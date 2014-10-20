@@ -1,0 +1,4 @@
+sudo apt-get install git
+git clone https://github.com/Victor-Haefner/polyvr-depends.git dependencies
+cd dependencies
+sudo ./install

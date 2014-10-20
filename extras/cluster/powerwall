@@ -1,0 +1,15 @@
+#!/bin/sh
+
+slave1=user@172.22.151.207
+slave2=user@172.22.151.208
+
+case $1 in
+	start)
+		ssh -f slave1 'export DISPLAY=":0" && ~/VRServer -m slave1'
+		ssh -f slave2 'export DISPLAY=":0" && ~/VRServer -m slave2'
+		;;
+	stop)
+		ssh -f slave1 'killall VRServer'
+		ssh -f slave2 'killall VRServer'
+		;;
+esac
