@@ -1,0 +1,8 @@
+examples/*.png
+*~
+*.depend
+*.layout
+obj
+bin
+.local
+examples/.cfg

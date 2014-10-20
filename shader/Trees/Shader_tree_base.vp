@@ -1,0 +1,14 @@
+// vertex shader program
+varying out mat4 model;
+varying out mat3 n_model;
+varying out vec2 tc;
+varying out vec3 vert_normal;
+
+//----------------------------------------------------------------------------------------------MAIN--VP
+void main( void ) {
+    tc = gl_MultiTexCoord0.xy;
+    model = gl_ModelViewProjectionMatrix;
+    n_model = gl_NormalMatrix;
+    gl_Position = gl_Vertex;
+    vert_normal = gl_Normal;
+}

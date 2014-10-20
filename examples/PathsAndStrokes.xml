@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scene name_suffix="0" base_name="PathsAndStrokes" name_space="Scene">
+  <Objects>
+    <Root name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
+      <l1 name_suffix="0" base_name="l1" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" diffuse="1 1 1 1" lightType="directional" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
+        <l2 name_suffix="0" base_name="l2" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="l2_beacon" diffuse="1 1 1 1" lightType="directional" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
+          <l2_beacon name_suffix="0" base_name="l2_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0.2 0.2 1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="l2"/>
+          <strokes name_suffix="0" base_name="strokes" name_space="__global__" type="Object" pickable="0" visible="1"/>
+          <Default name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="0.517028 0.676042 1.46322" at="-0.0801871 0.0834597 0.1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472"/>
+          <Box name_suffix="0" base_name="Box" name_space="__global__" type="Geometry" pickable="1" visible="1" from="-0.448361 0.884818 0.971027" at="-1.21073 1.429 0.620816" up="0.628539 0.751474 -0.200562" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" sourcetype="3" sourceparam="Box 0.2 0.2 0.2 1 1 1"/>
+        </l2>
+      </l1>
+    </Root>
+  </Objects>
+  <Rendering frustum_culling="1" occlusion_culling="0"/>
+  <Scripts>
+    <chooseColor core="&#9;import VR&#10;&#9;if hasattr(VR, 'colChooser'):&#10;&#9;&#9;if dev_1 != None:&#10;&#9;&#9;&#9;dev = dev_1&#10;&#9;&#9;&#9;&#10;&#9;&#9;VR.colChooser.resolve(dev)&#10;&#9;&#9;VR.col = VR.colChooser.get()" type="Python" mobile="">
+      <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" name_suffix="2" base_name="trigger" name_space="__global__"/>
+      <trig type="on_device" dev="flystick" state="Pressed" param="" key="1" name_suffix="3" base_name="trigger" name_space="__global__"/>
+    </chooseColor>
+    <init core="&#9;import VR&#10;&#9;VR.path = VR.Path()&#10;&#9;VR.lastPos = [0,0,0]&#10;&#9;VR.lastNorm = [0,1,0]&#10;&#9;&#10;&#9;VR.strokes = []&#10;&#9;VR.strokeCount = 0&#10;&#9;VR.strokeMax = 200&#10;&#9;&#10;&#9;VR.colChooser = VR.ColorChooser()&#10;&#9;VR.colChooser.setGeometry(pencil)&#10;&#9;VR.colChooser.set(1,0,0)&#10;&#9;&#10;&#9;VR.l_col = VR.colChooser.get()&#10;&#9;VR.col = VR.colChooser.get()&#10;&#9;&#10;&#9;for c in root.getChildren():&#10;&#9;&#9;c.destroy()&#10;&#9;&#10;&#9;for i in range(VR.strokeMax):&#10;&#9;&#9;s = VR.Stroke(&quot;stroke&quot;)&#10;&#9;&#9;VR.strokes.append(s)&#10;&#9;&#9;root.addChild(s)&#10;&#9;&#9;&#10;&#9;pencil.setIdentity()" type="Python" mobile="">
+      <arg type="VRPyGeometryType" value="Box" name_suffix="0" base_name="pencil" name_space="init"/>
+      <arg type="VRPyObjectType" value="strokes" name_suffix="0" base_name="root" name_space="init"/>
+      <trig type="on_scene_load" dev="" state="pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
+    </init>
+    <update core="&#9;import VR&#10;&#9;import math&#10;&#9;p0 = VR.lastPos&#10;&#9;p1 = box.getWorldFrom()&#10;&#9;&#10;&#9;d = [p1[0]-p0[0], p1[1]-p0[1], p1[2]-p0[2]]&#10;&#9;L = math.sqrt(d[0]*d[0] + d[1]*d[1] + d[2]*d[2])&#10;&#9;&#10;&#9;if L &lt; 0.1:&#10;&#9;&#9;return&#10;&#9;&#9;&#10;&#9;c0 = VR.l_col&#10;&#9;c1 = VR.col&#10;&#9;n0 = VR.lastNorm&#10;&#9;n1 = d[:]&#10;&#9;n1[0] /= L&#10;&#9;n1[1] /= L&#10;&#9;n1[2] /= L&#10;&#9;VR.lastPos = p1[:]&#10;&#9;VR.lastNorm = n1[:]&#10;&#9;VR.l_col = c1[:]&#10;&#9;&#10;&#9;VR.path.setStart(p0, n0, c0)&#10;&#9;VR.path.setEnd(p1, n1, c1)&#10;&#9;VR.path.compute(8)&#10;&#9;&#10;&#9;k = 0.03&#10;&#9;&#10;&#9;prof = []&#10;&#9;prof.append([-k,0,0])&#10;&#9;prof.append([0,k,0])&#10;&#9;prof.append([k,0,0])&#10;&#9;&#10;&#9;stroke = VR.strokes[VR.strokeCount]&#10;&#9;&#10;&#9;stroke.setPath(VR.path)&#10;&#9;#stroke.strokeStrew(box)&#10;&#9;stroke.strokeProfile(prof, True, True)&#10;&#9;&#10;&#9;VR.strokeCount += 1&#10;&#9;if VR.strokeCount &gt;= VR.strokeMax:&#10;&#9;&#9;VR.strokeCount = 0" type="Python" mobile="">
+      <arg type="VRPyTransformType" value="Box" name_suffix="0" base_name="box" name_space="update"/>
+      <arg type="VRPyObjectType" value="strokes" name_suffix="0" base_name="root" name_space="update"/>
+      <trig type="on_timeout" dev="keyboard" state="pressed" param="50" key="0" name_suffix="1" base_name="trigger" name_space="__global__"/>
+    </update>
+  </Scripts>
+  <Sockets/>
+  <Background color="0.893965 0.412482 0.412482" path="data/common/skybox/sky/Sky" type="2"/>
+</Scene>

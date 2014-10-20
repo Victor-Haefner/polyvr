@@ -1,0 +1,17 @@
+#version 120
+// vertex shader program
+varying mat4 model;
+varying vec4 light1;
+varying vec4 light2;
+
+//----------------------------------------------------------------------------------------------MAIN--VP
+void main( void ) {
+    model = gl_ModelViewProjectionMatrix;
+    gl_Position = gl_Vertex;
+
+    light1.xyz = gl_Normal.xyz;
+    light1.w = gl_MultiTexCoord0[0];
+
+    light2.xyz = gl_Color.xyz;
+    light2.w = gl_MultiTexCoord0[1];
+}
