@@ -1,0 +1,295 @@
+#ifndef ROADSYSTEM_H
+#define ROADSYSTEM_H
+
+#include <map>
+#include <set>
+
+
+#include "types.h"
+#include "Node.h"
+#include "NodeLogicRightFirst.h"
+#include "Street.h"
+#include "Vehicle.h"
+
+using namespace std;
+
+
+/**
+ This class represents a road system with nodes, streets and vehicles.
+ It stores the parts of the system, offers methods to add and access parts
+ and is responsible for freeing their memory on destruction.
+ */
+class RoadSystem {
+
+    private:
+        /// The width of one lane.
+        double laneWidth;
+
+        /// The default speed of streets if not explicitly set.
+        double defaultSpeed;
+
+        /// The default type of streets if not explicitly set.
+        Street::TYPE defaultType;
+
+        /// The density of traffic.
+        double trafficDensity;
+
+        /// The nodes in the road system.
+        map<ID, Node*> nodes;
+
+        /// The streets in the road system.
+        map<ID, Street*> streets;
+
+        /// The registered vehicle types.
+        map<ID, VehicleType*> vehicleTypes;
+
+        /// The sum of all vehicleTypes probabilities.
+        double vehicleTypesProbability;
+
+        /// The registered driver types.
+        map<ID, DriverType*> driverTypes;
+
+        /// The sum of all driverTypes probabilities.
+        double driverTypesProbability;
+
+        /// The vehicles on the roads.
+        set<Vehicle*> vehicles;
+
+        /// One global logic for all right-before-left crossings.
+        NodeLogicRightFirst logicRightFirst;
+
+        /**
+         Applies a given traffic density to a street.
+         */
+
+        /**
+         Creates a vehicle on the given street.
+         It will be created on a random position somewhere on the street.
+
+         If is is a meso-street, the new vehicle will just be an additional
+         arrival time in the list, if it is a micro street the new Vehicle
+         will be added to the vehicle-set.
+
+         Note that the position of the vehicle in meso-mode might not be very
+         realistic, e.g. it can appear too near (or even on top) of an other vehicle.
+         @param street The street to add the vehicle to.
+         */
+        void createVehicleOnStreet(Street* street);
+
+        /**
+         Removes a random vehicle from the given street.
+         @param street The street to remove a vehicle from.
+         */
+        void removeVehicleFromStreet(Street* street);
+
+    public:
+
+        /**
+         Creates an empty road system.
+         */
+        RoadSystem();
+
+        /**
+         Frees the memory used by the road system.
+         Deletes all streets, nodes and vehicles that are created by the system.
+         */
+        ~RoadSystem();
+
+        /**
+         Sets the width of one lane.
+         The lane width is used to calculate the offset from the middle of the street
+         for the vehicle driving on different lanes.
+         If changed while running the simulation, the vehicles will slowly adapt
+         to the new lane with when driving to the next node.
+         @note The width has to be positive, if it is negativ the default will be restored.
+         @param width The new width to set.
+         */
+        void setLaneWidth(const double width);
+
+        /**
+         Returns the current lane width.
+         @return A double containing the current width of lanes.
+         */
+        double getLaneWidth() const;
+
+        /**
+         Sets the default maximum speed for streets.
+         This speed in km/h is used if not explicitly set for a street.
+         @note The speed has to be positive, if it is negativ the default of 50km/h will be restored.
+         @param speed The new speed to set.
+         */
+        void setDefaultSpeed(const double speed);
+
+        /**
+         Returns the current lane width.
+         @return A double containing the current maximum speed for streets.
+         */
+        double getDefaultSpeed() const;
+
+        /**
+         Sets the default type for streets.
+         @param type The new type to set.
+         */
+        void setDefaultType(const Street::TYPE type);
+
+        /**
+         Returns the current default street type.
+         @return The default type of streets.
+         */
+        Street::TYPE getDefaultType() const;
+
+        /**
+         Sets the traffic density in the road system.
+         This is an average value, e.g. a living street will be quite empty either way
+         while a motorway will become full quite early.
+         You can interpret this value as the number of vehicles on a 100 meter long
+         main road inside a town. Note that this value is not exact and is merely
+         an approximation for the simulator.
+         @param density The new density to set.
+         */
+        void setTrafficDensity(const double density);
+
+        /**
+         Returns the currently set traffic density.
+         The real density might differ from this and depends on the sizes of the
+         used streets.
+         @return The currently set traffic density.
+         */
+        double getTrafficDensity() const;
+
+        /**
+         Adds a node to the road system.
+         @param id The id of the new node.
+         @param pos The position of the node.
+         @param features The features the node should contain.
+         @return \c True if the node has been added, \c false if there already is a node with this id.
+         */
+        bool addNode(const ID id, const Vec2f& pos, const Node::FEATURE features = Node::NONE);
+
+        /**
+         Tries to add the given node to the street net.
+         If the id of the new node is already in use, the node can not be added.
+         Ownership of the object is given to the RoadSystem, so the RoadSystem will free its memory.
+         @param node The node to add.
+         @return \c True if the node has been added, \c false otherwise.
+         */
+        bool addNode(Node *node);
+
+        /**
+         Removes a node.
+         @param id The node to remove.
+         @param removeStreets If \c true, remove the streets that are using this node.
+         @return \c True if the node has been removed, \c false if it could not been removed, either because the
+                given id is invalid or there are streets using this node and \c removeStreets is false.
+         */
+        bool removeNode(const ID id, const bool removeStreets = false);
+
+        /**
+         Returns a pointer to the node with the given id.
+         The returned pointer should not be stored for a longer time.
+         @param id The id of the node to search.
+         @return A pointer to the node or \c null if the node does not exist.
+         */
+        Node* getNode(const ID id);
+
+        /**
+         Adds a street.
+         @param id The id of the street.
+         @param nodeIds The ids of the nodes.
+         @return A pointer to the newly created street or \c null if the id is already in use
+                 or a node id is invalid.
+                 This pointer should not be stored for a longer time.
+                 Instead of a boolean a pointer is returned to allow modification of the
+                 newly created street, e.g. setting the maximum speed.
+         */
+        Street* addStreet(const ID id, const vector<ID>& nodeIds);
+
+        /**
+         Tries to add the given street to the street net.
+         If the id of the new street is already in use, the street can not be added.
+         Ownership of the object is given to the RoadSystem, so the RoadSystem will free its memory.
+         @param street The street to add.
+         @return \c True if the street has been added, \c false otherwise (e.g. invalid id or unknown node id).
+         */
+        bool addStreet(Street *street);
+
+        /**
+         Removes a street.
+         @param id The street to remove.
+         @param removeVehicles If \c true, remove the vehicles that are currently using this street,
+                if \c false, the vehicles will remain at their position and will try to find an other
+                street to drive on.
+         @return \c True if the street has been removed, \c false if the given id is invalid.
+         */
+        bool removeStreet(const ID id, const bool removeVehicles = true);
+
+        /**
+         Returns a pointer to the street with the given id.
+         The returned pointer should not be stored for a longer time.
+         @param id The id of the street to search.
+         @return A pointer to the street or \c null if the street does not exist.
+         */
+        Street* getStreet(const ID id);
+
+        /**
+         Adds a vehicle type to the list of vehicle types.
+         @param id An id for the vehicle, used to reference the type in the output.
+         @param probability The probability of this vehicle. The sum of all probabilities is used as 100%.
+         @param radius The radius of the vehicle. If two vehicles are nearer to each other than their.
+                combined radii, a collision-warning is sent to the client.
+         @param maxSpeed The maximal speed in km/h the vehicle can drive with.
+         @param maxAcc The maximal acceleration / deceleration of the vehicle in m/s^2.
+         @param maxRot The maximum possible rotation per second in degree. This determines how good
+                the vehicle can drive around corners.
+         @return \c True if the type has been added, \c false if there already is a type with this id or a parameter is invalid.
+        */
+        bool addVehicleType(const ID id, const double probability, const double radius, const double maxSpeed, const double maxAcc, const double maxRot);
+
+        /**
+         Removes a vehicle type.
+         @param id The id of the vehicle type to remove.
+         @param modifyVehicles If \c true, change the type of the vehicles using this type to an other type.
+                If set to \c false, the removal of the type will fail if the type is in use.
+                To remove a vehicle type gracefully, set its probability to \c 0 and remove it later
+                when it isno longer in use.
+         @return \c True if the type has been removed, \c false if the given id is invalid or in use or it is the last one.
+         */
+        bool removeVehicleType(const ID id, const bool modifyVehicles = false);
+
+        /**
+         Returns a pointer to the vehicle type with the given id.
+         The returned pointer should not be stored for a longer time.
+         @param id The id of the vehicle type to search.
+         @return A pointer to the type or \c null if the type does not exist.
+         */
+        VehicleType* getVehicleType(const ID id);
+
+        /**
+         Adds a driver type to the list of vehicle types.
+         @param id An id for the driver, used to reference the type in the output.
+         @param probability The probability of this driver. The sum of all probabilities is used as 100%.
+         @param reactionTime The time in seconds the driver needs to react to an event, e.g. a red traffic light.
+         @param lawlessness The probability in [0-1] that the driver will break the law, e.g. by speeding.
+         @param cautiousness The probability in [0-1] for the driver to behave responsible, e.g. with a big safety margin.
+         @return \c True if the type has been added, \c false if there already is a type with this id or a parameter is invalid.
+        */
+        bool addDriverType(const ID id, const double probability, const double reactionTime, const double lawlessness, const double cautiousness);
+
+        /**
+         Removes a driver type.
+         @param id The id of the driver type to remove.
+         @return \c True if the type has been removed, \c false if the given id is invalid or the type is the last one.
+         */
+        bool removeDriverType(const ID id);
+
+        /**
+         Returns a pointer to the driver type with the given id.
+         The returned pointer should not be stored for a longer time.
+         @param id The id of the driver type to search.
+         @return A pointer to the type or \c null if the type does not exist.
+         */
+        DriverType* getDriverType(const ID id);
+};
+
+#endif // ROADSYSTEM_H
+

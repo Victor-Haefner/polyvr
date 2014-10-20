@@ -6,3 +6,4 @@ obj
 bin
 .local
 examples/.cfg
+*.o

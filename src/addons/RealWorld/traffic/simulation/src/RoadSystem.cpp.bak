@@ -1,0 +1,493 @@
+#include "RoadSystem.h"
+
+#include "NodeLogicTrafficLight.h"
+#include "timer.h"
+
+/**
+ Creates an empty road system.
+ */
+RoadSystem::RoadSystem()
+    : laneWidth(VEHICLE_LENGTH), defaultSpeed(50), defaultType(Street::RESIDENTAL), trafficDensity(10),
+      nodes(), streets(), vehicleTypes(), vehicleTypesProbability(0), driverTypes(), driverTypesProbability(0),
+      vehicles(), logicRightFirst() {
+}
+
+/**
+ Frees the memory used by the road system.
+ Deletes all streets, nodes and vehicles that are created by the system.
+ */
+RoadSystem::~RoadSystem() {
+
+    for (map<ID, Node*>::iterator iter = nodes.begin(); iter != nodes.end(); ++iter)
+        delete (*iter).second;
+    nodes.clear();
+
+    for (map<ID, Street*>::iterator iter = streets.begin(); iter != streets.end(); ++iter)
+        delete (*iter).second;
+    streets.clear();
+
+    for (map<ID, VehicleType*>::iterator iter = vehicleTypes.begin(); iter != vehicleTypes.end(); ++iter)
+        delete (*iter).second;
+    vehicleTypes.clear();
+
+    for (map<ID, DriverType*>::iterator iter = driverTypes.begin(); iter != driverTypes.end(); ++iter)
+        delete (*iter).second;
+    driverTypes.clear();
+
+    for (set<Vehicle*>::iterator iter = vehicles.begin(); iter != vehicles.end(); ++iter)
+        delete *iter;
+    vehicles.clear();
+}
+
+/**
+ Sets the width of one lane.
+ The lane width is used to calculate the offset from the middle of the street
+ for the vehicle driving on different lanes.
+ If changed while running the simulation, the vehicles will slowly adapt
+ to the new lane with when driving to the next node.
+ @note The width has to be positive, if it is negativ the default will be restored.
+ @param width The new width to set.
+ */
+void RoadSystem::setLaneWidth(const double width) {
+    if (width < 0)
+        laneWidth = VEHICLE_LENGTH;
+    else
+        laneWidth = width;
+}
+
+/**
+ Returns the current lane width.
+ @return A double containing the current width of lanes.
+ */
+double RoadSystem::getLaneWidth() const {
+    return laneWidth;
+}
+
+/**
+ Sets the default maximum speed for streets.
+ This speed in km/h is used if not explicitly set for a street.
+ @note The speed has to be positive, if it is negativ the default of 50km/h will be restored.
+ @param speed The new speed to set.
+ */
+void RoadSystem::setDefaultSpeed(const double speed) {
+    if (speed < 0)
+        defaultSpeed = 50;
+    else
+        defaultSpeed = speed;
+}
+
+/**
+ Returns the current lane width.
+ @return A double containing the current maximum speed for streets.
+ */
+double RoadSystem::getDefaultSpeed() const {
+    return defaultSpeed;
+}
+
+/**
+ Sets the default type for streets.
+ @param type The new type to set.
+ */
+void RoadSystem::setDefaultType(const Street::TYPE type) {
+    if (type == Street::DEFAULT)
+        defaultType = Street::RESIDENTAL;
+    else
+        defaultType = type;
+}
+
+/**
+ Returns the current default street type.
+ @return The default type of streets.
+ */
+Street::TYPE RoadSystem::getDefaultType() const {
+    return defaultType;
+}
+
+/**
+ Sets the traffic density in the road system.
+ This is an average value, e.g. a living street will be quite empty either way
+ while a motorway will become full quite early.
+ You can interpret this value as the number of vehicles on a 100 meter long
+ main road inside a town. Note that this value is not exact and is merely
+ an approximation for the simulator.
+ @param density The new density to set.
+ */
+void RoadSystem::setTrafficDensity(const double density) {
+    if (density < 0)
+        trafficDensity = 0;
+    else
+        trafficDensity = density;
+
+    // Apply the density to all streets in meso mode.
+    // This way the vehicles around the client will not disappear
+    // immediately but over time it will become empty.
+    // Of course this does not set an exact value but it will be good enough
+
+    // Count the number of meso-streets
+    //double nMeso = 0;
+
+    for (map<ID, Street*>::iterator iter = streets.begin(); iter != streets.end(); ++iter) {
+        if (!iter->second->getIsMicro()) {
+            //nMeso++;
+
+            // Do this for both directions
+            for (int direction = -1; direction <= 1; direction += 2) {
+
+                // Calculate current and new density
+                double densityForType = (density / 20) * (iter->second->getType() / 100);
+                double shouldBeVehicleCount = densityForType * iter->second->getLaneMaxVehicles(direction);
+
+                // While the amount is not matching, adapt it
+                // Add vehicles if not full
+                ptime now = timer.getTime();
+                time_duration travelTime = iter->second->getLaneTravelTime(direction);
+                while (iter->second->getLaneArrivalTimes(direction)->size() < shouldBeVehicleCount) {
+                    // Add vehicle with random arrival time
+                    iter->second->getLaneArrivalTimes(direction)->insert(ptime(now + (travelTime * ((rand() % 100) / 100))));
+                }
+
+                // Remove vehicles if too full
+                while (iter->second->getLaneArrivalTimes(direction)->size() > shouldBeVehicleCount) {
+                    // Remove random vehicle
+                    multiset<ptime>::iterator iter2 = iter->second->getLaneArrivalTimes(direction)->begin();
+                    int r = rand() % iter->second->getLaneArrivalTimes(direction)->size();
+                    for (int i = 0; i < r; ++i) {
+                        ++iter2;
+                    }
+                    iter->second->getLaneArrivalTimes(direction)->erase(iter2);
+                }
+            }
+        }
+
+        /// TODO: Probably it is not enough to only change the meso streets. If there are (nearly) none, it is useless.
+    }
+}
+
+/**
+ Returns the currently set traffic density.
+ The real density might differ from this and depends on the sizes of the
+ used streets.
+ @return The currently set traffic density.
+ */
+double RoadSystem::getTrafficDensity() const {
+    return trafficDensity;
+}
+
+/**
+ Adds a node to the road system.
+ @param id The id of the new node.
+ @param pos The position of the node.
+ @param features The features the node should contain.
+ @return \c True if the node has been added, \c false if there already is a node with this id.
+ */
+bool RoadSystem::addNode(const ID id, const Vec2f& pos, const Node::FEATURE features) {
+
+    if (nodes.count(id) > 0)
+        return false;
+
+    Node* node = new Node(id, pos, features, 0);
+
+    if (features & Node::TRAFFICLIGHTS) {
+        node->setLogic(new NodeLogicTrafficLight());
+    } else {
+        node->setLogic(&logicRightFirst);
+    }
+
+    nodes.insert(make_pair(id, node));
+    return true;
+}
+
+/**
+ Tries to add the given node to the street net.
+ If the id of the new node is already in use, the node can not be added.
+ Ownership of the object is given to the RoadSystem, so the RoadSystem will free its memory.
+ @param node The node to add.
+ @return \c True if the node has been added, \c false otherwise.
+ */
+bool RoadSystem::addNode(Node *node) {
+
+    if (nodes.count(node->getId()) > 0)
+        return false;
+
+    nodes.insert(make_pair(node->getId(), node));
+    return true;
+}
+
+/**
+ Removes a node.
+ @param id The node to remove.
+ @param removeStreets If \c true, remove the streets that are using this node.
+ @return \c True if the node has been removed, \c false if it could not been removed, either because the
+        given id is invalid or there are streets using this node and \c removeStreets is false.
+ */
+bool RoadSystem::removeNode(const ID id, const bool removeStreets) {
+    map<ID, Node*>::iterator iter = nodes.find(id);
+    if (iter == nodes.end())
+        return false;
+
+    if (removeStreets) {
+        //for (vector<ID>::iterator streetIter = iter->getStreetIds().begin(); streetIter != iter->getStreetIds().end(); ++streetIter) {
+        while (!iter->second->getStreetIds().empty()) {
+            removeStreet(iter->second->getStreetIds().front());
+        }
+    }
+
+    delete iter->second;
+    return true;
+}
+
+/**
+ Returns a pointer to the node with the given id.
+ The returned pointer should not be stored for a longer time.
+ @param id The id of the node to search.
+ @return A pointer to the node or \c null if the node does not exist.
+ */
+Node* RoadSystem::getNode(const ID id) {
+    map<ID, Node*>::iterator iter = nodes.find(id);
+    if (iter == nodes.end())
+        return NULL;
+    else
+        return iter->second;
+}
+
+/**
+ Adds a street.
+ @param id The id of the street.
+ @param nodeIds The ids of the nodes.
+ @return A pointer to the newly created street or \c null if the id is already in use
+         or a node id is invalid.
+         This pointer should not be stored for a longer time.
+         Instead of a boolean a pointer is returned to allow modification of the
+         newly created street, e.g. setting the maximum speed.
+ */
+Street* RoadSystem::addStreet(const ID id, const vector<ID>& nodeIds) {
+
+    if (streets.count(id) > 0)
+        return NULL;
+
+    Street *street = new Street(this, id, nodeIds);
+
+    streets.insert(make_pair(id, street));
+
+#warning TODO: Add cars to the street
+
+    return street;
+}
+
+/**
+ Tries to add the given street to the street net.
+ If the id of the new street is already in use, the street can not be added.
+ Ownership of the object is given to the RoadSystem, so the RoadSystem will free its memory.
+ @param node The street to add.
+ @return \c True if the street has been added, \c false otherwise (e.g. invalid id or unknown node id).
+ */
+bool RoadSystem::addStreet(Street *street) {
+
+    if (streets.count(street->getId()) > 0)
+        return false;
+
+#warning TODO: Add cars to the street
+
+    streets.insert(make_pair(street->getId(), street));
+    return true;
+}
+
+/**
+ Removes a street.
+ @param id The street to remove.
+ @param removeVehicles If \c true, remove the vehicles that are currently using this street,
+        if \c false, the vehicles will remain at their position and will try to find an other
+        street to drive on.
+ @return \c True if the street has been removed, \c false if the given id is invalid.
+ */
+bool RoadSystem::removeStreet(const ID id, const bool removeVehicles) {
+
+    map<ID, Street*>::iterator iter = streets.find(id);
+    if (iter == streets.end())
+        return NULL;
+
+    if (removeVehicles) {
+        // remove Vehicles from this street
+#warning TODO: remove Vehicles from this street
+        iter->
+    }
+
+    delete iter->second;
+    streets.erase(iter);
+    return true;
+}
+
+/**
+ Returns a pointer to the street with the given id.
+ The returned pointer should not be stored for a longer time.
+ @param id The id of the street to search.
+ @return A pointer to the street or \c null if the street does not exist.
+ */
+Street* RoadSystem::getStreet(const ID id) {
+    map<ID, Street*>::iterator iter = streets.find(id);
+    if (iter == streets.end())
+        return NULL;
+    else
+        return iter->second;
+}
+
+/**
+ Adds a vehicle type to the list of vehicle types.
+ @param id An id for the vehicle, used to reference the type in the output.
+ @param probability The probability of this vehicle. The sum of all probabilities is used as 100%.
+ @param radius The radius of the vehicle. If two vehicles are nearer to each other than their.
+        combined radii, a collision-warning is sent to the client.
+ @param maxSpeed The maximal speed in km/h the vehicle can drive with.
+ @param maxAcc The maximal acceleration / deceleration of the vehicle in m/s^2.
+ @param maxRot The maximum possible rotation per second in degree. This determines how good
+        the vehicle can drive around corners.
+ @return \c True if the type has been added, \c false if there already is a type with this id or a parameter is invalid.
+*/
+bool RoadSystem::addVehicleType(const ID id, const double probability, const double radius, const double maxSpeed, const double maxAcc, const double maxRot) {
+
+    map<ID, VehicleType*>::iterator iter = vehicleTypes.find(id);
+    if (iter == vehicleTypes.end())
+        return false;
+
+    VehicleType *type = VehicleType::createVehicleType(id, probability, radius, maxSpeed,maxAcc, maxRot);
+    if (type == NULL)
+        return false;
+
+    vehicleTypes.insert(make_pair(id, type));
+    vehicleTypesProbability += probability;
+    return true;
+}
+
+/**
+ Removes a vehicle type.
+ @param id The id of the vehicle type to remove.
+ @param modifyVehicles If \c true, change the type of the vehicles using this type to an other type.
+        If set to \c false, the removal of the type will fail if the type is in use.
+        To remove a vehicle type gracefully, set its probability to \c 0 and remove it later
+        when no longer in use.
+ @return \c True if the type has been removed, \c false if the given id is invalid or in use.
+ */
+bool RoadSystem::removeVehicleType(const ID id, const bool modifyVehicles) {
+
+    if (vehicleTypes.size() <= 1)
+        return false;
+
+    map<ID, VehicleType*>::iterator iter = vehicleTypes.find(id);
+    if (iter == vehicleTypes.end())
+        return false;
+
+    // Check if the id is in use
+    for (set<Vehicle*>::iterator vehicleIter = vehicles.begin(); vehicleIter != vehicles.end(); ++vehicleIter) {
+        if ((*vehicleIter)->getVehicleType() == id) {
+            if (!modifyVehicles) {
+                return false;
+            } else {
+                // Set the type to the first or last one
+                if (vehicleTypes.begin()->first != id)
+                    (*vehicleIter)->setVehicleType(vehicleTypes.begin()->first);
+                else if (vehicleTypes.rbegin()->first != id)
+                    (*vehicleIter)->setVehicleType(vehicleTypes.rbegin()->first);
+                else
+                    // No other type is available: just fail.
+                    return false;
+            }
+        }
+    }
+
+    // Remove the type
+    vehicleTypesProbability -= iter->second->getProbability();
+    delete iter->second;
+    vehicleTypes.erase(iter);
+
+    return true;
+}
+
+/**
+ Returns a pointer to the vehicle type with the given id.
+ The returned pointer should not be stored for a longer time.
+ @param id The id of the vehicle type to search.
+ @return A pointer to the type or \c null if the type does not exist.
+ */
+VehicleType* RoadSystem::getVehicleType(const ID id) {
+
+    map<ID, VehicleType*>::iterator iter = vehicleTypes.find(id);
+    if (iter == vehicleTypes.end())
+        return NULL;
+    else
+        return iter->second;
+}
+
+/**
+ Adds a driver type to the list of vehicle types.
+ @param id An id for the driver, used to reference the type in the output.
+ @param probability The probability of this driver. The sum of all probabilities is used as 100%.
+ @param reactionTime The time in seconds the driver needs to react to an event, e.g. a red traffic light.
+ @param lawlessness The probability in [0-1] that the driver will break the law, e.g. by speeding.
+ @param cautiousness The probability in [0-1] for the driver to behave responsible, e.g. with a big safety margin.
+ @return \c True if the type has been added, \c false if there already is a type with this id or a parameter is invalid.
+*/
+bool RoadSystem::addDriverType(const ID id, const double probability, const double reactionTime, const double lawlessness, const double cautiousness) {
+
+    map<ID, DriverType*>::iterator iter = driverTypes.find(id);
+    if (iter == driverTypes.end())
+        return false;
+
+    DriverType *type = DriverType::createDriverType(id, probability, reactionTime, lawlessness, cautiousness);
+    if (type == NULL)
+        return false;
+
+    driverTypes.insert(make_pair(id, type));
+    driverTypesProbability += probability;
+    return true;
+}
+
+/**
+ Removes a driver type.
+ @param id The id of the driver type to remove.
+ @return \c True if the type has been removed, \c false if the given id is invalid.
+ */
+bool RoadSystem::removeDriverType(const ID id) {
+
+    if (driverTypes.size() <= 1)
+        return false;
+
+    map<ID, DriverType*>::iterator iter = driverTypes.find(id);
+    if (iter == driverTypes.end())
+        return false;
+
+    // Check if the id is in use
+    for (set<Vehicle*>::iterator vehicleIter = vehicles.begin(); vehicleIter != vehicles.end(); ++vehicleIter) {
+        if ((*vehicleIter)->getDriverType() == id) {
+            // Set the type to the first or last one
+            if (driverTypes.begin()->first != id)
+                (*vehicleIter)->setDriverType(driverTypes.begin()->first);
+            else if (driverTypes.rbegin()->first != id)
+                (*vehicleIter)->setDriverType(driverTypes.rbegin()->first);
+            else
+                // No other type is available: just fail.
+                return false;
+        }
+    }
+
+    // Remove the type
+    driverTypesProbability -= iter->second->getProbability();
+    delete iter->second;
+    driverTypes.erase(iter);
+
+    return true;
+}
+
+/**
+ Returns a pointer to the driver type with the given id.
+ The returned pointer should not be stored for a longer time.
+ @param id The id of the driver type to search.
+ @return A pointer to the type or \c null if the type does not exist.
+ */
+DriverType* RoadSystem::getDriverType(const ID id) {
+
+    map<ID, DriverType*>::iterator iter = driverTypes.find(id);
+    if (iter == driverTypes.end())
+        return NULL;
+    else
+        return iter->second;
+}

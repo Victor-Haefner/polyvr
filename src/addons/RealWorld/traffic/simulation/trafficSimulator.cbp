@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="trafficSimulator" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/trafficSimulator" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add option="-DWITH_GUI" />
+					<Add option="-DFILE_LOADING" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/trafficSimulator" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+			<Target title="Lib">
+				<Option output="TrafficSim" prefix_auto="1" extension_auto="1" />
+				<Option type="3" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="-fPIC" />
+				</Compiler>
+			</Target>
+			<Target title="LibStatic">
+				<Option output="TrafficSim" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="" />
+				<Option type="2" />
+				<Option compiler="gcc" />
+				<Option createDefFile="1" />
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wmain" />
+			<Add option="-pedantic" />
+			<Add option="-Wextra" />
+			<Add option="-Wall" />
+			<Add option="-fexceptions" />
+			<Add directory="/usr/share/qt4/mkspecs/linux-g++-64" />
+			<Add directory="/usr/include/qt4/QtCore" />
+			<Add directory="/usr/include/qt4/QtGui" />
+			<Add directory="/usr/include/qt4" />
+		</Compiler>
+		<Linker>
+			<Add library="microhttpd" />
+			<Add library="jsoncpp" />
+			<Add library="boost_system" />
+			<Add library="boost_thread" />
+			<Add library="QtGui" />
+			<Add library="QtCore" />
+		</Linker>
+		<Unit filename="Traffic.cpp" />
+		<Unit filename="Traffic.h" />
+		<Unit filename="src/DriverType.cpp" />
+		<Unit filename="src/DriverType.h" />
+		<Unit filename="src/IJsonServerListener.h" />
+		<Unit filename="src/JsonServer.cpp" />
+		<Unit filename="src/JsonServer.h" />
+		<Unit filename="src/Mesosimulator.cpp" />
+		<Unit filename="src/Mesosimulator.h" />
+		<Unit filename="src/Microsimulator.cpp" />
+		<Unit filename="src/Microsimulator.h" />
+		<Unit filename="src/NetworkInterface.cpp" />
+		<Unit filename="src/NetworkInterface.h" />
+		<Unit filename="src/Node.cpp" />
+		<Unit filename="src/Node.h" />
+		<Unit filename="src/NodeLogic.h" />
+		<Unit filename="src/NodeLogicPriorityCrossing.cpp" />
+		<Unit filename="src/NodeLogicPriorityCrossing.h" />
+		<Unit filename="src/NodeLogicRightFirst.cpp" />
+		<Unit filename="src/NodeLogicRightFirst.h" />
+		<Unit filename="src/NodeLogicTrafficLight.cpp" />
+		<Unit filename="src/NodeLogicTrafficLight.h" />
+		<Unit filename="src/RoadSystem.cpp" />
+		<Unit filename="src/RoadSystem.h" />
+		<Unit filename="src/Routing.cpp" />
+		<Unit filename="src/Routing.h" />
+		<Unit filename="src/Street.cpp" />
+		<Unit filename="src/Street.h" />
+		<Unit filename="src/TrafficSimulator.cpp" />
+		<Unit filename="src/TrafficSimulator.h" />
+		<Unit filename="src/Vehicle.cpp" />
+		<Unit filename="src/Vehicle.h" />
+		<Unit filename="src/VehicleType.cpp" />
+		<Unit filename="src/VehicleType.h" />
+		<Unit filename="src/main.cpp" />
+		<Unit filename="src/networkDocu.h" />
+		<Unit filename="src/qtgui/renderarea.cpp" />
+		<Unit filename="src/qtgui/renderarea.h" />
+		<Unit filename="src/qtgui/window.cpp" />
+		<Unit filename="src/qtgui/window.h" />
+		<Unit filename="src/timer.cpp" />
+		<Unit filename="src/timer.h" />
+		<Unit filename="src/types.h" />
+		<Extensions>
+			<code_completion />
+			<debugger />
+			<DoxyBlocks>
+				<comment_style block="0" line="0" />
+				<doxyfile_project />
+				<doxyfile_build />
+				<doxyfile_warnings warn_if_undocumented="1" />
+				<doxyfile_output />
+				<doxyfile_dot class_diagrams="1" have_dot="1" />
+				<general use_at_in_tags="1" />
+			</DoxyBlocks>
+			<envvars />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

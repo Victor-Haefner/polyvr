@@ -1,0 +1,299 @@
+#ifndef STREET_H
+#define STREET_H
+
+#include <vector>
+#include <set>
+#include <inttypes.h>
+
+#include "timer.h"
+#include "types.h"
+
+class RoadSystem;
+class Vehicle;
+
+using namespace std;
+
+/**
+ This class represents a street in a road system.
+
+ The direction of a street is defined as the direction you are traveling in, if you follow the associated list of nodes.
+ That means that \a forward is in the direction of the nodes while \a backward is in the other direction.
+
+ Some methods take a lane number as parameter. These lane number starts counting with 1 at the lane near the middle of
+ the street and increases while going outside. If the lane number is positiv (e.g. 1, 2, 3, ...) the lanes in forward
+ direction are meant, if the lane number is negative (e.g. -1, -2, -3, ...) the lanes in the backward direction is meant.
+ If you pass an invalid lane number (either a too big/small number or 0), the returned result is undefined.
+ */
+class Street {
+
+    public:
+        /**
+         The different types of street.
+         Order is loosely going down in speed and traffic amount.
+         The values that are represented determine how full this street will be
+         in percent if a traffic density of 20 is assigned.
+         */
+        enum TYPE {
+            /// Big car-only street between towns.
+            MOTORWAY = 60,
+            /// Big, but no motorway.
+            TRUNK = 60,
+            /// Main bypass in towns.
+            PRIMARY = 80,
+            /// Main streets in towns.
+            SECONDARY = 100,
+            /// Other streets in towns.
+            TERTIARY = 80,
+            /// Other streets.
+            /// A bit smaller than tertiary.
+            UNCLASSIFIED = 70,
+            /// Service streets for e.g. industries.
+            SERVICE = 40,
+            /// Streets which offer access to housing.
+            RESIDENTAL = 40,
+            /// Unknown type.
+            // (Either unknown to the mapper or to this program.)
+            ROAD = 40,
+            /// Tracks over fields.
+            TRACK = 2,
+            /// Streets where children might play.
+            LIVING_STREET = 5,
+            /// If set as type for a street, the street will ask
+            /// the RoadSystem for the default type of streets.
+            DEFAULT = RESIDENTAL // Just in case...
+        };
+
+        /// Flags for a lane.
+        typedef uint8_t LANEFLAG;
+        /// At the end of the lane the vehicles can turn left
+        static const LANEFLAG TURN_LEFT      = 1 << 0;
+        /// At the end of the lane the vehicles can turn right
+        static const LANEFLAG TURN_RIGHT     = 1 << 1;
+        /// At the end of the lane the vehicles can drive through
+        static const LANEFLAG TURN_THROUGH   = 1 << 2;
+        // At the end of the lane the vehicles can turn around
+        // Unimplemented/Used at the moment. Can not be send over the network.
+        //static const LANEFLAG TURN_BACK      = 1 << 3;
+        /// Vehicles can change their lane to the lane on the left
+        static const LANEFLAG CHANGE_LEFT    = 1 << 4;
+        /// Vehicles can change their lane to the lane on the right
+        static const LANEFLAG CHANGE_RIGHT   = 1 << 5;
+
+    private:
+
+        /// Flags for the street.
+        typedef uint8_t STREETFLAG;
+        /// Determines whether this street should be simulated mirco or meso.
+        static const STREETFLAG IS_MICRO = 1 << 0;
+
+        /// Flags for the street.
+        // Well, one flag. But it might become more later on
+        STREETFLAG flags;
+
+        /// A structure that contains the lanes into one direction.
+        /// Lanes are counted ascending from the middle of the street.
+        struct Lanes {
+            /// A default constructor.
+            Lanes();
+
+            /// The flags of this lanes for each lane separately.
+            vector<LANEFLAG> flags;
+
+            /// The cars that are driving in this direction.
+            /// Each vector element represents one lane while the sets
+            /// contains the Cars on this lane.
+            vector< set<Vehicle> > cars;
+
+            /// The maximum amount of vehicles that can drive on the street
+            /// in this direction.
+            /// Is used by the mesosimulation and calculated out of length
+            /// and number of lanes.
+            unsigned int maxVehicles;
+
+            /// In the mesosimulation these are the arrival times of the vehicles
+            /// on this lanes.
+            multiset<ptime> arrivalTimes;
+        };
+
+        /// The lanes in forward direction.
+        /// "Forward" is in the direction of the nodes.
+        Lanes forward;
+
+        /// The lanes in backward direction.
+        Lanes backward;
+
+        /// The id of this street.
+        const ID id;
+
+        /// The nodes that describe the course of this street.
+        vector<ID> nodes;
+
+        /// The allowed maximum speed on this street.
+        /// Might be negativ, in that case ask the RoadSystem for the default value.
+        double maxSpeed;
+
+        /// The roadSystem this street is part of.
+        /// Is asked for the lane width and the default speed/streettype.
+        RoadSystem *roadSystem;
+
+        /// The type (=size) of this street.
+        TYPE type;
+
+    public:
+        Street(RoadSystem *roadSystem, const ID id, const vector<ID>& nodeIds);
+
+        /**
+         Determines whether this street should be simulated mirco or meso.
+         @param micro Whether or not simulate this street with the microsimulator.
+         */
+        void setMicro(const bool micro);
+
+        /**
+         Returns whether this street will be simulated with the microsimulator.
+         @return \c True if it will be, \c false otherwise.
+         */
+        bool getIsMicro() const;
+
+        /**
+         Returns the id of this street.
+         @return The id of the street.
+         */
+        ID getId() const;
+
+        /**
+         Returns the node ids of the nodes that describe the course of this street.
+         @return A vector containing the ids of the nodes of this street.
+         */
+        const vector<ID>* getNodeIds();
+
+        /**
+         Returns the length of this street.
+         Note that this is not an exact value but the sum of the
+         distances between the nodes.
+         @return The lenght of the street.
+         */
+        double getLength() const;
+
+        /**
+         Sets the allowed maximum speed on this street.
+         If set to a negative value, the speed will be retrieved
+         from the associated RoadSystem.
+         @param speed The new allowed maximum speed.
+         */
+        void setMaxSpeed(const double speed);
+
+        /**
+         Returns the allowed maximum speed on this street.
+         @return The currently allowed maximum speed.
+         */
+        double getMaxSpeed() const;
+
+        /**
+         Sets the type of this street.
+         This type describes how big the street is, e.g. a street to private houses
+         or a big motorway between towns.
+         If set to TYPE::DEFAULT the RoadSystem will be queried for the type.
+         @param type The type to set.
+         */
+        void setType(const TYPE type);
+
+        /**
+         Returns the type of this street.
+         @param type The type of this street.
+         */
+        TYPE getType() const;
+
+        /**
+         Sets the number of lanes for the given direction.
+         New lanes will start empty but will have the TURN_THROUGH flag set.
+         @param direction The direction to set. The actual value does not matter,
+                     only the sign of it will be interpreted.
+         @param count The new number of lanes in that direction.
+         @return An integer with the number of lanes in the given direction. Note that
+                 a value of 2 means that the lanes 1 and 2 exists.
+         */
+        void setLaneCount(const int direction, unsigned int count);
+
+        /**
+         Returns the number of lanes for the given direction.
+         @param direction The direction to return. The actual value does not matter,
+                     only the sign of it will be interpreted.
+         @return An integer with the number of lanes in the given direction. Note that
+                 a value of 2 means that the lanes 1 and 2 exists.
+         */
+        unsigned int getLaneCount(const int direction);
+
+        /**
+         Sets the flags of a lane.
+         This overwrites the current flags of a lane.
+         To set a single flag, you have to call setLaneFlags(lane, getLaneFlags(lane) | TURN_RIGHT).
+         @param lane The number of the lane.
+         @param flags The flags to set.
+         */
+        void setLaneFlags(const int lane, const LANEFLAG flags);
+
+        /**
+         Returns the current flags of a lane.
+         @param lane The lane to get the flags of.
+         */
+        LANEFLAG getLaneFlags(const int lane) const;
+
+        /**
+         Returns the set containing the vehicles on a lane.
+         The returned set can be modified.
+         @param lane The lane to get the vehicles of.
+         @return A set with the vehicles of this lane.
+         */
+        set<Vehicle>* getLaneVehicles(const int lane);
+
+        /**
+         Returns the vehicle density of one direction of the street.
+         @param direction The direction to return. The actual value does not matter,
+                     only the sign of it will be interpreted.
+         @return The density of this direction.
+         */
+        double getLaneDensity(const int direction);
+
+        /**
+         Returns the time it needs to travel the street.
+         This time is based on the length of the street but variies depending
+         from the amount of vehicles currently driving over it.
+         @param direction The direction to return. The actual value does not matter,
+                     only the sign of it will be interpreted.
+         @return The time it probably needs to travel along this street.
+         */
+        time_duration getLaneTravelTime(const int direction) const;
+
+        /**
+         Returns the maximal number of vehicles that can drive into one direction.
+         @note Even when the method expects a lane as parameter, the returned value is
+               calculated for one direction and not for one lane. This also means that
+               all lanes into the same direction return the same value.
+         @param direction The direction to return. The actual value does not matter,
+                     only the sign of it will be interpreted.
+         @return The maximum number of vehicles that fit on this street in the given direction.
+         */
+        unsigned int getLaneMaxVehicles(const int direction) const;
+
+        /**
+         Returns the set of arrival times.
+         In the mesosimulation these are the arrival times of the vehicles
+         on this lanes. In the microsimulation this set should be empty.
+         @param direction The direction to return. The actual value does not matter,
+                     only the sign of it will be interpreted.
+         @return A set with the arrival times of the vehicle in the given direction.
+         */
+        multiset<ptime>* getLaneArrivalTimes(const int direction);
+
+        /**
+         Calculates a destination-position for a vehicle.
+         Since vehicle on outer lanes should not drive to the actual position of the node,
+         this method calculates a translated position based on the node and the actual lane.
+         @param nodeId The id of the node that is the destination.
+         @param lane The number of the lane that is driven on.
+         @return The position to drive to.
+         */
+        Vec2f getRelativeNodePosition(ID nodeId, int lane);
+};
+
+#endif // STREET_H

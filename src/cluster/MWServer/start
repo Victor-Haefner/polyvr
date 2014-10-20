@@ -1,0 +1,2 @@
+#!/bin/bash
+export OSG_LOAD_LIBS="OSGEffectGroups:OSGContribTrapezoidalShadowMaps" && ./VRServer -c Multicast -n $1 -s 0.0:400x200+100+100 -s 0.0:400x200+100+500

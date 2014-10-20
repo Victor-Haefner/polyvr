@@ -1,0 +1,30 @@
+#ifndef VRPYMATERIAL_H_INCLUDED
+#define VRPYMATERIAL_H_INCLUDED
+
+#include "core/objects/material/VRMaterial.h"
+#include "VRPyBase.h"
+
+struct VRPyMaterial : VRPyBaseT<OSG::VRMaterial> {
+    static PyMemberDef members[];
+    static PyMethodDef methods[];
+
+    static PyObject* getAmbient(VRPyMaterial* self);
+    static PyObject* setAmbient(VRPyMaterial* self, PyObject* args);
+    static PyObject* getDiffuse(VRPyMaterial* self);
+    static PyObject* setDiffuse(VRPyMaterial* self, PyObject* args);
+    static PyObject* getSpecular(VRPyMaterial* self);
+    static PyObject* setSpecular(VRPyMaterial* self, PyObject* args);
+
+    static PyObject* setPointSize(VRPyMaterial* self, PyObject* args);
+    static PyObject* setLineWidth(VRPyMaterial* self, PyObject* args);
+    static PyObject* setWireFrame(VRPyMaterial* self, PyObject* args);
+
+    static PyObject* setQRCode(VRPyMaterial* self, PyObject* args);
+
+    static PyObject* setMagMinFilter(VRPyMaterial* self, PyObject* args);
+    static PyObject* setVertexProgram(VRPyMaterial* self, PyObject* args);
+    static PyObject* setFragmentProgram(VRPyMaterial* self, PyObject* args);
+    static PyObject* setGeometryProgram(VRPyMaterial* self, PyObject* args);
+};
+
+#endif // VRPYMATERIAL_H_INCLUDED

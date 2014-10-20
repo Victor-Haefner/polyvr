@@ -1,0 +1,82 @@
+#include "VRPyBase.h"
+
+
+PyObject* VRPyBase::err = NULL;
+
+vector<PyObject*> VRPyBase::pyListToVector(PyObject *v) {
+    PyObject *pi;
+    int N = PyList_Size(v);
+    vector<PyObject*> res;
+    for (int i=0; i<N; i++) {
+        pi = PyList_GetItem(v, i);
+        res.push_back(pi);
+    }
+    return res;
+}
+
+vector<PyObject*> VRPyBase::parseList(PyObject *args) {
+    PyObject* v;
+    if (! PyArg_ParseTuple(args, "O", &v)) return vector<PyObject*>();
+    return pyListToVector(v);
+}
+
+OSG::Vec3f VRPyBase::parseVec3fList(PyObject *li) {
+    vector<PyObject*> lis = pyListToVector(li);
+    if (lis.size() != 3) return OSG::Vec3f(0,0,0);
+    float x,y,z;
+    x = PyFloat_AsDouble(lis[0]);
+    y = PyFloat_AsDouble(lis[1]);
+    z = PyFloat_AsDouble(lis[2]);
+    return OSG::Vec3f(x,y,z);
+}
+
+OSG::Vec2f VRPyBase::parseVec2f(PyObject *args) {
+    float x,y; x=y=0;
+    if (! PyArg_ParseTuple(args, "ff", &x, &y)) return OSG::Vec2f();
+    return OSG::Vec2f(x,y);
+}
+
+OSG::Vec3f VRPyBase::parseVec3f(PyObject *args) {
+    float x,y,z; x=y=z=0;
+    if (! PyArg_ParseTuple(args, "fff", &x, &y, &z)) return OSG::Vec3f();
+    return OSG::Vec3f(x,y,z);
+}
+
+OSG::Vec4f VRPyBase::parseVec4f(PyObject *args) {
+    float x,y,z,w; x=y=z=w=0;
+    if (! PyArg_ParseTuple(args, "ffff", &x, &y, &z, &w)) return OSG::Vec4f();
+    return OSG::Vec4f(x,y,z,w);
+}
+
+float VRPyBase::parseFloat(PyObject *args) {
+    float x; x=0;
+    if (! PyArg_ParseTuple(args, "f", &x)) return 0;
+    return x;
+}
+
+bool VRPyBase::parseBool(PyObject *args) {
+    int x; x=0;
+    if (! PyArg_ParseTuple(args, "i", &x)) return 0;
+    return x;
+}
+
+int VRPyBase::parseInt(PyObject *args) {
+    int x; x=0;
+    if (! PyArg_ParseTuple(args, "i", &x)) return 0;
+    return x;
+}
+
+string VRPyBase::parseString(PyObject *args) {
+    PyObject* o = 0;
+    if (! PyArg_ParseTuple(args, "O", &o)) return "";
+    return PyString_AsString(o);
+}
+
+PyObject* VRPyBase::toPyTuple(OSG::Vec3f v) {
+    PyObject* res = PyList_New(3);
+    for (int i=0; i<3; i++) PyList_SetItem(res, i, PyFloat_FromDouble(v[i]));
+    return res;
+}
+
+template<class T>
+PyTypeObject VRPyBaseT<T>::type = NULL;

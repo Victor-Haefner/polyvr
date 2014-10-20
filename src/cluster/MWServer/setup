@@ -1,0 +1,3 @@
+#!/bin/bash
+gcc VRServer.cpp -lOSGBase -lOSGContribTrapezoidalShadowMaps -lOSGCluster -lOSGDrawable -lOSGEffectGroups -lOSGFileIO -lOSGGroup -lOSGImageFileIO -lOSGState -lOSGSystem -lOSGUtil -lOSGText -lOSGWindow -lOSGWindowGLUT -lOSGWindowX -lGLU -lGL -lSM -lICE -lX11 -lXext -lglut -lXmu -lXi -lboost_system -o VRServer
+
