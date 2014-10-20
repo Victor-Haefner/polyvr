@@ -2619,3 +2619,7 @@ Initialising component "com.babiel.dfg.js.TeaserNavigationComponent" failed. Typ
 [1020/190608:ERROR:renderer_main.cc(226)] Running without renderer sandbox
 [1020/190608:ERROR:renderer_main.cc(226)] Running without renderer sandbox
 [1020/190608:INFO:CONSOLE(0)] "event.returnValue is deprecated. Please use the standard event.preventDefault() instead.", source:  (0)
+[1020/230442:ERROR:renderer_main.cc(226)] Running without renderer sandbox
+[1020/230442:ERROR:renderer_main.cc(226)] Running without renderer sandbox
+[1020/235153:ERROR:renderer_main.cc(226)] Running without renderer sandbox
+[1020/235153:ERROR:renderer_main.cc(226)] Running without renderer sandbox

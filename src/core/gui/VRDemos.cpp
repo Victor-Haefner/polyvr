@@ -59,16 +59,11 @@ VRDemos::VRDemos() {
     initMenu();
     scanFolder("examples");
     loadCfg();
-    updateScenesList();
-    updateTable();
+    updateTable("examples_tab");
 
     setToolButtonCallback("toolbutton1", sigc::mem_fun(*this, &VRDemos::on_new_clicked));
     setToolButtonCallback("toolbutton5", sigc::mem_fun(*this, &VRDemos::on_saveas_clicked));
     setToolButtonCallback("toolbutton21", sigc::mem_fun(*this, &VRDemos::on_load_clicked));
-
-    Glib::RefPtr<Gtk::CellRendererToggle> crt;
-    crt = Glib::RefPtr<Gtk::CellRendererToggle>::cast_static(VRGuiBuilder()->get_object("cellrenderertoggle3"));
-    crt->signal_toggled().connect( sigc::mem_fun(*this, &VRDemos::on_toggle_scene_fav) );
 }
 
 void VRDemos::scanFolder(string folder) {
@@ -145,9 +140,9 @@ void VRDemos::setButton(demoEntry* e) {
     b->show_all();
 }
 
-void VRDemos::updateTable() {
+void VRDemos::updateTable(string t) {
     Gtk::Table* tab;
-    VRGuiBuilder()->get_widget("demos_tab", tab);
+    VRGuiBuilder()->get_widget(t, tab);
 
     int x,y;
 
@@ -174,9 +169,9 @@ void VRDemos::updateTable() {
     tab->show();
 }
 
-void VRDemos::clearTable() {
+void VRDemos::clearTable(string t) {
     Gtk::Table* tab;
-    VRGuiBuilder()->get_widget("demos_tab", tab);
+    VRGuiBuilder()->get_widget(t, tab);
     for (auto d : demos) {
         demoEntry* e = d.second;
         if(!e->favorite) continue;
@@ -206,7 +201,7 @@ void VRDemos::setGuiState(demoEntry* e) {
 void VRDemos::addEntry(string path, bool running) {
     if (demos.count(path)) return;
 
-    clearTable();
+    clearTable("examples_tab");
 
     demoEntry* e = new demoEntry();
     e->path = path;
@@ -215,9 +210,8 @@ void VRDemos::addEntry(string path, bool running) {
     e->pxm_path = path.substr(0,path.size()-4)+".png";
     setButton(e);
 
-    updateTable();
+    updateTable("examples_tab");
     setGuiState(e);
-    updateScenesList();
 }
 
 void VRDemos::initMenu() {
@@ -237,12 +231,11 @@ void VRDemos::on_menu_delete() {
 
     if (d->running) toggleDemo(d); // close demo if it is running
 
-    clearTable();
+    clearTable("examples_tab");
     demos.erase(d->path);
     remove(d->path.c_str());
     delete d;
-    updateScenesList();
-    updateTable();
+    updateTable("examples_tab");
 }
 
 void VRDemos::on_menu_advanced() {
@@ -266,23 +259,6 @@ void VRDemos::on_advanced_start() {
     toggleDemo(current_demo); // start demo
 
     if (no_scripts) VRSceneManager::get()->getActiveScene()->disableAllScripts();
-}
-
-void VRDemos::updateScenesList() {
-    Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("demo_catalog"));
-    store->clear();
-
-    map<string, demoEntry*>::iterator itr;
-    Gtk::TreeModel::iterator sitr;
-    Gtk::TreeStore::Row row;
-    for (itr = demos.begin(); itr != demos.end(); itr++) {
-        demoEntry* e = itr->second;
-        sitr = store->append();
-        row = *sitr;
-        gtk_list_store_set (store->gobj(), row.gobj(), 0, e->path.c_str(), -1);
-        gtk_list_store_set (store->gobj(), row.gobj(), 1, e->favorite, -1);
-        gtk_list_store_set (store->gobj(), row.gobj(), 2, e, -1);
-    }
 }
 
 void VRDemos::saveCfg() {
@@ -312,23 +288,12 @@ void VRDemos::loadCfg() {
     }
 }
 
-void VRDemos::on_toggle_scene_fav(string path) {
-    Glib::RefPtr<Gtk::ListStore> store  = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("demo_catalog"));
-    Gtk::TreeModel::iterator iter = store->get_iter(path);
-    if (!iter) return;
-
-    // set the cell with new name
-    scenes_columns cols;
-    Gtk::TreeModel::Row row = *iter;
-    bool b = !row.get_value(cols.favs);
-    row[cols.favs] = b;
-
-    // do something
-    clearTable();
+void VRDemos::on_toggle_scene_fav(string path) { // TODO
+    /*clearTable("favorites_tab");
     demoEntry* e = (demoEntry*)row.get_value(cols.obj);
     e->favorite = b;
-    updateTable();
-    saveCfg();
+    updateTable("favorites_tab");
+    saveCfg();*/
 }
 
 void VRDemos::on_diag_save_clicked() {

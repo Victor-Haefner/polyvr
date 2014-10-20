@@ -1075,6 +1075,12 @@ cave allocated</property>
       <column type="gchararray"/>
     </columns>
   </object>
+  <object class="GtkListStore" id="script_list">
+    <columns>
+      <!-- column-name script -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
   <object class="GtkListStore" id="prim_list">
     <columns>
       <!-- column-name prims -->
@@ -1101,12 +1107,6 @@ cave allocated</property>
       <!-- column-name foreground -->
       <column type="gchararray"/>
       <!-- column-name background -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
-  <object class="GtkListStore" id="script_list">
-    <columns>
-      <!-- column-name script -->
       <column type="gchararray"/>
     </columns>
   </object>
@@ -1410,11 +1410,17 @@ cave allocated</property>
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <child>
-                                  <object class="GtkTable" id="demos_tab">
+                                  <object class="GtkTable" id="favorites_tab">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
                                     <property name="n_columns">2</property>
                                     <property name="homogeneous">True</property>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
                                     <child>
                                       <placeholder/>
                                     </child>
@@ -1560,29 +1566,160 @@ cave allocated</property>
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkTreeView" id="treeview11">
+                                  <object class="GtkTable" id="examples_tab">
                                     <property name="visible">True</property>
-                                    <property name="can_focus">True</property>
-                                    <property name="model">demo_catalog</property>
+                                    <property name="can_focus">False</property>
+                                    <property name="n_columns">2</property>
+                                    <property name="homogeneous">True</property>
                                     <child>
-                                      <object class="GtkTreeViewColumn" id="treeviewcolumn24">
-                                        <property name="title" translatable="yes">Scenes</property>
-                                        <child>
-                                          <object class="GtkCellRendererText" id="cellrenderertext34"/>
-                                          <attributes>
-                                            <attribute name="text">0</attribute>
-                                          </attributes>
-                                        </child>
-                                        <child>
-                                          <object class="GtkCellRendererToggle" id="cellrenderertoggle3">
-                                            <property name="xpad">10</property>
-                                            <property name="indicator_size">15</property>
-                                          </object>
-                                          <attributes>
-                                            <attribute name="active">1</attribute>
-                                          </attributes>
-                                        </child>
-                                      </object>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
                                     </child>
                                   </object>
                                   <packing>
@@ -1593,7 +1730,7 @@ cave allocated</property>
                                   <object class="GtkLabel" id="label89">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="label" translatable="yes">Scenes</property>
+                                    <property name="label" translatable="yes">Examples</property>
                                   </object>
                                   <packing>
                                     <property name="position">1</property>

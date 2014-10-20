@@ -35,9 +35,8 @@ class VRDemos {
 
         void setButton(demoEntry* e);
 
-        void clearTable();
-        void updateTable();
-        void updateScenesList();
+        void clearTable(string t);
+        void updateTable(string t);
 
         void setGuiState(demoEntry* e);
         void toggleDemo(demoEntry* e);
