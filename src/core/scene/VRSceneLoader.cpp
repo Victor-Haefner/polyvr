@@ -24,6 +24,8 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+VRScene* VRSceneLoader_current_scene = 0;
+
 void fixEmptyNames(NodeRecPtr o, string parentName = "NAN", int iChild = 0) {
     string name;
     if (OSG::getName(o)) {
@@ -303,6 +305,10 @@ VRSceneLoader* VRSceneLoader::get() {
 
 // get only the object for a single geometry
 GeometryRecPtr VRSceneLoader::loadGeometry(string file, string object) {
+    file = VRSceneLoader_current_scene->getWorkdir() + '/' + file;
+
+    cout << "loadGeometry " << file << endl;
+
     if (cached_files.count(file) == 0) load(file);
     if (cached_files.count(file) == 0) {
         cout << "\n VRSceneLoader::loadGeometry - Warning: " << file << " not in cache" << flush;
@@ -323,6 +329,10 @@ GeometryRecPtr VRSceneLoader::loadGeometry(string file, string object) {
 }
 
 VRTransform* VRSceneLoader::load3DContent(string filepath, VRObject* parent, bool reload) {
+    filepath = VRSceneLoader_current_scene->getWorkdir() + '/' + filepath;
+
+    cout << "load3DContent " << filepath << endl;
+
     VRObject* root;
     if(cached_files.count(filepath) == 0 or reload) load(filepath);
     NodeRecPtr osg = cached_files[filepath].root;
@@ -469,6 +479,7 @@ void VRSceneLoader::loadScene(string path) {
     VRScene* scene = new VRScene();
     scene->setPath(path);
     scene->setName(scene->getFileName());
+    VRSceneLoader_current_scene = scene;
 
     VRTimer timer;
     timer.start("total_time");

@@ -677,6 +677,8 @@
 		<Unit filename="src/core/tools/VRText.h" />
 		<Unit filename="src/core/utils/VRDoublebuffer.cpp" />
 		<Unit filename="src/core/utils/VRDoublebuffer.h" />
+		<Unit filename="src/core/utils/VRFlags.cpp" />
+		<Unit filename="src/core/utils/VRFlags.h" />
 		<Unit filename="src/core/utils/VRFunction.h" />
 		<Unit filename="src/core/utils/VRInternalMonitor.cpp" />
 		<Unit filename="src/core/utils/VRInternalMonitor.h" />
