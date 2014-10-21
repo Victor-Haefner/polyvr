@@ -58,8 +58,10 @@ class scenes_columns : public Gtk::TreeModelColumnRecord {
 VRDemos::VRDemos() {
     initMenu();
     scanFolder("examples");
-    loadCfg();
     updateTable("examples_tab");
+
+
+    loadCfg();
 
     setToolButtonCallback("toolbutton1", sigc::mem_fun(*this, &VRDemos::on_new_clicked));
     setToolButtonCallback("toolbutton5", sigc::mem_fun(*this, &VRDemos::on_saveas_clicked));
@@ -83,10 +85,10 @@ void VRDemos::scanFolder(string folder) {
         demos[path] = new demoEntry();
         demos[path]->path = path;
         demos[path]->pxm_path = folder+"/"+name+".png";
+        demos[path]->write_protected = true;
     }
 
-    map<string, demoEntry*>::iterator itr;
-    for (itr = demos.begin(); itr != demos.end(); itr++) setButton(itr->second);
+    for (auto d : demos) setButton(d.second);
 }
 
 void VRDemos::updatePixmap(demoEntry* e, Gtk::Image* img_pxb) {
@@ -340,8 +342,13 @@ void VRDemos::toggleDemo(demoEntry* e) {
     setVPanedSensivity("vpaned1", !e->running);
     setNotebookSensivity("notebook3", !e->running);
     VRSceneManager::get()->removeScene(VRSceneManager::get()->getActiveScene());
+
     e->running = !e->running;
-    if (e->running) VRSceneLoader::get()->loadScene(e->path);
+    if (e->running) {
+        VRSceneLoader::get()->loadScene(e->path);
+        VRSceneManager::get()->getActiveScene()->setFlag(SCENE_WRITE_PROTECTED, e->write_protected);
+    }
+
     current_demo = e->running ? e : 0;
     setGuiState(e);
     VRGuiSignals::get()->getSignal("scene_changed")->trigger(); // update gui

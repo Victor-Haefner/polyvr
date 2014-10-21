@@ -377,6 +377,8 @@ void saveScene(string path) {
     if (scene == 0) return;
     if (path == "") path = scene->getPath();
 
+    if (scene->getFlag(OSG::SCENE_WRITE_PROTECTED)) return;
+
     OSG::VRSceneLoader::get()->saveScene(path);
     string ipath = scene->getWorkdir() + '/'+  scene->getIcon();
     saveSnapshot(ipath);

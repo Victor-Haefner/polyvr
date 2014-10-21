@@ -12,12 +12,17 @@
 #include "core/navigation/VRNavigator.h"
 #include "core/networking/VRNetworkManager.h"
 #include "core/utils/VRName.h"
+#include "core/utils/VRFlags.h"
 #include "VRBackground.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRObject;
+
+enum {
+    SCENE_WRITE_PROTECTED
+};
 
 class VRScene : public VRObjectManager,
                 public VRLightManager,
@@ -30,7 +35,8 @@ class VRScene : public VRObjectManager,
                 public VRNetworkManager,
                 public VRName,
                 public VRBackground,
-                public VRRenderManager {
+                public VRRenderManager,
+                public VRFlags {
     private:
         string path;
         string icon;

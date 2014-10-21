@@ -22,6 +22,7 @@ struct demoEntry {
     bool running = false;
     bool pixmap = false;
     bool favorite = true;
+    bool write_protected = false;
 };
 
 class VRDemos {

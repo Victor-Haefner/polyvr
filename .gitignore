@@ -7,3 +7,4 @@ bin
 .local
 examples/.cfg
 *.o
+wblog.log

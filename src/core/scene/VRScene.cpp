@@ -17,6 +17,34 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+VRScene::VRScene() {
+    cout << "Init Scene" << endl;
+
+    root = new VRObject("Root");
+    setNameSpace("Scene");
+    setName("Scene");
+
+    icon = "Scene.png";
+    addFlag(SCENE_WRITE_PROTECTED);
+
+    //scene update functions
+    addUpdateFkt(updateObjectsFkt);
+    addUpdateFkt(updateAnimationsFkt);
+    addUpdateFkt(updatePhysicsFkt);
+
+    initDevices();
+    VRMaterial::getDefault()->resetDefault();
+
+    cout << " init scene done\n";
+}
+
+VRScene::~VRScene() {
+    root->destroy();
+    VRGroup::clearGroups();
+    VRLightBeacon::getAll().clear();
+    VRCamera::getAll().clear();
+}
+
 void VRScene::initDevices() { // TODO: remove this after refactoring the navigation stuff
     VRSetup* setup = VRSetupManager::get()->getCurrent();
 
@@ -36,32 +64,6 @@ void VRScene::initDevices() { // TODO: remove this after refactoring the navigat
     setup->updateDeviceDynNodes(getRoot());
 
     cout << " init devices done\n";
-}
-
-VRScene::VRScene() {
-    cout << "Init Scene" << endl;
-    root = new VRObject("Root");
-    setNameSpace("Scene");
-    setName("Scene");
-
-    icon = "Scene.png";
-
-    //scene update functions
-    addUpdateFkt(updateObjectsFkt);
-    addUpdateFkt(updateAnimationsFkt);
-    addUpdateFkt(updatePhysicsFkt);
-
-    initDevices();
-    cout << " init scene done\n";
-
-    VRMaterial::getDefault()->resetDefault();
-}
-
-VRScene::~VRScene() {
-    root->destroy();
-    VRGroup::clearGroups();
-    VRLightBeacon::getAll().clear();
-    VRCamera::getAll().clear();
 }
 
 void VRScene::setPath(string path) { this->path = path; }
