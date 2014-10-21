@@ -57,8 +57,7 @@ class scenes_columns : public Gtk::TreeModelColumnRecord {
 
 VRDemos::VRDemos() {
     initMenu();
-    scanFolder("examples");
-    updateTable("examples_tab");
+    scanFolder("examples", "examples_tab");
 
 
     loadCfg();
@@ -68,7 +67,7 @@ VRDemos::VRDemos() {
     setToolButtonCallback("toolbutton21", sigc::mem_fun(*this, &VRDemos::on_load_clicked));
 }
 
-void VRDemos::scanFolder(string folder) {
+void VRDemos::scanFolder(string folder, string table) {
     DIR* dir = opendir(folder.c_str());
     if (dir == NULL) { perror("Error: no local directory scene"); return; }
 
@@ -86,9 +85,12 @@ void VRDemos::scanFolder(string folder) {
         demos[path]->path = path;
         demos[path]->pxm_path = folder+"/"+name+".png";
         demos[path]->write_protected = true;
+        demos[path]->table = table;
     }
 
     for (auto d : demos) setButton(d.second);
+
+    updateTable(table);
 }
 
 void VRDemos::updatePixmap(demoEntry* e, Gtk::Image* img_pxb) {
@@ -150,18 +152,16 @@ void VRDemos::updateTable(string t) {
 
     Gtk::AttachOptions opts = Gtk::FILL|Gtk::EXPAND;
 
-    //tab->resize(0,0);
     int N = 4;
     for (auto d : demos) if(d.second->favorite) N++;
     tab->resize(N*0.5+1, 2);
 
     int i = 0;
     for (auto d : demos) {
-        demoEntry* e = d.second;
-        if(!e->favorite) continue;
+        if (d.second->table != t) continue;
+        if (d.second->button == 0) continue;
 
-        Gtk::Widget* w = e->button;
-        if (w == 0) continue;
+        Gtk::Widget* w = d.second->button;
         x = i%2;
         y = i/2;
         tab->attach( *w, x, x+1, y, y+1, opts, opts, 10, 10);
@@ -175,10 +175,9 @@ void VRDemos::clearTable(string t) {
     Gtk::Table* tab;
     VRGuiBuilder()->get_widget(t, tab);
     for (auto d : demos) {
-        demoEntry* e = d.second;
-        if(!e->favorite) continue;
+        if (d.second->table != t) continue;
 
-        Gtk::Widget* w = e->button;
+        Gtk::Widget* w = d.second->button;
         if (w == 0) continue;
         tab->remove(*w);
     }
@@ -200,19 +199,20 @@ void VRDemos::setGuiState(demoEntry* e) {
     else e->img->set(Gtk::Stock::MEDIA_PLAY, Gtk::ICON_SIZE_BUTTON);
 }
 
-void VRDemos::addEntry(string path, bool running) {
+void VRDemos::addEntry(string path, string table, bool running) {
     if (demos.count(path)) return;
 
-    clearTable("examples_tab");
+    clearTable("favorites_tab");
 
     demoEntry* e = new demoEntry();
     e->path = path;
     demos[path] = e;
     e->running = running;
+    e->table = table;
     e->pxm_path = path.substr(0,path.size()-4)+".png";
     setButton(e);
 
-    updateTable("examples_tab");
+    updateTable("favorites_tab");
     setGuiState(e);
 }
 
@@ -228,16 +228,17 @@ void VRDemos::initMenu() {
 void VRDemos::on_menu_delete() {
     demoEntry* d = current_demo;
     if (d == 0) return;
+    if (d->write_protected == true) return;
 
     if (!askUser("Delete scene " + d->path + " (this will remove it completely from disk!)", "Are you sure you want to delete this scene?")) return;
 
     if (d->running) toggleDemo(d); // close demo if it is running
 
-    clearTable("examples_tab");
+    clearTable("favorites_tab");
     demos.erase(d->path);
     remove(d->path.c_str());
     delete d;
-    updateTable("examples_tab");
+    updateTable("favorites_tab");
 }
 
 void VRDemos::on_menu_advanced() {
@@ -300,7 +301,7 @@ void VRDemos::on_toggle_scene_fav(string path) { // TODO
 
 void VRDemos::on_diag_save_clicked() {
     string path = VRGuiFile::getRelativePath();
-    addEntry(path, true);
+    addEntry(path, "favorites_tab", true);
     saveScene(path);
 }
 
@@ -312,7 +313,7 @@ void VRDemos::on_saveas_clicked() {
 void VRDemos::on_diag_load_clicked() {
     string path = VRGuiFile::getRelativePath();
     if (current_demo) if (current_demo->running) toggleDemo(current_demo); // close demo if it is running
-    if (demos.count(path) == 0) addEntry(path, false);
+    if (demos.count(path) == 0) addEntry(path, "favorites_tab", false);
     toggleDemo(demos[path]);
 }
 
@@ -329,7 +330,7 @@ void VRDemos::on_diag_new_clicked() {
     VRSceneManager::get()->removeScene(VRSceneManager::get()->getActiveScene());
     VRSceneManager::get()->newScene(path);
     VRGuiSignals::get()->getSignal("scene_changed")->trigger();
-    addEntry(path, true);
+    addEntry(path, "favorites_tab", true);
 }
 
 void VRDemos::on_new_clicked() {

@@ -16,6 +16,7 @@ using namespace std;
 struct demoEntry {
     string path;
     string pxm_path;
+    string table;
     Gtk::Button* button = 0;
     Gtk::Label* button_label = 0;
     Gtk::Image* img = 0;
@@ -32,7 +33,7 @@ class VRDemos {
         map<string, demoEntry*> demos;
         VRGuiContextMenu* menu;
 
-        void scanFolder(string folder);
+        void scanFolder(string folder, string table);
 
         void setButton(demoEntry* e);
 
@@ -41,7 +42,7 @@ class VRDemos {
 
         void setGuiState(demoEntry* e);
         void toggleDemo(demoEntry* e);
-        void addEntry(string path, bool running);
+        void addEntry(string path, string table, bool running);
 
         void updatePixmap(demoEntry* e, Gtk::Image* img_pxb);
 
