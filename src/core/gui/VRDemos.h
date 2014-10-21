@@ -49,6 +49,7 @@ class VRDemos {
         void initMenu();
         void on_menu_delete();
         void on_menu_advanced();
+        void on_menu_unpin();
 
         void on_advanced_cancel();
         void on_advanced_start();
@@ -62,8 +63,6 @@ class VRDemos {
 
         void saveCfg();
         int loadCfg();
-
-        void on_toggle_scene_fav(string path);
 
     public:
         VRDemos();

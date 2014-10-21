@@ -219,6 +219,7 @@ void VRDemos::addEntry(string path, string table, bool running) {
 
 void VRDemos::initMenu() {
     menu = new VRGuiContextMenu("DemoMenu");
+    menu->appendItem("DemoMenu", "Unpin", sigc::mem_fun(*this, &VRDemos::on_menu_unpin));
     menu->appendItem("DemoMenu", "Delete", sigc::mem_fun(*this, &VRDemos::on_menu_delete));
     menu->appendItem("DemoMenu", "Advanced..", sigc::mem_fun(*this, &VRDemos::on_menu_advanced));
 
@@ -232,7 +233,6 @@ void VRDemos::on_menu_delete() {
     if (d->write_protected == true) return;
 
     if (!askUser("Delete scene " + d->path + " (this will remove it completely from disk!)", "Are you sure you want to delete this scene?")) return;
-
     if (d->running) toggleDemo(d); // close demo if it is running
 
     clearTable("favorites_tab");
@@ -240,6 +240,22 @@ void VRDemos::on_menu_delete() {
     remove(d->path.c_str());
     delete d;
     updateTable("favorites_tab");
+    saveCfg();
+}
+
+void VRDemos::on_menu_unpin() {
+    demoEntry* d = current_demo;
+    if (d == 0) return;
+    if (d->write_protected == true) return;
+
+    if (!askUser("Forget about " + d->path + " ?", "")) return;
+    if (d->running) toggleDemo(d); // close demo if it is running
+
+    clearTable("favorites_tab");
+    demos.erase(d->path);
+    delete d;
+    updateTable("favorites_tab");
+    saveCfg();
 }
 
 void VRDemos::on_menu_advanced() {
@@ -277,17 +293,13 @@ int VRDemos::loadCfg() {
 
     int N = 0;
     string line, path;
-    while ( getline (file,line) ) { addEntry(line, "favorites_tab", false); N++; }
+    while ( getline (file,line) ) {
+        ifstream f(line.c_str());
+        if (!f.good()) continue;
+        addEntry(line, "favorites_tab", false); N++;
+    }
     file.close();
     return N;
-}
-
-void VRDemos::on_toggle_scene_fav(string path) { // TODO
-    clearTable("favorites_tab");
-    //demoEntry* e = (demoEntry*)row.get_value(cols.obj);
-    //e->favorite = b;
-    updateTable("favorites_tab");
-    saveCfg();
 }
 
 void VRDemos::on_diag_save_clicked() {
@@ -322,6 +334,7 @@ void VRDemos::on_diag_new_clicked() {
     VRSceneManager::get()->newScene(path);
     VRGuiSignals::get()->getSignal("scene_changed")->trigger();
     addEntry(path, "favorites_tab", true);
+    saveScene(path);
 }
 
 void VRDemos::on_new_clicked() {

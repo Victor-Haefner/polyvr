@@ -74,7 +74,7 @@ void VRSceneManager::newScene(string path) {
 
     VRScene* scene = new VRScene();
     scene->setPath(path);
-    scene->setName(scene->getFile());
+    scene->setName(scene->getFileName());
     VRTransform* cam = scene->addCamera("Default");
 
     VRLight* headlight = scene->addLight("Headlight");

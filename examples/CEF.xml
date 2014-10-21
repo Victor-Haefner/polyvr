@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="CEF.xml" name_space="Scene">
+<Scene name_suffix="0" base_name="CEF" name_space="Scene">
   <Objects>
     <Root name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
       <Headlight name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">

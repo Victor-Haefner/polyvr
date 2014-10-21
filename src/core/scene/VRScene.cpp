@@ -68,9 +68,16 @@ void VRScene::initDevices() { // TODO: remove this after refactoring the navigat
 
 void VRScene::setPath(string path) { this->path = path; }
 string VRScene::getPath() { return path; }
-string VRScene::getFileName() { return getFile().substr(0,getFile().size()-4); }
+string VRScene::getFileName() {
+    return getFile().substr(0,getFile().size()-4);
+}
 string VRScene::getIcon() { return getFileName() + ".png"; }
-string VRScene::getFile() { return path.substr(path.find_last_of("\\/")+1, path.size()-1); }
+string VRScene::getFile() {
+    int n = path.find_last_of("\\/");
+    if (n == -1) return path;
+    return path.substr(path.find_last_of("\\/")+1, path.size()-1);
+}
+
 string VRScene::getWorkdir() {
     int n = path.find_last_of("\\/");
     if (n == -1) return ".";
