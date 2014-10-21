@@ -60,9 +60,8 @@ class VRDemos {
         void on_saveas_clicked();
         void on_load_clicked();
 
-
         void saveCfg();
-        void loadCfg();
+        int loadCfg();
 
         void on_toggle_scene_fav(string path);
 

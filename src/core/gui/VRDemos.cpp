@@ -59,8 +59,7 @@ VRDemos::VRDemos() {
     initMenu();
     scanFolder("examples", "examples_tab");
 
-
-    loadCfg();
+    if (loadCfg() == 0) setNotebookPage("notebook2", 1);
 
     setToolButtonCallback("toolbutton1", sigc::mem_fun(*this, &VRDemos::on_new_clicked));
     setToolButtonCallback("toolbutton5", sigc::mem_fun(*this, &VRDemos::on_saveas_clicked));
@@ -214,6 +213,8 @@ void VRDemos::addEntry(string path, string table, bool running) {
 
     updateTable("favorites_tab");
     setGuiState(e);
+    saveCfg();
+    setNotebookPage("notebook2", 0);
 }
 
 void VRDemos::initMenu() {
@@ -265,38 +266,28 @@ void VRDemos::on_advanced_start() {
 }
 
 void VRDemos::saveCfg() {
-    ofstream file("scene/.cfg");
-    for (auto d : demos) file << d.second->path << " " << d.second->favorite << endl;
+    ofstream file("examples/.cfg");
+    for (auto d : demos) if (d.second->table == "favorites_tab") file << d.second->path << endl;
     file.close();
 }
 
-void VRDemos::loadCfg() {
-    ifstream file("scene/.cfg");
-    if (!file.is_open()) return;
-    string line, path;
-    bool fav;
-    map<string, bool> cfg;
-    while ( getline (file,line) ) {
-        stringstream ss(line);
-        ss >> path;
-        ss >> fav;
-        cfg[path] = fav;
-    }
-    file.close();
+int VRDemos::loadCfg() {
+    ifstream file("examples/.cfg");
+    if (!file.is_open()) return 0;
 
-    for (auto d : demos ) {
-        demoEntry* e = d.second;
-        if (cfg.count(e->path)== 0 ) e->favorite = true;
-        else e->favorite = cfg[e->path];
-    }
+    int N = 0;
+    string line, path;
+    while ( getline (file,line) ) { addEntry(line, "favorites_tab", false); N++; }
+    file.close();
+    return N;
 }
 
 void VRDemos::on_toggle_scene_fav(string path) { // TODO
-    /*clearTable("favorites_tab");
-    demoEntry* e = (demoEntry*)row.get_value(cols.obj);
-    e->favorite = b;
+    clearTable("favorites_tab");
+    //demoEntry* e = (demoEntry*)row.get_value(cols.obj);
+    //e->favorite = b;
     updateTable("favorites_tab");
-    saveCfg();*/
+    saveCfg();
 }
 
 void VRDemos::on_diag_save_clicked() {

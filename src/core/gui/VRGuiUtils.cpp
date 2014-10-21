@@ -347,10 +347,16 @@ void setCellRendererCombo(string treeviewcolumn, string combolist, Gtk::TreeMode
     renderer->signal_changed().connect(sig);
 }
 
-void setNoteBookCallback(string nb,  void (* fkt)(GtkNotebook*, GtkNotebookPage*, guint, gpointer), gpointer ptr ) {
+void setNoteBookCallback(string nb,  void (* fkt)(GtkNotebook*, GtkNotebookPage*, guint, gpointer), gpointer ptr) {
     Glib::RefPtr<Gtk::Notebook> nbk;
     nbk = Glib::RefPtr<Gtk::Notebook>::cast_static(VRGuiBuilder()->get_object(nb.c_str()));
     g_signal_connect_after(nbk->gobj(), "switch-page", G_CALLBACK (fkt), ptr);
+}
+
+void setNotebookPage(string nb, int p) {
+    Glib::RefPtr<Gtk::Notebook> nbk;
+    nbk = Glib::RefPtr<Gtk::Notebook>::cast_static(VRGuiBuilder()->get_object(nb.c_str()));
+    nbk->set_current_page(p);
 }
 
 class LStore_ModelColumns : public Gtk::TreeModelColumnRecord {

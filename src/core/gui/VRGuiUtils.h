@@ -59,7 +59,8 @@ void setTreeviewSelectCallback(string treeview, sigc::slot<void> sig);
 void setTableSensivity(string table, bool b);
 void setNotebookSensivity(string nb, bool b);
 void setVPanedSensivity(string vp, bool b);
-void setNoteBookCallback(string nb,  void (* fkt)(GtkNotebook*, GtkNotebookPage*, guint, gpointer) , gpointer ptr = NULL);
+void setNoteBookCallback(string nb, void (* fkt)(GtkNotebook*, GtkNotebookPage*, guint, gpointer) , gpointer ptr = NULL);
+void setNotebookPage(string nb, int p);
 
 bool keySignalProxy(GdkEventKey* e, string k, sigc::slot<void> sig );
 void setExpanderSensivity(string exp, bool b);
