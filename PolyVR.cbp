@@ -102,7 +102,6 @@
 		</Compiler>
 		<Linker>
 			<Add option="-lcef" />
-			<Add option="-lffmpegsumo" />
 			<Add option="-lcef_dll_wrapper" />
 			<Add option="`pkg-config --libs libxml++-2.6`" />
 			<Add option="`pkg-config gtk+-2.0 --libs`" />
@@ -168,13 +167,15 @@
 			<Add option="-lpthread" />
 			<Add option="-ldl" />
 			<Add option="-lm" />
+			<Add option="-lopenal" />
 			<Add option="-lavformat" />
 			<Add option="-lavcodec" />
+			<Add option="-lavdevice" />
 			<Add option="-lswscale" />
 			<Add option="-lavutil" />
 			<Add option="-lqrencode" />
 			<Add option="-ludev" />
-			<Add option="-lao" />
+			<Add option="-lffmpegsumo" />
 			<Add directory="/usr/lib/qt3/lib64" />
 			<Add directory="/usr/X11R6/lib64" />
 			<Add directory="/usr/include/pango-1.0" />
