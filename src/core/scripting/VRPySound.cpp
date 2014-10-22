@@ -62,15 +62,12 @@ PyObject* VRPySound::play(VRPySound* self, PyObject* args) {
 
     string _path = PyString_AsString(path);
 
-    bool _loop = false;
-    if(loop==1)_loop = true;
+    //bool _loop = false;
+    //if(loop==1)_loop = true;
 
-    if(_loop){
-        OSG::VRSoundManager::get().playMusic(_path);
-    }else{
-        OSG::VRSoundManager::get().playSound(_path);
-    }
-
+    //if(_loop) OSG::VRSoundManager::get().playMusic(_path);
+    //else
+    OSG::VRSoundManager::get().playSound(_path);
     Py_RETURN_TRUE;
 }
 

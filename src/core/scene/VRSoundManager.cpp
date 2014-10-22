@@ -1,4 +1,6 @@
 #include "VRSoundManager.h"
+#include "VRSceneManager.h"
+#include "VRScene.h"
 
 extern "C" {
 #include "libavutil/mathematics.h"
@@ -32,9 +34,12 @@ void VRSoundManager::clearSoundMap() {
     for (auto s : sounds) avformat_close_input(&s.second);
 }
 
-void VRSoundManager::playSound(const string &filename) {
+void VRSoundManager::playSound(string filename) {
+    filename = VRSceneManager::get()->getActiveScene()->getWorkdir() + '/' + filename;
+    cout << "playSound " << filename << endl;
     AVFormatContext* sound = getSound(filename);
-
+    if (sound == 0) return;
+    cout << "A\n";
 
     int stream_id = -1;
     for (uint i=0; i < sound->nb_streams; i++){
@@ -44,11 +49,14 @@ void VRSoundManager::playSound(const string &filename) {
         }
     }
     if (stream_id == -1) return;
+    cout << "B\n";
 
     AVCodecContext* ctx = sound->streams[stream_id]->codec;
     AVCodec* codec = avcodec_find_decoder(ctx->codec_id);
     if (codec == 0) return;
+    cout << "C\n";
     if (avcodec_open2(ctx, codec, NULL) < 0) return;
+    cout << "D\n";
 
     int driver = ao_default_driver_id();
     ao_sample_format sformat;
@@ -89,7 +97,7 @@ void VRSoundManager::playSound(const string &filename) {
     }
 }
 
-AVFormatContext* VRSoundManager::getSound(const string &filename) {
+AVFormatContext* VRSoundManager::getSound(string filename) {
     if (sounds.count(filename)) return sounds[filename];
 
     AVFormatContext* sound = avformat_alloc_context();
@@ -102,7 +110,7 @@ AVFormatContext* VRSoundManager::getSound(const string &filename) {
     return sound;
 }
 
-void VRSoundManager::playMusic(const std::string &filename) {
+void VRSoundManager::playMusic(string filename) {
     /*stopMusic();
 
     _system->createStream(filename.c_str(), FMOD_HARDWARE | FMOD_LOOP_NORMAL | FMOD_2D, 0, &_backgroundMusic);

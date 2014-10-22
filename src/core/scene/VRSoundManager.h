@@ -18,7 +18,6 @@ class VRSoundManager {
         map<string, AVFormatContext*> sounds;
 
         VRSoundManager();
-        VRSoundManager(const VRSoundManager& ref);
 
         /**
          * Loads the sound from disk or returns it from the internal cache
@@ -27,7 +26,7 @@ class VRSoundManager {
          * @param filename The file to be loaded; must be
          * @return May return nullptr if sound couldn't be loaded from file or cache
          */
-        AVFormatContext* getSound(const string &filename);
+        AVFormatContext* getSound(string filename);
 
         /**
          * Clears the sound map and frees used memory
@@ -43,7 +42,7 @@ class VRSoundManager {
          * @param filename The name of the music file
          * @see initialize()
          */
-        void playMusic(const string &filename);
+        void playMusic(string filename);
 
         /**
          * Stops the currently playing music.
@@ -56,7 +55,7 @@ class VRSoundManager {
          * @param filename The name of the sound file
          * @see initialize()
          */
-        void playSound(const string &filename);
+        void playSound(string filename);
 
         /**
          * Play the sound with the given filename in 3D mode.
@@ -66,7 +65,7 @@ class VRSoundManager {
          * @see playSound()
          * @see initialize()
          */
-        void playPositionalSound(const string &filename, Vec3f vec);
+        void playPositionalSound(string filename, Vec3f vec);
 
         /**
          * Stops all currently playing sounds. Note that this will also
