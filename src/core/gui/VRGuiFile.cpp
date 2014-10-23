@@ -14,13 +14,14 @@ void VRGuiFile::init() {
     setButtonCallback("button3", sigc::ptr_fun(VRGuiFile::close));
     setButtonCallback("button9", sigc::ptr_fun(VRGuiFile::apply));
 //<string, sigc::slot<void> >
-    VRGuiFile::dialog->signal_key_release_event().connect( sigc::bind( sigc::ptr_fun(keySignalProxy), "Return", sigc::ptr_fun(VRGuiFile::apply) ) );
+    dialog->signal_key_release_event().connect( sigc::bind( sigc::ptr_fun(keySignalProxy), "Return", sigc::ptr_fun(VRGuiFile::apply) ) );
+    dialog->set_action(Gtk::FILE_CHOOSER_ACTION_OPEN);
 }
 
 void VRGuiFile::open(bool folder, string b1, string b2) {
-    if (VRGuiFile::dialog == 0) init();
+    if (dialog == 0) init();
     setLabel("openFileWarning", "");
-    VRGuiFile::dialog->show();
+    dialog->show();
 
     Gtk::Button *bt1, *bt2;
     VRGuiBuilder()->get_widget("button9", bt1);
@@ -29,16 +30,44 @@ void VRGuiFile::open(bool folder, string b1, string b2) {
     bt2->set_label(b2);
 }
 
+void VRGuiFile::addFilter(string name, string pattern) {
+    if (dialog == 0) init();
+    dialog->set_action(Gtk::FILE_CHOOSER_ACTION_OPEN);
+
+    Gtk::FileFilter* filter = new Gtk::FileFilter();
+    filter->set_name(name);
+    filter->add_pattern(pattern);
+
+    dialog->add_filter(*filter);
+}
+
+void VRGuiFile::setFile(string file) {
+    if (dialog == 0) init();
+    dialog->set_action(Gtk::FILE_CHOOSER_ACTION_SAVE);
+    dialog->set_current_name(file);
+}
+
+void VRGuiFile::gotoPath(string path) {
+    if (dialog == 0) init();
+    dialog->set_current_folder(path);
+}
+
 void VRGuiFile::apply() {
-    if (VRGuiFile::dialog == 0) init();
-    VRGuiFile::dialog->hide();
-    VRGuiFile::sigApply();
+    if (dialog == 0) init();
+    dialog->hide();
+    sigApply();
 }
 
 void VRGuiFile::close() {
-    if (VRGuiFile::dialog == 0) init();
-    VRGuiFile::dialog->hide();
-    VRGuiFile::sigClose();
+    if (dialog == 0) init();
+    dialog->hide();
+    sigClose();
+    dialog->set_action(Gtk::FILE_CHOOSER_ACTION_OPEN);
+
+    for (auto f : dialog->list_filters()) {
+        dialog->remove_filter(*f);
+        delete &(*f);
+    }
 }
 
 void VRGuiFile::setCallbacks(sigc::slot<void> sa, sigc::slot<void> sc) {

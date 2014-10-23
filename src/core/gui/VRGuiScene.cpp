@@ -710,8 +710,16 @@ void VRGuiScene::on_menu_add_animation() {
 
 void VRGuiScene::on_menu_add_file() {
     if(!selected_itr) return;
+    VRScene* scene = VRSceneManager::get()->getActiveScene();
+    if (scene == 0) return;
+    VRGuiFile::gotoPath( scene->getWorkdir() );
     VRGuiFile::setCallbacks( sigc::mem_fun(*this, &VRGuiScene::on_collada_import_clicked) );
-    VRGuiFile::open();
+    VRGuiFile::addFilter("All", "*");
+    VRGuiFile::addFilter("COLLADA", "*.dae");
+    VRGuiFile::addFilter("VRML", "*.wrl");
+    VRGuiFile::addFilter("3DS", "*.3ds");
+    VRGuiFile::addFilter("OBJ", "*.obj");
+    VRGuiFile::open(false, "Load");
 }
 
 void VRGuiScene::on_menu_add_light() {

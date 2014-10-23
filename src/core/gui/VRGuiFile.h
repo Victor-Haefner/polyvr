@@ -22,6 +22,10 @@ class VRGuiFile {
         static string getPath();
         static string getRelativePath();
 
+        static void gotoPath(string path);
+        static void setFile(string file);
+        static void addFilter(string name, string pattern);
+
         static void setCallbacks(sig sa = sig(), sig sc = sig());
 };
 
