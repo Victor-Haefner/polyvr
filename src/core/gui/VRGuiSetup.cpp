@@ -702,6 +702,8 @@ VRGuiSetup::VRGuiSetup() {
     Glib::RefPtr<Gtk::Entry> entry;
     Glib::RefPtr<Gtk::Button> button;
 
+    setLabel("label13", "VR Setup: None");
+
     setButtonCallback("button25", sigc::mem_fun(*this, &VRGuiSetup::on_connect_mw_clicked) );
 
     setToolButtonCallback("toolbutton10", sigc::mem_fun(*this, &VRGuiSetup::on_new_clicked) );
@@ -881,6 +883,8 @@ void VRGuiSetup::updateSetup() {
 
     on_treeview_select();
     tree_view->expand_all();
+
+    setLabel("label13", "VR Setup: " + VRSetupManager::get()->getCurrent()->getName());
 }
 
 void VRGuiSetup::updateSetupList() {

@@ -190,7 +190,7 @@ VRSound* VRSoundManager::getSound(string filename) {
     //av_dump_format(sound->context, 0, filename.c_str(), false);
 
     int stream_id = -1;
-    for (uint i=0; i < sound->context->nb_streams; i++){
+    for (uint i=0; i < sound->context->nb_streams; i++) {
         if (sound->context->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO){
             stream_id = i;
             break;

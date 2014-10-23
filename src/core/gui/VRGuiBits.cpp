@@ -187,6 +187,8 @@ VRGuiBits::VRGuiBits() {
     setButtonCallback("button14", VRGuiBits_on_new_cancel_clicked);
     setButtonCallback("button21", VRGuiBits_on_internal_close_clicked);
 
+    setLabel("label24", "Project: None");
+
     // About Dialog
 
     Gtk::AboutDialog* diag;
@@ -259,6 +261,7 @@ VRGuiBits::VRGuiBits() {
 void VRGuiBits::update() {
     // update camera liststore
     VRScene* scene = VRSceneManager::get()->getActiveScene();
+    setLabel("label24", "Project: None");
     if (scene == 0) return;
 
     vector<VRCamera*> cams = scene->getCameraMap();
@@ -293,7 +296,6 @@ void VRGuiBits::update() {
 
     // update setup and project label
     cout << " now running: " << scene->getName() << endl;
-    setLabel("label13", "VR Setup: " + VRSetupManager::get()->getCurrent()->getName());
     setLabel("label24", "Project: " + scene->getName());
 }
 
