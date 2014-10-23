@@ -542,6 +542,8 @@
 		<Unit filename="src/core/objects/material/VRMaterial.h" />
 		<Unit filename="src/core/objects/material/VRShader.cpp" />
 		<Unit filename="src/core/objects/material/VRShader.h" />
+		<Unit filename="src/core/objects/material/VRTextureGenerator.cpp" />
+		<Unit filename="src/core/objects/material/VRTextureGenerator.h" />
 		<Unit filename="src/core/objects/material/VRVideo.cpp" />
 		<Unit filename="src/core/objects/material/VRVideo.h" />
 		<Unit filename="src/core/objects/object/VRAttachment.cpp" />
