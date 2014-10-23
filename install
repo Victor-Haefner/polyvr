@@ -1,4 +1,9 @@
-sudo apt-get install git
-git clone https://github.com/Victor-Haefner/polyvr-depends.git dependencies
+sudo apt-get install git codeblocks codeblocks-contrib
+
+if [ ! -e dependencies ]; then
+  git clone https://github.com/Victor-Haefner/polyvr-depends.git dependencies
+fi
+
 cd dependencies
+git pull
 sudo ./install dev
