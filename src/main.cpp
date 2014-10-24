@@ -6,6 +6,9 @@ OSG_USING_NAMESPACE;
 using namespace std;
 
 int main(int argc, char **argv) {
+    // remove possible core file
+    remove("./core");
+
     // Enable core dumps
     struct rlimit corelim;
     corelim.rlim_cur = -1;
