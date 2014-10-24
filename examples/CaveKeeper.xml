@@ -3,7 +3,7 @@
   <Objects>
     <Root name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
       <Headlight name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
-        <Default name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="1.48078 0.345985 -0.829934" at="0 0 0" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
+        <Default name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
           <Headlight_beacon name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
         </Default>
         <lantern name_suffix="0" base_name="lantern" name_space="__global__" type="Transform" pickable="0" visible="1" from="0 1000 0" at="0 1000 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1">
@@ -39,6 +39,10 @@
       <arg type="VRPyTransformType" value="lantern" name_suffix="0" base_name="obj" name_space="light"/>
       <trig type="on_device" dev="mouse" state="Pressed" param="" key="2" name_suffix="2" base_name="trigger" name_space="__global__"/>
     </light>
+    <nav core="&#9;k = chr(dev.getKey())&#10;&#9;print k&#10;&#9;if k == 'w':&#10;&#9;&#9;cam.move(0.1)&#10;&#9;if k == 's':&#10;&#9;&#9;cam.move(-0.1)&#10;&#9;&#9;&#10;&#9;if k == 'a':&#10;&#9;&#9;cam.rotate(0,1,0,0.1)&#10;&#9;if k == 'd':&#10;&#9;&#9;cam.rotate(0,1,0,-0.1)&#10;&#9;&#9;&#10;&#9;if k == 'q':&#10;&#9;&#9;cam.translate(0,-0.1,0)&#10;&#9;if k == 'e':&#10;&#9;&#9;cam.translate(0,0.1,0)" type="Python" mobile="">
+      <arg type="VRPyTransformType" value="Default" name_suffix="0" base_name="cam" name_space="nav"/>
+      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="-1" name_suffix="3" base_name="trigger" name_space="__global__"/>
+    </nav>
   </Scripts>
   <Sockets/>
   <Background color="0.6 0.6 0.6" path="" type="0"/>

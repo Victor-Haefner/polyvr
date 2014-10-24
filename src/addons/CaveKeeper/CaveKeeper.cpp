@@ -8,6 +8,7 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/objects/VRCamera.h"
+#include "core/objects/material/VRTextureGenerator.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -75,8 +76,9 @@ SimpleMaterialRecPtr BlockWorld::initMaterial(string texture) {
     TextureEnvChunkRecPtr tex_env_chunk = TextureEnvChunk::create();
 
     TextureObjChunkRecPtr tex_obj_chunk = TextureObjChunk::create();
-    ImageRecPtr img = Image::create();
-    img->read(texture.c_str());
+    VRTextureGenerator tgen;
+    tgen.addNoise(PERLIN, 0.5, Vec3f(1,0,0), Vec3f(1,1,0));
+    ImageRecPtr img = tgen.compose(0);
     tex_obj_chunk->setImage(img);
     mat->addChunk(tex_obj_chunk);
     mat->addChunk(tex_env_chunk);
@@ -154,7 +156,7 @@ VRGeometry* BlockWorld::initChunk() {
     VRGeometry* chunk = createChunk(*elements);
     delete elements;
 
-    chunk->setMaterial(initMaterial("data/common/tex/dirt.png"));
+    chunk->setMaterial(initMaterial("dirt"));
 
     return chunk;
 }

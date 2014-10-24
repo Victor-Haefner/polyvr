@@ -260,8 +260,8 @@ void VRNavigator::focus(VRDevice* dev) {
 
     (*dev->addIntersect(devBeacon, target->getRoot()))(dev); // TODO: was macht das??
 
+    if (dev->getHitObject() == 0) return;
     Vec3f at = dev->getHitPoint().subZero();
-
     target->setAt(at);
 }
 
