@@ -1,5 +1,6 @@
 #include "VRPyMaterial.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/material/VRTextureGenerator.h"
 #include "VRPyBaseT.h"
 #include "VRPyTypeCaster.h"
 
@@ -54,6 +55,7 @@ PyMethodDef VRPyMaterial::methods[] = {
     {"setSpecular", (PyCFunction)VRPyMaterial::setSpecular, METH_VARARGS, "Sets the specular color" },
     {"setPointSize", (PyCFunction)VRPyMaterial::setPointSize, METH_VARARGS, "Sets the GL point size" },
     {"setLineWidth", (PyCFunction)VRPyMaterial::setLineWidth, METH_VARARGS, "Sets the GL line width" },
+    {"setPerlin", (PyCFunction)VRPyMaterial::setPerlin, METH_VARARGS, "Set a perlin noise texture - setPerlin(col1[r,g,b], col2[r,g,b], seed)" },
     {"setQRCode", (PyCFunction)VRPyMaterial::setQRCode, METH_VARARGS, "Encode a string as QR code texture - setQRCode(string, fg[r,g,b], bg[r,g,b], offset)" },
     {"setMagMinFilter", (PyCFunction)VRPyMaterial::setMagMinFilter, METH_VARARGS, "Set the mag and min filtering mode - setMagMinFilter( mag, min)\n possible values for mag are GL_X and min can be GL_X or GL_X_MIPMAP_Y, where X and Y can be NEAREST or LINEAR" },
     {"setVertexProgram", (PyCFunction)VRPyMaterial::setVertexProgram, METH_VARARGS, "Set vertex program - setVertexProgram( myScript )" },
@@ -146,5 +148,15 @@ PyObject* VRPyMaterial::setQRCode(VRPyMaterial* self, PyObject* args) {
 	PyObject *data, *fg, *bg; int i;
     if (! PyArg_ParseTuple(args, "OOOi", &data, &fg, &bg, &i)) return NULL;
 	self->obj->setQRCode(PyString_AsString(data), parseVec3fList(fg), parseVec3fList(bg), i);
+	Py_RETURN_TRUE;
+}
+
+PyObject* VRPyMaterial::setPerlin(VRPyMaterial* self, PyObject* args) {
+	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setQRCode, C obj is invalid"); return NULL; }
+	PyObject *c1, *c2; int seed; float amount;
+    if (! PyArg_ParseTuple(args, "OOif", &c1, &c2, &seed, &amount)) return NULL;
+	OSG::VRTextureGenerator tgen;
+	tgen.addNoise(OSG::PERLIN, amount, parseVec3fList(c1), parseVec3fList(c2));
+	self->obj->setTexture(tgen.compose(seed));
 	Py_RETURN_TRUE;
 }

@@ -2,11 +2,11 @@
 #define VRTEXTUREGENERATOR_H_INCLUDED
 
 #include <OpenSG/OSGFieldContainerFields.h>
+#include <OpenSG/OSGVector.h>
+#include <OpenSG/OSGImage.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
-
-class Image; OSG_GEN_CONTAINERPTR(Image);
 
 enum NOISE_TYPE {
     PERLIN
@@ -14,13 +14,23 @@ enum NOISE_TYPE {
 
 class VRTextureGenerator {
     private:
+        int width = 128;
+        int height = 128;
+
+        struct noise_layer {
+            NOISE_TYPE noise;
+            float amount;
+            Vec3f c1,c2;
+        };
+
+        vector<noise_layer> layers;
 
     public:
         VRTextureGenerator();
 
         void setSize(int w, int h);
 
-        void addNoise(NOISE_TYPE noise, float amount);
+        void addNoise(NOISE_TYPE noise, float amount, Vec3f c1, Vec3f c2);
         void clearStage();
 
         ImageRecPtr compose(int seed);

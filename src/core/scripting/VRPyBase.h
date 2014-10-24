@@ -28,6 +28,7 @@ struct VRPyBase {
     static OSG::Vec3f parseVec3fList(PyObject *li);
 
     static PyObject* toPyTuple(OSG::Vec3f v);
+    static PyObject* toPyTuple(OSG::Vec2f v);
 };
 
 template<class T>

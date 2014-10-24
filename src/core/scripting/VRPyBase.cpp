@@ -78,5 +78,11 @@ PyObject* VRPyBase::toPyTuple(OSG::Vec3f v) {
     return res;
 }
 
+PyObject* VRPyBase::toPyTuple(OSG::Vec2f v) {
+    PyObject* res = PyList_New(2);
+    for (int i=0; i<2; i++) PyList_SetItem(res, i, PyFloat_FromDouble(v[i]));
+    return res;
+}
+
 template<class T>
 PyTypeObject VRPyBaseT<T>::type = NULL;

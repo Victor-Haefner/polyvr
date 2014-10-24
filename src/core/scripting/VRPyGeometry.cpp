@@ -424,7 +424,6 @@ PyObject* VRPyGeometry::getNormals(VRPyGeometry* self) {
         OSG::Vec3f v;
         pos->getValue(v,i);
         PyObject* pv = toPyTuple(v);
-        // append to list
         PyList_SetItem(res, i, pv);
     }
 
@@ -441,7 +440,6 @@ PyObject* VRPyGeometry::getColors(VRPyGeometry* self) {
         OSG::Vec3f v;
         pos->getValue(v,i);
         PyObject* pv = toPyTuple(v);
-        // append to list
         PyList_SetItem(res, i, pv);
     }
 
@@ -457,8 +455,7 @@ PyObject* VRPyGeometry::getIndices(VRPyGeometry* self) {
     for (uint i=0; i<pos->size(); i++) {
         int v;
         pos->getValue(v,i);
-        PyObject* pv = toPyTuple(v);
-        // append to list
+        PyObject* pv = PyInt_FromLong(v);
         PyList_SetItem(res, i, pv);
     }
 
@@ -468,16 +465,15 @@ PyObject* VRPyGeometry::getIndices(VRPyGeometry* self) {
 PyObject* VRPyGeometry::getTexCoords(VRPyGeometry* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyGeometry::getTexCoords - Object is invalid"); return NULL; }
 
-    OSG::GeoVectorProperty* pos = self->obj->getMesh()->getTexCoords();
-    PyObject* res = PyList_New(pos->size());
+    OSG::GeoVectorProperty* tc = self->obj->getMesh()->getTexCoords();
+    PyObject* res = PyList_New(tc->size());
 
-    /*for (int i=0; i<pos->size(); i++) {
+    for (int i=0; i<tc->size(); i++) {
         OSG::Vec2f v;
-        pos->getValue(v,i);
+        tc->getValue(v,i);
         PyObject* pv = toPyTuple(v);
-        // append to list
         PyList_SetItem(res, i, pv);
-    }*/ // TODO
+    }
 
     return res;
 }

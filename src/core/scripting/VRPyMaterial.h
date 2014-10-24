@@ -20,6 +20,7 @@ struct VRPyMaterial : VRPyBaseT<OSG::VRMaterial> {
     static PyObject* setWireFrame(VRPyMaterial* self, PyObject* args);
 
     static PyObject* setQRCode(VRPyMaterial* self, PyObject* args);
+    static PyObject* setPerlin(VRPyMaterial* self, PyObject* args);
 
     static PyObject* setMagMinFilter(VRPyMaterial* self, PyObject* args);
     static PyObject* setVertexProgram(VRPyMaterial* self, PyObject* args);
