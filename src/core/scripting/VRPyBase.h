@@ -44,6 +44,7 @@ struct VRPyBaseT : public VRPyBase {
     static PyObject* New(PyTypeObject *type, PyObject *args, PyObject *kwds);
     static PyObject* New_toZero(PyTypeObject *type, PyObject *args, PyObject *kwds);
     static PyObject* New_VRObjects(PyTypeObject *type, PyObject *args, PyObject *kwds);
+    static PyObject* New_VRObjects_unnamed(PyTypeObject *type, PyObject *args, PyObject *kwds);
 
     static void dealloc(VRPyBaseT<T>* self);
     static int init(VRPyBaseT<T> *self, PyObject *args, PyObject *kwds);

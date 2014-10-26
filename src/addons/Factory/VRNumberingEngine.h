@@ -3,10 +3,14 @@
 
 #include "core/objects/geometry/VRGeometry.h"
 
-class VRNumberingEngine : OSG::VRGeometry {
+class VRNumberingEngine : public OSG::VRGeometry {
     private:
         OSG::GeoVectorProperty* pos = 0;
         OSG::GeoVectorProperty* norms = 0; // n[0] is the number, n[1] is the ID
+
+        static string vp;
+        static string fp;
+        static string gp;
 
         struct group {
             string pre, post;

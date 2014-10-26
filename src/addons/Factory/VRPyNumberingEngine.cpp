@@ -42,7 +42,7 @@ template<> PyTypeObject VRPyBaseT<VRNumberingEngine>::type = {
     0,                         /* tp_dictoffset */
     (initproc)init,      /* tp_init */
     0,                         /* tp_alloc */
-    New,                 /* tp_new */
+    New_VRObjects_unnamed,                 /* tp_new */
 };
 
 PyMethodDef VRPyNumberingEngine::methods[] = {

@@ -52,6 +52,18 @@ PyObject* VRPyBaseT<T>::New_VRObjects(PyTypeObject *type, PyObject *args, PyObje
 }
 
 template<class T>
+PyObject* VRPyBaseT<T>::New_VRObjects_unnamed(PyTypeObject *type, PyObject *args, PyObject *kwds) {
+    VRPyBaseT<T>* self = (VRPyBaseT<T> *)type->tp_alloc(type, 0);
+    if (self != NULL) {
+        self->owner = true;
+        self->obj = new T();
+        self->obj->addAttachment("dynamicaly_generated", 0);
+    }
+
+    return (PyObject *)self;
+}
+
+template<class T>
 void VRPyBaseT<T>::dealloc(VRPyBaseT<T>* self) {
     //if (self->owner and self->obj != 0) delete self->obj; // TOCHECK
     self->ob_type->tp_free((PyObject*)self);
