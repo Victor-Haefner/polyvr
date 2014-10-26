@@ -279,10 +279,7 @@ void VRMaterial::setVertexShader(string s) {
 }
 
 void VRMaterial::setFragmentShader(string s) {
-    if (shaderChunk == 0) {
-            shaderChunk = SimpleSHLChunk::create(); mat->addChunk(shaderChunk);
-            cout << "Add frag prog " << s << endl;
-    }
+    if (shaderChunk == 0) { shaderChunk = SimpleSHLChunk::create(); mat->addChunk(shaderChunk); }
     shaderChunk->setFragmentProgram(s.c_str());
 }
 

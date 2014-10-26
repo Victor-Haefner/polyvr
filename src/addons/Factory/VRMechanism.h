@@ -22,6 +22,13 @@ class VRProfile {
         vector<Vec3f> get(Vec3f n = Vec3f(0,0,1), Vec3f u = Vec3f(0,1,0));
 };
 
+struct MChange {
+    Vec3f t; // translation
+    float l = 0; // translation length
+    Vec3f n; // rotation axis
+    float a = 0; // rotation angle
+};
+
 class MPart {
     public:
         vector<MPart*> neighbors;
@@ -29,6 +36,7 @@ class MPart {
         VRGeometry* geo;
         VRTransform* trans;
         VRPrimitive* prim;
+        MChange change;
         Matrix reference;
         unsigned int timestamp;
 
@@ -43,6 +51,8 @@ class MPart {
 
         void clearNeighbors();
         void addNeighbor(MPart* p);
+
+        void printChange();
 
         virtual void move(float dx);
         virtual void updateNeighbors(vector<MPart*> parts) = 0;
