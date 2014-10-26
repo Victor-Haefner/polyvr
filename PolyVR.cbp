@@ -170,7 +170,6 @@
 			<Add option="-lopenal" />
 			<Add option="-lavformat" />
 			<Add option="-lavcodec" />
-			<Add option="-lavdevice" />
 			<Add option="-lswscale" />
 			<Add option="-lavutil" />
 			<Add option="-lqrencode" />
