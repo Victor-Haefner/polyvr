@@ -11,24 +11,25 @@ using namespace std;
 VRSegmentation::VRSegmentation() {}
 
 struct Accumulator {
-    int* data;
+    float* data;
     int Da, Dr;
-    float Ra, Rr;
+    float Ra, Rr, Dp;
 
     Accumulator() {
         Da = 10;
         Dr = 10;
         Ra = Pi/Da;
         Rr = 5.0/Dr;
-        data = new int[size()];
-        memset (data, 0, size()*sizeof(int));
+        Dp = 0.05*Rr;
+        data = new float[size()];
+        memset (data, 0, size()*sizeof(float));
     }
 
     ~Accumulator() {
         delete data;
     }
 
-    int& operator()(int i, int j, int k) { return data[i*Da*Dr*2 + j*Dr*2 + k + Dr]; }
+    float& operator()(int i, int j, int k) { return data[i*Da*Dr*2 + j*Dr*2 + k + Dr]; }
 
     int size() { return 2*Dr*Da*Da; }
 };
@@ -42,38 +43,33 @@ Vec4f plane(float theta, float phi, float rho, Accumulator& accu) {
     return Vec4f(n[0], n[1], n[2], -rho*accu.Rr);
 }
 
-bool pOnPlane(Vec4f p, Vec4f pl, Accumulator& accu) { return abs(pl.dot(p)) < 0.1*max(accu.Ra, accu.Rr); }
-bool pOnPlane(Pnt3f p, Vec4f pl, Accumulator& accu) { return pOnPlane(Vec4f(p[0], p[1], p[2], 1), pl, accu); }
+bool pOnPlane(Pnt3f& p, Vec4f& pl, Accumulator& accu) { return abs(pl[0]*p[0]+pl[1]*p[1]+pl[2]*p[2]+pl[3]) < accu.Dp; }
 
 vector<VRGeometry*> extractPlanes(VRGeometry* pnts) {
-
-    //cout << "test plane " << plane(0,0,0, 5,5,1) << endl;
-    //cout << "test plane " << plane(Pnt3f(12,0,56), plane(0,0,0, 5,5,1) ) << endl;
-    //return vector<VRGeometry*>(); // test
 
     Accumulator accu;
 
     GeoVectorPropertyRecPtr positions = pnts->getMesh()->getPositions();
-    //positions = positions->deepClone();
+    GeoVectorPropertyRecPtr normals = pnts->getMesh()->getNormals();
 
     cout << "start plane extraction of " << pnts->getName() << " with " << positions->size() << " points" << endl;
     cout << " accumulator size: " << accu.size() << endl;
 
     Pnt3f p;
+    Vec3f n;
+    Vec4f pl;
     for (uint i = 0; i<positions->size(); i++) {
         positions->getValue(p, i);
-
-        /*Vec4f pl = plane(5, 0, -2, accu);
-        bool b = pOnPlane(p, pl, accu);
-        if ( b ) accu(5, 0, -2) += 1;
-        cout << " pnt " << p << " belongs to " << pl << "? " << b << endl;*/
+        normals->getValue(n, i);
 
         for (int th=0; th < accu.Da; th++) {
             for (int phi=0; phi < accu.Da; phi++) {
                 if (th == int(accu.Da*0.5) and phi != 0) continue;
-                for (int rho=-accu.Dr; rho < accu.Dr; rho++) {
-                    Vec4f pl = plane(th, phi, rho, accu);
-                    if ( pOnPlane(p, pl, accu) ) accu(th, phi, rho) += 1;
+                for (int rho=-accu.Dr; rho < accu.Dr; rho++) { // TODO: segment similar normals and not planes? 3D -> 2D ??
+                    pl = plane(th, phi, rho, accu); // TODO: compute all planes before
+                    if ( pOnPlane(p, pl, accu) ) {
+                        accu(th, phi, rho) += Vec3f(pl).dot(n); // TODO: check the not product with the normal, doesnt seem to work right..
+                    }
                 }
             }
         }
@@ -81,43 +77,43 @@ vector<VRGeometry*> extractPlanes(VRGeometry* pnts) {
 
     cout << " accumulation done " << endl;
 
-    map<int, vector<Vec3f> > planes; // the planes by importance
+    map<int, vector<Vec3f> > accu_results; // the planes by importance
     for (int i=0; i < accu.Da; i++) {
         for (int j=0; j < accu.Da; j++) {
             for (int k=-accu.Dr; k < accu.Dr; k++) {
                 int a = accu(i, j, k);
-                if (planes.count(a) == 0) planes[a] = vector<Vec3f>();
+                if (accu_results.count(a) == 0) accu_results[a] = vector<Vec3f>();
 
-                planes[a].push_back( Vec3f(i,j,k) );
+                accu_results[a].push_back( Vec3f(i,j,k) );
             }
         }
     }
 
-    for (auto pl : planes) {
-        cout << " found " << pl.second.size() << " planes with " << pl.first << " points " << endl;
+    vector<Vec4f> planes;
+    for (auto pvec : boost::adaptors::reverse(accu_results)) {
+        if (pvec.first == 0) continue;
+        for (auto m : pvec.second) planes.push_back(plane(m[0], m[1], m[2], accu));
     }
 
     map<int, VRGeometry*> res;
     for (uint i = 0; i<positions->size(); i++) {
         positions->getValue(p, i);
 
-        int k=0;
-        for (auto pvec : boost::adaptors::reverse(planes)) {
-            if (pvec.first == 0) continue;
+        int k = 0;
+        for (auto pl : planes) {
+            if (pOnPlane(p, pl, accu)) {
 
-            for (auto m : pvec.second) {
-                if (k++ == 10) break;
-
+                if (res.count(k) == 0) {
                     VRGeometry* geo = new VRGeometry(pnts->getName() + "_patch");
-                    res[k] = (geo);
                     GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
                     geo->setPositions(pos);
+                    res[k] = (geo);
+                }
 
-                Vec4f pl = plane(m[0], m[1], m[2], accu);
-                if (pOnPlane(p, pl, accu)) pos->addValue(p);
-
+                res[k]->getMesh()->getPositions()->addValue(p);
+                break;
             }
-
+            k++;
         }
     }
 
@@ -140,6 +136,8 @@ vector<VRGeometry*> extractPlanes(VRGeometry* pnts) {
         geo->addAttachment("dynamicaly_generated", 0);
         res2.push_back(geo);
     }
+
+    // TODO: remove all points from the biggest plane and restart the whole process
 
     return res2;
 }
