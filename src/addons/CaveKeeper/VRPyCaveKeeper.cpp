@@ -33,7 +33,7 @@ template<> PyTypeObject VRPyBaseT<OSG::CaveKeeper>::type = {
     0,		               /* tp_iter */
     0,		               /* tp_iternext */
     VRPyCaveKeeper::methods,             /* tp_methods */
-    VRPyCaveKeeper::members,             /* tp_members */
+    0,             /* tp_members */
     0,                         /* tp_getset */
     0,                         /* tp_base */
     0,                         /* tp_dict */
@@ -43,10 +43,6 @@ template<> PyTypeObject VRPyBaseT<OSG::CaveKeeper>::type = {
     (initproc)init,      /* tp_init */
     0,                         /* tp_alloc */
     New,                 /* tp_new */
-};
-
-PyMemberDef VRPyCaveKeeper::members[] = {
-    {NULL}  /* Sentinel */
 };
 
 PyMethodDef VRPyCaveKeeper::methods[] = {

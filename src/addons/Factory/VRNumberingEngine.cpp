@@ -115,6 +115,7 @@ string VRNumberingEngine::fp = ""
 
 string VRNumberingEngine::gp = ""
 "#version 150\n"
+"#extension GL_EXT_geometry_shader4 : enable\n"
 "layout (points) in;\n"
 "layout (triangle_strip, max_vertices=60) out;\n"
 
@@ -166,7 +167,7 @@ string VRNumberingEngine::gp = ""
 " int first = 1;\n"
 " float p = 0;\n"
 
-" while(1) {\n"
+" while(true) {\n"
 "   if (first == 1) {\n"
 "     d = k2%10;\n"
 "     k2 = int(k2*0.1);\n"

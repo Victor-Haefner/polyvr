@@ -399,6 +399,7 @@ PyObject* VRPyGeometry::getTypes(VRPyGeometry* self) {
 
 PyObject* VRPyGeometry::getPositions(VRPyGeometry* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyGeometry::getPositions - Object is invalid"); return NULL; }
+    if (self->obj->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getPositions - Mesh is invalid"); return NULL; }
 
     OSG::GeoVectorProperty* pos = self->obj->getMesh()->getPositions();
     PyObject* res = PyList_New(pos->size());
@@ -416,6 +417,7 @@ PyObject* VRPyGeometry::getPositions(VRPyGeometry* self) {
 
 PyObject* VRPyGeometry::getNormals(VRPyGeometry* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyGeometry::getNormals - Object is invalid"); return NULL; }
+    if (self->obj->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getNormals - Mesh is invalid"); return NULL; }
 
     OSG::GeoVectorProperty* pos = self->obj->getMesh()->getNormals();
     PyObject* res = PyList_New(pos->size());
@@ -432,6 +434,7 @@ PyObject* VRPyGeometry::getNormals(VRPyGeometry* self) {
 
 PyObject* VRPyGeometry::getColors(VRPyGeometry* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyGeometry::getColors - Object is invalid"); return NULL; }
+    if (self->obj->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getColors - Mesh is invalid"); return NULL; }
 
     OSG::GeoVectorProperty* pos = self->obj->getMesh()->getColors();
     PyObject* res = PyList_New(pos->size());
@@ -448,6 +451,7 @@ PyObject* VRPyGeometry::getColors(VRPyGeometry* self) {
 
 PyObject* VRPyGeometry::getIndices(VRPyGeometry* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyGeometry::getIndices - Object is invalid"); return NULL; }
+    if (self->obj->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getIndices - Mesh is invalid"); return NULL; }
 
     OSG::GeoIntegralProperty* pos = self->obj->getMesh()->getIndices();
     PyObject* res = PyList_New(pos->size());
@@ -464,6 +468,7 @@ PyObject* VRPyGeometry::getIndices(VRPyGeometry* self) {
 
 PyObject* VRPyGeometry::getTexCoords(VRPyGeometry* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyGeometry::getTexCoords - Object is invalid"); return NULL; }
+    if (self->obj->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getTexCoords - Mesh is invalid"); return NULL; }
 
     OSG::GeoVectorProperty* tc = self->obj->getMesh()->getTexCoords();
     PyObject* res = PyList_New(tc->size());

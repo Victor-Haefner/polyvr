@@ -29,6 +29,7 @@
 #include "addons/Factory/VRPyMechanism.h"
 #include "addons/Factory/VRPyNumberingEngine.h"
 #include "addons/CEF/VRPyCEF.h"
+#include "addons/Classification/VRPySegmentation.h"
 //#include "addons/WebKit/VRPyWebKit.h"
 #include "core/utils/VRStorage_template.h"
 #include "VRPyTypeCaster.h"
@@ -188,6 +189,7 @@ void VRScriptManager::initPyModules() {
     VRPySound::registerModule("Sound", pModVR);
 
     VRPyCEF::registerModule("CEF", pModVR);
+    VRPySegmentation::registerModule("Segmentation", pModVR);
     VRPyMechanism::registerModule("Mechanism", pModVR);
     VRPyNumberingEngine::registerModule("NumberingEngine", pModVR, VRPyGeometry::typeRef);
 

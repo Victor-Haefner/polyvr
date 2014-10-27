@@ -2,11 +2,10 @@
 #define VRPYCAVEKEEPER_H_INCLUDED
 
 #include "core/scripting/VRPyBase.h"
-#include "core/objects/object/VRObject.h"
+//#include "core/objects/object/VRObject.h"
 #include "CaveKeeper.h"
 
 struct VRPyCaveKeeper : VRPyBaseT<OSG::CaveKeeper> {
-    static PyMemberDef members[];
     static PyMethodDef methods[];
 
     static PyObject* initWorld(VRPyCaveKeeper* self, PyObject* args);
