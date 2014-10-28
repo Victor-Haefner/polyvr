@@ -37,10 +37,7 @@ VRThreadManager::VRThreadManager() {
     appThread = dynamic_cast<Thread *>(ThreadManager::getAppThread());
 }
 
-VRThreadManager::~VRThreadManager() {
-    cout << "\n~VRThreadManager()" << endl;
-    for (auto t : threads) delete t.second;
-}
+VRThreadManager::~VRThreadManager() { for (auto t : threads) delete t.second; }
 
 VRThread::~VRThread() {
     control_flag = false;
@@ -70,13 +67,12 @@ int VRThreadManager::initThread(VRFunction<VRThread*>* f, string name, bool loop
 
 void VRThreadManager::stopThread(int id, int tries) {
     if (threads.count(id) == 0) return;
-    cout << "\nSTOP THREAD " << id << endl;
     VRThread* t = threads[id];
     t->control_flag = false;
 
     int k = 0;
     while (t->status != 2) {
-        if (k == tries) { cout << "thread " << id << " wont stop" << endl; return; }
+        if (k == tries) { cout << "Warning: thread " << id << " won't stop" << endl; return; }
         k++;
         osgSleep(10);
     }

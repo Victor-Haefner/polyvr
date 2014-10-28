@@ -107,7 +107,7 @@ string VRNumberingEngine::vp = ""
 string VRNumberingEngine::fp = ""
 "#version 120\n"
 "uniform sampler2D texture;\n"
-"in vec2 texCoord;\n"
+"varying vec2 texCoord;\n"
 
 "void main( void ) {\n"
 "  gl_FragColor = texture2D(texture, texCoord);\n"

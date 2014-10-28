@@ -34,11 +34,7 @@ VRSceneManager::VRSceneManager() {
     glutIdleFunc(glutUpdate);
 }
 
-VRSceneManager::~VRSceneManager() {
-    map<string, VRScene*>::iterator itr;
-    for (itr = scenes.begin(); itr != scenes.end(); itr++) delete itr->second;
-    cout << "\nKILL SCENE MANAGER\n";
-}
+VRSceneManager::~VRSceneManager() { for (auto scene : scenes) delete scene.second; }
 
 void VRSceneManager::operator= (VRSceneManager v) {;}
 

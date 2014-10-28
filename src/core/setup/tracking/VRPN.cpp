@@ -57,7 +57,6 @@ VRPN::VRPN() {
 }
 
 VRPN::~VRPN() {
-    cout << "\n~VRPN()" << endl;
     VRSceneManager::get()->stopThread(threadID);
 }
 

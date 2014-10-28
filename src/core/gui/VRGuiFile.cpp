@@ -115,5 +115,7 @@ string VRGuiFile::getRelativePath() {
     string workdir = string(cCurrentPath);
 
     path a(p), b(workdir);
-    return make_relative( b, a ).string();
+    string rel = make_relative( b, a ).string();
+    //cout << "relative path from " << p << " is " << rel << endl;
+    return rel;
 }

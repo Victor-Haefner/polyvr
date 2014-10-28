@@ -473,7 +473,7 @@ PyObject* VRPyGeometry::getTexCoords(VRPyGeometry* self) {
     OSG::GeoVectorProperty* tc = self->obj->getMesh()->getTexCoords();
     PyObject* res = PyList_New(tc->size());
 
-    for (int i=0; i<tc->size(); i++) {
+    for (unsigned int i=0; i<tc->size(); i++) {
         OSG::Vec2f v;
         tc->getValue(v,i);
         PyObject* pv = toPyTuple(v);

@@ -13,7 +13,6 @@ VRSegmentation::VRSegmentation() {}
 
 Vec3f randC() {return Vec3f(0.5+0.5*rand()/RAND_MAX, 0.5+0.5*rand()/RAND_MAX, 0.5+0.5*rand()/RAND_MAX); }
 
-
 struct accu_bin {
     float weight;
     Vec4f plane;

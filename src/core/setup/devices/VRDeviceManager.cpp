@@ -28,19 +28,8 @@ VRDeviceManager::VRDeviceManager() {
     cout << "Init VRDeviceManager\n";
 }
 
-VRDeviceManager::~VRDeviceManager() {
-    for (itr =devices.begin(); itr!=devices.end(); itr++) {
-        cout << "\nDELETE DEVICE " << itr->first << endl;
-        delete itr->second;
-    }
-}
-
-void VRDeviceManager::clearSignals() {
-    for (itr =devices.begin(); itr!=devices.end(); itr++) {
-        itr->second->clearSignals();
-    }
-}
-
+VRDeviceManager::~VRDeviceManager() { for (auto dev : devices) delete dev.second; }
+void VRDeviceManager::clearSignals() { for (auto dev : devices) dev.second->clearSignals(); }
 void VRDeviceManager::setDeviceRoot(VRTransform* root) { device_root = root; }
 
 void VRDeviceManager::addDevice(VRDevice* dev) {
