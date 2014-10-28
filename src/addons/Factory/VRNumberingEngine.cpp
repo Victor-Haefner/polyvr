@@ -27,6 +27,7 @@ VRNumberingEngine::VRNumberingEngine() : VRGeometry("NumbEng") {
     mat->setVertexShader(vp);
     mat->setFragmentShader(fp);
     mat->setGeometryShader(gp);
+    mat->setPointSize(5);
     updateTexture();
     setMaterial(mat);
 
@@ -105,9 +106,9 @@ string VRNumberingEngine::vp = ""
 "}";
 
 string VRNumberingEngine::fp = ""
-"#version 120\n"
+"#version 130\n"
 "uniform sampler2D texture;\n"
-"varying vec2 texCoord;\n"
+"in vec2 texCoord;\n"
 
 "void main( void ) {\n"
 "  gl_FragColor = texture2D(texture, texCoord);\n"
