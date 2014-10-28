@@ -106,7 +106,7 @@ string VRNumberingEngine::vp = ""
 "}";
 
 string VRNumberingEngine::fp = ""
-"#version 130\n"
+"#version 120\n"
 "uniform sampler2D texture;\n"
 "in vec2 texCoord;\n"
 
