@@ -81,7 +81,9 @@ string VRScene::getFile() {
 string VRScene::getWorkdir() {
     int n = path.find_last_of("\\/");
     if (n == -1) return ".";
-    return path.substr(0, n);
+    string wdir = path.substr(0, n);
+    //cout << "getWorkdir from path " << path << " which is " << wdir << endl;
+    return wdir;
 }
 
 void VRScene::add(VRObject* obj, int parentID) {

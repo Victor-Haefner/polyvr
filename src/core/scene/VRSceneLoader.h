@@ -31,7 +31,6 @@ class VRSceneLoader {
         VRScene* scene;
         map<string, string> attr;
         vector<string> fileFilter;
-        string currentFile;
         map<string, cache> cached_files;
         bool ihr_flag = false; // ignore heavy ressources
 
@@ -39,7 +38,7 @@ class VRSceneLoader {
 
         void load(string filename);
 
-        VRObject* parseOSGTree(NodeRecPtr n, VRObject* parent = 0, string name = "", NodeCore* geoTrans = 0);
+        VRObject* parseOSGTree(NodeRecPtr n, VRObject* parent = 0, string name = "", string currentFile = "", NodeCore* geoTrans = 0);
 
         void optimizeGraph(VRObject* obj);
 

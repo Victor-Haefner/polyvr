@@ -122,8 +122,6 @@ void VRSceneLoader::load(string filename) {
         if (L > 30000000) return;
     }
 
-    currentFile = filename;
-
     string extension = filename.substr(filename.size()-4, filename.size()-1);
 
     VRTimer timer;
@@ -153,7 +151,7 @@ void VRSceneLoader::load(string filename) {
     //timer.print();
 }
 
-VRObject* VRSceneLoader::parseOSGTree(NodeRecPtr n, VRObject* parent, string name, NodeCore* geoTrans) { // TODO add a wrap method for each object?
+VRObject* VRSceneLoader::parseOSGTree(NodeRecPtr n, VRObject* parent, string name, string currentFile, NodeCore* geoTrans) { // TODO add a wrap method for each object?
     if (n == 0) return 0;
 
     VRObject* tmp = 0;
@@ -240,7 +238,7 @@ VRObject* VRSceneLoader::parseOSGTree(NodeRecPtr n, VRObject* parent, string nam
     }
 
     for (uint i=0;i<n->getNChildren();i++)
-        tmp->addChild(parseOSGTree(n->getChild(i), tmp, name, geoTrans));
+        tmp->addChild(parseOSGTree(n->getChild(i), tmp, name, currentFile, geoTrans));
 
     return tmp;
 }
@@ -329,14 +327,14 @@ GeometryRecPtr VRSceneLoader::loadGeometry(string file, string object) {
 }
 
 VRTransform* VRSceneLoader::load3DContent(string filepath, VRObject* parent, bool reload) {
-    filepath = VRSceneLoader_current_scene->getWorkdir() + '/' + filepath;
+    string filepath_toApp = VRSceneLoader_current_scene->getWorkdir() + '/' + filepath;
 
     cout << "load3DContent " << filepath << endl;
 
     VRObject* root;
-    if(cached_files.count(filepath) == 0 or reload) load(filepath);
-    NodeRecPtr osg = cached_files[filepath].root;
-    root = parseOSGTree(osg, parent, filepath);
+    if(cached_files.count(filepath_toApp) == 0 or reload) load(filepath_toApp);
+    NodeRecPtr osg = cached_files[filepath_toApp].root;
+    root = parseOSGTree(osg, parent, filepath, filepath);
     if (root == 0) return 0;
 
     //optimizeGraph(root);

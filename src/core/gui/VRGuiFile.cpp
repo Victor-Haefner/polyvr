@@ -5,6 +5,9 @@
 #include <gtkmm/dialog.h>
 #include <boost/filesystem.hpp>
 
+#include "core/scene/VRSceneManager.h"
+#include "core/scene/VRScene.h"
+
 Gtk::FileChooserDialog* VRGuiFile::dialog = 0;
 sigc::slot<void> VRGuiFile::sigApply = sigc::slot<void>();
 sigc::slot<void> VRGuiFile::sigClose = sigc::slot<void>();
@@ -110,12 +113,10 @@ path make_relative( path a_From, path a_To ) {
 
 string VRGuiFile::getRelativePath() {
     string p = getPath();
-    char cCurrentPath[FILENAME_MAX];
-    getcwd(cCurrentPath, sizeof(cCurrentPath) );
-    string workdir = string(cCurrentPath);
+    string workdir = OSG::VRSceneManager::get()->getActiveScene()->getWorkdir();
 
     path a(p), b(workdir);
     string rel = make_relative( b, a ).string();
-    //cout << "relative path from " << p << " is " << rel << endl;
+    //cout << "relative path from " << a.string() << " to " << b.string() << " is " << rel << endl;
     return rel;
 }
