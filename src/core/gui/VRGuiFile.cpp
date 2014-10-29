@@ -113,7 +113,14 @@ path make_relative( path a_From, path a_To ) {
 
 string VRGuiFile::getRelativePath() {
     string p = getPath();
-    string workdir = OSG::VRSceneManager::get()->getActiveScene()->getWorkdir();
+    string workdir;
+    OSG::VRScene* scene = OSG::VRSceneManager::get()->getActiveScene();
+    if (scene) workdir = scene->getWorkdir();
+    else {
+        char cCurrentPath[FILENAME_MAX];
+        getcwd(cCurrentPath, sizeof(cCurrentPath) );
+        workdir = string(cCurrentPath);
+    }
 
     path a(p), b(workdir);
     string rel = make_relative( b, a ).string();
