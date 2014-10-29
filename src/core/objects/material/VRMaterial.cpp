@@ -151,6 +151,8 @@ MaterialRecPtr VRMaterial::getMaterial() { return mat; }
 /** Load a texture and apply it to the mesh as new material **/
 void VRMaterial::setTexture(string img_path, bool alpha) { // TODO: improve with texture map
     if (texture == 0) texture = Image::create();
+    VRScene* scene = VRSceneManager::get()->getActiveScene();
+    img_path = scene->getWorkdir()+"/"+img_path;
     texture->read(img_path.c_str());
     setTexture(texture, alpha);
 }
