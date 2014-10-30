@@ -186,6 +186,12 @@ void setButtonCallback(string b, sigc::slot<void> sig ) {
     bu->signal_clicked().connect(sig);
 }
 
+void setButtonText(string b, string txt ) {
+    Gtk::Button* bu;
+    VRGuiBuilder()->get_widget(b, bu);
+    bu->set_label(txt);
+}
+
 bool keySignalProxy(GdkEventKey* e, string k, sigc::slot<void> sig ) {
     if (gdk_keyval_name(e->keyval) == k) {
         sig();

@@ -15,20 +15,20 @@ class VRLightBeacon;
 
 class VRLight : public VRObject, public VRStorage {
     protected:
-        DirectionalLightRecPtr d_light;
-        PointLightRecPtr p_light;
-        SpotLightRecPtr s_light;
+        DirectionalLightRecPtr d_light = 0;
+        PointLightRecPtr p_light = 0;
+        SpotLightRecPtr s_light = 0;
         string lightType;
         string shadowType;
-        VRLightBeacon* beacon;
+        VRLightBeacon* beacon = 0;
         string beacon_name;
         Color4f lightDiffuse;
         Color4f lightAmbient;
         Color4f lightSpecular;
         Color4f shadowColor;
-        bool shadows;
-        bool on;
-        SimpleShadowMapEngineRefPtr ssme;
+        bool shadows = false;
+        bool on = true;
+        SimpleShadowMapEngineRefPtr ssme = 0;
         Vec3f attenuation; // C L Q
 
         void saveContent(xmlpp::Element* e);

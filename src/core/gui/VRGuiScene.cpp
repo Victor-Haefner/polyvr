@@ -188,6 +188,10 @@ void setLight(VRLight* l) {
     setTextEntry("entry45", toString(a[1]));
     setTextEntry("entry46", toString(a[2]));
 
+    string bname = "NONE";
+    if (l->getBeacon()) bname = l->getBeacon()->getName();
+    setButtonText("button27", bname);
+
     Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("light_params"));
     vector<string> param_names = VRLight::getTypeParameter(l->getLightType());
     for (uint i=0; i<param_names.size(); i++) {

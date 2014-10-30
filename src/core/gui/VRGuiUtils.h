@@ -33,6 +33,7 @@ bool getRadioButtonState(string b);
 bool getToggleButtonState(string b);
 void setRadioButtonCallback(string cb, sigc::slot<void> sig );
 void setRadioButton(string cb, bool b );
+void setButtonText(string cb, string txt );
 
 // COMBOBOX
 void setComboboxCallback(string b, void (* fkt)(GtkComboBox*, gpointer));

@@ -26,12 +26,9 @@ VRLight::VRLight(string name) : VRObject(name) {
     setShadowColor(Color4f(0.1f, 0.1f, 0.1f, 1.0f));
     setShadowType("4096");
 
-    beacon = 0;
     setCore(p_light, "Light");
     lightType = "point";
     attenuation = Vec3f(p_light->getConstantAttenuation(), p_light->getLinearAttenuation(), p_light->getQuadraticAttenuation());
-    shadows = false;
-    on = true;
 
     setLightDiffColor(Color4f(1,1,1,1));
     setLightAmbColor(Color4f(.3,.3,.3,1));
