@@ -482,10 +482,12 @@ void VRTransform::drag(VRTransform* new_parent) {
     getWorldMatrix(m);
     switchParent(new_parent);
     setWorldMatrix(m);
+
     physics->updateTransformation(m);
     physics->resetForces();
     physics->pause(true);
     reg_change();
+    update();
 }
 
 /** Drop the object, this returns the object at its old place in hirarchy **/
@@ -496,14 +498,14 @@ void VRTransform::drop() {
 
     Matrix m;
     getWorldMatrix(m);
-
     switchParent(old_parent);
-
     setWorldMatrix(m);
+
     physics->updateTransformation(m);
     physics->resetForces();
     physics->pause(false);
     reg_change();
+    update();
 }
 
 /** Cast a ray in world coordinates from the object in its local coordinates, -z axis defaults **/
