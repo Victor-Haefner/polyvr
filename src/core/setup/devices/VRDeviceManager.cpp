@@ -35,14 +35,23 @@ void VRDeviceManager::setDeviceRoot(VRTransform* root) { device_root = root; }
 void VRDeviceManager::addDevice(VRDevice* dev) {
     devices[dev->getName()] = dev;
     dev->getBeacon()->switchParent(device_root);
+    //dev->getCross()->switchParent(device_root); //TODO: add crosses as marker with a marker engine!
 }
 
 map<string, VRDevice* > VRDeviceManager::getDevices() { return devices; }
+
 vector<string> VRDeviceManager::getDevices(string type) {
     vector<string> devs;
-    for (auto itr = devices.begin(); itr != devices.end(); itr++)
-        if (itr->second->getType() == type) devs.push_back(itr->first);
+    for (auto itr : devices) if (itr.second->getType() == type) devs.push_back(itr.first);
     return devs;
+}
+
+vector<string> VRDeviceManager::getDeviceTypes() {
+    map<string, int> types;
+    vector<string> res;
+    for (auto itr : devices) types[itr.second->getType()] = 0;
+    for (auto t : types) res.push_back(t.first);
+    return res;
 }
 
 /*VRDevice* VRDeviceManager::getDevice(string type, int i) { // deprecated?

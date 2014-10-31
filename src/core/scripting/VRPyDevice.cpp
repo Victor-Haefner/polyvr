@@ -147,12 +147,12 @@ PyObject* VRPyDevice::setDnD(VRPyDevice* self, PyObject *args) {
 
 PyObject* VRPyDevice::getIntersected(VRPyDevice* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getIntersected, Object is invalid"); return NULL; }
-    return VRPyTypeCaster::cast(self->obj->getHitObject());
+    return VRPyTypeCaster::cast(self->obj->getLastIntersection().object);
 }
 
 PyObject* VRPyDevice::getIntersection(VRPyDevice* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getIntersection, Object is invalid"); return NULL; }
-    OSG::Pnt3f v = self->obj->getHitPoint();
+    OSG::Pnt3f v = self->obj->getLastIntersection().point;
     PyObject* res = PyTuple_New(3);
     for (int i=0; i<3; i++) PyTuple_SetItem(res, i, PyFloat_FromDouble(v[i]));
     return res;

@@ -84,10 +84,6 @@ void CEF::addMouse(VRDevice* dev, VRObject* obj, int lb, int rb, int wu, int wd)
     dev->addSignal(wu, 1)->add( new VRFunction<VRDevice*>( "CEF::WU", boost::bind(&CEF::mouse, this, 3, 0, _1 ) ) );
     dev->addSignal(wd, 1)->add( new VRFunction<VRDevice*>( "CEF::WD", boost::bind(&CEF::mouse, this, 4, 0, _1 ) ) );
 
-    VRSignal* sig = dev->addSignal( -1, 0);
-    sig->add( dev->addIntersect( dev->getBeacon(), obj) );
-    dev->addUpdateSignal(sig);
-
     VRFunction<int>* fkt = new VRFunction<int>( "CEF::MM", boost::bind(&CEF::mouse_move, this, dev, _1) );
     VRSceneManager::get()->getActiveScene()->addUpdateFkt(fkt);
 }
@@ -98,12 +94,14 @@ void CEF::addKeyboard(VRDevice* dev) {
 }
 
 void CEF::mouse_move(VRDevice* dev, int i) {
-    if (dev->getHitObject() != obj) return;
+    VRIntersection ins = dev->intersect(obj);
 
-    Vec2f tc = dev->getHitTexel();
+    if (!ins.hit) return;
+    if (ins.object != obj) return;
+
     CefMouseEvent me;
-    me.x = tc[0]*width;
-    me.y = tc[1]*height;
+    me.x = ins.texel[0]*width;
+    me.y = ins.texel[1]*height;
     browser->GetHost()->SendMouseMoveEvent(me, dev->b_state(dev->key()));
 }
 
@@ -112,12 +110,22 @@ void CEF::mouse(int b, bool down, VRDevice* dev) {
     /*browser->GetHost()->SendCaptureLostEvent();
     browser->GetHost()->SendFocusEvent();*/
 
-    if (dev->getHitObject() != obj) return;
+    VRIntersection ins = dev->intersect(obj);
 
-    Vec2f tc = dev->getHitTexel();
+    /*string o = "NONE";
+    if (ins.object) o = ins.object->getName();
+    cout << "CEF::mouse " << this;
+    cout << " hit " << ins.hit << " " << o << ", trg " << obj->getName();
+    cout << " b: " << b << " state: " << down;
+    cout << " texel: " << ins.texel;
+    cout << endl;*/
+
+    if (!ins.hit) return;
+    if (ins.object != obj) return;
+
     CefMouseEvent me;
-    me.x = tc[0]*width;
-    me.y = tc[1]*height;
+    me.x = ins.texel[0]*width;
+    me.y = ins.texel[1]*height;
 
     if (b < 3) {
         cef_mouse_button_type_t mbt;

@@ -89,6 +89,7 @@ class VRGuiSetup {
 
         void on_haptic_ip_edited();
         void on_change_haptic_type();
+        void on_toggle_dev_cross();
 
         void updateObjectData();
 

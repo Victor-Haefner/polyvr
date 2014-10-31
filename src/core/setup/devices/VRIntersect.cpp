@@ -13,30 +13,16 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-void VRIntersect::intersect(VRTransform* caster, VRObject* tree, VRDevice* dev) {
-    Line ray = caster->castRay();
-    IntersectActionRefPtr iAct = IntersectAction::create();
-    iAct->setLine(ray);
-    //iAct->apply(scene->getRoot()->getNode());
+Vec2f VRIntersect_computeTexel(VRIntersection& ins, NodeRecPtr node) {
+    if (!ins.hit) return Vec2f(0,0);
+    if (node == 0) return Vec2f(0,0);
 
-    if (tree == 0) tree = dynTree;
-    if (tree == 0) return;
-    iAct->apply(tree->getNode());
+    GeometryRefPtr geo = dynamic_cast<Geometry*>( node->getCore() );
+    if (geo == 0) return Vec2f(0,0);
+    TriangleIterator iter = geo->beginTriangles(); iter.seek( ins.triangle );
 
-    if (!iAct->didHit()) {obj = 0; return; }
-    if (showHit) { // TODO: does nothing!
-        cross->setFrom(Vec3f(iAct->getHitPoint()));
-        cross->setAt(Vec3f(ray.getPosition()));
-    }
-
-    hitPoint = iAct->getHitPoint();
-    Vec3f normal = iAct->getHitNormal();
-
-    GeometryRefPtr geo = dynamic_cast<Geometry*>( iAct->getHitObject()->getCore() );
-    TriangleIterator iter = geo->beginTriangles(); iter.seek( iAct->getHitTriangle() );
-
-    Matrix m; iAct->getHitObject()->getToWorld().inverse(m);
-    Pnt3f local_pnt; m.mult(hitPoint, local_pnt);
+    Matrix m; node->getToWorld().inverse(m);
+    Pnt3f local_pnt; m.mult(ins.point, local_pnt);
 
     Pnt3f p0 = iter.getPosition(0);
     Pnt3f p1 = iter.getPosition(1);
@@ -51,24 +37,57 @@ void VRIntersect::intersect(VRTransform* caster, VRObject* tree, VRDevice* dev) 
     float b = areaPCA / areaABC;
     float c = 1.0f - a - b;
 
-    hitTexel = iter.getTexCoords(0) * a + iter.getTexCoords(1) * b + iter.getTexCoords(2) * c;
+    return iter.getTexCoords(0) * a + iter.getTexCoords(1) * b + iter.getTexCoords(2) * c;
+}
 
+//VRIntersection VRIntersect::intersect(VRTransform* caster, VRObject* tree, VRDevice* dev) {
+VRIntersection VRIntersect::intersect(VRObject* tree) {
+    VRDevice* dev = (VRDevice*)this;
+    VRTransform* caster = dev->getBeacon();
+    Line ray = caster->castRay();
+    IntersectActionRefPtr iAct = IntersectAction::create();
+    iAct->setLine(ray);
 
-    obj = tree->find(iAct->getHitObject()->getParent());
-    if(obj == 0) return;
+    if (tree == 0) tree = dynTree;
+    if (tree == 0) return VRIntersection();
+
+    VRIntersection ins = intersections[tree];
+    uint now = VRGlobals::get()->CURRENT_FRAME;
+    if (ins.hit && ins.time == now) return ins; // allready found it
+    ins.time = now;
+
+    iAct->apply(tree->getNode());
+    ins.hit = iAct->didHit();
+    if (!ins.hit) { intersections[tree] = ins; lastIntersection = ins; return ins; }
+
+    ins.object = tree->find(iAct->getHitObject()->getParent());
+    ins.point = iAct->getHitPoint();
+    ins.normal = iAct->getHitNormal();
+    ins.triangle = iAct->getHitTriangle();
+    ins.texel = VRIntersect_computeTexel(ins, iAct->getHitObject());
+    intersections[tree] = ins;
+    lastIntersection = ins;
+
+    if (showHit) cross->setWorldPosition(Vec3f(ins.point));
+    //cout << "VRIntersect::intersect " << obj << endl;
+
+    return ins;
 }
 
 void VRIntersect::drag(VRTransform* caster, VRObject* tree, VRDevice* dev) {
-    intersect(caster, tree, dev);
-    if (obj == 0 or dragged != 0 or !dnd) return;
+    VRIntersection ins = intersect(tree);
 
-    VRObject* obj2 = obj->findPickableAncestor();
+    if (ins.object == 0 or dragged != 0 or !dnd) return;
+
+    VRObject* obj2 = ins.object->findPickableAncestor();
     //cout << "\n pickable " << obj->isPickable() << " " << obj->getName() << " " << caster->getParent()->getName() << flush;
     if (obj2 == 0) return;
     if (!obj2->hasAttachment("transform")) return;
 
     dragged = (VRTransform*)obj2;
     dragged->drag(caster);
+
+    return;
 }
 
 void VRIntersect::drop(VRDevice* dev) {
@@ -115,18 +134,7 @@ VRIntersect::VRIntersect() {
     drop_fkt = new VRDevCb("Intersect_drop", boost::bind(&VRIntersect::drop, this, _1));
 }
 
-VRIntersect::~VRIntersect() {
-    delete cross;
-}
-
-VRDevCb* VRIntersect::addIntersect(VRTransform* caster, VRObject* tree) {
-    VRDevCb* fkt;
-    if (int_fkt_map.count(tree)) return int_fkt_map[tree];
-
-    fkt = new VRDevCb("Intersect_intersect", boost::bind(&VRIntersect::intersect, this, caster, tree, _1));
-    int_fkt_map[tree] = fkt;
-    return fkt;
-}
+VRIntersect::~VRIntersect() { delete cross; }
 
 VRDevCb* VRIntersect::addDrag(VRTransform* caster, VRObject* tree) {
     VRDevCb* fkt;
@@ -170,9 +178,11 @@ void VRIntersect::updateDynTree(VRObject* a) {
 
 VRObject* VRIntersect::getCross() { return cross; }//needs to be optimized for multiple scenes
 VRDevCb* VRIntersect::getDrop() { return drop_fkt; }
-Pnt3f VRIntersect::getHitPoint() { return hitPoint; }
-Vec2f VRIntersect::getHitTexel() { return hitTexel; }
-VRObject* VRIntersect::getHitObject() { return obj; }
+//Pnt3f VRIntersect::getHitPoint() { return hitPoint; }
+//Vec2f VRIntersect::getHitTexel() { return hitTexel; }
+//VRObject* VRIntersect::getHitObject() { return obj; }
 VRTransform* VRIntersect::getDraggedObject() { return dragged; }
+
+VRIntersection VRIntersect::getLastIntersection() { return lastIntersection; }
 
 OSG_END_NAMESPACE;

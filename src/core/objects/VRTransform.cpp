@@ -512,7 +512,7 @@ Line VRTransform::castRay(Vec3f dir) {
     getWorldMatrix(m);
 
     m.mult(dir,dir); dir.normalize();
-    Pnt3f p0 = Vec3f(m[3]) + dir*0.5;
+    Pnt3f p0 = Vec3f(m[3]);// + dir*0.5;
 
     Line ray;
     ray.setValue(p0, dir);

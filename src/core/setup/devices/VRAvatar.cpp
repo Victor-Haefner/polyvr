@@ -66,6 +66,10 @@ void VRAvatar::hideAll() {
     for(;itr != avatars.end();itr++) itr->second->hide();
 }
 
+void VRAvatar::addAvatar(VRObject* geo) {
+    deviceRoot->addChild(geo);
+}
+
 VRAvatar::VRAvatar(string name) {
     deviceRoot = 0;
     deviceRoot = new VRTransform(name + "_beacon");

@@ -21,11 +21,6 @@ void VRMouse::clearSignals() {
 
     addSignal( 0, 0)->add( getDrop() );
     addSignal( 0, 1)->add( addDrag( getBeacon(), 0) );
-
-    /*VRSignal* sig = addSignal( -1, 0);
-    sig->add( addIntersect( getBeacon(), 0) );
-    addUpdateSignal(sig);
-    showHitPoint(true);*/
 }
 
 void VRMouse::multFull(Matrix _matrix, const Pnt3f &pntIn, Pnt3f  &pntOut) {

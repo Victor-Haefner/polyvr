@@ -29,6 +29,8 @@ class VRAvatar {
         VRAvatar(string name);
         ~VRAvatar();
 
+        void addAvatar(VRObject* geo);
+
     public:
         void enableAvatar(string avatar);
         void disableAvatar(string avatar);

@@ -202,10 +202,10 @@ void VRMesure::setPosition(Vec3f pos) {
 void VRMesure::kill(VRDevice* dev) {
     if (dev == 0) { _kill(); return; }
 
-    VRObject* obj = dev->getHitObject();
-    if (obj == 0) return;
-
-    if (obj->hasAncestor(s1) or obj->hasAncestor(s2)) _kill();
+    VRIntersection ins = dev->intersect(l);
+    if (!ins.hit) return;
+    if (ins.object == 0) return;
+    if (ins.object->hasAncestor(s1) or ins.object->hasAncestor(s2)) _kill();
 }
 
 OSG_END_NAMESPACE

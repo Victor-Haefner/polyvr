@@ -13,6 +13,7 @@ string toString(OSG::Vec2f v) {
     return ss.str();
 }
 
+string toString(OSG::Pnt3f v) { return toString(OSG::Vec3f(v)); }
 string toString(OSG::Vec3f v) {
     stringstream ss;
     ss << v[0] << " " << v[1] << " " << v[2];

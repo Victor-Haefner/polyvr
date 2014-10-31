@@ -21,9 +21,10 @@ void VRElectricDevice::turnOff() {
 
 void VRElectricDevice::toggle(VRDevice* dev) {
     if (dev != 0 and EDev != 0) {
-        VRObject* obj = dev->getHitObject();
-        if ( obj == 0 ) return;
-        if ( EDev->find(obj) == 0 ) return;
+        VRIntersection ins = dev->intersect(EDev);
+        if (!ins.hit) return;
+        if ( ins.object == 0 ) return;
+        if ( EDev->find(ins.object) == 0 ) return;
     }
 
     if (active) turnOff();

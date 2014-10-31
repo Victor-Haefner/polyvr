@@ -52,6 +52,7 @@ class VRGuiSetup_UserColumns : public Gtk::TreeModelColumnRecord {
 
 void VRGuiSetup::updateObjectData() {
     guard = true;
+    bool device = false;
     setExpanderSensivity("expander3", false);
     setExpanderSensivity("expander4", false);
     setExpanderSensivity("expander5", false);
@@ -59,6 +60,7 @@ void VRGuiSetup::updateObjectData() {
     setExpanderSensivity("expander7", false);
     setExpanderSensivity("expander8", false);
     setExpanderSensivity("expander20", false);
+    setExpanderSensivity("expander21", false);
 
     current_scene = VRSceneManager::get()->getActiveScene();
 
@@ -130,6 +132,7 @@ void VRGuiSetup::updateObjectData() {
     if (selected_type == "vrpn_device") {
         setExpanderSensivity("expander4", true);
         setExpanderSensivity("expander7", true);
+        device = true;
         VRPN_tracker* t = (VRPN_tracker*)selected_object;
         setTextEntry("entry50", t->tracker);
     }
@@ -137,16 +140,22 @@ void VRGuiSetup::updateObjectData() {
     if (selected_type == "art_device") {
         setExpanderSensivity("expander5", true);
         setExpanderSensivity("expander6", true);
+        device = true;
         ART_device* t = (ART_device*)selected_object;
         setTextEntry("entry40", toString(t->ID));
     }
 
     if (selected_type == "haptic") {
         setExpanderSensivity("expander20", true);
+        device = true;
         VRHaptic* t = (VRHaptic*)selected_object;
         setTextEntry("entry8", t->getIP());
         setCombobox("combobox25", getListStorePos("liststore8", t->getType()) );
     }
+
+    if (selected_type == "mouse") { device = true; }
+    if (selected_type == "keyboard") { device = true; }
+    if (selected_type == "mobile") { device = true; }
 
     if (selected_type == "section") {
         if (selected_name == "ART") {
@@ -159,6 +168,21 @@ void VRGuiSetup::updateObjectData() {
             setTextEntry("entry62", toString(o[1]));
             setTextEntry("entry63", toString(o[2]));
         }
+    }
+
+    if (device) {
+        VRDevice* dev = (VRDevice*)selected_object;
+        VRIntersection ins = dev->getLastIntersection();
+
+        setExpanderSensivity("expander21", true);
+        setLabel("label93", dev->getName());
+        fillStringListstore("dev_types_list", current_setup->getDeviceTypes());
+        setCombobox("combobox26", getListStorePos("dev_types_list", dev->getType()) );
+        string hobj = ins.object && ins.hit ? ins.object->getName() : "NONE";
+        setLabel("label110", hobj);
+        setLabel("label111", toString(ins.point));
+        setLabel("label112", toString(ins.texel));
+        setCheckButton("checkbutton37", dev->getCross()->isVisible());
     }
 
     guard = false;
@@ -667,6 +691,14 @@ void VRGuiSetup::on_change_haptic_type() {
     setToolButtonSensivity("toolbutton12", true);
 }
 
+void VRGuiSetup::on_toggle_dev_cross() {
+    if (guard) return;
+
+    bool b = getCheckButtonState("checkbutton37");
+    VRDevice* dev = (VRDevice*)selected_object;
+    dev->showHitPoint(b);
+}
+
 // --------------------------
 // ---------Main-------------
 // --------------------------
@@ -757,6 +789,7 @@ VRGuiSetup::VRGuiSetup() {
     setCheckButtonCallback("checkbutton24", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_art));
     setCheckButtonCallback("checkbutton26", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_view_user));
     setCheckButtonCallback("checkbutton4", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_view_stats));
+    setCheckButtonCallback("checkbutton37", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_dev_cross));
 
     // primitive list
     fillStringListstore("prim_list", VRPrimitive::getTypes());

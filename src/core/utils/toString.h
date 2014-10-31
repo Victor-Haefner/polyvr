@@ -14,6 +14,7 @@ string toString(unsigned int i);
 string toString(float f);
 string toString(OSG::Vec2f v);
 string toString(OSG::Vec3f v);
+string toString(OSG::Pnt3f v);
 string toString(OSG::Vec4f v);
 string toString(OSG::Vec3i v);
 

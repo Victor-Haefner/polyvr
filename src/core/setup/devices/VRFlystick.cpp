@@ -15,11 +15,6 @@ void VRFlystick::clearSignals() {
 
     addSignal( 0, 0)->add( getDrop() );
     addSignal( 0, 1)->add( addDrag( getBeacon(), 0) );
-
-    /*VRSignal* sig = addSignal( -1, 0);
-    sig->add( addIntersect( getBeacon(), 0) );
-    addUpdateSignal(sig);
-    showHitPoint(true);*/
 }
 
 void VRFlystick::update(int Nb, int* buttons, int Ns, float* sliders) {

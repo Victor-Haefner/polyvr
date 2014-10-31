@@ -17,9 +17,22 @@ class VRObject;
 class VRTransform;
 typedef VRFunction<VRDevice*> VRDevCb;
 
+struct VRIntersection {
+    bool hit = false;
+    uint time = 0;
+    VRObject* object = 0; // hit object
+    VRObject* tree = 0; // intersection tree
+    Pnt3f point;
+    Vec3f normal;
+    Vec2f texel;
+    int triangle;
+};
+
 class VRIntersect {
     private:
-        VRObject* obj = 0;//hit object
+        map<VRObject*, VRIntersection> intersections;
+        VRIntersection lastIntersection;
+
         bool dnd = true;//drag n drop
         bool showHit = false;//show where the hitpoint lies
         //VRScene* scene;
@@ -28,15 +41,11 @@ class VRIntersect {
         vector<VRObject*> dynTrees;
         VRObject* dynTree = 0;
 
-        Pnt3f hitPoint;
-        Vec2f hitTexel;
-
         map<VRObject*, VRDevCb* > int_fkt_map;
         map<VRObject*, VRDevCb* > dra_fkt_map;
         //map<VRObject*, VRDevCb* > dro_fkt_map;
         VRDevCb* drop_fkt;
 
-        void intersect(VRTransform* caster, VRObject* tree, VRDevice* dev = 0);
         void drag(VRTransform* caster, VRObject* tree, VRDevice* dev = 0);
         void drop(VRDevice* dev = 0);
 
@@ -46,7 +55,7 @@ class VRIntersect {
         VRIntersect();
         ~VRIntersect();
 
-        VRDevCb* addIntersect(VRTransform* caster, VRObject* tree);
+        VRIntersection intersect(VRObject* tree);
         VRDevCb* addDrag(VRTransform* caster, VRObject* tree);
         VRDevCb* getDrop();
 
@@ -59,10 +68,11 @@ class VRIntersect {
         void remDynTree(VRObject* o);
         void updateDynTree(VRObject* a);
 
-        Pnt3f getHitPoint();
-        Vec2f getHitTexel();
-        VRObject* getHitObject();
+        //Pnt3f getHitPoint();
+        //Vec2f getHitTexel();
+        //VRObject* getHitObject();
         VRTransform* getDraggedObject();
+        VRIntersection getLastIntersection();
 };
 
 OSG_END_NAMESPACE;

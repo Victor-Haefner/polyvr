@@ -86,13 +86,13 @@ void VROpening::toggle(VRDevice* dev) {
     if (d1 == 0 and d2 == 0) return;
 
     if (dev != 0) { //if triggered by a device, check if this is hit
-        VRObject* obj = dev->getHitObject();
-        if (obj == 0) return;
+        VRIntersection ins = dev->intersect(this);
+        if (!ins.hit) return;
+        if ( ins.object == 0 ) return;
+
         bool b = true;
-        if (d1)
-            if (d1->find(obj)) b=false;
-        if (d2)
-            if (d2->find(obj)) b=false;
+        if (d1) if (d1->find(ins.object)) b=false;
+        if (d2) if (d2->find(ins.object)) b=false;
         if (b) return;
     }
 

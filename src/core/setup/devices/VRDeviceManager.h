@@ -36,6 +36,7 @@ class VRDeviceManager {
         //VRDevice* getDevice(string type, int i);
         VRDevice* getDevice(string name);
         vector<string> getDevices(string type);
+        vector<string> getDeviceTypes();
         map<string, VRDevice* > getDevices();
 
         void updateActivatedSignals();
