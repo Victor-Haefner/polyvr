@@ -30,6 +30,7 @@
 #include "addons/Factory/VRPyNumberingEngine.h"
 #include "addons/CEF/VRPyCEF.h"
 #include "addons/Classification/VRPySegmentation.h"
+#include "addons/Engineering/Chemistry/VRPyMolecule.h"
 //#include "addons/WebKit/VRPyWebKit.h"
 #include "core/utils/VRStorage_template.h"
 #include "VRPyTypeCaster.h"
@@ -192,6 +193,7 @@ void VRScriptManager::initPyModules() {
     VRPySegmentation::registerModule("Segmentation", pModVR);
     VRPyMechanism::registerModule("Mechanism", pModVR);
     VRPyNumberingEngine::registerModule("NumberingEngine", pModVR, VRPyGeometry::typeRef);
+    VRPyMolecule::registerModule("Molecule", pModVR, VRPyGeometry::typeRef);
 
     PyObject* pModFactory = Py_InitModule3("Factory", VRScriptManager_module_methods, "VR Module");
     FPyNode::registerModule("Node", pModFactory);

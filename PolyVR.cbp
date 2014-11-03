@@ -217,6 +217,10 @@
 		<Unit filename="src/addons/Classification/VRPySegmentation.h" />
 		<Unit filename="src/addons/Classification/VRSegmentation.cpp" />
 		<Unit filename="src/addons/Classification/VRSegmentation.h" />
+		<Unit filename="src/addons/Engineering/Chemistry/VRMolecule.cpp" />
+		<Unit filename="src/addons/Engineering/Chemistry/VRMolecule.h" />
+		<Unit filename="src/addons/Engineering/Chemistry/VRPyMolecule.cpp" />
+		<Unit filename="src/addons/Engineering/Chemistry/VRPyMolecule.h" />
 		<Unit filename="src/addons/Factory/VRFactory.h" />
 		<Unit filename="src/addons/Factory/VRLogistics.cpp" />
 		<Unit filename="src/addons/Factory/VRLogistics.h" />

@@ -253,7 +253,7 @@ void setCSG(CSGApp::CSGGeometry* g) {
 
 void on_toggle_liveupdate(GtkToggleButton* tb, gpointer user_data) { liveUpdate = !liveUpdate; }
 
-void updateObjectForms(VRObject* obj) {
+void updateObjectForms(VRObject* obj/*, string path*/) {
     setExpanderSensivity("expander1", false);
     setExpanderSensivity("expander2", false);
     setExpanderSensivity("expander9", false);
@@ -266,6 +266,14 @@ void updateObjectForms(VRObject* obj) {
     setExpanderSensivity("expander16", false);
 
     if (obj == 0) return;
+
+    /*if (obj != root->getFromPath(path)) return*/
+
+    // TODO: check if object is still valid
+    //  this is a bit complicated, options are:
+    //   1) store just the name and search for it
+    //   2) store that path and check for it -> sounds best so far
+    //   3) notify the gui when an object gets destroyed
 
     // set object label
     Gtk::Label* lab;
