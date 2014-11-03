@@ -3,7 +3,7 @@
   <Objects>
     <Root name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
       <Headlight name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
-        <Default name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="-3.51033 3.56151 0.792647" at="0 0 0" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
+        <Default name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="-0.851864 1.84895 -2.131" at="0 0 0" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
           <Headlight_beacon name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
         </Default>
       </Headlight>
@@ -11,10 +11,13 @@
   </Objects>
   <Rendering frustum_culling="1" occlusion_culling="0"/>
   <Scripts>
-    <Init core="&#9;import VR&#10;&#9;m = VR.Molecule('C4H10')&#10;&#9;root.addChild(m)" type="Python" mobile="">
+    <Init core="&#9;import VR&#10;&#9;#m = VR.Molecule('C3HOCCl3Cl3H2')&#10;&#9;#m = VR.Molecule('C10000')&#10;&#9;#m = VR.Molecule('CH3CH2CH2CH2CH2CH3')&#10;&#9;#m = VR.Molecule('C2H5CH3')&#10;&#9;m = VR.Molecule('CH3CH2Cl')&#10;&#9;#m = VR.Molecule('C12H22O11')&#10;&#9;#m = VR.Molecule('OH2')&#10;&#9;root.addChild(m)&#10;&#9;&#10;&#9;mat = m.getMaterial()&#10;&#9;mat.setVertexProgram('vp')&#10;&#9;mat.setFragmentProgram('fp')&#10;&#9;mat.setGeometryProgram('gp')&#10;&#9;" type="Python" mobile="">
       <arg type="VRPyObjectType" value="Headlight" name_suffix="0" base_name="root" name_space="Init"/>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
     </Init>
+    <fp core="#version 120&#10;&#10;in vec2 texCoord;&#10;in vec4 Color;&#10;&#10;void main( void ) {&#10;&#9;vec2 p = 2* ( vec2(0.5, 0.5) - texCoord );&#10;&#9;float r = sqrt(dot(p,p));&#10;&#9;if (r &gt; 1.0) discard;&#10;&#10;&#9;float f = 1.2 - (1.0-sqrt(1.0-r))/(r);&#10;&#9;vec4 amb = vec4(0.2);&#10;&#9;gl_FragColor = Color*f + amb;&#10;}" type="GLSL" mobile=""/>
+    <gp core="#version 150&#10;#extension GL_EXT_geometry_shader4 : enable&#10;layout (points) in;&#10;layout (triangle_strip, max_vertices=6) out;&#10;&#10;in mat4 view[];&#10;in vec4 color[];&#10;out vec2 texCoord;&#10;out vec4 Color;&#10;&#10;void emitVertex(in vec4 p, in vec2 tc) {&#10;&#9;gl_Position = p;&#10;&#9;texCoord = tc;&#10;&#9;EmitVertex();&#10;}&#10;&#10;void emitQuad(in float s, in vec4 tc) {&#10;&#9;vec4 p = gl_PositionIn[0];&#10;&#10;&#9;vec4 u = view[0]*vec4(s,0,0,0);&#10;&#9;vec4 v = view[0]*vec4(0,s,0,0);&#10;&#9;vec4 w = view[0]*vec4(0,0,s,0);&#10;&#9;w = vec4(0,0,-0.02,0);&#10;&#10;&#9;vec4 p1 = p -u -v +w;&#10;&#9;vec4 p2 = p -u +v +w;&#10;&#9;vec4 p3 = p +u +v +w;&#10;&#9;vec4 p4 = p +u -v +w;&#10;&#10;&#9;emitVertex(p1, vec2(tc[0], tc[2]));&#10;&#9;emitVertex(p2, vec2(tc[0], tc[3]));&#10;&#9;emitVertex(p3, vec2(tc[1], tc[3]));&#10;&#9;EndPrimitive();&#10;&#9;emitVertex(p1, vec2(tc[0], tc[2]));&#10;&#9;emitVertex(p3, vec2(tc[1], tc[3]));&#10;&#9;emitVertex(p4, vec2(tc[1], tc[2]));&#10;&#9;EndPrimitive();&#10;}&#10;&#10;void main() {&#10;&#9;Color = color[0];&#10;&#9;emitQuad(0.2, vec4(0,1,0,1));&#10;}" type="GLSL" mobile=""/>
+    <vp core="#version 120&#10;varying mat4 view;&#10;varying vec4 color;&#10;&#10;void main( void ) {&#10;    view = gl_ProjectionMatrix;&#10;    color = gl_Color;&#10;    gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex;&#10;}" type="GLSL" mobile=""/>
   </Scripts>
   <Sockets/>
   <Background color="0.6 0.6 0.6" path="" type="0"/>

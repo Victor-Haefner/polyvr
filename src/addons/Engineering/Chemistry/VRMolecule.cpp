@@ -53,9 +53,9 @@ void initAtomicTables() {
 	Vec3f tP3 = Vec3f(-sqrt(2.0/3), -s2/3, _3);
 
 	Vec3f tU0 = Vec3f(0, -1, 0);
-	Vec3f tU1 = Vec3f(0, _3, 2*s2/3);
-	Vec3f tU2 = Vec3f(-s3/6, -1/6, 2*s2/3);
-	Vec3f tU3 = Vec3f(s3/6, -1/6, 2*s2/3);
+	Vec3f tU1 = Vec3f(0, -_3, 2*s2/3);
+	Vec3f tU2 = Vec3f(-s3/6, 1.0/6, 2*s2/3);
+	Vec3f tU3 = Vec3f(s3/6, 1.0/6, 2*s2/3);
 
 	m.setIdentity(); MatrixLookAt( m, tP0, Vec3f(0,0,0), tU0) ; AtomicStructures["tetra"].push_back( m );
 	m.setIdentity(); MatrixLookAt( m, tP1, Vec3f(0,0,0), tU1) ; AtomicStructures["tetra"].push_back( m );
@@ -195,24 +195,38 @@ void VRMolecule::updateGeo() {
 
 
 
+    /*VRMaterial* mat3 = VRMaterial::get("normals");
+    mat3->setLineWidth(5);
+    mat3->setLit(false);
+
     GeoPnt3fPropertyRecPtr      Pos2 = GeoPnt3fProperty::create();
-    GeoUInt32PropertyRefPtr     Indices = GeoUInt32Property::create();
-    GeoVec3fPropertyRefPtr      cols = GeoVec3fProperty::create();
+    GeoUInt32PropertyRefPtr     Indices3 = GeoUInt32Property::create();
+    GeoVec3fPropertyRefPtr      cols2 = GeoVec3fProperty::create();
+    GeoVec3fPropertyRefPtr      norms2 = GeoVec3fProperty::create();
 
 
+    int i=0;
     for (auto a : atoms) {
-        cols->addValue(a->getParams().color);
-        Pos2->addValue(a->getTransformation()[1]);
+        cols2->addValue(Vec3f(0,1,1));
+        cols2->addValue(Vec3f(0,1,1));
+        norms2->addValue(Vec3f(0,1,0));
+        norms2->addValue(Vec3f(0,1,0));
+        Pos2->addValue(a->getTransformation()[3]);
+        Pos2->addValue(a->getTransformation()[3] + a->getTransformation()[1]);
+        Indices3->addValue(i);
+        Indices3->addValue(i+1);
+        i +=2;
+        cout << " normal " << a->getID() << " " << a->getTransformation()[1] << endl;
     }
 
     VRGeometry* normals = new VRGeometry("normals");
     addChild(normals);
     bonds_geo->setType(GL_LINES);
     bonds_geo->setPositions(Pos2);
-    bonds_geo->setNormals(Norms);
+    bonds_geo->setNormals(norms2);
     bonds_geo->setColors(cols2);
     bonds_geo->setIndices(Indices3);
-    bonds_geo->setMaterial(mat2);
+    bonds_geo->setMaterial(mat3);*/
 }
 
 vector<string> VRMolecule::parse(string mol) {
