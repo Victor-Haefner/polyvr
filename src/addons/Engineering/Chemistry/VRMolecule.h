@@ -46,6 +46,8 @@ class VRMolecule : public VRGeometry {
     private:
         vector<VRAtom*> atoms;
 
+        VRGeometry* bonds_geo;
+
 		void addAtom(string a);
 		void updateGeo();
 		vector<string> parse(string mol);

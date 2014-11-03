@@ -13,6 +13,7 @@
   <Scripts>
     <Init core="&#9;import VR&#10;&#9;m = VR.Molecule('C4H10')&#10;&#9;root.addChild(m)" type="Python" mobile="">
       <arg type="VRPyObjectType" value="Headlight" name_suffix="0" base_name="root" name_space="Init"/>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
     </Init>
   </Scripts>
   <Sockets/>

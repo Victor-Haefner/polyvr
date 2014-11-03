@@ -3,13 +3,22 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/utils/toString.h"
 
-#include <OpenSG/OSGMatrixUtility.h>
 #include <OpenSG/OSGGeoProperties.h>
 
 using namespace OSG;
 
 map<string, PeriodicTableEntry> PeriodicTable;
 map<string, vector<Matrix> > AtomicStructures;
+
+//#include <OpenSG/OSGMatrixUtility.h>
+void MatrixLookAt( Matrix& m, Vec3f p, Vec3f a, Vec3f u) {
+    Vec3f d = p - a;
+    Vec3f r = u.cross(d);
+    m[0] = Vec4f(r[0], r[1], r[2], 0);
+    m[1] = Vec4f(u[0], u[1], u[2], 0);
+    m[2] = Vec4f(d[0], d[1], d[2], 0);
+    m[3] = Vec4f(p[0], p[1], p[2], 1);
+}
 
 void initAtomicTables() {
 	PeriodicTable["H"] = PeriodicTableEntry(1, Vec3f(1,1,1));
@@ -30,16 +39,28 @@ void initAtomicTables() {
 	MatrixLookAt( m, Vec3f(0,0,-1), Vec3f(0,0,0), Vec3f(0,-1,0) ); AtomicStructures["linear"].push_back( m );
 	MatrixLookAt( m, Vec3f(0,0,1), Vec3f(0,0,0), Vec3f(0,-1,0) ); AtomicStructures["linear"].push_back( m );
 
+    float s2 = sqrt(2);
+    float s3 = sqrt(3);
     float _3 = 1.0/3.0;
-    float l2 = sqrt(2);
+
 	MatrixLookAt( m, Vec3f(0,0,-1), Vec3f(0,0,0), Vec3f(0,-1,0) ); AtomicStructures["iso"].push_back( m );
 	MatrixLookAt( m, Vec3f(0,-sqrt(8.0/9),_3), Vec3f(0,0,0), Vec3f(0,-1,0) ); AtomicStructures["iso"].push_back( m );
 	MatrixLookAt( m, Vec3f(0,sqrt(8.0/9),_3), Vec3f(0,0,0), Vec3f(0,-1,0) ); AtomicStructures["iso"].push_back( m );
 
-	MatrixLookAt( m, Vec3f(0, 0, -1), Vec3f(0,0,0), Vec3f(0,-1,0) ); AtomicStructures["tetra"].push_back( m );
-	MatrixLookAt( m, Vec3f(0, sqrt(8.0/9), _3), Vec3f(0,0,0), Vec3f(0,-1,0) ); AtomicStructures["tetra"].push_back( m );
-	MatrixLookAt( m, Vec3f(sqrt(7.0/9), -_3, _3), Vec3f(0,0,0), Vec3f(0,-1,0) ); AtomicStructures["tetra"].push_back( m );
-	MatrixLookAt( m, Vec3f(-sqrt(7.0/9), -_3, _3), Vec3f(0,0,0), Vec3f(0,-1,0) ); AtomicStructures["tetra"].push_back( m );
+	Vec3f tP0 = Vec3f(0, 0, -1);
+	Vec3f tP1 = Vec3f(0, 2*s2/3, _3);
+	Vec3f tP2 = Vec3f(sqrt(2.0/3), -s2/3, _3);
+	Vec3f tP3 = Vec3f(-sqrt(2.0/3), -s2/3, _3);
+
+	Vec3f tU0 = Vec3f(0, -1, 0);
+	Vec3f tU1 = Vec3f(0, _3, 2*s2/3);
+	Vec3f tU2 = Vec3f(-s3/6, -1/6, 2*s2/3);
+	Vec3f tU3 = Vec3f(s3/6, -1/6, 2*s2/3);
+
+	m.setIdentity(); MatrixLookAt( m, tP0, Vec3f(0,0,0), tU0) ; AtomicStructures["tetra"].push_back( m );
+	m.setIdentity(); MatrixLookAt( m, tP1, Vec3f(0,0,0), tU1) ; AtomicStructures["tetra"].push_back( m );
+	m.setIdentity(); MatrixLookAt( m, tP2, Vec3f(0,0,0), tU2); AtomicStructures["tetra"].push_back( m );
+	m.setIdentity(); MatrixLookAt( m, tP3, Vec3f(0,0,0), tU3); AtomicStructures["tetra"].push_back( m );
 }
 
 PeriodicTableEntry::PeriodicTableEntry() {}
@@ -105,6 +126,9 @@ void VRAtom::print() {
 VRMolecule::VRMolecule(string definition) : VRGeometry(definition) {
     if (PeriodicTable.size() == 0) initAtomicTables();
 
+    bonds_geo = new VRGeometry("bonds");
+    addChild(bonds_geo);
+
     vector<string> mol = parse(definition);
     for (auto a : mol) addAtom(a);
     for (auto a : atoms) a->computeGeo();
@@ -120,53 +144,75 @@ void VRMolecule::addAtom(string a) {
 }
 
 void VRMolecule::updateGeo() {
-    GeoUInt8PropertyRecPtr      Type = GeoUInt8Property::create();
-    GeoUInt32PropertyRefPtr     Length = GeoUInt32Property::create();
     GeoPnt3fPropertyRecPtr      Pos = GeoPnt3fProperty::create();
     GeoVec3fPropertyRefPtr      Norms = GeoVec3fProperty::create();
     GeoUInt32PropertyRefPtr     Indices = GeoUInt32Property::create();
     GeoVec3fPropertyRefPtr      cols = GeoVec3fProperty::create();
 
-    Type->addValue(GL_POINTS);
-    Type->addValue(GL_LINES);
-
     for (auto a : atoms) {
         cols->addValue(a->getParams().color);
         Pos->addValue(a->getTransformation()[3]);
+        Norms->addValue(a->getTransformation()[1]);
+        cout << " updateGeo " << a->getID() << " " << a->getTransformation()[3] << endl;
     }
 
     for (uint i=0; i<Pos->size(); i++) {
-        Norms->addValue(Vec3f(0,1,0));
         Indices->addValue(i);
     }
 
-    int bN = 0;
+    GeoUInt32PropertyRefPtr     Indices2 = GeoUInt32Property::create();
     for (auto a : atoms) {
         for (auto b : a->getBonds()) {
             if (b->getID() > a->getID()) {
-                Indices->addValue(a->getID());
-                Indices->addValue(b->getID());
-                bN++;
+                Indices2->addValue(a->getID());
+                Indices2->addValue(b->getID());
             }
         }
     }
 
-    Length->addValue(Pos->size());
-    Length->addValue(2*bN);
-
-
-    VRMaterial* mat = VRMaterial::get("molecules");
+    VRMaterial* mat = VRMaterial::get("atoms");
     mat->setPointSize(40);
-    mat->setLineWidth(5);
     mat->setLit(false);
 
-    setTypes(Type);
+    VRMaterial* mat2 = VRMaterial::get("molecule_bonds");
+    mat2->setLineWidth(5);
+    mat2->setLit(false);
+
+    setType(GL_POINTS);
     setPositions(Pos);
     setNormals(Norms);
-    setIndices(Indices);
-    setLengths(Length);
-    setMaterial(mat);
     setColors(cols);
+    setIndices(Indices);
+    setMaterial(mat);
+
+    bonds_geo->setType(GL_LINES);
+    bonds_geo->setPositions(Pos);
+    bonds_geo->setNormals(Norms);
+    bonds_geo->setColors(cols);
+    bonds_geo->setIndices(Indices2);
+    bonds_geo->setMaterial(mat2);
+
+
+
+
+    GeoPnt3fPropertyRecPtr      Pos2 = GeoPnt3fProperty::create();
+    GeoUInt32PropertyRefPtr     Indices = GeoUInt32Property::create();
+    GeoVec3fPropertyRefPtr      cols = GeoVec3fProperty::create();
+
+
+    for (auto a : atoms) {
+        cols->addValue(a->getParams().color);
+        Pos2->addValue(a->getTransformation()[1]);
+    }
+
+    VRGeometry* normals = new VRGeometry("normals");
+    addChild(normals);
+    bonds_geo->setType(GL_LINES);
+    bonds_geo->setPositions(Pos2);
+    bonds_geo->setNormals(Norms);
+    bonds_geo->setColors(cols2);
+    bonds_geo->setIndices(Indices3);
+    bonds_geo->setMaterial(mat2);
 }
 
 vector<string> VRMolecule::parse(string mol) {
