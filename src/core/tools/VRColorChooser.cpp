@@ -54,13 +54,10 @@ void VRColorChooser::setGeometry(VRGeometry* g) { geo = g; geo->setMaterial(mat)
 void VRColorChooser::resolve(VRDevice* dev) {
     if (dev == 0) return;
 
-    cout << "A0\n";
-
-    VRIntersection ins = dev->getLastIntersection();//dev->intersect(geo);
+    //VRIntersection ins = dev->getLastIntersection();
+    VRIntersection ins = dev->intersect(geo);
     if (!ins.hit) return;
-    cout << "A1\n";
     if (ins.object == 0) return;
-    cout << "A2\n";
     if (ins.object != geo) return;
 
     cout << "VRColorChooser::resolve, geo: " << geo->getName() << " texel: " << ins.texel << endl;

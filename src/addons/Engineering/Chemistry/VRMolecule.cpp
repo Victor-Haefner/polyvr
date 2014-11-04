@@ -305,10 +305,12 @@ string VRMolecule::vp =
 "#version 120\n"
 GLSL(
 varying mat4 view;
+varying mat4 model;
 varying vec4 color;
 
 void main( void ) {
     view = gl_ProjectionMatrix;
+    model = gl_ModelViewMatrix;
     color = gl_Color;
     gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex;
 }
@@ -322,6 +324,7 @@ layout (points) in;
 layout (triangle_strip, max_vertices=6) out;
 
 in mat4 view[];
+in mat4 model[];
 in vec4 color[];
 out vec2 texCoord;
 out vec4 Color;
@@ -333,17 +336,32 @@ void emitVertex(in vec4 p, in vec2 tc) {
 }
 
 void emitQuad(in float s, in vec4 tc) {
+	mat4 vm = view[0];
+	mat4 m = model[0];
+
+	m[0][0] = 1;
+	m[0][1] = 0;
+	m[0][2] = 0;
+
+	m[1][0] = 0;
+	m[1][1] = 1;
+	m[1][2] = 0;
+
+	m[2][0] = 0;
+	m[2][1] = 0;
+	m[2][2] = 1;
+	mat4 vmm = vm*m;
+
 	vec4 p = gl_PositionIn[0];
+	p.z -= 0.02;
 
-	vec4 u = view[0]*vec4(s,0,0,0);
-	vec4 v = view[0]*vec4(0,s,0,0);
-	vec4 w = view[0]*vec4(0,0,s,0);
-	w = vec4(0,0,-0.02,0);
+	vec4 u = vmm*vec4(s,0,0,0);
+	vec4 v = vmm*vec4(0,s,0,0);
 
-	vec4 p1 = p -u -v +w;
-	vec4 p2 = p -u +v +w;
-	vec4 p3 = p +u +v +w;
-	vec4 p4 = p +u -v +w;
+	vec4 p1 = p -u -v;
+	vec4 p2 = p -u +v;
+	vec4 p3 = p +u +v;
+	vec4 p4 = p +u -v;
 
 	emitVertex(p1, vec2(tc[0], tc[2]));
 	emitVertex(p2, vec2(tc[0], tc[3]));

@@ -75,7 +75,6 @@ VRIntersection VRIntersect::intersect(VRObject* tree) {
 }
 
 void VRIntersect::drag(VRTransform* caster, VRObject* tree, VRDevice* dev) {
-    cout << "D0\n";
     VRIntersection ins = intersect(tree);
 
     if (ins.object == 0 or dragged != 0 or !dnd) return;
