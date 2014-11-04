@@ -5,20 +5,14 @@
 
 #include <OpenSG/OSGGeoProperties.h>
 
+#define GLSL(shader) #shader
+
 using namespace OSG;
 
 map<string, PeriodicTableEntry> PeriodicTable;
 map<string, vector<Matrix> > AtomicStructures;
 
-//#include <OpenSG/OSGMatrixUtility.h>
-void MatrixLookAt( Matrix& m, Vec3f p, Vec3f a, Vec3f u) {
-    Vec3f d = p - a;
-    Vec3f r = u.cross(d);
-    m[0] = Vec4f(r[0], r[1], r[2], 0);
-    m[1] = Vec4f(u[0], u[1], u[2], 0);
-    m[2] = Vec4f(d[0], d[1], d[2], 0);
-    m[3] = Vec4f(p[0], p[1], p[2], 1);
-}
+#include <OpenSG/OSGMatrixUtility.h>
 
 void initAtomicTables() {
 	PeriodicTable["H"] = PeriodicTableEntry(1, Vec3f(1,1,1));
@@ -35,32 +29,35 @@ void initAtomicTables() {
 	AtomicStructures["single"] = vector<Matrix>();
 	AtomicStructures["invalid"] = vector<Matrix>();
 
-    Matrix m;
-	MatrixLookAt( m, Vec3f(0,0,-1), Vec3f(0,0,0), Vec3f(0,-1,0) ); AtomicStructures["linear"].push_back( m );
-	MatrixLookAt( m, Vec3f(0,0,1), Vec3f(0,0,0), Vec3f(0,-1,0) ); AtomicStructures["linear"].push_back( m );
-
     float s2 = sqrt(2);
     float s3 = sqrt(3);
     float _3 = 1.0/3.0;
+    Matrix m;
 
+    // linear structure
+	MatrixLookAt( m, Vec3f(0,0,-1), Vec3f(0,0,0), Vec3f(0,-1,0) ); AtomicStructures["linear"].push_back( m );
+	MatrixLookAt( m, Vec3f(0,0,1), Vec3f(0,0,0), Vec3f(0,-1,0) ); AtomicStructures["linear"].push_back( m );
+
+    // planar structure
 	MatrixLookAt( m, Vec3f(0,0,-1), Vec3f(0,0,0), Vec3f(0,-1,0) ); AtomicStructures["iso"].push_back( m );
-	MatrixLookAt( m, Vec3f(0,-sqrt(8.0/9),_3), Vec3f(0,0,0), Vec3f(0,-1,0) ); AtomicStructures["iso"].push_back( m );
-	MatrixLookAt( m, Vec3f(0,sqrt(8.0/9),_3), Vec3f(0,0,0), Vec3f(0,-1,0) ); AtomicStructures["iso"].push_back( m );
+	MatrixLookAt( m, Vec3f(0,2*s2/3,_3), Vec3f(0,0,0), Vec3f(0,-_3, 2*s2/3) ); AtomicStructures["iso"].push_back( m );
+	MatrixLookAt( m, Vec3f(0,-2*s2/3,_3), Vec3f(0,0,0), Vec3f(0,-_3, -2*s2/3) ); AtomicStructures["iso"].push_back( m );
 
+    // tetraeder structure
 	Vec3f tP0 = Vec3f(0, 0, -1);
-	Vec3f tP1 = Vec3f(0, 2*s2/3, _3);
-	Vec3f tP2 = Vec3f(sqrt(2.0/3), -s2/3, _3);
-	Vec3f tP3 = Vec3f(-sqrt(2.0/3), -s2/3, _3);
+	Vec3f tP1 = Vec3f(sqrt(2.0/3), -s2/3, _3);
+	Vec3f tP2 = Vec3f(-sqrt(2.0/3), -s2/3, _3);
+	Vec3f tP3 = Vec3f(0, 2*s2/3, _3);
 
 	Vec3f tU0 = Vec3f(0, -1, 0);
-	Vec3f tU1 = Vec3f(0, -_3, 2*s2/3);
-	Vec3f tU2 = Vec3f(-s3/6, 1.0/6, 2*s2/3);
-	Vec3f tU3 = Vec3f(s3/6, 1.0/6, 2*s2/3);
+	Vec3f tU1 = Vec3f(-s3/6, 1.0/6, 2*s2/3);
+	Vec3f tU2 = Vec3f(s3/6, 1.0/6, 2*s2/3);
+	Vec3f tU3 = Vec3f(0, -_3, 2*s2/3);
 
-	m.setIdentity(); MatrixLookAt( m, tP0, Vec3f(0,0,0), tU0) ; AtomicStructures["tetra"].push_back( m );
-	m.setIdentity(); MatrixLookAt( m, tP1, Vec3f(0,0,0), tU1) ; AtomicStructures["tetra"].push_back( m );
-	m.setIdentity(); MatrixLookAt( m, tP2, Vec3f(0,0,0), tU2); AtomicStructures["tetra"].push_back( m );
-	m.setIdentity(); MatrixLookAt( m, tP3, Vec3f(0,0,0), tU3); AtomicStructures["tetra"].push_back( m );
+	MatrixLookAt( m, tP0, Vec3f(0,0,0), tU0); AtomicStructures["tetra"].push_back( m );
+	MatrixLookAt( m, tP1, Vec3f(0,0,0), tU1); AtomicStructures["tetra"].push_back( m );
+	MatrixLookAt( m, tP2, Vec3f(0,0,0), tU2); AtomicStructures["tetra"].push_back( m );
+	MatrixLookAt( m, tP3, Vec3f(0,0,0), tU3); AtomicStructures["tetra"].push_back( m );
 }
 
 PeriodicTableEntry::PeriodicTableEntry() {}
@@ -124,17 +121,10 @@ void VRAtom::print() {
 
 
 VRMolecule::VRMolecule(string definition) : VRGeometry(definition) {
-    if (PeriodicTable.size() == 0) initAtomicTables();
-
     bonds_geo = new VRGeometry("bonds");
     addChild(bonds_geo);
 
-    vector<string> mol = parse(definition);
-    for (auto a : mol) addAtom(a);
-    for (auto a : atoms) a->computeGeo();
-    //for (auto a : atoms) a->print();
-    for (auto a : atoms) a->computePositions();
-    updateGeo();
+    set(definition);
 }
 
 void VRMolecule::addAtom(string a) {
@@ -153,7 +143,6 @@ void VRMolecule::updateGeo() {
         cols->addValue(a->getParams().color);
         Pos->addValue(a->getTransformation()[3]);
         Norms->addValue(a->getTransformation()[1]);
-        cout << " updateGeo " << a->getID() << " " << a->getTransformation()[3] << endl;
     }
 
     for (uint i=0; i<Pos->size(); i++) {
@@ -173,6 +162,10 @@ void VRMolecule::updateGeo() {
     VRMaterial* mat = VRMaterial::get("atoms");
     mat->setPointSize(40);
     mat->setLit(false);
+
+    mat->setVertexShader(vp);
+    mat->setFragmentShader(fp);
+    mat->setGeometryShader(gp);
 
     VRMaterial* mat2 = VRMaterial::get("molecule_bonds");
     mat2->setLineWidth(5);
@@ -261,3 +254,109 @@ vector<string> VRMolecule::parse(string mol) {
 
     return m;
 }
+
+void VRMolecule::set(string definition) {
+    if (PeriodicTable.size() == 0) initAtomicTables();
+
+    vector<string> mol = parse(definition);
+    atoms.clear();
+    for (auto a : mol) addAtom(a);
+    for (auto a : atoms) a->computeGeo();
+    for (auto a : atoms) a->computePositions();
+    //for (auto a : atoms) a->print();
+
+    updateGeo();
+}
+
+void VRMolecule::setRandom(int N) {
+    string m;
+    int a = 0;
+
+    vector<string> types;
+    for(auto a : PeriodicTable) types.push_back(a.first);
+    int aN = types.size();
+
+    for (int i=0; i<N; i++) {
+        a = random()%aN;
+        m += types[a];
+        m += toString(int(1+random()%4));
+    }
+
+    set(m);
+}
+
+string VRMolecule::fp =
+"#version 120\n"
+GLSL(
+in vec2 texCoord;
+in vec4 Color;
+
+void main( void ) {
+	vec2 p = 2* ( vec2(0.5, 0.5) - texCoord );
+	float r = sqrt(dot(p,p));
+	if (r > 1.0) discard;
+	float f = 1.2 - (1.0-sqrt(1.0-r))/(r);
+	vec4 amb = vec4(0.2);
+	gl_FragColor = Color*f + amb;
+}
+);
+
+string VRMolecule::vp =
+"#version 120\n"
+GLSL(
+varying mat4 view;
+varying vec4 color;
+
+void main( void ) {
+    view = gl_ProjectionMatrix;
+    color = gl_Color;
+    gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex;
+}
+);
+
+string VRMolecule::gp =
+"#version 150\n"
+"#extension GL_EXT_geometry_shader4 : enable\n"
+GLSL(
+layout (points) in;
+layout (triangle_strip, max_vertices=6) out;
+
+in mat4 view[];
+in vec4 color[];
+out vec2 texCoord;
+out vec4 Color;
+
+void emitVertex(in vec4 p, in vec2 tc) {
+	gl_Position = p;
+	texCoord = tc;
+	EmitVertex();
+}
+
+void emitQuad(in float s, in vec4 tc) {
+	vec4 p = gl_PositionIn[0];
+
+	vec4 u = view[0]*vec4(s,0,0,0);
+	vec4 v = view[0]*vec4(0,s,0,0);
+	vec4 w = view[0]*vec4(0,0,s,0);
+	w = vec4(0,0,-0.02,0);
+
+	vec4 p1 = p -u -v +w;
+	vec4 p2 = p -u +v +w;
+	vec4 p3 = p +u +v +w;
+	vec4 p4 = p +u -v +w;
+
+	emitVertex(p1, vec2(tc[0], tc[2]));
+	emitVertex(p2, vec2(tc[0], tc[3]));
+	emitVertex(p3, vec2(tc[1], tc[3]));
+	EndPrimitive();
+	emitVertex(p1, vec2(tc[0], tc[2]));
+	emitVertex(p3, vec2(tc[1], tc[3]));
+	emitVertex(p4, vec2(tc[1], tc[2]));
+	EndPrimitive();
+}
+
+void main() {
+	Color = color[0];
+	emitQuad(0.2, vec4(0,1,0,1));
+}
+);

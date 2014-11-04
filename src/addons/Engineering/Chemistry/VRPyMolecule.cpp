@@ -46,5 +46,19 @@ template<> PyTypeObject VRPyBaseT<OSG::VRMolecule>::type = {
 };
 
 PyMethodDef VRPyMolecule::methods[] = {
+    {"set", (PyCFunction)VRPyMolecule::set, METH_VARARGS, "Set the molecule from string - set('CH4')" },
+    {"setRandom", (PyCFunction)VRPyMolecule::setRandom, METH_VARARGS, "Set a random molecule - setRandom(123)" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyMolecule::set(VRPyMolecule* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyMolecule::set - Object is invalid"); return NULL; }
+    self->obj->set( parseString(args) );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyMolecule::setRandom(VRPyMolecule* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyMolecule::setRandom - Object is invalid"); return NULL; }
+    self->obj->setRandom( parseInt(args) );
+    Py_RETURN_TRUE;
+}
