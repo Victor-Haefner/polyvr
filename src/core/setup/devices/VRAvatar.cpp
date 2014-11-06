@@ -76,7 +76,7 @@ VRAvatar::VRAvatar(string name) {
     deviceRoot->addAttachment("global", 0);
 
     avatars["ray"] = initRay();
-    avatars["cone"] = initCone();
+    //avatars["cone"] = initCone();
     //avatars["broadray"] = initBroadRay();
 
     addAll();
@@ -87,8 +87,8 @@ VRAvatar::~VRAvatar() {
     delete deviceRoot; // also deletes the avatars!
 }
 
-void VRAvatar::enableAvatar(string avatar) { avatars[avatar]->show(); }
-void VRAvatar::disableAvatar(string avatar) { avatars[avatar]->hide(); }
+void VRAvatar::enableAvatar(string avatar) { if (avatars.count(avatar)) avatars[avatar]->show(); }
+void VRAvatar::disableAvatar(string avatar) { if (avatars.count(avatar)) avatars[avatar]->hide(); }
 
 VRTransform* VRAvatar::getBeacon() { return deviceRoot; }
 void VRAvatar::setBeacon(VRTransform* b) {
