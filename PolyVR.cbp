@@ -82,24 +82,21 @@
 			<Add option="-DCGAL_CFG_NO_VARIADIC_TEMPLATES" />
 			<Add option="-DNDEBUG" />
 			<Add option="-DCGAL_NDEBUG" />
-			<Add directory="/usr/lib/qt3/include" />
-			<Add directory="/usr/local/include" />
 			<Add directory="/usr/include/pango-1.0" />
 			<Add directory="/usr/include/glib-2.0" />
 			<Add directory="/usr/lib64/glib-2.0/include" />
-			<Add directory="/usr" />
 			<Add directory="/usr/include/freetype2" />
 			<Add directory="/usr/include/cairo" />
 			<Add directory="/usr/include/libpng12" />
-			<Add directory="/usr/lib" />
 			<Add directory="/usr/lib/glib-2.0/include" />
 			<Add directory="/usr/lib/x86_64-linux-gnu/glib-2.0/include" />
 			<Add directory="/usr/include/vtk-5.8/" />
 			<Add directory="/usr/include/bullet" />
 			<Add directory="/usr/include/gtkglext-1.0" />
 			<Add directory="/usr/include/vrpn" />
-			<Add directory="src" />
 			<Add directory="/usr/include/CEF" />
+			<Add directory="src" />
+			<Add directory="/usr/include/opensg" />
 		</Compiler>
 		<Linker>
 			<Add option="-lcef" />
