@@ -261,9 +261,7 @@ void VRNavigator::focus(VRDevice* dev) {
     VRIntersection ins = dev->intersect(target->getRoot());
 
     if (!ins.hit) return;
-    if (ins.object == 0) return;
-    Vec3f at = ins.point.subZero();
-    target->setAt(at);
+    target->setAt( ins.point.subZero() );
 }
 
 // presets

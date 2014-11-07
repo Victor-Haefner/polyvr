@@ -132,7 +132,7 @@ class VRTransform : public VRObject {
         void drop();
 
         /** Cast a ray in world coordinates from the object in its local coordinates, -z axis defaults **/
-        Line castRay(Vec3f dir = Vec3f(0,0,-1));
+        Line castRay(VRObject* obj = 0, Vec3f dir = Vec3f(0,0,-1));
 
         void startPathAnimation(path* p, float t, bool redirect = true);
         void stopAnimation();

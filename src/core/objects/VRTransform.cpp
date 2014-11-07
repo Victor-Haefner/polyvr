@@ -509,16 +509,26 @@ void VRTransform::drop() {
 }
 
 /** Cast a ray in world coordinates from the object in its local coordinates, -z axis defaults **/
-Line VRTransform::castRay(Vec3f dir) {
-    Matrix m;
-    getWorldMatrix(m);
+Line VRTransform::castRay(VRObject* obj, Vec3f dir) {
+    Matrix m = getWorldMatrix();
+    if (obj) obj = obj->getParent();
+
+    if (obj != 0) {
+        while (!obj->hasAttachment("transform")) { obj = obj->getParent(); if(obj == 0) break; }
+        if (obj != 0) {
+            VRTransform* tr = (VRTransform*)obj;
+            Matrix om = tr->getWorldMatrix();
+            om.invert();
+            om.mult(m);
+            m = om;
+        }
+    }
 
     m.mult(dir,dir); dir.normalize();
-    Pnt3f p0 = Vec3f(m[3]);// + dir*0.5;
+    Pnt3f p0 = Vec3f(m[3]);
 
     Line ray;
     ray.setValue(p0, dir);
-
     return ray;
 }
 
