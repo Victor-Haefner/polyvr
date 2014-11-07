@@ -74,24 +74,19 @@ void VRGeometry::setPrimitive(string primitive, string args) {
 
 /** Create a mesh using vectors with positions, normals, indices and optionaly texture coordinates **/
 void VRGeometry::create(int type, vector<Vec3f> pos, vector<Vec3f> norms, vector<int> inds, vector<Vec2f> texs) {
-    /*GeoUInt8PropertyRecPtr      Type = GeoUInt8Property::create();
+    GeoUInt8PropertyRecPtr      Type = GeoUInt8Property::create();
     GeoUInt32PropertyRecPtr     Length = GeoUInt32Property::create();
     GeoPnt3fPropertyRecPtr      Pos = GeoPnt3fProperty::create();
     GeoVec3fPropertyRecPtr      Norms = GeoVec3fProperty::create();
     GeoUInt32PropertyRecPtr     Indices = GeoUInt32Property::create();
     SimpleMaterialRecPtr        Mat = SimpleMaterial::create();
-    GeoVec2fPropertyRecPtr      Tex = GeoVec2fProperty::create();*/
+    GeoVec2fPropertyRecPtr      Tex = GeoVec2fProperty::create();
 
-    /*cout << "\nBLAAAAA ";
-    cout << type << " ";
-    cout << this << " ";
-    cout << endl;*/
-
-    //Type->addValue(type);
-    //Length->addValue(inds.size());
+    Type->addValue(type);
+    Length->addValue(inds.size());
 
     //positionen und Normalen
-    /*for(uint i=0;i<pos.size();i++) {
+    for(uint i=0;i<pos.size();i++) {
             Pos->addValue(pos[i]);
             Norms->addValue(norms[i]);
             if (texs.size() == pos.size()) Tex->addValue(texs[i]);
@@ -114,7 +109,7 @@ void VRGeometry::create(int type, vector<Vec3f> pos, vector<Vec3f> norms, vector
     geo->setTexCoords(Tex);
     geo->setMaterial(Mat);
 
-    setMesh(geo);*/
+    setMesh(geo);
 }
 
 /** Create a mesh using vectors with positions, normals, indices and optionaly texture coordinates **/

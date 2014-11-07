@@ -134,7 +134,7 @@ OSG::GeometryRecPtr VRTorus::make() { return OSG::makeTorusGeo(inner_radius, out
 OSG::GeometryRecPtr VRTeapot::make() { return OSG::makeTeapotGeo(iterations, scale); }
 OSG::GeometryRecPtr VRCylinder::make() { return OSG::makeCylinderGeo(height, radius, Nsides, doSides, doTop, doBottom); }
 OSG::GeometryRecPtr VRThread::make() {
-    /*OSG::GeoUInt8PropertyRecPtr      Type = OSG::GeoUInt8Property::create();
+    OSG::GeoUInt8PropertyRecPtr      Type = OSG::GeoUInt8Property::create();
     OSG::GeoUInt32PropertyRecPtr     Length = OSG::GeoUInt32Property::create();
     OSG::GeoPnt3fPropertyRecPtr      Pos = OSG::GeoPnt3fProperty::create();
     OSG::GeoVec3fPropertyRecPtr      Norms = OSG::GeoVec3fProperty::create();
@@ -193,10 +193,10 @@ OSG::GeometryRecPtr VRThread::make() {
     geo->setNormals(Norms);
     geo->setMaterial(Mat);
 
-    return geo;*/
+    return geo;
 }
 OSG::GeometryRecPtr VRGear::make() {
-    /*OSG::GeoUInt8PropertyRecPtr      Type = OSG::GeoUInt8Property::create();
+    OSG::GeoUInt8PropertyRecPtr      Type = OSG::GeoUInt8Property::create();
     OSG::GeoUInt32PropertyRecPtr     Length = OSG::GeoUInt32Property::create();
     OSG::GeoPnt3fPropertyRecPtr      Pos = OSG::GeoPnt3fProperty::create();
     OSG::GeoVec3fPropertyRecPtr      Norms = OSG::GeoVec3fProperty::create();
@@ -403,7 +403,7 @@ OSG::GeometryRecPtr VRGear::make() {
     geo->setNormals(Norms);
     geo->setMaterial(Mat);
 
-    return geo;*/
+    return geo;
 }
 
 

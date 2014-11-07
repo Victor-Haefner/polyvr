@@ -72,12 +72,6 @@ void initPolyVR(int argc, char **argv) {
     cout << "Init OSG\n";
     osgInit(argc,argv);
 
-    makeSphereGeo(2,2);
-
-    GeoUInt8PropertyRecPtr      Type = GeoUInt8Property::create();
-    //Type->addValue(GL_POINTS);
-
-
     cout << "Init SceneManager\n";
     VRSceneManager::get();
     VRInternalMonitor::get();

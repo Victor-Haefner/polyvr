@@ -44,6 +44,8 @@ Vec2f VRIntersect_computeTexel(VRIntersection& ins, NodeRecPtr node) {
 VRIntersection VRIntersect::intersect(VRObject* tree) {
     VRDevice* dev = (VRDevice*)this;
     VRTransform* caster = dev->getBeacon();
+    if (caster == 0) return VRIntersection();
+
     Line ray = caster->castRay();
     IntersectActionRefPtr iAct = IntersectAction::create();
     iAct->setLine(ray);

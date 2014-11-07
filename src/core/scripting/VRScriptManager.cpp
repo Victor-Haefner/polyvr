@@ -31,7 +31,6 @@
 #include "addons/CEF/VRPyCEF.h"
 #include "addons/Classification/VRPySegmentation.h"
 #include "addons/Engineering/Chemistry/VRPyMolecule.h"
-//#include "addons/WebKit/VRPyWebKit.h"
 #include "core/utils/VRStorage_template.h"
 #include "VRPyTypeCaster.h"
 
@@ -169,26 +168,24 @@ void VRScriptManager::initPyModules() {
     VRPyObject::registerModule("Object", pModVR);
     VRPyTransform::registerModule("Transform", pModVR, VRPyObject::typeRef);
     VRPyGeometry::registerModule("Geometry", pModVR, VRPyTransform::typeRef);
-    //VRPySocket::registerModule("Socket", pModVR);
+    VRPyMaterial::registerModule("Material", pModVR, VRPyObject::typeRef);
+    VRPyLod::registerModule("Lod", pModVR, VRPyObject::typeRef);
     VRPySprite::registerModule("Sprite", pModVR, VRPyGeometry::typeRef);
+    VRPySound::registerModule("Sound", pModVR);
+    VRPyStroke::registerModule("Stroke", pModVR, VRPyObject::typeRef);
+    VRPyConstraint::registerModule("Constraint", pModVR);
+    VRPyDevice::registerModule("Device", pModVR);
+    VRPyHaptic::registerModule("Haptic", pModVR, VRPyDevice::typeRef);
+    //VRPySocket::registerModule("Socket", pModVR);
+    //VRPyPath::registerModule("Path", pModVR);
+
+    VRPyColorChooser::registerModule("ColorChooser", pModVR);
+    VRPyCSG::registerModule("CSGGeometry", pModVR, VRPyGeometry::typeRef);
     VRPyRealWorld::registerModule("RealWorld", pModVR);
     VRPyTrafficSimulation::registerModule("TrafficSimulation", pModVR);
     VRPySimViDekont::registerModule("SimViDekont", pModVR);
     VRPyCaveKeeper::registerModule("CaveKeeper", pModVR);
-    //VRPySound::registerModule("Sound", pModVR);
     VRPyCarDynamics::registerModule("CarDynamics", pModVR);
-    //VRPyPath::registerModule("Path", pModVR);
-    VRPyStroke::registerModule("Stroke", pModVR, VRPyObject::typeRef);
-    VRPyColorChooser::registerModule("ColorChooser", pModVR);
-    VRPyCSG::registerModule("CSGGeometry", pModVR, VRPyGeometry::typeRef);
-    VRPyConstraint::registerModule("Constraint", pModVR);
-    VRPyDevice::registerModule("Device", pModVR);
-    VRPyHaptic::registerModule("Haptic", pModVR, VRPyDevice::typeRef);
-    VRPyMaterial::registerModule("Material", pModVR, VRPyObject::typeRef);
-    VRPyLod::registerModule("Lod", pModVR, VRPyObject::typeRef);
-
-    VRPySound::registerModule("Sound", pModVR);
-
     VRPyCEF::registerModule("CEF", pModVR);
     VRPySegmentation::registerModule("Segmentation", pModVR);
     VRPyMechanism::registerModule("Mechanism", pModVR);
