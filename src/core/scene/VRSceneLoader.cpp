@@ -303,7 +303,11 @@ VRSceneLoader* VRSceneLoader::get() {
 
 // get only the object for a single geometry
 GeometryRecPtr VRSceneLoader::loadGeometry(string file, string object) {
-    file = VRSceneLoader_current_scene->getWorkdir() + '/' + file;
+    VRScene* scene = VRSceneLoader_current_scene;
+    if (scene == 0) scene = VRSceneManager::get()->getActiveScene();
+    if (scene == 0) return 0;
+
+    file = scene->getWorkdir() + '/' + file;
 
     cout << "loadGeometry " << file << endl;
 
@@ -327,7 +331,11 @@ GeometryRecPtr VRSceneLoader::loadGeometry(string file, string object) {
 }
 
 VRTransform* VRSceneLoader::load3DContent(string filepath, VRObject* parent, bool reload) {
-    string filepath_toApp = VRSceneLoader_current_scene->getWorkdir() + '/' + filepath;
+    VRScene* scene = VRSceneLoader_current_scene;
+    if (scene == 0) scene = VRSceneManager::get()->getActiveScene();
+    if (scene == 0) return 0;
+
+    string filepath_toApp = scene->getWorkdir() + '/' + filepath;
 
     cout << "load3DContent " << filepath << endl;
 

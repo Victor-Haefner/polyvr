@@ -48,12 +48,19 @@ class VRMolecule : public VRGeometry {
 
         VRGeometry* bonds_geo;
 
+        static string vp;
+        static string fp;
+        static string gp;
+
 		void addAtom(string a);
 		void updateGeo();
 		vector<string> parse(string mol);
 
     public:
         VRMolecule(string definition);
+
+        void set(string definition);
+        void setRandom(int N);
 };
 
 OSG_END_NAMESPACE;
