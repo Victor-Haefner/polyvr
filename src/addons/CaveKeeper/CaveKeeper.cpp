@@ -99,12 +99,12 @@ VRGeometry* BlockWorld::createChunk(vector<octree::element*>& elements) {
 
     GeometryRecPtr g = Geometry::create();
     GeoUInt8PropertyRecPtr      Type = GeoUInt8Property::create();
-    GeoUInt32PropertyRefPtr     Length = GeoUInt32Property::create();
+    GeoUInt32PropertyRecPtr     Length = GeoUInt32Property::create();
     GeoPnt3fPropertyRecPtr      Pos = GeoPnt3fProperty::create();
-    GeoVec3fPropertyRefPtr      Norms = GeoVec3fProperty::create();
-    GeoVec3fPropertyRefPtr      Colors = GeoVec3fProperty::create();
+    GeoVec3fPropertyRecPtr      Norms = GeoVec3fProperty::create();
+    GeoVec3fPropertyRecPtr      Colors = GeoVec3fProperty::create();
     GeoVec2fPropertyRefPtr      texs = GeoVec2fProperty::create();
-    GeoUInt32PropertyRefPtr     Indices = GeoUInt32Property::create();
+    GeoUInt32PropertyRecPtr     Indices = GeoUInt32Property::create();
     SimpleMaterialRecPtr        Mat = SimpleMaterial::create();
 
     GeoVec4fPropertyRefPtr      vLights = GeoVec4fProperty::create();

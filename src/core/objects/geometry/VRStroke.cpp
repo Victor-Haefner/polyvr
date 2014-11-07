@@ -38,11 +38,11 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool lit) {
     this->lit = lit;
 
     GeoUInt8PropertyRecPtr      Type = GeoUInt8Property::create();
-    GeoUInt32PropertyRefPtr     Length = GeoUInt32Property::create();
+    GeoUInt32PropertyRecPtr     Length = GeoUInt32Property::create();
     GeoPnt3fPropertyRecPtr      Pos = GeoPnt3fProperty::create();
-    GeoVec3fPropertyRefPtr      Norms = GeoVec3fProperty::create();
-    GeoVec3fPropertyRefPtr      Colors = GeoVec3fProperty::create();
-    GeoUInt32PropertyRefPtr     Indices = GeoUInt32Property::create();
+    GeoVec3fPropertyRecPtr      Norms = GeoVec3fProperty::create();
+    GeoVec3fPropertyRecPtr      Colors = GeoVec3fProperty::create();
+    GeoUInt32PropertyRecPtr     Indices = GeoUInt32Property::create();
 
     Vec3f z = Vec3f(0,0,1);
     if (profile.size() == 1) Type->addValue(GL_LINES);

@@ -13,7 +13,7 @@ using namespace std;
 VRNumberingEngine::VRNumberingEngine() : VRGeometry("NumbEng") {
     OSG::GeoPnt3fPropertyRecPtr pos = OSG::GeoPnt3fProperty::create();
     OSG::GeoVec3fPropertyRecPtr norms = OSG::GeoVec3fProperty::create();
-    OSG::GeoUInt32PropertyRefPtr inds = OSG::GeoUInt32Property::create();
+    OSG::GeoUInt32PropertyRecPtr inds = OSG::GeoUInt32Property::create();
 
     this->pos = pos;
     this->norms = norms;

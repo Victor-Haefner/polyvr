@@ -135,9 +135,9 @@ void VRMolecule::addAtom(string a) {
 
 void VRMolecule::updateGeo() {
     GeoPnt3fPropertyRecPtr      Pos = GeoPnt3fProperty::create();
-    GeoVec3fPropertyRefPtr      Norms = GeoVec3fProperty::create();
-    GeoUInt32PropertyRefPtr     Indices = GeoUInt32Property::create();
-    GeoVec3fPropertyRefPtr      cols = GeoVec3fProperty::create();
+    GeoVec3fPropertyRecPtr      Norms = GeoVec3fProperty::create();
+    GeoUInt32PropertyRecPtr     Indices = GeoUInt32Property::create();
+    GeoVec3fPropertyRecPtr      cols = GeoVec3fProperty::create();
 
     for (auto a : atoms) {
         cols->addValue(a->getParams().color);
@@ -149,7 +149,7 @@ void VRMolecule::updateGeo() {
         Indices->addValue(i);
     }
 
-    GeoUInt32PropertyRefPtr     Indices2 = GeoUInt32Property::create();
+    GeoUInt32PropertyRecPtr     Indices2 = GeoUInt32Property::create();
     for (auto a : atoms) {
         for (auto b : a->getBonds()) {
             if (b->getID() > a->getID()) {
@@ -193,9 +193,9 @@ void VRMolecule::updateGeo() {
     mat3->setLit(false);
 
     GeoPnt3fPropertyRecPtr      Pos2 = GeoPnt3fProperty::create();
-    GeoUInt32PropertyRefPtr     Indices3 = GeoUInt32Property::create();
-    GeoVec3fPropertyRefPtr      cols2 = GeoVec3fProperty::create();
-    GeoVec3fPropertyRefPtr      norms2 = GeoVec3fProperty::create();
+    GeoUInt32PropertyRecPtr     Indices3 = GeoUInt32Property::create();
+    GeoVec3fPropertyRecPtr      cols2 = GeoVec3fProperty::create();
+    GeoVec3fPropertyRecPtr      norms2 = GeoVec3fProperty::create();
 
 
     int i=0;

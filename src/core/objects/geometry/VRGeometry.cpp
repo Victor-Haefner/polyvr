@@ -5,7 +5,11 @@
 #include <OpenSG/OSGSimpleGeometry.h>        // Methods to create simple geos.
 #include <OpenSG/OSGChunkMaterial.h>
 #include <OpenSG/OSGGeoFunctions.h>
-#include <OpenSG/OSGGeoProperties.h>
+
+//#include <OpenSG/OSGGeoProperties.h>
+#include <OpenSG/OSGTypedGeoIntegralProperty.h>
+#include <OpenSG/OSGTypedGeoVectorProperty.h>
+
 #include <OpenSG/OSGTriangleIterator.h>
 #include "core/scene/VRSceneLoader.h"
 #include "core/utils/toString.h"
@@ -60,30 +64,34 @@ void VRGeometry::setMesh(GeometryRecPtr g) {
 }
 
 void VRGeometry::setPrimitive(string primitive, string args) {
-    /*this->primitive = VRPrimitive::make(primitive);
+    this->primitive = VRPrimitive::make(primitive);
     if (this->primitive == 0) return;
     if (args != "") this->primitive->fromString(args);
     source.type = PRIMITIVE;
     source.parameter = primitive + " " + this->primitive->toString();
-    setMesh(this->primitive->make(), source);*/
+    setMesh(this->primitive->make(), source);
 }
 
 /** Create a mesh using vectors with positions, normals, indices and optionaly texture coordinates **/
 void VRGeometry::create(int type, vector<Vec3f> pos, vector<Vec3f> norms, vector<int> inds, vector<Vec2f> texs) {
-/*
-    GeoUInt8PropertyRecPtr      Type = GeoUInt8Property::create();
-    GeoUInt32PropertyRefPtr     Length = GeoUInt32Property::create();
+    /*GeoUInt8PropertyRecPtr      Type = GeoUInt8Property::create();
+    GeoUInt32PropertyRecPtr     Length = GeoUInt32Property::create();
     GeoPnt3fPropertyRecPtr      Pos = GeoPnt3fProperty::create();
-    GeoVec3fPropertyRefPtr      Norms = GeoVec3fProperty::create();
-    GeoUInt32PropertyRefPtr     Indices = GeoUInt32Property::create();
+    GeoVec3fPropertyRecPtr      Norms = GeoVec3fProperty::create();
+    GeoUInt32PropertyRecPtr     Indices = GeoUInt32Property::create();
     SimpleMaterialRecPtr        Mat = SimpleMaterial::create();
-    GeoVec2fPropertyRecPtr      Tex = GeoVec2fProperty::create();
+    GeoVec2fPropertyRecPtr      Tex = GeoVec2fProperty::create();*/
 
-    Type->addValue(type);
-    Length->addValue(inds.size());
+    /*cout << "\nBLAAAAA ";
+    cout << type << " ";
+    cout << this << " ";
+    cout << endl;*/
+
+    //Type->addValue(type);
+    //Length->addValue(inds.size());
 
     //positionen und Normalen
-    for(uint i=0;i<pos.size();i++) {
+    /*for(uint i=0;i<pos.size();i++) {
             Pos->addValue(pos[i]);
             Norms->addValue(norms[i]);
             if (texs.size() == pos.size()) Tex->addValue(texs[i]);
@@ -155,7 +163,7 @@ void VRGeometry::setTexCoords(GeoVectorProperty* Tex, int i) {
 
 void VRGeometry::setIndices(GeoIntegralProperty* Indices) {
     if (!meshSet) setMesh(Geometry::create());
-    GeoUInt32PropertyRefPtr Length = GeoUInt32Property::create();
+    GeoUInt32PropertyRecPtr Length = GeoUInt32Property::create();
     Length->addValue(Indices->size());
     mesh->setLengths(Length);
     mesh->setIndices(Indices);

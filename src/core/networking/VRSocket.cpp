@@ -325,7 +325,7 @@ void VRSocket::scanTCP(VRThread* thread) {
 }
 
 void VRSocket::initServer(CONNECTION_TYPE t, int _port) {
-    VRFunction<VRThread*>* socket;
+    VRFunction<VRThread*>* socket = 0;
     port = _port;
     switch(t) {
         case UNIX:

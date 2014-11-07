@@ -65,11 +65,11 @@ NodeRecPtr loadPly(string filename) {
     for(int i=0; i<16; i++) getline(file, s); // jump to data
 
     GeoUInt8PropertyRecPtr      Type = GeoUInt8Property::create();
-    GeoUInt32PropertyRefPtr     Length = GeoUInt32Property::create();
+    GeoUInt32PropertyRecPtr     Length = GeoUInt32Property::create();
     GeoPnt3fPropertyRecPtr      Pos = GeoPnt3fProperty::create();
-    GeoVec3fPropertyRefPtr      Norms = GeoVec3fProperty::create();
-    GeoVec3fPropertyRefPtr      Cols = GeoVec3fProperty::create();
-    GeoUInt32PropertyRefPtr     Indices = GeoUInt32Property::create();
+    GeoVec3fPropertyRecPtr      Norms = GeoVec3fProperty::create();
+    GeoVec3fPropertyRecPtr      Cols = GeoVec3fProperty::create();
+    GeoUInt32PropertyRecPtr     Indices = GeoUInt32Property::create();
     SimpleMaterialRecPtr        Mat = SimpleMaterial::create();
     GeoVec2fPropertyRecPtr      Tex = GeoVec2fProperty::create();
 

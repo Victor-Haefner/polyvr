@@ -9,8 +9,9 @@
 #include "core/scene/VRSoundManager.h"
 #include "core/objects/material/VRMaterial.h"
 #include <GL/glut.h>
-//#include "core/VRSocket.h"
-//#include "networking/VRCommunication.h"
+
+#include <OpenSG/OSGSimpleGeometry.h>
+#include <OpenSG/OSGTypedGeoIntegralProperty.h>
 
 #include <signal.h>
 extern "C" void my_function_to_handle_aborts(int signal_number) {
@@ -70,6 +71,12 @@ void initPolyVR(int argc, char **argv) {
     OSG::preloadSharedObject("OSGImageFileIO");
     cout << "Init OSG\n";
     osgInit(argc,argv);
+
+    makeSphereGeo(2,2);
+
+    GeoUInt8PropertyRecPtr      Type = GeoUInt8Property::create();
+    //Type->addValue(GL_POINTS);
+
 
     cout << "Init SceneManager\n";
     VRSceneManager::get();

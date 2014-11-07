@@ -125,7 +125,7 @@ void VRIntersect::initCross() {
 
     VRMaterial* mat = new VRMaterial("red_cross");
     mat->setDiffuse(Color3f(1,0,0));
-    cross->create(GL_LINE, pos, norms, inds, texs);
+    cross->create(GL_LINES, pos, norms, inds, texs);
     cross->setMaterial(mat);
 }
 

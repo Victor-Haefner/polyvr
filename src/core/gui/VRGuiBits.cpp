@@ -267,7 +267,7 @@ void VRGuiBits::update() {
     vector<VRCamera*> cams = scene->getCameraMap();
     Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("cameras"));
     store->clear();
-    int active;
+    int active = 0;
     for (uint i=0; i<cams.size(); i++) {
         if (cams[i] == scene->getActiveCamera()) active = i;
         Gtk::ListStore::Row row = *store->append();

@@ -320,17 +320,17 @@ PyObject* VRPyGeometry::setIndices(VRPyGeometry* self, PyObject *args) {
     if (! PyArg_ParseTuple(args, "O", &vec)) return NULL;
     if (self->obj == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
 
-    OSG::GeoUInt32PropertyRefPtr inds = OSG::GeoUInt32Property::create();
+    OSG::GeoUInt32PropertyRecPtr inds = OSG::GeoUInt32Property::create();
 
     int ld = getListDepth(vec);
     if (ld == 1) {
-        feed1D<OSG::GeoUInt32PropertyRefPtr>( vec, inds );
+        feed1D<OSG::GeoUInt32PropertyRecPtr>( vec, inds );
         self->obj->setIndices(inds);
     } else if (ld == 2) {
         OSG::GeoUInt32PropertyRecPtr lengths = OSG::GeoUInt32Property::create();
         for(Py_ssize_t i = 0; i < PyList_Size(vec); i++) {
             PyObject* vecList = PyList_GetItem(vec, i);
-            feed1D<OSG::GeoUInt32PropertyRefPtr>( vecList, inds );
+            feed1D<OSG::GeoUInt32PropertyRecPtr>( vecList, inds );
             lengths->addValue(PyList_Size(vecList));
         }
         self->obj->setIndices(inds);

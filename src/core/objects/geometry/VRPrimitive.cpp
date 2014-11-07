@@ -135,10 +135,10 @@ OSG::GeometryRecPtr VRTeapot::make() { return OSG::makeTeapotGeo(iterations, sca
 OSG::GeometryRecPtr VRCylinder::make() { return OSG::makeCylinderGeo(height, radius, Nsides, doSides, doTop, doBottom); }
 OSG::GeometryRecPtr VRThread::make() {
     /*OSG::GeoUInt8PropertyRecPtr      Type = OSG::GeoUInt8Property::create();
-    OSG::GeoUInt32PropertyRefPtr     Length = OSG::GeoUInt32Property::create();
+    OSG::GeoUInt32PropertyRecPtr     Length = OSG::GeoUInt32Property::create();
     OSG::GeoPnt3fPropertyRecPtr      Pos = OSG::GeoPnt3fProperty::create();
-    OSG::GeoVec3fPropertyRefPtr      Norms = OSG::GeoVec3fProperty::create();
-    OSG::GeoUInt32PropertyRefPtr     Indices = OSG::GeoUInt32Property::create();
+    OSG::GeoVec3fPropertyRecPtr      Norms = OSG::GeoVec3fProperty::create();
+    OSG::GeoUInt32PropertyRecPtr     Indices = OSG::GeoUInt32Property::create();
     OSG::SimpleMaterialRecPtr        Mat = OSG::SimpleMaterial::create();
 
     int rN = Nsegments;
@@ -197,10 +197,10 @@ OSG::GeometryRecPtr VRThread::make() {
 }
 OSG::GeometryRecPtr VRGear::make() {
     /*OSG::GeoUInt8PropertyRecPtr      Type = OSG::GeoUInt8Property::create();
-    OSG::GeoUInt32PropertyRefPtr     Length = OSG::GeoUInt32Property::create();
+    OSG::GeoUInt32PropertyRecPtr     Length = OSG::GeoUInt32Property::create();
     OSG::GeoPnt3fPropertyRecPtr      Pos = OSG::GeoPnt3fProperty::create();
-    OSG::GeoVec3fPropertyRefPtr      Norms = OSG::GeoVec3fProperty::create();
-    OSG::GeoUInt32PropertyRefPtr     Indices = OSG::GeoUInt32Property::create();
+    OSG::GeoVec3fPropertyRecPtr      Norms = OSG::GeoVec3fProperty::create();
+    OSG::GeoUInt32PropertyRecPtr     Indices = OSG::GeoUInt32Property::create();
     OSG::SimpleMaterialRecPtr        Mat = OSG::SimpleMaterial::create();
 
     float r0 = hole;
