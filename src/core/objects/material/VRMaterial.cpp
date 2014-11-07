@@ -278,6 +278,7 @@ ImageRecPtr VRMaterial::getTexture() { return texture; }
 void VRMaterial::setVertexShader(string s) {
     if (shaderChunk == 0) { shaderChunk = SimpleSHLChunk::create(); mat->addChunk(shaderChunk); }
     shaderChunk->setVertexProgram(s.c_str());
+    shaderChunk->addOSGVariable("OSGViewportSize");
 }
 
 void VRMaterial::setFragmentShader(string s) {

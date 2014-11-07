@@ -4,6 +4,7 @@
 #include "core/utils/toString.h"
 
 #include <OpenSG/OSGGeoProperties.h>
+#include <OpenSG/OSGShaderVariableOSG.h>
 
 #define GLSL(shader) #shader
 
@@ -323,8 +324,9 @@ GLSL(
 layout (points) in;
 layout (triangle_strip, max_vertices=6) out;
 
+uniform vec2 OSGViewportSize;
+
 in mat4 view[];
-in mat4 model[];
 in vec4 color[];
 out vec2 texCoord;
 out vec4 Color;
@@ -336,27 +338,13 @@ void emitVertex(in vec4 p, in vec2 tc) {
 }
 
 void emitQuad(in float s, in vec4 tc) {
-	mat4 vm = view[0];
-	mat4 m = model[0];
-
-	m[0][0] = 1;
-	m[0][1] = 0;
-	m[0][2] = 0;
-
-	m[1][0] = 0;
-	m[1][1] = 1;
-	m[1][2] = 0;
-
-	m[2][0] = 0;
-	m[2][1] = 0;
-	m[2][2] = 1;
-	mat4 vmm = vm*m;
-
 	vec4 p = gl_PositionIn[0];
 	p.z -= 0.02;
 
-	vec4 u = vmm*vec4(s,0,0,0);
-	vec4 v = vmm*vec4(0,s,0,0);
+	float a = OSGViewportSize.x/OSGViewportSize.y;
+
+	vec4 u = vec4(s/a,0,0,0);
+	vec4 v = vec4(0,s,0,0);
 
 	vec4 p1 = p -u -v;
 	vec4 p2 = p -u +v;
