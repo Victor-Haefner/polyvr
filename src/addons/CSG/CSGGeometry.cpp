@@ -146,7 +146,7 @@ CGAL::Polyhedron *CSGGeometry::intersect(CGAL::Polyhedron *first, CGAL::Polyhedr
 }
 
 GeometryTransitPtr CSGGeometry::toOsgGeometry(const CGAL::Polyhedron *p)
-{
+{/*
 #ifdef MEASURE_TIME
 	timespec startTime;
 	clock_gettime(CLOCK_MONOTONIC, &startTime);
@@ -162,7 +162,7 @@ GeometryTransitPtr CSGGeometry::toOsgGeometry(const CGAL::Polyhedron *p)
 	 * faces, but makes cubes look good. Well, well...
 	 */
 
-	Matrix localToWorld = getWorldMatrix();
+	/*Matrix localToWorld = getWorldMatrix();
 	OSG::Vec3f translation;
 	OSG::Quaternion rotation;
 	OSG::Vec3f scaleFactor;
@@ -210,14 +210,14 @@ GeometryTransitPtr CSGGeometry::toOsgGeometry(const CGAL::Polyhedron *p)
 	mesh->setTypes(types);
 	mesh->setLengths(lengths);
 	mesh->setMaterial(VRMaterial::getDefault()->getMaterial());
-	calcVertexNormals(mesh, 0.523598775598 /*30 deg in rad*/);
+	calcVertexNormals(mesh, 0.523598775598 /*30 deg in rad*//*);
 
 #ifdef MEASURE_TIME
 	timespec endTime;
 	clock_gettime(CLOCK_MONOTONIC, &endTime);
 	cout << "toOsgGeometry: " << ((uint64_t)(endTime.tv_sec - startTime.tv_sec) * 1000000000) + endTime.tv_nsec - startTime.tv_nsec << " nsec\n";
 #endif
-	return GeometryTransitPtr(mesh);
+	return GeometryTransitPtr(mesh);*/
 }
 
 size_t CSGGeometry::isKnownPoint(OSG::Pnt3f newPoint)
@@ -235,7 +235,7 @@ size_t CSGGeometry::isKnownPoint(OSG::Pnt3f newPoint)
 // Converts geometry to a polyhedron and applies the geometry node's world transform to the polyhedron.
 // OpenSG geometry data isn't transformed itself but has an associated transform core. Both are unified for CGAL.
 CGAL::Polyhedron* CSGGeometry::toPolyhedron(const GeometryRecPtr geometry, const Matrix *worldTransform)
-{
+{/*
 #ifdef MEASURE_TIME
 	timespec startTime;
 	clock_gettime(CLOCK_MONOTONIC, &startTime);
@@ -303,7 +303,7 @@ CGAL::Polyhedron* CSGGeometry::toPolyhedron(const GeometryRecPtr geometry, const
 	clock_gettime(CLOCK_MONOTONIC, &endTime);
 	cout << "toPolyhedron: " << ((uint64_t)(endTime.tv_sec - startTime.tv_sec) * 1000000000) + endTime.tv_nsec - startTime.tv_nsec << " nsec\n";
 #endif
-	return result;
+	return result;*/
 }
 
 void CSGGeometry::enableEditMode()

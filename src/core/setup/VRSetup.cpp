@@ -6,6 +6,7 @@
 #include "core/setup/devices/VRMouse.h"
 #include "core/objects/VRTransform.h"
 #include "core/objects/VRCamera.h"
+#include "core/objects/object/VRObjectT.h"
 #include <libxml++/libxml++.h>
 #include <libxml++/nodes/element.h>
 

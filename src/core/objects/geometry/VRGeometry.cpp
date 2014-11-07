@@ -10,6 +10,7 @@
 #include "core/scene/VRSceneLoader.h"
 #include "core/utils/toString.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/object/VRObjectT.h"
 #include "VRPrimitive.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -59,17 +60,17 @@ void VRGeometry::setMesh(GeometryRecPtr g) {
 }
 
 void VRGeometry::setPrimitive(string primitive, string args) {
-    this->primitive = VRPrimitive::make(primitive);
+    /*this->primitive = VRPrimitive::make(primitive);
     if (this->primitive == 0) return;
     if (args != "") this->primitive->fromString(args);
     source.type = PRIMITIVE;
     source.parameter = primitive + " " + this->primitive->toString();
-    setMesh(this->primitive->make(), source);
+    setMesh(this->primitive->make(), source);*/
 }
 
 /** Create a mesh using vectors with positions, normals, indices and optionaly texture coordinates **/
 void VRGeometry::create(int type, vector<Vec3f> pos, vector<Vec3f> norms, vector<int> inds, vector<Vec2f> texs) {
-
+/*
     GeoUInt8PropertyRecPtr      Type = GeoUInt8Property::create();
     GeoUInt32PropertyRefPtr     Length = GeoUInt32Property::create();
     GeoPnt3fPropertyRecPtr      Pos = GeoPnt3fProperty::create();
@@ -105,7 +106,7 @@ void VRGeometry::create(int type, vector<Vec3f> pos, vector<Vec3f> norms, vector
     geo->setTexCoords(Tex);
     geo->setMaterial(Mat);
 
-    setMesh(geo);
+    setMesh(geo);*/
 }
 
 /** Create a mesh using vectors with positions, normals, indices and optionaly texture coordinates **/
@@ -161,7 +162,7 @@ void VRGeometry::setIndices(GeoIntegralProperty* Indices) {
 }
 
 void VRGeometry::decimate(float f) {
-    if (mesh == 0) return;
+    /*if (mesh == 0) return;
 
     map<int, int> collapsing;
     map<int, Pnt3f> collapse_points;
@@ -251,7 +252,7 @@ void VRGeometry::decimate(float f) {
 	setLengths(lengths);
 
 
-    createSharedIndex(mesh);
+    createSharedIndex(mesh);*/
 }
 
 void VRGeometry::removeDoubles(float minAngle) {// TODO: use angle

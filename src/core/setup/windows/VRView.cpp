@@ -13,6 +13,7 @@
 #include "core/objects/geometry/VRSprite.h"
 #include "core/objects/VRTransform.h"
 #include "core/objects/VRCamera.h"
+#include "core/objects/object/VRObjectT.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
