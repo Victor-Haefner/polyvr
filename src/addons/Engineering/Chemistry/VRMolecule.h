@@ -16,13 +16,15 @@ struct PeriodicTableEntry {
 };
 
 class VRAtom {
-    private:
+    public:
         string type;
         PeriodicTableEntry params;
 
         int ID = 0; // ID in molecule
         bool full = false; // all valence electrons bound
         Matrix transformation;
+
+        int bondType = 1;
 
         vector<VRAtom*> bonds;
         string geo;
@@ -52,7 +54,7 @@ class VRMolecule : public VRGeometry {
         static string fp;
         static string gp;
 
-		void addAtom(string a);
+		void addAtom(string a, string b);
 		void updateGeo();
 		vector<string> parse(string mol);
 

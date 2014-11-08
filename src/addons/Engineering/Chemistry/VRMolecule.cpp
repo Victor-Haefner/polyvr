@@ -128,8 +128,11 @@ VRMolecule::VRMolecule(string definition) : VRGeometry(definition) {
     set(definition);
 }
 
-void VRMolecule::addAtom(string a) {
+void VRMolecule::addAtom(string a, string b) {
     VRAtom* at = new VRAtom(a, atoms.size());
+    if (b == "s") at->bondType = 1;
+    if (b == "d") at->bondType = 2;
+    if (b == "t") at->bondType = 3;
     for (auto a : atoms) if (a->append(at)) break;
     atoms.push_back(at);
 }
@@ -143,7 +146,10 @@ void VRMolecule::updateGeo() {
     for (auto a : atoms) {
         cols->addValue(a->getParams().color);
         Pos->addValue(a->getTransformation()[3]);
-        Norms->addValue(a->getTransformation()[1]);
+        //Norms->addValue(a->getTransformation()[1]);
+        Vec3f n = Vec3f(0.1*a->bondType, 1,1);
+        Norms->addValue(n);
+        cout << "norm " << n << endl;
     }
 
     for (uint i=0; i<Pos->size(); i++) {
@@ -185,42 +191,6 @@ void VRMolecule::updateGeo() {
     bonds_geo->setColors(cols);
     bonds_geo->setIndices(Indices2);
     bonds_geo->setMaterial(mat2);
-
-
-
-
-    /*VRMaterial* mat3 = VRMaterial::get("normals");
-    mat3->setLineWidth(5);
-    mat3->setLit(false);
-
-    GeoPnt3fPropertyRecPtr      Pos2 = GeoPnt3fProperty::create();
-    GeoUInt32PropertyRecPtr     Indices3 = GeoUInt32Property::create();
-    GeoVec3fPropertyRecPtr      cols2 = GeoVec3fProperty::create();
-    GeoVec3fPropertyRecPtr      norms2 = GeoVec3fProperty::create();
-
-
-    int i=0;
-    for (auto a : atoms) {
-        cols2->addValue(Vec3f(0,1,1));
-        cols2->addValue(Vec3f(0,1,1));
-        norms2->addValue(Vec3f(0,1,0));
-        norms2->addValue(Vec3f(0,1,0));
-        Pos2->addValue(a->getTransformation()[3]);
-        Pos2->addValue(a->getTransformation()[3] + a->getTransformation()[1]);
-        Indices3->addValue(i);
-        Indices3->addValue(i+1);
-        i +=2;
-        cout << " normal " << a->getID() << " " << a->getTransformation()[1] << endl;
-    }
-
-    VRGeometry* normals = new VRGeometry("normals");
-    addChild(normals);
-    bonds_geo->setType(GL_LINES);
-    bonds_geo->setPositions(Pos2);
-    bonds_geo->setNormals(norms2);
-    bonds_geo->setColors(cols2);
-    bonds_geo->setIndices(Indices3);
-    bonds_geo->setMaterial(mat3);*/
 }
 
 vector<string> VRMolecule::parse(string mol) {
@@ -230,6 +200,12 @@ vector<string> VRMolecule::parse(string mol) {
 
     while (i < mol.size() ) {
         if (mol[i] == '%') return m; // check for ending flag
+
+        // check for double or triple bounds
+        string bond = "s"; // single
+        if (mol[i] == '-') bond = "d"; // double
+        if (mol[i] == '=') bond = "t"; // triple
+        if (mol[i] == '-' or mol[i] == '=') i++;
 
         int j = 1;
         string atom = mol.substr(i, 2);
@@ -246,7 +222,10 @@ vector<string> VRMolecule::parse(string mol) {
         if (X.size() > 0) N = toInt(X);
 
         if (PeriodicTable.count(atom)) {
-            for (int k=0; k<N; k++) m.push_back(atom);
+            for (int k=0; k<N; k++) {
+                m.push_back(bond);
+                m.push_back(atom);
+            }
         }
 
         i += j;
@@ -261,7 +240,13 @@ void VRMolecule::set(string definition) {
 
     vector<string> mol = parse(definition);
     atoms.clear();
-    for (auto a : mol) addAtom(a);
+
+    for (int i=0; i<mol.size(); i+=2) {
+        string b = mol[i];
+        string a = mol[i+1];
+        addAtom(a,b);
+    }
+
     for (auto a : atoms) a->computeGeo();
     for (auto a : atoms) a->computePositions();
     //for (auto a : atoms) a->print();
