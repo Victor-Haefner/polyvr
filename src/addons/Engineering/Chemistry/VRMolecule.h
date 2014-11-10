@@ -20,6 +20,7 @@ struct VRBond {
     VRAtom* atom = 0;
     int type = 1;
     bool extra = false;
+    Vec3f p1, p2;
 
     VRBond(int t, VRAtom* a);
 };

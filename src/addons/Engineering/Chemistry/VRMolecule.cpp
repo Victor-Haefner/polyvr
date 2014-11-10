@@ -94,19 +94,35 @@ void VRAtom::computeGeo() {
 }
 
 void VRAtom::computePositions() {
+    // fill in the duplets
+    for (int i=4; i<params.valence_electrons; i++) bonds.push_back(VRBond(4,0));
+
+    computeGeo();
+
     string g = geo;
     if (AtomicStructures.count(geo) == 0) { cout << "Error: " << geo << " is invalid!\n"; return; }
 
     vector<Matrix> structure = AtomicStructures[geo];
     for (uint i=0; i<bonds.size(); i++) {
-        VRBond b = bonds[i];
-        VRAtom* a = b.atom;
-        if (b.extra) continue;
-        if (a->ID <= ID) continue;
         if (i >= structure.size()) break;
+        VRBond b = bonds[i];
+        if (b.extra) continue;
 
-        a->transformation = transformation;
-        a->transformation.mult(structure[i]);
+        Matrix T = transformation;
+        Matrix S = structure[i];
+
+        VRAtom* a = b.atom;
+        if (a == 0) {
+            S[3] *= 0.2; S[3][3] = 1;
+            T.mult(S);
+            T.mult(Pnt3f(0.2,0,0), bonds[i].p1);
+            T.mult(Pnt3f(-0.2,0,0), bonds[i].p2);
+            continue;
+        }
+
+        if (a->ID <= ID) continue;
+        T.mult(S);
+        a->transformation = T;
     }
 }
 
@@ -184,10 +200,20 @@ void VRMolecule::updateGeo() {
 
         // bonds
         for (auto b : a->getBonds()) {
+            if (b.atom == 0) { // duplet
+                Pos2->addValue(b.p1);
+                Pos2->addValue(b.p2);
+                Norms2->addValue( Vec3f(0, 1, 0) );
+                Norms2->addValue( Vec3f(0.1, 1,1) );
+                Indices2->addValue(j++);
+                Indices2->addValue(j++);
+                continue;
+            }
+
             if (b.atom->getID() < a->getID()) {
                 Pos2->addValue(a->getTransformation()[3]);
-                Norms2->addValue( Vec3f(0, 1, 0) );
                 Pos2->addValue(b.atom->getTransformation()[3]);
+                Norms2->addValue( Vec3f(0, 1, 0) );
                 Norms2->addValue( Vec3f(0.1*b.type, 1,1) );
                 Indices2->addValue(j++);
                 Indices2->addValue(j++);
@@ -302,7 +328,6 @@ void VRMolecule::set(string definition) {
         else addAtom(a,b);
     }
 
-    for (auto a : atoms) a->computeGeo();
     for (auto a : atoms) a->computePositions();
     //for (auto a : atoms) a->print();
 
