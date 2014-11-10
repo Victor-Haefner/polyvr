@@ -19,6 +19,9 @@ class VRAtom;
 struct VRBond {
     VRAtom* atom = 0;
     int type = 1;
+    bool extra = false;
+
+    VRBond(int t, VRAtom* a);
 };
 
 class VRAtom {
@@ -45,7 +48,7 @@ class VRAtom {
 
 		void computeGeo();
 		void computePositions();
-		bool append(VRAtom* at, int bond);
+		bool append(VRBond bond);
 
 		void print();
 };
@@ -64,7 +67,7 @@ class VRMolecule : public VRGeometry {
         static string b_fp;
         static string b_gp;
 
-		void addAtom(VRAtom* at, int b);
+		void addAtom(VRBond b);
 		void addAtom(string a, int b);
 		void addAtom(int a, int b);
 		void updateGeo();

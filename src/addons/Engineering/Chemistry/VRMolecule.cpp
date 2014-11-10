@@ -44,8 +44,8 @@ void initAtomicTables() {
 
     // planar structure
 	MatrixLookAt( m, Vec3f(0,0,-1), Vec3f(0,0,0), Vec3f(0,-1,0) ); AtomicStructures["iso"].push_back( m );
-	MatrixLookAt( m, Vec3f(0, s3/2, 0.5), Vec3f(0,0,0), Vec3f(0, -0.5, s3/2) ); AtomicStructures["iso"].push_back( m );
-	MatrixLookAt( m, Vec3f(0, -s3/2, 0.5), Vec3f(0,0,0), Vec3f(0, -0.5, -s3/2) ); AtomicStructures["iso"].push_back( m );
+	MatrixLookAt( m, Vec3f(0, s3/2, 0.5), Vec3f(0,0,0), Vec3f(0, 0.5, s3/2) ); AtomicStructures["iso"].push_back( m );
+	MatrixLookAt( m, Vec3f(0, -s3/2, 0.5), Vec3f(0,0,0), Vec3f(0, 0.5, -s3/2) ); AtomicStructures["iso"].push_back( m );
 
     // tetraeder structure
 	Vec3f tP0 = Vec3f(0, 0, -1);
@@ -70,8 +70,9 @@ PeriodicTableEntry::PeriodicTableEntry(int valence_electrons, Vec3f color) {
     this->color = color;
 }
 
+VRBond::VRBond(int t, VRAtom* a) { type = t; atom = a; }
+
 VRAtom::VRAtom(string type, int ID) {
-    cout << "Add " << type << " " << ID << endl;
     this->ID = ID;
     this->type = type;
     params = PeriodicTable[type];
@@ -98,25 +99,27 @@ void VRAtom::computePositions() {
 
     vector<Matrix> structure = AtomicStructures[geo];
     for (uint i=0; i<bonds.size(); i++) {
-        VRAtom* b = bonds[i].atom;
-        if (b->ID <= ID) continue;
+        VRBond b = bonds[i];
+        VRAtom* a = b.atom;
+        if (b.extra) continue;
+        if (a->ID <= ID) continue;
         if (i >= structure.size()) break;
-        b->transformation = transformation;
-        b->transformation.mult(structure[i]);
+
+        a->transformation = transformation;
+        a->transformation.mult(structure[i]);
     }
 }
 
-bool VRAtom::append(VRAtom* at, int bond) {
+bool VRAtom::append(VRBond bond) {
+    VRAtom* at = bond.atom;
     if (full or at->full or at == this) return false;
     for (auto b : bonds) if (b.atom == at) return false;
 
     int bmax = 4 - abs(params.valence_electrons - 4);
-    VRBond b;
-    b.type = bond;
-    b.atom = at;
-    bonds.push_back(b);
-    bound_valence_electrons += bond;
-    at->append(this, bond);
+    bonds.push_back(bond);
+    bound_valence_electrons += bond.type;
+    bond.atom = this;
+    at->append(bond);
 
     //print();
     if (bound_valence_electrons >= bmax) full = true;
@@ -138,17 +141,24 @@ VRMolecule::VRMolecule(string definition) : VRGeometry(definition) {
     set(definition);
 }
 
-void VRMolecule::addAtom(string a, int b) { addAtom( new VRAtom(a, atoms.size()), b); }
-void VRMolecule::addAtom(VRAtom* at, int b) {
-    for (auto a : atoms) if (a->append(at, b)) break;
-    atoms.push_back(at);
+void VRMolecule::addAtom(string a, int t) {
+    VRBond b(t, new VRAtom(a, atoms.size()) );
+    addAtom(b);
 }
 
-void VRMolecule::addAtom(int ID, int b) {
+void VRMolecule::addAtom(VRBond b) {
+    for (auto a : atoms) if (a->append(b)) break;
+    atoms.push_back(b.atom);
+}
+
+void VRMolecule::addAtom(int ID, int t) {
     if (ID >= atoms.size() or ID < 0) return;
     VRAtom* at = atoms[ID];
     if (at->full) return;
-    addAtom(at, b);
+
+    VRBond b(t, at);
+    b.extra = true;
+    addAtom(b);
 }
 
 void VRMolecule::updateGeo() {
@@ -169,13 +179,15 @@ void VRMolecule::updateGeo() {
 
         int bondType = 1 ;
         for (auto b : a->getBonds()) {
-            if (b.type > bondType) bondType = b.type;
-            if (b.atom->getID() > a->getID()) {
-                Indices2->addValue(a->getID());
+            if (b.atom->getID() < a->getID()) {
+                if (b.type > bondType) bondType = b.type;
+                cout << " geo bond " << b.atom->getID() << " " << a->getID() << " " << b.type << endl;
                 Indices2->addValue(b.atom->getID());
+                Indices2->addValue(a->getID());
             }
         }
 
+        cout << "  geo norm "  << " " << a->getID() << " " << bondType << endl;
         Norms->addValue( Vec3f(0.1*bondType, 1,1) );
     }
 
@@ -470,8 +482,7 @@ void emitQuad(in float s, in float f, in vec4 tc) {
 void main() {
 	vec3 n1 = normal[0];
 	vec3 n2 = normal[1];
-	float b = max(n1.x, n2.x);
-	b = n2.x;
+	float b = n2.x;
 
 	Color = vec4(0.5, 0.5, 0.5, 1.0);
 	vec4 tc = vec4(0,1,0,1);
