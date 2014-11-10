@@ -15,6 +15,12 @@ struct PeriodicTableEntry {
     PeriodicTableEntry( int valence_electrons, Vec3f color);
 };
 
+class VRAtom;
+struct VRBond {
+    VRAtom* atom = 0;
+    int type = 1;
+};
+
 class VRAtom {
     public:
         string type;
@@ -24,9 +30,9 @@ class VRAtom {
         bool full = false; // all valence electrons bound
         Matrix transformation;
 
-        int bondType = 1;
+        int bound_valence_electrons = 0;
 
-        vector<VRAtom*> bonds;
+        vector<VRBond> bonds;
         string geo;
 
     public:
@@ -34,12 +40,12 @@ class VRAtom {
 
         PeriodicTableEntry getParams();
         Matrix getTransformation();
-        vector<VRAtom*> getBonds();
+        vector<VRBond> getBonds();
         int getID();
 
 		void computeGeo();
 		void computePositions();
-		bool append(VRAtom* at);
+		bool append(VRAtom* at, int bond);
 
 		void print();
 };
@@ -50,13 +56,19 @@ class VRMolecule : public VRGeometry {
 
         VRGeometry* bonds_geo;
 
-        static string vp;
-        static string fp;
-        static string gp;
+        static string a_vp;
+        static string a_fp;
+        static string a_gp;
 
-		void addAtom(string a, string b);
+        static string b_vp;
+        static string b_fp;
+        static string b_gp;
+
+		void addAtom(VRAtom* at, int b);
+		void addAtom(string a, int b);
+		void addAtom(int a, int b);
 		void updateGeo();
-		vector<string> parse(string mol);
+		vector<string> parse(string mol, bool verbose = false);
 
     public:
         VRMolecule(string definition);

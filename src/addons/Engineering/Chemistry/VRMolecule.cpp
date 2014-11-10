@@ -28,6 +28,7 @@ void initAtomicTables() {
 	AtomicStructures["iso"] = vector<Matrix>();
 	AtomicStructures["linear"] = vector<Matrix>();
 	AtomicStructures["single"] = vector<Matrix>();
+	AtomicStructures["none"] = vector<Matrix>();
 	AtomicStructures["invalid"] = vector<Matrix>();
 
     float s2 = sqrt(2);
@@ -39,10 +40,12 @@ void initAtomicTables() {
 	MatrixLookAt( m, Vec3f(0,0,-1), Vec3f(0,0,0), Vec3f(0,-1,0) ); AtomicStructures["linear"].push_back( m );
 	MatrixLookAt( m, Vec3f(0,0,1), Vec3f(0,0,0), Vec3f(0,-1,0) ); AtomicStructures["linear"].push_back( m );
 
+	AtomicStructures["single"] = AtomicStructures["linear"];
+
     // planar structure
 	MatrixLookAt( m, Vec3f(0,0,-1), Vec3f(0,0,0), Vec3f(0,-1,0) ); AtomicStructures["iso"].push_back( m );
-	MatrixLookAt( m, Vec3f(0,2*s2/3,_3), Vec3f(0,0,0), Vec3f(0,-_3, 2*s2/3) ); AtomicStructures["iso"].push_back( m );
-	MatrixLookAt( m, Vec3f(0,-2*s2/3,_3), Vec3f(0,0,0), Vec3f(0,-_3, -2*s2/3) ); AtomicStructures["iso"].push_back( m );
+	MatrixLookAt( m, Vec3f(0, s3/2, 0.5), Vec3f(0,0,0), Vec3f(0, -0.5, s3/2) ); AtomicStructures["iso"].push_back( m );
+	MatrixLookAt( m, Vec3f(0, -s3/2, 0.5), Vec3f(0,0,0), Vec3f(0, -0.5, -s3/2) ); AtomicStructures["iso"].push_back( m );
 
     // tetraeder structure
 	Vec3f tP0 = Vec3f(0, 0, -1);
@@ -68,6 +71,7 @@ PeriodicTableEntry::PeriodicTableEntry(int valence_electrons, Vec3f color) {
 }
 
 VRAtom::VRAtom(string type, int ID) {
+    cout << "Add " << type << " " << ID << endl;
     this->ID = ID;
     this->type = type;
     params = PeriodicTable[type];
@@ -75,16 +79,17 @@ VRAtom::VRAtom(string type, int ID) {
 
 PeriodicTableEntry VRAtom::getParams() { return params; }
 Matrix VRAtom::getTransformation() { return transformation; }
-vector<VRAtom*> VRAtom::getBonds() { return bonds; }
+vector<VRBond> VRAtom::getBonds() { return bonds; }
 int VRAtom::getID() { return ID; }
 
 void VRAtom::computeGeo() {
-    if (bonds.size() > 4) geo = "invalid";
-    if (bonds.size() == 4) geo = "tetra";
-    if (bonds.size() == 3) geo = "iso";
-    if (bonds.size() == 2) geo = "linear";
-    if (bonds.size() == 1) geo = "single";
-    if (bonds.size() == 0) geo = "none";
+    int bN = bonds.size();
+    if (bN > 4) geo = "invalid";
+    if (bN == 4) geo = "tetra";
+    if (bN == 3) geo = "iso";
+    if (bN == 2) geo = "linear";
+    if (bN == 1) geo = "single";
+    if (bN == 0) geo = "none";
 }
 
 void VRAtom::computePositions() {
@@ -93,7 +98,7 @@ void VRAtom::computePositions() {
 
     vector<Matrix> structure = AtomicStructures[geo];
     for (uint i=0; i<bonds.size(); i++) {
-        VRAtom* b = bonds[i];
+        VRAtom* b = bonds[i].atom;
         if (b->ID <= ID) continue;
         if (i >= structure.size()) break;
         b->transformation = transformation;
@@ -101,24 +106,29 @@ void VRAtom::computePositions() {
     }
 }
 
-bool VRAtom::append(VRAtom* at) {
+bool VRAtom::append(VRAtom* at, int bond) {
     if (full or at->full or at == this) return false;
-    for (auto b : bonds) if (b == at) return false;
+    for (auto b : bonds) if (b.atom == at) return false;
 
-    uint bmax = 4 - abs(params.valence_electrons - 4);
-    bonds.push_back(at);
-    at->append(this);
+    int bmax = 4 - abs(params.valence_electrons - 4);
+    VRBond b;
+    b.type = bond;
+    b.atom = at;
+    bonds.push_back(b);
+    bound_valence_electrons += bond;
+    at->append(this, bond);
 
-    if (bonds.size() == bmax) full = true;
+    //print();
+    if (bound_valence_electrons >= bmax) full = true;
     return true;
 }
 
 void VRAtom::print() {
-    cout << " " << ID << " " << type << " " << geo;
-    for (auto b : bonds) cout << " " << b->ID;
+    cout << " ID: " << ID << " Type: " << type << " boundEl: " << bound_valence_electrons << " geo: " << geo << " pos: " << Vec3f(transformation[3]);
+    cout << " bonds with: ";
+    for (auto b : bonds) cout << " " << b.atom->ID;
     cout << endl;
 }
-
 
 
 VRMolecule::VRMolecule(string definition) : VRGeometry(definition) {
@@ -128,55 +138,54 @@ VRMolecule::VRMolecule(string definition) : VRGeometry(definition) {
     set(definition);
 }
 
-void VRMolecule::addAtom(string a, string b) {
-    VRAtom* at = new VRAtom(a, atoms.size());
-    if (b == "s") at->bondType = 1;
-    if (b == "d") at->bondType = 2;
-    if (b == "t") at->bondType = 3;
-    for (auto a : atoms) if (a->append(at)) break;
+void VRMolecule::addAtom(string a, int b) { addAtom( new VRAtom(a, atoms.size()), b); }
+void VRMolecule::addAtom(VRAtom* at, int b) {
+    for (auto a : atoms) if (a->append(at, b)) break;
     atoms.push_back(at);
+}
+
+void VRMolecule::addAtom(int ID, int b) {
+    if (ID >= atoms.size() or ID < 0) return;
+    VRAtom* at = atoms[ID];
+    if (at->full) return;
+    addAtom(at, b);
 }
 
 void VRMolecule::updateGeo() {
     GeoPnt3fPropertyRecPtr      Pos = GeoPnt3fProperty::create();
     GeoVec3fPropertyRecPtr      Norms = GeoVec3fProperty::create();
     GeoUInt32PropertyRecPtr     Indices = GeoUInt32Property::create();
+    GeoUInt32PropertyRecPtr     Indices2 = GeoUInt32Property::create();
     GeoVec3fPropertyRecPtr      cols = GeoVec3fProperty::create();
 
+    // hack to avoid the single point bug
+    if (atoms.size() == 1) atoms.push_back(atoms[0]);
+
+    int i=0;
     for (auto a : atoms) {
         cols->addValue(a->getParams().color);
         Pos->addValue(a->getTransformation()[3]);
-        //Norms->addValue(a->getTransformation()[1]);
-        Vec3f n = Vec3f(0.1*a->bondType, 1,1);
-        Norms->addValue(n);
-        cout << "norm " << n << endl;
-    }
+        Indices->addValue(i++);
 
-    for (uint i=0; i<Pos->size(); i++) {
-        Indices->addValue(i);
-    }
-
-    GeoUInt32PropertyRecPtr     Indices2 = GeoUInt32Property::create();
-    for (auto a : atoms) {
+        int bondType = 1 ;
         for (auto b : a->getBonds()) {
-            if (b->getID() > a->getID()) {
+            if (b.type > bondType) bondType = b.type;
+            if (b.atom->getID() > a->getID()) {
                 Indices2->addValue(a->getID());
-                Indices2->addValue(b->getID());
+                Indices2->addValue(b.atom->getID());
             }
         }
+
+        Norms->addValue( Vec3f(0.1*bondType, 1,1) );
     }
 
+    // atoms geometry
     VRMaterial* mat = VRMaterial::get("atoms");
     mat->setPointSize(40);
     mat->setLit(false);
-
-    mat->setVertexShader(vp);
-    mat->setFragmentShader(fp);
-    mat->setGeometryShader(gp);
-
-    VRMaterial* mat2 = VRMaterial::get("molecule_bonds");
-    mat2->setLineWidth(5);
-    mat2->setLit(false);
+    mat->setVertexShader(a_vp);
+    mat->setFragmentShader(a_fp);
+    mat->setGeometryShader(a_gp);
 
     setType(GL_POINTS);
     setPositions(Pos);
@@ -184,6 +193,14 @@ void VRMolecule::updateGeo() {
     setColors(cols);
     setIndices(Indices);
     setMaterial(mat);
+
+    // bonds geometry
+    VRMaterial* mat2 = VRMaterial::get("molecule_bonds");
+    mat2->setLineWidth(5);
+    mat2->setLit(false);
+    mat2->setVertexShader(b_vp);
+    mat2->setFragmentShader(b_fp);
+    mat2->setGeometryShader(b_gp);
 
     bonds_geo->setType(GL_LINES);
     bonds_geo->setPositions(Pos);
@@ -193,58 +210,80 @@ void VRMolecule::updateGeo() {
     bonds_geo->setMaterial(mat2);
 }
 
-vector<string> VRMolecule::parse(string mol) {
-    mol += "%  "; // add an ending flag
-    vector<string> m;
-    uint i = 0;
+bool isNumber(char c) { return (c >= '0' and c <= '9'); }
 
+string parseNumber(string in, int offset) {
+    string X = ""; //parse number
+    for (int k=0; isNumber(in[offset+k]); k++) X += in[offset+k];
+    return X;
+}
+
+vector<string> VRMolecule::parse(string mol, bool verbose) {
+    mol += "%  "; // add an ending flag
+    vector<string> res;
+    uint i = 0;
+    string X;
+
+    if (verbose) cout << "parse " << mol << endl;
     while (i < mol.size() ) {
-        if (mol[i] == '%') return m; // check for ending flag
+        if (verbose) cout << "  c: " << mol[i];
+        if (mol[i] == '%') break; // check for ending flag
 
         // check for double or triple bounds
-        string bond = "s"; // single
-        if (mol[i] == '-') bond = "d"; // double
-        if (mol[i] == '=') bond = "t"; // triple
+        string bond = "1"; // single
+        if (mol[i] == '-') bond = "2"; // double
+        if (mol[i] == '=') bond = "3"; // triple
         if (mol[i] == '-' or mol[i] == '=') i++;
+
+        // check for bond with ID atom
+        X = parseNumber(mol, i); //parse number
+        if (X.size() > 0) {
+            res.push_back(bond);
+            res.push_back(X);
+            i += X.size();
+            if (verbose) cout << " ID: " << X;
+            continue;
+        }
 
         int j = 1;
         string atom = mol.substr(i, 2);
         if (PeriodicTable.count(atom)) j = 2; // search first for double atom names like Cl
+        atom = mol.substr(i, j); // final atom type string
 
-        atom = mol.substr(i, j);
-
-        string X = "";
-        for (int k=0; mol[i+j+k] >= '0' and mol[i+j+k] <= '9'; k++) {
-            X += mol[i+j+k];
-        }
+        X = parseNumber(mol, i+j); //parse number
+        if (X.size() > 0 and verbose) cout << " N: " << X;
+        j += X.size();
 
         int N = 1;
         if (X.size() > 0) N = toInt(X);
 
         if (PeriodicTable.count(atom)) {
             for (int k=0; k<N; k++) {
-                m.push_back(bond);
-                m.push_back(atom);
+                res.push_back(bond);
+                res.push_back(atom);
             }
         }
 
         i += j;
     }
 
+    if (verbose) cout << endl;
 
-    return m;
+
+    return res;
 }
 
 void VRMolecule::set(string definition) {
     if (PeriodicTable.size() == 0) initAtomicTables();
 
-    vector<string> mol = parse(definition);
+    vector<string> mol = parse(definition, true);
     atoms.clear();
 
-    for (int i=0; i<mol.size(); i+=2) {
-        string b = mol[i];
+    for (uint i=0; i<mol.size(); i+=2) {
         string a = mol[i+1];
-        addAtom(a,b);
+        int b = toInt(mol[i]);
+        if (isNumber(a[0])) addAtom(toInt(a), b);
+        else addAtom(a,b);
     }
 
     for (auto a : atoms) a->computeGeo();
@@ -263,6 +302,9 @@ void VRMolecule::setRandom(int N) {
     int aN = types.size();
 
     for (int i=0; i<N; i++) {
+        int bt = random()%20;
+        if (bt == 0) m += '=';
+        else if (bt < 4) m += '-';
         a = random()%aN;
         m += types[a];
         m += toString(int(1+random()%4));
@@ -271,7 +313,7 @@ void VRMolecule::setRandom(int N) {
     set(m);
 }
 
-string VRMolecule::fp =
+string VRMolecule::a_fp =
 "#version 120\n"
 GLSL(
 in vec2 texCoord;
@@ -281,28 +323,25 @@ void main( void ) {
 	vec2 p = 2* ( vec2(0.5, 0.5) - texCoord );
 	float r = sqrt(dot(p,p));
 	if (r > 1.0) discard;
+
 	float f = 1.2 - (1.0-sqrt(1.0-r))/(r);
 	vec4 amb = vec4(0.2);
 	gl_FragColor = Color*f + amb;
 }
 );
 
-string VRMolecule::vp =
+string VRMolecule::a_vp =
 "#version 120\n"
 GLSL(
-varying mat4 view;
-varying mat4 model;
 varying vec4 color;
 
 void main( void ) {
-    view = gl_ProjectionMatrix;
-    model = gl_ModelViewMatrix;
     color = gl_Color;
     gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex;
 }
 );
 
-string VRMolecule::gp =
+string VRMolecule::a_gp =
 "#version 150\n"
 "#extension GL_EXT_geometry_shader4 : enable\n"
 GLSL(
@@ -311,7 +350,6 @@ layout (triangle_strip, max_vertices=6) out;
 
 uniform vec2 OSGViewportSize;
 
-in mat4 view[];
 in vec4 color[];
 out vec2 texCoord;
 out vec4 Color;
@@ -324,11 +362,10 @@ void emitVertex(in vec4 p, in vec2 tc) {
 
 void emitQuad(in float s, in vec4 tc) {
 	vec4 p = gl_PositionIn[0];
-	p.z -= 0.02;
 
-	float a = OSGViewportSize.x/OSGViewportSize.y;
+	float a = OSGViewportSize.y/OSGViewportSize.x;
 
-	vec4 u = vec4(s/a,0,0,0);
+	vec4 u = vec4(s*a,0,0,0);
 	vec4 v = vec4(0,s,0,0);
 
 	vec4 p1 = p -u -v;
@@ -349,5 +386,113 @@ void emitQuad(in float s, in vec4 tc) {
 void main() {
 	Color = color[0];
 	emitQuad(0.2, vec4(0,1,0,1));
+}
+);
+
+string VRMolecule::b_fp =
+"#version 120\n"
+GLSL(
+in vec2 texCoord;
+in vec4 Color;
+
+void main( void ) {
+	float r = texCoord.y;
+	r = 2.8*abs(r - floor(r) - 0.5);
+	if (r > 1.0) discard;
+
+	float f = 1.2 - (1.0-sqrt(1.0-r))/(r);
+	vec4 amb = vec4(0.2);
+	gl_FragColor = Color*f + amb;
+}
+);
+
+string VRMolecule::b_vp =
+"#version 120\n"
+GLSL(
+varying vec3 normal;
+
+void main( void ) {
+    normal = gl_Normal;
+    gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex;
+}
+);
+
+string VRMolecule::b_gp =
+"#version 150\n"
+"#extension GL_EXT_geometry_shader4 : enable\n"
+GLSL(
+layout (lines) in;
+layout (triangle_strip, max_vertices=6) out;
+
+uniform vec2 OSGViewportSize;
+
+in vec3 normal[];
+out vec2 texCoord;
+out vec4 Color;
+
+void emitVertex(in vec4 p, in vec2 tc) {
+	gl_Position = p;
+	texCoord = tc;
+	EmitVertex();
+}
+
+void emitQuad(in float s, in float f, in vec4 tc) {
+	vec4 pl1 = gl_PositionIn[0];
+	vec4 pl2 = gl_PositionIn[1];
+
+	float a = OSGViewportSize.y/OSGViewportSize.x;
+
+	vec4 d = pl2-pl1;
+	pl1 += 0.9*s*d;
+	pl2 -= 0.9*s*d;
+
+	vec3 x = cross(d.xyz, vec3(0,0,1));
+	x.x *= a;
+	x = f*normalize(x);
+	x.x *= a;
+	vec4 v = vec4(x,0);
+
+	vec4 p1 = pl1 -v;
+	vec4 p2 = pl1 +v;
+	vec4 p3 = pl2 +v;
+	vec4 p4 = pl2 -v;
+
+	emitVertex(p1, vec2(tc[0], tc[2]));
+	emitVertex(p2, vec2(tc[0], tc[3]));
+	emitVertex(p3, vec2(tc[1], tc[3]));
+	EndPrimitive();
+	emitVertex(p1, vec2(tc[0], tc[2]));
+	emitVertex(p3, vec2(tc[1], tc[3]));
+	emitVertex(p4, vec2(tc[1], tc[2]));
+	EndPrimitive();
+}
+
+void main() {
+	vec3 n1 = normal[0];
+	vec3 n2 = normal[1];
+	float b = max(n1.x, n2.x);
+	b = n2.x;
+
+	Color = vec4(0.5, 0.5, 0.5, 1.0);
+	vec4 tc = vec4(0,1,0,1);
+	float w = 0.06;
+	float k = 1.0;
+
+	if (b > 0.0 && b < 0.15) Color.y += 0.5;
+
+	if (b > 0.15 && b < 0.25) {
+		Color.x += 0.5;
+		Color.y += 0.5;
+		w = 1.5*w;
+		k = 2.0;
+	}
+
+	if (b > 0.25) {
+		Color.x += 0.5;
+		w = 2*w;
+		k = 3.0;
+	}
+
+	emitQuad(0.2, w, vec4(0.0, k, 0.0, k));
 }
 );

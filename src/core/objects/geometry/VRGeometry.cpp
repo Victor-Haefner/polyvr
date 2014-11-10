@@ -158,6 +158,7 @@ void VRGeometry::setTexCoords(GeoVectorProperty* Tex, int i) {
 
 void VRGeometry::setIndices(GeoIntegralProperty* Indices) {
     if (!meshSet) setMesh(Geometry::create());
+    if (Indices->size() == 0) setMesh(0);
     GeoUInt32PropertyRecPtr Length = GeoUInt32Property::create();
     Length->addValue(Indices->size());
     mesh->setLengths(Length);
