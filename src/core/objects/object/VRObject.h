@@ -80,6 +80,7 @@ class VRObject : public VRName {
 
         VRObject* getRoot();
         string getPath();
+        VRObject* getAtPath(string path);
 
         bool hasGraphChanged();
 

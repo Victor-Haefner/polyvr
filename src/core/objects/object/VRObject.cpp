@@ -170,10 +170,30 @@ void VRObject::detach() {
     parent = 0;
 }
 
-VRObject* VRObject::getChild(int i) { return children[i]; }
+VRObject* VRObject::getChild(int i) {
+    if (i < 0 or i >= (int)children.size()) return 0;
+    return children[i];
+}
 
 /** Returns the parent of this object **/
 VRObject* VRObject::getParent() { return parent; }
+
+VRObject* VRObject::getAtPath(string path) {
+    vector<int> pvec;
+    stringstream ss(path);
+    string item;
+    while (getline(ss, item, ':')) pvec.push_back(toInt(item));
+
+    pvec.erase( pvec.begin() ); // ditch first element (should be the local node)
+
+    VRObject* res = this;
+    for (int c : pvec) {
+        if (res == 0) break;
+        res = res->getChild(c);
+    }
+
+    return res;
+}
 
 vector<VRObject*> VRObject::getObjectListByType(string _type) {
     vector<VRObject*> v;

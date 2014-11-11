@@ -122,7 +122,7 @@ void VRAtom::computePositions() {
 
     vector<Matrix> structure = AtomicStructures[geo];
     for (auto& b : bonds) {
-        if (b.first >= structure.size()) break;
+        if (b.first >= (int)structure.size()) break;
         if (b.second.extra) continue;
 
         Matrix T = transformation;
@@ -183,9 +183,12 @@ void VRAtom::propagateTransformation(Matrix& T, uint flag) {
     m.mult(transformation);
     transformation = m;
 
-    for (auto b : bonds) {
-        if (b.second.atom == 0) continue;
-        b.second.atom->propagateTransformation(T, flag);
+    for (auto& b : bonds) {
+        if (b.second.atom == 0) {
+            T.mult(b.second.p1, b.second.p1);
+            T.mult(b.second.p2, b.second.p2);
+        }
+        else b.second.atom->propagateTransformation(T, flag);
     }
 }
 
@@ -214,7 +217,7 @@ void VRMolecule::addAtom(VRBond b) {
 }
 
 void VRMolecule::addAtom(int ID, int t) {
-    if (ID >= atoms.size() or ID < 0) return;
+    if (atoms.count(ID) == 0) return;
     VRAtom* at = atoms[ID];
     if (at->full) return;
 
@@ -418,8 +421,8 @@ int VRMolecule::getID() {
 void VRMolecule::rotateBond(int a, int b, float f) {
     if (atoms.count(a) == 0) return;
     if (atoms.count(b) == 0) return;
-    VRAtom* A = atoms[min(a,b)];
-    VRAtom* B = atoms[max(a,b)];
+    VRAtom* A = atoms[a];
+    VRAtom* B = atoms[b];
 
     uint now = VRGlobals::get()->CURRENT_FRAME+1234;
     A->recFlag = now;
@@ -438,7 +441,8 @@ void VRMolecule::rotateBond(int a, int b, float f) {
     T.mult(_T);
 
     cout << "ROTATE " << a << " " << b << " " << f << endl;
-    cout << T << endl;
+    cout << " q " << dir << endl;
+    //cout << T << endl;
 
     B->propagateTransformation(T, now);
     updateGeo();

@@ -45,7 +45,10 @@ VRScriptManager::VRScriptManager() {
 VRScriptManager::~VRScriptManager() {
     for (auto s : scripts) delete s.second;
     scripts.clear();
-    Py_XDECREF(pModBase);
+    if (PyErr_Occurred() != NULL) PyErr_Print();
+    //Py_XDECREF(pModBase);
+    if (PyErr_Occurred() != NULL) PyErr_Print();
+    PyErr_Clear();
     Py_Finalize();
 }
 
@@ -157,7 +160,7 @@ void VRScriptManager::initPyModules() {
     pGlobal = PyDict_New();
 
     //Create a new module object
-    pModBase = PyModule_New("PolyVR_base");
+    pModBase = PyImport_AddModule("PolyVR_base");
     PyModule_AddStringConstant(pModBase, "__file__", "");
     pLocal = PyModule_GetDict(pModBase); //Get the dictionary object from my module so I can pass this to PyRun_String
 
