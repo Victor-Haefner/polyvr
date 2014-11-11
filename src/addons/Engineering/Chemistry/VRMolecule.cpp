@@ -6,6 +6,7 @@
 
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGShaderVariableOSG.h>
+#include <OpenSG/OSGQuaternion.h>
 
 #define GLSL(shader) #shader
 
@@ -78,6 +79,14 @@ VRAtom::VRAtom(string type, int ID) {
     this->ID = ID;
     this->type = type;
     params = PeriodicTable[type];
+
+    // fill in the duplets
+    for (int i=4; i<params.valence_electrons; i++) {
+        if (i == 4) bonds[2] = VRBond(4,2,0);
+        if (i == 5) bonds[1] = VRBond(4,1,0);
+        if (i == 6) bonds[3] = VRBond(4,3,0);
+        if (i == 7) bonds[0] = VRBond(4,0,0);
+    }
 }
 
 VRAtom::~VRAtom() {
@@ -93,10 +102,7 @@ Matrix VRAtom::getTransformation() { return transformation; }
 void VRAtom::setTransformation(Matrix m) { transformation = m; }
 map<int, VRBond> VRAtom::getBonds() { return bonds; }
 int VRAtom::getID() { return ID; }
-
-void VRAtom::setID(int ID) {
-    this->ID = ID;
-}
+void VRAtom::setID(int ID) { this->ID = ID; }
 
 void VRAtom::computeGeo() {
     int bN = bonds.size();
@@ -109,9 +115,6 @@ void VRAtom::computeGeo() {
 }
 
 void VRAtom::computePositions() {
-    // fill in the duplets
-    for (int i=4; i<params.valence_electrons; i++) bonds[7-i] = VRBond(4,7-i,0);
-
     computeGeo();
 
     string g = geo;
@@ -172,6 +175,20 @@ void VRAtom::print() {
     cout << endl;
 }
 
+void VRAtom::propagateTransformation(Matrix& T, uint flag) {
+    if (flag == recFlag) return;
+    recFlag = flag;
+
+    Matrix m = T;
+    m.mult(transformation);
+    transformation = m;
+
+    for (auto b : bonds) {
+        if (b.second.atom == 0) continue;
+        b.second.atom->propagateTransformation(T, flag);
+    }
+}
+
 
 VRMolecule::VRMolecule(string definition) : VRGeometry(definition) {
     bonds_geo = new VRGeometry("bonds");
@@ -228,9 +245,7 @@ void VRMolecule::updateGeo() {
 
     int i=0;
     int j=0;
-    cout << "GEN\n";
     for (auto a : atoms) {
-        a.second->print();
         cols->addValue(a.second->getParams().color);
         Pos->addValue(a.second->getTransformation()[3]);
         Norms->addValue( Vec3f(0, 1, 0) );
@@ -400,6 +415,35 @@ int VRMolecule::getID() {
     return i;
 }
 
+void VRMolecule::rotateBond(int a, int b, float f) {
+    if (atoms.count(a) == 0) return;
+    if (atoms.count(b) == 0) return;
+    VRAtom* A = atoms[min(a,b)];
+    VRAtom* B = atoms[max(a,b)];
+
+    uint now = VRGlobals::get()->CURRENT_FRAME+1234;
+    A->recFlag = now;
+
+    Vec3f p1 = Vec3f( A->getTransformation()[3] );
+    Vec3f p2 = Vec3f( B->getTransformation()[3] );
+    Vec3f dir = p2-p1;
+    Quaternion q(dir, f);
+    Matrix R;
+    R.setRotate(q);
+
+    Matrix T = B->getTransformation();
+    Matrix _T;
+    T.inverse(_T);
+    T.mult(R);
+    T.mult(_T);
+
+    cout << "ROTATE " << a << " " << b << " " << f << endl;
+    cout << T << endl;
+
+    B->propagateTransformation(T, now);
+    updateGeo();
+}
+
 void VRMolecule::substitute(int a, VRMolecule* m, int b) {
     if (atoms.count(a) == 0) return;
     if (m->atoms.count(b) == 0) return;
@@ -416,17 +460,19 @@ void VRMolecule::substitute(int a, VRMolecule* m, int b) {
     remAtom(a);
     m->remAtom(b);
 
+    // copy atoms
     for (auto at : m->atoms) {
         at.second->setID( getID() );
         atoms[at.second->getID()] = at.second;
-
-        Matrix atm = at.second->getTransformation();
-        Matrix Am = am;//A->getTransformation();
-        Am.mult(atm);
-        at.second->setTransformation(Am);
     }
     m->atoms.clear();
 
+    // transform new atoms
+    uint now = VRGlobals::get()->CURRENT_FRAME+987;
+    A->recFlag = now;
+    B->propagateTransformation(am, now);
+
+    // attach molecules
     VRBond bond(1,0,B);
     bond.extra = true;
     A->append(bond);

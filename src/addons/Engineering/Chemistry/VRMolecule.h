@@ -38,6 +38,7 @@ class VRAtom {
         Matrix transformation;
 
         int bound_valence_electrons = 0;
+        uint recFlag = 0;
 
         map<int, VRBond> bonds;
         string geo;
@@ -56,6 +57,8 @@ class VRAtom {
 		void computeGeo();
 		void computePositions();
 		bool append(VRBond bond);
+
+		void propagateTransformation(Matrix& T, uint flag);
 
 		void print();
 };
@@ -93,6 +96,7 @@ class VRMolecule : public VRGeometry {
         void setRandom(int N);
 
         void substitute(int a, VRMolecule* m, int b);
+        void rotateBond(int a, int b, float f);
 
         void showLabels(bool b);
 };

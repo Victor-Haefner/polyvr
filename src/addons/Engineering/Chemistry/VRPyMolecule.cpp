@@ -50,6 +50,7 @@ PyMethodDef VRPyMolecule::methods[] = {
     {"setRandom", (PyCFunction)VRPyMolecule::setRandom, METH_VARARGS, "Set a random molecule - setRandom(123)" },
     {"showLabels", (PyCFunction)VRPyMolecule::showLabels, METH_VARARGS, "Display the ID of each atom - showLabels(True)" },
     {"substitute", (PyCFunction)VRPyMolecule::substitute, METH_VARARGS, "Substitute an atom of both molecules to append the second to this - substitute(int aID, mol b, int bID)" },
+    {"rotateBond", (PyCFunction)VRPyMolecule::rotateBond, METH_VARARGS, "Rotate the bon between atom a and b - rotateBond(int aID, int bID, float a)" },
     {NULL}  /* Sentinel */
 };
 
@@ -68,6 +69,14 @@ PyObject* VRPyMolecule::setRandom(VRPyMolecule* self, PyObject* args) {
 PyObject* VRPyMolecule::showLabels(VRPyMolecule* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyMolecule::showLabels - Object is invalid"); return NULL; }
     self->obj->showLabels( parseBool(args) );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyMolecule::rotateBond(VRPyMolecule* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyMolecule::rotateBond - Object is invalid"); return NULL; }
+    int a, b; float f;
+    if (! PyArg_ParseTuple(args, "iif", &a, &b, &f)) return NULL;
+    self->obj->rotateBond( a, b, f );
     Py_RETURN_TRUE;
 }
 

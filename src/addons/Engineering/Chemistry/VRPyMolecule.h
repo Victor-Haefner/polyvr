@@ -11,6 +11,7 @@ struct VRPyMolecule : VRPyBaseT<OSG::VRMolecule> {
     static PyObject* setRandom(VRPyMolecule* self, PyObject* args);
     static PyObject* showLabels(VRPyMolecule* self, PyObject* args);
     static PyObject* substitute(VRPyMolecule* self, PyObject* args);
+    static PyObject* rotateBond(VRPyMolecule* self, PyObject* args);
 };
 
 #endif // VRPYMOLECULE_H_INCLUDED
