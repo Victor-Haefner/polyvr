@@ -2,6 +2,7 @@
 
 #include "core/objects/material/VRMaterial.h"
 #include "core/utils/toString.h"
+#include "addons/Factory/VRNumberingEngine.h"
 
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGShaderVariableOSG.h>
@@ -70,7 +71,8 @@ PeriodicTableEntry::PeriodicTableEntry(int valence_electrons, Vec3f color) {
     this->color = color;
 }
 
-VRBond::VRBond(int t, VRAtom* a) { type = t; atom = a; }
+VRBond::VRBond(int t, int s, VRAtom* a) { type = t; atom = a; slot = s; }
+VRBond::VRBond() {}
 
 VRAtom::VRAtom(string type, int ID) {
     this->ID = ID;
@@ -78,10 +80,23 @@ VRAtom::VRAtom(string type, int ID) {
     params = PeriodicTable[type];
 }
 
+VRAtom::~VRAtom() {
+    for (auto b : bonds) {
+        VRAtom* a = b.second.atom;
+        a->full = false;
+        a->bonds.erase(b.second.slot);
+    }
+}
+
 PeriodicTableEntry VRAtom::getParams() { return params; }
 Matrix VRAtom::getTransformation() { return transformation; }
-vector<VRBond> VRAtom::getBonds() { return bonds; }
+void VRAtom::setTransformation(Matrix m) { transformation = m; }
+map<int, VRBond> VRAtom::getBonds() { return bonds; }
 int VRAtom::getID() { return ID; }
+
+void VRAtom::setID(int ID) {
+    this->ID = ID;
+}
 
 void VRAtom::computeGeo() {
     int bN = bonds.size();
@@ -95,7 +110,7 @@ void VRAtom::computeGeo() {
 
 void VRAtom::computePositions() {
     // fill in the duplets
-    for (int i=4; i<params.valence_electrons; i++) bonds.push_back(VRBond(4,0));
+    for (int i=4; i<params.valence_electrons; i++) bonds[7-i] = VRBond(4,7-i,0);
 
     computeGeo();
 
@@ -103,20 +118,19 @@ void VRAtom::computePositions() {
     if (AtomicStructures.count(geo) == 0) { cout << "Error: " << geo << " is invalid!\n"; return; }
 
     vector<Matrix> structure = AtomicStructures[geo];
-    for (uint i=0; i<bonds.size(); i++) {
-        if (i >= structure.size()) break;
-        VRBond b = bonds[i];
-        if (b.extra) continue;
+    for (auto& b : bonds) {
+        if (b.first >= structure.size()) break;
+        if (b.second.extra) continue;
 
         Matrix T = transformation;
-        Matrix S = structure[i];
+        Matrix S = structure[b.second.slot];
 
-        VRAtom* a = b.atom;
+        VRAtom* a = b.second.atom;
         if (a == 0) {
             S[3] *= 0.2; S[3][3] = 1;
             T.mult(S);
-            T.mult(Pnt3f(0.2,0,0), bonds[i].p1);
-            T.mult(Pnt3f(-0.2,0,0), bonds[i].p2);
+            T.mult(Pnt3f(0.2,0,0), b.second.p1);
+            T.mult(Pnt3f(-0.2,0,0), b.second.p2);
             continue;
         }
 
@@ -129,11 +143,17 @@ void VRAtom::computePositions() {
 bool VRAtom::append(VRBond bond) {
     VRAtom* at = bond.atom;
     if (full or at->full or at == this) return false;
-    for (auto b : bonds) if (b.atom == at) return false;
+    for (auto b : bonds) if (b.second.atom == at) return false;
 
     int bmax = 4 - abs(params.valence_electrons - 4);
-    bonds.push_back(bond);
+
+    int slot=0;
+    for (; bonds.count(slot) == 1; slot++);
+
+    bond.slot = slot;
+    bonds[slot] = bond;
     bound_valence_electrons += bond.type;
+
     bond.atom = this;
     at->append(bond);
 
@@ -145,7 +165,10 @@ bool VRAtom::append(VRBond bond) {
 void VRAtom::print() {
     cout << " ID: " << ID << " Type: " << type << " boundEl: " << bound_valence_electrons << " geo: " << geo << " pos: " << Vec3f(transformation[3]);
     cout << " bonds with: ";
-    for (auto b : bonds) cout << " " << b.atom->ID;
+    for (auto b : bonds) {
+        if (b.second.atom == 0) cout << " " << "pair";
+        else cout << " " << b.second.atom->ID;
+    }
     cout << endl;
 }
 
@@ -154,17 +177,23 @@ VRMolecule::VRMolecule(string definition) : VRGeometry(definition) {
     bonds_geo = new VRGeometry("bonds");
     addChild(bonds_geo);
 
+    labels = new VRNumberingEngine();
+    labels->setBillboard(true);
+    labels->setOnTop(true);
+    labels->setSize(0.1);
+    addChild(labels);
+
     set(definition);
 }
 
 void VRMolecule::addAtom(string a, int t) {
-    VRBond b(t, new VRAtom(a, atoms.size()) );
+    VRBond b(t, 0, new VRAtom(a, getID()) );
+    atoms[b.atom->getID()] = b.atom;
     addAtom(b);
 }
 
 void VRMolecule::addAtom(VRBond b) {
-    for (auto a : atoms) if (a->append(b)) break;
-    atoms.push_back(b.atom);
+    for (auto a : atoms) if (a.second->append(b)) break;
 }
 
 void VRMolecule::addAtom(int ID, int t) {
@@ -172,9 +201,16 @@ void VRMolecule::addAtom(int ID, int t) {
     VRAtom* at = atoms[ID];
     if (at->full) return;
 
-    VRBond b(t, at);
+    VRBond b(t, 0, at);
     b.extra = true;
     addAtom(b);
+}
+
+void VRMolecule::remAtom(int ID) {
+    if (atoms.count(ID) == 0) return;
+    VRAtom* a = atoms[ID];
+    atoms.erase(ID);
+    delete a;
 }
 
 void VRMolecule::updateGeo() {
@@ -188,33 +224,35 @@ void VRMolecule::updateGeo() {
     GeoUInt32PropertyRecPtr     Indices2 = GeoUInt32Property::create();
 
     // hack to avoid the single point bug
-    if (atoms.size() == 1) atoms.push_back(atoms[0]);
+    if (atoms.size() == 1) atoms[1] = atoms[0];
 
     int i=0;
     int j=0;
+    cout << "GEN\n";
     for (auto a : atoms) {
-        cols->addValue(a->getParams().color);
-        Pos->addValue(a->getTransformation()[3]);
+        a.second->print();
+        cols->addValue(a.second->getParams().color);
+        Pos->addValue(a.second->getTransformation()[3]);
         Norms->addValue( Vec3f(0, 1, 0) );
         Indices->addValue(i++);
 
         // bonds
-        for (auto b : a->getBonds()) {
-            if (b.atom == 0) { // duplet
-                Pos2->addValue(b.p1);
-                Pos2->addValue(b.p2);
+        for (auto b : a.second->getBonds()) {
+            if (b.second.atom == 0) { // duplet
+                Pos2->addValue(b.second.p1);
+                Pos2->addValue(b.second.p2);
                 Norms2->addValue( Vec3f(0, 1, 0) );
-                Norms2->addValue( Vec3f(0.1, 1,1) );
+                Norms2->addValue( Vec3f(0.1*b.second.type, 1,1) );
                 Indices2->addValue(j++);
                 Indices2->addValue(j++);
                 continue;
             }
 
-            if (b.atom->getID() < a->getID()) {
-                Pos2->addValue(a->getTransformation()[3]);
-                Pos2->addValue(b.atom->getTransformation()[3]);
+            if (b.second.atom->getID() < a.first) {
+                Pos2->addValue(a.second->getTransformation()[3]);
+                Pos2->addValue(b.second.atom->getTransformation()[3]);
                 Norms2->addValue( Vec3f(0, 1, 0) );
-                Norms2->addValue( Vec3f(0.1*b.type, 1,1) );
+                Norms2->addValue( Vec3f(0.1*b.second.type, 1,1) );
                 Indices2->addValue(j++);
                 Indices2->addValue(j++);
             }
@@ -250,6 +288,8 @@ void VRMolecule::updateGeo() {
     bonds_geo->setColors(cols);
     bonds_geo->setIndices(Indices2);
     bonds_geo->setMaterial(mat2);
+
+    updateLabels();
 }
 
 bool isNumber(char c) { return (c >= '0' and c <= '9'); }
@@ -328,7 +368,7 @@ void VRMolecule::set(string definition) {
         else addAtom(a,b);
     }
 
-    for (auto a : atoms) a->computePositions();
+    for (auto a : atoms) a.second->computePositions();
     //for (auto a : atoms) a->print();
 
     updateGeo();
@@ -352,6 +392,66 @@ void VRMolecule::setRandom(int N) {
     }
 
     set(m);
+}
+
+int VRMolecule::getID() {
+    int i=0;
+    while (atoms.count(i)) i++;
+    return i;
+}
+
+void VRMolecule::substitute(int a, VRMolecule* m, int b) {
+    if (atoms.count(a) == 0) return;
+    if (m->atoms.count(b) == 0) return;
+
+    Matrix am = atoms[a]->getTransformation();
+
+    map<int, VRBond> bondsA = atoms[a]->getBonds();
+    map<int, VRBond> bondsB = m->atoms[b]->getBonds();
+    if (bondsA.count(0) == 0) return;
+    if (bondsB.count(0) == 0) return;
+
+    VRAtom* A = bondsA[0].atom;
+    VRAtom* B = bondsB[0].atom;
+    remAtom(a);
+    m->remAtom(b);
+
+    for (auto at : m->atoms) {
+        at.second->setID( getID() );
+        atoms[at.second->getID()] = at.second;
+
+        Matrix atm = at.second->getTransformation();
+        Matrix Am = am;//A->getTransformation();
+        Am.mult(atm);
+        at.second->setTransformation(Am);
+    }
+    m->atoms.clear();
+
+    VRBond bond(1,0,B);
+    bond.extra = true;
+    A->append(bond);
+
+    updateGeo();
+    m->updateGeo();
+}
+
+void VRMolecule::showLabels(bool b) {
+    if (doLabels == b) return;
+    doLabels = b;
+    updateLabels();
+}
+
+void VRMolecule::updateLabels() {
+    labels->clear();
+    if (!doLabels) return;
+
+    labels->add(Vec3f(), atoms.size(), 0, 0);
+
+    int i=0;
+    for (auto a : atoms) {
+        Vec3f p = Vec3f(a.second->getTransformation()[3]);
+        labels->set(i++, p, a.first);
+    }
 }
 
 string VRMolecule::a_fp =
@@ -518,19 +618,26 @@ void main() {
 	float w = 0.06;
 	float k = 1.0;
 
-	if (b > 0.0 && b < 0.15) Color.y += 0.5;
+	if (b > 0.0 && b < 0.15) Color.y += 0.5; /* single */
 
-	if (b > 0.15 && b < 0.25) {
+	if (b > 0.15 && b < 0.25) { /* double */
 		Color.x += 0.5;
 		Color.y += 0.5;
 		w = 1.5*w;
 		k = 2.0;
 	}
 
-	if (b > 0.25) {
+	if (b > 0.25 && b < 0.35) { /* triple */
 		Color.x += 0.5;
 		w = 2*w;
 		k = 3.0;
+	}
+
+	if (b > 0.35 && b < 0.45) { /* el pair */
+		Color.x += 0.5;
+		Color.y += 0.3;
+		w = 2*w;
+		k = 1.0;
 	}
 
 	emitQuad(0.2, w, vec4(0.0, k, 0.0, k));

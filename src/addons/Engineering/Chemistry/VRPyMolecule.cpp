@@ -48,6 +48,8 @@ template<> PyTypeObject VRPyBaseT<OSG::VRMolecule>::type = {
 PyMethodDef VRPyMolecule::methods[] = {
     {"set", (PyCFunction)VRPyMolecule::set, METH_VARARGS, "Set the molecule from string - set('CH4')" },
     {"setRandom", (PyCFunction)VRPyMolecule::setRandom, METH_VARARGS, "Set a random molecule - setRandom(123)" },
+    {"showLabels", (PyCFunction)VRPyMolecule::showLabels, METH_VARARGS, "Display the ID of each atom - showLabels(True)" },
+    {"substitute", (PyCFunction)VRPyMolecule::substitute, METH_VARARGS, "Substitute an atom of both molecules to append the second to this - substitute(int aID, mol b, int bID)" },
     {NULL}  /* Sentinel */
 };
 
@@ -60,5 +62,22 @@ PyObject* VRPyMolecule::set(VRPyMolecule* self, PyObject* args) {
 PyObject* VRPyMolecule::setRandom(VRPyMolecule* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyMolecule::setRandom - Object is invalid"); return NULL; }
     self->obj->setRandom( parseInt(args) );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyMolecule::showLabels(VRPyMolecule* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyMolecule::showLabels - Object is invalid"); return NULL; }
+    self->obj->showLabels( parseBool(args) );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyMolecule::substitute(VRPyMolecule* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyMolecule::substitute - Object is invalid"); return NULL; }
+
+    VRPyMolecule* mB; int a, b;
+    if (! PyArg_ParseTuple(args, "iOi", &a, &mB, &b)) return NULL;
+    if ((PyObject*)mB == Py_None) { PyErr_SetString(err, "VRPyMolecule::substitute - molecule is invalid"); return NULL; }
+
+    self->obj->substitute( a, mB->obj, b );
     Py_RETURN_TRUE;
 }

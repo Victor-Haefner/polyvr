@@ -106,6 +106,8 @@ class VRMaterial : public VRObject {
         string getFragmentShader();
         string getGeometryShader();
 
+        template<class T> void setShaderParameter(string name, const T &value);
+
         void setMagMinFilter(string mag, string min);
         void setVertexProgram(string script);
         void setFragmentProgram(string script);

@@ -3,9 +3,10 @@
 
 #include "core/objects/geometry/VRGeometry.h"
 
+class VRNumberingEngine;
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
-
 
 struct PeriodicTableEntry {
     int valence_electrons = 0;
@@ -19,10 +20,12 @@ class VRAtom;
 struct VRBond {
     VRAtom* atom = 0;
     int type = 1;
+    int slot = 0;
     bool extra = false;
     Vec3f p1, p2;
 
-    VRBond(int t, VRAtom* a);
+    VRBond();
+    VRBond(int t, int s, VRAtom* a);
 };
 
 class VRAtom {
@@ -36,16 +39,19 @@ class VRAtom {
 
         int bound_valence_electrons = 0;
 
-        vector<VRBond> bonds;
+        map<int, VRBond> bonds;
         string geo;
 
     public:
         VRAtom(string type, int ID);
+        ~VRAtom();
 
         PeriodicTableEntry getParams();
         Matrix getTransformation();
-        vector<VRBond> getBonds();
+        void setTransformation(Matrix m);
+        map<int, VRBond> getBonds();
         int getID();
+        void setID(int ID);
 
 		void computeGeo();
 		void computePositions();
@@ -56,9 +62,11 @@ class VRAtom {
 
 class VRMolecule : public VRGeometry {
     private:
-        vector<VRAtom*> atoms;
+        map<int, VRAtom*> atoms;
 
-        VRGeometry* bonds_geo;
+        VRGeometry* bonds_geo = 0;
+        VRNumberingEngine* labels = 0;
+        bool doLabels = false;
 
         static string a_vp;
         static string a_fp;
@@ -71,7 +79,11 @@ class VRMolecule : public VRGeometry {
 		void addAtom(VRBond b);
 		void addAtom(string a, int b);
 		void addAtom(int a, int b);
+		void remAtom(int ID);
 		void updateGeo();
+		void updateLabels();
+
+		int getID();
 		vector<string> parse(string mol, bool verbose = false);
 
     public:
@@ -79,6 +91,10 @@ class VRMolecule : public VRGeometry {
 
         void set(string definition);
         void setRandom(int N);
+
+        void substitute(int a, VRMolecule* m, int b);
+
+        void showLabels(bool b);
 };
 
 OSG_END_NAMESPACE;

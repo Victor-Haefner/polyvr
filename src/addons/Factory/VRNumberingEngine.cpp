@@ -1,16 +1,37 @@
 #include "VRNumberingEngine.h"
 
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/material/VRMaterialT.h"
 #include "core/tools/VRText.h"
 #include "core/utils/toString.h"
 
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGGeometry.h>
 
+#define GLSL(shader) #shader
+
 using namespace OSG;
 using namespace std;
 
 VRNumberingEngine::VRNumberingEngine() : VRGeometry("NumbEng") {
+    group g;
+    groups.push_back(g);
+
+    mat = VRMaterial::get("NumbEngMat");
+    mat->setVertexShader(vp);
+    mat->setFragmentShader(fp);
+    mat->setGeometryShader(gp);
+    mat->setPointSize(5);
+    updateTexture();
+
+    setSize(0.2);
+    setBillboard(false);
+    setOnTop(false);
+
+    clear();
+}
+
+void VRNumberingEngine::clear() {
     OSG::GeoPnt3fPropertyRecPtr pos = OSG::GeoPnt3fProperty::create();
     OSG::GeoVec3fPropertyRecPtr norms = OSG::GeoVec3fProperty::create();
     OSG::GeoUInt32PropertyRecPtr inds = OSG::GeoUInt32Property::create();
@@ -23,16 +44,8 @@ VRNumberingEngine::VRNumberingEngine() : VRGeometry("NumbEng") {
     setNormals(norms);
     setIndices(inds);
 
-    mat = new VRMaterial("NumbEngMat");
-    mat->setVertexShader(vp);
-    mat->setFragmentShader(fp);
-    mat->setGeometryShader(gp);
-    mat->setPointSize(5);
-    updateTexture();
+    mesh->getLengths()->setValue(0, 0);
     setMaterial(mat);
-
-    group g;
-    groups.push_back(g);
 }
 
 bool VRNumberingEngine::checkUIn(int grp) {
@@ -84,122 +97,133 @@ int VRNumberingEngine::addPrePost(string pre, string post) {
     return groups.size()-1;
 }
 
+void VRNumberingEngine::setOnTop(bool b) { mat->setShaderParameter("onTop", Real32(b)); }
+void VRNumberingEngine::setSize(float f) { mat->setShaderParameter("size", Real32(f)); }
+void VRNumberingEngine::setBillboard(bool b) { mat->setShaderParameter("doBillboard", Real32(b)); }
+
 void VRNumberingEngine::updateTexture() {
     string txt = "0123456789.";
-    for (auto g : groups) {
-        txt += "\n"+g.pre+"\n"+g.post;
-    }
-
+    //for (auto g : groups) txt += "\n+g.pre+"\n"+g.post;
     ImageRecPtr img = VRText::get()->create(txt, "MONO 20", 20, Color4f(0,0,0,255), Color4f(0,0,0,0) );
     mat->setTexture(img);
 }
 
-string VRNumberingEngine::vp = ""
+string VRNumberingEngine::vp =
 "#version 120\n"
-"varying mat4 model;\n"
-"varying vec3 normal;\n"
+GLSL(
+uniform float onTop;
+varying mat4 model;
+varying vec3 normal;
 
-"void main( void ) {\n"
-"    model = gl_ModelViewProjectionMatrix;\n"
-"    gl_Position = model*gl_Vertex;\n"
-"    normal = gl_Normal;\n"
-"}";
+void main( void ) {
+    model = gl_ModelViewProjectionMatrix;\
+    gl_Position = model*gl_Vertex;
+    normal = gl_Normal;
+    if (onTop > 0.0) gl_Position.z = 0.5;
+}
+);
 
-string VRNumberingEngine::fp = ""
+string VRNumberingEngine::fp =
 "#version 120\n"
-"uniform sampler2D texture;\n"
-"in vec2 texCoord;\n"
+GLSL(
+uniform sampler2D texture;
 
-"void main( void ) {\n"
-"  gl_FragColor = texture2D(texture, texCoord);\n"
-"}";
+in vec2 texCoord;
 
-string VRNumberingEngine::gp = ""
+void main( void ) {
+  gl_FragColor = texture2D(texture, texCoord);\
+}
+);
+
+string VRNumberingEngine::gp =
 "#version 150\n"
 "#extension GL_EXT_geometry_shader4 : enable\n"
-"layout (points) in;\n"
-"layout (triangle_strip, max_vertices=60) out;\n"
+GLSL(
+layout (points) in;
+layout (triangle_strip, max_vertices=60) out;
 
-"in mat4 model[];\n"
-"in vec3 normal[];\n"
-"out vec2 texCoord;\n"
+uniform float size;
+in mat4 model[];
+in vec3 normal[];
+out vec2 texCoord;
 
-"void emitVertex(in vec4 p, in vec2 tc) {\n"
-"   gl_Position = p;\n"
-"   texCoord = tc;\n"
-"   EmitVertex();\n"
-"}\n"
+void emitVertex(in vec4 p, in vec2 tc) {
+   gl_Position = p;
+   texCoord = tc;
+   EmitVertex();
+}
 
-"void emitQuad(in float offset, in vec4 tc) {\n"
-"   float sx = 0.1;\n"
-"   float sy = 0.2;\n"
-"   float ox = 2*sx*offset;\n"
-"   vec4 p1 = gl_PositionIn[0]+model[0]*vec4(-sx+ox,-sy,0,0);\n"
-"   vec4 p2 = gl_PositionIn[0]+model[0]*vec4(-sx+ox, sy,0,0);\n"
-"   vec4 p3 = gl_PositionIn[0]+model[0]*vec4( sx+ox, sy,0,0);\n"
-"   vec4 p4 = gl_PositionIn[0]+model[0]*vec4( sx+ox,-sy,0,0);\n"
+void emitQuad(in float offset, in vec4 tc) {
+   float sx = 0.5*size;
+   float sy = size;
+   float ox = 2*sx*offset;
+   vec4 p1 = gl_PositionIn[0]+model[0]*vec4(-sx+ox,-sy,0,0);
+   vec4 p2 = gl_PositionIn[0]+model[0]*vec4(-sx+ox, sy,0,0);
+   vec4 p3 = gl_PositionIn[0]+model[0]*vec4( sx+ox, sy,0,0);
+   vec4 p4 = gl_PositionIn[0]+model[0]*vec4( sx+ox,-sy,0,0);
 
-"   emitVertex(p1, vec2(tc[0], tc[2]));\n"
-"   emitVertex(p2, vec2(tc[0], tc[3]));\n"
-"   emitVertex(p3, vec2(tc[1], tc[3]));\n"
-"   EndPrimitive();\n"
-"   emitVertex(p1, vec2(tc[0], tc[2]));\n"
-"   emitVertex(p3, vec2(tc[1], tc[3]));\n"
-"   emitVertex(p4, vec2(tc[1], tc[2]));\n"
-"   EndPrimitive();\n"
-"}\n"
+   emitVertex(p1, vec2(tc[0], tc[2]));
+   emitVertex(p2, vec2(tc[0], tc[3]));
+   emitVertex(p3, vec2(tc[1], tc[3]));
+   EndPrimitive();
+   emitVertex(p1, vec2(tc[0], tc[2]));
+   emitVertex(p3, vec2(tc[1], tc[3]));
+   emitVertex(p4, vec2(tc[1], tc[2]));
+   EndPrimitive();
+}
 
-"void emitDot(in float p) {\n"
-" float f = 0.0727;\n"
-" int d = 10;\n"
-" emitQuad(p, vec4(d*f,d*f+f, 0,1));\n"
-"}\n"
+void emitDot(in float p) {
+ float f = 0.0727;
+ int d = 10;
+ emitQuad(p, vec4(d*f,d*f+f, 0,1));
+}
 
-"void emitDigit(in int d, in float p) {\n"
-" float f = 0.0727;\n"
-" emitQuad(p, vec4(d*f,d*f+f, 0,1));\n"
-"}\n"
+void emitDigit(in int d, in float p) {
+ float f = 0.0727;
+ emitQuad(p, vec4(d*f,d*f+f, 0,1));
+}
 
-"void emitNumber(in float n1, in float n2, in int N) {\n"
-" int d=0;\n"
-" int k1 = int(n1);\n"
-" int k2 = int(n2);\n"
-" int i=0;\n"
-" int first = 1;\n"
-" float p = 0;\n"
+void emitNumber(in float n1, in float n2, in int N) {
+ int d=0;
+ int k1 = int(n1);
+ int k2 = int(n2);
+ int i=0;
+ int first = 1;
+ float p = 0;
 
-" while(true) {\n"
-"   if (first == 1) {\n"
-"     d = k2%10;\n"
-"     k2 = int(k2*0.1);\n"
-"     p = -i*1.5;\n"
-"     emitDigit(d, p);\n"
-"   } else {\n"
-"     d = k1%10;\n"
-"     k1 = int(k1*0.1);\n"
-"     p = -i*1.5;\n"
-"     emitDigit(d, p);\n"
-"   }\n"
+ while(true) {
+   if (first == 1) {
+     d = k2%10;
+     k2 = int(k2*0.1);
+     p = -i*1.5;
+     emitDigit(d, p);
+   } else {
+     d = k1%10;
+     k1 = int(k1*0.1);
+     p = -i*1.5;
+     emitDigit(d, p);
+   }
 
-"   if (first == 1) {\n"
-"     if (k2 == 0 || i == N) {\n"
-"       i++;\n"
-"       p = -i*1.5;\n"
-"       emitDot(p);\n"
-"       first = 2;\n"
-"       k2 = 0;\n"
-"     }\n"
-"   }\n"
+   if (first == 1) {
+     if (k2 == 0 || i == N) {
+       i++;
+       p = -i*1.5;
+       emitDot(p);
+       first = 2;
+       k2 = 0;
+     }
+   }
 
-"   i++;\n"
-"   if (k1 == 0 && k2 == 0) return;\n"
-"   if (i > 10) return;\n"
-" }\n"
-"}\n"
+   i++;
+   if (k1 == 0 && k2 == 0) return;
+   if (i > 10) return;
+ }
+}
 
-"void main() {\n"
-"  emitNumber(normal[0][0], normal[0][2], 1);\n"
-"}";
+void main() {
+  emitNumber(normal[0][0], normal[0][2], 1);
+}
+);
 
 
 

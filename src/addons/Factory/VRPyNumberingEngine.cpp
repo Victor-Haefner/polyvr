@@ -46,17 +46,15 @@ template<> PyTypeObject VRPyBaseT<VRNumberingEngine>::type = {
 };
 
 PyMethodDef VRPyNumberingEngine::methods[] = {
-    {"add", (PyCFunction)VRPyNumberingEngine::add, METH_VARARGS, "Add number" },
-    {"set", (PyCFunction)VRPyNumberingEngine::set, METH_VARARGS, "Set number" },
+    {"add", (PyCFunction)VRPyNumberingEngine::add, METH_VARARGS, "Add N numbers - add(int N)" },
+    {"set", (PyCFunction)VRPyNumberingEngine::set, METH_VARARGS, "Set number - set(int i, [x,y,z] pos, float val)" },
     {"clear", (PyCFunction)VRPyNumberingEngine::clear, METH_NOARGS, "Clear numbers" },
     {NULL}  /* Sentinel */
 };
 
 PyObject* VRPyNumberingEngine::add(VRPyNumberingEngine* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyNumberingEngine::add - Object is invalid"); return NULL; }
-
-    int N = parseInt(args);
-    self->obj->add(OSG::Vec3f(), N);
+    self->obj->add(OSG::Vec3f(), parseInt(args));
     Py_RETURN_TRUE;
 }
 
@@ -80,6 +78,6 @@ PyObject* VRPyNumberingEngine::set(VRPyNumberingEngine* self, PyObject* args) {
 
 PyObject* VRPyNumberingEngine::clear(VRPyNumberingEngine* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyNumberingEngine::clear - Object is invalid"); return NULL; }
-    //self->obj->clear();
+    self->obj->clear();
     Py_RETURN_TRUE;
 }
