@@ -18,10 +18,14 @@ vector<CEF*> instances;
 
 CEF::CEF() {
     CefSettings settings;
-    CefString(&settings.browser_subprocess_path).FromASCII("ressources/cef/CefSubProcess");
-    CefString(&settings.locales_dir_path).FromASCII("ressources/cef/locales");
-    CefString(&settings.resources_dir_path).FromASCII("ressources/cef");
-    CefString(&settings.log_file).FromASCII("ressources/cef/wblog.log");
+    string bsp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/CefSubProcess";
+    string ldp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/locales";
+    string rdp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef";
+    string lfp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/wblog.log";
+    CefString(&settings.browser_subprocess_path).FromASCII(bsp.c_str());
+    CefString(&settings.locales_dir_path).FromASCII(ldp.c_str());
+    CefString(&settings.resources_dir_path).FromASCII(rdp.c_str());
+    CefString(&settings.log_file).FromASCII(lfp.c_str());
     settings.no_sandbox = true;
 
     CefMainArgs args(VROptions::get()->argc, VROptions::get()->argv);

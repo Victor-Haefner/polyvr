@@ -303,7 +303,7 @@ int VRDemos::loadCfg() {
 }
 
 void VRDemos::on_diag_save_clicked() {
-    string path = VRGuiFile::getRelativePath();
+    string path = VRGuiFile::getRelativePath_toWorkdir();
     addEntry(path, "favorites_tab", true);
     saveScene(path);
 }
@@ -318,7 +318,7 @@ void VRDemos::on_saveas_clicked() {
 }
 
 void VRDemos::on_diag_load_clicked() {
-    string path = VRGuiFile::getRelativePath();
+    string path = VRGuiFile::getRelativePath_toWorkdir();
     if (current_demo) if (current_demo->running) toggleDemo(current_demo); // close demo if it is running
     if (demos.count(path) == 0) addEntry(path, "favorites_tab", false);
     toggleDemo(demos[path]);
@@ -333,7 +333,7 @@ void VRDemos::on_load_clicked() {
 }
 
 void VRDemos::on_diag_new_clicked() {
-    string path = VRGuiFile::getRelativePath();
+    string path = VRGuiFile::getRelativePath_toWorkdir();
     if (path == "") return;
 
     // new scene

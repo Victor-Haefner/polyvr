@@ -103,27 +103,28 @@ path make_relative( path a_From, path a_To ) {
         ++itrFrom, ++itrTo );
     // Navigate backwards in directory to reach previously found base
     for( path::const_iterator fromEnd( a_From.end() ); itrFrom != fromEnd; ++itrFrom ) {
-        if( (*itrFrom) != "." )
-            ret /= "..";
+        if( (*itrFrom) != "." ) ret /= "..";
     }
     // Now navigate down the directory branch
     ret.append( itrTo, a_To.end() );
     return ret;
 }
 
-string VRGuiFile::getRelativePath() {
-    string p = getPath();
-    string workdir;
+string VRGuiFile::getRelativePath_toScene() {
     OSG::VRScene* scene = OSG::VRSceneManager::get()->getActiveScene();
-    if (scene) workdir = scene->getWorkdir();
-    else {
-        char cCurrentPath[FILENAME_MAX];
-        getcwd(cCurrentPath, sizeof(cCurrentPath) );
-        workdir = string(cCurrentPath);
-    }
+    if (scene == 0) return "";
 
-    path a(p), b(workdir);
-    string rel = make_relative( b, a ).string();
-    //cout << "relative path from " << a.string() << " to " << b.string() << " is " << rel << endl;
-    return rel;
+    path a(getPath()), b(scene->getWorkdir());
+    return make_relative( b, a ).string();
+}
+
+string VRGuiFile::getRelativePath_toWorkdir() {
+    char cCurrentPath[FILENAME_MAX];
+    getcwd(cCurrentPath, sizeof(cCurrentPath) );
+    string workdir = string(cCurrentPath);
+
+    cout << "VRGuiFile::getRelativePath_toWorkdir " << workdir << endl;
+
+    path a(getPath()), b(workdir);
+    return make_relative( b, a ).string();
 }

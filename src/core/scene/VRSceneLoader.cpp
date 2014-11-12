@@ -20,6 +20,7 @@
 #include <OpenSG/OSGGeoProperties.h>
 
 #include <stdio.h>
+#include <unistd.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -307,7 +308,7 @@ GeometryRecPtr VRSceneLoader::loadGeometry(string file, string object) {
     if (scene == 0) scene = VRSceneManager::get()->getActiveScene();
     if (scene == 0) return 0;
 
-    file = scene->getWorkdir() + '/' + file;
+    //file = scene->getWorkdir() + '/' + file;
 
     cout << "loadGeometry " << file << endl;
 
@@ -335,13 +336,11 @@ VRTransform* VRSceneLoader::load3DContent(string filepath, VRObject* parent, boo
     if (scene == 0) scene = VRSceneManager::get()->getActiveScene();
     if (scene == 0) return 0;
 
-    string filepath_toApp = scene->getWorkdir() + '/' + filepath;
-
     cout << "load3DContent " << filepath << endl;
 
     VRObject* root;
-    if(cached_files.count(filepath_toApp) == 0 or reload) load(filepath_toApp);
-    NodeRecPtr osg = cached_files[filepath_toApp].root;
+    if(cached_files.count(filepath) == 0 or reload) load(filepath);
+    NodeRecPtr osg = cached_files[filepath].root;
     root = parseOSGTree(osg, parent, filepath, filepath);
     if (root == 0) return 0;
 
@@ -484,6 +483,7 @@ void VRSceneLoader::loadScene(string path) {
     xmlpp::Element* root = VRSceneLoader_getElementChild_(objectsN, 0);
     VRScene* scene = new VRScene();
     scene->setPath(path);
+    VRSceneManager::get()->setWorkdir(scene->getWorkdir());
     scene->setName(scene->getFileName());
     VRSceneLoader_current_scene = scene;
 

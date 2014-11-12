@@ -20,7 +20,8 @@ class VRGuiFile {
         static void close();
         static void apply();
         static string getPath();
-        static string getRelativePath();
+        static string getRelativePath_toScene();
+        static string getRelativePath_toWorkdir();
 
         static void gotoPath(string path);
         static void setFile(string file);

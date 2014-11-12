@@ -17,6 +17,7 @@ class VRSceneManager : public VRThreadManager, public VRCallbackManager {
     private:
         map<string, VRScene*> scenes;
         string active;
+        string original_workdir;
 
         VRSceneManager();
         void operator= (VRSceneManager v);
@@ -31,6 +32,9 @@ class VRSceneManager : public VRThreadManager, public VRCallbackManager {
 
         void setActiveScene(VRScene* s);
         void setActiveSceneByName(string s);
+
+        void setWorkdir(string path);
+        string getOriginalWorkdir();
 
         //void printTree() { scenes[active]->printTree();}
 

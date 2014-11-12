@@ -9,6 +9,8 @@
 #include <OpenSG/OSGSceneFileHandler.h>
 #include <gtkmm/main.h>
 #include <GL/glut.h>
+#include <unistd.h>
+#include <errno.h>
 
 
 OSG_BEGIN_NAMESPACE
@@ -32,6 +34,10 @@ VRSceneManager::VRSceneManager() {
     g_timeout_add_full(G_PRIORITY_LOW, 17, gtkUpdate, NULL, NULL); // 60 Hz
     glutDisplayFunc(glutUpdate);
     glutIdleFunc(glutUpdate);
+
+    char cCurrentPath[FILENAME_MAX];
+    getcwd(cCurrentPath, sizeof(cCurrentPath) );
+    original_workdir = string(cCurrentPath);
 }
 
 VRSceneManager::~VRSceneManager() { for (auto scene : scenes) delete scene.second; }
@@ -48,6 +54,8 @@ void VRSceneManager::addScene(VRScene* s) {
     setActiveScene(s);
 }
 
+string VRSceneManager::getOriginalWorkdir() { return original_workdir; }
+
 void VRSceneManager::removeScene(VRScene* s) {
     if (s == 0) return;
     scenes.erase(s->getName());
@@ -63,6 +71,23 @@ void VRSceneManager::removeScene(VRScene* s) {
     map<string, VRWindow*> windows = VRSetupManager::get()->getCurrent()->getWindows();
     map<string, VRWindow*>::iterator itr;
     for (itr = windows.begin(); itr != windows.end(); itr++) itr->second->setContent(false);
+
+    setWorkdir(original_workdir);
+}
+
+void VRSceneManager::setWorkdir(string path) {
+    if (path == "") return;
+    string full_path = path[0] != '/' ? original_workdir + '/' + path : path;
+    int ret = chdir(full_path.c_str());
+    cout << "VRSceneManager::setWorkdir switch to " << path << " " << full_path << endl;
+    cout << "  success ? " << ret << " " << strerror(errno) << endl;
+
+
+    // check path
+    char cCurrentPath[FILENAME_MAX];
+    getcwd(cCurrentPath, sizeof(cCurrentPath) );
+    string workdir = string(cCurrentPath);
+    cout << "VRSceneManager::setWorkdir current: " << workdir << " "  << endl;
 }
 
 void VRSceneManager::newScene(string path) {
@@ -70,6 +95,7 @@ void VRSceneManager::newScene(string path) {
 
     VRScene* scene = new VRScene();
     scene->setPath(path);
+    setWorkdir(scene->getWorkdir());
     scene->setName(scene->getFileName());
     VRTransform* cam = scene->addCamera("Default");
 
