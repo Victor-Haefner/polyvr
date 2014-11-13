@@ -123,8 +123,6 @@ string VRGuiFile::getRelativePath_toWorkdir() {
     getcwd(cCurrentPath, sizeof(cCurrentPath) );
     string workdir = string(cCurrentPath);
 
-    cout << "VRGuiFile::getRelativePath_toWorkdir " << workdir << endl;
-
     path a(getPath()), b(workdir);
     return make_relative( b, a ).string();
 }

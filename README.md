@@ -1,12 +1,11 @@
-polyvr
-======
+<h1>PolyVR - a shortcut to virtual reality</h1>
 
 PolyVR - a shortcut to virtual reality
 
 PolyVR is a scene authoring system. 
 
 
--= install =-
+<h2>Install instructions</h2>
 
 clone this repository
 
@@ -17,5 +16,8 @@ clone this repository
  sudo ./install
 
 
-now you can start codeblocks and open 
-the project polyvr/PolyVR.cbp
+start polyvr from console:
+
+> polyvr
+
+or build the project in codeblocks with the project file polyvr/PolyVR.cbp
