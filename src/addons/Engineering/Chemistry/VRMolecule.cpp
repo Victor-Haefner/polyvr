@@ -767,7 +767,7 @@ void main() {
 
 	Color = vec4(0.5, 0.5, 0.5, 1.0);
 	vec4 tc = vec4(0,1,0,1);
-	float w = 0.06;
+	float w = 0.09;
 	float k = 1.0;
 
 	if (b > 0.0 && b < 0.15) Color.y += 0.5; /* single */
