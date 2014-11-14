@@ -11,21 +11,23 @@ using namespace std;
 struct PeriodicTableEntry {
     int valence_electrons = 0;
     Vec3f color;
+    float radius = 1;
 
     PeriodicTableEntry();
-    PeriodicTableEntry( int valence_electrons, Vec3f color);
+    PeriodicTableEntry( int valence_electrons, float radius, Vec3f color);
 };
 
 class VRAtom;
 struct VRBond {
-    VRAtom* atom = 0;
+    VRAtom* atom1 = 0;
+    VRAtom* atom2 = 0;
     int type = 1;
     int slot = 0;
     bool extra = false;
     Pnt3f p1, p2;
 
     VRBond();
-    VRBond(int t, int s, VRAtom* a);
+    VRBond(int t, int s, VRAtom* a2, VRAtom* a1);
 };
 
 class VRAtom {

@@ -119,7 +119,7 @@ void main( void ) {
     model = gl_ModelViewProjectionMatrix;\
     gl_Position = model*gl_Vertex;
     normal = gl_Normal;
-    if (onTop > 0.0) gl_Position.z = 0.5;
+    if (onTop > 0.0) gl_Position.z -= 0.5;
 }
 );
 
@@ -205,6 +205,8 @@ void emitNumber(in float n1, in float n2, in int N) {
  int i=0;
  int first = 1;
  float p = 0;
+
+ if (k2 == 0) first = 0;
 
  while(true) {
    if (first == 1) {
