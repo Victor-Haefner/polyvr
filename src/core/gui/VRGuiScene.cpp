@@ -702,6 +702,7 @@ void on_treeview_select(GtkTreeView* tv, gpointer user_data) {
     updateObjectForms();
 
     selected_geometry = 0;
+    if (getSelected() == 0) return;
     if (getSelected()->hasAttachment("geometry")) selected_geometry = (VRGeometry*)getSelected();
 }
 
