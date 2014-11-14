@@ -93,6 +93,7 @@ VRAtom::~VRAtom() {
     for (auto b : bonds) {
         VRAtom* a = b.second.atom;
         a->full = false;
+        a->bound_valence_electrons -= b.second.type;
         a->bonds.erase(b.second.slot);
     }
 }
@@ -126,7 +127,7 @@ void VRAtom::computePositions() {
         if (b.second.extra) continue;
 
         Matrix T = transformation;
-        Matrix S = structure[b.second.slot];
+        Matrix S = structure[b.first];
 
         VRAtom* a = b.second.atom;
         if (a == 0) {
@@ -147,30 +148,40 @@ bool VRAtom::append(VRBond bond) {
     VRAtom* at = bond.atom;
     if (full or at->full or at == this) return false;
     for (auto b : bonds) if (b.second.atom == at) return false;
+    for (auto b : at->bonds) if (b.second.atom == this) return false;
 
-    int bmax = 4 - abs(params.valence_electrons - 4);
+    int bmax1 = 4 - abs(params.valence_electrons - 4);
+    int bmax2 = 4 - abs(at->params.valence_electrons - 4);
 
-    int slot=0;
-    for (; bonds.count(slot) == 1; slot++);
+    int slot1=0;
+    int slot2=0;
+    for (; bonds.count(slot1) == 1; slot1++);
+    for (; at->bonds.count(slot2) == 1; slot2++);
 
-    bond.slot = slot;
-    bonds[slot] = bond;
-    bound_valence_electrons += bond.type;
+    bond.slot = slot2;
+    bonds[slot1] = bond;
 
     bond.atom = this;
-    at->append(bond);
+    bond.slot = slot1;
+    at->bonds[slot2] = bond;
+
+    bound_valence_electrons += bond.type;
+    at->bound_valence_electrons += bond.type;
+
+    if (bound_valence_electrons >= bmax1) full = true;
+    if (at->bound_valence_electrons >= bmax2) at->full = true;
 
     //print();
-    if (bound_valence_electrons >= bmax) full = true;
+    //cout << " "; at->print();
     return true;
 }
 
 void VRAtom::print() {
-    cout << " ID: " << ID << " Type: " << type << " boundEl: " << bound_valence_electrons << " geo: " << geo << " pos: " << Vec3f(transformation[3]);
+    cout << " ID: " << ID << " Type: " << type  << " full?: " << full << " boundEl: " << bound_valence_electrons << " geo: " << geo << " pos: " << Vec3f(transformation[3]);
     cout << " bonds with: ";
     for (auto b : bonds) {
         if (b.second.atom == 0) cout << " " << "pair";
-        else cout << " " << b.second.atom->ID;
+        else cout << " " << b.second.atom->ID << "(" << b.first << "," << b.second.slot << ")";
     }
     cout << endl;
 }
@@ -178,6 +189,8 @@ void VRAtom::print() {
 void VRAtom::propagateTransformation(Matrix& T, uint flag) {
     if (flag == recFlag) return;
     recFlag = flag;
+
+    print();
 
     Matrix m = T;
     m.mult(transformation);
@@ -434,7 +447,8 @@ void VRMolecule::rotateBond(int a, int b, float f) {
     Matrix R;
     R.setRotate(q);
 
-    Matrix T = B->getTransformation();
+    Matrix T;
+    T[3] = B->getTransformation()[3];
     Matrix _T;
     T.inverse(_T);
     T.mult(R);
@@ -453,6 +467,7 @@ void VRMolecule::substitute(int a, VRMolecule* m, int b) {
     if (m->atoms.count(b) == 0) return;
 
     Matrix am = atoms[a]->getTransformation();
+    Matrix bm = m->atoms[b]->getTransformation();
 
     map<int, VRBond> bondsA = atoms[a]->getBonds();
     map<int, VRBond> bondsB = m->atoms[b]->getBonds();
@@ -461,8 +476,13 @@ void VRMolecule::substitute(int a, VRMolecule* m, int b) {
 
     VRAtom* A = bondsA[0].atom;
     VRAtom* B = bondsB[0].atom;
+    int Ai = A->getID();
+    int Bi = B->getID();
     remAtom(a);
     m->remAtom(b);
+
+    if (atoms.count(Ai) == 0) { cout << "AA\n"; return; }
+    if (m->atoms.count(Bi) == 0) { cout << "BB\n"; return; }
 
     // copy atoms
     for (auto at : m->atoms) {
@@ -471,15 +491,23 @@ void VRMolecule::substitute(int a, VRMolecule* m, int b) {
     }
     m->atoms.clear();
 
-    // transform new atoms
-    uint now = VRGlobals::get()->CURRENT_FRAME+987;
-    A->recFlag = now;
-    B->propagateTransformation(am, now);
-
     // attach molecules
     VRBond bond(1,0,B);
     bond.extra = true;
     A->append(bond);
+
+    // transform new atoms
+    uint now = VRGlobals::get()->CURRENT_FRAME+987;
+    A->recFlag = now;
+    bm.invert();
+    Matrix Bm = B->getTransformation();
+    bm.mult(Bm);
+    bm.setTranslate(Vec3f(0,0,0));
+    am.mult(bm);
+    MatrixLookAt( bm, Vec3f(0,0,0), Vec3f(0,0,1), Vec3f(0,-1,0) );
+    bm.mult(am);
+    bm[3] = am[3];
+    B->propagateTransformation(bm, now);
 
     updateGeo();
     m->updateGeo();
