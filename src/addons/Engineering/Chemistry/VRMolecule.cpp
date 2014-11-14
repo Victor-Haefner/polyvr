@@ -133,8 +133,8 @@ void VRAtom::computePositions() {
         if (a == 0) { // duplets
             S[3] *= 0.2; S[3][3] = 1;
             T.mult(S);
-            T.mult(Pnt3f(0.2,0,0), b.second.p1);
-            T.mult(Pnt3f(-0.2,0,0), b.second.p2);
+            T.mult(Pnt3f(1,0,0)*0.2, b.second.p1);
+            T.mult(Pnt3f(-1,-0,0)*0.2, b.second.p2);
             continue;
         }
 
@@ -209,6 +209,9 @@ void VRAtom::propagateTransformation(Matrix& T, uint flag) {
 VRMolecule::VRMolecule(string definition) : VRGeometry(definition) {
     bonds_geo = new VRGeometry("bonds");
     addChild(bonds_geo);
+
+    coords_geo = new VRGeometry("coords");
+    addChild(coords_geo);
 
     labels = new VRNumberingEngine();
     labels->setBillboard(true);
@@ -321,6 +324,7 @@ void VRMolecule::updateGeo() {
     bonds_geo->setMaterial(mat2);
 
     updateLabels();
+    updateCoords();
 }
 
 bool isNumber(char c) { return (c >= '0' and c <= '9'); }
@@ -437,7 +441,7 @@ void VRMolecule::rotateBond(int a, int b, float f) {
     VRAtom* A = atoms[a];
     VRAtom* B = atoms[b];
 
-    uint now = VRGlobals::get()->CURRENT_FRAME+1234;
+    uint now = VRGlobals::get()->CURRENT_FRAME+random();
     A->recFlag = now;
 
     Vec3f p1 = Vec3f( A->getTransformation()[3] );
@@ -454,9 +458,7 @@ void VRMolecule::rotateBond(int a, int b, float f) {
     T.mult(R);
     T.mult(_T);
 
-    cout << "ROTATE " << a << " " << b << " " << f << endl;
-    cout << " q " << dir << endl;
-    //cout << T << endl;
+    cout << "ROTATE bound " << a << "-" << b << " around " << dir << " with " << f << endl;
 
     B->propagateTransformation(T, now);
     updateGeo();
@@ -497,7 +499,7 @@ void VRMolecule::substitute(int a, VRMolecule* m, int b) {
     A->append(bond);
 
     // transform new atoms
-    uint now = VRGlobals::get()->CURRENT_FRAME+987;
+    uint now = VRGlobals::get()->CURRENT_FRAME+random();
     A->recFlag = now;
     bm.invert();
     Matrix Bm = B->getTransformation();
@@ -513,10 +515,56 @@ void VRMolecule::substitute(int a, VRMolecule* m, int b) {
     m->updateGeo();
 }
 
-void VRMolecule::showLabels(bool b) {
-    if (doLabels == b) return;
-    doLabels = b;
-    updateLabels();
+void VRMolecule::showLabels(bool b) { if (doLabels == b) return; doLabels = b; updateLabels(); }
+void VRMolecule::showCoords(bool b) { if (doCoords == b) return; doCoords = b; updateCoords(); }
+
+void VRMolecule::updateCoords() {
+    coords_geo->hide();
+    if (!doCoords) return;
+
+    coords_geo->show();
+
+    GeoPnt3fPropertyRecPtr      Pos = GeoPnt3fProperty::create();
+    GeoVec3fPropertyRecPtr      Norms = GeoVec3fProperty::create();
+    GeoUInt32PropertyRecPtr     Indices = GeoUInt32Property::create();
+    GeoVec3fPropertyRecPtr      cols = GeoVec3fProperty::create();
+
+    int i=0;
+    for (auto a : atoms) {
+        float s = 0.4;
+        Vec4f p0 = a.second->getTransformation()[3];
+        Pos->addValue( p0 );
+        Pos->addValue( p0 + s*a.second->getTransformation()[0] );
+        Pos->addValue( p0 + s*a.second->getTransformation()[1] );
+        Pos->addValue( p0 + s*a.second->getTransformation()[2] );
+        cols->addValue(Vec3f(0,0,0));
+        cols->addValue(Vec3f(1,0,0));
+        cols->addValue(Vec3f(0,1,0));
+        cols->addValue(Vec3f(0,0,1));
+        Norms->addValue( Vec3f(0, 1, 0) );
+        Norms->addValue( Vec3f(0, 1, 0) );
+        Norms->addValue( Vec3f(0, 1, 0) );
+        Norms->addValue( Vec3f(0, 1, 0) );
+        Indices->addValue(i+0);
+        Indices->addValue(i+1);
+        Indices->addValue(i+0);
+        Indices->addValue(i+2);
+        Indices->addValue(i+0);
+        Indices->addValue(i+3);
+        i+=4;
+    }
+
+    // atoms geometry
+    VRMaterial* mat = VRMaterial::get("coords");
+    mat->setLineWidth(2);
+    mat->setLit(false);
+
+    coords_geo->setType(GL_LINES);
+    coords_geo->setPositions(Pos);
+    coords_geo->setNormals(Norms);
+    coords_geo->setColors(cols);
+    coords_geo->setIndices(Indices);
+    coords_geo->setMaterial(mat);
 }
 
 void VRMolecule::updateLabels() {

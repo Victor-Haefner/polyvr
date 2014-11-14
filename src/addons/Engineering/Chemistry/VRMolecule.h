@@ -68,8 +68,10 @@ class VRMolecule : public VRGeometry {
         map<int, VRAtom*> atoms;
 
         VRGeometry* bonds_geo = 0;
+        VRGeometry* coords_geo = 0;
         VRNumberingEngine* labels = 0;
         bool doLabels = false;
+        bool doCoords = false;
 
         static string a_vp;
         static string a_fp;
@@ -85,6 +87,7 @@ class VRMolecule : public VRGeometry {
 		void remAtom(int ID);
 		void updateGeo();
 		void updateLabels();
+		void updateCoords();
 
 		int getID();
 		vector<string> parse(string mol, bool verbose = false);
@@ -99,6 +102,7 @@ class VRMolecule : public VRGeometry {
         void rotateBond(int a, int b, float f);
 
         void showLabels(bool b);
+        void showCoords(bool b);
 };
 
 OSG_END_NAMESPACE;
