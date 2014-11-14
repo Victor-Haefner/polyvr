@@ -11,21 +11,23 @@ using namespace std;
 struct PeriodicTableEntry {
     int valence_electrons = 0;
     Vec3f color;
+    float radius = 1;
 
     PeriodicTableEntry();
-    PeriodicTableEntry( int valence_electrons, Vec3f color);
+    PeriodicTableEntry( int valence_electrons, float radius, Vec3f color);
 };
 
 class VRAtom;
 struct VRBond {
-    VRAtom* atom = 0;
+    VRAtom* atom1 = 0;
+    VRAtom* atom2 = 0;
     int type = 1;
     int slot = 0;
     bool extra = false;
-    Vec3f p1, p2;
+    Pnt3f p1, p2;
 
     VRBond();
-    VRBond(int t, int s, VRAtom* a);
+    VRBond(int t, int s, VRAtom* a2, VRAtom* a1);
 };
 
 class VRAtom {
@@ -68,8 +70,10 @@ class VRMolecule : public VRGeometry {
         map<int, VRAtom*> atoms;
 
         VRGeometry* bonds_geo = 0;
+        VRGeometry* coords_geo = 0;
         VRNumberingEngine* labels = 0;
         bool doLabels = false;
+        bool doCoords = false;
 
         static string a_vp;
         static string a_fp;
@@ -85,6 +89,7 @@ class VRMolecule : public VRGeometry {
 		void remAtom(int ID);
 		void updateGeo();
 		void updateLabels();
+		void updateCoords();
 
 		int getID();
 		vector<string> parse(string mol, bool verbose = false);
@@ -99,6 +104,7 @@ class VRMolecule : public VRGeometry {
         void rotateBond(int a, int b, float f);
 
         void showLabels(bool b);
+        void showCoords(bool b);
 };
 
 OSG_END_NAMESPACE;

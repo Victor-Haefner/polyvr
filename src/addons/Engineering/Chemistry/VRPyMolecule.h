@@ -10,6 +10,7 @@ struct VRPyMolecule : VRPyBaseT<OSG::VRMolecule> {
     static PyObject* set(VRPyMolecule* self, PyObject* args);
     static PyObject* setRandom(VRPyMolecule* self, PyObject* args);
     static PyObject* showLabels(VRPyMolecule* self, PyObject* args);
+    static PyObject* showCoords(VRPyMolecule* self, PyObject* args);
     static PyObject* substitute(VRPyMolecule* self, PyObject* args);
     static PyObject* rotateBond(VRPyMolecule* self, PyObject* args);
 };

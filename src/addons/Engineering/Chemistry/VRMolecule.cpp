@@ -17,14 +17,27 @@ map<string, vector<Matrix> > AtomicStructures;
 
 #include <OpenSG/OSGMatrixUtility.h>
 
-void initAtomicTables() {
-	PeriodicTable["H"] = PeriodicTableEntry(1, Vec3f(1,1,1));
-	PeriodicTable["C"] = PeriodicTableEntry(4, Vec3f(0.4,0.4,0.4));
-	PeriodicTable["N"] = PeriodicTableEntry(5, Vec3f(0,0,1));
-	PeriodicTable["O"] = PeriodicTableEntry(6, Vec3f(1,0,0));
-	PeriodicTable["S"] = PeriodicTableEntry(5, Vec3f(1,1,0));
-	PeriodicTable["P"] = PeriodicTableEntry(6, Vec3f(0.8,0.5,0));
-	PeriodicTable["Cl"] = PeriodicTableEntry(7, Vec3f(0,1,0));
+void initAtomicTables() { // TODO: set colors
+	PeriodicTable["H"] = PeriodicTableEntry(1, 0.37, Vec3f(1,1,1));
+	PeriodicTable["He"] = PeriodicTableEntry(8, 0.5, Vec3f(1,0,1));
+
+	PeriodicTable["Li"] = PeriodicTableEntry(1, 1.52, Vec3f(0.6,0.4,0.0));
+	PeriodicTable["Be"] = PeriodicTableEntry(2, 1.11, Vec3f(0.6,0.0,0.6));
+	PeriodicTable["B"] = PeriodicTableEntry(3, 0.88, Vec3f(0.4,1.0,0.4));
+	PeriodicTable["C"] = PeriodicTableEntry(4, 0.77, Vec3f(0.4,0.4,0.4));
+	PeriodicTable["N"] = PeriodicTableEntry(5, 0.7, Vec3f(0,0,1));
+	PeriodicTable["O"] = PeriodicTableEntry(6, 0.66, Vec3f(1,0,0));
+	PeriodicTable["F"] = PeriodicTableEntry(7, 0.64, Vec3f(0,0,1));
+	PeriodicTable["Ne"] = PeriodicTableEntry(8, 0.70, Vec3f(0,0,1));
+
+	PeriodicTable["Na"] = PeriodicTableEntry(1, 1.86, Vec3f(0,0,1));
+	PeriodicTable["Mg"] = PeriodicTableEntry(2, 1.60, Vec3f(0,1,0));
+	PeriodicTable["Al"] = PeriodicTableEntry(3, 1.43, Vec3f(0.6,0.6,0.6));
+	PeriodicTable["Si"] = PeriodicTableEntry(4, 1.17, Vec3f(0.5,1,0));
+	PeriodicTable["P"] = PeriodicTableEntry(5, 1.1, Vec3f(0.8,0.5,0));
+	PeriodicTable["S"] = PeriodicTableEntry(6, 1.04, Vec3f(1,1,0));
+	PeriodicTable["Cl"] = PeriodicTableEntry(7, 0.99, Vec3f(0.3,1,0));
+	PeriodicTable["Ar"] = PeriodicTableEntry(8, 0.94, Vec3f(0,1,0.5));
 
 	AtomicStructures["tetra"] = vector<Matrix>();
 	AtomicStructures["iso"] = vector<Matrix>();
@@ -67,12 +80,13 @@ void initAtomicTables() {
 }
 
 PeriodicTableEntry::PeriodicTableEntry() {}
-PeriodicTableEntry::PeriodicTableEntry(int valence_electrons, Vec3f color) {
+PeriodicTableEntry::PeriodicTableEntry(int valence_electrons, float radius, Vec3f color) {
     this->valence_electrons = valence_electrons;
     this->color = color;
+    this->radius = radius;
 }
 
-VRBond::VRBond(int t, int s, VRAtom* a) { type = t; atom = a; slot = s; }
+VRBond::VRBond(int t, int s, VRAtom* a2, VRAtom* a1) { type = t; atom1 = a1; atom2 = a2; slot = s; }
 VRBond::VRBond() {}
 
 VRAtom::VRAtom(string type, int ID) {
@@ -82,17 +96,18 @@ VRAtom::VRAtom(string type, int ID) {
 
     // fill in the duplets
     for (int i=4; i<params.valence_electrons; i++) {
-        if (i == 4) bonds[2] = VRBond(4,2,0);
-        if (i == 5) bonds[1] = VRBond(4,1,0);
-        if (i == 6) bonds[3] = VRBond(4,3,0);
-        if (i == 7) bonds[0] = VRBond(4,0,0);
+        if (i == 4) bonds[2] = VRBond(4,2,0, this);
+        if (i == 5) bonds[1] = VRBond(4,1,0, this);
+        if (i == 6) bonds[3] = VRBond(4,3,0, this);
+        if (i == 7) bonds[0] = VRBond(4,0,0, this);
     }
 }
 
 VRAtom::~VRAtom() {
     for (auto b : bonds) {
-        VRAtom* a = b.second.atom;
+        VRAtom* a = b.second.atom2;
         a->full = false;
+        a->bound_valence_electrons -= b.second.type;
         a->bonds.erase(b.second.slot);
     }
 }
@@ -126,14 +141,15 @@ void VRAtom::computePositions() {
         if (b.second.extra) continue;
 
         Matrix T = transformation;
-        Matrix S = structure[b.second.slot];
+        Matrix S = structure[b.first];
 
-        VRAtom* a = b.second.atom;
-        if (a == 0) {
-            S[3] *= 0.2; S[3][3] = 1;
+        VRAtom* a = b.second.atom2;
+        if (a == 0) { // duplets
+            float r = 0.5*b.second.atom1->getParams().radius;
+            S[3] *= r; S[3][3] = 1;
             T.mult(S);
-            T.mult(Pnt3f(0.2,0,0), b.second.p1);
-            T.mult(Pnt3f(-0.2,0,0), b.second.p2);
+            T.mult(Pnt3f(1,0,0)*r, b.second.p1);
+            T.mult(Pnt3f(-1,-0,0)*r, b.second.p2);
             continue;
         }
 
@@ -144,33 +160,45 @@ void VRAtom::computePositions() {
 }
 
 bool VRAtom::append(VRBond bond) {
-    VRAtom* at = bond.atom;
+    VRAtom* at = bond.atom2;
     if (full or at->full or at == this) return false;
-    for (auto b : bonds) if (b.second.atom == at) return false;
+    for (auto b : bonds) if (b.second.atom2 == at) return false;
+    for (auto b : at->bonds) if (b.second.atom2 == this) return false;
 
-    int bmax = 4 - abs(params.valence_electrons - 4);
+    int bmax1 = 4 - abs(params.valence_electrons - 4);
+    int bmax2 = 4 - abs(at->params.valence_electrons - 4);
 
-    int slot=0;
-    for (; bonds.count(slot) == 1; slot++);
+    int slot1=0;
+    int slot2=0;
+    for (; bonds.count(slot1) == 1; slot1++);
+    for (; at->bonds.count(slot2) == 1; slot2++);
 
-    bond.slot = slot;
-    bonds[slot] = bond;
+    bond.atom1 = this;
+    bond.slot = slot2;
+    bonds[slot1] = bond;
+
+    bond.atom2 = this;
+    bond.atom1 = at;
+    bond.slot = slot1;
+    at->bonds[slot2] = bond;
+
     bound_valence_electrons += bond.type;
+    at->bound_valence_electrons += bond.type;
 
-    bond.atom = this;
-    at->append(bond);
+    if (bound_valence_electrons >= bmax1) full = true;
+    if (at->bound_valence_electrons >= bmax2) at->full = true;
 
     //print();
-    if (bound_valence_electrons >= bmax) full = true;
+    //cout << " "; at->print();
     return true;
 }
 
 void VRAtom::print() {
-    cout << " ID: " << ID << " Type: " << type << " boundEl: " << bound_valence_electrons << " geo: " << geo << " pos: " << Vec3f(transformation[3]);
+    cout << " ID: " << ID << " Type: " << type  << " full?: " << full << " boundEl: " << bound_valence_electrons << " geo: " << geo << " pos: " << Vec3f(transformation[3]);
     cout << " bonds with: ";
     for (auto b : bonds) {
-        if (b.second.atom == 0) cout << " " << "pair";
-        else cout << " " << b.second.atom->ID;
+        if (b.second.atom2 == 0) cout << " " << "pair";
+        else cout << " " << b.second.atom2->ID << "(" << b.first << "," << b.second.slot << ")";
     }
     cout << endl;
 }
@@ -179,16 +207,18 @@ void VRAtom::propagateTransformation(Matrix& T, uint flag) {
     if (flag == recFlag) return;
     recFlag = flag;
 
+    //print();
+
     Matrix m = T;
     m.mult(transformation);
     transformation = m;
 
     for (auto& b : bonds) {
-        if (b.second.atom == 0) {
+        if (b.second.atom2 == 0) { // duplet
             T.mult(b.second.p1, b.second.p1);
             T.mult(b.second.p2, b.second.p2);
         }
-        else b.second.atom->propagateTransformation(T, flag);
+        else b.second.atom2->propagateTransformation(T, flag);
     }
 }
 
@@ -197,9 +227,12 @@ VRMolecule::VRMolecule(string definition) : VRGeometry(definition) {
     bonds_geo = new VRGeometry("bonds");
     addChild(bonds_geo);
 
+    coords_geo = new VRGeometry("coords");
+    addChild(coords_geo);
+
     labels = new VRNumberingEngine();
     labels->setBillboard(true);
-    labels->setOnTop(true);
+    labels->setOnTop(false);
     labels->setSize(0.1);
     addChild(labels);
 
@@ -207,8 +240,8 @@ VRMolecule::VRMolecule(string definition) : VRGeometry(definition) {
 }
 
 void VRMolecule::addAtom(string a, int t) {
-    VRBond b(t, 0, new VRAtom(a, getID()) );
-    atoms[b.atom->getID()] = b.atom;
+    VRBond b(t, 0, new VRAtom(a, getID()), 0);
+    atoms[b.atom2->getID()] = b.atom2;
     addAtom(b);
 }
 
@@ -221,7 +254,7 @@ void VRMolecule::addAtom(int ID, int t) {
     VRAtom* at = atoms[ID];
     if (at->full) return;
 
-    VRBond b(t, 0, at);
+    VRBond b(t, 0, at, 0);
     b.extra = true;
     addAtom(b);
 }
@@ -246,17 +279,20 @@ void VRMolecule::updateGeo() {
     // hack to avoid the single point bug
     if (atoms.size() == 1) atoms[1] = atoms[0];
 
+    float r_scale = 0.6;
+
     int i=0;
     int j=0;
     for (auto a : atoms) {
-        cols->addValue(a.second->getParams().color);
+        PeriodicTableEntry aP = a.second->getParams();
+        cols->addValue(aP.color);
         Pos->addValue(a.second->getTransformation()[3]);
-        Norms->addValue( Vec3f(0, 1, 0) );
+        Norms->addValue( Vec3f(0, r_scale*aP.radius, 0) );
         Indices->addValue(i++);
 
         // bonds
         for (auto b : a.second->getBonds()) {
-            if (b.second.atom == 0) { // duplet
+            if (b.second.atom2 == 0) { // duplet
                 Pos2->addValue(b.second.p1);
                 Pos2->addValue(b.second.p2);
                 Norms2->addValue( Vec3f(0, 1, 0) );
@@ -266,11 +302,12 @@ void VRMolecule::updateGeo() {
                 continue;
             }
 
-            if (b.second.atom->getID() < a.first) {
+            if (b.second.atom2->getID() < a.first) {
+                PeriodicTableEntry bP = b.second.atom2->getParams();
                 Pos2->addValue(a.second->getTransformation()[3]);
-                Pos2->addValue(b.second.atom->getTransformation()[3]);
+                Pos2->addValue(b.second.atom2->getTransformation()[3]);
                 Norms2->addValue( Vec3f(0, 1, 0) );
-                Norms2->addValue( Vec3f(0.1*b.second.type, 1,1) );
+                Norms2->addValue( Vec3f(0.1*b.second.type, r_scale*aP.radius, r_scale*bP.radius) );
                 Indices2->addValue(j++);
                 Indices2->addValue(j++);
             }
@@ -308,6 +345,7 @@ void VRMolecule::updateGeo() {
     bonds_geo->setMaterial(mat2);
 
     updateLabels();
+    updateCoords();
 }
 
 bool isNumber(char c) { return (c >= '0' and c <= '9'); }
@@ -335,7 +373,7 @@ vector<string> VRMolecule::parse(string mol, bool verbose) {
         if (mol[i] == '=') bond = "3"; // triple
         if (mol[i] == '-' or mol[i] == '=') i++;
 
-        // check for bond with ID atom
+        // check for bond with ID atom2
         X = parseNumber(mol, i); //parse number
         if (X.size() > 0) {
             res.push_back(bond);
@@ -346,9 +384,9 @@ vector<string> VRMolecule::parse(string mol, bool verbose) {
         }
 
         int j = 1;
-        string atom = mol.substr(i, 2);
-        if (PeriodicTable.count(atom)) j = 2; // search first for double atom names like Cl
-        atom = mol.substr(i, j); // final atom type string
+        string atom2 = mol.substr(i, 2);
+        if (PeriodicTable.count(atom2)) j = 2; // search first for double atom2 names like Cl
+        atom2 = mol.substr(i, j); // final atom2 type string
 
         X = parseNumber(mol, i+j); //parse number
         if (X.size() > 0 and verbose) cout << " N: " << X;
@@ -357,10 +395,10 @@ vector<string> VRMolecule::parse(string mol, bool verbose) {
         int N = 1;
         if (X.size() > 0) N = toInt(X);
 
-        if (PeriodicTable.count(atom)) {
+        if (PeriodicTable.count(atom2)) {
             for (int k=0; k<N; k++) {
                 res.push_back(bond);
-                res.push_back(atom);
+                res.push_back(atom2);
             }
         }
 
@@ -424,7 +462,7 @@ void VRMolecule::rotateBond(int a, int b, float f) {
     VRAtom* A = atoms[a];
     VRAtom* B = atoms[b];
 
-    uint now = VRGlobals::get()->CURRENT_FRAME+1234;
+    uint now = VRGlobals::get()->CURRENT_FRAME+random();
     A->recFlag = now;
 
     Vec3f p1 = Vec3f( A->getTransformation()[3] );
@@ -434,15 +472,14 @@ void VRMolecule::rotateBond(int a, int b, float f) {
     Matrix R;
     R.setRotate(q);
 
-    Matrix T = B->getTransformation();
+    Matrix T;
+    T[3] = B->getTransformation()[3];
     Matrix _T;
     T.inverse(_T);
     T.mult(R);
     T.mult(_T);
 
-    cout << "ROTATE " << a << " " << b << " " << f << endl;
-    cout << " q " << dir << endl;
-    //cout << T << endl;
+    //cout << "ROTATE bound " << a << "-" << b << " around " << dir << " with " << f << endl;
 
     B->propagateTransformation(T, now);
     updateGeo();
@@ -453,16 +490,22 @@ void VRMolecule::substitute(int a, VRMolecule* m, int b) {
     if (m->atoms.count(b) == 0) return;
 
     Matrix am = atoms[a]->getTransformation();
+    Matrix bm = m->atoms[b]->getTransformation();
 
     map<int, VRBond> bondsA = atoms[a]->getBonds();
     map<int, VRBond> bondsB = m->atoms[b]->getBonds();
     if (bondsA.count(0) == 0) return;
     if (bondsB.count(0) == 0) return;
 
-    VRAtom* A = bondsA[0].atom;
-    VRAtom* B = bondsB[0].atom;
+    VRAtom* A = bondsA[0].atom2;
+    VRAtom* B = bondsB[0].atom2;
+    int Ai = A->getID();
+    int Bi = B->getID();
     remAtom(a);
     m->remAtom(b);
+
+    if (atoms.count(Ai) == 0) { cout << "AA\n"; return; }
+    if (m->atoms.count(Bi) == 0) { cout << "BB\n"; return; }
 
     // copy atoms
     for (auto at : m->atoms) {
@@ -471,24 +514,78 @@ void VRMolecule::substitute(int a, VRMolecule* m, int b) {
     }
     m->atoms.clear();
 
-    // transform new atoms
-    uint now = VRGlobals::get()->CURRENT_FRAME+987;
-    A->recFlag = now;
-    B->propagateTransformation(am, now);
-
     // attach molecules
-    VRBond bond(1,0,B);
+    VRBond bond(1,0,B,A);
     bond.extra = true;
     A->append(bond);
+
+    // transform new atoms
+    uint now = VRGlobals::get()->CURRENT_FRAME+random();
+    A->recFlag = now;
+    bm.invert();
+    Matrix Bm = B->getTransformation();
+    bm.mult(Bm);
+    bm.setTranslate(Vec3f(0,0,0));
+    am.mult(bm);
+    MatrixLookAt( bm, Vec3f(0,0,0), Vec3f(0,0,1), Vec3f(0,-1,0) );
+    bm.mult(am);
+    bm[3] = am[3];
+    B->propagateTransformation(bm, now);
 
     updateGeo();
     m->updateGeo();
 }
 
-void VRMolecule::showLabels(bool b) {
-    if (doLabels == b) return;
-    doLabels = b;
-    updateLabels();
+void VRMolecule::showLabels(bool b) { if (doLabels == b) return; doLabels = b; updateLabels(); }
+void VRMolecule::showCoords(bool b) { if (doCoords == b) return; doCoords = b; updateCoords(); }
+
+void VRMolecule::updateCoords() {
+    coords_geo->hide();
+    if (!doCoords) return;
+
+    coords_geo->show();
+
+    GeoPnt3fPropertyRecPtr      Pos = GeoPnt3fProperty::create();
+    GeoVec3fPropertyRecPtr      Norms = GeoVec3fProperty::create();
+    GeoUInt32PropertyRecPtr     Indices = GeoUInt32Property::create();
+    GeoVec3fPropertyRecPtr      cols = GeoVec3fProperty::create();
+
+    int i=0;
+    for (auto a : atoms) {
+        float s = 0.4;
+        Vec4f p0 = a.second->getTransformation()[3];
+        Pos->addValue( p0 );
+        Pos->addValue( p0 + s*a.second->getTransformation()[0] );
+        Pos->addValue( p0 + s*a.second->getTransformation()[1] );
+        Pos->addValue( p0 + s*a.second->getTransformation()[2] );
+        cols->addValue(Vec3f(0,0,0));
+        cols->addValue(Vec3f(1,0,0));
+        cols->addValue(Vec3f(0,1,0));
+        cols->addValue(Vec3f(0,0,1));
+        Norms->addValue( Vec3f(0, 1, 0) );
+        Norms->addValue( Vec3f(0, 1, 0) );
+        Norms->addValue( Vec3f(0, 1, 0) );
+        Norms->addValue( Vec3f(0, 1, 0) );
+        Indices->addValue(i+0);
+        Indices->addValue(i+1);
+        Indices->addValue(i+0);
+        Indices->addValue(i+2);
+        Indices->addValue(i+0);
+        Indices->addValue(i+3);
+        i+=4;
+    }
+
+    // atoms geometry
+    VRMaterial* mat = VRMaterial::get("coords");
+    mat->setLineWidth(2);
+    mat->setLit(false);
+
+    coords_geo->setType(GL_LINES);
+    coords_geo->setPositions(Pos);
+    coords_geo->setNormals(Norms);
+    coords_geo->setColors(cols);
+    coords_geo->setIndices(Indices);
+    coords_geo->setMaterial(mat);
 }
 
 void VRMolecule::updateLabels() {
@@ -525,9 +622,11 @@ string VRMolecule::a_vp =
 "#version 120\n"
 GLSL(
 varying vec4 color;
+varying vec3 normal;
 
 void main( void ) {
     color = gl_Color;
+    normal = gl_Normal;
     gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex;
 }
 );
@@ -542,6 +641,7 @@ layout (triangle_strip, max_vertices=6) out;
 uniform vec2 OSGViewportSize;
 
 in vec4 color[];
+in vec3 normal[];
 out vec2 texCoord;
 out vec4 Color;
 
@@ -576,7 +676,7 @@ void emitQuad(in float s, in vec4 tc) {
 
 void main() {
 	Color = color[0];
-	emitQuad(0.2, vec4(0,1,0,1));
+	emitQuad(normal[0][1], vec4(0,1,0,1));
 }
 );
 
@@ -631,11 +731,13 @@ void emitQuad(in float s, in float f, in vec4 tc) {
 	vec4 pl1 = gl_PositionIn[0];
 	vec4 pl2 = gl_PositionIn[1];
 
+	vec3 n2 = normal[1];
+
 	float a = OSGViewportSize.y/OSGViewportSize.x;
 
 	vec4 d = pl2-pl1;
-	pl1 += 0.9*s*d;
-	pl2 -= 0.9*s*d;
+	pl1 += 0.7*n2.y*d;
+	pl2 -= 0.7*n2.z*d;
 
 	vec3 x = cross(d.xyz, vec3(0,0,1));
 	x.x *= a;

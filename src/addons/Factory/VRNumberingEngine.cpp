@@ -119,7 +119,7 @@ void main( void ) {
     model = gl_ModelViewProjectionMatrix;\
     gl_Position = model*gl_Vertex;
     normal = gl_Normal;
-    if (onTop > 0.0) gl_Position.z = 0.5;
+    if (onTop > 0.0) gl_Position.z -= 0.5;
 }
 );
 
@@ -142,34 +142,49 @@ GLSL(
 layout (points) in;
 layout (triangle_strip, max_vertices=60) out;
 
+uniform float doBillboard;
 uniform float size;
+uniform vec2 OSGViewportSize;
 in mat4 model[];
 in vec3 normal[];
 out vec2 texCoord;
 
 void emitVertex(in vec4 p, in vec2 tc) {
-   gl_Position = p;
-   texCoord = tc;
-   EmitVertex();
+ gl_Position = p;
+ texCoord = tc;
+ EmitVertex();
 }
 
 void emitQuad(in float offset, in vec4 tc) {
-   float sx = 0.5*size;
-   float sy = size;
-   float ox = 2*sx*offset;
-   vec4 p1 = gl_PositionIn[0]+model[0]*vec4(-sx+ox,-sy,0,0);
-   vec4 p2 = gl_PositionIn[0]+model[0]*vec4(-sx+ox, sy,0,0);
-   vec4 p3 = gl_PositionIn[0]+model[0]*vec4( sx+ox, sy,0,0);
-   vec4 p4 = gl_PositionIn[0]+model[0]*vec4( sx+ox,-sy,0,0);
+ float sx = 0.5*size;
+ float sy = size;
+ float ox = 2*sx*offset;
+ vec4 p1;
+ vec4 p2;
+ vec4 p3;
+ vec4 p4;
 
-   emitVertex(p1, vec2(tc[0], tc[2]));
-   emitVertex(p2, vec2(tc[0], tc[3]));
-   emitVertex(p3, vec2(tc[1], tc[3]));
-   EndPrimitive();
-   emitVertex(p1, vec2(tc[0], tc[2]));
-   emitVertex(p3, vec2(tc[1], tc[3]));
-   emitVertex(p4, vec2(tc[1], tc[2]));
-   EndPrimitive();
+ if (doBillboard < 0.5) {
+  p1 = gl_PositionIn[0]+model[0]*vec4(-sx+ox,-sy,0,0);
+  p2 = gl_PositionIn[0]+model[0]*vec4(-sx+ox, sy,0,0);
+  p3 = gl_PositionIn[0]+model[0]*vec4( sx+ox, sy,0,0);
+  p4 = gl_PositionIn[0]+model[0]*vec4( sx+ox,-sy,0,0);
+ } else {
+  float a = OSGViewportSize.y/OSGViewportSize.x;
+  p1 = gl_PositionIn[0]+vec4(-sx*a+ox*a,-sy,0,0);
+  p2 = gl_PositionIn[0]+vec4(-sx*a+ox*a, sy,0,0);
+  p3 = gl_PositionIn[0]+vec4( sx*a+ox*a, sy,0,0);
+  p4 = gl_PositionIn[0]+vec4( sx*a+ox*a,-sy,0,0);
+ }
+
+ emitVertex(p1, vec2(tc[0], tc[2]));
+ emitVertex(p2, vec2(tc[0], tc[3]));
+ emitVertex(p3, vec2(tc[1], tc[3]));
+ EndPrimitive();
+ emitVertex(p1, vec2(tc[0], tc[2]));
+ emitVertex(p3, vec2(tc[1], tc[3]));
+ emitVertex(p4, vec2(tc[1], tc[2]));
+ EndPrimitive();
 }
 
 void emitDot(in float p) {
@@ -190,6 +205,8 @@ void emitNumber(in float n1, in float n2, in int N) {
  int i=0;
  int first = 1;
  float p = 0;
+
+ if (k2 == 0) first = 0;
 
  while(true) {
    if (first == 1) {
@@ -221,7 +238,7 @@ void emitNumber(in float n1, in float n2, in int N) {
 }
 
 void main() {
-  emitNumber(normal[0][0], normal[0][2], 1);
+    emitNumber(normal[0][0], normal[0][2], 1);
 }
 );
 

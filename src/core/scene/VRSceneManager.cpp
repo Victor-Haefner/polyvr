@@ -79,15 +79,13 @@ void VRSceneManager::setWorkdir(string path) {
     if (path == "") return;
     string full_path = path[0] != '/' ? original_workdir + '/' + path : path;
     int ret = chdir(full_path.c_str());
-    cout << "VRSceneManager::setWorkdir switch to " << path << " " << full_path << endl;
-    cout << "  success ? " << ret << " " << strerror(errno) << endl;
-
+    if (ret != 0) cout << "VRSceneManager::setWorkdir switch to " << path << " failed with: " << strerror(errno) << endl;
 
     // check path
-    char cCurrentPath[FILENAME_MAX];
+    /*char cCurrentPath[FILENAME_MAX];
     getcwd(cCurrentPath, sizeof(cCurrentPath) );
     string workdir = string(cCurrentPath);
-    cout << "VRSceneManager::setWorkdir current: " << workdir << " "  << endl;
+    cout << "VRSceneManager::setWorkdir current: " << workdir << " "  << endl;*/
 }
 
 void VRSceneManager::newScene(string path) {

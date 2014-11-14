@@ -1,6 +1,4 @@
-<h1>PolyVR - a shortcut to virtual reality</h1>
-
-PolyVR - a shortcut to virtual reality
+<h1>PolyVR - A Shortcut To Virtual Reality</h1>
 
 PolyVR is a scene authoring system. 
 
