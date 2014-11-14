@@ -37,6 +37,9 @@ OSG::Vec2f VRPyBase::parseVec2f(PyObject *args) {
 }
 
 OSG::Vec3f VRPyBase::parseVec3f(PyObject *args) {
+    int aL = PyTuple_Size(args);
+    if (aL == 1) return parseVec3fList(args);
+
     float x,y,z; x=y=z=0;
     if (! PyArg_ParseTuple(args, "fff", &x, &y, &z)) return OSG::Vec3f();
     return OSG::Vec3f(x,y,z);
