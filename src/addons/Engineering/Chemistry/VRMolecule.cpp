@@ -130,7 +130,7 @@ void VRAtom::computePositions() {
         Matrix S = structure[b.first];
 
         VRAtom* a = b.second.atom;
-        if (a == 0) {
+        if (a == 0) { // duplets
             S[3] *= 0.2; S[3][3] = 1;
             T.mult(S);
             T.mult(Pnt3f(0.2,0,0), b.second.p1);
@@ -197,7 +197,7 @@ void VRAtom::propagateTransformation(Matrix& T, uint flag) {
     transformation = m;
 
     for (auto& b : bonds) {
-        if (b.second.atom == 0) {
+        if (b.second.atom == 0) { // duplet
             T.mult(b.second.p1, b.second.p1);
             T.mult(b.second.p2, b.second.p2);
         }

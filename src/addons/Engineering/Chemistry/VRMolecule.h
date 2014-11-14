@@ -22,7 +22,7 @@ struct VRBond {
     int type = 1;
     int slot = 0;
     bool extra = false;
-    Vec3f p1, p2;
+    Pnt3f p1, p2;
 
     VRBond();
     VRBond(int t, int s, VRAtom* a);
