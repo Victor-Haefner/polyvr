@@ -50,11 +50,18 @@ template<> PyTypeObject VRPyBaseT<CEF>::type = {
 PyMethodDef VRPyCEF::methods[] = {
     {"open", (PyCFunction)VRPyCEF::open, METH_VARARGS, "Open URL" },
     {"setMaterial", (PyCFunction)VRPyCEF::setMaterial, METH_VARARGS, "Set material" },
-    {"addMouse", (PyCFunction)VRPyCEF::addMouse, METH_VARARGS, "Add device" },
-    {"addKeyboard", (PyCFunction)VRPyCEF::addKeyboard, METH_VARARGS, "Add device" },
-    {"setAspectRatio", (PyCFunction)VRPyCEF::setAspectRatio, METH_VARARGS, "Set aspect ratio of rendered texture" },
+    {"addMouse", (PyCFunction)VRPyCEF::addMouse, METH_VARARGS, "Add mouse interaction - addMouse(mouse, geo, LMB, RMB, SCRUP, SCRDOWN)" },
+    {"addKeyboard", (PyCFunction)VRPyCEF::addKeyboard, METH_VARARGS, "Add keyboard device" },
+    {"setResolution", (PyCFunction)VRPyCEF::setResolution, METH_VARARGS, "Set horizontal resolution W" },
+    {"setAspectRatio", (PyCFunction)VRPyCEF::setAspectRatio, METH_VARARGS, "Set aspect ratio a to define the height H: H = W/a" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyCEF::setResolution(VRPyCEF* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyCEF::setResolution, obj is invalid"); return NULL; }
+    self->obj->setResolution(parseFloat(args));
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyCEF::setAspectRatio(VRPyCEF* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyCEF::setAspectRatio, obj is invalid"); return NULL; }
