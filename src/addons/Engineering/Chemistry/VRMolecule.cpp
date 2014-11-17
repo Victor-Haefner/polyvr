@@ -159,8 +159,11 @@ void VRAtom::computePositions() {
     }
 }
 
-bool VRAtom::append(VRBond bond) {
-    VRAtom* at = bond.atom2;
+bool VRAtom::append(VRAtom* at, int bType, bool extra) {
+    VRBond bond;
+    bond.type = bType;
+    bond.extra = extra;
+    bond.atom2 = at;
     if (full or at->full or at == this) return false;
     for (auto b : bonds) if (b.second.atom2 == at) return false;
     for (auto b : at->bonds) if (b.second.atom2 == this) return false;
@@ -191,6 +194,24 @@ bool VRAtom::append(VRBond bond) {
     //print();
     //cout << " "; at->print();
     return true;
+}
+
+void VRAtom::detach(VRAtom* a) {
+    for (auto b : bonds) {
+        if (b.second.atom2 != a) continue;
+        full = false;
+        bound_valence_electrons -= b.second.type;
+        bonds.erase(b.first);
+        break;
+    }
+
+    for (auto b : a->bonds) {
+        if (b.second.atom2 != this) continue;
+        a->full = false;
+        a->bound_valence_electrons -= b.second.type;
+        a->bonds.erase(b.first);
+        break;
+    }
 }
 
 void VRAtom::print() {
@@ -240,23 +261,20 @@ VRMolecule::VRMolecule(string definition) : VRGeometry(definition) {
 }
 
 void VRMolecule::addAtom(string a, int t) {
-    VRBond b(t, 0, new VRAtom(a, getID()), 0);
-    atoms[b.atom2->getID()] = b.atom2;
-    addAtom(b);
+    VRAtom* at = new VRAtom(a, getID());
+    atoms[at->getID()] = at;
+    addAtom(at, t);
 }
 
-void VRMolecule::addAtom(VRBond b) {
-    for (auto a : atoms) if (a.second->append(b)) break;
+void VRMolecule::addAtom(VRAtom* b, int bType, bool extra) {
+    for (auto a : atoms) if (a.second->append(b, bType, extra)) break;
 }
 
 void VRMolecule::addAtom(int ID, int t) {
     if (atoms.count(ID) == 0) return;
     VRAtom* at = atoms[ID];
     if (at->full) return;
-
-    VRBond b(t, 0, at, 0);
-    b.extra = true;
-    addAtom(b);
+    addAtom(at, t, true);
 }
 
 void VRMolecule::remAtom(int ID) {
@@ -275,9 +293,6 @@ void VRMolecule::updateGeo() {
     GeoPnt3fPropertyRecPtr      Pos2 = GeoPnt3fProperty::create();
     GeoVec3fPropertyRecPtr      Norms2 = GeoVec3fProperty::create();
     GeoUInt32PropertyRecPtr     Indices2 = GeoUInt32Property::create();
-
-    // hack to avoid the single point bug
-    if (atoms.size() == 1) atoms[1] = atoms[0];
 
     float r_scale = 0.6;
 
@@ -490,9 +505,10 @@ void VRMolecule::changeBond(int a, int b, int t) {
     if (atoms.count(b) == 0) return;
     VRAtom* A = atoms[a];
     VRAtom* B = atoms[b];
-    cout << " change bond " << a << " " << b << " " << t << endl;
-    for (auto& b : A->bonds) if (b.second.atom2 == B) b.second.type = t;
-    for (auto& b : B->bonds) if (b.second.atom2 == A) b.second.type = t;
+    if (A == 0 or B == 0) return;
+
+    A->detach(B);
+    A->append(B, t);
     updateGeo();
 }
 
@@ -526,9 +542,7 @@ void VRMolecule::substitute(int a, VRMolecule* m, int b) {
     m->atoms.clear();
 
     // attach molecules
-    VRBond bond(1,0,B,A);
-    bond.extra = true;
-    A->append(bond);
+    A->append(B, 1, true);
 
     // transform new atoms
     uint now = VRGlobals::get()->CURRENT_FRAME+random();
@@ -551,48 +565,35 @@ void VRMolecule::attachMolecule(int a, VRMolecule* m, int b) {
     if (atoms.count(a) == 0) return;
     if (m->atoms.count(b) == 0) return;
 
-    Matrix am = atoms[a]->getTransformation();
-    Matrix bm = m->atoms[b]->getTransformation();
-
-    map<int, VRBond> bondsA = atoms[a]->getBonds();
-    map<int, VRBond> bondsB = m->atoms[b]->getBonds();
-    if (bondsA.count(0) == 0) return;
-    if (bondsB.count(0) == 0) return;
-
-    VRAtom* A = bondsA[0].atom2;
-    VRAtom* B = bondsB[0].atom2;
-    int Ai = A->getID();
-    int Bi = B->getID();
-    remAtom(a);
-    m->remAtom(b);
-
-    if (atoms.count(Ai) == 0) { cout << "AA\n"; return; }
-    if (m->atoms.count(Bi) == 0) { cout << "BB\n"; return; }
+    VRAtom* A = atoms[a];
+    VRAtom* B = m->atoms[b];
+    Matrix am = A->getTransformation();
+    Matrix bm = B->getTransformation();
 
     // copy atoms
     for (auto at : m->atoms) {
         at.second->setID( getID() );
         atoms[at.second->getID()] = at.second;
+        cout << " attach " << at.second->getID() << endl;
     }
     m->atoms.clear();
 
     // attach molecules
-    VRBond bond(1,0,B,A);
-    bond.extra = true;
-    A->append(bond);
+    A->append(B, 1, true);
 
     // transform new atoms
     uint now = VRGlobals::get()->CURRENT_FRAME+random();
     A->recFlag = now;
-    bm.invert();
-    Matrix Bm = B->getTransformation();
-    bm.mult(Bm);
+
     bm.setTranslate(Vec3f(0,0,0));
     am.mult(bm);
     MatrixLookAt( bm, Vec3f(0,0,0), Vec3f(0,0,1), Vec3f(0,-1,0) );
     bm.mult(am);
     bm[3] = am[3];
     B->propagateTransformation(bm, now);
+
+    cout << " A: "; A->print();
+    cout << " B: "; B->print();
 
     updateGeo();
     m->updateGeo();

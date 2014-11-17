@@ -58,7 +58,9 @@ class VRAtom {
 
 		void computeGeo();
 		void computePositions();
-		bool append(VRBond bond);
+
+		bool append(VRAtom* b, int bType, bool extra = false);
+		void detach(VRAtom* a);
 
 		void propagateTransformation(Matrix& T, uint flag);
 
@@ -83,7 +85,7 @@ class VRMolecule : public VRGeometry {
         static string b_fp;
         static string b_gp;
 
-		void addAtom(VRBond b);
+		void addAtom(VRAtom* b, int bType, bool extra = false);
 		void addAtom(string a, int b);
 		void addAtom(int a, int b);
 		void remAtom(int ID);
