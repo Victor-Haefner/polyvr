@@ -115,10 +115,13 @@ uniform float onTop;
 varying mat4 model;
 varying vec3 normal;
 
+attribute vec4 osg_Vertex;
+attribute vec4 osg_Normal;
+
 void main( void ) {
-    model = gl_ModelViewProjectionMatrix;\
-    gl_Position = model*gl_Vertex;
-    normal = gl_Normal;
+    model = gl_ModelViewProjectionMatrix;
+    gl_Position = model*osg_Vertex;
+    normal = osg_Normal.xyz;
     if (onTop > 0.0) gl_Position.z -= 0.5;
 }
 );
@@ -131,7 +134,7 @@ uniform sampler2D texture;
 in vec2 texCoord;
 
 void main( void ) {
-  gl_FragColor = texture2D(texture, texCoord);\
+  gl_FragColor = texture2D(texture, texCoord);
 }
 );
 

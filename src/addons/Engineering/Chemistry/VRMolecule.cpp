@@ -491,8 +491,8 @@ void VRMolecule::changeBond(int a, int b, int t) {
     VRAtom* A = atoms[a];
     VRAtom* B = atoms[b];
     cout << " change bond " << a << " " << b << " " << t << endl;
-    for (auto& b : A->getBonds()) if (b.second.atom2 == B) b.second.type = t;
-    for (auto& b : B->getBonds()) if (b.second.atom2 == A) b.second.type = t;
+    for (auto& b : A->bonds) if (b.second.atom2 == B) b.second.type = t;
+    for (auto& b : B->bonds) if (b.second.atom2 == A) b.second.type = t;
     updateGeo();
 }
 
