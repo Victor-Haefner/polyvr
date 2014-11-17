@@ -115,7 +115,7 @@ VRAtom::~VRAtom() {
 PeriodicTableEntry VRAtom::getParams() { return params; }
 Matrix VRAtom::getTransformation() { return transformation; }
 void VRAtom::setTransformation(Matrix m) { transformation = m; }
-map<int, VRBond> VRAtom::getBonds() { return bonds; }
+map<int, VRBond>& VRAtom::getBonds() { return bonds; }
 int VRAtom::getID() { return ID; }
 void VRAtom::setID(int ID) { this->ID = ID; }
 
@@ -485,7 +485,69 @@ void VRMolecule::rotateBond(int a, int b, float f) {
     updateGeo();
 }
 
+void VRMolecule::changeBond(int a, int b, int t) {
+    if (atoms.count(a) == 0) return;
+    if (atoms.count(b) == 0) return;
+    VRAtom* A = atoms[a];
+    VRAtom* B = atoms[b];
+    cout << " change bond " << a << " " << b << " " << t << endl;
+    for (auto& b : A->getBonds()) if (b.second.atom2 == B) b.second.type = t;
+    for (auto& b : B->getBonds()) if (b.second.atom2 == A) b.second.type = t;
+    updateGeo();
+}
+
 void VRMolecule::substitute(int a, VRMolecule* m, int b) {
+    if (atoms.count(a) == 0) return;
+    if (m->atoms.count(b) == 0) return;
+
+    Matrix am = atoms[a]->getTransformation();
+    Matrix bm = m->atoms[b]->getTransformation();
+
+    map<int, VRBond> bondsA = atoms[a]->getBonds();
+    map<int, VRBond> bondsB = m->atoms[b]->getBonds();
+    if (bondsA.count(0) == 0) return;
+    if (bondsB.count(0) == 0) return;
+
+    VRAtom* A = bondsA[0].atom2;
+    VRAtom* B = bondsB[0].atom2;
+    int Ai = A->getID();
+    int Bi = B->getID();
+    remAtom(a);
+    m->remAtom(b);
+
+    if (atoms.count(Ai) == 0) { cout << "AA\n"; return; }
+    if (m->atoms.count(Bi) == 0) { cout << "BB\n"; return; }
+
+    // copy atoms
+    for (auto at : m->atoms) {
+        at.second->setID( getID() );
+        atoms[at.second->getID()] = at.second;
+    }
+    m->atoms.clear();
+
+    // attach molecules
+    VRBond bond(1,0,B,A);
+    bond.extra = true;
+    A->append(bond);
+
+    // transform new atoms
+    uint now = VRGlobals::get()->CURRENT_FRAME+random();
+    A->recFlag = now;
+    bm.invert();
+    Matrix Bm = B->getTransformation();
+    bm.mult(Bm);
+    bm.setTranslate(Vec3f(0,0,0));
+    am.mult(bm);
+    MatrixLookAt( bm, Vec3f(0,0,0), Vec3f(0,0,1), Vec3f(0,-1,0) );
+    bm.mult(am);
+    bm[3] = am[3];
+    B->propagateTransformation(bm, now);
+
+    updateGeo();
+    m->updateGeo();
+}
+
+void VRMolecule::attachMolecule(int a, VRMolecule* m, int b) {
     if (atoms.count(a) == 0) return;
     if (m->atoms.count(b) == 0) return;
 

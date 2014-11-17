@@ -12,7 +12,9 @@ struct VRPyMolecule : VRPyBaseT<OSG::VRMolecule> {
     static PyObject* showLabels(VRPyMolecule* self, PyObject* args);
     static PyObject* showCoords(VRPyMolecule* self, PyObject* args);
     static PyObject* substitute(VRPyMolecule* self, PyObject* args);
+    static PyObject* attachMolecule(VRPyMolecule* self, PyObject* args);
     static PyObject* rotateBond(VRPyMolecule* self, PyObject* args);
+    static PyObject* changeBond(VRPyMolecule* self, PyObject* args);
     static PyObject* getAtomPosition(VRPyMolecule* self, PyObject* args);
 };
 

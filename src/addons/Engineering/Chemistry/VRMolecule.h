@@ -52,7 +52,7 @@ class VRAtom {
         PeriodicTableEntry getParams();
         Matrix getTransformation();
         void setTransformation(Matrix m);
-        map<int, VRBond> getBonds();
+        map<int, VRBond>& getBonds();
         int getID();
         void setID(int ID);
 
@@ -103,7 +103,9 @@ class VRMolecule : public VRGeometry {
         VRAtom* getAtom(int ID);
 
         void substitute(int a, VRMolecule* m, int b);
+        void attachMolecule(int a, VRMolecule* m, int b);
         void rotateBond(int a, int b, float f);
+        void changeBond(int a, int b, int t);
 
         void showLabels(bool b);
         void showCoords(bool b);
