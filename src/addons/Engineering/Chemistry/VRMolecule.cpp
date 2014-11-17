@@ -697,7 +697,7 @@ attribute vec4 osg_Color;
 
 void main( void ) {
     color = osg_Color;
-    normal = osg_Normal;
+    normal = osg_Normal.xyz;
     gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;
 }
 );
@@ -773,9 +773,13 @@ string VRMolecule::b_vp =
 GLSL(
 varying vec3 normal;
 
+attribute vec4 osg_Vertex;
+attribute vec4 osg_Normal;
+attribute vec4 osg_Color;
+
 void main( void ) {
-    normal = gl_Normal;
-    gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex;
+    normal = osg_Normal.xyz;
+    gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;
 }
 );
 

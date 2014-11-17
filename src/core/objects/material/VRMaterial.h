@@ -21,7 +21,8 @@ class TextureObjChunk; OSG_GEN_CONTAINERPTR(TextureObjChunk);
 class LineChunk; OSG_GEN_CONTAINERPTR(LineChunk);
 class PointChunk; OSG_GEN_CONTAINERPTR(PointChunk);
 class PolygonChunk; OSG_GEN_CONTAINERPTR(PolygonChunk);
-class SimpleSHLChunk; OSG_GEN_CONTAINERPTR(SimpleSHLChunk);
+class ShaderProgramChunk; OSG_GEN_CONTAINERPTR(ShaderProgramChunk);
+class ShaderProgram; OSG_GEN_CONTAINERPTR(ShaderProgram);
 
 Color4f toColor4f(Color3f c, float t = 1);
 Color3f toColor3f(Color4f c);
@@ -41,7 +42,10 @@ class VRMaterial : public VRObject {
         PointChunkRecPtr pointChunk;
         PolygonChunkRecPtr polygonChunk;
         ImageRecPtr texture;
-        SimpleSHLChunkRecPtr shaderChunk;
+        ShaderProgramChunkRecPtr shaderChunk;
+        ShaderProgramRecPtr vProgram;
+        ShaderProgramRecPtr fProgram;
+        ShaderProgramRecPtr gProgram;
         VRVideo* video;
 
         string vertexScript;
