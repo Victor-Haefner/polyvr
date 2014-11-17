@@ -34,17 +34,15 @@ void VRAnimation<T>::end() {
 template<typename T>
 bool VRAnimation<T>::update(float current_time) {
     if (!run) return false;
-    float t = current_time - start_time;
+    float t = current_time - start_time - offset;
     t /= duration;
 
+    if (t < 0) return true;
     if (t > 1) {
         if (!loop) end();
         if (loop) start();
         return true;
     }
-
-    t += offset;
-    if (t > 1) t -= 1;
 
     T val = start_value + (end_value - start_value)*t;
     (*fkt)(val);

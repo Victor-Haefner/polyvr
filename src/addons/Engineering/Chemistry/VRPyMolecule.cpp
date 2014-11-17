@@ -52,6 +52,7 @@ PyMethodDef VRPyMolecule::methods[] = {
     {"showCoords", (PyCFunction)VRPyMolecule::showCoords, METH_VARARGS, "Display the coordinate system of each atom - showCoords(True)" },
     {"substitute", (PyCFunction)VRPyMolecule::substitute, METH_VARARGS, "Substitute an atom of both molecules to append the second to this - substitute(int aID, mol b, int bID)" },
     {"rotateBond", (PyCFunction)VRPyMolecule::rotateBond, METH_VARARGS, "Rotate the bon between atom a and b - rotateBond(int aID, int bID, float a)" },
+    {"getAtomPosition", (PyCFunction)VRPyMolecule::getAtomPosition, METH_VARARGS, "Returns the position of the atom by ID - getAtomPosition(int ID)" },
     {NULL}  /* Sentinel */
 };
 
@@ -59,6 +60,15 @@ PyObject* VRPyMolecule::set(VRPyMolecule* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyMolecule::set - Object is invalid"); return NULL; }
     self->obj->set( parseString(args) );
     Py_RETURN_TRUE;
+}
+
+PyObject* VRPyMolecule::getAtomPosition(VRPyMolecule* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyMolecule::getAtomPosition - Object is invalid"); return NULL; }
+    OSG::VRAtom* a = self->obj->getAtom( parseInt(args) );
+    if (a == 0) return toPyTuple( OSG::Vec3f(0,0,0) );
+    OSG::Matrix m = self->obj->getWorldMatrix();
+    m.mult( a->getTransformation() );
+    return toPyTuple( OSG::Vec3f(m[3]) );
 }
 
 PyObject* VRPyMolecule::setRandom(VRPyMolecule* self, PyObject* args) {

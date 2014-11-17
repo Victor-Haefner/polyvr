@@ -601,6 +601,11 @@ void VRMolecule::updateLabels() {
     }
 }
 
+VRAtom* VRMolecule::getAtom(int ID) {
+    if (atoms.count(ID) != 0) return atoms[ID];
+    return 0;
+}
+
 string VRMolecule::a_fp =
 "#version 120\n"
 GLSL(

@@ -131,10 +131,10 @@ void VRSceneLoader::load(string filename) {
     NodeRecPtr n;
     if (extension == ".ply") n = loadPly(filename);
     else {
-        //cout << "read " << filename << flush;
+        cout << "read " << filename << flush;
         setlocale(LC_ALL, "C");
         n = SceneFileHandler::the()->read(filename.c_str());
-        //cout << ", done " << endl;
+        cout << ", done " << endl;
     }
 
     timer.stop("scenefilehandler");

@@ -100,6 +100,8 @@ class VRMolecule : public VRGeometry {
         void set(string definition);
         void setRandom(int N);
 
+        VRAtom* getAtom(int ID);
+
         void substitute(int a, VRMolecule* m, int b);
         void rotateBond(int a, int b, float f);
 

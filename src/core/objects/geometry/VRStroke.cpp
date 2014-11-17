@@ -50,7 +50,7 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool lit) {
 
     clearChildren();
     for (uint i=0; i<paths.size(); i++) {
-        vector<Vec3f> pnts = paths[i]->get();
+        vector<Vec3f> pnts = paths[i]->getPositions();
         vector<Vec3f> norms = paths[i]->getNormals();
         vector<Vec3f> cols = paths[i]->getColors();
 
@@ -140,7 +140,7 @@ void VRStroke::strokeStrew(VRGeometry* geo) {
 
     clearChildren();
     for (uint i=0; i<paths.size(); i++) {
-        vector<Vec3f> pnts = paths[i]->get();
+        vector<Vec3f> pnts = paths[i]->getPositions();
         for (uint j=0; j<pnts.size(); j++) {
             Vec3f p = pnts[j];
             VRGeometry* g = (VRGeometry*)geo->duplicate();
