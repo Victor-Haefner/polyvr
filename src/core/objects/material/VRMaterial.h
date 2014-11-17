@@ -96,6 +96,7 @@ class VRMaterial : public VRObject {
         Color3f getEmission();
         float getTransparency();
 
+        void initShaderChunk();
         void setVertexShader(string s);
         void setFragmentShader(string s);
         void setGeometryShader(string s);

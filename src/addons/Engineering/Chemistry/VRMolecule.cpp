@@ -691,10 +691,14 @@ GLSL(
 varying vec4 color;
 varying vec3 normal;
 
+attribute vec4 osg_Vertex;
+attribute vec4 osg_Normal;
+attribute vec4 osg_Color;
+
 void main( void ) {
-    color = gl_Color;
-    normal = gl_Normal;
-    gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex;
+    color = osg_Color;
+    normal = osg_Normal;
+    gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;
 }
 );
 

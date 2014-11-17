@@ -275,20 +275,38 @@ bool VRMaterial::isLit() { return colChunk->getLit(); }
 
 ImageRecPtr VRMaterial::getTexture() { return texture; }
 
-void VRMaterial::setVertexShader(string s) {
-    if (shaderChunk == 0) { shaderChunk = SimpleSHLChunk::create(); mat->addChunk(shaderChunk); }
-    shaderChunk->setVertexProgram(s.c_str());
+void VRMaterial::initShaderChunk() {
+    if (shaderChunk != 0) return;
+    shaderChunk = SimpleSHLChunk::create();
+    mat->addChunk(shaderChunk);
+
+    ShaderProgramRecPtr vp = ShaderProgram::createVertexShader  ();
+    ShaderProgramRecPtr fp = ShaderProgram::createFragmentShader();
+    ShaderProgramRecPtr gp = ShaderProgram::createGeometryShader();
+    shaderChunk->addShader(vp);
+    shaderChunk->addShader(fp);
+    shaderChunk->addShader(gp);
+
+    vp->createDefaulAttribMapping();
+    fp->createDefaulAttribMapping();
+    gp->createDefaulAttribMapping();
+
     shaderChunk->addOSGVariable("OSGViewportSize");
 }
 
+void VRMaterial::setVertexShader(string s) {
+    initShaderChunk();
+    shaderChunk->getVertexShader(0)->setProgram(s.c_str());
+}
+
 void VRMaterial::setFragmentShader(string s) {
-    if (shaderChunk == 0) { shaderChunk = SimpleSHLChunk::create(); mat->addChunk(shaderChunk); }
-    shaderChunk->setFragmentProgram(s.c_str());
+    initShaderChunk();
+    shaderChunk->getFragmentShader(0)->setProgram(s.c_str());
 }
 
 void VRMaterial::setGeometryShader(string s) {
-    if (shaderChunk == 0) { shaderChunk = SimpleSHLChunk::create(); mat->addChunk(shaderChunk); }
-    shaderChunk->setGeometryProgram(s.c_str());
+    initShaderChunk();
+    shaderChunk->getGeometryShader(0)->setProgram(s.c_str());
 }
 
 string readFile(string path) {
