@@ -224,15 +224,15 @@ void VRAtom::print() {
     cout << endl;
 }
 
-void VRAtom::propagateTransformation(Matrix& T, uint flag) {
+void VRAtom::propagateTransformation(Matrix& T, uint flag, bool self) {
     if (flag == recFlag) return;
     recFlag = flag;
 
-    //print();
-
-    Matrix m = T;
-    m.mult(transformation);
-    transformation = m;
+    if (self) {
+        Matrix m = T;
+        m.mult(transformation);
+        transformation = m;
+    }
 
     for (auto& b : bonds) {
         if (b.second.atom2 == 0) { // duplet
@@ -428,6 +428,7 @@ vector<string> VRMolecule::parse(string mol, bool verbose) {
 
 void VRMolecule::set(string definition) {
     if (PeriodicTable.size() == 0) initAtomicTables();
+    this->definition = definition;
 
     vector<string> mol = parse(definition, false);
     atoms.clear();
@@ -465,10 +466,16 @@ void VRMolecule::setRandom(int N) {
     set(m);
 }
 
+string VRMolecule::getDefinition() { return definition; }
+
 int VRMolecule::getID() {
     int i=0;
     while (atoms.count(i)) i++;
     return i;
+}
+
+uint VRMolecule::getFlag() {
+    return VRGlobals::get()->CURRENT_FRAME+random();
 }
 
 void VRMolecule::rotateBond(int a, int b, float f) {
@@ -536,10 +543,11 @@ void VRMolecule::substitute(int a, VRMolecule* m, int b) {
 
     // copy atoms
     for (auto at : m->atoms) {
-        at.second->setID( getID() );
-        atoms[at.second->getID()] = at.second;
+        int ID = getID();
+        at.second->setID(ID);
+        atoms[ID] = at.second;
     }
-    m->atoms.clear();
+    m->set(m->getDefinition());
 
     // attach molecules
     A->append(B, 1, true);
@@ -558,45 +566,53 @@ void VRMolecule::substitute(int a, VRMolecule* m, int b) {
     B->propagateTransformation(bm, now);
 
     updateGeo();
-    m->updateGeo();
+}
+
+void VRMolecule::setLocalOrigin(int ID) {
+    if (atoms.count(ID) == 0) return;
+
+    uint now = VRGlobals::get()->CURRENT_FRAME+random();
+    Matrix m = atoms[ID]->getTransformation();
+    m.invert();
+
+    Matrix im;
+    MatrixLookAt( im, Vec3f(0,0,0), Vec3f(0,0,1), Vec3f(0,1,0) );
+    im.mult(m);
+
+    atoms[ID]->propagateTransformation(im, now);
 }
 
 void VRMolecule::attachMolecule(int a, VRMolecule* m, int b) {
     if (atoms.count(a) == 0) return;
     if (m->atoms.count(b) == 0) return;
 
+    /*if (time > 0.00001) { // just an idea
+        path* p = new path();
+        m->startPathAnimation(path* p, time, offset, bool redirect = true);
+        return;
+    }*/
+
     VRAtom* A = atoms[a];
     VRAtom* B = m->atoms[b];
-    Matrix am = A->getTransformation();
-    Matrix bm = B->getTransformation();
+    m->setLocalOrigin(b);
 
-    // copy atoms
-    for (auto at : m->atoms) {
-        at.second->setID( getID() );
-        atoms[at.second->getID()] = at.second;
-        cout << " attach " << at.second->getID() << endl;
+    for (auto at : m->atoms) { // copy atoms
+        int ID = getID();
+        at.second->setID(ID);
+        atoms[ID] = at.second;
     }
-    m->atoms.clear();
+    m->set(m->getDefinition());
 
-    // attach molecules
-    A->append(B, 1, true);
+    A->append(B, 1); // attach molecules
+    A->computePositions();
 
     // transform new atoms
-    uint now = VRGlobals::get()->CURRENT_FRAME+random();
+    uint now = getFlag();
     A->recFlag = now;
-
-    bm.setTranslate(Vec3f(0,0,0));
-    am.mult(bm);
-    MatrixLookAt( bm, Vec3f(0,0,0), Vec3f(0,0,1), Vec3f(0,-1,0) );
-    bm.mult(am);
-    bm[3] = am[3];
-    B->propagateTransformation(bm, now);
-
-    cout << " A: "; A->print();
-    cout << " B: "; B->print();
+    Matrix bm = B->getTransformation();
+    B->propagateTransformation(bm, now, false);
 
     updateGeo();
-    m->updateGeo();
 }
 
 void VRMolecule::showLabels(bool b) { if (doLabels == b) return; doLabels = b; updateLabels(); }

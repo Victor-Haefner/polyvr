@@ -1,5 +1,8 @@
 #include "VRScriptManager.h"
 #include "core/scene/VRSceneManager.h"
+#include "core/scene/VRScene.h"
+#include "core/scene/VRAnimationManagerT.h"
+#include "core/utils/VRStorage_template.h"
 #include "VRScript.h"
 #include "VRPyObject.h"
 #include "VRPyGeometry.h"
@@ -31,7 +34,6 @@
 #include "addons/CEF/VRPyCEF.h"
 #include "addons/Classification/VRPySegmentation.h"
 #include "addons/Engineering/Chemistry/VRPyMolecule.h"
-#include "core/utils/VRStorage_template.h"
 #include "VRPyTypeCaster.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -57,7 +59,6 @@ void VRScriptManager::disableAllScripts() {
 }
 
 VRScript* VRScriptManager::newScript(string name, string core) {
-    //if (scripts.count(name) == 0) scripts[name] = new VRScript(name);
     VRScript* script = new VRScript(name);
     name = script->getName();
     scripts[name] = script;
@@ -150,6 +151,7 @@ initVRPyStdOut(void) {
 
 static PyMethodDef VRScriptManager_module_methods[] = {
 	{"loadCollada", (PyCFunction)VRScriptManager::loadCollada, METH_VARARGS, "loads a collada file and returns a VR.Geometry node" },
+	{"stackCall", (PyCFunction)VRScriptManager::stackCall, METH_VARARGS, "Stacks a call to a py function - stackCall( function, delay )" },
     {NULL}  /* Sentinel */
 };
 
@@ -207,7 +209,6 @@ void VRScriptManager::initPyModules() {
 
     initVRPyPath(pModVR); // TODO
     initVRPySocket(pModVR);
-
     initVRPyStdOut();
 
     // add cython local path to python search path
@@ -303,13 +304,42 @@ string VRScriptManager::getPyVRMethodDoc(string type, string method) {
 // ==============
 
 PyObject* VRScriptManager::loadCollada(VRScriptManager* self, PyObject *args) {
-    //if (self->obj == 0) { PyErr_SetString(err, "VRScriptManager::loadCollada - Object is invalid"); return NULL; }
-
-	PyObject* pyPath;
+    PyObject* pyPath;
     if (! PyArg_ParseTuple(args, "O", &pyPath)) return NULL;
     string path = PyString_AsString(pyPath);
     VRTransform *obj = VRSceneLoader::get()->load3DContent(path, 0);
     return VRPyTypeCaster::cast(obj);
+}
+
+void execCall(PyObject* pyFkt, int i) {
+    if (pyFkt == 0) return;
+    if (PyErr_Occurred() != NULL) PyErr_Print();
+
+    cout << "execCall\n";
+    PyObject* pArgs = PyTuple_New(0);
+    PyObject_CallObject(pyFkt, pArgs);
+    Py_XDECREF(pArgs);
+    Py_DecRef(pyFkt);
+
+    if (PyErr_Occurred() != NULL) PyErr_Print();
+}
+
+PyObject* VRScriptManager::stackCall(VRScriptManager* self, PyObject *args) {
+    PyObject* pyFkt;
+    float delay;
+    if (! PyArg_ParseTuple(args, "Of", &pyFkt, &delay)) return NULL;
+
+    Py_IncRef(pyFkt);
+
+    //execCall(pyFkt, 1);
+    //Py_RETURN_TRUE;
+
+    VRFunction<int>* fkt = new VRFunction<int>( "pyExecCall", boost::bind(execCall, pyFkt, _1) );
+
+    VRScene* scene = VRSceneManager::getCurrent();
+    cout << "add anim\n";
+    scene->addAnimation(0, delay, fkt, 0, 0, false);
+    Py_RETURN_TRUE;
 }
 
 OSG_END_NAMESPACE

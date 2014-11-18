@@ -62,13 +62,14 @@ class VRAtom {
 		bool append(VRAtom* b, int bType, bool extra = false);
 		void detach(VRAtom* a);
 
-		void propagateTransformation(Matrix& T, uint flag);
+		void propagateTransformation(Matrix& T, uint flag, bool self = true);
 
 		void print();
 };
 
 class VRMolecule : public VRGeometry {
     private:
+        string definition;
         map<int, VRAtom*> atoms;
 
         VRGeometry* bonds_geo = 0;
@@ -96,13 +97,18 @@ class VRMolecule : public VRGeometry {
 		int getID();
 		vector<string> parse(string mol, bool verbose = false);
 
+		uint getFlag();
+
     public:
         VRMolecule(string definition);
 
         void set(string definition);
         void setRandom(int N);
+        string getDefinition();
 
         VRAtom* getAtom(int ID);
+
+        void setLocalOrigin(int ID);
 
         void substitute(int a, VRMolecule* m, int b);
         void attachMolecule(int a, VRMolecule* m, int b);

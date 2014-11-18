@@ -111,7 +111,7 @@ path make_relative( path a_From, path a_To ) {
 }
 
 string VRGuiFile::getRelativePath_toScene() {
-    OSG::VRScene* scene = OSG::VRSceneManager::get()->getActiveScene();
+    OSG::VRScene* scene = OSG::VRSceneManager::getCurrent();
     if (scene == 0) return "";
 
     path a(getPath()), b(scene->getWorkdir());

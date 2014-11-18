@@ -38,7 +38,7 @@ CEF::CEF() {
     browser = CefBrowserHost::CreateBrowserSync(win, this, "www.google.de", browser_settings, 0);
 
     VRFunction<int>* fkt = new VRFunction<int>("webkit_update", boost::bind(&CEF::update, this));
-    VRSceneManager::get()->getActiveScene()->addUpdateFkt(fkt);
+    VRSceneManager::getCurrent()->addUpdateFkt(fkt);
 
 
     image = Image::create();
@@ -96,7 +96,7 @@ void CEF::addMouse(VRDevice* dev, VRObject* obj, int lb, int rb, int wu, int wd)
     dev->addSignal(wd, 1)->add( new VRFunction<VRDevice*>( "CEF::WD", boost::bind(&CEF::mouse, this, 4, 0, _1 ) ) );
 
     VRFunction<int>* fkt = new VRFunction<int>( "CEF::MM", boost::bind(&CEF::mouse_move, this, dev, _1) );
-    VRSceneManager::get()->getActiveScene()->addUpdateFkt(fkt);
+    VRSceneManager::getCurrent()->addUpdateFkt(fkt);
 }
 
 void CEF::addKeyboard(VRDevice* dev) {

@@ -20,7 +20,7 @@ using namespace std;
 
 void updateArgPtr(VRScript::arg* a) {
     string t = a->type;
-    VRScene* scene = VRSceneManager::get()->getActiveScene();
+    VRScene* scene = VRSceneManager::getCurrent();
     VRSetup* setup = VRSetupManager::get()->getCurrent();
 
     if (t == "VRPyObjectType" or t == "VRPyGeometryType" or t == "VRPyTransformType") {
@@ -52,7 +52,7 @@ void VRScript::clean() {
     VRMobile* mob = (VRMobile*)VRSetupManager::get()->getCurrent()->getDevice(this->mobile);
     if (mob) mob->remWebSite(getName());
 
-    VRScene* scene = VRSceneManager::get()->getActiveScene();
+    VRScene* scene = VRSceneManager::getCurrent();
 
     for (t_itr = trigs.begin(); t_itr != trigs.end(); t_itr++) {
         trig* t = t_itr->second;
@@ -72,7 +72,7 @@ void VRScript::update() {
         if (mob) mob->addWebSite(getName(), core);
     }
 
-    VRScene* scene = VRSceneManager::get()->getActiveScene();
+    VRScene* scene = VRSceneManager::getCurrent();
 
     for (t_itr = trigs.begin(); t_itr != trigs.end(); t_itr++) {
         trig* t = t_itr->second;
@@ -390,7 +390,7 @@ void VRScript::load(xmlpp::Element* e) {
             trigs[t->getName()] = t;
 
             if (t->trigger == "on_scene_load") {
-                VRScene* scene = VRSceneManager::get()->getActiveScene();
+                VRScene* scene = VRSceneManager::getCurrent();
                 scene->queueJob(cbfkt_sys);
             }
         }

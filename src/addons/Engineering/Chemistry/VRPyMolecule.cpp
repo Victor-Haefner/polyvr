@@ -125,6 +125,6 @@ PyObject* VRPyMolecule::attachMolecule(VRPyMolecule* self, PyObject* args) {
     if (! PyArg_ParseTuple(args, "iOi", &a, &mB, &b)) return NULL;
     if ((PyObject*)mB == Py_None) { PyErr_SetString(err, "VRPyMolecule::attachMolecule - molecule is invalid"); return NULL; }
 
-    self->obj->attachMolecule( a, mB->obj, b );
+    self->obj->attachMolecule( a, mB->obj, b);
     Py_RETURN_TRUE;
 }

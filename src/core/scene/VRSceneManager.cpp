@@ -89,7 +89,7 @@ void VRSceneManager::setWorkdir(string path) {
 }
 
 void VRSceneManager::newScene(string path) {
-    removeScene(getActiveScene());
+    removeScene(getCurrent());
 
     VRScene* scene = new VRScene();
     scene->setPath(path);
@@ -131,19 +131,16 @@ void VRSceneManager::setActiveScene(VRScene* s) {
 
 void VRSceneManager::setActiveSceneByName(string s) { if (scenes.count(s) == 1) setActiveScene(scenes[s]); }
 
-//void printTree() { scenes[active]->printTree();}
-
 int VRSceneManager::getSceneNum() {return scenes.size();}
 
 VRScene* VRSceneManager::getScene(string s) { if (scenes.count(s)) return scenes[s]; else return 0; }
 
-VRScene* VRSceneManager::getActiveScene() { return getScene(active); }
+VRScene* VRSceneManager::getCurrent() { return get()->getScene(get()->active); }
 
 void VRSceneManager::update() {
     int fps = VRRate::get()->getRate();
 
     if (scenes.count(active) == 1) {
-        //if (active == "NO_SCENE_ACTIVE") cout << "\nupdate " << active << flush; //TODO: segfault when closing scene
         if (scenes[active] != 0) {
             scenes[active]->update();
             VRSetupManager::get()->getCurrent()->updateActivatedSignals();

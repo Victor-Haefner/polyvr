@@ -385,7 +385,7 @@ void saveSnapshot(string path) {
 }
 
 void saveScene(string path) {
-    OSG::VRScene* scene = OSG::VRSceneManager::get()->getActiveScene();
+    OSG::VRScene* scene = OSG::VRSceneManager::getCurrent();
     if (scene == 0) return;
     //if (path == "") path = scene->getPath();
     path = scene->getFile();

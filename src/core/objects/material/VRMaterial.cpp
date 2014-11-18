@@ -151,7 +151,7 @@ MaterialRecPtr VRMaterial::getMaterial() { return mat; }
 /** Load a texture and apply it to the mesh as new material **/
 void VRMaterial::setTexture(string img_path, bool alpha) { // TODO: improve with texture map
     if (texture == 0) texture = Image::create();
-    VRScene* scene = VRSceneManager::get()->getActiveScene();
+    VRScene* scene = VRSceneManager::getCurrent();
     img_path = scene->getWorkdir()+"/"+img_path;
     texture->read(img_path.c_str());
     setTexture(texture, alpha);
@@ -340,19 +340,19 @@ void VRMaterial::setMagMinFilter(string mag, string min) {
 
 void VRMaterial::setVertexProgram(string script) {
     vertexScript = script;
-    VRScript* scr = VRSceneManager::get()->getActiveScene()->getScript(script);
+    VRScript* scr = VRSceneManager::getCurrent()->getScript(script);
     if (scr) setVertexShader(scr->getCore());
 }
 
 void VRMaterial::setFragmentProgram(string script) {
     fragmentScript = script;
-    VRScript* scr = VRSceneManager::get()->getActiveScene()->getScript(script);
+    VRScript* scr = VRSceneManager::getCurrent()->getScript(script);
     if (scr) setFragmentShader(scr->getCore());
 }
 
 void VRMaterial::setGeometryProgram(string script) {
     geometryScript = script;
-    VRScript* scr = VRSceneManager::get()->getActiveScene()->getScript(script);
+    VRScript* scr = VRSceneManager::getCurrent()->getScript(script);
     if (scr) setGeometryShader(scr->getCore());
 }
 

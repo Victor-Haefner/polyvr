@@ -305,7 +305,7 @@ VRSceneLoader* VRSceneLoader::get() {
 // get only the object for a single geometry
 GeometryRecPtr VRSceneLoader::loadGeometry(string file, string object) {
     VRScene* scene = VRSceneLoader_current_scene;
-    if (scene == 0) scene = VRSceneManager::get()->getActiveScene();
+    if (scene == 0) scene = VRSceneManager::getCurrent();
     if (scene == 0) return 0;
 
     if (cached_files.count(file) == 0) load(file);
@@ -329,7 +329,7 @@ GeometryRecPtr VRSceneLoader::loadGeometry(string file, string object) {
 
 VRTransform* VRSceneLoader::load3DContent(string filepath, VRObject* parent, bool reload) {
     VRScene* scene = VRSceneLoader_current_scene;
-    if (scene == 0) scene = VRSceneManager::get()->getActiveScene();
+    if (scene == 0) scene = VRSceneManager::getCurrent();
     if (scene == 0) return 0;
 
     cout << "load3DContent " << filepath << endl;
@@ -380,7 +380,7 @@ void VRSceneLoader_saveObject(VRObject* p, xmlpp::Element* e) {
 
 void VRSceneLoader::saveScene(string file, xmlpp::Element* guiN) {
     cout << " save " << file << endl;
-    VRScene* scene = VRSceneManager::get()->getActiveScene();
+    VRScene* scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
 
     xmlpp::Document doc;

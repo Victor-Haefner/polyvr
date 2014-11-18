@@ -170,7 +170,7 @@ void VRSocket::trigger() {
 }
 
 void VRSocket::handle(string s) {
-    VRScene* scene = VRSceneManager::get()->getActiveScene();
+    VRScene* scene = VRSceneManager::getCurrent();
     tcp_msg = s;
     scene->queueJob(queued_signal);
 }

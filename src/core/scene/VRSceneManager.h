@@ -40,7 +40,7 @@ class VRSceneManager : public VRThreadManager, public VRCallbackManager {
 
         int getSceneNum();
         VRScene* getScene(string s);
-        VRScene* getActiveScene();
+        static VRScene* getCurrent();
 
         void update();
 };
