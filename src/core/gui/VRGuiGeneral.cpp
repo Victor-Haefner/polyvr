@@ -33,7 +33,7 @@ VRGuiGeneral::VRGuiGeneral() {
 }
 
 void VRGuiGeneral::dumpOSG() {
-     VRScene* scene = VRSceneManager::get()->getActiveScene();
+     VRScene* scene = VRSceneManager::getCurrent();
      if (scene == 0) return;
 
      string pg = scene->getName() + "_osg_dump.osg";
@@ -46,16 +46,16 @@ void VRGuiGeneral::dumpOSG() {
 bool VRGuiGeneral::setColor(GdkEventButton* b) {
     if (updating) return true;
 
-    Color3f col = VRSceneManager::get()->getActiveScene()->getBackgroundColor();
+    Color3f col = VRSceneManager::getCurrent()->getBackgroundColor();
     Color4f c = chooseColor("bg_solid", toColor4f(col));
-    VRSceneManager::get()->getActiveScene()->setBackgroundColor(toColor3f(c));
+    VRSceneManager::getCurrent()->setBackgroundColor(toColor3f(c));
     return true;
 }
 
 void VRGuiGeneral::setPath() {
     if (updating) return;
 
-    VRScene* scene = VRSceneManager::get()->getActiveScene();
+    VRScene* scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
 
     string s = getTextEntry("entry42");
@@ -68,13 +68,13 @@ void VRGuiGeneral::setMode() {
     VRBackground::TYPE t = VRBackground::SOLID;
     if ( getCheckButtonState("checkbutton30") ) t = VRBackground::IMAGE;
     if ( getCheckButtonState("checkbutton29") ) t = VRBackground::SKY;
-    VRSceneManager::get()->getActiveScene()->setBackground( t );
+    VRSceneManager::getCurrent()->setBackground( t );
 }
 
 void VRGuiGeneral::toggleFrustumCulling() {
     if (updating) return;
 
-    VRScene* scene = VRSceneManager::get()->getActiveScene();
+    VRScene* scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
 
     scene->setFrustumCulling( getCheckButtonState("checkbutton_01") );
@@ -83,14 +83,14 @@ void VRGuiGeneral::toggleFrustumCulling() {
 void VRGuiGeneral::toggleOcclusionCulling() {
     if (updating) return;
 
-    VRScene* scene = VRSceneManager::get()->getActiveScene();
+    VRScene* scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
 
     scene->setOcclusionCulling( getCheckButtonState("checkbutton_02") );
 }
 
 void VRGuiGeneral::updateScene() {
-    VRScene* scene = VRSceneManager::get()->getActiveScene();
+    VRScene* scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
 
     updating = true;

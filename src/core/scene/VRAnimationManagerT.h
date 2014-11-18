@@ -26,25 +26,26 @@ void VRAnimation<T>::start() {
 }
 
 template<typename T>
-void VRAnimation<T>::end() {
-    //cout << "\nEND ANIM";
-    run = false;
-}
+void VRAnimation<T>::end() { run = false; }
 
 template<typename T>
 bool VRAnimation<T>::update(float current_time) {
     if (!run) return false;
-    float t = current_time - start_time;
-    t /= duration;
+
+    float t = current_time - start_time - offset;
+    if (t < 0) return true;
+
+    if (duration > 0.00001) t /= duration;
+    else t = 2;
 
     if (t > 1) {
-        if (!loop) end();
         if (loop) start();
+        else {
+            end();
+            (*fkt)(end_value);
+        }
         return true;
     }
-
-    t += offset;
-    if (t > 1) t -= 1;
 
     T val = start_value + (end_value - start_value)*t;
     (*fkt)(val);

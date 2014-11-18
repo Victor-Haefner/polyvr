@@ -160,7 +160,7 @@ void path::compute(int N) {
     linearBezier(_cls, N, c1, c2);
 }
 
-vector<Vec3f> path::get() { return points; }
+vector<Vec3f> path::getPositions() { return points; }
 vector<Vec3f> path::getNormals() { return normals; }
 vector<Vec3f> path::getColors() { return colors; }
 
@@ -178,6 +178,27 @@ void path::getEndPoint(Vec3f& p, Vec3f& n, Vec3f& c) {
 
 void path::update() {
     compute(points.size());
+}
+
+Vec3f path::getPosition(float t) {
+    float tN = t*(points.size()-1);
+    int ti = floor(tN);
+    float x = tN-ti;
+    return (1-x)*points[ti] + x*points[ti+1];
+}
+
+Vec3f path::getNormal(float t) {
+    float tN = t*(points.size()-1);
+    int ti = floor(tN);
+    float x = tN-ti;
+    return (1-x)*normals[ti] + x*normals[ti+1];
+}
+
+Vec3f path::getColor(float t) {
+    float tN = t*(points.size()-1);
+    int ti = floor(tN);
+    float x = tN-ti;
+    return (1-x)*colors[ti] + x*colors[ti+1];
 }
 
 OSG_END_NAMESPACE;

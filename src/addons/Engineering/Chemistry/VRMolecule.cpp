@@ -115,7 +115,7 @@ VRAtom::~VRAtom() {
 PeriodicTableEntry VRAtom::getParams() { return params; }
 Matrix VRAtom::getTransformation() { return transformation; }
 void VRAtom::setTransformation(Matrix m) { transformation = m; }
-map<int, VRBond> VRAtom::getBonds() { return bonds; }
+map<int, VRBond>& VRAtom::getBonds() { return bonds; }
 int VRAtom::getID() { return ID; }
 void VRAtom::setID(int ID) { this->ID = ID; }
 
@@ -159,8 +159,11 @@ void VRAtom::computePositions() {
     }
 }
 
-bool VRAtom::append(VRBond bond) {
-    VRAtom* at = bond.atom2;
+bool VRAtom::append(VRAtom* at, int bType, bool extra) {
+    VRBond bond;
+    bond.type = bType;
+    bond.extra = extra;
+    bond.atom2 = at;
     if (full or at->full or at == this) return false;
     for (auto b : bonds) if (b.second.atom2 == at) return false;
     for (auto b : at->bonds) if (b.second.atom2 == this) return false;
@@ -193,6 +196,24 @@ bool VRAtom::append(VRBond bond) {
     return true;
 }
 
+void VRAtom::detach(VRAtom* a) {
+    for (auto b : bonds) {
+        if (b.second.atom2 != a) continue;
+        full = false;
+        bound_valence_electrons -= b.second.type;
+        bonds.erase(b.first);
+        break;
+    }
+
+    for (auto b : a->bonds) {
+        if (b.second.atom2 != this) continue;
+        a->full = false;
+        a->bound_valence_electrons -= b.second.type;
+        a->bonds.erase(b.first);
+        break;
+    }
+}
+
 void VRAtom::print() {
     cout << " ID: " << ID << " Type: " << type  << " full?: " << full << " boundEl: " << bound_valence_electrons << " geo: " << geo << " pos: " << Vec3f(transformation[3]);
     cout << " bonds with: ";
@@ -203,15 +224,15 @@ void VRAtom::print() {
     cout << endl;
 }
 
-void VRAtom::propagateTransformation(Matrix& T, uint flag) {
+void VRAtom::propagateTransformation(Matrix& T, uint flag, bool self) {
     if (flag == recFlag) return;
     recFlag = flag;
 
-    //print();
-
-    Matrix m = T;
-    m.mult(transformation);
-    transformation = m;
+    if (self) {
+        Matrix m = T;
+        m.mult(transformation);
+        transformation = m;
+    }
 
     for (auto& b : bonds) {
         if (b.second.atom2 == 0) { // duplet
@@ -240,23 +261,20 @@ VRMolecule::VRMolecule(string definition) : VRGeometry(definition) {
 }
 
 void VRMolecule::addAtom(string a, int t) {
-    VRBond b(t, 0, new VRAtom(a, getID()), 0);
-    atoms[b.atom2->getID()] = b.atom2;
-    addAtom(b);
+    VRAtom* at = new VRAtom(a, getID());
+    atoms[at->getID()] = at;
+    addAtom(at, t);
 }
 
-void VRMolecule::addAtom(VRBond b) {
-    for (auto a : atoms) if (a.second->append(b)) break;
+void VRMolecule::addAtom(VRAtom* b, int bType, bool extra) {
+    for (auto a : atoms) if (a.second->append(b, bType, extra)) break;
 }
 
 void VRMolecule::addAtom(int ID, int t) {
     if (atoms.count(ID) == 0) return;
     VRAtom* at = atoms[ID];
     if (at->full) return;
-
-    VRBond b(t, 0, at, 0);
-    b.extra = true;
-    addAtom(b);
+    addAtom(at, t, true);
 }
 
 void VRMolecule::remAtom(int ID) {
@@ -275,9 +293,6 @@ void VRMolecule::updateGeo() {
     GeoPnt3fPropertyRecPtr      Pos2 = GeoPnt3fProperty::create();
     GeoVec3fPropertyRecPtr      Norms2 = GeoVec3fProperty::create();
     GeoUInt32PropertyRecPtr     Indices2 = GeoUInt32Property::create();
-
-    // hack to avoid the single point bug
-    if (atoms.size() == 1) atoms[1] = atoms[0];
 
     float r_scale = 0.6;
 
@@ -413,6 +428,7 @@ vector<string> VRMolecule::parse(string mol, bool verbose) {
 
 void VRMolecule::set(string definition) {
     if (PeriodicTable.size() == 0) initAtomicTables();
+    this->definition = definition;
 
     vector<string> mol = parse(definition, false);
     atoms.clear();
@@ -450,10 +466,16 @@ void VRMolecule::setRandom(int N) {
     set(m);
 }
 
+string VRMolecule::getDefinition() { return definition; }
+
 int VRMolecule::getID() {
     int i=0;
     while (atoms.count(i)) i++;
     return i;
+}
+
+uint VRMolecule::getFlag() {
+    return VRGlobals::get()->CURRENT_FRAME+random();
 }
 
 void VRMolecule::rotateBond(int a, int b, float f) {
@@ -485,6 +507,18 @@ void VRMolecule::rotateBond(int a, int b, float f) {
     updateGeo();
 }
 
+void VRMolecule::changeBond(int a, int b, int t) {
+    if (atoms.count(a) == 0) return;
+    if (atoms.count(b) == 0) return;
+    VRAtom* A = atoms[a];
+    VRAtom* B = atoms[b];
+    if (A == 0 or B == 0) return;
+
+    A->detach(B);
+    A->append(B, t);
+    updateGeo();
+}
+
 void VRMolecule::substitute(int a, VRMolecule* m, int b) {
     if (atoms.count(a) == 0) return;
     if (m->atoms.count(b) == 0) return;
@@ -509,15 +543,14 @@ void VRMolecule::substitute(int a, VRMolecule* m, int b) {
 
     // copy atoms
     for (auto at : m->atoms) {
-        at.second->setID( getID() );
-        atoms[at.second->getID()] = at.second;
+        int ID = getID();
+        at.second->setID(ID);
+        atoms[ID] = at.second;
     }
-    m->atoms.clear();
+    m->set(m->getDefinition());
 
     // attach molecules
-    VRBond bond(1,0,B,A);
-    bond.extra = true;
-    A->append(bond);
+    A->append(B, 1, true);
 
     // transform new atoms
     uint now = VRGlobals::get()->CURRENT_FRAME+random();
@@ -533,7 +566,53 @@ void VRMolecule::substitute(int a, VRMolecule* m, int b) {
     B->propagateTransformation(bm, now);
 
     updateGeo();
-    m->updateGeo();
+}
+
+void VRMolecule::setLocalOrigin(int ID) {
+    if (atoms.count(ID) == 0) return;
+
+    uint now = VRGlobals::get()->CURRENT_FRAME+random();
+    Matrix m = atoms[ID]->getTransformation();
+    m.invert();
+
+    Matrix im;
+    MatrixLookAt( im, Vec3f(0,0,0), Vec3f(0,0,1), Vec3f(0,1,0) );
+    im.mult(m);
+
+    atoms[ID]->propagateTransformation(im, now);
+}
+
+void VRMolecule::attachMolecule(int a, VRMolecule* m, int b) {
+    if (atoms.count(a) == 0) return;
+    if (m->atoms.count(b) == 0) return;
+
+    /*if (time > 0.00001) { // just an idea
+        path* p = new path();
+        m->startPathAnimation(path* p, time, offset, bool redirect = true);
+        return;
+    }*/
+
+    VRAtom* A = atoms[a];
+    VRAtom* B = m->atoms[b];
+    m->setLocalOrigin(b);
+
+    for (auto at : m->atoms) { // copy atoms
+        int ID = getID();
+        at.second->setID(ID);
+        atoms[ID] = at.second;
+    }
+    m->set(m->getDefinition());
+
+    A->append(B, 1); // attach molecules
+    A->computePositions();
+
+    // transform new atoms
+    uint now = getFlag();
+    A->recFlag = now;
+    Matrix bm = B->getTransformation();
+    B->propagateTransformation(bm, now, false);
+
+    updateGeo();
 }
 
 void VRMolecule::showLabels(bool b) { if (doLabels == b) return; doLabels = b; updateLabels(); }
@@ -601,6 +680,11 @@ void VRMolecule::updateLabels() {
     }
 }
 
+VRAtom* VRMolecule::getAtom(int ID) {
+    if (atoms.count(ID) != 0) return atoms[ID];
+    return 0;
+}
+
 string VRMolecule::a_fp =
 "#version 120\n"
 GLSL(
@@ -624,10 +708,14 @@ GLSL(
 varying vec4 color;
 varying vec3 normal;
 
+attribute vec4 osg_Vertex;
+attribute vec4 osg_Normal;
+attribute vec4 osg_Color;
+
 void main( void ) {
-    color = gl_Color;
-    normal = gl_Normal;
-    gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex;
+    color = osg_Color;
+    normal = osg_Normal.xyz;
+    gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;
 }
 );
 
@@ -702,9 +790,13 @@ string VRMolecule::b_vp =
 GLSL(
 varying vec3 normal;
 
+attribute vec4 osg_Vertex;
+attribute vec4 osg_Normal;
+attribute vec4 osg_Color;
+
 void main( void ) {
-    normal = gl_Normal;
-    gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex;
+    normal = osg_Normal.xyz;
+    gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;
 }
 );
 

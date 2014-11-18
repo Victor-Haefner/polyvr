@@ -124,6 +124,7 @@ void VRGeometry::create(int type, GeoVectorProperty* pos, GeoVectorProperty* nor
 /** Overwrites the vertex positions of the mesh **/
 void VRGeometry::setPositions(GeoVectorProperty* Pos) {
     if (!meshSet) setMesh(Geometry::create());
+    if (Pos->size() == 1) Pos->addValue(Pnt3f()); // hack to avoid the single point bug
     mesh->setPositions(Pos);
 }
 

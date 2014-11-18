@@ -59,6 +59,7 @@ class VRScriptManager : public VRStorage {
 
         // Python Methods
 		static PyObject* loadCollada(VRScriptManager* self, PyObject *args);
+		static PyObject* stackCall(VRScriptManager* self, PyObject *args);
 };
 
 OSG_END_NAMESPACE

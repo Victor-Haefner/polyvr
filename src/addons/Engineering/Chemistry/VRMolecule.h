@@ -52,21 +52,24 @@ class VRAtom {
         PeriodicTableEntry getParams();
         Matrix getTransformation();
         void setTransformation(Matrix m);
-        map<int, VRBond> getBonds();
+        map<int, VRBond>& getBonds();
         int getID();
         void setID(int ID);
 
 		void computeGeo();
 		void computePositions();
-		bool append(VRBond bond);
 
-		void propagateTransformation(Matrix& T, uint flag);
+		bool append(VRAtom* b, int bType, bool extra = false);
+		void detach(VRAtom* a);
+
+		void propagateTransformation(Matrix& T, uint flag, bool self = true);
 
 		void print();
 };
 
 class VRMolecule : public VRGeometry {
     private:
+        string definition;
         map<int, VRAtom*> atoms;
 
         VRGeometry* bonds_geo = 0;
@@ -83,7 +86,7 @@ class VRMolecule : public VRGeometry {
         static string b_fp;
         static string b_gp;
 
-		void addAtom(VRBond b);
+		void addAtom(VRAtom* b, int bType, bool extra = false);
 		void addAtom(string a, int b);
 		void addAtom(int a, int b);
 		void remAtom(int ID);
@@ -94,14 +97,23 @@ class VRMolecule : public VRGeometry {
 		int getID();
 		vector<string> parse(string mol, bool verbose = false);
 
+		uint getFlag();
+
     public:
         VRMolecule(string definition);
 
         void set(string definition);
         void setRandom(int N);
+        string getDefinition();
+
+        VRAtom* getAtom(int ID);
+
+        void setLocalOrigin(int ID);
 
         void substitute(int a, VRMolecule* m, int b);
+        void attachMolecule(int a, VRMolecule* m, int b);
         void rotateBond(int a, int b, float f);
+        void changeBond(int a, int b, int t);
 
         void showLabels(bool b);
         void showCoords(bool b);

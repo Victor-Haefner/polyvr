@@ -45,7 +45,7 @@ CSGGeometry::CSGGeometry(string name) :
 {
 	VRObject::type = "CSGGeometry";
 	dm->read(_oldWorldTrans); // Initialization
-	//VRScene* scene = VRSceneManager::get()->getActiveScene();
+	//VRScene* scene = VRSceneManager::getCurrent();
 	/*GTSGeometry *boxA = GTSGeometry::createCube("boxA", 1.0);
 	scene->add(boxA);
 	GTSGeometry *boxB = GTSGeometry::createCube("boxB", 1.0);

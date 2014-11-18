@@ -62,7 +62,7 @@ void VRGuiSetup::updateObjectData() {
     setExpanderSensivity("expander20", false);
     setExpanderSensivity("expander21", false);
 
-    current_scene = VRSceneManager::get()->getActiveScene();
+    current_scene = VRSceneManager::getCurrent();
 
     if (selected_type == "window") {
         setExpanderSensivity("expander3", true);
@@ -341,12 +341,10 @@ void VRGuiSetup::on_menu_delete() {
 }
 
 void VRGuiSetup::on_menu_add_window() {
-    VRSceneManager* sm = VRSceneManager::get();
-
     string name = "Display";
     current_setup->addMultiWindow(name);
     VRWindow* win = current_setup->getWindow(name);
-    if (sm->getActiveScene()) win->setContent(true);
+    if ( VRSceneManager::getCurrent() ) win->setContent(true);
 
     updateSetup();
     setToolButtonSensivity("toolbutton12", true);

@@ -7,8 +7,10 @@
 template<typename T>
 void OSG::VRMaterial::setShaderParameter(string name, const T &value) {
     //shaderChunk->updateUniformVariable(name.c_str(), value);
-    shaderChunk->subUniformVariable(name.c_str());
-    shaderChunk->addUniformVariable(name.c_str(), value);
+    //shaderChunk->subUniformVariable(name.c_str());
+    //shaderChunk->addUniformVariable(name.c_str(), value);
+    vProgram->subUniformVariable(name.c_str());
+    vProgram->addUniformVariable(name.c_str(), value);
 }
 
 #endif // VRMATERIALT_H_INCLUDED

@@ -20,6 +20,7 @@ class CEF : public CefClient, public CefRenderHandler {
         OSG::ImageRecPtr image = 0;
         int width = 1024;
         int height = 1024;
+        float aspect = 1;
 
         CefRefPtr<CefBrowser> browser;
         CefRefPtr<CefRenderHandler> GetRenderHandler();
@@ -38,6 +39,7 @@ class CEF : public CefClient, public CefRenderHandler {
         CEF();
         ~CEF();
 
+        void setResolution(float a);
         void setAspectRatio(float a);
 
         void setMaterial(OSG::VRMaterial* mat);

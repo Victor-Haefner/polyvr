@@ -38,7 +38,7 @@ CEF::CEF() {
     browser = CefBrowserHost::CreateBrowserSync(win, this, "www.google.de", browser_settings, 0);
 
     VRFunction<int>* fkt = new VRFunction<int>("webkit_update", boost::bind(&CEF::update, this));
-    VRSceneManager::get()->getActiveScene()->addUpdateFkt(fkt);
+    VRSceneManager::getCurrent()->addUpdateFkt(fkt);
 
 
     image = Image::create();
@@ -58,7 +58,13 @@ void CEF::update() { CefDoMessageLoopWork(); }
 void CEF::open(string site) { this->site = site; browser->GetMainFrame()->LoadURL(site); }
 CefRefPtr<CefRenderHandler> CEF::GetRenderHandler() { return this; }
 string CEF::getSite() { return site; }
-void CEF::reload() { open(site); }
+
+void CEF::reload() {
+    height = width/aspect;
+    cout << "reload " << width << " " << height << endl;
+    open(site);
+}
+
 void CEF::reload(string path) {
     for (uint i=0; i<instances.size(); i++) {
         string s = instances[i]->getSite();
@@ -67,7 +73,8 @@ void CEF::reload(string path) {
     }
 }
 
-void CEF::setAspectRatio(float a) { height = 1024/a; reload(); }
+void CEF::setResolution(float a) { width = a; reload(); }
+void CEF::setAspectRatio(float a) { aspect = a; reload(); }
 
 bool CEF::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
     rect = CefRect(0, 0, width, height);
@@ -89,7 +96,7 @@ void CEF::addMouse(VRDevice* dev, VRObject* obj, int lb, int rb, int wu, int wd)
     dev->addSignal(wd, 1)->add( new VRFunction<VRDevice*>( "CEF::WD", boost::bind(&CEF::mouse, this, 4, 0, _1 ) ) );
 
     VRFunction<int>* fkt = new VRFunction<int>( "CEF::MM", boost::bind(&CEF::mouse_move, this, dev, _1) );
-    VRSceneManager::get()->getActiveScene()->addUpdateFkt(fkt);
+    VRSceneManager::getCurrent()->addUpdateFkt(fkt);
 }
 
 void CEF::addKeyboard(VRDevice* dev) {

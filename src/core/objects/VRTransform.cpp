@@ -708,29 +708,21 @@ void VRTransform::loadContent(xmlpp::Element* e) {
     if(doTConstraint or doRConstraint) setFixed(false);
 }
 
-void VRTransform::startPathAnimation(path* p, float t, bool redirect) {
-    VRFunction<Vec3f> *fkt1, *fkt2;
-    fkt1 = new VRFunction<Vec3f>("3DEntSetFrom", boost::bind(&VRTransform::setFrom, this, _1));
-    fkt2 = new VRFunction<Vec3f>("3DEntSetDir", boost::bind(&VRTransform::setDir, this, _1));
+void setFromPath(VRTransform* tr, path* p, bool redirect, float t) {
+    tr->setFrom( p->getPosition(t) );
+    if (redirect) tr->setDir( p->getNormal(t) );
+}
 
-    Vec3f p0, p1, n0, n1, c, d;
-    p->getStartPoint(p0,n0,c);
-    p->getEndPoint(p1,n1,c);
-    d = getDir();
-
-    VRScene* scene = VRSceneManager::get()->getActiveScene();
-    int a1, a2;
-    a1 = scene->addAnimation(t, 0, fkt1, p0, p1, false);
-    if (redirect) a2 = scene->addAnimation(t, 0, fkt2, n0, n1, false);
-    else a2 = scene->addAnimation(t, 0, fkt2, d, d, false);
-    animations.push_back(a1);
-    animations.push_back(a2);
+void VRTransform::startPathAnimation(path* p, float time, float offset, bool redirect) {
+    VRFunction<float>* fkt = new VRFunction<float>("TransAnim", boost::bind(setFromPath, this, p, redirect, _1));
+    VRScene* scene = VRSceneManager::getCurrent();
+    int a = scene->addAnimation(time, offset, fkt, 0.f, 1.f, false);
+    animations.push_back(a);
 }
 
 void VRTransform::stopAnimation() {
-    VRScene* scene = VRSceneManager::get()->getActiveScene();
-    for (auto a : animations)
-        scene->stopAnimation(a);
+    VRScene* scene = VRSceneManager::getCurrent();
+    for (auto a : animations) scene->stopAnimation(a);
     animations.clear();
 }
 

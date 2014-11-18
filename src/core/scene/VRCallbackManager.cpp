@@ -26,6 +26,12 @@ void VRCallbackManager::queueJob(VRFunction<int>* f, int priority) {
     addUpdateFkt(f, priority);
 }
 
+void VRCallbackManager::queueEvent(VRFunction<int>* f, float delay, int priority) {
+    /*updateListsChanged = true;
+    jobFkts[f] = priority;
+    addUpdateFkt(f, priority);*/ // TODO
+}
+
 void VRCallbackManager::addUpdateFkt(VRFunction<int>* f, int priority) {
     updateListsChanged = true;
     if (updateFkts.count(priority) == 0) {

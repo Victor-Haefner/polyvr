@@ -45,7 +45,7 @@ void VRGuiBits_on_viewoption_changed(GtkComboBox* cb, gpointer data) {
     if (i == -1) return;
 
     // get all in
-    VRScene* scene = VRSceneManager::get()->getActiveScene();
+    VRScene* scene = VRSceneManager::getCurrent();
     VRSetup* setup = VRSetupManager::get()->getCurrent();
     Glib::RefPtr<Gtk::ListStore> opt_list = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("view_options"));
     VRGuiSetup_ViewOptsColumns cols;
@@ -66,14 +66,14 @@ void VRGuiBits_on_viewoption_changed(GtkComboBox* cb, gpointer data) {
 
 void VRGuiBits_on_camera_changed(GtkComboBox* cb, gpointer data) {
     int i = gtk_combo_box_get_active(cb);
-    VRScene* scene = VRSceneManager::get()->getActiveScene();
+    VRScene* scene = VRSceneManager::getCurrent();
     scene->setActiveCamera(i);
 
     VRGuiSignals::get()->getSignal("camera_changed")->trigger();
 }
 
 void VRGuiBits_on_navigation_changed(GtkComboBox* cb, gpointer data) {
-    VRScene* scene = VRSceneManager::get()->getActiveScene();
+    VRScene* scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
 
     char* c = gtk_combo_box_get_active_text(cb);
@@ -260,7 +260,7 @@ VRGuiBits::VRGuiBits() {
 // scene updated, get cameras and nav presets
 void VRGuiBits::update() {
     // update camera liststore
-    VRScene* scene = VRSceneManager::get()->getActiveScene();
+    VRScene* scene = VRSceneManager::getCurrent();
     setLabel("label24", "Project: None");
     if (scene == 0) return;
 

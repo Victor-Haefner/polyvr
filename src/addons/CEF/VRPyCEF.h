@@ -13,6 +13,7 @@ struct VRPyCEF : VRPyBaseT<CEF> {
     static PyObject* setMaterial(VRPyCEF* self, PyObject* args);
     static PyObject* addMouse(VRPyCEF* self, PyObject* args);
     static PyObject* addKeyboard(VRPyCEF* self, PyObject* args);
+    static PyObject* setResolution(VRPyCEF* self, PyObject* args);
     static PyObject* setAspectRatio(VRPyCEF* self, PyObject* args);
 };
 

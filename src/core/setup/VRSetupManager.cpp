@@ -23,7 +23,7 @@ VRSetup* VRSetupManager::create() {
     if (current) delete current;
     current = new VRSetup("VRSetup");
     current_path = "setup/" + current->getName() + ".xml";
-    current->setScene( VRSceneManager::get()->getActiveScene() );
+    current->setScene( VRSceneManager::getCurrent() );
     return current;
 }
 
@@ -34,7 +34,7 @@ VRSetup* VRSetupManager::load(string name, string path) {
     current = new VRSetup(name);
     current->load(path);
     current_path = path;
-    current->setScene( VRSceneManager::get()->getActiveScene() );
+    current->setScene( VRSceneManager::getCurrent() );
     return current;
 }
 
