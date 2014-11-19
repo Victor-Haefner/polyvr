@@ -258,7 +258,16 @@ Color4f toColor4f(Color3f c, float t) { return Color4f(c[0], c[1], c[2], t); }
 Color3f toColor3f(Color4f c) { return Color3f(c[0], c[1], c[2]); }
 
 void VRMaterial::setDiffuse(Color3f c) { colChunk->setDiffuse( toColor4f(c, getTransparency()) ); }
-void VRMaterial::setTransparency(float c) { colChunk->setDiffuse( toColor4f(getDiffuse(), c) ); }
+void VRMaterial::setTransparency(float c) {
+    colChunk->setDiffuse( toColor4f(getDiffuse(), c) );
+
+    if (blendChunk == 0) {
+        blendChunk = BlendChunk::create();
+        mat->addChunk(blendChunk);
+        blendChunk->setSrcFactor  ( GL_SRC_ALPHA           );
+        blendChunk->setDestFactor ( GL_ONE_MINUS_SRC_ALPHA );
+    }
+}
 void VRMaterial::setSpecular(Color3f c) { colChunk->setSpecular(toColor4f(c)); }
 void VRMaterial::setAmbient(Color3f c) { colChunk->setAmbient(toColor4f(c)); }
 void VRMaterial::setEmission(Color3f c) { colChunk->setEmission(toColor4f(c)); }
