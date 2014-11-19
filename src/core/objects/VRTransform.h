@@ -99,7 +99,7 @@ class VRTransform : public VRObject {
         void setScale(float s);
         void setScale(Vec3f s);
         void setOrientation(Vec3f at, Vec3f up);
-        void setPose(Vec3f from, Vec3f at, Vec3f up);
+        void setPose(Vec3f from, Vec3f dir, Vec3f up);
         void setMatrix(Matrix _m);
 
         void getWorldMatrix(Matrix& _m, bool parentOnly = false);

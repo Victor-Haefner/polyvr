@@ -13,8 +13,6 @@ vector<PyObject*> VRPyBase::pyListToVector(PyObject *v) {
     std::string type = v->ob_type->tp_name;
     if (type == "list") v = PyList_AsTuple(v);
 
-    cout << " t " << type;
-
     PyObject *pi;
     int N = PyTuple_Size(v);
     vector<PyObject*> res;
@@ -22,8 +20,6 @@ vector<PyObject*> VRPyBase::pyListToVector(PyObject *v) {
         pi = PyTuple_GetItem(v, i);
         res.push_back(pi);
     }
-
-    cout << " R " << N << endl;
     return res;
 }
 

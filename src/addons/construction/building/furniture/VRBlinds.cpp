@@ -123,7 +123,7 @@ void VRBlinds::create() {
     m.mult(pos, pos);
     m.mult(norm, norm);
 
-    blend_geo->setPose(pos, pos + norm, Vec3f(0,1,0));
+    blend_geo->setPose(pos, norm, Vec3f(0,1,0));
     scene->add(blend_geo);
 
     SimpleMaterialRecPtr mat = SimpleMaterial::create();

@@ -89,8 +89,6 @@ class VRMolecule : public VRGeometry {
 		void addAtom(VRAtom* b, int bType, bool extra = false);
 		void addAtom(string a, int b);
 		void addAtom(int a, int b);
-		void remAtom(int ID);
-		void updateGeo();
 		void updateLabels();
 		void updateCoords();
 
@@ -114,6 +112,9 @@ class VRMolecule : public VRGeometry {
         void attachMolecule(int a, VRMolecule* m, int b);
         void rotateBond(int a, int b, float f);
         void changeBond(int a, int b, int t);
+		void remAtom(int ID);
+
+		void updateGeo();
 
         void showLabels(bool b);
         void showCoords(bool b);

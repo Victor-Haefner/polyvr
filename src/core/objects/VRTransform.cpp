@@ -348,16 +348,16 @@ void VRTransform::setOrientation(Vec3f at, Vec3f up) {
 }
 
 /** Set the pose of the object with the from, at and up vectors **/
-void VRTransform::setPose(Vec3f from, Vec3f at, Vec3f up) {
+void VRTransform::setPose(Vec3f from, Vec3f dir, Vec3f up) {
     _from = from;
-    _at = at;
     _up = up;
+    setDir(dir);
     reg_change();
 }
 
 /** Set the local matrix **/
 void VRTransform::setMatrix(Matrix _m) {
-    setPose(Vec3f(_m[3]), Vec3f(-_m[2]+_m[3]), Vec3f(_m[1]));
+    setPose(Vec3f(_m[3]), Vec3f(-_m[2]), Vec3f(_m[1]));
 }
 //-------------------------------------
 
@@ -696,6 +696,7 @@ void VRTransform::loadContent(xmlpp::Element* e) {
     if (e->get_attribute("scale")) _scale = toVec3f(e->get_attribute("scale")->get_value());
 
     setPose(f, a, u);
+    setAt(a);
 
     if (e->get_attribute("cT_mode")) tConPlane = toBool(e->get_attribute("cT_mode")->get_value());
     if (e->get_attribute("do_cT")) doTConstraint = toBool(e->get_attribute("do_cT")->get_value());

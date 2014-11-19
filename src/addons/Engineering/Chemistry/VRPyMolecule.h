@@ -16,6 +16,7 @@ struct VRPyMolecule : VRPyBaseT<OSG::VRMolecule> {
     static PyObject* rotateBond(VRPyMolecule* self, PyObject* args);
     static PyObject* changeBond(VRPyMolecule* self, PyObject* args);
     static PyObject* getAtomPosition(VRPyMolecule* self, PyObject* args);
+    static PyObject* remAtom(VRPyMolecule* self, PyObject* args);
 };
 
 #endif // VRPYMOLECULE_H_INCLUDED

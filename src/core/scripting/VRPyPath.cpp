@@ -1,41 +1,7 @@
 #include "VRPyPath.h"
+#include "VRPyBaseT.h"
 
-PyObject* VRPyPath::err = NULL;
-
-PyMODINIT_FUNC initVRPyPath(PyObject* module) {
-    if (PyType_Ready(&VRPyPath::type) < 0)
-        return;
-
-    Py_INCREF(&VRPyPath::type);
-    PyModule_AddObject(module, "Path", (PyObject *)&VRPyPath::type);
-
-    VRPyPath::err = PyErr_NewException((char *)"VR.Error", NULL, NULL);
-}
-
-void VRPyPath::dealloc(VRPyPath* self) {
-    self->ob_type->tp_free((PyObject*)self);
-}
-
-PyObject* VRPyPath::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
-    VRPyPath* self = (VRPyPath *)type->tp_alloc(type, 0);
-    if (self != NULL) self->obj = new OSG::path();
-    return (PyObject *)self;
-}
-
-PyObject* VRPyPath::fromPtr(OSG::path* obj) {
-    VRPyPath *self = (VRPyPath *)type.tp_alloc(&type, 0);
-
-    if (self != NULL) self->obj = obj;
-
-    return (PyObject *)self;
-}
-
-int VRPyPath::init(VRPyPath *self, PyObject *args, PyObject *kwds) {
-    return 0;
-}
-
-
-PyTypeObject VRPyPath::type = {
+template<> PyTypeObject VRPyBaseT<OSG::path>::type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
     "VR.Path",             /*tp_name*/
@@ -64,8 +30,8 @@ PyTypeObject VRPyPath::type = {
     0,		               /* tp_weaklistoffset */
     0,		               /* tp_iter */
     0,		               /* tp_iternext */
-    methods,             /* tp_methods */
-    members,             /* tp_members */
+    VRPyPath::methods,             /* tp_methods */
+    0,             /* tp_members */
     0,                         /* tp_getset */
     0,                         /* tp_base */
     0,                         /* tp_dict */
@@ -77,11 +43,8 @@ PyTypeObject VRPyPath::type = {
     New,                 /* tp_new */
 };
 
-PyMemberDef VRPyPath::members[] = {
-    {NULL}  /* Sentinel */
-};
-
 PyMethodDef VRPyPath::methods[] = {
+    {"set", (PyCFunction)VRPyPath::set, METH_VARARGS, "Set the path - set(start pos, start norm, end pos, end norm, steps)" },
     {"setStart", (PyCFunction)VRPyPath::setStartPoint, METH_VARARGS, "Set the path start point" },
     {"setEnd", (PyCFunction)VRPyPath::setEndPoint, METH_VARARGS, "Set the path end point" },
     {"getStart", (PyCFunction)VRPyPath::getStartPoint, METH_NOARGS, "Get the path start point" },
@@ -104,6 +67,22 @@ OSG::Vec3f PyVecToVec(PyObject* _v) {
         v[i] = PyFloat_AsDouble(pi);
     }
     return v;
+}
+
+PyObject* VRPyPath::set(VRPyPath* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::set, Object is invalid"); return NULL; }
+
+    int i;
+    PyObject *p1, *p2, *n1, *n2;
+    if (! PyArg_ParseTuple(args, "OOOOi", &p1, &n1, &p2, &n2, &i)) return NULL;
+
+    cout << " SET " << parseVec3fList(p1) << " " << parseVec3fList(p2) << " " << parseVec3fList(n1) << " " << parseVec3fList(n2) << endl;
+
+    OSG::Vec3f c;
+    self->obj->setStartPoint(parseVec3fList(p1), parseVec3fList(n1), c);
+    self->obj->setEndPoint(parseVec3fList(p2), parseVec3fList(n2), c);
+    self->obj->compute(i);
+    Py_RETURN_TRUE;
 }
 
 PyObject* VRPyPath::setStartPoint(VRPyPath* self, PyObject* args) {

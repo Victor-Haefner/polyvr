@@ -182,7 +182,7 @@ void VRScriptManager::initPyModules() {
     VRPyDevice::registerModule("Device", pModVR);
     VRPyHaptic::registerModule("Haptic", pModVR, VRPyDevice::typeRef);
     //VRPySocket::registerModule("Socket", pModVR);
-    //VRPyPath::registerModule("Path", pModVR);
+    VRPyPath::registerModule("Path", pModVR);
 
     VRPyColorChooser::registerModule("ColorChooser", pModVR);
     VRPyCSG::registerModule("CSGGeometry", pModVR, VRPyGeometry::typeRef);
@@ -207,7 +207,6 @@ void VRScriptManager::initPyModules() {
     FPyLogistics::registerModule("Logistics", pModFactory);
     PyModule_AddObject(pModVR, "Factory", pModFactory);
 
-    initVRPyPath(pModVR); // TODO
     initVRPySocket(pModVR);
     initVRPyStdOut();
 

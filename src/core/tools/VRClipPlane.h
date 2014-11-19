@@ -23,7 +23,7 @@ class VRClipPlane {
             beacon = b;
             handPlane = new VRGeometry("handPlane");
             handPlane->setMesh(makePlaneGeo(0.2, 0.2, 1,1));
-            handPlane->setPose(Vec3f(0,0,-0.3), Vec3f(0,1,-0.3), Vec3f(1,0,0));
+            handPlane->setPose(Vec3f(0,0,-0.3), Vec3f(0,1,0), Vec3f(1,0,0));
             b->addChild(handPlane);
             handPlane->setVisible(active);
         }

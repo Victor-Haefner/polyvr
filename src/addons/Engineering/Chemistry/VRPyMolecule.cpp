@@ -54,6 +54,7 @@ PyMethodDef VRPyMolecule::methods[] = {
     {"attachMolecule", (PyCFunction)VRPyMolecule::attachMolecule, METH_VARARGS, "Attach a molecule to the second - attachMolecule(int aID, mol b, int bID)" },
     {"rotateBond", (PyCFunction)VRPyMolecule::rotateBond, METH_VARARGS, "Rotate the bond between atom a and b - rotateBond(int aID, int bID, float a)" },
     {"changeBond", (PyCFunction)VRPyMolecule::changeBond, METH_VARARGS, "Change the bond type between atom a and b to type t- changeBond(int aID, int bID, int t)" },
+    {"remAtom", (PyCFunction)VRPyMolecule::remAtom, METH_VARARGS, "Remove an atom by ID" },
     {"getAtomPosition", (PyCFunction)VRPyMolecule::getAtomPosition, METH_VARARGS, "Returns the position of the atom by ID - getAtomPosition(int ID)" },
     {NULL}  /* Sentinel */
 };
@@ -61,6 +62,13 @@ PyMethodDef VRPyMolecule::methods[] = {
 PyObject* VRPyMolecule::set(VRPyMolecule* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyMolecule::set - Object is invalid"); return NULL; }
     self->obj->set( parseString(args) );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyMolecule::remAtom(VRPyMolecule* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyMolecule::remAtom - Object is invalid"); return NULL; }
+    self->obj->remAtom( parseInt(args) );
+    self->obj->updateGeo();
     Py_RETURN_TRUE;
 }
 
