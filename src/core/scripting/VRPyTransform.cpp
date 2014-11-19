@@ -63,6 +63,8 @@ PyMethodDef VRPyTransform::methods[] = {
     {"getUp", (PyCFunction)VRPyTransform::getUp, METH_NOARGS, "Return the object's up vector" },
     {"getScale", (PyCFunction)VRPyTransform::getScale, METH_NOARGS, "Return the object's scale vector" },
     {"setWorldFrom", (PyCFunction)VRPyTransform::setWFrom, METH_VARARGS, "Set the object's world position" },
+    {"setPose", (PyCFunction)VRPyTransform::setPose, METH_VARARGS, "Set the object's from dir and up vector" },
+    {"setPosition", (PyCFunction)VRPyTransform::setFrom, METH_VARARGS, "Set the object's from vector" },
     {"setFrom", (PyCFunction)VRPyTransform::setFrom, METH_VARARGS, "Set the object's from vector" },
     {"setAt", (PyCFunction)VRPyTransform::setAt, METH_VARARGS, "Set the object's at vector" },
     {"setDir", (PyCFunction)VRPyTransform::setDir, METH_VARARGS, "Set the object's dir vector" },
@@ -153,77 +155,69 @@ PyObject* VRPyTransform::getScale(VRPyTransform* self) {
     return toPyTuple(self->obj->getScale());
 }
 
+PyObject* VRPyTransform::setPose(VRPyTransform* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setPose, Object is invalid"); return NULL; }
+    PyObject *fl, *dl, *ul;
+    if (! PyArg_ParseTuple(args, "OOO", &fl, &dl, &ul)) return NULL;
+    self->obj->setPose( parseVec3fList(fl), parseVec3fList(dl), parseVec3fList(ul));
+    Py_RETURN_TRUE;
+}
+
 PyObject* VRPyTransform::setFrom(VRPyTransform* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setFrom, Object is invalid"); return NULL; }
     OSG::Vec3f v = parseVec3f(args);
-
-    OSG::VRTransform* e = (OSG::VRTransform*) self->obj;
-    e->setFrom(v);
+    self->obj->setFrom(v);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTransform::setWFrom(VRPyTransform* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setWFrom, Object is invalid"); return NULL; }
     OSG::Vec3f v = parseVec3f(args);
-
-    OSG::VRTransform* e = (OSG::VRTransform*) self->obj;
-    e->setWorldPosition(v);
+    self->obj->setWorldPosition(v);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTransform::setAt(VRPyTransform* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setAt, Object is invalid"); return NULL; }
     OSG::Vec3f v = parseVec3f(args);
-
-    OSG::VRTransform* e = (OSG::VRTransform*) self->obj;
-    e->setAt(v);
+    self->obj->setAt(v);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTransform::setDir(VRPyTransform* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setDir, Object is invalid"); return NULL; }
     OSG::Vec3f v = parseVec3f(args);
-
-    OSG::VRTransform* e = (OSG::VRTransform*) self->obj;
-    e->setDir(v);
+    self->obj->setDir(v);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTransform::setUp(VRPyTransform* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setUp, Object is invalid"); return NULL; }
     OSG::Vec3f v = parseVec3f(args);
-
-    OSG::VRTransform* e = (OSG::VRTransform*) self->obj;
-    e->setUp(v);
+    self->obj->setUp(v);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTransform::setScale(VRPyTransform* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setScale, Object is invalid"); return NULL; }
     OSG::Vec3f v = parseVec3f(args);
-
-    OSG::VRTransform* e = (OSG::VRTransform*) self->obj;
-    e->setScale(v);
+    self->obj->setScale(v);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTransform::setPickable(VRPyTransform* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setPickable, Object is invalid"); return NULL; }
     bool b = parseBool(args);
-
-    OSG::VRTransform* e = (OSG::VRTransform*) self->obj;
-    e->setPickable(b);
+    self->obj->setPickable(b);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTransform::setPlaneConstraints(VRPyTransform* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setPlaneConstraints, Object is invalid"); return NULL; }
     OSG::Vec3f v = parseVec3f(args);
-
-    OSG::VRTransform* e = (OSG::VRTransform*) self->obj;
-    e->setTConstraint(v);
-    e->setTConstraintMode(true);
-    e->toggleTConstraint(true);
+    self->obj->setTConstraint(v);
+    self->obj->setTConstraintMode(true);
+    self->obj->toggleTConstraint(true);
     Py_RETURN_TRUE;
 }
 

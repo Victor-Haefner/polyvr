@@ -16,6 +16,8 @@ struct VRPyBase {
     PyObject_HEAD;
     static PyObject* err;
 
+    static PyObject* parseObject(PyObject *args);
+
     static vector<PyObject*> pyListToVector(PyObject *v);
     static vector<PyObject*> parseList(PyObject *args);
     static OSG::Vec2f parseVec2f(PyObject *args);
