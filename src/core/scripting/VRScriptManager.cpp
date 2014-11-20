@@ -314,7 +314,6 @@ void execCall(PyObject* pyFkt, int i) {
     if (pyFkt == 0) return;
     if (PyErr_Occurred() != NULL) PyErr_Print();
 
-    cout << "execCall\n";
     PyObject* pArgs = PyTuple_New(0);
     PyObject_CallObject(pyFkt, pArgs);
     Py_XDECREF(pArgs);
@@ -327,16 +326,11 @@ PyObject* VRScriptManager::stackCall(VRScriptManager* self, PyObject *args) {
     PyObject* pyFkt;
     float delay;
     if (! PyArg_ParseTuple(args, "Of", &pyFkt, &delay)) return NULL;
-
     Py_IncRef(pyFkt);
-
-    //execCall(pyFkt, 1);
-    //Py_RETURN_TRUE;
 
     VRFunction<int>* fkt = new VRFunction<int>( "pyExecCall", boost::bind(execCall, pyFkt, _1) );
 
     VRScene* scene = VRSceneManager::getCurrent();
-    cout << "add anim\n";
     scene->addAnimation(0, delay, fkt, 0, 0, false);
     Py_RETURN_TRUE;
 }
