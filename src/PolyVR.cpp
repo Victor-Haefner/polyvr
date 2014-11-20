@@ -96,7 +96,7 @@ void exitPolyVR() {
 }
 
 
-void startPolyVR() { VRSetupManager::get()->getCurrent()->startMainLoop(); }
+void startPolyVR() { VRSetupManager::getCurrent()->startMainLoop(); }
 
 
 OSG_END_NAMESPACE;

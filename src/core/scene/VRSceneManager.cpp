@@ -61,14 +61,14 @@ void VRSceneManager::removeScene(VRScene* s) {
     scenes.erase(s->getName());
     delete s;
 
-    VRSetupManager::get()->getCurrent()->resetViewports();
-    VRSetupManager::get()->getCurrent()->clearSignals();
+    VRSetupManager::getCurrent()->resetViewports();
+    VRSetupManager::getCurrent()->clearSignals();
     VRTransform::changedObjects.clear();
     VRTransform::dynamicObjects.clear();
     active = "NO_SCENE_ACTIVE";
 
     // deactivate windows
-    map<string, VRWindow*> windows = VRSetupManager::get()->getCurrent()->getWindows();
+    map<string, VRWindow*> windows = VRSetupManager::getCurrent()->getWindows();
     map<string, VRWindow*>::iterator itr;
     for (itr = windows.begin(); itr != windows.end(); itr++) itr->second->setContent(false);
 
@@ -101,7 +101,7 @@ void VRSceneManager::newScene(string path) {
     headlight->setType("point");
     VRLightBeacon* headlight_B = new VRLightBeacon("Headlight_beacon");
     headlight->setBeacon(headlight_B);
-    VRTransform* user = VRSetupManager::get()->getCurrent()->getUser();
+    VRTransform* user = VRSetupManager::getCurrent()->getUser();
     scene->add(headlight);
     headlight->addChild(cam);
     if (user) user->addChild(headlight_B);
@@ -120,7 +120,7 @@ void VRSceneManager::setActiveScene(VRScene* s) {
     if (active != "NO_SCENE_ACTIVE") scenes[active]->getRoot()->hide(); //hide old scene
 
     active = s->getName();
-    VRSetupManager::get()->getCurrent()->setScene(s);
+    VRSetupManager::getCurrent()->setScene(s);
 
     // todo:
     //  - add scene signals to setup devices
@@ -143,13 +143,13 @@ void VRSceneManager::update() {
     if (scenes.count(active) == 1) {
         if (scenes[active] != 0) {
             scenes[active]->update();
-            VRSetupManager::get()->getCurrent()->updateActivatedSignals();
+            VRSetupManager::getCurrent()->updateActivatedSignals();
         }
     }
 
     updateCallbacks();
 
-    VRSetupManager::get()->getCurrent()->updateWindows();//rendering
+    VRSetupManager::getCurrent()->updateWindows();//rendering
 
     VRGlobals::get()->CURRENT_FRAME++;
     VRGlobals::get()->FRAME_RATE = fps;

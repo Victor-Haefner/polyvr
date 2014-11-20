@@ -417,7 +417,7 @@ void VRView::showStats(bool b) {
 
     doStats = b;
 
-    VRSetupManager::get()->getCurrent()->getRenderAction()->setStatCollector(stats->getCollector());
+    VRSetupManager::getCurrent()->getRenderAction()->setStatCollector(stats->getCollector());
 }
 
 void VRView::showViewGeo(bool b) {
@@ -618,7 +618,7 @@ void VRView::load(xmlpp::Element* node) {
     proj_size = toVec2f(node->get_attribute("size")->get_value());
     if (node->get_attribute("user")) {
         string u = node->get_attribute("user")->get_value();
-        user = VRSetupManager::get()->getCurrent()->getTracker(u);
+        user = VRSetupManager::getCurrent()->getTracker(u);
     }
 
     showStats(doStats);

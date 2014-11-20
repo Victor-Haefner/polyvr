@@ -917,7 +917,7 @@ void VRGuiSetup::updateSetup() {
     on_treeview_select();
     tree_view->expand_all();
 
-    setLabel("label13", "VR Setup: " + VRSetupManager::get()->getCurrent()->getName());
+    setLabel("label13", "VR Setup: " + VRSetupManager::getCurrent()->getName());
 }
 
 void VRGuiSetup::updateSetupList() {

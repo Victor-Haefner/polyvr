@@ -153,7 +153,7 @@ void VRGuiScripts::on_select_script() { // selected a script
 
     // update options
     setCombobox("combobox1", getListStorePos("liststore6", script->getType()));
-    fillStringListstore("liststore7", VRSetupManager::get()->getCurrent()->getDevices("mobile"));
+    fillStringListstore("liststore7", VRSetupManager::getCurrent()->getDevices("mobile"));
     setCombobox("combobox24", getListStorePos("liststore7", script->getMobile()));
 
     // update editor content and script head

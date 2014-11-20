@@ -13,6 +13,8 @@
 #include <iostream>
 //#include <boost/locale.hpp>
 #include "core/scene/VRSceneManager.h"
+#include "core/setup/VRSetupManager.h"
+#include "core/setup/windows/VRView.h"
 #include "core/utils/VRInternalMonitor.h"
 #include "core/scene/VRSceneLoader.h"
 #include "VRGuiUtils.h"
@@ -46,7 +48,7 @@ void VRGuiBits_on_viewoption_changed(GtkComboBox* cb, gpointer data) {
 
     // get all in
     VRScene* scene = VRSceneManager::getCurrent();
-    VRSetup* setup = VRSetupManager::get()->getCurrent();
+    VRSetup* setup = VRSetupManager::getCurrent();
     Glib::RefPtr<Gtk::ListStore> opt_list = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("view_options"));
     VRGuiSetup_ViewOptsColumns cols;
     Gtk::TreeModel::Row row = *getComboboxIter("combobox20");
@@ -176,30 +178,12 @@ bool VRGuiBits::toggleFullscreen(GdkEventKey* k) {
 }
 
 bool VRGuiBits::toggleStereo(GdkEventKey* k) {
-    cout << "blaa " << k->keyval << endl;
-    return false;
-    if (k->keyval != 65480) return false;
-    static bool fs = false;
-    fs = !fs;
+    if (k->keyval != 65479) return false;
+    VRView* v = VRSetupManager::getCurrent()->getView(0);
+    if (v == 0) return false;
 
-    Gtk::Window* win; VRGuiBuilder()->get_widget("window1", win);
-    Gtk::Separator* hs1; VRGuiBuilder()->get_widget("hseparator1", hs1);
-    Gtk::Table* tab; VRGuiBuilder()->get_widget("table20", tab);
-    Gtk::Notebook* nb1; VRGuiBuilder()->get_widget("notebook1", nb1);
-    Gtk::Box* hb1; VRGuiBuilder()->get_widget("hbox1", hb1);
-
-    if (fs) {
-        win->fullscreen();
-        nb1->hide();
-        hb1->hide();
-        tab->hide();
-        hs1->hide();
-        gtk_widget_hide(term_box);
-    } else {
-        win->unfullscreen();
-        win->show_all();
-    }
-
+    bool b = v->isStereo();
+    v->setStereo(!b);
     return true;
 }
 

@@ -46,7 +46,7 @@ VRScene::~VRScene() {
 }
 
 void VRScene::initDevices() { // TODO: remove this after refactoring the navigation stuff
-    VRSetup* setup = VRSetupManager::get()->getCurrent();
+    VRSetup* setup = VRSetupManager::getCurrent();
 
     VRMouse* mouse = (VRMouse*)setup->getDevice("mouse");
     VRFlystick* flystick = (VRFlystick*)setup->getDevice("flystick");
@@ -111,7 +111,7 @@ VRObject* VRScene::get(string name) {
 
 void VRScene::setActiveCamera(int i) {
     VRCameraManager::setActiveCamera(i);
-    VRSetup* setup = VRSetupManager::get()->getCurrent();
+    VRSetup* setup = VRSetupManager::getCurrent();
 
     // TODO: refactor the following workaround
     VRCamera* cam = getActiveCamera();
@@ -126,7 +126,7 @@ void VRScene::setActiveCamera(int i) {
     VRFlystick* flystick = (VRFlystick*)setup->getDevice("flystick");
     if (flystick) flystick->setTarget(cam);
 
-    VRMobile* mobile = (VRMobile*)VRSetupManager::get()->getCurrent()->getDevice("mobile");
+    VRMobile* mobile = (VRMobile*)VRSetupManager::getCurrent()->getDevice("mobile");
     if (mobile) mobile->setTarget(getActiveCamera());
 
     setup->setViewCamera(cam, -1);

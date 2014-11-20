@@ -38,6 +38,6 @@ VRSetup* VRSetupManager::load(string name, string path) {
     return current;
 }
 
-VRSetup* VRSetupManager::getCurrent() { return current; }
+VRSetup* VRSetupManager::getCurrent() { return get()->current; }
 
 OSG_END_NAMESPACE;

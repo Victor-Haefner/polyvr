@@ -21,7 +21,7 @@ using namespace std;
 void updateArgPtr(VRScript::arg* a) {
     string t = a->type;
     VRScene* scene = VRSceneManager::getCurrent();
-    VRSetup* setup = VRSetupManager::get()->getCurrent();
+    VRSetup* setup = VRSetupManager::getCurrent();
 
     if (t == "VRPyObjectType" or t == "VRPyGeometryType" or t == "VRPyTransformType") {
         a->ptr = (void*)scene->get(a->val);
@@ -49,7 +49,7 @@ VRScript::arg::arg(string nspace, string name) {
 }
 
 void VRScript::clean() {
-    VRMobile* mob = (VRMobile*)VRSetupManager::get()->getCurrent()->getDevice(this->mobile);
+    VRMobile* mob = (VRMobile*)VRSetupManager::getCurrent()->getDevice(this->mobile);
     if (mob) mob->remWebSite(getName());
 
     VRScene* scene = VRSceneManager::getCurrent();
@@ -68,7 +68,7 @@ void VRScript::clean() {
 
 void VRScript::update() {
     if (type == "HTML") {
-        VRMobile* mob = (VRMobile*)VRSetupManager::get()->getCurrent()->getDevice(mobile);
+        VRMobile* mob = (VRMobile*)VRSetupManager::getCurrent()->getDevice(mobile);
         if (mob) mob->addWebSite(getName(), core);
     }
 
@@ -83,7 +83,7 @@ void VRScript::update() {
         }
 
         if (t->trigger == "on_device") {
-            VRDevice* dev = VRSetupManager::get()->getCurrent()->getDevice(t->dev);
+            VRDevice* dev = VRSetupManager::getCurrent()->getDevice(t->dev);
             int state = 0;
             if (t->state == "Pressed") state = 1;
             else if (t->state == "Released") state = 0;
@@ -246,7 +246,7 @@ void VRScript::execute() {
     }
 
     if (type == "HTML") {
-        VRMobile* mob = (VRMobile*)VRSetupManager::get()->getCurrent()->getDevice(this->mobile);
+        VRMobile* mob = (VRMobile*)VRSetupManager::getCurrent()->getDevice(this->mobile);
         if (mob) mob->updateClients(getName());
     }
 }

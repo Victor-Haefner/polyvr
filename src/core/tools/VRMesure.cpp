@@ -126,7 +126,7 @@ void VRMesure::check() {//check spheres for change of position
     Vec3f p1, p2;
 
     VRCamera* cam = scene->getActiveCamera();
-    VRTransform* user = VRSetupManager::get()->getCurrent()->getUser();
+    VRTransform* user = VRSetupManager::getCurrent()->getUser();
 
     p1 = s1->getWorldPosition();
     p2 = s2->getWorldPosition();

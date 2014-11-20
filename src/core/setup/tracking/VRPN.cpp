@@ -100,7 +100,7 @@ void VRPN::addVRPNTracker(int ID, string addr, Vec3f offset, float scale) {
     t->ID = ID;
     t->offset = offset;
     t->scale = scale;
-    VRSetupManager::get()->getCurrent()->addObject(t->ent);
+    VRSetupManager::getCurrent()->addObject(t->ent);
 
     tracker[ID] = t;
 }
