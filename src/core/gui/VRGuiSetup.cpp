@@ -248,7 +248,8 @@ void VRGuiSetup::on_del_clicked() { //TODO, should delete setup
 void VRGuiSetup::on_save_clicked() {
     if (current_setup == 0) return;
 
-    current_setup->save("setup/" + current_setup->getName() + ".xml");
+    string defWorkDir = VRSceneManager::get()->getOriginalWorkdir();
+    current_setup->save(defWorkDir+"/setup/" + current_setup->getName() + ".xml");
 
     setToolButtonSensivity("toolbutton12", false);
 }
@@ -257,7 +258,8 @@ void VRGuiSetup::on_save_clicked() {
 
 void VRGuiSetup::on_setup_changed() {
     string name = getComboboxText("combobox6");
-    current_setup = VRSetupManager::get()->load(name, "setup/" + name + ".xml");
+    string defWorkDir = VRSceneManager::get()->getOriginalWorkdir();
+    current_setup = VRSetupManager::get()->load(name, defWorkDir+"/setup/" + name + ".xml");
     updateSetup();
     // remember setup
     ofstream f("setup/.local"); f.write(name.c_str(), name.size()); f.close();
