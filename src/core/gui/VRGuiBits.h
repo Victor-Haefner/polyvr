@@ -23,6 +23,7 @@ class VRGuiBits {
         static void write_to_terminal(string s);
 
         bool toggleFullscreen(GdkEventKey* k);
+        bool toggleStereo(GdkEventKey* k);
 
         void update();
 };

@@ -175,6 +175,34 @@ bool VRGuiBits::toggleFullscreen(GdkEventKey* k) {
     return true;
 }
 
+bool VRGuiBits::toggleStereo(GdkEventKey* k) {
+    cout << "blaa " << k->keyval << endl;
+    return false;
+    if (k->keyval != 65480) return false;
+    static bool fs = false;
+    fs = !fs;
+
+    Gtk::Window* win; VRGuiBuilder()->get_widget("window1", win);
+    Gtk::Separator* hs1; VRGuiBuilder()->get_widget("hseparator1", hs1);
+    Gtk::Table* tab; VRGuiBuilder()->get_widget("table20", tab);
+    Gtk::Notebook* nb1; VRGuiBuilder()->get_widget("notebook1", nb1);
+    Gtk::Box* hb1; VRGuiBuilder()->get_widget("hbox1", hb1);
+
+    if (fs) {
+        win->fullscreen();
+        nb1->hide();
+        hb1->hide();
+        tab->hide();
+        hs1->hide();
+        gtk_widget_hide(term_box);
+    } else {
+        win->unfullscreen();
+        win->show_all();
+    }
+
+    return true;
+}
+
 VRGuiBits::VRGuiBits() {
     setComboboxCallback("combobox4", VRGuiBits_on_camera_changed);
     setComboboxCallback("combobox9", VRGuiBits_on_navigation_changed);
@@ -203,6 +231,7 @@ VRGuiBits::VRGuiBits() {
     // window fullscreen
     Gtk::Window* win;
     VRGuiBuilder()->get_widget("window1", win);
+    win->signal_key_press_event().connect( sigc::mem_fun(*this, &VRGuiBits::toggleStereo) );
     win->signal_key_press_event().connect( sigc::mem_fun(*this, &VRGuiBits::toggleFullscreen) );
 
     // VTE
