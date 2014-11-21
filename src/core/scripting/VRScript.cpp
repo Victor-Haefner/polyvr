@@ -13,6 +13,7 @@
 #include "core/utils/toString.h"
 #include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
+#include "core/objects/material/VRMaterial.h"
 #include <libxml++/nodes/element.h>
 
 OSG_BEGIN_NAMESPACE;
@@ -126,8 +127,8 @@ void VRScript::update() {
 
     // update args namespaces and map
     map<string, arg*> tmp_args;
-    for (a_itr = args.begin(); a_itr != args.end(); a_itr++) {
-        arg* a = a_itr->second;
+    for (auto _a : args) {
+        arg* a = _a.second;
         a->setNameSpace(VRName::getName());
         tmp_args[a->getName()] = a;
         changeArgValue(a->getName(), a->val);
@@ -157,8 +158,8 @@ VRScript::VRScript(string _name) {
 }
 
 VRScript::~VRScript() {
-    for (a_itr = args.begin(); a_itr != args.end(); a_itr++) delete a_itr->second;
-    for (t_itr = trigs.begin(); t_itr != trigs.end(); t_itr++) delete t_itr->second;
+    for (auto a : args) delete a.second;
+    for (auto t : trigs) delete t.second;
 }
 
 VRScript::arg* VRScript::addArgument() {
@@ -248,6 +249,15 @@ void VRScript::execute() {
     if (type == "HTML") {
         VRMobile* mob = (VRMobile*)VRSetupManager::getCurrent()->getDevice(this->mobile);
         if (mob) mob->updateClients(getName());
+    }
+
+    if (type == "GLSL") {
+        for (auto m : VRMaterial::materials) {
+            VRMaterial* mat = m.second;
+            if (mat->getVertexScript() == getName()) mat->setVertexScript(getName());
+            if (mat->getFragmentScript() == getName()) mat->setFragmentScript(getName());
+            if (mat->getGeometryScript() == getName()) mat->setGeometryScript(getName());
+        }
     }
 }
 

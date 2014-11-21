@@ -85,19 +85,19 @@ PyObject* VRPyMaterial::setMagMinFilter(VRPyMaterial* self, PyObject* args) {
 
 PyObject* VRPyMaterial::setVertexProgram(VRPyMaterial* self, PyObject* args) {
 	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setVertexProgram, C obj is invalid"); return NULL; }
-	self->obj->setVertexProgram(parseString(args));
+	self->obj->setVertexScript(parseString(args));
 	Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMaterial::setFragmentProgram(VRPyMaterial* self, PyObject* args) {
 	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setFragmentProgram, C obj is invalid"); return NULL; }
-	self->obj->setFragmentProgram(parseString(args));
+	self->obj->setFragmentScript(parseString(args));
 	Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMaterial::setGeometryProgram(VRPyMaterial* self, PyObject* args) {
 	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setGeometryProgram, C obj is invalid"); return NULL; }
-	self->obj->setGeometryProgram(parseString(args));
+	self->obj->setGeometryScript(parseString(args));
 	Py_RETURN_TRUE;
 }
 

@@ -107,16 +107,19 @@ class VRMaterial : public VRObject {
         void readVertexShader(string s);
         void readFragmentShader(string s);
         void readGeometryShader(string s);
+        void setVertexScript(string script);
+        void setFragmentScript(string script);
+        void setGeometryScript(string script);
         string getVertexShader();
         string getFragmentShader();
         string getGeometryShader();
+        string getVertexScript();
+        string getFragmentScript();
+        string getGeometryScript();
 
         template<class T> void setShaderParameter(string name, const T &value);
 
         void setMagMinFilter(string mag, string min);
-        void setVertexProgram(string script);
-        void setFragmentProgram(string script);
-        void setGeometryProgram(string script);
 
         void setLit(bool b);
         bool isLit();

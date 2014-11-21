@@ -347,22 +347,27 @@ void VRMaterial::setMagMinFilter(string mag, string min) {
     texChunk->setMinFilter(Min);
 }
 
-void VRMaterial::setVertexProgram(string script) {
+void VRMaterial::setVertexScript(string script) {
     vertexScript = script;
     VRScript* scr = VRSceneManager::getCurrent()->getScript(script);
     if (scr) setVertexShader(scr->getCore());
 }
 
-void VRMaterial::setFragmentProgram(string script) {
+void VRMaterial::setFragmentScript(string script) {
     fragmentScript = script;
     VRScript* scr = VRSceneManager::getCurrent()->getScript(script);
     if (scr) setFragmentShader(scr->getCore());
 }
 
-void VRMaterial::setGeometryProgram(string script) {
+void VRMaterial::setGeometryScript(string script) {
+    cout << "setGeometryScript " << script << endl;
     geometryScript = script;
     VRScript* scr = VRSceneManager::getCurrent()->getScript(script);
     if (scr) setGeometryShader(scr->getCore());
 }
+
+string VRMaterial::getVertexScript() { return vertexScript; }
+string VRMaterial::getFragmentScript() { return fragmentScript; }
+string VRMaterial::getGeometryScript() { return geometryScript; }
 
 OSG_END_NAMESPACE;

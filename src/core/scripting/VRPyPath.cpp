@@ -76,8 +76,6 @@ PyObject* VRPyPath::set(VRPyPath* self, PyObject* args) {
     PyObject *p1, *p2, *n1, *n2;
     if (! PyArg_ParseTuple(args, "OOOOi", &p1, &n1, &p2, &n2, &i)) return NULL;
 
-    cout << " SET " << parseVec3fList(p1) << " " << parseVec3fList(p2) << " " << parseVec3fList(n1) << " " << parseVec3fList(n2) << endl;
-
     OSG::Vec3f c;
     self->obj->setStartPoint(parseVec3fList(p1), parseVec3fList(n1), c);
     self->obj->setEndPoint(parseVec3fList(p2), parseVec3fList(n2), c);
