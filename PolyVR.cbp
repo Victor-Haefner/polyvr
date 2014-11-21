@@ -218,6 +218,8 @@
 		<Unit filename="src/addons/Engineering/Chemistry/VRMolecule.h" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRPyMolecule.cpp" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRPyMolecule.h" />
+		<Unit filename="src/addons/Engineering/Mechanics/VRProfile.cpp" />
+		<Unit filename="src/addons/Engineering/Mechanics/VRProfile.h" />
 		<Unit filename="src/addons/Factory/VRFactory.h" />
 		<Unit filename="src/addons/Factory/VRLogistics.cpp" />
 		<Unit filename="src/addons/Factory/VRLogistics.h" />

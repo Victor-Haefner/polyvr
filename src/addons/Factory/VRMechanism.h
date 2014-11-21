@@ -6,6 +6,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 
 class VRGear;
+class VRThread;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -27,6 +28,7 @@ struct MChange {
     float l = 0; // translation length
     Vec3f n; // rotation axis
     float a = 0; // rotation angle
+    float dx = 0;
 };
 
 class MPart {
@@ -44,7 +46,7 @@ class MPart {
         virtual ~MPart();
         bool changed();
 
-        void computeChange();
+        virtual void computeChange();
         void apply();
         void setBack();
         bool propagateMovement();
@@ -54,7 +56,7 @@ class MPart {
 
         void printChange();
 
-        virtual void move(float dx);
+        virtual void move(MChange c);
         virtual void updateNeighbors(vector<MPart*> parts) = 0;
 
         static MPart* make(VRGeometry* g, VRTransform* t);
@@ -65,7 +67,10 @@ class MGear : public MPart {
         MGear();
         ~MGear();
 
-        void move(float dx);
+        VRGear* gear();
+
+        void computeChange();
+        void move(MChange c);
         void updateNeighbors(vector<MPart*> parts);
 };
 
@@ -74,7 +79,9 @@ class MThread : public MPart {
         MThread();
         ~MThread();
 
-        void move(float dx);
+        VRThread* thread();
+
+        void move(MChange c);
         void updateNeighbors(vector<MPart*> parts);
 };
 
@@ -83,7 +90,7 @@ class MChain : public MPart {
         MChain();
         ~MChain();
 
-        void move(float dx);
+        void move(MChange c);
         void updateNeighbors(vector<MPart*> parts);
 };
 
