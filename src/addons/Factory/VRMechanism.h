@@ -29,34 +29,39 @@ struct MChange {
     Vec3f n; // rotation axis
     float a = 0; // rotation angle
     float dx = 0;
+    uint time = 0;
+
+    void flip();
+    bool same(MChange c);
 };
 
 class MPart {
     public:
         vector<MPart*> neighbors;
         vector<MPart*> group;
-        VRGeometry* geo;
-        VRTransform* trans;
-        VRPrimitive* prim;
+        VRGeometry* geo = 0;
+        VRTransform* trans = 0;
+        VRPrimitive* prim = 0;
         MChange change;
         Matrix reference;
-        unsigned int timestamp;
+        uint timestamp = 0;
 
         MPart();
         virtual ~MPart();
         bool changed();
 
-        virtual void computeChange();
         void apply();
         void setBack();
         bool propagateMovement();
+        bool propagateMovement(MChange c);
 
         void clearNeighbors();
         void addNeighbor(MPart* p);
 
         void printChange();
 
-        virtual void move(MChange c);
+        virtual void computeChange();
+        virtual void move();
         virtual void updateNeighbors(vector<MPart*> parts) = 0;
 
         static MPart* make(VRGeometry* g, VRTransform* t);
@@ -70,7 +75,7 @@ class MGear : public MPart {
         VRGear* gear();
 
         void computeChange();
-        void move(MChange c);
+        void move();
         void updateNeighbors(vector<MPart*> parts);
 };
 
@@ -81,7 +86,7 @@ class MThread : public MPart {
 
         VRThread* thread();
 
-        void move(MChange c);
+        void move();
         void updateNeighbors(vector<MPart*> parts);
 };
 
@@ -90,7 +95,7 @@ class MChain : public MPart {
         MChain();
         ~MChain();
 
-        void move(MChange c);
+        void move();
         void updateNeighbors(vector<MPart*> parts);
 };
 

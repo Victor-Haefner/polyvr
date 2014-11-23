@@ -14,13 +14,14 @@ MThread::MThread() {}
 MThread::~MThread() {}
 
 bool MPart::changed() {
+    if (geo == 0) return false;
     bool b = (timestamp != geo->getLastChange());
     timestamp = geo->getLastChange();
     return b;
 }
 
-void MPart::setBack() { geo->setWorldMatrix(reference); }
-void MPart::apply() { reference = geo->getWorldMatrix(); }
+void MPart::setBack() { if (geo) geo->setWorldMatrix(reference); }
+void MPart::apply() { if (geo) reference = geo->getWorldMatrix(); }
 
 MPart* MPart::make(VRGeometry* g, VRTransform* t) {
     string type = g->getPrimitive()->getType();
@@ -46,9 +47,34 @@ void MPart::addNeighbor(MPart* p) {
     p->neighbors.push_back(this);
 }
 
-bool MPart::propagateMovement() {
-    for (auto n : neighbors) n->move(change);
+void MChange::flip() {
+    a *= -1;
+    dx *= -1;
+}
+
+bool MChange::same(MChange c) {
+    if (a*c.a < 0) return false;
     return true;
+}
+
+bool MPart::propagateMovement() {
+    bool res = true;
+    cout << "p " << geo->getName() << " " << change.a << endl;
+    for (auto n : neighbors) res = n->propagateMovement(change) ? res : false;
+    return res;
+}
+
+bool MPart::propagateMovement(MChange c) {
+    c.flip();
+    if (change.time == c.time) {
+        return change.same(c);
+    } // TODO: either it is the same change or another change in the same timestep..
+
+    change = c;
+    move();
+    cout << " pC " << geo->getName() << " " << change.a << endl;
+
+    return propagateMovement();
 }
 
 void MPart::printChange() {
@@ -94,10 +120,12 @@ bool checkChainPart(MChain* c, MPart* p, Matrix r1, Matrix r2) {
 VRGear* MGear::gear() { return (VRGear*)prim; }
 VRThread* MThread::thread() { return (VRThread*)prim; }
 
-void MPart::move(MChange c) {}
-void MGear::move(MChange c) { trans->rotate(-c.dx/gear()->radius(), Vec3f(0,0,1)); }
-void MChain::move(MChange c) {}
-void MThread::move(MChange c) { trans->rotate(c.a, Vec3f(0,0,1)); }
+void MPart::move() {}
+void MGear::move() {
+    trans->rotate(change.dx/gear()->radius(), Vec3f(0,0,1));
+}
+void MChain::move() {}
+void MThread::move() { trans->rotate(change.a, Vec3f(0,0,1)); }
 
 void MPart::computeChange() {
     Matrix m = reference;
@@ -112,6 +140,8 @@ void MPart::computeChange() {
     change.n.normalize();
 
     if (change.n[2] > 0) { change.n *= -1; change.a *= -1; }
+
+    change.time = timestamp;
 }
 
 void MGear::computeChange() {
@@ -123,7 +153,8 @@ void MGear::updateNeighbors(vector<MPart*> parts) {
     clearNeighbors();
     for (auto part : parts) {
         if (part == this) continue;
-        VRPrimitive* p = part->geo->getPrimitive();
+        VRPrimitive* p = part->prim;
+        if (p == 0) continue;
         if (p->getType() == "Gear") {
             bool b = checkGearGear(gear(), (VRGear*)p, reference, part->reference);
             if (b) addNeighbor(part);
@@ -196,11 +227,12 @@ void VRMechanism::update() {
     for (auto& part : changed_parts) {
         part->updateNeighbors(parts);
         part->computeChange();
-        part->printChange();
+        //part->printChange();
     }
 
     for (auto& part : changed_parts) {
         bool block = !part->propagateMovement();
+        cout << "block? " << block << endl;
         if (block) { // mechanism is blocked
             for (auto part : changed_parts) part->setBack();
             return;

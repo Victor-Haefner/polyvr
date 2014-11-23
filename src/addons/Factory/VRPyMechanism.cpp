@@ -46,10 +46,10 @@ template<> PyTypeObject VRPyBaseT<OSG::VRMechanism>::type = {
 };
 
 PyMethodDef VRPyMechanism::methods[] = {
-    {"add", (PyCFunction)VRPyMechanism::add, METH_VARARGS, "Add part to mechanism" },
+    {"add", (PyCFunction)VRPyMechanism::add, METH_VARARGS, "Add part to mechanism - add(P)" },
     {"update", (PyCFunction)VRPyMechanism::update, METH_NOARGS, "Update mechanism simulation" },
     {"clear", (PyCFunction)VRPyMechanism::clear, METH_NOARGS, "Clear mechanism parts" },
-    {"addChain", (PyCFunction)VRPyMechanism::addChain, METH_VARARGS, "Add chain" },
+    {"addChain", (PyCFunction)VRPyMechanism::addChain, METH_VARARGS, "Add chain - addChain(float width, [G1, G2, G3, ...])" },
     {NULL}  /* Sentinel */
 };
 
