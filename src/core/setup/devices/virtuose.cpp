@@ -50,7 +50,6 @@ virtVec(z,x,y);
 */
 
 virtuose::virtuose() {
-
 }
 
 virtuose::~virtuose() {
@@ -124,6 +123,7 @@ Matrix virtuose::getPose() {
     //CHECK( virtGetPhysicalPosition(vc, f) );
 
     Matrix m;
+
     Vec3f pos(f[1], f[2], f[0]);
     Quaternion q;
     q.setValue(f[4], f[5], f[3]);
@@ -131,5 +131,41 @@ Matrix virtuose::getPose() {
     m.setTranslate(pos);
     return m;
 }
+
+
+void virtuose::connectPhysicalized(VRPhysics* ph) {
+    connObjects.push_back(ph);
+}
+void virtuose::disconnectPhysicalized() {
+    connObjects.pop_back();
+}
+
+void virtuose::updateConnectedObjects(){
+    //virtuose
+    float f[6];
+    CHECK( virtGetAvatarPosition(vc, f) );
+    Vec3f virtPos(f[1], f[2], f[0]);
+    //connected object
+    OSG::Matrix objTrans;
+    Vec3f diff;
+    //for all connected objects
+    for (connObjIt = connObjects.begin(); connObjIt != connObjects.end(); connObjIt++) {
+        if((*connObjIt)->isPhysicalized()) {
+           objTrans = (*connObjIt)->getTransformation();
+            //diff = line between virtPos and objPos
+           diff[0] = ((*connObjIt)->fromMatrix(objTrans).getOrigin()[0]) - virtPos[0];
+           diff[1] = ((*connObjIt)->fromMatrix(objTrans).getOrigin()[1]) - virtPos[1];
+           diff[2] = ((*connObjIt)->fromMatrix(objTrans).getOrigin()[2]) - virtPos[2];
+           (*connObjIt)->applyImpulse(diff);
+        }
+        else {
+            //stub
+        }
+    }
+}
+void virtuose::updateFeedbackForces() {
+
+}
+
 
 OSG_END_NAMESPACE;

@@ -2,6 +2,8 @@
 #define VRHAPTIC_H_INCLUDED
 
 #include "VRDevice.h"
+#include "core/objects/geometry/VRPhysics.h"
+
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -24,6 +26,8 @@ class VRHaptic : public VRDevice {
 
         void setForce(Vec3f force, Vec3f torque);
         void setSimulationScales(float scale, float forces);
+        void connectPhysicalized(VRPhysics* ph);
+        void updateConnectedObjects();
 
         void setIP(string IP);
         string getIP();

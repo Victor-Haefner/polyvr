@@ -51,6 +51,8 @@ PyMemberDef VRPyHaptic::members[] = {
 PyMethodDef VRPyHaptic::methods[] = {
     {"setSimulationScales", (PyCFunction)VRPyHaptic::setSimulationScales, METH_VARARGS, "Set force on haptic device" },
     {"setForce", (PyCFunction)VRPyHaptic::setForce, METH_VARARGS, "Set force on haptic device" },
+    {"connectPhysicalized", (PyCFunction)VRPyHaptic::connectPhysicalized, METH_VARARGS, "connect a physicalized object to the haptic's avatar" },
+    {"updateConnected", (PyCFunction)VRPyHaptic::updateConnected, METH_VARARGS, "update the translation of the connected objects" },
     {NULL}  /* Sentinel */
 };
 
@@ -69,4 +71,23 @@ PyObject* VRPyHaptic::setForce(VRPyHaptic* self, PyObject* args) {
     self->obj->setForce(OSG::Vec3f(x,y,z), OSG::Vec3f(u,v,w));
     Py_RETURN_TRUE;
 }
+
+
+PyObject* VRPyHaptic::connectPhysicalized(VRPyHaptic* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyHaptic::connectPhysicalized - Object is invalid"); return NULL; }
+    VRPhysics* tr;
+    self->obj->connectPhysicalized(tr);
+    if (! PyArg_ParseTuple(args, "ffffff", &tr)) return NULL;
+    Py_RETURN_TRUE;
+}
+
+
+PyObject* VRPyHaptic::updateConnected(VRPyHaptic* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyHaptic::updateConnected - Object is invalid"); return NULL; }
+    VRPhysics* tr;
+    if (! PyArg_ParseTuple(args, "ffffff", &tr)) return NULL;
+    self->obj->updateConnectedObjects();
+    Py_RETURN_TRUE;
+}
+
 

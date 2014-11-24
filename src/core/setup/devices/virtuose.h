@@ -4,12 +4,18 @@
 #include <OpenSG/OSGVector.h>
 #include <OpenSG/OSGMatrix.h>
 
+#include <list>
+#include "core/objects/geometry/VRPhysics.h"
+
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class virtuose {
     private:
         void* vc = 0; // virtuose context
+        list<VRPhysics*> connObjects; //to the virtuose connected objects
+        list<VRPhysics*> ::iterator connObjIt;
 
     public:
         virtuose();
@@ -22,6 +28,13 @@ class virtuose {
         void setSimulationScales(float translation, float forces);
         void applyForce(Vec3f force, Vec3f torque);
         Matrix getPose();
+
+        //connect a physicalized Object to this virtuose and push it in the same direction the virtuose moves (via updateCOnnectedObjects)
+        void connectPhysicalized(VRPhysics* ph);
+        void disconnectPhysicalized();
+        void updateConnectedObjects();
+        void updateFeedbackForces();
+
 };
 
 OSG_END_NAMESPACE;

@@ -33,7 +33,6 @@ struct VRPhysicsJoint {
 
 VRPhysics::VRPhysics(OSG::VRTransform* t) {
     vr_obj = t;
-
     world = 0;
     body = 0;
     shape = 0;
