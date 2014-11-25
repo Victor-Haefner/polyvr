@@ -73,6 +73,10 @@ class VRPhysics : public OSG::VRStorage {
         void pause(bool b = true);
         void resetForces();
         void applyImpulse(OSG::Vec3f i);
+        void applyForce(OSG::Vec3f i);
+
+        /**get the totalForce **/
+        btVector3 getForce();
 
         static vector<string> getPhysicsShapes();
         static btTransform fromMatrix(const OSG::Matrix& m);

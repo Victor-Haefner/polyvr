@@ -140,31 +140,50 @@ void virtuose::disconnectPhysicalized() {
     connObjects.pop_back();
 }
 
-void virtuose::updateConnectedObjects(){
+/**
+* updates the forces affecting the connected objects
+**/
+void virtuose::updateConnectedObjects() {
+
     //virtuose
     float f[6];
-    CHECK( virtGetAvatarPosition(vc, f) );
-    Vec3f virtPos(f[1], f[2], f[0]);
-    //connected object
-    OSG::Matrix objTrans;
-    Vec3f diff;
+    CHECK( virtGetForce(vc, f) );
+    Vec3f virtForce(f[1], f[2], f[0]);
+
     //for all connected objects
     for (connObjIt = connObjects.begin(); connObjIt != connObjects.end(); connObjIt++) {
         if((*connObjIt)->isPhysicalized()) {
-           objTrans = (*connObjIt)->getTransformation();
-            //diff = line between virtPos and objPos
-           diff[0] = ((*connObjIt)->fromMatrix(objTrans).getOrigin()[0]) - virtPos[0];
-           diff[1] = ((*connObjIt)->fromMatrix(objTrans).getOrigin()[1]) - virtPos[1];
-           diff[2] = ((*connObjIt)->fromMatrix(objTrans).getOrigin()[2]) - virtPos[2];
-           (*connObjIt)->applyImpulse(diff);
-        }
-        else {
-            //stub
+            (*connObjIt)->applyForce(virtForce);
         }
     }
 }
+
+/**
+* calculates the force out of the distance between position of the connected object (the last) and the virtuose  and
+* puts it on the virtuose
+**/
 void virtuose::updateFeedbackForces() {
 
+    connObjIt = connObjects.end();
+    connObjIt--;
+    OSG::Matrix objTrans;
+    float f[6];
+    btVector3 objectPos;
+    btVector3 diff;
+
+     //virtuose
+    CHECK( virtGetAvatarPosition(vc, f) );
+
+    //connected object
+    //last object (affects the haptic)
+    objTrans = (*connObjIt)->getTransformation();
+    objectPos = ((*connObjIt)->fromMatrix(objTrans).getOrigin());
+
+    //diff = objectPos - virtPos
+    applyForce(Vec3f((float) objectPos.getX() - f[1],
+                     (float) objectPos.getY() - f[2],
+                     (float) objectPos.getZ() - f[0]) ,
+               Vec3f(0.0f,0.0f,0.0f));
 }
 
 

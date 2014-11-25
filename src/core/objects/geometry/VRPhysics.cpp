@@ -297,6 +297,16 @@ void VRPhysics::applyImpulse(OSG::Vec3f i) {
     body->setLinearVelocity(btVector3(i[0]/mass, i[1]/mass, i[2]/mass));
 }
 
+void VRPhysics::applyForce(OSG::Vec3f i) {
+   if (body == 0) return;
+   if (mass == 0) return;
+   body->applyCentralForce(btVector3(i[0], i[1], i[2]));
+}
+
+btVector3 VRPhysics::getForce() {
+    return body->getTotalForce();
+}
+
 void VRPhysics::updateTransformation(const OSG::Matrix& m) {
     if(body == 0) return;
     body->setWorldTransform(fromMatrix(m));

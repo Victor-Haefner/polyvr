@@ -85,6 +85,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setPhysicsActivationMode", (PyCFunction)VRPyTransform::setPhysicsActivationMode, METH_VARARGS, "Set the physics activation mode of the physics object (normal:1 , no deactivation:4, stay deactivated: 5)" },
     {"animate", (PyCFunction)VRPyTransform::animate, METH_VARARGS, "Animate object (currently only with a path: animate(path, duration, redirect) )" },
     {"animationStop", (PyCFunction)VRPyTransform::animationStop, METH_NOARGS, "Stop any running animation of this object" },
+    {"getPhysicsData", (PyCFunction)VRPyTransform::getPhysicsData, METH_NOARGS, "get Data to the physics" },
     {NULL}  /* Sentinel */
 };
 
@@ -323,5 +324,13 @@ PyObject* VRPyTransform::animate(VRPyTransform* self, PyObject *args) {
     self->obj->startPathAnimation(path->obj, t, o, b);
     Py_RETURN_TRUE;
 }
+
+PyObject* VRPyTransform::getPhysicsData(VRPyTransform* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::getPhysicsData: C Object is invalid"); return NULL; }
+    btVector3 a = self->obj->getPhysics()->getForce();
+    return toPyTuple(OSG::Vec3f(a.getX(),a.getY(),a.getZ()));
+}
+
+
 
 
