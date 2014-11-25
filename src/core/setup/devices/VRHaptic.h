@@ -28,6 +28,7 @@ class VRHaptic : public VRDevice {
         void setSimulationScales(float scale, float forces);
         void connectPhysicalized(VRPhysics* ph);
         void updateConnectedObjects();
+        void updateFeedbackForces();
 
         void setIP(string IP);
         string getIP();
