@@ -139,6 +139,8 @@ void VRDevice::change_slider(int key, float state) { // TODO: test min value
 }
 
 int VRDevice::key() { return sig_key; }
+string VRDevice::getMessage() { return message; }
+void VRDevice::setMessage(string s) { message = s; }
 
 void VRDevice::b_state(int key, int* b_state) { if (BStates.count(key)) *b_state = BStates[key]; }
 int VRDevice::b_state(int key) { if (BStates.count(key)) return BStates[key]; else return -1; }

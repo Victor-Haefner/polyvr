@@ -74,14 +74,16 @@ int server_answer_to_connection (void* param, struct MHD_Connection *connection,
     //--- respond to client ------
     struct MHD_Response* response = 0;
 
-    if (sad->pages->count(sad->path)) { // return local site
-        string spage = *(*sad->pages)[sad->path];
-        response = MHD_create_response_from_data (spage.size(), (void*) spage.c_str(), MHD_NO, MHD_YES);
-    } else { // return ressources
-        struct stat sbuf;
-        int fd = open(sad->path.c_str(), O_RDONLY);
-        if (fstat (fd, &sbuf) != 0) cout << "Did not find ressource: " << sad->path << endl;
-        else response = MHD_create_response_from_fd_at_offset (sbuf.st_size, fd, 0);
+    if (sad->path != "") {
+        if (sad->pages->count(sad->path)) { // return local site
+            string spage = *(*sad->pages)[sad->path];
+            response = MHD_create_response_from_data (spage.size(), (void*) spage.c_str(), MHD_NO, MHD_YES);
+        } else { // return ressources
+            struct stat sbuf;
+            int fd = open(sad->path.c_str(), O_RDONLY);
+            if (fstat (fd, &sbuf) != 0) cout << "Did not find ressource: " << sad->path << endl;
+            else response = MHD_create_response_from_fd_at_offset (sbuf.st_size, fd, 0);
+        }
     }
 
     //--- send response ----------

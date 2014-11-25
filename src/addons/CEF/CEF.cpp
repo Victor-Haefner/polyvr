@@ -69,7 +69,7 @@ void CEF::reload(string path) {
     for (auto i : instances) {
         string s = i->getSite();
         stringstream ss(s); vector<string> res; while (getline(ss, s, '/')) res.push_back(s); // split by ':'
-        if (res.size() == 0) return;
+        if (res.size() == 0) continue;
         if (res[res.size()-1] == path) i->reload();
     }
 }

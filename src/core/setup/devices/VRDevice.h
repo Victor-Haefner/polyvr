@@ -13,6 +13,7 @@ class VRSignal;
 class VRDevice : public VRIntersect, public VRAvatar, public VRName, public VRStorage {
     protected:
         int sig_key;
+        string message;
         string type;
         VRTransform* target;
 
@@ -53,6 +54,8 @@ class VRDevice : public VRIntersect, public VRAvatar, public VRName, public VRSt
         void updateSignals();
 
         int key();
+        string getMessage();
+        void setMessage(string s);
 
         string getType();
 
