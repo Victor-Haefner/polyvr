@@ -745,12 +745,13 @@ void VRGuiScene::on_menu_add_file() {
     if (scene == 0) return;
     VRGuiFile::gotoPath( scene->getWorkdir() );
     VRGuiFile::setCallbacks( sigc::mem_fun(*this, &VRGuiScene::on_collada_import_clicked) );
+    VRGuiFile::clearFilter();
     VRGuiFile::addFilter("All", "*");
     VRGuiFile::addFilter("COLLADA", "*.dae");
     VRGuiFile::addFilter("VRML", "*.wrl");
     VRGuiFile::addFilter("3DS", "*.3ds");
     VRGuiFile::addFilter("OBJ", "*.obj");
-    VRGuiFile::open(false, "Load");
+    VRGuiFile::open( "Load", "Load geometric data" );
 }
 
 void VRGuiScene::on_menu_add_light() {

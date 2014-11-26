@@ -21,7 +21,7 @@ void VRGuiFile::init() {
     dialog->set_action(Gtk::FILE_CHOOSER_ACTION_OPEN);
 }
 
-void VRGuiFile::open(bool folder, string b1, string b2) {
+void VRGuiFile::open(string mode, string title) {
     if (dialog == 0) init();
     setLabel("openFileWarning", "");
     dialog->show();
@@ -29,13 +29,17 @@ void VRGuiFile::open(bool folder, string b1, string b2) {
     Gtk::Button *bt1, *bt2;
     VRGuiBuilder()->get_widget("button9", bt1);
     VRGuiBuilder()->get_widget("button3", bt2);
-    bt1->set_label(b1);
-    bt2->set_label(b2);
+    bt1->set_label(mode);
+    bt2->set_label("Cancel");
+
+    dialog->set_title(title);
+
+    dialog->set_action(Gtk::FILE_CHOOSER_ACTION_OPEN);
+    if (mode == "Save") dialog->set_action(Gtk::FILE_CHOOSER_ACTION_SAVE);
 }
 
 void VRGuiFile::addFilter(string name, string pattern) {
     if (dialog == 0) init();
-    dialog->set_action(Gtk::FILE_CHOOSER_ACTION_OPEN);
 
     Gtk::FileFilter* filter = new Gtk::FileFilter();
     filter->set_name(name);
@@ -44,9 +48,16 @@ void VRGuiFile::addFilter(string name, string pattern) {
     dialog->add_filter(*filter);
 }
 
+void VRGuiFile::clearFilter() {
+    if (dialog == 0) return;
+    for (auto f : dialog->list_filters()) {
+        dialog->remove_filter(*f);
+        delete f;
+    }
+}
+
 void VRGuiFile::setFile(string file) {
     if (dialog == 0) init();
-    dialog->set_action(Gtk::FILE_CHOOSER_ACTION_SAVE);
     dialog->set_current_name(file);
 }
 
@@ -65,7 +76,6 @@ void VRGuiFile::close() {
     if (dialog == 0) init();
     dialog->hide();
     sigClose();
-    dialog->set_action(Gtk::FILE_CHOOSER_ACTION_OPEN);
 
     for (auto f : dialog->list_filters()) {
         dialog->remove_filter(*f);

@@ -22,6 +22,7 @@
 
 //TODO: refactoring
 #include "../gui/VRGuiBits.h"
+#include "../gui/VRGuiFile.h"
 #include "addons/CSG/VRPyCSG.h"
 #include "addons/RealWorld/VRPyRealWorld.h"
 #include "addons/RealWorld/traffic/VRPyTrafficSimulation.h"
@@ -150,8 +151,9 @@ initVRPyStdOut(void) {
 //  it should be possible to call the script with any parameter, the gui parameter should be used as default ones!
 
 static PyMethodDef VRScriptManager_module_methods[] = {
-	{"loadCollada", (PyCFunction)VRScriptManager::loadCollada, METH_VARARGS, "loads a collada file and returns a VR.Geometry node" },
-	{"stackCall", (PyCFunction)VRScriptManager::stackCall, METH_VARARGS, "Stacks a call to a py function - stackCall( function, delay )" },
+	{"loadGeometry", (PyCFunction)VRScriptManager::loadGeometry, METH_VARARGS, "loads a collada file and returns a VR.Geometry node" },
+	{"stackCall", (PyCFunction)VRScriptManager::stackCall, METH_VARARGS, "Stacks a call to a py function - stackCall( function, delay, [args] )" },
+	{"openFileDialog", (PyCFunction)VRScriptManager::openFileDialog, METH_VARARGS, "Open a file dialog - openFileDialog( onLoad, mode, title, default_path, filter )" },
     {NULL}  /* Sentinel */
 };
 
@@ -302,19 +304,16 @@ string VRScriptManager::getPyVRMethodDoc(string type, string method) {
 // Python methods
 // ==============
 
-PyObject* VRScriptManager::loadCollada(VRScriptManager* self, PyObject *args) {
-    PyObject* pyPath;
-    if (! PyArg_ParseTuple(args, "O", &pyPath)) return NULL;
-    string path = PyString_AsString(pyPath);
-    VRTransform *obj = VRSceneLoader::get()->load3DContent(path, 0);
+PyObject* VRScriptManager::loadGeometry(VRScriptManager* self, PyObject *args) {
+    VRTransform *obj = VRSceneLoader::get()->load3DContent( parseString(args), 0);
     return VRPyTypeCaster::cast(obj);
 }
 
-void execCall(PyObject* pyFkt, int i) {
+void execCall(PyObject* pyFkt, PyObject* pArgs, int i) {
     if (pyFkt == 0) return;
     if (PyErr_Occurred() != NULL) PyErr_Print();
 
-    PyObject* pArgs = PyTuple_New(0);
+    if (pArgs == 0) pArgs = PyTuple_New(0);
     PyObject_CallObject(pyFkt, pArgs);
     Py_XDECREF(pArgs);
     Py_DecRef(pyFkt);
@@ -323,15 +322,44 @@ void execCall(PyObject* pyFkt, int i) {
 }
 
 PyObject* VRScriptManager::stackCall(VRScriptManager* self, PyObject *args) {
-    PyObject* pyFkt;
+    PyObject *pyFkt, *pArgs = 0;
     float delay;
-    if (! PyArg_ParseTuple(args, "Of", &pyFkt, &delay)) return NULL;
+    if (PyTuple_Size(args) == 2) {
+        if (! PyArg_ParseTuple(args, "Of", &pyFkt, &delay)) return NULL;
+    } else if (! PyArg_ParseTuple(args, "OfO", &pyFkt, &delay, &pArgs)) return NULL;
     Py_IncRef(pyFkt);
 
-    VRFunction<int>* fkt = new VRFunction<int>( "pyExecCall", boost::bind(execCall, pyFkt, _1) );
+    if (pArgs != 0) {
+        std::string type = pArgs->ob_type->tp_name;
+        if (type == "list") pArgs = PyList_AsTuple(pArgs);
+    }
+
+    VRFunction<int>* fkt = new VRFunction<int>( "pyExecCall", boost::bind(execCall, pyFkt, pArgs, _1) );
 
     VRScene* scene = VRSceneManager::getCurrent();
     scene->addAnimation(0, delay, fkt, 0, 0, false);
+    Py_RETURN_TRUE;
+}
+
+void on_py_file_diag_cb(PyObject* pyFkt) {
+    string res = VRGuiFile::getRelativePath_toWorkdir();
+    PyObject *pArgs = PyTuple_New(1);
+    PyTuple_SetItem( pArgs, 0, PyString_FromString(res.c_str()) );
+    execCall( pyFkt, pArgs, 0 );
+}
+
+PyObject* VRScriptManager::openFileDialog(VRScriptManager* self, PyObject *args) {
+    PyObject *cb, *mode, *title, *default_path, *filter;
+    if (! PyArg_ParseTuple(args, "OOOOO", &cb, &mode, &title, &default_path, &filter)) return NULL;
+    Py_IncRef(cb);
+
+    VRGuiFile::clearFilter();
+    VRGuiFile::gotoPath( PyString_AsString(default_path) );
+    VRGuiFile::setCallbacks( sigc::bind<PyObject*>( sigc::ptr_fun( &on_py_file_diag_cb ), cb) );
+    VRGuiFile::open( PyString_AsString(mode), PyString_AsString(title) );
+
+
+
     Py_RETURN_TRUE;
 }
 
