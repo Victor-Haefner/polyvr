@@ -305,7 +305,11 @@ string VRScriptManager::getPyVRMethodDoc(string type, string method) {
 // ==============
 
 PyObject* VRScriptManager::loadGeometry(VRScriptManager* self, PyObject *args) {
-    VRTransform *obj = VRSceneLoader::get()->load3DContent( parseString(args), 0);
+    PyObject* path; int ignoreCache;
+    if (! PyArg_ParseTuple(args, "Oi", &path, &ignoreCache)) return NULL;
+    VRTransform* obj = VRSceneLoader::get()->load3DContent( PyString_AsString(path), 0, ignoreCache);
+    if (obj == 0) Py_RETURN_NONE;
+    obj->addAttachment("dynamicaly_generated", 0);
     return VRPyTypeCaster::cast(obj);
 }
 
@@ -355,10 +359,9 @@ PyObject* VRScriptManager::openFileDialog(VRScriptManager* self, PyObject *args)
 
     VRGuiFile::clearFilter();
     VRGuiFile::gotoPath( PyString_AsString(default_path) );
+    VRGuiFile::setFile( PyString_AsString(default_path) );
     VRGuiFile::setCallbacks( sigc::bind<PyObject*>( sigc::ptr_fun( &on_py_file_diag_cb ), cb) );
     VRGuiFile::open( PyString_AsString(mode), PyString_AsString(title) );
-
-
 
     Py_RETURN_TRUE;
 }
