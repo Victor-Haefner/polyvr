@@ -83,7 +83,7 @@ int VRPhysics::getCollisionGroup() { return collisionGroup; }
 int VRPhysics::getCollisionMask() { return collisionMask; }
 void VRPhysics::setActivationMode(int m) { activation_mode = m; update(); }
 int VRPhysics::getActivationMode() { return activation_mode; }
-void VRPhysics::setGhost(bool b) { ghost = b; }
+void VRPhysics::setGhost(bool b) { ghost = b; update(); }
 bool VRPhysics::isGhost() { return ghost; }
 OSG::Vec3f VRPhysics::toVec3f(btVector3 v) { return OSG::Vec3f(v[0], v[1], v[2]); }
 
