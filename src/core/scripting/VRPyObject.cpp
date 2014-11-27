@@ -62,7 +62,7 @@ PyMethodDef VRPyObject::methods[] = {
     {"getType", (PyCFunction)VRPyObject::getType, METH_NOARGS, "Return the object type string (such as \"Geometry\")" },
     {"duplicate", (PyCFunction)VRPyObject::duplicate, METH_NOARGS, "Duplicate object including subtree" },
     {"getChild", (PyCFunction)VRPyObject::getChild, METH_VARARGS, "Return child object with index i" },
-    {"getChildren", (PyCFunction)VRPyObject::getChildren, METH_NOARGS, "Return the list of children objects" },
+    {"getChildren", (PyCFunction)VRPyObject::getChildren, METH_VARARGS, "Return the list of children objects" },
     {"getParent", (PyCFunction)VRPyObject::getParent, METH_NOARGS, "Return parent object" },
     {"find", (PyCFunction)VRPyObject::find, METH_VARARGS, "Find node with given name (str) in scene graph below this node" },
     {"isPickable", (PyCFunction)VRPyObject::isPickable, METH_NOARGS, "Return if the object is pickable" },
@@ -177,14 +177,22 @@ PyObject* VRPyObject::getChild(VRPyObject* self, PyObject* args) {
     return VRPyTypeCaster::cast(c);
 }
 
-PyObject* VRPyObject::getChildren(VRPyObject* self) {
+PyObject* VRPyObject::getChildren(VRPyObject* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::getChild, Child is invalid"); return NULL; }
 
-    int N = self->obj->getChildrenCount();
-    PyObject* li = PyList_New(N);
-    for (int i=0; i<N; i++) {
-        OSG::VRObject* c = self->obj->getChild(i);
-        PyList_SetItem(li, i, VRPyTypeCaster::cast(c));
+    PyObject* ptype = 0; int doRecursive = 0;
+    if (PyTuple_Size(args) == 1) if (! PyArg_ParseTuple(args, "i", &doRecursive)) return NULL;
+    if (PyTuple_Size(args) == 2) if (! PyArg_ParseTuple(args, "iO", &doRecursive, &ptype)) return NULL;
+
+    string type;
+    if (ptype) type = PyString_AsString(ptype);
+
+    vector<OSG::VRObject*> objs = self->obj->getChildren(doRecursive, type);
+
+    PyObject* li = PyList_New(objs.size());
+    for (int i=0; i<objs.size(); i++) {
+        cout << objs[i]->getName() << endl;
+        PyList_SetItem(li, i, VRPyTypeCaster::cast(objs[i]));
     }
 
     return li;

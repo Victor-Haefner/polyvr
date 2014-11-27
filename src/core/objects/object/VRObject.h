@@ -124,6 +124,7 @@ class VRObject : public VRName {
 
         /** Returns the child by his position **/
         VRObject* getChild(int i);
+        vector<VRObject*> getChildren(bool recursive = false, string type = "");
 
         /** Returns the parent of this object **/
         VRObject* getParent();

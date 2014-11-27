@@ -19,7 +19,7 @@ struct VRPyObject : VRPyBaseT<OSG::VRObject> {
     static PyObject* isVisible(VRPyObject* self);
     static PyObject* getType(VRPyObject* self);
     static PyObject* getChild(VRPyObject* self, PyObject* args);
-    static PyObject* getChildren(VRPyObject* self);
+    static PyObject* getChildren(VRPyObject* self, PyObject* args);
     static PyObject* getParent(VRPyObject* self);
     static PyObject* find(VRPyObject* self, PyObject* args);
     static PyObject* isPickable(VRPyObject* self);
