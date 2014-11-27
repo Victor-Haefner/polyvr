@@ -36,6 +36,7 @@
 #include "addons/Classification/VRPySegmentation.h"
 #include "addons/Engineering/Chemistry/VRPyMolecule.h"
 #include "VRPyTypeCaster.h"
+#include "PolyVR.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -151,7 +152,8 @@ initVRPyStdOut(void) {
 //  it should be possible to call the script with any parameter, the gui parameter should be used as default ones!
 
 static PyMethodDef VRScriptManager_module_methods[] = {
-	{"loadGeometry", (PyCFunction)VRScriptManager::loadGeometry, METH_VARARGS, "loads a collada file and returns a VR.Geometry node" },
+	{"exit", (PyCFunction)VRScriptManager::exit, METH_NOARGS, "Terminate application" },
+	{"loadGeometry", (PyCFunction)VRScriptManager::loadGeometry, METH_VARARGS, "Loads a collada file and returns a VR.Geometry node" },
 	{"stackCall", (PyCFunction)VRScriptManager::stackCall, METH_VARARGS, "Stacks a call to a py function - stackCall( function, delay, [args] )" },
 	{"openFileDialog", (PyCFunction)VRScriptManager::openFileDialog, METH_VARARGS, "Open a file dialog - openFileDialog( onLoad, mode, title, default_path, filter )" },
     {NULL}  /* Sentinel */
@@ -304,13 +306,18 @@ string VRScriptManager::getPyVRMethodDoc(string type, string method) {
 // Python methods
 // ==============
 
+PyObject* VRScriptManager::exit(VRScriptManager* self) {
+    exitPolyVR();
+    Py_RETURN_TRUE;
+}
+
 PyObject* VRScriptManager::loadGeometry(VRScriptManager* self, PyObject *args) {
     PyObject* path; int ignoreCache;
     if (! PyArg_ParseTuple(args, "Oi", &path, &ignoreCache)) return NULL;
     VRTransform* obj = VRSceneLoader::get()->load3DContent( PyString_AsString(path), 0, ignoreCache);
     if (obj == 0) Py_RETURN_NONE;
     obj->addAttachment("dynamicaly_generated", 0);
-    return VRPyTypeCaster::cast(obj);
+    Py_RETURN_TRUE;
 }
 
 void execCall(PyObject* pyFkt, PyObject* pArgs, int i) {
