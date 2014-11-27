@@ -303,8 +303,42 @@ void VRPhysics::applyForce(OSG::Vec3f i) {
    body->applyCentralForce(btVector3(i[0], i[1], i[2]));
 }
 
+
 btVector3 VRPhysics::getForce() {
-    return body->getTotalForce();
+
+   //go through all contacts
+   int numManifolds = world->getDispatcher()->getNumManifolds();
+   btVector3 result(0.0f,0.0f,0.0f);
+
+    for (int i=0;i<numManifolds;i++)
+    {
+        btPersistentManifold* contactManifold = world->getDispatcher()->getManifoldByIndexInternal(i);
+        btRigidBody* obA = (btRigidBody*)(contactManifold->getBody0());
+        btRigidBody* obB = (btRigidBody*)(contactManifold->getBody1());
+
+
+        // ignore cases where "this" body is not involved
+        if ((obA != body) && (obB != body))
+            continue; // no more searching needed
+
+        //go through all contacts
+        int numContacts = contactManifold->getNumContacts();
+        for (int j=0;j<numContacts;j++)
+        {
+            btManifoldPoint& pt = contactManifold->getContactPoint(j);
+            //calculate the vector for feedback
+            if(obA == body) {
+                result += (pt.m_normalWorldOnB );
+            } else {
+              //  result += ((pt.getPositionWorldOnB() - pt.getPositionWorldOnA())) * pt.getAppliedImpulse();
+                result -= (pt.m_normalWorldOnB);
+            }
+            //printf("%f\n", pt.getAppliedImpulse()); // log to see the variation range of getAppliedImpulse and to chose the appropriate impulseThreshold
+
+        }
+
+    }
+    return result;
 }
 
 void VRPhysics::updateTransformation(const OSG::Matrix& m) {

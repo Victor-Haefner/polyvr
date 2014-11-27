@@ -159,31 +159,28 @@ void virtuose::updateConnectedObjects() {
 }
 
 /**
-* calculates the force out of the distance between position of the connected object (the last) and the virtuose  and
-* puts it on the virtuose
+* takes the resulting force of the last connected object and puts it on the virtuose
 **/
 void virtuose::updateFeedbackForces() {
 
     connObjIt = connObjects.end();
     connObjIt--;
-    OSG::Matrix objTrans;
+    if(connObjects.empty())
+        return;
     float f[6];
-    btVector3 objectPos;
     btVector3 diff;
 
      //virtuose
-    CHECK( virtGetAvatarPosition(vc, f) );
+    CHECK( virtGetForce(vc, f) );
+    btVector3 virtForce(f[1], f[2], f[0]);
 
     //connected object
     //last object (affects the haptic)
-    objTrans = (*connObjIt)->getTransformation();
-    objectPos = ((*connObjIt)->fromMatrix(objTrans).getOrigin());
-
-    //diff = objectPos - virtPos
-    applyForce(Vec3f((float) objectPos.getX() - f[1],
-                     (float) objectPos.getY() - f[2],
-                     (float) objectPos.getZ() - f[0]) ,
+    diff = ((*connObjIt)->getForce() * virtForce.length());
+    applyForce(Vec3f((float) diff.getX(),(float) diff.getY(),(float) diff.getZ()),
                Vec3f(0.0f,0.0f,0.0f));
+
+
 }
 
 

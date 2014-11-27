@@ -75,7 +75,7 @@ class VRPhysics : public OSG::VRStorage {
         void applyImpulse(OSG::Vec3f i);
         void applyForce(OSG::Vec3f i);
 
-        /**get the totalForce **/
+        /**get the resulting force (out of a collision, without the gravity) **/
         btVector3 getForce();
 
         static vector<string> getPhysicsShapes();
