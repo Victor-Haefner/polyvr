@@ -385,9 +385,15 @@ void VRPhysics::applyImpulse(OSG::Vec3f i) {
 }
 
 void VRPhysics::updateTransformation(const OSG::Matrix& m) {
-    if(body == 0) return;
-    body->setWorldTransform(fromMatrix(m));
-    body->activate();
+    if (body) {
+        body->setWorldTransform(fromMatrix(m));
+        body->activate();
+    }
+
+    if (ghost_body) {
+        ghost_body->setWorldTransform(fromMatrix(m));
+        ghost_body->activate();
+    }
 }
 
 OSG::Matrix VRPhysics::getTransformation() {
