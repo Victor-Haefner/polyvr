@@ -317,7 +317,7 @@ PyObject* VRScriptManager::loadGeometry(VRScriptManager* self, PyObject *args) {
     VRTransform* obj = VRSceneLoader::get()->load3DContent( PyString_AsString(path), 0, ignoreCache);
     if (obj == 0) Py_RETURN_NONE;
     obj->addAttachment("dynamicaly_generated", 0);
-    Py_RETURN_TRUE;
+    return VRPyTypeCaster::cast(obj);
 }
 
 void execCall(PyObject* pyFkt, PyObject* pArgs, int i) {

@@ -134,36 +134,29 @@ PyObject* VRPyObject::destroy(VRPyObject* self) {
 }
 
 PyObject* VRPyObject::addChild(VRPyObject* self, PyObject* args, PyObject *kwds) {
-    PyObject* child = NULL;
+    VRPyObject* child = NULL;
     if (! PyArg_ParseTuple(args, "O", &child)) return NULL;
-    if (child == NULL) {
-        PyErr_SetString(err, "Missing child parameter");
-        return NULL;
-    }
-
-    VRPyObject* _child = (VRPyObject*)child;
+    if (child == NULL) { PyErr_SetString(err, "Missing child parameter"); return NULL; }
 
     if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::addChild, Parent is invalid"); return NULL; }
-    if (_child->obj == 0) { PyErr_SetString(err, "VRPyObject::addChild, Child is invalid"); return NULL; }
+    if (child->obj == 0) { PyErr_SetString(err, "VRPyObject::addChild, Child is invalid"); return NULL; }
 
-    self->obj->addChild(_child->obj);
+    self->obj->addChild(child->obj);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyObject::switchParent(VRPyObject* self, PyObject* args, PyObject *kwds) {
-    PyObject* parent = NULL;
+    VRPyObject* parent = NULL;
     if (! PyArg_ParseTuple(args, "O", &parent)) return NULL;
     if (parent == NULL) {
         PyErr_SetString(err, "Missing parent parameter");
         return NULL;
     }
 
-    VRPyObject* _parent = (VRPyObject*)parent;
-
     if (self->obj == 0) { PyErr_SetString(err, "C Child is invalid"); return NULL; }
-    if (_parent->obj == 0) { PyErr_SetString(err, "C Parent is invalid"); return NULL; }
+    if (parent->obj == 0) { PyErr_SetString(err, "C Parent is invalid"); return NULL; }
 
-    self->obj->switchParent(_parent->obj);
+    self->obj->switchParent(parent->obj);
     Py_RETURN_TRUE;
 }
 
