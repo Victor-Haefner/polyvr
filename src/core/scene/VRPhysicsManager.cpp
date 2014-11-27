@@ -1,6 +1,7 @@
 #include "VRPhysicsManager.h"
 
 #include <btBulletDynamicsCommon.h>
+#include <BulletCollision/CollisionDispatch/btGhostObject.h>
 #include <iostream>
 #include <OpenSG/OSGGLUT.h>
 #include <OpenSG/OSGTriangleIterator.h>
@@ -26,6 +27,7 @@ VRPhysicsManager::VRPhysicsManager() {
     // The world.
     dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher,broadphase,solver,collisionConfiguration);
     dynamicsWorld->setGravity(btVector3(0,-10,0));
+    dynamicsWorld->getPairCache()->setInternalGhostPairCallback( new btGhostPairCallback() );
 
     updatePhysicsFkt = new VRFunction<int>("PhysicsUpdate", boost::bind(&VRPhysicsManager::updatePhysics, this));
 

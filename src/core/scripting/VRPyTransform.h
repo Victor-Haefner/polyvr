@@ -30,11 +30,14 @@ struct VRPyTransform : VRPyBaseT<OSG::VRTransform> {
 
     static PyObject* duplicate(VRPyTransform* self);
     static PyObject* physicalize(VRPyTransform* self, PyObject *args);
+    static PyObject* setGhost(VRPyTransform* self, PyObject *args);
     static PyObject* setPhysicsConstraintTo(VRPyTransform* self, PyObject *args);
     static PyObject* setMass(VRPyTransform* self, PyObject *args);
     static PyObject* setCollisionMargin(VRPyTransform* self, PyObject *args);
     static PyObject* setCollisionGroup(VRPyTransform* self, PyObject *args);
     static PyObject* setCollisionMask(VRPyTransform* self, PyObject *args);
+    static PyObject* setCollisionShape(VRPyTransform* self, PyObject *args);
+    static PyObject* getCollisions(VRPyTransform* self);
     static PyObject* setPhysicsActivationMode(VRPyTransform* self, PyObject *args);
     static PyObject* applyImpulse(VRPyTransform* self, PyObject *args);
 

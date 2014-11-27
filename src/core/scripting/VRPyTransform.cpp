@@ -76,17 +76,42 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setRotationConstraints", (PyCFunction)VRPyTransform::setRotationConstraints, METH_VARARGS, "Constraint the object's rotation - setRotationConstraints(xi, yi, zi)" },
     {"duplicate", (PyCFunction)VRPyTransform::duplicate, METH_NOARGS, "duplicate transform" },
     {"physicalize", (PyCFunction)VRPyTransform::physicalize, METH_VARARGS, "physicalize subtree - physicalize( physicalized , dynamic , concave )" },
+    {"setGhost", (PyCFunction)VRPyTransform::setGhost, METH_VARARGS, "Set the physics object to be a ghost object - setGhost(bool)" },
     {"attach", (PyCFunction)VRPyTransform::setPhysicsConstraintTo, METH_VARARGS, "create a constraint between this obejct and another - setPhysicsConstraintTo( Transform , Constraint )" },
     {"setMass", (PyCFunction)VRPyTransform::setMass, METH_VARARGS, "Set the mass of the physics object" },
     {"setCollisionMargin", (PyCFunction)VRPyTransform::setCollisionMargin, METH_VARARGS, "Set the collision margin of the physics object" },
     {"setCollisionGroup", (PyCFunction)VRPyTransform::setCollisionGroup, METH_VARARGS, "Set the collision group of the physics object" },
     {"setCollisionMask", (PyCFunction)VRPyTransform::setCollisionMask, METH_VARARGS, "Set the collision mask of the physics object" },
+    {"setCollisionShape", (PyCFunction)VRPyTransform::setCollisionShape, METH_VARARGS, "Set the collision mask of the physics object" },
+    {"getCollisions", (PyCFunction)VRPyTransform::getCollisions, METH_NOARGS, "Return the current collisions with other objects" },
     {"applyImpulse", (PyCFunction)VRPyTransform::applyImpulse, METH_VARARGS, "Apply impulse on the physics object" },
     {"setPhysicsActivationMode", (PyCFunction)VRPyTransform::setPhysicsActivationMode, METH_VARARGS, "Set the physics activation mode of the physics object (normal:1 , no deactivation:4, stay deactivated: 5)" },
     {"animate", (PyCFunction)VRPyTransform::animate, METH_VARARGS, "Animate object (currently only with a path: animate(path, duration, redirect) )" },
     {"animationStop", (PyCFunction)VRPyTransform::animationStop, METH_NOARGS, "Stop any running animation of this object" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyTransform::getCollisions(VRPyTransform* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setGhost, Object is invalid"); return NULL; }
+    auto cols = self->obj->getPhysics()->getCollisions();
+    PyObject* res = PyList_New(cols.size());
+    int i=0;
+    for (auto c : cols) {
+        PyObject* cres = PyTuple_New(3);
+        PyTuple_SetItem(cres, 0, toPyTuple(c.pos1));
+        PyTuple_SetItem(cres, 1, toPyTuple(c.pos2));
+        PyTuple_SetItem(cres, 2, toPyTuple(c.norm));
+        PyList_SetItem(res, i, cres);
+        i++;
+    }
+    return res;
+}
+
+PyObject* VRPyTransform::setGhost(VRPyTransform* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setGhost, Object is invalid"); return NULL; }
+    self->obj->getPhysics()->setGhost(parseBool(args));
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyTransform::animationStop(VRPyTransform* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::animationStop, Object is invalid"); return NULL; }
@@ -291,6 +316,14 @@ PyObject* VRPyTransform::setCollisionGroup(VRPyTransform* self, PyObject *args) 
     if (i > 15 or i < 0) { PyErr_SetString(err, "VRPyTransform::setCollisionGroup: only 15 groups/masks available, group 0 means no collisions at all"); return NULL; }
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setCollisionGroup: C Object is invalid"); return NULL; }
     self->obj->getPhysics()->setCollisionGroup(pow(2,i));
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyTransform::setCollisionShape(VRPyTransform* self, PyObject *args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setCollisionShape C Object is invalid"); return NULL; }
+    PyObject* shape; float param;
+    if (! PyArg_ParseTuple(args, "Of", &shape, &param)) return NULL;
+    self->obj->getPhysics()->setShape( PyString_AsString(shape), param );
     Py_RETURN_TRUE;
 }
 

@@ -4,6 +4,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRConstraint.h"
 #include <OpenSG/OSGTriangleIterator.h>
+#include <BulletCollision/CollisionDispatch/btGhostObject.h>
 
 struct VRPhysicsJoint {
     OSG::VRConstraint* constraint;
@@ -67,7 +68,7 @@ VRPhysics::~VRPhysics() {
 btRigidBody* VRPhysics::obj() { return body; }
 
 void VRPhysics::setPhysicalized(bool b) { physicalized = b; update(); }
-void VRPhysics::setShape(string s) { physicsShape = s; update(); }
+void VRPhysics::setShape(string s, float param) { physicsShape = s; shape_param = param; update(); }
 bool VRPhysics::isPhysicalized() { return physicalized; }
 string VRPhysics::getShape() { return physicsShape; }
 void VRPhysics::setDynamic(bool b) { dynamic = b; update(); }
@@ -82,6 +83,74 @@ int VRPhysics::getCollisionGroup() { return collisionGroup; }
 int VRPhysics::getCollisionMask() { return collisionMask; }
 void VRPhysics::setActivationMode(int m) { activation_mode = m; update(); }
 int VRPhysics::getActivationMode() { return activation_mode; }
+void VRPhysics::setGhost(bool b) { ghost = b; }
+bool VRPhysics::isGhost() { return ghost; }
+OSG::Vec3f VRPhysics::toVec3f(btVector3 v) { return OSG::Vec3f(v[0], v[1], v[2]); }
+
+vector<VRCollision> VRPhysics::getCollisions() {
+    vector<VRCollision> res;
+    if (!physicalized) return res;
+
+    if (!ghost) {
+        int numManifolds = world->getDispatcher()->getNumManifolds();
+        for (int i=0;i<numManifolds;i++) {
+            btPersistentManifold* contactManifold =  world->getDispatcher()->getManifoldByIndexInternal(i);
+            //btCollisionObject* obA = (btCollisionObject*)(contactManifold->getBody0());
+            //btCollisionObject* obB = (btCollisionObject*)(contactManifold->getBody1());
+
+            int numContacts = contactManifold->getNumContacts();
+            for (int j=0;j<numContacts;j++) {
+                btManifoldPoint& pt = contactManifold->getContactPoint(j);
+                if (pt.getDistance()<0.f) {
+                    VRCollision c;
+                    c.obj1 = vr_obj;
+                    // c.obj2 = // TODO
+                    c.pos1 = toVec3f( pt.getPositionWorldOnA() );
+                    c.pos2 = toVec3f( pt.getPositionWorldOnB() );
+                    c.norm = toVec3f( pt.m_normalWorldOnB );
+                    res.push_back(c);
+                }
+            }
+        }
+        return res;
+    }
+
+    // --------- ghost object --------------
+    btManifoldArray   manifoldArray;
+    btBroadphasePairArray& pairArray = ghost_body->getOverlappingPairCache()->getOverlappingPairArray();
+    int numPairs = pairArray.size();
+
+    for (int i=0;i<numPairs;i++) {
+        manifoldArray.clear();
+
+        const btBroadphasePair& pair = pairArray[i];
+
+        //unless we manually perform collision detection on this pair, the contacts are in the dynamics world paircache:
+        btBroadphasePair* collisionPair = world->getPairCache()->findPair(pair.m_pProxy0,pair.m_pProxy1);
+        if (!collisionPair)
+            continue;
+
+        if (collisionPair->m_algorithm)
+            collisionPair->m_algorithm->getAllContactManifolds(manifoldArray);
+
+        for (int j=0;j<manifoldArray.size();j++) {
+            btPersistentManifold* manifold = manifoldArray[j];
+            btScalar directionSign = manifold->getBody0() == ghost_body ? btScalar(-1.0) : btScalar(1.0);
+            for (int p=0;p<manifold->getNumContacts();p++) {
+                const btManifoldPoint&pt = manifold->getContactPoint(p);
+                if (pt.getDistance()<0.f) {
+                    VRCollision c;
+                    c.pos1 = toVec3f( pt.getPositionWorldOnA() );
+                    c.pos2 = toVec3f( pt.getPositionWorldOnB() );
+                    c.norm = toVec3f( pt.m_normalWorldOnB*directionSign );
+                    res.push_back(c);
+                }
+            }
+        }
+    }
+
+    return res;
+}
 
 vector<string> VRPhysics::getPhysicsShapes() {
     static vector<string> shapes;
@@ -102,18 +171,18 @@ void VRPhysics::update() {
     if (world == 0) return;
 
     if (body != 0) {
-        for (jointItr = joints.begin(); jointItr != joints.end(); jointItr++) {
-            if (jointItr->second->btJoint != 0) {
-                VRPhysicsJoint* joint = jointItr->second;
+        for (auto j : joints) {
+            if (j.second->btJoint != 0) {
+                VRPhysicsJoint* joint = j.second;
                 world->removeConstraint(joint->btJoint);
                 delete joint->btJoint;
                 joint->btJoint = 0;
             }
         }
 
-        for (jointItr = joints2.begin(); jointItr != joints2.end(); jointItr++) {
-            if (jointItr->first->joints.count(this) == 0) continue;
-            VRPhysicsJoint* joint = jointItr->first->joints[this];
+        for (auto j : joints2) {
+            if (j.first->joints.count(this) == 0) continue;
+            VRPhysicsJoint* joint = j.first->joints[this];
             if (joint->btJoint != 0) {
                 world->removeConstraint(joint->btJoint);
                 delete joint->btJoint;
@@ -124,6 +193,12 @@ void VRPhysics::update() {
         world->removeRigidBody(body);
         delete body;
         body = 0;
+    }
+
+    if (ghost_body != 0) {
+        world->removeCollisionObject(ghost_body);
+        delete ghost_body;
+        ghost_body = 0;
     }
 
     if (!physicalized) return;
@@ -144,9 +219,17 @@ void VRPhysics::update() {
     if (_mass != 0) shape->calculateLocalInertia(_mass, inertiaVector);
 
     btRigidBody::btRigidBodyConstructionInfo rbInfo( _mass, motionState, shape, inertiaVector );
-    body = new btRigidBody(rbInfo);
-    body->setActivationState(activation_mode);
-    world->addRigidBody(body, collisionGroup, collisionMask);
+    if (ghost) {
+        ghost_body = new btPairCachingGhostObject();
+        ghost_body->setCollisionShape( shape );
+        ghost_body->setUserPointer( vr_obj );
+        ghost_body->setCollisionFlags( btCollisionObject::CF_KINEMATIC_OBJECT | btCollisionObject::CF_NO_CONTACT_RESPONSE );
+        world->addCollisionObject(ghost_body, collisionGroup, collisionMask);
+    } else {
+        body = new btRigidBody(rbInfo);
+        body->setActivationState(activation_mode);
+        world->addRigidBody(body, collisionGroup, collisionMask);
+    }
 
     scene->physicalize(vr_obj);
     updateConstraints();
@@ -154,6 +237,7 @@ void VRPhysics::update() {
 
 
 btCollisionShape* VRPhysics::getBoxShape() {
+    if (shape_param > 0) return new btBoxShape( btVector3(shape_param, shape_param, shape_param) );
     float x,y,z;
     x=y=z=0;
 
@@ -176,6 +260,8 @@ btCollisionShape* VRPhysics::getBoxShape() {
 }
 
 btCollisionShape* VRPhysics::getSphereShape() {
+    if (shape_param > 0) return new btSphereShape( shape_param );
+
     float r2 = 0;
 
     vector<OSG::VRObject*> geos = vr_obj->getObjectListByType("Geometry");
