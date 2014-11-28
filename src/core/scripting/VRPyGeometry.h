@@ -42,6 +42,7 @@ struct VRPyGeometry : VRPyBaseT<OSG::VRGeometry> {
     static PyObject* setRandomColors(VRPyGeometry* self);
     static PyObject* makeUnique(VRPyGeometry* self);
     static PyObject* removeDoubles(VRPyGeometry* self, PyObject *args);
+    static PyObject* merge(VRPyGeometry* self, PyObject *args);
 };
 
 #endif // VRPYGEOMETRY_H_INCLUDED

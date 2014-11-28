@@ -17,6 +17,7 @@ struct VRPyObject : VRPyBaseT<OSG::VRObject> {
     static PyObject* hide(VRPyObject* self);
     static PyObject* show(VRPyObject* self);
     static PyObject* isVisible(VRPyObject* self);
+    static PyObject* setVisible(VRPyObject* self, PyObject* args);
     static PyObject* getType(VRPyObject* self);
     static PyObject* getChild(VRPyObject* self, PyObject* args);
     static PyObject* getChildren(VRPyObject* self, PyObject* args);

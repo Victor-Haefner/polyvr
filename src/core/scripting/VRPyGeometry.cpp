@@ -93,6 +93,7 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"getTexture", (PyCFunction)VRPyGeometry::getTexture, METH_NOARGS, "get texture filepath" },
     {"getMaterial", (PyCFunction)VRPyGeometry::getMaterial, METH_NOARGS, "get material" },
     {"duplicate", (PyCFunction)VRPyGeometry::duplicate, METH_NOARGS, "duplicate geometry" },
+    {"merge", (PyCFunction)VRPyGeometry::merge, METH_VARARGS, "Merge another geometry into this one" },
     {"setLit", (PyCFunction)VRPyGeometry::setLit, METH_VARARGS, "Set if geometry is lit" },
     {"setPrimitive", (PyCFunction)VRPyGeometry::setPrimitive, METH_VARARGS, "Set geometry to primitive" },
     {"setVideo", (PyCFunction)VRPyGeometry::setVideo, METH_VARARGS, "Set video texture - setVideo(path)" },
@@ -166,6 +167,14 @@ void feed1D(PyObject* o, T& vec) {
     }
 }
 
+
+PyObject* VRPyGeometry::merge(VRPyGeometry* self, PyObject *args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyGeometry::merge - Object is invalid"); return NULL; }
+	VRPyGeometry* geo;
+    if (!PyArg_ParseTuple(args, "O", &geo)) return NULL;
+    self->obj->merge(geo->obj);
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyGeometry::setRandomColors(VRPyGeometry* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyGeometry::setRandomColors - Object is invalid"); return NULL; }
@@ -293,12 +302,12 @@ PyObject* VRPyGeometry::setColors(VRPyGeometry* self, PyObject *args) {
     if (self->obj == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
     OSG::VRGeometry* geo = (OSG::VRGeometry*) self->obj;
 
-    OSG::GeoVec3fPropertyRecPtr cols = OSG::GeoVec3fProperty::create();
+    OSG::GeoVec4fPropertyRecPtr cols = OSG::GeoVec4fProperty::create();
     string tname = vec->ob_type->tp_name;
-    if (tname == "numpy.ndarray") feed2Dnp<OSG::GeoVec3fPropertyRecPtr, OSG::Vec3f>( vec, cols);
-    else feed2D<OSG::GeoVec3fPropertyRecPtr, OSG::Vec3f>( vec, cols);
+    if (tname == "numpy.ndarray") feed2Dnp<OSG::GeoVec4fPropertyRecPtr, OSG::Vec4f>( vec, cols);
+    else feed2D<OSG::GeoVec4fPropertyRecPtr, OSG::Vec4f>( vec, cols);
 
-    geo->setColors(cols);
+    geo->setColors(cols, true);
     Py_RETURN_TRUE;
 }
 

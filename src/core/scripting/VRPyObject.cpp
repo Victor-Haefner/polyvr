@@ -59,6 +59,7 @@ PyMethodDef VRPyObject::methods[] = {
     {"hide", (PyCFunction)VRPyObject::hide, METH_NOARGS, "Hide object" },
     {"show", (PyCFunction)VRPyObject::show, METH_NOARGS, "Show object" },
     {"isVisible", (PyCFunction)VRPyObject::isVisible, METH_NOARGS, "Return if object is visible" },
+    {"setVisible", (PyCFunction)VRPyObject::setVisible, METH_VARARGS, "Set the visibility of the object" },
     {"getType", (PyCFunction)VRPyObject::getType, METH_NOARGS, "Return the object type string (such as \"Geometry\")" },
     {"duplicate", (PyCFunction)VRPyObject::duplicate, METH_NOARGS, "Duplicate object including subtree" },
     {"getChild", (PyCFunction)VRPyObject::getChild, METH_VARARGS, "Return child object with index i" },
@@ -105,10 +106,14 @@ PyObject* VRPyObject::show(VRPyObject* self) {
 
 PyObject* VRPyObject::isVisible(VRPyObject* self) {
 	if (self->obj == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
-    if (self->obj->isVisible())
-		Py_RETURN_TRUE;
-	else
-		Py_RETURN_FALSE;
+    if (self->obj->isVisible()) Py_RETURN_TRUE;
+	else Py_RETURN_FALSE;
+}
+
+PyObject* VRPyObject::setVisible(VRPyObject* self, PyObject* args) {
+	if (self->obj == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
+    self->obj->setVisible( parseBool(args) );
+    Py_RETURN_TRUE;
 }
 
 PyObject* VRPyObject::getType(VRPyObject* self) {
@@ -191,7 +196,6 @@ PyObject* VRPyObject::getChildren(VRPyObject* self, PyObject* args) {
 
     PyObject* li = PyList_New(objs.size());
     for (int i=0; i<objs.size(); i++) {
-        cout << objs[i]->getName() << endl;
         PyList_SetItem(li, i, VRPyTypeCaster::cast(objs[i]));
     }
 
