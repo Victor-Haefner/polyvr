@@ -19,6 +19,7 @@
 #include "VRPyMaterial.h"
 #include "VRPyLod.h"
 #include <iostream>
+#include <algorithm>
 
 //TODO: refactoring
 #include "../gui/VRGuiBits.h"
@@ -235,6 +236,7 @@ vector<string> VRScriptManager::getPyVRTypes() {
         res.push_back(name);
     }
 
+    sort (res.begin(), res.end());
     return res;
 }
 
@@ -262,6 +264,7 @@ vector<string> VRScriptManager::getPyVRMethods(string type) {
         res.push_back(name);
     }
 
+    sort (res.begin(), res.end());
     return res;
 }
 
