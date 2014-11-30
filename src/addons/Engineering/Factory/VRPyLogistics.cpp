@@ -1,7 +1,7 @@
 #include "VRPyLogistics.h"
-#include "../../core/scripting/VRPyBaseT.h"
-#include "../../core/scripting/VRPyTransform.h"
-#include "../../core/scripting/VRPyObject.h"
+#include "core/scripting/VRPyBaseT.h"
+#include "core/scripting/VRPyTransform.h"
+#include "core/scripting/VRPyObject.h"
 
 
 // ------------------------------------------------------------------------ NODE

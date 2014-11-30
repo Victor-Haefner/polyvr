@@ -1,7 +1,7 @@
 #ifndef VRPYMECHANISM_H_INCLUDED
 #define VRPYMECHANISM_H_INCLUDED
 
-#include "../../core/scripting/VRPyObject.h"
+#include "core/scripting/VRPyObject.h"
 #include "VRMechanism.h"
 
 class VRPyGeometry;

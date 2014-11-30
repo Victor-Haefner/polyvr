@@ -37,6 +37,13 @@ struct MChange {
 
 class MPart {
     public:
+        enum STATE {
+            FREE,
+            ENGAGED,
+            ENGAGING,
+            DISENGAGING
+        };
+
         vector<MPart*> neighbors;
         vector<MPart*> group;
         VRGeometry* geo = 0;
@@ -45,6 +52,7 @@ class MPart {
         MChange change;
         Matrix reference;
         uint timestamp = 0;
+        STATE state = FREE;
 
         MPart();
         virtual ~MPart();
@@ -57,8 +65,11 @@ class MPart {
 
         void clearNeighbors();
         void addNeighbor(MPart* p);
+        bool hasNeighbor(MPart* p);
+        void computeState();
 
         void printChange();
+        void printNeighbors();
 
         virtual void computeChange();
         virtual void move();
@@ -92,8 +103,20 @@ class MThread : public MPart {
 
 class MChain : public MPart {
     public:
+        enum CSTATE {
+            WHOLE,
+            BROKEN
+        };
+
+        string dirs;
+        CSTATE cstate = WHOLE;
+
         MChain();
         ~MChain();
+
+        VRGeometry* init();
+        void set(string dirs);
+        void updateGeo();
 
         void move();
         void updateNeighbors(vector<MPart*> parts);
@@ -111,7 +134,7 @@ class VRMechanism {
         void add(VRGeometry* part, VRTransform* trans = 0);
         void clear();
         void update();
-        void addChain(float w, vector<VRGeometry*> geos);
+        VRGeometry* addChain(float w, vector<VRGeometry*> geos, string dirs);
 };
 
 OSG_END_NAMESPACE;
