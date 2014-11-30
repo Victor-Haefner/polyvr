@@ -224,6 +224,7 @@ void VRScriptManager::initPyModules() {
 
 vector<string> VRScriptManager::getPyVRTypes() {
     vector<string> res;
+    res.push_back("VR globals");
 
     PyObject* dict = PyModule_GetDict(pModVR);
     PyObject *key, *value;
@@ -236,29 +237,38 @@ vector<string> VRScriptManager::getPyVRTypes() {
         res.push_back(name);
     }
 
-    sort (res.begin(), res.end());
+    sort (res.begin()+1, res.end());
     return res;
 }
 
 vector<string> VRScriptManager::getPyVRMethods(string type) {
     vector<string> res;
-
     PyObject* dict = PyModule_GetDict(pModVR);
     PyObject *key, *value;
     Py_ssize_t pos = 0;
+
+    if (type == "VR globals") {
+        while (PyDict_Next(dict, &pos, &key, &value)) {
+            string name = PyString_AsString(key);
+            if (name[0] == '_' and name[1] == '_') continue;
+            if (PyCFunction_Check(value)) res.push_back(name);
+        }
+
+        sort (res.begin(), res.end());
+        return res;
+    }
 
     while (PyDict_Next(dict, &pos, &key, &value)) {
         if (!PyType_Check(value)) continue;
         string name = PyString_AsString(key);
         if (name != type) continue;
+        PyTypeObject*t = (PyTypeObject*)value;
+        dict = t->tp_dict;
         break;
     }
 
-    // value is the type object
-    PyTypeObject* t = (PyTypeObject*)value;
-    dict = t->tp_dict; pos = 0;
+    pos = 0;
     while (PyDict_Next(dict, &pos, &key, &value)) {
-        //if (!PyMethod_Check(value)) continue;
         string name = PyString_AsString(key);
         if (name[0] == '_' and name[1] == '_') continue;
         res.push_back(name);
@@ -275,6 +285,16 @@ string VRScriptManager::getPyVRMethodDoc(string type, string method) {
     PyObject *key, *tp, *meth;
     Py_ssize_t pos = 0;
 
+    if (type == "VR globals") {
+        while (PyDict_Next(dict, &pos, &key, &meth)) {
+            string name = PyString_AsString(key);
+            if (method != name) continue;
+            if (!PyCFunction_Check(meth)) continue;
+            PyCFunctionObject* cfo =  (PyCFunctionObject*)meth;
+            return cfo->m_ml->ml_doc;
+        }
+    }
+
     while (PyDict_Next(dict, &pos, &key, &tp)) {
         if (!PyType_Check(tp)) continue;
         string name = PyString_AsString(key);
@@ -282,25 +302,19 @@ string VRScriptManager::getPyVRMethodDoc(string type, string method) {
         break;
     }
 
-    // tp is the type object
     PyTypeObject* t = (PyTypeObject*)tp;
     dict = t->tp_dict; pos = 0;
-//PyMethodDescrObject::d_method::
     while (PyDict_Next(dict, &pos, &key, &meth)) {
         string name = PyString_AsString(key);
         if (method != name) continue;
 
         string ty = meth->ob_type->tp_name;
-        //cout << "\nMethod type " << ty << endl;
         if (ty != "method_descriptor") continue;
 
         PyMethodDescrObject* md = (PyMethodDescrObject*)meth;
         res = md->d_method->ml_doc;
         break;
     }
-
-    // meth is the method
-    ;
 
     return res;
 }

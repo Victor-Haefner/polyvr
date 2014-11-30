@@ -527,6 +527,7 @@ void VRGuiScripts::loadHelp() {
         gtk_tree_store_set (tree_store->gobj(), row.gobj(), 0, types[i].c_str(), -1);
         gtk_tree_store_set (tree_store->gobj(), row.gobj(), 1, "module", -1);
         gtk_tree_store_set (tree_store->gobj(), row.gobj(), 2, types[i].c_str(), -1);
+
         vector<string> methods = sm->getPyVRMethods(types[i]);
         for (uint j=0; j<methods.size(); j++) {
             itr2 = tree_store->append(itr->children());
