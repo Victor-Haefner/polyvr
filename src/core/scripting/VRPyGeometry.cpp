@@ -152,7 +152,23 @@ void feed2D(PyObject* o, T& vec) {
             pj = PyList_GetItem(pi, j);
             tmp[j] = PyFloat_AsDouble(pj);
         }
-        vec->addValue(tmp);
+        vec->push_back(tmp);
+    }
+}
+
+template<class T, class t>
+void feed2D_v2(PyObject* o, T& vec) {
+    PyObject *pi, *pj;
+    t tmp;
+    Py_ssize_t N = PyList_Size(o);
+
+    for (Py_ssize_t i=0; i<N; i++) {
+        pi = PyList_GetItem(o, i);
+        for (Py_ssize_t j=0; j<PyList_Size(pi); j++) {
+            pj = PyList_GetItem(pi, j);
+            tmp[j] = PyFloat_AsDouble(pj);
+        }
+        vec.push_back(tmp);
     }
 }
 
@@ -173,7 +189,11 @@ PyObject* VRPyGeometry::influence(VRPyGeometry* self, PyObject *args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyGeometry::influence - Object is invalid"); return NULL; }
 	PyObject *vP, *vV; int power;
     if (!PyArg_ParseTuple(args, "OOi", &vP, &vV, &power)) return NULL;
-    //self->obj->influence(vP, vV, power);
+    vector<OSG::Vec3f> pos;
+    vector<OSG::Vec3f> vals;
+    feed2D_v2<vector<OSG::Vec3f>, OSG::Vec3f>(vP, pos);
+    feed2D_v2<vector<OSG::Vec3f>, OSG::Vec3f>(vV, vals);
+    self->obj->influence(pos, vals, power);
     Py_RETURN_TRUE;
 }
 
