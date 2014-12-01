@@ -2,7 +2,7 @@
 
 #include "core/objects/material/VRMaterial.h"
 #include "core/utils/toString.h"
-#include "addons/Factory/VRNumberingEngine.h"
+#include "addons/Engineering/VRNumberingEngine.h"
 
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGShaderVariableOSG.h>

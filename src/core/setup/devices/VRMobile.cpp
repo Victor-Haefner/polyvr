@@ -18,6 +18,8 @@ void VRMobile::callback(HTTP_args* args) { // TODO: implement generic button tri
     if (args->params->count("button") == 0) return;
     if (args->params->count("state") == 0) return;
 
+    if (args->params->count("message")) setMessage((*args->params)["message"]);
+
     int button = toInt((*args->params)["button"]);
     int state = toInt((*args->params)["state"]);
 

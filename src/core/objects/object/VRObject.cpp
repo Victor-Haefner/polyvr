@@ -195,6 +195,22 @@ VRObject* VRObject::getAtPath(string path) {
     return res;
 }
 
+vector<VRObject*> VRObject::getChildren(bool recursive, string type) {
+    if (!recursive) {
+        if (type == "") return children;
+        vector<VRObject*> res;
+        for (auto c : children) if (c->getType() == type) res.push_back(c);
+        return res;
+    }
+
+    vector<VRObject*> res = getChildren(false, type);
+    for (auto c : children) {
+        vector<VRObject*> tmp = c->getChildren(true, type);
+        res.insert( res.end(), tmp.begin(), tmp.end() );
+    }
+    return res;
+}
+
 vector<VRObject*> VRObject::getObjectListByType(string _type) {
     vector<VRObject*> v;
     getObjectListByType(_type, v);
@@ -204,7 +220,7 @@ vector<VRObject*> VRObject::getObjectListByType(string _type) {
 void VRObject::getObjectListByType(string _type, vector<VRObject*>& list) {
     if (type == "Camera") return;
     if (type == _type) list.push_back(this);
-    for (uint i=0;i<children.size();i++) children[i]->getObjectListByType(_type, list);
+    for (auto c : children) c->getObjectListByType(_type, list);
 }
 
 VRObject* VRObject::find(NodeRecPtr n, string indent) {

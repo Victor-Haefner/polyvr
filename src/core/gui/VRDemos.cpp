@@ -314,7 +314,8 @@ void VRDemos::on_saveas_clicked() {
     VRGuiFile::gotoPath( scene->getWorkdir() );
     VRGuiFile::setFile( scene->getFile() );
     VRGuiFile::setCallbacks( sigc::mem_fun(*this, &VRDemos::on_diag_save_clicked) );
-    VRGuiFile::open( false, "Save" );
+    VRGuiFile::clearFilter();
+    VRGuiFile::open( "Save", "Save project as.." );
 }
 
 void VRDemos::on_diag_load_clicked() {
@@ -327,9 +328,10 @@ void VRDemos::on_diag_load_clicked() {
 void VRDemos::on_load_clicked() {
     VRGuiFile::setCallbacks( sigc::mem_fun(*this, &VRDemos::on_diag_load_clicked) );
     VRGuiFile::gotoPath( g_get_home_dir() );
+    VRGuiFile::clearFilter();
     VRGuiFile::addFilter("Project", "*.xml");
     VRGuiFile::addFilter("All", "*");
-    VRGuiFile::open(false, "Load");
+    VRGuiFile::open( "Load", "Load project" );
 }
 
 void VRDemos::on_diag_new_clicked() {
@@ -348,7 +350,8 @@ void VRDemos::on_new_clicked() {
     VRGuiFile::setCallbacks( sigc::mem_fun(*this, &VRDemos::on_diag_new_clicked) );
     VRGuiFile::gotoPath( g_get_home_dir() );
     VRGuiFile::setFile( "myApp.xml" );
-    VRGuiFile::open( false, "Create" );
+    VRGuiFile::clearFilter();
+    VRGuiFile::open( "Create", "Create new project" );
 }
 
 void VRDemos::toggleDemo(demoEntry* e) {

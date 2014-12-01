@@ -3,7 +3,7 @@
 #include "core/objects/VRGroup.h"
 #include "core/objects/VRLight.h"
 #include "core/objects/VRLightBeacon.h"
-#include "addons/CSG/CSGGeometry.h"
+#include "addons/Engineering/CSG/CSGGeometry.h"
 
 #include "VRScene.h"
 #include "core/utils/VRTimer.h"

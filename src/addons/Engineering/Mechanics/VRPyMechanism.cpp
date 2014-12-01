@@ -1,6 +1,7 @@
 #include "VRPyMechanism.h"
-#include "../../core/scripting/VRPyBaseT.h"
-#include "../../core/scripting/VRPyGeometry.h"
+#include "core/scripting/VRPyBaseT.h"
+#include "core/scripting/VRPyGeometry.h"
+#include "core/scripting/VRPyTypeCaster.h"
 
 
 template<> PyTypeObject VRPyBaseT<OSG::VRMechanism>::type = {
@@ -77,14 +78,13 @@ PyObject* VRPyMechanism::clear(VRPyMechanism* self) {
 
 PyObject* VRPyMechanism::addChain(VRPyMechanism* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyMechanism::addChain - Object is invalid"); return NULL; }
-    float w; PyObject *l;
-    if (! PyArg_ParseTuple(args, "fO", &w, &l)) return NULL;
+    float w; PyObject *l, *dirs;
+    if (! PyArg_ParseTuple(args, "fOO", &w, &l, &dirs)) return NULL;
     vector<PyObject*> objs = pyListToVector(l);
     vector<OSG::VRGeometry*> geos;
     for (auto o : objs) {
         VRPyGeometry* g = (VRPyGeometry*)o;
         geos.push_back( g->obj );
     }
-    self->obj->addChain(w,geos);
-    Py_RETURN_TRUE;
+    return VRPyTypeCaster::cast( self->obj->addChain(w, geos, PyString_AsString(dirs) ) );
 }

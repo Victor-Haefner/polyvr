@@ -527,6 +527,7 @@ void VRGuiScripts::loadHelp() {
         gtk_tree_store_set (tree_store->gobj(), row.gobj(), 0, types[i].c_str(), -1);
         gtk_tree_store_set (tree_store->gobj(), row.gobj(), 1, "module", -1);
         gtk_tree_store_set (tree_store->gobj(), row.gobj(), 2, types[i].c_str(), -1);
+
         vector<string> methods = sm->getPyVRMethods(types[i]);
         for (uint j=0; j<methods.size(); j++) {
             itr2 = tree_store->append(itr->children());
@@ -697,7 +698,7 @@ VRGuiScripts::VRGuiScripts() {
     setCellRendererCombo("treeviewcolumn30", "ScriptTriggerStates", tcols.state, sigc::mem_fun(*this, &VRGuiScripts::on_trigstate_edited) );
 
     // fill combolists
-    const char *arg_types[] = {"int", "float", "str", "VRPyObjectType", "VRPyTransformType", "VRPyGeometryType", "VRPyDeviceType", "VRPySocketType"};
+    const char *arg_types[] = {"int", "float", "str", "VRPyObjectType", "VRPyTransformType", "VRPyGeometryType", "VRPyDeviceType", "VRPyHapticType", "VRPySocketType"};
     const char *trigger_types[] = {"none", "on_scene_load", "on_timeout", "on_device", "on_socket"};
     const char *device_types[] = {"mouse", "keyboard", "flystick", "haptic", "mobile"}; // TODO: get from a list in devicemanager or something
     const char *trigger_states[] = {"Pressed", "Released"};

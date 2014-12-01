@@ -1,6 +1,6 @@
 #include "VRPyCSG.h"
-#include "../../core/scripting/VRPyTransform.h"
-#include "../../core/scripting/VRPyBaseT.h"
+#include "core/scripting/VRPyTransform.h"
+#include "core/scripting/VRPyBaseT.h"
 
 template<> PyTypeObject VRPyBaseT<OSG::CSGApp::CSGGeometry>::type = {
     PyObject_HEAD_INIT(NULL)

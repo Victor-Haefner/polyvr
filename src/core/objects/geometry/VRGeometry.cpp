@@ -141,9 +141,13 @@ void VRGeometry::makeUnique() {
     setMesh( dynamic_cast<Geometry*>( clone->getCore() ), source );
 }
 
+void VRGeometry::fixColorMapping() {
+    mesh->setIndex(mesh->getIndex(Geometry::PositionsIndex), Geometry::ColorsIndex);
+}
+
 void VRGeometry::setTypes(GeoIntegralProperty* types) { if (!meshSet) setMesh(Geometry::create()); mesh->setTypes(types); }
 void VRGeometry::setNormals(GeoVectorProperty* Norms) { if (!meshSet) setMesh(Geometry::create()); mesh->setNormals(Norms); }
-void VRGeometry::setColors(GeoVectorProperty* Colors) { if (!meshSet) setMesh(Geometry::create()); mesh->setColors(Colors); }
+void VRGeometry::setColors(GeoVectorProperty* Colors, bool fixMapping) { if (!meshSet) setMesh(Geometry::create()); mesh->setColors(Colors); if (fixMapping) fixColorMapping(); }
 void VRGeometry::setLengths(GeoIntegralProperty* lengths) { if (!meshSet) setMesh(Geometry::create()); mesh->setLengths(lengths); }
 void VRGeometry::setTexCoords(GeoVectorProperty* Tex, int i) {
     if (!meshSet) setMesh(Geometry::create());
@@ -164,6 +168,78 @@ void VRGeometry::setIndices(GeoIntegralProperty* Indices) {
     Length->addValue(Indices->size());
     mesh->setLengths(Length);
     mesh->setIndices(Indices);
+}
+
+GeoVec4fPropertyRecPtr convertColors(GeoVectorProperty* v) {
+    GeoVec4fPropertyRecPtr res = GeoVec4fProperty::create();
+    if (v == 0) return res;
+    if (v->size() == 0) return res;
+
+    return res;
+
+    int cN = sizeof(v[0]);
+    if (cN == sizeof(Vec4f)) res = (GeoVec4fProperty*)v;
+    if (cN == sizeof(Vec3f)) for (uint i=0; i<v->size(); i++) res->addValue( Vec4f(v->getValue<Vec3f>(i)) );
+    return res;
+}
+
+void VRGeometry::merge(VRGeometry* geo) {
+    if (!meshSet) {
+        setTypes(GeoUInt8PropertyRecPtr( GeoUInt8Property::create()) );
+        setNormals(GeoVec3fPropertyRecPtr( GeoVec3fProperty::create()) );
+        setColors(GeoVec4fPropertyRecPtr( GeoVec4fProperty::create()) );
+        setLengths(GeoUInt32PropertyRecPtr( GeoUInt32Property::create()) );
+        setIndices(GeoUInt32PropertyRecPtr( GeoUInt32Property::create()) );
+        setPositions(GeoPnt3fPropertyRecPtr( GeoPnt3fProperty::create()) );
+    }
+
+    Matrix M = getWorldMatrix();
+    M.invert();
+    M.mult( geo->getWorldMatrix() );
+
+    GeoVectorProperty *v1, *v2;
+    v1 = mesh->getPositions();
+    v2 = geo->mesh->getPositions();
+    int N = v1->size();
+    for (uint i=0; i<v2->size(); i++) v1->addValue(v2->getValue<Pnt3f>(i));
+
+    v1 = mesh->getNormals();
+    v2 = geo->mesh->getNormals();
+    for (uint i=0; i<v2->size(); i++) v1->addValue(v2->getValue<Vec3f>(i));
+
+    GeoVec4fPropertyRecPtr c1 = convertColors(mesh->getColors());
+    GeoVec4fPropertyRecPtr c2 = convertColors(geo->mesh->getColors());
+    for (uint i=0; i<c2->size(); i++) v1->addValue(c2->getValue(i));
+
+    GeoIntegralProperty *i1, *i2;
+    i1 = mesh->getTypes();
+    i2 = geo->mesh->getTypes();
+    for (uint i=0; i<i2->size(); i++) i1->addValue(i2->getValue(i));
+
+    /*cout << "types:";
+    for (uint i=0; i<i1->size(); i++) cout << " " << i1->getValue(i);
+    cout << endl;*/
+
+    i1 = mesh->getLengths();
+    i2 = geo->mesh->getLengths();
+    for (uint i=0; i<i2->size(); i++) i1->addValue(i2->getValue(i));
+
+    /*cout << "lengths:";
+    for (uint i=0; i<i1->size(); i++) cout << " " << i1->getValue(i);
+    cout << endl;*/
+
+    i1 = mesh->getIndices();
+    i2 = geo->mesh->getIndices();
+    for (uint i=0; i<i2->size(); i++) i1->addValue(i2->getValue(i) + N);
+
+    cout << "sizes:\n";
+    cout << " pos: " << mesh->getPositions()->size() << endl;
+    cout << " norm: " << mesh->getNormals()->size() << endl;
+    cout << " cols: " << mesh->getColors()->size() << endl;
+    cout << " types: " << mesh->getTypes()->size() << endl;
+    cout << " lengths: " << mesh->getLengths()->size() << endl;
+    cout << " inds: " << mesh->getIndices()->size() << endl;
+    cout << endl;
 }
 
 void VRGeometry::decimate(float f) {

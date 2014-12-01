@@ -1,7 +1,7 @@
 #ifndef PYVRLOGISTICS_H_INCLUDED
 #define PYVRLOGISTICS_H_INCLUDED
 
-#include "../../core/scripting/VRPyObject.h"
+#include "core/scripting/VRPyObject.h"
 #include "VRLogistics.h"
 
 struct FPyNode : VRPyBaseT<FNode> {

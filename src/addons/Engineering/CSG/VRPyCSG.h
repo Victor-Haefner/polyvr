@@ -1,7 +1,7 @@
 #ifndef VRPYCSG_H_INCLUDED
 #define VRPYCSG_H_INCLUDED
 
-#include "../../core/scripting/VRPyBase.h"
+#include "core/scripting/VRPyBase.h"
 #include "CSGGeometry.h"
 
 struct VRPyCSG : VRPyBaseT<OSG::CSGApp::CSGGeometry> {

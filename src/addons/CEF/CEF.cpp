@@ -66,10 +66,11 @@ void CEF::reload() {
 }
 
 void CEF::reload(string path) {
-    for (uint i=0; i<instances.size(); i++) {
-        string s = instances[i]->getSite();
+    for (auto i : instances) {
+        string s = i->getSite();
         stringstream ss(s); vector<string> res; while (getline(ss, s, '/')) res.push_back(s); // split by ':'
-        if (res[res.size()-1] == path) instances[i]->reload();
+        if (res.size() == 0) continue;
+        if (res[res.size()-1] == path) i->reload();
     }
 }
 

@@ -6,7 +6,7 @@
 #include "VRPyLod.h"
 #include "VRPyBaseT.h"
 #include "core/objects/object/VRObject.h"
-#include "addons/CSG/VRPyCSG.h"
+#include "addons/Engineering/CSG/VRPyCSG.h"
 
 VRPyTypeCaster::VRPyTypeCaster() {;}
 
