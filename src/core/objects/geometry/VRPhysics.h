@@ -87,6 +87,7 @@ class VRPhysics : public OSG::VRStorage {
 
         void updateTransformation(const OSG::Matrix& m);
         OSG::Matrix getTransformation();
+        btTransform getTransform();
         void setTransformation(btTransform t);
 
         void pause(bool b = true);
@@ -98,6 +99,12 @@ class VRPhysics : public OSG::VRStorage {
         btVector3 getNormForceWithConstrained();
         /**get the resulting force (out of a collision, without the gravity) of the given object**/
         btVector3 getForce();
+
+        btVector3 getLinearVelocity();
+        btVector3 getAngularVelocity();
+
+
+
 
 
         static vector<string> getPhysicsShapes();

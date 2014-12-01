@@ -235,6 +235,8 @@ void VRPhysics::update() {
 }
 
 
+
+
 btCollisionShape* VRPhysics::getBoxShape() {
     if (shape_param > 0) return new btBoxShape( btVector3(shape_param, shape_param, shape_param) );
     float x,y,z;
@@ -444,6 +446,19 @@ btVector3 VRPhysics::getNormForceWithConstrained() {
     return ret;
 }
 
+btVector3 VRPhysics::getLinearVelocity() {
+
+     if (body == 0) return btVector3(0.0f,0.0f,0.0f);
+     return body->getLinearVelocity();
+}
+
+btVector3 VRPhysics::getAngularVelocity() {
+
+     if (body == 0) return btVector3(0.0f,0.0f,0.0f);
+     return body->getAngularVelocity();
+}
+
+
 void VRPhysics::updateTransformation(const OSG::Matrix& m) {
     if (body) {
         body->setWorldTransform(fromMatrix(m));
@@ -456,12 +471,20 @@ void VRPhysics::updateTransformation(const OSG::Matrix& m) {
     }
 }
 
+btTransform VRPhysics::getTransform() {
+    if (body == 0) return btTransform();
+    btTransform t;
+    body->getMotionState()->getWorldTransform(t);
+    return t;
+}
+
 OSG::Matrix VRPhysics::getTransformation() {
     if (body == 0) return OSG::Matrix();
     btTransform t;
     body->getMotionState()->getWorldTransform(t);
     return fromTransform(t);
 }
+
 
 void VRPhysics::setTransformation(btTransform t) {
     if (body == 0) return;

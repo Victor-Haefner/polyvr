@@ -95,6 +95,11 @@ void virtuose::connect(string IP) {
     CHECK( virtSetObservationFrame(vc, identity) );
 	CHECK( virtSetPowerOn(vc, 1) );
 	//virtSetPeriodicFunction(vc, callback, &timestep, this);
+
+
+	float inertia[9] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
+	CHECK( virtAttachVO(vc, 1,inertia) );
+
 }
 
 void virtuose::disconnect() {
@@ -135,10 +140,7 @@ Matrix virtuose::getPose() {
 
 void virtuose::synchronizeObject(VRPhysics* ph) {
 
-    //if there is a force!!!!!
-    float f[6];
-    CHECK( virtGetForce(vc, f) );
-    ph->applyForce(Vec3f(f[1],f[2],f[3]));
+
 
 }
 
@@ -147,9 +149,34 @@ void virtuose::synchronizeObject(VRPhysics* ph) {
 **/
 void virtuose::applyObjectFeedback(VRPhysics* ph) {
 
-    btVector3 force = ph->getNormForceWithConstrained();
-    applyForce(Vec3f((float)force.getX(),(float)force.getY(),(float)force.getZ()),Vec3f(0.0f,0.0f,0.0f));
+    btTransform phTrans = ph->getTransform();
+    float p[7] = {phTrans.getOrigin().getY(),
+                phTrans.getOrigin().getZ(),
+                phTrans.getOrigin().getX(),
+                phTrans.getRotation().getX(),
+                phTrans.getRotation().getY(),
+                phTrans.getRotation().getZ(),
+                phTrans.getRotation().getW(),
+                };
+    CHECK( virtSetPosition(vc, p) );
+    btVector3 phLVel = ph->getLinearVelocity();
+    btVector3 phAVel = ph->getAngularVelocity();
+    float v[6] = {
+                    phLVel.getY(),
+                    phLVel.getZ(),
+                    phLVel.getX(),
+                    phAVel.getY(),
+                    phAVel.getZ(),
+                    phAVel.getX()
+                    };
 
+    CHECK( virtSetSpeed(vc, v) );
+
+
+    float f[6] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
+    CHECK( virtGetForce(vc, f) );
+
+    ph->applyForce(Vec3f(f[1],f[2],f[0]));
 
 }
 
