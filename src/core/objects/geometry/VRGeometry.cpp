@@ -12,6 +12,7 @@
 
 #include <OpenSG/OSGTriangleIterator.h>
 #include "core/scene/VRSceneLoader.h"
+#include "core/math/interpolator.h"
 #include "core/utils/toString.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/object/VRObjectT.h"
@@ -379,6 +380,15 @@ Vec3f VRGeometry::getAverageNormal() {
     normal *= 1./norms->size();
 
     return normal;
+}
+
+void VRGeometry::influence(vector<Vec3f> pnts, vector<Vec3f> values, int power) {
+    interpolator inp;
+    inp.setPoints(pnts);
+    inp.setValues(values);
+    GeoVectorPropertyRefPtr prop = mesh->getPositions();
+    vector<Vec3f> vec( prop->editData(), prop->editData() + prop->size()*sizeof(Vec3f) );
+    inp.evalVec(vec, power);
 }
 
 /** Returns the maximum position on the x, y or z axis **/

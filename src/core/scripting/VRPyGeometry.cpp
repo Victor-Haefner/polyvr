@@ -102,6 +102,7 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"setRandomColors", (PyCFunction)VRPyGeometry::setRandomColors, METH_NOARGS, "Set a random color for each vertex" },
     {"removeDoubles", (PyCFunction)VRPyGeometry::removeDoubles, METH_VARARGS, "Remove double vertices" },
     {"makeUnique", (PyCFunction)VRPyGeometry::makeUnique, METH_NOARGS, "Make the geometry data unique" },
+    {"influence", (PyCFunction)VRPyGeometry::influence, METH_VARARGS, "Pass a points and value vector to influence the geometry - influence([points,f3], [values,f3], int power)" },
     {NULL}  /* Sentinel */
 };
 
@@ -167,6 +168,14 @@ void feed1D(PyObject* o, T& vec) {
     }
 }
 
+
+PyObject* VRPyGeometry::influence(VRPyGeometry* self, PyObject *args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyGeometry::influence - Object is invalid"); return NULL; }
+	PyObject *vP, *vV; int power;
+    if (!PyArg_ParseTuple(args, "OOi", &vP, &vV, &power)) return NULL;
+    //self->obj->influence(vP, vV, power);
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyGeometry::merge(VRPyGeometry* self, PyObject *args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyGeometry::merge - Object is invalid"); return NULL; }
