@@ -25,7 +25,7 @@ class VRPhysics : public OSG::VRStorage {
         float mass;
         float collisionMargin;
         string physicsShape;
-        map<VRPhysics*, VRPhysicsJoint*> joints;
+        map<VRPhysics*, VRPhysicsJoint*> joints ;
         map<VRPhysics*, VRPhysicsJoint*> joints2;
         map<VRPhysics*, VRPhysicsJoint*>::iterator jointItr;
 
@@ -75,8 +75,11 @@ class VRPhysics : public OSG::VRStorage {
         void applyImpulse(OSG::Vec3f i);
         void applyForce(OSG::Vec3f i);
 
-        /**get the resulting force (out of a collision, without the gravity) **/
+        /**get the normalized resulting force (out of a collision, without the gravity) of this object with the constraints considered**/
+        btVector3 getNormForceWithConstrained();
+        /**get the resulting force (out of a collision, without the gravity) of the given object**/
         btVector3 getForce();
+
 
         static vector<string> getPhysicsShapes();
         static btTransform fromMatrix(const OSG::Matrix& m);

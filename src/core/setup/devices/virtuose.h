@@ -14,8 +14,6 @@ using namespace std;
 class virtuose {
     private:
         void* vc = 0; // virtuose context
-        list<VRPhysics*> connObjects; //to the virtuose connected objects
-        list<VRPhysics*> ::iterator connObjIt;
 
     public:
         virtuose();
@@ -29,11 +27,9 @@ class virtuose {
         void applyForce(Vec3f force, Vec3f torque);
         Matrix getPose();
 
-        //connect a physicalized Object to this virtuose and push it in the same direction the virtuose moves (via updateCOnnectedObjects)
-        void connectPhysicalized(VRPhysics* ph);
-        void disconnectPhysicalized();
-        void updateConnectedObjects();
-        void updateFeedbackForces();
+        //connect a physicalized Object to this virtuose and push it in the same direction the virtuose moves . apply forces( which affect the object )on the haptic.
+        void synchronizeObject(VRPhysics* ph);
+        void applyObjectFeedback(VRPhysics* ph);
 
 };
 

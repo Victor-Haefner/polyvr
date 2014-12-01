@@ -304,7 +304,9 @@ void VRPhysics::applyForce(OSG::Vec3f i) {
 }
 
 
+
 btVector3 VRPhysics::getForce() {
+    if (body == 0) return btVector3(0.0f,0.0f,0.0f);
 
    //go through all contacts
    int numManifolds = world->getDispatcher()->getNumManifolds();
@@ -317,7 +319,7 @@ btVector3 VRPhysics::getForce() {
         btRigidBody* obB = (btRigidBody*)(contactManifold->getBody1());
 
 
-        // ignore cases where "this" body is not involved
+        // ignore cases where body is not involved
         if ((obA != body) && (obB != body))
             continue; // no more searching needed
 
@@ -339,6 +341,21 @@ btVector3 VRPhysics::getForce() {
 
     }
     return result;
+}
+
+btVector3 VRPhysics::getNormForceWithConstrained() {
+    if (body == 0) return btVector3(0.0f,0.0f,0.0f);
+
+    btVector3 ret(0.0f,0.0f,0.0f);
+    ret = getForce();
+
+    for (jointItr = joints.begin(); jointItr != joints.end(); jointItr++) {
+        ret += jointItr->first->getForce();
+
+    }
+    //normalize
+    if(ret != btVector3(0.0f,0.0f,0.0f)) ret.normalize();
+    return ret;
 }
 
 void VRPhysics::updateTransformation(const OSG::Matrix& m) {

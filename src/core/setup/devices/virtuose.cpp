@@ -133,52 +133,22 @@ Matrix virtuose::getPose() {
 }
 
 
-void virtuose::connectPhysicalized(VRPhysics* ph) {
-    connObjects.push_back(ph);
-}
-void virtuose::disconnectPhysicalized() {
-    connObjects.pop_back();
-}
+void virtuose::synchronizeObject(VRPhysics* ph) {
 
-/**
-* updates the forces affecting the connected objects
-**/
-void virtuose::updateConnectedObjects() {
-
-    //virtuose
+    //if there is a force!!!!!
     float f[6];
     CHECK( virtGetForce(vc, f) );
-    Vec3f virtForce(f[1], f[2], f[0]);
+    ph->applyForce(Vec3f(f[1],f[2],f[3]));
 
-    //for all connected objects
-    for (connObjIt = connObjects.begin(); connObjIt != connObjects.end(); connObjIt++) {
-        if((*connObjIt)->isPhysicalized()) {
-            (*connObjIt)->applyForce(virtForce);
-        }
-    }
 }
 
 /**
 * takes the resulting force of the last connected object and puts it on the virtuose
 **/
-void virtuose::updateFeedbackForces() {
+void virtuose::applyObjectFeedback(VRPhysics* ph) {
 
-    connObjIt = connObjects.end();
-    connObjIt--;
-    if(connObjects.empty())
-        return;
-    float f[6];
-    btVector3 diff;
-
-     //virtuose
-    CHECK( virtGetForce(vc, f) );
-    btVector3 virtForce(f[1], f[2], f[0]);
-
-    //connected object
-    //last object (affects the haptic)
-    diff = ((*connObjIt)->getForce() * virtForce.length());
-    applyForce(Vec3f((float) diff.getX(),(float) diff.getY(),(float) diff.getZ()),
-               Vec3f(0.0f,0.0f,0.0f));
+    btVector3 force = ph->getNormForceWithConstrained();
+    applyForce(Vec3f((float)force.getX(),(float)force.getY(),(float)force.getZ()),Vec3f(0.0f,0.0f,0.0f));
 
 
 }
