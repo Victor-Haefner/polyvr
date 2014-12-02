@@ -137,13 +137,12 @@ bool checkGearThread(VRGear* g, VRThread* t, Matrix r1, Matrix r2) {
 }
 
 bool checkChainPart(MChain* c, MPart* p, Matrix r1, Matrix r2) {
-    auto pos = c->geo->getMesh()->getPositions();
     Vec3f pp = p->geo->getFrom();
-    for (int i=0; i<pos->size(); i++) {
-        Vec3f cp = pos->getValue<Pnt3f>(i).subZero() - pp;
-        if (cp.length() < 0.01) return true;
-    }
-    return false;
+    if (p->prim->getType() != "Gear") return false;
+    float r = ((VRGear*)p->prim)->radius();
+    bool res = c->onPolygon(pp, r);
+    //cout << " checkChainPart " << p->geo->getName() << " " << res << endl;
+    return res;
 }
 
 /*bool checkThreadNut(VRThread* t, VRNut* n, Matrix r1, Matrix r2) {
@@ -236,7 +235,8 @@ void MChain::set(string dirs) {
     this->dirs = dirs;
 }
 
-bool MChain::onPolygon(Vec3f p) {
+bool MChain::onPolygon(Vec3f p, float pd) {
+    //cout << " test on polygon\n";
     for (int i=0; i<polygon.size(); i+=2) {
         Vec3f p1 = polygon[i];
         Vec3f p2 = polygon[i+1];
@@ -244,24 +244,26 @@ bool MChain::onPolygon(Vec3f p) {
         Vec3f d1 = p-p1;
         Vec3f d2 = p-p2;
 
-        float dist;
+        float dist = 0;
+        float l2 = d.squareLength();
+        if (l2 == 0.0) dist = d1.length();
+        else {
+            float t = d1.dot(d)/l2;
+            cout << " t " << t;
+            if (t < 0.0) dist = d1.length();
+            else if (t > 1.0) dist = d2.length();
+            else dist = (p1 + t*d - p).length(); // distance from p to p1p2
+        }
 
-        /*// Return minimum distance between line segment vw and point p
-        const float l2 = d.squareLength();
-        if (l2 == 0.0) return d1.length();
-        // Consider the line extending the segment, parameterized as v + t (w - v).
-        // We find projection of point p onto the line.
-        // It falls where t = [(p-v) . (w-v)] / |w-v|^2
-        const float t = dot(p - v, w - v) / l2;
-        if (t < 0.0) return distance(p, v);       // Beyond the 'v' end of the segment
-        else if (t > 1.0) return distance(p, w);  // Beyond the 'w' end of the segment
-        const vec2 projection = v + t * (w - v);  // Projection falls on the segment
-        return distance(p, projection);*/
+        bool res = abs(dist-pd) < 0.01;
+        //cout << "  onPolygon " << res << " d " << dist << " r " << pd << " p: " << p << " p1: " << p1 << " p2: " << p2 << endl;
+        if (res) return true;
     }
     return false;
 }
 
 void MChain::updateGeo() {
+    //cout << "update chain\n";
     // update chain geometry
     GeoVec3fPropertyRecPtr pos = GeoVec3fProperty::create();
     GeoVec3fPropertyRecPtr norms = GeoVec3fProperty::create();
@@ -280,6 +282,8 @@ void MChain::updateGeo() {
         if (p2->getType() != "Gear") continue;
         VRGear* g1 = (VRGear*)p1;
         VRGear* g2 = (VRGear*)p2;
+
+        cout << " neighbor " << i << " " << neighbors[i]->geo->getName() << endl;
 
         int d1 = dirs[i] == 'r' ? -1 : 1;
         int d2 = dirs[j] == 'r' ? -1 : 1;
