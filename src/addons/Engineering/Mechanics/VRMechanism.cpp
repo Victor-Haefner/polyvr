@@ -236,6 +236,31 @@ void MChain::set(string dirs) {
     this->dirs = dirs;
 }
 
+bool MChain::onPolygon(Vec3f p) {
+    for (int i=0; i<polygon.size(); i+=2) {
+        Vec3f p1 = polygon[i];
+        Vec3f p2 = polygon[i+1];
+        Vec3f d = p2-p1;
+        Vec3f d1 = p-p1;
+        Vec3f d2 = p-p2;
+
+        float dist;
+
+        /*// Return minimum distance between line segment vw and point p
+        const float l2 = d.squareLength();
+        if (l2 == 0.0) return d1.length();
+        // Consider the line extending the segment, parameterized as v + t (w - v).
+        // We find projection of point p onto the line.
+        // It falls where t = [(p-v) . (w-v)] / |w-v|^2
+        const float t = dot(p - v, w - v) / l2;
+        if (t < 0.0) return distance(p, v);       // Beyond the 'v' end of the segment
+        else if (t > 1.0) return distance(p, w);  // Beyond the 'w' end of the segment
+        const vec2 projection = v + t * (w - v);  // Projection falls on the segment
+        return distance(p, projection);*/
+    }
+    return false;
+}
+
 void MChain::updateGeo() {
     // update chain geometry
     GeoVec3fPropertyRecPtr pos = GeoVec3fProperty::create();
@@ -245,31 +270,51 @@ void MChain::updateGeo() {
     GeoUInt32PropertyRecPtr lengths = GeoUInt32Property::create();
 
     // collect all polygon points
-    vector<Vec3f> pnts;
+    polygon.clear();
+    int j=0;
     for (int i=0; i<neighbors.size(); i++) {
-        //VRPrimitive* p = n->prim;
-        //if (p->getType() != "Gear") continue;
-        //VRGear* g = (VRGear*)p;
-        char dir = dirs[i]; // TODO: use dir for the right points
-        pnts.push_back(neighbors[i]->geo->getFrom());
+        j = (i+1) % neighbors.size(); // next
+        VRPrimitive* p1 = neighbors[i]->prim;
+        VRPrimitive* p2 = neighbors[j]->prim;
+        if (p1->getType() != "Gear") continue;
+        if (p2->getType() != "Gear") continue;
+        VRGear* g1 = (VRGear*)p1;
+        VRGear* g2 = (VRGear*)p2;
+
+        int d1 = dirs[i] == 'r' ? -1 : 1;
+        int d2 = dirs[j] == 'r' ? -1 : 1;
+
+        float r1 = g1->radius();
+        float r2 = g2->radius();
+
+        Vec3f c1 = neighbors[i]->geo->getFrom();
+        Vec3f c2 = neighbors[j]->geo->getFrom();
+        Vec3f d = c2-c1;
+
+        Vec3f t1 = neighbors[i]->geo->getDir();
+        Vec3f t2 = neighbors[j]->geo->getDir();
+        t1 = d.cross(t1);
+        t2 = d.cross(t2);
+        t1.normalize();
+        t2.normalize();
+
+        polygon.push_back(c1+t1*d1*r1);
+        polygon.push_back(c2+t2*d2*r2);
     }
-    if (neighbors.size() > 0) pnts.push_back(neighbors[0]->geo->getFrom());
 
     // draw polygon
-    Vec3f p0,p1;
-    if (pnts.size() > 0) p0 = pnts[0];
-    int j=0;
-    for (int i=1; i<pnts.size(); i++) {
-        p1 = pnts[i];
-        pos->addValue(p0);
+    j=0;
+    for (int i=0; i<polygon.size(); i+=2) {
+        Vec3f p1 = polygon[i];
+        Vec3f p2 = polygon[i+1];
         pos->addValue(p1);
+        pos->addValue(p2);
         norms->addValue(Vec3f(0,1,0));
         norms->addValue(Vec3f(0,1,0));
         cols->addValue(Vec4f(0,1,0,1));
         cols->addValue(Vec4f(0,1,0,1));
         inds->addValue(j++);
         inds->addValue(j++);
-        p0 = p1;
     }
     lengths->addValue(j);
 

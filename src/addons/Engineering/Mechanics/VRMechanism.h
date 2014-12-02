@@ -110,6 +110,7 @@ class MChain : public MPart {
 
         string dirs;
         CSTATE cstate = WHOLE;
+        vector<Vec3f> polygon;
 
         MChain();
         ~MChain();
@@ -117,6 +118,7 @@ class MChain : public MPart {
         VRGeometry* init();
         void set(string dirs);
         void updateGeo();
+        bool onPolygon(Vec3f p);
 
         void move();
         void updateNeighbors(vector<MPart*> parts);
