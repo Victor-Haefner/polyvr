@@ -382,13 +382,20 @@ Vec3f VRGeometry::getAverageNormal() {
     return normal;
 }
 
-void VRGeometry::influence(vector<Vec3f> pnts, vector<Vec3f> values, int power) {
+void VRGeometry::influence(vector<Vec3f> pnts, vector<Vec3f> values, int power, float color_code) {
     interpolator inp;
     inp.setPoints(pnts);
     inp.setValues(values);
-    GeoVectorPropertyRefPtr prop = mesh->getPositions();
-    vector<Vec3f> vec( prop->editData(), prop->editData() + prop->size()*sizeof(Vec3f) );
-    inp.evalVec(vec, power);
+    if (color_code > 0) {
+        if (mesh->getColors() == 0) {
+            GeoVec4fPropertyRecPtr cols = GeoVec4fProperty::create();
+            cols->resize(mesh->getPositions()->size());
+            setColors(cols);
+            fixColorMapping();
+        }
+        inp.evalVec(mesh->getPositions(), power, mesh->getColors(), color_code);
+    }
+    else inp.evalVec(mesh->getPositions(), power);
 }
 
 /** Returns the maximum position on the x, y or z axis **/

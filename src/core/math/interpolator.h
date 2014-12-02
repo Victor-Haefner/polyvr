@@ -6,6 +6,8 @@
 
 using namespace std;
 
+namespace OSG { class GeoVectorProperty; }
+
 class interpolator {
     private:
         vector<OSG::Vec3f> pnts;
@@ -16,7 +18,8 @@ class interpolator {
 
         void setPoints(vector<OSG::Vec3f> pnts);
         void setValues(vector<OSG::Vec3f> vals);
-        void eval(OSG::Vec3f& p, int power);
+        OSG::Vec3f eval(OSG::Vec3f& p, int power);
+        void evalVec(OSG::GeoVectorProperty* pin, int power, OSG::GeoVectorProperty* cvec = 0, float cscale = 0);
         void evalVec(vector<OSG::Vec3f>& pin, int power);
 };
 
