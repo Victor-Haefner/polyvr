@@ -123,6 +123,7 @@ void VRSceneLoader::load(string filename) {
         if (L > 30000000) return;
     }
 
+    if (filename.size() < 4) return;
     string extension = filename.substr(filename.size()-4, filename.size()-1);
 
     VRTimer timer;

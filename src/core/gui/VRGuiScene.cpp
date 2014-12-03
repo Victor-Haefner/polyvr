@@ -288,7 +288,7 @@ void updateObjectForms() {
     setExpanderSensivity("expander16", false);
 
     VRObject* obj = getSelected();
-    cout << " updateObjectForms " << obj << endl;
+    //cout << " updateObjectForms " << obj << endl;
     if (obj == 0) return;
 
     // set object label
@@ -820,10 +820,10 @@ void VRGuiScene::on_menu_add_csg() {
 }
 
 void VRGuiScene::on_collada_import_clicked() {
-    VRGuiFile::close();
     string rel_path = VRGuiFile::getRelativePath_toWorkdir();
     string path = VRGuiFile::getPath(); // absolute path
     cout << "Collada import: " << path << ", relative: " << rel_path << endl;
+    VRGuiFile::close();
 
     // import stuff
     VRObject* tmp = VRSceneLoader::get()->load3DContent(rel_path, getSelected(), cache_override);
