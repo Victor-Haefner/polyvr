@@ -50,6 +50,7 @@ class VRObject : public VRName {
         void _switchParent(NodeRecPtr parent);
 
         int findChild(VRObject* node);
+        void updateChildrenIndices();
 
         static void unitTest();
 

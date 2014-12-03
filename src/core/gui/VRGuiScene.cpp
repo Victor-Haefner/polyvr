@@ -57,15 +57,19 @@ VRGuiVectorEntry lodCEntry;
 void parseSGTree(VRObject* o);
 VRObject* getSelected() {
     if (selected == "") return 0;
-    VRObject* root = VRSceneManager::getCurrent()->getRoot();
+    VRScene* scene = VRSceneManager::getCurrent();
+    if (scene == 0) return 0;
+
+    cout << " search for: " << selected << endl;
+
+    VRObject* root = scene->getRoot();
     VRObject* res = root->getAtPath(selected);
 
+    cout << "  found: " << res->getName() << " at " << res->getPath() << endl;
+
     if (res == 0) {
-        VRScene* scene = VRSceneManager::getCurrent();
-        if (scene == 0) return res;
 
         tree_store->clear();
-        VRObject* root = scene->getRoot();
         parseSGTree( root );
 
         tree_view->expand_all();
@@ -288,13 +292,10 @@ void updateObjectForms() {
     setExpanderSensivity("expander16", false);
 
     VRObject* obj = getSelected();
-    //cout << " updateObjectForms " << obj << endl;
     if (obj == 0) return;
 
-    // set object label
-    Gtk::Label* lab;
-    VRGuiBuilder()->get_widget("current_object_lab", lab);
-    lab->set_text(obj->getName());
+    // set object label and path
+    setLabel( "current_object_lab", obj->getName() + "\npath " + obj->getPath() );
 
     if (obj->hasAttachment("global")) return;
 
@@ -698,6 +699,7 @@ void on_treeview_select(GtkTreeView* tv, gpointer user_data) {
     //string type = row.get_value(cols.type);
     updateObjectForms();
     selected = row.get_value(cols.obj);
+    cout << "selected clicked: " << selected << endl;
     selected_itr = iter;
     updateObjectForms();
 

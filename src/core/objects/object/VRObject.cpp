@@ -138,6 +138,7 @@ void VRObject::subChild(VRObject* child, bool osg) {
     if (target != -1) children.erase(children.begin() + target);
     if (child->parent == this) child->parent=0;
     child->graphChanged = VRGlobals::get()->CURRENT_FRAME;
+    updateChildrenIndices();
 }
 
 void VRObject::switchParent(VRObject* new_p) {
@@ -366,6 +367,12 @@ void VRObject::_switchParent(NodeRecPtr parent) {
 
     p_old->subChild(node);
     parent->addChild(node);
+}
+
+void VRObject::updateChildrenIndices() {
+    for (int i=0; i<children.size(); i++) {
+        children[i]->childIndex = i;
+    }
 }
 
 int VRObject::findChild(VRObject* node) {
