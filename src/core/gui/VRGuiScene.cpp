@@ -822,7 +822,7 @@ void VRGuiScene::on_menu_add_csg() {
 void VRGuiScene::on_collada_import_clicked() {
     string rel_path = VRGuiFile::getRelativePath_toWorkdir();
     string path = VRGuiFile::getPath(); // absolute path
-    cout << "Collada import: " << path << ", relative: " << rel_path << endl;
+    cout << "Data import: " << path << ", relative: " << rel_path << endl;
     VRGuiFile::close();
 
     // import stuff

@@ -282,13 +282,14 @@ void VRDemos::on_advanced_start() {
 }
 
 void VRDemos::saveCfg() {
-    ofstream file("examples/.cfg");
+    string path = VRSceneManager::get()->getOriginalWorkdir() + "/examples/.cfg";
+    ofstream file(path);
     for (auto d : demos) if (d.second->table == "favorites_tab") file << d.second->path << endl;
     file.close();
 }
 
 int VRDemos::loadCfg() {
-    ifstream file("examples/.cfg");
+    ifstream file( VRSceneManager::get()->getOriginalWorkdir() + "/examples/.cfg" );
     if (!file.is_open()) return 0;
 
     int N = 0;
