@@ -28,8 +28,7 @@ class virtuose {
         Matrix getPose();
 
         //connect a physicalized Object to this virtuose and push it in the same direction the virtuose moves . apply forces( which affect the object )on the haptic.
-        void synchronizeObject(VRPhysics* ph);
-        void applyObjectFeedback(VRPhysics* ph);
+        void updateHapticToObject(VRPhysics* ph);
 
 };
 

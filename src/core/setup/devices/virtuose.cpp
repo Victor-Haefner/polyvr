@@ -82,7 +82,17 @@ void virtuose::connect(string IP) {
     if (vc == 0) return;
 
     float timestep = 0.003;
-	CHECK( virtSetCommandType(vc, COMMAND_TYPE_IMPEDANCE) );
+
+    //COMMAND_TYPE_VIRTMECH: ohne attachVO: getForce immer 0, addForce funktioniert
+    //COMMAND_TYPE_VIRTMECH: mit attachVO: getForce immer 0, addForce funktioniert
+    //COMMAND_TYPE_ADMITTANCE: ohne attachVO: getForce immer 0, addForce funktioniert nicht
+    //COMMAND_TYPE_ADMITTANCE: mit attachVO: getForce immer 0, addForce funktioniert nicht
+    //COMMAND_TYPE_ARTICULAR: ohne attachVO: komplette blockierung
+    //COMMAND_TYPE_ARTICULAR: mit attachVO: komplette blockierung
+    //COMMAND_TYPE_ARTICULAR_IMPEDANCE: ohne attachVO: getForce immer 0, addForce funktioniert nicht
+    //COMMAND_TYPE_IMPEDANCE: ohne attachVO: getForce wrong command mode!, addForce funktioniert
+
+	CHECK( virtSetCommandType(vc, COMMAND_TYPE_VIRTMECH) );
 	CHECK( virtSetDebugFlags(vc, DEBUG_SERVO|DEBUG_LOOP) );
 	CHECK( virtSetIndexingMode(vc, INDEXING_ALL_FORCE_FEEDBACK_INHIBITION) );
 	CHECK( virtSetTimeStep(vc, timestep) );
@@ -96,9 +106,12 @@ void virtuose::connect(string IP) {
 	CHECK( virtSetPowerOn(vc, 1) );
 	//virtSetPeriodicFunction(vc, callback, &timestep, this);
 
+   float inertia[9] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
+    float vel[6] =  {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
+    CHECK(virtAttachVO(vc,0.1,inertia));
+    CHECK(virtSetPosition(vc, identity));
+    CHECK(virtSetSpeed(vc, vel));
 
-	float inertia[9] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
-	CHECK( virtAttachVO(vc, 1,inertia) );
 
 }
 
@@ -119,12 +132,13 @@ void virtuose::setSimulationScales(float translation, float forces) {
 
 void virtuose::applyForce(Vec3f force, Vec3f torque) {
     float f[6] = { force[2], force[0], force[1], torque[2], torque[0], torque[1] };
-    CHECK( virtSetForce(vc, f) );
+    CHECK( virtAddForce(vc, f) );
 }
 
 Matrix virtuose::getPose() {
     float f[6];
-    CHECK( virtGetAvatarPosition(vc, f) );
+    CHECK( virtGetPosition(vc, f) );
+    CHECK( virtSetPosition(vc, f) );
     //CHECK( virtGetPhysicalPosition(vc, f) );
 
     Matrix m;
@@ -138,45 +152,41 @@ Matrix virtuose::getPose() {
 }
 
 
-void virtuose::synchronizeObject(VRPhysics* ph) {
-
-
-
-}
 
 /**
-* takes the resulting force of the last connected object and puts it on the virtuose
+* takes the resulting force of given object and puts it on the virtuose
 **/
-void virtuose::applyObjectFeedback(VRPhysics* ph) {
-
-    btTransform phTrans = ph->getTransform();
-    float p[7] = {phTrans.getOrigin().getY(),
-                phTrans.getOrigin().getZ(),
-                phTrans.getOrigin().getX(),
-                phTrans.getRotation().getX(),
-                phTrans.getRotation().getY(),
-                phTrans.getRotation().getZ(),
-                phTrans.getRotation().getW(),
-                };
-    CHECK( virtSetPosition(vc, p) );
-    btVector3 phLVel = ph->getLinearVelocity();
-    btVector3 phAVel = ph->getAngularVelocity();
-    float v[6] = {
-                    phLVel.getY(),
-                    phLVel.getZ(),
-                    phLVel.getX(),
-                    phAVel.getY(),
-                    phAVel.getZ(),
-                    phAVel.getX()
-                    };
-
-    CHECK( virtSetSpeed(vc, v) );
+void virtuose::updateHapticToObject(VRPhysics* ph) {
 
 
-    float f[6] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
-    CHECK( virtGetForce(vc, f) );
+    float f[7];
+    CHECK(virtGetPosition(vc, f));
+    CHECK(virtSetPosition(vc, f));
 
-    ph->applyForce(Vec3f(f[1],f[2],f[0]));
+
+    float v[6] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
+    CHECK(virtGetSpeed(vc, v));
+    CHECK(virtSetSpeed(vc, v));
+
+    float force[6] = {0.0f,-1.0f,0.0f,0.0f,0.0f,0.0f};
+    //CHECK(virtAddForce(vc, force));
+
+    CHECK(virtGetForce(vc, force));
+    Vec3f imp(force[2]* 100.0f,force[1]* 100.0f,force[0]* 100.0f);
+    ph->applyForce(imp);
+
+
+
+    //put applied force of haptic on the object
+   // CHECK(virtGetForce(vc,force));
+    //ph->applyForce(Vec3f(force[1] * 100.0f, force[2]* 100.0f, force[0]* 100.0f));
+
+    //get force resulting out of collisions
+
+
+    // * applied force on the haptic
+
+    //apply force on haptic
 
 }
 

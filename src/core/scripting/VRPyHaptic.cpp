@@ -2,6 +2,8 @@
 #include "VRPyDevice.h"
 #include "VRPyBaseT.h"
 
+#include "VRPyTransform.h"
+
 template<> PyTypeObject VRPyBaseT<OSG::VRHaptic>::type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
@@ -51,8 +53,7 @@ PyMemberDef VRPyHaptic::members[] = {
 PyMethodDef VRPyHaptic::methods[] = {
     {"setSimulationScales", (PyCFunction)VRPyHaptic::setSimulationScales, METH_VARARGS, "Set force on haptic device" },
     {"setForce", (PyCFunction)VRPyHaptic::setForce, METH_VARARGS, "Set force on haptic device" },
-    {"synchronizeObject", (PyCFunction)VRPyHaptic::synchronizeObject, METH_VARARGS, "synchronize the position of a physicalized object with the haptic's avatar " },
-    {"applyObjectFeedback", (PyCFunction)VRPyHaptic::applyObjectFeedback, METH_VARARGS, "update the forces provided by the given object on the haptic" },
+    {"updateHapticToObject", (PyCFunction)VRPyHaptic::updateHapticToObject, METH_VARARGS, "update the forces provided by the given object on the haptic and vice versa" },
     {NULL}  /* Sentinel */
 };
 
@@ -73,20 +74,11 @@ PyObject* VRPyHaptic::setForce(VRPyHaptic* self, PyObject* args) {
 }
 
 
-PyObject* VRPyHaptic::synchronizeObject(VRPyHaptic* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyHaptic::connectPhysicalized - Object is invalid"); return NULL; }
-    VRPhysics* tr;
+PyObject* VRPyHaptic::updateHapticToObject(VRPyHaptic* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyHaptic::updateHapticToObject - Object is invalid"); return NULL; }
+    VRPyTransform* tr;
     if (! PyArg_ParseTuple(args, "O", &tr)) return NULL;
-    self->obj->synchronizeObject(tr);
-    Py_RETURN_TRUE;
-}
-
-
-PyObject* VRPyHaptic::applyObjectFeedback(VRPyHaptic* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyHaptic::updateFeedbackForces - Object is invalid"); return NULL; }
-    VRPhysics* tr;
-    if (! PyArg_ParseTuple(args, "O", &tr)) return NULL;
-    self->obj->applyObjectFeedback(tr);
+    self->obj->updateHapticToObject(tr->obj->getPhysics());
     Py_RETURN_TRUE;
 }
 

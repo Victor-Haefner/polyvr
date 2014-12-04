@@ -396,39 +396,12 @@ void VRPhysics::applyForce(OSG::Vec3f i) {
 btVector3 VRPhysics::getForce() {
     if (body == 0) return btVector3(0.0f,0.0f,0.0f);
 
-   //go through all contacts
-   int numManifolds = world->getDispatcher()->getNumManifolds();
-   btVector3 result(0.0f,0.0f,0.0f);
-
-    for (int i=0;i<numManifolds;i++)
-    {
-        btPersistentManifold* contactManifold = world->getDispatcher()->getManifoldByIndexInternal(i);
-        btRigidBody* obA = (btRigidBody*)(contactManifold->getBody0());
-        btRigidBody* obB = (btRigidBody*)(contactManifold->getBody1());
-
-
-        // ignore cases where body is not involved
-        if ((obA != body) && (obB != body))
-            continue; // no more searching needed
-
-        //go through all contacts
-        int numContacts = contactManifold->getNumContacts();
-        for (int j=0;j<numContacts;j++)
-        {
-            btManifoldPoint& pt = contactManifold->getContactPoint(j);
-            //calculate the vector for feedback
-            if(obA == body) {
-                result += (pt.m_normalWorldOnB );
-            } else {
-              //  result += ((pt.getPositionWorldOnB() - pt.getPositionWorldOnA())) * pt.getAppliedImpulse();
-                result -= (pt.m_normalWorldOnB);
-            }
-            //printf("%f\n", pt.getAppliedImpulse()); // log to see the variation range of getAppliedImpulse and to chose the appropriate impulseThreshold
-
-        }
+    //go through all contacts
+    vector<VRCollision> colls = getCollisions();
+    for(vector<VRCollision>::iterator it = colls.begin(); it != colls.end(); ++it) {
 
     }
-    return result;
+
 }
 
 btVector3 VRPhysics::getNormForceWithConstrained() {
