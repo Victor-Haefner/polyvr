@@ -44,7 +44,7 @@ class MPart {
             DISENGAGING
         };
 
-        vector<MPart*> neighbors;
+        map<MPart*, int> neighbors;
         vector<MPart*> group;
         VRGeometry* geo = 0;
         VRTransform* trans = 0;
@@ -61,10 +61,10 @@ class MPart {
         void apply();
         void setBack();
         bool propagateMovement();
-        bool propagateMovement(MChange c);
+        bool propagateMovement(MChange c, int flip);
 
         void clearNeighbors();
-        void addNeighbor(MPart* p);
+        void addNeighbor(MPart* p, int flip);
         bool hasNeighbor(MPart* p);
         void computeState();
 

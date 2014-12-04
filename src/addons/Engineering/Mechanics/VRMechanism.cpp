@@ -43,19 +43,19 @@ MPart* MPart::make(VRGeometry* g, VRTransform* t) {
 
 void MPart::clearNeighbors() {
     for (auto n : neighbors) {
-        //if (n->prim == 0) continue; // TODO: chain ?
-        n->neighbors.erase( remove( begin(n->neighbors), end(n->neighbors), this ), end(n->neighbors) );
+        //n->neighbors.erase( remove( begin(n->neighbors), end(n->neighbors), this ), end(n->neighbors) );
+        n.first->neighbors.erase(this);
     }
     neighbors.clear();
 }
 
-void MPart::addNeighbor(MPart* p) {
-    neighbors.push_back(p);
-    p->neighbors.push_back(this);
+void MPart::addNeighbor(MPart* p, int flip) {
+    neighbors[p] = flip;
+    p->neighbors[this] = flip;
 }
 
 bool MPart::hasNeighbor(MPart* p) {
-    for (auto n : neighbors) if (n == p) return true;
+    for (auto n : neighbors) if (n.first == p) return true;
     return false;
 }
 
@@ -80,13 +80,13 @@ bool MChange::same(MChange c) {
 bool MPart::propagateMovement() { // recursion
     bool res = true;
     for (auto n : neighbors) {
-        res = n->propagateMovement(change) ? res : false;
+        res = n.first->propagateMovement(change, n.second) ? res : false;
     }
     return res;
 }
 
-bool MPart::propagateMovement(MChange c) { // change
-    c.flip();
+bool MPart::propagateMovement(MChange c, int flip) { // change
+    if (flip == -1) c.flip();
     if (change.time == c.time) {
         return change.same(c);
     } // TODO: either it is the same change or another change in the same timestep..
@@ -110,7 +110,7 @@ void MPart::printChange() {
 void MPart::printNeighbors() {
     cout << geo->getName();
     cout << " neighbors: ";
-    for (auto n : neighbors) cout << " " << n->geo->getName();
+    for (auto n : neighbors) cout << " " << n.first->geo->getName();
     cout << endl;
 }
 
@@ -133,9 +133,9 @@ bool checkGearThread(VRGear* g, VRThread* t, Matrix r1, Matrix r2) {
     return true;
 }
 
-bool checkChainPart(MChain* c, MPart* p, Matrix r1, Matrix r2) {
+int checkChainPart(MChain* c, MPart* p, Matrix r1, Matrix r2) {
     Vec3f pp = p->geo->getFrom();
-    if (p->prim->getType() != "Gear") return false;
+    if (p->prim->getType() != "Gear") return 0;
     float r = ((VRGear*)p->prim)->radius();
     Vec3f dir = p->geo->getDir();
 
@@ -143,20 +143,20 @@ bool checkChainPart(MChain* c, MPart* p, Matrix r1, Matrix r2) {
 
     Vec3f pc, sd;
     c->toPolygon(pp, pc, sd); // point, vec to nearest seg, dir of seg
-    bool res = ( abs(pc.squareLength() - r*r) < eps );
-
-    if (res) {
+    bool touch = ( abs(pc.squareLength() - r*r) < eps );
+    if (touch) {
         pc.normalize();
         sd.normalize();
         dir.normalize();
         float n = pc.cross(dir).dot(sd);
-        if (abs(n) < (1-eps)) return false;
+        if (abs(n) < (1-eps)) return 0;
 
         char d = n > 0 ? 'r' : 'l';
         c->addDir(d);
+        return n > 0 ? -1 : 1;
     }
 
-    return res;
+    return 0;
 }
 
 /*bool checkThreadNut(VRThread* t, VRNut* n, Matrix r1, Matrix r2) {
@@ -170,7 +170,7 @@ VRThread* MThread::thread() { return (VRThread*)prim; }
 
 void MPart::move() {}
 void MGear::move() { trans->rotate(change.dx/gear()->radius(), Vec3f(0,0,1)); }
-void MChain::move() { /*if (geo == 0) return; updateGeo();*/ }
+void MChain::move() { if (geo == 0) return; updateGeo(); }
 void MThread::move() { trans->rotate(change.a, Vec3f(0,0,1)); }
 
 void MPart::computeChange() {
@@ -202,17 +202,17 @@ void MGear::updateNeighbors(vector<MPart*> parts) {
         VRPrimitive* p = part->prim;
 
         if (p == 0) { // chain
-            bool b = checkChainPart((MChain*)part, this, reference, part->reference);
-            if (b) addNeighbor(part);
+            int b = checkChainPart((MChain*)part, this, reference, part->reference);
+            if (b) addNeighbor(part, b);
             continue;
         }
         if (p->getType() == "Gear") {
             bool b = checkGearGear(gear(), (VRGear*)p, reference, part->reference);
-            if (b) addNeighbor(part);
+            if (b) addNeighbor(part, -1);
         }
         if (p->getType() == "Thread") {
             bool b = checkGearThread(gear(), (VRThread*)p, reference, part->reference);
-            if (b) addNeighbor(part);
+            if (b) addNeighbor(part, 1);
         }
     }
 }
@@ -223,7 +223,8 @@ void MChain::updateNeighbors(vector<MPart*> parts) {
     for (auto p : parts) {
         if (p == this) continue;
         if (p->prim->getType() == "Gear") {
-            if (checkChainPart(this, p, reference, p->reference) ) addNeighbor(p);
+            int b = checkChainPart(this, p, reference, p->reference);
+            if (b) addNeighbor(p,b);
         }
     }
 }
@@ -235,7 +236,7 @@ void MThread::updateNeighbors(vector<MPart*> parts) {
         if (part == this) continue;
         VRPrimitive* p = part->geo->getPrimitive();
         if (p->getType() == "Gear") {
-            if (checkGearThread((VRGear*)p, self, reference, part->reference) ) addNeighbor(part);
+            if (checkGearThread((VRGear*)p, self, reference, part->reference) ) addNeighbor(part,1);
         }
     }
 }
@@ -283,14 +284,16 @@ void MChain::updateGeo() {
     GeoUInt32PropertyRecPtr lengths = GeoUInt32Property::create();
 
     // collect all polygon points
-    printNeighbors();
-
+    //printNeighbors();
     polygon.clear();
+    vector<MPart*> nbrs;
+    for (auto n : neighbors) nbrs.push_back(n.first);
+
     int j=0;
-    for (int i=0; i<neighbors.size(); i++) {
-        j = (i+1) % neighbors.size(); // next
-        VRPrimitive* p1 = neighbors[i]->prim;
-        VRPrimitive* p2 = neighbors[j]->prim;
+    for (int i=0; i<nbrs.size(); i++) {
+        j = (i+1) % nbrs.size(); // next
+        VRPrimitive* p1 = nbrs[i]->prim;
+        VRPrimitive* p2 = nbrs[j]->prim;
         if (p1->getType() != "Gear") continue;
         if (p2->getType() != "Gear") continue;
         VRGear* g1 = (VRGear*)p1;
@@ -300,8 +303,8 @@ void MChain::updateGeo() {
         int d2 = dirs[j] == 'r' ? -1 : 1;
         int z1 = -1*d1*d2;
 
-        Vec3f c1 = neighbors[i]->geo->getFrom();
-        Vec3f c2 = neighbors[j]->geo->getFrom();
+        Vec3f c1 = nbrs[i]->geo->getFrom();
+        Vec3f c2 = nbrs[j]->geo->getFrom();
         Vec3f D = c2-c1;
         float d = D.length();
 
@@ -328,15 +331,15 @@ void MChain::updateGeo() {
         }
 
         Vec3f dn = D/d;
-        Vec3f t1 = dn.cross(neighbors[i]->geo->getDir());
-        Vec3f t2 = dn.cross(neighbors[j]->geo->getDir());
+        Vec3f t1 = dn.cross(nbrs[i]->geo->getDir());
+        Vec3f t2 = dn.cross(nbrs[j]->geo->getDir());
         t1 = c1 + t1*y1 + dn*x1;
         t2 = c2 + t2*y2 - dn*x2;
         polygon.push_back(t1);
         polygon.push_back(t2);
 
         /*Vec3f check = t2-t1;
-        cout << neighbors[i]->geo->getName() << " " << neighbors[j]->geo->getName();
+        cout << nbrs[i]->geo->getName() << " " << nbrs[j]->geo->getName();
         cout << " check " << check.dot(t1-c1) << " " << check.dot(t2-c2);
         cout << " r1 " << r1 << " r2 " << r2;
         cout << endl;*/
@@ -395,9 +398,11 @@ void VRMechanism::add(VRGeometry* part, VRTransform* trans) {
 
 VRGeometry* VRMechanism::addChain(float w, vector<VRGeometry*> geos, string dirs) {
     MChain* c = new MChain();
-    for (auto g : geos) {
+    for (int i=0; i<geos.size(); i++) {
+        VRGeometry* g = geos[i];
         if (cache.count(g) == 0) continue;
-        c->addNeighbor(cache[g]);
+        int flip = dirs[i] == 'l' ? 1 : -1;
+        c->addNeighbor(cache[g],flip);
     }
     c->setDirs(dirs);
     parts.push_back(c);
