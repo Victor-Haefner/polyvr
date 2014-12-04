@@ -77,18 +77,15 @@ bool MChange::same(MChange c) {
     return true;
 }
 
-bool MPart::propagateMovement() {
-    bool dop = (geo->getName() == "Gear.2");
-
+bool MPart::propagateMovement() { // recursion
     bool res = true;
     for (auto n : neighbors) {
         res = n->propagateMovement(change) ? res : false;
-        //if (dop) cout << " d " << n->geo->getName() << endl;
     }
     return res;
 }
 
-bool MPart::propagateMovement(MChange c) {
+bool MPart::propagateMovement(MChange c) { // change
     c.flip();
     if (change.time == c.time) {
         return change.same(c);
@@ -140,8 +137,25 @@ bool checkChainPart(MChain* c, MPart* p, Matrix r1, Matrix r2) {
     Vec3f pp = p->geo->getFrom();
     if (p->prim->getType() != "Gear") return false;
     float r = ((VRGear*)p->prim)->radius();
-    bool res = c->onPolygon(pp, r);
-    //cout << " checkChainPart " << p->geo->getName() << " " << res << endl;
+    Vec3f dir = p->geo->getDir();
+
+    float eps = 0.0001;
+
+    Vec3f pc, sd;
+    c->toPolygon(pp, pc, sd); // point, vec to nearest seg, dir of seg
+    bool res = ( abs(pc.squareLength() - r*r) < eps );
+
+    if (res) {
+        pc.normalize();
+        sd.normalize();
+        dir.normalize();
+        float n = pc.cross(dir).dot(sd);
+        if (abs(n) < (1-eps)) return false;
+
+        char d = n > 0 ? 'r' : 'l';
+        c->addDir(d);
+    }
+
     return res;
 }
 
@@ -155,13 +169,8 @@ VRGear* MGear::gear() { return (VRGear*)prim; }
 VRThread* MThread::thread() { return (VRThread*)prim; }
 
 void MPart::move() {}
-void MGear::move() {
-    trans->rotate(change.dx/gear()->radius(), Vec3f(0,0,1));
-}
-void MChain::move() {
-    if (geo == 0) return;
-    updateGeo();
-}
+void MGear::move() { trans->rotate(change.dx/gear()->radius(), Vec3f(0,0,1)); }
+void MChain::move() { /*if (geo == 0) return; updateGeo();*/ }
 void MThread::move() { trans->rotate(change.a, Vec3f(0,0,1)); }
 
 void MPart::computeChange() {
@@ -210,6 +219,7 @@ void MGear::updateNeighbors(vector<MPart*> parts) {
 
 void MChain::updateNeighbors(vector<MPart*> parts) {
     clearNeighbors();
+    dirs = "";
     for (auto p : parts) {
         if (p == this) continue;
         if (p->prim->getType() == "Gear") {
@@ -230,13 +240,13 @@ void MThread::updateNeighbors(vector<MPart*> parts) {
     }
 }
 
-void MChain::set(string dirs) {
-    if (neighbors.size() > dirs.size()) return;
-    this->dirs = dirs;
-}
+void MChain::setDirs(string dirs) { this->dirs = dirs; }
+void MChain::addDir(char dir) { dirs.push_back(dir); }
 
-bool MChain::onPolygon(Vec3f p, float pd) {
-    //cout << " test on polygon\n";
+void MChain::toPolygon(Vec3f p, Vec3f& ps, Vec3f& sd) {
+    float l2min = 1e12;
+    ps = Vec3f(sqrt(l2min),0,0);
+
     for (int i=0; i<polygon.size(); i+=2) {
         Vec3f p1 = polygon[i];
         Vec3f p2 = polygon[i+1];
@@ -244,22 +254,23 @@ bool MChain::onPolygon(Vec3f p, float pd) {
         Vec3f d1 = p-p1;
         Vec3f d2 = p-p2;
 
+        Vec3f dx;
         float dist = 0;
         float l2 = d.squareLength();
-        if (l2 == 0.0) dist = d1.length();
+        if (l2 == 0.0) dx = d1;
         else {
             float t = d1.dot(d)/l2;
-            cout << " t " << t;
-            if (t < 0.0) dist = d1.length();
-            else if (t > 1.0) dist = d2.length();
-            else dist = (p1 + t*d - p).length(); // distance from p to p1p2
+            if (t < 0.0) dx = d1;
+            else if (t > 1.0) dx = d2;
+            else dx = p1 + t*d - p; // vector from p to p1p2
         }
 
-        bool res = abs(dist-pd) < 0.01;
-        //cout << "  onPolygon " << res << " d " << dist << " r " << pd << " p: " << p << " p1: " << p1 << " p2: " << p2 << endl;
-        if (res) return true;
+        float l = dx.squareLength();
+        if (l > l2min) continue;
+        l2min = l;
+        ps = dx;
+        sd = d;
     }
-    return false;
 }
 
 void MChain::updateGeo() {
@@ -272,6 +283,8 @@ void MChain::updateGeo() {
     GeoUInt32PropertyRecPtr lengths = GeoUInt32Property::create();
 
     // collect all polygon points
+    printNeighbors();
+
     polygon.clear();
     int j=0;
     for (int i=0; i<neighbors.size(); i++) {
@@ -283,27 +296,50 @@ void MChain::updateGeo() {
         VRGear* g1 = (VRGear*)p1;
         VRGear* g2 = (VRGear*)p2;
 
-        cout << " neighbor " << i << " " << neighbors[i]->geo->getName() << endl;
-
         int d1 = dirs[i] == 'r' ? -1 : 1;
         int d2 = dirs[j] == 'r' ? -1 : 1;
-
-        float r1 = g1->radius();
-        float r2 = g2->radius();
+        int z1 = -1*d1*d2;
 
         Vec3f c1 = neighbors[i]->geo->getFrom();
         Vec3f c2 = neighbors[j]->geo->getFrom();
-        Vec3f d = c2-c1;
+        Vec3f D = c2-c1;
+        float d = D.length();
 
-        Vec3f t1 = neighbors[i]->geo->getDir();
-        Vec3f t2 = neighbors[j]->geo->getDir();
-        t1 = d.cross(t1);
-        t2 = d.cross(t2);
-        t1.normalize();
-        t2.normalize();
+        float r1 = g1->radius();
+        float r2 = g2->radius();
+        int z2 = r2 > r1 ? z1 : 1;
+        r2 *= z1;
 
-        polygon.push_back(c1+t1*d1*r1);
-        polygon.push_back(c2+t2*d2*r2);
+        float x1 = 0;
+        float x2 = 0;
+        float y1 = r1;
+        float y2 = z1*r2;
+
+        if (abs(r1+r2) > 0.001 ) {
+            Vec3f Ch = c1*r2/(r1+r2) + c2*r1/(r1+r2); // homothetic center
+            float dCh1 = (Ch-c1).length();
+            float dCh2 = (Ch-c2).length();
+            float rCh1 = sqrt( dCh1*dCh1 - r1*r1 );
+            float rCh2 = sqrt( dCh2*dCh2 - r2*r2 );
+            x1 =    z2*r1*r1  /dCh1;
+            x2 = z1*z2*r2*r2  /dCh2;
+            y1 =    d1*r1*rCh1/dCh1;
+            y2 = z1*d2*r2*rCh2/dCh2;
+        }
+
+        Vec3f dn = D/d;
+        Vec3f t1 = dn.cross(neighbors[i]->geo->getDir());
+        Vec3f t2 = dn.cross(neighbors[j]->geo->getDir());
+        t1 = c1 + t1*y1 + dn*x1;
+        t2 = c2 + t2*y2 - dn*x2;
+        polygon.push_back(t1);
+        polygon.push_back(t2);
+
+        /*Vec3f check = t2-t1;
+        cout << neighbors[i]->geo->getName() << " " << neighbors[j]->geo->getName();
+        cout << " check " << check.dot(t1-c1) << " " << check.dot(t2-c2);
+        cout << " r1 " << r1 << " r2 " << r2;
+        cout << endl;*/
     }
 
     // draw polygon
@@ -363,7 +399,7 @@ VRGeometry* VRMechanism::addChain(float w, vector<VRGeometry*> geos, string dirs
         if (cache.count(g) == 0) continue;
         c->addNeighbor(cache[g]);
     }
-    c->set(dirs);
+    c->setDirs(dirs);
     parts.push_back(c);
     return c->init();
 }

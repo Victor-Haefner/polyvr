@@ -60,20 +60,13 @@ VRObject* getSelected() {
     VRScene* scene = VRSceneManager::getCurrent();
     if (scene == 0) return 0;
 
-    cout << " search for: " << selected << endl;
-
     VRObject* root = scene->getRoot();
     VRObject* res = root->getAtPath(selected);
 
-    cout << "  found: " << res->getName() << " at " << res->getPath() << endl;
-
     if (res == 0) {
-
         tree_store->clear();
         parseSGTree( root );
-
         tree_view->expand_all();
-
         setTableSensivity("table11", false);
     }
 
@@ -699,7 +692,6 @@ void on_treeview_select(GtkTreeView* tv, gpointer user_data) {
     //string type = row.get_value(cols.type);
     updateObjectForms();
     selected = row.get_value(cols.obj);
-    cout << "selected clicked: " << selected << endl;
     selected_itr = iter;
     updateObjectForms();
 

@@ -116,9 +116,10 @@ class MChain : public MPart {
         ~MChain();
 
         VRGeometry* init();
-        void set(string dirs);
+        void setDirs(string dirs);
+        void addDir(char dir);
         void updateGeo();
-        bool onPolygon(Vec3f p, float pd);
+        void toPolygon(Vec3f p, Vec3f& ps, Vec3f& sd);
 
         void move();
         void updateNeighbors(vector<MPart*> parts);
