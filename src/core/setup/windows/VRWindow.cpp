@@ -115,7 +115,7 @@ void VRWindow::load(xmlpp::Element* node) {
     string _mouse = node->get_attribute("mouse")->get_value();
     if (_mouse != "None") {
         mouse = (VRMouse*)VRSetupManager::get()->getCurrent()->getDevice(_mouse);
-        if (views.size() > 0) mouse->setViewport(views[0]);
+        if (views.size() > 0 and mouse) mouse->setViewport(views[0]);
     }
 
     if (node->get_attribute("keyboard") != 0) {
