@@ -55,6 +55,7 @@
 			<Add option="-DOSG_WITH_JPG" />
 			<Add option="-DOSG_WITH_PNG" />
 			<Add option="-DOSG_WITH_COLLADA" />
+			<Add option="-DOSG_ENABLE_OGL_VERTEXT_ATTRIB_FUNCS=ON" />
 			<Add option="-D_OSG_HAVE_CONFIGURED_H_" />
 			<Add option="-DQT_NO_XINERAMA" />
 			<Add option="-DQT_NO_XRENDER" />
