@@ -360,8 +360,8 @@ PyObject* VRPyTransform::animate(VRPyTransform* self, PyObject *args) {
 
 PyObject* VRPyTransform::getPhysicsData(VRPyTransform* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::getPhysicsData: C Object is invalid"); return NULL; }
-    btVector3 a = self->obj->getPhysics()->getNormForceWithConstrained();
-    return toPyTuple(OSG::Vec3f(a.getX(),a.getY(),a.getZ()));
+    OSG::Vec3f a = self->obj->getPhysics()->getForce();
+    return toPyTuple(a);
 }
 
 

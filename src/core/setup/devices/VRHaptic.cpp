@@ -27,11 +27,14 @@ VRHaptic::~VRHaptic() {
 void VRHaptic::applyTransformation(VRTransform* t) { // TODO: rotation
     if (!v->connected()) return;
     t->setMatrix(v->getPose());
+    //v->updateHapticToObject(t);
 }
 
 void VRHaptic::setForce(Vec3f force, Vec3f torque) { v->applyForce(force, torque); }
 void VRHaptic::setSimulationScales(float scale, float forces) { v->setSimulationScales(scale, forces); }
-void VRHaptic::updateHapticToObject(VRPhysics* ph) { v->updateHapticToObject(ph); }
+void VRHaptic::updateHapticToObject(VRTransform* ph) { v->updateHapticToObject(ph); }
+Vec3f VRHaptic::getForce(){ v->getForce(); }
+
 
 void VRHaptic::setIP(string IP) { this->IP = IP; v->connect(IP); }
 string VRHaptic::getIP() { return IP; }

@@ -5,6 +5,7 @@
 #include <OpenSG/OSGMatrix.h>
 
 #include <list>
+#include "core/objects/VRTransform.h"
 #include "core/objects/geometry/VRPhysics.h"
 
 
@@ -14,6 +15,7 @@ using namespace std;
 class virtuose {
     private:
         void* vc = 0; // virtuose context
+        bool isAttached = false;
 
     public:
         virtuose();
@@ -28,8 +30,8 @@ class virtuose {
         Matrix getPose();
 
         //connect a physicalized Object to this virtuose and push it in the same direction the virtuose moves . apply forces( which affect the object )on the haptic.
-        void updateHapticToObject(VRPhysics* ph);
-
+        void updateHapticToObject(VRTransform* ph);
+        Vec3f getForce();
 };
 
 OSG_END_NAMESPACE;

@@ -81,22 +81,13 @@ void virtuose::connect(string IP) {
     CHECK_INIT(vc);
     if (vc == 0) return;
 
-    float timestep = 0.003;
+    float timestep = 0.003f;
 
-    //COMMAND_TYPE_VIRTMECH: ohne attachVO: getForce immer 0, addForce funktioniert
-    //COMMAND_TYPE_VIRTMECH: mit attachVO: getForce immer 0, addForce funktioniert
-    //COMMAND_TYPE_ADMITTANCE: ohne attachVO: getForce immer 0, addForce funktioniert nicht
-    //COMMAND_TYPE_ADMITTANCE: mit attachVO: getForce immer 0, addForce funktioniert nicht
-    //COMMAND_TYPE_ARTICULAR: ohne attachVO: komplette blockierung
-    //COMMAND_TYPE_ARTICULAR: mit attachVO: komplette blockierung
-    //COMMAND_TYPE_ARTICULAR_IMPEDANCE: ohne attachVO: getForce immer 0, addForce funktioniert nicht
-    //COMMAND_TYPE_IMPEDANCE: ohne attachVO: getForce wrong command mode!, addForce funktioniert
-
-	CHECK( virtSetCommandType(vc, COMMAND_TYPE_VIRTMECH) );
+	CHECK( virtSetCommandType(vc, COMMAND_TYPE_IMPEDANCE) );
 	CHECK( virtSetDebugFlags(vc, DEBUG_SERVO|DEBUG_LOOP) );
 	CHECK( virtSetIndexingMode(vc, INDEXING_ALL_FORCE_FEEDBACK_INHIBITION) );
 	CHECK( virtSetTimeStep(vc, timestep) );
-    setSimulationScales(1,1);
+    setSimulationScales(1.0f,1.0f);
 
     float identity[7] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f};
     //float baseFrame[7] = { 0.0f, 0.0f, 0.0f, 0.70710678f, 0.0f, 0.70710678f, 0.0f };
@@ -106,11 +97,9 @@ void virtuose::connect(string IP) {
 	CHECK( virtSetPowerOn(vc, 1) );
 	//virtSetPeriodicFunction(vc, callback, &timestep, this);
 
-   float inertia[9] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
-    float vel[6] =  {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
-    CHECK(virtAttachVO(vc,0.1,inertia));
-    CHECK(virtSetPosition(vc, identity));
-    CHECK(virtSetSpeed(vc, vel));
+
+
+    isAttached = true;
 
 
 }
@@ -122,6 +111,7 @@ void virtuose::disconnect() {
 		//CHECK( virtStopLoop(vc) );
 		CHECK( virtClose(vc) );
         vc = 0;
+        isAttached = false;
     }
 }
 
@@ -136,9 +126,8 @@ void virtuose::applyForce(Vec3f force, Vec3f torque) {
 }
 
 Matrix virtuose::getPose() {
-    float f[6];
-    CHECK( virtGetPosition(vc, f) );
-    CHECK( virtSetPosition(vc, f) );
+    float f[7]= {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f};
+    CHECK( virtGetAvatarPosition(vc, f) );
     //CHECK( virtGetPhysicalPosition(vc, f) );
 
     Matrix m;
@@ -151,42 +140,26 @@ Matrix virtuose::getPose() {
     return m;
 }
 
-
+Vec3f virtuose::getForce() {
+    float force[6] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
+    CHECK(virtGetForce(vc, force));
+    Vec3f imp(force[1],force[2],force[0]);
+    return imp;
+}
 
 /**
 * takes the resulting force of given object and puts it on the virtuose
 **/
-void virtuose::updateHapticToObject(VRPhysics* ph) {
+void virtuose::updateHapticToObject(VRTransform* trans) {
+    Matrix m = getPose();
+    trans->setMatrix(m);
+    vector<VRCollision> colls = trans->getPhysics()->getCollisions();
+    Vec3f frc =   trans->getPhysics()->getForce();
 
+    float force[6] = {frc.z(),frc.x(),frc.y(),0.0f,0.0f,0.0f};
 
-    float f[7];
-    CHECK(virtGetPosition(vc, f));
-    CHECK(virtSetPosition(vc, f));
+    CHECK(virtSetForce(vc,force));
 
-
-    float v[6] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
-    CHECK(virtGetSpeed(vc, v));
-    CHECK(virtSetSpeed(vc, v));
-
-    float force[6] = {0.0f,-1.0f,0.0f,0.0f,0.0f,0.0f};
-    //CHECK(virtAddForce(vc, force));
-
-    CHECK(virtGetForce(vc, force));
-    Vec3f imp(force[2]* 100.0f,force[1]* 100.0f,force[0]* 100.0f);
-    ph->applyForce(imp);
-
-
-
-    //put applied force of haptic on the object
-   // CHECK(virtGetForce(vc,force));
-    //ph->applyForce(Vec3f(force[1] * 100.0f, force[2]* 100.0f, force[0]* 100.0f));
-
-    //get force resulting out of collisions
-
-
-    // * applied force on the haptic
-
-    //apply force on haptic
 
 }
 

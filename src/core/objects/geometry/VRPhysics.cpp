@@ -107,6 +107,7 @@ vector<VRCollision> VRPhysics::getCollisions() {
                     c.pos1 = toVec3f( pt.getPositionWorldOnA() );
                     c.pos2 = toVec3f( pt.getPositionWorldOnB() );
                     c.norm = toVec3f( pt.m_normalWorldOnB );
+                    c.distance = pt.getDistance();
                     res.push_back(c);
                 }
             }
@@ -142,6 +143,7 @@ vector<VRCollision> VRPhysics::getCollisions() {
                     c.pos1 = toVec3f( pt.getPositionWorldOnA() );
                     c.pos2 = toVec3f( pt.getPositionWorldOnB() );
                     c.norm = toVec3f( pt.m_normalWorldOnB*directionSign );
+                    c.distance = pt.getDistance();
                     res.push_back(c);
                 }
             }
@@ -388,36 +390,24 @@ void VRPhysics::applyImpulse(OSG::Vec3f i) {
 void VRPhysics::applyForce(OSG::Vec3f i) {
    if (body == 0) return;
    if (mass == 0) return;
-   body->applyCentralForce(btVector3(i[0], i[1], i[2]));
+   body->applyCentralForce(btVector3(i.x(), i.y(), i.z()));
 }
 
 
 
-btVector3 VRPhysics::getForce() {
-    if (body == 0) return btVector3(0.0f,0.0f,0.0f);
-
+OSG::Vec3f VRPhysics::getForce() {
+    OSG::Vec3f result(0.0f,0.0f,0.0f);
     //go through all contacts
-    vector<VRCollision> colls = getCollisions();
-    for(vector<VRCollision>::iterator it = colls.begin(); it != colls.end(); ++it) {
+    vector<VRCollision> v = getCollisions();
+    for ( auto i = v.begin(); i != v.end(); i++ ) {
+        result += ((i->norm) * 100.0f * (i->distance));
 
     }
+   // result.normalize();
+    return result;
 
 }
 
-btVector3 VRPhysics::getNormForceWithConstrained() {
-    if (body == 0) return btVector3(0.0f,0.0f,0.0f);
-
-    btVector3 ret(0.0f,0.0f,0.0f);
-    ret = getForce();
-
-    for (jointItr = joints.begin(); jointItr != joints.end(); jointItr++) {
-        ret += jointItr->first->getForce();
-
-    }
-    //normalize
-    if(ret != btVector3(0.0f,0.0f,0.0f)) ret.normalize();
-    return ret;
-}
 
 btVector3 VRPhysics::getLinearVelocity() {
 

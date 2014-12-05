@@ -26,8 +26,8 @@ class VRHaptic : public VRDevice {
 
         void setForce(Vec3f force, Vec3f torque);
         void setSimulationScales(float scale, float forces);
-        void updateHapticToObject(VRPhysics* ph);
-
+        void updateHapticToObject(VRTransform* ph);
+        Vec3f getForce();
         void setIP(string IP);
         string getIP();
 

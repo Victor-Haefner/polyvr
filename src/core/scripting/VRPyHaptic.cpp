@@ -54,6 +54,7 @@ PyMethodDef VRPyHaptic::methods[] = {
     {"setSimulationScales", (PyCFunction)VRPyHaptic::setSimulationScales, METH_VARARGS, "Set force on haptic device" },
     {"setForce", (PyCFunction)VRPyHaptic::setForce, METH_VARARGS, "Set force on haptic device" },
     {"updateHapticToObject", (PyCFunction)VRPyHaptic::updateHapticToObject, METH_VARARGS, "update the forces provided by the given object on the haptic and vice versa" },
+    {"getForce", (PyCFunction)VRPyHaptic::getForce, METH_VARARGS, "the force that you put on the haptic" },
     {NULL}  /* Sentinel */
 };
 
@@ -78,8 +79,13 @@ PyObject* VRPyHaptic::updateHapticToObject(VRPyHaptic* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyHaptic::updateHapticToObject - Object is invalid"); return NULL; }
     VRPyTransform* tr;
     if (! PyArg_ParseTuple(args, "O", &tr)) return NULL;
-    self->obj->updateHapticToObject(tr->obj->getPhysics());
+    self->obj->updateHapticToObject(tr->obj);
     Py_RETURN_TRUE;
 }
 
+PyObject* VRPyHaptic::getForce(VRPyHaptic* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::getForce: C Object is invalid"); return NULL; }
+    OSG::Vec3f a = self->obj->getForce();
+    return toPyTuple(a);
+}
 

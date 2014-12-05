@@ -16,6 +16,7 @@ struct VRCollision {
     OSG::Vec3f pos1;
     OSG::Vec3f pos2;
     OSG::Vec3f norm;
+    float distance;
     OSG::VRTransform* obj1 = 0;
     OSG::VRTransform* obj2 = 0;
 };
@@ -96,9 +97,9 @@ class VRPhysics : public OSG::VRStorage {
         void applyForce(OSG::Vec3f i);
 
         /**get the normalized resulting force (out of a collision, without the gravity) of this object with the constraints considered**/
-        btVector3 getNormForceWithConstrained();
+      //  btVector3 getNormForceWithConstrained();
         /**get the resulting force (out of a collision, without the gravity) of the given object**/
-        btVector3 getForce();
+        OSG::Vec3f getForce();
 
         btVector3 getLinearVelocity();
         btVector3 getAngularVelocity();
