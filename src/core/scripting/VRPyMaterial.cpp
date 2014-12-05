@@ -53,6 +53,10 @@ PyMethodDef VRPyMaterial::methods[] = {
     {"setDiffuse", (PyCFunction)VRPyMaterial::setDiffuse, METH_VARARGS, "Sets the diffuse color" },
     {"getSpecular", (PyCFunction)VRPyMaterial::getSpecular, METH_NOARGS, "Returns the specular color" },
     {"setSpecular", (PyCFunction)VRPyMaterial::setSpecular, METH_VARARGS, "Sets the specular color" },
+    {"getTransparency", (PyCFunction)VRPyMaterial::getTransparency, METH_NOARGS, "Returns the transparency" },
+    {"setTransparency", (PyCFunction)VRPyMaterial::setTransparency, METH_VARARGS, "Sets the transparency" },
+    {"getShininess", (PyCFunction)VRPyMaterial::getShininess, METH_NOARGS, "Returns the shininess" },
+    {"setShininess", (PyCFunction)VRPyMaterial::setShininess, METH_VARARGS, "Sets the shininess" },
     {"setPointSize", (PyCFunction)VRPyMaterial::setPointSize, METH_VARARGS, "Sets the GL point size" },
     {"setLineWidth", (PyCFunction)VRPyMaterial::setLineWidth, METH_VARARGS, "Sets the GL line width" },
     {"setPerlin", (PyCFunction)VRPyMaterial::setPerlin, METH_VARARGS, "Set a perlin noise texture - setPerlin(col1[r,g,b], col2[r,g,b], seed)" },
@@ -64,7 +68,6 @@ PyMethodDef VRPyMaterial::methods[] = {
     {"setWireFrame", (PyCFunction)VRPyMaterial::setWireFrame, METH_VARARGS, "Set wireframe mode" },
     {NULL}  /* Sentinel */
 };
-
 
 PyObject* VRPyMaterial::setWireFrame(VRPyMaterial* self, PyObject* args) {
 	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setWireFrame, C obj is invalid"); return NULL; }
@@ -82,19 +85,19 @@ PyObject* VRPyMaterial::setMagMinFilter(VRPyMaterial* self, PyObject* args) {
 
 PyObject* VRPyMaterial::setVertexProgram(VRPyMaterial* self, PyObject* args) {
 	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setVertexProgram, C obj is invalid"); return NULL; }
-	self->obj->setVertexProgram(parseString(args));
+	self->obj->setVertexScript(parseString(args));
 	Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMaterial::setFragmentProgram(VRPyMaterial* self, PyObject* args) {
 	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setFragmentProgram, C obj is invalid"); return NULL; }
-	self->obj->setFragmentProgram(parseString(args));
+	self->obj->setFragmentScript(parseString(args));
 	Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMaterial::setGeometryProgram(VRPyMaterial* self, PyObject* args) {
 	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setGeometryProgram, C obj is invalid"); return NULL; }
-	self->obj->setGeometryProgram(parseString(args));
+	self->obj->setGeometryScript(parseString(args));
 	Py_RETURN_TRUE;
 }
 
@@ -123,6 +126,28 @@ PyObject* VRPyMaterial::setDiffuse(VRPyMaterial* self, PyObject* args) {
 PyObject* VRPyMaterial::getSpecular(VRPyMaterial* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::getSpecular, C obj is invalid"); return NULL; }
     return toPyTuple(self->obj->getSpecular());
+}
+
+PyObject* VRPyMaterial::setTransparency(VRPyMaterial* self, PyObject* args) {
+	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setTransparency, C obj is invalid"); return NULL; }
+	self->obj->setTransparency(parseFloat(args));
+	Py_RETURN_TRUE;
+}
+
+PyObject* VRPyMaterial::getTransparency(VRPyMaterial* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::getTransparency, C obj is invalid"); return NULL; }
+    return PyFloat_FromDouble(self->obj->getTransparency());
+}
+
+PyObject* VRPyMaterial::setShininess(VRPyMaterial* self, PyObject* args) {
+	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setShininess, C obj is invalid"); return NULL; }
+	self->obj->setShininess(parseFloat(args));
+	Py_RETURN_TRUE;
+}
+
+PyObject* VRPyMaterial::getShininess(VRPyMaterial* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::getShininess, C obj is invalid"); return NULL; }
+    return PyFloat_FromDouble(self->obj->getShininess());
 }
 
 PyObject* VRPyMaterial::setSpecular(VRPyMaterial* self, PyObject* args) {

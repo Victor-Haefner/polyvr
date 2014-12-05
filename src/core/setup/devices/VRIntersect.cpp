@@ -21,7 +21,8 @@ Vec2f VRIntersect_computeTexel(VRIntersection& ins, NodeRecPtr node) {
     if (geo == 0) return Vec2f(0,0);
     TriangleIterator iter = geo->beginTriangles(); iter.seek( ins.triangle );
 
-    Matrix m; node->getToWorld().inverse(m);
+    Matrix m = node->getToWorld();
+    m.invert();
     Pnt3f local_pnt; m.mult(ins.point, local_pnt);
 
     Pnt3f p0 = iter.getPosition(0);
@@ -40,37 +41,38 @@ Vec2f VRIntersect_computeTexel(VRIntersection& ins, NodeRecPtr node) {
     return iter.getTexCoords(0) * a + iter.getTexCoords(1) * b + iter.getTexCoords(2) * c;
 }
 
-//VRIntersection VRIntersect::intersect(VRTransform* caster, VRObject* tree, VRDevice* dev) {
 VRIntersection VRIntersect::intersect(VRObject* tree) {
     VRDevice* dev = (VRDevice*)this;
     VRTransform* caster = dev->getBeacon();
-    Line ray = caster->castRay();
-    IntersectActionRefPtr iAct = IntersectAction::create();
-    iAct->setLine(ray);
-
+    VRIntersection ins;
+    if (caster == 0) { cout << "Warning: VRIntersect::intersect, caster is 0!\n"; return ins; }
     if (tree == 0) tree = dynTree;
-    if (tree == 0) return VRIntersection();
+    if (tree == 0) return ins;
 
-    VRIntersection ins = intersections[tree];
+    if (intersections.count(tree)) ins = intersections[tree];
     uint now = VRGlobals::get()->CURRENT_FRAME;
     if (ins.hit && ins.time == now) return ins; // allready found it
     ins.time = now;
 
+    Line ray = caster->castRay(tree);
+    IntersectActionRefPtr iAct = IntersectAction::create();
+    iAct->setLine(ray);
     iAct->apply(tree->getNode());
-    ins.hit = iAct->didHit();
+    ins.hit = iAct->didHit(); // TODO :
     if (!ins.hit) { intersections[tree] = ins; lastIntersection = ins; return ins; }
+
 
     ins.object = tree->find(iAct->getHitObject()->getParent());
     ins.point = iAct->getHitPoint();
     ins.normal = iAct->getHitNormal();
+    if (tree->getParent()) tree->getParent()->getNode()->getToWorld().mult( ins.point, ins.point );
+    if (tree->getParent()) tree->getParent()->getNode()->getToWorld().mult( ins.normal, ins.normal );
     ins.triangle = iAct->getHitTriangle();
     ins.texel = VRIntersect_computeTexel(ins, iAct->getHitObject());
     intersections[tree] = ins;
     lastIntersection = ins;
 
     if (showHit) cross->setWorldPosition(Vec3f(ins.point));
-    //cout << "VRIntersect::intersect " << obj << endl;
-
     return ins;
 }
 
@@ -125,7 +127,7 @@ void VRIntersect::initCross() {
 
     VRMaterial* mat = new VRMaterial("red_cross");
     mat->setDiffuse(Color3f(1,0,0));
-    cross->create(GL_LINE, pos, norms, inds, texs);
+    cross->create(GL_LINES, pos, norms, inds, texs);
     cross->setMaterial(mat);
 }
 

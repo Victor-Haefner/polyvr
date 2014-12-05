@@ -1,0 +1,12 @@
+Additional dependencies:
+CGAL:
+Packages: libcgal8 libcgal-dev
+Linker: CGAL gmp mpfr
+
+GTS:
+Packages: libgts-0.7-5 libgts-dev
+Linker: gts
+
+Compiler flags needed for C++98 and CGAL:
+-DCGAL_CFG_NO_CPP0X_ARRAY -DCGAL_CFG_NO_TR1_ARRAY -DCGAL_CFG_NO_VARIADIC_TEMPLATES
+-frounding-math

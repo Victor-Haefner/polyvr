@@ -93,6 +93,7 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"getTexture", (PyCFunction)VRPyGeometry::getTexture, METH_NOARGS, "get texture filepath" },
     {"getMaterial", (PyCFunction)VRPyGeometry::getMaterial, METH_NOARGS, "get material" },
     {"duplicate", (PyCFunction)VRPyGeometry::duplicate, METH_NOARGS, "duplicate geometry" },
+    {"merge", (PyCFunction)VRPyGeometry::merge, METH_VARARGS, "Merge another geometry into this one" },
     {"setLit", (PyCFunction)VRPyGeometry::setLit, METH_VARARGS, "Set if geometry is lit" },
     {"setPrimitive", (PyCFunction)VRPyGeometry::setPrimitive, METH_VARARGS, "Set geometry to primitive" },
     {"setVideo", (PyCFunction)VRPyGeometry::setVideo, METH_VARARGS, "Set video texture - setVideo(path)" },
@@ -101,6 +102,7 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"setRandomColors", (PyCFunction)VRPyGeometry::setRandomColors, METH_NOARGS, "Set a random color for each vertex" },
     {"removeDoubles", (PyCFunction)VRPyGeometry::removeDoubles, METH_VARARGS, "Remove double vertices" },
     {"makeUnique", (PyCFunction)VRPyGeometry::makeUnique, METH_NOARGS, "Make the geometry data unique" },
+    {"influence", (PyCFunction)VRPyGeometry::influence, METH_VARARGS, "Pass a points and value vector to influence the geometry - influence([points,f3], [values,f3], int power)" },
     {NULL}  /* Sentinel */
 };
 
@@ -150,7 +152,23 @@ void feed2D(PyObject* o, T& vec) {
             pj = PyList_GetItem(pi, j);
             tmp[j] = PyFloat_AsDouble(pj);
         }
-        vec->addValue(tmp);
+        vec->push_back(tmp);
+    }
+}
+
+template<class T, class t>
+void feed2D_v2(PyObject* o, T& vec) {
+    PyObject *pi, *pj;
+    t tmp;
+    Py_ssize_t N = PyList_Size(o);
+
+    for (Py_ssize_t i=0; i<N; i++) {
+        pi = PyList_GetItem(o, i);
+        for (Py_ssize_t j=0; j<PyList_Size(pi); j++) {
+            pj = PyList_GetItem(pi, j);
+            tmp[j] = PyFloat_AsDouble(pj);
+        }
+        vec.push_back(tmp);
     }
 }
 
@@ -166,6 +184,26 @@ void feed1D(PyObject* o, T& vec) {
     }
 }
 
+
+PyObject* VRPyGeometry::influence(VRPyGeometry* self, PyObject *args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyGeometry::influence - Object is invalid"); return NULL; }
+	PyObject *vP, *vV; int power; float color_coding;
+    if (!PyArg_ParseTuple(args, "OOif", &vP, &vV, &power, &color_coding)) return NULL;
+    vector<OSG::Vec3f> pos;
+    vector<OSG::Vec3f> vals;
+    feed2D_v2<vector<OSG::Vec3f>, OSG::Vec3f>(vP, pos);
+    feed2D_v2<vector<OSG::Vec3f>, OSG::Vec3f>(vV, vals);
+    self->obj->influence(pos, vals, power, color_coding);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyGeometry::merge(VRPyGeometry* self, PyObject *args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyGeometry::merge - Object is invalid"); return NULL; }
+	VRPyGeometry* geo;
+    if (!PyArg_ParseTuple(args, "O", &geo)) return NULL;
+    self->obj->merge(geo->obj);
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyGeometry::setRandomColors(VRPyGeometry* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyGeometry::setRandomColors - Object is invalid"); return NULL; }
@@ -293,12 +331,12 @@ PyObject* VRPyGeometry::setColors(VRPyGeometry* self, PyObject *args) {
     if (self->obj == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
     OSG::VRGeometry* geo = (OSG::VRGeometry*) self->obj;
 
-    OSG::GeoVec3fPropertyRecPtr cols = OSG::GeoVec3fProperty::create();
+    OSG::GeoVec4fPropertyRecPtr cols = OSG::GeoVec4fProperty::create();
     string tname = vec->ob_type->tp_name;
-    if (tname == "numpy.ndarray") feed2Dnp<OSG::GeoVec3fPropertyRecPtr, OSG::Vec3f>( vec, cols);
-    else feed2D<OSG::GeoVec3fPropertyRecPtr, OSG::Vec3f>( vec, cols);
+    if (tname == "numpy.ndarray") feed2Dnp<OSG::GeoVec4fPropertyRecPtr, OSG::Vec4f>( vec, cols);
+    else feed2D<OSG::GeoVec4fPropertyRecPtr, OSG::Vec4f>( vec, cols);
 
-    geo->setColors(cols);
+    geo->setColors(cols, true);
     Py_RETURN_TRUE;
 }
 
@@ -320,17 +358,17 @@ PyObject* VRPyGeometry::setIndices(VRPyGeometry* self, PyObject *args) {
     if (! PyArg_ParseTuple(args, "O", &vec)) return NULL;
     if (self->obj == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
 
-    OSG::GeoUInt32PropertyRefPtr inds = OSG::GeoUInt32Property::create();
+    OSG::GeoUInt32PropertyRecPtr inds = OSG::GeoUInt32Property::create();
 
     int ld = getListDepth(vec);
     if (ld == 1) {
-        feed1D<OSG::GeoUInt32PropertyRefPtr>( vec, inds );
+        feed1D<OSG::GeoUInt32PropertyRecPtr>( vec, inds );
         self->obj->setIndices(inds);
     } else if (ld == 2) {
         OSG::GeoUInt32PropertyRecPtr lengths = OSG::GeoUInt32Property::create();
         for(Py_ssize_t i = 0; i < PyList_Size(vec); i++) {
             PyObject* vecList = PyList_GetItem(vec, i);
-            feed1D<OSG::GeoUInt32PropertyRefPtr>( vecList, inds );
+            feed1D<OSG::GeoUInt32PropertyRecPtr>( vecList, inds );
             lengths->addValue(PyList_Size(vecList));
         }
         self->obj->setIndices(inds);

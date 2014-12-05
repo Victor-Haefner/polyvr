@@ -63,6 +63,8 @@ PyMethodDef VRPyTransform::methods[] = {
     {"getUp", (PyCFunction)VRPyTransform::getUp, METH_NOARGS, "Return the object's up vector" },
     {"getScale", (PyCFunction)VRPyTransform::getScale, METH_NOARGS, "Return the object's scale vector" },
     {"setWorldFrom", (PyCFunction)VRPyTransform::setWFrom, METH_VARARGS, "Set the object's world position" },
+    {"setPose", (PyCFunction)VRPyTransform::setPose, METH_VARARGS, "Set the object's from dir and up vector" },
+    {"setPosition", (PyCFunction)VRPyTransform::setFrom, METH_VARARGS, "Set the object's from vector" },
     {"setFrom", (PyCFunction)VRPyTransform::setFrom, METH_VARARGS, "Set the object's from vector" },
     {"setAt", (PyCFunction)VRPyTransform::setAt, METH_VARARGS, "Set the object's at vector" },
     {"setDir", (PyCFunction)VRPyTransform::setDir, METH_VARARGS, "Set the object's dir vector" },
@@ -74,17 +76,42 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setRotationConstraints", (PyCFunction)VRPyTransform::setRotationConstraints, METH_VARARGS, "Constraint the object's rotation - setRotationConstraints(xi, yi, zi)" },
     {"duplicate", (PyCFunction)VRPyTransform::duplicate, METH_NOARGS, "duplicate transform" },
     {"physicalize", (PyCFunction)VRPyTransform::physicalize, METH_VARARGS, "physicalize subtree - physicalize( physicalized , dynamic , concave )" },
+    {"setGhost", (PyCFunction)VRPyTransform::setGhost, METH_VARARGS, "Set the physics object to be a ghost object - setGhost(bool)" },
     {"attach", (PyCFunction)VRPyTransform::setPhysicsConstraintTo, METH_VARARGS, "create a constraint between this obejct and another - setPhysicsConstraintTo( Transform , Constraint )" },
     {"setMass", (PyCFunction)VRPyTransform::setMass, METH_VARARGS, "Set the mass of the physics object" },
     {"setCollisionMargin", (PyCFunction)VRPyTransform::setCollisionMargin, METH_VARARGS, "Set the collision margin of the physics object" },
     {"setCollisionGroup", (PyCFunction)VRPyTransform::setCollisionGroup, METH_VARARGS, "Set the collision group of the physics object" },
     {"setCollisionMask", (PyCFunction)VRPyTransform::setCollisionMask, METH_VARARGS, "Set the collision mask of the physics object" },
+    {"setCollisionShape", (PyCFunction)VRPyTransform::setCollisionShape, METH_VARARGS, "Set the collision mask of the physics object" },
+    {"getCollisions", (PyCFunction)VRPyTransform::getCollisions, METH_NOARGS, "Return the current collisions with other objects" },
     {"applyImpulse", (PyCFunction)VRPyTransform::applyImpulse, METH_VARARGS, "Apply impulse on the physics object" },
     {"setPhysicsActivationMode", (PyCFunction)VRPyTransform::setPhysicsActivationMode, METH_VARARGS, "Set the physics activation mode of the physics object (normal:1 , no deactivation:4, stay deactivated: 5)" },
     {"animate", (PyCFunction)VRPyTransform::animate, METH_VARARGS, "Animate object (currently only with a path: animate(path, duration, redirect) )" },
     {"animationStop", (PyCFunction)VRPyTransform::animationStop, METH_NOARGS, "Stop any running animation of this object" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyTransform::getCollisions(VRPyTransform* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setGhost, Object is invalid"); return NULL; }
+    auto cols = self->obj->getPhysics()->getCollisions();
+    PyObject* res = PyList_New(cols.size());
+    int i=0;
+    for (auto c : cols) {
+        PyObject* cres = PyTuple_New(3);
+        PyTuple_SetItem(cres, 0, toPyTuple(c.pos1));
+        PyTuple_SetItem(cres, 1, toPyTuple(c.pos2));
+        PyTuple_SetItem(cres, 2, toPyTuple(c.norm));
+        PyList_SetItem(res, i, cres);
+        i++;
+    }
+    return res;
+}
+
+PyObject* VRPyTransform::setGhost(VRPyTransform* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setGhost, Object is invalid"); return NULL; }
+    self->obj->getPhysics()->setGhost(parseBool(args));
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyTransform::animationStop(VRPyTransform* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::animationStop, Object is invalid"); return NULL; }
@@ -153,77 +180,69 @@ PyObject* VRPyTransform::getScale(VRPyTransform* self) {
     return toPyTuple(self->obj->getScale());
 }
 
+PyObject* VRPyTransform::setPose(VRPyTransform* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setPose, Object is invalid"); return NULL; }
+    PyObject *fl, *dl, *ul;
+    if (! PyArg_ParseTuple(args, "OOO", &fl, &dl, &ul)) return NULL;
+    self->obj->setPose( parseVec3fList(fl), parseVec3fList(dl), parseVec3fList(ul));
+    Py_RETURN_TRUE;
+}
+
 PyObject* VRPyTransform::setFrom(VRPyTransform* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setFrom, Object is invalid"); return NULL; }
     OSG::Vec3f v = parseVec3f(args);
-
-    OSG::VRTransform* e = (OSG::VRTransform*) self->obj;
-    e->setFrom(v);
+    self->obj->setFrom(v);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTransform::setWFrom(VRPyTransform* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setWFrom, Object is invalid"); return NULL; }
     OSG::Vec3f v = parseVec3f(args);
-
-    OSG::VRTransform* e = (OSG::VRTransform*) self->obj;
-    e->setWorldPosition(v);
+    self->obj->setWorldPosition(v);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTransform::setAt(VRPyTransform* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setAt, Object is invalid"); return NULL; }
     OSG::Vec3f v = parseVec3f(args);
-
-    OSG::VRTransform* e = (OSG::VRTransform*) self->obj;
-    e->setAt(v);
+    self->obj->setAt(v);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTransform::setDir(VRPyTransform* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setDir, Object is invalid"); return NULL; }
     OSG::Vec3f v = parseVec3f(args);
-
-    OSG::VRTransform* e = (OSG::VRTransform*) self->obj;
-    e->setDir(v);
+    self->obj->setDir(v);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTransform::setUp(VRPyTransform* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setUp, Object is invalid"); return NULL; }
     OSG::Vec3f v = parseVec3f(args);
-
-    OSG::VRTransform* e = (OSG::VRTransform*) self->obj;
-    e->setUp(v);
+    self->obj->setUp(v);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTransform::setScale(VRPyTransform* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setScale, Object is invalid"); return NULL; }
     OSG::Vec3f v = parseVec3f(args);
-
-    OSG::VRTransform* e = (OSG::VRTransform*) self->obj;
-    e->setScale(v);
+    self->obj->setScale(v);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTransform::setPickable(VRPyTransform* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setPickable, Object is invalid"); return NULL; }
     bool b = parseBool(args);
-
-    OSG::VRTransform* e = (OSG::VRTransform*) self->obj;
-    e->setPickable(b);
+    self->obj->setPickable(b);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTransform::setPlaneConstraints(VRPyTransform* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setPlaneConstraints, Object is invalid"); return NULL; }
     OSG::Vec3f v = parseVec3f(args);
-
-    OSG::VRTransform* e = (OSG::VRTransform*) self->obj;
-    e->setTConstraint(v);
-    e->setTConstraintMode(true);
-    e->toggleTConstraint(true);
+    self->obj->setTConstraint(v);
+    self->obj->setTConstraintMode(true);
+    self->obj->toggleTConstraint(true);
     Py_RETURN_TRUE;
 }
 
@@ -267,7 +286,6 @@ PyObject* VRPyTransform::physicalize(VRPyTransform* self, PyObject *args) {
     if (b3) geo->getPhysics()->setShape("Concave");
     else geo->getPhysics()->setShape("Convex");
     geo->getPhysics()->setPhysicalized(b1);
-
     Py_RETURN_TRUE;
 }
 
@@ -275,27 +293,21 @@ PyObject* VRPyTransform::setPhysicsConstraintTo(VRPyTransform* self, PyObject *a
     VRPyTransform *t; VRPyConstraint *c; VRPyConstraint *cs;
     if (! PyArg_ParseTuple(args, "OOO", &t, &c, &cs)) return NULL;
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setPhysicsConstraintTo: C Object is invalid"); return NULL; }
-
     self->obj->getPhysics()->setConstraint( t->obj->getPhysics(), c->obj, cs->obj );
-
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTransform::setMass(VRPyTransform* self, PyObject *args) {
     float f = parseFloat(args);
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setMass: C Object is invalid"); return NULL; }
-
     self->obj->getPhysics()->setMass(f);
-
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTransform::setCollisionMargin(VRPyTransform* self, PyObject *args) {
     float f = parseFloat(args);
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setCollisionMargin: C Object is invalid"); return NULL; }
-
     self->obj->getPhysics()->setCollisionMargin(f);
-
     Py_RETURN_TRUE;
 }
 
@@ -303,9 +315,15 @@ PyObject* VRPyTransform::setCollisionGroup(VRPyTransform* self, PyObject *args) 
     int i = parseInt(args);
     if (i > 15 or i < 0) { PyErr_SetString(err, "VRPyTransform::setCollisionGroup: only 15 groups/masks available, group 0 means no collisions at all"); return NULL; }
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setCollisionGroup: C Object is invalid"); return NULL; }
-
     self->obj->getPhysics()->setCollisionGroup(pow(2,i));
+    Py_RETURN_TRUE;
+}
 
+PyObject* VRPyTransform::setCollisionShape(VRPyTransform* self, PyObject *args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setCollisionShape C Object is invalid"); return NULL; }
+    PyObject* shape; float param;
+    if (! PyArg_ParseTuple(args, "Of", &shape, &param)) return NULL;
+    self->obj->getPhysics()->setShape( PyString_AsString(shape), param );
     Py_RETURN_TRUE;
 }
 
@@ -313,39 +331,29 @@ PyObject* VRPyTransform::setCollisionMask(VRPyTransform* self, PyObject *args) {
     int i = parseInt(args);
     if (i > 15 or i < 0) { PyErr_SetString(err, "VRPyTransform::setCollisionMask: only 15 groups/masks available, group 0 means no collisions at all"); return NULL; }
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setCollisionMask: C Object is invalid"); return NULL; }
-
     self->obj->getPhysics()->setCollisionMask(pow(2,i));
-
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTransform::setPhysicsActivationMode(VRPyTransform* self, PyObject *args) {
     int i = parseInt(args);
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setPhysicsActivationMode: C Object is invalid"); return NULL; }
-
     self->obj->getPhysics()->setActivationMode(i);
-
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTransform::applyImpulse(VRPyTransform* self, PyObject *args) {
     OSG::Vec3f i = parseVec3f(args);
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::applyImpulse: C Object is invalid"); return NULL; }
-
     self->obj->getPhysics()->applyImpulse(i);
-
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTransform::animate(VRPyTransform* self, PyObject *args) {
-    VRPyPath* path; float t; int b;
-    if (! PyArg_ParseTuple(args, "Ofi", &path, &t, &b)) return NULL;
+    VRPyPath* path; float t; float o; int b;
+    if (! PyArg_ParseTuple(args, "Offi", &path, &t, &o, &b)) return NULL;
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::animate: C Object is invalid"); return NULL; }
-
-    //VRPyPath* path = (VRPyPath*)o;
-
-    self->obj->startPathAnimation(path->obj, t, b);
-
+    self->obj->startPathAnimation(path->obj, t, o, b);
     Py_RETURN_TRUE;
 }
 

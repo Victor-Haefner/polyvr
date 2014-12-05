@@ -16,15 +16,17 @@ class VRGuiFile {
         static void init();
 
     public:
-        static void open(bool folder = false, string b1 = "Open", string b2 = "Cancel");
+        static void open(string mode, string title);
         static void close();
         static void apply();
         static string getPath();
-        static string getRelativePath();
+        static string getRelativePath_toScene();
+        static string getRelativePath_toWorkdir();
 
         static void gotoPath(string path);
         static void setFile(string file);
         static void addFilter(string name, string pattern);
+        static void clearFilter();
 
         static void setCallbacks(sig sa = sig(), sig sc = sig());
 };

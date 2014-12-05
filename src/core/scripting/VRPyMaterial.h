@@ -14,6 +14,10 @@ struct VRPyMaterial : VRPyBaseT<OSG::VRMaterial> {
     static PyObject* setDiffuse(VRPyMaterial* self, PyObject* args);
     static PyObject* getSpecular(VRPyMaterial* self);
     static PyObject* setSpecular(VRPyMaterial* self, PyObject* args);
+    static PyObject* getTransparency(VRPyMaterial* self);
+    static PyObject* setTransparency(VRPyMaterial* self, PyObject* args);
+    static PyObject* getShininess(VRPyMaterial* self);
+    static PyObject* setShininess(VRPyMaterial* self, PyObject* args);
 
     static PyObject* setPointSize(VRPyMaterial* self, PyObject* args);
     static PyObject* setLineWidth(VRPyMaterial* self, PyObject* args);

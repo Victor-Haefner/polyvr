@@ -9,6 +9,7 @@
 #include <string>
 #include "core/setup/devices/VRSignal.h"
 #include "core/utils/VRStorage.h"
+#include "VRPyBase.h"
 
 namespace xmlpp{ class Element; }
 
@@ -17,7 +18,7 @@ using namespace std;
 
 class VRScript;
 
-class VRScriptManager : public VRStorage {
+class VRScriptManager : public VRStorage, public VRPyBase {
     private:
         PyObject* pGlobal;
         PyObject* pLocal;
@@ -58,7 +59,10 @@ class VRScriptManager : public VRStorage {
         string getPyVRMethodDoc(string type, string method);
 
         // Python Methods
-		static PyObject* loadCollada(VRScriptManager* self, PyObject *args);
+		static PyObject* exit(VRScriptManager* self);
+		static PyObject* loadGeometry(VRScriptManager* self, PyObject *args);
+		static PyObject* stackCall(VRScriptManager* self, PyObject *args);
+		static PyObject* openFileDialog(VRScriptManager* self, PyObject *args);
 };
 
 OSG_END_NAMESPACE

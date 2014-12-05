@@ -21,7 +21,7 @@ void VRGuiFile::init() {
     dialog->set_action(Gtk::FILE_CHOOSER_ACTION_OPEN);
 }
 
-void VRGuiFile::open(bool folder, string b1, string b2) {
+void VRGuiFile::open(string mode, string title) {
     if (dialog == 0) init();
     setLabel("openFileWarning", "");
     dialog->show();
@@ -29,13 +29,17 @@ void VRGuiFile::open(bool folder, string b1, string b2) {
     Gtk::Button *bt1, *bt2;
     VRGuiBuilder()->get_widget("button9", bt1);
     VRGuiBuilder()->get_widget("button3", bt2);
-    bt1->set_label(b1);
-    bt2->set_label(b2);
+    bt1->set_label(mode);
+    bt2->set_label("Cancel");
+
+    dialog->set_title(title);
+
+    dialog->set_action(Gtk::FILE_CHOOSER_ACTION_OPEN);
+    if (mode == "Save") dialog->set_action(Gtk::FILE_CHOOSER_ACTION_SAVE);
 }
 
 void VRGuiFile::addFilter(string name, string pattern) {
     if (dialog == 0) init();
-    dialog->set_action(Gtk::FILE_CHOOSER_ACTION_OPEN);
 
     Gtk::FileFilter* filter = new Gtk::FileFilter();
     filter->set_name(name);
@@ -44,9 +48,16 @@ void VRGuiFile::addFilter(string name, string pattern) {
     dialog->add_filter(*filter);
 }
 
+void VRGuiFile::clearFilter() {
+    if (dialog == 0) return;
+    for (auto f : dialog->list_filters()) {
+        dialog->remove_filter(*f);
+        delete f;
+    }
+}
+
 void VRGuiFile::setFile(string file) {
     if (dialog == 0) init();
-    dialog->set_action(Gtk::FILE_CHOOSER_ACTION_SAVE);
     dialog->set_current_name(file);
 }
 
@@ -65,7 +76,6 @@ void VRGuiFile::close() {
     if (dialog == 0) init();
     dialog->hide();
     sigClose();
-    dialog->set_action(Gtk::FILE_CHOOSER_ACTION_OPEN);
 
     for (auto f : dialog->list_filters()) {
         dialog->remove_filter(*f);
@@ -103,27 +113,26 @@ path make_relative( path a_From, path a_To ) {
         ++itrFrom, ++itrTo );
     // Navigate backwards in directory to reach previously found base
     for( path::const_iterator fromEnd( a_From.end() ); itrFrom != fromEnd; ++itrFrom ) {
-        if( (*itrFrom) != "." )
-            ret /= "..";
+        if( (*itrFrom) != "." ) ret /= "..";
     }
     // Now navigate down the directory branch
     ret.append( itrTo, a_To.end() );
     return ret;
 }
 
-string VRGuiFile::getRelativePath() {
-    string p = getPath();
-    string workdir;
-    OSG::VRScene* scene = OSG::VRSceneManager::get()->getActiveScene();
-    if (scene) workdir = scene->getWorkdir();
-    else {
-        char cCurrentPath[FILENAME_MAX];
-        getcwd(cCurrentPath, sizeof(cCurrentPath) );
-        workdir = string(cCurrentPath);
-    }
+string VRGuiFile::getRelativePath_toScene() {
+    OSG::VRScene* scene = OSG::VRSceneManager::getCurrent();
+    if (scene == 0) return "";
 
-    path a(p), b(workdir);
-    string rel = make_relative( b, a ).string();
-    //cout << "relative path from " << a.string() << " to " << b.string() << " is " << rel << endl;
-    return rel;
+    path a(getPath()), b(scene->getWorkdir());
+    return make_relative( b, a ).string();
+}
+
+string VRGuiFile::getRelativePath_toWorkdir() {
+    char cCurrentPath[FILENAME_MAX];
+    getcwd(cCurrentPath, sizeof(cCurrentPath) );
+    string workdir = string(cCurrentPath);
+
+    path a(getPath()), b(workdir);
+    return make_relative( b, a ).string();
 }

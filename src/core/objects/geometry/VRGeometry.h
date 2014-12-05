@@ -68,7 +68,7 @@ class VRGeometry : public VRTransform {
         void setTypes(GeoIntegralProperty* types);
         void setPositions(GeoVectorProperty* Pos);
         void setNormals(GeoVectorProperty* Norms);
-        void setColors(GeoVectorProperty* Colors);
+        void setColors(GeoVectorProperty* Colors, bool fixMapping = false);
         void setIndices(GeoIntegralProperty* Indices);
         void setTexCoords(GeoVectorProperty* Tex, int i=0);
         void setLengths(GeoIntegralProperty* lenghts);
@@ -76,6 +76,8 @@ class VRGeometry : public VRTransform {
         void setRandomColors();
         void removeDoubles(float minAngle);
         void decimate(float f);
+        void merge(VRGeometry* geo);
+        void fixColorMapping();
 
         /** Returns the geometric center of the mesh **/
         Vec3f getGeometricCenter();
@@ -102,6 +104,8 @@ class VRGeometry : public VRTransform {
 
         /** Returns the texture or 0 **/
         ImageRecPtr getTexture() { return texture; }
+
+        void influence(vector<Vec3f> pnts, vector<Vec3f> values, int power, float color_code = -1);
 };
 
 OSG_END_NAMESPACE;

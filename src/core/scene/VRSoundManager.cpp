@@ -110,7 +110,7 @@ VRSoundManager::~VRSoundManager() {
 void VRSoundManager::clearSoundMap() { for (auto s : sounds) if (s.second) delete s.second; }
 
 void VRSoundManager::playSound(string filename) {
-    filename = VRSceneManager::get()->getActiveScene()->getWorkdir() + '/' + filename;
+    filename = VRSceneManager::getCurrent()->getWorkdir() + '/' + filename;
     //cout << "playSound " << filename << endl;
     boost::mutex::scoped_lock lock(t_mutex);
     sound_jobs.push_back(filename);

@@ -21,7 +21,8 @@ class TextureObjChunk; OSG_GEN_CONTAINERPTR(TextureObjChunk);
 class LineChunk; OSG_GEN_CONTAINERPTR(LineChunk);
 class PointChunk; OSG_GEN_CONTAINERPTR(PointChunk);
 class PolygonChunk; OSG_GEN_CONTAINERPTR(PolygonChunk);
-class SimpleSHLChunk; OSG_GEN_CONTAINERPTR(SimpleSHLChunk);
+class ShaderProgramChunk; OSG_GEN_CONTAINERPTR(ShaderProgramChunk);
+class ShaderProgram; OSG_GEN_CONTAINERPTR(ShaderProgram);
 
 Color4f toColor4f(Color3f c, float t = 1);
 Color3f toColor3f(Color4f c);
@@ -41,7 +42,10 @@ class VRMaterial : public VRObject {
         PointChunkRecPtr pointChunk;
         PolygonChunkRecPtr polygonChunk;
         ImageRecPtr texture;
-        SimpleSHLChunkRecPtr shaderChunk;
+        ShaderProgramChunkRecPtr shaderChunk;
+        ShaderProgramRecPtr vProgram;
+        ShaderProgramRecPtr fProgram;
+        ShaderProgramRecPtr gProgram;
         VRVideo* video;
 
         string vertexScript;
@@ -96,20 +100,26 @@ class VRMaterial : public VRObject {
         Color3f getEmission();
         float getTransparency();
 
+        void initShaderChunk();
         void setVertexShader(string s);
         void setFragmentShader(string s);
         void setGeometryShader(string s);
         void readVertexShader(string s);
         void readFragmentShader(string s);
         void readGeometryShader(string s);
+        void setVertexScript(string script);
+        void setFragmentScript(string script);
+        void setGeometryScript(string script);
         string getVertexShader();
         string getFragmentShader();
         string getGeometryShader();
+        string getVertexScript();
+        string getFragmentScript();
+        string getGeometryScript();
+
+        template<class T> void setShaderParameter(string name, const T &value);
 
         void setMagMinFilter(string mag, string min);
-        void setVertexProgram(string script);
-        void setFragmentProgram(string script);
-        void setGeometryProgram(string script);
 
         void setLit(bool b);
         bool isLit();

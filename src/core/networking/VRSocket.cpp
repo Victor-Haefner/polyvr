@@ -67,17 +67,26 @@ int server_answer_to_connection (void* param, struct MHD_Connection *connection,
 
     //cout << "HTTP: " << method_s << endl;
 
+    //--- process request --------
     VRFunction<int>* _fkt = new VRFunction<int>("HTTP_answer_job", boost::bind(server_answer_job, sad, _1));
     VRSceneManager::get()->queueJob(_fkt);
 
-    //----------------------------------------------
-    string spage = string();
-    if (sad->pages->count(sad->path) == 1) spage = *(*sad->pages)[sad->path];
-    else cout << "Did not find path: " << sad->path << endl;
+    //--- respond to client ------
+    struct MHD_Response* response = 0;
 
-    const char* page = spage.c_str();
-    struct MHD_Response *response;
-    response = MHD_create_response_from_data (spage.size(), (void*) page, MHD_NO, MHD_YES);
+    if (sad->path != "") {
+        if (sad->pages->count(sad->path)) { // return local site
+            string spage = *(*sad->pages)[sad->path];
+            response = MHD_create_response_from_data (spage.size(), (void*) spage.c_str(), MHD_NO, MHD_YES);
+        } else { // return ressources
+            struct stat sbuf;
+            int fd = open(sad->path.c_str(), O_RDONLY);
+            if (fstat (fd, &sbuf) != 0) cout << "Did not find ressource: " << sad->path << endl;
+            else response = MHD_create_response_from_fd_at_offset (sbuf.st_size, fd, 0);
+        }
+    }
+
+    //--- send response ----------
     int ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
     MHD_destroy_response (response);
     return ret;
@@ -163,7 +172,7 @@ void VRSocket::trigger() {
 }
 
 void VRSocket::handle(string s) {
-    VRScene* scene = VRSceneManager::get()->getActiveScene();
+    VRScene* scene = VRSceneManager::getCurrent();
     tcp_msg = s;
     scene->queueJob(queued_signal);
 }
@@ -325,7 +334,7 @@ void VRSocket::scanTCP(VRThread* thread) {
 }
 
 void VRSocket::initServer(CONNECTION_TYPE t, int _port) {
-    VRFunction<VRThread*>* socket;
+    VRFunction<VRThread*>* socket = 0;
     port = _port;
     switch(t) {
         case UNIX:

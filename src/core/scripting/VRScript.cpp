@@ -13,6 +13,7 @@
 #include "core/utils/toString.h"
 #include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
+#include "core/objects/material/VRMaterial.h"
 #include <libxml++/nodes/element.h>
 
 OSG_BEGIN_NAMESPACE;
@@ -20,8 +21,8 @@ using namespace std;
 
 void updateArgPtr(VRScript::arg* a) {
     string t = a->type;
-    VRScene* scene = VRSceneManager::get()->getActiveScene();
-    VRSetup* setup = VRSetupManager::get()->getCurrent();
+    VRScene* scene = VRSceneManager::getCurrent();
+    VRSetup* setup = VRSetupManager::getCurrent();
 
     if (t == "VRPyObjectType" or t == "VRPyGeometryType" or t == "VRPyTransformType") {
         a->ptr = (void*)scene->get(a->val);
@@ -49,10 +50,10 @@ VRScript::arg::arg(string nspace, string name) {
 }
 
 void VRScript::clean() {
-    VRMobile* mob = (VRMobile*)VRSetupManager::get()->getCurrent()->getDevice(this->mobile);
+    VRMobile* mob = (VRMobile*)VRSetupManager::getCurrent()->getDevice(this->mobile);
     if (mob) mob->remWebSite(getName());
 
-    VRScene* scene = VRSceneManager::get()->getActiveScene();
+    VRScene* scene = VRSceneManager::getCurrent();
 
     for (t_itr = trigs.begin(); t_itr != trigs.end(); t_itr++) {
         trig* t = t_itr->second;
@@ -68,11 +69,11 @@ void VRScript::clean() {
 
 void VRScript::update() {
     if (type == "HTML") {
-        VRMobile* mob = (VRMobile*)VRSetupManager::get()->getCurrent()->getDevice(mobile);
+        VRMobile* mob = (VRMobile*)VRSetupManager::getCurrent()->getDevice(mobile);
         if (mob) mob->addWebSite(getName(), core);
     }
 
-    VRScene* scene = VRSceneManager::get()->getActiveScene();
+    VRScene* scene = VRSceneManager::getCurrent();
 
     for (t_itr = trigs.begin(); t_itr != trigs.end(); t_itr++) {
         trig* t = t_itr->second;
@@ -83,7 +84,7 @@ void VRScript::update() {
         }
 
         if (t->trigger == "on_device") {
-            VRDevice* dev = VRSetupManager::get()->getCurrent()->getDevice(t->dev);
+            VRDevice* dev = VRSetupManager::getCurrent()->getDevice(t->dev);
             int state = 0;
             if (t->state == "Pressed") state = 1;
             else if (t->state == "Released") state = 0;
@@ -126,8 +127,8 @@ void VRScript::update() {
 
     // update args namespaces and map
     map<string, arg*> tmp_args;
-    for (a_itr = args.begin(); a_itr != args.end(); a_itr++) {
-        arg* a = a_itr->second;
+    for (auto _a : args) {
+        arg* a = _a.second;
         a->setNameSpace(VRName::getName());
         tmp_args[a->getName()] = a;
         changeArgValue(a->getName(), a->val);
@@ -157,8 +158,8 @@ VRScript::VRScript(string _name) {
 }
 
 VRScript::~VRScript() {
-    for (a_itr = args.begin(); a_itr != args.end(); a_itr++) delete a_itr->second;
-    for (t_itr = trigs.begin(); t_itr != trigs.end(); t_itr++) delete t_itr->second;
+    for (auto a : args) delete a.second;
+    for (auto t : trigs) delete t.second;
 }
 
 VRScript::arg* VRScript::addArgument() {
@@ -246,8 +247,17 @@ void VRScript::execute() {
     }
 
     if (type == "HTML") {
-        VRMobile* mob = (VRMobile*)VRSetupManager::get()->getCurrent()->getDevice(this->mobile);
+        VRMobile* mob = (VRMobile*)VRSetupManager::getCurrent()->getDevice(this->mobile);
         if (mob) mob->updateClients(getName());
+    }
+
+    if (type == "GLSL") {
+        for (auto m : VRMaterial::materials) {
+            VRMaterial* mat = m.second;
+            if (mat->getVertexScript() == getName()) mat->setVertexScript(getName());
+            if (mat->getFragmentScript() == getName()) mat->setFragmentScript(getName());
+            if (mat->getGeometryScript() == getName()) mat->setGeometryScript(getName());
+        }
     }
 }
 
@@ -390,7 +400,7 @@ void VRScript::load(xmlpp::Element* e) {
             trigs[t->getName()] = t;
 
             if (t->trigger == "on_scene_load") {
-                VRScene* scene = VRSceneManager::get()->getActiveScene();
+                VRScene* scene = VRSceneManager::getCurrent();
                 scene->queueJob(cbfkt_sys);
             }
         }

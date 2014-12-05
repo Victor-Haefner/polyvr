@@ -34,9 +34,12 @@ class path {
         void getStartPoint(Vec3f& p, Vec3f& n, Vec3f& c);
         void getEndPoint(Vec3f& p, Vec3f& n, Vec3f& c);
         void compute(int N);
-        vector<Vec3f> get();
+        vector<Vec3f> getPositions();
         vector<Vec3f> getNormals();
         vector<Vec3f> getColors();
+        Vec3f getPosition(float t);
+        Vec3f getNormal(float t);
+        Vec3f getColor(float t);
 
         void update();
 };

@@ -385,14 +385,16 @@ void saveSnapshot(string path) {
 }
 
 void saveScene(string path) {
-    OSG::VRScene* scene = OSG::VRSceneManager::get()->getActiveScene();
+    OSG::VRScene* scene = OSG::VRSceneManager::getCurrent();
     if (scene == 0) return;
-    if (path == "") path = scene->getPath();
+    //if (path == "") path = scene->getPath();
+    path = scene->getFile();
 
     if (scene->getFlag(OSG::SCENE_WRITE_PROTECTED)) return;
 
     OSG::VRSceneLoader::get()->saveScene(path);
-    string ipath = scene->getWorkdir() + '/'+  scene->getIcon();
+    //string ipath = scene->getWorkdir() + '/'+  scene->getIcon();
+    string ipath = scene->getIcon();
     saveSnapshot(ipath);
 
     OSG::VRGuiSignals::get()->getSignal("onSaveScene")->trigger();

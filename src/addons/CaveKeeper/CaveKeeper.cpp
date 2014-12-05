@@ -54,9 +54,9 @@ SimpleMaterialRecPtr BlockWorld::initMaterial(string texture) {
 
     //shader programs
     VRShader* wshader = new VRShader(mat);
-    wshader->setFragmentProgram("shader/Blockworld.fp");
-    wshader->setVertexProgram("shader/Blockworld.vp");
-    wshader->setGeometryProgram("shader/Blockworld.gp");
+    wshader->setFragmentProgram("../shader/Blockworld.fp");
+    wshader->setVertexProgram("../shader/Blockworld.vp");
+    wshader->setGeometryProgram("../shader/Blockworld.gp");
 
     //shader parameter
     float voxel = 1.0;
@@ -99,12 +99,12 @@ VRGeometry* BlockWorld::createChunk(vector<octree::element*>& elements) {
 
     GeometryRecPtr g = Geometry::create();
     GeoUInt8PropertyRecPtr      Type = GeoUInt8Property::create();
-    GeoUInt32PropertyRefPtr     Length = GeoUInt32Property::create();
+    GeoUInt32PropertyRecPtr     Length = GeoUInt32Property::create();
     GeoPnt3fPropertyRecPtr      Pos = GeoPnt3fProperty::create();
-    GeoVec3fPropertyRefPtr      Norms = GeoVec3fProperty::create();
-    GeoVec3fPropertyRefPtr      Colors = GeoVec3fProperty::create();
+    GeoVec3fPropertyRecPtr      Norms = GeoVec3fProperty::create();
+    GeoVec3fPropertyRecPtr      Colors = GeoVec3fProperty::create();
     GeoVec2fPropertyRefPtr      texs = GeoVec2fProperty::create();
-    GeoUInt32PropertyRefPtr     Indices = GeoUInt32Property::create();
+    GeoUInt32PropertyRecPtr     Indices = GeoUInt32Property::create();
     SimpleMaterialRecPtr        Mat = SimpleMaterial::create();
 
     GeoVec4fPropertyRefPtr      vLights = GeoVec4fProperty::create();
@@ -170,7 +170,7 @@ void BlockWorld::appendToVector(vector<octree::element*>* elements, octree::elem
 void BlockWorld::updateShaderCamPos() {
     //VRTransform* e = VRSceneManager::get()->getTrackerUser(); // TODO
     VRTransform* e = 0;
-    if (e == 0) e = VRSceneManager::get()->getActiveScene()->getActiveCamera();
+    if (e == 0) e = VRSceneManager::getCurrent()->getActiveCamera();
     Vec4f cam_pos = Vec4f(e->getWorldPosition());
 
     map<string, VRShader*>::iterator itr = shader->begin();
@@ -205,7 +205,7 @@ void BlockWorld::initWorld() {
     createSphere(6, Vec3i(0,0,0));
 
     // TODO ?
-    VRScene* scene = VRSceneManager::get()->getActiveScene();
+    VRScene* scene = VRSceneManager::getCurrent();
     VRFunction<int>* ufkt = new VRFunction<int>("blockworld_update", boost::bind(&BlockWorld::updateShaderCamPos, this));
     scene->addUpdateFkt(ufkt, 1);
 

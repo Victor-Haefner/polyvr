@@ -106,7 +106,7 @@ ART::~ART() {
 ART_device* ART::addARTDevice(VRTransform* trans) {
     ART_device* t = addARTDevice();
     t->ent = trans;
-    if (t->ent) VRSetupManager::get()->getCurrent()->addObject(t->ent);
+    if (t->ent) VRSetupManager::getCurrent()->addObject(t->ent);
     return t;
 }
 
@@ -116,7 +116,7 @@ ART_device* ART::addARTDevice(VRFlystick* dev) {
     t->type = 1;
     if (dev) t->ent = t->dev->getBeacon();
     devices[t->getName()] = t;
-    if (t->ent) VRSetupManager::get()->getCurrent()->addObject(t->ent);
+    if (t->ent) VRSetupManager::getCurrent()->addObject(t->ent);
     return t;
 }
 

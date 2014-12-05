@@ -31,6 +31,7 @@ class VRCallbackManager {
         ~VRCallbackManager();
 
         void queueJob(VRFunction<int>* f, int priority = 0);
+        void queueEvent(VRFunction<int>* f, float delay = 0, int priority = 0);
 
         void addUpdateFkt(VRFunction<int>* f, int priority = 0);
         void addTimeoutFkt(VRFunction<int>* f, int priority, int timeout);

@@ -138,6 +138,7 @@ void VRObject::subChild(VRObject* child, bool osg) {
     if (target != -1) children.erase(children.begin() + target);
     if (child->parent == this) child->parent=0;
     child->graphChanged = VRGlobals::get()->CURRENT_FRAME;
+    updateChildrenIndices();
 }
 
 void VRObject::switchParent(VRObject* new_p) {
@@ -170,10 +171,46 @@ void VRObject::detach() {
     parent = 0;
 }
 
-VRObject* VRObject::getChild(int i) { return children[i]; }
+VRObject* VRObject::getChild(int i) {
+    if (i < 0 or i >= (int)children.size()) return 0;
+    return children[i];
+}
 
 /** Returns the parent of this object **/
 VRObject* VRObject::getParent() { return parent; }
+
+VRObject* VRObject::getAtPath(string path) {
+    vector<int> pvec;
+    stringstream ss(path);
+    string item;
+    while (getline(ss, item, ':')) pvec.push_back(toInt(item));
+
+    pvec.erase( pvec.begin() ); // ditch first element (should be the local node)
+
+    VRObject* res = this;
+    for (int c : pvec) {
+        if (res == 0) break;
+        res = res->getChild(c);
+    }
+
+    return res;
+}
+
+vector<VRObject*> VRObject::getChildren(bool recursive, string type) {
+    if (!recursive) {
+        if (type == "") return children;
+        vector<VRObject*> res;
+        for (auto c : children) if (c->getType() == type) res.push_back(c);
+        return res;
+    }
+
+    vector<VRObject*> res = getChildren(false, type);
+    for (auto c : children) {
+        vector<VRObject*> tmp = c->getChildren(true, type);
+        res.insert( res.end(), tmp.begin(), tmp.end() );
+    }
+    return res;
+}
 
 vector<VRObject*> VRObject::getObjectListByType(string _type) {
     vector<VRObject*> v;
@@ -184,7 +221,7 @@ vector<VRObject*> VRObject::getObjectListByType(string _type) {
 void VRObject::getObjectListByType(string _type, vector<VRObject*>& list) {
     if (type == "Camera") return;
     if (type == _type) list.push_back(this);
-    for (uint i=0;i<children.size();i++) children[i]->getObjectListByType(_type, list);
+    for (auto c : children) c->getObjectListByType(_type, list);
 }
 
 VRObject* VRObject::find(NodeRecPtr n, string indent) {
@@ -330,6 +367,12 @@ void VRObject::_switchParent(NodeRecPtr parent) {
 
     p_old->subChild(node);
     parent->addChild(node);
+}
+
+void VRObject::updateChildrenIndices() {
+    for (int i=0; i<children.size(); i++) {
+        children[i]->childIndex = i;
+    }
 }
 
 int VRObject::findChild(VRObject* node) {

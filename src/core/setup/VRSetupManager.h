@@ -19,12 +19,11 @@ class VRSetupManager {
 
     public:
         static VRSetupManager* get();
+        static VRSetup* getCurrent();
         ~VRSetupManager();
 
         VRSetup* create();
         VRSetup* load(string name, string path);
-
-        VRSetup* getCurrent();
 };
 
 OSG_END_NAMESPACE;

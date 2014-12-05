@@ -123,7 +123,7 @@ vector<VRGeometry*> extractPointsOnPlane(VRGeometry* geo_in, Vec4f plane, Accumu
 
     for (auto geo : res) {
         geo->setType(GL_POINTS);
-        GeoUInt32PropertyRefPtr inds = GeoUInt32Property::create();
+        GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
         for (uint i=0; i<geo->getMesh()->getPositions()->size(); i++) inds->addValue(i);
         geo->setIndices(inds);
         geo->setMaterial(new VRMaterial("pmat"));

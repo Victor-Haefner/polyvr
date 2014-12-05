@@ -13,6 +13,8 @@
 #include <iostream>
 //#include <boost/locale.hpp>
 #include "core/scene/VRSceneManager.h"
+#include "core/setup/VRSetupManager.h"
+#include "core/setup/windows/VRView.h"
 #include "core/utils/VRInternalMonitor.h"
 #include "core/scene/VRSceneLoader.h"
 #include "VRGuiUtils.h"
@@ -45,8 +47,8 @@ void VRGuiBits_on_viewoption_changed(GtkComboBox* cb, gpointer data) {
     if (i == -1) return;
 
     // get all in
-    VRScene* scene = VRSceneManager::get()->getActiveScene();
-    VRSetup* setup = VRSetupManager::get()->getCurrent();
+    VRScene* scene = VRSceneManager::getCurrent();
+    VRSetup* setup = VRSetupManager::getCurrent();
     Glib::RefPtr<Gtk::ListStore> opt_list = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("view_options"));
     VRGuiSetup_ViewOptsColumns cols;
     Gtk::TreeModel::Row row = *getComboboxIter("combobox20");
@@ -66,14 +68,14 @@ void VRGuiBits_on_viewoption_changed(GtkComboBox* cb, gpointer data) {
 
 void VRGuiBits_on_camera_changed(GtkComboBox* cb, gpointer data) {
     int i = gtk_combo_box_get_active(cb);
-    VRScene* scene = VRSceneManager::get()->getActiveScene();
+    VRScene* scene = VRSceneManager::getCurrent();
     scene->setActiveCamera(i);
 
     VRGuiSignals::get()->getSignal("camera_changed")->trigger();
 }
 
 void VRGuiBits_on_navigation_changed(GtkComboBox* cb, gpointer data) {
-    VRScene* scene = VRSceneManager::get()->getActiveScene();
+    VRScene* scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
 
     char* c = gtk_combo_box_get_active_text(cb);
@@ -175,6 +177,16 @@ bool VRGuiBits::toggleFullscreen(GdkEventKey* k) {
     return true;
 }
 
+bool VRGuiBits::toggleStereo(GdkEventKey* k) {
+    if (k->keyval != 65479) return false;
+    VRView* v = VRSetupManager::getCurrent()->getView(0);
+    if (v == 0) return false;
+
+    bool b = v->isStereo();
+    v->setStereo(!b);
+    return true;
+}
+
 VRGuiBits::VRGuiBits() {
     setComboboxCallback("combobox4", VRGuiBits_on_camera_changed);
     setComboboxCallback("combobox9", VRGuiBits_on_navigation_changed);
@@ -203,6 +215,7 @@ VRGuiBits::VRGuiBits() {
     // window fullscreen
     Gtk::Window* win;
     VRGuiBuilder()->get_widget("window1", win);
+    win->signal_key_press_event().connect( sigc::mem_fun(*this, &VRGuiBits::toggleStereo) );
     win->signal_key_press_event().connect( sigc::mem_fun(*this, &VRGuiBits::toggleFullscreen) );
 
     // VTE
@@ -260,14 +273,14 @@ VRGuiBits::VRGuiBits() {
 // scene updated, get cameras and nav presets
 void VRGuiBits::update() {
     // update camera liststore
-    VRScene* scene = VRSceneManager::get()->getActiveScene();
+    VRScene* scene = VRSceneManager::getCurrent();
     setLabel("label24", "Project: None");
     if (scene == 0) return;
 
     vector<VRCamera*> cams = scene->getCameraMap();
     Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("cameras"));
     store->clear();
-    int active;
+    int active = 0;
     for (uint i=0; i<cams.size(); i++) {
         if (cams[i] == scene->getActiveCamera()) active = i;
         Gtk::ListStore::Row row = *store->append();

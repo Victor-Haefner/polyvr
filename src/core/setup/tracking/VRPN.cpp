@@ -48,7 +48,7 @@ void VRPN_CALLBACK handle_tracker(void* data, const vrpn_TRACKERCB t ) { // TODO
     //m[3] = Vec4f(-t.pos[0], -t.pos[1], 0.8, m[3][3]);
     //m[3] = Vec4f(0,0,1, m[3][3]);
     //obj->setMatrix(m);
-    obj->setPose(pos, pos+Vec3f(0,0,1), Vec3f(0,1,0));
+    obj->setPose(pos, Vec3f(0,0,1), Vec3f(0,1,0));
 }
 
 VRPN::VRPN() {
@@ -100,7 +100,7 @@ void VRPN::addVRPNTracker(int ID, string addr, Vec3f offset, float scale) {
     t->ID = ID;
     t->offset = offset;
     t->scale = scale;
-    VRSetupManager::get()->getCurrent()->addObject(t->ent);
+    VRSetupManager::getCurrent()->addObject(t->ent);
 
     tracker[ID] = t;
 }

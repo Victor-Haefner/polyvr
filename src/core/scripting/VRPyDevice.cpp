@@ -62,6 +62,7 @@ PyMethodDef VRPyDevice::methods[] = {
     {"getKey", (PyCFunction)VRPyDevice::getKey, METH_NOARGS, "Get activated device key." },
     {"getKeyState", (PyCFunction)VRPyDevice::getKeyState, METH_VARARGS, "Get device key state." },
     {"getSlider", (PyCFunction)VRPyDevice::getSlider, METH_VARARGS, "Get device slider state." },
+    {"getMessage", (PyCFunction)VRPyDevice::getMessage, METH_NOARGS, "Get device received message." },
     {"getType", (PyCFunction)VRPyDevice::getType, METH_NOARGS, "Get device type." },
     {"setDnD", (PyCFunction)VRPyDevice::setDnD, METH_VARARGS, "Set drag and drop." },
     {"getIntersected", (PyCFunction)VRPyDevice::getIntersected, METH_NOARGS, "Get device intersected object." },
@@ -123,6 +124,11 @@ PyObject* VRPyDevice::getKeyState(VRPyDevice* self, PyObject *args) {
 PyObject* VRPyDevice::getKey(VRPyDevice* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getKey, Object is invalid"); return NULL; }
     return PyInt_FromLong(self->obj->key());
+}
+
+PyObject* VRPyDevice::getMessage(VRPyDevice* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getKey, Object is invalid"); return NULL; }
+    return PyString_FromString(self->obj->getMessage().c_str());
 }
 
 PyObject* VRPyDevice::getSlider(VRPyDevice* self, PyObject *args) {

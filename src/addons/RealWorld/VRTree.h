@@ -170,7 +170,7 @@ class VRTree : public VRGeometry {
                 texs.push_back(s->params[1]);
             }
 
-            geo->create(GL_LINE, pos, norms, inds, texs);
+            geo->create(GL_LINES, pos, norms, inds, texs);
             return geo;
         }
 

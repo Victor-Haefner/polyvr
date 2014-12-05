@@ -1103,7 +1103,7 @@ cave allocated</property>
       <!-- column-name Type -->
       <column type="gchararray"/>
       <!-- column-name obj -->
-      <column type="gpointer"/>
+      <column type="gchararray"/>
       <!-- column-name foreground -->
       <column type="gchararray"/>
       <!-- column-name background -->

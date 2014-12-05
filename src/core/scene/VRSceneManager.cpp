@@ -9,6 +9,8 @@
 #include <OpenSG/OSGSceneFileHandler.h>
 #include <gtkmm/main.h>
 #include <GL/glut.h>
+#include <unistd.h>
+#include <errno.h>
 
 
 OSG_BEGIN_NAMESPACE
@@ -32,6 +34,10 @@ VRSceneManager::VRSceneManager() {
     g_timeout_add_full(G_PRIORITY_LOW, 17, gtkUpdate, NULL, NULL); // 60 Hz
     glutDisplayFunc(glutUpdate);
     glutIdleFunc(glutUpdate);
+
+    char cCurrentPath[FILENAME_MAX];
+    getcwd(cCurrentPath, sizeof(cCurrentPath) );
+    original_workdir = string(cCurrentPath);
 }
 
 VRSceneManager::~VRSceneManager() { for (auto scene : scenes) delete scene.second; }
@@ -48,28 +54,46 @@ void VRSceneManager::addScene(VRScene* s) {
     setActiveScene(s);
 }
 
+string VRSceneManager::getOriginalWorkdir() { return original_workdir; }
+
 void VRSceneManager::removeScene(VRScene* s) {
     if (s == 0) return;
     scenes.erase(s->getName());
     delete s;
 
-    VRSetupManager::get()->getCurrent()->resetViewports();
-    VRSetupManager::get()->getCurrent()->clearSignals();
+    VRSetupManager::getCurrent()->resetViewports();
+    VRSetupManager::getCurrent()->clearSignals();
     VRTransform::changedObjects.clear();
     VRTransform::dynamicObjects.clear();
     active = "NO_SCENE_ACTIVE";
 
     // deactivate windows
-    map<string, VRWindow*> windows = VRSetupManager::get()->getCurrent()->getWindows();
+    map<string, VRWindow*> windows = VRSetupManager::getCurrent()->getWindows();
     map<string, VRWindow*>::iterator itr;
     for (itr = windows.begin(); itr != windows.end(); itr++) itr->second->setContent(false);
+
+    setWorkdir(original_workdir);
+}
+
+void VRSceneManager::setWorkdir(string path) {
+    if (path == "") return;
+    string full_path = path[0] != '/' ? original_workdir + '/' + path : path;
+    int ret = chdir(full_path.c_str());
+    if (ret != 0) cout << "VRSceneManager::setWorkdir switch to " << path << " failed with: " << strerror(errno) << endl;
+
+    // check path
+    /*char cCurrentPath[FILENAME_MAX];
+    getcwd(cCurrentPath, sizeof(cCurrentPath) );
+    string workdir = string(cCurrentPath);
+    cout << "VRSceneManager::setWorkdir current: " << workdir << " "  << endl;*/
 }
 
 void VRSceneManager::newScene(string path) {
-    removeScene(getActiveScene());
+    removeScene(getCurrent());
 
     VRScene* scene = new VRScene();
     scene->setPath(path);
+    setWorkdir(scene->getWorkdir());
     scene->setName(scene->getFileName());
     VRTransform* cam = scene->addCamera("Default");
 
@@ -77,7 +101,7 @@ void VRSceneManager::newScene(string path) {
     headlight->setType("point");
     VRLightBeacon* headlight_B = new VRLightBeacon("Headlight_beacon");
     headlight->setBeacon(headlight_B);
-    VRTransform* user = VRSetupManager::get()->getCurrent()->getUser();
+    VRTransform* user = VRSetupManager::getCurrent()->getUser();
     scene->add(headlight);
     headlight->addChild(cam);
     if (user) user->addChild(headlight_B);
@@ -96,7 +120,7 @@ void VRSceneManager::setActiveScene(VRScene* s) {
     if (active != "NO_SCENE_ACTIVE") scenes[active]->getRoot()->hide(); //hide old scene
 
     active = s->getName();
-    VRSetupManager::get()->getCurrent()->setScene(s);
+    VRSetupManager::getCurrent()->setScene(s);
 
     // todo:
     //  - add scene signals to setup devices
@@ -107,28 +131,25 @@ void VRSceneManager::setActiveScene(VRScene* s) {
 
 void VRSceneManager::setActiveSceneByName(string s) { if (scenes.count(s) == 1) setActiveScene(scenes[s]); }
 
-//void printTree() { scenes[active]->printTree();}
-
 int VRSceneManager::getSceneNum() {return scenes.size();}
 
 VRScene* VRSceneManager::getScene(string s) { if (scenes.count(s)) return scenes[s]; else return 0; }
 
-VRScene* VRSceneManager::getActiveScene() { return getScene(active); }
+VRScene* VRSceneManager::getCurrent() { return get()->getScene(get()->active); }
 
 void VRSceneManager::update() {
     int fps = VRRate::get()->getRate();
 
     if (scenes.count(active) == 1) {
-        //if (active == "NO_SCENE_ACTIVE") cout << "\nupdate " << active << flush; //TODO: segfault when closing scene
         if (scenes[active] != 0) {
             scenes[active]->update();
-            VRSetupManager::get()->getCurrent()->updateActivatedSignals();
+            VRSetupManager::getCurrent()->updateActivatedSignals();
         }
     }
 
     updateCallbacks();
 
-    VRSetupManager::get()->getCurrent()->updateWindows();//rendering
+    VRSetupManager::getCurrent()->updateWindows();//rendering
 
     VRGlobals::get()->CURRENT_FRAME++;
     VRGlobals::get()->FRAME_RATE = fps;

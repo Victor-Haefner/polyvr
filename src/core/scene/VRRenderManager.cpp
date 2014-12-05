@@ -22,7 +22,7 @@ VRRenderManager::VRRenderManager() {
 VRRenderManager::~VRRenderManager() {}
 
 void VRRenderManager::update() {
-    RenderActionRefPtr ract = VRSetupManager::get()->getCurrent()->getRenderAction();
+    RenderActionRefPtr ract = VRSetupManager::getCurrent()->getRenderAction();
     ract->setFrustumCulling(frustumCulling);
     ract->setOcclusionCulling(occlusionCulling);
 }

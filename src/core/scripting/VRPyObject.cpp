@@ -59,10 +59,11 @@ PyMethodDef VRPyObject::methods[] = {
     {"hide", (PyCFunction)VRPyObject::hide, METH_NOARGS, "Hide object" },
     {"show", (PyCFunction)VRPyObject::show, METH_NOARGS, "Show object" },
     {"isVisible", (PyCFunction)VRPyObject::isVisible, METH_NOARGS, "Return if object is visible" },
+    {"setVisible", (PyCFunction)VRPyObject::setVisible, METH_VARARGS, "Set the visibility of the object" },
     {"getType", (PyCFunction)VRPyObject::getType, METH_NOARGS, "Return the object type string (such as \"Geometry\")" },
     {"duplicate", (PyCFunction)VRPyObject::duplicate, METH_NOARGS, "Duplicate object including subtree" },
     {"getChild", (PyCFunction)VRPyObject::getChild, METH_VARARGS, "Return child object with index i" },
-    {"getChildren", (PyCFunction)VRPyObject::getChildren, METH_NOARGS, "Return the list of children objects" },
+    {"getChildren", (PyCFunction)VRPyObject::getChildren, METH_VARARGS, "Return the list of children objects" },
     {"getParent", (PyCFunction)VRPyObject::getParent, METH_NOARGS, "Return parent object" },
     {"find", (PyCFunction)VRPyObject::find, METH_VARARGS, "Find node with given name (str) in scene graph below this node" },
     {"isPickable", (PyCFunction)VRPyObject::isPickable, METH_NOARGS, "Return if the object is pickable" },
@@ -105,10 +106,14 @@ PyObject* VRPyObject::show(VRPyObject* self) {
 
 PyObject* VRPyObject::isVisible(VRPyObject* self) {
 	if (self->obj == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
-    if (self->obj->isVisible())
-		Py_RETURN_TRUE;
-	else
-		Py_RETURN_FALSE;
+    if (self->obj->isVisible()) Py_RETURN_TRUE;
+	else Py_RETURN_FALSE;
+}
+
+PyObject* VRPyObject::setVisible(VRPyObject* self, PyObject* args) {
+	if (self->obj == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
+    self->obj->setVisible( parseBool(args) );
+    Py_RETURN_TRUE;
 }
 
 PyObject* VRPyObject::getType(VRPyObject* self) {
@@ -134,36 +139,29 @@ PyObject* VRPyObject::destroy(VRPyObject* self) {
 }
 
 PyObject* VRPyObject::addChild(VRPyObject* self, PyObject* args, PyObject *kwds) {
-    PyObject* child = NULL;
+    VRPyObject* child = NULL;
     if (! PyArg_ParseTuple(args, "O", &child)) return NULL;
-    if (child == NULL) {
-        PyErr_SetString(err, "Missing child parameter");
-        return NULL;
-    }
-
-    VRPyObject* _child = (VRPyObject*)child;
+    if (child == NULL) { PyErr_SetString(err, "Missing child parameter"); return NULL; }
 
     if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::addChild, Parent is invalid"); return NULL; }
-    if (_child->obj == 0) { PyErr_SetString(err, "VRPyObject::addChild, Child is invalid"); return NULL; }
+    if (child->obj == 0) { PyErr_SetString(err, "VRPyObject::addChild, Child is invalid"); return NULL; }
 
-    self->obj->addChild(_child->obj);
+    self->obj->addChild(child->obj);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyObject::switchParent(VRPyObject* self, PyObject* args, PyObject *kwds) {
-    PyObject* parent = NULL;
+    VRPyObject* parent = NULL;
     if (! PyArg_ParseTuple(args, "O", &parent)) return NULL;
     if (parent == NULL) {
         PyErr_SetString(err, "Missing parent parameter");
         return NULL;
     }
 
-    VRPyObject* _parent = (VRPyObject*)parent;
-
     if (self->obj == 0) { PyErr_SetString(err, "C Child is invalid"); return NULL; }
-    if (_parent->obj == 0) { PyErr_SetString(err, "C Parent is invalid"); return NULL; }
+    if (parent->obj == 0) { PyErr_SetString(err, "C Parent is invalid"); return NULL; }
 
-    self->obj->switchParent(_parent->obj);
+    self->obj->switchParent(parent->obj);
     Py_RETURN_TRUE;
 }
 
@@ -184,14 +182,21 @@ PyObject* VRPyObject::getChild(VRPyObject* self, PyObject* args) {
     return VRPyTypeCaster::cast(c);
 }
 
-PyObject* VRPyObject::getChildren(VRPyObject* self) {
+PyObject* VRPyObject::getChildren(VRPyObject* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::getChild, Child is invalid"); return NULL; }
 
-    int N = self->obj->getChildrenCount();
-    PyObject* li = PyList_New(N);
-    for (int i=0; i<N; i++) {
-        OSG::VRObject* c = self->obj->getChild(i);
-        PyList_SetItem(li, i, VRPyTypeCaster::cast(c));
+    PyObject* ptype = 0; int doRecursive = 0;
+    if (PyTuple_Size(args) == 1) if (! PyArg_ParseTuple(args, "i", &doRecursive)) return NULL;
+    if (PyTuple_Size(args) == 2) if (! PyArg_ParseTuple(args, "iO", &doRecursive, &ptype)) return NULL;
+
+    string type;
+    if (ptype) type = PyString_AsString(ptype);
+
+    vector<OSG::VRObject*> objs = self->obj->getChildren(doRecursive, type);
+
+    PyObject* li = PyList_New(objs.size());
+    for (int i=0; i<objs.size(); i++) {
+        PyList_SetItem(li, i, VRPyTypeCaster::cast(objs[i]));
     }
 
     return li;

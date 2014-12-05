@@ -1,4 +1,5 @@
 
+#include "core/utils/isNan.h"
 #include "core/utils/toString.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
@@ -13,6 +14,7 @@
 #include <OpenSG/OSGMatrixUtility.h>
 #include <OpenSG/OSGSimpleGeometry.h>        // Methods to create simple geos.
 #include <libxml++/nodes/element.h>
+
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -287,6 +289,7 @@ void VRTransform::setFixed(bool b) {
 
 /** Set the world matrix of the object **/
 void VRTransform::setWorldMatrix(Matrix _m) {
+    if (isNan(_m)) return;
     Matrix wm, lm;
     getWorldMatrix(wm);
     getMatrix(lm);
@@ -301,6 +304,7 @@ void VRTransform::setWorldMatrix(Matrix _m) {
 
 /** Set the world position of the object **/
 void VRTransform::setWorldPosition(Vec3f pos) {
+    if (isNan(pos)) return;
     Vec3f tmp = getWorldPosition();
 
     _from = pos - tmp + _from;
@@ -310,6 +314,7 @@ void VRTransform::setWorldPosition(Vec3f pos) {
 //local pose setter--------------------
 /** Set the from vector **/
 void VRTransform::setFrom(Vec3f pos) {
+    if (isNan(pos)) return;
     //cout << "\nSet From : " << name << getID() << " : " << pos;
     Vec3f dir;
     if (orientation_mode) dir = _at - _from; // TODO: there may a better way
@@ -320,6 +325,7 @@ void VRTransform::setFrom(Vec3f pos) {
 
 /** Set the at vector **/
 void VRTransform::setAt(Vec3f at) {
+    if (isNan(at)) return;
     _at = at;
     orientation_mode = false;
     reg_change();
@@ -327,11 +333,13 @@ void VRTransform::setAt(Vec3f at) {
 
 /** Set the up vector **/
 void VRTransform::setUp(Vec3f up) {
+    if (isNan(up)) return;
     _up = up;
     reg_change();
 }
 
 void VRTransform::setDir(Vec3f dir) {
+    if (isNan(dir)) return;
     _at = _from + dir;
     orientation_mode = true;
     reg_change();
@@ -342,22 +350,25 @@ void VRTransform::set_orientation_mode(bool b) { orientation_mode = b; }
 
 /** Set the orientation of the object with the at and up vectors **/
 void VRTransform::setOrientation(Vec3f at, Vec3f up) {
+    if (isNan(at) || isNan(up)) return;
     _at = at;
     _up = up;
     reg_change();
 }
 
 /** Set the pose of the object with the from, at and up vectors **/
-void VRTransform::setPose(Vec3f from, Vec3f at, Vec3f up) {
+void VRTransform::setPose(Vec3f from, Vec3f dir, Vec3f up) {
+    if (isNan(from) || isNan(dir) || isNan(up)) return;
     _from = from;
-    _at = at;
     _up = up;
+    setDir(dir);
     reg_change();
 }
 
 /** Set the local matrix **/
 void VRTransform::setMatrix(Matrix _m) {
-    setPose(Vec3f(_m[3]), Vec3f(-_m[2]+_m[3]), Vec3f(_m[1]));
+    if (isNan(_m)) return;
+    setPose(Vec3f(_m[3]), Vec3f(-_m[2]), Vec3f(_m[1]));
 }
 //-------------------------------------
 
@@ -371,6 +382,7 @@ void VRTransform::showCoordAxis(bool b) {
 void VRTransform::setScale(float s) { setScale(Vec3f(s,s,s)); }
 
 void VRTransform::setScale(Vec3f s) {
+    if (isNan(s)) return;
     _scale = s;
     reg_change();
 }
@@ -379,6 +391,7 @@ Vec3f VRTransform::getScale() { return _scale; }
 
 /** Rotate the object around its up axis **/
 void VRTransform::rotate(float a) {//rotate around up axis
+    if (isNan(a)) return;
     Vec3f d = _at - _from;
 
     Quaternion q = Quaternion(_up, a);
@@ -391,6 +404,7 @@ void VRTransform::rotate(float a) {//rotate around up axis
 }
 
 void VRTransform::rotate(float a, Vec3f v) {//rotate around up axis
+    if (isNan(a) || isNan(v)) return;
     Vec3f d = _at - _from;
 
     v.normalize();
@@ -405,6 +419,7 @@ void VRTransform::rotate(float a, Vec3f v) {//rotate around up axis
 
         /** Rotate the object around its dir axis **/
 void VRTransform::rotateUp(float a) {//rotate around _at axis
+    if (isNan(a)) return;
     Vec3f d = _at - _from;
     d.normalize();
 
@@ -417,6 +432,7 @@ void VRTransform::rotateUp(float a) {//rotate around _at axis
 
         /** Rotate the object around its x axis **/
 void VRTransform::rotateX(float a) {//rotate around x axis
+    if (isNan(a)) return;
     Vec3f dir = _at - _from;
     Vec3f d = dir.cross(_up);
     d.normalize();
@@ -432,6 +448,7 @@ void VRTransform::rotateX(float a) {//rotate around x axis
 
 /** Rotate the object around the point where at indicates and the up axis **/
 void VRTransform::rotateAround(float a) {//rotate around focus using up axis
+    if (isNan(a)) return;
     orientation_mode = false;
     Vec3f d = _at - _from;
 
@@ -445,6 +462,7 @@ void VRTransform::rotateAround(float a) {//rotate around focus using up axis
 
 /** translate the object with a vector v, this changes the from and at vector **/
 void VRTransform::translate(Vec3f v) {
+    if (isNan(v)) return;
     _at += v;
     _from += v;
     reg_change();
@@ -452,6 +470,7 @@ void VRTransform::translate(Vec3f v) {
 
 /** translate the object by changing the from in direction of the at vector **/
 void VRTransform::zoom(float d) {
+    if (isNan(d)) return;
     Vec3f dv = _at-_from;
     /*float norm = dv.length();
     dv /= norm;
@@ -462,6 +481,7 @@ void VRTransform::zoom(float d) {
 
 /** Translate the object towards at **/
 void VRTransform::move(float d) {
+    if (isNan(d)) return;
     Vec3f dv = _at-_from;
     dv.normalize();
     _at += dv*d;
@@ -509,16 +529,26 @@ void VRTransform::drop() {
 }
 
 /** Cast a ray in world coordinates from the object in its local coordinates, -z axis defaults **/
-Line VRTransform::castRay(Vec3f dir) {
-    Matrix m;
-    getWorldMatrix(m);
+Line VRTransform::castRay(VRObject* obj, Vec3f dir) {
+    Matrix m = getWorldMatrix();
+    if (obj) obj = obj->getParent();
+
+    if (obj != 0) {
+        while (!obj->hasAttachment("transform")) { obj = obj->getParent(); if(obj == 0) break; }
+        if (obj != 0) {
+            VRTransform* tr = (VRTransform*)obj;
+            Matrix om = tr->getWorldMatrix();
+            om.invert();
+            om.mult(m);
+            m = om;
+        }
+    }
 
     m.mult(dir,dir); dir.normalize();
-    Pnt3f p0 = Vec3f(m[3]);// + dir*0.5;
+    Pnt3f p0 = Vec3f(m[3]);
 
     Line ray;
     ray.setValue(p0, dir);
-
     return ray;
 }
 
@@ -686,6 +716,7 @@ void VRTransform::loadContent(xmlpp::Element* e) {
     if (e->get_attribute("scale")) _scale = toVec3f(e->get_attribute("scale")->get_value());
 
     setPose(f, a, u);
+    setAt(a);
 
     if (e->get_attribute("cT_mode")) tConPlane = toBool(e->get_attribute("cT_mode")->get_value());
     if (e->get_attribute("do_cT")) doTConstraint = toBool(e->get_attribute("do_cT")->get_value());
@@ -698,29 +729,21 @@ void VRTransform::loadContent(xmlpp::Element* e) {
     if(doTConstraint or doRConstraint) setFixed(false);
 }
 
-void VRTransform::startPathAnimation(path* p, float t, bool redirect) {
-    VRFunction<Vec3f> *fkt1, *fkt2;
-    fkt1 = new VRFunction<Vec3f>("3DEntSetFrom", boost::bind(&VRTransform::setFrom, this, _1));
-    fkt2 = new VRFunction<Vec3f>("3DEntSetDir", boost::bind(&VRTransform::setDir, this, _1));
+void setFromPath(VRTransform* tr, path* p, bool redirect, float t) {
+    tr->setFrom( p->getPosition(t) );
+    if (redirect) tr->setDir( p->getNormal(t) );
+}
 
-    Vec3f p0, p1, n0, n1, c, d;
-    p->getStartPoint(p0,n0,c);
-    p->getEndPoint(p1,n1,c);
-    d = getDir();
-
-    VRScene* scene = VRSceneManager::get()->getActiveScene();
-    int a1, a2;
-    a1 = scene->addAnimation(t, 0, fkt1, p0, p1, false);
-    if (redirect) a2 = scene->addAnimation(t, 0, fkt2, n0, n1, false);
-    else a2 = scene->addAnimation(t, 0, fkt2, d, d, false);
-    animations.push_back(a1);
-    animations.push_back(a2);
+void VRTransform::startPathAnimation(path* p, float time, float offset, bool redirect) {
+    VRFunction<float>* fkt = new VRFunction<float>("TransAnim", boost::bind(setFromPath, this, p, redirect, _1));
+    VRScene* scene = VRSceneManager::getCurrent();
+    int a = scene->addAnimation(time, offset, fkt, 0.f, 1.f, false);
+    animations.push_back(a);
 }
 
 void VRTransform::stopAnimation() {
-    VRScene* scene = VRSceneManager::get()->getActiveScene();
-    for (auto a : animations)
-        scene->stopAnimation(a);
+    VRScene* scene = VRSceneManager::getCurrent();
+    for (auto a : animations) scene->stopAnimation(a);
     animations.clear();
 }
 

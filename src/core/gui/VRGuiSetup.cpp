@@ -62,7 +62,7 @@ void VRGuiSetup::updateObjectData() {
     setExpanderSensivity("expander20", false);
     setExpanderSensivity("expander21", false);
 
-    current_scene = VRSceneManager::get()->getActiveScene();
+    current_scene = VRSceneManager::getCurrent();
 
     if (selected_type == "window") {
         setExpanderSensivity("expander3", true);
@@ -248,7 +248,8 @@ void VRGuiSetup::on_del_clicked() { //TODO, should delete setup
 void VRGuiSetup::on_save_clicked() {
     if (current_setup == 0) return;
 
-    current_setup->save("setup/" + current_setup->getName() + ".xml");
+    string defWorkDir = VRSceneManager::get()->getOriginalWorkdir();
+    current_setup->save(defWorkDir+"/setup/" + current_setup->getName() + ".xml");
 
     setToolButtonSensivity("toolbutton12", false);
 }
@@ -257,7 +258,8 @@ void VRGuiSetup::on_save_clicked() {
 
 void VRGuiSetup::on_setup_changed() {
     string name = getComboboxText("combobox6");
-    current_setup = VRSetupManager::get()->load(name, "setup/" + name + ".xml");
+    string defWorkDir = VRSceneManager::get()->getOriginalWorkdir();
+    current_setup = VRSetupManager::get()->load(name, defWorkDir+"/setup/" + name + ".xml");
     updateSetup();
     // remember setup
     ofstream f("setup/.local"); f.write(name.c_str(), name.size()); f.close();
@@ -341,12 +343,10 @@ void VRGuiSetup::on_menu_delete() {
 }
 
 void VRGuiSetup::on_menu_add_window() {
-    VRSceneManager* sm = VRSceneManager::get();
-
     string name = "Display";
     current_setup->addMultiWindow(name);
     VRWindow* win = current_setup->getWindow(name);
-    if (sm->getActiveScene()) win->setContent(true);
+    if ( VRSceneManager::getCurrent() ) win->setContent(true);
 
     updateSetup();
     setToolButtonSensivity("toolbutton12", true);
@@ -917,7 +917,7 @@ void VRGuiSetup::updateSetup() {
     on_treeview_select();
     tree_view->expand_all();
 
-    setLabel("label13", "VR Setup: " + VRSetupManager::get()->getCurrent()->getName());
+    setLabel("label13", "VR Setup: " + VRSetupManager::getCurrent()->getName());
 }
 
 void VRGuiSetup::updateSetupList() {

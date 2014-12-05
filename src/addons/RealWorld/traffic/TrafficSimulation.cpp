@@ -367,7 +367,7 @@ TrafficSimulation::TrafficSimulation(MapCoordinator *mapCoordinator, const strin
     a_green->setLit(false);
 
     //VRFunction<int>* fkt = new VRFunction<int>( "traffic update fkt", boost::bind(&TrafficSimulation::updateScene, this) );
-    //VRSceneManager::get()->getActiveScene()->addUpdateFkt(fkt);
+    //VRSceneManager::getCurrent()->addUpdateFkt(fkt);
 }
 
 TrafficSimulation::~TrafficSimulation() {
@@ -873,7 +873,7 @@ void TrafficSimulation::update() {
                     if (!light.isConvertibleTo(stringValue)) continue;
 
                     while (bulbIndex+1 >= lightBulbs.size()) {
-                        if (VRSceneManager::get()->getActiveScene() == NULL) break;
+                        if (VRSceneManager::getCurrent() == NULL) break;
 
                         // Create a new light
                         VRGeometry* geo = new VRGeometry("ampel");
@@ -881,7 +881,7 @@ void TrafficSimulation::update() {
                         geo->setPrimitive("Sphere", "0.5 2"); // The first value has to be half of bulbSize
                         geo->setMaterial(a_red);
 
-                        VRSceneManager::get()->getActiveScene()->add(geo);
+                        VRSceneManager::getCurrent()->add(geo);
                         lightBulbs.push_back(geo);
                     }
 

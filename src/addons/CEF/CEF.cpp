@@ -18,10 +18,14 @@ vector<CEF*> instances;
 
 CEF::CEF() {
     CefSettings settings;
-    CefString(&settings.browser_subprocess_path).FromASCII("ressources/cef/CefSubProcess");
-    CefString(&settings.locales_dir_path).FromASCII("ressources/cef/locales");
-    CefString(&settings.resources_dir_path).FromASCII("ressources/cef");
-    CefString(&settings.log_file).FromASCII("ressources/cef/wblog.log");
+    string bsp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/CefSubProcess";
+    string ldp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/locales";
+    string rdp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef";
+    string lfp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/wblog.log";
+    CefString(&settings.browser_subprocess_path).FromASCII(bsp.c_str());
+    CefString(&settings.locales_dir_path).FromASCII(ldp.c_str());
+    CefString(&settings.resources_dir_path).FromASCII(rdp.c_str());
+    CefString(&settings.log_file).FromASCII(lfp.c_str());
     settings.no_sandbox = true;
 
     CefMainArgs args(VROptions::get()->argc, VROptions::get()->argv);
@@ -34,7 +38,7 @@ CEF::CEF() {
     browser = CefBrowserHost::CreateBrowserSync(win, this, "www.google.de", browser_settings, 0);
 
     VRFunction<int>* fkt = new VRFunction<int>("webkit_update", boost::bind(&CEF::update, this));
-    VRSceneManager::get()->getActiveScene()->addUpdateFkt(fkt);
+    VRSceneManager::getCurrent()->addUpdateFkt(fkt);
 
 
     image = Image::create();
@@ -54,16 +58,24 @@ void CEF::update() { CefDoMessageLoopWork(); }
 void CEF::open(string site) { this->site = site; browser->GetMainFrame()->LoadURL(site); }
 CefRefPtr<CefRenderHandler> CEF::GetRenderHandler() { return this; }
 string CEF::getSite() { return site; }
-void CEF::reload() { open(site); }
+
+void CEF::reload() {
+    height = width/aspect;
+    cout << "reload " << width << " " << height << endl;
+    open(site);
+}
+
 void CEF::reload(string path) {
-    for (uint i=0; i<instances.size(); i++) {
-        string s = instances[i]->getSite();
+    for (auto i : instances) {
+        string s = i->getSite();
         stringstream ss(s); vector<string> res; while (getline(ss, s, '/')) res.push_back(s); // split by ':'
-        if (res[res.size()-1] == path) instances[i]->reload();
+        if (res.size() == 0) continue;
+        if (res[res.size()-1] == path) i->reload();
     }
 }
 
-void CEF::setAspectRatio(float a) { height = 1024/a; reload(); }
+void CEF::setResolution(float a) { width = a; reload(); }
+void CEF::setAspectRatio(float a) { aspect = a; reload(); }
 
 bool CEF::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
     rect = CefRect(0, 0, width, height);
@@ -85,7 +97,7 @@ void CEF::addMouse(VRDevice* dev, VRObject* obj, int lb, int rb, int wu, int wd)
     dev->addSignal(wd, 1)->add( new VRFunction<VRDevice*>( "CEF::WD", boost::bind(&CEF::mouse, this, 4, 0, _1 ) ) );
 
     VRFunction<int>* fkt = new VRFunction<int>( "CEF::MM", boost::bind(&CEF::mouse_move, this, dev, _1) );
-    VRSceneManager::get()->getActiveScene()->addUpdateFkt(fkt);
+    VRSceneManager::getCurrent()->addUpdateFkt(fkt);
 }
 
 void CEF::addKeyboard(VRDevice* dev) {

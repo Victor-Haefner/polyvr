@@ -151,7 +151,7 @@ MaterialRecPtr VRMaterial::getMaterial() { return mat; }
 /** Load a texture and apply it to the mesh as new material **/
 void VRMaterial::setTexture(string img_path, bool alpha) { // TODO: improve with texture map
     if (texture == 0) texture = Image::create();
-    VRScene* scene = VRSceneManager::get()->getActiveScene();
+    VRScene* scene = VRSceneManager::getCurrent();
     img_path = scene->getWorkdir()+"/"+img_path;
     texture->read(img_path.c_str());
     setTexture(texture, alpha);
@@ -258,7 +258,16 @@ Color4f toColor4f(Color3f c, float t) { return Color4f(c[0], c[1], c[2], t); }
 Color3f toColor3f(Color4f c) { return Color3f(c[0], c[1], c[2]); }
 
 void VRMaterial::setDiffuse(Color3f c) { colChunk->setDiffuse( toColor4f(c, getTransparency()) ); }
-void VRMaterial::setTransparency(float c) { colChunk->setDiffuse( toColor4f(getDiffuse(), c) ); }
+void VRMaterial::setTransparency(float c) {
+    colChunk->setDiffuse( toColor4f(getDiffuse(), c) );
+
+    if (blendChunk == 0) {
+        blendChunk = BlendChunk::create();
+        mat->addChunk(blendChunk);
+        blendChunk->setSrcFactor  ( GL_SRC_ALPHA           );
+        blendChunk->setDestFactor ( GL_ONE_MINUS_SRC_ALPHA );
+    }
+}
 void VRMaterial::setSpecular(Color3f c) { colChunk->setSpecular(toColor4f(c)); }
 void VRMaterial::setAmbient(Color3f c) { colChunk->setAmbient(toColor4f(c)); }
 void VRMaterial::setEmission(Color3f c) { colChunk->setEmission(toColor4f(c)); }
@@ -275,19 +284,36 @@ bool VRMaterial::isLit() { return colChunk->getLit(); }
 
 ImageRecPtr VRMaterial::getTexture() { return texture; }
 
+void VRMaterial::initShaderChunk() {
+    if (shaderChunk != 0) return;
+    shaderChunk = ShaderProgramChunk::create();
+    mat->addChunk(shaderChunk);
+
+    vProgram = ShaderProgram::createVertexShader  ();
+    fProgram = ShaderProgram::createFragmentShader();
+    gProgram = ShaderProgram::createGeometryShader();
+    shaderChunk->addShader(vProgram);
+    shaderChunk->addShader(fProgram);
+    shaderChunk->addShader(gProgram);
+
+    vProgram->createDefaulAttribMapping();
+
+    vProgram->addOSGVariable("OSGViewportSize");
+}
+
 void VRMaterial::setVertexShader(string s) {
-    if (shaderChunk == 0) { shaderChunk = SimpleSHLChunk::create(); mat->addChunk(shaderChunk); }
-    shaderChunk->setVertexProgram(s.c_str());
+    initShaderChunk();
+    vProgram->setProgram(s.c_str());
 }
 
 void VRMaterial::setFragmentShader(string s) {
-    if (shaderChunk == 0) { shaderChunk = SimpleSHLChunk::create(); mat->addChunk(shaderChunk); }
-    shaderChunk->setFragmentProgram(s.c_str());
+    initShaderChunk();
+    fProgram->setProgram(s.c_str());
 }
 
 void VRMaterial::setGeometryShader(string s) {
-    if (shaderChunk == 0) { shaderChunk = SimpleSHLChunk::create(); mat->addChunk(shaderChunk); }
-    shaderChunk->setGeometryProgram(s.c_str());
+    initShaderChunk();
+    gProgram->setProgram(s.c_str());
 }
 
 string readFile(string path) {
@@ -321,22 +347,27 @@ void VRMaterial::setMagMinFilter(string mag, string min) {
     texChunk->setMinFilter(Min);
 }
 
-void VRMaterial::setVertexProgram(string script) {
+void VRMaterial::setVertexScript(string script) {
     vertexScript = script;
-    VRScript* scr = VRSceneManager::get()->getActiveScene()->getScript(script);
+    VRScript* scr = VRSceneManager::getCurrent()->getScript(script);
     if (scr) setVertexShader(scr->getCore());
 }
 
-void VRMaterial::setFragmentProgram(string script) {
+void VRMaterial::setFragmentScript(string script) {
     fragmentScript = script;
-    VRScript* scr = VRSceneManager::get()->getActiveScene()->getScript(script);
+    VRScript* scr = VRSceneManager::getCurrent()->getScript(script);
     if (scr) setFragmentShader(scr->getCore());
 }
 
-void VRMaterial::setGeometryProgram(string script) {
+void VRMaterial::setGeometryScript(string script) {
+    cout << "setGeometryScript " << script << endl;
     geometryScript = script;
-    VRScript* scr = VRSceneManager::get()->getActiveScene()->getScript(script);
+    VRScript* scr = VRSceneManager::getCurrent()->getScript(script);
     if (scr) setGeometryShader(scr->getCore());
 }
+
+string VRMaterial::getVertexScript() { return vertexScript; }
+string VRMaterial::getFragmentScript() { return fragmentScript; }
+string VRMaterial::getGeometryScript() { return geometryScript; }
 
 OSG_END_NAMESPACE;

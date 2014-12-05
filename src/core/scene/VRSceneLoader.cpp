@@ -3,7 +3,7 @@
 #include "core/objects/VRGroup.h"
 #include "core/objects/VRLight.h"
 #include "core/objects/VRLightBeacon.h"
-#include "addons/CSG/CSGGeometry.h"
+#include "addons/Engineering/CSG/CSGGeometry.h"
 
 #include "VRScene.h"
 #include "core/utils/VRTimer.h"
@@ -20,6 +20,7 @@
 #include <OpenSG/OSGGeoProperties.h>
 
 #include <stdio.h>
+#include <unistd.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -65,11 +66,11 @@ NodeRecPtr loadPly(string filename) {
     for(int i=0; i<16; i++) getline(file, s); // jump to data
 
     GeoUInt8PropertyRecPtr      Type = GeoUInt8Property::create();
-    GeoUInt32PropertyRefPtr     Length = GeoUInt32Property::create();
+    GeoUInt32PropertyRecPtr     Length = GeoUInt32Property::create();
     GeoPnt3fPropertyRecPtr      Pos = GeoPnt3fProperty::create();
-    GeoVec3fPropertyRefPtr      Norms = GeoVec3fProperty::create();
-    GeoVec3fPropertyRefPtr      Cols = GeoVec3fProperty::create();
-    GeoUInt32PropertyRefPtr     Indices = GeoUInt32Property::create();
+    GeoVec3fPropertyRecPtr      Norms = GeoVec3fProperty::create();
+    GeoVec3fPropertyRecPtr      Cols = GeoVec3fProperty::create();
+    GeoUInt32PropertyRecPtr     Indices = GeoUInt32Property::create();
     SimpleMaterialRecPtr        Mat = SimpleMaterial::create();
     GeoVec2fPropertyRecPtr      Tex = GeoVec2fProperty::create();
 
@@ -122,6 +123,7 @@ void VRSceneLoader::load(string filename) {
         if (L > 30000000) return;
     }
 
+    if (filename.size() < 4) return;
     string extension = filename.substr(filename.size()-4, filename.size()-1);
 
     VRTimer timer;
@@ -304,12 +306,8 @@ VRSceneLoader* VRSceneLoader::get() {
 // get only the object for a single geometry
 GeometryRecPtr VRSceneLoader::loadGeometry(string file, string object) {
     VRScene* scene = VRSceneLoader_current_scene;
-    if (scene == 0) scene = VRSceneManager::get()->getActiveScene();
+    if (scene == 0) scene = VRSceneManager::getCurrent();
     if (scene == 0) return 0;
-
-    file = scene->getWorkdir() + '/' + file;
-
-    cout << "loadGeometry " << file << endl;
 
     if (cached_files.count(file) == 0) load(file);
     if (cached_files.count(file) == 0) {
@@ -332,16 +330,14 @@ GeometryRecPtr VRSceneLoader::loadGeometry(string file, string object) {
 
 VRTransform* VRSceneLoader::load3DContent(string filepath, VRObject* parent, bool reload) {
     VRScene* scene = VRSceneLoader_current_scene;
-    if (scene == 0) scene = VRSceneManager::get()->getActiveScene();
+    if (scene == 0) scene = VRSceneManager::getCurrent();
     if (scene == 0) return 0;
-
-    string filepath_toApp = scene->getWorkdir() + '/' + filepath;
 
     cout << "load3DContent " << filepath << endl;
 
     VRObject* root;
-    if(cached_files.count(filepath_toApp) == 0 or reload) load(filepath_toApp);
-    NodeRecPtr osg = cached_files[filepath_toApp].root;
+    if(cached_files.count(filepath) == 0 or reload) load(filepath);
+    NodeRecPtr osg = cached_files[filepath].root;
     root = parseOSGTree(osg, parent, filepath, filepath);
     if (root == 0) return 0;
 
@@ -385,7 +381,7 @@ void VRSceneLoader_saveObject(VRObject* p, xmlpp::Element* e) {
 
 void VRSceneLoader::saveScene(string file, xmlpp::Element* guiN) {
     cout << " save " << file << endl;
-    VRScene* scene = VRSceneManager::get()->getActiveScene();
+    VRScene* scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
 
     xmlpp::Document doc;
@@ -484,6 +480,7 @@ void VRSceneLoader::loadScene(string path) {
     xmlpp::Element* root = VRSceneLoader_getElementChild_(objectsN, 0);
     VRScene* scene = new VRScene();
     scene->setPath(path);
+    VRSceneManager::get()->setWorkdir(scene->getWorkdir());
     scene->setName(scene->getFileName());
     VRSceneLoader_current_scene = scene;
 

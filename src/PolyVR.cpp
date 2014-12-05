@@ -9,8 +9,9 @@
 #include "core/scene/VRSoundManager.h"
 #include "core/objects/material/VRMaterial.h"
 #include <GL/glut.h>
-//#include "core/VRSocket.h"
-//#include "networking/VRCommunication.h"
+
+#include <OpenSG/OSGSimpleGeometry.h>
+#include <OpenSG/OSGTypedGeoIntegralProperty.h>
 
 #include <signal.h>
 extern "C" void my_function_to_handle_aborts(int signal_number) {
@@ -95,7 +96,7 @@ void exitPolyVR() {
 }
 
 
-void startPolyVR() { VRSetupManager::get()->getCurrent()->startMainLoop(); }
+void startPolyVR() { VRSetupManager::getCurrent()->startMainLoop(); }
 
 
 OSG_END_NAMESPACE;

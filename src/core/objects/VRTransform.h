@@ -99,7 +99,7 @@ class VRTransform : public VRObject {
         void setScale(float s);
         void setScale(Vec3f s);
         void setOrientation(Vec3f at, Vec3f up);
-        void setPose(Vec3f from, Vec3f at, Vec3f up);
+        void setPose(Vec3f from, Vec3f dir, Vec3f up);
         void setMatrix(Matrix _m);
 
         void getWorldMatrix(Matrix& _m, bool parentOnly = false);
@@ -132,9 +132,9 @@ class VRTransform : public VRObject {
         void drop();
 
         /** Cast a ray in world coordinates from the object in its local coordinates, -z axis defaults **/
-        Line castRay(Vec3f dir = Vec3f(0,0,-1));
+        Line castRay(VRObject* obj = 0, Vec3f dir = Vec3f(0,0,-1));
 
-        void startPathAnimation(path* p, float t, bool redirect = true);
+        void startPathAnimation(path* p, float time, float offset, bool redirect = true);
         void stopAnimation();
 
         /** Print the position of the object in local and world coords **/
