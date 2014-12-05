@@ -355,7 +355,7 @@ void MChain::updateGeo() {
         norms->addValue(Vec3f(0,1,0));
         norms->addValue(Vec3f(0,1,0));
         cols->addValue(Vec4f(0,1,0,1));
-        cols->addValue(Vec4f(0,1,0,1));
+        cols->addValue(Vec4f(1,1,0,1));
         inds->addValue(j++);
         inds->addValue(j++);
     }
@@ -363,9 +363,11 @@ void MChain::updateGeo() {
 
     geo->setPositions(pos);
     geo->setNormals(norms);
-    geo->setColors(norms);
+    geo->setColors(cols);
     geo->setIndices(inds);
     geo->setLengths(lengths);
+    geo->getMaterial()->setLineWidth(3);
+    geo->getMaterial()->setLit(false);
 }
 
 VRGeometry* MChain::init() {
