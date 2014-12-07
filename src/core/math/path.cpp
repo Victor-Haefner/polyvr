@@ -181,6 +181,7 @@ void path::update() {
 }
 
 Vec3f path::getPosition(float t) {
+    if (points.size() == 0) return Vec3f();
     float tN = t*(points.size()-1);
     int ti = floor(tN);
     float x = tN-ti;
@@ -189,7 +190,8 @@ Vec3f path::getPosition(float t) {
 }
 
 Vec3f path::getNormal(float t) {
-    float tN = t*(points.size()-1);
+    if (normals.size() == 0) return Vec3f();
+    float tN = t*(normals.size()-1);
     int ti = floor(tN);
     float x = tN-ti;
     if (ti > normals.size()-1) return normals[normals.size()-1];
@@ -197,7 +199,8 @@ Vec3f path::getNormal(float t) {
 }
 
 Vec3f path::getColor(float t) {
-    float tN = t*(points.size()-1);
+    if (colors.size() == 0) return Vec3f();
+    float tN = t*(colors.size()-1);
     int ti = floor(tN);
     float x = tN-ti;
     if (ti > colors.size()-1) return colors[colors.size()-1];
