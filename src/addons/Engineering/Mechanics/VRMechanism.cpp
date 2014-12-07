@@ -142,9 +142,6 @@ MRelation* checkGearThread(MPart* p1, MPart* p2) {
 }
 
 MChainGearRelation* checkChainPart(MChain* c, MPart* p) {
-    //Matrix r1 = c->reference;
-    //Matrix r2 = p->reference;
-
     Vec3f pp = p->geo->getFrom();
     if (p->prim->getType() != "Gear") return 0;
     float r = ((VRGear*)p->prim)->radius();
@@ -152,25 +149,65 @@ MChainGearRelation* checkChainPart(MChain* c, MPart* p) {
 
     float eps = 0.0001;
 
-    Vec3f pc, sd;
-    c->toPolygon(pp, pc, sd); // point, vec to nearest seg, dir of seg
-    bool touch = ( abs(pc.squareLength() - r*r) < eps );
-    if (touch) {
-        pc.normalize();
-        sd.normalize();
-        dir.normalize();
-        float n = pc.cross(dir).dot(sd);
-        if (abs(n) < (1-eps)) return 0;
+    vector<pointPolySegment> psegs;
+    for (auto ps : c->toPolygon(pp) ) if ( abs(ps.dist2 - r*r) < eps ) psegs.push_back(ps);
+    if (psegs.size() == 0) return 0;
 
-        MChainGearRelation* rel = new MChainGearRelation();
-        rel->part1 = c;
-        rel->part2 = p;
-        rel->dir = n > 0 ? -1 : 1;
-        return rel;
+    dir.normalize();
+    float fd;
+    int IDmin = 1e6;
+
+    for (auto ps : psegs) {
+        ps.Pseg.normalize();
+        ps.seg.normalize();
+        float n = ps.Pseg.cross(dir).dot(ps.seg);
+        if (abs(n) < (1-eps)) continue;
+        if (IDmin > ps.ID) {
+            IDmin = ps.ID;
+            fd = n;
+        }
     }
 
-    return 0;
+    MChainGearRelation* rel = new MChainGearRelation();
+    rel->part1 = c;
+    rel->part2 = p;
+    rel->dir = fd > 0 ? -1 : 1;
+    rel->segID = IDmin;
+    return rel;
 }
+
+vector<pointPolySegment> MChain::toPolygon(Vec3f p) {
+    vector<pointPolySegment> res;
+    for (int i=0; i<polygon.size(); i+=2) {
+        Vec3f p1 = polygon[i];
+        Vec3f p2 = polygon[i+1];
+        Vec3f d = p2-p1;
+        Vec3f d1 = p1-p;
+        Vec3f d2 = p2-p;
+
+        Vec3f dx;
+        float l2 = d.squareLength();
+        int ID = i;
+        if (l2 == 0.0) dx = d1;
+        else {
+            float t = d1.dot(d)/l2;
+            if (t < 0.0) dx = d1;
+            else if (t > 1.0) dx = d2;
+            else dx = p1 + t*d - p; // vector from p to p1p2
+            if (t > 0.5) ID = i+1;
+        }
+
+        pointPolySegment r;
+        r.dist2 = dx.squareLength();
+        r.Pseg = dx;
+        r.seg = d;
+        r.ID = ID;
+        res.push_back(r);
+    }
+
+    return res;
+}
+
 
 /*bool checkThreadNut(VRThread* t, VRNut* n, Matrix r1, Matrix r2) {
     ; // TODO: check if nut center on thread line
@@ -183,7 +220,7 @@ VRThread* MThread::thread() { return (VRThread*)prim; }
 
 void MPart::move() {}
 void MGear::move() { trans->rotate(change.dx/gear()->radius(), Vec3f(0,0,1)); }
-void MChain::move() { if (geo == 0) return; /*updateGeo();*/ }
+void MChain::move() { if (geo == 0) return; updateGeo(); }
 void MThread::move() { trans->rotate(change.a, Vec3f(0,0,1)); }
 
 void MPart::computeChange() {
@@ -261,36 +298,6 @@ void MChainGearRelation::translateChange(MChange& change) { if (dir == -1) chang
 void MChain::setDirs(string dirs) { this->dirs = dirs; }
 void MChain::addDir(char dir) { dirs.push_back(dir); }
 
-void MChain::toPolygon(Vec3f p, Vec3f& ps, Vec3f& sd) {
-    float l2min = 1e12;
-    ps = Vec3f(sqrt(l2min),0,0);
-
-    for (int i=0; i<polygon.size(); i+=2) {
-        Vec3f p1 = polygon[i];
-        Vec3f p2 = polygon[i+1];
-        Vec3f d = p2-p1;
-        Vec3f d1 = p-p1;
-        Vec3f d2 = p-p2;
-
-        Vec3f dx;
-        float dist = 0;
-        float l2 = d.squareLength();
-        if (l2 == 0.0) dx = d1;
-        else {
-            float t = d1.dot(d)/l2;
-            if (t < 0.0) dx = d1;
-            else if (t > 1.0) dx = d2;
-            else dx = p1 + t*d - p; // vector from p to p1p2
-        }
-
-        float l = dx.squareLength();
-        if (l > l2min) continue;
-        l2min = l;
-        ps = dx;
-        sd = d;
-    }
-}
-
 void MChain::updateGeo() {
     //cout << "update chain\n";
     // update chain geometry
@@ -304,7 +311,9 @@ void MChain::updateGeo() {
     //printNeighbors();
     polygon.clear();
     vector<MPart*> nbrs;
-    for (auto n : neighbors) nbrs.push_back(n.first);
+    map<int, MPart*> nbrs_m;
+    for (auto n : neighbors) nbrs_m[((MChainGearRelation*)n.second)->segID] = n.first;
+    for (auto n : nbrs_m) nbrs.push_back(n.second);
 
     int j=0;
     for (int i=0; i<nbrs.size(); i++) {
@@ -330,7 +339,7 @@ void MChain::updateGeo() {
         int z2 = r2 > r1 ? z1 : 1;
         r2 *= z1;
 
-        cout << " A " << nbrs[i]->geo->getName() << " " << D << " " << r1 << " " << r2 << endl;
+        //cout << " A " << nbrs[i]->geo->getName() << " " << D << " " << r1 << " " << r2 << endl;
 
         float x1 = 0;
         float x2 = 0;
@@ -373,8 +382,8 @@ void MChain::updateGeo() {
         pos->addValue(p2);
         norms->addValue(Vec3f(0,1,0));
         norms->addValue(Vec3f(0,1,0));
-        cols->addValue(Vec4f(0,1,0,1));
-        cols->addValue(Vec4f(0,1,0,1));
+        cols->addValue(Vec4f(1,0,0,1));
+        cols->addValue(Vec4f(1,1,0,1));
         inds->addValue(j++);
         inds->addValue(j++);
     }
@@ -382,7 +391,7 @@ void MChain::updateGeo() {
 
     geo->setPositions(pos);
     geo->setNormals(norms);
-    geo->setColors(norms);
+    geo->setColors(cols);
     geo->setIndices(inds);
     geo->setLengths(lengths);
 }
@@ -435,6 +444,7 @@ VRGeometry* VRMechanism::addChain(float w, vector<VRGeometry*> geos, string dirs
         rel->dir = (dirs[i] == 'l') ? 1 : -1;
         rel->prev = cache[g1];
         rel->next = cache[g3];
+        rel->segID = j;
         c->addNeighbor(cache[g2], rel);
     }
     c->setDirs(dirs);

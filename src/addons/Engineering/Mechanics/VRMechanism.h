@@ -47,12 +47,20 @@ struct MChainGearRelation : public MRelation {
     int dir = -1;
     MPart* next = 0;
     MPart* prev = 0;
+    int segID = 0;
 
     void translateChange(MChange& change);
 };
 
 struct MGearGearRelation : public MRelation {
     void translateChange(MChange& change);
+};
+
+struct pointPolySegment {
+    Vec3f Pseg;
+    Vec3f seg;
+    float dist2 = 0;
+    int ID = 0;
 };
 
 class MPart {
@@ -139,7 +147,7 @@ class MChain : public MPart {
         void setDirs(string dirs);
         void addDir(char dir);
         void updateGeo();
-        void toPolygon(Vec3f p, Vec3f& ps, Vec3f& sd);
+        vector<pointPolySegment> toPolygon(Vec3f p);
 
         void move();
         void updateNeighbors(vector<MPart*> parts);
