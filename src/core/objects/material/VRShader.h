@@ -14,7 +14,10 @@ OSG_BEGIN_NAMESPACE;
 
 class VRShader {
     private:
-        SimpleSHLChunkRecPtr shader_chunk;
+        ShaderProgramChunkRecPtr shader_chunk;
+        ShaderProgramRecPtr vProgram;
+        ShaderProgramRecPtr fProgram;
+        ShaderProgramRecPtr gProgram;
 
         static string vs_program;
         static string fs_program;
@@ -25,7 +28,7 @@ class VRShader {
     public:
         VRShader(ChunkMaterialRecPtr mat);
 
-        SimpleSHLChunkRecPtr getShader();
+        ShaderProgramChunkRecPtr getShader();
 
         void setVertexProgram(string path);
         void setFragmentProgram(string path);
@@ -33,13 +36,19 @@ class VRShader {
 
         template<class T> inline
         void addParameter(string name, const T &value) {
-            shader_chunk->addUniformVariable(name.c_str(), value);
+            vProgram->addUniformVariable(name.c_str(), value);
+            fProgram->addUniformVariable(name.c_str(), value);
+            gProgram->addUniformVariable(name.c_str(), value);
         }
         template<class T> inline
         void setParameter(string name, const T &value) {
             //shader_chunk->updateUniformVariable(name.c_str(), value);
-            shader_chunk->subUniformVariable(name.c_str());
-            shader_chunk->addUniformVariable(name.c_str(), value);
+            vProgram->subUniformVariable(name.c_str());
+            fProgram->subUniformVariable(name.c_str());
+            gProgram->subUniformVariable(name.c_str());
+            vProgram->addUniformVariable(name.c_str(), value);
+            fProgram->addUniformVariable(name.c_str(), value);
+            gProgram->addUniformVariable(name.c_str(), value);
         }
 };
 

@@ -208,6 +208,7 @@ void VRPhysics::update() {
     if (physicsShape == "Sphere") shape = getSphereShape();
     if (physicsShape == "Convex") shape = getConvexShape();
     if (physicsShape == "Concave") shape = getConcaveShape();
+    if (shape == 0) return;
 
     if (motionState != 0) delete motionState;
     motionState = new btDefaultMotionState(fromMatrix(vr_obj->getWorldMatrix()));
@@ -308,6 +309,7 @@ btCollisionShape* VRPhysics::getConcaveShape() {
     btTriangleMesh* tri_mesh = new btTriangleMesh();
 
     vector<OSG::VRObject*> geos = vr_obj->getObjectListByType("Geometry");
+    int N = 0;
     for (uint j=0; j<geos.size(); j++) {
         OSG::VRGeometry* geo = (OSG::VRGeometry*)geos[j];
         if (geo == 0) continue;
@@ -324,8 +326,10 @@ btCollisionShape* VRPhysics::getConcaveShape() {
 
             tri_mesh->addTriangle(vertexPos[0], vertexPos[1], vertexPos[2]);
             ++ti;
+            N++;
         }
     }
+    if (N == 0) return 0;
 
     //cout << "\nConstruct Concave shape for " << vr_obj->getName() << endl;
     btBvhTriangleMeshShape* shape = new btBvhTriangleMeshShape(tri_mesh, true);

@@ -297,7 +297,6 @@ void VRMaterial::initShaderChunk() {
     shaderChunk->addShader(gProgram);
 
     vProgram->createDefaulAttribMapping();
-
     vProgram->addOSGVariable("OSGViewportSize");
 }
 

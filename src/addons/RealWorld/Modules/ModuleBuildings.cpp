@@ -18,12 +18,14 @@ ModuleBuildings::ModuleBuildings(OSMMapDB* mapDB, MapCoordinator* mapCoordinator
     this->mapDB = mapDB;
 
     b_mat = new VRMaterial("Buildings");
-    b_mat->setTexture("data/RealWorld/textures/Buildings.png", false);
+    b_mat->setTexture("textures/Buildings.png", false);
     b_mat->setAmbient(Color3f(0.7, 0.7, 0.7)); //light reflection in all directions
     b_mat->setDiffuse(Color3f(1.0, 1.0, 1.0)); //light from ambient (without lightsource)
     b_mat->setSpecular(Color3f(0.2, 0.2, 0.2)); //light reflection in camera direction
-    b_mat->readVertexShader("shader/TexturePhong/phong.vp");
-    b_mat->readFragmentShader("shader/TexturePhong/phong_building.fp"); //Fragment Shader
+
+    string wdir = VRSceneManager::get()->getOriginalWorkdir();
+    b_mat->readVertexShader(wdir+"/shader/TexturePhong/phong.vp");
+    b_mat->readFragmentShader(wdir+"/shader/TexturePhong/phong_building.fp"); //Fragment Shader
     b_mat->setMagMinFilter("GL_LINEAR", "GL_NEAREST_MIPMAP_NEAREST");
 
     b_geo_d = new GeometryData();

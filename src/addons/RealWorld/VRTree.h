@@ -133,15 +133,16 @@ class VRTree : public VRGeometry {
             mat->setSpecular(Color3f(0.1, 0.1, 0.1));
 
             VRShader* nfs = new VRShader(mat);
-            nfs->setFragmentProgram("shader/Trees/Shader_tree_base.fp");
-            nfs->setVertexProgram("shader/Trees/Shader_tree_base.vp");
-            nfs->setGeometryProgram("shader/Trees/Shader_tree_base.gp");
+            string wdir = VRSceneManager::get()->getOriginalWorkdir();
+            nfs->setFragmentProgram(wdir+"/shader/Trees/Shader_tree_base.fp");
+            nfs->setVertexProgram(wdir+"/shader/Trees/Shader_tree_base.vp");
+            nfs->setGeometryProgram(wdir+"/shader/Trees/Shader_tree_base.gp");
 
 
             TextureEnvChunkRecPtr tex_env_chunk = TextureEnvChunk::create();
             TextureObjChunkRecPtr tex_obj_chunk = TextureObjChunk::create();
             ImageRecPtr img = Image::create();
-            img->read("data/tex/terasse.jpg");
+            img->read("textures/terasse.jpg");
             tex_obj_chunk->setImage(img);
             nfs->addParameter("texture", 0);
 
