@@ -112,6 +112,7 @@ class VRPhysics : public OSG::VRStorage {
         static btTransform fromMatrix(const OSG::Matrix& m);
         static OSG::Matrix fromTransform(const btTransform t);
 
+
         void setConstraint(VRPhysics* p, OSG::VRConstraint* c, OSG::VRConstraint* cs);
         void updateConstraint(VRPhysics* p);
         void updateConstraints();

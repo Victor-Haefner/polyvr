@@ -12,7 +12,9 @@ struct VRPyHaptic : VRPyBaseT<OSG::VRHaptic> {
 
     static PyObject* setForce(VRPyHaptic* self, PyObject* args);
     static PyObject* setSimulationScales(VRPyHaptic* self, PyObject* args);
-    static PyObject* updateHapticToObject(VRPyHaptic* self, PyObject* args);
+    static PyObject* updateVirtMech(VRPyHaptic* self);
+    static PyObject* attachTransform(VRPyHaptic* self, PyObject* args);
+    static PyObject* detachTransform(VRPyHaptic* self);
     static PyObject* getForce(VRPyHaptic* self);
 };
 

@@ -16,6 +16,7 @@ class virtuose {
     private:
         void* vc = 0; // virtuose context
         bool isAttached = false;
+        VRTransform* attached = 0;
 
     public:
         virtuose();
@@ -30,8 +31,10 @@ class virtuose {
         Matrix getPose();
 
         //connect a physicalized Object to this virtuose and push it in the same direction the virtuose moves . apply forces( which affect the object )on the haptic.
-        void updateHapticToObject(VRTransform* ph);
+        void updateVirtMech();
         Vec3f getForce();
+        void attachTransform(VRTransform* trans);
+        void detachTransform();
 };
 
 OSG_END_NAMESPACE;

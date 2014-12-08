@@ -53,7 +53,9 @@ PyMemberDef VRPyHaptic::members[] = {
 PyMethodDef VRPyHaptic::methods[] = {
     {"setSimulationScales", (PyCFunction)VRPyHaptic::setSimulationScales, METH_VARARGS, "Set force on haptic device" },
     {"setForce", (PyCFunction)VRPyHaptic::setForce, METH_VARARGS, "Set force on haptic device" },
-    {"updateHapticToObject", (PyCFunction)VRPyHaptic::updateHapticToObject, METH_VARARGS, "update the forces provided by the given object on the haptic and vice versa" },
+    {"updateVirtMech", (PyCFunction)VRPyHaptic::updateVirtMech, METH_NOARGS, "update the virtuose  ( if it is in COMMAND_MODE_VIRTMECH)" },
+    {"attachTransform", (PyCFunction)VRPyHaptic::attachTransform, METH_VARARGS, "attaches given Transform to the virtuose (Command-Mode has to be COMMAND_MODE_VIRTMECH) "},
+    {"detachTransform", (PyCFunction)VRPyHaptic::detachTransform, METH_NOARGS, "detach previously attached transform" },
     {"getForce", (PyCFunction)VRPyHaptic::getForce, METH_VARARGS, "the force that you put on the haptic" },
     {NULL}  /* Sentinel */
 };
@@ -75,11 +77,23 @@ PyObject* VRPyHaptic::setForce(VRPyHaptic* self, PyObject* args) {
 }
 
 
-PyObject* VRPyHaptic::updateHapticToObject(VRPyHaptic* self, PyObject* args) {
+PyObject* VRPyHaptic::updateVirtMech(VRPyHaptic* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyHaptic::updateVirtMech - Object is invalid"); return NULL; }
+    self->obj->updateVirtMech();
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyHaptic::attachTransform(VRPyHaptic* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyHaptic::updateHapticToObject - Object is invalid"); return NULL; }
     VRPyTransform* tr;
     if (! PyArg_ParseTuple(args, "O", &tr)) return NULL;
-    self->obj->updateHapticToObject(tr->obj);
+    self->obj->attachTransform(tr->obj);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyHaptic::detachTransform(VRPyHaptic* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyHaptic::updateHapticToObject - Object is invalid"); return NULL; }
+    self->obj->detachTransform();
     Py_RETURN_TRUE;
 }
 

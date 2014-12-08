@@ -86,6 +86,8 @@ void VRPhysics::setGhost(bool b) { ghost = b; update(); }
 bool VRPhysics::isGhost() { return ghost; }
 OSG::Vec3f VRPhysics::toVec3f(btVector3 v) { return OSG::Vec3f(v[0], v[1], v[2]); }
 
+
+
 vector<VRCollision> VRPhysics::getCollisions() {
     vector<VRCollision> res;
     if (!physicalized) return res;

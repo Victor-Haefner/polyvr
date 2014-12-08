@@ -83,11 +83,13 @@ void virtuose::connect(string IP) {
 
     float timestep = 0.003f;
 
-	CHECK( virtSetCommandType(vc, COMMAND_TYPE_IMPEDANCE) );
+	//CHECK( virtSetCommandType(vc, COMMAND_TYPE_IMPEDANCE) );
+	CHECK( virtSetCommandType(vc, COMMAND_TYPE_VIRTMECH) );
 	CHECK( virtSetDebugFlags(vc, DEBUG_SERVO|DEBUG_LOOP) );
 	CHECK( virtSetIndexingMode(vc, INDEXING_ALL_FORCE_FEEDBACK_INHIBITION) );
 	CHECK( virtSetTimeStep(vc, timestep) );
-    setSimulationScales(1.0f,1.0f);
+    //setSimulationScales(1.0f,1.0f);
+    setSimulationScales(1.0f,0.1f);
 
     float identity[7] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f};
     //float baseFrame[7] = { 0.0f, 0.0f, 0.0f, 0.70710678f, 0.0f, 0.70710678f, 0.0f };
@@ -99,7 +101,7 @@ void virtuose::connect(string IP) {
 
 
 
-    isAttached = true;
+    isAttached = false;
 
 
 }
@@ -147,19 +149,76 @@ Vec3f virtuose::getForce() {
     return imp;
 }
 
+
+
+void virtuose::attachTransform(VRTransform* trans) {
+    isAttached = true;
+    attached = trans;
+    float inertia[9] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
+    CHECK(virtAttachVO(vc, trans->getPhysics()->getMass(),inertia));
+   // virtSetPosition(VC, P);
+   // virtSetSpeed(VC, S);
+
+
+}
+
+void virtuose::detachTransform() {
+    isAttached = false;
+    CHECK(virtDetachVO(vc));
+    attached = 0;
+
+}
+
+
 /**
-* takes the resulting force of given object and puts it on the virtuose
+* takes positiob, speed of attached object and puts it on the virtuose
 **/
-void virtuose::updateHapticToObject(VRTransform* trans) {
-    Matrix m = getPose();
-    trans->setMatrix(m);
-    vector<VRCollision> colls = trans->getPhysics()->getCollisions();
-    Vec3f frc =   trans->getPhysics()->getForce();
+void virtuose::updateVirtMech() {
+    float position[7] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f};
+    float speed[6] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
+    float force[6] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
+    VirtCommandType * type;
+    CHECK(virtGetCommandType(vc, type));
+    if((*type) == COMMAND_TYPE_VIRTMECH) {
 
-    float force[6] = {frc.z(),frc.x(),frc.y(),0.0f,0.0f,0.0f};
+		if (!(this->isAttached))
+		{
+			/* mode libre */
+			CHECK(virtGetPosition(vc, position));
+			CHECK(virtSetPosition(vc, position));
+			CHECK(virtGetSpeed(vc, speed));
+			CHECK(virtSetSpeed(vc, speed));
 
-    CHECK(virtSetForce(vc,force));
+		}
+		else
+		{
+			btTransform pos = this->attached->getPhysics()->getTransform();
+			position[0] = pos.getOrigin().getY();
+			position[1] = pos.getOrigin().getZ();
+			position[2] = pos.getOrigin().getX();
+			pos.setRotation(pos.getRotation().normalized());
+			position[3] = pos.getRotation().getY();
+			position[4] = pos.getRotation().getZ();
+			position[5] = pos.getRotation().getX();
+			position[6] = pos.getRotation().getW();
+			CHECK(virtSetPosition(vc, position));
 
+			btVector3 vel = this->attached->getPhysics()->getLinearVelocity();
+			speed[0] = vel.getY();
+			speed[0] = vel.getZ();
+			speed[0] = vel.getX();
+			vel = this->attached->getPhysics()->getAngularVelocity();
+			speed[0] = vel.getY();
+			speed[0] = vel.getZ();
+			speed[0] = vel.getX();
+			CHECK(virtSetSpeed(vc, speed));
+
+			CHECK(virtGetForce(vc, force));
+			attached->getPhysics()->applyForce(Vec3f(force[1],force[2],force[0]));
+
+		}
+
+    }
 
 }
 
