@@ -4,6 +4,7 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/utils/toString.h"
 #include "../Config.h"
 #include "TrafficSimulation.h"
 
@@ -634,6 +635,16 @@ void TrafficSimulation::tick() {
     update();
 }
 
+Vec3f toVec3f(Json::Value val) { // TODO
+    Vec3f v;
+    if (!val.isConvertibleTo(arrayValue)) return v;
+    //if (!val[0].isConvertibleTo(realValue) || !val[1].isConvertibleTo(realValue) || !val[2].isConvertibleTo(realValue)) return v;
+    v[0] = toFloat(val[0].toStyledString());
+    v[1] = toFloat(val[0].toStyledString());
+    v[2] = toFloat(val[0].toStyledString());
+    //Json::Value::toStyledString()
+}
+
 void TrafficSimulation::update() {
 
     networkDataMutex.lock();
@@ -740,6 +751,7 @@ void TrafficSimulation::update() {
 
                 Vehicle& v = vehicles[ID];
 
+                //v.pos = toVec3f(vehicleIter["pos"]);
                 v.pos = Vec3f(vehicleIter["pos"][0].asFloat(), vehicleIter["pos"][1].asFloat(), vehicleIter["pos"][2].asFloat());
                 v.deltaPos = Vec3f(vehicleIter["dPos"][0].asFloat(), vehicleIter["dPos"][1].asFloat(), vehicleIter["dPos"][2].asFloat());
                 v.deltaPos *= partDelta;
