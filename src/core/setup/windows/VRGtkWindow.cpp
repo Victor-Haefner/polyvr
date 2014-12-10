@@ -7,6 +7,7 @@
 #include <gtk/gtkgl.h>
 
 #include "../devices/VRKeyboard.h"
+#include "core/utils/VRTimer.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

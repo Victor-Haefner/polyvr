@@ -6,6 +6,7 @@
 #include "VRScene.h"
 #include "core/objects/VRLight.h"
 #include "core/objects/VRLightBeacon.h"
+#include "core/gui/VRGuiManager.h"
 #include <OpenSG/OSGSceneFileHandler.h>
 #include <gtkmm/main.h>
 #include <GL/glut.h>
@@ -30,8 +31,15 @@ VRSceneManager::VRSceneManager() {
     cout << "Init VRSceneManager\n";
     active = "NO_SCENE_ACTIVE";
 
-    //g_timeout_add(17, gtkUpdate, NULL); // 60 Hz
-    g_timeout_add_full(G_PRIORITY_LOW, 17, gtkUpdate, NULL, NULL); // 60 Hz
+/*
+G_PRIORITY_DEFAULT
+G_PRIORITY_DEFAULT_IDLE
+G_PRIORITY_LOW
+G_PRIORITY_HIGH
+G_PRIORITY_HIGH_IDLE
+*/
+
+    g_timeout_add_full(G_PRIORITY_LOW, 16, gtkUpdate, NULL, NULL); // 60 Hz
     glutDisplayFunc(glutUpdate);
     glutIdleFunc(glutUpdate);
 
@@ -150,6 +158,7 @@ void VRSceneManager::update() {
     updateCallbacks();
 
     VRSetupManager::getCurrent()->updateWindows();//rendering
+    VRGuiManager::get()->updateGtk();
 
     VRGlobals::get()->CURRENT_FRAME++;
     VRGlobals::get()->FRAME_RATE = fps;

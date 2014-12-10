@@ -33,15 +33,9 @@ VRObject::VRObject(string _name) {
 
     setName(_name);
 
-    specialized = false;
     node = makeNodeFor(Group::create());
     OSG::setName(node, name);
     type = "Object";
-
-    parent = 0;
-
-    pickable = false;
-    visible = true;
     //unitTest();
 }
 

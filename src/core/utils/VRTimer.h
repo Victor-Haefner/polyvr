@@ -13,6 +13,7 @@ class VRTimer {
 
         timer single;
         std::map<std::string, timer> timers;
+        static std::map<std::string, timer> beacons;
 
     public:
         void start();
@@ -21,6 +22,8 @@ class VRTimer {
         void start(std::string t);
         int stop(std::string t);
         void print();
+
+        static void emitBeacon(std::string);
 };
 
 #endif // VRTIMER_H_INCLUDED

@@ -36,14 +36,14 @@ class VRGlobals {
 
 class VRObject : public VRName {
     private:
-        bool specialized;
-        VRObject* parent;
+        bool specialized = false;
+        VRObject* parent = 0;
         NodeRecPtr node;
-        int ID;
-        int childIndex; // index of this object in its parent child vector
-        bool pickable;
-        bool visible;
-        unsigned int graphChanged; //is frame number
+        int ID = 0;
+        int childIndex = 0; // index of this object in its parent child vector
+        bool pickable = false;
+        bool visible = true;
+        unsigned int graphChanged = 0; //is frame number
 
         map<string, VRAttachment*> attachments;
 
