@@ -7,6 +7,8 @@
 #include "core/scene/VRSceneManager.h"
 #include "VRGuiSignals.h"
 
+class _GtkSourceLanguage;
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -15,6 +17,9 @@ class VRScript;
 class VRGuiScripts {
     private:
         bool trigger_cbs = true;
+        _GtkSourceLanguage* python = 0;
+        _GtkSourceLanguage* web = 0;
+        _GtkSourceLanguage* glsl = 0;
 
         void initEditor();
         void printViewerLanguages();

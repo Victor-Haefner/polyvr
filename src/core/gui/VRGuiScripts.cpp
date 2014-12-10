@@ -239,6 +239,11 @@ void VRGuiScripts::on_select_script() { // selected a script
     setToolButtonSensivity("toolbutton9", true);
     setTableSensivity("table15", true);
 
+    // language
+    if (script->getType() == "Python") gtk_source_buffer_set_language(VRGuiScripts_sourceBuffer, python);
+    if (script->getType() == "GLSL") gtk_source_buffer_set_language(VRGuiScripts_sourceBuffer, glsl);
+    if (script->getType() == "HTML") gtk_source_buffer_set_language(VRGuiScripts_sourceBuffer, web);
+
     // script trigger
     //string trigger = script->getTrigger();
     //setTextEntry("entry48", script->getTriggerParams());
@@ -672,8 +677,13 @@ void VRGuiScripts::updateList() {
 void VRGuiScripts::initEditor() {
     // init source view editor
     GtkSourceLanguageManager* langMgr = gtk_source_language_manager_get_default();
-    GtkSourceLanguage* lang = gtk_source_language_manager_get_language(langMgr, "python");
-    VRGuiScripts_sourceBuffer = gtk_source_buffer_new_with_language(lang);
+    python = gtk_source_language_manager_get_language(langMgr, "python");
+    glsl = gtk_source_language_manager_get_language(langMgr, "glsl");
+    web = gtk_source_language_manager_get_language(langMgr, "html");
+
+    VRGuiScripts_sourceBuffer = gtk_source_buffer_new_with_language(python);
+    gtk_source_buffer_set_highlight_syntax(VRGuiScripts_sourceBuffer, true);
+    gtk_source_buffer_set_highlight_matching_brackets(VRGuiScripts_sourceBuffer, true);
 
     Glib::RefPtr<Gtk::ScrolledWindow> win = Glib::RefPtr<Gtk::ScrolledWindow>::cast_static(VRGuiBuilder()->get_object("scrolledwindow4"));
     GtkWidget* editor = gtk_source_view_new_with_buffer(VRGuiScripts_sourceBuffer);
