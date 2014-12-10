@@ -54,6 +54,7 @@ class VRScript : public VRName {
         map<string, trig*> trigs;
         map<string, trig*>::iterator t_itr;
         bool active = true;
+        float execution_time = -1;
 
         PyObject* getPyObj(arg* a);
 
@@ -85,6 +86,8 @@ class VRScript : public VRName {
 
         void enable(bool b);
         bool enabled();
+
+        float getExecutionTime();
 
         arg* addArgument();
         void remArgument(string name);

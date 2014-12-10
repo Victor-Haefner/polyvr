@@ -18,6 +18,7 @@ class VRGuiScripts {
 
         void initEditor();
         void printViewerLanguages();
+        void setScriptListRow(Gtk::TreeIter itr, VRScript* script);
 
         void on_new_clicked();
         void on_save_clicked();
@@ -59,6 +60,8 @@ class VRGuiScripts {
         void updateList();
         VRScript* getSelectedScript();
         string get_editor_core(int i);
+
+        void update();
 };
 
 OSG_END_NAMESPACE

@@ -11,11 +11,15 @@ class VRTimer {
             int start = 0;
         };
 
+        timer single;
         std::map<std::string, timer> timers;
 
     public:
+        void start();
+        int stop();
+
         void start(std::string t);
-        void stop(std::string t);
+        int stop(std::string t);
         void print();
 };
 

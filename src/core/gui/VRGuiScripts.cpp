@@ -5,6 +5,7 @@
 #include "core/scene/VRScene.h"
 #include "core/scripting/VRScript.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRTimer.h"
 #include <gtkmm/liststore.h>
 #include <gtkmm/treeview.h>
 #include <gtkmm/textbuffer.h>
@@ -84,12 +85,47 @@ VRScript* VRGuiScripts::getSelectedScript() {
     return script;
 }
 
+void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScript* script) {
+    if (script == 0) return;
+
+    Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("script_list"));
+    Gtk::ListStore::Row row = *itr;
+    string fg = "#000000";
+    string bg = "#FFFFFF";
+    string tfg = "#000000";
+    string tbg = "#FFFFFF";
+
+    int trig_lvl = 0;
+    for (auto trig : script->getTriggers()) {
+        if (trig.second->trigger == "on_scene_load") trig_lvl |= 1;
+        if (trig.second->trigger == "on_timeout") trig_lvl |= 2;
+        if (trig.second->trigger == "on_device") trig_lvl |= 4;
+        if (trig.second->trigger == "on_socket") trig_lvl |= 8;
+    }
+
+    if (trig_lvl >= 1) bg = "#AAFF88";
+    if (trig_lvl >= 2) bg = "#FF8866";
+    if (trig_lvl >= 4) bg = "#FFBB33";
+    if (trig_lvl >= 8) bg = "#3388FF";
+
+    string time = " ";
+    float exec_time = script->getExecutionTime();
+    if (exec_time >= 0) time = toString( exec_time ) + " ms";
+
+    gtk_list_store_set (store->gobj(), row.gobj(),
+                        0, script->getName().c_str(),
+                        1, fg.c_str(),
+                        2, bg.c_str(),
+                        3, time.c_str(),
+                        4, tfg.c_str(),
+                        5, tbg.c_str(),
+                        -1);
+}
+
 void VRGuiScripts::on_new_clicked() {
     Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("script_list"));
-    Gtk::ListStore::Row row = *store->append();
-
     VRScript* script = VRSceneManager::getCurrent()->newScript("Script", "\tpass");
-    gtk_list_store_set (store->gobj(), row.gobj(), 0, script->getName().c_str(), -1);
+    setScriptListRow(store->append(), script);
 }
 
 void VRGuiScripts::on_save_clicked() {
@@ -609,6 +645,18 @@ void VRGuiScripts::printViewerLanguages() {
         if(ids != NULL) cout << "\nLID " << *id << endl;
 }
 
+void VRGuiScripts::update() {
+    VRScene* scene = VRSceneManager::getCurrent();
+    if (scene == 0) return;
+    Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("script_list"));
+
+    int i=0;
+    for (auto script : scene->getScripts()) {
+        setScriptListRow(store->get_iter(toString(i)), script.second);
+        i++;
+    }
+}
+
 void VRGuiScripts::updateList() {
     VRScene* scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
@@ -617,13 +665,7 @@ void VRGuiScripts::updateList() {
     Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("script_list"));
     store->clear();
 
-    map<string, VRScript*> fkts = scene->getScripts();
-    map<string, VRScript*>::iterator itr;
-    for (itr = fkts.begin(); itr != fkts.end(); itr++) {
-        Gtk::ListStore::Row row = *store->append();
-        gtk_list_store_set (store->gobj(), row.gobj(), 0, itr->first.c_str(), -1);
-    }
-
+    for (auto script : scene->getScripts()) setScriptListRow(store->append(), script.second);
     on_select_script();
 }
 
@@ -712,6 +754,10 @@ VRGuiScripts::VRGuiScripts() {
     setToolButtonSensivity("toolbutton7", false);
     setToolButtonSensivity("toolbutton8", false);
     setToolButtonSensivity("toolbutton9", false);
+
+    // update the list each frame to update the execution time
+    VRFunction<int>* fkt = new VRFunction<int>("scripts_gui_update",  boost::bind(&VRGuiScripts::update, this) );
+    VRSceneManager::get()->addUpdateFkt(fkt, 100);
 }
 
 OSG_END_NAMESPACE;

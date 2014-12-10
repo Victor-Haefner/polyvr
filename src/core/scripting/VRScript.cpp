@@ -10,6 +10,7 @@
 #include "VRPyHaptic.h"
 #include "VRPyBaseT.h"
 #include "core/scene/VRSceneManager.h"
+#include "core/utils/VRTimer.h"
 #include "core/utils/toString.h"
 #include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
@@ -230,6 +231,8 @@ void VRScript::execute() {
         if (!active) return;
         if (PyErr_Occurred() != NULL) PyErr_Print();
 
+        VRTimer timer; timer.start();
+
         PyObject* pArgs = PyTuple_New(args.size());
 
         int i=0;
@@ -240,6 +243,8 @@ void VRScript::execute() {
             a_itr->second = a;
         }
         PyObject_CallObject(fkt, pArgs);
+
+        execution_time = timer.stop();
 
         Py_XDECREF(pArgs);
 
@@ -261,56 +266,17 @@ void VRScript::execute() {
     }
 }
 
-void VRScript::execute_dev(VRDevice* dev) {// TODO: pass device as first parameter
+void VRScript::execute_dev(VRDevice* dev) {
     if (type != "Python") return;
-    //cout << "\nEXECUTE SCRIPT " << name << flush;
-    if (!active) return;
-
-    if (PyErr_Occurred() != NULL) PyErr_Print();
-    PyObject* pArgs = PyTuple_New(args.size());
-
-    int i=0;
-    for (a_itr = args.begin(); a_itr != args.end(); a_itr++, i++) {
-        arg* a = a_itr->second;
-        a->pyo = getPyObj(a);
-        PyTuple_SetItem(pArgs, i, a->pyo);
-        a_itr->second = a;
-    }
-
-    PyObject_CallObject(fkt, pArgs);
-
-    Py_XDECREF(pArgs);
-    if (PyErr_Occurred() != NULL) PyErr_Print();
-
-
-    //cout << "done\n";
+    execute();
 }
 
 void VRScript::execute_soc(string s) {
     if (type != "Python") return;
-    //cout << "\nEXECUTE SOC SCRIPT " << s << flush;
     if (!active) return;
 
     args["Message"]->val = s;
-
-    if (PyErr_Occurred() != NULL) PyErr_Print();
-    PyObject* pArgs = PyTuple_New(args.size());
-
-    int i=0;
-    for (a_itr = args.begin(); a_itr != args.end(); a_itr++, i++) {
-        arg* a = a_itr->second;
-        a->pyo = getPyObj(a);
-        PyTuple_SetItem(pArgs, i, a->pyo);
-        a_itr->second = a;
-    }
-
-    PyObject_CallObject(fkt, pArgs);
-
-    Py_XDECREF(pArgs);
-    if (PyErr_Occurred() != NULL) PyErr_Print();
-
-
-    //cout << "done\n";
+    execute();
 }
 
 void VRScript::enable(bool b) { active = b; }
@@ -330,6 +296,8 @@ void VRScript::remTrigger(string name) {
     delete trigs[name]; trigs.erase(name);
     update();
 }
+
+float VRScript::getExecutionTime() { return execution_time; }
 
 void VRScript::remArgument(string name) {
     if (args.count(name) == 0) return;
