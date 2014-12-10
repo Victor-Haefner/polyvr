@@ -24,6 +24,7 @@ class VRTimer {
         void print();
 
         static void emitBeacon(std::string);
+        static int getBeacon(std::string);
 };
 
 #endif // VRTIMER_H_INCLUDED

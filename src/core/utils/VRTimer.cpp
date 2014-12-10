@@ -35,3 +35,11 @@ void VRTimer::emitBeacon(string b) {
         beacons[b].start = t;
     }
 }
+
+int VRTimer::getBeacon(string b) {
+    if (!beacons.count(b)) beacons[b] = timer();
+    int t = glutGet(GLUT_ELAPSED_TIME);
+    int res = t - beacons[b].start;
+    beacons[b].start = t;
+    return res;
+}

@@ -7,6 +7,7 @@
 #include "core/objects/VRLight.h"
 #include "core/objects/VRLightBeacon.h"
 #include "core/gui/VRGuiManager.h"
+#include "core/utils/VRTimer.h"
 #include <OpenSG/OSGSceneFileHandler.h>
 #include <gtkmm/main.h>
 #include <GL/glut.h>
@@ -145,6 +146,14 @@ VRScene* VRSceneManager::getScene(string s) { if (scenes.count(s)) return scenes
 
 VRScene* VRSceneManager::getCurrent() { return get()->getScene(get()->active); }
 
+void sleep_to(int fps) {
+    int dt = VRTimer::getBeacon("st");
+    if (dt > 16) return;
+
+    //cout << " dt " << dt << flush;
+    osgSleep(16-dt);
+}
+
 void VRSceneManager::update() {
     int fps = VRRate::get()->getRate();
 
@@ -162,6 +171,8 @@ void VRSceneManager::update() {
 
     VRGlobals::get()->CURRENT_FRAME++;
     VRGlobals::get()->FRAME_RATE = fps;
+
+    sleep_to(60);
 }
 
 OSG_END_NAMESPACE
