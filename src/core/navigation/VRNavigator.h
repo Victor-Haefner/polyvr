@@ -59,24 +59,23 @@ class VRNavigator_base {
         map<string, VRDevCb*> library;
 
         VRNavPreset* current;
+        string current_name;
         map<string, VRNavPreset*> presets;
 
     public:
         VRNavigator_base ();
 
-        void addPreset(VRNavPreset* ps, string& name);
+        void addNavigation(VRNavPreset* ps, string& name);
+        void remNavigation(string name);
 
-        void remPreset(string name);
+        void setActiveNavigation(string s);
+        string getActiveNavigation();
+        VRNavPreset* getNavigation(string s);
+        map<string, VRNavPreset*> getNavigations();
+        vector<string> getNavigationNames();
 
-        void setActivePreset(string s);
-
-        VRNavPreset* getPreset(string s);
-
-        map<string, VRNavPreset*> getPresets();
-
-        void storeCallback(VRDevCb* cb);
-
-        map<string, VRDevCb*>& getCallbacks();
+        void storeNavigationCallback(VRDevCb* cb);
+        map<string, VRDevCb*>& getNavigationCallbacks();
 };
 
 class VRNavigator : public VRNavigator_base {
