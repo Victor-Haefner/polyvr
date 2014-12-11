@@ -53,7 +53,7 @@ namespace realworld {
                 //cout << "latlons: " << latlons << endl;
                 latlonList[i] = latlons;
             }
-            string filePath = "data/RealWorld/elevation/" + latLonName + ".json";
+            string filePath = "elevation/" + latLonName + ".json";
             if(fileExists(filePath)){
                 //cout << "File exists already!" << endl;
             }else{
@@ -90,7 +90,7 @@ namespace realworld {
         void readElevationFile(string id){
             Json::Value root;   // will contains the root value after parsing.
             Json::Reader reader;
-            std::ifstream test((char*)("data/RealWorld/elevation/" + id + ".json").c_str(), std::ifstream::binary);
+            std::ifstream test((char*)("elevation/" + id + ".json").c_str(), std::ifstream::binary);
             bool parsingSuccessful = reader.parse( test, root, false );
             if ( !parsingSuccessful )
             {
@@ -105,7 +105,7 @@ namespace realworld {
 
         /** create json-file with latitude, longitude and elevation data **/
         void createElevationFile(string id, string latlons[]){
-                string filePath = "data/RealWorld/elevation/" + id + ".json";
+                string filePath = "elevation/" + id + ".json";
                 for(int i = 0; i< n; i++){
                     latlons[i] = getMapQuestElevations(latlons[i]);
                     if(latlons[i] == "error") {

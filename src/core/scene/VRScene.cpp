@@ -55,10 +55,12 @@ void VRScene::initDevices() { // TODO: remove this after refactoring the navigat
         initOrbit(getActiveCamera(), mouse); //TODO, load from xml
         initWalk(getActiveCamera(), mouse);
         initOrbit2D(getActiveCamera(), mouse);
+        setActiveNavigation("Orbit");
     }
 
     if (flystick) {
         initFlyWalk(getActiveCamera(), flystick); // TODO
+        setActiveNavigation("FlyWalk");
     }
 
     setup->updateDeviceDynNodes(getRoot());

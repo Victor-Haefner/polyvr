@@ -4,14 +4,19 @@ varying mat4 model;
 varying vec4 light1;
 varying vec4 light2;
 
+attribute vec4 osg_Vertex;
+attribute vec3 osg_Normal;
+attribute vec4 osg_Color;
+attribute vec2 osg_MultiTexCoord0;
+
 //----------------------------------------------------------------------------------------------MAIN--VP
 void main( void ) {
     model = gl_ModelViewProjectionMatrix;
-    gl_Position = gl_Vertex;
+    gl_Position = osg_Vertex;
 
-    light1.xyz = gl_Normal.xyz;
-    light1.w = gl_MultiTexCoord0[0];
+    light1.xyz = osg_Normal.xyz;
+    light1.w = osg_MultiTexCoord0[0];
 
-    light2.xyz = gl_Color.xyz;
-    light2.w = gl_MultiTexCoord0[1];
+    light2.xyz = osg_Color.xyz;
+    light2.w = osg_MultiTexCoord0[1];
 }

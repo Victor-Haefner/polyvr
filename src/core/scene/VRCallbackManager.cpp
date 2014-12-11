@@ -98,9 +98,7 @@ void VRCallbackManager::updateCallbacks() {
 
     for (fkt_list_itr = updateFkts.rbegin(); fkt_list_itr != updateFkts.rend(); fkt_list_itr++) {
         list<VRFunction<int>*> l = *fkt_list_itr->second;
-        //cout << "\nPrio: " << fkt_list_itr->first << " " << fkt_list_itr->second;
-        for (fkt_itr = l.begin(); fkt_itr != l.end(); fkt_itr++) {
-            VRFunction<int>* f = *fkt_itr;
+        for (auto f : l) {
             (*f)(0);
 
             if (jobFkts.count(f)) { // if a job erase it

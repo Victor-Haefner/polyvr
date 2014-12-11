@@ -12,6 +12,7 @@
 #include "VRGuiGeneral.h"
 #include <gtkmm/uimanager.h>
 #include <gtkmm/main.h>
+#include <gtkmm/window.h>
 #include <gtk/gtkglinit.h>
 
 OSG_BEGIN_NAMESPACE;
@@ -29,7 +30,7 @@ Gtk::Main* GtkMain;
 
 VRGuiManager::VRGuiManager() {
     int argc   = 0;
-    GtkMain = new Gtk::Main(&argc, NULL);
+    GtkMain = new Gtk::Main(&argc, NULL, false);
     gtk_gl_init(&argc, NULL);
 
     //gtk_rc_parse("gui/gtkrc");
@@ -67,6 +68,11 @@ VRGuiManager::VRGuiManager() {
 
     VRFunction<int>* ufkt = new VRFunction<int>("GUI_updateManager", boost::bind(&VRGuiManager::update, this) );
     VRSceneManager::get()->addUpdateFkt(ufkt, 1);
+
+    Gtk::Window* top = 0;
+    VRGuiBuilder()->get_widget("window1", top);
+    top->maximize();
+    top->show_all();
 }
 
 VRGuiManager::~VRGuiManager() {
@@ -84,7 +90,9 @@ VRGuiManager* VRGuiManager::get() {
     return instance;
 }
 
-
+void VRGuiManager::updateGtk() {
+    while( Gtk::Main::events_pending() ) Gtk::Main::iteration();
+}
 
 void VRGuiManager::update() {
     g_scene->update();

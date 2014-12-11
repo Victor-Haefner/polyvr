@@ -199,7 +199,7 @@ void SimViDekont::createGeo(frame* f) {
     calcVertexNormals(geo);
 
     //--- BEGIN Save Geo in .osb binary
-        string path = "data/simvidekont_data/rslt/geo_frame";
+        string path = "rslt/geo_frame";
         GeoIO::save(f->id, geo, path);
     //--- END Save Geo in .osb binary
 
@@ -237,7 +237,7 @@ void SimViDekont::quadOnSurface(map<int, float>& Vstress, map<int, int>* vmap, m
 }
 
 void SimViDekont::computeVertexColors(frame* f, map<int, int>* vmap, map<int, float>& VsValue, bool stress) {
-
+    if (f->stress->size() == 0 or f->strain->size() == 0 ) return;
     //float max = f->stress->at(0);   //1.22e9;
     float max = (stress) ? f->stress->at(0) : f->strain->at(0);
     for(uint i=0; i < f->ind->size()/8; i++) { // go through elements
@@ -267,7 +267,7 @@ void SimViDekont::initFrameGeometries() {
         frame* f = frames->at(i);
         cout << "\nCONSTRUCT SURFACE " << f->id << endl;
 
-        string path = "data/simvidekont_data/rslt/geo_frame";
+        string path = "rslt/geo_frame";
 
         bool file = false;
         file =  GeoIO::load(f, path);

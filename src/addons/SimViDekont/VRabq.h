@@ -103,7 +103,7 @@ class VRabq {
 
         void loadAbaqusFile(int from, int to) {
             frames = new vector<frame*>(to-from);
-            string path = "data/simvidekont_data/abacusTest/aba_frame";
+            string path = "abacusTest/aba_frame";
             for (int i=from;i<=to;i++) {
                 stringstream ss;
                 ss << (i+1);

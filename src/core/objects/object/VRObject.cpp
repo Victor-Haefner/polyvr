@@ -33,15 +33,9 @@ VRObject::VRObject(string _name) {
 
     setName(_name);
 
-    specialized = false;
     node = makeNodeFor(Group::create());
     OSG::setName(node, name);
     type = "Object";
-
-    parent = 0;
-
-    pickable = false;
-    visible = true;
     //unitTest();
 }
 
@@ -127,6 +121,7 @@ void VRObject::addChild(VRObject* child, bool osg) {
     child->childIndex = children.size();
     children.push_back(child);
     child->parent=this;
+    updateChildrenIndices(true);
 }
 
 void VRObject::subChild(NodeRecPtr n) { node->subChild(n); }
@@ -138,7 +133,7 @@ void VRObject::subChild(VRObject* child, bool osg) {
     if (target != -1) children.erase(children.begin() + target);
     if (child->parent == this) child->parent=0;
     child->graphChanged = VRGlobals::get()->CURRENT_FRAME;
-    updateChildrenIndices();
+    updateChildrenIndices(true);
 }
 
 void VRObject::switchParent(VRObject* new_p) {
@@ -369,9 +364,10 @@ void VRObject::_switchParent(NodeRecPtr parent) {
     parent->addChild(node);
 }
 
-void VRObject::updateChildrenIndices() {
-    for (int i=0; i<children.size(); i++) {
+void VRObject::updateChildrenIndices(bool recursive) {
+    for (uint i=0; i<children.size(); i++) {
         children[i]->childIndex = i;
+        if (recursive) children[i]->updateChildrenIndices();
     }
 }
 

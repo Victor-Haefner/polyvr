@@ -35,6 +35,34 @@ struct MChange {
     bool same(MChange c);
 };
 
+class MPart;
+struct MRelation {
+    MPart* part1 = 0;
+    MPart* part2 = 0;
+
+    virtual void translateChange(MChange& change);
+};
+
+struct MChainGearRelation : public MRelation {
+    int dir = -1;
+    MPart* next = 0;
+    MPart* prev = 0;
+    int segID = 0;
+
+    void translateChange(MChange& change);
+};
+
+struct MGearGearRelation : public MRelation {
+    void translateChange(MChange& change);
+};
+
+struct pointPolySegment {
+    Vec3f Pseg;
+    Vec3f seg;
+    float dist2 = 0;
+    int ID = 0;
+};
+
 class MPart {
     public:
         enum STATE {
@@ -44,7 +72,7 @@ class MPart {
             DISENGAGING
         };
 
-        map<MPart*, int> neighbors;
+        map<MPart*, MRelation*> neighbors;
         vector<MPart*> group;
         VRGeometry* geo = 0;
         VRTransform* trans = 0;
@@ -61,10 +89,10 @@ class MPart {
         void apply();
         void setBack();
         bool propagateMovement();
-        bool propagateMovement(MChange c, int flip);
+        bool propagateMovement(MChange c, MRelation* r);
 
         void clearNeighbors();
-        void addNeighbor(MPart* p, int flip);
+        void addNeighbor(MPart* p, MRelation* r);
         bool hasNeighbor(MPart* p);
         void computeState();
 
@@ -119,7 +147,7 @@ class MChain : public MPart {
         void setDirs(string dirs);
         void addDir(char dir);
         void updateGeo();
-        void toPolygon(Vec3f p, Vec3f& ps, Vec3f& sd);
+        vector<pointPolySegment> toPolygon(Vec3f p);
 
         void move();
         void updateNeighbors(vector<MPart*> parts);

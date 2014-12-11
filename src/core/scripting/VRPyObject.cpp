@@ -195,7 +195,7 @@ PyObject* VRPyObject::getChildren(VRPyObject* self, PyObject* args) {
     vector<OSG::VRObject*> objs = self->obj->getChildren(doRecursive, type);
 
     PyObject* li = PyList_New(objs.size());
-    for (int i=0; i<objs.size(); i++) {
+    for (uint i=0; i<objs.size(); i++) {
         PyList_SetItem(li, i, VRPyTypeCaster::cast(objs[i]));
     }
 

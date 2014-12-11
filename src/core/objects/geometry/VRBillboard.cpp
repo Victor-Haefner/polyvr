@@ -5,6 +5,7 @@
 #include <OpenSG/OSGSimpleGeometry.h>        // Methods to create simple geos.
 #include "core/tools/VRText.h"
 #include "core/objects/material/VRShader.h"
+#include "core/scene/VRSceneManager.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -18,7 +19,8 @@ void VRBillboard::initBBMesh(bool alpha) {
     setMaterial(BBmat);
 
     bbs = new VRShader(BBmat);
-    bbs->setVertexProgram("shader/Billboard.vp");
+    string wdir = VRSceneManager::get()->getOriginalWorkdir();
+    bbs->setVertexProgram(wdir+"/shader/Billboard.vp");
 
     BBtexChunk = TextureObjChunk::create();
     TextureEnvChunkRecPtr env_chunk = TextureEnvChunk::create();

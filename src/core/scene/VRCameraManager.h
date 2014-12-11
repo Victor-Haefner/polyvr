@@ -29,8 +29,10 @@ class VRCameraManager {
         void setActiveCamera(int ID);
 
         VRCamera* getActiveCamera();
+        int getActiveCameraIndex();
 
-        vector<VRCamera*> getCameraMap();
+        vector<VRCamera*> getCameras();
+        vector<string> getCameraNames();
 };
 
 OSG_END_NAMESPACE;

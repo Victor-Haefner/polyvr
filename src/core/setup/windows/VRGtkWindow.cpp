@@ -7,6 +7,7 @@
 #include <gtk/gtkgl.h>
 
 #include "../devices/VRKeyboard.h"
+#include "core/utils/VRTimer.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -84,7 +85,7 @@ bool VRGtkWindow::on_motion(GdkEventMotion * event) {
 }
 
 bool VRGtkWindow::on_key(GdkEventKey *event) {
-    if (event->keyval >= 65470 or event->keyval <= 65481) return false; //F keys
+    if (event->keyval >= 65470 and event->keyval <= 65481) return false; //F keys
     //VRKeyboard::get()->keyboard(event->keyval, 0, 0); // TODO: check the values!!
 	//printf("\n KEY: %i %i %i\n", event->keyval, event->type, event->state);
 	//cout << "\n KEY: " << event->keyval << " " << event->type << " " << event->state << endl;

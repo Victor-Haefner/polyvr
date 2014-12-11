@@ -16,7 +16,7 @@ namespace realworld {
         OSMMap* getMap(string posStr) {
             if (maps.count(posStr)) return maps[posStr];
 
-            string filename = "data/RealWorld/mapdata/map-"+posStr+".osm";
+            string filename = "mapdata/map-"+posStr+".osm";
 
             // check if file exists
             ifstream ifile(filename.c_str());

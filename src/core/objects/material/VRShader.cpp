@@ -12,14 +12,24 @@ string VRShader::getFromFile(string path) {
 }
 
 VRShader::VRShader(ChunkMaterialRecPtr mat) {
-    shader_chunk = SimpleSHLChunk::create();
+    shader_chunk = ShaderProgramChunk::create();
     mat->addChunk(shader_chunk);
+
+    vProgram = ShaderProgram::createVertexShader  ();
+    fProgram = ShaderProgram::createFragmentShader();
+    gProgram = ShaderProgram::createGeometryShader();
+    shader_chunk->addShader(vProgram);
+    shader_chunk->addShader(fProgram);
+    shader_chunk->addShader(gProgram);
+
+    vProgram->createDefaulAttribMapping();
+    vProgram->addOSGVariable("OSGViewportSize");
 }
 
-SimpleSHLChunkRecPtr VRShader::getShader() { return shader_chunk; }
+ShaderProgramChunkRecPtr VRShader::getShader() { return shader_chunk; }
 
-void VRShader::setVertexProgram(string path) { shader_chunk->setVertexProgram(getFromFile(path).c_str()); }
-void VRShader::setFragmentProgram(string path) { shader_chunk->setFragmentProgram(getFromFile(path).c_str()); }
-void VRShader::setGeometryProgram(string path) { shader_chunk->setGeometryProgram(getFromFile(path).c_str()); }
+void VRShader::setVertexProgram(string path) { vProgram->setProgram(getFromFile(path).c_str()); }
+void VRShader::setFragmentProgram(string path) { fProgram->setProgram(getFromFile(path).c_str()); }
+void VRShader::setGeometryProgram(string path) { gProgram->setProgram(getFromFile(path).c_str()); }
 
 OSG_END_NAMESPACE;
