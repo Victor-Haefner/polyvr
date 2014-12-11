@@ -61,6 +61,9 @@ void VRGuiSetup::updateObjectData() {
     setExpanderSensivity("expander8", false);
     setExpanderSensivity("expander20", false);
     setExpanderSensivity("expander21", false);
+    setExpanderSensivity("expander22", false);
+    setExpanderSensivity("expander23", false);
+    setExpanderSensivity("expander24", false);
 
     current_scene = VRSceneManager::getCurrent();
 
@@ -70,8 +73,8 @@ void VRGuiSetup::updateObjectData() {
         VRWindow* win = (VRWindow*)selected_object;
         setCheckButton("checkbutton7", win->isActive());
 
-        setCheckButton("checkbutton12", win->hasType(0));
         if (win->hasType(0)) { // multiwindow
+            setExpanderSensivity("expander24", true);
             VRMultiWindow* mwin = (VRMultiWindow*)win;
             int nx, ny;
             nx = mwin->getNXTiles();
@@ -95,6 +98,9 @@ void VRGuiSetup::updateObjectData() {
                 }
             }
         }
+
+        if (win->hasType(1)) setExpanderSensivity("expander23", true);
+        if (win->hasType(2)) setExpanderSensivity("expander22", true); // GTK
 
         // mouse
         string name = "None";
@@ -441,19 +447,6 @@ void VRGuiSetup::on_toggle_display_active() {
     setToolButtonSensivity("toolbutton12", true);
 }
 
-void VRGuiSetup::on_toggle_display_multi() {
-    bool b = getCheckButtonState("checkbutton12");
-    setTableSensivity("table9", b);
-    if (guard) return;
-
-    if (selected_type != "window") return;
-    //VRWindow* win = (VRWindow*)selected_object;
-
-    //cout << "\nToggleActive " << name << " " << b << endl;
-    //win->getView()->setStereo(b);
-    setToolButtonSensivity("toolbutton12", true);
-}
-
 void VRGuiSetup::on_servern_edit() {
     if (guard) return;
     if (selected_type != "window") return;
@@ -785,7 +778,6 @@ VRGuiSetup::VRGuiSetup() {
     setCheckButtonCallback("checkbutton7", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_display_active));
     setCheckButtonCallback("checkbutton8", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_display_stereo));
     setCheckButtonCallback("checkbutton11", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_display_projection));
-    setCheckButtonCallback("checkbutton12", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_display_multi));
     setCheckButtonCallback("checkbutton24", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_art));
     setCheckButtonCallback("checkbutton26", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_view_user));
     setCheckButtonCallback("checkbutton4", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_view_stats));
@@ -797,7 +789,6 @@ VRGuiSetup::VRGuiSetup() {
     setTableSensivity("table2", false);
     setTableSensivity("table7", false);
     setTableSensivity("table8", false);
-    setTableSensivity("table9", false);
 
     updateSetupList();
     updateSetup();
