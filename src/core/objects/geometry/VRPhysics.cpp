@@ -74,6 +74,7 @@ void VRPhysics::setDynamic(bool b) { dynamic = b; update(); }
 bool VRPhysics::isDynamic() { return dynamic; }
 void VRPhysics::setMass(float m) { mass = m; update(); }
 float VRPhysics::getMass() { return mass; }
+void VRPhysics::setGravity(OSG::Vec3f v) { body->setGravity(btVector3 (v.x(),v.y(),v.z())); }
 void VRPhysics::setCollisionMargin(float m) { collisionMargin = m; update(); }
 float VRPhysics::getCollisionMargin() { return collisionMargin; }
 void VRPhysics::setCollisionGroup(int g) { collisionGroup = g; update(); }
@@ -91,7 +92,6 @@ OSG::Vec3f VRPhysics::toVec3f(btVector3 v) { return OSG::Vec3f(v[0], v[1], v[2])
 vector<VRCollision> VRPhysics::getCollisions() {
     vector<VRCollision> res;
     if (!physicalized) return res;
-
     if (!ghost) {
         int numManifolds = world->getDispatcher()->getNumManifolds();
         for (int i=0;i<numManifolds;i++) {
@@ -393,6 +393,12 @@ void VRPhysics::applyForce(OSG::Vec3f i) {
    if (body == 0) return;
    if (mass == 0) return;
    body->applyCentralForce(btVector3(i.x(), i.y(), i.z()));
+}
+
+void VRPhysics::applyTorque(OSG::Vec3f i) {
+   if (body == 0) return;
+   if (mass == 0) return;
+   body->applyTorque(btVector3(i.x(), i.y(), i.z()));
 }
 
 

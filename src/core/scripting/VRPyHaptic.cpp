@@ -54,7 +54,7 @@ PyMethodDef VRPyHaptic::methods[] = {
     {"setSimulationScales", (PyCFunction)VRPyHaptic::setSimulationScales, METH_VARARGS, "Set force on haptic device" },
     {"setForce", (PyCFunction)VRPyHaptic::setForce, METH_VARARGS, "Set force on haptic device" },
     {"updateVirtMech", (PyCFunction)VRPyHaptic::updateVirtMech, METH_NOARGS, "update the virtuose  ( if it is in COMMAND_MODE_VIRTMECH)" },
-    {"attachTransform", (PyCFunction)VRPyHaptic::attachTransform, METH_VARARGS, "attaches given Transform to the virtuose (Command-Mode has to be COMMAND_MODE_VIRTMECH) "},
+    {"attachTransform", (PyCFunction)VRPyHaptic::attachTransform, METH_VARARGS, "attaches given Transform to the virtuose (Command-Mode has to be COMMAND_MODE_VIRTMECH) PAY ATTENTION TO NOT ATTACH A  OBJECT WHICH IS TOO HEAVY"},
     {"detachTransform", (PyCFunction)VRPyHaptic::detachTransform, METH_NOARGS, "detach previously attached transform" },
     {"getForce", (PyCFunction)VRPyHaptic::getForce, METH_VARARGS, "the force that you put on the haptic" },
     {NULL}  /* Sentinel */

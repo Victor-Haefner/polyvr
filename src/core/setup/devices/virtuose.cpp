@@ -88,8 +88,7 @@ void virtuose::connect(string IP) {
 	CHECK( virtSetDebugFlags(vc, DEBUG_SERVO|DEBUG_LOOP) );
 	CHECK( virtSetIndexingMode(vc, INDEXING_ALL_FORCE_FEEDBACK_INHIBITION) );
 	CHECK( virtSetTimeStep(vc, timestep) );
-    //setSimulationScales(1.0f,1.0f);
-    setSimulationScales(1.0f,0.1f);
+    setSimulationScales(1.0f,1.0f);
 
     float identity[7] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f};
     //float baseFrame[7] = { 0.0f, 0.0f, 0.0f, 0.70710678f, 0.0f, 0.70710678f, 0.0f };
@@ -114,6 +113,8 @@ void virtuose::disconnect() {
 		CHECK( virtClose(vc) );
         vc = 0;
         isAttached = false;
+        CHECK( virtSetCommandType(vc, COMMAND_TYPE_IMPEDANCE) );
+
     }
 }
 
@@ -129,7 +130,12 @@ void virtuose::applyForce(Vec3f force, Vec3f torque) {
 
 Matrix virtuose::getPose() {
     float f[7]= {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f};
-    CHECK( virtGetAvatarPosition(vc, f) );
+
+    VirtCommandType * type;
+    CHECK(virtGetCommandType(vc, type));
+    if((*type) == COMMAND_TYPE_IMPEDANCE) {
+        CHECK( virtGetAvatarPosition(vc, f) );
+    }
     //CHECK( virtGetPhysicalPosition(vc, f) );
 
     Matrix m;
@@ -144,7 +150,11 @@ Matrix virtuose::getPose() {
 
 Vec3f virtuose::getForce() {
     float force[6] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
+    VirtCommandType * type;
+    CHECK(virtGetCommandType(vc, type));
+    if((*type) == COMMAND_TYPE_VIRTMECH) {
     CHECK(virtGetForce(vc, force));
+    }
     Vec3f imp(force[1],force[2],force[0]);
     return imp;
 }
@@ -174,12 +184,14 @@ void virtuose::detachTransform() {
 * takes positiob, speed of attached object and puts it on the virtuose
 **/
 void virtuose::updateVirtMech() {
-    float position[7] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f};
-    float speed[6] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
-    float force[6] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
+
     VirtCommandType * type;
     CHECK(virtGetCommandType(vc, type));
     if((*type) == COMMAND_TYPE_VIRTMECH) {
+
+    float position[7] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f};
+    float speed[6] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
+    float force[6] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
 
 		if (!(this->isAttached))
 		{
@@ -192,6 +204,7 @@ void virtuose::updateVirtMech() {
 		}
 		else
 		{
+
 			btTransform pos = this->attached->getPhysics()->getTransform();
 			position[0] = pos.getOrigin().getY();
 			position[1] = pos.getOrigin().getZ();
@@ -215,6 +228,7 @@ void virtuose::updateVirtMech() {
 
 			CHECK(virtGetForce(vc, force));
 			attached->getPhysics()->applyForce(Vec3f(force[1],force[2],force[0]));
+			attached->getPhysics()->applyTorque(Vec3f(force[4],force[5],force[3]));
 
 		}
 

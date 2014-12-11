@@ -76,6 +76,7 @@ class VRPhysics : public OSG::VRStorage {
 
         void setMass(float m);
         float getMass();
+        void setGravity(OSG::Vec3f v);
 
         void setCollisionMargin(float m);
         void setCollisionGroup(int g);
@@ -95,6 +96,7 @@ class VRPhysics : public OSG::VRStorage {
         void resetForces();
         void applyImpulse(OSG::Vec3f i);
         void applyForce(OSG::Vec3f i);
+        void applyTorque(OSG::Vec3f i);
 
         /**get the normalized resulting force (out of a collision, without the gravity) of this object with the constraints considered**/
       //  btVector3 getNormForceWithConstrained();
