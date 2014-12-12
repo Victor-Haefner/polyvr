@@ -64,6 +64,7 @@ VRObject* getSelected() {
     VRObject* res = root->getAtPath(selected);
 
     if (res == 0) {
+        cout << "did not find " << selected << endl;
         tree_store->clear();
         parseSGTree( root );
         tree_view->expand_all();
@@ -272,7 +273,7 @@ void setCSG(CSGApp::CSGGeometry* g) {
 
 void on_toggle_liveupdate(GtkToggleButton* tb, gpointer user_data) { liveUpdate = !liveUpdate; }
 
-void updateObjectForms() {
+void updateObjectForms(bool disable = false) {
     setExpanderSensivity("expander1", false);
     setExpanderSensivity("expander2", false);
     setExpanderSensivity("expander9", false);
@@ -283,6 +284,7 @@ void updateObjectForms() {
     setExpanderSensivity("expander14", false);
     setExpanderSensivity("expander15", false);
     setExpanderSensivity("expander16", false);
+    if (disable) return;
 
     VRObject* obj = getSelected();
     if (obj == 0) return;
@@ -354,6 +356,7 @@ void getTypeColors(VRObject* o, string& fg, string& bg) {
 
 void setSGRow(Gtk::TreeModel::iterator itr, VRObject* o) {
     if (o == 0) return;
+    if (!itr) return;
 
     string fg, bg;
     getTypeColors(o, fg, bg);
@@ -368,6 +371,7 @@ void setSGRow(Gtk::TreeModel::iterator itr, VRObject* o) {
 
 void parseSGTree(VRObject* o, Gtk::TreeModel::iterator itr) {
     if (o == 0) return;
+    if (!itr) { parseSGTree(o); return; }
     itr = tree_store->append(itr->children());
     setSGRow( itr, o );
     for (uint i=0; i<o->getChildrenCount(); i++) parseSGTree( o->getChild(i), itr );
@@ -690,7 +694,7 @@ void on_treeview_select(GtkTreeView* tv, gpointer user_data) {
 
     //string name = row.get_value(cols.name);
     //string type = row.get_value(cols.type);
-    updateObjectForms();
+    updateObjectForms(true);
     selected = row.get_value(cols.obj);
     selected_itr = iter;
     updateObjectForms();
@@ -865,7 +869,11 @@ void VRGuiScene::on_drag_end(const Glib::RefPtr<Gdk::DragContext>& dc) {
     Gdk::DragAction ac = dc->get_selected_action();
     if (dragDest == 0) return;
     if (ac == 0) return;
-    getSelected()->switchParent(dragDest);
+    VRObject* selected = getSelected();
+    selected->switchParent(dragDest, 0);
+    cout << "drag_end " << selected->getPath() << endl;
+    Gtk::TreeModel::iterator iter = tree_view->get_model()->get_iter(selected->getPath());
+    setSGRow(iter, selected);
 }
 
 void VRGuiScene::on_drag_beg(const Glib::RefPtr<Gdk::DragContext>& dc) {

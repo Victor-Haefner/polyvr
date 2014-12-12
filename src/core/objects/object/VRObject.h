@@ -106,7 +106,7 @@ class VRObject : public VRName {
         void setSiblingPosition(int i);
 
         /** Add a child to this object **/
-        void addChild(VRObject* child, bool osg = true);
+        void addChild(VRObject* child, bool osg = true, int place = -1);
 
         /** Add a OSG node as child to this object **/
         void addChild(NodeRecPtr n);
@@ -118,7 +118,7 @@ class VRObject : public VRName {
         void subChild(NodeRecPtr n);
 
         /** Switch the parent of this object **/
-        void switchParent(VRObject* new_p);
+        void switchParent(VRObject* new_p, int place = -1);
 
         /** Detach object from the parent**/
         void detach();
