@@ -159,6 +159,8 @@ class VRObject : public VRName {
         /** Returns the Boundingbox of the OSG Node */
         void getBoundingBox(Vec3f& v1, Vec3f& v2);
 
+        void flattenHiarchy();
+
         /** Print to console the scene subgraph starting at this object **/
         void printTree(int indent = 0);
 

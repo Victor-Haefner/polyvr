@@ -69,9 +69,16 @@ PyMethodDef VRPyObject::methods[] = {
     {"isPickable", (PyCFunction)VRPyObject::isPickable, METH_NOARGS, "Return if the object is pickable" },
     {"setPickable", (PyCFunction)VRPyObject::setPickable, METH_VARARGS, "Set if the object is pickable" },
     {"printOSG", (PyCFunction)VRPyObject::printOSG, METH_NOARGS, "Print the OSG structure to console" },
+    {"flattenHiarchy", (PyCFunction)VRPyObject::flattenHiarchy, METH_NOARGS, "Flatten the scene graph hiarchy" },
     {NULL}  /* Sentinel */
 };
 
+
+PyObject* VRPyObject::flattenHiarchy(VRPyObject* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::flattenHiarchy - C Object is invalid"); return NULL; }
+    self->obj->flattenHiarchy();
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyObject::printOSG(VRPyObject* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::printOSG - C Object is invalid"); return NULL; }

@@ -1,4 +1,5 @@
 #include "VRObject.h"
+#include "../VRTransform.h"
 #include "VRObjectT.h"
 #include "VRAttachment.h"
 #include <OpenSG/OSGNameAttachment.h>
@@ -95,7 +96,7 @@ NodeRecPtr VRObject::getNode() { return node; }
 
 void VRObject::setSiblingPosition(int i) {
     if (parent == 0) return;
-    if (i < 0 or i >= parent->children.size()) return;
+    if (i < 0 or i >= (int)parent->children.size()) return;
 
     NodeRecPtr p = parent->getNode();
 
@@ -294,6 +295,22 @@ void VRObject::getBoundingBox(Vec3f& v1, Vec3f& v2) {
     node->getVolume().getBounds(p1, p2);
     v1 = p1.subZero();
     v2 = p2.subZero();
+}
+
+void VRObject::flattenHiarchy() {
+    map<VRTransform*, Matrix> geos;
+    for(auto g : getChildren(true, "Geometry") ) {
+        VRTransform* t = (VRTransform*)g;
+        geos[t] = t->getWorldMatrix();
+        t->detach();
+    }
+
+    clearChildren();
+
+    for (auto g : geos) {
+        addChild(g.first);
+        g.first->setWorldMatrix(g.second);
+    }
 }
 
 /** Print to console the scene subgraph starting at this object **/
