@@ -18,6 +18,7 @@
 #include <OpenSG/OSGSimpleMaterial.h>
 #include <OpenSG/OSGPointLight.h>
 #include <OpenSG/OSGGeoProperties.h>
+#include <OpenSG/OSGComponentTransform.h>
 
 #include <stdio.h>
 #include <unistd.h>
@@ -197,7 +198,16 @@ VRObject* VRSceneLoader::parseOSGTree(NodeRecPtr n, VRObject* parent, string nam
         tmp->setCore(core, "Object");
     }
 
+    else if (t_name == "ComponentTransform") {
+        if (tmp == 0) {
+            tmp_e = new VRTransform(name);
+            tmp_e->setMatrix(dynamic_cast<ComponentTransform *>(n->getCore())->getMatrix());
+            tmp = tmp_e;
+        }
+    }
+
     else if (t_name == "Transform") {
+        cout << " Transform_" << name << " " << dynamic_cast<Transform *>(n->getCore())->getMatrix() << endl;
         if (n->getNChildren() == 1) { // try to optimize the tree by avoiding obsolete transforms
             string tp = n->getChild(0)->getCore()->getTypeName();
             if (tp == "Geometry") {

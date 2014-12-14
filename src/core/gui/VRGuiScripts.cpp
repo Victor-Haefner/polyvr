@@ -85,7 +85,7 @@ VRScript* VRGuiScripts::getSelectedScript() {
     return script;
 }
 
-void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScript* script) {
+void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScript* script, bool onlyTime) {
     if (script == 0) return;
 
     Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("script_list"));
@@ -112,7 +112,23 @@ void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScript* script) {
     float exec_time = script->getExecutionTime();
     if (exec_time >= 0) time = toString( exec_time ) + " ms";
 
-    gtk_list_store_set (store->gobj(), row.gobj(),
+    Gtk::Window* win1;
+    VRGuiBuilder()->get_widget("window1", win1);
+    Gtk::Widget* wdg = 0;
+    if (win1) wdg = win1->get_focus();
+    string name;
+    if (wdg) name = wdg->get_name();
+    bool user_focus = false;
+    if(!user_focus) user_focus = ("gtkmm__GtkTreeView" == name);
+    if(!user_focus) user_focus = ("GtkEntry" == name);
+    if(onlyTime and user_focus) return;
+
+    if (onlyTime) gtk_list_store_set (store->gobj(), row.gobj(),
+                        3, time.c_str(),
+                        4, tfg.c_str(),
+                        5, tbg.c_str(),
+                        -1);
+    else gtk_list_store_set (store->gobj(), row.gobj(),
                         0, script->getName().c_str(),
                         1, fg.c_str(),
                         2, bg.c_str(),
@@ -657,7 +673,7 @@ void VRGuiScripts::update() {
 
     int i=0;
     for (auto script : scene->getScripts()) {
-        setScriptListRow(store->get_iter(toString(i)), script.second);
+        setScriptListRow(store->get_iter(toString(i)), script.second, true);
         i++;
     }
 }

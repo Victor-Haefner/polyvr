@@ -23,7 +23,7 @@ class VRGuiScripts {
 
         void initEditor();
         void printViewerLanguages();
-        void setScriptListRow(Gtk::TreeIter itr, VRScript* script);
+        void setScriptListRow(Gtk::TreeIter itr, VRScript* script, bool onlyTime = false);
 
         void on_new_clicked();
         void on_save_clicked();

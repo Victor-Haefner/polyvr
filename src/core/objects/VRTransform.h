@@ -33,7 +33,7 @@ class VRTransform : public VRObject {
         Vec3f _at;
         Vec3f _from;
         Vec3f _up;
-        Vec3f _scale;//still not used
+        Vec3f _scale;
         NodeRecPtr coords;
         NodeRecPtr translator;
 
