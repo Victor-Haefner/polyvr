@@ -120,7 +120,7 @@ void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScript* script, bool on
     if (wdg) name = wdg->get_name();
     bool user_focus = false;
     if(!user_focus) user_focus = ("gtkmm__GtkTreeView" == name);
-    if(!user_focus) user_focus = ("GtkEntry" == name);
+    if(!user_focus) user_focus = ("GtkEntry" == name); // TODO: be more specific
     if(onlyTime and user_focus) return;
 
     if (onlyTime) gtk_list_store_set (store->gobj(), row.gobj(),
