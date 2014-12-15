@@ -1,5 +1,4 @@
 #include "virtuose.h"
-#include <virtuose/virtuoseAPI.h>
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -50,6 +49,10 @@ virtVec(z,x,y);
 */
 
 virtuose::virtuose() {
+    isAttached = false;
+    gripperPosition = 0.0f;
+    gripperSpeed = 0.0f;
+
 }
 
 virtuose::~virtuose() {
@@ -85,10 +88,10 @@ void virtuose::connect(string IP) {
 
 	//CHECK( virtSetCommandType(vc, COMMAND_TYPE_IMPEDANCE) );
 	CHECK( virtSetCommandType(vc, COMMAND_TYPE_VIRTMECH) );
+	commandType = COMMAND_TYPE_VIRTMECH;
 	CHECK( virtSetDebugFlags(vc, DEBUG_SERVO|DEBUG_LOOP) );
 	CHECK( virtSetIndexingMode(vc, INDEXING_ALL_FORCE_FEEDBACK_INHIBITION) );
 	CHECK( virtSetTimeStep(vc, timestep) );
-    setSimulationScales(1.0f,1.0f);
 
     float identity[7] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f};
     //float baseFrame[7] = { 0.0f, 0.0f, 0.0f, 0.70710678f, 0.0f, 0.70710678f, 0.0f };
@@ -97,10 +100,10 @@ void virtuose::connect(string IP) {
     CHECK( virtSetObservationFrame(vc, identity) );
 	CHECK( virtSetPowerOn(vc, 1) );
 	//virtSetPeriodicFunction(vc, callback, &timestep, this);
+    setSimulationScales(1.0f,0.1f);
 
 
 
-    isAttached = false;
 
 
 }
@@ -114,6 +117,7 @@ void virtuose::disconnect() {
         vc = 0;
         isAttached = false;
         CHECK( virtSetCommandType(vc, COMMAND_TYPE_IMPEDANCE) );
+        commandType = COMMAND_TYPE_IMPEDANCE;
 
     }
 }
@@ -131,9 +135,7 @@ void virtuose::applyForce(Vec3f force, Vec3f torque) {
 Matrix virtuose::getPose() {
     float f[7]= {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f};
 
-    VirtCommandType * type;
-    CHECK(virtGetCommandType(vc, type));
-    if((*type) == COMMAND_TYPE_IMPEDANCE) {
+    if(commandType == COMMAND_TYPE_IMPEDANCE) {
         CHECK( virtGetAvatarPosition(vc, f) );
     }
     //CHECK( virtGetPhysicalPosition(vc, f) );
@@ -149,14 +151,10 @@ Matrix virtuose::getPose() {
 }
 
 Vec3f virtuose::getForce() {
-    float force[6] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
-    VirtCommandType * type;
-    CHECK(virtGetCommandType(vc, type));
-    if((*type) == COMMAND_TYPE_VIRTMECH) {
+    float force[6];
     CHECK(virtGetForce(vc, force));
-    }
-    Vec3f imp(force[1],force[2],force[0]);
-    return imp;
+    Vec3f vel = Vec3f(force[1],force[2],force[0]);
+    return vel;
 }
 
 
@@ -164,7 +162,10 @@ Vec3f virtuose::getForce() {
 void virtuose::attachTransform(VRTransform* trans) {
     isAttached = true;
     attached = trans;
-    float inertia[9] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
+    btMatrix3x3 t = trans->getPhysics()->getInertiaTensor();
+    float inertia[9] = {t.getRow(0).getX(),t.getRow(0).getY(),t.getRow(0).getZ(),
+                        t.getRow(1).getX(),t.getRow(1).getY(),t.getRow(1).getZ(),
+                        t.getRow(2).getX(),t.getRow(2).getY(),t.getRow(2).getZ()};
     CHECK(virtAttachVO(vc, trans->getPhysics()->getMass(),inertia));
    // virtSetPosition(VC, P);
    // virtSetSpeed(VC, S);
@@ -185,54 +186,63 @@ void virtuose::detachTransform() {
 **/
 void virtuose::updateVirtMech() {
 
-    VirtCommandType * type;
-    CHECK(virtGetCommandType(vc, type));
-    if((*type) == COMMAND_TYPE_VIRTMECH) {
 
     float position[7] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f};
     float speed[6] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
-    float force[6] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
+    float force[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
+    int power = 0;
+    CHECK(virtIsInShiftPosition(vc,&power));
 
-		if (!(this->isAttached))
-		{
-			/* mode libre */
-			CHECK(virtGetPosition(vc, position));
-			CHECK(virtSetPosition(vc, position));
-			CHECK(virtGetSpeed(vc, speed));
-			CHECK(virtSetSpeed(vc, speed));
+    if(commandType == COMMAND_TYPE_VIRTMECH)
+	{
 
-		}
-		else
-		{
 
-			btTransform pos = this->attached->getPhysics()->getTransform();
-			position[0] = pos.getOrigin().getY();
-			position[1] = pos.getOrigin().getZ();
-			position[2] = pos.getOrigin().getX();
-			pos.setRotation(pos.getRotation().normalized());
-			position[3] = pos.getRotation().getY();
-			position[4] = pos.getRotation().getZ();
-			position[5] = pos.getRotation().getX();
-			position[6] = pos.getRotation().getW();
-			CHECK(virtSetPosition(vc, position));
+            if (!isAttached)
+            {
+                virtGetPosition(vc, position);
+                virtSetPosition(vc, position);
+                virtGetSpeed(vc, speed);
+                virtSetSpeed(vc, speed);
 
-			btVector3 vel = this->attached->getPhysics()->getLinearVelocity();
-			speed[0] = vel.getY();
-			speed[0] = vel.getZ();
-			speed[0] = vel.getX();
-			vel = this->attached->getPhysics()->getAngularVelocity();
-			speed[0] = vel.getY();
-			speed[0] = vel.getZ();
-			speed[0] = vel.getX();
-			CHECK(virtSetSpeed(vc, speed));
+                virtGetArticularPositionOfAdditionalAxe(vc, &gripperPosition);
+                virtGetArticularSpeedOfAdditionalAxe(vc, &gripperSpeed);
+                virtSetArticularPositionOfAdditionalAxe(vc, &gripperPosition);
+                virtSetArticularSpeedOfAdditionalAxe(vc, &gripperSpeed);
+            }
+            else
+            {
+                 btTransform pos = this->attached->getPhysics()->getTransform();
+                 position[0] = (float) pos.getOrigin().getZ();
+                 position[1] = (float) pos.getOrigin().getX();
+                 position[2] = (float) pos.getOrigin().getY();
+                 pos.setRotation(pos.getRotation().normalized());
+                 position[3] = (float) pos.getRotation().getZ();
+                 position[4] = (float) pos.getRotation().getX();
+                 position[5] = (float) pos.getRotation().getY();
+                 position[6] = (float) pos.getRotation().getW();
+                 CHECK(virtSetPosition(vc, position));
+                 Vec3f vel = this->attached->getPhysics()->getLinearVelocity();
+                 speed[0] = vel.z();
+                 speed[1] = vel.x();
+                 speed[2] = vel.y();
+                 vel = this->attached->getPhysics()->getAngularVelocity();
+                 speed[3] = vel.z();
+                 speed[4] = vel.x();
+                 speed[5] = vel.y();
+                 CHECK(virtSetSpeed(vc, speed));
 
-			CHECK(virtGetForce(vc, force));
-			attached->getPhysics()->applyForce(Vec3f(force[1],force[2],force[0]));
-			attached->getPhysics()->applyTorque(Vec3f(force[4],force[5],force[3]));
+                 CHECK(virtGetForce(vc, force));
+                 Vec3f frc = Vec3f(force[1],force[2],force[0]);
+                 frc *= 0.1f;
+                 attached->getPhysics()->addForce(frc);
+                 frc = Vec3f(force[4],force[5],force[3]);
+                 frc *= 0.1f;
+                 attached->getPhysics()->addTorque(frc);
 
-		}
 
-    }
+            }
+	    }
+
 
 }
 

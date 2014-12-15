@@ -99,7 +99,5 @@ PyObject* VRPyHaptic::detachTransform(VRPyHaptic* self) {
 
 PyObject* VRPyHaptic::getForce(VRPyHaptic* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::getForce: C Object is invalid"); return NULL; }
-    OSG::Vec3f a = self->obj->getForce();
-    return toPyTuple(a);
+    return toPyTuple(self->obj->getForce());
 }
-

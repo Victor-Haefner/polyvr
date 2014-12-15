@@ -356,14 +356,14 @@ PyObject* VRPyTransform::applyImpulse(VRPyTransform* self, PyObject *args) {
 PyObject* VRPyTransform::applyForce(VRPyTransform* self, PyObject *args) {
     OSG::Vec3f i = parseVec3f(args);
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::applyForce: C Object is invalid"); return NULL; }
-    self->obj->getPhysics()->applyForce(i);
+    self->obj->getPhysics()->addForce(i);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTransform::applyTorque(VRPyTransform* self, PyObject *args) {
     OSG::Vec3f i = parseVec3f(args);
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::applyTorque: C Object is invalid"); return NULL; }
-    self->obj->getPhysics()->applyTorque(i);
+    self->obj->getPhysics()->addTorque(i);
     Py_RETURN_TRUE;
 }
 

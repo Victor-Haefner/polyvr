@@ -1,5 +1,6 @@
 #ifndef VIRTUOSE_H_INCLUDED
 #define VIRTUOSE_H_INCLUDED
+#include <virtuose/virtuoseAPI.h>
 
 #include <OpenSG/OSGVector.h>
 #include <OpenSG/OSGMatrix.h>
@@ -17,6 +18,9 @@ class virtuose {
         void* vc = 0; // virtuose context
         bool isAttached = false;
         VRTransform* attached = 0;
+        VirtCommandType commandType  = COMMAND_TYPE_NONE;
+        float gripperPosition;
+        float gripperSpeed;
 
     public:
         virtuose();

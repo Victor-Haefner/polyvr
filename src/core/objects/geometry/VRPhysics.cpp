@@ -389,16 +389,22 @@ void VRPhysics::applyImpulse(OSG::Vec3f i) {
     body->setLinearVelocity(btVector3(i[0]/mass, i[1]/mass, i[2]/mass));
 }
 
-void VRPhysics::applyForce(OSG::Vec3f i) {
+void VRPhysics::addForce(OSG::Vec3f i) {
    if (body == 0) return;
    if (mass == 0) return;
-   body->applyCentralForce(btVector3(i.x(), i.y(), i.z()));
+   btVector3 ttlForce = body->getTotalForce();
+   btVector3 force = btVector3(i.x(), i.y(), i.z());
+   ttlForce += force;
+   body->applyCentralForce(ttlForce);
 }
 
-void VRPhysics::applyTorque(OSG::Vec3f i) {
+void VRPhysics::addTorque(OSG::Vec3f i) {
    if (body == 0) return;
    if (mass == 0) return;
-   body->applyTorque(btVector3(i.x(), i.y(), i.z()));
+   btVector3 ttlTorque = body->getTotalTorque();
+   btVector3 force = btVector3(i.x(), i.y(), i.z());
+   ttlTorque += force;
+   body->applyTorque(ttlTorque);
 }
 
 
@@ -417,16 +423,20 @@ OSG::Vec3f VRPhysics::getForce() {
 }
 
 
-btVector3 VRPhysics::getLinearVelocity() {
+OSG::Vec3f VRPhysics::getLinearVelocity() {
 
-     if (body == 0) return btVector3(0.0f,0.0f,0.0f);
-     return body->getLinearVelocity();
+     if (body == 0) return OSG::Vec3f (0.0f,0.0f,0.0f);
+     btVector3 tmp = body->getLinearVelocity();
+     OSG::Vec3f result = OSG::Vec3f ((float) tmp.getX(),(float) tmp.getY(),(float) tmp.getZ());
+     return result;
 }
 
-btVector3 VRPhysics::getAngularVelocity() {
+OSG::Vec3f VRPhysics::getAngularVelocity() {
 
-     if (body == 0) return btVector3(0.0f,0.0f,0.0f);
-     return body->getAngularVelocity();
+     if (body == 0) return OSG::Vec3f (0.0f,0.0f,0.0f);
+     btVector3 tmp = body->getAngularVelocity();
+     OSG::Vec3f result = OSG::Vec3f ((float) tmp.getX(),(float) tmp.getY(),(float) tmp.getZ());
+     return result;
 }
 
 
@@ -442,6 +452,8 @@ void VRPhysics::updateTransformation(const OSG::Matrix& m) {
     }
 }
 
+
+
 btTransform VRPhysics::getTransform() {
     if (body == 0) return btTransform();
     btTransform t;
@@ -455,6 +467,14 @@ OSG::Matrix VRPhysics::getTransformation() {
     body->getMotionState()->getWorldTransform(t);
     return fromTransform(t);
 }
+
+btMatrix3x3 VRPhysics::getInertiaTensor() {
+    if (body == 0) return btMatrix3x3();
+    btMatrix3x3 t = body->getInvInertiaTensorWorld();
+    return t;
+}
+
+
 
 
 void VRPhysics::setTransformation(btTransform t) {

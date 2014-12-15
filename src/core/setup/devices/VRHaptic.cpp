@@ -27,6 +27,7 @@ VRHaptic::~VRHaptic() {
 void VRHaptic::applyTransformation(VRTransform* t) { // TODO: rotation
     if (!v->connected()) return;
     t->setMatrix(v->getPose());
+    //COMMAND_MODE_VIRTMECH
     v->updateVirtMech();
 }
 

@@ -95,16 +95,18 @@ class VRPhysics : public OSG::VRStorage {
         void pause(bool b = true);
         void resetForces();
         void applyImpulse(OSG::Vec3f i);
-        void applyForce(OSG::Vec3f i);
-        void applyTorque(OSG::Vec3f i);
+        void addForce(OSG::Vec3f i);
+        void addTorque(OSG::Vec3f i);
 
         /**get the normalized resulting force (out of a collision, without the gravity) of this object with the constraints considered**/
       //  btVector3 getNormForceWithConstrained();
         /**get the resulting force (out of a collision, without the gravity) of the given object**/
         OSG::Vec3f getForce();
 
-        btVector3 getLinearVelocity();
-        btVector3 getAngularVelocity();
+        OSG::Vec3f getLinearVelocity();
+        OSG::Vec3f getAngularVelocity();
+        btMatrix3x3 getInertiaTensor();
+
 
 
 
