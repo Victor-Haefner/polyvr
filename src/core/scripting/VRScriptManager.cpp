@@ -25,6 +25,8 @@
 #include "core/gui/VRGuiBits.h"
 #include "core/gui/VRGuiFile.h"
 #include "core/gui/VRGuiManager.h"
+#include "core/setup/VRSetup.h"
+#include "core/setup/VRSetupManager.h"
 #include "addons/Engineering/CSG/VRPyCSG.h"
 #include "addons/RealWorld/VRPyRealWorld.h"
 #include "addons/RealWorld/traffic/VRPyTrafficSimulation.h"
@@ -159,6 +161,7 @@ static PyMethodDef VRScriptManager_module_methods[] = {
 	{"stackCall", (PyCFunction)VRScriptManager::stackCall, METH_VARARGS, "Stacks a call to a py function - stackCall( function, delay, [args] )" },
 	{"openFileDialog", (PyCFunction)VRScriptManager::openFileDialog, METH_VARARGS, "Open a file dialog - openFileDialog( onLoad, mode, title, default_path, filter )" },
 	{"updateGui", (PyCFunction)VRScriptManager::updateGui, METH_NOARGS, "Update the gui" },
+	{"render", (PyCFunction)VRScriptManager::render, METH_NOARGS, "Renders the viewports" },
     {NULL}  /* Sentinel */
 };
 
@@ -393,6 +396,12 @@ PyObject* VRScriptManager::openFileDialog(VRScriptManager* self, PyObject *args)
 }
 
 PyObject* VRScriptManager::updateGui(VRScriptManager* self) {
+    VRGuiManager::get()->updateGtk();
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRScriptManager::render(VRScriptManager* self) {
+    VRSetupManager::getCurrent()->updateWindows();
     VRGuiManager::get()->updateGtk();
     Py_RETURN_TRUE;
 }

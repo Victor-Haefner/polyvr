@@ -42,28 +42,13 @@ int server_answer_to_connection (void* param, struct MHD_Connection *connection,
     sad->path = section;
     sad->params->clear();
 
-    if (method_s == "GET")
+    if (method_s == "GET") {
         MHD_get_connection_values(connection, MHD_GET_ARGUMENT_KIND, server_parseURI, sad->params);//Parse URI parameter
+    }
 
-    if (method_s == "POST")
+    if (method_s == "POST") {
         MHD_get_connection_values(connection, MHD_POSTDATA_KIND, server_parseURI, sad->params);//Parse URI parameter
-
-    /*if (method_s == "POST") {
-        struct MHD_PostProcessor* pp = (MHD_PostProcessor*)(*opt);
-        if (pp == NULL) {
-            sad->params->clear();
-            pp = MHD_create_post_processor(connection, 1024, server_parseFORM, sad->params);
-            *opt = pp;
-            return MHD_YES;
-        }
-        if (*upload_data_size) {
-            MHD_post_process(pp, upload_data, *upload_data_size);
-            *upload_data_size = 0;
-            return MHD_YES;
-        } else {
-            MHD_destroy_post_processor(pp);
-        }
-    }*/
+    }
 
     //cout << "HTTP: " << method_s << endl;
 
