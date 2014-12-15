@@ -20,7 +20,7 @@ class VRFunction : public VRFunction_base {
         VRFunction(string _name, boost::function<void (T)> _fkt) : fkt(_fkt) { name = _name; }
 
         void operator()(T t) {
-            try { fkt(t); }
+            try { if(fkt) fkt(t); }
             catch (boost::exception& e) {
                 cout << "VRFunction::() exception occured" << endl;
             }

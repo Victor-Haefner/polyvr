@@ -50,14 +50,12 @@ int server_answer_to_connection (void* param, struct MHD_Connection *connection,
         MHD_get_connection_values(connection, MHD_POSTDATA_KIND, server_parseURI, sad->params);//Parse URI parameter
     }
 
-    //cout << "HTTP: " << method_s << endl;
-
-    //--- process request --------
-    VRFunction<int>* _fkt = new VRFunction<int>("HTTP_answer_job", boost::bind(server_answer_job, sad, _1));
-    VRSceneManager::get()->queueJob(_fkt);
+    //sad->print();
+    //cout << "HTTP: " << method_s << " " << sad->path << endl;
 
     //--- respond to client ------
     struct MHD_Response* response = 0;
+    string empty_str;
 
     if (sad->path != "") {
         if (sad->pages->count(sad->path)) { // return local site
@@ -66,14 +64,22 @@ int server_answer_to_connection (void* param, struct MHD_Connection *connection,
         } else { // return ressources
             struct stat sbuf;
             int fd = open(sad->path.c_str(), O_RDONLY);
-            if (fstat (fd, &sbuf) != 0) cout << "Did not find ressource: " << sad->path << endl;
-            else response = MHD_create_response_from_fd_at_offset (sbuf.st_size, fd, 0);
+            if (fstat (fd, &sbuf) != 0) { cout << "Did not find ressource: " << sad->path << endl;
+            } else response = MHD_create_response_from_fd_at_offset (sbuf.st_size, fd, 0);
         }
     }
 
     //--- send response ----------
-    int ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
-    MHD_destroy_response (response);
+    int ret = 0;
+    if (response) {
+        ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
+        MHD_destroy_response (response);
+    }
+
+    //--- process request --------
+    VRFunction<int>* _fkt = new VRFunction<int>("HTTP_answer_job", boost::bind(server_answer_job, sad, _1));
+    VRSceneManager::get()->queueJob(_fkt);
+
     return ret;
 }
 
@@ -106,6 +112,7 @@ class HTTPServer {
         void initServer(VRHTTP_cb* fkt, int port) {
             data->cb = fkt;
             server = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, port, NULL, NULL, &server_answer_to_connection, data, MHD_OPTION_END);
+            //server = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY | MHD_USE_DEBUG, port, NULL, NULL, &server_answer_to_connection, data, MHD_OPTION_END);
         }
 
         void addPage(string path, string page) {
