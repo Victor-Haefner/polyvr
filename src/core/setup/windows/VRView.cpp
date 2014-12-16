@@ -9,6 +9,7 @@
 #include "core/tools/VRText.h"
 #include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
+#include "core/gui/VRGuiManager.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRSprite.h"
 #include "core/objects/VRTransform.h"
@@ -593,12 +594,19 @@ void VRView::setCallibrationMode(bool b) {
 ImageRecPtr VRView::grab() {
     if (grabfg == 0) {
         grabfg = GrabForeground::create();
+        ImageRecPtr img = Image::create();
+        grabfg->setImage(img);
         if (lView) lView->editMFForegrounds()->push_back(grabfg);
         //if (rView) rView->editMFForegrounds()->push_back(grabfg);
     }
 
     ImageRecPtr img = 0;
-    if (lView) img = grabfg->getImage();
+    if (lView) {
+        grabfg->setActive(true);
+        VRSetupManager::getCurrent()->updateWindows();
+        VRGuiManager::get()->updateGtk();
+        img = grabfg->getImage();
+    }
     //if (rView) rView->editMFForegrounds()->push_back(grabfg);
     return img;
 }
