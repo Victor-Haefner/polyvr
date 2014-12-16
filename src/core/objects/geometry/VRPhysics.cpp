@@ -401,9 +401,7 @@ void VRPhysics::addForce(OSG::Vec3f i) {
 void VRPhysics::addTorque(OSG::Vec3f i) {
    if (body == 0) return;
    if (mass == 0) return;
-   btVector3 ttlTorque = body->getTotalTorque();
-   btVector3 force = btVector3(i.x(), i.y(), i.z());
-   ttlTorque += force;
+   btVector3 ttlTorque = btVector3(i.x(), i.y(), i.z());
    body->applyTorque(ttlTorque);
 }
 

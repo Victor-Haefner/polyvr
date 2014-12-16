@@ -84,7 +84,7 @@ void virtuose::connect(string IP) {
     CHECK_INIT(vc);
     if (vc == 0) return;
 
-    float timestep = 0.003f;
+    timestep = 0.003f;
 
 	//CHECK( virtSetCommandType(vc, COMMAND_TYPE_IMPEDANCE) );
 	CHECK( virtSetCommandType(vc, COMMAND_TYPE_VIRTMECH) );
@@ -153,7 +153,7 @@ Matrix virtuose::getPose() {
 Vec3f virtuose::getForce() {
     float force[6];
     CHECK(virtGetForce(vc, force));
-    Vec3f vel = Vec3f(force[1],force[2],force[0]);
+    Vec3f vel = Vec3f(force[4],force[5],force[3]);
     return vel;
 }
 
@@ -163,9 +163,13 @@ void virtuose::attachTransform(VRTransform* trans) {
     isAttached = true;
     attached = trans;
     btMatrix3x3 t = trans->getPhysics()->getInertiaTensor();
-    float inertia[9] = {t.getRow(0).getX(),t.getRow(0).getY(),t.getRow(0).getZ(),
-                        t.getRow(1).getX(),t.getRow(1).getY(),t.getRow(1).getZ(),
-                        t.getRow(2).getX(),t.getRow(2).getY(),t.getRow(2).getZ()};
+    t.setRotation(btQuaternion(btVector3(0.0,1.0,0.0),90.0));
+    t.setRotation(btQuaternion(btVector3(1.0,0.0,0.0),90.0));
+    /*float inertia[9] = {(float) t.getRow(0).getX(),(float) t.getRow(0).getY(),(float) t.getRow(0).getZ(),
+          (float) t.getRow(1).getX(),(float) t.getRow(1).getY(),(float) t.getRow(1).getZ(),
+          (float) t.getRow(2).getX(),(float) t.getRow(2).getY(),(float) t.getRow(2).getZ()};
+    */
+    float inertia[9] = {1.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0};
     CHECK(virtAttachVO(vc, trans->getPhysics()->getMass(),inertia));
    // virtSetPosition(VC, P);
    // virtSetSpeed(VC, S);
@@ -187,8 +191,8 @@ void virtuose::detachTransform() {
 void virtuose::updateVirtMech() {
 
 
-    float position[7] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f};
-    float speed[6] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f};
+    float position[7] = {0.0,0.0,0.0,0.0,0.0,0.0,1.0};
+    float speed[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
     float force[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
     int power = 0;
     CHECK(virtIsInShiftPosition(vc,&power));
@@ -222,23 +226,24 @@ void virtuose::updateVirtMech() {
                  position[6] = (float) pos.getRotation().getW();
                  CHECK(virtSetPosition(vc, position));
                  Vec3f vel = this->attached->getPhysics()->getLinearVelocity();
-                 speed[0] = vel.z();
-                 speed[1] = vel.x();
-                 speed[2] = vel.y();
+                 speed[0] =(float) vel.z();
+                 speed[1] =(float) vel.x();
+                 speed[2] =(float) vel.y();
                  vel = this->attached->getPhysics()->getAngularVelocity();
-                 speed[3] = vel.z();
-                 speed[4] = vel.x();
-                 speed[5] = vel.y();
+                 speed[3] =(float) vel.z();
+                 speed[4] = (float)vel.x();
+                 speed[5] =(float) vel.y();
                  CHECK(virtSetSpeed(vc, speed));
 
-                 CHECK(virtGetForce(vc, force));
-                 Vec3f frc = Vec3f(force[1],force[2],force[0]);
-                 frc *= 0.1f;
-                 attached->getPhysics()->addForce(frc);
-                 frc = Vec3f(force[4],force[5],force[3]);
-                 frc *= 0.1f;
-                 attached->getPhysics()->addTorque(frc);
 
+                     CHECK(virtGetForce(vc, force));
+                     Vec3f frc = Vec3f((float)force[1],(float)force[2],(float)force[0]);
+                     frc *= 0.1f;
+                     //attached->getPhysics()->addForce(frc);
+                     Vec3f trqu = Vec3f((float)force[4],(float)force[5],(float)force[3]);
+                     trqu.normalize();
+                     trqu *= 0.0000001f;
+                     attached->getPhysics()->addTorque(trqu);
 
             }
 	    }

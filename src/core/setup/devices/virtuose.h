@@ -18,6 +18,7 @@ class virtuose {
         void* vc = 0; // virtuose context
         bool isAttached = false;
         VRTransform* attached = 0;
+        float timestep = 0.0f;
         VirtCommandType commandType  = COMMAND_TYPE_NONE;
         float gripperPosition;
         float gripperSpeed;
