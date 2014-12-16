@@ -490,6 +490,8 @@
 		<Unit filename="src/core/scripting/VRPyObject.h" />
 		<Unit filename="src/core/scripting/VRPyPath.cpp" />
 		<Unit filename="src/core/scripting/VRPyPath.h" />
+		<Unit filename="src/core/scripting/VRPyRecorder.cpp" />
+		<Unit filename="src/core/scripting/VRPyRecorder.h" />
 		<Unit filename="src/core/scripting/VRPySocket.cpp" />
 		<Unit filename="src/core/scripting/VRPySocket.h" />
 		<Unit filename="src/core/scripting/VRPySound.cpp" />
@@ -563,6 +565,8 @@
 		<Unit filename="src/core/tools/VRMesure.h" />
 		<Unit filename="src/core/tools/VRQRCode.cpp" />
 		<Unit filename="src/core/tools/VRQRCode.h" />
+		<Unit filename="src/core/tools/VRRecorder.cpp" />
+		<Unit filename="src/core/tools/VRRecorder.h" />
 		<Unit filename="src/core/tools/VRText.cpp" />
 		<Unit filename="src/core/tools/VRText.h" />
 		<Unit filename="src/core/utils/VRDoublebuffer.cpp" />

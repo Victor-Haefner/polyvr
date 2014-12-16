@@ -18,6 +18,7 @@
 #include "VRPyBaseT.h"
 #include "VRPyMaterial.h"
 #include "VRPyLod.h"
+#include "VRPyRecorder.h"
 #include <iostream>
 #include <algorithm>
 
@@ -193,6 +194,7 @@ void VRScriptManager::initPyModules() {
     VRPyHaptic::registerModule("Haptic", pModVR, VRPyDevice::typeRef);
     //VRPySocket::registerModule("Socket", pModVR);
     VRPyPath::registerModule("Path", pModVR);
+    VRPyRecorder::registerModule("Recorder", pModVR);
 
     VRPyColorChooser::registerModule("ColorChooser", pModVR);
     VRPyCSG::registerModule("CSGGeometry", pModVR, VRPyGeometry::typeRef);

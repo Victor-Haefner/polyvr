@@ -235,6 +235,7 @@ VRView::VRView(string n) {
     eyeSeparation = 0.06;
 
     stats = 0;
+    grabfg = 0;
     dummy_user = new VRTransform("view_user");
     dummy_user->translate(Vec3f(0,0,1));
     dummy_user->addAttachment("global", 0);
@@ -587,6 +588,19 @@ void VRView::setCallibrationMode(bool b) {
         if (lView) lView->editMFForegrounds()->push_back(fg);
         if (rView) rView->editMFForegrounds()->push_back(fg);
     } else update();
+}
+
+ImageRecPtr VRView::grab() {
+    if (grabfg == 0) {
+        grabfg = GrabForeground::create();
+        if (lView) lView->editMFForegrounds()->push_back(grabfg);
+        //if (rView) rView->editMFForegrounds()->push_back(grabfg);
+    }
+
+    ImageRecPtr img = 0;
+    if (lView) img = grabfg->getImage();
+    //if (rView) rView->editMFForegrounds()->push_back(grabfg);
+    return img;
 }
 
 void VRView::save(xmlpp::Element* node) {
