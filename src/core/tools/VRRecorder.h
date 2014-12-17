@@ -2,7 +2,8 @@
 #define VRRECORDER_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
-#include <map>
+#include <string>
+#include <vector>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -13,7 +14,7 @@ class VRFrame;
 class VRRecorder {
     private:
         VRView* view = 0;
-        map<int, VRFrame*> captures;
+        vector<VRFrame*> captures;
 
     public:
         VRRecorder();

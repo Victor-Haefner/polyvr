@@ -35,28 +35,29 @@ void VRRecorder::setView(int i) {
 
 void VRRecorder::capture() {
     if (view == 0) return;
-    int ts = VRGlobals::get()->CURRENT_FRAME;
-    captures[ts] = new VRFrame();
-    captures[ts]->capture = view->grab();
-    captures[ts]->timestamp = glutGet(GLUT_ELAPSED_TIME);
+    //int ts = VRGlobals::get()->CURRENT_FRAME;
+    VRFrame* f = new VRFrame();
+    captures.push_back(f);
+    f->capture = view->grab();
+    f->timestamp = glutGet(GLUT_ELAPSED_TIME);
 }
 
 void VRRecorder::clear() {
-    for (auto f : captures) delete f.second;
+    for (auto f : captures) delete f;
     captures.clear();
 }
 
 int VRRecorder::getRecordingSize() { return captures.size(); }
 float VRRecorder::getRecordingLength() {
     if (captures.size() == 0) return 0;
-    int t0 = captures.begin()->second->timestamp;
-    int t1 = captures.rbegin()->second->timestamp;
+    int t0 = (*captures.begin())->timestamp;
+    int t1 = (*captures.rbegin())->timestamp;
     return (t1-t0)*0.001; //seconds
 }
 
 void VRRecorder::compile(string path) {
     if (captures.size() == 0) return;
-    ImageRecPtr img0 = captures.begin()->second->capture;
+    ImageRecPtr img0 = (*captures.begin())->capture;
 
     AVCodec* codec;
     AVCodecContext* c= NULL;
@@ -66,8 +67,8 @@ void VRRecorder::compile(string path) {
     AVPacket pkt;
     uint8_t endcode[] = { 0, 0, 1, 0xb7 };
 
-    AVCodecID codec_id = AV_CODEC_ID_MPEG1VIDEO;
-    //AVCodecID codec_id = AV_CODEC_ID_H264;
+    //AVCodecID codec_id = AV_CODEC_ID_MPEG1VIDEO;
+    AVCodecID codec_id = AV_CODEC_ID_H264;
     codec = avcodec_find_encoder(codec_id);
     if (!codec) { fprintf(stderr, "Codec not found\n"); return; }
 
@@ -77,7 +78,7 @@ void VRRecorder::compile(string path) {
     c->bit_rate = 400000; /* put sample parameters */
     c->width = img0->getWidth() - img0->getWidth()%2; /* resolution must be a multiple of two */
     c->height = img0->getHeight() - img0->getHeight()%2;
-    c->time_base= (AVRational){1,60}; /* frames per second */
+    c->time_base= (AVRational){1,25}; /* frames per second */
     c->gop_size = 10; /* emit one intra frame every ten frames */
     c->max_b_frames=1;
     c->pix_fmt = AV_PIX_FMT_YUV420P;
@@ -99,35 +100,31 @@ void VRRecorder::compile(string path) {
     ret = av_image_alloc(frame->data, frame->linesize, c->width, c->height, c->pix_fmt, 32);
     if (ret < 0) { fprintf(stderr, "Could not allocate raw picture buffer\n"); return; }
 
-    //for (i=0; i<25; i++) { /* encode 1 second of video */
-    i = 0;
-    for (auto cap : captures) {
-        ImageRecPtr img = cap.second->capture;
+    for (i=0; i<captures.size(); i++) {
+        ImageRecPtr img = captures[i]->capture;
         if (img == 0) continue;
         av_init_packet(&pkt);
         pkt.data = NULL;    // packet data will be allocated by the encoder
         pkt.size = 0;
 
-        /*for (y=0; y<c->height; y++) { // dummy image
-            for (x=0; x<c->width; x++) {
-                frame->data[0][y * frame->linesize[0] + x] = img->getData()[y * c->width + x +0];
-                frame->data[1][y * frame->linesize[1] + x] = img->getData()[y * c->width + x +1];
-                frame->data[2][y * frame->linesize[2] + x] = img->getData()[y * c->width + x +2];
-            }
-        }*/
-
-        fflush(stdout);
-        for (y=0; y<c->height; y++) { // dummy image
+        const unsigned char* data = img->getData();
+        for (y=0; y<c->height; y++) { // Y
          for (x=0; x<c->width; x++) {
-             frame->data[0][y * frame->linesize[0] + x] = x + y + i * 3;
-         }
-        }
+            int k = y*(img->getWidth()+1) + x;
+            int r = data[k*3+0];
+            int g = data[k*3+1];
+            int b = data[k*3+2];
+            int Y = 16 + 0.256789063*r + 0.504128906*g + 0.09790625*b;
+            frame->data[0][y * frame->linesize[0] + x] = Y;
 
-
-        for (y=0; y<c->height/2; y++) { // Cb and Cr
-         for (x=0; x<c->width/2; x++) {
-             frame->data[1][y * frame->linesize[1] + x] = 128 + y + i * 2;
-             frame->data[2][y * frame->linesize[2] + x] = 64 + x + i * 5;
+            if (y%2 == 0 and y%2 == 0) {
+             int u = y/2;
+             int v = x/2;
+             int U = 128 + -0.148222656*r + -0.290992188*g + 0.439214844*b;
+             int V = 128 + 0.439214844*r + -0.367789063*g + -0.071425781*b;
+             frame->data[1][u * frame->linesize[1] + v] = U;
+             frame->data[2][u * frame->linesize[2] + v] = V;
+            }
          }
         }
 
@@ -138,12 +135,9 @@ void VRRecorder::compile(string path) {
         if (ret < 0) { fprintf(stderr, "Error encoding frame\n"); return; }
 
         if (got_output) {
-         printf("Write frame %3d (size=%5d)\n", i, pkt.size);
          fwrite(pkt.data, 1, pkt.size, f);
          av_free_packet(&pkt);
         }
-
-        i++;
     }
 
     /* get the delayed frames */
@@ -154,7 +148,6 @@ void VRRecorder::compile(string path) {
         if (ret < 0) { fprintf(stderr, "Error encoding frame\n"); return; }
 
         if (got_output) {
-         printf("Write frame %3d (size=%5d)\n", i, pkt.size);
          fwrite(pkt.data, 1, pkt.size, f);
          av_free_packet(&pkt);
         }
@@ -168,7 +161,6 @@ void VRRecorder::compile(string path) {
     av_free(c);
     av_freep(&frame->data[0]);
     avcodec_free_frame(&frame);
-    printf("\n");
 }
 
 OSG_END_NAMESPACE;
