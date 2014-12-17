@@ -83,24 +83,24 @@ void virtuose::connect(string IP) {
     vc = virtOpen(IP.c_str());
     CHECK_INIT(vc);
     if (vc == 0) return;
+    float identity[7] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f};
 
+	CHECK( virtSetIndexingMode(vc, INDEXING_ALL_FORCE_FEEDBACK_INHIBITION) );
+    setSimulationScales(1.0f,0.1f);
     timestep = 0.003f;
-
+	CHECK( virtSetTimeStep(vc, timestep) );
+	CHECK( virtSetBaseFrame(vc, identity) );
+    CHECK( virtSetObservationFrame(vc, identity) );
 	//CHECK( virtSetCommandType(vc, COMMAND_TYPE_IMPEDANCE) );
 	CHECK( virtSetCommandType(vc, COMMAND_TYPE_VIRTMECH) );
 	commandType = COMMAND_TYPE_VIRTMECH;
 	CHECK( virtSetDebugFlags(vc, DEBUG_SERVO|DEBUG_LOOP) );
-	CHECK( virtSetIndexingMode(vc, INDEXING_ALL_FORCE_FEEDBACK_INHIBITION) );
-	CHECK( virtSetTimeStep(vc, timestep) );
 
-    float identity[7] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f};
     //float baseFrame[7] = { 0.0f, 0.0f, 0.0f, 0.70710678f, 0.0f, 0.70710678f, 0.0f };
 	//virtActiveSpeedControl(vc, 0.04f, 10.0f);
-	CHECK( virtSetBaseFrame(vc, identity) );
-    CHECK( virtSetObservationFrame(vc, identity) );
+
 	CHECK( virtSetPowerOn(vc, 1) );
 	//virtSetPeriodicFunction(vc, callback, &timestep, this);
-    setSimulationScales(1.0f,0.1f);
 
 
 
@@ -150,30 +150,21 @@ Matrix virtuose::getPose() {
     return m;
 }
 
-Vec3f virtuose::getForce() {
-    float force[6];
-    CHECK(virtGetForce(vc, force));
-    Vec3f vel = Vec3f(force[4],force[5],force[3]);
-    return vel;
-}
 
 
 
 void virtuose::attachTransform(VRTransform* trans) {
     isAttached = true;
     attached = trans;
-    btMatrix3x3 t = trans->getPhysics()->getInertiaTensor();
-    t.setRotation(btQuaternion(btVector3(0.0,1.0,0.0),90.0));
-    t.setRotation(btQuaternion(btVector3(1.0,0.0,0.0),90.0));
-    /*float inertia[9] = {(float) t.getRow(0).getX(),(float) t.getRow(0).getY(),(float) t.getRow(0).getZ(),
-          (float) t.getRow(1).getX(),(float) t.getRow(1).getY(),(float) t.getRow(1).getZ(),
-          (float) t.getRow(2).getX(),(float) t.getRow(2).getY(),(float) t.getRow(2).getZ()};
-    */
-    float inertia[9] = {1.0,0.0,0.0,0.0,1.0,0.0,0.0,0.0,1.0};
-    CHECK(virtAttachVO(vc, trans->getPhysics()->getMass(),inertia));
-   // virtSetPosition(VC, P);
-   // virtSetSpeed(VC, S);
-
+    VRPhysics* o = trans->getPhysics();
+    //add a damping to attached obj
+    o->setDamping(0.5f,0.5f);
+    btMatrix3x3 t = o->getInertiaTensor();
+    //"roundabout"-inertia-tensor
+    float s = 0.1;
+    float k = s*s*o->getMass()/6.0;
+    float inertia[9] = {k,0.0,0.0,0.0,k,0.0,0.0,0.0,k};
+    CHECK(virtAttachVO(vc, o->getMass(), inertia));
 
 }
 
@@ -190,13 +181,17 @@ void virtuose::detachTransform() {
 **/
 void virtuose::updateVirtMech() {
 
+    // calc time delta in seconds
+    //float timeNow = glutGet(GLUT_ELAPSED_TIME);
+    //float dt = (timeNow - timeLastFrame) * 0.001f;
+    //timeLastFrame = timeNow;
 
     float position[7] = {0.0,0.0,0.0,0.0,0.0,0.0,1.0};
     float speed[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
     float force[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
     int power = 0;
-    CHECK(virtIsInShiftPosition(vc,&power));
 
+    CHECK(virtIsInShiftPosition(vc,&power));
     if(commandType == COMMAND_TYPE_VIRTMECH)
 	{
 
@@ -215,6 +210,7 @@ void virtuose::updateVirtMech() {
             }
             else
             {
+                 //apply position&speed to the haptic
                  btTransform pos = this->attached->getPhysics()->getTransform();
                  position[0] = (float) pos.getOrigin().getZ();
                  position[1] = (float) pos.getOrigin().getX();
@@ -235,15 +231,22 @@ void virtuose::updateVirtMech() {
                  speed[5] =(float) vel.y();
                  CHECK(virtSetSpeed(vc, speed));
 
+                 //get force applied by human on the haptic
+                 CHECK(virtGetForce(vc, force));
+                 //multiply with hardcoded "bullshit"- factor
+                 float f_lin = 0.1f;
+                 float f_ang = 0.1f;
 
-                     CHECK(virtGetForce(vc, force));
-                     Vec3f frc = Vec3f((float)force[1],(float)force[2],(float)force[0]);
-                     frc *= 0.1f;
-                     //attached->getPhysics()->addForce(frc);
-                     Vec3f trqu = Vec3f((float)force[4],(float)force[5],(float)force[3]);
-                     trqu.normalize();
-                     trqu *= 0.0000001f;
+                 Vec3f frc = Vec3f(force[1], force[2], force[0]) * f_lin;
+                 Vec3f trqu = Vec3f((float)force[4],(float)force[5],(float)force[3]);
+                 trqu *= f_ang;
+                 //cout << globalforce[0] << " " <<globalforce[1] <<" " << globalforce[2] <<" " << "\n ";
+
+                 //apply force on the object
+                 if(power == 0) {
+                     attached->getPhysics()->addForce(frc);
                      attached->getPhysics()->addTorque(trqu);
+                 }
 
             }
 	    }

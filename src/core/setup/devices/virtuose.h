@@ -4,6 +4,8 @@
 
 #include <OpenSG/OSGVector.h>
 #include <OpenSG/OSGMatrix.h>
+#include <OpenSG/OSGGLUT.h>
+
 
 #include <list>
 #include "core/objects/VRTransform.h"
@@ -18,10 +20,15 @@ class virtuose {
         void* vc = 0; // virtuose context
         bool isAttached = false;
         VRTransform* attached = 0;
+        //haptic timesteps
         float timestep = 0.0f;
+        //polyvr time
+        float timeLastFrame = glutGet(GLUT_ELAPSED_TIME);
         VirtCommandType commandType  = COMMAND_TYPE_NONE;
         float gripperPosition;
         float gripperSpeed;
+        float globalforce[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
+
 
     public:
         virtuose();
@@ -37,7 +44,6 @@ class virtuose {
 
         //connect a physicalized Object to this virtuose and push it in the same direction the virtuose moves . apply forces( which affect the object )on the haptic.
         void updateVirtMech();
-        Vec3f getForce();
         void attachTransform(VRTransform* trans);
         void detachTransform();
 };

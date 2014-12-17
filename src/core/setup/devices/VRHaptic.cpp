@@ -33,7 +33,6 @@ void VRHaptic::applyTransformation(VRTransform* t) { // TODO: rotation
 
 void VRHaptic::setForce(Vec3f force, Vec3f torque) { v->applyForce(force, torque); }
 void VRHaptic::setSimulationScales(float scale, float forces) { v->setSimulationScales(scale, forces); }
-Vec3f VRHaptic::getForce(){ v->getForce(); }
 void VRHaptic::attachTransform(VRTransform* trans) {v->attachTransform(trans);}
 void VRHaptic::detachTransform() {v->detachTransform();}
 void VRHaptic::updateVirtMech() {v->updateVirtMech();}

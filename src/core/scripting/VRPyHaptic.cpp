@@ -56,7 +56,6 @@ PyMethodDef VRPyHaptic::methods[] = {
     {"updateVirtMech", (PyCFunction)VRPyHaptic::updateVirtMech, METH_NOARGS, "update the virtuose  ( if it is in COMMAND_MODE_VIRTMECH)" },
     {"attachTransform", (PyCFunction)VRPyHaptic::attachTransform, METH_VARARGS, "attaches given Transform to the virtuose (Command-Mode has to be COMMAND_MODE_VIRTMECH) PAY ATTENTION TO NOT ATTACH A  OBJECT WHICH IS TOO HEAVY"},
     {"detachTransform", (PyCFunction)VRPyHaptic::detachTransform, METH_NOARGS, "detach previously attached transform" },
-    {"getForce", (PyCFunction)VRPyHaptic::getForce, METH_VARARGS, "the force that you put on the haptic" },
     {NULL}  /* Sentinel */
 };
 
@@ -97,7 +96,6 @@ PyObject* VRPyHaptic::detachTransform(VRPyHaptic* self) {
     Py_RETURN_TRUE;
 }
 
-PyObject* VRPyHaptic::getForce(VRPyHaptic* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::getForce: C Object is invalid"); return NULL; }
-    return toPyTuple(self->obj->getForce());
-}
+
+
+

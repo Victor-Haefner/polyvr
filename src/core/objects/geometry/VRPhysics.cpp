@@ -86,6 +86,7 @@ int VRPhysics::getActivationMode() { return activation_mode; }
 void VRPhysics::setGhost(bool b) { ghost = b; update(); }
 bool VRPhysics::isGhost() { return ghost; }
 OSG::Vec3f VRPhysics::toVec3f(btVector3 v) { return OSG::Vec3f(v[0], v[1], v[2]); }
+void VRPhysics::setDamping(float lin, float ang) { body->setDamping(btScalar(lin),btScalar(ang)); }
 
 
 
@@ -468,8 +469,11 @@ OSG::Matrix VRPhysics::getTransformation() {
 
 btMatrix3x3 VRPhysics::getInertiaTensor() {
     if (body == 0) return btMatrix3x3();
-    btMatrix3x3 t = body->getInvInertiaTensorWorld();
-    return t;
+    btVector3 t;
+    shape->calculateLocalInertia(btScalar(mass),t);
+    body->setMassProps(btScalar(mass),t);
+    btMatrix3x3 m = body->getInvInertiaTensorWorld();
+    return m;
 }
 
 

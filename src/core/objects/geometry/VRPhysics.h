@@ -106,6 +106,7 @@ class VRPhysics : public OSG::VRStorage {
         OSG::Vec3f getLinearVelocity();
         OSG::Vec3f getAngularVelocity();
         btMatrix3x3 getInertiaTensor();
+        void setDamping(float lin,float ang);
 
 
 
