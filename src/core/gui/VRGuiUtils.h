@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGColor.h>
+#include <OpenSG/OSGImage.h>
 #include <gtkmm/builder.h>
 #include <gtkmm/treemodelcolumn.h>
 #include <gtkmm/treestore.h>
@@ -70,6 +71,7 @@ OSG::Color4f chooseColor(string drawable, OSG::Color4f current);
 void setColorChooser(string drawable, sigc::slot<bool, GdkEventButton*> sig);
 void setColorChooserColor(string drawable, OSG::Color3f col);
 
+OSG::ImageRecPtr takeSnapshot();
 void saveScene(string path = "");
 
 void showDialog(string d);
