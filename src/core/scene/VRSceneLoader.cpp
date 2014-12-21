@@ -384,7 +384,8 @@ void VRSceneLoader_saveObject(VRObject* p, xmlpp::Element* e) {
         VRObject* c = p->getChild(i);
         if (c->hasAttachment("dynamicaly_generated")) continue; // generated objects are not be saved
         if (c->hasAttachment("global")) continue; // global objects are not be saved
-        xmlpp::Element* ce = e->add_child(c->getName());
+        //xmlpp::Element* ce = e->add_child(c->getName());
+        xmlpp::Element* ce = e->add_child("Object");
         VRSceneLoader_saveObject(c, ce);
     }
 }
@@ -402,7 +403,7 @@ void VRSceneLoader::saveScene(string file, xmlpp::Element* guiN) {
     // save scenegraph
     scene->setPath(file);
     VRObject* root = scene->getRoot();
-    xmlpp::Element* rootN = objectsN->add_child(root->getName());
+    xmlpp::Element* rootN = objectsN->add_child("Object");
     VRSceneLoader_saveObject(root, rootN);
     scene->save(sceneN);
     doc.write_to_file_formatted(file);
