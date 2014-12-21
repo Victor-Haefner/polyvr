@@ -28,14 +28,11 @@ void VRSetup::processOptions() {
     static xmlpp::DomParser parser;
     parser.parse_file(cfgfile);
     parseSetup(parser.get_document()->get_root_node());
-
-    //exit(0);
 }
 
-//VRSetup::VRSetup() : real_root(new VRTransform("real_root")), VRViewManager(real_root), VRDeviceManager(real_root) {
 VRSetup::VRSetup(string name) {
     setName(name);
-    real_root = new VRTransform("real_root");
+    real_root = new VRTransform("VR Setup");
     setup_cam = new VRCamera("Setup");
     setViewAnchor(real_root);
     setDeviceRoot(real_root);
