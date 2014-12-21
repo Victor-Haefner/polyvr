@@ -24,26 +24,27 @@ void VRStorage::save_on_cb(T* t, string tag, xmlpp::Element* e) {
 
 template<typename T>
 void VRStorage::save_map_cb(map<string, T*>* mt, string tag, xmlpp::Element* e) {
-    typename map<string, T*>::iterator itr;
-    for (itr = mt->begin(); itr != mt->end(); itr++) {
-        T* t = itr->second;
-        xmlpp::Element* ei = e->add_child(t->getName());
-        itr->second->save(ei);
+    for (auto t : *mt) {
+        xmlpp::Element* ei = e->add_child(tag);
+        //xmlpp::Element* ei = e->add_child(t.second->getName());
+        t.second->save(ei);
     }
 }
 
 template<typename T>
 void VRStorage::load_map_cb(map<string, T*>* mt, string tag, xmlpp::Element* e) {
-    xmlpp::Node::NodeList nl = e->get_children();
-    xmlpp::Node::NodeList::iterator itr;
-    for (itr = nl.begin(); itr != nl.end(); itr++) {
-        xmlpp::Node* n = *itr;
+    for (auto n : e->get_children()) {
         xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
         if (!el) continue;
 
         string name = el->get_name();
-        if (mt->count(name) == 0) (*mt)[name] = new T(name);
-        (*mt)[name]->load(el);
+        if (el->get_attribute("base_name")) name = el->get_attribute("base_name")->get_value();
+        T* o = new T(name);
+        o->load(el);
+
+        name = o->getName();
+        if (mt->count(name)) delete o;
+        else (*mt)[name] = o;
     }
 }
 

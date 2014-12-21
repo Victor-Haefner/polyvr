@@ -345,6 +345,7 @@ void VRSocket::initServer(CONNECTION_TYPE t, int _port) {
 
 
 void VRSocket::save(xmlpp::Element* e) {
+    saveName(e);
     e->set_attribute("type", type);
     stringstream ss; ss << port;
     e->set_attribute("port", ss.str());
@@ -354,6 +355,7 @@ void VRSocket::save(xmlpp::Element* e) {
 }
 
 void VRSocket::load(xmlpp::Element* e) {
+    loadName(e);
     setType( e->get_attribute("type")->get_value() );
     setPort( toInt(e->get_attribute("port")->get_value().c_str()) );
     setIP( e->get_attribute("ip")->get_value() );

@@ -12,7 +12,7 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 VRNetworkManager::VRNetworkManager() {
-    storeMap("VRSocket", &sockets);
+    storeMap("Socket", &sockets);
 }
 
 VRNetworkManager::~VRNetworkManager() {

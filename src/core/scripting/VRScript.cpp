@@ -307,6 +307,7 @@ void VRScript::remArgument(string name) {
 }
 
 void VRScript::save(xmlpp::Element* e) {
+    saveName(e);
     e->set_attribute("core", core);
     e->set_attribute("type", type);
     e->set_attribute("mobile", mobile);
@@ -335,7 +336,7 @@ void VRScript::save(xmlpp::Element* e) {
 
 void VRScript::load(xmlpp::Element* e) {
     clean();
-
+    loadName(e);
     if (e->get_attribute("core")) core = e->get_attribute("core")->get_value();
     if (e->get_attribute("type")) type = e->get_attribute("type")->get_value();
     if (e->get_attribute("mobile")) mobile = e->get_attribute("mobile")->get_value();
