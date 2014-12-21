@@ -277,7 +277,8 @@ void CarDynamics::resetVehicle() {
 }
 
 btRigidBody* CarDynamics::createRigitBody(float mass, const btTransform& startTransform, btCollisionShape* shape) {
-	btAssert((!shape || shape->getShapeType() != INVALID_SHAPE_PROXYTYPE));
+	if (shape == 0) return 0;
+	if (shape->getShapeType() == INVALID_SHAPE_PROXYTYPE) return 0;
 
 	btVector3 localInertia(0, 0, 0);
 	if (mass != 0.f) shape->calculateLocalInertia(mass, localInertia);

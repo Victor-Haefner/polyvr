@@ -417,7 +417,7 @@ VRObject* VRSceneLoader_createFromElement(VRScene* scene, xmlpp::Element* e) {
 
     if (type == "Transform") return new VRTransform(base_name);
     if (type == "Geometry") return new VRGeometry(base_name);
-    if (type == "CSGGeometry") return new CSGApp::CSGGeometry(base_name);
+    if (type == "CSGGeometry") return new CSGGeometry(base_name);
     if (type == "Camera") return scene->addCamera(base_name);
     if (type == "LightBeacon") return new VRLightBeacon(base_name);
     if (type == "Light") return scene->addLight(base_name);

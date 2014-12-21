@@ -262,7 +262,7 @@ void setLod(VRLod* lod) {
     }
 }
 
-void setCSG(CSGApp::CSGGeometry* g) {
+void setCSG(CSGGeometry* g) {
     setExpanderSensivity("expander15", true);
 
     bool b = g->getEditMode();
@@ -310,7 +310,7 @@ void updateObjectForms(bool disable = false) {
 
     if (type == "Lod") setLod((VRLod*)obj);
 
-    if (type == "CSGGeometry") setCSG((CSGApp::CSGGeometry*)obj);
+    if (type == "CSGGeometry") setCSG((CSGGeometry*)obj);
 
     trigger_cbs = true;
 }
@@ -652,7 +652,7 @@ void VRGuiScene::on_lod_decimate_changed() {
 
 void on_toggle_CSG_editmode(GtkToggleButton* tb, gpointer data) {
     if(!trigger_cbs) return;
-    CSGApp::CSGGeometry* obj = (CSGApp::CSGGeometry*) getSelected();
+    CSGGeometry* obj = (CSGGeometry*) getSelected();
 
     bool b = getCheckButtonState("checkbutton27");
     obj->setEditMode(b);
@@ -662,7 +662,7 @@ void on_change_CSG_operation(GtkComboBox* cb, gpointer data) {
     if(!trigger_cbs) return;
     string op = getComboboxText("combobox19");
 
-    CSGApp::CSGGeometry* obj = (CSGApp::CSGGeometry*) getSelected();
+    CSGGeometry* obj = (CSGGeometry*) getSelected();
 
     obj->setOperation(op);
 }
@@ -812,7 +812,7 @@ void VRGuiScene::on_menu_paste() {
 
 void VRGuiScene::on_menu_add_csg() {
     if(!selected_itr) return;
-    CSGApp::CSGGeometry* g = new CSGApp::CSGGeometry("csg_geo");
+    CSGGeometry* g = new CSGGeometry("csg_geo");
     getSelected()->addChild(g);
     parseSGTree(g, selected_itr);
 }
@@ -1224,7 +1224,7 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     //light
     fillStringListstore("light_types", VRLight::getTypes());
     fillStringListstore("shadow_types", VRLight::getShadowTypes());
-    fillStringListstore("csg_operations", CSGApp::CSGGeometry::getOperations());
+    fillStringListstore("csg_operations", CSGGeometry::getOperations());
     fillStringListstore("phys_shapes", VRPhysics::getPhysicsShapes());
     fillStringListstore("cam_proj", VRCamera::getProjectionTypes());
 

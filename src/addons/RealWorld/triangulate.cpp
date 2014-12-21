@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 #include "Modules/triangulate.h"
 
 static const float EPSILON=0.0000000001f;

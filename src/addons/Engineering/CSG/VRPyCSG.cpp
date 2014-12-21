@@ -2,7 +2,7 @@
 #include "core/scripting/VRPyTransform.h"
 #include "core/scripting/VRPyBaseT.h"
 
-template<> PyTypeObject VRPyBaseT<OSG::CSGApp::CSGGeometry>::type = {
+template<> PyTypeObject VRPyBaseT<OSG::CSGGeometry>::type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
     "VR.CSGGeometry",             /*tp_name*/
