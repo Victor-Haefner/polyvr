@@ -151,6 +151,7 @@ GeometryTransitPtr CSGGeometry::toOsgGeometry(CGAL::Polyhedron *p) {
 	mesh->setTypes(types);
 	mesh->setLengths(lengths);
 	mesh->setMaterial(VRMaterial::getDefault()->getMaterial());
+    createSharedIndex(mesh);
 	calcVertexNormals(mesh, 0.523598775598 /*30 deg in rad*/);
 
 	return GeometryTransitPtr(mesh);
