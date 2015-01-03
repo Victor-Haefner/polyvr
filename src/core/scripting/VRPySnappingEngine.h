@@ -7,6 +7,7 @@
 struct VRPySnappingEngine : VRPyBaseT<OSG::VRSnappingEngine> {
     static PyMethodDef methods[];
 
+    static PyObject* addObject(VRPySnappingEngine* self, PyObject* args);
     static PyObject* setPreset(VRPySnappingEngine* self, PyObject* args);
 };
 

@@ -4,6 +4,8 @@
 #include "core/setup/devices/VRDevice.h"
 #include "core/setup/VRSetup.h"
 #include "core/setup/VRSetupManager.h"
+#include "core/scene/VRScene.h"
+#include "core/scene/VRSceneManager.h"
 #include "addons/Engineering/CSG/Octree/Octree.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -13,6 +15,9 @@ VRSnappingEngine::VRSnappingEngine() {
     positions = new Octree(0.1);
     distances = new Octree(0.1);
     orientations = new Octree(0.1);
+
+    VRFunction<int>* fkt = new VRFunction<int>("snapping engine update", boost::bind(&VRSnappingEngine::update, this) );
+    VRSceneManager::getCurrent()->addUpdateFkt(fkt);
 }
 
 void VRSnappingEngine::clear() {
@@ -35,6 +40,8 @@ void VRSnappingEngine::setPreset(PRESET preset) {
 
 void VRSnappingEngine::addObject(VRTransform* obj, float weight) {
     objects[obj] = obj->getWorldMatrix();
+    Vec3f p = obj->getWorldPosition();
+    positions->add(p[0], p[1], p[2], obj);
 }
 
 // snap object's position
@@ -71,18 +78,22 @@ void VRSnappingEngine::update() {
         vector<void*> neighbors = positions->radiusSearch(p[0], p[1], p[2], influence_radius);
         for (auto n : neighbors) {
             VRTransform* t = (VRTransform*)n;
+            if (t == obj) continue;
             Matrix nm = t->getWorldMatrix();
             Vec3f np = Vec3f(nm[3]);
             float d2 = (p-np).squareLength();
 
             // get snap distances in snapping range
             vector<void*> dists = distances->radiusSearch(d2,0,0,distance_snap);
+            cout << "Snap init " << d2 << endl;
             if (dists.size() == 0) continue;
 
             // apply snap
             float d = sqrt(*(float*)dists[0]);
             p = np + (p-np)*d/sqrt(d2);
         }
+
+        obj->setWorldPosition(p);
     }
 
     // update geo

@@ -1,4 +1,5 @@
 #include "VRPySnappingEngine.h"
+#include "VRPyTransform.h"
 #include "VRPyBaseT.h"
 
 template<> PyTypeObject VRPyBaseT<OSG::VRSnappingEngine>::type = {
@@ -44,10 +45,20 @@ template<> PyTypeObject VRPyBaseT<OSG::VRSnappingEngine>::type = {
 };
 
 PyMethodDef VRPySnappingEngine::methods[] = {
+    {"addObject", (PyCFunction)VRPySnappingEngine::addObject, METH_VARARGS, "Add an object to be checked for snapping - addObject(obj)" },
     {"setPreset", (PyCFunction)VRPySnappingEngine::setPreset, METH_VARARGS, "Initiate the engine with a preset - setPreset('simple alignment')" },
     {NULL}  /* Sentinel */
 };
 
+
+PyObject* VRPySnappingEngine::addObject(VRPySnappingEngine* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPySnappingEngine::addObject - Object is invalid"); return NULL; }
+    VRPyTransform* obj = 0;
+    if (! PyArg_ParseTuple(args, "O", &obj)) return NULL;
+
+    if (obj->obj) self->obj->addObject(obj->obj);
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPySnappingEngine::setPreset(VRPySnappingEngine* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPySnappingEngine::setPreset - Object is invalid"); return NULL; }
