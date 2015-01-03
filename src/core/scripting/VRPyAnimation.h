@@ -1,10 +1,6 @@
 #ifndef VRPYANIMATION_H_INCLUDED
 #define VRPYANIMATION_H_INCLUDED
 
-#undef _XOPEN_SOURCE
-#undef _POSIX_C_SOURCE
-#include <Python.h>
-#include <structmember.h>
 #include "core/math/path.h"
 #include "core/scene/VRAnimationManager.h"
 #include "VRPyBase.h"

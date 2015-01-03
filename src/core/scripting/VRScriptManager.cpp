@@ -19,6 +19,7 @@
 #include "VRPyMaterial.h"
 #include "VRPyLod.h"
 #include "VRPyRecorder.h"
+#include "VRPySnappingEngine.h"
 #include <iostream>
 #include <algorithm>
 
@@ -195,6 +196,7 @@ void VRScriptManager::initPyModules() {
     //VRPySocket::registerModule("Socket", pModVR);
     VRPyPath::registerModule("Path", pModVR);
     VRPyRecorder::registerModule("Recorder", pModVR);
+    VRPySnappingEngine::registerModule("SnappingEngine", pModVR);
 
     VRPyColorChooser::registerModule("ColorChooser", pModVR);
     VRPyCSG::registerModule("CSGGeometry", pModVR, VRPyGeometry::typeRef);
