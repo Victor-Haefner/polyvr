@@ -24,12 +24,15 @@ class VRSnappingEngine {
     private:
         map<VRTransform*, Matrix> objects; // map objects to reference matrix
         Octree* positions = 0; // objects by positions
-        Octree* distances = 0; // objects by positions
+        Octree* distances = 0; // 0D snap
+        Octree* lines = 0; // 1D snap
+        Octree* planes = 0; // 2D snap
         Octree* orientations = 0; // objects by positions
         VRGeometry* hintGeo = 0;
 
         float influence_radius = 1000;
-        float distance_snap = 0.1;
+        float distance_snap = 0.05;
+        bool doOrientation = false;
         bool showHints = false;
 
     public:
@@ -45,8 +48,7 @@ class VRSnappingEngine {
         void addPlane(Plane plane, bool local = true, float weight = 1);
 
         // snap object's orientation
-        void addDirection(Vec3f dir, bool local = true, float weight = 1);
-        void addUp(Vec3f up, bool local = true, float weight = 1);
+        void setOrientation(bool b, bool local = true, float weight = 1);
 
         void setVisualHints(bool b = true);
         void setPreset(PRESET preset);

@@ -14,10 +14,12 @@ VRSnappingEngine::VRSnappingEngine() {
     hintGeo = new VRGeometry("snapping_engine_hint");
     positions = new Octree(0.1);
     distances = new Octree(0.1);
+    lines = new Octree(0.1);
+    planes = new Octree(0.1);
     orientations = new Octree(0.1);
 
     VRFunction<int>* fkt = new VRFunction<int>("snapping engine update", boost::bind(&VRSnappingEngine::update, this) );
-    VRSceneManager::getCurrent()->addUpdateFkt(fkt);
+    VRSceneManager::getCurrent()->addUpdateFkt(fkt, 100);
 }
 
 void VRSnappingEngine::clear() {
@@ -25,6 +27,8 @@ void VRSnappingEngine::clear() {
     //hintGeo->hide();
     positions->clear();
     distances->clear();
+    lines->clear();
+    planes->clear();
     orientations->clear();
 }
 
@@ -34,6 +38,10 @@ void VRSnappingEngine::setPreset(PRESET preset) {
         case SIMPLE_ALIGNMENT:
             // TODO
             addDistance(1);
+            setOrientation(true);
+            addAxis( Line(Pnt3f(0,0,0), Vec3f(1,0,0)) );
+            addAxis( Line(Pnt3f(0,0,0), Vec3f(0,1,0)) );
+            addAxis( Line(Pnt3f(0,0,0), Vec3f(0,0,1)) );
             break;
     }
 }
@@ -49,12 +57,18 @@ void VRSnappingEngine::addDistance(float dist, bool local, float weight) {
     distances->add(dist, 0, 0, new float(dist) );
 }
 
-void VRSnappingEngine::addAxis(Line line, bool local, float weight) {}
+void VRSnappingEngine::addAxis(Line line, bool local, float weight) {
+    Vec3f d = line.getDirection();
+    lines->add(d[0], d[1], d[2], new Vec3f(d));
+    lines->add(-d[0], -d[1], -d[2], new Vec3f(-d));
+}
+
 void VRSnappingEngine::addPlane(Plane plane, bool local, float weight) {}
 
 // snap object's orientation
-void VRSnappingEngine::addDirection(Vec3f dir, bool local, float weight) {}
-void VRSnappingEngine::addUp(Vec3f up, bool local, float weight) {}
+void VRSnappingEngine::setOrientation(bool b, bool local, float weight) {
+    doOrientation = b;
+}
 
 void VRSnappingEngine::setVisualHints(bool b) {
     showHints = b;
@@ -81,19 +95,35 @@ void VRSnappingEngine::update() {
             if (t == obj) continue;
             Matrix nm = t->getWorldMatrix();
             Vec3f np = Vec3f(nm[3]);
-            float d2 = (p-np).squareLength();
+
+            Vec3f dir = p-np;
+            float d = dir.length();
+            if (d < 1e-4) continue;
+            dir /= d;
+
+            if (doOrientation) {
+                m[0] = nm[0];
+                m[1] = nm[1];
+                m[2] = nm[2];
+            }
+
+            // get snapping axis
+            vector<void*> lins = lines->radiusSearch(dir[0],dir[1],dir[2], distance_snap);
+            if (lins.size() != 0) { // apply snap
+                dir = *(Vec3f*)lins[0];
+                Line l(np, dir);
+                m.setTranslate(l.getClosestPoint(p));
+            }
 
             // get snap distances in snapping range
-            vector<void*> dists = distances->radiusSearch(d2,0,0,distance_snap);
-            cout << "Snap init " << d2 << endl;
-            if (dists.size() == 0) continue;
-
-            // apply snap
-            float d = sqrt(*(float*)dists[0]);
-            p = np + (p-np)*d/sqrt(d2);
+            vector<void*> dists = distances->radiusSearch(d,0,0, distance_snap*d);
+            if (dists.size() != 0) { // apply snap
+                d = *(float*)dists[0];
+                m.setTranslate(np + dir*d);
+            }
         }
 
-        obj->setWorldPosition(p);
+        obj->setWorldMatrix(m);
     }
 
     // update geo
