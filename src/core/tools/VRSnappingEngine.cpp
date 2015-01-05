@@ -77,16 +77,13 @@ void VRSnappingEngine::setVisualHints(bool b) {
 
 void VRSnappingEngine::update() {
     // get dragged objects
-    vector<VRTransform*> dragged;
     for (auto dev : VRSetupManager::getCurrent()->getDevices()) {
         VRTransform* obj = dev.second->getDraggedObject();
-        if (obj) dragged.push_back(obj);
-    }
+        VRTransform* gobj = dev.second->getDraggedGhost();
+        if (obj == 0) continue;
 
-    // update rules
-    if (dragged.size() == 0) return;
-    for (auto obj : dragged) {
-        Matrix m = obj->getWorldMatrix();
+        //Matrix m = obj->getWorldMatrix();
+        Matrix m = gobj->getWorldMatrix();
         Vec3f p = Vec3f(m[3]);
 
         vector<void*> neighbors = positions->radiusSearch(p[0], p[1], p[2], influence_radius);

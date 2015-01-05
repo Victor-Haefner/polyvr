@@ -37,6 +37,7 @@ class VRIntersect {
         bool showHit = false;//show where the hitpoint lies
         //VRScene* scene;
         VRTransform* dragged = 0;
+        VRTransform* dragged_ghost = 0;
         VRGeometry* cross = 0;
         vector<VRObject*> dynTrees;
         VRObject* dynTree = 0;
@@ -72,6 +73,7 @@ class VRIntersect {
         //Vec2f getHitTexel();
         //VRObject* getHitObject();
         VRTransform* getDraggedObject();
+        VRTransform* getDraggedGhost();
         VRIntersection getLastIntersection();
 };
 
