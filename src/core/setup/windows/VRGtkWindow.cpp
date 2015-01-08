@@ -110,6 +110,7 @@ void VRGtkWindow::render() {
     if (!active or !content) return;
     Glib::RefPtr<Gdk::Window> drawable = drawArea->get_window();
     GdkRectangle rect; rect.x = 0; rect.y = 0; rect.width = 1; rect.height = 1;
+    //cout << "Renderer A " << endl;
     if (drawable) gdk_window_invalidate_rect( drawable->gobj(), &rect, true);
 }
 
@@ -140,7 +141,7 @@ bool VRGtkWindow::on_expose(GdkEventExpose* event) {
 
     //const GLubyte* renderer = glGetString (GL_RENDERER); // get renderer string
     //const GLubyte* version = glGetString (GL_VERSION); // version as a string
-    //cout << "Renderer: " << renderer << endl;
+    //cout << "Renderer B " << endl;
     //cout << "OpenGL version supported " << version << endl;
 
     if (win->getWidth() != w or win->getHeight() != h) resize(w,h);

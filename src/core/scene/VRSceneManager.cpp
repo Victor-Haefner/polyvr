@@ -32,18 +32,6 @@ VRSceneManager::VRSceneManager() {
     cout << "Init VRSceneManager\n";
     active = "NO_SCENE_ACTIVE";
 
-/*
-G_PRIORITY_DEFAULT
-G_PRIORITY_DEFAULT_IDLE
-G_PRIORITY_LOW
-G_PRIORITY_HIGH
-G_PRIORITY_HIGH_IDLE
-*/
-
-    g_timeout_add_full(G_PRIORITY_LOW, 16, gtkUpdate, NULL, NULL); // 60 Hz
-    glutDisplayFunc(glutUpdate);
-    glutIdleFunc(glutUpdate);
-
     char cCurrentPath[FILENAME_MAX];
     char* r = getcwd(cCurrentPath, sizeof(cCurrentPath) );
     if (r) original_workdir = string(cCurrentPath);
@@ -166,6 +154,7 @@ void VRSceneManager::update() {
 
     updateCallbacks();
 
+    VRGuiManager::get()->updateGtk();
     VRSetupManager::getCurrent()->updateWindows();//rendering
     VRGuiManager::get()->updateGtk();
 
