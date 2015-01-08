@@ -349,13 +349,14 @@ void VRGuiSetup::on_menu_delete() {
 }
 
 void VRGuiSetup::on_menu_add_window() {
-    string name = "Display";
-    current_setup->addMultiWindow(name);
-    VRWindow* win = current_setup->getWindow(name);
+    VRWindow* win = current_setup->addMultiWindow("Display");
+    win->setActive(true);
     if ( VRSceneManager::getCurrent() ) win->setContent(true);
 
     updateSetup();
-    setToolButtonSensivity("toolbutton12", true);
+    selected_object = win;
+    selected_type = "window";
+    on_menu_add_viewport();
 }
 
 void VRGuiSetup::on_menu_add_viewport() {

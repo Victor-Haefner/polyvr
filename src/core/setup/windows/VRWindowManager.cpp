@@ -100,24 +100,24 @@ void VRWindowManager::initGlut() { // deprecated?
     else glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
 }
 
-void VRWindowManager::addGlutWindow(string& name) {
+VRWindow* VRWindowManager::addGlutWindow(string name) {
     initGlut();
     VRGlutWindow* win = new VRGlutWindow();
     win->setName(name);
     win->setAction(ract);
     windows[win->getName()] = win;
-    name = win->getName();
+    return win;
 }
 
-void VRWindowManager::addMultiWindow(string& name) {
+VRWindow* VRWindowManager::addMultiWindow(string name) {
     VRMultiWindow* win = new VRMultiWindow();
     win->setName(name);
     win->setAction(ract);
     windows[win->getName()] = win;
-    name = win->getName();
+    return win;
 }
 
-void VRWindowManager::addGtkWindow(string& name, string glarea) {
+VRWindow* VRWindowManager::addGtkWindow(string name, string glarea) {
     Gtk::DrawingArea* drawArea = 0;
     VRGuiBuilder()->get_widget(glarea, drawArea);
 
@@ -125,7 +125,7 @@ void VRWindowManager::addGtkWindow(string& name, string glarea) {
     win->setName(name);
     win->setAction(ract);
     windows[win->getName()] = win;
-    name = win->getName();
+    return win;
 }
 
 void VRWindowManager::getWindowSize(string name, int& width, int& height) {
@@ -215,13 +215,13 @@ void VRWindowManager::load(xmlpp::Element* node) {
         string name = el->get_attribute("name")->get_value();
 
         if (type == "0") {
-            addMultiWindow(name);
-            windows[name]->load(el);
+            VRWindow* win = addMultiWindow(name);
+            win->load(el);
         }
 
         if (type == "2") {
-            addGtkWindow(name);
-            windows[name]->load(el);
+            VRWindow* win = addGtkWindow(name);
+            win->load(el);
         }
     }
 }
