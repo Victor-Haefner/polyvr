@@ -23,6 +23,7 @@ void setEntryCallback(string e, sigc::slot<void> sig);
 // BUTTONS
 void setButtonCallback(string b, void (* fkt)(GtkButton*, gpointer), gpointer data = NULL);
 void setButtonCallback(string b, sigc::slot<void> sig );
+void setToggleButtonCallback(string b, sigc::slot<void> sig );
 void setToolButtonCallback(string b, void (* fkt)(GtkButton*, gpointer));
 void setToolButtonCallback(string b, sigc::slot<void> sig );
 void setToolButtonSensivity(string toolbutton, bool b);

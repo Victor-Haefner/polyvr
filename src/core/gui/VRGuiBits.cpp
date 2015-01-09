@@ -187,6 +187,30 @@ bool VRGuiBits::toggleStereo(GdkEventKey* k) {
     return true;
 }
 
+void VRGuiBits::toggleDock() {
+    Gtk::ToggleButton* tbut;
+    VRGuiBuilder()->get_widget("togglebutton1", tbut);
+    bool a = tbut->get_active();
+
+    static Gtk::Window* win = 0;
+    Gtk::VBox* box;
+    Gtk::VPaned* pan;
+    VRGuiBuilder()->get_widget("vbox5", box);
+    VRGuiBuilder()->get_widget("vpaned1", pan);
+
+    if(a) {
+        win = new Gtk::Window();
+        win->set_title("PolyVR 3D View");
+        win->set_default_size(400, 400);
+        box->reparent(*win);
+        win->show_all();
+    } else if(win) {
+        box->reparent(*pan);
+        pan->show_all();
+        delete win;
+    }
+}
+
 VRGuiBits::VRGuiBits() {
     setComboboxCallback("combobox4", VRGuiBits_on_camera_changed);
     setComboboxCallback("combobox9", VRGuiBits_on_navigation_changed);
@@ -198,6 +222,8 @@ VRGuiBits::VRGuiBits() {
 
     setButtonCallback("button14", VRGuiBits_on_new_cancel_clicked);
     setButtonCallback("button21", VRGuiBits_on_internal_close_clicked);
+
+    setToggleButtonCallback("togglebutton1", sigc::mem_fun(*this, &VRGuiBits::toggleDock) );
 
     setLabel("label24", "Project: None");
 

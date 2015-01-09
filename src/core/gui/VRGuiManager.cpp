@@ -91,7 +91,12 @@ VRGuiManager* VRGuiManager::get() {
 }
 
 void VRGuiManager::updateGtk() {
-    while( Gtk::Main::events_pending() ) Gtk::Main::iteration();
+    int N = 0;
+    while( Gtk::Main::events_pending() ) {
+        N++;
+        Gtk::Main::iteration();
+    }
+    //cout << "N " << N << endl;
 }
 
 void VRGuiManager::update() {

@@ -945,6 +945,11 @@ cave allocated</property>
     <property name="can_focus">False</property>
     <property name="stock">gtk-remove</property>
   </object>
+  <object class="GtkImage" id="image48">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-leave-fullscreen</property>
+  </object>
   <object class="GtkImage" id="image5">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -1081,17 +1086,17 @@ cave allocated</property>
       <column type="gchararray"/>
     </columns>
   </object>
-  <object class="GtkListStore" id="prim_list">
-    <columns>
-      <!-- column-name prims -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
   <object class="GtkListStore" id="primitive_opts">
     <columns>
       <!-- column-name param -->
       <column type="gchararray"/>
       <!-- column-name value -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+  <object class="GtkListStore" id="prim_list">
+    <columns>
+      <!-- column-name prims -->
       <column type="gchararray"/>
     </columns>
   </object>
@@ -1587,6 +1592,12 @@ cave allocated</property>
                                     <child>
                                       <placeholder/>
                                     </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
                                   </object>
                                 </child>
                                 <child type="tab">
@@ -1605,6 +1616,12 @@ cave allocated</property>
                                     <property name="can_focus">False</property>
                                     <property name="n_columns">2</property>
                                     <property name="homogeneous">True</property>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
                                     <child>
                                       <placeholder/>
                                     </child>
@@ -7974,6 +7991,19 @@ to add distances</property>
                             <property name="expand">True</property>
                             <property name="fill">True</property>
                             <property name="position">9</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkToggleButton" id="togglebutton1">
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="receives_default">True</property>
+                            <property name="image">image48</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">10</property>
                           </packing>
                         </child>
                       </object>

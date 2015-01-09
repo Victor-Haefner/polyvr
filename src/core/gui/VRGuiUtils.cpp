@@ -212,6 +212,12 @@ void setToolButtonCallback(string b, sigc::slot<void> sig ) {
     bu->signal_clicked().connect(sig);
 }
 
+void setToggleButtonCallback(string b, sigc::slot<void> sig ) {
+    Gtk::ToggleButton* bu;
+    VRGuiBuilder()->get_widget(b, bu);
+    bu->signal_clicked().connect(sig);
+}
+
 void setComboboxLastActive(string n) { // TODO: google how to get N rows!
     Gtk::ComboBox* cb;
     VRGuiBuilder()->get_widget(n, cb);

@@ -18,16 +18,6 @@
 OSG_BEGIN_NAMESPACE
 using namespace std;
 
-void glutUpdate() {
-    //osgsleep(1);
-    VRSceneManager::get()->update();
-}
-
-int gtkUpdate(void* data) {
-    VRSceneManager::get()->update();
-    return true;
-}
-
 VRSceneManager::VRSceneManager() {
     cout << "Init VRSceneManager\n";
     active = "NO_SCENE_ACTIVE";
