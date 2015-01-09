@@ -100,7 +100,7 @@ void VRRecorder::compile(string path) {
     ret = av_image_alloc(frame->data, frame->linesize, c->width, c->height, c->pix_fmt, 32);
     if (ret < 0) { fprintf(stderr, "Could not allocate raw picture buffer\n"); return; }
 
-    for (i=0; i<captures.size(); i++) {
+    for (i=0; i<(int)captures.size(); i++) {
         ImageRecPtr img = captures[i]->capture;
         if (img == 0) continue;
         av_init_packet(&pkt);

@@ -143,10 +143,24 @@ void VRGuiSetup::updateObjectData() {
         setTextEntry("entry50", t->tracker);
     }
 
+    if (selected_type == "vrpn_tracker") {
+        setExpanderSensivity("expander4", true);
+        setExpanderSensivity("expander7", true);
+        VRPN_tracker* t = (VRPN_tracker*)selected_object;
+        setTextEntry("entry50", t->tracker);
+    }
+
     if (selected_type == "art_device") {
         setExpanderSensivity("expander5", true);
         setExpanderSensivity("expander6", true);
         device = true;
+        ART_device* t = (ART_device*)selected_object;
+        setTextEntry("entry40", toString(t->ID));
+    }
+
+    if (selected_type == "art_tracker") {
+        setExpanderSensivity("expander5", true);
+        setExpanderSensivity("expander6", true);
         ART_device* t = (ART_device*)selected_object;
         setTextEntry("entry40", toString(t->ID));
     }
@@ -173,6 +187,11 @@ void VRGuiSetup::updateObjectData() {
             setTextEntry("entry48", toString(o[0]));
             setTextEntry("entry62", toString(o[1]));
             setTextEntry("entry63", toString(o[2]));
+        }
+
+        if (selected_name == "VRPN") {
+            setExpanderSensivity("expander7", true);
+            setCheckButton("checkbutton25", current_setup->getVRPNActive());
         }
     }
 
@@ -336,8 +355,9 @@ void VRGuiSetup::on_menu_delete() {
         win->remView(view);
     }
 
-    if (selected_type == "vrpn_device") {
-        ;
+    if (selected_type == "vrpn_tracker") {
+        VRPN_tracker* t = (VRPN_tracker*)selected_object;
+        current_setup->delVRPNTracker(t);
     }
 
     if (selected_type == "art_device") {
@@ -712,13 +732,15 @@ VRGuiSetup::VRGuiSetup() {
     menu->appendItem("SM_AddMenu", "Window", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_window) );
     menu->appendItem("SM_AddMenu", "Viewport", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_viewport) );
     menu->appendMenu("SM_AddMenu", "Device", "SM_AddDevMenu");
+    menu->appendMenu("SM_AddMenu", "ART", "SM_AddARTMenu");
+    menu->appendMenu("SM_AddMenu", "VRPN", "SM_AddVRPNMenu");
     menu->appendItem("SM_AddDevMenu", "Mouse", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_mouse) );
     menu->appendItem("SM_AddDevMenu", "Keyboard", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_keyboard) );
-    menu->appendItem("SM_AddDevMenu", "Flystick", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_flystick) );
     menu->appendItem("SM_AddDevMenu", "Haptic", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_haptic) );
     menu->appendItem("SM_AddDevMenu", "Mobile", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_mobile) );
-    menu->appendItem("SM_AddDevMenu", "ART tracker", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_art_tracker) );
-    menu->appendItem("SM_AddDevMenu", "VRPN tracker", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_vrpn_tracker) );
+    menu->appendItem("SM_AddARTMenu", "Flystick", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_flystick) );
+    menu->appendItem("SM_AddARTMenu", "ART tracker", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_art_tracker) );
+    menu->appendItem("SM_AddVRPNMenu", "VRPN tracker", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_vrpn_tracker) );
 
     Glib::RefPtr<Gtk::ToolButton> tbutton;
     Glib::RefPtr<Gtk::CheckButton> cbutton;
@@ -884,7 +906,7 @@ void VRGuiSetup::updateSetup() {
     for (uint i=0; i<vrpnIDs.size(); i++) {
         VRPN_tracker* t = current_setup->getVRPNTracker(vrpnIDs[i]);
         itr = tree_store->append(vrpn_itr->children());
-        setTreeRow(tree_store, *itr, t->ent->getName().c_str(), "vrpn_device", (gpointer)t);
+        setTreeRow(tree_store, *itr, t->getName().c_str(), "vrpn_tracker", (gpointer)t);
     }
 
     // ART
