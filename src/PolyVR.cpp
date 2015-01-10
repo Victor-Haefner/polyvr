@@ -9,6 +9,7 @@
 #include "core/utils/VRFunction.h"
 #include "core/scene/VRSoundManager.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/networking/VRMainInterface.h"
 #include <GL/glut.h>
 
 #include <OpenSG/OSGSimpleGeometry.h>
@@ -78,6 +79,7 @@ void initPolyVR(int argc, char **argv) {
     VRInternalMonitor::get();
 
     VRGuiManager::get();
+    VRMainInterface::get();
 }
 
 void exitPolyVR() {
@@ -87,6 +89,7 @@ void exitPolyVR() {
     delete VRSceneLoader::get();
     delete VROptions::get();
     delete VRInternalMonitor::get();
+    delete VRMainInterface::get();
     delete &VRSoundManager::get();
     VRMaterial::clearAll();
 

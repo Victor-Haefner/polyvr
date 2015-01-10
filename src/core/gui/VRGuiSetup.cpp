@@ -434,7 +434,7 @@ void VRGuiSetup::on_menu_add_haptic() {
 }
 
 void VRGuiSetup::on_menu_add_mobile() {
-    VRMobile* m = new VRMobile();
+    VRMobile* m = new VRMobile(5500);
     current_setup->addDevice(m);
     updateSetup();
     setToolButtonSensivity("toolbutton12", true);

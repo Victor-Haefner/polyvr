@@ -24,7 +24,7 @@ class VRNetworkManager : public VRStorage {
         VRNetworkManager();
         ~VRNetworkManager();
 
-        string newSocket();
+        VRSocket* getSocket(int port);
         void remSocket(string name);
         string changeSocketName(string name, string new_name);
 

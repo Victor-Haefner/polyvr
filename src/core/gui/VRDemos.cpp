@@ -57,39 +57,26 @@ class scenes_columns : public Gtk::TreeModelColumnRecord {
 
 VRDemos::VRDemos() {
     initMenu();
-    scanFolder("examples", "examples_tab");
 
-    if (loadCfg() == 0) setNotebookPage("notebook2", 1);
+    for (string path : VRSceneManager::get()->getExamplePaths() ) {
+        demos[path] = new demoEntry();
+        demos[path]->path = path;
+        demos[path]->pxm_path = path.substr(0,path.size()-4) + ".png";
+        demos[path]->write_protected = true;
+        demos[path]->favorite = false;
+        demos[path]->table = "examples_tab";
+    }
+
+    for (auto d : demos) setButton(d.second);
+    updateTable("examples_tab");
+
+    vector<string> favorites = VRSceneManager::get()->getFavoritePaths();
+    for (auto f : favorites) addEntry(f, "favorites_tab", false);
+    if (favorites.size() == 0) setNotebookPage("notebook2", 1);
 
     setToolButtonCallback("toolbutton1", sigc::mem_fun(*this, &VRDemos::on_new_clicked));
     setToolButtonCallback("toolbutton5", sigc::mem_fun(*this, &VRDemos::on_saveas_clicked));
     setToolButtonCallback("toolbutton21", sigc::mem_fun(*this, &VRDemos::on_load_clicked));
-}
-
-void VRDemos::scanFolder(string folder, string table) {
-    DIR* dir = opendir(folder.c_str());
-    if (dir == NULL) { perror("Error: no local directory scene"); return; }
-
-    struct dirent *entry;
-    while ( (entry = readdir(dir)) ) {
-        string file = string(entry->d_name);
-        int N = file.size(); if (N < 6) continue;
-
-        string path = folder+"/"+file;
-        string name = file.substr(0,N-4);
-        string ending = file.substr(N-4, N-1);
-        if (ending != ".xml") continue;
-
-        demos[path] = new demoEntry();
-        demos[path]->path = path;
-        demos[path]->pxm_path = folder+"/"+name+".png";
-        demos[path]->write_protected = true;
-        demos[path]->table = table;
-    }
-
-    for (auto d : demos) setButton(d.second);
-
-    updateTable(table);
 }
 
 void VRDemos::updatePixmap(demoEntry* e, Gtk::Image* img_pxb) {
@@ -213,7 +200,7 @@ void VRDemos::addEntry(string path, string table, bool running) {
 
     updateTable("favorites_tab");
     setGuiState(e);
-    saveCfg();
+    VRSceneManager::get()->storeFavorites();
     setNotebookPage("notebook2", 0);
 }
 
@@ -240,7 +227,7 @@ void VRDemos::on_menu_delete() {
     remove(d->path.c_str());
     delete d;
     updateTable("favorites_tab");
-    saveCfg();
+    VRSceneManager::get()->storeFavorites();
 }
 
 void VRDemos::on_menu_unpin() {
@@ -255,7 +242,7 @@ void VRDemos::on_menu_unpin() {
     demos.erase(d->path);
     delete d;
     updateTable("favorites_tab");
-    saveCfg();
+    VRSceneManager::get()->storeFavorites();
 }
 
 void VRDemos::on_menu_advanced() {
@@ -279,28 +266,6 @@ void VRDemos::on_advanced_start() {
     toggleDemo(current_demo); // start demo
 
     if (no_scripts) VRSceneManager::getCurrent()->disableAllScripts();
-}
-
-void VRDemos::saveCfg() {
-    string path = VRSceneManager::get()->getOriginalWorkdir() + "/examples/.cfg";
-    ofstream file(path);
-    for (auto d : demos) if (d.second->table == "favorites_tab") file << d.second->path << endl;
-    file.close();
-}
-
-int VRDemos::loadCfg() {
-    ifstream file( VRSceneManager::get()->getOriginalWorkdir() + "/examples/.cfg" );
-    if (!file.is_open()) return 0;
-
-    int N = 0;
-    string line, path;
-    while ( getline (file,line) ) {
-        ifstream f(line.c_str());
-        if (!f.good()) continue;
-        addEntry(line, "favorites_tab", false); N++;
-    }
-    file.close();
-    return N;
 }
 
 void VRDemos::on_diag_save_clicked() {

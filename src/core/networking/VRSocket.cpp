@@ -57,16 +57,16 @@ int server_answer_to_connection (void* param, struct MHD_Connection *connection,
     struct MHD_Response* response = 0;
     string empty_str;
 
-    if (sad->path != "") {
-        if (sad->pages->count(sad->path)) { // return local site
-            string spage = *(*sad->pages)[sad->path];
-            response = MHD_create_response_from_data (spage.size(), (void*) spage.c_str(), MHD_NO, MHD_YES);
-        } else { // return ressources
-            struct stat sbuf;
-            int fd = open(sad->path.c_str(), O_RDONLY);
-            if (fstat (fd, &sbuf) != 0) { cout << "Did not find ressource: " << sad->path << endl;
-            } else response = MHD_create_response_from_fd_at_offset (sbuf.st_size, fd, 0);
-        }
+    cout << "REQUEST SERVER PAGE " << sad->path << " " << sad->pages << endl;
+
+    if (sad->pages->count(sad->path)) { // return local site
+        string spage = *(*sad->pages)[sad->path];
+        response = MHD_create_response_from_data (spage.size(), (void*) spage.c_str(), MHD_NO, MHD_YES);
+    } else if(sad->path != "") { // return ressources
+        struct stat sbuf;
+        int fd = open(sad->path.c_str(), O_RDONLY);
+        if (fstat (fd, &sbuf) != 0) { cout << "Did not find ressource: " << sad->path << endl;
+        } else response = MHD_create_response_from_fd_at_offset (sbuf.st_size, fd, 0);
     }
 
     //--- send response ----------
@@ -85,8 +85,7 @@ int server_answer_to_connection (void* param, struct MHD_Connection *connection,
 
 void HTTP_args::print() {
     cout << "\nHTTP: " << path << endl;
-    map<string, string>::iterator itr;
-    for (itr = params->begin(); itr != params->end(); itr++) cout << "  " << itr->first << " : " << itr->second << endl;
+    for (auto p : *params) cout << "  " << p.first << " : " << p.second << endl;
 }
 
 class HTTPServer {
@@ -103,7 +102,7 @@ class HTTPServer {
         }
 
         ~HTTPServer() {
-            for (auto itr = data->pages->begin(); itr != data->pages->end(); itr++) delete itr->second;
+            for (auto p : *data->pages) delete p.second;
             delete data->params;
             delete data->pages;
             delete data;
@@ -116,6 +115,7 @@ class HTTPServer {
         }
 
         void addPage(string path, string page) {
+            cout << "ADD PAGE " << path << " " << data->pages << endl;
             if (data->pages->count(path) == 0) (*data->pages)[path] = new string();
             *(*data->pages)[path] = page;
         }

@@ -19,10 +19,13 @@ VRNetworkManager::~VRNetworkManager() {
     for (auto s : sockets) delete s.second;
 }
 
-string VRNetworkManager::newSocket() {
+VRSocket* VRNetworkManager::getSocket(int port) {
+    for (auto s : sockets) if(s.second->getPort() == port) return s.second;
+
     VRSocket* s = new VRSocket("Socket");
+    s->setPort(port);
     sockets[s->getName()] = s;
-    return s->getName();
+    return s;
 }
 
 void VRNetworkManager::remSocket(string name) {

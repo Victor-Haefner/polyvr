@@ -6,6 +6,8 @@
 #include "core/networking/VRSocket.h"
 #include "core/objects/VRTransform.h"
 #include "addons/CEF/CEF.h"
+#include "core/scene/VRSceneManager.h"
+#include "core/scene/VRScene.h"
 //#include "addons/WebKit/VRPyWebKit.h"
 #include <boost/bind.hpp>
 
@@ -26,16 +28,15 @@ void VRMobile::callback(HTTP_args* args) { // TODO: implement generic button tri
     change_button(button, state);
 }
 
-VRMobile::VRMobile() : VRDevice("mobile") {
+VRMobile::VRMobile(int port) : VRDevice("mobile") {
     //enableAvatar("cone");
     //enableAvatar("ray");
     clearSignals();
 
-    soc = new VRSocket("Mobile_server");
+    soc = VRSceneManager::get()->getSocket(port);
     cb = new VRHTTP_cb( "Mobile_server_callback", boost::bind(&VRMobile::callback, this, _1) );
     soc->setCallback(cb);
     soc->setType("http receive");
-    setPort(5500);
 }
 
 void VRMobile::clearSignals() {

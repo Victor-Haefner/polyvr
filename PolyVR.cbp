@@ -392,6 +392,8 @@
 		<Unit filename="src/core/navigation/VRNavigator.h" />
 		<Unit filename="src/core/networking/VRCommunication.h" />
 		<Unit filename="src/core/networking/VRHTTPSocket.h" />
+		<Unit filename="src/core/networking/VRMainInterface.cpp" />
+		<Unit filename="src/core/networking/VRMainInterface.h" />
 		<Unit filename="src/core/networking/VRNetworkManager.cpp" />
 		<Unit filename="src/core/networking/VRNetworkManager.h" />
 		<Unit filename="src/core/networking/VRProtocol.cpp" />

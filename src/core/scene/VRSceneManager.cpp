@@ -25,6 +25,8 @@ VRSceneManager::VRSceneManager() {
     char cCurrentPath[FILENAME_MAX];
     char* r = getcwd(cCurrentPath, sizeof(cCurrentPath) );
     if (r) original_workdir = string(cCurrentPath);
+
+    searchExercisesAndFavorites();
 }
 
 VRSceneManager::~VRSceneManager() { for (auto scene : scenes) delete scene.second; }
@@ -116,6 +118,50 @@ void VRSceneManager::setActiveScene(VRScene* s) {
     //  - the setup real_root has to be added to the current camera
 }
 
+void VRSceneManager::storeFavorites() {
+    string path = original_workdir + "/examples/.cfg";
+    ofstream file(path);
+    for (auto f : favorite_paths) file << f << endl;
+    file.close();
+}
+
+void VRSceneManager::searchExercisesAndFavorites() {
+    favorite_paths.clear();
+    example_paths.clear();
+
+    // examples
+    string folder = "examples";
+    DIR* dir = opendir(folder.c_str());
+    if (dir == NULL) { perror("Error: no exercise directory"); return; }
+
+    struct dirent *entry;
+    while ( (entry = readdir(dir)) ) {
+        string file = string(entry->d_name);
+        int N = file.size(); if (N < 6) continue;
+
+        string ending = file.substr(N-4, N-1);
+        if (ending != ".xml") continue;
+
+        string path = folder+"/"+file;
+        example_paths.push_back(path);
+    }
+
+    // favorites
+    ifstream file( folder + "/.cfg" );
+    if (!file.is_open()) return;
+
+    string line, path;
+    while ( getline (file,line) ) {
+        ifstream f(line.c_str());
+        if (!f.good()) continue;
+        favorite_paths.push_back(line);
+    }
+    file.close();
+}
+
+vector<string> VRSceneManager::getFavoritePaths() { return favorite_paths; }
+vector<string> VRSceneManager::getExamplePaths() { return example_paths; }
+
 void VRSceneManager::setActiveSceneByName(string s) { if (scenes.count(s) == 1) setActiveScene(scenes[s]); }
 
 int VRSceneManager::getSceneNum() {return scenes.size();}
@@ -127,8 +173,6 @@ VRScene* VRSceneManager::getCurrent() { return get()->getScene(get()->active); }
 void sleep_to(int fps) {
     int dt = VRTimer::getBeacon("st");
     if (dt > 16) return;
-
-    //cout << " dt " << dt << flush;
     osgSleep(16-dt);
 }
 

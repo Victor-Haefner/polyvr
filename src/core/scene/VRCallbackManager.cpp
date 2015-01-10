@@ -12,11 +12,9 @@ VRCallbackManager::~VRCallbackManager() {
     map<int, list<VRFunction<int>*>*>::iterator itr1;
     list<VRFunction<int>*>::iterator itr2;
 
-    for (itr1 = updateFkts.begin(); itr1 != updateFkts.end(); itr1++) {
-        for (itr2 = itr1->second->begin(); itr2 != itr1->second->end(); itr2++) {
-            delete *itr2;
-        }
-        delete itr1->second;
+    for (auto ufs : updateFkts) {
+        for (auto uf : *ufs.second) delete uf;
+        delete ufs.second;
     }
 }
 
@@ -59,6 +57,8 @@ void VRCallbackManager::dropUpdateFkt(VRFunction<int>* f) {//replace by list or 
     if (updateFkts_priorities.count(f) == 0) return;
     int prio = updateFkts_priorities[f];
     list<VRFunction<int>*>* l = updateFkts[prio];
+    if (l == 0) return;
+
     l->remove(f);
     updateFkts_priorities.erase(f);
 }
@@ -71,6 +71,8 @@ void VRCallbackManager::dropTimeoutFkt(VRFunction<int>* f) {//replace by list or
     list<timeoutFkt>* l = timeoutFkts[prio];
     if (l == 0) return;
 
+    //for (auto fkt : *l) if(fkt->fkt == f) { l->erase(fkt); break; }
+
     list<timeoutFkt>::iterator itr;
     for (itr = l->begin(); itr != l->end(); itr++)
         if (itr->fkt == f) { l->erase(itr); break; }
@@ -79,34 +81,23 @@ void VRCallbackManager::dropTimeoutFkt(VRFunction<int>* f) {//replace by list or
 }
 
 void VRCallbackManager::updateCallbacks() {
-    updateListsChanged = false;
-    map<int, list<timeoutFkt>* >::reverse_iterator itr1;
-    list<timeoutFkt>::iterator itr2;
-    for (itr1 = timeoutFkts.rbegin(); itr1 != timeoutFkts.rend(); itr1++) {
-        list<timeoutFkt>* l = itr1->second;
-        for (itr2 = l->begin(); itr2 != l->end(); itr2++) {
-            if (updateListsChanged) break;
-            VRFunction<int>* f = itr2->fkt;
+    vector<VRFunction<int>*> cbs;
 
-            int time = SDL_GetTicks();
-            if (time - itr2->last_call >= itr2->timeout) {
-                (*f)(0);
-                itr2->last_call = time;
-            }
-        }
-    }
-
-    for (fkt_list_itr = updateFkts.rbegin(); fkt_list_itr != updateFkts.rend(); fkt_list_itr++) {
-        list<VRFunction<int>*> l = *fkt_list_itr->second;
-        for (auto f : l) {
-            (*f)(0);
-
-            if (jobFkts.count(f)) { // if a job erase it
-                dropUpdateFkt(f);
-                jobFkts.erase(f);
+    int time = SDL_GetTicks();
+    for (auto tfl : timeoutFkts)
+        for (auto& tf : *tfl.second)
+            if (time - tf.last_call >= tf.timeout) {
+                cbs.push_back(tf.fkt);
+                tf.last_call = time;
             }
 
-            if (updateListsChanged) break;
+    for (auto fl : updateFkts) for (auto f : *fl.second) cbs.push_back(f);
+
+    for (auto cb : cbs) {
+        (*cb)(0);
+        if (jobFkts.count(cb)) { // if a job erase it
+            dropUpdateFkt(cb);
+            jobFkts.erase(cb);
         }
     }
 }
