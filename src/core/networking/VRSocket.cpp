@@ -144,6 +144,7 @@ VRSocket::VRSocket(string _name) {
 
     queued_signal = new VRFunction<int>("signal_trigger", boost::bind(&VRSocket::trigger, this));
     sig = new VRSignal();
+    setNameSpace("Sockets");
     setName(_name);
     http_serv = new HTTPServer();
 }

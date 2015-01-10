@@ -16,22 +16,13 @@ VRNetworkManager::VRNetworkManager() {
 }
 
 VRNetworkManager::~VRNetworkManager() {
-    map<string, VRSocket*>::iterator itr;
-    for (itr = sockets.begin(); itr != sockets.end(); itr++) {
-        delete itr->second;
-    }
+    for (auto s : sockets) delete s.second;
 }
 
 string VRNetworkManager::newSocket() {
-    string name = "Socket";
-    for (int i=0; sockets.count(name) != 0; i++) {
-        stringstream ss;
-        ss << "Socket" << i;
-        name = ss.str();
-    }
-
-    sockets[name] = new VRSocket(name);
-    return name;
+    VRSocket* s = new VRSocket("Socket");
+    sockets[s->getName()] = s;
+    return s->getName();
 }
 
 void VRNetworkManager::remSocket(string name) {
@@ -44,21 +35,13 @@ string VRNetworkManager::changeSocketName(string name, string new_name) {
     map<string, VRSocket*>::iterator i = sockets.find(name);
     if (i == sockets.end()) return name;
 
-    VRSocket* socket = i->second;
+    VRSocket* s = i->second;
     sockets.erase(i);
+    s->setName(new_name);
 
-    string tmp = new_name;
-    for (int j=0; sockets.count(new_name) != 0; j++) {
-        stringstream ss;
-        ss << tmp << j;
-        new_name = ss.str();
-    }
-
-    sockets[new_name] = socket;
-    socket->setName(new_name);
-    return new_name;
+    sockets[s->getName()] = s;
+    return s->getName();
 }
-
 
 map<string, VRSocket*> VRNetworkManager::getSockets() { return sockets; }
 VRSocket* VRNetworkManager::getSocket(string name) {

@@ -209,6 +209,8 @@ void VRGuiBits::toggleDock() {
         pan->show_all();
         delete win;
     }
+
+    //TODO: reset changelist to redraw everything!
 }
 
 VRGuiBits::VRGuiBits() {
