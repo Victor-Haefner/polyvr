@@ -305,9 +305,7 @@ void VRDemos::on_diag_new_clicked() {
     if (path == "") return;
 
     // new scene
-    VRSceneManager::get()->removeScene(VRSceneManager::getCurrent());
     VRSceneManager::get()->newScene(path);
-    VRGuiSignals::get()->getSignal("scene_changed")->trigger();
     addEntry(path, "favorites_tab", true);
     saveScene(path);
 }
@@ -327,14 +325,9 @@ void VRDemos::toggleDemo(demoEntry* e) {
     VRSceneManager::get()->removeScene(VRSceneManager::getCurrent());
 
     e->running = !e->running;
-    if (e->running) {
-        VRSceneLoader::get()->loadScene(e->path);
-        VRSceneManager::getCurrent()->setFlag(SCENE_WRITE_PROTECTED, e->write_protected);
-    }
-
     current_demo = e->running ? e : 0;
     setGuiState(e);
-    VRGuiSignals::get()->getSignal("scene_changed")->trigger(); // update gui
+    if (e->running) VRSceneManager::get()->loadScene(e->path, e->write_protected);
 }
 
 OSG_END_NAMESPACE;

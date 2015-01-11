@@ -1,4 +1,5 @@
 #include "VRSceneManager.h"
+#include "VRSceneLoader.h"
 #include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
 #include "core/setup/windows/VRWindow.h"
@@ -8,6 +9,7 @@
 #include "core/objects/VRLightBeacon.h"
 #include "core/gui/VRGuiManager.h"
 #include "core/utils/VRTimer.h"
+#include "core/gui/VRGuiSignals.h"
 #include <OpenSG/OSGSceneFileHandler.h>
 #include <gtkmm/main.h>
 #include <GL/glut.h>
@@ -41,6 +43,14 @@ VRSceneManager* VRSceneManager::get() {
 void VRSceneManager::addScene(VRScene* s) {
     scenes[s->getName()] = s;
     setActiveScene(s);
+    VRGuiSignals::get()->getSignal("scene_changed")->trigger(); // update gui
+}
+
+void VRSceneManager::loadScene(string path, bool write_protected) {
+    removeScene(getCurrent());
+    VRSceneLoader::get()->loadScene(path);
+    VRSceneManager::getCurrent()->setFlag(SCENE_WRITE_PROTECTED, write_protected);
+    VRGuiSignals::get()->getSignal("scene_changed")->trigger(); // update gui
 }
 
 string VRSceneManager::getOriginalWorkdir() { return original_workdir; }
@@ -62,6 +72,7 @@ void VRSceneManager::removeScene(VRScene* s) {
     for (itr = windows.begin(); itr != windows.end(); itr++) itr->second->setContent(false);
 
     setWorkdir(original_workdir);
+    VRGuiSignals::get()->getSignal("scene_changed")->trigger(); // update gui
 }
 
 void VRSceneManager::setWorkdir(string path) {

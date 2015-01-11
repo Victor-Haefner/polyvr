@@ -27,8 +27,7 @@ VRMainInterface* VRMainInterface::get() {
 void VRMainInterface::on_scene_clicked(VRDevice* dev) {
     string path = dev->getMessage();
     cout << "switch to scene " << path << endl;
-    VRSceneManager::get()->removeScene(VRSceneManager::getCurrent());
-    VRSceneLoader::get()->loadScene(path);
+    VRSceneManager::get()->loadScene(path);
     update();
 }
 
@@ -40,6 +39,7 @@ void VRMainInterface::update() {
     page += "    var xmlHttp = new XMLHttpRequest();\n";
     page += "    xmlHttp.open( \"GET\", document.URL+'?button='+b+'&state='+s+'&message='+m, true );\n";
     page += "    xmlHttp.send( null );\n";
+    //page += "    location.reload();\n";
     page += "}\n";
     page += "</script>\n";
 
