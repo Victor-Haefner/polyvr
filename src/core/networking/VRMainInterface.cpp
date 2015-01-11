@@ -1,12 +1,19 @@
 #include "VRMainInterface.h"
 #include "core/setup/devices/VRMobile.h"
 #include "core/scene/VRSceneManager.h"
+#include "core/scene/VRScene.h"
 #include "core/setup/VRSetupManager.h"
+#include "core/setup/VRSetup.h"
+#include "core/scene/VRSceneLoader.h"
+
+#include <boost/bind.hpp>
 
 OSG_BEGIN_NAMESPACE;
 
 VRMainInterface::VRMainInterface() {
     mobile = new VRMobile(5501);
+    VRSignal* sig = mobile->addSignal(0,1);
+    sig->add( new VRDevCb( "VRMainInterface_on_scene_clicked", boost::bind(&VRMainInterface::on_scene_clicked, this, _1) ) );
     update();
 }
 
@@ -17,26 +24,34 @@ VRMainInterface* VRMainInterface::get() {
     return instance;
 }
 
+void VRMainInterface::on_scene_clicked(VRDevice* dev) {
+    string path = dev->getMessage();
+    cout << "switch to scene " << path << endl;
+    VRSceneManager::get()->removeScene(VRSceneManager::getCurrent());
+    VRSceneLoader::get()->loadScene(path);
+    update();
+}
+
 void VRMainInterface::update() {
-    // get a list of scenes (TODO: move the scene management from the demo gui to the scene manager)
-    // list all the scenes on this site
-    vector<string> scenes;
-    scenes.push_back("Scene1");
-    scenes.push_back("Scene2");
-    scenes.push_back("Scene3");
+    page = "<html><body>\n";
 
-    page = "<html><body>";
+    page += "<script>\n";
+    page += "function get(b,s,m) {\n";
+    page += "    var xmlHttp = new XMLHttpRequest();\n";
+    page += "    xmlHttp.open( \"GET\", document.URL+'?button='+b+'&state='+s+'&message='+m, true );\n";
+    page += "    xmlHttp.send( null );\n";
+    page += "}\n";
+    page += "</script>\n";
 
-    page += "<script>";
-    page += "function get(b,s) {";
-    page += "    var xmlHttp = new XMLHttpRequest();";
-    page += "    xmlHttp.open( \"GET\", document.URL+'?button='+b+'&state='+s, true );";
-    page += "    xmlHttp.send( null );";
-    page += "}";
-    page += "</script>";
+    page += "<h1>Status</h1>";
+    if (VRSceneManager::getCurrent()) page += "<h3> active scene: " + VRSceneManager::getCurrent()->getName() + "</h3>";
+    if (VRSetupManager::getCurrent()) page += "<h3> active setup: " + VRSetupManager::getCurrent()->getName() + "</h3>";
 
-    page += "Scenes:\n\n";
-    for (auto s : scenes) page += "<button onClick='get(0,1)'>" + s + "</button>";
+    page += "<h1>Scenes</h1>";
+    page += "<h2>Favorites:</h2>";
+    for (auto s : VRSceneManager::get()->getFavoritePaths()) page += "<button onClick='get(0,1,\"" + s + "\")'>" + s + "</button><br>";
+    page += "<h2>Examples:</h2>";
+    for (auto s : VRSceneManager::get()->getExamplePaths() ) page += "<button onClick='get(0,1,\"" + s + "\")'>" + s + "</button><br>";
 
     page += "</body></html>";
     mobile->addWebSite("", page);

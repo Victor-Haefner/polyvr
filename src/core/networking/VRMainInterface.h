@@ -8,6 +8,7 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRMobile;
+class VRDevice;
 
 class VRMainInterface {
     private:
@@ -15,6 +16,7 @@ class VRMainInterface {
         string page;
 
         VRMainInterface();
+        void on_scene_clicked(VRDevice* dev);
         void update();
 
     public:

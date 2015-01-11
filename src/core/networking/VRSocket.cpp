@@ -57,8 +57,6 @@ int server_answer_to_connection (void* param, struct MHD_Connection *connection,
     struct MHD_Response* response = 0;
     string empty_str;
 
-    cout << "REQUEST SERVER PAGE " << sad->path << " " << sad->pages << endl;
-
     if (sad->pages->count(sad->path)) { // return local site
         string spage = *(*sad->pages)[sad->path];
         response = MHD_create_response_from_data (spage.size(), (void*) spage.c_str(), MHD_NO, MHD_YES);
@@ -115,7 +113,6 @@ class HTTPServer {
         }
 
         void addPage(string path, string page) {
-            cout << "ADD PAGE " << path << " " << data->pages << endl;
             if (data->pages->count(path) == 0) (*data->pages)[path] = new string();
             *(*data->pages)[path] = page;
         }
