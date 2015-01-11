@@ -43,6 +43,7 @@ class VRDemos {
         void addEntry(string path, string table, bool running);
 
         void updatePixmap(demoEntry* e, Gtk::Image* img_pxb);
+        void update();
 
         void initMenu();
         void on_menu_delete();

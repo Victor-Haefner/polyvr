@@ -74,6 +74,9 @@ VRDemos::VRDemos() {
     for (auto f : favorites) addEntry(f, "favorites_tab", false);
     if (favorites.size() == 0) setNotebookPage("notebook2", 1);
 
+    auto fkt = new VRDevCb("GUI_updateDemos", boost::bind(&VRDemos::update, this) );
+    VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
+
     setToolButtonCallback("toolbutton1", sigc::mem_fun(*this, &VRDemos::on_new_clicked));
     setToolButtonCallback("toolbutton5", sigc::mem_fun(*this, &VRDemos::on_saveas_clicked));
     setToolButtonCallback("toolbutton21", sigc::mem_fun(*this, &VRDemos::on_load_clicked));
@@ -170,19 +173,20 @@ void VRDemos::clearTable(string t) {
 }
 
 void VRDemos::setGuiState(demoEntry* e) {
-    setVPanedSensivity("vpaned1", e->running);
-    setNotebookSensivity("notebook3", e->running);
+    bool running = (e == 0) ? 0 : e->running;
+    setVPanedSensivity("vpaned1", running);
+    setNotebookSensivity("notebook3", running);
 
     for (auto i : demos) {
         demoEntry* d = i.second;
-        if (d->button) d->button->set_sensitive(!e->running);
+        if (d->button) d->button->set_sensitive(!running);
         if (d->img) d->img->set(Gtk::Stock::MEDIA_PLAY, Gtk::ICON_SIZE_BUTTON);
         if (d != e) d->running = false;
     }
 
-    e->button->set_sensitive(true);
-    if (e->running) e->img->set(Gtk::Stock::MEDIA_STOP, Gtk::ICON_SIZE_BUTTON);
-    else e->img->set(Gtk::Stock::MEDIA_PLAY, Gtk::ICON_SIZE_BUTTON);
+    if (e) e->button->set_sensitive(true);
+    if (running) e->img->set(Gtk::Stock::MEDIA_STOP, Gtk::ICON_SIZE_BUTTON);
+    else if (e) e->img->set(Gtk::Stock::MEDIA_PLAY, Gtk::ICON_SIZE_BUTTON);
 }
 
 void VRDemos::addEntry(string path, string table, bool running) {
@@ -303,8 +307,6 @@ void VRDemos::on_load_clicked() {
 void VRDemos::on_diag_new_clicked() {
     string path = VRGuiFile::getRelativePath_toWorkdir();
     if (path == "") return;
-
-    // new scene
     VRSceneManager::get()->newScene(path);
     addEntry(path, "favorites_tab", true);
     saveScene(path);
@@ -318,16 +320,36 @@ void VRDemos::on_new_clicked() {
     VRGuiFile::open( "Create", "Create new project" );
 }
 
-void VRDemos::toggleDemo(demoEntry* e) {
-    for (auto d : demos) if (d.second->button) d.second->button->set_sensitive(e->running); // toggle all buttons
-    setVPanedSensivity("vpaned1", !e->running);
-    setNotebookSensivity("notebook3", !e->running);
-    VRSceneManager::get()->removeScene(VRSceneManager::getCurrent());
+void VRDemos::update() {
+    VRScene* scene = VRSceneManager::getCurrent();
+    if (scene == 0 and current_demo == 0) return;
+    if (scene == 0 and current_demo != 0) {
+        current_demo->running = false;
+        setGuiState(current_demo);
+        return;
+    }
 
-    e->running = !e->running;
-    current_demo = e->running ? e : 0;
-    setGuiState(e);
-    if (e->running) VRSceneManager::get()->loadScene(e->path, e->write_protected);
+    string sPath = scene->getPath();
+    if (current_demo) {
+        if (current_demo->path == sPath) {
+            current_demo->running = true;
+            setGuiState(current_demo);
+            return;
+        }
+        current_demo->running = false;
+        setGuiState(current_demo);
+    }
+
+    if (demos.count(sPath) == 0) return;
+    current_demo = demos[sPath];
+    current_demo->running = true;
+    setGuiState(current_demo);
+}
+
+void VRDemos::toggleDemo(demoEntry* e) {
+    bool run = !e->running;
+    VRSceneManager::get()->removeScene(VRSceneManager::getCurrent());
+    if (run) VRSceneManager::get()->loadScene(e->path, e->write_protected);
 }
 
 OSG_END_NAMESPACE;
