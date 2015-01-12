@@ -23,7 +23,7 @@ void main (void) {
 	// blend textures
 	vec4 tex = texture2D(myTexture, tc);
 	vec4 tex2 = texture2D(myTexture, tc2);
-	tex = tex*(1-tex2[3]) + tex2*tex2[3];
+	tex = tex*(1.0-tex2[3]) + tex2*tex2[3];
 
   	vec4 result = (sColor + tex) * ( Iamb + Idiff + Ispec );
   	result.a = 1.0;
