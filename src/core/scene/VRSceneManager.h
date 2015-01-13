@@ -42,6 +42,8 @@ class VRSceneManager : public VRThreadManager, public VRCallbackManager, public 
         void setWorkdir(string path);
         string getOriginalWorkdir();
         void storeFavorites();
+        void addFavorite(string path);
+        void remFavorite(string path);
 
         vector<string> getFavoritePaths();
         vector<string> getExamplePaths();

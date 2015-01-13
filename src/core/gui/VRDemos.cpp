@@ -204,7 +204,6 @@ void VRDemos::addEntry(string path, string table, bool running) {
 
     updateTable("favorites_tab");
     setGuiState(e);
-    VRSceneManager::get()->storeFavorites();
     setNotebookPage("notebook2", 0);
 }
 
@@ -223,15 +222,16 @@ void VRDemos::on_menu_delete() {
     if (d == 0) return;
     if (d->write_protected == true) return;
 
-    if (!askUser("Delete scene " + d->path + " (this will remove it completely from disk!)", "Are you sure you want to delete this scene?")) return;
+    string path = d->path;
+    if (!askUser("Delete scene " + path + " (this will remove it completely from disk!)", "Are you sure you want to delete this scene?")) return;
     if (d->running) toggleDemo(d); // close demo if it is running
 
     clearTable("favorites_tab");
-    demos.erase(d->path);
-    remove(d->path.c_str());
+    demos.erase(path);
+    remove(path.c_str());
     delete d;
     updateTable("favorites_tab");
-    VRSceneManager::get()->storeFavorites();
+    VRSceneManager::get()->remFavorite(path);
 }
 
 void VRDemos::on_menu_unpin() {
@@ -239,14 +239,15 @@ void VRDemos::on_menu_unpin() {
     if (d == 0) return;
     if (d->write_protected == true) return;
 
-    if (!askUser("Forget about " + d->path + " ?", "")) return;
+    string path = d->path;
+    if (!askUser("Forget about " + path + " ?", "")) return;
     if (d->running) toggleDemo(d); // close demo if it is running
 
     clearTable("favorites_tab");
-    demos.erase(d->path);
+    demos.erase(path);
     delete d;
     updateTable("favorites_tab");
-    VRSceneManager::get()->storeFavorites();
+    VRSceneManager::get()->remFavorite(path);
 }
 
 void VRDemos::on_menu_advanced() {
@@ -274,7 +275,10 @@ void VRDemos::on_advanced_start() {
 
 void VRDemos::on_diag_save_clicked() {
     string path = VRGuiFile::getRelativePath_toWorkdir();
-    addEntry(path, "favorites_tab", true);
+    if (demos.count(path) == 0) {
+        addEntry(path, "favorites_tab", false);
+        VRSceneManager::get()->addFavorite(path);
+    }
     saveScene(path);
 }
 
@@ -291,7 +295,10 @@ void VRDemos::on_saveas_clicked() {
 void VRDemos::on_diag_load_clicked() {
     string path = VRGuiFile::getRelativePath_toWorkdir();
     if (current_demo) if (current_demo->running) toggleDemo(current_demo); // close demo if it is running
-    if (demos.count(path) == 0) addEntry(path, "favorites_tab", false);
+    if (demos.count(path) == 0) {
+        addEntry(path, "favorites_tab", false);
+        VRSceneManager::get()->addFavorite(path);
+    }
     toggleDemo(demos[path]);
 }
 
@@ -308,7 +315,10 @@ void VRDemos::on_diag_new_clicked() {
     string path = VRGuiFile::getRelativePath_toWorkdir();
     if (path == "") return;
     VRSceneManager::get()->newScene(path);
-    addEntry(path, "favorites_tab", true);
+    if (demos.count(path) == 0) {
+        addEntry(path, "favorites_tab", true);
+        VRSceneManager::get()->addFavorite(path);
+    }
     saveScene(path);
 }
 

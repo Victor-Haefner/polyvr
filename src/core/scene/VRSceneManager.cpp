@@ -136,6 +136,16 @@ void VRSceneManager::storeFavorites() {
     file.close();
 }
 
+void VRSceneManager::addFavorite(string path) {
+    favorite_paths.push_back(path);
+    storeFavorites();
+}
+
+void VRSceneManager::remFavorite(string path) {
+    favorite_paths.erase(std::remove(favorite_paths.begin(), favorite_paths.end(), path), favorite_paths.end());
+    storeFavorites();
+}
+
 void VRSceneManager::searchExercisesAndFavorites() {
     favorite_paths.clear();
     example_paths.clear();
