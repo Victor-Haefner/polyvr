@@ -88,6 +88,8 @@ void VRIntersect::drag(VRTransform* caster, VRObject* tree, VRDevice* dev) {
 
     dragged = (VRTransform*)obj2;
     dragged->drag(caster);
+    dragged_ghost->setMatrix(dragged->getMatrix());
+    dragged_ghost->switchParent(caster);
 
     return;
 }
@@ -134,9 +136,13 @@ void VRIntersect::initCross() {
 VRIntersect::VRIntersect() {
     initCross();
     drop_fkt = new VRDevCb("Intersect_drop", boost::bind(&VRIntersect::drop, this, _1));
+    dragged_ghost = new VRTransform("dev_ghost");
 }
 
-VRIntersect::~VRIntersect() { delete cross; }
+VRIntersect::~VRIntersect() {
+    delete cross;
+    delete dragged_ghost;
+}
 
 VRDevCb* VRIntersect::addDrag(VRTransform* caster, VRObject* tree) {
     VRDevCb* fkt;
@@ -184,6 +190,7 @@ VRDevCb* VRIntersect::getDrop() { return drop_fkt; }
 //Vec2f VRIntersect::getHitTexel() { return hitTexel; }
 //VRObject* VRIntersect::getHitObject() { return obj; }
 VRTransform* VRIntersect::getDraggedObject() { return dragged; }
+VRTransform* VRIntersect::getDraggedGhost() { return dragged_ghost; }
 
 VRIntersection VRIntersect::getLastIntersection() { return lastIntersection; }
 

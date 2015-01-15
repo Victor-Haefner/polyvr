@@ -19,18 +19,17 @@
 #include <CGAL/Nef_polyhedron_3.h>
 #include <CGAL/Polyhedron_items_with_id_3.h>
 
-namespace CGAL
-{
-
-typedef Exact_predicates_exact_constructions_kernel Kernel;	// Mostly referenced as "Epeck"
-typedef Polyhedron_3<Kernel/*, Polyhedron_items_with_id_3*/> Polyhedron; // Item "with_id_3" is necessary for vertex indices
-typedef Polyhedron::Vertex_iterator	Vertex_iterator;
-typedef Polyhedron::HalfedgeDS		HalfedgeDS;
-typedef Nef_polyhedron_3<Kernel>	Nef_Polyhedron;
-typedef Vector_3<Kernel>			Vector;
-typedef Point_3<Kernel>				Point;
-typedef Aff_transformation_3<Kernel> Transformation;
-
+namespace CGAL {
+    typedef Exact_predicates_exact_constructions_kernel Kernel;	// Mostly referenced as "Epeck"
+    class Polyhedron : public Polyhedron_3<Kernel> {};
+    //typedef Polyhedron_3<Kernel/*, Polyhedron_items_with_id_3*/> Polyhedron; // Item "with_id_3" is necessary for vertex indices
+    typedef Polyhedron::Vertex_iterator	Vertex_iterator;
+    typedef Polyhedron::HalfedgeDS		HalfedgeDS;
+    typedef Nef_polyhedron_3<Kernel>	Nef_Polyhedron;
+    typedef Vector_3<Kernel>			Vector;
+    typedef Point_3<Kernel>				Point;
+    typedef Aff_transformation_3<Kernel> Transformation;
 }
+
 
 #endif /* CGALTYPEDEFS_H_ */

@@ -54,9 +54,10 @@ SimpleMaterialRecPtr BlockWorld::initMaterial(string texture) {
 
     //shader programs
     VRShader* wshader = new VRShader(mat);
-    wshader->setFragmentProgram("../shader/Blockworld.fp");
-    wshader->setVertexProgram("../shader/Blockworld.vp");
-    wshader->setGeometryProgram("../shader/Blockworld.gp");
+    string wdir = VRSceneManager::get()->getOriginalWorkdir();
+    wshader->setFragmentProgram(wdir+"/shader/Blockworld.fp");
+    wshader->setVertexProgram(wdir+"/shader/Blockworld.vp");
+    wshader->setGeometryProgram(wdir+"/shader/Blockworld.gp");
 
     //shader parameter
     float voxel = 1.0;

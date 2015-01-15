@@ -12,6 +12,7 @@
 
 #include <OpenSG/OSGTriangleIterator.h>
 #include "core/scene/VRSceneLoader.h"
+#include "core/math/interpolator.h"
 #include "core/utils/toString.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/object/VRObjectT.h"
@@ -185,11 +186,11 @@ GeoVec4fPropertyRecPtr convertColors(GeoVectorProperty* v) {
 
 void VRGeometry::merge(VRGeometry* geo) {
     if (!meshSet) {
+        setIndices(GeoUInt32PropertyRecPtr( GeoUInt32Property::create()) );
         setTypes(GeoUInt8PropertyRecPtr( GeoUInt8Property::create()) );
         setNormals(GeoVec3fPropertyRecPtr( GeoVec3fProperty::create()) );
-        setColors(GeoVec4fPropertyRecPtr( GeoVec4fProperty::create()) );
+        if (geo->mesh->getColors()) setColors(GeoVec4fPropertyRecPtr( GeoVec4fProperty::create()) );
         setLengths(GeoUInt32PropertyRecPtr( GeoUInt32Property::create()) );
-        setIndices(GeoUInt32PropertyRecPtr( GeoUInt32Property::create()) );
         setPositions(GeoPnt3fPropertyRecPtr( GeoPnt3fProperty::create()) );
     }
 
@@ -201,45 +202,55 @@ void VRGeometry::merge(VRGeometry* geo) {
     v1 = mesh->getPositions();
     v2 = geo->mesh->getPositions();
     int N = v1->size();
-    for (uint i=0; i<v2->size(); i++) v1->addValue(v2->getValue<Pnt3f>(i));
+    for (uint i=0; i<v2->size(); i++) {
+        Pnt3f p = v2->getValue<Pnt3f>(i);
+        M.mult(p,p);
+        v1->addValue(p);
+    }
 
     v1 = mesh->getNormals();
     v2 = geo->mesh->getNormals();
-    for (uint i=0; i<v2->size(); i++) v1->addValue(v2->getValue<Vec3f>(i));
+    for (uint i=0; i<geo->mesh->getPositions()->size(); i++) v1->addValue(v2->getValue<Vec3f>(i));
 
-    GeoVec4fPropertyRecPtr c1 = convertColors(mesh->getColors());
-    GeoVec4fPropertyRecPtr c2 = convertColors(geo->mesh->getColors());
-    for (uint i=0; i<c2->size(); i++) v1->addValue(c2->getValue(i));
+    if (mesh->getColors()) {
+        GeoVec4fPropertyRecPtr c1 = convertColors(mesh->getColors());
+        GeoVec4fPropertyRecPtr c2 = convertColors(geo->mesh->getColors());
+        for (uint i=0; i<c2->size(); i++) v1->addValue(c2->getValue(i));
+    }
 
     GeoIntegralProperty *i1, *i2;
     i1 = mesh->getTypes();
     i2 = geo->mesh->getTypes();
     for (uint i=0; i<i2->size(); i++) i1->addValue(i2->getValue(i));
 
-    /*cout << "types:";
-    for (uint i=0; i<i1->size(); i++) cout << " " << i1->getValue(i);
-    cout << endl;*/
-
     i1 = mesh->getLengths();
     i2 = geo->mesh->getLengths();
     for (uint i=0; i<i2->size(); i++) i1->addValue(i2->getValue(i));
-
-    /*cout << "lengths:";
-    for (uint i=0; i<i1->size(); i++) cout << " " << i1->getValue(i);
-    cout << endl;*/
 
     i1 = mesh->getIndices();
     i2 = geo->mesh->getIndices();
     for (uint i=0; i<i2->size(); i++) i1->addValue(i2->getValue(i) + N);
 
-    cout << "sizes:\n";
-    cout << " pos: " << mesh->getPositions()->size() << endl;
-    cout << " norm: " << mesh->getNormals()->size() << endl;
-    cout << " cols: " << mesh->getColors()->size() << endl;
-    cout << " types: " << mesh->getTypes()->size() << endl;
-    cout << " lengths: " << mesh->getLengths()->size() << endl;
-    cout << " inds: " << mesh->getIndices()->size() << endl;
-    cout << endl;
+    /*cout << "merge sizes:\n";
+    if (mesh->getPositions()) cout << " pos: " << mesh->getPositions()->size() << endl;
+    else cout << "no positions\n";
+    if (mesh->getNormals()) cout << " norm: " << mesh->getNormals()->size() << endl;
+    else cout << "no normals\n";
+    if (mesh->getColors()) cout << " cols: " << mesh->getColors()->size() << endl;
+    else cout << "no colors\n";
+    if (mesh->getTypes()) cout << " types: " << mesh->getTypes()->size() << endl;
+    else cout << "no types\n";
+    if (mesh->getLengths()) {
+        cout << " lengths: " << mesh->getLengths()->size() << endl;
+        int lsum = 0;
+        for (int i=0; i<mesh->getLengths()->size(); i++) lsum += mesh->getLengths()->getValue<int>(i);
+        cout << " lengths sum: " << lsum << endl;
+    } else cout << "no lengths\n";
+    if (mesh->getIndices()) cout << " inds: " << mesh->getIndices()->size() << endl;
+    else cout << "no indices\n";
+    cout << "pos   idx " << mesh->getIndex(Geometry::PositionsIndex) << " " << geo->mesh->getIndex(Geometry::PositionsIndex) << endl;
+    cout << "norms idx " << mesh->getIndex(Geometry::NormalsIndex) << " " << geo->mesh->getIndex(Geometry::NormalsIndex) << endl;
+    cout << endl;*/
 }
 
 void VRGeometry::decimate(float f) {
@@ -379,6 +390,22 @@ Vec3f VRGeometry::getAverageNormal() {
     normal *= 1./norms->size();
 
     return normal;
+}
+
+void VRGeometry::influence(vector<Vec3f> pnts, vector<Vec3f> values, int power, float color_code) {
+    interpolator inp;
+    inp.setPoints(pnts);
+    inp.setValues(values);
+    if (color_code > 0) {
+        if (mesh->getColors() == 0) {
+            GeoVec4fPropertyRecPtr cols = GeoVec4fProperty::create();
+            cols->resize(mesh->getPositions()->size());
+            setColors(cols);
+            fixColorMapping();
+        }
+        inp.evalVec(mesh->getPositions(), power, mesh->getColors(), color_code);
+    }
+    else inp.evalVec(mesh->getPositions(), power);
 }
 
 /** Returns the maximum position on the x, y or z axis **/

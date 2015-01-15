@@ -10,16 +10,18 @@
 #include <boost/bind.hpp>
 #include "core/utils/VRFunction.h"
 #include "core/objects/VRTransform.h"
+#include "core/utils/VRStorage_template.h"
 
 OSG_BEGIN_NAMESPACE
 
 
 VRPN_tracker::VRPN_tracker() {
-    scale = 1;
-    ent = 0;
-    vrpnt = 0;
-    vrpnc = 0;
-    ID = 0;
+    setNameSpace("VRPN tracker");
+    store("address", &tracker);
+    store("offset", &offset);
+    store("scale", &scale);
+    store("ID", &ID);
+    store("name", &name);
 }
 
 void VRPN_tracker::setTracker(string t) {
@@ -54,6 +56,9 @@ void VRPN_CALLBACK handle_tracker(void* data, const vrpn_TRACKERCB t ) { // TODO
 VRPN::VRPN() {
     auto update_cb = new VRFunction<VRThread*>("VRPN_update", boost::bind(&VRPN::update, this, _1));
     threadID = VRSceneManager::get()->initThread(update_cb, "VRPN", true);
+
+    storeMap("Tracker", &tracker);
+    store("active", &active);
 }
 
 VRPN::~VRPN() {
@@ -61,6 +66,8 @@ VRPN::~VRPN() {
 }
 
 void VRPN::update(VRThread* thread) {
+    if (!active) return;
+
     timeval* timeout = new timeval();
     timeout->tv_sec = 0;
     timeout->tv_usec = 10;
@@ -95,7 +102,8 @@ void VRPN::addVRPNTracker(int ID, string addr, Vec3f offset, float scale) {
     while(tracker.count(ID)) ID++;
 
     VRPN_tracker* t = new VRPN_tracker();
-    t->ent = new VRTransform("VRPN_tracker" + toString(ID));
+    t->setName("tracker");
+    t->ent = new VRTransform(t->getName());
     t->tracker = addr;
     t->ID = ID;
     t->offset = offset;
@@ -105,6 +113,10 @@ void VRPN::addVRPNTracker(int ID, string addr, Vec3f offset, float scale) {
     tracker[ID] = t;
 }
 
+void VRPN::delVRPNTracker(VRPN_tracker* t) {
+    tracker.erase(t->ID);
+    delete t;
+}
 
 vector<int> VRPN::getVRPNTrackerIDs() {
     vector<int> IDs;
@@ -117,35 +129,7 @@ VRPN_tracker* VRPN::getVRPNTracker(int ID) {
     else return 0;
 }
 
-void VRPN::save(xmlpp::Element* node) {
-    xmlpp::Element* tn;
-    for (auto tr : tracker) {
-        VRPN_tracker* t = tr.second;
-        tn = node->add_child("Tracker");
-        tn->set_attribute("address", t->tracker);
-        tn->set_attribute("offset", toString(t->offset));
-        tn->set_attribute("scale", toString(t->scale));
-        tn->set_attribute("ID", toString(t->ID));
-    }
-}
-
-void VRPN::load(xmlpp::Element* node) {
-    xmlpp::Node::NodeList nl = node->get_children();
-    xmlpp::Node::NodeList::iterator itr;
-    for (itr = nl.begin(); itr != nl.end(); itr++) {
-        xmlpp::Node* n = *itr;
-
-        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
-        if (!el) continue;
-
-        int ID = toInt(el->get_attribute("ID")->get_value());
-        Vec3f off = toVec3f(el->get_attribute("offset")->get_value());
-        float s = toFloat(el->get_attribute("scale")->get_value());
-
-        //cout << "\nADD TRACKER " << ID << " " << s << " " << off << flush;
-
-        addVRPNTracker(ID, el->get_attribute("address")->get_value(), off, s);
-    }
-}
+void VRPN::setVRPNActive(bool b) { active = b; }
+bool VRPN::getVRPNActive() { return active; }
 
 OSG_END_NAMESPACE

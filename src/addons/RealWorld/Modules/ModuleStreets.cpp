@@ -4,6 +4,7 @@
 #include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/scene/VRSceneManager.h"
 #include "../OSM/OSMMap.h"
 #include "../OSM/OSMMapDB.h"
 #include "../Timer.h"
@@ -24,13 +25,14 @@ ModuleStreets::ModuleStreets(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, Te
 
     // create material
     matStreet = new VRMaterial("Street");
-    matStreet->setTexture("data/RealWorld/textures/street1.png");
+    matStreet->setTexture("textures/street1.png");
 
     matStreet->setAmbient(Color3f(0.5, 0.5, 0.5)); //light reflection in all directions
     matStreet->setDiffuse(Color3f(1.0, 1.0, 1.0)); //light from ambient (without lightsource)
     matStreet->setSpecular(Color3f(0.2, 0.2, 0.2)); //light reflection in camera direction
-    matStreet->readVertexShader("shader/TexturePhong/phong.vp");
-    matStreet->readFragmentShader("shader/TexturePhong/phong.fp");
+    string wdir = VRSceneManager::get()->getOriginalWorkdir();
+    matStreet->readVertexShader(wdir+"/shader/TexturePhong/phong.vp");
+    matStreet->readFragmentShader(wdir+"/shader/TexturePhong/phong.fp");
     matStreet->setMagMinFilter("GL_LINEAR", "GL_NEAREST_MIPMAP_NEAREST");
     //matStreet->setWireFrame(true);
 }

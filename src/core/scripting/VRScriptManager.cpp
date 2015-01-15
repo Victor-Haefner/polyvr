@@ -18,12 +18,17 @@
 #include "VRPyBaseT.h"
 #include "VRPyMaterial.h"
 #include "VRPyLod.h"
+#include "VRPyRecorder.h"
+#include "VRPySnappingEngine.h"
 #include <iostream>
 #include <algorithm>
 
 //TODO: refactoring
-#include "../gui/VRGuiBits.h"
-#include "../gui/VRGuiFile.h"
+#include "core/gui/VRGuiBits.h"
+#include "core/gui/VRGuiFile.h"
+#include "core/gui/VRGuiManager.h"
+#include "core/setup/VRSetup.h"
+#include "core/setup/VRSetupManager.h"
 #include "addons/Engineering/CSG/VRPyCSG.h"
 #include "addons/RealWorld/VRPyRealWorld.h"
 #include "addons/RealWorld/traffic/VRPyTrafficSimulation.h"
@@ -157,6 +162,8 @@ static PyMethodDef VRScriptManager_module_methods[] = {
 	{"loadGeometry", (PyCFunction)VRScriptManager::loadGeometry, METH_VARARGS, "Loads a collada file and returns a VR.Geometry node" },
 	{"stackCall", (PyCFunction)VRScriptManager::stackCall, METH_VARARGS, "Stacks a call to a py function - stackCall( function, delay, [args] )" },
 	{"openFileDialog", (PyCFunction)VRScriptManager::openFileDialog, METH_VARARGS, "Open a file dialog - openFileDialog( onLoad, mode, title, default_path, filter )" },
+	{"updateGui", (PyCFunction)VRScriptManager::updateGui, METH_NOARGS, "Update the gui" },
+	{"render", (PyCFunction)VRScriptManager::render, METH_NOARGS, "Renders the viewports" },
     {NULL}  /* Sentinel */
 };
 
@@ -188,6 +195,8 @@ void VRScriptManager::initPyModules() {
     VRPyHaptic::registerModule("Haptic", pModVR, VRPyDevice::typeRef);
     //VRPySocket::registerModule("Socket", pModVR);
     VRPyPath::registerModule("Path", pModVR);
+    VRPyRecorder::registerModule("Recorder", pModVR);
+    VRPySnappingEngine::registerModule("SnappingEngine", pModVR);
 
     VRPyColorChooser::registerModule("ColorChooser", pModVR);
     VRPyCSG::registerModule("CSGGeometry", pModVR, VRPyGeometry::typeRef);
@@ -387,6 +396,17 @@ PyObject* VRScriptManager::openFileDialog(VRScriptManager* self, PyObject *args)
     VRGuiFile::setCallbacks( sigc::bind<PyObject*>( sigc::ptr_fun( &on_py_file_diag_cb ), cb) );
     VRGuiFile::open( PyString_AsString(mode), PyString_AsString(title) );
 
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRScriptManager::updateGui(VRScriptManager* self) {
+    VRGuiManager::get()->updateGtk();
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRScriptManager::render(VRScriptManager* self) {
+    VRSetupManager::getCurrent()->updateWindows();
+    VRGuiManager::get()->updateGtk();
     Py_RETURN_TRUE;
 }
 

@@ -81,7 +81,7 @@ void VRGuiBits_on_navigation_changed(GtkComboBox* cb, gpointer data) {
     char* c = gtk_combo_box_get_active_text(cb);
     if (c == 0) return;
     string name = string(c);
-    scene->setActivePreset(name);
+    scene->setActiveNavigation(name);
 }
 
 void VRGuiBits_on_new_cancel_clicked(GtkButton* cb, gpointer data) {
@@ -187,6 +187,32 @@ bool VRGuiBits::toggleStereo(GdkEventKey* k) {
     return true;
 }
 
+void VRGuiBits::toggleDock() {
+    Gtk::ToggleButton* tbut;
+    VRGuiBuilder()->get_widget("togglebutton1", tbut);
+    bool a = tbut->get_active();
+
+    static Gtk::Window* win = 0;
+    Gtk::VBox* box;
+    Gtk::VPaned* pan;
+    VRGuiBuilder()->get_widget("vbox5", box);
+    VRGuiBuilder()->get_widget("vpaned1", pan);
+
+    if(a) {
+        win = new Gtk::Window();
+        win->set_title("PolyVR 3D View");
+        win->set_default_size(400, 400);
+        box->reparent(*win);
+        win->show_all();
+    } else if(win) {
+        box->reparent(*pan);
+        pan->show_all();
+        delete win;
+    }
+
+    //TODO: reset changelist to redraw everything!
+}
+
 VRGuiBits::VRGuiBits() {
     setComboboxCallback("combobox4", VRGuiBits_on_camera_changed);
     setComboboxCallback("combobox9", VRGuiBits_on_navigation_changed);
@@ -198,6 +224,8 @@ VRGuiBits::VRGuiBits() {
 
     setButtonCallback("button14", VRGuiBits_on_new_cancel_clicked);
     setButtonCallback("button21", VRGuiBits_on_internal_close_clicked);
+
+    setToggleButtonCallback("togglebutton1", sigc::mem_fun(*this, &VRGuiBits::toggleDock) );
 
     setLabel("label24", "Project: None");
 
@@ -270,42 +298,16 @@ VRGuiBits::VRGuiBits() {
     gtk_list_store_set (opt_list->gobj(), row.gobj(), 1, 0, -1);
 }
 
-// scene updated, get cameras and nav presets
 void VRGuiBits::update() {
-    // update camera liststore
     VRScene* scene = VRSceneManager::getCurrent();
     setLabel("label24", "Project: None");
     if (scene == 0) return;
 
-    vector<VRCamera*> cams = scene->getCameraMap();
-    Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("cameras"));
-    store->clear();
-    int active = 0;
-    for (uint i=0; i<cams.size(); i++) {
-        if (cams[i] == scene->getActiveCamera()) active = i;
-        Gtk::ListStore::Row row = *store->append();
-        gtk_list_store_set (store->gobj(), row.gobj(), 0, cams[i]->getName().c_str(), -1);
-    }
+    fillStringListstore("cameras", scene->getCameraNames());
+    fillStringListstore("nav_presets", scene->getNavigationNames());
 
-    // set active cam active
-    Gtk::ComboBox* cb;
-    VRGuiBuilder()->get_widget("combobox4", cb);
-    cb->set_active(active);
-
-    // update nav_presets liststore
-    map<string, VRNavPreset*>::iterator itr;
-    map<string, VRNavPreset*> presets = scene->getPresets();
-    store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("nav_presets"));
-    store->clear();
-    for (itr = presets.begin(); itr != presets.end(); itr++) {
-        Gtk::ListStore::Row row = *store->append();
-        gtk_list_store_set (store->gobj(), row.gobj(), 0, itr->first.c_str(), -1);
-        //if (itr->second) itr->second->setScene(scene);
-    }
-
-    // set first element active
-    VRGuiBuilder()->get_widget("combobox9", cb);
-    cb->set_active(0);
+    setCombobox("combobox4", scene->getActiveCameraIndex());
+    setCombobox("combobox9", getListStorePos( "nav_presets", scene->getActiveNavigation() ) );
 
     // update setup and project label
     cout << " now running: " << scene->getName() << endl;

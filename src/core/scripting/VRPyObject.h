@@ -26,6 +26,7 @@ struct VRPyObject : VRPyBaseT<OSG::VRObject> {
     static PyObject* isPickable(VRPyObject* self);
     static PyObject* setPickable(VRPyObject* self, PyObject* args);
     static PyObject* printOSG(VRPyObject* self);
+    static PyObject* flattenHiarchy(VRPyObject* self);
 };
 
 #endif // VRPYOBJECT_H_INCLUDED

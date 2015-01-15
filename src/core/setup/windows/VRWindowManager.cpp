@@ -28,8 +28,6 @@ using namespace std;
 VRWindowManager::VRWindowManager() {
     cout << "Init VRWindowManager\n";
     ract = RenderAction::create();
-    mode = 0;
-    topGtkWindow = 0;
 }
 
 VRWindowManager::~VRWindowManager() {
@@ -82,7 +80,7 @@ void setMultisampling(bool on) {
     if (res) {;};//__GL_FSAA_MODE 	 = 7;//find out how to set vie application
 }
 
-void VRWindowManager::initGlut() { //TODO
+void VRWindowManager::initGlut() { // deprecated?
     static bool initiated = false;
     if (initiated) return;
     initiated = true;
@@ -102,48 +100,32 @@ void VRWindowManager::initGlut() { //TODO
     else glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
 }
 
-void VRWindowManager::startMainLoop() {
-    if (mode == 1) glutMainLoop();
-    if (mode == 2) Gtk::Main::run(*topGtkWindow);
-}
-
-void VRWindowManager::addGlutWindow(string& name) {
-    if (mode == 2) cout << "\n!!! gtk windows have been added\n";
-    mode = 1;
-
+VRWindow* VRWindowManager::addGlutWindow(string name) {
     initGlut();
     VRGlutWindow* win = new VRGlutWindow();
     win->setName(name);
     win->setAction(ract);
     windows[win->getName()] = win;
-    name = win->getName();
+    return win;
 }
 
-void VRWindowManager::addMultiWindow(string& name) {
+VRWindow* VRWindowManager::addMultiWindow(string name) {
     VRMultiWindow* win = new VRMultiWindow();
     win->setName(name);
     win->setAction(ract);
     windows[win->getName()] = win;
-    name = win->getName();
+    return win;
 }
 
-void VRWindowManager::addGtkWindow(string& name, string glarea) {
-    if (mode == 1) cout << "\n!!! glut windows have been added\n";
-    mode = 2;
-
-    Gtk::Window* top = 0;
+VRWindow* VRWindowManager::addGtkWindow(string name, string glarea) {
     Gtk::DrawingArea* drawArea = 0;
-    VRGuiBuilder()->get_widget("window1", top);
     VRGuiBuilder()->get_widget(glarea, drawArea);
-
-    top->maximize();
-    topGtkWindow = (Gtk::Window*)drawArea->get_toplevel();
 
     VRGtkWindow* win = new VRGtkWindow(drawArea);
     win->setName(name);
     win->setAction(ract);
     windows[win->getName()] = win;
-    name = win->getName();
+    return win;
 }
 
 void VRWindowManager::getWindowSize(string name, int& width, int& height) {
@@ -233,13 +215,13 @@ void VRWindowManager::load(xmlpp::Element* node) {
         string name = el->get_attribute("name")->get_value();
 
         if (type == "0") {
-            addMultiWindow(name);
-            windows[name]->load(el);
+            VRWindow* win = addMultiWindow(name);
+            win->load(el);
         }
 
         if (type == "2") {
-            addGtkWindow(name);
-            windows[name]->load(el);
+            VRWindow* win = addGtkWindow(name);
+            win->load(el);
         }
     }
 }

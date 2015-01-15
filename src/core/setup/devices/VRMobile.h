@@ -20,10 +20,10 @@ class VRMobile : public VRDevice {
         map<string, string> websites;
 
         void callback(HTTP_args* args);
-        void init();
+        void updateMobilePage();
 
     public:
-        VRMobile();
+        VRMobile(int port);
 
         void clearSignals();
 
@@ -33,7 +33,6 @@ class VRMobile : public VRDevice {
         void remWebSite(string uri);
         void addWebSite(string uri, string website);
         void updateClients(string uri);
-        vector<string> getUris();
 };
 
 

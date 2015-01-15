@@ -1,5 +1,6 @@
 #include "Config.h"
 #include "core/objects/material/VRShader.h"
+#include "core/scene/VRSceneManager.h"
 #include <OpenSG/OSGSimpleMaterial.h>
 #include <sys/stat.h>
 
@@ -20,18 +21,19 @@ Config* Config::get() {
 
 //Lighting and Shading
 void Config::createPhongShader(SimpleMaterial* mat, bool phong) {
+    string wdir = VRSceneManager::get()->getOriginalWorkdir();
     if(phong){
         mat->setAmbient(Color3f(0.5, 0.5, 0.5)); //light reflection in all directions
         mat->setDiffuse(Color3f(1.0, 1.0, 1.0)); //light from ambiente (without lightsource)
         mat->setSpecular(Color3f(0.2, 0.2, 0.2)); //light reflection in camera direction
         VRShader* wshader = new VRShader(mat);
-        wshader->setVertexProgram("shader/TexturePhong/phong.vp"); //Vertex Shader
-        wshader->setFragmentProgram("shader/TexturePhong/phong.fp"); //Fragment Shader
+        wshader->setVertexProgram(wdir+"/shader/TexturePhong/phong.vp"); //Vertex Shader
+        wshader->setFragmentProgram(wdir+"/shader/TexturePhong/phong.fp"); //Fragment Shader
     } else { //without phong shading, but with transparent textures
         mat->setAmbient(Color3f(1.0, 1.0, 1.0));
         VRShader* wshader = new VRShader(mat);
-        wshader->setVertexProgram("shader/TexturePhong/phong.vp"); //Vertex Shader
-        wshader->setFragmentProgram("shader/TexturePhong/phong_tree.fp"); //Fragment Shader
+        wshader->setVertexProgram(wdir+"/shader/TexturePhong/phong.vp"); //Vertex Shader
+        wshader->setFragmentProgram(wdir+"/shader/TexturePhong/phong_tree.fp"); //Fragment Shader
     }
 }
 

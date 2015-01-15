@@ -5,41 +5,40 @@
 #include <time.h>
 
 OSG_BEGIN_NAMESPACE
-using namespace CSGApp;
 
-Point::Point(float x, float y, float z) {
+OcPoint::OcPoint(float x, float y, float z) {
     this->x = x;
     this->y = y;
     this->z = z;
     data=0;
 }
 
-float Point::length() {
+float OcPoint::length() {
     return sqrt(x*x+y*y+z*z);
 }
 
-float Point::dist(Point p) {
+float OcPoint::dist(OcPoint p) {
     p = sub(p);
     return p.length();
 }
 
-Point Point::mult(float a) {
-    return Point(x*a, y*a, z*a);
+OcPoint OcPoint::mult(float a) {
+    return OcPoint(x*a, y*a, z*a);
 }
 
-Point Point::add(Point p) {
-    return Point(x + p.x, y + p.y, z + p.z);
+OcPoint OcPoint::add(OcPoint p) {
+    return OcPoint(x + p.x, y + p.y, z + p.z);
 }
 
-Point Point::sub(Point p) {
-    return Point(x - p.x, y - p.y, z - p.z);
+OcPoint OcPoint::sub(OcPoint p) {
+    return OcPoint(x - p.x, y - p.y, z - p.z);
 }
 
-void Point::print() {
+void OcPoint::print() {
     cout << "( " << x << ", "  << y << ", " << z << " )";
 }
 
-bool Point::inBox(Point c, float size) {
+bool OcPoint::inBox(OcPoint c, float size) {
     if (abs(2*x - 2*c.x) > size) return false;
     if (abs(2*y - 2*c.y) > size) return false;
     if (abs(2*z - 2*c.z) > size) return false;
@@ -54,8 +53,8 @@ Octree::Octree(float resolution) {
     parent = 0;
 }
 
-int Octree::getOctant(Point p) {
-    Point rp = p.sub(center);
+int Octree::getOctant(OcPoint p) {
+    OcPoint rp = p.sub(center);
 
     int o = 0;
     if (rp.x < 0) o+=1;
@@ -64,15 +63,15 @@ int Octree::getOctant(Point p) {
     return o;
 }
 
-Point lvljumpCenter(float s2, Point rp) {
-    Point c(s2,s2,s2);
+OcPoint lvljumpCenter(float s2, OcPoint rp) {
+    OcPoint c(s2,s2,s2);
     if (rp.x < 0) c.x-=s2*2;
     if (rp.y < 0) c.y-=s2*2;
     if (rp.z < 0) c.z-=s2*2;
     return c;
 }
 
-bool checkRecursion(Octree* t, Point p) {
+bool checkRecursion(Octree* t, OcPoint p) {
     static Octree* rec_1 = 0;
     static Octree* rec_2 = 0;
     static Octree* rec_3 = 0;
@@ -80,7 +79,7 @@ bool checkRecursion(Octree* t, Point p) {
 
     if (t == rec_2 and rec_1 == rec_3) {
         cout << "\nRecursion error! Octree allready visited..";
-        cout << "\n Point "; p.print();
+        cout << "\n OcPoint "; p.print();
         cout << "\n Trees " << t << " " << rec_1 << " " << rec_2 << " " << rec_3;
         //cout << "\n parent center: "; t->center.print();
         cout << flush;
@@ -94,7 +93,7 @@ bool checkRecursion(Octree* t, Point p) {
     return true;
 }
 
-void Octree::add(Point p, void* data) {
+void Octree::add(OcPoint p, void* data) {
     bool rOk = checkRecursion(this, p);
     if (!rOk) {
         cout << "\n Center "; center.print();
@@ -104,21 +103,21 @@ void Octree::add(Point p, void* data) {
         cout << "\n P Center "; parent->center.print();
         cout << "\n P Size " << parent->size;
         cout << "\n In Box: " << p.inBox(parent->center, parent->size) << endl;
-        cout << "\n P point Octant " <<  parent->getOctant(p);
-        cout << "\n P child at point Octant " <<  parent->children[ parent->getOctant(p) ];
+        cout << "\n P OcPoint Octant " <<  parent->getOctant(p);
+        cout << "\n P child at OcPoint Octant " <<  parent->children[ parent->getOctant(p) ];
         cout << "\n this " << this;
         return;
     }
 
     //cout << "\nAdd "; p.print();
-    Point rp = p.sub(center);
+    OcPoint rp = p.sub(center);
 
     if ( ! p.inBox(center, size) ) {
         if (parent == 0) {
             float s2 = size*0.5;
             parent = new Octree(resolution);
-            //Point c = center.add( Point(copysign(s2,rp.x), copysign(s2,rp.y), copysign(s2,rp.z)) );
-            Point c = center.add( lvljumpCenter(s2, rp) );
+            //OcPoint c = center.add( OcPoint(copysign(s2,rp.x), copysign(s2,rp.y), copysign(s2,rp.z)) );
+            OcPoint c = center.add( lvljumpCenter(s2, rp) );
             parent->center = c;
             float s = 2*size;
             parent->size = s;
@@ -137,13 +136,13 @@ void Octree::add(Point p, void* data) {
             children[o] = new Octree(resolution);
             float s = size*0.5;
             children[o]->size = s;
-            //Point c = center.add( Point(copysign(s2,rp.x), copysign(s2,rp.y), copysign(s2,rp.z)) );
-            Point c = center.add( lvljumpCenter(s2, rp) );
+            //OcPoint c = center.add( OcPoint(copysign(s2,rp.x), copysign(s2,rp.y), copysign(s2,rp.z)) );
+            OcPoint c = center.add( lvljumpCenter(s2, rp) );
 
             children[o]->center = c;
             children[o]->parent = this;
         }
-        //Point c = children[o]->center;
+        //OcPoint c = children[o]->center;
         children[o]->add(p, data);
         return;
     }
@@ -153,7 +152,7 @@ void Octree::add(Point p, void* data) {
 }
 
 void Octree::add(float x, float y, float z, void* data) {
-    add(Point(x,y,z), data);
+    add(OcPoint(x,y,z), data);
 }
 
 void Octree::destroy(Octree* guard) {
@@ -176,11 +175,11 @@ Octree* Octree::getRoot() {
 }
 
 // sphere center, box center, sphere radius, box size
-bool sphere_box_intersect(Point Ps, Point Pb, float Rs, float Sb)  {
+bool sphere_box_intersect(OcPoint Ps, OcPoint Pb, float Rs, float Sb)  {
     float r2 = Rs * Rs;
-    Point diag(Sb*0.5, Sb*0.5, Sb*0.5);
-    Point Bmin = Pb.sub(diag);
-    Point Bmax = Pb.add(diag);
+    OcPoint diag(Sb*0.5, Sb*0.5, Sb*0.5);
+    OcPoint Bmin = Pb.sub(diag);
+    OcPoint Bmax = Pb.add(diag);
     float dmin = 0;
     if( Ps.x < Bmin.x ) dmin += ( Ps.x - Bmin.x )*( Ps.x - Bmin.x );
     else if( Ps.x > Bmax.x ) dmin += ( Ps.x - Bmax.x )*( Ps.x - Bmax.x );
@@ -191,7 +190,7 @@ bool sphere_box_intersect(Point Ps, Point Pb, float Rs, float Sb)  {
     return dmin <= r2;
 }
 
-void Octree::findInSphere(Point p, float r, vector<void*>& res) { // TODO: optimize!!
+void Octree::findInSphere(OcPoint p, float r, vector<void*>& res) { // TODO: optimize!!
     if (!sphere_box_intersect(p, center, r, size)) return;
 
     for (unsigned int i=0; i<data.size(); i++) {
@@ -203,7 +202,7 @@ void Octree::findInSphere(Point p, float r, vector<void*>& res) { // TODO: optim
     }
 }
 
-vector<void*> Octree::radiusSearch(Point p, float r) {
+vector<void*> Octree::radiusSearch(OcPoint p, float r) {
     vector<void*> res;
 
     getRoot()->findInSphere(p, r, res);
@@ -212,7 +211,7 @@ vector<void*> Octree::radiusSearch(Point p, float r) {
 }
 
 vector<void*> Octree::radiusSearch(float x, float y, float z, float r) {
-    return radiusSearch(Point(x,y,z), r);
+    return radiusSearch(OcPoint(x,y,z), r);
 }
 
 void Octree::print(int indent) {
@@ -231,22 +230,22 @@ void Octree::print(int indent) {
 void Octree::test() {
     int Nv = 100000;
     float sMax = 4;
-    Point p(1,2,3);
+    OcPoint p(1,2,3);
     float r = 0.1;
     resolution = 0.0001;
 
     clear();
     srand(time(0));
 
-    vector<Point> points;
-    for (int i=0; i<Nv; i++) { // create random points
+    vector<OcPoint> OcPoints;
+    for (int i=0; i<Nv; i++) { // create random OcPoints
         float x = rand()*sMax/RAND_MAX;
         float y = rand()*sMax/RAND_MAX;
         float z = rand()*sMax/RAND_MAX;
-        Point _p(x,y,z);
+        OcPoint _p(x,y,z);
         _p.data = (void*)new int(i);
-        points.push_back( _p );
-        add( points[i], points[i].data );
+        OcPoints.push_back( _p );
+        add( OcPoints[i], OcPoints[i].data );
     }
 
     //getRoot()->print();
@@ -258,7 +257,7 @@ void Octree::test() {
     vector<void*> radSearchRes_tree = radiusSearch(p, r);
     t1=clock();
     for (int i=0; i<Nv; i++) { // radius search brute forced
-        Point p2 = points[i];
+        OcPoint p2 = OcPoints[i];
         if (p2.dist(p) < r) radSearchRes_brute.push_back( p2.data );
     }
     t2=clock();
@@ -282,7 +281,7 @@ void Octree::test() {
         }
     }
 
-    cout << "\nOctree test passed with " << radSearchRes_tree.size() << " found points!\n";
+    cout << "\nOctree test passed with " << radSearchRes_tree.size() << " found OcPoints!\n";
 }
 
 vector<void*> Octree::getData() {

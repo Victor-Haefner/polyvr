@@ -3,10 +3,15 @@ varying vec3 v;
 varying vec2 tc;
 varying vec2 tc2;
 
+attribute vec4 osg_Vertex;
+attribute vec3 osg_Normal;
+attribute vec2 osg_MultiTexCoord0;
+attribute vec2 osg_MultiTexCoord1;
+
 void main(void) {
-   v = vec3(gl_ModelViewMatrix * gl_Vertex);
-   N = normalize(gl_NormalMatrix * gl_Normal);
-   tc = vec2(gl_MultiTexCoord0);
-   tc2 = vec2(gl_MultiTexCoord1);
-   gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+   v = vec3(gl_ModelViewMatrix * osg_Vertex);
+   N = normalize(gl_NormalMatrix * osg_Normal);
+   tc = vec2(osg_MultiTexCoord0);
+   tc2 = vec2(osg_MultiTexCoord1);
+   gl_Position = gl_ModelViewProjectionMatrix * osg_Vertex;
 }

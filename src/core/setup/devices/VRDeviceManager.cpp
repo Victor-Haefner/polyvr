@@ -124,7 +124,7 @@ void VRDeviceManager::load(xmlpp::Element* node) {
         }
 
         if (type == "mobile") {
-            VRMobile* m = new VRMobile();
+            VRMobile* m = new VRMobile(5500);
             m->load(el);
             dev = m;
         }

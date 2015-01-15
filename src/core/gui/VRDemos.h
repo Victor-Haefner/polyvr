@@ -33,8 +33,6 @@ class VRDemos {
         map<string, demoEntry*> demos;
         VRGuiContextMenu* menu;
 
-        void scanFolder(string folder, string table);
-
         void setButton(demoEntry* e);
 
         void clearTable(string t);
@@ -45,6 +43,7 @@ class VRDemos {
         void addEntry(string path, string table, bool running);
 
         void updatePixmap(demoEntry* e, Gtk::Image* img_pxb);
+        void update();
 
         void initMenu();
         void on_menu_delete();
@@ -60,9 +59,6 @@ class VRDemos {
         void on_new_clicked();
         void on_saveas_clicked();
         void on_load_clicked();
-
-        void saveCfg();
-        int loadCfg();
 
     public:
         VRDemos();

@@ -6,8 +6,10 @@
 #include "core/gui/VRGuiManager.h"
 #include "core/utils/VROptions.h"
 #include "core/utils/VRInternalMonitor.h"
+#include "core/utils/VRFunction.h"
 #include "core/scene/VRSoundManager.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/networking/VRMainInterface.h"
 #include <GL/glut.h>
 
 #include <OpenSG/OSGSimpleGeometry.h>
@@ -77,6 +79,7 @@ void initPolyVR(int argc, char **argv) {
     VRInternalMonitor::get();
 
     VRGuiManager::get();
+    VRMainInterface::get();
 }
 
 void exitPolyVR() {
@@ -86,6 +89,7 @@ void exitPolyVR() {
     delete VRSceneLoader::get();
     delete VROptions::get();
     delete VRInternalMonitor::get();
+    delete VRMainInterface::get();
     delete &VRSoundManager::get();
     VRMaterial::clearAll();
 
@@ -96,7 +100,13 @@ void exitPolyVR() {
 }
 
 
-void startPolyVR() { VRSetupManager::getCurrent()->startMainLoop(); }
+void startPolyVR() {
+    //VRFunction<VRThread*>* fkt = new VRFunction<VRThread*>( "VRSceneManager::update", boost::bind(&VRSceneManager::update, VRSceneManager::get()) );
+    //VRSceneManager::get()->initThread(fkt, "", true, 0);
+    while(true) {
+        VRSceneManager::get()->update();
+    }
+}
 
 
 OSG_END_NAMESPACE;

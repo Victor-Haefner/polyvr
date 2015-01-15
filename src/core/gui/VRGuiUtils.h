@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGColor.h>
+#include <OpenSG/OSGImage.h>
 #include <gtkmm/builder.h>
 #include <gtkmm/treemodelcolumn.h>
 #include <gtkmm/treestore.h>
@@ -22,6 +23,7 @@ void setEntryCallback(string e, sigc::slot<void> sig);
 // BUTTONS
 void setButtonCallback(string b, void (* fkt)(GtkButton*, gpointer), gpointer data = NULL);
 void setButtonCallback(string b, sigc::slot<void> sig );
+void setToggleButtonCallback(string b, sigc::slot<void> sig );
 void setToolButtonCallback(string b, void (* fkt)(GtkButton*, gpointer));
 void setToolButtonCallback(string b, sigc::slot<void> sig );
 void setToolButtonSensivity(string toolbutton, bool b);
@@ -70,6 +72,7 @@ OSG::Color4f chooseColor(string drawable, OSG::Color4f current);
 void setColorChooser(string drawable, sigc::slot<bool, GdkEventButton*> sig);
 void setColorChooserColor(string drawable, OSG::Color3f col);
 
+OSG::ImageRecPtr takeSnapshot();
 void saveScene(string path = "");
 
 void showDialog(string d);

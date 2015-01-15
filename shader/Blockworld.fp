@@ -10,4 +10,5 @@ in float light;
 void main( void )
 {
    gl_FragColor = texture2D(texture, texCoord)*light;
+   gl_FragColor.a = 1.0;
 }

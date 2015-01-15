@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
 
-    OSG::preloadSharedObject("OSGBase");
+    /*OSG::preloadSharedObject("OSGBase");
     OSG::preloadSharedObject("OSGContribCSMSimplePlugin");
     OSG::preloadSharedObject("OSGContribWebInterface");
     OSG::preloadSharedObject("OSGGroup");
@@ -125,7 +125,7 @@ int main(int argc, char **argv) {
     OSG::preloadSharedObject("OSGContribComputeBase");
     OSG::preloadSharedObject("OSGContribTrapezoidalShadowMaps");
     OSG::preloadSharedObject("OSGFileIO");
-    OSG::preloadSharedObject("OSGText");
+    OSG::preloadSharedObject("OSGText");*/
 
     // evaluate params
     for(int a=1 ; a<argc ; ++a) {

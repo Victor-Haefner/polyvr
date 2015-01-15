@@ -61,6 +61,9 @@ void VRGuiSetup::updateObjectData() {
     setExpanderSensivity("expander8", false);
     setExpanderSensivity("expander20", false);
     setExpanderSensivity("expander21", false);
+    setExpanderSensivity("expander22", false);
+    setExpanderSensivity("expander23", false);
+    setExpanderSensivity("expander24", false);
 
     current_scene = VRSceneManager::getCurrent();
 
@@ -70,8 +73,8 @@ void VRGuiSetup::updateObjectData() {
         VRWindow* win = (VRWindow*)selected_object;
         setCheckButton("checkbutton7", win->isActive());
 
-        setCheckButton("checkbutton12", win->hasType(0));
         if (win->hasType(0)) { // multiwindow
+            setExpanderSensivity("expander24", true);
             VRMultiWindow* mwin = (VRMultiWindow*)win;
             int nx, ny;
             nx = mwin->getNXTiles();
@@ -95,6 +98,9 @@ void VRGuiSetup::updateObjectData() {
                 }
             }
         }
+
+        if (win->hasType(1)) setExpanderSensivity("expander23", true);
+        if (win->hasType(2)) setExpanderSensivity("expander22", true); // GTK
 
         // mouse
         string name = "None";
@@ -137,10 +143,24 @@ void VRGuiSetup::updateObjectData() {
         setTextEntry("entry50", t->tracker);
     }
 
+    if (selected_type == "vrpn_tracker") {
+        setExpanderSensivity("expander4", true);
+        setExpanderSensivity("expander7", true);
+        VRPN_tracker* t = (VRPN_tracker*)selected_object;
+        setTextEntry("entry50", t->tracker);
+    }
+
     if (selected_type == "art_device") {
         setExpanderSensivity("expander5", true);
         setExpanderSensivity("expander6", true);
         device = true;
+        ART_device* t = (ART_device*)selected_object;
+        setTextEntry("entry40", toString(t->ID));
+    }
+
+    if (selected_type == "art_tracker") {
+        setExpanderSensivity("expander5", true);
+        setExpanderSensivity("expander6", true);
         ART_device* t = (ART_device*)selected_object;
         setTextEntry("entry40", toString(t->ID));
     }
@@ -167,6 +187,11 @@ void VRGuiSetup::updateObjectData() {
             setTextEntry("entry48", toString(o[0]));
             setTextEntry("entry62", toString(o[1]));
             setTextEntry("entry63", toString(o[2]));
+        }
+
+        if (selected_name == "VRPN") {
+            setExpanderSensivity("expander7", true);
+            setCheckButton("checkbutton25", current_setup->getVRPNActive());
         }
     }
 
@@ -330,8 +355,9 @@ void VRGuiSetup::on_menu_delete() {
         win->remView(view);
     }
 
-    if (selected_type == "vrpn_device") {
-        ;
+    if (selected_type == "vrpn_tracker") {
+        VRPN_tracker* t = (VRPN_tracker*)selected_object;
+        current_setup->delVRPNTracker(t);
     }
 
     if (selected_type == "art_device") {
@@ -343,13 +369,14 @@ void VRGuiSetup::on_menu_delete() {
 }
 
 void VRGuiSetup::on_menu_add_window() {
-    string name = "Display";
-    current_setup->addMultiWindow(name);
-    VRWindow* win = current_setup->getWindow(name);
+    VRWindow* win = current_setup->addMultiWindow("Display");
+    win->setActive(true);
     if ( VRSceneManager::getCurrent() ) win->setContent(true);
 
     updateSetup();
-    setToolButtonSensivity("toolbutton12", true);
+    selected_object = win;
+    selected_type = "window";
+    on_menu_add_viewport();
 }
 
 void VRGuiSetup::on_menu_add_viewport() {
@@ -407,7 +434,7 @@ void VRGuiSetup::on_menu_add_haptic() {
 }
 
 void VRGuiSetup::on_menu_add_mobile() {
-    VRMobile* m = new VRMobile();
+    VRMobile* m = new VRMobile(5500);
     current_setup->addDevice(m);
     updateSetup();
     setToolButtonSensivity("toolbutton12", true);
@@ -438,19 +465,6 @@ void VRGuiSetup::on_toggle_display_active() {
     if (!b) bg = "#FFDDDD";
     Glib::RefPtr<Gtk::TreeStore> tree_store = Glib::RefPtr<Gtk::TreeStore>::cast_static(VRGuiBuilder()->get_object("setupTree"));
     setTreeRow(tree_store, selected_row, win->getName().c_str(), "window", (gpointer)win, "#000000", bg);
-    setToolButtonSensivity("toolbutton12", true);
-}
-
-void VRGuiSetup::on_toggle_display_multi() {
-    bool b = getCheckButtonState("checkbutton12");
-    setTableSensivity("table9", b);
-    if (guard) return;
-
-    if (selected_type != "window") return;
-    //VRWindow* win = (VRWindow*)selected_object;
-
-    //cout << "\nToggleActive " << name << " " << b << endl;
-    //win->getView()->setStereo(b);
     setToolButtonSensivity("toolbutton12", true);
 }
 
@@ -718,13 +732,15 @@ VRGuiSetup::VRGuiSetup() {
     menu->appendItem("SM_AddMenu", "Window", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_window) );
     menu->appendItem("SM_AddMenu", "Viewport", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_viewport) );
     menu->appendMenu("SM_AddMenu", "Device", "SM_AddDevMenu");
+    menu->appendMenu("SM_AddMenu", "ART", "SM_AddARTMenu");
+    menu->appendMenu("SM_AddMenu", "VRPN", "SM_AddVRPNMenu");
     menu->appendItem("SM_AddDevMenu", "Mouse", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_mouse) );
     menu->appendItem("SM_AddDevMenu", "Keyboard", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_keyboard) );
-    menu->appendItem("SM_AddDevMenu", "Flystick", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_flystick) );
     menu->appendItem("SM_AddDevMenu", "Haptic", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_haptic) );
     menu->appendItem("SM_AddDevMenu", "Mobile", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_mobile) );
-    menu->appendItem("SM_AddDevMenu", "ART tracker", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_art_tracker) );
-    menu->appendItem("SM_AddDevMenu", "VRPN tracker", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_vrpn_tracker) );
+    menu->appendItem("SM_AddARTMenu", "Flystick", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_flystick) );
+    menu->appendItem("SM_AddARTMenu", "ART tracker", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_art_tracker) );
+    menu->appendItem("SM_AddVRPNMenu", "VRPN tracker", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_vrpn_tracker) );
 
     Glib::RefPtr<Gtk::ToolButton> tbutton;
     Glib::RefPtr<Gtk::CheckButton> cbutton;
@@ -785,7 +801,6 @@ VRGuiSetup::VRGuiSetup() {
     setCheckButtonCallback("checkbutton7", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_display_active));
     setCheckButtonCallback("checkbutton8", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_display_stereo));
     setCheckButtonCallback("checkbutton11", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_display_projection));
-    setCheckButtonCallback("checkbutton12", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_display_multi));
     setCheckButtonCallback("checkbutton24", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_art));
     setCheckButtonCallback("checkbutton26", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_view_user));
     setCheckButtonCallback("checkbutton4", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_view_stats));
@@ -797,7 +812,6 @@ VRGuiSetup::VRGuiSetup() {
     setTableSensivity("table2", false);
     setTableSensivity("table7", false);
     setTableSensivity("table8", false);
-    setTableSensivity("table9", false);
 
     updateSetupList();
     updateSetup();
@@ -892,7 +906,7 @@ void VRGuiSetup::updateSetup() {
     for (uint i=0; i<vrpnIDs.size(); i++) {
         VRPN_tracker* t = current_setup->getVRPNTracker(vrpnIDs[i]);
         itr = tree_store->append(vrpn_itr->children());
-        setTreeRow(tree_store, *itr, t->ent->getName().c_str(), "vrpn_device", (gpointer)t);
+        setTreeRow(tree_store, *itr, t->getName().c_str(), "vrpn_tracker", (gpointer)t);
     }
 
     // ART

@@ -1,4 +1,5 @@
 #include "VRSceneManager.h"
+#include "VRSceneLoader.h"
 #include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
 #include "core/setup/windows/VRWindow.h"
@@ -6,6 +7,9 @@
 #include "VRScene.h"
 #include "core/objects/VRLight.h"
 #include "core/objects/VRLightBeacon.h"
+#include "core/gui/VRGuiManager.h"
+#include "core/utils/VRTimer.h"
+#include "core/gui/VRGuiSignals.h"
 #include <OpenSG/OSGSceneFileHandler.h>
 #include <gtkmm/main.h>
 #include <GL/glut.h>
@@ -16,28 +20,15 @@
 OSG_BEGIN_NAMESPACE
 using namespace std;
 
-void glutUpdate() {
-    //osgsleep(1);
-    VRSceneManager::get()->update();
-}
-
-int gtkUpdate(void* data) {
-    VRSceneManager::get()->update();
-    return true;
-}
-
 VRSceneManager::VRSceneManager() {
     cout << "Init VRSceneManager\n";
     active = "NO_SCENE_ACTIVE";
 
-    //g_timeout_add(17, gtkUpdate, NULL); // 60 Hz
-    g_timeout_add_full(G_PRIORITY_LOW, 17, gtkUpdate, NULL, NULL); // 60 Hz
-    glutDisplayFunc(glutUpdate);
-    glutIdleFunc(glutUpdate);
-
     char cCurrentPath[FILENAME_MAX];
-    getcwd(cCurrentPath, sizeof(cCurrentPath) );
-    original_workdir = string(cCurrentPath);
+    char* r = getcwd(cCurrentPath, sizeof(cCurrentPath) );
+    if (r) original_workdir = string(cCurrentPath);
+
+    searchExercisesAndFavorites();
 }
 
 VRSceneManager::~VRSceneManager() { for (auto scene : scenes) delete scene.second; }
@@ -52,6 +43,14 @@ VRSceneManager* VRSceneManager::get() {
 void VRSceneManager::addScene(VRScene* s) {
     scenes[s->getName()] = s;
     setActiveScene(s);
+    VRGuiSignals::get()->getSignal("scene_changed")->trigger(); // update gui
+}
+
+void VRSceneManager::loadScene(string path, bool write_protected) {
+    removeScene(getCurrent());
+    VRSceneLoader::get()->loadScene(path);
+    VRSceneManager::getCurrent()->setFlag(SCENE_WRITE_PROTECTED, write_protected);
+    VRGuiSignals::get()->getSignal("scene_changed")->trigger(); // update gui
 }
 
 string VRSceneManager::getOriginalWorkdir() { return original_workdir; }
@@ -73,6 +72,7 @@ void VRSceneManager::removeScene(VRScene* s) {
     for (itr = windows.begin(); itr != windows.end(); itr++) itr->second->setContent(false);
 
     setWorkdir(original_workdir);
+    VRGuiSignals::get()->getSignal("scene_changed")->trigger(); // update gui
 }
 
 void VRSceneManager::setWorkdir(string path) {
@@ -129,6 +129,60 @@ void VRSceneManager::setActiveScene(VRScene* s) {
     //  - the setup real_root has to be added to the current camera
 }
 
+void VRSceneManager::storeFavorites() {
+    string path = original_workdir + "/examples/.cfg";
+    ofstream file(path);
+    for (auto f : favorite_paths) file << f << endl;
+    file.close();
+}
+
+void VRSceneManager::addFavorite(string path) {
+    favorite_paths.push_back(path);
+    storeFavorites();
+}
+
+void VRSceneManager::remFavorite(string path) {
+    favorite_paths.erase(std::remove(favorite_paths.begin(), favorite_paths.end(), path), favorite_paths.end());
+    storeFavorites();
+}
+
+void VRSceneManager::searchExercisesAndFavorites() {
+    favorite_paths.clear();
+    example_paths.clear();
+
+    // examples
+    string folder = "examples";
+    DIR* dir = opendir(folder.c_str());
+    if (dir == NULL) { perror("Error: no exercise directory"); return; }
+
+    struct dirent *entry;
+    while ( (entry = readdir(dir)) ) {
+        string file = string(entry->d_name);
+        int N = file.size(); if (N < 6) continue;
+
+        string ending = file.substr(N-4, N-1);
+        if (ending != ".xml") continue;
+
+        string path = folder+"/"+file;
+        example_paths.push_back(path);
+    }
+
+    // favorites
+    ifstream file( folder + "/.cfg" );
+    if (!file.is_open()) return;
+
+    string line, path;
+    while ( getline (file,line) ) {
+        ifstream f(line.c_str());
+        if (!f.good()) continue;
+        favorite_paths.push_back(line);
+    }
+    file.close();
+}
+
+vector<string> VRSceneManager::getFavoritePaths() { return favorite_paths; }
+vector<string> VRSceneManager::getExamplePaths() { return example_paths; }
+
 void VRSceneManager::setActiveSceneByName(string s) { if (scenes.count(s) == 1) setActiveScene(scenes[s]); }
 
 int VRSceneManager::getSceneNum() {return scenes.size();}
@@ -136,6 +190,12 @@ int VRSceneManager::getSceneNum() {return scenes.size();}
 VRScene* VRSceneManager::getScene(string s) { if (scenes.count(s)) return scenes[s]; else return 0; }
 
 VRScene* VRSceneManager::getCurrent() { return get()->getScene(get()->active); }
+
+void sleep_to(int fps) {
+    int dt = VRTimer::getBeacon("st");
+    if (dt > 16) return;
+    osgSleep(16-dt);
+}
 
 void VRSceneManager::update() {
     int fps = VRRate::get()->getRate();
@@ -149,10 +209,14 @@ void VRSceneManager::update() {
 
     updateCallbacks();
 
+    VRGuiManager::get()->updateGtk();
     VRSetupManager::getCurrent()->updateWindows();//rendering
+    VRGuiManager::get()->updateGtk();
 
     VRGlobals::get()->CURRENT_FRAME++;
     VRGlobals::get()->FRAME_RATE = fps;
+
+    sleep_to(60);
 }
 
 OSG_END_NAMESPACE

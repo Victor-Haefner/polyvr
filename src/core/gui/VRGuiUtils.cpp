@@ -212,6 +212,12 @@ void setToolButtonCallback(string b, sigc::slot<void> sig ) {
     bu->signal_clicked().connect(sig);
 }
 
+void setToggleButtonCallback(string b, sigc::slot<void> sig ) {
+    Gtk::ToggleButton* bu;
+    VRGuiBuilder()->get_widget(b, bu);
+    bu->signal_clicked().connect(sig);
+}
+
 void setComboboxLastActive(string n) { // TODO: google how to get N rows!
     Gtk::ComboBox* cb;
     VRGuiBuilder()->get_widget(n, cb);
@@ -371,6 +377,19 @@ class LStore_ModelColumns : public Gtk::TreeModelColumnRecord {
 
         Gtk::TreeModelColumn<Glib::ustring> content;
 };
+
+OSG::ImageRecPtr takeSnapshot() {
+    Gtk::DrawingArea* drawArea = 0;
+    VRGuiBuilder()->get_widget("glarea", drawArea);
+    Glib::RefPtr<Gdk::Drawable> src = drawArea->get_window();
+    int w = drawArea->get_width();
+    int h = drawArea->get_height();
+    Glib::RefPtr<Gdk::Image> img = Glib::wrap( gdk_drawable_get_image(src->gobj(), 0, 0, w, h) );
+    Glib::RefPtr<Gdk::Pixbuf> pxb = Glib::wrap( gdk_pixbuf_get_from_image(NULL, img->gobj(), NULL, 0,0,0,0,w,h) );
+    OSG::ImageRecPtr res = OSG::Image::create();
+    res->set(OSG::Image::OSG_RGB_PF, w, h, 1, 0, 1, 0, (const unsigned char*)pxb->get_pixels(), OSG::Image::OSG_UINT8_IMAGEDATA, true, 1);
+    return res;
+}
 
 void saveSnapshot(string path) {
     Gtk::DrawingArea* drawArea = 0;

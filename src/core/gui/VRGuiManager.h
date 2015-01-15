@@ -16,6 +16,7 @@ class VRGuiManager {
         static VRGuiManager* get();
         ~VRGuiManager();
 
+        void updateGtk();
 };
 
 OSG_END_NAMESPACE;

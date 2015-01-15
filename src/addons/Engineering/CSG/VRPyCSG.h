@@ -4,7 +4,7 @@
 #include "core/scripting/VRPyBase.h"
 #include "CSGGeometry.h"
 
-struct VRPyCSG : VRPyBaseT<OSG::CSGApp::CSGGeometry> {
+struct VRPyCSG : VRPyBaseT<OSG::CSGGeometry> {
     static PyMemberDef members[];
     static PyMethodDef methods[];
 

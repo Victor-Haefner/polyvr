@@ -135,8 +135,6 @@ void VRGuiVectorEntry::set(OSG::Vec2f v) {
 void VRGuiVectorEntry::setFontColor(OSG::Vec3f c) {
     Gdk::Color col("#FFFFFF");
     col.set_rgb_p(c[0], c[1], c[2]);
-    cout << "\nCOL " << c << " " << col.to_string() << endl;
-
     if (lbl) lbl->modify_fg(lbl->get_state(), col);
     if (ex) ex->modify_text(ex->get_state(), col);
     if (ey) ey->modify_text(ey->get_state(), col);

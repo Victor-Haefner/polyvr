@@ -7,6 +7,7 @@
 #include <gtk/gtkgl.h>
 
 #include "../devices/VRKeyboard.h"
+#include "core/utils/VRTimer.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -84,7 +85,7 @@ bool VRGtkWindow::on_motion(GdkEventMotion * event) {
 }
 
 bool VRGtkWindow::on_key(GdkEventKey *event) {
-    if (event->keyval >= 65470 or event->keyval <= 65481) return false; //F keys
+    if (event->keyval >= 65470 and event->keyval <= 65481) return false; //F keys
     //VRKeyboard::get()->keyboard(event->keyval, 0, 0); // TODO: check the values!!
 	//printf("\n KEY: %i %i %i\n", event->keyval, event->type, event->state);
 	//cout << "\n KEY: " << event->keyval << " " << event->type << " " << event->state << endl;
@@ -109,7 +110,11 @@ void VRGtkWindow::render() {
     if (!active or !content) return;
     Glib::RefPtr<Gdk::Window> drawable = drawArea->get_window();
     GdkRectangle rect; rect.x = 0; rect.y = 0; rect.width = 1; rect.height = 1;
-    if (drawable) gdk_window_invalidate_rect( drawable->gobj(), &rect, true);
+    //cout << "Renderer A " << endl;
+    if (drawable) {
+        gdk_window_invalidate_rect( drawable->gobj(), &rect, false);
+        //gtk_widget_draw( (GtkWidget*)drawArea->gobj(), &rect );
+    }
 }
 
 void VRGtkWindow::on_realize() {
@@ -139,7 +144,7 @@ bool VRGtkWindow::on_expose(GdkEventExpose* event) {
 
     //const GLubyte* renderer = glGetString (GL_RENDERER); // get renderer string
     //const GLubyte* version = glGetString (GL_VERSION); // version as a string
-    //cout << "Renderer: " << renderer << endl;
+    //cout << "Renderer B " << endl;
     //cout << "OpenGL version supported " << version << endl;
 
     if (win->getWidth() != w or win->getHeight() != h) resize(w,h);

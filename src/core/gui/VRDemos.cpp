@@ -57,39 +57,29 @@ class scenes_columns : public Gtk::TreeModelColumnRecord {
 
 VRDemos::VRDemos() {
     initMenu();
-    scanFolder("examples", "examples_tab");
 
-    if (loadCfg() == 0) setNotebookPage("notebook2", 1);
+    for (string path : VRSceneManager::get()->getExamplePaths() ) {
+        demos[path] = new demoEntry();
+        demos[path]->path = path;
+        demos[path]->pxm_path = path.substr(0,path.size()-4) + ".png";
+        demos[path]->write_protected = true;
+        demos[path]->favorite = false;
+        demos[path]->table = "examples_tab";
+    }
+
+    for (auto d : demos) setButton(d.second);
+    updateTable("examples_tab");
+
+    vector<string> favorites = VRSceneManager::get()->getFavoritePaths();
+    for (auto f : favorites) addEntry(f, "favorites_tab", false);
+    if (favorites.size() == 0) setNotebookPage("notebook2", 1);
+
+    auto fkt = new VRDevCb("GUI_updateDemos", boost::bind(&VRDemos::update, this) );
+    VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
 
     setToolButtonCallback("toolbutton1", sigc::mem_fun(*this, &VRDemos::on_new_clicked));
     setToolButtonCallback("toolbutton5", sigc::mem_fun(*this, &VRDemos::on_saveas_clicked));
     setToolButtonCallback("toolbutton21", sigc::mem_fun(*this, &VRDemos::on_load_clicked));
-}
-
-void VRDemos::scanFolder(string folder, string table) {
-    DIR* dir = opendir(folder.c_str());
-    if (dir == NULL) { perror("Error: no local directory scene"); return; }
-
-    struct dirent *entry;
-    while ( (entry = readdir(dir)) ) {
-        string file = string(entry->d_name);
-        int N = file.size(); if (N < 6) continue;
-
-        string path = folder+"/"+file;
-        string name = file.substr(0,N-4);
-        string ending = file.substr(N-4, N-1);
-        if (ending != ".xml") continue;
-
-        demos[path] = new demoEntry();
-        demos[path]->path = path;
-        demos[path]->pxm_path = folder+"/"+name+".png";
-        demos[path]->write_protected = true;
-        demos[path]->table = table;
-    }
-
-    for (auto d : demos) setButton(d.second);
-
-    updateTable(table);
 }
 
 void VRDemos::updatePixmap(demoEntry* e, Gtk::Image* img_pxb) {
@@ -183,19 +173,20 @@ void VRDemos::clearTable(string t) {
 }
 
 void VRDemos::setGuiState(demoEntry* e) {
-    setVPanedSensivity("vpaned1", e->running);
-    setNotebookSensivity("notebook3", e->running);
+    bool running = (e == 0) ? 0 : e->running;
+    setVPanedSensivity("vpaned1", running);
+    setNotebookSensivity("notebook3", running);
 
     for (auto i : demos) {
         demoEntry* d = i.second;
-        if (d->button) d->button->set_sensitive(!e->running);
+        if (d->button) d->button->set_sensitive(!running);
         if (d->img) d->img->set(Gtk::Stock::MEDIA_PLAY, Gtk::ICON_SIZE_BUTTON);
         if (d != e) d->running = false;
     }
 
-    e->button->set_sensitive(true);
-    if (e->running) e->img->set(Gtk::Stock::MEDIA_STOP, Gtk::ICON_SIZE_BUTTON);
-    else e->img->set(Gtk::Stock::MEDIA_PLAY, Gtk::ICON_SIZE_BUTTON);
+    if (e) e->button->set_sensitive(true);
+    if (running) e->img->set(Gtk::Stock::MEDIA_STOP, Gtk::ICON_SIZE_BUTTON);
+    else if (e) e->img->set(Gtk::Stock::MEDIA_PLAY, Gtk::ICON_SIZE_BUTTON);
 }
 
 void VRDemos::addEntry(string path, string table, bool running) {
@@ -213,7 +204,6 @@ void VRDemos::addEntry(string path, string table, bool running) {
 
     updateTable("favorites_tab");
     setGuiState(e);
-    saveCfg();
     setNotebookPage("notebook2", 0);
 }
 
@@ -232,15 +222,16 @@ void VRDemos::on_menu_delete() {
     if (d == 0) return;
     if (d->write_protected == true) return;
 
-    if (!askUser("Delete scene " + d->path + " (this will remove it completely from disk!)", "Are you sure you want to delete this scene?")) return;
+    string path = d->path;
+    if (!askUser("Delete scene " + path + " (this will remove it completely from disk!)", "Are you sure you want to delete this scene?")) return;
     if (d->running) toggleDemo(d); // close demo if it is running
 
     clearTable("favorites_tab");
-    demos.erase(d->path);
-    remove(d->path.c_str());
+    demos.erase(path);
+    remove(path.c_str());
     delete d;
     updateTable("favorites_tab");
-    saveCfg();
+    VRSceneManager::get()->remFavorite(path);
 }
 
 void VRDemos::on_menu_unpin() {
@@ -248,14 +239,15 @@ void VRDemos::on_menu_unpin() {
     if (d == 0) return;
     if (d->write_protected == true) return;
 
-    if (!askUser("Forget about " + d->path + " ?", "")) return;
+    string path = d->path;
+    if (!askUser("Forget about " + path + " ?", "")) return;
     if (d->running) toggleDemo(d); // close demo if it is running
 
     clearTable("favorites_tab");
-    demos.erase(d->path);
+    demos.erase(path);
     delete d;
     updateTable("favorites_tab");
-    saveCfg();
+    VRSceneManager::get()->remFavorite(path);
 }
 
 void VRDemos::on_menu_advanced() {
@@ -281,30 +273,12 @@ void VRDemos::on_advanced_start() {
     if (no_scripts) VRSceneManager::getCurrent()->disableAllScripts();
 }
 
-void VRDemos::saveCfg() {
-    ofstream file("examples/.cfg");
-    for (auto d : demos) if (d.second->table == "favorites_tab") file << d.second->path << endl;
-    file.close();
-}
-
-int VRDemos::loadCfg() {
-    ifstream file("examples/.cfg");
-    if (!file.is_open()) return 0;
-
-    int N = 0;
-    string line, path;
-    while ( getline (file,line) ) {
-        ifstream f(line.c_str());
-        if (!f.good()) continue;
-        addEntry(line, "favorites_tab", false); N++;
-    }
-    file.close();
-    return N;
-}
-
 void VRDemos::on_diag_save_clicked() {
     string path = VRGuiFile::getRelativePath_toWorkdir();
-    addEntry(path, "favorites_tab", true);
+    if (demos.count(path) == 0) {
+        addEntry(path, "favorites_tab", false);
+        VRSceneManager::get()->addFavorite(path);
+    }
     saveScene(path);
 }
 
@@ -321,7 +295,10 @@ void VRDemos::on_saveas_clicked() {
 void VRDemos::on_diag_load_clicked() {
     string path = VRGuiFile::getRelativePath_toWorkdir();
     if (current_demo) if (current_demo->running) toggleDemo(current_demo); // close demo if it is running
-    if (demos.count(path) == 0) addEntry(path, "favorites_tab", false);
+    if (demos.count(path) == 0) {
+        addEntry(path, "favorites_tab", false);
+        VRSceneManager::get()->addFavorite(path);
+    }
     toggleDemo(demos[path]);
 }
 
@@ -337,12 +314,11 @@ void VRDemos::on_load_clicked() {
 void VRDemos::on_diag_new_clicked() {
     string path = VRGuiFile::getRelativePath_toWorkdir();
     if (path == "") return;
-
-    // new scene
-    VRSceneManager::get()->removeScene(VRSceneManager::getCurrent());
     VRSceneManager::get()->newScene(path);
-    VRGuiSignals::get()->getSignal("scene_changed")->trigger();
-    addEntry(path, "favorites_tab", true);
+    if (demos.count(path) == 0) {
+        addEntry(path, "favorites_tab", true);
+        VRSceneManager::get()->addFavorite(path);
+    }
     saveScene(path);
 }
 
@@ -354,21 +330,36 @@ void VRDemos::on_new_clicked() {
     VRGuiFile::open( "Create", "Create new project" );
 }
 
-void VRDemos::toggleDemo(demoEntry* e) {
-    for (auto d : demos) if (d.second->button) d.second->button->set_sensitive(e->running); // toggle all buttons
-    setVPanedSensivity("vpaned1", !e->running);
-    setNotebookSensivity("notebook3", !e->running);
-    VRSceneManager::get()->removeScene(VRSceneManager::getCurrent());
-
-    e->running = !e->running;
-    if (e->running) {
-        VRSceneLoader::get()->loadScene(e->path);
-        VRSceneManager::getCurrent()->setFlag(SCENE_WRITE_PROTECTED, e->write_protected);
+void VRDemos::update() {
+    VRScene* scene = VRSceneManager::getCurrent();
+    if (scene == 0 and current_demo == 0) return;
+    if (scene == 0 and current_demo != 0) {
+        current_demo->running = false;
+        setGuiState(current_demo);
+        return;
     }
 
-    current_demo = e->running ? e : 0;
-    setGuiState(e);
-    VRGuiSignals::get()->getSignal("scene_changed")->trigger(); // update gui
+    string sPath = scene->getPath();
+    if (current_demo) {
+        if (current_demo->path == sPath) {
+            current_demo->running = true;
+            setGuiState(current_demo);
+            return;
+        }
+        current_demo->running = false;
+        setGuiState(current_demo);
+    }
+
+    if (demos.count(sPath) == 0) return;
+    current_demo = demos[sPath];
+    current_demo->running = true;
+    setGuiState(current_demo);
+}
+
+void VRDemos::toggleDemo(demoEntry* e) {
+    bool run = !e->running;
+    VRSceneManager::get()->removeScene(VRSceneManager::getCurrent());
+    if (run) VRSceneManager::get()->loadScene(e->path, e->write_protected);
 }
 
 OSG_END_NAMESPACE;

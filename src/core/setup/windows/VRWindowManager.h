@@ -14,9 +14,6 @@ class VRView;
 
 class VRWindowManager {
     private:
-        int mode;
-        Gtk::Window* topGtkWindow;
-
         map<string, VRWindow*> windows;
         RenderActionRefPtr ract;
 
@@ -31,15 +28,13 @@ class VRWindowManager {
 
         void initGlut();
 
-        void addGlutWindow  (string& name);
-        void addGtkWindow   (string& name, string glarea = "glarea");
-        void addMultiWindow (string& name);
+        VRWindow* addGlutWindow  (string name);
+        VRWindow* addGtkWindow   (string name, string glarea = "glarea");
+        VRWindow* addMultiWindow (string name);
         void removeWindow   (string name);
 
         void setWindowView(string name, VRView* view);
-
         void addWindowServer(string name, string server);
-
         void changeWindowName(string& name, string new_name);
 
         void getWindowSize(string name, int& w, int& h);
@@ -47,7 +42,6 @@ class VRWindowManager {
 
         RenderActionRefPtr getRenderAction();
         void updateWindows();
-        void startMainLoop();
 
         void save(xmlpp::Element* node);
         void load(xmlpp::Element* node);

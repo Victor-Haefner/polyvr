@@ -102,6 +102,7 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"setRandomColors", (PyCFunction)VRPyGeometry::setRandomColors, METH_NOARGS, "Set a random color for each vertex" },
     {"removeDoubles", (PyCFunction)VRPyGeometry::removeDoubles, METH_VARARGS, "Remove double vertices" },
     {"makeUnique", (PyCFunction)VRPyGeometry::makeUnique, METH_NOARGS, "Make the geometry data unique" },
+    {"influence", (PyCFunction)VRPyGeometry::influence, METH_VARARGS, "Pass a points and value vector to influence the geometry - influence([points,f3], [values,f3], int power)" },
     {NULL}  /* Sentinel */
 };
 
@@ -151,7 +152,23 @@ void feed2D(PyObject* o, T& vec) {
             pj = PyList_GetItem(pi, j);
             tmp[j] = PyFloat_AsDouble(pj);
         }
-        vec->addValue(tmp);
+        vec->push_back(tmp);
+    }
+}
+
+template<class T, class t>
+void feed2D_v2(PyObject* o, T& vec) {
+    PyObject *pi, *pj;
+    t tmp;
+    Py_ssize_t N = PyList_Size(o);
+
+    for (Py_ssize_t i=0; i<N; i++) {
+        pi = PyList_GetItem(o, i);
+        for (Py_ssize_t j=0; j<PyList_Size(pi); j++) {
+            pj = PyList_GetItem(pi, j);
+            tmp[j] = PyFloat_AsDouble(pj);
+        }
+        vec.push_back(tmp);
     }
 }
 
@@ -167,6 +184,18 @@ void feed1D(PyObject* o, T& vec) {
     }
 }
 
+
+PyObject* VRPyGeometry::influence(VRPyGeometry* self, PyObject *args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyGeometry::influence - Object is invalid"); return NULL; }
+	PyObject *vP, *vV; int power; float color_coding;
+    if (!PyArg_ParseTuple(args, "OOif", &vP, &vV, &power, &color_coding)) return NULL;
+    vector<OSG::Vec3f> pos;
+    vector<OSG::Vec3f> vals;
+    feed2D_v2<vector<OSG::Vec3f>, OSG::Vec3f>(vP, pos);
+    feed2D_v2<vector<OSG::Vec3f>, OSG::Vec3f>(vV, vals);
+    self->obj->influence(pos, vals, power, color_coding);
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyGeometry::merge(VRPyGeometry* self, PyObject *args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyGeometry::merge - Object is invalid"); return NULL; }

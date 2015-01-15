@@ -36,20 +36,21 @@ class VRGlobals {
 
 class VRObject : public VRName {
     private:
-        bool specialized;
-        VRObject* parent;
+        bool specialized = false;
+        VRObject* parent = 0;
         NodeRecPtr node;
-        int ID;
-        int childIndex; // index of this object in its parent child vector
-        bool pickable;
-        bool visible;
-        unsigned int graphChanged; //is frame number
+        int ID = 0;
+        int childIndex = 0; // index of this object in its parent child vector
+        bool pickable = false;
+        bool visible = true;
+        unsigned int graphChanged = 0; //is frame number
 
         map<string, VRAttachment*> attachments;
 
         void _switchParent(NodeRecPtr parent);
 
         int findChild(VRObject* node);
+        void updateChildrenIndices(bool recursive = false);
 
         static void unitTest();
 
@@ -105,7 +106,7 @@ class VRObject : public VRName {
         void setSiblingPosition(int i);
 
         /** Add a child to this object **/
-        void addChild(VRObject* child, bool osg = true);
+        void addChild(VRObject* child, bool osg = true, int place = -1);
 
         /** Add a OSG node as child to this object **/
         void addChild(NodeRecPtr n);
@@ -117,7 +118,7 @@ class VRObject : public VRName {
         void subChild(NodeRecPtr n);
 
         /** Switch the parent of this object **/
-        void switchParent(VRObject* new_p);
+        void switchParent(VRObject* new_p, int place = -1);
 
         /** Detach object from the parent**/
         void detach();
@@ -157,6 +158,8 @@ class VRObject : public VRName {
 
         /** Returns the Boundingbox of the OSG Node */
         void getBoundingBox(Vec3f& v1, Vec3f& v2);
+
+        void flattenHiarchy();
 
         /** Print to console the scene subgraph starting at this object **/
         void printTree(int indent = 0);

@@ -368,7 +368,11 @@ void VRTransform::setPose(Vec3f from, Vec3f dir, Vec3f up) {
 /** Set the local matrix **/
 void VRTransform::setMatrix(Matrix _m) {
     if (isNan(_m)) return;
-    setPose(Vec3f(_m[3]), Vec3f(-_m[2]), Vec3f(_m[1]));
+    float s1 = Vec3f(_m[0][0], _m[1][0], _m[2][0]).length();
+    float s2 = Vec3f(_m[0][1], _m[1][1], _m[2][1]).length();
+    float s3 = Vec3f(_m[0][2], _m[1][2], _m[2][2]).length();
+    setPose(Vec3f(_m[3]), Vec3f(-_m[2])*1.0/s3, Vec3f(_m[1])*1.0/s2);
+    setScale(Vec3f(s1,s2,s3));
 }
 //-------------------------------------
 
@@ -383,6 +387,7 @@ void VRTransform::setScale(float s) { setScale(Vec3f(s,s,s)); }
 
 void VRTransform::setScale(Vec3f s) {
     if (isNan(s)) return;
+    //cout << "setScale " << s << endl;
     _scale = s;
     reg_change();
 }

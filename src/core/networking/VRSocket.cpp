@@ -42,60 +42,48 @@ int server_answer_to_connection (void* param, struct MHD_Connection *connection,
     sad->path = section;
     sad->params->clear();
 
-    if (method_s == "GET")
+    if (method_s == "GET") {
         MHD_get_connection_values(connection, MHD_GET_ARGUMENT_KIND, server_parseURI, sad->params);//Parse URI parameter
+    }
 
-    if (method_s == "POST")
+    if (method_s == "POST") {
         MHD_get_connection_values(connection, MHD_POSTDATA_KIND, server_parseURI, sad->params);//Parse URI parameter
+    }
 
-    /*if (method_s == "POST") {
-        struct MHD_PostProcessor* pp = (MHD_PostProcessor*)(*opt);
-        if (pp == NULL) {
-            sad->params->clear();
-            pp = MHD_create_post_processor(connection, 1024, server_parseFORM, sad->params);
-            *opt = pp;
-            return MHD_YES;
-        }
-        if (*upload_data_size) {
-            MHD_post_process(pp, upload_data, *upload_data_size);
-            *upload_data_size = 0;
-            return MHD_YES;
-        } else {
-            MHD_destroy_post_processor(pp);
-        }
-    }*/
+    //sad->print();
+    //cout << "HTTP: " << method_s << " " << sad->path << endl;
 
-    //cout << "HTTP: " << method_s << endl;
+    //--- respond to client ------
+    struct MHD_Response* response = 0;
+    string empty_str;
+
+    if (sad->pages->count(sad->path)) { // return local site
+        string spage = *(*sad->pages)[sad->path];
+        response = MHD_create_response_from_data (spage.size(), (void*) spage.c_str(), MHD_NO, MHD_YES);
+    } else if(sad->path != "") { // return ressources
+        struct stat sbuf;
+        int fd = open(sad->path.c_str(), O_RDONLY);
+        if (fstat (fd, &sbuf) != 0) { cout << "Did not find ressource: " << sad->path << endl;
+        } else response = MHD_create_response_from_fd_at_offset (sbuf.st_size, fd, 0);
+    }
+
+    //--- send response ----------
+    int ret = 0;
+    if (response) {
+        ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
+        MHD_destroy_response (response);
+    }
 
     //--- process request --------
     VRFunction<int>* _fkt = new VRFunction<int>("HTTP_answer_job", boost::bind(server_answer_job, sad, _1));
     VRSceneManager::get()->queueJob(_fkt);
 
-    //--- respond to client ------
-    struct MHD_Response* response = 0;
-
-    if (sad->path != "") {
-        if (sad->pages->count(sad->path)) { // return local site
-            string spage = *(*sad->pages)[sad->path];
-            response = MHD_create_response_from_data (spage.size(), (void*) spage.c_str(), MHD_NO, MHD_YES);
-        } else { // return ressources
-            struct stat sbuf;
-            int fd = open(sad->path.c_str(), O_RDONLY);
-            if (fstat (fd, &sbuf) != 0) cout << "Did not find ressource: " << sad->path << endl;
-            else response = MHD_create_response_from_fd_at_offset (sbuf.st_size, fd, 0);
-        }
-    }
-
-    //--- send response ----------
-    int ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
-    MHD_destroy_response (response);
     return ret;
 }
 
 void HTTP_args::print() {
     cout << "\nHTTP: " << path << endl;
-    map<string, string>::iterator itr;
-    for (itr = params->begin(); itr != params->end(); itr++) cout << "  " << itr->first << " : " << itr->second << endl;
+    for (auto p : *params) cout << "  " << p.first << " : " << p.second << endl;
 }
 
 class HTTPServer {
@@ -112,7 +100,7 @@ class HTTPServer {
         }
 
         ~HTTPServer() {
-            for (auto itr = data->pages->begin(); itr != data->pages->end(); itr++) delete itr->second;
+            for (auto p : *data->pages) delete p.second;
             delete data->params;
             delete data->pages;
             delete data;
@@ -121,6 +109,7 @@ class HTTPServer {
         void initServer(VRHTTP_cb* fkt, int port) {
             data->cb = fkt;
             server = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, port, NULL, NULL, &server_answer_to_connection, data, MHD_OPTION_END);
+            //server = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY | MHD_USE_DEBUG, port, NULL, NULL, &server_answer_to_connection, data, MHD_OPTION_END);
         }
 
         void addPage(string path, string page) {
@@ -152,6 +141,7 @@ VRSocket::VRSocket(string _name) {
 
     queued_signal = new VRFunction<int>("signal_trigger", boost::bind(&VRSocket::trigger, this));
     sig = new VRSignal();
+    setNameSpace("Sockets");
     setName(_name);
     http_serv = new HTTPServer();
 }
@@ -353,6 +343,7 @@ void VRSocket::initServer(CONNECTION_TYPE t, int _port) {
 
 
 void VRSocket::save(xmlpp::Element* e) {
+    saveName(e);
     e->set_attribute("type", type);
     stringstream ss; ss << port;
     e->set_attribute("port", ss.str());
@@ -362,6 +353,7 @@ void VRSocket::save(xmlpp::Element* e) {
 }
 
 void VRSocket::load(xmlpp::Element* e) {
+    loadName(e);
     setType( e->get_attribute("type")->get_value() );
     setPort( toInt(e->get_attribute("port")->get_value().c_str()) );
     setIP( e->get_attribute("ip")->get_value() );

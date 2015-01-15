@@ -22,6 +22,7 @@ VRWindow::VRWindow() {
 VRWindow::~VRWindow() {
     VRSceneManager::get()->stopThread(thread_id);
     _win = NULL;
+    active_window_count--;
 }
 
 WindowRecPtr VRWindow::getOSGWindow() { return _win; }
@@ -41,20 +42,20 @@ vector<VRView*> VRWindow::getViews() { return views; }
 bool VRWindow::hasType(int i) { return (i == type); }
 void VRWindow::resize(int w, int h) { _win->resize(w,h); }
 
-void VRWindow::render() { _win->render(ract); }
+void VRWindow::render() { if(_win) _win->render(ract); }
 
 void VRWindow::update(VRThread* t) {
     do {
         BarrierRefPtr barrier = Barrier::get("PVR_rendering", true);
         barrier->enter(active_window_count+1);
 
-        Thread::getCurrentChangeList()->merge(*t->appThread->getChangeList());
+        if (t->control_flag) {
+            Thread::getCurrentChangeList()->merge(*t->appThread->getChangeList());
+            render();
+            Thread::getCurrentChangeList()->clear();
+        }
 
-        render();
-
-        Thread::getCurrentChangeList()->clear();
         barrier->enter(active_window_count+1);
-
         osgSleep(1);
     } while(t->control_flag);
 }
@@ -115,7 +116,7 @@ void VRWindow::load(xmlpp::Element* node) {
     string _mouse = node->get_attribute("mouse")->get_value();
     if (_mouse != "None") {
         mouse = (VRMouse*)VRSetupManager::getCurrent()->getDevice(_mouse);
-        if (views.size() > 0) mouse->setViewport(views[0]);
+        if (views.size() > 0 and mouse) mouse->setViewport(views[0]);
     }
 
     if (node->get_attribute("keyboard") != 0) {

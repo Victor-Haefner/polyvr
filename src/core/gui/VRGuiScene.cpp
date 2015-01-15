@@ -57,19 +57,17 @@ VRGuiVectorEntry lodCEntry;
 void parseSGTree(VRObject* o);
 VRObject* getSelected() {
     if (selected == "") return 0;
-    VRObject* root = VRSceneManager::getCurrent()->getRoot();
+    VRScene* scene = VRSceneManager::getCurrent();
+    if (scene == 0) return 0;
+
+    VRObject* root = scene->getRoot();
     VRObject* res = root->getAtPath(selected);
 
     if (res == 0) {
-        VRScene* scene = VRSceneManager::getCurrent();
-        if (scene == 0) return res;
-
+        cout << "did not find " << selected << endl;
         tree_store->clear();
-        VRObject* root = scene->getRoot();
         parseSGTree( root );
-
         tree_view->expand_all();
-
         setTableSensivity("table11", false);
     }
 
@@ -264,7 +262,7 @@ void setLod(VRLod* lod) {
     }
 }
 
-void setCSG(CSGApp::CSGGeometry* g) {
+void setCSG(CSGGeometry* g) {
     setExpanderSensivity("expander15", true);
 
     bool b = g->getEditMode();
@@ -275,7 +273,7 @@ void setCSG(CSGApp::CSGGeometry* g) {
 
 void on_toggle_liveupdate(GtkToggleButton* tb, gpointer user_data) { liveUpdate = !liveUpdate; }
 
-void updateObjectForms() {
+void updateObjectForms(bool disable = false) {
     setExpanderSensivity("expander1", false);
     setExpanderSensivity("expander2", false);
     setExpanderSensivity("expander9", false);
@@ -286,15 +284,13 @@ void updateObjectForms() {
     setExpanderSensivity("expander14", false);
     setExpanderSensivity("expander15", false);
     setExpanderSensivity("expander16", false);
+    if (disable) return;
 
     VRObject* obj = getSelected();
-    cout << " updateObjectForms " << obj << endl;
     if (obj == 0) return;
 
-    // set object label
-    Gtk::Label* lab;
-    VRGuiBuilder()->get_widget("current_object_lab", lab);
-    lab->set_text(obj->getName());
+    // set object label and path
+    setLabel( "current_object_lab", obj->getName() + "\npath " + obj->getPath() );
 
     if (obj->hasAttachment("global")) return;
 
@@ -314,7 +310,7 @@ void updateObjectForms() {
 
     if (type == "Lod") setLod((VRLod*)obj);
 
-    if (type == "CSGGeometry") setCSG((CSGApp::CSGGeometry*)obj);
+    if (type == "CSGGeometry") setCSG((CSGGeometry*)obj);
 
     trigger_cbs = true;
 }
@@ -360,6 +356,7 @@ void getTypeColors(VRObject* o, string& fg, string& bg) {
 
 void setSGRow(Gtk::TreeModel::iterator itr, VRObject* o) {
     if (o == 0) return;
+    if (!itr) return;
 
     string fg, bg;
     getTypeColors(o, fg, bg);
@@ -374,6 +371,7 @@ void setSGRow(Gtk::TreeModel::iterator itr, VRObject* o) {
 
 void parseSGTree(VRObject* o, Gtk::TreeModel::iterator itr) {
     if (o == 0) return;
+    if (!itr) { parseSGTree(o); return; }
     itr = tree_store->append(itr->children());
     setSGRow( itr, o );
     for (uint i=0; i<o->getChildrenCount(); i++) parseSGTree( o->getChild(i), itr );
@@ -654,7 +652,7 @@ void VRGuiScene::on_lod_decimate_changed() {
 
 void on_toggle_CSG_editmode(GtkToggleButton* tb, gpointer data) {
     if(!trigger_cbs) return;
-    CSGApp::CSGGeometry* obj = (CSGApp::CSGGeometry*) getSelected();
+    CSGGeometry* obj = (CSGGeometry*) getSelected();
 
     bool b = getCheckButtonState("checkbutton27");
     obj->setEditMode(b);
@@ -664,7 +662,7 @@ void on_change_CSG_operation(GtkComboBox* cb, gpointer data) {
     if(!trigger_cbs) return;
     string op = getComboboxText("combobox19");
 
-    CSGApp::CSGGeometry* obj = (CSGApp::CSGGeometry*) getSelected();
+    CSGGeometry* obj = (CSGGeometry*) getSelected();
 
     obj->setOperation(op);
 }
@@ -696,7 +694,7 @@ void on_treeview_select(GtkTreeView* tv, gpointer user_data) {
 
     //string name = row.get_value(cols.name);
     //string type = row.get_value(cols.type);
-    updateObjectForms();
+    updateObjectForms(true);
     selected = row.get_value(cols.obj);
     selected_itr = iter;
     updateObjectForms();
@@ -814,16 +812,16 @@ void VRGuiScene::on_menu_paste() {
 
 void VRGuiScene::on_menu_add_csg() {
     if(!selected_itr) return;
-    CSGApp::CSGGeometry* g = new CSGApp::CSGGeometry("csg_geo");
+    CSGGeometry* g = new CSGGeometry("csg_geo");
     getSelected()->addChild(g);
     parseSGTree(g, selected_itr);
 }
 
 void VRGuiScene::on_collada_import_clicked() {
-    VRGuiFile::close();
     string rel_path = VRGuiFile::getRelativePath_toWorkdir();
     string path = VRGuiFile::getPath(); // absolute path
-    cout << "Collada import: " << path << ", relative: " << rel_path << endl;
+    cout << "Data import: " << path << ", relative: " << rel_path << endl;
+    VRGuiFile::close();
 
     // import stuff
     VRObject* tmp = VRSceneLoader::get()->load3DContent(rel_path, getSelected(), cache_override);
@@ -871,7 +869,11 @@ void VRGuiScene::on_drag_end(const Glib::RefPtr<Gdk::DragContext>& dc) {
     Gdk::DragAction ac = dc->get_selected_action();
     if (dragDest == 0) return;
     if (ac == 0) return;
-    getSelected()->switchParent(dragDest);
+    VRObject* selected = getSelected();
+    selected->switchParent(dragDest, 0);
+    cout << "drag_end " << selected->getPath() << endl;
+    Gtk::TreeModel::iterator iter = tree_view->get_model()->get_iter(selected->getPath());
+    setSGRow(iter, selected);
 }
 
 void VRGuiScene::on_drag_beg(const Glib::RefPtr<Gdk::DragContext>& dc) {
@@ -1222,7 +1224,7 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     //light
     fillStringListstore("light_types", VRLight::getTypes());
     fillStringListstore("shadow_types", VRLight::getShadowTypes());
-    fillStringListstore("csg_operations", CSGApp::CSGGeometry::getOperations());
+    fillStringListstore("csg_operations", CSGGeometry::getOperations());
     fillStringListstore("phys_shapes", VRPhysics::getPhysicsShapes());
     fillStringListstore("cam_proj", VRCamera::getProjectionTypes());
 

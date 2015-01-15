@@ -65,12 +65,10 @@ void VRGuiNet_updateList() {
 }
 
 void VRGuiNet_on_new_clicked(GtkButton*, gpointer data) {
-    string name = VRSceneManager::getCurrent()->newSocket();
-    VRSocket* socket = VRSceneManager::getCurrent()->getSocket(name);
+    VRSocket* socket = VRSceneManager::getCurrent()->getSocket(5000);
     if (socket == 0) return;
 
     socket->setType("tcpip send");
-    socket->setPort(5000);
     socket->setIP("192.168.0.100");
 
     VRGuiNet_updateList();

@@ -18,6 +18,7 @@
 #include <OpenSG/OSGSimpleMaterial.h>
 #include <OpenSG/OSGPointLight.h>
 #include <OpenSG/OSGGeoProperties.h>
+#include <OpenSG/OSGComponentTransform.h>
 
 #include <stdio.h>
 #include <unistd.h>
@@ -123,6 +124,7 @@ void VRSceneLoader::load(string filename) {
         if (L > 30000000) return;
     }
 
+    if (filename.size() < 4) return;
     string extension = filename.substr(filename.size()-4, filename.size()-1);
 
     VRTimer timer;
@@ -196,7 +198,16 @@ VRObject* VRSceneLoader::parseOSGTree(NodeRecPtr n, VRObject* parent, string nam
         tmp->setCore(core, "Object");
     }
 
+    else if (t_name == "ComponentTransform") {
+        if (tmp == 0) {
+            tmp_e = new VRTransform(name);
+            tmp_e->setMatrix(dynamic_cast<ComponentTransform *>(n->getCore())->getMatrix());
+            tmp = tmp_e;
+        }
+    }
+
     else if (t_name == "Transform") {
+        cout << " Transform_" << name << " " << dynamic_cast<Transform *>(n->getCore())->getMatrix() << endl;
         if (n->getNChildren() == 1) { // try to optimize the tree by avoiding obsolete transforms
             string tp = n->getChild(0)->getCore()->getTypeName();
             if (tp == "Geometry") {
@@ -373,7 +384,8 @@ void VRSceneLoader_saveObject(VRObject* p, xmlpp::Element* e) {
         VRObject* c = p->getChild(i);
         if (c->hasAttachment("dynamicaly_generated")) continue; // generated objects are not be saved
         if (c->hasAttachment("global")) continue; // global objects are not be saved
-        xmlpp::Element* ce = e->add_child(c->getName());
+        //xmlpp::Element* ce = e->add_child(c->getName());
+        xmlpp::Element* ce = e->add_child("Object");
         VRSceneLoader_saveObject(c, ce);
     }
 }
@@ -391,7 +403,7 @@ void VRSceneLoader::saveScene(string file, xmlpp::Element* guiN) {
     // save scenegraph
     scene->setPath(file);
     VRObject* root = scene->getRoot();
-    xmlpp::Element* rootN = objectsN->add_child(root->getName());
+    xmlpp::Element* rootN = objectsN->add_child("Object");
     VRSceneLoader_saveObject(root, rootN);
     scene->save(sceneN);
     doc.write_to_file_formatted(file);
@@ -405,7 +417,7 @@ VRObject* VRSceneLoader_createFromElement(VRScene* scene, xmlpp::Element* e) {
 
     if (type == "Transform") return new VRTransform(base_name);
     if (type == "Geometry") return new VRGeometry(base_name);
-    if (type == "CSGGeometry") return new CSGApp::CSGGeometry(base_name);
+    if (type == "CSGGeometry") return new CSGGeometry(base_name);
     if (type == "Camera") return scene->addCamera(base_name);
     if (type == "LightBeacon") return new VRLightBeacon(base_name);
     if (type == "Light") return scene->addLight(base_name);

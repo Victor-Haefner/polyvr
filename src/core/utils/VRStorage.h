@@ -22,14 +22,17 @@ class VRStorage {
 
         template<typename T> void save_cb(T* t, string tag, xmlpp::Element* e);
         template<typename T> void save_on_cb(T* t, string tag, xmlpp::Element* e);
-        template<typename T> void save_map_cb(map<string, T*>* mt, string tag, xmlpp::Element* e);
+        template<typename T> void save_str_map_cb(map<string, T*>* mt, string tag, xmlpp::Element* e);
+        template<typename T> void save_int_map_cb(map<int, T*>* mt, string tag, xmlpp::Element* e);
         template<typename T> void load_cb(T* t, string tag, xmlpp::Element* e);
-        template<typename T> void load_map_cb(map<string, T*>* mt, string tag, xmlpp::Element* e);
+        template<typename T> void load_str_map_cb(map<string, T*>* mt, string tag, xmlpp::Element* e);
+        template<typename T> void load_int_map_cb(map<int, T*>* mt, string tag, xmlpp::Element* e);
 
     protected:
 
         template<typename T> void store(string tag, T* t);
         template<typename T> void storeMap(string tag, map<string, T*>* mt);
+        template<typename T> void storeMap(string tag, map<int, T*>* mt);
         template<typename To, typename T> void storeObjName(string tag, To* o, T* t);
 
     public:

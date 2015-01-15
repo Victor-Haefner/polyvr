@@ -55,6 +55,7 @@
 			<Add option="-DOSG_WITH_JPG" />
 			<Add option="-DOSG_WITH_PNG" />
 			<Add option="-DOSG_WITH_COLLADA" />
+			<Add option="-DOSG_ENABLE_OGL_VERTEXT_ATTRIB_FUNCS=ON" />
 			<Add option="-D_OSG_HAVE_CONFIGURED_H_" />
 			<Add option="-DQT_NO_XINERAMA" />
 			<Add option="-DQT_NO_XRENDER" />
@@ -379,6 +380,8 @@
 		<Unit filename="src/core/gui/VRGuiUtils.h" />
 		<Unit filename="src/core/gui/VRGuiVectorEntry.cpp" />
 		<Unit filename="src/core/gui/VRGuiVectorEntry.h" />
+		<Unit filename="src/core/math/interpolator.cpp" />
+		<Unit filename="src/core/math/interpolator.h" />
 		<Unit filename="src/core/math/octree.cpp" />
 		<Unit filename="src/core/math/octree.h" />
 		<Unit filename="src/core/math/patch.cpp" />
@@ -389,6 +392,8 @@
 		<Unit filename="src/core/navigation/VRNavigator.h" />
 		<Unit filename="src/core/networking/VRCommunication.h" />
 		<Unit filename="src/core/networking/VRHTTPSocket.h" />
+		<Unit filename="src/core/networking/VRMainInterface.cpp" />
+		<Unit filename="src/core/networking/VRMainInterface.h" />
 		<Unit filename="src/core/networking/VRNetworkManager.cpp" />
 		<Unit filename="src/core/networking/VRNetworkManager.h" />
 		<Unit filename="src/core/networking/VRProtocol.cpp" />
@@ -487,6 +492,10 @@
 		<Unit filename="src/core/scripting/VRPyObject.h" />
 		<Unit filename="src/core/scripting/VRPyPath.cpp" />
 		<Unit filename="src/core/scripting/VRPyPath.h" />
+		<Unit filename="src/core/scripting/VRPyRecorder.cpp" />
+		<Unit filename="src/core/scripting/VRPyRecorder.h" />
+		<Unit filename="src/core/scripting/VRPySnappingEngine.cpp" />
+		<Unit filename="src/core/scripting/VRPySnappingEngine.h" />
 		<Unit filename="src/core/scripting/VRPySocket.cpp" />
 		<Unit filename="src/core/scripting/VRPySocket.h" />
 		<Unit filename="src/core/scripting/VRPySound.cpp" />
@@ -560,6 +569,10 @@
 		<Unit filename="src/core/tools/VRMesure.h" />
 		<Unit filename="src/core/tools/VRQRCode.cpp" />
 		<Unit filename="src/core/tools/VRQRCode.h" />
+		<Unit filename="src/core/tools/VRRecorder.cpp" />
+		<Unit filename="src/core/tools/VRRecorder.h" />
+		<Unit filename="src/core/tools/VRSnappingEngine.cpp" />
+		<Unit filename="src/core/tools/VRSnappingEngine.h" />
 		<Unit filename="src/core/tools/VRText.cpp" />
 		<Unit filename="src/core/tools/VRText.h" />
 		<Unit filename="src/core/utils/VRDoublebuffer.cpp" />

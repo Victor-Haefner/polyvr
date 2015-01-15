@@ -1,4 +1,5 @@
 #include "VRObject.h"
+#include "../VRTransform.h"
 #include "VRObjectT.h"
 #include "VRAttachment.h"
 #include <OpenSG/OSGNameAttachment.h>
@@ -33,15 +34,9 @@ VRObject::VRObject(string _name) {
 
     setName(_name);
 
-    specialized = false;
     node = makeNodeFor(Group::create());
     OSG::setName(node, name);
     type = "Object";
-
-    parent = 0;
-
-    pickable = false;
-    visible = true;
     //unitTest();
 }
 
@@ -100,7 +95,8 @@ void VRObject::switchCore(NodeCoreRecPtr c) {
 NodeRecPtr VRObject::getNode() { return node; }
 
 void VRObject::setSiblingPosition(int i) {
-    if(parent == 0) return;
+    if (parent == 0) return;
+    if (i < 0 or i >= (int)parent->children.size()) return;
 
     NodeRecPtr p = parent->getNode();
 
@@ -113,20 +109,17 @@ void VRObject::setSiblingPosition(int i) {
 
 void VRObject::addChild(NodeRecPtr n) { node->addChild(n); }
 
-void VRObject::addChild(VRObject* child, bool osg) {
+void VRObject::addChild(VRObject* child, bool osg, int place) {
     if (child == 0) return;
-    if (child->getParent() != 0) {
-        child->switchParent(this);
-        return;
-    }
+    if (child->getParent() != 0) { child->switchParent(this, place); return; }
 
-    if (osg) {
-        node->addChild(child->node);
-    }
+    if (osg) node->addChild(child->node);
     child->graphChanged = VRGlobals::get()->CURRENT_FRAME;
     child->childIndex = children.size();
     children.push_back(child);
     child->parent=this;
+    child->setSiblingPosition(place);
+    updateChildrenIndices(true);
 }
 
 void VRObject::subChild(NodeRecPtr n) { node->subChild(n); }
@@ -136,20 +129,21 @@ void VRObject::subChild(VRObject* child, bool osg) {
     int target = findChild(child);
 
     if (target != -1) children.erase(children.begin() + target);
-    if (child->parent == this) child->parent=0;
+    if (child->parent == this) child->parent = 0;
     child->graphChanged = VRGlobals::get()->CURRENT_FRAME;
+    updateChildrenIndices(true);
 }
 
-void VRObject::switchParent(VRObject* new_p) {
+void VRObject::switchParent(VRObject* new_p, int place) {
     if (new_p == 0) { cout << "\nERROR : new parent is 0!\n"; return; }
 
-    if (parent == 0) { new_p->addChild(this); return; }
+    if (parent == 0) { new_p->addChild(this, true, place); return; }
     if (parent == new_p) { return; }
 
-    _switchParent(new_p->node);//takes care of the osg node structure
+    _switchParent(new_p->node); //takes care of the osg node structure
 
     parent->subChild(this, false);
-    new_p->addChild(this, false);
+    new_p->addChild(this, false, place);
 }
 
 /** Returns the number of children **/
@@ -303,6 +297,22 @@ void VRObject::getBoundingBox(Vec3f& v1, Vec3f& v2) {
     v2 = p2.subZero();
 }
 
+void VRObject::flattenHiarchy() {
+    map<VRTransform*, Matrix> geos;
+    for(auto g : getChildren(true, "Geometry") ) {
+        VRTransform* t = (VRTransform*)g;
+        geos[t] = t->getWorldMatrix();
+        t->detach();
+    }
+
+    clearChildren();
+
+    for (auto g : geos) {
+        addChild(g.first);
+        g.first->setWorldMatrix(g.second);
+    }
+}
+
 /** Print to console the scene subgraph starting at this object **/
 void VRObject::printTree(int indent) {
     if(indent == 0) cout << "\nPrint Tree : ";
@@ -366,6 +376,13 @@ void VRObject::_switchParent(NodeRecPtr parent) {
 
     p_old->subChild(node);
     parent->addChild(node);
+}
+
+void VRObject::updateChildrenIndices(bool recursive) {
+    for (uint i=0; i<children.size(); i++) {
+        children[i]->childIndex = i;
+        if (recursive) children[i]->updateChildrenIndices();
+    }
 }
 
 int VRObject::findChild(VRObject* node) {

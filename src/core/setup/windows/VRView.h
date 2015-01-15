@@ -5,6 +5,7 @@
 #include <OpenSG/OSGSolidBackground.h>
 #include <OpenSG/OSGStereoBufferViewport.h>
 #include <OpenSG/OSGSimpleStatisticsForeground.h>
+#include <OpenSG/OSGGrabForeground.h>
 
 namespace xmlpp{ class Element; }
 
@@ -69,6 +70,7 @@ class VRView {
 
         BackgroundRecPtr background;
         SimpleStatisticsForegroundRecPtr stats;
+        GrabForegroundRecPtr grabfg;
 
         void setMaterial();
 
@@ -130,6 +132,7 @@ class VRView {
 
         void setFotoMode(bool b);
         void setCallibrationMode(bool b);
+        ImageRecPtr grab();
 
         void save(xmlpp::Element* node);
         void load(xmlpp::Element* node);
