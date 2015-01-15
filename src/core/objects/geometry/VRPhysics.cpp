@@ -439,6 +439,7 @@ OSG::Vec3f VRPhysics::getAngularVelocity() {
 }
 
 
+
 void VRPhysics::updateTransformation(const OSG::Matrix& m) {
     if (body) {
         body->setWorldTransform(fromMatrix(m));
@@ -484,6 +485,20 @@ void VRPhysics::setTransformation(btTransform t) {
     body->setWorldTransform(t);
 }
 
+
+
+float VRPhysics::getConstraintAngle(VRPhysics* to, int axis) {
+    float ret = 0.0;
+    if(body) {
+        VRPhysicsJoint* joint = joints[to];
+        if(joint) {
+        ret = joint->btJoint->getAngle(axis);
+        }
+    }
+    return ret;
+}
+
+
 void VRPhysics::setConstraint(VRPhysics* p, OSG::VRConstraint* c, OSG::VRConstraint* cs) {
     if (body == 0) return;
     if (p->body == 0) return;
@@ -496,6 +511,9 @@ void VRPhysics::setConstraint(VRPhysics* p, OSG::VRConstraint* c, OSG::VRConstra
     if (p->joints2.count(this) == 0) p->joints2[this] = joints[p];
     updateConstraint(p);
 }
+
+
+
 
 void VRPhysics::updateConstraint(VRPhysics* p) {
     if (body == 0) return;

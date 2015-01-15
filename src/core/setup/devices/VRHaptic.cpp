@@ -10,7 +10,7 @@ using namespace std;
 
 VRHaptic::VRHaptic() : VRDevice("haptic") {
     v = new virtuose();
-    setIP("172.22.151.200");
+    setIP("172.22.151.199");
 
     updateFkt = new VRFunction<int>( "Haptic update", boost::bind(&VRHaptic::applyTransformation, this, getBeacon()) );
     VRSceneManager::get()->addUpdateFkt(updateFkt);

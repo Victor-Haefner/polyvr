@@ -86,7 +86,7 @@ void virtuose::connect(string IP) {
     float identity[7] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f};
 
 	CHECK( virtSetIndexingMode(vc, INDEXING_ALL_FORCE_FEEDBACK_INHIBITION) );
-    setSimulationScales(1.0f,0.1f);
+    setSimulationScales(1.0f,1.0f);
     timestep = 0.003f;
 	CHECK( virtSetTimeStep(vc, timestep) );
 	CHECK( virtSetBaseFrame(vc, identity) );
@@ -196,40 +196,43 @@ void virtuose::updateVirtMech() {
 	{
 
 
+
             if (!isAttached)
             {
                 virtGetPosition(vc, position);
                 virtSetPosition(vc, position);
                 virtGetSpeed(vc, speed);
                 virtSetSpeed(vc, speed);
-
-                virtGetArticularPositionOfAdditionalAxe(vc, &gripperPosition);
+              /*virtGetArticularPositionOfAdditionalAxe(vc, &gripperPosition);
                 virtGetArticularSpeedOfAdditionalAxe(vc, &gripperSpeed);
                 virtSetArticularPositionOfAdditionalAxe(vc, &gripperPosition);
-                virtSetArticularSpeedOfAdditionalAxe(vc, &gripperSpeed);
+                virtSetArticularSpeedOfAdditionalAxe(vc, &gripperSpeed);*/
+
             }
             else
             {
                  //apply position&speed to the haptic
                  btTransform pos = this->attached->getPhysics()->getTransform();
-                 position[0] = (float) pos.getOrigin().getZ();
-                 position[1] = (float) pos.getOrigin().getX();
-                 position[2] = (float) pos.getOrigin().getY();
+                 position[0] =  pos.getOrigin().getZ();
+                 position[1] = pos.getOrigin().getX();
+                 position[2] =  pos.getOrigin().getY();
                  pos.setRotation(pos.getRotation().normalized());
-                 position[3] = (float) pos.getRotation().getZ();
-                 position[4] = (float) pos.getRotation().getX();
-                 position[5] = (float) pos.getRotation().getY();
-                 position[6] = (float) pos.getRotation().getW();
+                 position[3] =  pos.getRotation().getZ();
+                 position[4] =  pos.getRotation().getX();
+                 position[5] =  pos.getRotation().getY();
+                 position[6] =  pos.getRotation().getW();
                  CHECK(virtSetPosition(vc, position));
+
                  Vec3f vel = this->attached->getPhysics()->getLinearVelocity();
-                 speed[0] =(float) vel.z();
-                 speed[1] =(float) vel.x();
-                 speed[2] =(float) vel.y();
+                 speed[0] = vel.z();
+                 speed[1] = vel.x();
+                 speed[2] = vel.y();
                  vel = this->attached->getPhysics()->getAngularVelocity();
-                 speed[3] =(float) vel.z();
-                 speed[4] = (float)vel.x();
-                 speed[5] =(float) vel.y();
+                 speed[3] = vel.z();
+                 speed[4] = vel.x();
+                 speed[5] = vel.y();
                  CHECK(virtSetSpeed(vc, speed));
+
 
                  //get force applied by human on the haptic
                  CHECK(virtGetForce(vc, force));
@@ -238,8 +241,7 @@ void virtuose::updateVirtMech() {
                  float f_ang = 0.1f;
 
                  Vec3f frc = Vec3f(force[1], force[2], force[0]) * f_lin;
-                 Vec3f trqu = Vec3f((float)force[4],(float)force[5],(float)force[3]);
-                 trqu *= f_ang;
+                 Vec3f trqu = Vec3f(force[4],force[5],force[3]) * f_ang;
                  //cout << globalforce[0] << " " <<globalforce[1] <<" " << globalforce[2] <<" " << "\n ";
 
                  //apply force on the object

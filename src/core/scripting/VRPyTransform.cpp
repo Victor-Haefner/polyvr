@@ -92,6 +92,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"animationStop", (PyCFunction)VRPyTransform::animationStop, METH_NOARGS, "Stop any running animation of this object" },
     {"getPhysicsData", (PyCFunction)VRPyTransform::getPhysicsData, METH_NOARGS, "get Data to the physics" },
     {"setGravity", (PyCFunction)VRPyTransform::setGravity, METH_VARARGS, "set Gravity (Vector) of given physicalized object" },
+    {"getConstraintAngleWith", (PyCFunction)VRPyTransform::getConstraintAngleWith, METH_VARARGS, "return the relative rotation Angles/position diffs (Vector3) to the given constraint partner (if there is one, otherwise return (0.0,0.0,0.0)) example: transform.getConstraintAngleWith(othertransform, 0) returns rotationAngles  (0:rotation , 1:position)"  },
     {NULL}  /* Sentinel */
 };
 
@@ -388,6 +389,26 @@ PyObject* VRPyTransform::getPhysicsData(VRPyTransform* self) {
     return toPyTuple(a);
 }
 
+PyObject* VRPyTransform::getConstraintAngleWith(VRPyTransform* self, PyObject *args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::getConstraintAngleWith: C Object is invalid"); return NULL; }
+    VRPyTransform *t;
+    int rotationOrPosition = 0;
+    if (! PyArg_ParseTuple(args, "Oi",&t, &rotationOrPosition)) return NULL;
+    OSG::Vec3f a = OSG::Vec3f(0.0,0.0,0.0);
+    //cout << (self->obj->getPhysics()->getConstraintAngle(t->obj->getPhysics(),rotationOrPosition));
+    if(rotationOrPosition == 0) {
+        a[0] = (self->obj->getPhysics()->getConstraintAngle(t->obj->getPhysics(),0));
+        a[1] = (self->obj->getPhysics()->getConstraintAngle(t->obj->getPhysics(),1));
+        a[2] = (self->obj->getPhysics()->getConstraintAngle(t->obj->getPhysics(),2));
+    }
+    else if(rotationOrPosition == 1) {
+        a[0] = (self->obj->getPhysics()->getConstraintAngle(t->obj->getPhysics(),3));
+        a[1] = (self->obj->getPhysics()->getConstraintAngle(t->obj->getPhysics(),4));
+        a[2] = (self->obj->getPhysics()->getConstraintAngle(t->obj->getPhysics(),5));
+    }
 
+    //Py_RETURN_TRUE;
+    return toPyTuple(a);
+}
 
 
