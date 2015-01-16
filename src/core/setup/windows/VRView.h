@@ -6,6 +6,7 @@
 #include <OpenSG/OSGStereoBufferViewport.h>
 #include <OpenSG/OSGSimpleStatisticsForeground.h>
 #include <OpenSG/OSGGrabForeground.h>
+#include <OpenSG/OSGImageForeground.h>
 
 namespace xmlpp{ class Element; }
 
@@ -71,6 +72,7 @@ class VRView {
         BackgroundRecPtr background;
         SimpleStatisticsForegroundRecPtr stats;
         GrabForegroundRecPtr grabfg;
+        ImageForegroundRecPtr calib_fg;
 
         void setMaterial();
 
