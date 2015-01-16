@@ -21,7 +21,7 @@ void VRGuiFile::init() {
     dialog->set_action(Gtk::FILE_CHOOSER_ACTION_OPEN);
 }
 
-void VRGuiFile::open(string mode, string title) {
+void VRGuiFile::open(string button, Gtk::FileChooserAction action, string title) {
     if (dialog == 0) init();
     setLabel("openFileWarning", "");
     dialog->show();
@@ -29,13 +29,11 @@ void VRGuiFile::open(string mode, string title) {
     Gtk::Button *bt1, *bt2;
     VRGuiBuilder()->get_widget("button9", bt1);
     VRGuiBuilder()->get_widget("button3", bt2);
-    bt1->set_label(mode);
+    bt1->set_label(button);
     bt2->set_label("Cancel");
 
     dialog->set_title(title);
-
-    dialog->set_action(Gtk::FILE_CHOOSER_ACTION_OPEN);
-    if (mode == "Save") dialog->set_action(Gtk::FILE_CHOOSER_ACTION_SAVE);
+    dialog->set_action(action);
 }
 
 void VRGuiFile::addFilter(string name, string pattern) {

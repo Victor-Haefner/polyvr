@@ -29,6 +29,7 @@ class VRGuiScripts {
         void on_save_clicked();
         void on_exec_clicked();
         void on_del_clicked();
+        void on_import_clicked();
 
         void on_select_script();
         void on_change_script_type();

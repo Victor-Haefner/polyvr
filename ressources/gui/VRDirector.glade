@@ -1086,17 +1086,17 @@ cave allocated</property>
       <column type="gchararray"/>
     </columns>
   </object>
+  <object class="GtkListStore" id="prim_list">
+    <columns>
+      <!-- column-name prims -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
   <object class="GtkListStore" id="primitive_opts">
     <columns>
       <!-- column-name param -->
       <column type="gchararray"/>
       <!-- column-name value -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
-  <object class="GtkListStore" id="prim_list">
-    <columns>
-      <!-- column-name prims -->
       <column type="gchararray"/>
     </columns>
   </object>
@@ -1598,6 +1598,12 @@ cave allocated</property>
                                     <child>
                                       <placeholder/>
                                     </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
                                   </object>
                                 </child>
                                 <child type="tab">
@@ -1616,6 +1622,12 @@ cave allocated</property>
                                     <property name="can_focus">False</property>
                                     <property name="n_columns">2</property>
                                     <property name="homogeneous">True</property>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
                                     <child>
                                       <placeholder/>
                                     </child>
@@ -7148,6 +7160,19 @@ to add distances</property>
                                 <property name="label" translatable="yes">toolbutton7</property>
                                 <property name="use_underline">True</property>
                                 <property name="stock_id">gtk-save</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="homogeneous">True</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkToolButton" id="toolbutton22">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="label" translatable="yes">toolbutton22</property>
+                                <property name="use_underline">True</property>
+                                <property name="stock_id">gtk-open</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>

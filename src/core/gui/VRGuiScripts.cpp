@@ -1,5 +1,6 @@
 #include "VRGuiScripts.h"
 #include "VRGuiUtils.h"
+#include "VRGuiFile.h"
 #include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
 #include "core/scene/VRScene.h"
@@ -154,6 +155,11 @@ void VRGuiScripts::on_save_clicked() {
     setToolButtonSensivity("toolbutton7", false);
 
     saveScene();
+}
+
+void VRGuiScripts::on_import_clicked() {
+    VRGuiFile::open("Import", Gtk::FILE_CHOOSER_ACTION_OPEN, "Import script");
+    //TODO: open file dialog, user chooses scene file, user sees list of scripts, script selection possibility, user sees script content, user can import script..
 }
 
 void VRGuiScripts::on_exec_clicked() {
@@ -730,6 +736,7 @@ VRGuiScripts::VRGuiScripts() {
     setToolButtonCallback("toolbutton8", sigc::mem_fun(*this, &VRGuiScripts::on_exec_clicked) );
     setToolButtonCallback("toolbutton9", sigc::mem_fun(*this, &VRGuiScripts::on_del_clicked) );
     setToolButtonCallback("toolbutton16", sigc::mem_fun(*this, &VRGuiScripts::on_help_clicked) );
+    setToolButtonCallback("toolbutton22", sigc::mem_fun(*this, &VRGuiScripts::on_import_clicked) );
 
     setButtonCallback("button12", sigc::mem_fun(*this, &VRGuiScripts::on_argadd_clicked) );
     setButtonCallback("button13", sigc::mem_fun(*this, &VRGuiScripts::on_argrem_clicked) );

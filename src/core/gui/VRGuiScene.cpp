@@ -749,7 +749,7 @@ void VRGuiScene::on_menu_add_file() {
     VRGuiFile::addFilter("VRML", "*.wrl");
     VRGuiFile::addFilter("3DS", "*.3ds");
     VRGuiFile::addFilter("OBJ", "*.obj");
-    VRGuiFile::open( "Load", "Load geometric data" );
+    VRGuiFile::open( "Load", Gtk::FILE_CHOOSER_ACTION_OPEN, "Load geometric data" );
 }
 
 void VRGuiScene::on_menu_add_light() {

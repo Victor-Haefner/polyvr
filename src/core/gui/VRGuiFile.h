@@ -3,6 +3,7 @@
 
 #include <string>
 #include <sigc++/functors/slot.h>
+#include <gtkmm/filechooser.h>
 
 namespace Gtk { class FileChooserDialog; }
 using namespace std;
@@ -16,7 +17,7 @@ class VRGuiFile {
         static void init();
 
     public:
-        static void open(string mode, string title);
+        static void open(string button, Gtk::FileChooserAction action, string title);
         static void close();
         static void apply();
         static string getPath();

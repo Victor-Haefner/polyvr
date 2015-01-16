@@ -394,7 +394,11 @@ PyObject* VRScriptManager::openFileDialog(VRScriptManager* self, PyObject *args)
     VRGuiFile::gotoPath( PyString_AsString(default_path) );
     VRGuiFile::setFile( PyString_AsString(default_path) );
     VRGuiFile::setCallbacks( sigc::bind<PyObject*>( sigc::ptr_fun( &on_py_file_diag_cb ), cb) );
-    VRGuiFile::open( PyString_AsString(mode), PyString_AsString(title) );
+
+    string m = PyString_AsString(mode);
+    Gtk::FileChooserAction action = Gtk::FILE_CHOOSER_ACTION_OPEN;
+    if (m == "Save" or m == "New" or m == "Create") action = Gtk::FILE_CHOOSER_ACTION_SAVE;
+    VRGuiFile::open( m, action, PyString_AsString(title) );
 
     Py_RETURN_TRUE;
 }
