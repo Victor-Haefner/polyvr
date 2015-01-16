@@ -42,6 +42,9 @@ class virtuose {
         void applyForce(Vec3f force, Vec3f torque);
         Matrix getPose();
 
+        void fillPosition(VRPhysics* p, float *to);
+        void fillSpeed(VRPhysics* p, float *to);
+        void Matrix3ToArray(btMatrix3x3 m, float *to);
         //connect a physicalized Object to this virtuose and push it in the same direction the virtuose moves . apply forces( which affect the object )on the haptic.
         void updateVirtMech();
         void attachTransform(VRTransform* trans);

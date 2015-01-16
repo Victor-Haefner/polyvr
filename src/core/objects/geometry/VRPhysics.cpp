@@ -474,9 +474,7 @@ OSG::Matrix VRPhysics::getTransformation() {
 
 btMatrix3x3 VRPhysics::getInertiaTensor() {
     if (body == 0) return btMatrix3x3();
-    btVector3 t;
-    shape->calculateLocalInertia(btScalar(mass),t);
-    body->setMassProps(btScalar(mass),t);
+    body->updateInertiaTensor();
     btMatrix3x3 m = body->getInvInertiaTensorWorld();
     return m;
 }
