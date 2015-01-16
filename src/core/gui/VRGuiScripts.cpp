@@ -17,11 +17,16 @@
 #include <gtkmm/treemodel.h>
 #include <gtkmm/treestore.h>
 #include <gtkmm/scrolledwindow.h>
+#include <gtkmm/table.h>
+#include <gtkmm/paned.h>
 #include <gtksourceview/gtksourceview.h>
 #include <gtksourceview/gtksourcelanguagemanager.h>
+#include <libxml++/nodes/element.h>
+#include <libxml++/libxml++.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
+using namespace Gtk;
 
 GtkSourceBuffer* VRGuiScripts_sourceBuffer;
 
@@ -158,9 +163,96 @@ void VRGuiScripts::on_save_clicked() {
 }
 
 void VRGuiScripts::on_import_clicked() {
+    VRScene* scene = VRSceneManager::getCurrent();
+    if (scene == 0) return;
+
+    import_liststore1->clear();
+    import_liststore2->clear();
+    ListStore::Row row;
+    for (auto script : scene->getScripts()) {
+        row = *import_liststore2->append();
+        gtk_list_store_set (import_liststore2->gobj(), row.gobj(), 0, script.first.c_str(), -1);
+    }
+
+    VRGuiFile::clearFilter();
+    VRGuiFile::addFilter("Project", "*.xml");
+    VRGuiFile::addFilter("All", "*");
+    VRGuiFile::setWidget(scriptImportWidget);
+    VRGuiFile::setCallbacks( sigc::mem_fun(*this, &VRGuiScripts::on_diag_import), sigc::slot<void>(), sigc::mem_fun(*this, &VRGuiScripts::on_diag_import_select));
     VRGuiFile::open("Import", Gtk::FILE_CHOOSER_ACTION_OPEN, "Import script");
-    //TODO: open file dialog, user chooses scene file, user sees list of scripts, script selection possibility, user sees script content, user can import script..
 }
+
+xmlpp::Element* getXMLChild(xmlpp::Element* e, string name) {
+    for (auto n : e->get_children()) {
+        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
+        if (!el) continue;
+        if (el->get_name() == name) return el;
+    } return 0;
+}
+
+vector<xmlpp::Element*> getXMLChildren(xmlpp::Element* e) {
+    vector<xmlpp::Element*> res;
+    for (auto n : e->get_children()) {
+        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
+        if (!el) continue;
+        res.push_back(el);
+    }
+    return res;
+}
+
+void VRGuiScripts::on_diag_import_select() {
+    import_liststore1->clear();
+    for (auto s : import_scripts) delete s.second;
+    import_scripts.clear();
+    string path = VRGuiFile::getPath();
+    if (path == "") return;
+
+    xmlpp::DomParser parser;
+    parser.set_validate(false);
+    try { parser.parse_file(path.c_str()); }
+    catch(exception& e) { return; }
+
+    xmlpp::Node* n = parser.get_document()->get_root_node();
+    xmlpp::Element* scene = dynamic_cast<xmlpp::Element*>(n);
+    vector<xmlpp::Element*> scripts = getXMLChildren( getXMLChild(scene, "Scripts") );
+
+    ListStore::Row row;
+    for (auto script : scripts) {
+        string name = script->get_name();
+        if (script->get_attribute("base_name")) {
+            string suffix = script->get_attribute("name_suffix")->get_value();
+            if (suffix == "0") suffix = "";
+            name = script->get_attribute("base_name")->get_value() + suffix;
+        }
+
+        VRScript* s = new VRScript(name);
+        s->enable(false);
+        s->load(script);
+        import_scripts[name] = s;
+
+        row = *import_liststore1->append();
+        gtk_list_store_set (import_liststore1->gobj(), row.gobj(), 0, name.c_str(), -1);
+    }
+}
+
+void VRGuiScripts::on_diag_import() {
+    auto itr = import_treeview1->get_selection()->get_selected();
+    if (!itr) return;
+
+    // get selected script
+    VRGuiScripts_ModelColumns cols;
+    Gtk::TreeModel::Row row = *itr;
+    string name = row.get_value(cols.script);
+    if (import_scripts.count(name) == 0) return;
+
+    VRScript* s = import_scripts[name];
+    VRSceneManager::getCurrent()->addScript(s);
+    s->enable(true);
+    updateList();
+}
+
+void VRGuiScripts::on_diag_import_select_1() {} // TODO
+void VRGuiScripts::on_diag_import_select_2() {}
 
 void VRGuiScripts::on_exec_clicked() {
     VRScript* script = VRGuiScripts::getSelectedScript();
@@ -791,6 +883,29 @@ VRGuiScripts::VRGuiScripts() {
     // update the list each frame to update the execution time
     VRFunction<int>* fkt = new VRFunction<int>("scripts_gui_update",  boost::bind(&VRGuiScripts::update, this) );
     VRSceneManager::get()->addUpdateFkt(fkt, 100);
+
+    // init scriptImportWidget
+    scriptImportWidget = manage( new Table() );
+    ScrolledWindow* sw1 = manage( new ScrolledWindow() );
+    ScrolledWindow* sw2 = manage( new ScrolledWindow() );
+    import_treeview1 = manage( new TreeView() );
+    import_treeview2 = manage( new TreeView() );
+
+    VRGuiScripts_ModelColumns columns;
+    import_liststore1 = ListStore::create( columns );
+    import_liststore2 = ListStore::create( columns );
+
+    scriptImportWidget->attach(*sw1, 0,1,0,1);
+    scriptImportWidget->attach(*sw2, 0,1,1,2);
+    sw1->add(*import_treeview1); sw2->add(*import_treeview2);
+
+    import_treeview1->set_model(import_liststore1);
+    import_treeview2->set_model(import_liststore2);
+    import_treeview1->append_column("File scripts", columns.script);
+    import_treeview2->append_column("Project scripts", columns.script);
+    import_treeview1->signal_cursor_changed().connect( sigc::mem_fun(*this, &VRGuiScripts::on_diag_import_select_1) );
+    import_treeview2->signal_cursor_changed().connect( sigc::mem_fun(*this, &VRGuiScripts::on_diag_import_select_2) );
+
 }
 
 OSG_END_NAMESPACE;

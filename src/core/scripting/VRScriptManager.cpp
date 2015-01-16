@@ -68,10 +68,14 @@ void VRScriptManager::disableAllScripts() {
 
 VRScript* VRScriptManager::newScript(string name, string core) {
     VRScript* script = new VRScript(name);
-    name = script->getName();
-    scripts[name] = script;
-    updateScript(name, core);
+    addScript( script );
     return script;
+}
+
+void VRScriptManager::addScript(VRScript* script) {
+    string name = script->getName();
+    scripts[name] = script;
+    updateScript(name, script->getCore());
 }
 
 void VRScriptManager::remScript(string name) {

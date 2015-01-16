@@ -4,10 +4,12 @@
 #include <OpenSG/OSGConfig.h>
 #include <gtkmm/treemodel.h>
 #include <gdkmm/event.h>
+#include <gtkmm/liststore.h>
 #include "core/scene/VRSceneManager.h"
 #include "VRGuiSignals.h"
 
 class _GtkSourceLanguage;
+namespace Gtk{ class Table; class TreeView; }
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -20,6 +22,13 @@ class VRGuiScripts {
         _GtkSourceLanguage* python = 0;
         _GtkSourceLanguage* web = 0;
         _GtkSourceLanguage* glsl = 0;
+
+        Gtk::Table* scriptImportWidget = 0;
+        Gtk::TreeView* import_treeview1 = 0;
+        Gtk::TreeView* import_treeview2 = 0;
+        Glib::RefPtr<Gtk::ListStore> import_liststore1;
+        Glib::RefPtr<Gtk::ListStore> import_liststore2;
+        map<string, VRScript*> import_scripts;
 
         void initEditor();
         void printViewerLanguages();
@@ -53,12 +62,16 @@ class VRGuiScripts {
         void on_help_clicked();
         void on_help_close_clicked();
 
-
         void on_argadd_clicked();
         void on_argrem_clicked();
         void on_argname_edited(const Glib::ustring& path, const Glib::ustring& new_name);
         void on_argval_edited(const Glib::ustring& path, const Glib::ustring& new_name);
         void on_argtype_edited(const Glib::ustring& new_name, const Gtk::TreeModel::iterator& new_iter);
+
+        void on_diag_import_select_1();
+        void on_diag_import_select_2();
+        void on_diag_import_select();
+        void on_diag_import();
 
     public:
         VRGuiScripts();
