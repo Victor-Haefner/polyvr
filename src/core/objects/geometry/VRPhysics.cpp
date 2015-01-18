@@ -87,6 +87,9 @@ void VRPhysics::setGhost(bool b) { ghost = b; update(); }
 bool VRPhysics::isGhost() { return ghost; }
 OSG::Vec3f VRPhysics::toVec3f(btVector3 v) { return OSG::Vec3f(v[0], v[1], v[2]); }
 void VRPhysics::setDamping(float lin, float ang) { body->setDamping(btScalar(lin),btScalar(ang)); }
+OSG::Vec3f VRPhysics::getForce() { return toVec3f(body->getTotalForce());}
+OSG::Vec3f VRPhysics::getTorque() { return toVec3f(body->getTotalTorque());}
+
 
 
 
@@ -411,19 +414,6 @@ void VRPhysics::addTorque(OSG::Vec3f i) {
 }
 
 
-
-OSG::Vec3f VRPhysics::getForce() {
-    OSG::Vec3f result(0.0f,0.0f,0.0f);
-    //go through all contacts
-    vector<VRCollision> v = getCollisions();
-    for ( auto i = v.begin(); i != v.end(); i++ ) {
-        result += ((i->norm) * 100.0f * (i->distance));
-
-    }
-   // result.normalize();
-    return result;
-
-}
 
 
 OSG::Vec3f VRPhysics::getLinearVelocity() {

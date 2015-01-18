@@ -43,10 +43,10 @@ struct VRPyTransform : VRPyBaseT<OSG::VRTransform> {
     static PyObject* applyImpulse(VRPyTransform* self, PyObject *args);
     static PyObject* applyForce(VRPyTransform* self, PyObject *args);
     static PyObject* applyTorque(VRPyTransform* self, PyObject *args);
+    static PyObject* getForce(VRPyTransform* self);
+    static PyObject* getTorque(VRPyTransform* self);
     static PyObject* getConstraintAngleWith(VRPyTransform* self, PyObject *args);
 
-    //physics data
-    static PyObject* getPhysicsData(VRPyTransform* self);
 
 
     static PyObject* setPickable(VRPyTransform* self, PyObject* args);

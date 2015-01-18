@@ -87,10 +87,11 @@ PyMethodDef VRPyTransform::methods[] = {
     {"applyImpulse", (PyCFunction)VRPyTransform::applyImpulse, METH_VARARGS, "Apply impulse on the physics object" },
     {"applyForce", (PyCFunction)VRPyTransform::applyForce, METH_VARARGS, "Apply force on the physics object (e.g. obj.applyForce(1.0,0.0,0.0) )" },
     {"applyTorque", (PyCFunction)VRPyTransform::applyTorque, METH_VARARGS, "Apply torque on the physics object  (e.g. obj.applyTorque(1.0,0.0,0.0) )" },
+    {"getForce", (PyCFunction)VRPyTransform::getForce, METH_NOARGS, "get the total force put on this transform during this frame. returns 3-Tuple" },
+    {"getTorque", (PyCFunction)VRPyTransform::getTorque, METH_NOARGS, "get the total torque put on this transform during this frame. returns 3-Tuple" },
     {"setPhysicsActivationMode", (PyCFunction)VRPyTransform::setPhysicsActivationMode, METH_VARARGS, "Set the physics activation mode of the physics object (normal:1 , no deactivation:4, stay deactivated: 5)" },
     {"animate", (PyCFunction)VRPyTransform::animate, METH_VARARGS, "Animate object (currently only with a path: animate(path, duration, redirect) )" },
     {"animationStop", (PyCFunction)VRPyTransform::animationStop, METH_NOARGS, "Stop any running animation of this object" },
-    {"getPhysicsData", (PyCFunction)VRPyTransform::getPhysicsData, METH_NOARGS, "get Data to the physics" },
     {"setGravity", (PyCFunction)VRPyTransform::setGravity, METH_VARARGS, "set Gravity (Vector) of given physicalized object" },
     {"getConstraintAngleWith", (PyCFunction)VRPyTransform::getConstraintAngleWith, METH_VARARGS, "return the relative rotation Angles/position diffs (Vector3) to the given constraint partner (if there is one, otherwise return (0.0,0.0,0.0)) example: transform.getConstraintAngleWith(othertransform, 0) returns rotationAngles  (0:rotation , 1:position)"  },
     {NULL}  /* Sentinel */
@@ -368,6 +369,19 @@ PyObject* VRPyTransform::applyTorque(VRPyTransform* self, PyObject *args) {
     Py_RETURN_TRUE;
 }
 
+
+PyObject* VRPyTransform::getForce(VRPyTransform* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::getForce: C Object is invalid"); return NULL; }
+    OSG::Vec3f i = self->obj->getPhysics()->getTorque();
+     return toPyTuple(i);
+}
+
+PyObject* VRPyTransform::getTorque(VRPyTransform* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::getTorque: C Object is invalid"); return NULL; }
+    OSG::Vec3f i = self->obj->getPhysics()->getForce();
+    return toPyTuple(i);
+}
+
 PyObject* VRPyTransform::setGravity(VRPyTransform* self, PyObject *args) {
     OSG::Vec3f i = parseVec3f(args);
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setGravity: C Object is invalid"); return NULL; }
@@ -383,11 +397,7 @@ PyObject* VRPyTransform::animate(VRPyTransform* self, PyObject *args) {
     Py_RETURN_TRUE;
 }
 
-PyObject* VRPyTransform::getPhysicsData(VRPyTransform* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::getPhysicsData: C Object is invalid"); return NULL; }
-    OSG::Vec3f a = self->obj->getPhysics()->getForce();
-    return toPyTuple(a);
-}
+
 
 PyObject* VRPyTransform::getConstraintAngleWith(VRPyTransform* self, PyObject *args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::getConstraintAngleWith: C Object is invalid"); return NULL; }
