@@ -36,6 +36,8 @@ void VRHaptic::setSimulationScales(float scale, float forces) { v->setSimulation
 void VRHaptic::attachTransform(VRTransform* trans) {v->attachTransform(trans);}
 void VRHaptic::detachTransform() {v->detachTransform();}
 void VRHaptic::updateVirtMech() {v->updateVirtMech();}
+Vec3i VRHaptic::getButtonStates() {return (v->getButtonStates());}
+
 
 
 void VRHaptic::setIP(string IP) { this->IP = IP; v->connect(IP); }

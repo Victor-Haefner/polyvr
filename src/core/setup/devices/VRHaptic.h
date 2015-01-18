@@ -29,6 +29,7 @@ class VRHaptic : public VRDevice {
         void attachTransform(VRTransform* trans);
         void detachTransform();
         void updateVirtMech();
+        Vec3i getButtonStates();
         void setIP(string IP);
         string getIP();
 

@@ -127,6 +127,7 @@ void virtuose::setSimulationScales(float translation, float forces) {
     CHECK( virtSetForceFactor(vc, forces) );
 }
 
+
 void virtuose::applyForce(Vec3f force, Vec3f torque) {
     float f[6] = { force[2], force[0], force[1], torque[2], torque[0], torque[1] };
     CHECK( virtAddForce(vc, f) );
@@ -218,10 +219,16 @@ void virtuose::detachTransform() {
 
 }
 
+OSG::Vec3i virtuose::getButtonStates() {
+    int i = 0;
+    int j = 0;
+    int k = 0;
+    CHECK(virtGetButton(vc,0,&i));
+    CHECK(virtGetButton(vc,1,&j));
+    CHECK(virtGetButton(vc,2,&k));
+    return Vec3i(i,j,k);
+}
 
-/**
-* takes positiob, speed of attached object and puts it on the virtuose
-**/
 void virtuose::updateVirtMech() {
 
     // calc time delta in seconds
@@ -257,7 +264,7 @@ void virtuose::updateVirtMech() {
                  CHECK(virtSetSpeed(vc, speed));
                  //get force applied by human on the haptic
                  CHECK(virtGetForce(vc, force));
-                 //multiply with hardcoded "bullshit"- factor
+                 //multiply with hardcoded estimated "bullshit"- factor
                  float f_lin = 0.1f;
                  float f_ang = 0.1f;
                  Vec3f frc = Vec3f(force[1], force[2], force[0]) * f_lin;

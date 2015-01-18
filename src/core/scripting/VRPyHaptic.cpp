@@ -54,8 +54,9 @@ PyMethodDef VRPyHaptic::methods[] = {
     {"setSimulationScales", (PyCFunction)VRPyHaptic::setSimulationScales, METH_VARARGS, "Set force on haptic device" },
     {"setForce", (PyCFunction)VRPyHaptic::setForce, METH_VARARGS, "Set force on haptic device" },
     {"updateVirtMech", (PyCFunction)VRPyHaptic::updateVirtMech, METH_NOARGS, "update the virtuose  ( if it is in COMMAND_MODE_VIRTMECH)" },
-    {"attachTransform", (PyCFunction)VRPyHaptic::attachTransform, METH_VARARGS, "attaches given Transform to the virtuose (Command-Mode has to be COMMAND_MODE_VIRTMECH) PAY ATTENTION TO NOT ATTACH A  OBJECT WHICH IS TOO HEAVY"},
+    {"attachTransform", (PyCFunction)VRPyHaptic::attachTransform, METH_VARARGS, "attaches given Transform to the virtuose (Command-Mode has to be COMMAND_MODE_VIRTMECH) Gravity for this transform should be set to zero,"},
     {"detachTransform", (PyCFunction)VRPyHaptic::detachTransform, METH_NOARGS, "detach previously attached transform" },
+    {"getButtonStates",(PyCFunction)VRPyHaptic::getButtonStates, METH_NOARGS,"return a 3-Tuple with the states of virtuose's three buttons. e.g. (0,0,1) means the 3rd button is active, the others not"},
     {NULL}  /* Sentinel */
 };
 
@@ -81,7 +82,11 @@ PyObject* VRPyHaptic::updateVirtMech(VRPyHaptic* self) {
     self->obj->updateVirtMech();
     Py_RETURN_TRUE;
 }
-
+PyObject* VRPyHaptic::getButtonStates(VRPyHaptic* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyHaptic::getButtonStates - Object is invalid"); return NULL; }
+    OSG::Vec3i states = self->obj->getButtonStates();
+    return toPyTuple(states);
+}
 PyObject* VRPyHaptic::attachTransform(VRPyHaptic* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyHaptic::updateHapticToObject - Object is invalid"); return NULL; }
     VRPyTransform* tr;
