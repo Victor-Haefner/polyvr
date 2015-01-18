@@ -1,49 +1,32 @@
 #ifndef VRFACTORY_H_INCLUDED
 #define VRFACTORY_H_INCLUDED
 
-#include "../objects/VR3DEntity.h"
+#include <OpenSG/OSGConfig.h>
+#include <string>
+#include <map>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRFactory{
+class VRLod;
+class VRObject;
+
+class VRFactory {
     public:
-        struct workplace {
-            workplace() : indMaterial(0), geo(0), indicator(0), nametag(0) {}
-
-            //ecoflex
+        struct node {
             int ID;
-            int parentID;
-            string name;
-            float ecoindex;
-            vector<int> inputnodes;
-            vector<int> outputnodes;
 
-            //visualisation
-            bool placed;
-            Vec3f pos;
-            Vec3f dir;
-            Vec3f up;
-            string file;
+            node* parent;
+            map<int, node*> children;
 
-            SimpleMaterialRecPtr indMaterial;
-            VR3DEntity* geo;
-            VRGeometry* indicator;
-            VRGeometry* nametag;
-            ImageRecPtr nameTexture;
-
-            static float min_index;
-            static float max_index;
+            VRLod* lod;
         };
 
     public:
-        VRFactory(string name) {
+        VRFactory();
 
-        }
+        VRObject* loadVRML(string path);
 };
-
-float VRFactory::workplace::min_index = 1;
-float VRFactory::workplace::max_index = 0;
 
 OSG_END_NAMESPACE;
 

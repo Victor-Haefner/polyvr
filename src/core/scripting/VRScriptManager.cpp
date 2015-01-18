@@ -41,6 +41,7 @@
 #include "addons/CEF/VRPyCEF.h"
 #include "addons/Classification/VRPySegmentation.h"
 #include "addons/Engineering/Chemistry/VRPyMolecule.h"
+#include "addons/Engineering/Factory/VRPyFactory.h"
 #include "VRPyTypeCaster.h"
 #include "PolyVR.h"
 
@@ -223,6 +224,7 @@ void VRScriptManager::initPyModules() {
     FPyContainer::registerModule("Container", pModFactory);
     FPyProduct::registerModule("Product", pModFactory);
     FPyLogistics::registerModule("Logistics", pModFactory);
+    VRPyFactory::registerModule("Factory", pModFactory);
     PyModule_AddObject(pModVR, "Factory", pModFactory);
 
     initVRPySocket(pModVR);
