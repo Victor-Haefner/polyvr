@@ -20,6 +20,9 @@ class path {
         vector<Vec3f> normals;
         vector<Vec3f> colors;
 
+        Vec3f localDir;
+        Matrix localDirMatrix;
+
         Vec3f projectInPlane(Vec3f v, Vec3f n, bool keep_length);
         void calcBezRowOld(Vec3f* &container, int N, Vec3f p0, Vec3f p1, Vec3f n0, Vec3f n1);
         void cubicBezier(Vec3f* &container, int N, Vec3f p0, Vec3f p1, Vec3f n0, Vec3f n1);
@@ -40,6 +43,8 @@ class path {
         Vec3f getPosition(float t);
         Vec3f getNormal(float t);
         Vec3f getColor(float t);
+
+        void setObjectDirection(Vec3f dir);
 
         void update();
 };

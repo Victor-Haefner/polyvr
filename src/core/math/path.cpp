@@ -1,5 +1,7 @@
 #include "path.h"
 
+#include<OpenSG/OSGQuaternion.h>
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -123,7 +125,10 @@ void path::cubicBezier(Vec3f* &container, int N, Vec3f p0, Vec3f p1, Vec3f h0, V
 }
 
 
-path::path() {}
+path::path() {
+    localDir = Vec3f(0,0,-1);
+    localDirMatrix.setIdentity();
+}
 
 void path::setStartPoint(Vec3f p, Vec3f n, Vec3f c) {
     ep1 = p;
@@ -190,12 +195,21 @@ Vec3f path::getPosition(float t) {
 }
 
 Vec3f path::getNormal(float t) {
-    if (normals.size() == 0) return Vec3f();
+    Vec3f res = localDir;
+    if (normals.size() == 0) return res;
     float tN = t*(normals.size()-1);
     int ti = floor(tN);
     float x = tN-ti;
-    if (ti > normals.size()-1) return normals[normals.size()-1];
-    return (1-x)*normals[ti] + x*normals[ti+1];
+
+    if (ti > normals.size()-1) {
+        res = normals[normals.size()-1];
+        localDirMatrix.mult(res, res);
+        return res;
+    }
+
+    res = (1-x)*normals[ti] + x*normals[ti+1];
+    localDirMatrix.mult(res, res);
+    return res;
 }
 
 Vec3f path::getColor(float t) {
@@ -205,6 +219,13 @@ Vec3f path::getColor(float t) {
     float x = tN-ti;
     if (ti > colors.size()-1) return colors[colors.size()-1];
     return (1-x)*colors[ti] + x*colors[ti+1];
+}
+
+void path::setObjectDirection(Vec3f dir) {
+    localDir = dir;
+    float a = localDir.enclosedAngle(Vec3f(0,0,-1));
+    Vec3f axis = localDir.cross(Vec3f(0,0,-1));
+    localDirMatrix.setRotate( Quaternion(axis, a) ) ;
 }
 
 OSG_END_NAMESPACE;

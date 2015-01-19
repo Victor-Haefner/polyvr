@@ -51,6 +51,7 @@ PyMethodDef VRPyPath::methods[] = {
     {"getEnd", (PyCFunction)VRPyPath::getEndPoint, METH_NOARGS, "Get the path end point" },
     {"compute", (PyCFunction)VRPyPath::compute, METH_VARARGS, "Compute path" },
     {"update", (PyCFunction)VRPyPath::update, METH_NOARGS, "Update path" },
+    {"setObjectDirection", (PyCFunction)VRPyPath::setObjectDirection, METH_VARARGS, "Set the object local looking direction" },
     {NULL}  /* Sentinel */
 };
 
@@ -151,6 +152,12 @@ PyObject* VRPyPath::compute(VRPyPath* self, PyObject* args) {
 
     if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::compute, Object is invalid"); return NULL; }
     self->obj->compute(N);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyPath::setObjectDirection(VRPyPath* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::setObjectDirection, Object is invalid"); return NULL; }
+    self->obj->setObjectDirection( parseVec3f(args) );
     Py_RETURN_TRUE;
 }
 
