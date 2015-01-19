@@ -46,6 +46,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRFactory>::type = {
 
 PyMethodDef VRPyFactory::methods[] = {
     {"loadVRML", (PyCFunction)VRPyFactory::loadVRML, METH_VARARGS, "Load VRML file" },
+    {"setupLod", (PyCFunction)VRPyFactory::setupLod, METH_VARARGS, "Setup factory LOD structure" },
     {NULL}  /* Sentinel */
 };
 
@@ -53,5 +54,12 @@ PyMethodDef VRPyFactory::methods[] = {
 PyObject* VRPyFactory::loadVRML(VRPyFactory* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyFactory::loadVRML - Object is invalid"); return NULL; }
     return VRPyTypeCaster::cast( self->obj->loadVRML( parseString(args) ) );
+}
+
+PyObject* VRPyFactory::setupLod(VRPyFactory* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyFactory::setupLod - Object is invalid"); return NULL; }
+    PyObject *p1, *p2;
+    if (! PyArg_ParseTuple(args, "OO", &p1, &p2)) return NULL;
+    return VRPyTypeCaster::cast( self->obj->setupLod( PyString_AsString(p1), PyString_AsString(p2) ) );
 }
 

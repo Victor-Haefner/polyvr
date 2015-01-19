@@ -26,6 +26,7 @@ class VRFactory {
         VRFactory();
 
         VRObject* loadVRML(string path);
+        VRObject* setupLod(string path, string path_low);
 };
 
 OSG_END_NAMESPACE;

@@ -2,6 +2,7 @@
 #include "core/utils/toString.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
+#include "addons/Engineering/CSG/Octree/Octree.h"
 
 #include <iostream>
 #include <fstream>
@@ -146,4 +147,29 @@ VRObject* VRFactory::loadVRML(string path) { // wrl filepath
     }
 
     return res;
+}
+
+VRObject* VRFactory::setupLod(string path, string path_low) { // TODO: extend this to a list of paths
+    VRObject* g1 = loadVRML(path_low);
+    VRObject* g2 = loadVRML(path);
+
+    Vec3f p, bb1, bb2;
+
+    Octree t1(0.001);
+    for (auto _g : g1->getChildren(true, "Geometry")) {
+        VRGeometry* g = (VRGeometry*)_g;
+        g->getBoundingBox(bb1, bb2);
+        p = (bb1+bb2)*0.5;
+        t1.add(p[0], p[1], p[2], g);
+    }
+
+    for (auto _g : g2->getChildren(true, "Geometry")) {
+        VRGeometry* g = (VRGeometry*)_g;
+        g->getBoundingBox(bb1, bb2);
+        p = (bb1+bb2)*0.5;
+        vector<void*> res = t1.radiusSearch(p[0], p[1], p[2], 0.01);
+        cout << "radius search " << p << " found " << res.size() << endl;
+    }
+
+    return 0;
 }
