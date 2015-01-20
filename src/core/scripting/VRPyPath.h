@@ -13,6 +13,7 @@ struct VRPyPath : VRPyBaseT<OSG::path> {
     static PyObject* compute(VRPyPath* self, PyObject* args);
     static PyObject* getStartPoint(VRPyPath* self);
     static PyObject* getEndPoint(VRPyPath* self);
+    static PyObject* invert(VRPyPath* self);
     static PyObject* update(VRPyPath* self);
 };
 

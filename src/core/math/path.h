@@ -18,6 +18,8 @@ class path {
         Vec3f c1;
         Vec3f c2;
 
+        int iterations = 80;
+
         vector<Vec3f> points;
         vector<Vec3f> directions;
         vector<Vec3f> up_vectors;
@@ -36,6 +38,7 @@ class path {
         void setEndPoint(Vec3f p, Vec3f n, Vec3f c, Vec3f u = Vec3f(0,1,0));
         void getStartPoint(Vec3f& p, Vec3f& n, Vec3f& c);
         void getEndPoint(Vec3f& p, Vec3f& n, Vec3f& c);
+        void invert();
         void compute(int N);
         vector<Vec3f> getPositions();
         vector<Vec3f> getDirections();

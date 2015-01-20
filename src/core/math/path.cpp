@@ -141,7 +141,16 @@ void path::setEndPoint(Vec3f p, Vec3f n, Vec3f c, Vec3f u) {
     u2 = u;
 }
 
+void path::invert() {
+    swap(ep1, ep2);
+    swap(n1, n2);
+    swap(c1, c2);
+    swap(u1, u2);
+    compute(iterations);
+}
+
 void path::compute(int N) {
+    iterations = N;
     points.assign(N, Vec3f());
     directions.assign(N, Vec3f());
     up_vectors.assign(N, Vec3f());

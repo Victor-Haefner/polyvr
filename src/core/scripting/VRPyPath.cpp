@@ -44,11 +44,12 @@ template<> PyTypeObject VRPyBaseT<OSG::path>::type = {
 };
 
 PyMethodDef VRPyPath::methods[] = {
-    {"set", (PyCFunction)VRPyPath::set, METH_VARARGS, "Set the path - set(start pos, start norm, end pos, end norm, steps)" },
+    {"set", (PyCFunction)VRPyPath::set, METH_VARARGS, "Set the path - set(start pos, start dir, end pos, end dir, steps) \n       set(start pos, start dir, start up, end pos, end dir, end up, steps)" },
     {"setStart", (PyCFunction)VRPyPath::setStartPoint, METH_VARARGS, "Set the path start point" },
     {"setEnd", (PyCFunction)VRPyPath::setEndPoint, METH_VARARGS, "Set the path end point" },
     {"getStart", (PyCFunction)VRPyPath::getStartPoint, METH_NOARGS, "Get the path start point" },
     {"getEnd", (PyCFunction)VRPyPath::getEndPoint, METH_NOARGS, "Get the path end point" },
+    {"invert", (PyCFunction)VRPyPath::invert, METH_NOARGS, "Invert start and end point of path" },
     {"compute", (PyCFunction)VRPyPath::compute, METH_VARARGS, "Compute path" },
     {"update", (PyCFunction)VRPyPath::update, METH_NOARGS, "Update path" },
     {NULL}  /* Sentinel */
@@ -84,6 +85,12 @@ PyObject* VRPyPath::set(VRPyPath* self, PyObject* args) {
     self->obj->setStartPoint(parseVec3fList(p1), parseVec3fList(n1), c, uv1);
     self->obj->setEndPoint(parseVec3fList(p2), parseVec3fList(n2), c, uv2);
     self->obj->compute(i);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyPath::invert(VRPyPath* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::invert, Object is invalid"); return NULL; }
+    self->obj->invert();
     Py_RETURN_TRUE;
 }
 
