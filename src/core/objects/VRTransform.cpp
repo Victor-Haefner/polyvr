@@ -736,7 +736,12 @@ void VRTransform::loadContent(xmlpp::Element* e) {
 
 void setFromPath(VRTransform* tr, path* p, bool redirect, float t) {
     tr->setFrom( p->getPosition(t) );
-    if (redirect) tr->setDir( p->getNormal(t) );
+    if (redirect) {
+        Vec3f d,u;
+        p->getOrientation(t, d, u);
+        tr->setDir( d );
+        tr->setUp( u );
+    }
 }
 
 void VRTransform::startPathAnimation(path* p, float time, float offset, bool redirect) {

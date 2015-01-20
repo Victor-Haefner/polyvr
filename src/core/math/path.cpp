@@ -125,48 +125,56 @@ void path::cubicBezier(Vec3f* &container, int N, Vec3f p0, Vec3f p1, Vec3f h0, V
 }
 
 
-path::path() {
-    localDir = Vec3f(0,0,-1);
-    localDirMatrix.setIdentity();
-}
+path::path() {}
 
-void path::setStartPoint(Vec3f p, Vec3f n, Vec3f c) {
+void path::setStartPoint(Vec3f p, Vec3f n, Vec3f c, Vec3f u) {
     ep1 = p;
     n1 = n;
     c1 = c;
+    u1 = u;
 }
 
-void path::setEndPoint(Vec3f p, Vec3f n, Vec3f c) {
+void path::setEndPoint(Vec3f p, Vec3f n, Vec3f c, Vec3f u) {
     ep2 = p;
     n2 = n;
     c2 = c;
+    u2 = u;
 }
 
 void path::compute(int N) {
     points.assign(N, Vec3f());
-    normals.assign(N, Vec3f());
+    directions.assign(N, Vec3f());
+    up_vectors.assign(N, Vec3f());
     colors.assign(N, Vec3f());
     Vec3f* _pts = &points[0];
-    Vec3f* _nrs = &normals[0];
+    Vec3f* _drs = &directions[0];
+    Vec3f* _ups = &up_vectors[0];
     Vec3f* _cls = &colors[0];
 
     // berechne die hilfspunkte fuer die positionen
     Vec3f r = ep2-ep1;
     float L = r.length();
-    Vec3f h1 = ep1 + n1*0.33*L;
-    Vec3f h2 = ep2 - n2*0.33*L;
+    Vec3f h1 = ep1 + n1*0.333*L;
+    Vec3f h2 = ep2 - n2*0.333*L;
 
-    // berechne die hilfspunkte fuer die normalen B'(0.5)
+    // berechne die hilfspunkte fuer die directions B'(0.5)
     Vec3f n = (h1-ep1)*3 + (ep1+h2-h1*2)*3 + (h1*3-h2*3-ep1+ep2)*0.75;
     n.normalize();
 
+    // berechne hilfspunkt für up vector
+    Vec3f x = n1.cross(u1)*0.5 + n2.cross(u2)*0.5;
+    Vec3f u = x.cross(n);
+    u.normalize();
+
     cubicBezier(_pts, N, ep1, ep2, h1, h2);
-    quadraticBezier(_nrs, N, n1, n2, n);
+    quadraticBezier(_drs, N, n1, n2, n);
+    quadraticBezier(_ups, N, u1, u2, u);
     linearBezier(_cls, N, c1, c2);
 }
 
 vector<Vec3f> path::getPositions() { return points; }
-vector<Vec3f> path::getNormals() { return normals; }
+vector<Vec3f> path::getDirections() { return directions; }
+vector<Vec3f> path::getUpvectors() { return up_vectors; }
 vector<Vec3f> path::getColors() { return colors; }
 
 void path::getStartPoint(Vec3f& p, Vec3f& n, Vec3f& c) {
@@ -194,22 +202,26 @@ Vec3f path::getPosition(float t) {
     return (1-x)*points[ti] + x*points[ti+1];
 }
 
-Vec3f path::getNormal(float t) {
-    Vec3f res = localDir;
-    if (normals.size() == 0) return res;
-    float tN = t*(normals.size()-1);
-    int ti = floor(tN);
-    float x = tN-ti;
+void path::getOrientation(float t, Vec3f& dir, Vec3f& up) {
+    if (directions.size() > 0) {
+        int S = directions.size()-1;
+        float tN = t*S;
+        int ti = floor(tN);
+        float x = tN-ti;
 
-    if (ti > normals.size()-1) {
-        res = normals[normals.size()-1];
-        localDirMatrix.mult(res, res);
-        return res;
+        if (ti > S) dir = directions[S];
+        else dir = (1-x)*directions[ti] + x*directions[ti+1];
     }
 
-    res = (1-x)*normals[ti] + x*normals[ti+1];
-    localDirMatrix.mult(res, res);
-    return res;
+    if (up_vectors.size() > 0) {
+        int S = up_vectors.size()-1;
+        float tN = t*S;
+        int ti = floor(tN);
+        float x = tN-ti;
+
+        if (ti > S) up = up_vectors[S];
+        else up = (1-x)*up_vectors[ti] + x*up_vectors[ti+1];
+    }
 }
 
 Vec3f path::getColor(float t) {
@@ -219,13 +231,6 @@ Vec3f path::getColor(float t) {
     float x = tN-ti;
     if (ti > colors.size()-1) return colors[colors.size()-1];
     return (1-x)*colors[ti] + x*colors[ti+1];
-}
-
-void path::setObjectDirection(Vec3f dir) {
-    localDir = dir;
-    float a = localDir.enclosedAngle(Vec3f(0,0,-1));
-    Vec3f axis = localDir.cross(Vec3f(0,0,-1));
-    localDirMatrix.setRotate( Quaternion(axis, a) ) ;
 }
 
 OSG_END_NAMESPACE;

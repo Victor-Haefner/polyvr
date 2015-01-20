@@ -51,7 +51,6 @@ PyMethodDef VRPyPath::methods[] = {
     {"getEnd", (PyCFunction)VRPyPath::getEndPoint, METH_NOARGS, "Get the path end point" },
     {"compute", (PyCFunction)VRPyPath::compute, METH_VARARGS, "Compute path" },
     {"update", (PyCFunction)VRPyPath::update, METH_NOARGS, "Update path" },
-    {"setObjectDirection", (PyCFunction)VRPyPath::setObjectDirection, METH_VARARGS, "Set the object local looking direction" },
     {NULL}  /* Sentinel */
 };
 
@@ -74,12 +73,16 @@ PyObject* VRPyPath::set(VRPyPath* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::set, Object is invalid"); return NULL; }
 
     int i;
-    PyObject *p1, *p2, *n1, *n2;
-    if (! PyArg_ParseTuple(args, "OOOOi", &p1, &n1, &p2, &n2, &i)) return NULL;
+    PyObject *p1, *p2, *n1, *n2, *u1 = 0, *u2 = 0;
+    if (PyList_GET_SIZE(args) <= 5) {
+        if (! PyArg_ParseTuple(args, "OOOOi", &p1, &n1, &p2, &n2, &i)) return NULL;
+    } else if (! PyArg_ParseTuple(args, "OOOOOOi", &p1, &n1, &u1, &p2, &n2, &u2, &i)) return NULL;
 
-    OSG::Vec3f c;
-    self->obj->setStartPoint(parseVec3fList(p1), parseVec3fList(n1), c);
-    self->obj->setEndPoint(parseVec3fList(p2), parseVec3fList(n2), c);
+    OSG::Vec3f c, uv1(0,1,0), uv2(0,1,0);
+    if (u1) uv1 = parseVec3fList(u1);
+    if (u2) uv2 = parseVec3fList(u2);
+    self->obj->setStartPoint(parseVec3fList(p1), parseVec3fList(n1), c, uv1);
+    self->obj->setEndPoint(parseVec3fList(p2), parseVec3fList(n2), c, uv2);
     self->obj->compute(i);
     Py_RETURN_TRUE;
 }
@@ -152,12 +155,6 @@ PyObject* VRPyPath::compute(VRPyPath* self, PyObject* args) {
 
     if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::compute, Object is invalid"); return NULL; }
     self->obj->compute(N);
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyPath::setObjectDirection(VRPyPath* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::setObjectDirection, Object is invalid"); return NULL; }
-    self->obj->setObjectDirection( parseVec3f(args) );
     Py_RETURN_TRUE;
 }
 

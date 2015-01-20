@@ -28,6 +28,7 @@ vector<PyObject*> VRPyBase::parseList(PyObject *args) {
 }
 
 OSG::Vec3f VRPyBase::parseVec3fList(PyObject *li) {
+    if (li == 0) return OSG::Vec3f();
     vector<PyObject*> lis = pyListToVector(li);
     if (lis.size() != 3) return OSG::Vec3f(0,0,0);
     float x,y,z;
