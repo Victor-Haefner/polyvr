@@ -53,28 +53,28 @@ class VRGuiSetup_UserColumns : public Gtk::TreeModelColumnRecord {
 void VRGuiSetup::updateObjectData() {
     guard = true;
     bool device = false;
-    setExpanderSensivity("expander3", false);
-    setExpanderSensivity("expander4", false);
-    setExpanderSensivity("expander5", false);
-    setExpanderSensivity("expander6", false);
-    setExpanderSensivity("expander7", false);
-    setExpanderSensivity("expander8", false);
-    setExpanderSensivity("expander20", false);
-    setExpanderSensivity("expander21", false);
-    setExpanderSensivity("expander22", false);
-    setExpanderSensivity("expander23", false);
-    setExpanderSensivity("expander24", false);
+    setExpanderSensitivity("expander3", false);
+    setExpanderSensitivity("expander4", false);
+    setExpanderSensitivity("expander5", false);
+    setExpanderSensitivity("expander6", false);
+    setExpanderSensitivity("expander7", false);
+    setExpanderSensitivity("expander8", false);
+    setExpanderSensitivity("expander20", false);
+    setExpanderSensitivity("expander21", false);
+    setExpanderSensitivity("expander22", false);
+    setExpanderSensitivity("expander23", false);
+    setExpanderSensitivity("expander24", false);
 
     current_scene = VRSceneManager::getCurrent();
 
     if (selected_type == "window") {
-        setExpanderSensivity("expander3", true);
+        setExpanderSensitivity("expander3", true);
 
         VRWindow* win = (VRWindow*)selected_object;
         setCheckButton("checkbutton7", win->isActive());
 
         if (win->hasType(0)) { // multiwindow
-            setExpanderSensivity("expander24", true);
+            setExpanderSensitivity("expander24", true);
             VRMultiWindow* mwin = (VRMultiWindow*)win;
             int nx, ny;
             nx = mwin->getNXTiles();
@@ -99,8 +99,8 @@ void VRGuiSetup::updateObjectData() {
             }
         }
 
-        if (win->hasType(1)) setExpanderSensivity("expander23", true);
-        if (win->hasType(2)) setExpanderSensivity("expander22", true); // GTK
+        if (win->hasType(1)) setExpanderSensitivity("expander23", true);
+        if (win->hasType(2)) setExpanderSensitivity("expander22", true); // GTK
 
         // mouse
         string name = "None";
@@ -109,7 +109,7 @@ void VRGuiSetup::updateObjectData() {
     }
 
     if (selected_type == "view") {
-        setExpanderSensivity("expander8", true);
+        setExpanderSensitivity("expander8", true);
 
         VRView* view = (VRView*)selected_object;
 
@@ -136,37 +136,37 @@ void VRGuiSetup::updateObjectData() {
     }
 
     if (selected_type == "vrpn_device") {
-        setExpanderSensivity("expander4", true);
-        setExpanderSensivity("expander7", true);
+        setExpanderSensitivity("expander4", true);
+        setExpanderSensitivity("expander7", true);
         device = true;
         VRPN_tracker* t = (VRPN_tracker*)selected_object;
         setTextEntry("entry50", t->tracker);
     }
 
     if (selected_type == "vrpn_tracker") {
-        setExpanderSensivity("expander4", true);
-        setExpanderSensivity("expander7", true);
+        setExpanderSensitivity("expander4", true);
+        setExpanderSensitivity("expander7", true);
         VRPN_tracker* t = (VRPN_tracker*)selected_object;
         setTextEntry("entry50", t->tracker);
     }
 
     if (selected_type == "art_device") {
-        setExpanderSensivity("expander5", true);
-        setExpanderSensivity("expander6", true);
+        setExpanderSensitivity("expander5", true);
+        setExpanderSensitivity("expander6", true);
         device = true;
         ART_device* t = (ART_device*)selected_object;
         setTextEntry("entry40", toString(t->ID));
     }
 
     if (selected_type == "art_tracker") {
-        setExpanderSensivity("expander5", true);
-        setExpanderSensivity("expander6", true);
+        setExpanderSensitivity("expander5", true);
+        setExpanderSensitivity("expander6", true);
         ART_device* t = (ART_device*)selected_object;
         setTextEntry("entry40", toString(t->ID));
     }
 
     if (selected_type == "haptic") {
-        setExpanderSensivity("expander20", true);
+        setExpanderSensitivity("expander20", true);
         device = true;
         VRHaptic* t = (VRHaptic*)selected_object;
         setTextEntry("entry8", t->getIP());
@@ -179,7 +179,7 @@ void VRGuiSetup::updateObjectData() {
 
     if (selected_type == "section") {
         if (selected_name == "ART") {
-            setExpanderSensivity("expander6", true);
+            setExpanderSensitivity("expander6", true);
             setTextEntry("entry39", toString(current_setup->getARTPort()));
             setCheckButton("checkbutton24", current_setup->getARTActive());
 
@@ -190,7 +190,7 @@ void VRGuiSetup::updateObjectData() {
         }
 
         if (selected_name == "VRPN") {
-            setExpanderSensivity("expander7", true);
+            setExpanderSensitivity("expander7", true);
             setCheckButton("checkbutton25", current_setup->getVRPNActive());
         }
     }
@@ -199,7 +199,7 @@ void VRGuiSetup::updateObjectData() {
         VRDevice* dev = (VRDevice*)selected_object;
         VRIntersection ins = dev->getLastIntersection();
 
-        setExpanderSensivity("expander21", true);
+        setExpanderSensitivity("expander21", true);
         setLabel("label93", dev->getName());
         fillStringListstore("dev_types_list", current_setup->getDeviceTypes());
         setCombobox("combobox26", getListStorePos("dev_types_list", dev->getType()) );
@@ -276,7 +276,7 @@ void VRGuiSetup::on_save_clicked() {
     string defWorkDir = VRSceneManager::get()->getOriginalWorkdir();
     current_setup->save(defWorkDir+"/setup/" + current_setup->getName() + ".xml");
 
-    setToolButtonSensivity("toolbutton12", false);
+    setToolButtonSensitivity("toolbutton12", false);
 }
 
 // setup list
@@ -365,7 +365,7 @@ void VRGuiSetup::on_menu_delete() {
     }
 
     updateSetup();
-    setToolButtonSensivity("toolbutton12", true);
+    setToolButtonSensitivity("toolbutton12", true);
 }
 
 void VRGuiSetup::on_menu_add_window() {
@@ -393,7 +393,7 @@ void VRGuiSetup::on_menu_add_viewport() {
     }
 
     updateSetup();
-    setToolButtonSensivity("toolbutton12", true);
+    setToolButtonSensitivity("toolbutton12", true);
 }
 
 void VRGuiSetup::on_menu_add_vrpn_tracker() {
@@ -401,21 +401,21 @@ void VRGuiSetup::on_menu_add_vrpn_tracker() {
     current_setup->addVRPNTracker(0, "LeapTracker@tcp://141.3.151.136", Vec3f(0,0,0), 1);
 
     updateSetup();
-    setToolButtonSensivity("toolbutton12", true);
+    setToolButtonSensitivity("toolbutton12", true);
 }
 
 void VRGuiSetup::on_menu_add_mouse() {
     VRMouse* m = new VRMouse();
     current_setup->addDevice(m);
     updateSetup();
-    setToolButtonSensivity("toolbutton12", true);
+    setToolButtonSensitivity("toolbutton12", true);
 }
 
 void VRGuiSetup::on_menu_add_keyboard() {
     VRKeyboard* m = new VRKeyboard();
     current_setup->addDevice(m);
     updateSetup();
-    setToolButtonSensivity("toolbutton12", true);
+    setToolButtonSensitivity("toolbutton12", true);
 }
 
 void VRGuiSetup::on_menu_add_flystick() {
@@ -423,21 +423,21 @@ void VRGuiSetup::on_menu_add_flystick() {
     current_setup->addARTDevice(f); // TODO
     current_setup->addDevice(f);
     updateSetup();
-    setToolButtonSensivity("toolbutton12", true);
+    setToolButtonSensitivity("toolbutton12", true);
 }
 
 void VRGuiSetup::on_menu_add_haptic() {
     VRHaptic* h = new VRHaptic();
     current_setup->addDevice(h);
     updateSetup();
-    setToolButtonSensivity("toolbutton12", true);
+    setToolButtonSensitivity("toolbutton12", true);
 }
 
 void VRGuiSetup::on_menu_add_mobile() {
     VRMobile* m = new VRMobile(5500);
     current_setup->addDevice(m);
     updateSetup();
-    setToolButtonSensivity("toolbutton12", true);
+    setToolButtonSensitivity("toolbutton12", true);
 }
 
 void VRGuiSetup::on_menu_add_art_tracker() {
@@ -445,14 +445,14 @@ void VRGuiSetup::on_menu_add_art_tracker() {
     tr->setFrom(Vec3f(0,1.6,0));
     current_setup->addARTDevice(tr);
     updateSetup();
-    setToolButtonSensivity("toolbutton12", true);
+    setToolButtonSensitivity("toolbutton12", true);
 }
 
 // window options
 
 void VRGuiSetup::on_toggle_display_active() {
     bool b = getCheckButtonState("checkbutton7");
-    setTableSensivity("table2", b);
+    setTableSensitivity("table2", b);
     if (guard) return;
 
     if (selected_type != "window") return;
@@ -465,7 +465,7 @@ void VRGuiSetup::on_toggle_display_active() {
     if (!b) bg = "#FFDDDD";
     Glib::RefPtr<Gtk::TreeStore> tree_store = Glib::RefPtr<Gtk::TreeStore>::cast_static(VRGuiBuilder()->get_object("setupTree"));
     setTreeRow(tree_store, selected_row, win->getName().c_str(), "window", (gpointer)win, "#000000", bg);
-    setToolButtonSensivity("toolbutton12", true);
+    setToolButtonSensitivity("toolbutton12", true);
 }
 
 void VRGuiSetup::on_servern_edit() {
@@ -478,7 +478,7 @@ void VRGuiSetup::on_servern_edit() {
     VRMultiWindow* mwin = (VRMultiWindow*)selected_object;
     mwin->setNTiles(toInt(nx.c_str()), toInt(ny.c_str()));
     updateObjectData();
-    setToolButtonSensivity("toolbutton12", true);
+    setToolButtonSensitivity("toolbutton12", true);
 }
 
 void VRGuiSetup::on_server_edit(const Glib::ustring& path, const Glib::ustring& server) {
@@ -497,14 +497,14 @@ void VRGuiSetup::on_server_edit(const Glib::ustring& path, const Glib::ustring& 
     VRMultiWindow* mwin = (VRMultiWindow*)selected_object;
     mwin->setServer(x,y,server);
     mwin->reset();
-    setToolButtonSensivity("toolbutton12", true);
+    setToolButtonSensitivity("toolbutton12", true);
 }
 
 void VRGuiSetup::on_connect_mw_clicked() {
     VRMultiWindow* mwin = (VRMultiWindow*)selected_object;
     if (mwin == 0) return;
     mwin->reset();
-    setToolButtonSensivity("toolbutton12", true);
+    setToolButtonSensitivity("toolbutton12", true);
 }
 
 // view options
@@ -520,26 +520,26 @@ void VRGuiSetup::on_toggle_view_stats() {
 
 void VRGuiSetup::on_toggle_display_stereo() {
     bool b = getCheckButtonState("checkbutton8");
-    setTableSensivity("table7", b);
+    setTableSensitivity("table7", b);
     if (guard) return;
 
     if (selected_type != "view") return;
     VRView* view = (VRView*)selected_object;
 
     view->setStereo(b);
-    setToolButtonSensivity("toolbutton12", true);
+    setToolButtonSensitivity("toolbutton12", true);
 }
 
 void VRGuiSetup::on_toggle_display_projection() {
     bool b = getCheckButtonState("checkbutton11");
-    setTableSensivity("table8", b);
+    setTableSensitivity("table8", b);
     if (guard) return;
 
     if (selected_type != "view") return;
     VRView* view = (VRView*)selected_object;
 
     view->setProjection(b);
-    setToolButtonSensivity("toolbutton12", true);
+    setToolButtonSensitivity("toolbutton12", true);
 }
 
 void VRGuiSetup::on_toggle_view_invert() {
@@ -550,7 +550,7 @@ void VRGuiSetup::on_toggle_view_invert() {
 
     bool b = getCheckButtonState("checkbutton9");
     view->swapEyes(b);
-    setToolButtonSensivity("toolbutton12", true);
+    setToolButtonSensitivity("toolbutton12", true);
 }
 
 void VRGuiSetup::on_pos_edit() {
@@ -565,7 +565,7 @@ void VRGuiSetup::on_pos_edit() {
 
     VRView* view = (VRView*)selected_object;
     view->setPosition(pos);
-    setToolButtonSensivity("toolbutton12", true);
+    setToolButtonSensitivity("toolbutton12", true);
 }
 
 void VRGuiSetup::on_eyesep_edit() {
@@ -576,7 +576,7 @@ void VRGuiSetup::on_eyesep_edit() {
 
     VRView* view = (VRView*)selected_object;
     view->setStereoEyeSeparation(toFloat(es));
-    setToolButtonSensivity("toolbutton12", true);
+    setToolButtonSensitivity("toolbutton12", true);
 }
 
 void VRGuiSetup::on_toggle_view_user() {
@@ -585,7 +585,7 @@ void VRGuiSetup::on_toggle_view_user() {
 
     VRView* view = (VRView*)selected_object;
     view->setUser();
-    setToolButtonSensivity("toolbutton12", true);
+    setToolButtonSensitivity("toolbutton12", true);
 }
 
 void VRGuiSetup::on_change_view_user() {
@@ -598,7 +598,7 @@ void VRGuiSetup::on_change_view_user() {
 
     VRView* view = (VRView*)selected_object;
     view->setUser(u);
-    setToolButtonSensivity("toolbutton12", true);
+    setToolButtonSensitivity("toolbutton12", true);
 }
 
 void VRGuiSetup::on_proj_user_edit(Vec3f v) {
@@ -607,7 +607,7 @@ void VRGuiSetup::on_proj_user_edit(Vec3f v) {
 
     VRView* view = (VRView*)selected_object;
     if (view->getUser()) view->getUser()->setFrom(v);
-    setToolButtonSensivity("toolbutton12", true);
+    setToolButtonSensitivity("toolbutton12", true);
 }
 
 void VRGuiSetup::on_proj_center_edit(Vec3f v) {
@@ -616,7 +616,7 @@ void VRGuiSetup::on_proj_center_edit(Vec3f v) {
 
     VRView* view = (VRView*)selected_object;
     view->setProjectionCenter(v);
-    setToolButtonSensivity("toolbutton12", true);
+    setToolButtonSensitivity("toolbutton12", true);
 }
 
 void VRGuiSetup::on_proj_normal_edit(Vec3f v) {
@@ -625,7 +625,7 @@ void VRGuiSetup::on_proj_normal_edit(Vec3f v) {
 
     VRView* view = (VRView*)selected_object;
     view->setProjectionNormal(v);
-    setToolButtonSensivity("toolbutton12", true);
+    setToolButtonSensitivity("toolbutton12", true);
 }
 
 void VRGuiSetup::on_proj_up_edit(Vec3f v) {
@@ -634,7 +634,7 @@ void VRGuiSetup::on_proj_up_edit(Vec3f v) {
 
     VRView* view = (VRView*)selected_object;
     view->setProjectionUp(v);
-    setToolButtonSensivity("toolbutton12", true);
+    setToolButtonSensitivity("toolbutton12", true);
 }
 
 void VRGuiSetup::on_proj_size_edit(Vec2f v) {
@@ -643,7 +643,7 @@ void VRGuiSetup::on_proj_size_edit(Vec2f v) {
 
     VRView* view = (VRView*)selected_object;
     view->setProjectionSize(v);
-    setToolButtonSensivity("toolbutton12", true);
+    setToolButtonSensitivity("toolbutton12", true);
 }
 
 // tracker
@@ -652,14 +652,14 @@ void VRGuiSetup::on_toggle_art() {
     if (guard) return;
     bool b = getCheckButtonState("checkbutton24");
     current_setup->setARTActive(b);
-    setToolButtonSensivity("toolbutton12", true);
+    setToolButtonSensitivity("toolbutton12", true);
 }
 
 void VRGuiSetup::on_art_edit_port() {
     if (guard) return;
     int p = toInt(getTextEntry("entry39"));
     current_setup->setARTPort(p);
-    setToolButtonSensivity("toolbutton12", true);
+    setToolButtonSensitivity("toolbutton12", true);
 }
 
 void VRGuiSetup::on_art_edit_offset() {
@@ -668,7 +668,7 @@ void VRGuiSetup::on_art_edit_offset() {
     float oy = toFloat(getTextEntry("entry62"));
     float oz = toFloat(getTextEntry("entry63"));
     current_setup->setARTOffset(Vec3f(ox,oy,oz));
-    setToolButtonSensivity("toolbutton12", true);
+    setToolButtonSensitivity("toolbutton12", true);
 }
 
 void VRGuiSetup::on_art_edit_id() {
@@ -676,7 +676,7 @@ void VRGuiSetup::on_art_edit_id() {
     int id = toInt(getTextEntry("entry40"));
     ART_device* dev = (ART_device*)selected_object;
     dev->ID = id;
-    setToolButtonSensivity("toolbutton12", true);
+    setToolButtonSensitivity("toolbutton12", true);
 }
 
 void VRGuiSetup::on_edit_VRPN_tracker_address() {
@@ -688,21 +688,21 @@ void VRGuiSetup::on_edit_VRPN_tracker_address() {
     string txt = getTextEntry("entry50");
     t->setTracker(txt);
 
-    setToolButtonSensivity("toolbutton12", true);
+    setToolButtonSensitivity("toolbutton12", true);
 }
 
 void VRGuiSetup::on_haptic_ip_edited() {
     if (guard) return;
     VRHaptic* dev = (VRHaptic*)selected_object;
     dev->setIP(getTextEntry("entry8"));
-    setToolButtonSensivity("toolbutton12", true);
+    setToolButtonSensitivity("toolbutton12", true);
 }
 
 void VRGuiSetup::on_change_haptic_type() {
     if (guard) return;
     VRHaptic* dev = (VRHaptic*)selected_object;
     dev->setType(getComboboxText("combobox25"));
-    setToolButtonSensivity("toolbutton12", true);
+    setToolButtonSensitivity("toolbutton12", true);
 }
 
 void VRGuiSetup::on_toggle_dev_cross() {
@@ -809,9 +809,9 @@ VRGuiSetup::VRGuiSetup() {
     // primitive list
     fillStringListstore("prim_list", VRPrimitive::getTypes());
 
-    setTableSensivity("table2", false);
-    setTableSensivity("table7", false);
-    setTableSensivity("table8", false);
+    setTableSensitivity("table2", false);
+    setTableSensitivity("table7", false);
+    setTableSensitivity("table8", false);
 
     updateSetupList();
     updateSetup();

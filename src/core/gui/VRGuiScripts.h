@@ -73,6 +73,11 @@ class VRGuiScripts {
         void on_diag_import_select();
         void on_diag_import();
 
+        void on_find_clicked();
+        void on_find_diag_cancel_clicked();
+        void on_find_diag_find_clicked();
+        void on_toggle_find_replace();
+
     public:
         VRGuiScripts();
 

@@ -68,14 +68,14 @@ VRObject* getSelected() {
         tree_store->clear();
         parseSGTree( root );
         tree_view->expand_all();
-        setTableSensivity("table11", false);
+        setTableSensitivity("table11", false);
     }
 
     return res;
 }
 
 void setObject(VRObject* o) {
-    setExpanderSensivity("expander2", true);
+    setExpanderSensitivity("expander2", true);
 
     // set object properties
     setCheckButton("checkbutton6", o->isVisible());
@@ -87,7 +87,7 @@ void setObject(VRObject* o) {
 }
 
 void setTransform(VRTransform* e) {
-    setExpanderSensivity("expander1", true);
+    setExpanderSensitivity("expander1", true);
 
     Vec3f f = e->getFrom();
     Vec3f a = e->getAt();
@@ -131,9 +131,9 @@ void setTransform(VRTransform* e) {
 }
 
 void setGeometry(VRGeometry* g) {
-    //setExpanderSensivity("expander11", true);
-    setExpanderSensivity("expander14", true);
-    setExpanderSensivity("expander16", true);
+    //setExpanderSensitivity("expander11", true);
+    setExpanderSensitivity("expander14", true);
+    setExpanderSensitivity("expander16", true);
     VRMaterial* mat = g->getMaterial();
 
     bool lit = true;
@@ -191,7 +191,7 @@ void setGeometry(VRGeometry* g) {
 }
 
 void setLight(VRLight* l) {
-    setExpanderSensivity("expander13", true);
+    setExpanderSensitivity("expander13", true);
 
     setCheckButton("checkbutton31", l->isOn());
     setCheckButton("checkbutton32", l->getShadows());
@@ -223,7 +223,7 @@ void setLight(VRLight* l) {
 }
 
 void setCamera(VRCamera* c) {
-    setExpanderSensivity("expander12", true);
+    setExpanderSensitivity("expander12", true);
     setCheckButton("checkbutton17", c->getAcceptRoot());
     setTextEntry("entry60", toString(c->getAspect()));
     setTextEntry("entry61", toString(c->getFov()));
@@ -232,8 +232,8 @@ void setCamera(VRCamera* c) {
 }
 
 void setGroup(VRGroup* g) {
-    setExpanderSensivity("expander2", true);
-    setExpanderSensivity("expander9", true);
+    setExpanderSensitivity("expander2", true);
+    setExpanderSensitivity("expander9", true);
     setCheckButton("checkbutton23", g->getActive() );
 
     fillStringListstore("liststore3", g->getGroups());
@@ -242,8 +242,8 @@ void setGroup(VRGroup* g) {
 }
 
 void setLod(VRLod* lod) {
-    setExpanderSensivity("expander2", true);
-    setExpanderSensivity("expander10", true);
+    setExpanderSensitivity("expander2", true);
+    setExpanderSensitivity("expander10", true);
 
     setTextEntry("entry9", toString(lod->getDecimateNumber()));
     setCheckButton("checkbutton35", lod->getDecimate());
@@ -263,7 +263,7 @@ void setLod(VRLod* lod) {
 }
 
 void setCSG(CSGGeometry* g) {
-    setExpanderSensivity("expander15", true);
+    setExpanderSensitivity("expander15", true);
 
     bool b = g->getEditMode();
     string op = g->getOperation();
@@ -274,16 +274,16 @@ void setCSG(CSGGeometry* g) {
 void on_toggle_liveupdate(GtkToggleButton* tb, gpointer user_data) { liveUpdate = !liveUpdate; }
 
 void updateObjectForms(bool disable = false) {
-    setExpanderSensivity("expander1", false);
-    setExpanderSensivity("expander2", false);
-    setExpanderSensivity("expander9", false);
-    setExpanderSensivity("expander10", false);
-    setExpanderSensivity("expander11", false);
-    setExpanderSensivity("expander12", false);
-    setExpanderSensivity("expander13", false);
-    setExpanderSensivity("expander14", false);
-    setExpanderSensivity("expander15", false);
-    setExpanderSensivity("expander16", false);
+    setExpanderSensitivity("expander1", false);
+    setExpanderSensitivity("expander2", false);
+    setExpanderSensitivity("expander9", false);
+    setExpanderSensitivity("expander10", false);
+    setExpanderSensitivity("expander11", false);
+    setExpanderSensitivity("expander12", false);
+    setExpanderSensitivity("expander13", false);
+    setExpanderSensitivity("expander14", false);
+    setExpanderSensitivity("expander15", false);
+    setExpanderSensitivity("expander16", false);
     if (disable) return;
 
     VRObject* obj = getSelected();
@@ -687,7 +687,7 @@ void on_toggle_camera_accept_realroot(GtkToggleButton* tb, gpointer data) {
 void on_treeview_select(GtkTreeView* tv, gpointer user_data) {
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
     if(!iter) return;
-    setTableSensivity("table11", true);
+    setTableSensitivity("table11", true);
 
     ModelColumns cols;
     Gtk::TreeModel::Row row = *iter;
@@ -1302,7 +1302,7 @@ void VRGuiScene::updateTreeView() {
 
     tree_view->expand_all();
 
-    setTableSensivity("table11", false);
+    setTableSensitivity("table11", false);
 }
 
 // check if currently getSelected() object has been modified

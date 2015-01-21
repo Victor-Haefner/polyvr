@@ -1,6 +1,7 @@
 #include "VRGuiScripts.h"
 #include "VRGuiUtils.h"
 #include "VRGuiFile.h"
+#include "VRGuiBits.h"
 #include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
 #include "core/scene/VRScene.h"
@@ -157,7 +158,7 @@ void VRGuiScripts::on_save_clicked() {
     string core = VRGuiScripts::get_editor_core(script->getHeadSize());
     VRSceneManager::getCurrent()->updateScript(script->getName(), core);
 
-    setToolButtonSensivity("toolbutton7", false);
+    setToolButtonSensitivity("toolbutton7", false);
 
     saveScene();
 }
@@ -285,17 +286,17 @@ void VRGuiScripts::on_del_clicked() {
     Glib::RefPtr<Gtk::ListStore> list_store  = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("script_list"));
     list_store->erase(iter);
 
-    setToolButtonSensivity("toolbutton9", false);
-    setToolButtonSensivity("toolbutton8", false);
+    setToolButtonSensitivity("toolbutton9", false);
+    setToolButtonSensitivity("toolbutton8", false);
 }
 
 void VRGuiScripts::on_select_script() { // selected a script
     VRScript* script = VRGuiScripts::getSelectedScript();
     if (script == 0) {
-        setToolButtonSensivity("toolbutton8", false);
-        setToolButtonSensivity("toolbutton7", false);
-        setToolButtonSensivity("toolbutton9", false);
-        setTableSensivity("table15", false);
+        setToolButtonSensitivity("toolbutton8", false);
+        setToolButtonSensitivity("toolbutton7", false);
+        setToolButtonSensitivity("toolbutton9", false);
+        setTableSensitivity("table15", false);
         return;
     }
 
@@ -348,10 +349,10 @@ void VRGuiScripts::on_select_script() { // selected a script
         gtk_list_store_set(trigs->gobj(), row.gobj(), 6, t->getName().c_str(), -1);
     }
 
-    setToolButtonSensivity("toolbutton8", true);
-    setToolButtonSensivity("toolbutton7", false);
-    setToolButtonSensivity("toolbutton9", true);
-    setTableSensivity("table15", true);
+    setToolButtonSensitivity("toolbutton8", true);
+    setToolButtonSensitivity("toolbutton7", false);
+    setToolButtonSensitivity("toolbutton9", true);
+    setTableSensitivity("table15", true);
 
     // language
     if (script->getType() == "Python") gtk_source_buffer_set_language(VRGuiScripts_sourceBuffer, python);
@@ -435,7 +436,7 @@ void VRGuiScripts::on_name_edited(const Glib::ustring& path, const Glib::ustring
 
 
 void VRGuiScripts_on_script_changed(GtkTextBuffer* tb, gpointer user_data) {
-    setToolButtonSensivity("toolbutton7", true);
+    setToolButtonSensitivity("toolbutton7", true);
 
     VRGuiScripts* gs = (VRGuiScripts*)user_data;
 
@@ -753,6 +754,76 @@ void VRGuiScripts::on_change_mobile() {
     on_save_clicked();
 }
 
+void VRGuiScripts::on_find_clicked() {
+    setCheckButton("checkbutton12", false);
+    setEntrySensitivity("entry11", false);
+    showDialog("find_dialog");
+}
+
+void VRGuiScripts::on_find_diag_cancel_clicked() {
+    hideDialog("find_dialog");
+}
+
+void VRGuiScripts::on_find_diag_find_clicked() {
+    bool sa = getCheckButtonState("checkbutton38");
+    bool rep = getCheckButtonState("checkbutton12");
+    string search = getTextEntry("entry10");
+    hideDialog("find_dialog");
+    if (search == "") return;
+
+    VRScript* s = getSelectedScript();
+    map<VRScript*, string > cores;
+    map<VRScript*, map<int, bool> > res;
+
+    if (!sa and s == 0) return;
+
+    if (!sa) cores[s] = s->getCore();
+    else {
+        for (auto sc : VRSceneManager::getCurrent()->getScripts() ) {
+            cores[sc.second] = sc.second->getCore();
+        }
+    }
+
+    for (auto c : cores) {
+        res[c.first] = map<int, bool>();
+        int pos = c.second.find(search, 0);
+        while(pos != string::npos) {
+            res[c.first][pos] = false;
+            pos = c.second.find(search, pos+1);
+        }
+        pos = c.second.find("\n", 0);
+        while(pos != string::npos) {
+            res[c.first][pos] = true;
+            pos = c.second.find("\n", pos+1);
+        }
+    }
+
+    stringstream console_output;
+    console_output << "Results for search of '" << search << "'\n";
+    for (auto r : res) {
+        console_output << r.first->getName() << ": line (position)\n";
+        int l = 2; // core starts at line 2
+        int lp = 0;
+        int lpos = 0;
+        for (auto r2 : r.second) {
+            if (r2.second) { l++; lpos = r2.first; continue; }
+            if (lp != l) { console_output << " " << l; lp = l; }
+            console_output << " (" << r2.first - lpos << ")";
+        }
+        console_output << endl;
+    }
+    console_output << endl;
+
+    VRGuiBits::write_to_terminal( console_output.str() );
+}
+
+void VRGuiScripts::on_toggle_find_replace() {
+    //setEntrySensitivity("entry11", getCheckButtonState("checkbutton12") );
+    setEntrySensitivity("entry11", false);
+    setTextEntry("entry11", "Coming soon!");
+}
+
+
 // --------------------------
 // ---------Main-------------
 // --------------------------
@@ -829,12 +900,17 @@ VRGuiScripts::VRGuiScripts() {
     setToolButtonCallback("toolbutton9", sigc::mem_fun(*this, &VRGuiScripts::on_del_clicked) );
     setToolButtonCallback("toolbutton16", sigc::mem_fun(*this, &VRGuiScripts::on_help_clicked) );
     setToolButtonCallback("toolbutton22", sigc::mem_fun(*this, &VRGuiScripts::on_import_clicked) );
+    setToolButtonCallback("toolbutton23", sigc::mem_fun(*this, &VRGuiScripts::on_find_clicked) );
 
     setButtonCallback("button12", sigc::mem_fun(*this, &VRGuiScripts::on_argadd_clicked) );
     setButtonCallback("button13", sigc::mem_fun(*this, &VRGuiScripts::on_argrem_clicked) );
     setButtonCallback("button23", sigc::mem_fun(*this, &VRGuiScripts::on_trigadd_clicked) );
     setButtonCallback("button24", sigc::mem_fun(*this, &VRGuiScripts::on_trigrem_clicked) );
     setButtonCallback("button16", sigc::mem_fun(*this, &VRGuiScripts::on_help_close_clicked) );
+    setButtonCallback("button28", sigc::mem_fun(*this, &VRGuiScripts::on_find_diag_cancel_clicked) );
+    setButtonCallback("button29", sigc::mem_fun(*this, &VRGuiScripts::on_find_diag_find_clicked) );
+
+    setCheckButtonCallback("checkbutton12", sigc::mem_fun(*this, &VRGuiScripts::on_toggle_find_replace) );
 
     setComboboxCallback("combobox1", sigc::mem_fun(*this, &VRGuiScripts::on_change_script_type) );
     setComboboxCallback("combobox24", sigc::mem_fun(*this, &VRGuiScripts::on_change_mobile) );
@@ -876,9 +952,9 @@ VRGuiScripts::VRGuiScripts() {
     fillStringListstore("ScriptTriggerStates", vector<string>(trigger_states, end(trigger_states)) );
     fillStringListstore("liststore6", vector<string>(script_types, end(script_types)) );
 
-    setToolButtonSensivity("toolbutton7", false);
-    setToolButtonSensivity("toolbutton8", false);
-    setToolButtonSensivity("toolbutton9", false);
+    setToolButtonSensitivity("toolbutton7", false);
+    setToolButtonSensitivity("toolbutton8", false);
+    setToolButtonSensitivity("toolbutton9", false);
 
     // update the list each frame to update the execution time
     VRFunction<int>* fkt = new VRFunction<int>("scripts_gui_update",  boost::bind(&VRGuiScripts::update, this) );

@@ -174,8 +174,8 @@ void VRDemos::clearTable(string t) {
 
 void VRDemos::setGuiState(demoEntry* e) {
     bool running = (e == 0) ? 0 : e->running;
-    setVPanedSensivity("vpaned1", running);
-    setNotebookSensivity("notebook3", running);
+    setVPanedSensitivity("vpaned1", running);
+    setNotebookSensitivity("notebook3", running);
 
     for (auto i : demos) {
         demoEntry* d = i.second;

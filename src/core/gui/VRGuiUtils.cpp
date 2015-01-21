@@ -64,7 +64,7 @@ void setRadioButton(string cb, bool b) {
     cbut->set_active(b);
 }
 
-void setTableSensivity(string table, bool b) {
+void setTableSensitivity(string table, bool b) {
     Gtk::Table* tab;
     VRGuiBuilder()->get_widget(table, tab);
     tab->set_sensitive(b);
@@ -76,25 +76,25 @@ void setComboboxSensitivity(string cb, bool b) {
     tab->set_sensitive(b);
 }
 
-void setNotebookSensivity(string nb, bool b) {
+void setNotebookSensitivity(string nb, bool b) {
     Gtk::Notebook* tab;
     VRGuiBuilder()->get_widget(nb, tab);
     tab->set_sensitive(b);
 }
 
-void setVPanedSensivity(string vp, bool b) {
+void setVPanedSensitivity(string vp, bool b) {
     Gtk::VPaned* tab;
     VRGuiBuilder()->get_widget(vp, tab);
     tab->set_sensitive(b);
 }
 
-void setToolButtonSensivity(string toolbutton, bool b) {
+void setToolButtonSensitivity(string toolbutton, bool b) {
     Gtk::ToolButton* tb;
     VRGuiBuilder()->get_widget(toolbutton, tb);
     tb->set_sensitive(b);
 }
 
-void setExpanderSensivity(string exp, bool b) {
+void setExpanderSensitivity(string exp, bool b) {
     Gtk::Expander* e;
     VRGuiBuilder()->get_widget(exp, e);
     if (!b) e->hide();
@@ -172,6 +172,12 @@ void setEntryCallback(string e, sigc::slot<bool,GdkEventFocus*> sig) {
     Gtk::Entry* en;
     VRGuiBuilder()->get_widget(e, en);
     en->signal_focus_out_event().connect(sig);
+}
+
+void setEntrySensitivity(string e, bool b) {
+    Gtk::Entry* en;
+    VRGuiBuilder()->get_widget(e, en);
+    en->set_sensitive(b);
 }
 
 void setButtonCallback(string b, void (* fkt)(GtkButton*, gpointer), gpointer data) {
@@ -448,13 +454,13 @@ void fillStringListstore(string ls, vector<string> list) {
 
 void showDialog(string d) {
     Gtk::Window* dialog;
-    VRGuiBuilder()->get_widget("advanced_start", dialog);
+    VRGuiBuilder()->get_widget(d, dialog);
     dialog->show();
 }
 
 void hideDialog(string d) {
     Gtk::Window* dialog;
-    VRGuiBuilder()->get_widget("advanced_start", dialog);
+    VRGuiBuilder()->get_widget(d, dialog);
     dialog->hide();
 }
 

@@ -19,6 +19,7 @@ void setTextEntry(string entry, string text);
 string getTextEntry(string entry);
 void setEntryCallback(string e, void (* fkt)(GtkEntry*, gpointer));
 void setEntryCallback(string e, sigc::slot<void> sig);
+void setEntrySensitivity(string e, bool b);
 
 // BUTTONS
 void setButtonCallback(string b, void (* fkt)(GtkButton*, gpointer), gpointer data = NULL);
@@ -26,7 +27,7 @@ void setButtonCallback(string b, sigc::slot<void> sig );
 void setToggleButtonCallback(string b, sigc::slot<void> sig );
 void setToolButtonCallback(string b, void (* fkt)(GtkButton*, gpointer));
 void setToolButtonCallback(string b, sigc::slot<void> sig );
-void setToolButtonSensivity(string toolbutton, bool b);
+void setToolButtonSensitivity(string toolbutton, bool b);
 void setCheckButton(string cb, bool b);
 bool getCheckButtonState(string b);
 void setCheckButtonCallback(string cb, void (* fkt)(GtkToggleButton*, gpointer) );
@@ -59,14 +60,14 @@ void setCellRendererCombo(string treeviewcolumn, string combolist, Gtk::TreeMode
 void setTreeviewSelectCallback(string treeview, sigc::slot<void> sig);
 
 // STUFF
-void setTableSensivity(string table, bool b);
-void setNotebookSensivity(string nb, bool b);
-void setVPanedSensivity(string vp, bool b);
+void setTableSensitivity(string table, bool b);
+void setNotebookSensitivity(string nb, bool b);
+void setVPanedSensitivity(string vp, bool b);
 void setNoteBookCallback(string nb, void (* fkt)(GtkNotebook*, GtkNotebookPage*, guint, gpointer) , gpointer ptr = NULL);
 void setNotebookPage(string nb, int p);
 
 bool keySignalProxy(GdkEventKey* e, string k, sigc::slot<void> sig );
-void setExpanderSensivity(string exp, bool b);
+void setExpanderSensitivity(string exp, bool b);
 bool askUser(string msg1, string msg2);
 OSG::Color4f chooseColor(string drawable, OSG::Color4f current);
 void setColorChooser(string drawable, sigc::slot<bool, GdkEventButton*> sig);

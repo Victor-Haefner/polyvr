@@ -171,8 +171,8 @@ void path::compute(int N) {
     n.normalize();
 
     // berechne hilfspunkt für up vector
-    Vec3f x = n1.cross(u1)*0.5 + n2.cross(u2)*0.5;
-    Vec3f u = x.cross(n);
+    //Vec3f x = n1.cross(u1)*0.5 + n2.cross(u2)*0.5;
+    Vec3f u = (u1+u2)*0.5;//x.cross(n);
     u.normalize();
 
     cubicBezier(_pts, N, ep1, ep2, h1, h2);
