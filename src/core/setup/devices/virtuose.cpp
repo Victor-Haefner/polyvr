@@ -136,9 +136,7 @@ void virtuose::applyForce(Vec3f force, Vec3f torque) {
 Matrix virtuose::getPose() {
     float f[7]= {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f};
 
-    if(commandType == COMMAND_TYPE_IMPEDANCE) {
         CHECK( virtGetAvatarPosition(vc, f) );
-    }
     //CHECK( virtGetPhysicalPosition(vc, f) );
 
     Matrix m;
@@ -167,10 +165,10 @@ void virtuose::attachTransform(VRTransform* trans) {
     //float s = 0.1;
     //float k = s*s*o->getMass()/6.0;
     //float inertia[9] = {k,0.0,0.0,0.0,k,0.0,0.0,0.0,k};
-    float tmp = inertia[0];
-    inertia[0] = inertia[8];
-    inertia[8] = inertia[4];
-    inertia[4] = tmp;
+    //float tmp = inertia[0];
+    //inertia[0] = inertia[8];
+    //inertia[8] = inertia[4];
+    //inertia[4] = tmp;
 
     cout<<"\n "<<"\n "<<inertia[0] << "    " <<inertia[1] <<  "    " <<inertia[2] << "\n "<<inertia[3] <<  "    " <<inertia[4] <<  "    " <<inertia[5] << "\n "<<inertia[6] << "    " <<inertia[7] <<"    " << inertia[8]<<"\n ";
 
@@ -183,7 +181,7 @@ void virtuose::fillPosition(VRPhysics* p, float *to) {
      to[0] =  pos.getOrigin().getZ();
      to[1] = pos.getOrigin().getX();
      to[2] =  pos.getOrigin().getY();
-     pos.setRotation(pos.getRotation().normalized());
+     //pos.setRotation(pos.getRotation().normalized());
      to[3] =  pos.getRotation().getZ();
      to[4] =  pos.getRotation().getX();
      to[5] =  pos.getRotation().getY();
@@ -257,23 +255,36 @@ void virtuose::updateVirtMech() {
             }
             else
             {
+                 float ts = 0.0;
+                 CHECK(virtGetTimeStep(vc, &ts));
+
                  //apply position&speed to the haptic
                  fillPosition(this->attached->getPhysics(),position);
                  CHECK(virtSetPosition(vc, position));
-                 fillPosition(this->attached->getPhysics(),speed);
+                 fillSpeed(this->attached->getPhysics(),speed);
+                 for(int i = 0; i < 6; i++) {
+                     speed[i] *= dt;
+                     speed[i] *= (1/ts);
+                 }
+
+
                  CHECK(virtSetSpeed(vc, speed));
                  //get force applied by human on the haptic
                  CHECK(virtGetForce(vc, force));
-                 //multiply with hardcoded estimated "bullshit"- factor
-                 float f_lin = 0.1f;
-                 float f_ang = 0.1f;
-                 Vec3f frc = Vec3f(force[1], force[2], force[0]) * f_lin;
-                 Vec3f trqu = Vec3f(force[4],force[5],force[3]) * f_ang;
+                for(int i = 0; i < 6; i++) {
+                     force[i] *= ts;
+                     force[i] *= ts;
+                     force[i] *= (1/dt);
+                     force[i] *= (1/dt);
+                 }
+
+                 Vec3f frc = Vec3f(force[1], force[2], force[0]);
+                 Vec3f trqu = Vec3f(force[4],force[5],force[3]);
                  //cout << globalforce[0] << " " <<globalforce[1] <<" " << globalforce[2] <<" " << "\n ";
                  //apply force on the object
                  if(power == 0) {
                     //optimization against "bumby" surfaces (for interaction with static rigidbodies only!)
-                    /*
+/*
                     vector<VRCollision> colls = attached->getPhysics()->getCollisions();
                     VRCollision tmp;
                     Vec3f v = Vec3f(0.0,0.0,0.0);
@@ -284,8 +295,7 @@ void virtuose::updateVirtMech() {
                     v.normalize();
                     float bumpBackf = -((frc[0] * v[0]) + (frc[1] * v[1]) + (frc[2] * v[2]));
                     frc += (v * bumpBackf);
-                    */
-
+*/
 
                      attached->getPhysics()->addForce(frc);
                      attached->getPhysics()->addTorque(trqu);

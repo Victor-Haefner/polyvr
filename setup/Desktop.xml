@@ -12,5 +12,5 @@
     <Device name="mouse" type="mouse"/>
   </Devices>
   <TrackingART active="0" port="5000" offset="0 0 0"/>
-  <TrackingVRPN/>
+  <TrackingVRPN active="1"/>
 </Setup>

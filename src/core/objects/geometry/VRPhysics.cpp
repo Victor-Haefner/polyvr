@@ -402,8 +402,8 @@ void VRPhysics::addForce(OSG::Vec3f i) {
    if (mass == 0) return;
    btVector3 ttlForce = body->getTotalForce();
    btVector3 force = btVector3(i.x(), i.y(), i.z());
-   ttlForce += force;
-   body->applyCentralForce(ttlForce);
+   //ttlForce += force;
+   body->applyCentralForce(force);
 }
 
 void VRPhysics::addTorque(OSG::Vec3f i) {
@@ -420,7 +420,7 @@ OSG::Vec3f VRPhysics::getLinearVelocity() {
 
      if (body == 0) return OSG::Vec3f (0.0f,0.0f,0.0f);
      btVector3 tmp = body->getLinearVelocity();
-     OSG::Vec3f result = OSG::Vec3f ((float) tmp.getX(),(float) tmp.getY(),(float) tmp.getZ());
+     OSG::Vec3f result = OSG::Vec3f ( tmp.getX(), tmp.getY(), tmp.getZ());
      return result;
 }
 
@@ -428,7 +428,11 @@ OSG::Vec3f VRPhysics::getAngularVelocity() {
 
      if (body == 0) return OSG::Vec3f (0.0f,0.0f,0.0f);
      btVector3 tmp = body->getAngularVelocity();
-     OSG::Vec3f result = OSG::Vec3f ((float) tmp.getX(),(float) tmp.getY(),(float) tmp.getZ());
+     //btVector3 tmp2 = body->getInterpolationAngularVelocity();
+     //cout<<"\n "<<"\n "<< (float)tmp.getX() << "    " <<(float)tmp.getY() <<  "    " <<(float)tmp.getZ() << "\n ";
+     //cout<<"\n "<<"\n "<<(float)tmp2.getX() << "    " <<(float)tmp2.getY() <<  "    " <<(float)tmp2.getZ() << "\n ";
+
+     OSG::Vec3f result = OSG::Vec3f (tmp.getX(), tmp.getY(), tmp.getZ());
      return result;
 }
 
@@ -451,6 +455,7 @@ void VRPhysics::updateTransformation(const OSG::Matrix& m) {
 btTransform VRPhysics::getTransform() {
     if (body == 0) return btTransform();
     btTransform t;
+
     body->getMotionState()->getWorldTransform(t);
     return t;
 }
