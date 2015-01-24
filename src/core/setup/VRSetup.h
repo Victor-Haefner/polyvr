@@ -35,9 +35,6 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
         ~VRSetup();
 
         VRTransform* getUser();
-        //VRTransform* getTrackerFlystick() { return fly_tracker; }
-        //VRGeometry* getTrackerHand() { return hand_tracker; }
-        //VRDevice* getDeviceFlystick() { return fly; }
 
         void addObject(VRObject* o);
         VRTransform* getRoot();

@@ -5,9 +5,12 @@
 #include <iostream>
 #include <OpenSG/OSGGLUT.h>
 #include <OpenSG/OSGTriangleIterator.h>
+#include <OpenSG/OSGNode.h>
+#include <OpenSG/OSGGeometry.h>
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRPhysics.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/VRVisualLayer.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -31,42 +34,35 @@ VRPhysicsManager::VRPhysicsManager() {
 
     updatePhysicsFkt = new VRFunction<int>("PhysicsUpdate", boost::bind(&VRPhysicsManager::updatePhysics, this));
 
+    physics_visual_layer = new VRVisualLayer("physics");
+
     cout << "Init VRPhysicsManager" << endl;
 }
 
 VRPhysicsManager::~VRPhysicsManager() {
-    return;
-
-    //cleanup in the reverse order of creation/initialization
+    return; // TODO
 
     //remove the rigidbodies from the dynamics world and delete them
-    for (int i=dynamicsWorld->getNumCollisionObjects()-1; i>=0 ;i--)
-    {
+    for (int i=dynamicsWorld->getNumCollisionObjects()-1; i>=0 ;i--) {
         btCollisionObject* obj = dynamicsWorld->getCollisionObjectArray()[i];
         btRigidBody* body = btRigidBody::upcast(obj);
-        if (body && body->getMotionState())
-        {
-            delete body->getMotionState();
-        }
+        if (body && body->getMotionState()) delete body->getMotionState();
         dynamicsWorld->removeCollisionObject( obj );
         delete obj;
     }
 
     //delete collision shapes
-    for (int j=0;j<collisionShapes.size();j++)
-    {
+    for (int j=0;j<collisionShapes.size();j++) {
         btCollisionShape* shape = collisionShapes[j];
         collisionShapes[j] = 0;
         delete shape;
     }
 
-    // Clean up behind ourselves like good little programmers
     delete dynamicsWorld;
     delete solver;
     delete dispatcher;
     delete collisionConfiguration;
     delete broadphase;
-
 }
 
 void VRPhysicsManager::updatePhysics() {
@@ -85,10 +81,34 @@ void VRPhysicsManager::updatePhysics() {
         body = btRigidBody::upcast(obj);
         if (body && body->getMotionState() && OSGobjs.count(body) == 1) OSGobjs[body]->updateFromBullet();
     }
+
+    // update physics visualisation
+    if (physics_visual_layer->getVisibility()) {
+        for (auto obj : physics_visuals) {
+            btCollisionShape* shape = obj.first->getCollisionShape();
+            int stype = shape->getShapeType();
+            VRGeometry* geo = obj.second;
+
+            btVector3 center;
+            btScalar radius;
+            shape->getBoundingSphere(center, radius);
+
+            stringstream params("Sphere "); params << radius << " 1";
+            geo->setPrimitive(params.str());
+
+            // transfer transformation
+            btTransform trans = obj.first->getWorldTransform();
+            geo->setMatrix( VRPhysics::fromTransform( trans ) );
+
+        }
+    }
 }
 
 void VRPhysicsManager::physicalize(VRTransform* obj) {
     OSGobjs[obj->getPhysics()->obj()] = obj;
+    VRGeometry* pshape = new VRGeometry("phys_shape");
+    physics_visuals[obj->getPhysics()->obj()] = pshape;
+    physics_visual_layer->addObject(pshape);
 }
 
 void VRPhysicsManager::setGravity(Vec3f g) {

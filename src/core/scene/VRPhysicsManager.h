@@ -22,6 +22,7 @@ using namespace std;
 
 class VRGeometry;
 class VRTransform;
+class VRVisualLayer;
 
 class VRPhysicsManager {
      private:
@@ -35,6 +36,8 @@ class VRPhysicsManager {
         btRigidBody* body;
 
         map<btRigidBody*, VRTransform*> OSGobjs;
+        map<btRigidBody*, VRGeometry*> physics_visuals;
+        VRVisualLayer* physics_visual_layer = 0;
 
         vector<Vec3f> collisionPoints;
 
@@ -53,8 +56,10 @@ class VRPhysicsManager {
         btDiscreteDynamicsWorld* bltWorld();
 
         void collectCollisionPoints();
-
         vector<Vec3f>& getCollisionPoints();
+
+        void setShowPhysics(bool b);
+        bool getShowPhysics();
 };
 
 OSG_END_NAMESPACE;

@@ -39,7 +39,6 @@ class VRPhysics : public OSG::VRStorage {
         string physicsShape;
         map<VRPhysics*, VRPhysicsJoint*> joints;
         map<VRPhysics*, VRPhysicsJoint*> joints2;
-        map<VRPhysics*, VRPhysicsJoint*>::iterator jointItr;
 
         OSG::VRTransform* vr_obj = 0;
         OSG::VRConstraint* constraint = 0;

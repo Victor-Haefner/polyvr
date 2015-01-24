@@ -59,9 +59,9 @@ VRPhysics::~VRPhysics() {
     if (shape != 0) delete shape;
     if (motionState != 0) delete motionState;
 
-    for (jointItr = joints.begin(); jointItr != joints.end(); jointItr++) {
-        world->removeConstraint(jointItr->second->btJoint);
-        delete jointItr->second;
+    for (auto j : joints) {
+        world->removeConstraint(j.second->btJoint);
+        delete j.second;
     }
 }
 
@@ -476,12 +476,6 @@ void VRPhysics::updateConstraint(VRPhysics* p) {
 
 void VRPhysics::updateConstraints() {
     if (body == 0) return;
-
-    for (jointItr = joints.begin(); jointItr != joints.end(); jointItr++) {
-        updateConstraint(jointItr->first);
-    }
-
-    for (jointItr = joints2.begin(); jointItr != joints2.end(); jointItr++) {
-        jointItr->first->updateConstraint(this);
-    }
+    for (auto j : joints) updateConstraint(j.first);
+    for (auto j : joints2) j.first->updateConstraint(this);
 }
