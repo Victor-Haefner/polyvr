@@ -48,15 +48,16 @@ class VRPhysics : public OSG::VRStorage {
         btCollisionShape* getConvexShape();
         btCollisionShape* getConcaveShape();
 
-        OSG::Vec3f toVec3f(btVector3);
-
         void update();
 
     public:
         VRPhysics(OSG::VRTransform* t);
         ~VRPhysics();
 
-        btRigidBody* obj();
+        btRigidBody* getRigidBody();
+        btPairCachingGhostObject* getGhostBody();
+        btCollisionObject* getCollisionObject();
+        btCollisionShape* getCollisionShape();
 
         void setShape(string s, float param = -1);
         string getShape();
@@ -95,6 +96,8 @@ class VRPhysics : public OSG::VRStorage {
         static vector<string> getPhysicsShapes();
         static btTransform fromMatrix(const OSG::Matrix& m);
         static OSG::Matrix fromTransform(const btTransform t);
+
+        static OSG::Vec3f toVec3f(btVector3);
 
         void setConstraint(VRPhysics* p, OSG::VRConstraint* c, OSG::VRConstraint* cs);
         void updateConstraint(VRPhysics* p);

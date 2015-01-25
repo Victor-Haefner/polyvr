@@ -44,6 +44,8 @@ VRScene::VRScene() {
     cameras_layer->setCallback( new VRFunction<bool>("showCameras", boost::bind(&VRScene::showCameras, this, _1) ) );
     lights_layer->setCallback( new VRFunction<bool>("showLights", boost::bind(&VRScene::showLights, this, _1) ) );
 
+    VRVisualLayer::anchorLayers(root);
+
     cout << " init scene done\n";
 }
 

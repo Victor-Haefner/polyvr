@@ -61,9 +61,7 @@ void VRSetup::setScene(VRScene* scene) {
 
     setViewBackground(scene->getBackground());
 
-    map<string, VRWindow*> windows = getWindows();
-    map<string, VRWindow*>::iterator itr;
-    for (itr = windows.begin(); itr != windows.end(); itr++) itr->second->setContent(true);
+    for (auto w : getWindows()) w.second->setContent(true);
 
     scene->addCamera(setup_cam);
 

@@ -65,7 +65,10 @@ VRPhysics::~VRPhysics() {
     }
 }
 
-btRigidBody* VRPhysics::obj() { return body; }
+btCollisionObject* VRPhysics::getCollisionObject() { return ghost ? (btCollisionObject*)ghost_body : (btCollisionObject*)body; }
+btRigidBody* VRPhysics::getRigidBody() { return body; }
+btPairCachingGhostObject* VRPhysics::getGhostBody() { return ghost_body; }
+btCollisionShape* VRPhysics::getCollisionShape() { return shape; }
 
 void VRPhysics::setPhysicalized(bool b) { physicalized = b; update(); }
 void VRPhysics::setShape(string s, float param) { physicsShape = s; shape_param = param; update(); }
@@ -170,6 +173,8 @@ void VRPhysics::update() {
     if (world == 0) world = scene->bltWorld();
     if (world == 0) return;
 
+    scene->unphysicalize(vr_obj);
+
     if (body != 0) {
         for (auto j : joints) {
             if (j.second->btJoint != 0) {
@@ -201,16 +206,17 @@ void VRPhysics::update() {
         ghost_body = 0;
     }
 
+    if (shape != 0) delete shape;
+    if (motionState != 0) delete motionState;
+
     if (!physicalized) return;
 
-    if (shape != 0) delete shape;
     if (physicsShape == "Box") shape = getBoxShape();
     if (physicsShape == "Sphere") shape = getSphereShape();
     if (physicsShape == "Convex") shape = getConvexShape();
     if (physicsShape == "Concave") shape = getConcaveShape();
     if (shape == 0) return;
 
-    if (motionState != 0) delete motionState;
     motionState = new btDefaultMotionState(fromMatrix(vr_obj->getWorldMatrix()));
 
     btVector3 inertiaVector(0,0,0);
