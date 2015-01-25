@@ -74,8 +74,11 @@ VRPhysicsManager::~VRPhysicsManager() {
 }
 
 void VRPhysicsManager::updatePhysics() {
-
     if (dynamicsWorld == 0) return;
+
+    for (auto o : OSGobjs) {
+        if (o.second->getPhysics()->isGhost()) o.second->updatePhysics();
+    }
 
     static int t_last = glutGet(GLUT_ELAPSED_TIME);
     int t = glutGet(GLUT_ELAPSED_TIME);
@@ -92,7 +95,9 @@ void VRPhysicsManager::updatePhysics() {
 
     // update physics visualisation shapes
     for (auto v : physics_visuals_to_update) {
+        if (physics_visuals.count(v) == 0) continue;
         VRGeometry* geo = physics_visuals[v];
+        //cout << "try " << v << " " << geo << endl;
         btCollisionShape* shape = v->getCollisionShape();
         int stype = shape->getShapeType();
 
@@ -102,7 +107,7 @@ void VRPhysicsManager::updatePhysics() {
         // 21 : concave
 
         if (stype == 0) {
-            btBoxShape* bshape = (btBoxShape*)shape;
+            //btBoxShape* bshape = (btBoxShape*)shape;
         }
 
         if (stype == 4) {
@@ -112,7 +117,6 @@ void VRPhysicsManager::updatePhysics() {
 
             int Ni = hull.numIndices();
             int Nv = hull.numVertices();
-            int Nt = hull.numTriangles();
             const unsigned int* bt_inds = hull.getIndexPointer();
             const btVector3* verts = hull.getVertexPointer();
 
@@ -157,7 +161,9 @@ void VRPhysicsManager::updatePhysics() {
 }
 
 void VRPhysicsManager::physicalize(VRTransform* obj) {
+    //cout << "physicalize transform: " << obj;
     btCollisionObject* bdy = obj->getPhysics()->getCollisionObject();
+    //cout << " with bt_body " << bdy << endl;
     if (bdy == 0) return;
 
     OSGobjs[bdy] = obj;
@@ -171,8 +177,10 @@ void VRPhysicsManager::physicalize(VRTransform* obj) {
 }
 
 void VRPhysicsManager::unphysicalize(VRTransform* obj) {
-    return;
+    //cout << "unphysicalize transform: " << obj;
     btCollisionObject* bdy = obj->getPhysics()->getCollisionObject();
+    //cout << " with bt_body " << bdy << endl;
+    if (bdy == 0) return;
     if (OSGobjs.count(bdy)) OSGobjs.erase(bdy);
     if (physics_visuals.count(bdy)) {
         delete physics_visuals[bdy];
