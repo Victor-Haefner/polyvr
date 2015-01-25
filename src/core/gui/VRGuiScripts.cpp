@@ -943,7 +943,7 @@ VRGuiScripts::VRGuiScripts() {
     // fill combolists
     const char *arg_types[] = {"int", "float", "str", "VRPyObjectType", "VRPyTransformType", "VRPyGeometryType", "VRPyDeviceType", "VRPyHapticType", "VRPySocketType"};
     const char *trigger_types[] = {"none", "on_scene_load", "on_timeout", "on_device", "on_socket"};
-    const char *device_types[] = {"mouse", "keyboard", "flystick", "haptic", "mobile"}; // TODO: get from a list in devicemanager or something
+    const char *device_types[] = {"mouse", "keyboard", "flystick", "haptic", "mobile", "razer"}; // TODO: get from a list in devicemanager or something
     const char *trigger_states[] = {"Pressed", "Released"};
     const char *script_types[] = {"Python", "GLSL", "HTML"};
     fillStringListstore("arg_types", vector<string>(arg_types, end(arg_types)) );
