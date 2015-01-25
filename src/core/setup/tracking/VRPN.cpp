@@ -17,7 +17,7 @@ OSG_BEGIN_NAMESPACE
 
 VRPN_tracker::VRPN_tracker() {
     setNameSpace("VRPN tracker");
-    store("address", &tracker);
+    store("address", &address);
     store("offset", &offset);
     store("scale", &scale);
     store("ID", &ID);
@@ -25,9 +25,9 @@ VRPN_tracker::VRPN_tracker() {
 }
 
 void VRPN_tracker::setTracker(string t) {
-    tracker = t;
-    if (vrpnt) delete vrpnt;
-    vrpnt = 0;
+    address = t;
+    if (tracker) delete tracker;
+    tracker = 0;
 }
 
 void VRPN_CALLBACK handle_tracker(void* data, const vrpn_TRACKERCB t ) { // TODO
@@ -82,14 +82,14 @@ void VRPN::update(VRThread* thread) {
     for (auto tr : tracker) {
         VRPN_tracker* t = tr.second;
 
-        if (t->vrpnt == 0) {
-            t->vrpnt = new vrpn_Tracker_Remote( t->tracker.c_str() );
-            t->vrpnt->register_change_handler( t, handle_tracker );
+        if (t->tracker == 0) {
+            t->tracker = new vrpn_Tracker_Remote( t->address.c_str() );
+            t->tracker->register_change_handler( t, handle_tracker );
         }
 
         if (state == 0) {
             state = 1;
-            if (VRGlobals::get()->CURRENT_FRAME%5 == 0) t->vrpnt->mainloop();
+            if (VRGlobals::get()->CURRENT_FRAME%5 == 0) t->tracker->mainloop();
             state = 0;
         }
 
@@ -104,7 +104,7 @@ void VRPN::addVRPNTracker(int ID, string addr, Vec3f offset, float scale) {
     VRPN_tracker* t = new VRPN_tracker();
     t->setName("tracker");
     t->ent = new VRTransform(t->getName());
-    t->tracker = addr;
+    t->address = addr;
     t->ID = ID;
     t->offset = offset;
     t->scale = scale;

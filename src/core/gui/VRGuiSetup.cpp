@@ -140,14 +140,14 @@ void VRGuiSetup::updateObjectData() {
         setExpanderSensitivity("expander7", true);
         device = true;
         VRPN_tracker* t = (VRPN_tracker*)selected_object;
-        setTextEntry("entry50", t->tracker);
+        setTextEntry("entry50", t->address);
     }
 
     if (selected_type == "vrpn_tracker") {
         setExpanderSensitivity("expander4", true);
         setExpanderSensitivity("expander7", true);
         VRPN_tracker* t = (VRPN_tracker*)selected_object;
-        setTextEntry("entry50", t->tracker);
+        setTextEntry("entry50", t->address);
     }
 
     if (selected_type == "art_device") {

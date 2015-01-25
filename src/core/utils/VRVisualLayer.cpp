@@ -1,0 +1,44 @@
+#include "VRVisualLayer.h"
+#include "core/objects/object/VRObject.h"
+
+#include <OpenSG/OSGNode.h>
+
+OSG_BEGIN_NAMESPACE;
+
+VRVisualLayer::VRVisualLayer(string name) {
+    if (layers.count(name)) delete layers[name];
+
+    layers[name] = this;
+    anchor = new VRObject("layer_anchor_"+name);
+    anchor->hide();
+}
+
+VRVisualLayer::~VRVisualLayer() {
+    delete anchor;
+}
+
+map<string, VRVisualLayer*> VRVisualLayer::layers;
+vector<string> VRVisualLayer::getLayers() {
+    vector<string> ls;
+    for (auto l : layers) ls.push_back(l.first);
+    return ls;
+}
+
+void VRVisualLayer::anchorLayers(VRObject* root) {
+    //for (auto l : layers) l.second->anchor->switchParent(root);
+    for (auto l : layers) root->addChild( l.second->anchor->getNode() );
+}
+
+VRVisualLayer* VRVisualLayer::getLayer(string l) { return layers.count(l) ? layers[l] : 0; }
+void VRVisualLayer::clearLayers() { layers.clear(); }
+
+void VRVisualLayer::setVisibility(bool b) { anchor->setVisible(b); if (callback) (*callback)(b); }
+bool VRVisualLayer::getVisibility() { return anchor->isVisible(); }
+
+void VRVisualLayer::addObject(VRObject* obj) { anchor->addChild(obj); }
+
+void VRVisualLayer::setCallback(VRFunction<bool>* fkt) { callback = fkt; }
+
+OSG_END_NAMESPACE;
+
+

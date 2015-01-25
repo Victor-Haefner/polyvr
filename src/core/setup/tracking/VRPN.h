@@ -11,6 +11,10 @@
 
 namespace xmlpp{ class Element; }
 class vrpn_Tracker_Remote;
+class vrpn_Button_Remote;
+class vrpn_Analog_Remote;
+class vrpn_Dial_Remote;
+class vrpn_Text_Receiver;
 class vrpn_Connection;
 template<class T> class VRFunction;
 
@@ -22,10 +26,15 @@ class VRThread;
 
 struct VRPN_tracker : public VRName, public VRStorage {
     VRTransform* ent = 0;
-    string tracker;
+    string address;
     Vec3f offset;
     float scale = 1;
-    vrpn_Tracker_Remote* vrpnt = 0;
+    vrpn_Tracker_Remote* tracker = 0;
+	vrpn_Button_Remote*  button = 0;
+	vrpn_Analog_Remote*  analog = 0;
+	vrpn_Dial_Remote*    dial = 0;
+    vrpn_Text_Receiver*  text = 0;
+
     vrpn_Connection* vrpnc = 0;
     int ID = 0;
 
