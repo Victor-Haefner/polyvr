@@ -37,6 +37,8 @@ class VRPhysicsManager {
         map<btRigidBody*, VRTransform*> OSGobjs;
 
         vector<Vec3f> collisionPoints;
+        /** timestamp last frame**/
+        int t_last;
 
     protected:
         VRFunction<int>* updatePhysicsFkt;

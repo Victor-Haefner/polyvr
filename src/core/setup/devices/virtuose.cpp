@@ -48,20 +48,26 @@ virtVec(z,x,y);
 
 */
 
-virtuose::virtuose() {
+virtuose::virtuose()
+{
     isAttached = false;
     gripperPosition = 0.0f;
     gripperSpeed = 0.0f;
 
 }
 
-virtuose::~virtuose() {
+virtuose::~virtuose()
+{
     disconnect();
 }
 
-bool virtuose::connected() { return (vc != 0); }
+bool virtuose::connected()
+{
+    return (vc != 0);
+}
 
-bool checkVirtuoseIP(string IP) { // TODO: try if haptic is found -> right port?
+bool checkVirtuoseIP(string IP)   // TODO: try if haptic is found -> right port?
+{
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     fcntl(sockfd, F_SETFL, O_NONBLOCK); // TODO: try blocking but with timeout
     struct sockaddr_in sin;
@@ -69,14 +75,16 @@ bool checkVirtuoseIP(string IP) { // TODO: try if haptic is found -> right port?
     sin.sin_port   = htons(3131);  // Could be anything
     inet_pton(AF_INET, IP.c_str(), &sin.sin_addr);
 
-    if (connect(sockfd, (struct sockaddr *) &sin, sizeof(sin)) == -1) {
+    if (connect(sockfd, (struct sockaddr *) &sin, sizeof(sin)) == -1)
+    {
         printf("No haptic device at IP %s: %d (%s)\n", IP.c_str(), errno, strerror(errno));
         return false;
     }
     return true;
 }
 
-void virtuose::connect(string IP) {
+void virtuose::connect(string IP)
+{
     disconnect();
     //if (!checkVirtuoseIP(IP)) return; // TODO: does not work
     cout << "Open virtuose " << IP << endl;
@@ -85,22 +93,22 @@ void virtuose::connect(string IP) {
     if (vc == 0) return;
     float identity[7] = {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f};
 
-	CHECK( virtSetIndexingMode(vc, INDEXING_ALL_FORCE_FEEDBACK_INHIBITION) );
+    CHECK( virtSetIndexingMode(vc, INDEXING_ALL_FORCE_FEEDBACK_INHIBITION) );
     setSimulationScales(1.0f,1.0f);
     timestep = 0.017f;
-	CHECK( virtSetTimeStep(vc, timestep) );
-	CHECK( virtSetBaseFrame(vc, identity) );
+    CHECK( virtSetTimeStep(vc, timestep) );
+    CHECK( virtSetBaseFrame(vc, identity) );
     CHECK( virtSetObservationFrame(vc, identity) );
-	//CHECK( virtSetCommandType(vc, COMMAND_TYPE_IMPEDANCE) );
-	CHECK( virtSetCommandType(vc, COMMAND_TYPE_VIRTMECH) );
-	commandType = COMMAND_TYPE_VIRTMECH;
-	CHECK( virtSetDebugFlags(vc, DEBUG_SERVO|DEBUG_LOOP) );
+    //CHECK( virtSetCommandType(vc, COMMAND_TYPE_IMPEDANCE) );
+    CHECK( virtSetCommandType(vc, COMMAND_TYPE_VIRTMECH) );
+    commandType = COMMAND_TYPE_VIRTMECH;
+    CHECK( virtSetDebugFlags(vc, DEBUG_SERVO|DEBUG_LOOP) );
 
     //float baseFrame[7] = { 0.0f, 0.0f, 0.0f, 0.70710678f, 0.0f, 0.70710678f, 0.0f };
-	//virtActiveSpeedControl(vc, 0.04f, 10.0f);
+    //virtActiveSpeedControl(vc, 0.04f, 10.0f);
 
-	CHECK( virtSetPowerOn(vc, 1) );
-	//virtSetPeriodicFunction(vc, callback, &timestep, this);
+    CHECK( virtSetPowerOn(vc, 1) );
+    //virtSetPeriodicFunction(vc, callback, &timestep, this);
 
 
 
@@ -108,12 +116,14 @@ void virtuose::connect(string IP) {
 
 }
 
-void virtuose::disconnect() {
-    if (vc) {
+void virtuose::disconnect()
+{
+    if (vc)
+    {
         CHECK( virtSetPowerOn(vc, 0) );
-		CHECK( virtDetachVO(vc) );
-		//CHECK( virtStopLoop(vc) );
-		CHECK( virtClose(vc) );
+        CHECK( virtDetachVO(vc) );
+        //CHECK( virtStopLoop(vc) );
+        CHECK( virtClose(vc) );
         vc = 0;
         isAttached = false;
         CHECK( virtSetCommandType(vc, COMMAND_TYPE_IMPEDANCE) );
@@ -122,21 +132,24 @@ void virtuose::disconnect() {
     }
 }
 
-void virtuose::setSimulationScales(float translation, float forces) {
+void virtuose::setSimulationScales(float translation, float forces)
+{
     CHECK( virtSetSpeedFactor(vc, translation) );
     CHECK( virtSetForceFactor(vc, forces) );
 }
 
 
-void virtuose::applyForce(Vec3f force, Vec3f torque) {
+void virtuose::applyForce(Vec3f force, Vec3f torque)
+{
     float f[6] = { force[2], force[0], force[1], torque[2], torque[0], torque[1] };
     CHECK( virtAddForce(vc, f) );
 }
 
-Matrix virtuose::getPose() {
+Matrix virtuose::getPose()
+{
     float f[7]= {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f};
 
-        CHECK( virtGetAvatarPosition(vc, f) );
+    CHECK( virtGetAvatarPosition(vc, f) );
     //CHECK( virtGetPhysicalPosition(vc, f) );
 
     Matrix m;
@@ -152,7 +165,8 @@ Matrix virtuose::getPose() {
 
 
 
-void virtuose::attachTransform(VRTransform* trans) {
+void virtuose::attachTransform(VRTransform* trans)
+{
     isAttached = true;
     attached = trans;
     VRPhysics* o = trans->getPhysics();
@@ -170,54 +184,62 @@ void virtuose::attachTransform(VRTransform* trans) {
     //inertia[8] = inertia[4];
     //inertia[4] = tmp;
 
-    cout<<"\n "<<"\n "<<inertia[0] << "    " <<inertia[1] <<  "    " <<inertia[2] << "\n "<<inertia[3] <<  "    " <<inertia[4] <<  "    " <<inertia[5] << "\n "<<inertia[6] << "    " <<inertia[7] <<"    " << inertia[8]<<"\n ";
 
     CHECK(virtAttachVO(vc, o->getMass(), inertia));
 
 }
 
-void virtuose::fillPosition(VRPhysics* p, float *to) {
-     btTransform pos = p->getTransform();
-     to[0] =  pos.getOrigin().getZ();
-     to[1] = pos.getOrigin().getX();
-     to[2] =  pos.getOrigin().getY();
-     //pos.setRotation(pos.getRotation().normalized());
-     to[3] =  pos.getRotation().getZ();
-     to[4] =  pos.getRotation().getX();
-     to[5] =  pos.getRotation().getY();
-     to[6] =  pos.getRotation().getW();
+void virtuose::fillPosition(VRPhysics* p, float *to)
+{
+    btTransform pos = p->getTransform();
+    to[0] =  pos.getOrigin().getX();
+    to[1] = pos.getOrigin().getZ();
+    to[2] =  pos.getOrigin().getY();
+    //pos.setRotation(pos.getRotation().normalized());
+    to[3] =  -pos.getRotation().getY();
+    to[4] =  -pos.getRotation().getW();
+    to[5] =  -pos.getRotation().getZ();
+    to[6] =  pos.getRotation().getX();
 }
-void virtuose::fillSpeed(VRPhysics* p, float *to) {
-     Vec3f vel = p->getLinearVelocity();
-     to[0] = vel.z();
-     to[1] = vel.x();
-     to[2] = vel.y();
-     vel = p->getAngularVelocity();
-     to[3] = vel.z();
-     to[4] = vel.x();
-     to[5] = vel.y();
+void virtuose::fillSpeed(VRPhysics* p, float *to)
+{
+    Vec3f vel = p->getLinearVelocity();
+    to[0] = vel.x();
+    to[1] = vel.z();
+    to[2] = vel.y();
+    Vec3f ang = p->getAngularVelocity();
+    to[3] = -ang.x();
+    to[4] = -ang.z();
+    to[5] = -ang.y();
 }
-void virtuose::Matrix3ToArray(btMatrix3x3 m, float *to) {
-    int j = 0;
-    for(int i = 0; i < 3; i++) {
-        to[j] = m.getRow(i).getX();
-        to[j + 1] = m.getRow(i).getY();
-        to[j + 2] = m.getRow(i).getZ();
-        j = j + 3;
-    }
+void virtuose::Matrix3ToArray(btMatrix3x3 m, float *to)
+{
+    to[0] = m.getRow(0).getX();
+    to[1] = m.getRow(0).getZ();
+    to[2] = m.getRow(0).getY();
+    to[3] = m.getRow(2).getX();
+    to[4] = m.getRow(2).getZ();
+    to[5] = m.getRow(2).getY();
+    to[6] = m.getRow(1).getX();
+    to[7] = m.getRow(1).getZ();
+    to[8] = m.getRow(1).getY();
+
+
 
 }
 
 
 
-void virtuose::detachTransform() {
+void virtuose::detachTransform()
+{
     isAttached = false;
     CHECK(virtDetachVO(vc));
     attached = 0;
 
 }
 
-OSG::Vec3i virtuose::getButtonStates() {
+OSG::Vec3i virtuose::getButtonStates()
+{
     int i = 0;
     int j = 0;
     int k = 0;
@@ -227,7 +249,8 @@ OSG::Vec3i virtuose::getButtonStates() {
     return Vec3i(i,j,k);
 }
 
-void virtuose::updateVirtMech() {
+void virtuose::updateVirtMech()
+{
 
     // calc time delta in seconds
     float timeNow = glutGet(GLUT_ELAPSED_TIME);
@@ -241,68 +264,127 @@ void virtuose::updateVirtMech() {
 
     CHECK(virtIsInShiftPosition(vc,&power));
     if(commandType == COMMAND_TYPE_VIRTMECH)
-	{
+    {
 
 
 
-            if (!isAttached)
-            {
-                virtGetPosition(vc, position);
-                virtSetPosition(vc, position);
-                virtGetSpeed(vc, speed);
-                virtSetSpeed(vc, speed);
+        if (!isAttached)
+        {
+            virtGetPosition(vc, position);
+            virtSetPosition(vc, position);
+            virtGetSpeed(vc, speed);
+            virtSetSpeed(vc, speed);
 
+            virtGetArticularPositionOfAdditionalAxe(vc, &gripperPosition);
+            virtGetArticularSpeedOfAdditionalAxe(vc, &gripperSpeed);
+            virtSetArticularPositionOfAdditionalAxe(vc, &gripperPosition);
+            virtSetArticularSpeedOfAdditionalAxe(vc, &gripperSpeed);
+        }
+        else
+        {
+            float ts = 0.0;
+            CHECK(virtGetTimeStep(vc, &ts));
+
+            //apply position&speed to the haptic
+            fillPosition(this->attached->getPhysics(),position);
+
+            //"tolerance"
+            float tmpPos[7];
+            CHECK(virtGetPosition(vc, tmpPos));
+            for(int i = 0; i < 7 ; i++) {
+                tmpPos[i] = (position[i] - tmpPos[i]);
+                //cout << tmpPos[i];
             }
-            else
+            //cout << "\n";
+            Vec3f pPos = Vec3f(tmpPos[0],tmpPos[1],tmpPos[2]);
+            Quaternion pRot;
+            pRot.setValue(tmpPos[4], tmpPos[5], tmpPos[3]);
+            cout << setprecision(4);
+            cout << fixed;
+            cout << "posdiff: " << pPos.length() << "  "  << " rotdiff: " << pRot.length();
+
+            CHECK(virtSetPosition(vc, position));
+
+
+            fillSpeed(this->attached->getPhysics(),speed);
+            for(int i = 0; i < 6; i++)
             {
-                 float ts = 0.0;
-                 CHECK(virtGetTimeStep(vc, &ts));
-
-                 //apply position&speed to the haptic
-                 fillPosition(this->attached->getPhysics(),position);
-                 CHECK(virtSetPosition(vc, position));
-                 fillSpeed(this->attached->getPhysics(),speed);
-                 for(int i = 0; i < 6; i++) {
-                     speed[i] *= dt;
-                     speed[i] *= (1/ts);
-                 }
-
-
-                 CHECK(virtSetSpeed(vc, speed));
-                 //get force applied by human on the haptic
-                 CHECK(virtGetForce(vc, force));
-                for(int i = 0; i < 6; i++) {
-                     force[i] *= ts;
-                     force[i] *= ts;
-                     force[i] *= (1/dt);
-                     force[i] *= (1/dt);
-                 }
-
-                 Vec3f frc = Vec3f(force[1], force[2], force[0]);
-                 Vec3f trqu = Vec3f(force[4],force[5],force[3]);
-                 //cout << globalforce[0] << " " <<globalforce[1] <<" " << globalforce[2] <<" " << "\n ";
-                 //apply force on the object
-                 if(power == 0) {
-                    //optimization against "bumby" surfaces (for interaction with static rigidbodies only!)
-/*
-                    vector<VRCollision> colls = attached->getPhysics()->getCollisions();
-                    VRCollision tmp;
-                    Vec3f v = Vec3f(0.0,0.0,0.0);
-                    for(int i = 0; i < colls.size(); i++) {
-                        tmp = colls[i];
-                        v += tmp.norm;
-                    }
-                    v.normalize();
-                    float bumpBackf = -((frc[0] * v[0]) + (frc[1] * v[1]) + (frc[2] * v[2]));
-                    frc += (v * bumpBackf);
-*/
-
-                     attached->getPhysics()->addForce(frc);
-                     attached->getPhysics()->addTorque(trqu);
-                 }
-
+                speed[i] *= dt;
+                speed[i] *= (1/ts);
             }
-	    }
+             //"tolerance"
+            float tmpSp[6];
+            CHECK(virtGetSpeed(vc, tmpSp));
+            for(int i = 0; i < 6 ; i++) {
+                tmpSp[i] = (speed[i] - tmpSp[i]);
+                //cout << tmpSp[i];
+            }
+             Vec3f sPos = Vec3f(tmpSp[0],tmpSp[1],tmpSp[2]);
+              Vec3f sRot = Vec3f(tmpSp[0],tmpSp[1],tmpSp[2]);
+              cout << setprecision(4);
+            cout << fixed;
+            cout <<"   " <<  "speeddiff: "<<  sPos.length() << "  "  << " rotspeeddiff: " << sRot.length();
+
+            cout << "\n";
+
+
+
+            CHECK(virtSetSpeed(vc, speed));
+            //get force applied by human on the haptic
+            CHECK(virtGetForce(vc, force));
+            for(int i = 0; i < 6; i++)
+            {
+                force[i] *= ts;
+                force[i] *= ts;
+                force[i] *= (1/dt);
+                force[i] *= (1/dt);
+            }
+
+            Vec3f frc = Vec3f(force[0], force[2], force[1]);
+            Vec3f trqu = Vec3f(-force[3],-force[5],-force[4]);
+            //cout << globalforce[0] << " " <<globalforce[1] <<" " << globalforce[2] <<" " << "\n ";
+            //apply force on the object
+            if(power == 0)
+            {
+                //optimization against "bumby" surfaces (for interaction with static rigidbodies only!)
+                /*
+                                    vector<VRCollision> colls = attached->getPhysics()->getCollisions();
+                                    VRCollision tmp;
+                                    Vec3f v = Vec3f(0.0,0.0,0.0);
+                                    for(int i = 0; i < colls.size(); i++) {
+                                        tmp = colls[i];
+                                        v += tmp.norm;
+                                    }
+                                    v.normalize();
+                                    float bumpBackf = -((frc[0] * v[0]) + (frc[1] * v[1]) + (frc[2] * v[2]));
+                                    frc += (v * bumpBackf);
+                */
+
+                attached->getPhysics()->addForce(frc);
+                attached->getPhysics()->addTorque(trqu);
+            }
+
+
+            int m_power = 0;
+            virtGetPowerOn(vc, &m_power);
+			virtIsInShiftPosition(vc, &power);
+			if ((m_power == 0) || (power == 1))
+			{
+				virtGetArticularPositionOfAdditionalAxe(vc, &gripperPosition);
+				virtGetArticularSpeedOfAdditionalAxe(vc, &gripperSpeed);
+				virtSetArticularPositionOfAdditionalAxe(vc, &gripperPosition);
+				virtSetArticularSpeedOfAdditionalAxe(vc, &gripperSpeed);
+			}
+			else
+			{
+				/* mode bloqué */
+				virtSetArticularPositionOfAdditionalAxe(vc, &gripperPosition);
+				gripperSpeed = 0.0;
+				virtSetArticularSpeedOfAdditionalAxe(vc, &gripperSpeed);
+			}
+
+        }
+    }
 
 
 }

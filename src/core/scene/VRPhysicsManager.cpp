@@ -32,6 +32,8 @@ VRPhysicsManager::VRPhysicsManager() {
     updatePhysicsFkt = new VRFunction<int>("PhysicsUpdate", boost::bind(&VRPhysicsManager::updatePhysics, this));
 
     cout << "Init VRPhysicsManager" << endl;
+    t_last = glutGet(GLUT_ELAPSED_TIME);
+
 }
 
 VRPhysicsManager::~VRPhysicsManager() {
@@ -73,7 +75,6 @@ void VRPhysicsManager::updatePhysics() {
 
     if (dynamicsWorld == 0) return;
 
-    static int t_last = glutGet(GLUT_ELAPSED_TIME);
     int t = glutGet(GLUT_ELAPSED_TIME);
     dynamicsWorld->stepSimulation((t-t_last)*0.001, 30);
     collectCollisionPoints();
