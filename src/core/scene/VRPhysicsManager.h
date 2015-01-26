@@ -16,12 +16,15 @@ class btSequentialImpulseConstraintSolver;
 class btDiscreteDynamicsWorld;
 class btRigidBody;
 class btCollisionShape;
+class btCollisionObject;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRGeometry;
 class VRTransform;
+class VRVisualLayer;
+class VRMaterial;
 
 class VRPhysicsManager {
      private:
@@ -34,7 +37,11 @@ class VRPhysicsManager {
         btAlignedObjectArray<btCollisionShape*> collisionShapes;
         btRigidBody* body;
 
-        map<btRigidBody*, VRTransform*> OSGobjs;
+        map<btCollisionObject*, VRTransform*> OSGobjs;
+        map<btCollisionObject*, VRGeometry*> physics_visuals;
+        vector<btCollisionObject*> physics_visuals_to_update;
+        VRVisualLayer* physics_visual_layer = 0;
+        VRMaterial* phys_mat = 0;
 
         vector<Vec3f> collisionPoints;
 
@@ -47,14 +54,17 @@ class VRPhysicsManager {
 
     public:
         void physicalize(VRTransform* obj);
+        void unphysicalize(VRTransform* obj);
 
         void setGravity(Vec3f g);
 
         btDiscreteDynamicsWorld* bltWorld();
 
         void collectCollisionPoints();
-
         vector<Vec3f>& getCollisionPoints();
+
+        void setShowPhysics(bool b);
+        bool getShowPhysics();
 };
 
 OSG_END_NAMESPACE;

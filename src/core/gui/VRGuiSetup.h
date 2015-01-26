@@ -82,6 +82,7 @@ class VRGuiSetup {
         void on_proj_size_edit(Vec2f v);
 
         void on_edit_VRPN_tracker_address();
+        void on_toggle_vrpn();
         void on_toggle_art();
         void on_art_edit_port();
         void on_art_edit_id();

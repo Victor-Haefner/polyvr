@@ -6,6 +6,8 @@
 #include <gtkmm/table.h>
 #include <boost/filesystem.hpp>
 
+#include "core/setup/VRSetupManager.h"
+#include "core/setup/VRSetup.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 
@@ -26,6 +28,8 @@ void VRGuiFile::init() {
 }
 
 void VRGuiFile::open(string button, Gtk::FileChooserAction action, string title) {
+    //OSG::VRSetupManager::getCurrent()->pauseRendering(true);
+
     if (dialog == 0) init();
     setLabel("openFileWarning", "");
     dialog->show();
@@ -38,6 +42,19 @@ void VRGuiFile::open(string button, Gtk::FileChooserAction action, string title)
 
     dialog->set_title(title);
     dialog->set_action(action);
+}
+
+void VRGuiFile::close() {
+    //OSG::VRSetupManager::getCurrent()->pauseRendering(false);
+    if (dialog == 0) init();
+    setWidget(0);
+    dialog->hide();
+    sigClose();
+
+    for (auto f : dialog->list_filters()) {
+        dialog->remove_filter(*f);
+        delete &(*f);
+    }
 }
 
 void VRGuiFile::setWidget(Gtk::Table* table) {
@@ -92,18 +109,6 @@ void VRGuiFile::apply() {
     dialog->hide();
     sigApply();
     setWidget(0);
-}
-
-void VRGuiFile::close() {
-    if (dialog == 0) init();
-    setWidget(0);
-    dialog->hide();
-    sigClose();
-
-    for (auto f : dialog->list_filters()) {
-        dialog->remove_filter(*f);
-        delete &(*f);
-    }
 }
 
 void VRGuiFile::setCallbacks(sig sa, sig sc, sig ss) {

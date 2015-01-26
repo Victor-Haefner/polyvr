@@ -12,6 +12,7 @@
 #include "core/objects/VRGroup.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/VRCamera.h"
+#include "core/utils/VRVisualLayer.h"
 #include <libxml++/nodes/element.h>
 
 OSG_BEGIN_NAMESPACE;
@@ -34,6 +35,16 @@ VRScene::VRScene() {
 
     initDevices();
     VRMaterial::getDefault()->resetDefault();
+
+    referentials_layer = new VRVisualLayer("referentials");
+    cameras_layer = new VRVisualLayer("cameras");
+    lights_layer = new VRVisualLayer("lights");
+
+    referentials_layer->setCallback( new VRFunction<bool>("showReferentials", boost::bind(&VRScene::showReferentials, this, _1, (VRObject*)0) ) );
+    cameras_layer->setCallback( new VRFunction<bool>("showCameras", boost::bind(&VRScene::showCameras, this, _1) ) );
+    lights_layer->setCallback( new VRFunction<bool>("showLights", boost::bind(&VRScene::showLights, this, _1) ) );
+
+    VRVisualLayer::anchorLayers(root);
 
     cout << " init scene done\n";
 }
@@ -149,9 +160,12 @@ void VRScene::showReferentials(bool b, VRObject* o) {
     for (uint i=0; i<o->getChildrenCount(); i++) showReferentials(b, o->getChild(i));
 }
 
-void VRScene::showLightsCameras(bool b) {
+void VRScene::showLights(bool b) {
     vector<VRLightBeacon*> beacons = VRLightBeacon::getAll();
     for (uint i=0; i<beacons.size(); i++) beacons[i]->showLightGeo(b);
+}
+
+void VRScene::showCameras(bool b) {
     vector<VRCamera*> cams = VRCamera::getAll();
     for (uint i=0; i<cams.size(); i++) cams[i]->showCamGeo(b);
 }

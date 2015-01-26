@@ -181,13 +181,13 @@ void CarDynamics::setChassisGeo(VRGeometry* geo) {
     geo->getPhysics()->setPhysicalized(true);
     geo->getPhysics()->updateTransformation(geo->getWorldMatrix());
 
-    if (geo->getPhysics()->obj() == 0) {
+    if (geo->getPhysics()->getRigidBody() == 0) {
         cout<<"!!!!!!!!chassis is 0!!!!!!!!\ncreating vehicle with standard parameters and shapes"<<endl;
         initVehicle();
         return;
     }
 
-    m_carChassis = geo->getPhysics()->obj();
+    m_carChassis = geo->getPhysics()->getRigidBody();
 
     cout << "\nset chassis geo " << geo->getName() << endl;
 

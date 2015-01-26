@@ -6,58 +6,66 @@
 #include <string>
 #include <map>
 
-#include "core/utils/VRName.h"
-#include "core/utils/VRStorage.h"
+#include "core/setup/devices/VRDevice.h"
 
 namespace xmlpp{ class Element; }
 class vrpn_Tracker_Remote;
+class vrpn_Button_Remote;
+class vrpn_Analog_Remote;
+class vrpn_Dial_Remote;
+class vrpn_Text_Receiver;
 class vrpn_Connection;
 template<class T> class VRFunction;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRTransform;
 class VRThread;
 
-struct VRPN_tracker : public VRName, public VRStorage {
-    VRTransform* ent = 0;
-    string tracker;
+struct VRPN_device : public VRDevice {
+    string address;
     Vec3f offset;
     float scale = 1;
-    vrpn_Tracker_Remote* vrpnt = 0;
+    vrpn_Tracker_Remote* tracker = 0;
+	vrpn_Button_Remote*  button = 0;
+	vrpn_Analog_Remote*  analog = 0;
+	vrpn_Dial_Remote*    dial = 0;
+    vrpn_Text_Receiver*  text = 0;
+
     vrpn_Connection* vrpnc = 0;
     int ID = 0;
+    bool initialized = false;
 
-    VRPN_tracker();
-    void setTracker(string t);
+    VRPN_device();
+    void setAddress(string t);
+    void loop();
 };
 
 class VRPN : public VRStorage {
     private:
-        map<int, VRPN_tracker*> tracker;//pointer map auf die objecte
+        map<int, VRPN_device*> devices;//pointer map auf die objecte
         int threadID;
         bool active = true;
 
         //update thread
-        void update(VRThread* thread);
+        void update_t(VRThread* thread);
+        void update();
 
     public:
         VRPN();
         ~VRPN();
 
         void addVRPNTracker(int ID, string addr, Vec3f offset, float scale);
-        void delVRPNTracker(VRPN_tracker* t);
+        void delVRPNTracker(VRPN_device* t);
 
         VRFunction<int>* getVRPNUpdateFkt();
 
         vector<int> getVRPNTrackerIDs();
-        VRPN_tracker* getVRPNTracker(int ID);
+        VRPN_device* getVRPNTracker(int ID);
         void setVRPNActive(bool b);
         bool getVRPNActive();
 
-        //void save(xmlpp::Element* node);
-        //void load(xmlpp::Element* node);
+        void changeVRPNDeviceName(VRPN_device* dev, string name);
 };
 
 OSG_END_NAMESPACE

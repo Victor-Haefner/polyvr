@@ -61,9 +61,7 @@ void VRSetup::setScene(VRScene* scene) {
 
     setViewBackground(scene->getBackground());
 
-    map<string, VRWindow*> windows = getWindows();
-    map<string, VRWindow*>::iterator itr;
-    for (itr = windows.begin(); itr != windows.end(); itr++) itr->second->setContent(true);
+    for (auto w : getWindows()) w.second->setContent(true);
 
     scene->addCamera(setup_cam);
 
@@ -86,11 +84,11 @@ VRTransform* VRSetup::getTracker(string t) {
         if (dev->ent->getName() == t) return dev->ent;
     }
 
-    vector<int> IDs = getVRPNTrackerIDs();
+    /*vector<int> IDs = getVRPNTrackerIDs();
     for (uint i=0; i< IDs.size(); i++) {
-        VRPN_tracker* tr = getVRPNTracker(IDs[i]);
-        if (tr->ent->getName() == t) return tr->ent;
-    }
+        VRPN_device* tr = getVRPNTracker(IDs[i]);
+        if (tr->getName() == t) return tr->getBeacon();
+    }*/
 
     return 0;
 }
