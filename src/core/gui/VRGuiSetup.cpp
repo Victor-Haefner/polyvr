@@ -148,6 +148,8 @@ void VRGuiSetup::updateObjectData() {
         setExpanderSensitivity("expander7", true);
         VRPN_device* t = (VRPN_device*)selected_object;
         setTextEntry("entry50", t->address);
+        tVRPNAxisEntry.set(t->translate_axis);
+        rVRPNAxisEntry.set(t->rotation_axis);
     }
 
     if (selected_type == "art_device") {
@@ -649,6 +651,26 @@ void VRGuiSetup::on_proj_size_edit(Vec2f v) {
     setToolButtonSensitivity("toolbutton12", true);
 }
 
+void VRGuiSetup::on_vrpn_trans_axis_edit(Vec3f v) {
+    if (guard) return;
+
+    if (selected_type != "vrpn_tracker") return;
+    VRPN_device* t = (VRPN_device*)selected_object;
+
+    t->setTranslationAxis(v);
+    setToolButtonSensitivity("toolbutton12", true);
+}
+
+void VRGuiSetup::on_vrpn_rot_axis_edit(Vec3f v) {
+    if (guard) return;
+
+    if (selected_type != "vrpn_tracker") return;
+    VRPN_device* t = (VRPN_device*)selected_object;
+
+    t->setRotationAxis(v);
+    setToolButtonSensitivity("toolbutton12", true);
+}
+
 // tracker
 
 void VRGuiSetup::on_toggle_art() {
@@ -775,6 +797,9 @@ VRGuiSetup::VRGuiSetup() {
     normalEntry.init("normal_entry", "normal", sigc::mem_fun(*this, &VRGuiSetup::on_proj_normal_edit));
     upEntry.init("viewup_entry", "up", sigc::mem_fun(*this, &VRGuiSetup::on_proj_up_edit));
     sizeEntry.init2D("size_entry", "size", sigc::mem_fun(*this, &VRGuiSetup::on_proj_size_edit));
+
+    tVRPNAxisEntry.init("tvrpn_entry", "", sigc::mem_fun(*this, &VRGuiSetup::on_vrpn_trans_axis_edit));
+    rVRPNAxisEntry.init("rvrpn_entry", "", sigc::mem_fun(*this, &VRGuiSetup::on_vrpn_rot_axis_edit));
 
     setEntryCallback("entry50", sigc::mem_fun(*this, &VRGuiSetup::on_edit_VRPN_tracker_address) );
     setEntryCallback("entry52", sigc::mem_fun(*this, &VRGuiSetup::on_pos_edit) );

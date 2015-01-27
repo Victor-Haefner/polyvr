@@ -61,6 +61,7 @@ void VRScene::initDevices() { // TODO: remove this after refactoring the navigat
 
     VRMouse* mouse = (VRMouse*)setup->getDevice("mouse");
     VRFlystick* flystick = (VRFlystick*)setup->getDevice("flystick");
+    VRDevice* razer = setup->getDevice("vrpn_device");
 
     if (mouse) {
         initOrbit(getActiveCamera(), mouse); //TODO, load from xml
@@ -72,6 +73,11 @@ void VRScene::initDevices() { // TODO: remove this after refactoring the navigat
     if (flystick) {
         initFlyWalk(getActiveCamera(), flystick); // TODO
         setActiveNavigation("FlyWalk");
+    }
+
+    if (razer) {
+        initHydraFly(getActiveCamera(), razer); // TODO
+        setActiveNavigation("Hydra");
     }
 
     setup->updateDeviceDynNodes(getRoot());
@@ -139,8 +145,11 @@ void VRScene::setActiveCamera(int i) {
     VRFlystick* flystick = (VRFlystick*)setup->getDevice("flystick");
     if (flystick) flystick->setTarget(cam);
 
+    VRDevice* razer = (VRFlystick*)setup->getDevice("vrpn_device");
+    if (razer) razer->setTarget(cam);
+
     VRMobile* mobile = (VRMobile*)VRSetupManager::getCurrent()->getDevice("mobile");
-    if (mobile) mobile->setTarget(getActiveCamera());
+    if (mobile) mobile->setTarget(cam);
 
     setup->setViewCamera(cam, -1);
     if (cam->getAcceptRoot()) setup->getRoot()->switchParent(cam);

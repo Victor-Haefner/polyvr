@@ -26,6 +26,8 @@ struct VRPN_device : public VRDevice {
     string address;
     Vec3f offset;
     float scale = 1;
+    Vec3f translate_axis;
+    Vec3f rotation_axis;
     vrpn_Tracker_Remote* tracker = 0;
 	vrpn_Button_Remote*  button = 0;
 	vrpn_Analog_Remote*  analog = 0;
@@ -38,6 +40,8 @@ struct VRPN_device : public VRDevice {
 
     VRPN_device();
     void setAddress(string t);
+    void setTranslationAxis(Vec3f v);
+    void setRotationAxis(Vec3f v);
     void loop();
 };
 

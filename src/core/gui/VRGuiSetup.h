@@ -32,6 +32,9 @@ class VRGuiSetup {
         VRGuiVectorEntry upEntry;
         VRGuiVectorEntry sizeEntry;
 
+        VRGuiVectorEntry tVRPNAxisEntry;
+        VRGuiVectorEntry rVRPNAxisEntry;
+
         VRGuiContextMenu* menu;
         VRMultiWindow* mwindow;
 
@@ -87,6 +90,9 @@ class VRGuiSetup {
         void on_art_edit_port();
         void on_art_edit_id();
         void on_art_edit_offset();
+
+        void on_vrpn_trans_axis_edit(Vec3f v);
+        void on_vrpn_rot_axis_edit(Vec3f v);
 
         void on_haptic_ip_edited();
         void on_change_haptic_type();

@@ -27,14 +27,25 @@ void VRPN_CALLBACK handle_tracker(void* data, const vrpn_TRACKERCB tracker ) {
     VRTransform* obj = dev->getBeacon();
     if (obj == 0) return;
 
+    Vec3f ra = dev->rotation_axis;
+    Vec3f ta = dev->translate_axis;
+    Vec3f sra, sta;
+    for (int i=0; i<3; i++) {
+        sra[i] = ra[i]<0 ? -1 : 1; ra[i] = abs(ra[i]);
+        sta[i] = ta[i]<0 ? -1 : 1; ta[i] = abs(ta[i]);
+    }
+
     //rotation
-    Quaternion q(tracker.quat[0], tracker.quat[2], tracker.quat[1], tracker.quat[3]);
+    Quaternion q(sra[0]*tracker.quat[(int)ra[0]], sra[1]*tracker.quat[(int)ra[1]], sra[2]*tracker.quat[(int)ra[2]], tracker.quat[3]);
+    //Quaternion q2(1,0,0,0.5*3.14);
+    //q += q2;
+    //Quaternion q(tracker.quat[0], -tracker.quat[2], -tracker.quat[1], tracker.quat[3]);
     Matrix m;
     m.setRotate(q);
 
     //position
     float s = dev->scale;
-    Vec3f pos = dev->offset + Vec3f(tracker.pos[0]*s, tracker.pos[2]*s, tracker.pos[1]*s);
+    Vec3f pos = dev->offset + Vec3f(sta[0]*tracker.pos[(int)ta[0]]*s, sta[1]*tracker.pos[(int)ta[1]]*s, sta[2]*tracker.pos[(int)ta[2]]*s);
     for (int i=0; i<3; i++) m[3][i] = pos[i];
 
     obj->setMatrix(m);
@@ -43,12 +54,11 @@ void VRPN_CALLBACK handle_tracker(void* data, const vrpn_TRACKERCB tracker ) {
 void VRPN_CALLBACK handle_button(void* data, const vrpn_BUTTONCB button ) {
     VRPN_device* dev = (VRPN_device*)data;
     dev->change_button(button.button, button.state);
-    cout << "VRPN BUTTON " << button.button << " : " << button.state << endl;
 }
 
 void VRPN_CALLBACK handle_analog(void* data, const vrpn_ANALOGCB analog ) {
     VRPN_device* dev = (VRPN_device*)data;
-    for (int i=0; i<analog.num_channel; i++) dev->change_slider(i, analog.channel[i]);
+    for (int i=0; i<analog.num_channel; i++) dev->change_slider(i+20, analog.channel[i]);
 }
 
 VRPN_device::VRPN_device() : VRDevice("vrpn_device") {
@@ -56,6 +66,8 @@ VRPN_device::VRPN_device() : VRDevice("vrpn_device") {
     store("offset", &offset);
     store("scale", &scale);
     store("ID", &ID);
+    store("taxis", &translate_axis);
+    store("raxis", &rotation_axis);
 
     enableAvatar("cone");
     enableAvatar("ray");
@@ -84,6 +96,9 @@ void VRPN_device::setAddress(string addr) {
     analog->register_change_handler( this, handle_analog ); // TODO: add other handlers
     initialized = true;
 }
+
+void VRPN_device::setTranslationAxis(Vec3f v) { translate_axis = v; }
+void VRPN_device::setRotationAxis(Vec3f v) { rotation_axis = v; }
 
 void VRPN_device::loop() {
     if (!initialized) setAddress(address);

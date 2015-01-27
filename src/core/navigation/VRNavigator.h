@@ -90,6 +90,7 @@ class VRNavigator : public VRNavigator_base {
         void zoom(VRDevice* dev, int dir);
         void walk(VRDevice* dev);
         void fly_walk(VRDevice* dev);
+        void hyd_walk(VRDevice* dev);
         void orbit(VRDevice* dev);
         void orbit2D(VRDevice* dev);
         void focus(VRDevice* dev);
@@ -103,6 +104,7 @@ class VRNavigator : public VRNavigator_base {
         void initOrbit2D(VRTransform* target, VRDevice* dev);
         void initFlyOrbit(VRTransform* target, VRDevice* dev);
         void initFlyWalk(VRTransform* target, VRDevice* dev);
+        void initHydraFly(VRTransform* target, VRDevice* dev);
 };
 
 OSG_END_NAMESPACE;
