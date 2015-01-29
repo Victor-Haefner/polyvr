@@ -206,8 +206,8 @@ void VRPhysics::update() {
         ghost_body = 0;
     }
 
-    if (shape != 0) delete shape;
-    if (motionState != 0) delete motionState;
+    if (shape != 0) { delete shape; shape = 0; }
+    if (motionState != 0) { delete motionState; motionState = 0; }
 
     if (!physicalized) return;
 
@@ -409,6 +409,7 @@ void VRPhysics::updateTransformation(const OSG::Matrix& m) {
 OSG::Matrix VRPhysics::getTransformation() {
     if (body == 0) return OSG::Matrix();
     btTransform t;
+    if (body->getMotionState() == 0) return OSG::Matrix();
     body->getMotionState()->getWorldTransform(t);
     return fromTransform(t);
 }
