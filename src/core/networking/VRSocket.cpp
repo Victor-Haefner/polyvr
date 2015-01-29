@@ -57,6 +57,10 @@ int server_answer_to_connection (void* param, struct MHD_Connection *connection,
     struct MHD_Response* response = 0;
     string empty_str;
 
+    if (sad->path == "") {
+        response = MHD_create_response_from_data(1, (void*)" ", MHD_NO, MHD_YES);
+    }
+
     if (sad->pages->count(sad->path)) { // return local site
         string spage = *(*sad->pages)[sad->path];
         response = MHD_create_response_from_data (spage.size(), (void*) spage.c_str(), MHD_NO, MHD_YES);
