@@ -5,6 +5,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "core/utils/VRStorage.h"
 
 template<class T> class VRFunction;
 
@@ -54,7 +55,7 @@ class VRNavPreset {
         void addKeyBinding(VRNavBinding b);
 };
 
-class VRNavigator_base {
+class VRNavigator_base : public VRStorage {
     private:
         map<string, VRDevCb*> library;
 
@@ -105,6 +106,8 @@ class VRNavigator : public VRNavigator_base {
         void initFlyOrbit(VRTransform* target, VRDevice* dev);
         void initFlyWalk(VRTransform* target, VRDevice* dev);
         void initHydraFly(VRTransform* target, VRDevice* dev);
+
+        void update();
 };
 
 OSG_END_NAMESPACE;

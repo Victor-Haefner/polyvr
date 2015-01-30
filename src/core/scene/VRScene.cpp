@@ -225,11 +225,13 @@ void VRScene::save(xmlpp::Element* e) {
     xmlpp::Element* scriptsN = e->add_child("Scripts");
     xmlpp::Element* protocolsN = e->add_child("Sockets");
     xmlpp::Element* backgroundN = e->add_child("Background");
+    xmlpp::Element* naviN = e->add_child("Navigation");
 
     VRRenderManager::save(renderN);
     VRScriptManager::save(scriptsN);
     VRNetworkManager::save(protocolsN);
     VRBackground::save(backgroundN);
+    VRNavigator::save(naviN);
 }
 
 void VRScene::load(xmlpp::Element* e) {
@@ -240,16 +242,19 @@ void VRScene::load(xmlpp::Element* e) {
     xmlpp::Element* protocolsN = VRSceneLoader_getElementChild(e, "Sockets");
     xmlpp::Element* backgroundN = VRSceneLoader_getElementChild(e, "Background");
     xmlpp::Element* renderN = VRSceneLoader_getElementChild(e, "Rendering");
+    xmlpp::Element* naviN = VRSceneLoader_getElementChild(e, "Navigation");
 
     VRRenderManager::load(renderN);
     VRScriptManager::load(scriptsN);
     VRNetworkManager::load(protocolsN);
     VRBackground::load(backgroundN);
+    VRNavigator::load(naviN);
 
     VRRenderManager::update();
     VRScriptManager::update();
     VRNetworkManager::update();
     VRBackground::update();
+    VRNavigator::update();
 }
 
 OSG_END_NAMESPACE;

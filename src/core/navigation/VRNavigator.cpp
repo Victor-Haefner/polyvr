@@ -80,6 +80,8 @@ void VRNavPreset::addKeyBinding(VRNavBinding b) {
 
 VRNavigator_base::VRNavigator_base () {
     current = 0;
+
+    store("active", &current_name);
 }
 
 void VRNavigator_base::addNavigation(VRNavPreset* ps, string& name) {
@@ -461,6 +463,9 @@ void VRNavigator::initHydraFly(VRTransform* target, VRDevice* dev) {
     addPreset(preset, name);
 }*/
 
+void VRNavigator::update() {
+    setActiveNavigation(getActiveNavigation());
+}
 
 VRNavigator::VRNavigator() {}
 
