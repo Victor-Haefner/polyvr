@@ -58,8 +58,9 @@ PyObject* VRPyFactory::loadVRML(VRPyFactory* self, PyObject* args) {
 
 PyObject* VRPyFactory::setupLod(VRPyFactory* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyFactory::setupLod - Object is invalid"); return NULL; }
-    PyObject *p1, *p2;
-    if (! PyArg_ParseTuple(args, "OO", &p1, &p2)) return NULL;
-    return VRPyTypeCaster::cast( self->obj->setupLod( PyString_AsString(p1), PyString_AsString(p2) ) );
+    vector<PyObject*> vec = parseList(args);
+    vector<string> svec;
+    for (auto o : vec) svec.push_back( PyString_AsString(o) );
+    return VRPyTypeCaster::cast( self->obj->setupLod( svec ) );
 }
 

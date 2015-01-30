@@ -2,6 +2,7 @@
 #include "core/utils/toString.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/VRLod.h"
 #include "addons/Engineering/CSG/Octree/Octree.h"
 
 #include <iostream>
@@ -21,7 +22,7 @@ VRFactory::VRFactory() {}
 
 void parsePoints(int& i, vector<string>& data, GeoVectorPropertyRecPtr res) {
     stringstream ss;
-    for (; data[i][0] != ']'; i++) ss << data[i];
+    for (; data[i][0] != ']' and i < data.size(); i++) ss << data[i];
 
     Pnt3f v;
     while(ss) {
@@ -35,7 +36,7 @@ void parsePoints(int& i, vector<string>& data, GeoVectorPropertyRecPtr res) {
 
 void parseNorms(int& i, vector<string>& data, GeoVectorPropertyRecPtr res) {
     stringstream ss;
-    for (; data[i][0] != ']'; i++) ss << data[i];
+    for (; data[i][0] != ']' and i < data.size(); i++) ss << data[i];
 
     Vec3f v;
     while(ss) {
@@ -49,7 +50,7 @@ void parseNorms(int& i, vector<string>& data, GeoVectorPropertyRecPtr res) {
 
 void parseInds(int& i, vector<string>& data, GeoIntegralPropertyRefPtr res, int offset) {
     stringstream ss;
-    for (; data[i][0] != ']'; i++) ss << data[i];
+    for (; data[i][0] != ']' and i < data.size(); i++) ss << data[i];
 
     int v;
     while(ss) {
@@ -149,27 +150,72 @@ VRObject* VRFactory::loadVRML(string path) { // wrl filepath
     return res;
 }
 
-VRObject* VRFactory::setupLod(string path, string path_low) { // TODO: extend this to a list of paths
-    VRObject* g1 = loadVRML(path_low);
-    VRObject* g2 = loadVRML(path);
+VRObject* VRFactory::setupLod(vector<string> paths) {
+    vector<VRObject*> objects;
+    for (auto p : paths) objects.push_back( loadVRML(p) );
+    Vec3f p, bb1, bb2, sbb1, sbb2;
+    Vec3i spaced;
+    int spaceN;
 
-    Vec3f p, bb1, bb2;
+    commitChanges();
+    cout << "setupLod - changes commited\n";
+    if (objects.size() == 0) return 0;
 
-    Octree t1(0.001);
-    for (auto _g : g1->getChildren(true, "Geometry")) {
-        VRGeometry* g = (VRGeometry*)_g;
-        g->getBoundingBox(bb1, bb2);
-        p = (bb1+bb2)*0.5;
-        t1.add(p[0], p[1], p[2], g);
+    VRObject* root = new VRObject("factory_lod_root");
+
+    Octree tree(0.001);
+    vector<VRLod*> grid;
+    for (int i = 0; i<objects.size(); i++) {
+
+        if (i == 0) {// get the full space to organise with LODs
+            objects[i]->getBoundingBox(sbb1, sbb2);
+
+            for (int j=0; j<3; j++) spaced[j] = ceil(sbb2[j]-sbb1[j]);
+            spaceN = spaced[0]*spaced[1]*spaced[2];
+            cout << "setupLod - space " << spaced << endl;
+
+            for (int j=0; j<spaceN; j++) {
+                VRLod* lod = new VRLod("factory_lod");
+                lod->switchParent(root);
+                grid.push_back( lod );
+            }
+
+            for (int u = 0; u<spaced[0]; u++) {
+                for (int v = 0; v<spaced[1]; v++) {
+                    for (int w = 0; w<spaced[2]; w++) {
+                        int j = u*spaced[2]*spaced[1] + v*spaced[2] + w;
+                        Vec3f pos = sbb1 + Vec3f(u+0.5, v+0.5, w*0.5);
+                        grid[j]->setCenter(pos);
+            }}}
+        }
+
+        for (auto _g : objects[i]->getChildren(true, "Geometry")) {
+            VRGeometry* g = (VRGeometry*)_g;
+            g->getBoundingBox(bb1, bb2);
+            p = (bb1+bb2)*0.5 - sbb1;
+
+            int j = floor(p[0])*spaced[2]*spaced[1] + floor(p[1])*spaced[2] + floor(p[2]);
+            VRLod* lod = grid[j];
+            while (i >= lod->getChildrenCount()) {
+                lod->addChild(new VRObject("factory_lod_part"));
+                lod->setDistance(i, i+0.5);
+            }
+            VRObject* anchor = lod->getChild(i);
+            g->switchParent(anchor);
+
+            /*if (i == 0) tree.add(p[0], p[1], p[2], g); // put the first file into an octree
+            else {
+                vector<void*> res = tree.radiusSearch(p[0], p[1], p[2], 0.01);
+                cout << "radius search " << p << " found " << res.size() << endl;
+            }*/
+        }
+
+        for (int j=0; j<spaceN; j++) {
+            grid[j]->addChild(new VRObject("factory_empty_part"));
+            int N = grid[j]->getChildrenCount();
+            if (N > 1) grid[j]->setDistance(N-2, 2*N);
+        }
     }
 
-    for (auto _g : g2->getChildren(true, "Geometry")) {
-        VRGeometry* g = (VRGeometry*)_g;
-        g->getBoundingBox(bb1, bb2);
-        p = (bb1+bb2)*0.5;
-        vector<void*> res = t1.radiusSearch(p[0], p[1], p[2], 0.01);
-        cout << "radius search " << p << " found " << res.size() << endl;
-    }
-
-    return 0;
+    return root;
 }
