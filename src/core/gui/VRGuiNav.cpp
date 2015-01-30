@@ -63,6 +63,7 @@ void VRGuiNav_on_preset_changed(GtkComboBox* cb, gpointer data) {
         gtk_list_store_set (navBindings_store->gobj(), row.gobj(), 2, type.c_str(), -1);
         gtk_list_store_set (navBindings_store->gobj(), row.gobj(), 3, cb_name.c_str(), -1);
         gtk_list_store_set (navBindings_store->gobj(), row.gobj(), 4, NULL, -1);
+        gtk_list_store_set (navBindings_store->gobj(), row.gobj(), 5, b.speed, -1);
     }
 }
 

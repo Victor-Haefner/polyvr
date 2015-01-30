@@ -21,11 +21,12 @@ typedef VRFunction<VRDevice*> VRDevCb;
 struct VRNavBinding {
     int key;
     int state;
-    VRSignal* sig;
-    VRDevCb* cb;
+    VRSignal* sig = 0;
+    VRDevCb* cb = 0;
     string sig_name;
     string cb_name;
-    bool doRepeat;
+    bool doRepeat = false;
+    float speed = 1.0;
 
     VRNavBinding(VRDevCb* c, int k, int s, bool repeat);
 };
@@ -79,6 +80,7 @@ class VRNavigator_base : public VRStorage {
 
         void storeNavigationCallback(VRDevCb* cb);
         map<string, VRDevCb*>& getNavigationCallbacks();
+        VRDevCb* getNavigationCallback(string s);
 };
 
 class VRNavigator : public VRNavigator_base {

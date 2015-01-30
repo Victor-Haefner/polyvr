@@ -34,7 +34,6 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -48,7 +47,6 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -241,7 +239,6 @@ Germany</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -255,7 +252,6 @@ Germany</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -292,7 +288,6 @@ Germany</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
-                <property name="use_action_appearance">False</property>
                 <property name="draw_indicator">True</property>
               </object>
               <packing>
@@ -307,7 +302,6 @@ Germany</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
-                <property name="use_action_appearance">False</property>
                 <property name="draw_indicator">True</property>
               </object>
               <packing>
@@ -450,7 +444,6 @@ cave allocated</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -580,7 +573,6 @@ cave allocated</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -675,7 +667,6 @@ cave allocated</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -689,7 +680,6 @@ cave allocated</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -726,7 +716,6 @@ cave allocated</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
-                <property name="use_action_appearance">False</property>
                 <property name="draw_indicator">True</property>
               </object>
               <packing>
@@ -784,7 +773,6 @@ cave allocated</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">False</property>
-                <property name="use_action_appearance">False</property>
                 <property name="draw_indicator">True</property>
               </object>
               <packing>
@@ -827,7 +815,6 @@ cave allocated</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -841,7 +828,6 @@ cave allocated</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="use_action_appearance">False</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -862,7 +848,6 @@ cave allocated</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">False</property>
-            <property name="use_action_appearance">False</property>
             <property name="draw_indicator">True</property>
           </object>
           <packing>
@@ -1214,12 +1199,6 @@ cave allocated</property>
       <column type="gchararray"/>
     </columns>
   </object>
-  <object class="GtkListStore" id="mouse_list">
-    <columns>
-      <!-- column-name mouse -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
   <object class="GtkListStore" id="nav_bindings">
     <columns>
       <!-- column-name Key -->
@@ -1232,18 +1211,8 @@ cave allocated</property>
       <column type="gchararray"/>
       <!-- column-name binding -->
       <column type="gpointer"/>
-    </columns>
-  </object>
-  <object class="GtkListStore" id="nav_presets">
-    <columns>
-      <!-- column-name nav_presets -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
-  <object class="GtkListStore" id="phys_shapes">
-    <columns>
-      <!-- column-name shapes -->
-      <column type="gchararray"/>
+      <!-- column-name speed -->
+      <column type="gfloat"/>
     </columns>
   </object>
   <object class="GtkListStore" id="prim_list">
@@ -1261,6 +1230,24 @@ cave allocated</property>
     </columns>
   </object>
   <object class="GtkTextBuffer" id="pydoc"/>
+  <object class="GtkListStore" id="mouse_list">
+    <columns>
+      <!-- column-name mouse -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+  <object class="GtkListStore" id="nav_presets">
+    <columns>
+      <!-- column-name nav_presets -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+  <object class="GtkListStore" id="phys_shapes">
+    <columns>
+      <!-- column-name shapes -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
   <object class="GtkTreeStore" id="scenegraph">
     <columns>
       <!-- column-name Object -->
@@ -1424,7 +1411,6 @@ cave allocated</property>
                   <object class="GtkToolButton" id="toolbutton1">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="use_underline">True</property>
                     <property name="stock_id">gtk-new</property>
                   </object>
@@ -1437,7 +1423,6 @@ cave allocated</property>
                   <object class="GtkToolButton" id="toolbutton21">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="label" translatable="yes">toolbutton21</property>
                     <property name="use_underline">True</property>
                     <property name="stock_id">gtk-open</property>
@@ -1451,7 +1436,6 @@ cave allocated</property>
                   <object class="GtkToolButton" id="toolbutton4">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="label" translatable="yes">toolbutton4</property>
                     <property name="use_underline">True</property>
                     <property name="stock_id">gtk-save</property>
@@ -1465,7 +1449,6 @@ cave allocated</property>
                   <object class="GtkToolButton" id="toolbutton5">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="label" translatable="yes">toolbutton5</property>
                     <property name="use_underline">True</property>
                     <property name="stock_id">gtk-save-as</property>
@@ -1479,7 +1462,6 @@ cave allocated</property>
                   <object class="GtkToolButton" id="toolbutton3">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="use_underline">True</property>
                     <property name="stock_id">gtk-quit</property>
                   </object>
@@ -1492,7 +1474,6 @@ cave allocated</property>
                   <object class="GtkToolButton" id="toolbutton17">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="label" translatable="yes">toolbutton17</property>
                     <property name="use_underline">True</property>
                     <property name="stock_id">gtk-about</property>
@@ -1506,7 +1487,6 @@ cave allocated</property>
                   <object class="GtkToolButton" id="toolbutton18">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="label" translatable="yes">toolbutton18</property>
                     <property name="use_underline">True</property>
                     <property name="stock_id">gtk-paste</property>
@@ -1526,7 +1506,6 @@ cave allocated</property>
                   <object class="GtkToolButton" id="toolbutton2">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="use_action_appearance">False</property>
                     <property name="label" translatable="yes">toolbutton2</property>
                     <property name="use_underline">True</property>
                   </object>
@@ -1610,6 +1589,12 @@ cave allocated</property>
                                     <child>
                                       <placeholder/>
                                     </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
                                   </object>
                                 </child>
                                 <child type="tab">
@@ -1628,6 +1613,12 @@ cave allocated</property>
                                     <property name="can_focus">False</property>
                                     <property name="n_columns">2</property>
                                     <property name="homogeneous">True</property>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
+                                    <child>
+                                      <placeholder/>
+                                    </child>
                                     <child>
                                       <placeholder/>
                                     </child>
@@ -1737,7 +1728,6 @@ cave allocated</property>
                           <object class="GtkToolButton" id="toolbutton10">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="label" translatable="yes">toolbutton6</property>
                             <property name="use_underline">True</property>
                             <property name="stock_id">gtk-new</property>
@@ -1751,7 +1741,6 @@ cave allocated</property>
                           <object class="GtkToolButton" id="toolbutton11">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="label" translatable="yes">toolbutton9</property>
                             <property name="use_underline">True</property>
                             <property name="stock_id">gtk-delete</property>
@@ -1765,7 +1754,6 @@ cave allocated</property>
                           <object class="GtkToolButton" id="toolbutton12">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="label" translatable="yes">toolbutton7</property>
                             <property name="use_underline">True</property>
                             <property name="stock_id">gtk-save</property>
@@ -1790,7 +1778,6 @@ cave allocated</property>
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="tooltip_text" translatable="yes">Foto mode</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="label" translatable="yes">toolbutton19</property>
                             <property name="use_underline">True</property>
                             <property name="stock_id">gtk-orientation-portrait</property>
@@ -1805,7 +1792,6 @@ cave allocated</property>
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
                             <property name="tooltip_text" translatable="yes">Calibration foreground</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="label" translatable="yes">toolbutton20</property>
                             <property name="use_underline">True</property>
                             <property name="stock_id">gtk-paste</property>
@@ -1874,7 +1860,6 @@ cave allocated</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">False</property>
-                                            <property name="use_action_appearance">False</property>
                                             <property name="draw_indicator">True</property>
                                           </object>
                                           <packing>
@@ -1907,7 +1892,6 @@ cave allocated</property>
                                                 <property name="sensitive">False</property>
                                                 <property name="can_focus">True</property>
                                                 <property name="receives_default">False</property>
-                                                <property name="use_action_appearance">False</property>
                                                 <property name="draw_indicator">True</property>
                                               </object>
                                               <packing>
@@ -2436,7 +2420,6 @@ cave allocated</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">True</property>
-                                            <property name="use_action_appearance">False</property>
                                           </object>
                                           <packing>
                                             <property name="left_attach">3</property>
@@ -2479,7 +2462,6 @@ cave allocated</property>
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">True</property>
                                                 <property name="receives_default">False</property>
-                                                <property name="use_action_appearance">False</property>
                                                 <property name="draw_indicator">True</property>
                                               </object>
                                               <packing>
@@ -2727,7 +2709,6 @@ cave allocated</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">False</property>
-                                            <property name="use_action_appearance">False</property>
                                             <property name="draw_indicator">True</property>
                                           </object>
                                           <packing>
@@ -2790,7 +2771,6 @@ cave allocated</property>
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">True</property>
                                                 <property name="receives_default">False</property>
-                                                <property name="use_action_appearance">False</property>
                                                 <property name="draw_indicator">True</property>
                                               </object>
                                               <packing>
@@ -2819,7 +2799,6 @@ cave allocated</property>
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">True</property>
                                                 <property name="receives_default">False</property>
-                                                <property name="use_action_appearance">False</property>
                                                 <property name="draw_indicator">True</property>
                                               </object>
                                               <packing>
@@ -2854,7 +2833,6 @@ cave allocated</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">False</property>
-                                            <property name="use_action_appearance">False</property>
                                             <property name="draw_indicator">True</property>
                                           </object>
                                           <packing>
@@ -2875,7 +2853,6 @@ cave allocated</property>
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">True</property>
                                                 <property name="receives_default">False</property>
-                                                <property name="use_action_appearance">False</property>
                                                 <property name="draw_indicator">True</property>
                                               </object>
                                               <packing>
@@ -3090,7 +3067,6 @@ cave allocated</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">False</property>
-                                            <property name="use_action_appearance">False</property>
                                             <property name="draw_indicator">True</property>
                                           </object>
                                           <packing>
@@ -3280,7 +3256,6 @@ cave allocated</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">False</property>
-                                            <property name="use_action_appearance">False</property>
                                             <property name="draw_indicator">True</property>
                                           </object>
                                           <packing>
@@ -3673,7 +3648,6 @@ cave allocated</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">False</property>
-                                            <property name="use_action_appearance">False</property>
                                             <property name="draw_indicator">True</property>
                                           </object>
                                           <packing>
@@ -3865,7 +3839,6 @@ cave allocated</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">False</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="draw_indicator">True</property>
                           </object>
                           <packing>
@@ -3882,7 +3855,6 @@ cave allocated</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">False</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="draw_indicator">True</property>
                           </object>
                           <packing>
@@ -3947,7 +3919,6 @@ cave allocated</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">False</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="draw_indicator">True</property>
                           </object>
                           <packing>
@@ -3965,7 +3936,6 @@ cave allocated</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">False</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="draw_indicator">True</property>
                           </object>
                           <packing>
@@ -4006,7 +3976,6 @@ cave allocated</property>
                             <property name="sensitive">False</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="image">image26</property>
                           </object>
                           <packing>
@@ -4079,7 +4048,6 @@ cave allocated</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <property name="use_action_appearance">False</property>
                           </object>
                           <packing>
                             <property name="left_attach">1</property>
@@ -4138,7 +4106,6 @@ cave allocated</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">False</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="draw_indicator">True</property>
                           </object>
                           <packing>
@@ -4314,7 +4281,6 @@ cave allocated</property>
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">True</property>
                                                 <property name="receives_default">True</property>
-                                                <property name="use_action_appearance">False</property>
                                                 <property name="image">image29</property>
                                               </object>
                                               <packing>
@@ -4342,7 +4308,6 @@ cave allocated</property>
                                                 <property name="visible">True</property>
                                                 <property name="can_focus">True</property>
                                                 <property name="receives_default">False</property>
-                                                <property name="use_action_appearance">False</property>
                                                 <property name="draw_indicator">True</property>
                                               </object>
                                               <packing>
@@ -4378,7 +4343,6 @@ cave allocated</property>
                                                         <property name="visible">True</property>
                                                         <property name="can_focus">True</property>
                                                         <property name="receives_default">False</property>
-                                                        <property name="use_action_appearance">False</property>
                                                         <property name="draw_indicator">True</property>
                                                       </object>
                                                       <packing>
@@ -4417,7 +4381,6 @@ cave allocated</property>
                                                         <property name="visible">True</property>
                                                         <property name="can_focus">True</property>
                                                         <property name="receives_default">False</property>
-                                                        <property name="use_action_appearance">False</property>
                                                         <property name="draw_indicator">True</property>
                                                       </object>
                                                       <packing>
@@ -4502,7 +4465,6 @@ cave allocated</property>
                                                         <property name="sensitive">False</property>
                                                         <property name="can_focus">True</property>
                                                         <property name="receives_default">False</property>
-                                                        <property name="use_action_appearance">False</property>
                                                         <property name="draw_indicator">True</property>
                                                       </object>
                                                       <packing>
@@ -4552,7 +4514,6 @@ cave allocated</property>
                                                         <property name="visible">True</property>
                                                         <property name="can_focus">True</property>
                                                         <property name="receives_default">True</property>
-                                                        <property name="use_action_appearance">False</property>
                                                       </object>
                                                       <packing>
                                                         <property name="expand">False</property>
@@ -4566,7 +4527,6 @@ cave allocated</property>
                                                         <property name="visible">True</property>
                                                         <property name="can_focus">True</property>
                                                         <property name="receives_default">True</property>
-                                                        <property name="use_action_appearance">False</property>
                                                       </object>
                                                       <packing>
                                                         <property name="expand">False</property>
@@ -4591,7 +4551,6 @@ cave allocated</property>
                                                     <property name="visible">True</property>
                                                     <property name="can_focus">True</property>
                                                     <property name="receives_default">False</property>
-                                                    <property name="use_action_appearance">False</property>
                                                     <property name="draw_indicator">True</property>
                                                     <property name="group">radiobutton2</property>
                                                   </object>
@@ -4609,7 +4568,6 @@ cave allocated</property>
                                                     <property name="visible">True</property>
                                                     <property name="can_focus">True</property>
                                                     <property name="receives_default">False</property>
-                                                    <property name="use_action_appearance">False</property>
                                                     <property name="active">True</property>
                                                     <property name="draw_indicator">True</property>
                                                   </object>
@@ -4631,7 +4589,6 @@ cave allocated</property>
                                                         <property name="visible">True</property>
                                                         <property name="can_focus">True</property>
                                                         <property name="receives_default">False</property>
-                                                        <property name="use_action_appearance">False</property>
                                                         <property name="draw_indicator">True</property>
                                                       </object>
                                                       <packing>
@@ -4646,7 +4603,6 @@ cave allocated</property>
                                                         <property name="visible">True</property>
                                                         <property name="can_focus">True</property>
                                                         <property name="receives_default">False</property>
-                                                        <property name="use_action_appearance">False</property>
                                                         <property name="draw_indicator">True</property>
                                                       </object>
                                                       <packing>
@@ -4661,7 +4617,6 @@ cave allocated</property>
                                                         <property name="visible">True</property>
                                                         <property name="can_focus">True</property>
                                                         <property name="receives_default">False</property>
-                                                        <property name="use_action_appearance">False</property>
                                                         <property name="draw_indicator">True</property>
                                                       </object>
                                                       <packing>
@@ -4699,7 +4654,6 @@ cave allocated</property>
                                                     <property name="visible">True</property>
                                                     <property name="can_focus">True</property>
                                                     <property name="receives_default">False</property>
-                                                    <property name="use_action_appearance">False</property>
                                                     <property name="draw_indicator">True</property>
                                                   </object>
                                                   <packing>
@@ -4714,7 +4668,6 @@ cave allocated</property>
                                                     <property name="visible">True</property>
                                                     <property name="can_focus">True</property>
                                                     <property name="receives_default">False</property>
-                                                    <property name="use_action_appearance">False</property>
                                                     <property name="draw_indicator">True</property>
                                                   </object>
                                                   <packing>
@@ -4755,7 +4708,6 @@ cave allocated</property>
                                                     <property name="visible">True</property>
                                                     <property name="can_focus">True</property>
                                                     <property name="receives_default">False</property>
-                                                    <property name="use_action_appearance">False</property>
                                                     <property name="draw_indicator">True</property>
                                                   </object>
                                                   <packing>
@@ -4791,7 +4743,6 @@ cave allocated</property>
                                                     <property name="visible">True</property>
                                                     <property name="can_focus">True</property>
                                                     <property name="receives_default">False</property>
-                                                    <property name="use_action_appearance">False</property>
                                                     <property name="draw_indicator">True</property>
                                                   </object>
                                                   <packing>
@@ -5081,7 +5032,6 @@ cave allocated</property>
                                                     <property name="visible">True</property>
                                                     <property name="can_focus">True</property>
                                                     <property name="receives_default">False</property>
-                                                    <property name="use_action_appearance">False</property>
                                                     <property name="draw_indicator">True</property>
                                                   </object>
                                                   <packing>
@@ -5096,7 +5046,6 @@ cave allocated</property>
                                                     <property name="visible">True</property>
                                                     <property name="can_focus">True</property>
                                                     <property name="receives_default">True</property>
-                                                    <property name="use_action_appearance">False</property>
                                                   </object>
                                                   <packing>
                                                     <property name="top_attach">2</property>
@@ -5112,7 +5061,6 @@ cave allocated</property>
                                                     <property name="visible">True</property>
                                                     <property name="can_focus">True</property>
                                                     <property name="receives_default">True</property>
-                                                    <property name="use_action_appearance">False</property>
                                                   </object>
                                                   <packing>
                                                     <property name="left_attach">1</property>
@@ -5296,7 +5244,6 @@ to add distances</property>
                                                         <property name="visible">True</property>
                                                         <property name="can_focus">True</property>
                                                         <property name="receives_default">False</property>
-                                                        <property name="use_action_appearance">False</property>
                                                         <property name="draw_indicator">True</property>
                                                       </object>
                                                       <packing>
@@ -5445,7 +5392,6 @@ to add distances</property>
                                                     <property name="visible">True</property>
                                                     <property name="can_focus">True</property>
                                                     <property name="receives_default">False</property>
-                                                    <property name="use_action_appearance">False</property>
                                                     <property name="draw_indicator">True</property>
                                                   </object>
                                                   <packing>
@@ -5625,7 +5571,6 @@ to add distances</property>
                                                     <property name="visible">True</property>
                                                     <property name="can_focus">True</property>
                                                     <property name="receives_default">False</property>
-                                                    <property name="use_action_appearance">False</property>
                                                     <property name="draw_indicator">True</property>
                                                   </object>
                                                   <packing>
@@ -5907,7 +5852,6 @@ to add distances</property>
                                                     <property name="visible">True</property>
                                                     <property name="can_focus">True</property>
                                                     <property name="receives_default">False</property>
-                                                    <property name="use_action_appearance">False</property>
                                                     <property name="draw_indicator">True</property>
                                                   </object>
                                                   <packing>
@@ -5921,7 +5865,6 @@ to add distances</property>
                                                     <property name="visible">True</property>
                                                     <property name="can_focus">True</property>
                                                     <property name="receives_default">False</property>
-                                                    <property name="use_action_appearance">False</property>
                                                     <property name="draw_indicator">True</property>
                                                   </object>
                                                   <packing>
@@ -6248,7 +6191,6 @@ to add distances</property>
                                                     <property name="visible">True</property>
                                                     <property name="can_focus">True</property>
                                                     <property name="receives_default">True</property>
-                                                    <property name="use_action_appearance">False</property>
                                                   </object>
                                                   <packing>
                                                     <property name="left_attach">1</property>
@@ -6366,7 +6308,6 @@ to add distances</property>
                                                     <property name="visible">True</property>
                                                     <property name="can_focus">True</property>
                                                     <property name="receives_default">False</property>
-                                                    <property name="use_action_appearance">False</property>
                                                     <property name="draw_indicator">True</property>
                                                   </object>
                                                   <packing>
@@ -6439,7 +6380,6 @@ to add distances</property>
                                                     <property name="sensitive">False</property>
                                                     <property name="can_focus">True</property>
                                                     <property name="receives_default">False</property>
-                                                    <property name="use_action_appearance">False</property>
                                                     <property name="draw_indicator">True</property>
                                                   </object>
                                                   <packing>
@@ -6563,7 +6503,6 @@ to add distances</property>
                                                     <property name="visible">True</property>
                                                     <property name="can_focus">True</property>
                                                     <property name="receives_default">False</property>
-                                                    <property name="use_action_appearance">False</property>
                                                     <property name="draw_indicator">True</property>
                                                   </object>
                                                   <packing>
@@ -6699,7 +6638,6 @@ to add distances</property>
                                                     <property name="visible">True</property>
                                                     <property name="can_focus">True</property>
                                                     <property name="receives_default">False</property>
-                                                    <property name="use_action_appearance">False</property>
                                                     <property name="draw_indicator">True</property>
                                                   </object>
                                                 </child>
@@ -6831,6 +6769,20 @@ to add distances</property>
                                       </object>
                                     </child>
                                     <child>
+                                      <object class="GtkTreeViewColumn" id="treeviewcolumn24">
+                                        <property name="sizing">autosize</property>
+                                        <property name="title" translatable="yes">Speed</property>
+                                        <property name="expand">True</property>
+                                        <property name="alignment">0.5</property>
+                                        <child>
+                                          <object class="GtkCellRendererText" id="cellrenderertext46"/>
+                                          <attributes>
+                                            <attribute name="text">5</attribute>
+                                          </attributes>
+                                        </child>
+                                      </object>
+                                    </child>
+                                    <child>
                                       <object class="GtkTreeViewColumn" id="treeviewcolumn12">
                                         <property name="sizing">autosize</property>
                                         <property name="title" translatable="yes">Type</property>
@@ -6882,29 +6834,6 @@ to add distances</property>
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkLabel" id="label46">
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">False</property>
-                                        <property name="label" translatable="yes">Scene:</property>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">False</property>
-                                        <property name="fill">False</property>
-                                        <property name="position">2</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkComboBox" id="combobox10">
-                                        <property name="visible">True</property>
-                                        <property name="can_focus">False</property>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">False</property>
-                                        <property name="fill">False</property>
-                                        <property name="position">3</property>
-                                      </packing>
-                                    </child>
-                                    <child>
                                       <object class="GtkLabel" id="label47">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
@@ -6913,7 +6842,7 @@ to add distances</property>
                                       <packing>
                                         <property name="expand">False</property>
                                         <property name="fill">False</property>
-                                        <property name="position">4</property>
+                                        <property name="position">2</property>
                                       </packing>
                                     </child>
                                     <child>
@@ -6924,7 +6853,7 @@ to add distances</property>
                                       <packing>
                                         <property name="expand">False</property>
                                         <property name="fill">False</property>
-                                        <property name="position">5</property>
+                                        <property name="position">3</property>
                                       </packing>
                                     </child>
                                   </object>
@@ -6957,7 +6886,6 @@ to add distances</property>
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="receives_default">True</property>
-                                        <property name="use_action_appearance">False</property>
                                         <property name="image">image16</property>
                                       </object>
                                       <packing>
@@ -6971,7 +6899,6 @@ to add distances</property>
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="receives_default">True</property>
-                                        <property name="use_action_appearance">False</property>
                                         <property name="image">image17</property>
                                       </object>
                                       <packing>
@@ -7043,7 +6970,6 @@ to add distances</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">True</property>
-                                    <property name="use_action_appearance">False</property>
                                     <property name="image">image18</property>
                                   </object>
                                   <packing>
@@ -7057,7 +6983,6 @@ to add distances</property>
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
                                     <property name="receives_default">True</property>
-                                    <property name="use_action_appearance">False</property>
                                     <property name="image">image19</property>
                                   </object>
                                   <packing>
@@ -7105,7 +7030,6 @@ to add distances</property>
                               <object class="GtkToolButton" id="toolbutton6">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="use_action_appearance">False</property>
                                 <property name="label" translatable="yes">toolbutton6</property>
                                 <property name="use_underline">True</property>
                                 <property name="stock_id">gtk-new</property>
@@ -7119,7 +7043,6 @@ to add distances</property>
                               <object class="GtkToolButton" id="toolbutton22">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="use_action_appearance">False</property>
                                 <property name="label" translatable="yes">toolbutton22</property>
                                 <property name="use_underline">True</property>
                                 <property name="stock_id">gtk-open</property>
@@ -7133,7 +7056,6 @@ to add distances</property>
                               <object class="GtkToolButton" id="toolbutton9">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="use_action_appearance">False</property>
                                 <property name="label" translatable="yes">toolbutton9</property>
                                 <property name="use_underline">True</property>
                                 <property name="stock_id">gtk-delete</property>
@@ -7147,7 +7069,6 @@ to add distances</property>
                               <object class="GtkToolButton" id="toolbutton7">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="use_action_appearance">False</property>
                                 <property name="label" translatable="yes">toolbutton7</property>
                                 <property name="use_underline">True</property>
                                 <property name="stock_id">gtk-save</property>
@@ -7161,7 +7082,6 @@ to add distances</property>
                               <object class="GtkToolButton" id="toolbutton8">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="use_action_appearance">False</property>
                                 <property name="label" translatable="yes">toolbutton8</property>
                                 <property name="use_underline">True</property>
                                 <property name="stock_id">gtk-execute</property>
@@ -7175,7 +7095,6 @@ to add distances</property>
                               <object class="GtkToolButton" id="toolbutton23">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="use_action_appearance">False</property>
                                 <property name="label" translatable="yes">toolbutton23</property>
                                 <property name="use_underline">True</property>
                                 <property name="stock_id">gtk-find</property>
@@ -7189,7 +7108,6 @@ to add distances</property>
                               <object class="GtkToolButton" id="toolbutton16">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="use_action_appearance">False</property>
                                 <property name="label" translatable="yes">toolbutton16</property>
                                 <property name="use_underline">True</property>
                                 <property name="stock_id">gtk-help</property>
@@ -7319,7 +7237,6 @@ to add distances</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">True</property>
-                                            <property name="use_action_appearance">False</property>
                                             <property name="image">image46</property>
                                           </object>
                                           <packing>
@@ -7333,7 +7250,6 @@ to add distances</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">True</property>
-                                            <property name="use_action_appearance">False</property>
                                             <property name="image">image47</property>
                                           </object>
                                           <packing>
@@ -7448,7 +7364,6 @@ to add distances</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">True</property>
-                                            <property name="use_action_appearance">False</property>
                                             <property name="image">image42</property>
                                           </object>
                                           <packing>
@@ -7462,7 +7377,6 @@ to add distances</property>
                                             <property name="visible">True</property>
                                             <property name="can_focus">True</property>
                                             <property name="receives_default">True</property>
-                                            <property name="use_action_appearance">False</property>
                                             <property name="image">image43</property>
                                           </object>
                                           <packing>
@@ -7710,7 +7624,6 @@ to add distances</property>
                               <object class="GtkToolButton" id="toolbutton14">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="use_action_appearance">False</property>
                                 <property name="label" translatable="yes">toolbutton6</property>
                                 <property name="use_underline">True</property>
                                 <property name="stock_id">gtk-new</property>
@@ -7724,7 +7637,6 @@ to add distances</property>
                               <object class="GtkToolButton" id="toolbutton15">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="use_action_appearance">False</property>
                                 <property name="label" translatable="yes">toolbutton9</property>
                                 <property name="use_underline">True</property>
                                 <property name="stock_id">gtk-delete</property>
@@ -7907,7 +7819,6 @@ to add distances</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="image">image30</property>
                           </object>
                           <packing>
@@ -7921,7 +7832,6 @@ to add distances</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="image">image31</property>
                           </object>
                           <packing>
@@ -8025,7 +7935,6 @@ to add distances</property>
                             <property name="visible">True</property>
                             <property name="can_focus">True</property>
                             <property name="receives_default">True</property>
-                            <property name="use_action_appearance">False</property>
                             <property name="image">image48</property>
                           </object>
                           <packing>

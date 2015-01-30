@@ -3,6 +3,7 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/utils/VROptions.h"
+#include "core/utils/VRVisualLayer.h"
 #include "core/setup/devices/VRMouse.h"
 #include "core/objects/VRTransform.h"
 #include "core/objects/VRCamera.h"
@@ -42,6 +43,9 @@ VRSetup::VRSetup(string name) {
     setup_cam->setAcceptRoot(false);
     user = 0;
     tracking = "None";
+
+    setup_layer = new VRVisualLayer("setup");
+    setup_layer->setCallback( new VRFunction<bool>("showSetup", boost::bind(&VRSetup::showSetup, this, _1) ) );
 }
 
 VRSetup::~VRSetup() {
