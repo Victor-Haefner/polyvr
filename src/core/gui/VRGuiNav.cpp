@@ -68,18 +68,14 @@ void VRGuiNav_on_preset_changed(GtkComboBox* cb, gpointer data) {
 
 
 void VRGuiNav_on_new_preset_clicked(GtkButton* b, gpointer d) {
-    VRNavPreset* preset = new VRNavPreset();
     VRScene* scene = VRSceneManager::getCurrent();
-
-    string name = "preset"; //TODO: dialog with name, and copy from other scene options
-    scene->addNavigation(preset, name);
-
-    //preset->setDevice(VRMouse::get());
+    VRNavPreset* preset = new VRNavPreset();
+    scene->addNavigation(preset);
     preset->setTarget(scene->getActiveCamera());
 
     Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("nav_presets"));
     Gtk::ListStore::Row row = *store->append();
-    gtk_list_store_set (store->gobj(), row.gobj(), 0, name.c_str(), -1);
+    gtk_list_store_set (store->gobj(), row.gobj(), 0, preset->getName().c_str(), -1);
 
     setComboboxLastActive("combobox5");
 }

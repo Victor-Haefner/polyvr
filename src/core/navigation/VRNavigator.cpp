@@ -25,6 +25,8 @@ VRNavBinding::VRNavBinding(VRDevCb* c, int k, int s, bool repeat) {
 
 
 VRNavPreset::VRNavPreset() {
+    setNameSpace("NavPreset");
+    setName("preset");
     dev = 0;
     target = 0;
     active = false;
@@ -82,14 +84,20 @@ VRNavigator_base::VRNavigator_base () {
     current = 0;
 
     store("active", &current_name);
+
+    VRNavPreset* np = new VRNavPreset();
+    np->setName("None");
+    addNavigation(np);
 }
 
-void VRNavigator_base::addNavigation(VRNavPreset* ps, string& name) {
-    string tmp = name; //make unique name
-    int i=2;
-    while (presets.count(tmp) == 1) { tmp = name + VRN_toString(i); i++; }
-    name = tmp;
+VRNavigator_base::~VRNavigator_base() {
+    for (auto p : presets) delete p.second;
+    presets.clear();
+}
 
+void VRNavigator_base::addNavigation(VRNavPreset* ps) {
+    string name = ps->getName();
+    if (presets.count(name)) delete presets[name];
     presets[name] = ps;
 }
 
@@ -118,6 +126,10 @@ map<string, VRNavPreset*> VRNavigator_base::getNavigations() { return presets; }
 
 void VRNavigator_base::storeNavigationCallback(VRDevCb* cb) { library[cb->getName()] = cb; }
 map<string, VRDevCb*>& VRNavigator_base::getNavigationCallbacks() { return library; }
+
+
+VRNavigator::VRNavigator() {}
+VRNavigator::~VRNavigator() {}
 
 // callbacks
 
@@ -281,9 +293,9 @@ void VRNavigator::initWalk(VRTransform* target, VRDevice* dev) {
     VRNavBinding b1(cb, 0, 0, true);
     preset->addKeyBinding(b1);
     preset->deactivate();
+    preset->setName("Walk");
 
-    string name = "Walk";
-    addNavigation(preset, name);
+    addNavigation(preset);
 }
 
 void VRNavigator::initOrbit(VRTransform* target, VRDevice* dev) {
@@ -310,9 +322,9 @@ void VRNavigator::initOrbit(VRTransform* target, VRDevice* dev) {
     preset->addKeyBinding(bz2);
     preset->addKeyBinding(bf);
     preset->deactivate();
+    preset->setName("Orbit");
 
-    string name = "Orbit";
-    addNavigation(preset, name);
+    addNavigation(preset);
 }
 
 void VRNavigator::initOrbit2D(VRTransform* target, VRDevice* dev) {
@@ -335,9 +347,9 @@ void VRNavigator::initOrbit2D(VRTransform* target, VRDevice* dev) {
     preset->addKeyBinding(bz1);
     preset->addKeyBinding(bz2);
     preset->deactivate();
+    preset->setName("Orbit2D");
 
-    string name = "Orbit2D";
-    addNavigation(preset, name);
+    addNavigation(preset);
 }
 
 void VRNavigator::initFlyOrbit(VRTransform* target, VRDevice* dev) { // TODO
@@ -360,9 +372,9 @@ void VRNavigator::initFlyOrbit(VRTransform* target, VRDevice* dev) { // TODO
     preset->addKeyBinding(bz1);
     preset->addKeyBinding(bz2);
     preset->deactivate();
+    preset->setName("FlyOrbit2D");
 
-    string name = "FlyOrbit2D";
-    addNavigation(preset, name);
+    addNavigation(preset);
 }
 
 void VRNavigator::initFlyWalk(VRTransform* target, VRDevice* dev) {
@@ -378,9 +390,9 @@ void VRNavigator::initFlyWalk(VRTransform* target, VRDevice* dev) {
     preset->addKeyBinding(b1);
     preset->addKeyBinding(b2);
     preset->deactivate();
+    preset->setName("FlyWalk");
 
-    string name = "FlyWalk";
-    addNavigation(preset, name);
+    addNavigation(preset);
 }
 
 void VRNavigator::hyd_walk(VRDevice* dev) {
@@ -433,9 +445,9 @@ void VRNavigator::initHydraFly(VRTransform* target, VRDevice* dev) {
     preset->addKeyBinding(b3);
     preset->addKeyBinding(b4);
     preset->deactivate();
+    preset->setName("Hydra");
 
-    string name = "Hydra";
-    addNavigation(preset, name);
+    addNavigation(preset);
 }
 
 /*void VRNavigator::initFlyWalk(VRTransform* target, VRDevice* dev) { // TODO
@@ -466,8 +478,6 @@ void VRNavigator::initHydraFly(VRTransform* target, VRDevice* dev) {
 void VRNavigator::update() {
     setActiveNavigation(getActiveNavigation());
 }
-
-VRNavigator::VRNavigator() {}
 
 
 OSG_END_NAMESPACE;

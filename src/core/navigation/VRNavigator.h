@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include "core/utils/VRStorage.h"
+#include "core/utils/VRName.h"
 
 template<class T> class VRFunction;
 
@@ -29,7 +30,7 @@ struct VRNavBinding {
     VRNavBinding(VRDevCb* c, int k, int s, bool repeat);
 };
 
-class VRNavPreset {
+class VRNavPreset : public VRName {
     private:
         vector<VRNavBinding> bindings;
         VRDevice* dev;
@@ -64,9 +65,10 @@ class VRNavigator_base : public VRStorage {
         map<string, VRNavPreset*> presets;
 
     public:
-        VRNavigator_base ();
+        VRNavigator_base();
+        ~VRNavigator_base();
 
-        void addNavigation(VRNavPreset* ps, string& name);
+        void addNavigation(VRNavPreset* ps);
         void remNavigation(string name);
 
         void setActiveNavigation(string s);
@@ -98,6 +100,7 @@ class VRNavigator : public VRNavigator_base {
 
     protected:
         VRNavigator();
+        ~VRNavigator();
 
         // init presets
         void initWalk(VRTransform* target, VRDevice* dev);
