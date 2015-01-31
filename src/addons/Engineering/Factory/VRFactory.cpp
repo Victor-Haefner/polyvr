@@ -150,72 +150,141 @@ VRObject* VRFactory::loadVRML(string path) { // wrl filepath
     return res;
 }
 
-VRObject* VRFactory::setupLod(vector<string> paths) {
-    vector<VRObject*> objects;
-    for (auto p : paths) objects.push_back( loadVRML(p) );
-    Vec3f p, bb1, bb2, sbb1, sbb2;
-    Vec3i spaced;
-    int spaceN;
+class VRLODGrid {
+    private:
+        Vec3f smin;
+        Vec3i dim;
+        int N;
+        float res;
+        float dist;
+        vector<VRLod*> grid;
+        VRObject* root;
 
-    commitChanges();
-    cout << "setupLod - changes commited\n";
-    if (objects.size() == 0) return 0;
+        int toIndex(Vec3i p) {
+            return p[0]*dim[2]*dim[1] + p[1]*dim[2] + p[2];
+        }
 
-    VRObject* root = new VRObject("factory_lod_root");
+        int toIndex(Vec3f p) {
+            Vec3i ip;
+            for (int i=0; i<3; i++) ip[i] = floor(p[i]/res);
+            return toIndex(ip);
+        }
 
-    Octree tree(0.001);
-    vector<VRLod*> grid;
-    for (int i = 0; i<objects.size(); i++) {
+    public:
+        VRLODGrid(Vec3f smin, Vec3f smax, float res) {
+            this->smin = smin;
+            this->res = res;
 
-        if (i == 0) {// get the full space to organise with LODs
-            objects[i]->getBoundingBox(sbb1, sbb2);
+            root = new VRObject("lodgrid_root");
 
-            for (int j=0; j<3; j++) spaced[j] = ceil(sbb2[j]-sbb1[j]);
-            spaceN = spaced[0]*spaced[1]*spaced[2];
-            cout << "setupLod - space " << spaced << endl;
+            for (int j=0; j<3; j++) dim[j] = ceil((smax[j]-smin[j])/res);
+            N = dim[0]*dim[1]*dim[2];
+            cout << "setupLodGrid - space " << dim << endl;
 
-            for (int j=0; j<spaceN; j++) {
+            for (int j=0; j<N; j++) {
                 VRLod* lod = new VRLod("factory_lod");
                 lod->switchParent(root);
                 grid.push_back( lod );
             }
 
-            for (int u = 0; u<spaced[0]; u++) {
-                for (int v = 0; v<spaced[1]; v++) {
-                    for (int w = 0; w<spaced[2]; w++) {
-                        int j = u*spaced[2]*spaced[1] + v*spaced[2] + w;
-                        Vec3f pos = sbb1 + Vec3f(u+0.5, v+0.5, w*0.5);
-                        grid[j]->setCenter(pos);
+            for (int u = 0; u<dim[0]; u++) {
+                for (int v = 0; v<dim[1]; v++) {
+                    for (int w = 0; w<dim[2]; w++) {
+                        Vec3f pos = smin + Vec3f(u+0.5, v+0.5, w*0.5)*res;
+                        grid[ toIndex(Vec3i(u,v,w)) ]->setCenter(pos);
             }}}
+
+            // lod distance for each space segment
+            dist = res*5;
+
         }
 
-        for (auto _g : objects[i]->getChildren(true, "Geometry")) {
-            VRGeometry* g = (VRGeometry*)_g;
-            g->getBoundingBox(bb1, bb2);
-            p = (bb1+bb2)*0.5 - sbb1;
-
-            int j = floor(p[0])*spaced[2]*spaced[1] + floor(p[1])*spaced[2] + floor(p[2]);
-            VRLod* lod = grid[j];
-            while (i >= lod->getChildrenCount()) {
-                lod->addChild(new VRObject("factory_lod_part"));
-                lod->setDistance(i, i+0.5);
+        void finalize() {
+            for (int j=0; j<N; j++) { // all lods get an empty object
+                grid[j]->addChild(new VRObject("factory_empty_part"));
             }
-            VRObject* anchor = lod->getChild(i);
-            g->switchParent(anchor);
-
-            /*if (i == 0) tree.add(p[0], p[1], p[2], g); // put the first file into an octree
-            else {
-                vector<void*> res = tree.radiusSearch(p[0], p[1], p[2], 0.01);
-                cout << "radius search " << p << " found " << res.size() << endl;
-            }*/
         }
 
-        for (int j=0; j<spaceN; j++) {
-            grid[j]->addChild(new VRObject("factory_empty_part"));
-            int N = grid[j]->getChildrenCount();
-            if (N > 1) grid[j]->setDistance(N-2, 2*N);
+        void addObject(VRObject* g, int detail) {
+            Vec3f v1, v2, p;
+            g->getBoundingBox(v1, v2);
+            p = (v1+v2)*0.5 - smin;
+
+            int i = toIndex(p);
+            if (i >= grid.size()) cout << "addObj " << p << " " << grid.size() << " " << i;
+            VRLod* lod = grid[i];
+            while (detail >= lod->getChildrenCount()) {
+                lod->addChild(new VRObject("factory_lod_part"));
+                lod->setDistance(detail, dist*(detail+1));
+            }
+
+            VRObject* anchor = lod->getChild(detail);
+            g->switchParent(anchor);
+        }
+
+        VRObject* getRoot() { return root; }
+};
+
+class VRLODSystem {
+    private:
+        map<float, VRLODGrid*> grids;
+        Vec3f smin,smax;
+        VRObject* root;
+
+    public:
+        VRLODSystem() {
+            root = new VRObject("VRLODSystem_Root");
+            root->addAttachment("dynamicaly_generated", 0);
+        }
+
+        void addObject(VRObject* g, int detail) {
+            Vec3f v1, v2, d;
+            g->getBoundingBox(v1, v2);
+            d = v2-v1;
+            float r = 0; // get the size of the object to pass it to the right grid level
+            for (int i=0; i<3; i++) r = max(r,d[i]);
+
+            for (auto gr : grids) if (r < gr.first) { gr.second->addObject(g, detail); break; }
+        }
+
+        void finalize() {
+            for (auto g : grids ) {
+                g.second->finalize();
+                root->addChild(g.second->getRoot());
+            }
+        }
+
+        void addLevel(float res) { grids[res] = new VRLODGrid(smin, smax, res); }
+        void initSpace(VRObject* space) { space->getBoundingBox(smin, smax); }
+        VRObject* getRoot() { return root; }
+};
+
+VRObject* VRFactory::setupLod(vector<string> paths) {
+    vector<VRObject*> objects;
+    for (auto p : paths) objects.push_back( loadVRML(p) );
+    Vec3f p;
+
+    commitChanges();
+    cout << "setupLod - changes commited\n";
+    if (objects.size() == 0) return 0;
+
+    Octree tree(0.001);
+    VRLODSystem* lodsys = new VRLODSystem();
+
+    lodsys->initSpace(objects[0]);
+    lodsys->addLevel(64);
+    lodsys->addLevel(4);
+    lodsys->addLevel(2);
+    lodsys->addLevel(1);
+    lodsys->addLevel(0.5);
+    //lodsys->addLevel(0.25);
+
+    for (int i = 0; i<objects.size(); i++) {
+        for (auto _g : objects[i]->getChildren(true, "Geometry")) {
+            lodsys->addObject(_g, i);
         }
     }
 
-    return root;
+    lodsys->finalize();
+    return lodsys->getRoot();
 }
