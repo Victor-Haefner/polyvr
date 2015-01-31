@@ -20,91 +20,6 @@ using namespace boost::filesystem;
 
 VRFactory::VRFactory() {}
 
-void parsePoints(int& i, vector<string>& data, GeoVectorPropertyRecPtr res) {
-    stringstream ss;
-    for (; data[i][0] != ']' and i < data.size(); i++) ss << data[i];
-
-    Pnt3f v;
-    while(ss) {
-        ss >> v[0];
-        ss >> v[1];
-        ss >> v[2];
-        ss.get();
-        res->addValue( v );
-    }
-}
-
-void parseNorms(int& i, vector<string>& data, GeoVectorPropertyRecPtr res) {
-    stringstream ss;
-    for (; data[i][0] != ']' and i < data.size(); i++) ss << data[i];
-
-    Vec3f v;
-    while(ss) {
-        ss >> v[0];
-        ss >> v[1];
-        ss >> v[2];
-        ss.get();
-        res->addValue( v );
-    }
-}
-
-void parseInds(int& i, vector<string>& data, GeoIntegralPropertyRefPtr res, int offset) {
-    stringstream ss;
-    for (; data[i][0] != ']' and i < data.size(); i++) ss << data[i];
-
-    int v;
-    while(ss) {
-        ss >> v;
-        ss.get();
-        if (v >= 0) res->addValue( offset+v );
-    }
-}
-
-void finalizeObject(vector<string>& data, vector<VRGeometry*>& geos) {
-    if (data.size() < 10) return;
-
-    static Vec3f last_dc(-1,-1,-1);
-    static VRGeometry* geo = 0;
-
-    Vec3f dc = toVec3f( data[6].substr(12) ); // get diffuse color
-    if (last_dc != dc) {
-        // init new object
-        geo = new VRGeometry("factory_part");
-
-        GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
-        GeoVec3fPropertyRecPtr norms = GeoVec3fProperty::create();
-        GeoUInt32PropertyRecPtr inds_p = GeoUInt32Property::create();
-        GeoUInt32PropertyRecPtr inds_n = GeoUInt32Property::create();
-
-        geo->setType(GL_TRIANGLES);
-        geo->setPositions( pos );
-        geo->setNormals( norms );
-        geo->setIndices( inds_p );
-        geo->getMesh()->setIndex(inds_n, Geometry::NormalsIndex);
-
-        VRMaterial* mat = new VRMaterial("fmat");
-        mat->setDiffuse(dc);
-        geo->setMaterial(mat);
-
-        geos.push_back(geo);
-        last_dc = dc;
-    }
-
-    int i = 21;
-    GeoVectorPropertyRecPtr pos = geo->getMesh()->getPositions();
-    GeoVectorPropertyRecPtr norms = geo->getMesh()->getNormals();
-    GeoIntegralPropertyRefPtr inds_p = geo->getMesh()->getIndices();
-    GeoIntegralPropertyRefPtr inds_n = geo->getMesh()->getIndex(Geometry::NormalsIndex);
-
-    int Np = pos->size();
-    int Nn = norms->size();
-    parsePoints(i, data, pos); i+=4;
-    parseNorms(i, data, norms); i+=3;
-    parseInds(i, data, inds_p, Np); i+=2;
-    while (data[i][0] != ']') i++; i+=2;
-    parseInds(i, data, inds_n, Nn);
-}
-
 VRObject* VRFactory::loadVRML(string path) { // wrl filepath
     ifstream file(path);
     if (!file.is_open()) { cout << "file " << path << " not found" << endl; return 0; }
@@ -117,22 +32,106 @@ VRObject* VRFactory::loadVRML(string path) { // wrl filepath
     vector<string> data;
     string line;
 
-    boost::filesystem::path d(dir);
-    if (!exists(d)) create_directory(d);
-
     vector<VRGeometry*> geos;
 
-    for ( int i=0; getline(file, line); ) {
-        if ( line.compare(0, delimiter.size(), delimiter) == 0 ) {
-            finalizeObject(data, geos);
-            data.clear();
-            i++;
+    int state = 0;
+    map<int, string> states;
+    states[0] = "Transform"; // 0
+    states[1] = "diffuseColor"; // 6
+    states[2] = "coord"; // 21 +2
+    states[3] = "normal"; // x +2
+    states[4] = "coordIndex"; // x +1
+    states[5] = "colorIndex"; // x +1
+    states[6] = "normalIndex"; // x +1
+
+    VRGeometry* geo = 0;
+    Vec3f color;
+    Vec3f last_col(-1,-1,-1);
+
+    GeoVectorPropertyRecPtr pos;
+    GeoVectorPropertyRecPtr norms;
+    GeoIntegralPropertyRefPtr inds_p;
+    GeoIntegralPropertyRefPtr inds_n;
+
+    Pnt3f v;
+    Vec3f n;
+    int i, Np, Nn;
+    int j = 0;
+
+    while ( getline(file, line) ) {
+        j++;
+        cout << "line " << j << endl;
+        string delim = states[state];
+        //cout << "delim " << delim << " " << state << endl;
+        if ( line.compare(0, delim.size(), delim) == 0 ) {
+            switch (state) {
+                case 0:
+                    break;
+                case 1:
+
+                    if (line.size() > 12) color = toVec3f( line.substr(12) );
+                    else cout << "color " << line << endl;
+
+                    if (color != last_col) {
+                        // init new object
+                        geo = new VRGeometry("factory_part");
+
+                        pos = GeoPnt3fProperty::create();
+                        norms = GeoVec3fProperty::create();
+                        inds_p = GeoUInt32Property::create();
+                        inds_n = GeoUInt32Property::create();
+
+                        geo->setType(GL_TRIANGLES);
+                        geo->setPositions( pos );
+                        geo->setNormals( norms );
+                        geo->setIndices( inds_p );
+                        geo->getMesh()->setIndex(inds_n, Geometry::NormalsIndex);
+
+                        VRMaterial* mat = new VRMaterial("fmat");
+                        mat->setDiffuse(color);
+                        geo->setMaterial(mat);
+
+                        geos.push_back(geo);
+                        last_col = color;
+                    }
+                    break;
+                case 2:
+                    Np = pos->size();
+                    break;
+                case 3:
+                    Nn = norms->size();
+                    break;
+                case 4:
+                    break;
+                case 5:
+                    break;
+                }
+
+            state++;
+            if (state == 7) state = 0;
+            continue;
         }
 
-        data.push_back(line);
+        if (line[0] != ' ') continue;
+        if (state == 6) continue; // skip color indices
+
+        stringstream ss(line);
+        switch (state) {
+            case 3:
+                while(ss >> v[0] && ss >> v[1] && ss >> v[2] && ss.get()) pos->addValue( v );
+                break;
+            case 4:
+                while(ss >> n[0] && ss >> n[1] && ss >> n[2] && ss.get()) norms->addValue( n );
+                break;
+            case 5:
+                while(ss >> i && ss.get()) if (i >= 0) inds_p->addValue( Np + i );
+                break;
+            case 0:
+                while(ss >> i && ss.get()) if (i >= 0) inds_n->addValue( Nn + i );
+                break;
+        }
     }
 
-    finalizeObject(data, geos);
     file.close();
     cout << "loaded " << geos.size() << " geometries" << endl;
 
@@ -140,6 +139,13 @@ VRObject* VRFactory::loadVRML(string path) { // wrl filepath
     res->addAttachment("dynamicaly_generated", 0);
 
     for (auto g : geos) {
+        /*cout << "geo " ;
+        cout << g->getMesh()->getPositions()->size() << " ";
+        cout << g->getMesh()->getNormals()->size() << " ";
+        cout << g->getMesh()->getIndex(Geometry::PositionsIndex)->size() << " ";
+        cout << g->getMesh()->getIndex(Geometry::NormalsIndex)->size() << " ";
+        cout << endl;*/
+
         res->addChild(g);
 
         GeoUInt32PropertyRecPtr Length = GeoUInt32Property::create();
@@ -268,7 +274,7 @@ VRObject* VRFactory::setupLod(vector<string> paths) {
     cout << "setupLod - changes commited\n";
     if (objects.size() == 0) return 0;
 
-    Octree tree(0.001);
+    /*Octree tree(0.001);
     VRLODSystem* lodsys = new VRLODSystem();
 
     lodsys->initSpace(objects[0]);
@@ -277,7 +283,6 @@ VRObject* VRFactory::setupLod(vector<string> paths) {
     lodsys->addLevel(2);
     lodsys->addLevel(1);
     lodsys->addLevel(0.5);
-    //lodsys->addLevel(0.25);
 
     for (int i = 0; i<objects.size(); i++) {
         for (auto _g : objects[i]->getChildren(true, "Geometry")) {
@@ -287,4 +292,27 @@ VRObject* VRFactory::setupLod(vector<string> paths) {
 
     lodsys->finalize();
     return lodsys->getRoot();
+    */
+
+    VRObject* root = new VRObject("factory_lod_root");
+    root->addAttachment("dynamicaly_generated", 0);
+    for (int i = 0; i<objects.size(); i++) {
+        for (auto g : objects[i]->getChildren(true, "Geometry")) {
+            Vec3f v1, v2, p, d;
+            g->getBoundingBox(v1, v2);
+            p = (v1+v2)*0.5;
+
+            d = v2-v1;
+            float r = 0; // get the size of the object to pass it to the right grid level
+            for (int i=0; i<3; i++) r = max(r,d[i]);
+
+            VRLod* lod = new VRLod("factory_lod");
+            lod->setCenter(p);
+            lod->addChild(g);
+            lod->addChild(new VRObject("factory_empty"));
+            lod->setDistance(0, r*15);
+            root->addChild(lod);
+        }
+    }
+    return root;
 }
