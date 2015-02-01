@@ -416,6 +416,7 @@ PyObject* VRScriptManager::updateGui(VRScriptManager* self) {
 }
 
 PyObject* VRScriptManager::render(VRScriptManager* self) {
+    VRSceneManager::get()->updateScene();
     VRSetupManager::getCurrent()->updateWindows();
     VRGuiManager::get()->updateGtk();
     Py_RETURN_TRUE;
