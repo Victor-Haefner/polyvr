@@ -51,19 +51,21 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool lit) {
     clearChildren();
     for (uint i=0; i<paths.size(); i++) {
         vector<Vec3f> pnts = paths[i]->getPositions();
-        vector<Vec3f> norms = paths[i]->getNormals();
+        vector<Vec3f> directions = paths[i]->getDirections();
+        vector<Vec3f> up_vectors = paths[i]->getUpvectors();
         vector<Vec3f> cols = paths[i]->getColors();
 
         Vec3f _p;
         for (uint j=0; j<pnts.size(); j++) {
             Vec3f p = pnts[j];
-            Vec3f n = norms[j];
+            Vec3f n = directions[j];
+            Vec3f u = up_vectors[j];
             Vec3f c = cols[j];
 
             //float ca = n.dot(z);
             Matrix m;
             //MatrixLookAt(m, Vec3f(0,0,0), n, z.cross(n));
-            MatrixLookAt(m, Vec3f(0,0,0), n, Vec3f(0,1,0));
+            MatrixLookAt(m, Vec3f(0,0,0), n, u);
 
             // add new profile points and normals
             for (uint k=0; k<profile.size(); k++) {

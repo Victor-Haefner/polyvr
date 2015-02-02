@@ -12,6 +12,7 @@
 #include "core/objects/VRGroup.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/VRCamera.h"
+#include "core/utils/VRVisualLayer.h"
 #include <libxml++/nodes/element.h>
 
 OSG_BEGIN_NAMESPACE;
@@ -35,6 +36,16 @@ VRScene::VRScene() {
     initDevices();
     VRMaterial::getDefault()->resetDefault();
 
+    referentials_layer = new VRVisualLayer("referentials");
+    cameras_layer = new VRVisualLayer("cameras");
+    lights_layer = new VRVisualLayer("lights");
+
+    referentials_layer->setCallback( new VRFunction<bool>("showReferentials", boost::bind(&VRScene::showReferentials, this, _1, (VRObject*)0) ) );
+    cameras_layer->setCallback( new VRFunction<bool>("showCameras", boost::bind(&VRScene::showCameras, this, _1) ) );
+    lights_layer->setCallback( new VRFunction<bool>("showLights", boost::bind(&VRScene::showLights, this, _1) ) );
+
+    VRVisualLayer::anchorLayers(root);
+
     cout << " init scene done\n";
 }
 
@@ -50,6 +61,7 @@ void VRScene::initDevices() { // TODO: remove this after refactoring the navigat
 
     VRMouse* mouse = (VRMouse*)setup->getDevice("mouse");
     VRFlystick* flystick = (VRFlystick*)setup->getDevice("flystick");
+    VRDevice* razer = setup->getDevice("vrpn_device");
 
     if (mouse) {
         initOrbit(getActiveCamera(), mouse); //TODO, load from xml
@@ -61,6 +73,11 @@ void VRScene::initDevices() { // TODO: remove this after refactoring the navigat
     if (flystick) {
         initFlyWalk(getActiveCamera(), flystick); // TODO
         setActiveNavigation("FlyWalk");
+    }
+
+    if (razer) {
+        initHydraFly(getActiveCamera(), razer); // TODO
+        setActiveNavigation("Hydra");
     }
 
     setup->updateDeviceDynNodes(getRoot());
@@ -128,8 +145,11 @@ void VRScene::setActiveCamera(int i) {
     VRFlystick* flystick = (VRFlystick*)setup->getDevice("flystick");
     if (flystick) flystick->setTarget(cam);
 
+    VRDevice* razer = (VRFlystick*)setup->getDevice("vrpn_device");
+    if (razer) razer->setTarget(cam);
+
     VRMobile* mobile = (VRMobile*)VRSetupManager::getCurrent()->getDevice("mobile");
-    if (mobile) mobile->setTarget(getActiveCamera());
+    if (mobile) mobile->setTarget(cam);
 
     setup->setViewCamera(cam, -1);
     if (cam->getAcceptRoot()) setup->getRoot()->switchParent(cam);
@@ -149,9 +169,12 @@ void VRScene::showReferentials(bool b, VRObject* o) {
     for (uint i=0; i<o->getChildrenCount(); i++) showReferentials(b, o->getChild(i));
 }
 
-void VRScene::showLightsCameras(bool b) {
+void VRScene::showLights(bool b) {
     vector<VRLightBeacon*> beacons = VRLightBeacon::getAll();
     for (uint i=0; i<beacons.size(); i++) beacons[i]->showLightGeo(b);
+}
+
+void VRScene::showCameras(bool b) {
     vector<VRCamera*> cams = VRCamera::getAll();
     for (uint i=0; i<cams.size(); i++) cams[i]->showCamGeo(b);
 }
@@ -202,11 +225,13 @@ void VRScene::save(xmlpp::Element* e) {
     xmlpp::Element* scriptsN = e->add_child("Scripts");
     xmlpp::Element* protocolsN = e->add_child("Sockets");
     xmlpp::Element* backgroundN = e->add_child("Background");
+    xmlpp::Element* naviN = e->add_child("Navigation");
 
     VRRenderManager::save(renderN);
     VRScriptManager::save(scriptsN);
     VRNetworkManager::save(protocolsN);
     VRBackground::save(backgroundN);
+    VRNavigator::save(naviN);
 }
 
 void VRScene::load(xmlpp::Element* e) {
@@ -217,16 +242,19 @@ void VRScene::load(xmlpp::Element* e) {
     xmlpp::Element* protocolsN = VRSceneLoader_getElementChild(e, "Sockets");
     xmlpp::Element* backgroundN = VRSceneLoader_getElementChild(e, "Background");
     xmlpp::Element* renderN = VRSceneLoader_getElementChild(e, "Rendering");
+    xmlpp::Element* naviN = VRSceneLoader_getElementChild(e, "Navigation");
 
     VRRenderManager::load(renderN);
     VRScriptManager::load(scriptsN);
     VRNetworkManager::load(protocolsN);
     VRBackground::load(backgroundN);
+    VRNavigator::load(naviN);
 
     VRRenderManager::update();
     VRScriptManager::update();
     VRNetworkManager::update();
     VRBackground::update();
+    VRNavigator::update();
 }
 
 OSG_END_NAMESPACE;

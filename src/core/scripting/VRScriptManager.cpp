@@ -41,6 +41,7 @@
 #include "addons/CEF/VRPyCEF.h"
 #include "addons/Classification/VRPySegmentation.h"
 #include "addons/Engineering/Chemistry/VRPyMolecule.h"
+#include "addons/Engineering/Factory/VRPyFactory.h"
 #include "VRPyTypeCaster.h"
 #include "PolyVR.h"
 
@@ -68,10 +69,15 @@ void VRScriptManager::disableAllScripts() {
 
 VRScript* VRScriptManager::newScript(string name, string core) {
     VRScript* script = new VRScript(name);
-    name = script->getName();
-    scripts[name] = script;
-    updateScript(name, core);
+    script->setCore(core);
+    addScript( script );
     return script;
+}
+
+void VRScriptManager::addScript(VRScript* script) {
+    string name = script->getName();
+    scripts[name] = script;
+    updateScript(name, script->getCore());
 }
 
 void VRScriptManager::remScript(string name) {
@@ -219,6 +225,7 @@ void VRScriptManager::initPyModules() {
     FPyContainer::registerModule("Container", pModFactory);
     FPyProduct::registerModule("Product", pModFactory);
     FPyLogistics::registerModule("Logistics", pModFactory);
+    VRPyFactory::registerModule("Factory", pModFactory);
     PyModule_AddObject(pModVR, "Factory", pModFactory);
 
     initVRPySocket(pModVR);
@@ -394,7 +401,11 @@ PyObject* VRScriptManager::openFileDialog(VRScriptManager* self, PyObject *args)
     VRGuiFile::gotoPath( PyString_AsString(default_path) );
     VRGuiFile::setFile( PyString_AsString(default_path) );
     VRGuiFile::setCallbacks( sigc::bind<PyObject*>( sigc::ptr_fun( &on_py_file_diag_cb ), cb) );
-    VRGuiFile::open( PyString_AsString(mode), PyString_AsString(title) );
+
+    string m = PyString_AsString(mode);
+    Gtk::FileChooserAction action = Gtk::FILE_CHOOSER_ACTION_OPEN;
+    if (m == "Save" or m == "New" or m == "Create") action = Gtk::FILE_CHOOSER_ACTION_SAVE;
+    VRGuiFile::open( m, action, PyString_AsString(title) );
 
     Py_RETURN_TRUE;
 }
@@ -405,6 +416,7 @@ PyObject* VRScriptManager::updateGui(VRScriptManager* self) {
 }
 
 PyObject* VRScriptManager::render(VRScriptManager* self) {
+    VRSceneManager::get()->updateScene();
     VRSetupManager::getCurrent()->updateWindows();
     VRGuiManager::get()->updateGtk();
     Py_RETURN_TRUE;

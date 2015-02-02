@@ -3,25 +3,33 @@
 #include <gtkmm/filechooserdialog.h>
 #include <gtkmm/button.h>
 #include <gtkmm/dialog.h>
+#include <gtkmm/table.h>
 #include <boost/filesystem.hpp>
 
+#include "core/setup/VRSetupManager.h"
+#include "core/setup/VRSetup.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 
 Gtk::FileChooserDialog* VRGuiFile::dialog = 0;
+Gtk::Table* VRGuiFile::addon = 0;
 sigc::slot<void> VRGuiFile::sigApply = sigc::slot<void>();
 sigc::slot<void> VRGuiFile::sigClose = sigc::slot<void>();
+sigc::slot<void> VRGuiFile::sigSelect = sigc::slot<void>();
 
 void VRGuiFile::init() {
     VRGuiBuilder()->get_widget("file_dialog", VRGuiFile::dialog);
     setButtonCallback("button3", sigc::ptr_fun(VRGuiFile::close));
     setButtonCallback("button9", sigc::ptr_fun(VRGuiFile::apply));
+    dialog->signal_selection_changed().connect( sigc::ptr_fun( VRGuiFile::select ));
 //<string, sigc::slot<void> >
     dialog->signal_key_release_event().connect( sigc::bind( sigc::ptr_fun(keySignalProxy), "Return", sigc::ptr_fun(VRGuiFile::apply) ) );
     dialog->set_action(Gtk::FILE_CHOOSER_ACTION_OPEN);
 }
 
-void VRGuiFile::open(string mode, string title) {
+void VRGuiFile::open(string button, Gtk::FileChooserAction action, string title) {
+    //OSG::VRSetupManager::getCurrent()->pauseRendering(true);
+
     if (dialog == 0) init();
     setLabel("openFileWarning", "");
     dialog->show();
@@ -29,13 +37,39 @@ void VRGuiFile::open(string mode, string title) {
     Gtk::Button *bt1, *bt2;
     VRGuiBuilder()->get_widget("button9", bt1);
     VRGuiBuilder()->get_widget("button3", bt2);
-    bt1->set_label(mode);
+    bt1->set_label(button);
     bt2->set_label("Cancel");
 
     dialog->set_title(title);
+    dialog->set_action(action);
+}
 
-    dialog->set_action(Gtk::FILE_CHOOSER_ACTION_OPEN);
-    if (mode == "Save") dialog->set_action(Gtk::FILE_CHOOSER_ACTION_SAVE);
+void VRGuiFile::close() {
+    //OSG::VRSetupManager::getCurrent()->pauseRendering(false);
+    if (dialog == 0) init();
+    setWidget(0);
+    dialog->hide();
+    sigClose();
+
+    for (auto f : dialog->list_filters()) {
+        dialog->remove_filter(*f);
+        delete &(*f);
+    }
+}
+
+void VRGuiFile::setWidget(Gtk::Table* table) {
+    if (addon == table) return;
+    Gtk::VBox* vbox;
+    VRGuiBuilder()->get_widget("dialog-vbox1", vbox);
+
+    // sub
+    if (addon) vbox->remove(*addon);
+    addon = table;
+    if (table == 0) return;
+
+    // add
+    vbox->pack_start(*table);
+    vbox->show_all();
 }
 
 void VRGuiFile::addFilter(string name, string pattern) {
@@ -66,26 +100,21 @@ void VRGuiFile::gotoPath(string path) {
     dialog->set_current_folder(path);
 }
 
+void VRGuiFile::select() {
+    sigSelect();
+}
+
 void VRGuiFile::apply() {
     if (dialog == 0) init();
     dialog->hide();
     sigApply();
+    setWidget(0);
 }
 
-void VRGuiFile::close() {
-    if (dialog == 0) init();
-    dialog->hide();
-    sigClose();
-
-    for (auto f : dialog->list_filters()) {
-        dialog->remove_filter(*f);
-        delete &(*f);
-    }
-}
-
-void VRGuiFile::setCallbacks(sigc::slot<void> sa, sigc::slot<void> sc) {
+void VRGuiFile::setCallbacks(sig sa, sig sc, sig ss) {
     sigApply = sa;
     sigClose = sc;
+    sigSelect = ss;
 }
 
 string VRGuiFile::getPath() {

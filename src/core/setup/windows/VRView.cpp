@@ -512,8 +512,6 @@ void VRView::swapEyes(bool b) {
 bool VRView::eyesInverted() { return eyeinverted; }
 
 void VRView::update() {
-    if (lView) lView->editMFForegrounds()->clear();
-    if (rView) rView->editMFForegrounds()->clear();
     setViewports();
     setDecorators();
     setCamera();
@@ -546,13 +544,11 @@ void VRView::setFotoMode(bool b) {
 }
 
 void VRView::setCallibrationMode(bool b) {
-    cout << "VRView::setCallibrationMode " << b << endl;
     if (b) {
         typedef OSG::Vector< OSG::UInt8, 4 > Vec4c;
-        int w = window->getWidth();
+        int w = window->getWidth(); // TODO: get the right window size from server window
         int h = window->getHeight();
 
-        cout << "VRView::setCallibrationMode " << b << " " << w << " " << h << endl;
 
         if (w*h <= 0) return;
 
@@ -584,12 +580,19 @@ void VRView::setCallibrationMode(bool b) {
         ImageRecPtr img = Image::create();
         img->set(Image::OSG_RGBA_PF, w, h, 1, 0, 1, 0, (const uint8_t*)&data[0], Image::OSG_UINT8_IMAGEDATA, true, 1);
 
-        ImageForegroundRecPtr fg = ImageForeground::create();
-        fg->addImage(img, Pnt2f());
-
-        if (lView) lView->editMFForegrounds()->push_back(fg);
-        if (rView) rView->editMFForegrounds()->push_back(fg);
-    } else update();
+        calib_fg = ImageForeground::create();
+        calib_fg->addImage(img, Pnt2f());
+        if (lView) lView->addForeground(calib_fg);
+        if (rView) rView->addForeground(calib_fg);
+    } else {
+        //if (lView) lView->removeObjFromForegrounds(calib_fg); // TODO
+        //if (rView) rView->removeObjFromForegrounds(calib_fg);
+        if (lView) lView = 0; // WORKAROUND
+        if (rView) rView = 0;
+        if (lView_act) lView_act = 0;
+        if (rView_act) rView_act = 0;
+        update();
+    }
 }
 
 ImageRecPtr VRView::grab() {

@@ -16,6 +16,7 @@ class VRWindowManager {
     private:
         map<string, VRWindow*> windows;
         RenderActionRefPtr ract;
+        bool rendering_paused = false;
 
         bool checkWin(string name);
 
@@ -40,6 +41,7 @@ class VRWindowManager {
         void getWindowSize(string name, int& w, int& h);
         void resizeWindow(string name, int w, int h);
 
+        void pauseRendering(bool b);
         RenderActionRefPtr getRenderAction();
         void updateWindows();
 

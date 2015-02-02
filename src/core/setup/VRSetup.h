@@ -14,15 +14,18 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRScene;
+class VRVisualLayer;
 
 class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceManager, public ART, public VRPN, public VRName {
     private:
         string cfgfile;
         string tracking;
 
-        VRTransform* real_root;
-        VRTransform* user;
-        VRCamera* setup_cam;
+        VRTransform* real_root = 0;
+        VRTransform* user = 0;
+        VRCamera* setup_cam = 0;
+
+        VRVisualLayer* setup_layer = 0;
 
         void parseSetup(xmlpp::Element* setup);
 
@@ -35,9 +38,6 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
         ~VRSetup();
 
         VRTransform* getUser();
-        //VRTransform* getTrackerFlystick() { return fly_tracker; }
-        //VRGeometry* getTrackerHand() { return hand_tracker; }
-        //VRDevice* getDeviceFlystick() { return fly; }
 
         void addObject(VRObject* o);
         VRTransform* getRoot();

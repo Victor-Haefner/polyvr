@@ -14,6 +14,7 @@ class VRGuiBits {
         GtkWidget* term_box;
 
         void hideAbout(int i);
+        void updateVisualLayer();
 
     public:
         VRGuiBits();
@@ -24,6 +25,7 @@ class VRGuiBits {
 
         void toggleDock();
         bool toggleFullscreen(GdkEventKey* k);
+        bool toggleWidgets(GdkEventKey* k);
         bool toggleStereo(GdkEventKey* k);
 
         void update();

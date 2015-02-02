@@ -1,5 +1,7 @@
 #include "VRGuiScripts.h"
 #include "VRGuiUtils.h"
+#include "VRGuiFile.h"
+#include "VRGuiBits.h"
 #include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
 #include "core/scene/VRScene.h"
@@ -16,11 +18,16 @@
 #include <gtkmm/treemodel.h>
 #include <gtkmm/treestore.h>
 #include <gtkmm/scrolledwindow.h>
+#include <gtkmm/table.h>
+#include <gtkmm/paned.h>
 #include <gtksourceview/gtksourceview.h>
 #include <gtksourceview/gtksourcelanguagemanager.h>
+#include <libxml++/nodes/element.h>
+#include <libxml++/libxml++.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
+using namespace Gtk;
 
 GtkSourceBuffer* VRGuiScripts_sourceBuffer;
 
@@ -151,10 +158,102 @@ void VRGuiScripts::on_save_clicked() {
     string core = VRGuiScripts::get_editor_core(script->getHeadSize());
     VRSceneManager::getCurrent()->updateScript(script->getName(), core);
 
-    setToolButtonSensivity("toolbutton7", false);
+    setToolButtonSensitivity("toolbutton7", false);
 
     saveScene();
 }
+
+void VRGuiScripts::on_import_clicked() {
+    VRScene* scene = VRSceneManager::getCurrent();
+    if (scene == 0) return;
+
+    import_liststore1->clear();
+    import_liststore2->clear();
+    ListStore::Row row;
+    for (auto script : scene->getScripts()) {
+        row = *import_liststore2->append();
+        gtk_list_store_set (import_liststore2->gobj(), row.gobj(), 0, script.first.c_str(), -1);
+    }
+
+    VRGuiFile::clearFilter();
+    VRGuiFile::addFilter("Project", "*.xml");
+    VRGuiFile::addFilter("All", "*");
+    VRGuiFile::setWidget(scriptImportWidget);
+    VRGuiFile::setCallbacks( sigc::mem_fun(*this, &VRGuiScripts::on_diag_import), sigc::slot<void>(), sigc::mem_fun(*this, &VRGuiScripts::on_diag_import_select));
+    VRGuiFile::open("Import", Gtk::FILE_CHOOSER_ACTION_OPEN, "Import script");
+}
+
+xmlpp::Element* getXMLChild(xmlpp::Element* e, string name) {
+    for (auto n : e->get_children()) {
+        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
+        if (!el) continue;
+        if (el->get_name() == name) return el;
+    } return 0;
+}
+
+vector<xmlpp::Element*> getXMLChildren(xmlpp::Element* e) {
+    vector<xmlpp::Element*> res;
+    for (auto n : e->get_children()) {
+        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
+        if (!el) continue;
+        res.push_back(el);
+    }
+    return res;
+}
+
+void VRGuiScripts::on_diag_import_select() {
+    import_liststore1->clear();
+    for (auto s : import_scripts) delete s.second;
+    import_scripts.clear();
+    string path = VRGuiFile::getPath();
+    if (path == "") return;
+
+    xmlpp::DomParser parser;
+    parser.set_validate(false);
+    try { parser.parse_file(path.c_str()); }
+    catch(exception& e) { return; }
+
+    xmlpp::Node* n = parser.get_document()->get_root_node();
+    xmlpp::Element* scene = dynamic_cast<xmlpp::Element*>(n);
+    vector<xmlpp::Element*> scripts = getXMLChildren( getXMLChild(scene, "Scripts") );
+
+    ListStore::Row row;
+    for (auto script : scripts) {
+        string name = script->get_name();
+        if (script->get_attribute("base_name")) {
+            string suffix = script->get_attribute("name_suffix")->get_value();
+            if (suffix == "0") suffix = "";
+            name = script->get_attribute("base_name")->get_value() + suffix;
+        }
+
+        VRScript* s = new VRScript(name);
+        s->enable(false);
+        s->load(script);
+        import_scripts[name] = s;
+
+        row = *import_liststore1->append();
+        gtk_list_store_set (import_liststore1->gobj(), row.gobj(), 0, name.c_str(), -1);
+    }
+}
+
+void VRGuiScripts::on_diag_import() {
+    auto itr = import_treeview1->get_selection()->get_selected();
+    if (!itr) return;
+
+    // get selected script
+    VRGuiScripts_ModelColumns cols;
+    Gtk::TreeModel::Row row = *itr;
+    string name = row.get_value(cols.script);
+    if (import_scripts.count(name) == 0) return;
+
+    VRScript* s = import_scripts[name];
+    VRSceneManager::getCurrent()->addScript(s);
+    s->enable(true);
+    updateList();
+}
+
+void VRGuiScripts::on_diag_import_select_1() {} // TODO
+void VRGuiScripts::on_diag_import_select_2() {}
 
 void VRGuiScripts::on_exec_clicked() {
     VRScript* script = VRGuiScripts::getSelectedScript();
@@ -187,17 +286,17 @@ void VRGuiScripts::on_del_clicked() {
     Glib::RefPtr<Gtk::ListStore> list_store  = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("script_list"));
     list_store->erase(iter);
 
-    setToolButtonSensivity("toolbutton9", false);
-    setToolButtonSensivity("toolbutton8", false);
+    setToolButtonSensitivity("toolbutton9", false);
+    setToolButtonSensitivity("toolbutton8", false);
 }
 
 void VRGuiScripts::on_select_script() { // selected a script
     VRScript* script = VRGuiScripts::getSelectedScript();
     if (script == 0) {
-        setToolButtonSensivity("toolbutton8", false);
-        setToolButtonSensivity("toolbutton7", false);
-        setToolButtonSensivity("toolbutton9", false);
-        setTableSensivity("table15", false);
+        setToolButtonSensitivity("toolbutton8", false);
+        setToolButtonSensitivity("toolbutton7", false);
+        setToolButtonSensitivity("toolbutton9", false);
+        setTableSensitivity("table15", false);
         return;
     }
 
@@ -250,10 +349,10 @@ void VRGuiScripts::on_select_script() { // selected a script
         gtk_list_store_set(trigs->gobj(), row.gobj(), 6, t->getName().c_str(), -1);
     }
 
-    setToolButtonSensivity("toolbutton8", true);
-    setToolButtonSensivity("toolbutton7", false);
-    setToolButtonSensivity("toolbutton9", true);
-    setTableSensivity("table15", true);
+    setToolButtonSensitivity("toolbutton8", true);
+    setToolButtonSensitivity("toolbutton7", false);
+    setToolButtonSensitivity("toolbutton9", true);
+    setTableSensitivity("table15", true);
 
     // language
     if (script->getType() == "Python") gtk_source_buffer_set_language(VRGuiScripts_sourceBuffer, python);
@@ -337,7 +436,7 @@ void VRGuiScripts::on_name_edited(const Glib::ustring& path, const Glib::ustring
 
 
 void VRGuiScripts_on_script_changed(GtkTextBuffer* tb, gpointer user_data) {
-    setToolButtonSensivity("toolbutton7", true);
+    setToolButtonSensitivity("toolbutton7", true);
 
     VRGuiScripts* gs = (VRGuiScripts*)user_data;
 
@@ -655,6 +754,76 @@ void VRGuiScripts::on_change_mobile() {
     on_save_clicked();
 }
 
+void VRGuiScripts::on_find_clicked() {
+    setCheckButton("checkbutton12", false);
+    setEntrySensitivity("entry11", false);
+    showDialog("find_dialog");
+}
+
+void VRGuiScripts::on_find_diag_cancel_clicked() {
+    hideDialog("find_dialog");
+}
+
+void VRGuiScripts::on_find_diag_find_clicked() {
+    bool sa = getCheckButtonState("checkbutton38");
+    bool rep = getCheckButtonState("checkbutton12");
+    string search = getTextEntry("entry10");
+    hideDialog("find_dialog");
+    if (search == "") return;
+
+    VRScript* s = getSelectedScript();
+    map<VRScript*, string > cores;
+    map<VRScript*, map<int, bool> > res;
+
+    if (!sa and s == 0) return;
+
+    if (!sa) cores[s] = s->getCore();
+    else {
+        for (auto sc : VRSceneManager::getCurrent()->getScripts() ) {
+            cores[sc.second] = sc.second->getCore();
+        }
+    }
+
+    for (auto c : cores) {
+        res[c.first] = map<int, bool>();
+        int pos = c.second.find(search, 0);
+        while(pos != string::npos) {
+            res[c.first][pos] = false;
+            pos = c.second.find(search, pos+1);
+        }
+        pos = c.second.find("\n", 0);
+        while(pos != string::npos) {
+            res[c.first][pos] = true;
+            pos = c.second.find("\n", pos+1);
+        }
+    }
+
+    stringstream console_output;
+    console_output << "Results for search of '" << search << "'\n";
+    for (auto r : res) {
+        console_output << r.first->getName() << ": line (position)\n";
+        int l = 2; // core starts at line 2
+        int lp = 0;
+        int lpos = 0;
+        for (auto r2 : r.second) {
+            if (r2.second) { l++; lpos = r2.first; continue; }
+            if (lp != l) { console_output << " " << l; lp = l; }
+            console_output << " (" << r2.first - lpos << ")";
+        }
+        console_output << endl;
+    }
+    console_output << endl;
+
+    VRGuiBits::write_to_terminal( console_output.str() );
+}
+
+void VRGuiScripts::on_toggle_find_replace() {
+    //setEntrySensitivity("entry11", getCheckButtonState("checkbutton12") );
+    setEntrySensitivity("entry11", false);
+    setTextEntry("entry11", "Coming soon!");
+}
+
+
 // --------------------------
 // ---------Main-------------
 // --------------------------
@@ -730,12 +899,18 @@ VRGuiScripts::VRGuiScripts() {
     setToolButtonCallback("toolbutton8", sigc::mem_fun(*this, &VRGuiScripts::on_exec_clicked) );
     setToolButtonCallback("toolbutton9", sigc::mem_fun(*this, &VRGuiScripts::on_del_clicked) );
     setToolButtonCallback("toolbutton16", sigc::mem_fun(*this, &VRGuiScripts::on_help_clicked) );
+    setToolButtonCallback("toolbutton22", sigc::mem_fun(*this, &VRGuiScripts::on_import_clicked) );
+    setToolButtonCallback("toolbutton23", sigc::mem_fun(*this, &VRGuiScripts::on_find_clicked) );
 
     setButtonCallback("button12", sigc::mem_fun(*this, &VRGuiScripts::on_argadd_clicked) );
     setButtonCallback("button13", sigc::mem_fun(*this, &VRGuiScripts::on_argrem_clicked) );
     setButtonCallback("button23", sigc::mem_fun(*this, &VRGuiScripts::on_trigadd_clicked) );
     setButtonCallback("button24", sigc::mem_fun(*this, &VRGuiScripts::on_trigrem_clicked) );
     setButtonCallback("button16", sigc::mem_fun(*this, &VRGuiScripts::on_help_close_clicked) );
+    setButtonCallback("button28", sigc::mem_fun(*this, &VRGuiScripts::on_find_diag_cancel_clicked) );
+    setButtonCallback("button29", sigc::mem_fun(*this, &VRGuiScripts::on_find_diag_find_clicked) );
+
+    setCheckButtonCallback("checkbutton12", sigc::mem_fun(*this, &VRGuiScripts::on_toggle_find_replace) );
 
     setComboboxCallback("combobox1", sigc::mem_fun(*this, &VRGuiScripts::on_change_script_type) );
     setComboboxCallback("combobox24", sigc::mem_fun(*this, &VRGuiScripts::on_change_mobile) );
@@ -768,7 +943,7 @@ VRGuiScripts::VRGuiScripts() {
     // fill combolists
     const char *arg_types[] = {"int", "float", "str", "VRPyObjectType", "VRPyTransformType", "VRPyGeometryType", "VRPyDeviceType", "VRPyHapticType", "VRPySocketType"};
     const char *trigger_types[] = {"none", "on_scene_load", "on_timeout", "on_device", "on_socket"};
-    const char *device_types[] = {"mouse", "keyboard", "flystick", "haptic", "mobile"}; // TODO: get from a list in devicemanager or something
+    const char *device_types[] = {"mouse", "keyboard", "flystick", "haptic", "mobile", "vrpn_device"}; // TODO: get from a list in devicemanager or something
     const char *trigger_states[] = {"Pressed", "Released"};
     const char *script_types[] = {"Python", "GLSL", "HTML"};
     fillStringListstore("arg_types", vector<string>(arg_types, end(arg_types)) );
@@ -777,13 +952,36 @@ VRGuiScripts::VRGuiScripts() {
     fillStringListstore("ScriptTriggerStates", vector<string>(trigger_states, end(trigger_states)) );
     fillStringListstore("liststore6", vector<string>(script_types, end(script_types)) );
 
-    setToolButtonSensivity("toolbutton7", false);
-    setToolButtonSensivity("toolbutton8", false);
-    setToolButtonSensivity("toolbutton9", false);
+    setToolButtonSensitivity("toolbutton7", false);
+    setToolButtonSensitivity("toolbutton8", false);
+    setToolButtonSensitivity("toolbutton9", false);
 
     // update the list each frame to update the execution time
     VRFunction<int>* fkt = new VRFunction<int>("scripts_gui_update",  boost::bind(&VRGuiScripts::update, this) );
     VRSceneManager::get()->addUpdateFkt(fkt, 100);
+
+    // init scriptImportWidget
+    scriptImportWidget = manage( new Table() );
+    ScrolledWindow* sw1 = manage( new ScrolledWindow() );
+    ScrolledWindow* sw2 = manage( new ScrolledWindow() );
+    import_treeview1 = manage( new TreeView() );
+    import_treeview2 = manage( new TreeView() );
+
+    VRGuiScripts_ModelColumns columns;
+    import_liststore1 = ListStore::create( columns );
+    import_liststore2 = ListStore::create( columns );
+
+    scriptImportWidget->attach(*sw1, 0,1,0,1);
+    scriptImportWidget->attach(*sw2, 0,1,1,2);
+    sw1->add(*import_treeview1); sw2->add(*import_treeview2);
+
+    import_treeview1->set_model(import_liststore1);
+    import_treeview2->set_model(import_liststore2);
+    import_treeview1->append_column("File scripts", columns.script);
+    import_treeview2->append_column("Project scripts", columns.script);
+    import_treeview1->signal_cursor_changed().connect( sigc::mem_fun(*this, &VRGuiScripts::on_diag_import_select_1) );
+    import_treeview2->signal_cursor_changed().connect( sigc::mem_fun(*this, &VRGuiScripts::on_diag_import_select_2) );
+
 }
 
 OSG_END_NAMESPACE;

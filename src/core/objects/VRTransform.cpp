@@ -208,12 +208,16 @@ bool VRTransform::checkWorldChange() {
 
     if (hasGraphChanged()) return true;
 
+
     VRObject* obj = this;
     VRTransform* ent;
     while(obj) {
         if (obj->hasAttachment("transform")) {
             ent = (VRTransform*)obj;
-            if (ent->change) return true;
+            if (ent->change_time_stamp > wchange_time_stamp) {
+                wchange_time_stamp = ent->change_time_stamp;
+                return true;
+            }
         }
         obj = obj->getParent();
     }
@@ -680,12 +684,10 @@ VRPhysics* VRTransform::getPhysics() { return physics; }
 
 /** Update the object OSG transformation **/
 void VRTransform::update() {
-    frame = 0;
-
-    //if (checkWorldChange()) {
     apply_constraints();
-    // }
+
     if (held) updatePhysics();
+    //if (checkWorldChange()) updatePhysics();
 
     if (!change) return;
     computeMatrix();
@@ -736,7 +738,12 @@ void VRTransform::loadContent(xmlpp::Element* e) {
 
 void setFromPath(VRTransform* tr, path* p, bool redirect, float t) {
     tr->setFrom( p->getPosition(t) );
-    if (redirect) tr->setDir( p->getNormal(t) );
+    if (redirect) {
+        Vec3f d,u;
+        p->getOrientation(t, d, u);
+        tr->setDir( d );
+        tr->setUp( u );
+    }
 }
 
 void VRTransform::startPathAnimation(path* p, float time, float offset, bool redirect) {

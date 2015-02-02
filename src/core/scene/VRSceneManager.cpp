@@ -197,16 +197,19 @@ void sleep_to(int fps) {
     osgSleep(16-dt);
 }
 
-void VRSceneManager::update() {
-    int fps = VRRate::get()->getRate();
-
+void VRSceneManager::updateScene() {
     if (scenes.count(active) == 1) {
         if (scenes[active] != 0) {
             scenes[active]->update();
             VRSetupManager::getCurrent()->updateActivatedSignals();
         }
     }
+}
 
+void VRSceneManager::update() {
+    int fps = VRRate::get()->getRate();
+
+    updateScene();
     updateCallbacks();
 
     VRGuiManager::get()->updateGtk();

@@ -4,7 +4,9 @@
 #include <OpenSG/OSGVector.h>
 #include <map>
 
-namespace boost{ class thread; }
+namespace boost {
+class thread;
+}
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
@@ -13,38 +15,40 @@ struct VRSound;
 struct VRSoundContext;
 
 class VRSoundManager {
-    private:
-        VRSoundContext* context = 0;
-        VRSound* bgMusic = 0;
-        map<string, VRSound*> sounds;
-        vector<string> sound_jobs;
+private:
+    VRSoundContext* context = 0;
+    VRSound* bgMusic = 0;
+    map<string, VRSound*> sounds;
+    vector<string> sound_jobs;
 
-        VRSoundManager();
-        VRSound* getSound(string filename);
-        void clearSoundMap(void);
+    VRSoundManager();
+    VRSound* getSound(string filename);
+    void clearSoundMap(void);
 
-        bool t_running = true;
-        boost::thread* s_thread = 0;
-        void soundThread();
+    bool t_running = true;
+    boost::thread* s_thread = 0;
+    void soundThread();
 
-        void play(VRSound* sound);
+    void play(VRSound* sound);
 
-    public:
-        static VRSoundManager& get();
-        ~VRSoundManager();
+public:
+    static VRSoundManager& get();
+    ~VRSoundManager();
 
-        void playMusic(string filename);
-        void stopMusic(void);
+    void playMusic(string filename);
+    void stopSound(string path);
+    void stopMusic(void);
 
-        void playSound(string filename);
-        void playPositionalSound(string filename, Vec3f vec);
+    void playSound(string filename);
+    void playSound(string filename, bool loop);
+    void playPositionalSound(string filename, Vec3f vec);
 
-        void stopAllSounds(void);
+    void stopAllSounds(void);
 
-        void setMusicVolume(float volume);
-        void setSoundVolume(float volume);
+    void setMusicVolume(float volume);
+    void setSoundVolume(float volume);
 
-        void updatePlayerPosition(Vec3f position, Vec3f forward);
+    void updatePlayerPosition(Vec3f position, Vec3f forward);
 };
 
 OSG_END_NAMESPACE;

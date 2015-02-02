@@ -3,6 +3,7 @@
 #include "core/setup/VRSetup.h"
 #include "core/setup/VRSetupManager.h"
 #include "core/objects/object/VRObject.h"
+#include "core/utils/toString.h"
 
 #include <OpenSG/OSGImage.h>
 #include <GL/glut.h>
@@ -57,7 +58,12 @@ float VRRecorder::getRecordingLength() {
 
 void VRRecorder::compile(string path) {
     if (captures.size() == 0) return;
-    ImageRecPtr img0 = (*captures.begin())->capture;
+    ImageRecPtr img0 = captures[0]->capture;
+
+    /*for (int i=0; i<1; i++) { // test export the first N images
+        string pimg = path+"."+toString(i)+".png";
+        captures[i]->capture->write(pimg.c_str());
+    }*/
 
     AVCodec* codec;
     AVCodecContext* c= NULL;
@@ -75,10 +81,10 @@ void VRRecorder::compile(string path) {
     c = avcodec_alloc_context3(codec);
     if (!c) { fprintf(stderr, "Could not allocate video codec context\n"); return; }
 
-    c->bit_rate = 400000; /* put sample parameters */
-    c->width = img0->getWidth() - img0->getWidth()%2; /* resolution must be a multiple of two */
-    c->height = img0->getHeight() - img0->getHeight()%2;
-    c->time_base= (AVRational){1,25}; /* frames per second */
+    c->bit_rate = 1200000; /* put sample parameters */
+    c->width = img0->getWidth();
+    c->height = img0->getHeight();
+    c->time_base = (AVRational){1,25}; /* frames per second */
     c->gop_size = 10; /* emit one intra frame every ten frames */
     c->max_b_frames=1;
     c->pix_fmt = AV_PIX_FMT_YUV420P;
@@ -110,7 +116,7 @@ void VRRecorder::compile(string path) {
         const unsigned char* data = img->getData();
         for (y=0; y<c->height; y++) { // Y
          for (x=0; x<c->width; x++) {
-            int k = y*(img->getWidth()+1) + x;
+            int k = y*c->width + x;
             int r = data[k*3+0];
             int g = data[k*3+1];
             int b = data[k*3+2];

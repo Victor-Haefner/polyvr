@@ -174,8 +174,8 @@ void VRDemos::clearTable(string t) {
 
 void VRDemos::setGuiState(demoEntry* e) {
     bool running = (e == 0) ? 0 : e->running;
-    setVPanedSensivity("vpaned1", running);
-    setNotebookSensivity("notebook3", running);
+    setVPanedSensitivity("vpaned1", running);
+    setNotebookSensitivity("notebook3", running);
 
     for (auto i : demos) {
         demoEntry* d = i.second;
@@ -289,7 +289,7 @@ void VRDemos::on_saveas_clicked() {
     VRGuiFile::setFile( scene->getFile() );
     VRGuiFile::setCallbacks( sigc::mem_fun(*this, &VRDemos::on_diag_save_clicked) );
     VRGuiFile::clearFilter();
-    VRGuiFile::open( "Save", "Save project as.." );
+    VRGuiFile::open( "Save", Gtk::FILE_CHOOSER_ACTION_SAVE, "Save project as.." );
 }
 
 void VRDemos::on_diag_load_clicked() {
@@ -308,7 +308,7 @@ void VRDemos::on_load_clicked() {
     VRGuiFile::clearFilter();
     VRGuiFile::addFilter("Project", "*.xml");
     VRGuiFile::addFilter("All", "*");
-    VRGuiFile::open( "Load", "Load project" );
+    VRGuiFile::open( "Load", Gtk::FILE_CHOOSER_ACTION_OPEN, "Load project" );
 }
 
 void VRDemos::on_diag_new_clicked() {
@@ -327,7 +327,7 @@ void VRDemos::on_new_clicked() {
     VRGuiFile::gotoPath( g_get_home_dir() );
     VRGuiFile::setFile( "myApp.xml" );
     VRGuiFile::clearFilter();
-    VRGuiFile::open( "Create", "Create new project" );
+    VRGuiFile::open( "Create", Gtk::FILE_CHOOSER_ACTION_SAVE, "Create new project" );
 }
 
 void VRDemos::update() {

@@ -28,11 +28,12 @@ void interpolator::evalVec(GeoVectorProperty* pvec, int power, GeoVectorProperty
     Vec3f* data = (Vec3f*)pvec->editData();
     Vec4f* cdata = 0;
     if (cvec) cdata = (Vec4f*)cvec->editData();
+    float eps = 1e-5;
     for (int i=0; i<pvec->size(); i++) {
         Vec3f d = eval(data[i], power);
         data[i] += d;
         if (cdata) {
-            float l = d.length() * cscale;
+            float l = d.length() / max(cscale, eps);
             cdata[i] = Vec4f(l,1-l,0,1);
         }
     }

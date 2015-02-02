@@ -129,7 +129,7 @@ void VRDevice::change_button(int key, int state) {
 }
 
 void VRDevice::change_slider(int key, float state) { // TODO: test min value
-    //cout << "VRDevice::change_slider " << key << " " << state << endl;
+    //cout << "VRDevice::change_slider " << this << " " << key << " " << state << endl;
     if (SStates.count(key) == 0) SStates[key] = state;
     //float old_state = SStates[key];
     SStates[key] = state;

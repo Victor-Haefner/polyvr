@@ -224,9 +224,12 @@
 		<Unit filename="src/addons/Engineering/Chemistry/VRMolecule.h" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRPyMolecule.cpp" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRPyMolecule.h" />
+		<Unit filename="src/addons/Engineering/Factory/VRFactory.cpp" />
 		<Unit filename="src/addons/Engineering/Factory/VRFactory.h" />
 		<Unit filename="src/addons/Engineering/Factory/VRLogistics.cpp" />
 		<Unit filename="src/addons/Engineering/Factory/VRLogistics.h" />
+		<Unit filename="src/addons/Engineering/Factory/VRPyFactory.cpp" />
+		<Unit filename="src/addons/Engineering/Factory/VRPyFactory.h" />
 		<Unit filename="src/addons/Engineering/Factory/VRPyLogistics.cpp" />
 		<Unit filename="src/addons/Engineering/Factory/VRPyLogistics.h" />
 		<Unit filename="src/addons/Engineering/Factory/network.cpp" />
@@ -593,6 +596,8 @@
 		<Unit filename="src/core/utils/VRStorage_template.h" />
 		<Unit filename="src/core/utils/VRTimer.cpp" />
 		<Unit filename="src/core/utils/VRTimer.h" />
+		<Unit filename="src/core/utils/VRVisualLayer.cpp" />
+		<Unit filename="src/core/utils/VRVisualLayer.h" />
 		<Unit filename="src/core/utils/isNan.cpp" />
 		<Unit filename="src/core/utils/isNan.h" />
 		<Unit filename="src/core/utils/toString.cpp" />
