@@ -98,6 +98,7 @@ class VRPhysics : public OSG::VRStorage {
         void addForce(OSG::Vec3f i);
         void addTorque(OSG::Vec3f i);
         float getConstraintAngle(VRPhysics *to, int axis);
+        void deleteConstraints(VRPhysics* with);
         /**get the total force in this frame **/
         OSG::Vec3f getForce();
         /** get total torque**/

@@ -496,6 +496,13 @@ float VRPhysics::getConstraintAngle(VRPhysics* to, int axis) {
     return ret;
 }
 
+void VRPhysics::deleteConstraints(VRPhysics* with) {
+    VRPhysicsJoint* joint =joints[with];
+    if(joint != 0) {
+        world->removeConstraint(joint->btJoint);
+    }
+
+}
 
 void VRPhysics::setConstraint(VRPhysics* p, OSG::VRConstraint* c, OSG::VRConstraint* cs) {
     if (body == 0) return;
@@ -528,12 +535,23 @@ void VRPhysics::updateConstraint(VRPhysics* p) {
         joint->btJoint = 0;
     }
 
+     //the two world transforms
+    btTransform localA = btTransform();
+    localA.setIdentity();
+    btTransform localB = btTransform();
+    localB.setIdentity();
+
+    //Constraint.getReferenceFrameInB
+    OSG::Matrix m = c->getReference();
+    localB = fromMatrix(m);
+
     // TODO: possible bug - p is not valid, may have been deleted!
 
     //cout << "\nCreate Joint " << fromTransform(body->getWorldTransform())[3] << " " << fromTransform(p->body->getWorldTransform())[3] << endl;
-    btTransform t = p->body->getWorldTransform().inverse();
-    t.mult(t, body->getWorldTransform()); // the position of the first object in the local coords of the second
-    joint->btJoint = new btGeneric6DofSpringConstraint(*body, *p->body, btTransform::getIdentity(), t, true);
+    //btTransform t = p->body->getWorldTransform().inverse();
+    //t.mult(t, body->getWorldTransform()); // the position of the first object in the local coords of the second
+
+    joint->btJoint = new btGeneric6DofSpringConstraint(*body, *p->body, localA, localB, false);
     world->addConstraint(joint->btJoint, true);
 
     for (int i=0; i<6; i++) {
