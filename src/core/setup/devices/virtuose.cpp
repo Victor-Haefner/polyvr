@@ -181,8 +181,8 @@ void virtuose::attachTransform(VRTransform* trans)
 void virtuose::fillPosition(VRPhysics* p, float *to)
 {
     btTransform pos = p->getTransform();
-    to[0] =  pos.getOrigin().getX();
-    to[1] = pos.getOrigin().getZ();
+    to[0] =  pos.getOrigin().getZ();
+    to[1] = pos.getOrigin().getX();
     to[2] =  pos.getOrigin().getY();
     /** not supported **/
     //to[3] =  -pos.getRotation().getY();
@@ -193,8 +193,8 @@ void virtuose::fillPosition(VRPhysics* p, float *to)
 void virtuose::fillSpeed(VRPhysics* p, float *to)
 {
     Vec3f vel = p->getLinearVelocity();
-    to[0] = vel.x();
-    to[1] = vel.z();
+    to[0] = vel.z();
+    to[1] = vel.x();
     to[2] = vel.y();
     /**not supported **/
     //Vec3f ang = p->getAngularVelocity();
@@ -204,14 +204,14 @@ void virtuose::fillSpeed(VRPhysics* p, float *to)
 }
 void virtuose::Matrix3ToArray(btMatrix3x3 m, float *to)
 {
-    to[0] = m.getRow(0).getX();
-    to[1] = m.getRow(0).getZ();
+    to[0] = m.getRow(0).getZ();
+    to[1] = m.getRow(0).getX();
     to[2] = m.getRow(0).getY();
-    to[3] = m.getRow(2).getX();
-    to[4] = m.getRow(2).getZ();
+    to[3] = m.getRow(2).getZ();
+    to[4] = m.getRow(2).getX();
     to[5] = m.getRow(2).getY();
-    to[6] = m.getRow(1).getX();
-    to[7] = m.getRow(1).getZ();
+    to[6] = m.getRow(1).getZ();
+    to[7] = m.getRow(1).getX();
     to[8] = m.getRow(1).getY();
 
 
@@ -354,7 +354,7 @@ void virtuose::updateVirtMech()
                     force[i] *= (1/dt);
                 }
 
-                Vec3f frc = Vec3f(force[0], force[2], force[1]);
+                Vec3f frc = Vec3f(force[1], force[2], force[0]);
 
             /** not supported**/
                 //Vec3f trqu = Vec3f(-force[3],-force[5],-force[4]);
