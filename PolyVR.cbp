@@ -589,6 +589,8 @@
 		<Unit filename="src/core/utils/VRName.h" />
 		<Unit filename="src/core/utils/VROptions.cpp" />
 		<Unit filename="src/core/utils/VROptions.h" />
+		<Unit filename="src/core/utils/VRProgress.cpp" />
+		<Unit filename="src/core/utils/VRProgress.h" />
 		<Unit filename="src/core/utils/VRRate.cpp" />
 		<Unit filename="src/core/utils/VRRate.h" />
 		<Unit filename="src/core/utils/VRStorage.cpp" />

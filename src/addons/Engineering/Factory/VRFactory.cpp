@@ -1,5 +1,6 @@
 #include "VRFactory.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRProgress.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/VRLod.h"
@@ -23,6 +24,12 @@ VRFactory::VRFactory() {}
 VRObject* VRFactory::loadVRML(string path) { // wrl filepath
     ifstream file(path);
     if (!file.is_open()) { cout << "file " << path << " not found" << endl; return 0; }
+
+    // get file size
+    file.seekg(0, ios_base::end);
+    size_t fileSize = file.tellg();
+    file.seekg(0, ios_base::beg);
+    VRProgress prog("load VRML " + path, fileSize);
 
     string header = "#VRML V2.0 utf8\n";
     string delimiter = "Transform";
@@ -56,11 +63,10 @@ VRObject* VRFactory::loadVRML(string path) { // wrl filepath
     Pnt3f v;
     Vec3f n;
     int i, Np, Nn;
-    int j = 0;
 
     while ( getline(file, line) ) {
-        j++;
-        cout << "line " << j << endl;
+        prog.update( line.size() );
+
         string delim = states[state];
         //cout << "delim " << delim << " " << state << endl;
         if ( line.compare(0, delim.size(), delim) == 0 ) {
@@ -133,19 +139,12 @@ VRObject* VRFactory::loadVRML(string path) { // wrl filepath
     }
 
     file.close();
-    cout << "loaded " << geos.size() << " geometries" << endl;
+    cout << "\nloaded " << geos.size() << " geometries" << endl;
 
     VRObject* res = new VRObject("factory");
     res->addAttachment("dynamicaly_generated", 0);
 
     for (auto g : geos) {
-        /*cout << "geo " ;
-        cout << g->getMesh()->getPositions()->size() << " ";
-        cout << g->getMesh()->getNormals()->size() << " ";
-        cout << g->getMesh()->getIndex(Geometry::PositionsIndex)->size() << " ";
-        cout << g->getMesh()->getIndex(Geometry::NormalsIndex)->size() << " ";
-        cout << endl;*/
-
         res->addChild(g);
 
         GeoUInt32PropertyRecPtr Length = GeoUInt32Property::create();
@@ -297,7 +296,11 @@ VRObject* VRFactory::setupLod(vector<string> paths) {
     VRObject* root = new VRObject("factory_lod_root");
     root->addAttachment("dynamicaly_generated", 0);
     for (int i = 0; i<objects.size(); i++) {
-        for (auto g : objects[i]->getChildren(true, "Geometry")) {
+        vector<VRObject*> geos = objects[i]->getChildren(true, "Geometry");
+        VRProgress prog("setup factory LODs ", geos.size());
+        for (auto g : geos) {
+            prog.update(1);
+
             Vec3f v1, v2, p, d;
             g->getBoundingBox(v1, v2);
             p = (v1+v2)*0.5;
