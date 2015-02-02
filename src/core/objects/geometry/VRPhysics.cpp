@@ -389,6 +389,7 @@ void VRPhysics::resetForces() {
     body->setAngularVelocity(btVector3(0,0,0));
     body->setLinearVelocity(btVector3(0,0,0));
     body->clearForces();
+
 }
 
 void VRPhysics::applyImpulse(OSG::Vec3f i) {
@@ -471,7 +472,7 @@ btMatrix3x3 VRPhysics::getInertiaTensor() {
     if (body == 0) return btMatrix3x3();
     body->updateInertiaTensor();
     btMatrix3x3 m = body->getInvInertiaTensorWorld();
-    return m;
+    return m.inverse();
 }
 
 
