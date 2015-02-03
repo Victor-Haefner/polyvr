@@ -17,6 +17,7 @@ class VRHaptic : public VRDevice {
         string IP;
         string type;
         VRFunction<int>* updateFkt;
+        Vec3i button_states;
 
         void applyTransformation(VRTransform* t);
 

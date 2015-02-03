@@ -30,14 +30,27 @@ void VRHaptic::applyTransformation(VRTransform* t) { // TODO: rotation
     if (!v->connected()) return;
     t->setMatrix(v->getPose());
     //COMMAND_MODE_VIRTMECH
-    v->updateVirtMech();
+    updateVirtMech();
 }
 
 void VRHaptic::setForce(Vec3f force, Vec3f torque) { v->applyForce(force, torque); }
 void VRHaptic::setSimulationScales(float scale, float forces) { v->setSimulationScales(scale, forces); }
 void VRHaptic::attachTransform(VRTransform* trans) {v->attachTransform(trans);}
 void VRHaptic::detachTransform() {v->detachTransform();}
-void VRHaptic::updateVirtMech() {v->updateVirtMech();}
+void VRHaptic::updateVirtMech() {
+    v->updateVirtMech();
+    OSG::Vec3i states = v->getButtonStates();
+
+    cout << "updateVirtMech b states " << states << endl;
+
+    for (int i=0; i<3; i++) {
+        if (states[i] != button_states[i]) {
+            cout << "updateVirtMech trigger " << i << " " << states[i] << endl;
+            change_button(i, states[i]);
+            button_states[i] = states[i];
+        }
+    }
+}
 Vec3i VRHaptic::getButtonStates() {return (v->getButtonStates());}
 
 

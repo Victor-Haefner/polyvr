@@ -396,7 +396,6 @@ void virtuose::updateVirtMech()
         }
     }
 
-
 }
 
 

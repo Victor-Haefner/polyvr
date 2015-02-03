@@ -76,8 +76,7 @@ PyObject* VRPyConstraint::setLocalOffset(VRPyConstraint* self, PyObject* args) {
     //rotation
     btQuaternion q ;
     q.setEuler(yaw,pitch,roll);
-    OSG::Quaternion qtwo;
-    qtwo.setValueAsAxisRad(q.x(),q.y(),q.z(),q.w());
+    OSG::Quaternion qtwo = OSG::Quaternion(q.x(),q.y(),q.z(),q.w());
     m.setRotate(qtwo);
 
     if (self->obj == 0) self->obj = new OSG::VRConstraint();
