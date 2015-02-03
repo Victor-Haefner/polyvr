@@ -34,8 +34,13 @@ void VRRecorder::setView(int i) {
     view = VRSetupManager::getCurrent()->getView(i);
 }
 
+void VRRecorder::setMaxFrames(int maxf) { maxFrames = maxf; }
+bool VRRecorder::frameLimitReached() { return (captures.size() == maxFrames); }
+
 void VRRecorder::capture() {
     if (view == 0) return;
+    if (frameLimitReached()) return;
+
     //int ts = VRGlobals::get()->CURRENT_FRAME;
     VRFrame* f = new VRFrame();
     captures.push_back(f);
@@ -73,20 +78,20 @@ void VRRecorder::compile(string path) {
     AVPacket pkt;
     uint8_t endcode[] = { 0, 0, 1, 0xb7 };
 
-    //AVCodecID codec_id = AV_CODEC_ID_MPEG1VIDEO;
-    AVCodecID codec_id = AV_CODEC_ID_H264;
+    AVCodecID codec_id = AV_CODEC_ID_MPEG1VIDEO;
+    //AVCodecID codec_id = AV_CODEC_ID_H264; // only works with m player??
     codec = avcodec_find_encoder(codec_id);
     if (!codec) { fprintf(stderr, "Codec not found\n"); return; }
 
     c = avcodec_alloc_context3(codec);
     if (!c) { fprintf(stderr, "Could not allocate video codec context\n"); return; }
 
-    c->bit_rate = 1200000; /* put sample parameters */
     c->width = img0->getWidth();
     c->height = img0->getHeight();
+    c->bit_rate = c->width*c->height*5; /* put sample parameters */
     c->time_base = (AVRational){1,25}; /* frames per second */
     c->gop_size = 10; /* emit one intra frame every ten frames */
-    c->max_b_frames=1;
+    c->max_b_frames = 1;
     c->pix_fmt = AV_PIX_FMT_YUV420P;
 
     if (codec_id == AV_CODEC_ID_H264) av_opt_set(c->priv_data, "preset", "slow", 0);
