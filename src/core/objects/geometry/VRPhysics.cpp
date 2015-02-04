@@ -43,7 +43,7 @@ VRPhysics::VRPhysics(OSG::VRTransform* t) {
     collisionMargin = 0.04;
     physicalized = false;
     dynamic = false;
-    physicsShape = "Box";
+    physicsShape = "Convex";
     activation_mode = ACTIVE_TAG;
 
     collisionGroup = 1;
