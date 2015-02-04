@@ -185,10 +185,10 @@ void virtuose::fillPosition(VRPhysics* p, float *to)
     to[1] = pos.getOrigin().getX();
     to[2] =  pos.getOrigin().getY();
     /** not supported **/
-    //to[3] =  -pos.getRotation().getY();
-    //to[4] =  -pos.getRotation().getW();
-    //to[5] =  -pos.getRotation().getZ();
-    //to[6] =  pos.getRotation().getX();
+    //to[3] =  -pos.getRotation().getZ();
+    //to[4] =  -pos.getRotation().getX();
+    //to[5] =  -pos.getRotation().getY();
+    //to[6] =  pos.getRotation().getW();
 }
 void virtuose::fillSpeed(VRPhysics* p, float *to)
 {
@@ -198,8 +198,8 @@ void virtuose::fillSpeed(VRPhysics* p, float *to)
     to[2] = vel.y();
     /**not supported **/
     //Vec3f ang = p->getAngularVelocity();
-    //to[3] = -ang.x();
-    //to[4] = -ang.z();
+    //to[3] = -ang.z();
+    //to[4] = -ang.x();
     //to[5] = -ang.y();
 }
 void virtuose::Matrix3ToArray(btMatrix3x3 m, float *to)
@@ -357,8 +357,7 @@ void virtuose::updateVirtMech()
                 Vec3f frc = Vec3f(force[1], force[2], force[0]);
 
             /** not supported**/
-                //Vec3f trqu = Vec3f(-force[3],-force[5],-force[4]);
-
+                //Vec3f trqu = Vec3f(-force[4],-force[5],-force[3]);
 
             //apply force on the object
                 if(power == 0)

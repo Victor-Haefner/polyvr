@@ -410,7 +410,7 @@ void VRPhysics::addForce(OSG::Vec3f i) {
    btVector3 ttlForce = body->getTotalForce();
    btVector3 force = btVector3(i.x(), i.y(), i.z());
    //ttlForce += force;
-   body->applyCentralForce(force);
+   body->applyForce(force,btVector3(0.0,0.0,0.0));
 }
 
 void VRPhysics::addTorque(OSG::Vec3f i) {
