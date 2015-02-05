@@ -155,7 +155,7 @@ void VRPhysicsManager::updatePhysics() {
         for (auto obj : physics_visuals) {
             VRGeometry* geo = obj.second; // transfer transformation
             btTransform trans = obj.first->getWorldTransform();
-            geo->setMatrix( VRPhysics::fromTransform( trans ) );
+            geo->setMatrix( VRPhysics::fromBTTransform( trans ) );
         }
     }
 }

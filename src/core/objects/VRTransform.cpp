@@ -46,13 +46,13 @@ void VRTransform::updatePhysics() {
     if (noBlt and !held) { noBlt = false; return; }
     if (!physics->isPhysicalized()) return;
 
-    Matrix m;
+    /*Matrix m;
     dm->read(m);
     Matrix pm;
     getWorldMatrix(pm, true);
-    pm.mult(m);
+    pm.mult(m);*/
 
-    physics->updateTransformation(pm);
+    physics->updateTransformation(this);
     physics->pause();
     physics->resetForces();
 }
@@ -518,7 +518,7 @@ void VRTransform::drag(VRTransform* new_parent) {
     switchParent(new_parent);
     setWorldMatrix(m);
 
-    physics->updateTransformation(m);
+    physics->updateTransformation(this);
     physics->resetForces();
     physics->pause(true);
     reg_change();
@@ -536,7 +536,7 @@ void VRTransform::drop() {
     switchParent(old_parent);
     setWorldMatrix(m);
 
-    physics->updateTransformation(m);
+    physics->updateTransformation(this);
     physics->resetForces();
     physics->pause(false);
     reg_change();

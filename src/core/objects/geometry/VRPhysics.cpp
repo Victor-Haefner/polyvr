@@ -211,13 +211,13 @@ void VRPhysics::update() {
 
     if (!physicalized) return;
 
+    motionState = new btDefaultMotionState(fromVRTransform( vr_obj, scale ));
+
     if (physicsShape == "Box") shape = getBoxShape();
     if (physicsShape == "Sphere") shape = getSphereShape();
     if (physicsShape == "Convex") shape = getConvexShape();
     if (physicsShape == "Concave") shape = getConcaveShape();
     if (shape == 0) return;
-
-    motionState = new btDefaultMotionState(fromMatrix(vr_obj->getWorldMatrix()));
 
     btVector3 inertiaVector(0,0,0);
     float _mass = mass;
@@ -256,9 +256,9 @@ btCollisionShape* VRPhysics::getBoxShape() {
         for (uint i=0;i<pos->size();i++) {
             OSG::Pnt3f p;
             pos->getValue(p,i);
-            x = max(x, p[0]);
-            y = max(y, p[1]);
-            z = max(z, p[2]);
+            x = max(x, p[0]*scale[0]);
+            y = max(y, p[1]*scale[1]);
+            z = max(z, p[2]*scale[2]);
         }
     }
 
@@ -270,15 +270,32 @@ btCollisionShape* VRPhysics::getSphereShape() {
     if (shape_param > 0) return new btSphereShape( shape_param );
 
     float r2 = 0;
+    int N = 0;
+    OSG::Pnt3f p;
+    OSG::Pnt3f center;
 
-    vector<OSG::VRObject*> geos = vr_obj->getObjectListByType("Geometry");
-    for (uint j=0; j<geos.size(); j++) {
-        OSG::VRGeometry* geo = (OSG::VRGeometry*)geos[j];
+    auto geos = vr_obj->getObjectListByType("Geometry");
+
+    /*for (auto _g : geos ) { // get geometric center // makes no sense as you would have to change the center of the shape..
+        OSG::VRGeometry* geo = (OSG::VRGeometry*)_g;
         OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->getPositions();
-        for (uint i=0;i<pos->size();i++) {
-            OSG::Pnt3f p;
+        N += pos->size();
+        for (uint i=0; i<pos->size(); i++) {
             pos->getValue(p,i);
-            r2 = max(r2, p[0]*p[0]+p[1]*p[1]+p[2]*p[2]);
+            center += p;
+        }
+    }
+
+    center *= 1.0/N;*/
+
+    for (auto _g : geos ) {
+        OSG::VRGeometry* geo = (OSG::VRGeometry*)_g;
+        OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->getPositions();
+        for (uint i=0; i<pos->size(); i++) {
+            pos->getValue(p,i);
+            //r2 = max( r2, (p-center).squareLength() );
+            for (int i=0; i<3; i++) p[i] *= scale[i];
+            r2 = max( r2, p[0]*p[0]+p[1]*p[1]+p[2]*p[2] );
         }
     }
 
@@ -287,8 +304,6 @@ btCollisionShape* VRPhysics::getSphereShape() {
 
 btCollisionShape* VRPhysics::getConvexShape() {
     btConvexHullShape* shape = new btConvexHullShape();
-
-    //Matrix m = vr_obj->getWorldMatrix();
 
     vector<OSG::VRObject*> geos = vr_obj->getObjectListByType("Geometry");
     for (uint j=0; j<geos.size(); j++) {
@@ -300,7 +315,7 @@ btCollisionShape* VRPhysics::getConvexShape() {
         for (uint i=0;i<pos->size();i++) {
             OSG::Pnt3f p;
             pos->getValue(p,i);
-            //m.mult(p,p);
+            for (int i=0; i<3; i++) p[i] *= scale[i];
             shape->addPoint(btVector3(p[0], p[1], p[2]));
         }
     }
@@ -330,7 +345,7 @@ btCollisionShape* VRPhysics::getConcaveShape() {
                 for (int j=0;j<3;j++) vertexPos[i][j] = p[j];
             }
 
-            tri_mesh->addTriangle(vertexPos[0], vertexPos[1], vertexPos[2]);
+            tri_mesh->addTriangle(vertexPos[0]*scale[0], vertexPos[1]*scale[1], vertexPos[2]*scale[2]);
             ++ti;
             N++;
         }
@@ -342,26 +357,29 @@ btCollisionShape* VRPhysics::getConcaveShape() {
     return shape;
 }
 
-btTransform VRPhysics::fromMatrix(const OSG::Matrix& m) {
-    btVector3 pos = btVector3(m[3][0], m[3][1], m[3][2]);
-    /*btMatrix3x3 mat = btMatrix3x3(m[0][0], m[0][1], m[0][2],
-                                  m[1][0], m[1][1], m[1][2],
-                                  m[2][0], m[2][1], m[2][2]);*/
-    btMatrix3x3 mat = btMatrix3x3(m[0][0], m[1][0], m[2][0],
-                                  m[0][1], m[1][1], m[2][1],
-                                  m[0][2], m[1][2], m[2][2]);
-    btQuaternion q;
-    mat.getRotation(q);
+btTransform VRPhysics::fromVRTransform(OSG::VRTransform* t, OSG::Vec3f& scale) {
+    OSG::Matrix m = t->getWorldMatrix();
 
-    btTransform bltTrans;//Bullets transform
-    bltTrans.setIdentity();
-    bltTrans.setOrigin(pos);
-    bltTrans.setRotation(q);
+    scale;
+    for (int i=0; i<3; i++) scale[i] = m[i].length(); // store scale
+    for (int i=0; i<3; i++) m[i] *= 1.0/scale[i]; // normalize
 
+    btTransform bltTrans;
+    bltTrans.setFromOpenGLMatrix(&m[0][0]);
     return bltTrans;
 }
 
-OSG::Matrix VRPhysics::fromTransform(const btTransform t) {
+OSG::Matrix VRPhysics::fromBTTransform(const btTransform t, OSG::Vec3f scale) {
+    OSG::Matrix m = fromBTTransform(t);
+
+    // apply scale
+    OSG::Matrix s;
+    s.setScale(scale);
+    m.mult(s);
+    return m;
+}
+
+OSG::Matrix VRPhysics::fromBTTransform(const btTransform t) {
     btScalar _m[16];
     t.getOpenGLMatrix(_m);
 
@@ -370,6 +388,8 @@ OSG::Matrix VRPhysics::fromTransform(const btTransform t) {
     for (int i=0;i<4;i++) m[1][i] = _m[4+i];
     for (int i=0;i<4;i++) m[2][i] = _m[8+i];
     for (int i=0;i<4;i++) m[3][i] = _m[12+i];
+
+    //cout << "fromTransform " << m << endl;
     return m;
 }
 
@@ -377,7 +397,6 @@ void VRPhysics::pause(bool b) {
     return;
     if (body == 0) return;
     if (dynamic == !b) return;
-    cout << "\nSET PAUSE dyn: " << dynamic << " pause: " << b << endl;
     setDynamic(!b);
 }
 
@@ -394,14 +413,14 @@ void VRPhysics::applyImpulse(OSG::Vec3f i) {
     body->setLinearVelocity(btVector3(i[0]/mass, i[1]/mass, i[2]/mass));
 }
 
-void VRPhysics::updateTransformation(const OSG::Matrix& m) {
+void VRPhysics::updateTransformation(OSG::VRTransform* t) {
     if (body) {
-        body->setWorldTransform(fromMatrix(m));
+        body->setWorldTransform(fromVRTransform(t, scale));
         body->activate();
     }
 
     if (ghost_body) {
-        ghost_body->setWorldTransform(fromMatrix(m));
+        ghost_body->setWorldTransform(fromVRTransform(t, scale));
         ghost_body->activate();
     }
 }
@@ -411,7 +430,7 @@ OSG::Matrix VRPhysics::getTransformation() {
     btTransform t;
     if (body->getMotionState() == 0) return OSG::Matrix();
     body->getMotionState()->getWorldTransform(t);
-    return fromTransform(t);
+    return fromBTTransform(t, scale);
 }
 
 void VRPhysics::setTransformation(btTransform t) {

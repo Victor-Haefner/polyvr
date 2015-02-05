@@ -42,6 +42,7 @@ class VRPhysics : public OSG::VRStorage {
 
         OSG::VRTransform* vr_obj = 0;
         OSG::VRConstraint* constraint = 0;
+        OSG::Vec3f scale;
 
         btCollisionShape* getBoxShape();
         btCollisionShape* getSphereShape();
@@ -85,7 +86,7 @@ class VRPhysics : public OSG::VRStorage {
 
         vector<VRCollision> getCollisions();
 
-        void updateTransformation(const OSG::Matrix& m);
+        void updateTransformation(OSG::VRTransform* t);
         OSG::Matrix getTransformation();
         void setTransformation(btTransform t);
 
@@ -94,8 +95,9 @@ class VRPhysics : public OSG::VRStorage {
         void applyImpulse(OSG::Vec3f i);
 
         static vector<string> getPhysicsShapes();
-        static btTransform fromMatrix(const OSG::Matrix& m);
-        static OSG::Matrix fromTransform(const btTransform t);
+        static btTransform fromVRTransform(OSG::VRTransform* t, OSG::Vec3f& scale);
+        static OSG::Matrix fromBTTransform(const btTransform t);
+        static OSG::Matrix fromBTTransform(const btTransform t, OSG::Vec3f scale);
 
         static OSG::Vec3f toVec3f(btVector3);
 
