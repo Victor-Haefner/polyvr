@@ -22,7 +22,8 @@ class VRTransform : public VRObject {
         bool noBlt;
         VRPhysics* physics;
 
-        unsigned int change_time_stamp;
+        unsigned int change_time_stamp = 0;
+        unsigned int wchange_time_stamp = 0;
         bool change;
         bool fixed;
         bool cam_invert_z;
@@ -57,7 +58,6 @@ class VRTransform : public VRObject {
         //read matrix from doublebuffer and apply it to transformation
         //should be called from the main thread only
         void updateTransformation();
-        void updatePhysics();
 
         void reg_change();
 
@@ -169,6 +169,7 @@ class VRTransform : public VRObject {
 
         /** Update the object OSG transformation **/
         virtual void update();
+        void updatePhysics();
 };
 
 OSG_END_NAMESPACE;

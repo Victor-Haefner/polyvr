@@ -128,6 +128,8 @@ VRWindow* VRWindowManager::addGtkWindow(string name, string glarea) {
     return win;
 }
 
+void VRWindowManager::pauseRendering(bool b) { rendering_paused = b; }
+
 void VRWindowManager::getWindowSize(string name, int& width, int& height) {
     if (!checkWin(name)) return;
 
@@ -139,6 +141,7 @@ void VRWindowManager::getWindowSize(string name, int& width, int& height) {
 void VRWindowManager::updateWindows() {
     //VRTimer timer;
     //timer.start("VRWindowManager::updateWindows");
+    if (rendering_paused) return;
 
     ract->setResetStatistics(false);
     StatCollector* sc = ract->getStatCollector();

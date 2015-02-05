@@ -19,6 +19,7 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRObject;
+class VRVisualLayer;
 
 enum {
     SCENE_WRITE_PROTECTED
@@ -40,6 +41,10 @@ class VRScene : public VRObjectManager,
     private:
         string path;
         string icon;
+
+        VRVisualLayer* referentials_layer = 0;
+        VRVisualLayer* cameras_layer = 0;
+        VRVisualLayer* lights_layer = 0;
 
     public:
         VRScene();
@@ -65,9 +70,9 @@ class VRScene : public VRObjectManager,
         void setActiveCamera(int i);
 
         void printTree();
-
-        void showReferentials(bool b, VRObject* o = 0);
-        void showLightsCameras(bool b);
+        void showReferentials(bool b, VRObject* o);
+        void showLights(bool b);
+        void showCameras(bool b);
 
         void update();
 

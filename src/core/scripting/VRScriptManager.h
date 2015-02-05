@@ -39,6 +39,7 @@ class VRScriptManager : public VRStorage, public VRPyBase {
         ~VRScriptManager();
 
         VRScript* newScript(string name, string function);
+        void addScript(VRScript* script);
         void remScript(string name);
 
         void disableAllScripts();

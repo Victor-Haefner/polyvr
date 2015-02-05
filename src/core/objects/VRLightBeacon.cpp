@@ -60,8 +60,8 @@ void VRLightBeacon::loadContent(xmlpp::Element* e) {
     // try to find light!
     VRObject* tmp = this;
     while(tmp->getParent()) tmp = tmp->getParent();
-    light = (VRLight*)tmp->find(lightName);
-    if (tmp) light->setBeacon(this);
+    if (tmp) light = (VRLight*)tmp->find(lightName);
+    if (light) light->setBeacon(this);
 }
 
 vector<VRLightBeacon*>& VRLightBeacon::getAll() {

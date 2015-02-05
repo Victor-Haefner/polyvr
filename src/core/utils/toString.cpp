@@ -83,6 +83,15 @@ OSG::Vec4f toVec4f(string s) {
     return v;
 }
 
+OSG::Pnt3f toPnt3f(string s) {
+    OSG::Pnt3f v;
+    stringstream ss(s);
+    ss >> v[0];
+    ss >> v[1];
+    ss >> v[2];
+    return v;
+}
+
 OSG::Vec3i toVec3i(string s) {
     OSG::Vec3i v;
     stringstream ss(s);

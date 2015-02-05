@@ -26,6 +26,7 @@ OSG::Vec2f toVec2f(string s);
 OSG::Vec3f toVec3f(string s);
 OSG::Vec4f toVec4f(string s);
 OSG::Vec3i toVec3i(string s);
+OSG::Pnt3f toPnt3f(string s);
 
 void toValue(string s, string& s2);
 void toValue(string s, bool& b);

@@ -35,12 +35,15 @@ typedef VRFunction<HTTP_args*> VRHTTP_cb;
 typedef VRFunction<string> VRTCP_cb;
 
 struct HTTP_args {
-    VRHTTP_cb* cb;
-    map<string, string>* params;
-    map<string, string*>* pages;
+    VRHTTP_cb* cb = 0;
+    map<string, string>* params = 0;
+    map<string, string*>* pages = 0;
     string path;
 
+    HTTP_args();
+    ~HTTP_args();
     void print();
+    HTTP_args* copy();
 };
 
 class VRSocket : public VRName {

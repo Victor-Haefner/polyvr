@@ -3,6 +3,7 @@
 #include "core/setup/VRSetup.h"
 #include "core/setup/VRSetupManager.h"
 #include "core/objects/object/VRObject.h"
+#include "core/utils/toString.h"
 
 #include <OpenSG/OSGImage.h>
 #include <GL/glut.h>
@@ -33,8 +34,13 @@ void VRRecorder::setView(int i) {
     view = VRSetupManager::getCurrent()->getView(i);
 }
 
+void VRRecorder::setMaxFrames(int maxf) { maxFrames = maxf; }
+bool VRRecorder::frameLimitReached() { return (captures.size() == maxFrames); }
+
 void VRRecorder::capture() {
     if (view == 0) return;
+    if (frameLimitReached()) return;
+
     //int ts = VRGlobals::get()->CURRENT_FRAME;
     VRFrame* f = new VRFrame();
     captures.push_back(f);
@@ -57,7 +63,12 @@ float VRRecorder::getRecordingLength() {
 
 void VRRecorder::compile(string path) {
     if (captures.size() == 0) return;
-    ImageRecPtr img0 = (*captures.begin())->capture;
+    ImageRecPtr img0 = captures[0]->capture;
+
+    /*for (int i=0; i<1; i++) { // test export the first N images
+        string pimg = path+"."+toString(i)+".png";
+        captures[i]->capture->write(pimg.c_str());
+    }*/
 
     AVCodec* codec;
     AVCodecContext* c= NULL;
@@ -67,20 +78,20 @@ void VRRecorder::compile(string path) {
     AVPacket pkt;
     uint8_t endcode[] = { 0, 0, 1, 0xb7 };
 
-    //AVCodecID codec_id = AV_CODEC_ID_MPEG1VIDEO;
-    AVCodecID codec_id = AV_CODEC_ID_H264;
+    AVCodecID codec_id = AV_CODEC_ID_MPEG1VIDEO;
+    //AVCodecID codec_id = AV_CODEC_ID_H264; // only works with m player??
     codec = avcodec_find_encoder(codec_id);
     if (!codec) { fprintf(stderr, "Codec not found\n"); return; }
 
     c = avcodec_alloc_context3(codec);
     if (!c) { fprintf(stderr, "Could not allocate video codec context\n"); return; }
 
-    c->bit_rate = 400000; /* put sample parameters */
-    c->width = img0->getWidth() - img0->getWidth()%2; /* resolution must be a multiple of two */
-    c->height = img0->getHeight() - img0->getHeight()%2;
-    c->time_base= (AVRational){1,25}; /* frames per second */
+    c->width = img0->getWidth();
+    c->height = img0->getHeight();
+    c->bit_rate = c->width*c->height*5; /* put sample parameters */
+    c->time_base = (AVRational){1,25}; /* frames per second */
     c->gop_size = 10; /* emit one intra frame every ten frames */
-    c->max_b_frames=1;
+    c->max_b_frames = 1;
     c->pix_fmt = AV_PIX_FMT_YUV420P;
 
     if (codec_id == AV_CODEC_ID_H264) av_opt_set(c->priv_data, "preset", "slow", 0);
@@ -110,7 +121,7 @@ void VRRecorder::compile(string path) {
         const unsigned char* data = img->getData();
         for (y=0; y<c->height; y++) { // Y
          for (x=0; x<c->width; x++) {
-            int k = y*(img->getWidth()+1) + x;
+            int k = y*c->width + x;
             int r = data[k*3+0];
             int g = data[k*3+1];
             int b = data[k*3+2];

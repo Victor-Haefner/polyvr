@@ -13,6 +13,8 @@ struct VRPyRecorder : VRPyBaseT<OSG::VRRecorder> {
     static PyObject* clear(VRPyRecorder* self);
     static PyObject* getRecordingSize(VRPyRecorder* self);
     static PyObject* getRecordingLength(VRPyRecorder* self);
+    static PyObject* setMaxFrames(VRPyRecorder* self, PyObject* args);
+    static PyObject* frameLimitReached(VRPyRecorder* self);
 };
 
 #endif // VRPYRECORDER_H_INCLUDED

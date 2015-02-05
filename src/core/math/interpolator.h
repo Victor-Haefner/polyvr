@@ -19,7 +19,7 @@ class interpolator {
         void setPoints(vector<OSG::Vec3f> pnts);
         void setValues(vector<OSG::Vec3f> vals);
         OSG::Vec3f eval(OSG::Vec3f& p, int power);
-        void evalVec(OSG::GeoVectorProperty* pin, int power, OSG::GeoVectorProperty* cvec = 0, float cscale = 0);
+        void evalVec(OSG::GeoVectorProperty* pin, int power, OSG::GeoVectorProperty* cvec = 0, float cscale = 0, float dl_max = 1.0);
         void evalVec(vector<OSG::Vec3f>& pin, int power);
 };
 

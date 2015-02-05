@@ -187,13 +187,13 @@ void feed1D(PyObject* o, T& vec) {
 
 PyObject* VRPyGeometry::influence(VRPyGeometry* self, PyObject *args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyGeometry::influence - Object is invalid"); return NULL; }
-	PyObject *vP, *vV; int power; float color_coding;
-    if (!PyArg_ParseTuple(args, "OOif", &vP, &vV, &power, &color_coding)) return NULL;
+	PyObject *vP, *vV; int power; float color_coding; float dl_max;
+    if (!PyArg_ParseTuple(args, "OOiff", &vP, &vV, &power, &color_coding, &dl_max)) return NULL;
     vector<OSG::Vec3f> pos;
     vector<OSG::Vec3f> vals;
     feed2D_v2<vector<OSG::Vec3f>, OSG::Vec3f>(vP, pos);
     feed2D_v2<vector<OSG::Vec3f>, OSG::Vec3f>(vV, vals);
-    self->obj->influence(pos, vals, power, color_coding);
+    self->obj->influence(pos, vals, power, color_coding, dl_max);
     Py_RETURN_TRUE;
 }
 

@@ -8,7 +8,7 @@ struct VRPySound : VRPyBaseT<OSG::VRSoundManager> {
     static PyMethodDef methods[];
 
     static PyObject* play(VRPySound* self, PyObject* args);
-    static PyObject* stop(VRPySound* self);
+    static PyObject* stop(VRPySound* self, PyObject* args);
     static PyObject* stopAllSounds(VRPySound* self);
     static PyObject* setVolume(VRPySound* self, PyObject* args);
 };

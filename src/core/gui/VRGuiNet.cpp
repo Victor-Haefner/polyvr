@@ -199,7 +199,7 @@ VRGuiNet::VRGuiNet() {
 
     setNoteBookCallback("notebook3", VRGuiNet_on_notebook_switched);
 
-    setToolButtonSensivity("toolbutton15", false);
+    setToolButtonSensitivity("toolbutton15", false);
 }
 
 void VRGuiNet::updateList() {

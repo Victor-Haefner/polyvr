@@ -9,7 +9,10 @@
     <Device name="keyboard" type="keyboard"/>
     <Device name="mobile" type="mobile"/>
     <Device name="mouse" type="mouse"/>
+    <Device ID="0" address="Tracker0@localhost" name="razer" offset="0 0 0" raxis="0 2 1" scale="1" taxis="0 2 1" type="vrpn_device"/>
   </Devices>
   <TrackingART active="0" port="5000" offset="0 0 0"/>
-  <TrackingVRPN/>
+  <TrackingVRPN active="1">
+    <Tracker ID="0" address="Tracker0@localhost" name="razer" offset="0 0 0" raxis="0 2 1" scale="1" taxis="0 2 1" type="vrpn_device"/>
+  </TrackingVRPN>
 </Setup>

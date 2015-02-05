@@ -16,6 +16,7 @@
 #include "core/setup/VRSetupManager.h"
 #include "core/setup/windows/VRView.h"
 #include "core/utils/VRInternalMonitor.h"
+#include "core/utils/VRVisualLayer.h"
 #include "core/scene/VRSceneLoader.h"
 #include "VRGuiUtils.h"
 #include "VRGuiSignals.h"
@@ -55,11 +56,12 @@ void VRGuiBits_on_viewoption_changed(GtkComboBox* cb, gpointer data) {
     string opt = row.get_value(cols.option);
     bool b = row.get_value(cols.state);
     b = !b;
+    VRVisualLayer::getLayer(opt)->setVisibility(b);
 
     // process option
-    if (opt == "referentials") scene->showReferentials(b);
+    /*if (opt == "referentials") scene->showReferentials(b);
     if (opt == "setup") setup->showSetup(b);
-    if (opt == "lights and cameras") scene->showLightsCameras(b);
+    if (opt == "lights and cameras") scene->showLightsCameras(b);*/
 
     // update liststore toggle
     gtk_list_store_set (opt_list->gobj(), row.gobj(), 1, (int)b, -1);
@@ -151,8 +153,8 @@ void VRGuiBits::hideAbout(int i) {
     diag->hide();
 }
 
-bool VRGuiBits::toggleFullscreen(GdkEventKey* k) {
-    if (k->keyval != 65480) return false;
+bool VRGuiBits::toggleWidgets(GdkEventKey* k) {
+    if (k->keyval != 65481) return false;
     static bool fs = false;
     fs = !fs;
 
@@ -163,17 +165,23 @@ bool VRGuiBits::toggleFullscreen(GdkEventKey* k) {
     Gtk::Box* hb1; VRGuiBuilder()->get_widget("hbox1", hb1);
 
     if (fs) {
-        win->fullscreen();
         nb1->hide();
         hb1->hide();
         tab->hide();
         hs1->hide();
         gtk_widget_hide(term_box);
-    } else {
-        win->unfullscreen();
-        win->show_all();
-    }
+    } else win->show_all();
+    return true;
+}
 
+bool VRGuiBits::toggleFullscreen(GdkEventKey* k) {
+    if (k->keyval != 65480) return false;
+    static bool fs = false;
+    fs = !fs;
+
+    Gtk::Window* win; VRGuiBuilder()->get_widget("window1", win);
+    if (fs) win->fullscreen();
+    else win->unfullscreen();
     return true;
 }
 
@@ -245,6 +253,7 @@ VRGuiBits::VRGuiBits() {
     VRGuiBuilder()->get_widget("window1", win);
     win->signal_key_press_event().connect( sigc::mem_fun(*this, &VRGuiBits::toggleStereo) );
     win->signal_key_press_event().connect( sigc::mem_fun(*this, &VRGuiBits::toggleFullscreen) );
+    win->signal_key_press_event().connect( sigc::mem_fun(*this, &VRGuiBits::toggleWidgets) );
 
     // VTE
 
@@ -284,21 +293,27 @@ VRGuiBits::VRGuiBits() {
 
     // view options
     setComboboxCallback("combobox20", VRGuiBits_on_viewoption_changed);
+    updateVisualLayer();
+}
+
+void VRGuiBits::updateVisualLayer() {
+    vector<string> vopts;
+    /*vopts.push_back("referentials");
+    vopts.push_back("setup");
+    vopts.push_back("lights and cameras");*/
+    for (auto l : VRVisualLayer::getLayers()) vopts.push_back(l);
+
     Glib::RefPtr<Gtk::ListStore> opt_list = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("view_options"));
     opt_list->clear();
     Gtk::ListStore::Row row;
-    row = *opt_list->append();
-    gtk_list_store_set (opt_list->gobj(), row.gobj(), 0, "referentials", -1);
-    gtk_list_store_set (opt_list->gobj(), row.gobj(), 1, 0, -1);
-    row = *opt_list->append();
-    gtk_list_store_set (opt_list->gobj(), row.gobj(), 0, "setup", -1);
-    gtk_list_store_set (opt_list->gobj(), row.gobj(), 1, 0, -1);
-    row = *opt_list->append();
-    gtk_list_store_set (opt_list->gobj(), row.gobj(), 0, "lights and cameras", -1);
-    gtk_list_store_set (opt_list->gobj(), row.gobj(), 1, 0, -1);
+    for (auto l : vopts) {
+        row = *opt_list->append();
+        gtk_list_store_set (opt_list->gobj(), row.gobj(), 0, l.c_str(), -1);
+        gtk_list_store_set (opt_list->gobj(), row.gobj(), 1, 0, -1);
+    }
 }
 
-void VRGuiBits::update() {
+void VRGuiBits::update() { // scene changed
     VRScene* scene = VRSceneManager::getCurrent();
     setLabel("label24", "Project: None");
     if (scene == 0) return;
@@ -312,6 +327,8 @@ void VRGuiBits::update() {
     // update setup and project label
     cout << " now running: " << scene->getName() << endl;
     setLabel("label24", "Project: " + scene->getName());
+
+    updateVisualLayer();
 }
 
 OSG_END_NAMESPACE;

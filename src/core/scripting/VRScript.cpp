@@ -368,7 +368,7 @@ void VRScript::load(xmlpp::Element* e) {
             t->loadName(el);
             trigs[t->getName()] = t;
 
-            if (t->trigger == "on_scene_load") {
+            if (t->trigger == "on_scene_load" and active) {
                 VRScene* scene = VRSceneManager::getCurrent();
                 scene->queueJob(cbfkt_sys);
             }

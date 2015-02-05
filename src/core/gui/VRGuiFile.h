@@ -3,22 +3,26 @@
 
 #include <string>
 #include <sigc++/functors/slot.h>
+#include <gtkmm/filechooser.h>
 
-namespace Gtk { class FileChooserDialog; }
+namespace Gtk { class FileChooserDialog; class Table; }
 using namespace std;
 
 class VRGuiFile {
     private:
         static Gtk::FileChooserDialog* dialog;
+        static Gtk::Table* addon;
         typedef sigc::slot<void> sig;
         static sig sigApply;
         static sig sigClose;
+        static sig sigSelect;
         static void init();
 
     public:
-        static void open(string mode, string title);
+        static void open(string button, Gtk::FileChooserAction action, string title);
         static void close();
         static void apply();
+        static void select();
         static string getPath();
         static string getRelativePath_toScene();
         static string getRelativePath_toWorkdir();
@@ -28,7 +32,8 @@ class VRGuiFile {
         static void addFilter(string name, string pattern);
         static void clearFilter();
 
-        static void setCallbacks(sig sa = sig(), sig sc = sig());
+        static void setCallbacks(sig sa = sig(), sig sc = sig(), sig ss = sig());
+        static void setWidget(Gtk::Table* table);
 };
 
 #endif // VRGUIFILE_H_INCLUDED
