@@ -47,6 +47,7 @@ VRGuiVectorEntry posEntry;
 VRGuiVectorEntry atEntry;
 VRGuiVectorEntry dirEntry;
 VRGuiVectorEntry upEntry;
+VRGuiVectorEntry scaleEntry;
 VRGuiVectorEntry ctEntry;
 VRGuiVectorEntry lodCEntry;
 
@@ -93,6 +94,7 @@ void setTransform(VRTransform* e) {
     Vec3f a = e->getAt();
     Vec3f u = e->getUp();
     Vec3f d = e->getDir();
+    Vec3f s = e->getScale();
 
     Vec3f tc = e->getTConstraint();
     Vec3i rc = e->getRConstraint();
@@ -101,14 +103,13 @@ void setTransform(VRTransform* e) {
     atEntry.set(a);
     dirEntry.set(d);
     upEntry.set(u);
+    scaleEntry.set(s);
     ctEntry.set(tc);
 
     atEntry.setFontColor(Vec3f(0, 0, 0));
     dirEntry.setFontColor(Vec3f(0, 0, 0));
     if (e->get_orientation_mode())  atEntry.setFontColor(Vec3f(0.6, 0.6, 0.6));
     else                            dirEntry.setFontColor(Vec3f(0.6, 0.6, 0.6));
-
-    setTextEntry("entry18", toString(e->getScale()[0]));
 
     bool doTc = e->hasTConstraint();
     bool doRc = e->hasRConstraint();
@@ -513,12 +514,11 @@ void on_change_lod_center(Vec3f v) {
     updateObjectForms();
 }
 
-void on_scale_changed(GtkEntry* e, gpointer data) {
-    if (!trigger_cbs) return;
+void on_scale_changed(Vec3f v) {
+    if(!trigger_cbs) return;
     VRTransform* obj = (VRTransform*) getSelected();
-
-    float s = toFloat(gtk_entry_get_text(e));
-    obj->setScale(s);
+    obj->setScale(v);
+    updateObjectForms();
 }
 
 void on_focus_clicked(GtkButton*, gpointer data) {
@@ -1262,10 +1262,10 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     atEntry.init("at_entry", "at", sigc::ptr_fun(on_change_at));
     dirEntry.init("dir_entry", "dir", sigc::ptr_fun(on_change_dir));
     upEntry.init("up_entry", "up", sigc::ptr_fun(on_change_up));
+    scaleEntry.init("scale_entry", "scale", sigc::ptr_fun(on_scale_changed));
     lodCEntry.init("lod_center", "center", sigc::ptr_fun(on_change_lod_center));
     ctEntry.init("ct_entry", "", sigc::ptr_fun(on_edit_T_constraint));
 
-    setEntryCallback("entry18", on_scale_changed);
     setEntryCallback("entry59", sigc::mem_fun(*this, &VRGuiScene::on_mass_changed) );
     setEntryCallback("entry60", sigc::mem_fun(*this, &VRGuiScene::on_cam_aspect_changed) );
     setEntryCallback("entry61", sigc::mem_fun(*this, &VRGuiScene::on_cam_fov_changed) );
