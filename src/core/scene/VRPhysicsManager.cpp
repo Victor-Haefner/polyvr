@@ -106,11 +106,27 @@ void VRPhysicsManager::updatePhysics() {
         // 0 : box
         // 21 : concave
 
-        if (stype == 0) {
-            //btBoxShape* bshape = (btBoxShape*)shape;
+        if (stype == 8) { // sphere
+            btSphereShape* sshape = (btSphereShape*)shape;
+            btScalar radius = sshape->getRadius();
+            stringstream params;
+            params << radius*1.01 << " 2";
+            geo->setPrimitive("Sphere", params.str());
         }
 
-        if (stype == 4) {
+        if (stype == 0) { // box
+            btBoxShape* bshape = (btBoxShape*)shape;
+            btVector4 plane;
+            Vec3f dim;
+            bshape->getPlaneEquation(plane, 0); dim[0] = 2*(abs(plane[3]) + shape->getMargin());
+            bshape->getPlaneEquation(plane, 2); dim[1] = 2*(abs(plane[3]) + shape->getMargin());
+            bshape->getPlaneEquation(plane, 4); dim[2] = 2*(abs(plane[3]) + shape->getMargin());
+            stringstream params;
+            params << dim[0]*1.01 << " " << dim[1]*1.01 << " " << dim[2]*1.01 << " 1 1 1";
+            geo->setPrimitive("Box", params.str());
+        }
+
+        if (stype == 4) { // convex
             btConvexHullShape* cshape = (btConvexHullShape*)shape;
             btShapeHull hull(cshape);
             hull.buildHull(cshape->getMargin());
@@ -136,14 +152,6 @@ void VRPhysicsManager::updatePhysics() {
             geo->setPositions(pos);
             geo->setNormals(norms);
             geo->setIndices(inds);
-        }
-
-        if (stype == 8) { // sphere
-            btVector3 center;
-            btScalar radius;
-            shape->getBoundingSphere(center, radius);
-            stringstream params("Sphere "); params << radius << " 1";
-            geo->setPrimitive(params.str());
         }
 
         geo->setMaterial(phys_mat);

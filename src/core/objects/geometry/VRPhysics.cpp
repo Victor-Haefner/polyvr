@@ -262,8 +262,8 @@ btCollisionShape* VRPhysics::getBoxShape() {
         }
     }
 
-    //cout << "\nConstruct Box shape for " << vr_obj->getName() << ": " << 2*x << " " << 2*y << " " << 2*z << endl;
-    return new btBoxShape(btVector3(2*x,2*y,2*z));
+    //cout << "create BoxShape " << x << " " << y << " " << z << " " << scale << endl;
+    return new btBoxShape(btVector3(x,y,z));
 }
 
 btCollisionShape* VRPhysics::getSphereShape() {

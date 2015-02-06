@@ -165,8 +165,6 @@ void setGeometry(VRGeometry* g) {
     setTextEntry("entry36", "");
     setTextEntry("entry37", "");
 
-    cout << " geo params " << g->getReference().type << " " << g->getReference().parameter << endl;
-
     switch (g->getReference().type) {
         case VRGeometry::FILE:
             params >> file;
