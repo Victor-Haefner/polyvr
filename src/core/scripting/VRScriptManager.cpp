@@ -88,6 +88,26 @@ void VRScriptManager::remScript(string name) {
     scripts.erase(name);
 }
 
+vector<VRScript*> VRScriptManager::searchScript(string s, VRScript* sc) {
+    vector<VRScript*> res;
+    VRScript::Search search;
+
+    for (auto sc : scripts) sc.second->find(""); // clear old search results
+
+    if (sc) {
+        search = sc->find(s);
+        if (search.N) res.push_back(sc);
+        return res;
+    }
+
+    for (auto sc : scripts) {
+        search = sc.second->find(s);
+        if (search.N) res.push_back(sc.second);
+    }
+
+    return res;
+}
+
 void VRScriptManager::update() {
     for (auto s : scripts) updateScript(s.first, s.second->getCore());
 }

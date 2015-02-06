@@ -1227,12 +1227,6 @@ cave allocated</property>
       <column type="gchararray"/>
     </columns>
   </object>
-  <object class="GtkListStore" id="phys_shapes">
-    <columns>
-      <!-- column-name shapes -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
   <object class="GtkListStore" id="prim_list">
     <columns>
       <!-- column-name prims -->
@@ -1244,21 +1238,6 @@ cave allocated</property>
       <!-- column-name param -->
       <column type="gchararray"/>
       <!-- column-name value -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
-  <object class="GtkTextBuffer" id="pydoc"/>
-  <object class="GtkTreeStore" id="scenegraph">
-    <columns>
-      <!-- column-name Object -->
-      <column type="gchararray"/>
-      <!-- column-name Type -->
-      <column type="gchararray"/>
-      <!-- column-name obj -->
-      <column type="gchararray"/>
-      <!-- column-name foreground -->
-      <column type="gchararray"/>
-      <!-- column-name background -->
       <column type="gchararray"/>
     </columns>
   </object>
@@ -1275,6 +1254,31 @@ cave allocated</property>
       <!-- column-name fg_text -->
       <column type="gchararray"/>
       <!-- column-name bg_text -->
+      <column type="gchararray"/>
+      <!-- column-name imgID -->
+      <column type="gchararray"/>
+      <!-- column-name foundN -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+  <object class="GtkListStore" id="phys_shapes">
+    <columns>
+      <!-- column-name shapes -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+  <object class="GtkTextBuffer" id="pydoc"/>
+  <object class="GtkTreeStore" id="scenegraph">
+    <columns>
+      <!-- column-name Object -->
+      <column type="gchararray"/>
+      <!-- column-name Type -->
+      <column type="gchararray"/>
+      <!-- column-name obj -->
+      <column type="gchararray"/>
+      <!-- column-name foreground -->
+      <column type="gchararray"/>
+      <!-- column-name background -->
       <column type="gchararray"/>
     </columns>
   </object>
@@ -7597,6 +7601,7 @@ to add distances</property>
                                     <property name="search_column">0</property>
                                     <child>
                                       <object class="GtkTreeViewColumn" id="treeviewcolumn14">
+                                        <property name="sizing">autosize</property>
                                         <property name="title" translatable="yes">Script</property>
                                         <child>
                                           <object class="GtkCellRendererText" id="cellrenderertext13">
@@ -7618,6 +7623,18 @@ to add distances</property>
                                             <attribute name="text">3</attribute>
                                           </attributes>
                                         </child>
+                                        <child>
+                                          <object class="GtkCellRendererPixbuf" id="cellrendererpixbuf2"/>
+                                          <attributes>
+                                            <attribute name="stock-id">6</attribute>
+                                          </attributes>
+                                        </child>
+                                        <child>
+                                          <object class="GtkCellRendererText" id="cellrenderertext47"/>
+                                          <attributes>
+                                            <attribute name="text">7</attribute>
+                                          </attributes>
+                                        </child>
                                       </object>
                                     </child>
                                   </object>
@@ -7634,7 +7651,7 @@ to add distances</property>
                           <packing>
                             <property name="top_attach">1</property>
                             <property name="bottom_attach">2</property>
-                            <property name="x_options">GTK_FILL</property>
+                            <property name="x_options">GTK_SHRINK | GTK_FILL</property>
                             <property name="x_padding">2</property>
                             <property name="y_padding">3</property>
                           </packing>

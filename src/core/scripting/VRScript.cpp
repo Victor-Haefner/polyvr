@@ -211,6 +211,38 @@ void VRScript::changeArgType(string name, string _new) {
     args[name]->val = "0";
 }
 
+VRScript::Search VRScript::getSearch() { return search; }
+VRScript::Search VRScript::find(string s) {
+    search = Search();
+    if (s == "") return search;
+
+    search.search = s;
+    map<int, bool> res;
+
+    int pos = core.find(s, 0);
+    while(pos != string::npos) {
+        res[pos] = false;
+        pos = core.find(s, pos+1);
+    }
+    pos = core.find("\n", 0);
+    while(pos != string::npos) {
+        res[pos] = true;
+        pos = core.find("\n", pos+1);
+    }
+
+    int l = getHeadSize()+1;
+    int lpo = 0;
+    for (auto r : res) {
+        if (r.second) { l++; lpo = r.first; continue; } // new line
+        if (search.result.count(l) == 0) search.result[l] = vector<int>();
+        search.result[l].push_back(r.first - lpo);
+    }
+
+    search.N = search.result.size();
+
+    return search;
+}
+
 map<string, VRScript::arg*> VRScript::getArguments() { return args; }
 
 void VRScript::setName(string n) { clean(); VRName::setName(n); update(); }
