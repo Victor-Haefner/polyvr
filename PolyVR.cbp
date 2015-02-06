@@ -487,6 +487,8 @@
 		<Unit filename="src/core/scripting/VRPyGeometry.h" />
 		<Unit filename="src/core/scripting/VRPyHaptic.cpp" />
 		<Unit filename="src/core/scripting/VRPyHaptic.h" />
+		<Unit filename="src/core/scripting/VRPyLight.cpp" />
+		<Unit filename="src/core/scripting/VRPyLight.h" />
 		<Unit filename="src/core/scripting/VRPyLod.cpp" />
 		<Unit filename="src/core/scripting/VRPyLod.h" />
 		<Unit filename="src/core/scripting/VRPyMaterial.cpp" />

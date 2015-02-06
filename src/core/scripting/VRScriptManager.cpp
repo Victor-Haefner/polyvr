@@ -17,6 +17,7 @@
 #include "VRPyHaptic.h"
 #include "VRPyBaseT.h"
 #include "VRPyMaterial.h"
+#include "VRPyLight.h"
 #include "VRPyLod.h"
 #include "VRPyRecorder.h"
 #include "VRPySnappingEngine.h"
@@ -192,6 +193,7 @@ void VRScriptManager::initPyModules() {
     VRPyTransform::registerModule("Transform", pModVR, VRPyObject::typeRef);
     VRPyGeometry::registerModule("Geometry", pModVR, VRPyTransform::typeRef);
     VRPyMaterial::registerModule("Material", pModVR, VRPyObject::typeRef);
+    VRPyLight::registerModule("Light", pModVR, VRPyObject::typeRef);
     VRPyLod::registerModule("Lod", pModVR, VRPyObject::typeRef);
     VRPySprite::registerModule("Sprite", pModVR, VRPyGeometry::typeRef);
     VRPySound::registerModule("Sound", pModVR);

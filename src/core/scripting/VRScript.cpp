@@ -5,6 +5,8 @@
 #include "VRPyObject.h"
 #include "VRPyGeometry.h"
 #include "VRPyDevice.h"
+#include "VRPyLight.h"
+#include "VRPyLod.h"
 #include "core/setup/devices/VRMobile.h"
 #include "VRPySocket.h"
 #include "VRPyHaptic.h"
@@ -25,7 +27,7 @@ void updateArgPtr(VRScript::arg* a) {
     VRScene* scene = VRSceneManager::getCurrent();
     VRSetup* setup = VRSetupManager::getCurrent();
 
-    if (t == "VRPyObjectType" or t == "VRPyGeometryType" or t == "VRPyTransformType") {
+    if (t == "VRPyObjectType" or t == "VRPyGeometryType" or t == "VRPyTransformType" or t == "VRPyLightType" or t == "VRPyLodType") {
         a->ptr = (void*)scene->get(a->val);
         return;
     }
@@ -180,6 +182,8 @@ PyObject* VRScript::getPyObj(arg* a) {
     else if (a->type == "VRPyObjectType") return VRPyObject::fromPtr((VRObject*)a->ptr);
     else if (a->type == "VRPyTransformType") return VRPyTransform::fromPtr((VRTransform*)a->ptr);
     else if (a->type == "VRPyGeometryType") return VRPyGeometry::fromPtr((VRGeometry*)a->ptr);
+    else if (a->type == "VRPyLightType") return VRPyLight::fromPtr((VRLight*)a->ptr);
+    else if (a->type == "VRPyLodType") return VRPyLod::fromPtr((VRLod*)a->ptr);
     else if (a->type == "VRPyDeviceType") return VRPyDevice::fromPtr((VRDevice*)a->ptr);
     else if (a->type == "VRPyHapticType") return VRPyHaptic::fromPtr((VRHaptic*)a->ptr);
     else if (a->type == "VRPySocketType") return VRPySocket::fromPtr((VRSocket*)a->ptr);
