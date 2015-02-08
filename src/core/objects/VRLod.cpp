@@ -30,6 +30,7 @@ VRLod::~VRLod() { lod=0;}
 void VRLod::setCenter(Vec3f c) { center = c; update(); }
 void VRLod::setDecimate(bool b, int N) { decimate = b; decimateNumber = N; update(); }
 void VRLod::setDistance(uint i, float dist) { distances[i] = dist; update(); }
+void VRLod::addDistance(float dist) { setDistance(distances.size(), dist); }
 Vec3f VRLod::getCenter() { return center; }
 bool VRLod::getDecimate() { return decimate; }
 int VRLod::getDecimateNumber() { return decimateNumber; }
@@ -112,5 +113,8 @@ void VRLod::loadContent(xmlpp::Element* e) {
     update();
 }
 
+void VRLod::addEmpty() {
+    addChild(new VRObject("lod_empty"));
+}
 
 OSG_END_NAMESPACE;
