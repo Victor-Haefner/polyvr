@@ -301,19 +301,11 @@ VRObject* VRFactory::setupLod(vector<string> paths) {
         for (auto g : geos) {
             prog.update(1);
 
-            Vec3f v1, v2, p, d;
-            g->getBoundingBox(v1, v2);
-            p = (v1+v2)*0.5;
-
-            d = v2-v1;
-            float r = 0; // get the size of the object to pass it to the right grid level
-            for (int i=0; i<3; i++) r = max(r,d[i]);
-
             VRLod* lod = new VRLod("factory_lod");
-            lod->setCenter(p);
+            lod->setCenter( g->getBBCenter() );
             lod->addChild(g);
             lod->addChild(new VRObject("factory_empty"));
-            lod->setDistance(0, r*15);
+            lod->setDistance(0, g->getBBMax()*15);
             root->addChild(lod);
         }
     }
