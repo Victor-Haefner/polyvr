@@ -31,6 +31,8 @@ struct Geo {
     VRGeometry* geo = 0;
 
     Vec3f vmin, vmax;
+    float r = 0;
+    bool vmm_changed = false;
 
     //void init(vector<VRGeometry*>& geos, VRMaterial* mat) {
     void init(vector<Geo>& geos, VRMaterial* mat) {
@@ -54,10 +56,16 @@ struct Geo {
         vmax = Vec3f(-1e9, -1e9, -1e9);
 
         Np = Nn = 0;
+        r = 0;
     }
 
     bool inBB(Pnt3f& v) {
-        for (int i=0; i<3; i++) if (v[i] > vmax[i] or v[i] < vmin[i]) return false;
+        if (vmm_changed) {
+            Vec3f d = (vmax - vmin);
+            for (int i=0; i<3; i++) r = max(r, d[i]);
+        }
+
+        for (int i=0; i<3; i++) if (v[i] > vmax[i]+r or v[i] < vmin[i]-r) return false;
         return true;
     }
 
@@ -66,6 +74,7 @@ struct Geo {
             vmin[i] = min(vmin[i], v[i]);
             vmax[i] = max(vmax[i], v[i]);
         }
+        vmm_changed = true;
     }
 
     void updateN() {
@@ -94,13 +103,13 @@ VRObject* VRFactory::loadVRML(string path) { // wrl filepath
 
     int state = 0;
     map<int, string> states;
-    states[0] = "Transform"; // 0
-    states[1] = "diffuseColor"; // 6
-    states[2] = "coord"; // 21 +2
-    states[3] = "normal"; // x +2
-    states[4] = "coordIndex"; // x +1
-    states[5] = "colorIndex"; // x +1
-    states[6] = "normalIndex"; // x +1
+    states[0] = "Transform "; // 0
+    states[1] = "diffuseColor "; // 6
+    states[2] = "coord "; // 21 +2
+    states[3] = "normal "; // x +2
+    states[4] = "coordIndex "; // x +1
+    states[5] = "colorIndex "; // x +1
+    states[6] = "normalIndex "; // x +1
 
     Vec3f color;
     Vec3f last_col(-1,-1,-1);
@@ -120,34 +129,36 @@ VRObject* VRFactory::loadVRML(string path) { // wrl filepath
     while ( getline(file, line) ) {
         prog.update( line.size() );
 
-        string delim = states[state];
-        if ( line.compare(0, delim.size(), delim) == 0 ) {
-            switch (state) {
-                case 0: break;
-                case 1:
-                    new_obj = true;
-                    if (line.size() > 12) color = toVec3f( line.substr(12) );
-                    if (mats.count(color) == 0) {
-                        mats[color] = new VRMaterial("fmat");
-                        mats[color]->setDiffuse(color);
-                    }
+        for (auto d : states) {
+            //if ( line[d.second.size()-1] != ' ') continue; // optimization
+            if ( line.compare(0, d.second.size(), d.second) == 0) {
+                if (state != d.first) cout << line << endl;
+                switch (d.first) {
+                    case 0: break;
+                    case 1:
+                        new_obj = true;
+                        if (line.size() > 12) color = toVec3f( line.substr(12) );
+                        if (mats.count(color) == 0) {
+                            mats[color] = new VRMaterial("fmat");
+                            mats[color]->setDiffuse(color);
+                        }
 
-                    if (color != last_col) {
-                        new_color = true;
-                        last_col = color;
-                    }
-                    break;
-                case 2:
-                    geo.updateN();
-                    break;
-                case 3: break;
-                case 4: break;
-                case 5: break;
+                        if (color != last_col) {
+                            new_color = true;
+                            last_col = color;
+                        }
+                        break;
+                    case 2:
+                        geo.updateN();
+                        break;
+                    case 3: break;
+                    case 4: break;
+                    case 5: break;
+                }
+                state = d.first+1;
+                if (state == 7) state = 0;
+                break;
             }
-
-            state++;
-            if (state == 7) state = 0;
-            continue;
         }
 
         if (line[0] != ' ') continue;
@@ -157,11 +168,11 @@ VRObject* VRFactory::loadVRML(string path) { // wrl filepath
         switch (state) {
             case 3:
                 while(ss >> v[0] && ss >> v[1] && ss >> v[2] && ss.get()) {
-                    //if (!new_color and new_obj) new_obj = !geo.inBB(v); // strange artifacts!!
+                    if (!new_color and new_obj) new_obj = !geo.inBB(v); // strange artifacts!!
                     geo.updateBB(v);
 
-                    if (new_color) {
-                    //if (new_obj) {
+                    //if (new_color) {
+                    if (new_obj) {
                         new_obj = false;
                         new_color = false;
                         geo.init(geos, mats[color]);
@@ -189,8 +200,8 @@ VRObject* VRFactory::loadVRML(string path) { // wrl filepath
     res->addAttachment("dynamicaly_generated", 0);
 
     for (auto g : geos) {
-        Vec3f d = g.vmax - g.vmin;
-        if (d.length() < 0.1) continue;
+        //Vec3f d = g.vmax - g.vmin;
+        //if (d.length() < 0.1) continue; // skip very small objects
 
         res->addChild(g.geo);
 
