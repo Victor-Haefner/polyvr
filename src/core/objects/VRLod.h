@@ -34,7 +34,10 @@ class VRLod : public VRObject {
         void setCenter(Vec3f c);
         Vec3f getCenter();
         void setDistance(uint i, float dist);
+        void addDistance(float dist);
         vector<float> getDistances();
+
+        void addEmpty();
 
         void setDecimate(bool b, int N);
         bool getDecimate();

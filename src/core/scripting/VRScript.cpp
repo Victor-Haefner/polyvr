@@ -5,6 +5,8 @@
 #include "VRPyObject.h"
 #include "VRPyGeometry.h"
 #include "VRPyDevice.h"
+#include "VRPyLight.h"
+#include "VRPyLod.h"
 #include "core/setup/devices/VRMobile.h"
 #include "VRPySocket.h"
 #include "VRPyHaptic.h"
@@ -25,7 +27,7 @@ void updateArgPtr(VRScript::arg* a) {
     VRScene* scene = VRSceneManager::getCurrent();
     VRSetup* setup = VRSetupManager::getCurrent();
 
-    if (t == "VRPyObjectType" or t == "VRPyGeometryType" or t == "VRPyTransformType") {
+    if (t == "VRPyObjectType" or t == "VRPyGeometryType" or t == "VRPyTransformType" or t == "VRPyLightType" or t == "VRPyLodType") {
         a->ptr = (void*)scene->get(a->val);
         return;
     }
@@ -180,6 +182,8 @@ PyObject* VRScript::getPyObj(arg* a) {
     else if (a->type == "VRPyObjectType") return VRPyObject::fromPtr((VRObject*)a->ptr);
     else if (a->type == "VRPyTransformType") return VRPyTransform::fromPtr((VRTransform*)a->ptr);
     else if (a->type == "VRPyGeometryType") return VRPyGeometry::fromPtr((VRGeometry*)a->ptr);
+    else if (a->type == "VRPyLightType") return VRPyLight::fromPtr((VRLight*)a->ptr);
+    else if (a->type == "VRPyLodType") return VRPyLod::fromPtr((VRLod*)a->ptr);
     else if (a->type == "VRPyDeviceType") return VRPyDevice::fromPtr((VRDevice*)a->ptr);
     else if (a->type == "VRPyHapticType") return VRPyHaptic::fromPtr((VRHaptic*)a->ptr);
     else if (a->type == "VRPySocketType") return VRPySocket::fromPtr((VRSocket*)a->ptr);
@@ -205,6 +209,38 @@ void VRScript::changeArgType(string name, string _new) {
     if (args.count(name) == 0) return;
     args[name]->type = _new;
     args[name]->val = "0";
+}
+
+VRScript::Search VRScript::getSearch() { return search; }
+VRScript::Search VRScript::find(string s) {
+    search = Search();
+    if (s == "") return search;
+
+    search.search = s;
+    map<int, bool> res;
+
+    int pos = core.find(s, 0);
+    while(pos != string::npos) {
+        res[pos] = false;
+        pos = core.find(s, pos+1);
+    }
+    pos = core.find("\n", 0);
+    while(pos != string::npos) {
+        res[pos] = true;
+        pos = core.find("\n", pos+1);
+    }
+
+    int l = getHeadSize()+1;
+    int lpo = 0;
+    for (auto r : res) {
+        if (r.second) { l++; lpo = r.first; continue; } // new line
+        if (search.result.count(l) == 0) search.result[l] = vector<int>();
+        search.result[l].push_back(r.first - lpo);
+    }
+
+    search.N = search.result.size();
+
+    return search;
 }
 
 map<string, VRScript::arg*> VRScript::getArguments() { return args; }

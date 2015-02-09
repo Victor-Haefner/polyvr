@@ -21,6 +21,7 @@ class VRGuiGeneral {
         // rendering signals
         void toggleFrustumCulling();
         void toggleOcclusionCulling();
+        void toggleTwoSided();
 
         // other
         void dumpOSG();

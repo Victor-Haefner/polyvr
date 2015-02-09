@@ -52,8 +52,7 @@ class VRScriptManager : public VRStorage, public VRPyBase {
         VRScript* getScript(string name);
         map<string, VRScript*> getScripts();
 
-        //void saveScripts(xmlpp::Element* e);
-        //void loadScripts(xmlpp::Element* e);
+        vector<VRScript*> searchScript(string s, VRScript* sc = 0);
 
         vector<string> getPyVRTypes();
         vector<string> getPyVRMethods(string type);

@@ -158,6 +158,9 @@ class VRObject : public VRName {
 
         /** Returns the Boundingbox of the OSG Node */
         void getBoundingBox(Vec3f& v1, Vec3f& v2);
+        Vec3f getBBCenter();
+        Vec3f getBBExtent();
+        float getBBMax();
 
         void flattenHiarchy();
 

@@ -17,6 +17,7 @@
 #include "VRPyHaptic.h"
 #include "VRPyBaseT.h"
 #include "VRPyMaterial.h"
+#include "VRPyLight.h"
 #include "VRPyLod.h"
 #include "VRPyRecorder.h"
 #include "VRPySnappingEngine.h"
@@ -85,6 +86,26 @@ void VRScriptManager::remScript(string name) {
     scripts[name]->clean();
     delete scripts[name];
     scripts.erase(name);
+}
+
+vector<VRScript*> VRScriptManager::searchScript(string s, VRScript* sc) {
+    vector<VRScript*> res;
+    VRScript::Search search;
+
+    for (auto sc : scripts) sc.second->find(""); // clear old search results
+
+    if (sc) {
+        search = sc->find(s);
+        if (search.N) res.push_back(sc);
+        return res;
+    }
+
+    for (auto sc : scripts) {
+        search = sc.second->find(s);
+        if (search.N) res.push_back(sc.second);
+    }
+
+    return res;
 }
 
 void VRScriptManager::update() {
@@ -192,6 +213,7 @@ void VRScriptManager::initPyModules() {
     VRPyTransform::registerModule("Transform", pModVR, VRPyObject::typeRef);
     VRPyGeometry::registerModule("Geometry", pModVR, VRPyTransform::typeRef);
     VRPyMaterial::registerModule("Material", pModVR, VRPyObject::typeRef);
+    VRPyLight::registerModule("Light", pModVR, VRPyObject::typeRef);
     VRPyLod::registerModule("Lod", pModVR, VRPyObject::typeRef);
     VRPySprite::registerModule("Sprite", pModVR, VRPyGeometry::typeRef);
     VRPySound::registerModule("Sound", pModVR);

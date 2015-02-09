@@ -297,6 +297,30 @@ void VRObject::getBoundingBox(Vec3f& v1, Vec3f& v2) {
     v2 = p2.subZero();
 }
 
+Vec3f VRObject::getBBCenter() {
+    Vec3f v1, v2;
+    getBoundingBox(v1, v2);
+
+    return (v1+v2)*0.5;
+}
+
+Vec3f VRObject::getBBExtent() {
+    Vec3f v1, v2;
+    getBoundingBox(v1, v2);
+
+    return v2-v1;
+}
+
+float VRObject::getBBMax() {
+    Vec3f v1, v2;
+    getBoundingBox(v1, v2);
+    v1 = v2-v1;
+    float r = 0;
+    for (int i=0; i<3; i++) r = max(r,v1[i]);
+
+    return r;
+}
+
 void VRObject::flattenHiarchy() {
     map<VRTransform*, Matrix> geos;
     for(auto g : getChildren(true, "Geometry") ) {
