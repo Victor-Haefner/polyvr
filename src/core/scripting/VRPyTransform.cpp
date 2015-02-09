@@ -59,6 +59,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"getWorldFrom", (PyCFunction)VRPyTransform::getWFrom, METH_NOARGS, "Return the object's world position" },
     {"getFrom", (PyCFunction)VRPyTransform::getFrom, METH_NOARGS, "Return the object's from vector" },
     {"getAt", (PyCFunction)VRPyTransform::getAt, METH_NOARGS, "Return the object's at vector" },
+    {"getWorldDir", (PyCFunction)VRPyTransform::getWorldDir, METH_NOARGS, "Return the object's dir vector" },
     {"getDir", (PyCFunction)VRPyTransform::getDir, METH_NOARGS, "Return the object's dir vector" },
     {"getUp", (PyCFunction)VRPyTransform::getUp, METH_NOARGS, "Return the object's up vector" },
     {"getScale", (PyCFunction)VRPyTransform::getScale, METH_NOARGS, "Return the object's scale vector" },
@@ -168,6 +169,11 @@ PyObject* VRPyTransform::getAt(VRPyTransform* self) {
 PyObject* VRPyTransform::getDir(VRPyTransform* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::getDir, Object is invalid"); return NULL; }
     return toPyTuple(self->obj->getDir());
+}
+
+PyObject* VRPyTransform::getWorldDir(VRPyTransform* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::getWorldDir, Object is invalid"); return NULL; }
+    return toPyTuple(self->obj->getWorldDirection());
 }
 
 PyObject* VRPyTransform::getUp(VRPyTransform* self) {

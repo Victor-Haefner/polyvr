@@ -389,26 +389,22 @@ void VRNavigator::hyd_walk(VRDevice* dev) {
 
     VRTransform* target = dev->getTarget();
     VRTransform* flystick = dev->getBeacon();
-    cout << "hyd_walk " << target << " " << flystick << endl;
     if (target == 0 or flystick == 0) return;
-    cout << "B\n";
 
     Vec3f dir = flystick->getWorldDirection();
     dir.normalize();
 
-    float rspeed = 0.7;
-    float tspeed = 1.5;
+    float rspeed = 0.1;
+    float tspeed = 0.1;
 
     float dt = 60.0/ max(1u, VRGlobals::get()->FRAME_RATE);
     switch(key) {
         case 20:
         case 23:
-            cout << "C\n";
             target->rotate(-dt*d*d_abs*0.1*rspeed);
             break;
         case 21:
         case 24:
-            cout << "D\n";
             target->translate(-dir*dt*d*d_abs*0.2*tspeed);
             break;
     }
@@ -422,10 +418,10 @@ void VRNavigator::initHydraFly(VRTransform* target, VRDevice* dev) {
     VRDevCb* cb = new VRDevCb( "hyd_walk", boost::bind(&VRNavigator::hyd_walk, this, _1) );
     storeNavigationCallback(cb);
 
-    VRNavBinding b1(cb, 20, 0, false);
-    VRNavBinding b2(cb, 21, 0, false);
-    VRNavBinding b3(cb, 23, 0, false);
-    VRNavBinding b4(cb, 24, 0, false);
+    VRNavBinding b1(cb, 20, 0, true);
+    VRNavBinding b2(cb, 21, 0, true);
+    VRNavBinding b3(cb, 23, 0, true);
+    VRNavBinding b4(cb, 24, 0, true);
     preset->addKeyBinding(b1);
     preset->addKeyBinding(b2);
     preset->addKeyBinding(b3);

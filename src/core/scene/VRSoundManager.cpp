@@ -51,6 +51,20 @@ struct VRSound {
     }
 };
 
+struct VRSoundJob {
+    string path;
+    bool looping;
+
+    VRSoundJob(string filename, bool loop) {
+        path = filename;
+        looping = loop;
+    }
+
+    /*~VRSoundJob() {
+        delete path;
+    }*/
+};
+
 struct VRSoundContext {
     ALCdevice* device = 0;
     ALCcontext* context = 0;
@@ -85,15 +99,15 @@ void VRSoundManager::soundThread() {
     context = new VRSoundContext();
 
     while (t_running) {
-        vector<string> sounds;
+        vector<VRSoundJob*> sounds;
         {
             boost::mutex::scoped_lock lock(t_mutex);
-            sounds = sound_jobs;
-            sound_jobs.clear();
+            sounds = soundJobs;
+            soundJobs.clear();
         }
 
-        for (auto path : sounds) {
-            VRSound* sound = getSound(path);
+        for (auto job : sounds) {
+            VRSound* sound = getSound(job);
             play(sound);
         }
 
@@ -125,7 +139,7 @@ void VRSoundManager::clearSoundMap() {
 
 void VRSoundManager::playSound(string filename, bool loop) {
     boost::mutex::scoped_lock lock(t_mutex);
-    sound_jobs.push_back(filename);
+    soundJobs.push_back(new VRSoundJob(filename, loop));
 }
 
 void VRSoundManager::playSound(string filename) {
@@ -202,14 +216,13 @@ void VRSoundManager::play(VRSound* sound) {
     if (packet.data) av_free_packet(&packet);
 }
 
-VRSound* VRSoundManager::getSound(string filename) {
-    cout << "getSound " << filename << endl;
+VRSound* VRSoundManager::getSound(VRSoundJob* soundJob) {
+    cout << "getSound " << soundJob->path << endl;
 
-    bool loop = false;
-    VRSound* sound = new VRSound(loop);
-    sound->path = filename;
+    VRSound* sound = new VRSound(soundJob->looping);
+    sound->path = soundJob->path;
 
-    if (avformat_open_input(&sound->context, filename.c_str(), NULL, NULL) < 0) return 0;
+    if (avformat_open_input(&sound->context, sound->path.c_str(), NULL, NULL) < 0) return 0;
 
     if (avformat_find_stream_info(sound->context, NULL) < 0) return 0;
 
@@ -247,7 +260,7 @@ VRSound* VRSoundManager::getSound(string filename) {
         if (sfmt == AV_SAMPLE_FMT_S16) sound->format = AL_FORMAT_STEREO16;
     }
 
-    sounds[filename] = sound;
+    sounds[sound->path] = sound;
     return sound;
 }
 
@@ -268,7 +281,7 @@ void VRSoundManager::setSoundVolume(float volume) {
 }
 
 void VRSoundManager::setMusicVolume(float volume) {
-    // Just work with Ubuntu
+    // This is just working with Ubuntu!
     if (volume > 1.0) volume = 1.0f;
     else
         if (volume < 0.0) volume = 0.0f;
@@ -297,8 +310,6 @@ void VRSoundManager::stopAllSounds(void) {
         cout << "stopSound " << sound->path << endl;
         sound->interrupt = true;
     }
-
-    //clearSoundMap();
 }
 
 OSG_END_NAMESPACE;
