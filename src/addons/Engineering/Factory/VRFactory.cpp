@@ -228,7 +228,7 @@ class VRLODSpace : public VRObject {
             if (lod_spaces.count(p)) return lod_spaces[p];
             VRLod* l = new VRLod("lod_space");
             l->addChild(new VRObject("lod_entry"));
-            l->addDistance(15*p[3]/scale);
+            l->addDistance(max(15*p[3]/scale, 1.0f));
             l->setCenter( Vec3f(p[0], p[1], p[2])/scale );
             addChild(l);
             lod_spaces[p] = l;
@@ -286,7 +286,7 @@ VRObject* VRFactory::setupLod(vector<string> paths) {
             lod->addChild(g);
             lod->addEmpty();
             lod->setCenter( g->getBBCenter() );
-            lod->setDistance(0, g->getBBMax()*15);
+            lod->setDistance(0, max(g->getBBMax()*15, 1.0f));
             micro_lods.push_back(lod);
         }
     }
