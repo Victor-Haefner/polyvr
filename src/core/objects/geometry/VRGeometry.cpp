@@ -392,7 +392,7 @@ Vec3f VRGeometry::getAverageNormal() {
     return normal;
 }
 
-void VRGeometry::influence(vector<Vec3f> pnts, vector<Vec3f> values, int power, float color_code) {
+void VRGeometry::influence(vector<Vec3f> pnts, vector<Vec3f> values, int power, float color_code, float dl_max) {
     interpolator inp;
     inp.setPoints(pnts);
     inp.setValues(values);
@@ -403,7 +403,7 @@ void VRGeometry::influence(vector<Vec3f> pnts, vector<Vec3f> values, int power, 
             setColors(cols);
             fixColorMapping();
         }
-        inp.evalVec(mesh->getPositions(), power, mesh->getColors(), color_code);
+        inp.evalVec(mesh->getPositions(), power, mesh->getColors(), color_code, dl_max);
     }
     else inp.evalVec(mesh->getPositions(), power);
 }

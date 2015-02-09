@@ -12,6 +12,7 @@ using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 struct VRSound;
+struct VRSoundJob;
 struct VRSoundContext;
 
 class VRSoundManager {
@@ -19,10 +20,10 @@ private:
     VRSoundContext* context = 0;
     VRSound* bgMusic = 0;
     map<string, VRSound*> sounds;
-    vector<string> sound_jobs;
+    vector<VRSoundJob*> soundJobs;
 
     VRSoundManager();
-    VRSound* getSound(string filename);
+    VRSound* getSound(VRSoundJob* soundJob);
     void clearSoundMap(void);
 
     bool t_running = true;

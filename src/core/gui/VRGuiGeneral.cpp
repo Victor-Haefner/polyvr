@@ -27,6 +27,7 @@ VRGuiGeneral::VRGuiGeneral() {
     setCheckButtonCallback("checkbutton30", sigc::mem_fun(*this, &VRGuiGeneral::setMode) );
     setCheckButtonCallback("checkbutton_01", sigc::mem_fun(*this, &VRGuiGeneral::toggleFrustumCulling) );
     setCheckButtonCallback("checkbutton_02", sigc::mem_fun(*this, &VRGuiGeneral::toggleOcclusionCulling) );
+    setCheckButtonCallback("checkbutton_2", sigc::mem_fun(*this, &VRGuiGeneral::toggleTwoSided) );
     setButtonCallback("button22", sigc::mem_fun(*this, &VRGuiGeneral::dumpOSG) );
     setColorChooser("bg_solid", sigc::mem_fun(*this, &VRGuiGeneral::setColor) );
     setEntryCallback("entry42", sigc::mem_fun(*this, &VRGuiGeneral::setPath));
@@ -89,6 +90,15 @@ void VRGuiGeneral::toggleOcclusionCulling() {
     scene->setOcclusionCulling( getCheckButtonState("checkbutton_02") );
 }
 
+void VRGuiGeneral::toggleTwoSided() {
+    if (updating) return;
+
+    VRScene* scene = VRSceneManager::getCurrent();
+    if (scene == 0) return;
+
+    scene->setTwoSided( getCheckButtonState("checkbutton_2") );
+}
+
 void VRGuiGeneral::updateScene() {
     VRScene* scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
@@ -107,6 +117,7 @@ void VRGuiGeneral::updateScene() {
     // rendering
     setCheckButton("checkbutton_01", scene->getFrustumCulling() );
     setCheckButton("checkbutton_02", scene->getOcclusionCulling() );
+    setCheckButton("checkbutton_2", scene->getTwoSided() );
 
 
     updating = false;

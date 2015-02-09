@@ -130,6 +130,13 @@ void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScript* script, bool on
     if(!user_focus) user_focus = ("GtkEntry" == name); // TODO: be more specific
     if(onlyTime and user_focus) return;
 
+    int Nf = script->getSearch().N;
+    string icon, Nfound;
+    if (Nf) {
+        icon = "gtk-find";
+        Nfound = toString(Nf);
+    }
+
     if (onlyTime) gtk_list_store_set (store->gobj(), row.gobj(),
                         3, time.c_str(),
                         4, tfg.c_str(),
@@ -142,6 +149,8 @@ void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScript* script, bool on
                         3, time.c_str(),
                         4, tfg.c_str(),
                         5, tbg.c_str(),
+                        6, icon.c_str(),
+                        7, Nfound.c_str(),
                         -1);
 }
 
@@ -769,52 +778,40 @@ void VRGuiScripts::on_find_diag_find_clicked() {
     bool rep = getCheckButtonState("checkbutton12");
     string search = getTextEntry("entry10");
     hideDialog("find_dialog");
-    if (search == "") return;
 
     VRScript* s = getSelectedScript();
-    map<VRScript*, string > cores;
-    map<VRScript*, map<int, bool> > res;
-
     if (!sa and s == 0) return;
 
-    if (!sa) cores[s] = s->getCore();
-    else {
-        for (auto sc : VRSceneManager::getCurrent()->getScripts() ) {
-            cores[sc.second] = sc.second->getCore();
-        }
-    }
+    VRScene* scene = VRSceneManager::getCurrent();
 
-    for (auto c : cores) {
-        res[c.first] = map<int, bool>();
-        int pos = c.second.find(search, 0);
-        while(pos != string::npos) {
-            res[c.first][pos] = false;
-            pos = c.second.find(search, pos+1);
-        }
-        pos = c.second.find("\n", 0);
-        while(pos != string::npos) {
-            res[c.first][pos] = true;
-            pos = c.second.find("\n", pos+1);
-        }
-    }
+    vector<VRScript*> results;
+    if (!sa) results = scene->searchScript(search, s);
+    else results = scene->searchScript(search);
 
-    stringstream console_output;
-    console_output << "Results for search of '" << search << "'\n";
-    for (auto r : res) {
-        console_output << r.first->getName() << ": line (position)\n";
-        int l = 2; // core starts at line 2
-        int lp = 0;
-        int lpos = 0;
-        for (auto r2 : r.second) {
-            if (r2.second) { l++; lpos = r2.first; continue; }
-            if (lp != l) { console_output << " " << l; lp = l; }
-            console_output << " (" << r2.first - lpos << ")";
-        }
-        console_output << endl;
-    }
-    console_output << endl;
+    // result output
+    stringstream out;
+    out << "Results, line (position), for search of '" << search << "'\n";
+    for (auto r : results) {
+        VRScript::Search res = r->getSearch();
+        out << r->getName() << ":";
 
-    VRGuiBits::write_to_terminal( console_output.str() );
+        for (auto r2 : res.result) {
+            int l = r2.first;
+            out << " " << l << "(";
+            bool first = true;
+            for (auto p : r2.second) {
+                if (!first) out << ", ";
+                first = false;
+                out << p;
+            }
+            out << ")";
+        }
+        out << endl;
+    }
+    out << endl;
+
+    VRGuiBits::write_to_terminal( out.str() );
+    updateList();
 }
 
 void VRGuiScripts::on_toggle_find_replace() {
@@ -941,7 +938,7 @@ VRGuiScripts::VRGuiScripts() {
     setCellRendererCombo("treeviewcolumn30", "ScriptTriggerStates", tcols.state, sigc::mem_fun(*this, &VRGuiScripts::on_trigstate_edited) );
 
     // fill combolists
-    const char *arg_types[] = {"int", "float", "str", "VRPyObjectType", "VRPyTransformType", "VRPyGeometryType", "VRPyDeviceType", "VRPyHapticType", "VRPySocketType"};
+    const char *arg_types[] = {"int", "float", "str", "VRPyObjectType", "VRPyTransformType", "VRPyGeometryType", "VRPyLightType", "VRPyLodType", "VRPyDeviceType", "VRPyHapticType", "VRPySocketType"};
     const char *trigger_types[] = {"none", "on_scene_load", "on_timeout", "on_device", "on_socket"};
     const char *device_types[] = {"mouse", "keyboard", "flystick", "haptic", "mobile", "vrpn_device"}; // TODO: get from a list in devicemanager or something
     const char *trigger_states[] = {"Pressed", "Released"};

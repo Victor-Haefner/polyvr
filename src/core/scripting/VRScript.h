@@ -42,6 +42,12 @@ class VRScript : public VRName {
             trig();
         };
 
+        struct Search {
+            int N = 0;
+            string search;
+            map<int, vector<int> > result;
+        };
+
     private:
         string core;
         string head;
@@ -55,6 +61,7 @@ class VRScript : public VRName {
         map<string, trig*>::iterator t_itr;
         bool active = true;
         float execution_time = -1;
+        Search search;
 
         PyObject* getPyObj(arg* a);
 
@@ -86,6 +93,9 @@ class VRScript : public VRName {
 
         void enable(bool b);
         bool enabled();
+
+        Search find(string s);
+        Search getSearch();
 
         float getExecutionTime();
 

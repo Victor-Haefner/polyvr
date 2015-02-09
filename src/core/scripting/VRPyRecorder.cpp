@@ -50,8 +50,19 @@ PyMethodDef VRPyRecorder::methods[] = {
     {"clear", (PyCFunction)VRPyRecorder::clear, METH_NOARGS, "Clear the captures frames - clear()" },
     {"getRecordingSize", (PyCFunction)VRPyRecorder::getRecordingSize, METH_NOARGS, "Get the number of captured frames - int getRecordingSize()" },
     {"getRecordingLength", (PyCFunction)VRPyRecorder::getRecordingLength, METH_NOARGS, "Get the length in seconds fromt he first to last of the captured frames - float getRecordingLength()" },
+    {"setMaxFrames", (PyCFunction)VRPyRecorder::setMaxFrames, METH_VARARGS, "Set the maximum number of frames" },
+    {"frameLimitReached", (PyCFunction)VRPyRecorder::frameLimitReached, METH_NOARGS, "Check if the frame limit has been reached" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyRecorder::setMaxFrames(VRPyRecorder* self, PyObject* args) {
+    if (self->obj) self->obj->setMaxFrames( parseInt(args) );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyRecorder::frameLimitReached(VRPyRecorder* self) {
+    return PyBool_FromLong( self->obj->frameLimitReached() );
+}
 
 PyObject* VRPyRecorder::getRecordingSize(VRPyRecorder* self) {
     int size = 0;
