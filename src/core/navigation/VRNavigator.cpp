@@ -25,6 +25,8 @@ VRNavBinding::VRNavBinding(VRDevCb* c, int k, int s, bool repeat) {
 
 
 VRNavPreset::VRNavPreset() {
+    setNameSpace("NavPreset");
+    setName("preset");
     dev = 0;
     target = 0;
     active = false;
@@ -80,14 +82,22 @@ void VRNavPreset::addKeyBinding(VRNavBinding b) {
 
 VRNavigator_base::VRNavigator_base () {
     current = 0;
+
+    store("active", &current_name);
+
+    VRNavPreset* np = new VRNavPreset();
+    np->setName("None");
+    addNavigation(np);
 }
 
-void VRNavigator_base::addNavigation(VRNavPreset* ps, string& name) {
-    string tmp = name; //make unique name
-    int i=2;
-    while (presets.count(tmp) == 1) { tmp = name + VRN_toString(i); i++; }
-    name = tmp;
+VRNavigator_base::~VRNavigator_base() {
+    for (auto p : presets) delete p.second;
+    presets.clear();
+}
 
+void VRNavigator_base::addNavigation(VRNavPreset* ps) {
+    string name = ps->getName();
+    if (presets.count(name)) delete presets[name];
     presets[name] = ps;
 }
 
@@ -115,7 +125,22 @@ vector<string> VRNavigator_base::getNavigationNames() { vector<string> res; for(
 map<string, VRNavPreset*> VRNavigator_base::getNavigations() { return presets; }
 
 void VRNavigator_base::storeNavigationCallback(VRDevCb* cb) { library[cb->getName()] = cb; }
+VRDevCb* VRNavigator_base::getNavigationCallback(string s) { if (library.count(s)) return library[s]; return 0; }
 map<string, VRDevCb*>& VRNavigator_base::getNavigationCallbacks() { return library; }
+
+
+VRNavigator::VRNavigator() {
+    storeNavigationCallback( new VRDevCb( "mouse_orbit2d", boost::bind(&VRNavigator::orbit2D, this, _1) ) );
+    storeNavigationCallback( new VRDevCb( "mouse_orbit", boost::bind(&VRNavigator::orbit, this, _1) ) );
+    storeNavigationCallback( new VRDevCb( "mouse_zoom_in", boost::bind(&VRNavigator::zoom, this, _1, 1) ) );
+    storeNavigationCallback( new VRDevCb( "mouse_zoom_out", boost::bind(&VRNavigator::zoom, this, _1, -1) ) );
+    storeNavigationCallback( new VRDevCb( "mouse_focus", boost::bind(&VRNavigator::focus, this, _1) ) );
+    storeNavigationCallback( new VRDevCb( "mouse_walk", boost::bind(&VRNavigator::walk, this, _1) ) );
+    storeNavigationCallback( new VRDevCb( "fly_walk", boost::bind(&VRNavigator::fly_walk, this, _1) ) );
+    storeNavigationCallback( new VRDevCb( "hyd_walk", boost::bind(&VRNavigator::hyd_walk, this, _1) ) );
+}
+
+VRNavigator::~VRNavigator() {}
 
 // callbacks
 
@@ -273,15 +298,12 @@ void VRNavigator::initWalk(VRTransform* target, VRDevice* dev) {
     preset->setDevice(dev);
     preset->setTarget(target);
 
-    VRDevCb* cb = new VRDevCb( "mouse_walk", boost::bind(&VRNavigator::walk, this, _1) );
-    storeNavigationCallback(cb);
-
-    VRNavBinding b1(cb, 0, 0, true);
+    VRNavBinding b1( getNavigationCallback("mouse_walk"), 0, 0, true);
     preset->addKeyBinding(b1);
     preset->deactivate();
+    preset->setName("Walk");
 
-    string name = "Walk";
-    addNavigation(preset, name);
+    addNavigation(preset);
 }
 
 void VRNavigator::initOrbit(VRTransform* target, VRDevice* dev) {
@@ -289,28 +311,19 @@ void VRNavigator::initOrbit(VRTransform* target, VRDevice* dev) {
     preset->setDevice(dev);
     preset->setTarget(target);
 
-    VRDevCb* cb = new VRDevCb( "mouse_orbit", boost::bind(&VRNavigator::orbit, this, _1) );
-    VRDevCb* cb_zoom1 = new VRDevCb( "mouse_zoom", boost::bind(&VRNavigator::zoom, this, _1, 1) );
-    VRDevCb* cb_zoom2 = new VRDevCb( "mouse_zoom2", boost::bind(&VRNavigator::zoom, this, _1, -1) );
-    VRDevCb* cb_focus = new VRDevCb( "mouse_focus", boost::bind(&VRNavigator::focus, this, _1) );
-    storeNavigationCallback(cb);
-    storeNavigationCallback(cb_zoom1);
-    storeNavigationCallback(cb_zoom2);
-    storeNavigationCallback(cb_focus);
-
-    VRNavBinding b(cb, 1, 0, true);
-    VRNavBinding bz1(cb_zoom1, 4, 1, false);
-    VRNavBinding bz2(cb_zoom2, 3, 1, false);
-    VRNavBinding bf(cb_focus, 2, 0, false);
+    VRNavBinding b( getNavigationCallback("mouse_orbit"), 1, 0, true);
+    VRNavBinding bz1( getNavigationCallback("mouse_zoom_in"), 4, 1, false);
+    VRNavBinding bz2( getNavigationCallback("mouse_zoom_out"), 3, 1, false);
+    VRNavBinding bf( getNavigationCallback("mouse_focus"), 2, 0, false);
 
     preset->addKeyBinding(b);
     preset->addKeyBinding(bz1);
     preset->addKeyBinding(bz2);
     preset->addKeyBinding(bf);
     preset->deactivate();
+    preset->setName("Orbit");
 
-    string name = "Orbit";
-    addNavigation(preset, name);
+    addNavigation(preset);
 }
 
 void VRNavigator::initOrbit2D(VRTransform* target, VRDevice* dev) {
@@ -318,24 +331,19 @@ void VRNavigator::initOrbit2D(VRTransform* target, VRDevice* dev) {
     preset->setDevice(dev);
     preset->setTarget(target);
 
-    VRDevCb* cb = new VRDevCb( "mouse_orbit2d", boost::bind(&VRNavigator::orbit2D, this, _1) );
-    VRDevCb* cb_zoom1 = new VRDevCb( "mouse_zoom", boost::bind(&VRNavigator::zoom, this, _1, 1) );
-    VRDevCb* cb_zoom2 = new VRDevCb( "mouse_zoom2", boost::bind(&VRNavigator::zoom, this, _1, -1) );
-    storeNavigationCallback(cb);
-    storeNavigationCallback(cb_zoom1);
-    storeNavigationCallback(cb_zoom2);
-
-    VRNavBinding b(cb, 0, 0, true);
-    VRNavBinding bz1(cb_zoom1, 4, 1, false);
-    VRNavBinding bz2(cb_zoom2, 3, 1, false);
+    VRNavBinding b( getNavigationCallback("mouse_orbit2d"), 0, 0, true);
+    VRNavBinding bz1( getNavigationCallback("mouse_zoom_in"), 4, 1, false);
+    VRNavBinding bz2( getNavigationCallback("mouse_zoom_out"), 3, 1, false);
+    VRNavBinding bf( getNavigationCallback("mouse_focus"), 2, 0, false);
 
     preset->addKeyBinding(b);
     preset->addKeyBinding(bz1);
     preset->addKeyBinding(bz2);
+    preset->addKeyBinding(bf);
     preset->deactivate();
+    preset->setName("Orbit2D");
 
-    string name = "Orbit2D";
-    addNavigation(preset, name);
+    addNavigation(preset);
 }
 
 void VRNavigator::initFlyOrbit(VRTransform* target, VRDevice* dev) { // TODO
@@ -343,24 +351,17 @@ void VRNavigator::initFlyOrbit(VRTransform* target, VRDevice* dev) { // TODO
     preset->setDevice(dev);
     preset->setTarget(target);
 
-    VRDevCb* cb = new VRDevCb( "fly_orbit2d", boost::bind(&VRNavigator::orbit, this, _1) );
-    VRDevCb* cb_zoom1 = new VRDevCb( "fly_zoom", boost::bind(&VRNavigator::zoom, this, _1, 1) );
-    VRDevCb* cb_zoom2 = new VRDevCb( "fly_zoom2", boost::bind(&VRNavigator::zoom, this, _1, -1) );
-    storeNavigationCallback(cb);
-    storeNavigationCallback(cb_zoom1);
-    storeNavigationCallback(cb_zoom2);
-
-    VRNavBinding b(cb, 0, 0, true);
-    VRNavBinding bz1(cb_zoom1, 4, 1, false);
-    VRNavBinding bz2(cb_zoom2, 3, 1, false);
+    VRNavBinding b( getNavigationCallback("mouse_orbit"), 0, 0, true);
+    VRNavBinding bz1( getNavigationCallback("mouse_zoom_in"), 4, 1, false);
+    VRNavBinding bz2( getNavigationCallback("mouse_zoom_out"), 3, 1, false);
 
     preset->addKeyBinding(b);
     preset->addKeyBinding(bz1);
     preset->addKeyBinding(bz2);
     preset->deactivate();
+    preset->setName("FlyOrbit2D");
 
-    string name = "FlyOrbit2D";
-    addNavigation(preset, name);
+    addNavigation(preset);
 }
 
 void VRNavigator::initFlyWalk(VRTransform* target, VRDevice* dev) {
@@ -368,17 +369,14 @@ void VRNavigator::initFlyWalk(VRTransform* target, VRDevice* dev) {
     preset->setDevice(dev);
     preset->setTarget(target);
 
-    VRDevCb* cb = new VRDevCb( "fly_walk", boost::bind(&VRNavigator::fly_walk, this, _1) );
-    storeNavigationCallback(cb);
-
-    VRNavBinding b1(cb, 10, 0, false);
-    VRNavBinding b2(cb, 11, 0, false);
+    VRNavBinding b1( getNavigationCallback("fly_walk"), 10, 0, false);
+    VRNavBinding b2( getNavigationCallback("fly_walk"), 11, 0, false);
     preset->addKeyBinding(b1);
     preset->addKeyBinding(b2);
     preset->deactivate();
+    preset->setName("FlyWalk");
 
-    string name = "FlyWalk";
-    addNavigation(preset, name);
+    addNavigation(preset);
 }
 
 void VRNavigator::hyd_walk(VRDevice* dev) {
@@ -415,50 +413,24 @@ void VRNavigator::initHydraFly(VRTransform* target, VRDevice* dev) {
     preset->setDevice(dev);
     preset->setTarget(target);
 
-    VRDevCb* cb = new VRDevCb( "hyd_walk", boost::bind(&VRNavigator::hyd_walk, this, _1) );
-    storeNavigationCallback(cb);
+    VRNavBinding b1( getNavigationCallback("hyd_walk"), 20, 0, false);
+    VRNavBinding b2( getNavigationCallback("hyd_walk"), 21, 0, false);
+    VRNavBinding b3( getNavigationCallback("hyd_walk"), 23, 0, false);
+    VRNavBinding b4( getNavigationCallback("hyd_walk"), 24, 0, false);
 
-    VRNavBinding b1(cb, 20, 0, true);
-    VRNavBinding b2(cb, 21, 0, true);
-    VRNavBinding b3(cb, 23, 0, true);
-    VRNavBinding b4(cb, 24, 0, true);
     preset->addKeyBinding(b1);
     preset->addKeyBinding(b2);
     preset->addKeyBinding(b3);
     preset->addKeyBinding(b4);
     preset->deactivate();
+    preset->setName("Hydra");
 
-    string name = "Hydra";
-    addNavigation(preset, name);
+    addNavigation(preset);
 }
 
-/*void VRNavigator::initFlyWalk(VRTransform* target, VRDevice* dev) { // TODO
-    VRNavPreset* preset = new VRNavPreset();
-    preset->setDevice(dev);
-    preset->setTarget(target);
-
-    VRDevCb* cb = new VRDevCb( "fly_orbit2d", boost::bind(&VRNavigator::orbit2D, this, _1) );
-    VRDevCb* cb_zoom1 = new VRDevCb( "fly_zoom", boost::bind(&VRNavigator::zoom, this, _1, 1) );
-    VRDevCb* cb_zoom2 = new VRDevCb( "fly_zoom2", boost::bind(&VRNavigator::zoom, this, _1, -1) );
-    storeCallback(cb);
-    storeCallback(cb_zoom1);
-    storeCallback(cb_zoom2);
-
-    VRNavBinding b(cb, 0, 0, true);
-    VRNavBinding bz1(cb_zoom1, 4, 1, false);
-    VRNavBinding bz2(cb_zoom2, 3, 1, false);
-
-    preset->addKeyBinding(b);
-    preset->addKeyBinding(bz1);
-    preset->addKeyBinding(bz2);
-    preset->deactivate();
-
-    string name = "FlyOrbit2D";
-    addPreset(preset, name);
-}*/
-
-
-VRNavigator::VRNavigator() {}
+void VRNavigator::update() {
+    setActiveNavigation(getActiveNavigation());
+}
 
 
 OSG_END_NAMESPACE;

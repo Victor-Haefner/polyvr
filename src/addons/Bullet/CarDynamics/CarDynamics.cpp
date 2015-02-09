@@ -168,10 +168,10 @@ void CarDynamics::updateWheels() {
     if (!m_vehicle) return;
     for(int i = 0; i<4;i++) m_vehicle->updateWheelTransform(i,true);
 
-    if (w1) { w1->setWorldMatrix( VRPhysics::fromTransform(m_vehicle->getWheelInfo(0).m_worldTransform) ); w1->setNoBltFlag(); }
-    if (w2) { w2->setWorldMatrix( VRPhysics::fromTransform(m_vehicle->getWheelInfo(1).m_worldTransform) ); w2->setNoBltFlag(); }
-    if (w3) { w3->setWorldMatrix( VRPhysics::fromTransform(m_vehicle->getWheelInfo(2).m_worldTransform) ); w3->setNoBltFlag(); }
-    if (w4) { w4->setWorldMatrix( VRPhysics::fromTransform(m_vehicle->getWheelInfo(3).m_worldTransform) ); w4->setNoBltFlag(); }
+    if (w1) { w1->setWorldMatrix( VRPhysics::fromBTTransform(m_vehicle->getWheelInfo(0).m_worldTransform) ); w1->setNoBltFlag(); }
+    if (w2) { w2->setWorldMatrix( VRPhysics::fromBTTransform(m_vehicle->getWheelInfo(1).m_worldTransform) ); w2->setNoBltFlag(); }
+    if (w3) { w3->setWorldMatrix( VRPhysics::fromBTTransform(m_vehicle->getWheelInfo(2).m_worldTransform) ); w3->setNoBltFlag(); }
+    if (w4) { w4->setWorldMatrix( VRPhysics::fromBTTransform(m_vehicle->getWheelInfo(3).m_worldTransform) ); w4->setNoBltFlag(); }
 }
 
 void CarDynamics::setChassisGeo(VRGeometry* geo) {
@@ -179,7 +179,7 @@ void CarDynamics::setChassisGeo(VRGeometry* geo) {
     geo->getPhysics()->setShape("Convex");
     geo->getPhysics()->setDynamic(true);
     geo->getPhysics()->setPhysicalized(true);
-    geo->getPhysics()->updateTransformation(geo->getWorldMatrix());
+    geo->getPhysics()->updateTransformation(geo);
 
     if (geo->getPhysics()->getRigidBody() == 0) {
         cout<<"!!!!!!!!chassis is 0!!!!!!!!\ncreating vehicle with standard parameters and shapes"<<endl;

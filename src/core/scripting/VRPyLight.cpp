@@ -1,12 +1,12 @@
-#include "VRPyFactory.h"
-#include "core/scripting/VRPyBaseT.h"
-#include "core/scripting/VRPyTypeCaster.h"
+#include "VRPyLight.h"
+#include "VRPyBaseT.h"
+#include "VRPyTypeCaster.h"
 
-template<> PyTypeObject VRPyBaseT<OSG::VRFactory>::type = {
+template<> PyTypeObject VRPyBaseT<OSG::VRLight>::type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
-    "VR.Factory.Factory",             /*tp_name*/
-    sizeof(VRPyFactory),             /*tp_basicsize*/
+    "VR.Light",             /*tp_name*/
+    sizeof(VRPyLight),             /*tp_basicsize*/
     0,                         /*tp_itemsize*/
     (destructor)dealloc, /*tp_dealloc*/
     0,                         /*tp_print*/
@@ -24,14 +24,14 @@ template<> PyTypeObject VRPyBaseT<OSG::VRFactory>::type = {
     0,                         /*tp_setattro*/
     0,                         /*tp_as_buffer*/
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
-    "Factory binding",           /* tp_doc */
+    "VRLight binding",           /* tp_doc */
     0,		               /* tp_traverse */
     0,		               /* tp_clear */
     0,		               /* tp_richcompare */
     0,		               /* tp_weaklistoffset */
     0,		               /* tp_iter */
     0,		               /* tp_iternext */
-    VRPyFactory::methods,             /* tp_methods */
+    VRPyLight::methods,             /* tp_methods */
     0,             /* tp_members */
     0,                         /* tp_getset */
     0,                         /* tp_base */
@@ -41,26 +41,17 @@ template<> PyTypeObject VRPyBaseT<OSG::VRFactory>::type = {
     0,                         /* tp_dictoffset */
     (initproc)init,      /* tp_init */
     0,                         /* tp_alloc */
-    New,                 /* tp_new */
+    New_VRObjects,                 /* tp_new */
 };
 
-PyMethodDef VRPyFactory::methods[] = {
-    {"loadVRML", (PyCFunction)VRPyFactory::loadVRML, METH_VARARGS, "Load VRML file" },
-    {"setupLod", (PyCFunction)VRPyFactory::setupLod, METH_VARARGS, "Setup factory LOD structure" },
+PyMethodDef VRPyLight::methods[] = {
+    {"setOn", (PyCFunction)VRPyLight::setOn, METH_VARARGS, "Set light state - setOn(bool)" },
     {NULL}  /* Sentinel */
 };
 
-
-PyObject* VRPyFactory::loadVRML(VRPyFactory* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyFactory::loadVRML - Object is invalid"); return NULL; }
-    return VRPyTypeCaster::cast( self->obj->loadVRML( parseString(args) ) );
-}
-
-PyObject* VRPyFactory::setupLod(VRPyFactory* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyFactory::setupLod - Object is invalid"); return NULL; }
-    vector<PyObject*> vec = parseList(args);
-    vector<string> svec;
-    for (auto o : vec) svec.push_back( PyString_AsString(o) );
-    return VRPyTypeCaster::cast( self->obj->setupLod( svec ) );
+PyObject* VRPyLight::setOn(VRPyLight* self, PyObject *args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyLight::setOn - Object is invalid"); return NULL; }
+    self->obj->setOn( parseBool(args) );
+    Py_RETURN_TRUE;
 }
 

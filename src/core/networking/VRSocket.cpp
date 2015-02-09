@@ -17,8 +17,10 @@ using namespace std;
 //MICROHTTPD server-------------------------------------------------------------
 
 void server_answer_job(HTTP_args* args, int i) {
-    //cout << "server_answer_job: " << i << endl;
-    (*args->cb)(args);
+    //cout << "server_answer_job: " << args->cb << endl;
+    //args->print();
+    if (args->cb) (*args->cb)(args);
+    delete args;
 }
 
 int server_parseURI(void *cls, enum MHD_ValueKind kind, const char *key, const char *value) {
@@ -50,12 +52,16 @@ int server_answer_to_connection (void* param, struct MHD_Connection *connection,
         MHD_get_connection_values(connection, MHD_POSTDATA_KIND, server_parseURI, sad->params);//Parse URI parameter
     }
 
-    //sad->print();
     //cout << "HTTP: " << method_s << " " << sad->path << endl;
+    //sad->print();
 
     //--- respond to client ------
     struct MHD_Response* response = 0;
     string empty_str;
+
+    if (sad->path == "") {
+        response = MHD_create_response_from_data(1, (void*)" ", MHD_NO, MHD_YES);
+    }
 
     if (sad->pages->count(sad->path)) { // return local site
         string spage = *(*sad->pages)[sad->path];
@@ -75,28 +81,45 @@ int server_answer_to_connection (void* param, struct MHD_Connection *connection,
     }
 
     //--- process request --------
-    VRFunction<int>* _fkt = new VRFunction<int>("HTTP_answer_job", boost::bind(server_answer_job, sad, _1));
+    VRFunction<int>* _fkt = new VRFunction<int>("HTTP_answer_job", boost::bind(server_answer_job, sad->copy(), _1));
     VRSceneManager::get()->queueJob(_fkt);
 
     return ret;
 }
 
+HTTP_args::HTTP_args() {
+    params = new map<string, string>();
+    pages = new map<string, string*>();
+}
+
+HTTP_args::~HTTP_args() {
+    delete params;
+    delete pages;
+}
+
 void HTTP_args::print() {
-    cout << "\nHTTP: " << path << endl;
+    cout << "HTTP args: " << path << endl;
+    if (params == 0) return;
     for (auto p : *params) cout << "  " << p.first << " : " << p.second << endl;
+}
+
+HTTP_args* HTTP_args::copy() {
+    HTTP_args* res = new HTTP_args();
+    res->cb = cb;
+    *res->params = *params;
+    *res->pages = *pages;
+    res->path = path;
+    return res;
 }
 
 class HTTPServer {
     public:
         //server----------------------------------------------------------------
-        struct MHD_Daemon* server;
-        HTTP_args* data;
+        struct MHD_Daemon* server = 0;
+        HTTP_args* data = 0;
 
         HTTPServer() {
-            server = 0;
             data = new HTTP_args();
-            data->params = new map<string, string>();
-            data->pages = new map<string, string*>();
         }
 
         ~HTTPServer() {

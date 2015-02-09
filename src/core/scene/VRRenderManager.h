@@ -11,6 +11,7 @@ class VRRenderManager : public VRStorage {
     private:
         bool frustumCulling;
         bool occlusionCulling;
+        bool twoSided;
 
     public:
         VRRenderManager();
@@ -21,6 +22,9 @@ class VRRenderManager : public VRStorage {
 
         void setOcclusionCulling(bool b);
         bool getOcclusionCulling();
+
+        void setTwoSided(bool b);
+        bool getTwoSided();
 
         void update();
 };

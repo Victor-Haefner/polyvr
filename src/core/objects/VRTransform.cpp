@@ -46,13 +46,13 @@ void VRTransform::updatePhysics() {
     if (noBlt and !held) { noBlt = false; return; }
     if (!physics->isPhysicalized()) return;
 
-    Matrix m;
+    /*Matrix m;
     dm->read(m);
     Matrix pm;
     getWorldMatrix(pm, true);
-    pm.mult(m);
+    pm.mult(m);*/
 
-    physics->updateTransformation(pm);
+    physics->updateTransformation(this);
     physics->pause();
     physics->resetForces();
 }
@@ -372,9 +372,15 @@ void VRTransform::setPose(Vec3f from, Vec3f dir, Vec3f up) {
 /** Set the local matrix **/
 void VRTransform::setMatrix(Matrix _m) {
     if (isNan(_m)) return;
-    float s1 = Vec3f(_m[0][0], _m[1][0], _m[2][0]).length();
+
+    /*float s1 = Vec3f(_m[0][0], _m[1][0], _m[2][0]).length();
     float s2 = Vec3f(_m[0][1], _m[1][1], _m[2][1]).length();
-    float s3 = Vec3f(_m[0][2], _m[1][2], _m[2][2]).length();
+    float s3 = Vec3f(_m[0][2], _m[1][2], _m[2][2]).length();*/
+
+    float s1 = _m[0].length(); //TODO: check if this is fine
+    float s2 = _m[1].length();
+    float s3 = _m[2].length();
+
     setPose(Vec3f(_m[3]), Vec3f(-_m[2])*1.0/s3, Vec3f(_m[1])*1.0/s2);
     setScale(Vec3f(s1,s2,s3));
 }
@@ -512,7 +518,7 @@ void VRTransform::drag(VRTransform* new_parent) {
     switchParent(new_parent);
     setWorldMatrix(m);
 
-    physics->updateTransformation(m);
+    physics->updateTransformation(this);
     physics->resetForces();
     physics->pause(true);
     reg_change();
@@ -530,7 +536,7 @@ void VRTransform::drop() {
     switchParent(old_parent);
     setWorldMatrix(m);
 
-    physics->updateTransformation(m);
+    physics->updateTransformation(this);
     physics->resetForces();
     physics->pause(false);
     reg_change();

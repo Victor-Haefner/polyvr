@@ -5,6 +5,8 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "core/utils/VRStorage.h"
+#include "core/utils/VRName.h"
 
 template<class T> class VRFunction;
 
@@ -19,16 +21,17 @@ typedef VRFunction<VRDevice*> VRDevCb;
 struct VRNavBinding {
     int key;
     int state;
-    VRSignal* sig;
-    VRDevCb* cb;
+    VRSignal* sig = 0;
+    VRDevCb* cb = 0;
     string sig_name;
     string cb_name;
-    bool doRepeat;
+    bool doRepeat = false;
+    float speed = 1.0;
 
     VRNavBinding(VRDevCb* c, int k, int s, bool repeat);
 };
 
-class VRNavPreset {
+class VRNavPreset : public VRName {
     private:
         vector<VRNavBinding> bindings;
         VRDevice* dev;
@@ -54,7 +57,7 @@ class VRNavPreset {
         void addKeyBinding(VRNavBinding b);
 };
 
-class VRNavigator_base {
+class VRNavigator_base : public VRStorage {
     private:
         map<string, VRDevCb*> library;
 
@@ -63,9 +66,10 @@ class VRNavigator_base {
         map<string, VRNavPreset*> presets;
 
     public:
-        VRNavigator_base ();
+        VRNavigator_base();
+        ~VRNavigator_base();
 
-        void addNavigation(VRNavPreset* ps, string& name);
+        void addNavigation(VRNavPreset* ps);
         void remNavigation(string name);
 
         void setActiveNavigation(string s);
@@ -76,6 +80,7 @@ class VRNavigator_base {
 
         void storeNavigationCallback(VRDevCb* cb);
         map<string, VRDevCb*>& getNavigationCallbacks();
+        VRDevCb* getNavigationCallback(string s);
 };
 
 class VRNavigator : public VRNavigator_base {
@@ -97,6 +102,7 @@ class VRNavigator : public VRNavigator_base {
 
     protected:
         VRNavigator();
+        ~VRNavigator();
 
         // init presets
         void initWalk(VRTransform* target, VRDevice* dev);
@@ -105,6 +111,8 @@ class VRNavigator : public VRNavigator_base {
         void initFlyOrbit(VRTransform* target, VRDevice* dev);
         void initFlyWalk(VRTransform* target, VRDevice* dev);
         void initHydraFly(VRTransform* target, VRDevice* dev);
+
+        void update();
 };
 
 OSG_END_NAMESPACE;

@@ -11,7 +11,7 @@ void interpolator::setValues(vector<Vec3f> vals) { this->vals = vals; }
 Vec3f interpolator::eval(Vec3f& p, int power) { // frame
     Vec3f d;
     float Sw = 0, w = 0;
-    for (int i=0; i<pnts.size(); i++) {
+    for (uint i=0; i<pnts.size(); i++) {
         if (i >= vals.size()) break;
 
         w = (p - pnts[i]).squareLength();
@@ -24,20 +24,23 @@ Vec3f interpolator::eval(Vec3f& p, int power) { // frame
     return d;
 }
 
-void interpolator::evalVec(GeoVectorProperty* pvec, int power, GeoVectorProperty* cvec, float cscale) {
+void interpolator::evalVec(GeoVectorProperty* pvec, int power, GeoVectorProperty* cvec, float cscale, float dl_max) {
     Vec3f* data = (Vec3f*)pvec->editData();
     Vec4f* cdata = 0;
     if (cvec) cdata = (Vec4f*)cvec->editData();
-    for (int i=0; i<pvec->size(); i++) {
+    float eps = 1e-5;
+    float dl;
+    for (uint i=0; i<pvec->size(); i++) {
         Vec3f d = eval(data[i], power);
         data[i] += d;
         if (cdata) {
-            float l = d.length() * cscale;
-            cdata[i] = Vec4f(l,1-l,0,1);
+            dl = d.length();
+            float l = dl / max(cscale*dl_max, eps);
+            cdata[i] = Vec4f(l, 1-l, 0, 1);
         }
     }
 }
 
 void interpolator::evalVec(vector<Vec3f>& pvec, int power) {
-    for (Vec3f& p : pvec) eval(p, power);
+    for (Vec3f& p : pvec) p += eval(p, power);
 }

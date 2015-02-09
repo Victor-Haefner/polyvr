@@ -487,6 +487,8 @@
 		<Unit filename="src/core/scripting/VRPyGeometry.h" />
 		<Unit filename="src/core/scripting/VRPyHaptic.cpp" />
 		<Unit filename="src/core/scripting/VRPyHaptic.h" />
+		<Unit filename="src/core/scripting/VRPyLight.cpp" />
+		<Unit filename="src/core/scripting/VRPyLight.h" />
 		<Unit filename="src/core/scripting/VRPyLod.cpp" />
 		<Unit filename="src/core/scripting/VRPyLod.h" />
 		<Unit filename="src/core/scripting/VRPyMaterial.cpp" />
@@ -589,6 +591,8 @@
 		<Unit filename="src/core/utils/VRName.h" />
 		<Unit filename="src/core/utils/VROptions.cpp" />
 		<Unit filename="src/core/utils/VROptions.h" />
+		<Unit filename="src/core/utils/VRProgress.cpp" />
+		<Unit filename="src/core/utils/VRProgress.h" />
 		<Unit filename="src/core/utils/VRRate.cpp" />
 		<Unit filename="src/core/utils/VRRate.h" />
 		<Unit filename="src/core/utils/VRStorage.cpp" />

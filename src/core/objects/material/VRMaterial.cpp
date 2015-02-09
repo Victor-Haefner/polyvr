@@ -8,6 +8,7 @@
 #include <OpenSG/OSGPolygonChunk.h>
 #include <OpenSG/OSGChunkMaterial.h>
 #include <OpenSG/OSGSimpleSHLChunk.h>
+#include <OpenSG/OSGTwoSidedLightingChunk.h>
 #include <OpenSG/OSGImage.h>
 #include "core/utils/toString.h"
 #include "core/scene/VRSceneManager.h"
@@ -48,7 +49,10 @@ VRMaterial* VRMaterial::getDefault() {
 void VRMaterial::resetDefault() {
     mat = ChunkMaterial::create();
     colChunk = MaterialChunk::create();
+    colChunk->setBackMaterial(false);
     mat->addChunk(colChunk);
+    twoSidedChunk = TwoSidedLightingChunk::create();
+    mat->addChunk(twoSidedChunk);
     blendChunk = 0;
     texChunk = 0;
     envChunk = 0;
@@ -139,6 +143,7 @@ void VRMaterial::setMaterial(MaterialRecPtr m) {
             if (tc == 0) tc = dynamic_pointer_cast<TextureObjChunk>(chunk);
         }
 
+        if (mc) mc->setBackMaterial(false);
         if (mc) { mat->subChunk(colChunk); colChunk = mc; mat->addChunk(colChunk); }
         if (bc) { mat->subChunk(blendChunk); blendChunk = bc; mat->addChunk(blendChunk); }
         if (ec) { mat->subChunk(envChunk); envChunk = ec; mat->addChunk(envChunk); }

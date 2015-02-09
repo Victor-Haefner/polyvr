@@ -4,6 +4,7 @@
 #include <OpenSG/OSGConfig.h>
 #include <string>
 #include <map>
+#include <vector>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -26,7 +27,7 @@ class VRFactory {
         VRFactory();
 
         VRObject* loadVRML(string path);
-        VRObject* setupLod(string path, string path_low);
+        VRObject* setupLod(vector<string> paths);
 };
 
 OSG_END_NAMESPACE;

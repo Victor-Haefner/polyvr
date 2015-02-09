@@ -15,6 +15,7 @@ class VRRecorder {
     private:
         VRView* view = 0;
         vector<VRFrame*> captures;
+        int maxFrames = -1;
 
     public:
         VRRecorder();
@@ -25,6 +26,8 @@ class VRRecorder {
         void clear();
         int getRecordingSize();
         float getRecordingLength();
+        void setMaxFrames(int maxf);
+        bool frameLimitReached();
 };
 
 OSG_END_NAMESPACE;

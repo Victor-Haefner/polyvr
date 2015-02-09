@@ -21,6 +21,7 @@ class TextureObjChunk; OSG_GEN_CONTAINERPTR(TextureObjChunk);
 class LineChunk; OSG_GEN_CONTAINERPTR(LineChunk);
 class PointChunk; OSG_GEN_CONTAINERPTR(PointChunk);
 class PolygonChunk; OSG_GEN_CONTAINERPTR(PolygonChunk);
+class TwoSidedLightingChunk; OSG_GEN_CONTAINERPTR(TwoSidedLightingChunk);
 class ShaderProgramChunk; OSG_GEN_CONTAINERPTR(ShaderProgramChunk);
 class ShaderProgram; OSG_GEN_CONTAINERPTR(ShaderProgram);
 
@@ -41,6 +42,7 @@ class VRMaterial : public VRObject {
         LineChunkRecPtr lineChunk;
         PointChunkRecPtr pointChunk;
         PolygonChunkRecPtr polygonChunk;
+        TwoSidedLightingChunkRecPtr twoSidedChunk;
         ImageRecPtr texture;
         ShaderProgramChunkRecPtr shaderChunk;
         ShaderProgramRecPtr vProgram;
