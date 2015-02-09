@@ -93,14 +93,6 @@ VRObject* VRFactory::loadVRML(string path) { // wrl filepath
     file.seekg(0, ios_base::beg);
     VRProgress prog("load VRML " + path, fileSize);
 
-    string header = "#VRML V2.0 utf8\n";
-    string delimiter = "Transform";
-    string dir = "split/";
-
-    ofstream out;
-    vector<string> data;
-    string line;
-
     int state = 0;
     map<int, string> states;
     states[0] = "Transform "; // 0
@@ -125,14 +117,17 @@ VRObject* VRFactory::loadVRML(string path) { // wrl filepath
     map<Vec3f, VRMaterial*> mats;
     bool new_obj = true;
     bool new_color = true;
+    int li = 0;
 
+    string line;
     while ( getline(file, line) ) {
         prog.update( line.size() );
+        li++;
 
         for (auto d : states) {
             //if ( line[d.second.size()-1] != ' ') continue; // optimization
             if ( line.compare(0, d.second.size(), d.second) == 0) {
-                if (state != d.first) cout << line << endl;
+                //if (state != d.first) cout << "got on line " << li << ": " << states[d.first] << " instead of: " << states[state] << endl;
                 switch (d.first) {
                     case 0: break;
                     case 1:
@@ -171,7 +166,6 @@ VRObject* VRFactory::loadVRML(string path) { // wrl filepath
                     if (!new_color and new_obj) new_obj = !geo.inBB(v); // strange artifacts!!
                     geo.updateBB(v);
 
-                    //if (new_color) {
                     if (new_obj) {
                         new_obj = false;
                         new_color = false;
@@ -202,6 +196,16 @@ VRObject* VRFactory::loadVRML(string path) { // wrl filepath
     for (auto g : geos) {
         //Vec3f d = g.vmax - g.vmin;
         //if (d.length() < 0.1) continue; // skip very small objects
+
+        if (g.inds_n->size() != g.inds_p->size()) { // not happening
+            cout << " wrong indices lengths: " << g.inds_p->size() << " " << g.inds_n->size() << endl;
+            continue;
+        }
+
+        if (g.inds_p->size() == 0) { // not happening
+            cout << " empty geo: " << g.inds_p->size() << " " << g.inds_n->size() << endl;
+            continue;
+        }
 
         res->addChild(g.geo);
 
