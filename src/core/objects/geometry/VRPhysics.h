@@ -113,6 +113,7 @@ class VRPhysics : public OSG::VRStorage {
 
 
 
+        btTransform fromMatrix(const OSG::Matrix& m);
 
 
         static vector<string> getPhysicsShapes();

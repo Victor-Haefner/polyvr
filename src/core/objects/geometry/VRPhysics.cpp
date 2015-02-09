@@ -404,6 +404,7 @@ OSG::Matrix VRPhysics::fromBTTransform(const btTransform t) {
 
 void VRPhysics::pause(bool b) {
     return;
+
     if (body == 0) return;
     if (dynamic == !b) return;
     setDynamic(!b);
@@ -531,6 +532,23 @@ void VRPhysics::deleteConstraints(VRPhysics* with) {
 
 }
 
+btTransform VRPhysics::fromMatrix(const OSG::Matrix& m) {
+ btVector3 pos = btVector3(m[3][0], m[3][1], m[3][2]);
+ /*btMatrix3x3 mat = btMatrix3x3(m[0][0], m[0][1], m[0][2],
+ m[1][0], m[1][1], m[1][2],
+ m[2][0], m[2][1], m[2][2]);*/
+ btMatrix3x3 mat = btMatrix3x3(m[0][0], m[1][0], m[2][0],
+ m[0][1], m[1][1], m[2][1],
+ m[0][2], m[1][2], m[2][2]);
+ btQuaternion q;
+ mat.getRotation(q);
+
+ btTransform bltTrans;//Bullets transform
+ bltTrans.setIdentity();
+ bltTrans.setOrigin(pos);
+ bltTrans.setRotation(q);
+ return bltTrans;
+}
 void VRPhysics::setConstraint(VRPhysics* p, OSG::VRConstraint* c, OSG::VRConstraint* cs) {
     if (body == 0) return;
     if (p->body == 0) return;
