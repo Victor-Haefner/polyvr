@@ -21,6 +21,7 @@ struct VRSound {
     uint source;
     uint buffer;
     uint frequency;
+    uint Nbuffers = 1;
     int stream_id;
     int init = 1;
     string path;
@@ -37,9 +38,7 @@ struct VRSound {
     VRSound() {}
 
     ~VRSound() {
-        alDeleteSources(1u, &source);
-        alDeleteBuffers(1u, &buffer);
-        avformat_close_input(&context);
+        close();
     }
 
     void setLoop(bool loop) {
@@ -64,10 +63,17 @@ struct VRSound {
         alSource3f(source, AL_VELOCITY, v[0], v[1], v[2]);
     }
 
+    void close() {
+        alDeleteSources(1u, &source);
+        alDeleteBuffers(1u, &buffer);
+        avformat_close_input(&context);
+    }
+
     bool initiate() {
-        if (initiated) return initiated;
-        else initiated = true;
-        alGenBuffers(1u, &buffer);
+        if (initiated) close();
+        initiated = true;
+
+        alGenBuffers(Nbuffers, &buffer);
         alGenSources(1u, &source);
         setPitch(1);
         setGain(1);
@@ -104,6 +110,64 @@ struct VRSound {
             if (sfmt == AV_SAMPLE_FMT_S16) format = AL_FORMAT_STEREO16;
         }
         return true;
+    }
+
+    void play() {
+        AVPacket packet; // libav
+        AVFrame* decodedFrame;
+        decodedFrame = avcodec_alloc_frame();
+
+        int len;
+        while (1) {
+            if (interrupt || (av_read_frame(context, &packet) < 0)) { cout << "end of stream\n"; break; } // End of stream. Done decoding.
+            if (packet.stream_index != stream_id) { cout << "skip non audio\n"; continue; } // Skip non audio packets
+
+            while (packet.size > 0) { // Decodes audio data from `packet` into the frame
+                if (interrupt) { cout << "interrupt sound\n"; break; }
+
+                int finishedFrame = 0;
+                len = avcodec_decode_audio4(codec, decodedFrame, &finishedFrame, &packet);
+
+                if (len < 0) { cout << "decoding error\n"; break; }
+
+                if (finishedFrame) {
+                    if (interrupt) { cout << "interrupt sound\n"; break; }
+
+                    // Decoded data is now available in decodedFrame->data[0]
+                    int data_size = av_samples_get_buffer_size(NULL, codec->channels, decodedFrame->nb_samples, codec->sample_fmt, 1);
+
+                    if (init) { // initialize OpenAL buffers
+                        alBufferData(buffer, format, decodedFrame->data[0], data_size, frequency);
+                        alSourceQueueBuffers(source, 1, &buffer);    // all buffers queued
+                        alSourcePlay(source);    // start playback
+                        init = 0;
+                    } else { // start continous playback.
+                        ALuint buffer;
+                        ALint val = -1;
+
+                        while (val <= 0) alGetSourcei(source, AL_BUFFERS_PROCESSED, &val);      // wait for openal to release one buffer
+
+                        // fill and requeue the empty buffer
+                        alSourceUnqueueBuffers(source, 1, &buffer);
+                        alBufferData(buffer, format, decodedFrame->data[0], data_size, frequency);
+                        alSourceQueueBuffers(source, 1, &buffer);
+
+                        //Restart openal playback if needed
+                        alGetSourcei(source, AL_SOURCE_STATE, &val);
+
+                        if (val != AL_PLAYING) alSourcePlay(source);
+                    }
+                }
+
+                //There may be more than one frame of audio data inside the packet.
+                packet.size -= len;
+                packet.data += len;
+            } // while packet.size > 0
+        } // while more packets exist inside container.
+
+        if (packet.data) av_free_packet(&packet);
+        init = 1;
+        cout << "stream done " << path << endl;
     }
 };
 
@@ -162,84 +226,16 @@ struct VRSoundChannel {
             }
 
             cout << "PLAY " << current->loop << endl;
-            if (current->initiate()) stream(current);
+            busy = true;
+            if (current->initiate()) current->play();
             if (!current->loop) {
                 boost::mutex::scoped_lock lock(mutex);
                 current = 0;
             }
+            busy = false;
         }
 
         if (context) delete context;
-    }
-
-    void stream(VRSound* sound) {
-        if (sound == 0) return;
-
-        cout << "stream " << sound << " from " << this << endl;
-        busy = true;
-
-        // libav
-        AVPacket packet;
-        AVFrame* decodedFrame;
-        decodedFrame = avcodec_alloc_frame();
-
-        int len;
-
-        while (1) {
-            if ((sound->interrupt) || (av_read_frame(sound->context, &packet) < 0)) { cout << "end of stream\n"; break; } // End of stream. Done decoding.
-
-            if (packet.stream_index != sound->stream_id) { cout << "skip non audio\n"; continue; } // Skip non audio packets
-
-            while (packet.size > 0) { // Decodes audio data from `packet` into the frame
-                if (sound->interrupt) { cout << "interrupt sound\n"; break; }
-
-                int finishedFrame = 0;
-                len = avcodec_decode_audio4(sound->codec, decodedFrame, &finishedFrame, &packet);
-
-                if (len < 0) { cout << "decoding error\n"; break; }
-
-                if (finishedFrame) {
-                    if (sound->interrupt) { cout << "interrupt sound\n"; break; }
-
-                    // Decoded data is now available in decodedFrame->data[0]
-                    int data_size = av_samples_get_buffer_size(NULL, sound->codec->channels, decodedFrame->nb_samples, sound->codec->sample_fmt, 1);
-
-                    // OpenAL consumes buffers in the background
-                    // we first need to initialize the OpenAL buffers then
-                    // start continous playback.
-                    if (sound->init) {
-                        alBufferData(sound->buffer, sound->format, decodedFrame->data[0], data_size, sound->frequency);
-                        alSourceQueueBuffers(sound->source, 1, &sound->buffer);    // all buffers queued
-                        alSourcePlay(sound->source);    // start playback
-                        sound->init = 0;
-                    } else {
-                        ALuint buffer;
-                        ALint val = -1;
-
-                        while (val <= 0) alGetSourcei(sound->source, AL_BUFFERS_PROCESSED, &val);      // wait for openal to release one buffer
-
-                        // fill and requeue the empty buffer
-                        alSourceUnqueueBuffers(sound->source, 1, &buffer);
-                        alBufferData(buffer, sound->format, decodedFrame->data[0], data_size, sound->frequency);
-                        alSourceQueueBuffers(sound->source, 1, &buffer);
-
-                        //Restart openal playback if needed
-                        alGetSourcei(sound->source, AL_SOURCE_STATE, &val);
-
-                        if (val != AL_PLAYING) alSourcePlay(sound->source);
-                    }
-                }
-
-                //There may be more than one frame of audio data inside the packet.
-                packet.size -= len;
-                packet.data += len;
-            } // while packet.size > 0
-        } // while more packets exist inside container.
-
-        if (packet.data) av_free_packet(&packet);
-        sound->init = 1;
-        cout << "stream done " << sound->path << endl;
-        busy = false;
     }
 };
 
