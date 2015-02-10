@@ -41,16 +41,19 @@ struct VRSound {
     uint source = 0;
     uint* buffers = 0;
     uint frequency = 0;
-    uint Nbuffers = 5;
+    uint Nbuffers = 50;
     int stream_id = 0;
     int init = 0;
     string path;
     ALenum sample = 0;
     ALenum format = 0;
     ALenum layout = 0;
+    ALenum state = AL_INITIAL;
     AVFormatContext* context = 0;
     AVAudioResampleContext* resampler = 0;
     AVCodecContext* codec = NULL;
+    AVPacket packet;
+    AVFrame* frame;
     bool interrupt = false;
     bool initiated = false;
 
@@ -113,8 +116,7 @@ struct VRSound {
         if (avcodec == 0) return 0;
         if (avcodec_open2(codec, avcodec, NULL) < 0) return 0;
 
-        if (codec->channel_layout == 0) codec->channel_layout = AV_CH_LAYOUT_MONO;
-        //codec->sample_fmt = AV_SAMPLE_FMT_FLT; // override
+        if (codec->channel_layout == 0) codec->channel_layout = AV_CH_LAYOUT_STEREO; // TODO: fix this!!
 
         frequency = codec->sample_rate;
         format = AL_FORMAT_MONO16;
@@ -177,12 +179,12 @@ struct VRSound {
             default: cout << "OpenAL unsupported format";
         }
 
-        cout << "init audio stream" << endl;
+        /*cout << "init audio stream" << endl;
         cout << " AL format=" << format << endl;
         cout << " sample_fmt=" << codec->sample_fmt << endl;
         cout << " channel_layout=" << codec->channel_layout << endl;
         cout << " sample_rate=" << codec->sample_rate << endl;
-        cout << " bit_rate=" << codec->bit_rate << endl;
+        cout << " bit_rate=" << codec->bit_rate << endl;*/
 
         if (av_sample_fmt_is_planar(codec->sample_fmt)) {
             int out_sample_fmt;
@@ -203,27 +205,36 @@ struct VRSound {
             av_opt_set_int(resampler, "out_sample_fmt",     out_sample_fmt,        0);
             av_opt_set_int(resampler, "out_sample_rate",    codec->sample_rate,    0);
             avresample_open(resampler);
-            cout << "converting sample format to " << out_sample_fmt << endl;
+            //cout << "converting sample format to " << out_sample_fmt << endl;
         }
 
         return true;
     }
 
-    void play() {
-        AVPacket packet; // libav
-        AVFrame* frame = avcodec_alloc_frame();
+    void playFrame() {
+        if (state == AL_INITIAL) {
+            initiate();
+            frame = avcodec_alloc_frame();
+            state = AL_PLAYING;
+        }
 
         int len;
-        while (1) {
-            if (interrupt || (av_read_frame(context, &packet) < 0)) { cout << "end of stream\n"; break; } // End of stream. Done decoding.
-            if (packet.stream_index != stream_id) { cout << "skip non audio\n"; continue; } // Skip non audio packets
+        if (state == AL_PLAYING) {
+            if (interrupt || (av_read_frame(context, &packet) < 0)) {
+                cout << "end of stream\n";
+                if (packet.data) av_free_packet(&packet);
+                state = loop ? AL_INITIAL : AL_STOPPED;
+                init = 0;
+                return;
+            } // End of stream. Done decoding.
+
+            if (packet.stream_index != stream_id) { cout << "skip non audio\n"; return; } // Skip non audio packets
 
             while (packet.size > 0) { // Decodes audio data from `packet` into the frame
                 if (interrupt) { cout << "interrupt sound\n"; break; }
 
                 int finishedFrame = 0;
                 len = avcodec_decode_audio4(codec, frame, &finishedFrame, &packet);
-
                 if (len < 0) { cout << "decoding error\n"; break; }
 
                 if (finishedFrame) {
@@ -233,9 +244,15 @@ struct VRSound {
                     int linesize;
                     int data_size = av_samples_get_buffer_size(&linesize, codec->channels, frame->nb_samples, codec->sample_fmt, 0);
 
+                    ALbyte* frameData;
+                    if (resampler != 0) {
+                        frameData = (ALbyte *)av_malloc(data_size*sizeof(uint8_t));
+                        avresample_convert( resampler, (uint8_t **)&frameData, linesize, frame->nb_samples, (uint8_t **)frame->data, frame->linesize[0], frame->nb_samples);
+                    } else frameData = (ALbyte*)frame->data[0];
+
                     if (init < Nbuffers) { // initialize OpenAL buffers
                         ALint val = -1;
-                        ALCHECK( alBufferData(buffers[init], format, frame->data[0], data_size, frequency));
+                        ALCHECK( alBufferData(buffers[init], format, frameData, data_size, frequency));
                         ALCHECK( alSourceQueueBuffers(source, 1, &buffers[init]));    // all buffers queued
                         ALCHECK( alGetSourcei(source, AL_SOURCE_STATE, &val));
                         if (val != AL_PLAYING) ALCHECK( alSourcePlay(source));
@@ -262,10 +279,6 @@ struct VRSound {
                 packet.data += len;
             } // while packet.size > 0
         } // while more packets exist inside container.
-
-        if (packet.data) av_free_packet(&packet);
-        init = 0;
-        cout << "stream done " << path << endl;
     }
 };
 
@@ -279,7 +292,7 @@ struct VRSoundContext {
         if (!device) { cout << "VRSoundContext() > alcOpenDevice failed!\n"; return; }
 
         context = alcCreateContext(device, NULL);
-        if (!alcMakeContextCurrent(context)) cout << "VRSoundContext() > alcMakeContextCurrent failed!\n";
+        makeCurrent();
 
         alGetError();
         //enumerateDevices();
@@ -289,6 +302,10 @@ struct VRSoundContext {
         alcMakeContextCurrent(NULL);
         alcDestroyContext(context);
         alcCloseDevice(device);
+    }
+
+    void makeCurrent() {
+        if (!alcMakeContextCurrent(context)) cout << "VRSoundContext() > alcMakeContextCurrent failed!\n";
     }
 
     void enumerateDevices() {
@@ -302,11 +319,10 @@ struct VRSoundContext {
 
 struct VRSoundChannel {
     bool running = true;
-    bool busy = false;
     boost::thread* thread;
     VRSoundContext* context;
     boost::mutex mutex;
-    VRSound* current = 0;
+    map<int, VRSound*> current;
 
     VRSoundChannel() {
         thread = new boost::thread(boost::bind(&VRSoundChannel::soundThread, this));
@@ -320,7 +336,7 @@ struct VRSoundChannel {
 
     void play(VRSound* sound) {
         boost::mutex::scoped_lock lock(mutex);
-        current = sound;
+        current[current.size()] = sound;
     }
 
     void soundThread() {
@@ -328,20 +344,14 @@ struct VRSoundChannel {
 
         while (running) {
             osgSleep(1);
+            boost::mutex::scoped_lock lock(mutex);
+            if (current.size() == 0) continue;
 
-            {
-                boost::mutex::scoped_lock lock(mutex);
-                if (current == 0) continue;
+            for (auto c : current) {
+                c.second->playFrame();
+                if (c.second->state == AL_STOPPED) current.erase(c.first);
+                //if (!c.second->loop) current.erase(c.first);
             }
-
-            cout << "PLAY " << current->loop << endl;
-            busy = true;
-            if (current->initiate()) current->play();
-            if (!current->loop) {
-                boost::mutex::scoped_lock lock(mutex);
-                current = 0;
-            }
-            busy = false;
         }
 
         if (context) delete context;
@@ -349,7 +359,7 @@ struct VRSoundChannel {
 };
 
 VRSoundManager::VRSoundManager() {
-    ;
+    channel = new VRSoundChannel();
 }
 
 VRSoundManager::~VRSoundManager() { clearSoundMap(); }
@@ -366,13 +376,6 @@ void VRSoundManager::clearSoundMap() {
 void VRSoundManager::playSound(string path, bool loop) {
     VRSound* sound = getSound(path);
     sound->setLoop(loop);
-
-    VRSoundChannel* channel = 0;
-    for (auto c : channels) if (!c->busy) { channel = c; break; }
-    if (channel == 0) {
-        channel = new VRSoundChannel();
-        channels.push_back(channel);
-    }
     channel->play(sound);
 }
 
@@ -386,13 +389,7 @@ VRSound* VRSoundManager::getSound(string path) {
 void VRSoundManager::setSoundVolume(float volume) {
     volume = max(volume, 0.f);
     volume = min(volume, 1.f);
-
-    for (auto s : sounds) alSourcef(s.second->source, AL_GAIN, volume);
-
-    // This is just working with Ubuntu!
-    //string percent = boost::lexical_cast<std::string>(static_cast<int>(volume * 100));
-    //string amixer = "amixer -D pulse sset Master " + percent + "% > /dev/null 2>&1";
-    //system(amixer.c_str());
+    for (auto s : sounds) s.second->setGain(volume);
 }
 
 /*void VRSoundManager::updatePlayerPosition(Vec3f position, Vec3f forward) { }*/
