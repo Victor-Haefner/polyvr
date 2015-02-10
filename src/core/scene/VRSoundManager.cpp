@@ -6,11 +6,12 @@ extern "C" {
 #include <libavutil/mathematics.h>
 #include <libavformat/avformat.h>
 #include <libswscale/swscale.h>
+#include <libavutil/opt.h>
 }
 
 #include <AL/al.h>
 #include <AL/alc.h>
-//#include <AL/alut.h>
+#include <AL/alext.h>
 
 #include <boost/thread/thread.hpp>
 #include <boost/thread.hpp>
@@ -37,11 +38,13 @@ struct VRSound {
     uint source;
     uint* buffers;
     uint frequency;
-    uint Nbuffers = 1;
+    uint Nbuffers = 1; // TODO: raise this!
     int stream_id;
     int init = 1;
     string path;
+    ALenum sample;
     ALenum format;
+    ALenum layout;
     AVFormatContext* context = NULL;
     AVCodecContext* codec = NULL;
     bool interrupt = false;
@@ -121,20 +124,69 @@ struct VRSound {
         format = AL_FORMAT_MONO16;
         AVSampleFormat sfmt = codec->sample_fmt;
 
-        if (sfmt == AV_SAMPLE_FMT_U8) format = AL_FORMAT_MONO8;
-        if (sfmt == AV_SAMPLE_FMT_S16) format = AL_FORMAT_MONO16;
+        if (sfmt == AV_SAMPLE_FMT_NONE) cout << "unsupported format: none\n";
 
-        if (codec->channels == 2) {
-            if (sfmt == AV_SAMPLE_FMT_U8) format = AL_FORMAT_STEREO8;
-            if (sfmt == AV_SAMPLE_FMT_S16) format = AL_FORMAT_STEREO16;
+        if (sfmt == AV_SAMPLE_FMT_U8) sample = AL_UNSIGNED_BYTE_SOFT;
+        if (sfmt == AV_SAMPLE_FMT_S16) sample = AL_SHORT_SOFT;
+        if (sfmt == AV_SAMPLE_FMT_S32) sample = AL_INT_SOFT;
+        if (sfmt == AV_SAMPLE_FMT_FLT) sample = AL_FLOAT_SOFT;
+        if (sfmt == AV_SAMPLE_FMT_DBL) sample = AL_DOUBLE_SOFT;
+
+        if (sfmt == AV_SAMPLE_FMT_U8P) sample = AL_UNSIGNED_BYTE_SOFT;
+        if (sfmt == AV_SAMPLE_FMT_S16P) sample = AL_SHORT_SOFT;
+        if (sfmt == AV_SAMPLE_FMT_S32P) sample = AL_INT_SOFT;
+        if (sfmt == AV_SAMPLE_FMT_FLTP) sample = AL_FLOAT_SOFT;
+        if (sfmt == AV_SAMPLE_FMT_DBLP) sample = AL_DOUBLE_SOFT;
+
+        if (codec->channels == 1) layout = AL_MONO_SOFT;
+        if (codec->channels == 2) layout = AL_STEREO_SOFT;
+        if (codec->channels == 4) layout = AL_QUAD_SOFT;
+        if (codec->channels == 6) layout = AL_5POINT1_SOFT;
+        if (codec->channels == 8) layout = AL_7POINT1_SOFT; // TODO: check the channel count, AV_CH_LAYOUT_MONO
+
+        switch(sample) {
+            case AL_UNSIGNED_BYTE_SOFT:
+                switch(layout) {
+                    case AL_MONO_SOFT:    return AL_FORMAT_MONO8;
+                    case AL_STEREO_SOFT:  return AL_FORMAT_STEREO8;
+                    case AL_QUAD_SOFT:    return alGetEnumValue("AL_FORMAT_QUAD8");
+                    case AL_5POINT1_SOFT: return alGetEnumValue("AL_FORMAT_51CHN8");
+                    case AL_7POINT1_SOFT: return alGetEnumValue("AL_FORMAT_71CHN8");
+                    default: cout << "OpenAL unsupported format";
+                } break;
+            case AL_SHORT_SOFT:
+                switch(layout) {
+                    case AL_MONO_SOFT:    return AL_FORMAT_MONO16;
+                    case AL_STEREO_SOFT:  return AL_FORMAT_STEREO16;
+                    case AL_QUAD_SOFT:    return alGetEnumValue("AL_FORMAT_QUAD16");
+                    case AL_5POINT1_SOFT: return alGetEnumValue("AL_FORMAT_51CHN16");
+                    case AL_7POINT1_SOFT: return alGetEnumValue("AL_FORMAT_71CHN16");
+                    default: cout << "OpenAL unsupported format";
+                } break;
+            case AL_FLOAT_SOFT:
+                switch(layout) {
+                    case AL_MONO_SOFT:    return alGetEnumValue("AL_FORMAT_MONO_FLOAT32");
+                    case AL_STEREO_SOFT:  return alGetEnumValue("AL_FORMAT_STEREO_FLOAT32");
+                    case AL_QUAD_SOFT:    return alGetEnumValue("AL_FORMAT_QUAD32");
+                    case AL_5POINT1_SOFT: return alGetEnumValue("AL_FORMAT_51CHN32");
+                    case AL_7POINT1_SOFT: return alGetEnumValue("AL_FORMAT_71CHN32");
+                    default: cout << "OpenAL unsupported format";
+                } break;
+            case AL_DOUBLE_SOFT:
+                switch(layout) {
+                    case AL_MONO_SOFT:    return alGetEnumValue("AL_FORMAT_MONO_DOUBLE");
+                    case AL_STEREO_SOFT:  return alGetEnumValue("AL_FORMAT_STEREO_DOUBLE");
+                    default: cout << "OpenAL unsupported format";
+                } break;
+            default: cout << "OpenAL unsupported format";
         }
+
         return true;
     }
 
     void play() {
         AVPacket packet; // libav
-        AVFrame* decodedFrame;
-        decodedFrame = avcodec_alloc_frame();
+        AVFrame* frame = avcodec_alloc_frame();
 
         int len;
         while (1) {
@@ -145,18 +197,19 @@ struct VRSound {
                 if (interrupt) { cout << "interrupt sound\n"; break; }
 
                 int finishedFrame = 0;
-                len = avcodec_decode_audio4(codec, decodedFrame, &finishedFrame, &packet);
+                len = avcodec_decode_audio4(codec, frame, &finishedFrame, &packet);
 
                 if (len < 0) { cout << "decoding error\n"; break; }
 
                 if (finishedFrame) {
                     if (interrupt) { cout << "interrupt sound\n"; break; }
 
-                    // Decoded data is now available in decodedFrame->data[0]
-                    int data_size = av_samples_get_buffer_size(NULL, codec->channels, decodedFrame->nb_samples, codec->sample_fmt, 1);
+                    // Decoded data is now available in frame->data[0]
+                    int linesize;
+                    int data_size = av_samples_get_buffer_size(&linesize, codec->channels, frame->nb_samples, codec->sample_fmt, 0);
 
                     if (init) { // initialize OpenAL buffers
-                        ALCHECK( alBufferData(buffers[0], format, decodedFrame->data[0], data_size, frequency));
+                        ALCHECK( alBufferData(buffers[0], format, frame->data[0], data_size, frequency));
                         ALCHECK( alSourceQueueBuffers(source, Nbuffers, buffers));    // all buffers queued
                         ALCHECK( alSourcePlay(source));    // start playback
                         init = 0;
@@ -165,10 +218,12 @@ struct VRSound {
                         ALint val = -1;
                         while (val <= 0) ALCHECK( alGetSourcei(source, AL_BUFFERS_PROCESSED, &val));      // wait for openal to release one buffer
 
+                        ALuint bufid; // get empty buffer
+                        for(; val > 0; --val) ALCHECK( alSourceUnqueueBuffers(source, 1, &bufid));
+
                         // fill and requeue the empty buffer
-                        ALCHECK( alSourceUnqueueBuffers(source, 1, buffers+val));
-                        ALCHECK( alBufferData(buffers[val], format, decodedFrame->data[0], data_size, frequency));
-                        ALCHECK( alSourceQueueBuffers(source, 1, buffers+val));
+                        ALCHECK( alBufferData(bufid, format, frame->data[0], data_size, frequency));
+                        ALCHECK( alSourceQueueBuffers(source, 1, &bufid));
 
                         //Restart openal playback if needed
                         ALCHECK( alGetSourcei(source, AL_SOURCE_STATE, &val));
