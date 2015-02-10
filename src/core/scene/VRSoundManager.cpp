@@ -40,6 +40,7 @@ string toString(ALenum error) {
 struct VRSound {
     uint source = 0;
     uint* buffers = 0;
+    list<uint> free_buffers;
     uint frequency = 0;
     uint Nbuffers = 50;
     int stream_id = 0;
@@ -56,6 +57,7 @@ struct VRSound {
     AVFrame* frame;
     bool interrupt = false;
     bool initiated = false;
+    bool doUpdate = false;
 
     bool loop = false;
     float pitch = 1;
@@ -71,10 +73,10 @@ struct VRSound {
         delete[] buffers;
     }
 
-    void setLoop(bool loop) { this->loop = loop; }
-    void setPitch(float pitch) { this->pitch = pitch; }
-    void setGain(float gain) { this->gain = gain; }
-    void setUser(Vec3f p, Vec3f v) { pos = p; vel = v; }
+    void setLoop(bool loop) { this->loop = loop; doUpdate = true; }
+    void setPitch(float pitch) { this->pitch = pitch; doUpdate = true; }
+    void setGain(float gain) { this->gain = gain; doUpdate = true; }
+    void setUser(Vec3f p, Vec3f v) { pos = p; vel = v; doUpdate = true; }
 
     void close() {
         ALCHECK( alDeleteSources(1u, &source));
@@ -86,37 +88,40 @@ struct VRSound {
         init = 0;
     }
 
-    bool initiate() {
-        if (initiated) close();
-        initiated = true;
-
-        ALCHECK( alGenBuffers(Nbuffers, buffers) );
-        ALCHECK( alGenSources(1u, &source) );
+    void updateSource() {
         ALCHECK( alSourcef(source, AL_PITCH, pitch));
         ALCHECK( alSourcef(source, AL_GAIN, gain));
         ALCHECK( alSource3f(source, AL_POSITION, pos[0], pos[1], pos[2]));
         ALCHECK( alSource3f(source, AL_VELOCITY, vel[0], vel[1], vel[2]));
-        //ALCHECK( alSourcei(source, AL_LOOPING, (loop ? AL_TRUE : AL_FALSE)) );
+        doUpdate = false;
+    }
+
+    bool initiate() {
+        initiated = true;
+
+        ALCHECK( alGenBuffers(Nbuffers, buffers) );
+        for (int i=0; i<Nbuffers; i++) free_buffers.push_back(buffers[i]);
+
+        ALCHECK( alGenSources(1u, &source) );
+        updateSource();
 
         if (avformat_open_input(&context, path.c_str(), NULL, NULL) < 0) return 0;
         if (avformat_find_stream_info(context, NULL) < 0) return 0;
+        av_dump_format(context, 0, path.c_str(), 0);
 
-        int stream_id = -1;
-        for (uint i = 0; i < context->nb_streams; i++) {
-            if (context->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO) {
-                stream_id = i;
-                break;
-            }
-        }
+        stream_id = av_find_best_stream(context, AVMEDIA_TYPE_AUDIO, -1, -1, NULL, 0);
         if (stream_id == -1) return 0;
 
-        this->stream_id = stream_id;
         codec = context->streams[stream_id]->codec;
         AVCodec* avcodec = avcodec_find_decoder(codec->codec_id);
         if (avcodec == 0) return 0;
         if (avcodec_open2(codec, avcodec, NULL) < 0) return 0;
 
-        if (codec->channel_layout == 0) codec->channel_layout = AV_CH_LAYOUT_STEREO; // TODO: fix this!!
+        if (codec->channel_layout == 0) {
+            if (codec->channels == 1) codec->channel_layout = AV_CH_LAYOUT_MONO;
+            if (codec->channels == 2) codec->channel_layout = AV_CH_LAYOUT_STEREO;
+            if (codec->channel_layout == 0) cout << "WARNING! channel_layout is 0.\n";
+        }
 
         frequency = codec->sample_rate;
         format = AL_FORMAT_MONO16;
@@ -179,13 +184,6 @@ struct VRSound {
             default: cout << "OpenAL unsupported format";
         }
 
-        /*cout << "init audio stream" << endl;
-        cout << " AL format=" << format << endl;
-        cout << " sample_fmt=" << codec->sample_fmt << endl;
-        cout << " channel_layout=" << codec->channel_layout << endl;
-        cout << " sample_rate=" << codec->sample_rate << endl;
-        cout << " bit_rate=" << codec->bit_rate << endl;*/
-
         if (av_sample_fmt_is_planar(codec->sample_fmt)) {
             int out_sample_fmt;
             switch(codec->sample_fmt) {
@@ -205,7 +203,6 @@ struct VRSound {
             av_opt_set_int(resampler, "out_sample_fmt",     out_sample_fmt,        0);
             av_opt_set_int(resampler, "out_sample_rate",    codec->sample_rate,    0);
             avresample_open(resampler);
-            //cout << "converting sample format to " << out_sample_fmt << endl;
         }
 
         return true;
@@ -213,18 +210,19 @@ struct VRSound {
 
     void playFrame() {
         if (state == AL_INITIAL) {
-            initiate();
+            if (!initiated) initiate();
             frame = avcodec_alloc_frame();
+            av_seek_frame(context, stream_id, 0,  AVSEEK_FLAG_FRAME);
             state = AL_PLAYING;
         }
 
         int len;
         if (state == AL_PLAYING) {
+            if (doUpdate) updateSource();
             if (interrupt || (av_read_frame(context, &packet) < 0)) {
-                cout << "end of stream\n";
                 if (packet.data) av_free_packet(&packet);
+                av_free(frame);
                 state = loop ? AL_INITIAL : AL_STOPPED;
-                init = 0;
                 return;
             } // End of stream. Done decoding.
 
@@ -250,28 +248,24 @@ struct VRSound {
                         avresample_convert( resampler, (uint8_t **)&frameData, linesize, frame->nb_samples, (uint8_t **)frame->data, frame->linesize[0], frame->nb_samples);
                     } else frameData = (ALbyte*)frame->data[0];
 
-                    if (init < Nbuffers) { // initialize OpenAL buffers
-                        ALint val = -1;
-                        ALCHECK( alBufferData(buffers[init], format, frameData, data_size, frequency));
-                        ALCHECK( alSourceQueueBuffers(source, 1, &buffers[init]));    // all buffers queued
-                        ALCHECK( alGetSourcei(source, AL_SOURCE_STATE, &val));
-                        if (val != AL_PLAYING) ALCHECK( alSourcePlay(source));
-                        init++;
-                    } else { // start continous playback.
-                        ALint val = -1;
-                        ALuint bufid = 0; // get empty buffer
+                    ALint val = -1;
+                    ALuint bufid = 0;
 
+                    while (free_buffers.size() == 0) { // recycle buffers
                         while (val <= 0) ALCHECK( alGetSourcei(source, AL_BUFFERS_PROCESSED, &val));      // wait for openal to release one buffer
-                        for(; val > 0; --val) ALCHECK( alSourceUnqueueBuffers(source, 1, &bufid));
-
-                        // fill and requeue the empty buffer
-                        ALCHECK( alBufferData(bufid, format, frame->data[0], data_size, frequency));
-                        ALCHECK( alSourceQueueBuffers(source, 1, &bufid));
-
-                        //Restart openal playback if needed
-                        ALCHECK( alGetSourcei(source, AL_SOURCE_STATE, &val));
-                        if (val != AL_PLAYING) ALCHECK( alSourcePlay(source));
+                        for(; val > 0; --val) {
+                            ALCHECK( alSourceUnqueueBuffers(source, 1, &bufid));
+                            free_buffers.push_back(bufid);
+                        }
                     }
+
+                    bufid = free_buffers.front();
+                    free_buffers.pop_front();
+
+                    ALCHECK( alBufferData(bufid, format, frameData, data_size, frequency));
+                    ALCHECK( alSourceQueueBuffers(source, 1, &bufid));
+                    ALCHECK( alGetSourcei(source, AL_SOURCE_STATE, &val));
+                    if (val != AL_PLAYING) ALCHECK( alSourcePlay(source));
                 }
 
                 //There may be more than one frame of audio data inside the packet.
@@ -350,7 +344,6 @@ struct VRSoundChannel {
             for (auto c : current) {
                 c.second->playFrame();
                 if (c.second->state == AL_STOPPED) current.erase(c.first);
-                //if (!c.second->loop) current.erase(c.first);
             }
         }
 
