@@ -868,6 +868,7 @@ void VRGuiScene::on_drag_end(const Glib::RefPtr<Gdk::DragContext>& dc) {
     if (dragDest == 0) return;
     if (ac == 0) return;
     VRObject* selected = getSelected();
+    if (selected == 0) return;
     selected->switchParent(dragDest, 0);
     cout << "drag_end " << selected->getPath() << endl;
     Gtk::TreeModel::iterator iter = tree_view->get_model()->get_iter(selected->getPath());
@@ -887,7 +888,10 @@ void VRGuiScene::on_drag_data_receive(const Glib::RefPtr<Gdk::DragContext>& dc ,
 
     // check for wrong drags
     dragDest = 0;
-    if (getSelected()->hasAttachment("treeviewNotDragable")) { dc->drag_status(Gdk::DragAction(0),0); return; } // object is not dragable
+    VRObject* selected = getSelected();
+    if (selected == 0) return;
+
+    if (selected->hasAttachment("treeviewNotDragable")) { dc->drag_status(Gdk::DragAction(0),0); return; } // object is not dragable
     string _path = path.to_string();
     if (_path == "0" and pos <= 1) { dc->drag_status(Gdk::DragAction(0),0); return; } // drag out of root
     Gtk::TreeModel::iterator iter = tree_view->get_model()->get_iter(path);
