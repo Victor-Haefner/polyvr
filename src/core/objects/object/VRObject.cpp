@@ -138,9 +138,9 @@ void VRObject::switchParent(VRObject* new_p, int place) {
     if (new_p == 0) { cout << "\nERROR : new parent is 0!\n"; return; }
 
     if (parent == 0) { new_p->addChild(this, true, place); return; }
-    if (parent == new_p) { return; }
+    if (parent == new_p and place == childIndex) { return; }
 
-    _switchParent(new_p->node); //takes care of the osg node structure
+    if (parent != new_p) _switchParent(new_p->node); //takes care of the osg node structure
 
     parent->subChild(this, false);
     new_p->addChild(this, false, place);

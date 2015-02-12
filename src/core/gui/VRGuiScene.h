@@ -13,6 +13,8 @@ using namespace std;
 class VRGuiScene {
     private:
         VRObject* dragDest;
+        string dragPath;
+        int dragPos = 0;
         VRGuiContextMenu* menu;
         bool cache_override;
 
