@@ -37,7 +37,7 @@ VRPhysicsManager::VRPhysicsManager() {
 
     updatePhysicsFkt = new VRFunction<int>("PhysicsUpdate", boost::bind(&VRPhysicsManager::updatePhysics, this));
 
-    physics_visual_layer = new VRVisualLayer("physics");
+    physics_visual_layer = new VRVisualLayer("physics", "physics.png");
 
     phys_mat = new VRMaterial("phys_mat");
     phys_mat->setLit(false);

@@ -6,8 +6,12 @@
 #include <gtkmm/combobox.h>
 #include "core/setup/devices/VRSignal.h"
 
+namespace Gtk { class ToggleToolButton; }
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
+
+class VRVisualLayer;
 
 class VRGuiBits {
     private:
@@ -15,6 +19,7 @@ class VRGuiBits {
 
         void hideAbout(int i);
         void updateVisualLayer();
+        void on_view_option_toggle(VRVisualLayer* l, Gtk::ToggleToolButton* tb);
 
     public:
         VRGuiBits();
