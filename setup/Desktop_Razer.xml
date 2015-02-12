@@ -2,10 +2,11 @@
 <Setup>
   <Displays>
     <Window active="1" type="2" width="300" height="300" name="screen" mouse="mouse" keyboard="keyboard">
-      <View stereo="0" active_stereo="0" projection="0" eye_inverted="0" eye_separation="0.06" stats="1" position="0 0 1 1" center="0 0 0" normal="0 0 1" up="0 1 0" size="2 1"/>
+      <View stereo="1" active_stereo="0" projection="0" eye_inverted="0" eye_separation="0.03" stats="1" position="0 0 1 1" center="0 0 0" normal="0 0 1" up="0 1 0" size="2 1"/>
     </Window>
   </Displays>
   <Devices>
+    <Device h_ip="172.22.151.200" h_type="" name="haptic" type="haptic"/>
     <Device name="keyboard" type="keyboard"/>
     <Device name="mobile" type="mobile"/>
     <Device name="mouse" type="mouse"/>

@@ -1227,12 +1227,6 @@ cave allocated</property>
       <column type="gchararray"/>
     </columns>
   </object>
-  <object class="GtkListStore" id="phys_shapes">
-    <columns>
-      <!-- column-name shapes -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
   <object class="GtkListStore" id="prim_list">
     <columns>
       <!-- column-name prims -->
@@ -1244,6 +1238,12 @@ cave allocated</property>
       <!-- column-name param -->
       <column type="gchararray"/>
       <!-- column-name value -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+  <object class="GtkListStore" id="phys_shapes">
+    <columns>
+      <!-- column-name shapes -->
       <column type="gchararray"/>
     </columns>
   </object>
@@ -7986,51 +7986,28 @@ to add distances</property>
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkComboBox" id="combobox20">
+                          <object class="GtkToolbar" id="toolbar6">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
-                            <property name="model">view_options</property>
+                            <property name="toolbar_style">icons</property>
                             <child>
-                              <object class="GtkCellRendererText" id="cellrenderertext30"/>
-                              <attributes>
-                                <attribute name="text">0</attribute>
-                              </attributes>
+                              <object class="GtkToggleToolButton" id="togglebutton1">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="label" translatable="yes">toolbutton24</property>
+                                <property name="use_underline">True</property>
+                                <property name="icon_widget">image48</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="homogeneous">True</property>
+                              </packing>
                             </child>
-                            <child>
-                              <object class="GtkCellRendererToggle" id="cellrenderertoggle2"/>
-                              <attributes>
-                                <attribute name="active">1</attribute>
-                              </attributes>
-                            </child>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">8</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkFixed" id="fixed41">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
                           </object>
                           <packing>
                             <property name="expand">True</property>
                             <property name="fill">True</property>
-                            <property name="position">9</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkToggleButton" id="togglebutton1">
-                            <property name="visible">True</property>
-                            <property name="can_focus">True</property>
-                            <property name="receives_default">True</property>
-                            <property name="image">image48</property>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">10</property>
+                            <property name="position">8</property>
                           </packing>
                         </child>
                       </object>

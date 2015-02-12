@@ -392,8 +392,8 @@ void VRNavigator::hyd_walk(VRDevice* dev) {
     Vec3f dir = flystick->getWorldDirection();
     dir.normalize();
 
-    float rspeed = 0.7;
-    float tspeed = 1.5;
+    float rspeed = 0.1;
+    float tspeed = 0.1;
 
     float dt = 60.0/ max(1u, VRGlobals::get()->FRAME_RATE);
     switch(key) {
@@ -417,6 +417,7 @@ void VRNavigator::initHydraFly(VRTransform* target, VRDevice* dev) {
     VRNavBinding b2( getNavigationCallback("hyd_walk"), 21, 0, false);
     VRNavBinding b3( getNavigationCallback("hyd_walk"), 23, 0, false);
     VRNavBinding b4( getNavigationCallback("hyd_walk"), 24, 0, false);
+
     preset->addKeyBinding(b1);
     preset->addKeyBinding(b2);
     preset->addKeyBinding(b3);

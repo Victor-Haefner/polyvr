@@ -868,7 +868,8 @@ void VRGuiScene::on_drag_end(const Glib::RefPtr<Gdk::DragContext>& dc) {
     if (dragDest == 0) return;
     if (ac == 0) return;
     VRObject* selected = getSelected();
-    selected->switchParent(dragDest, 0);
+    if (selected == 0) return;
+    selected->switchParent(dragDest, dragPos);
     cout << "drag_end " << selected->getPath() << endl;
     Gtk::TreeModel::iterator iter = tree_view->get_model()->get_iter(selected->getPath());
     setSGRow(iter, selected);
@@ -881,22 +882,32 @@ void VRGuiScene::on_drag_beg(const Glib::RefPtr<Gdk::DragContext>& dc) {
 void VRGuiScene::on_drag_data_receive(const Glib::RefPtr<Gdk::DragContext>& dc , int x, int y ,const Gtk::SelectionData& sd, guint i3, guint i4) {
     Gtk::TreeModel::Path path;
     Gtk::TreeViewDropPosition pos; // enum
-    tree_view->get_drag_dest_row(path,pos);
-    if (path == 0) return; // TOCHECK: needed because this hapns right before drag end
-    // if (path == 0) { dc->drag_status(Gdk::DragAction(0),0); return; }
+    tree_view->get_drag_dest_row(path, pos);
+    if (path == 0) return;
 
-    // check for wrong drags
     dragDest = 0;
-    if (getSelected()->hasAttachment("treeviewNotDragable")) { dc->drag_status(Gdk::DragAction(0),0); return; } // object is not dragable
-    string _path = path.to_string();
-    if (_path == "0" and pos <= 1) { dc->drag_status(Gdk::DragAction(0),0); return; } // drag out of root
-    Gtk::TreeModel::iterator iter = tree_view->get_model()->get_iter(path);
-    if(!iter) { dc->drag_status(Gdk::DragAction(0),0); return; }
+    VRObject* selected = getSelected();
+    if (selected == 0) return;
 
+    dragPath = path.to_string();
+    dragPos = 0;
+    if (pos <= 1) { // between two rows
+        int d = dragPath.rfind(':');
+        dragPos = toInt( dragPath.substr(d+1) );
+        dragPath = dragPath.substr(0,d);
+    }
+    cout << "drag dest " << dragPath << " " << pos << endl;
+
+    if (selected->hasAttachment("treeviewNotDragable")) { dc->drag_status(Gdk::DragAction(0),0); return; } // object is not dragable
+    if (dragPath == "0" and pos <= 1) { dc->drag_status(Gdk::DragAction(0),0); return; } // drag out of root
+
+    /*Gtk::TreeModel::iterator iter = tree_view->get_model()->get_iter(path);
+    if(!iter) { dc->drag_status(Gdk::DragAction(0),0); return; }
     ModelColumns cols;
     Gtk::TreeModel::Row row = *iter;
-    string dest_path = row.get_value(cols.obj);
-    dragDest = VRSceneManager::getCurrent()->getRoot()->getAtPath(dest_path);
+    string dest_path = row.get_value(cols.obj);*/
+
+    dragDest = VRSceneManager::getCurrent()->getRoot()->getAtPath(dragPath);
 }
 
 void VRGuiScene_on_notebook_switched(GtkNotebook* notebook, GtkNotebookPage* page, guint pageN, gpointer data) {

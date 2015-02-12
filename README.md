@@ -14,8 +14,8 @@ clone this repository
  sudo ./install
 
 
-start polyvr from console:
+build the project in codeblocks with the project file polyvr/PolyVR.cbp.
+Set the number of compilation processes to 5 or more depending on your CPU.
+The option is in Settings > Compiler... > Global compiler settings > Build options.
 
-> polyvr
 
-or build the project in codeblocks with the project file polyvr/PolyVR.cbp

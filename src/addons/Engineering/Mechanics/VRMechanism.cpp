@@ -394,18 +394,16 @@ void MChain::updateGeo() {
     geo->setColors(cols);
     geo->setIndices(inds);
     geo->setLengths(lengths);
-    geo->getMaterial()->setLineWidth(3);
-    geo->getMaterial()->setLit(false);
 }
 
 VRGeometry* MChain::init() {
     geo = new VRGeometry("chain");
-    VRMaterial* cm = new VRMaterial("chain_mat");
+    updateGeo();
+    VRMaterial* cm = VRMaterial::get("chain_mat");
     cm->setLit(false);
-    cm->setLineWidth(4);
+    cm->setLineWidth(3);
     geo->setMaterial(cm);
     geo->setType(GL_LINES);
-    updateGeo();
     return geo;
 }
 

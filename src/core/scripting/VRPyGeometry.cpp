@@ -475,9 +475,12 @@ PyObject* VRPyGeometry::getColors(VRPyGeometry* self) {
     if (self->obj->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getColors - Mesh is invalid"); return NULL; }
 
     OSG::GeoVectorProperty* pos = self->obj->getMesh()->getColors();
-    PyObject* res = PyList_New(pos->size());
 
-    for (uint i=0; i<pos->size(); i++) {
+    int N = 0;
+    if (pos != 0) N = pos->size();
+    PyObject* res = PyList_New(N);
+
+    for (uint i=0; i<N; i++) {
         OSG::Vec3f v;
         pos->getValue(v,i);
         PyObject* pv = toPyTuple(v);

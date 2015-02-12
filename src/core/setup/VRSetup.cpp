@@ -44,7 +44,7 @@ VRSetup::VRSetup(string name) {
     user = 0;
     tracking = "None";
 
-    setup_layer = new VRVisualLayer("setup");
+    setup_layer = new VRVisualLayer("setup", "setup.png");
     setup_layer->setCallback( new VRFunction<bool>("showSetup", boost::bind(&VRSetup::showSetup, this, _1) ) );
 }
 

@@ -9,6 +9,8 @@
 #include <gtkmm/notebook.h>
 #include <gtkmm/separator.h>
 #include <gtkmm/table.h>
+#include <gtkmm/toggletoolbutton.h>
+#include <gtkmm/toolbar.h>
 #include <vte-0.0/vte/vte.h>
 #include <iostream>
 //#include <boost/locale.hpp>
@@ -43,29 +45,8 @@ class VRGuiSetup_ViewOptsColumns : public Gtk::TreeModelColumnRecord {
 // ---------SIGNALS----------
 // --------------------------
 
-void VRGuiBits_on_viewoption_changed(GtkComboBox* cb, gpointer data) {
-    int i = gtk_combo_box_get_active(cb);
-    if (i == -1) return;
-
-    // get all in
-    VRScene* scene = VRSceneManager::getCurrent();
-    VRSetup* setup = VRSetupManager::getCurrent();
-    Glib::RefPtr<Gtk::ListStore> opt_list = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("view_options"));
-    VRGuiSetup_ViewOptsColumns cols;
-    Gtk::TreeModel::Row row = *getComboboxIter("combobox20");
-    string opt = row.get_value(cols.option);
-    bool b = row.get_value(cols.state);
-    b = !b;
-    VRVisualLayer::getLayer(opt)->setVisibility(b);
-
-    // process option
-    /*if (opt == "referentials") scene->showReferentials(b);
-    if (opt == "setup") setup->showSetup(b);
-    if (opt == "lights and cameras") scene->showLightsCameras(b);*/
-
-    // update liststore toggle
-    gtk_list_store_set (opt_list->gobj(), row.gobj(), 1, (int)b, -1);
-    setCombobox("combobox20", -1);
+void VRGuiBits::on_view_option_toggle(VRVisualLayer* l, Gtk::ToggleToolButton* tb) {
+    l->setVisibility( tb->get_active() );
 }
 
 void VRGuiBits_on_camera_changed(GtkComboBox* cb, gpointer data) {
@@ -196,7 +177,7 @@ bool VRGuiBits::toggleStereo(GdkEventKey* k) {
 }
 
 void VRGuiBits::toggleDock() {
-    Gtk::ToggleButton* tbut;
+    Gtk::ToggleToolButton* tbut;
     VRGuiBuilder()->get_widget("togglebutton1", tbut);
     bool a = tbut->get_active();
 
@@ -233,7 +214,7 @@ VRGuiBits::VRGuiBits() {
     setButtonCallback("button14", VRGuiBits_on_new_cancel_clicked);
     setButtonCallback("button21", VRGuiBits_on_internal_close_clicked);
 
-    setToggleButtonCallback("togglebutton1", sigc::mem_fun(*this, &VRGuiBits::toggleDock) );
+    setToolButtonCallback("togglebutton1", sigc::mem_fun(*this, &VRGuiBits::toggleDock) );
 
     setLabel("label24", "Project: None");
 
@@ -292,25 +273,32 @@ VRGuiBits::VRGuiBits() {
     VRSceneManager::get()->addUpdateFkt(fkt);
 
     // view options
-    setComboboxCallback("combobox20", VRGuiBits_on_viewoption_changed);
+    //setComboboxCallback("combobox20", VRGuiBits_on_viewoption_changed);
     updateVisualLayer();
 }
 
 void VRGuiBits::updateVisualLayer() {
-    vector<string> vopts;
-    /*vopts.push_back("referentials");
-    vopts.push_back("setup");
-    vopts.push_back("lights and cameras");*/
-    for (auto l : VRVisualLayer::getLayers()) vopts.push_back(l);
+    Gtk::Toolbar* bar;
+    VRGuiBuilder()->get_widget("toolbar6", bar);
+    for (auto c : bar->get_children()) bar->remove(*c);
 
-    Glib::RefPtr<Gtk::ListStore> opt_list = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("view_options"));
-    opt_list->clear();
-    Gtk::ListStore::Row row;
-    for (auto l : vopts) {
-        row = *opt_list->append();
-        gtk_list_store_set (opt_list->gobj(), row.gobj(), 0, l.c_str(), -1);
-        gtk_list_store_set (opt_list->gobj(), row.gobj(), 1, 0, -1);
+    for (auto l : VRVisualLayer::getLayers()) {
+        VRVisualLayer* ly = VRVisualLayer::getLayer(l);
+        Gtk::ToggleToolButton* tb = Gtk::manage( new Gtk::ToggleToolButton() );
+        Gtk::Image* icon = Gtk::manage( new Gtk::Image() );
+
+        string icon_path = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/gui/" + ly->getIconName();
+        icon->set(icon_path);
+        Glib::RefPtr<Gdk::Pixbuf> pbuf = icon->get_pixbuf();
+        pbuf = pbuf->scale_simple(24, 24, Gdk::INTERP_BILINEAR);
+        icon->set(pbuf);
+        tb->set_icon_widget(*icon);
+
+        sigc::slot<void> slot = sigc::bind<VRVisualLayer*, Gtk::ToggleToolButton*>( sigc::mem_fun(*this, &VRGuiBits::on_view_option_toggle), ly, tb);
+        bar->append(*tb, slot);
     }
+
+    bar->show_all();
 }
 
 void VRGuiBits::update() { // scene changed
