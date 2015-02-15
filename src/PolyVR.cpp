@@ -76,6 +76,7 @@ void initPolyVR(int argc, char **argv) {
 
     cout << "Init SceneManager\n";
     VRSceneManager::get();
+    VRSetupManager::get();
     VRInternalMonitor::get();
 
     VRGuiManager::get();

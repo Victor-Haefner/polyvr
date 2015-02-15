@@ -12,10 +12,14 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRVisualLayer;
+class VRRecorder;
 
 class VRGuiBits {
     private:
         GtkWidget* term_box;
+
+        VRRecorder* recorder = 0;
+        VRVisualLayer* recorder_visual_layer = 0;
 
         void hideAbout(int i);
         void updateVisualLayer();

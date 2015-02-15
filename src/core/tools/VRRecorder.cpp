@@ -2,6 +2,7 @@
 #include "core/setup/windows/VRView.h"
 #include "core/setup/VRSetup.h"
 #include "core/setup/VRSetupManager.h"
+#include "core/scene/VRSceneManager.h"
 #include "core/objects/object/VRObject.h"
 #include "core/utils/toString.h"
 
@@ -28,9 +29,14 @@ class VRFrame {
 VRRecorder::VRRecorder() {
     av_register_all();
     avcodec_register_all();
+
+    toggleCallback = new VRFunction<bool>("recorder toggle", boost::bind(&VRRecorder::on_record_toggle, this, _1));
+    updateCallback = new VRFunction<int>("recorder update", boost::bind(&VRRecorder::capture, this));
 }
 
 void VRRecorder::setView(int i) {
+    viewID = i;
+    if (VRSetupManager::getCurrent() == 0) return;
     view = VRSetupManager::getCurrent()->getView(i);
 }
 
@@ -38,6 +44,7 @@ void VRRecorder::setMaxFrames(int maxf) { maxFrames = maxf; }
 bool VRRecorder::frameLimitReached() { return (captures.size() == maxFrames); }
 
 void VRRecorder::capture() {
+    if (view == 0) view = VRSetupManager::getCurrent()->getView(viewID);
     if (view == 0) return;
     if (frameLimitReached()) return;
 
@@ -173,5 +180,16 @@ void VRRecorder::compile(string path) {
     av_freep(&frame->data[0]);
     avcodec_free_frame(&frame);
 }
+
+void VRRecorder::on_record_toggle(bool b) {
+    if (b) VRSceneManager::get()->addUpdateFkt(updateCallback);
+    else {
+        VRSceneManager::get()->dropUpdateFkt(updateCallback);
+        compile("recording_"+toString(VRGlobals::get()->CURRENT_FRAME)+".avi");
+        clear();
+    }
+}
+
+VRFunction<bool>* VRRecorder::getToggleCallback() { return toggleCallback; }
 
 OSG_END_NAMESPACE;

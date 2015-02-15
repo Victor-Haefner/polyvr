@@ -28,6 +28,7 @@
 #include "core/scene/VRScene.h"
 #include "PolyVR.h"
 #include "core/objects/VRCamera.h"
+#include "core/tools/VRRecorder.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -218,8 +219,13 @@ VRGuiBits::VRGuiBits() {
 
     setLabel("label24", "Project: None");
 
-    // About Dialog
+    // recorder
+    recorder = new VRRecorder();
+    recorder->setView(0);
+    recorder_visual_layer = new VRVisualLayer("recorder", "recorder.png");
+    recorder_visual_layer->setCallback( recorder->getToggleCallback() );
 
+    // About Dialog
     Gtk::AboutDialog* diag;
     VRGuiBuilder()->get_widget("aboutdialog1", diag);
     diag->signal_response().connect( sigc::mem_fun(*this, &VRGuiBits::hideAbout) );
@@ -287,15 +293,17 @@ void VRGuiBits::updateVisualLayer() {
         Gtk::ToggleToolButton* tb = Gtk::manage( new Gtk::ToggleToolButton() );
         Gtk::Image* icon = Gtk::manage( new Gtk::Image() );
 
+        sigc::slot<void> slot = sigc::bind<VRVisualLayer*, Gtk::ToggleToolButton*>( sigc::mem_fun(*this, &VRGuiBits::on_view_option_toggle), ly, tb);
+        bar->append(*tb, slot);
+
         string icon_path = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/gui/" + ly->getIconName();
         icon->set(icon_path);
         Glib::RefPtr<Gdk::Pixbuf> pbuf = icon->get_pixbuf();
-        pbuf = pbuf->scale_simple(24, 24, Gdk::INTERP_BILINEAR);
-        icon->set(pbuf);
-        tb->set_icon_widget(*icon);
-
-        sigc::slot<void> slot = sigc::bind<VRVisualLayer*, Gtk::ToggleToolButton*>( sigc::mem_fun(*this, &VRGuiBits::on_view_option_toggle), ly, tb);
-        bar->append(*tb, slot);
+        if (pbuf) {
+            pbuf = pbuf->scale_simple(24, 24, Gdk::INTERP_BILINEAR);
+            icon->set(pbuf);
+            tb->set_icon_widget(*icon);
+        }
     }
 
     bar->show_all();
