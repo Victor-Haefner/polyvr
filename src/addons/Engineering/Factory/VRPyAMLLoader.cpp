@@ -1,13 +1,12 @@
-#include "VRPySegmentation.h"
-#include "core/scripting/VRPyGeometry.h"
-#include "core/scripting/VRPyTypeCaster.h"
+#include "VRPyAMLLoader.h"
 #include "core/scripting/VRPyBaseT.h"
+#include "core/scripting/VRPyTypeCaster.h"
 
-template<> PyTypeObject VRPyBaseT<OSG::VRSegmentation>::type = {
+template<> PyTypeObject VRPyBaseT<OSG::VRAMLLoader>::type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
-    "VR.Segmentation",             /*tp_name*/
-    sizeof(VRPySegmentation),             /*tp_basicsize*/
+    "VR.Factory.AMLLoader",             /*tp_name*/
+    sizeof(VRPyAMLLoader),             /*tp_basicsize*/
     0,                         /*tp_itemsize*/
     (destructor)dealloc, /*tp_dealloc*/
     0,                         /*tp_print*/
@@ -25,14 +24,14 @@ template<> PyTypeObject VRPyBaseT<OSG::VRSegmentation>::type = {
     0,                         /*tp_setattro*/
     0,                         /*tp_as_buffer*/
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
-    "VRSegmentation binding",           /* tp_doc */
+    "AML loader binding",           /* tp_doc */
     0,		               /* tp_traverse */
     0,		               /* tp_clear */
     0,		               /* tp_richcompare */
     0,		               /* tp_weaklistoffset */
     0,		               /* tp_iter */
     0,		               /* tp_iternext */
-    VRPySegmentation::methods,             /* tp_methods */
+    VRPyAMLLoader::methods,             /* tp_methods */
     0,             /* tp_members */
     0,                         /* tp_getset */
     0,                         /* tp_base */
@@ -45,22 +44,13 @@ template<> PyTypeObject VRPyBaseT<OSG::VRSegmentation>::type = {
     New_toZero,                 /* tp_new */
 };
 
-PyMethodDef VRPySegmentation::methods[] = {
-    {"extractPatches", (PyCFunction)VRPySegmentation::extractPatches, METH_VARARGS, "Init real world" },
+PyMethodDef VRPyAMLLoader::methods[] = {
+    {"load", (PyCFunction)VRPyAMLLoader::load, METH_VARARGS, "Load AML file - load(string path)" },
     {NULL}  /* Sentinel */
 };
 
-PyObject* VRPySegmentation::extractPatches(VRPySegmentation* self, PyObject* args) {
-    VRPyGeometry* geo = NULL;
-    int algo = 0;
-    float curv, curv_d;
-    PyObject *norm, *norm_d;
-    if (! PyArg_ParseTuple(args, "OiffOO", &geo, &algo, &curv, &curv_d, &norm, &norm_d)) return NULL;
-    if (geo == NULL) { PyErr_SetString(err, "VRPySegmentation::extractPatches: Missing geometry parameter"); return NULL; }
 
-    OSG::Vec3f vnorm = parseVec3fList(norm);
-    OSG::Vec3f vnorm_d = parseVec3fList(norm_d);
-
-    OSG::VRObject* patches = self->obj->extractPatches(geo->obj, OSG::SEGMENTATION_ALGORITHM(algo), curv, curv_d, vnorm, vnorm_d);
-    return VRPyTypeCaster::cast( patches );
+PyObject* VRPyAMLLoader::load(VRPyAMLLoader* self, PyObject* args) {
+    return VRPyTypeCaster::cast( OSG::VRAMLLoader::get()->load( parseString(args) ) );
 }
+

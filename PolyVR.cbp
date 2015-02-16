@@ -98,6 +98,7 @@
 			<Add directory="/usr/include/CEF" />
 			<Add directory="src" />
 			<Add directory="/usr/include/opensg" />
+			<Add directory="/usr/include/collada" />
 		</Compiler>
 		<Linker>
 			<Add option="-lcef" />
@@ -225,10 +226,14 @@
 		<Unit filename="src/addons/Engineering/Chemistry/VRMolecule.h" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRPyMolecule.cpp" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRPyMolecule.h" />
+		<Unit filename="src/addons/Engineering/Factory/VRAMLLoader.cpp" />
+		<Unit filename="src/addons/Engineering/Factory/VRAMLLoader.h" />
 		<Unit filename="src/addons/Engineering/Factory/VRFactory.cpp" />
 		<Unit filename="src/addons/Engineering/Factory/VRFactory.h" />
 		<Unit filename="src/addons/Engineering/Factory/VRLogistics.cpp" />
 		<Unit filename="src/addons/Engineering/Factory/VRLogistics.h" />
+		<Unit filename="src/addons/Engineering/Factory/VRPyAMLLoader.cpp" />
+		<Unit filename="src/addons/Engineering/Factory/VRPyAMLLoader.h" />
 		<Unit filename="src/addons/Engineering/Factory/VRPyFactory.cpp" />
 		<Unit filename="src/addons/Engineering/Factory/VRPyFactory.h" />
 		<Unit filename="src/addons/Engineering/Factory/VRPyLogistics.cpp" />

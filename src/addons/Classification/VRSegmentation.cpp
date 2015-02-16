@@ -1,6 +1,7 @@
 #include "VRSegmentation.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
+#include "addons/Engineering/CSG/Octree/Octree.h"
 #include <OpenSG/OSGGeometry.h>
 #include <OpenSG/OSGGeoProperties.h>
 #include <boost/range/adaptor/reversed.hpp>
@@ -61,6 +62,57 @@ struct Accumulator {
     bool pOnPlane(Pnt3f& p, Vec4f& pl, float& th) { return abs(pl[0]*p[0]+pl[1]*p[1]+pl[2]*p[2]+pl[3]) < th; }
 };
 
+struct Accumulator_octree {
+    Octree* octree;
+    int Da, Dr;
+    float Ra, Rr, Dp;
+
+    Accumulator_octree(int Da, int Dr) {
+        this->Da = Da;
+        this->Dr = Dr;
+        Ra = Pi/Da;
+        Rr = 5.0/Dr;
+        Dp = 0.05*Rr;
+        octree = new Octree(Rr);
+    }
+
+    ~Accumulator_octree() {
+        delete octree;
+    }
+
+    void clear() { ; }
+
+    float getWeight(Vec3f p) {
+        Octree* t = octree->get(p[0], p[1], p[2]);
+        vector<void*> data = t->getData();
+        if (data.size() == 0) return 0;
+        accu_bin* bin = (accu_bin*)data[0];
+        return bin->weight;
+    }
+
+    void pushPoint(Vec3f p) {
+        float w = 0;
+        Octree* t = octree->get(p[0], p[1], p[2]);
+        vector<void*> data = t->getData();
+        if (data.size() > 0) {
+            accu_bin* bin = (accu_bin*)data[0];
+            w = bin->weight;
+            bin->weight += 0.1;
+        }
+
+        t->add(p[0], p[1], p[2], new accu_bin(), w);
+    }
+
+    Vec4f plane(float theta, float phi, float rho) {
+        float th = Ra*theta - Pi*0.5;
+        float ph = Ra*phi;
+        float sin_th = sin(th);
+        return Vec4f(cos(ph)*sin_th, cos(th), sin(ph)*sin_th, -rho*Rr);
+    }
+
+    bool pOnPlane(Pnt3f& p, Vec4f& pl, float& th) { return abs(pl[0]*p[0]+pl[1]*p[1]+pl[2]*p[2]+pl[3]) < th; }
+};
+
 void feedAccumulator(VRGeometry* geo_in, Accumulator& accu) {
     GeoVectorPropertyRecPtr positions = geo_in->getMesh()->getPositions();
     //GeoVectorPropertyRecPtr normals = geo_in->getMesh()->getNormals();
@@ -74,10 +126,30 @@ void feedAccumulator(VRGeometry* geo_in, Accumulator& accu) {
         positions->getValue(p, i);
         //normals->getValue(n, i);
 
-        for (int i = 0; i < accu.size(); i++) {
+        for (int j = 0; j < accu.size(); j++) {
+            pl = accu.data[j].plane;
+            if ( accu.pOnPlane(p, pl, accu.Dp) ) accu.data[j].weight += 1;//Vec3f(pl).dot(n); // TODO: check the dot product
+        }
+    }
+}
+
+void feedAccumulatorOctree(VRGeometry* geo_in, Accumulator_octree& accu) {
+    GeoVectorPropertyRecPtr positions = geo_in->getMesh()->getPositions();
+    //GeoVectorPropertyRecPtr normals = geo_in->getMesh()->getNormals();
+
+    cout << "start plane extraction of " << geo_in->getName() << " with " << positions->size() << " points" << endl;
+
+    Pnt3f p;
+    Vec3f n;
+    Vec4f pl;
+    for (uint i = 0; i < positions->size(); i++) {
+        positions->getValue(p, i);
+        //accu.pushPoint(p);
+
+        /*for (int i = 0; i < accu.size(); i++) {
             pl = accu.data[i].plane;
             if ( accu.pOnPlane(p, pl, accu.Dp) ) accu.data[i].weight += 1;//Vec3f(pl).dot(n); // TODO: check the dot product
-        }
+        }*/
     }
 }
 
@@ -102,7 +174,7 @@ vector<Vec4f> evalAccumulator(Accumulator& accu) {
     return planes;
 }
 
-vector<VRGeometry*> extractPointsOnPlane(VRGeometry* geo_in, Vec4f plane, Accumulator& accu) {
+vector<VRGeometry*> extractPointsOnPlane(VRGeometry* geo_in, Vec4f plane, Accumulator& accu, float Dp) {
     GeoVectorPropertyRecPtr positions = geo_in->getMesh()->getPositions();
 
     vector<VRGeometry*> res; // two geometries, the plane and the rest
@@ -114,7 +186,6 @@ vector<VRGeometry*> extractPointsOnPlane(VRGeometry* geo_in, Vec4f plane, Accumu
     }
 
     Pnt3f p;
-    float Dp = 0.05;
     for (uint i = 0; i<positions->size(); i++) {
         positions->getValue(p, i);
         if (accu.pOnPlane(p, plane, Dp)) res[0]->getMesh()->getPositions()->addValue(p);
@@ -138,19 +209,20 @@ vector<VRGeometry*> extractPointsOnPlane(VRGeometry* geo_in, Vec4f plane, Accumu
     return res;
 }
 
-vector<VRGeometry*> extractPlanes(VRGeometry* geo_in) {
+vector<VRGeometry*> extractPlanes(VRGeometry* geo_in, int N, float delta) {
     srand(5);
 
     vector<VRGeometry*> res, tmp;
-    for (int i=0; i<15; i++) {
+    for (int i=0; i<N; i++) {
         int D = 10 + 2*i;
+        D *= delta;
         Accumulator accu( D, D );
         cout << " accumulator size: " << accu.size() << endl;
 
         feedAccumulator(geo_in, accu);
         vector<Vec4f> planes = evalAccumulator(accu);
         cout << " planes" << planes.size() << endl;
-        tmp = extractPointsOnPlane(geo_in, planes[0], accu);
+        tmp = extractPointsOnPlane(geo_in, planes[0], accu, 0.02);
         res.push_back(tmp[0]);
         cout << "  push to res " << tmp[0] << " and rest " << tmp[1] <<endl;
         geo_in = tmp[1];
@@ -160,12 +232,17 @@ vector<VRGeometry*> extractPlanes(VRGeometry* geo_in) {
     return res;
 }
 
-vector<VRGeometry*> VRSegmentation::extractPatches(VRGeometry* geo, SEGMENTATION_ALGORITHM algo, float curvature, float curvature_delta, Vec3f normal, Vec3f normal_delta) {
-    vector<VRGeometry*> patches = extractPlanes(geo);
+VRObject* VRSegmentation::extractPatches(VRGeometry* geo, SEGMENTATION_ALGORITHM algo, float curvature, float curvature_delta, Vec3f normal, Vec3f normal_delta) {
+    vector<VRGeometry*> patches = extractPlanes(geo, curvature, curvature_delta);
 
-	for (auto p : patches) geo->getParent()->addChild(p);
+    VRObject* anchor = new VRObject("segmentation");
+    geo->getParent()->addChild(anchor);
+	for (auto p : patches) {
+        anchor->addChild(p);
+        p->setWorldMatrix(geo->getWorldMatrix());
+	}
 
-    return patches;
+    return anchor;
 }
 
 OSG_END_NAMESPACE;

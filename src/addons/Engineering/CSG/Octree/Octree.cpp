@@ -93,7 +93,7 @@ bool checkRecursion(Octree* t, OcPoint p) {
     return true;
 }
 
-void Octree::add(OcPoint p, void* data) {
+void Octree::add(OcPoint p, void* data, int maxjump) {
     bool rOk = checkRecursion(this, p);
     if (!rOk) {
         cout << "\n Center "; center.print();
@@ -129,7 +129,7 @@ void Octree::add(OcPoint p, void* data) {
         return;
     }
 
-    if (size > resolution) {
+    if (size > resolution and maxjump != 0) {
         int o = getOctant(p);
         if (children[o] == 0) {
             float s2 = size*0.25;
@@ -143,7 +143,7 @@ void Octree::add(OcPoint p, void* data) {
             children[o]->parent = this;
         }
         //OcPoint c = children[o]->center;
-        children[o]->add(p, data);
+        children[o]->add(p, data, maxjump-1);
         return;
     }
 
@@ -151,8 +151,25 @@ void Octree::add(OcPoint p, void* data) {
     this->data.push_back(data);
 }
 
-void Octree::add(float x, float y, float z, void* data) {
-    add(OcPoint(x,y,z), data);
+void Octree::add(float x, float y, float z, void* data, int maxjump) {
+    add(OcPoint(x,y,z), data, maxjump);
+}
+
+void Octree::set(Octree* node, void* data) { node->data.clear(); node->data.push_back(data); }
+
+Octree* Octree::get(float x, float y, float z) {
+    OcPoint p = OcPoint(x,y,z);
+    if ( ! p.inBox(center, size) ) {
+        return parent == 0 ? 0 : parent->get(x,y,z);
+    }
+
+    if (size > resolution) {
+        int o = getOctant(p);
+        if (children[o] == 0) return this;
+        return children[o]->get(x,y,z);
+    }
+
+    return this;
 }
 
 void Octree::destroy(Octree* guard) {
