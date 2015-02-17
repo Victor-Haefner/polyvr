@@ -25,8 +25,12 @@ struct VRPlane {
     }
 
     bool on(const Pnt3f& p, const float& th) {
+        return abs(dist(p)) < th;
+    }
+
+    float dist(const Pnt3f& p) {
         Vec4f pl = plane();
-        return abs(pl[0]*p[0]+pl[1]*p[1]+pl[2]*p[2]+pl[3]) < th;
+        return pl[0]*p[0]+pl[1]*p[1]+pl[2]*p[2]+pl[3];
     }
 };
 
@@ -90,8 +94,18 @@ struct Accumulator_grid : public Accumulator {
     void clear() { memset(data, 0, size()*sizeof(Bin)); }
 
     void pushPoint(Pnt3f p) {
-        for (int j = 0; j < size(); j++) {
+        /*for (int j = 0; j < size(); j++) {
             if ( data[j].plane.on(p, Dp) ) data[j].weight += 1;//Vec3f(pl).dot(n); // TODO: check the dot product
+        }*/
+
+        for (int th=0; th < Da; th++) {
+            for (int ph=0; ph < Da; ph++) {
+                VRPlane p0(th*Ra, ph*Ra, 0);
+                float rf = p0.dist(p);
+                int r = round(rf/Rr);
+                (*this)(th, ph, r).weight += 1;
+                //if ( (*this)(th, ph, r).plane.on(p, Dp) ) (*this)(th, ph, r).weight += 1;
+            }
         }
     }
 
