@@ -117,7 +117,9 @@ void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScript* script, bool on
 
     string time = " ";
     float exec_time = script->getExecutionTime();
-    if (exec_time >= 0) time = toString( exec_time ) + " ms";
+    if (exec_time >= 60*1000) time = toString( exec_time*0.001/60 ) + " min";
+    else if (exec_time >= 1000) time = toString( exec_time*0.001 ) + " s";
+    else if (exec_time >= 0) time = toString( exec_time ) + " ms";
 
     Gtk::Window* win1;
     VRGuiBuilder()->get_widget("window1", win1);

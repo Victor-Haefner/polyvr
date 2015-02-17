@@ -6,6 +6,7 @@ string toString(int i) { stringstream ss; ss << i; return ss.str(); }
 string toString(size_t i) { stringstream ss; ss << i; return ss.str(); }
 string toString(unsigned int i) { stringstream ss; ss << i; return ss.str(); }
 string toString(float f) { stringstream ss; ss << f; return ss.str(); }
+string toString(double f) { stringstream ss; ss << f; return ss.str(); }
 
 string toString(OSG::Vec2f v) {
     stringstream ss;

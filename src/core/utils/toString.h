@@ -11,6 +11,7 @@ string toString(bool b);
 string toString(int i);
 string toString(size_t i);
 string toString(unsigned int i);
+string toString(double f);
 string toString(float f);
 string toString(OSG::Vec2f v);
 string toString(OSG::Vec3f v);
