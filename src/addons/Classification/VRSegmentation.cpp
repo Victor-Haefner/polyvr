@@ -14,14 +14,22 @@ VRSegmentation::VRSegmentation() {}
 struct VRPlane {
     Vec3f data; // theta, phi, rho
 
+    VRPlane(Pnt3f p, Vec3f n) {
+        data[0] = acos(n[1]);
+        float csT = max(sin(data[0])+1, cos(data[0])+1)-1;
+        data[1] = acos(n[0]/csT);
+        data[2] = dist(p);
+        //cout << " set plane " << data << "  p " << p << "  n " << n << "  pl " << plane() << " " << dist(p) << endl;
+    }
+
     VRPlane(float a, float b, float c) : data(a,b,c) {;}
     VRPlane() {;}
 
     Vec4f plane() {
-        float th = data[0] - Pi*0.5;
+        float th = data[0];
         float ph = data[1];
         float sin_th = sin(th);
-        return Vec4f(cos(ph)*sin_th, cos(th), sin(ph)*sin_th, -data[2]);
+        return Vec4f(cos(ph)*sin_th, cos(th), -sin(ph)*sin_th, -data[2]);
     }
 
     bool on(const Pnt3f& p, const float& th) {
@@ -43,21 +51,21 @@ struct Accumulator {
         VRPlane plane;
     };
 
-    virtual void pushPoint(Pnt3f p) = 0;
+    virtual void pushPoint(Pnt3f p, Vec3f n) = 0;
 
     void pushGeometry(VRGeometry* geo_in) {
         GeoVectorPropertyRecPtr positions = geo_in->getMesh()->getPositions();
-        //GeoVectorPropertyRecPtr normals = geo_in->getMesh()->getNormals();
+        GeoVectorPropertyRecPtr normals = geo_in->getMesh()->getNormals();
 
-        cout << "start plane extraction of " << geo_in->getName() << " with " << positions->size() << " points" << endl;
+        cout << "start plane extraction of " << geo_in->getName() << " with " << positions->size() << " points and " << normals->size() << " normals" << endl;
 
         Pnt3f p;
         Vec3f n;
         VRPlane pl;
         for (uint i = 0; i<positions->size(); i++) {
             positions->getValue(p, i);
-            //normals->getValue(n, i);
-            pushPoint(p);
+            normals->getValue(n, i);
+            pushPoint(p,n);
         }
     }
 
@@ -78,8 +86,8 @@ struct Accumulator_grid : public Accumulator {
         data = new Bin[size()];
         clear();
 
-        for (int th=0; th < Da; th++) {
-            for (int phi=0; phi < Da; phi++) {
+        for (int th=0; th <= Da; th++) {
+            for (int phi=0; phi <= Da; phi++) {
                 for (int rho=-Dr; rho < Dr; rho++) {
                     (*this)(th, phi, rho).plane = VRPlane(th*Ra, phi*Ra, rho*Rr);
                 }
@@ -93,34 +101,35 @@ struct Accumulator_grid : public Accumulator {
 
     void clear() { memset(data, 0, size()*sizeof(Bin)); }
 
-    void pushPoint(Pnt3f p) {
-        /*for (int j = 0; j < size(); j++) {
-            if ( data[j].plane.on(p, Dp) ) data[j].weight += 1;//Vec3f(pl).dot(n); // TODO: check the dot product
-        }*/
+    void pushPoint(Pnt3f p, Vec3f n) {
+        VRPlane p0(p, n);
+        int T,P,R;
+        T = round(p0.data[0]/Ra);
+        P = round(p0.data[1]/Ra);
+        R = round(p0.data[2]/Rr);
+        if (T < 0 or T > Da) cout << " Err T " << Da << " " << T << endl;
+        if (P < 0 or P > Da) cout << " Err P " << Da << " " << P << endl;
+        if (R < -Dr or R >= Dr) cout << " Err R " << Dr << " " << R << endl;
+        Bin& b = (*this)(T, P, R);
 
-        for (int th=0; th < Da; th++) {
-            for (int ph=0; ph < Da; ph++) {
-                VRPlane p0(th*Ra, ph*Ra, 0);
-                float rf = p0.dist(p);
-                int r = round(rf/Rr);
-                (*this)(th, ph, r).weight += 1;
-                //if ( (*this)(th, ph, r).plane.on(p, Dp) ) (*this)(th, ph, r).weight += 1;
-            }
-        }
+        b.weight += 1;
+        //b.weight += 1.0/(1.0+b.plane.dist(p));
+        //if ( b.plane.on(p, Dp) ) b.weight += 1;
     }
 
-    Bin& operator()(int i, int j, int k) { return data[i*Da*Dr*2 + j*Dr*2 + k + Dr]; }
+    Bin& operator()(int i, int j, int k) { return data[i*(Da+1)*Dr*2 + j*Dr*2 + k + Dr]; }
 
-    int size() { return 2*Dr*Da*Da; }
+    int size() { return 2*Dr*(Da+1)*(Da+1); }
 
-    vector<VRPlane> eval() {
+    vector<VRPlane> eval() { // get planes by highest weight
         map<int, vector<VRPlane> > res; // the planes by importance
-        for (int i=0; i < Da; i++) {
-            for (int j=0; j < Da; j++) {
+        for (int i=0; i <= Da; i++) {
+            for (int j=0; j <= Da; j++) {
                 for (int k=-Dr; k < Dr; k++) {
-                    int a = (*this)(i, j, k).weight;
-                    if (res.count(a) == 0) res[a] = vector<VRPlane>();
-                    res[a].push_back( (*this)(i, j, k).plane );
+                    Bin& b = (*this)(i, j, k);
+                    int w = b.weight;
+                    if (res.count(w) == 0) res[w] = vector<VRPlane>();
+                    res[w].push_back( b.plane );
                 }
             }
         }
@@ -161,7 +170,7 @@ struct Accumulator_octree : public Accumulator {
         return bin->weight;
     }
 
-    void pushPoint(Pnt3f p) {
+    void pushPoint(Pnt3f p, Vec3f n) {
         float w = 0;
         Octree* t = octree->get(p[0], p[1], p[2]);
         vector<void*> data = t->getData();
@@ -175,7 +184,7 @@ struct Accumulator_octree : public Accumulator {
     }
 
     vector<VRPlane> eval() {
-        ;
+        return vector<VRPlane>();
     }
 };
 
@@ -197,7 +206,49 @@ vector<VRGeometry*> extractPointsOnPlane(VRGeometry* geo_in, VRPlane plane, floa
         else res[1]->getMesh()->getPositions()->addValue(p);
     }
 
-    for (auto geo : res) {
+    return res;
+}
+
+vector<VRGeometry*> clusterByPlanes(VRGeometry* geo_in, vector<VRPlane> planes, float Dp, int pMax) {
+    GeoVectorPropertyRecPtr positions = geo_in->getMesh()->getPositions();
+    map<int, VRGeometry*> res_map;
+    Pnt3f p;
+    int N = min(pMax+1, (int)planes.size());
+
+    for (uint i = 0; i<positions->size(); i++) {
+        positions->getValue(p, i);
+        int pl = 0;
+        float dmin = 1e7;
+        float d;
+        for (int j=0; j<N; j++) { // go through planes
+            d = abs(planes[j].dist(p));
+            if (d < dmin) {
+                dmin = d;
+                pl = j;
+            }
+
+            if (dmin < Dp) break;
+        }
+
+        if (dmin > Dp) continue;
+
+        if (res_map.count(pl) == 0) { // init geometries for each plane
+            VRGeometry* geo = new VRGeometry(geo_in->getName() + "_p");
+            GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
+            geo->setPositions(pos);
+            res_map[pl] = geo;
+        }
+
+        res_map[pl]->getMesh()->getPositions()->addValue(p);
+    }
+
+    vector<VRGeometry*> res;
+    for (auto r : res_map) res.push_back(r.second);
+    return res;
+}
+
+void finalizeClusterGeometries(vector<VRGeometry*>& res) {
+    for (auto geo : res) { // finalize geometries
         geo->setType(GL_POINTS);
         GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
         for (uint i=0; i<geo->getMesh()->getPositions()->size(); i++) inds->addValue(i);
@@ -210,39 +261,50 @@ vector<VRGeometry*> extractPointsOnPlane(VRGeometry* geo_in, VRPlane plane, floa
         geo->getMaterial()->setLit(false);
         geo->addAttachment("dynamicaly_generated", 0);
     }
+}
 
-    return res;
+void fixNormalsIndices(VRGeometry* geo_in) {
+    map<int, int> inds_map;
+
+    GeoIntegralPropertyRecPtr i_n = geo_in->getMesh()->getIndex(Geometry::PositionsIndex);
+    GeoIntegralPropertyRecPtr i_p = geo_in->getMesh()->getIndex(Geometry::NormalsIndex);
+
+    GeoVectorPropertyRecPtr norms = geo_in->getMesh()->getNormals();
+    GeoVec3fPropertyRecPtr norms2 = GeoVec3fProperty::create();
+
+    for (int i=0; i<i_p->size(); i++) inds_map[i_n->getValue(i)] = i_p->getValue(i);
+    for (int i=0; i<norms->size(); i++) {
+        Vec3f n;
+        norms->getValue(n, inds_map[i]);
+        norms2->addValue(n);
+    }
+
+    geo_in->setNormals(norms2);
+    geo_in->getMesh()->setIndex(geo_in->getMesh()->getIndex(Geometry::PositionsIndex), Geometry::NormalsIndex);
+
+    /*GeoColor4fPropertyRecPtr cols = GeoColor4fProperty::create();
+    for (uint i = 0; i<norms->size(); i++) {
+        Vec3f v; norms->getValue(v, i);
+        Vec4f c(abs(v[0]), abs(v[1]), abs(v[2]), 1);
+        cols->addValue(c);
+    }
+    geo_in->getMaterial()->setLit(false);
+    geo_in->getMesh()->setIndex(geo_in->getMesh()->getIndex(Geometry::PositionsIndex), Geometry::ColorsIndex);
+    geo_in->setColors(cols);*/
+    //geo_in->getMesh()->setIndex(geo_in->getMesh()->getIndex(Geometry::PositionsIndex), Geometry::NormalsIndex);
 }
 
 vector<VRGeometry*> extractPlanes(VRGeometry* geo_in, int N, float delta) {
-    srand(5);
+    srand(time(0));
 
-    vector<VRGeometry*> res, tmp;
+    fixNormalsIndices(geo_in);
 
-    /*Accumulator_grid accu( 10*delta, 10*delta );
+    Accumulator_grid accu( delta, delta ); cout << "gen accu grid with size " << accu.size() << endl;
     accu.pushGeometry(geo_in);
-    vector<VRPlane> planes = accu.eval();
-    cout << "found " << planes.size() << " planes" << endl;
-    for (int i=0; i<N; i++) {
-        tmp = extractPointsOnPlane(geo_in, planes[i], 0.02);
-        res.push_back( tmp[0] );
-    }*/
-
-
-    for (int i=0; i<N; i++) {
-        int D = 10 + 2*i;
-        D *= delta;
-        Accumulator_grid accu( D, D );
-        cout << " accumulator size: " << accu.size() << endl;
-
-        accu.pushGeometry(geo_in);
-
-        vector<VRPlane> planes = accu.eval();
-        cout << " planes" << planes.size() << endl;
-        tmp = extractPointsOnPlane(geo_in, planes[0], 0.02);
-        res.push_back(tmp[0]);
-        geo_in = tmp[1];
-    }
+    vector<VRPlane> planes = accu.eval();  cout << "found " << planes.size() << " planes" << endl;
+    //vector<VRGeometry*> res = extractPointsOnPlane(geo_in, planes[0], 0.02);
+    vector<VRGeometry*> res = clusterByPlanes(geo_in, planes, 0.005, N);
+    finalizeClusterGeometries(res);
 
     cout << "return " << res.size() << " planes " << endl;
     return res;
@@ -252,6 +314,7 @@ VRObject* VRSegmentation::extractPatches(VRGeometry* geo, SEGMENTATION_ALGORITHM
     vector<VRGeometry*> patches = extractPlanes(geo, curvature, curvature_delta);
 
     VRObject* anchor = new VRObject("segmentation");
+    anchor->addAttachment("dynamicaly_generated", 0);
     geo->getParent()->addChild(anchor);
 	for (auto p : patches) {
         anchor->addChild(p);
