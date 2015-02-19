@@ -1,6 +1,7 @@
 #include "VRPyGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRVideo.h"
+#include "core/utils/toString.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneManager.h"
 #include "VRPyBaseT.h"
@@ -305,7 +306,11 @@ PyObject* VRPyGeometry::setPositions(VRPyGeometry* self, PyObject *args) {
             if (tname == "numpy.ndarray") feed2Dnp<OSG::GeoPnt3fPropertyRecPtr, OSG::Pnt3f>(vecList, pos);
             else feed2D<OSG::GeoPnt3fPropertyRecPtr, OSG::Pnt3f>(vecList, pos);
         }
-    } else { PyErr_SetString(err, "VRPyGeometry::setPositions - bad argument"); return NULL; }
+    } else {
+        string e = "VRPyGeometry::setPositions - bad argument, ld is " + toString(ld);
+        PyErr_SetString(err, e.c_str());
+        return NULL;
+    }
 
     self->obj->setPositions(pos);
     Py_RETURN_TRUE;
