@@ -276,7 +276,6 @@ void VRView::showStats(bool b) {
         stats->setSize(25);
         stats->setColor(Color4f(0,1,0,0.7f));
 
-
         // Render traversal stats action
         stats->addElement(RenderAction::statDrawTime, "Draw FPS: %r.3f");
         stats->addElement(RenderAction::statTravTime, "Trav FPS: %r.3f");
@@ -288,136 +287,44 @@ void VRView::showStats(bool b) {
         stats->addElement(TextureObjChunk::statNTexBytes, " Tex Mem: %MB MB");
 
 
-#if 0
-        stats->addElement(RenderAction::statNGeometries,
-                       "    Geom nodes: %d");
-#endif
-        stats->addElement(RenderAction::statNMatrices,
-                       "Matrix changes: %d");
-#if 0
-        stats->addElement(RenderAction::statNTriangles,
-                       "     Triangles: %d");
-#endif
+        stats->addElement(RenderAction::statNMatrices, "Matrix changes: %d");
+        //stats->addElement(RenderAction::statNGeometries, "    Geom nodes: %d");
+        //stats->addElement(RenderAction::statNTransGeometries, "Transparent Nodes drawn   %d");
+        //stats->addElement(RenderAction::statNTriangles, "     Triangles: %d");
+        //stats->addElement(RenderAction::statNMaterials, "%d material changes");
 
-        /*stats->addElement(PointLight::statNPointLights,
-                           "%d active point lights");
-        stats->addElement(DirectionalLight::statNDirectionalLights,
-                           "%d active directional lights");
-        stats->addElement(SpotLight::statNSpotLights,
-                           "%d active spot lights");*/
+        //stats->addElement(PointLight::statNPointLights, "%d active point lights");
+        //stats->addElement(DirectionalLight::statNDirectionalLights, "%d active directional lights");
+        //stats->addElement(SpotLight::statNSpotLights, "%d active spot lights");
 
         stats->addText   ("Drawables: (drawn)");
-
         stats->addElement(Drawable::statNTriangles,    "  tris: %d");
         stats->addElement(Drawable::statNLines,        " lines: %d");
         stats->addElement(Drawable::statNPoints,       "points: %d");
         stats->addElement(Drawable::statNVertices,     " verts: %d");
 
-        if(stats->getCollector() != NULL)
-        {
-            // add optional elements
-            stats->getCollector()->getElem(Drawable::statNTriangles);
-        }
+        if(stats->getCollector() != NULL) stats->getCollector()->getElem(Drawable::statNTriangles);
 
         stats->addText   ("ChangeList: ");
-        stats->addElement(ChangeList::statNChangedStoreSize,
-                       "    %d entries in changedStore");
-        stats->addElement(ChangeList::statNCreatedStoreSize,
-                       "    %d entries in createdStore");
-        stats->addElement(ChangeList::statNUnCommittedStoreSize,
-                       "    %d entries in uncommitedStore");
-        stats->addElement(ChangeList::statNPoolSize,
-                       "    %d entries in pool");
+        stats->addElement(ChangeList::statNChangedStoreSize, "    %d entries in changedStore");
+        stats->addElement(ChangeList::statNCreatedStoreSize, "    %d entries in createdStore");
+        stats->addElement(ChangeList::statNUnCommittedStoreSize, "    %d entries in uncommitedStore");
+        stats->addElement(ChangeList::statNPoolSize, "    %d entries in pool");
 
-#if 0
-        // 1.x stat
-        stats->addElement(RenderAction::statTravTime,
-                           "FPS:                  %r.3f");
-        stats->addElement(DrawActionBase::statCullTestedNodes,
-                           "Nodes culltested      %d");
-        stats->addElement(DrawActionBase::statCulledNodes,
-                           "Nodes culled          %d");
-        stats->addElement(RenderAction::statNOcclusionMode,
-                           "Occlusion culling     %s");
-        stats->addElement(RenderAction::statNOcclusionTests,
-                           "Occlusion tests       %d");
-        stats->addElement(RenderAction::statNOcclusionCulled,
-                           "Occlusion culled      %d");
-        stats->addElement(RenderAction::statNGeometries,
-                           "Nodes drawn           %d");
-        stats->addElement(RenderAction::statNTransGeometries,
-                           "Transp. Nodes drawn   %d");
-        stats->addElement(RenderAction::statNMaterials,
-                           "Material changes      %d");
-        stats->addElement(RenderAction::statNMatrices,
-                           "Matrix changes        %d");
 
-#if 0 // not ready for primetime yet
-        stats->addElement(PointLight::statNPointLights,
-                           "%d active point lights");
-        stats->addElement(DirectionalLight::statNDirectionalLights,
-                           "%d active directional lights");
-        stats->addElement(SpotLight::statNSpotLights,
-                           "%d active spot lights");
-#endif
-        stats->addElement(Drawable::statNTriangles,
-                           "Triangles drawn       %d");
-        stats->addElement(Drawable::statNLines,
-                           "Lines drawn           %d");
-        stats->addElement(Drawable::statNPoints,
-                           "Points drawn          %d");
-        stats->addElement(Drawable::statNVertices,
-                           "Vertices transformed  %d");
-        stats->addElement(RenderAction::statNTextures,
-                           "Textures used         %d");
-        stats->addElement(RenderAction::statNTexBytes,
-                           "Textures size (bytes) %d");
-#endif
+        //stats->addElement(DrawActionBase::statCullTestedNodes, "Nodes culltested      %d");
+        //stats->addElement(DrawActionBase::statCulledNodes, "Nodes culled          %d");
+        //stats->addElement(RenderAction::statNOcclusionMode, "Occlusion culling     %s");
+        //stats->addElement(RenderAction::statNOcclusionTests, "Occlusion tests       %d");
+        //stats->addElement(RenderAction::statNOcclusionCulled, "Occlusion culled      %d");
 
-#if 0
-        // Render action
-        stats->addElement(RenderAction::statDrawTime,      "Draw FPS: %r.3f");
-        stats->addElement(RenderAction::statTravTime,      "Trav FPS: %r.3f");
-        stats->addElement(DrawActionBase::statCullTestedNodes,
-                           "%d Nodes culltested");
-        stats->addElement(DrawActionBase::statCulledNodes,
-                           "%d Nodes culled");
-        stats->addElement(RenderAction::statNMaterials,
-                           "%d material changes");
-        stats->addElement(RenderAction::statNMatrices,
-                           "%d matrix changes");
-        stats->addElement(RenderAction::statNGeometries,
-                           "%d Nodes drawn");
-        stats->addElement(RenderAction::statNTransGeometries,
-                           "%d transparent Nodes drawn");
-#if 0 // not ready for primetime yet
-        stats->addElement(PointLight::statNPointLights,
-                           "%d active point lights");
-        stats->addElement(DirectionalLight::statNDirectionalLights,
-                           "%d active directional lights");
-        stats->addElement(SpotLight::statNSpotLights,
-                           "%d active spot lights");
-#endif
-        stats->addElement(Drawable::statNTriangles,    "%d triangles drawn");
-        stats->addElement(Drawable::statNLines,        "%d lines drawn");
-        stats->addElement(Drawable::statNPoints,       "%d points drawn");
-        stats->addElement(Drawable::statNVertices,     "%d vertices transformed");
-        stats->addElement(RenderAction::statNTextures, "%d textures used");
-        stats->addElement(RenderAction::statNTexBytes, "%d bytes of texture used");
-        if(stats->getCollector() != NULL)
-        {
-            // add optional elements
-            stats->editCollector()->getElem(Drawable::statNTriangles);
-        }
-#endif
 
+        if(stats->getCollector() != NULL) stats->editCollector()->getElem(Drawable::statNTriangles);
     }
 
     if (lView == 0) return;
-
     if (b and !doStats) lView->addForeground(stats);
     if (!b and doStats) lView->removeObjFromForegrounds(stats);
-
     doStats = b;
 
     VRSetupManager::getCurrent()->getRenderAction()->setStatCollector(stats->getCollector());
@@ -629,7 +536,6 @@ void VRView::save(xmlpp::Element* node) {
     node->set_attribute("projection", toString(projection).c_str());
     node->set_attribute("eye_inverted", toString(eyeinverted).c_str());
     node->set_attribute("eye_separation", toString(eyeSeparation).c_str());
-    node->set_attribute("stats", toString(doStats).c_str());
     node->set_attribute("position", toString(position).c_str());
     node->set_attribute("center", toString(proj_center).c_str());
     node->set_attribute("normal", toString(proj_normal).c_str());
@@ -643,7 +549,6 @@ void VRView::load(xmlpp::Element* node) {
     active_stereo = toBool(node->get_attribute("active_stereo")->get_value());
     projection = toBool(node->get_attribute("projection")->get_value());
     eyeinverted = toBool(node->get_attribute("eye_inverted")->get_value());
-    doStats = toBool(node->get_attribute("stats")->get_value());
     eyeSeparation = toFloat(node->get_attribute("eye_separation")->get_value());
     position = toVec4f(node->get_attribute("position")->get_value());
     proj_center = toVec3f(node->get_attribute("center")->get_value());
