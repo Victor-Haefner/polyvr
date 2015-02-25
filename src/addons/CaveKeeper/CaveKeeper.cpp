@@ -9,6 +9,7 @@
 #include "core/scene/VRScene.h"
 #include "core/objects/VRCamera.h"
 #include "core/objects/material/VRTextureGenerator.h"
+#include "core/setup/devices/VRDevice.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

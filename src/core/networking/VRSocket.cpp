@@ -10,6 +10,26 @@
 #include <fcntl.h>
 #include <libxml++/nodes/element.h>
 
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+
+
+#include <algorithm>
+#include <curl/curl.h>
+#include <stdint.h>
+#include <microhttpd.h>
+#include <jsoncpp/json/json.h>
+
+#include "core/setup/devices/VRDevice.h"
+
+#define UNIX_SOCK_PATH "/tmp/vrf_soc"
+#define HTTP_SOCK_ADD "141.3.150.20"
+
 OSG_BEGIN_NAMESPACE
 using namespace std;
 

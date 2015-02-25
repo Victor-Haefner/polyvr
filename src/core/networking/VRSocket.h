@@ -1,32 +1,15 @@
 #ifndef VRSOCKET_H_INCLUDED
 #define VRSOCKET_H_INCLUDED
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
 #include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/un.h>
-
-
-#include <algorithm>
-#include <curl/curl.h>
-#include <stdint.h>
-#include <microhttpd.h>
-#include <jsoncpp/json/json.h>
-
 #include <OpenSG/OSGConfig.h>
 #include "core/utils/VRFunction.h"
-#include "core/setup/devices/VRDevice.h"
 #include "core/utils/VRName.h"
-
-#define UNIX_SOCK_PATH "/tmp/vrf_soc"
-#define HTTP_SOCK_ADD "141.3.150.20"
 
 OSG_BEGIN_NAMESPACE
 using namespace std;
 
+class VRSignal;
 class VRThread;
 class HTTPServer;
 struct HTTP_args;
@@ -108,16 +91,5 @@ class VRSocket : public VRName {
 };
 
 OSG_END_NAMESPACE
-
-// refactoring
-
-// common:
-//      VRSocket::setVerbose(int i);
-
-// client scenario:
-//      res = VRSocket::connect(VRSocket::CONNECTION_TYPE, string IP, int port);
-
-// server scenario:
-//      VRSocket::initServer(VRSocket::CONNECTION_TYPE, int port, VRFunction* handler);
 
 #endif // VRSOCKET_H_INCLUDED
