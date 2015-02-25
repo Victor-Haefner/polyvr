@@ -2,9 +2,12 @@
 #define TOSTRING_H_INCLUDED
 
 #include <string>
+#include <vector>
 #include <OpenSG/OSGVector.h>
 
 using namespace std;
+
+vector<string> splitString(string s, char c);
 
 string toString(string s);
 string toString(bool b);

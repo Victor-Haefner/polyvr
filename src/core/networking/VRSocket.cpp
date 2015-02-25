@@ -30,6 +30,8 @@
 #define UNIX_SOCK_PATH "/tmp/vrf_soc"
 #define HTTP_SOCK_ADD "141.3.150.20"
 
+#include "mongoose/mongoose.h"
+
 OSG_BEGIN_NAMESPACE
 using namespace std;
 
@@ -107,6 +109,52 @@ int server_answer_to_connection (void* param, struct MHD_Connection *connection,
     return ret;
 }
 
+static int server_answer_to_connection_m(struct mg_connection *conn, enum mg_event ev) {
+    if (ev == MG_AUTH) return MG_TRUE;
+
+    if (ev == MG_REQUEST) {
+        HTTP_args* sad = (HTTP_args*) conn->server_param;
+        string method_s(conn->request_method);//GET, POST, ...
+        string section(conn->uri+1); //path
+        sad->path = section;
+        sad->params->clear();
+
+        string params;
+        if(conn->query_string) params = string(conn->query_string);
+        for (auto pp : splitString(params, '&')) {
+            vector<string> d = splitString(pp, '=');
+            if (d.size() != 2) continue;
+            (*sad->params)[d[0]] = d[1];
+        }
+
+        //sad->print();
+
+        //--- respond to client ------
+        if (sad->path == "") {
+            mg_send_status(conn, 200);
+            //response = MHD_create_response_from_data(1, (void*)" ", MHD_NO, MHD_YES);
+        }
+
+        if (sad->pages->count(sad->path)) { // return local site
+            string spage = *(*sad->pages)[sad->path];
+            mg_send_data(conn, spage.c_str(), spage.size());
+        } else if(sad->path != "") { // return ressources
+            struct stat sbuf;
+            int fd = open(sad->path.c_str(), O_RDONLY);
+            if (fstat (fd, &sbuf) != 0) { cout << "Did not find ressource: " << sad->path << endl;
+            } else mg_send_file_data(conn,fd);
+        }
+
+        //--- process request --------
+        VRFunction<int>* _fkt = new VRFunction<int>("HTTP_answer_job", boost::bind(server_answer_job, sad->copy(), _1));
+        VRSceneManager::get()->queueJob(_fkt);
+
+        return MG_TRUE;
+    }
+
+    return MG_FALSE;
+}
+
 HTTP_args::HTTP_args() {
     params = new map<string, string>();
     pages = new map<string, string*>();
@@ -135,7 +183,9 @@ HTTP_args* HTTP_args::copy() {
 class HTTPServer {
     public:
         //server----------------------------------------------------------------
-        struct MHD_Daemon* server = 0;
+        //struct MHD_Daemon* server = 0;
+        struct mg_server* server = 0;
+        int threadID = 0;
         HTTP_args* data = 0;
 
         HTTPServer() {
@@ -149,10 +199,19 @@ class HTTPServer {
             delete data;
         }
 
+        void loop(VRThread* t) {
+            if (server) mg_poll_server(server, 1000);
+        }
+
         void initServer(VRHTTP_cb* fkt, int port) {
             data->cb = fkt;
-            server = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, port, NULL, NULL, &server_answer_to_connection, data, MHD_OPTION_END);
-            //server = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY | MHD_USE_DEBUG, port, NULL, NULL, &server_answer_to_connection, data, MHD_OPTION_END);
+            server = mg_create_server(data, server_answer_to_connection_m);
+            mg_set_option(server, "listening_port", toString(port).c_str());
+
+            VRFunction<VRThread*>* lfkt = new VRFunction<VRThread*>("mongoose loop", boost::bind(&HTTPServer::loop, this, _1));
+            threadID = VRSceneManager::get()->initThread(lfkt, "mongoose", true);
+
+            //server = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, port, NULL, NULL, &server_answer_to_connection, data, MHD_OPTION_END);
         }
 
         void addPage(string path, string page) {
@@ -168,7 +227,11 @@ class HTTPServer {
         }
 
         void close() {
-            if (server) MHD_stop_daemon(server);
+            //if (server) MHD_stop_daemon(server);
+            if (server) {
+                VRSceneManager::get()->stopThread(threadID);
+                mg_destroy_server(&server);
+            }
             server = 0;
         }
 };

@@ -409,6 +409,10 @@
 		<Unit filename="src/core/networking/VRProtocol.h" />
 		<Unit filename="src/core/networking/VRSocket.cpp" />
 		<Unit filename="src/core/networking/VRSocket.h" />
+		<Unit filename="src/core/networking/mongoose/mongoose.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/networking/mongoose/mongoose.h" />
 		<Unit filename="src/core/objects/VRCamera.cpp" />
 		<Unit filename="src/core/objects/VRCamera.h" />
 		<Unit filename="src/core/objects/VRGroup.cpp" />
