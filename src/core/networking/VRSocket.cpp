@@ -22,7 +22,6 @@
 #include <algorithm>
 #include <curl/curl.h>
 #include <stdint.h>
-#include <microhttpd.h>
 #include <jsoncpp/json/json.h>
 
 #include "core/setup/devices/VRDevice.h"
@@ -36,77 +35,13 @@ OSG_BEGIN_NAMESPACE
 using namespace std;
 
 
-//MICROHTTPD server-------------------------------------------------------------
+//mongoose server-------------------------------------------------------------
 
 void server_answer_job(HTTP_args* args, int i) {
     //cout << "server_answer_job: " << args->cb << endl;
     //args->print();
     if (args->cb) (*args->cb)(args);
     delete args;
-}
-
-int server_parseURI(void *cls, enum MHD_ValueKind kind, const char *key, const char *value) {
-    map<string, string>* uri_map = (map<string, string>*)cls;
-    (*uri_map)[string(key)] = string(value);
-    //printf ("GET %s: %s\n", key, value);
-    return MHD_YES;
-}
-
-int server_parseFORM(void *cls, enum MHD_ValueKind kind, const char *key, const char *filename, const char *content_type, const char *transfer_encoding, const char *data, uint64_t off, size_t size) {
-    map<string, string>* uri_map = (map<string, string>*)cls;
-    (*uri_map)[string(key)] = string(data);
-    //printf ("POST %s: %s\n", key, data);
-    return MHD_YES;
-}
-
-int server_answer_to_connection (void* param, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **opt) {
-    HTTP_args* sad = (HTTP_args*) param;
-    string method_s(method);//GET, POST, ...
-    string section(url+1); //path
-    sad->path = section;
-    sad->params->clear();
-
-    if (method_s == "GET") {
-        MHD_get_connection_values(connection, MHD_GET_ARGUMENT_KIND, server_parseURI, sad->params);//Parse URI parameter
-    }
-
-    if (method_s == "POST") {
-        MHD_get_connection_values(connection, MHD_POSTDATA_KIND, server_parseURI, sad->params);//Parse URI parameter
-    }
-
-    //cout << "HTTP: " << method_s << " " << sad->path << endl;
-    //sad->print();
-
-    //--- respond to client ------
-    struct MHD_Response* response = 0;
-    string empty_str;
-
-    if (sad->path == "") {
-        response = MHD_create_response_from_data(1, (void*)" ", MHD_NO, MHD_YES);
-    }
-
-    if (sad->pages->count(sad->path)) { // return local site
-        string spage = *(*sad->pages)[sad->path];
-        response = MHD_create_response_from_data (spage.size(), (void*) spage.c_str(), MHD_NO, MHD_YES);
-    } else if(sad->path != "") { // return ressources
-        struct stat sbuf;
-        int fd = open(sad->path.c_str(), O_RDONLY);
-        if (fstat (fd, &sbuf) != 0) { cout << "Did not find ressource: " << sad->path << endl;
-        } else response = MHD_create_response_from_fd_at_offset (sbuf.st_size, fd, 0);
-    }
-
-    //--- send response ----------
-    int ret = 0;
-    if (response) {
-        ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
-        MHD_destroy_response (response);
-    }
-
-    //--- process request --------
-    VRFunction<int>* _fkt = new VRFunction<int>("HTTP_answer_job", boost::bind(server_answer_job, sad->copy(), _1));
-    VRSceneManager::get()->queueJob(_fkt);
-
-    return ret;
 }
 
 static int server_answer_to_connection_m(struct mg_connection *conn, enum mg_event ev) {
