@@ -2,16 +2,22 @@
 #define VRDEMOS_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
-#include <gtkmm/button.h>
-#include <gtkmm/image.h>
-#include <gtkmm/builder.h>
+#include <string>
+#include <map>
 
-#include "core/scene/VRScene.h"
-#include "core/setup/devices/VRSignal.h"
-#include "VRGuiContextMenu.h"
+namespace Gtk {
+    class Button;
+    class Image;
+    class Label;
+}
+
+class VRGuiContextMenu;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
+
+class VRScene;
+class VRSignal;
 
 struct demoEntry {
     string path;
