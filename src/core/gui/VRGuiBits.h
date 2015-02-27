@@ -16,7 +16,7 @@ class VRRecorder;
 
 class VRGuiBits {
     private:
-        GtkWidget* term_box;
+        GtkWidget* term_box = 0;
 
         VRRecorder* recorder = 0;
         VRVisualLayer* recorder_visual_layer = 0;
@@ -24,6 +24,7 @@ class VRGuiBits {
         void hideAbout(int i);
         void updateVisualLayer();
         void on_view_option_toggle(VRVisualLayer* l, Gtk::ToggleToolButton* tb);
+        static void on_terminal_changed();
 
     public:
         VRGuiBits();

@@ -11,7 +11,10 @@
 #include <gtkmm/table.h>
 #include <gtkmm/toggletoolbutton.h>
 #include <gtkmm/toolbar.h>
-#include <vte-0.0/vte/vte.h>
+#include <gtkmm/textbuffer.h>
+#include <gtkmm/textview.h>
+#include <gtkmm/scrolledwindow.h>
+//#include <vte-0.0/vte/vte.h>
 #include <iostream>
 //#include <boost/locale.hpp>
 #include "core/scene/VRSceneManager.h"
@@ -120,13 +123,17 @@ void VRGuiBits_on_internal_update(int i) {
 // ---------Main-------------
 // --------------------------
 
-VteTerminal* terminal;
+Glib::RefPtr<Gtk::TextBuffer> terminal;
+Gtk::ScrolledWindow* swin;
 
 void VRGuiBits::write_to_terminal(string s) {
-    for (int i=s.size(); i>=0; i--)
-        if (s[i] == '\n') s.insert(i, "\r");
+    terminal->insert(terminal->end(),s);
+    on_terminal_changed();
+}
 
-    vte_terminal_feed(terminal, s.c_str(), s.size());
+void VRGuiBits::on_terminal_changed() {
+    auto a = swin->get_vadjustment();
+    a->set_value(a->get_upper());
 }
 
 void VRGuiBits::hideAbout(int i) {
@@ -242,44 +249,22 @@ VRGuiBits::VRGuiBits() {
     win->signal_key_press_event().connect( sigc::mem_fun(*this, &VRGuiBits::toggleFullscreen) );
     win->signal_key_press_event().connect( sigc::mem_fun(*this, &VRGuiBits::toggleWidgets) );
 
-    // VTE
-
-    GtkWidget* vte = vte_terminal_new();
-    terminal = VTE_TERMINAL (vte);
-
-    vte_terminal_set_background_transparent(terminal, FALSE);
-    vte_terminal_set_scrollback_lines(terminal, -1);
-    vte_terminal_set_size(terminal, 80, 20);
-
-    char** argv=NULL;
-    g_shell_parse_argv("/bin/bash", NULL, &argv, NULL);
-    vte_terminal_fork_command_full(terminal, VTE_PTY_DEFAULT, NULL, argv, NULL, GSpawnFlags(0), NULL, NULL, NULL, NULL);
-
-    vte_terminal_set_scroll_on_keystroke(terminal, TRUE);
-    gtk_widget_set_size_request(vte, -1, 100);
-
-    GtkWidget* scrollbar = gtk_vscrollbar_new(vte_terminal_get_adjustment(terminal));
-    term_box = gtk_hbox_new(FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(term_box), vte, FALSE, TRUE, 0);
-    gtk_box_pack_start(GTK_BOX(term_box), scrollbar, FALSE, FALSE, 0);
+    // TERMINAL
+    terminal = Gtk::TextBuffer::create();
+    Gtk::TextView* term_view = Gtk::manage(new Gtk::TextView(terminal));
+    swin = Gtk::manage(new Gtk::ScrolledWindow());
+    swin->add(*term_view);
+    swin->set_size_request(-1,70);
+    term_box = (GtkWidget*)swin->gobj();
 
     Gtk::VPaned* paned;
     VRGuiBuilder()->get_widget("vpaned1", paned);
-    gtk_paned_pack2(GTK_PANED (paned->gobj()), term_box, FALSE, FALSE);
-
-    vte_terminal_get_emulation(VTE_TERMINAL (vte));
-
-    gtk_widget_show (term_box);
-    gtk_widget_show (vte);
-
-    //int pos = paned->property_max_position () - 100;
-    //paned->set_position(pos);
+    paned->pack2(*swin, false, false);
+    paned->show_all();
 
     VRFunction<int>* fkt = new VRFunction<int>( "IntMonitor_guiUpdate", VRGuiBits_on_internal_update );
     VRSceneManager::get()->addUpdateFkt(fkt);
 
-    // view options
-    //setComboboxCallback("combobox20", VRGuiBits_on_viewoption_changed);
     updateVisualLayer();
 }
 
