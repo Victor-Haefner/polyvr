@@ -77,7 +77,10 @@ static int server_answer_to_connection_m(struct mg_connection *conn, enum mg_eve
             struct stat sbuf;
             int fd = open(sad->path.c_str(), O_RDONLY);
             if (fstat (fd, &sbuf) != 0) { cout << "Did not find ressource: " << sad->path << endl;
-            } else mg_send_file_data(conn,fd);
+            } else {
+                mg_send_file(conn, sad->path.c_str(), NULL);
+                return MG_MORE;
+            }
         }
 
         //--- process request --------
