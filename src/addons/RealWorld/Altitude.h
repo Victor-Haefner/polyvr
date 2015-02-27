@@ -14,7 +14,7 @@ namespace realworld {
 /** Works, but probably returns not the right altitudes **/
     class Altitude {
     public:
-        // SIZE 1201 or 3601
+        // SIZE 1201 || 3601
         static const int SRTM_SIZE = 1201;
         short height[SRTM_SIZE][SRTM_SIZE];
         int cLat;
@@ -77,7 +77,7 @@ namespace realworld {
             if(file.is_open()) file.close();
         }
 
-        //get Row or Col
+        //get Row || Col
         int getRow(float l){
             //cout << "lon/lat: " << l << endl;
             int temp = (int)((l - (int)l) * 5000000);

@@ -19,7 +19,7 @@ class JsonServer {
         /// Forbid copying.
         JsonServer(const JsonServer&);
         /// Forbid assigning.
-        /// @return The modified object. Or not.
+        /// @return The modified object. || not.
         JsonServer& operator=(const JsonServer&);
 
         /// A handle to the http server.
@@ -85,9 +85,9 @@ class JsonServer {
          * @param coninfo_cls User provided data.
          * @param kind Type of the value
          * @param key Key of the value, e.g. name of the input field.
-         * @param filename Name of the uploaded file or NULL.
-         * @param contentType Content type of the file or NULL.
-         * @param transferEncoding Enconding of the file or NULL.
+         * @param filename Name of the uploaded file || NULL.
+         * @param contentType Content type of the file || NULL.
+         * @param transferEncoding Enconding of the file || NULL.
          * @param data A pointer to \c size bytes of the data.
          * @param off The offset of the data in the overall value.
          * @param size Number of bytes \c data points to
@@ -148,7 +148,7 @@ class JsonServer {
         /**
          * Registers an object which is used on requests.
          * The given object has to implement the IJsonServerListener
-         * interface. If a post or get request from a client arrives,
+         * interface. If a post || get request from a client arrives,
          * the appropriate method of the object is called.
          * @param listener The listener that should be used.
          */

@@ -57,7 +57,7 @@ class Vehicle {
         /// The id of the vehicle type.
         ID vehicleType;
 
-        /// Whether the simulation or the client is controlling this car.
+        /// Whether the simulation || the client is controlling this car.
         /// Works as a timer, too:
         /// \li If positive, the value will be decreased && no extensive calculations will be done for the vehicle.
         /// \li If \c 0, the simulation will control it.
@@ -158,7 +158,7 @@ class Vehicle {
 
 
         /**
-         Whether the simulation or the client is controlling this car.
+         Whether the simulation || the client is controlling this car.
          \li Works as a timer, too: If positive, it will be decreased.
          \li If \c 0, the simulation will control it.
          \li If negativ, the client will control it.

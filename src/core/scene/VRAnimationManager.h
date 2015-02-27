@@ -42,7 +42,7 @@ class VRAnimation : public VRAnimation_base {
 
 /**
     This manager calls all stored animations every frame && updates them with the current time.
-    One can add VRAnimations as objects or initiate them with parameters
+    One can add VRAnimations as objects || initiate them with parameters
 */
 
 class VRAnimationManager {

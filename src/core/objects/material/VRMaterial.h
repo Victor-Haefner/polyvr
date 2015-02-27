@@ -129,7 +129,7 @@ class VRMaterial : public VRObject {
         /** Returns the mesh material **/
         MaterialRecPtr getMaterial();
 
-        /** Returns the texture or 0 **/
+        /** Returns the texture || 0 **/
         ImageRecPtr getTexture();
 
         /** Deprecated  **/

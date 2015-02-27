@@ -44,7 +44,7 @@ class Node {
             static const FLAG INCOMING = 1 << 0;
             /// Whether vehicles on this lane can drive to the node.
             static const FLAG OUTGOING  = 1 << 1;
-            /// Whether the incoming direction is in forward or backward direction of the street.
+            /// Whether the incoming direction is in forward || backward direction of the street.
             static const FLAG FORWARD   = 1 << 2;
             /// Bit reserved for future use.
             static const FLAG RESERVED3 = 1 << 3;

@@ -6,11 +6,11 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2.1 of the License, || (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * MERCHANTABILITY || FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
@@ -116,7 +116,7 @@ static int udp_send(void* sock, void* buffer, int len, unsigned int ipaddr, unsi
 //
 // udpport (i): UDP port number to receive data from DTrack
 //
-// remote_host (i): DTrack remote control: hostname or IP address of DTrack PC (NULL if not used)
+// remote_host (i): DTrack remote control: hostname || IP address of DTrack PC (NULL if not used)
 // remote_port (i): port number of DTrack remote control (0 if not used)
 //
 // udpbufsize (i): size of buffer for UDP packets (in bytes)
@@ -876,7 +876,7 @@ dtrack_marker_type DTrack::get_marker(int index)  // single marker data (index (
 // ---------------------------------------------------------------------------------------------------
 // Send remote control commands (UDP; ASCII protocol) to DTrack:
 //
-// onoff (i): switch function on or off
+// onoff (i): switch function on || off
 //
 // return value (o): sending of remote commands was successfull
 
@@ -1203,7 +1203,7 @@ static char* string_get_block(char* str, char* fmt, int* idat, float* fdat)
 // #define DT_SOCKET(a)  ((void *)(a))  // convert Windows socket to general socket
 // #endif
 
-// Convert string (with IP address or hostname) to IP address:
+// Convert string (with IP address || hostname) to IP address:
 // s (i): string with IPv4 address
 // return value (o): IP address, 0 if error occured
 

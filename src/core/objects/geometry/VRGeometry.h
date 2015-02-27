@@ -85,10 +85,10 @@ class VRGeometry : public VRTransform {
         /** Returns the average of all normals of the mesh (not normalized, can be zero) **/
         Vec3f getAverageNormal();
 
-        /** Returns the maximum position on the x, y or z axis **/
+        /** Returns the maximum position on the x, y || z axis **/
         float getMax(int axis);
 
-        /** Returns the minimum position on the x, y or z axis **/
+        /** Returns the minimum position on the x, y || z axis **/
         float getMin(int axis);
 
         /** Returns the mesh as a OSG geometry core **/
@@ -102,7 +102,7 @@ class VRGeometry : public VRTransform {
         /** Returns the mesh material **/
         VRMaterial* getMaterial();
 
-        /** Returns the texture or 0 **/
+        /** Returns the texture || 0 **/
         ImageRecPtr getTexture() { return texture; }
 
         void influence(vector<Vec3f> pnts, vector<Vec3f> values, int power, float color_code = -1, float dl_max = 1.0);

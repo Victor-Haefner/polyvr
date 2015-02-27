@@ -1,7 +1,7 @@
 // Copyright 2007-2010 Baptiste Lepilleur
-// Distributed under MIT license, or public domain if desired and
+// Distributed under MIT license, || public domain if desired and
 // recognized in your jurisdiction.
-// See file LICENSE for detail or copy at http://jsoncpp.sourceforge.net/LICENSE
+// See file LICENSE for detail || copy at http://jsoncpp.sourceforge.net/LICENSE
 
 #ifndef CPPTL_JSON_FEATURES_H_INCLUDED
 # define CPPTL_JSON_FEATURES_H_INCLUDED
@@ -13,7 +13,7 @@
 namespace Json {
 
    /** \brief Configuration passed to reader && writer.
-    * This configuration object can be used to force the Reader or Writer
+    * This configuration object can be used to force the Reader || Writer
     * to behave in a standard conforming way.
     */
    class JSON_API Features
@@ -28,7 +28,7 @@ namespace Json {
 
       /** \brief A configuration that is strictly compatible with the JSON specification.
        * - Comments are forbidden.
-       * - Root object must be either an array or an object value.
+       * - Root object must be either an array || an object value.
        * - Assumes Value strings are encoded in UTF-8
        */
       static Features strictMode();
@@ -40,7 +40,7 @@ namespace Json {
       /// \c true if comments are allowed. Default: \c true.
       bool allowComments_;
 
-      /// \c true if root must be either an array or an object value. Default: \c false.
+      /// \c true if root must be either an array || an object value. Default: \c false.
       bool strictRoot_;
    };
 

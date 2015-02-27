@@ -147,7 +147,7 @@ void CEF::mouse(int b, bool down, VRDevice* dev) {
         browser->GetHost()->SendMouseClickEvent(me, mbt, !down, 1);
     }
 
-    if (b == 3 or b == 4) {
+    if (b == 3 || b == 4) {
         int d = b==3 ? -1 : 1;
         browser->GetHost()->SendMouseWheelEvent(me, d*width*0.05, d*height*0.05);
     }

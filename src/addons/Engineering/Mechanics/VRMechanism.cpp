@@ -89,7 +89,7 @@ bool MPart::propagateMovement(MChange c, MRelation* r) { // change
     r->translateChange(c);
     if (change.time == c.time) {
         return change.same(c);
-    } // TODO: either it is the same change or another change in the same timestep..
+    } // TODO: either it is the same change || another change in the same timestep..
 
     change = c;
     move();
@@ -124,7 +124,7 @@ MGearGearRelation* checkGearGear(MPart* p1, MPart* p2) {
     Vec3f d = Vec3f(r1[3] - r2[3]);
     float D = d.length();
     float t = 0.5*g1->teeth_size;
-    if (R+t < D or R-t > D) return 0; // too far apart
+    if (R+t < D || R-t > D) return 0; // too far apart
     ;// TODO: check if intersection line of gear planes is at the edge of both gears
     ;// TODO: check if coplanar
 

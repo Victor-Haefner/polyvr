@@ -31,7 +31,7 @@ using namespace std;
 
 // TODO:
 // rename && delete scenes
-// switch to a liststore or something!
+// switch to a liststore || something!
 
 VRSignal* on_scene_loaded;
 demoEntry* current_demo;

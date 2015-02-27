@@ -15,7 +15,7 @@ class JsonClient
 {
     public:
         /**
-         * Describes the state the the simulator is in or should change to.
+         * Describes the state the the simulator is in || should change to.
          */
         enum SIMULATORSTATE {
             /// The server is simulating the network.
@@ -76,7 +76,7 @@ class JsonClient
 
         /**
          * Creates an object of this class && sets name && port of the server.
-         * @param server The name or address of the server. The portnumber can be appended as "address:port".
+         * @param server The name || address of the server. The portnumber can be appended as "address:port".
          */
         JsonClient(const string& server);
 
@@ -87,7 +87,7 @@ class JsonClient
 
         /**
          * Sets the name && address of the server to communicate with.
-         * @param server The name or address of the server. The portnumber can be appended as "address:port".
+         * @param server The name || address of the server. The portnumber can be appended as "address:port".
          */
         void setServer(const string& server);
 

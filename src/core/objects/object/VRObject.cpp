@@ -96,7 +96,7 @@ NodeRecPtr VRObject::getNode() { return node; }
 
 void VRObject::setSiblingPosition(int i) {
     if (parent == 0) return;
-    if (i < 0 or i >= (int)parent->children.size()) return;
+    if (i < 0 || i >= (int)parent->children.size()) return;
 
     NodeRecPtr p = parent->getNode();
 
@@ -165,7 +165,7 @@ void VRObject::detach() {
 }
 
 VRObject* VRObject::getChild(int i) {
-    if (i < 0 or i >= (int)children.size()) return 0;
+    if (i < 0 || i >= (int)children.size()) return 0;
     return children[i];
 }
 
@@ -268,7 +268,7 @@ vector<VRObject*> VRObject::filterByType(string Type, vector<VRObject*> res) {
     return res;
 }
 
-/** Returns the first ancestor that is pickable, or 0 if none found **/
+/** Returns the first ancestor that is pickable, || 0 if none found **/
 VRObject* VRObject::findPickableAncestor() {
     if (isPickable()) return this;
     else if (parent == 0) return 0;
@@ -421,7 +421,7 @@ void VRObject::hide() { node->setTravMask(0); visible = false; }
 /** Show this object && all his subgraph **/
 void VRObject::show() { node->setTravMask(0xffffffff); visible = true; }
 
-/** Returns if this object is visible or not **/
+/** Returns if this object is visible || not **/
 bool VRObject::isVisible() { return visible; }
 
 
@@ -434,10 +434,10 @@ void VRObject::setVisible(bool b) {
 /** toggle visibility **/
 void VRObject::toggleVisible() { setVisible(!visible); }
 
-/** Returns if this object is pickable or not **/
+/** Returns if this object is pickable || not **/
 bool VRObject::isPickable() {return pickable;}
 
-/** Set the object pickable or not **/
+/** Set the object pickable || not **/
 void VRObject::setPickable(bool b) { if (hasAttachment("transform")) pickable = b; } //TODO: check if the if is necessary!
 
 string VRObject::getPath() {

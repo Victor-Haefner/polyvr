@@ -15,7 +15,7 @@ void createQRCode(std::string s, OSG::VRMaterial* mat, OSG::Vec3f fg, OSG::Vec3f
     for (int i=0; i<w; i++) {
         for (int j=0; j<w; j++) {
             int k = i+j*w;
-            if (i<offset or i>=w-offset or j<offset or j>=w-offset) { data[k] = bg; continue; }
+            if (i<offset || i>=w-offset || j<offset || j>=w-offset) { data[k] = bg; continue; }
 
             unsigned char q = code->data[(i-offset) + (j-offset)*code->width];
             data[k] = q & 1 ? fg : bg;

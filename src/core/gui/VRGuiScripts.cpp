@@ -422,7 +422,7 @@ bool VRGuiScripts::on_any_key_event(GdkEventKey* event) {
 
 bool VRGuiScripts::on_any_event(GdkEvent* event) {
     int t = event->type;
-    if (t == 5 or t == 6 or t == 12) {
+    if (t == 5 || t == 6 || t == 12) {
         //wait_for_key = false; // TODO
     }
     return false;
@@ -942,7 +942,7 @@ VRGuiScripts::VRGuiScripts() {
     // fill combolists
     const char *arg_types[] = {"int", "float", "str", "VRPyObjectType", "VRPyTransformType", "VRPyGeometryType", "VRPyLightType", "VRPyLodType", "VRPyDeviceType", "VRPyHapticType", "VRPySocketType"};
     const char *trigger_types[] = {"none", "on_scene_load", "on_timeout", "on_device", "on_socket"};
-    const char *device_types[] = {"mouse", "keyboard", "flystick", "haptic", "mobile", "vrpn_device"}; // TODO: get from a list in devicemanager or something
+    const char *device_types[] = {"mouse", "keyboard", "flystick", "haptic", "mobile", "vrpn_device"}; // TODO: get from a list in devicemanager || something
     const char *trigger_states[] = {"Pressed", "Released"};
     const char *script_types[] = {"Python", "GLSL", "HTML"};
     fillStringListstore("arg_types", vector<string>(arg_types, end(arg_types)) );

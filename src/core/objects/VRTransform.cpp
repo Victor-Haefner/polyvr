@@ -280,7 +280,7 @@ Vec3f VRTransform::getWorldDirection() {
     return Vec3f(m[2]);
 }
 
-/** Set the object fixed or not **/
+/** Set the object fixed || not **/
 void VRTransform::setFixed(bool b) {
     if (b == fixed) return;
     fixed = b;
@@ -582,13 +582,13 @@ void VRTransform::printTransformationTree(int indent) {
 
     cout << "\n";
     for (int i=0;i<indent;i++) cout << "  ";
-    if (getType() == "Transform" or getType() == "Geometry") {
+    if (getType() == "Transform" || getType() == "Geometry") {
         VRTransform* _this = (VRTransform*) this;
         _this->printPos();
     }
 
     for (uint i=0;i<getChildrenCount();i++) {
-        if (getChild(i)->getType() == "Transform" or getChild(i)->getType() == "Geometry") {
+        if (getChild(i)->getType() == "Transform" || getChild(i)->getType() == "Geometry") {
             VRTransform* tmp = (VRTransform*) getChild(i);
             tmp->printTransformationTree(indent+1);
         }
@@ -739,7 +739,7 @@ void VRTransform::loadContent(xmlpp::Element* e) {
 
     if (e->get_attribute("at_dir")) orientation_mode = toBool(e->get_attribute("at_dir")->get_value());
 
-    if(doTConstraint or doRConstraint) setFixed(false);
+    if(doTConstraint || doRConstraint) setFixed(false);
 }
 
 void setFromPath(VRTransform* tr, path* p, bool redirect, float t) {

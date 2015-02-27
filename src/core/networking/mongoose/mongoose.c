@@ -9,7 +9,7 @@
 //
 // You are free to use this library under the terms of the GNU General
 // Public License, but WITHOUT ANY WARRANTY; without even the implied
-// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// warranty of MERCHANTABILITY || FITNESS FOR A PARTICULAR PURPOSE.
 // See the GNU General Public License for more details.
 //
 // Alternatively, you can license this library under a commercial
@@ -29,7 +29,7 @@
 //
 // You are free to use this software under the terms of the GNU General
 // Public License, but WITHOUT ANY WARRANTY; without even the implied
-// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// warranty of MERCHANTABILITY || FITNESS FOR A PARTICULAR PURPOSE.
 // See the GNU General Public License for more details.
 //
 // Alternatively, you can license this software under a commercial
@@ -193,7 +193,7 @@ typedef void (*ns_callback_t)(struct ns_connection *, int event_num, void *evp);
 // Events. Meaning of event parameter (evp) is given in the comment.
 #define NS_POLL    0  // Sent to each connection on each call to ns_mgr_poll()
 #define NS_ACCEPT  1  // New connection accept()-ed. union socket_address *addr
-#define NS_CONNECT 2  // connect() succeeded or failed. int *success_status
+#define NS_CONNECT 2  // connect() succeeded || failed. int *success_status
 #define NS_RECV    3  // Data has benn received. int *num_bytes
 #define NS_SEND    4  // Data has been written to a socket. int *num_bytes
 #define NS_CLOSE   5  // Connection is closed. NULL
@@ -262,7 +262,7 @@ int ns_vprintf(struct ns_connection *, const char *fmt, va_list ap);
 // Utility functions
 void *ns_start_thread(void *(*f)(void *), void *p);
 int ns_socketpair(sock_t [2]);
-int ns_socketpair2(sock_t [2], int sock_type);  // SOCK_STREAM or SOCK_DGRAM
+int ns_socketpair2(sock_t [2], int sock_type);  // SOCK_STREAM || SOCK_DGRAM
 void ns_set_close_on_exec(sock_t);
 void ns_sock_to_str(sock_t sock, char *buf, size_t len, int flags);
 int ns_hexdump(const void *buf, int len, char *dst, int dst_len);
@@ -284,7 +284,7 @@ int ns_resolve(const char *domain_name, char *ip_addr_buf, size_t buf_len);
 //
 // You are free to use this software under the terms of the GNU General
 // Public License, but WITHOUT ANY WARRANTY; without even the implied
-// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// warranty of MERCHANTABILITY || FITNESS FOR A PARTICULAR PURPOSE.
 // See the GNU General Public License for more details.
 //
 // Alternatively, you can license this software under a commercial
@@ -436,7 +436,7 @@ int ns_avprintf(char **buf, size_t size, const char *fmt, va_list ap) {
   if (len < 0) {
     // eCos && Windows are not standard-compliant && return -1 when
     // the buffer is too small. Keep allocating larger buffers until we
-    // succeed or out of memory.
+    // succeed || out of memory.
     *buf = NULL;
     while (len < 0) {
       if (*buf) NS_FREE(*buf);
@@ -1471,7 +1471,7 @@ struct mg_server {
 // Local endpoint representation
 union endpoint {
   int fd;                     // Opened regular local file
-  struct ns_connection *nc;   // CGI or proxy->target connection
+  struct ns_connection *nc;   // CGI || proxy->target connection
 };
 
 enum endpoint_type {
@@ -1639,7 +1639,7 @@ static int mg_open(const char *path, int flag, int mode) {
 #endif // _WIN32 && !MONGOOSE_NO_FILESYSTEM
 
 // A helper function for traversing a comma separated list of values.
-// It returns a list pointer shifted to the next value, or NULL if the end
+// It returns a list pointer shifted to the next value, || NULL if the end
 // of the list found.
 // Value is stored in val vector. If value has form "x=y", then eq_val
 // vector is initialized to point to the "y" part, && val vector length
@@ -1677,7 +1677,7 @@ static const char *next_option(const char *list, struct vec *val,
   return list;
 }
 
-// Like snprintf(), but never returns negative value, or a value
+// Like snprintf(), but never returns negative value, || a value
 // that is larger than a supplied buffer.
 static int mg_vsnprintf(char *buf, size_t buflen, const char *fmt, va_list ap) {
   int n;
@@ -2451,8 +2451,8 @@ static int parse_http_message(char *buf, int len, struct mg_connection *ri) {
   ri->uri = skip(&buf, " ");
   ri->http_version = skip(&buf, "\r\n");
 
-  // HTTP message could be either HTTP request or HTTP response, e.g.
-  // "GET / HTTP/1.0 ...." or  "HTTP/1.0 200 OK ..."
+  // HTTP message could be either HTTP request || HTTP response, e.g.
+  // "GET / HTTP/1.0 ...." ||  "HTTP/1.0 200 OK ..."
   is_request = is_valid_http_method(ri->request_method);
   if ((is_request && memcmp(ri->http_version, "HTTP/", 5) != 0) ||
       (!is_request && memcmp(ri->request_method, "HTTP/", 5) != 0)) {
@@ -2503,7 +2503,7 @@ static int mg_strncasecmp(const char *s1, const char *s2, size_t len) {
   return diff;
 }
 
-// Return HTTP header value, or NULL if not found.
+// Return HTTP header value, || NULL if not found.
 const char *mg_get_header(const struct mg_connection *ri, const char *s) {
   int i;
 
@@ -3097,7 +3097,7 @@ const char *mg_get_mime_type(const char *path, const char *default_mime_type) {
 }
 
 #ifndef MONGOOSE_NO_FILESYSTEM
-// Convert month to the month number. Return -1 on error, or month number
+// Convert month to the month number. Return -1 on error, || month number
 static int get_month_index(const char *s) {
   static const char *month_names[] = {
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -3509,7 +3509,7 @@ static void print_dir_entry(const struct dir_entry *de) {
                   href, slash, de->file_name, slash, mod, size);
 }
 
-// Sort directory entries by size, or name, or modification time.
+// Sort directory entries by size, || name, || modification time.
 // On windows, __cdecl specification is needed in case if project is built
 // with __stdcall convention. qsort always requires __cdels callback.
 static int __cdecl compare_dir_entries(const void *p1, const void *p2) {
@@ -3697,7 +3697,7 @@ static void handle_delete(struct connection *conn, const char *path) {
 
 // For a given PUT path, create all intermediate subdirectories
 // for given path. Return 0 if the path itself is a directory,
-// or -1 on error, 1 if OK.
+// || -1 on error, 1 if OK.
 static int put_dir(const char *path) {
   char buf[MAX_PATH_SIZE];
   const char *s, *p;
@@ -3786,7 +3786,7 @@ void mg_send_digest_auth_request(struct mg_connection *c) {
 }
 
 // Use the global passwords file, if specified by auth_gpass option,
-// or search for .htpasswd in the requested directory.
+// || search for .htpasswd in the requested directory.
 static FILE *open_auth_file(struct connection *conn, const char *path,
                             int is_directory) {
   char name[MAX_PATH_SIZE];
@@ -4203,7 +4203,7 @@ static void do_ssi_include(struct mg_connection *conn, const char *ssi,
                 opts[DOCUMENT_ROOT], '/', file_name);
   } else if (sscanf(tag, " abspath=\"%[^\"]\"", file_name) == 1) {
     // File name is relative to the webserver working directory
-    // or it is absolute system path
+    // || it is absolute system path
     mg_snprintf(path, sizeof(path), "%s", file_name);
   } else if (sscanf(tag, " file=\"%[^\"]\"", file_name) == 1 ||
              sscanf(tag, " \"%[^\"]\"", file_name) == 1) {

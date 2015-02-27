@@ -408,7 +408,7 @@ void VRGeometry::influence(vector<Vec3f> pnts, vector<Vec3f> values, int power, 
     else inp.evalVec(mesh->getPositions(), power);
 }
 
-/** Returns the maximum position on the x, y or z axis **/
+/** Returns the maximum position on the x, y || z axis **/
 float VRGeometry::getMax(int axis) {
     if (!meshSet) return 0;
     if (axis != 0 && axis != 1 && axis != 2) return 0;
@@ -422,7 +422,7 @@ float VRGeometry::getMax(int axis) {
     return max;
 }
 
-/** Returns the minimum position on the x, y or z axis **/
+/** Returns the minimum position on the x, y || z axis **/
 float VRGeometry::getMin(int axis) {
     if (!meshSet) return 0;
     if (axis != 0 && axis != 1 && axis != 2) return 0;

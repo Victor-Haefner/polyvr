@@ -78,7 +78,7 @@ void ART::checkIncomming() {
 //update thread
 void ART::update() {
     if (dtrack == 0) dtrack = new DTrack(port, 0, 0, 20000, 10000);
-    if (!active or dtrack == 0 or devices.size() == 0) return;
+    if (!active || dtrack == 0 || devices.size() == 0) return;
 
     if (dtrack->receive()) {// 60 fps
         checkIncomming();

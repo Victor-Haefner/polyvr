@@ -49,7 +49,7 @@ class VehicleType
          @param maxAcc The maximal acceleration / deceleration of the vehicle in m/s^2.
          @param maxRot The maximum possible rotation per second in degree. This determines how good
                 the vehicle can drive around corners.
-         @return A pointer to the newly created object or \c null if a parameter is invalid.
+         @return A pointer to the newly created object || \c null if a parameter is invalid.
         */
         static VehicleType* createVehicleType(const ID id, const double probability, const double radius, const double maxSpeed, const double maxAcc, const double maxRot);
 

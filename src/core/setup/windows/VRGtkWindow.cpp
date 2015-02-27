@@ -107,7 +107,7 @@ bool VRGtkWindow::on_scroll(GdkEventScroll * event) {
 }
 
 void VRGtkWindow::render() {
-    if (!active or !content) return;
+    if (!active || !content) return;
     Glib::RefPtr<Gdk::Window> drawable = drawArea->get_window();
     GdkRectangle rect; rect.x = 0; rect.y = 0; rect.width = 1; rect.height = 1;
     //cout << "Renderer A " << endl;
@@ -147,7 +147,7 @@ bool VRGtkWindow::on_expose(GdkEventExpose* event) {
     //cout << "Renderer B " << endl;
     //cout << "OpenGL version supported " << version << endl;
 
-    if (win->getWidth() != w or win->getHeight() != h) resize(w,h);
+    if (win->getWidth() != w || win->getHeight() != h) resize(w,h);
 
     glClearColor(0.2, 0.2, 0.2, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);

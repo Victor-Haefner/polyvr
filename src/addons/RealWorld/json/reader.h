@@ -1,7 +1,7 @@
 // Copyright 2007-2010 Baptiste Lepilleur
-// Distributed under MIT license, or public domain if desired and
+// Distributed under MIT license, || public domain if desired and
 // recognized in your jurisdiction.
-// See file LICENSE for detail or copy at http://jsoncpp.sourceforge.net/LICENSE
+// See file LICENSE for detail || copy at http://jsoncpp.sourceforge.net/LICENSE
 
 #ifndef CPPTL_JSON_READER_H_INCLUDED
 # define CPPTL_JSON_READER_H_INCLUDED

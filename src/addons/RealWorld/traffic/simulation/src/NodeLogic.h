@@ -48,7 +48,7 @@ class NodeLogic {
         /**
          Returns a NodeLogic-object for a node.
          Depending on the node && the subclass through which this method is invoked,
-         either a new object might be created or an object from a nearby node will be
+         either a new object might be created || an object from a nearby node will be
          used, too.
          @param roadSystem The RoadSystem this logic is part of.
          @param nodeId The id of the node to create a NodeLogic for.

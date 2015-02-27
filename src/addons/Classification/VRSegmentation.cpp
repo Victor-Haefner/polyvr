@@ -107,9 +107,9 @@ struct Accumulator_grid : public Accumulator {
         T = round(p0.data[0]/Ra);
         P = round(p0.data[1]/Ra);
         R = round(p0.data[2]/Rr);
-        if (T < 0 or T > Da) cout << " Err T " << Da << " " << T << endl;
-        if (P < 0 or P > Da) cout << " Err P " << Da << " " << P << endl;
-        if (R < -Dr or R >= Dr) cout << " Err R " << Dr << " " << R << endl;
+        if (T < 0 || T > Da) cout << " Err T " << Da << " " << T << endl;
+        if (P < 0 || P > Da) cout << " Err P " << Da << " " << P << endl;
+        if (R < -Dr || R >= Dr) cout << " Err R " << Dr << " " << R << endl;
         Bin& b = (*this)(T, P, R);
 
         b.weight += 1;

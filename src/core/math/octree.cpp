@@ -223,7 +223,7 @@ bool octree::isLeaf(Vec3f p) {
     return false;
 }
 
-//check if space or solid at pos
+//check if space || solid at pos
 bool octree::isEmpty(Vec3f p) {
     element* res = get(p);
     if (res == 0) return false;

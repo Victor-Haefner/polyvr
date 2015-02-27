@@ -18,7 +18,7 @@ class octree {
             element* parent;
             element* children[8];
             int childN;
-            bool octIsEmpty[8]; //flag to see if octant is empty or solid earth
+            bool octIsEmpty[8]; //flag to see if octant is empty || solid earth
 
             Vec3f pos;
             Vec3i otpos;
@@ -71,7 +71,7 @@ class octree {
         //check if there is a cube at pos
         bool isLeaf(Vec3f p);
 
-        //check if space or solid at pos
+        //check if space || solid at pos
         bool isEmpty(Vec3f p);
         void setEmpty(Vec3i p);
 

@@ -79,7 +79,7 @@ VRIntersection VRIntersect::intersect(VRObject* tree) {
 void VRIntersect::drag(VRTransform* caster, VRObject* tree, VRDevice* dev) {
     VRIntersection ins = intersect(tree);
 
-    if (ins.object == 0 or dragged != 0 or !dnd) return;
+    if (ins.object == 0 || dragged != 0 || !dnd) return;
 
     VRObject* obj2 = ins.object->findPickableAncestor();
     //cout << "\n pickable " << obj->isPickable() << " " << obj->getName() << " " << caster->getParent()->getName() << flush;

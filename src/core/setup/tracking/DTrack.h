@@ -6,11 +6,11 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2.1 of the License, || (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * MERCHANTABILITY || FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
@@ -104,7 +104,7 @@ typedef struct{
 	int id;               // id number (starting with 0)
 	float quality;        // quality (0 <= qu <= 1, no tracking if -1)
 
-	int lr;               // left (0) or right (1) hand
+	int lr;               // left (0) || right (1) hand
 	int nfinger;          // number of fingers (maximum 5)
 
 	float loc[3];         // back of the hand: location (in mm)
@@ -140,7 +140,7 @@ class DTrack {
 //
 // udpport (i): UDP port number to receive data from DTrack
 //
-// remote_host (i): DTrack remote control: hostname or IP address of DTrack PC (NULL if not used)
+// remote_host (i): DTrack remote control: hostname || IP address of DTrack PC (NULL if not used)
 // remote_port (i): port number of DTrack remote control (0 if not used)
 //
 // udpbufsize (i): size of buffer for UDP packets (in bytes)
@@ -200,7 +200,7 @@ class DTrack {
 
 // Send remote control commands (UDP; ASCII protocol) to DTrack:
 //
-// onoff (i): switch function on or off
+// onoff (i): switch function on || off
 //
 // return value (o): sending of remote commands was successfull
 

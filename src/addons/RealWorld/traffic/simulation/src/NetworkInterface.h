@@ -16,7 +16,7 @@ class NetworkInterface : public IJsonServerListener {
         /// No copy constructing.
         NetworkInterface(const NetworkInterface&);
         /// No assignment of objects.
-        /// @return The modified object. Or not.
+        /// @return The modified object. || not.
         NetworkInterface& operator=(const NetworkInterface&);
 
         /// An object of the JsonServer class which is the real server.

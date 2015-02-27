@@ -419,7 +419,7 @@ void TrafficSimulation::addMap(const OSMMap* map) {
     unsigned int iStreets = 0;
     for (vector<OSMWay*>::const_iterator iter = map->osmWays.begin(); iter != map->osmWays.end(); iter++) {
 
-        // Only handle streets && no other ways (e.g. building or park boundaries)
+        // Only handle streets && no other ways (e.g. building || park boundaries)
         if ((*iter)->tags.count("highway") && !((*iter)->tags["highway"].empty())) {
 
             // A vector with the allowed road types

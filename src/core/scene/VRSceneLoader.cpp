@@ -346,7 +346,7 @@ VRTransform* VRSceneLoader::load3DContent(string filepath, VRObject* parent, boo
     cout << "load3DContent " << filepath << endl;
 
     VRObject* root;
-    if(cached_files.count(filepath) == 0 or reload) load(filepath);
+    if(cached_files.count(filepath) == 0 || reload) load(filepath);
     NodeRecPtr osg = cached_files[filepath].root;
     root = parseOSGTree(osg, parent, filepath, filepath);
     if (root == 0) return 0;

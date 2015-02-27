@@ -49,13 +49,13 @@ void VRNumberingEngine::clear() {
 }
 
 bool VRNumberingEngine::checkUIn(int grp) {
-    if (grp < 0 or grp > (int)groups.size()) return true;
+    if (grp < 0 || grp > (int)groups.size()) return true;
     return false;
 }
 
 bool VRNumberingEngine::checkUIn(int i, int grp) {
-    if (grp < 0 or grp > (int)groups.size()) return true;
-    if (i < 0 or i > (int)pos->size()) return true;
+    if (grp < 0 || grp > (int)groups.size()) return true;
+    if (i < 0 || i > (int)pos->size()) return true;
     return false;
 }
 

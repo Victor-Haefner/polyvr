@@ -67,7 +67,7 @@ struct Geo {
             for (int i=0; i<3; i++) r = max(r, d[i]);
         }
 
-        for (int i=0; i<3; i++) if (v[i] > vmax[i]+r or v[i] < vmin[i]-r) return false;
+        for (int i=0; i<3; i++) if (v[i] > vmax[i]+r || v[i] < vmin[i]-r) return false;
         return true;
     }
 

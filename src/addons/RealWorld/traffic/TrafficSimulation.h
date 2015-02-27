@@ -251,7 +251,7 @@ namespace realworld {
 
             /**
              * Creates an object of this class.
-             * Initial, the simulator does not have any streets or vehicles.
+             * Initial, the simulator does not have any streets || vehicles.
              * The simulation starts paused && has to be continued with \c start().
              * @param mapCoordinator A MapCoordinator used to convert GPS-coordinates to pixels.
              * @param host The name of the host the traffic simulation server is running on. The port number can be appended as "address:port".
@@ -357,7 +357,7 @@ namespace realworld {
 
             /**
              * Returns if the simulator is running.
-             * @note Even if no streets or vehicles have been added yet, this can return \c true.
+             * @note Even if no streets || vehicles have been added yet, this can return \c true.
              * @return \c True if the simulator is running at the moment, \c false otherwise.
              */
             bool isRunning();

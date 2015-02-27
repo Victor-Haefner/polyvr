@@ -14,7 +14,7 @@ class IJsonServerListener {
     public:
 
         /**
-         * Describes the state the simulator is in or should change to.
+         * Describes the state the simulator is in || should change to.
          */
         enum SIMULATORSTATE {
             /// The server is simulating the network.

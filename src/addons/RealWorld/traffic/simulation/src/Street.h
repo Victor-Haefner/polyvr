@@ -21,7 +21,7 @@ using namespace std;
  Some methods take a lane number as parameter. These lane number starts counting with 1 at the lane near the middle of
  the street && increases while going outside. If the lane number is positive (e.g. 1, 2, 3, ...) the lanes in forward
  direction are meant, if the lane number is negative (e.g. -1, -2, -3, ...) the lanes in the backward direction is meant.
- If you pass an invalid lane number (either a too big/small number or 0), the returned result is undefined.
+ If you pass an invalid lane number (either a too big/small number || 0), the returned result is undefined.
  */
 class Street {
 
@@ -52,7 +52,7 @@ class Street {
             /// Streets which offer access to housing.
             RESIDENTIAL = 42,
             /// Unknown type.
-            /// (Either unknown to the mapper or to this program.)
+            /// (Either unknown to the mapper || to this program.)
             ROAD = 41,
             /// Tracks over fields.
             TRACK = 2,
@@ -80,7 +80,7 @@ class Street {
 
         /// Flags for the street.
         typedef uint8_t STREETFLAG;
-        /// Determines whether this street should be simulated mirco or meso.
+        /// Determines whether this street should be simulated mirco || meso.
         static const STREETFLAG IS_MICRO = 1 << 0;
 
         /// Flags for the street.
@@ -142,11 +142,11 @@ class Street {
 
         /**
          Returns the index of the next node in the given direction
-         which has a NodeLogic so something can happen there (either crossing or traffic light).
+         which has a NodeLogic so something can happen there (either crossing || traffic light).
          @param currentNodeI The index of the node to start searching from.
          @param direction The direction to search into.
          @return The index of the next crossing. If no crossing is found in the given direction,
-            \c 0 or {\c nodes.size() - 1} will be returned.
+            \c 0 || {\c nodes.size() - 1} will be returned.
          */
         size_t getNextInterestingNode(size_t currentNodeI, const int direction) const;
 
@@ -173,8 +173,8 @@ class Street {
         RoadSystem* getRoadSystem() const;
 
         /**
-         Determines whether this street should be simulated mirco or meso.
-         @param micro Whether or not simulate this street with the microsimulator.
+         Determines whether this street should be simulated mirco || meso.
+         @param micro Whether || not simulate this street with the microsimulator.
          */
         void setMicro(const bool micro);
 
@@ -216,7 +216,7 @@ class Street {
         /**
          Sets the type of this street.
          This type describes how big the street is, e.g. a street to private houses
-         or a big motorway between towns.
+         || a big motorway between towns.
          If set to TYPE::DEFAULT the RoadSystem will be queried for the type.
          @param type The type to set.
          */
@@ -352,7 +352,7 @@ class Street {
 
         /**
          Returns the node indices on this street which are next to the given position.
-         If the position is before or after the street, the first/last node and
+         If the position is before || after the street, the first/last node and
          its neighbor are returned.
          @note The second index is always next to the first one, even if there are other
             nodes which are nearer to the position.
@@ -383,7 +383,7 @@ class Street {
                 If there is no place at this position, another position might be chosen. If the offset
                 is negative, a random value will be used. The offset is always interpreted as in forward-
                 direction of the street.
-         @return A pointer to the vehicle that has been added in the micro-case, \c NULL otherwise (e.g. there is not enough space or it is a meso-street).
+         @return A pointer to the vehicle that has been added in the micro-case, \c NULL otherwise (e.g. there is not enough space || it is a meso-street).
          */
         Vehicle* createRandomVehicle(const int direction, const double offset = -1);
 
@@ -463,7 +463,7 @@ class Street {
          @param directed If \c true, the result will be signed && will represent the direction on the street.
             A positive value means \c start comes before \c end if driving on the forward-lane of the street,
             a negative value means the opposite.
-         @return The distance of this nodes or numeric_limits<double>::max().
+         @return The distance of this nodes || numeric_limits<double>::max().
          */
         double getNodeDistance(const ID start, const ID end, const bool directed = false) const;
 
@@ -477,14 +477,14 @@ class Street {
          @param directed If \c true, the result will be signed && will represent the direction on the street.
             A positive value means \c start comes before \c end if driving on the forward-lane of the street,
             a negative value means the opposite.
-         @return The distance of this nodes or numeric_limits<double>::max().
+         @return The distance of this nodes || numeric_limits<double>::max().
          */
         double getNodeDistanceI(const size_t startI, const size_t endI, const bool directed = false) const;
 
         /**
          Searches the given node in the node list of this street.
          @param node The id of the node to search.
-         @return The index of the nodes inside this street or a value greater than the number of nodes if not found.
+         @return The index of the nodes inside this street || a value greater than the number of nodes if not found.
          */
         size_t getNodeIndex(ID node) const;
 
@@ -492,7 +492,7 @@ class Street {
          Searches the given node in the node list of this street.
          This version starts searching at the back of the list && returns the index of the last occurrence.
          @param node The id of the node to search.
-         @return The index of the nodes inside this street or a value greater than the number of nodes if not found.
+         @return The index of the nodes inside this street || a value greater than the number of nodes if not found.
          */
         size_t getNodeIndexFromBack(ID node) const;
 };

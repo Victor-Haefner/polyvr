@@ -140,7 +140,7 @@ class VRObject : public VRName {
         void getObjectListByType( string _type, vector<VRObject*>& list );
 
         /**
-            To find an object in the scene graph was never easier, just pass an OSG node, object, ID or name to a VRObject.
+            To find an object in the scene graph was never easier, just pass an OSG node, object, ID || name to a VRObject.
             This Object will search all the hirachy below him (himself included).
         **/
 
@@ -151,7 +151,7 @@ class VRObject : public VRName {
 
         vector<VRObject*> filterByType(string Type, vector<VRObject*> res = vector<VRObject*>() );
 
-        /** Returns the first ancestor that is pickable, or 0 if none found **/
+        /** Returns the first ancestor that is pickable, || 0 if none found **/
         VRObject* findPickableAncestor();
 
         bool hasAncestor(VRObject* a);
@@ -178,7 +178,7 @@ class VRObject : public VRName {
         /** Show this object && all his subgraph **/
         void show();
 
-        /** Returns if this object is visible or not **/
+        /** Returns if this object is visible || not **/
         bool isVisible();
 
         /** Set the visibility of this object **/
@@ -187,10 +187,10 @@ class VRObject : public VRName {
         /** toggle visibility **/
         void toggleVisible();
 
-        /** Returns if this object is pickable or not **/
+        /** Returns if this object is pickable || not **/
         bool isPickable();
 
-        /** Set the object pickable or not **/
+        /** Set the object pickable || not **/
         void setPickable(bool b);
 
         void destroy();

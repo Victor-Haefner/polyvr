@@ -53,7 +53,7 @@ void VRCallbackManager::addTimeoutFkt(VRFunction<int>* f, int priority, int time
     timeoutFkts[priority]->push_back(tof);
 }
 
-void VRCallbackManager::dropUpdateFkt(VRFunction<int>* f) {//replace by list or map or something..
+void VRCallbackManager::dropUpdateFkt(VRFunction<int>* f) {//replace by list || map || something..
     if (updateFkts_priorities.count(f) == 0) return;
     int prio = updateFkts_priorities[f];
     list<VRFunction<int>*>* l = updateFkts[prio];
@@ -63,7 +63,7 @@ void VRCallbackManager::dropUpdateFkt(VRFunction<int>* f) {//replace by list or 
     updateFkts_priorities.erase(f);
 }
 
-void VRCallbackManager::dropTimeoutFkt(VRFunction<int>* f) {//replace by list or map or something..
+void VRCallbackManager::dropTimeoutFkt(VRFunction<int>* f) {//replace by list || map || something..
     updateListsChanged = true;
     if (updateFkts_priorities.count(f) == 0) return;
     int prio = updateFkts_priorities[f];

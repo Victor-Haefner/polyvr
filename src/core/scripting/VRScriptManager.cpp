@@ -428,7 +428,7 @@ PyObject* VRScriptManager::openFileDialog(VRScriptManager* self, PyObject *args)
 
     string m = PyString_AsString(mode);
     Gtk::FileChooserAction action = Gtk::FILE_CHOOSER_ACTION_OPEN;
-    if (m == "Save" or m == "New" or m == "Create") action = Gtk::FILE_CHOOSER_ACTION_SAVE;
+    if (m == "Save" || m == "New" || m == "Create") action = Gtk::FILE_CHOOSER_ACTION_SAVE;
     VRGuiFile::open( m, action, PyString_AsString(title) );
 
     Py_RETURN_TRUE;

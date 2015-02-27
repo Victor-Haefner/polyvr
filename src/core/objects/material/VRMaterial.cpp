@@ -227,7 +227,7 @@ class MAC : private SimpleTexturedMaterial {
             SimpleTexturedMaterialRecPtr stmat = dynamic_pointer_cast<SimpleTexturedMaterial>(mat);
             ChunkMaterialRecPtr cmat = dynamic_pointer_cast<ChunkMaterial>(mat);
 
-            if (smat or stmat)  {
+            if (smat || stmat)  {
                 MAC* macc = (MAC*)matPtr;
                 MaterialChunkRecPtr mchunk = macc->_materialChunk;
                 if (mchunk) return mchunk;

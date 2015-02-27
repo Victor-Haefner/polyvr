@@ -21,8 +21,8 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 bool onBox(int i, int j, int c) {
-    if(abs(i) > c or abs(j) > c) return false;
-    if(abs(i) == c or abs(j) == c) return true;
+    if(abs(i) > c || abs(j) > c) return false;
+    if(abs(i) == c || abs(j) == c) return true;
     return false;
 }
 
@@ -476,11 +476,11 @@ void VRView::setCallibrationMode(bool b) {
                 int k = i+j*w;
 
                 data[k] = c1;
-                if (i == 0 or j == 0 or i == w-1 or j == h-1) data[k] = c2;
-                else if (i == w1 or j == w1 or i == w-w1 or j == h-h1) data[k] = c2;
-                else if (x == -h5 or y == -w5 or x == h5 or y == w5) data[k] = c2;
-                else if(l == h5 or l == w5 or l == w1) data[k] = c2;
-                else if(x == 0 or y == 0) data[k] = c2;
+                if (i == 0 || j == 0 || i == w-1 || j == h-1) data[k] = c2;
+                else if (i == w1 || j == w1 || i == w-w1 || j == h-h1) data[k] = c2;
+                else if (x == -h5 || y == -w5 || x == h5 || y == w5) data[k] = c2;
+                else if(l == h5 || l == w5 || l == w1) data[k] = c2;
+                else if(x == 0 || y == 0) data[k] = c2;
             }
         }
 

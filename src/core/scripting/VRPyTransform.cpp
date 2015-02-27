@@ -319,7 +319,7 @@ PyObject* VRPyTransform::setCollisionMargin(VRPyTransform* self, PyObject *args)
 
 PyObject* VRPyTransform::setCollisionGroup(VRPyTransform* self, PyObject *args) {
     int i = parseInt(args);
-    if (i > 15 or i < 0) { PyErr_SetString(err, "VRPyTransform::setCollisionGroup: only 15 groups/masks available, group 0 means no collisions at all"); return NULL; }
+    if (i > 15 || i < 0) { PyErr_SetString(err, "VRPyTransform::setCollisionGroup: only 15 groups/masks available, group 0 means no collisions at all"); return NULL; }
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setCollisionGroup: C Object is invalid"); return NULL; }
     self->obj->getPhysics()->setCollisionGroup(pow(2,i));
     Py_RETURN_TRUE;
@@ -335,7 +335,7 @@ PyObject* VRPyTransform::setCollisionShape(VRPyTransform* self, PyObject *args) 
 
 PyObject* VRPyTransform::setCollisionMask(VRPyTransform* self, PyObject *args) {
     int i = parseInt(args);
-    if (i > 15 or i < 0) { PyErr_SetString(err, "VRPyTransform::setCollisionMask: only 15 groups/masks available, group 0 means no collisions at all"); return NULL; }
+    if (i > 15 || i < 0) { PyErr_SetString(err, "VRPyTransform::setCollisionMask: only 15 groups/masks available, group 0 means no collisions at all"); return NULL; }
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setCollisionMask: C Object is invalid"); return NULL; }
     self->obj->getPhysics()->setCollisionMask(pow(2,i));
     Py_RETURN_TRUE;

@@ -80,7 +80,7 @@ JsonClient::JsonClient()
 
 /**
  * Creates an object of this class && sets name && port of the server.
- * @param server The name or address of the server. The portnumber can be appended as "address:port".
+ * @param server The name || address of the server. The portnumber can be appended as "address:port".
  */
 JsonClient::JsonClient(const string& servername)
     : curl(0), curlMutex() {
@@ -102,7 +102,7 @@ JsonClient::~JsonClient() {
 
 /**
  * Sets the name && address of the server to communicate with.
- * @param server The name or address of the server. The portnumber can be appended as "address:port".
+ * @param server The name || address of the server. The portnumber can be appended as "address:port".
  */
 void JsonClient::setServer(const string& server) {
 

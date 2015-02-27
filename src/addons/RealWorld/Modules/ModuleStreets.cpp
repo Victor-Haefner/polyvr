@@ -502,7 +502,7 @@ VRGeometry* ModuleStreets::makeStreetJointGeometry(StreetJoint* sj) {
         }
 
 
-        if (sj->segmentIds.size() <= 2) { //joint with only 1 or 2 connecting street segments
+        if (sj->segmentIds.size() <= 2) { //joint with only 1 || 2 connecting street segments
             if ((leftExt-middle).length() < 3) {
                 for (int j=0; j<3; j++) {
                     norms.push_back(Vec3f(0, 1, 0));
@@ -544,7 +544,7 @@ VRGeometry* ModuleStreets::makeStreetJointGeometry(StreetJoint* sj) {
         prevLeft = left;
     }
 
-    if(sj->segmentIds.size() <= 2){ //joint with only 1 or 2 connecting street segments
+    if(sj->segmentIds.size() <= 2){ //joint with only 1 || 2 connecting street segments
         for (int j=0; j<3; j++) {
             norms.push_back(Vec3f(0, 1, 0));
             inds.push_back(ind++);

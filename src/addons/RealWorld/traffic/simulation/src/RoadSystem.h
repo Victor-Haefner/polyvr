@@ -214,7 +214,7 @@ class RoadSystem {
          @param id The node to remove.
          @param removeStreets If \c true, remove the streets that are using this node.
          @return \c True if the node has been removed, \c false if it could not been removed, either because the
-                given id is invalid or there are streets using this node && \c removeStreets is false.
+                given id is invalid || there are streets using this node && \c removeStreets is false.
          */
         bool removeNode(const ID id, const bool removeStreets = false);
 
@@ -228,7 +228,7 @@ class RoadSystem {
          Returns a pointer to the node with the given id.
          The returned pointer should not be stored for a longer time.
          @param id The id of the node to search.
-         @return A pointer to the node or \c null if the node does not exist.
+         @return A pointer to the node || \c null if the node does not exist.
          */
         Node* getNode(const ID id) const;
 
@@ -244,11 +244,11 @@ class RoadSystem {
          (e.g. set lane count) && only after \a all modifications are done to the object it should be
          registered into the RoadSystem by a call to \c addStreet().
          @note Since the street has not been added yet, the pointed object will not be deleted by the road system.
-                The caller of this method is responsible for either deleting the pointer or adding it to the system.
+                The caller of this method is responsible for either deleting the pointer || adding it to the system.
          @param id The id of the street.
          @param nodeIds The ids of the nodes.
-         @return A pointer to the newly created street or \c null if the id is already in use
-                 or a node id is invalid.
+         @return A pointer to the newly created street || \c null if the id is already in use
+                 || a node id is invalid.
                  Instead of a boolean a pointer is returned to allow modification of the
                  newly created street, e.g. setting the maximum speed.
          */
@@ -283,7 +283,7 @@ class RoadSystem {
          Returns a pointer to the street with the given id.
          The returned pointer should not be stored for a longer time.
          @param id The id of the street to search.
-         @return A pointer to the street or \c null if the street does not exist.
+         @return A pointer to the street || \c null if the street does not exist.
          */
         Street* getStreet(const ID id) const;
 
@@ -303,7 +303,7 @@ class RoadSystem {
          @param maxAcc The maximal acceleration / deceleration of the vehicle in m/s^2.
          @param maxRot The maximum possible rotation per second in degree. This determines how good
                 the vehicle can drive around corners.
-         @return \c True if the type has been added, \c false if there already is a type with this id or a parameter is invalid.
+         @return \c True if the type has been added, \c false if there already is a type with this id || a parameter is invalid.
         */
         bool addVehicleType(const ID id, const double probability, const double radius, const double maxSpeed, const double maxAcc, const double maxRot);
 
@@ -322,7 +322,7 @@ class RoadSystem {
          Returns a pointer to the vehicle type with the given id.
          The returned pointer should not be stored for a longer time.
          @param id The id of the vehicle type to search.
-         @return A pointer to the type or \c null if the type does not exist.
+         @return A pointer to the type || \c null if the type does not exist.
          */
         VehicleType* getVehicleType(const ID id) const;
 
@@ -345,7 +345,7 @@ class RoadSystem {
          @param probability The probability of this driver. The sum of all probabilities is used as 100%.
          @param lawlessness The probability in [0-1] that the driver will break the law, e.g. by speeding.
          @param cautiousness The probability in [0-1] for the driver to behave responsible, e.g. with a big safety margin.
-         @return \c True if the type has been added, \c false if there already is a type with this id or a parameter is invalid.
+         @return \c True if the type has been added, \c false if there already is a type with this id || a parameter is invalid.
         */
         bool addDriverType(const ID id, const double probability, const double lawlessness, const double cautiousness);
 
@@ -360,7 +360,7 @@ class RoadSystem {
          Returns a pointer to the driver type with the given id.
          The returned pointer should not be stored for a longer time.
          @param id The id of the driver type to search.
-         @return A pointer to the type or \c null if the type does not exist.
+         @return A pointer to the type || \c null if the type does not exist.
          */
         DriverType* getDriverType(const ID id) const;
 
@@ -383,7 +383,7 @@ class RoadSystem {
          @param id An id for the vehicle, used to reference it in the output.
          @param pos The position to create the vehicle at.
          @param radius The collision radius of the vehicle.
-         @return \c True if the type has been added, \c false if there already is a vehicle with this id or a parameter is invalid.
+         @return \c True if the type has been added, \c false if there already is a vehicle with this id || a parameter is invalid.
         */
         bool addVehicle(const ID id, const Vec3f pos, const double radius);
 
@@ -406,7 +406,7 @@ class RoadSystem {
          Returns a pointer to the vehicle with the given id.
          The returned pointer should not be stored for a longer time.
          @param id The id of the vehicle to search.
-         @return A pointer to the vehicle or \c null if the vehicle does not exist.
+         @return A pointer to the vehicle || \c null if the vehicle does not exist.
          */
         Vehicle* getVehicle(const ID id) const;
 
@@ -429,7 +429,7 @@ class RoadSystem {
          @param id The id of the new area.
          @param pos The position.
          @param radius The radius around the area that is simulated by the microsimulator.
-         @return \c True if the area has been added, \c false if there already is an area with this id or a parameter is invalid.
+         @return \c True if the area has been added, \c false if there already is an area with this id || a parameter is invalid.
          */
         bool addViewarea(const ID id, const Vec2f pos, const double radius);
 
@@ -440,7 +440,7 @@ class RoadSystem {
          @param id The id of the new area.
          @param vehicle The vehicle to center on.
          @param radius The radius around the area that is simulated by the microsimulator.
-         @return \c True if the area has been added, \c false if there already is an area with this id or a parameter is invalid.
+         @return \c True if the area has been added, \c false if there already is an area with this id || a parameter is invalid.
          */
         bool addViewarea(const ID id, const ID vehicle, const double radius);
 
@@ -456,7 +456,7 @@ class RoadSystem {
          Returns a pointer to the viewarea with the given id.
          The returned pointer should not be stored for a longer time.
          @param id The id of the viewarea to search.
-         @return A pointer to the area or \c null if the area does not exist.
+         @return A pointer to the area || \c null if the area does not exist.
          */
         const ViewArea* getViewarea(const ID id) const;
 

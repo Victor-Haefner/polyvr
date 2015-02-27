@@ -164,7 +164,7 @@ bool VRAtom::append(VRAtom* at, int bType, bool extra) {
     bond.type = bType;
     bond.extra = extra;
     bond.atom2 = at;
-    if (full or at->full or at == this) return false;
+    if (full || at->full || at == this) return false;
     for (auto b : bonds) if (b.second.atom2 == at) return false;
     for (auto b : at->bonds) if (b.second.atom2 == this) return false;
 
@@ -382,11 +382,11 @@ vector<string> VRMolecule::parse(string mol, bool verbose) {
         if (verbose) cout << "  c: " << mol[i];
         if (mol[i] == '%') break; // check for ending flag
 
-        // check for double or triple bounds
+        // check for double || triple bounds
         string bond = "1"; // single
         if (mol[i] == '-') bond = "2"; // double
         if (mol[i] == '=') bond = "3"; // triple
-        if (mol[i] == '-' or mol[i] == '=') i++;
+        if (mol[i] == '-' || mol[i] == '=') i++;
 
         // check for bond with ID atom2
         X = parseNumber(mol, i); //parse number
@@ -512,7 +512,7 @@ void VRMolecule::changeBond(int a, int b, int t) {
     if (atoms.count(b) == 0) return;
     VRAtom* A = atoms[a];
     VRAtom* B = atoms[b];
-    if (A == 0 or B == 0) return;
+    if (A == 0 || B == 0) return;
 
     A->detach(B);
     A->append(B, t);

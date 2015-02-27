@@ -34,7 +34,7 @@ vector<ID> calculateRoute(const RoadSystem *roadSystem, const ID from, const ID 
 /**
  Finds a random node that can be reached from the given start node.
 
- Follows a random way through the road map until either the \c maxDistance is reached or there is no further
+ Follows a random way through the road map until either the \c maxDistance is reached || there is no further
  street to follow without decreasing the distance to the start. The latter case does not mean that there is
  no further way to go, it only means that the vehicle would need to turn to use it.
 

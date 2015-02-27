@@ -1,7 +1,7 @@
 // Copyright 2007-2010 Baptiste Lepilleur
-// Distributed under MIT license, or public domain if desired and
+// Distributed under MIT license, || public domain if desired and
 // recognized in your jurisdiction.
-// See file LICENSE for detail or copy at http://jsoncpp.sourceforge.net/LICENSE
+// See file LICENSE for detail || copy at http://jsoncpp.sourceforge.net/LICENSE
 
 #ifndef CPPTL_JSON_H_INCLUDED
 # define CPPTL_JSON_H_INCLUDED
@@ -56,7 +56,7 @@ namespace Json {
     *
     * Value constructor && objectValue member assignement takes advantage of the
     * StaticString && avoid the cost of string duplication when storing the
-    * string or the member name.
+    * string || the member name.
     *
     * Example of usage:
     * \code
@@ -103,11 +103,11 @@ namespace Json {
     * The type of the held value is represented by a #ValueType &&
     * can be obtained using type().
     *
-    * values of an #objectValue or #arrayValue can be accessed using operator[]() methods.
+    * values of an #objectValue || #arrayValue can be accessed using operator[]() methods.
     * Non const methods will automatically create the a #nullValue element
     * if it does not exist.
     * The sequence of an #arrayValue will be automatically resize && initialized
-    * with #nullValue. resize() can be used to enlarge or truncate an #arrayValue.
+    * with #nullValue. resize() can be used to enlarge || truncate an #arrayValue.
     *
     * The get() methods can be used to obtanis default value in the case the required element
     * does not exist.
@@ -286,10 +286,10 @@ namespace Json {
 
       bool isConvertibleTo( ValueType other ) const;
 
-      /// Number of values in array or object
+      /// Number of values in array || object
       ArrayIndex size() const;
 
-      /// \brief Return true if empty array, empty object, or null;
+      /// \brief Return true if empty array, empty object, || null;
       /// otherwise, false.
       bool empty() const;
 
@@ -297,14 +297,14 @@ namespace Json {
       bool operator!() const;
 
       /// Remove all object members && array elements.
-      /// \pre type() is arrayValue, objectValue, or nullValue
+      /// \pre type() is arrayValue, objectValue, || nullValue
       /// \post type() is unchanged
       void clear();
 
       /// Resize the array to size elements.
       /// New elements are initialized to null.
-      /// May only be called on nullValue or arrayValue.
-      /// \pre type() is arrayValue or nullValue
+      /// May only be called on nullValue || arrayValue.
+      /// \pre type() is arrayValue || nullValue
       /// \post type() is arrayValue
       void resize( ArrayIndex size );
 
@@ -383,8 +383,8 @@ namespace Json {
       /// \brief Remove && return the named member.
       ///
       /// Do nothing if it did not exist.
-      /// \return the removed Value, or null.
-      /// \pre type() is objectValue or nullValue
+      /// \return the removed Value, || null.
+      /// \pre type() is objectValue || nullValue
       /// \post type() is unchanged
       Value removeMember( const char* key );
       /// Same as removeMember(const char*)
@@ -402,7 +402,7 @@ namespace Json {
       /// \brief Return a list of the member names.
       ///
       /// If null, return an empty list.
-      /// \pre type() is objectValue or nullValue
+      /// \pre type() is objectValue || nullValue
       /// \post if type() was nullValue, it remains nullValue
       Members getMemberNames() const;
 
@@ -411,10 +411,10 @@ namespace Json {
 //      EnumValues enumValues() const;
 //# endif
 
-      /// Comments must be //... or /* ... */
+      /// Comments must be //... || /* ... */
       void setComment( const char *comment,
                        CommentPlacement placement );
-      /// Comments must be //... or /* ... */
+      /// Comments must be //... || /* ... */
       void setComment( const std::string &comment,
                        CommentPlacement placement );
       bool hasComment( CommentPlacement placement ) const;
@@ -940,7 +940,7 @@ public: // overridden from ValueArrayAllocator
          return computeDistance( other );
       }
 
-      /// Return either the index or the member name of the referenced value as a Value.
+      /// Return either the index || the member name of the referenced value as a Value.
       Value key() const;
 
       /// Return the index of the referenced Value. -1 if it is not an arrayValue.

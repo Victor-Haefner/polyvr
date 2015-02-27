@@ -29,7 +29,7 @@ namespace realworld {
         float SIGN_WIDTH = 0.3; //sign width
 
         //buildings
-        float WINDOW_DOOR_WIDTH = 2.5f; //width of a door or window
+        float WINDOW_DOOR_WIDTH = 2.5f; //width of a door || window
         float BUILDING_FLOOR_HEIGHT = 3.0f; //height of one level of a building
         int MAX_FLOORS = 4; //how many floors a building can have at max
         int FASSADE_SEGMENTS = 4; // number of segments per fassade

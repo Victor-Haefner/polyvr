@@ -58,8 +58,8 @@ PyMethodDef VRPyColorChooser::methods[] = {
 PyObject* VRPyColorChooser::setGeometry(VRPyColorChooser* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyColorChooser::activate - Object is invalid"); return NULL; }
     VRPyGeometry* geo = 0;
-    if (! PyArg_ParseTuple(args, "O", &geo)) return NULL;
-    self->obj->setGeometry(geo->obj);
+    parseObject(args, geo);
+    if (geo) self->obj->setGeometry(geo->obj);
     Py_RETURN_TRUE;
 }
 
