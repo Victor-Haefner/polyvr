@@ -288,7 +288,7 @@ void updateObjectForms(bool disable = false) {
     VRObject* obj = getSelected();
     if (obj == 0) return;
 
-    // set object label and path
+    // set object label && path
     setLabel( "current_object_lab", obj->getName() + "\npath " + obj->getPath() );
 
     if (obj->hasAttachment("global")) return;
@@ -899,7 +899,7 @@ void VRGuiScene::on_drag_data_receive(const Glib::RefPtr<Gdk::DragContext>& dc ,
     cout << "drag dest " << dragPath << " " << pos << endl;
 
     if (selected->hasAttachment("treeviewNotDragable")) { dc->drag_status(Gdk::DragAction(0),0); return; } // object is not dragable
-    if (dragPath == "0" and pos <= 1) { dc->drag_status(Gdk::DragAction(0),0); return; } // drag out of root
+    if (dragPath == "0" && pos <= 1) { dc->drag_status(Gdk::DragAction(0),0); return; } // drag out of root
 
     /*Gtk::TreeModel::iterator iter = tree_view->get_model()->get_iter(path);
     if(!iter) { dc->drag_status(Gdk::DragAction(0),0); return; }

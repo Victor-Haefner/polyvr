@@ -198,7 +198,7 @@ void octree::addAround(element* e) {
     for (i=-1;i<2;i++) {
         for (j=-1;j<2;j++) {
             for (k=-1;k<2;k++) {
-                if (i==0 and j==0 and k==0) continue; //ignore itself
+                if (i==0 && j==0 && k==0) continue; //ignore itself
 
                 p2 = p + Vec3i(i,j,k);
                 pos = e->pos + Vec3f(i,j,k);
@@ -291,7 +291,7 @@ octree::element* octree::get(Line ray, octree::element* e, string indent) {
     int o_pos = e->getOctant(diff);
     element* c = e->children[o_pos];
 
-    if (o_dir == o_pos and c == 0) {
+    if (o_dir == o_pos && c == 0) {
         return 0; //cast in empty space
     }
 
@@ -352,7 +352,7 @@ vector<octree::element*> octree::getAround(Vec3f pos, float r) {
                 Vec3f p = pos+Vec3f(i,j,k);
                 element* e = get(p);
                 if (e == 0) continue;
-                if (e->size == 1 and e != oe) {
+                if (e->size == 1 && e != oe) {
                     elements.push_back(e);
                     oe = e;
                     //cout << "\nAt " << p << " is " << e->size << " ptr " << e ;

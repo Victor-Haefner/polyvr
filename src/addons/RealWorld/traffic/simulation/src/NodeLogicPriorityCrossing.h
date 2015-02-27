@@ -9,7 +9,7 @@ class RoadSystem;
  A node logic that represents a crossing between streets of different sizes.
  The vehicles on the bigger street are allowed to drive first.
 
- This class is quite similar to NodeLogicRightFirst but checks first for street size and only
+ This class is quite similar to NodeLogicRightFirst but checks first for street size && only
  then for the direction of streets with the same size.
  */
 class NodeLogicPriorityCrossing : public NodeLogic {
@@ -44,7 +44,7 @@ class NodeLogicPriorityCrossing : public NodeLogic {
     public:
         /**
          Returns a NodeLogic-object for a node.
-         Depending on the node and the subclass through which this method is invoked,
+         Depending on the node && the subclass through which this method is invoked,
          either a new object might be created or an object from a nearby node will be
          used, too.
          @param roadSystem The RoadSystem this logic is part of.

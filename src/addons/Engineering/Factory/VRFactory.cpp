@@ -163,7 +163,7 @@ VRObject* VRFactory::loadVRML(string path) { // wrl filepath
         switch (state) {
             case 3:
                 while(ss >> v[0] && ss >> v[1] && ss >> v[2] && ss.get()) {
-                    if (!new_color and new_obj) new_obj = !geo.inBB(v); // strange artifacts!!
+                    if (!new_color && new_obj) new_obj = !geo.inBB(v); // strange artifacts!!
                     geo.updateBB(v);
 
                     if (new_obj) {

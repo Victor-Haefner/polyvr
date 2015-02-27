@@ -17,6 +17,12 @@ struct VRPyBase {
     static PyObject* err;
 
     static PyObject* parseObject(PyObject *args);
+    template <typename T>
+    static void parseObject(PyObject *args, T& t) {
+        t = 0;
+        if (! PyArg_ParseTuple(args, "O", &t)) return;
+        if ((PyObject*)t == Py_None) t = 0;
+    }
 
     static vector<PyObject*> pyListToVector(PyObject *v);
     static vector<PyObject*> parseList(PyObject *args);

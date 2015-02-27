@@ -138,7 +138,7 @@ void VRObject::switchParent(VRObject* new_p, int place) {
     if (new_p == 0) { cout << "\nERROR : new parent is 0!\n"; return; }
 
     if (parent == 0) { new_p->addChild(this, true, place); return; }
-    if (parent == new_p and place == childIndex) { return; }
+    if (parent == new_p && place == childIndex) { return; }
 
     if (parent != new_p) _switchParent(new_p->node); //takes care of the osg node structure
 
@@ -383,7 +383,7 @@ VRObject* VRObject::duplicate(bool anchor) {
     for (uint i=0; i<children.size();i++)
         o->addChild(children[i]); // append children
 
-    if (anchor and parent) parent->addChild(o);
+    if (anchor && parent) parent->addChild(o);
     return o;
 }
 
@@ -415,10 +415,10 @@ int VRObject::findChild(VRObject* node) {
     return -1;
 }
 
-/** Hide this object and all his subgraph **/
+/** Hide this object && all his subgraph **/
 void VRObject::hide() { node->setTravMask(0); visible = false; }
 
-/** Show this object and all his subgraph **/
+/** Show this object && all his subgraph **/
 void VRObject::show() { node->setTravMask(0xffffffff); visible = true; }
 
 /** Returns if this object is visible or not **/

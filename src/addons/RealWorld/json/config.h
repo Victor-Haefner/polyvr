@@ -19,7 +19,7 @@
 /// THIS FEATURE IS STILL EXPERIMENTAL! There is know bugs: See #3177332
 //#  define JSON_VALUE_USE_INTERNAL_MAP 1
 /// Force usage of standard new/malloc based allocator instead of memory pool based allocator.
-/// The memory pools allocator used optimization (initializing Value and ValueInternalLink
+/// The memory pools allocator used optimization (initializing Value && ValueInternalLink
 /// as if it was a POD) that may cause some validation tool to report errors.
 /// Only has effects if JSON_VALUE_USE_INTERNAL_MAP is defined.
 //#  define JSON_USE_SIMPLE_INTERNAL_ALLOCATOR 1
@@ -52,7 +52,7 @@
 # endif
 
 // If JSON_NO_INT64 is defined, then Json only support C++ "int" type for integer
-// Storages, and 64 bits integer support is disabled.
+// Storages, && 64 bits integer support is disabled.
 // #define JSON_NO_INT64 1
 
 #if defined(_MSC_VER)  &&  _MSC_VER <= 1200 // MSVC 6

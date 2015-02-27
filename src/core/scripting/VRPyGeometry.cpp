@@ -103,7 +103,7 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"setRandomColors", (PyCFunction)VRPyGeometry::setRandomColors, METH_NOARGS, "Set a random color for each vertex" },
     {"removeDoubles", (PyCFunction)VRPyGeometry::removeDoubles, METH_VARARGS, "Remove double vertices" },
     {"makeUnique", (PyCFunction)VRPyGeometry::makeUnique, METH_NOARGS, "Make the geometry data unique" },
-    {"influence", (PyCFunction)VRPyGeometry::influence, METH_VARARGS, "Pass a points and value vector to influence the geometry - influence([points,f3], [values,f3], int power)" },
+    {"influence", (PyCFunction)VRPyGeometry::influence, METH_VARARGS, "Pass a points && value vector to influence the geometry - influence([points,f3], [values,f3], int power)" },
     {NULL}  /* Sentinel */
 };
 

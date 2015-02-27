@@ -363,7 +363,7 @@ void VRMolecule::updateGeo() {
     updateCoords();
 }
 
-bool isNumber(char c) { return (c >= '0' and c <= '9'); }
+bool isNumber(char c) { return (c >= '0' && c <= '9'); }
 
 string parseNumber(string in, int offset) {
     string X = ""; //parse number
@@ -404,7 +404,7 @@ vector<string> VRMolecule::parse(string mol, bool verbose) {
         atom2 = mol.substr(i, j); // final atom2 type string
 
         X = parseNumber(mol, i+j); //parse number
-        if (X.size() > 0 and verbose) cout << " N: " << X;
+        if (X.size() > 0 && verbose) cout << " N: " << X;
         j += X.size();
 
         int N = 1;

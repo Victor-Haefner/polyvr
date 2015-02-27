@@ -161,7 +161,7 @@ OSG::GeometryRecPtr VRThread::make() {
             Norms->addValue(OSG::Vec3f(ca,sa,0));
             Norms->addValue(OSG::Vec3f(ca,sa,0));
 
-            if (i == 0 and j == 0) continue;
+            if (i == 0 && j == 0) continue;
 
             Indices->addValue(iN+2*j-2);
             Indices->addValue(iN+2*j);
@@ -169,7 +169,7 @@ OSG::GeometryRecPtr VRThread::make() {
             Indices->addValue(iN+2*j-1);
 
             if (i == 0) continue;
-            if (i == 1 and j == 0) continue;
+            if (i == 1 && j == 0) continue;
 
             Indices->addValue(iN+2*j-2*rN-1);
             Indices->addValue(iN+2*j-2*rN+1);

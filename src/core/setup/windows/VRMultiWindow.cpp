@@ -80,7 +80,7 @@ void VRMultiWindow::initialize() {
 
 void VRMultiWindow::render() {
     if (state == INITIALIZING) initialize();
-    if (state == CONNECTED and active and content) {
+    if (state == CONNECTED && active && content) {
         try { _win->render(ract); }
         catch(exception& e) { reset(); }
     }

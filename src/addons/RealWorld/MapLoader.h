@@ -48,7 +48,7 @@ namespace realworld {
                 streetJointMap[node->id] = joint;
             }
 
-            // Load StreetSegments and Buildings
+            // Load StreetSegments && Buildings
             BOOST_FOREACH(OSMWay* way, osmMap->osmWays) {
                 if (way->tags["building"] == "yes") {
                     // load building

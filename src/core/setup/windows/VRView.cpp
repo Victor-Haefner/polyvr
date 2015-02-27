@@ -57,10 +57,10 @@ void VRView::setMaterial() {
             if (onBox(x,y,b1)) data[k] = c1; // box1
             if (onBox(x,y,b2)) data[k] = c1; // box2
 
-            if (y == 0 and x >= 0 and x < ar) data[k] = cax; // ax
-            if (x == 0 and y >= 0 and y < ar) data[k] = cay; // ax
+            if (y == 0 && x >= 0 && x < ar) data[k] = cax; // ax
+            if (x == 0 && y >= 0 && y < ar) data[k] = cay; // ax
 
-            if (x >= pl[0]-lw*0.5 and x < pl[0]+lw*0.5 and y >= pl[1]-lh*0.5 and y < pl[1]+lh*0.5) {
+            if (x >= pl[0]-lw*0.5 && x < pl[0]+lw*0.5 && y >= pl[1]-lh*0.5 && y < pl[1]+lh*0.5) {
                 int u = x - pl[0] + lw*0.5;
                 int v = y - pl[1] + lh*0.5;
                 int w = 4*(u+v*lw);
@@ -77,7 +77,7 @@ void VRView::setMaterial() {
     viewGeoMat->setLit(false);
 }
 
-void VRView::setViewports() {//create and set size of viewports
+void VRView::setViewports() {//create && set size of viewports
     Vec4f p = position;
     p[1] = 1-position[3]; // invert y
     p[3] = 1-position[1];
@@ -96,7 +96,7 @@ void VRView::setViewports() {//create and set size of viewports
     }
 
     //no stereo
-    if (!stereo and !active_stereo) {
+    if (!stereo && !active_stereo) {
         if (lView == 0) lView = Viewport::create();
         lView->setSize(p[0], p[1], p[2], p[3]);
         if (rView) window->subPortByObj(rView);
@@ -104,7 +104,7 @@ void VRView::setViewports() {//create and set size of viewports
         return;
     }
 
-    if (stereo and !active_stereo) {
+    if (stereo && !active_stereo) {
         if (lView == 0) lView = Viewport::create();
         if (rView == 0) rView = Viewport::create();
         lView->setSize(p[0], p[1], (p[0]+p[2])*0.5, p[3]);
@@ -154,13 +154,13 @@ void VRView::setDecorators() {//set decorators, only if projection true
     pos->setValue(screenUpperLeft, 2);
     pos->setValue(screenUpperRight, 3);
 
-    if (!projection and !stereo) {
+    if (!projection && !stereo) {
         PCDecoratorLeft = 0;
         PCDecoratorRight = 0;
         return;
     }
 
-    if (projection and !stereo) {
+    if (projection && !stereo) {
         cout << "\nset single projection decorator";
         if (PCDecoratorLeft == 0) PCDecoratorLeft = ProjectionCameraDecorator::create();
         PCDecoratorLeft->setLeftEye(true);
@@ -323,8 +323,8 @@ void VRView::showStats(bool b) {
     }
 
     if (lView == 0) return;
-    if (b and !doStats) lView->addForeground(stats);
-    if (!b and doStats) lView->removeObjFromForegrounds(stats);
+    if (b && !doStats) lView->addForeground(stats);
+    if (!b && doStats) lView->removeObjFromForegrounds(stats);
     doStats = b;
 
     VRSetupManager::getCurrent()->getRenderAction()->setStatCollector(stats->getCollector());
@@ -349,8 +349,8 @@ void VRView::setRoot(VRObject* root, VRTransform* real) {
     if (root) view_root = root;
     //if (view_root == 0) return;
 
-    if (user and real_root) user->switchParent(real_root);
-    if (dummy_user and real_root) dummy_user->switchParent(real_root);
+    if (user && real_root) user->switchParent(real_root);
+    if (dummy_user && real_root) dummy_user->switchParent(real_root);
 
     NodeRecPtr n = view_root ? view_root->getNode() : 0;
     if (lView) lView->setRoot(n);
@@ -373,14 +373,14 @@ void VRView::setCamera(VRCamera* c) {
     if (c) cam = c;
     if (cam == 0) return;
 
-    if (lView and PCDecoratorLeft == 0) lView->setCamera(cam->getCam());
-    if (rView and PCDecoratorRight == 0) rView->setCamera(cam->getCam());
+    if (lView && PCDecoratorLeft == 0) lView->setCamera(cam->getCam());
+    if (rView && PCDecoratorRight == 0) rView->setCamera(cam->getCam());
 
     if (PCDecoratorLeft) PCDecoratorLeft->setDecoratee(cam->getCam());
     if (PCDecoratorRight) PCDecoratorRight->setDecoratee(cam->getCam());
 
-    if (lView and PCDecoratorLeft) lView->setCamera(PCDecoratorLeft);
-    if (rView and PCDecoratorRight) rView->setCamera(PCDecoratorRight);
+    if (lView && PCDecoratorLeft) lView->setCamera(PCDecoratorLeft);
+    if (rView && PCDecoratorRight) rView->setCamera(PCDecoratorRight);
 }
 
 void VRView::setBackground(BackgroundRecPtr bg) {

@@ -52,8 +52,8 @@ PyMethodDef VRPyMolecule::methods[] = {
     {"showCoords", (PyCFunction)VRPyMolecule::showCoords, METH_VARARGS, "Display the coordinate system of each atom - showCoords(True)" },
     {"substitute", (PyCFunction)VRPyMolecule::substitute, METH_VARARGS, "Substitute an atom of both molecules to append the second to this - substitute(int aID, mol b, int bID)" },
     {"attachMolecule", (PyCFunction)VRPyMolecule::attachMolecule, METH_VARARGS, "Attach a molecule to the second - attachMolecule(int aID, mol b, int bID)" },
-    {"rotateBond", (PyCFunction)VRPyMolecule::rotateBond, METH_VARARGS, "Rotate the bond between atom a and b - rotateBond(int aID, int bID, float a)" },
-    {"changeBond", (PyCFunction)VRPyMolecule::changeBond, METH_VARARGS, "Change the bond type between atom a and b to type t- changeBond(int aID, int bID, int t)" },
+    {"rotateBond", (PyCFunction)VRPyMolecule::rotateBond, METH_VARARGS, "Rotate the bond between atom a && b - rotateBond(int aID, int bID, float a)" },
+    {"changeBond", (PyCFunction)VRPyMolecule::changeBond, METH_VARARGS, "Change the bond type between atom a && b to type t- changeBond(int aID, int bID, int t)" },
     {"remAtom", (PyCFunction)VRPyMolecule::remAtom, METH_VARARGS, "Remove an atom by ID" },
     {"getAtomPosition", (PyCFunction)VRPyMolecule::getAtomPosition, METH_VARARGS, "Returns the position of the atom by ID - getAtomPosition(int ID)" },
     {NULL}  /* Sentinel */

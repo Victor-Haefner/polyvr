@@ -39,11 +39,11 @@ void VRTransform::computeMatrix() {
     dm->write(mm);
 }
 
-//read matrix from doublebuffer and apply it to transformation
+//read matrix from doublebuffer && apply it to transformation
 //should be called from the main thread only
 void VRTransform::updatePhysics() {
     //update bullets transform
-    if (noBlt and !held) { noBlt = false; return; }
+    if (noBlt && !held) { noBlt = false; return; }
     if (!physics->isPhysicalized()) return;
 
     /*Matrix m;
@@ -233,7 +233,7 @@ void VRTransform::getWorldMatrix(Matrix& _m, bool parentOnly) {
 
         Matrix m;
         VRObject* obj = this;
-        if (parentOnly and obj->getParent() != 0) obj = obj->getParent();
+        if (parentOnly && obj->getParent() != 0) obj = obj->getParent();
 
         VRTransform* tmp;
         while(true) {
@@ -352,7 +352,7 @@ void VRTransform::setDir(Vec3f dir) {
 bool VRTransform::get_orientation_mode() { return orientation_mode; }
 void VRTransform::set_orientation_mode(bool b) { orientation_mode = b; }
 
-/** Set the orientation of the object with the at and up vectors **/
+/** Set the orientation of the object with the at && up vectors **/
 void VRTransform::setOrientation(Vec3f at, Vec3f up) {
     if (isNan(at) || isNan(up)) return;
     _at = at;
@@ -360,7 +360,7 @@ void VRTransform::setOrientation(Vec3f at, Vec3f up) {
     reg_change();
 }
 
-/** Set the pose of the object with the from, at and up vectors **/
+/** Set the pose of the object with the from, at && up vectors **/
 void VRTransform::setPose(Vec3f from, Vec3f dir, Vec3f up) {
     if (isNan(from) || isNan(dir) || isNan(up)) return;
     _from = from;
@@ -461,7 +461,7 @@ void VRTransform::rotateX(float a) {//rotate around x axis
     //cout << "\nRotating " << name << " " << a ;
 }
 
-/** Rotate the object around the point where at indicates and the up axis **/
+/** Rotate the object around the point where at indicates && the up axis **/
 void VRTransform::rotateAround(float a) {//rotate around focus using up axis
     if (isNan(a)) return;
     orientation_mode = false;
@@ -475,7 +475,7 @@ void VRTransform::rotateAround(float a) {//rotate around focus using up axis
     reg_change();
 }
 
-/** translate the object with a vector v, this changes the from and at vector **/
+/** translate the object with a vector v, this changes the from && at vector **/
 void VRTransform::translate(Vec3f v) {
     if (isNan(v)) return;
     _at += v;
@@ -567,7 +567,7 @@ Line VRTransform::castRay(VRObject* obj, Vec3f dir) {
     return ray;
 }
 
-/** Print the position of the object in local and world coords **/
+/** Print the position of the object in local && world coords **/
 void VRTransform::printPos() {
     Matrix wm, wm_osg, lm;
     getWorldMatrix(wm);
@@ -599,7 +599,7 @@ void VRTransform::printTransformationTree(int indent) {
 
 /** enable constraints on the object, 0 leaves the DOF free, 1 restricts it **/
 void VRTransform::apply_constraints() {
-    if (!doTConstraint and !doRConstraint) return;
+    if (!doTConstraint && !doRConstraint) return;
 
     Matrix t = getWorldMatrix();//current position
 

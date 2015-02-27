@@ -162,7 +162,7 @@ void ART::save(xmlpp::Element* node) {
     xmlpp::Element* sn;
     for (itr = devices.begin(); itr != devices.end(); itr++) {
         ART_device* ad = itr->second;
-        if (ad->type != 0) continue; // ignore flysticks, they are loaded elsewhere and creater their own tracker
+        if (ad->type != 0) continue; // ignore flysticks, they are loaded elsewhere && creater their own tracker
 
         sn = node->add_child("Tracker");
         sn->set_attribute("scale", toString(ad->scale));

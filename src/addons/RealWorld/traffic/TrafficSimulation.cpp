@@ -414,12 +414,12 @@ void TrafficSimulation::addMap(const OSMMap* map) {
     // Insert map into set
     loadedMaps.insert(map);
 
-    // Iterate over the streets of the map and add them to an array to send to the server
+    // Iterate over the streets of the map && add them to an array to send to the server
     Value arrayStreets;
     unsigned int iStreets = 0;
     for (vector<OSMWay*>::const_iterator iter = map->osmWays.begin(); iter != map->osmWays.end(); iter++) {
 
-        // Only handle streets and no other ways (e.g. building or park boundaries)
+        // Only handle streets && no other ways (e.g. building or park boundaries)
         if ((*iter)->tags.count("highway") && !((*iter)->tags["highway"].empty())) {
 
             // A vector with the allowed road types
@@ -452,7 +452,7 @@ void TrafficSimulation::addMap(const OSMMap* map) {
         }
     }
 
-    // Iterate over the nodes of the map and add them to an array to send to the server
+    // Iterate over the nodes of the map && add them to an array to send to the server
     Value arrayNodes;
     // Iterate over nodes
     for (vector<OSMNode*>::const_iterator iter = map->osmNodes.begin(); iter != map->osmNodes.end(); iter++) {
@@ -490,7 +490,7 @@ void TrafficSimulation::removeMap(const OSMMap* map) {
     // Remove map from set
     loadedMaps.erase(map);
 
-    // Iterate over the streets of the map and add them to an array to send to the server
+    // Iterate over the streets of the map && add them to an array to send to the server
     Value array;
     unsigned int i = 0;
     for (vector<OSMWay*>::const_iterator iter = map->osmWays.begin(); iter != map->osmWays.end(); iter++) {
@@ -672,12 +672,12 @@ void TrafficSimulation::update() {
     if (!receivedData.isNull()) {
         //cout << "Received data\n";
 
-        // New data received per network. Update the positions of vehicles and the states of traffic lights
+        // New data received per network. Update the positions of vehicles && the states of traffic lights
 
         // A set which contains the IDs of the currently existing vehicles.
         // If data for one of those is received, the entry in the set will be removed.
         // All vehicles that are in the set after the loop finished are no longer in the
-        // area and can be deleted.
+        // area && can be deleted.
         set<uint> vehicleIDs;
         for (auto iter : vehicles) vehicleIDs.insert(iter.first);
 
@@ -687,7 +687,7 @@ void TrafficSimulation::update() {
             //cout << "Received vehicles " << receivedData["vehicles"].size();
 
             // A set for possible collisions
-            // Add them all to the set and resolve them later on to avoid doubled checks
+            // Add them all to the set && resolve them later on to avoid doubled checks
             set< pair<unsigned int, unsigned int> > collisions;
 
             // Sleeps for 10ms each tick, but the send deltas are for one second
@@ -748,7 +748,7 @@ void TrafficSimulation::update() {
 
                 } else vehicleIDs.erase(ID); // Already (and still) exists, remove its ID from the vehicle-id-set
 
-                // Now the vehicle exists, update its position and state
+                // Now the vehicle exists, update its position && state
 
                 Vehicle& v = vehicles[ID];
 
@@ -878,7 +878,7 @@ void TrafficSimulation::update() {
                 // streetOffset now contains a position in the center of a street a bit away from the crossing
                 // normal is a vector that is orthogonal to the street
 
-                // Now iterate over the lanes and hang up the lights
+                // Now iterate over the lanes && hang up the lights
                 double lane = -0.5;
                 for (auto light : lightpost["state"]) {
                     lane += 1;
@@ -997,7 +997,7 @@ void TrafficSimulation::setPlayerTransform(VRTransform *transform) {
 
     if (player != NULL && !playerCreated) {
 
-        // Create a vehicle and a viewarea around it
+        // Create a vehicle && a viewarea around it
         Value value;
 
         // Create the vehicle
@@ -1031,7 +1031,7 @@ void TrafficSimulation::setPlayerTransform(VRTransform *transform) {
         setVehiclePosition(0, player->getWorldPosition(), OSG::Vec3f(0,0,0));
     } else /* player == NULL */ {
 
-        // Remove area and vehicle
+        // Remove area && vehicle
         Value value;
         value["removeViewareas"].append(0);
         value["removeVehicles"].append(0);

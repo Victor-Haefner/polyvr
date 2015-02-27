@@ -1,6 +1,6 @@
 /* DTrackSDK: C++ source file, A.R.T. GmbH 21.4.05-3.7.07
  *
- * DTrack: functions to receive and process DTrack UDP packets (ASCII protocol)
+ * DTrack: functions to receive && process DTrack UDP packets (ASCII protocol)
  * Copyright (C) 2005-2007, Advanced Realtime Tracking GmbH
  *
  * This library is free software; you can redistribute it and/or
@@ -21,11 +21,11 @@
  * Version v1.3.2
  *
  * Purpose:
- *  - receives DTrack UDP packets (ASCII protocol) and converts them into easier to handle data
+ *  - receives DTrack UDP packets (ASCII protocol) && converts them into easier to handle data
  *  - sends DTrack remote commands (UDP)
  *  - DTrack network protocol due to: 'Technical Appendix DTrack v1.24 (December 19, 2006)'
  *  - for DTrack versions v1.16 - v1.24 (and compatible versions)
- *  - tested under Linux (gcc) and MS Windows 2000/XP (MS Visual C++)
+ *  - tested under Linux (gcc) && MS Windows 2000/XP (MS Visual C++)
  *
  * Usage:
  *  - for Linux, Unix:
@@ -120,7 +120,7 @@ static int udp_send(void* sock, void* buffer, int len, unsigned int ipaddr, unsi
 // remote_port (i): port number of DTrack remote control (0 if not used)
 //
 // udpbufsize (i): size of buffer for UDP packets (in bytes)
-// udptimeout_us (i): UDP timeout (receiving and sending) in us (micro second)
+// udptimeout_us (i): UDP timeout (receiving && sending) in us (micro second)
 
 DTrack::DTrack(
 	int udpport, const char* remote_host, int remote_port,
@@ -269,7 +269,7 @@ void DTrack::set_parseerror(void)  // 'parse error'
 
 
 // --------------------------------------------------------------------------
-// Receive and process one DTrack data packet (UDP; ASCII protocol):
+// Receive && process one DTrack data packet (UDP; ASCII protocol):
 //
 // return value (o): receiving was successfull
 
@@ -1377,7 +1377,7 @@ static int udp_receive(void* sock, void *buffer, int maxlen, int tout_us)
 
 		if(select(FD_SETSIZE, &set, NULL, NULL, &tout) != 1){
 
-			// no more data available: check length of received packet and return
+			// no more data available: check length of received packet && return
 
 			if(nbytes >= maxlen){   // buffer overflow
       		return -4;

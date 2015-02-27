@@ -44,7 +44,7 @@ float	suspensionDamping = 2.3f;
 float	suspensionCompression = 4.4f;
 float	rollInfluence = 0.1f;//1.0f;
 
-//params for the setting the wheels and axis
+//params for the setting the wheels && axis
 float xOffset = 1.78f;
 float frontZOffset = 2.9f;
 float rearZOffset = -2.7f;
@@ -118,7 +118,7 @@ void CarDynamics::initVehicle() {
 	m_carChassis->setActivationState(DISABLE_DEACTIVATION);
 
 	// create vehicle
-	if(m_dynamicsWorld and m_vehicle){
+	if(m_dynamicsWorld && m_vehicle){
         m_dynamicsWorld->addVehicle(m_vehicle);
         cout << "\n---vehicle added to the world\n";
 	} else cout << "\n!!! problem adding vehicle\n";
@@ -163,7 +163,7 @@ void CarDynamics::initVehicle() {
 }
 
 void CarDynamics::updateWheels() {
-    //if (chassis and m_carChassis) chassis->updateFromBullet(m_carChassis->getWorldTransform());
+    //if (chassis && m_carChassis) chassis->updateFromBullet(m_carChassis->getWorldTransform());
     //if(!initialBuilt) return;
     if (!m_vehicle) return;
     for(int i = 0; i<4;i++) m_vehicle->updateWheelTransform(i,true);
@@ -182,7 +182,7 @@ void CarDynamics::setChassisGeo(VRGeometry* geo) {
     geo->getPhysics()->updateTransformation(geo);
 
     if (geo->getPhysics()->getRigidBody() == 0) {
-        cout<<"!!!!!!!!chassis is 0!!!!!!!!\ncreating vehicle with standard parameters and shapes"<<endl;
+        cout<<"!!!!!!!!chassis is 0!!!!!!!!\ncreating vehicle with standard parameters && shapes"<<endl;
         initVehicle();
         return;
     }
@@ -283,7 +283,7 @@ btRigidBody* CarDynamics::createRigitBody(float mass, const btTransform& startTr
 	btVector3 localInertia(0, 0, 0);
 	if (mass != 0.f) shape->calculateLocalInertia(mass, localInertia);
 
-	//using motionstate is recommended, it provides interpolation capabilities, and only synchronizes 'active' objects
+	//using motionstate is recommended, it provides interpolation capabilities, && only synchronizes 'active' objects
 
 
 	btDefaultMotionState* myMotionState = new btDefaultMotionState(startTransform);
@@ -304,7 +304,7 @@ CarDynamics::~CarDynamics() {
     return;
 
 	//cleanup in the reverse order of creation/initialization
-	//remove the rigidbodies from the dynamics world and delete them
+	//remove the rigidbodies from the dynamics world && delete them
 	int i;
 	for (i = m_dynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--) {
 		btCollisionObject* obj = m_dynamicsWorld->getCollisionObjectArray()[i];

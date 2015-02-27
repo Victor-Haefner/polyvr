@@ -54,7 +54,7 @@
 #define __STDC_FORMAT_MACROS    // <inttypes.h> wants this for C++
 #define __STDC_LIMIT_MACROS     // C++ wants that for INT64_MAX
 #ifndef _LARGEFILE_SOURCE
-#define _LARGEFILE_SOURCE       // Enable fseeko() and ftello() functions
+#define _LARGEFILE_SOURCE       // Enable fseeko() && ftello() functions
 #endif
 #define _FILE_OFFSET_BITS 64    // Enable 64-bit file offsets
 
@@ -424,7 +424,7 @@ static void ns_remove_conn(struct ns_connection *conn) {
 
 // Print message to buffer. If buffer is large enough to hold the message,
 // return buffer. If buffer is to small, allocate large enough buffer on heap,
-// and return allocated buffer.
+// && return allocated buffer.
 int ns_avprintf(char **buf, size_t size, const char *fmt, va_list ap) {
   va_list ap_copy;
   int len;
@@ -434,7 +434,7 @@ int ns_avprintf(char **buf, size_t size, const char *fmt, va_list ap) {
   va_end(ap_copy);
 
   if (len < 0) {
-    // eCos and Windows are not standard-compliant and return -1 when
+    // eCos && Windows are not standard-compliant && return -1 when
     // the buffer is too small. Keep allocating larger buffers until we
     // succeed or out of memory.
     *buf = NULL;
@@ -655,7 +655,7 @@ static int ns_parse_address(const char *str, union socket_address *sa,
 
   // MacOS needs that. If we do not zero it, subsequent bind() will fail.
   // Also, all-zeroes in the socket address means binding to all addresses
-  // for both IPv4 and IPv6 (INADDR_ANY and IN6ADDR_ANY_INIT).
+  // for both IPv4 && IPv6 (INADDR_ANY && IN6ADDR_ANY_INIT).
   memset(sa, 0, sizeof(*sa));
   sa->sin.sin_family = AF_INET;
 
@@ -712,10 +712,10 @@ static sock_t ns_open_listening_socket(union socket_address *sa, int proto) {
   if ((sock = socket(sa->sa.sa_family, proto, 0)) != INVALID_SOCKET &&
 #ifndef _WIN32
       // SO_RESUSEADDR is not enabled on Windows because the semantics of
-      // SO_REUSEADDR on UNIX and Windows is different. On Windows,
+      // SO_REUSEADDR on UNIX && Windows is different. On Windows,
       // SO_REUSEADDR allows to bind a socket to a port without error even if
       // the port is already open by another program. This is not the behavior
-      // SO_REUSEADDR was designed for, and leads to hard-to-track failure
+      // SO_REUSEADDR was designed for, && leads to hard-to-track failure
       // scenarios. Therefore, SO_REUSEADDR was disabled on Windows.
       !setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (void *) &on, sizeof(on)) &&
 #endif
@@ -1110,9 +1110,9 @@ time_t ns_mgr_poll(struct ns_mgr *mgr, int milli) {
           if (conn->flags & NSF_UDP) {
             ns_handle_udp(conn);
           } else {
-            // We're not looping here, and accepting just one connection at
+            // We're not looping here, && accepting just one connection at
             // a time. The reason is that eCos does not respect non-blocking
-            // flag on a listening socket and hangs in a loop.
+            // flag on a listening socket && hangs in a loop.
             accept_conn(conn);
           }
         } else {
@@ -1267,7 +1267,7 @@ void ns_mgr_free(struct ns_mgr *s) {
 
 #include <ctype.h>
 
-#ifdef _WIN32         //////////////// Windows specific defines and includes
+#ifdef _WIN32         //////////////// Windows specific defines && includes
 #include <io.h>       // For _lseeki64
 #include <direct.h>   // For _mkdir
 #ifndef S_ISDIR
@@ -1309,7 +1309,7 @@ void ns_mgr_free(struct ns_mgr *s) {
 typedef struct _stati64 file_stat_t;
 typedef HANDLE process_id_t;
 
-#else                    ////////////// UNIX specific defines and includes
+#else                    ////////////// UNIX specific defines && includes
 
 #if !defined(MONGOOSE_NO_FILESYSTEM) &&\
     (!defined(MONGOOSE_NO_DAV) || !defined(MONGOOSE_NO_DIRECTORY_LISTING))
@@ -1326,7 +1326,7 @@ typedef HANDLE process_id_t;
 #define INT64_FMT PRId64
 typedef struct stat file_stat_t;
 typedef pid_t process_id_t;
-#endif                  //////// End of platform-specific defines and includes
+#endif                  //////// End of platform-specific defines && includes
 
 #include "mongoose.h"
 
@@ -1377,7 +1377,7 @@ struct vec {
   int len;
 };
 
-// For directory listing and WevDAV support
+// For directory listing && WevDAV support
 struct dir_entry {
   struct connection *conn;
   char *file_name;
@@ -1595,7 +1595,7 @@ void mg_munmap(void *p, size_t size) {
 
 #if defined(_WIN32) && !defined(MONGOOSE_NO_FILESYSTEM)
 // Encode 'path' which is assumed UTF-8 string, into UNICODE string.
-// wbuf and wbuf_len is a target buffer and its length.
+// wbuf && wbuf_len is a target buffer && its length.
 static void to_wchar(const char *path, wchar_t *wbuf, size_t wbuf_len) {
   char buf[MAX_PATH_SIZE * 2], buf2[MAX_PATH_SIZE * 2], *p;
 
@@ -1606,7 +1606,7 @@ static void to_wchar(const char *path, wchar_t *wbuf, size_t wbuf_len) {
   p = buf + strlen(buf) - 1;
   while (p > buf && p[-1] != ':' && (p[0] == '\\' || p[0] == '/')) *p-- = '\0';
 
-  // Convert to Unicode and back. If doubly-converted string does not
+  // Convert to Unicode && back. If doubly-converted string does not
   // match the original, something is fishy, reject.
   memset(wbuf, 0, wbuf_len * sizeof(wchar_t));
   MultiByteToWideChar(CP_UTF8, 0, buf, -1, wbuf, (int) wbuf_len);
@@ -1642,7 +1642,7 @@ static int mg_open(const char *path, int flag, int mode) {
 // It returns a list pointer shifted to the next value, or NULL if the end
 // of the list found.
 // Value is stored in val vector. If value has form "x=y", then eq_val
-// vector is initialized to point to the "y" part, and val vector length
+// vector is initialized to point to the "y" part, && val vector length
 // is adjusted to point only to "x".
 static const char *next_option(const char *list, struct vec *val,
                                struct vec *eq_val) {
@@ -1652,7 +1652,7 @@ static const char *next_option(const char *list, struct vec *val,
   } else {
     val->ptr = list;
     if ((list = strchr(val->ptr, ',')) != NULL) {
-      // Comma found. Store length and shift the list ptr
+      // Comma found. Store length && shift the list ptr
       val->len = list - val->ptr;
       list++;
     } else {
@@ -1662,8 +1662,8 @@ static const char *next_option(const char *list, struct vec *val,
     }
 
     if (eq_val != NULL) {
-      // Value has form "x=y", adjust pointers and lengths
-      // so that val points to "x", and eq_val points to "y".
+      // Value has form "x=y", adjust pointers && lengths
+      // so that val points to "x", && eq_val points to "y".
       eq_val->len = 0;
       eq_val->ptr = (const char *) memchr(val->ptr, '=', val->len);
       if (eq_val->ptr != NULL) {
@@ -2042,7 +2042,7 @@ static process_id_t start_process(char *interp, const char *cmd,
   }
   DBG(("CGI command: [%ls] -> %p", wcmd, pi.hProcess));
 
-  // Not closing a[0] and b[1] because we've used DUPLICATE_CLOSE_SOURCE
+  // Not closing a[0] && b[1] because we've used DUPLICATE_CLOSE_SOURCE
   CloseHandle(si.hStdOutput);
   CloseHandle(si.hStdInput);
   //CloseHandle(pi.hThread);
@@ -2065,7 +2065,7 @@ static process_id_t start_process(const char *interp, const char *cmd,
     closesocket(sock);
 
     // After exec, all signal handlers are restored to their default values,
-    // with one exception of SIGCHLD. According to POSIX.1-2001 and Linux's
+    // with one exception of SIGCHLD. According to POSIX.1-2001 && Linux's
     // implementation, SIGCHLD's handler will leave unchanged after exec
     // if it was set to be ignored. Restore it to default action.
     signal(SIGCHLD, SIG_DFL);
@@ -2102,7 +2102,7 @@ struct cgi_env_block {
   int nvars;                            // Number of variables in envp[]
 };
 
-// Append VARIABLE=VALUE\0 string to the buffer, and add a respective
+// Append VARIABLE=VALUE\0 string to the buffer, && add a respective
 // pointer into the vars array.
 static char *addenv(struct cgi_env_block *block, const char *fmt, ...) {
   int n, space;
@@ -2121,7 +2121,7 @@ static char *addenv(struct cgi_env_block *block, const char *fmt, ...) {
   n = mg_vsnprintf(added, (size_t) space, fmt, ap);
   va_end(ap);
 
-  // Make sure we do not overflow buffer and the envp array
+  // Make sure we do not overflow buffer && the envp array
   if (n > 0 && n + 1 < space &&
       block->nvars < (int) ARRAY_SIZE(block->vars) - 2) {
     // Append a pointer to the added string into the envp array
@@ -2222,7 +2222,7 @@ static void prepare_cgi_environment(struct connection *conn,
     p = addenv(blk, "HTTP_%s=%s",
         ri->http_headers[i].name, ri->http_headers[i].value);
 
-    // Convert variable name into uppercase, and change - to _
+    // Convert variable name into uppercase, && change - to _
     for (; *p != '=' && *p != '\0'; p++) {
       if (*p == '-')
         *p = '_';
@@ -2257,7 +2257,7 @@ static void open_cgi_endpoint(struct connection *conn, const char *prog) {
   }
 
   // Try to create socketpair in a loop until success. ns_socketpair()
-  // can be interrupted by a signal and fail.
+  // can be interrupted by a signal && fail.
   // TODO(lsm): use sigaction to restart interrupted syscall
   do {
     ns_socketpair(fds);
@@ -2380,14 +2380,14 @@ static int check_acl(const char *acl, uint32_t remote_ip) {
 }
 
 // Protect against directory disclosure attack by removing '..',
-// excessive '/' and '\' characters
+// excessive '/' && '\' characters
 static void remove_double_dots_and_double_slashes(char *s) {
   char *p = s;
 
   while (*s != '\0') {
     *p++ = *s++;
     if (s[-1] == '/' || s[-1] == '\\') {
-      // Skip all following slashes, backslashes and double-dots
+      // Skip all following slashes, backslashes && double-dots
       while (s[0] != '\0') {
         if (s[0] == '/' || s[0] == '\\') { s++; }
         else if (s[0] == '.' && s[1] == '.') { s += 2; }
@@ -2431,7 +2431,7 @@ static int is_valid_http_method(const char *s) {
 
 // Parse HTTP request, fill in mg_request structure.
 // This function modifies the buffer by NUL-terminating
-// HTTP request components, header names and header values.
+// HTTP request components, header names && header values.
 // Note that len must point to the last \n of HTTP headers.
 static int parse_http_message(char *buf, int len, struct mg_connection *ri) {
   int is_request, n;
@@ -2552,7 +2552,7 @@ int mg_match_prefix(const char *pattern, int pattern_len, const char *str) {
   return j;
 }
 
-// This function prints HTML pages, and expands "{{something}}" blocks
+// This function prints HTML pages, && expands "{{something}}" blocks
 // inside HTML by calling appropriate callback functions.
 // Note that {{@path/to/file}} construct outputs embedded file's contents,
 // which provides SSI-like functionality.
@@ -2957,7 +2957,7 @@ static int deliver_websocket_frame(struct connection *conn) {
       }
     }
 
-    // Call the handler and remove frame from the iobuf
+    // Call the handler && remove frame from the iobuf
     if (call_user(conn, MG_REQUEST) == MG_FALSE) {
       conn->ns_conn->flags |= NSF_FINISHED_SENDING_DATA;
     }
@@ -3116,7 +3116,7 @@ static int num_leap_years(int year) {
   return year / 4 - year / 100 + year / 400;
 }
 
-// Parse UTC date-time string, and return the corresponding time_t value.
+// Parse UTC date-time string, && return the corresponding time_t value.
 static time_t parse_date_string(const char *datetime) {
   static const unsigned short days_before_month[] = {
     0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334
@@ -3144,7 +3144,7 @@ static time_t parse_date_string(const char *datetime) {
   return result;
 }
 
-// Look at the "path" extension and figure what mime type it has.
+// Look at the "path" extension && figure what mime type it has.
 // Store mime type in the vector.
 static void get_mime_type(const struct mg_server *server, const char *path,
                           struct vec *vec) {
@@ -3209,7 +3209,7 @@ static int find_index_file(struct connection *conn, char *path,
   path[n] = '/';
 
   // Traverse index files list. For each entry, append it to the given
-  // path and see if the file exists. If it exists, break the loop
+  // path && see if the file exists. If it exists, break the loop
   while ((list = next_option(list, &filename_vec, NULL)) != NULL) {
 
     // Ignore too long entries that may overflow path buffer
@@ -3422,7 +3422,7 @@ static int scan_directory(struct connection *conn, const char *dir,
   if ((dirp = (opendir(dir))) == NULL) return 0;
 
   while ((dp = readdir(dirp)) != NULL) {
-    // Do not show current dir and hidden files
+    // Do not show current dir && hidden files
     if (!strcmp(dp->d_name, ".") ||
         !strcmp(dp->d_name, "..") ||
         must_hide_file(conn, dp->d_name)) {
@@ -3818,13 +3818,13 @@ static FILE *open_auth_file(struct connection *conn, const char *path,
  * This code is in the public domain; do with it what you wish.
  *
  * Equivalent code is available from RSA Data Security, Inc.
- * This code has been tested against that, and is equivalent,
+ * This code has been tested against that, && is equivalent,
  * except that you don't need to include two pages of legalese
  * with every copy.
  *
  * To compute the message digest of a chunk of bytes, declare an
  * MD5Context structure, pass it to MD5Init, call MD5Update as
- * needed on buffers full of bytes, and then call MD5Final, which
+ * needed on buffers full of bytes, && then call MD5Final, which
  * will fill a supplied 16-byte array with the digest.
  */
 
@@ -3856,7 +3856,7 @@ static void byteReverse(unsigned char *buf, unsigned longs) {
 #define MD5STEP(f, w, x, y, z, data, s) \
   ( w += f(x, y, z) + data,  w = w<<s | w>>(32-s),  w += x )
 
-// Start MD5 accumulation.  Set bit count to 0 and buffer to mysterious
+// Start MD5 accumulation.  Set bit count to 0 && buffer to mysterious
 // initialization constants.
 static void MD5Init(MD5_CTX *ctx) {
   ctx->buf[0] = 0x67452301;
@@ -4616,7 +4616,7 @@ static void try_parse(struct connection *conn) {
   if (conn->request_len == 0 &&
       (conn->request_len = get_request_len(io->buf, io->len)) > 0) {
     // If request is buffered in, remove it from the iobuf. This is because
-    // iobuf could be reallocated, and pointers in parsed request could
+    // iobuf could be reallocated, && pointers in parsed request could
     // become invalid.
     conn->request = (char *) NS_MALLOC(conn->request_len);
     memcpy(conn->request, io->buf, conn->request_len);
@@ -4983,7 +4983,7 @@ int mg_parse_multipart(const char *buf, int buf_len,
   // Get boundary length
   bl = get_line_len(buf, buf_len);
 
-  // Loop through headers, fetch variable name and file name
+  // Loop through headers, fetch variable name && file name
   var_name[0] = file_name[0] = '\0';
   for (n = bl; (ll = get_line_len(buf + n, hl - n)) > 0; n += ll) {
     if (mg_strncasecmp(cd, buf + n, cdl) == 0) {

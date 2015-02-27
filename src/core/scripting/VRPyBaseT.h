@@ -65,7 +65,7 @@ PyObject* VRPyBaseT<T>::New_VRObjects_unnamed(PyTypeObject *type, PyObject *args
 
 template<class T>
 void VRPyBaseT<T>::dealloc(VRPyBaseT<T>* self) {
-    //if (self->owner and self->obj != 0) delete self->obj; // TOCHECK
+    //if (self->owner && self->obj != 0) delete self->obj; // TOCHECK
     self->ob_type->tp_free((PyObject*)self);
 }
 

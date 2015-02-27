@@ -19,7 +19,7 @@ void VROpening::initAnimations(VRObject* _d1, VRObject* _d2) {
     d1 = (VRTransform*)_d1;
     d2 = (VRTransform*)_d2;
 
-    if (d2 == 0 and param == "CW") {
+    if (d2 == 0 && param == "CW") {
         d2 = d1;
         d1 = 0;
     }
@@ -83,7 +83,7 @@ void VROpening::close() {
 }
 
 void VROpening::toggle(VRDevice* dev) {
-    if (d1 == 0 and d2 == 0) return;
+    if (d1 == 0 && d2 == 0) return;
 
     if (dev != 0) { //if triggered by a device, check if this is hit
         VRIntersection ins = dev->intersect(this);

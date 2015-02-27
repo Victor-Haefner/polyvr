@@ -14,9 +14,9 @@ using namespace std;
 
 
 /**
- This class represents a road system with nodes, streets and vehicles.
- It stores the parts of the system, offers methods to add and access parts
- and is responsible for freeing their memory on destruction.
+ This class represents a road system with nodes, streets && vehicles.
+ It stores the parts of the system, offers methods to add && access parts
+ && is responsible for freeing their memory on destruction.
  */
 class RoadSystem {
 
@@ -100,10 +100,10 @@ class RoadSystem {
         set<ID> freeVehicles;
 
         /// A list of streets that can not be reached by normal vehicles.
-        /// Each entry contains a street id and its probability (for random assignments).
+        /// Each entry contains a street id && its probability (for random assignments).
         vector< pair<ID, double> > sourceStreets;
 
-        /// The number of vehicles which have left the map and needs to be re-added at a source.
+        /// The number of vehicles which have left the map && needs to be re-added at a source.
         // int instead of uint to "auto-fix" problems when too many vehicles have been added
         int offmapVehicleCount;
 
@@ -127,7 +127,7 @@ class RoadSystem {
 
         /**
          Frees the memory used by the road system.
-         Deletes all streets, nodes and vehicles that are created by the system.
+         Deletes all streets, nodes && vehicles that are created by the system.
          */
         ~RoadSystem();
 
@@ -186,7 +186,7 @@ class RoadSystem {
          This is an average value, e.g. a living street will be quite empty either way
          while a motorway will become full quite early.
          You can interpret this value as the number of vehicles on a 100 meter long
-         main road inside a town. Note that this value is not exact and is merely
+         main road inside a town. Note that this value is not exact && is merely
          an approximation for the simulator.
          @param density The new density to set.
          */
@@ -194,7 +194,7 @@ class RoadSystem {
 
         /**
          Returns the currently set traffic density.
-         The real density might differ from this and depends on the sizes of the
+         The real density might differ from this && depends on the sizes of the
          used streets.
          @return The currently set traffic density.
          */
@@ -214,7 +214,7 @@ class RoadSystem {
          @param id The node to remove.
          @param removeStreets If \c true, remove the streets that are using this node.
          @return \c True if the node has been removed, \c false if it could not been removed, either because the
-                given id is invalid or there are streets using this node and \c removeStreets is false.
+                given id is invalid or there are streets using this node && \c removeStreets is false.
          */
         bool removeNode(const ID id, const bool removeStreets = false);
 
@@ -241,7 +241,7 @@ class RoadSystem {
         /**
          Creates a street.
          The returned street has not been added to the road system yet. The street can be modified at will
-         (e.g. set lane count) and only after \a all modifications are done to the object it should be
+         (e.g. set lane count) && only after \a all modifications are done to the object it should be
          registered into the RoadSystem by a call to \c addStreet().
          @note Since the street has not been added yet, the pointed object will not be deleted by the road system.
                 The caller of this method is responsible for either deleting the pointer or adding it to the system.
@@ -266,7 +266,7 @@ class RoadSystem {
          Removes a street.
          @param id The street to remove.
          @param removeVehicles If \c true, remove the vehicles that are currently using this street,
-                if \c false, the vehicles will remain at their position and will try to find an other
+                if \c false, the vehicles will remain at their position && will try to find an other
                 street to drive on.
          @return \c True if the street has been removed, \c false if the given id is invalid.
          */
@@ -312,7 +312,7 @@ class RoadSystem {
          @param id The id of the vehicle type to remove.
          @param modifyVehicles If \c true, change the type of the vehicles using this type to an other type.
                 If set to \c false, the removal of the type will fail if the type is in use.
-                To remove a vehicle type gracefully, set its probability to \c 0 and remove it later
+                To remove a vehicle type gracefully, set its probability to \c 0 && remove it later
                 when it isno longer in use.
          @return \c True if the type has been removed, \c false if the given id is invalid.
          */
@@ -327,7 +327,7 @@ class RoadSystem {
         VehicleType* getVehicleType(const ID id) const;
 
         /**
-         Selects and returns the id of a vehicle type.
+         Selects && returns the id of a vehicle type.
          The vehicle type is selected randomly based on the set probabilities.
          @return The id of a vehicle type.
          */
@@ -365,7 +365,7 @@ class RoadSystem {
         DriverType* getDriverType(const ID id) const;
 
         /**
-         Selects and returns the id of a driver type.
+         Selects && returns the id of a driver type.
          The driver type is selected randomly based on the set probabilities.
          @return The id of a driver type.
          */
@@ -436,7 +436,7 @@ class RoadSystem {
         /**
          Adds a viewarea to the system.
          Streets inside the viewarea are simulated by the microsimulator.
-         The viewarea is centered on the vehice and will move with it.
+         The viewarea is centered on the vehice && will move with it.
          @param id The id of the new area.
          @param vehicle The vehicle to center on.
          @param radius The radius around the area that is simulated by the microsimulator.
@@ -477,7 +477,7 @@ class RoadSystem {
 
         /**
          Removes an entry from the collision list.
-         The order of \c a and \c b does not matter.
+         The order of \c a && \c b does not matter.
          @param a The id of one vehicle.
          @param b The id of an other vehicle.
          */

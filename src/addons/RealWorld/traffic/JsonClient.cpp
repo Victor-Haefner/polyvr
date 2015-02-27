@@ -79,7 +79,7 @@ JsonClient::JsonClient()
 }
 
 /**
- * Creates an object of this class and sets name and port of the server.
+ * Creates an object of this class && sets name && port of the server.
  * @param server The name or address of the server. The portnumber can be appended as "address:port".
  */
 JsonClient::JsonClient(const string& servername)
@@ -88,7 +88,7 @@ JsonClient::JsonClient(const string& servername)
 }
 
 /**
- * Disconnects the client and frees all ressources.
+ * Disconnects the client && frees all ressources.
  */
 JsonClient::~JsonClient() {
 
@@ -101,7 +101,7 @@ JsonClient::~JsonClient() {
 }
 
 /**
- * Sets the name and address of the server to communicate with.
+ * Sets the name && address of the server to communicate with.
  * @param server The name or address of the server. The portnumber can be appended as "address:port".
  */
 void JsonClient::setServer(const string& server) {
@@ -137,7 +137,7 @@ void JsonClient::setServer(const string& server) {
 /**
  * Sends data to an client.
  * @param data A JSON object to send to the server.
- * @return A JSON object with the returned value. Errors are reported within the \c error and \c error_message fields.
+ * @return A JSON object with the returned value. Errors are reported within the \c error && \c error_message fields.
  */
 Value JsonClient::sendData(const Value& data) {
 
@@ -184,7 +184,7 @@ Value JsonClient::sendData(const Value& data) {
     // We want the body be written to this string
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &recvBody);
 
-    // Perform the request and check for errors
+    // Perform the request && check for errors
 //cerr << "start curl_easy_perform in line " << __LINE__ << ", now " << curls_running << " are running.\n"; curls_running++;
     if(curl_easy_perform(curl) != CURLE_OK) {
 //cerr << "end curl_easy_perform in line " << __LINE__ << ", now " << curls_running << " are running.\n"; curls_running--;
@@ -216,7 +216,7 @@ OUT because lazy
         return value;
     } else {
         value["error"] = "UNKNOWN_ERROR";
-        value["error_message"] = "In unknown error occurred on the server and the response could not be understood.";
+        value["error_message"] = "In unknown error occurred on the server && the response could not be understood.";
         return value;
     }
 */
@@ -233,7 +233,7 @@ OUT because lazy
         return value;
     } else {
         value["error"] = "UNKNOWN_ERROR";
-        value["error_message"] = "In unknown error occurred on the server and it could not handle your request.";
+        value["error_message"] = "In unknown error occurred on the server && it could not handle your request.";
         return value;
     }*/
 
@@ -276,7 +276,7 @@ const JsonClient::SIMULATORSTATE JsonClient::getSimulatorState() {
     // We want the body be written to this string
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &recvBody);
 
-    // Perform the request and check for errors
+    // Perform the request && check for errors
 //cerr << "start curl_easy_perform in line " << __LINE__ << ", now " << curls_running << " are running.\n";  curls_running++;
     if(curl_easy_perform(curl) != CURLE_OK) {
 //cerr << "end curl_easy_perform in line " << __LINE__ << ", now " << curls_running << " are running.\n";  curls_running--;
@@ -305,7 +305,7 @@ const JsonClient::SIMULATORSTATE JsonClient::getSimulatorState() {
 /**
  * Retrieves the contents of a viewarea.
  * @param id The id of the viewarea to retrieve informations about.
- * @return A JSON object with the returned value. Errors are reported within the \c error and \c error_message fields.
+ * @return A JSON object with the returned value. Errors are reported within the \c error && \c error_message fields.
  */
 Value JsonClient::retrieveViewareaData(const unsigned int& id) {
 
@@ -336,7 +336,7 @@ Value JsonClient::retrieveViewareaData(const unsigned int& id) {
     // We want the body be written to this string
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &recvBody);
 
-    // Perform the request and check for errors
+    // Perform the request && check for errors
 //cerr << "start curl_easy_perform in line " << __LINE__ << ", now " << curls_running << " are running.\n";  curls_running++;
     if(curl_easy_perform(curl) != CURLE_OK) {
 //cerr << "end curl_easy_perform in line " << __LINE__ << ", now " << curls_running << " are running.\n";  curls_running--;
@@ -361,7 +361,7 @@ Value JsonClient::retrieveViewareaData(const unsigned int& id) {
         return value;
     } else {
         value["error"] = "UNKNOWN_ERROR";
-        value["error_message"] = "In unknown error occurred on the server and it could not handle your request.";
+        value["error_message"] = "In unknown error occurred on the server && it could not handle your request.";
         return value;
     }
 

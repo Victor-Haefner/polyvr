@@ -113,7 +113,7 @@ void VRRecorder::compile(string path) {
     frame->width  = c->width;
     frame->height = c->height;
 
-    /* the image can be allocated by any means and av_image_alloc() is
+    /* the image can be allocated by any means && av_image_alloc() is
     * just the most convenient way if av_malloc() is to be used */
     ret = av_image_alloc(frame->data, frame->linesize, c->width, c->height, c->pix_fmt, 32);
     if (ret < 0) { fprintf(stderr, "Could not allocate raw picture buffer\n"); return; }
@@ -135,7 +135,7 @@ void VRRecorder::compile(string path) {
             int Y = 16 + 0.256789063*r + 0.504128906*g + 0.09790625*b;
             frame->data[0][y * frame->linesize[0] + x] = Y;
 
-            if (y%2 == 0 and y%2 == 0) {
+            if (y%2 == 0 && y%2 == 0) {
              int u = y/2;
              int v = x/2;
              int U = 128 + -0.148222656*r + -0.290992188*g + 0.439214844*b;

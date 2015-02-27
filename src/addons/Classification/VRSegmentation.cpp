@@ -57,7 +57,7 @@ struct Accumulator {
         GeoVectorPropertyRecPtr positions = geo_in->getMesh()->getPositions();
         GeoVectorPropertyRecPtr normals = geo_in->getMesh()->getNormals();
 
-        cout << "start plane extraction of " << geo_in->getName() << " with " << positions->size() << " points and " << normals->size() << " normals" << endl;
+        cout << "start plane extraction of " << geo_in->getName() << " with " << positions->size() << " points && " << normals->size() << " normals" << endl;
 
         Pnt3f p;
         Vec3f n;
@@ -191,7 +191,7 @@ struct Accumulator_octree : public Accumulator {
 vector<VRGeometry*> extractPointsOnPlane(VRGeometry* geo_in, VRPlane plane, float Dp) {
     GeoVectorPropertyRecPtr positions = geo_in->getMesh()->getPositions();
 
-    vector<VRGeometry*> res; // two geometries, the plane and the rest
+    vector<VRGeometry*> res; // two geometries, the plane && the rest
     for (int i=0; i<2; i++) {
         VRGeometry* geo = new VRGeometry(geo_in->getName() + "_p");
         GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();

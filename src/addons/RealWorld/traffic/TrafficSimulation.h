@@ -22,7 +22,7 @@ using namespace boost;
 namespace realworld {
 
     /**
-     * Simulates and draws traffic in the world.
+     * Simulates && draws traffic in the world.
      * @note Since this class communicates with an extern process over a network connection,
      *       most of its method are quite slow.
      * @todo The drawing code is missing completely.
@@ -94,7 +94,7 @@ namespace realworld {
                 static const VehicleState BLOCKED         = 1 << 4;
                 /// The vehicle is braking (note: This is active breaking as opposed to only decelerating, e.g. the stoplight is on).
                 static const VehicleState BRAKING         = 1 << 5;
-                /// The vehicle has collided in the past and is not moved by the simulator at the moment.
+                /// The vehicle has collided in the past && is not moved by the simulator at the moment.
                 static const VehicleState COLLIDED        = 1 << 6;
 
                 /**
@@ -122,7 +122,7 @@ namespace realworld {
             /**
              * Set of pointers to currently loaded maps.
              * If a map should be added/removed, its pointer is first looked after in this
-             * set and only if (not) found, the simulator is notified.
+             * set && only if (not) found, the simulator is notified.
              */
             set<const OSMMap*> loadedMaps;
 
@@ -155,7 +155,7 @@ namespace realworld {
             VRTransform *player;
 
             /**
-             * Whether the vehicle of the player and the viewarea around it has
+             * Whether the vehicle of the player && the viewarea around it has
              * been created inside the simulation.
              */
             bool playerCreated;
@@ -167,7 +167,7 @@ namespace realworld {
             int communicationThreadId;
 
             /**
-             * A mutex to block access to the data that is transfered to and from the network.
+             * A mutex to block access to the data that is transfered to && from the network.
              */
             mutex networkDataMutex;
 
@@ -187,7 +187,7 @@ namespace realworld {
             map<unsigned int, VRGeometry*> meshes;
 
             /**
-             * A map that stores the ids and vehicles that are moved around by the simulator.
+             * A map that stores the ids && vehicles that are moved around by the simulator.
              */
             map<unsigned int, Vehicle> vehicles;
 
@@ -246,13 +246,13 @@ namespace realworld {
 
         public:
 
-            /// @name Construction and initialization
+            /// @name Construction && initialization
             /// @{
 
             /**
              * Creates an object of this class.
              * Initial, the simulator does not have any streets or vehicles.
-             * The simulation starts paused and has to be continued with \c start().
+             * The simulation starts paused && has to be continued with \c start().
              * @param mapCoordinator A MapCoordinator used to convert GPS-coordinates to pixels.
              * @param host The name of the host the traffic simulation server is running on. The port number can be appended as "address:port".
              */
@@ -277,13 +277,13 @@ namespace realworld {
 
             /**
              * Removes a map from the simulator.
-             * All vehicles on this map will be deleted and no further vehicles will drive on these streets.
+             * All vehicles on this map will be deleted && no further vehicles will drive on these streets.
              * @param map The map to delete.
              */
             void removeMap(const OSMMap* map);
 
             /**
-             * Sets the distance vehicles can have to the player and still be drawn.
+             * Sets the distance vehicles can have to the player && still be drawn.
              * Default is 200.
              * @param distance The maximal distance to draw a vehicle at.
              */
@@ -364,7 +364,7 @@ namespace realworld {
 
             /**
              * Updates the vehicle positions.
-             * Moves all active vehicles a bit depending on their current speed and direction.
+             * Moves all active vehicles a bit depending on their current speed && direction.
              */
             void update();
             void tick();
@@ -378,8 +378,8 @@ namespace realworld {
              * Sets the collision handler.
              * The set function is called if the distance between two vehicles is less than the sum of their radii.
              * The handler receives two \c Vehicle structures for the two vehicles which might have collided. If the handler
-             * returns \c true, a collision has occurred and the vehicles are not moved for some time. If the handler
-             * returns \c false, no collision has occurred and the vehicles continue driving.
+             * returns \c true, a collision has occurred && the vehicles are not moved for some time. If the handler
+             * returns \c false, no collision has occurred && the vehicles continue driving.
              *
              * @warning The handler will be called in a separate thread by the simulator,
              *     so you should not access outside data structures from it.

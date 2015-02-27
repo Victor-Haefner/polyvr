@@ -170,7 +170,7 @@ VRObject* VRSceneLoader::parseOSGTree(NodeRecPtr n, VRObject* parent, string nam
     else name = "Unnamed";
     if (name == "") name = "NAN";
 
-    if (name[0] == 'F' and name[1] == 'T') {
+    if (name[0] == 'F' && name[1] == 'T') {
         string g = name; g.erase(0,2);
         if (g.find('.') != string::npos) g.erase(g.find('.'));
         if (g.find('_') != string::npos) g.erase(g.find('_'));
@@ -257,7 +257,7 @@ VRObject* VRSceneLoader::parseOSGTree(NodeRecPtr n, VRObject* parent, string nam
 
 void VRSceneLoader::optimizeGraph(VRObject* obj) { //TODO
     VRObject* p = obj->getParent();
-    if (obj->getType() == "Geometry" and p->getType() == "Transform" and p->getChildrenCount() == 1) {
+    if (obj->getType() == "Geometry" && p->getType() == "Transform" && p->getChildrenCount() == 1) {
         obj->switchParent(p->getParent());
         obj->setName(p->getName());
         //obj->setMatrix(p->getMatrix()); //TODO: cast

@@ -61,10 +61,10 @@ bool MPart::hasNeighbor(MPart* p) {
 
 void MPart::computeState() {
     int N = neighbors.size();
-    if (state == FREE and N > 0) state = ENGAGING;
-    if (state == ENGAGING and N > 0) state = ENGAGED;
-    if (state == ENGAGED and N == 0) state = DISENGAGING;
-    if (state == DISENGAGING and N == 0) state = FREE;
+    if (state == FREE && N > 0) state = ENGAGING;
+    if (state == ENGAGING && N > 0) state = ENGAGED;
+    if (state == ENGAGED && N == 0) state = DISENGAGING;
+    if (state == DISENGAGING && N == 0) state = FREE;
 }
 
 void MChange::flip() {
@@ -137,7 +137,7 @@ MGearGearRelation* checkGearGear(MPart* p1, MPart* p2) {
 MRelation* checkGearThread(MPart* p1, MPart* p2) {
     //float R = g->radius() + t->radius;
     ; // TODO: check if line center distance is the gear + thread radius
-    ; // TODO: check if thread and gear coplanar
+    ; // TODO: check if thread && gear coplanar
     return 0;
 }
 
@@ -211,7 +211,7 @@ vector<pointPolySegment> MChain::toPolygon(Vec3f p) {
 
 /*bool checkThreadNut(VRThread* t, VRNut* n, Matrix r1, Matrix r2) {
     ; // TODO: check if nut center on thread line
-    ; // TODO: check if nut and thread same orientation
+    ; // TODO: check if nut && thread same orientation
     return true;
 }*/
 

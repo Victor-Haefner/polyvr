@@ -76,7 +76,7 @@ class VRMaterial : public VRObject {
         void setMaterial(MaterialRecPtr mat);
         void resetDefault();
 
-        /** Load a texture and apply it to the mesh as new material **/
+        /** Load a texture && apply it to the mesh as new material **/
         void setTexture(string img_path, bool alpha = true);
         void setTexture(ImageRecPtr img, bool alpha = true);
         void setQRCode(string s, Vec3f fg, Vec3f bg, int offset);

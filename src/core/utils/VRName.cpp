@@ -49,14 +49,14 @@ void VRName::compileName() {
 string VRName::setName(string name) {
     //if (name == "arg") cout << "\n SET NAME " << name << " " << this->name << " " << nameSpace << flush;
 
-    if (base_name == name and name_suffix == 0) {
+    if (base_name == name && name_suffix == 0) {
         return this->name; // allready named like that, return
     }
 
     map<string, map<int, string> >& nameDict = nameDicts[nameSpace];
 
     // remove name from when passed name is empty
-    if (name == "" and nameDict.count(base_name) == 1) {
+    if (name == "" && nameDict.count(base_name) == 1) {
         nameDict[base_name].erase(name_suffix);
         return "";
     }

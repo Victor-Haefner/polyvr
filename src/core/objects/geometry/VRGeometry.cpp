@@ -73,7 +73,7 @@ void VRGeometry::setPrimitive(string primitive, string args) {
     setMesh(this->primitive->make(), source);
 }
 
-/** Create a mesh using vectors with positions, normals, indices and optionaly texture coordinates **/
+/** Create a mesh using vectors with positions, normals, indices && optionaly texture coordinates **/
 void VRGeometry::create(int type, vector<Vec3f> pos, vector<Vec3f> norms, vector<int> inds, vector<Vec2f> texs) {
     GeoUInt8PropertyRecPtr      Type = GeoUInt8Property::create();
     GeoUInt32PropertyRecPtr     Length = GeoUInt32Property::create();
@@ -113,7 +113,7 @@ void VRGeometry::create(int type, vector<Vec3f> pos, vector<Vec3f> norms, vector
     setMesh(geo);
 }
 
-/** Create a mesh using vectors with positions, normals, indices and optionaly texture coordinates **/
+/** Create a mesh using vectors with positions, normals, indices && optionaly texture coordinates **/
 void VRGeometry::create(int type, GeoVectorProperty* pos, GeoVectorProperty* norms, GeoIntegralProperty* inds, GeoVectorProperty* texs) {
     setType(type);
     setPositions(pos);
@@ -411,7 +411,7 @@ void VRGeometry::influence(vector<Vec3f> pnts, vector<Vec3f> values, int power, 
 /** Returns the maximum position on the x, y or z axis **/
 float VRGeometry::getMax(int axis) {
     if (!meshSet) return 0;
-    if (axis != 0 and axis != 1 and axis != 2) return 0;
+    if (axis != 0 && axis != 1 && axis != 2) return 0;
     GeoPnt3fPropertyRecPtr pos = dynamic_cast<GeoPnt3fProperty*>(mesh->getPositions());
 
     float max = pos->getValue(0)[axis];
@@ -425,7 +425,7 @@ float VRGeometry::getMax(int axis) {
 /** Returns the minimum position on the x, y or z axis **/
 float VRGeometry::getMin(int axis) {
     if (!meshSet) return 0;
-    if (axis != 0 and axis != 1 and axis != 2) return 0;
+    if (axis != 0 && axis != 1 && axis != 2) return 0;
     GeoPnt3fPropertyRecPtr pos = dynamic_cast<GeoPnt3fProperty*>(mesh->getPositions());
 
     float min = pos->getValue(0)[axis];

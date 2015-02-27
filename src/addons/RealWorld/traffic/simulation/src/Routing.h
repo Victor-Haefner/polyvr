@@ -21,7 +21,7 @@ set<ID> getConnectedNodes(const RoadSystem *roadSystem, const ID startNode, cons
  Calculates a route from Node \c start to Node \c end;
  If \c start is equal to \c end, this will return a vector only containing \c start.
  If there is no route, an empty vector will be returned.
- The \c start and \c end nodes are part of the returned route.
+ The \c start && \c end nodes are part of the returned route.
  @param roadSystem The RoadSystem to find a route in.
  @param from The id of the node the vehicle is coming from when arriving at \c start.
  @param start The id of the node to start routing at.

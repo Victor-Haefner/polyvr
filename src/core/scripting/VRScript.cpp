@@ -128,7 +128,7 @@ void VRScript::update() {
         }
     }
 
-    // update args namespaces and map
+    // update args namespaces && map
     map<string, arg*> tmp_args;
     for (auto _a : args) {
         arg* a = _a.second;
@@ -404,7 +404,7 @@ void VRScript::load(xmlpp::Element* e) {
             t->loadName(el);
             trigs[t->getName()] = t;
 
-            if (t->trigger == "on_scene_load" and active) {
+            if (t->trigger == "on_scene_load" && active) {
                 VRScene* scene = VRSceneManager::getCurrent();
                 scene->queueJob(cbfkt_sys);
             }

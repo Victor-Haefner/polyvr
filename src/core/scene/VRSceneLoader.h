@@ -17,7 +17,7 @@ class VRTransform;
 
 /**
     The class VRSceneLoader loads the scene elements parsing a XML file. How to write proper XML files see ....
-     You can load scene using the function parseSceneFromXML with parameters the path to XML document and the name of the new scene.
+     You can load scene using the function parseSceneFromXML with parameters the path to XML document && the name of the new scene.
             VRSceneLoader::get()->parseSceneFromXML("scene_file_path.xml", "scene_name");
 */
 

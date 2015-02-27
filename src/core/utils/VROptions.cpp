@@ -33,7 +33,7 @@ VROptions::VROptions() : desc("Configuration ") {
 
     addOption<int>(1, "ann_inputs", "number of inputs for the ann");
     addOption<int>(1, "ann_trigger", "input number of the ann used for trigger maximum");
-    addOption<bool>(true, "dragndrop", "activates drag and drop");
+    addOption<bool>(true, "dragndrop", "activates drag && drop");
     addOption<float>(1, "menu_size", "size of menu");
 
     addOption<bool>(false, "deferredShading", "activates deferredShading");

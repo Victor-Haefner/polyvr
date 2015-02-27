@@ -30,7 +30,7 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 // TODO:
-// rename and delete scenes
+// rename && delete scenes
 // switch to a liststore or something!
 
 VRSignal* on_scene_loaded;
@@ -337,8 +337,8 @@ void VRDemos::on_new_clicked() {
 
 void VRDemos::update() {
     VRScene* scene = VRSceneManager::getCurrent();
-    if (scene == 0 and current_demo == 0) return;
-    if (scene == 0 and current_demo != 0) {
+    if (scene == 0 && current_demo == 0) return;
+    if (scene == 0 && current_demo != 0) {
         current_demo->running = false;
         setGuiState(current_demo);
         return;

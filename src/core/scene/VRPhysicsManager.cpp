@@ -23,7 +23,7 @@ VRPhysicsManager::VRPhysicsManager() {
     // Build the broadphase
     broadphase = new btDbvtBroadphase();
 
-    // Set up the collision configuration and dispatcher
+    // Set up the collision configuration && dispatcher
     collisionConfiguration = new btDefaultCollisionConfiguration();
     dispatcher = new btCollisionDispatcher(collisionConfiguration);
 
@@ -50,7 +50,7 @@ VRPhysicsManager::VRPhysicsManager() {
 VRPhysicsManager::~VRPhysicsManager() {
     return; // TODO
 
-    //remove the rigidbodies from the dynamics world and delete them
+    //remove the rigidbodies from the dynamics world && delete them
     for (int i=dynamicsWorld->getNumCollisionObjects()-1; i>=0 ;i--) {
         btCollisionObject* obj = dynamicsWorld->getCollisionObjectArray()[i];
         btRigidBody* body = btRigidBody::upcast(obj);

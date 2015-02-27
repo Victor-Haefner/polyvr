@@ -19,7 +19,7 @@ class VRSignal;
 
 class VRMesure {
     private:
-        VRGeometry* s1;//spheren die mit drag and drop plaziert werden
+        VRGeometry* s1;//spheren die mit drag && drop plaziert werden
         VRGeometry* s2;
         VRGeometry* l;
 

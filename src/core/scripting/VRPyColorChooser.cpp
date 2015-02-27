@@ -66,8 +66,8 @@ PyObject* VRPyColorChooser::setGeometry(VRPyColorChooser* self, PyObject* args) 
 PyObject* VRPyColorChooser::resolve(VRPyColorChooser* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyColorChooser::activate - Object is invalid"); return NULL; }
     VRPyDevice* dev = 0;
-    if (! PyArg_ParseTuple(args, "O", &dev)) return NULL;
-    self->obj->resolve(dev->obj);
+    parseObject(args, dev);
+    if (dev) self->obj->resolve(dev->obj);
     Py_RETURN_TRUE;
 }
 

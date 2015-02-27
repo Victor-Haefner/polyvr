@@ -124,7 +124,7 @@ void ModuleBuildings::addBuildingWallLevel(Vec2f pos1, Vec2f pos2, int level, in
     float low = level * FLOOR_HEIGHT + elevation;
     float high = low + FLOOR_HEIGHT;
 
-    // insert a door at a random place (when on level 0 and there is enough room)
+    // insert a door at a random place (when on level 0 && there is enough room)
     int doorIndex = -1;
     if (level == 0 && segN > 2) doorIndex = bNum % segN;
 
@@ -195,7 +195,7 @@ Vec2f convRTC(float u, float v, Vec2f m) {
 }
 
 void ModuleBuildings::addBuildingRoof(Building* building, float height, float elevation){
-    //create and fill vector a with polygon corners
+    //create && fill vector a with polygon corners
     Vector2dVector a;
     bool first = true;
     for(auto corner : building->getCorners()) {

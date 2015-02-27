@@ -86,7 +86,7 @@ void VRGuiSetup::updateObjectData() {
             setTextEntry("entry34", ssy.str());
             setLabel("win_state", mwin->getStateString());
 
-            //TODO: clear server array and add entry for each nx * ny
+            //TODO: clear server array && add entry for each nx * ny
             Glib::RefPtr<Gtk::ListStore> servers = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("serverlist"));
             servers->clear();
             for (int y=0; y<ny; y++) {

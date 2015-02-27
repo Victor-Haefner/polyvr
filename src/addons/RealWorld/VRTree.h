@@ -14,8 +14,8 @@ class VRTree : public VRGeometry {
             int iterations; //number of iterations
             int child_number; //number of children
 
-            float n_angle; //angle between n1 and parent n2
-            float p_angle; //angle between axis (p1 p2) and parent axis (p1 p2)
+            float n_angle; //angle between n1 && parent n2
+            float p_angle; //angle between axis (p1 p2) && parent axis (p1 p2)
             float l_factor; //length diminution factor
             float r_factor; //radius diminution factor
 

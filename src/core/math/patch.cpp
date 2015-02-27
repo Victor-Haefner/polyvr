@@ -354,7 +354,7 @@ void patch::calcBezQuadPlane(bezPolygon<4>& q) {
     Vec4f b = Vec4f(n[0].dot(P[2][1][0]), n[1].dot(P[0][2][1]), n[2].dot(P[1][0][2]), 0);
     Matrix Ai;
 
-    if (A.det() < 0.0001 and A.det() > -0.0001) {
+    if (A.det() < 0.0001 && A.det() > -0.0001) {
         for (int l=0;l<3;l++) {
             Ai = A;
             Ai[l] = b;
@@ -416,7 +416,7 @@ void patch::calcBezQuadPlane(bezPolygon<4>& q) {
 
     int iter = 0;
     for (int i=0;i<q.N;i++) {
-        for (int k=0; k<3 and i>0;k++) {
+        for (int k=0; k<3 && i>0;k++) {
             T[k][i] = T[k][i-1]+DELv[k][0];
             DELv[k][0] += DELv[k][1];
             DELv[k][1] += DELv[k][2];

@@ -27,7 +27,7 @@ class RenderArea : public QWidget {
 
     private:
         /**
-         Applies zoom and position.
+         Applies zoom && position.
          @param p The point to transform.
          @return The transformed point.
          */

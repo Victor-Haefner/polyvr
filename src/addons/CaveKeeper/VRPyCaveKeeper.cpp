@@ -49,7 +49,7 @@ PyMethodDef VRPyCaveKeeper::methods[] = {
     {"init", (PyCFunction)VRPyCaveKeeper::initWorld, METH_VARARGS, "Init real world" },
     {"update", (PyCFunction)VRPyCaveKeeper::update, METH_VARARGS, "Update real world" },
     {"dig", (PyCFunction)VRPyCaveKeeper::dig, METH_VARARGS, "Dig a cube, pass the device as argument" },
-    {"place", (PyCFunction)VRPyCaveKeeper::place, METH_VARARGS, "Place an object, pass the device and the type of object as string" },
+    {"place", (PyCFunction)VRPyCaveKeeper::place, METH_VARARGS, "Place an object, pass the device && the type of object as string" },
     {NULL}  /* Sentinel */
 };
 

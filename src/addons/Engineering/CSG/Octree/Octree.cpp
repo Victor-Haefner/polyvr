@@ -77,7 +77,7 @@ bool checkRecursion(Octree* t, OcPoint p) {
     static Octree* rec_3 = 0;
 
 
-    if (t == rec_2 and rec_1 == rec_3) {
+    if (t == rec_2 && rec_1 == rec_3) {
         cout << "\nRecursion error! Octree allready visited..";
         cout << "\n OcPoint "; p.print();
         cout << "\n Trees " << t << " " << rec_1 << " " << rec_2 << " " << rec_3;
@@ -129,7 +129,7 @@ void Octree::add(OcPoint p, void* data, int maxjump) {
         return;
     }
 
-    if (size > resolution and maxjump != 0) {
+    if (size > resolution && maxjump != 0) {
         int o = getOctant(p);
         if (children[o] == 0) {
             float s2 = size*0.25;
@@ -279,7 +279,7 @@ void Octree::test() {
     }
     t2=clock();
 
-    cout << "\ntest took " << t1-t0 << " octree range search and " << t2-t1 << " brute force\n";
+    cout << "\ntest took " << t1-t0 << " octree range search && " << t2-t1 << " brute force\n";
 
     // validate results
 

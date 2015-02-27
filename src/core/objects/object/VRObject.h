@@ -90,7 +90,7 @@ class VRObject : public VRName {
         bool hasAttachment(string name);
         VRObject* hasAncestorWithAttachment(string name);
 
-        /** Set the object OSG core and specify the type**/
+        /** Set the object OSG core && specify the type**/
         void setCore(NodeCoreRecPtr c, string _type);
 
         /** Returns the object OSG core **/
@@ -172,10 +172,10 @@ class VRObject : public VRName {
         /** duplicate this object **/
         VRObject* duplicate(bool anchor = false);
 
-        /** Hide this object and all his subgraph **/
+        /** Hide this object && all his subgraph **/
         void hide();
 
-        /** Show this object and all his subgraph **/
+        /** Show this object && all his subgraph **/
         void show();
 
         /** Returns if this object is visible or not **/

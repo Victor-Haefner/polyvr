@@ -68,7 +68,7 @@ class Window : public QWidget {
         /// A label to display information about the selected object.
         QLabel *dataLabel;
 
-        /// A button to start and pause the simulator
+        /// A button to start && pause the simulator
         QPushButton *startStopButton;
         /// A checkbox to use single-step simulation.
         QCheckBox *singleStepCheckBox;

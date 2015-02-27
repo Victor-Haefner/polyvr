@@ -130,7 +130,7 @@ void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScript* script, bool on
     bool user_focus = false;
     if(!user_focus) user_focus = ("gtkmm__GtkTreeView" == name);
     if(!user_focus) user_focus = ("GtkEntry" == name); // TODO: be more specific
-    if(onlyTime and user_focus) return;
+    if(onlyTime && user_focus) return;
 
     int Nf = script->getSearch().N;
     string icon, Nfound;
@@ -318,7 +318,7 @@ void VRGuiScripts::on_select_script() { // selected a script
     fillStringListstore("liststore7", VRSetupManager::getCurrent()->getDevices("mobile"));
     setCombobox("combobox24", getListStorePos("liststore7", script->getMobile()));
 
-    // update editor content and script head
+    // update editor content && script head
     string core = script->getHead() + script->getCore();
     gtk_text_buffer_set_text(GTK_TEXT_BUFFER(VRGuiScripts_sourceBuffer), core.c_str(), core.size());
 
@@ -346,7 +346,7 @@ void VRGuiScripts::on_select_script() { // selected a script
     for (itr2 = trig_map.begin(); itr2 != trig_map.end(); itr2++) {
         VRScript::trig* t = itr2->second;
         string key = toString(t->key);
-        if (t->dev == "keyboard" and t->key > 32 and t->key < 127) {
+        if (t->dev == "keyboard" && t->key > 32 && t->key < 127) {
             char kc = t->key;
             key = kc;
         }
@@ -782,7 +782,7 @@ void VRGuiScripts::on_find_diag_find_clicked() {
     hideDialog("find_dialog");
 
     VRScript* s = getSelectedScript();
-    if (!sa and s == 0) return;
+    if (!sa && s == 0) return;
 
     VRScene* scene = VRSceneManager::getCurrent();
 

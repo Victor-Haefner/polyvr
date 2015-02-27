@@ -8,7 +8,7 @@ using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 /**
-* Static utility class for saving and loading OSG- and VRGeometry
+* Static utility class for saving && loading OSG- && VRGeometry
 **/
 class GeoIO
 {
@@ -31,7 +31,7 @@ class GeoIO
         }
 
         /**
-        * Loads a VRGeometry from an .osb binary file and writes it in a given Frame.
+        * Loads a VRGeometry from an .osb binary file && writes it in a given Frame.
         * @param _frame: a pointer to the pointer which has to contain the VrGeometry
         * @param the path to load from
         * @return true if the path was found.

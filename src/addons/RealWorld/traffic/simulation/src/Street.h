@@ -19,7 +19,7 @@ using namespace std;
  That means that \a forward is in the direction of the nodes while \a backward is in the other direction.
 
  Some methods take a lane number as parameter. These lane number starts counting with 1 at the lane near the middle of
- the street and increases while going outside. If the lane number is positive (e.g. 1, 2, 3, ...) the lanes in forward
+ the street && increases while going outside. If the lane number is positive (e.g. 1, 2, 3, ...) the lanes in forward
  direction are meant, if the lane number is negative (e.g. -1, -2, -3, ...) the lanes in the backward direction is meant.
  If you pass an invalid lane number (either a too big/small number or 0), the returned result is undefined.
  */
@@ -28,7 +28,7 @@ class Street {
     public:
         /**
          The different types of street.
-         Order is loosely going down in speed and traffic amount.
+         Order is loosely going down in speed && traffic amount.
          The values that are represented determine how full this street will be
          in percent if a traffic density of 20 is assigned.
          */
@@ -103,8 +103,8 @@ class Street {
 
             /// The maximum amount of vehicles that can drive on the street
             /// in this direction.
-            /// Is used by the mesosimulation and calculated out of length
-            /// and number of lanes.
+            /// Is used by the mesosimulation && calculated out of length
+            /// && number of lanes.
             unsigned int maxVehicles;
 
             /// In the mesosimulation these are the arrival times and
@@ -127,7 +127,7 @@ class Street {
         double maxSpeed;
 
         /// The roadSystem this street is part of.
-        /// Is asked for the lane width and the default speed/streettype.
+        /// Is asked for the lane width && the default speed/streettype.
         RoadSystem *roadSystem;
 
         /// The type (=size) of this street.
@@ -235,7 +235,7 @@ class Street {
                      only the sign of it will be interpreted.
          @param count The new number of lanes in that direction.
          @return An integer with the number of lanes in the given direction. Note that
-                 a value of 2 means that the lanes 1 and 2 exists.
+                 a value of 2 means that the lanes 1 && 2 exists.
          */
         void setLaneCount(const int direction, unsigned int count);
 
@@ -244,7 +244,7 @@ class Street {
          @param direction The direction to return. The actual value does not matter,
                      only the sign of it will be interpreted.
          @return An integer with the number of lanes in the given direction. Note that
-                 a value of 2 means that the lanes 1 and 2 exists.
+                 a value of 2 means that the lanes 1 && 2 exists.
          */
         unsigned int getLaneCount(const int direction) const;
 
@@ -300,7 +300,7 @@ class Street {
         /**
          Returns the number of vehicles that are currently driving into one direction.
          @note Even when the method expects a lane as parameter, the returned value is
-               calculated for one direction and not for one lane. This also means that
+               calculated for one direction && not for one lane. This also means that
                all lanes into the same direction return the same value.
          @param direction The direction to return. The actual value does not matter,
                      only the sign of it will be interpreted.
@@ -311,7 +311,7 @@ class Street {
         /**
          Returns the maximal number of vehicles that can drive into one direction.
          @note Even when the method expects a lane as parameter, the returned value is
-               calculated for one direction and not for one lane. This also means that
+               calculated for one direction && not for one lane. This also means that
                all lanes into the same direction return the same value.
          @param direction The direction to return. The actual value does not matter,
                      only the sign of it will be interpreted.
@@ -333,7 +333,7 @@ class Street {
         /**
          Calculates a destination-position for a vehicle.
          Since vehicle on outer lanes should not drive to the actual position of the node,
-         this method calculates a translated position based on the node and the actual lane.
+         this method calculates a translated position based on the node && the actual lane.
          @param nodeId The id of the node that is the destination.
          @param lane The number of the lane that is driven on.
          @return The position to drive to.
@@ -341,7 +341,7 @@ class Street {
         Vec2f getRelativeNodePosition(const ID nodeId, const int lane) const;
 
         /**
-         Calculates a position on the street based on the lane number and an offset.
+         Calculates a position on the street based on the lane number && an offset.
          The offset is always going IN direction of the street, independent of the
          direction of the given lane.
          @param lane The number of the lane.
@@ -413,7 +413,7 @@ class Street {
         /**
          Tries to transfer a vehicle from this micro-street to the given street.
          This takes care of the micro/meso translation. If the destination street is in meso-mode, the given
-         vehicle will be removed from this street and the RoadSystem. If the transfer is successful, the vehicle
+         vehicle will be removed from this street && the RoadSystem. If the transfer is successful, the vehicle
          will be removed from this street automatically.
 
          The route of the vehicle is adapted appropriately.
@@ -425,8 +425,8 @@ class Street {
          @param destLane The lane the vehicle wants to enter.
          @param vehicle The vehicle that wants to change its street.
          @return The pointer to the given vehicle if the vehicle has been moved to a micro-street. In that case, the
-            street-pointer inside the vehicle will be reset and the other street will now contain it. If the
-            destination street is in meso-mode, the given vehicle will be removed and \c NULL will be returned.
+            street-pointer inside the vehicle will be reset && the other street will now contain it. If the
+            destination street is in meso-mode, the given vehicle will be removed && \c NULL will be returned.
          */
         Vehicle* transferVehicle(Street *destStreet, const ID node, const int destLane, Vehicle *vehicle);
 
@@ -440,15 +440,15 @@ class Street {
          @param destStreet The street to move the vehicle to.
          @param node The ID of the node where the vehicle wants to enter (e.g. the node with the junction).
          @param destLane The lane the vehicle wants to enter.
-         @return \c True if the vehicle has been transferred to the new street and should be removed from this street
-            by the caller.  If \c false, no changes have been done and the vehicle remains on this street.
+         @return \c True if the vehicle has been transferred to the new street && should be removed from this street
+            by the caller.  If \c false, no changes have been done && the vehicle remains on this street.
          */
         bool transferVehicle(Street *destStreet, const ID node, const int destLane);
 
         /**
          Calculates a cost for using this street.
          This cost is based on an obscure formula involving lane-count,
-         type and maximal speed.
+         type && maximal speed.
          @return A double describing a cost for routing above this street.
          */
         double getRoutingCost() const;
@@ -460,7 +460,7 @@ class Street {
          will be returned.
          @param start The id of the first node.
          @param end The id of the second node.
-         @param directed If \c true, the result will be signed and will represent the direction on the street.
+         @param directed If \c true, the result will be signed && will represent the direction on the street.
             A positive value means \c start comes before \c end if driving on the forward-lane of the street,
             a negative value means the opposite.
          @return The distance of this nodes or numeric_limits<double>::max().
@@ -474,7 +474,7 @@ class Street {
          will be returned.
          @param startI The index of the first node inside this street.
          @param endI The index of the second node inside this street.
-         @param directed If \c true, the result will be signed and will represent the direction on the street.
+         @param directed If \c true, the result will be signed && will represent the direction on the street.
             A positive value means \c start comes before \c end if driving on the forward-lane of the street,
             a negative value means the opposite.
          @return The distance of this nodes or numeric_limits<double>::max().
@@ -490,7 +490,7 @@ class Street {
 
         /**
          Searches the given node in the node list of this street.
-         This version starts searching at the back of the list and returns the index of the last occurrence.
+         This version starts searching at the back of the list && returns the index of the last occurrence.
          @param node The id of the node to search.
          @return The index of the nodes inside this street or a value greater than the number of nodes if not found.
          */

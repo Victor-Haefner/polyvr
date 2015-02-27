@@ -5,7 +5,7 @@
  *      Author: marcel
  *
  *  CGAL uses loads of template classes. It seems to be common practice to typedef the needed classes
- *  to have shorter and easier names. This way, it might also be possible to switch to a more precise
+ *  to have shorter && easier names. This way, it might also be possible to switch to a more precise
  *  kernel "easily".
  *  Predefining most CGAL types used here as they need exactly these template arguments anyway.
  *  Besides, the actual code is shortened (but stays readable).

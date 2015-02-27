@@ -13,14 +13,14 @@ namespace realworld {
         float maxTriangleSize = 15; //maximum size of a side of a tesselated triangle;
 
         //floor values
-        //Terrain and Ground
+        //Terrain && Ground
         //static const float GROUND_LVL = -1.0f; //y value of ground
         float LAYER_DISTANCE = 0.11f; // distance between 2 layers, so that one layer is hidden completely
 
         //streets
         float STREET_HEIGHT = 0.35f; //street distance from floor
         float STREET_WIDTH = 3.0f; //minimum street width
-        float BRIDGE_HEIGHT = 3.0f; //distance between ground and a bridge
+        float BRIDGE_HEIGHT = 3.0f; //distance between ground && a bridge
         float SMALL_BRIDGE_HEIGHT = 0.5f; //thickness of smaller bridges
         float BRIDGE_SIZE = 0.1f; //thickness of the bridge
 

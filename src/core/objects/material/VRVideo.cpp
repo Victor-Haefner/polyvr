@@ -19,7 +19,7 @@ VRVideo::VRVideo(OSG::VRMaterial* mat) {
     vFrame = 0;
     NStreams = 0;
 
-    av_register_all(); // Register all formats and codecs
+    av_register_all(); // Register all formats && codecs
 
     // test
     const char* file = "~/Videos/drop.avi";

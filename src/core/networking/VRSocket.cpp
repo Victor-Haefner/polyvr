@@ -411,7 +411,7 @@ void VRSocket::update() {
     sig->setName("on_" + name + "_" + type);
 
     if (type == "tcpip receive") if (tcp_fkt) initServer(TCP, port);
-    if (type == "http receive") if (http_serv and http_fkt) http_serv->initServer(http_fkt, port);
+    if (type == "http receive") if (http_serv && http_fkt) http_serv->initServer(http_fkt, port);
 }
 
 bool VRSocket::isClient() {

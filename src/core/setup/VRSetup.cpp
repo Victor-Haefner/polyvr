@@ -64,7 +64,7 @@ void VRSetup::setScene(VRScene* scene) {
     setViewCamera(cam, -1);
 
     VRMouse* mouse = (VRMouse*)getDevice("mouse");
-    if (mouse and cam) mouse->setCamera(cam);
+    if (mouse && cam) mouse->setCamera(cam);
 
     setViewBackground(scene->getBackground());
 

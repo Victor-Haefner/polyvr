@@ -85,7 +85,7 @@ bool VRGtkWindow::on_motion(GdkEventMotion * event) {
 }
 
 bool VRGtkWindow::on_key(GdkEventKey *event) {
-    if (event->keyval >= 65470 and event->keyval <= 65481) return false; //F keys
+    if (event->keyval >= 65470 && event->keyval <= 65481) return false; //F keys
     //VRKeyboard::get()->keyboard(event->keyval, 0, 0); // TODO: check the values!!
 	//printf("\n KEY: %i %i %i\n", event->keyval, event->type, event->state);
 	//cout << "\n KEY: " << event->keyval << " " << event->type << " " << event->state << endl;
@@ -151,7 +151,7 @@ bool VRGtkWindow::on_expose(GdkEventExpose* event) {
 
     glClearColor(0.2, 0.2, 0.2, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
-    if (active and content) win->render(ract);
+    if (active && content) win->render(ract);
 
     gdk_gl_drawable_swap_buffers (gldrawable);
     gdk_gl_drawable_gl_end (gldrawable);

@@ -153,7 +153,7 @@ void VRMaterial::setMaterial(MaterialRecPtr m) {
 
 MaterialRecPtr VRMaterial::getMaterial() { return mat; }
 
-/** Load a texture and apply it to the mesh as new material **/
+/** Load a texture && apply it to the mesh as new material **/
 void VRMaterial::setTexture(string img_path, bool alpha) { // TODO: improve with texture map
     if (texture == 0) texture = Image::create();
     //VRScene* scene = VRSceneManager::getCurrent();
@@ -168,12 +168,12 @@ void VRMaterial::setTexture(ImageRecPtr img, bool alpha) {
 
     texture = img;
     texChunk->setImage(img);
-    if (alpha and img->hasAlphaChannel() and blendChunk == 0) {
+    if (alpha && img->hasAlphaChannel() && blendChunk == 0) {
         blendChunk = BlendChunk::create();
         mat->addChunk(blendChunk);
     }
 
-    if (alpha and img->hasAlphaChannel()) {
+    if (alpha && img->hasAlphaChannel()) {
         envChunk->setEnvMode   (GL_MODULATE);
         blendChunk->setSrcFactor  ( GL_SRC_ALPHA           );
         blendChunk->setDestFactor ( GL_ONE_MINUS_SRC_ALPHA );

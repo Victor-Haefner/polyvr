@@ -18,7 +18,7 @@ class VRAnimation_base {
 };
 
 /**
-    A VRAnimation stores a VRFunction and calls it every frame, when running the animation, with an interpolated value.
+    A VRAnimation stores a VRFunction && calls it every frame, when running the animation, with an interpolated value.
     One can use any type as long as it can be interpolated, meaning it supports the basic math operations [-, +, *].
 */
 
@@ -41,7 +41,7 @@ class VRAnimation : public VRAnimation_base {
 };
 
 /**
-    This manager calls all stored animations every frame and updates them with the current time.
+    This manager calls all stored animations every frame && updates them with the current time.
     One can add VRAnimations as objects or initiate them with parameters
 */
 
@@ -59,14 +59,14 @@ class VRAnimationManager {
         VRAnimationManager();
 
         /**
-            Add a VRAnimation and starts it.
+            Add a VRAnimation && starts it.
         */
 
         template<typename T>
         int addAnimation(VRAnimation<T>* anim);
 
         /**
-            Add a VRAnimation and starts it.
+            Add a VRAnimation && starts it.
             One can use any type as long as it can be interpolated, meaning it supports the basic math operations [-, +, *].
         */
 

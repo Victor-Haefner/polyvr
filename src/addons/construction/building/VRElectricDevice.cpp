@@ -10,17 +10,17 @@ VRElectricDevice::VRElectricDevice(VRObject* obj, VRFunction<bool>* cb) : active
 bool VRElectricDevice::isActive() { return active; }
 
 void VRElectricDevice::turnOn() {
-    if (!this->active and callback != 0) (*callback)(false);
+    if (!this->active && callback != 0) (*callback)(false);
     this->active = true;
 }
 
 void VRElectricDevice::turnOff() {
-    if (this->active and callback != 0) (*callback)(false);
+    if (this->active && callback != 0) (*callback)(false);
     this->active = false;
 }
 
 void VRElectricDevice::toggle(VRDevice* dev) {
-    if (dev != 0 and EDev != 0) {
+    if (dev != 0 && EDev != 0) {
         VRIntersection ins = dev->intersect(EDev);
         if (!ins.hit) return;
         if ( ins.object == 0 ) return;

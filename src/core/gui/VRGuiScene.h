@@ -72,7 +72,7 @@ class VRGuiScene {
         void on_lod_decimate_changed();
         // ----------------------------------------------
 
-        // ------------- scenegraph drag and drop -------
+        // ------------- scenegraph drag && drop -------
         void on_drag_beg(const Glib::RefPtr<Gdk::DragContext>& dc);
         void on_drag_end(const Glib::RefPtr<Gdk::DragContext>& dc);
         void on_drag_data_receive(const Glib::RefPtr<Gdk::DragContext>& dc , int i1, int i2 ,const Gtk::SelectionData& sd, guint i3, guint i4);

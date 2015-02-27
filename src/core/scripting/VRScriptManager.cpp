@@ -187,7 +187,7 @@ initVRPyStdOut(void) {
 
 static PyMethodDef VRScriptManager_module_methods[] = {
 	{"exit", (PyCFunction)VRScriptManager::exit, METH_NOARGS, "Terminate application" },
-	{"loadGeometry", (PyCFunction)VRScriptManager::loadGeometry, METH_VARARGS, "Loads a collada file and returns a VR.Geometry node" },
+	{"loadGeometry", (PyCFunction)VRScriptManager::loadGeometry, METH_VARARGS, "Loads a collada file && returns a VR.Geometry node" },
 	{"stackCall", (PyCFunction)VRScriptManager::stackCall, METH_VARARGS, "Stacks a call to a py function - stackCall( function, delay, [args] )" },
 	{"openFileDialog", (PyCFunction)VRScriptManager::openFileDialog, METH_VARARGS, "Open a file dialog - openFileDialog( onLoad, mode, title, default_path, filter )" },
 	{"updateGui", (PyCFunction)VRScriptManager::updateGui, METH_NOARGS, "Update the gui" },
@@ -290,7 +290,7 @@ vector<string> VRScriptManager::getPyVRMethods(string type) {
     if (type == "VR globals") {
         while (PyDict_Next(dict, &pos, &key, &value)) {
             string name = PyString_AsString(key);
-            if (name[0] == '_' and name[1] == '_') continue;
+            if (name[0] == '_' && name[1] == '_') continue;
             if (PyCFunction_Check(value)) res.push_back(name);
         }
 
@@ -310,7 +310,7 @@ vector<string> VRScriptManager::getPyVRMethods(string type) {
     pos = 0;
     while (PyDict_Next(dict, &pos, &key, &value)) {
         string name = PyString_AsString(key);
-        if (name[0] == '_' and name[1] == '_') continue;
+        if (name[0] == '_' && name[1] == '_') continue;
         res.push_back(name);
     }
 
