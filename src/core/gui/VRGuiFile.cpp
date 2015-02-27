@@ -122,13 +122,6 @@ string VRGuiFile::getPath() {
 }
 
 typedef boost::filesystem::path path;
-namespace boost {
-namespace filesystem {
-template < >
-path& path::append< typename path::iterator >( typename path::iterator begin, typename path::iterator end, const codecvt_type& cvt) {
-    for( ; begin != end ; ++begin ) *this /= *begin;
-    return *this;
-}}}
 
 // Return path when appended to a_From will resolve to same as a_To
 path make_relative( path a_From, path a_To ) {
@@ -145,7 +138,7 @@ path make_relative( path a_From, path a_To ) {
         if( (*itrFrom) != "." ) ret /= "..";
     }
     // Now navigate down the directory branch
-    ret.append( itrTo, a_To.end() );
+	for (; itrTo != a_To.end(); ++itrTo) ret /= *itrTo;
     return ret;
 }
 
@@ -159,9 +152,7 @@ string VRGuiFile::getRelativePath_toScene() {
 
 string VRGuiFile::getRelativePath_toWorkdir() {
     char cCurrentPath[FILENAME_MAX];
-    getcwd(cCurrentPath, sizeof(cCurrentPath) );
-    string workdir = string(cCurrentPath);
-
-    path a(getPath()), b(workdir);
+	path b = boost::filesystem::current_path();
+    path a(getPath());
     return make_relative( b, a ).string();
 }
