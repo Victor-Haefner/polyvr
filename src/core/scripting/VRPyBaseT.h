@@ -1,77 +1,42 @@
-template<class T>
-PyTypeObject* VRPyBaseT<T>::typeRef = &VRPyBaseT<T>::type;
-
-template<class T>
-VRPyBaseT<T>::VRPyBaseT() {
-    owner = true;
-    obj = 0;
-}
+template<class T> PyTypeObject* VRPyBaseT<T>::typeRef = &VRPyBaseT<T>::type;
+template<class T> VRPyBaseT<T>::VRPyBaseT() {;}
 
 template<class T>
 PyObject* VRPyBaseT<T>::fromPtr(T* obj) {
     if (obj == 0) Py_RETURN_NONE;
-
     VRPyBaseT<T> *self = (VRPyBaseT<T> *)typeRef->tp_alloc(typeRef, 0);
-
     if (self != NULL) {
         self->obj = obj;
         self->owner = false;
     }
-
     return (PyObject *)self;
 }
 
 template<class T>
-PyObject* VRPyBaseT<T>::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
+PyObject* VRPyBaseT<T>::alloc(PyTypeObject* type, T* t) {
     VRPyBaseT<T>* self = (VRPyBaseT<T> *)type->tp_alloc(type, 0);
     if (self != NULL) {
         self->owner = true;
-        self->obj = new T();
+        self->obj = t;
     }
     return (PyObject *)self;
 }
 
-template<class T>
-PyObject* VRPyBaseT<T>::New_named(PyTypeObject *type, PyObject *args, PyObject *kwds) {
-    string name = VRPyBase::parseString(args);
-    VRPyBaseT<T>* self = (VRPyBaseT<T> *)type->tp_alloc(type, 0);
-    if (self != NULL) {
-        self->owner = true;
-        self->obj = new T(name);
-    }
-
-    return (PyObject *)self;
-}
-
-template<class T>
-PyObject* VRPyBaseT<T>::New_toZero(PyTypeObject *type, PyObject *args, PyObject *kwds) {
-    VRPyBaseT<T>* self = (VRPyBaseT<T> *)type->tp_alloc(type, 0);
-    if (self != NULL) self->owner = true;
-    return (PyObject *)self;
-}
+template<class T> PyObject* VRPyBaseT<T>::New(PyTypeObject *type, PyObject *args, PyObject *kwds) { return alloc( type, new T() ); }
+template<class T> PyObject* VRPyBaseT<T>::New_named(PyTypeObject *type, PyObject *args, PyObject *kwds) { return alloc( type, new T( parseString(args) ) ); }
+template<class T> PyObject* VRPyBaseT<T>::New_toZero(PyTypeObject *type, PyObject *args, PyObject *kwds) { return alloc( type, 0 ); }
 
 template<class T>
 PyObject* VRPyBaseT<T>::New_VRObjects(PyTypeObject *type, PyObject *args, PyObject *kwds) {
-    string name = VRPyBase::parseString(args);
-    VRPyBaseT<T>* self = (VRPyBaseT<T> *)type->tp_alloc(type, 0);
-    if (self != NULL) {
-        self->owner = true;
-        self->obj = new T(name);
-        self->obj->addAttachment("dynamicaly_generated", 0);
-    }
-
+    VRPyBaseT<T>* self = (VRPyBaseT<T> *)New_named(type, args, kwds);
+    if (self != NULL) self->obj->addAttachment("dynamicaly_generated", 0);
     return (PyObject *)self;
 }
 
 template<class T>
 PyObject* VRPyBaseT<T>::New_VRObjects_unnamed(PyTypeObject *type, PyObject *args, PyObject *kwds) {
-    VRPyBaseT<T>* self = (VRPyBaseT<T> *)type->tp_alloc(type, 0);
-    if (self != NULL) {
-        self->owner = true;
-        self->obj = new T();
-        self->obj->addAttachment("dynamicaly_generated", 0);
-    }
-
+    VRPyBaseT<T>* self = (VRPyBaseT<T> *)New(type, args, kwds);
+    if (self != NULL) self->obj->addAttachment("dynamicaly_generated", 0);
     return (PyObject *)self;
 }
 

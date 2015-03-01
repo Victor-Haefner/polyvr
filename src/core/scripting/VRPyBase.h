@@ -41,8 +41,8 @@ struct VRPyBase {
 
 template<class T>
 struct VRPyBaseT : public VRPyBase {
-    T* obj;
-    bool owner;
+    T* obj = 0;
+    bool owner = true;
     static PyTypeObject type;
     static PyTypeObject* typeRef;
 
@@ -55,6 +55,7 @@ struct VRPyBaseT : public VRPyBase {
     static PyObject* New_VRObjects(PyTypeObject *type, PyObject *args, PyObject *kwds);
     static PyObject* New_VRObjects_unnamed(PyTypeObject *type, PyObject *args, PyObject *kwds);
 
+    static PyObject* alloc(PyTypeObject* type, T* t);
     static void dealloc(VRPyBaseT<T>* self);
     static int init(VRPyBaseT<T> *self, PyObject *args, PyObject *kwds);
     static void registerModule(string name, PyObject* mod, PyTypeObject* tp_base = 0);
