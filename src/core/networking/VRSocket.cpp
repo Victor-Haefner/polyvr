@@ -1,4 +1,5 @@
 #include "VRSocket.h"
+#include "VRPing.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/utils/toString.h"
@@ -370,17 +371,8 @@ void VRSocket::scanTCP(VRThread* thread) {
 void VRSocket::initServer(CONNECTION_TYPE t, int _port) {
     VRFunction<VRThread*>* socket = 0;
     port = _port;
-    switch(t) {
-        case UNIX:
-            socket = new VRFunction<VRThread*>("UNIXSocket", boost::bind(&VRSocket::scanUnix, this, _1));
-            break;
-        case TCP:
-            socket = new VRFunction<VRThread*>("TCPSocket", boost::bind(&VRSocket::scanTCP, this, _1));
-            break;
-        default:
-            break;
-    }
-
+    if (t == UNIX) socket = new VRFunction<VRThread*>("UNIXSocket", boost::bind(&VRSocket::scanUnix, this, _1));
+    if (t == TCP) socket = new VRFunction<VRThread*>("TCPSocket", boost::bind(&VRSocket::scanTCP, this, _1));
     run = true;
     threadID = VRSceneManager::get()->initThread(socket, "socket", true);
 }
@@ -441,5 +433,9 @@ string VRSocket::getCallback() { return callback; }
 VRSignal* VRSocket::getSignal() { return sig; }
 int VRSocket::getPort() { return port; }
 
+bool VRSocket::ping(string IP, string port) {
+    VRPing ping;
+    return ping.start(IP, port, 0);
+}
 
 OSG_END_NAMESPACE

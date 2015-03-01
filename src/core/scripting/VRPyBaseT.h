@@ -32,6 +32,18 @@ PyObject* VRPyBaseT<T>::New(PyTypeObject *type, PyObject *args, PyObject *kwds) 
 }
 
 template<class T>
+PyObject* VRPyBaseT<T>::New_named(PyTypeObject *type, PyObject *args, PyObject *kwds) {
+    string name = VRPyBase::parseString(args);
+    VRPyBaseT<T>* self = (VRPyBaseT<T> *)type->tp_alloc(type, 0);
+    if (self != NULL) {
+        self->owner = true;
+        self->obj = new T(name);
+    }
+
+    return (PyObject *)self;
+}
+
+template<class T>
 PyObject* VRPyBaseT<T>::New_toZero(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     VRPyBaseT<T>* self = (VRPyBaseT<T> *)type->tp_alloc(type, 0);
     if (self != NULL) self->owner = true;

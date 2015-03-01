@@ -50,6 +50,7 @@ struct VRPyBaseT : public VRPyBase {
 
     static PyObject* fromPtr(T* obj);
     static PyObject* New(PyTypeObject *type, PyObject *args, PyObject *kwds);
+    static PyObject* New_named(PyTypeObject *type, PyObject *args, PyObject *kwds);
     static PyObject* New_toZero(PyTypeObject *type, PyObject *args, PyObject *kwds);
     static PyObject* New_VRObjects(PyTypeObject *type, PyObject *args, PyObject *kwds);
     static PyObject* New_VRObjects_unnamed(PyTypeObject *type, PyObject *args, PyObject *kwds);

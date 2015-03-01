@@ -87,6 +87,8 @@ class VRSocket : public VRName {
         VRSignal* getSignal();
         int getPort();
 
+        bool ping(string IP, string port);
+
         bool isClient();
 };
 

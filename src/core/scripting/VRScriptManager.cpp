@@ -218,6 +218,7 @@ void VRScriptManager::initPyModules() {
     VRPyLod::registerModule("Lod", pModVR, VRPyObject::typeRef);
     VRPySprite::registerModule("Sprite", pModVR, VRPyGeometry::typeRef);
     VRPySound::registerModule("Sound", pModVR);
+    VRPySocket::registerModule("Socket", pModVR);
     VRPyStroke::registerModule("Stroke", pModVR, VRPyObject::typeRef);
     VRPyConstraint::registerModule("Constraint", pModVR);
     VRPyDevice::registerModule("Device", pModVR);
@@ -252,7 +253,6 @@ void VRScriptManager::initPyModules() {
     VRPyAMLLoader::registerModule("AMLLoader", pModFactory);
     PyModule_AddObject(pModVR, "Factory", pModFactory);
 
-    initVRPySocket(pModVR);
     initVRPyStdOut();
 
     // add cython local path to python search path
