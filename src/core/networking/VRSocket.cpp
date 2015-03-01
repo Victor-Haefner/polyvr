@@ -1,36 +1,17 @@
 #include "VRSocket.h"
 #include "VRPing.h"
+#include "mongoose/mongoose.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
+#include "core/setup/devices/VRDevice.h"
 #include "core/utils/toString.h"
-#include <netinet/in.h>
-#include <netdb.h>
-#include <sys/ioctl.h>
-#include <linux/if.h>
-#include <linux/sockios.h>
-#include <fcntl.h>
-#include <libxml++/nodes/element.h>
-
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/un.h>
-
 
 #include <algorithm>
-#include <curl/curl.h>
+#include <curl/curl.h> // TODO
 #include <stdint.h>
+#include <libxml++/nodes/element.h>
 #include <jsoncpp/json/json.h>
-
-#include "core/setup/devices/VRDevice.h"
-
-#define UNIX_SOCK_PATH "/tmp/vrf_soc"
-#define HTTP_SOCK_ADD "141.3.150.20"
-
-#include "mongoose/mongoose.h"
+#include <boost/filesystem.hpp>
 
 OSG_BEGIN_NAMESPACE
 using namespace std;
@@ -75,13 +56,8 @@ static int server_answer_to_connection_m(struct mg_connection *conn, enum mg_eve
             string spage = *(*sad->pages)[sad->path];
             mg_send_data(conn, spage.c_str(), spage.size());
         } else if(sad->path != "") { // return ressources
-            struct stat sbuf;
-            int fd = open(sad->path.c_str(), O_RDONLY);
-            if (fstat (fd, &sbuf) != 0) { cout << "Did not find ressource: " << sad->path << endl;
-            } else {
-                mg_send_file(conn, sad->path.c_str(), NULL);
-                return MG_MORE;
-            }
+            if (!boost::filesystem::exists( sad->path )) cout << "Did not find ressource: " << sad->path << endl;
+            else { mg_send_file(conn, sad->path.c_str(), NULL); return MG_MORE; }
         }
 
         //--- process request --------
@@ -213,7 +189,7 @@ void VRSocket::handle(string s) {
 }
 
 void VRSocket::sendMessage(string msg) {
-    cout << "\nSOCKET SEND " << msg << endl;
+    /*cout << "\nSOCKET SEND " << msg << endl;
 
     unsigned int sockfd, n;
     struct sockaddr_in serv_addr;
@@ -245,12 +221,12 @@ void VRSocket::sendMessage(string msg) {
     /* Now read server response */
     //n = read(sockfd, buffer, 255);
     //if (n < 0) { perror("ERROR reading from socket"); return; }
-    //printf("%s\n",buffer);
+    //printf("%s\n",buffer);*/
 }
 
 void VRSocket::scanUnix(VRThread* thread) {
     //scan what new stuff is in the socket
-    unsigned int s, len, contype;
+    /*unsigned int s, len, contype;
     struct sockaddr_un local_u, remote_u;
     struct sockaddr* local;
     struct sockaddr* remote;
@@ -267,7 +243,7 @@ void VRSocket::scanUnix(VRThread* thread) {
     IP = string(ic.ifc_buf);
 
     local_u.sun_family = AF_UNIX; // unix
-    strcpy(local_u.sun_path, UNIX_SOCK_PATH); // unix
+    strcpy(local_u.sun_path, "/tmp/vrf_soc"); // unix
     unlink(local_u.sun_path); // unix
     len = strlen(local_u.sun_path) + sizeof(local_u.sun_family); // unix
     local = (struct sockaddr *)&local_u;
@@ -304,12 +280,12 @@ void VRSocket::scanUnix(VRThread* thread) {
         if ( send(socketID, str, strlen(str), 0) < 0) { perror("send"); return; }
 
         close(socketID);
-    }
+    }*/
 }
 
 void VRSocket::scanTCP(VRThread* thread) {
     //scan what new stuff is in the socket
-    unsigned int socketAcc, len, contype;
+    /*unsigned int socketAcc, len, contype;
     struct sockaddr_in local_i, remote_i;
     struct sockaddr* local;
     struct sockaddr* remote;
@@ -365,7 +341,7 @@ void VRSocket::scanTCP(VRThread* thread) {
     }
     //close(sListen);
     //close(sBind);
-    close(socketID);
+    close(socketID);*/
 }
 
 void VRSocket::initServer(CONNECTION_TYPE t, int _port) {
