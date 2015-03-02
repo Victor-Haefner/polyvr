@@ -268,7 +268,7 @@ octree::element* octree::get(Line ray, octree::element* e, string indent) {
     for (int i=0;i<3;i++) {
         int j = (i+1)%3;
         int k = (i+2)%3;
-        if (abs(hitNormal[i]) > abs(hitNormal[j]) and
+        if (abs(hitNormal[i]) > abs(hitNormal[j]) &&
             abs(hitNormal[i]) > abs(hitNormal[k])) {
                 hitNormal[i] *= 2;
                 hitNormal[j]  = 0;

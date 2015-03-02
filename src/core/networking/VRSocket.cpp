@@ -7,7 +7,7 @@
 #include "core/utils/toString.h"
 
 #include <algorithm>
-#include <curl/curl.h> // TODO
+//#include <curl/curl.h> // TODO
 #include <stdint.h>
 #include <libxml++/nodes/element.h>
 #include <jsoncpp/json/json.h>
@@ -169,7 +169,7 @@ VRSocket::VRSocket(string _name) {
 
 VRSocket::~VRSocket() {
     run = false;
-    shutdown(socketID, SHUT_RDWR);
+    //shutdown(socketID, SHUT_RDWR);
     VRSceneManager::get()->stopThread(threadID);
     delete sig;
     delete queued_signal;
@@ -375,7 +375,7 @@ void VRSocket::load(xmlpp::Element* e) {
 
 void VRSocket::update() {
     run = false;
-    shutdown(socketID, SHUT_RDWR);
+    //shutdown(socketID, SHUT_RDWR);
     VRSceneManager::get()->stopThread(threadID);
     if (http_serv) http_serv->close();
 

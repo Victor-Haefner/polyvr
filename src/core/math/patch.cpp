@@ -221,7 +221,9 @@ void patch::calcBezQuadPlane(bezPolygon<4>& q) {
     Vec3f DELt[4][3];
 
     //hilfskoefficienten
-    Vec3f T[4][q.N];
+
+    vector<Vec3f> T[4];
+	for (int i = 0; i < 4; i++) T[i].resize(q.N);
     Vec3f G[4][4];
     Vec3f P[4][4];
     Vec3f bs[3];

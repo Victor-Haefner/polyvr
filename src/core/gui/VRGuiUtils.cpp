@@ -450,7 +450,7 @@ int getListStorePos(string ls, string s) {
 void fillStringListstore(string ls, vector<string> list) {
     Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object(ls.c_str()));
     store->clear();
-    for (uint i=0; i<list.size(); i++) {
+    for (unsigned int i=0; i<list.size(); i++) {
         Gtk::ListStore::Row row = *store->append();
         gtk_list_store_set (store->gobj(), row.gobj(), 0, list[i].c_str(), -1);
     }
