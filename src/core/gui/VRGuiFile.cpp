@@ -156,3 +156,37 @@ string VRGuiFile::getRelativePath_toWorkdir() {
     path a(getPath());
     return make_relative( b, a ).string();
 }
+
+bool VRGuiFile::exists(string path) { return boost::filesystem::exists(path); }
+bool VRGuiFile::isDir(string path) { return boost::filesystem::is_directory(path); }
+bool VRGuiFile::isFile(string path) {
+    bool b = boost::filesystem::is_regular_file( boost::filesystem::path(path) );
+    cout << "isFile " << path << " : " << b << endl;
+    return b;
+}
+
+class directory {
+    path p_;
+    public:
+        inline directory(path p):p_(p) {;}
+        boost::filesystem::directory_iterator begin() { return boost::filesystem::directory_iterator(p_); }
+        boost::filesystem::directory_iterator end() { return boost::filesystem::directory_iterator(); }
+};
+
+vector<string> VRGuiFile::listDir(string dir) {
+    vector<string> res;
+
+    if (!exists(dir)) return res;
+    if (!isDir(dir)) return res;
+
+    namespace fs = boost::filesystem;
+    fs::path path(dir);
+
+    for( auto f : directory(path) ) {
+        string fpath = f.path().filename().string();
+        //if ( !isFile(dir+"/"+fpath) ) continue; //does not work???
+        res.push_back(fpath);
+    }
+
+    return res;
+}
