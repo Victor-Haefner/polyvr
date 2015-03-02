@@ -1,7 +1,7 @@
 #include "VRCallbackManager.h"
-#include <SDL/SDL.h>
 #include "core/utils/VRFunction.h"
 #include <iostream>
+#include <GL/glut.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -49,7 +49,7 @@ void VRCallbackManager::addTimeoutFkt(VRFunction<int>* f, int priority, int time
     timeoutFkt tof;
     tof.fkt = f;
     tof.timeout = timeout;
-    tof.last_call = SDL_GetTicks();
+    tof.last_call = glutGet(GLUT_ELAPSED_TIME);
     timeoutFkts[priority]->push_back(tof);
 }
 
@@ -83,7 +83,7 @@ void VRCallbackManager::dropTimeoutFkt(VRFunction<int>* f) {//replace by list ||
 void VRCallbackManager::updateCallbacks() {
     vector<VRFunction<int>*> cbs;
 
-    int time = SDL_GetTicks();
+    int time = glutGet(GLUT_ELAPSED_TIME);
     for (auto tfl : timeoutFkts)
         for (auto& tf : *tfl.second)
             if (time - tf.last_call >= tf.timeout) {
