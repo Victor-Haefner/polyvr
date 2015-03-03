@@ -28,13 +28,17 @@ CEF::CEF() {
     CefString(&settings.log_file).FromASCII(lfp.c_str());
     settings.no_sandbox = true;
 
-    CefMainArgs args(VROptions::get()->argc, VROptions::get()->argv);
+    CefMainArgs args;
     CefInitialize(args, settings, 0, 0);
 
     CefWindowInfo win;
     CefBrowserSettings browser_settings;
 
+#ifdef _WIN32
+    win.SetAsWindowless(0, false);
+#else
     win.SetAsOffScreen(0);
+#endif
     browser = CefBrowserHost::CreateBrowserSync(win, this, "www.google.de", browser_settings, 0);
 
     VRFunction<int>* fkt = new VRFunction<int>("webkit_update", boost::bind(&CEF::update, this));
