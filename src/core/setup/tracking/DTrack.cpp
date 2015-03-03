@@ -46,11 +46,11 @@
  * #define OS_SOCKET(a)  ((long )(a))
  */
 
-// #ifndef _WIN32
+#ifndef _WIN32
 #define OS_UNIX  // for Unix (Linux, Irix)
-// #else
-//     #define OS_WIN   // for MS Windows (2000, XP)
-// #endif
+#else
+     #define OS_WIN   // for MS Windows (2000, XP)
+#endif
 
 // --------------------------------------------------------------------------
 

@@ -44,7 +44,8 @@ void VRView::setMaterial() {
     int ar = 50;
     Vec2f pl(-0.1*s, -0.05*s);
 
-    Vec4f data[s*s];
+	vector<Vec4f> data;
+	data.resize(s*s);
 
     for (int i=0; i<s; i++) {
         for (int j=0; j<s; j++) {
@@ -71,7 +72,7 @@ void VRView::setMaterial() {
         }
     }
 
-    img->set( Image::OSG_RGBA_PF, s, s, 1, 0, 1, 0, (const uint8_t*)data, OSG::Image::OSG_FLOAT32_IMAGEDATA, true, 1);
+    img->set( Image::OSG_RGBA_PF, s, s, 1, 0, 1, 0, (const uint8_t*)&data[0], OSG::Image::OSG_FLOAT32_IMAGEDATA, true, 1);
 
     viewGeoMat->setTexture(img);
     viewGeoMat->setLit(false);

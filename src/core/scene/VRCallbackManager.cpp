@@ -1,6 +1,7 @@
 #include "VRCallbackManager.h"
 #include "core/utils/VRFunction.h"
 #include <iostream>
+#include <vector>
 #include <GL/glut.h>
 
 OSG_BEGIN_NAMESPACE;

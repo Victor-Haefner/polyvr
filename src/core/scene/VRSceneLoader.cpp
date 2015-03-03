@@ -21,7 +21,7 @@
 #include <OpenSG/OSGComponentTransform.h>
 
 #include <stdio.h>
-#include <unistd.h>
+#include <fstream>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -116,10 +116,9 @@ NodeRecPtr loadPly(string filename) {
 
 void VRSceneLoader::load(string filename) {
     if (ihr_flag) { // check
-        FILE* fp = fopen(filename.c_str(), "rb");
-        fseeko(fp, 0L, SEEK_END);
-        int L = ftello(fp);
-        fclose(fp);
+		ifstream in(filename, ios::binary | ios::ate);
+		int L = in.tellg();
+		in.close();
         cout << "File " << filename << " has size " << L << endl;
         if (L > 30000000) return;
     }
