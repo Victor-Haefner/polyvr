@@ -50,6 +50,7 @@ class VRTransform : public VRObject {
 
         bool held;//drag n drop
         VRObject* old_parent;
+        int old_child_id;
 
         VRObject* copy(vector<VRObject*> children);
 

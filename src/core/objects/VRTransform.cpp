@@ -509,6 +509,7 @@ void VRTransform::drag(VRTransform* new_parent) {
     if (held) return;
     held = true;
     old_parent = getParent();
+    old_child_id = getChildIndex();
     setFixed(false);
 
     //showTranslator(true); //TODO
@@ -533,7 +534,7 @@ void VRTransform::drop() {
 
     Matrix m;
     getWorldMatrix(m);
-    switchParent(old_parent);
+    switchParent(old_parent, old_child_id);
     setWorldMatrix(m);
 
     physics->updateTransformation(this);
