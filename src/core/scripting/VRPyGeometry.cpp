@@ -445,6 +445,7 @@ PyObject* VRPyGeometry::getPositions(VRPyGeometry* self) {
     if (self->obj->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getPositions - Mesh is invalid"); return NULL; }
 
     OSG::GeoVectorProperty* pos = self->obj->getMesh()->getPositions();
+    if (pos == 0) return PyList_New(0);
     PyObject* res = PyList_New(pos->size());
 
     for (uint i=0; i<pos->size(); i++) {
@@ -463,6 +464,7 @@ PyObject* VRPyGeometry::getNormals(VRPyGeometry* self) {
     if (self->obj->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getNormals - Mesh is invalid"); return NULL; }
 
     OSG::GeoVectorProperty* pos = self->obj->getMesh()->getNormals();
+    if (pos == 0) return PyList_New(0);
     PyObject* res = PyList_New(pos->size());
 
     for (uint i=0; i<pos->size(); i++) {
@@ -480,12 +482,10 @@ PyObject* VRPyGeometry::getColors(VRPyGeometry* self) {
     if (self->obj->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getColors - Mesh is invalid"); return NULL; }
 
     OSG::GeoVectorProperty* pos = self->obj->getMesh()->getColors();
+    if (pos == 0) return PyList_New(0);
+    PyObject* res = PyList_New(pos->size());
 
-    int N = 0;
-    if (pos != 0) N = pos->size();
-    PyObject* res = PyList_New(N);
-
-    for (uint i=0; i<N; i++) {
+    for (uint i=0; i<pos->size(); i++) {
         OSG::Vec3f v;
         pos->getValue(v,i);
         PyObject* pv = toPyTuple(v);
@@ -500,6 +500,7 @@ PyObject* VRPyGeometry::getIndices(VRPyGeometry* self) {
     if (self->obj->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getIndices - Mesh is invalid"); return NULL; }
 
     OSG::GeoIntegralProperty* pos = self->obj->getMesh()->getIndices();
+    if (pos == 0) return PyList_New(0);
     PyObject* res = PyList_New(pos->size());
 
     for (uint i=0; i<pos->size(); i++) {
@@ -517,6 +518,7 @@ PyObject* VRPyGeometry::getTexCoords(VRPyGeometry* self) {
     if (self->obj->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getTexCoords - Mesh is invalid"); return NULL; }
 
     OSG::GeoVectorProperty* tc = self->obj->getMesh()->getTexCoords();
+    if (tc == 0) return PyList_New(0);
     PyObject* res = PyList_New(tc->size());
 
     for (unsigned int i=0; i<tc->size(); i++) {
