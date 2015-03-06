@@ -19,6 +19,31 @@ using namespace std;
 
 //mongoose server-------------------------------------------------------------
 
+HTTP_args::HTTP_args() {
+    params = new map<string, string>();
+    pages = new map<string, string*>();
+}
+
+HTTP_args::~HTTP_args() {
+    delete params;
+    delete pages;
+}
+
+void HTTP_args::print() {
+    cout << "HTTP args: " << path << endl;
+    if (params == 0) return;
+    for (auto p : *params) cout << "  " << p.first << " : " << p.second << endl;
+}
+
+HTTP_args* HTTP_args::copy() {
+    HTTP_args* res = new HTTP_args();
+    res->cb = cb;
+    *res->params = *params;
+    *res->pages = *pages;
+    res->path = path;
+    return res;
+}
+
 void server_answer_job(HTTP_args* args, int i) {
     //cout << "server_answer_job: " << args->cb << endl;
     //args->print();
@@ -27,6 +52,15 @@ void server_answer_job(HTTP_args* args, int i) {
 }
 
 static int server_answer_to_connection_m(struct mg_connection *conn, enum mg_event ev) {
+    if (ev == MG_POLL) return MG_FALSE;
+    if (ev == MG_CONNECT) { cout << "EV CONNECT\n"; return MG_FALSE; }
+    if (ev == MG_REPLY) { cout << "EV REPLY\n"; return MG_FALSE; }
+    if (ev == MG_RECV) { cout << "EV RECV\n"; return MG_FALSE; }
+    if (ev == MG_CLOSE) { cout << "EV CLOSE\n"; return MG_FALSE; }
+    if (ev == MG_WS_HANDSHAKE) { cout << "EV WS H\n"; return MG_FALSE; }
+    if (ev == MG_WS_CONNECT) { cout << "EV WS C\n"; return MG_FALSE; }
+    if (ev == MG_HTTP_ERROR) { cout << "EV ERROR\n"; return MG_FALSE; }
+
     if (ev == MG_AUTH) return MG_TRUE;
 
     if (ev == MG_REQUEST) {
@@ -57,7 +91,11 @@ static int server_answer_to_connection_m(struct mg_connection *conn, enum mg_eve
             mg_send_data(conn, spage.c_str(), spage.size());
         } else if(sad->path != "") { // return ressources
             if (!boost::filesystem::exists( sad->path )) cout << "Did not find ressource: " << sad->path << endl;
-            else { mg_send_file(conn, sad->path.c_str(), NULL); return MG_MORE; }
+            else {
+                cout << "send file " << sad->path << endl;
+                mg_send_file(conn, sad->path.c_str(), NULL);
+                return MG_MORE;
+            }
         }
 
         //--- process request --------
@@ -67,32 +105,8 @@ static int server_answer_to_connection_m(struct mg_connection *conn, enum mg_eve
         return MG_TRUE;
     }
 
+    cout << "unknown event " << ev << endl;
     return MG_FALSE;
-}
-
-HTTP_args::HTTP_args() {
-    params = new map<string, string>();
-    pages = new map<string, string*>();
-}
-
-HTTP_args::~HTTP_args() {
-    delete params;
-    delete pages;
-}
-
-void HTTP_args::print() {
-    cout << "HTTP args: " << path << endl;
-    if (params == 0) return;
-    for (auto p : *params) cout << "  " << p.first << " : " << p.second << endl;
-}
-
-HTTP_args* HTTP_args::copy() {
-    HTTP_args* res = new HTTP_args();
-    res->cb = cb;
-    *res->params = *params;
-    *res->pages = *pages;
-    res->path = path;
-    return res;
 }
 
 class HTTPServer {
@@ -115,7 +129,9 @@ class HTTPServer {
         }
 
         void loop(VRThread* t) {
-            if (server) mg_poll_server(server, 1000);
+            if (server) mg_poll_server(server, 100);
+            cout << "act connections " << server-> << endl;
+            if (t->control_flag == false) return;
         }
 
         void initServer(VRHTTP_cb* fkt, int port) {
