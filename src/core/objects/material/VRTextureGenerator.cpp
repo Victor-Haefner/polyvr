@@ -73,11 +73,12 @@ ImageRecPtr VRTextureGenerator::compose(int seed) {
             }
         }
 
-        delete grid;
+        delete[] grid;
     }
 
     ImageRecPtr img = Image::create();
     img->set(OSG::Image::OSG_RGB_PF, width, height, 1, 0, 1, 0.0, (const uint8_t*)data, OSG::Image::OSG_FLOAT32_IMAGEDATA, true, 1);
+    delete[] data;
     return img;
 }
 

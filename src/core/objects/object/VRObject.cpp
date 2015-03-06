@@ -122,6 +122,8 @@ void VRObject::addChild(VRObject* child, bool osg, int place) {
     updateChildrenIndices(true);
 }
 
+int VRObject::getChildIndex() { return childIndex;}
+
 void VRObject::subChild(NodeRecPtr n) { node->subChild(n); }
 void VRObject::subChild(VRObject* child, bool osg) {
     if (osg) node->subChild(child->node);
@@ -145,6 +147,9 @@ void VRObject::switchParent(VRObject* new_p, int place) {
     parent->subChild(this, false);
     new_p->addChild(this, false, place);
 }
+
+void VRObject::setIntern(bool b) { intern = b; }
+bool VRObject::getIntern() { return intern; }
 
 /** Returns the number of children **/
 size_t VRObject::getChildrenCount() { return children.size(); }

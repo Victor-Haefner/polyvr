@@ -103,7 +103,8 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"setRandomColors", (PyCFunction)VRPyGeometry::setRandomColors, METH_NOARGS, "Set a random color for each vertex" },
     {"removeDoubles", (PyCFunction)VRPyGeometry::removeDoubles, METH_VARARGS, "Remove double vertices" },
     {"makeUnique", (PyCFunction)VRPyGeometry::makeUnique, METH_NOARGS, "Make the geometry data unique" },
-    {"influence", (PyCFunction)VRPyGeometry::influence, METH_VARARGS, "Pass a points && value vector to influence the geometry - influence([points,f3], [values,f3], int power)" },
+    {"influence", (PyCFunction)VRPyGeometry::influence, METH_VARARGS, "Pass a points and value vector to influence the geometry - influence([points,f3], [values,f3], int power)" },
+    {"showGeometricData", (PyCFunction)VRPyGeometry::showGeometricData, METH_VARARGS, "Enable or disable a data layer - showGeometricData(string type, bool)\n layers are: ['Normals']" },
     {NULL}  /* Sentinel */
 };
 
@@ -185,6 +186,14 @@ void feed1D(PyObject* o, T& vec) {
     }
 }
 
+PyObject* VRPyGeometry::showGeometricData(VRPyGeometry* self, PyObject *args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyGeometry::showGeometricData - Object is invalid"); return NULL; }
+	PyObject* type;
+	int b;
+    if (!PyArg_ParseTuple(args, "Oi", &type, &b)) return NULL;
+    self->obj->showGeometricData( PyString_AsString(type), b);
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyGeometry::influence(VRPyGeometry* self, PyObject *args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyGeometry::influence - Object is invalid"); return NULL; }
@@ -445,6 +454,7 @@ PyObject* VRPyGeometry::getPositions(VRPyGeometry* self) {
     if (self->obj->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getPositions - Mesh is invalid"); return NULL; }
 
     OSG::GeoVectorProperty* pos = self->obj->getMesh()->getPositions();
+    if (pos == 0) return PyList_New(0);
     PyObject* res = PyList_New(pos->size());
 
     for (uint i=0; i<pos->size(); i++) {
@@ -463,6 +473,7 @@ PyObject* VRPyGeometry::getNormals(VRPyGeometry* self) {
     if (self->obj->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getNormals - Mesh is invalid"); return NULL; }
 
     OSG::GeoVectorProperty* pos = self->obj->getMesh()->getNormals();
+    if (pos == 0) return PyList_New(0);
     PyObject* res = PyList_New(pos->size());
 
     for (uint i=0; i<pos->size(); i++) {
@@ -480,12 +491,10 @@ PyObject* VRPyGeometry::getColors(VRPyGeometry* self) {
     if (self->obj->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getColors - Mesh is invalid"); return NULL; }
 
     OSG::GeoVectorProperty* pos = self->obj->getMesh()->getColors();
+    if (pos == 0) return PyList_New(0);
+    PyObject* res = PyList_New(pos->size());
 
-    int N = 0;
-    if (pos != 0) N = pos->size();
-    PyObject* res = PyList_New(N);
-
-    for (uint i=0; i<N; i++) {
+    for (uint i=0; i<pos->size(); i++) {
         OSG::Vec3f v;
         pos->getValue(v,i);
         PyObject* pv = toPyTuple(v);
@@ -500,6 +509,7 @@ PyObject* VRPyGeometry::getIndices(VRPyGeometry* self) {
     if (self->obj->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getIndices - Mesh is invalid"); return NULL; }
 
     OSG::GeoIntegralProperty* pos = self->obj->getMesh()->getIndices();
+    if (pos == 0) return PyList_New(0);
     PyObject* res = PyList_New(pos->size());
 
     for (uint i=0; i<pos->size(); i++) {
@@ -517,6 +527,7 @@ PyObject* VRPyGeometry::getTexCoords(VRPyGeometry* self) {
     if (self->obj->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getTexCoords - Mesh is invalid"); return NULL; }
 
     OSG::GeoVectorProperty* tc = self->obj->getMesh()->getTexCoords();
+    if (tc == 0) return PyList_New(0);
     PyObject* res = PyList_New(tc->size());
 
     for (unsigned int i=0; i<tc->size(); i++) {

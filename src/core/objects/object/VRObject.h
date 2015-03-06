@@ -43,6 +43,7 @@ class VRObject : public VRName {
         int childIndex = 0; // index of this object in its parent child vector
         bool pickable = false;
         bool visible = true;
+        bool intern = false;
         unsigned int graphChanged = 0; //is frame number
 
         map<string, VRAttachment*> attachments;
@@ -57,6 +58,8 @@ class VRObject : public VRName {
     protected:
         vector<VRObject*> children;
         string type;
+
+        void setIntern(bool b);
 
         virtual void printInformation();
         //void printInformation();
@@ -78,6 +81,8 @@ class VRObject : public VRName {
 
         /** Returns the object type **/
         string getType();
+
+        bool getIntern();
 
         VRObject* getRoot();
         string getPath();
@@ -124,6 +129,7 @@ class VRObject : public VRName {
         void detach();
 
         /** Returns the child by his position **/
+        int getChildIndex();
         VRObject* getChild(int i);
         vector<VRObject*> getChildren(bool recursive = false, string type = "");
 

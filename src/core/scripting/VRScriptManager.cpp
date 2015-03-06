@@ -192,11 +192,12 @@ initVRPyStdOut(void) {
 
 static PyMethodDef VRScriptManager_module_methods[] = {
 	{"exit", (PyCFunction)VRScriptManager::exit, METH_NOARGS, "Terminate application" },
-	{"loadGeometry", (PyCFunction)VRScriptManager::loadGeometry, METH_VARARGS, "Loads a collada file && returns a VR.Geometry node" },
-	{"stackCall", (PyCFunction)VRScriptManager::stackCall, METH_VARARGS, "Stacks a call to a py function - stackCall( function, delay, [args] )" },
-	{"openFileDialog", (PyCFunction)VRScriptManager::openFileDialog, METH_VARARGS, "Open a file dialog - openFileDialog( onLoad, mode, title, default_path, filter )" },
+	{"loadGeometry", (PyCFunction)VRScriptManager::loadGeometry, METH_VARARGS, "Loads a collada file and returns a VR.Object node" },
+	{"stackCall", (PyCFunction)VRScriptManager::stackCall, METH_VARARGS, "Schedules a call to a python function - stackCall( function, delay, [args] )" },
+	{"openFileDialog", (PyCFunction)VRScriptManager::openFileDialog, METH_VARARGS, "Open a file dialog - openFileDialog( onLoad, mode, title, default_path, filter )\n mode : {Save, Load, New, Create}" },
 	{"updateGui", (PyCFunction)VRScriptManager::updateGui, METH_NOARGS, "Update the gui" },
 	{"render", (PyCFunction)VRScriptManager::render, METH_NOARGS, "Renders the viewports" },
+	{"triggerScript", (PyCFunction)VRScriptManager::pyTriggerScript, METH_VARARGS, "Trigger a script - triggerScript( str script )" },
     {NULL}  /* Sentinel */
 };
 
@@ -383,6 +384,11 @@ PyObject* VRScriptManager::loadGeometry(VRScriptManager* self, PyObject *args) {
     if (obj == 0) Py_RETURN_NONE;
     obj->addAttachment("dynamicaly_generated", 0);
     return VRPyTypeCaster::cast(obj);
+}
+
+PyObject* VRScriptManager::pyTriggerScript(VRScriptManager* self, PyObject *args) {
+    VRSceneManager::getCurrent()->triggerScript( parseString(args) );
+    Py_RETURN_TRUE;
 }
 
 void execCall(PyObject* pyFkt, PyObject* pArgs, int i) {

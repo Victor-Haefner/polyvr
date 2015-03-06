@@ -37,6 +37,13 @@ VRGeometry::VRGeometry(string name) : VRTransform(name) {
     addAttachment("geometry", 0);
 }
 
+VRGeometry::VRGeometry(string name, bool hidden) : VRTransform(name) {
+    setNameSpace("system");
+    setIntern(hidden);
+    type = "Geometry";
+    addAttachment("geometry", 0);
+}
+
 VRGeometry::~VRGeometry() {
     ;
 }
@@ -470,6 +477,45 @@ VRMaterial* VRGeometry::getMaterial() {
 }
 
 VRGeometry::Reference VRGeometry::getReference() { return source; }
+
+void VRGeometry::showGeometricData(string type, bool b) {
+    if (dataLayer.count(type)) dataLayer[type]->destroy();
+
+    VRGeometry* geo = new VRGeometry("DATALAYER_"+getName()+"_"+type, true);
+    dataLayer[type] = geo;
+    addChild(geo);
+
+    GeoColor3fPropertyRecPtr cols = GeoColor3fProperty::create();
+    GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
+    GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
+
+    Pnt3f p;
+    Vec3f n;
+
+    if (type == "Normals") {
+        GeoVectorPropertyRecPtr g_norms = mesh->getNormals();
+        GeoVectorPropertyRecPtr g_pos = mesh->getPositions();
+        for (int i=0; i<g_norms->size(); i++) {
+            p = g_pos->getValue<Pnt3f>(i);
+            n = g_norms->getValue<Vec3f>(i);
+            pos->addValue(p);
+            pos->addValue(p+n*0.1);
+            cols->addValue(Vec3f(1,1,1));
+            cols->addValue(Vec3f(abs(n[0]),abs(n[1]),abs(n[2])));
+            inds->addValue(2*i);
+            inds->addValue(2*i+1);
+        }
+
+        geo->setPositions(pos);
+        geo->setType(GL_LINE);
+        geo->setColors(cols);
+        geo->setIndices(inds);
+    }
+
+    VRMaterial* m = new VRMaterial("some-mat");
+    geo->setMaterial(m);
+    m->setLit(false);
+}
 
 void VRGeometry::saveContent(xmlpp::Element* e) {
     VRTransform::saveContent(e);
