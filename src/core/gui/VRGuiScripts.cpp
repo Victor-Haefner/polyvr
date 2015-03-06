@@ -2,6 +2,7 @@
 #include "VRGuiUtils.h"
 #include "VRGuiFile.h"
 #include "VRGuiBits.h"
+#include "VRGuiManager.h"
 #include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
 #include "core/scene/VRScene.h"
@@ -812,7 +813,7 @@ void VRGuiScripts::on_find_diag_find_clicked() {
     }
     out << endl;
 
-    VRGuiBits::write_to_terminal( out.str() );
+    VRGuiManager::get()->printInfo( out.str() );
     updateList();
 }
 

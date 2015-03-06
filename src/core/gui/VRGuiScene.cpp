@@ -20,6 +20,7 @@
 #include "core/objects/VRGroup.h"
 #include "core/objects/VRLod.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRPrimitive.h"
 #include "core/scene/VRScene.h"
 #include "core/utils/toString.h"
@@ -27,7 +28,7 @@
 #include "VRGuiSignals.h"
 #include "VRGuiFile.h"
 #include "addons/construction/building/VRElectricDevice.h"
-#include "addons/Engineering/CSG/CSGGeometry.h"
+//#include "addons/Engineering/CSG/CSGGeometry.h"
 
 
 OSG_BEGIN_NAMESPACE;
@@ -261,14 +262,14 @@ void setLod(VRLod* lod) {
     }
 }
 
-void setCSG(CSGGeometry* g) {
+/*void setCSG(CSGGeometry* g) {
     setExpanderSensitivity("expander15", true);
 
     bool b = g->getEditMode();
     string op = g->getOperation();
     setCheckButton("checkbutton27", b);
     setCombobox("combobox19", getListStorePos("csg_operations",op));
-}
+}*/
 
 void on_toggle_liveupdate(GtkToggleButton* tb, gpointer user_data) { liveUpdate = !liveUpdate; }
 
@@ -309,7 +310,7 @@ void updateObjectForms(bool disable = false) {
 
     if (type == "Lod") setLod((VRLod*)obj);
 
-    if (type == "CSGGeometry") setCSG((CSGGeometry*)obj);
+    //if (type == "CSGGeometry") setCSG((CSGGeometry*)obj);
 
     trigger_cbs = true;
 }
@@ -648,7 +649,7 @@ void VRGuiScene::on_lod_decimate_changed() {
 
 // CSG
 
-void on_toggle_CSG_editmode(GtkToggleButton* tb, gpointer data) {
+/*void on_toggle_CSG_editmode(GtkToggleButton* tb, gpointer data) {
     if(!trigger_cbs) return;
     CSGGeometry* obj = (CSGGeometry*) getSelected();
 
@@ -663,7 +664,7 @@ void on_change_CSG_operation(GtkComboBox* cb, gpointer data) {
     CSGGeometry* obj = (CSGGeometry*) getSelected();
 
     obj->setOperation(op);
-}
+}*/
 
 // Camera
 
@@ -808,12 +809,12 @@ void VRGuiScene::on_menu_paste() {
     parseSGTree(tmp, selected_itr);
 }
 
-void VRGuiScene::on_menu_add_csg() {
+/*void VRGuiScene::on_menu_add_csg() {
     if(!selected_itr) return;
     CSGGeometry* g = new CSGGeometry("csg_geo");
     getSelected()->addChild(g);
     parseSGTree(g, selected_itr);
-}
+}*/
 
 void VRGuiScene::on_collada_import_clicked() {
     string rel_path = VRGuiFile::getRelativePath_toWorkdir();
@@ -1185,7 +1186,7 @@ void VRGuiScene::initMenu() {
     menu->appendItem("SGM_AddMenu", "LoD", sigc::mem_fun(*this, &VRGuiScene::on_menu_add<VRLod>));
     menu->appendItem("SGM_AddMenu", "Animation", sigc::mem_fun(*this, &VRGuiScene::on_menu_add_animation));
     menu->appendItem("SGM_AddMenu", "File", sigc::mem_fun(*this, &VRGuiScene::on_menu_add_file) );
-    menu->appendItem("SGM_AddMenu", "CSGGeometry", sigc::mem_fun(*this, &VRGuiScene::on_menu_add_csg) );
+    //menu->appendItem("SGM_AddMenu", "CSGGeometry", sigc::mem_fun(*this, &VRGuiScene::on_menu_add_csg) );
 
     // primitives
     vector<string> prims = VRPrimitive::getTypes();
@@ -1233,7 +1234,7 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     //light
     fillStringListstore("light_types", VRLight::getTypes());
     fillStringListstore("shadow_types", VRLight::getShadowTypes());
-    fillStringListstore("csg_operations", CSGGeometry::getOperations());
+    //fillStringListstore("csg_operations", CSGGeometry::getOperations());
     fillStringListstore("phys_shapes", VRPhysics::getPhysicsShapes());
     fillStringListstore("cam_proj", VRCamera::getProjectionTypes());
 
@@ -1246,7 +1247,7 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     setCheckButtonCallback("checkbutton20", on_toggle_rc_z);
     setCheckButtonCallback("checkbutton21", on_toggle_T_constraint);
     setCheckButtonCallback("checkbutton22", on_toggle_R_constraint);
-    setCheckButtonCallback("checkbutton27", on_toggle_CSG_editmode);
+    //setCheckButtonCallback("checkbutton27", on_toggle_CSG_editmode);
     setCheckButtonCallback("checkbutton17", on_toggle_camera_accept_realroot);
     setCheckButtonCallback("radiobutton1", sigc::mem_fun(*this, &VRGuiScene::on_toggle_T_constraint_mode) );
     setCheckButtonCallback("checkbutton31", sigc::mem_fun(*this, &VRGuiScene::on_toggle_light) );
@@ -1257,7 +1258,7 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     setCheckButtonCallback("checkbutton35", sigc::mem_fun(*this, &VRGuiScene::on_lod_decimate_changed) );
 
     setComboboxCallback("combobox14", VRGuiScene_on_change_group);
-    setComboboxCallback("combobox19", on_change_CSG_operation);
+    //setComboboxCallback("combobox19", on_change_CSG_operation);
     setComboboxCallback("combobox21", on_change_primitive);
     setComboboxCallback("combobox2", sigc::mem_fun(*this, &VRGuiScene::on_change_light_type) );
     setComboboxCallback("combobox22", sigc::mem_fun(*this, &VRGuiScene::on_change_light_shadow) );

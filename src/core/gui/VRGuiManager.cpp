@@ -1,5 +1,6 @@
 #include "VRGuiManager.h"
 #include "core/scene/VRSceneManager.h"
+#include "core/setup/VRSetupManager.h"
 #include "VRGuiUtils.h"
 #include "VRDemos.h"
 #include "VRGuiScene.h"
@@ -14,6 +15,7 @@
 #include <gtkmm/uimanager.h>
 #include <gtkmm/main.h>
 #include <gtkmm/window.h>
+#include <gtkmm/drawingarea.h>
 #include <gtk/gtkglinit.h>
 
 OSG_BEGIN_NAMESPACE;
@@ -35,10 +37,17 @@ VRGuiManager::VRGuiManager() {
     int argc   = 0;
     GtkMain = new Gtk::Main(&argc, NULL, false);
     gtk_gl_init(&argc, NULL);
+    VRGuiBuilder(standalone);
 
     if (standalone) {
         cout << " start in standalone mode\n";
-        Gtk::Window* top = Gtk::manage(new Gtk::Window());
+        VRSetupManager::get()->load("Desktop", "setup/Desktop.xml");
+
+        VRFunction<int>* ufkt = new VRFunction<int>("GUI_updateManager", boost::bind(&VRGuiManager::update, this) );
+        VRSceneManager::get()->addUpdateFkt(ufkt, 1);
+
+        Gtk::Window* top = 0;
+        VRGuiBuilder()->get_widget("window1", top);
         top->maximize();
         top->show_all();
         return;
@@ -99,6 +108,11 @@ VRGuiManager::~VRGuiManager() {
 VRGuiManager* VRGuiManager::get() {
     static VRGuiManager* instance = new VRGuiManager();
     return instance;
+}
+
+void VRGuiManager::printInfo(string s) {
+    if (standalone) return;
+    g_bits->write_to_terminal(s);
 }
 
 void VRGuiManager::updateGtk() {

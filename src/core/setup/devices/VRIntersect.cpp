@@ -61,7 +61,6 @@ VRIntersection VRIntersect::intersect(VRObject* tree) {
     ins.hit = iAct->didHit(); // TODO :
     if (!ins.hit) { intersections[tree] = ins; lastIntersection = ins; return ins; }
 
-
     ins.object = tree->find(iAct->getHitObject()->getParent());
     ins.point = iAct->getHitPoint();
     ins.normal = iAct->getHitNormal();

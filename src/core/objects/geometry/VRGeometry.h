@@ -5,7 +5,7 @@
 #include <OpenSG/OSGFieldContainerFields.h>
 #include <OpenSG/OSGImage.h> // TODO
 
-class VRPrimitive;
+struct VRPrimitive;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

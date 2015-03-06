@@ -135,6 +135,7 @@ void VRScene::setActiveCamera(int i) {
     // TODO: refactor the following workaround
     VRCamera* cam = getActiveCamera();
     if (cam == 0) return;
+    cout << " set active camera to " << cam->getName() << endl;
 
     VRMouse* mouse = (VRMouse*)setup->getDevice("mouse");
     if (mouse) {

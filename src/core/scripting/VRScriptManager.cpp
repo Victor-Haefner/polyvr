@@ -1,6 +1,7 @@
 #include "VRScriptManager.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
+#include "core/scene/VRSceneLoader.h"
 #include "core/scene/VRAnimationManagerT.h"
 #include "core/utils/VRStorage_template.h"
 #include "VRScript.h"
@@ -25,16 +26,11 @@
 #include <algorithm>
 
 //TODO: refactoring
-#include "core/gui/VRGuiBits.h"
 #include "core/gui/VRGuiFile.h"
 #include "core/gui/VRGuiManager.h"
 #include "core/setup/VRSetup.h"
 #include "core/setup/VRSetupManager.h"
-#include "addons/Engineering/CSG/VRPyCSG.h"
-#include "addons/RealWorld/VRPyRealWorld.h"
-#include "addons/RealWorld/traffic/VRPyTrafficSimulation.h"
 #include "addons/CaveKeeper/VRPyCaveKeeper.h"
-#include "addons/SimViDekont/VRPySimViDekont.h"
 #include "addons/Bullet/CarDynamics/VRPyCarDynamics.h"
 #include "addons/Engineering/Factory/VRPyLogistics.h"
 #include "addons/Engineering/Factory/VRPyAMLLoader.h"
@@ -46,6 +42,14 @@
 #include "addons/Engineering/Factory/VRPyFactory.h"
 #include "VRPyTypeCaster.h"
 #include "PolyVR.h"
+
+// not yet ported dependencies
+#ifndef _WIN32
+#include "addons/Engineering/CSG/VRPyCSG.h"
+#include "addons/RealWorld/VRPyRealWorld.h"
+#include "addons/RealWorld/traffic/VRPyTrafficSimulation.h"
+#include "addons/SimViDekont/VRPySimViDekont.h"
+#endif
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -160,7 +164,7 @@ void VRScriptManager::updateScript(string name, string core, bool compile) {
 static PyObject* vte_write(PyObject *self, PyObject *args) {
     const char *what;
     if (!PyArg_ParseTuple(args, "s", &what)) return NULL;
-    VRGuiBits::write_to_terminal(what);
+    VRGuiManager::get()->printInfo(what);
     //printf("==%s==", what);
     return Py_BuildValue("");
 }
@@ -229,11 +233,7 @@ void VRScriptManager::initPyModules() {
     VRPyRecorder::registerModule("Recorder", pModVR);
     VRPySnappingEngine::registerModule("SnappingEngine", pModVR);
 
-    VRPyColorChooser::registerModule("ColorChooser", pModVR);
-    VRPyCSG::registerModule("CSGGeometry", pModVR, VRPyGeometry::typeRef);
-    VRPyRealWorld::registerModule("RealWorld", pModVR);
-    VRPyTrafficSimulation::registerModule("TrafficSimulation", pModVR);
-    VRPySimViDekont::registerModule("SimViDekont", pModVR);
+	VRPyColorChooser::registerModule("ColorChooser", pModVR);
     VRPyCaveKeeper::registerModule("CaveKeeper", pModVR);
     VRPyCarDynamics::registerModule("CarDynamics", pModVR);
     VRPyCEF::registerModule("CEF", pModVR);
@@ -241,6 +241,13 @@ void VRScriptManager::initPyModules() {
     VRPyMechanism::registerModule("Mechanism", pModVR);
     VRPyNumberingEngine::registerModule("NumberingEngine", pModVR, VRPyGeometry::typeRef);
     VRPyMolecule::registerModule("Molecule", pModVR, VRPyGeometry::typeRef);
+
+#ifndef _WIN32
+	VRPyCSG::registerModule("CSGGeometry", pModVR, VRPyGeometry::typeRef);
+	VRPyRealWorld::registerModule("RealWorld", pModVR);
+	VRPyTrafficSimulation::registerModule("TrafficSimulation", pModVR);
+	VRPySimViDekont::registerModule("SimViDekont", pModVR);
+#endif
 
     PyObject* pModFactory = Py_InitModule3("Factory", VRScriptManager_module_methods, "VR Module");
     FPyNode::registerModule("Node", pModFactory);

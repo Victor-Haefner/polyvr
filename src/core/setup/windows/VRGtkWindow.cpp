@@ -16,9 +16,10 @@ VRGtkWindow::VRGtkWindow(Gtk::DrawingArea* da) {
     type = 2;
     drawArea = da;
     widget = (GtkWidget*)drawArea->gobj();
+    if(gtk_widget_get_realized(widget)) cout << "Warning: glarea is realized!\n";
 
     GdkGLConfig *glConfigMode = gdk_gl_config_new_by_mode((GdkGLConfigMode)(GDK_GL_MODE_RGB | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH));
-    gtk_widget_set_gl_capability((GtkWidget*)drawArea->gobj(),glConfigMode,NULL,true,GDK_GL_RGBA_TYPE);
+    gtk_widget_set_gl_capability(widget,glConfigMode,NULL,true,GDK_GL_RGBA_TYPE);
 
     drawArea->show();
     drawArea->add_events((Gdk::EventMask)GDK_VISIBILITY_NOTIFY_MASK);

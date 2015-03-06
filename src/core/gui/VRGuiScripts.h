@@ -8,7 +8,7 @@
 #include "core/scene/VRSceneManager.h"
 #include "VRGuiSignals.h"
 
-class _GtkSourceLanguage;
+struct _GtkSourceLanguage;
 namespace Gtk{ class Table; class TreeView; }
 
 OSG_BEGIN_NAMESPACE;

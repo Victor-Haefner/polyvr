@@ -26,7 +26,6 @@
 #include "VRGuiUtils.h"
 #include "VRGuiSignals.h"
 #include "VRGuiFile.h"
-#include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
 #include "core/scene/VRScene.h"
 #include "PolyVR.h"

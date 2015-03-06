@@ -129,7 +129,7 @@ void CEF::mouse(int b, bool down, VRDevice* dev) {
 
     /*string o = "NONE";
     if (ins.object) o = ins.object->getName();
-    cout << "CEF::mouse " << this;
+    cout << "CEF::mouse " << this << " dev " << dev->getName();
     cout << " hit " << ins.hit << " " << o << ", trg " << obj->getName();
     cout << " b: " << b << " state: " << down;
     cout << " texel: " << ins.texel;

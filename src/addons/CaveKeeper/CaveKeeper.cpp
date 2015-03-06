@@ -97,7 +97,7 @@ SimpleMaterialRecPtr BlockWorld::initMaterial(string texture) {
     return mat;
 }
 
-VRGeometry* BlockWorld::createChunk(vector<octree::element*>& elements) {
+VRGeometry* BlockWorld::createChunk(vector<octree2::element*>& elements) {
 
     GeometryRecPtr g = Geometry::create();
     GeoUInt8PropertyRecPtr      Type = GeoUInt8Property::create();
@@ -117,7 +117,7 @@ VRGeometry* BlockWorld::createChunk(vector<octree::element*>& elements) {
     int c = 0;
 
     for(uint i=0;i<elements.size();i++) {
-        octree::element* e = elements[i];
+		octree2::element* e = elements[i];
         for (int j=0;j<3;j++) {
             Pos->addValue(e->pos);
 
@@ -150,8 +150,8 @@ VRGeometry* BlockWorld::createChunk(vector<octree::element*>& elements) {
 }
 
 VRGeometry* BlockWorld::initChunk() {
-    vector<octree::element*>* elements = new vector<octree::element*>();
-    VRFunction<octree::element*>* fkt = new VRFunction<octree::element*>("blockworld_appendtovector", boost::bind(&BlockWorld::appendToVector, this, elements, _1));
+	vector<octree2::element*>* elements = new vector<octree2::element*>();
+	VRFunction<octree2::element*>* fkt = new VRFunction<octree2::element*>("blockworld_appendtovector", boost::bind(&BlockWorld::appendToVector, this, elements, _1));
     tree->traverse(fkt);
     delete fkt;
 
@@ -163,7 +163,7 @@ VRGeometry* BlockWorld::initChunk() {
     return chunk;
 }
 
-void BlockWorld::appendToVector(vector<octree::element*>* elements, octree::element* e) {
+void BlockWorld::appendToVector(vector<octree2::element*>* elements, octree2::element* e) {
     elements->push_back(e);
 }
 
@@ -203,7 +203,7 @@ BlockWorld::~BlockWorld() {
 }
 
 void BlockWorld::initWorld() {
-    tree = new octree();
+	tree = new octree2();
     createSphere(6, Vec3i(0,0,0));
 
     // TODO ?
@@ -251,9 +251,9 @@ void CaveKeeper::placeLight(Vec3f p) {
     ric[2] = Vec2f(1,-1);
     ric[3] = Vec2f(-1,-1);
 
-    vector<octree::element*> elements = tree->getAround(p, 10);
+	vector<octree2::element*> elements = tree->getAround(p, 10);
     for (uint i=0;i< elements.size();i++) {
-        octree::element* e = elements[i];
+		octree2::element* e = elements[i];
 
         Vec3f dp = p - e->pos;
         Vec3f n, p, t, x;
@@ -279,7 +279,7 @@ void CaveKeeper::placeLight(Vec3f p) {
 
 void CaveKeeper::dig(VRDevice* dev) {
     Line ray = dev->getBeacon()->castRay();
-    octree::element* e = tree->get(ray);
+	octree2::element* e = tree->get(ray);
     if (e) {
         tree->addAround(e);
         tree->rem(e);
@@ -291,7 +291,7 @@ void CaveKeeper::place(VRDevice* dev, string obj, VRTransform* geo) {
     if (dev == 0) return;
 
     Line ray = dev->getBeacon()->castRay();
-    octree::element* e = tree->get(ray);
+	octree2::element* e = tree->get(ray);
     if (e) {
         Vec3f n = tree->getHitNormal();
         Vec3f p = e->pos + n;

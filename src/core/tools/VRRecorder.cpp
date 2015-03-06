@@ -96,7 +96,8 @@ void VRRecorder::compile(string path) {
     c->width = img0->getWidth();
     c->height = img0->getHeight();
     c->bit_rate = c->width*c->height*5; /* put sample parameters */
-    c->time_base = (AVRational){1,25}; /* frames per second */
+	c->time_base.num = 1;
+	c->time_base.den = 25;/* frames per second */
     c->gop_size = 10; /* emit one intra frame every ten frames */
     c->max_b_frames = 1;
     c->pix_fmt = AV_PIX_FMT_YUV420P;

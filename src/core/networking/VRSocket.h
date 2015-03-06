@@ -12,9 +12,9 @@ using namespace std;
 class VRSignal;
 class VRThread;
 class HTTPServer;
-struct HTTP_args;
+//struct HTTP_args;
 
-typedef VRFunction<HTTP_args*> VRHTTP_cb;
+typedef VRFunction<void*> VRHTTP_cb;
 typedef VRFunction<string> VRTCP_cb;
 
 struct HTTP_args {
@@ -73,8 +73,8 @@ class VRSocket : public VRName {
         void setName(string s);
         void setType(string s);
         void setIP(string s);
-        void setCallback(VRTCP_cb* cb);
-        void setCallback(VRHTTP_cb* cb);
+        void setTCPCallback(VRTCP_cb* cb);
+        void setHTTPCallback(VRHTTP_cb* cb);
         void unsetCallbacks();
         void setSignal(string s);
         void setPort(int i);

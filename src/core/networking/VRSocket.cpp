@@ -394,8 +394,8 @@ bool VRSocket::isClient() {
 
 void VRSocket::setName(string n) { name = n; update(); }
 void VRSocket::setType(string t) { type = t; update(); }
-void VRSocket::setCallback(VRTCP_cb* cb) { tcp_fkt = cb; update(); }
-void VRSocket::setCallback(VRHTTP_cb* cb) { http_fkt = cb; update(); }
+void VRSocket::setTCPCallback(VRTCP_cb* cb) { tcp_fkt = cb; update(); }
+void VRSocket::setHTTPCallback(VRHTTP_cb* cb) { http_fkt = cb; update(); }
 void VRSocket::setIP(string s) { IP = s; }
 void VRSocket::setSignal(string s) { signal = s; update(); }
 void VRSocket::setPort(int i) { port = i; update(); }

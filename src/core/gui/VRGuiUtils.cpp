@@ -1,5 +1,6 @@
 #include "VRGuiUtils.h"
 #include "VRGuiSignals.h"
+#include "VRGuiFile.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRSceneLoader.h"
 #include "core/scene/VRScene.h"
@@ -24,8 +25,20 @@
 
 using namespace std;
 
-Glib::RefPtr<Gtk::Builder> VRGuiBuilder() {
-    static Glib::RefPtr<Gtk::Builder> b = Gtk::Builder::create_from_file("ressources/gui/VRDirector.glade");
+Glib::RefPtr<Gtk::Builder> VRGuiBuilder(bool standalone) {
+	static bool init = false;
+	static Glib::RefPtr<Gtk::Builder> b;
+	if (init) return b;
+	init = true;
+
+	string path = "ressources/gui/VRDirector.glade";
+	if (standalone) path = "ressources/gui/VRDirector_min.glade";
+
+	if (!VRGuiFile::exists(path)) cerr << "FATAL ERROR: " << path << " not found\n";
+	else cout << " found glade file: " << path << endl;
+
+	try { b = Gtk::Builder::create_from_file(path); }
+	catch (Gtk::BuilderError& e) { cerr << "FATAL ERROR: " << e.what() << endl; }
     return b;
 }
 

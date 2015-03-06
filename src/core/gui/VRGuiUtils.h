@@ -11,7 +11,7 @@
 //OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-Glib::RefPtr<Gtk::Builder> VRGuiBuilder();
+Glib::RefPtr<Gtk::Builder> VRGuiBuilder(bool standalone = false);
 
 // TEXT
 void setLabel(string l, string txt);

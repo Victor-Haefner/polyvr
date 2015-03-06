@@ -391,8 +391,9 @@
 		<Unit filename="src/core/gui/VRGuiVectorEntry.h" />
 		<Unit filename="src/core/math/interpolator.cpp" />
 		<Unit filename="src/core/math/interpolator.h" />
-		<Unit filename="src/core/math/octree.cpp" />
 		<Unit filename="src/core/math/octree.h" />
+		<Unit filename="src/core/math/octree2.cpp" />
+		<Unit filename="src/core/math/octree2.h" />
 		<Unit filename="src/core/math/patch.cpp" />
 		<Unit filename="src/core/math/patch.h" />
 		<Unit filename="src/core/math/path.cpp" />

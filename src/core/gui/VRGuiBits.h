@@ -31,7 +31,7 @@ class VRGuiBits {
 
         void setSceneSignal(VRSignal* sig);
 
-        static void write_to_terminal(string s);
+        void write_to_terminal(string s);
 
         void toggleDock();
         bool toggleFullscreen(GdkEventKey* k);

@@ -4,6 +4,7 @@
 #include <OpenSG/OSGConfig.h>
 #include <string>
 #include <map>
+#include <vector>
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRName.h"
 

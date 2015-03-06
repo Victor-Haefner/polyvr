@@ -131,6 +131,7 @@ void VRSetup::save(string file) {
 }
 
 void VRSetup::load(string file) {
+    cout << " load setup " << file << endl;
     xmlpp::DomParser parser;
     parser.set_validate(false);
     parser.parse_file(file.c_str());

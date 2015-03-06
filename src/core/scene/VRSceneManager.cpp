@@ -23,6 +23,7 @@ VRSceneManager::VRSceneManager() {
     cout << "Init VRSceneManager\n";
     active = "NO_SCENE_ACTIVE";
 	original_workdir = boost::filesystem::current_path().string();
+	cout << " PolyVR system directory: " << original_workdir << endl;
     searchExercisesAndFavorites();
 }
 
@@ -109,6 +110,7 @@ void VRSceneManager::setActiveScene(VRScene* s) {
 
     active = s->getName();
     VRSetupManager::getCurrent()->setScene(s);
+    s->setActiveCamera(0);
 
     // todo:
     //  - add scene signals to setup devices
@@ -196,7 +198,7 @@ void VRSceneManager::update() {
     updateCallbacks();
 
     VRGuiManager::get()->updateGtk();
-    VRSetupManager::getCurrent()->updateWindows();//rendering
+    if (VRSetupManager::getCurrent()) VRSetupManager::getCurrent()->updateWindows();//rendering
     VRGuiManager::get()->updateGtk();
 
     VRGlobals::get()->CURRENT_FRAME++;
