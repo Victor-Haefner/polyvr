@@ -455,12 +455,12 @@ void VRMolecule::setRandom(int N) {
     int aN = types.size();
 
     for (int i=0; i<N; i++) {
-        int bt = random()%20;
+        int bt = rand()%20;
         if (bt == 0) m += '=';
         else if (bt < 4) m += '-';
-        a = random()%aN;
+		a = rand() % aN;
         m += types[a];
-        m += toString(int(1+random()%4));
+		m += toString(int(1 + rand() % 4));
     }
 
     set(m);
@@ -475,7 +475,7 @@ int VRMolecule::getID() {
 }
 
 uint VRMolecule::getFlag() {
-    return VRGlobals::get()->CURRENT_FRAME+random();
+	return VRGlobals::get()->CURRENT_FRAME + rand();
 }
 
 void VRMolecule::rotateBond(int a, int b, float f) {
@@ -484,7 +484,7 @@ void VRMolecule::rotateBond(int a, int b, float f) {
     VRAtom* A = atoms[a];
     VRAtom* B = atoms[b];
 
-    uint now = VRGlobals::get()->CURRENT_FRAME+random();
+	uint now = VRGlobals::get()->CURRENT_FRAME + rand();
     A->recFlag = now;
 
     Vec3f p1 = Vec3f( A->getTransformation()[3] );
@@ -553,7 +553,7 @@ void VRMolecule::substitute(int a, VRMolecule* m, int b) {
     A->append(B, 1, true);
 
     // transform new atoms
-    uint now = VRGlobals::get()->CURRENT_FRAME+random();
+	uint now = VRGlobals::get()->CURRENT_FRAME + rand();
     A->recFlag = now;
     bm.invert();
     Matrix Bm = B->getTransformation();
@@ -571,7 +571,7 @@ void VRMolecule::substitute(int a, VRMolecule* m, int b) {
 void VRMolecule::setLocalOrigin(int ID) {
     if (atoms.count(ID) == 0) return;
 
-    uint now = VRGlobals::get()->CURRENT_FRAME+random();
+	uint now = VRGlobals::get()->CURRENT_FRAME + rand();
     Matrix m = atoms[ID]->getTransformation();
     m.invert();
 

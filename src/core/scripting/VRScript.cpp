@@ -115,7 +115,7 @@ void VRScript::update() {
         if (t->trigger == "on_socket") {
             t->soc = scene->getSocket(t->dev);
             if (t->soc == 0) continue;
-            t->soc->setCallback(cbfkt_soc);
+            t->soc->setTCPCallback(cbfkt_soc);
 
             // add msg argument
             arg* a = new arg(VRName::getName(), "msg");

@@ -1311,10 +1311,10 @@ static int udp_exit(void* sock)
 #ifdef OS_UNIX
 	err = close(OS_SOCKET(sock));
 #endif
-// #ifdef OS_WIN
-// 	err = closesocket(OS_SOCKET(sock));
-// 	WSACleanup();
-// #endif
+ #ifdef OS_WIN
+ 	err = closesocket(OS_SOCKET(sock));
+ 	WSACleanup();
+ #endif
 
 	if(err < 0){
 		return -1;

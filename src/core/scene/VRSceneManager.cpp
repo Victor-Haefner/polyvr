@@ -23,6 +23,7 @@ VRSceneManager::VRSceneManager() {
     cout << "Init VRSceneManager\n";
     active = "NO_SCENE_ACTIVE";
 	original_workdir = boost::filesystem::current_path().string();
+	cout << " PolyVR system directory: " << original_workdir << endl;
     searchExercisesAndFavorites();
 }
 

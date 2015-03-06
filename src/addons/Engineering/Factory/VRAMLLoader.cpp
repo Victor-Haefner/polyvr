@@ -1,6 +1,6 @@
 #include "VRAMLLoader.h"
 
-#include <iostream.h>
+#include <iostream>
 //#include <collada/dom.h>
 #include <collada/dae.h>
 #include <OpenSG/OSGSceneFileHandler.h>

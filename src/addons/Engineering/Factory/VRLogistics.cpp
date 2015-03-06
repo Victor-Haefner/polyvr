@@ -200,6 +200,7 @@ void FTransporter::update(float dt) {
     FContainer *c1, *c2;
     FNode::State s1, s2;
     FObject::Type t1, t2;
+	s1 = FNode::FREE;
 
     n1=n2=0;
     o1=o2=0;

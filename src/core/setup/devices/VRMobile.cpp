@@ -8,14 +8,14 @@
 #include "addons/CEF/CEF.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
-//#include "addons/WebKit/VRPyWebKit.h"
 #include <boost/bind.hpp>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-void VRMobile::callback(HTTP_args* args) { // TODO: implement generic button trigger of device etc..
+void VRMobile::callback(void* _args) { // TODO: implement generic button trigger of device etc..
     //args->print();
+	HTTP_args* args = (HTTP_args*)_args;
 
     if (args->params->count("button") == 0) return;
     if (args->params->count("state") == 0) return;
@@ -35,7 +35,7 @@ VRMobile::VRMobile(int port) : VRDevice("mobile") {
 
     soc = VRSceneManager::get()->getSocket(port);
     cb = new VRHTTP_cb( "Mobile_server_callback", boost::bind(&VRMobile::callback, this, _1) );
-    soc->setCallback(cb);
+    soc->setHTTPCallback(cb);
     soc->setType("http receive");
 }
 

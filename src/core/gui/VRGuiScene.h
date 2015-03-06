@@ -92,7 +92,7 @@ class VRGuiScene {
         void on_menu_add_camera();
         void on_menu_add_animation();
         void on_menu_add_primitive(string s);
-        void on_menu_add_csg();
+        //void on_menu_add_csg();
         // ----------------------------------------------
 
 

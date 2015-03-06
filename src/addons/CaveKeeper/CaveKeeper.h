@@ -1,7 +1,7 @@
 #ifndef CAVEKEEPER_H_INCLUDED
 #define CAVEKEEPER_H_INCLUDED
 
-#include "core/math/octree.h"
+#include "core/math/octree2.h"
 #include "core/objects/material/VRShader.h"
 #include "core/objects/geometry/VRGeometry.h"
 
@@ -19,7 +19,7 @@ class VRDevice;
 
 class BlockWorld {
     public:
-        octree* tree;
+		octree2* tree;
 
         VRObject* getAnchor();
 
@@ -38,11 +38,11 @@ class BlockWorld {
 
         SimpleMaterialRecPtr initMaterial(string texture);
 
-        VRGeometry* createChunk(vector<octree::element*>& elements);
+		VRGeometry* createChunk(vector<octree2::element*>& elements);
 
         VRGeometry* initChunk();
 
-        void appendToVector(vector<octree::element*>* elements, octree::element* e);
+		void appendToVector(vector<octree2::element*>* elements, octree2::element* e);
 
         // update methods
 

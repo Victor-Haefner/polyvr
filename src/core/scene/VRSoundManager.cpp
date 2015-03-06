@@ -10,9 +10,15 @@ extern "C" {
 #include <libavresample/avresample.h>
 }
 
+#if _WIN32
+#include <al.h>
+#include <alc.h>
+#include <alext.h>
+#else
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <AL/alext.h>
+#endif
 
 #include <boost/thread/thread.hpp>
 #include <boost/thread.hpp>
