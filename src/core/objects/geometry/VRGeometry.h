@@ -29,7 +29,6 @@ class VRGeometry : public VRTransform {
         };
 
     protected:
-        //VRObject* geonode;
         VRMaterial* mat = 0;
         VRPrimitive* primitive = 0;
         GeometryRecPtr mesh;
@@ -37,12 +36,16 @@ class VRGeometry : public VRTransform {
         ImageRecPtr texture;
         bool meshSet = false;
 
+        map<string, VRGeometry*> dataLayer;
+
         Reference source;
 
         VRObject* copy(vector<VRObject*> children);
 
         virtual void saveContent(xmlpp::Element* e);
         virtual void loadContent(xmlpp::Element* e);
+
+        VRGeometry(string name, bool hidden);
 
     public:
 
@@ -79,16 +82,12 @@ class VRGeometry : public VRTransform {
         void merge(VRGeometry* geo);
         void fixColorMapping();
 
-        /** Returns the geometric center of the mesh **/
-        Vec3f getGeometricCenter();
+        void showGeometricData(string type, bool b);
 
-        /** Returns the average of all normals of the mesh (not normalized, can be zero) **/
+        Vec3f getGeometricCenter();
         Vec3f getAverageNormal();
 
-        /** Returns the maximum position on the x, y || z axis **/
         float getMax(int axis);
-
-        /** Returns the minimum position on the x, y || z axis **/
         float getMin(int axis);
 
         /** Returns the mesh as a OSG geometry core **/

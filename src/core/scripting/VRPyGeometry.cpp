@@ -103,7 +103,8 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"setRandomColors", (PyCFunction)VRPyGeometry::setRandomColors, METH_NOARGS, "Set a random color for each vertex" },
     {"removeDoubles", (PyCFunction)VRPyGeometry::removeDoubles, METH_VARARGS, "Remove double vertices" },
     {"makeUnique", (PyCFunction)VRPyGeometry::makeUnique, METH_NOARGS, "Make the geometry data unique" },
-    {"influence", (PyCFunction)VRPyGeometry::influence, METH_VARARGS, "Pass a points && value vector to influence the geometry - influence([points,f3], [values,f3], int power)" },
+    {"influence", (PyCFunction)VRPyGeometry::influence, METH_VARARGS, "Pass a points and value vector to influence the geometry - influence([points,f3], [values,f3], int power)" },
+    {"showGeometricData", (PyCFunction)VRPyGeometry::showGeometricData, METH_VARARGS, "Enable or disable a data layer - showGeometricData(string type, bool)\n layers are: ['Normals']" },
     {NULL}  /* Sentinel */
 };
 
@@ -185,6 +186,14 @@ void feed1D(PyObject* o, T& vec) {
     }
 }
 
+PyObject* VRPyGeometry::showGeometricData(VRPyGeometry* self, PyObject *args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyGeometry::showGeometricData - Object is invalid"); return NULL; }
+	PyObject* type;
+	int b;
+    if (!PyArg_ParseTuple(args, "Oi", &type, &b)) return NULL;
+    self->obj->showGeometricData( PyString_AsString(type), b);
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyGeometry::influence(VRPyGeometry* self, PyObject *args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyGeometry::influence - Object is invalid"); return NULL; }

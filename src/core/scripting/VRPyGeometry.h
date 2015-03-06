@@ -44,6 +44,7 @@ struct VRPyGeometry : VRPyBaseT<OSG::VRGeometry> {
     static PyObject* removeDoubles(VRPyGeometry* self, PyObject *args);
     static PyObject* merge(VRPyGeometry* self, PyObject *args);
     static PyObject* influence(VRPyGeometry* self, PyObject *args);
+    static PyObject* showGeometricData(VRPyGeometry* self, PyObject *args);
 };
 
 #endif // VRPYGEOMETRY_H_INCLUDED

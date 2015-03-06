@@ -148,6 +148,9 @@ void VRObject::switchParent(VRObject* new_p, int place) {
     new_p->addChild(this, false, place);
 }
 
+void VRObject::setIntern(bool b) { intern = b; }
+bool VRObject::getIntern() { return intern; }
+
 /** Returns the number of children **/
 size_t VRObject::getChildrenCount() { return children.size(); }
 
