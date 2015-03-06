@@ -8,6 +8,8 @@ using namespace std;
 
 class VRGuiManager {
     private:
+        bool standalone = false;
+
         VRGuiManager();
 
         void update();

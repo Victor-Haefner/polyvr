@@ -11,6 +11,8 @@ namespace bpo = boost::program_options;
 VROptions::VROptions() : desc("Configuration ") {
     desc.add_options() ("help", "show possible options");
 
+    addOption<bool>(false, "standalone");
+
     addOption<int>(0, "shadowType");
     addOption<int>(1024, "shadowMapSize");
     addOption<float>(0.5, "shadowColor");

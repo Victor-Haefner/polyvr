@@ -10,6 +10,7 @@
 #include "VRGuiSetup.h"
 #include "VRGuiNet.h"
 #include "VRGuiGeneral.h"
+#include "core/utils/VROptions.h"
 #include <gtkmm/uimanager.h>
 #include <gtkmm/main.h>
 #include <gtkmm/window.h>
@@ -29,9 +30,19 @@ VRGuiGeneral* g_gen;
 Gtk::Main* GtkMain;
 
 VRGuiManager::VRGuiManager() {
+    standalone = VROptions::get()->getOption<bool>("standalone");
+
     int argc   = 0;
     GtkMain = new Gtk::Main(&argc, NULL, false);
     gtk_gl_init(&argc, NULL);
+
+    if (standalone) {
+        cout << " start in standalone mode\n";
+        Gtk::Window* top = Gtk::manage(new Gtk::Window());
+        top->maximize();
+        top->show_all();
+        return;
+    }
 
     //gtk_rc_parse("gui/gtkrc");
     g_demos = new VRDemos();

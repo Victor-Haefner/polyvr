@@ -7,7 +7,6 @@
 
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
-#include "core/utils/VROptions.h"
 #include "core/setup/devices/VRDevice.h"
 #include "core/objects/material/VRMaterial.h"
 
