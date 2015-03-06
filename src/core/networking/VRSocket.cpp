@@ -82,13 +82,15 @@ static int server_answer_to_connection_m(struct mg_connection *conn, enum mg_eve
 
         //--- respond to client ------
         if (sad->path == "") {
-            mg_send_status(conn, 200);
+            //mg_send_status(conn, 200);
+            mg_send_data(conn, "", 0);
             //response = MHD_create_response_from_data(1, (void*)" ", MHD_NO, MHD_YES);
         }
 
         if (sad->pages->count(sad->path)) { // return local site
             string spage = *(*sad->pages)[sad->path];
             mg_send_data(conn, spage.c_str(), spage.size());
+            return MG_TRUE;
         } else if(sad->path != "") { // return ressources
             if (!boost::filesystem::exists( sad->path )) cout << "Did not find ressource: " << sad->path << endl;
             else {
@@ -101,7 +103,6 @@ static int server_answer_to_connection_m(struct mg_connection *conn, enum mg_eve
         //--- process request --------
         VRFunction<int>* _fkt = new VRFunction<int>("HTTP_answer_job", boost::bind(server_answer_job, sad->copy(), _1));
         VRSceneManager::get()->queueJob(_fkt);
-
         return MG_TRUE;
     }
 
@@ -130,7 +131,6 @@ class HTTPServer {
 
         void loop(VRThread* t) {
             if (server) mg_poll_server(server, 100);
-            cout << "act connections " << server-> << endl;
             if (t->control_flag == false) return;
         }
 
