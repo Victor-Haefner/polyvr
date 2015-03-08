@@ -297,7 +297,6 @@ OSG::Color4f chooseColor(string drawable, OSG::Color4f current) {
     cdiag.set_deletable(false);
     cdiag.get_color_selection()->set_has_opacity_control(true);
 
-    current[3] = 1.0 - current[3];
     Gdk::Color c("#FFFFFF");
     c.set_rgb_p(current[0], current[1], current[2]);
     cdiag.get_color_selection()->set_current_color(c);
@@ -306,7 +305,7 @@ OSG::Color4f chooseColor(string drawable, OSG::Color4f current) {
     float alpha = 0;
     if (cdiag.run() == Gtk::RESPONSE_OK) {
         c = cdiag.get_color_selection()->get_current_color();
-        alpha = 1.0 - cdiag.get_color_selection()->get_current_alpha()/65535.0;
+        alpha = cdiag.get_color_selection()->get_current_alpha()/65535.0;
     }
 
     darea->modify_bg(Gtk::STATE_NORMAL, c); // TODO: blend with pattern to show alpha channel
