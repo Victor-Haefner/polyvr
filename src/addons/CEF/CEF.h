@@ -21,10 +21,12 @@ class CEF : public CefClient, public CefRenderHandler {
         int width = 1024;
         int height = 1024;
         float aspect = 1;
+        bool init = false;
 
         CefRefPtr<CefBrowser> browser;
         CefRefPtr<CefRenderHandler> GetRenderHandler();
 
+        void initiate();
         void update();
         bool GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect);
         void OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList& dirtyRects, const void* buffer, int width, int height);
@@ -47,10 +49,11 @@ class CEF : public CefClient, public CefRenderHandler {
         void addKeyboard(OSG::VRDevice* dev);
 
         void open(string site);
-        string getSite();
         void reload();
+        string getSite();
+        void resize();
 
-        static void reload(string path);
+        static void reloadScripts(string path);
 };
 
 #endif // CAVEKEEPER_H_INCLUDED

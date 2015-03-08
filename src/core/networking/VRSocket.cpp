@@ -52,14 +52,14 @@ void server_answer_job(HTTP_args* args, int i) {
 }
 
 static int server_answer_to_connection_m(struct mg_connection *conn, enum mg_event ev) {
-    if (ev == MG_POLL) return MG_FALSE;
+    /*if (ev == MG_POLL) return MG_FALSE;
     if (ev == MG_CONNECT) { cout << "EV CONNECT\n"; return MG_FALSE; }
     if (ev == MG_REPLY) { cout << "EV REPLY\n"; return MG_FALSE; }
     if (ev == MG_RECV) { cout << "EV RECV\n"; return MG_FALSE; }
     if (ev == MG_CLOSE) { cout << "EV CLOSE\n"; return MG_FALSE; }
     if (ev == MG_WS_HANDSHAKE) { cout << "EV WS H\n"; return MG_FALSE; }
     if (ev == MG_WS_CONNECT) { cout << "EV WS C\n"; return MG_FALSE; }
-    if (ev == MG_HTTP_ERROR) { cout << "EV ERROR\n"; return MG_FALSE; }
+    if (ev == MG_HTTP_ERROR) { cout << "EV ERROR\n"; return MG_FALSE; }*/
 
     if (ev == MG_AUTH) return MG_TRUE;
 
@@ -87,10 +87,10 @@ static int server_answer_to_connection_m(struct mg_connection *conn, enum mg_eve
             //response = MHD_create_response_from_data(1, (void*)" ", MHD_NO, MHD_YES);
         }
 
-        if (sad->pages->count(sad->path)) { // return local site
+        if (sad->pages->count(sad->path) and sad->path != "") { // return local site
             string spage = *(*sad->pages)[sad->path];
             mg_send_data(conn, spage.c_str(), spage.size());
-            return MG_TRUE;
+            //return MG_TRUE;
         } else if(sad->path != "") { // return ressources
             if (!boost::filesystem::exists( sad->path )) cout << "Did not find ressource: " << sad->path << endl;
             else {
@@ -106,7 +106,7 @@ static int server_answer_to_connection_m(struct mg_connection *conn, enum mg_eve
         return MG_TRUE;
     }
 
-    cout << "unknown event " << ev << endl;
+    //cout << "unknown event " << ev << endl;
     return MG_FALSE;
 }
 

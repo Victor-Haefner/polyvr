@@ -214,6 +214,13 @@ void VRScriptManager::initPyModules() {
     PyDict_SetItemString(pLocal, "__builtins__", PyEval_GetBuiltins());
     PyDict_SetItemString(pGlobal, "__builtins__", PyEval_GetBuiltins());
 
+    PyObject* sys_path = PySys_GetObject("path");
+    PyList_Append(sys_path, PyString_FromString(".") );
+
+    //string sys_path = PyString_AsString(PySys_GetObject("path"));
+    //sys_path += ":.";
+    //PySys_SetPath(sys_path.c_str());
+
     pModVR = Py_InitModule3("VR", VRScriptManager_module_methods, "VR Module");
     VRPyObject::registerModule("Object", pModVR);
     VRPyTransform::registerModule("Transform", pModVR, VRPyObject::typeRef);

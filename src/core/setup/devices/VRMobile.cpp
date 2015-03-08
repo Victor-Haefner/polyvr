@@ -17,8 +17,8 @@ void VRMobile::callback(void* _args) { // TODO: implement generic button trigger
     //args->print();
 	HTTP_args* args = (HTTP_args*)_args;
 
-    if (args->params->count("button") == 0) return;
-    if (args->params->count("state") == 0) return;
+    if (args->params->count("button") == 0) { cout << "VRMobile::callback warning, no button passed\n"; return; }
+    if (args->params->count("state") == 0) { cout << "VRMobile::callback warning, no state passed\n"; return; }
 
     if (args->params->count("message")) setMessage((*args->params)["message"]);
 
@@ -68,6 +68,6 @@ void VRMobile::remWebSite(string uri) {
     updateMobilePage();
 }
 
-void VRMobile::updateClients(string path) { CEF::reload(path); }
+void VRMobile::updateClients(string path) { CEF::reloadScripts(path); }
 
 OSG_END_NAMESPACE;

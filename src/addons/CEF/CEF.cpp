@@ -16,6 +16,20 @@ using namespace OSG;
 vector<CEF*> instances;
 
 CEF::CEF() {
+    VRFunction<int>* fkt = new VRFunction<int>("webkit_update", boost::bind(&CEF::update, this));
+    VRSceneManager::getCurrent()->addUpdateFkt(fkt);
+    image = Image::create();
+    instances.push_back(this);
+}
+
+CEF::~CEF() {
+    browser = 0;
+    CefShutdown();
+
+    instances.erase( remove(instances.begin(), instances.end(), this), instances.end() );
+}
+
+void CEF::initiate() {
     CefSettings settings;
     string bsp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/CefSubProcess";
     string ldp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/locales";
@@ -39,46 +53,44 @@ CEF::CEF() {
     win.SetAsOffScreen(0);
 #endif
     browser = CefBrowserHost::CreateBrowserSync(win, this, "www.google.de", browser_settings, 0);
-
-    VRFunction<int>* fkt = new VRFunction<int>("webkit_update", boost::bind(&CEF::update, this));
-    VRSceneManager::getCurrent()->addUpdateFkt(fkt);
-
-
-    image = Image::create();
-
-    instances.push_back(this);
-}
-
-CEF::~CEF() {
-    browser = 0;
-    CefShutdown();
-
-    instances.erase( remove(instances.begin(), instances.end(), this), instances.end() );
+    init = true;
 }
 
 void CEF::setMaterial(VRMaterial* mat) { if (mat == 0) return; this->mat = mat; mat->setTexture(image); }
-void CEF::update() { CefDoMessageLoopWork(); }
-void CEF::open(string site) { this->site = site; browser->GetMainFrame()->LoadURL(site); }
+void CEF::update() { if (init) CefDoMessageLoopWork(); }
 CefRefPtr<CefRenderHandler> CEF::GetRenderHandler() { return this; }
 string CEF::getSite() { return site; }
+void CEF::reload() { open(site); }
 
-void CEF::reload() {
-    height = width/aspect;
-    cout << "reload " << width << " " << height << endl;
-    open(site);
+void CEF::open(string site) {
+    if (!init) initiate();
+    this->site = site;
+    browser->GetMainFrame()->LoadURL(site);
 }
 
-void CEF::reload(string path) {
+void CEF::resize() {
+    auto v = CefBrowserHost::PaintElementType::PET_VIEW;
+    height = width/aspect;
+    if (init) browser->GetHost()->WasResized();
+    if (init) reload();
+}
+
+void CEF::reloadScripts(string path) {
     for (auto i : instances) {
         string s = i->getSite();
         stringstream ss(s); vector<string> res; while (getline(ss, s, '/')) res.push_back(s); // split by ':'
         if (res.size() == 0) continue;
-        if (res[res.size()-1] == path) i->reload();
+        if (res[res.size()-1] == path) {
+            i->resize();
+            i->reload();
+        }
     }
 }
 
-void CEF::setResolution(float a) { width = a; reload(); }
-void CEF::setAspectRatio(float a) { aspect = a; reload(); }
+void CEF::setResolution(float a) { width = a; resize(); }
+void CEF::setAspectRatio(float a) { aspect = a; resize(); }
+
+// inherited CEF callbacks:
 
 bool CEF::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
     rect = CefRect(0, 0, width, height);

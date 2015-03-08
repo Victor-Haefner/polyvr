@@ -289,6 +289,17 @@ bool VRMaterial::isLit() { return colChunk->getLit(); }
 
 ImageRecPtr VRMaterial::getTexture() { return texture; }
 
+void setTexture(char* data, int N, int format, Vec3i dims, bool isfloat) {
+    ImageRecPtr img = Image::create();
+
+    int pf = Image::OSG_RGB_PF;
+    if (format == 4) pf = Image::OSG_RGBA_PF;
+
+    int f = Image::OSG_UINT8_IMAGEDATA;
+    if (isfloat) f = Image::OSG_FLOAT32_IMAGEDATA;
+    img->set( pf, dims[0], dims[1], dims[2], 1, 1, 0, (const UInt8*)data, f);
+}
+
 void VRMaterial::initShaderChunk() {
     if (shaderChunk != 0) return;
     shaderChunk = ShaderProgramChunk::create();
