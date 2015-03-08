@@ -12,6 +12,7 @@
 #include <OpenSG/OSGQuaternion.h>
 #include <OpenSG/OSGGeoFunctions.h>
 #include <OpenSG/OSGChunkMaterial.h>
+#include <OpenSG/OSGMultiPassMaterial.h>
 #include <libxml++/nodes/element.h>
 
 //#include "../../../../csg_alt/GTSGeometry.h"

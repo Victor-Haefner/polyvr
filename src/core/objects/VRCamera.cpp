@@ -4,6 +4,7 @@
 #include <OpenSG/OSGTransform.h>
 #include <OpenSG/OSGSimpleMaterial.h>
 #include <OpenSG/OSGSimpleGeometry.h>
+#include <OpenSG/OSGMultiPassMaterial.h>
 #include <libxml++/nodes/element.h>
 
 OSG_BEGIN_NAMESPACE;

@@ -10,6 +10,7 @@
 #include <OpenSG/OSGSimpleSHLChunk.h>
 #include <OpenSG/OSGTwoSidedLightingChunk.h>
 #include <OpenSG/OSGImage.h>
+#include <OpenSG/OSGMultiPassMaterial.h>
 #include "core/utils/toString.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
@@ -28,7 +29,7 @@ VRMaterial::VRMaterial(string name) : VRObject(name) {
     type = "Material";
     resetDefault();
     addAttachment("material", 0);
-    materials[getName()] = this; // name is always unique ;)
+    materials[getName()] = this;
 }
 
 VRMaterial::~VRMaterial() {
@@ -49,6 +50,7 @@ VRMaterial* VRMaterial::getDefault() {
 void VRMaterial::resetDefault() {
     mat = ChunkMaterial::create();
     colChunk = MaterialChunk::create();
+    passes = MultiPassMaterial::create();
     colChunk->setBackMaterial(false);
     mat->addChunk(colChunk);
     twoSidedChunk = TwoSidedLightingChunk::create();
@@ -67,6 +69,19 @@ void VRMaterial::resetDefault() {
     setAmbient  (Color3f(0.3f,0.3f,0.3f));
     setSpecular (Color3f(1.f,1.f,1.f));
     setShininess(50.f);
+
+    activePass = 0;
+    passes->clearMaterials();
+    passes->addMaterial(mat);
+}
+
+int VRMaterial::getActivePass() { return activePass; }
+int VRMaterial::getNPasses() { return passes->getNPasses(); }
+void VRMaterial::setActivePass(int i) {
+    if (i < 0 or i >= getNPasses()) return;
+
+    activePass = i;
+    mat = dynamic_cast<ChunkMaterial*>(passes->getMaterials(i));
 }
 
 VRMaterial* VRMaterial::get(MaterialRecPtr mat) {
@@ -151,7 +166,7 @@ void VRMaterial::setMaterial(MaterialRecPtr m) {
     }
 }
 
-MaterialRecPtr VRMaterial::getMaterial() { return mat; }
+MultiPassMaterialRecPtr VRMaterial::getMaterial() { return passes; }
 
 /** Load a texture && apply it to the mesh as new material **/
 void VRMaterial::setTexture(string img_path, bool alpha) { // TODO: improve with texture map

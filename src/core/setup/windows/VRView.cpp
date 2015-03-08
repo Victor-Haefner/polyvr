@@ -2,7 +2,8 @@
 #include <OpenSG/OSGRenderAction.h>
 #include <OpenSG/OSGImageForeground.h>
 #include <libxml++/nodes/element.h>
-#include <OpenSG/OSGSimpleGeometry.h>        // Methods to create simple geos.
+#include <OpenSG/OSGSimpleGeometry.h>
+#include <OpenSG/OSGMultiPassMaterial.h>
 
 #include "core/utils/VRRate.h"
 #include "core/utils/toString.h"

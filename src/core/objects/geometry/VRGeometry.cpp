@@ -4,6 +4,7 @@
 #include <OpenSG/OSGSimpleMaterial.h>
 #include <OpenSG/OSGSimpleGeometry.h>        // Methods to create simple geos.
 #include <OpenSG/OSGChunkMaterial.h>
+#include <OpenSG/OSGMultiPassMaterial.h>
 #include <OpenSG/OSGGeoFunctions.h>
 
 //#include <OpenSG/OSGGeoProperties.h>

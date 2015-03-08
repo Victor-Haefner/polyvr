@@ -1,6 +1,7 @@
 #include "VRLightBeacon.h"
 #include "VRLight.h"
 #include "core/objects/material/VRMaterial.h"
+#include <OpenSG/OSGMultiPassMaterial.h>
 #include <OpenSG/OSGSimpleMaterial.h>
 #include <OpenSG/OSGSimpleGeometry.h>        // Methods to create simple geos.
 #include <libxml++/nodes/element.h>

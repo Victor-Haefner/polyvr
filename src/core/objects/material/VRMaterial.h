@@ -24,6 +24,7 @@ class PolygonChunk; OSG_GEN_CONTAINERPTR(PolygonChunk);
 class TwoSidedLightingChunk; OSG_GEN_CONTAINERPTR(TwoSidedLightingChunk);
 class ShaderProgramChunk; OSG_GEN_CONTAINERPTR(ShaderProgramChunk);
 class ShaderProgram; OSG_GEN_CONTAINERPTR(ShaderProgram);
+class MultiPassMaterial; OSG_GEN_CONTAINERPTR(MultiPassMaterial);
 
 Color4f toColor4f(Color3f c, float t = 1);
 Color3f toColor3f(Color4f c);
@@ -34,6 +35,7 @@ class VRMaterial : public VRObject {
         static map<MaterialRecPtr, VRMaterial*> materialsByPtr;
 
     protected:
+        MultiPassMaterialRecPtr passes;
         ChunkMaterialRecPtr mat;
         MaterialChunkRecPtr colChunk;
         BlendChunkRecPtr blendChunk;
@@ -49,6 +51,8 @@ class VRMaterial : public VRObject {
         ShaderProgramRecPtr fProgram;
         ShaderProgramRecPtr gProgram;
         VRVideo* video;
+
+        int activePass = 0;
 
         string vertexScript;
         string fragmentScript;
@@ -66,6 +70,10 @@ class VRMaterial : public VRObject {
     public:
         VRMaterial(string name);
         virtual ~VRMaterial();
+
+        void setActivePass(int i);
+        int getActivePass();
+        int getNPasses();
 
         static VRMaterial* getDefault();
         static VRMaterial* get(MaterialRecPtr mat);
@@ -128,7 +136,7 @@ class VRMaterial : public VRObject {
         bool isLit();
 
         /** Returns the mesh material **/
-        MaterialRecPtr getMaterial();
+        MultiPassMaterialRecPtr getMaterial();
 
         /** Returns the texture || 0 **/
         ImageRecPtr getTexture();
