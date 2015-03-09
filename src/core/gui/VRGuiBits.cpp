@@ -31,6 +31,7 @@
 #include "PolyVR.h"
 #include "core/objects/VRCamera.h"
 #include "core/tools/VRRecorder.h"
+#include "core/utils/VRLogger.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -220,7 +221,7 @@ void VRGuiBits::toggleDock() {
 }
 
 void VRGuiBits::toggleVerbose(string s) {
-    if (s == "network") VRGlobals::get()->VERBOSE_NETWORK = getToggleButtonState("network_verbose");
+    if (s == "network") VRLog::setTag("net", getToggleButtonState("network_verbose"));
 }
 
 VRGuiBits::VRGuiBits() {

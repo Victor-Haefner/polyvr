@@ -9,7 +9,7 @@
 #include "core/scene/VRScene.h"
 #include "core/setup/devices/VRDevice.h"
 #include "core/objects/material/VRMaterial.h"
-#include "core/gui/VRGuiManager.h"
+#include "core/utils/VRLogger.h"
 
 using namespace std;
 using namespace OSG;
@@ -145,8 +145,7 @@ void CEF::mouse(int b, bool down, VRDevice* dev) {
 
     VRIntersection ins = dev->intersect(obj);
 
-    bool v = VRGlobals::get()->VERBOSE_NETWORK;
-    if (v) {
+    if (VRLog::tag("net")) {
         string o = "NONE";
         if (ins.object) o = ins.object->getName();
         stringstream ss;
@@ -155,7 +154,7 @@ void CEF::mouse(int b, bool down, VRDevice* dev) {
         ss << " b: " << b << " s: " << down;
         ss << " texel: " << ins.texel;
         ss << endl;
-        VRGuiManager::get()->printInfo(ss.str());
+        VRLog::log("net", ss.str());
     }
 
     if (!ins.hit) return;
