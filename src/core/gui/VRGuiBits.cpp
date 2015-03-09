@@ -256,6 +256,10 @@ VRGuiBits::VRGuiBits() {
     // TERMINAL
     terminal = Gtk::TextBuffer::create();
     Gtk::TextView* term_view = Gtk::manage(new Gtk::TextView(terminal));
+    Pango::FontDescription fdesc;
+    fdesc.set_family("monospace");
+    fdesc.set_size(10 * PANGO_SCALE);
+    term_view->modify_font(fdesc);
     swin = Gtk::manage(new Gtk::ScrolledWindow());
     swin->add(*term_view);
     swin->set_size_request(-1,70);
