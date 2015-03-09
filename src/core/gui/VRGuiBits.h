@@ -3,7 +3,9 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <string.h>
+#include <queue>
 #include <gtkmm/combobox.h>
+#include <boost/thread.hpp>
 #include "core/setup/devices/VRSignal.h"
 
 namespace Gtk { class ToggleToolButton; }
@@ -17,6 +19,8 @@ class VRRecorder;
 class VRGuiBits {
     private:
         GtkWidget* term_box = 0;
+	    std::queue<string> msg_queue;
+	    mutable boost::mutex msg_mutex;
 
         VRRecorder* recorder = 0;
         VRVisualLayer* recorder_visual_layer = 0;
@@ -33,6 +37,7 @@ class VRGuiBits {
         void setSceneSignal(VRSignal* sig);
 
         void write_to_terminal(string s);
+        void update_terminal();
 
         void toggleDock();
         bool toggleFullscreen(GdkEventKey* k);

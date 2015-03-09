@@ -126,6 +126,7 @@ void VRGuiManager::updateGtk() {
 
 void VRGuiManager::update() {
     g_scene->update();
+    if (!standalone) g_bits->update_terminal();
 }
 
 OSG_END_NAMESPACE;

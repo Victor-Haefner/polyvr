@@ -1,10 +1,12 @@
 #include "VRSocket.h"
 #include "VRPing.h"
 #include "mongoose/mongoose.h"
+#include "core/objects/object/VRObject.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/setup/devices/VRDevice.h"
 #include "core/utils/toString.h"
+#include "core/gui/VRGuiManager.h"
 
 #include <algorithm>
 //#include <curl/curl.h> // TODO
@@ -30,9 +32,11 @@ HTTP_args::~HTTP_args() {
 }
 
 void HTTP_args::print() {
-    cout << "HTTP args: " << path << endl;
-    if (params == 0) return;
-    for (auto p : *params) cout << "  " << p.first << " : " << p.second << endl;
+    stringstream ss;
+    ss << "HTTP args: " << path << endl;
+    if (params != 0)
+        for (auto p : *params) ss << "  " << p.first << " : " << p.second << endl;
+    VRGuiManager::get()->printInfo(ss.str());
 }
 
 HTTP_args* HTTP_args::copy() {
@@ -45,7 +49,10 @@ HTTP_args* HTTP_args::copy() {
 }
 
 void server_answer_job(HTTP_args* args, int i) {
-    //cout << "server_answer_job: " << args->cb << endl;
+    if (VRGlobals::get()->VERBOSE_NETWORK) {
+        stringstream ss; ss << "server_answer_job: " << args->cb << endl;
+        VRGuiManager::get()->printInfo(ss.str());
+    }
     //args->print();
     if (args->cb) (*args->cb)(args);
     delete args;
@@ -60,6 +67,7 @@ static int server_answer_to_connection_m(struct mg_connection *conn, enum mg_eve
     if (ev == MG_WS_HANDSHAKE) { cout << "EV WS H\n"; return MG_FALSE; }
     if (ev == MG_WS_CONNECT) { cout << "EV WS C\n"; return MG_FALSE; }
     if (ev == MG_HTTP_ERROR) { cout << "EV ERROR\n"; return MG_FALSE; }*/
+    bool v = VRGlobals::get()->VERBOSE_NETWORK;
 
     if (ev == MG_AUTH) return MG_TRUE;
 
@@ -78,11 +86,13 @@ static int server_answer_to_connection_m(struct mg_connection *conn, enum mg_eve
             (*sad->params)[d[0]] = d[1];
         }
 
-        //sad->print();
+        if (v) VRGuiManager::get()->printInfo("HTTP Request\n");
+        if (v) sad->print();
 
         //--- respond to client ------
         if (sad->path == "") {
             //mg_send_status(conn, 200);
+            if (v) VRGuiManager::get()->printInfo("Send empty string\n");
             mg_send_data(conn, "", 0);
             //response = MHD_create_response_from_data(1, (void*)" ", MHD_NO, MHD_YES);
         }
@@ -90,11 +100,12 @@ static int server_answer_to_connection_m(struct mg_connection *conn, enum mg_eve
         if (sad->pages->count(sad->path) && sad->path != "") { // return local site
             string spage = *(*sad->pages)[sad->path];
             mg_send_data(conn, spage.c_str(), spage.size());
+            if (v) VRGuiManager::get()->printInfo("Send local site\n");
             //return MG_TRUE;
         } else if(sad->path != "") { // return ressources
             if (!boost::filesystem::exists( sad->path )) cout << "Did not find ressource: " << sad->path << endl;
             else {
-                cout << "send file " << sad->path << endl;
+                if (v) VRGuiManager::get()->printInfo("Send ressource\n");
                 mg_send_file(conn, sad->path.c_str(), NULL);
                 return MG_MORE;
             }

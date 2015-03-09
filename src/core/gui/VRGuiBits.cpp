@@ -126,8 +126,18 @@ Glib::RefPtr<Gtk::TextBuffer> terminal;
 Gtk::ScrolledWindow* swin;
 
 void VRGuiBits::write_to_terminal(string s) {
-    terminal->insert(terminal->end(),s);
-    on_terminal_changed();
+    boost::mutex::scoped_lock lock(msg_mutex);
+    msg_queue.push(s);
+}
+
+void VRGuiBits::update_terminal() {
+    boost::mutex::scoped_lock lock(msg_mutex);
+    bool u = !msg_queue.empty();
+    while(!msg_queue.empty()) {
+        terminal->insert(terminal->end(), msg_queue.front());
+		msg_queue.pop();
+    }
+    if (u) on_terminal_changed();
 }
 
 void VRGuiBits::on_terminal_changed() {
