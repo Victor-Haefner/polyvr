@@ -11,9 +11,9 @@ class VRVideo;
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class Image; OSG_GEN_CONTAINERPTR(Image);
 class Material; OSG_GEN_CONTAINERPTR(Material);
-class ChunkMaterial; OSG_GEN_CONTAINERPTR(ChunkMaterial);
+class Image; OSG_GEN_CONTAINERPTR(Image);
+/*class ChunkMaterial; OSG_GEN_CONTAINERPTR(ChunkMaterial);
 class MaterialChunk; OSG_GEN_CONTAINERPTR(MaterialChunk);
 class BlendChunk; OSG_GEN_CONTAINERPTR(BlendChunk);
 class TextureEnvChunk; OSG_GEN_CONTAINERPTR(TextureEnvChunk);
@@ -22,9 +22,11 @@ class LineChunk; OSG_GEN_CONTAINERPTR(LineChunk);
 class PointChunk; OSG_GEN_CONTAINERPTR(PointChunk);
 class PolygonChunk; OSG_GEN_CONTAINERPTR(PolygonChunk);
 class TwoSidedLightingChunk; OSG_GEN_CONTAINERPTR(TwoSidedLightingChunk);
-class ShaderProgramChunk; OSG_GEN_CONTAINERPTR(ShaderProgramChunk);
+class ShaderProgramChunk; OSG_GEN_CONTAINERPTR(ShaderProgramChunk);*/
 class ShaderProgram; OSG_GEN_CONTAINERPTR(ShaderProgram);
 class MultiPassMaterial; OSG_GEN_CONTAINERPTR(MultiPassMaterial);
+
+struct VRMatData;
 
 Color4f toColor4f(Color3f c, float t = 1);
 Color3f toColor3f(Color4f c);
@@ -36,27 +38,8 @@ class VRMaterial : public VRObject {
 
     protected:
         MultiPassMaterialRecPtr passes;
-        ChunkMaterialRecPtr mat;
-        MaterialChunkRecPtr colChunk;
-        BlendChunkRecPtr blendChunk;
-        TextureEnvChunkRecPtr envChunk;
-        TextureObjChunkRecPtr texChunk;
-        LineChunkRecPtr lineChunk;
-        PointChunkRecPtr pointChunk;
-        PolygonChunkRecPtr polygonChunk;
-        TwoSidedLightingChunkRecPtr twoSidedChunk;
-        ImageRecPtr texture;
-        ShaderProgramChunkRecPtr shaderChunk;
-        ShaderProgramRecPtr vProgram;
-        ShaderProgramRecPtr fProgram;
-        ShaderProgramRecPtr gProgram;
-        VRVideo* video;
-
+        vector<VRMatData*> mats;
         int activePass = 0;
-
-        string vertexScript;
-        string fragmentScript;
-        string geometryScript;
 
         VRObject* copy(vector<VRObject*> children);
 
@@ -74,6 +57,8 @@ class VRMaterial : public VRObject {
         void setActivePass(int i);
         int getActivePass();
         int getNPasses();
+        int addPass();
+        void remPass(int i);
 
         static VRMaterial* getDefault();
         static VRMaterial* get(MaterialRecPtr mat);
@@ -127,6 +112,7 @@ class VRMaterial : public VRObject {
         string getVertexScript();
         string getFragmentScript();
         string getGeometryScript();
+        ShaderProgramRecPtr getShaderProgram();
 
         template<class T> void setShaderParameter(string name, const T &value);
 
@@ -136,7 +122,7 @@ class VRMaterial : public VRObject {
         bool isLit();
 
         /** Returns the mesh material **/
-        MultiPassMaterialRecPtr getMaterial();
+        MaterialRecPtr getMaterial();
 
         /** Returns the texture || 0 **/
         ImageRecPtr getTexture();
