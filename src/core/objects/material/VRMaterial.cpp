@@ -78,7 +78,7 @@ void VRMaterial::resetDefault() {
 int VRMaterial::getActivePass() { return activePass; }
 int VRMaterial::getNPasses() { return passes->getNPasses(); }
 void VRMaterial::setActivePass(int i) {
-    if (i < 0 or i >= getNPasses()) return;
+    if (i < 0 || i >= getNPasses()) return;
 
     activePass = i;
     mat = dynamic_cast<ChunkMaterial*>(passes->getMaterials(i));

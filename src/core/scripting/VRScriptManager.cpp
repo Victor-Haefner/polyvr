@@ -4,6 +4,7 @@
 #include "core/scene/VRSceneLoader.h"
 #include "core/scene/VRAnimationManagerT.h"
 #include "core/utils/VRStorage_template.h"
+#include "core/utils/VROptions.h"
 #include "VRScript.h"
 #include "VRPyObject.h"
 #include "VRPyGeometry.h"
@@ -268,7 +269,7 @@ void VRScriptManager::initPyModules() {
     VRPyAMLLoader::registerModule("AMLLoader", pModFactory);
     PyModule_AddObject(pModVR, "Factory", pModFactory);
 
-    initVRPyStdOut();
+	if (!VROptions::get()->getOption<bool>("standalone")) initVRPyStdOut();
 
     // add cython local path to python search path
     PyRun_SimpleString(

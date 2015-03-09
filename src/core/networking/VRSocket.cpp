@@ -87,7 +87,7 @@ static int server_answer_to_connection_m(struct mg_connection *conn, enum mg_eve
             //response = MHD_create_response_from_data(1, (void*)" ", MHD_NO, MHD_YES);
         }
 
-        if (sad->pages->count(sad->path) and sad->path != "") { // return local site
+        if (sad->pages->count(sad->path) && sad->path != "") { // return local site
             string spage = *(*sad->pages)[sad->path];
             mg_send_data(conn, spage.c_str(), spage.size());
             //return MG_TRUE;

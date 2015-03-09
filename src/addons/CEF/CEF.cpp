@@ -31,7 +31,11 @@ CEF::~CEF() {
 
 void CEF::initiate() {
     CefSettings settings;
+#ifndef _WIN32
     string bsp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/CefSubProcess";
+#else
+	string bsp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/CefSubProcessWin.exe";
+#endif
     string ldp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/locales";
     string rdp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef";
     string lfp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/wblog.log";
