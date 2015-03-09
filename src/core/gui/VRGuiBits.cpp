@@ -209,6 +209,10 @@ void VRGuiBits::toggleDock() {
     //TODO: reset changelist to redraw everything!
 }
 
+void VRGuiBits::toggleVerbose(string s) {
+    if (s == "network") VRGlobals::get()->VERBOSE_NETWORK = getToggleButtonState("network_verbose");
+}
+
 VRGuiBits::VRGuiBits() {
     setComboboxCallback("combobox4", VRGuiBits_on_camera_changed);
     setComboboxCallback("combobox9", VRGuiBits_on_navigation_changed);
@@ -222,6 +226,7 @@ VRGuiBits::VRGuiBits() {
     setButtonCallback("button21", VRGuiBits_on_internal_close_clicked);
 
     setToolButtonCallback("togglebutton1", sigc::mem_fun(*this, &VRGuiBits::toggleDock) );
+    setToolButtonCallback("network_verbose", sigc::bind<string>( sigc::mem_fun(*this, &VRGuiBits::toggleVerbose), "network" ) );
 
     setLabel("label24", "Project: None");
 
@@ -256,10 +261,10 @@ VRGuiBits::VRGuiBits() {
     swin->set_size_request(-1,70);
     term_box = (GtkWidget*)swin->gobj();
 
-    Gtk::VPaned* paned;
-    VRGuiBuilder()->get_widget("vpaned1", paned);
-    paned->pack2(*swin, false, false);
-    paned->show_all();
+    Gtk::HBox* box;
+    VRGuiBuilder()->get_widget("hbox15", box);
+    box->pack_start(*swin, true, true);
+    box->show_all();
 
     VRFunction<int>* fkt = new VRFunction<int>( "IntMonitor_guiUpdate", VRGuiBits_on_internal_update );
     VRSceneManager::get()->addUpdateFkt(fkt);

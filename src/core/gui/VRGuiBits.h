@@ -24,6 +24,7 @@ class VRGuiBits {
         void hideAbout(int i);
         void updateVisualLayer();
         void on_view_option_toggle(VRVisualLayer* l, Gtk::ToggleToolButton* tb);
+        void toggleVerbose(string s);
         static void on_terminal_changed();
 
     public:

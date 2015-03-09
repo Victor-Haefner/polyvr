@@ -9,6 +9,7 @@
 #include "core/scene/VRScene.h"
 #include "core/setup/devices/VRDevice.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/gui/VRGuiManager.h"
 
 using namespace std;
 using namespace OSG;
@@ -30,6 +31,8 @@ CEF::~CEF() {
 }
 
 void CEF::initiate() {
+    init = true;
+    cout << "CEF init " << endl;
     CefSettings settings;
 #ifndef _WIN32
     string bsp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/CefSubProcess";
@@ -57,7 +60,6 @@ void CEF::initiate() {
     win.SetAsOffScreen(0);
 #endif
     browser = CefBrowserHost::CreateBrowserSync(win, this, "www.google.de", browser_settings, 0);
-    init = true;
 }
 
 void CEF::setMaterial(VRMaterial* mat) { if (mat == 0) return; this->mat = mat; mat->setTexture(image); }
@@ -143,13 +145,18 @@ void CEF::mouse(int b, bool down, VRDevice* dev) {
 
     VRIntersection ins = dev->intersect(obj);
 
-    /*string o = "NONE";
-    if (ins.object) o = ins.object->getName();
-    cout << "CEF::mouse " << this << " dev " << dev->getName();
-    cout << " hit " << ins.hit << " " << o << ", trg " << obj->getName();
-    cout << " b: " << b << " state: " << down;
-    cout << " texel: " << ins.texel;
-    cout << endl;*/
+    bool v = VRGlobals::get()->VERBOSE_NETWORK;
+    if (v) {
+        string o = "NONE";
+        if (ins.object) o = ins.object->getName();
+        stringstream ss;
+        ss << "CEF::mouse " << this << " dev " << dev->getName();
+        ss << " hit " << ins.hit << " " << o << ", trg " << obj->getName();
+        ss << " b: " << b << " s: " << down;
+        ss << " texel: " << ins.texel;
+        ss << endl;
+        VRGuiManager::get()->printInfo(ss.str());
+    }
 
     if (!ins.hit) return;
     if (ins.object != obj) return;
