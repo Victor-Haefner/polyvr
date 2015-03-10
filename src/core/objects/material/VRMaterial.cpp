@@ -69,6 +69,33 @@ struct VRMatData {
         colChunk->setSpecular( Color4f(1, 1, 1, 1) );
         colChunk->setShininess( 50 );
     }
+
+    VRMatData* copy() {
+        VRMatData* m = new VRMatData();
+        m->mat = ChunkMaterial::create();
+
+        if (colChunk) { m->colChunk = dynamic_pointer_cast<MaterialChunk>(colChunk->shallowCopy()); m->mat->addChunk(m->colChunk); }
+        if (blendChunk) { m->blendChunk = dynamic_pointer_cast<BlendChunk>(blendChunk->shallowCopy()); m->mat->addChunk(m->blendChunk); }
+        if (envChunk) { m->envChunk = dynamic_pointer_cast<TextureEnvChunk>(envChunk->shallowCopy()); m->mat->addChunk(m->envChunk); }
+        if (texChunk) { m->texChunk = dynamic_pointer_cast<TextureObjChunk>(texChunk->shallowCopy()); m->mat->addChunk(m->texChunk); }
+        if (lineChunk) { m->lineChunk = dynamic_pointer_cast<LineChunk>(lineChunk->shallowCopy()); m->mat->addChunk(m->lineChunk); }
+        if (pointChunk) { m->pointChunk = dynamic_pointer_cast<PointChunk>(pointChunk->shallowCopy()); m->mat->addChunk(m->pointChunk); }
+        if (polygonChunk) { m->polygonChunk = dynamic_pointer_cast<PolygonChunk>(polygonChunk->shallowCopy()); m->mat->addChunk(m->polygonChunk); }
+        if (twoSidedChunk) { m->twoSidedChunk = dynamic_pointer_cast<TwoSidedLightingChunk>(twoSidedChunk->shallowCopy()); m->mat->addChunk(m->twoSidedChunk); }
+        if (shaderChunk) { m->shaderChunk = ShaderProgramChunk::create(); m->mat->addChunk(m->shaderChunk); }
+
+        if (texture) { m->texture = dynamic_pointer_cast<Image>(texture->shallowCopy()); m->texChunk->setImage(m->texture); }
+        if (vProgram) { m->vProgram = dynamic_pointer_cast<ShaderProgram>(vProgram->shallowCopy()); m->shaderChunk->addShader(m->vProgram); }
+        if (fProgram) { m->fProgram = dynamic_pointer_cast<ShaderProgram>(fProgram->shallowCopy()); m->shaderChunk->addShader(m->fProgram); }
+        if (gProgram) { m->gProgram = dynamic_pointer_cast<ShaderProgram>(gProgram->shallowCopy()); m->shaderChunk->addShader(m->gProgram); }
+        if (video) ; // TODO
+
+        m->vertexScript = vertexScript;
+        m->fragmentScript = fragmentScript;
+        m->geometryScript = geometryScript;
+
+        return m;
+    }
 };
 
 map<string, VRMaterial*> VRMaterial::materials;
@@ -125,6 +152,15 @@ void VRMaterial::remPass(int i) {
 void VRMaterial::setActivePass(int i) {
     if (i < 0 || i >= getNPasses()) return;
     activePass = i;
+}
+
+void VRMaterial::clearExtraPasses() { for (int i=1; i<getNPasses(); i++) remPass(i); }
+void VRMaterial::appendPasses(VRMaterial* mat) {
+    for (int i=0; i<mat->getNPasses(); i++) {
+        VRMatData* md = mat->mats[i]->copy();
+        passes->addMaterial(md->mat);
+        mats.push_back(md);
+    }
 }
 
 VRMaterial* VRMaterial::get(MaterialRecPtr mat) {
@@ -256,23 +292,26 @@ void VRMaterial::setZOffset(float factor, float bias) {
     md->polygonChunk->setOffsetFill(true);
 }
 
-void VRMaterial::setFronBackDraw(int front, int back) {
+void VRMaterial::setFrontBackModes(int front, int back) {
     auto md = mats[activePass];
     if (md->polygonChunk == 0) { md->polygonChunk = PolygonChunk::create(); md->mat->addChunk(md->polygonChunk); }
-    md->polygonChunk->setFrontMode(front);
-    md->polygonChunk->setBackMode(back);
+
+    md->polygonChunk->setCullFace(GL_BACK);
+
+    if (front == GL_NONE) {
+        md->polygonChunk->setFrontMode(GL_FILL);
+        md->polygonChunk->setCullFace(GL_FRONT);
+    } else md->polygonChunk->setFrontMode(front);
+
+    if (back == GL_NONE) {
+        md->polygonChunk->setBackMode(GL_FILL);
+        md->polygonChunk->setCullFace(GL_BACK);
+    } else md->polygonChunk->setBackMode(back);
 }
 
 void VRMaterial::setWireFrame(bool b) {
-    auto md = mats[activePass];
-    if (md->polygonChunk == 0) { md->polygonChunk = PolygonChunk::create(); md->mat->addChunk(md->polygonChunk); }
-    if (b) {
-        md->polygonChunk->setFrontMode(GL_LINE);
-        md->polygonChunk->setBackMode(GL_LINE);
-    } else {
-        md->polygonChunk->setFrontMode(GL_FILL);
-        md->polygonChunk->setBackMode(GL_FILL);
-    }
+    if (b) setFrontBackModes(GL_LINE, GL_LINE);
+    else setFrontBackModes(GL_FILL, GL_FILL);
 }
 
 void VRMaterial::setVideo(string vid_path) {

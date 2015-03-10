@@ -59,6 +59,8 @@ class VRMaterial : public VRObject {
         int getNPasses();
         int addPass();
         void remPass(int i);
+        void appendPasses(VRMaterial* mat);
+        void clearExtraPasses();
 
         static VRMaterial* getDefault();
         static VRMaterial* get(MaterialRecPtr mat);
@@ -89,7 +91,7 @@ class VRMaterial : public VRObject {
         void setPointSize(int s);
         void setWireFrame(bool b);
         void setZOffset(float factor, float bias);
-        void setFronBackDraw(int front, int back);
+        void setFrontBackModes(int front, int back);
 
         Color3f getDiffuse();
         Color3f getSpecular();
