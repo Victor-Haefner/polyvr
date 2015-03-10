@@ -110,12 +110,10 @@ void VRGuiBits_on_internal_update(int i) {
     Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("liststore4"));
     store->clear();
 
-    map<string, string> vars = mnr->getVariables();
-    map<string, string>::iterator itr;
-    for (itr = vars.begin(); itr != vars.end(); itr++) {
+    for (auto var : mnr->getVariables()) {
         Gtk::ListStore::Row row = *store->append();
-        gtk_list_store_set (store->gobj(), row.gobj(), 0, itr->first.c_str(), -1);
-        gtk_list_store_set (store->gobj(), row.gobj(), 1, itr->second.c_str(), -1);
+        gtk_list_store_set (store->gobj(), row.gobj(), 0, var.first.c_str(), -1);
+        gtk_list_store_set (store->gobj(), row.gobj(), 1, var.second.c_str(), -1);
     }
 }
 

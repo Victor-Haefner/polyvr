@@ -97,7 +97,10 @@ VRMaterial* VRMaterial::getDefault() {
     return new VRMaterial("default");
 }
 
-void VRMaterial::resetDefault() { mats[activePass]->reset(); }
+void VRMaterial::resetDefault() {
+    delete getDefault();
+    materials.erase("default");
+}
 
 int VRMaterial::getActivePass() { return activePass; }
 int VRMaterial::getNPasses() { return passes->getNPasses(); }
@@ -202,10 +205,10 @@ void VRMaterial::setMaterial(MaterialRecPtr m) {
 
         auto md = mats[activePass];
         if (mc) mc->setBackMaterial(false);
-        if (mc) { md->mat->subChunk(md->colChunk); md->colChunk = mc; md->mat->addChunk(mc); }
+        if (mc) { md->mat->subChunk(md->colChunk);   md->colChunk = mc;   md->mat->addChunk(mc); }
         if (bc) { md->mat->subChunk(md->blendChunk); md->blendChunk = bc; md->mat->addChunk(bc); }
-        if (ec) { md->mat->subChunk(md->envChunk); md->envChunk = ec; md->mat->addChunk(ec); }
-        if (tc) { md->mat->subChunk(md->texChunk); md->texChunk = tc; md->mat->addChunk(tc); }
+        if (ec) { md->mat->subChunk(md->envChunk);   md->envChunk = ec;   md->mat->addChunk(ec); }
+        if (tc) { md->mat->subChunk(md->texChunk);   md->texChunk = tc;   md->mat->addChunk(tc); }
     }
 }
 
@@ -323,7 +326,6 @@ class MAC : private SimpleTexturedMaterial {
 Color4f toColor4f(Color3f c, float t) { return Color4f(c[0], c[1], c[2], t); }
 Color3f toColor3f(Color4f c) { return Color3f(c[0], c[1], c[2]); }
 
-void VRMaterial::setDiffuse(Color3f c) { mats[activePass]->colChunk->setDiffuse( toColor4f(c, getTransparency()) ); }
 void VRMaterial::setTransparency(float c) {
     auto md = mats[activePass];
     md->colChunk->setDiffuse( toColor4f(getDiffuse(), c) );
@@ -335,6 +337,8 @@ void VRMaterial::setTransparency(float c) {
         md->blendChunk->setDestFactor ( GL_ONE_MINUS_SRC_ALPHA );
     }
 }
+
+void VRMaterial::setDiffuse(Color3f c) { mats[activePass]->colChunk->setDiffuse( toColor4f(c, getTransparency()) );}
 void VRMaterial::setSpecular(Color3f c) { mats[activePass]->colChunk->setSpecular(toColor4f(c)); }
 void VRMaterial::setAmbient(Color3f c) { mats[activePass]->colChunk->setAmbient(toColor4f(c)); }
 void VRMaterial::setEmission(Color3f c) { mats[activePass]->colChunk->setEmission(toColor4f(c)); }

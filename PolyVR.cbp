@@ -600,6 +600,8 @@
 		<Unit filename="src/core/utils/VRFunction.h" />
 		<Unit filename="src/core/utils/VRInternalMonitor.cpp" />
 		<Unit filename="src/core/utils/VRInternalMonitor.h" />
+		<Unit filename="src/core/utils/VRLogger.cpp" />
+		<Unit filename="src/core/utils/VRLogger.h" />
 		<Unit filename="src/core/utils/VRName.cpp" />
 		<Unit filename="src/core/utils/VRName.h" />
 		<Unit filename="src/core/utils/VROptions.cpp" />

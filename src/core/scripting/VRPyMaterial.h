@@ -8,6 +8,10 @@ struct VRPyMaterial : VRPyBaseT<OSG::VRMaterial> {
     static PyMemberDef members[];
     static PyMethodDef methods[];
 
+    static PyObject* addPass(VRPyMaterial* self);
+    static PyObject* remPass(VRPyMaterial* self, PyObject* args);
+    static PyObject* setActivePass(VRPyMaterial* self, PyObject* args);
+
     static PyObject* getAmbient(VRPyMaterial* self);
     static PyObject* setAmbient(VRPyMaterial* self, PyObject* args);
     static PyObject* getDiffuse(VRPyMaterial* self);
