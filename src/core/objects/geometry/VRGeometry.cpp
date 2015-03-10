@@ -461,7 +461,6 @@ void VRGeometry::setMaterial(VRMaterial* mat) {
 
     this->mat = mat;
     mesh->setMaterial(mat->getMaterial());
-    cout << "VRGeometry::setMaterial " << getName() << " " << mat->getMaterial() << endl;
 }
 
 void VRGeometry::setMaterial(MaterialRecPtr mat) {

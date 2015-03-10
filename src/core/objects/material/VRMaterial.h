@@ -88,6 +88,8 @@ class VRMaterial : public VRObject {
         void setLineWidth(int w);
         void setPointSize(int s);
         void setWireFrame(bool b);
+        void setZOffset(float factor, float bias);
+        void setFronBackDraw(int front, int back);
 
         Color3f getDiffuse();
         Color3f getSpecular();

@@ -248,6 +248,21 @@ void VRMaterial::setQRCode(string s, Vec3f fg, Vec3f bg, int offset) {
     md->texChunk->setMinFilter (GL_NEAREST_MIPMAP_NEAREST);
 }
 
+void VRMaterial::setZOffset(float factor, float bias) {
+    auto md = mats[activePass];
+    if (md->polygonChunk == 0) { md->polygonChunk = PolygonChunk::create(); md->mat->addChunk(md->polygonChunk); }
+    md->polygonChunk->setOffsetFactor(factor);
+    md->polygonChunk->setOffsetBias(bias);
+    md->polygonChunk->setOffsetFill(true);
+}
+
+void VRMaterial::setFronBackDraw(int front, int back) {
+    auto md = mats[activePass];
+    if (md->polygonChunk == 0) { md->polygonChunk = PolygonChunk::create(); md->mat->addChunk(md->polygonChunk); }
+    md->polygonChunk->setFrontMode(front);
+    md->polygonChunk->setBackMode(back);
+}
+
 void VRMaterial::setWireFrame(bool b) {
     auto md = mats[activePass];
     if (md->polygonChunk == 0) { md->polygonChunk = PolygonChunk::create(); md->mat->addChunk(md->polygonChunk); }

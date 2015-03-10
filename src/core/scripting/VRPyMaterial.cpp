@@ -65,13 +65,28 @@ PyMethodDef VRPyMaterial::methods[] = {
     {"setVertexProgram", (PyCFunction)VRPyMaterial::setVertexProgram, METH_VARARGS, "Set vertex program - setVertexProgram( myScript )" },
     {"setFragmentProgram", (PyCFunction)VRPyMaterial::setFragmentProgram, METH_VARARGS, "Set fragment program - setFragmentProgram( myScript )" },
     {"setGeometryProgram", (PyCFunction)VRPyMaterial::setGeometryProgram, METH_VARARGS, "Set geometry program - setGeometryProgram( myScript )" },
-    {"setWireFrame", (PyCFunction)VRPyMaterial::setWireFrame, METH_VARARGS, "Set wireframe mode" },
-
+    {"setWireFrame", (PyCFunction)VRPyMaterial::setWireFrame, METH_VARARGS, "Set wireframe mode - setWireFrame(bool)" },
+    {"setLit", (PyCFunction)VRPyMaterial::setLit, METH_VARARGS, "Set if geometry is lit - setLit(bool)" },
     {"addPass", (PyCFunction)VRPyMaterial::addPass, METH_NOARGS, "Add a new pass - i addPass()" },
     {"remPass", (PyCFunction)VRPyMaterial::remPass, METH_VARARGS, "Remove a pass - remPass(i)" },
     {"setActivePass", (PyCFunction)VRPyMaterial::setActivePass, METH_VARARGS, "Activate a pass - setActivePass(i)" },
+    {"setZOffset", (PyCFunction)VRPyMaterial::setZOffset, METH_VARARGS, "Set the z offset factor and bias - setZOffset(factor, bias)" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyMaterial::setZOffset(VRPyMaterial* self, PyObject* args) {
+	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setZOffset, C obj is invalid"); return NULL; }
+	float f,b;
+    if (! PyArg_ParseTuple(args, "ff", &f, &b)) return NULL;
+	self->obj->setZOffset(f,b);
+	Py_RETURN_TRUE;
+}
+
+PyObject* VRPyMaterial::setLit(VRPyMaterial* self, PyObject* args) {
+	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setLit, C obj is invalid"); return NULL; }
+	self->obj->setLit(parseBool(args));
+	Py_RETURN_TRUE;
+}
 
 PyObject* VRPyMaterial::addPass(VRPyMaterial* self) {
 	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::addPass, C obj is invalid"); return NULL; }
