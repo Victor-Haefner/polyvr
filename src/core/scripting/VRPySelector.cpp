@@ -48,9 +48,15 @@ PyMethodDef VRPySelector::methods[] = {
     {"select", (PyCFunction)VRPySelector::select, METH_VARARGS, "Select an object - select( object )" },
     {"deselect", (PyCFunction)VRPySelector::select, METH_VARARGS, "Deselect - deselect()" },
     {"get", (PyCFunction)VRPySelector::get, METH_NOARGS, "Return the selected object - object get()" },
+    {"setColor", (PyCFunction)VRPySelector::setColor, METH_VARARGS, "Set the color of the selection - setColor([f,f,f])" },
     {NULL}  /* Sentinel */
 };
 
+PyObject* VRPySelector::setColor(VRPySelector* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPySelector::setColor - Object is invalid"); return NULL; }
+    self->obj->setColor(parseVec3f(args));
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPySelector::select(VRPySelector* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPySelector::select - Object is invalid"); return NULL; }

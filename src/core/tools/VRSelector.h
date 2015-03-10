@@ -15,6 +15,8 @@ class VRGeometry;
 
 class VRSelector {
     private:
+        Vec3f color;
+
         map<VRGeometry*, VRMaterial*> orig_mats;
         VRObject* selection = 0;
 
@@ -27,6 +29,8 @@ class VRSelector {
 
         void select(VRObject* obj);
         VRObject* get();
+
+        void setColor(Vec3f c);
 };
 
 OSG_END_NAMESPACE;

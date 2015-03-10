@@ -7,6 +7,7 @@
 struct VRPySelector : VRPyBaseT<OSG::VRSelector> {
     static PyMethodDef methods[];
 
+    static PyObject* setColor(VRPySelector* self, PyObject* args);
     static PyObject* select(VRPySelector* self, PyObject* args);
     static PyObject* deselect(VRPySelector* self);
     static PyObject* get(VRPySelector* self);

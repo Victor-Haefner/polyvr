@@ -5,16 +5,18 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-VRSelector::VRSelector() {;}
+VRSelector::VRSelector() { color = Vec3f(0.2, 0.65, 0.9); }
 
 VRMaterial* VRSelector::getMat() {
     VRMaterial* mat = new VRMaterial("VRSelector");
     mat->setFrontBackModes(GL_NONE, GL_LINE);
-    mat->setDiffuse(Vec3f(1,0,0));
+    mat->setDiffuse(color);
     mat->setLineWidth(5);
     mat->setLit(false);
     return mat;
 }
+
+void VRSelector::setColor(Vec3f c) { color = c; }
 
 void VRSelector::deselect() {
     if (selection == 0) return;
