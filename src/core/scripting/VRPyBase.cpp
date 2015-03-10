@@ -27,6 +27,17 @@ vector<PyObject*> VRPyBase::parseList(PyObject *args) {
     return pyListToVector( parseObject(args) );
 }
 
+OSG::Vec3i VRPyBase::parseVec3iList(PyObject *li) {
+    if (li == 0) return OSG::Vec3i();
+    vector<PyObject*> lis = pyListToVector(li);
+    if (lis.size() != 3) return OSG::Vec3i(0,0,0);
+    int x,y,z;
+    x = PyInt_AsLong(lis[0]);
+    y = PyInt_AsLong(lis[1]);
+    z = PyInt_AsLong(lis[2]);
+    return OSG::Vec3i(x,y,z);
+}
+
 OSG::Vec3f VRPyBase::parseVec3fList(PyObject *li) {
     if (li == 0) return OSG::Vec3f();
     vector<PyObject*> lis = pyListToVector(li);

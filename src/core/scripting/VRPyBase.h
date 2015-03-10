@@ -34,6 +34,7 @@ struct VRPyBase {
     static int parseInt(PyObject *args);
     static string parseString(PyObject *args);
     static OSG::Vec3f parseVec3fList(PyObject *li);
+    static OSG::Vec3i parseVec3iList(PyObject *li);
 
     static PyObject* toPyTuple(OSG::Vec3f v);
     static PyObject* toPyTuple(OSG::Vec2f v);

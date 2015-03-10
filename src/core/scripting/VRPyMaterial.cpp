@@ -71,8 +71,40 @@ PyMethodDef VRPyMaterial::methods[] = {
     {"remPass", (PyCFunction)VRPyMaterial::remPass, METH_VARARGS, "Remove a pass - remPass(i)" },
     {"setActivePass", (PyCFunction)VRPyMaterial::setActivePass, METH_VARARGS, "Activate a pass - setActivePass(i)" },
     {"setZOffset", (PyCFunction)VRPyMaterial::setZOffset, METH_VARARGS, "Set the z offset factor and bias - setZOffset(factor, bias)" },
+    {"setTexture", (PyCFunction)VRPyMaterial::setTexture, METH_VARARGS, "Set the texture - setTexture(str path)\n - setTexture([[r,g,b]], [xN, yN, zN], bool isFloat)\n - setTexture([[r,g,b,a]], [xN, yN, zN], bool isFloat)" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyMaterial::setTexture(VRPyMaterial* self, PyObject* args) {
+	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setTexture, C obj is invalid"); return NULL; }
+	int aN = PyList_GET_SIZE(args);
+	if (aN == 1) self->obj->setTexture( parseString(args) );
+	if (aN > 1) {
+        PyObject *data, *dims;
+        int doFl;
+        if (! PyArg_ParseTuple(args, "OOi", &data, &dims, &doFl)) return NULL;
+        vector<PyObject*> _data = pyListToVector(data);
+        if (_data.size() == 0) Py_RETURN_TRUE;
+
+        int vN = PyList_GET_SIZE(_data[0]);
+        if (doFl) {
+            float buf[vN*_data.size()];
+            for (int i=0; i<_data.size(); i++) {
+                vector<PyObject*> vec = pyListToVector(_data[i]);
+                for (int j=0; j<vN; j++) buf[i*vN+j] = PyFloat_AsDouble(vec[j]);
+            }
+            self->obj->setTexture( (char*)buf, vN, parseVec3iList(dims), true );
+        } else {
+            char buf[vN*_data.size()];
+            for (int i=0; i<_data.size(); i++) {
+                vector<PyObject*> vec = pyListToVector(_data[i]);
+                for (int j=0; j<vN; j++) buf[i*vN+j] = PyInt_AsLong(vec[j]);
+            }
+            self->obj->setTexture( buf, vN, parseVec3iList(dims), false );
+        }
+	}
+	Py_RETURN_TRUE;
+}
 
 PyObject* VRPyMaterial::setZOffset(VRPyMaterial* self, PyObject* args) {
 	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setZOffset, C obj is invalid"); return NULL; }
