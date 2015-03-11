@@ -160,13 +160,14 @@ bool VRGuiBits::toggleWidgets(GdkEventKey* k) {
     Gtk::Table* tab; VRGuiBuilder()->get_widget("table20", tab);
     Gtk::Notebook* nb1; VRGuiBuilder()->get_widget("notebook1", nb1);
     Gtk::Box* hb1; VRGuiBuilder()->get_widget("hbox1", hb1);
+    Gtk::Box* hb2; VRGuiBuilder()->get_widget("hbox15", hb2);
 
     if (fs) {
         nb1->hide();
         hb1->hide();
+        hb2->hide();
         tab->hide();
         hs1->hide();
-        gtk_widget_hide(term_box);
     } else win->show_all();
     return true;
 }
