@@ -397,16 +397,20 @@ PyObject* VRPyGeometry::setTexCoords(VRPyGeometry* self, PyObject *args) {
     PyObject* vec;
     if (! PyArg_ParseTuple(args, "O", &vec)) return NULL;
     if (self->obj == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
-    OSG::VRGeometry* geo = (OSG::VRGeometry*) self->obj;
 
-    OSG::GeoVec2fPropertyRecPtr tc = OSG::GeoVec2fProperty::create();
-    feed2D<OSG::GeoVec2fPropertyRecPtr, OSG::Vec2f>(vec, tc);
-    geo->setTexCoords(tc);
+    int vN = PyList_GET_SIZE(vec);
+    if (vN == 0) Py_RETURN_TRUE;
+    int vvN = PyList_GET_SIZE(PyList_GetItem(vec,0));
 
-    /*cout << "\nSET TexCoords ";
-    OSG::Vec2f f;
-    for (int i=0;i<4;i++) { tc->getValue(f,i); cout << "   " << f; }
-    cout << endl;*/
+    if (vvN == 2) {
+        OSG::GeoVec2fPropertyRecPtr tc = OSG::GeoVec2fProperty::create();
+        feed2D<OSG::GeoVec2fPropertyRecPtr, OSG::Vec2f>(vec, tc);
+        self->obj->setTexCoords(tc);
+    } else if (vvN == 3) {
+        OSG::GeoVec3fPropertyRecPtr tc = OSG::GeoVec3fProperty::create();
+        feed2D<OSG::GeoVec3fPropertyRecPtr, OSG::Vec3f>(vec, tc);
+        self->obj->setTexCoords(tc);
+    }
 
     Py_RETURN_TRUE;
 }
