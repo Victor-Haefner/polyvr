@@ -3,6 +3,7 @@
 #include <OpenSG/OSGSimpleTexturedMaterial.h>
 #include <OpenSG/OSGTextureObjChunk.h>
 #include <OpenSG/OSGTextureEnvChunk.h>
+#include <OpenSG/OSGTexGenChunk.h>
 #include <OpenSG/OSGLineChunk.h>
 #include <OpenSG/OSGPointChunk.h>
 #include <OpenSG/OSGPolygonChunk.h>
@@ -28,6 +29,7 @@ struct VRMatData {
     BlendChunkRecPtr blendChunk;
     TextureEnvChunkRecPtr envChunk;
     TextureObjChunkRecPtr texChunk;
+    TexGenChunkRecPtr genChunk;
     LineChunkRecPtr lineChunk;
     PointChunkRecPtr pointChunk;
     PolygonChunkRecPtr polygonChunk;
@@ -56,6 +58,7 @@ struct VRMatData {
         mat->addChunk(twoSidedChunk);
         blendChunk = 0;
         texChunk = 0;
+        genChunk = 0;
         envChunk = 0;
         lineChunk = 0;
         pointChunk = 0;
@@ -78,6 +81,7 @@ struct VRMatData {
         if (blendChunk) { m->blendChunk = dynamic_pointer_cast<BlendChunk>(blendChunk->shallowCopy()); m->mat->addChunk(m->blendChunk); }
         if (envChunk) { m->envChunk = dynamic_pointer_cast<TextureEnvChunk>(envChunk->shallowCopy()); m->mat->addChunk(m->envChunk); }
         if (texChunk) { m->texChunk = dynamic_pointer_cast<TextureObjChunk>(texChunk->shallowCopy()); m->mat->addChunk(m->texChunk); }
+        if (genChunk) { m->genChunk = dynamic_pointer_cast<TexGenChunk>(genChunk->shallowCopy()); m->mat->addChunk(m->genChunk); }
         if (lineChunk) { m->lineChunk = dynamic_pointer_cast<LineChunk>(lineChunk->shallowCopy()); m->mat->addChunk(m->lineChunk); }
         if (pointChunk) { m->pointChunk = dynamic_pointer_cast<PointChunk>(pointChunk->shallowCopy()); m->mat->addChunk(m->pointChunk); }
         if (polygonChunk) { m->polygonChunk = dynamic_pointer_cast<PolygonChunk>(polygonChunk->shallowCopy()); m->mat->addChunk(m->polygonChunk); }
@@ -274,6 +278,22 @@ void VRMaterial::setTexture(ImageRecPtr img, bool alpha) {
     if (alpha && img->hasAlphaChannel()) {
         md->blendChunk->setSrcFactor  ( GL_SRC_ALPHA           );
         md->blendChunk->setDestFactor ( GL_ONE_MINUS_SRC_ALPHA );
+    }
+}
+
+void VRMaterial::setTextureType(string type) {
+    auto md = mats[activePass];
+    if (type == "Normal") {
+        if (md->genChunk == 0) return;
+        md->mat->subChunk(md->genChunk);
+        md->genChunk = 0;
+        return;
+    }
+
+    if (type == "SphereEnv") {
+        if (md->genChunk == 0) { md->genChunk = TexGenChunk::create(); md->mat->addChunk(md->genChunk); }
+        md->genChunk->setGenFuncS(GL_SPHERE_MAP);
+        md->genChunk->setGenFuncT(GL_SPHERE_MAP);
     }
 }
 

@@ -13,16 +13,6 @@ using namespace std;
 
 class Material; OSG_GEN_CONTAINERPTR(Material);
 class Image; OSG_GEN_CONTAINERPTR(Image);
-/*class ChunkMaterial; OSG_GEN_CONTAINERPTR(ChunkMaterial);
-class MaterialChunk; OSG_GEN_CONTAINERPTR(MaterialChunk);
-class BlendChunk; OSG_GEN_CONTAINERPTR(BlendChunk);
-class TextureEnvChunk; OSG_GEN_CONTAINERPTR(TextureEnvChunk);
-class TextureObjChunk; OSG_GEN_CONTAINERPTR(TextureObjChunk);
-class LineChunk; OSG_GEN_CONTAINERPTR(LineChunk);
-class PointChunk; OSG_GEN_CONTAINERPTR(PointChunk);
-class PolygonChunk; OSG_GEN_CONTAINERPTR(PolygonChunk);
-class TwoSidedLightingChunk; OSG_GEN_CONTAINERPTR(TwoSidedLightingChunk);
-class ShaderProgramChunk; OSG_GEN_CONTAINERPTR(ShaderProgramChunk);*/
 class ShaderProgram; OSG_GEN_CONTAINERPTR(ShaderProgram);
 class MultiPassMaterial; OSG_GEN_CONTAINERPTR(MultiPassMaterial);
 
@@ -75,6 +65,7 @@ class VRMaterial : public VRObject {
         void setTexture(string img_path, bool alpha = true);
         void setTexture(ImageRecPtr img, bool alpha = true);
         void setTexture(char* data, int format, Vec3i dims, bool isfloat);
+        void setTextureType(string type);
         void setQRCode(string s, Vec3f fg, Vec3f bg, int offset);
         void setVideo(string vid_path);
         VRVideo* getVideo();
