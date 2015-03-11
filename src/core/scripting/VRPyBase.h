@@ -24,7 +24,6 @@ struct VRPyBase {
         if ((PyObject*)t == Py_None) t = 0;
     }
 
-    static vector<PyObject*> pyListToVector(PyObject *v);
     static vector<PyObject*> parseList(PyObject *args);
     static OSG::Vec2f parseVec2f(PyObject *args);
     static OSG::Vec3f parseVec3f(PyObject *args);
@@ -33,6 +32,12 @@ struct VRPyBase {
     static bool parseBool(PyObject *args);
     static int parseInt(PyObject *args);
     static string parseString(PyObject *args);
+
+    static bool isList(PyObject* o);
+    static bool isTuple(PyObject* o);
+    static int pySize(PyObject* v);
+    static PyObject* getItem(PyObject* v, int i);
+    static vector<PyObject*> pyListToVector(PyObject *v);
     static OSG::Vec3f parseVec3fList(PyObject *li);
     static OSG::Vec3i parseVec3iList(PyObject *li);
 

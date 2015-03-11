@@ -265,13 +265,13 @@ void VRMaterial::setTexture(ImageRecPtr img, bool alpha) {
 
     md->texture = img;
     md->texChunk->setImage(img);
+    md->envChunk->setEnvMode(GL_MODULATE);
     if (alpha && img->hasAlphaChannel() && md->blendChunk == 0) {
         md->blendChunk = BlendChunk::create();
         md->mat->addChunk(md->blendChunk);
     }
 
     if (alpha && img->hasAlphaChannel()) {
-        md->envChunk->setEnvMode   (GL_MODULATE);
         md->blendChunk->setSrcFactor  ( GL_SRC_ALPHA           );
         md->blendChunk->setDestFactor ( GL_ONE_MINUS_SRC_ALPHA );
     }

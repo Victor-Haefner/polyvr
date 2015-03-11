@@ -77,32 +77,37 @@ PyMethodDef VRPyMaterial::methods[] = {
 
 PyObject* VRPyMaterial::setTexture(VRPyMaterial* self, PyObject* args) {
 	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setTexture, C obj is invalid"); return NULL; }
-	int aN = PyList_GET_SIZE(args);
-	if (aN == 1) self->obj->setTexture( parseString(args) );
-	if (aN > 1) {
-        PyObject *data, *dims;
-        int doFl;
-        if (! PyArg_ParseTuple(args, "OOi", &data, &dims, &doFl)) return NULL;
-        vector<PyObject*> _data = pyListToVector(data);
-        if (_data.size() == 0) Py_RETURN_TRUE;
 
-        int vN = PyList_GET_SIZE(_data[0]);
+	int aN = pySize(args);
+	if (aN == 1) self->obj->setTexture( parseString(args) );
+
+	if (aN > 1) {
+        PyObject *data, *dims; int doFl;
+        if (! PyArg_ParseTuple(args, "OOi", &data, &dims, &doFl)) return NULL;
+
+        if (pySize(data) == 0) Py_RETURN_TRUE;
+        vector<PyObject*> _data = pyListToVector(data);
+        int dN = _data.size();
+
+        int vN = pySize(_data[0]);
         if (doFl) {
-            float buf[vN*_data.size()];
-            for (int i=0; i<_data.size(); i++) {
-                vector<PyObject*> vec = pyListToVector(_data[i]);
+            vector<float> buf(vN*dN, 0);
+            for (int i=0; i<dN; i++) {
+                PyObject* dObj = _data[i];
+                vector<PyObject*> vec = pyListToVector(dObj);
                 for (int j=0; j<vN; j++) buf[i*vN+j] = PyFloat_AsDouble(vec[j]);
             }
-            self->obj->setTexture( (char*)buf, vN, parseVec3iList(dims), true );
+            self->obj->setTexture( (char*)&buf[0], vN, parseVec3iList(dims), true );
         } else {
-            char buf[vN*_data.size()];
-            for (int i=0; i<_data.size(); i++) {
+            vector<char> buf(vN*dN, 0);
+            for (int i=0; i<dN; i++) {
                 vector<PyObject*> vec = pyListToVector(_data[i]);
                 for (int j=0; j<vN; j++) buf[i*vN+j] = PyInt_AsLong(vec[j]);
             }
-            self->obj->setTexture( buf, vN, parseVec3iList(dims), false );
+            self->obj->setTexture( &buf[0], vN, parseVec3iList(dims), false );
         }
 	}
+
 	Py_RETURN_TRUE;
 }
 

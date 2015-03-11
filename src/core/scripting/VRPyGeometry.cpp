@@ -267,13 +267,8 @@ PyObject* VRPyGeometry::setTypes(VRPyGeometry* self, PyObject *args) {
     OSG::VRGeometry* geo = (OSG::VRGeometry*) self->obj;
     OSG::GeoUInt8PropertyRecPtr types = OSG::GeoUInt8Property::create();
 
-	for(Py_ssize_t i = 0; i < PyList_Size(typeList); i++) {
+	for (int i = 0; i < pySize(typeList); i++) {
 		PyObject* pyType = PyList_GetItem(typeList, i);
-		/*PyObject* tmpType = 0;
-		if (!PyArg_ParseTuple(pyType, "O", &tmpType)) {
-			PyErr_SetString(err, "Couldn't parse type from type list");
-			continue;
-		}*/
 
 		string stype = PyString_AsString(pyType);
 		int type = GL_type_from_string(stype);
@@ -398,15 +393,16 @@ PyObject* VRPyGeometry::setTexCoords(VRPyGeometry* self, PyObject *args) {
     if (! PyArg_ParseTuple(args, "O", &vec)) return NULL;
     if (self->obj == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
 
-    int vN = PyList_GET_SIZE(vec);
-    if (vN == 0) Py_RETURN_TRUE;
-    int vvN = PyList_GET_SIZE(PyList_GetItem(vec,0));
+    if (pySize(vec) == 0) Py_RETURN_TRUE;
+    int vN = pySize(PyList_GetItem(vec,0));
 
-    if (vvN == 2) {
+    if (vN == 2) {
         OSG::GeoVec2fPropertyRecPtr tc = OSG::GeoVec2fProperty::create();
         feed2D<OSG::GeoVec2fPropertyRecPtr, OSG::Vec2f>(vec, tc);
         self->obj->setTexCoords(tc);
-    } else if (vvN == 3) {
+    }
+
+    if (vN == 3) {
         OSG::GeoVec3fPropertyRecPtr tc = OSG::GeoVec3fProperty::create();
         feed2D<OSG::GeoVec3fPropertyRecPtr, OSG::Vec3f>(vec, tc);
         self->obj->setTexCoords(tc);

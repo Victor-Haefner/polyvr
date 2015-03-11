@@ -62,6 +62,7 @@ PyObject* VRPySelector::select(VRPySelector* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPySelector::select - Object is invalid"); return NULL; }
     VRPyObject* obj;
     parseObject(args, obj);
+    if (obj == 0) return NULL;
     self->obj->select(obj->obj);
     Py_RETURN_TRUE;
 }
