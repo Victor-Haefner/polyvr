@@ -46,7 +46,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRSelector>::type = {
 
 PyMethodDef VRPySelector::methods[] = {
     {"select", (PyCFunction)VRPySelector::select, METH_VARARGS, "Select an object - select( object )" },
-    {"deselect", (PyCFunction)VRPySelector::select, METH_VARARGS, "Deselect - deselect()" },
+    {"deselect", (PyCFunction)VRPySelector::select, METH_NOARGS, "Deselect - deselect()" },
     {"get", (PyCFunction)VRPySelector::get, METH_NOARGS, "Return the selected object - object get()" },
     {"setColor", (PyCFunction)VRPySelector::setColor, METH_VARARGS, "Set the color of the selection - setColor([f,f,f])" },
     {NULL}  /* Sentinel */
