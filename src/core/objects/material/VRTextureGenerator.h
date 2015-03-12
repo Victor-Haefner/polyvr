@@ -30,9 +30,11 @@ class VRTextureGenerator {
     public:
         VRTextureGenerator();
 
+        void setSize(Vec3i dim);
         void setSize(int w, int h, int d = 1);
 
         void add(GEN_TYPE type, float amount, Vec3f c1, Vec3f c2);
+        void add(string type, float amount, Vec3f c1, Vec3f c2);
         void clearStage();
 
         ImageRecPtr compose(int seed);

@@ -78,6 +78,14 @@ OSG::Vec4f VRPyBase::parseVec4f(PyObject *args) {
     return OSG::Vec4f(x,y,z,w);
 }
 
+OSG::Vec3i VRPyBase::parseVec3i(PyObject *args) {
+    if (pySize(args) == 1) return parseVec3iList( parseObject(args) );
+
+    int x,y,z; x=y=z=0;
+    if (! PyArg_ParseTuple(args, "iii", &x, &y, &z)) return OSG::Vec3i();
+    return OSG::Vec3i(x,y,z);
+}
+
 float VRPyBase::parseFloat(PyObject *args) {
     float x; x=0;
     if (! PyArg_ParseTuple(args, "f", &x)) return 0;

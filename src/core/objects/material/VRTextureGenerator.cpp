@@ -7,7 +7,14 @@ using namespace std;
 
 VRTextureGenerator::VRTextureGenerator() {}
 
+void VRTextureGenerator::setSize(Vec3i dim) { width = dim[0]; height = dim[1]; depth = dim[2]; }
 void VRTextureGenerator::setSize(int w, int h, int d) { width = w; height = h; depth = d; }
+
+void VRTextureGenerator::add(string type, float amount, Vec3f c1, Vec3f c2) {
+    GEN_TYPE t = PERLIN;
+    if (type == "Bricks") t = BRICKS;
+    add(t, amount, c1, c2);
+}
 
 void VRTextureGenerator::add(GEN_TYPE type, float amount, Vec3f c1, Vec3f c2) {
     Layer l;

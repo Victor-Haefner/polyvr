@@ -1,4 +1,5 @@
 #include "VRPyMaterial.h"
+#include "VRPyTextureGenerator.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTextureGenerator.h"
 #include "VRPyBaseT.h"
@@ -59,7 +60,6 @@ PyMethodDef VRPyMaterial::methods[] = {
     {"setShininess", (PyCFunction)VRPyMaterial::setShininess, METH_VARARGS, "Sets the shininess - setShininess(f)" },
     {"setPointSize", (PyCFunction)VRPyMaterial::setPointSize, METH_VARARGS, "Sets the GL point size - setPointSize(i)" },
     {"setLineWidth", (PyCFunction)VRPyMaterial::setLineWidth, METH_VARARGS, "Sets the GL line width - setLineWidth(i)" },
-    {"setPerlin", (PyCFunction)VRPyMaterial::setPerlin, METH_VARARGS, "Set a perlin noise texture - setPerlin(col1[r,g,b], col2[r,g,b], int seed, float amount)" },
     {"setQRCode", (PyCFunction)VRPyMaterial::setQRCode, METH_VARARGS, "Encode a string as QR code texture - setQRCode(string, fg[r,g,b], bg[r,g,b], offset)" },
     {"setMagMinFilter", (PyCFunction)VRPyMaterial::setMagMinFilter, METH_VARARGS, "Set the mag && min filtering mode - setMagMinFilter( mag, min)\n possible values for mag are GL_X && min can be GL_X || GL_X_MIPMAP_Y, where X && Y can be NEAREST || LINEAR" },
     {"setVertexProgram", (PyCFunction)VRPyMaterial::setVertexProgram, METH_VARARGS, "Set vertex program - setVertexProgram( myScript )" },
@@ -86,7 +86,14 @@ PyObject* VRPyMaterial::setTexture(VRPyMaterial* self, PyObject* args) {
 	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setTexture, C obj is invalid"); return NULL; }
 
 	int aN = pySize(args);
-	if (aN == 1) self->obj->setTexture( parseString(args) );
+	if (aN == 1) {
+        PyObject* o = parseObject(args);
+        if (PyString_Check(o)) self->obj->setTexture( PyString_AsString(o) ); // load a file
+        else {
+            VRPyTextureGenerator* tg = (VRPyTextureGenerator*)o;
+            self->obj->setTexture( tg->obj->compose(0) );
+        }
+	}
 
 	if (aN > 1) {
         PyObject *data, *dims; int doFl;
@@ -253,15 +260,5 @@ PyObject* VRPyMaterial::setQRCode(VRPyMaterial* self, PyObject* args) {
 	PyObject *data, *fg, *bg; int i;
     if (! PyArg_ParseTuple(args, "OOOi", &data, &fg, &bg, &i)) return NULL;
 	self->obj->setQRCode(PyString_AsString(data), parseVec3fList(fg), parseVec3fList(bg), i);
-	Py_RETURN_TRUE;
-}
-
-PyObject* VRPyMaterial::setPerlin(VRPyMaterial* self, PyObject* args) {
-	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setPerlin, C obj is invalid"); return NULL; }
-	PyObject *c1, *c2; int seed; float amount;
-    if (! PyArg_ParseTuple(args, "OOif", &c1, &c2, &seed, &amount)) return NULL;
-	OSG::VRTextureGenerator tgen;
-	tgen.add(OSG::PERLIN, amount, parseVec3fList(c1), parseVec3fList(c2));
-	self->obj->setTexture(tgen.compose(seed));
 	Py_RETURN_TRUE;
 }

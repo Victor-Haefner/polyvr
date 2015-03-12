@@ -28,6 +28,7 @@ struct VRPyBase {
     static OSG::Vec2f parseVec2f(PyObject *args);
     static OSG::Vec3f parseVec3f(PyObject *args);
     static OSG::Vec4f parseVec4f(PyObject *args);
+    static OSG::Vec3i parseVec3i(PyObject *args);
     static float parseFloat(PyObject *args);
     static bool parseBool(PyObject *args);
     static int parseInt(PyObject *args);
