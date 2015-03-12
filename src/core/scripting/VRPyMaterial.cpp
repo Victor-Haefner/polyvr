@@ -261,7 +261,7 @@ PyObject* VRPyMaterial::setPerlin(VRPyMaterial* self, PyObject* args) {
 	PyObject *c1, *c2; int seed; float amount;
     if (! PyArg_ParseTuple(args, "OOif", &c1, &c2, &seed, &amount)) return NULL;
 	OSG::VRTextureGenerator tgen;
-	tgen.addNoise(OSG::PERLIN, amount, parseVec3fList(c1), parseVec3fList(c2));
+	tgen.add(OSG::PERLIN, amount, parseVec3fList(c1), parseVec3fList(c2));
 	self->obj->setTexture(tgen.compose(seed));
 	Py_RETURN_TRUE;
 }

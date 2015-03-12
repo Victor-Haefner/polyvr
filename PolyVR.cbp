@@ -442,9 +442,13 @@
 		<Unit filename="src/core/objects/geometry/VRSprite.h" />
 		<Unit filename="src/core/objects/geometry/VRStroke.cpp" />
 		<Unit filename="src/core/objects/geometry/VRStroke.h" />
+		<Unit filename="src/core/objects/material/VRBricks.cpp" />
+		<Unit filename="src/core/objects/material/VRBricks.h" />
 		<Unit filename="src/core/objects/material/VRMaterial.cpp" />
 		<Unit filename="src/core/objects/material/VRMaterial.h" />
 		<Unit filename="src/core/objects/material/VRMaterialT.h" />
+		<Unit filename="src/core/objects/material/VRPerlin.cpp" />
+		<Unit filename="src/core/objects/material/VRPerlin.h" />
 		<Unit filename="src/core/objects/material/VRShader.cpp" />
 		<Unit filename="src/core/objects/material/VRShader.h" />
 		<Unit filename="src/core/objects/material/VRTextureGenerator.cpp" />

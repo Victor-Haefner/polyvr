@@ -79,7 +79,10 @@ SimpleMaterialRecPtr BlockWorld::initMaterial(string texture) {
 
     TextureObjChunkRecPtr tex_obj_chunk = TextureObjChunk::create();
     VRTextureGenerator tgen;
-    tgen.addNoise(PERLIN, 0.5, Vec3f(1,0,0), Vec3f(1,1,0));
+    tgen.setSize(512,512);
+    tgen.add(PERLIN, 1./2, Vec3f(0.3,0.1,0.1), Vec3f(0.9,0.5,0.1));
+    tgen.add(PERLIN, 1./8, Vec3f(0.8,0.8,0.8), Vec3f(1.0,1.0,1.0));
+    tgen.add(PERLIN, 1./32, Vec3f(0.8,0.8,0.8), Vec3f(1.0,1.0,1.0));
     ImageRecPtr img = tgen.compose(0);
     tex_obj_chunk->setImage(img);
     mat->addChunk(tex_obj_chunk);
