@@ -48,6 +48,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRClipPlane>::type = {
 PyMethodDef VRPyClipPlane::methods[] = {
     {"setTree", (PyCFunction)VRPyClipPlane::setTree, METH_VARARGS, "Set the tree to apply the clipping plane to - setTree( object )" },
     {"setActive", (PyCFunction)VRPyClipPlane::setActive, METH_VARARGS, "Activate and deactivate the clipping - setActive( bool )" },
+    {"isActive", (PyCFunction)VRPyClipPlane::isActive, METH_NOARGS, "Check if active - bool isActive()" },
     {NULL}  /* Sentinel */
 };
 
@@ -63,4 +64,9 @@ PyObject* VRPyClipPlane::setActive(VRPyClipPlane* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyClipPlane::setActive - Object is invalid"); return NULL; }
     self->obj->setActive( parseBool(args) );
     Py_RETURN_TRUE;
+}
+
+PyObject* VRPyClipPlane::isActive(VRPyClipPlane* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyClipPlane::isActive - Object is invalid"); return NULL; }
+    return PyBool_FromLong( self->obj->isActive() );
 }

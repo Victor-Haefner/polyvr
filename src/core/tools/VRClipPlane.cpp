@@ -27,6 +27,8 @@ void VRClipPlane::setTree(VRObject* obj) {
     if (tree && active) activate();
 }
 
+bool VRClipPlane::isActive() { return active; }
+
 void VRClipPlane::setActive(bool a) {
     if (active == a) return;
 

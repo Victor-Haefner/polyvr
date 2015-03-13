@@ -26,6 +26,7 @@ class VRClipPlane : public VRGeometry {
     public:
         VRClipPlane(string name);
 
+        bool isActive();
         void setActive(bool a);
         void setTree(VRObject* obj);
 };

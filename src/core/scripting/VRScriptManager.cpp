@@ -201,6 +201,7 @@ static PyMethodDef VRScriptManager_module_methods[] = {
 	{"updateGui", (PyCFunction)VRScriptManager::updateGui, METH_NOARGS, "Update the gui" },
 	{"render", (PyCFunction)VRScriptManager::render, METH_NOARGS, "Renders the viewports" },
 	{"triggerScript", (PyCFunction)VRScriptManager::pyTriggerScript, METH_VARARGS, "Trigger a script - triggerScript( str script )" },
+	{"getRoot", (PyCFunction)VRScriptManager::getRoot, METH_NOARGS, "Return the root node of the scenegraph - object getRoot()" },
     {NULL}  /* Sentinel */
 };
 
@@ -388,6 +389,10 @@ string VRScriptManager::getPyVRMethodDoc(string type, string method) {
 PyObject* VRScriptManager::exit(VRScriptManager* self) {
     exitPolyVR();
     Py_RETURN_TRUE;
+}
+
+PyObject* VRScriptManager::getRoot(VRScriptManager* self) {
+    return VRPyTypeCaster::cast( VRSceneManager::getCurrent()->getRoot() );
 }
 
 PyObject* VRScriptManager::loadGeometry(VRScriptManager* self, PyObject *args) {

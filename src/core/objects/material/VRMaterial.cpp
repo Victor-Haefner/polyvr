@@ -335,17 +335,13 @@ void VRMaterial::setFrontBackModes(int front, int back) {
 }
 
 void VRMaterial::setClipPlane(bool active, Vec4f equation, VRTransform* beacon) {
-    //auto md = mats[activePass];
-    //if (md->clipChunk == 0) { md->clipChunk = ClipPlaneChunk::create(); md->mat->addChunk(md->clipChunk); }
-
     for (int i=0; i<getNPasses(); i++) {
-        cout << "clip pass " << i << endl;
         auto md = mats[i];
         if (md->clipChunk == 0) { md->clipChunk = ClipPlaneChunk::create(); md->mat->addChunk(md->clipChunk); }
 
         md->clipChunk->setEquation(equation);
         md->clipChunk->setEnable  (active);
-        md->clipChunk->setBeacon  (beacon->getNode());
+        if (beacon) md->clipChunk->setBeacon(beacon->getNode());
     }
 }
 
