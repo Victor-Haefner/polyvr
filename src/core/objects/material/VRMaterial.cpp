@@ -12,6 +12,8 @@
 #include <OpenSG/OSGTwoSidedLightingChunk.h>
 #include <OpenSG/OSGImage.h>
 #include <OpenSG/OSGMultiPassMaterial.h>
+#include <OpenSG/OSGClipPlaneChunk.h>
+#include "core/objects/VRTransform.h"
 #include "core/utils/toString.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
@@ -36,6 +38,7 @@ struct VRMatData {
     TwoSidedLightingChunkRecPtr twoSidedChunk;
     ImageRecPtr texture;
     ShaderProgramChunkRecPtr shaderChunk;
+    ClipPlaneChunkRecPtr clipChunk;
     ShaderProgramRecPtr vProgram;
     ShaderProgramRecPtr fProgram;
     ShaderProgramRecPtr gProgram;
@@ -66,6 +69,7 @@ struct VRMatData {
         texture = 0;
         video = 0;
         shaderChunk = 0;
+        clipChunk = 0;
 
         colChunk->setDiffuse( Color4f(0.9, 0.9, 0.8, 1) );
         colChunk->setAmbient( Color4f(0.3, 0.3, 0.3, 1) );
@@ -86,6 +90,7 @@ struct VRMatData {
         if (pointChunk) { m->pointChunk = dynamic_pointer_cast<PointChunk>(pointChunk->shallowCopy()); m->mat->addChunk(m->pointChunk); }
         if (polygonChunk) { m->polygonChunk = dynamic_pointer_cast<PolygonChunk>(polygonChunk->shallowCopy()); m->mat->addChunk(m->polygonChunk); }
         if (twoSidedChunk) { m->twoSidedChunk = dynamic_pointer_cast<TwoSidedLightingChunk>(twoSidedChunk->shallowCopy()); m->mat->addChunk(m->twoSidedChunk); }
+        if (clipChunk) { m->clipChunk = dynamic_pointer_cast<ClipPlaneChunk>(clipChunk->shallowCopy()); m->mat->addChunk(m->clipChunk); }
         if (shaderChunk) { m->shaderChunk = ShaderProgramChunk::create(); m->mat->addChunk(m->shaderChunk); }
 
         if (texture) { m->texture = dynamic_pointer_cast<Image>(texture->shallowCopy()); m->texChunk->setImage(m->texture); }
@@ -316,7 +321,7 @@ void VRMaterial::setFrontBackModes(int front, int back) {
     auto md = mats[activePass];
     if (md->polygonChunk == 0) { md->polygonChunk = PolygonChunk::create(); md->mat->addChunk(md->polygonChunk); }
 
-    md->polygonChunk->setCullFace(GL_BACK);
+    md->polygonChunk->setCullFace(GL_NONE);
 
     if (front == GL_NONE) {
         md->polygonChunk->setFrontMode(GL_FILL);
@@ -327,6 +332,21 @@ void VRMaterial::setFrontBackModes(int front, int back) {
         md->polygonChunk->setBackMode(GL_FILL);
         md->polygonChunk->setCullFace(GL_BACK);
     } else md->polygonChunk->setBackMode(back);
+}
+
+void VRMaterial::setClipPlane(bool active, Vec4f equation, VRTransform* beacon) {
+    //auto md = mats[activePass];
+    //if (md->clipChunk == 0) { md->clipChunk = ClipPlaneChunk::create(); md->mat->addChunk(md->clipChunk); }
+
+    for (int i=0; i<getNPasses(); i++) {
+        cout << "clip pass " << i << endl;
+        auto md = mats[i];
+        if (md->clipChunk == 0) { md->clipChunk = ClipPlaneChunk::create(); md->mat->addChunk(md->clipChunk); }
+
+        md->clipChunk->setEquation(equation);
+        md->clipChunk->setEnable  (active);
+        md->clipChunk->setBeacon  (beacon->getNode());
+    }
 }
 
 void VRMaterial::setWireFrame(bool b) {

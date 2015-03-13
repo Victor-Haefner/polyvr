@@ -17,6 +17,7 @@ class ShaderProgram; OSG_GEN_CONTAINERPTR(ShaderProgram);
 class MultiPassMaterial; OSG_GEN_CONTAINERPTR(MultiPassMaterial);
 
 struct VRMatData;
+class VRTransform;
 
 Color4f toColor4f(Color3f c, float t = 1);
 Color3f toColor3f(Color4f c);
@@ -83,6 +84,7 @@ class VRMaterial : public VRObject {
         void setWireFrame(bool b);
         void setZOffset(float factor, float bias);
         void setFrontBackModes(int front, int back);
+        void setClipPlane(bool active, Vec4f equation, VRTransform* beacon);
 
         Color3f getDiffuse();
         Color3f getSpecular();

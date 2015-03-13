@@ -25,6 +25,7 @@
 #include "VRPyRecorder.h"
 #include "VRPySnappingEngine.h"
 #include "VRPySelector.h"
+#include "VRPyClipPlane.h"
 #include <iostream>
 #include <algorithm>
 
@@ -245,6 +246,7 @@ void VRScriptManager::initPyModules() {
     VRPySnappingEngine::registerModule("SnappingEngine", pModVR);
     VRPySelector::registerModule("Selector", pModVR);
 
+    VRPyClipPlane::registerModule("ClipPlane", pModVR, VRPyGeometry::typeRef);
 	VRPyColorChooser::registerModule("ColorChooser", pModVR);
     VRPyCaveKeeper::registerModule("CaveKeeper", pModVR);
     VRPyCarDynamics::registerModule("CarDynamics", pModVR);

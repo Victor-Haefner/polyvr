@@ -494,6 +494,8 @@
 		<Unit filename="src/core/scripting/VRPyBase.cpp" />
 		<Unit filename="src/core/scripting/VRPyBase.h" />
 		<Unit filename="src/core/scripting/VRPyBaseT.h" />
+		<Unit filename="src/core/scripting/VRPyClipPlane.cpp" />
+		<Unit filename="src/core/scripting/VRPyClipPlane.h" />
 		<Unit filename="src/core/scripting/VRPyColorChooser.cpp" />
 		<Unit filename="src/core/scripting/VRPyColorChooser.h" />
 		<Unit filename="src/core/scripting/VRPyConstraint.cpp" />
@@ -528,6 +530,8 @@
 		<Unit filename="src/core/scripting/VRPySprite.h" />
 		<Unit filename="src/core/scripting/VRPyStroke.cpp" />
 		<Unit filename="src/core/scripting/VRPyStroke.h" />
+		<Unit filename="src/core/scripting/VRPyTextureGenerator.cpp" />
+		<Unit filename="src/core/scripting/VRPyTextureGenerator.h" />
 		<Unit filename="src/core/scripting/VRPyTransform.cpp" />
 		<Unit filename="src/core/scripting/VRPyTransform.h" />
 		<Unit filename="src/core/scripting/VRPyTypeCaster.cpp" />
@@ -586,6 +590,7 @@
 		<Unit filename="src/core/setup/windows/VRWindow.h" />
 		<Unit filename="src/core/setup/windows/VRWindowManager.cpp" />
 		<Unit filename="src/core/setup/windows/VRWindowManager.h" />
+		<Unit filename="src/core/tools/VRClipPlane.cpp" />
 		<Unit filename="src/core/tools/VRClipPlane.h" />
 		<Unit filename="src/core/tools/VRColorChooser.cpp" />
 		<Unit filename="src/core/tools/VRColorChooser.h" />
