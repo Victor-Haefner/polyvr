@@ -12,6 +12,7 @@ VRClipPlane::VRClipPlane(string name) : VRGeometry(name) {
     setPrimitive("Plane", "0.2 0.2 1 1");
     VRMaterial* m = new VRMaterial("clipPlane");
     setMaterial(m);
+    setVisible(false);
 
     //m->setWireFrame(true);
     m->setFrontBackModes(GL_LINE, GL_FILL);

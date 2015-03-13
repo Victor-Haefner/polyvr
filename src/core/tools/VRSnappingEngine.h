@@ -12,6 +12,7 @@ using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 class Octree;
+class VRObject;
 class VRTransform;
 class VRGeometry;
 
@@ -41,6 +42,7 @@ class VRSnappingEngine {
         void clear();
 
         void addObject(VRTransform* obj, float weight = 1);
+        void addTree(VRObject* obj, float weight = 1);
 
         // snap object's position
         void addDistance(float dist, bool local = true, float weight = 1);

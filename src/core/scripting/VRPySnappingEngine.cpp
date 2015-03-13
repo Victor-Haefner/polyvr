@@ -5,7 +5,7 @@
 template<> PyTypeObject VRPyBaseT<OSG::VRSnappingEngine>::type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
-    "VR.Haptic",             /*tp_name*/
+    "VR.SnappingEngine",             /*tp_name*/
     sizeof(VRPySnappingEngine),             /*tp_basicsize*/
     0,                         /*tp_itemsize*/
     (destructor)dealloc, /*tp_dealloc*/
@@ -24,7 +24,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRSnappingEngine>::type = {
     0,                         /*tp_setattro*/
     0,                         /*tp_as_buffer*/
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
-    "Haptic binding",           /* tp_doc */
+    "SnappingEngine binding",           /* tp_doc */
     0,		               /* tp_traverse */
     0,		               /* tp_clear */
     0,		               /* tp_richcompare */
@@ -46,10 +46,20 @@ template<> PyTypeObject VRPyBaseT<OSG::VRSnappingEngine>::type = {
 
 PyMethodDef VRPySnappingEngine::methods[] = {
     {"addObject", (PyCFunction)VRPySnappingEngine::addObject, METH_VARARGS, "Add an object to be checked for snapping - addObject(obj)" },
-    {"setPreset", (PyCFunction)VRPySnappingEngine::setPreset, METH_VARARGS, "Initiate the engine with a preset - setPreset('simple alignment')" },
+    {"addTree", (PyCFunction)VRPySnappingEngine::addTree, METH_VARARGS, "Add all subtree objects to be checked for snapping - addTree(obj)" },
+    {"setPreset", (PyCFunction)VRPySnappingEngine::setPreset, METH_VARARGS, "Initiate the engine with a preset - setPreset(str preset)\n   preset can be: 'simple alignment'" },
     {NULL}  /* Sentinel */
 };
 
+
+PyObject* VRPySnappingEngine::addTree(VRPySnappingEngine* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPySnappingEngine::addTree - Object is invalid"); return NULL; }
+    VRPyObject* obj = 0;
+    if (! PyArg_ParseTuple(args, "O", &obj)) return NULL;
+
+    if (obj->obj) self->obj->addTree(obj->obj);
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPySnappingEngine::addObject(VRPySnappingEngine* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPySnappingEngine::addObject - Object is invalid"); return NULL; }

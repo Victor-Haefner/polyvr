@@ -46,6 +46,11 @@ void VRSnappingEngine::setPreset(PRESET preset) {
     }
 }
 
+void VRSnappingEngine::addTree(VRObject* obj, float weight) {
+    vector<VRObject*> objs = obj->getObjectListByType("Geometry");
+    for (auto o : objs) addObject((VRTransform*)o, weight);
+}
+
 void VRSnappingEngine::addObject(VRTransform* obj, float weight) {
     objects[obj] = obj->getWorldMatrix();
     Vec3f p = obj->getWorldPosition();
