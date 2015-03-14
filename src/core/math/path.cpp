@@ -205,7 +205,7 @@ void path::update() {
 Vec3f path::getPosition(float t) {
     if (points.size() == 0) return Vec3f();
     float tN = t*(points.size()-1);
-    int ti = floor(tN);
+    uint ti = floor(tN);
     float x = tN-ti;
     if (ti > points.size()-1) return points[points.size()-1];
     return (1-x)*points[ti] + x*points[ti+1];
@@ -236,7 +236,7 @@ void path::getOrientation(float t, Vec3f& dir, Vec3f& up) {
 Vec3f path::getColor(float t) {
     if (colors.size() == 0) return Vec3f();
     float tN = t*(colors.size()-1);
-    int ti = floor(tN);
+    uint ti = floor(tN);
     float x = tN-ti;
     if (ti > colors.size()-1) return colors[colors.size()-1];
     return (1-x)*colors[ti] + x*colors[ti+1];

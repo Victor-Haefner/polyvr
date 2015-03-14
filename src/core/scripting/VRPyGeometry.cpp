@@ -7,7 +7,9 @@
 #include "VRPyBaseT.h"
 #include "VRPyMaterial.h"
 #include "VRPyTypeCaster.h"
-//#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+
+#define NO_IMPORT_ARRAY
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include "numpy/ndarraytypes.h"
 #include "numpy/ndarrayobject.h"
 
@@ -58,7 +60,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRGeometry>::type = {
     0,		               /* tp_iter */
     0,		               /* tp_iternext */
     VRPyGeometry::methods,             /* tp_methods */
-    VRPyGeometry::members,             /* tp_members */
+    0,             /* tp_members */
     0,                         /* tp_getset */
     0,                         /* tp_base */
     0,                         /* tp_dict */
@@ -68,10 +70,6 @@ template<> PyTypeObject VRPyBaseT<OSG::VRGeometry>::type = {
     (initproc)init,      /* tp_init */
     0,                         /* tp_alloc */
     New_VRObjects,                 /* tp_new */
-};
-
-PyMemberDef VRPyGeometry::members[] = {
-    {NULL}  /* Sentinel */
 };
 
 PyMethodDef VRPyGeometry::methods[] = {
@@ -95,7 +93,6 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"getMaterial", (PyCFunction)VRPyGeometry::getMaterial, METH_NOARGS, "get material" },
     {"duplicate", (PyCFunction)VRPyGeometry::duplicate, METH_NOARGS, "duplicate geometry" },
     {"merge", (PyCFunction)VRPyGeometry::merge, METH_VARARGS, "Merge another geometry into this one" },
-    {"setLit", (PyCFunction)VRPyGeometry::setLit, METH_VARARGS, "Set if geometry is lit" },
     {"setPrimitive", (PyCFunction)VRPyGeometry::setPrimitive, METH_VARARGS, "Set geometry to primitive" },
     {"setVideo", (PyCFunction)VRPyGeometry::setVideo, METH_VARARGS, "Set video texture - setVideo(path)" },
     {"playVideo", (PyCFunction)VRPyGeometry::playVideo, METH_VARARGS, "Play the video texture from t0 to t1 - playVideo(t0, t1, speed)" },
@@ -124,11 +121,7 @@ template<class T, class t>
 void feed2Dnp(PyObject* o, T& vec) { // numpy version
     PyArrayObject* a = (PyArrayObject*)o;
 
-    //float ftmp[] = {1.f,2.f,3.f};
-    //OSG::Vec3f* vtmp = (OSG::Vec3f*) ftmp;
-
-    int N = a->dimensions[0]; //
-
+    int N = PyArray_DIMS(a)[0];
     vec->resize(N);
 
     t v;
@@ -581,14 +574,6 @@ PyObject* VRPyGeometry::duplicate(VRPyGeometry* self) {// TODO: can a duplicate 
     OSG::VRGeometry* d = (OSG::VRGeometry*)self->obj->duplicate();
     d->addAttachment("dynamicaly_generated", 0);
     return VRPyGeometry::fromPtr( d );
-}
-
-PyObject* VRPyGeometry::setLit(VRPyGeometry* self, PyObject *args) {
-    int b1;
-    if (! PyArg_ParseTuple(args, "i", &b1)) return NULL;
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyGeometry::setLit, Object is invalid"); return NULL; }
-    self->obj->getMaterial()->setLit(b1);
-    Py_RETURN_TRUE;
 }
 
 PyObject* VRPyGeometry::setPrimitive(VRPyGeometry* self, PyObject *args) {

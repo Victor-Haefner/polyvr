@@ -2051,6 +2051,7 @@ static process_id_t start_process(char *interp, const char *cmd,
   return pi.hProcess;
 }
 #else
+#pragma GCC diagnostic ignored "-Wunused-result"
 static process_id_t start_process(const char *interp, const char *cmd,
                                   const char *env, const char *envp[],
                                   const char *dir, sock_t sock) {

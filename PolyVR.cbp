@@ -41,11 +41,11 @@
 			<Add option="`pkg-config python --cflags`" />
 			<Add option="`pkg-config gtksourceview-2.0 --cflags`" />
 			<Add option="-use_readonly_const" />
-			<Add option="-ftemplate-depth-100" />
 			<Add option="-fPIC" />
 			<Add option="-Wno-deprecated" />
 			<Add option="-frounding-math" />
 			<Add option="-ftime-report" />
+			<Add option="-fno-strict-aliasing" />
 			<Add option="-DLC_ALL=C" />
 			<Add option="-DOSG2" />
 			<Add option="-D_GNU_SOURCE" />
@@ -574,8 +574,6 @@
 		<Unit filename="src/core/setup/tracking/Kinect.h" />
 		<Unit filename="src/core/setup/tracking/VRPN.cpp" />
 		<Unit filename="src/core/setup/tracking/VRPN.h" />
-		<Unit filename="src/core/setup/tracking/WinTrackerIII.cpp" />
-		<Unit filename="src/core/setup/tracking/WinTrackerIII.h" />
 		<Unit filename="src/core/setup/windows/VRGlutWindow.cpp" />
 		<Unit filename="src/core/setup/windows/VRGlutWindow.h" />
 		<Unit filename="src/core/setup/windows/VRGtkWindow.cpp" />

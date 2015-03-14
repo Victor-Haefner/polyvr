@@ -270,7 +270,7 @@ btCollisionShape* VRPhysics::getSphereShape() {
     if (shape_param > 0) return new btSphereShape( shape_param );
 
     float r2 = 0;
-    int N = 0;
+    //int N = 0;
     OSG::Pnt3f p;
     OSG::Pnt3f center;
 
@@ -360,7 +360,6 @@ btCollisionShape* VRPhysics::getConcaveShape() {
 btTransform VRPhysics::fromVRTransform(OSG::VRTransform* t, OSG::Vec3f& scale) {
     OSG::Matrix m = t->getWorldMatrix();
 
-    scale;
     for (int i=0; i<3; i++) scale[i] = m[i].length(); // store scale
     for (int i=0; i<3; i++) m[i] *= 1.0/scale[i]; // normalize
 

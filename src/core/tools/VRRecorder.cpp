@@ -41,7 +41,7 @@ void VRRecorder::setView(int i) {
 }
 
 void VRRecorder::setMaxFrames(int maxf) { maxFrames = maxf; }
-bool VRRecorder::frameLimitReached() { return (captures.size() == maxFrames); }
+bool VRRecorder::frameLimitReached() { return ((int)captures.size() == maxFrames); }
 
 void VRRecorder::capture() {
     if (view == 0) view = VRSetupManager::getCurrent()->getView(viewID);

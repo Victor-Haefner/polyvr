@@ -75,7 +75,6 @@ void CEF::open(string site) {
 }
 
 void CEF::resize() {
-    auto v = CefBrowserHost::PaintElementType::PET_VIEW;
     height = width/aspect;
     if (init) browser->GetHost()->WasResized();
     if (init) reload();

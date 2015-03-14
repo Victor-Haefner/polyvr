@@ -473,7 +473,8 @@ VRGeometry* ModuleStreets::makeStreetJointGeometry(StreetJoint* sj) {
 
     int ind = 0;
     middle = Vec3f(sj->position.getValues()[0], this->mapCoordinator->getElevation(sj->position) +  jointHeight, sj->position.getValues()[1]);
-    float width, mx, my;
+    float width = 0;
+    float mx, my;
 
     BOOST_FOREACH(JointPoints* jp, jointPoints) {
         right = Vec3f(jp->right.getValues()[0], this->mapCoordinator->getElevation(jp->right) +jointHeight, jp->right.getValues()[1]);

@@ -272,8 +272,8 @@ void fixNormalsIndices(VRGeometry* geo_in) {
     GeoVectorPropertyRecPtr norms = geo_in->getMesh()->getNormals();
     GeoVec3fPropertyRecPtr norms2 = GeoVec3fProperty::create();
 
-    for (int i=0; i<i_p->size(); i++) inds_map[i_n->getValue(i)] = i_p->getValue(i);
-    for (int i=0; i<norms->size(); i++) {
+    for (uint i=0; i<i_p->size(); i++) inds_map[i_n->getValue(i)] = i_p->getValue(i);
+    for (uint i=0; i<norms->size(); i++) {
         Vec3f n;
         norms->getValue(n, inds_map[i]);
         norms2->addValue(n);

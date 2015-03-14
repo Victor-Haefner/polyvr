@@ -276,7 +276,7 @@ VRObject* VRFactory::setupLod(vector<string> paths) {
     VRObject* root = new VRObject("factory_lod_root");
     root->addAttachment("dynamicaly_generated", 0);
     vector<VRLod*> micro_lods;
-    for (int i = 0; i<objects.size(); i++) {
+    for (uint i = 0; i<objects.size(); i++) {
         vector<VRObject*> geos = objects[i]->getChildren(true, "Geometry");
         VRProgress prog("setup factory LODs ", geos.size());
         for (auto g : geos) {

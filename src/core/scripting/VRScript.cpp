@@ -219,7 +219,7 @@ VRScript::Search VRScript::find(string s) {
     search.search = s;
     map<int, bool> res;
 
-    int pos = core.find(s, 0);
+    uint pos = core.find(s, 0);
     while(pos != string::npos) {
         res[pos] = false;
         pos = core.find(s, pos+1);

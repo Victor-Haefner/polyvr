@@ -151,7 +151,6 @@ string VRGuiFile::getRelativePath_toScene() {
 }
 
 string VRGuiFile::getRelativePath_toWorkdir() {
-    char cCurrentPath[FILENAME_MAX];
 	path b = boost::filesystem::current_path();
     path a(getPath());
     return make_relative( b, a ).string();

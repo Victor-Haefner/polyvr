@@ -106,7 +106,7 @@ struct VRSound {
         initiated = true;
 
         ALCHECK( alGenBuffers(Nbuffers, buffers) );
-        for (int i=0; i<Nbuffers; i++) free_buffers.push_back(buffers[i]);
+        for (uint i=0; i<Nbuffers; i++) free_buffers.push_back(buffers[i]);
 
         ALCHECK( alGenSources(1u, &source) );
         updateSource();

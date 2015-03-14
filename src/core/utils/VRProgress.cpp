@@ -27,6 +27,8 @@ void VRProgress::update(int i) {
 		case CALLBACK_M:
             (*callback)(k);
             break;
+        case WIDGET_M:
+            break;
     }
 }
 

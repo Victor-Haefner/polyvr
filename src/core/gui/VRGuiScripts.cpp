@@ -778,7 +778,7 @@ void VRGuiScripts::on_find_diag_cancel_clicked() {
 
 void VRGuiScripts::on_find_diag_find_clicked() {
     bool sa = getCheckButtonState("checkbutton38");
-    bool rep = getCheckButtonState("checkbutton12");
+    //bool rep = getCheckButtonState("checkbutton12");
     string search = getTextEntry("entry10");
     hideDialog("find_dialog");
 

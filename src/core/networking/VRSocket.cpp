@@ -246,7 +246,7 @@ void VRSocket::sendMessage(string msg) {
 
     close(sockfd);
 
-    /* Now read server response */
+    // Now read server response
     //n = read(sockfd, buffer, 255);
     //if (n < 0) { perror("ERROR reading from socket"); return; }
     //printf("%s\n",buffer);*/

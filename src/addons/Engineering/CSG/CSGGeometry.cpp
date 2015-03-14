@@ -195,7 +195,7 @@ CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryRecPtr geometry, Matrix worl
 	}
 
 	// Cleanup
-	for (void* o : oct->getData()) delete o;
+	for (void* o : oct->getData()) delete (size_t*)o;
 	delete oct;
 
 	oct = new Octree(THRESHOLD);

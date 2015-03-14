@@ -496,7 +496,7 @@ void VRGeometry::showGeometricData(string type, bool b) {
     if (type == "Normals") {
         GeoVectorPropertyRecPtr g_norms = mesh->getNormals();
         GeoVectorPropertyRecPtr g_pos = mesh->getPositions();
-        for (int i=0; i<g_norms->size(); i++) {
+        for (uint i=0; i<g_norms->size(); i++) {
             p = g_pos->getValue<Pnt3f>(i);
             n = g_norms->getValue<Vec3f>(i);
             pos->addValue(p);

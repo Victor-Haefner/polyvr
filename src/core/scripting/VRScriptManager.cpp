@@ -219,7 +219,7 @@ void VRScriptManager::initPyModules() {
     PyDict_SetItemString(pLocal, "__builtins__", PyEval_GetBuiltins());
     PyDict_SetItemString(pGlobal, "__builtins__", PyEval_GetBuiltins());
 
-    PyObject* sys_path = PySys_GetObject("path");
+    PyObject* sys_path = PySys_GetObject((char*)"path");
     PyList_Append(sys_path, PyString_FromString(".") );
 
     //string sys_path = PyString_AsString(PySys_GetObject("path"));
