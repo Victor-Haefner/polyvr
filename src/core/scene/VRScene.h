@@ -8,6 +8,7 @@
 #include "VRPhysicsManager.h"
 #include "VRCallbackManager.h"
 #include "VRRenderManager.h"
+#include "VRMaterialManager.h"
 #include "core/scripting/VRScriptManager.h"
 #include "core/navigation/VRNavigator.h"
 #include "core/networking/VRNetworkManager.h"
@@ -34,6 +35,7 @@ class VRScene : public VRObjectManager,
                 public VRScriptManager,
                 public VRNavigator,
                 public VRNetworkManager,
+                public VRMaterialManager,
                 public VRName,
                 public VRBackground,
                 public VRRenderManager,

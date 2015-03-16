@@ -84,6 +84,7 @@ void VRCallbackManager::dropTimeoutFkt(VRFunction<int>* f) {//replace by list ||
 void VRCallbackManager::updateCallbacks() {
     vector<VRFunction<int>*> cbs;
 
+    // gather all timeout callbacks
     int time = glutGet(GLUT_ELAPSED_TIME);
     for (auto tfl : timeoutFkts)
         for (auto& tf : *tfl.second)
@@ -92,9 +93,10 @@ void VRCallbackManager::updateCallbacks() {
                 tf.last_call = time;
             }
 
+    // gather all update callbacks
     for (auto fl : updateFkts) for (auto f : *fl.second) cbs.push_back(f);
 
-    for (auto cb : cbs) {
+    for (auto cb : cbs) { // trigger all callbacks
         (*cb)(0);
         if (jobFkts.count(cb)) { // if a job erase it
             dropUpdateFkt(cb);
