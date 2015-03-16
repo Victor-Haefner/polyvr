@@ -55,6 +55,7 @@ struct VRSnappingEngine::Rule {
         // check distance
         if ((p2-p).length() > distance) return;
 
+        cout << "Snapp!\n";
         m.setTranslate(p2); // snap
 
         // apply orientation
@@ -130,6 +131,7 @@ void VRSnappingEngine::update() {
         VRTransform* obj = dev.second->getDraggedObject();
         VRTransform* gobj = dev.second->getDraggedGhost();
         if (obj == 0 || gobj == 0) continue;
+
 
         Matrix m = gobj->getWorldMatrix();
         Vec3f p = Vec3f(m[3]);

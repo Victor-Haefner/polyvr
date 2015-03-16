@@ -194,10 +194,10 @@ void VRSceneManager::updateScene() {
 void VRSceneManager::update() {
     int fps = VRRate::get()->getRate();
 
+    VRGuiManager::get()->updateGtk();
     updateScene();
     updateCallbacks();
 
-    VRGuiManager::get()->updateGtk();
     if (VRSetupManager::getCurrent()) VRSetupManager::getCurrent()->updateWindows();//rendering
     VRGuiManager::get()->updateGtk();
 
