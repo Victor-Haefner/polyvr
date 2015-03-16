@@ -206,6 +206,8 @@
 		<Unit filename="src/addons/CSG/PolyhedronBuilder.h" />
 		<Unit filename="src/addons/CSG/VRPyCSG.h" />
 		<Unit filename="src/addons/CSG/csgjs.h" />
+		<Unit filename="src/addons/CaveKeeper/CKOctree.cpp" />
+		<Unit filename="src/addons/CaveKeeper/CKOctree.h" />
 		<Unit filename="src/addons/CaveKeeper/CaveKeeper.cpp" />
 		<Unit filename="src/addons/CaveKeeper/CaveKeeper.h" />
 		<Unit filename="src/addons/CaveKeeper/VRPyCaveKeeper.cpp" />
@@ -217,7 +219,6 @@
 		<Unit filename="src/addons/Engineering/CSG/CGALTypedefs.h" />
 		<Unit filename="src/addons/Engineering/CSG/CSGGeometry.cpp" />
 		<Unit filename="src/addons/Engineering/CSG/CSGGeometry.h" />
-		<Unit filename="src/addons/Engineering/CSG/Octree/Octree.cpp" />
 		<Unit filename="src/addons/Engineering/CSG/Octree/Octree.h" />
 		<Unit filename="src/addons/Engineering/CSG/PolyhedronBuilder.h" />
 		<Unit filename="src/addons/Engineering/CSG/VRPyCSG.cpp" />
@@ -389,11 +390,10 @@
 		<Unit filename="src/core/gui/VRGuiUtils.h" />
 		<Unit filename="src/core/gui/VRGuiVectorEntry.cpp" />
 		<Unit filename="src/core/gui/VRGuiVectorEntry.h" />
+		<Unit filename="src/core/math/Octree.cpp" />
+		<Unit filename="src/core/math/Octree.h" />
 		<Unit filename="src/core/math/interpolator.cpp" />
 		<Unit filename="src/core/math/interpolator.h" />
-		<Unit filename="src/core/math/octree.h" />
-		<Unit filename="src/core/math/octree2.cpp" />
-		<Unit filename="src/core/math/octree2.h" />
 		<Unit filename="src/core/math/patch.cpp" />
 		<Unit filename="src/core/math/patch.h" />
 		<Unit filename="src/core/math/path.cpp" />

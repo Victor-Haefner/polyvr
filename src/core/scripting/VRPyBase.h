@@ -9,6 +9,7 @@
 #include <iostream>
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGVector.h>
+#include <OpenSG/OSGLine.h>
 
 using namespace std;
 
@@ -40,7 +41,9 @@ struct VRPyBase {
     static PyObject* getItem(PyObject* v, int i);
     static vector<PyObject*> pyListToVector(PyObject *v);
     static OSG::Vec3f parseVec3fList(PyObject *li);
+    static OSG::Vec4f parseVec4fList(PyObject *li);
     static OSG::Vec3i parseVec3iList(PyObject *li);
+    static OSG::Line PyToLine(PyObject *li);
 
     static PyObject* toPyTuple(OSG::Vec3f v);
     static PyObject* toPyTuple(OSG::Vec2f v);

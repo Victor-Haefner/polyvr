@@ -1,11 +1,11 @@
-#include "octree2.h"
+#include "CKOctree.h"
 
 
 OSG_BEGIN_NAMESPACE
 using namespace std;
 
 
-octree2::element::element(Vec3f p, Vec3i otp, int s) : pos(p), otpos(otp), size(s), _size(s / 2), octant(0) {
+CKOctree::element::element(Vec3f p, Vec3i otp, int s) : pos(p), otpos(otp), size(s), _size(s / 2), octant(0) {
     for (int i=0;i<8;i++) {
         children[i] = 0;
         octIsEmpty[i] = 0;
@@ -21,7 +21,7 @@ octree2::element::element(Vec3f p, Vec3i otp, int s) : pos(p), otpos(otp), size(
     ID = count;
 }
 
-void octree2::element::add(element* e) {
+void CKOctree::element::add(element* e) {
     if (e == 0) return;
 
     Vec3i d = e->otpos - otpos;
@@ -46,8 +46,8 @@ void octree2::element::add(element* e) {
     if (c != e) c->add(e);
 }
 
-int octree2::element::getOctant(Vec3i p) { return getOctant(Vec3f(p)); }
-int octree2::element::getOctant(Vec3f p) {
+int CKOctree::element::getOctant(Vec3i p) { return getOctant(Vec3f(p)); }
+int CKOctree::element::getOctant(Vec3f p) {
     if(p[0] >= 0) {
         if(p[1] >= 0) {
             if(p[2] >= 0) return 0;
@@ -67,7 +67,7 @@ int octree2::element::getOctant(Vec3f p) {
     }
 }
 
-Vec3i octree2::element::getOctantVec(int o) {
+Vec3i CKOctree::element::getOctantVec(int o) {
     Vec3i d;
     switch(o) {
         case 0:
@@ -99,14 +99,14 @@ Vec3i octree2::element::getOctantVec(int o) {
     return d;
 }
 
-bool octree2::element::inside(Vec3f f) {
+bool CKOctree::element::inside(Vec3f f) {
     for (int i=0;i<3;i++) {
         if (abs(f[i] - pos[i]) > size*0.5) return false;
     }
     return true;
 }
 
-bool octree2::element::inside(Vec3i f) {
+bool CKOctree::element::inside(Vec3i f) {
     for (int i=0;i<3;i++) {
         float d = abs(f[i] - otpos[i]);
         cout << "\ninside " << d << " s " << size << flush;
@@ -115,21 +115,21 @@ bool octree2::element::inside(Vec3i f) {
     return true;
 }
 
-void octree2::element::print(string indent) {
+void CKOctree::element::print(string indent) {
     cout << "\n" << indent << "Octree element " << ID << " size: " << size;
     cout << " at " << pos << "  :  " << otpos << " in octant " << octant << flush;
 }
 
 // -----------------------------------------------------------------------------------------------------------
 
-int octree2::getMax(Vec3i i) {
+int CKOctree::getMax(Vec3i i) {
     int r = abs(i[0]);
     if (abs(i[1]) > r) r = abs(i[1]);
     if (abs(i[2]) > r) r = abs(i[2]);
     return r;
 }
 
-void octree2::print(element* e, string indent) {
+void CKOctree::print(element* e, string indent) {
     if (e == 0) return;
 
     e->print(indent);
@@ -138,14 +138,14 @@ void octree2::print(element* e, string indent) {
         print(e->children[i], indent + " ");
 }
 
-int octree2::signof(float f) {
+int CKOctree::signof(float f) {
     if (f >= 0) return 1;
     return -1;
 }
 
-octree2::octree2() : root(0), N(0), hitElement(0) {}
+CKOctree::CKOctree() : root(0), N(0), hitElement(0) {}
 
-void octree2::add(Vec3i _p) {
+void CKOctree::add(Vec3i _p) {
     Vec3i p = _p*2 + Vec3i(1,1,1); // avoid half positions
 
     int s = getMax(p);
@@ -171,7 +171,7 @@ void octree2::add(Vec3i _p) {
     //check lightning
 }
 
-void octree2::rem(element* e) {
+void CKOctree::rem(element* e) {
     N--;
 
     element* p = e->parent;
@@ -189,7 +189,7 @@ void octree2::rem(element* e) {
         if (p->childN == 0) rem(p);
 }
 
-void octree2::addAround(element* e) {
+void CKOctree::addAround(element* e) {
     Vec3i p = e->otpos;
     int i,j,k;
     Vec3i p2;
@@ -214,7 +214,7 @@ void octree2::addAround(element* e) {
 
 
 //check if there is a cube at pos
-bool octree2::isLeaf(Vec3f p) {
+bool CKOctree::isLeaf(Vec3f p) {
     element* res = get(p);
     if (res == 0) return false;
 
@@ -224,7 +224,7 @@ bool octree2::isLeaf(Vec3f p) {
 }
 
 //check if space || solid at pos
-bool octree2::isEmpty(Vec3f p) {
+bool CKOctree::isEmpty(Vec3f p) {
     element* res = get(p);
     if (res == 0) return false;
 
@@ -232,7 +232,7 @@ bool octree2::isEmpty(Vec3f p) {
     return res->octIsEmpty[o];
 }
 
-void octree2::setEmpty(Vec3i p) {
+void CKOctree::setEmpty(Vec3i p) {
     element* e = get(Vec3f(p));
     if (e == 0) return;
 
@@ -241,7 +241,7 @@ void octree2::setEmpty(Vec3i p) {
 }
 
 //get the smallest element at that position
-octree2::element* octree2::get(Vec3f p, octree2::element* e) {
+CKOctree::element* CKOctree::get(Vec3f p, CKOctree::element* e) {
     if (e == 0) e = root;
     if (e == 0) return 0;
 
@@ -257,7 +257,7 @@ octree2::element* octree2::get(Vec3f p, octree2::element* e) {
 }
 
 //ray cast
-octree2::element* octree2::get(Line ray, octree2::element* e, string indent) {
+CKOctree::element* CKOctree::get(Line ray, CKOctree::element* e, string indent) {
     if (e == 0) e = root;
     if (e == 0) return 0;
 
@@ -339,7 +339,7 @@ octree2::element* octree2::get(Line ray, octree2::element* e, string indent) {
     return 0;
 }
 
-vector<octree2::element*> octree2::getAround(Vec3f pos, float r) {
+vector<CKOctree::element*> CKOctree::getAround(Vec3f pos, float r) {
     //cout << "\nRequest Around " << pos << " in R " << r;
     vector<element*> elements;
     element* oe = 0;
@@ -366,20 +366,20 @@ vector<octree2::element*> octree2::getAround(Vec3f pos, float r) {
     return elements;
 }
 
-void octree2::traverse(VRFunction<element*>* cb) { traverse(root, cb); }
-void octree2::traverse(element* e, VRFunction<element*>* cb) {
+void CKOctree::traverse(VRFunction<element*>* cb) { traverse(root, cb); }
+void CKOctree::traverse(element* e, VRFunction<element*>* cb) {
     if (e == 0) return;
     if (e->leaf) (*cb)(e);
     for (int i=0; i<8; i++) traverse(e->children[i], cb);
 }
 
-octree2::element* octree2::getRoot() { return root; }
+CKOctree::element* CKOctree::getRoot() { return root; }
 
-Vec3f octree2::getHitPoint() { return hitPoint; }
-Vec3f octree2::getHitNormal() { return hitNormal; }
-octree2::element* octree2::getHitElement() { return hitElement; }
+Vec3f CKOctree::getHitPoint() { return hitPoint; }
+Vec3f CKOctree::getHitNormal() { return hitNormal; }
+CKOctree::element* CKOctree::getHitElement() { return hitElement; }
 
-void octree2::print() {
+void CKOctree::print() {
     if (root == 0) cout << "\nTree is empty" << flush;
     print(root);
 }

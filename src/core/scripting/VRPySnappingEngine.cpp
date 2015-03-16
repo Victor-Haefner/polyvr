@@ -46,11 +46,42 @@ template<> PyTypeObject VRPyBaseT<OSG::VRSnappingEngine>::type = {
 
 PyMethodDef VRPySnappingEngine::methods[] = {
     {"addObject", (PyCFunction)VRPySnappingEngine::addObject, METH_VARARGS, "Add an object to be checked for snapping - addObject(obj)" },
+    {"remObject", (PyCFunction)VRPySnappingEngine::remObject, METH_VARARGS, "Remove an object - remObject(obj)" },
     {"addTree", (PyCFunction)VRPySnappingEngine::addTree, METH_VARARGS, "Add all subtree objects to be checked for snapping - addTree(obj)" },
-    {"setPreset", (PyCFunction)VRPySnappingEngine::setPreset, METH_VARARGS, "Initiate the engine with a preset - setPreset(str preset)\n   preset can be: 'simple alignment'" },
+    {"setPreset", (PyCFunction)VRPySnappingEngine::setPreset, METH_VARARGS, "Initiate the engine with a preset - setPreset(str preset)\n   preset can be: 'snap back', 'simple alignment'" },
+    {"addRule", (PyCFunction)VRPySnappingEngine::addRule, METH_VARARGS, "Add snapping rule - int addRule(str translation, str orientation, prim_t[x,y,z,x0,y0,z0], prim_o[x,y,z,x0,y0,z0] center, float dist, float weight, bool local)" },
+    {"remRule", (PyCFunction)VRPySnappingEngine::remRule, METH_VARARGS, "Remove a rule - remRule(int ID)" },
     {NULL}  /* Sentinel */
 };
 
+
+PyObject* VRPySnappingEngine::remRule(VRPySnappingEngine* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPySnappingEngine::remRule - Object is invalid"); return NULL; }
+    self->obj->remRule( parseInt(args) );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPySnappingEngine::addRule(VRPySnappingEngine* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPySnappingEngine::addRule - Object is invalid"); return NULL; }
+    PyObject *t, *o; // string
+    PyObject *pt, *po; // Vec4f
+    float d, w;
+    int l;
+    if (! PyArg_ParseTuple(args, "OOOOffi", &t, &o, &pt, &po, &d, &w, &l)) return NULL;
+    auto _t = self->obj->typeFromStr( PyString_AsString(t) );
+    auto _o = self->obj->typeFromStr( PyString_AsString(o) );
+    int r = self->obj->addRule(_t, _o, PyToLine(pt), PyToLine(po), d,w,l);
+    return PyInt_FromLong(r);
+}
+
+PyObject* VRPySnappingEngine::remObject(VRPySnappingEngine* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPySnappingEngine::remObject - Object is invalid"); return NULL; }
+    VRPyTransform* obj = 0;
+    if (! PyArg_ParseTuple(args, "O", &obj)) return NULL;
+
+    if (obj->obj) self->obj->remObject(obj->obj);
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPySnappingEngine::addTree(VRPySnappingEngine* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPySnappingEngine::addTree - Object is invalid"); return NULL; }
@@ -74,6 +105,7 @@ PyObject* VRPySnappingEngine::setPreset(VRPySnappingEngine* self, PyObject* args
     if (self->obj == 0) { PyErr_SetString(err, "VRPySnappingEngine::setPreset - Object is invalid"); return NULL; }
     string ps = parseString(args);
     if (ps == "simple alignment") self->obj->setPreset(OSG::VRSnappingEngine::SIMPLE_ALIGNMENT);
+    if (ps == "snap back") self->obj->setPreset(OSG::VRSnappingEngine::SNAP_BACK);
     Py_RETURN_TRUE;
 }
 

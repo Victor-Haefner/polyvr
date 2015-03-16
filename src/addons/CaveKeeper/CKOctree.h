@@ -11,7 +11,7 @@
 OSG_BEGIN_NAMESPACE
 using namespace std;
 
-class octree2 {
+class CKOctree {
     public:
         struct element {
             int ID;
@@ -61,7 +61,7 @@ class octree2 {
         int signof(float f);
 
     public:
-        octree2();
+        CKOctree();
 
         void add(Vec3i _p);
         void rem(element* e);
