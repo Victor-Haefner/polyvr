@@ -25,6 +25,7 @@ class VRGeometry;
 class VRTransform;
 class VRVisualLayer;
 class VRMaterial;
+class VRThread;
 
 class VRPhysicsManager {
      private:
@@ -46,11 +47,13 @@ class VRPhysicsManager {
         vector<Vec3f> collisionPoints;
 
     protected:
-        VRFunction<int>* updatePhysicsFkt;
+        VRFunction<VRThread*>* updatePhysicsFkt;
+        VRFunction<int>* updatePhysObjectsFkt;
         VRPhysicsManager();
         ~VRPhysicsManager();
 
-        void updatePhysics();
+        void updatePhysics(VRThread* t);
+        void updatePhysObjects();
 
     public:
         void physicalize(VRTransform* obj);

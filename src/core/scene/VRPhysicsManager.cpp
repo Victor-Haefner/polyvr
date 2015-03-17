@@ -14,6 +14,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRVisualLayer.h"
+#include "VRThreadManager.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -35,7 +36,8 @@ VRPhysicsManager::VRPhysicsManager() {
     dynamicsWorld->setGravity(btVector3(0,-10,0));
     dynamicsWorld->getPairCache()->setInternalGhostPairCallback( new btGhostPairCallback() );
 
-    updatePhysicsFkt = new VRFunction<int>("PhysicsUpdate", boost::bind(&VRPhysicsManager::updatePhysics, this));
+    updatePhysObjectsFkt = new VRFunction<int>("Physics object update", boost::bind(&VRPhysicsManager::updatePhysObjects, this));
+    updatePhysicsFkt = new VRFunction<VRThread*>("Physics update", boost::bind(&VRPhysicsManager::updatePhysics, this, _1));
 
     physics_visual_layer = new VRVisualLayer("physics", "physics.png");
 
@@ -73,20 +75,22 @@ VRPhysicsManager::~VRPhysicsManager() {
     delete broadphase;
 }
 
-void VRPhysicsManager::updatePhysics() {
+void VRPhysicsManager::updatePhysics(VRThread* thread) {
     if (dynamicsWorld == 0) return;
-
-    for (auto o : OSGobjs) {
-        if (o.second->getPhysics()->isGhost()) o.second->updatePhysics();
-    }
 
     static int t_last = glutGet(GLUT_ELAPSED_TIME);
     int t = glutGet(GLUT_ELAPSED_TIME);
     dynamicsWorld->stepSimulation((t-t_last)*0.001, 30);
-    collectCollisionPoints();
     t_last = t;
+}
 
-    //print positions of all objects
+void VRPhysicsManager::updatePhysObjects() {
+    for (auto o : OSGobjs) {
+        if (o.second->getPhysics()->isGhost()) o.second->updatePhysics();
+    }
+
+    collectCollisionPoints();
+
     for (int j=dynamicsWorld->getNumCollisionObjects()-1; j>=0 ;j--) {
         btCollisionObject* obj = dynamicsWorld->getCollisionObjectArray()[j];
         body = btRigidBody::upcast(obj);

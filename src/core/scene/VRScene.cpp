@@ -31,7 +31,9 @@ VRScene::VRScene() {
     //scene update functions
     addUpdateFkt(updateObjectsFkt, 1000);
     addUpdateFkt(updateAnimationsFkt);
-    addUpdateFkt(updatePhysicsFkt);
+    addUpdateFkt(updatePhysObjectsFkt);
+
+    initThread(updatePhysicsFkt, "physics", true, 0);
 
     initDevices();
     VRMaterial::getDefault()->resetDefault();
