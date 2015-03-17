@@ -160,7 +160,7 @@ void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScript* script, bool on
 void VRGuiScripts::on_new_clicked() {
     Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("script_list"));
     VRScript* script = VRSceneManager::getCurrent()->newScript("Script", "\tpass");
-    setScriptListRow(store->append(), script);
+    updateList();
 }
 
 void VRGuiScripts::on_save_clicked() {
@@ -294,9 +294,7 @@ void VRGuiScripts::on_del_clicked() {
     if (!askUser(msg1, "Are you sure you want to delete this script?")) return;
 
     VRSceneManager::getCurrent()->remScript(script->getName());
-
-    Glib::RefPtr<Gtk::ListStore> list_store  = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("script_list"));
-    list_store->erase(iter);
+    updateList();
 
     setToolButtonSensitivity("toolbutton9", false);
     setToolButtonSensitivity("toolbutton8", false);
