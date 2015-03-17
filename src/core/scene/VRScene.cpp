@@ -29,7 +29,7 @@ VRScene::VRScene() {
     addFlag(SCENE_WRITE_PROTECTED);
 
     //scene update functions
-    addUpdateFkt(updateObjectsFkt);
+    addUpdateFkt(updateObjectsFkt, 1000);
     addUpdateFkt(updateAnimationsFkt);
     addUpdateFkt(updatePhysicsFkt);
 

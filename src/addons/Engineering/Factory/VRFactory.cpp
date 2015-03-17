@@ -4,7 +4,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/VRLod.h"
-#include "addons/Engineering/CSG/Octree/Octree.h"
+#include "core/math/Octree.h"
 
 #include <iostream>
 #include <fstream>

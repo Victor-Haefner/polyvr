@@ -1,7 +1,6 @@
 #include "core/utils/VRDoublebuffer.h"
 #include "core/objects/material/VRMaterial.h"
-//#include "core/math/octree.h"
-#include "Octree/Octree.h"
+#include "core/math/Octree.h"
 
 #include "CSGGeometry.h"
 #include "CGALTypedefs.h"

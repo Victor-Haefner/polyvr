@@ -292,18 +292,15 @@ void VRTransform::setFixed(bool b) {
 }
 
 /** Set the world matrix of the object **/
-void VRTransform::setWorldMatrix(Matrix _m) {
-    if (isNan(_m)) return;
-    Matrix wm, lm;
-    getWorldMatrix(wm);
-    getMatrix(lm);
+void VRTransform::setWorldMatrix(Matrix m) {
+    if (isNan(m)) return;
 
+    Matrix wm = getWorldMatrix(true);
     wm.invert();
+    wm.mult(m);
+    setMatrix(wm);
 
-    lm.mult(wm);
-    lm.mult(_m);
-
-    setMatrix(lm);
+    //cout << ;
 }
 
 /** Set the world position of the object **/
@@ -314,6 +311,8 @@ void VRTransform::setWorldPosition(Vec3f pos) {
     _from = pos - tmp + _from;
     reg_change();
 }
+
+doubleBuffer* VRTransform::getBuffer() { return dm; }
 
 //local pose setter--------------------
 /** Set the from vector **/

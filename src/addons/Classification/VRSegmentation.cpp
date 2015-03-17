@@ -1,7 +1,7 @@
 #include "VRSegmentation.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
-#include "addons/Engineering/CSG/Octree/Octree.h"
+#include "core/math/Octree.h"
 #include <OpenSG/OSGGeometry.h>
 #include <OpenSG/OSGGeoProperties.h>
 #include <boost/range/adaptor/reversed.hpp>
