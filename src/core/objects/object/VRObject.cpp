@@ -381,7 +381,7 @@ VRObject* VRObject::duplicate(bool anchor) {
     int N = getChildrenCount();
     for (int i=0;i<N;i++) {// first duplicate all children
         VRObject* d = getChild(i)->duplicate();
-        children.push_back(d);// this is not the objects chidren vector! (its local)
+        children.push_back(d);// this is not the objects children vector! (its local)
     }
 
     VRObject* o = copy(children); // copy himself

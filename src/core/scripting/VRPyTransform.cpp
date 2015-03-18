@@ -75,7 +75,6 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setPlaneConstraints", (PyCFunction)VRPyTransform::setPlaneConstraints, METH_VARARGS, "Constraint the object on a plane - setPlaneConstraints(nxf, nyf, nzf)" },
     {"setAxisConstraints", (PyCFunction)VRPyTransform::setAxisConstraints, METH_VARARGS, "Constraint the object on an axis - TODO -> to test, may work" },
     {"setRotationConstraints", (PyCFunction)VRPyTransform::setRotationConstraints, METH_VARARGS, "Constraint the object's rotation - setRotationConstraints(xi, yi, zi)" },
-    {"duplicate", (PyCFunction)VRPyTransform::duplicate, METH_NOARGS, "duplicate transform" },
     {"physicalize", (PyCFunction)VRPyTransform::physicalize, METH_VARARGS, "physicalize subtree - physicalize( physicalized , dynamic , concave )" },
     {"setGhost", (PyCFunction)VRPyTransform::setGhost, METH_VARARGS, "Set the physics object to be a ghost object - setGhost(bool)" },
     {"attach", (PyCFunction)VRPyTransform::setPhysicsConstraintTo, METH_VARARGS, "create a constraint between this obejct && another - setPhysicsConstraintTo( Transform , Constraint )" },
@@ -273,13 +272,6 @@ PyObject* VRPyTransform::setRotationConstraints(VRPyTransform* self, PyObject* a
     e->setRConstraint(vi);
     e->toggleRConstraint(true);
     Py_RETURN_TRUE;
-}
-
-PyObject* VRPyTransform::duplicate(VRPyTransform* self) {// TODO: can a duplicate for each object be avoided?
-    if (self->obj == 0) { PyErr_SetString(err, "C Child is invalid"); return NULL; }
-    OSG::VRTransform* d = (OSG::VRTransform*)self->obj->duplicate();
-    d->addAttachment("dynamicaly_generated", 0);
-    return VRPyTransform::fromPtr( d );
 }
 
 PyObject* VRPyTransform::physicalize(VRPyTransform* self, PyObject *args) {

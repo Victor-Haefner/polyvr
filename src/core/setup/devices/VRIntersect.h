@@ -47,8 +47,7 @@ class VRIntersect {
         //map<VRObject*, VRDevCb* > dro_fkt_map;
         VRDevCb* drop_fkt;
 
-        void drag(VRTransform* caster, VRObject* tree, VRDevice* dev = 0);
-        void drop(VRDevice* dev = 0);
+        void dragCB(VRTransform* caster, VRObject* tree, VRDevice* dev = 0);
 
         void initCross();
 
@@ -57,6 +56,8 @@ class VRIntersect {
         ~VRIntersect();
 
         VRIntersection intersect(VRObject* tree);
+        void drag(VRObject* obj, VRTransform* caster);
+        void drop(VRDevice* dev = 0);
         VRDevCb* addDrag(VRTransform* caster, VRObject* tree);
         VRDevCb* getDrop();
 

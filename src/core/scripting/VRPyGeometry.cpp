@@ -91,7 +91,6 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"getTexCoords", (PyCFunction)VRPyGeometry::getTexCoords, METH_NOARGS, "get geometry texture coordinates" },
     {"getTexture", (PyCFunction)VRPyGeometry::getTexture, METH_NOARGS, "get texture filepath" },
     {"getMaterial", (PyCFunction)VRPyGeometry::getMaterial, METH_NOARGS, "get material" },
-    {"duplicate", (PyCFunction)VRPyGeometry::duplicate, METH_NOARGS, "duplicate geometry" },
     {"merge", (PyCFunction)VRPyGeometry::merge, METH_VARARGS, "Merge another geometry into this one" },
     {"setPrimitive", (PyCFunction)VRPyGeometry::setPrimitive, METH_VARARGS, "Set geometry to primitive" },
     {"setVideo", (PyCFunction)VRPyGeometry::setVideo, METH_VARARGS, "Set video texture - setVideo(path)" },
@@ -567,13 +566,6 @@ PyObject* VRPyGeometry::getMaterial(VRPyGeometry* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyGeometry::getMaterial - Object is invalid"); return NULL; }
 
     return VRPyMaterial::fromPtr(self->obj->getMaterial());
-}
-
-PyObject* VRPyGeometry::duplicate(VRPyGeometry* self) {// TODO: can a duplicate for each object be avoided?
-    if (self->obj == 0) { PyErr_SetString(err, "C Child is invalid"); return NULL; }
-    OSG::VRGeometry* d = (OSG::VRGeometry*)self->obj->duplicate();
-    d->addAttachment("dynamicaly_generated", 0);
-    return VRPyGeometry::fromPtr( d );
 }
 
 PyObject* VRPyGeometry::setPrimitive(VRPyGeometry* self, PyObject *args) {
