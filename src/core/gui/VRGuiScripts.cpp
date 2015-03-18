@@ -159,7 +159,7 @@ void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScript* script, bool on
 
 void VRGuiScripts::on_new_clicked() {
     Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("script_list"));
-    VRScript* script = VRSceneManager::getCurrent()->newScript("Script", "\tpass");
+    VRSceneManager::getCurrent()->newScript("Script", "\tpass");
     updateList();
 }
 

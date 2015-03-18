@@ -45,7 +45,7 @@ void VRSceneManager::addScene(VRScene* s) {
 void VRSceneManager::loadScene(string path, bool write_protected) {
     removeScene(getCurrent());
     VRSceneLoader::get()->loadScene(path);
-    VRSceneManager::getCurrent()->setFlag(SCENE_WRITE_PROTECTED, write_protected);
+    VRSceneManager::getCurrent()->setFlag("write_protected", write_protected);
     VRGuiSignals::get()->getSignal("scene_changed")->trigger(); // update gui
 }
 

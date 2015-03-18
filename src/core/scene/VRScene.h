@@ -23,10 +23,6 @@ using namespace std;
 class VRObject;
 class VRVisualLayer;
 
-enum {
-    SCENE_WRITE_PROTECTED
-};
-
 class VRScene : public VRObjectManager,
                 public VRLightManager,
                 public VRCameraManager,

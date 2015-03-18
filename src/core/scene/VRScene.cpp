@@ -26,7 +26,7 @@ VRScene::VRScene() {
     setName("Scene");
 
     icon = "Scene.png";
-    addFlag(SCENE_WRITE_PROTECTED);
+    setFlag("write_protected", false);
 
     //scene update functions
     addUpdateFkt(updateObjectsFkt, 1000);
