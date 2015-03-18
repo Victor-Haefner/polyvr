@@ -1,6 +1,7 @@
 #include "VRPySelector.h"
 #include "VRPyObject.h"
 #include "VRPyBaseT.h"
+#include "VRPyTypeCaster.h"
 
 template<> PyTypeObject VRPyBaseT<OSG::VRSelector>::type = {
     PyObject_HEAD_INIT(NULL)
@@ -75,5 +76,5 @@ PyObject* VRPySelector::deselect(VRPySelector* self) {
 
 PyObject* VRPySelector::get(VRPySelector* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPySelector::get - Object is invalid"); return NULL; }
-    return VRPyObject::fromPtr( self->obj->get() );
+    return VRPyTypeCaster::cast( self->obj->get() );
 }

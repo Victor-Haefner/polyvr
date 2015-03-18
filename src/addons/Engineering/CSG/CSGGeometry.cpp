@@ -262,7 +262,8 @@ bool CSGGeometry::disableEditMode() {
 	// Clean up
 	for (auto p : polys) delete p;
 
-	setCSGGeometry(polyhedron);
+	if (polyhedron == 0) return false;
+    setCSGGeometry(polyhedron);
 	return true;
 }
 

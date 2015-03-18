@@ -21,9 +21,14 @@ void VRSelector::setColor(Vec3f c) { color = c; }
 void VRSelector::deselect() {
     if (selection == 0) return;
 
-    vector<VRObject*> geos = selection->filterByType("Geometry");
-    for (auto o : geos) {
-        VRGeometry* g = (VRGeometry*)o;
+    vector<VRGeometry*> geos;
+    if (selection->hasAttachment("geometry")) geos.push_back((VRGeometry*)selection);
+
+    for (auto o : selection->getChildren(true)) {
+        if (o->hasAttachment("geometry")) geos.push_back((VRGeometry*)o);
+    }
+
+    for (auto g : geos) {
         if (orig_mats.count(g) == 0) continue;
         VRMaterial* mat = g->getMaterial();
         g->setMaterial(orig_mats[g]);
@@ -39,9 +44,14 @@ void VRSelector::select(VRObject* obj) {
     if (obj == 0) return;
     selection = obj;
 
-    vector<VRObject*> geos = obj->filterByType("Geometry");
-    for (auto o : geos) {
-        VRGeometry* g = (VRGeometry*)o;
+    vector<VRGeometry*> geos;
+    if (obj->hasAttachment("geometry")) geos.push_back((VRGeometry*)obj);
+
+    for (auto o : obj->getChildren(true)) {
+        if (o->hasAttachment("geometry")) geos.push_back((VRGeometry*)o);
+    }
+
+    for (auto g : geos) {
         orig_mats[g] = g->getMaterial();
         VRMaterial* mat = getMat();
         mat->appendPasses(orig_mats[g]);
