@@ -441,6 +441,7 @@ void VRGuiScripts::on_name_edited(const Glib::ustring& path, const Glib::ustring
 
     // update key in map
     VRSceneManager::getCurrent()->changeScriptName(name, new_name);
+    updateList();
     on_select_script();
 }
 
