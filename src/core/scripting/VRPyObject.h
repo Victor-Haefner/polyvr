@@ -8,6 +8,8 @@ struct VRPyObject : VRPyBaseT<OSG::VRObject> {
     static PyMemberDef members[];
     static PyMethodDef methods[];
 
+    static int compare(PyObject* o1, PyObject* o2);
+
     static PyObject* getName(VRPyObject* self);
     static PyObject* setName(VRPyObject* self, PyObject* args);
     static PyObject* addChild(VRPyObject* self, PyObject* args, PyObject *kwds);

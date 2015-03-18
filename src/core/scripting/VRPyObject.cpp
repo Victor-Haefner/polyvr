@@ -14,7 +14,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRObject>::type = {
     0,                         /*tp_print*/
     0,                         /*tp_getattr*/
     0,                         /*tp_setattr*/
-    0,                         /*tp_compare*/
+    VRPyObject::compare,                         /*tp_compare*/
     0,                         /*tp_repr*/
     0,                         /*tp_as_number*/
     0,                         /*tp_as_sequence*/
@@ -73,6 +73,12 @@ PyMethodDef VRPyObject::methods[] = {
     {NULL}  /* Sentinel */
 };
 
+int VRPyObject::compare(PyObject* p1, PyObject* p2) {
+    if (Py_TYPE(p1) != Py_TYPE(p2)) return -1;
+    VRPyBaseT* o1 = (VRPyBaseT*)p1;
+    VRPyBaseT* o2 = (VRPyBaseT*)p2;
+    return (o1->obj == o2->obj) ? 0 : -1;
+}
 
 PyObject* VRPyObject::flattenHiarchy(VRPyObject* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::flattenHiarchy - C Object is invalid"); return NULL; }
