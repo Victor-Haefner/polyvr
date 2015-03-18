@@ -26,7 +26,7 @@ class VRSprite : public VRGeometry {
 
         void setSize(float w, float h);
 
-        void setLabel(string l, float w = 100, float h = 100);
+        void setLabel(string l, float res = 1);
 
         void setTexture(string path);
 

@@ -19,7 +19,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRObject>::type = {
     0,                         /*tp_as_number*/
     0,                         /*tp_as_sequence*/
     0,                         /*tp_as_mapping*/
-    0,                         /*tp_hash */
+    VRPyObject::hash,                         /*tp_hash */
     0,                         /*tp_call*/
     0,                         /*tp_str*/
     0,                         /*tp_getattro*/
@@ -78,6 +78,11 @@ int VRPyObject::compare(PyObject* p1, PyObject* p2) {
     VRPyBaseT* o1 = (VRPyBaseT*)p1;
     VRPyBaseT* o2 = (VRPyBaseT*)p2;
     return (o1->obj == o2->obj) ? 0 : -1;
+}
+
+long VRPyObject::hash(PyObject* p) {
+    VRPyBaseT* o = (VRPyBaseT*)p;
+    return (long)o->obj;
 }
 
 PyObject* VRPyObject::flattenHiarchy(VRPyObject* self) {
