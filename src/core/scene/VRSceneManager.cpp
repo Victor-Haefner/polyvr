@@ -63,9 +63,8 @@ void VRSceneManager::removeScene(VRScene* s) {
     active = "NO_SCENE_ACTIVE";
 
     // deactivate windows
-    map<string, VRWindow*> windows = VRSetupManager::getCurrent()->getWindows();
-    map<string, VRWindow*>::iterator itr;
-    for (itr = windows.begin(); itr != windows.end(); itr++) itr->second->setContent(false);
+    auto windows = VRSetupManager::getCurrent()->getWindows();
+    for (auto w : windows) w.second->setContent(false);
 
     setWorkdir(original_workdir);
     VRGuiSignals::get()->getSignal("scene_changed")->trigger(); // update gui

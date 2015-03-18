@@ -24,7 +24,7 @@ class VRGuiFile {
         static void apply();
         static void select();
         static string getPath();
-        static string getRelativePath_toScene();
+        static string getRelativePath_toOrigin();
         static string getRelativePath_toWorkdir();
 
         static void gotoPath(string path);

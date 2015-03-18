@@ -317,7 +317,7 @@ void VRDemos::on_load_clicked() {
 }
 
 void VRDemos::on_diag_new_clicked() {
-    string path = VRGuiFile::getRelativePath_toWorkdir();
+    string path = VRGuiFile::getRelativePath_toOrigin();
     if (path == "") return;
     VRSceneManager::get()->newScene(path);
     if (demos.count(path) == 0) {

@@ -142,17 +142,15 @@ path make_relative( path a_From, path a_To ) {
     return ret;
 }
 
-string VRGuiFile::getRelativePath_toScene() {
-    OSG::VRScene* scene = OSG::VRSceneManager::getCurrent();
-    if (scene == 0) return "";
-
-    path a(getPath()), b(scene->getWorkdir());
+string VRGuiFile::getRelativePath_toOrigin() {
+    path a(getPath());
+    path b(OSG::VRSceneManager::get()->getOriginalWorkdir());
     return make_relative( b, a ).string();
 }
 
 string VRGuiFile::getRelativePath_toWorkdir() {
-	path b = boost::filesystem::current_path();
     path a(getPath());
+	path b = boost::filesystem::current_path();
     return make_relative( b, a ).string();
 }
 
