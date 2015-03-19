@@ -187,6 +187,8 @@
 			<Add directory="/usr/lib/CEF" />
 			<Add directory="/usr/include/CEF/include" />
 			<Add directory="/usr/lib/1.4" />
+			<Add directory="/usr/lib" />
+			<Add directory="/usr/lib/x86_64-linux-gnu" />
 		</Linker>
 		<Unit filename="src/PolyVR.cpp" />
 		<Unit filename="src/PolyVR.h" />
