@@ -20,6 +20,7 @@
 #include "core/objects/VRGroup.h"
 #include "core/objects/VRLod.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRPrimitive.h"
 #include "core/scene/VRScene.h"
 #include "core/utils/toString.h"
@@ -27,7 +28,7 @@
 #include "VRGuiSignals.h"
 #include "VRGuiFile.h"
 #include "addons/construction/building/VRElectricDevice.h"
-#include "addons/Engineering/CSG/CSGGeometry.h"
+//#include "addons/Engineering/CSG/CSGGeometry.h"
 
 
 OSG_BEGIN_NAMESPACE;
@@ -261,14 +262,14 @@ void setLod(VRLod* lod) {
     }
 }
 
-void setCSG(CSGGeometry* g) {
+/*void setCSG(CSGGeometry* g) {
     setExpanderSensitivity("expander15", true);
 
     bool b = g->getEditMode();
     string op = g->getOperation();
     setCheckButton("checkbutton27", b);
     setCombobox("combobox19", getListStorePos("csg_operations",op));
-}
+}*/
 
 void on_toggle_liveupdate(GtkToggleButton* tb, gpointer user_data) { liveUpdate = !liveUpdate; }
 
@@ -288,7 +289,7 @@ void updateObjectForms(bool disable = false) {
     VRObject* obj = getSelected();
     if (obj == 0) return;
 
-    // set object label and path
+    // set object label && path
     setLabel( "current_object_lab", obj->getName() + "\npath " + obj->getPath() );
 
     if (obj->hasAttachment("global")) return;
@@ -309,7 +310,7 @@ void updateObjectForms(bool disable = false) {
 
     if (type == "Lod") setLod((VRLod*)obj);
 
-    if (type == "CSGGeometry") setCSG((CSGGeometry*)obj);
+    //if (type == "CSGGeometry") setCSG((CSGGeometry*)obj);
 
     trigger_cbs = true;
 }
@@ -648,7 +649,7 @@ void VRGuiScene::on_lod_decimate_changed() {
 
 // CSG
 
-void on_toggle_CSG_editmode(GtkToggleButton* tb, gpointer data) {
+/*void on_toggle_CSG_editmode(GtkToggleButton* tb, gpointer data) {
     if(!trigger_cbs) return;
     CSGGeometry* obj = (CSGGeometry*) getSelected();
 
@@ -663,7 +664,7 @@ void on_change_CSG_operation(GtkComboBox* cb, gpointer data) {
     CSGGeometry* obj = (CSGGeometry*) getSelected();
 
     obj->setOperation(op);
-}
+}*/
 
 // Camera
 
@@ -808,12 +809,12 @@ void VRGuiScene::on_menu_paste() {
     parseSGTree(tmp, selected_itr);
 }
 
-void VRGuiScene::on_menu_add_csg() {
+/*void VRGuiScene::on_menu_add_csg() {
     if(!selected_itr) return;
     CSGGeometry* g = new CSGGeometry("csg_geo");
     getSelected()->addChild(g);
     parseSGTree(g, selected_itr);
-}
+}*/
 
 void VRGuiScene::on_collada_import_clicked() {
     string rel_path = VRGuiFile::getRelativePath_toWorkdir();
@@ -868,7 +869,8 @@ void VRGuiScene::on_drag_end(const Glib::RefPtr<Gdk::DragContext>& dc) {
     if (dragDest == 0) return;
     if (ac == 0) return;
     VRObject* selected = getSelected();
-    selected->switchParent(dragDest, 0);
+    if (selected == 0) return;
+    selected->switchParent(dragDest, dragPos);
     cout << "drag_end " << selected->getPath() << endl;
     Gtk::TreeModel::iterator iter = tree_view->get_model()->get_iter(selected->getPath());
     setSGRow(iter, selected);
@@ -881,22 +883,32 @@ void VRGuiScene::on_drag_beg(const Glib::RefPtr<Gdk::DragContext>& dc) {
 void VRGuiScene::on_drag_data_receive(const Glib::RefPtr<Gdk::DragContext>& dc , int x, int y ,const Gtk::SelectionData& sd, guint i3, guint i4) {
     Gtk::TreeModel::Path path;
     Gtk::TreeViewDropPosition pos; // enum
-    tree_view->get_drag_dest_row(path,pos);
-    if (path == 0) return; // TOCHECK: needed because this hapns right before drag end
-    // if (path == 0) { dc->drag_status(Gdk::DragAction(0),0); return; }
+    tree_view->get_drag_dest_row(path, pos);
+    if (path == 0) return;
 
-    // check for wrong drags
     dragDest = 0;
-    if (getSelected()->hasAttachment("treeviewNotDragable")) { dc->drag_status(Gdk::DragAction(0),0); return; } // object is not dragable
-    string _path = path.to_string();
-    if (_path == "0" and pos <= 1) { dc->drag_status(Gdk::DragAction(0),0); return; } // drag out of root
-    Gtk::TreeModel::iterator iter = tree_view->get_model()->get_iter(path);
-    if(!iter) { dc->drag_status(Gdk::DragAction(0),0); return; }
+    VRObject* selected = getSelected();
+    if (selected == 0) return;
 
+    dragPath = path.to_string();
+    dragPos = 0;
+    if (pos <= 1) { // between two rows
+        int d = dragPath.rfind(':');
+        dragPos = toInt( dragPath.substr(d+1) );
+        dragPath = dragPath.substr(0,d);
+    }
+    cout << "drag dest " << dragPath << " " << pos << endl;
+
+    if (selected->hasAttachment("treeviewNotDragable")) { dc->drag_status(Gdk::DragAction(0),0); return; } // object is not dragable
+    if (dragPath == "0" && pos <= 1) { dc->drag_status(Gdk::DragAction(0),0); return; } // drag out of root
+
+    /*Gtk::TreeModel::iterator iter = tree_view->get_model()->get_iter(path);
+    if(!iter) { dc->drag_status(Gdk::DragAction(0),0); return; }
     ModelColumns cols;
     Gtk::TreeModel::Row row = *iter;
-    string dest_path = row.get_value(cols.obj);
-    dragDest = VRSceneManager::getCurrent()->getRoot()->getAtPath(dest_path);
+    string dest_path = row.get_value(cols.obj);*/
+
+    dragDest = VRSceneManager::getCurrent()->getRoot()->getAtPath(dragPath);
 }
 
 void VRGuiScene_on_notebook_switched(GtkNotebook* notebook, GtkNotebookPage* page, guint pageN, gpointer data) {
@@ -1174,7 +1186,7 @@ void VRGuiScene::initMenu() {
     menu->appendItem("SGM_AddMenu", "LoD", sigc::mem_fun(*this, &VRGuiScene::on_menu_add<VRLod>));
     menu->appendItem("SGM_AddMenu", "Animation", sigc::mem_fun(*this, &VRGuiScene::on_menu_add_animation));
     menu->appendItem("SGM_AddMenu", "File", sigc::mem_fun(*this, &VRGuiScene::on_menu_add_file) );
-    menu->appendItem("SGM_AddMenu", "CSGGeometry", sigc::mem_fun(*this, &VRGuiScene::on_menu_add_csg) );
+    //menu->appendItem("SGM_AddMenu", "CSGGeometry", sigc::mem_fun(*this, &VRGuiScene::on_menu_add_csg) );
 
     // primitives
     vector<string> prims = VRPrimitive::getTypes();
@@ -1222,7 +1234,7 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     //light
     fillStringListstore("light_types", VRLight::getTypes());
     fillStringListstore("shadow_types", VRLight::getShadowTypes());
-    fillStringListstore("csg_operations", CSGGeometry::getOperations());
+    //fillStringListstore("csg_operations", CSGGeometry::getOperations());
     fillStringListstore("phys_shapes", VRPhysics::getPhysicsShapes());
     fillStringListstore("cam_proj", VRCamera::getProjectionTypes());
 
@@ -1235,7 +1247,7 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     setCheckButtonCallback("checkbutton20", on_toggle_rc_z);
     setCheckButtonCallback("checkbutton21", on_toggle_T_constraint);
     setCheckButtonCallback("checkbutton22", on_toggle_R_constraint);
-    setCheckButtonCallback("checkbutton27", on_toggle_CSG_editmode);
+    //setCheckButtonCallback("checkbutton27", on_toggle_CSG_editmode);
     setCheckButtonCallback("checkbutton17", on_toggle_camera_accept_realroot);
     setCheckButtonCallback("radiobutton1", sigc::mem_fun(*this, &VRGuiScene::on_toggle_T_constraint_mode) );
     setCheckButtonCallback("checkbutton31", sigc::mem_fun(*this, &VRGuiScene::on_toggle_light) );
@@ -1246,7 +1258,7 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     setCheckButtonCallback("checkbutton35", sigc::mem_fun(*this, &VRGuiScene::on_lod_decimate_changed) );
 
     setComboboxCallback("combobox14", VRGuiScene_on_change_group);
-    setComboboxCallback("combobox19", on_change_CSG_operation);
+    //setComboboxCallback("combobox19", on_change_CSG_operation);
     setComboboxCallback("combobox21", on_change_primitive);
     setComboboxCallback("combobox2", sigc::mem_fun(*this, &VRGuiScene::on_change_light_type) );
     setComboboxCallback("combobox22", sigc::mem_fun(*this, &VRGuiScene::on_change_light_shadow) );

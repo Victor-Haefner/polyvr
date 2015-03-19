@@ -21,7 +21,7 @@ set<ID> getConnectedNodes(const RoadSystem *roadSystem, const ID startNode, cons
  Calculates a route from Node \c start to Node \c end;
  If \c start is equal to \c end, this will return a vector only containing \c start.
  If there is no route, an empty vector will be returned.
- The \c start and \c end nodes are part of the returned route.
+ The \c start && \c end nodes are part of the returned route.
  @param roadSystem The RoadSystem to find a route in.
  @param from The id of the node the vehicle is coming from when arriving at \c start.
  @param start The id of the node to start routing at.
@@ -34,7 +34,7 @@ vector<ID> calculateRoute(const RoadSystem *roadSystem, const ID from, const ID 
 /**
  Finds a random node that can be reached from the given start node.
 
- Follows a random way through the road map until either the \c maxDistance is reached or there is no further
+ Follows a random way through the road map until either the \c maxDistance is reached || there is no further
  street to follow without decreasing the distance to the start. The latter case does not mean that there is
  no further way to go, it only means that the vehicle would need to turn to use it.
 

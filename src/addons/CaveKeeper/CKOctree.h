@@ -11,14 +11,14 @@
 OSG_BEGIN_NAMESPACE
 using namespace std;
 
-class octree {
+class CKOctree {
     public:
         struct element {
             int ID;
             element* parent;
             element* children[8];
             int childN;
-            bool octIsEmpty[8]; //flag to see if octant is empty or solid earth
+            bool octIsEmpty[8]; //flag to see if octant is empty || solid earth
 
             Vec3f pos;
             Vec3i otpos;
@@ -61,7 +61,7 @@ class octree {
         int signof(float f);
 
     public:
-        octree();
+        CKOctree();
 
         void add(Vec3i _p);
         void rem(element* e);
@@ -71,7 +71,7 @@ class octree {
         //check if there is a cube at pos
         bool isLeaf(Vec3f p);
 
-        //check if space or solid at pos
+        //check if space || solid at pos
         bool isEmpty(Vec3f p);
         void setEmpty(Vec3i p);
 

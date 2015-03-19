@@ -8,7 +8,7 @@ VRProgress::VRProgress(string title, int max, Mode m) {
 }
 
 VRProgress::~VRProgress() {
-    if (mode == CONSOLE) cout << endl;
+	if (mode == CONSOLE_M) cout << endl;
 }
 
 void VRProgress::setCallback(VRFunction<int>* cb) { callback = cb; }
@@ -21,11 +21,13 @@ void VRProgress::update(int i) {
     k++;
 
     switch(mode) {
-        case CONSOLE:
+        case CONSOLE_M:
             cout << "\r" << title << " " << k << "%" << flush;
             break;
-        case CALLBACK:
+		case CALLBACK_M:
             (*callback)(k);
+            break;
+        case WIDGET_M:
             break;
     }
 }

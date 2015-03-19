@@ -19,7 +19,7 @@ Config* Config::get() {
     return c;
 }
 
-//Lighting and Shading
+//Lighting && Shading
 void Config::createPhongShader(SimpleMaterial* mat, bool phong) {
     string wdir = VRSceneManager::get()->getOriginalWorkdir();
     if(phong){

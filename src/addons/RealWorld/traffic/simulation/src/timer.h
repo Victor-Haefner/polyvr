@@ -15,10 +15,10 @@ using namespace boost::posix_time;
  A class to replace the time() function.
 
  Using the time() function has to drawbacks: It only offers a resolution of seconds
- and it can not be stopped. If it would be used, then the vehicles would "jump" after
+ && it can not be stopped. If it would be used, then the vehicles would "jump" after
  a pause to make up for the lost time.
 
- To avoid this behavior the timer class offers the time since the last tick and a
+ To avoid this behavior the timer class offers the time since the last tick && a
  "current" time that does not keep running if the timer is stopped.
  */
 class Timer {
@@ -65,7 +65,7 @@ class Timer {
         void stop();
 
         /**
-         Calculates a new \c now and \c delta time.
+         Calculates a new \c now && \c delta time.
          If the timer is stopped, the \c now value will not be changed.
          */
         void tick();

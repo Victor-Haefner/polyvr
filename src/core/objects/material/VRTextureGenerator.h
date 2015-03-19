@@ -8,29 +8,33 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-enum NOISE_TYPE {
-    PERLIN
+enum GEN_TYPE {
+    PERLIN,
+    BRICKS
 };
 
 class VRTextureGenerator {
     private:
         int width = 128;
         int height = 128;
+        int depth = 1;
 
-        struct noise_layer {
-            NOISE_TYPE noise;
+        struct Layer {
+            GEN_TYPE type;
             float amount;
             Vec3f c1,c2;
         };
 
-        vector<noise_layer> layers;
+        vector<Layer> layers;
 
     public:
         VRTextureGenerator();
 
-        void setSize(int w, int h);
+        void setSize(Vec3i dim);
+        void setSize(int w, int h, int d = 1);
 
-        void addNoise(NOISE_TYPE noise, float amount, Vec3f c1, Vec3f c2);
+        void add(GEN_TYPE type, float amount, Vec3f c1, Vec3f c2);
+        void add(string type, float amount, Vec3f c1, Vec3f c2);
         void clearStage();
 
         ImageRecPtr compose(int seed);

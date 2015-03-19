@@ -67,7 +67,7 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool lit) {
             //MatrixLookAt(m, Vec3f(0,0,0), n, z.cross(n));
             MatrixLookAt(m, Vec3f(0,0,0), n, u);
 
-            // add new profile points and normals
+            // add new profile points && normals
             for (uint k=0; k<profile.size(); k++) {
                 Vec3f tmp = profile[k];
                 m.mult(tmp, tmp);
@@ -78,7 +78,7 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool lit) {
                 Colors->addValue(c);
             }
 
-            if (j==0 and profile.size() > 1) continue;
+            if (j==0 && profile.size() > 1) continue;
 
             // add line
             if (profile.size() == 1) {

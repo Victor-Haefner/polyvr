@@ -122,13 +122,6 @@ string VRGuiFile::getPath() {
 }
 
 typedef boost::filesystem::path path;
-namespace boost {
-namespace filesystem {
-template < >
-path& path::append< typename path::iterator >( typename path::iterator begin, typename path::iterator end, const codecvt_type& cvt) {
-    for( ; begin != end ; ++begin ) *this /= *begin;
-    return *this;
-}}}
 
 // Return path when appended to a_From will resolve to same as a_To
 path make_relative( path a_From, path a_To ) {
@@ -145,23 +138,52 @@ path make_relative( path a_From, path a_To ) {
         if( (*itrFrom) != "." ) ret /= "..";
     }
     // Now navigate down the directory branch
-    ret.append( itrTo, a_To.end() );
+	for (; itrTo != a_To.end(); ++itrTo) ret /= *itrTo;
     return ret;
 }
 
-string VRGuiFile::getRelativePath_toScene() {
-    OSG::VRScene* scene = OSG::VRSceneManager::getCurrent();
-    if (scene == 0) return "";
-
-    path a(getPath()), b(scene->getWorkdir());
+string VRGuiFile::getRelativePath_toOrigin() {
+    path a(getPath());
+    path b(OSG::VRSceneManager::get()->getOriginalWorkdir());
     return make_relative( b, a ).string();
 }
 
 string VRGuiFile::getRelativePath_toWorkdir() {
-    char cCurrentPath[FILENAME_MAX];
-    getcwd(cCurrentPath, sizeof(cCurrentPath) );
-    string workdir = string(cCurrentPath);
-
-    path a(getPath()), b(workdir);
+    path a(getPath());
+	path b = boost::filesystem::current_path();
     return make_relative( b, a ).string();
+}
+
+bool VRGuiFile::exists(string path) { return boost::filesystem::exists(path); }
+bool VRGuiFile::isDir(string path) { return boost::filesystem::is_directory(path); }
+bool VRGuiFile::isFile(string path) {
+    bool b = boost::filesystem::is_regular_file( boost::filesystem::path(path) );
+    cout << "isFile " << path << " : " << b << endl;
+    return b;
+}
+
+class directory {
+    path p_;
+    public:
+        inline directory(path p):p_(p) {;}
+        boost::filesystem::directory_iterator begin() { return boost::filesystem::directory_iterator(p_); }
+        boost::filesystem::directory_iterator end() { return boost::filesystem::directory_iterator(); }
+};
+
+vector<string> VRGuiFile::listDir(string dir) {
+    vector<string> res;
+
+    if (!exists(dir)) return res;
+    if (!isDir(dir)) return res;
+
+    namespace fs = boost::filesystem;
+    fs::path path(dir);
+
+    for( auto f : directory(path) ) {
+        string fpath = f.path().filename().string();
+        //if ( !isFile(dir+"/"+fpath) ) continue; //does not work???
+        res.push_back(fpath);
+    }
+
+    return res;
 }

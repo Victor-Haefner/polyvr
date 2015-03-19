@@ -7,9 +7,9 @@
 
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
-#include "core/utils/VROptions.h"
 #include "core/setup/devices/VRDevice.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/utils/VRLogger.h"
 
 using namespace std;
 using namespace OSG;
@@ -17,32 +17,9 @@ using namespace OSG;
 vector<CEF*> instances;
 
 CEF::CEF() {
-    CefSettings settings;
-    string bsp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/CefSubProcess";
-    string ldp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/locales";
-    string rdp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef";
-    string lfp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/wblog.log";
-    CefString(&settings.browser_subprocess_path).FromASCII(bsp.c_str());
-    CefString(&settings.locales_dir_path).FromASCII(ldp.c_str());
-    CefString(&settings.resources_dir_path).FromASCII(rdp.c_str());
-    CefString(&settings.log_file).FromASCII(lfp.c_str());
-    settings.no_sandbox = true;
-
-    CefMainArgs args(VROptions::get()->argc, VROptions::get()->argv);
-    CefInitialize(args, settings, 0, 0);
-
-    CefWindowInfo win;
-    CefBrowserSettings browser_settings;
-
-    win.SetAsOffScreen(0);
-    browser = CefBrowserHost::CreateBrowserSync(win, this, "www.google.de", browser_settings, 0);
-
     VRFunction<int>* fkt = new VRFunction<int>("webkit_update", boost::bind(&CEF::update, this));
     VRSceneManager::getCurrent()->addUpdateFkt(fkt);
-
-
     image = Image::create();
-
     instances.push_back(this);
 }
 
@@ -53,29 +30,72 @@ CEF::~CEF() {
     instances.erase( remove(instances.begin(), instances.end(), this), instances.end() );
 }
 
-void CEF::setMaterial(VRMaterial* mat) { if (mat == 0) return; this->mat = mat; mat->setTexture(image); }
-void CEF::update() { CefDoMessageLoopWork(); }
-void CEF::open(string site) { this->site = site; browser->GetMainFrame()->LoadURL(site); }
-CefRefPtr<CefRenderHandler> CEF::GetRenderHandler() { return this; }
-string CEF::getSite() { return site; }
+void CEF::initiate() {
+    init = true;
+    cout << "CEF init " << endl;
+    CefSettings settings;
+#ifndef _WIN32
+    string bsp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/CefSubProcess";
+#else
+	string bsp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/CefSubProcessWin.exe";
+#endif
+    string ldp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/locales";
+    string rdp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef";
+    string lfp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/wblog.log";
+    CefString(&settings.browser_subprocess_path).FromASCII(bsp.c_str());
+    CefString(&settings.locales_dir_path).FromASCII(ldp.c_str());
+    CefString(&settings.resources_dir_path).FromASCII(rdp.c_str());
+    CefString(&settings.log_file).FromASCII(lfp.c_str());
+    settings.no_sandbox = true;
 
-void CEF::reload() {
-    height = width/aspect;
-    cout << "reload " << width << " " << height << endl;
-    open(site);
+    CefMainArgs args;
+    CefInitialize(args, settings, 0, 0);
+
+    CefWindowInfo win;
+    CefBrowserSettings browser_settings;
+
+#ifdef _WIN32
+    win.SetAsWindowless(0, false);
+#else
+    win.SetAsOffScreen(0);
+#endif
+    browser = CefBrowserHost::CreateBrowserSync(win, this, "www.google.de", browser_settings, 0);
 }
 
-void CEF::reload(string path) {
+void CEF::setMaterial(VRMaterial* mat) { if (mat == 0) return; this->mat = mat; mat->setTexture(image); }
+void CEF::update() { if (init) CefDoMessageLoopWork(); }
+CefRefPtr<CefRenderHandler> CEF::GetRenderHandler() { return this; }
+string CEF::getSite() { return site; }
+void CEF::reload() { open(site); }
+
+void CEF::open(string site) {
+    if (!init) initiate();
+    this->site = site;
+    browser->GetMainFrame()->LoadURL(site);
+}
+
+void CEF::resize() {
+    height = width/aspect;
+    if (init) browser->GetHost()->WasResized();
+    if (init) reload();
+}
+
+void CEF::reloadScripts(string path) {
     for (auto i : instances) {
         string s = i->getSite();
         stringstream ss(s); vector<string> res; while (getline(ss, s, '/')) res.push_back(s); // split by ':'
         if (res.size() == 0) continue;
-        if (res[res.size()-1] == path) i->reload();
+        if (res[res.size()-1] == path) {
+            i->resize();
+            i->reload();
+        }
     }
 }
 
-void CEF::setResolution(float a) { width = a; reload(); }
-void CEF::setAspectRatio(float a) { aspect = a; reload(); }
+void CEF::setResolution(float a) { width = a; resize(); }
+void CEF::setAspectRatio(float a) { aspect = a; resize(); }
+
+// inherited CEF callbacks:
 
 bool CEF::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
     rect = CefRect(0, 0, width, height);
@@ -124,13 +144,17 @@ void CEF::mouse(int b, bool down, VRDevice* dev) {
 
     VRIntersection ins = dev->intersect(obj);
 
-    /*string o = "NONE";
-    if (ins.object) o = ins.object->getName();
-    cout << "CEF::mouse " << this;
-    cout << " hit " << ins.hit << " " << o << ", trg " << obj->getName();
-    cout << " b: " << b << " state: " << down;
-    cout << " texel: " << ins.texel;
-    cout << endl;*/
+    if (VRLog::tag("net")) {
+        string o = "NONE";
+        if (ins.object) o = ins.object->getName();
+        stringstream ss;
+        ss << "CEF::mouse " << this << " dev " << dev->getName();
+        ss << " hit " << ins.hit << " " << o << ", trg " << obj->getName();
+        ss << " b: " << b << " s: " << down;
+        ss << " texel: " << ins.texel;
+        ss << endl;
+        VRLog::log("net", ss.str());
+    }
 
     if (!ins.hit) return;
     if (ins.object != obj) return;
@@ -147,7 +171,7 @@ void CEF::mouse(int b, bool down, VRDevice* dev) {
         browser->GetHost()->SendMouseClickEvent(me, mbt, !down, 1);
     }
 
-    if (b == 3 or b == 4) {
+    if (b == 3 || b == 4) {
         int d = b==3 ? -1 : 1;
         browser->GetHost()->SendMouseWheelEvent(me, d*width*0.05, d*height*0.05);
     }

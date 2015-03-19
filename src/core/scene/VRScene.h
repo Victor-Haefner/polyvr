@@ -8,6 +8,8 @@
 #include "VRPhysicsManager.h"
 #include "VRCallbackManager.h"
 #include "VRRenderManager.h"
+#include "VRMaterialManager.h"
+#include "VRThreadManager.h"
 #include "core/scripting/VRScriptManager.h"
 #include "core/navigation/VRNavigator.h"
 #include "core/networking/VRNetworkManager.h"
@@ -21,19 +23,17 @@ using namespace std;
 class VRObject;
 class VRVisualLayer;
 
-enum {
-    SCENE_WRITE_PROTECTED
-};
-
 class VRScene : public VRObjectManager,
                 public VRLightManager,
                 public VRCameraManager,
                 public VRAnimationManager,
                 public VRPhysicsManager,
                 public VRCallbackManager,
+                public VRThreadManager,
                 public VRScriptManager,
                 public VRNavigator,
                 public VRNetworkManager,
+                public VRMaterialManager,
                 public VRName,
                 public VRBackground,
                 public VRRenderManager,

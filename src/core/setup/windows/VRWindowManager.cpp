@@ -118,9 +118,9 @@ VRWindow* VRWindowManager::addMultiWindow(string name) {
 }
 
 VRWindow* VRWindowManager::addGtkWindow(string name, string glarea) {
+    cout << " add Gtk window " << name << endl;
     Gtk::DrawingArea* drawArea = 0;
     VRGuiBuilder()->get_widget(glarea, drawArea);
-
     VRGtkWindow* win = new VRGtkWindow(drawArea);
     win->setName(name);
     win->setAction(ract);

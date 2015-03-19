@@ -66,7 +66,7 @@ namespace realworld {
             // unload joints
             BOOST_FOREACH(string jointId, world->listUnloadJointMeshes) {
                 if (world->meshes.count(jointId)) {
-                    // delete mesh from scene and from world.meshes
+                    // delete mesh from scene && from world.meshes
                     VRObject* obj = world->meshes[jointId];
                     world->meshes.erase(jointId);
                     delete obj;
@@ -76,7 +76,7 @@ namespace realworld {
                 StreetJoint* joint = world->streetJoints[jointId];
                 BOOST_FOREACH(string segId, joint->segmentIds) {
                     if (world->meshes.count(segId)) {
-                        // delete mesh from scene and from world.meshes
+                        // delete mesh from scene && from world.meshes
                         VRObject* obj = world->meshes[segId];
                         world->meshes.erase(segId);
                         delete obj;
@@ -87,7 +87,7 @@ namespace realworld {
             // unload segments
             BOOST_FOREACH(string segId, world->listUnloadSegmentMeshes) {
                 if (world->meshes.count(segId)) {
-                    // delete mesh from scene and from world.meshes
+                    // delete mesh from scene && from world.meshes
                     VRObject* obj = world->meshes[segId];
                     world->meshes.erase(segId);
                     delete obj;

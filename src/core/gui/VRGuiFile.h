@@ -24,7 +24,7 @@ class VRGuiFile {
         static void apply();
         static void select();
         static string getPath();
-        static string getRelativePath_toScene();
+        static string getRelativePath_toOrigin();
         static string getRelativePath_toWorkdir();
 
         static void gotoPath(string path);
@@ -34,6 +34,11 @@ class VRGuiFile {
 
         static void setCallbacks(sig sa = sig(), sig sc = sig(), sig ss = sig());
         static void setWidget(Gtk::Table* table);
+
+        static bool exists(string path);
+        static bool isDir(string path);
+        static bool isFile(string path);
+        static vector<string> listDir(string dir);
 };
 
 #endif // VRGUIFILE_H_INCLUDED

@@ -124,7 +124,7 @@ VRTransform* FNode::getTransform() { return transform; }
 Vec3f FNode::getTangent() {
     int Nout = out.size();
     int Nin = in.size();
-    if (Nout == 0 and Nin == 0) return Vec3f(0,0,1);
+    if (Nout == 0 && Nin == 0) return Vec3f(0,0,1);
 
     Vec3f t;
     for (itr = out.begin(); itr != out.end(); itr++)
@@ -144,7 +144,7 @@ void FPath::set(FNode* n1, FNode* n2) { // TODO: A*
     nodes.clear();
     FNode* n = n1;
     nodes.push_back(n);
-    while(n != n2 and n->next() > 0) {
+    while(n != n2 && n->next() > 0) {
         n = n->next(); // assumes linear networks
         nodes.push_back(n);
     }
@@ -200,6 +200,7 @@ void FTransporter::update(float dt) {
     FContainer *c1, *c2;
     FNode::State s1, s2;
     FObject::Type t1, t2;
+	s1 = FNode::FREE;
 
     n1=n2=0;
     o1=o2=0;
@@ -281,7 +282,7 @@ void FTransporter::update(float dt) {
 
             if (no == 0) { n->set(o); continue; } // no is not a container, just place the object there
 
-            if (no->getType() == FObject::CONTAINER and o->getType() == FObject::PRODUCT) {
+            if (no->getType() == FObject::CONTAINER && o->getType() == FObject::PRODUCT) {
                 FContainer* c = (FContainer*)no;
                 FProduct* p = (FProduct*)o;
                 c->add(p);

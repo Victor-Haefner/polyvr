@@ -3,7 +3,8 @@
 #include "core/objects/VRGroup.h"
 #include "core/objects/VRLight.h"
 #include "core/objects/VRLightBeacon.h"
-#include "addons/Engineering/CSG/CSGGeometry.h"
+#include "core/objects/geometry/VRGeometry.h"
+//#include "addons/Engineering/CSG/CSGGeometry.h"
 
 #include "VRScene.h"
 #include "core/utils/VRTimer.h"
@@ -21,7 +22,7 @@
 #include <OpenSG/OSGComponentTransform.h>
 
 #include <stdio.h>
-#include <unistd.h>
+#include <fstream>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -116,10 +117,9 @@ NodeRecPtr loadPly(string filename) {
 
 void VRSceneLoader::load(string filename) {
     if (ihr_flag) { // check
-        FILE* fp = fopen(filename.c_str(), "rb");
-        fseeko(fp, 0L, SEEK_END);
-        int L = ftello(fp);
-        fclose(fp);
+		ifstream in(filename, ios::binary | ios::ate);
+		int L = in.tellg();
+		in.close();
         cout << "File " << filename << " has size " << L << endl;
         if (L > 30000000) return;
     }
@@ -170,7 +170,7 @@ VRObject* VRSceneLoader::parseOSGTree(NodeRecPtr n, VRObject* parent, string nam
     else name = "Unnamed";
     if (name == "") name = "NAN";
 
-    if (name[0] == 'F' and name[1] == 'T') {
+    if (name[0] == 'F' && name[1] == 'T') {
         string g = name; g.erase(0,2);
         if (g.find('.') != string::npos) g.erase(g.find('.'));
         if (g.find('_') != string::npos) g.erase(g.find('_'));
@@ -257,7 +257,7 @@ VRObject* VRSceneLoader::parseOSGTree(NodeRecPtr n, VRObject* parent, string nam
 
 void VRSceneLoader::optimizeGraph(VRObject* obj) { //TODO
     VRObject* p = obj->getParent();
-    if (obj->getType() == "Geometry" and p->getType() == "Transform" and p->getChildrenCount() == 1) {
+    if (obj->getType() == "Geometry" && p->getType() == "Transform" && p->getChildrenCount() == 1) {
         obj->switchParent(p->getParent());
         obj->setName(p->getName());
         //obj->setMatrix(p->getMatrix()); //TODO: cast
@@ -346,7 +346,7 @@ VRTransform* VRSceneLoader::load3DContent(string filepath, VRObject* parent, boo
     cout << "load3DContent " << filepath << endl;
 
     VRObject* root;
-    if(cached_files.count(filepath) == 0 or reload) load(filepath);
+    if(cached_files.count(filepath) == 0 || reload) load(filepath);
     NodeRecPtr osg = cached_files[filepath].root;
     root = parseOSGTree(osg, parent, filepath, filepath);
     if (root == 0) return 0;
@@ -417,7 +417,7 @@ VRObject* VRSceneLoader_createFromElement(VRScene* scene, xmlpp::Element* e) {
 
     if (type == "Transform") return new VRTransform(base_name);
     if (type == "Geometry") return new VRGeometry(base_name);
-    if (type == "CSGGeometry") return new CSGGeometry(base_name);
+    //if (type == "CSGGeometry") return new CSGGeometry(base_name);
     if (type == "Camera") return scene->addCamera(base_name);
     if (type == "LightBeacon") return new VRLightBeacon(base_name);
     if (type == "Light") return scene->addLight(base_name);

@@ -2,7 +2,8 @@
 #include <OpenSG/OSGRenderAction.h>
 #include <OpenSG/OSGImageForeground.h>
 #include <libxml++/nodes/element.h>
-#include <OpenSG/OSGSimpleGeometry.h>        // Methods to create simple geos.
+#include <OpenSG/OSGSimpleGeometry.h>
+#include <OpenSG/OSGMultiPassMaterial.h>
 
 #include "core/utils/VRRate.h"
 #include "core/utils/toString.h"
@@ -21,8 +22,8 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 bool onBox(int i, int j, int c) {
-    if(abs(i) > c or abs(j) > c) return false;
-    if(abs(i) == c or abs(j) == c) return true;
+    if(abs(i) > c || abs(j) > c) return false;
+    if(abs(i) == c || abs(j) == c) return true;
     return false;
 }
 
@@ -44,7 +45,8 @@ void VRView::setMaterial() {
     int ar = 50;
     Vec2f pl(-0.1*s, -0.05*s);
 
-    Vec4f data[s*s];
+	vector<Vec4f> data;
+	data.resize(s*s);
 
     for (int i=0; i<s; i++) {
         for (int j=0; j<s; j++) {
@@ -57,10 +59,10 @@ void VRView::setMaterial() {
             if (onBox(x,y,b1)) data[k] = c1; // box1
             if (onBox(x,y,b2)) data[k] = c1; // box2
 
-            if (y == 0 and x >= 0 and x < ar) data[k] = cax; // ax
-            if (x == 0 and y >= 0 and y < ar) data[k] = cay; // ax
+            if (y == 0 && x >= 0 && x < ar) data[k] = cax; // ax
+            if (x == 0 && y >= 0 && y < ar) data[k] = cay; // ax
 
-            if (x >= pl[0]-lw*0.5 and x < pl[0]+lw*0.5 and y >= pl[1]-lh*0.5 and y < pl[1]+lh*0.5) {
+            if (x >= pl[0]-lw*0.5 && x < pl[0]+lw*0.5 && y >= pl[1]-lh*0.5 && y < pl[1]+lh*0.5) {
                 int u = x - pl[0] + lw*0.5;
                 int v = y - pl[1] + lh*0.5;
                 int w = 4*(u+v*lw);
@@ -71,13 +73,13 @@ void VRView::setMaterial() {
         }
     }
 
-    img->set( Image::OSG_RGBA_PF, s, s, 1, 0, 1, 0, (const uint8_t*)data, OSG::Image::OSG_FLOAT32_IMAGEDATA, true, 1);
+    img->set( Image::OSG_RGBA_PF, s, s, 1, 0, 1, 0, (const uint8_t*)&data[0], OSG::Image::OSG_FLOAT32_IMAGEDATA, true, 1);
 
     viewGeoMat->setTexture(img);
     viewGeoMat->setLit(false);
 }
 
-void VRView::setViewports() {//create and set size of viewports
+void VRView::setViewports() {//create && set size of viewports
     Vec4f p = position;
     p[1] = 1-position[3]; // invert y
     p[3] = 1-position[1];
@@ -96,7 +98,7 @@ void VRView::setViewports() {//create and set size of viewports
     }
 
     //no stereo
-    if (!stereo and !active_stereo) {
+    if (!stereo && !active_stereo) {
         if (lView == 0) lView = Viewport::create();
         lView->setSize(p[0], p[1], p[2], p[3]);
         if (rView) window->subPortByObj(rView);
@@ -104,7 +106,7 @@ void VRView::setViewports() {//create and set size of viewports
         return;
     }
 
-    if (stereo and !active_stereo) {
+    if (stereo && !active_stereo) {
         if (lView == 0) lView = Viewport::create();
         if (rView == 0) rView = Viewport::create();
         lView->setSize(p[0], p[1], (p[0]+p[2])*0.5, p[3]);
@@ -154,13 +156,13 @@ void VRView::setDecorators() {//set decorators, only if projection true
     pos->setValue(screenUpperLeft, 2);
     pos->setValue(screenUpperRight, 3);
 
-    if (!projection and !stereo) {
+    if (!projection && !stereo) {
         PCDecoratorLeft = 0;
         PCDecoratorRight = 0;
         return;
     }
 
-    if (projection and !stereo) {
+    if (projection && !stereo) {
         cout << "\nset single projection decorator";
         if (PCDecoratorLeft == 0) PCDecoratorLeft = ProjectionCameraDecorator::create();
         PCDecoratorLeft->setLeftEye(true);
@@ -276,7 +278,6 @@ void VRView::showStats(bool b) {
         stats->setSize(25);
         stats->setColor(Color4f(0,1,0,0.7f));
 
-
         // Render traversal stats action
         stats->addElement(RenderAction::statDrawTime, "Draw FPS: %r.3f");
         stats->addElement(RenderAction::statTravTime, "Trav FPS: %r.3f");
@@ -288,136 +289,44 @@ void VRView::showStats(bool b) {
         stats->addElement(TextureObjChunk::statNTexBytes, " Tex Mem: %MB MB");
 
 
-#if 0
-        stats->addElement(RenderAction::statNGeometries,
-                       "    Geom nodes: %d");
-#endif
-        stats->addElement(RenderAction::statNMatrices,
-                       "Matrix changes: %d");
-#if 0
-        stats->addElement(RenderAction::statNTriangles,
-                       "     Triangles: %d");
-#endif
+        stats->addElement(RenderAction::statNMatrices, "Matrix changes: %d");
+        //stats->addElement(RenderAction::statNGeometries, "    Geom nodes: %d");
+        //stats->addElement(RenderAction::statNTransGeometries, "Transparent Nodes drawn   %d");
+        //stats->addElement(RenderAction::statNTriangles, "     Triangles: %d");
+        //stats->addElement(RenderAction::statNMaterials, "%d material changes");
 
-        /*stats->addElement(PointLight::statNPointLights,
-                           "%d active point lights");
-        stats->addElement(DirectionalLight::statNDirectionalLights,
-                           "%d active directional lights");
-        stats->addElement(SpotLight::statNSpotLights,
-                           "%d active spot lights");*/
+        //stats->addElement(PointLight::statNPointLights, "%d active point lights");
+        //stats->addElement(DirectionalLight::statNDirectionalLights, "%d active directional lights");
+        //stats->addElement(SpotLight::statNSpotLights, "%d active spot lights");
 
         stats->addText   ("Drawables: (drawn)");
-
         stats->addElement(Drawable::statNTriangles,    "  tris: %d");
         stats->addElement(Drawable::statNLines,        " lines: %d");
         stats->addElement(Drawable::statNPoints,       "points: %d");
         stats->addElement(Drawable::statNVertices,     " verts: %d");
 
-        if(stats->getCollector() != NULL)
-        {
-            // add optional elements
-            stats->getCollector()->getElem(Drawable::statNTriangles);
-        }
+        if(stats->getCollector() != NULL) stats->getCollector()->getElem(Drawable::statNTriangles);
 
         stats->addText   ("ChangeList: ");
-        stats->addElement(ChangeList::statNChangedStoreSize,
-                       "    %d entries in changedStore");
-        stats->addElement(ChangeList::statNCreatedStoreSize,
-                       "    %d entries in createdStore");
-        stats->addElement(ChangeList::statNUnCommittedStoreSize,
-                       "    %d entries in uncommitedStore");
-        stats->addElement(ChangeList::statNPoolSize,
-                       "    %d entries in pool");
+        stats->addElement(ChangeList::statNChangedStoreSize, "    %d entries in changedStore");
+        stats->addElement(ChangeList::statNCreatedStoreSize, "    %d entries in createdStore");
+        stats->addElement(ChangeList::statNUnCommittedStoreSize, "    %d entries in uncommitedStore");
+        stats->addElement(ChangeList::statNPoolSize, "    %d entries in pool");
 
-#if 0
-        // 1.x stat
-        stats->addElement(RenderAction::statTravTime,
-                           "FPS:                  %r.3f");
-        stats->addElement(DrawActionBase::statCullTestedNodes,
-                           "Nodes culltested      %d");
-        stats->addElement(DrawActionBase::statCulledNodes,
-                           "Nodes culled          %d");
-        stats->addElement(RenderAction::statNOcclusionMode,
-                           "Occlusion culling     %s");
-        stats->addElement(RenderAction::statNOcclusionTests,
-                           "Occlusion tests       %d");
-        stats->addElement(RenderAction::statNOcclusionCulled,
-                           "Occlusion culled      %d");
-        stats->addElement(RenderAction::statNGeometries,
-                           "Nodes drawn           %d");
-        stats->addElement(RenderAction::statNTransGeometries,
-                           "Transp. Nodes drawn   %d");
-        stats->addElement(RenderAction::statNMaterials,
-                           "Material changes      %d");
-        stats->addElement(RenderAction::statNMatrices,
-                           "Matrix changes        %d");
 
-#if 0 // not ready for primetime yet
-        stats->addElement(PointLight::statNPointLights,
-                           "%d active point lights");
-        stats->addElement(DirectionalLight::statNDirectionalLights,
-                           "%d active directional lights");
-        stats->addElement(SpotLight::statNSpotLights,
-                           "%d active spot lights");
-#endif
-        stats->addElement(Drawable::statNTriangles,
-                           "Triangles drawn       %d");
-        stats->addElement(Drawable::statNLines,
-                           "Lines drawn           %d");
-        stats->addElement(Drawable::statNPoints,
-                           "Points drawn          %d");
-        stats->addElement(Drawable::statNVertices,
-                           "Vertices transformed  %d");
-        stats->addElement(RenderAction::statNTextures,
-                           "Textures used         %d");
-        stats->addElement(RenderAction::statNTexBytes,
-                           "Textures size (bytes) %d");
-#endif
+        //stats->addElement(DrawActionBase::statCullTestedNodes, "Nodes culltested      %d");
+        //stats->addElement(DrawActionBase::statCulledNodes, "Nodes culled          %d");
+        //stats->addElement(RenderAction::statNOcclusionMode, "Occlusion culling     %s");
+        //stats->addElement(RenderAction::statNOcclusionTests, "Occlusion tests       %d");
+        //stats->addElement(RenderAction::statNOcclusionCulled, "Occlusion culled      %d");
 
-#if 0
-        // Render action
-        stats->addElement(RenderAction::statDrawTime,      "Draw FPS: %r.3f");
-        stats->addElement(RenderAction::statTravTime,      "Trav FPS: %r.3f");
-        stats->addElement(DrawActionBase::statCullTestedNodes,
-                           "%d Nodes culltested");
-        stats->addElement(DrawActionBase::statCulledNodes,
-                           "%d Nodes culled");
-        stats->addElement(RenderAction::statNMaterials,
-                           "%d material changes");
-        stats->addElement(RenderAction::statNMatrices,
-                           "%d matrix changes");
-        stats->addElement(RenderAction::statNGeometries,
-                           "%d Nodes drawn");
-        stats->addElement(RenderAction::statNTransGeometries,
-                           "%d transparent Nodes drawn");
-#if 0 // not ready for primetime yet
-        stats->addElement(PointLight::statNPointLights,
-                           "%d active point lights");
-        stats->addElement(DirectionalLight::statNDirectionalLights,
-                           "%d active directional lights");
-        stats->addElement(SpotLight::statNSpotLights,
-                           "%d active spot lights");
-#endif
-        stats->addElement(Drawable::statNTriangles,    "%d triangles drawn");
-        stats->addElement(Drawable::statNLines,        "%d lines drawn");
-        stats->addElement(Drawable::statNPoints,       "%d points drawn");
-        stats->addElement(Drawable::statNVertices,     "%d vertices transformed");
-        stats->addElement(RenderAction::statNTextures, "%d textures used");
-        stats->addElement(RenderAction::statNTexBytes, "%d bytes of texture used");
-        if(stats->getCollector() != NULL)
-        {
-            // add optional elements
-            stats->editCollector()->getElem(Drawable::statNTriangles);
-        }
-#endif
 
+        if(stats->getCollector() != NULL) stats->editCollector()->getElem(Drawable::statNTriangles);
     }
 
     if (lView == 0) return;
-
-    if (b and !doStats) lView->addForeground(stats);
-    if (!b and doStats) lView->removeObjFromForegrounds(stats);
-
+    if (b && !doStats) lView->addForeground(stats);
+    if (!b && doStats) lView->removeObjFromForegrounds(stats);
     doStats = b;
 
     VRSetupManager::getCurrent()->getRenderAction()->setStatCollector(stats->getCollector());
@@ -442,8 +351,8 @@ void VRView::setRoot(VRObject* root, VRTransform* real) {
     if (root) view_root = root;
     //if (view_root == 0) return;
 
-    if (user and real_root) user->switchParent(real_root);
-    if (dummy_user and real_root) dummy_user->switchParent(real_root);
+    if (user && real_root) user->switchParent(real_root);
+    if (dummy_user && real_root) dummy_user->switchParent(real_root);
 
     NodeRecPtr n = view_root ? view_root->getNode() : 0;
     if (lView) lView->setRoot(n);
@@ -466,14 +375,14 @@ void VRView::setCamera(VRCamera* c) {
     if (c) cam = c;
     if (cam == 0) return;
 
-    if (lView and PCDecoratorLeft == 0) lView->setCamera(cam->getCam());
-    if (rView and PCDecoratorRight == 0) rView->setCamera(cam->getCam());
+    if (lView && PCDecoratorLeft == 0) lView->setCamera(cam->getCam());
+    if (rView && PCDecoratorRight == 0) rView->setCamera(cam->getCam());
 
     if (PCDecoratorLeft) PCDecoratorLeft->setDecoratee(cam->getCam());
     if (PCDecoratorRight) PCDecoratorRight->setDecoratee(cam->getCam());
 
-    if (lView and PCDecoratorLeft) lView->setCamera(PCDecoratorLeft);
-    if (rView and PCDecoratorRight) rView->setCamera(PCDecoratorRight);
+    if (lView && PCDecoratorLeft) lView->setCamera(PCDecoratorLeft);
+    if (rView && PCDecoratorRight) rView->setCamera(PCDecoratorRight);
 }
 
 void VRView::setBackground(BackgroundRecPtr bg) {
@@ -569,11 +478,11 @@ void VRView::setCallibrationMode(bool b) {
                 int k = i+j*w;
 
                 data[k] = c1;
-                if (i == 0 or j == 0 or i == w-1 or j == h-1) data[k] = c2;
-                else if (i == w1 or j == w1 or i == w-w1 or j == h-h1) data[k] = c2;
-                else if (x == -h5 or y == -w5 or x == h5 or y == w5) data[k] = c2;
-                else if(l == h5 or l == w5 or l == w1) data[k] = c2;
-                else if(x == 0 or y == 0) data[k] = c2;
+                if (i == 0 || j == 0 || i == w-1 || j == h-1) data[k] = c2;
+                else if (i == w1 || j == w1 || i == w-w1 || j == h-h1) data[k] = c2;
+                else if (x == -h5 || y == -w5 || x == h5 || y == w5) data[k] = c2;
+                else if(l == h5 || l == w5 || l == w1) data[k] = c2;
+                else if(x == 0 || y == 0) data[k] = c2;
             }
         }
 
@@ -629,7 +538,6 @@ void VRView::save(xmlpp::Element* node) {
     node->set_attribute("projection", toString(projection).c_str());
     node->set_attribute("eye_inverted", toString(eyeinverted).c_str());
     node->set_attribute("eye_separation", toString(eyeSeparation).c_str());
-    node->set_attribute("stats", toString(doStats).c_str());
     node->set_attribute("position", toString(position).c_str());
     node->set_attribute("center", toString(proj_center).c_str());
     node->set_attribute("normal", toString(proj_normal).c_str());
@@ -643,7 +551,6 @@ void VRView::load(xmlpp::Element* node) {
     active_stereo = toBool(node->get_attribute("active_stereo")->get_value());
     projection = toBool(node->get_attribute("projection")->get_value());
     eyeinverted = toBool(node->get_attribute("eye_inverted")->get_value());
-    doStats = toBool(node->get_attribute("stats")->get_value());
     eyeSeparation = toFloat(node->get_attribute("eye_separation")->get_value());
     position = toVec4f(node->get_attribute("position")->get_value());
     proj_center = toVec3f(node->get_attribute("center")->get_value());

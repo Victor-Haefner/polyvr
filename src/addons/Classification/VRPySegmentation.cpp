@@ -61,13 +61,6 @@ PyObject* VRPySegmentation::extractPatches(VRPySegmentation* self, PyObject* arg
     OSG::Vec3f vnorm = parseVec3fList(norm);
     OSG::Vec3f vnorm_d = parseVec3fList(norm_d);
 
-    vector<OSG::VRGeometry*> patches = self->obj->extractPatches(geo->obj, OSG::SEGMENTATION_ALGORITHM(algo), curv, curv_d, vnorm, vnorm_d);
-
-    PyObject* res = PyList_New(patches.size());
-    for (uint i=0; i<patches.size(); i++) {
-        PyObject* p = VRPyTypeCaster::cast(patches[i]);
-        PyList_SetItem(res, i, p);
-    }
-
-    return res;
+    OSG::VRObject* patches = self->obj->extractPatches(geo->obj, OSG::SEGMENTATION_ALGORITHM(algo), curv, curv_d, vnorm, vnorm_d);
+    return VRPyTypeCaster::cast( patches );
 }

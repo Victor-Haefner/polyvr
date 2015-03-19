@@ -43,6 +43,7 @@ class VRObject : public VRName {
         int childIndex = 0; // index of this object in its parent child vector
         bool pickable = false;
         bool visible = true;
+        bool intern = false;
         unsigned int graphChanged = 0; //is frame number
 
         map<string, VRAttachment*> attachments;
@@ -57,6 +58,8 @@ class VRObject : public VRName {
     protected:
         vector<VRObject*> children;
         string type;
+
+        void setIntern(bool b);
 
         virtual void printInformation();
         //void printInformation();
@@ -79,6 +82,8 @@ class VRObject : public VRName {
         /** Returns the object type **/
         string getType();
 
+        bool getIntern();
+
         VRObject* getRoot();
         string getPath();
         VRObject* getAtPath(string path);
@@ -90,7 +95,7 @@ class VRObject : public VRName {
         bool hasAttachment(string name);
         VRObject* hasAncestorWithAttachment(string name);
 
-        /** Set the object OSG core and specify the type**/
+        /** Set the object OSG core && specify the type**/
         void setCore(NodeCoreRecPtr c, string _type);
 
         /** Returns the object OSG core **/
@@ -124,6 +129,7 @@ class VRObject : public VRName {
         void detach();
 
         /** Returns the child by his position **/
+        int getChildIndex();
         VRObject* getChild(int i);
         vector<VRObject*> getChildren(bool recursive = false, string type = "");
 
@@ -140,7 +146,7 @@ class VRObject : public VRName {
         void getObjectListByType( string _type, vector<VRObject*>& list );
 
         /**
-            To find an object in the scene graph was never easier, just pass an OSG node, object, ID or name to a VRObject.
+            To find an object in the scene graph was never easier, just pass an OSG node, object, ID || name to a VRObject.
             This Object will search all the hirachy below him (himself included).
         **/
 
@@ -151,7 +157,7 @@ class VRObject : public VRName {
 
         vector<VRObject*> filterByType(string Type, vector<VRObject*> res = vector<VRObject*>() );
 
-        /** Returns the first ancestor that is pickable, or 0 if none found **/
+        /** Returns the first ancestor that is pickable, || 0 if none found **/
         VRObject* findPickableAncestor();
 
         bool hasAncestor(VRObject* a);
@@ -172,13 +178,13 @@ class VRObject : public VRName {
         /** duplicate this object **/
         VRObject* duplicate(bool anchor = false);
 
-        /** Hide this object and all his subgraph **/
+        /** Hide this object && all his subgraph **/
         void hide();
 
-        /** Show this object and all his subgraph **/
+        /** Show this object && all his subgraph **/
         void show();
 
-        /** Returns if this object is visible or not **/
+        /** Returns if this object is visible || not **/
         bool isVisible();
 
         /** Set the visibility of this object **/
@@ -187,10 +193,10 @@ class VRObject : public VRName {
         /** toggle visibility **/
         void toggleVisible();
 
-        /** Returns if this object is pickable or not **/
+        /** Returns if this object is pickable || not **/
         bool isPickable();
 
-        /** Set the object pickable or not **/
+        /** Set the object pickable || not **/
         void setPickable(bool b);
 
         void destroy();

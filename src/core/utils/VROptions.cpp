@@ -11,29 +11,27 @@ namespace bpo = boost::program_options;
 VROptions::VROptions() : desc("Configuration ") {
     desc.add_options() ("help", "show possible options");
 
+    addOption<bool>(false, "standalone");
+    addOption<string>("", "application");
+    addOption<string>("", "setup");
+
     addOption<int>(0, "shadowType");
     addOption<int>(1024, "shadowMapSize");
     addOption<float>(0.5, "shadowColor");
 
-    addOption<string>("", "setupCfg");
-
-    addOption<int>(0, "setup", "wich hardware setup to choose (0,1,2), will be changed to setup config files soon");
-    addOption<int>(-1, "scene", "wich scenes to choose (0,1,2), will be changed to scene config files soon");
-    addOption<float>(1.0, "scale", "scale the real environement in the virtual world");
-    //("stereo", bpo::value<bool>(), "use stereo or not")
-    addOption<bool>(false, "active_stereo", "use active_stereo or not");
-    addOption<bool>(false, "swap_buffer", "use active_stereo or not");
+    addOption<bool>(false, "active_stereo", "use active_stereo || not");
+    addOption<bool>(false, "swap_buffer", "use active_stereo || not");
     addOption<float>(0, "cave_offsetX", "X offset for the cave model");
     addOption<float>(0, "cave_offsetY", "Y offset for the cave model");
     addOption<float>(0, "cave_offsetZ", "Z offset for the cave model");
-    //("projection", bpo::value<bool>(), "use projections or not")
+
     addOption<string>("", "graphene_path", "path to load from");
-    addOption<bool>(false, "graphene_wired", "shaded or wired");
+    addOption<bool>(false, "graphene_wired", "shaded || wired");
     addOption<float>(1, "graphene_scale", "scale the amplitude of the wave function");
 
     addOption<int>(1, "ann_inputs", "number of inputs for the ann");
     addOption<int>(1, "ann_trigger", "input number of the ann used for trigger maximum");
-    addOption<bool>(true, "dragndrop", "activates drag and drop");
+    addOption<bool>(true, "dragndrop", "activates drag && drop");
     addOption<float>(1, "menu_size", "size of menu");
 
     addOption<bool>(false, "deferredShading", "activates deferredShading");

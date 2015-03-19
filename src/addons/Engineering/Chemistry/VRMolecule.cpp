@@ -164,7 +164,7 @@ bool VRAtom::append(VRAtom* at, int bType, bool extra) {
     bond.type = bType;
     bond.extra = extra;
     bond.atom2 = at;
-    if (full or at->full or at == this) return false;
+    if (full || at->full || at == this) return false;
     for (auto b : bonds) if (b.second.atom2 == at) return false;
     for (auto b : at->bonds) if (b.second.atom2 == this) return false;
 
@@ -363,7 +363,7 @@ void VRMolecule::updateGeo() {
     updateCoords();
 }
 
-bool isNumber(char c) { return (c >= '0' and c <= '9'); }
+bool isNumber(char c) { return (c >= '0' && c <= '9'); }
 
 string parseNumber(string in, int offset) {
     string X = ""; //parse number
@@ -382,11 +382,11 @@ vector<string> VRMolecule::parse(string mol, bool verbose) {
         if (verbose) cout << "  c: " << mol[i];
         if (mol[i] == '%') break; // check for ending flag
 
-        // check for double or triple bounds
+        // check for double || triple bounds
         string bond = "1"; // single
         if (mol[i] == '-') bond = "2"; // double
         if (mol[i] == '=') bond = "3"; // triple
-        if (mol[i] == '-' or mol[i] == '=') i++;
+        if (mol[i] == '-' || mol[i] == '=') i++;
 
         // check for bond with ID atom2
         X = parseNumber(mol, i); //parse number
@@ -404,7 +404,7 @@ vector<string> VRMolecule::parse(string mol, bool verbose) {
         atom2 = mol.substr(i, j); // final atom2 type string
 
         X = parseNumber(mol, i+j); //parse number
-        if (X.size() > 0 and verbose) cout << " N: " << X;
+        if (X.size() > 0 && verbose) cout << " N: " << X;
         j += X.size();
 
         int N = 1;
@@ -455,12 +455,13 @@ void VRMolecule::setRandom(int N) {
     int aN = types.size();
 
     for (int i=0; i<N; i++) {
-        int bt = random()%20;
+        int bt = rand()%20;
         if (bt == 0) m += '=';
         else if (bt < 4) m += '-';
-        a = random()%aN;
+
+		a = rand() % aN;
         m += types[a];
-        m += toString(int(1+random()%4));
+		m += toString(int(1 + rand() % 4));
     }
 
     set(m);
@@ -475,7 +476,7 @@ int VRMolecule::getID() {
 }
 
 uint VRMolecule::getFlag() {
-    return VRGlobals::get()->CURRENT_FRAME+random();
+	return VRGlobals::get()->CURRENT_FRAME + rand();
 }
 
 void VRMolecule::rotateBond(int a, int b, float f) {
@@ -484,7 +485,7 @@ void VRMolecule::rotateBond(int a, int b, float f) {
     VRAtom* A = atoms[a];
     VRAtom* B = atoms[b];
 
-    uint now = VRGlobals::get()->CURRENT_FRAME+random();
+	uint now = VRGlobals::get()->CURRENT_FRAME + rand();
     A->recFlag = now;
 
     Vec3f p1 = Vec3f( A->getTransformation()[3] );
@@ -512,7 +513,7 @@ void VRMolecule::changeBond(int a, int b, int t) {
     if (atoms.count(b) == 0) return;
     VRAtom* A = atoms[a];
     VRAtom* B = atoms[b];
-    if (A == 0 or B == 0) return;
+    if (A == 0 || B == 0) return;
 
     A->detach(B);
     A->append(B, t);
@@ -553,7 +554,7 @@ void VRMolecule::substitute(int a, VRMolecule* m, int b) {
     A->append(B, 1, true);
 
     // transform new atoms
-    uint now = VRGlobals::get()->CURRENT_FRAME+random();
+	uint now = VRGlobals::get()->CURRENT_FRAME + rand();
     A->recFlag = now;
     bm.invert();
     Matrix Bm = B->getTransformation();
@@ -571,7 +572,7 @@ void VRMolecule::substitute(int a, VRMolecule* m, int b) {
 void VRMolecule::setLocalOrigin(int ID) {
     if (atoms.count(ID) == 0) return;
 
-    uint now = VRGlobals::get()->CURRENT_FRAME+random();
+	uint now = VRGlobals::get()->CURRENT_FRAME + rand();
     Matrix m = atoms[ID]->getTransformation();
     m.invert();
 

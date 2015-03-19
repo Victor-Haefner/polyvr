@@ -8,7 +8,7 @@ using namespace std;
 
 class path {
     private:
-        // end points and normals
+        // end points && normals
         Vec3f ep1;
         Vec3f ep2;
         Vec3f n1;

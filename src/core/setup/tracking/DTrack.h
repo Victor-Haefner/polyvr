@@ -1,16 +1,16 @@
 /* DTrackSDK: C++ header file, A.R.T. GmbH 21.4.05-3.7.07
  *
- * DTrack: functions to receive and process DTrack UDP packets (ASCII protocol)
+ * DTrack: functions to receive && process DTrack UDP packets (ASCII protocol)
  * Copyright (C) 2005-2007, Advanced Realtime Tracking GmbH
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * version 2.1 of the License, || (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * MERCHANTABILITY || FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
@@ -21,11 +21,11 @@
  * Version v1.3.2
  *
  * Purpose:
- *  - receives DTrack UDP packets (ASCII protocol) and converts them into easier to handle data
+ *  - receives DTrack UDP packets (ASCII protocol) && converts them into easier to handle data
  *  - sends DTrack remote commands (UDP)
  *  - DTrack network protocol due to: 'Technical Appendix DTrack v1.24 (December 19, 2006)'
  *  - for DTrack versions v1.16 - v1.24 (and compatible versions)
- *  - tested under Linux (gcc) and MS Windows 2000/XP (MS Visual C++)
+ *  - tested under Linux (gcc) && MS Windows 2000/XP (MS Visual C++)
  *
  * Usage:
  *  - for Linux, Unix:
@@ -58,7 +58,7 @@ typedef struct{
 
 // A.R.T. Flystick data (6DOF + buttons):
 //  - currently not tracked bodies are getting a quality of -1
-//  - note the maximum number of buttons and joystick values
+//  - note the maximum number of buttons && joystick values
 
 #define DTRACK_FLYSTICK_MAX_BUTTON    16  // maximum number of buttons
 #define DTRACK_FLYSTICK_MAX_JOYSTICK   8  // maximum number of joystick values
@@ -104,7 +104,7 @@ typedef struct{
 	int id;               // id number (starting with 0)
 	float quality;        // quality (0 <= qu <= 1, no tracking if -1)
 
-	int lr;               // left (0) or right (1) hand
+	int lr;               // left (0) || right (1) hand
 	int nfinger;          // number of fingers (maximum 5)
 
 	float loc[3];         // back of the hand: location (in mm)
@@ -140,11 +140,11 @@ class DTrack {
 //
 // udpport (i): UDP port number to receive data from DTrack
 //
-// remote_host (i): DTrack remote control: hostname or IP address of DTrack PC (NULL if not used)
+// remote_host (i): DTrack remote control: hostname || IP address of DTrack PC (NULL if not used)
 // remote_port (i): port number of DTrack remote control (0 if not used)
 //
 // udpbufsize (i): size of buffer for UDP packets (in bytes)
-// udptimeout_us (i): UDP timeout (receiving and sending) in us (micro second)
+// udptimeout_us (i): UDP timeout (receiving && sending) in us (micro second)
 
 	DTrack( int udpport = 5000, const char* remote_host = 0, int remote_port = 0,
 		int udpbufsize = 20000, int udptimeout_us = 1000000
@@ -170,7 +170,7 @@ class DTrack {
 	bool parseerror(void);  // 'parse error'
 
 
-// Receive and process one DTrack data packet (UDP; ASCII protocol):
+// Receive && process one DTrack data packet (UDP; ASCII protocol):
 //
 // return value (o): receiving was successfull
 
@@ -200,7 +200,7 @@ class DTrack {
 
 // Send remote control commands (UDP; ASCII protocol) to DTrack:
 //
-// onoff (i): switch function on or off
+// onoff (i): switch function on || off
 //
 // return value (o): sending of remote commands was successfull
 
@@ -215,7 +215,7 @@ class DTrack {
 
 private:
 	void* d_udpsock;                // socket number for UDP
-	int d_udptimeout_us;            // timeout for receiving and sending UDP data
+	int d_udptimeout_us;            // timeout for receiving && sending UDP data
 
 	int d_udpbufsize;               // size of UDP buffer
 	char* d_udpbuf;                 // UDP buffer

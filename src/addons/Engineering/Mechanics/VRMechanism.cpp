@@ -61,10 +61,10 @@ bool MPart::hasNeighbor(MPart* p) {
 
 void MPart::computeState() {
     int N = neighbors.size();
-    if (state == FREE and N > 0) state = ENGAGING;
-    if (state == ENGAGING and N > 0) state = ENGAGED;
-    if (state == ENGAGED and N == 0) state = DISENGAGING;
-    if (state == DISENGAGING and N == 0) state = FREE;
+    if (state == FREE && N > 0) state = ENGAGING;
+    if (state == ENGAGING && N > 0) state = ENGAGED;
+    if (state == ENGAGED && N == 0) state = DISENGAGING;
+    if (state == DISENGAGING && N == 0) state = FREE;
 }
 
 void MChange::flip() {
@@ -89,7 +89,7 @@ bool MPart::propagateMovement(MChange c, MRelation* r) { // change
     r->translateChange(c);
     if (change.time == c.time) {
         return change.same(c);
-    } // TODO: either it is the same change or another change in the same timestep..
+    } // TODO: either it is the same change || another change in the same timestep..
 
     change = c;
     move();
@@ -124,7 +124,7 @@ MGearGearRelation* checkGearGear(MPart* p1, MPart* p2) {
     Vec3f d = Vec3f(r1[3] - r2[3]);
     float D = d.length();
     float t = 0.5*g1->teeth_size;
-    if (R+t < D or R-t > D) return 0; // too far apart
+    if (R+t < D || R-t > D) return 0; // too far apart
     ;// TODO: check if intersection line of gear planes is at the edge of both gears
     ;// TODO: check if coplanar
 
@@ -137,7 +137,7 @@ MGearGearRelation* checkGearGear(MPart* p1, MPart* p2) {
 MRelation* checkGearThread(MPart* p1, MPart* p2) {
     //float R = g->radius() + t->radius;
     ; // TODO: check if line center distance is the gear + thread radius
-    ; // TODO: check if thread and gear coplanar
+    ; // TODO: check if thread && gear coplanar
     return 0;
 }
 
@@ -211,7 +211,7 @@ vector<pointPolySegment> MChain::toPolygon(Vec3f p) {
 
 /*bool checkThreadNut(VRThread* t, VRNut* n, Matrix r1, Matrix r2) {
     ; // TODO: check if nut center on thread line
-    ; // TODO: check if nut and thread same orientation
+    ; // TODO: check if nut && thread same orientation
     return true;
 }*/
 
@@ -394,18 +394,16 @@ void MChain::updateGeo() {
     geo->setColors(cols);
     geo->setIndices(inds);
     geo->setLengths(lengths);
-    geo->getMaterial()->setLineWidth(3);
-    geo->getMaterial()->setLit(false);
 }
 
 VRGeometry* MChain::init() {
     geo = new VRGeometry("chain");
-    VRMaterial* cm = new VRMaterial("chain_mat");
+    updateGeo();
+    VRMaterial* cm = VRMaterial::get("chain_mat");
     cm->setLit(false);
-    cm->setLineWidth(4);
+    cm->setLineWidth(3);
     geo->setMaterial(cm);
     geo->setType(GL_LINES);
-    updateGeo();
     return geo;
 }
 

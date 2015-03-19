@@ -1,7 +1,6 @@
 #include "core/utils/VRDoublebuffer.h"
 #include "core/objects/material/VRMaterial.h"
-//#include "core/math/octree.h"
-#include "Octree/Octree.h"
+#include "core/math/Octree.h"
 
 #include "CSGGeometry.h"
 #include "CGALTypedefs.h"
@@ -12,6 +11,7 @@
 #include <OpenSG/OSGQuaternion.h>
 #include <OpenSG/OSGGeoFunctions.h>
 #include <OpenSG/OSGChunkMaterial.h>
+#include <OpenSG/OSGMultiPassMaterial.h>
 #include <libxml++/nodes/element.h>
 
 //#include "../../../../csg_alt/GTSGeometry.h"
@@ -104,8 +104,8 @@ GeometryTransitPtr CSGGeometry::toOsgGeometry(CGAL::Polyhedron *p) {
 	GeoUInt32PropertyRecPtr indices = GeoUInt32Property::create();
 
 	/*
-	 * Iterate over all faces, add their vertices to 'positions' and write indices at
-	 * the same time. Results in no shared vertices and therefore no normal interpolation between
+	 * Iterate over all faces, add their vertices to 'positions' && write indices at
+	 * the same time. Results in no shared vertices && therefore no normal interpolation between
 	 * faces, but makes cubes look good. Well, well...
 	 */
 
@@ -118,7 +118,7 @@ GeometryTransitPtr CSGGeometry::toOsgGeometry(CGAL::Polyhedron *p) {
 	Matrix worldToLocal;
 	worldToLocal.invertFrom(localToWorld);
 
-	// Convert indices and positions
+	// Convert indices && positions
 	int curIndex = 0;
 	for (CGAL::Polyhedron::Facet_const_iterator it = p->facets_begin(); it != p->facets_end(); it++) {
 		CGAL::Polyhedron::Halfedge_around_facet_const_circulator circ = it->facet_begin();
@@ -163,14 +163,14 @@ size_t CSGGeometry::isKnownPoint(OSG::Pnt3f newPoint) {
 	return numeric_limits<size_t>::max();
 }
 
-// Converts geometry to a polyhedron and applies the geometry node's world transform to the polyhedron.
+// Converts geometry to a polyhedron && applies the geometry node's world transform to the polyhedron.
 // OpenSG geometry data isn't transformed itself but has an associated transform core. Both are unified for CGAL.
 CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryRecPtr geometry, Matrix worldTransform) {
 	vector<CGAL::Point> positions;
 	vector<size_t> indices;
 	size_t curIndex = 0;
 
-	// Convert triangles to indices and vertices, leaving out redundant vertices
+	// Convert triangles to indices && vertices, leaving out redundant vertices
 	// (f.e. from different normals at an edge)
 	TriangleIterator it(geometry);
 	while (!it.isAtEnd()) {
@@ -194,7 +194,7 @@ CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryRecPtr geometry, Matrix worl
 	}
 
 	// Cleanup
-	for (void* o : oct->getData()) delete o;
+	for (void* o : oct->getData()) delete (size_t*)o;
 	delete oct;
 
 	oct = new Octree(THRESHOLD);
@@ -262,7 +262,8 @@ bool CSGGeometry::disableEditMode() {
 	// Clean up
 	for (auto p : polys) delete p;
 
-	setCSGGeometry(polyhedron);
+	if (polyhedron == 0) return false;
+    setCSGGeometry(polyhedron);
 	return true;
 }
 
@@ -273,7 +274,7 @@ bool CSGGeometry::setEditMode(const bool editModeActive) {
 		editMode = editModeActive;
 		if (editModeActive) enableEditMode();
 		else {
-			// We need to stop and report it back if an error occurred
+			// We need to stop && report it back if an error occurred
 			result = disableEditMode();
 
 			// Promote news to our parents, but only if parents had edit mode disabled before

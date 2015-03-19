@@ -8,13 +8,13 @@ using namespace std;
 
 class VRCallbackManager {
     private:
-        int id;//one single counter for all signals and callbacks
+        int id;//one single counter for all signals && callbacks
 
         //functions maps
         map<int, VRFunction_base*> callbacks;
         map<int, VRSignal*> signals;
         list<int*> bonds;//signal/callback pairs
-        map<int, string> labels;//maps callback and signal to their names
+        map<int, string> labels;//maps callback && signal to their names
 
         int id_increment(string name);
 

@@ -6,17 +6,72 @@
 #include "core/setup/VRSetupManager.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneManager.h"
-#include "addons/Engineering/CSG/Octree/Octree.h"
+#include "core/math/Octree.h"
+#include "core/utils/VRDoublebuffer.h"
+
+#include <OpenSG/OSGMatrixUtility.h>
 
 OSG_BEGIN_NAMESPACE;
+
+struct VRSnappingEngine::Rule {
+    unsigned long long ID = 0;
+    Type translation = NONE;
+    Type orientation = NONE;
+    Line prim_t, prim_o;
+
+    bool local;
+    float distance;
+    float weight = 1;
+
+    Rule(Type t, Type o, Line pt, Line po, float d, float w, bool l) :
+        translation(t), orientation(o),
+        prim_t(pt), prim_o(po), local(l),
+        distance(d), weight(w) {
+        static unsigned long long i = 0;
+        ID = i++;
+    }
+
+    void apply(Matrix& m, VRTransform* t = 0) {
+        Vec3f p = Vec3f(m[3]);
+
+        Vec3f p2; // get point to snap to
+        if (translation == POINT) p2 = prim_t.getDirection();
+        if (translation == LINE) p2 = prim_t.getClosestPoint(p).subZero(); // project on line
+        if (translation == PLANE) {
+            Plane pl(prim_t.getDirection(), prim_t.getPosition());
+            float d = pl.distance(p); // project on plane
+            p2 = p + d*pl.getNormal();
+        }
+
+        if (t) { // TODO: go to local coords of t
+            Matrix nm = t->getWorldMatrix();
+            Vec3f np = Vec3f(nm[3]);
+
+            Vec3f dir = p-np;
+            float d = dir.length();
+            //if (d < 1e-4) continue;
+            dir /= d;
+        }
+
+        // check distance
+        if ((p2-p).length() > distance) return;
+
+        m.setTranslate(p2); // snap
+
+        // apply orientation
+        if (orientation == POINT) {
+            Matrix r;
+            MatrixLookAt(r, Pnt3f(), prim_o.getPosition(), prim_o.getDirection());
+            m[0] = r[0];
+            m[1] = r[1];
+            m[2] = r[2];
+        }
+    }
+};
 
 VRSnappingEngine::VRSnappingEngine() {
     hintGeo = new VRGeometry("snapping_engine_hint");
     positions = new Octree(0.1);
-    distances = new Octree(0.1);
-    lines = new Octree(0.1);
-    planes = new Octree(0.1);
-    orientations = new Octree(0.1);
 
     VRFunction<int>* fkt = new VRFunction<int>("snapping engine update", boost::bind(&VRSnappingEngine::update, this) );
     VRSceneManager::getCurrent()->addUpdateFkt(fkt, 100);
@@ -26,25 +81,33 @@ void VRSnappingEngine::clear() {
     //hintGeo->clear();
     //hintGeo->hide();
     positions->clear();
-    distances->clear();
-    lines->clear();
-    planes->clear();
-    orientations->clear();
 }
 
-void VRSnappingEngine::setPreset(PRESET preset) {
-    clear();
-    switch(preset) {
-        case SIMPLE_ALIGNMENT:
-            // TODO
-            addDistance(1);
-            setOrientation(true);
-            addAxis( Line(Pnt3f(0,0,0), Vec3f(1,0,0)) );
-            addAxis( Line(Pnt3f(0,0,0), Vec3f(0,1,0)) );
-            addAxis( Line(Pnt3f(0,0,0), Vec3f(0,0,1)) );
-            break;
-    }
+
+VRSnappingEngine::Type VRSnappingEngine::typeFromStr(string t) {
+    if (t == "NONE") return NONE;
+    if (t == "POINT") return POINT;
+    if (t == "LINE") return LINE;
+    if (t == "PLANE") return PLANE;
+    if (t == "POINT_LOCAL") return POINT_LOCAL;
+    if (t == "LINE_LOCAL") return LINE_LOCAL;
+    if (t == "PLANE_LOCAL") return PLANE_LOCAL;
+    cout << "Warning: VRSnappingEngine::" << t << " is not a Type.\n";
+    return NONE;
 }
+
+int VRSnappingEngine::addRule(Type t, Type o, Line pt, Line po, float d, float w, bool l) {
+    Rule* r = new Rule(t,o,pt,po,d,w,l);
+    rules[r->ID] = r;
+    return r->ID;
+}
+
+void VRSnappingEngine::remRule(int i) {
+    if (rules.count(i) == 0) return;
+    delete rules[i];
+    rules.erase(i);
+}
+
 
 void VRSnappingEngine::addObject(VRTransform* obj, float weight) {
     objects[obj] = obj->getWorldMatrix();
@@ -52,71 +115,33 @@ void VRSnappingEngine::addObject(VRTransform* obj, float weight) {
     positions->add(p[0], p[1], p[2], obj);
 }
 
-// snap object's position
-void VRSnappingEngine::addDistance(float dist, bool local, float weight) {
-    distances->add(dist, 0, 0, new float(dist) );
+void VRSnappingEngine::remObject(VRTransform* obj) {
+    if (objects.count(obj)) objects.erase(obj);
 }
 
-void VRSnappingEngine::addAxis(Line line, bool local, float weight) {
-    Vec3f d = line.getDirection();
-    lines->add(d[0], d[1], d[2], new Vec3f(d));
-    lines->add(-d[0], -d[1], -d[2], new Vec3f(-d));
+void VRSnappingEngine::addTree(VRObject* obj, float weight) {
+    vector<VRObject*> objs = obj->getObjectListByType("Geometry");
+    for (auto o : objs) addObject((VRTransform*)o, weight);
 }
 
-void VRSnappingEngine::addPlane(Plane plane, bool local, float weight) {}
 
-// snap object's orientation
-void VRSnappingEngine::setOrientation(bool b, bool local, float weight) {
-    doOrientation = b;
-}
-
-void VRSnappingEngine::setVisualHints(bool b) {
-    showHints = b;
-    hintGeo->setVisible(b);
-}
 
 void VRSnappingEngine::update() {
-    // get dragged objects
-    for (auto dev : VRSetupManager::getCurrent()->getDevices()) {
+    for (auto dev : VRSetupManager::getCurrent()->getDevices()) { // get dragged objects
         VRTransform* obj = dev.second->getDraggedObject();
         VRTransform* gobj = dev.second->getDraggedGhost();
-        if (obj == 0) continue;
+        if (obj == 0 || gobj == 0) continue;
 
-        //Matrix m = obj->getWorldMatrix();
         Matrix m = gobj->getWorldMatrix();
         Vec3f p = Vec3f(m[3]);
 
         vector<void*> neighbors = positions->radiusSearch(p[0], p[1], p[2], influence_radius);
-        for (auto n : neighbors) {
-            VRTransform* t = (VRTransform*)n;
-            if (t == obj) continue;
-            Matrix nm = t->getWorldMatrix();
-            Vec3f np = Vec3f(nm[3]);
-
-            Vec3f dir = p-np;
-            float d = dir.length();
-            if (d < 1e-4) continue;
-            dir /= d;
-
-            if (doOrientation) {
-                m[0] = nm[0];
-                m[1] = nm[1];
-                m[2] = nm[2];
-            }
-
-            // get snapping axis
-            vector<void*> lins = lines->radiusSearch(dir[0],dir[1],dir[2], distance_snap);
-            if (lins.size() != 0) { // apply snap
-                dir = *(Vec3f*)lins[0];
-                Line l(np, dir);
-                m.setTranslate(l.getClosestPoint(p));
-            }
-
-            // get snap distances in snapping range
-            vector<void*> dists = distances->radiusSearch(d,0,0, distance_snap*d);
-            if (dists.size() != 0) { // apply snap
-                d = *(float*)dists[0];
-                m.setTranslate(np + dir*d);
+        for (auto ri : rules) {
+            Rule* r = ri.second;
+            if (!r->local) r->apply(m);
+            else for (auto n : neighbors) {
+                VRTransform* t = (VRTransform*)n;
+                if (t != obj) r->apply(m, t);
             }
         }
 
@@ -125,6 +150,30 @@ void VRSnappingEngine::update() {
 
     // update geo
     if (!hintGeo->isVisible()) return;
+}
+
+void VRSnappingEngine::setVisualHints(bool b) {
+    showHints = b;
+    hintGeo->setVisible(b);
+}
+
+void VRSnappingEngine::setPreset(PRESET preset) {
+    clear();
+
+    Line t0(Pnt3f(0,0,0), Vec3f(0,0,0));
+    Line o0(Pnt3f(0,0,-1), Vec3f(0,1,0));
+
+    switch(preset) {
+        case SIMPLE_ALIGNMENT:
+            addRule(POINT, POINT, t0, o0, 1, 1, true);
+            addRule(LINE, POINT, Line(Pnt3f(), Vec3f(1,0,0)), o0, 1, 1, true);
+            addRule(LINE, POINT, Line(Pnt3f(), Vec3f(0,1,0)), o0, 1, 1, true);
+            addRule(LINE, POINT, Line(Pnt3f(), Vec3f(0,0,1)), o0, 1, 1, true);
+            break;
+        case SNAP_BACK:
+            addRule(POINT, POINT, t0, o0, 1, 1, true);
+            break;
+    }
 }
 
 OSG_END_NAMESPACE;

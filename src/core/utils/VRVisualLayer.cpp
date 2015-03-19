@@ -5,17 +5,23 @@
 
 OSG_BEGIN_NAMESPACE;
 
-VRVisualLayer::VRVisualLayer(string name) {
+VRVisualLayer::VRVisualLayer(string name, string ic) {
+    setNameSpace("VRVisualLayer");
     if (layers.count(name)) delete layers[name];
+    setName(name);
 
     layers[name] = this;
     anchor = new VRObject("layer_anchor_"+name);
     anchor->hide();
+
+    icon = ic;
 }
 
 VRVisualLayer::~VRVisualLayer() {
     delete anchor;
 }
+
+string VRVisualLayer::getIconName() { return icon; }
 
 map<string, VRVisualLayer*> VRVisualLayer::layers;
 vector<string> VRVisualLayer::getLayers() {

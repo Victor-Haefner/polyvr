@@ -39,11 +39,11 @@ void VRTransform::computeMatrix() {
     dm->write(mm);
 }
 
-//read matrix from doublebuffer and apply it to transformation
+//read matrix from doublebuffer && apply it to transformation
 //should be called from the main thread only
 void VRTransform::updatePhysics() {
     //update bullets transform
-    if (noBlt and !held) { noBlt = false; return; }
+    if (noBlt && !held) { noBlt = false; return; }
     if (!physics->isPhysicalized()) return;
 
     /*Matrix m;
@@ -233,7 +233,7 @@ void VRTransform::getWorldMatrix(Matrix& _m, bool parentOnly) {
 
         Matrix m;
         VRObject* obj = this;
-        if (parentOnly and obj->getParent() != 0) obj = obj->getParent();
+        if (parentOnly && obj->getParent() != 0) obj = obj->getParent();
 
         VRTransform* tmp;
         while(true) {
@@ -280,7 +280,7 @@ Vec3f VRTransform::getWorldDirection() {
     return Vec3f(m[2]);
 }
 
-/** Set the object fixed or not **/
+/** Set the object fixed || not **/
 void VRTransform::setFixed(bool b) {
     if (b == fixed) return;
     fixed = b;
@@ -292,18 +292,15 @@ void VRTransform::setFixed(bool b) {
 }
 
 /** Set the world matrix of the object **/
-void VRTransform::setWorldMatrix(Matrix _m) {
-    if (isNan(_m)) return;
-    Matrix wm, lm;
-    getWorldMatrix(wm);
-    getMatrix(lm);
+void VRTransform::setWorldMatrix(Matrix m) {
+    if (isNan(m)) return;
 
+    Matrix wm = getWorldMatrix(true);
     wm.invert();
+    wm.mult(m);
+    setMatrix(wm);
 
-    lm.mult(wm);
-    lm.mult(_m);
-
-    setMatrix(lm);
+    //cout << ;
 }
 
 /** Set the world position of the object **/
@@ -314,6 +311,8 @@ void VRTransform::setWorldPosition(Vec3f pos) {
     _from = pos - tmp + _from;
     reg_change();
 }
+
+doubleBuffer* VRTransform::getBuffer() { return dm; }
 
 //local pose setter--------------------
 /** Set the from vector **/
@@ -352,7 +351,7 @@ void VRTransform::setDir(Vec3f dir) {
 bool VRTransform::get_orientation_mode() { return orientation_mode; }
 void VRTransform::set_orientation_mode(bool b) { orientation_mode = b; }
 
-/** Set the orientation of the object with the at and up vectors **/
+/** Set the orientation of the object with the at && up vectors **/
 void VRTransform::setOrientation(Vec3f at, Vec3f up) {
     if (isNan(at) || isNan(up)) return;
     _at = at;
@@ -360,7 +359,7 @@ void VRTransform::setOrientation(Vec3f at, Vec3f up) {
     reg_change();
 }
 
-/** Set the pose of the object with the from, at and up vectors **/
+/** Set the pose of the object with the from, at && up vectors **/
 void VRTransform::setPose(Vec3f from, Vec3f dir, Vec3f up) {
     if (isNan(from) || isNan(dir) || isNan(up)) return;
     _from = from;
@@ -461,7 +460,7 @@ void VRTransform::rotateX(float a) {//rotate around x axis
     //cout << "\nRotating " << name << " " << a ;
 }
 
-/** Rotate the object around the point where at indicates and the up axis **/
+/** Rotate the object around the point where at indicates && the up axis **/
 void VRTransform::rotateAround(float a) {//rotate around focus using up axis
     if (isNan(a)) return;
     orientation_mode = false;
@@ -475,7 +474,7 @@ void VRTransform::rotateAround(float a) {//rotate around focus using up axis
     reg_change();
 }
 
-/** translate the object with a vector v, this changes the from and at vector **/
+/** translate the object with a vector v, this changes the from && at vector **/
 void VRTransform::translate(Vec3f v) {
     if (isNan(v)) return;
     _at += v;
@@ -509,6 +508,7 @@ void VRTransform::drag(VRTransform* new_parent) {
     if (held) return;
     held = true;
     old_parent = getParent();
+    old_child_id = getChildIndex();
     setFixed(false);
 
     //showTranslator(true); //TODO
@@ -533,7 +533,7 @@ void VRTransform::drop() {
 
     Matrix m;
     getWorldMatrix(m);
-    switchParent(old_parent);
+    switchParent(old_parent, old_child_id);
     setWorldMatrix(m);
 
     physics->updateTransformation(this);
@@ -567,7 +567,7 @@ Line VRTransform::castRay(VRObject* obj, Vec3f dir) {
     return ray;
 }
 
-/** Print the position of the object in local and world coords **/
+/** Print the position of the object in local && world coords **/
 void VRTransform::printPos() {
     Matrix wm, wm_osg, lm;
     getWorldMatrix(wm);
@@ -582,13 +582,13 @@ void VRTransform::printTransformationTree(int indent) {
 
     cout << "\n";
     for (int i=0;i<indent;i++) cout << "  ";
-    if (getType() == "Transform" or getType() == "Geometry") {
+    if (getType() == "Transform" || getType() == "Geometry") {
         VRTransform* _this = (VRTransform*) this;
         _this->printPos();
     }
 
     for (uint i=0;i<getChildrenCount();i++) {
-        if (getChild(i)->getType() == "Transform" or getChild(i)->getType() == "Geometry") {
+        if (getChild(i)->getType() == "Transform" || getChild(i)->getType() == "Geometry") {
             VRTransform* tmp = (VRTransform*) getChild(i);
             tmp->printTransformationTree(indent+1);
         }
@@ -599,7 +599,7 @@ void VRTransform::printTransformationTree(int indent) {
 
 /** enable constraints on the object, 0 leaves the DOF free, 1 restricts it **/
 void VRTransform::apply_constraints() {
-    if (!doTConstraint and !doRConstraint) return;
+    if (!doTConstraint && !doRConstraint) return;
 
     Matrix t = getWorldMatrix();//current position
 
@@ -739,7 +739,7 @@ void VRTransform::loadContent(xmlpp::Element* e) {
 
     if (e->get_attribute("at_dir")) orientation_mode = toBool(e->get_attribute("at_dir")->get_value());
 
-    if(doTConstraint or doRConstraint) setFixed(false);
+    if(doTConstraint || doRConstraint) setFixed(false);
 }
 
 void setFromPath(VRTransform* tr, path* p, bool redirect, float t) {

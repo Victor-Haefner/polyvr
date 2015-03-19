@@ -11,8 +11,8 @@
  This class is responsible for the data structures, the network interface and
  running the simulators on the data.
 
- To run it, create an object of this class and execute the \c mainLoop() method.
- It will block and run the simulation until the state is set to \c STOP with the
+ To run it, create an object of this class && execute the \c mainLoop() method.
+ It will block && run the simulation until the state is set to \c STOP with the
  \c setState() method.
  */
 class TrafficSimulator {
@@ -24,9 +24,9 @@ class TrafficSimulator {
             RUN,
             /// The simulation is paused but the mainloop still handles the network.
             PAUSE,
-            /// The simulator is shutting down and the \c mainLoop() method will return shortly.
+            /// The simulator is shutting down && the \c mainLoop() method will return shortly.
             STOP,
-            /// The simulator restarts, same as deleting this object and creating a new one.
+            /// The simulator restarts, same as deleting this object && creating a new one.
             RESTART
         };
 
@@ -56,7 +56,7 @@ class TrafficSimulator {
 
         /**
          Runs the main loop of the simulator.
-         This includes running the simulation and controlling the interfaces.
+         This includes running the simulation && controlling the interfaces.
 
          This call will block until \c setState(STOP) is called.
          */

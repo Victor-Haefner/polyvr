@@ -10,19 +10,20 @@ void createQRCode(std::string s, OSG::VRMaterial* mat, OSG::Vec3f fg, OSG::Vec3f
     if (code == NULL) { cout << "\nQR code failed\n"; return; }
 
     int w = code->width + 2*offset;
-    OSG::Vec3f data[w*w];
+	vector<OSG::Vec3f> data;
+	data.resize(w*w);
 
     for (int i=0; i<w; i++) {
         for (int j=0; j<w; j++) {
             int k = i+j*w;
-            if (i<offset or i>=w-offset or j<offset or j>=w-offset) { data[k] = bg; continue; }
+            if (i<offset || i>=w-offset || j<offset || j>=w-offset) { data[k] = bg; continue; }
 
             unsigned char q = code->data[(i-offset) + (j-offset)*code->width];
             data[k] = q & 1 ? fg : bg;
         }
     }
 
-    img->set(OSG::Image::OSG_RGB_PF, w, w, 1, 0, 1, 0.0, (const uint8_t*)data, OSG::Image::OSG_FLOAT32_IMAGEDATA, true, 1);
+    img->set(OSG::Image::OSG_RGB_PF, w, w, 1, 0, 1, 0.0, (const uint8_t*)&data[0], OSG::Image::OSG_FLOAT32_IMAGEDATA, true, 1);
 
     mat->setTexture(img);
 }

@@ -151,7 +151,7 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
     // unload joints
     BOOST_FOREACH(string jointId, listReloadJoints) {
         if (meshes.count(jointId)) {
-            // delete mesh from scene and from world.meshes
+            // delete mesh from scene && from world.meshes
             VRObject* obj = meshes[jointId];
             meshes.erase(jointId);
             delete obj;
@@ -161,7 +161,7 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
         StreetJoint* joint = streetJointMap[jointId];
         BOOST_FOREACH(string segId, joint->segmentIds) {
             if (meshes.count(segId)) {
-                // delete mesh from scene and from world.meshes
+                // delete mesh from scene && from world.meshes
                 VRObject* obj = meshes[segId];
                 meshes.erase(segId);
                 delete obj;
@@ -243,7 +243,7 @@ void ModuleStreets::unloadBbox(AreaBoundingBox* bbox) {
         string jointId = node->id;
 
         if (meshes.count(jointId)) {
-            // delete mesh from scene and from world.meshes
+            // delete mesh from scene && from world.meshes
             VRObject* obj = meshes[jointId];
             meshes.erase(jointId);
             delete obj;
@@ -256,7 +256,7 @@ void ModuleStreets::unloadBbox(AreaBoundingBox* bbox) {
 
             BOOST_FOREACH(string segId, joint->segmentIds) {
                 if (meshes.count(segId)) {
-                    // delete mesh from scene and from world.meshes
+                    // delete mesh from scene && from world.meshes
                     VRObject* obj = meshes[segId];
                     meshes.erase(segId);
                     streetSegmentMap.erase(segId);
@@ -418,7 +418,7 @@ void ModuleStreets::pushQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f norma
 
 void ModuleStreets::pushQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f normal, int* i,
               vector<Vec3f>* pos, vector<Vec3f>* norms, vector<int>* inds, vector<Vec2f>* texs, bool isSide){
-    // calc road length and divide by texture size
+    // calc road length && divide by texture size
     float width = (a2-a1).length();
 
     float len = (b1 - a1).length()/width;
@@ -473,7 +473,8 @@ VRGeometry* ModuleStreets::makeStreetJointGeometry(StreetJoint* sj) {
 
     int ind = 0;
     middle = Vec3f(sj->position.getValues()[0], this->mapCoordinator->getElevation(sj->position) +  jointHeight, sj->position.getValues()[1]);
-    float width, mx, my;
+    float width = 0;
+    float mx, my;
 
     BOOST_FOREACH(JointPoints* jp, jointPoints) {
         right = Vec3f(jp->right.getValues()[0], this->mapCoordinator->getElevation(jp->right) +jointHeight, jp->right.getValues()[1]);
@@ -502,7 +503,7 @@ VRGeometry* ModuleStreets::makeStreetJointGeometry(StreetJoint* sj) {
         }
 
 
-        if (sj->segmentIds.size() <= 2) { //joint with only 1 or 2 connecting street segments
+        if (sj->segmentIds.size() <= 2) { //joint with only 1 || 2 connecting street segments
             if ((leftExt-middle).length() < 3) {
                 for (int j=0; j<3; j++) {
                     norms.push_back(Vec3f(0, 1, 0));
@@ -544,7 +545,7 @@ VRGeometry* ModuleStreets::makeStreetJointGeometry(StreetJoint* sj) {
         prevLeft = left;
     }
 
-    if(sj->segmentIds.size() <= 2){ //joint with only 1 or 2 connecting street segments
+    if(sj->segmentIds.size() <= 2){ //joint with only 1 || 2 connecting street segments
         for (int j=0; j<3; j++) {
             norms.push_back(Vec3f(0, 1, 0));
             inds.push_back(ind++);

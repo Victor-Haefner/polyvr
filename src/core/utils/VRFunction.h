@@ -4,6 +4,7 @@
 #include <boost/function.hpp>
 #include <iostream>
 #include <boost/exception/all.hpp>
+#include <boost/exception/diagnostic_information.hpp>
 #include "VRName.h"
 
 using namespace std;
@@ -22,7 +23,7 @@ class VRFunction : public VRFunction_base {
         void operator()(T t) {
             try { if(fkt) fkt(t); }
             catch (boost::exception& e) {
-                cout << "VRFunction::() exception occured" << endl;
+				cout << "VRFunction::() exception occured: " << boost::diagnostic_information(e) << endl;
             }
         }
 };

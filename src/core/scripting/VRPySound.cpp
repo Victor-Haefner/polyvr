@@ -56,15 +56,10 @@ PyObject* VRPySound::play(VRPySound* self, PyObject* args) {
     long loop = 0;
 
     if (! PyArg_ParseTuple(args, "Ol", &path, &loop)) return NULL;
+    if (path == NULL) { PyErr_SetString(err, "Missing path parameter"); return NULL; }
 
-    if (path == NULL) {
-        PyErr_SetString(err, "Missing path parameter");
-        Py_RETURN_FALSE;
-    } else {
-        string filepath = PyString_AsString(path);
-        OSG::VRSoundManager::get().playSound(filepath, loop);
-        Py_RETURN_TRUE;
-    }
+    OSG::VRSoundManager::get().playSound( PyString_AsString(path), loop);
+    Py_RETURN_TRUE;
 }
 
 
@@ -79,16 +74,9 @@ PyObject* VRPySound::stopAllSounds(VRPySound* self) {
 }
 
 PyObject* VRPySound::setVolume(VRPySound* self, PyObject* args) {
-    float vol = -1.0f;
-    PyArg_ParseTuple(args, "f", &vol);
+    float vol = parseFloat(args);
+    if ((vol < 0.0f) || (vol > 1.0f)) { PyErr_SetString(err, "Volume ranging from 0.0 to 1.0"); return NULL; }
 
-    if ((vol < 0.0f) || (vol > 1.0f)) {
-        PyErr_SetString(err, "Volume ranging from 0.0 to 1.0");
-        Py_RETURN_FALSE;
-    } else {
-        OSG::VRSoundManager::get().setMusicVolume(vol);
-        //OSG::VRSoundManager::get().setSoundVolume(vol);
-        Py_RETURN_TRUE;
-    }
-
+    OSG::VRSoundManager::get().setSoundVolume(vol);
+    Py_RETURN_TRUE;
 }

@@ -10,16 +10,9 @@ PyObject* VRPyBase::parseObject(PyObject *args) {
 }
 
 vector<PyObject*> VRPyBase::pyListToVector(PyObject *v) {
-    std::string type = v->ob_type->tp_name;
-    if (type == "list") v = PyList_AsTuple(v);
-
-    PyObject *pi;
-    int N = PyTuple_Size(v);
     vector<PyObject*> res;
-    for (int i=0; i<N; i++) {
-        pi = PyTuple_GetItem(v, i);
-        res.push_back(pi);
-    }
+    if(isList(v))  for (int i=0; i<pySize(v); i++) res.push_back(PyList_GetItem(v, i));
+    if(isTuple(v)) for (int i=0; i<pySize(v); i++) res.push_back(PyTuple_GetItem(v, i));
     return res;
 }
 
@@ -27,15 +20,63 @@ vector<PyObject*> VRPyBase::parseList(PyObject *args) {
     return pyListToVector( parseObject(args) );
 }
 
+bool VRPyBase::isList(PyObject* o) { return PyList_Check(o); }
+bool VRPyBase::isTuple(PyObject* o) { return PyTuple_Check(o); }
+
+int VRPyBase::pySize(PyObject* v) {
+    if (isList(v)) return PyList_Size(v);
+    if (isTuple(v)) return PyTuple_Size(v);
+    return 0;
+}
+
+PyObject* VRPyBase::getItem(PyObject* v, int i) {
+    if (i < 0 || i >= pySize(v)) return 0;
+    if (isList(v)) return PyList_GetItem(v,i);
+    if (isTuple(v)) return PyTuple_GetItem(v,i);
+    return 0;
+}
+
+OSG::Vec3i VRPyBase::parseVec3iList(PyObject *li) {
+    if (li == 0) return OSG::Vec3i();
+    vector<PyObject*> lis = pyListToVector(li);
+    if (lis.size() != 3) return OSG::Vec3i();
+    int x,y,z;
+    x = PyInt_AsLong(lis[0]);
+    y = PyInt_AsLong(lis[1]);
+    z = PyInt_AsLong(lis[2]);
+    return OSG::Vec3i(x,y,z);
+}
+
+OSG::Line VRPyBase::PyToLine(PyObject *li) {
+    if (li == 0) return OSG::Line();
+    vector<PyObject*> lis = pyListToVector(li);
+    if (lis.size() != 6) return OSG::Line();
+    int r[6];
+    for (int i=0; i<6; i++) r[i] = PyInt_AsLong(lis[i]);
+    return OSG::Line(OSG::Pnt3f(r[3],r[4],r[5]), OSG::Vec3f(r[0],r[1],r[2]));
+}
+
 OSG::Vec3f VRPyBase::parseVec3fList(PyObject *li) {
     if (li == 0) return OSG::Vec3f();
     vector<PyObject*> lis = pyListToVector(li);
-    if (lis.size() != 3) return OSG::Vec3f(0,0,0);
+    if (lis.size() != 3) return OSG::Vec3f();
     float x,y,z;
     x = PyFloat_AsDouble(lis[0]);
     y = PyFloat_AsDouble(lis[1]);
     z = PyFloat_AsDouble(lis[2]);
     return OSG::Vec3f(x,y,z);
+}
+
+OSG::Vec4f VRPyBase::parseVec4fList(PyObject *li) {
+    if (li == 0) return OSG::Vec4f();
+    vector<PyObject*> lis = pyListToVector(li);
+    if (lis.size() != 4) return OSG::Vec4f();
+    float x,y,z,w;
+    x = PyFloat_AsDouble(lis[0]);
+    y = PyFloat_AsDouble(lis[1]);
+    z = PyFloat_AsDouble(lis[2]);
+    w = PyFloat_AsDouble(lis[3]);
+    return OSG::Vec4f(x,y,z,w);
 }
 
 OSG::Vec2f VRPyBase::parseVec2f(PyObject *args) {
@@ -45,8 +86,7 @@ OSG::Vec2f VRPyBase::parseVec2f(PyObject *args) {
 }
 
 OSG::Vec3f VRPyBase::parseVec3f(PyObject *args) {
-    int aL = PyTuple_Size(args);
-    if (aL == 1) return parseVec3fList( parseObject(args) );
+    if (pySize(args) == 1) return parseVec3fList( parseObject(args) );
 
     float x,y,z; x=y=z=0;
     if (! PyArg_ParseTuple(args, "fff", &x, &y, &z)) return OSG::Vec3f();
@@ -57,6 +97,14 @@ OSG::Vec4f VRPyBase::parseVec4f(PyObject *args) {
     float x,y,z,w; x=y=z=w=0;
     if (! PyArg_ParseTuple(args, "ffff", &x, &y, &z, &w)) return OSG::Vec4f();
     return OSG::Vec4f(x,y,z,w);
+}
+
+OSG::Vec3i VRPyBase::parseVec3i(PyObject *args) {
+    if (pySize(args) == 1) return parseVec3iList( parseObject(args) );
+
+    int x,y,z; x=y=z=0;
+    if (! PyArg_ParseTuple(args, "iii", &x, &y, &z)) return OSG::Vec3i();
+    return OSG::Vec3i(x,y,z);
 }
 
 float VRPyBase::parseFloat(PyObject *args) {

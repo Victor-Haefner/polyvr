@@ -161,7 +161,7 @@ OSG::GeometryRecPtr VRThread::make() {
             Norms->addValue(OSG::Vec3f(ca,sa,0));
             Norms->addValue(OSG::Vec3f(ca,sa,0));
 
-            if (i == 0 and j == 0) continue;
+            if (i == 0 && j == 0) continue;
 
             Indices->addValue(iN+2*j-2);
             Indices->addValue(iN+2*j);
@@ -169,7 +169,7 @@ OSG::GeometryRecPtr VRThread::make() {
             Indices->addValue(iN+2*j-1);
 
             if (i == 0) continue;
-            if (i == 1 and j == 0) continue;
+            if (i == 1 && j == 0) continue;
 
             Indices->addValue(iN+2*j-2*rN-1);
             Indices->addValue(iN+2*j-2*rN+1);
@@ -243,20 +243,20 @@ OSG::GeometryRecPtr VRGear::make() {
         for (int j=0; j<8; j++) { n = OSG::Vec3f(0,0,-1); Norms->addValue(n); }
         for (int j=0; j<8; j++) { n = OSG::Vec3f(0,0,1); Norms->addValue(n); }
 
-        Indices->addValue(iN+0); // T1 unten
         Indices->addValue(iN+1);
-        Indices->addValue(iN+6);
+        Indices->addValue(iN+0); // T1 unten
         Indices->addValue(iN+7);
-
-        Indices->addValue(iN+1); // T2 unten
-        Indices->addValue(iN+2);
-        Indices->addValue(iN+5);
         Indices->addValue(iN+6);
 
-        Indices->addValue(iN+2); // T3 unten
-        Indices->addValue(iN+3);
-        Indices->addValue(iN+4);
+        Indices->addValue(iN+2);
+        Indices->addValue(iN+1); // T2 unten
+        Indices->addValue(iN+6);
         Indices->addValue(iN+5);
+
+        Indices->addValue(iN+3);
+        Indices->addValue(iN+2); // T3 unten
+        Indices->addValue(iN+5);
+        Indices->addValue(iN+4);
 
         Indices->addValue(iN+8); // T1 oben
         Indices->addValue(iN+9);
@@ -273,14 +273,14 @@ OSG::GeometryRecPtr VRGear::make() {
         Indices->addValue(iN+12);
         Indices->addValue(iN+13);
 
-        Indices->addValue(iN+7); // N unten
         Indices->addValue(iN+6);
+        Indices->addValue(iN+7); // N unten
         if (i<tN-1) {
-            Indices->addValue(iN+17);
             Indices->addValue(iN+16);
+            Indices->addValue(iN+17);
         } else { // loop closing quad
-            Indices->addValue(1);
             Indices->addValue(0);
+            Indices->addValue(1);
         }
 
         Indices->addValue(iN+15); // N oben
@@ -352,39 +352,39 @@ OSG::GeometryRecPtr VRGear::make() {
             Indices->addValue(iNs+0);
         }
 
-        Indices->addValue(iN+1); // O1
         Indices->addValue(iN+9);
-        Indices->addValue(iN+10);
+        Indices->addValue(iN+1); // O1
         Indices->addValue(iN+2);
-
-        Indices->addValue(iN+2); // O2
         Indices->addValue(iN+10);
-        Indices->addValue(iN+11);
+
+        Indices->addValue(iN+10);
+        Indices->addValue(iN+2); // O2
         Indices->addValue(iN+3);
-
-        Indices->addValue(iN+3); // O3
         Indices->addValue(iN+11);
-        Indices->addValue(iN+12);
+
+        Indices->addValue(iN+11);
+        Indices->addValue(iN+3); // O3
         Indices->addValue(iN+4);
-
-        Indices->addValue(iN+4); // O4
         Indices->addValue(iN+12);
-        Indices->addValue(iN+13);
+
+        Indices->addValue(iN+12);
+        Indices->addValue(iN+4); // O4
         Indices->addValue(iN+5);
-
-        Indices->addValue(iN+5); // O5
         Indices->addValue(iN+13);
-        Indices->addValue(iN+14);
-        Indices->addValue(iN+6);
 
-        Indices->addValue(iN+6); // O6
+        Indices->addValue(iN+13);
+        Indices->addValue(iN+5); // O5
+        Indices->addValue(iN+6);
         Indices->addValue(iN+14);
+
+        Indices->addValue(iN+14);
+        Indices->addValue(iN+6); // O6
         if (i<tN-1) {
-            Indices->addValue(iN+25);
             Indices->addValue(iN+17);
+            Indices->addValue(iN+25);
         } else { // loop closing quad
-            Indices->addValue(iNs+9);
             Indices->addValue(iNs+1);
+            Indices->addValue(iNs+9);
         }
     }
 

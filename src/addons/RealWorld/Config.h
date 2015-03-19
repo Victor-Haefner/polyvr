@@ -13,14 +13,14 @@ namespace realworld {
         float maxTriangleSize = 15; //maximum size of a side of a tesselated triangle;
 
         //floor values
-        //Terrain and Ground
+        //Terrain && Ground
         //static const float GROUND_LVL = -1.0f; //y value of ground
         float LAYER_DISTANCE = 0.11f; // distance between 2 layers, so that one layer is hidden completely
 
         //streets
         float STREET_HEIGHT = 0.35f; //street distance from floor
         float STREET_WIDTH = 3.0f; //minimum street width
-        float BRIDGE_HEIGHT = 3.0f; //distance between ground and a bridge
+        float BRIDGE_HEIGHT = 3.0f; //distance between ground && a bridge
         float SMALL_BRIDGE_HEIGHT = 0.5f; //thickness of smaller bridges
         float BRIDGE_SIZE = 0.1f; //thickness of the bridge
 
@@ -29,7 +29,7 @@ namespace realworld {
         float SIGN_WIDTH = 0.3; //sign width
 
         //buildings
-        float WINDOW_DOOR_WIDTH = 2.5f; //width of a door or window
+        float WINDOW_DOOR_WIDTH = 2.5f; //width of a door || window
         float BUILDING_FLOOR_HEIGHT = 3.0f; //height of one level of a building
         int MAX_FLOORS = 4; //how many floors a building can have at max
         int FASSADE_SEGMENTS = 4; // number of segments per fassade

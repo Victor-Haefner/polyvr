@@ -25,6 +25,8 @@ struct VRPyDevice : VRPyBaseT<OSG::VRDevice> {
     static PyObject* addIntersection(VRPyDevice* self, PyObject *args);
     static PyObject* remIntersection(VRPyDevice* self, PyObject *args);
     static PyObject* getDragged(VRPyDevice* self);
+    static PyObject* drag(VRPyDevice* self, PyObject *args);
+    static PyObject* drop(VRPyDevice* self);
 };
 
 #endif // VRPYDEVICE_H_INCLUDED

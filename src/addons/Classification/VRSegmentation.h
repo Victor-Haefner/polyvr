@@ -8,6 +8,7 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+class VRObject;
 class VRGeometry;
 
 enum SEGMENTATION_ALGORITHM {
@@ -17,9 +18,10 @@ enum SEGMENTATION_ALGORITHM {
 class VRSegmentation {
     private:
         VRSegmentation();
+
     public:
 
-        static vector<VRGeometry*> extractPatches(VRGeometry* geo, SEGMENTATION_ALGORITHM algo, float curvature, float curvature_delta, Vec3f normal, Vec3f normal_delta);
+        static VRObject* extractPatches(VRGeometry* geo, SEGMENTATION_ALGORITHM algo, float curvature, float curvature_delta, Vec3f normal, Vec3f normal_delta);
 };
 
 OSG_END_NAMESPACE;

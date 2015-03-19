@@ -1,48 +1,25 @@
 #include "VRTextureGenerator.h"
+#include "VRPerlin.h"
+#include "VRBricks.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-float lerp(float a0, float a1, float w) { return (1.0 - w)*a0 + w*a1; }
-
-float dotGridGradient(Vec2f* grid, Vec2i dim, Vec2i vi, Vec2f v) {
-    Vec2f d = v-Vec2f(vi); // Compute the distance vector
-
-    if (vi[0] >= dim[0]) vi[0] = 0; // cyclic
-    if (vi[1] >= dim[1]) vi[1] = 0;
-
-    Vec2f g = grid[vi[0]+vi[1]*dim[0]]; // Compute the dot-product
-    return d.dot(g);
-}
-
-float perlin(Vec2f* grid, Vec2i dim, Vec2f v) {
-    // Determine grid cell coordinates
-    Vec2i v0 = Vec2i(v);
-    Vec2f s = v-Vec2f(v0);
-
-    // Interpolate between grid point gradients
-    float n0, n1, ix0, ix1, value;
-
-    n0 = dotGridGradient(grid, dim, v0, v);
-    n1 = dotGridGradient(grid, dim, v0+Vec2i(1,0), v);
-    ix0 = lerp(n0, n1, s[0]);
-
-    n0 = dotGridGradient(grid, dim, v0+Vec2i(0,1), v);
-    n1 = dotGridGradient(grid, dim, v0+Vec2i(1,1), v);
-    ix1 = lerp(n0, n1, s[0]);
-
-    value = lerp(ix0, ix1, s[1]);
-    return value;
-}
-
 VRTextureGenerator::VRTextureGenerator() {}
 
-void VRTextureGenerator::setSize(int w, int h) { width = w; height = h; }
+void VRTextureGenerator::setSize(Vec3i dim) { width = dim[0]; height = dim[1]; depth = dim[2]; }
+void VRTextureGenerator::setSize(int w, int h, int d) { width = w; height = h; depth = d; }
 
-void VRTextureGenerator::addNoise(NOISE_TYPE noise, float amount, Vec3f c1, Vec3f c2) {
-    noise_layer l;
+void VRTextureGenerator::add(string type, float amount, Vec3f c1, Vec3f c2) {
+    GEN_TYPE t = PERLIN;
+    if (type == "Bricks") t = BRICKS;
+    add(t, amount, c1, c2);
+}
+
+void VRTextureGenerator::add(GEN_TYPE type, float amount, Vec3f c1, Vec3f c2) {
+    Layer l;
     l.amount = amount;
-    l.noise = noise;
+    l.type = type;
     l.c1 = c1;
     l.c2 = c2;
     layers.push_back(l);
@@ -52,32 +29,18 @@ void VRTextureGenerator::clearStage() { layers.clear(); }
 
 ImageRecPtr VRTextureGenerator::compose(int seed) {
     srand(seed);
+    Vec3i dims(width, height, depth);
 
-    Vec3f* data = new Vec3f[width*height];
+    Vec3f* data = new Vec3f[width*height*depth];
+    for (int i=0; i<width*height*depth; i++) data[i] = Vec3f(1,1,1);
     for (auto l : layers) {
-        Vec2i dim = Vec2i(width*0.5*l.amount, height*0.5*l.amount);
-        Vec2f* grid = new Vec2f[ dim[0]*dim[1] ];
-
-        for (int i=0; i<dim[0]; i++) {
-            for (int j=0; j<dim[1]; j++) {
-                Vec2f r = Vec2f(rand(), rand())*2.0/RAND_MAX - Vec2f(1,1);
-                r.normalize();
-                grid[i+j*dim[0]] = r;
-            }
-        }
-
-        for (int x=0; x<width; x++) {
-            for (int y=0; y<height; y++) {
-                float p = perlin(grid, dim, Vec2f(x,y)*l.amount*0.5 );
-                data[y*height+x] =  p*l.c1 + (1-p)*l.c2;
-            }
-        }
-
-        delete grid;
+        if (l.type == BRICKS) VRBricks::apply(data, dims, l.amount, l.c1, l.c2);
+        if (l.type == PERLIN) VRPerlin::apply(data, dims, l.amount, l.c1, l.c2);
     }
 
     ImageRecPtr img = Image::create();
-    img->set(OSG::Image::OSG_RGB_PF, width, height, 1, 0, 1, 0.0, (const uint8_t*)data, OSG::Image::OSG_FLOAT32_IMAGEDATA, true, 1);
+    img->set(OSG::Image::OSG_RGB_PF, width, height, depth, 0, 1, 0.0, (const uint8_t*)data, OSG::Image::OSG_FLOAT32_IMAGEDATA, true, 1);
+    delete[] data;
     return img;
 }
 

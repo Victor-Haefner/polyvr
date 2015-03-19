@@ -14,12 +14,12 @@ template<> PyTypeObject VRPyBaseT<OSG::VRObject>::type = {
     0,                         /*tp_print*/
     0,                         /*tp_getattr*/
     0,                         /*tp_setattr*/
-    0,                         /*tp_compare*/
+    VRPyObject::compare,                         /*tp_compare*/
     0,                         /*tp_repr*/
     0,                         /*tp_as_number*/
     0,                         /*tp_as_sequence*/
     0,                         /*tp_as_mapping*/
-    0,                         /*tp_hash */
+    VRPyObject::hash,                         /*tp_hash */
     0,                         /*tp_call*/
     0,                         /*tp_str*/
     0,                         /*tp_getattro*/
@@ -63,7 +63,7 @@ PyMethodDef VRPyObject::methods[] = {
     {"getType", (PyCFunction)VRPyObject::getType, METH_NOARGS, "Return the object type string (such as \"Geometry\")" },
     {"duplicate", (PyCFunction)VRPyObject::duplicate, METH_NOARGS, "Duplicate object including subtree" },
     {"getChild", (PyCFunction)VRPyObject::getChild, METH_VARARGS, "Return child object with index i" },
-    {"getChildren", (PyCFunction)VRPyObject::getChildren, METH_VARARGS, "Return the list of children objects" },
+    {"getChildren", (PyCFunction)VRPyObject::getChildren, METH_VARARGS, "Return the list of children objects\n\t - getChildren() : return immediate children\n\t - getChildren(bool recursive) : if true returns whole subtree\n\t - getChildren(bool recursive, str type) : filter by type" },
     {"getParent", (PyCFunction)VRPyObject::getParent, METH_NOARGS, "Return parent object" },
     {"find", (PyCFunction)VRPyObject::find, METH_VARARGS, "Find node with given name (str) in scene graph below this node" },
     {"isPickable", (PyCFunction)VRPyObject::isPickable, METH_NOARGS, "Return if the object is pickable" },
@@ -73,6 +73,17 @@ PyMethodDef VRPyObject::methods[] = {
     {NULL}  /* Sentinel */
 };
 
+int VRPyObject::compare(PyObject* p1, PyObject* p2) {
+    if (Py_TYPE(p1) != Py_TYPE(p2)) return -1;
+    VRPyBaseT* o1 = (VRPyBaseT*)p1;
+    VRPyBaseT* o2 = (VRPyBaseT*)p2;
+    return (o1->obj == o2->obj) ? 0 : -1;
+}
+
+long VRPyObject::hash(PyObject* p) {
+    VRPyBaseT* o = (VRPyBaseT*)p;
+    return (long)o->obj;
+}
 
 PyObject* VRPyObject::flattenHiarchy(VRPyObject* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::flattenHiarchy - C Object is invalid"); return NULL; }
@@ -174,9 +185,9 @@ PyObject* VRPyObject::switchParent(VRPyObject* self, PyObject* args, PyObject *k
 
 PyObject* VRPyObject::duplicate(VRPyObject* self) {
     if (self->obj == 0) { PyErr_SetString(err, "C Child is invalid"); return NULL; }
-    OSG::VRObject* d = (OSG::VRObject*)self->obj->duplicate();
+    OSG::VRObject* d = (OSG::VRObject*)self->obj->duplicate(true);
     d->addAttachment("dynamicaly_generated", 0);
-    return VRPyObject::fromPtr( d );
+    return VRPyTypeCaster::cast(d);
 }
 
 PyObject* VRPyObject::getChild(VRPyObject* self, PyObject* args) {

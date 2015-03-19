@@ -28,7 +28,7 @@ namespace realworld {
         }
 
         // returns how much line A has to be scaled to hit the intersection
-        // or false if the lines do not intersect
+        // || false if the lines do not intersect
         static pair<bool, float> lineIntersection(Vec2f startLineA, Vec2f dirLineA, Vec2f startLineB, Vec2f dirLineB) {
             float u_b = dirLineB.getValues()[1] * dirLineA.getValues()[0] - dirLineB.getValues()[0] * dirLineA.getValues()[1];
 

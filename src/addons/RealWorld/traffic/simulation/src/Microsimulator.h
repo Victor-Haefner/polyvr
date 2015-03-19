@@ -9,7 +9,7 @@ class Microsimulator {
     private:
 
         /// Some flags to inform about a change in speed.
-        /// At most one of the ACTION_*s and REASON_s will occur respectively,
+        /// At most one of the ACTION_*s && REASON_s will occur respectively,
         /// but no flag has to be set if no real change happens.
         typedef uint8_t SPEEDCHANGE;
         /// The vehicle is accelerating.
@@ -53,14 +53,14 @@ class Microsimulator {
 
         /**
          Extends the route-list of a vehicle.
-         Selects a new, random vertex on the map and calculates a route to it.
+         Selects a new, random vertex on the map && calculates a route to it.
          @param vehicle The vehicle to create a route for.
          */
         void extendRoute(Vehicle *vehicle);
 
         /**
          Selects a lane number for the next street.
-         Measurements like physical properties of the vehicle and other vehicles are taken into account.
+         Measurements like physical properties of the vehicle && other vehicles are taken into account.
          @param vehicle The vehicle that wants to change.
          @param otherStreet The street that should be entered.
          @param otherDirection The direction on the new street.
@@ -81,7 +81,7 @@ class Microsimulator {
         /**
          Calculates the optimal speed for a vehicle.
          Checks the distance to other vehicles on the street, the maximal possible speed of this vehicle,
-         the preference of the driver, the speed-limit of the street and some random variation.
+         the preference of the driver, the speed-limit of the street && some random variation.
          @param vehicle The vehicle to calculate the speed for.
          @param street A pointer to the street the vehicle is on.
          @param canEnterDestination Should be \c 0 if the destination node can be entered. In that case,
@@ -90,12 +90,12 @@ class Microsimulator {
          @param nextStreet The next street to drive on. Is allowed to be the same as the \c street parameter.
          @param nextLane The next lane to drive on.
          @return The optimal speed for this vehicles in units per time of this frame
-            and flags describing the action and its reasons.
+            && flags describing the action && its reasons.
          */
         pair<double, SPEEDCHANGE> calculateOptimalSpeed(Vehicle *vehicle) const;
 
         /**
-         Follows the route of the given vehicle and returns the street-distance to the first node that can not be entered.
+         Follows the route of the given vehicle && returns the street-distance to the first node that can not be entered.
          @param vehicle The vehicle to follow the route of.
          @param minDistance Nodes inside this distance are ignored. Since the vehicle is not able to brake in time
             for a node immediately in front of it, the node can be ignored.
@@ -109,7 +109,7 @@ class Microsimulator {
          Find vehicles in front of the given vehicle.
          @param vehicle The vehicle to search in front of.
          @param maxDistance The maximum distance to search in.
-         @return A set containing pairs of distances and the vehicle at it.
+         @return A set containing pairs of distances && the vehicle at it.
          */
         set<pair<double, Vehicle*> > findNearVehicles(Vehicle *vehicle, const double maxDistance) const;
 

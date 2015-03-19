@@ -10,12 +10,11 @@
 #include "core/gui/VRGuiManager.h"
 #include "core/utils/VRTimer.h"
 #include "core/gui/VRGuiSignals.h"
+#include "core/gui/VRGuiFile.h"
 #include <OpenSG/OSGSceneFileHandler.h>
 #include <gtkmm/main.h>
 #include <GL/glut.h>
-#include <unistd.h>
-#include <errno.h>
-
+#include <boost/filesystem.hpp>
 
 OSG_BEGIN_NAMESPACE
 using namespace std;
@@ -23,11 +22,8 @@ using namespace std;
 VRSceneManager::VRSceneManager() {
     cout << "Init VRSceneManager\n";
     active = "NO_SCENE_ACTIVE";
-
-    char cCurrentPath[FILENAME_MAX];
-    char* r = getcwd(cCurrentPath, sizeof(cCurrentPath) );
-    if (r) original_workdir = string(cCurrentPath);
-
+	original_workdir = boost::filesystem::current_path().string();
+	cout << " PolyVR system directory: " << original_workdir << endl;
     searchExercisesAndFavorites();
 }
 
@@ -49,7 +45,7 @@ void VRSceneManager::addScene(VRScene* s) {
 void VRSceneManager::loadScene(string path, bool write_protected) {
     removeScene(getCurrent());
     VRSceneLoader::get()->loadScene(path);
-    VRSceneManager::getCurrent()->setFlag(SCENE_WRITE_PROTECTED, write_protected);
+    VRSceneManager::getCurrent()->setFlag("write_protected", write_protected);
     VRGuiSignals::get()->getSignal("scene_changed")->trigger(); // update gui
 }
 
@@ -67,9 +63,8 @@ void VRSceneManager::removeScene(VRScene* s) {
     active = "NO_SCENE_ACTIVE";
 
     // deactivate windows
-    map<string, VRWindow*> windows = VRSetupManager::getCurrent()->getWindows();
-    map<string, VRWindow*>::iterator itr;
-    for (itr = windows.begin(); itr != windows.end(); itr++) itr->second->setContent(false);
+    auto windows = VRSetupManager::getCurrent()->getWindows();
+    for (auto w : windows) w.second->setContent(false);
 
     setWorkdir(original_workdir);
     VRGuiSignals::get()->getSignal("scene_changed")->trigger(); // update gui
@@ -78,14 +73,7 @@ void VRSceneManager::removeScene(VRScene* s) {
 void VRSceneManager::setWorkdir(string path) {
     if (path == "") return;
     string full_path = path[0] != '/' ? original_workdir + '/' + path : path;
-    int ret = chdir(full_path.c_str());
-    if (ret != 0) cout << "VRSceneManager::setWorkdir switch to " << path << " failed with: " << strerror(errno) << endl;
-
-    // check path
-    /*char cCurrentPath[FILENAME_MAX];
-    getcwd(cCurrentPath, sizeof(cCurrentPath) );
-    string workdir = string(cCurrentPath);
-    cout << "VRSceneManager::setWorkdir current: " << workdir << " "  << endl;*/
+	boost::filesystem::current_path(full_path);
 }
 
 void VRSceneManager::newScene(string path) {
@@ -121,6 +109,7 @@ void VRSceneManager::setActiveScene(VRScene* s) {
 
     active = s->getName();
     VRSetupManager::getCurrent()->setScene(s);
+    s->setActiveCamera(0);
 
     // todo:
     //  - add scene signals to setup devices
@@ -151,24 +140,19 @@ void VRSceneManager::searchExercisesAndFavorites() {
     example_paths.clear();
 
     // examples
-    string folder = "examples";
-    DIR* dir = opendir(folder.c_str());
-    if (dir == NULL) { perror("Error: no exercise directory"); return; }
+	vector<string> files = VRGuiFile::listDir("examples");
+	for (string file : files) {
+		int N = file.size(); if (N < 6) continue;
 
-    struct dirent *entry;
-    while ( (entry = readdir(dir)) ) {
-        string file = string(entry->d_name);
-        int N = file.size(); if (N < 6) continue;
+		string ending = file.substr(N - 4, N - 1);
+		if (ending != ".xml") continue;
 
-        string ending = file.substr(N-4, N-1);
-        if (ending != ".xml") continue;
-
-        string path = folder+"/"+file;
-        example_paths.push_back(path);
-    }
+		string path = "examples/" + file;
+		example_paths.push_back(path);
+	}
 
     // favorites
-    ifstream file( folder + "/.cfg" );
+    ifstream file( "examples/.cfg" );
     if (!file.is_open()) return;
 
     string line, path;
@@ -209,11 +193,11 @@ void VRSceneManager::updateScene() {
 void VRSceneManager::update() {
     int fps = VRRate::get()->getRate();
 
+    VRGuiManager::get()->updateGtk();
     updateScene();
     updateCallbacks();
 
-    VRGuiManager::get()->updateGtk();
-    VRSetupManager::getCurrent()->updateWindows();//rendering
+    if (VRSetupManager::getCurrent()) VRSetupManager::getCurrent()->updateWindows();//rendering
     VRGuiManager::get()->updateGtk();
 
     VRGlobals::get()->CURRENT_FRAME++;

@@ -9,8 +9,8 @@ using namespace std;
 
 /**
  * A class to provide the server part of a JSON-HTTP connection.
- * This class handles the server and calls provided functions on incomming
- * POST and GET requests.
+ * This class handles the server && calls provided functions on incomming
+ * POST && GET requests.
  */
 class JsonServer {
 
@@ -19,7 +19,7 @@ class JsonServer {
         /// Forbid copying.
         JsonServer(const JsonServer&);
         /// Forbid assigning.
-        /// @return The modified object. Or not.
+        /// @return The modified object. || not.
         JsonServer& operator=(const JsonServer&);
 
         /// A handle to the http server.
@@ -44,9 +44,9 @@ class JsonServer {
          * @param method the HTTP method used ("GET", "POST", etc.)
          * @param version the HTTP version string (i.e. "HTTP/1.1")
          * @param uploadData the data being uploaded (excluding HEADERS,
-         *        for a POST that fits into memory and that is encoded
+         *        for a POST that fits into memory && that is encoded
          *        with a supported encoding, the POST data will NOT be
-         *        given in upload_data and is instead available as
+         *        given in upload_data && is instead available as
          *        part of MHD_get_connection_values; very large POST
          *        data *will* be made available incrementally in
          *        upload_data)
@@ -54,7 +54,7 @@ class JsonServer {
          *        upload_data provided; the method must update this
          *        value to the number of bytes NOT processed;
          * @param conCls pointer that the callback can set to some
-         *        address and that will be preserved by MHD for future
+         *        address && that will be preserved by MHD for future
          *        calls for this request; since the access handler may
          *        be called many times (i.e., for a PUT/POST operation
          *        with plenty of upload data) this allows the application
@@ -85,9 +85,9 @@ class JsonServer {
          * @param coninfo_cls User provided data.
          * @param kind Type of the value
          * @param key Key of the value, e.g. name of the input field.
-         * @param filename Name of the uploaded file or NULL.
-         * @param contentType Content type of the file or NULL.
-         * @param transferEncoding Enconding of the file or NULL.
+         * @param filename Name of the uploaded file || NULL.
+         * @param contentType Content type of the file || NULL.
+         * @param transferEncoding Enconding of the file || NULL.
          * @param data A pointer to \c size bytes of the data.
          * @param off The offset of the data in the overall value.
          * @param size Number of bytes \c data points to
@@ -115,14 +115,14 @@ class JsonServer {
         JsonServer();
 
         /**
-         * Creates an object of this class and starts the server.
+         * Creates an object of this class && starts the server.
          * @param port The port to listen on.
          * @note Since a constructor does not have a return value, call isRunning() to check whether the startup succeded.
          */
         explicit JsonServer(const unsigned short port);
 
         /**
-         * Stops the server and frees all resources.
+         * Stops the server && frees all resources.
          */
         ~JsonServer();
 
@@ -148,7 +148,7 @@ class JsonServer {
         /**
          * Registers an object which is used on requests.
          * The given object has to implement the IJsonServerListener
-         * interface. If a post or get request from a client arrives,
+         * interface. If a post || get request from a client arrives,
          * the appropriate method of the object is called.
          * @param listener The listener that should be used.
          */

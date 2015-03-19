@@ -31,7 +31,7 @@ namespace realworld {
 
 
 
-        /** returns elevation for input position and manages near positions, so later access is faster **/
+        /** returns elevation for input position && manages near positions, so later access is faster **/
         int getSomeElevation(float lat, float lon){
             lat = roundFloat(lat);
             lon = roundFloat(lon);
@@ -94,7 +94,7 @@ namespace realworld {
             bool parsingSuccessful = reader.parse( test, root, false );
             if ( !parsingSuccessful )
             {
-                // report to the user the failure and their locations in the document.
+                // report to the user the failure && their locations in the document.
                 std::cout  << reader.getFormatedErrorMessages() << "\n";
                 return;
             }else{
@@ -103,7 +103,7 @@ namespace realworld {
 
         }
 
-        /** create json-file with latitude, longitude and elevation data **/
+        /** create json-file with latitude, longitude && elevation data **/
         void createElevationFile(string id, string latlons[]){
                 string filePath = "elevation/" + id + ".json";
                 for(int i = 0; i< n; i++){
@@ -129,7 +129,7 @@ namespace realworld {
             return Json::Value();
         }
 
-        /** get String with Json Data for lat- lon pair and their elevation and distance **/
+        /** get String with Json Data for lat- lon pair && their elevation && distance **/
         string getMapQuestElevations(string latlons){
                 CURL *curl;
                 CURLcode res;
@@ -162,7 +162,7 @@ namespace realworld {
                 return "";
         }
 
-        /** return Json that only contains lat, lon and elevation data **/
+        /** return Json that only contains lat, lon && elevation data **/
         Json::Value getBetterJson(string readBuffer[], Json::Value event){
             string rb, sLat, sLon;
             for(int i = 0; i< n; i++){
@@ -177,7 +177,7 @@ namespace realworld {
                 bool parsingSuccessful = reader.parse(rb, root, false );
                 if ( !parsingSuccessful )
                 {
-                    // report to the user the failure and their locations in the document.
+                    // report to the user the failure && their locations in the document.
                     cout  << reader.getFormatedErrorMessages() << "\n";
                     return "";
                 }

@@ -81,7 +81,7 @@ void VRLight::setType(string type) {
 }
 
 void VRLight::setBeacon(VRLightBeacon* b) {
-    if (beacon and b != beacon) delete beacon;
+    if (beacon && b != beacon) delete beacon;
     beacon = b;
 
     b->setLight(this);

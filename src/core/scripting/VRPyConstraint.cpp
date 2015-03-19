@@ -93,7 +93,7 @@ PyObject* VRPyConstraint::setLocal(VRPyConstraint* self, PyObject* args) {
 PyObject* VRPyConstraint::lock(VRPyConstraint* self, PyObject* args) {
     if (self->obj == 0) self->obj = new OSG::VRConstraint();
     vector<PyObject*> o = parseList(args);
-    for (uint i=0; i<o.size(); i++) {
+    for (unsigned int i=0; i<o.size(); i++) {
         int j=PyLong_AsLong(o[i]);
         self->obj->setMinMax(j,0,0);
     }
@@ -103,7 +103,7 @@ PyObject* VRPyConstraint::lock(VRPyConstraint* self, PyObject* args) {
 PyObject* VRPyConstraint::free(VRPyConstraint* self, PyObject* args) {
     if (self->obj == 0) self->obj = new OSG::VRConstraint();
     vector<PyObject*> o = parseList(args);
-    for (uint i=0; i<o.size(); i++) {
+	for (unsigned int i = 0; i<o.size(); i++) {
         int j=PyLong_AsLong(o[i]);
         self->obj->setMinMax(j,1,-1);
     }

@@ -76,10 +76,14 @@ void initPolyVR(int argc, char **argv) {
 
     cout << "Init SceneManager\n";
     VRSceneManager::get();
+    VRSetupManager::get();
     VRInternalMonitor::get();
 
     VRGuiManager::get();
     VRMainInterface::get();
+
+    string app = VROptions::get()->getOption<string>("application");
+    if (app != "") VRSceneManager::get()->loadScene(app);
 }
 
 void exitPolyVR() {

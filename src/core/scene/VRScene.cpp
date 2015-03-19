@@ -26,19 +26,21 @@ VRScene::VRScene() {
     setName("Scene");
 
     icon = "Scene.png";
-    addFlag(SCENE_WRITE_PROTECTED);
+    setFlag("write_protected", false);
 
     //scene update functions
-    addUpdateFkt(updateObjectsFkt);
+    addUpdateFkt(updateObjectsFkt, 1000);
     addUpdateFkt(updateAnimationsFkt);
-    addUpdateFkt(updatePhysicsFkt);
+    addUpdateFkt(updatePhysObjectsFkt);
+
+    initThread(updatePhysicsFkt, "physics", true, 0);
 
     initDevices();
     VRMaterial::getDefault()->resetDefault();
 
-    referentials_layer = new VRVisualLayer("referentials");
-    cameras_layer = new VRVisualLayer("cameras");
-    lights_layer = new VRVisualLayer("lights");
+    referentials_layer = new VRVisualLayer("referentials", "refs.png");
+    cameras_layer = new VRVisualLayer("cameras", "cameras.png");
+    lights_layer = new VRVisualLayer("lights", "lights.png");
 
     referentials_layer->setCallback( new VRFunction<bool>("showReferentials", boost::bind(&VRScene::showReferentials, this, _1, (VRObject*)0) ) );
     cameras_layer->setCallback( new VRFunction<bool>("showCameras", boost::bind(&VRScene::showCameras, this, _1) ) );
@@ -135,6 +137,7 @@ void VRScene::setActiveCamera(int i) {
     // TODO: refactor the following workaround
     VRCamera* cam = getActiveCamera();
     if (cam == 0) return;
+    cout << " set active camera to " << cam->getName() << endl;
 
     VRMouse* mouse = (VRMouse*)setup->getDevice("mouse");
     if (mouse) {
@@ -226,12 +229,14 @@ void VRScene::save(xmlpp::Element* e) {
     xmlpp::Element* protocolsN = e->add_child("Sockets");
     xmlpp::Element* backgroundN = e->add_child("Background");
     xmlpp::Element* naviN = e->add_child("Navigation");
+    xmlpp::Element* matN = e->add_child("Materials");
 
     VRRenderManager::save(renderN);
     VRScriptManager::save(scriptsN);
     VRNetworkManager::save(protocolsN);
     VRBackground::save(backgroundN);
     VRNavigator::save(naviN);
+    VRMaterialManager::save(matN);
 }
 
 void VRScene::load(xmlpp::Element* e) {
@@ -243,18 +248,21 @@ void VRScene::load(xmlpp::Element* e) {
     xmlpp::Element* backgroundN = VRSceneLoader_getElementChild(e, "Background");
     xmlpp::Element* renderN = VRSceneLoader_getElementChild(e, "Rendering");
     xmlpp::Element* naviN = VRSceneLoader_getElementChild(e, "Navigation");
+    xmlpp::Element* matN = VRSceneLoader_getElementChild(e, "Materials");
 
     VRRenderManager::load(renderN);
     VRScriptManager::load(scriptsN);
     VRNetworkManager::load(protocolsN);
     VRBackground::load(backgroundN);
     VRNavigator::load(naviN);
+    VRMaterialManager::load(matN);
 
     VRRenderManager::update();
     VRScriptManager::update();
     VRNetworkManager::update();
     VRBackground::update();
     VRNavigator::update();
+    VRMaterialManager::update();
 }
 
 OSG_END_NAMESPACE;

@@ -258,11 +258,11 @@ btCollisionShape* VRPhysics::getBoxShape() {
     x=y=z=0;
 
     vector<OSG::VRObject*> geos = vr_obj->getObjectListByType("Geometry");
-    for (uint j=0; j<geos.size(); j++) {
+    for (unsigned int j=0; j<geos.size(); j++) {
         OSG::VRGeometry* geo = (OSG::VRGeometry*)geos[j];
         if (geo == 0) continue;
         OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->getPositions();
-        for (uint i=0;i<pos->size();i++) {
+		for (unsigned int i = 0; i<pos->size(); i++) {
             OSG::Pnt3f p;
             pos->getValue(p,i);
             x = max(x, p[0]*scale[0]);
@@ -279,7 +279,7 @@ btCollisionShape* VRPhysics::getSphereShape() {
     if (shape_param > 0) return new btSphereShape( shape_param );
 
     float r2 = 0;
-    int N = 0;
+    //int N = 0;
     OSG::Pnt3f p;
     OSG::Pnt3f center;
 
@@ -289,7 +289,7 @@ btCollisionShape* VRPhysics::getSphereShape() {
         OSG::VRGeometry* geo = (OSG::VRGeometry*)_g;
         OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->getPositions();
         N += pos->size();
-        for (uint i=0; i<pos->size(); i++) {
+        for (unsigned int i=0; i<pos->size(); i++) {
             pos->getValue(p,i);
             center += p;
         }
@@ -300,7 +300,7 @@ btCollisionShape* VRPhysics::getSphereShape() {
     for (auto _g : geos ) {
         OSG::VRGeometry* geo = (OSG::VRGeometry*)_g;
         OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->getPositions();
-        for (uint i=0; i<pos->size(); i++) {
+		for (unsigned int i = 0; i<pos->size(); i++) {
             pos->getValue(p,i);
             //r2 = max( r2, (p-center).squareLength() );
             for (int i=0; i<3; i++) p[i] *= scale[i];
@@ -315,13 +315,13 @@ btCollisionShape* VRPhysics::getConvexShape() {
     btConvexHullShape* shape = new btConvexHullShape();
 
     vector<OSG::VRObject*> geos = vr_obj->getObjectListByType("Geometry");
-    for (uint j=0; j<geos.size(); j++) {
+	for (unsigned int j = 0; j<geos.size(); j++) {
         OSG::VRGeometry* geo = (OSG::VRGeometry*)geos[j];
         if (geo == 0) continue;
         if (geo->getMesh() == 0) continue;
         OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->getPositions();
         if (pos == 0) continue;
-        for (uint i=0;i<pos->size();i++) {
+		for (unsigned int i = 0; i<pos->size(); i++) {
             OSG::Pnt3f p;
             pos->getValue(p,i);
             for (int i=0; i<3; i++) p[i] *= scale[i];
@@ -340,7 +340,7 @@ btCollisionShape* VRPhysics::getConcaveShape() {
 
     vector<OSG::VRObject*> geos = vr_obj->getObjectListByType("Geometry");
     int N = 0;
-    for (uint j=0; j<geos.size(); j++) {
+	for (unsigned int j = 0; j<geos.size(); j++) {
         OSG::VRGeometry* geo = (OSG::VRGeometry*)geos[j];
         if (geo == 0) continue;
         if (geo->getMesh() == 0) continue;
@@ -369,7 +369,6 @@ btCollisionShape* VRPhysics::getConcaveShape() {
 btTransform VRPhysics::fromVRTransform(OSG::VRTransform* t, OSG::Vec3f& scale) {
     OSG::Matrix m = t->getWorldMatrix();
 
-    scale;
     for (int i=0; i<3; i++) scale[i] = m[i].length(); // store scale
     for (int i=0; i<3; i++) m[i] *= 1.0/scale[i]; // normalize
 

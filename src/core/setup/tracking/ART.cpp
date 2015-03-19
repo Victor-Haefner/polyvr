@@ -78,7 +78,7 @@ void ART::checkIncomming() {
 //update thread
 void ART::update() {
     if (dtrack == 0) dtrack = new DTrack(port, 0, 0, 20000, 10000);
-    if (!active or dtrack == 0 or devices.size() == 0) return;
+    if (!active || dtrack == 0 || devices.size() == 0) return;
 
     if (dtrack->receive()) {// 60 fps
         checkIncomming();
@@ -162,7 +162,7 @@ void ART::save(xmlpp::Element* node) {
     xmlpp::Element* sn;
     for (itr = devices.begin(); itr != devices.end(); itr++) {
         ART_device* ad = itr->second;
-        if (ad->type != 0) continue; // ignore flysticks, they are loaded elsewhere and creater their own tracker
+        if (ad->type != 0) continue; // ignore flysticks, they are loaded elsewhere && creater their own tracker
 
         sn = node->add_child("Tracker");
         sn->set_attribute("scale", toString(ad->scale));

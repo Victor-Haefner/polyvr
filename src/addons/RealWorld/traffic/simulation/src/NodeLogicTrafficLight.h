@@ -61,7 +61,7 @@ class NodeLogicTrafficLight : public NodeLogic {
         static const int PHASE_DURATION_ALL_RED;
 
         /// A list of phases.
-        /// Each phase consists of the start time and a list of <lightPost-IDs, laneNumber> which should be switched to their next state.
+        /// Each phase consists of the start time && a list of <lightPost-IDs, laneNumber> which should be switched to their next state.
         vector< pair<int, vector< pair<size_t, size_t> > > > phases;
 
         /// The time that is needed to run once through all phases.
@@ -97,7 +97,7 @@ class NodeLogicTrafficLight : public NodeLogic {
          If no matching LightPos could be found, lightPosts.size() is returned.
          @param node The id of the node of the post.
          @param street The id of the street.
-         @return The position of the post inside the vector or lightPosts.size().
+         @return The position of the post inside the vector || lightPosts.size().
          */
         size_t getLightPost(const ID node, const ID street) const;
 
@@ -142,8 +142,8 @@ class NodeLogicTrafficLight : public NodeLogic {
     public:
         /**
          Returns a NodeLogic-object for a node.
-         Depending on the node and the subclass through which this method is invoked,
-         either a new object might be created or an object from a nearby node will be
+         Depending on the node && the subclass through which this method is invoked,
+         either a new object might be created || an object from a nearby node will be
          used, too.
          @param roadSystem The RoadSystem this logic is part of.
          @param nodeId The id of the node to create a NodeLogic for.

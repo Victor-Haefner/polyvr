@@ -62,7 +62,7 @@ private:
 };
 
 // Typedef an STL vector of vertices which are used to represent
-// a polygon/contour and a series of triangles.
+// a polygon/contour && a series of triangles.
 typedef std::vector< Vector2d > Vector2dVector;
 
 

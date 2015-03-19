@@ -59,8 +59,8 @@ bool SimViDekont::isElementValid(int i, frame* f) {
 
     delta = Max - Min;
 
-    if((abs(delta[0]) > 2.45e-4) or (abs(delta[1])> 2.45e-4)
-       or (abs(delta[2])> 2.45e-4) ) return false;
+    if((abs(delta[0]) > 2.45e-4) || (abs(delta[1])> 2.45e-4)
+       || (abs(delta[2])> 2.45e-4) ) return false;
 
     return true;
 }
@@ -100,7 +100,7 @@ void SimViDekont::createGeo(frame* f) {
 
 
 
-    // go through the point ids and count the elements they belong to
+    // go through the point ids && count the elements they belong to
     map<int, int>* vmap = new map<int, int>();
     map<int, int>* vmap2 = new map<int, int>(); // maps points new to old IDs
     for(uint i=0; i<f->ind->size()/8; i++) { // is element ID
@@ -126,7 +126,7 @@ void SimViDekont::createGeo(frame* f) {
     float k = 200; // scale
     int j = 0;
     for(uint i=0; i < f->pos->size(); i++) {
-        if ((*vmap)[i] == 0 or (*vmap)[i] == 8) continue;
+        if ((*vmap)[i] == 0 || (*vmap)[i] == 8) continue;
 
         //cout << "\n" << i << flush;
         p[0] = f->pos->at(i).x[0]*k;
@@ -237,7 +237,7 @@ void SimViDekont::quadOnSurface(map<int, float>& Vstress, map<int, int>* vmap, m
 }
 
 void SimViDekont::computeVertexColors(frame* f, map<int, int>* vmap, map<int, float>& VsValue, bool stress) {
-    if (f->stress->size() == 0 or f->strain->size() == 0 ) return;
+    if (f->stress->size() == 0 || f->strain->size() == 0 ) return;
     //float max = f->stress->at(0);   //1.22e9;
     float max = (stress) ? f->stress->at(0) : f->strain->at(0);
     for(uint i=0; i < f->ind->size()/8; i++) { // go through elements
@@ -318,7 +318,7 @@ void SimViDekont::initPlayer() {
     VRFunction<VRDevice*>* callback5 = new VRFunction<VRDevice*>("playStepBackward", boost::bind(&SimViDekont::playStepBackward, this, _1));
     VRFunction<VRDevice*>* callback6 = new VRFunction<VRDevice*>("toggleColors", boost::bind(&SimViDekont::toggleColors, this, _1));*/
 
-    // signals for key + and -
+    // signals for key + && -
     /*VRDevice* keyboard = VRKeyboard::get();
     VRSignal* key_plus_pressed = keyboard->addSignal('+',1);
     VRSignal* key_minus_pressed = keyboard->addSignal('-',1);
@@ -375,15 +375,15 @@ SimViDekont::SimViDekont() {
 
     1: Load all frames from Binary file in frames vector
     2: Get a VRGeometry for each frame
-    3: Get device signals, keyboard and mouse/flystick
+    3: Get device signals, keyboard && mouse/flystick
     4: start Player
     5: Enjoy
 
     */
 
-    loadAbaqusFile(0, 100); // load odb file and parse data to frames
+    loadAbaqusFile(0, 100); // load odb file && parse data to frames
 
-    initFrameGeometries(); // create geometries for each frame and hide it
+    initFrameGeometries(); // create geometries for each frame && hide it
 
     //writeFrameStress(frames->at(3), "stress_data"); // checking if Stress data ok.
 

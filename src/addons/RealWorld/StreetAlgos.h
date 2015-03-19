@@ -31,7 +31,7 @@ namespace realworld {
 
     class StreetAlgos {
     public:
-        /** returns start and end point of the left border of a street segment */
+        /** returns start && end point of the left border of a street segment */
         static StreetBorder* segmentGetLeftBorderTo(StreetSegment* seg, string jointId, map<string, StreetJoint*> streetJoints) {
             StreetJoint* joint = streetJoints[jointId];
             StreetJoint* oJoint = streetJoints[seg->getOtherJointId(jointId)];
@@ -44,7 +44,7 @@ namespace realworld {
             return new StreetBorder(seg->id, posStart+dOrtho, posEnd+dOrtho);
         }
 
-        /** returns start and end point of the right border of a street segment */
+        /** returns start && end point of the right border of a street segment */
         static StreetBorder* segmentGetRightBorderTo(StreetSegment* seg, string jointId, map<string, StreetJoint*> streetJoints) {
             StreetJoint* joint = streetJoints[jointId];
             StreetJoint* oJoint = streetJoints[seg->getOtherJointId(jointId)];

@@ -4,6 +4,7 @@
 #include <OpenSG/OSGSimpleMaterial.h>
 #include <OpenSG/OSGSimpleGeometry.h>        // Methods to create simple geos.
 #include <OpenSG/OSGChunkMaterial.h>
+#include <OpenSG/OSGMultiPassMaterial.h>
 #include <OpenSG/OSGGeoFunctions.h>
 
 //#include <OpenSG/OSGGeoProperties.h>
@@ -33,6 +34,13 @@ VRObject* VRGeometry::copy(vector<VRObject*> children) {
 
 /** initialise a geometry object with his name **/
 VRGeometry::VRGeometry(string name) : VRTransform(name) {
+    type = "Geometry";
+    addAttachment("geometry", 0);
+}
+
+VRGeometry::VRGeometry(string name, bool hidden) : VRTransform(name) {
+    setNameSpace("system");
+    setIntern(hidden);
     type = "Geometry";
     addAttachment("geometry", 0);
 }
@@ -73,7 +81,7 @@ void VRGeometry::setPrimitive(string primitive, string args) {
     setMesh(this->primitive->make(), source);
 }
 
-/** Create a mesh using vectors with positions, normals, indices and optionaly texture coordinates **/
+/** Create a mesh using vectors with positions, normals, indices && optionaly texture coordinates **/
 void VRGeometry::create(int type, vector<Vec3f> pos, vector<Vec3f> norms, vector<int> inds, vector<Vec2f> texs) {
     GeoUInt8PropertyRecPtr      Type = GeoUInt8Property::create();
     GeoUInt32PropertyRecPtr     Length = GeoUInt32Property::create();
@@ -113,7 +121,7 @@ void VRGeometry::create(int type, vector<Vec3f> pos, vector<Vec3f> norms, vector
     setMesh(geo);
 }
 
-/** Create a mesh using vectors with positions, normals, indices and optionaly texture coordinates **/
+/** Create a mesh using vectors with positions, normals, indices && optionaly texture coordinates **/
 void VRGeometry::create(int type, GeoVectorProperty* pos, GeoVectorProperty* norms, GeoIntegralProperty* inds, GeoVectorProperty* texs) {
     setType(type);
     setPositions(pos);
@@ -408,10 +416,10 @@ void VRGeometry::influence(vector<Vec3f> pnts, vector<Vec3f> values, int power, 
     else inp.evalVec(mesh->getPositions(), power);
 }
 
-/** Returns the maximum position on the x, y or z axis **/
+/** Returns the maximum position on the x, y || z axis **/
 float VRGeometry::getMax(int axis) {
     if (!meshSet) return 0;
-    if (axis != 0 and axis != 1 and axis != 2) return 0;
+    if (axis != 0 && axis != 1 && axis != 2) return 0;
     GeoPnt3fPropertyRecPtr pos = dynamic_cast<GeoPnt3fProperty*>(mesh->getPositions());
 
     float max = pos->getValue(0)[axis];
@@ -422,10 +430,10 @@ float VRGeometry::getMax(int axis) {
     return max;
 }
 
-/** Returns the minimum position on the x, y or z axis **/
+/** Returns the minimum position on the x, y || z axis **/
 float VRGeometry::getMin(int axis) {
     if (!meshSet) return 0;
-    if (axis != 0 and axis != 1 and axis != 2) return 0;
+    if (axis != 0 && axis != 1 && axis != 2) return 0;
     GeoPnt3fPropertyRecPtr pos = dynamic_cast<GeoPnt3fProperty*>(mesh->getPositions());
 
     float min = pos->getValue(0)[axis];
@@ -470,6 +478,45 @@ VRMaterial* VRGeometry::getMaterial() {
 }
 
 VRGeometry::Reference VRGeometry::getReference() { return source; }
+
+void VRGeometry::showGeometricData(string type, bool b) {
+    if (dataLayer.count(type)) dataLayer[type]->destroy();
+
+    VRGeometry* geo = new VRGeometry("DATALAYER_"+getName()+"_"+type, true);
+    dataLayer[type] = geo;
+    addChild(geo);
+
+    GeoColor3fPropertyRecPtr cols = GeoColor3fProperty::create();
+    GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
+    GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
+
+    Pnt3f p;
+    Vec3f n;
+
+    if (type == "Normals") {
+        GeoVectorPropertyRecPtr g_norms = mesh->getNormals();
+        GeoVectorPropertyRecPtr g_pos = mesh->getPositions();
+        for (uint i=0; i<g_norms->size(); i++) {
+            p = g_pos->getValue<Pnt3f>(i);
+            n = g_norms->getValue<Vec3f>(i);
+            pos->addValue(p);
+            pos->addValue(p+n*0.1);
+            cols->addValue(Vec3f(1,1,1));
+            cols->addValue(Vec3f(abs(n[0]),abs(n[1]),abs(n[2])));
+            inds->addValue(2*i);
+            inds->addValue(2*i+1);
+        }
+
+        geo->setPositions(pos);
+        geo->setType(GL_LINE);
+        geo->setColors(cols);
+        geo->setIndices(inds);
+    }
+
+    VRMaterial* m = new VRMaterial("some-mat");
+    geo->setMaterial(m);
+    m->setLit(false);
+}
 
 void VRGeometry::saveContent(xmlpp::Element* e) {
     VRTransform::saveContent(e);

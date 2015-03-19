@@ -1,17 +1,7 @@
 #include "virtuose.h"
-
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <sys/ioctl.h>
-#include <linux/if.h>
-#include <linux/sockios.h>
-#include <fcntl.h>
-
+#include <virtuose/virtuoseAPI.h>
 #include <OpenSG/OSGQuaternion.h>
+#include "core/networking/VRPing.h"
 
 #define CHECK(x) { \
   int result = (x); \
@@ -48,45 +38,19 @@ virtVec(z,x,y);
 
 */
 
-virtuose::virtuose()
-{
+virtuose::virtuose() {
     isAttached = false;
     gripperPosition = 0.0f;
     gripperSpeed = 0.0f;
-
 }
 
-virtuose::~virtuose()
-{
+virtuose::~virtuose() { disconnect(); }
+bool virtuose::connected() { return (vc != 0); }
+
+void virtuose::connect(string IP) {
     disconnect();
-}
-
-bool virtuose::connected()
-{
-    return (vc != 0);
-}
-
-bool checkVirtuoseIP(string IP)   // TODO: try if haptic is found -> right port?
-{
-    int sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    fcntl(sockfd, F_SETFL, O_NONBLOCK); // TODO: try blocking but with timeout
-    struct sockaddr_in sin;
-    sin.sin_family = AF_INET;
-    sin.sin_port   = htons(3131);  // Could be anything
-    inet_pton(AF_INET, IP.c_str(), &sin.sin_addr);
-
-    if (connect(sockfd, (struct sockaddr *) &sin, sizeof(sin)) == -1)
-    {
-        printf("No haptic device at IP %s: %d (%s)\n", IP.c_str(), errno, strerror(errno));
-        return false;
-    }
-    return true;
-}
-
-void virtuose::connect(string IP)
-{
-    disconnect();
-    //if (!checkVirtuoseIP(IP)) return; // TODO: does not work
+    VRPing ping;
+    //ping.start(IP, port); // TODO: test it with right port
     cout << "Open virtuose " << IP << endl;
     vc = virtOpen(IP.c_str());
     CHECK_INIT(vc);
@@ -109,11 +73,6 @@ void virtuose::connect(string IP)
 
     CHECK( virtSetPowerOn(vc, 1) );
     //virtSetPeriodicFunction(vc, callback, &timestep, this);
-
-
-
-
-
 }
 
 void virtuose::disconnect()

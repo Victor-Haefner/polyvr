@@ -38,7 +38,7 @@ class DriverType
          @param probability The probability of this driver. The sum of all probabilities is used as 100%.
          @param lawlessness The probability in [0-1] that the driver will break the law, e.g. by speeding.
          @param cautiousness The probability in [0-1] for the driver to behave responsible, e.g. with a big safety margin.
-         @return A pointer to the newly created object or \c null if a parameter is invalid.
+         @return A pointer to the newly created object || \c null if a parameter is invalid.
         */
         static DriverType* createDriverType(const ID id, const double probability, const double lawlessness, const double cautiousness);
 

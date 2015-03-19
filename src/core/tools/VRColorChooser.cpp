@@ -18,7 +18,7 @@ VRColorChooser::VRColorChooser() {
 }
 
 Color3f VRColorChooser::colFromUV(Vec2f tc) {
-    if (abs(tc[0]-0.5) > 0.5-border or abs(tc[1]-0.5) > 0.5-border) return color;
+    if (abs(tc[0]-0.5) > 0.5-border || abs(tc[1]-0.5) > 0.5-border) return color;
 
     tc *= 1.4;
     tc -= Vec2f(0.2, 0.2);

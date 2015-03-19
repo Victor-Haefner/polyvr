@@ -1,5 +1,6 @@
 #include "VRGuiUtils.h"
 #include "VRGuiSignals.h"
+#include "VRGuiFile.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRSceneLoader.h"
 #include "core/scene/VRScene.h"
@@ -24,8 +25,20 @@
 
 using namespace std;
 
-Glib::RefPtr<Gtk::Builder> VRGuiBuilder() {
-    static Glib::RefPtr<Gtk::Builder> b = Gtk::Builder::create_from_file("ressources/gui/VRDirector.glade");
+Glib::RefPtr<Gtk::Builder> VRGuiBuilder(bool standalone) {
+	static bool init = false;
+	static Glib::RefPtr<Gtk::Builder> b;
+	if (init) return b;
+	init = true;
+
+	string path = "ressources/gui/VRDirector.glade";
+	if (standalone) path = "ressources/gui/VRDirector_min.glade";
+
+	if (!VRGuiFile::exists(path)) cerr << "FATAL ERROR: " << path << " not found\n";
+	else cout << " found glade file: " << path << endl;
+
+	try { b = Gtk::Builder::create_from_file(path); }
+	catch (Gtk::BuilderError& e) { cerr << "FATAL ERROR: " << e.what() << endl; }
     return b;
 }
 
@@ -284,7 +297,6 @@ OSG::Color4f chooseColor(string drawable, OSG::Color4f current) {
     cdiag.set_deletable(false);
     cdiag.get_color_selection()->set_has_opacity_control(true);
 
-    current[3] = 1.0 - current[3];
     Gdk::Color c("#FFFFFF");
     c.set_rgb_p(current[0], current[1], current[2]);
     cdiag.get_color_selection()->set_current_color(c);
@@ -293,7 +305,7 @@ OSG::Color4f chooseColor(string drawable, OSG::Color4f current) {
     float alpha = 0;
     if (cdiag.run() == Gtk::RESPONSE_OK) {
         c = cdiag.get_color_selection()->get_current_color();
-        alpha = 1.0 - cdiag.get_color_selection()->get_current_alpha()/65535.0;
+        alpha = cdiag.get_color_selection()->get_current_alpha()/65535.0;
     }
 
     darea->modify_bg(Gtk::STATE_NORMAL, c); // TODO: blend with pattern to show alpha channel
@@ -419,7 +431,7 @@ void saveScene(string path) {
     //if (path == "") path = scene->getPath();
     path = scene->getFile();
 
-    if (scene->getFlag(OSG::SCENE_WRITE_PROTECTED)) return;
+    if (scene->getFlag("write_protected")) return;
 
     OSG::VRSceneLoader::get()->saveScene(path);
     //string ipath = scene->getWorkdir() + '/'+  scene->getIcon();
@@ -450,7 +462,7 @@ int getListStorePos(string ls, string s) {
 void fillStringListstore(string ls, vector<string> list) {
     Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object(ls.c_str()));
     store->clear();
-    for (uint i=0; i<list.size(); i++) {
+    for (unsigned int i=0; i<list.size(); i++) {
         Gtk::ListStore::Row row = *store->append();
         gtk_list_store_set (store->gobj(), row.gobj(), 0, list[i].c_str(), -1);
     }

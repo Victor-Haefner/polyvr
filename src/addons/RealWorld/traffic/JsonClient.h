@@ -15,12 +15,12 @@ class JsonClient
 {
     public:
         /**
-         * Describes the state the the simulator is in or should change to.
+         * Describes the state the the simulator is in || should change to.
          */
         enum SIMULATORSTATE {
             /// The server is simulating the network.
             RUNNING,
-            /// The server is paused and should not run its mainloop
+            /// The server is paused && should not run its mainloop
             PAUSED,
             /// The state could not be received, maybe an error occurred while retrieving it
             UNKNOWN
@@ -75,26 +75,26 @@ class JsonClient
         JsonClient();
 
         /**
-         * Creates an object of this class and sets name and port of the server.
-         * @param server The name or address of the server. The portnumber can be appended as "address:port".
+         * Creates an object of this class && sets name && port of the server.
+         * @param server The name || address of the server. The portnumber can be appended as "address:port".
          */
         JsonClient(const string& server);
 
         /**
-         * Disconnects the client and frees all ressources.
+         * Disconnects the client && frees all ressources.
          */
         ~JsonClient();
 
         /**
-         * Sets the name and address of the server to communicate with.
-         * @param server The name or address of the server. The portnumber can be appended as "address:port".
+         * Sets the name && address of the server to communicate with.
+         * @param server The name || address of the server. The portnumber can be appended as "address:port".
          */
         void setServer(const string& server);
 
         /**
          * Sends data to an client.
          * @param data A JSON object to send to the server.
-         * @return A JSON object with the returned value. Errors are reported within the \c error and \c error_message fields.
+         * @return A JSON object with the returned value. Errors are reported within the \c error && \c error_message fields.
          */
         Value sendData(const Value& data);
 
@@ -107,7 +107,7 @@ class JsonClient
         /**
          * Retrieves the contents of a viewarea.
          * @param id The id of the viewarea to retrieve informations about.
-         * @return A JSON object with the returned value. Errors are reported within the \c error and \c error_message fields.
+         * @return A JSON object with the returned value. Errors are reported within the \c error && \c error_message fields.
          */
         Value retrieveViewareaData(const unsigned int& id);
 };

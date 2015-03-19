@@ -4,7 +4,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/VRLod.h"
-#include "addons/Engineering/CSG/Octree/Octree.h"
+#include "core/math/Octree.h"
 
 #include <iostream>
 #include <fstream>
@@ -65,7 +65,7 @@ struct Geo {
             for (int i=0; i<3; i++) r = max(r, d[i]);
         }
 
-        for (int i=0; i<3; i++) if (v[i] > vmax[i]+r or v[i] < vmin[i]-r) return false;
+        for (int i=0; i<3; i++) if (v[i] > vmax[i]+r || v[i] < vmin[i]-r) return false;
         return true;
     }
 
@@ -163,7 +163,7 @@ VRObject* VRFactory::loadVRML(string path) { // wrl filepath
         switch (state) {
             case 3:
                 while(ss >> v[0] && ss >> v[1] && ss >> v[2] && ss.get()) {
-                    if (!new_color and new_obj) new_obj = !geo.inBB(v); // strange artifacts!!
+                    if (!new_color && new_obj) new_obj = !geo.inBB(v); // strange artifacts!!
                     geo.updateBB(v);
 
                     if (new_obj) {
@@ -228,7 +228,7 @@ class VRLODSpace : public VRObject {
             if (lod_spaces.count(p)) return lod_spaces[p];
             VRLod* l = new VRLod("lod_space");
             l->addChild(new VRObject("lod_entry"));
-            l->addDistance(15*p[3]/scale);
+            l->addDistance(max(15*p[3]/scale, 1.0f));
             l->setCenter( Vec3f(p[0], p[1], p[2])/scale );
             addChild(l);
             lod_spaces[p] = l;
@@ -276,7 +276,7 @@ VRObject* VRFactory::setupLod(vector<string> paths) {
     VRObject* root = new VRObject("factory_lod_root");
     root->addAttachment("dynamicaly_generated", 0);
     vector<VRLod*> micro_lods;
-    for (int i = 0; i<objects.size(); i++) {
+    for (uint i = 0; i<objects.size(); i++) {
         vector<VRObject*> geos = objects[i]->getChildren(true, "Geometry");
         VRProgress prog("setup factory LODs ", geos.size());
         for (auto g : geos) {
@@ -286,7 +286,7 @@ VRObject* VRFactory::setupLod(vector<string> paths) {
             lod->addChild(g);
             lod->addEmpty();
             lod->setCenter( g->getBBCenter() );
-            lod->setDistance(0, g->getBBMax()*15);
+            lod->setDistance(0, max(g->getBBMax()*15, 1.0f));
             micro_lods.push_back(lod);
         }
     }

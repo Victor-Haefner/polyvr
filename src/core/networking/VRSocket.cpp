@@ -1,91 +1,25 @@
 #include "VRSocket.h"
+#include "VRPing.h"
+#include "mongoose/mongoose.h"
+#include "core/objects/object/VRObject.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
+#include "core/setup/devices/VRDevice.h"
 #include "core/utils/toString.h"
-#include <netinet/in.h>
-#include <netdb.h>
-#include <sys/ioctl.h>
-#include <linux/if.h>
-#include <linux/sockios.h>
-#include <fcntl.h>
+#include "core/utils/VRLogger.h"
+
+#include <algorithm>
+//#include <curl/curl.h> // TODO
+#include <stdint.h>
 #include <libxml++/nodes/element.h>
+#include <jsoncpp/json/json.h>
+#include <boost/filesystem.hpp>
 
 OSG_BEGIN_NAMESPACE
 using namespace std;
 
 
-//MICROHTTPD server-------------------------------------------------------------
-
-void server_answer_job(HTTP_args* args, int i) {
-    //cout << "server_answer_job: " << args->cb << endl;
-    //args->print();
-    if (args->cb) (*args->cb)(args);
-    delete args;
-}
-
-int server_parseURI(void *cls, enum MHD_ValueKind kind, const char *key, const char *value) {
-    map<string, string>* uri_map = (map<string, string>*)cls;
-    (*uri_map)[string(key)] = string(value);
-    //printf ("GET %s: %s\n", key, value);
-    return MHD_YES;
-}
-
-int server_parseFORM(void *cls, enum MHD_ValueKind kind, const char *key, const char *filename, const char *content_type, const char *transfer_encoding, const char *data, uint64_t off, size_t size) {
-    map<string, string>* uri_map = (map<string, string>*)cls;
-    (*uri_map)[string(key)] = string(data);
-    //printf ("POST %s: %s\n", key, data);
-    return MHD_YES;
-}
-
-int server_answer_to_connection (void* param, struct MHD_Connection *connection, const char *url, const char *method, const char *version, const char *upload_data, size_t *upload_data_size, void **opt) {
-    HTTP_args* sad = (HTTP_args*) param;
-    string method_s(method);//GET, POST, ...
-    string section(url+1); //path
-    sad->path = section;
-    sad->params->clear();
-
-    if (method_s == "GET") {
-        MHD_get_connection_values(connection, MHD_GET_ARGUMENT_KIND, server_parseURI, sad->params);//Parse URI parameter
-    }
-
-    if (method_s == "POST") {
-        MHD_get_connection_values(connection, MHD_POSTDATA_KIND, server_parseURI, sad->params);//Parse URI parameter
-    }
-
-    //cout << "HTTP: " << method_s << " " << sad->path << endl;
-    //sad->print();
-
-    //--- respond to client ------
-    struct MHD_Response* response = 0;
-    string empty_str;
-
-    if (sad->path == "") {
-        response = MHD_create_response_from_data(1, (void*)" ", MHD_NO, MHD_YES);
-    }
-
-    if (sad->pages->count(sad->path)) { // return local site
-        string spage = *(*sad->pages)[sad->path];
-        response = MHD_create_response_from_data (spage.size(), (void*) spage.c_str(), MHD_NO, MHD_YES);
-    } else if(sad->path != "") { // return ressources
-        struct stat sbuf;
-        int fd = open(sad->path.c_str(), O_RDONLY);
-        if (fstat (fd, &sbuf) != 0) { cout << "Did not find ressource: " << sad->path << endl;
-        } else response = MHD_create_response_from_fd_at_offset (sbuf.st_size, fd, 0);
-    }
-
-    //--- send response ----------
-    int ret = 0;
-    if (response) {
-        ret = MHD_queue_response (connection, MHD_HTTP_OK, response);
-        MHD_destroy_response (response);
-    }
-
-    //--- process request --------
-    VRFunction<int>* _fkt = new VRFunction<int>("HTTP_answer_job", boost::bind(server_answer_job, sad->copy(), _1));
-    VRSceneManager::get()->queueJob(_fkt);
-
-    return ret;
-}
+//mongoose server-------------------------------------------------------------
 
 HTTP_args::HTTP_args() {
     params = new map<string, string>();
@@ -98,9 +32,11 @@ HTTP_args::~HTTP_args() {
 }
 
 void HTTP_args::print() {
-    cout << "HTTP args: " << path << endl;
-    if (params == 0) return;
-    for (auto p : *params) cout << "  " << p.first << " : " << p.second << endl;
+    stringstream ss;
+    ss << "HTTP args: " << path << endl;
+    if (params != 0)
+        for (auto p : *params) ss << "  " << p.first << " : " << p.second << endl;
+    VRLog::log("net", ss.str());
 }
 
 HTTP_args* HTTP_args::copy() {
@@ -112,10 +48,86 @@ HTTP_args* HTTP_args::copy() {
     return res;
 }
 
+void server_answer_job(HTTP_args* args, int i) {
+    if (VRLog::tag("net")) {
+        stringstream ss; ss << "server_answer_job: " << args->cb << endl;
+        VRLog::log("net", ss.str());
+    }
+    //args->print();
+    if (args->cb) (*args->cb)(args);
+    delete args;
+}
+
+static int server_answer_to_connection_m(struct mg_connection *conn, enum mg_event ev) {
+    bool v = VRLog::tag("net");
+    if (v) {
+        if (ev == MG_CONNECT) { VRLog::log("net", "EV CONNECT\n"); return MG_FALSE; }
+        if (ev == MG_REPLY) { VRLog::log("net", "EV REPLY\n"); return MG_FALSE; }
+        if (ev == MG_RECV) { VRLog::log("net", "EV RECV\n"); return MG_FALSE; }
+        if (ev == MG_CLOSE) { VRLog::log("net", "EV CLOSE\n"); return MG_FALSE; }
+        if (ev == MG_WS_HANDSHAKE) { VRLog::log("net", "EV WS CONNECT\n"); return MG_FALSE; }
+        if (ev == MG_WS_CONNECT) { VRLog::log("net", "EV WS CONNECT\n"); return MG_FALSE; }
+        if (ev == MG_HTTP_ERROR) { VRLog::log("net", "EV ERROR\n"); return MG_FALSE; }
+    }
+
+    if (ev == MG_AUTH) return MG_TRUE;
+
+    if (ev == MG_REQUEST) {
+        HTTP_args* sad = (HTTP_args*) conn->server_param;
+        string method_s(conn->request_method);//GET, POST, ...
+        string section(conn->uri+1); //path
+        sad->path = section;
+        sad->params->clear();
+
+        string params;
+        if(conn->query_string) params = string(conn->query_string);
+        for (auto pp : splitString(params, '&')) {
+            vector<string> d = splitString(pp, '=');
+            if (d.size() != 2) continue;
+            (*sad->params)[d[0]] = d[1];
+        }
+
+        if (v) VRLog::log("net", "HTTP Request\n");
+        if (v) sad->print();
+
+        //--- respond to client ------
+        if (sad->path == "") {
+            if (v) VRLog::log("net", "Send empty string\n");
+            mg_send_data(conn, "", 0);
+        }
+
+        if (sad->pages->count(sad->path) && sad->path != "") { // return local site
+            string spage = *(*sad->pages)[sad->path];
+            mg_send_data(conn, spage.c_str(), spage.size());
+            if (v) VRLog::log("net", "Send local site\n");
+        } else if(sad->path != "") { // return ressources
+            if (!boost::filesystem::exists( sad->path )) {
+                if (v) VRLog::wrn("net", "Did not find ressource: " + sad->path + "\n");
+                if (v) VRLog::log("net", "Send empty string\n");
+                mg_send_data(conn, "", 0);
+            }
+            else {
+                if (v) VRLog::log("net", "Send ressource\n");
+                mg_send_file(conn, sad->path.c_str(), NULL);
+                return MG_MORE;
+            }
+        }
+
+        //--- process request --------
+        VRFunction<int>* _fkt = new VRFunction<int>("HTTP_answer_job", boost::bind(server_answer_job, sad->copy(), _1));
+        VRSceneManager::get()->queueJob(_fkt);
+        return MG_TRUE;
+    }
+
+    return MG_FALSE;
+}
+
 class HTTPServer {
     public:
         //server----------------------------------------------------------------
-        struct MHD_Daemon* server = 0;
+        //struct MHD_Daemon* server = 0;
+        struct mg_server* server = 0;
+        int threadID = 0;
         HTTP_args* data = 0;
 
         HTTPServer() {
@@ -129,10 +141,20 @@ class HTTPServer {
             delete data;
         }
 
+        void loop(VRThread* t) {
+            if (server) mg_poll_server(server, 100);
+            if (t->control_flag == false) return;
+        }
+
         void initServer(VRHTTP_cb* fkt, int port) {
             data->cb = fkt;
-            server = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, port, NULL, NULL, &server_answer_to_connection, data, MHD_OPTION_END);
-            //server = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY | MHD_USE_DEBUG, port, NULL, NULL, &server_answer_to_connection, data, MHD_OPTION_END);
+            server = mg_create_server(data, server_answer_to_connection_m);
+            mg_set_option(server, "listening_port", toString(port).c_str());
+
+            VRFunction<VRThread*>* lfkt = new VRFunction<VRThread*>("mongoose loop", boost::bind(&HTTPServer::loop, this, _1));
+            threadID = VRSceneManager::get()->initThread(lfkt, "mongoose", true);
+
+            //server = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, port, NULL, NULL, &server_answer_to_connection, data, MHD_OPTION_END);
         }
 
         void addPage(string path, string page) {
@@ -148,7 +170,11 @@ class HTTPServer {
         }
 
         void close() {
-            if (server) MHD_stop_daemon(server);
+            //if (server) MHD_stop_daemon(server);
+            if (server) {
+                VRSceneManager::get()->stopThread(threadID);
+                mg_destroy_server(&server);
+            }
             server = 0;
         }
 };
@@ -171,7 +197,7 @@ VRSocket::VRSocket(string _name) {
 
 VRSocket::~VRSocket() {
     run = false;
-    shutdown(socketID, SHUT_RDWR);
+    //shutdown(socketID, SHUT_RDWR);
     VRSceneManager::get()->stopThread(threadID);
     delete sig;
     delete queued_signal;
@@ -191,7 +217,7 @@ void VRSocket::handle(string s) {
 }
 
 void VRSocket::sendMessage(string msg) {
-    cout << "\nSOCKET SEND " << msg << endl;
+    /*cout << "\nSOCKET SEND " << msg << endl;
 
     unsigned int sockfd, n;
     struct sockaddr_in serv_addr;
@@ -220,15 +246,15 @@ void VRSocket::sendMessage(string msg) {
 
     close(sockfd);
 
-    /* Now read server response */
+    // Now read server response
     //n = read(sockfd, buffer, 255);
     //if (n < 0) { perror("ERROR reading from socket"); return; }
-    //printf("%s\n",buffer);
+    //printf("%s\n",buffer);*/
 }
 
 void VRSocket::scanUnix(VRThread* thread) {
     //scan what new stuff is in the socket
-    unsigned int s, len, contype;
+    /*unsigned int s, len, contype;
     struct sockaddr_un local_u, remote_u;
     struct sockaddr* local;
     struct sockaddr* remote;
@@ -245,7 +271,7 @@ void VRSocket::scanUnix(VRThread* thread) {
     IP = string(ic.ifc_buf);
 
     local_u.sun_family = AF_UNIX; // unix
-    strcpy(local_u.sun_path, UNIX_SOCK_PATH); // unix
+    strcpy(local_u.sun_path, "/tmp/vrf_soc"); // unix
     unlink(local_u.sun_path); // unix
     len = strlen(local_u.sun_path) + sizeof(local_u.sun_family); // unix
     local = (struct sockaddr *)&local_u;
@@ -282,12 +308,12 @@ void VRSocket::scanUnix(VRThread* thread) {
         if ( send(socketID, str, strlen(str), 0) < 0) { perror("send"); return; }
 
         close(socketID);
-    }
+    }*/
 }
 
 void VRSocket::scanTCP(VRThread* thread) {
     //scan what new stuff is in the socket
-    unsigned int socketAcc, len, contype;
+    /*unsigned int socketAcc, len, contype;
     struct sockaddr_in local_i, remote_i;
     struct sockaddr* local;
     struct sockaddr* remote;
@@ -343,23 +369,14 @@ void VRSocket::scanTCP(VRThread* thread) {
     }
     //close(sListen);
     //close(sBind);
-    close(socketID);
+    close(socketID);*/
 }
 
 void VRSocket::initServer(CONNECTION_TYPE t, int _port) {
     VRFunction<VRThread*>* socket = 0;
     port = _port;
-    switch(t) {
-        case UNIX:
-            socket = new VRFunction<VRThread*>("UNIXSocket", boost::bind(&VRSocket::scanUnix, this, _1));
-            break;
-        case TCP:
-            socket = new VRFunction<VRThread*>("TCPSocket", boost::bind(&VRSocket::scanTCP, this, _1));
-            break;
-        default:
-            break;
-    }
-
+    if (t == UNIX) socket = new VRFunction<VRThread*>("UNIXSocket", boost::bind(&VRSocket::scanUnix, this, _1));
+    if (t == TCP) socket = new VRFunction<VRThread*>("TCPSocket", boost::bind(&VRSocket::scanTCP, this, _1));
     run = true;
     threadID = VRSceneManager::get()->initThread(socket, "socket", true);
 }
@@ -386,14 +403,14 @@ void VRSocket::load(xmlpp::Element* e) {
 
 void VRSocket::update() {
     run = false;
-    shutdown(socketID, SHUT_RDWR);
+    //shutdown(socketID, SHUT_RDWR);
     VRSceneManager::get()->stopThread(threadID);
     if (http_serv) http_serv->close();
 
     sig->setName("on_" + name + "_" + type);
 
     if (type == "tcpip receive") if (tcp_fkt) initServer(TCP, port);
-    if (type == "http receive") if (http_serv and http_fkt) http_serv->initServer(http_fkt, port);
+    if (type == "http receive") if (http_serv && http_fkt) http_serv->initServer(http_fkt, port);
 }
 
 bool VRSocket::isClient() {
@@ -405,8 +422,8 @@ bool VRSocket::isClient() {
 
 void VRSocket::setName(string n) { name = n; update(); }
 void VRSocket::setType(string t) { type = t; update(); }
-void VRSocket::setCallback(VRTCP_cb* cb) { tcp_fkt = cb; update(); }
-void VRSocket::setCallback(VRHTTP_cb* cb) { http_fkt = cb; update(); }
+void VRSocket::setTCPCallback(VRTCP_cb* cb) { tcp_fkt = cb; update(); }
+void VRSocket::setHTTPCallback(VRHTTP_cb* cb) { http_fkt = cb; update(); }
 void VRSocket::setIP(string s) { IP = s; }
 void VRSocket::setSignal(string s) { signal = s; update(); }
 void VRSocket::setPort(int i) { port = i; update(); }
@@ -420,5 +437,9 @@ string VRSocket::getCallback() { return callback; }
 VRSignal* VRSocket::getSignal() { return sig; }
 int VRSocket::getPort() { return port; }
 
+bool VRSocket::ping(string IP, string port) {
+    VRPing ping;
+    return ping.start(IP, port, 0);
+}
 
 OSG_END_NAMESPACE

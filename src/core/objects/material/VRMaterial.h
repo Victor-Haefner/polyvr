@@ -11,19 +11,13 @@ class VRVideo;
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class Image; OSG_GEN_CONTAINERPTR(Image);
 class Material; OSG_GEN_CONTAINERPTR(Material);
-class ChunkMaterial; OSG_GEN_CONTAINERPTR(ChunkMaterial);
-class MaterialChunk; OSG_GEN_CONTAINERPTR(MaterialChunk);
-class BlendChunk; OSG_GEN_CONTAINERPTR(BlendChunk);
-class TextureEnvChunk; OSG_GEN_CONTAINERPTR(TextureEnvChunk);
-class TextureObjChunk; OSG_GEN_CONTAINERPTR(TextureObjChunk);
-class LineChunk; OSG_GEN_CONTAINERPTR(LineChunk);
-class PointChunk; OSG_GEN_CONTAINERPTR(PointChunk);
-class PolygonChunk; OSG_GEN_CONTAINERPTR(PolygonChunk);
-class TwoSidedLightingChunk; OSG_GEN_CONTAINERPTR(TwoSidedLightingChunk);
-class ShaderProgramChunk; OSG_GEN_CONTAINERPTR(ShaderProgramChunk);
+class Image; OSG_GEN_CONTAINERPTR(Image);
 class ShaderProgram; OSG_GEN_CONTAINERPTR(ShaderProgram);
+class MultiPassMaterial; OSG_GEN_CONTAINERPTR(MultiPassMaterial);
+
+struct VRMatData;
+class VRTransform;
 
 Color4f toColor4f(Color3f c, float t = 1);
 Color3f toColor3f(Color4f c);
@@ -34,25 +28,9 @@ class VRMaterial : public VRObject {
         static map<MaterialRecPtr, VRMaterial*> materialsByPtr;
 
     protected:
-        ChunkMaterialRecPtr mat;
-        MaterialChunkRecPtr colChunk;
-        BlendChunkRecPtr blendChunk;
-        TextureEnvChunkRecPtr envChunk;
-        TextureObjChunkRecPtr texChunk;
-        LineChunkRecPtr lineChunk;
-        PointChunkRecPtr pointChunk;
-        PolygonChunkRecPtr polygonChunk;
-        TwoSidedLightingChunkRecPtr twoSidedChunk;
-        ImageRecPtr texture;
-        ShaderProgramChunkRecPtr shaderChunk;
-        ShaderProgramRecPtr vProgram;
-        ShaderProgramRecPtr fProgram;
-        ShaderProgramRecPtr gProgram;
-        VRVideo* video;
-
-        string vertexScript;
-        string fragmentScript;
-        string geometryScript;
+        MultiPassMaterialRecPtr passes;
+        vector<VRMatData*> mats;
+        int activePass = 0;
 
         VRObject* copy(vector<VRObject*> children);
 
@@ -67,6 +45,14 @@ class VRMaterial : public VRObject {
         VRMaterial(string name);
         virtual ~VRMaterial();
 
+        void setActivePass(int i);
+        int getActivePass();
+        int getNPasses();
+        int addPass();
+        void remPass(int i);
+        void appendPasses(VRMaterial* mat);
+        void clearExtraPasses();
+
         static VRMaterial* getDefault();
         static VRMaterial* get(MaterialRecPtr mat);
         static VRMaterial* get(string s);
@@ -76,9 +62,11 @@ class VRMaterial : public VRObject {
         void setMaterial(MaterialRecPtr mat);
         void resetDefault();
 
-        /** Load a texture and apply it to the mesh as new material **/
+        /** Load a texture && apply it to the mesh as new material **/
         void setTexture(string img_path, bool alpha = true);
         void setTexture(ImageRecPtr img, bool alpha = true);
+        void setTexture(char* data, int format, Vec3i dims, bool isfloat);
+        void setTextureType(string type);
         void setQRCode(string s, Vec3f fg, Vec3f bg, int offset);
         void setVideo(string vid_path);
         VRVideo* getVideo();
@@ -94,6 +82,9 @@ class VRMaterial : public VRObject {
         void setLineWidth(int w);
         void setPointSize(int s);
         void setWireFrame(bool b);
+        void setZOffset(float factor, float bias);
+        void setFrontBackModes(int front, int back);
+        void setClipPlane(bool active, Vec4f equation, VRTransform* beacon);
 
         Color3f getDiffuse();
         Color3f getSpecular();
@@ -118,6 +109,7 @@ class VRMaterial : public VRObject {
         string getVertexScript();
         string getFragmentScript();
         string getGeometryScript();
+        ShaderProgramRecPtr getShaderProgram();
 
         template<class T> void setShaderParameter(string name, const T &value);
 
@@ -129,7 +121,7 @@ class VRMaterial : public VRObject {
         /** Returns the mesh material **/
         MaterialRecPtr getMaterial();
 
-        /** Returns the texture or 0 **/
+        /** Returns the texture || 0 **/
         ImageRecPtr getTexture();
 
         /** Deprecated  **/

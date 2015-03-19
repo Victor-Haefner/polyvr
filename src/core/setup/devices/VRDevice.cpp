@@ -45,7 +45,7 @@ void VRDevice::addUpdateSignal(VRSignal* sig) {
 }
 
 void VRDevice::remUpdateSignal(VRSignal* sig, VRDevice* dev) {
-    // get and erase signal from active signals
+    // get && erase signal from active signals
     vector<VRSignal*>::iterator itr;
     for (auto itr : activatedSignals) {
         if (itr == sig) {

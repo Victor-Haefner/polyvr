@@ -12,27 +12,39 @@ using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 class Octree;
+class VRObject;
 class VRTransform;
 class VRGeometry;
 
+
 class VRSnappingEngine {
+    private:
+        struct Rule;
+
     public:
         enum PRESET {
             SIMPLE_ALIGNMENT,
+            SNAP_BACK,
+        };
+
+        enum Type {
+            NONE,
+            POINT,
+            LINE,
+            PLANE,
+            POINT_LOCAL,
+            LINE_LOCAL,
+            PLANE_LOCAL
         };
 
     private:
+        map<int, Rule*> rules; // map objects to reference matrix
         map<VRTransform*, Matrix> objects; // map objects to reference matrix
         Octree* positions = 0; // objects by positions
-        Octree* distances = 0; // 0D snap
-        Octree* lines = 0; // 1D snap
-        Octree* planes = 0; // 2D snap
-        Octree* orientations = 0; // objects by positions
         VRGeometry* hintGeo = 0;
 
         float influence_radius = 1000;
         float distance_snap = 0.05;
-        bool doOrientation = false;
         bool showHints = false;
 
     public:
@@ -40,15 +52,14 @@ class VRSnappingEngine {
 
         void clear();
 
+        Type typeFromStr(string t);
+
+        int addRule(Type t, Type o, Line pt, Line po, float d, float w = 1, bool l = false);
+        void remRule(int i);
+
         void addObject(VRTransform* obj, float weight = 1);
-
-        // snap object's position
-        void addDistance(float dist, bool local = true, float weight = 1);
-        void addAxis(Line line, bool local = true, float weight = 1);
-        void addPlane(Plane plane, bool local = true, float weight = 1);
-
-        // snap object's orientation
-        void setOrientation(bool b, bool local = true, float weight = 1);
+        void addTree(VRObject* obj, float weight = 1);
+        void remObject(VRTransform* obj);
 
         void setVisualHints(bool b = true);
         void setPreset(PRESET preset);

@@ -1,7 +1,8 @@
 #include "VRCallbackManager.h"
-#include <SDL/SDL.h>
 #include "core/utils/VRFunction.h"
 #include <iostream>
+#include <vector>
+#include <GL/glut.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -49,11 +50,11 @@ void VRCallbackManager::addTimeoutFkt(VRFunction<int>* f, int priority, int time
     timeoutFkt tof;
     tof.fkt = f;
     tof.timeout = timeout;
-    tof.last_call = SDL_GetTicks();
+    tof.last_call = glutGet(GLUT_ELAPSED_TIME);
     timeoutFkts[priority]->push_back(tof);
 }
 
-void VRCallbackManager::dropUpdateFkt(VRFunction<int>* f) {//replace by list or map or something..
+void VRCallbackManager::dropUpdateFkt(VRFunction<int>* f) {//replace by list || map || something..
     if (updateFkts_priorities.count(f) == 0) return;
     int prio = updateFkts_priorities[f];
     list<VRFunction<int>*>* l = updateFkts[prio];
@@ -63,7 +64,7 @@ void VRCallbackManager::dropUpdateFkt(VRFunction<int>* f) {//replace by list or 
     updateFkts_priorities.erase(f);
 }
 
-void VRCallbackManager::dropTimeoutFkt(VRFunction<int>* f) {//replace by list or map or something..
+void VRCallbackManager::dropTimeoutFkt(VRFunction<int>* f) {//replace by list || map || something..
     updateListsChanged = true;
     if (updateFkts_priorities.count(f) == 0) return;
     int prio = updateFkts_priorities[f];
@@ -83,7 +84,8 @@ void VRCallbackManager::dropTimeoutFkt(VRFunction<int>* f) {//replace by list or
 void VRCallbackManager::updateCallbacks() {
     vector<VRFunction<int>*> cbs;
 
-    int time = SDL_GetTicks();
+    // gather all timeout callbacks
+    int time = glutGet(GLUT_ELAPSED_TIME);
     for (auto tfl : timeoutFkts)
         for (auto& tf : *tfl.second)
             if (time - tf.last_call >= tf.timeout) {
@@ -91,9 +93,10 @@ void VRCallbackManager::updateCallbacks() {
                 tf.last_call = time;
             }
 
+    // gather all update callbacks
     for (auto fl : updateFkts) for (auto f : *fl.second) cbs.push_back(f);
 
-    for (auto cb : cbs) {
+    for (auto cb : cbs) { // trigger all callbacks
         (*cb)(0);
         if (jobFkts.count(cb)) { // if a job erase it
             dropUpdateFkt(cb);

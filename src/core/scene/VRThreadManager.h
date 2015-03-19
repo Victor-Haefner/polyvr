@@ -34,13 +34,7 @@ class VRThread {
 class VRThreadManager {
     private:
         ThreadRefPtr appThread;
-        /*static map<int, boost::thread*> threads;
-        static map<int, ExternalThread*> osgThreads;
-        static map<int, BarrierRefPtr> syncBarriers;
-        static map<int, string> threads_names;
-        static map<int, bool> flags;//thread control, tells threads to stop their internal loop
-        static map<int, int> status;//thread status, 0 is not running, 1 is running, 2 wants to close*/
-        static map<int, VRThread*> threads;
+        map<int, VRThread*> threads;
 
         void runLoop(VRThread* t);
 

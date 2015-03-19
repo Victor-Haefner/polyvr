@@ -77,7 +77,7 @@ bool checkRecursion(Octree* t, OcPoint p) {
     static Octree* rec_3 = 0;
 
 
-    if (t == rec_2 and rec_1 == rec_3) {
+    if (t == rec_2 && rec_1 == rec_3) {
         cout << "\nRecursion error! Octree allready visited..";
         cout << "\n OcPoint "; p.print();
         cout << "\n Trees " << t << " " << rec_1 << " " << rec_2 << " " << rec_3;
@@ -93,7 +93,7 @@ bool checkRecursion(Octree* t, OcPoint p) {
     return true;
 }
 
-void Octree::add(OcPoint p, void* data) {
+void Octree::add(OcPoint p, void* data, int maxjump) {
     bool rOk = checkRecursion(this, p);
     if (!rOk) {
         cout << "\n Center "; center.print();
@@ -129,7 +129,7 @@ void Octree::add(OcPoint p, void* data) {
         return;
     }
 
-    if (size > resolution) {
+    if (size > resolution && maxjump != 0) {
         int o = getOctant(p);
         if (children[o] == 0) {
             float s2 = size*0.25;
@@ -143,7 +143,7 @@ void Octree::add(OcPoint p, void* data) {
             children[o]->parent = this;
         }
         //OcPoint c = children[o]->center;
-        children[o]->add(p, data);
+        children[o]->add(p, data, maxjump-1);
         return;
     }
 
@@ -151,8 +151,25 @@ void Octree::add(OcPoint p, void* data) {
     this->data.push_back(data);
 }
 
-void Octree::add(float x, float y, float z, void* data) {
-    add(OcPoint(x,y,z), data);
+void Octree::add(float x, float y, float z, void* data, int maxjump) {
+    add(OcPoint(x,y,z), data, maxjump);
+}
+
+void Octree::set(Octree* node, void* data) { node->data.clear(); node->data.push_back(data); }
+
+Octree* Octree::get(float x, float y, float z) {
+    OcPoint p = OcPoint(x,y,z);
+    if ( ! p.inBox(center, size) ) {
+        return parent == 0 ? 0 : parent->get(x,y,z);
+    }
+
+    if (size > resolution) {
+        int o = getOctant(p);
+        if (children[o] == 0) return this;
+        return children[o]->get(x,y,z);
+    }
+
+    return this;
 }
 
 void Octree::destroy(Octree* guard) {
@@ -262,7 +279,7 @@ void Octree::test() {
     }
     t2=clock();
 
-    cout << "\ntest took " << t1-t0 << " octree range search and " << t2-t1 << " brute force\n";
+    cout << "\ntest took " << t1-t0 << " octree range search && " << t2-t1 << " brute force\n";
 
     // validate results
 

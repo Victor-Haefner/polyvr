@@ -1,5 +1,6 @@
 #include "VRGuiSetup.h"
 #include "VRGuiUtils.h"
+#include "VRGuiFile.h"
 #include "core/scripting/VRScript.h"
 #include "core/setup/VRSetupManager.h"
 #include "core/setup/windows/VRWindow.h"
@@ -19,7 +20,6 @@
 #include <gtkmm/notebook.h>
 #include <gtkmm/combobox.h>
 #include <gtkmm/cellrenderercombo.h>
-#include <dirent.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -86,7 +86,7 @@ void VRGuiSetup::updateObjectData() {
             setTextEntry("entry34", ssy.str());
             setLabel("win_state", mwin->getStateString());
 
-            //TODO: clear server array and add entry for each nx * ny
+            //TODO: clear server array && add entry for each nx * ny
             Glib::RefPtr<Gtk::ListStore> servers = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("serverlist"));
             servers->clear();
             for (int y=0; y<ny; y++) {
@@ -976,25 +976,19 @@ void VRGuiSetup::updateSetupList() {
     Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("setups"));
     store->clear();
 
-
-    DIR* dir = opendir("setup");
-    if (dir == NULL) {
-        perror("Error: no local directory setup");
-        return;
-    }
+    string dir = VRSceneManager::get()->getOriginalWorkdir() + "/setup";
+    if (!VRGuiFile::exists(dir)) { cerr << "Error: no local directory setup\n"; return; }
 
     string last;
-    ifstream f("setup/.local");
-    if (!f.good()) f.open("setup/.default");
+    ifstream f(dir+"/.local");
+    if (!f.good()) f.open(dir+"/.default");
+    if (!f.good()) { cerr << "Error: no setup file found\n"; return; }
     getline(f, last);
     f.close();
 
-
-    struct dirent *entry;
     int active = 0;
-    for(int i=0; (entry = readdir(dir)) ; ) {
-
-        string name = string(entry->d_name);
+    int i = 0;
+    for(string name : VRGuiFile::listDir(dir)) {
         int N = name.size();
         if (N < 6) continue;
 

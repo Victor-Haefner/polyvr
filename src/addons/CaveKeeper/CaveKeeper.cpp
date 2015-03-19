@@ -9,6 +9,7 @@
 #include "core/scene/VRScene.h"
 #include "core/objects/VRCamera.h"
 #include "core/objects/material/VRTextureGenerator.h"
+#include "core/setup/devices/VRDevice.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -78,7 +79,10 @@ SimpleMaterialRecPtr BlockWorld::initMaterial(string texture) {
 
     TextureObjChunkRecPtr tex_obj_chunk = TextureObjChunk::create();
     VRTextureGenerator tgen;
-    tgen.addNoise(PERLIN, 0.5, Vec3f(1,0,0), Vec3f(1,1,0));
+    tgen.setSize(512,512);
+    tgen.add(PERLIN, 1./2, Vec3f(0.3,0.1,0.1), Vec3f(0.9,0.5,0.1));
+    tgen.add(PERLIN, 1./8, Vec3f(0.8,0.8,0.8), Vec3f(1.0,1.0,1.0));
+    tgen.add(PERLIN, 1./32, Vec3f(0.8,0.8,0.8), Vec3f(1.0,1.0,1.0));
     ImageRecPtr img = tgen.compose(0);
     tex_obj_chunk->setImage(img);
     mat->addChunk(tex_obj_chunk);
@@ -96,7 +100,7 @@ SimpleMaterialRecPtr BlockWorld::initMaterial(string texture) {
     return mat;
 }
 
-VRGeometry* BlockWorld::createChunk(vector<octree::element*>& elements) {
+VRGeometry* BlockWorld::createChunk(vector<CKOctree::element*>& elements) {
 
     GeometryRecPtr g = Geometry::create();
     GeoUInt8PropertyRecPtr      Type = GeoUInt8Property::create();
@@ -116,7 +120,7 @@ VRGeometry* BlockWorld::createChunk(vector<octree::element*>& elements) {
     int c = 0;
 
     for(uint i=0;i<elements.size();i++) {
-        octree::element* e = elements[i];
+		CKOctree::element* e = elements[i];
         for (int j=0;j<3;j++) {
             Pos->addValue(e->pos);
 
@@ -149,8 +153,8 @@ VRGeometry* BlockWorld::createChunk(vector<octree::element*>& elements) {
 }
 
 VRGeometry* BlockWorld::initChunk() {
-    vector<octree::element*>* elements = new vector<octree::element*>();
-    VRFunction<octree::element*>* fkt = new VRFunction<octree::element*>("blockworld_appendtovector", boost::bind(&BlockWorld::appendToVector, this, elements, _1));
+	vector<CKOctree::element*>* elements = new vector<CKOctree::element*>();
+	VRFunction<CKOctree::element*>* fkt = new VRFunction<CKOctree::element*>("blockworld_appendtovector", boost::bind(&BlockWorld::appendToVector, this, elements, _1));
     tree->traverse(fkt);
     delete fkt;
 
@@ -162,7 +166,7 @@ VRGeometry* BlockWorld::initChunk() {
     return chunk;
 }
 
-void BlockWorld::appendToVector(vector<octree::element*>* elements, octree::element* e) {
+void BlockWorld::appendToVector(vector<CKOctree::element*>* elements, CKOctree::element* e) {
     elements->push_back(e);
 }
 
@@ -202,7 +206,7 @@ BlockWorld::~BlockWorld() {
 }
 
 void BlockWorld::initWorld() {
-    tree = new octree();
+	tree = new CKOctree();
     createSphere(6, Vec3i(0,0,0));
 
     // TODO ?
@@ -250,9 +254,9 @@ void CaveKeeper::placeLight(Vec3f p) {
     ric[2] = Vec2f(1,-1);
     ric[3] = Vec2f(-1,-1);
 
-    vector<octree::element*> elements = tree->getAround(p, 10);
+	vector<CKOctree::element*> elements = tree->getAround(p, 10);
     for (uint i=0;i< elements.size();i++) {
-        octree::element* e = elements[i];
+		CKOctree::element* e = elements[i];
 
         Vec3f dp = p - e->pos;
         Vec3f n, p, t, x;
@@ -278,7 +282,7 @@ void CaveKeeper::placeLight(Vec3f p) {
 
 void CaveKeeper::dig(VRDevice* dev) {
     Line ray = dev->getBeacon()->castRay();
-    octree::element* e = tree->get(ray);
+	CKOctree::element* e = tree->get(ray);
     if (e) {
         tree->addAround(e);
         tree->rem(e);
@@ -290,7 +294,7 @@ void CaveKeeper::place(VRDevice* dev, string obj, VRTransform* geo) {
     if (dev == 0) return;
 
     Line ray = dev->getBeacon()->castRay();
-    octree::element* e = tree->get(ray);
+	CKOctree::element* e = tree->get(ray);
     if (e) {
         Vec3f n = tree->getHitNormal();
         Vec3f p = e->pos + n;

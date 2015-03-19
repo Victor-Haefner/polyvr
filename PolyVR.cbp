@@ -41,11 +41,11 @@
 			<Add option="`pkg-config python --cflags`" />
 			<Add option="`pkg-config gtksourceview-2.0 --cflags`" />
 			<Add option="-use_readonly_const" />
-			<Add option="-ftemplate-depth-100" />
 			<Add option="-fPIC" />
 			<Add option="-Wno-deprecated" />
 			<Add option="-frounding-math" />
 			<Add option="-ftime-report" />
+			<Add option="-fno-strict-aliasing" />
 			<Add option="-DLC_ALL=C" />
 			<Add option="-DOSG2" />
 			<Add option="-D_GNU_SOURCE" />
@@ -98,6 +98,7 @@
 			<Add directory="/usr/include/CEF" />
 			<Add directory="src" />
 			<Add directory="/usr/include/opensg" />
+			<Add directory="/usr/include/collada" />
 		</Compiler>
 		<Linker>
 			<Add option="-lcef" />
@@ -170,6 +171,7 @@
 			<Add option="-lopenal" />
 			<Add option="-lavformat" />
 			<Add option="-lavcodec" />
+			<Add option="-lavresample" />
 			<Add option="-lswscale" />
 			<Add option="-lavutil" />
 			<Add option="-lqrencode" />
@@ -204,6 +206,8 @@
 		<Unit filename="src/addons/CSG/PolyhedronBuilder.h" />
 		<Unit filename="src/addons/CSG/VRPyCSG.h" />
 		<Unit filename="src/addons/CSG/csgjs.h" />
+		<Unit filename="src/addons/CaveKeeper/CKOctree.cpp" />
+		<Unit filename="src/addons/CaveKeeper/CKOctree.h" />
 		<Unit filename="src/addons/CaveKeeper/CaveKeeper.cpp" />
 		<Unit filename="src/addons/CaveKeeper/CaveKeeper.h" />
 		<Unit filename="src/addons/CaveKeeper/VRPyCaveKeeper.cpp" />
@@ -215,7 +219,6 @@
 		<Unit filename="src/addons/Engineering/CSG/CGALTypedefs.h" />
 		<Unit filename="src/addons/Engineering/CSG/CSGGeometry.cpp" />
 		<Unit filename="src/addons/Engineering/CSG/CSGGeometry.h" />
-		<Unit filename="src/addons/Engineering/CSG/Octree/Octree.cpp" />
 		<Unit filename="src/addons/Engineering/CSG/Octree/Octree.h" />
 		<Unit filename="src/addons/Engineering/CSG/PolyhedronBuilder.h" />
 		<Unit filename="src/addons/Engineering/CSG/VRPyCSG.cpp" />
@@ -224,10 +227,14 @@
 		<Unit filename="src/addons/Engineering/Chemistry/VRMolecule.h" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRPyMolecule.cpp" />
 		<Unit filename="src/addons/Engineering/Chemistry/VRPyMolecule.h" />
+		<Unit filename="src/addons/Engineering/Factory/VRAMLLoader.cpp" />
+		<Unit filename="src/addons/Engineering/Factory/VRAMLLoader.h" />
 		<Unit filename="src/addons/Engineering/Factory/VRFactory.cpp" />
 		<Unit filename="src/addons/Engineering/Factory/VRFactory.h" />
 		<Unit filename="src/addons/Engineering/Factory/VRLogistics.cpp" />
 		<Unit filename="src/addons/Engineering/Factory/VRLogistics.h" />
+		<Unit filename="src/addons/Engineering/Factory/VRPyAMLLoader.cpp" />
+		<Unit filename="src/addons/Engineering/Factory/VRPyAMLLoader.h" />
 		<Unit filename="src/addons/Engineering/Factory/VRPyFactory.cpp" />
 		<Unit filename="src/addons/Engineering/Factory/VRPyFactory.h" />
 		<Unit filename="src/addons/Engineering/Factory/VRPyLogistics.cpp" />
@@ -383,10 +390,10 @@
 		<Unit filename="src/core/gui/VRGuiUtils.h" />
 		<Unit filename="src/core/gui/VRGuiVectorEntry.cpp" />
 		<Unit filename="src/core/gui/VRGuiVectorEntry.h" />
+		<Unit filename="src/core/math/Octree.cpp" />
+		<Unit filename="src/core/math/Octree.h" />
 		<Unit filename="src/core/math/interpolator.cpp" />
 		<Unit filename="src/core/math/interpolator.h" />
-		<Unit filename="src/core/math/octree.cpp" />
-		<Unit filename="src/core/math/octree.h" />
 		<Unit filename="src/core/math/patch.cpp" />
 		<Unit filename="src/core/math/patch.h" />
 		<Unit filename="src/core/math/path.cpp" />
@@ -399,10 +406,16 @@
 		<Unit filename="src/core/networking/VRMainInterface.h" />
 		<Unit filename="src/core/networking/VRNetworkManager.cpp" />
 		<Unit filename="src/core/networking/VRNetworkManager.h" />
+		<Unit filename="src/core/networking/VRPing.cpp" />
+		<Unit filename="src/core/networking/VRPing.h" />
 		<Unit filename="src/core/networking/VRProtocol.cpp" />
 		<Unit filename="src/core/networking/VRProtocol.h" />
 		<Unit filename="src/core/networking/VRSocket.cpp" />
 		<Unit filename="src/core/networking/VRSocket.h" />
+		<Unit filename="src/core/networking/mongoose/mongoose.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/core/networking/mongoose/mongoose.h" />
 		<Unit filename="src/core/objects/VRCamera.cpp" />
 		<Unit filename="src/core/objects/VRCamera.h" />
 		<Unit filename="src/core/objects/VRGroup.cpp" />
@@ -429,9 +442,13 @@
 		<Unit filename="src/core/objects/geometry/VRSprite.h" />
 		<Unit filename="src/core/objects/geometry/VRStroke.cpp" />
 		<Unit filename="src/core/objects/geometry/VRStroke.h" />
+		<Unit filename="src/core/objects/material/VRBricks.cpp" />
+		<Unit filename="src/core/objects/material/VRBricks.h" />
 		<Unit filename="src/core/objects/material/VRMaterial.cpp" />
 		<Unit filename="src/core/objects/material/VRMaterial.h" />
 		<Unit filename="src/core/objects/material/VRMaterialT.h" />
+		<Unit filename="src/core/objects/material/VRPerlin.cpp" />
+		<Unit filename="src/core/objects/material/VRPerlin.h" />
 		<Unit filename="src/core/objects/material/VRShader.cpp" />
 		<Unit filename="src/core/objects/material/VRShader.h" />
 		<Unit filename="src/core/objects/material/VRTextureGenerator.cpp" />
@@ -456,6 +473,8 @@
 		<Unit filename="src/core/scene/VRDefShading.h" />
 		<Unit filename="src/core/scene/VRLightManager.cpp" />
 		<Unit filename="src/core/scene/VRLightManager.h" />
+		<Unit filename="src/core/scene/VRMaterialManager.cpp" />
+		<Unit filename="src/core/scene/VRMaterialManager.h" />
 		<Unit filename="src/core/scene/VRObjectManager.cpp" />
 		<Unit filename="src/core/scene/VRObjectManager.h" />
 		<Unit filename="src/core/scene/VRPhysicsManager.cpp" />
@@ -477,6 +496,8 @@
 		<Unit filename="src/core/scripting/VRPyBase.cpp" />
 		<Unit filename="src/core/scripting/VRPyBase.h" />
 		<Unit filename="src/core/scripting/VRPyBaseT.h" />
+		<Unit filename="src/core/scripting/VRPyClipPlane.cpp" />
+		<Unit filename="src/core/scripting/VRPyClipPlane.h" />
 		<Unit filename="src/core/scripting/VRPyColorChooser.cpp" />
 		<Unit filename="src/core/scripting/VRPyColorChooser.h" />
 		<Unit filename="src/core/scripting/VRPyConstraint.cpp" />
@@ -499,6 +520,8 @@
 		<Unit filename="src/core/scripting/VRPyPath.h" />
 		<Unit filename="src/core/scripting/VRPyRecorder.cpp" />
 		<Unit filename="src/core/scripting/VRPyRecorder.h" />
+		<Unit filename="src/core/scripting/VRPySelector.cpp" />
+		<Unit filename="src/core/scripting/VRPySelector.h" />
 		<Unit filename="src/core/scripting/VRPySnappingEngine.cpp" />
 		<Unit filename="src/core/scripting/VRPySnappingEngine.h" />
 		<Unit filename="src/core/scripting/VRPySocket.cpp" />
@@ -509,6 +532,8 @@
 		<Unit filename="src/core/scripting/VRPySprite.h" />
 		<Unit filename="src/core/scripting/VRPyStroke.cpp" />
 		<Unit filename="src/core/scripting/VRPyStroke.h" />
+		<Unit filename="src/core/scripting/VRPyTextureGenerator.cpp" />
+		<Unit filename="src/core/scripting/VRPyTextureGenerator.h" />
 		<Unit filename="src/core/scripting/VRPyTransform.cpp" />
 		<Unit filename="src/core/scripting/VRPyTransform.h" />
 		<Unit filename="src/core/scripting/VRPyTypeCaster.cpp" />
@@ -551,8 +576,6 @@
 		<Unit filename="src/core/setup/tracking/Kinect.h" />
 		<Unit filename="src/core/setup/tracking/VRPN.cpp" />
 		<Unit filename="src/core/setup/tracking/VRPN.h" />
-		<Unit filename="src/core/setup/tracking/WinTrackerIII.cpp" />
-		<Unit filename="src/core/setup/tracking/WinTrackerIII.h" />
 		<Unit filename="src/core/setup/windows/VRGlutWindow.cpp" />
 		<Unit filename="src/core/setup/windows/VRGlutWindow.h" />
 		<Unit filename="src/core/setup/windows/VRGtkWindow.cpp" />
@@ -567,6 +590,7 @@
 		<Unit filename="src/core/setup/windows/VRWindow.h" />
 		<Unit filename="src/core/setup/windows/VRWindowManager.cpp" />
 		<Unit filename="src/core/setup/windows/VRWindowManager.h" />
+		<Unit filename="src/core/tools/VRClipPlane.cpp" />
 		<Unit filename="src/core/tools/VRClipPlane.h" />
 		<Unit filename="src/core/tools/VRColorChooser.cpp" />
 		<Unit filename="src/core/tools/VRColorChooser.h" />
@@ -576,6 +600,8 @@
 		<Unit filename="src/core/tools/VRQRCode.h" />
 		<Unit filename="src/core/tools/VRRecorder.cpp" />
 		<Unit filename="src/core/tools/VRRecorder.h" />
+		<Unit filename="src/core/tools/VRSelector.cpp" />
+		<Unit filename="src/core/tools/VRSelector.h" />
 		<Unit filename="src/core/tools/VRSnappingEngine.cpp" />
 		<Unit filename="src/core/tools/VRSnappingEngine.h" />
 		<Unit filename="src/core/tools/VRText.cpp" />
@@ -587,6 +613,8 @@
 		<Unit filename="src/core/utils/VRFunction.h" />
 		<Unit filename="src/core/utils/VRInternalMonitor.cpp" />
 		<Unit filename="src/core/utils/VRInternalMonitor.h" />
+		<Unit filename="src/core/utils/VRLogger.cpp" />
+		<Unit filename="src/core/utils/VRLogger.h" />
 		<Unit filename="src/core/utils/VRName.cpp" />
 		<Unit filename="src/core/utils/VRName.h" />
 		<Unit filename="src/core/utils/VROptions.cpp" />

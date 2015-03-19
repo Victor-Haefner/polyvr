@@ -240,7 +240,7 @@ class VRHTTPSocket {
             Json::Reader reader;
             bool parsingSuccessful = reader.parse(s, root, false);
             if ( !parsingSuccessful ) {
-                // report to the user the failure and their locations in the document.
+                // report to the user the failure && their locations in the document.
                 std::cout  << "Failed to parse configuration\n"
                            << reader.getFormattedErrorMessages();
             }

@@ -47,7 +47,7 @@ void VRGuiNav_on_preset_changed(GtkComboBox* cb, gpointer data) {
     //get binding type liststore
     Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("binding_types"));
 
-    //TODO: get all bindings from preset and update nav_bindings
+    //TODO: get all bindings from preset && update nav_bindings
     navBindings_store->clear();
     for (uint i=0; i<preset->getBindings().size(); i++) {
         VRNavBinding b = preset->getBindings()[i];
@@ -209,7 +209,7 @@ VRGuiNav::VRGuiNav() {
     setCellRendererCombo("treeviewcolumn13", "binding_callbacks", collums.callback, VRGuiNav_on_cbbinding_changed);
 }
 
-// scene updated, get cameras and nav presets
+// scene updated, get cameras && nav presets
 void VRGuiNav::update() {
     VRScene* scene = VRSceneManager::getCurrent();
     if (scene == 0) return;

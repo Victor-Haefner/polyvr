@@ -9,7 +9,7 @@ using namespace std;
 
 namespace OSG{ class VRTransform; }
 namespace OSG{ class VRConstraint; }
-class VRPhysicsJoint;
+struct VRPhysicsJoint;
 class btPairCachingGhostObject;
 
 struct VRCollision {

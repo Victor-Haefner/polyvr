@@ -50,12 +50,13 @@ class VRTransform : public VRObject {
 
         bool held;//drag n drop
         VRObject* old_parent;
+        int old_child_id;
 
         VRObject* copy(vector<VRObject*> children);
 
         void computeMatrix();
 
-        //read matrix from doublebuffer and apply it to transformation
+        //read matrix from doublebuffer && apply it to transformation
         //should be called from the main thread only
         void updateTransformation();
 
@@ -81,8 +82,8 @@ class VRTransform : public VRObject {
         static list<VRTransform* > dynamicObjects;
 
         uint getLastChange();
-
-        // Local and world transformation setter and getter
+        doubleBuffer* getBuffer();
+        // Local && world transformation setter && getter
 
         Vec3f getFrom();
         Vec3f getDir();
@@ -137,7 +138,7 @@ class VRTransform : public VRObject {
         void startPathAnimation(path* p, float time, float offset, bool redirect = true);
         void stopAnimation();
 
-        /** Print the position of the object in local and world coords **/
+        /** Print the position of the object in local && world coords **/
         void printPos();
 
         /** Print the positions of all the subtree **/

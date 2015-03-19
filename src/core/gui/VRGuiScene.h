@@ -13,6 +13,8 @@ using namespace std;
 class VRGuiScene {
     private:
         VRObject* dragDest;
+        string dragPath;
+        int dragPos = 0;
         VRGuiContextMenu* menu;
         bool cache_override;
 
@@ -70,7 +72,7 @@ class VRGuiScene {
         void on_lod_decimate_changed();
         // ----------------------------------------------
 
-        // ------------- scenegraph drag and drop -------
+        // ------------- scenegraph drag && drop -------
         void on_drag_beg(const Glib::RefPtr<Gdk::DragContext>& dc);
         void on_drag_end(const Glib::RefPtr<Gdk::DragContext>& dc);
         void on_drag_data_receive(const Glib::RefPtr<Gdk::DragContext>& dc , int i1, int i2 ,const Gtk::SelectionData& sd, guint i3, guint i4);
@@ -90,7 +92,7 @@ class VRGuiScene {
         void on_menu_add_camera();
         void on_menu_add_animation();
         void on_menu_add_primitive(string s);
-        void on_menu_add_csg();
+        //void on_menu_add_csg();
         // ----------------------------------------------
 
 

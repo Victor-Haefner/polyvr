@@ -2,6 +2,7 @@
 #include "core/setup/windows/VRView.h"
 #include "core/setup/VRSetup.h"
 #include "core/setup/VRSetupManager.h"
+#include "core/scene/VRSceneManager.h"
 #include "core/objects/object/VRObject.h"
 #include "core/utils/toString.h"
 
@@ -28,16 +29,22 @@ class VRFrame {
 VRRecorder::VRRecorder() {
     av_register_all();
     avcodec_register_all();
+
+    toggleCallback = new VRFunction<bool>("recorder toggle", boost::bind(&VRRecorder::on_record_toggle, this, _1));
+    updateCallback = new VRFunction<int>("recorder update", boost::bind(&VRRecorder::capture, this));
 }
 
 void VRRecorder::setView(int i) {
+    viewID = i;
+    if (VRSetupManager::getCurrent() == 0) return;
     view = VRSetupManager::getCurrent()->getView(i);
 }
 
 void VRRecorder::setMaxFrames(int maxf) { maxFrames = maxf; }
-bool VRRecorder::frameLimitReached() { return (captures.size() == maxFrames); }
+bool VRRecorder::frameLimitReached() { return ((int)captures.size() == maxFrames); }
 
 void VRRecorder::capture() {
+    if (view == 0) view = VRSetupManager::getCurrent()->getView(viewID);
     if (view == 0) return;
     if (frameLimitReached()) return;
 
@@ -89,7 +96,8 @@ void VRRecorder::compile(string path) {
     c->width = img0->getWidth();
     c->height = img0->getHeight();
     c->bit_rate = c->width*c->height*5; /* put sample parameters */
-    c->time_base = (AVRational){1,25}; /* frames per second */
+	c->time_base.num = 1;
+	c->time_base.den = 25;/* frames per second */
     c->gop_size = 10; /* emit one intra frame every ten frames */
     c->max_b_frames = 1;
     c->pix_fmt = AV_PIX_FMT_YUV420P;
@@ -106,7 +114,7 @@ void VRRecorder::compile(string path) {
     frame->width  = c->width;
     frame->height = c->height;
 
-    /* the image can be allocated by any means and av_image_alloc() is
+    /* the image can be allocated by any means && av_image_alloc() is
     * just the most convenient way if av_malloc() is to be used */
     ret = av_image_alloc(frame->data, frame->linesize, c->width, c->height, c->pix_fmt, 32);
     if (ret < 0) { fprintf(stderr, "Could not allocate raw picture buffer\n"); return; }
@@ -128,7 +136,7 @@ void VRRecorder::compile(string path) {
             int Y = 16 + 0.256789063*r + 0.504128906*g + 0.09790625*b;
             frame->data[0][y * frame->linesize[0] + x] = Y;
 
-            if (y%2 == 0 and y%2 == 0) {
+            if (y%2 == 0 && y%2 == 0) {
              int u = y/2;
              int v = x/2;
              int U = 128 + -0.148222656*r + -0.290992188*g + 0.439214844*b;
@@ -173,5 +181,16 @@ void VRRecorder::compile(string path) {
     av_freep(&frame->data[0]);
     avcodec_free_frame(&frame);
 }
+
+void VRRecorder::on_record_toggle(bool b) {
+    if (b) VRSceneManager::get()->addUpdateFkt(updateCallback);
+    else {
+        VRSceneManager::get()->dropUpdateFkt(updateCallback);
+        compile("recording_"+toString(VRGlobals::get()->CURRENT_FRAME)+".avi");
+        clear();
+    }
+}
+
+VRFunction<bool>* VRRecorder::getToggleCallback() { return toggleCallback; }
 
 OSG_END_NAMESPACE;

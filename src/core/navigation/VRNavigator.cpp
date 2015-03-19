@@ -239,7 +239,7 @@ void VRNavigator::fly_walk(VRDevice* dev) {
 
     VRTransform* target = dev->getTarget();
     VRTransform* flystick = dev->getBeacon();
-    if (target == 0 or flystick == 0) return;
+    if (target == 0 || flystick == 0) return;
 
     Vec3f dir = flystick->getWorldDirection();
     dir.normalize();
@@ -387,7 +387,7 @@ void VRNavigator::hyd_walk(VRDevice* dev) {
 
     VRTransform* target = dev->getTarget();
     VRTransform* flystick = dev->getBeacon();
-    if (target == 0 or flystick == 0) return;
+    if (target == 0 || flystick == 0) return;
 
     Vec3f dir = flystick->getWorldDirection();
     dir.normalize();

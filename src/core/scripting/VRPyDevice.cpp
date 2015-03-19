@@ -64,15 +64,30 @@ PyMethodDef VRPyDevice::methods[] = {
     {"getSlider", (PyCFunction)VRPyDevice::getSlider, METH_VARARGS, "Get device slider state." },
     {"getMessage", (PyCFunction)VRPyDevice::getMessage, METH_NOARGS, "Get device received message." },
     {"getType", (PyCFunction)VRPyDevice::getType, METH_NOARGS, "Get device type." },
-    {"setDnD", (PyCFunction)VRPyDevice::setDnD, METH_VARARGS, "Set drag and drop." },
+    {"setDnD", (PyCFunction)VRPyDevice::setDnD, METH_VARARGS, "Set drag && drop." },
     {"getIntersected", (PyCFunction)VRPyDevice::getIntersected, METH_NOARGS, "Get device intersected object." },
     {"getIntersection", (PyCFunction)VRPyDevice::getIntersection, METH_NOARGS, "Get device intersection point." },
     {"addIntersection", (PyCFunction)VRPyDevice::addIntersection, METH_VARARGS, "Add device intersection node." },
     {"remIntersection", (PyCFunction)VRPyDevice::remIntersection, METH_VARARGS, "Remove device intersection node." },
     {"getDragged", (PyCFunction)VRPyDevice::getDragged, METH_NOARGS, "Get dragged object." },
+    {"drag", (PyCFunction)VRPyDevice::drag, METH_VARARGS, "Start to drag an object - drag(obj)" },
+    {"drop", (PyCFunction)VRPyDevice::drop, METH_NOARGS, "Drop any object - drop()" },
     {NULL}  /* Sentinel */
 };
 
+
+PyObject* VRPyDevice::drag(VRPyDevice* self, PyObject *args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::drag, Object is invalid"); return NULL; }
+    VRPyObject* p = (VRPyObject*)parseObject(args); // TODO: check the type
+    self->obj->drag(p->obj, self->obj->getBeacon());
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyDevice::drop(VRPyDevice* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::drop, Object is invalid"); return NULL; }
+    self->obj->drop();
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyDevice::getName(VRPyDevice* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getName, Object is invalid"); return NULL; }

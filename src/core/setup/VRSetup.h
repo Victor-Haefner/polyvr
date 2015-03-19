@@ -50,7 +50,7 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
         void load(string file);
 };
 
-// TODO: make a setup manager and manage setups like a bit the scene manager!
+// TODO: make a setup manager && manage setups like a bit the scene manager!
 
 
 OSG_END_NAMESPACE;

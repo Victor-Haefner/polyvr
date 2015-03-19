@@ -27,7 +27,7 @@ void updateArgPtr(VRScript::arg* a) {
     VRScene* scene = VRSceneManager::getCurrent();
     VRSetup* setup = VRSetupManager::getCurrent();
 
-    if (t == "VRPyObjectType" or t == "VRPyGeometryType" or t == "VRPyTransformType" or t == "VRPyLightType" or t == "VRPyLodType") {
+    if (t == "VRPyObjectType" || t == "VRPyGeometryType" || t == "VRPyTransformType" || t == "VRPyLightType" || t == "VRPyLodType") {
         a->ptr = (void*)scene->get(a->val);
         return;
     }
@@ -35,12 +35,12 @@ void updateArgPtr(VRScript::arg* a) {
         a->ptr = (void*)scene->getSocket(a->val);
         return;
     }
-    if (t == "VRPyDeviceType" or t == "VRPyHapticType") {
+    if (t == "VRPyDeviceType" || t == "VRPyHapticType") {
         a->ptr = (void*)setup->getDevice(a->val);
         return;
     }
 
-    if (t == "int" or t == "float" or t == "str" or t == "NoneType") return;
+    if (t == "int" || t == "float" || t == "str" || t == "NoneType") return;
 
     cout << "\nupdateArgPtr: " << t << " is an unknown argument type!" << endl;
 }
@@ -115,7 +115,7 @@ void VRScript::update() {
         if (t->trigger == "on_socket") {
             t->soc = scene->getSocket(t->dev);
             if (t->soc == 0) continue;
-            t->soc->setCallback(cbfkt_soc);
+            t->soc->setTCPCallback(cbfkt_soc);
 
             // add msg argument
             arg* a = new arg(VRName::getName(), "msg");
@@ -128,7 +128,7 @@ void VRScript::update() {
         }
     }
 
-    // update args namespaces and map
+    // update args namespaces && map
     map<string, arg*> tmp_args;
     for (auto _a : args) {
         arg* a = _a.second;
@@ -219,7 +219,7 @@ VRScript::Search VRScript::find(string s) {
     search.search = s;
     map<int, bool> res;
 
-    int pos = core.find(s, 0);
+    uint pos = core.find(s, 0);
     while(pos != string::npos) {
         res[pos] = false;
         pos = core.find(s, pos+1);
@@ -404,7 +404,7 @@ void VRScript::load(xmlpp::Element* e) {
             t->loadName(el);
             trigs[t->getName()] = t;
 
-            if (t->trigger == "on_scene_load" and active) {
+            if (t->trigger == "on_scene_load" && active) {
                 VRScene* scene = VRSceneManager::getCurrent();
                 scene->queueJob(cbfkt_sys);
             }

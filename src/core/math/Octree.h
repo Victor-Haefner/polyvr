@@ -48,8 +48,11 @@ class Octree {
         Octree(float resolution);
         Octree* getRoot();
 
-        void add(OcPoint p, void* data);
-        void add(float x, float y, float z, void* data);
+        void add(OcPoint p, void* data, int maxjump = -1);
+        void add(float x, float y, float z, void* data, int maxjump = -1);
+
+        void set(Octree* node, void* data);
+        Octree* get(float x, float y, float z);
 
         void clear();
 

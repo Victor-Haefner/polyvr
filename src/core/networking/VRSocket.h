@@ -1,37 +1,20 @@
 #ifndef VRSOCKET_H_INCLUDED
 #define VRSOCKET_H_INCLUDED
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
 #include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/un.h>
-
-
-#include <algorithm>
-#include <curl/curl.h>
-#include <stdint.h>
-#include <microhttpd.h>
-#include <jsoncpp/json/json.h>
-
 #include <OpenSG/OSGConfig.h>
 #include "core/utils/VRFunction.h"
-#include "core/setup/devices/VRDevice.h"
 #include "core/utils/VRName.h"
-
-#define UNIX_SOCK_PATH "/tmp/vrf_soc"
-#define HTTP_SOCK_ADD "141.3.150.20"
 
 OSG_BEGIN_NAMESPACE
 using namespace std;
 
+class VRSignal;
 class VRThread;
 class HTTPServer;
-struct HTTP_args;
+//struct HTTP_args;
 
-typedef VRFunction<HTTP_args*> VRHTTP_cb;
+typedef VRFunction<void*> VRHTTP_cb;
 typedef VRFunction<string> VRTCP_cb;
 
 struct HTTP_args {
@@ -90,8 +73,8 @@ class VRSocket : public VRName {
         void setName(string s);
         void setType(string s);
         void setIP(string s);
-        void setCallback(VRTCP_cb* cb);
-        void setCallback(VRHTTP_cb* cb);
+        void setTCPCallback(VRTCP_cb* cb);
+        void setHTTPCallback(VRHTTP_cb* cb);
         void unsetCallbacks();
         void setSignal(string s);
         void setPort(int i);
@@ -104,20 +87,11 @@ class VRSocket : public VRName {
         VRSignal* getSignal();
         int getPort();
 
+        bool ping(string IP, string port);
+
         bool isClient();
 };
 
 OSG_END_NAMESPACE
-
-// refactoring
-
-// common:
-//      VRSocket::setVerbose(int i);
-
-// client scenario:
-//      res = VRSocket::connect(VRSocket::CONNECTION_TYPE, string IP, int port);
-
-// server scenario:
-//      VRSocket::initServer(VRSocket::CONNECTION_TYPE, int port, VRFunction* handler);
 
 #endif // VRSOCKET_H_INCLUDED

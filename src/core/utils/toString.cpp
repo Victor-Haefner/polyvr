@@ -1,11 +1,20 @@
 #include "toString.h"
 
+vector<string> splitString(string s, char c) {
+    stringstream ss(s);
+    string token;
+    vector<string> res;
+    while (std::getline(ss, token, c)) res.push_back(token);
+    return res;
+}
+
 string toString(string s) { return s; }
 string toString(bool b) { stringstream ss; ss << b; return ss.str(); }
 string toString(int i) { stringstream ss; ss << i; return ss.str(); }
 string toString(size_t i) { stringstream ss; ss << i; return ss.str(); }
 string toString(unsigned int i) { stringstream ss; ss << i; return ss.str(); }
 string toString(float f) { stringstream ss; ss << f; return ss.str(); }
+string toString(double f) { stringstream ss; ss << f; return ss.str(); }
 
 string toString(OSG::Vec2f v) {
     stringstream ss;

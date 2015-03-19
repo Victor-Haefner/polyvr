@@ -61,7 +61,6 @@ VRIntersection VRIntersect::intersect(VRObject* tree) {
     ins.hit = iAct->didHit(); // TODO :
     if (!ins.hit) { intersections[tree] = ins; lastIntersection = ins; return ins; }
 
-
     ins.object = tree->find(iAct->getHitObject()->getParent());
     ins.point = iAct->getHitPoint();
     ins.normal = iAct->getHitNormal();
@@ -76,22 +75,22 @@ VRIntersection VRIntersect::intersect(VRObject* tree) {
     return ins;
 }
 
-void VRIntersect::drag(VRTransform* caster, VRObject* tree, VRDevice* dev) {
+void VRIntersect::dragCB(VRTransform* caster, VRObject* tree, VRDevice* dev) {
     VRIntersection ins = intersect(tree);
+    drag(ins.object, caster);
+}
 
-    if (ins.object == 0 or dragged != 0 or !dnd) return;
+void VRIntersect::drag(VRObject* obj, VRTransform* caster) {
+    if (obj == 0 || dragged != 0 || !dnd) return;
 
-    VRObject* obj2 = ins.object->findPickableAncestor();
-    //cout << "\n pickable " << obj->isPickable() << " " << obj->getName() << " " << caster->getParent()->getName() << flush;
-    if (obj2 == 0) return;
-    if (!obj2->hasAttachment("transform")) return;
+    obj = obj->findPickableAncestor();
+    if (obj == 0) return;
+    if (!obj->hasAttachment("transform")) return;
 
-    dragged = (VRTransform*)obj2;
+    dragged = (VRTransform*)obj;
     dragged->drag(caster);
     dragged_ghost->setMatrix(dragged->getMatrix());
     dragged_ghost->switchParent(caster);
-
-    return;
 }
 
 void VRIntersect::drop(VRDevice* dev) {
@@ -148,7 +147,7 @@ VRDevCb* VRIntersect::addDrag(VRTransform* caster, VRObject* tree) {
     VRDevCb* fkt;
     if (int_fkt_map.count(tree)) return int_fkt_map[tree];
 
-    fkt = new VRDevCb("Intersect_drag", boost::bind(&VRIntersect::drag, this, caster, tree, _1));
+    fkt = new VRDevCb("Intersect_drag", boost::bind(&VRIntersect::dragCB, this, caster, tree, _1));
     dra_fkt_map[tree] = fkt;
     return fkt;
 }

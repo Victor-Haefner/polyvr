@@ -167,11 +167,11 @@ namespace realworld {
         }
 
         void addTerrain(Terrain* ter, GeometryData* gdTerrain, int height){
-            //create and fill vector a with polygon corners
+            //create && fill vector a with polygon corners
             Vector2dVector a;
             bool first = true;
             BOOST_FOREACH(Vec2f corner, ter->getCorners()) {
-                if(first){ first=false; continue;} //first and last corners are equal, so ignoring first one
+                if(first){ first=false; continue;} //first && last corners are equal, so ignoring first one
                  a.push_back( Vector2d(corner[0], corner[1]));
             }
 

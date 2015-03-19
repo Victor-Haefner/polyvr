@@ -61,10 +61,12 @@ class VRScriptManager : public VRStorage, public VRPyBase {
         // Python Methods
 		static PyObject* exit(VRScriptManager* self);
 		static PyObject* loadGeometry(VRScriptManager* self, PyObject *args);
+		static PyObject* pyTriggerScript(VRScriptManager* self, PyObject *args);
 		static PyObject* stackCall(VRScriptManager* self, PyObject *args);
 		static PyObject* openFileDialog(VRScriptManager* self, PyObject *args);
 		static PyObject* updateGui(VRScriptManager* self);
 		static PyObject* render(VRScriptManager* self);
+		static PyObject* getRoot(VRScriptManager* self);
 };
 
 OSG_END_NAMESPACE

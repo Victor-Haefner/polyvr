@@ -66,7 +66,7 @@ static void recv_usb(struct usb_dev_handle* handle, int len, byte * dest) {
 /* debugging: enable debugging error messages in libusb */
 //extern int usb_debug;
 
-/* Find the first USB device with this vendor and product.
+/* Find the first USB device with this vendor && product.
    Exits on errors, like if the device couldn't be found.
 */
 struct usb_dev_handle *WG_fs_usb_open(void) {
@@ -183,7 +183,7 @@ int main(int argc, char ** argv) {
         //send_usb(WG_fs_usb, "SP"); /* Ask for sensor data */
         for(int i=0;i<32;i++) receive_buf[i]=0;
         recv_usb(WG_fs_usb, 32, receive_buf);
-        if ( receive_buf[0] != 'D' and receive_buf[1] != 'D') continue;
+        if ( receive_buf[0] != 'D' && receive_buf[1] != 'D') continue;
         if ( receive_buf[0] == 'D') data = &receive_buf[0];
         else if( receive_buf[1] == 'D') data = &receive_buf[1];
 

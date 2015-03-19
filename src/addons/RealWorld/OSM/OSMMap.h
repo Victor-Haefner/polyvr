@@ -77,7 +77,7 @@ namespace realworld {
                 double lat = toFloat(element->get_attribute_value("lat").c_str());
                 double lon = toFloat(element->get_attribute_value("lon").c_str());
 
-                // create node and add it to the list
+                // create node && add it to the list
                 OSMNode* osmNode = new OSMNode(id, lat, lon);
                 osmNodes.push_back(osmNode);
                 osmNodeMap[id] = osmNode;
@@ -100,7 +100,7 @@ namespace realworld {
                 // read attributes
                 string id = element->get_attribute_value("id");
 
-                // create way and add it to the list
+                // create way && add it to the list
                 OSMWay* osmWay = new OSMWay(id);
                 osmWays.push_back(osmWay);
 

@@ -96,7 +96,7 @@ NodeRecPtr VRObject::getNode() { return node; }
 
 void VRObject::setSiblingPosition(int i) {
     if (parent == 0) return;
-    if (i < 0 or i >= (int)parent->children.size()) return;
+    if (i < 0 || i >= (int)parent->children.size()) return;
 
     NodeRecPtr p = parent->getNode();
 
@@ -122,6 +122,8 @@ void VRObject::addChild(VRObject* child, bool osg, int place) {
     updateChildrenIndices(true);
 }
 
+int VRObject::getChildIndex() { return childIndex;}
+
 void VRObject::subChild(NodeRecPtr n) { node->subChild(n); }
 void VRObject::subChild(VRObject* child, bool osg) {
     if (osg) node->subChild(child->node);
@@ -138,13 +140,16 @@ void VRObject::switchParent(VRObject* new_p, int place) {
     if (new_p == 0) { cout << "\nERROR : new parent is 0!\n"; return; }
 
     if (parent == 0) { new_p->addChild(this, true, place); return; }
-    if (parent == new_p) { return; }
+    if (parent == new_p && place == childIndex) { return; }
 
-    _switchParent(new_p->node); //takes care of the osg node structure
+    if (parent != new_p) _switchParent(new_p->node); //takes care of the osg node structure
 
     parent->subChild(this, false);
     new_p->addChild(this, false, place);
 }
+
+void VRObject::setIntern(bool b) { intern = b; }
+bool VRObject::getIntern() { return intern; }
 
 /** Returns the number of children **/
 size_t VRObject::getChildrenCount() { return children.size(); }
@@ -165,7 +170,7 @@ void VRObject::detach() {
 }
 
 VRObject* VRObject::getChild(int i) {
-    if (i < 0 or i >= (int)children.size()) return 0;
+    if (i < 0 || i >= (int)children.size()) return 0;
     return children[i];
 }
 
@@ -268,7 +273,7 @@ vector<VRObject*> VRObject::filterByType(string Type, vector<VRObject*> res) {
     return res;
 }
 
-/** Returns the first ancestor that is pickable, or 0 if none found **/
+/** Returns the first ancestor that is pickable, || 0 if none found **/
 VRObject* VRObject::findPickableAncestor() {
     if (isPickable()) return this;
     else if (parent == 0) return 0;
@@ -376,14 +381,14 @@ VRObject* VRObject::duplicate(bool anchor) {
     int N = getChildrenCount();
     for (int i=0;i<N;i++) {// first duplicate all children
         VRObject* d = getChild(i)->duplicate();
-        children.push_back(d);// this is not the objects chidren vector! (its local)
+        children.push_back(d);// this is not the objects children vector! (its local)
     }
 
     VRObject* o = copy(children); // copy himself
     for (uint i=0; i<children.size();i++)
         o->addChild(children[i]); // append children
 
-    if (anchor and parent) parent->addChild(o);
+    if (anchor && parent) parent->addChild(o);
     return o;
 }
 
@@ -415,13 +420,13 @@ int VRObject::findChild(VRObject* node) {
     return -1;
 }
 
-/** Hide this object and all his subgraph **/
+/** Hide this object && all his subgraph **/
 void VRObject::hide() { node->setTravMask(0); visible = false; }
 
-/** Show this object and all his subgraph **/
+/** Show this object && all his subgraph **/
 void VRObject::show() { node->setTravMask(0xffffffff); visible = true; }
 
-/** Returns if this object is visible or not **/
+/** Returns if this object is visible || not **/
 bool VRObject::isVisible() { return visible; }
 
 
@@ -434,10 +439,10 @@ void VRObject::setVisible(bool b) {
 /** toggle visibility **/
 void VRObject::toggleVisible() { setVisible(!visible); }
 
-/** Returns if this object is pickable or not **/
+/** Returns if this object is pickable || not **/
 bool VRObject::isPickable() {return pickable;}
 
-/** Set the object pickable or not **/
+/** Set the object pickable || not **/
 void VRObject::setPickable(bool b) { if (hasAttachment("transform")) pickable = b; } //TODO: check if the if is necessary!
 
 string VRObject::getPath() {

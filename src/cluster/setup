@@ -1,7 +1,8 @@
 #!/bin/bash
-libs="-lOSGBase -lOSGContribTrapezoidalShadowMaps -lOSGCluster -lOSGDrawable -lOSGEffectGroups -lOSGFileIO -lOSGGroup -lOSGImageFileIO -lOSGState -lOSGSystem -lOSGUtil -lOSGText -lOSGWindow -lOSGWindowGLUT -lOSGWindowX -lGLU -lGL -lSM -lICE -lX11 -lXext -lglut -lXmu -lXi -lboost_system"
+libs="-lOSGBase -lOSGContribTrapezoidalShadowMaps -lOSGCluster -lOSGDrawable -lOSGEffectGroups -lOSGGroup -lOSGImageFileIO -lOSGState -lOSGSystem -lOSGUtil -lOSGText -lOSGWindow -lOSGWindowGLUT -lOSGWindowX -lGLU -lGL -lSM -lICE -lX11 -lXext -lglut -lXmu -lXi -lboost_system"
 libpaths="-L/usr/lib/opensg"
-flags="-DLC_ALL=C -DOSG_WITH_GLUT -DOSG_WITH_QT -DOSG_WITH_JPG -DOSG_WITH_PNG -DOSG_WITH_COLLADA -DOSG_ENABLE_OGL_VERTEXT_ATTRIB_FUNCS=ON -D_OSG_HAVE_CONFIGURED_H_ -DOSG_DEBUG -DOSG_DEBUGRT -DOSG_BUILD_ACTIVE"
+flags="-DLC_ALL=C -DOSG_WITH_GLUT -DOSG_WITH_JPG -DOSG_WITH_PNG -D_OSG_HAVE_CONFIGURED_H_ -DOSG_BUILD_ACTIVE"
 
 g++ VRServer.cpp $libs $libpaths $flags -o VRServer
+
 

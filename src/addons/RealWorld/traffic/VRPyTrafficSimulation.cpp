@@ -62,7 +62,7 @@ PyMethodDef VRPyTrafficSimulation::methods[] = {
     {"start", (PyCFunction)VRPyTrafficSimulation::start, METH_VARARGS, "Start simulation" },
     {"pause", (PyCFunction)VRPyTrafficSimulation::pause, METH_VARARGS, "Pause simulation" },
     {"isRunning", (PyCFunction)VRPyTrafficSimulation::isRunning, METH_VARARGS, "Returns if simulation is running" },
-    {"setServer", (PyCFunction)VRPyTrafficSimulation::setServer, METH_VARARGS, "Sets the server name and port" },
+    {"setServer", (PyCFunction)VRPyTrafficSimulation::setServer, METH_VARARGS, "Sets the server name && port" },
 
     {"setVehiclePosition", (PyCFunction)VRPyTrafficSimulation::setVehiclePosition, METH_VARARGS, "Sets the position of a vehicle" },
 

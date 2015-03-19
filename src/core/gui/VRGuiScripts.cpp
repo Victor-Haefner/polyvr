@@ -2,6 +2,7 @@
 #include "VRGuiUtils.h"
 #include "VRGuiFile.h"
 #include "VRGuiBits.h"
+#include "VRGuiManager.h"
 #include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
 #include "core/scene/VRScene.h"
@@ -117,7 +118,9 @@ void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScript* script, bool on
 
     string time = " ";
     float exec_time = script->getExecutionTime();
-    if (exec_time >= 0) time = toString( exec_time ) + " ms";
+    if (exec_time >= 60*1000) time = toString( exec_time*0.001/60 ) + " min";
+    else if (exec_time >= 1000) time = toString( exec_time*0.001 ) + " s";
+    else if (exec_time >= 0) time = toString( exec_time ) + " ms";
 
     Gtk::Window* win1;
     VRGuiBuilder()->get_widget("window1", win1);
@@ -128,7 +131,7 @@ void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScript* script, bool on
     bool user_focus = false;
     if(!user_focus) user_focus = ("gtkmm__GtkTreeView" == name);
     if(!user_focus) user_focus = ("GtkEntry" == name); // TODO: be more specific
-    if(onlyTime and user_focus) return;
+    if(onlyTime && user_focus) return;
 
     int Nf = script->getSearch().N;
     string icon, Nfound;
@@ -156,8 +159,8 @@ void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScript* script, bool on
 
 void VRGuiScripts::on_new_clicked() {
     Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("script_list"));
-    VRScript* script = VRSceneManager::getCurrent()->newScript("Script", "\tpass");
-    setScriptListRow(store->append(), script);
+    VRSceneManager::getCurrent()->newScript("Script", "\tpass");
+    updateList();
 }
 
 void VRGuiScripts::on_save_clicked() {
@@ -291,9 +294,7 @@ void VRGuiScripts::on_del_clicked() {
     if (!askUser(msg1, "Are you sure you want to delete this script?")) return;
 
     VRSceneManager::getCurrent()->remScript(script->getName());
-
-    Glib::RefPtr<Gtk::ListStore> list_store  = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("script_list"));
-    list_store->erase(iter);
+    updateList();
 
     setToolButtonSensitivity("toolbutton9", false);
     setToolButtonSensitivity("toolbutton8", false);
@@ -316,7 +317,7 @@ void VRGuiScripts::on_select_script() { // selected a script
     fillStringListstore("liststore7", VRSetupManager::getCurrent()->getDevices("mobile"));
     setCombobox("combobox24", getListStorePos("liststore7", script->getMobile()));
 
-    // update editor content and script head
+    // update editor content && script head
     string core = script->getHead() + script->getCore();
     gtk_text_buffer_set_text(GTK_TEXT_BUFFER(VRGuiScripts_sourceBuffer), core.c_str(), core.size());
 
@@ -344,7 +345,7 @@ void VRGuiScripts::on_select_script() { // selected a script
     for (itr2 = trig_map.begin(); itr2 != trig_map.end(); itr2++) {
         VRScript::trig* t = itr2->second;
         string key = toString(t->key);
-        if (t->dev == "keyboard" and t->key > 32 and t->key < 127) {
+        if (t->dev == "keyboard" && t->key > 32 && t->key < 127) {
             char kc = t->key;
             key = kc;
         }
@@ -420,7 +421,7 @@ bool VRGuiScripts::on_any_key_event(GdkEventKey* event) {
 
 bool VRGuiScripts::on_any_event(GdkEvent* event) {
     int t = event->type;
-    if (t == 5 or t == 6 or t == 12) {
+    if (t == 5 || t == 6 || t == 12) {
         //wait_for_key = false; // TODO
     }
     return false;
@@ -440,6 +441,7 @@ void VRGuiScripts::on_name_edited(const Glib::ustring& path, const Glib::ustring
 
     // update key in map
     VRSceneManager::getCurrent()->changeScriptName(name, new_name);
+    updateList();
     on_select_script();
 }
 
@@ -775,12 +777,12 @@ void VRGuiScripts::on_find_diag_cancel_clicked() {
 
 void VRGuiScripts::on_find_diag_find_clicked() {
     bool sa = getCheckButtonState("checkbutton38");
-    bool rep = getCheckButtonState("checkbutton12");
+    //bool rep = getCheckButtonState("checkbutton12");
     string search = getTextEntry("entry10");
     hideDialog("find_dialog");
 
     VRScript* s = getSelectedScript();
-    if (!sa and s == 0) return;
+    if (!sa && s == 0) return;
 
     VRScene* scene = VRSceneManager::getCurrent();
 
@@ -810,7 +812,7 @@ void VRGuiScripts::on_find_diag_find_clicked() {
     }
     out << endl;
 
-    VRGuiBits::write_to_terminal( out.str() );
+    VRGuiManager::get()->printInfo( out.str() );
     updateList();
 }
 
@@ -940,7 +942,7 @@ VRGuiScripts::VRGuiScripts() {
     // fill combolists
     const char *arg_types[] = {"int", "float", "str", "VRPyObjectType", "VRPyTransformType", "VRPyGeometryType", "VRPyLightType", "VRPyLodType", "VRPyDeviceType", "VRPyHapticType", "VRPySocketType"};
     const char *trigger_types[] = {"none", "on_scene_load", "on_timeout", "on_device", "on_socket"};
-    const char *device_types[] = {"mouse", "keyboard", "flystick", "haptic", "mobile", "vrpn_device"}; // TODO: get from a list in devicemanager or something
+    const char *device_types[] = {"mouse", "keyboard", "flystick", "haptic", "mobile", "vrpn_device"}; // TODO: get from a list in devicemanager || something
     const char *trigger_states[] = {"Pressed", "Released"};
     const char *script_types[] = {"Python", "GLSL", "HTML"};
     fillStringListstore("arg_types", vector<string>(arg_types, end(arg_types)) );

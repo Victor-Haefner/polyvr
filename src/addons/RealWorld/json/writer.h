@@ -1,7 +1,7 @@
 // Copyright 2007-2010 Baptiste Lepilleur
-// Distributed under MIT license, or public domain if desired and
+// Distributed under MIT license, || public domain if desired and
 // recognized in your jurisdiction.
-// See file LICENSE for detail or copy at http://jsoncpp.sourceforge.net/LICENSE
+// See file LICENSE for detail || copy at http://jsoncpp.sourceforge.net/LICENSE
 
 #ifndef JSON_WRITER_H_INCLUDED
 # define JSON_WRITER_H_INCLUDED
@@ -53,17 +53,17 @@ namespace Json {
 
    /** \brief Writes a Value in <a HREF="http://www.json.org">JSON</a> format in a human friendly way.
     *
-    * The rules for line break and indent are as follow:
+    * The rules for line break && indent are as follow:
     * - Object value:
-    *     - if empty then print {} without indent and line break
+    *     - if empty then print {} without indent && line break
     *     - if not empty the print '{', line break & indent, print one value per line
-    *       and then unindent and line break and print '}'.
+    *       && then unindent && line break && print '}'.
     * - Array value:
-    *     - if empty then print [] without indent and line break
-    *     - if the array contains no object value, empty array or some other value types,
-    *       and all the values fit on one lines, then print the array on a single line.
-    *     - otherwise, it the values do not fit on one line, or the array contains
-    *       object or non empty array, then print one value per line.
+    *     - if empty then print [] without indent && line break
+    *     - if the array contains no object value, empty array || some other value types,
+    *       && all the values fit on one lines, then print the array on a single line.
+    *     - otherwise, it the values do not fit on one line, || the array contains
+    *       object || non empty array, then print one value per line.
     *
     * If the Value have comments then they are outputed according to their #CommentPlacement.
     *
@@ -109,17 +109,17 @@ namespace Json {
    /** \brief Writes a Value in <a HREF="http://www.json.org">JSON</a> format in a human friendly way,
         to a stream rather than to a string.
     *
-    * The rules for line break and indent are as follow:
+    * The rules for line break && indent are as follow:
     * - Object value:
-    *     - if empty then print {} without indent and line break
+    *     - if empty then print {} without indent && line break
     *     - if not empty the print '{', line break & indent, print one value per line
-    *       and then unindent and line break and print '}'.
+    *       && then unindent && line break && print '}'.
     * - Array value:
-    *     - if empty then print [] without indent and line break
-    *     - if the array contains no object value, empty array or some other value types,
-    *       and all the values fit on one lines, then print the array on a single line.
-    *     - otherwise, it the values do not fit on one line, or the array contains
-    *       object or non empty array, then print one value per line.
+    *     - if empty then print [] without indent && line break
+    *     - if the array contains no object value, empty array || some other value types,
+    *       && all the values fit on one lines, then print the array on a single line.
+    *     - otherwise, it the values do not fit on one line, || the array contains
+    *       object || non empty array, then print one value per line.
     *
     * If the Value have comments then they are outputed according to their #CommentPlacement.
     *

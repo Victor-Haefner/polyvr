@@ -9,17 +9,16 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRSocket;
-class HTTP_args;
 
 class VRMobile : public VRDevice {
     private:
         int port;
         VRSocket* soc;
-        VRFunction<HTTP_args*>* cb;
+        VRFunction<void*>* cb;
 
         map<string, string> websites;
 
-        void callback(HTTP_args* args);
+        void callback(void* args);
         void updateMobilePage();
 
     public:

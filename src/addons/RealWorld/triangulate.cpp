@@ -75,7 +75,7 @@ bool Triangulate::Snip(const Vector2dVector &contour,int u,int v,int w,int n,int
 
 bool Triangulate::Process(const Vector2dVector &contour,Vector2dVector &result)
 {
-  /* allocate and initialize list of Vertices in polygon */
+  /* allocate && initialize list of Vertices in polygon */
 
   int n = contour.size();
   if ( n < 3 ) return false;

@@ -27,17 +27,17 @@ void VRCameraManager::addCamera(VRCamera* cam) {
 }
 
 VRCamera* VRCameraManager::getCamera(int ID) {
-    if (ID < 0 or ID > (int)cameras.size()) return 0;
+    if (ID < 0 || ID > (int)cameras.size()) return 0;
     return cameras[ID];
 }
 
 void VRCameraManager::setActiveCamera(int ID) {
-    if (ID < 0 or ID > (int)cameras.size()) return;
+    if (ID < 0 || ID > (int)cameras.size()) return;
     active = ID;
 }
 
 VRCamera* VRCameraManager::getActiveCamera() {
-    if (active < 0 or active > (int)cameras.size()) return 0;
+    if (active < 0 || active > (int)cameras.size()) return 0;
     return cameras[active];
 }
 

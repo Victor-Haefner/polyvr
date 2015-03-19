@@ -14,12 +14,12 @@ class IJsonServerListener {
     public:
 
         /**
-         * Describes the state the simulator is in or should change to.
+         * Describes the state the simulator is in || should change to.
          */
         enum SIMULATORSTATE {
             /// The server is simulating the network.
             RUNNING,
-            /// The server is paused and should not run its mainloop
+            /// The server is paused && should not run its mainloop
             PAUSED,
             /// The server should restart.
             RESTART,
@@ -30,7 +30,7 @@ class IJsonServerListener {
         /**
          * Handles post requests.
          * If a client sends informations via post, this funktion
-         * is called and its return value passed back to the client.
+         * is called && its return value passed back to the client.
          * @param input The data send by the client.
          * @return A JSON-structure to send back to the client.
          */
@@ -46,7 +46,7 @@ class IJsonServerListener {
         /**
          * Provides information about a viewarea.
          * If a client asks for information about a viewarea, this funktion
-         * is called and its return value passed to the client.
+         * is called && its return value passed to the client.
          * @param id The id of the viewarea that should be reported about.
          * @return A JSON-structure with informations about vehicles and
          *         traffic-lights in the area.

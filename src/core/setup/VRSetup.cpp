@@ -44,8 +44,11 @@ VRSetup::VRSetup(string name) {
     user = 0;
     tracking = "None";
 
-    setup_layer = new VRVisualLayer("setup");
+    setup_layer = new VRVisualLayer("setup", "setup.png");
     setup_layer->setCallback( new VRFunction<bool>("showSetup", boost::bind(&VRSetup::showSetup, this, _1) ) );
+
+    setup_layer = new VRVisualLayer("stats", "stats.png");
+    setup_layer->setCallback( new VRFunction<bool>("showStats", boost::bind(&VRViewManager::showViewStats, this, 0, _1) ) );
 }
 
 VRSetup::~VRSetup() {
@@ -61,7 +64,7 @@ void VRSetup::setScene(VRScene* scene) {
     setViewCamera(cam, -1);
 
     VRMouse* mouse = (VRMouse*)getDevice("mouse");
-    if (mouse and cam) mouse->setCamera(cam);
+    if (mouse && cam) mouse->setCamera(cam);
 
     setViewBackground(scene->getBackground());
 
@@ -128,6 +131,7 @@ void VRSetup::save(string file) {
 }
 
 void VRSetup::load(string file) {
+    cout << " load setup " << file << endl;
     xmlpp::DomParser parser;
     parser.set_validate(false);
     parser.parse_file(file.c_str());

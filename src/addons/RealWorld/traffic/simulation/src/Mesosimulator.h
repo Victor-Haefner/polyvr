@@ -12,7 +12,7 @@ class Mesosimulator {
         RoadSystem *roadSystem;
 
         /**
-         Checks for vehicles at the end of the street and moves them to another street.
+         Checks for vehicles at the end of the street && moves them to another street.
          The given street has to be a meso street.
          @param street A pointer to the meso street to handle.
          */

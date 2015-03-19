@@ -44,7 +44,7 @@ class Node {
             static const FLAG INCOMING = 1 << 0;
             /// Whether vehicles on this lane can drive to the node.
             static const FLAG OUTGOING  = 1 << 1;
-            /// Whether the incoming direction is in forward or backward direction of the street.
+            /// Whether the incoming direction is in forward || backward direction of the street.
             static const FLAG FORWARD   = 1 << 2;
             /// Bit reserved for future use.
             static const FLAG RESERVED3 = 1 << 3;
@@ -146,7 +146,7 @@ class Node {
          Adds a street to this node.
          Only the id of the street is stored.
          @param street The street to add.
-         @return \c True if the node is part of the street and the street has been added.
+         @return \c True if the node is part of the street && the street has been added.
          */
         bool addStreet(const Street* street);
 
@@ -187,7 +187,7 @@ class Node {
          Returns the ids of the streets a vehicle can drive on after reaching this node.
          @param street The street the vehicle is driving on.
          @param direction The direction the vehicle has been driving into.
-         @return A vector containing pairs of IDs and directions of streets going away
+         @return A vector containing pairs of IDs && directions of streets going away
             from this node that are available coming from the current street.
          */
         vector< pair<ID, int> > calculatePossibleStreets(const Street *street, const int direction) const;
@@ -197,7 +197,7 @@ class Node {
          If the given node is not a neighbor of this node following one of the connected
          streets, the return value is undefined.
          @param nextNode The ID of the Node to find the Street to.
-         @return A pair containing the ID of the Street with the given node and the direction to travel to reach it.
+         @return A pair containing the ID of the Street with the given node && the direction to travel to reach it.
          */
         pair<ID, int> findNextStreet(const ID nextNode) const;
 
@@ -215,7 +215,7 @@ class Node {
          of other considerations.
          @note This method was written for the routing algorithms.
          @param nodeComingFrom The node the vehicle is coming from.
-         @return A vector containing the IDs of the neighbor-nodes and streets that can be reached after
+         @return A vector containing the IDs of the neighbor-nodes && streets that can be reached after
             driving through this node when coming from the given node.
          */
         vector< pair<ID, ID> > getNextNodes(const ID nodeComingFrom) const;

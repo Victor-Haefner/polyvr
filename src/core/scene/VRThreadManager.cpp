@@ -99,6 +99,4 @@ void VRThreadManager::printThreadsStats() {
 
 void VRThreadManager::ThreadManagerUpdate() {}
 
-map<int, VRThread*> VRThreadManager::threads = map<int, VRThread*>();
-
 OSG_END_NAMESPACE;

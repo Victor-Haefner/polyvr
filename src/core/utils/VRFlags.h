@@ -1,19 +1,19 @@
 #ifndef VRFLAGS_H_INCLUDED
 #define VRFLAGS_H_INCLUDED
 
-#include <map>
+#include <unordered_map>
+#include <string>
 
 class VRFlags {
     private:
-        std::map<int, bool> flags;
+        std::unordered_map<int, bool> flags;
 
     public:
         VRFlags();
 
-        void addFlag(int);
-        bool hasFlag(int);
-        void setFlag(int, bool = true);
-        bool getFlag(int);
+        void setFlag(std::string flag, bool b = true);
+        bool hasFlag(std::string flag);
+        bool getFlag(std::string flag);
 
         void printFlags();
 };

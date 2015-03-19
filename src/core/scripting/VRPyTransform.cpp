@@ -64,7 +64,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"getUp", (PyCFunction)VRPyTransform::getUp, METH_NOARGS, "Return the object's up vector" },
     {"getScale", (PyCFunction)VRPyTransform::getScale, METH_NOARGS, "Return the object's scale vector" },
     {"setWorldFrom", (PyCFunction)VRPyTransform::setWFrom, METH_VARARGS, "Set the object's world position" },
-    {"setPose", (PyCFunction)VRPyTransform::setPose, METH_VARARGS, "Set the object's from dir and up vector" },
+    {"setPose", (PyCFunction)VRPyTransform::setPose, METH_VARARGS, "Set the object's from dir && up vector" },
     {"setPosition", (PyCFunction)VRPyTransform::setFrom, METH_VARARGS, "Set the object's from vector" },
     {"setFrom", (PyCFunction)VRPyTransform::setFrom, METH_VARARGS, "Set the object's from vector" },
     {"setAt", (PyCFunction)VRPyTransform::setAt, METH_VARARGS, "Set the object's at vector" },
@@ -75,7 +75,6 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setPlaneConstraints", (PyCFunction)VRPyTransform::setPlaneConstraints, METH_VARARGS, "Constraint the object on a plane - setPlaneConstraints(nxf, nyf, nzf)" },
     {"setAxisConstraints", (PyCFunction)VRPyTransform::setAxisConstraints, METH_VARARGS, "Constraint the object on an axis - TODO -> to test, may work" },
     {"setRotationConstraints", (PyCFunction)VRPyTransform::setRotationConstraints, METH_VARARGS, "Constraint the object's rotation - setRotationConstraints(xi, yi, zi)" },
-    {"duplicate", (PyCFunction)VRPyTransform::duplicate, METH_NOARGS, "duplicate transform" },
     {"physicalize", (PyCFunction)VRPyTransform::physicalize, METH_VARARGS, "physicalize subtree - physicalize( physicalized , dynamic , concave )" },
     {"setGhost", (PyCFunction)VRPyTransform::setGhost, METH_VARARGS, "Set the physics object to be a ghost object - setGhost(bool)" },
     {"attach", (PyCFunction)VRPyTransform::setPhysicsConstraintTo, METH_VARARGS, "create a constraint between this obejct and another - setPhysicsConstraintTo( Transform , Constraint )" },
@@ -290,13 +289,6 @@ PyObject* VRPyTransform::setRotationConstraints(VRPyTransform* self, PyObject* a
     Py_RETURN_TRUE;
 }
 
-PyObject* VRPyTransform::duplicate(VRPyTransform* self) {// TODO: can a duplicate for each object be avoided?
-    if (self->obj == 0) { PyErr_SetString(err, "C Child is invalid"); return NULL; }
-    OSG::VRTransform* d = (OSG::VRTransform*)self->obj->duplicate();
-    d->addAttachment("dynamicaly_generated", 0);
-    return VRPyTransform::fromPtr( d );
-}
-
 PyObject* VRPyTransform::physicalize(VRPyTransform* self, PyObject *args) {
     int b1, b2, b3;
     if (! PyArg_ParseTuple(args, "iii", &b1, &b2, &b3)) return NULL;
@@ -334,7 +326,7 @@ PyObject* VRPyTransform::setCollisionMargin(VRPyTransform* self, PyObject *args)
 
 PyObject* VRPyTransform::setCollisionGroup(VRPyTransform* self, PyObject *args) {
     int i = parseInt(args);
-    if (i > 15 or i < 0) { PyErr_SetString(err, "VRPyTransform::setCollisionGroup: only 15 groups/masks available, group 0 means no collisions at all"); return NULL; }
+    if (i > 15 || i < 0) { PyErr_SetString(err, "VRPyTransform::setCollisionGroup: only 15 groups/masks available, group 0 means no collisions at all"); return NULL; }
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setCollisionGroup: C Object is invalid"); return NULL; }
     self->obj->getPhysics()->setCollisionGroup(pow(2,i));
     Py_RETURN_TRUE;
@@ -350,7 +342,7 @@ PyObject* VRPyTransform::setCollisionShape(VRPyTransform* self, PyObject *args) 
 
 PyObject* VRPyTransform::setCollisionMask(VRPyTransform* self, PyObject *args) {
     int i = parseInt(args);
-    if (i > 15 or i < 0) { PyErr_SetString(err, "VRPyTransform::setCollisionMask: only 15 groups/masks available, group 0 means no collisions at all"); return NULL; }
+    if (i > 15 || i < 0) { PyErr_SetString(err, "VRPyTransform::setCollisionMask: only 15 groups/masks available, group 0 means no collisions at all"); return NULL; }
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setCollisionMask: C Object is invalid"); return NULL; }
     self->obj->getPhysics()->setCollisionMask(pow(2,i));
     Py_RETURN_TRUE;

@@ -13,7 +13,7 @@
 using namespace std;
 
 /**
- A class that represents a vehicle consisting of driver and type.
+ A class that represents a vehicle consisting of driver && type.
  */
 class Vehicle {
 
@@ -42,7 +42,7 @@ class Vehicle {
         /// A string with information about the calculation of the current speed.
         string speedInfluences;
 
-        /// A set of vehicles that are near this vehicles and are regarded for collision avoidance.
+        /// A set of vehicles that are near this vehicles && are regarded for collision avoidance.
         set<pair<double, ID> > nearVehicles;
 #endif // WITH_GUI
 
@@ -57,9 +57,9 @@ class Vehicle {
         /// The id of the vehicle type.
         ID vehicleType;
 
-        /// Whether the simulation or the client is controlling this car.
+        /// Whether the simulation || the client is controlling this car.
         /// Works as a timer, too:
-        /// \li If positive, the value will be decreased and no extensive calculations will be done for the vehicle.
+        /// \li If positive, the value will be decreased && no extensive calculations will be done for the vehicle.
         /// \li If \c 0, the simulation will control it.
         /// \li If negativ, the client will control it.
         int controller;
@@ -158,7 +158,7 @@ class Vehicle {
 
 
         /**
-         Whether the simulation or the client is controlling this car.
+         Whether the simulation || the client is controlling this car.
          \li Works as a timer, too: If positive, it will be decreased.
          \li If \c 0, the simulation will control it.
          \li If negativ, the client will control it.
@@ -259,7 +259,7 @@ class Vehicle {
         deque<ID>* getRoute();
 
         /**
-         Sets the street and the lane of the vehicle.
+         Sets the street && the lane of the vehicle.
          @param street The id of the street.
          @param lane The number of the lane.
          */
