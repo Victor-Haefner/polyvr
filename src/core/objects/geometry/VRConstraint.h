@@ -12,7 +12,7 @@ class VRConstraint {
     private:
         bool active;
         bool local;
-        Matrix reference;
+        Matrix refMatrix;
 
         float min[6];
         float max[6];

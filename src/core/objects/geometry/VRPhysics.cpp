@@ -34,7 +34,6 @@ struct VRPhysicsJoint {
 
 VRPhysics::VRPhysics(OSG::VRTransform* t) {
     vr_obj = t;
-
     world = 0;
     body = 0;
     shape = 0;
@@ -78,6 +77,7 @@ void VRPhysics::setDynamic(bool b) { dynamic = b; update(); }
 bool VRPhysics::isDynamic() { return dynamic; }
 void VRPhysics::setMass(float m) { mass = m; update(); }
 float VRPhysics::getMass() { return mass; }
+void VRPhysics::setGravity(OSG::Vec3f v) { body->setGravity(btVector3 (v.x(),v.y(),v.z())); }
 void VRPhysics::setCollisionMargin(float m) { collisionMargin = m; update(); }
 float VRPhysics::getCollisionMargin() { return collisionMargin; }
 void VRPhysics::setCollisionGroup(int g) { collisionGroup = g; update(); }
@@ -89,11 +89,16 @@ int VRPhysics::getActivationMode() { return activation_mode; }
 void VRPhysics::setGhost(bool b) { ghost = b; update(); }
 bool VRPhysics::isGhost() { return ghost; }
 OSG::Vec3f VRPhysics::toVec3f(btVector3 v) { return OSG::Vec3f(v[0], v[1], v[2]); }
+void VRPhysics::setDamping(float lin, float ang) { body->setDamping(btScalar(lin),btScalar(ang)); }
+OSG::Vec3f VRPhysics::getForce() { return toVec3f(body->getTotalForce());}
+OSG::Vec3f VRPhysics::getTorque() { return toVec3f(body->getTotalTorque());}
+
+
+
 
 vector<VRCollision> VRPhysics::getCollisions() {
     vector<VRCollision> res;
     if (!physicalized) return res;
-
     if (!ghost) {
         int numManifolds = world->getDispatcher()->getNumManifolds();
         for (int i=0;i<numManifolds;i++) {
@@ -111,6 +116,7 @@ vector<VRCollision> VRPhysics::getCollisions() {
                     c.pos1 = toVec3f( pt.getPositionWorldOnA() );
                     c.pos2 = toVec3f( pt.getPositionWorldOnB() );
                     c.norm = toVec3f( pt.m_normalWorldOnB );
+                    c.distance = pt.getDistance();
                     res.push_back(c);
                 }
             }
@@ -146,6 +152,7 @@ vector<VRCollision> VRPhysics::getCollisions() {
                     c.pos1 = toVec3f( pt.getPositionWorldOnA() );
                     c.pos2 = toVec3f( pt.getPositionWorldOnB() );
                     c.norm = toVec3f( pt.m_normalWorldOnB*directionSign );
+                    c.distance = pt.getDistance();
                     res.push_back(c);
                 }
             }
@@ -241,6 +248,8 @@ void VRPhysics::update() {
     scene->physicalize(vr_obj);
     updateConstraints();
 }
+
+
 
 
 btCollisionShape* VRPhysics::getBoxShape() {
@@ -394,6 +403,7 @@ OSG::Matrix VRPhysics::fromBTTransform(const btTransform t) {
 
 void VRPhysics::pause(bool b) {
     return;
+
     if (body == 0) return;
     if (dynamic == !b) return;
     setDynamic(!b);
@@ -404,6 +414,7 @@ void VRPhysics::resetForces() {
     body->setAngularVelocity(btVector3(0,0,0));
     body->setLinearVelocity(btVector3(0,0,0));
     body->clearForces();
+
 }
 
 void VRPhysics::applyImpulse(OSG::Vec3f i) {
@@ -411,6 +422,48 @@ void VRPhysics::applyImpulse(OSG::Vec3f i) {
     if (mass == 0) return;
     body->setLinearVelocity(btVector3(i[0]/mass, i[1]/mass, i[2]/mass));
 }
+
+void VRPhysics::addForce(OSG::Vec3f i) {
+   if (body == 0) return;
+   if (mass == 0) return;
+   btVector3 ttlForce = body->getTotalForce();
+   btVector3 force = btVector3(i.x(), i.y(), i.z());
+   //ttlForce += force;
+   body->applyForce(force,btVector3(0.0,0.0,0.0));
+}
+
+void VRPhysics::addTorque(OSG::Vec3f i) {
+   if (body == 0) return;
+   if (mass == 0) return;
+   btVector3 ttlTorque = btVector3(i.x(), i.y(), i.z());
+   body->applyTorque(ttlTorque);
+}
+
+
+
+
+OSG::Vec3f VRPhysics::getLinearVelocity() {
+
+     if (body == 0) return OSG::Vec3f (0.0f,0.0f,0.0f);
+     btVector3 tmp = body->getLinearVelocity();
+     OSG::Vec3f result = OSG::Vec3f ( tmp.getX(), tmp.getY(), tmp.getZ());
+     return result;
+}
+
+OSG::Vec3f VRPhysics::getAngularVelocity() {
+
+     if (body == 0) return OSG::Vec3f (0.0f,0.0f,0.0f);
+     btVector3 tmp = body->getAngularVelocity();
+     //btVector3 tmp2 = body->getInterpolationAngularVelocity();
+     //cout<<"\n "<<"\n "<< (float)tmp.getX() << "    " <<(float)tmp.getY() <<  "    " <<(float)tmp.getZ() << "\n ";
+     //cout<<"\n "<<"\n "<<(float)tmp2.getX() << "    " <<(float)tmp2.getY() <<  "    " <<(float)tmp2.getZ() << "\n ";
+
+     OSG::Vec3f result = OSG::Vec3f (tmp.getX(), tmp.getY(), tmp.getZ());
+     return result;
+}
+
+
+
 
 void VRPhysics::updateTransformation(OSG::VRTransform* t) {
     if (body) {
@@ -424,6 +477,16 @@ void VRPhysics::updateTransformation(OSG::VRTransform* t) {
     }
 }
 
+
+
+btTransform VRPhysics::getTransform() {
+    if (body == 0) return btTransform();
+    btTransform t;
+
+    body->getMotionState()->getWorldTransform(t);
+    return t;
+}
+
 OSG::Matrix VRPhysics::getTransformation() {
     if (body == 0) return OSG::Matrix();
     btTransform t;
@@ -432,11 +495,59 @@ OSG::Matrix VRPhysics::getTransformation() {
     return fromBTTransform(t, scale);
 }
 
+btMatrix3x3 VRPhysics::getInertiaTensor() {
+    if (body == 0) return btMatrix3x3();
+    body->updateInertiaTensor();
+    btMatrix3x3 m = body->getInvInertiaTensorWorld();
+    return m.inverse();
+}
+
+
+
+
 void VRPhysics::setTransformation(btTransform t) {
     if (body == 0) return;
     body->setWorldTransform(t);
 }
 
+
+
+float VRPhysics::getConstraintAngle(VRPhysics* to, int axis) {
+    float ret = 0.0;
+    if(body) {
+        VRPhysicsJoint* joint = joints[to];
+        if(joint) {
+        ret = joint->btJoint->getAngle(axis);
+        }
+    }
+    return ret;
+}
+
+void VRPhysics::deleteConstraints(VRPhysics* with) {
+    VRPhysicsJoint* joint =joints[with];
+    if(joint != 0) {
+        world->removeConstraint(joint->btJoint);
+    }
+
+}
+
+btTransform VRPhysics::fromMatrix(const OSG::Matrix& m) {
+ btVector3 pos = btVector3(m[3][0], m[3][1], m[3][2]);
+ /*btMatrix3x3 mat = btMatrix3x3(m[0][0], m[0][1], m[0][2],
+ m[1][0], m[1][1], m[1][2],
+ m[2][0], m[2][1], m[2][2]);*/
+ btMatrix3x3 mat = btMatrix3x3(m[0][0], m[1][0], m[2][0],
+ m[0][1], m[1][1], m[2][1],
+ m[0][2], m[1][2], m[2][2]);
+ btQuaternion q;
+ mat.getRotation(q);
+
+ btTransform bltTrans;//Bullets transform
+ bltTrans.setIdentity();
+ bltTrans.setOrigin(pos);
+ bltTrans.setRotation(q);
+ return bltTrans;
+}
 void VRPhysics::setConstraint(VRPhysics* p, OSG::VRConstraint* c, OSG::VRConstraint* cs) {
     if (body == 0) return;
     if (p->body == 0) return;
@@ -449,6 +560,9 @@ void VRPhysics::setConstraint(VRPhysics* p, OSG::VRConstraint* c, OSG::VRConstra
     if (p->joints2.count(this) == 0) p->joints2[this] = joints[p];
     updateConstraint(p);
 }
+
+
+
 
 void VRPhysics::updateConstraint(VRPhysics* p) {
     if (body == 0) return;
@@ -465,12 +579,23 @@ void VRPhysics::updateConstraint(VRPhysics* p) {
         joint->btJoint = 0;
     }
 
+     //the two world transforms
+    btTransform localA = btTransform();
+    localA.setIdentity();
+    btTransform localB = btTransform();
+    localB.setIdentity();
+
+    //Constraint.getReferenceFrameInB
+    OSG::Matrix m = c->getReference();
+    localB = fromMatrix(m);
+
     // TODO: possible bug - p is not valid, may have been deleted!
 
     //cout << "\nCreate Joint " << fromTransform(body->getWorldTransform())[3] << " " << fromTransform(p->body->getWorldTransform())[3] << endl;
-    btTransform t = p->body->getWorldTransform().inverse();
-    t.mult(t, body->getWorldTransform()); // the position of the first object in the local coords of the second
-    joint->btJoint = new btGeneric6DofSpringConstraint(*body, *p->body, btTransform::getIdentity(), t, true);
+    //btTransform t = p->body->getWorldTransform().inverse();
+    //t.mult(t, body->getWorldTransform()); // the position of the first object in the local coords of the second
+
+    joint->btJoint = new btGeneric6DofSpringConstraint(*body, *p->body, localA, localB, false);
     world->addConstraint(joint->btJoint, true);
 
     for (int i=0; i<6; i++) {

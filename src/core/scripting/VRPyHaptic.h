@@ -3,6 +3,8 @@
 
 #include "VRPyBase.h"
 #include "core/setup/devices/VRHaptic.h"
+#include "core/objects/geometry/VRPhysics.h"
+
 
 struct VRPyHaptic : VRPyBaseT<OSG::VRHaptic> {
     static PyMemberDef members[];
@@ -10,6 +12,10 @@ struct VRPyHaptic : VRPyBaseT<OSG::VRHaptic> {
 
     static PyObject* setForce(VRPyHaptic* self, PyObject* args);
     static PyObject* setSimulationScales(VRPyHaptic* self, PyObject* args);
+    static PyObject* updateVirtMech(VRPyHaptic* self);
+    static PyObject* attachTransform(VRPyHaptic* self, PyObject* args);
+    static PyObject* detachTransform(VRPyHaptic* self);
+    static PyObject* getButtonStates(VRPyHaptic* self);
 };
 
 #endif // VRPYHAPTIC_H_INCLUDED

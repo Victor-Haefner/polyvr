@@ -3,7 +3,7 @@
 
 #include "VRPyObject.h"
 #include "core/objects/geometry/VRConstraint.h"
-
+#include <OpenSG/OSGQuaternion.h>
 struct VRPyConstraint : VRPyBaseT<OSG::VRConstraint> {
     static PyMemberDef members[];
     static PyMethodDef methods[];
@@ -12,6 +12,7 @@ struct VRPyConstraint : VRPyBaseT<OSG::VRConstraint> {
     static PyObject* setLocal(VRPyConstraint* self, PyObject* args);
     static PyObject* free(VRPyConstraint* self, PyObject* args);
     static PyObject* lock(VRPyConstraint* self, PyObject* args);
+    static PyObject* setLocalOffset(VRPyConstraint* self, PyObject* args);
 };
 
 #endif // VRPYCONSTRAINT_H_INCLUDED

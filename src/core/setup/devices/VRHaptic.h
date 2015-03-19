@@ -2,6 +2,8 @@
 #define VRHAPTIC_H_INCLUDED
 
 #include "VRDevice.h"
+#include "core/objects/geometry/VRPhysics.h"
+
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -15,6 +17,7 @@ class VRHaptic : public VRDevice {
         string IP;
         string type;
         VRFunction<int>* updateFkt;
+        Vec3i button_states;
 
         void applyTransformation(VRTransform* t);
 
@@ -24,7 +27,10 @@ class VRHaptic : public VRDevice {
 
         void setForce(Vec3f force, Vec3f torque);
         void setSimulationScales(float scale, float forces);
-
+        void attachTransform(VRTransform* trans);
+        void detachTransform();
+        void updateVirtMech();
+        Vec3i getButtonStates();
         void setIP(string IP);
         string getIP();
 

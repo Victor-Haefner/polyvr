@@ -34,6 +34,7 @@ struct VRPyTransform : VRPyBaseT<OSG::VRTransform> {
     static PyObject* setGhost(VRPyTransform* self, PyObject *args);
     static PyObject* setPhysicsConstraintTo(VRPyTransform* self, PyObject *args);
     static PyObject* setMass(VRPyTransform* self, PyObject *args);
+    static PyObject* setGravity(VRPyTransform* self, PyObject *args);
     static PyObject* setCollisionMargin(VRPyTransform* self, PyObject *args);
     static PyObject* setCollisionGroup(VRPyTransform* self, PyObject *args);
     static PyObject* setCollisionMask(VRPyTransform* self, PyObject *args);
@@ -41,6 +42,13 @@ struct VRPyTransform : VRPyBaseT<OSG::VRTransform> {
     static PyObject* getCollisions(VRPyTransform* self);
     static PyObject* setPhysicsActivationMode(VRPyTransform* self, PyObject *args);
     static PyObject* applyImpulse(VRPyTransform* self, PyObject *args);
+    static PyObject* applyForce(VRPyTransform* self, PyObject *args);
+    static PyObject* applyTorque(VRPyTransform* self, PyObject *args);
+    static PyObject* getForce(VRPyTransform* self);
+    static PyObject* getTorque(VRPyTransform* self);
+    static PyObject* getConstraintAngleWith(VRPyTransform* self, PyObject *args);
+    static PyObject* deletePhysicsConstraints(VRPyTransform* self, PyObject* args);
+    static PyObject* setDamping(VRPyTransform* self, PyObject* args);
 
     static PyObject* setPickable(VRPyTransform* self, PyObject* args);
     static PyObject* setPlaneConstraints(VRPyTransform* self, PyObject* args);
