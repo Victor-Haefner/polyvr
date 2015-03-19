@@ -207,11 +207,9 @@ VRObject* VRSceneLoader::parseOSGTree(NodeRecPtr n, VRObject* parent, string nam
     }
 
     else if (t_name == "Transform") {
-        cout << " Transform_" << name << " " << dynamic_cast<Transform *>(n->getCore())->getMatrix() << endl;
         if (n->getNChildren() == 1) { // try to optimize the tree by avoiding obsolete transforms
             string tp = n->getChild(0)->getCore()->getTypeName();
             if (tp == "Geometry") {
-                cout << "\nB " << name << endl;
                 geoTrans = n->getCore();
                 tmp = parent;
             }
@@ -225,6 +223,7 @@ VRObject* VRSceneLoader::parseOSGTree(NodeRecPtr n, VRObject* parent, string nam
     }
 
     else if (t_name == "MaterialGroup") {
+        cout << "Warning: unsupported MaterialGroup\n";
         tmp = new VRObject(name);
         tmp->setCore(core, t_name);
     }

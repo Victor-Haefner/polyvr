@@ -1,17 +1,23 @@
 #include "VRMaterial.h"
+
 #include <OpenSG/OSGSimpleMaterial.h>
 #include <OpenSG/OSGSimpleTexturedMaterial.h>
+#include <OpenSG/OSGVariantMaterial.h>
+#include <OpenSG/OSGChunkMaterial.h>
+#include <OpenSG/OSGMultiPassMaterial.h>
+#include <OpenSG/OSGPrimeMaterial.h>
+#include <OpenSG/OSGCompositeMaterial.h>
+#include <OpenSG/OSGSwitchMaterial.h>
+
 #include <OpenSG/OSGTextureObjChunk.h>
 #include <OpenSG/OSGTextureEnvChunk.h>
 #include <OpenSG/OSGTexGenChunk.h>
 #include <OpenSG/OSGLineChunk.h>
 #include <OpenSG/OSGPointChunk.h>
 #include <OpenSG/OSGPolygonChunk.h>
-#include <OpenSG/OSGChunkMaterial.h>
 #include <OpenSG/OSGSimpleSHLChunk.h>
 #include <OpenSG/OSGTwoSidedLightingChunk.h>
 #include <OpenSG/OSGImage.h>
-#include <OpenSG/OSGMultiPassMaterial.h>
 #include <OpenSG/OSGClipPlaneChunk.h>
 #include "core/objects/VRTransform.h"
 #include "core/utils/toString.h"
@@ -220,11 +226,22 @@ void VRMaterial::loadContent(xmlpp::Element* e) {
 }
 
 void VRMaterial::setMaterial(MaterialRecPtr m) {
+    if ( dynamic_pointer_cast<MultiPassMaterial>(m) ) {
+        MultiPassMaterialRecPtr mm = dynamic_pointer_cast<MultiPassMaterial>(m);
+        for (int i=0; i<mm->getNPasses(); i++) {
+            if (i > 0) addPass();
+            setMaterial(mm->getMaterials(i));
+        }
+        setActivePass(0);
+        return;
+    }
+
     if ( isSMat(m) ) {
         SimpleMaterialRecPtr sm = dynamic_pointer_cast<SimpleMaterial>(m);
         setDiffuse(sm->getDiffuse());
         setAmbient(sm->getAmbient());
         setSpecular(sm->getSpecular());
+        return;
     }
     if ( isSTMat(m) ) {
         SimpleTexturedMaterialRecPtr stm = dynamic_pointer_cast<SimpleTexturedMaterial>(m);
@@ -232,6 +249,7 @@ void VRMaterial::setMaterial(MaterialRecPtr m) {
         setAmbient(stm->getAmbient());
         setSpecular(stm->getSpecular());
         setTexture(stm->getImage());
+        return;
     }
     if ( isCMat(m) ) {
         MaterialChunkRecPtr mc = 0;
@@ -250,11 +268,23 @@ void VRMaterial::setMaterial(MaterialRecPtr m) {
 
         auto md = mats[activePass];
         if (mc) mc->setBackMaterial(false);
-        if (mc) { md->mat->subChunk(md->colChunk);   md->colChunk = mc;   md->mat->addChunk(mc); }
-        if (bc) { md->mat->subChunk(md->blendChunk); md->blendChunk = bc; md->mat->addChunk(bc); }
-        if (ec) { md->mat->subChunk(md->envChunk);   md->envChunk = ec;   md->mat->addChunk(ec); }
-        if (tc) { md->mat->subChunk(md->texChunk);   md->texChunk = tc;   md->mat->addChunk(tc); }
+        if (mc) { if (md->colChunk) md->mat->subChunk(md->colChunk);   md->colChunk = mc;   md->mat->addChunk(mc); }
+        if (bc) { if (md->blendChunk) md->mat->subChunk(md->blendChunk); md->blendChunk = bc; md->mat->addChunk(bc); }
+        if (ec) { if (md->envChunk) md->mat->subChunk(md->envChunk);   md->envChunk = ec;   md->mat->addChunk(ec); }
+        if (tc) { if (md->texChunk) md->mat->subChunk(md->texChunk);   md->texChunk = tc;   md->mat->addChunk(tc); }
+        return;
     }
+
+    cout << "Warning: unhandled material type\n";
+    if (dynamic_pointer_cast<Material>(m)) cout << " Material" << endl;
+    if (dynamic_pointer_cast<PrimeMaterial>(m)) cout << "  PrimeMaterial" << endl;
+    if (dynamic_pointer_cast<SimpleMaterial>(m)) cout << "   SimpleMaterial" << endl;
+    if (dynamic_pointer_cast<SimpleTexturedMaterial>(m)) cout << "   SimpleTexturedMaterial" << endl;
+    if (dynamic_pointer_cast<VariantMaterial>(m)) cout << "   VariantMaterial" << endl;
+    if (dynamic_pointer_cast<ChunkMaterial>(m)) cout << "  ChunkMaterial" << endl;
+    if (dynamic_pointer_cast<MultiPassMaterial>(m)) cout << "   MultiPassMaterial" << endl;
+    if (dynamic_pointer_cast<CompositeMaterial>(m)) cout << "   CompositeMaterial" << endl;
+    if (dynamic_pointer_cast<SwitchMaterial>(m)) cout << "   SwitchMaterial" << endl;
 }
 
 MaterialRecPtr VRMaterial::getMaterial() { return passes; }
