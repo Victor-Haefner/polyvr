@@ -80,15 +80,15 @@ VRPhysicsManager::~VRPhysicsManager() {
 void VRPhysicsManager::updatePhysics(VRThread* thread) {
     if (dynamicsWorld == 0) return;
 
-
-
-
-
     static int t_last = glutGet(GLUT_ELAPSED_TIME);
     int t = glutGet(GLUT_ELAPSED_TIME);
     dynamicsWorld->stepSimulation((t-t_last)*0.001, 30);
     t_last = t;
+
+    for (auto f : updateFkts) (*f)(0);
 }
+
+void VRPhysicsManager::addPhysicsUpdateFunction(VRFunction<int>* fkt) { updateFkts.push_back(fkt); }
 
 void VRPhysicsManager::updatePhysObjects() {
 

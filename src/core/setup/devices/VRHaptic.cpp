@@ -12,10 +12,11 @@ VRHaptic::VRHaptic() : VRDevice("haptic") {
     v = new virtuose();
     setIP("172.22.151.200");
 
-
-
-    updateFkt = new VRFunction<int>( "Haptic update", boost::bind(&VRHaptic::applyTransformation, this, getBeacon()) );
+    updateObjFkt = new VRFunction<int>( "Haptic object update", boost::bind(&VRHaptic::applyTransformation, this, getBeacon()) );
     VRSceneManager::get()->addUpdateFkt(updateFkt);
+
+    auto fkt = new VRFunction<VRDevice*>( "Haptic on scene changed", boost::bind(&VRHaptic::on_scene_changed, this, _1) );
+    VRSceneManager::get()->getSignal_on_scene_load()->add(fkt);
 
     store("h_type", &type);
     store("h_ip", &IP);
@@ -26,9 +27,17 @@ VRHaptic::~VRHaptic() {
     v->disconnect();
 }
 
+void VRHaptic::on_scene_changed(VRDevice* dev) {
+    updateFkt = new VRFunction<int>( "Haptic update", boost::bind(&VRHaptic::updateHaptic, this, getBeacon()) );
+    VRSceneManager::getCurrent()->addPhysicsUpdateFunction(updateFkt); // TODO: do this when scene switch
+}
+
 void VRHaptic::applyTransformation(VRTransform* t) { // TODO: rotation
     if (!v->connected()) return;
     t->setMatrix(v->getPose());
+}
+
+void VRHaptic::updateHaptic(VRTransform* t) { // TODO: rotation
     //COMMAND_MODE_VIRTMECH
     updateVirtMech();
 }

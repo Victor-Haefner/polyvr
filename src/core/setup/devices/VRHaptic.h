@@ -19,6 +19,8 @@ class VRHaptic : public VRDevice {
         VRFunction<int>* updateFkt;
         Vec3i button_states;
 
+        void on_scene_changed(VRDevice* dev);
+
         void applyTransformation(VRTransform* t);
 
     public:

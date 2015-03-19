@@ -25,6 +25,8 @@ VRSceneManager::VRSceneManager() {
 	original_workdir = boost::filesystem::current_path().string();
 	cout << " PolyVR system directory: " << original_workdir << endl;
     searchExercisesAndFavorites();
+
+    on_scene_load = new VRSignal();
 }
 
 VRSceneManager::~VRSceneManager() { for (auto scene : scenes) delete scene.second; }
@@ -99,6 +101,8 @@ void VRSceneManager::newScene(string path) {
     addScene(scene);
 }
 
+VRSignal* VRSceneManager::getSignal_on_scene_load() { return on_scene_load; }
+
 void VRSceneManager::setActiveScene(VRScene* s) {
     if (scenes.size() == 0) { cout << "\n ERROR: No scenes defined " << flush; return; }
 
@@ -110,6 +114,8 @@ void VRSceneManager::setActiveScene(VRScene* s) {
     active = s->getName();
     VRSetupManager::getCurrent()->setScene(s);
     s->setActiveCamera(0);
+
+    on_scene_load->trigger();
 
     // todo:
     //  - add scene signals to setup devices
