@@ -47,6 +47,8 @@ VRPhysicsManager::VRPhysicsManager() {
     phys_mat->setTransparency(0.4);
 
     cout << "Init VRPhysicsManager" << endl;
+    t_last = glutGet(GLUT_ELAPSED_TIME);
+
 }
 
 VRPhysicsManager::~VRPhysicsManager() {
@@ -78,6 +80,10 @@ VRPhysicsManager::~VRPhysicsManager() {
 void VRPhysicsManager::updatePhysics(VRThread* thread) {
     if (dynamicsWorld == 0) return;
 
+
+
+
+
     static int t_last = glutGet(GLUT_ELAPSED_TIME);
     int t = glutGet(GLUT_ELAPSED_TIME);
     dynamicsWorld->stepSimulation((t-t_last)*0.001, 30);
@@ -85,9 +91,11 @@ void VRPhysicsManager::updatePhysics(VRThread* thread) {
 }
 
 void VRPhysicsManager::updatePhysObjects() {
+
     for (auto o : OSGobjs) {
         if (o.second->getPhysics()->isGhost()) o.second->updatePhysics();
     }
+
 
     collectCollisionPoints();
 

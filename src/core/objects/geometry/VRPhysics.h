@@ -16,6 +16,7 @@ struct VRCollision {
     OSG::Vec3f pos1;
     OSG::Vec3f pos2;
     OSG::Vec3f norm;
+    float distance;
     OSG::VRTransform* obj1 = 0;
     OSG::VRTransform* obj2 = 0;
 };
@@ -37,7 +38,7 @@ class VRPhysics : public OSG::VRStorage {
         float mass = 1.0;
         float collisionMargin = 0.3;
         string physicsShape;
-        map<VRPhysics*, VRPhysicsJoint*> joints;
+        map<VRPhysics*, VRPhysicsJoint*> joints ;
         map<VRPhysics*, VRPhysicsJoint*> joints2;
 
         OSG::VRTransform* vr_obj = 0;
@@ -76,6 +77,7 @@ class VRPhysics : public OSG::VRStorage {
 
         void setMass(float m);
         float getMass();
+        void setGravity(OSG::Vec3f v);
 
         void setCollisionMargin(float m);
         void setCollisionGroup(int g);
@@ -88,18 +90,41 @@ class VRPhysics : public OSG::VRStorage {
 
         void updateTransformation(OSG::VRTransform* t);
         OSG::Matrix getTransformation();
+        btTransform getTransform();
         void setTransformation(btTransform t);
 
         void pause(bool b = true);
         void resetForces();
         void applyImpulse(OSG::Vec3f i);
+        void addForce(OSG::Vec3f i);
+        void addTorque(OSG::Vec3f i);
+        float getConstraintAngle(VRPhysics *to, int axis);
+        void deleteConstraints(VRPhysics* with);
+        /**get the total force in this frame **/
+        OSG::Vec3f getForce();
+        /** get total torque**/
+        OSG::Vec3f getTorque();
+
+        OSG::Vec3f getLinearVelocity();
+        OSG::Vec3f getAngularVelocity();
+        btMatrix3x3 getInertiaTensor();
+        void setDamping(float lin,float ang);
+
+
+
+
+        btTransform fromMatrix(const OSG::Matrix& m);
+
 
         static vector<string> getPhysicsShapes();
         static btTransform fromVRTransform(OSG::VRTransform* t, OSG::Vec3f& scale);
         static OSG::Matrix fromBTTransform(const btTransform t);
         static OSG::Matrix fromBTTransform(const btTransform t, OSG::Vec3f scale);
 
+
+
         static OSG::Vec3f toVec3f(btVector3);
+
 
         void setConstraint(VRPhysics* p, OSG::VRConstraint* c, OSG::VRConstraint* cs);
         void updateConstraint(VRPhysics* p);

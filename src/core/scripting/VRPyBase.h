@@ -46,6 +46,7 @@ struct VRPyBase {
     static OSG::Line PyToLine(PyObject *li);
 
     static PyObject* toPyTuple(OSG::Vec3f v);
+    static PyObject* toPyTuple(OSG::Vec3i v);
     static PyObject* toPyTuple(OSG::Vec2f v);
 };
 

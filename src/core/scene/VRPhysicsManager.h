@@ -45,6 +45,8 @@ class VRPhysicsManager {
         VRMaterial* phys_mat = 0;
 
         vector<Vec3f> collisionPoints;
+        /** timestamp last frame**/
+        int t_last;
 
     protected:
         VRFunction<VRThread*>* updatePhysicsFkt;
