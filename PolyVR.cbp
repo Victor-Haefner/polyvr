@@ -376,6 +376,8 @@
 		<Unit filename="src/core/gui/VRGuiGeneral.h" />
 		<Unit filename="src/core/gui/VRGuiManager.cpp" />
 		<Unit filename="src/core/gui/VRGuiManager.h" />
+		<Unit filename="src/core/gui/VRGuiMonitor.cpp" />
+		<Unit filename="src/core/gui/VRGuiMonitor.h" />
 		<Unit filename="src/core/gui/VRGuiNav.cpp" />
 		<Unit filename="src/core/gui/VRGuiNav.h" />
 		<Unit filename="src/core/gui/VRGuiNet.cpp" />
