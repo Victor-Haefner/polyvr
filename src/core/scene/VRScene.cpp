@@ -65,6 +65,7 @@ void VRScene::initDevices() { // TODO: remove this after refactoring the navigat
     VRFlystick* flystick = (VRFlystick*)setup->getDevice("flystick");
     VRDevice* razer = setup->getDevice("vrpn_device");
 
+
     if (mouse) {
         initOrbit(getActiveCamera(), mouse); //TODO, load from xml
         initWalk(getActiveCamera(), mouse);

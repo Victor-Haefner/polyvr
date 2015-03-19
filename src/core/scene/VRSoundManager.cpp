@@ -1,14 +1,16 @@
-#include "VRSoundManager.h"
-#include "VRSceneManager.h"
-#include "VRScene.h"
 
 extern "C" {
+#include <libavresample/avresample.h>
 #include <libavutil/mathematics.h>
 #include <libavformat/avformat.h>
 #include <libswscale/swscale.h>
 #include <libavutil/opt.h>
-#include <libavresample/avresample.h>
 }
+
+
+#include "VRSoundManager.h"
+#include "VRSceneManager.h"
+#include "VRScene.h"
 
 #if _WIN32
 #include <al.h>
