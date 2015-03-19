@@ -8,3 +8,4 @@ bin
 examples/.cfg
 *.o
 wblog.log
+dependencies
