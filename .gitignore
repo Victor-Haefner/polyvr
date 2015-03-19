@@ -9,3 +9,4 @@ examples/.cfg
 *.o
 wblog.log
 dependencies
+PolyVR.cscope_file_list
