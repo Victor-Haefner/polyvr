@@ -9,8 +9,11 @@ using namespace std;
 
 class VRGuiMonitor {
     private:
-        Gtk::DrawingArea* da;
+        Glib::RefPtr<Gtk::DrawingArea> da;
+        Cairo::RefPtr<Cairo::Context> cr;
 
+        void draw_frame(int i, float w, float h, float x, int h0);
+        void draw_timeline(int N0, int N1, int DN, int w, int h, int h0);
         bool draw(GdkEventExpose* e);
 
     public:
