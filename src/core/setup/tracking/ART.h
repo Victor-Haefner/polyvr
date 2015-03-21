@@ -2,6 +2,7 @@
 #define ART_H_INCLUDED
 
 #include "core/utils/VRName.h"
+#include "core/utils/VRStorage.h"
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGMatrix.h>
 #include <map>
@@ -16,47 +17,51 @@ class VRFlystick;
 class VRTransform;
 
 struct ART_device : public VRName {
-    VRTransform* ent;
-    VRFlystick* dev;
+    Matrix m;
+    vector<int> buttons;
+    vector<float> joysticks;
+
+    VRTransform* ent = 0;
+    VRFlystick* dev = 0;
     Vec3f offset;
-    float scale;
-    int ID;
-    int type;
+    float scale = 1;
+    int ID = 0;
+    int type = 0;
 
     ART_device();
+    ART_device(int ID, int type);
+
+    int key();
+    static int key(int ID, int type);
+
+    void init();
+    void update();
 };
 
-class ART {
+class ART : public VRStorage {
     private:
-        bool active;
-        int port;
+        bool active = false;
+        int port = 5000;
+        int current_port = -1;
         Vec3f offset;
+        string up;
 
-        DTrack* dtrack;
-        map<string, ART_device*> devices;
-        map<string, ART_device*>::iterator itr;
+        DTrack* dtrack = 0;
+        map<int, ART_device*> devices;
 
-        //hohlt die Orientierung des getrackten Objektes
-        template<typename type>
-        void getRotation(type t, ART_device* dev, Matrix& m);
+        template<typename dev>
+        void getMatrix(dev t, Matrix& m);
 
-        //hohlt die Position des getrackten Objektes
-        template<typename type>
-        void getPosition(type t, ART_device* dev, Matrix& m);
+        void scan(int type = -1, int N = 0);
 
-        void checkIncomming();
-
-        //update thread
-        void update();
+        void update(); //update thread
 
     public:
         ART();
         ~ART();
 
-        ART_device* addARTDevice(VRTransform* trans);
-        ART_device* addARTDevice(VRFlystick* dev = 0);
-        vector<string> getARTDevices();
-        ART_device* getARTDevice(string s);
+        vector<int> getARTDevices();
+        ART_device* getARTDevice(int dev);
 
         void setARTActive(bool b);
         bool getARTActive();
@@ -69,8 +74,7 @@ class ART {
 
         VRFunction<int>* getARTUpdateFkt();
 
-        void save(xmlpp::Element* node);
-        void load(xmlpp::Element* node);
+        void startTestStream();
 };
 
 OSG_END_NAMESPACE

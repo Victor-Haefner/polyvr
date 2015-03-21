@@ -85,9 +85,8 @@ VRTransform* VRSetup::getUser() { return user; }
 VRTransform* VRSetup::getRoot() { return real_root; }
 
 VRTransform* VRSetup::getTracker(string t) {
-    vector<string> devs = getARTDevices();
-    for (uint i=0; i< devs.size(); i++) {
-        ART_device* dev = getARTDevice(devs[i]);
+    for (int ID : getARTDevices()) {
+        ART_device* dev = getARTDevice(ID);
         if (dev->ent->getName() == t) return dev->ent;
     }
 

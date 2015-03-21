@@ -396,6 +396,8 @@
 		<Unit filename="src/core/gui/VRGuiVectorEntry.h" />
 		<Unit filename="src/core/math/Octree.cpp" />
 		<Unit filename="src/core/math/Octree.h" />
+		<Unit filename="src/core/math/coordinates.cpp" />
+		<Unit filename="src/core/math/coordinates.h" />
 		<Unit filename="src/core/math/interpolator.cpp" />
 		<Unit filename="src/core/math/interpolator.h" />
 		<Unit filename="src/core/math/patch.cpp" />

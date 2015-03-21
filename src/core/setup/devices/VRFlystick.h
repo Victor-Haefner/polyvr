@@ -12,7 +12,7 @@ class VRFlystick : public VRDevice {
 
         void clearSignals();
 
-        void update(int Nb, int* buttons, int Ns, float* sliders);
+        void update(vector<int> buttons, vector<float> sliders);
 };
 
 
