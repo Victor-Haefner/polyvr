@@ -69,7 +69,10 @@ void ART::scan(int type, int N) {
     for (int i=0; i<N; i++) {
         int k = ART_device::key(i,type);
         if (devices.count(k) == 0) devices[k] = new ART_device(i,type);
-        getMatrix(dtrack->get_body(i), devices[k]->m);
+        if (type == 0) getMatrix(dtrack->get_body(i), devices[k]->m);
+        if (type == 1) getMatrix(dtrack->get_flystick(i), devices[k]->m);
+        if (type == 2) getMatrix(dtrack->get_hand(i), devices[k]->m);
+        if (type == 3) getMatrix(dtrack->get_meatool(i), devices[k]->m);
 
         if (type == 1) {
             auto fly = dtrack->get_flystick(i);
