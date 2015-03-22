@@ -67,6 +67,8 @@ PyMethodDef VRPyDevice::methods[] = {
     {"setDnD", (PyCFunction)VRPyDevice::setDnD, METH_VARARGS, "Set drag && drop." },
     {"getIntersected", (PyCFunction)VRPyDevice::getIntersected, METH_NOARGS, "Get device intersected object." },
     {"getIntersection", (PyCFunction)VRPyDevice::getIntersection, METH_NOARGS, "Get device intersection point." },
+    {"getIntersectionNormal", (PyCFunction)VRPyDevice::getIntersectionNormal, METH_NOARGS, "Get normal at intersection point." },
+    {"getIntersectionUV", (PyCFunction)VRPyDevice::getIntersectionUV, METH_NOARGS, "Get uv at intersection point." },
     {"addIntersection", (PyCFunction)VRPyDevice::addIntersection, METH_VARARGS, "Add device intersection node." },
     {"remIntersection", (PyCFunction)VRPyDevice::remIntersection, METH_VARARGS, "Remove device intersection node." },
     {"getDragged", (PyCFunction)VRPyDevice::getDragged, METH_NOARGS, "Get dragged object." },
@@ -174,9 +176,19 @@ PyObject* VRPyDevice::getIntersected(VRPyDevice* self) {
 PyObject* VRPyDevice::getIntersection(VRPyDevice* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getIntersection, Object is invalid"); return NULL; }
     OSG::Pnt3f v = self->obj->getLastIntersection().point;
-    PyObject* res = PyTuple_New(3);
-    for (int i=0; i<3; i++) PyTuple_SetItem(res, i, PyFloat_FromDouble(v[i]));
-    return res;
+    return toPyTuple( OSG::Vec3f(v) );
+}
+
+PyObject* VRPyDevice::getIntersectionNormal(VRPyDevice* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getIntersectionNormal, Object is invalid"); return NULL; }
+    OSG::Vec3f v = self->obj->getLastIntersection().normal;
+    return toPyTuple(v);
+}
+
+PyObject* VRPyDevice::getIntersectionUV(VRPyDevice* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getIntersectionUV, Object is invalid"); return NULL; }
+    OSG::Vec2f v = self->obj->getLastIntersection().texel;
+    return toPyTuple(v);
 }
 
 PyObject* VRPyDevice::addIntersection(VRPyDevice* self, PyObject *args) {

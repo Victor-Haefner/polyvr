@@ -22,6 +22,8 @@ struct VRPyDevice : VRPyBaseT<OSG::VRDevice> {
     static PyObject* setDnD(VRPyDevice* self, PyObject *args);
     static PyObject* getIntersected(VRPyDevice* self);
     static PyObject* getIntersection(VRPyDevice* self);
+    static PyObject* getIntersectionNormal(VRPyDevice* self);
+    static PyObject* getIntersectionUV(VRPyDevice* self);
     static PyObject* addIntersection(VRPyDevice* self, PyObject *args);
     static PyObject* remIntersection(VRPyDevice* self, PyObject *args);
     static PyObject* getDragged(VRPyDevice* self);
