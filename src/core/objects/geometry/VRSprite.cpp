@@ -29,9 +29,9 @@ void VRSprite::setLabel (string l, float res) {
     int h = 30*res;
     int w = l.size()*h*0.55;
     label = l;
-    labelMat = VRText::get()->getTexture(l, font, w, h, fontColor, Color4f(0,0,0,0) );
+    auto labelMat = VRText::get()->getTexture(l, font, w, h, fontColor, Color4f(0,0,0,0) );
     labelMat->setSortKey(1);
-    getMesh()->setMaterial(labelMat);
+    setMaterial(labelMat);
 }
 
 void VRSprite::setTexture(string path){
@@ -49,7 +49,6 @@ void VRSprite::setSize(float w, float h) {
     width = w;
     height = h;
     setMesh(makePlaneGeo(width, height, 1, 1));
-    getMesh()->setMaterial(labelMat);
 }
 
 OSG_END_NAMESPACE;
