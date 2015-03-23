@@ -12,6 +12,7 @@
 #include "core/objects/VRTransform.h"
 #include "core/math/coordinates.h"
 #include "core/utils/VRStorage_template.h"
+#include "core/setup/devices/VRSignal.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -39,6 +40,8 @@ void ART_device::update() {
 ART::ART() {
     VRSceneManager::get()->addUpdateFkt(getARTUpdateFkt());
 
+    on_new_device = new VRSignal();
+
     store("active", &active);
     store("port", &port);
     store("offset", &offset);
@@ -48,12 +51,20 @@ ART::ART() {
 ART::~ART() {}
 
 template<typename dev>
-void ART::getMatrix(dev t, Matrix& m) {
+void ART::getMatrix(dev t, ART_device* d) {
     if (t.quality <= 0) return;
+
+    Matrix& m = d->m;
     m[0] = Vec4f(t.rot[0], t.rot[1], t.rot[2], 1); // orientation
     m[1] = Vec4f(t.rot[3], t.rot[4], t.rot[5], 1);
     m[2] = Vec4f(t.rot[6], t.rot[7], t.rot[8], 1);
-    m[3] = Vec4f(t.loc[0], t.loc[1], t.loc[2], 1); // position
+
+    m[1] = Vec4f(t.rot[6], t.rot[7], t.rot[8], 1); // test
+    m[2] = Vec4f(-t.rot[3], -t.rot[4], -t.rot[5], 1);
+
+    m[3] = Vec4f(t.loc[0]*0.001, t.loc[1]*0.001, t.loc[2]*0.001, 1); // position
+    coords::YtoZ(m); // LESC -> TODO: use the up value and others to specify the coordinate system
+    m[3] += Vec4f(d->offset) + Vec4f(offset);
 }
 
 void ART::scan(int type, int N) {
@@ -68,16 +79,20 @@ void ART::scan(int type, int N) {
 
     for (int i=0; i<N; i++) {
         int k = ART_device::key(i,type);
-        if (devices.count(k) == 0) devices[k] = new ART_device(i,type);
-        if (type == 0) getMatrix(dtrack->get_body(i), devices[k]->m);
-        if (type == 1) getMatrix(dtrack->get_flystick(i), devices[k]->m);
-        if (type == 2) getMatrix(dtrack->get_hand(i), devices[k]->m);
-        if (type == 3) getMatrix(dtrack->get_meatool(i), devices[k]->m);
+        if (devices.count(k) == 0) {
+            devices[k] = new ART_device(i,type);
+            VRSetupManager::getCurrent()->getSignal_on_new_art_device()->trigger();
+        }
+
+        if (type == 0) getMatrix(dtrack->get_body(i), devices[k]);
+        if (type == 1) getMatrix(dtrack->get_flystick(i), devices[k]);
+        if (type == 2) getMatrix(dtrack->get_hand(i), devices[k]);
+        if (type == 3) getMatrix(dtrack->get_meatool(i), devices[k]);
 
         if (type == 1) {
             auto fly = dtrack->get_flystick(i);
-            devices[k]->buttons = vector<int>(fly.button, &fly.button[fly.num_button-1]);
-            devices[k]->joysticks = vector<float>(fly.joystick, &fly.joystick[fly.num_joystick-1]);
+            devices[k]->buttons = vector<int>(fly.button, &fly.button[fly.num_button]);
+            devices[k]->joysticks = vector<float>(fly.joystick, &fly.joystick[fly.num_joystick]);
         }
     }
 }
@@ -91,7 +106,6 @@ void ART::update() {
     if (dtrack->receive()) {
         scan();
         for (auto d : devices) {
-            coords::YtoZ(d.second->m); // LESC -> TODO: use the up value and others to specify the coordinate system
             d.second->update();
         }
     } else {
@@ -138,5 +152,7 @@ Vec3f ART::getARTOffset() { return offset; }
 void ART::startTestStream() {
     // TODO: create test data
 }
+
+VRSignal* ART::getSignal_on_new_art_device() { return on_new_device; }
 
 OSG_END_NAMESPACE

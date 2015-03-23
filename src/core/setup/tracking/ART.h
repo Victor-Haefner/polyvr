@@ -13,6 +13,7 @@ template<class T> class VRFunction;
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+class VRSignal;
 class VRFlystick;
 class VRTransform;
 
@@ -49,8 +50,10 @@ class ART : public VRStorage {
         DTrack* dtrack = 0;
         map<int, ART_device*> devices;
 
+        VRSignal* on_new_device = 0;
+
         template<typename dev>
-        void getMatrix(dev t, Matrix& m);
+        void getMatrix(dev t, ART_device* d);
 
         void scan(int type = -1, int N = 0);
 
@@ -75,6 +78,8 @@ class ART : public VRStorage {
         VRFunction<int>* getARTUpdateFkt();
 
         void startTestStream();
+
+        VRSignal* getSignal_on_new_art_device();
 };
 
 OSG_END_NAMESPACE
