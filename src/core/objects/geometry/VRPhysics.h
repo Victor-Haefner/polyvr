@@ -4,6 +4,8 @@
 #include "core/utils/VRStorage.h"
 #include <btBulletDynamicsCommon.h>
 #include <OpenSG/OSGMatrix.h>
+#include <boost/thread/recursive_mutex.hpp>
+
 
 using namespace std;
 
@@ -41,6 +43,8 @@ class VRPhysics : public OSG::VRStorage {
         map<VRPhysics*, VRPhysicsJoint*> joints ;
         map<VRPhysics*, VRPhysicsJoint*> joints2;
 
+        boost::recursive_mutex mtx;
+
         OSG::VRTransform* vr_obj = 0;
         OSG::VRConstraint* constraint = 0;
         OSG::Vec3f scale;
@@ -51,6 +55,8 @@ class VRPhysics : public OSG::VRStorage {
         btCollisionShape* getConcaveShape();
 
         void update();
+
+
 
     public:
         VRPhysics(OSG::VRTransform* t);

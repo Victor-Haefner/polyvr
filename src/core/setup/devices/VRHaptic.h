@@ -22,6 +22,7 @@ class VRHaptic : public VRDevice {
         void on_scene_changed(VRDevice* dev);
 
         void applyTransformation(VRTransform* t);
+        void updateHaptic(VRTransform* t);
 
     public:
         VRHaptic();

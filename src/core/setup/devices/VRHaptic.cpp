@@ -12,8 +12,8 @@ VRHaptic::VRHaptic() : VRDevice("haptic") {
     v = new virtuose();
     setIP("172.22.151.200");
 
-    updateObjFkt = new VRFunction<int>( "Haptic object update", boost::bind(&VRHaptic::applyTransformation, this, getBeacon()) );
-    VRSceneManager::get()->addUpdateFkt(updateFkt);
+    auto updateObjFkt = new VRFunction<int>( "Haptic object update", boost::bind(&VRHaptic::applyTransformation, this, getBeacon()) );
+    VRSceneManager::get()->addUpdateFkt(updateObjFkt);
 
     auto fkt = new VRFunction<VRDevice*>( "Haptic on scene changed", boost::bind(&VRHaptic::on_scene_changed, this, _1) );
     VRSceneManager::get()->getSignal_on_scene_load()->add(fkt);
@@ -29,7 +29,8 @@ VRHaptic::~VRHaptic() {
 
 void VRHaptic::on_scene_changed(VRDevice* dev) {
     updateFkt = new VRFunction<int>( "Haptic update", boost::bind(&VRHaptic::updateHaptic, this, getBeacon()) );
-    VRSceneManager::getCurrent()->addPhysicsUpdateFunction(updateFkt); // TODO: do this when scene switch
+    VRSceneManager::getCurrent()->dropUpdateFkt(updateFkt);
+    VRSceneManager::getCurrent()->addPhysicsUpdateFunction(updateFkt);
 }
 
 void VRHaptic::applyTransformation(VRTransform* t) { // TODO: rotation

@@ -6,11 +6,11 @@
 #include "VRCallbackManager.h"
 #include "core/networking/VRNetworkManager.h"
 
+#include "VRScene.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRScene;
 
 void glutUpdate();
 
