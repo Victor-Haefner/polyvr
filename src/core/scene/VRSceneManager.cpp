@@ -58,7 +58,6 @@ void VRSceneManager::removeScene(VRScene* s) {
 
     VRSetupManager::getCurrent()->resetViewports();
     VRSetupManager::getCurrent()->clearSignals();
-    VRTransform::changedObjects.clear();
     VRTransform::dynamicObjects.clear();
     active = "NO_SCENE_ACTIVE";
 

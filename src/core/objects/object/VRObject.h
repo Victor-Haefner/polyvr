@@ -48,8 +48,6 @@ class VRObject : public VRName {
 
         map<string, VRAttachment*> attachments;
 
-        void _switchParent(NodeRecPtr parent);
-
         int findChild(VRObject* node);
         void updateChildrenIndices(bool recursive = false);
 

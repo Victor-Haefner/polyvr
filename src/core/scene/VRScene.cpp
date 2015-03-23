@@ -52,6 +52,7 @@ VRScene::VRScene() {
 }
 
 VRScene::~VRScene() {
+    updateObjects();
     root->destroy();
     VRGroup::clearGroups();
     VRLightBeacon::getAll().clear();

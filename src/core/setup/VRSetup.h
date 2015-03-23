@@ -46,6 +46,8 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
         void setScene(VRScene* s);
         void showSetup(bool b);
 
+        void printOSG();
+
         void save(string file);
         void load(string file);
 };

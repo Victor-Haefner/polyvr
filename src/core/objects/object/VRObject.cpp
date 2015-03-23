@@ -37,7 +37,6 @@ VRObject::VRObject(string _name) {
     node = makeNodeFor(Group::create());
     OSG::setName(node, name);
     type = "Object";
-    //unitTest();
 }
 
 VRObject::~VRObject() {
@@ -142,10 +141,8 @@ void VRObject::switchParent(VRObject* new_p, int place) {
     if (parent == 0) { new_p->addChild(this, true, place); return; }
     if (parent == new_p && place == childIndex) { return; }
 
-    if (parent != new_p) _switchParent(new_p->node); //takes care of the osg node structure
-
-    parent->subChild(this, false);
-    new_p->addChild(this, false, place);
+    parent->subChild(this, true);
+    new_p->addChild(this, true, place);
 }
 
 void VRObject::setIntern(bool b) { intern = b; }
@@ -393,19 +390,6 @@ VRObject* VRObject::duplicate(bool anchor) {
 }
 
 void VRObject::destroy() { delete this; }
-
-void VRObject::_switchParent(NodeRecPtr parent) {
-    if (node == 0) return;
-    NodeRecPtr p_old = node->getParent();
-
-    if (p_old == 0) {//child has no parent
-        parent->addChild(node);
-        return;
-    }
-
-    p_old->subChild(node);
-    parent->addChild(node);
-}
 
 void VRObject::updateChildrenIndices(bool recursive) {
     for (uint i=0; i<children.size(); i++) {

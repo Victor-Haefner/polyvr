@@ -30,5 +30,5 @@
     </update>
   </Scripts>
   <Sockets/>
-  <Background color="0.893965 0.412482 0.412482" path="data/common/skybox/sky/Sky" type="2"/>
+  <Background color="1 1 1" path="" type="0"/>
 </Scene>

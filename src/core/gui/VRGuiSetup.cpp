@@ -566,7 +566,7 @@ void VRGuiSetup::on_toggle_view_user() {
     if (selected_type != "view") return;
 
     VRView* view = (VRView*)selected_object;
-    view->setUser();
+    view->setUser(0);
     setToolButtonSensitivity("toolbutton12", true);
 }
 

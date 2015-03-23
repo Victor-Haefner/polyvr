@@ -80,6 +80,11 @@ void VRView::setMaterial() {
 }
 
 void VRView::setViewports() {//create && set size of viewports
+    if (window && lView) window->subPortByObj(lView);
+    if (window && rView) window->subPortByObj(rView);
+    lView = 0;
+    rView = 0;
+
     Vec4f p = position;
     p[1] = 1-position[3]; // invert y
     p[3] = 1-position[1];
@@ -90,8 +95,8 @@ void VRView::setViewports() {//create && set size of viewports
 
     //active, stereo
     if (active_stereo) {
-        if (lView_act == 0) lView_act = StereoBufferViewport::create();
-        if (rView_act == 0) rView_act = StereoBufferViewport::create();
+        lView_act = StereoBufferViewport::create();
+        rView_act = StereoBufferViewport::create();
     } else {
         lView_act = 0;
         rView_act = 0;
@@ -99,16 +104,15 @@ void VRView::setViewports() {//create && set size of viewports
 
     //no stereo
     if (!stereo && !active_stereo) {
-        if (lView == 0) lView = Viewport::create();
+        lView = Viewport::create();
         lView->setSize(p[0], p[1], p[2], p[3]);
-        if (rView) window->subPortByObj(rView);
         rView = 0;
         return;
     }
 
     if (stereo && !active_stereo) {
-        if (lView == 0) lView = Viewport::create();
-        if (rView == 0) rView = Viewport::create();
+        lView = Viewport::create();
+        rView = Viewport::create();
         lView->setSize(p[0], p[1], (p[0]+p[2])*0.5, p[3]);
         rView->setSize((p[0]+p[2])*0.5, p[1], p[2], p[3]);
         return;
@@ -125,6 +129,13 @@ void VRView::setViewports() {//create && set size of viewports
 
     lView->setSize(p[0], p[1], p[2], p[3]);
     rView->setSize(p[0], p[1], p[2], p[3]);
+}
+
+void VRView::setBG() {
+    if (background) {
+        if (lView) lView->setBackground(background);
+        if (rView) rView->setBackground(background);
+    }
 }
 
 void VRView::setDecorators() {//set decorators, only if projection true
@@ -164,7 +175,7 @@ void VRView::setDecorators() {//set decorators, only if projection true
 
     if (projection && !stereo) {
         cout << "\nset single projection decorator";
-        if (PCDecoratorLeft == 0) PCDecoratorLeft = ProjectionCameraDecorator::create();
+        PCDecoratorLeft = ProjectionCameraDecorator::create();
         PCDecoratorLeft->setLeftEye(true);
         PCDecoratorLeft->setEyeSeparation(0);
         PCDecoratorLeft->editMFSurface()->clear();
@@ -179,8 +190,8 @@ void VRView::setDecorators() {//set decorators, only if projection true
     // stereo
 
     cout << "\nset projection decorators";
-    if (PCDecoratorLeft == 0) PCDecoratorLeft = ProjectionCameraDecorator::create();
-    if (PCDecoratorRight == 0) PCDecoratorRight = ProjectionCameraDecorator::create();
+    PCDecoratorLeft = ProjectionCameraDecorator::create();
+    PCDecoratorRight = ProjectionCameraDecorator::create();
 
     PCDecoratorLeft->setLeftEye(false);
     PCDecoratorLeft->setEyeSeparation(0.06);
@@ -214,6 +225,7 @@ VRView::VRView(string n) {
     user = 0;
     viewGeo = 0;
     name = n;
+    window = 0;
 
     // flags
     eyeinverted = false;
@@ -234,7 +246,7 @@ VRView::VRView(string n) {
 
     SolidBackgroundRecPtr sbg = SolidBackground::create();
     sbg->setColor(Color3f(0.7, 0.7, 0.7));
-    setBackground(sbg);
+    background = sbg;
 
     eyeSeparation = 0.06;
 
@@ -268,7 +280,6 @@ VRView::~VRView() {
 }
 
 int VRView::getID() { return ID; }
-
 void VRView::setID(int i) { ID = i; }
 
 void VRView::showStats(bool b) {
@@ -343,13 +354,10 @@ void VRView::setPosition(Vec4f pos) {
     setViewports();
 }
 
-void VRView::setRoot(VRObject* root, VRTransform* real) {
-    if (real) {
-        real_root = real;
-        real_root->addChild(viewGeo);
-    }
-    if (root) view_root = root;
-    //if (view_root == 0) return;
+void VRView::setRoot(VRObject* root, VRTransform* real) { view_root = root; real_root = real; update(); }
+
+void VRView::setRoot() {
+    if (real_root && viewGeo) real_root->addChild(viewGeo);
 
     if (user && real_root) user->switchParent(real_root);
     if (dummy_user && real_root) dummy_user->switchParent(real_root);
@@ -360,19 +368,27 @@ void VRView::setRoot(VRObject* root, VRTransform* real) {
 }
 
 void VRView::setUser(VRTransform* u) {
-    if (u) user = u;
+    user = u;
+    user_name = user ? user->getName() : "";
+    update();
+}
+
+void VRView::setUser() {
+    if (user == 0 && user_name != "") user = VRSetupManager::getCurrent()->getTracker(user_name);
 
     if (user == 0) {
         if (PCDecoratorLeft) PCDecoratorLeft->setUser(dummy_user->getNode());
         if (PCDecoratorRight) PCDecoratorRight->setUser(dummy_user->getNode());
     } else {
+        user_name = user->getName();
         if (PCDecoratorLeft) PCDecoratorLeft->setUser(user->getNode());
         if (PCDecoratorRight) PCDecoratorRight->setUser(user->getNode());
     }
 }
 
-void VRView::setCamera(VRCamera* c) {
-    if (c) cam = c;
+void VRView::setCamera(VRCamera* c) { cam = c; update(); }
+
+void VRView::setCam() {
     if (cam == 0) return;
 
     if (lView && PCDecoratorLeft == 0) lView->setCamera(cam->getCam());
@@ -385,26 +401,17 @@ void VRView::setCamera(VRCamera* c) {
     if (rView && PCDecoratorRight) rView->setCamera(PCDecoratorRight);
 }
 
-void VRView::setBackground(BackgroundRecPtr bg) {
-    if (bg) background = bg;
-    if (background == 0) return;
+void VRView::setBackground(BackgroundRecPtr bg) { background = bg; update(); }
 
-    if (lView) lView->setBackground(background);
-    if (rView) rView->setBackground(background);
-}
+void VRView::setWindow(WindowRecPtr win) { window = win; }
 
-void VRView::setWindow(WindowRecPtr win) {
-    if (win) window = win;
+void VRView::setWindow() {
     if (window == 0) return;
-
     if (lView) window->addPort(lView);
     if (rView) window->addPort(rView);
 }
 
-void VRView::setStereo(bool b) {
-    stereo = b;
-    update();
-}
+void VRView::setStereo(bool b) { stereo = b; update(); }
 
 void VRView::setStereoEyeSeparation(float v) {
     eyeSeparation = v;
@@ -423,11 +430,11 @@ bool VRView::eyesInverted() { return eyeinverted; }
 void VRView::update() {
     setViewports();
     setDecorators();
-    setCamera();
+    setCam();
     setRoot();
     setUser();
     setWindow();
-    setBackground();
+    setBG();
     swapEyes(eyeinverted);
     setStereoEyeSeparation(eyeSeparation);
     setMaterial();
@@ -543,7 +550,8 @@ void VRView::save(xmlpp::Element* node) {
     node->set_attribute("normal", toString(proj_normal).c_str());
     node->set_attribute("up", toString(proj_up).c_str());
     node->set_attribute("size", toString(proj_size).c_str());
-    if (user) node->set_attribute("user", user->getName().c_str());
+    if (user) node->set_attribute("user", user->getName());
+    else node->set_attribute("user", user_name);
 }
 
 void VRView::load(xmlpp::Element* node) {
@@ -558,8 +566,8 @@ void VRView::load(xmlpp::Element* node) {
     proj_up = toVec3f(node->get_attribute("up")->get_value());
     proj_size = toVec2f(node->get_attribute("size")->get_value());
     if (node->get_attribute("user")) {
-        string u = node->get_attribute("user")->get_value();
-        user = VRSetupManager::getCurrent()->getTracker(u);
+        user_name = node->get_attribute("user")->get_value();
+        user = VRSetupManager::getCurrent()->getTracker(user_name);
     }
 
     showStats(doStats);

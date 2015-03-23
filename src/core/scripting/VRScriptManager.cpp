@@ -202,6 +202,7 @@ static PyMethodDef VRScriptManager_module_methods[] = {
 	{"render", (PyCFunction)VRScriptManager::render, METH_NOARGS, "Renders the viewports" },
 	{"triggerScript", (PyCFunction)VRScriptManager::pyTriggerScript, METH_VARARGS, "Trigger a script - triggerScript( str script )" },
 	{"getRoot", (PyCFunction)VRScriptManager::getRoot, METH_NOARGS, "Return the root node of the scenegraph - object getRoot()" },
+	{"printOSG", (PyCFunction)VRScriptManager::printOSG, METH_NOARGS, "Print the OSG tree to console" },
     {NULL}  /* Sentinel */
 };
 
@@ -385,6 +386,12 @@ string VRScriptManager::getPyVRMethodDoc(string type, string method) {
 // ==============
 // Python methods
 // ==============
+
+PyObject* VRScriptManager::printOSG(VRScriptManager* self) {
+    VRObject::printOSGTree( VRSceneManager::getCurrent()->getRoot()->getNode() );
+    VRSetupManager::getCurrent()->printOSG();
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRScriptManager::exit(VRScriptManager* self) {
     exitPolyVR();
