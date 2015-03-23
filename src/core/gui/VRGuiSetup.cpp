@@ -155,14 +155,6 @@ void VRGuiSetup::updateObjectData() {
     if (selected_type == "art_device") {
         setExpanderSensitivity("expander5", true);
         setExpanderSensitivity("expander6", true);
-        device = true;
-        ART_device* t = (ART_device*)selected_object;
-        setTextEntry("entry40", toString(t->ID));
-    }
-
-    if (selected_type == "art_tracker") {
-        setExpanderSensitivity("expander5", true);
-        setExpanderSensitivity("expander6", true);
         ART_device* t = (ART_device*)selected_object;
         setTextEntry("entry40", toString(t->ID));
     }
@@ -178,6 +170,7 @@ void VRGuiSetup::updateObjectData() {
     if (selected_type == "mouse") { device = true; }
     if (selected_type == "keyboard") { device = true; }
     if (selected_type == "mobile") { device = true; }
+    if (selected_type == "flystick") { device = true; }
 
     if (selected_type == "section") {
         if (selected_name == "ART") {
@@ -870,10 +863,6 @@ void VRGuiSetup::updateSetup() {
     setTreeRow(tree_store, *art_itr, "ART", "section", 0);
     setTreeRow(tree_store, *vrpn_itr, "VRPN", "section", 0);
 
-    // displays
-    map<string, VRWindow*> windows = current_setup->getWindows();
-    map<string, VRWindow*>::iterator win;
-
     Glib::RefPtr<Gtk::ListStore> user_list = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("user_list"));
     user_list->clear();
     row = *user_list->append();
@@ -886,12 +875,10 @@ void VRGuiSetup::updateSetup() {
     row = *mouse_list->append();
     gtk_list_store_set (mouse_list->gobj(), row.gobj(), 0, "None", -1);
 
-    map<string, VRDevice* > devices = current_setup->getDevices();
-    map<string, VRDevice* >::iterator ditr = devices.begin();
-    for (; ditr != devices.end(); ditr++) {
-        VRDevice* dev = ditr->second;
+    for (auto ditr : current_setup->getDevices()) {
+        VRDevice* dev = ditr.second;
         itr = tree_store->append(devices_itr->children());
-        setTreeRow(tree_store, *itr, ditr->first.c_str(), dev->getType().c_str(), (gpointer)dev);
+        setTreeRow(tree_store, *itr, ditr.first.c_str(), dev->getType().c_str(), (gpointer)dev);
 
         if (dev->getType() == "mouse") {
             row = *mouse_list->append();
@@ -899,9 +886,9 @@ void VRGuiSetup::updateSetup() {
         }
     }
 
-    for (win = windows.begin(); win != windows.end(); win++) {
-        VRWindow* w = win->second;
-        string name = win->first;
+    for (auto win : current_setup->getWindows()) {
+        VRWindow* w = win.second;
+        string name = win.first;
         itr = tree_store->append(windows_itr->children());
         string bg = "#FFFFFF";
         if (w->isActive() == false) bg = "#FFDDDD";
