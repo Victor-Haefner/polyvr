@@ -11,6 +11,7 @@
 #include "VRGuiSetup.h"
 #include "VRGuiNet.h"
 #include "VRGuiGeneral.h"
+#include "VRGuiMonitor.h"
 #include "core/utils/VROptions.h"
 #include <gtkmm/uimanager.h>
 #include <gtkmm/main.h>
@@ -29,6 +30,7 @@ VRGuiScripts* g_sc;
 VRGuiSetup* g_di;
 VRGuiNet* g_net;
 VRGuiGeneral* g_gen;
+VRGuiMonitor* g_mon;
 Gtk::Main* GtkMain;
 
 VRGuiManager::VRGuiManager() {
@@ -62,6 +64,7 @@ VRGuiManager::VRGuiManager() {
     g_di = new VRGuiSetup();
     g_net = new VRGuiNet();
     g_gen = new VRGuiGeneral();
+    g_mon = new VRGuiMonitor();
     g_scene->updateTreeView();
 
     VRDevCb* fkt;

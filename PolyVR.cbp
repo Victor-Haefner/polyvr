@@ -187,6 +187,8 @@
 			<Add directory="/usr/lib/CEF" />
 			<Add directory="/usr/include/CEF/include" />
 			<Add directory="/usr/lib/1.4" />
+			<Add directory="/usr/lib" />
+			<Add directory="/usr/lib/x86_64-linux-gnu" />
 		</Linker>
 		<Unit filename="src/PolyVR.cpp" />
 		<Unit filename="src/PolyVR.h" />
@@ -374,6 +376,8 @@
 		<Unit filename="src/core/gui/VRGuiGeneral.h" />
 		<Unit filename="src/core/gui/VRGuiManager.cpp" />
 		<Unit filename="src/core/gui/VRGuiManager.h" />
+		<Unit filename="src/core/gui/VRGuiMonitor.cpp" />
+		<Unit filename="src/core/gui/VRGuiMonitor.h" />
 		<Unit filename="src/core/gui/VRGuiNav.cpp" />
 		<Unit filename="src/core/gui/VRGuiNav.h" />
 		<Unit filename="src/core/gui/VRGuiNet.cpp" />
@@ -392,6 +396,8 @@
 		<Unit filename="src/core/gui/VRGuiVectorEntry.h" />
 		<Unit filename="src/core/math/Octree.cpp" />
 		<Unit filename="src/core/math/Octree.h" />
+		<Unit filename="src/core/math/coordinates.cpp" />
+		<Unit filename="src/core/math/coordinates.h" />
 		<Unit filename="src/core/math/interpolator.cpp" />
 		<Unit filename="src/core/math/interpolator.h" />
 		<Unit filename="src/core/math/patch.cpp" />

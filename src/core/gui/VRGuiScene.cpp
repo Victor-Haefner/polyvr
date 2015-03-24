@@ -292,9 +292,6 @@ void updateObjectForms(bool disable = false) {
     // set object label && path
     setLabel( "current_object_lab", obj->getName() + "\npath " + obj->getPath() );
 
-    if (obj->hasAttachment("global")) return;
-
-
     string type = obj->getType();
     trigger_cbs = false;
 

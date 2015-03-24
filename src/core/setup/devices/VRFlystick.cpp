@@ -17,12 +17,11 @@ void VRFlystick::clearSignals() {
     addSignal( 0, 1)->add( addDrag( getBeacon(), 0) );
 }
 
-void VRFlystick::update(int Nb, int* buttons, int Ns, float* sliders) {
-    for(int i=0;i<Ns;i++) change_slider(i+10, sliders[i]); // slider key has an offset of 10
+void VRFlystick::update(vector<int> buttons, vector<float> sliders) {
+    for(int i=0; i<sliders.size(); i++) change_slider(i+10, sliders[i]); // art slider key has an offset of 10
 
-    for(int key=0; key<Nb; key++) {
-        if (BStates.count(key) == 0) continue;
-        if (BStates[key] != buttons[key]) change_button(key, buttons[key]);
+    for(int k=0; k<buttons.size(); k++) {
+        if (BStates[k] != buttons[k] || BStates.count(k) == 0) change_button(k, buttons[k]);
     }
 }
 

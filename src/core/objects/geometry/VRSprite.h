@@ -10,9 +10,6 @@ using namespace std;
 
 class VRSprite : public VRGeometry {
     protected:
-
-        SimpleTexturedMaterialRecPtr labelMat;
-
         string font;
         Color4f fontColor;
         float width;

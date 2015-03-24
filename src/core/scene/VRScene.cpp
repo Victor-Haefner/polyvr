@@ -54,6 +54,7 @@ VRScene::VRScene() {
 VRScene::~VRScene() {
     //kill physics thread
     VRThreadManager::stopThread(physicsThreadID);
+    updateObjects();
     root->destroy();
     VRGroup::clearGroups();
     VRLightBeacon::getAll().clear();

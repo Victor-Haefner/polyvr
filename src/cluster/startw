@@ -1,3 +1,6 @@
 #!/bin/bash
-libs="OSGBase:OSGContribCSMSimplePlugin:OSGContribWebInterface:OSGGroup:OSGUtil:OSGCluster:OSGContribCSM:OSGDrawable:OSGImageFileIO:OSGWindowGLUT:OSGContribBackgroundLoader:OSGContribGUI:OSGDynamics:OSGState:OSGWindow:OSGContribCgFX:OSGContribPLY:OSGEffectGroups:OSGSystem:OSGWindowX:OSGContribComputeBase:OSGContribTrapezoidalShadowMaps:OSGFileIO:OSGText"
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/opensg && export OSG_LOAD_LIBS=$libs && ./VRServer -m -w $1 -geometry 512x512+0+0
+
+path="`dirname \"$0\"`"
+libs="OSGBase:OSGGroup:OSGUtil:OSGCluster:OSGDrawable:OSGImageFileIO:OSGWindowGLUT:OSGDynamics:OSGState:OSGWindow:OSGEffectGroups:OSGSystem:OSGWindowX:OSGContribComputeBase:OSGContribTrapezoidalShadowMaps:OSGText"
+
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/opensg && export OSG_LOAD_LIBS=$libs && $path/VRServer -m -w $1 -geometry 512x512+0+0

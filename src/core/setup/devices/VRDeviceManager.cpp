@@ -109,14 +109,6 @@ void VRDeviceManager::load(xmlpp::Element* node) {
             dev = k;
         }
 
-        if (type == "flystick") {
-            VRFlystick* f = new VRFlystick();
-            f->load(el);
-            VRSetup* setup = (VRSetup*)this;
-            setup->addARTDevice(f);
-            dev = f;
-        }
-
         if (type == "haptic") {
             VRHaptic* h = new VRHaptic();
             h->load(el);

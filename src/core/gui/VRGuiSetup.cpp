@@ -155,14 +155,6 @@ void VRGuiSetup::updateObjectData() {
     if (selected_type == "art_device") {
         setExpanderSensitivity("expander5", true);
         setExpanderSensitivity("expander6", true);
-        device = true;
-        ART_device* t = (ART_device*)selected_object;
-        setTextEntry("entry40", toString(t->ID));
-    }
-
-    if (selected_type == "art_tracker") {
-        setExpanderSensitivity("expander5", true);
-        setExpanderSensitivity("expander6", true);
         ART_device* t = (ART_device*)selected_object;
         setTextEntry("entry40", toString(t->ID));
     }
@@ -178,6 +170,7 @@ void VRGuiSetup::updateObjectData() {
     if (selected_type == "mouse") { device = true; }
     if (selected_type == "keyboard") { device = true; }
     if (selected_type == "mobile") { device = true; }
+    if (selected_type == "flystick") { device = true; }
 
     if (selected_type == "section") {
         if (selected_name == "ART") {
@@ -423,14 +416,6 @@ void VRGuiSetup::on_menu_add_keyboard() {
     setToolButtonSensitivity("toolbutton12", true);
 }
 
-void VRGuiSetup::on_menu_add_flystick() {
-    VRFlystick* f = new VRFlystick();
-    current_setup->addARTDevice(f); // TODO
-    current_setup->addDevice(f);
-    updateSetup();
-    setToolButtonSensitivity("toolbutton12", true);
-}
-
 void VRGuiSetup::on_menu_add_haptic() {
     VRHaptic* h = new VRHaptic();
     current_setup->addDevice(h);
@@ -441,14 +426,6 @@ void VRGuiSetup::on_menu_add_haptic() {
 void VRGuiSetup::on_menu_add_mobile() {
     VRMobile* m = new VRMobile(5500);
     current_setup->addDevice(m);
-    updateSetup();
-    setToolButtonSensitivity("toolbutton12", true);
-}
-
-void VRGuiSetup::on_menu_add_art_tracker() {
-    VRTransform* tr = new VRTransform("ARTTracker");
-    tr->setFrom(Vec3f(0,1.6,0));
-    current_setup->addARTDevice(tr);
     updateSetup();
     setToolButtonSensitivity("toolbutton12", true);
 }
@@ -589,7 +566,7 @@ void VRGuiSetup::on_toggle_view_user() {
     if (selected_type != "view") return;
 
     VRView* view = (VRView*)selected_object;
-    view->setUser();
+    view->setUser(0);
     setToolButtonSensitivity("toolbutton12", true);
 }
 
@@ -764,14 +741,11 @@ VRGuiSetup::VRGuiSetup() {
     menu->appendItem("SM_AddMenu", "Window", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_window) );
     menu->appendItem("SM_AddMenu", "Viewport", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_viewport) );
     menu->appendMenu("SM_AddMenu", "Device", "SM_AddDevMenu");
-    menu->appendMenu("SM_AddMenu", "ART", "SM_AddARTMenu");
     menu->appendMenu("SM_AddMenu", "VRPN", "SM_AddVRPNMenu");
     menu->appendItem("SM_AddDevMenu", "Mouse", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_mouse) );
     menu->appendItem("SM_AddDevMenu", "Keyboard", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_keyboard) );
     menu->appendItem("SM_AddDevMenu", "Haptic", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_haptic) );
     menu->appendItem("SM_AddDevMenu", "Mobile", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_mobile) );
-    menu->appendItem("SM_AddARTMenu", "Flystick", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_flystick) );
-    menu->appendItem("SM_AddARTMenu", "ART tracker", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_art_tracker) );
     menu->appendItem("SM_AddVRPNMenu", "VRPN tracker", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_vrpn_tracker) );
 
     Glib::RefPtr<Gtk::ToolButton> tbutton;
@@ -851,6 +825,9 @@ VRGuiSetup::VRGuiSetup() {
 
     updateSetupList();
     updateSetup();
+
+    VRDevCb* fkt = new VRDevCb("update gui setup", boost::bind(&VRGuiSetup::updateSetup, this) );
+    VRSetupManager::getCurrent()->getSignal_on_new_art_device()->add(fkt);
 }
 
 void VRGuiSetup::setTreeRow(Glib::RefPtr<Gtk::TreeStore> tree_store, Gtk::TreeStore::Row row, string name, string type, gpointer ptr, string fg, string bg) {
@@ -889,10 +866,6 @@ void VRGuiSetup::updateSetup() {
     setTreeRow(tree_store, *art_itr, "ART", "section", 0);
     setTreeRow(tree_store, *vrpn_itr, "VRPN", "section", 0);
 
-    // displays
-    map<string, VRWindow*> windows = current_setup->getWindows();
-    map<string, VRWindow*>::iterator win;
-
     Glib::RefPtr<Gtk::ListStore> user_list = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("user_list"));
     user_list->clear();
     row = *user_list->append();
@@ -905,12 +878,10 @@ void VRGuiSetup::updateSetup() {
     row = *mouse_list->append();
     gtk_list_store_set (mouse_list->gobj(), row.gobj(), 0, "None", -1);
 
-    map<string, VRDevice* > devices = current_setup->getDevices();
-    map<string, VRDevice* >::iterator ditr = devices.begin();
-    for (; ditr != devices.end(); ditr++) {
-        VRDevice* dev = ditr->second;
+    for (auto ditr : current_setup->getDevices()) {
+        VRDevice* dev = ditr.second;
         itr = tree_store->append(devices_itr->children());
-        setTreeRow(tree_store, *itr, ditr->first.c_str(), dev->getType().c_str(), (gpointer)dev);
+        setTreeRow(tree_store, *itr, ditr.first.c_str(), dev->getType().c_str(), (gpointer)dev);
 
         if (dev->getType() == "mouse") {
             row = *mouse_list->append();
@@ -918,9 +889,9 @@ void VRGuiSetup::updateSetup() {
         }
     }
 
-    for (win = windows.begin(); win != windows.end(); win++) {
-        VRWindow* w = win->second;
-        string name = win->first;
+    for (auto win : current_setup->getWindows()) {
+        VRWindow* w = win.second;
+        string name = win.first;
         itr = tree_store->append(windows_itr->children());
         string bg = "#FFFFFF";
         if (w->isActive() == false) bg = "#FFDDDD";
@@ -947,10 +918,8 @@ void VRGuiSetup::updateSetup() {
     }
 
     // ART
-    vector<string> devs = current_setup->getARTDevices();
-    for (uint i=0; i<devs.size(); i++) {
-        ART_device* dev = current_setup->getARTDevice(devs[i]);
-        if (dev == 0) continue;
+    for (int ID : current_setup->getARTDevices() ) {
+        ART_device* dev = current_setup->getARTDevice(ID);
 
         itr = tree_store->append(art_itr->children());
         string name = dev->getName();

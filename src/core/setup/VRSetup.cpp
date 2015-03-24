@@ -11,6 +11,10 @@
 #include <libxml++/libxml++.h>
 #include <libxml++/nodes/element.h>
 
+#include <OpenSG/OSGWindow.h>
+#include <OpenSG/OSGViewport.h>
+#include <OpenSG/OSGNameAttachment.h>
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -85,33 +89,43 @@ VRTransform* VRSetup::getUser() { return user; }
 VRTransform* VRSetup::getRoot() { return real_root; }
 
 VRTransform* VRSetup::getTracker(string t) {
-    vector<string> devs = getARTDevices();
-    for (uint i=0; i< devs.size(); i++) {
-        ART_device* dev = getARTDevice(devs[i]);
+    for (int ID : getARTDevices()) {
+        ART_device* dev = getARTDevice(ID);
         if (dev->ent->getName() == t) return dev->ent;
     }
 
-    /*vector<int> IDs = getVRPNTrackerIDs();
-    for (uint i=0; i< IDs.size(); i++) {
-        VRPN_device* tr = getVRPNTracker(IDs[i]);
-        if (tr->getName() == t) return tr->getBeacon();
-    }*/
+    for (int ID : getVRPNTrackerIDs()) {
+        VRPN_device* dev = getVRPNTracker(ID);
+        if (dev->getName() == t) return dev->getBeacon();
+    }
 
     return 0;
 }
 
 xmlpp::Element* VRSetup::getElementChild(xmlpp::Element* e, string name) {
-    xmlpp::Node::NodeList nl = e->get_children();
-    xmlpp::Node::NodeList::iterator itr;
-    for (itr = nl.begin(); itr != nl.end(); itr++) {
-        xmlpp::Node* n = *itr;
-
+    for (auto n : e->get_children()) {
         xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
         if (!el) continue;
-
         if (el->get_name() == name) return el;
     }
     return 0;
+}
+
+void VRSetup::printOSG() {
+    cout << "Setup " << endl;
+    string name = "Unnamed";
+    for (auto win : getWindows()) {
+        VRWindow* w = win.second;
+        WindowRecPtr osgw = w->getOSGWindow();
+        cout << "Window " << win.first << " " << osgw->getTypeName() << endl;
+        int N = osgw->getMFPort()->size();
+
+        for (int i=0; i<N; i++) {
+            ViewportRefPtr view = osgw->getPort(i);
+            name = OSG::getName(view) ? OSG::getName(view) : "Unnamed";
+            cout << "View " << name << " " << view->getTypeName() << endl;
+        }
+    }
 }
 
 void VRSetup::save(string file) {

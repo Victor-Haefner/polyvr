@@ -67,6 +67,7 @@ class VRView {
         VRTransform* real_root;
         VRTransform* user;
         VRTransform* dummy_user;
+        string user_name;
         VRCamera* cam;
 
         BackgroundRecPtr background;
@@ -75,10 +76,13 @@ class VRView {
         ImageForegroundRecPtr calib_fg;
 
         void setMaterial();
-
         void setViewports();
-
         void setDecorators();
+        void setCam();
+        void setBG();
+        void setUser();
+        void setWindow();
+        void setRoot();
 
     public:
         //VRView(bool _active_stereo = false, bool _stereo = false, bool _projection = false, Pnt3f _screenLowerLeft = Pnt3f(0,0,0), Pnt3f _screenLowerRight = Pnt3f(0,0,0), Pnt3f _screenUpperRight = Pnt3f(0,0,0), Pnt3f _screenUpperLeft = Pnt3f(0,0,0), bool swapeyes = false);
@@ -88,25 +92,19 @@ class VRView {
         int getID();
         void setID(int i);
 
-        void setRoot(VRObject* root = 0, VRTransform* _real = 0);
-
-        void setUser(VRTransform* u = 0);
-        VRTransform* getUser();
-
-        void setCamera(VRCamera* c = 0);
-        VRCamera* getCamera();
-
-        void setBackground(BackgroundRecPtr bg = 0);
-
-        void setWindow(WindowRecPtr win = 0);
-
+        void setRoot(VRObject* root, VRTransform* _real);
+        void setUser(VRTransform* u);
+        void setCamera(VRCamera* c);
+        void setBackground(BackgroundRecPtr bg);
+        void setWindow(WindowRecPtr win);
         void setStereo(bool b);
-        bool isStereo();
-
         void setStereoEyeSeparation(float v);
-        float getEyeSeparation();
-
         void setProjection(bool b);
+
+        VRTransform* getUser();
+        VRCamera* getCamera();
+        bool isStereo();
+        float getEyeSeparation();
         bool isProjection();
 
         void setProjectionUp(Vec3f v);

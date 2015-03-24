@@ -56,10 +56,8 @@ class VRGuiSetup {
         void on_menu_add_mouse();
 
         void on_menu_add_keyboard();
-        void on_menu_add_flystick();
         void on_menu_add_haptic();
         void on_menu_add_mobile();
-        void on_menu_add_art_tracker();
         void on_menu_delete();
 
 

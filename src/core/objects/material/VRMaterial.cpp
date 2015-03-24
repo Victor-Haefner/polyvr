@@ -77,7 +77,7 @@ struct VRMatData {
         shaderChunk = 0;
         clipChunk = 0;
 
-        colChunk->setDiffuse( Color4f(0.9, 0.9, 0.8, 1) );
+        colChunk->setDiffuse( Color4f(1, 1, 1, 1) );
         colChunk->setAmbient( Color4f(0.3, 0.3, 0.3, 1) );
         colChunk->setSpecular( Color4f(1, 1, 1, 1) );
         colChunk->setShininess( 50 );

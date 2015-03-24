@@ -13,17 +13,11 @@ void VRObjectManager::addGroup(string group) {
 
 void VRObjectManager::updateObjects() {
     //update the Transform changelists
-    list<VRTransform*>::iterator it;
-    for ( it=VRTransform::changedObjects.begin() ; it != VRTransform::changedObjects.end() ; it++ ) {
-        (*it)->update();
-    }
-
+    for ( auto t : VRTransform::changedObjects ) t->update();
     VRTransform::changedObjects.clear();
 
     //update the dynamic objects
-    for ( it=VRTransform::dynamicObjects.begin() ; it != VRTransform::dynamicObjects.end() ; it++ ) {
-        (*it)->update();
-    }
+    for ( auto t : VRTransform::dynamicObjects ) t->update();
 }
 
 VRObjectManager::VRObjectManager() {
