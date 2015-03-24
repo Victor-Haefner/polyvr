@@ -79,11 +79,12 @@ VRPhysicsManager::~VRPhysicsManager() {
 
 void VRPhysicsManager::updatePhysics(VRThread* thread) {
     if (dynamicsWorld == 0) return;
-
-    static int t_last = glutGet(GLUT_ELAPSED_TIME);
     int t = glutGet(GLUT_ELAPSED_TIME);
-    dynamicsWorld->stepSimulation((t-t_last)*0.001, 30);
-    t_last = t;
+    float dt = (float)(t-(thread->t_last));
+    dynamicsWorld->stepSimulation(dt*0.001,30);
+    //sleep up to 500 fps
+    if(dt < 2.0f) osgSleep((2.0f - dt));
+    thread->t_last = t;
 
     for (auto f : updateFkts) (*f)(0);
 }

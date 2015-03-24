@@ -51,11 +51,11 @@ void VRHaptic::updateVirtMech() {
     v->updateVirtMech();
     OSG::Vec3i states = v->getButtonStates();
 
-    cout << "updateVirtMech b states " << states << endl;
+    //cout << "updateVirtMech b states " << states << endl;
 
     for (int i=0; i<3; i++) {
         if (states[i] != button_states[i]) {
-            cout << "updateVirtMech trigger " << i << " " << states[i] << endl;
+            //cout << "updateVirtMech trigger " << i << " " << states[i] << endl;
             change_button(i, states[i]);
             button_states[i] = states[i];
         }

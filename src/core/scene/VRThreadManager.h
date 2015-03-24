@@ -29,6 +29,9 @@ class VRThread {
         int status = 0;
         VRFunction<VRThread*>* fkt = 0;
         int aspect = 0;
+        /** last frame time stamp**/
+        int t_last = 0;
+
 };
 
 class VRThreadManager {
@@ -43,6 +46,7 @@ class VRThreadManager {
         ~VRThreadManager();
 
         int initThread(VRFunction<VRThread*>* f, string name, bool loop = false, int aspect = 0);
+
 
         void stopThread(int id, int tries = 100);
         void killThread(int id);

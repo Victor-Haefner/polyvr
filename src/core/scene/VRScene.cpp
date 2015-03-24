@@ -33,7 +33,7 @@ VRScene::VRScene() {
     addUpdateFkt(updateAnimationsFkt);
     addUpdateFkt(updatePhysObjectsFkt);
 
-    initThread(updatePhysicsFkt, "physics", true, 0);
+    physicsThreadID = initThread(updatePhysicsFkt, "physics", true, 0);
 
     initDevices();
     VRMaterial::getDefault()->resetDefault();
@@ -52,10 +52,13 @@ VRScene::VRScene() {
 }
 
 VRScene::~VRScene() {
+    //kill physics thread
+    VRThreadManager::stopThread(physicsThreadID);
     root->destroy();
     VRGroup::clearGroups();
     VRLightBeacon::getAll().clear();
     VRCamera::getAll().clear();
+
 }
 
 void VRScene::initDevices() { // TODO: remove this after refactoring the navigation stuff

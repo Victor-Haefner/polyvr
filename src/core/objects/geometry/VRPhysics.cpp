@@ -70,7 +70,7 @@ btRigidBody* VRPhysics::getRigidBody() {boost::recursive_mutex::scoped_lock lock
 btPairCachingGhostObject* VRPhysics::getGhostBody() {boost::recursive_mutex::scoped_lock lock(mtx); return ghost_body; }
 btCollisionShape* VRPhysics::getCollisionShape() {boost::recursive_mutex::scoped_lock lock(mtx); return shape; }
 
-void VRPhysics::setPhysicalized(bool b) { boost::recursive_mutex::scoped_lock lock(mtx); {physicalized = b;} update(); }
+void VRPhysics::setPhysicalized(bool b) { boost::recursive_mutex::scoped_lock lock(mtx); physicalized = b; update(); }
 void VRPhysics::setShape(string s, float param) { boost::recursive_mutex::scoped_lock lock(mtx); physicsShape = s; shape_param = param; update(); }
 bool VRPhysics::isPhysicalized() {boost::recursive_mutex::scoped_lock lock(mtx); return physicalized; }
 string VRPhysics::getShape() {boost::recursive_mutex::scoped_lock lock(mtx); return physicsShape; }
