@@ -6,6 +6,8 @@
 #include <OpenSG/OSGVector.h>
 #include <map>
 #include <vector>
+#include <boost/thread/recursive_mutex.hpp>
+
 
 template<class T> class VRFunction;
 
@@ -49,6 +51,8 @@ class VRPhysicsManager {
         vector<Vec3f> collisionPoints;
         /** timestamp last frame**/
         int t_last;
+        /** **/
+        boost::recursive_mutex mtx;
 
     protected:
         VRFunction<VRThread*>* updatePhysicsFkt;
