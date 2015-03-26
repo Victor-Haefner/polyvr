@@ -61,6 +61,7 @@ void VRNavPreset::setTarget(VRTransform* _target) { target = _target; if (dev) d
 
 void VRNavPreset::activate() {
     active = true;
+    if (dev) dev->setSpeed(speed);
     for (uint i=0; i<bindings.size(); i++) updateBinding(bindings[i]);
 }
 
@@ -77,6 +78,8 @@ void VRNavPreset::addKeyBinding(VRNavBinding b) {
     bindings.push_back(b);
     updateBinding(b);
 }
+
+void VRNavPreset::setSpeed(float vt, float vr) { speed = Vec2f(vt, vr); }
 
 // preset management
 
@@ -150,6 +153,7 @@ void VRNavigator::zoom(VRDevice* dev, int dir) {
     VRTransform* target = dev->getTarget();
     if (target == 0) return;
 
+    //Vec2f speed = dev->getSpeed(); // 0.05
     float speed = 0.05;
     target->zoom(speed*dir);
 }
@@ -220,9 +224,9 @@ void VRNavigator::walk(VRDevice* dev) {
     dir_m.normalize();
     dir_c.normalize();
 
-
-    float speedT = 0.02;
-    float speedR = 0.04;
+    Vec2f speed = dev->getSpeed();
+    float speedT = speed[0]; // 0.02
+    float speedR = speed[1]; // 0.04
 
     Vec3f x = -dir_c*dir_m[1]*speedT*exp(-abs(dir_m[0]));
     float y = -dir_m[0]*speedR*exp(-abs(dir_m[1]));
@@ -244,8 +248,9 @@ void VRNavigator::fly_walk(VRDevice* dev) {
     Vec3f dir = flystick->getWorldDirection();
     dir.normalize();
 
-    float rspeed = 0.7;
-    float tspeed = 1.5;
+    Vec2f speed = dev->getSpeed();
+    float tspeed = speed[0]; // 1.5
+    float rspeed = speed[1]; // 0.7
 
     float dt = 60.0/ max(1u, VRGlobals::get()->FRAME_RATE);
     switch(key) {
@@ -297,6 +302,7 @@ void VRNavigator::initWalk(VRTransform* target, VRDevice* dev) {
     VRNavPreset* preset = new VRNavPreset();
     preset->setDevice(dev);
     preset->setTarget(target);
+    preset->setSpeed(0.02, 0.04);
 
     VRNavBinding b1( getNavigationCallback("mouse_walk"), 0, 0, true);
     preset->addKeyBinding(b1);
@@ -368,6 +374,7 @@ void VRNavigator::initFlyWalk(VRTransform* target, VRDevice* dev) {
     VRNavPreset* preset = new VRNavPreset();
     preset->setDevice(dev);
     preset->setTarget(target);
+    preset->setSpeed(1.5, 0.7);
 
     VRNavBinding b1( getNavigationCallback("fly_walk"), 10, 0, false);
     VRNavBinding b2( getNavigationCallback("fly_walk"), 11, 0, false);

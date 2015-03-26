@@ -16,6 +16,7 @@ class VRDevice : public VRIntersect, public VRAvatar, public VRName, public VRSt
         string message;
         string type;
         VRTransform* target;
+        Vec2f speed;
 
         //map< int, map< int, VRSignal* > >* callbacks;//all callbacks
         //map< int, map< int, VRSignal* > >::iterator itr;
@@ -69,6 +70,9 @@ class VRDevice : public VRIntersect, public VRAvatar, public VRName, public VRSt
         VRTransform* getTarget();
 
         void printMap();
+
+        void setSpeed(Vec2f s);
+        Vec2f getSpeed();
 
         //virtual void save(xmlpp::Element* node);
         //virtual void load(xmlpp::Element* node);

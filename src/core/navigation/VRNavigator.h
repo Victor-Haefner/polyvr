@@ -2,6 +2,7 @@
 #define VRNAVIGATOR_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
+#include <OpenSG/OSGVector.h>
 #include <map>
 #include <string>
 #include <vector>
@@ -26,7 +27,6 @@ struct VRNavBinding {
     string sig_name;
     string cb_name;
     bool doRepeat = false;
-    float speed = 1.0;
 
     VRNavBinding(VRDevCb* c, int k, int s, bool repeat);
 };
@@ -37,6 +37,7 @@ class VRNavPreset : public VRName {
         VRDevice* dev;
         VRTransform* target;
         bool active;
+        Vec2f speed;
 
     public:
         VRNavPreset();
@@ -45,16 +46,14 @@ class VRNavPreset : public VRName {
         void updateBinding(VRNavBinding& b);
 
         void setDevice(VRDevice* _dev);
-
         void setTarget(VRTransform* _target);
+        void setSpeed(float vt, float vr);
 
         void activate();
-
         void deactivate();
 
-        vector<VRNavBinding>& getBindings();
-
         void addKeyBinding(VRNavBinding b);
+        vector<VRNavBinding>& getBindings();
 };
 
 class VRNavigator_base : public VRStorage {

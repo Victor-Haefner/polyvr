@@ -1,6 +1,7 @@
 #include "VRGuiMonitor.h"
 #include "VRGuiUtils.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRProfiler.h"
 #include <gtkmm/window.h>
 #include <cairomm/context.h>
 #include <pangomm/context.h>
@@ -57,20 +58,23 @@ void VRGuiMonitor::draw_timeline(int N0, int N1, int DN, int w, int h, int h0) {
 bool VRGuiMonitor::draw(GdkEventExpose* e) {
     Glib::RefPtr<Gdk::Drawable> win = da->get_window();
     cr = win->create_cairo_context();
-
-    Gtk::Allocation all = da->get_allocation();
-    int width = all.get_width();
-    int height = all.get_height();
-
     cr->rectangle(e->area.x, e->area.y, e->area.width, e->area.height);
     cr->clip(); // only draw on exposed area
 
-    int N = 30;
-    int w = N*30;
-    int h = 0.5*height;
-    da->set_size_request(w, -1);
+    // construction parameters
+    int line_height = 20;
+
+    // get needed lines
+    int lineN = 2; // timeline 1 and 2
+    /*for (auto f : VRProfiler::get()->getCalls()) {
+        ;
+    }*/
+
+    /*da->set_size_request(w, line_height*lineN);
+
     draw_timeline(0, N, 10, 10*w, h, 0);
     draw_timeline(0, N, 1, w, h, h); // frames N0 to N1, in DN steps, w the total width and h the total height, h0 the height offset
+    */
     return true;
 }
 

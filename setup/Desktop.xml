@@ -6,7 +6,6 @@
     </Window>
   </Displays>
   <Devices>
-    <Device h_ip="172.22.151.200" h_type="Virtuose 6D35-45" name="haptic" type="haptic"/>
     <Device name="keyboard" type="keyboard"/>
     <Device name="mobile" type="mobile"/>
     <Device name="mouse" type="mouse"/>

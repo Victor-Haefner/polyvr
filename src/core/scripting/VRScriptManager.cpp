@@ -26,6 +26,9 @@
 #include "VRPySnappingEngine.h"
 #include "VRPySelector.h"
 #include "VRPyClipPlane.h"
+#include "VRPyListMath.h"
+#include "VRPyNavigator.h"
+#include "VRPyNavPreset.h"
 #include <iostream>
 #include <algorithm>
 
@@ -203,6 +206,7 @@ static PyMethodDef VRScriptManager_module_methods[] = {
 	{"triggerScript", (PyCFunction)VRScriptManager::pyTriggerScript, METH_VARARGS, "Trigger a script - triggerScript( str script )" },
 	{"getRoot", (PyCFunction)VRScriptManager::getRoot, METH_NOARGS, "Return the root node of the scenegraph - object getRoot()" },
 	{"printOSG", (PyCFunction)VRScriptManager::printOSG, METH_NOARGS, "Print the OSG tree to console" },
+	{"getNavigator", (PyCFunction)VRScriptManager::getNavigator, METH_NOARGS, "Return a handle to the navigator object" },
     {NULL}  /* Sentinel */
 };
 
@@ -219,6 +223,7 @@ void VRScriptManager::initPyModules() {
 
     PyDict_SetItemString(pLocal, "__builtins__", PyEval_GetBuiltins());
     PyDict_SetItemString(pGlobal, "__builtins__", PyEval_GetBuiltins());
+    VRPyListMath::init(pModBase);
 
     PyObject* sys_path = PySys_GetObject((char*)"path");
     PyList_Append(sys_path, PyString_FromString(".") );
@@ -247,6 +252,8 @@ void VRScriptManager::initPyModules() {
     VRPyRecorder::registerModule("Recorder", pModVR);
     VRPySnappingEngine::registerModule("SnappingEngine", pModVR);
     VRPySelector::registerModule("Selector", pModVR);
+    VRPyNavigator::registerModule("Navigator", pModVR);
+    VRPyNavPreset::registerModule("NavPreset", pModVR);
 
     VRPyClipPlane::registerModule("ClipPlane", pModVR, VRPyGeometry::typeRef);
 	VRPyColorChooser::registerModule("ColorChooser", pModVR);
@@ -386,6 +393,10 @@ string VRScriptManager::getPyVRMethodDoc(string type, string method) {
 // ==============
 // Python methods
 // ==============
+
+PyObject* VRScriptManager::getNavigator(VRScriptManager* self) {
+    return VRPyNavigator::fromPtr((VRNavigator*)VRSceneManager::getCurrent());
+}
 
 PyObject* VRScriptManager::printOSG(VRScriptManager* self) {
     VRObject::printOSGTree( VRSceneManager::getCurrent()->getRoot()->getNode() );

@@ -60,7 +60,7 @@ void VRScript::clean() {
 
     for (t_itr = trigs.begin(); t_itr != trigs.end(); t_itr++) {
         trig* t = t_itr->second;
-        if (t->a) { args.erase(t->a->getName()); delete t->a; }
+        if (t->a && args.count("dev")) { args.erase("dev"); delete t->a; }
         if (t->soc) t->soc->unsetCallbacks();
         if (t->sig) t->sig->sub(cbfkt_dev);
         if (t->trigger == "on_timeout") scene->dropTimeoutFkt(cbfkt_sys);
@@ -99,14 +99,10 @@ void VRScript::update() {
             }
 
             // add dev argument
-            arg* a = new arg(VRName::getName(), "dev");
-            args[a->getName()] = a;
+            if (args.count("dev") == 0) args["dev"] = new arg(VRName::getName(), "dev");
+            arg* a = args["dev"];
             a->type = "VRPyDeviceType";
-            if (dev) {
-                if (dev->getType() == "haptic") a->type = "VRPyHapticType";
-                a->val = dev->getName();
-            }
-            a->ptr = dev;
+            a->val = "";
             a->trig = true;
             t->a = a;
             continue;
@@ -304,6 +300,12 @@ void VRScript::execute() {
 
 void VRScript::execute_dev(VRDevice* dev) {
     if (type != "Python") return;
+
+    args["dev"]->type = "VRPyDeviceType";
+    if (dev->getType() == "haptic") args["dev"]->type = "VRPyHapticType";
+    args["dev"]->val = dev->getName();
+    args["dev"]->ptr = dev;
+
     execute();
 }
 

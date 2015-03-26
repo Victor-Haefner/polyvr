@@ -516,10 +516,16 @@
 		<Unit filename="src/core/scripting/VRPyHaptic.h" />
 		<Unit filename="src/core/scripting/VRPyLight.cpp" />
 		<Unit filename="src/core/scripting/VRPyLight.h" />
+		<Unit filename="src/core/scripting/VRPyListMath.cpp" />
+		<Unit filename="src/core/scripting/VRPyListMath.h" />
 		<Unit filename="src/core/scripting/VRPyLod.cpp" />
 		<Unit filename="src/core/scripting/VRPyLod.h" />
 		<Unit filename="src/core/scripting/VRPyMaterial.cpp" />
 		<Unit filename="src/core/scripting/VRPyMaterial.h" />
+		<Unit filename="src/core/scripting/VRPyNavPreset.cpp" />
+		<Unit filename="src/core/scripting/VRPyNavPreset.h" />
+		<Unit filename="src/core/scripting/VRPyNavigator.cpp" />
+		<Unit filename="src/core/scripting/VRPyNavigator.h" />
 		<Unit filename="src/core/scripting/VRPyObject.cpp" />
 		<Unit filename="src/core/scripting/VRPyObject.h" />
 		<Unit filename="src/core/scripting/VRPyPath.cpp" />
@@ -616,6 +622,7 @@
 		<Unit filename="src/core/utils/VRDoublebuffer.h" />
 		<Unit filename="src/core/utils/VRFlags.cpp" />
 		<Unit filename="src/core/utils/VRFlags.h" />
+		<Unit filename="src/core/utils/VRFunction.cpp" />
 		<Unit filename="src/core/utils/VRFunction.h" />
 		<Unit filename="src/core/utils/VRInternalMonitor.cpp" />
 		<Unit filename="src/core/utils/VRInternalMonitor.h" />
@@ -625,6 +632,8 @@
 		<Unit filename="src/core/utils/VRName.h" />
 		<Unit filename="src/core/utils/VROptions.cpp" />
 		<Unit filename="src/core/utils/VROptions.h" />
+		<Unit filename="src/core/utils/VRProfiler.cpp" />
+		<Unit filename="src/core/utils/VRProfiler.h" />
 		<Unit filename="src/core/utils/VRProgress.cpp" />
 		<Unit filename="src/core/utils/VRProgress.h" />
 		<Unit filename="src/core/utils/VRRate.cpp" />
