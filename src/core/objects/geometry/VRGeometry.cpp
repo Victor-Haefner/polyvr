@@ -466,10 +466,11 @@ void VRGeometry::setMaterial(VRMaterial* mat) {
 void VRGeometry::setMaterial(MaterialRecPtr mat) {
     if (!meshSet) return;
     if (mat == 0) return;
-    if (this->mat == 0) this->mat = new VRMaterial("mat");
 
+    if (this->mat == 0) this->mat = new VRMaterial("mat");
     this->mat->setMaterial(mat);
-    mesh->setMaterial(mat);
+
+    setMaterial(this->mat);
 }
 
 VRMaterial* VRGeometry::getMaterial() {

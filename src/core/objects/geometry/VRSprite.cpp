@@ -26,10 +26,8 @@ VRSprite::VRSprite (string name, bool alpha, float w, float h) : VRGeometry(name
 
 void VRSprite::setLabel (string l, float res) {
     if (l == label) return;
-    int h = 30*res;
-    int w = l.size()*h*0.55;
     label = l;
-    auto labelMat = VRText::get()->getTexture(l, font, w, h, fontColor, Color4f(0,0,0,0) );
+    auto labelMat = VRText::get()->getTexture(l, font, 20*res, fontColor, Color4f(0,0,0,0) );
     labelMat->setSortKey(1);
     setMaterial(labelMat);
 }

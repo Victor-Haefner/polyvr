@@ -120,10 +120,10 @@ ImageRecPtr VRText::create(string text, string font, int scale, Color4f fg, Colo
     return createBmp(text, font, scale*l, scale*1.5, fg, bg);
 }
 
-SimpleTexturedMaterialRecPtr VRText::getTexture (string text, string font, int width, int height, Color4f fg, Color4f bg) {
+SimpleTexturedMaterialRecPtr VRText::getTexture (string text, string font, int scale, Color4f fg, Color4f bg) {
     SimpleTexturedMaterialRecPtr tex = SimpleTexturedMaterial::create();
-    tex->setImage( createBmp(text, font, width, height, fg, bg) );
-
+    int l = text.size();
+    tex->setImage( createBmp(text, font, scale*l, scale*1.5, fg, bg) );
     return tex;
 }
 

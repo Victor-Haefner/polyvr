@@ -241,14 +241,12 @@ void VRMaterial::setMaterial(MaterialRecPtr m) {
         setDiffuse(sm->getDiffuse());
         setAmbient(sm->getAmbient());
         setSpecular(sm->getSpecular());
-        return;
-    }
-    if ( isSTMat(m) ) {
-        SimpleTexturedMaterialRecPtr stm = dynamic_pointer_cast<SimpleTexturedMaterial>(m);
-        setDiffuse(stm->getDiffuse());
-        setAmbient(stm->getAmbient());
-        setSpecular(stm->getSpecular());
-        setTexture(stm->getImage());
+
+        if ( isSTMat(m) ) {
+            SimpleTexturedMaterialRecPtr stm = dynamic_pointer_cast<SimpleTexturedMaterial>(m);
+            setTexture(stm->getImage(), true);
+        }
+
         return;
     }
     if ( isCMat(m) ) {

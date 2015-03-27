@@ -27,7 +27,7 @@ class VRText {
 
         ImageRecPtr create(string text, string font, int scale, Color4f fg, Color4f bg);
 
-        SimpleTexturedMaterialRecPtr getTexture (string text, string font, int width, int height, Color4f fg, Color4f bg);
+        SimpleTexturedMaterialRecPtr getTexture (string text, string font, int scale, Color4f fg, Color4f bg);
 };
 
 
