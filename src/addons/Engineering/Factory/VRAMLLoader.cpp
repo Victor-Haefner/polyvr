@@ -15,6 +15,8 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 
+#include "core/objects/geometry/VRPhysics.h"
+
 OSG_BEGIN_NAMESPACE;
 
 VRAMLLoader::VRAMLLoader() {
