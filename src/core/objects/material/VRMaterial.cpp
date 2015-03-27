@@ -169,6 +169,10 @@ void VRMaterial::setActivePass(int i) {
     activePass = i;
 }
 
+void VRMaterial::addStencilBuffer() {
+    ;
+}
+
 void VRMaterial::clearExtraPasses() { for (int i=1; i<getNPasses(); i++) remPass(i); }
 void VRMaterial::appendPasses(VRMaterial* mat) {
     for (int i=0; i<mat->getNPasses(); i++) {

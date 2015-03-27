@@ -85,6 +85,7 @@ class VRMaterial : public VRObject {
         void setZOffset(float factor, float bias);
         void setFrontBackModes(int front, int back);
         void setClipPlane(bool active, Vec4f equation, VRTransform* beacon);
+        void addStencilBuffer();
 
         Color3f getDiffuse();
         Color3f getSpecular();
