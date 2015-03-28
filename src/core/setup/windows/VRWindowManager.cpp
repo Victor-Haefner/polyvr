@@ -91,13 +91,14 @@ void VRWindowManager::initGlut() { // deprecated?
     int argc = 0;
     glutInit(&argc, NULL);
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_STENCIL_TEST);
 
     //glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
     //setMultisampling(true);
 
     if (VROptions::get()->getOption<bool>("active_stereo"))
-        glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STEREO);
-    else glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
+        glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STEREO | GLUT_STENCIL);
+    else glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL);
 }
 
 VRWindow* VRWindowManager::addGlutWindow(string name) {

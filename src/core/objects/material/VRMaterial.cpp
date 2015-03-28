@@ -19,6 +19,7 @@
 #include <OpenSG/OSGTwoSidedLightingChunk.h>
 #include <OpenSG/OSGImage.h>
 #include <OpenSG/OSGClipPlaneChunk.h>
+#include <OpenSG/OSGStencilChunk.h>
 #include "core/objects/VRTransform.h"
 #include "core/utils/toString.h"
 #include "core/scene/VRSceneManager.h"
@@ -45,6 +46,7 @@ struct VRMatData {
     ImageRecPtr texture;
     ShaderProgramChunkRecPtr shaderChunk;
     ClipPlaneChunkRecPtr clipChunk;
+    StencilChunkRecPtr stencilChunk;
     ShaderProgramRecPtr vProgram;
     ShaderProgramRecPtr fProgram;
     ShaderProgramRecPtr gProgram;
@@ -76,6 +78,7 @@ struct VRMatData {
         video = 0;
         shaderChunk = 0;
         clipChunk = 0;
+        stencilChunk = 0;
 
         colChunk->setDiffuse( Color4f(1, 1, 1, 1) );
         colChunk->setAmbient( Color4f(0.3, 0.3, 0.3, 1) );
@@ -97,6 +100,7 @@ struct VRMatData {
         if (polygonChunk) { m->polygonChunk = dynamic_pointer_cast<PolygonChunk>(polygonChunk->shallowCopy()); m->mat->addChunk(m->polygonChunk); }
         if (twoSidedChunk) { m->twoSidedChunk = dynamic_pointer_cast<TwoSidedLightingChunk>(twoSidedChunk->shallowCopy()); m->mat->addChunk(m->twoSidedChunk); }
         if (clipChunk) { m->clipChunk = dynamic_pointer_cast<ClipPlaneChunk>(clipChunk->shallowCopy()); m->mat->addChunk(m->clipChunk); }
+        if (stencilChunk) { m->stencilChunk = dynamic_pointer_cast<StencilChunk>(stencilChunk->shallowCopy()); m->mat->addChunk(m->stencilChunk); }
         if (shaderChunk) { m->shaderChunk = ShaderProgramChunk::create(); m->mat->addChunk(m->shaderChunk); }
 
         if (texture) { m->texture = dynamic_pointer_cast<Image>(texture->shallowCopy()); m->texChunk->setImage(m->texture); }
@@ -169,14 +173,37 @@ void VRMaterial::setActivePass(int i) {
     activePass = i;
 }
 
-void VRMaterial::addStencilBuffer() {
-    ;
+void VRMaterial::setStencilBuffer(bool clear, float value, float mask, int func, int opFail, int opZFail, int opPass) {
+    auto md = mats[activePass];
+    if (md->stencilChunk == 0) { md->stencilChunk = StencilChunk::create(); md->mat->addChunk(md->stencilChunk); }
+
+    if (clear) md->stencilChunk->setClearBuffer(1);
+    md->stencilChunk->setStencilFunc(func);
+    md->stencilChunk->setStencilValue(value);
+    md->stencilChunk->setStencilMask(mask);
+    md->stencilChunk->setStencilOpFail(opFail);
+    md->stencilChunk->setStencilOpZFail(opZFail);
+    md->stencilChunk->setStencilOpZPass(opPass);
 }
 
 void VRMaterial::clearExtraPasses() { for (int i=1; i<getNPasses(); i++) remPass(i); }
 void VRMaterial::appendPasses(VRMaterial* mat) {
     for (int i=0; i<mat->getNPasses(); i++) {
         VRMatData* md = mat->mats[i]->copy();
+        passes->addMaterial(md->mat);
+        mats.push_back(md);
+    }
+}
+
+void VRMaterial::prependPasses(VRMaterial* mat) {
+    vector<VRMatData*> pses;
+    for (int i=0; i<mat->getNPasses(); i++) pses.push_back( mat->mats[i]->copy() );
+    for (int i=0; i<getNPasses(); i++) pses.push_back(mats[i]);
+
+    passes->clearMaterials();
+    mats.clear();
+
+    for (auto md : pses) {
         passes->addMaterial(md->mat);
         mats.push_back(md);
     }
@@ -347,6 +374,12 @@ void VRMaterial::setZOffset(float factor, float bias) {
     md->polygonChunk->setOffsetFactor(factor);
     md->polygonChunk->setOffsetBias(bias);
     md->polygonChunk->setOffsetFill(true);
+}
+
+void VRMaterial::setSortKey(int key) {
+    auto md = mats[activePass];
+    //if (md->polygonChunk == 0) { md->polygonChunk = PolygonChunk::create(); md->mat->addChunk(md->polygonChunk); }
+    md->mat->setSortKey(key);
 }
 
 void VRMaterial::setFrontBackModes(int front, int back) {

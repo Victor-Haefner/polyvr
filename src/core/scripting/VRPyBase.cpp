@@ -148,5 +148,26 @@ PyObject* VRPyBase::toPyTuple(OSG::Vec2f v) {
     return res;
 }
 
+int VRPyBase::toGLConst(PyObject* o) {
+    string s = PyString_AsString(o);
+    if (s == "GL_NEVER") return GL_NEVER;
+    if (s == "GL_ALWAYS") return GL_ALWAYS;
+    if (s == "GL_EQUAL") return GL_EQUAL;
+    if (s == "GL_NOTEQUAL") return GL_NOTEQUAL;
+    if (s == "GL_LESS") return GL_LESS;
+    if (s == "GL_LEQUAL") return GL_LEQUAL;
+    if (s == "GL_GEQUAL") return GL_GEQUAL;
+    if (s == "GL_GREATER") return GL_GREATER;
+    if (s == "GL_KEEP") return GL_KEEP;
+    if (s == "GL_ZERO") return GL_ZERO;
+    if (s == "GL_REPLACE") return GL_REPLACE;
+    if (s == "GL_INCR") return GL_INCR;
+    if (s == "GL_INCR_WRAP") return GL_INCR_WRAP;
+    if (s == "GL_DECR") return GL_DECR;
+    if (s == "GL_DECR_WRAP") return GL_DECR_WRAP;
+    if (s == "GL_INVERT") return GL_INVERT;
+    return 0;
+}
+
 template<class T>
 PyTypeObject VRPyBaseT<T>::type = NULL;

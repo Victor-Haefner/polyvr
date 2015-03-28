@@ -113,6 +113,11 @@ VRGuiManager* VRGuiManager::get() {
     return instance;
 }
 
+void VRGuiManager::wakeWindow() {
+    setVPanedSensitivity("vpaned1", true);
+    setNotebookSensitivity("notebook3", true);
+}
+
 void VRGuiManager::printInfo(string s) {
     if (standalone) return;
     g_bits->write_to_terminal(s);

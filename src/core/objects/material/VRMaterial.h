@@ -51,6 +51,7 @@ class VRMaterial : public VRObject {
         int addPass();
         void remPass(int i);
         void appendPasses(VRMaterial* mat);
+        void prependPasses(VRMaterial* mat);
         void clearExtraPasses();
 
         static VRMaterial* getDefault();
@@ -83,9 +84,10 @@ class VRMaterial : public VRObject {
         void setPointSize(int s);
         void setWireFrame(bool b);
         void setZOffset(float factor, float bias);
+        void setSortKey(int key);
         void setFrontBackModes(int front, int back);
         void setClipPlane(bool active, Vec4f equation, VRTransform* beacon);
-        void addStencilBuffer();
+        void setStencilBuffer(bool clear, float value, float mask, int func, int opFail, int opZFail, int opPass);
 
         Color3f getDiffuse();
         Color3f getSpecular();

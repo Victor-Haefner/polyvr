@@ -1,4 +1,7 @@
 #include "PolyVR.h"
+
+#include "core/scene/VRScene.h"
+#include "core/objects/object/VRObject.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
@@ -63,9 +66,10 @@ void initPolyVR(int argc, char **argv) {
     //GLUT
     glutInit(&argc, argv);
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_STENCIL_TEST);
     if (VROptions::get()->getOption<bool>("active_stereo"))
-        glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STEREO);
-    else glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
+        glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STEREO | GLUT_STENCIL);
+    else glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL);
 
     //OSG
     ChangeList::setReadWriteDefault();
@@ -105,11 +109,15 @@ void exitPolyVR() {
 
 
 void startPolyVR() {
-    //VRFunction<VRThread*>* fkt = new VRFunction<VRThread*>( "VRSceneManager::update", boost::bind(&VRSceneManager::update, VRSceneManager::get()) );
-    //VRSceneManager::get()->initThread(fkt, "", true, 0);
-    while(true) {
-        VRSceneManager::get()->update();
-    }
+    while(true) VRSceneManager::get()->update();
+}
+
+void startPolyVR_testScene(NodeRecPtr n) {
+    VRSceneManager::get()->newScene("test");
+    VRSceneManager::getCurrent()->getRoot()->find("Headlight")->addChild(n);
+    VRGuiManager::get()->wakeWindow();
+
+    startPolyVR();
 }
 
 

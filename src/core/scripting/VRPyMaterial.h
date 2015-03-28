@@ -25,11 +25,13 @@ struct VRPyMaterial : VRPyBaseT<OSG::VRMaterial> {
     static PyObject* setShininess(VRPyMaterial* self, PyObject* args);
     static PyObject* setTexture(VRPyMaterial* self, PyObject* args);
     static PyObject* setTextureType(VRPyMaterial* self, PyObject* args);
+    static PyObject* setStencilBuffer(VRPyMaterial* self, PyObject* args);
 
     static PyObject* setPointSize(VRPyMaterial* self, PyObject* args);
     static PyObject* setLineWidth(VRPyMaterial* self, PyObject* args);
     static PyObject* setWireFrame(VRPyMaterial* self, PyObject* args);
     static PyObject* setZOffset(VRPyMaterial* self, PyObject* args);
+    static PyObject* setSortKey(VRPyMaterial* self, PyObject* args);
 
     static PyObject* setQRCode(VRPyMaterial* self, PyObject* args);
 

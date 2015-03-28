@@ -21,5 +21,6 @@ int main(int argc, char **argv) {
 
 	initPolyVR(argc,argv);
     startPolyVR();
+
 	return 0;
 }

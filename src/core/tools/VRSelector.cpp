@@ -9,10 +9,11 @@ VRSelector::VRSelector() { color = Vec3f(0.2, 0.65, 0.9); }
 
 VRMaterial* VRSelector::getMat() {
     VRMaterial* mat = new VRMaterial("VRSelector");
-    mat->setFrontBackModes(GL_NONE, GL_LINE);
+    mat->setFrontBackModes(GL_LINE, GL_LINE);
     mat->setDiffuse(color);
-    mat->setLineWidth(5);
+    mat->setLineWidth(8);
     mat->setLit(false);
+    mat->setStencilBuffer(false, 1,-1, GL_NOTEQUAL, GL_KEEP, GL_KEEP, GL_REPLACE);
     return mat;
 }
 
@@ -54,7 +55,9 @@ void VRSelector::select(VRObject* obj) {
     for (auto g : geos) {
         orig_mats[g] = g->getMaterial();
         VRMaterial* mat = getMat();
-        mat->appendPasses(orig_mats[g]);
+        mat->prependPasses(orig_mats[g]);
+        mat->setActivePass(0);
+        mat->setStencilBuffer(true, 1,-1, GL_ALWAYS, GL_KEEP, GL_KEEP, GL_REPLACE);
         g->setMaterial(mat);
     }
 }

@@ -22,6 +22,8 @@ class VRGuiManager {
         void printInfo(string s);
 
         void updateGtk();
+
+        void wakeWindow();
 };
 
 OSG_END_NAMESPACE;

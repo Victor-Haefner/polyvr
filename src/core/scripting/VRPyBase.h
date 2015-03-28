@@ -48,6 +48,8 @@ struct VRPyBase {
     static PyObject* toPyTuple(OSG::Vec3f v);
     static PyObject* toPyTuple(OSG::Vec3i v);
     static PyObject* toPyTuple(OSG::Vec2f v);
+
+    static int toGLConst(PyObject* o);
 };
 
 template<class T>
