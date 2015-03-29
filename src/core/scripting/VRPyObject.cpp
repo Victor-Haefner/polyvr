@@ -70,8 +70,34 @@ PyMethodDef VRPyObject::methods[] = {
     {"setPickable", (PyCFunction)VRPyObject::setPickable, METH_VARARGS, "Set if the object is pickable" },
     {"printOSG", (PyCFunction)VRPyObject::printOSG, METH_NOARGS, "Print the OSG structure to console" },
     {"flattenHiarchy", (PyCFunction)VRPyObject::flattenHiarchy, METH_NOARGS, "Flatten the scene graph hiarchy" },
+    {"addTag", (PyCFunction)VRPyObject::addTag, METH_VARARGS, "Add a tag to the object - addTag( str tag )" },
+    {"hasTag", (PyCFunction)VRPyObject::hasTag, METH_VARARGS, "Check if the object has a tag - bool hasTag( str tag )" },
+    {"remTag", (PyCFunction)VRPyObject::remTag, METH_VARARGS, "Remove a tag from the object - remTag( str tag )" },
+    {"hasAncestorWithTag", (PyCFunction)VRPyObject::hasAncestorWithTag, METH_VARARGS, "Check if the object or an ancestor has a tag - obj hasAncestorWithTag( str tag )" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyObject::addTag(VRPyObject* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::addTag - C Object is invalid"); return NULL; }
+    self->obj->addAttachment( parseString(args) , 0);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyObject::hasTag(VRPyObject* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::hasTag - C Object is invalid"); return NULL; }
+    return PyBool_FromLong( self->obj->hasAttachment( parseString(args) ) );
+}
+
+PyObject* VRPyObject::hasAncestorWithTag(VRPyObject* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::hasAncestorWithTag - C Object is invalid"); return NULL; }
+    return VRPyTypeCaster::cast( self->obj->hasAncestorWithAttachment( parseString(args) ) );
+}
+
+PyObject* VRPyObject::remTag(VRPyObject* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::remTag - C Object is invalid"); return NULL; }
+    self->obj->remAttachment( parseString(args) );
+    Py_RETURN_TRUE;
+}
 
 int VRPyObject::compare(PyObject* p1, PyObject* p2) {
     if (Py_TYPE(p1) != Py_TYPE(p2)) return -1;

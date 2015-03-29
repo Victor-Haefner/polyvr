@@ -91,6 +91,7 @@ class VRObject : public VRName {
         template<typename T> void addAttachment(string name, T t);
         template<typename T> T getAttachment(string name);
         bool hasAttachment(string name);
+        void remAttachment(string name);
         VRObject* hasAncestorWithAttachment(string name);
 
         /** Set the object OSG core && specify the type**/

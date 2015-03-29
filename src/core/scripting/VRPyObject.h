@@ -30,6 +30,10 @@ struct VRPyObject : VRPyBaseT<OSG::VRObject> {
     static PyObject* setPickable(VRPyObject* self, PyObject* args);
     static PyObject* printOSG(VRPyObject* self);
     static PyObject* flattenHiarchy(VRPyObject* self);
+    static PyObject* addTag(VRPyObject* self, PyObject* args);
+    static PyObject* hasTag(VRPyObject* self, PyObject* args);
+    static PyObject* remTag(VRPyObject* self, PyObject* args);
+    static PyObject* hasAncestorWithTag(VRPyObject* self, PyObject* args);
 };
 
 #endif // VRPYOBJECT_H_INCLUDED

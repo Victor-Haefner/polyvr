@@ -58,18 +58,23 @@ VRIntersection VRIntersect::intersect(VRObject* tree) {
     IntersectActionRefPtr iAct = IntersectAction::create();
     iAct->setLine(ray);
     iAct->apply(tree->getNode());
-    ins.hit = iAct->didHit(); // TODO :
-    if (!ins.hit) { intersections[tree] = ins; lastIntersection = ins; return ins; }
 
-    ins.object = tree->find(iAct->getHitObject()->getParent());
-    ins.point = iAct->getHitPoint();
-    ins.normal = iAct->getHitNormal();
-    if (tree->getParent()) tree->getParent()->getNode()->getToWorld().mult( ins.point, ins.point );
-    if (tree->getParent()) tree->getParent()->getNode()->getToWorld().mult( ins.normal, ins.normal );
-    ins.triangle = iAct->getHitTriangle();
-    ins.texel = VRIntersect_computeTexel(ins, iAct->getHitObject());
+    ins.hit = iAct->didHit();
+    if (ins.hit) {
+        ins.object = tree->find(iAct->getHitObject()->getParent());
+        ins.point = iAct->getHitPoint();
+        ins.normal = iAct->getHitNormal();
+        if (tree->getParent()) tree->getParent()->getNode()->getToWorld().mult( ins.point, ins.point );
+        if (tree->getParent()) tree->getParent()->getNode()->getToWorld().mult( ins.normal, ins.normal );
+        ins.triangle = iAct->getHitTriangle();
+        ins.texel = VRIntersect_computeTexel(ins, iAct->getHitObject());
+        lastIntersection = ins;
+    } else {
+        ins.object = 0;
+        if (lastIntersection.time < ins.time) lastIntersection = ins;
+    }
+
     intersections[tree] = ins;
-    lastIntersection = ins;
 
     if (showHit) cross->setWorldPosition(Vec3f(ins.point));
     return ins;

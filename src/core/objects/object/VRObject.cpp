@@ -60,6 +60,7 @@ VRObject::~VRObject() {
 int VRObject::getID() { return ID; }
 string VRObject::getType() { return type; }
 bool VRObject::hasAttachment(string name) { return attachments.count(name); }
+void VRObject::remAttachment(string name) { attachments.erase(name); }
 
 VRObject* VRObject::hasAncestorWithAttachment(string name) {
     if (hasAttachment(name)) return this;

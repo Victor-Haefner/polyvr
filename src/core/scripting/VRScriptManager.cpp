@@ -198,7 +198,7 @@ initVRPyStdOut(void) {
 
 static PyMethodDef VRScriptManager_module_methods[] = {
 	{"exit", (PyCFunction)VRScriptManager::exit, METH_NOARGS, "Terminate application" },
-	{"loadGeometry", (PyCFunction)VRScriptManager::loadGeometry, METH_VARARGS, "Loads a collada file and returns a VR.Object node" },
+	{"loadGeometry", (PyCFunction)VRScriptManager::loadGeometry, METH_VARARGS, "Loads a collada file and returns a VR.Object node - obj loadGeometry('myPath', bool ignore_cache)" },
 	{"stackCall", (PyCFunction)VRScriptManager::stackCall, METH_VARARGS, "Schedules a call to a python function - stackCall( function, delay, [args] )" },
 	{"openFileDialog", (PyCFunction)VRScriptManager::openFileDialog, METH_VARARGS, "Open a file dialog - openFileDialog( onLoad, mode, title, default_path, filter )\n mode : {Save, Load, New, Create}" },
 	{"updateGui", (PyCFunction)VRScriptManager::updateGui, METH_NOARGS, "Update the gui" },
