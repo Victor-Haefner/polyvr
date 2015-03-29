@@ -4,6 +4,7 @@
 #include "core/setup/VRSetup.h"
 #include "core/setup/windows/VRWindow.h"
 #include "core/utils/VRRate.h"
+#include "core/utils/VRProfiler.h"
 #include "VRScene.h"
 #include "core/objects/VRLight.h"
 #include "core/objects/VRLightBeacon.h"
@@ -190,6 +191,7 @@ void VRSceneManager::updateScene() {
 }
 
 void VRSceneManager::update() {
+    VRProfiler::get()->swap();
     int fps = VRRate::get()->getRate();
 
     VRGuiManager::get()->updateGtk();

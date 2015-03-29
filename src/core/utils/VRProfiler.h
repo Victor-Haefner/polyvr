@@ -3,6 +3,7 @@
 
 #include <list>
 #include <map>
+#include <boost/thread/mutex.hpp>
 
 using namespace std;
 
@@ -15,11 +16,21 @@ class VRProfiler {
         };
 
         struct Frame {
+            int t0, t1;
+            bool running = true;
             map<int, Call> calls;
         };
 
     private:
         list<Frame> frames;
+        Frame* current = 0;
+        int ID = 0;
+        int history = 100;
+        bool active = true;
+
+        boost::mutex mutex;
+
+        int getTime();
 
         VRProfiler();
 
@@ -31,7 +42,8 @@ class VRProfiler {
 
         list<Frame> getFrames();
 
-        void setHistoryLength();
+        void setHistoryLength(int N);
+        int getHistoryLength();
 
         void swap();
 };
