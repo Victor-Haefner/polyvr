@@ -65,6 +65,7 @@ PyMethodDef VRPyDevice::methods[] = {
     {"getMessage", (PyCFunction)VRPyDevice::getMessage, METH_NOARGS, "Get device received message." },
     {"getType", (PyCFunction)VRPyDevice::getType, METH_NOARGS, "Get device type." },
     {"setDnD", (PyCFunction)VRPyDevice::setDnD, METH_VARARGS, "Set drag && drop." },
+    {"intersect", (PyCFunction)VRPyDevice::intersect, METH_NOARGS, "Intersects the scene" },
     {"getIntersected", (PyCFunction)VRPyDevice::getIntersected, METH_NOARGS, "Get device intersected object." },
     {"getIntersection", (PyCFunction)VRPyDevice::getIntersection, METH_NOARGS, "Get device intersection point." },
     {"getIntersectionNormal", (PyCFunction)VRPyDevice::getIntersectionNormal, METH_NOARGS, "Get normal at intersection point." },
@@ -77,6 +78,11 @@ PyMethodDef VRPyDevice::methods[] = {
     {NULL}  /* Sentinel */
 };
 
+PyObject* VRPyDevice::intersect(VRPyDevice* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::intersect, Object is invalid"); return NULL; }
+    self->obj->intersect(0);
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyDevice::drag(VRPyDevice* self, PyObject *args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::drag, Object is invalid"); return NULL; }
