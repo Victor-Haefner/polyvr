@@ -56,6 +56,7 @@ VRIntersection VRIntersect::intersect(VRObject* tree) {
 
     Line ray = caster->castRay(tree);
     IntersectActionRefPtr iAct = IntersectAction::create();
+    iAct->setTravMask(8);
     iAct->setLine(ray);
     iAct->apply(tree->getNode());
 
