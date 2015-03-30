@@ -279,8 +279,15 @@ void VRTransform::setWorldMatrix(Matrix m) {
 /** Set the world position of the object **/
 void VRTransform::setWorldPosition(Vec3f pos) {
     if (isNan(pos)) return;
-    //_from += pos - getWorldPosition();
-    _from = pos - getWorldPosition(true);
+
+    Matrix m;
+    m.setTranslate(pos);
+
+    Matrix wm = getWorldMatrix(true);
+    wm.invert();
+    wm.mult(m);
+    _from = Vec3f(wm[3]);
+
     reg_change();
 }
 
