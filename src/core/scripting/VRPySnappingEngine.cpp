@@ -49,7 +49,7 @@ PyMethodDef VRPySnappingEngine::methods[] = {
     {"remObject", (PyCFunction)VRPySnappingEngine::remObject, METH_VARARGS, "Remove an object - remObject(obj)" },
     {"addTree", (PyCFunction)VRPySnappingEngine::addTree, METH_VARARGS, "Add all subtree objects to be checked for snapping - addTree(obj)" },
     {"setPreset", (PyCFunction)VRPySnappingEngine::setPreset, METH_VARARGS, "Initiate the engine with a preset - setPreset(str preset)\n   preset can be: 'snap back', 'simple alignment'" },
-    {"addRule", (PyCFunction)VRPySnappingEngine::addRule, METH_VARARGS, "Add snapping rule - int addRule(str translation, str orientation, prim_t[x,y,z,x0,y0,z0], prim_o[x,y,z,x0,y0,z0] center, float dist, float weight, bool local)" },
+    {"addRule", (PyCFunction)VRPySnappingEngine::addRule, METH_VARARGS, "Add snapping rule - int addRule(str translation, str orientation, prim_t[x,y,z,x0,y0,z0], prim_o[x,y,z,x0,y0,z0], float dist, float weight, bool local)" },
     {"remRule", (PyCFunction)VRPySnappingEngine::remRule, METH_VARARGS, "Remove a rule - remRule(int ID)" },
     {NULL}  /* Sentinel */
 };
