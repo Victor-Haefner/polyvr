@@ -62,8 +62,6 @@ class VRTransform : public VRObject {
 
         void reg_change();
 
-        //multiplizirt alle matrizen in dem vector zusammen
-        Matrix computeMatrixVector(vector<Matrix> tv);
         bool checkWorldChange();
 
         void printInformation();
@@ -105,8 +103,8 @@ class VRTransform : public VRObject {
 
         void getWorldMatrix(Matrix& _m, bool parentOnly = false);
         Matrix getWorldMatrix(bool parentOnly = false);
-        Vec3f getWorldPosition();
-        Vec3f getWorldDirection();
+        Vec3f getWorldPosition(bool parentOnly = false);
+        Vec3f getWorldDirection(bool parentOnly = false);
 
         void setWorldMatrix(Matrix _m);
         void setWorldPosition(Vec3f pos);

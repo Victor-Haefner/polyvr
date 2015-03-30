@@ -71,18 +71,6 @@ void VRTransform::reg_change() {
     }
 }
 
-//multiplizirt alle matrizen in dem vector zusammen
-Matrix VRTransform::computeMatrixVector(vector<Matrix> tv) {
-    if (tv.size() == 0) return Matrix();
-
-    Matrix m;
-    for (unsigned int i=0; i<tv.size(); i++) {
-        m.mult(tv[tv.size()-i-1]);
-    }
-
-    return m;
-}
-
 void VRTransform::printInformation() { Matrix m; getMatrix(m); cout << " pos " << m[3]; }
 
 /** initialise a point 3D object with his name **/
@@ -226,35 +214,22 @@ bool VRTransform::checkWorldChange() {
 }
 
 /** Returns the world matrix **/
-void VRTransform::getWorldMatrix(Matrix& _m, bool parentOnly) {
-    //if (checkWorldChange()) {
-    if (true) {
-        vector<Matrix> tv;
+void VRTransform::getWorldMatrix(Matrix& M, bool parentOnly) {
+    VRTransform* t = 0;
+    M.setIdentity();
 
-        Matrix m;
-        VRObject* obj = this;
-        if (parentOnly && obj->getParent() != 0) obj = obj->getParent();
+    Matrix m;
+    VRObject* o = this;
+    if (parentOnly && o->getParent() != 0) o = o->getParent();
 
-        VRTransform* tmp;
-        while(true) {
-            if (obj->hasAttachment("transform")) {
-                tmp = (VRTransform*)obj;
-                tmp->getMatrix(m);
-                //cout << "\nPARENT: " << tmp->getName();
-                //cout << "\n" << m;
-                tv.push_back(m);
-            }
-
-            if (obj->getParent() == 0) break;
-            else obj = obj->getParent();
+    while(o) {
+        if (o->hasAttachment("transform")) {
+            t = (VRTransform*)o;
+            t->getMatrix(m);
+            M.multLeft(m);
         }
-
-        WorldTransformation = computeMatrixVector(tv);
+        o = o->getParent();
     }
-
-    _m = WorldTransformation;
-    //if (getName() == "Box") cout << WorldTransformation << endl;
-    //cout << "\nGETWM: " << getName() << endl << _m << endl;
 }
 
 Matrix VRTransform::getWorldMatrix(bool parentOnly) {
@@ -264,9 +239,9 @@ Matrix VRTransform::getWorldMatrix(bool parentOnly) {
 }
 
 /** Returns the world Position **/
-Vec3f VRTransform::getWorldPosition() {
+Vec3f VRTransform::getWorldPosition(bool parentOnly) {
     Matrix m;
-    getWorldMatrix(m);
+    getWorldMatrix(m, parentOnly);
     return Vec3f(m[3]);
 }
 
@@ -274,9 +249,9 @@ Vec3f VRTransform::getWorldPosition() {
 Vec3f VRTransform::getDir() { return _at-_from; }
 
 /** Returns the world direction vector (not normalized) **/
-Vec3f VRTransform::getWorldDirection() {
+Vec3f VRTransform::getWorldDirection(bool parentOnly) {
     Matrix m;
-    getWorldMatrix(m);
+    getWorldMatrix(m, parentOnly);
     return Vec3f(m[2]);
 }
 
@@ -299,16 +274,13 @@ void VRTransform::setWorldMatrix(Matrix m) {
     wm.invert();
     wm.mult(m);
     setMatrix(wm);
-
-    //cout << ;
 }
 
 /** Set the world position of the object **/
 void VRTransform::setWorldPosition(Vec3f pos) {
     if (isNan(pos)) return;
-    Vec3f tmp = getWorldPosition();
-
-    _from = pos - tmp + _from;
+    //_from += pos - getWorldPosition();
+    _from = pos - getWorldPosition(true);
     reg_change();
 }
 

@@ -49,6 +49,7 @@ struct VRPyTransform : VRPyBaseT<OSG::VRTransform> {
     static PyObject* getConstraintAngleWith(VRPyTransform* self, PyObject *args);
     static PyObject* deletePhysicsConstraints(VRPyTransform* self, PyObject* args);
     static PyObject* setDamping(VRPyTransform* self, PyObject* args);
+    static PyObject* applyChange(VRPyTransform* self);
 
     static PyObject* setPickable(VRPyTransform* self, PyObject* args);
     static PyObject* setPlaneConstraints(VRPyTransform* self, PyObject* args);
