@@ -1,16 +1,20 @@
 #ifndef CAVEKEEPER_H_INCLUDED
 #define CAVEKEEPER_H_INCLUDED
 
+#include <OpenSG/OSGVector.h>
+#include <map>
+#include <string>
+#include <vector>
 #include "CKOctree.h"
-#include "core/objects/material/VRShader.h"
-#include "core/objects/geometry/VRGeometry.h"
-
-#include <OpenSG/OSGSimpleMaterial.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRDevice;
+class VRGeometry;
+class VRMaterial;
+class VRObject;
+class VRTransform;
 
 // -------------- TODO --------
 // check if element exists when adding to octree
@@ -26,9 +30,8 @@ class BlockWorld {
     private:
         VRObject* anchor;
 
-        map<string, VRShader*>* shader;
-        map<string, SimpleMaterialRecPtr>* materials;
-        map<int, VRGeometry*>* chunks;
+        map<string, VRMaterial*> materials;
+        map<int, VRGeometry*> chunks;
 
         // octree population algorithm
 
@@ -36,7 +39,7 @@ class BlockWorld {
         void createSphere(int r, Vec3i p0);
         // mesh methods
 
-        SimpleMaterialRecPtr initMaterial(string texture);
+        VRMaterial* initMaterial(string texture);
 
 		VRGeometry* createChunk(vector<CKOctree::element*>& elements);
 

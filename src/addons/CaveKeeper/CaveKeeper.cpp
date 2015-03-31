@@ -10,6 +10,9 @@
 #include "core/objects/VRCamera.h"
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/setup/devices/VRDevice.h"
+#include "core/objects/material/VRMaterial.h"
+#include "core/objects/material/VRMaterialT.h"
+#include "core/objects/geometry/VRGeometry.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -46,57 +49,42 @@ void BlockWorld::createSphere(int r, Vec3i p0) {
 
 // mesh methods
 
-SimpleMaterialRecPtr BlockWorld::initMaterial(string texture) {
-    if (materials->count(texture) == 1) return (*materials)[texture];
+VRMaterial* BlockWorld::initMaterial(string texture) {
+    if (materials.count(texture) == 1) return materials[texture];
+
+    string wdir = VRSceneManager::get()->getOriginalWorkdir();
 
     //simple material
-    SimpleMaterialRecPtr mat = SimpleMaterial::create();
+    VRMaterial* mat = new VRMaterial("cavekeeper_mat");
     mat->setDiffuse(Color3f(0.8,0.5,0.1));
-
-    //shader programs
-    VRShader* wshader = new VRShader(mat);
-    string wdir = VRSceneManager::get()->getOriginalWorkdir();
-    wshader->setFragmentProgram(wdir+"/shader/Blockworld.fp");
-    wshader->setVertexProgram(wdir+"/shader/Blockworld.vp");
-    wshader->setGeometryProgram(wdir+"/shader/Blockworld.gp");
+    mat->readFragmentShader(wdir+"/shader/Blockworld.fp");
+    mat->readVertexShader(wdir+"/shader/Blockworld.vp");
+    mat->readGeometryShader(wdir+"/shader/Blockworld.gp");
 
     //shader parameter
     float voxel = 1.0;
-    wshader->addParameter("Vox0", Vec4f(voxel, 0.0, 0.0, 0.0) );
-    wshader->addParameter("Vox1", Vec4f(0.0, voxel, 0.0, 0.0) );
-    wshader->addParameter("Vox2", Vec4f(0.0, 0.0, voxel, 0.0) );
+    mat->setShaderParameter("Vox0", Vec4f(voxel, 0.0, 0.0, 0.0) );
+    mat->setShaderParameter("Vox1", Vec4f(0.0, voxel, 0.0, 0.0) );
+    mat->setShaderParameter("Vox2", Vec4f(0.0, 0.0, voxel, 0.0) );
 
-    wshader->addParameter("cam_pos", Vec4f(0.0, 0.0, 0.0, 0.0) );
+    mat->setShaderParameter("cam_pos", Vec4f(0.0, 0.0, 0.0, 0.0) );
 
-    wshader->addParameter("texture", 0);
-    wshader->addParameter("tc1", Vec2f(0,0));
-    wshader->addParameter("tc2", Vec2f(1,0));
-    wshader->addParameter("tc3", Vec2f(1,1));
-    wshader->addParameter("tc4", Vec2f(0,1));
+    mat->setShaderParameter("texture", 0);
+    mat->setShaderParameter("tc1", Vec2f(0,0));
+    mat->setShaderParameter("tc2", Vec2f(1,0));
+    mat->setShaderParameter("tc3", Vec2f(1,1));
+    mat->setShaderParameter("tc4", Vec2f(0,1));
 
     //texture
-    TextureEnvChunkRecPtr tex_env_chunk = TextureEnvChunk::create();
-
-    TextureObjChunkRecPtr tex_obj_chunk = TextureObjChunk::create();
     VRTextureGenerator tgen;
     tgen.setSize(512,512);
     tgen.add(PERLIN, 1./2, Vec3f(0.3,0.1,0.1), Vec3f(0.9,0.5,0.1));
     tgen.add(PERLIN, 1./8, Vec3f(0.8,0.8,0.8), Vec3f(1.0,1.0,1.0));
     tgen.add(PERLIN, 1./32, Vec3f(0.8,0.8,0.8), Vec3f(1.0,1.0,1.0));
-    ImageRecPtr img = tgen.compose(0);
-    tex_obj_chunk->setImage(img);
-    mat->addChunk(tex_obj_chunk);
-    mat->addChunk(tex_env_chunk);
+    mat->setTexture( tgen.compose(0) );
+    mat->setTextureParams(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_MODULATE, GL_REPEAT, GL_REPEAT);
 
-    tex_env_chunk->setEnvMode (GL_MODULATE);
-    tex_obj_chunk->setMagFilter (GL_LINEAR);
-    tex_obj_chunk->setMinFilter (GL_LINEAR_MIPMAP_LINEAR);
-    tex_obj_chunk->setWrapS (GL_REPEAT);
-    tex_obj_chunk->setWrapT (GL_REPEAT);
-
-    (*shader)[texture] = wshader;
-    (*materials)[texture] = mat;
-
+    materials[texture] = mat;
     return mat;
 }
 
@@ -178,29 +166,16 @@ void BlockWorld::updateShaderCamPos() {
     if (e == 0) e = VRSceneManager::getCurrent()->getActiveCamera();
     Vec4f cam_pos = Vec4f(e->getWorldPosition());
 
-    map<string, VRShader*>::iterator itr = shader->begin();
-    for (; itr != shader->end(); itr++)
-        itr->second->setParameter("cam_pos", cam_pos);
+    for (auto m : materials) m.second->setShaderParameter("cam_pos", cam_pos);
 }
 
 BlockWorld::BlockWorld() {
-    shader = new map<string, VRShader*>();
-    materials = new map<string, SimpleMaterialRecPtr>();
-    chunks = new map<int, VRGeometry*>();
-
     anchor = new VRObject("cavekeeper_anchor");
     anchor->addAttachment("dynamicaly_generated", 0);
     anchor->addAttachment("global", 0);
 }
 
 BlockWorld::~BlockWorld() {
-    map<string, VRShader*>::iterator itr;
-    for (itr = shader->begin(); itr != shader->end(); itr++) delete itr->second;
-
-    delete shader;
-    delete materials;
-    delete chunks;
-
     delete anchor;
     delete tree;
 }
@@ -214,19 +189,19 @@ void BlockWorld::initWorld() {
     VRFunction<int>* ufkt = new VRFunction<int>("blockworld_update", boost::bind(&BlockWorld::updateShaderCamPos, this));
     scene->addUpdateFkt(ufkt, 1);
 
-    (*chunks)[0] = initChunk();
-    anchor->addChild(chunks->at(0));
+    chunks[0] = initChunk();
+    anchor->addChild(chunks[0]);
 }
 
 VRObject* BlockWorld::getAnchor() { return anchor; }
 
 void BlockWorld::redraw(int chunk_id) {
-    VRGeometry* chunk = chunks->at(chunk_id);
+    VRGeometry* chunk = chunks[chunk_id];
 
     delete chunk;
 
-    (*chunks)[chunk_id] = initChunk();
-    anchor->addChild(chunks->at(chunk_id));
+    chunks[chunk_id] = initChunk();
+    anchor->addChild(chunks[chunk_id]);
 }
 
 

@@ -67,6 +67,7 @@ class VRMaterial : public VRObject {
         void setTexture(string img_path, bool alpha = true);
         void setTexture(ImageRecPtr img, bool alpha = true);
         void setTexture(char* data, int format, Vec3i dims, bool isfloat);
+        void setTextureParams(int min, int mag, int envMode, int wrapS, int wrapT);
         void setTextureType(string type);
         void setQRCode(string s, Vec3f fg, Vec3f bg, int offset);
         void setVideo(string vid_path);

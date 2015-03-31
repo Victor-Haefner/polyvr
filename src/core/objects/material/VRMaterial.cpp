@@ -318,6 +318,18 @@ void VRMaterial::setMaterial(MaterialRecPtr m) {
 
 MaterialRecPtr VRMaterial::getMaterial() { return passes; }
 
+void VRMaterial::setTextureParams(int min, int mag, int envMode, int wrapS, int wrapT) {
+    auto md = mats[activePass];
+    if (md->texChunk == 0) { md->texChunk = TextureObjChunk::create(); md->mat->addChunk(md->texChunk); }
+    if (md->envChunk == 0) { md->envChunk = TextureEnvChunk::create(); md->mat->addChunk(md->envChunk); }
+
+    md->texChunk->setMinFilter (min);
+    md->texChunk->setMagFilter (mag);
+    md->envChunk->setEnvMode (envMode);
+    md->texChunk->setWrapS (wrapS);
+    md->texChunk->setWrapT (wrapT);
+}
+
 /** Load a texture && apply it to the mesh as new material **/
 void VRMaterial::setTexture(string img_path, bool alpha) { // TODO: improve with texture map
     auto md = mats[activePass];
