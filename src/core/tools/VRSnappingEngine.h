@@ -38,8 +38,9 @@ class VRSnappingEngine {
         };
 
     private:
-        map<int, Rule*> rules; // map objects to reference matrix
+        map<int, Rule*> rules; // snapping rules, translation and orientation
         map<VRTransform*, Matrix> objects; // map objects to reference matrix
+        map<VRTransform*, vector<Matrix> > anchors; // object anchors
         Octree* positions = 0; // objects by positions
         VRGeometry* hintGeo = 0;
 
@@ -54,8 +55,12 @@ class VRSnappingEngine {
 
         Type typeFromStr(string t);
 
-        int addRule(Type t, Type o, Line pt, Line po, float d, float w = 1, bool l = false);
+        int addRule(Type t, Type o, Line pt, Line po, float d, float w = 1, VRTransform* l = 0);
         void remRule(int i);
+
+        void addObjectAnchor(VRTransform* obj, VRTransform* a);
+        void addObjectAnchor(VRTransform* obj, const Matrix& m);
+        void clearObjectAnchors(VRTransform* obj);
 
         void addObject(VRTransform* obj, float weight = 1);
         void addTree(VRObject* obj, float weight = 1);

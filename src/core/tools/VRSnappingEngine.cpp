@@ -19,21 +19,19 @@ struct VRSnappingEngine::Rule {
     Type orientation = NONE;
     Line prim_t, prim_o;
 
-    bool local;
-    float distance;
+    VRTransform* csys = 0;
+    float distance = 1;
     float weight = 1;
 
-    Rule(Type t, Type o, Line pt, Line po, float d, float w, bool l) :
+    Rule(Type t, Type o, Line pt, Line po, float d, float w, VRTransform* l) :
         translation(t), orientation(o),
-        prim_t(pt), prim_o(po), local(l),
+        prim_t(pt), prim_o(po), csys(l),
         distance(d), weight(w) {
         static unsigned long long i = 0;
         ID = i++;
     }
 
-    void apply(Matrix& m, VRTransform* t = 0) {
-        Vec3f p = Vec3f(m[3]);
-
+    Vec3f getSnapPoint(Vec3f p, Matrix m) {
         Vec3f p2; // get point to snap to
         if (translation == POINT) p2 = prim_t.getDirection();
         if (translation == LINE) p2 = prim_t.getClosestPoint(p).subZero(); // project on line
@@ -42,30 +40,27 @@ struct VRSnappingEngine::Rule {
             float d = pl.distance(p); // project on plane
             p2 = p + d*pl.getNormal();
         }
+        return p2;
+    }
 
-        if (t) { // TODO: go to local coords of t
-            Matrix nm = t->getWorldMatrix();
-            Vec3f np = Vec3f(nm[3]);
-
-            Vec3f dir = p-np;
-            float d = dir.length();
-            //if (d < 1e-4) continue;
-            dir /= d;
+    void snapOrientation(Matrix& m, Pnt3f p, const Matrix& C) {
+        if (orientation == POINT) {
+            MatrixLookAt(m, p, prim_o.getPosition(), prim_o.getDirection());
+            m.multLeft(C);
         }
+    }
+
+    void apply(Matrix& m) {
+        Vec3f p = Vec3f(m[3]);
+
+        Matrix C;
+        if (csys) C = csys->getWorldMatrix();
+        Vec3f p2 = getSnapPoint(p,C);
 
         // check distance
         if ((p2-p).length() > distance) return;
 
-        m.setTranslate(p2); // snap
-
-        // apply orientation
-        if (orientation == POINT) {
-            Matrix r;
-            MatrixLookAt(r, Pnt3f(), prim_o.getPosition(), prim_o.getDirection());
-            m[0] = r[0];
-            m[1] = r[1];
-            m[2] = r[2];
-        }
+        snapOrientation(m, p2, C);
     }
 };
 
@@ -78,9 +73,11 @@ VRSnappingEngine::VRSnappingEngine() {
 }
 
 void VRSnappingEngine::clear() {
-    //hintGeo->clear();
-    //hintGeo->hide();
+    anchors.clear();
     positions->clear();
+    objects.clear();
+    for (auto r : rules) delete r.second;
+    rules.clear();
 }
 
 
@@ -96,7 +93,7 @@ VRSnappingEngine::Type VRSnappingEngine::typeFromStr(string t) {
     return NONE;
 }
 
-int VRSnappingEngine::addRule(Type t, Type o, Line pt, Line po, float d, float w, bool l) {
+int VRSnappingEngine::addRule(Type t, Type o, Line pt, Line po, float d, float w, VRTransform* l) {
     Rule* r = new Rule(t,o,pt,po,d,w,l);
     rules[r->ID] = r;
     return r->ID;
@@ -108,6 +105,18 @@ void VRSnappingEngine::remRule(int i) {
     rules.erase(i);
 }
 
+void VRSnappingEngine::addObjectAnchor(VRTransform* obj, VRTransform* a) {
+    addObjectAnchor(obj, a->getMatrix());
+}
+
+void VRSnappingEngine::addObjectAnchor(VRTransform* obj, const Matrix& m) {
+    if (anchors.count(obj) == 0) anchors[obj] = vector<Matrix>();
+    anchors[obj].push_back(m);
+}
+
+void VRSnappingEngine::clearObjectAnchors(VRTransform* obj) {
+    if (anchors.count(obj)) anchors[obj].clear();
+}
 
 void VRSnappingEngine::addObject(VRTransform* obj, float weight) {
     objects[obj] = obj->getWorldMatrix();
@@ -135,15 +144,15 @@ void VRSnappingEngine::update() {
         Matrix m = gobj->getWorldMatrix();
         Vec3f p = Vec3f(m[3]);
 
-        vector<void*> neighbors = positions->radiusSearch(p[0], p[1], p[2], influence_radius);
+        /*vector<void*> neighbors = positions->radiusSearch(p[0], p[1], p[2], influence_radius);
         for (auto ri : rules) {
             Rule* r = ri.second;
-            if (!r->local) r->apply(m);
+            if (!r->csys) r->apply(m);
             else for (auto n : neighbors) {
                 VRTransform* t = (VRTransform*)n;
                 if (t != obj) r->apply(m, t);
             }
-        }
+        }*/
 
         obj->setWorldMatrix(m);
     }
@@ -165,13 +174,13 @@ void VRSnappingEngine::setPreset(PRESET preset) {
 
     switch(preset) {
         case SIMPLE_ALIGNMENT:
-            addRule(POINT, POINT, t0, o0, 1, 1, true);
-            addRule(LINE, POINT, Line(Pnt3f(), Vec3f(1,0,0)), o0, 1, 1, true);
-            addRule(LINE, POINT, Line(Pnt3f(), Vec3f(0,1,0)), o0, 1, 1, true);
-            addRule(LINE, POINT, Line(Pnt3f(), Vec3f(0,0,1)), o0, 1, 1, true);
+            addRule(POINT, POINT, t0, o0, 1, 1, 0);
+            addRule(LINE, POINT, Line(Pnt3f(), Vec3f(1,0,0)), o0, 1, 1, 0);
+            addRule(LINE, POINT, Line(Pnt3f(), Vec3f(0,1,0)), o0, 1, 1, 0);
+            addRule(LINE, POINT, Line(Pnt3f(), Vec3f(0,0,1)), o0, 1, 1, 0);
             break;
         case SNAP_BACK:
-            addRule(POINT, POINT, t0, o0, 1, 1, true);
+            addRule(POINT, POINT, t0, o0, 1, 1, 0);
             break;
     }
 }

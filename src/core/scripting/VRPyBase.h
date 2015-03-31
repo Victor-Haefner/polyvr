@@ -50,6 +50,7 @@ struct VRPyBase {
     static PyObject* toPyTuple(OSG::Vec2f v);
 
     static int toGLConst(PyObject* o);
+    static bool isNone(PyObject* o);
 };
 
 template<class T>

@@ -66,11 +66,12 @@ PyObject* VRPySnappingEngine::addRule(VRPySnappingEngine* self, PyObject* args) 
     PyObject *t, *o; // string
     PyObject *pt, *po; // Vec4f
     float d, w;
-    int l;
-    if (! PyArg_ParseTuple(args, "OOOOffi", &t, &o, &pt, &po, &d, &w, &l)) return NULL;
+    VRPyTransform* l;
+    if (! PyArg_ParseTuple(args, "OOOOffO", &t, &o, &pt, &po, &d, &w, &l)) return NULL;
+    OSG::VRTransform* trans = isNone((PyObject*)l) ? 0 : l->obj;
     auto _t = self->obj->typeFromStr( PyString_AsString(t) );
     auto _o = self->obj->typeFromStr( PyString_AsString(o) );
-    int r = self->obj->addRule(_t, _o, PyToLine(pt), PyToLine(po), d,w,l);
+    int r = self->obj->addRule(_t, _o, PyToLine(pt), PyToLine(po), d, w, trans);
     return PyInt_FromLong(r);
 }
 

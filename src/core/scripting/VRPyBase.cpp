@@ -169,5 +169,7 @@ int VRPyBase::toGLConst(PyObject* o) {
     return 0;
 }
 
+bool VRPyBase::isNone(PyObject* o) { return (o == Py_None); }
+
 template<class T>
 PyTypeObject VRPyBaseT<T>::type = NULL;
