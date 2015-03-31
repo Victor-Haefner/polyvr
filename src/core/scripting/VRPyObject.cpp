@@ -74,9 +74,22 @@ PyMethodDef VRPyObject::methods[] = {
     {"hasTag", (PyCFunction)VRPyObject::hasTag, METH_VARARGS, "Check if the object has a tag - bool hasTag( str tag )" },
     {"remTag", (PyCFunction)VRPyObject::remTag, METH_VARARGS, "Remove a tag from the object - remTag( str tag )" },
     {"hasAncestorWithTag", (PyCFunction)VRPyObject::hasAncestorWithTag, METH_VARARGS, "Check if the object or an ancestor has a tag - obj hasAncestorWithTag( str tag )" },
+    {"getChildrenWithTag", (PyCFunction)VRPyObject::getChildrenWithTag, METH_VARARGS, "Get all children which have the tag - [objs] getChildrenWithTag( str tag )" },
     {"setTravMask", (PyCFunction)VRPyObject::setTravMask, METH_VARARGS, "Set the traversal mask of the object - setTravMask( int mask )" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyObject::getChildrenWithTag(VRPyObject* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::getChildrenWithTag - C Object is invalid"); return NULL; }
+
+    vector<OSG::VRObject*> objs = self->obj->getChildrenWithAttachment( parseString(args) );
+
+    PyObject* li = PyList_New(objs.size());
+    for (uint i=0; i<objs.size(); i++) {
+        PyList_SetItem(li, i, VRPyTypeCaster::cast(objs[i]));
+    }
+    return li;
+}
 
 PyObject* VRPyObject::setTravMask(VRPyObject* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::setTravMask - C Object is invalid"); return NULL; }

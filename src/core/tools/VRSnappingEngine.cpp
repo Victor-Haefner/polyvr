@@ -50,7 +50,7 @@ struct VRSnappingEngine::Rule {
         }
     }
 
-    void apply(Matrix& m) {
+    void apply(Matrix& m, float& da_min) {
         Vec3f p = Vec3f(m[3]);
 
         Matrix C;
@@ -58,7 +58,9 @@ struct VRSnappingEngine::Rule {
         Vec3f p2 = getSnapPoint(p,C);
 
         // check distance
-        if ((p2-p).length() > distance) return;
+        float D = (p2-p).length();
+        if (D > distance || D > da_min) return;
+        da_min = D;
 
         snapOrientation(m, p2, C);
     }
@@ -153,6 +155,13 @@ void VRSnappingEngine::update() {
                 if (t != obj) r->apply(m, t);
             }
         }*/
+
+        for (auto ri : rules) {
+            Rule* r = ri.second;
+            float dmin = 1e5;
+            if (anchors.count(obj) == 0) r->apply(m,dmin);
+            else for (auto a : anchors[obj]) r->apply(a, dmin);
+        }
 
         obj->setWorldMatrix(m);
     }

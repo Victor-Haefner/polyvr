@@ -62,6 +62,14 @@ string VRObject::getType() { return type; }
 bool VRObject::hasAttachment(string name) { return attachments.count(name); }
 void VRObject::remAttachment(string name) { attachments.erase(name); }
 
+vector<VRObject*> VRObject::getChildrenWithAttachment(string name) {
+    vector<VRObject*> res;
+    for (auto c : getChildren()) {
+        if (c->hasAttachment(name)) res.push_back(c);
+    }
+    return res;
+}
+
 VRObject* VRObject::hasAncestorWithAttachment(string name) {
     if (hasAttachment(name)) return this;
     if (parent == 0) return 0;

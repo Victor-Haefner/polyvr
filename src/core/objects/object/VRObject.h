@@ -93,6 +93,7 @@ class VRObject : public VRName {
         bool hasAttachment(string name);
         void remAttachment(string name);
         VRObject* hasAncestorWithAttachment(string name);
+        vector<VRObject*> getChildrenWithAttachment(string name);
 
         /** Set the object OSG core && specify the type**/
         void setCore(NodeCoreRecPtr c, string _type);
