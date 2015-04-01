@@ -20,6 +20,8 @@ class btRigidBody;
 class btCollisionShape;
 class btCollisionObject;
 
+class VRPhysics;
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -78,6 +80,8 @@ class VRPhysicsManager {
 
         void setShowPhysics(bool b);
         bool getShowPhysics();
+
+        boost::recursive_mutex& physicsMutex();
 };
 
 OSG_END_NAMESPACE;

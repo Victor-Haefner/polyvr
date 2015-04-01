@@ -43,8 +43,6 @@ class VRPhysics : public OSG::VRStorage {
         map<VRPhysics*, VRPhysicsJoint*> joints ;
         map<VRPhysics*, VRPhysicsJoint*> joints2;
 
-        boost::recursive_mutex mtx;
-
         OSG::VRTransform* vr_obj = 0;
         OSG::VRConstraint* constraint = 0;
         OSG::Vec3f scale;
@@ -54,9 +52,8 @@ class VRPhysics : public OSG::VRStorage {
         btCollisionShape* getConvexShape();
         btCollisionShape* getConcaveShape();
 
+        boost::recursive_mutex& mtx();
         void update();
-
-
 
     public:
         VRPhysics(OSG::VRTransform* t);

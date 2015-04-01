@@ -16,11 +16,14 @@
 #include "core/utils/VRVisualLayer.h"
 #include "VRThreadManager.h"
 
+typedef boost::recursive_mutex::scoped_lock MLock;
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 
 VRPhysicsManager::VRPhysicsManager() {
+    MLock lock(mtx);
     // Build the broadphase
     broadphase = new btDbvtBroadphase();
 
@@ -77,27 +80,32 @@ VRPhysicsManager::~VRPhysicsManager() {
     delete broadphase;
 }
 
+boost::recursive_mutex& VRPhysicsManager::physicsMutex() { return mtx; }
+
 void VRPhysicsManager::updatePhysics(VRThread* thread) {
+    if (dynamicsWorld == 0) return;
     int t = glutGet(GLUT_ELAPSED_TIME);
     float dt = (float)(t-(thread->t_last));
-        if (dynamicsWorld == 0) return;
-        dynamicsWorld->stepSimulation(dt*0.001,30);
-        for (auto f : updateFkts) (*f)(0);
-    //sleep up to 500 fps
-    if(dt < 2.0f) osgSleep((2.0f - dt));
     thread->t_last = t;
 
+    {
+        MLock lock(mtx);
+        dynamicsWorld->stepSimulation(dt*0.001, 30);
+        for (auto f : updateFkts) (*f)(0);
+    }
 
+    //sleep up to 500 fps
+    if (dt < 2.0f) osgSleep((2.0f - dt));
 }
 
-void VRPhysicsManager::addPhysicsUpdateFunction(VRFunction<int>* fkt) { updateFkts.push_back(fkt); }
+void VRPhysicsManager::addPhysicsUpdateFunction(VRFunction<int>* fkt) { MLock lock(mtx); updateFkts.push_back(fkt); }
 
 void VRPhysicsManager::updatePhysObjects() {
-
+    //mtx.try_lock();
+    MLock lock(mtx);
     for (auto o : OSGobjs) {
         if (o.second->getPhysics()->isGhost()) o.second->updatePhysics();
     }
-
 
     collectCollisionPoints();
 
@@ -192,7 +200,7 @@ void VRPhysicsManager::physicalize(VRTransform* obj) {
     OSGobjs[bdy] = obj;
     physics_visuals_to_update.push_back(bdy);
 
-    if (physics_visuals.count(bdy) == 0) {
+    if (physics_visuals.count(bdy) == 0) { // TODO: refactor this
         VRGeometry* pshape = new VRGeometry("phys_shape");
         physics_visuals[bdy] = pshape;
         physics_visual_layer->addObject(pshape);
@@ -205,17 +213,20 @@ void VRPhysicsManager::unphysicalize(VRTransform* obj) {
     //cout << " with bt_body " << bdy << endl;
     if (bdy == 0) return;
     if (OSGobjs.count(bdy)) OSGobjs.erase(bdy);
-    if (physics_visuals.count(bdy)) {
+
+    if (physics_visuals.count(bdy)) { // TODO: refactor this
         delete physics_visuals[bdy];
         physics_visuals.erase(bdy);
     }
 }
 
 void VRPhysicsManager::setGravity(Vec3f g) {
+    MLock lock(mtx);
     dynamicsWorld->setGravity(btVector3(g[0],g[1],g[2]));
 }
 
 void VRPhysicsManager::collectCollisionPoints() {
+    MLock lock(mtx);
     btVector3 p1, p2, n;
     Vec3f p;
 
