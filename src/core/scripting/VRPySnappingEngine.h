@@ -13,6 +13,8 @@ struct VRPySnappingEngine : VRPyBaseT<OSG::VRSnappingEngine> {
     static PyObject* setPreset(VRPySnappingEngine* self, PyObject* args);
     static PyObject* addRule(VRPySnappingEngine* self, PyObject* args);
     static PyObject* remRule(VRPySnappingEngine* self, PyObject* args);
+    static PyObject* addObjectAnchor(VRPySnappingEngine* self, PyObject* args);
+    static PyObject* clearObjectAnchors(VRPySnappingEngine* self, PyObject* args);
 };
 
 #endif // VRPYSNAPPINGENGINE_H_INCLUDED

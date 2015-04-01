@@ -22,6 +22,7 @@ struct VRSnappingEngine::Rule {
     VRTransform* csys = 0;
     float distance = 1;
     float weight = 1;
+    Matrix C;
 
     Rule(Type t, Type o, Line pt, Line po, float d, float w, VRTransform* l) :
         translation(t), orientation(o),
@@ -31,7 +32,9 @@ struct VRSnappingEngine::Rule {
         ID = i++;
     }
 
-    Vec3f getSnapPoint(Vec3f p, Matrix m) {
+    Vec3f getSnapPoint(Vec3f p) {
+        if (csys) C = csys->getWorldMatrix();
+
         Vec3f p2; // get point to snap to
         if (translation == POINT) p2 = prim_t.getDirection();
         if (translation == LINE) p2 = prim_t.getClosestPoint(p).subZero(); // project on line
@@ -43,27 +46,14 @@ struct VRSnappingEngine::Rule {
         return p2;
     }
 
-    void snapOrientation(Matrix& m, Pnt3f p, const Matrix& C) {
+    void snapOrientation(Matrix& m, Pnt3f p) {
         if (orientation == POINT) {
             MatrixLookAt(m, p, prim_o.getPosition(), prim_o.getDirection());
             m.multLeft(C);
         }
     }
 
-    void apply(Matrix& m, float& da_min) {
-        Vec3f p = Vec3f(m[3]);
-
-        Matrix C;
-        if (csys) C = csys->getWorldMatrix();
-        Vec3f p2 = getSnapPoint(p,C);
-
-        // check distance
-        float D = (p2-p).length();
-        if (D > distance || D > da_min) return;
-        da_min = D;
-
-        snapOrientation(m, p2, C);
-    }
+    bool inRange(float d) { return (d <= distance); }
 };
 
 VRSnappingEngine::VRSnappingEngine() {
@@ -146,21 +136,31 @@ void VRSnappingEngine::update() {
         Matrix m = gobj->getWorldMatrix();
         Vec3f p = Vec3f(m[3]);
 
-        /*vector<void*> neighbors = positions->radiusSearch(p[0], p[1], p[2], influence_radius);
         for (auto ri : rules) {
             Rule* r = ri.second;
-            if (!r->csys) r->apply(m);
-            else for (auto n : neighbors) {
-                VRTransform* t = (VRTransform*)n;
-                if (t != obj) r->apply(m, t);
-            }
-        }*/
 
-        for (auto ri : rules) {
-            Rule* r = ri.second;
-            float dmin = 1e5;
-            if (anchors.count(obj) == 0) r->apply(m,dmin);
-            else for (auto a : anchors[obj]) r->apply(a, dmin);
+            if (anchors.count(obj)) {
+                for (auto a : anchors[obj]) {
+                    Matrix b = a;
+                    b.multLeft(m);
+                    Vec3f pa = Vec3f(b[3]);
+                    Vec3f p2 = r->getSnapPoint(pa);
+                    float D = (p2-p).length(); // check distance
+                    if (!r->inRange(D)) continue;
+
+                    Matrix am;
+                    r->snapOrientation(am, p2);
+                    a.invert();
+                    am.mult(a);
+                    m = am;
+                    break;
+                }
+            } else {
+                Vec3f p2 = r->getSnapPoint(p);
+                float D = (p2-p).length(); // check distance
+                if (!r->inRange(D)) continue;
+                r->snapOrientation(m, p2);
+            }
         }
 
         obj->setWorldMatrix(m);

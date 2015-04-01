@@ -51,9 +51,26 @@ PyMethodDef VRPySnappingEngine::methods[] = {
     {"setPreset", (PyCFunction)VRPySnappingEngine::setPreset, METH_VARARGS, "Initiate the engine with a preset - setPreset(str preset)\n   preset can be: 'snap back', 'simple alignment'" },
     {"addRule", (PyCFunction)VRPySnappingEngine::addRule, METH_VARARGS, "Add snapping rule - int addRule(str translation, str orientation, prim_t[x,y,z,x0,y0,z0], prim_o[x,y,z,x0,y0,z0], float dist, float weight, bool local)" },
     {"remRule", (PyCFunction)VRPySnappingEngine::remRule, METH_VARARGS, "Remove a rule - remRule(int ID)" },
+    {"addObjectAnchor", (PyCFunction)VRPySnappingEngine::addObjectAnchor, METH_VARARGS, "Remove a rule - addObjectAnchor(obj transform, obj anchor)" },
+    {"clearObjectAnchors", (PyCFunction)VRPySnappingEngine::clearObjectAnchors, METH_VARARGS, "Remove a rule - clearObjectAnchors(obj transform)" },
     {NULL}  /* Sentinel */
 };
 
+PyObject* VRPySnappingEngine::addObjectAnchor(VRPySnappingEngine* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPySnappingEngine::addObjectAnchor - Object is invalid"); return NULL; }
+    VRPyTransform *o, *a;
+    if (! PyArg_ParseTuple(args, "OO", &o, &a)) return NULL;
+    self->obj->addObjectAnchor( o->obj, a->obj );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPySnappingEngine::clearObjectAnchors(VRPySnappingEngine* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPySnappingEngine::clearObjectAnchors - Object is invalid"); return NULL; }
+    VRPyTransform *o;
+    if (! PyArg_ParseTuple(args, "O", &o )) return NULL;
+    self->obj->clearObjectAnchors( o->obj );
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPySnappingEngine::remRule(VRPySnappingEngine* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPySnappingEngine::remRule - Object is invalid"); return NULL; }
