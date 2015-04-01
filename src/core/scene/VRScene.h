@@ -41,6 +41,8 @@ class VRScene : public VRObjectManager,
     private:
         string path;
         string icon;
+        //physics run in own thread
+        int physicsThreadID;
 
         VRVisualLayer* referentials_layer = 0;
         VRVisualLayer* cameras_layer = 0;

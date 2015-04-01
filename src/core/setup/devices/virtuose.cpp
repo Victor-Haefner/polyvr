@@ -93,6 +93,7 @@ void virtuose::disconnect()
 
 void virtuose::setSimulationScales(float translation, float forces)
 {
+    if(vc == 0) return;
     CHECK( virtSetSpeedFactor(vc, translation) );
     CHECK( virtSetForceFactor(vc, forces) );
 }
@@ -100,12 +101,14 @@ void virtuose::setSimulationScales(float translation, float forces)
 
 void virtuose::applyForce(Vec3f force, Vec3f torque)
 {
+    if(vc == 0) return;
     float f[6] = { force[2], force[0], force[1], torque[2], torque[0], torque[1] };
     CHECK( virtAddForce(vc, f) );
 }
 
 Matrix virtuose::getPose()
 {
+    if(vc == 0) return Matrix().identity();
     float f[7]= {0.0f,0.0f,0.0f,0.0f,0.0f,0.0f,1.0f};
 
     CHECK( virtGetAvatarPosition(vc, f) );
@@ -126,6 +129,7 @@ Matrix virtuose::getPose()
 
 void virtuose::attachTransform(VRTransform* trans)
 {
+    if(vc == 0) return;
     isAttached = true;
     attached = trans;
     VRPhysics* o = trans->getPhysics();
@@ -139,6 +143,7 @@ void virtuose::attachTransform(VRTransform* trans)
 
 void virtuose::fillPosition(VRPhysics* p, float *to)
 {
+
     btTransform pos = p->getTransform();
     to[0] =  pos.getOrigin().getZ();
     to[1] = pos.getOrigin().getX();
@@ -181,6 +186,7 @@ void virtuose::Matrix3ToArray(btMatrix3x3 m, float *to)
 
 void virtuose::detachTransform()
 {
+    if(vc == 0) return;
     isAttached = false;
     CHECK(virtDetachVO(vc));
     attached = 0;
@@ -189,6 +195,7 @@ void virtuose::detachTransform()
 
 OSG::Vec3i virtuose::getButtonStates()
 {
+    if(vc == 0) return Vec3i(0,0,0);
     int i = 0;
     int j = 0;
     int k = 0;
@@ -200,7 +207,7 @@ OSG::Vec3i virtuose::getButtonStates()
 
 void virtuose::updateVirtMech()
 {
-
+    if(vc == 0) return;
     // calc time delta in seconds
     float timeNow = glutGet(GLUT_ELAPSED_TIME);
     float dt = (timeNow - timeLastFrame) * 0.001f;

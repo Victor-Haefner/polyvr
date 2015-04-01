@@ -6,11 +6,11 @@
 #include "VRCallbackManager.h"
 #include "core/networking/VRNetworkManager.h"
 
+#include "VRScene.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRScene;
 
 void glutUpdate();
 
@@ -21,6 +21,7 @@ class VRSceneManager : public VRThreadManager, public VRCallbackManager, public 
         map<string, VRScene*> scenes;
         string active;
         string original_workdir;
+        VRSignal* on_scene_load = 0;
 
         VRSceneManager();
         void operator= (VRSceneManager v);
@@ -44,6 +45,8 @@ class VRSceneManager : public VRThreadManager, public VRCallbackManager, public 
         void storeFavorites();
         void addFavorite(string path);
         void remFavorite(string path);
+
+        VRSignal* getSignal_on_scene_load();
 
         vector<string> getFavoritePaths();
         vector<string> getExamplePaths();

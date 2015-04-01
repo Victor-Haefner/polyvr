@@ -33,7 +33,7 @@ VRScene::VRScene() {
     addUpdateFkt(updateAnimationsFkt);
     addUpdateFkt(updatePhysObjectsFkt);
 
-    initThread(updatePhysicsFkt, "physics", true, 0);
+    physicsThreadID = initThread(updatePhysicsFkt, "physics", true, 0);
 
     initDevices();
     VRMaterial::getDefault()->resetDefault();
@@ -52,11 +52,14 @@ VRScene::VRScene() {
 }
 
 VRScene::~VRScene() {
+    //kill physics thread
+    VRThreadManager::stopThread(physicsThreadID);
     updateObjects();
     root->destroy();
     VRGroup::clearGroups();
     VRLightBeacon::getAll().clear();
     VRCamera::getAll().clear();
+
 }
 
 void VRScene::initDevices() { // TODO: remove this after refactoring the navigation stuff
@@ -65,6 +68,7 @@ void VRScene::initDevices() { // TODO: remove this after refactoring the navigat
     VRMouse* mouse = (VRMouse*)setup->getDevice("mouse");
     VRFlystick* flystick = (VRFlystick*)setup->getDevice("flystick");
     VRDevice* razer = setup->getDevice("vrpn_device");
+
 
     if (mouse) {
         initOrbit(getActiveCamera(), mouse); //TODO, load from xml

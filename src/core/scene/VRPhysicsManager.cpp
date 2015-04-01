@@ -78,17 +78,19 @@ VRPhysicsManager::~VRPhysicsManager() {
 }
 
 void VRPhysicsManager::updatePhysics(VRThread* thread) {
-    if (dynamicsWorld == 0) return;
-
-
-
-
-
-    static int t_last = glutGet(GLUT_ELAPSED_TIME);
     int t = glutGet(GLUT_ELAPSED_TIME);
-    dynamicsWorld->stepSimulation((t-t_last)*0.001, 30);
-    t_last = t;
+    float dt = (float)(t-(thread->t_last));
+        if (dynamicsWorld == 0) return;
+        dynamicsWorld->stepSimulation(dt*0.001,30);
+        for (auto f : updateFkts) (*f)(0);
+    //sleep up to 500 fps
+    if(dt < 2.0f) osgSleep((2.0f - dt));
+    thread->t_last = t;
+
+
 }
+
+void VRPhysicsManager::addPhysicsUpdateFunction(VRFunction<int>* fkt) { updateFkts.push_back(fkt); }
 
 void VRPhysicsManager::updatePhysObjects() {
 
@@ -178,6 +180,7 @@ void VRPhysicsManager::updatePhysObjects() {
             geo->setMatrix( VRPhysics::fromBTTransform( trans ) );
         }
     }
+
 }
 
 void VRPhysicsManager::physicalize(VRTransform* obj) {
@@ -197,7 +200,7 @@ void VRPhysicsManager::physicalize(VRTransform* obj) {
 }
 
 void VRPhysicsManager::unphysicalize(VRTransform* obj) {
-    //cout << "unphysicalize transform: " << obj;
+  //cout << "unphysicalize transform: " << obj;
     btCollisionObject* bdy = obj->getPhysics()->getCollisionObject();
     //cout << " with bt_body " << bdy << endl;
     if (bdy == 0) return;

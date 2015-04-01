@@ -6,6 +6,8 @@
 #include <OpenSG/OSGVector.h>
 #include <map>
 #include <vector>
+#include <boost/thread/recursive_mutex.hpp>
+
 
 template<class T> class VRFunction;
 
@@ -29,6 +31,8 @@ class VRThread;
 
 class VRPhysicsManager {
      private:
+        vector<VRFunction<int>* > updateFkts;
+
         btBroadphaseInterface* broadphase;
         btDefaultCollisionConfiguration* collisionConfiguration;
         btCollisionDispatcher* dispatcher;
@@ -47,6 +51,8 @@ class VRPhysicsManager {
         vector<Vec3f> collisionPoints;
         /** timestamp last frame**/
         int t_last;
+        /** **/
+        boost::recursive_mutex mtx;
 
     protected:
         VRFunction<VRThread*>* updatePhysicsFkt;
@@ -60,6 +66,8 @@ class VRPhysicsManager {
     public:
         void physicalize(VRTransform* obj);
         void unphysicalize(VRTransform* obj);
+
+        void addPhysicsUpdateFunction(VRFunction<int>* fkt);
 
         void setGravity(Vec3f g);
 

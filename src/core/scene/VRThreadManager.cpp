@@ -7,6 +7,8 @@
 #include <OpenSG/OSGChangeList.h>
 #include <OpenSG/OSGThread.h>
 #include <OpenSG/OSGThreadManager.h>
+#include <OpenSG/OSGGLUT.h>
+
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -25,10 +27,9 @@ void VRThreadManager::runLoop(VRThread* t) {
     t->osg_t = tr;
     t->status = 1;
 
-    do {
+    while(t->control_flag) {
         (*t->fkt)(t);
-        osgSleep(1);
-    } while(t->control_flag);
+    }
 
     t->status = 2;
 }
@@ -58,6 +59,7 @@ int VRThreadManager::initThread(VRFunction<VRThread*>* f, string name, bool loop
     t->name = name;
     t->ID = id;
     t->fkt = f;
+    t->t_last = glutGet(GLUT_ELAPSED_TIME);
     t->boost_t = new boost::thread(boost::bind(&VRThreadManager::runLoop, this, t));
     threads[id] = t;
 
@@ -66,6 +68,7 @@ int VRThreadManager::initThread(VRFunction<VRThread*>* f, string name, bool loop
 }
 
 void VRThreadManager::stopThread(int id, int tries) {
+
     if (threads.count(id) == 0) return;
     VRThread* t = threads[id];
     t->control_flag = false;
