@@ -27,16 +27,17 @@ void VRMillingMachine::setPosition(Vec3f p) {
 }
 
 void VRMillingMachine::setSpeed(Vec3f v) {
-    Vec3f t = Vec3f(-v[1], v[2], -v[0]);
+    //Vec3f t = Vec3f(-v[1], v[2], -v[0]);
+    Vec3f t = Vec3f(-v[2], -v[0], v[1]);
     v = t*1000;
 
     float vmin = 0.3;
     if (online and state == 4 and mode == 1) {
         if (abs(v[0]) > vmin) post("c","jog(1,0,"+toString(v[0])+")");
         else post("c","jog(0,0)");
-        if (abs(v[1]) > vmin) post("c","jog(1,2,"+toString(v[1])+")");
+        if (abs(v[1]) > vmin) post("c","jog(1,1,"+toString(v[1])+")");
         else post("c","jog(0,1)");
-        if (abs(v[2]) > vmin) post("c","jog(1,3,"+toString(v[2])+")");
+        if (abs(v[2]) > vmin) post("c","jog(1,2,"+toString(v[2])+")");
         else post("c","jog(0,2)");
     }
 }
