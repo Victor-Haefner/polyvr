@@ -53,7 +53,6 @@ VRPhysics::VRPhysics(OSG::VRTransform* t) {
 }
 
 VRPhysics::~VRPhysics() {
-    //cout << " Destroy physics: " << endl;
     Lock lock(mtx());
     if (body) {
         if (world) world->removeRigidBody(body);
@@ -71,7 +70,11 @@ VRPhysics::~VRPhysics() {
 
 boost::recursive_mutex& VRPhysics::mtx() {
     auto scene = OSG::VRSceneManager::getCurrent();
-    return scene->physicsMutex();
+    if (scene) return scene->physicsMutex();
+    else {
+        boost::recursive_mutex m;
+        return m;
+    };
 }
 
 btCollisionObject* VRPhysics::getCollisionObject() { Lock lock(mtx()); return ghost ? (btCollisionObject*)ghost_body : (btCollisionObject*)body; }
