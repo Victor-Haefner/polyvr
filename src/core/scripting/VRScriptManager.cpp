@@ -47,6 +47,7 @@
 #include "addons/Classification/VRPySegmentation.h"
 #include "addons/Engineering/Chemistry/VRPyMolecule.h"
 #include "addons/Engineering/Factory/VRPyFactory.h"
+#include "addons/Engineering/Milling/VRPyMillingMachine.h"
 #include "VRPyTypeCaster.h"
 #include "PolyVR.h"
 
@@ -263,6 +264,7 @@ void VRScriptManager::initPyModules() {
     VRPySegmentation::registerModule("Segmentation", pModVR);
     VRPyMechanism::registerModule("Mechanism", pModVR);
     VRPyNumberingEngine::registerModule("NumberingEngine", pModVR, VRPyGeometry::typeRef);
+    VRPyMillingMachine::registerModule("MillingMachine", pModVR);
     VRPyMolecule::registerModule("Molecule", pModVR, VRPyGeometry::typeRef);
 
 #ifndef _WIN32

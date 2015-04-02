@@ -9,7 +9,7 @@
 #include "core/utils/VRLogger.h"
 
 #include <algorithm>
-//#include <curl/curl.h> // TODO
+#include <curl/curl.h> // TODO: windows port
 #include <stdint.h>
 #include <libxml++/nodes/element.h>
 #include <jsoncpp/json/json.h>
@@ -216,7 +216,24 @@ void VRSocket::handle(string s) {
     scene->queueJob(queued_signal);
 }
 
+//CURL HTTP client--------------------------------------------------------------
+size_t httpwritefkt( char *ptr, size_t size, size_t nmemb, void *userdata) {
+    string* s = (string*)userdata;
+    s->append(ptr, size*nmemb);
+    return size*nmemb;
+}
+
 void VRSocket::sendMessage(string msg) {
+    /*if (type == "http post") {
+        curl = curl_easy_init();
+        server = IP+":"+toString(port); // TODO: add uri args
+        curl_easy_setopt(curl, CURLOPT_POST, 1);
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, msg.c_str());
+
+        curl_easy_setopt(curl, CURLOPT_URL, server.c_str());//scheme://host:port/path
+        curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, server.c_str());//use this to parse the header lines!
+    }*/
+
     /*cout << "\nSOCKET SEND " << msg << endl;
 
     unsigned int sockfd, n;

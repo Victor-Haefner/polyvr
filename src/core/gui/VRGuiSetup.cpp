@@ -278,11 +278,10 @@ void VRGuiSetup::on_save_clicked() {
 
 void VRGuiSetup::on_setup_changed() {
     string name = getComboboxText("combobox6");
+    ofstream f("setup/.local"); f.write(name.c_str(), name.size()); f.close(); // remember setup
     string defWorkDir = VRSceneManager::get()->getOriginalWorkdir();
     current_setup = VRSetupManager::get()->load(name, defWorkDir+"/setup/" + name + ".xml");
     updateSetup();
-    // remember setup
-    ofstream f("setup/.local"); f.write(name.c_str(), name.size()); f.close();
 }
 
 void VRGuiSetup::on_treeview_select() {
