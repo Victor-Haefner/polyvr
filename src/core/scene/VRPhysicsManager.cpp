@@ -90,15 +90,20 @@ void VRPhysicsManager::updatePhysics(VRThread* thread) {
 
     {
         MLock lock(mtx);
+        for (auto f : updateFktsPre) (*f)(0);
         dynamicsWorld->stepSimulation(dt*0.001, 30);
-        for (auto f : updateFkts) (*f)(0);
+        for (auto f : updateFktsPost) (*f)(0);
     }
 
     //sleep up to 500 fps
     if (dt < 2.0f) osgSleep((2.0f - dt));
 }
 
-void VRPhysicsManager::addPhysicsUpdateFunction(VRFunction<int>* fkt) { MLock lock(mtx); updateFkts.push_back(fkt); }
+void VRPhysicsManager::addPhysicsUpdateFunction(VRFunction<int>* fkt, bool after) {
+    MLock lock(mtx);
+    if (after) updateFktsPost.push_back(fkt);
+    else updateFktsPre.push_back(fkt);
+}
 
 void VRPhysicsManager::updatePhysObjects() {
     //mtx.try_lock();

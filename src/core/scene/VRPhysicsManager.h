@@ -33,7 +33,8 @@ class VRThread;
 
 class VRPhysicsManager {
      private:
-        vector<VRFunction<int>* > updateFkts;
+        vector<VRFunction<int>* > updateFktsPre;
+        vector<VRFunction<int>* > updateFktsPost;
 
         btBroadphaseInterface* broadphase;
         btDefaultCollisionConfiguration* collisionConfiguration;
@@ -69,7 +70,7 @@ class VRPhysicsManager {
         void physicalize(VRTransform* obj);
         void unphysicalize(VRTransform* obj);
 
-        void addPhysicsUpdateFunction(VRFunction<int>* fkt);
+        void addPhysicsUpdateFunction(VRFunction<int>* fkt, bool after);
 
         void setGravity(Vec3f g);
 

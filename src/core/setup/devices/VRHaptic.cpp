@@ -13,6 +13,7 @@ VRHaptic::VRHaptic() : VRDevice("haptic") {
     setIP("172.22.151.200");
 
     auto updateObjFkt = new VRFunction<int>( "Haptic object update", boost::bind(&VRHaptic::applyTransformation, this, getBeacon()) );
+    VRSceneManager::get()->dropUpdateFkt(updateObjFkt);
     VRSceneManager::get()->addUpdateFkt(updateObjFkt);
 
     auto fkt = new VRFunction<VRDevice*>( "Haptic on scene changed", boost::bind(&VRHaptic::on_scene_changed, this, _1) );
@@ -23,14 +24,19 @@ VRHaptic::VRHaptic() : VRDevice("haptic") {
 }
 
 VRHaptic::~VRHaptic() {
-    VRSceneManager::get()->dropUpdateFkt(updateFkt);
+    VRSceneManager::get()->dropUpdateFkt(updateFktPre);
+    VRSceneManager::get()->dropUpdateFkt(updateFktPost);
     v->disconnect();
 }
 
 void VRHaptic::on_scene_changed(VRDevice* dev) {
-    updateFkt = new VRFunction<int>( "Haptic update", boost::bind(&VRHaptic::updateHaptic, this, getBeacon()) );
-    VRSceneManager::getCurrent()->dropUpdateFkt(updateFkt);
-    VRSceneManager::getCurrent()->addPhysicsUpdateFunction(updateFkt);
+    updateFktPre = new VRFunction<int>( "Haptic pre update", boost::bind(&VRHaptic::updateHapticPre, this, getBeacon()) );
+    updateFktPost = new VRFunction<int>( "Haptic post update", boost::bind(&VRHaptic::updateHapticPost, this, getBeacon()) );
+    VRSceneManager::getCurrent()->dropUpdateFkt(updateFktPre);
+    VRSceneManager::getCurrent()->dropUpdateFkt(updateFktPost);
+    VRSceneManager::getCurrent()->addPhysicsUpdateFunction(updateFktPre,false);
+    VRSceneManager::getCurrent()->addPhysicsUpdateFunction(updateFktPost,true);
+
 }
 
 void VRHaptic::applyTransformation(VRTransform* t) { // TODO: rotation
@@ -38,17 +44,26 @@ void VRHaptic::applyTransformation(VRTransform* t) { // TODO: rotation
     t->setMatrix(v->getPose());
 }
 
-void VRHaptic::updateHaptic(VRTransform* t) { // TODO: rotation
+void VRHaptic::updateHapticPre(VRTransform* t) { // TODO: rotation
     //COMMAND_MODE_VIRTMECH
-    updateVirtMech();
+    updateVirtMechPre();
+}
+
+void VRHaptic::updateHapticPost(VRTransform* t) { // TODO: rotation
+    //COMMAND_MODE_VIRTMECH
+    updateVirtMechPost();
 }
 
 void VRHaptic::setForce(Vec3f force, Vec3f torque) { v->applyForce(force, torque); }
+Vec3f VRHaptic::getForce() {return v->getForce(); }
 void VRHaptic::setSimulationScales(float scale, float forces) { v->setSimulationScales(scale, forces); }
 void VRHaptic::attachTransform(VRTransform* trans) {v->attachTransform(trans);}
 void VRHaptic::detachTransform() {v->detachTransform();}
-void VRHaptic::updateVirtMech() {
-    v->updateVirtMech();
+void VRHaptic::updateVirtMechPre() {
+    v->updateVirtMechPre();
+}
+void VRHaptic::updateVirtMechPost() {
+    v->updateVirtMechPost();
     OSG::Vec3i states = v->getButtonStates();
 
     //cout << "updateVirtMech b states " << states << endl;

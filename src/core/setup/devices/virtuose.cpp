@@ -59,7 +59,7 @@ void virtuose::connect(string IP) {
 
     CHECK( virtSetIndexingMode(vc, INDEXING_ALL_FORCE_FEEDBACK_INHIBITION) );
     setSimulationScales(1.0f,1.0f);
-    timestep = 0.017f;
+    timestep = 0.002f;
     CHECK( virtSetTimeStep(vc, timestep) );
     CHECK( virtSetBaseFrame(vc, identity) );
     CHECK( virtSetObservationFrame(vc, identity) );
@@ -104,6 +104,11 @@ void virtuose::applyForce(Vec3f force, Vec3f torque)
     if(vc == 0) return;
     float f[6] = { force[2], force[0], force[1], torque[2], torque[0], torque[1] };
     CHECK( virtAddForce(vc, f) );
+}
+
+Vec3f virtuose::getForce() {
+
+    return totalForce;
 }
 
 Matrix virtuose::getPose()
@@ -205,12 +210,13 @@ OSG::Vec3i virtuose::getButtonStates()
     return Vec3i(i,j,k);
 }
 
-void virtuose::updateVirtMech()
-{
+
+void virtuose::updateVirtMechPre() {
+
     if(vc == 0) return;
     // calc time delta in seconds
     float timeNow = glutGet(GLUT_ELAPSED_TIME);
-    float dt = (timeNow - timeLastFrame) * 0.001f;
+    float dt = (timeNow - timeLastFrame);
     timeLastFrame = timeNow;
 
     float position[7] = {0.0,0.0,0.0,0.0,0.0,0.0,1.0};
@@ -239,8 +245,7 @@ void virtuose::updateVirtMech()
         else
         {
         /** rotation <-> torque with haptic <-> attachedObject is not supported yet. haptic's rotation is set free instead**/
-                float ts = 0.0;
-                CHECK(virtGetTimeStep(vc, &ts));
+
 
             //apply position&speed to the haptic
 
@@ -254,7 +259,7 @@ void virtuose::updateVirtMech()
                     //cout << tmpPos[i];
                 }
                 //cout << "\n";
-                Vec3f pPos = Vec3f(tmpPos[0],tmpPos[1],tmpPos[2]);
+                pPos = Vec3f(tmpPos[0],tmpPos[1],tmpPos[2]);
             /* bugfixing and logging
                 Quaternion pRot;
                 pRot.setValue(tmpPos[4], tmpPos[5], tmpPos[3]);
@@ -275,11 +280,11 @@ void virtuose::updateVirtMech()
             //speed
                 fillSpeed(this->attached->getPhysics(),speed);
                 //timestep bullet -> haptic
-                for(int i = 0; i < 6; i++)
-                {
-                    speed[i] *= dt;
-                    speed[i] *= (1/ts);
-                }
+        //       for(int i = 0; i < 6; i++)
+          //      {
+           //         speed[i] *= dt;
+            //        speed[i] *= (1/timestep);
+            //    }
             //"diff"
                 float tmpSp[6];
                 CHECK(virtGetSpeed(vc, tmpSp));
@@ -287,8 +292,8 @@ void virtuose::updateVirtMech()
                     tmpSp[i] = (speed[i] - tmpSp[i]);
                     //cout << tmpSp[i];
                 }
-                Vec3f sPos = Vec3f(tmpSp[0],tmpSp[1],tmpSp[2]);
-                Vec3f sRot = Vec3f(tmpSp[0],tmpSp[1],tmpSp[2]);
+                sPos = Vec3f(tmpSp[0],tmpSp[1],tmpSp[2]);
+                sRot = Vec3f(tmpSp[0],tmpSp[1],tmpSp[2]);
 
             /* bugfixing and logging
                 cout << setprecision(4);
@@ -308,38 +313,7 @@ void virtuose::updateVirtMech()
 
 
 
-            //get force applied by human on the haptic
-                CHECK(virtGetForce(vc, force));
-
-                //timestep haptic -> haptic
-                for(int i = 0; i < 6; i++)
-                {
-                    force[i] *= ts;
-                    force[i] *= ts;
-                    force[i] *= (1/dt);
-                    force[i] *= (1/dt);
-                }
-
-                Vec3f frc = Vec3f(force[1], force[2], force[0]);
-
-            /** not supported**/
-                //Vec3f trqu = Vec3f(-force[4],-force[5],-force[3]);
-
-            //apply force on the object
-                if(power == 0)
-                {
-                    if( (pPos.length() < 0.1f) && (sPos.length() < 0.5f) &&  (sRot.length() < 0.5f)) {
-                        attached->getPhysics()->addForce(frc);
-                        /** not supported**/
-                        //attached->getPhysics()->addTorque(trqu);
-                    } else {
-                        attached->getPhysics()->resetForces();
-                        float newSpeed[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
-                        CHECK(virtSetSpeed(vc, newSpeed));
-                    }
-                }
-
-            //copypaste from demosrc
+       //copypaste from demosrc
                 int m_power = 0;
                 virtGetPowerOn(vc, &m_power);
                 virtIsInShiftPosition(vc, &power);
@@ -358,10 +332,69 @@ void virtuose::updateVirtMech()
                     virtSetArticularSpeedOfAdditionalAxe(vc, &gripperSpeed);
                 }
 
+
         }
+    }
+}
+
+void virtuose::updateVirtMechPost() {
+  if(vc == 0) return;
+
+
+    // calc time delta in seconds
+    float timeNow = glutGet(GLUT_ELAPSED_TIME);
+    float dt = (timeNow - timeLastFrame);
+    timeLastFrame = timeNow;
+
+    float position[7] = {0.0,0.0,0.0,0.0,0.0,0.0,1.0};
+    float speed[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
+    float force[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
+    int power = 0;
+
+    CHECK(virtIsInShiftPosition(vc,&power));
+    if(commandType == COMMAND_TYPE_VIRTMECH)
+    {
+
+        if (isAttached)
+        {
+            //get force applied by human on the haptic
+                CHECK(virtGetForce(vc, force));
+
+                //timestep haptic -> haptic
+        //       for(int i = 0; i < 6; i++)
+         //       {
+          //          force[i] *= timestep;
+           //         force[i] *= timestep;
+            //        force[i] *= (1/dt);
+             //       force[i] *= (1/dt);
+             //   }
+
+                Vec3f frc = Vec3f(force[1], force[2], force[0]);
+                totalForce = frc;
+
+            /** not supported**/
+                //Vec3f trqu = Vec3f(-force[4],-force[5],-force[3]);
+
+            //apply force on the object
+                if(power == 0)
+                {
+                    if( (pPos.length() < 0.1f) && (sPos.length() < 0.5f) &&  (sRot.length() < 0.5f)) {
+                        attached->getPhysics()->addForce(frc);
+                        cout<< frc.x() <<" "<< frc.y()<< " " << frc.z() << "\n";
+                        /** not supported**/
+                        //attached->getPhysics()->addTorque(trqu);
+                    } else {
+                        attached->getPhysics()->resetForces();
+                        float newSpeed[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
+                        CHECK(virtSetSpeed(vc, newSpeed));
+                    }
+                }
+        }
+
     }
 
 }
+
 
 
 OSG_END_NAMESPACE;

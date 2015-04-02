@@ -439,9 +439,7 @@ void VRPhysics::addForce(OSG::Vec3f i) {
    if (body == 0) return;
    if (mass == 0) return;
    Lock lock(mtx());
-   btVector3 ttlForce = body->getTotalForce();
    btVector3 force = btVector3(i.x(), i.y(), i.z());
-   //ttlForce += force;
    body->applyForce(force,btVector3(0.0,0.0,0.0));
 }
 

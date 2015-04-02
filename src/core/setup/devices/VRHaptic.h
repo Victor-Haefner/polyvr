@@ -16,23 +16,27 @@ class VRHaptic : public VRDevice {
         virtuose* v;
         string IP;
         string type;
-        VRFunction<int>* updateFkt;
+        VRFunction<int>* updateFktPre;
+        VRFunction<int>* updateFktPost;
         Vec3i button_states;
 
         void on_scene_changed(VRDevice* dev);
 
         void applyTransformation(VRTransform* t);
-        void updateHaptic(VRTransform* t);
+        void updateHapticPre(VRTransform* t);
+        void updateHapticPost(VRTransform* t);
 
     public:
         VRHaptic();
         ~VRHaptic();
 
         void setForce(Vec3f force, Vec3f torque);
+        Vec3f getForce();
         void setSimulationScales(float scale, float forces);
         void attachTransform(VRTransform* trans);
         void detachTransform();
-        void updateVirtMech();
+        void updateVirtMechPre();
+        void updateVirtMechPost();
         Vec3i getButtonStates();
         void setIP(string IP);
         string getIP();
