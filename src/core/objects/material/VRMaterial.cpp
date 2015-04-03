@@ -234,12 +234,14 @@ void VRMaterial::setLineWidth(int w) {
     auto md = mats[activePass];
     if (md->lineChunk == 0) { md->lineChunk = LineChunk::create(); md->mat->addChunk(md->lineChunk); }
     md->lineChunk->setWidth(w);
+    md->lineChunk->setSmooth(true);
 }
 
 void VRMaterial::setPointSize(int s) {
     auto md = mats[activePass];
     if (md->pointChunk == 0) { md->pointChunk = PointChunk::create(); md->mat->addChunk(md->pointChunk); }
     md->pointChunk->setSize(s);
+    md->pointChunk->setSmooth(true);
 }
 
 void VRMaterial::saveContent(xmlpp::Element* e) {

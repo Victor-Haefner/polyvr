@@ -30,6 +30,7 @@ PyObject* VRPyTypeCaster::cast(OSG::VRObject* obj) {
     else if (type == "Lod") return VRPyLod::fromPtr((OSG::VRLod*)obj);
     else if (type == "ClipPlane") return VRPyClipPlane::fromPtr((OSG::VRClipPlane*)obj);
     else if (type == "Light") return VRPyLight::fromPtr((OSG::VRLight*)obj);
+    else if (type == "Camera") return VRPyTransform::fromPtr((OSG::VRTransform*)obj); // TODO: add camera py type
     cout << "\nERROR in VRPyTypeCaster::cast: " << type << " not handled!\n";
     Py_RETURN_NONE;
 }
