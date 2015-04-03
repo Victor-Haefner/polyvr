@@ -216,12 +216,12 @@ VRScript::Search VRScript::find(string s) {
     map<int, bool> res;
 
     uint pos = core.find(s, 0);
-    while(pos != string::npos) {
+    while(pos != string::npos && pos <= core.size()) {
         res[pos] = false;
         pos = core.find(s, pos+1);
     }
     pos = core.find("\n", 0);
-    while(pos != string::npos) {
+    while(pos != string::npos && pos <= core.size()) {
         res[pos] = true;
         pos = core.find("\n", pos+1);
     }
