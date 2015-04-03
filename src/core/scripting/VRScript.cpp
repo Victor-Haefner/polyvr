@@ -346,12 +346,13 @@ void VRScript::remArgument(string name) {
 
 void VRScript::save(xmlpp::Element* e) {
     saveName(e);
-    e->set_attribute("core", core);
+    xmlpp::Element* ec = e->add_child("core");
+    ec->set_child_text("\n"+core+"\n");
     e->set_attribute("type", type);
     e->set_attribute("mobile", mobile);
 
-    for (a_itr = args.begin(); a_itr != args.end(); a_itr++) {
-        arg* a = a_itr->second;
+    for (auto ai : args) {
+        arg* a = ai.second;
         if (a->trig) continue;
 
         xmlpp::Element* ea = e->add_child("arg");
@@ -360,8 +361,8 @@ void VRScript::save(xmlpp::Element* e) {
         a->saveName(ea);
     }
 
-    for (t_itr = trigs.begin(); t_itr != trigs.end(); t_itr++) {
-        trig* t = t_itr->second;
+    for (auto ti : trigs) {
+        trig* t = ti.second;
         xmlpp::Element* ea = e->add_child("trig");
         ea->set_attribute("type", t->trigger);
         ea->set_attribute("dev", t->dev);
@@ -379,14 +380,19 @@ void VRScript::load(xmlpp::Element* e) {
     if (e->get_attribute("type")) type = e->get_attribute("type")->get_value();
     if (e->get_attribute("mobile")) mobile = e->get_attribute("mobile")->get_value();
 
-    xmlpp::Node::NodeList nl = e->get_children();
-    xmlpp::Node::NodeList::iterator itr;
-    for (itr = nl.begin(); itr != nl.end(); itr++) {
-        xmlpp::Node* n = *itr;
+    for (xmlpp::Node* n : e->get_children() ) {
         xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
         if (!el) continue;
 
         string name = el->get_name();
+
+        if (name == "core") {
+            if (el->has_child_text()) {
+                core = el->get_child_text()->get_content();
+                core = core.substr(1,core.size()-2);
+            }
+        }
+
         if (name == "arg") {
             arg* a = addArgument();
             a->type = el->get_attribute("type")->get_value();
