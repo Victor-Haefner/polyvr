@@ -52,23 +52,9 @@ PyMethodDef VRPyPath::methods[] = {
     {"invert", (PyCFunction)VRPyPath::invert, METH_NOARGS, "Invert start && end point of path" },
     {"compute", (PyCFunction)VRPyPath::compute, METH_VARARGS, "Compute path" },
     {"update", (PyCFunction)VRPyPath::update, METH_NOARGS, "Update path" },
+    {"addPoint", (PyCFunction)VRPyPath::addPoint, METH_VARARGS, "Add a point to the path - int addPoint(vec3 pos, vec3 dir, vec3 col, vec3 up)" },
     {NULL}  /* Sentinel */
 };
-
-
-OSG::Vec3f PyVecToVec(PyObject* _v) {
-    OSG::Vec3f v;
-    PyObject *pi;
-
-    std::string type = _v->ob_type->tp_name;
-    if (type == "list") _v = PyList_AsTuple(_v);
-
-    for (int i=0; i<3; i++) {
-        pi = PyTuple_GetItem(_v, i);
-        v[i] = PyFloat_AsDouble(pi);
-    }
-    return v;
-}
 
 PyObject* VRPyPath::set(VRPyPath* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::set, Object is invalid"); return NULL; }
@@ -94,14 +80,29 @@ PyObject* VRPyPath::invert(VRPyPath* self) {
     Py_RETURN_TRUE;
 }
 
+PyObject* VRPyPath::addPoint(VRPyPath* self, PyObject* args) {
+    PyObject *_p, *_n, *_c, *_u; _p=_n=_c=_u=0;
+    if (! PyArg_ParseTuple(args, "OOOO", &_p, &_n, &_c, &_u)) return NULL;
+
+    OSG::Vec3f p, n, c, u;
+    p = parseVec3fList(_p);
+    n = parseVec3fList(_n);
+    c = parseVec3fList(_c);
+    u = parseVec3fList(_u);
+
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::setStartPoint, Object is invalid"); return NULL; }
+    self->obj->addPoint(p,n,c,u);
+    Py_RETURN_TRUE;
+}
+
 PyObject* VRPyPath::setStartPoint(VRPyPath* self, PyObject* args) {
     PyObject *_p, *_n, *_c; _p=_n=_c=0;
     if (! PyArg_ParseTuple(args, "OOO", &_p, &_n, &_c)) return NULL;
 
     OSG::Vec3f p, n, c;
-    p = PyVecToVec(_p);
-    n = PyVecToVec(_n);
-    c = PyVecToVec(_c);
+    p = parseVec3fList(_p);
+    n = parseVec3fList(_n);
+    c = parseVec3fList(_c);
 
     if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::setStartPoint, Object is invalid"); return NULL; }
     self->obj->addPoint(p,n,c);
@@ -113,9 +114,9 @@ PyObject* VRPyPath::setEndPoint(VRPyPath* self, PyObject* args) {
     if (! PyArg_ParseTuple(args, "OOO", &_p, &_n, &_c)) return NULL;
 
     OSG::Vec3f p, n, c;
-    p = PyVecToVec(_p);
-    n = PyVecToVec(_n);
-    c = PyVecToVec(_c);
+    p = parseVec3fList(_p);
+    n = parseVec3fList(_n);
+    c = parseVec3fList(_c);
 
     if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::setEndPoint, Object is invalid"); return NULL; }
     self->obj->addPoint(p,n,c);

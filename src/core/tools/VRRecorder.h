@@ -13,6 +13,7 @@ using namespace std;
 class VRView;
 class VRFrame;
 class VRTransform;
+class Image;
 
 class VRRecorder {
     private:
@@ -39,8 +40,10 @@ class VRRecorder {
         bool frameLimitReached();
         void setTransform(VRTransform* t, int f);
         Vec3f getFrom(int f);
+        Vec3f getDir(int f);
         Vec3f getAt(int f);
         Vec3f getUp(int f);
+        Image* get(int f);
 
         VRFunction<bool>* getToggleCallback();
 };

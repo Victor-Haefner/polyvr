@@ -57,6 +57,7 @@ void VRRecorder::setTransform(VRTransform* t, int f) {
 }
 
 Vec3f VRRecorder::getFrom(int f) { VRFrame* fr = captures[f]; return fr->f; }
+Vec3f VRRecorder::getDir(int f) { VRFrame* fr = captures[f]; Vec3f d = fr->a - fr->f; d.normalize(); return d; }
 Vec3f VRRecorder::getAt(int f) { VRFrame* fr = captures[f]; return fr->a; }
 Vec3f VRRecorder::getUp(int f) { VRFrame* fr = captures[f]; return fr->u; }
 
@@ -203,6 +204,11 @@ void VRRecorder::compile(string path) {
     av_free(c);
     av_freep(&frame->data[0]);
     avcodec_free_frame(&frame);
+}
+
+Image* VRRecorder::get(int f) {
+    VRFrame* fr = captures[f];
+    return fr->capture;
 }
 
 void VRRecorder::on_record_toggle(bool b) {

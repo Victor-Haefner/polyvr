@@ -1,6 +1,7 @@
 #include "VRPyRecorder.h"
 #include "VRPyBaseT.h"
 #include "VRPyTransform.h"
+#include "VRPyImage.h"
 
 template<> PyTypeObject VRPyBaseT<OSG::VRRecorder>::type = {
     PyObject_HEAD_INIT(NULL)
@@ -53,8 +54,10 @@ PyMethodDef VRPyRecorder::methods[] = {
     {"getRecordingLength", (PyCFunction)VRPyRecorder::getRecordingLength, METH_NOARGS, "Get the length in seconds fromt he first to last of the captured frames - float getRecordingLength()" },
     {"setMaxFrames", (PyCFunction)VRPyRecorder::setMaxFrames, METH_VARARGS, "Set the maximum number of frames" },
     {"frameLimitReached", (PyCFunction)VRPyRecorder::frameLimitReached, METH_NOARGS, "Check if the frame limit has been reached" },
+    {"get", (PyCFunction)VRPyRecorder::get, METH_VARARGS, "Get capture i - get(int i)" },
     {"setTransform", (PyCFunction)VRPyRecorder::setTransform, METH_VARARGS, "Apply the transform of the camera pose of frame i - setTransform(transform t, int i)" },
     {"getFrom", (PyCFunction)VRPyRecorder::getFrom, METH_VARARGS, "Get the position of the camera pose of frame i - getFrom(int i)" },
+    {"getDir", (PyCFunction)VRPyRecorder::getDir, METH_VARARGS, "Get the direction of the camera pose of frame i - getDir(int i)" },
     {"getAt", (PyCFunction)VRPyRecorder::getAt, METH_VARARGS, "Get the at vector of the camera pose of frame i - getAt(int i)" },
     {"getUp", (PyCFunction)VRPyRecorder::getUp, METH_VARARGS, "Get the up vector of the camera pose of frame i - getUp(int i)" },
     {NULL}  /* Sentinel */
@@ -68,7 +71,13 @@ PyObject* VRPyRecorder::setTransform(VRPyRecorder* self, PyObject* args) {
     Py_RETURN_TRUE;
 }
 
+PyObject* VRPyRecorder::get(VRPyRecorder* self, PyObject* args) {
+    int i = parseInt(args);
+    return VRPyImage::fromPtr( self->obj->get(i) );
+}
+
 PyObject* VRPyRecorder::getFrom(VRPyRecorder* self, PyObject* args) { return toPyTuple(self->obj->getFrom( parseInt(args) ) ); }
+PyObject* VRPyRecorder::getDir(VRPyRecorder* self, PyObject* args) { return toPyTuple(self->obj->getDir( parseInt(args) ) ); }
 PyObject* VRPyRecorder::getAt(VRPyRecorder* self, PyObject* args) { return toPyTuple(self->obj->getAt( parseInt(args) ) ); }
 PyObject* VRPyRecorder::getUp(VRPyRecorder* self, PyObject* args) { return toPyTuple(self->obj->getUp( parseInt(args) ) ); }
 
