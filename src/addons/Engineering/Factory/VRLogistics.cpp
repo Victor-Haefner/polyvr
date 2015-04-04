@@ -333,9 +333,9 @@ VRStroke* FNetwork::stroke(Vec3f c, float k) {
             Vec3f p2 = n2->getTransform()->getFrom();
 
             path* p = new path();
-            p->setStartPoint(p1, t1, c);
-            p->setEndPoint(p2, t2, c);
-            p->compute(10);
+            p->addPoint(p1, t1, c);
+            p->addPoint(p2, t2, c);
+            p->compute(20);
             paths.push_back(p);
         }
     }

@@ -1,5 +1,6 @@
 #include "VRPyRecorder.h"
 #include "VRPyBaseT.h"
+#include "VRPyTransform.h"
 
 template<> PyTypeObject VRPyBaseT<OSG::VRRecorder>::type = {
     PyObject_HEAD_INIT(NULL)
@@ -54,6 +55,18 @@ PyMethodDef VRPyRecorder::methods[] = {
     {"frameLimitReached", (PyCFunction)VRPyRecorder::frameLimitReached, METH_NOARGS, "Check if the frame limit has been reached" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyRecorder::setTransform(VRPyRecorder* self, PyObject* args) {
+	VRPyTransform* t;
+	int i;
+    if (!PyArg_ParseTuple(args, "O", &t, &i)) return NULL;
+    self->obj->setTransform(t->obj,i);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyRecorder::getFrom(VRPyRecorder* self, PyObject* args) { return toPyTuple(self->obj->getFrom( parseInt(args) ) ); }
+PyObject* VRPyRecorder::getAt(VRPyRecorder* self, PyObject* args) { return toPyTuple(self->obj->getAt( parseInt(args) ) ); }
+PyObject* VRPyRecorder::getUp(VRPyRecorder* self, PyObject* args) { return toPyTuple(self->obj->getUp( parseInt(args) ) ); }
 
 PyObject* VRPyRecorder::setMaxFrames(VRPyRecorder* self, PyObject* args) {
     if (self->obj) self->obj->setMaxFrames( parseInt(args) );

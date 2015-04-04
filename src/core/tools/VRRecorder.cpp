@@ -4,6 +4,8 @@
 #include "core/setup/VRSetupManager.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/objects/object/VRObject.h"
+#include "core/objects/VRTransform.h"
+#include "core/objects/VRCamera.h"
 #include "core/utils/toString.h"
 
 #include <OpenSG/OSGImage.h>
@@ -24,6 +26,8 @@ class VRFrame {
     public:
         ImageRecPtr capture = 0;
         int timestamp = 0;
+
+        Vec3f f,a,u; // from at up
 };
 
 VRRecorder::VRRecorder() {
@@ -43,6 +47,17 @@ void VRRecorder::setView(int i) {
 void VRRecorder::setMaxFrames(int maxf) { maxFrames = maxf; }
 bool VRRecorder::frameLimitReached() { return ((int)captures.size() == maxFrames); }
 
+void VRRecorder::setTransform(VRTransform* t, int f) {
+    VRFrame* fr = captures[f];
+    t->setFrom(fr->f);
+    t->setAt(fr->a);
+    t->setUp(fr->u);
+}
+
+Vec3f VRRecorder::getFrom(int f) { VRFrame* fr = captures[f]; return fr->f; }
+Vec3f VRRecorder::getAt(int f) { VRFrame* fr = captures[f]; return fr->a; }
+Vec3f VRRecorder::getUp(int f) { VRFrame* fr = captures[f]; return fr->u; }
+
 void VRRecorder::capture() {
     if (view == 0) view = VRSetupManager::getCurrent()->getView(viewID);
     if (view == 0) return;
@@ -53,6 +68,12 @@ void VRRecorder::capture() {
     captures.push_back(f);
     f->capture = view->grab();
     f->timestamp = glutGet(GLUT_ELAPSED_TIME);
+
+    VRTransform* t = view->getCamera();
+    if (t == 0) return;
+    f->f = t->getFrom();
+    f->a = t->getAt();
+    f->u = t->getUp();
 }
 
 void VRRecorder::clear() {

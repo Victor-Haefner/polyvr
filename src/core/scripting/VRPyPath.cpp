@@ -82,8 +82,8 @@ PyObject* VRPyPath::set(VRPyPath* self, PyObject* args) {
     OSG::Vec3f c, uv1(0,1,0), uv2(0,1,0);
     if (u1) uv1 = parseVec3fList(u1);
     if (u2) uv2 = parseVec3fList(u2);
-    self->obj->setStartPoint(parseVec3fList(p1), parseVec3fList(n1), c, uv1);
-    self->obj->setEndPoint(parseVec3fList(p2), parseVec3fList(n2), c, uv2);
+    self->obj->addPoint(parseVec3fList(p1), parseVec3fList(n1), c, uv1);
+    self->obj->addPoint(parseVec3fList(p2), parseVec3fList(n2), c, uv2);
     self->obj->compute(i);
     Py_RETURN_TRUE;
 }
@@ -104,7 +104,7 @@ PyObject* VRPyPath::setStartPoint(VRPyPath* self, PyObject* args) {
     c = PyVecToVec(_c);
 
     if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::setStartPoint, Object is invalid"); return NULL; }
-    self->obj->setStartPoint(p,n,c);
+    self->obj->addPoint(p,n,c);
     Py_RETURN_TRUE;
 }
 
@@ -118,14 +118,17 @@ PyObject* VRPyPath::setEndPoint(VRPyPath* self, PyObject* args) {
     c = PyVecToVec(_c);
 
     if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::setEndPoint, Object is invalid"); return NULL; }
-    self->obj->setEndPoint(p,n,c);
+    self->obj->addPoint(p,n,c);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyPath::getStartPoint(VRPyPath* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::getStartPoint, Object is invalid"); return NULL; }
     OSG::Vec3f v[3];
-    self->obj->getStartPoint(v[0], v[1], v[2]);
+    auto pnt = self->obj->getPoint(0);
+    v[0] = pnt.p;
+    v[1] = pnt.n;
+    v[2] = pnt.c;
 
     PyObject* res = PyTuple_New(3);
     for (int i=0; i<3; i++) {
@@ -142,7 +145,10 @@ PyObject* VRPyPath::getStartPoint(VRPyPath* self) {
 PyObject* VRPyPath::getEndPoint(VRPyPath* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::getEndPoint, Object is invalid"); return NULL; }
     OSG::Vec3f v[3];
-    self->obj->getEndPoint(v[0], v[1], v[2]);
+    auto pnt = self->obj->getPoint(1);
+    v[0] = pnt.p;
+    v[1] = pnt.n;
+    v[2] = pnt.c;
 
     PyObject* res = PyTuple_New(3);
     for (int i=0; i<3; i++) {

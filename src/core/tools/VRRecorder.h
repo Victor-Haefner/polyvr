@@ -1,7 +1,7 @@
 #ifndef VRRECORDER_H_INCLUDED
 #define VRRECORDER_H_INCLUDED
 
-#include <OpenSG/OSGConfig.h>
+#include <OpenSG/OSGVector.h>
 #include <string>
 #include <vector>
 
@@ -12,6 +12,7 @@ using namespace std;
 
 class VRView;
 class VRFrame;
+class VRTransform;
 
 class VRRecorder {
     private:
@@ -36,6 +37,10 @@ class VRRecorder {
         float getRecordingLength();
         void setMaxFrames(int maxf);
         bool frameLimitReached();
+        void setTransform(VRTransform* t, int f);
+        Vec3f getFrom(int f);
+        Vec3f getAt(int f);
+        Vec3f getUp(int f);
 
         VRFunction<bool>* getToggleCallback();
 };
