@@ -53,13 +53,17 @@ PyMethodDef VRPyRecorder::methods[] = {
     {"getRecordingLength", (PyCFunction)VRPyRecorder::getRecordingLength, METH_NOARGS, "Get the length in seconds fromt he first to last of the captured frames - float getRecordingLength()" },
     {"setMaxFrames", (PyCFunction)VRPyRecorder::setMaxFrames, METH_VARARGS, "Set the maximum number of frames" },
     {"frameLimitReached", (PyCFunction)VRPyRecorder::frameLimitReached, METH_NOARGS, "Check if the frame limit has been reached" },
+    {"setTransform", (PyCFunction)VRPyRecorder::setTransform, METH_VARARGS, "Apply the transform of the camera pose of frame i - setTransform(transform t, int i)" },
+    {"getFrom", (PyCFunction)VRPyRecorder::getFrom, METH_VARARGS, "Get the position of the camera pose of frame i - getFrom(int i)" },
+    {"getAt", (PyCFunction)VRPyRecorder::getAt, METH_VARARGS, "Get the at vector of the camera pose of frame i - getAt(int i)" },
+    {"getUp", (PyCFunction)VRPyRecorder::getUp, METH_VARARGS, "Get the up vector of the camera pose of frame i - getUp(int i)" },
     {NULL}  /* Sentinel */
 };
 
 PyObject* VRPyRecorder::setTransform(VRPyRecorder* self, PyObject* args) {
 	VRPyTransform* t;
 	int i;
-    if (!PyArg_ParseTuple(args, "O", &t, &i)) return NULL;
+    if (!PyArg_ParseTuple(args, "Oi", &t, &i)) return NULL;
     self->obj->setTransform(t->obj,i);
     Py_RETURN_TRUE;
 }
@@ -101,7 +105,9 @@ PyObject* VRPyRecorder::setView(VRPyRecorder* self, PyObject* args) {
 
 PyObject* VRPyRecorder::capture(VRPyRecorder* self) {
     if (self->obj) self->obj->capture();
-    Py_RETURN_TRUE;
+    int size = 0;
+    if (self->obj) size = self->obj->getRecordingSize();
+    return PyInt_FromLong(size-1);
 }
 
 PyObject* VRPyRecorder::compile(VRPyRecorder* self, PyObject* args) {

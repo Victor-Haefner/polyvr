@@ -48,7 +48,9 @@ void VRRecorder::setMaxFrames(int maxf) { maxFrames = maxf; }
 bool VRRecorder::frameLimitReached() { return ((int)captures.size() == maxFrames); }
 
 void VRRecorder::setTransform(VRTransform* t, int f) {
+    if (f >= captures.size() || f < 0) return;
     VRFrame* fr = captures[f];
+    cout << "setTransform " << t->getName() << " " << fr->f << endl;
     t->setFrom(fr->f);
     t->setAt(fr->a);
     t->setUp(fr->u);
