@@ -405,9 +405,13 @@ PyObject* VRPyTransform::setGravity(VRPyTransform* self, PyObject *args) {
 
 PyObject* VRPyTransform::animate(VRPyTransform* self, PyObject *args) {
     VRPyPath* path; float t; float o; int b;
-    if (! PyArg_ParseTuple(args, "Offi", &path, &t, &o, &b)) return NULL;
+    int l = 0;
+    if (pySize(args) == 4)
+        if (! PyArg_ParseTuple(args, "Offi", &path, &t, &o, &b)) return NULL;
+    if (pySize(args) == 5)
+        if (! PyArg_ParseTuple(args, "Offii", &path, &t, &o, &b, &l)) return NULL;
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::animate: C Object is invalid"); return NULL; }
-    self->obj->startPathAnimation(path->obj, t, o, b);
+    self->obj->startPathAnimation(path->obj, t, o, b, l);
     Py_RETURN_TRUE;
 }
 

@@ -345,7 +345,6 @@ void VRMaterial::setTexture(ImageRecPtr img, bool alpha) {
     if (md->texChunk == 0) { md->texChunk = TextureObjChunk::create(); md->mat->addChunk(md->texChunk); }
     if (md->envChunk == 0) { md->envChunk = TextureEnvChunk::create(); md->mat->addChunk(md->envChunk); }
 
-    cout << "IMAGE2 " << img << endl;
     md->texture = img;
     md->texChunk->setImage(img);
     md->envChunk->setEnvMode(GL_MODULATE);

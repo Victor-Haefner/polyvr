@@ -38,6 +38,7 @@ class path {
         pnt getPoint(int i);
 
         void invert();
+        void close();
         void compute(int N);
         vector<Vec3f> getPositions();
         vector<Vec3f> getDirections();

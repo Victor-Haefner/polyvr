@@ -53,6 +53,7 @@ PyMethodDef VRPyPath::methods[] = {
     {"compute", (PyCFunction)VRPyPath::compute, METH_VARARGS, "Compute path" },
     {"update", (PyCFunction)VRPyPath::update, METH_NOARGS, "Update path" },
     {"addPoint", (PyCFunction)VRPyPath::addPoint, METH_VARARGS, "Add a point to the path - int addPoint(vec3 pos, vec3 dir, vec3 col, vec3 up)" },
+    {"close", (PyCFunction)VRPyPath::close, METH_NOARGS, "Close the path - close()" },
     {NULL}  /* Sentinel */
 };
 
@@ -71,6 +72,12 @@ PyObject* VRPyPath::set(VRPyPath* self, PyObject* args) {
     self->obj->addPoint(parseVec3fList(p1), parseVec3fList(n1), c, uv1);
     self->obj->addPoint(parseVec3fList(p2), parseVec3fList(n2), c, uv2);
     self->obj->compute(i);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyPath::close(VRPyPath* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::invert, Object is invalid"); return NULL; }
+    self->obj->close();
     Py_RETURN_TRUE;
 }
 

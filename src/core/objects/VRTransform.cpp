@@ -731,10 +731,10 @@ void setFromPath(VRTransform* tr, path* p, bool redirect, float t) {
     }
 }
 
-void VRTransform::startPathAnimation(path* p, float time, float offset, bool redirect) {
+void VRTransform::startPathAnimation(path* p, float time, float offset, bool redirect, bool loop) {
     VRFunction<float>* fkt = new VRFunction<float>("TransAnim", boost::bind(setFromPath, this, p, redirect, _1));
     VRScene* scene = VRSceneManager::getCurrent();
-    int a = scene->addAnimation(time, offset, fkt, 0.f, 1.f, false);
+    int a = scene->addAnimation(time, offset, fkt, 0.f, 1.f, loop);
     animations.push_back(a);
 }
 

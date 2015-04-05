@@ -148,6 +148,11 @@ vector<Vec3f> path::getColors() { return colors; }
 void path::invert() { direction *= -1; }
 void path::update() { compute(iterations); }
 
+void path::close() {
+    if (points.size() <= 1) return;
+    points.push_back( getPoint(0) );
+}
+
 Vec3f path::interp(vector<Vec3f>& vec, float t) {
     if (direction == -1) t = 1-t;
     int N = vec.size() -1;

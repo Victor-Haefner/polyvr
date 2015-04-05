@@ -133,7 +133,7 @@ class VRTransform : public VRObject {
         /** Cast a ray in world coordinates from the object in its local coordinates, -z axis defaults **/
         Line castRay(VRObject* obj = 0, Vec3f dir = Vec3f(0,0,-1));
 
-        void startPathAnimation(path* p, float time, float offset, bool redirect = true);
+        void startPathAnimation(path* p, float time, float offset, bool redirect = true, bool loop = false);
         void stopAnimation();
 
         /** Print the position of the object in local && world coords **/
