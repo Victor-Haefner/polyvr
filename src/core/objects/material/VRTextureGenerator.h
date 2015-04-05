@@ -26,6 +26,7 @@ class VRTextureGenerator {
         };
 
         vector<Layer> layers;
+        ImageRecPtr img;
 
     public:
         VRTextureGenerator();

@@ -2,6 +2,7 @@
 #include "VRPyGeometry.h"
 #include "VRPyDevice.h"
 #include "VRPyBaseT.h"
+#include "VRPyImage.h"
 
 template<> PyTypeObject VRPyBaseT<OSG::VRTextureGenerator>::type = {
     PyObject_HEAD_INIT(NULL)
@@ -48,8 +49,13 @@ template<> PyTypeObject VRPyBaseT<OSG::VRTextureGenerator>::type = {
 PyMethodDef VRPyTextureGenerator::methods[] = {
     {"add", (PyCFunction)VRPyTextureGenerator::add, METH_VARARGS, "Add a layer - add(str type, float amount, [r,g,b], [r,g,b])\n   type can be: 'Perlin', 'Bricks'" },
     {"setSize", (PyCFunction)VRPyTextureGenerator::setSize, METH_VARARGS, "Set the size - setSize([width, height, depth])\n   set depth to 1 for 2D textures" },
+    {"compose", (PyCFunction)VRPyTextureGenerator::compose, METH_VARARGS, "Bake the layers into an image - img compose( int seed )" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyTextureGenerator::compose(VRPyTextureGenerator* self, PyObject* args) {
+    return VRPyImage::fromPtr( self->obj->compose( parseInt(args) ) );
+}
 
 PyObject* VRPyTextureGenerator::add(VRPyTextureGenerator* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTextureGenerator::add - Object is invalid"); return NULL; }

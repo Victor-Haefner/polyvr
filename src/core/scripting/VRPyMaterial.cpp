@@ -4,6 +4,7 @@
 #include "core/objects/material/VRTextureGenerator.h"
 #include "VRPyBaseT.h"
 #include "VRPyTypeCaster.h"
+#include "VRPyImage.h"
 
 template<> PyTypeObject VRPyBaseT<OSG::VRMaterial>::type = {
     PyObject_HEAD_INIT(NULL)
@@ -107,8 +108,8 @@ PyObject* VRPyMaterial::setTexture(VRPyMaterial* self, PyObject* args) {
         PyObject* o = parseObject(args);
         if (PyString_Check(o)) self->obj->setTexture( PyString_AsString(o) ); // load a file
         else {
-            VRPyTextureGenerator* tg = (VRPyTextureGenerator*)o;
-            self->obj->setTexture( tg->obj->compose(0) );
+            VRPyImage* img = (VRPyImage*)o;
+            self->obj->setTexture( img->obj );
         }
 	}
 

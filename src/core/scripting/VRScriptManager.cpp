@@ -29,6 +29,7 @@
 #include "VRPyListMath.h"
 #include "VRPyNavigator.h"
 #include "VRPyNavPreset.h"
+#include "VRPyImage.h"
 #include <iostream>
 #include <algorithm>
 
@@ -239,6 +240,7 @@ void VRScriptManager::initPyModules() {
     VRPyGeometry::registerModule("Geometry", pModVR, VRPyTransform::typeRef);
     VRPyMaterial::registerModule("Material", pModVR, VRPyObject::typeRef);
     VRPyTextureGenerator::registerModule("TextureGenerator", pModVR);
+    VRPyImage::registerModule("Image", pModVR);
     VRPyLight::registerModule("Light", pModVR, VRPyObject::typeRef);
     VRPyLod::registerModule("Lod", pModVR, VRPyObject::typeRef);
     VRPySprite::registerModule("Sprite", pModVR, VRPyGeometry::typeRef);
