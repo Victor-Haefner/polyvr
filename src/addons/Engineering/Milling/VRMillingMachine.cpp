@@ -10,6 +10,11 @@ VRMillingMachine::VRMillingMachine() {
     http = new VRSocket("milling machine");
 }
 
+int VRMillingMachine::getState() { return state; }
+int VRMillingMachine::getMode() { return mode; }
+
+bool VRMillingMachine::connected() { return online; }
+
 void VRMillingMachine::connect(string s) {
     address = s;
     online = true;

@@ -9,10 +9,14 @@ struct VRPyMillingMachine : VRPyBaseT<OSG::VRMillingMachine> {
 
     static PyObject* connect(VRPyMillingMachine* self, PyObject* args);
     static PyObject* disconnect(VRPyMillingMachine* self);
+    static PyObject* connected(VRPyMillingMachine* self);
     static PyObject* setSpeed(VRPyMillingMachine* self, PyObject* args);
     static PyObject* setGeometry(VRPyMillingMachine* self, PyObject* args);
     static PyObject* update(VRPyMillingMachine* self);
     static PyObject* setPosition(VRPyMillingMachine* self, PyObject* args);
+    static PyObject* getPosition(VRPyMillingMachine* self);
+    static PyObject* state(VRPyMillingMachine* self);
+    static PyObject* mode(VRPyMillingMachine* self);
 };
 
 #endif // VRPYMILLINGMACHINE_H_INCLUDED

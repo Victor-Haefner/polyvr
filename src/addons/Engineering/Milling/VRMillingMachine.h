@@ -32,6 +32,7 @@ class VRMillingMachine {
 
         void connect(string s);
         void disconnect();
+        bool connected();
 
         void setSpeed(Vec3f v);
         void setSpeed(float s);
@@ -39,6 +40,9 @@ class VRMillingMachine {
 
         void setPosition(Vec3f p);
         Vec3f getPosition();
+
+        int getState();
+        int getMode();
 
         void update();
 };

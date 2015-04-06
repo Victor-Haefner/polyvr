@@ -48,12 +48,36 @@ template<> PyTypeObject VRPyBaseT<OSG::VRMillingMachine>::type = {
 PyMethodDef VRPyMillingMachine::methods[] = {
     {"connect", (PyCFunction)VRPyMillingMachine::connect, METH_VARARGS, "Connect to machine - connect( 'ip:port' )" },
     {"disconnect", (PyCFunction)VRPyMillingMachine::disconnect, METH_NOARGS, "Disconnect from machine" },
+    {"connected", (PyCFunction)VRPyMillingMachine::connected, METH_NOARGS, "Return if machine connected - bool connected()" },
     {"setSpeed", (PyCFunction)VRPyMillingMachine::setSpeed, METH_VARARGS, "Set milling speed and direction - setSpeed( [x,y,z] )" },
-    {"setGeometry", (PyCFunction)VRPyMillingMachine::setGeometry, METH_VARARGS, "Set milling speed and direction - setGeometry( [objX, objY, objZ, endEffector] )" },
-    {"update", (PyCFunction)VRPyMillingMachine::update, METH_VARARGS, "Set milling speed and direction - update( [objX, objY, objZ, endEffector] )" },
-    {"setPosition", (PyCFunction)VRPyMillingMachine::setPosition, METH_VARARGS, "Set milling speed and direction - setPosition( [objX, objY, objZ, endEffector] )" },
+    {"setGeometry", (PyCFunction)VRPyMillingMachine::setGeometry, METH_VARARGS, "Set the geometries - setGeometry( [objX, objY, objZ, endEffector] )" },
+    {"update", (PyCFunction)VRPyMillingMachine::update, METH_NOARGS, "Update the machine visualisation - update()" },
+    {"setPosition", (PyCFunction)VRPyMillingMachine::setPosition, METH_VARARGS, "Set the position of the machine - setPosition( [x,y,z] )" },
+    {"getPosition", (PyCFunction)VRPyMillingMachine::setPosition, METH_NOARGS, "Get the position of the machine - [x,y,z] getPosition()" },
+    {"state", (PyCFunction)VRPyMillingMachine::state, METH_NOARGS, "Get the state of the machine" },
+    {"mode", (PyCFunction)VRPyMillingMachine::mode, METH_NOARGS, "Get the mode of the machine" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyMillingMachine::connected(VRPyMillingMachine* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyMillingMachine::connected - Object is invalid"); return NULL; }
+    return PyBool_FromLong( self->obj->connected() );
+}
+
+PyObject* VRPyMillingMachine::getPosition(VRPyMillingMachine* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyMillingMachine::getPosition - Object is invalid"); return NULL; }
+    return toPyTuple( self->obj->getPosition() );
+}
+
+PyObject* VRPyMillingMachine::state(VRPyMillingMachine* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyMillingMachine::state - Object is invalid"); return NULL; }
+    return PyInt_FromLong( self->obj->getState() );
+}
+
+PyObject* VRPyMillingMachine::mode(VRPyMillingMachine* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyMillingMachine::mode - Object is invalid"); return NULL; }
+    return PyInt_FromLong( self->obj->getMode() );
+}
 
 PyObject* VRPyMillingMachine::update(VRPyMillingMachine* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyMillingMachine::update - Object is invalid"); return NULL; }
