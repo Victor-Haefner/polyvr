@@ -259,6 +259,8 @@ void VRGuiScripts::on_diag_import() {
     if (import_scripts.count(name) == 0) return;
 
     VRScript* s = import_scripts[name];
+    import_scripts.erase(name);
+
     VRSceneManager::getCurrent()->addScript(s);
     s->enable(true);
     updateList();
