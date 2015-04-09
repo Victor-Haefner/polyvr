@@ -200,6 +200,10 @@
 		<Unit filename="src/addons/CEF/CEF.h" />
 		<Unit filename="src/addons/CEF/VRPyCEF.cpp" />
 		<Unit filename="src/addons/CEF/VRPyCEF.h" />
+		<Unit filename="src/addons/CEF/VRPyWebCam.cpp" />
+		<Unit filename="src/addons/CEF/VRPyWebCam.h" />
+		<Unit filename="src/addons/CEF/VRWebCam.cpp" />
+		<Unit filename="src/addons/CEF/VRWebCam.h" />
 		<Unit filename="src/addons/CSG/CGALTypedefs.h" />
 		<Unit filename="src/addons/CSG/CSGGeometry.h" />
 		<Unit filename="src/addons/CSG/CsgjsWrapper.h" />

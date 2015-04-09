@@ -45,6 +45,7 @@
 #include "addons/Engineering/Mechanics/VRPyMechanism.h"
 #include "addons/Engineering/VRPyNumberingEngine.h"
 #include "addons/CEF/VRPyCEF.h"
+#include "addons/CEF/VRPyWebCam.h"
 #include "addons/Classification/VRPySegmentation.h"
 #include "addons/Engineering/Chemistry/VRPyMolecule.h"
 #include "addons/Engineering/Factory/VRPyFactory.h"
@@ -263,6 +264,7 @@ void VRScriptManager::initPyModules() {
     VRPyCaveKeeper::registerModule("CaveKeeper", pModVR);
     VRPyCarDynamics::registerModule("CarDynamics", pModVR);
     VRPyCEF::registerModule("CEF", pModVR);
+    VRPyWebCam::registerModule("Webcam", pModVR, VRPySprite::typeRef);
     VRPySegmentation::registerModule("Segmentation", pModVR);
     VRPyMechanism::registerModule("Mechanism", pModVR);
     VRPyNumberingEngine::registerModule("NumberingEngine", pModVR, VRPyGeometry::typeRef);
