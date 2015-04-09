@@ -11,6 +11,7 @@ struct VRPySprite : VRPyBaseT<OSG::VRSprite> {
     static PyObject* getText(VRPySprite* self);
     static PyObject* setText(VRPySprite* self, PyObject* args);
     static PyObject* setSize(VRPySprite* self, PyObject* args);
+    static PyObject* webOpen(VRPySprite* self, PyObject* args);
 };
 
 #endif // VRPYSPRITE_H_INCLUDED

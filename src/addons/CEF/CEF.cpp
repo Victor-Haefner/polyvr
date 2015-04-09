@@ -107,6 +107,7 @@ void CEF::OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const Re
 }
 
 void CEF::addMouse(VRDevice* dev, VRObject* obj, int lb, int rb, int wu, int wd) {
+    if (dev == 0 || obj == 0) return;
     this->obj = obj;
 
     dev->addSignal(lb, 0)->add( new VRFunction<VRDevice*>( "CEF::LMBP", boost::bind(&CEF::mouse, this, 0, 0, _1 ) ) );
@@ -121,6 +122,7 @@ void CEF::addMouse(VRDevice* dev, VRObject* obj, int lb, int rb, int wu, int wd)
 }
 
 void CEF::addKeyboard(VRDevice* dev) {
+    if (dev == 0) return;
     dev->addSignal(-1, 0)->add( new VRFunction<VRDevice*>( "CEF::KP", boost::bind(&CEF::keyboard, this, 0, _1 ) ) );
     //dev->addSignal(-1, 1)->add( new VRFunction<VRDevice*>( "CEF::KR", boost::bind(&CEF::keyboard, this, 1, _1 ) ) );
 }

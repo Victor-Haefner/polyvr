@@ -27,6 +27,8 @@ class VRSprite : public VRGeometry {
 
         void setTexture(string path);
 
+        void webOpen(string path, int res, float ratio);
+
         void setFont(string f);
         void setFontColor(Color4f c);
 

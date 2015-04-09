@@ -52,8 +52,17 @@ PyMethodDef VRPySprite::methods[] = {
     {"getText", (PyCFunction)VRPySprite::getText, METH_NOARGS, "Get label text from sprite." },
     {"setText", (PyCFunction)VRPySprite::setText, METH_VARARGS, "Set label text from sprite." },
     {"setSize", (PyCFunction)VRPySprite::setSize, METH_VARARGS, "Set sprite size." },
+    {"webOpen", (PyCFunction)VRPySprite::webOpen, METH_VARARGS, "Open and display a website - webOpen(str uri, int width, flt ratio)" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPySprite::webOpen(VRPySprite* self, PyObject* args) {
+	if (self->obj == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
+	PyObject* uri; int res; float ratio;
+    if (! PyArg_ParseTuple(args, "Oif", &uri, &res, &ratio)) return NULL;
+	self->obj->webOpen( PyString_AsString(uri), res, ratio);
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPySprite::getText(VRPySprite* self) {
 	if (self->obj == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }

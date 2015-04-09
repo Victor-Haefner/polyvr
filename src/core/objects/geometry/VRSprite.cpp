@@ -2,6 +2,9 @@
 
 #include "core/tools/VRText.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/setup/VRSetupManager.h"
+#include "core/setup/VRSetup.h"
+#include "addons/CEF/CEF.h"
 #include <OpenSG/OSGNameAttachment.h>
 #include <OpenSG/OSGSimpleGeometry.h>
 #include <sstream>
@@ -30,6 +33,23 @@ void VRSprite::setLabel (string l, float res) {
     auto labelMat = VRText::get()->getTexture(l, font, 20*res, fontColor, Color4f(0,0,0,0) );
     labelMat->setSortKey(1);
     setMaterial(labelMat);
+}
+
+void VRSprite::webOpen(string path, int res, float ratio){
+    VRMaterial* mat = VRMaterial::get(getName()+"web");
+    setMaterial(mat);
+    mat->setLit(false);
+    CEF* w = new CEF();
+
+    VRDevice* mouse = VRSetupManager::getCurrent()->getDevice("mouse");
+    VRDevice* keyboard = VRSetupManager::getCurrent()->getDevice("keyboard");
+
+    w->setMaterial(mat);
+    w->open(path);
+    w->addMouse(mouse, this, 0, 2, 3, 4);
+    w->addKeyboard(keyboard);
+    w->setResolution(res);
+    w->setAspectRatio(ratio);
 }
 
 void VRSprite::setTexture(string path){
