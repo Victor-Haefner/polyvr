@@ -23,6 +23,7 @@
 #include "VRPyLight.h"
 #include "VRPyLod.h"
 #include "VRPyRecorder.h"
+#include "VRPyPathtool.h"
 #include "VRPySnappingEngine.h"
 #include "VRPySelector.h"
 #include "VRPyClipPlane.h"
@@ -255,6 +256,7 @@ void VRScriptManager::initPyModules() {
     VRPyPath::registerModule("Path", pModVR);
     VRPyRecorder::registerModule("Recorder", pModVR);
     VRPySnappingEngine::registerModule("SnappingEngine", pModVR);
+    VRPyPathtool::registerModule("Pathtool", pModVR);
     VRPySelector::registerModule("Selector", pModVR);
     VRPyNavigator::registerModule("Navigator", pModVR);
     VRPyNavPreset::registerModule("NavPreset", pModVR);
@@ -425,7 +427,7 @@ PyObject* VRScriptManager::loadGeometry(VRScriptManager* self, PyObject *args) {
     string p = PyString_AsString(path);
     VRTransform* obj = VRSceneLoader::get()->load3DContent( p, 0, ignoreCache);
     if (obj == 0) {
-        VRGuiManager::get()->printInfo("Warning: " + p + " not found.");
+        VRGuiManager::get()->printInfo("Warning: " + p + " not found.\n");
         Py_RETURN_NONE;
     }
     obj->addAttachment("dynamicaly_generated", 0);

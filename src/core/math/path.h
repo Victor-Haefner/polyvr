@@ -35,6 +35,7 @@ class path {
         path();
 
         int addPoint(Vec3f p, Vec3f n, Vec3f c, Vec3f u = Vec3f(0,1,0));
+        int setPoint(int i, Vec3f p, Vec3f n, Vec3f c, Vec3f u = Vec3f(0,1,0));
         pnt getPoint(int i);
 
         void invert();
