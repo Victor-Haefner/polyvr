@@ -422,8 +422,12 @@ PyObject* VRScriptManager::getRoot(VRScriptManager* self) {
 PyObject* VRScriptManager::loadGeometry(VRScriptManager* self, PyObject *args) {
     PyObject* path; int ignoreCache;
     if (! PyArg_ParseTuple(args, "Oi", &path, &ignoreCache)) return NULL;
-    VRTransform* obj = VRSceneLoader::get()->load3DContent( PyString_AsString(path), 0, ignoreCache);
-    if (obj == 0) Py_RETURN_NONE;
+    string p = PyString_AsString(path);
+    VRTransform* obj = VRSceneLoader::get()->load3DContent( p, 0, ignoreCache);
+    if (obj == 0) {
+        VRGuiManager::get()->printInfo("Warning: " + p + " not found.");
+        Py_RETURN_NONE;
+    }
     obj->addAttachment("dynamicaly_generated", 0);
     return VRPyTypeCaster::cast(obj);
 }
