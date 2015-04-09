@@ -205,7 +205,7 @@ PyObject* VRPyObject::destroy(VRPyObject* self) {
 PyObject* VRPyObject::addChild(VRPyObject* self, PyObject* args, PyObject *kwds) {
     VRPyObject* child = NULL;
     if (! PyArg_ParseTuple(args, "O", &child)) return NULL;
-    if (child == NULL) { PyErr_SetString(err, "Missing child parameter"); return NULL; }
+    if ( isNone((PyObject*)child) ) Py_RETURN_TRUE;
 
     if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::addChild, Parent is invalid"); return NULL; }
     if (child->obj == 0) { PyErr_SetString(err, "VRPyObject::addChild, Child is invalid"); return NULL; }
