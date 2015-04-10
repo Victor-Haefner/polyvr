@@ -99,7 +99,8 @@ int path::addPoint(Vec3f p, Vec3f n, Vec3f c, Vec3f u) {
     return points.size() - 1;
 }
 
-int path::setPoint(int i, Vec3f p, Vec3f n, Vec3f c, Vec3f u) {
+void path::setPoint(int i, Vec3f p, Vec3f n, Vec3f c, Vec3f u) {
+    if (i < 0 || i >= points.size()) return;
     points[i].p = p;
     points[i].n = n;
     points[i].c = c;

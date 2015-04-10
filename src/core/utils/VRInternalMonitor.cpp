@@ -32,21 +32,16 @@ void VRInternalMonitor::add( string name, VRFunction<string&>* fkt ) {
 }
 
 void VRInternalMonitor::update() {
-    map<string, varFkt*>::iterator itr;
     string val;
-    for(itr = varFkts.begin(); itr != varFkts.end(); itr++) {
-        (*itr->second)(val);
-        cout << "\nVar " << itr->first << " = " << val << flush;
-    }
+    for(auto var : varFkts) (*var.second)(val);
 }
 
 map<string, string> VRInternalMonitor::getVariables() {
-    map<string, varFkt*>::iterator itr;
     string val;
     map<string, string> m;
-    for(itr = varFkts.begin(); itr != varFkts.end(); itr++) {
-        (*itr->second)(val);
-        m[itr->first] = val;
+    for(auto var : varFkts) {
+        (*var.second)(val);
+        m[var.first] = val;
     }
     return m;
 }

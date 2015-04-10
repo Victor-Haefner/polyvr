@@ -18,16 +18,16 @@ class path;
 class VRPathtool {
     private:
         struct entry {
-            path* p;
+            path* p = 0;
             map<VRGeometry*, int> handles;
-            VRGeometry* line;
-            VRObject* anchor;
+            VRGeometry* line = 0;
+            VRObject* anchor = 0;
         };
 
         map<int, entry*> paths;
-        map<VRGeometry*, entry*> handles;
+        map<VRGeometry*, entry*> handles_dict;
 
-        VRGeometry* newHandle(entry* e, VRDevice* dev = 0);
+        void updatePath(entry* e);
         void update();
 
     public:
