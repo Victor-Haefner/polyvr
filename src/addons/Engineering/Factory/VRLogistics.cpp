@@ -3,6 +3,7 @@
 #include "core/objects/VRTransform.h"
 #include "core/math/path.h"
 #include "core/objects/geometry/VRStroke.h"
+#include "core/objects/material/VRMaterial.h"
 #include "core/utils/toString.h"
 #include <GL/glut.h>
 
@@ -31,6 +32,7 @@ void FObject::setTransformation(VRTransform* t) {
 void FObject::setMetaData(string s) {
     if (metaData == 0) {
         metaData = new OSG::VRSprite("meta");
+        metaData->setMaterial(new VRMaterial("metasprite"));
         metaData->switchParent(transform);
         metaData->setFrom(Vec3f(0,0,1));
         metaData->setDir(Vec3f(-1,0,0));

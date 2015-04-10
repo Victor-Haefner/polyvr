@@ -15,6 +15,7 @@ VRPrimitive* VRPrimitive::make(string p) {
     if (p == "Torus") return new VRTorus();
     if (p == "Teapot") return new VRTeapot();
     if (p == "Cylinder") return new VRCylinder();
+    if (p == "Cone") return new VRCone();
     if (p == "Gear") return new VRGear();
     if (p == "Thread") return new VRThread();
     return 0;
@@ -30,6 +31,7 @@ vector<string> VRPrimitive::getTypes() {
         prims.push_back("Box");
         prims.push_back("Sphere");
         prims.push_back("Cylinder");
+        prims.push_back("Cone");
         prims.push_back("Torus");
         prims.push_back("Teapot");
         prims.push_back("Gear");
@@ -49,6 +51,7 @@ vector<string> VRPrimitive::getTypeParameter(string type) {
         params["Box"] = vector<string>();
         params["Sphere"] = vector<string>();
         params["Cylinder"] = vector<string>();
+        params["Cone"] = vector<string>();
         params["Torus"] = vector<string>();
         params["Teapot"] = vector<string>();
         params["Gear"] = vector<string>();
@@ -75,6 +78,12 @@ vector<string> VRPrimitive::getTypeParameter(string type) {
         params["Cylinder"].push_back("Do bottom");
         params["Cylinder"].push_back("Do top");
         params["Cylinder"].push_back("Do sides");
+
+        params["Cone"].push_back("Height");
+        params["Cone"].push_back("Radius");
+        params["Cone"].push_back("Sides");
+        params["Cone"].push_back("Do bottom");
+        params["Cone"].push_back("Do sides");
 
         params["Torus"].push_back("Inner radius");
         params["Torus"].push_back("Outer radius");
@@ -106,6 +115,7 @@ VRSphere::VRSphere() { N = 2; type = "Sphere"; }
 VRTorus::VRTorus() { N = 4; type = "Torus"; }
 VRTeapot::VRTeapot() { N = 2; type = "Teapot"; }
 VRCylinder::VRCylinder() { N = 6; type = "Cylinder"; }
+VRCone::VRCone() { N = 5; type = "Cone"; }
 VRThread::VRThread() { N = 4; type = "Thread"; }
 VRGear::VRGear() { N = 6; type = "Gear"; }
 
@@ -115,6 +125,7 @@ void VRSphere::fromStream(stringstream& ss) { ss >> radius >> iterations; }
 void VRTorus::fromStream(stringstream& ss) { ss >> inner_radius >> outer_radius >> Nsegments >> Nrings; }
 void VRTeapot::fromStream(stringstream& ss) { ss >> iterations >> scale; }
 void VRCylinder::fromStream(stringstream& ss) { ss >> height >> radius >> Nsides >> doTop >> doBottom >> doSides; }
+void VRCone::fromStream(stringstream& ss) { ss >> height >> radius >> Nsides >> doBottom >> doSides; }
 void VRThread::fromStream(stringstream& ss) { ss >> length >> radius >> pitch >> Nsegments; }
 void VRGear::fromStream(stringstream& ss) { ss >> width >> hole >> pitch >> teeth_number >> teeth_size >> bevel; }
 
@@ -124,6 +135,7 @@ void VRSphere::toStream(stringstream& ss) { ss << radius << " " << iterations; }
 void VRTorus::toStream(stringstream& ss) { ss << inner_radius << " " << outer_radius << " " << Nsegments << " " << Nrings; }
 void VRTeapot::toStream(stringstream& ss) { ss << iterations << " " << scale; }
 void VRCylinder::toStream(stringstream& ss) { ss << height << " " << radius << " " << Nsides << " " << doTop << " " << doBottom << " " << doSides; }
+void VRCone::toStream(stringstream& ss) { ss << height << " " << radius << " " << Nsides << " " << doBottom << " " << doSides; }
 void VRThread::toStream(stringstream& ss) { ss << length << " " << radius << " " << pitch << " " << Nsegments; }
 void VRGear::toStream(stringstream& ss) { ss << width << " " << hole << " " << pitch << " " << teeth_number << " " << teeth_size << " " << bevel; }
 
@@ -133,6 +145,7 @@ OSG::GeometryRecPtr VRSphere::make() { return OSG::makeSphereGeo(iterations, rad
 OSG::GeometryRecPtr VRTorus::make() { return OSG::makeTorusGeo(inner_radius, outer_radius, Nsegments, Nrings); }
 OSG::GeometryRecPtr VRTeapot::make() { return OSG::makeTeapotGeo(iterations, scale); }
 OSG::GeometryRecPtr VRCylinder::make() { return OSG::makeCylinderGeo(height, radius, Nsides, doSides, doTop, doBottom); }
+OSG::GeometryRecPtr VRCone::make() { return OSG::makeConeGeo(height, radius, Nsides, doSides, doBottom); }
 OSG::GeometryRecPtr VRThread::make() {
     OSG::GeoUInt8PropertyRecPtr      Type = OSG::GeoUInt8Property::create();
     OSG::GeoUInt32PropertyRecPtr     Length = OSG::GeoUInt32Property::create();

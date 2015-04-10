@@ -24,6 +24,7 @@ class VRTransform : public VRObject {
 
         unsigned int change_time_stamp = 0;
         unsigned int wchange_time_stamp = 0;
+        unsigned int apply_time_stamp = 0;
         bool change;
         bool fixed;
         bool cam_invert_z;

@@ -86,6 +86,19 @@ struct VRTeapot : public VRPrimitive {
     OSG::GeometryRecPtr make();
 };
 
+struct VRCone : public VRPrimitive {
+    float height = 1;
+    float radius = 1;
+    int Nsides = 16;
+    bool doSides = true;
+    bool doBottom = true;
+
+    VRCone();
+    void fromStream(stringstream& ss);
+    void toStream(stringstream& ss);
+    OSG::GeometryRecPtr make();
+};
+
 struct VRCylinder : public VRPrimitive {
     float height = 1;
     float radius = 1;

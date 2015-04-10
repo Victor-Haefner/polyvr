@@ -107,6 +107,8 @@ void path::setPoint(int i, Vec3f p, Vec3f n, Vec3f c, Vec3f u) {
     points[i].u = u;
 }
 
+vector<path::pnt> path::getPoints() { return points; }
+
 path::pnt path::getPoint(int i) { return points[i]; }
 
 void path::compute(int N) {

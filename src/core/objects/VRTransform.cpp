@@ -579,8 +579,14 @@ void VRTransform::printTransformationTree(int indent) {
 /** enable constraints on the object, 0 leaves the DOF free, 1 restricts it **/
 void VRTransform::apply_constraints() {
     if (!doTConstraint && !doRConstraint) return;
+    auto now = VRGlobals::get()->CURRENT_FRAME;
+    if (apply_time_stamp == now) return;
+    apply_time_stamp = now;
 
-    Matrix t = getWorldMatrix();//current position
+    Matrix t = getWorldMatrix();
+
+    //Matrix pt = getWorldMatrix(false); // parent world matrix
+    //Matrix t; dm->read(t); t.multLeft(pt); // own world matrix
 
     //rotation
     if (doRConstraint) {
@@ -624,17 +630,19 @@ void VRTransform::apply_constraints() {
 
     //translation
     if (doTConstraint) {
-        //cout << "\nA";
         if (tConPlane) {
             float d = Vec3f(t[3] - constraints_reference[3]).dot(tConstraint);
             for (int i=0; i<3; i++) t[3][i] -= d*tConstraint[i];
-        }
-        else {
+        } else {
             Vec3f d = Vec3f(t[3] - constraints_reference[3]);
             d = d.dot(tConstraint)*tConstraint;
             for (int i=0; i<3; i++) t[3][i] = constraints_reference[3][i] + d[i];
         }
     }
+
+    //pt.invert();
+    //t.multLeft(pt);
+    //setMatrix(t);
 
     setWorldMatrix(t);
 }
@@ -654,7 +662,7 @@ void VRTransform::setNoBltFlag() { noBlt = true; }
 void VRTransform::setRestrictionReference(Matrix m) { constraints_reference = m; }
 void VRTransform::toggleTConstraint(bool b) { doTConstraint = b; if (b) getWorldMatrix(constraints_reference); if(!doRConstraint) setFixed(!b); }
 void VRTransform::toggleRConstraint(bool b) { doRConstraint = b; if (b) getWorldMatrix(constraints_reference); if(!doTConstraint) setFixed(!b); }
-void VRTransform::setTConstraint(Vec3f trans) { tConstraint = trans; tConstraint.normalize(); }
+void VRTransform::setTConstraint(Vec3f trans) { tConstraint = trans; if (tConstraint.length() > 1e-4) tConstraint.normalize(); }
 void VRTransform::setTConstraintMode(bool plane) { tConPlane = plane; }
 void VRTransform::setRConstraint(Vec3i rot) { rConstraint = rot; }
 
