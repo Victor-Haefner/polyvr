@@ -64,7 +64,7 @@ class FNode : public FID {
         FObject* object;
         FTransporter* transporter;
         State state;
-        OSG::VRTransform* transform;
+        OSG::VRTransform* transform = 0;
 
         std::map<int, FNode*> out;
         std::map<int, FNode*> in;
@@ -92,6 +92,7 @@ class FNode : public FID {
         void disconnect(FNode* n);
         void isolate();
 
+        void setTransform(OSG::VRTransform* t);
         OSG::VRTransform* getTransform();
 
         friend class FNetwork;

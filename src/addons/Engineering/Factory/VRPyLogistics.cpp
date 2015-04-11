@@ -83,7 +83,8 @@ PyObject* FPyNode::setTransform(FPyNode* self, PyObject* args) {
     VRPyTransform* t;
     if (! PyArg_ParseTuple(args, "O", &t)) return NULL;
 
-    self->obj->getTransform()->setWorldMatrix(t->obj->getWorldMatrix());
+    self->obj->setTransform(t->obj);
+    //self->obj->getTransform()->setWorldMatrix(t->obj->getWorldMatrix());
     Py_RETURN_TRUE;
 }
 

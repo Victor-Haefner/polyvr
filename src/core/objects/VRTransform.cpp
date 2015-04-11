@@ -112,6 +112,8 @@ VRTransform::~VRTransform() {
 }
 
 uint VRTransform::getLastChange() { return change_time_stamp; }
+//bool VRTransform::changedNow() { return (change_time_stamp >= VRGlobals::get()->CURRENT_FRAME-1); }
+bool VRTransform::changedNow() { return checkWorldChange(); }
 
 void VRTransform::initCoords() {
     if (coords != 0) return;

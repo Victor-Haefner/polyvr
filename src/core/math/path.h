@@ -53,6 +53,8 @@ class path {
         void getOrientation(float t, Vec3f& dir, Vec3f& up);
         Vec3f getColor(float t);
 
+        float getLength();
+
         void update();
 };
 

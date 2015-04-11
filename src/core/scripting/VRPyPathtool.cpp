@@ -56,8 +56,15 @@ PyMethodDef VRPyPathtool::methods[] = {
     {"setVisible", (PyCFunction)VRPyPathtool::setVisible, METH_VARARGS, "Extrude a path - extrude(device, int id)" },
     {"getPaths", (PyCFunction)VRPyPathtool::getPaths, METH_NOARGS, "Extrude a path - extrude(device, int id)" },
     {"getHandles", (PyCFunction)VRPyPathtool::getHandles, METH_VARARGS, "Extrude a path - extrude(device, int id)" },
+    {"update", (PyCFunction)VRPyPathtool::update, METH_NOARGS, "Extrude a path - extrude(device, int id)" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyPathtool::update(VRPyPathtool* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyPathtool::update - Object is invalid"); return NULL; }
+    self->obj->update();
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyPathtool::getPaths(VRPyPathtool* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyPathtool::getPaths - Object is invalid"); return NULL; }
@@ -117,7 +124,9 @@ PyObject* VRPyPathtool::newPath(VRPyPathtool* self, PyObject* args) {
     VRPyDevice* dev;
     VRPyObject* obj;
     if (! PyArg_ParseTuple(args, "OO", &dev, &obj)) return NULL;
-    OSG::path* p = self->obj->newPath( dev->obj, obj->obj );
+    OSG::VRDevice* d = 0;
+    if (!isNone((PyObject*)dev)) d = dev->obj;
+    OSG::path* p = self->obj->newPath( d, obj->obj );
     return VRPyPath::fromPtr(p);
 }
 
@@ -132,7 +141,9 @@ PyObject* VRPyPathtool::extrude(VRPyPathtool* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyPathtool::extrude - Object is invalid"); return NULL; }
     VRPyDevice* dev; VRPyPath* p;
     if (! PyArg_ParseTuple(args, "OO", &dev, &p)) return NULL;
-    self->obj->extrude( dev->obj, p->obj );
+    OSG::VRDevice* d = 0;
+    if (!isNone((PyObject*)dev)) d = dev->obj;
+    self->obj->extrude( d, p->obj );
     Py_RETURN_TRUE;
 }
 

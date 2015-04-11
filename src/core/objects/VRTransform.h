@@ -81,6 +81,7 @@ class VRTransform : public VRObject {
         static list<VRTransform* > dynamicObjects;
 
         uint getLastChange();
+        bool changedNow();
         doubleBuffer* getBuffer();
         // Local && world transformation setter && getter
 

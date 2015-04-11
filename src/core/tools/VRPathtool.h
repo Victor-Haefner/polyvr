@@ -119,7 +119,7 @@ class VRPathtool {
 
         VRGeometry* newHandle();
         void updateHandle(VRGeometry* handle);
-        void update();
+        void updateDevs();
 
     public:
         VRPathtool();
@@ -135,6 +135,7 @@ class VRPathtool {
         vector<VRGeometry*> getHandles(path* p);
 
         void select(VRGeometry* handle);
+        void update();
 };
 
 OSG_END_NAMESPACE

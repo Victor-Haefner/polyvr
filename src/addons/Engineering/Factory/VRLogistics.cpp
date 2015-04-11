@@ -52,12 +52,11 @@ void FObject::setType(FObject::Type t) { type = t; }
 FObject::Type FObject::getType() { return type; }
 
 bool FObject::move(OSG::path* p, float dx) {
-    bool done = false;
     VRTransform* trans = getTransformation();
     if (trans == 0) return true;
 
+    bool done = false;
     t += dx;
-
     if (t >= 1) { t = 1; done = true; }
 
     trans->setFrom( p->getPosition(t) );
@@ -72,11 +71,9 @@ bool FObject::move(OSG::path* p, float dx) {
 
 // --------------------------------------------------------------------- NODE
 
-FNode::FNode() : object(0), transporter(0), state(FREE) {
-    transform = new VRTransform("Logistics_node");
-}
+FNode::FNode() : object(0), transporter(0), state(FREE) {}
 
-FNode::~FNode() { delete transform; }
+FNode::~FNode() { ; }
 FObject* FNode::get() { return object; }
 void FNode::set(FObject* o) {
     object = o;
@@ -120,6 +117,7 @@ map<int, FNode*>& FNode::getOutgoing() { return out; }
 FNode* FNode::previous() { if (in.size() > 0) return in.begin()->second; else return 0; }
 FNode* FNode::next() { if (out.size() > 0) return out.begin()->second; else return 0; }
 
+void FNode::setTransform(OSG::VRTransform* t) { transform = t; }
 VRTransform* FNode::getTransform() { return transform; }
 
 Vec3f FNode::getTangent() {
@@ -128,10 +126,8 @@ Vec3f FNode::getTangent() {
     if (Nout == 0 && Nin == 0) return Vec3f(0,0,1);
 
     Vec3f t;
-    for (itr = out.begin(); itr != out.end(); itr++)
-        t += (itr->second->transform->getFrom() - transform->getFrom());
-    //for (itr = in.begin(); itr != in.end(); itr++)
-    //    t += (transform->getFrom() - itr->second->transform->getFrom());
+    //for (auto o : out) t += (o.second->transform->getFrom() - transform->getFrom());
+    for (auto o : out) t += (o.second->transform->getWorldPosition() - transform->getWorldPosition());
     t.normalize();
     return t;
 }
@@ -216,6 +212,17 @@ float FTransporter::getSpeed() { return speed; }
 
 void FTransporter::update(float dt) {
     vector<FNode*> nodes = fpath->get();
+
+    bool changed = true; // TODO: chengeNow does not yet work!
+    for (auto n : nodes) {
+        if (n->getTransform()->changedNow()) {
+            changed = true; break;
+            cout << "detected change!\n";
+        }
+    }
+
+    if (changed) fpath->update();
+
     vector<FNode*>::reverse_iterator itr;
     FNode *n1, *n2;
     FObject *o1, *o2;
@@ -229,8 +236,6 @@ void FTransporter::update(float dt) {
     o1=o2=0;
     p1=p2=0;
     c1=c2=0;
-
-    float dx = speed*dt;
 
     //cout << "\n Transport id " << getID() << flush;
     int test_id = -1;
@@ -298,7 +303,10 @@ void FTransporter::update(float dt) {
         FNode* n = c.first;
         FObject* o = c.second;
         if (n == 0) continue;
-        if (o->move(fpath->getPath(n), dx)) {
+
+        OSG::path* p = fpath->getPath(n);
+        float dx = speed*dt/p->getLength();
+        if (o->move(p, dx)) {
             toErase.push_back(n);
             FObject* no = n->get();
 
@@ -347,12 +355,12 @@ VRStroke* FNetwork::stroke(Vec3f c, float k) {
     for (itr = nodes.begin(); itr != nodes.end(); itr++) {
         FNode* n1 = itr->second;
         Vec3f t1 = n1->getTangent();
-        Vec3f p1 = n1->getTransform()->getFrom();
+        Vec3f p1 = n1->getTransform()->getWorldPosition();
         map<int, FNode*>::iterator itr2;
         for (itr2 = n1->getOutgoing().begin(); itr2 != n1->getOutgoing().end(); itr2++) {
             FNode* n2 = itr2->second;
             Vec3f t2 = n2->getTangent();
-            Vec3f p2 = n2->getTransform()->getFrom();
+            Vec3f p2 = n2->getTransform()->getWorldPosition();
 
             path* p = new path();
             p->addPoint(p1, t1, c);

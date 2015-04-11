@@ -131,13 +131,10 @@ void VRGuiBits::write_to_terminal(string s) {
 
 void VRGuiBits::update_terminal() {
     boost::mutex::scoped_lock lock(msg_mutex);
-    bool u = !msg_queue.empty();
     while(!msg_queue.empty()) {
         terminal->insert(terminal->begin(), msg_queue.front());
-        //terminal->insert(terminal->end(), msg_queue.front());
 		msg_queue.pop();
     }
-    //if (u) on_terminal_changed();
 }
 
 void VRGuiBits::on_terminal_changed() { // not called

@@ -14,10 +14,14 @@
 using namespace OSG;
 
 VRPathtool::VRPathtool() {
-    VRFunction<int>* fkt = new VRFunction<int>("path tool update", boost::bind(&VRPathtool::update, this) );
+    VRFunction<int>* fkt = new VRFunction<int>("path tool update", boost::bind(&VRPathtool::updateDevs, this) );
     VRSceneManager::getCurrent()->addUpdateFkt(fkt, 100);
 
     manip = new VRManipulator();
+}
+
+void VRPathtool::update() {
+    for (auto h : handles_dict) updateHandle(h.first);
 }
 
 void VRPathtool::addPath(path* p, VRObject* anchor) {
@@ -136,7 +140,7 @@ void VRPathtool::updateHandle(VRGeometry* handle) {
     e->line->setLengths(Length);
 }
 
-void VRPathtool::update() {
+void VRPathtool::updateDevs() {
     for (auto dev : VRSetupManager::getCurrent()->getDevices()) { // get dragged objects
         VRGeometry* obj = (VRGeometry*)dev.second->getDraggedObject();
         if (obj == 0) continue;

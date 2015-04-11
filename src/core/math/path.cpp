@@ -101,10 +101,16 @@ int path::addPoint(Vec3f p, Vec3f n, Vec3f c, Vec3f u) {
 }
 
 int path::addPoint(VRTransform* t) {
-    pnt pn(t->getFrom(),-t->getDir(),Vec3f(1,1,1),t->getUp());
+    OSG::Matrix m = t->getWorldMatrix();
+    Vec3f p = Vec3f(m[3]);
+    Vec3f d = Vec3f(m[2]);
+    Vec3f u = Vec3f(m[1]);
+    pnt pn(p, d, Vec3f(1,1,1), u);
     points.push_back(pn);
     return points.size() - 1;
 }
+
+float path::getLength() { return (points[points.size()-1].p - points[0].p).length();}
 
 void path::setPoint(int i, Vec3f p, Vec3f n, Vec3f c, Vec3f u) {
     if (i < 0 || i >= points.size()) return;
