@@ -65,9 +65,14 @@ vector<VRGeometry*> VRPathtool::getHandles(path* p) {
     vector<VRGeometry*> res;
     if (p == 0) for (auto h : handles_dict) res.push_back(h.first);
     else {
+        map<int, VRGeometry*> sor;
         entry* e = paths[p];
-        for (auto h : e->handles) res.push_back(h.first);
+        for (auto h : e->handles) sor[h.second] = h.first;
+        for (auto h : sor) res.push_back(h.second);
     }
+
+    cout << "get handles " << p << endl;
+    for (auto h : res) cout << " " << h->getName() << endl;
     return res;
 }
 

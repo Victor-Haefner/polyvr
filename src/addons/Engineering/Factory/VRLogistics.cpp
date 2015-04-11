@@ -34,13 +34,14 @@ void FObject::setMetaData(string s) {
         metaData = new OSG::VRSprite("meta");
         metaData->setMaterial(new VRMaterial("metasprite"));
         metaData->switchParent(transform);
-        metaData->setFrom(Vec3f(0,0,1));
-        metaData->setDir(Vec3f(-1,0,0));
-        metaData->setUp(Vec3f(0,0,1));
-        metaData->setScale(3);
+        metaData->setFrom(Vec3f(0,1,0));
+        metaData->setDir(Vec3f(0,0,-1));
+        metaData->setUp(Vec3f(0,1,0));
     }
 
     metaData->setLabel(s);
+    float k = 0.2;
+    metaData->setSize(0.5*k*s.size(), k);
 }
 
 VRTransform* FObject::getTransformation() {
@@ -50,24 +51,22 @@ VRTransform* FObject::getTransformation() {
 void FObject::setType(FObject::Type t) { type = t; }
 FObject::Type FObject::getType() { return type; }
 
-bool FObject::move(FNode* n, float dx) {
+bool FObject::move(OSG::path* p, float dx) {
     bool done = false;
     VRTransform* trans = getTransformation();
     if (trans == 0) return true;
-    if (n->getTransform() == 0) return true;
 
-    Vec3f p = trans->getFrom();
-    Vec3f c = n->getTransform()->getFrom();
+    t += dx;
 
+    if (t >= 1) { t = 1; done = true; }
 
-    Vec3f d = c-p;
-    if (d.length() < dx) { p = c; done = true; }
-    else { d.normalize(); p = p+d*dx; }
+    trans->setFrom( p->getPosition(t) );
+    Vec3f dir, up;
+    p->getOrientation(t, dir, up);
+    trans->setDir( dir );
+    trans->setUp( up );
 
-    //cout << "MOVE " << p << "   " << c << endl;
-    trans->setFrom(p);
-    //trans->setDir(Vec3f(1,0,0));
-
+    if (done) t = 0;
     return done;
 }
 
@@ -140,8 +139,9 @@ Vec3f FNode::getTangent() {
 
 // --------------------------------------------------------------------- PATH
 
-FPath::FPath() {;}
+FPath::FPath() {}
 std::vector<FNode*>& FPath::get() {return nodes; }
+
 void FPath::set(FNode* n1, FNode* n2) { // TODO: A*
     nodes.clear();
     FNode* n = n1;
@@ -150,9 +150,30 @@ void FPath::set(FNode* n1, FNode* n2) { // TODO: A*
         n = n->next(); // assumes linear networks
         nodes.push_back(n);
     }
+    update();
 }
 
-void FPath::add(FNode* n) { nodes.push_back(n); }
+void FPath::add(FNode* n) {
+    nodes.push_back(n);
+    update();
+}
+
+OSG::path* FPath::getPath(FNode* n) { return paths[n]; }
+
+void FPath::update() {
+    for (auto p : paths) delete p.second;
+    paths.clear();
+
+    for (int i=1; i<nodes.size(); i++) {
+        FNode* n0 = nodes[i-1];
+        FNode* n1 = nodes[i];
+        path* p = new path();
+        p->addPoint(n0->getTransform());
+        p->addPoint(n1->getTransform());
+        p->compute(12);
+        paths[n1] = (p);
+    }
+}
 
 
 // --------------------------------------------------------------------- CONTAINER
@@ -188,13 +209,13 @@ bool FContainer::isEmpty() { return ((int)products.size() == 0); }
 // --------------------------------------------------------------------- TRANSPORTER
 
 FTransporter::FTransporter() : speed(0.5) { ; }
-void FTransporter::setPath(FPath* path) { this->path = path; }
+void FTransporter::setPath(FPath* fpath) { this->fpath = fpath; }
 void FTransporter::setTransportType(FTType type) { transport_type = type; }
 void FTransporter::setSpeed(float s) { speed = s; }
 float FTransporter::getSpeed() { return speed; }
 
 void FTransporter::update(float dt) {
-    vector<FNode*> nodes = path->get();
+    vector<FNode*> nodes = fpath->get();
     vector<FNode*>::reverse_iterator itr;
     FNode *n1, *n2;
     FObject *o1, *o2;
@@ -272,13 +293,12 @@ void FTransporter::update(float dt) {
     }
 
     // objects in cargo are moved
-    map<FNode*, FObject*>::iterator c_itr;
     vector<FNode*> toErase;
-    for (c_itr = cargo.begin(); c_itr != cargo.end(); c_itr++) {
-        FNode* n = c_itr->first;
-        FObject* o = c_itr->second;
+    for (auto c : cargo) {
+        FNode* n = c.first;
+        FObject* o = c.second;
         if (n == 0) continue;
-        if (o->move(n, dx)) {
+        if (o->move(fpath->getPath(n), dx)) {
             toErase.push_back(n);
             FObject* no = n->get();
 
@@ -293,7 +313,7 @@ void FTransporter::update(float dt) {
     }
 
     // delete cargo
-    for (unsigned int i=0; i<toErase.size(); i++) cargo.erase(toErase[i]);
+    for (auto e : toErase) cargo.erase(e);
 }
 
 

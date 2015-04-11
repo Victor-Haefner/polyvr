@@ -1,6 +1,7 @@
 #include "path.h"
 
-#include<OpenSG/OSGQuaternion.h>
+#include <OpenSG/OSGQuaternion.h>
+#include "core/objects/VRTransform.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -95,6 +96,12 @@ path::pnt::pnt(Vec3f p, Vec3f n, Vec3f c, Vec3f u) {
 
 int path::addPoint(Vec3f p, Vec3f n, Vec3f c, Vec3f u) {
     pnt pn(p,n,c,u);
+    points.push_back(pn);
+    return points.size() - 1;
+}
+
+int path::addPoint(VRTransform* t) {
+    pnt pn(t->getFrom(),-t->getDir(),Vec3f(1,1,1),t->getUp());
     points.push_back(pn);
     return points.size() - 1;
 }

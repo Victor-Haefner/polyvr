@@ -6,6 +6,8 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+class VRTransform;
+
 class path {
     public:
         // points
@@ -35,6 +37,7 @@ class path {
         path();
 
         int addPoint(Vec3f p, Vec3f n, Vec3f c, Vec3f u = Vec3f(0,1,0));
+        int addPoint(VRTransform* t);
         void setPoint(int i, Vec3f p, Vec3f n, Vec3f c, Vec3f u = Vec3f(0,1,0));
         pnt getPoint(int i);
         vector<pnt> getPoints();

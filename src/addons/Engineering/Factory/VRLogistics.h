@@ -15,7 +15,7 @@ class FStack;
 class FTransporter;
 class FLogistics;
 
-namespace OSG{ class VRTransform; class VRStroke; class VRSprite; }
+namespace OSG{ class VRTransform; class VRStroke; class VRSprite; class path; }
 
 class FID {
     private:
@@ -36,6 +36,7 @@ class FObject : public FID {
         Type type;
         OSG::VRTransform* transform = 0;
         OSG::VRSprite* metaData = 0;
+        float t = 0;
 
     protected:
         FObject();
@@ -48,7 +49,7 @@ class FObject : public FID {
 
         void setTransformation(OSG::VRTransform* t);
         OSG::VRTransform* getTransformation();
-        bool move(FNode* n, float dx);
+        bool move(OSG::path* p, float dx);
 
         void setMetaData(std::string s);
 
@@ -99,12 +100,15 @@ class FNode : public FID {
 class FPath : public FID {
     private:
         std::vector<FNode*> nodes;
+        std::map<FNode*, OSG::path*> paths;
 
     public:
         FPath();
         void set(FNode* n1, FNode* n2);
         void add(FNode* n);
         std::vector<FNode*>& get();
+        OSG::path* getPath(FNode*);
+        void update();
 };
 
 
@@ -135,8 +139,6 @@ class FProduct : public FObject {
         ~FProduct();
 
     public:
-        void move();
-
         friend class FLogistics;
 };
 
@@ -168,7 +170,7 @@ class FTransporter : public FID {
 
     private:
         std::map<FNode*, FObject*> cargo;
-        FPath* path;
+        FPath* fpath;
         FTType transport_type;
         float speed;
 
