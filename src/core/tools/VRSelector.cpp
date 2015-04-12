@@ -10,11 +10,12 @@ VRSelector::VRSelector() { color = Vec3f(0.2, 0.65, 0.9); }
 VRMaterial* VRSelector::getMat() {
     VRMaterial* mat = new VRMaterial("VRSelector");
 
+    // stencil buffer
     mat->setFrontBackModes(GL_POINT, GL_POINT);
     mat->setDiffuse(color);
     mat->setPointSize(8);
     mat->setLit(false);
-    mat->setStencilBuffer(false, 1,-1, GL_NOTEQUAL, GL_KEEP, GL_KEEP, GL_REPLACE);
+    //mat->setStencilBuffer(false, 1,-1, GL_NOTEQUAL, GL_KEEP, GL_KEEP, GL_REPLACE);
 
     mat->addPass();
 
@@ -22,7 +23,12 @@ VRMaterial* VRSelector::getMat() {
     mat->setDiffuse(color);
     mat->setLineWidth(8);
     mat->setLit(false);
-    mat->setStencilBuffer(false, 1,-1, GL_NOTEQUAL, GL_KEEP, GL_KEEP, GL_REPLACE);
+    //mat->setStencilBuffer(false, 1,-1, GL_NOTEQUAL, GL_KEEP, GL_KEEP, GL_REPLACE);
+
+    mat->addPass();
+
+    mat->setDiffuse(color);
+    mat->setLit(false);
 
     return mat;
 }
@@ -65,9 +71,10 @@ void VRSelector::select(VRObject* obj) {
     for (auto g : geos) {
         orig_mats[g] = g->getMaterial();
         VRMaterial* mat = getMat();
-        mat->prependPasses(orig_mats[g]);
+        mat->appendPasses(orig_mats[g]);
+        //mat->prependPasses(orig_mats[g]);
         mat->setActivePass(0);
-        mat->setStencilBuffer(true, 1,-1, GL_ALWAYS, GL_KEEP, GL_KEEP, GL_REPLACE);
+        //mat->setStencilBuffer(true, 1,-1, GL_ALWAYS, GL_KEEP, GL_KEEP, GL_REPLACE);
         g->setMaterial(mat);
     }
 }
