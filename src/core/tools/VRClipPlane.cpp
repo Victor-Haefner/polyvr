@@ -55,6 +55,7 @@ void VRClipPlane::activate() {
         if (o->getType() == "ClipPlane") continue;
         VRGeometry* g = (VRGeometry*)o;
         VRMaterial* m = g->getMaterial();
+        if (m == 0) continue;
         m->setClipPlane(true, Vec4f(0,0,-1,0), this);
         mats.push_back(m);
     }
