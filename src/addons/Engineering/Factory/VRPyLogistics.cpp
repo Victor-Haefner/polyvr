@@ -370,13 +370,37 @@ template<> PyTypeObject VRPyBaseT<FContainer>::type = {
 
 PyMethodDef FPyContainer::methods[] = {
     {"setCapacity", (PyCFunction)FPyContainer::setCapacity, METH_VARARGS, "Set container capacity" },
+    {"getCapacity", (PyCFunction)FPyContainer::getCapacity, METH_NOARGS, "Set container capacity" },
+    {"isEmpty", (PyCFunction)FPyContainer::isEmpty, METH_NOARGS, "Set container capacity" },
+    {"isFull", (PyCFunction)FPyContainer::isFull, METH_NOARGS, "Set container capacity" },
+    {"clear", (PyCFunction)FPyContainer::clear, METH_NOARGS, "Set container capacity" },
     {NULL}  /* Sentinel */
 };
 
+PyObject* FPyContainer::clear(FPyContainer* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "FPyContainer::getCapacity - Object is invalid"); return NULL; }
+    self->obj->clear();
+    Py_RETURN_TRUE;
+}
+
+PyObject* FPyContainer::isFull(FPyContainer* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "FPyContainer::getCapacity - Object is invalid"); return NULL; }
+    return PyBool_FromLong( self->obj->isFull() );
+}
+
+PyObject* FPyContainer::isEmpty(FPyContainer* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "FPyContainer::getCapacity - Object is invalid"); return NULL; }
+    return PyBool_FromLong( self->obj->isEmpty() );
+}
+
+PyObject* FPyContainer::getCapacity(FPyContainer* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "FPyContainer::getCapacity - Object is invalid"); return NULL; }
+    return PyInt_FromLong( self->obj->getCapacity() );
+}
+
 PyObject* FPyContainer::setCapacity(FPyContainer* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "FPyContainer::setCapacity - Object is invalid"); return NULL; }
-    float s = parseFloat(args);
-    self->obj->setCapacity(s);
+    self->obj->setCapacity( parseFloat(args) );
     Py_RETURN_TRUE;
 }
 
@@ -482,8 +506,22 @@ PyMethodDef FPyLogistics::methods[] = {
     {"fillContainer", (PyCFunction)FPyLogistics::fillContainer, METH_VARARGS, "Fill container : fillContainer(container, N, obj)" },
     {"update", (PyCFunction)FPyLogistics::update, METH_NOARGS, "Update logistics simulation" },
     {"destroy", (PyCFunction)FPyLogistics::destroy, METH_NOARGS, "Destroy logistics simulation" },
+    {"getContainers", (PyCFunction)FPyLogistics::getContainers, METH_NOARGS, "Destroy logistics simulation" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* FPyLogistics::getContainers(FPyLogistics* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "FPyLogistics::getContainers - Object is invalid"); return NULL; }
+
+    vector<FContainer*> objs = self->obj->getContainers();
+
+    PyObject* li = PyList_New(objs.size());
+    for (uint i=0; i<objs.size(); i++) {
+        PyList_SetItem(li, i, FPyContainer::fromPtr(objs[i]));
+    }
+
+    return li;
+}
 
 PyObject* FPyLogistics::addNetwork(FPyLogistics* self) {
     if (self->obj == 0) { PyErr_SetString(err, "FPyLogistics::addNetwork - Object is invalid"); return NULL; }

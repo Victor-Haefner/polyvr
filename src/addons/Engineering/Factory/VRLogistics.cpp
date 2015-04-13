@@ -199,6 +199,8 @@ FProduct* FContainer::pop() {
     return p;
 }
 
+void FContainer::clear() { products.clear(); }
+
 bool FContainer::isFull() { return ((int)products.size() == capacity); }
 bool FContainer::isEmpty() { return ((int)products.size() == 0); }
 
@@ -440,8 +442,10 @@ void FLogistics::fillContainer(FContainer* c, int N, VRTransform* t) {
     }
 }
 
-void FLogistics::run() {
-    ;
+vector<FContainer*> FLogistics::getContainers() {
+    vector<FContainer*> res;
+    for (auto o : objects) if (o.second->getType() == FObject::CONTAINER) res.push_back((FContainer*)o.second);
+    return res;
 }
 
 void FLogistics::update() {

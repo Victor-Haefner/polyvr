@@ -54,6 +54,8 @@ VRGeometry* VRPathtool::newHandle() {
     VRGeometry* h = new VRGeometry("handle");
     h->setPickable(true);
     h->setPrimitive("Torus", "0.04 0.15 3 4");
+    h->setMaterial(VRMaterial::get("pathHandle"));
+    h->getMaterial()->setDiffuse(Vec3f(0.5,0.5,0.9));
     //calcFaceNormals(h->getMesh()); // not working ??
     h->addAttachment("dynamicaly_generated", 0);
     return h;

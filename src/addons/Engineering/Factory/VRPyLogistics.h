@@ -41,6 +41,10 @@ struct FPyTransporter : VRPyBaseT<FTransporter> {
 struct FPyContainer : VRPyBaseT<FContainer> {
     static PyMethodDef methods[];
     static PyObject* setCapacity(FPyContainer* self, PyObject* args);
+    static PyObject* getCapacity(FPyContainer* self);
+    static PyObject* isEmpty(FPyContainer* self);
+    static PyObject* isFull(FPyContainer* self);
+    static PyObject* clear(FPyContainer* self);
 };
 
 struct FPyProduct : VRPyBaseT<FProduct> {
@@ -57,6 +61,7 @@ struct FPyLogistics : VRPyBaseT<FLogistics> {
     static PyObject* fillContainer(FPyLogistics* self, PyObject* args);
     static PyObject* update(FPyLogistics* self);
     static PyObject* destroy(FPyLogistics* self);
+    static PyObject* getContainers(FPyLogistics* self);
 };
 
 #endif // PYVRLOGISTICS_H_INCLUDED

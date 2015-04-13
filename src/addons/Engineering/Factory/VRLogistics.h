@@ -162,6 +162,8 @@ class FContainer : public FObject {
         bool isFull();
         bool isEmpty();
 
+        void clear();
+
         friend class FLogistics;
 };
 
@@ -213,6 +215,7 @@ class FLogistics {
         FPath* addPath();
         FContainer* addContainer(OSG::VRTransform* t);
         void fillContainer(FContainer* c, int N, OSG::VRTransform* t);
+        std::vector<FContainer*> getContainers();
 
         void update();
         void run();
