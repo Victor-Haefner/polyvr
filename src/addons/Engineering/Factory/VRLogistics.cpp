@@ -7,6 +7,8 @@
 #include "core/utils/toString.h"
 #include <GL/glut.h>
 
+#include <OpenSG/OSGMatrixUtility.h>
+
 using namespace std;
 using namespace OSG;
 
@@ -59,11 +61,13 @@ bool FObject::move(OSG::path* p, float dx) {
     t += dx;
     if (t >= 1) { t = 1; done = true; }
 
-    trans->setFrom( p->getPosition(t) );
-    Vec3f dir, up;
+    Matrix m;
+    Vec3f dir, up, pos;
+    pos = p->getPosition(t);
     p->getOrientation(t, dir, up);
-    trans->setDir( dir );
-    trans->setUp( up );
+
+    MatrixLookAt( m, pos, pos+dir, up );
+    trans->setWorldMatrix(m);
 
     if (done) t = 0;
     return done;
@@ -81,7 +85,9 @@ void FNode::set(FObject* o) {
     if (o->getType() == FObject::CONTAINER) setState(CONTAINER);
     if (o->getType() == FObject::PRODUCT) setState(PRODUCT);
     if (o->getTransformation() == 0) return;
-    o->getTransformation()->setMatrix(getTransform()->getMatrix());
+
+    getTransform()->addChild(o->getTransformation());
+    o->getTransformation()->setMatrix(OSG::Matrix());
 }
 
 void FNode::connect(FNode* n) {
