@@ -75,8 +75,21 @@ PyMethodDef VRPyDevice::methods[] = {
     {"getDragged", (PyCFunction)VRPyDevice::getDragged, METH_NOARGS, "Get dragged object." },
     {"drag", (PyCFunction)VRPyDevice::drag, METH_VARARGS, "Start to drag an object - drag(obj)" },
     {"drop", (PyCFunction)VRPyDevice::drop, METH_NOARGS, "Drop any object - drop()" },
+    {"setSpeed", (PyCFunction)VRPyDevice::setSpeed, METH_VARARGS, "Drop any object - drop()" },
+    {"getSpeed", (PyCFunction)VRPyDevice::getSpeed, METH_NOARGS, "Drop any object - drop()" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyDevice::setSpeed(VRPyDevice* self, PyObject *args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::setSpeed, Object is invalid"); return NULL; }
+    self->obj->setSpeed( parseVec2f(args) );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyDevice::getSpeed(VRPyDevice* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getSpeed, Object is invalid"); return NULL; }
+    return toPyTuple( self->obj->getSpeed() );
+}
 
 PyObject* VRPyDevice::intersect(VRPyDevice* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::intersect, Object is invalid"); return NULL; }

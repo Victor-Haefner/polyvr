@@ -30,6 +30,8 @@ struct VRPyDevice : VRPyBaseT<OSG::VRDevice> {
     static PyObject* getDragged(VRPyDevice* self);
     static PyObject* drag(VRPyDevice* self, PyObject *args);
     static PyObject* drop(VRPyDevice* self);
+    static PyObject* setSpeed(VRPyDevice* self, PyObject *args);
+    static PyObject* getSpeed(VRPyDevice* self);
 };
 
 #endif // VRPYDEVICE_H_INCLUDED
