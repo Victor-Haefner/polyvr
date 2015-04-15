@@ -210,188 +210,107 @@ OSG::Vec3i virtuose::getButtonStates()
     return Vec3i(i,j,k);
 }
 
-
 void virtuose::updateVirtMechPre() {
 
-    if(vc == 0) return;
-    // calc time delta in seconds
-    float timeNow = glutGet(GLUT_ELAPSED_TIME);
-    float dt = (timeNow - timeLastFrame);
-    timeLastFrame = timeNow;
+	if(vc == 0) return;
+	// calc time delta in seconds
+	float timeNow = glutGet(GLUT_ELAPSED_TIME);
+	//float dt = (timeNow - timeLastFrame);
+	timeLastFrame = timeNow;
 
-    float position[7] = {0.0,0.0,0.0,0.0,0.0,0.0,1.0};
-    float speed[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
-    float force[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
-    int power = 0;
+	float position[7] = {0.0,0.0,0.0,0.0,0.0,0.0,1.0};
+	float speed[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
+	int power = 0;
 
-    CHECK(virtIsInShiftPosition(vc,&power));
-    if(commandType == COMMAND_TYPE_VIRTMECH)
-    {
+	CHECK(virtIsInShiftPosition(vc,&power));
+	if(commandType == COMMAND_TYPE_VIRTMECH) {
 
 
 
-        if (!isAttached)
-        {
-                virtGetPosition(vc, position);
-                virtSetPosition(vc, position);
-                virtGetSpeed(vc, speed);
-                virtSetSpeed(vc, speed);
+		if (!isAttached) {
+			virtGetPosition(vc, position);
+			virtSetPosition(vc, position);
+			virtGetSpeed(vc, speed);
+			virtSetSpeed(vc, speed);
 
-                virtGetArticularPositionOfAdditionalAxe(vc, &gripperPosition);
-                virtGetArticularSpeedOfAdditionalAxe(vc, &gripperSpeed);
-                virtSetArticularPositionOfAdditionalAxe(vc, &gripperPosition);
-                virtSetArticularSpeedOfAdditionalAxe(vc, &gripperSpeed);
-        }
-        else
-        {
-        /** rotation <-> torque with haptic <-> attachedObject is not supported yet. haptic's rotation is set free instead**/
+			virtGetArticularPositionOfAdditionalAxe(vc, &gripperPosition);
+			virtGetArticularSpeedOfAdditionalAxe(vc, &gripperSpeed);
+			virtSetArticularPositionOfAdditionalAxe(vc, &gripperPosition);
+			virtSetArticularSpeedOfAdditionalAxe(vc, &gripperSpeed);
+		} else {
+			//apply position&speed to the haptic
+			fillPosition(this->attached->getPhysics(),position);
+			//"diff"
+			float tmpPos[7];
+			CHECK(virtGetPosition(vc, tmpPos));
+			for(int i = 0; i < 7 ; i++) {
+				tmpPos[i] = (position[i] - tmpPos[i]);
+			}
+			pPos = Vec3f(tmpPos[0],tmpPos[1],tmpPos[2]);
+			CHECK(virtSetPosition(vc, position));
+			//speed
+			fillSpeed(this->attached->getPhysics(),speed);
+			//"diff"
+			float tmpSp[6];
+			CHECK(virtGetSpeed(vc, tmpSp));
+			for(int i = 0; i < 6 ; i++) {
+				tmpSp[i] = (speed[i] - tmpSp[i]);
+			}
+			sPos = Vec3f(tmpSp[0],tmpSp[1],tmpSp[2]);
+			sRot = Vec3f(tmpSp[0],tmpSp[1],tmpSp[2]);
+			CHECK(virtSetSpeed(vc, speed));
 
+			int m_power = 0;
+			virtGetPowerOn(vc, &m_power);
+			virtIsInShiftPosition(vc, &power);
+			if ((m_power == 0) || (power == 1)) {
+				virtGetArticularPositionOfAdditionalAxe(vc, &gripperPosition);
+				virtGetArticularSpeedOfAdditionalAxe(vc, &gripperSpeed);
+				virtSetArticularPositionOfAdditionalAxe(vc, &gripperPosition);
+				virtSetArticularSpeedOfAdditionalAxe(vc, &gripperSpeed);
+			} else {
+				/* mode bloqué */
+				virtSetArticularPositionOfAdditionalAxe(vc, &gripperPosition);
+				gripperSpeed = 0.0;
+				virtSetArticularSpeedOfAdditionalAxe(vc, &gripperSpeed);
+			}
 
-            //apply position&speed to the haptic
-
-                fillPosition(this->attached->getPhysics(),position);
-
-            //"diff"
-                float tmpPos[7];
-                CHECK(virtGetPosition(vc, tmpPos));
-                for(int i = 0; i < 7 ; i++) {
-                    tmpPos[i] = (position[i] - tmpPos[i]);
-                    //cout << tmpPos[i];
-                }
-                //cout << "\n";
-                pPos = Vec3f(tmpPos[0],tmpPos[1],tmpPos[2]);
-            /* bugfixing and logging
-                Quaternion pRot;
-                pRot.setValue(tmpPos[4], tmpPos[5], tmpPos[3]);
-                cout << setprecision(4);
-                cout << fixed;
-                cout << "posdiff: " << pPos.length() << "  "  << " rotdiff: " << pRot.length();
-               */
-
-            /**free rotation **/
-                CHECK(virtGetPosition(vc, tmpPos));
-                for(int i = 3; i < 7;i++ ) {
-                   position[i] = tmpPos[i];
-                }
-
-
-                CHECK(virtSetPosition(vc, position));
-
-            //speed
-                fillSpeed(this->attached->getPhysics(),speed);
-                //timestep bullet -> haptic
-        //       for(int i = 0; i < 6; i++)
-          //      {
-           //         speed[i] *= dt;
-            //        speed[i] *= (1/timestep);
-            //    }
-            //"diff"
-                float tmpSp[6];
-                CHECK(virtGetSpeed(vc, tmpSp));
-                for(int i = 0; i < 6 ; i++) {
-                    tmpSp[i] = (speed[i] - tmpSp[i]);
-                    //cout << tmpSp[i];
-                }
-                sPos = Vec3f(tmpSp[0],tmpSp[1],tmpSp[2]);
-                sRot = Vec3f(tmpSp[0],tmpSp[1],tmpSp[2]);
-
-            /* bugfixing and logging
-                cout << setprecision(4);
-                cout << fixed;
-                cout <<"   " <<  "speeddiff: "<<  sPos.length() << "  "  << " rotspeeddiff: " << sRot.length();
-
-                cout << "\n";
-                */
-
-            /**free rotation **/
-                CHECK(virtGetSpeed(vc, tmpSp));
-                for(int i = 3; i < 6;i++ ) {
-                   speed[i] = tmpSp[i];
-                }
-
-                CHECK(virtSetSpeed(vc, speed));
-
-
-
-       //copypaste from demosrc
-                int m_power = 0;
-                virtGetPowerOn(vc, &m_power);
-                virtIsInShiftPosition(vc, &power);
-                if ((m_power == 0) || (power == 1))
-                {
-                    virtGetArticularPositionOfAdditionalAxe(vc, &gripperPosition);
-                    virtGetArticularSpeedOfAdditionalAxe(vc, &gripperSpeed);
-                    virtSetArticularPositionOfAdditionalAxe(vc, &gripperPosition);
-                    virtSetArticularSpeedOfAdditionalAxe(vc, &gripperSpeed);
-                }
-                else
-                {
-                    /* mode bloqué */
-                    virtSetArticularPositionOfAdditionalAxe(vc, &gripperPosition);
-                    gripperSpeed = 0.0;
-                    virtSetArticularSpeedOfAdditionalAxe(vc, &gripperSpeed);
-                }
-
-
-        }
-    }
+		}
+	}
 }
-
 void virtuose::updateVirtMechPost() {
-  if(vc == 0) return;
+	if(vc == 0) return;
 
+	float force[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
+	int power = 0;
 
-    // calc time delta in seconds
-    float timeNow = glutGet(GLUT_ELAPSED_TIME);
-    float dt = (timeNow - timeLastFrame);
-    timeLastFrame = timeNow;
+	CHECK(virtIsInShiftPosition(vc,&power));
+	if(commandType == COMMAND_TYPE_VIRTMECH) {
+		if (isAttached) {
+			//get force applied by human on the haptic
+			CHECK(virtGetForce(vc, force));
 
-    float position[7] = {0.0,0.0,0.0,0.0,0.0,0.0,1.0};
-    float speed[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
-    float force[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
-    int power = 0;
+			Vec3f frc = Vec3f(force[1], force[2], force[0]);
+			totalForce = frc;
 
-    CHECK(virtIsInShiftPosition(vc,&power));
-    if(commandType == COMMAND_TYPE_VIRTMECH)
-    {
+			/** not supported**/
+			//Vec3f trqu = Vec3f(-force[4],-force[5],-force[3]);
 
-        if (isAttached)
-        {
-            //get force applied by human on the haptic
-                CHECK(virtGetForce(vc, force));
+			//apply force on the object
+			if(power == 0) {
+				if( (pPos.length() < 0.1f) && (sPos.length() < 0.5f) &&  (sRot.length() < 0.5f)) {
+					attached->getPhysics()->addForce(frc);
+					/** not supported**/
+					//attached->getPhysics()->addTorque(trqu);
+				} else {
+					attached->getPhysics()->resetForces();
+					float newSpeed[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
+					CHECK(virtSetSpeed(vc, newSpeed));
+				}
+			}
+		}
 
-                //timestep haptic -> haptic
-        //       for(int i = 0; i < 6; i++)
-         //       {
-          //          force[i] *= timestep;
-           //         force[i] *= timestep;
-            //        force[i] *= (1/dt);
-             //       force[i] *= (1/dt);
-             //   }
-
-                Vec3f frc = Vec3f(force[1], force[2], force[0]);
-                totalForce = frc;
-
-            /** not supported**/
-                //Vec3f trqu = Vec3f(-force[4],-force[5],-force[3]);
-
-            //apply force on the object
-                if(power == 0)
-                {
-                    if( (pPos.length() < 0.1f) && (sPos.length() < 0.5f) &&  (sRot.length() < 0.5f)) {
-                        attached->getPhysics()->addForce(frc);
-                        cout<< frc.x() <<" "<< frc.y()<< " " << frc.z() << "\n";
-                        /** not supported**/
-                        //attached->getPhysics()->addTorque(trqu);
-                    } else {
-                        attached->getPhysics()->resetForces();
-                        float newSpeed[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
-                        CHECK(virtSetSpeed(vc, newSpeed));
-                    }
-                }
-        }
-
-    }
+	}
 
 }
 
