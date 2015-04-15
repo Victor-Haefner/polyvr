@@ -111,7 +111,7 @@ void VRIntersect::drop(VRDevice* dev) {
 VRTransform* VRIntersect::getDraggedObject() {
     if (dragged) {
         uint now = VRGlobals::get()->CURRENT_FRAME;
-        if (now > drop_time && drop_time > 0) {
+        if (now > drop_time+1 && drop_time > 0) {
             dragged = 0;
             drop_time = 0;
         }
