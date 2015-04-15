@@ -38,6 +38,7 @@ class VRIntersect {
         //VRScene* scene;
         VRTransform* dragged = 0;
         VRTransform* dragged_ghost = 0;
+        uint drop_time = 0;
         VRGeometry* cross = 0;
         vector<VRObject*> dynTrees;
         VRObject* dynTree = 0;

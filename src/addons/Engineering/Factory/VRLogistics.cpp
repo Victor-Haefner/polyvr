@@ -189,7 +189,8 @@ void FContainer::setCapacity(int i) { capacity = i; }
 int FContainer::getCapacity() { return capacity; }
 
 void FContainer::add(FProduct* p) {
-    p->getTransformation()->setMatrix(getTransformation()->getMatrix());
+    //p->getTransformation()->setMatrix(getTransformation()->getMatrix());
+    getTransformation()->addChild(p->getTransformation());
     p->getTransformation()->hide();
     products.push_back(p);
     setMetaData("Nb: " + toString(products.size()));
@@ -197,7 +198,7 @@ void FContainer::add(FProduct* p) {
 
 FProduct* FContainer::pop() {
     FProduct* p = products.back();
-    p->getTransformation()->setMatrix(getTransformation()->getMatrix());
+    //p->getTransformation()->setMatrix(getTransformation()->getMatrix());
     products.pop_back();
     p->getTransformation()->show();
     setMetaData("Nb: " + toString(products.size()));
@@ -311,12 +312,12 @@ void FTransporter::update(float dt) {
         FNode* n = c.first;
         FObject* o = c.second;
         if (n == 0) continue;
+        FObject* no = n->get();
 
         OSG::path* p = fpath->getPath(n);
         float dx = speed*dt/p->getLength();
         if (o->move(p, dx)) {
             toErase.push_back(n);
-            FObject* no = n->get();
 
             if (no == 0) { n->set(o); continue; } // no is not a container, just place the object there
 
@@ -329,7 +330,7 @@ void FTransporter::update(float dt) {
     }
 
     // delete cargo
-    for (auto e : toErase) cargo.erase(e);
+    for (auto n : toErase) cargo.erase(n);
 }
 
 
