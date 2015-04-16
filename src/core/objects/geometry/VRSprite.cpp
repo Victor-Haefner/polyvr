@@ -14,7 +14,6 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 VRSprite::VRSprite (string name, bool alpha, float w, float h) : VRGeometry(name) {
-
     width = w;
     height = h;
     type = "Sprite";
@@ -25,6 +24,10 @@ VRSprite::VRSprite (string name, bool alpha, float w, float h) : VRGeometry(name
     font = "SANS 20";
     fontColor = Color4f(0,0,0,255);
     label = "";
+}
+
+VRSprite::~VRSprite() {
+    ;
 }
 
 void VRSprite::setLabel (string l, float res) {
