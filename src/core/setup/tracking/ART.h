@@ -6,6 +6,7 @@
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGMatrix.h>
 #include <map>
+#include <boost/thread/mutex.hpp>
 
 class DTrack;
 template<class T> class VRFunction;
@@ -55,6 +56,7 @@ class ART : public VRStorage {
         template<typename dev>
         void getMatrix(dev t, ART_device* d);
 
+        boost::mutex mutex;
         void scan(int type = -1, int N = 0);
 
         void update(); //update thread

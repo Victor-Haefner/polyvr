@@ -13,6 +13,7 @@
 #include "core/math/coordinates.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/setup/devices/VRSignal.h"
+//#include <boost/thread/locks.hpp>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -89,6 +90,7 @@ void ART::scan(int type, int N) {
         return;
     }
 
+    boost::mutex::scoped_lock lock(mutex);
     for (int i=0; i<N; i++) {
         int k = ART_device::key(i,type);
         if (devices.count(k) == 0) continue;
@@ -142,6 +144,7 @@ void ART::checkNewDevices(int type, int N) {
 }
 
 void ART::applyEvents() {
+    boost::mutex::scoped_lock lock(mutex);
     checkNewDevices();
     for (auto d : devices) d.second->update();
 }
