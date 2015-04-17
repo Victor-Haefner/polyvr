@@ -91,10 +91,7 @@ void ART::scan(int type, int N) {
 
     for (int i=0; i<N; i++) {
         int k = ART_device::key(i,type);
-        if (devices.count(k) == 0) {
-            devices[k] = new ART_device(i,type);
-            VRSetupManager::getCurrent()->getSignal_on_new_art_device()->trigger();
-        }
+        if (devices.count(k) == 0) continue;
 
         if (type == 0) getMatrix(dtrack->get_body(i), devices[k]);
         if (type == 1) getMatrix(dtrack->get_flystick(i), devices[k]);
@@ -123,7 +120,29 @@ void ART::update() {
     }
 }
 
+
+void ART::checkNewDevices(int type, int N) {
+    //check for new devices
+    if (type < 0) {
+        checkNewDevices(0, dtrack->get_num_body());
+        checkNewDevices(1, dtrack->get_num_flystick());
+        checkNewDevices(2, dtrack->get_num_hand());
+        checkNewDevices(3, dtrack->get_num_meatool());
+        //checkNewDevices(4, dtrack->get_num_marker());
+        return;
+    }
+
+    for (int i=0; i<N; i++) {
+        int k = ART_device::key(i,type);
+        if (devices.count(k) == 0) {
+            devices[k] = new ART_device(i,type);
+            VRSetupManager::getCurrent()->getSignal_on_new_art_device()->trigger();
+        }
+    }
+}
+
 void ART::applyEvents() {
+    checkNewDevices();
     for (auto d : devices) d.second->update();
 }
 

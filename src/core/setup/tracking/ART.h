@@ -59,6 +59,7 @@ class ART : public VRStorage {
 
         void update(); //update thread
         void applyEvents(); //update thread
+        void checkNewDevices(int type = -1, int N = 0); //update thread
 
     public:
         ART();
