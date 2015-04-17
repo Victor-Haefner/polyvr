@@ -19,8 +19,8 @@ class VRTransform;
 
 struct ART_device : public VRName {
     Matrix m;
-    vector<int> buttons;
-    vector<float> joysticks;
+    list<vector<int> > buttons;
+    list<vector<float> > joysticks;
 
     VRTransform* ent = 0;
     VRFlystick* dev = 0;
@@ -58,6 +58,7 @@ class ART : public VRStorage {
         void scan(int type = -1, int N = 0);
 
         void update(); //update thread
+        void applyEvents(); //update thread
 
     public:
         ART();
@@ -74,8 +75,6 @@ class ART : public VRStorage {
 
         void setARTOffset(Vec3f o);
         Vec3f getARTOffset();
-
-        VRFunction<int>* getARTUpdateFkt();
 
         void startTestStream();
 
