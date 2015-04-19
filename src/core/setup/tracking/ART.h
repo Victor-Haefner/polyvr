@@ -17,6 +17,7 @@ using namespace std;
 class VRSignal;
 class VRFlystick;
 class VRTransform;
+class VRThread;
 
 struct ART_device : public VRName {
     Matrix m;
@@ -59,7 +60,7 @@ class ART : public VRStorage {
         boost::mutex mutex;
         void scan(int type = -1, int N = 0);
 
-        void update(); //update thread
+        void update(VRThread* t); //update thread
         void applyEvents(); //update thread
         void checkNewDevices(int type = -1, int N = 0); //update thread
 

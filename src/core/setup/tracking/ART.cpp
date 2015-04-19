@@ -50,7 +50,7 @@ ART::ART() {
     auto fkt = new VRFunction<int>("ART_applyEvents", boost::bind(&ART::applyEvents, this));
     VRSceneManager::get()->addUpdateFkt(fkt);
 
-    auto fkt2 = new VRFunction<VRThread*>("ART_fetch", boost::bind(&ART::update, this));
+    auto fkt2 = new VRFunction<VRThread*>("ART_fetch", boost::bind(&ART::update, this, _1));
     VRSceneManager::get()->initThread(fkt2, "ART_fetch", true);
 
     on_new_device = new VRSignal();
@@ -109,7 +109,12 @@ void ART::scan(int type, int N) {
 }
 
 //update thread
-void ART::update() {
+void ART::update(VRThread* t) {
+    if (!active) {
+        sleep(1);
+        return;
+    }
+
     setARTPort(port);
     if (dtrack == 0) dtrack = new DTrack(port, 0, 0, 20000, 10000);
     if (!active || dtrack == 0) return;
@@ -124,6 +129,8 @@ void ART::update() {
 
 
 void ART::checkNewDevices(int type, int N) {
+    if (!active or dtrack == 0) return;
+
     //check for new devices
     if (type < 0) {
         checkNewDevices(0, dtrack->get_num_body());

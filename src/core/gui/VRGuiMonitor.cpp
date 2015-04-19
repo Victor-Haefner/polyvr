@@ -62,13 +62,30 @@ void VRGuiMonitor::draw_timeline(int N0, int N1, int DN, int w, int h, int h0, i
     cr->stroke();
 }
 
-void VRGuiMonitor::draw_call(int x0, int x1, int h, int h0, string name) {
+Vec3f VRGuiMonitor::getColor(string name) {
+    if (color_map.count(name) == 0) {
+        float r = float(rand())/RAND_MAX;
+        float g = float(rand())/RAND_MAX;
+        float b = float(rand())/RAND_MAX;
+        color_map[name] = Vec3f(r,g,b);
+    }
+    return color_map[name];
+}
+
+void VRGuiMonitor::draw_call(int x0, int y0, int w, int h, string name) {
+    Vec3f c = getColor(name);
+
     cr->set_line_width(1.0);
-    cr->set_source_rgb(0.9, 0.5, 0);
-    cr->rectangle(x0,h0,x1,h);
+    cr->set_source_rgb(c[0], c[1], c[2]);
+    if (x0 < 0) x0 = 0;
+    if (y0 < 0) y0 = 0;
+    if (w < 1) w = 1;
+    if (h < 1) h = 1;
+
+    cr->rectangle(x0,y0,w,h);
     cr->stroke();
 
-    draw_text(name, x0+x1*0.5, h0+h);
+    //draw_text(name, x0+x1*0.5, h0+h);
 }
 
 bool VRGuiMonitor::draw(GdkEventExpose* e) {
@@ -85,7 +102,10 @@ bool VRGuiMonitor::draw(GdkEventExpose* e) {
 
     // get needed lines
     int lineN = 2; // timeline 1 and 2
-    lineN += 1; // N threads (TODO)
+
+    int Nt = 1; // N threads (TODO)
+    int Hl = 5; // scale height
+    lineN += Nt*Hl;
 
     da->set_size_request(-1, line_height*lineN);
 
@@ -94,7 +114,7 @@ bool VRGuiMonitor::draw(GdkEventExpose* e) {
 
     // user selection
     int selected_cluster = 10;
-    int selected_frame = 2;
+    int selected_frame = 1;
 
     draw_timeline(0, N,   L, L*width, line_height, 0,           selected_cluster);
     draw_timeline(0, N/L, 1, width,   line_height, line_height, selected_frame);
@@ -110,15 +130,14 @@ bool VRGuiMonitor::draw(GdkEventExpose* e) {
         i++;
     }
 
+    float fl = 1./(sframe.t1 - sframe.t0);
     for (auto itr : sframe.calls) {
         auto call = itr.second;
-        int fl = sframe.t1 - sframe.t0;
-        int t0 = call.t0 - sframe.t0;
-        int t1 = call.t1 - sframe.t0;
-        t0 = t0*width/fl;
-        t1 = t1*width/fl;
-        int l = t1-t0;
-        draw_call(t0, l, line_height, line_height*2, call.name);
+        float t0 = (call.t0 - sframe.t0)*fl;
+        float t1 = (call.t1 - sframe.t0)*fl;
+        float l = t1-t0;
+        float h = 0.1 +l*0.9;
+        draw_call(t0*width, line_height*(2 + (1-h)*0.5*Hl), l*width, line_height*h*Hl, call.name);
     }
 
     return true;
