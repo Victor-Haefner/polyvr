@@ -3,6 +3,7 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRProfiler.h"
 #include <gtkmm/window.h>
+#include <gtkmm/liststore.h>
 #include <cairomm/context.h>
 #include <pangomm/context.h>
 
@@ -130,6 +131,9 @@ bool VRGuiMonitor::draw(GdkEventExpose* e) {
         i++;
     }
 
+    Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("prof_fkts"));
+    store->clear();
+
     float fl = 1./(sframe.t1 - sframe.t0);
     for (auto itr : sframe.calls) {
         auto call = itr.second;
@@ -138,6 +142,18 @@ bool VRGuiMonitor::draw(GdkEventExpose* e) {
         float l = t1-t0;
         float h = 0.1 +l*0.9;
         draw_call(t0*width, line_height*(2 + (1-h)*0.5*Hl), l*width, line_height*h*Hl, call.name);
+    }
+
+    for (auto c : color_map) {
+        stringstream ss;
+        Vec3f co = c.second*255;
+        int hcol = (int(co[0]) << 16) + (int(co[1]) << 8) + int(co[2]);
+        ss << std::hex << std::uppercase << hcol;
+        string col = "#"+ss.str();
+        Gtk::ListStore::Row row = *store->append();
+        gtk_list_store_set (store->gobj(), row.gobj(), 0, c.first.c_str(), -1);
+        gtk_list_store_set (store->gobj(), row.gobj(), 1, "", -1);
+        gtk_list_store_set (store->gobj(), row.gobj(), 2, col.c_str(), -1);
     }
 
     return true;
