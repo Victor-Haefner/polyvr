@@ -178,6 +178,7 @@
 			<Add option="-ludev" />
 			<Add option="-lffmpegsumo" />
 			<Add option="-lusb" />
+			<Add option="-lassimp" />
 			<Add directory="/usr/X11R6/lib64" />
 			<Add directory="/usr/lib/virtuose" />
 			<Add directory="/usr/lib/i386-linux-gnu" />
@@ -239,6 +240,7 @@
 		<Unit filename="src/addons/Engineering/Factory/VRFactory.h" />
 		<Unit filename="src/addons/Engineering/Factory/VRLogistics.cpp" />
 		<Unit filename="src/addons/Engineering/Factory/VRLogistics.h" />
+		<Unit filename="src/addons/Engineering/Factory/VRProduction.h" />
 		<Unit filename="src/addons/Engineering/Factory/VRPyAMLLoader.cpp" />
 		<Unit filename="src/addons/Engineering/Factory/VRPyAMLLoader.h" />
 		<Unit filename="src/addons/Engineering/Factory/VRPyFactory.cpp" />

@@ -61,6 +61,7 @@ class VRSnappingEngine {
         void addObjectAnchor(VRTransform* obj, VRTransform* a);
         void addObjectAnchor(VRTransform* obj, const Matrix& m);
         void clearObjectAnchors(VRTransform* obj);
+        void remLocalRules(VRTransform* obj);
 
         void addObject(VRTransform* obj, float weight = 1);
         void addTree(VRObject* obj, float weight = 1);
