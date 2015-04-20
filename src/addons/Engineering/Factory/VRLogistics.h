@@ -126,6 +126,8 @@ class FNetwork : public FID {
         FNode* addNode(FNode* parent = 0);
         FNode* addNodeChain(int N, FNode* parent = 0);
 
+        std::vector<FNode*> getNodes();
+
         OSG::VRStroke* stroke(OSG::Vec3f c, float k);
 
         friend class FLogistics;

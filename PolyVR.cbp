@@ -240,6 +240,7 @@
 		<Unit filename="src/addons/Engineering/Factory/VRFactory.h" />
 		<Unit filename="src/addons/Engineering/Factory/VRLogistics.cpp" />
 		<Unit filename="src/addons/Engineering/Factory/VRLogistics.h" />
+		<Unit filename="src/addons/Engineering/Factory/VRProduction.cpp" />
 		<Unit filename="src/addons/Engineering/Factory/VRProduction.h" />
 		<Unit filename="src/addons/Engineering/Factory/VRPyAMLLoader.cpp" />
 		<Unit filename="src/addons/Engineering/Factory/VRPyAMLLoader.h" />

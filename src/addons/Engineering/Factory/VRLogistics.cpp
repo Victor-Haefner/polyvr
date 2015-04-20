@@ -359,6 +359,12 @@ FNode* FNetwork::addNodeChain(int N, FNode* parent) {
     return parent;
 }
 
+vector<FNode*> FNetwork::getNodes() {
+    vector<FNode*> res;
+    for (auto n : nodes) res.push_back(n.second);
+    return res;
+}
+
 VRStroke* FNetwork::stroke(Vec3f c, float k) {
     vector<path*> paths;
     for (itr = nodes.begin(); itr != nodes.end(); itr++) {
