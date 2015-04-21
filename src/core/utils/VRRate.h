@@ -16,6 +16,7 @@ class VRRate {
 
     public:
         static StatRate statFPStime;
+        static StatRate statPhysFPStime;
 
     private:
         int count, current;

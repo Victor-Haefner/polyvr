@@ -34,5 +34,6 @@ int VRRate::getRate() {
     return current;
 }
 
-VRRate::StatRate VRRate::statFPStime("statFPStime", "PolyVR Framerate");
+VRRate::StatRate VRRate::statFPStime("statFPStime", "PolyVR framerate");
+VRRate::StatRate VRRate::statPhysFPStime("statPhysFPStime", "PolyVR physics framerate");
 
