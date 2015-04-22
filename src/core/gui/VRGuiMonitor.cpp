@@ -10,11 +10,32 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+class VRGuiMonitor_FktColumns : public Gtk::TreeModelColumnRecord {
+    public:
+        VRGuiMonitor_FktColumns() { add(fkt); add(time); add(color); }
+        Gtk::TreeModelColumn<Glib::ustring> fkt;
+        Gtk::TreeModelColumn<Glib::ustring> time;
+        Gtk::TreeModelColumn<Glib::ustring> color;
+};
+
 VRGuiMonitor::VRGuiMonitor() {
     Gtk::DrawingArea* _da;
     VRGuiBuilder()->get_widget("profiler_area", _da);
     da = Glib::RefPtr<Gtk::DrawingArea>(_da);
     da->signal_expose_event().connect( sigc::mem_fun(*this, &VRGuiMonitor::draw) );
+
+    setTreeviewSelectCallback("treeview15", sigc::mem_fun(*this, &VRGuiMonitor::select_fkt) );
+}
+
+void VRGuiMonitor::select_fkt() {
+    auto row = getTreeviewSelected("treeview15");
+    if (!row) return;
+    VRGuiMonitor_FktColumns cols;
+    string selection = row->get_value(cols.fkt);
+    if (selection == selRow) return;
+    selRow = selection;
+    redraw(); // TODO: breaks row selection -> focus?
+    selectTreestoreRow("treeview15", row);
 }
 
 void VRGuiMonitor::draw_text(string txt, int x, int y) {
@@ -76,7 +97,8 @@ Vec3f VRGuiMonitor::getColor(string name) {
 void VRGuiMonitor::draw_call(int x0, int y0, int w, int h, string name) {
     Vec3f c = getColor(name);
 
-    cr->set_line_width(1.0);
+    cr->set_line_width(0.5);
+    if (name == selRow) cr->set_line_width(1.5);
     cr->set_source_rgb(c[0], c[1], c[2]);
     if (x0 < 0) x0 = 0;
     if (y0 < 0) y0 = 0;
@@ -85,8 +107,19 @@ void VRGuiMonitor::draw_call(int x0, int y0, int w, int h, string name) {
 
     cr->rectangle(x0,y0,w,h);
     cr->stroke();
+}
 
-    //draw_text(name, x0+x1*0.5, h0+h);
+string VRGuiMonitor::toHex(Vec3f color) {
+    stringstream ss;
+    Vec3f co = color*255;
+    int hcol = (int(co[0]) << 16) + (int(co[1]) << 8) + int(co[2]);
+    ss << hex << uppercase << setw(6) << setfill('0') << hcol;
+    return "#"+ss.str();
+}
+
+void VRGuiMonitor::redraw() {
+    Glib::RefPtr<Gdk::Window> win = da->get_window();
+    if (win) gdk_window_invalidate_rect( win->gobj(), NULL, false);
 }
 
 bool VRGuiMonitor::draw(GdkEventExpose* e) {
@@ -145,16 +178,14 @@ bool VRGuiMonitor::draw(GdkEventExpose* e) {
     }
 
     for (auto c : color_map) {
-        stringstream ss;
-        Vec3f co = c.second*255;
-        int hcol = (int(co[0]) << 16) + (int(co[1]) << 8) + int(co[2]);
-        ss << std::hex << std::uppercase << hcol;
-        string col = "#"+ss.str();
+        string col = toHex(c.second);
         Gtk::ListStore::Row row = *store->append();
         gtk_list_store_set (store->gobj(), row.gobj(), 0, c.first.c_str(), -1);
         gtk_list_store_set (store->gobj(), row.gobj(), 1, "", -1);
         gtk_list_store_set (store->gobj(), row.gobj(), 2, col.c_str(), -1);
     }
+
+    focusTreeView("treeview15");
 
     return true;
 }
