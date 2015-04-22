@@ -1,7 +1,6 @@
 #include "VRGuiMonitor.h"
 #include "VRGuiUtils.h"
 #include "core/utils/toString.h"
-#include "core/utils/VRProfiler.h"
 #include <gtkmm/window.h>
 #include <gtkmm/liststore.h>
 #include <cairomm/context.h>
@@ -22,9 +21,31 @@ VRGuiMonitor::VRGuiMonitor() {
     Gtk::DrawingArea* _da;
     VRGuiBuilder()->get_widget("profiler_area", _da);
     da = Glib::RefPtr<Gtk::DrawingArea>(_da);
+
+    da->add_events((Gdk::EventMask)GDK_BUTTON_PRESS_MASK);
+    da->add_events((Gdk::EventMask)GDK_BUTTON_RELEASE_MASK);
+    da->add_events((Gdk::EventMask)GDK_POINTER_MOTION_MASK);
+
     da->signal_expose_event().connect( sigc::mem_fun(*this, &VRGuiMonitor::draw) );
+    da->signal_button_press_event().connect(sigc::mem_fun(*this, &VRGuiMonitor::on_button) );
+    da->signal_button_release_event().connect(sigc::mem_fun(*this, &VRGuiMonitor::on_button) );
 
     setTreeviewSelectCallback("treeview15", sigc::mem_fun(*this, &VRGuiMonitor::select_fkt) );
+}
+
+bool VRGuiMonitor::on_button(GdkEventButton * event) {
+    int state = 1;
+    if (event->type == GDK_BUTTON_PRESS) state = 0;
+
+    float w = da->get_allocation().get_width();
+    float x = 1.0 - event->x/w;
+
+    if (event->y > 40) return true;
+    if (event->y >= 20) selFrame = ceil(10*x);
+    else selFrameRange = 10*ceil(10*x);
+
+	selectFrame();
+	return true;
 }
 
 void VRGuiMonitor::select_fkt() {
@@ -35,7 +56,7 @@ void VRGuiMonitor::select_fkt() {
     if (selection == selRow) return;
     selRow = selection;
     redraw(); // TODO: breaks row selection -> focus?
-    selectTreestoreRow("treeview15", row);
+    //selectTreestoreRow("treeview15", row);
 }
 
 void VRGuiMonitor::draw_text(string txt, int x, int y) {
@@ -146,48 +167,45 @@ bool VRGuiMonitor::draw(GdkEventExpose* e) {
     int N = VRProfiler::get()->getHistoryLength();
     int L = 10;
 
-    // user selection
-    int selected_cluster = 10;
-    int selected_frame = 1;
+    draw_timeline(0, N,   L, L*width, line_height, 0,           selFrameRange);
+    draw_timeline(0, N/L, 1, width,   line_height, line_height, selFrame);
 
-    draw_timeline(0, N,   L, L*width, line_height, 0,           selected_cluster);
-    draw_timeline(0, N/L, 1, width,   line_height, line_height, selected_frame);
-
-    auto frames = VRProfiler::get()->getFrames();
-    VRProfiler::Frame sframe;
-    int i=0;
-    for (auto frame : frames) {
-        // TODO:
-        //  get fps per frame
-        //  draw curve of fps on frames
-        if (i == selected_frame) sframe = frame;
-        i++;
-    }
-
-    Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("prof_fkts"));
-    store->clear();
-
-    float fl = 1./(sframe.t1 - sframe.t0);
-    for (auto itr : sframe.calls) {
+    float fl = 1./(frame.t1 - frame.t0);
+    for (auto itr : frame.calls) {
         auto call = itr.second;
-        float t0 = (call.t0 - sframe.t0)*fl;
-        float t1 = (call.t1 - sframe.t0)*fl;
+        float t0 = (call.t0 - frame.t0)*fl;
+        float t1 = (call.t1 - frame.t0)*fl;
         float l = t1-t0;
         float h = 0.1 +l*0.9;
         draw_call(t0*width, line_height*(2 + (1-h)*0.5*Hl), l*width, line_height*h*Hl, call.name);
     }
 
-    for (auto c : color_map) {
-        string col = toHex(c.second);
+    return true;
+}
+
+void VRGuiMonitor::selectFrame() {
+    // get frame
+    int f = selFrameRange - 10 + selFrame;
+    frame = VRProfiler::get()->getFrame(f);
+
+    map<string, float> fkts;
+    for (auto c : frame.calls) {
+        if (fkts.count(c.second.name) == 0) fkts[c.second.name] = 0;
+        fkts[c.second.name] += c.second.t1 - c.second.t0;
+    }
+
+    // update list
+    Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("prof_fkts"));
+    store->clear();
+    for (auto c : fkts) {
+        string col = toHex( getColor(c.first) );
         Gtk::ListStore::Row row = *store->append();
         gtk_list_store_set (store->gobj(), row.gobj(), 0, c.first.c_str(), -1);
-        gtk_list_store_set (store->gobj(), row.gobj(), 1, "", -1);
+        gtk_list_store_set (store->gobj(), row.gobj(), 1, toString(c.second).c_str(), -1);
         gtk_list_store_set (store->gobj(), row.gobj(), 2, col.c_str(), -1);
     }
 
-    focusTreeView("treeview15");
-
-    return true;
+    redraw();
 }
 
 OSG_END_NAMESPACE;

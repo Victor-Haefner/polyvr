@@ -44,6 +44,7 @@ class VRProfiler {
         void regStop(int ID);
 
         list<Frame> getFrames();
+        Frame getFrame(int i);
 
         void setHistoryLength(int N);
         int getHistoryLength();

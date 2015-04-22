@@ -36,6 +36,7 @@ void VRProfiler::regStop(int ID) {
 
 int VRProfiler::getTime() {
     clock_t c = clock();
+    //int c = glutGet(GLUT_ELAPSED_TIME);
     return c;
 }
 
@@ -51,6 +52,14 @@ bool VRProfiler::isActive() {
 list<VRProfiler::Frame> VRProfiler::getFrames() {
     boost::mutex::scoped_lock lock(mutex);
     return frames;
+}
+
+VRProfiler::Frame VRProfiler::getFrame(int f) {
+    int i=0;
+    for (auto fr : frames) {
+        if (i == f) return fr;
+        i++;
+    }
 }
 
 void VRProfiler::swap() {
