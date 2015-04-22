@@ -546,9 +546,11 @@ PyObject* FPyLogistics::addTransporter(FPyLogistics* self, PyObject* args) {
 
 PyObject* FPyLogistics::addContainer(FPyLogistics* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "FPyLogistics::addContainer - Object is invalid"); return NULL; }
-    VRPyTransform *t;
+    VRPyTransform* t = 0;
     if (! PyArg_ParseTuple(args, "O", &t)) return NULL;
-    FContainer* c = self->obj->addContainer(t->obj);
+    OSG::VRTransform* tr = 0;
+    if (!isNone((PyObject*)t)) tr = t->obj;
+    FContainer* c = self->obj->addContainer(tr);
     return FPyContainer::fromPtr(c);
 }
 

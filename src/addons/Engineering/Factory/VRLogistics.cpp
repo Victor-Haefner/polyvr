@@ -437,6 +437,7 @@ FPath* FLogistics::addPath() {
 }
 
 FContainer* FLogistics::addContainer(VRTransform* t) {
+    if (t == 0) return 0;
     FContainer* c = new FContainer();
     t = (VRTransform*)t->duplicate(true);
     t->addAttachment("dynamicaly_generated", 0);
