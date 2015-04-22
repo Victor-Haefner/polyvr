@@ -58,7 +58,6 @@ void VRProfiler::swap() {
 
     boost::mutex::scoped_lock lock(mutex);
     if (current) current->t1 = getTime();
-    if (current) cout << "swap profiler frame " << current->calls.size() << " " << current->t1-current->t0 << endl;
     Frame f;
     f.t0 = getTime();
     frames.push_front(f);
