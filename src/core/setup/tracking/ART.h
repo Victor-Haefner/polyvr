@@ -60,8 +60,10 @@ class ART : public VRStorage {
         boost::mutex mutex;
         void scan(int type = -1, int N = 0);
 
-        void update(VRThread* t); //update thread
-        void applyEvents(); //update thread
+
+        void updateT(VRThread* t); //update thread
+        void updateL(); //update
+        void applyEvents(); //main loop update
         void checkNewDevices(int type = -1, int N = 0); //update thread
 
     public:

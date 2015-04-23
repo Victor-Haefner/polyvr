@@ -13,7 +13,6 @@
 #include "core/math/coordinates.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/setup/devices/VRSignal.h"
-//#include <boost/thread/locks.hpp>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -47,10 +46,10 @@ void ART_device::update() {
 
 
 ART::ART() {
-    auto fkt = new VRFunction<int>("ART_applyEvents", boost::bind(&ART::applyEvents, this));
+    auto fkt  = new VRFunction<int>("ART_apply", boost::bind(&ART::applyEvents, this));
     VRSceneManager::get()->addUpdateFkt(fkt);
 
-    auto fkt2 = new VRFunction<VRThread*>("ART_fetch", boost::bind(&ART::update, this, _1));
+    auto fkt2 = new VRFunction<VRThread*>("ART_fetch", boost::bind(&ART::updateT, this, _1));
     VRSceneManager::get()->initThread(fkt2, "ART_fetch", true);
 
     on_new_device = new VRSignal();
@@ -82,6 +81,7 @@ void ART::getMatrix(dev t, ART_device* d) {
 
 void ART::scan(int type, int N) {
     if (type < 0) {
+        boost::mutex::scoped_lock lock(mutex);
         scan(0, dtrack->get_num_body());
         scan(1, dtrack->get_num_flystick());
         scan(2, dtrack->get_num_hand());
@@ -90,7 +90,6 @@ void ART::scan(int type, int N) {
         return;
     }
 
-    boost::mutex::scoped_lock lock(mutex);
     for (int i=0; i<N; i++) {
         int k = ART_device::key(i,type);
         if (devices.count(k) == 0) continue;
@@ -108,15 +107,16 @@ void ART::scan(int type, int N) {
     }
 }
 
+void ART::updateL() { updateT(0); }
+
 //update thread
-void ART::update(VRThread* t) {
+void ART::updateT(VRThread* t) {
     if (!active) {
         sleep(1);
         return;
     }
 
     setARTPort(port);
-    if (dtrack == 0) dtrack = new DTrack(port, 0, 0, 20000, 10000);
     if (!active || dtrack == 0) return;
 
     if (dtrack->receive()) scan();
@@ -127,9 +127,9 @@ void ART::update(VRThread* t) {
     }
 }
 
-
 void ART::checkNewDevices(int type, int N) {
-    if (!active or dtrack == 0) return;
+    setARTPort(port);
+    if (!active || dtrack == 0) return;
 
     //check for new devices
     if (type < 0) {
@@ -181,6 +181,7 @@ void ART::setARTPort(int port) {
         port = -1;
         dtrack = 0;
     }
+    dtrack->receive();
 }
 
 void ART::setARTOffset(Vec3f o) { offset = o; }
