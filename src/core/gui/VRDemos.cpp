@@ -87,47 +87,61 @@ VRDemos::VRDemos() {
     setToolButtonCallback("toolbutton21", sigc::mem_fun(*this, &VRDemos::on_load_clicked));
 }
 
-void VRDemos::updatePixmap(demoEntry* e, Gtk::Image* img_pxb) {
+void VRDemos::updatePixmap(demoEntry* e, Gtk::Image* img, int w, int h) {
     if (e == 0) return;
-    if (img_pxb == 0) return;
-    //cout << "pxmap path " << e->pxm_path << endl;
+    if (img == 0) return;
     if ( !boost::filesystem::exists( e->pxm_path ) ) return;
     Glib::RefPtr<Gdk::Pixbuf> pxb = Gdk::Pixbuf::create_from_file (e->pxm_path);
-    img_pxb->set(pxb);
+    img->set(pxb);
+    img->set_size_request(w, h);
+}
+
+Gtk::Image* loadGTKIcon(string path, int w, int h) {
+    Glib::RefPtr<Gdk::Pixbuf> pxb;
+    try { pxb = Gdk::Pixbuf::create_from_file (path); }
+    catch(Glib::Error e) {;}
+    Gtk::Image* img = Gtk::manage(new Gtk::Image(pxb));
+    img->set_size_request(w, h);
+    return img;
 }
 
 void VRDemos::setButton(demoEntry* e) {
     Gtk::Settings::get_default()->property_gtk_button_images() = true;
 
+    // prep icons
     Gtk::Image* imgPlay = Gtk::manage(new Gtk::Image(Gtk::Stock::MEDIA_PLAY, Gtk::ICON_SIZE_BUTTON));
+    Gtk::Image* imgOpts = loadGTKIcon("ressources/gui/opts20.png", 20, 20);
+    Gtk::Image* imgLock = loadGTKIcon("ressources/gui/lock20.png", 20, 20);
+    Gtk::Image* imgUnlock = loadGTKIcon("ressources/gui/unlock20.png", 20, 20);
+    Gtk::Image* imgScene = loadGTKIcon("ressources/gui/default_scene.png", 100, 75);
 
+    // prep other widgets
     Gtk::Label* lbl = Gtk::manage(new Gtk::Label(e->path, true));
     Gtk::HBox* hb = Gtk::manage(new Gtk::HBox(false, 0));
     Gtk::VBox* vb = Gtk::manage(new Gtk::VBox(false, 0));
-
-    Glib::RefPtr<Gdk::Pixbuf> pxb;
-    try { pxb = Gdk::Pixbuf::create_from_file ("ressources/gui/default_scene.png"); }
-    catch(Glib::Error e) {;}
-    Gtk::Image* img_pxb = Gtk::manage(new Gtk::Image(pxb));
-    img_pxb->set_size_request(-1, 50);
-    hb->pack_start(*img_pxb, true, true, 10);
-
-    vb->pack_start(*lbl, false, false, 5);
-    vb->pack_end(*hb, true, true, 5);
-    hb->pack_end(*imgPlay, true, true, 5);
-
-    lbl->set_alignment(0.5, 0.5);
-
+    Gtk::VBox* vb2 = Gtk::manage(new Gtk::VBox(false, 0));
     Gtk::Button* b = Gtk::manage(new VRButton(e));
+    lbl->set_alignment(0.5, 0.5);
+    lbl->set_ellipsize(Pango::ELLIPSIZE_START);
+    lbl->set_max_width_chars(20);
+
+    // build widget
+    vb2->pack_start(*imgOpts, false, false, 5);
+    vb2->pack_start(*imgUnlock, false, false, 5);
+    hb->pack_start(*imgScene, false, false, 10);
+    hb->pack_end(*imgPlay, false, false, 5);
+    hb->pack_end(*vb2, false, false, 5);
+    vb->pack_start(*lbl, false, false, 5);
+    vb->pack_end(*hb, false, false, 5);
     b->add(*vb);
 
     e->button = b;
     e->button_label = lbl;
     e->img = imgPlay;
 
-    updatePixmap(e, img_pxb);
+    updatePixmap(e, imgScene, 100, 75);
     VRDevCb* fkt;
-    fkt = new VRDevCb("GUI_addDemoEntry", boost::bind(&VRDemos::updatePixmap, this, e, img_pxb) );
+    fkt = new VRDevCb("GUI_addDemoEntry", boost::bind(&VRDemos::updatePixmap, this, e, imgScene, 100, 75) );
     VRGuiSignals::get()->getSignal("onSaveScene")->add(fkt);
 
 
@@ -145,6 +159,7 @@ void VRDemos::updateTable(string t) {
     int x,y;
 
     Gtk::AttachOptions opts = Gtk::FILL|Gtk::EXPAND;
+    Gtk::AttachOptions opts2;
 
     int N = 4;
     for (auto d : demos) if(d.second->favorite) N++;
@@ -158,10 +173,13 @@ void VRDemos::updateTable(string t) {
         Gtk::Widget* w = d.second->button;
         x = i%2;
         y = i/2;
-        tab->attach( *w, x, x+1, y, y+1, opts, opts, 10, 10);
+        tab->attach( *w, x, x+1, y, y+1, opts, opts2, 10, 10);
         i++;
     }
 
+    //Gtk::AttachOptions opts = Gtk::FILL|Gtk::EXPAND;
+    //Gtk::Widget* w = Gtk::manage(new Gtk::Fixed());
+    //tab->attach( *w, 0, 1, y, y+1, opts, opts, 0, 0);
     tab->show();
 }
 
