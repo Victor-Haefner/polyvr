@@ -9,6 +9,7 @@ namespace Gtk {
     class Button;
     class Image;
     class Label;
+    class Frame;
 }
 
 class VRGuiContextMenu;
@@ -23,9 +24,15 @@ struct demoEntry {
     string path;
     string pxm_path;
     string table;
-    Gtk::Button* button = 0;
-    Gtk::Label* button_label = 0;
-    Gtk::Image* img = 0;
+    Gtk::Frame* widget = 0;
+    Gtk::Button* butPlay = 0;
+    Gtk::Button* butOpts = 0;
+    Gtk::Button* butLock = 0;
+    Gtk::Label* label = 0;
+    Gtk::Image* imgScene = 0;
+    Gtk::Image* imgPlay = 0;
+    Gtk::Image* imgLock = 0;
+    Gtk::Image* imgOpts = 0;
     bool running = false;
     bool pixmap = false;
     bool favorite = true;
@@ -58,6 +65,8 @@ class VRDemos {
 
         void on_advanced_cancel();
         void on_advanced_start();
+
+        void on_lock_toggle(demoEntry* e);
 
         void on_diag_new_clicked();
         void on_diag_save_clicked();
