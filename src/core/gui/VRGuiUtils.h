@@ -58,6 +58,9 @@ void setCellRendererCallback(string renderer, sigc::slot<void,const Glib::ustrin
 void setCellRendererCombo(string treeviewcolumn, string combolist, Gtk::TreeModelColumnBase& col, void (* fkt)(GtkCellRendererCombo*, gchar*, GtkTreeIter*, gpointer));
 void setCellRendererCombo(string treeviewcolumn, string combolist, Gtk::TreeModelColumnBase& col, sigc::slot<void,const Glib::ustring&,const Gtk::TreeModel::iterator& > sig);
 void setTreeviewSelectCallback(string treeview, sigc::slot<void> sig);
+Gtk::TreeModel::iterator getTreeviewSelected(string treeview);
+void selectTreestoreRow(string treeview, Gtk::TreeModel::iterator itr);
+void focusTreeView(string treeview);
 
 // STUFF
 void setTableSensitivity(string table, bool b);

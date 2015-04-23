@@ -87,7 +87,8 @@ void VRIntersect::dragCB(VRTransform* caster, VRObject* tree, VRDevice* dev) {
 }
 
 void VRIntersect::drag(VRObject* obj, VRTransform* caster) {
-    if (obj == 0 || dragged != 0 || !dnd) return;
+    auto d = getDraggedObject();
+    if (obj == 0 || d != 0 || !dnd) return;
 
     obj = obj->findPickableAncestor();
     if (obj == 0) return;
@@ -100,11 +101,26 @@ void VRIntersect::drag(VRObject* obj, VRTransform* caster) {
 }
 
 void VRIntersect::drop(VRDevice* dev) {
-    if (dragged != 0) {
-        dragged->drop();
-        dragged = 0;
+    auto d = getDraggedObject();
+    if (d != 0) {
+        d->drop();
+        drop_time = VRGlobals::get()->CURRENT_FRAME;
     }
 }
+
+VRTransform* VRIntersect::getDraggedObject() {
+    if (dragged) {
+        uint now = VRGlobals::get()->CURRENT_FRAME;
+        if (now > drop_time+1 && drop_time > 0) {
+            dragged = 0;
+            drop_time = 0;
+        }
+    }
+
+    return dragged;
+}
+
+VRTransform* VRIntersect::getDraggedGhost() { return dragged_ghost; }
 
 void VRIntersect::initCross() {
     cross = new VRGeometry("Hit cross");
@@ -194,8 +210,6 @@ VRDevCb* VRIntersect::getDrop() { return drop_fkt; }
 //Pnt3f VRIntersect::getHitPoint() { return hitPoint; }
 //Vec2f VRIntersect::getHitTexel() { return hitTexel; }
 //VRObject* VRIntersect::getHitObject() { return obj; }
-VRTransform* VRIntersect::getDraggedObject() { return dragged; }
-VRTransform* VRIntersect::getDraggedGhost() { return dragged_ghost; }
 
 VRIntersection VRIntersect::getLastIntersection() { return lastIntersection; }
 

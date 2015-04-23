@@ -30,6 +30,7 @@ class VRGlobals {
     public:
         unsigned int CURRENT_FRAME = 0;
         unsigned int FRAME_RATE = 0;
+        unsigned int PHYSICS_FRAME_RATE = 0;
 
         static VRGlobals* get();
 };

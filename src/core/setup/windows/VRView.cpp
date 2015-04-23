@@ -293,6 +293,7 @@ void VRView::showStats(bool b) {
         stats->addElement(RenderAction::statDrawTime, "Draw FPS: %r.3f");
         stats->addElement(RenderAction::statTravTime, "Trav FPS: %r.3f");
         stats->addElement(VRRate::statFPStime, "PVR FPS: %d");
+        stats->addElement(VRRate::statPhysFPStime, "Physics FPS: %d");
 
         stats->addElement(RenderAction::statNStates, " State changes: %d");
         stats->addElement(RenderAction::statNShaders, "Shader changes: %d");

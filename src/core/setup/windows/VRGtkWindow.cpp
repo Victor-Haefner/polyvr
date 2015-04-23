@@ -111,11 +111,7 @@ void VRGtkWindow::render() {
     if (!active || !content) return;
     Glib::RefPtr<Gdk::Window> drawable = drawArea->get_window();
     GdkRectangle rect; rect.x = 0; rect.y = 0; rect.width = 1; rect.height = 1;
-    //cout << "Renderer A " << endl;
-    if (drawable) {
-        gdk_window_invalidate_rect( drawable->gobj(), &rect, false);
-        //gtk_widget_draw( (GtkWidget*)drawArea->gobj(), &rect );
-    }
+    if (drawable) gdk_window_invalidate_rect( drawable->gobj(), &rect, false );
 }
 
 void VRGtkWindow::on_realize() {

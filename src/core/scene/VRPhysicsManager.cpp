@@ -16,6 +16,8 @@
 #include "core/utils/VRVisualLayer.h"
 #include "VRThreadManager.h"
 
+#include <unistd.h>
+
 typedef boost::recursive_mutex::scoped_lock MLock;
 
 OSG_BEGIN_NAMESPACE;
@@ -50,8 +52,6 @@ VRPhysicsManager::VRPhysicsManager() {
     phys_mat->setTransparency(0.4);
 
     cout << "Init VRPhysicsManager" << endl;
-    t_last = glutGet(GLUT_ELAPSED_TIME);
-
 }
 
 VRPhysicsManager::~VRPhysicsManager() {
@@ -82,21 +82,35 @@ VRPhysicsManager::~VRPhysicsManager() {
 
 boost::recursive_mutex& VRPhysicsManager::physicsMutex() { return mtx; }
 
+long long VRPhysicsManager::getTime() { // time in seconds
+    return 1000*glutGet(GLUT_ELAPSED_TIME);
+    //return 1e6*clock()/CLOCKS_PER_SEC; // TODO
+}
+
 void VRPhysicsManager::updatePhysics(VRThread* thread) {
     if (dynamicsWorld == 0) return;
-    int t = glutGet(GLUT_ELAPSED_TIME);
-    float dt = (float)(t-(thread->t_last));
-    thread->t_last = t;
+    long long dt,t0,t1,t2,t3;
+    t0 = thread->t_last;
+    t1 = getTime();
+    thread->t_last = t1;
+    dt = t1-t0;
 
     {
         MLock lock(mtx);
         for (auto f : updateFktsPre) (*f)(0);
-        dynamicsWorld->stepSimulation(dt*0.001, 30);
+        dynamicsWorld->stepSimulation(1e-6*dt, 30);
         for (auto f : updateFktsPost) (*f)(0);
     }
 
+    t2 = getTime();
+    dt = t2-t1;
+
     //sleep up to 500 fps
-    if (dt < 2.0f) osgSleep((2.0f - dt));
+    if (dt < 2e3) usleep(2e3-dt);
+    t3 = getTime();
+
+    MLock lock(mtx);
+    fps = 1e6/(t3-t1);
 }
 
 void VRPhysicsManager::addPhysicsUpdateFunction(VRFunction<int>* fkt, bool after) {
@@ -108,6 +122,8 @@ void VRPhysicsManager::addPhysicsUpdateFunction(VRFunction<int>* fkt, bool after
 void VRPhysicsManager::updatePhysObjects() {
     //mtx.try_lock();
     MLock lock(mtx);
+    VRGlobals::get()->PHYSICS_FRAME_RATE = fps;
+
     for (auto o : OSGobjs) {
         if (o.second->getPhysics()->isGhost()) o.second->updatePhysics();
     }

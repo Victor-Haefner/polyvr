@@ -52,10 +52,10 @@ class VRPhysicsManager {
         VRMaterial* phys_mat = 0;
 
         vector<Vec3f> collisionPoints;
-        /** timestamp last frame**/
-        int t_last;
-        /** **/
         boost::recursive_mutex mtx;
+
+        long long getTime();
+        int fps = 500;
 
     protected:
         VRFunction<VRThread*>* updatePhysicsFkt;

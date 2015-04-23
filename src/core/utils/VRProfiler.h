@@ -37,10 +37,14 @@ class VRProfiler {
     public:
         static VRProfiler* get();
 
+        void setActive(bool b);
+        bool isActive();
+
         int regStart(string name);
         void regStop(int ID);
 
         list<Frame> getFrames();
+        Frame getFrame(int i);
 
         void setHistoryLength(int N);
         int getHistoryLength();

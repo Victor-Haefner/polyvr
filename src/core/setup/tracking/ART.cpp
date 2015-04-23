@@ -13,6 +13,7 @@
 #include "core/math/coordinates.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/setup/devices/VRSignal.h"
+//#include <boost/thread/locks.hpp>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -33,12 +34,24 @@ void ART_device::init() {
 
 void ART_device::update() {
     if (ent) ent->setMatrix(m);
-    if (dev) dev->update(buttons, joysticks);
+    if (dev) {
+        auto bitr = buttons.begin();
+        auto jitr = joysticks.begin();
+        for (; bitr != buttons.end() && jitr != joysticks.end(); bitr++, jitr++) {
+            dev->update(*bitr, *jitr);
+        }
+        buttons.clear();
+        joysticks.clear();
+    }
 }
 
 
 ART::ART() {
-    VRSceneManager::get()->addUpdateFkt(getARTUpdateFkt());
+    auto fkt = new VRFunction<int>("ART_applyEvents", boost::bind(&ART::applyEvents, this));
+    VRSceneManager::get()->addUpdateFkt(fkt);
+
+    auto fkt2 = new VRFunction<VRThread*>("ART_fetch", boost::bind(&ART::update, this, _1));
+    VRSceneManager::get()->initThread(fkt2, "ART_fetch", true);
 
     on_new_device = new VRSignal();
 
@@ -77,12 +90,10 @@ void ART::scan(int type, int N) {
         return;
     }
 
+    boost::mutex::scoped_lock lock(mutex);
     for (int i=0; i<N; i++) {
         int k = ART_device::key(i,type);
-        if (devices.count(k) == 0) {
-            devices[k] = new ART_device(i,type);
-            VRSetupManager::getCurrent()->getSignal_on_new_art_device()->trigger();
-        }
+        if (devices.count(k) == 0) continue;
 
         if (type == 0) getMatrix(dtrack->get_body(i), devices[k]);
         if (type == 1) getMatrix(dtrack->get_flystick(i), devices[k]);
@@ -91,32 +102,58 @@ void ART::scan(int type, int N) {
 
         if (type == 1) {
             auto fly = dtrack->get_flystick(i);
-            devices[k]->buttons = vector<int>(fly.button, &fly.button[fly.num_button]);
-            devices[k]->joysticks = vector<float>(fly.joystick, &fly.joystick[fly.num_joystick]);
+            devices[k]->buttons.push_back( vector<int>(fly.button, &fly.button[fly.num_button]) );
+            devices[k]->joysticks.push_back( vector<float>(fly.joystick, &fly.joystick[fly.num_joystick]) );
         }
     }
 }
 
 //update thread
-void ART::update() {
+void ART::update(VRThread* t) {
+    if (!active) {
+        sleep(1);
+        return;
+    }
+
     setARTPort(port);
     if (dtrack == 0) dtrack = new DTrack(port, 0, 0, 20000, 10000);
     if (!active || dtrack == 0) return;
 
-    if (dtrack->receive()) {
-        scan();
-        for (auto d : devices) {
-            d.second->update();
-        }
-    } else {
+    if (dtrack->receive()) scan();
+    else {
         if(dtrack->timeout())       cout << "--- ART: timeout while waiting for udp data" << endl;
         if(dtrack->udperror())      cout << "--- ART: error while receiving udp data" << endl;
         if(dtrack->parseerror())    cout << "--- ART: error while parsing udp data" << endl;
     }
 }
 
-VRFunction<int>* ART::getARTUpdateFkt() {
-    return new VRFunction<int>("ART_update", boost::bind(&ART::update, this));
+
+void ART::checkNewDevices(int type, int N) {
+    if (!active or dtrack == 0) return;
+
+    //check for new devices
+    if (type < 0) {
+        checkNewDevices(0, dtrack->get_num_body());
+        checkNewDevices(1, dtrack->get_num_flystick());
+        checkNewDevices(2, dtrack->get_num_hand());
+        checkNewDevices(3, dtrack->get_num_meatool());
+        //checkNewDevices(4, dtrack->get_num_marker());
+        return;
+    }
+
+    for (int i=0; i<N; i++) {
+        int k = ART_device::key(i,type);
+        if (devices.count(k) == 0) {
+            devices[k] = new ART_device(i,type);
+            VRSetupManager::getCurrent()->getSignal_on_new_art_device()->trigger();
+        }
+    }
+}
+
+void ART::applyEvents() {
+    boost::mutex::scoped_lock lock(mutex);
+    checkNewDevices();
+    for (auto d : devices) d.second->update();
 }
 
 vector<int> ART::getARTDevices() {

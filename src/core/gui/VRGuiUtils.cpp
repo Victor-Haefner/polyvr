@@ -168,6 +168,23 @@ void setTreeviewSelectCallback(string treeview, sigc::slot<void> sig) {
     tv->signal_cursor_changed().connect(sig);
 }
 
+Gtk::TreeModel::iterator getTreeviewSelected(string treeview) {
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object(treeview));
+    return tree_view->get_selection()->get_selected();
+}
+
+void selectTreestoreRow(string treeview, Gtk::TreeModel::iterator itr) {
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object(treeview));
+    Gtk::TreeModel::Path path(itr);
+    tree_view->set_cursor( path );
+    tree_view->grab_focus();
+}
+
+void focusTreeView(string treeview) {
+    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object(treeview));
+    tree_view->grab_focus();
+}
+
 void setEntryCallback(string e, void (* fkt)(GtkEntry*, gpointer)) {
     Gtk::Entry* en;
     VRGuiBuilder()->get_widget(e, en);

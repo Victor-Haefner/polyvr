@@ -53,8 +53,17 @@ PyMethodDef VRPySnappingEngine::methods[] = {
     {"remRule", (PyCFunction)VRPySnappingEngine::remRule, METH_VARARGS, "Remove a rule - remRule(int ID)" },
     {"addObjectAnchor", (PyCFunction)VRPySnappingEngine::addObjectAnchor, METH_VARARGS, "Remove a rule - addObjectAnchor(obj transform, obj anchor)" },
     {"clearObjectAnchors", (PyCFunction)VRPySnappingEngine::clearObjectAnchors, METH_VARARGS, "Remove a rule - clearObjectAnchors(obj transform)" },
+    {"remLocalRules", (PyCFunction)VRPySnappingEngine::remLocalRules, METH_VARARGS, "Remove all object relative rules - clearObjectAnchors(obj transform)" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPySnappingEngine::remLocalRules(VRPySnappingEngine* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPySnappingEngine::remLocalRules - Object is invalid"); return NULL; }
+    VRPyTransform *o;
+    if (! PyArg_ParseTuple(args, "O", &o)) return NULL;
+    self->obj->remLocalRules( o->obj );
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPySnappingEngine::addObjectAnchor(VRPySnappingEngine* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPySnappingEngine::addObjectAnchor - Object is invalid"); return NULL; }

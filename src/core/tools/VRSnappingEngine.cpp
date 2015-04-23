@@ -110,6 +110,12 @@ void VRSnappingEngine::clearObjectAnchors(VRTransform* obj) {
     if (anchors.count(obj)) anchors[obj].clear();
 }
 
+void VRSnappingEngine::remLocalRules(VRTransform* obj) {
+    vector<int> d;
+    for (auto r : rules) if (r.second->csys == obj) d.push_back(r.first);
+    for (int i : d) remRule(i);
+}
+
 void VRSnappingEngine::addObject(VRTransform* obj, float weight) {
     objects[obj] = obj->getWorldMatrix();
     Vec3f p = obj->getWorldPosition();
@@ -125,8 +131,6 @@ void VRSnappingEngine::addTree(VRObject* obj, float weight) {
     for (auto o : objs) addObject((VRTransform*)o, weight);
 }
 
-
-
 void VRSnappingEngine::update() {
     for (auto dev : VRSetupManager::getCurrent()->getDevices()) { // get dragged objects
         VRTransform* obj = dev.second->getDraggedObject();
@@ -136,16 +140,20 @@ void VRSnappingEngine::update() {
         Matrix m = gobj->getWorldMatrix();
         Vec3f p = Vec3f(m[3]);
 
+        cout << "snap obj " << obj->getName() << endl;
         for (auto ri : rules) {
             Rule* r = ri.second;
+            if (r->csys) cout << " local rule in " << r->csys->getName() << endl;
 
             if (anchors.count(obj)) {
+                cout << "  obj has anchors " << endl;
                 for (auto a : anchors[obj]) {
                     Matrix b = a;
                     b.multLeft(m);
                     Vec3f pa = Vec3f(b[3]);
                     Vec3f p2 = r->getSnapPoint(pa);
                     float D = (p2-p).length(); // check distance
+                    cout << "   anchor " << pa << " dist " << D << " is range " << r->inRange(D) << endl;
                     if (!r->inRange(D)) continue;
 
                     Matrix am;

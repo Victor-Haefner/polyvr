@@ -30,7 +30,7 @@ class VRThread {
         VRFunction<VRThread*>* fkt = 0;
         int aspect = 0;
         /** last frame time stamp**/
-        int t_last = 0;
+        long long t_last = 0;
 
 };
 
