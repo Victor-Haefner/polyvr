@@ -90,7 +90,7 @@ void VRPhysics::setDynamic(bool b) { dynamic = b; update(); }
 bool VRPhysics::isDynamic() { return dynamic; }
 void VRPhysics::setMass(float m) { mass = m; update(); }
 float VRPhysics::getMass() { return mass; }
-void VRPhysics::setGravity(OSG::Vec3f v) { Lock lock(mtx()); body->setGravity(btVector3 (v.x(),v.y(),v.z())); }
+void VRPhysics::setGravity(OSG::Vec3f v) { Lock lock(mtx()); if (body) body->setGravity(btVector3 (v.x(),v.y(),v.z())); }
 void VRPhysics::setCollisionMargin(float m) { collisionMargin = m; update(); }
 float VRPhysics::getCollisionMargin() { return collisionMargin; }
 void VRPhysics::setCollisionGroup(int g) { collisionGroup = g; update(); }

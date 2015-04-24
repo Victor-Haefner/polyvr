@@ -1,23 +1,17 @@
 #ifndef VRabq_H
 #define VRabq_H
 
-//--- BEGIN INCLUDE STD HEADERS
-    #include <iostream>
-    #include <sstream>
-    #include <fstream>
-    #include <string>
-    #include <vector>
-    #include <map>
-    #include <math.h>
-//--- END INCLUDE STD HEADERS
+#include <iostream>
+#include <sstream>
+#include <fstream>
+#include <string>
+#include <vector>
+#include <map>
+#include <math.h>
 
-//--- BEGIN INCLUDE ABACON HEADERS
+#include "struct.h" // Nodes, Elements, vec, frame
+#include "core/utils/toString.h"
 
-    //#include "simvidekont_src/struct.h"
-
-    #include "struct.h" // Nodes, Elements, vec, frame
-
-//--- END INCLUDE ABACON HEADERS
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
@@ -25,7 +19,7 @@ OSG_BEGIN_NAMESPACE;
 class VRabq {
     protected:
 
-        vector<frame*>* frames;
+        vector<frame*> frames;
 
         /**
         * Returns a frame from a given binary data.
@@ -102,16 +96,13 @@ class VRabq {
         }
 
         void loadAbaqusFile(int from, int to) {
-            frames = new vector<frame*>(to-from);
+            frames = vector<frame*>(to-from);
             string path = "abacusTest/aba_frame";
             for (int i=from;i<=to;i++) {
-                stringstream ss;
-                ss << (i+1);
-                string p = path + ss.str() + ".dat";
+                string p = path + toString(i+1) + ".dat";
                 cout << "\nLOAD " << p << flush;
-                frame* f = loadBin(p);
-                (*frames)[i-from] = f;
-                f->id = i;
+                frames[i-from] = loadBin(p);
+                frames[i-from]->id = i;
             }
         }
 };
