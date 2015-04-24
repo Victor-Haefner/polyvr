@@ -153,11 +153,10 @@ void virtuose::fillPosition(VRPhysics* p, float *to)
     to[0] =  pos.getOrigin().getZ();
     to[1] = pos.getOrigin().getX();
     to[2] =  pos.getOrigin().getY();
-    /** not supported **/
-    //to[3] =  -pos.getRotation().getZ();
-    //to[4] =  -pos.getRotation().getX();
-    //to[5] =  -pos.getRotation().getY();
-    //to[6] =  pos.getRotation().getW();
+    to[3] =  pos.getRotation().getZ();
+    to[4] =  pos.getRotation().getX();
+    to[5] =  pos.getRotation().getY();
+    to[6] =  pos.getRotation().getW();
 }
 void virtuose::fillSpeed(VRPhysics* p, float *to)
 {
@@ -165,19 +164,18 @@ void virtuose::fillSpeed(VRPhysics* p, float *to)
     to[0] = vel.z();
     to[1] = vel.x();
     to[2] = vel.y();
-    /**not supported **/
-    //Vec3f ang = p->getAngularVelocity();
-    //to[3] = -ang.z();
-    //to[4] = -ang.x();
-    //to[5] = -ang.y();
+    Vec3f ang = p->getAngularVelocity();
+    to[3] = ang.z();
+    to[4] = ang.x();
+    to[5] = ang.y();
 }
 void virtuose::Matrix3ToArray(btMatrix3x3 m, float *to)
 {
-    to[0] = m.getRow(0).getZ();
-    to[1] = m.getRow(0).getX();
+    to[0] = m.getRow(0).getX();
+    to[1] = m.getRow(0).getZ();
     to[2] = m.getRow(0).getY();
-    to[3] = m.getRow(2).getZ();
-    to[4] = m.getRow(2).getX();
+    to[3] = m.getRow(2).getX();
+    to[4] = m.getRow(2).getZ();
     to[5] = m.getRow(2).getY();
     to[6] = m.getRow(1).getZ();
     to[7] = m.getRow(1).getX();
@@ -281,19 +279,16 @@ void virtuose::updateVirtMechPost() {
 		if (isAttached) {
 			//get force applied by human on the haptic
 			CHECK(virtGetForce(vc, force));
-
+            //position +1, +2, +0
 			Vec3f frc = Vec3f(force[1], force[2], force[0]);
 			totalForce = frc;
-
-			/** not supported**/
-			//Vec3f trqu = Vec3f(-force[4],-force[5],-force[3]);
-
+			//rotation +4 +5 +3    (x-Achse am haptik: force[4])(y-Achse am haptik: force[5])(z-Achse am haptik: force[3])
+			Vec3f trqu = Vec3f( force[4], force[5], force[3]);
 			//apply force on the object
             //avoiding build-ups
                 if( (pPos.length() < 0.1f) && (sPos.length() < 0.5f) &&  (sRot.length() < 0.5f)) {
                    attached->getPhysics()->addForce(frc);
-                   /** not supported**/
-                   //attached->getPhysics()->addTorque(trqu);
+                   attached->getPhysics()->addTorque(trqu);
 				}
 			}
 		}
