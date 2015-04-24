@@ -25,17 +25,18 @@ class virtuose {
         /** user generated force **/
         Vec3f totalForce;
 
-        /** diff between frames (used for security)**/
+        /** diff between frames (used to avoid build-ups)**/
         Vec3f pPos;
         Vec3f sPos;
         Vec3f sRot;
+
 
         //polyvr time
         float timeLastFrame = glutGet(GLUT_ELAPSED_TIME);
         VirtCommandType commandType  = COMMAND_TYPE_NONE;
         float gripperPosition;
         float gripperSpeed;
-        float globalforce[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
+
 
 
     public:

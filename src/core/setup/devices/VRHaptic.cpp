@@ -5,6 +5,8 @@
 #include "core/scene/VRSceneManager.h"
 #include <boost/bind.hpp>
 
+
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -45,6 +47,10 @@ void VRHaptic::applyTransformation(VRTransform* t) { // TODO: rotation
 }
 
 void VRHaptic::updateHapticPre(VRTransform* t) { // TODO: rotation
+    //need a recalibration (timestep reset) ?
+    //float tempTimeStep = (1.0f/2.0f);
+    //cout << "updateHapticPre: timestep: " << tempTimeStep << "\n";
+    //if(timestep < tempTimeStep)
     //COMMAND_MODE_VIRTMECH
     updateVirtMechPre();
 }
