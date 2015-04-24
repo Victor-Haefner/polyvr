@@ -256,27 +256,26 @@ void SimViDekont::computeVertexColors(frame* f, map<int, int>* vmap, map<int, fl
 
 void SimViDekont::showFrame(int i) {
     static int last = 0;
-    frames->at(last)->geo->hide();
-    frames->at(i)->geo->show();
+    frames[last]->geo->hide();
+    frames[i]->geo->show();
     last = i;
     //cout << "\nGoto " << i << "  " << frames->size() << flush;
 }
 
 void SimViDekont::initFrameGeometries() {
-    for (uint i=0; i < frames->size(); i++) {
-        frame* f = frames->at(i);
-        cout << "\nCONSTRUCT SURFACE " << f->id << endl;
+    for (auto frame : frames) {
+        cout << "\nCONSTRUCT SURFACE " << frame->id << endl;
 
         string path = "rslt/geo_frame";
 
         bool file = false;
-        file =  GeoIO::load(f, path);
+        file =  GeoIO::load(frame, path);
 
-        if(!file) createGeo(f);
+        if(!file) createGeo(frame);
 
-        root->addChild(f->geo);
-        f->geo->hide();
-        f->geo->translate(Vec3f(0,1,0));
+        root->addChild(frame->geo);
+        frame->geo->hide();
+        frame->geo->translate(Vec3f(0,1,0));
     }
 }
 
@@ -291,85 +290,26 @@ void SimViDekont::playStepForward(VRDevice* dev) { player->step(); }
 void SimViDekont::playStepBackward(VRDevice* dev) { player->step(true); }
 
 void SimViDekont::toggleColors(VRDevice* dev) {
-
-    for(uint frameNum = 0; frameNum < frames->size(); frameNum++){
-
-        GeometryRecPtr geo = frames->at(frameNum)->geo->getMesh();
+    for (auto frame : frames) {
+        GeometryRecPtr geo = frame->geo->getMesh();
         GeoVec3fPropertyRecPtr colors1 = dynamic_cast<GeoVec3fProperty*>(geo->getColors());
         GeoVec3fPropertyRecPtr colors2 = dynamic_cast<GeoVec3fProperty*>(geo->getSecondaryColors());
         geo->setColors(colors2);
         geo->setSecondaryColors(colors1);
-
     }
-
 }
 
 
 //--- END Player callbacks
 void SimViDekont::initPlayer() {
-
     VRFunction<int>* cb = new VRFunction<int>("showFrame", boost::bind(&SimViDekont::showFrame, this, _1));
-    player = new Player(cb, 0, frames->size() );
-
-    /*VRFunction<VRDevice*>* callback1 = new VRFunction<VRDevice*>("playForward", boost::bind(&SimViDekont::playForward, this, _1));
-    VRFunction<VRDevice*>* callback2 = new VRFunction<VRDevice*>("playBackward", boost::bind(&SimViDekont::playBackward, this, _1));
-    VRFunction<VRDevice*>* callback3 = new VRFunction<VRDevice*>("playStop", boost::bind(&SimViDekont::playStop, this, _1));
-    VRFunction<VRDevice*>* callback4 = new VRFunction<VRDevice*>("playStepForward", boost::bind(&SimViDekont::playStepForward, this, _1));
-    VRFunction<VRDevice*>* callback5 = new VRFunction<VRDevice*>("playStepBackward", boost::bind(&SimViDekont::playStepBackward, this, _1));
-    VRFunction<VRDevice*>* callback6 = new VRFunction<VRDevice*>("toggleColors", boost::bind(&SimViDekont::toggleColors, this, _1));*/
-
-    // signals for key + && -
-    /*VRDevice* keyboard = VRKeyboard::get();
-    VRSignal* key_plus_pressed = keyboard->addSignal('+',1);
-    VRSignal* key_minus_pressed = keyboard->addSignal('-',1);
-    VRSignal* key_space_pressed = keyboard->addSignal(' ',1);
-    VRSignal* key_six_pressed = keyboard->addSignal('6',1);
-    VRSignal* key_four_pressed = keyboard->addSignal('4',1);
-    VRSignal* key_zero_pressed = keyboard->addSignal('0',1);*/
-
-    /*scene->bindLink(key_plus_pressed, callback1, "keyboard plus", "simvidekont playforward");
-    scene->bindLink(key_minus_pressed, callback2, "keyboard minus", "simvidekont playbackward");
-    scene->bindLink(key_space_pressed, callback3, "keyboard space", "simvidekont stop");
-    scene->bindLink(key_six_pressed, callback4, "keyboard 6", "simvidekont stepforward");
-    scene->bindLink(key_four_pressed, callback5, "keyboard 4", "simvidekont stepbackward");
-    scene->bindLink(key_zero_pressed, callback6, "keyboard 0", "simvidekont toggle colors");
-
-    VRDevice* mouse = VRMouse::get();
-    scene->bindLink(mouse->addSignal(3, 1), callback1, "mouse button left pressed", "simvidekont playforward");
-    scene->bindLink(mouse->addSignal(4, 1), callback2, "mouse button left pressed", "simvidekont playbackward");
-
-    VRDevice* fly = VRSceneManager::get()->getDeviceFlystick();
-    if (fly) {
-        scene->bindLink(fly->addSignal(0, 1), callback6, "mouse button left pressed", "simvidekont playforward");
-
-        scene->bindLink(fly->addSignal(1, 0), callback3, "mouse button left pressed", "simvidekont playforward");
-        scene->bindLink(fly->addSignal(1, 1), callback1, "mouse button left pressed", "simvidekont playbackward");
-
-        scene->bindLink(fly->addSignal(4, 0), callback3, "mouse button left pressed", "simvidekont playbackward");
-        scene->bindLink(fly->addSignal(4, 1), callback2, "mouse button left pressed", "simvidekont playbackward");
-
-        scene->bindLink(fly->addSignal(2, 1), callback4, "mouse button left pressed", "simvidekont playbackward");
-        scene->bindLink(fly->addSignal(3, 1), callback5, "mouse button left pressed", "simvidekont playbackward");
-    }*/
+    player = new Player(cb, 0, frames.size() );
 }
 
 //--- END Player binding
 
 
 SimViDekont::SimViDekont() {
-    root = new VRObject("SimViDekont");
-
-    //--- BEGIN Initialize VRScene
-
-        //VROptions::get()->deferredShading = 0;
-        //VRSceneManager::get()->showStats(0);
-        //scene  = VRSceneLoader::get()->parseSceneFromXML("scene/simvidekont.xml", "Simvidekont");
-        //VRCamera* cam = scene->getActiveCamera();
-        //scene->get("Headlight_beacon")->switchParent(cam);
-
-
-    //--- END Initialize VRScene
-
 
     /* Workflow:
 
@@ -381,21 +321,13 @@ SimViDekont::SimViDekont() {
 
     */
 
+    root = new VRObject("SimViDekont");
     loadAbaqusFile(0, 100); // load odb file && parse data to frames
-
     initFrameGeometries(); // create geometries for each frame && hide it
 
-    //writeFrameStress(frames->at(3), "stress_data"); // checking if Stress data ok.
-
-
-
-    //--- BEGIN Initialize Frame Player
-
-        //initDevice(); // Device
-        initPlayer(); // Player
-        player->jump(0);
-
-    //--- END Initialize Frame Player
+    // Frame Player
+    initPlayer();
+    player->jump(0);
 }
 
 Player* SimViDekont::getPlayer() { return player; }

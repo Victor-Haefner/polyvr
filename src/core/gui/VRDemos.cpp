@@ -314,8 +314,10 @@ void VRDemos::on_advanced_start() {
 
     if (lightweight) VRSceneLoader::get()->ingoreHeavyRessources(); // just for the next scene
 
-    if (current_demo->running) toggleDemo(current_demo); // close demo if it is running
-    toggleDemo(current_demo); // start demo
+    if (current_demo) {
+        if (current_demo->running) toggleDemo(current_demo); // close demo if it is running
+        toggleDemo(current_demo); // start demo
+    }
 
     if (no_scripts) VRSceneManager::getCurrent()->disableAllScripts();
 }
