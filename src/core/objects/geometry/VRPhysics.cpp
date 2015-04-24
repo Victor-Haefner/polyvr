@@ -72,7 +72,7 @@ boost::recursive_mutex& VRPhysics::mtx() {
     auto scene = OSG::VRSceneManager::getCurrent();
     if (scene) return scene->physicsMutex();
     else {
-        boost::recursive_mutex m;
+        static boost::recursive_mutex m;
         return m;
     };
 }
