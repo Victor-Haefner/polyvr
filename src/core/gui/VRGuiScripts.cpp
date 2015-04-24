@@ -423,8 +423,9 @@ bool VRGuiScripts::on_any_key_event(GdkEventKey* event) {
 
 bool VRGuiScripts::on_any_event(GdkEvent* event) {
     int t = event->type;
-    if (t == 5 || t == 6 || t == 12) {
-        //wait_for_key = false; // TODO
+    if (t == GDK_KEY_PRESS) {
+        on_any_key_event((GdkEventKey*)event);
+        return true;
     }
     return false;
 }
