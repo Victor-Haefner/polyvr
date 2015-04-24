@@ -423,10 +423,7 @@ bool VRGuiScripts::on_any_key_event(GdkEventKey* event) {
 
 bool VRGuiScripts::on_any_event(GdkEvent* event) {
     int t = event->type;
-    if (t == GDK_KEY_PRESS) {
-        on_any_key_event((GdkEventKey*)event);
-        return true;
-    }
+    if (t == GDK_KEY_PRESS) return on_any_key_event((GdkEventKey*)event);
     return false;
 }
 
