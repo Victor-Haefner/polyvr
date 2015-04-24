@@ -32,6 +32,7 @@ struct demoEntry {
     Gtk::Image* imgScene = 0;
     Gtk::Image* imgPlay = 0;
     Gtk::Image* imgLock = 0;
+    Gtk::Image* imgUnlock = 0;
     Gtk::Image* imgOpts = 0;
     bool running = false;
     bool pixmap = false;
@@ -45,6 +46,8 @@ class VRDemos {
         VRScene* demo;
         map<string, demoEntry*> demos;
         VRGuiContextMenu* menu;
+
+        Gtk::Image* loadGTKIcon(Gtk::Image* img, string path, int w, int h);
 
         void setButton(demoEntry* e);
 

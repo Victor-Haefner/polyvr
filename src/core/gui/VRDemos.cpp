@@ -97,8 +97,11 @@ void VRDemos::updatePixmap(demoEntry* e, Gtk::Image* img, int w, int h) {
     img->set_size_request(w, h);
 }
 
-Gtk::Image* loadGTKIcon(Gtk::Image* img, string path, int w, int h) {
-    if ( !boost::filesystem::exists( path ) ) return img;
+Gtk::Image* VRDemos::loadGTKIcon(Gtk::Image* img, string path, int w, int h) {
+    if ( !boost::filesystem::exists( path ) ) {
+        cout << "Warning (loadGTKIcon): " << path << " not found!" << endl;
+        return img;
+    }
     if (img == 0) img = Gtk::manage(new Gtk::Image());
     img->set(path);
     img->set_size_request(w, h);
@@ -112,9 +115,8 @@ void VRDemos::setButton(demoEntry* e) {
     e->imgPlay = Gtk::manage(new Gtk::Image(Gtk::Stock::MEDIA_PLAY, Gtk::ICON_SIZE_BUTTON));
     e->imgOpts = loadGTKIcon(0, "ressources/gui/opts20.png", 20, 20);
     e->imgScene = loadGTKIcon(0, "ressources/gui/default_scene.png", 100, 75);
-
-    if (e->write_protected) e->imgLock = loadGTKIcon(e->imgLock, "ressources/gui/lock20.png", 20, 20);
-    else e->imgLock = loadGTKIcon(e->imgLock, "ressources/gui/unlock20.png", 20, 20);
+    e->imgLock = loadGTKIcon(0, "ressources/gui/lock20.png", 20, 20);
+    e->imgUnlock = loadGTKIcon(0, "ressources/gui/unlock20.png", 20, 20);
 
     // prep other widgets
     e->widget = Gtk::manage(new Gtk::Frame());
@@ -140,7 +142,8 @@ void VRDemos::setButton(demoEntry* e) {
     e->widget->add(*vb);
     e->butPlay->add(*e->imgPlay);
     e->butOpts->add(*e->imgOpts);
-    e->butLock->add(*e->imgLock);
+    if (e->write_protected) e->butLock->add(*e->imgLock);
+    else e->butLock->add(*e->imgUnlock);
 
     updatePixmap(e, e->imgScene, 100, 75);
 
@@ -164,10 +167,11 @@ void VRDemos::setButton(demoEntry* e) {
 
 void VRDemos::on_lock_toggle(demoEntry* e) {
     e->write_protected = !e->write_protected;
-    cout << "toggle lock " << e->write_protected << endl;
-    if (e->write_protected) loadGTKIcon(e->imgLock, "ressources/gui/lock20.png", 20, 20);
-    else loadGTKIcon(e->imgLock, "ressources/gui/unlock20.png", 20, 20);
-    e->imgLock->show_all();
+    e->butLock->remove();
+    if (e->write_protected) e->butLock->add(*e->imgLock);
+    else e->butLock->add(*e->imgUnlock);
+    e->butLock->show_all();
+
     if (VRSceneManager::getCurrent())
         VRSceneManager::getCurrent()->setFlag("write_protected", e->write_protected);
 }
