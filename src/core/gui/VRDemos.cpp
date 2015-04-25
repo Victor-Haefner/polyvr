@@ -14,6 +14,7 @@
 #include <gtkmm/image.h>
 #include <gtkmm/builder.h>
 #include <gtkmm/frame.h>
+#include <gtkmm/eventbox.h>
 #include <string>
 #include <iostream>
 #include <boost/filesystem.hpp>
@@ -33,24 +34,6 @@ using namespace std;
 // TODO:
 // rename && delete scenes
 // switch to a liststore || something!
-
-VRSignal* on_scene_loaded;
-demoEntry* current_demo;
-
-// override button released event handler to access right click events
-class VRButton : public Gtk::Button {
-    private:
-        demoEntry* demo;
-
-    public:
-        VRButton(demoEntry* demo) : demo(demo) { ; }
-
-        bool on_button_release_event(GdkEventButton* event) {
-            if (event->button == 1) return Gtk::Button::on_button_release_event(event);
-            current_demo = demo;
-            return false;
-        }
-};
 
 class scenes_columns : public Gtk::TreeModelColumnRecord {
     public:
@@ -120,11 +103,12 @@ void VRDemos::setButton(demoEntry* e) {
 
     // prep other widgets
     e->widget = Gtk::manage(new Gtk::Frame());
+    Gtk::EventBox* ebox = Gtk::manage(new Gtk::EventBox());
     Gtk::HBox* hb = Gtk::manage(new Gtk::HBox(false, 0));
     Gtk::VBox* vb = Gtk::manage(new Gtk::VBox(false, 0));
     Gtk::VBox* vb2 = Gtk::manage(new Gtk::VBox(false, 0));
     e->label = Gtk::manage(new Gtk::Label(e->path, true));
-    e->butPlay = Gtk::manage(new VRButton(e));
+    e->butPlay = Gtk::manage(new Gtk::Button());
     e->butOpts = Gtk::manage(new Gtk::Button());
     e->butLock = Gtk::manage(new Gtk::Button());
     e->label->set_alignment(0.5, 0.5);
@@ -139,7 +123,8 @@ void VRDemos::setButton(demoEntry* e) {
     hb->pack_end(*vb2, false, false, 5);
     vb->pack_start(*e->label, false, false, 5);
     vb->pack_end(*hb, false, false, 5);
-    e->widget->add(*vb);
+    e->widget->add(*ebox);
+    ebox->add(*vb);
     e->butPlay->add(*e->imgPlay);
     e->butOpts->add(*e->imgOpts);
     if (e->write_protected) e->butLock->add(*e->imgLock);
@@ -151,18 +136,18 @@ void VRDemos::setButton(demoEntry* e) {
     VRDevCb* fkt = new VRDevCb("GUI_addDemoEntry", boost::bind(&VRDemos::updatePixmap, this, e, e->imgScene, 100, 75) );
     VRGuiSignals::get()->getSignal("onSaveScene")->add(fkt);
 
-    e->butPlay->add_events((Gdk::EventMask)GDK_BUTTON_PRESS_MASK);
-    e->butPlay->add_events((Gdk::EventMask)GDK_BUTTON_RELEASE_MASK);
-    e->butOpts->add_events((Gdk::EventMask)GDK_BUTTON_PRESS_MASK);
-    e->butOpts->add_events((Gdk::EventMask)GDK_BUTTON_RELEASE_MASK);
-    e->butLock->add_events((Gdk::EventMask)GDK_BUTTON_PRESS_MASK);
-    e->butLock->add_events((Gdk::EventMask)GDK_BUTTON_RELEASE_MASK);
+    menu->connectWidget("DemoMenu", ebox);
+    ebox->signal_event().connect( sigc::bind<demoEntry*>( sigc::mem_fun(*this, &VRDemos::on_any_event), e) );
 
     e->butPlay->signal_clicked().connect( sigc::bind<demoEntry*>( sigc::mem_fun(*this, &VRDemos::toggleDemo), e) );
     e->butOpts->signal_clicked().connect( sigc::mem_fun(*this, &VRDemos::on_menu_advanced) );
     e->butLock->signal_clicked().connect( sigc::bind<demoEntry*>( sigc::mem_fun(*this, &VRDemos::on_lock_toggle), e) );
-    menu->connectWidget("DemoMenu", e->widget);
     e->widget->show_all();
+}
+
+bool VRDemos::on_any_event(GdkEvent* event, demoEntry* entry) {
+    if (event->type == GDK_BUTTON_PRESS) current_demo = entry;
+    return false;
 }
 
 void VRDemos::on_lock_toggle(demoEntry* e) {
@@ -314,10 +299,8 @@ void VRDemos::on_advanced_start() {
 
     if (lightweight) VRSceneLoader::get()->ingoreHeavyRessources(); // just for the next scene
 
-    if (current_demo) {
-        if (current_demo->running) toggleDemo(current_demo); // close demo if it is running
-        toggleDemo(current_demo); // start demo
-    }
+    if (current_demo->running) toggleDemo(current_demo); // close demo if it is running
+    toggleDemo(current_demo); // start demo
 
     if (no_scripts) VRSceneManager::getCurrent()->disableAllScripts();
 }

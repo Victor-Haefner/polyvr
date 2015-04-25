@@ -5,6 +5,8 @@
 #include <string>
 #include <map>
 
+#include <gdkmm/event.h>
+
 namespace Gtk {
     class Button;
     class Image;
@@ -43,12 +45,14 @@ struct demoEntry {
 class VRDemos {
     private:
         string active;
-        VRScene* demo;
+        VRScene* demo = 0;
+        VRSignal* on_scene_loaded = 0;
+        demoEntry* current_demo = 0;
         map<string, demoEntry*> demos;
         VRGuiContextMenu* menu;
 
+        bool on_any_event(GdkEvent* event, demoEntry* entry);
         Gtk::Image* loadGTKIcon(Gtk::Image* img, string path, int w, int h);
-
         void setButton(demoEntry* e);
 
         void clearTable(string t);
