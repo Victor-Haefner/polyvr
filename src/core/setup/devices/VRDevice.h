@@ -12,14 +12,12 @@ class VRSignal;
 
 class VRDevice : public VRIntersect, public VRAvatar, public VRName, public VRStorage {
     protected:
-        int sig_key;
+        int sig_key = -1;
         string message;
         string type;
-        VRTransform* target;
+        VRTransform* target = 0;
         Vec2f speed;
 
-        //map< int, map< int, VRSignal* > >* callbacks;//all callbacks
-        //map< int, map< int, VRSignal* > >::iterator itr;
         map< string, VRSignal* > callbacks;//all callbacks
         map< string, VRSignal* >::iterator itr;
 
