@@ -150,6 +150,10 @@ PyObject* VRPyBase::toPyTuple(OSG::Vec2f v) {
 
 int VRPyBase::toGLConst(PyObject* o) {
     string s = PyString_AsString(o);
+    return toGLConst(s);
+}
+
+int VRPyBase::toGLConst(string s) {
     if (s == "GL_NEVER") return GL_NEVER;
     if (s == "GL_ALWAYS") return GL_ALWAYS;
     if (s == "GL_EQUAL") return GL_EQUAL;
@@ -166,6 +170,18 @@ int VRPyBase::toGLConst(PyObject* o) {
     if (s == "GL_DECR") return GL_DECR;
     if (s == "GL_DECR_WRAP") return GL_DECR_WRAP;
     if (s == "GL_INVERT") return GL_INVERT;
+
+    if (s == "GL_QUADS") return GL_QUADS;
+    if (s == "GL_TRIANGLES") return GL_TRIANGLES;
+    if (s == "GL_LINES") return GL_LINES;
+    if (s == "GL_POINTS") return GL_POINTS;
+    if (s == "GL_TRIANGLE_STRIP") return GL_TRIANGLE_STRIP;
+    if (s == "GL_TRIANGLE_FAN") return GL_TRIANGLE_FAN;
+    if (s == "GL_LINE_STRIP") return GL_LINE_STRIP;
+    if (s == "GL_LINE_LOOP") return GL_LINE_LOOP;
+    if (s == "GL_QUAD_STRIP") return GL_QUAD_STRIP;
+    if (s == "GL_POLYGON") return GL_POLYGON;
+
     return 0;
 }
 
