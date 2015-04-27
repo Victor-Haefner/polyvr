@@ -27,6 +27,7 @@ VRObject* VRGeometry::copy(vector<VRObject*> children) {
     geo->setMesh(mesh);
     geo->setMaterial(mat);
     geo->source = source;
+    geo->setVisible(isVisible());
     geo->setPickable(isPickable());
     geo->setMatrix(getMatrix());
     return geo;

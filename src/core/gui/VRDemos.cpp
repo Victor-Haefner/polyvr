@@ -94,12 +94,14 @@ Gtk::Image* VRDemos::loadGTKIcon(Gtk::Image* img, string path, int w, int h) {
 void VRDemos::setButton(demoEntry* e) {
     Gtk::Settings::get_default()->property_gtk_button_images() = true;
 
+    string rpath = VRSceneManager::get()->getOriginalWorkdir();
+
     // prep icons
     e->imgPlay = Gtk::manage(new Gtk::Image(Gtk::Stock::MEDIA_PLAY, Gtk::ICON_SIZE_BUTTON));
-    e->imgOpts = loadGTKIcon(0, "ressources/gui/opts20.png", 20, 20);
-    e->imgScene = loadGTKIcon(0, "ressources/gui/default_scene.png", 100, 75);
-    e->imgLock = loadGTKIcon(0, "ressources/gui/lock20.png", 20, 20);
-    e->imgUnlock = loadGTKIcon(0, "ressources/gui/unlock20.png", 20, 20);
+    e->imgOpts = loadGTKIcon(0, rpath+"/ressources/gui/opts20.png", 20, 20);
+    e->imgScene = loadGTKIcon(0, rpath+"/ressources/gui/default_scene.png", 100, 75);
+    e->imgLock = loadGTKIcon(0, rpath+"/ressources/gui/lock20.png", 20, 20);
+    e->imgUnlock = loadGTKIcon(0, rpath+"/ressources/gui/unlock20.png", 20, 20);
 
     // prep other widgets
     e->widget = Gtk::manage(new Gtk::Frame());

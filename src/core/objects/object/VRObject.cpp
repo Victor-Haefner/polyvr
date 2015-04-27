@@ -24,6 +24,9 @@ void VRObject::printInformation() {;}
 VRObject* VRObject::copy(vector<VRObject*> children) {
     VRObject* o = new VRObject(getBaseName());
     if (specialized) o->setCore(getCore(), getType());
+    cout << "VRObject::copy " << visible << endl;
+    o->setVisible(visible);
+    o->setPickable(pickable);
     return o;
 }
 

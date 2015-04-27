@@ -3,7 +3,7 @@
   <Objects>
     <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
       <Object name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
-        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="2.43891 1.19921 -1.69966" at="0.0982124 0.322221 -0.00898802" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
+        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="3.86321 0.797429 -3.13323" at="0.0982124 0.322221 -0.00898802" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
           <Object name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" light="Headlight"/>
         </Object>
       </Object>
@@ -38,7 +38,7 @@
 	j1.setPrimitive('Sphere 0.11 1')
 	j2.setPrimitive('Sphere 0.12 1')
 	z1.translate(0,1.1,0)
-	s.translate(0,-0.9,0)
+	s.translate(0,-1,0)
 	j1.translate(0,0.55,0)
 	j2.translate(0,-0.6,0)
 	s.setPickable(True)
@@ -81,38 +81,9 @@
 	c.free([3,4,5])
 	c.setLocalOffset(0,0.35,0,0,0,0)
 	j2.attach(s, c, cs)
-	
-	j2.applyImpulse(0,0,10) #no effekt??
 </core>
       <arg type="VRPyObjectType" value="Headlight" name_suffix="0" base_name="root" name_space="Init"/>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
-    </Script>
-    <Script name_suffix="0" base_name="mobile_nav" name_space="__script__" type="Python" mobile="">
-      <core>
-	if not dev:
-		return
-		
-	k = dev.getKey()
-	s = dev.getKeyState(k)
-	if (s == 0) :
-		return
-	
-	c = dev.getTarget()
-	
-	if (k == 0) :
-		c.move(0.1)
-	if (k == 1) :
-		c.move(-0.1)
-	if (k == 2) :
-		c.rotate(0,1,0,0.1)
-	if (k == 3) :
-		c.rotate(0,1,0,-0.1)
-</core>
-      <trig type="on_device" dev="mobile" state="Pressed" param="" key="0" name_suffix="3" base_name="trigger" name_space="__global__"/>
-      <trig type="on_device" dev="mobile" state="Pressed" param="" key="1" name_suffix="4" base_name="trigger" name_space="__global__"/>
-      <trig type="on_device" dev="mobile" state="Pressed" param="" key="2" name_suffix="5" base_name="trigger" name_space="__global__"/>
-      <trig type="on_device" dev="mobile" state="Pressed" param="" key="3" name_suffix="6" base_name="trigger" name_space="__global__"/>
-      <trig type="on_timeout" dev="" state="Pressed" param="50" key="0" name_suffix="7" base_name="trigger" name_space="__global__"/>
     </Script>
   </Scripts>
   <Sockets/>

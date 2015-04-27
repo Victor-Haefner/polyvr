@@ -23,6 +23,8 @@ VRObject* VRTransform::copy(vector<VRObject*> children) {
     VRTransform* geo = new VRTransform(getBaseName());
     geo->setPickable(isPickable());
     geo->setMatrix(getMatrix());
+    geo->setVisible(isVisible());
+    geo->setPickable(isPickable());
     return geo;
 }
 

@@ -277,6 +277,7 @@ void CaveKeeper::place(VRDevice* dev, string obj, VRTransform* geo) {
         if (obj == "lantern") placeLight(p);
 
         geo = (VRTransform*)geo->duplicate(true);
+        geo->setVisible(true);
         geo->setFrom(p);
         geo->setAt(e->pos);
         geo->addAttachment("dynamicaly_generated", 0);
