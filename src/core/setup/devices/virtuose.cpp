@@ -130,11 +130,18 @@ Matrix virtuose::getPose()
 }
 
 
+void virtuose::setBase(VRTransform* tBase) {
+    base = tBase;
+}
 
 
 void virtuose::attachTransform(VRTransform* trans)
 {
     if(vc == 0) return;
+    if(base == 0) {
+        cout << "attachTransform : Error: no base frame representation defined (do setBase() first).";
+        return;
+    }
     isAttached = true;
     attached = trans;
     VRPhysics* o = trans->getPhysics();
@@ -146,8 +153,13 @@ void virtuose::attachTransform(VRTransform* trans)
 
 }
 
-void virtuose::fillPosition(VRPhysics* p, float *to)
+void virtuose::fillPosition(VRPhysics* p, float *to, VRPhysics* origin)
 {
+    //no origin->take zero as origin
+
+    if (origin != 0) {
+
+    }
 
     btTransform pos = p->getTransform();
     to[0] =  pos.getOrigin().getZ();
@@ -211,10 +223,6 @@ OSG::Vec3i virtuose::getButtonStates()
 void virtuose::updateVirtMechPre() {
 
 	if(vc == 0) return;
-	// calc time delta in seconds
-	float timeNow = glutGet(GLUT_ELAPSED_TIME);
-	//float dt = (timeNow - timeLastFrame);
-	timeLastFrame = timeNow;
 
 	float position[7] = {0.0,0.0,0.0,0.0,0.0,0.0,1.0};
 	float speed[6] = {0.0,0.0,0.0,0.0,0.0,0.0};
@@ -230,7 +238,7 @@ void virtuose::updateVirtMechPre() {
 			virtSetSpeed(vc, speed);
 		} else {
                 //apply position&speed to the haptic
-                fillPosition(this->attached->getPhysics(),position);
+                fillPosition(this->attached->getPhysics(),position,0);
                 //"diff"
                 float tmpPos[7];
                 CHECK(virtGetPosition(vc, tmpPos));

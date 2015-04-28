@@ -4,8 +4,12 @@
 #include "core/utils/VRFunction.h"
 #include "core/scene/VRSceneManager.h"
 #include <boost/bind.hpp>
+#include "core/utils/VRProfiler.h"
+#include <time.h>
 
 
+#define FPS_WATCHDOG_TOLERANCE_CLOCKDELTA 5000
+#define FPS_WATCHDOG_TOLERANCE_FPSCHANGE 1000
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -26,24 +30,68 @@ VRHaptic::VRHaptic() : VRDevice("haptic") {
 }
 
 VRHaptic::~VRHaptic() {
+    VRSceneManager::get()->dropUpdateFkt(timestepWatchdog);
     VRSceneManager::get()->dropUpdateFkt(updateFktPre);
     VRSceneManager::get()->dropUpdateFkt(updateFktPost);
     v->disconnect();
 }
 
 void VRHaptic::on_scene_changed(VRDevice* dev) {
+    v->setBase(0);
+    v->detachTransform();
+
+    timestepWatchdog = new VRFunction<int>( "Haptic Timestep Watchdog", boost::bind(&VRHaptic::updateHapticTimestep, this, getBeacon()) );
     updateFktPre = new VRFunction<int>( "Haptic pre update", boost::bind(&VRHaptic::updateHapticPre, this, getBeacon()) );
     updateFktPost = new VRFunction<int>( "Haptic post update", boost::bind(&VRHaptic::updateHapticPost, this, getBeacon()) );
+    VRSceneManager::getCurrent()->dropUpdateFkt(timestepWatchdog);
     VRSceneManager::getCurrent()->dropUpdateFkt(updateFktPre);
     VRSceneManager::getCurrent()->dropUpdateFkt(updateFktPost);
+    VRSceneManager::getCurrent()->addPhysicsUpdateFunction(timestepWatchdog,false);
     VRSceneManager::getCurrent()->addPhysicsUpdateFunction(updateFktPre,false);
     VRSceneManager::getCurrent()->addPhysicsUpdateFunction(updateFktPost,true);
+
 
 }
 
 void VRHaptic::applyTransformation(VRTransform* t) { // TODO: rotation
     if (!v->connected()) return;
     t->setMatrix(v->getPose());
+}
+
+void VRHaptic::updateHapticTimestep(VRTransform* t) {
+    list<VRProfiler::Frame> frames = VRProfiler::get()->getFrames();
+    VRProfiler::get()->setActive(true);
+
+    if(frames.size() > 4) {
+        //oldest timestep delta
+        VRProfiler::Frame tmpOlder = frames.back();
+        frames.pop_back();
+        VRProfiler::Frame tmpNewer = frames.back();
+        int dOld = tmpNewer.t0 - tmpOlder.t0;
+
+        //newest timestep delta
+        tmpNewer = frames.front();
+        frames.pop_front();
+        tmpOlder = frames.front();
+        int dNew = tmpNewer.t0 - tmpOlder.t0;
+        int diff = dOld - dNew;
+        //if it keeps going down/up
+        if(abs(diff) > FPS_WATCHDOG_TOLERANCE_CLOCKDELTA) {
+            //store in fps_change
+            diff < 0 ? fps_change-- : fps_change++;
+            cout << fps_change << "\n";
+
+        }
+        //if it stopped and the overall drop/increase is big enough
+        else {
+            if(abs(fps_change) > FPS_WATCHDOG_TOLERANCE_FPSCHANGE) {
+                    cout << VRGlobals::get()->PHYSICS_FRAME_RATE << "\n";
+            }
+            fps_change = 0;
+
+        }
+
+    }
 }
 
 void VRHaptic::updateHapticPre(VRTransform* t) { // TODO: rotation
@@ -64,6 +112,7 @@ void VRHaptic::setForce(Vec3f force, Vec3f torque) { v->applyForce(force, torque
 Vec3f VRHaptic::getForce() {return v->getForce(); }
 void VRHaptic::setSimulationScales(float scale, float forces) { v->setSimulationScales(scale, forces); }
 void VRHaptic::attachTransform(VRTransform* trans) {v->attachTransform(trans);}
+void VRHaptic::setBase(VRTransform* trans) {v->setBase(trans);}
 void VRHaptic::detachTransform() {v->detachTransform();}
 void VRHaptic::updateVirtMechPre() {
     v->updateVirtMechPre();

@@ -16,15 +16,22 @@ class VRHaptic : public VRDevice {
         virtuose* v;
         string IP;
         string type;
+        VRFunction<int>* timestepWatchdog;
         VRFunction<int>* updateFktPre;
         VRFunction<int>* updateFktPost;
         Vec3i button_states;
+
+        /**gets negative when fps drops**/
+        int fps_change = 0;
+
 
         void on_scene_changed(VRDevice* dev);
 
         void applyTransformation(VRTransform* t);
         void updateHapticPre(VRTransform* t);
         void updateHapticPost(VRTransform* t);
+        /** restarts Haptic, if necessary (fps drop/gain) **/
+        void updateHapticTimestep(VRTransform* t);
 
     public:
         VRHaptic();
@@ -34,6 +41,7 @@ class VRHaptic : public VRDevice {
         Vec3f getForce();
         void setSimulationScales(float scale, float forces);
         void attachTransform(VRTransform* trans);
+        void setBase(VRTransform* trans);
         void detachTransform();
         void updateVirtMechPre();
         void updateVirtMechPost();

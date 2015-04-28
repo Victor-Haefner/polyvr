@@ -55,9 +55,10 @@ list<VRProfiler::Frame> VRProfiler::getFrames() {
 }
 
 VRProfiler::Frame VRProfiler::getFrame(int f) {
+    boost::mutex::scoped_lock lock(mutex);
     int i=0;
     for (auto fr : frames) {
-        if (i == f) return fr;
+        if (i == f) return (Frame)fr;
         i++;
     }
 }

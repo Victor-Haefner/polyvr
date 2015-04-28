@@ -57,6 +57,7 @@ PyMethodDef VRPyHaptic::methods[] = {
     {"attachTransform", (PyCFunction)VRPyHaptic::attachTransform, METH_VARARGS, "attaches given Transform to the virtuose (Command-Mode has to be COMMAND_MODE_VIRTMECH) Gravity for this transform should be set to zero,"},
     {"detachTransform", (PyCFunction)VRPyHaptic::detachTransform, METH_NOARGS, "detach previously attached transform" },
     {"getButtonStates",(PyCFunction)VRPyHaptic::getButtonStates, METH_NOARGS,"return a 3-Tuple with the states of virtuose's three buttons. e.g. (0,0,1) means the 3rd button is active, the others not"},
+    {"setBase",(PyCFunction)VRPyHaptic::setBase, METH_VARARGS,"sets the given transform to the representation of the haptic's base"},
     {NULL}  /* Sentinel */
 };
 
@@ -91,10 +92,17 @@ PyObject* VRPyHaptic::getForce(VRPyHaptic* self) {
 }
 
 PyObject* VRPyHaptic::attachTransform(VRPyHaptic* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyHaptic::updateHapticToObject - Object is invalid"); return NULL; }
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyHaptic::attachTransform - Object is invalid"); return NULL; }
     VRPyTransform* tr;
     if (! PyArg_ParseTuple(args, "O", &tr)) return NULL;
     self->obj->attachTransform(tr->obj);
+    Py_RETURN_TRUE;
+}
+PyObject* VRPyHaptic::setBase(VRPyHaptic* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyHaptic::setBase - Object is invalid"); return NULL; }
+    VRPyTransform* tr;
+    if (! PyArg_ParseTuple(args, "O", &tr)) return NULL;
+    self->obj->setBase(tr->obj);
     Py_RETURN_TRUE;
 }
 
