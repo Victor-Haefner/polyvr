@@ -8,8 +8,8 @@
 #include <time.h>
 
 
-#define FPS_WATCHDOG_TOLERANCE_CLOCKDELTA 5000
-#define FPS_WATCHDOG_TOLERANCE_FPSCHANGE 1000
+#define FPS_WATCHDOG_TOLERANCE_EPSILON 0.3
+#define FPS_WATCHDOG_COOLDOWNFRAMES 1000
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -60,38 +60,50 @@ void VRHaptic::applyTransformation(VRTransform* t) { // TODO: rotation
 
 void VRHaptic::updateHapticTimestep(VRTransform* t) {
     list<VRProfiler::Frame> frames = VRProfiler::get()->getFrames();
-    VRProfiler::get()->setActive(true);
 
-    if(frames.size() > 4) {
-        //oldest timestep delta
-        VRProfiler::Frame tmpOlder = frames.back();
-        frames.pop_back();
-        VRProfiler::Frame tmpNewer = frames.back();
-        int dOld = tmpNewer.t0 - tmpOlder.t0;
-
-        //newest timestep delta
-        tmpNewer = frames.front();
-        frames.pop_front();
-        tmpOlder = frames.front();
-        int dNew = tmpNewer.t0 - tmpOlder.t0;
-        int diff = dOld - dNew;
-        //if it keeps going down/up
-        if(abs(diff) > FPS_WATCHDOG_TOLERANCE_CLOCKDELTA) {
-            //store in fps_change
-            diff < 0 ? fps_change-- : fps_change++;
-            cout << fps_change << "\n";
-
-        }
-        //if it stopped and the overall drop/increase is big enough
-        else {
-            if(abs(fps_change) > FPS_WATCHDOG_TOLERANCE_FPSCHANGE) {
-                    cout << VRGlobals::get()->PHYSICS_FRAME_RATE << "\n";
+        VRProfiler::Frame tmpOlder;
+        VRProfiler::Frame tmpNewer;
+        int listSize = frames.size();
+        double av = 0.;
+        //average time delta ratio    = O(listsize)
+        for(int i = 0 ; i < (listSize - 1);i++) {
+            tmpOlder = frames.back();
+            frames.pop_back();
+            //there are frames left in history
+            if(frames.size() > 0) {
+                tmpNewer = frames.back();
+                //timestamp older frame divided by timestamp newer frame
+                av +=  ((double)tmpOlder.t0 / (double)tmpNewer.t0);
             }
-            fps_change = 0;
-
+            //tmpOlder is the newest frame
+            else {
+                av += 1.;
+                break;
+            }
         }
+        //average
+        av /= (double)listSize;
+        frames.clear();
 
-    }
+        //fps keeps changing (absolute ratio is greater than 1+epsilon
+        if(abs(av - 1.) > FPS_WATCHDOG_TOLERANCE_EPSILON) {
+            fps_change++;
+            fps_stable = 0;
+            //turn off force feedback
+        }
+        //fps doesn't change
+        else {
+            //fps marked as recently unstable -> cooldown
+            fps_change-= fps_stable == 0 ? 1 : 0;
+            //cooldown up to -FPS_WATCHDOG_COOLDOWNFRAMES
+            if(fps_change < -FPS_WATCHDOG_COOLDOWNFRAMES) {
+                //fps now stable
+                fps_change = 0;
+                fps_stable = 1;
+                cout << "reconnect haptic" << VRGlobals::get()->PHYSICS_FRAME_RATE << "\n";
+                //reconnect haptic
+            }
+        }
 }
 
 void VRHaptic::updateHapticPre(VRTransform* t) { // TODO: rotation

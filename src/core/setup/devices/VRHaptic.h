@@ -21,8 +21,10 @@ class VRHaptic : public VRDevice {
         VRFunction<int>* updateFktPost;
         Vec3i button_states;
 
-        /**gets negative when fps drops**/
+        /**gets positive when fps changes, negative w**/
         int fps_change = 0;
+        /** fps stable flag. 1=stable, 0=not stable**/
+        int fps_stable = 1;
 
 
         void on_scene_changed(VRDevice* dev);
