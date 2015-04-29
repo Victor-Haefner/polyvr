@@ -51,8 +51,8 @@ OSG::Line VRPyBase::PyToLine(PyObject *li) {
     if (li == 0) return OSG::Line();
     vector<PyObject*> lis = pyListToVector(li);
     if (lis.size() != 6) return OSG::Line();
-    int r[6];
-    for (int i=0; i<6; i++) r[i] = PyInt_AsLong(lis[i]);
+    float r[6];
+    for (int i=0; i<6; i++) r[i] = PyFloat_AsDouble(lis[i]);
     return OSG::Line(OSG::Pnt3f(r[3],r[4],r[5]), OSG::Vec3f(r[0],r[1],r[2]));
 }
 

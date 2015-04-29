@@ -36,7 +36,7 @@ struct VRSnappingEngine::Rule {
         if (csys) C = csys->getWorldMatrix();
 
         Vec3f p2; // get point to snap to
-        if (translation == POINT) p2 = prim_t.getDirection();
+        if (translation == POINT) p2 = Vec3f(prim_t.getPosition());
         if (translation == LINE) p2 = prim_t.getClosestPoint(p).subZero(); // project on line
         if (translation == PLANE) {
             Plane pl(prim_t.getDirection(), prim_t.getPosition());
@@ -98,12 +98,8 @@ void VRSnappingEngine::remRule(int i) {
 }
 
 void VRSnappingEngine::addObjectAnchor(VRTransform* obj, VRTransform* a) {
-    addObjectAnchor(obj, a->getMatrix());
-}
-
-void VRSnappingEngine::addObjectAnchor(VRTransform* obj, const Matrix& m) {
-    if (anchors.count(obj) == 0) anchors[obj] = vector<Matrix>();
-    anchors[obj].push_back(m);
+    if (anchors.count(obj) == 0) anchors[obj] = vector<VRTransform*>();
+    anchors[obj].push_back(a);
 }
 
 void VRSnappingEngine::clearObjectAnchors(VRTransform* obj) {
@@ -143,23 +139,21 @@ void VRSnappingEngine::update() {
         cout << "snap obj " << obj->getName() << endl;
         for (auto ri : rules) {
             Rule* r = ri.second;
-            if (r->csys) cout << " local rule in " << r->csys->getName() << endl;
+            if (r->csys == obj) continue;
 
             if (anchors.count(obj)) {
-                cout << "  obj has anchors " << endl;
                 for (auto a : anchors[obj]) {
-                    Matrix b = a;
-                    b.multLeft(m);
-                    Vec3f pa = Vec3f(b[3]);
+                    Matrix maL = a->getMatrix();
+                    Matrix maW = m; maW.mult(maL);
+                    Vec3f pa = Vec3f(maW[3]);
                     Vec3f p2 = r->getSnapPoint(pa);
-                    float D = (p2-p).length(); // check distance
-                    cout << "   anchor " << pa << " dist " << D << " is range " << r->inRange(D) << endl;
+                    float D = (p2-pa).length(); // check distance
                     if (!r->inRange(D)) continue;
 
                     Matrix am;
                     r->snapOrientation(am, p2);
-                    a.invert();
-                    am.mult(a);
+                    maL.invert();
+                    am.mult(maL);
                     m = am;
                     break;
                 }
