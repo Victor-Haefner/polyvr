@@ -33,7 +33,11 @@ struct VRSnappingEngine::Rule {
     }
 
     Vec3f getSnapPoint(Vec3f p) {
-        if (csys) C = csys->getWorldMatrix();
+        if (csys) {
+            C = csys->getWorldMatrix();
+            C.invert();
+            C.mult(p,p);
+        }
 
         Vec3f p2; // get point to snap to
         if (translation == POINT) p2 = Vec3f(prim_t.getPosition());
@@ -47,8 +51,10 @@ struct VRSnappingEngine::Rule {
     }
 
     void snapOrientation(Matrix& m, Pnt3f p) {
+        if (csys) C = csys->getWorldMatrix();
+
         if (orientation == POINT) {
-            MatrixLookAt(m, p, prim_o.getPosition(), prim_o.getDirection());
+            MatrixLookAt(m, p, p+Vec3f(prim_o.getPosition()), prim_o.getDirection());
             m.multLeft(C);
         }
     }
@@ -132,11 +138,11 @@ void VRSnappingEngine::update() {
         VRTransform* obj = dev.second->getDraggedObject();
         VRTransform* gobj = dev.second->getDraggedGhost();
         if (obj == 0 || gobj == 0) continue;
+        if (objects.count(obj) == 0) continue;
 
         Matrix m = gobj->getWorldMatrix();
         Vec3f p = Vec3f(m[3]);
 
-        cout << "snap obj " << obj->getName() << endl;
         for (auto ri : rules) {
             Rule* r = ri.second;
             if (r->csys == obj) continue;
@@ -148,6 +154,7 @@ void VRSnappingEngine::update() {
                     Vec3f pa = Vec3f(maW[3]);
                     Vec3f p2 = r->getSnapPoint(pa);
                     float D = (p2-pa).length(); // check distance
+                    //cout << "dist " << D << endl;
                     if (!r->inRange(D)) continue;
 
                     Matrix am;

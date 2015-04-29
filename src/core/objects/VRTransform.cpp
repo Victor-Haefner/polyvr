@@ -295,6 +295,22 @@ void VRTransform::setWorldPosition(Vec3f pos) {
     reg_change();
 }
 
+/** Set the world position of the object **/
+void VRTransform::setWorldOrientation(Vec3f dir, Vec3f up) {
+    if (isNan(dir)) return;
+
+    Matrix m;
+    MatrixLookAt(m, Vec3f(), dir, up);
+
+    Matrix wm = getWorldMatrix(true);
+    wm.invert();
+    wm.mult(m);
+    wm.setTranslate(_from);
+    setMatrix(wm);
+
+    reg_change();
+}
+
 doubleBuffer* VRTransform::getBuffer() { return dm; }
 
 //local pose setter--------------------

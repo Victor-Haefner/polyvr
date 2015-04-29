@@ -64,6 +64,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"getUp", (PyCFunction)VRPyTransform::getUp, METH_NOARGS, "Return the object's up vector" },
     {"getScale", (PyCFunction)VRPyTransform::getScale, METH_NOARGS, "Return the object's scale vector" },
     {"setWorldFrom", (PyCFunction)VRPyTransform::setWFrom, METH_VARARGS, "Set the object's world position" },
+    {"setWorldOrientation", (PyCFunction)VRPyTransform::setWOrientation, METH_VARARGS, "Set the object's world direction" },
     {"setPose", (PyCFunction)VRPyTransform::setPose, METH_VARARGS, "Set the object's from dir && up vector" },
     {"setPosition", (PyCFunction)VRPyTransform::setFrom, METH_VARARGS, "Set the object's from vector" },
     {"setFrom", (PyCFunction)VRPyTransform::setFrom, METH_VARARGS, "Set the object's from vector" },
@@ -226,6 +227,14 @@ PyObject* VRPyTransform::setWFrom(VRPyTransform* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setWFrom, Object is invalid"); return NULL; }
     OSG::Vec3f v = parseVec3f(args);
     self->obj->setWorldPosition(v);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyTransform::setWOrientation(VRPyTransform* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setWDir, Object is invalid"); return NULL; }
+    PyObject *d, *u;
+    if (! PyArg_ParseTuple(args, "OO", &d, &u)) return NULL;
+    self->obj->setWorldOrientation(parseVec3fList(d), parseVec3fList(u));
     Py_RETURN_TRUE;
 }
 

@@ -110,6 +110,7 @@ class VRTransform : public VRObject {
 
         void setWorldMatrix(Matrix _m);
         void setWorldPosition(Vec3f pos);
+        void setWorldOrientation(Vec3f dir, Vec3f up);
 
         bool get_orientation_mode();
         void set_orientation_mode(bool b);
