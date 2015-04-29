@@ -46,7 +46,7 @@ class virtuose {
         ~virtuose();
 
         bool connected();
-        void connect(string IP);
+        void connect(string IP,float timestep = 0.002f);
         void disconnect();
 
         void setSimulationScales(float translation, float forces);
@@ -77,6 +77,8 @@ class virtuose {
         void updateVirtMechPost();
         /** 1 means button pressed, 0 means released**/
         Vec3i getButtonStates();
+
+        void enableForceFeedback(bool enable);
 };
 
 OSG_END_NAMESPACE;

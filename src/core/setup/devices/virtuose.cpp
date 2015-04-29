@@ -46,8 +46,9 @@ virtuose::virtuose() {
 
 virtuose::~virtuose() { disconnect(); }
 bool virtuose::connected() { return (vc != 0); }
+void virtuose::enableForceFeedback(bool enable) {if(vc != 0)CHECK(virtEnableForceFeedback(vc,(enable==true ? 1 : 0)));}
 
-void virtuose::connect(string IP) {
+void virtuose::connect(string IP,float pTimeStep) {
     disconnect();
     VRPing ping;
     //ping.start(IP, port); // TODO: test it with right port
@@ -59,7 +60,7 @@ void virtuose::connect(string IP) {
 
     CHECK( virtSetIndexingMode(vc, INDEXING_ALL_FORCE_FEEDBACK_INHIBITION) );
     setSimulationScales(1.0f,1.0f);
-    timestep = 0.002f;
+    timestep = pTimeStep;
     CHECK( virtSetTimeStep(vc, timestep) );
     CHECK( virtSetBaseFrame(vc, identity) );
     CHECK( virtSetObservationFrame(vc, identity) );

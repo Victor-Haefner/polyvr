@@ -90,6 +90,7 @@ void VRHaptic::updateHapticTimestep(VRTransform* t) {
             fps_change++;
             fps_stable = 0;
             //turn off force feedback
+            v->enableForceFeedback(false);
         }
         //fps doesn't change
         else {
@@ -102,6 +103,9 @@ void VRHaptic::updateHapticTimestep(VRTransform* t) {
                 fps_stable = 1;
                 cout << "reconnect haptic" << VRGlobals::get()->PHYSICS_FRAME_RATE << "\n";
                 //reconnect haptic
+                v->enableForceFeedback(true);
+                v->disconnect();
+                v->connect(getIP(), (1.0f/(float)VRGlobals::get()->PHYSICS_FRAME_RATE));
             }
         }
 }
@@ -147,7 +151,7 @@ Vec3i VRHaptic::getButtonStates() {return (v->getButtonStates());}
 
 
 
-void VRHaptic::setIP(string IP) { this->IP = IP; v->connect(IP); }
+void VRHaptic::setIP(string IP) { this->IP = IP; v->connect(IP,(1.0f/(float)VRGlobals::get()->PHYSICS_FRAME_RATE)); }
 string VRHaptic::getIP() { return IP; }
 
 void VRHaptic::setType(string type) { this->type = type; } // TODO: use type for configuration
