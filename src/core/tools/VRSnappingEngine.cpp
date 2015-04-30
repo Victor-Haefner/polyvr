@@ -18,6 +18,7 @@ struct VRSnappingEngine::Rule {
     Type translation = NONE;
     Type orientation = NONE;
     Line prim_t, prim_o;
+    Vec3f snapP;
 
     VRTransform* csys = 0;
     float distance = 1;
@@ -32,29 +33,33 @@ struct VRSnappingEngine::Rule {
         ID = i++;
     }
 
-    Vec3f getSnapPoint(Vec3f p) {
+    Vec3f local(Vec3f p) {
         if (csys) {
             C = csys->getWorldMatrix();
             C.invert();
-            C.mult(p,p);
-        }
-
-        Vec3f p2; // get point to snap to
-        if (translation == POINT) p2 = Vec3f(prim_t.getPosition());
-        if (translation == LINE) p2 = prim_t.getClosestPoint(p).subZero(); // project on line
-        if (translation == PLANE) {
-            Plane pl(prim_t.getDirection(), prim_t.getPosition());
-            float d = pl.distance(p); // project on plane
-            p2 = p + d*pl.getNormal();
-        }
-        return p2;
+            Pnt3f pL;
+            C.mult(p,pL);
+            return Vec3f(pL);
+        } else return p;
     }
 
-    void snapOrientation(Matrix& m, Pnt3f p) {
+    Vec3f getSnapPoint(Vec3f p) {
+        if (translation == POINT) snapP = Vec3f(prim_t.getPosition());
+        if (translation == LINE) snapP = prim_t.getClosestPoint(local(p)).subZero(); // project on line
+        if (translation == PLANE) {
+            Plane pl(prim_t.getDirection(), prim_t.getPosition());
+            p = local(p);
+            float d = pl.distance(p); // project on plane
+            snapP = p + d*pl.getNormal();
+        }
+        return snapP;
+    }
+
+    void snap(Matrix& m) {
         if (csys) C = csys->getWorldMatrix();
 
         if (orientation == POINT) {
-            MatrixLookAt(m, p, p+Vec3f(prim_o.getPosition()), prim_o.getDirection());
+            MatrixLookAt(m, snapP, snapP+Vec3f(prim_o.getPosition()), prim_o.getDirection());
             m.multLeft(C);
         }
     }
@@ -152,23 +157,22 @@ void VRSnappingEngine::update() {
                     Matrix maL = a->getMatrix();
                     Matrix maW = m; maW.mult(maL);
                     Vec3f pa = Vec3f(maW[3]);
-                    Vec3f p2 = r->getSnapPoint(pa);
-                    float D = (p2-pa).length(); // check distance
-                    //cout << "dist " << D << endl;
+                    Vec3f paL = r->local( Vec3f(maW[3]) );
+                    Vec3f psnap = r->getSnapPoint(pa);
+                    float D = (psnap-paL).length(); // check distance
+                    //cout << "dist " << D << " " << pa[1] << " " << paL[1] << " " << psnap[1] << endl;
                     if (!r->inRange(D)) continue;
 
-                    Matrix am;
-                    r->snapOrientation(am, p2);
+                    r->snap(m);
                     maL.invert();
-                    am.mult(maL);
-                    m = am;
+                    m.mult(maL);
                     break;
                 }
             } else {
                 Vec3f p2 = r->getSnapPoint(p);
                 float D = (p2-p).length(); // check distance
                 if (!r->inRange(D)) continue;
-                r->snapOrientation(m, p2);
+                r->snap(m);
             }
         }
 
