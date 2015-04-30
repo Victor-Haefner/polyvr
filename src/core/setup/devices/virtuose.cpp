@@ -46,7 +46,7 @@ virtuose::virtuose() {
 
 virtuose::~virtuose() { disconnect(); }
 bool virtuose::connected() { return (vc != 0); }
-void virtuose::enableForceFeedback(bool enable) {if(vc != 0)CHECK(virtEnableForceFeedback(vc,(enable==true ? 1 : 0)));}
+void virtuose::enableForceFeedback(bool enable) {if(vc==0)return; int i = (enable==true ? 1 : 0);CHECK(virtEnableForceFeedback(vc,i));}
 
 void virtuose::connect(string IP,float pTimeStep) {
     disconnect();
@@ -69,6 +69,7 @@ void virtuose::connect(string IP,float pTimeStep) {
     commandType = COMMAND_TYPE_VIRTMECH;
     CHECK( virtSetDebugFlags(vc, DEBUG_SERVO|DEBUG_LOOP) );
 
+    enableForceFeedback(true);
     //float baseFrame[7] = { 0.0f, 0.0f, 0.0f, 0.70710678f, 0.0f, 0.70710678f, 0.0f };
     //virtActiveSpeedControl(vc, 0.04f, 10.0f);
 
@@ -84,11 +85,9 @@ void virtuose::disconnect()
         CHECK( virtDetachVO(vc) );
         //CHECK( virtStopLoop(vc) );
         CHECK( virtClose(vc) );
+
         vc = 0;
         isAttached = false;
-        CHECK( virtSetCommandType(vc, COMMAND_TYPE_IMPEDANCE) );
-        commandType = COMMAND_TYPE_IMPEDANCE;
-
     }
 }
 

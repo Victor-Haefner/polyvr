@@ -37,8 +37,10 @@ VRHaptic::~VRHaptic() {
 }
 
 void VRHaptic::on_scene_changed(VRDevice* dev) {
-    v->setBase(0);
-    v->detachTransform();
+    //disconnect
+    //v->setBase(0);
+    //v->detachTransform();
+    //v->disconnect();
 
     timestepWatchdog = new VRFunction<int>( "Haptic Timestep Watchdog", boost::bind(&VRHaptic::updateHapticTimestep, this, getBeacon()) );
     updateFktPre = new VRFunction<int>( "Haptic pre update", boost::bind(&VRHaptic::updateHapticPre, this, getBeacon()) );
@@ -46,10 +48,12 @@ void VRHaptic::on_scene_changed(VRDevice* dev) {
     VRSceneManager::getCurrent()->dropUpdateFkt(timestepWatchdog);
     VRSceneManager::getCurrent()->dropUpdateFkt(updateFktPre);
     VRSceneManager::getCurrent()->dropUpdateFkt(updateFktPost);
-    VRSceneManager::getCurrent()->addPhysicsUpdateFunction(timestepWatchdog,false);
+    VRSceneManager::getCurrent()->addUpdateFkt(timestepWatchdog,false);
     VRSceneManager::getCurrent()->addPhysicsUpdateFunction(updateFktPre,false);
     VRSceneManager::getCurrent()->addPhysicsUpdateFunction(updateFktPost,true);
 
+    //reconnect
+    setIP("172.22.151.200");
 
 }
 
@@ -64,7 +68,7 @@ void VRHaptic::updateHapticTimestep(VRTransform* t) {
         VRProfiler::Frame tmpOlder;
         VRProfiler::Frame tmpNewer;
         int listSize = frames.size();
-        double av = 0.;
+        double av = 1.;
         //average time delta ratio    = O(listsize)
         for(int i = 0 ; i < (listSize - 1);i++) {
             tmpOlder = frames.back();
@@ -77,7 +81,6 @@ void VRHaptic::updateHapticTimestep(VRTransform* t) {
             }
             //tmpOlder is the newest frame
             else {
-                av += 1.;
                 break;
             }
         }
@@ -89,8 +92,6 @@ void VRHaptic::updateHapticTimestep(VRTransform* t) {
         if(abs(av - 1.) > FPS_WATCHDOG_TOLERANCE_EPSILON) {
             fps_change++;
             fps_stable = 0;
-            //turn off force feedback
-            v->enableForceFeedback(false);
         }
         //fps doesn't change
         else {
@@ -103,7 +104,6 @@ void VRHaptic::updateHapticTimestep(VRTransform* t) {
                 fps_stable = 1;
                 cout << "reconnect haptic" << VRGlobals::get()->PHYSICS_FRAME_RATE << "\n";
                 //reconnect haptic
-                v->enableForceFeedback(true);
                 v->disconnect();
                 v->connect(getIP(), (1.0f/(float)VRGlobals::get()->PHYSICS_FRAME_RATE));
             }
@@ -111,10 +111,6 @@ void VRHaptic::updateHapticTimestep(VRTransform* t) {
 }
 
 void VRHaptic::updateHapticPre(VRTransform* t) { // TODO: rotation
-    //need a recalibration (timestep reset) ?
-    //float tempTimeStep = (1.0f/2.0f);
-    //cout << "updateHapticPre: timestep: " << tempTimeStep << "\n";
-    //if(timestep < tempTimeStep)
     //COMMAND_MODE_VIRTMECH
     updateVirtMechPre();
 }
@@ -151,7 +147,7 @@ Vec3i VRHaptic::getButtonStates() {return (v->getButtonStates());}
 
 
 
-void VRHaptic::setIP(string IP) { this->IP = IP; v->connect(IP,(1.0f/(float)VRGlobals::get()->PHYSICS_FRAME_RATE)); }
+void VRHaptic::setIP(string IP) { this->IP = IP; v->connect(IP,0.002f);}
 string VRHaptic::getIP() { return IP; }
 
 void VRHaptic::setType(string type) { this->type = type; } // TODO: use type for configuration
