@@ -3,7 +3,7 @@
   <Objects>
     <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
       <Object name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
-        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="-2.892 -1.9721 3.02897" at="-1.18501 2.45019 1.75543" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
+        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="7.27858 -2.16597 -1.7453" at="-2.39287 -1.79638 3.18514" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
           <Object name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
         </Object>
       </Object>
@@ -28,7 +28,7 @@
 		 &lt;script&gt;
 			function get(b,s,m) {
 				var xmlHttp = new XMLHttpRequest();
-				var uri = document.URL+'?button='+b+'&amp;state='+s;
+				var uri = document.URL+'?button='+b+'&amp;state='+s+'&amp;message='+m;
 				xmlHttp.open( "GET", uri, true );
 				xmlHttp.send( null );
 			}
@@ -36,14 +36,45 @@
  
  		&lt;script src="three.min.js"&gt;&lt;/script&gt;
 		&lt;script src="TrackballControls.js"&gt;&lt;/script&gt;
+		
+		&lt;script type="x-shader/x-vertex" id="vertexShader"&gt;
+		varying vec3 norm;
+		varying vec3 pos;
+		void main() {
+		    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+		    norm = normal;
+		    pos = position + abs(position);
+		}
+		&lt;/script&gt;
+
+		&lt;script type="x-shader/x-fragment" id="fragmentShader"&gt;	
+		varying vec3 norm;
+		varying vec3 pos;
+		void main() {
+			vec3 t = abs(norm.xyz-1.0);
+		    
+		    vec3 Pos = pos; 
+		    Pos.y *= 3.0/1.2;
+		    highp ivec3 i = ivec3(abs(Pos.xyz));
+		    vec3 D = abs(Pos.xyz)-vec3(i);
+		    D = abs(0.5-D.xyz)*t.xyz;
+		    vec3 col = vec3(0.0, 0.7, 1.0);
+		    if (length(D) &lt; 0.4) 
+				col = vec3(0.7, 0.9, 1.0);
+				
+		    vec3 l = vec3(0.7, 1.0, 0.4);
+		    l = normalize(l);
+		    gl_FragColor = vec4(col * max(0.0, dot(norm, l)), 1.0);
+		}
+		&lt;/script&gt;
 
 		&lt;script&gt;
 			var camera, scene, renderer, mesh, geo;
 			var width = 180;
 			var height = 180;
-			var bX = 1;
-			var bY = 1;
-			var bZ = 1;
+			var bX = 4;
+			var bY = 3;
+			var bZ = 4;
 
 			function onWindowResize() {
 				camera.aspect = width/height;
@@ -63,6 +94,17 @@
 			init();
 			animate();
 			render();
+			
+			function brickMaterial() {
+				/*var texture = THREE.ImageUtils.loadTexture( 'CaveKeeper.png' );
+				texture.anisotropy = renderer.getMaxAnisotropy();
+				return new THREE.MeshBasicMaterial( { map: texture } );*/
+				
+				return new THREE.ShaderMaterial( { 
+					uniforms: { radius: { type: "f", value: 0.8 } }, 
+					vertexShader: document.getElementById( 'vertexShader' ).textContent, 
+					fragmentShader: document.getElementById( 'fragmentShader' ).textContent } );
+			}
 
 			function init() {
 				renderer = new THREE.WebGLRenderer();
@@ -72,15 +114,10 @@
 				document.body.appendChild( renderer.domElement );
 
 				camera = new THREE.PerspectiveCamera( 70, width/height, 1, 1000 );
-				camera.position.z = 6;
-
-				var texture = THREE.ImageUtils.loadTexture( 'CaveKeeper.png' );
-				texture.anisotropy = renderer.getMaxAnisotropy();
-				var material = new THREE.MeshBasicMaterial( { map: texture } );
-
+				camera.position.set(4,4,4);
 				scene = new THREE.Scene();
 				geo = new THREE.BoxGeometry( bX, bY*1.2/3, bZ );
-				mesh = new THREE.Mesh( geo, material );
+				mesh = new THREE.Mesh( geo, brickMaterial() );
 				scene.add( mesh );
 				
 				controls = new THREE.TrackballControls( camera, renderer.domElement );
@@ -97,6 +134,10 @@
 				window.addEventListener( 'resize', onWindowResize, false );
 			}
 			
+			function dims() {
+				return bX+"_"+bY*1.2/3+"_"+bZ;
+			}
+			
 			function brick(i,v) {
 				if (i == 1) bX = v;
 				if (i == 2) bY = v;
@@ -108,16 +149,45 @@
  
 &lt;h1&gt;Bricks&lt;/h1&gt;
 
-&lt;input type="number" onchange="brick(1,this.value)" min="1" max="4" value="1"&gt;
-&lt;input type="number" onchange="brick(2,this.value)" min="1" max="3" value="1"&gt;
-&lt;input type="number" onchange="brick(3,this.value)" min="1" max="4" value="1"&gt;
+&lt;input type="number" onchange="brick(1,this.value)" min="1" max="4" value="4"&gt;
+&lt;input type="number" onchange="brick(2,this.value)" min="1" max="3" value="3"&gt;
+&lt;input type="number" onchange="brick(3,this.value)" min="1" max="4" value="4"&gt;
 
 &lt;br/&gt;&lt;br/&gt;
-&lt;button onmousedown='get(1,1)' onmouseup='get(1,0)'&gt;Create&lt;/button&gt;
+&lt;button onmousedown='get(1,1,dims())' onmouseup='get(1,0,dims())'&gt;Create&lt;/button&gt;
 
 
 &lt;/body&gt;&lt;/html&gt;
 </core>
+    </Script>
+    <Script name_suffix="0" base_name="handler" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+	
+	r = VR.getRoot().find('Headlight')
+	
+	k = dev.getKey()
+	m = dev.getMessage()
+	
+	if not hasattr(VR,'bmat'):
+		VR.bmat = VR.Material('bricks')
+		VR.bmat.setVertexProgram('shdr_v')
+		VR.bmat.setFragmentProgram('shdr_f')
+	
+	if k == 1:
+		dims = m.split('_')
+		dims = dims[0]+' '+dims[1]+' '+dims[2]
+		print dims
+		g = VR.Geometry('brick')
+		g.setPrimitive('Box '+dims+' 1 1 1')
+		g.setMaterial(VR.bmat)
+		g.setPickable(1)
+		r.addChild(g)
+		mouse.drag(g)
+		g.setFrom(0,0,-15)
+</core>
+      <arg type="VRPyDeviceType" value="mouse" name_suffix="0" base_name="mouse" name_space="handler"/>
+      <trig type="on_device" dev="mobile" state="Released" param="" key="-1" name_suffix="1" base_name="trigger" name_space="__global__"/>
     </Script>
     <Script name_suffix="0" base_name="init" name_space="__script__" type="Python" mobile="">
       <core>
@@ -148,6 +218,45 @@
       <arg type="VRPyDeviceType" value="keyboard" name_suffix="0" base_name="keyboard" name_space="init"/>
       <arg type="VRPyDeviceType" value="mouse" name_suffix="0" base_name="mouse" name_space="init"/>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
+    </Script>
+    <Script name_suffix="0" base_name="shdr_f" name_space="__script__" type="GLSL" mobile="">
+      <core>
+varying vec3 norm;
+varying vec3 pos;
+void main() {
+	vec3 t = abs(norm.xyz-1.0);
+    
+    vec3 Pos = pos; 
+    Pos.y *= 3.0/1.2;
+    highp ivec3 i = ivec3(abs(Pos.xyz));
+    vec3 D = abs(Pos.xyz)-vec3(i);
+    D = abs(0.5-D.xyz)*t.xyz;
+    vec3 col = vec3(0.0, 0.7, 1.0);
+    if (length(D) &lt; 0.4) 
+		col = vec3(0.7, 0.9, 1.0);
+		
+    vec3 l = vec3(0.7, 1.0, 0.4);
+    l = normalize(l);
+    gl_FragColor = vec4(col * max(0.0, dot(norm, l)), 1.0);
+}
+</core>
+    </Script>
+    <Script name_suffix="0" base_name="shdr_v" name_space="__script__" type="GLSL" mobile="">
+      <core>
+varying vec3 norm;
+varying vec3 pos;
+
+attribute vec4 osg_Vertex;
+attribute vec3 osg_Normal;
+
+void main() {
+    //gl_Position = ftransform();
+    
+    gl_Position = gl_ModelViewProjectionMatrix * osg_Vertex;
+    norm = osg_Normal;
+    pos = osg_Vertex+abs(osg_Vertex);
+}
+</core>
     </Script>
   </Scripts>
   <Sockets/>
