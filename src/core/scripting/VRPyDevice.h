@@ -28,6 +28,7 @@ struct VRPyDevice : VRPyBaseT<OSG::VRDevice> {
     static PyObject* addIntersection(VRPyDevice* self, PyObject *args);
     static PyObject* remIntersection(VRPyDevice* self, PyObject *args);
     static PyObject* getDragged(VRPyDevice* self);
+    static PyObject* getDragGhost(VRPyDevice* self);
     static PyObject* drag(VRPyDevice* self, PyObject *args);
     static PyObject* drop(VRPyDevice* self);
     static PyObject* setSpeed(VRPyDevice* self, PyObject *args);

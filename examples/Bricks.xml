@@ -3,7 +3,7 @@
   <Objects>
     <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
       <Object name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
-        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="7.27858 -2.16597 -1.7453" at="-2.39287 -1.79638 3.18514" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
+        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="11.4521 12.2526 -1.23354" at="0.0484867 4.13473 -0.832987" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
           <Object name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
         </Object>
       </Object>
@@ -51,7 +51,7 @@
 		varying vec3 norm;
 		varying vec3 pos;
 		void main() {
-			vec3 t = abs(norm.xyz-1.0);
+			vec3 t = abs(abs(norm.xyz)-1.0);
 		    
 		    vec3 Pos = pos; 
 		    Pos.y *= 3.0/1.2;
@@ -169,22 +169,55 @@
 	k = dev.getKey()
 	m = dev.getMessage()
 	
-	if not hasattr(VR,'bmat'):
+	if not hasattr(VR, 'bmat'):
 		VR.bmat = VR.Material('bricks')
 		VR.bmat.setVertexProgram('shdr_v')
 		VR.bmat.setFragmentProgram('shdr_f')
 	
+	if not hasattr(VR, 'snap'):
+		VR.snap = VR.SnappingEngine()
+		
+	if not hasattr(VR, 'anchor'):
+		VR.anchor = VR.Geometry('anchor')
+		VR.anchor.setPrimitive('Box 0.1 0.1 0.1 1 1 1')
+		VR.getRoot().find('Headlight').addChild(VR.anchor)
+		VR.anchor.hide()
+	
+	# new brick
 	if k == 1:
 		dims = m.split('_')
-		dims = dims[0]+' '+dims[1]+' '+dims[2]
-		print dims
 		g = VR.Geometry('brick')
-		g.setPrimitive('Box '+dims+' 1 1 1')
+		g.setPrimitive('Box '+dims[0]+' '+dims[1]+' '+dims[2]+' 1 1 1')
 		g.setMaterial(VR.bmat)
 		g.setPickable(1)
 		r.addChild(g)
 		mouse.drag(g)
 		g.setFrom(0,0,-15)
+		mouse.getDragGhost().setFrom(0,0,-15)
+		
+		h = float(dims[1])*0.5
+		VR.snap.addObject(g)
+		osnapu = [1,0,0,0,1,0] # orientation to snap to (up, dir)
+		osnapd = [1,0,0,0,1,0] # orientation to snap to (up, dir)
+		for i in range(int(dims[0])):
+			for j in range(int(dims[2])):
+				x = i - float(dims[0])*0.5 +0.5
+				y = j - float(dims[2])*0.5 +0.5
+				a_u = VR.anchor.duplicate()
+				a_d = VR.anchor.duplicate()
+				a_u.show()
+				a_d.show()
+				a_u.setPose([x,h,y], [0,1,0], [1,0,0])
+				a_d.setPose([x,-h,y], [0,1,0], [1,0,0])
+				g.addChild(a_u)
+				g.addChild(a_d)
+				VR.snap.addObjectAnchor(g,a_u)
+				VR.snap.addObjectAnchor(g,a_d)
+				pu = [0,0,0,x,h,y] # point to snap to
+				pd = [0,0,0,x,-h,y] # point to snap to
+				VR.snap.addRule('POINT', 'POINT', pu, osnapu, 0.25, 1, g )
+				VR.snap.addRule('POINT', 'POINT', pd, osnapd, 0.25, 1, g )
+		
 </core>
       <arg type="VRPyDeviceType" value="mouse" name_suffix="0" base_name="mouse" name_space="handler"/>
       <trig type="on_device" dev="mobile" state="Released" param="" key="-1" name_suffix="1" base_name="trigger" name_space="__global__"/>
@@ -211,9 +244,6 @@
 	#site.open('http://threejs.org/examples/#webgl_geometry_cube')
 	site.addMouse(mouse, gui, 0, 2, 3, 4)
 	site.addKeyboard(keyboard)
-	
-	if not hasattr(VR, 'snap'):
-		VR.snap = VR.SnappingEngine()
 </core>
       <arg type="VRPyDeviceType" value="keyboard" name_suffix="0" base_name="keyboard" name_space="init"/>
       <arg type="VRPyDeviceType" value="mouse" name_suffix="0" base_name="mouse" name_space="init"/>
@@ -223,21 +253,21 @@
       <core>
 varying vec3 norm;
 varying vec3 pos;
+varying vec3 light;
 void main() {
-	vec3 t = abs(norm.xyz-1.0);
+	vec3 t = abs(abs(norm.xyz)-1.0);
     
     vec3 Pos = pos; 
     Pos.y *= 3.0/1.2;
-    highp ivec3 i = ivec3(abs(Pos.xyz));
+    ivec3 i = ivec3(abs(Pos.xyz));
     vec3 D = abs(Pos.xyz)-vec3(i);
     D = abs(0.5-D.xyz)*t.xyz;
     vec3 col = vec3(0.0, 0.7, 1.0);
     if (length(D) &lt; 0.4) 
 		col = vec3(0.7, 0.9, 1.0);
 		
-    vec3 l = vec3(0.7, 1.0, 0.4);
-    l = normalize(l);
-    gl_FragColor = vec4(col * max(0.0, dot(norm, l)), 1.0);
+    //gl_FragColor = vec4(col * max(0.0, dot(norm, light)), 1.0);
+    gl_FragColor = vec4(col * abs(dot(norm, light)), 1.0);
 }
 </core>
     </Script>
@@ -245,16 +275,20 @@ void main() {
       <core>
 varying vec3 norm;
 varying vec3 pos;
+varying vec3 light;
 
 attribute vec4 osg_Vertex;
 attribute vec3 osg_Normal;
 
 void main() {
-    //gl_Position = ftransform();
-    
     gl_Position = gl_ModelViewProjectionMatrix * osg_Vertex;
     norm = osg_Normal;
     pos = osg_Vertex+abs(osg_Vertex);
+    
+    &#13;
+    light = gl_LightSource[0].position.xyz - gl_Position.xyz;
+    light = vec3(0.5, 1.0, -0.7);
+    light = normalize(light);
 }
 </core>
     </Script>

@@ -73,6 +73,7 @@ PyMethodDef VRPyDevice::methods[] = {
     {"addIntersection", (PyCFunction)VRPyDevice::addIntersection, METH_VARARGS, "Add device intersection node." },
     {"remIntersection", (PyCFunction)VRPyDevice::remIntersection, METH_VARARGS, "Remove device intersection node." },
     {"getDragged", (PyCFunction)VRPyDevice::getDragged, METH_NOARGS, "Get dragged object." },
+    {"getDragGhost", (PyCFunction)VRPyDevice::getDragGhost, METH_NOARGS, "Get drag ghost." },
     {"drag", (PyCFunction)VRPyDevice::drag, METH_VARARGS, "Start to drag an object - drag(obj)" },
     {"drop", (PyCFunction)VRPyDevice::drop, METH_NOARGS, "Drop any object - drop()" },
     {"setSpeed", (PyCFunction)VRPyDevice::setSpeed, METH_VARARGS, "Drop any object - drop()" },
@@ -226,6 +227,11 @@ PyObject* VRPyDevice::remIntersection(VRPyDevice* self, PyObject *args) {
     VRPyObject* t = (VRPyObject*)iobj;
     self->obj->remDynTree(t->obj);
     Py_RETURN_TRUE;
+}
+
+PyObject* VRPyDevice::getDragGhost(VRPyDevice* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getDragGhost, Object is invalid"); return NULL; }
+    return VRPyTypeCaster::cast(self->obj->getDraggedGhost());
 }
 
 PyObject* VRPyDevice::getDragged(VRPyDevice* self) {
