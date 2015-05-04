@@ -22,6 +22,7 @@ class VRTransform;
 */
 
 class VRSceneLoader {
+
     private:
         struct cache {
             NodeRecPtr root;
@@ -53,6 +54,8 @@ class VRSceneLoader {
         static VRSceneLoader* get();
         ~VRSceneLoader();
 
+        typedef NodeTransitPtr (*FileIOReadCBF )(SceneFileType* type, std::istream &is, Char8 const *ext );
+
         GeometryRecPtr loadGeometry(string file, string object);
 
         VRTransform* load3DContent(string filename, VRObject* parent = 0, bool reload = false);
@@ -61,6 +64,7 @@ class VRSceneLoader {
 
         void saveScene(string file, xmlpp::Element* guiN = 0);
         void loadScene(string file);
+
 };
 
 OSG_END_NAMESPACE;
