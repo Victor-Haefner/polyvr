@@ -8,11 +8,6 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-
-void VRAnimation_base::start() { start_time = glutGet(GLUT_ELAPSED_TIME)/1000.0; run = true; }
-void VRAnimation_base::stop() { run = false; }
-bool VRAnimation_base::isActive() { return run; }
-
 void VRAnimationManager::updateAnimations() {
     float t = glutGet(GLUT_ELAPSED_TIME)/1000.0;//in seconds
     vector<int> toRemove;
@@ -28,6 +23,14 @@ void VRAnimationManager::updateAnimations() {
 VRAnimationManager::VRAnimationManager() {
     id = 0;
     updateAnimationsFkt = new VRFunction<int>("AnimationUpdateFkt", boost::bind(&VRAnimationManager::updateAnimations, this));
+}
+
+int VRAnimationManager::addAnimation(VRAnimation* anim) {
+    anim->start();
+
+    id++;
+    anim_map[id] = anim;
+    return id;
 }
 
 void VRAnimationManager::stopAnimation(int i) {

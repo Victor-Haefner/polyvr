@@ -5,7 +5,7 @@
 
 #include "core/scene/VRAnimationManagerT.h"
 
-template<> PyTypeObject VRPyBaseT<OSG::VRAnimation<float> >::type = {
+template<> PyTypeObject VRPyBaseT<OSG::VRAnimation>::type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
     "VR.Animation",             /*tp_name*/
@@ -44,7 +44,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRAnimation<float> >::type = {
     0,                         /* tp_dictoffset */
     (initproc)init,      /* tp_init */
     0,                         /* tp_alloc */
-    New,                 /* tp_new */
+    New_named,                 /* tp_new */
 };
 
 PyMethodDef VRPyAnimation::methods[] = {

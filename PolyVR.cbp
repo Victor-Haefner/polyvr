@@ -433,6 +433,8 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/networking/mongoose/mongoose.h" />
+		<Unit filename="src/core/objects/VRAnimation.cpp" />
+		<Unit filename="src/core/objects/VRAnimation.h" />
 		<Unit filename="src/core/objects/VRCamera.cpp" />
 		<Unit filename="src/core/objects/VRCamera.h" />
 		<Unit filename="src/core/objects/VRGroup.cpp" />

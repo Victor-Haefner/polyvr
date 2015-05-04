@@ -427,8 +427,9 @@ PyObject* VRPyTransform::animate(VRPyTransform* self, PyObject *args) {
 
 PyObject* VRPyTransform::getAnimations(VRPyTransform* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::getAnimations: C Object is invalid"); return NULL; }
-    //vector<VRAnimation<float>*> anims = self->obj->getAnimations(path->obj, t, o, b, l);
+    vector<VRAnimation*> anims = self->obj->getAnimations();
     // TODO: return animations
+    // -
     Py_RETURN_TRUE;
 }
 

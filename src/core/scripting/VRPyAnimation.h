@@ -5,7 +5,7 @@
 #include "core/scene/VRAnimationManager.h"
 #include "VRPyBase.h"
 
-struct VRPyAnimation : public VRPyBaseT<OSG::VRAnimation<float> > {
+struct VRPyAnimation : public VRPyBaseT<OSG::VRAnimation> {
     static PyMethodDef methods[];
 
     static PyObject* start(VRPyAnimation* self);
