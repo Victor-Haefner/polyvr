@@ -1,9 +1,11 @@
 #include "VRPyTransform.h"
 #include "VRPyConstraint.h"
+#include "VRPyAnimation.h"
 #include "VRPyPath.h"
 #include "VRPyBaseT.h"
 #include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/geometry/VRConstraint.h"
+#include "core/objects/VRAnimation.h"
 
 template<> PyTypeObject VRPyBaseT<OSG::VRTransform>::type = {
     PyObject_HEAD_INIT(NULL)
@@ -427,10 +429,13 @@ PyObject* VRPyTransform::animate(VRPyTransform* self, PyObject *args) {
 
 PyObject* VRPyTransform::getAnimations(VRPyTransform* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::getAnimations: C Object is invalid"); return NULL; }
-    vector<VRAnimation*> anims = self->obj->getAnimations();
-    // TODO: return animations
-    // -
-    Py_RETURN_TRUE;
+    vector<OSG::VRAnimation*> anims = self->obj->getAnimations();
+
+    PyObject* li = PyList_New(anims.size());
+    for (uint i=0; i<anims.size(); i++) {
+        PyList_SetItem(li, i, VRPyAnimation::fromPtr(anims[i]));
+    }
+    return li;
 }
 
 PyObject* VRPyTransform::getConstraintAngleWith(VRPyTransform* self, PyObject *args) {

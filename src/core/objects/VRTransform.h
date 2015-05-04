@@ -14,6 +14,7 @@ using namespace std;
 class doubleBuffer;
 class path;
 class Transform; OSG_GEN_CONTAINERPTR(Transform);
+class VRAnimation;
 
 class VRTransform : public VRObject {
     protected:
@@ -29,8 +30,6 @@ class VRTransform : public VRObject {
         bool fixed;
         bool cam_invert_z;
         bool orientation_mode;
-
-        vector<int> animations;
 
         Vec3f _at;
         Vec3f _from;
@@ -136,6 +135,9 @@ class VRTransform : public VRObject {
         /** Cast a ray in world coordinates from the object in its local coordinates, -z axis defaults **/
         Line castRay(VRObject* obj = 0, Vec3f dir = Vec3f(0,0,-1));
 
+        map<string, VRAnimation*> animations;
+        void addAnimation(VRAnimation* animation);
+        vector<VRAnimation*> getAnimations();
         void startPathAnimation(path* p, float time, float offset, bool redirect = true, bool loop = false);
         void stopAnimation();
 

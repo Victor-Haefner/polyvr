@@ -12,10 +12,8 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRAnimationManager {
-
     private:
-        int id;
-        map<int, VRAnimation*> anim_map;
+        map<string, VRAnimation*> anim_map;
 
     protected:
         VRFunction<int>* updateAnimationsFkt;
@@ -24,11 +22,11 @@ class VRAnimationManager {
     public:
         VRAnimationManager();
 
-        void stopAnimation(int i);
-        int addAnimation(VRAnimation* anim);
+        void stopAnimation(VRAnimation* anim);
+        void addAnimation(VRAnimation* anim);
 
         template<typename T>
-        int addAnimation(float duration, float offset, VRFunction<T>* fkt, T start, T end, bool loop = false);
+        VRAnimation* addAnimation(float duration, float offset, VRFunction<T>* fkt, T start, T end, bool loop = false);
 };
 
 OSG_END_NAMESPACE;

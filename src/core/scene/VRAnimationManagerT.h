@@ -19,12 +19,16 @@ VRAnimation::VRAnimation(float _duration, float _offset, VRFunction<T>* _fkt, T 
     i->start_value = _start;
     i->end_value = _end;
     interp = i;
+
+    setNameSpace("animation");
+    setName("anim"); // TODO: _fkt->getBaseName() is an empty string??
 }
 
 template<typename T>
-int VRAnimationManager::addAnimation(float duration, float offset, VRFunction<T>* fkt, T start, T end, bool loop) {//Todo: replace VRFunction, template?
+VRAnimation* VRAnimationManager::addAnimation(float duration, float offset, VRFunction<T>* fkt, T start, T end, bool loop) {//Todo: replace VRFunction, template?
     VRAnimation* anim = new VRAnimation(duration, offset, fkt, start, end, loop);
-    return addAnimation(anim);
+    addAnimation(anim);
+    return anim;
 }
 
 OSG_END_NAMESPACE;
