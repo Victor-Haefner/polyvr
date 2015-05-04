@@ -2,12 +2,14 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneLoader.h"
+#include "core/scene/import/VRImport.h"
 #include "core/scene/VRAnimationManagerT.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/utils/VROptions.h"
 #include "VRScript.h"
 #include "VRPyObject.h"
 #include "VRPyGeometry.h"
+#include "VRPyAnimation.h"
 #include "VRPySocket.h"
 #include "VRPySprite.h"
 #include "VRPySound.h"
@@ -252,7 +254,7 @@ void VRScriptManager::initPyModules() {
     VRPyConstraint::registerModule("Constraint", pModVR);
     VRPyDevice::registerModule("Device", pModVR);
     VRPyHaptic::registerModule("Haptic", pModVR, VRPyDevice::typeRef);
-    //VRPySocket::registerModule("Socket", pModVR);
+    VRPyAnimation::registerModule("Animation", pModVR);
     VRPyPath::registerModule("Path", pModVR);
     VRPyRecorder::registerModule("Recorder", pModVR);
     VRPySnappingEngine::registerModule("SnappingEngine", pModVR);
@@ -423,9 +425,16 @@ PyObject* VRScriptManager::getRoot(VRScriptManager* self) {
 
 PyObject* VRScriptManager::loadGeometry(VRScriptManager* self, PyObject *args) {
     PyObject* path; int ignoreCache;
-    if (! PyArg_ParseTuple(args, "Oi", &path, &ignoreCache)) return NULL;
+    PyObject *preset = 0;
+
+    if (pySize(args) == 2) if (! PyArg_ParseTuple(args, "Oi", &path, &ignoreCache)) return NULL;
+    if (pySize(args) == 3) if (! PyArg_ParseTuple(args, "OiO", &path, &ignoreCache, &preset)) return NULL;
+
     string p = PyString_AsString(path);
-    VRTransform* obj = VRSceneLoader::get()->load3DContent( p, 0, ignoreCache);
+    string pre = "OSG";
+    if (preset) pre = PyString_AsString(preset);
+
+    VRTransform* obj = VRImport::get()->load( p, 0, ignoreCache, pre);
     if (obj == 0) {
         VRGuiManager::get()->printInfo("Warning: " + p + " not found.\n");
         Py_RETURN_NONE;

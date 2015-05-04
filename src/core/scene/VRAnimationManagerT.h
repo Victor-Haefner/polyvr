@@ -7,6 +7,9 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 template<typename T>
+VRAnimation<T>::VRAnimation() {;}
+
+template<typename T>
 VRAnimation<T>::VRAnimation(float _duration, float _offset, VRFunction<T>* _fkt, T _start, T _end, bool _loop) {
     run = false;
 
@@ -17,16 +20,6 @@ VRAnimation<T>::VRAnimation(float _duration, float _offset, VRFunction<T>* _fkt,
     offset = _offset;
     loop = _loop;
 }
-
-template<typename T>
-void VRAnimation<T>::start() {
-    //cout << "\nSTART ANIM";
-    start_time = glutGet(GLUT_ELAPSED_TIME)/1000.0;
-    run = true;
-}
-
-template<typename T>
-void VRAnimation<T>::end() { run = false; }
 
 template<typename T>
 bool VRAnimation<T>::update(float current_time) {
@@ -41,7 +34,7 @@ bool VRAnimation<T>::update(float current_time) {
     if (t > 1) {
         if (loop) start();
         else {
-            end();
+            stop();
             (*fkt)(end_value);
         }
         return true;

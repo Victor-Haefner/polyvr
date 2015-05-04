@@ -13,8 +13,18 @@ using namespace std;
 */
 
 class VRAnimation_base {
+    protected:
+        float start_time = 0;
+        float duration = 0;
+        float offset = 0;
+        bool run = false;
+        bool loop = false;
+
     public:
         virtual bool update(float t) = 0;
+        void start();
+        void stop();
+        bool isActive();
 };
 
 /**
@@ -24,18 +34,13 @@ class VRAnimation_base {
 
 template<typename T>
 class VRAnimation : public VRAnimation_base {
-        float start_time, duration, offset;
+    private:
         VRFunction<T>* fkt;
-        bool run, loop;
-
         T start_value, end_value;
 
     public:
+        VRAnimation();
         VRAnimation(float _duration, float _offset, VRFunction<T>* _fkt, T _start, T _end, bool _loop);
-
-        void start();
-
-        void end();
 
         bool update(float current_time);
 };

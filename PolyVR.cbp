@@ -508,6 +508,12 @@
 		<Unit filename="src/core/scene/VRSoundManager.h" />
 		<Unit filename="src/core/scene/VRThreadManager.cpp" />
 		<Unit filename="src/core/scene/VRThreadManager.h" />
+		<Unit filename="src/core/scene/import/VRCOLLADA.cpp" />
+		<Unit filename="src/core/scene/import/VRCOLLADA.h" />
+		<Unit filename="src/core/scene/import/VRImport.cpp" />
+		<Unit filename="src/core/scene/import/VRImport.h" />
+		<Unit filename="src/core/scene/import/VRPLY.cpp" />
+		<Unit filename="src/core/scene/import/VRPLY.h" />
 		<Unit filename="src/core/scripting/VRPyAnimation.cpp" />
 		<Unit filename="src/core/scripting/VRPyAnimation.h" />
 		<Unit filename="src/core/scripting/VRPyBase.cpp" />

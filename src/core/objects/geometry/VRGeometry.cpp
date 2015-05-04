@@ -6,13 +6,14 @@
 #include <OpenSG/OSGChunkMaterial.h>
 #include <OpenSG/OSGMultiPassMaterial.h>
 #include <OpenSG/OSGGeoFunctions.h>
+#include <OpenSG/OSGNameAttachment.h>
 
 //#include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGTypedGeoIntegralProperty.h>
 #include <OpenSG/OSGTypedGeoVectorProperty.h>
 
 #include <OpenSG/OSGTriangleIterator.h>
-#include "core/scene/VRSceneLoader.h"
+#include "core/scene/import/VRImport.h"
 #include "core/math/interpolator.h"
 #include "core/utils/toString.h"
 #include "core/objects/material/VRMaterial.h"
@@ -535,7 +536,7 @@ void VRGeometry::loadContent(xmlpp::Element* e) {
 
     string p1, p2;
     stringstream ss;
-    GeometryRecPtr g;
+    VRGeometry* g;
     // get source info
     // construct data from that
 
@@ -547,12 +548,9 @@ void VRGeometry::loadContent(xmlpp::Element* e) {
         case FILE:
             ss << source.parameter;
             ss >> p1; ss >> p2;
-            g = VRSceneLoader::get()->loadGeometry(p1, p2);
-            if (g == 0) {
-                cout << "\n Could not find " << getName() << " in file " << p1 << endl;
-                return;
-            }
-            setMesh( g, source, true );
+            g = VRImport::get()->loadGeometry(p1, p2);
+            if (g) setMesh( g->getMesh(), source, true );
+            else cout << "failed to load " << p2 << " from file " << p1 << endl;
             break;
         case PRIMITIVE:
             ss << source.parameter;

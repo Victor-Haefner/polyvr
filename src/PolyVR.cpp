@@ -17,6 +17,7 @@
 
 #include <OpenSG/OSGSimpleGeometry.h>
 #include <OpenSG/OSGTypedGeoIntegralProperty.h>
+#include <OpenSG/OSGNameAttachment.h>
 
 #include <signal.h>
 extern "C" void my_function_to_handle_aborts(int signal_number) {

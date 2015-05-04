@@ -8,6 +8,11 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+
+void VRAnimation_base::start() { start_time = glutGet(GLUT_ELAPSED_TIME)/1000.0; run = true; }
+void VRAnimation_base::stop() { run = false; }
+bool VRAnimation_base::isActive() { return run; }
+
 void VRAnimationManager::updateAnimations() {
     float t = glutGet(GLUT_ELAPSED_TIME)/1000.0;//in seconds
     vector<int> toRemove;

@@ -1,27 +1,117 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scene name_suffix="0" base_name="KA300" name_space="Scene">
   <Objects>
-    <Root name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
-      <L1 name_suffix="0" base_name="L1" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="L1_beacon" diffuse="0.774197 0.774197 0.774197 1" lightType="directional" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
-        <L2 name_suffix="0" base_name="L2" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="L2_beacon" diffuse="1 1 1 1" lightType="directional" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
-          <L2_beacon name_suffix="0" base_name="L2_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="-0.2 -0.2 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="L2"/>
-          <Karlsruhe name_suffix="0" base_name="Karlsruhe" name_space="__global__" type="Geometry" pickable="0" visible="1" from="-1.87274 0.835229 0" at="-1.87274 0.835229 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" sourcetype="2" sourceparam="../ressources/misc/Karlsruhe300.dae Plane0"/>
-          <Default name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="2.10867 -0.817534 19.4815" at="0.455133 0.900688 0.00590563" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472"/>
-          <L1_beacon name_suffix="0" base_name="L1_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0.2 0.2 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="L1"/>
-        </L2>
-      </L1>
-    </Root>
+    <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
+      <Object name_suffix="0" base_name="L1" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="L1_beacon" diffuse="0.774197 0.774197 0.774197 1" lightType="directional" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
+        <Object name_suffix="0" base_name="L2" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="L2_beacon" diffuse="1 1 1 1" lightType="directional" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
+          <Object name_suffix="0" base_name="Karlsruhe" name_space="__global__" type="Geometry" pickable="0" visible="1" from="-1.87274 0.835229 0" at="-1.87274 0.835229 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" sourcetype="2" sourceparam="../ressources/misc/Karlsruhe300.dae Plane0"/>
+          <Object name_suffix="0" base_name="L2_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="-0.2 -0.2 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="L2"/>
+          <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="2.53399 2.99016 19.4043" at="0.455133 0.900688 0.00590563" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472"/>
+          <Object name_suffix="0" base_name="L1_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0.2 0.2 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="L1"/>
+        </Object>
+      </Object>
+    </Object>
   </Objects>
-  <Rendering frustum_culling="1" occlusion_culling="0"/>
+  <Rendering frustum_culling="1" occlusion_culling="0" two_sided="1"/>
   <Scripts>
-    <init core="&#9;import VR&#10;&#9;import math&#10;&#9;import random&#10;&#10;&#9;m = ka.getMaterial()&#10;&#9;&#10;&#9;d = 1.0&#10;&#9;a = 0.8&#10;&#9;m.setDiffuse(d,d,d)&#10;&#9;m.setAmbient(a,a,a)&#10;&#9;&#10;&#9;if not hasattr(VR, 'fan'):&#10;&#9;&#9;VR.fan = VR.Geometry('fan')&#10;&#9;&#9;ka.addChild(VR.fan)&#10;&#9;&#9;fm = VR.Material('fan') # does not work!!&#10;&#9;&#9;VR.fan.setMaterial(fm)&#10;&#9;&#9;print 'init'&#10;&#9;&#9;&#10;&#9;N = 64&#10;&#9;pos = []&#10;&#9;pos.append([0,0,-200])&#10;&#9;inds = []&#10;&#9;cols = []&#10;&#9;for i in range(N):&#10;&#9;&#9;a1 = i*2*math.pi/N&#10;&#9;&#9;a2 = a1 + 0.1 + random.random()&#10;&#9;&#9;&#10;&#9;&#9;ca1 = math.cos(a1)&#10;&#9;&#9;sa1 = math.sin(a1)&#10;&#9;&#9;ca2 = math.cos(a2)&#10;&#9;&#9;sa2 = math.sin(a2)&#10;&#9;&#9;&#10;&#9;&#9;r = 3 + 4*random.random()&#10;&#9;&#9;z1 = 1-2*random.random()&#10;&#9;&#9;z2 = 1-2*random.random()&#10;&#9;&#9;&#10;&#9;&#9;pos.append([1.5+r*1.5*ca1, r*sa1-0.5, z1])&#10;&#9;&#9;pos.append([1.5+r*1.5*ca2, r*sa2-0.5, z2])&#10;&#9;&#9;&#10;&#9;&#9;c1 = random.random()&#10;&#9;&#9;c2 = random.random()&#10;&#9;&#9;cols.append([c1, 1-c1*c2, c2])&#10;&#9;&#9;cols.append([c1, 1-c1*c2, c2])&#10;&#9;&#9;&#10;&#9;&#9;inds.append(0)&#10;&#9;&#9;inds.append(i*2+1)&#10;&#9;&#9;inds.append(i*2+2)&#10;&#9;&#9;&#10;&#9;norms = [[0,0,1]]*len(pos)&#10;&#9;&#9;&#10;&#9;VR.fan.setNormals(norms)&#10;&#9;VR.fan.setPositions(pos)&#10;&#9;VR.fan.setIndices(inds)&#10;&#9;VR.fan.setColors(cols)&#10;&#9;#VR.fan.setRandomColors()&#10;&#9;VR.fan.setType('GL_TRIANGLES')&#10;&#9;VR.fan.setLit(False)&#10;&#9;&#10;&#9;&#10;&#9;fm = VR.fan.getMaterial()&#10;&#9;fm.setDiffuse(1,1,1)&#10;&#9;fm.setAmbient(1,1,1)&#10;&#9;fm.setSpecular(1,1,1)&#10;&#9;&#10;&#9;&#10;&#9;&#10;&#9;" type="Python" mobile="">
+    <Script name_suffix="0" base_name="init" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+	import math
+	import random
+
+	m = ka.getMaterial()
+	
+	d = 1.0
+	a = 0.8
+	m.setDiffuse(d,d,d)
+	m.setAmbient(a,a,a)
+	
+	if not hasattr(VR, 'fan'):
+		VR.fan = VR.Geometry('fan')
+		ka.addChild(VR.fan)
+		fm = VR.Material('fan') # does not work!!
+		VR.fan.setMaterial(fm)
+		print 'init'
+		
+	N = 64
+	pos = []
+	pos.append([0,0,-200])
+	inds = []
+	cols = []
+	for i in range(N):
+		a1 = i*2*math.pi/N
+		a2 = a1 + 0.1 + random.random()
+		
+		ca1 = math.cos(a1)
+		sa1 = math.sin(a1)
+		ca2 = math.cos(a2)
+		sa2 = math.sin(a2)
+		
+		r = 3 + 4*random.random()
+		z1 = 1-2*random.random()
+		z2 = 1-2*random.random()
+		
+		pos.append([1.5+r*1.5*ca1, r*sa1-0.5, z1])
+		pos.append([1.5+r*1.5*ca2, r*sa2-0.5, z2])
+		
+		c1 = random.random()
+		c2 = random.random()
+		cols.append([c1, 1-c1*c2, c2])
+		cols.append([c1, 1-c1*c2, c2])
+		
+		inds.append(0)
+		inds.append(i*2+1)
+		inds.append(i*2+2)
+		
+	norms = [[0,0,1]]*len(pos)
+		
+	VR.fan.setNormals(norms)
+	VR.fan.setPositions(pos)
+	VR.fan.setIndices(inds)
+	VR.fan.setColors(cols)
+	#VR.fan.setRandomColors()
+	VR.fan.setType('GL_TRIANGLES')
+	VR.fan.setLit(False)
+	
+	
+	fm = VR.fan.getMaterial()
+	fm.setDiffuse(1,1,1)
+	fm.setAmbient(1,1,1)
+	fm.setSpecular(1,1,1)
+	
+	
+	
+	
+</core>
       <arg type="VRPyGeometryType" value="Karlsruhe" name_suffix="0" base_name="ka" name_space="init"/>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
-    </init>
-    <update core="&#9;import VR&#10;&#9;import random&#10;&#9;&#10;&#9;if not hasattr(VR, 'fan'):&#10;&#9;&#9;return&#10;&#9;&#10;&#9;f = VR.fan&#10;&#9;pos = f.getPositions()&#10;&#9;&#10;&#9;s = 1.15&#10;&#9;&#10;&#9;for i in range(len(pos)):&#10;&#9;&#9;#pos[i][0] += s*(0.5-random.random())&#10;&#9;&#9;#pos[i][1] += s*(0.5-random.random())&#10;&#9;&#9;pos[i][2] += s*(0.5-random.random())&#10;&#9;&#9;&#10;&#9;f.setPositions(pos)" type="Python" mobile="">
+    </Script>
+    <Script name_suffix="0" base_name="update" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+	import random
+	
+	if not hasattr(VR, 'fan'):
+		return
+	
+	f = VR.fan
+	pos = f.getPositions()
+	
+	s = 1.15
+	
+	for i in range(len(pos)):
+		#pos[i][0] += s*(0.5-random.random())
+		#pos[i][1] += s*(0.5-random.random())
+		pos[i][2] += s*(0.5-random.random())
+		
+	f.setPositions(pos)
+</core>
       <trig type="on_timeout" dev="" state="Pressed" param="100" key="0" name_suffix="1" base_name="trigger" name_space="__global__"/>
-    </update>
+    </Script>
   </Scripts>
   <Sockets/>
   <Background color="1 1 1" path="" type="0"/>
+  <Navigation active="Orbit"/>
+  <Materials/>
 </Scene>

@@ -93,6 +93,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"getTorque", (PyCFunction)VRPyTransform::getTorque, METH_NOARGS, "get the total torque put on this transform during this frame. returns 3-Tuple" },
     {"setPhysicsActivationMode", (PyCFunction)VRPyTransform::setPhysicsActivationMode, METH_VARARGS, "Set the physics activation mode of the physics object (normal:1 , no deactivation:4, stay deactivated: 5)" },
     {"animate", (PyCFunction)VRPyTransform::animate, METH_VARARGS, "Animate object (currently only with a path: animate(path, duration, redirect) )" },
+    {"getAnimations", (PyCFunction)VRPyTransform::getAnimations, METH_NOARGS, "Return all animations associated to the object" },
     {"animationStop", (PyCFunction)VRPyTransform::animationStop, METH_NOARGS, "Stop any running animation of this object" },
     {"setGravity", (PyCFunction)VRPyTransform::setGravity, METH_VARARGS, "set Gravity (Vector) of given physicalized object" },
     {"getConstraintAngleWith", (PyCFunction)VRPyTransform::getConstraintAngleWith, METH_VARARGS, "return the relative rotation Angles/position diffs (Vector3) to the given constraint partner (if there is one, otherwise return (0.0,0.0,0.0)) example: transform.getConstraintAngleWith(othertransform, 0) returns rotationAngles  (0:rotation , 1:position)"  },
@@ -424,7 +425,12 @@ PyObject* VRPyTransform::animate(VRPyTransform* self, PyObject *args) {
     Py_RETURN_TRUE;
 }
 
-
+PyObject* VRPyTransform::getAnimations(VRPyTransform* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::getAnimations: C Object is invalid"); return NULL; }
+    //vector<VRAnimation<float>*> anims = self->obj->getAnimations(path->obj, t, o, b, l);
+    // TODO: return animations
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyTransform::getConstraintAngleWith(VRPyTransform* self, PyObject *args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::getConstraintAngleWith: C Object is invalid"); return NULL; }
