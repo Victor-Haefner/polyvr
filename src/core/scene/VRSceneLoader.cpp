@@ -25,8 +25,8 @@
 #include <fstream>
 #include <unistd.h>
 
-#include <rapidxml/rapidxml.hpp>
-#include <rapidxml/rapidxml_print.hpp>
+#include "core/utils/rapidxml/rapidxml.hpp"
+#include "core/utils/rapidxml/rapidxml_print.hpp"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
