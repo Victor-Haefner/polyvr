@@ -1,8 +1,10 @@
 #include "VRCOLLADA.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/VRAnimation.h"
 
 #include "core/utils/rapidxml/rapidxml.hpp"
 #include "core/utils/rapidxml/rapidxml_print.hpp"
+#include "core/utils/VRFunction.h"
 
 #include <fstream>
 
@@ -145,12 +147,49 @@ void printAll(const AnimationLibrary& library) {
 
 using namespace OSG;
 
+void setPose(VRTransform* o, int i, float t) {
+    Vec3f f = o->getFrom();
+    f[i] = t;
+    o->setFrom(f);
+}
+
+void setPose3(VRTransform* o, int i, Vec3f t) {
+    o->setFrom(t);
+}
+
+void buildAnimations(AnimationLibrary& lib, VRObject* objects) {
+    for (auto a : lib.animations) {
+        VRObject* obj = objects->find(a.second.channel.target);
+        if (obj == 0) continue;
+        if (!obj->hasAttachment("transform")) continue;
+
+        VRTransform* t = (VRTransform*)obj;
+
+        float duration = 2.0;
+        float offset = 0.0;
+        bool loop = false;
+
+        int i = 0; // x axis
+        auto fkt = new VRFunction<float>(a.first, boost::bind(setPose, t, i, _1) );
+        float start = 0.0;
+        float end = 1.0;
+
+        //auto fkt = new VRFunction<Vec3f>(a.first, boost::bind(setPose, t, i, _1) );
+        //Vec3f start = Vec3f(x,y,z);
+        //Vec3f end = Vec3f(2*x,y,z);
+
+        VRAnimation* anim = new VRAnimation(duration, offset, fkt, start, end, loop);
+        t->addAnimation(anim);
+    }
+}
+
 VRObject* OSG::loadCollada(string path, VRObject* objects) {
     ifstream file(path);
     string data( (std::istreambuf_iterator<char>(file) ), (std::istreambuf_iterator<char>() ) );
     file.close();
 
     auto library = parseColladaAnimations(data);
+    buildAnimations(library, objects);
 
     printAll(library);
 
