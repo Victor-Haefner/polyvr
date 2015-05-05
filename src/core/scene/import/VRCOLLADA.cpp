@@ -11,108 +11,95 @@
 #include <OpenSG/OSGSceneFileHandler.h>
 #include <OpenSG/OSGSimpleMaterial.h>
 
-OSG_BEGIN_NAMESPACE;
 using namespace rapidxml;
 
-NodeTransitPtr fileReadCallback(string data){
-    NodeTransitPtr ptr;
+typedef xml_node<> Node;
+typedef xml_attribute<> Attrib;
 
-    //cout << "File Type: " << type->getName() << endl;
+struct SamplerIn {
+    string semantic;
+    string source;
+};
 
-    //cout << "stream: ";
-    //std::copy(std::istream_iterator<char>(is), std::istream_iterator<char>(), std::ostream_iterator<char>(cout));
-    //cout << endl;
+struct Sampler {
+    string ID;
+    vector<SamplerIn> inputs;
+};
 
-    //cout << "ext " << ext <<"\t with type: "; type->print(); cout << endl;
+struct Channel {
+    string source;
+    string target;
+};
 
-    //ptr = VRSceneLoader::get()->getDefaultReadOSG()(type, is, ext);
-    //ptr = SceneFileHandler::the()->read(is,ext);//when reading with isstream, you need the extension as well
-    cout << "printing rapidxml document:" << endl;
+struct Source {
+    string ID;
+};
 
+struct Animation {
+    string ID;
+    Channel channel;
+    Sampler sampler;
+    map<string, Source> sources;
+};
+
+struct AnimationLibrary {
+    map<string, Animation> animations;
+};
+
+vector<Node*> getNodes(Node* node, string name = "") {
+    vector<Node*> res;
+    if (name.size() > 0) for (Node* n = node->first_node(name.c_str()); n; n = n->next_sibling(name.c_str()) ) res.push_back(n);
+    else                 for (Node* n = node->first_node(            ); n; n = n->next_sibling(            ) ) res.push_back(n);
+    return res;
+}
+
+AnimationLibrary parseColladaAnimations(string data) {
     xml_document<> doc;
     doc.parse<0>(&data[0]);
 
+    AnimationLibrary library;
 
-
-    xml_node<> *node = doc.first_node("COLLADA");
-    if(node){ //found COLLADA tag
-
+    Node* node = doc.first_node("COLLADA");
+    if (node) { //found COLLADA tag
         node = node->first_node("library_animations");
-        if(node){ //found animations tag...look for animations
+        if (node) { //found animations tag...look for animations
+            for (Node* animNode : getNodes(node, "animation")) {
+                Attrib* animID = animNode->first_attribute("id");
+                Node* channels = animNode->first_node("channel");
+                Node* sampler = animNode->first_node("sampler");
+                if (!channels) continue;
+                if (!sampler) continue;
 
-            xml_node<> *animNode = node->first_node("animation");
-            while(animNode){
-                xml_attribute<> *animNode_id = animNode->first_attribute("id");
-                cout << animNode_id->value() << endl;
+                Attrib* source = channels->first_attribute("source");
+                Attrib* target = channels->first_attribute("target");
+                Attrib* samplerID = sampler->first_attribute("id");
 
-                /*
-                Introduction
-                    Declares an output channel of an animation.
-                Concepts
-                    As an animation’s sampler transforms values over time, those values are directed out to channels. The
-                    animation channels describe where to store the transformed values from the animation engine. The
-                    channels target the data structures
-                    that receive the animated values.
-                */
-                xml_node<> *animation_nodes = animNode->first_node("channel");
-                if(!animation_nodes) {cout << "<channel> tag not found" << endl; animNode = animNode->next_sibling("animation"); continue;} //no channel found!
+                Animation anim;
+                anim.ID = animID->value();
+                anim.channel = Channel();
+                anim.channel.source = source->value();
+                anim.channel.target = target->value();
+                anim.sampler = Sampler();
+                anim.sampler.ID = samplerID->value();
 
-                xml_attribute<> *animationChannel_source = animation_nodes->first_attribute("source");
-                cout << animationChannel_source->value() << endl;
-                xml_attribute<> *animationChannel_target = animation_nodes->first_attribute("target");
-                cout << animationChannel_target->value() << endl;
-                //TODO check if target exists in the tree
+                if (anim.channel.source.find(anim.sampler.ID) == string::npos) continue;
 
-                /*
-                Introduction
-                    Declares an interpolation sampling function for an animation.
-                Concepts
-                    Animation function curves are represented by 1-D <sampler>
-                    elements in COLLADA. The sampler
-                    defines sampling points and how to
-                    interpolate between them. When used to compute values for an
-                    animation channel, the sampling points are the animation key frames.
-                    Sampling points (key frames) are input data sources
-                    to the sampler, as are interpolation type symbolic
-                    names. Animation channels direct
-                    the output data values of
-                    the sampler to their targets.
-                */
-                animation_nodes = animNode->first_node("sampler");
-                if(!animation_nodes) {cout << "<sampler> tag not found" << endl; animNode = animNode->next_sibling("animation"); continue;} //no channel found!
-                xml_attribute<> *animationSampler_id = animation_nodes->first_attribute("id");
-                cout << animationSampler_id->value() << endl;
+                for (Node* samplerIn : getNodes(sampler, "input")) {
+                    SamplerIn sampIn;
+                    sampIn.semantic = samplerIn->first_attribute("semantic")->value();
+                    sampIn.source = samplerIn->first_attribute("source")->value();
 
-                std::string string_with_tag = animationChannel_source->value();
-                std::string string_compare = animationSampler_id->value();
+                    for (Node* animSource : getNodes(animNode, "source")) {
+                        Source source;
+                        source.ID = animSource->first_attribute("id")->value();
 
-
-                if (string_with_tag.find(string_compare) == string::npos){cout << "could not find animation sampler id in source name!" << endl; animNode = animNode->next_sibling("animation"); continue;}
-
-                cout << "getting sampler inputs" << endl;
-                xml_node<> *animationSampler_input = animation_nodes->first_node("input");
-                while(animationSampler_input){
-                    xml_attribute<> *animationSampler_inputSemantic =animationSampler_input->first_attribute("semantic");
-                    xml_attribute<> *animationSampler_inputSource =animationSampler_input->first_attribute("source");
-                    cout << animationSampler_inputSemantic->value() << endl;
-
-                    xml_node<> *animation_source = animNode->first_node("source");
-                    while(animation_source){
-                        cout << animation_source->first_attribute("id")->value() << endl;
-                        string_with_tag = animationSampler_inputSource->value();
-                        string_compare = animation_source->first_attribute("id")->value();
-                        if(string_with_tag.find(string_compare) != string::npos){
+                        if (sampIn.source.find(source.ID) != string::npos) {
                             //now we have the semantics (sampler node) INPUT,OUTPUT,INTERPOLATION,INTANGENT and OUTTANGET to parse through...
-                            cout << " == " << endl;
-                            xml_node<> *animationSource_node = animation_source->first_node();
-                            while(animationSource_node){
-                                cout << animationSource_node->name() << endl;
-                                //float/name_array and technique_common
+                            for (Node* sourceNode : getNodes(animSource)) {
+                                string sourceName = sourceNode->name();
+                                if (sourceName.find("_array") != string::npos) { // parse array
 
-                                string animationSource_node_name = animationSource_node->name();
-                                if(animationSource_node_name.find("_array") != string::npos){ // parse array
-
-                                } else if(animationSource_node_name =="technique_common"){
+                                } else if(sourceName == "technique_common") {
 
                                 }
                                 ////////////////////////////////////////////////
@@ -120,39 +107,54 @@ NodeTransitPtr fileReadCallback(string data){
                                 //VRScene* scene = VRSceneManager::getCurrent();
                                 //int a = scene->addAnimation(4.125, 0, fkt, 0.f, 1.f, true);
                                 ////////////////////////////////////////////////
-
-
-                                animationSource_node = animationSource_node->next_sibling();
                             }
                             break;
                         }
-                        animation_source = animation_source->next_sibling("source");
+
+                        anim.sources[source.ID] = source;
                     }
-                    animationSampler_input = animationSampler_input->next_sibling("input");
+
+                    anim.sampler.inputs.push_back(sampIn);
                 }
-                animNode = animNode->next_sibling("animation");//get next animation node when done parsing previous
+
+                library.animations[anim.ID] = anim;
             }
         } else cout << "<library_animations> tag not found" << endl;
     } else cout << "<COLLADA> tag not found" << endl;
 
-    //cout << doc << endl;  // 0 means default printing flags
-
-    cout << "the import worked" << endl;
-
-    return Node::create();
+    return library;
 }
 
+void printAll(const AnimationLibrary& library) {
+    cout << "Imported COLLADA animations:\n";
+    cout << " Animations:\n";
+    for (auto a : library.animations) {
+        cout << "  Animation " << a.first << endl;
+        cout << "   Channel source: " << a.second.channel.source << endl;
+        cout << "   Channel target: " << a.second.channel.target << endl;
+        cout << "   Sources:\n";
+        for (auto s : a.second.sources) cout << "    Source " << s.first << endl;
+        cout << "   Sampler " << a.second.sampler.ID << endl;
+        cout << "    Sampler inputs:\n";
+        for (auto i : a.second.sampler.inputs) {
+            cout << "     Input source: " << i.source << endl;
+            cout << "     Input semantic: " << i.semantic << endl;
+        }
+    }
+}
 
+using namespace OSG;
 
-VRObject* loadCollada(string path, VRObject* objects) {
+VRObject* OSG::loadCollada(string path, VRObject* objects) {
     ifstream file(path);
-    string content( (std::istreambuf_iterator<char>(file) ), (std::istreambuf_iterator<char>() ) );
+    string data( (std::istreambuf_iterator<char>(file) ), (std::istreambuf_iterator<char>() ) );
     file.close();
-    NodeRecPtr n = fileReadCallback(content);
+
+    auto library = parseColladaAnimations(data);
+
+    printAll(library);
 
     VRObject* res = new VRObject("COLLADA");
-    res->addChild(n);
+    //res->addChild(n);
     return res;
 }
-
-OSG_END_NAMESPACE;
