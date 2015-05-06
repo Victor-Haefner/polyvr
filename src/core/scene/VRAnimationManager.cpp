@@ -25,11 +25,10 @@ VRAnimationManager::VRAnimationManager() {
 }
 
 void VRAnimationManager::addAnimation(VRAnimation* anim) {
-    anim->start();
     anim_map[anim->getName()] = anim;
 }
 
-void VRAnimationManager::stopAnimation(VRAnimation* anim) {
+void VRAnimationManager::remAnimation(VRAnimation* anim) {
     string n = anim->getName();
     if (anim_map.count(n)) anim_map.erase(n);
 }

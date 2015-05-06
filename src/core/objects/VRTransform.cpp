@@ -774,9 +774,7 @@ void VRTransform::startPathAnimation(path* p, float time, float offset, bool red
 }
 
 void VRTransform::stopAnimation() {
-    VRScene* scene = VRSceneManager::getCurrent();
-    for (auto a : animations) scene->stopAnimation(a.second);
-    animations.clear();
+    for (auto a : animations) a.second->stop();
 }
 
 list<VRTransform* > VRTransform::dynamicObjects = list<VRTransform* >();

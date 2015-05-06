@@ -234,8 +234,8 @@ void VRObject::getObjectListByType(string _type, vector<VRObject*>& list) {
 VRObject* VRObject::find(NodeRecPtr n, string indent) {
     //cout << endl << indent << getName() << " " << node << " " << this << flush;
     if (node == n) return this;
-    for (uint i=0;i<children.size();i++) {
-        VRObject* tmp = children[i]->find(n, indent+" ");
+    for (auto c : children) {
+        VRObject* tmp = c->find(n, indent+" ");
         if (tmp != 0) return tmp;
     }
     return 0;
@@ -243,8 +243,8 @@ VRObject* VRObject::find(NodeRecPtr n, string indent) {
 
 VRObject* VRObject::find(VRObject* obj) {
     if (obj == this) return this;
-    for (uint i=0;i<children.size();i++) {
-        VRObject* tmp = children[i]->find(obj);
+    for (auto c : children) {
+        VRObject* tmp = c->find(obj);
         if (tmp != 0) return tmp;
     }
     return 0;
@@ -252,8 +252,9 @@ VRObject* VRObject::find(VRObject* obj) {
 
 VRObject* VRObject::find(string Name) {
     if (name == Name) return this;
-    for (uint i=0;i<children.size();i++) {
-        VRObject* tmp = children[i]->find(Name);
+    for (auto c : children) {
+        if (c == this) continue; // workaround! TODO: find why this can happn
+        VRObject* tmp = c->find(Name);
         if (tmp != 0) return tmp;
     }
     return 0;
@@ -262,8 +263,8 @@ VRObject* VRObject::find(string Name) {
 VRObject* VRObject::find(int id) {
     if (ID == -1) return 0;
     if (ID == id) return this;
-    for (uint i=0;i<children.size();i++) {
-        VRObject* tmp = children[i]->find(id);
+    for (auto c : children) {
+        VRObject* tmp = c->find(id);
         if (tmp != 0) return tmp;
     }
     return 0;

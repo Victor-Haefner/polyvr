@@ -22,8 +22,8 @@ class VRAnimationManager {
     public:
         VRAnimationManager();
 
-        void stopAnimation(VRAnimation* anim);
         void addAnimation(VRAnimation* anim);
+        void remAnimation(VRAnimation* anim);
 
         template<typename T>
         VRAnimation* addAnimation(float duration, float offset, VRFunction<T>* fkt, T start, T end, bool loop = false);
