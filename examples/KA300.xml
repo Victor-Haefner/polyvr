@@ -6,7 +6,7 @@
         <Object name_suffix="0" base_name="L2" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="L2_beacon" diffuse="1 1 1 1" lightType="directional" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
           <Object name_suffix="0" base_name="Karlsruhe" name_space="__global__" type="Geometry" pickable="0" visible="1" from="-1.87274 0.835229 0" at="-1.87274 0.835229 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" sourcetype="2" sourceparam="../ressources/misc/Karlsruhe300.dae Plane0"/>
           <Object name_suffix="0" base_name="L2_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="-0.2 -0.2 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="L2"/>
-          <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="2.53399 2.99016 19.4043" at="0.455133 0.900688 0.00590563" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472"/>
+          <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="-1.9943 4.34345 19.1667" at="0.455133 0.900688 0.00590563" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472"/>
           <Object name_suffix="0" base_name="L1_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0.2 0.2 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="L1"/>
         </Object>
       </Object>
@@ -30,8 +30,6 @@
 	if not hasattr(VR, 'fan'):
 		VR.fan = VR.Geometry('fan')
 		ka.addChild(VR.fan)
-		fm = VR.Material('fan') # does not work!!
-		VR.fan.setMaterial(fm)
 		print 'init'
 		
 	N = 64
@@ -39,6 +37,7 @@
 	pos.append([0,0,-200])
 	inds = []
 	cols = []
+	cols.append([1, 0.5, 0.5])
 	for i in range(N):
 		a1 = i*2*math.pi/N
 		a2 = a1 + 0.1 + random.random()
@@ -66,19 +65,19 @@
 		
 	norms = [[0,0,1]]*len(pos)
 		
+	fm = VR.Material('fan')
+	fm.setLit(False)
+	fm.setDiffuse(1,1,1)
+	fm.setAmbient(1,1,1)
+	fm.setSpecular(1,1,1)
+	
 	VR.fan.setNormals(norms)
 	VR.fan.setPositions(pos)
 	VR.fan.setIndices(inds)
 	VR.fan.setColors(cols)
 	#VR.fan.setRandomColors()
 	VR.fan.setType('GL_TRIANGLES')
-	VR.fan.setLit(False)
-	
-	
-	fm = VR.fan.getMaterial()
-	fm.setDiffuse(1,1,1)
-	fm.setAmbient(1,1,1)
-	fm.setSpecular(1,1,1)
+	VR.fan.setMaterial(fm)
 	
 	
 	

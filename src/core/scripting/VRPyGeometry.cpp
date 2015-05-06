@@ -223,7 +223,7 @@ PyObject* VRPyGeometry::setType(VRPyGeometry* self, PyObject *args) {
     string stype = parseString(args);
 
     int type = toGLConst(stype);
-    if (type == 0) {
+    if (type == -1) {
         PyErr_SetString(err, (stype + " is not a valid type").c_str() );
         return NULL;
     }
