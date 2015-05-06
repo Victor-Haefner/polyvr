@@ -1,6 +1,8 @@
 #include "VRAnimation.h"
 
 #include "core/utils/VRFunction.h"
+#include "core/scene/VRSceneManager.h"
+#include "core/scene/VRScene.h"
 
 #include <GL/glut.h>
 
@@ -11,7 +13,12 @@ VRAnimation::VRAnimation(string name) {
     setName(name);
 }
 
-void VRAnimation::start() { start_time = glutGet(GLUT_ELAPSED_TIME)/1000.0; run = true; }
+void VRAnimation::start() {
+    start_time = glutGet(GLUT_ELAPSED_TIME)/1000.0;
+    run = true;
+    VRSceneManager::getCurrent()->addAnimation(this);
+}
+
 void VRAnimation::stop() { run = false; }
 bool VRAnimation::isActive() { return run; }
 

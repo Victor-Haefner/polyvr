@@ -26,7 +26,7 @@ class VRImport {
 
         VRTransform* prependTransform(VRObject* o, string path);
         void fixEmptyNames(NodeRecPtr o, map<string, bool>& m, string parentName = "NAN", int iChild = 0);
-        VRObject* OSGConstruct(NodeRecPtr n, VRObject* parent = 0, string name = "", string currentFile = "", NodeCore* geoTrans = 0);
+        VRObject* OSGConstruct(NodeRecPtr n, VRObject* parent = 0, string name = "", string currentFile = "", NodeCore* geoTrans = 0, string geoTransName = "");
 
     public:
         static VRImport* get();

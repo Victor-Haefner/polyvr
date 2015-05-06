@@ -9,6 +9,7 @@
 #include "core/objects/VRTransform.h"
 #include "core/objects/VRGroup.h"
 #include "core/objects/object/VRObject.h"
+#include "core/objects/object/VRObjectT.h"
 #include "core/objects/geometry/VRGeometry.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -82,7 +83,7 @@ VRTransform* VRImport::load(string path, VRObject* parent, bool reload, string p
     return cache[path].root;
 }
 
-VRObject* VRImport::OSGConstruct(NodeRecPtr n, VRObject* parent, string name, string currentFile, NodeCore* geoTrans) {
+VRObject* VRImport::OSGConstruct(NodeRecPtr n, VRObject* parent, string name, string currentFile, NodeCore* geoTrans, string geoTransName) {
     if (n == 0) return 0; // TODO add an osg wrap method for each object?
 
     VRObject* tmp = 0;
@@ -116,7 +117,7 @@ VRObject* VRImport::OSGConstruct(NodeRecPtr n, VRObject* parent, string name, st
         }
 
         for (uint i=0;i<n->getNChildren();i++)
-            tmp_gr->addChild(OSGConstruct(n->getChild(i), parent, name));
+            tmp_gr->addChild(OSGConstruct(n->getChild(i), parent, name, geoTransName));
 
         return tmp;
     }
@@ -139,6 +140,7 @@ VRObject* VRImport::OSGConstruct(NodeRecPtr n, VRObject* parent, string name, st
             string tp = n->getChild(0)->getCore()->getTypeName();
             if (tp == "Geometry") {
                 geoTrans = n->getCore();
+                geoTransName = name;
                 tmp = parent;
             }
         }
@@ -159,8 +161,10 @@ VRObject* VRImport::OSGConstruct(NodeRecPtr n, VRObject* parent, string name, st
     else if (t_name == "Geometry") {
         tmp_g = new VRGeometry(name);
         if (geoTrans) {
+            tmp_g->addAttachment("collada_name", geoTransName);
             tmp_g->setMatrix(dynamic_cast<Transform *>(geoTrans)->getMatrix());
             geoTrans = 0;
+            geoTransName = "";
         }
 
         VRGeometry::Reference ref;
@@ -176,7 +180,7 @@ VRObject* VRImport::OSGConstruct(NodeRecPtr n, VRObject* parent, string name, st
     }
 
     for (uint i=0;i<n->getNChildren();i++)
-        tmp->addChild(OSGConstruct(n->getChild(i), tmp, name, currentFile, geoTrans));
+        tmp->addChild(OSGConstruct(n->getChild(i), tmp, name, currentFile, geoTrans, geoTransName));
 
     if (cache.count(currentFile) == 0) cache[currentFile] = Cache();
     cache[currentFile].objects[name] = tmp;
