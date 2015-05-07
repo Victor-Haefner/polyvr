@@ -3,7 +3,7 @@
   <Objects>
     <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
       <Object name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
-        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="17.9724 23.7305 2.1237" at="10.3176 15.6126 -6.3384" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
+        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="17.1448 24.262 2.9627" at="17.9488 23.6779 2.07249" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
           <Object name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
         </Object>
       </Object>
@@ -20,7 +20,8 @@
  &lt;style type="text/css"&gt;
   body {text-align:center;
 		background:#f0f0ff;
-		color:#111166}
+		color:#111166;
+		margin:0;}
  &lt;/style&gt;
 &lt;/head&gt;
 
@@ -70,8 +71,8 @@
 
 		&lt;script&gt;
 			var camera, scene, renderer, mesh, geo;
-			var width = 105;
-			var height = 105;
+			var width = 200;
+			var height = 200;
 			var bX = 4;
 			var bY = 3;
 			var bZ = 4;
@@ -114,7 +115,7 @@
 				document.body.appendChild( renderer.domElement );
 
 				camera = new THREE.PerspectiveCamera( 70, width/height, 1, 1000 );
-				camera.position.set(4,4,4);
+				camera.position.set(3,3,3);
 				scene = new THREE.Scene();
 				geo = new THREE.BoxGeometry( bX, bY*1.2/3, bZ );
 				mesh = new THREE.Mesh( geo, brickMaterial() );
@@ -150,8 +151,7 @@
 &lt;input type="number" onchange="brick(1,this.value)" min="1" max="4" value="4"&gt;
 &lt;input type="number" onchange="brick(2,this.value)" min="1" max="3" value="3"&gt;
 &lt;input type="number" onchange="brick(3,this.value)" min="1" max="4" value="4"&gt;
-
-&lt;br/&gt;&lt;br/&gt;
+&lt;br/&gt;
 &lt;button onmousedown='get(1,1,dims())' onmouseup='get(1,0,dims())'&gt;Create&lt;/button&gt;
 
 
@@ -236,8 +236,8 @@
 	import VR
 	
 	gui = VR.Geometry('gui')
-	gui.setPrimitive('Plane 0.5 1 1 1')
-	gui.setPose([-1,0,-1], [0,0,1], [0,-1,0])
+	gui.setPrimitive('Plane 0.5 0.65 1 1')
+	gui.setPose([-0.5,0,-1], [0,0,1], [0,-1,0])
 	l = VR.getRoot().find('Default')
 	l.addChild(gui)
 	
@@ -247,8 +247,8 @@
 	site = VR.CEF()
 	site.setMaterial( gui.getMaterial() )
 		
-	site.setAspectRatio(0.5)
-	site.setResolution(128)
+	site.setAspectRatio(0.769)
+	site.setResolution(200)
 	site.open('http://localhost:5500/gui')
 	#site.open('http://threejs.org/examples/#webgl_geometry_cube')
 	site.addMouse(mouse, gui, 0, 2, 3, 4)
@@ -294,7 +294,7 @@ attribute vec3 osg_Normal;
 void main() {
     gl_Position = gl_ModelViewProjectionMatrix * osg_Vertex;
     norm = osg_Normal;
-    pos = osg_Vertex+abs(osg_Vertex);
+    pos = 10*(osg_Vertex+abs(osg_Vertex));
     
     &#13;
     light = gl_LightSource[0].position.xyz - gl_Position.xyz;

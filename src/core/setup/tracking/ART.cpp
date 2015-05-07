@@ -26,7 +26,7 @@ void ART_device::init() {
     if (type != 1) ent = new VRTransform("ART_tracker");
     if (type == 1) {
         dev = new VRFlystick();
-        ent = dev->getBeacon();
+        ent = dev->editBeacon();
         VRSetupManager::getCurrent()->addDevice(dev);
     }
 }

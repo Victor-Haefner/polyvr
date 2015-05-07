@@ -112,7 +112,7 @@ void VRMouse::updatePosition(int x, int y) {
     view->getViewport()->calcNormalizedCoordinates(rx, ry, x, y);
 
     calcViewRay(cam->getCam(), ray, rx,ry,w,h);
-    getBeacon()->setDir(ray.getDirection());
+    editBeacon()->setDir(ray.getDirection());
 }
 
 void VRMouse::mouse(int button, int state, int x, int y) {

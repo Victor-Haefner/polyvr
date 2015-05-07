@@ -72,7 +72,7 @@ VRSnappingEngine::VRSnappingEngine() {
     positions = new Octree(0.1);
 
     VRFunction<int>* fkt = new VRFunction<int>("snapping engine update", boost::bind(&VRSnappingEngine::update, this) );
-    VRSceneManager::getCurrent()->addUpdateFkt(fkt, 100);
+    VRSceneManager::getCurrent()->addUpdateFkt(fkt, 999);
 }
 
 void VRSnappingEngine::clear() {

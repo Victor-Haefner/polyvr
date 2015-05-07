@@ -1,5 +1,6 @@
 #include "VRCallbackManager.h"
 #include "core/utils/VRFunction.h"
+#include "core/objects/object/VRObject.h"
 #include <iostream>
 #include <vector>
 #include <GL/glut.h>
@@ -82,7 +83,11 @@ void VRCallbackManager::dropTimeoutFkt(VRFunction<int>* f) {//replace by list ||
 }
 
 void VRCallbackManager::updateCallbacks() {
+    //printCallbacks();
     vector<VRFunction<int>*> cbs;
+
+    // gather all update callbacks
+    for (auto fl : updateFkts) for (auto f : *fl.second) cbs.push_back(f);
 
     // gather all timeout callbacks
     int time = glutGet(GLUT_ELAPSED_TIME);
@@ -93,9 +98,6 @@ void VRCallbackManager::updateCallbacks() {
                 tf.last_call = time;
             }
 
-    // gather all update callbacks
-    for (auto fl : updateFkts) for (auto f : *fl.second) cbs.push_back(f);
-
     for (auto cb : cbs) { // trigger all callbacks
         (*cb)(0);
         if (jobFkts.count(cb)) { // if a job erase it
@@ -105,5 +107,15 @@ void VRCallbackManager::updateCallbacks() {
     }
 }
 
+void VRCallbackManager::printCallbacks() {
+    cout << "VRCallbackManager " << this << " t " << VRGlobals::get()->CURRENT_FRAME << endl;
+    cout << " update fkts (" << updateFkts.size() << ")\n";
+    for (auto fl : updateFkts) {
+        cout << "  prio " << fl.first << " (" << fl.second->size() << ")\n";
+        for (auto f : *fl.second) {
+            cout << "   fkt " << f->getName() << endl;
+        }
+    }
+}
 
 OSG_END_NAMESPACE
