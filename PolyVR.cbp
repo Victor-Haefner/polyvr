@@ -197,6 +197,12 @@
 		<Unit filename="src/addons/Bullet/CarDynamics/CarDynamics.h" />
 		<Unit filename="src/addons/Bullet/CarDynamics/VRPyCarDynamics.cpp" />
 		<Unit filename="src/addons/Bullet/CarDynamics/VRPyCarDynamics.h" />
+		<Unit filename="src/addons/Bullet/Fluids/VRFluids.cpp" />
+		<Unit filename="src/addons/Bullet/Fluids/VRFluids.h" />
+		<Unit filename="src/addons/Bullet/Particles/VRParticles.cpp" />
+		<Unit filename="src/addons/Bullet/Particles/VRParticles.h" />
+		<Unit filename="src/addons/Bullet/Particles/VRPyParticles.cpp" />
+		<Unit filename="src/addons/Bullet/Particles/VRPyParticles.h" />
 		<Unit filename="src/addons/CEF/CEF.cpp" />
 		<Unit filename="src/addons/CEF/CEF.h" />
 		<Unit filename="src/addons/CEF/VRPyCEF.cpp" />

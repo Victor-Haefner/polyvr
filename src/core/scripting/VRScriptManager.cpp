@@ -42,6 +42,7 @@
 #include "core/setup/VRSetup.h"
 #include "core/setup/VRSetupManager.h"
 #include "addons/CaveKeeper/VRPyCaveKeeper.h"
+#include "addons/Bullet/Particles/VRPyParticles.h"
 #include "addons/Bullet/CarDynamics/VRPyCarDynamics.h"
 #include "addons/Engineering/Factory/VRPyLogistics.h"
 #include "addons/Engineering/Factory/VRPyAMLLoader.h"
@@ -266,6 +267,7 @@ void VRScriptManager::initPyModules() {
     VRPyClipPlane::registerModule("ClipPlane", pModVR, VRPyGeometry::typeRef);
 	VRPyColorChooser::registerModule("ColorChooser", pModVR);
     VRPyCaveKeeper::registerModule("CaveKeeper", pModVR);
+    VRPyParticles::registerModule("Particles", pModVR, VRPyGeometry::typeRef);
     VRPyCarDynamics::registerModule("CarDynamics", pModVR);
     VRPyCEF::registerModule("CEF", pModVR);
     VRPyWebCam::registerModule("Webcam", pModVR, VRPySprite::typeRef);
