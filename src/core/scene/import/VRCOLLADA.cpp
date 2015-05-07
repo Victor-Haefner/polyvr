@@ -16,8 +16,9 @@
 #include <OpenSG/OSGSimpleMaterial.h>
 
 using namespace rapidxml;
+using namespace OSG;
 
-typedef xml_node<> Node;
+typedef xml_node<> xNode;
 typedef xml_attribute<> Attrib;
 
 struct SamplerIn {
@@ -27,7 +28,8 @@ struct SamplerIn {
 
 struct Sampler {
     string ID;
-    vector<SamplerIn> inputs;
+    map<string, string> inputs;
+    //vector<SamplerIn> inputs;
 };
 
 struct Channel {
@@ -55,8 +57,8 @@ technique_common
 
 struct Source {
     string ID;
-    Node* array_element;
-    Node* technique_common;
+    xNode* array_element;
+    xNode* technique_common;
    // string data;//contains the data associated with semantic, see above comment
 };
 
@@ -71,10 +73,10 @@ struct AnimationLibrary {
     map<string, Animation> animations;
 };
 
-vector<Node*> getNodes(Node* node, string name = "") {
-    vector<Node*> res;
-    if (name.size() > 0) for (Node* n = node->first_node(name.c_str()); n; n = n->next_sibling(name.c_str()) ) res.push_back(n);
-    else                 for (Node* n = node->first_node(            ); n; n = n->next_sibling(            ) ) res.push_back(n);
+vector<xNode*> getxNodes(xNode* node, string name = "") {
+    vector<xNode*> res;
+    if (name.size() > 0) for (xNode* n = node->first_node(name.c_str()); n; n = n->next_sibling(name.c_str()) ) res.push_back(n);
+    else                 for (xNode* n = node->first_node(            ); n; n = n->next_sibling(            ) ) res.push_back(n);
     return res;
 }
 
@@ -84,14 +86,14 @@ AnimationLibrary parseColladaAnimations(string data) {
 
     AnimationLibrary library;
 
-    Node* node = doc.first_node("COLLADA");
+    xNode* node = doc.first_node("COLLADA");
     if (node) { //found COLLADA tag
         node = node->first_node("library_animations");
         if (node) { //found animations tag...look for animations
-            for (Node* animNode : getNodes(node, "animation")) {
-                Attrib* animID = animNode->first_attribute("id");
-                Node* channels = animNode->first_node("channel");
-                Node* sampler = animNode->first_node("sampler");
+            for (xNode* animxNode : getxNodes(node, "animation")) {
+                Attrib* animID = animxNode->first_attribute("id");
+                xNode* channels = animxNode->first_node("channel");
+                xNode* sampler = animxNode->first_node("sampler");
                 if (!channels) continue;
                 if (!sampler) continue;
 
@@ -115,23 +117,26 @@ AnimationLibrary parseColladaAnimations(string data) {
 
                 if (anim.channel.source.find(anim.sampler.ID) == string::npos) continue;
 
-                for (Node* samplerIn : getNodes(sampler, "input")) {
-                    SamplerIn sampIn;
-                    sampIn.semantic = samplerIn->first_attribute("semantic")->value();
-                    sampIn.source = samplerIn->first_attribute("source")->value();
+                for (xNode* samplerIn : getxNodes(sampler, "input")) {
+                    //SamplerIn sampIn;
+                    string samplerSemantic = samplerIn->first_attribute("semantic")->value();
+                    string samplerSource = samplerIn->first_attribute("source")->value();
+                    samplerSource = samplerSource.substr(1, samplerSource.size()-1);
 
-                    for (Node* animSource : getNodes(animNode, "source")) {
+                    anim.sampler.inputs[samplerSemantic] = samplerSource;
+
+                    for (xNode* animSource : getxNodes(animxNode, "source")) {
                         Source source;
                         source.ID = animSource->first_attribute("id")->value();
 
-                        if (sampIn.source.find(source.ID) != string::npos) {
+                        if (samplerSource.find(source.ID) != string::npos) {
                             //now we have the semantics (sampler node) INPUT,OUTPUT,INTERPOLATION,INTANGENT and OUTTANGET to parse through...
-                            for (Node* sourceNode : getNodes(animSource)) {
-                                string sourceName = sourceNode->name();
+                            for (xNode* sourcexNode : getxNodes(animSource)) {
+                                string sourceName = sourcexNode->name();
                                 if (sourceName.find("_array") != string::npos) { // parse array
-                                    source.array_element = sourceNode;
+                                    source.array_element = sourcexNode;
                                 } else if(sourceName == "technique_common") {
-                                    source.technique_common = sourceNode;
+                                    source.technique_common = sourcexNode;
                                 }
                             }
                             break;
@@ -140,7 +145,7 @@ AnimationLibrary parseColladaAnimations(string data) {
                         anim.sources[source.ID] = source;
                     }
 
-                    anim.sampler.inputs.push_back(sampIn);
+                    //anim.sampler.inputs.push_back(sampIn);
                 }
 
                 library.animations[anim.ID] = anim;
@@ -164,8 +169,8 @@ void printAll(const AnimationLibrary& library) {
         cout << "      Sampler " << a.second.sampler.ID << endl;
         cout << "         Sampler inputs:\n";
         for (auto i : a.second.sampler.inputs) {
-            cout << "            Input semantic: " << i.semantic << endl;
-            cout << "            Input source: " << i.source << endl;
+            cout << "            Input semantic: " << i.first << endl;
+            cout << "            Input source: " << i.second << endl;
         }
 
         cout << "      Sources:\n";
@@ -177,9 +182,7 @@ void printAll(const AnimationLibrary& library) {
     }
 }
 
-using namespace OSG;
-
-void setPose(VRTransform* o, int i, float t) {
+void setPose(OSG::VRTransform* o, int i, float t) {
     cout << "setPose " << o->getName() << " " << t << endl;
     Vec3f f = o->getFrom();
     f[i] = t;
@@ -209,13 +212,98 @@ void buildAnimations(AnimationLibrary& lib, VRObject* objects) {
         if (obj == 0) continue;
         if (!obj->hasAttachment("transform")) continue;
 
-        VRTransform* t = (VRTransform*)obj;
-
-        float duration = 2.0;
+        float duration = 0;
         float offset = 0.0;
         bool loop = false;
-
         int i = 0; // x axis
+
+        map<string, Source> sources = a.second.sources;
+        Sampler sampler = a.second.sampler;
+        Source inputSource = sources.find(sampler.inputs.find("INPUT")->second)->second;
+        cout << "starting animation build for source: " << inputSource.ID << endl;
+
+
+        xNode* technique_common = inputSource.technique_common;
+        xNode* accessor = technique_common->first_node("accessor");
+
+        int inputCount = toInt(accessor->first_attribute("count")->value());
+        int inputStride = toInt(accessor->first_attribute("stride")->value());
+        string arrayType =  accessor->first_node("param")->first_attribute("type")->value();//differentiate type
+
+        vector<float> inputValues;
+        string arrayElemCount = inputSource.array_element->first_attribute("count")->value();
+
+
+
+
+  // If possible, always prefer std::vector to naked array
+
+  // Build an istream that holds the input string
+        std::istringstream iss(inputSource.array_element->value());
+        cout << "values to be parsed: " << inputSource.array_element->value() << endl;
+
+  // Iterate over the istream, using >> to grab floats
+  // and push_back to store them in the vector
+        std::copy(std::istream_iterator<float>(iss),
+        std::istream_iterator<float>(),
+        std::back_inserter(inputValues));
+
+  // Put the result on standard out
+        cout << "input values: ";
+        for(float i : inputValues) cout << i <<" ";
+
+        cout << "accessor count " << inputCount << endl;
+        cout << "accessor stride " << inputStride << endl;
+        cout << "arrayType " << arrayType << endl;
+
+
+
+
+/*
+        for(auto in : a.second.sampler.inputs){
+            cout << "***********buildAnimations, in.source" << in.second << endl;
+            auto source = sources.find(in.second)->second;
+            cout << "***********buildAnimations, source name" <<source.ID << endl;
+
+            xNode* accessor = source.technique_common->first_node("accessor");
+
+
+
+
+            if(in.semantic == "INPUT") {
+                cout << "***INPUT: "  << endl;
+               // cout << "***INPUT: " << input.ID << endl;
+
+               //my source is the input, so time
+            }
+            else if(in.semantic == "OUTPUT") {
+                cout << "***OUTPUT" << endl;
+            }
+            else if(in.semantic == "INTERPOLATION") {
+                cout << "***INTERPOLATION" << endl;
+            }
+            else if(in.semantic == "IN_TANGENT") {
+                cout << "***INTANGENT" << endl;
+            }
+            else if(in.semantic == "OUT_TANGENT") {
+                cout << "***OUTTANGENT" << endl;
+            }
+
+
+            cout << "accessor count " << counts << endl;
+            cout << "accessor stride " << stride << endl;
+
+        }
+
+
+        */
+        VRTransform* t = (VRTransform*)obj;
+
+        //float duration = 2.0;
+        //float offset = 0.0;
+        //bool loop = false;
+
+        //int i = 0; // x axis
         auto fkt = new VRFunction<float>(a.first, boost::bind(setPose, t, i, _1) );
         float start = 0.0;
         float end = 1.0;
@@ -237,7 +325,7 @@ VRObject* OSG::loadCollada(string path, VRObject* objects) {
     auto library = parseColladaAnimations(data);
     buildAnimations(library, objects);
 
-    //printAll(library);
+    printAll(library);
 
     VRObject* res = new VRObject("COLLADA");
     //res->addChild(n);
