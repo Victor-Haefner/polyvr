@@ -23,7 +23,7 @@ struct OSG::Particle {
     btRigidBody* body = 0;
     btCollisionShape* shape = 0;
     btDefaultMotionState* motionState = 0;
-    float radius = 0.1;
+    float radius = 0.01;
     int collisionGroup = 1;
     int collisionMask = 1;
     float mass = 1.0;
