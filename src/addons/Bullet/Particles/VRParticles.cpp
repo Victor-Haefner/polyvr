@@ -55,9 +55,7 @@ struct OSG::Particle {
     ~Particle() {
         btDiscreteDynamicsWorld* world = 0;
         VRScene* scene = VRSceneManager::getCurrent();
-        if (scene) world = scene->bltWorld();
-
-        world->removeRigidBody(body);
+        if (scene) scene->bltWorld()->removeRigidBody(body);
         delete body;
         delete shape;
         delete motionState;
@@ -68,7 +66,7 @@ Vec3f toVec3f(btVector3 v) { return Vec3f(v[0], v[1], v[2]); }
 btVector3 toBtVector3(Vec3f v) { return btVector3(v[0], v[1], v[2]); }
 
 VRParticles::VRParticles() : VRGeometry("particles") {
-    N = 50;
+    N = 500;
 
     // physics
     VRScene* scene = VRSceneManager::getCurrent();
@@ -109,7 +107,7 @@ VRParticles::VRParticles() : VRGeometry("particles") {
 
 VRParticles::~VRParticles() {
     VRScene* scene = VRSceneManager::getCurrent();
-    scene->dropUpdateFkt(fkt);
+    if (scene) scene->dropUpdateFkt(fkt);
     delete mat;
 
     BLock lock(mtx());
