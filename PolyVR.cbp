@@ -313,10 +313,8 @@
 		<Unit filename="src/addons/RealWorld/TestMover.h" />
 		<Unit filename="src/addons/RealWorld/TextureManager.h" />
 		<Unit filename="src/addons/RealWorld/Timer.h" />
-		<Unit filename="src/addons/RealWorld/VRNatureManager.h" />
 		<Unit filename="src/addons/RealWorld/VRPyRealWorld.cpp" />
 		<Unit filename="src/addons/RealWorld/VRPyRealWorld.h" />
-		<Unit filename="src/addons/RealWorld/VRTree.h" />
 		<Unit filename="src/addons/RealWorld/Vec2Helper.h" />
 		<Unit filename="src/addons/RealWorld/World.h" />
 		<Unit filename="src/addons/RealWorld/WorldFeatures/WorldFeatureExtractor.h" />
@@ -328,6 +326,11 @@
 		<Unit filename="src/addons/RealWorld/json/reader.h" />
 		<Unit filename="src/addons/RealWorld/json/value.h" />
 		<Unit filename="src/addons/RealWorld/json/writer.h" />
+		<Unit filename="src/addons/RealWorld/nature/VRNatureManager.h" />
+		<Unit filename="src/addons/RealWorld/nature/VRPyTree.cpp" />
+		<Unit filename="src/addons/RealWorld/nature/VRPyTree.h" />
+		<Unit filename="src/addons/RealWorld/nature/VRTree.cpp" />
+		<Unit filename="src/addons/RealWorld/nature/VRTree.h" />
 		<Unit filename="src/addons/RealWorld/traffic/JsonClient.cpp" />
 		<Unit filename="src/addons/RealWorld/traffic/JsonClient.h" />
 		<Unit filename="src/addons/RealWorld/traffic/ModuleTraffic.h" />
