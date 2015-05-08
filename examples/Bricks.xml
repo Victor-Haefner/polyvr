@@ -22,6 +22,14 @@
 		background:#f0f0ff;
 		color:#111166;
 		margin:0;}
+		input[type=number]::-webkit-inner-spin-button {
+		  cursor: pointer;
+		  display: block;
+		  width: 60px;
+		  text-align: center;
+		  position: relative;
+		  background: transparent;
+		}
  &lt;/style&gt;
 &lt;/head&gt;
 
@@ -148,10 +156,9 @@
 			}
 		&lt;/script&gt;
 
-&lt;input type="number" onchange="brick(1,this.value)" min="1" max="4" value="4"&gt;
-&lt;input type="number" onchange="brick(2,this.value)" min="1" max="3" value="3"&gt;
-&lt;input type="number" onchange="brick(3,this.value)" min="1" max="4" value="4"&gt;
-&lt;br/&gt;
+&lt;input style="height:45px;" type="number" onchange="brick(1,this.value)" min="1" max="4" value="4"&gt;
+&lt;input style="height:45px;" type="number" onchange="brick(2,this.value)" min="1" max="3" value="3"&gt;
+&lt;input style="height:45px;" type="number" onchange="brick(3,this.value)" min="1" max="4" value="4"&gt;
 &lt;button onmousedown='get(1,1,dims())' onmouseup='get(1,0,dims())'&gt;Create&lt;/button&gt;
 
 
