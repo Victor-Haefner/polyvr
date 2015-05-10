@@ -632,6 +632,8 @@
 		<Unit filename="src/core/tools/VRClipPlane.h" />
 		<Unit filename="src/core/tools/VRColorChooser.cpp" />
 		<Unit filename="src/core/tools/VRColorChooser.h" />
+		<Unit filename="src/core/tools/VRMenu.cpp" />
+		<Unit filename="src/core/tools/VRMenu.h" />
 		<Unit filename="src/core/tools/VRMesure.cpp" />
 		<Unit filename="src/core/tools/VRMesure.h" />
 		<Unit filename="src/core/tools/VRPathtool.cpp" />

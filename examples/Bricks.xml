@@ -3,7 +3,7 @@
   <Objects>
     <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
       <Object name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
-        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="17.1448 24.262 2.9627" at="17.9488 23.6779 2.07249" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
+        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="16.938 24.4123 3.19171" at="17.9488 23.6779 2.07249" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
           <Object name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
         </Object>
       </Object>
@@ -156,9 +156,9 @@
 			}
 		&lt;/script&gt;
 
-&lt;input style="height:45px;" type="number" onchange="brick(1,this.value)" min="1" max="4" value="4"&gt;
-&lt;input style="height:45px;" type="number" onchange="brick(2,this.value)" min="1" max="3" value="3"&gt;
-&lt;input style="height:45px;" type="number" onchange="brick(3,this.value)" min="1" max="4" value="4"&gt;
+&lt;input style="height:45px;width:35px;" type="number" onchange="brick(1,this.value)" min="1" max="4" value="4"&gt;
+&lt;input style="height:45px;width:35px;" type="number" onchange="brick(2,this.value)" min="1" max="3" value="3"&gt;
+&lt;input style="height:45px;width:35px;" type="number" onchange="brick(3,this.value)" min="1" max="4" value="4"&gt;
 &lt;button onmousedown='get(1,1,dims())' onmouseup='get(1,0,dims())'&gt;Create&lt;/button&gt;
 
 
