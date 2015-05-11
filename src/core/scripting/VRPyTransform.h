@@ -23,6 +23,7 @@ struct VRPyTransform : VRPyBaseT<OSG::VRTransform> {
 
     static PyObject* setPose(VRPyTransform* self, PyObject* args);
     static PyObject* setWFrom(VRPyTransform* self, PyObject* args);
+    static PyObject* setWOrientation(VRPyTransform* self, PyObject* args);
     static PyObject* setFrom(VRPyTransform* self, PyObject* args);
     static PyObject* setAt(VRPyTransform* self, PyObject* args);
     static PyObject* setDir(VRPyTransform* self, PyObject* args);
@@ -44,6 +45,8 @@ struct VRPyTransform : VRPyBaseT<OSG::VRTransform> {
     static PyObject* applyImpulse(VRPyTransform* self, PyObject *args);
     static PyObject* applyForce(VRPyTransform* self, PyObject *args);
     static PyObject* applyTorque(VRPyTransform* self, PyObject *args);
+    static PyObject* applyConstantForce(VRPyTransform* self, PyObject *args);
+    static PyObject* applyConstantTorque(VRPyTransform* self, PyObject *args);
     static PyObject* getForce(VRPyTransform* self);
     static PyObject* getTorque(VRPyTransform* self);
     static PyObject* getConstraintAngleWith(VRPyTransform* self, PyObject *args);
@@ -58,6 +61,7 @@ struct VRPyTransform : VRPyBaseT<OSG::VRTransform> {
 
     static PyObject* animate(VRPyTransform* self, PyObject* args);
     static PyObject* animationStop(VRPyTransform* self);
+    static PyObject* getAnimations(VRPyTransform* self);
 };
 
 #endif // VRPyTransform_H_INCLUDED

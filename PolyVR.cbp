@@ -313,10 +313,8 @@
 		<Unit filename="src/addons/RealWorld/TestMover.h" />
 		<Unit filename="src/addons/RealWorld/TextureManager.h" />
 		<Unit filename="src/addons/RealWorld/Timer.h" />
-		<Unit filename="src/addons/RealWorld/VRNatureManager.h" />
 		<Unit filename="src/addons/RealWorld/VRPyRealWorld.cpp" />
 		<Unit filename="src/addons/RealWorld/VRPyRealWorld.h" />
-		<Unit filename="src/addons/RealWorld/VRTree.h" />
 		<Unit filename="src/addons/RealWorld/Vec2Helper.h" />
 		<Unit filename="src/addons/RealWorld/World.h" />
 		<Unit filename="src/addons/RealWorld/WorldFeatures/WorldFeatureExtractor.h" />
@@ -328,6 +326,11 @@
 		<Unit filename="src/addons/RealWorld/json/reader.h" />
 		<Unit filename="src/addons/RealWorld/json/value.h" />
 		<Unit filename="src/addons/RealWorld/json/writer.h" />
+		<Unit filename="src/addons/RealWorld/nature/VRNatureManager.h" />
+		<Unit filename="src/addons/RealWorld/nature/VRPyTree.cpp" />
+		<Unit filename="src/addons/RealWorld/nature/VRPyTree.h" />
+		<Unit filename="src/addons/RealWorld/nature/VRTree.cpp" />
+		<Unit filename="src/addons/RealWorld/nature/VRTree.h" />
 		<Unit filename="src/addons/RealWorld/traffic/JsonClient.cpp" />
 		<Unit filename="src/addons/RealWorld/traffic/JsonClient.h" />
 		<Unit filename="src/addons/RealWorld/traffic/ModuleTraffic.h" />
@@ -433,6 +436,8 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/networking/mongoose/mongoose.h" />
+		<Unit filename="src/core/objects/VRAnimation.cpp" />
+		<Unit filename="src/core/objects/VRAnimation.h" />
 		<Unit filename="src/core/objects/VRCamera.cpp" />
 		<Unit filename="src/core/objects/VRCamera.h" />
 		<Unit filename="src/core/objects/VRGroup.cpp" />
@@ -508,6 +513,12 @@
 		<Unit filename="src/core/scene/VRSoundManager.h" />
 		<Unit filename="src/core/scene/VRThreadManager.cpp" />
 		<Unit filename="src/core/scene/VRThreadManager.h" />
+		<Unit filename="src/core/scene/import/VRCOLLADA.cpp" />
+		<Unit filename="src/core/scene/import/VRCOLLADA.h" />
+		<Unit filename="src/core/scene/import/VRImport.cpp" />
+		<Unit filename="src/core/scene/import/VRImport.h" />
+		<Unit filename="src/core/scene/import/VRPLY.cpp" />
+		<Unit filename="src/core/scene/import/VRPLY.h" />
 		<Unit filename="src/core/scripting/VRPyAnimation.cpp" />
 		<Unit filename="src/core/scripting/VRPyAnimation.h" />
 		<Unit filename="src/core/scripting/VRPyBase.cpp" />
@@ -621,6 +632,8 @@
 		<Unit filename="src/core/tools/VRClipPlane.h" />
 		<Unit filename="src/core/tools/VRColorChooser.cpp" />
 		<Unit filename="src/core/tools/VRColorChooser.h" />
+		<Unit filename="src/core/tools/VRMenu.cpp" />
+		<Unit filename="src/core/tools/VRMenu.h" />
 		<Unit filename="src/core/tools/VRMesure.cpp" />
 		<Unit filename="src/core/tools/VRMesure.h" />
 		<Unit filename="src/core/tools/VRPathtool.cpp" />

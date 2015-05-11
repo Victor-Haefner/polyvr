@@ -16,20 +16,6 @@
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGGeometry.h>
 
-static int GL_type_from_string(string s) {
-    static map<string, int> GL_types;
-    if (GL_types.size() == 0) {
-        GL_types["GL_QUADS"] = GL_QUADS;
-        GL_types["GL_TRIANGLES"] = GL_TRIANGLES;
-        GL_types["GL_LINES"] = GL_LINES;
-        GL_types["GL_POINTS"] = GL_POINTS;
-        GL_types["GL_TRIANGLE_STRIP"] = GL_TRIANGLE_STRIP;
-    }
-
-    if (GL_types.count(s) == 0) return -1;
-    return GL_types[s];
-}
-
 template<> PyTypeObject VRPyBaseT<OSG::VRGeometry>::type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
@@ -236,7 +222,7 @@ PyObject* VRPyGeometry::setType(VRPyGeometry* self, PyObject *args) {
 
     string stype = parseString(args);
 
-    int type = GL_type_from_string(stype);
+    int type = toGLConst(stype);
     if (type == -1) {
         PyErr_SetString(err, (stype + " is not a valid type").c_str() );
         return NULL;
@@ -263,7 +249,7 @@ PyObject* VRPyGeometry::setTypes(VRPyGeometry* self, PyObject *args) {
 		PyObject* pyType = PyList_GetItem(typeList, i);
 
 		string stype = PyString_AsString(pyType);
-		int type = GL_type_from_string(stype);
+		int type = toGLConst(stype);
 		if (type == -1) {
 			PyErr_SetString(err, (stype + " is not a valid type").c_str() );
 			return NULL;

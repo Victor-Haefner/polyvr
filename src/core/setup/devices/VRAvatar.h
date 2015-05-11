@@ -13,13 +13,12 @@ class VRTransform;
 
 class VRAvatar {
     private:
-        VRTransform* deviceRoot;
+        VRTransform* deviceRoot = 0;
+        VRTransform* tmpContainer = 0;
         map<string, VRObject*> avatars;
 
         VRObject* initRay();
-
         VRObject* initCone();
-
         VRObject* initBroadRay();
 
         void addAll();
@@ -36,7 +35,9 @@ class VRAvatar {
         void disableAvatar(string avatar);
 
         VRTransform* getBeacon();
+        VRTransform* editBeacon();
         void setBeacon(VRTransform* b);
+        void updateBeacon();
 };
 
 OSG_END_NAMESPACE;

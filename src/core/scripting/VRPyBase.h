@@ -49,6 +49,7 @@ struct VRPyBase {
     static PyObject* toPyTuple(OSG::Vec3i v);
     static PyObject* toPyTuple(OSG::Vec2f v);
 
+    static int toGLConst(string cst);
     static int toGLConst(PyObject* o);
     static bool isNone(PyObject* o);
 };

@@ -1,25 +1,122 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scene name_suffix="0" base_name="mecha_test" name_space="Scene">
   <Objects>
-    <Root name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
-      <Headlight name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
-        <Default name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="0.946182 0.0375084 -1.64147" at="0.0435432 -0.0313658 0.0100001" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
-          <Headlight_beacon name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" light="Headlight"/>
-        </Default>
-      </Headlight>
-    </Root>
+    <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
+      <Object name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
+        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="0.962492 0.269503 -0.849817" at="0.413739 0.0471988 -0.00999999" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
+          <Object name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" light="Headlight"/>
+        </Object>
+      </Object>
+    </Object>
   </Objects>
-  <Rendering frustum_culling="1" occlusion_culling="0"/>
+  <Rendering frustum_culling="1" occlusion_culling="0" two_sided="1"/>
   <Scripts>
-    <init core="&#9;import VR&#10;&#9;import math&#10;&#9;import string&#10;&#9;&#10;&#9;# root node and reset&#10;&#9;if hasattr(VR, 'gears'):&#10;&#9;&#9;VR.gears.destroy()&#10;&#9;VR.gears = VR.Transform('gears')&#10;&#9;root.addChild(VR.gears)&#10;&#9;&#10;&#9;if hasattr(VR, 'mechanism'):&#10;&#9;&#9;VR.mechanism.clear()&#10;&#9;else:&#10;&#9;&#9;VR.mechanism = VR.Mechanism()&#10;&#9;&#10;&#9;# primitives&#10;&#9;def addPrimitive(params, mecha):&#10;&#9;&#9;p = VR.Geometry(params[0])&#10;&#9;&#9;s = string.join([str(i) for i in params])&#10;&#9;&#9;p.setPrimitive( s )&#10;&#9;&#9;p.setPickable(True)&#10;&#9;&#9;VR.gears.addChild(p)&#10;&#9;&#9;if mecha:&#10;&#9;&#9;&#9;VR.mechanism.add(p)&#10;&#9;&#9;return p&#10;&#9;&#9;&#10;&#9;# parameters&#10;&#9;cfr = 1 # cyberfloor radius&#10;&#9;gp = 0.02 # gear pitch&#10;&#9;bgp = 0.01 # bevel gear pitch&#10;&#9;agN = 12 # auxilliary gear teeth N &#10;&#9;cgN = 32 # chain gear teeth N &#10;&#9;ar = 0.01 # axle radius&#10;&#9;&#10;&#9;cgr = gp*cgN*0.5/math.pi # chain gear radius&#10;&#9;VR.cgr = cgr&#10;&#9;&#9;&#10;&#9;# pads&#10;&#9;VR.P1 = addPrimitive(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True)&#10;&#9;VR.P2 = addPrimitive(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True)&#10;&#9;VR.P3 = addPrimitive(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True)&#10;&#9;VR.P4 = addPrimitive(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True)&#10;&#9;VR.P5 = addPrimitive(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True)&#10;&#9;VR.P6 = addPrimitive(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True)&#10;&#9;VR.P7 = addPrimitive(['Gear', 0.02, ar, gp, 16, 0.01, 0], True)&#10;&#9;VR.P8 = addPrimitive(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True)&#10;&#9;VR.P2.translate(cgr*2,0,0)&#10;&#9;VR.P3.translate(cgr*4,0,0)&#10;&#9;VR.P4.translate(cgr,cgr*math.sqrt(3), -0.1) # block wheel&#10;&#9;VR.P5.translate(cgr*2,-cgr*2,0)&#10;&#9;VR.P6.translate(cgr*4,-cgr*2,0)&#10;&#9;VR.P7.translate(cgr*8,0,0)&#10;&#9;VR.P8.translate(cgr*8,cgr*3,0)&#10;&#9;&#10;&#9;c = VR.mechanism.addChain(0.02, [VR.P3, VR.P7, VR.P8], 'lll')&#10;&#9;VR.gears.addChild(c)&#10;&#9;&#10;&#9;" type="Python" mobile="">
+    <Script name_suffix="0" base_name="init" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+	import math
+	import string
+	
+	# root node and reset
+	if hasattr(VR, 'gears'):
+		VR.gears.destroy()
+	VR.gears = VR.Transform('gears')
+	root.addChild(VR.gears)
+	
+	if hasattr(VR, 'mechanism'):
+		VR.mechanism.clear()
+	else:
+		VR.mechanism = VR.Mechanism()
+	
+	# primitives
+	def addPrimitive(params, mecha):
+		p = VR.Geometry(params[0])
+		s = string.join([str(i) for i in params])
+		p.setPrimitive( s )
+		p.setPickable(True)
+		VR.gears.addChild(p)
+		if mecha:
+			VR.mechanism.add(p)
+		return p
+		
+	# parameters
+	cfr = 1 # cyberfloor radius
+	gp = 0.02 # gear pitch
+	bgp = 0.01 # bevel gear pitch
+	agN = 12 # auxilliary gear teeth N 
+	cgN = 32 # chain gear teeth N 
+	ar = 0.01 # axle radius
+	
+	cgr = gp*cgN*0.5/math.pi # chain gear radius
+	VR.cgr = cgr
+		
+	# pads
+	VR.P1 = addPrimitive(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True)
+	VR.P2 = addPrimitive(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True)
+	VR.P3 = addPrimitive(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True)
+	VR.P4 = addPrimitive(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True)
+	VR.P5 = addPrimitive(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True)
+	VR.P6 = addPrimitive(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True)
+	VR.P7 = addPrimitive(['Gear', 0.02, ar, gp, 16, 0.01, 0], True)
+	VR.P8 = addPrimitive(['Gear', 0.02, ar, gp, cgN, 0.01, 0], True)
+	VR.P2.translate(cgr*2,0,0)
+	VR.P3.translate(cgr*4,0,0)
+	VR.P4.translate(cgr,cgr*math.sqrt(3), -0.1) # block wheel
+	VR.P5.translate(cgr*2,-cgr*2,0)
+	VR.P6.translate(cgr*4,-cgr*2,0)
+	VR.P7.translate(cgr*8,0,0)
+	VR.P8.translate(cgr*8,cgr*3,0)
+	
+	c = VR.mechanism.addChain(0.02, [VR.P3, VR.P7, VR.P8], 'lll')
+	VR.gears.addChild(c)
+	
+	
+</core>
       <arg type="VRPyObjectType" value="Headlight" name_suffix="0" base_name="root" name_space="init"/>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
-    </init>
-    <toggleBlock core="&#9;import VR&#10;&#9;import math&#10;&#9;&#10;&#9;if not hasattr(VR, 'block'):&#10;&#9;&#9;VR.block = False&#10;&#10;&#9;VR.block = not VR.block&#10;&#9;&#10;&#9;pb = [VR.cgr,VR.cgr*math.sqrt(3), 0]&#10;&#9;pub = [VR.cgr,VR.cgr*math.sqrt(3), -0.1]&#10;&#9;nb = [0,0,-1]&#10;&#9;nub = [0,0,1]&#10;&#9;&#10;&#9;path = VR.Path()&#10;&#9;if VR.block:&#10;&#9;&#9;#path.set(pub, nub, pb, nb, 3)&#10;&#9;&#9;#VR.P4.animate(path, 1, 0.1, False)&#10;&#9;&#9;VR.P4.setFrom(pb)&#10;&#9;else:&#10;&#9;&#9;#path.set(pb, nb, pub, nub, 80)&#10;&#9;&#9;#VR.P4.animate(path, 1, 0.1, False)&#10;&#9;&#9;VR.P4.setFrom(pub)&#10;&#9;&#9;&#10;&#9;" type="Python" mobile=""/>
-    <update core="&#9;import VR&#10;&#9;if not hasattr(VR, 'P1'):&#10;&#9;&#9;return&#10;&#9;&#10;&#9;VR.P1.rotate(0,0,1, 0.02);&#10;&#9;VR.mechanism.update()" type="Python" mobile="">
+    </Script>
+    <Script name_suffix="0" base_name="toggleBlock" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+	import math
+	
+	if not hasattr(VR, 'block'):
+		VR.block = False
+
+	VR.block = not VR.block
+	
+	pb = [VR.cgr,VR.cgr*math.sqrt(3), 0]
+	pub = [VR.cgr,VR.cgr*math.sqrt(3), -0.1]
+	nb = [0,0,-1]
+	nub = [0,0,1]
+	
+	path = VR.Path()
+	if VR.block:
+		#path.set(pub, nub, pb, nb, 3)
+		#VR.P4.animate(path, 1, 0.1, False)
+		VR.P4.setFrom(pb)
+	else:
+		#path.set(pb, nb, pub, nub, 80)
+		#VR.P4.animate(path, 1, 0.1, False)
+		VR.P4.setFrom(pub)
+		
+	
+</core>
+    </Script>
+    <Script name_suffix="0" base_name="update" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+	if not hasattr(VR, 'P1'):
+		return
+	
+	VR.P1.rotate(0,0,1, 0.02);
+	VR.mechanism.update()
+</core>
       <trig type="on_timeout" dev="" state="Pressed" param="100" key="0" name_suffix="1" base_name="trigger" name_space="__global__"/>
-    </update>
+    </Script>
   </Scripts>
   <Sockets/>
   <Background color="0.6 0.6 0.6" path="" type="0"/>
+  <Navigation active="Orbit"/>
+  <Materials/>
 </Scene>

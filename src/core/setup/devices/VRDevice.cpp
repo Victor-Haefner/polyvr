@@ -11,9 +11,6 @@ VRSignal* VRDevice::signalExist(int key, int state) {
     stringstream ss;
     ss << "on_" << name << "_" << key << "_" << state;
     string sig_name = ss.str();
-
-    //cout << "\nCHECK " << sig_name  << endl;
-
     if ( callbacks.count(sig_name) ==  0) return 0;
     return callbacks[sig_name];
 }
@@ -23,8 +20,6 @@ VRSignal* VRDevice::createSignal(int key, int state) {
     ss << "on_" << name << "_" << key << "_" << state;
     string sig_name = ss.str();
 
-    //cout << "\nCREATE " << sig_name  << endl;
-
     if ( callbacks.count(sig_name) ==  0) callbacks[sig_name] = new VRSignal(this);
     VRSignal* sig = callbacks[sig_name];
     sig->setName(sig_name);
@@ -32,7 +27,6 @@ VRSignal* VRDevice::createSignal(int key, int state) {
 }
 
 void VRDevice::triggerSignal(int key, int state) {
-    //cout << "VRDevice::triggerSignal " << key << " " << state << endl;
     VRSignal* sig = signalExist(key, state);
     if (sig) {
         sig->trigger();
@@ -45,8 +39,6 @@ void VRDevice::addUpdateSignal(VRSignal* sig) {
 }
 
 void VRDevice::remUpdateSignal(VRSignal* sig, VRDevice* dev) {
-    // get && erase signal from active signals
-    vector<VRSignal*>::iterator itr;
     for (auto itr : activatedSignals) {
         if (itr == sig) {
             sig->trigger();
@@ -128,13 +120,10 @@ void VRDevice::change_button(int key, int state) {
     triggerSignal(-1, state);
 }
 
-void VRDevice::change_slider(int key, float state) { // TODO: test min value
-    //cout << "VRDevice::change_slider " << this << " " << key << " " << state << endl;
+void VRDevice::change_slider(int key, float state) {
     if (SStates.count(key) == 0) SStates[key] = state;
-    //float old_state = SStates[key];
     SStates[key] = state;
     sig_key = key;
-    //if (abs(state - old_state) > 0.01) triggerSignal(key, 0);
     if (abs(state) > 0.001) triggerSignal(key, 0);
 }
 
@@ -156,22 +145,9 @@ VRSignal* VRDevice::getSignal(string name) { if (callbacks.count(name)) return c
 
 void VRDevice::printMap() {
     cout << "\nDevice " << name << " signals:";
-    itr = callbacks.begin();
-    map<int, int>::iterator itr2 = BStates.begin();
-    map<int, float>::iterator itr3 = SStates.begin();
-
-    for (int i=0; itr != callbacks.end(); itr++, i++) {
-        cout << "\n Signal " << i << "  " << itr->second->getName();
-    }
-
-    for (int i=0; itr2 != BStates.end(); itr2++, i++) {
-        cout << "\n BState " << i << " key " << itr2->first << " " << itr2->second;
-    }
-
-    for (int i=0; itr3 != SStates.end(); itr3++, i++) {
-        cout << "\n SState " << i << " key " << itr3->first << " " << itr3->second;
-    }
-
+    for (auto c : callbacks) cout << "\n Signal " << c.second->getName();
+    for (auto b : BStates) cout << "\n BState key " << b.first << " " << b.second;
+    for (auto s : SStates) cout << "\n SState key " << s.first << " " << s.second;
     cout << endl;
 }
 

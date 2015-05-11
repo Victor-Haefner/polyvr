@@ -61,6 +61,7 @@ VRProfiler::Frame VRProfiler::getFrame(int f) {
         if (i == f) return (Frame)fr;
         i++;
     }
+    return Frame();
 }
 
 void VRProfiler::swap() {

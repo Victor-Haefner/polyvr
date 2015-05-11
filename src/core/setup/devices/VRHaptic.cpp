@@ -46,6 +46,7 @@ void VRHaptic::on_scene_changed(VRDevice* dev) {
     updateFktPre = new VRFunction<int>( "Haptic pre update", boost::bind(&VRHaptic::updateHapticPre, this, getBeacon()) );
     updateFktPost = new VRFunction<int>( "Haptic post update", boost::bind(&VRHaptic::updateHapticPost, this, getBeacon()) );
     VRSceneManager::getCurrent()->dropUpdateFkt(timestepWatchdog);
+
     VRSceneManager::getCurrent()->dropUpdateFkt(updateFktPre);
     VRSceneManager::getCurrent()->dropUpdateFkt(updateFktPost);
     VRSceneManager::getCurrent()->addUpdateFkt(timestepWatchdog,false);

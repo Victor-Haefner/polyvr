@@ -24,7 +24,7 @@ OSG_BEGIN_NAMESPACE
 
 void VRPN_CALLBACK handle_tracker(void* data, const vrpn_TRACKERCB tracker ) {
     VRPN_device* dev = (VRPN_device*)data;
-    VRTransform* obj = dev->getBeacon();
+    VRTransform* obj = dev->editBeacon();
     if (obj == 0) return;
 
     Vec3f ra = dev->rotation_axis;

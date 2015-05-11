@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scene name_suffix="0" base_name="Bricks" name_space="Scene">
+  <Objects>
+    <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
+      <Object name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
+        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="16.938 24.4123 3.19171" at="17.9488 23.6779 2.07249" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
+          <Object name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
+        </Object>
+      </Object>
+    </Object>
+  </Objects>
+  <Rendering frustum_culling="1" occlusion_culling="0" two_sided="1"/>
+  <Scripts>
+    <Script name_suffix="0" base_name="gui" name_space="__script__" type="HTML" mobile="mobile">
+      <core>
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+ &lt;style type="text/css"&gt;
+  body {text-align:center;
+		background:#f0f0ff;
+		color:#111166;
+		margin:0;}
+		input[type=number]::-webkit-inner-spin-button {
+		  cursor: pointer;
+		  display: block;
+		  width: 60px;
+		  text-align: center;
+		  position: relative;
+		  background: transparent;
+		}
+ &lt;/style&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+		 &lt;script&gt;
+			function get(b,s,m) {
+				var xmlHttp = new XMLHttpRequest();
+				var uri = document.URL+'?button='+b+'&amp;state='+s+'&amp;message='+m;
+				xmlHttp.open( "GET", uri, true );
+				xmlHttp.send( null );
+			}
+		 &lt;/script&gt;
+ 
+ 		&lt;script src="three.min.js"&gt;&lt;/script&gt;
+		&lt;script src="TrackballControls.js"&gt;&lt;/script&gt;
+		
+		&lt;script type="x-shader/x-vertex" id="vertexShader"&gt;
+		varying vec3 norm;
+		varying vec3 pos;
+		void main() {
+		    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+		    norm = normal;
+		    pos = position + abs(position);
+		}
+		&lt;/script&gt;
+
+		&lt;script type="x-shader/x-fragment" id="fragmentShader"&gt;	
+		varying vec3 norm;
+		varying vec3 pos;
+		void main() {
+			vec3 t = abs(abs(norm.xyz)-1.0);
+		    
+		    vec3 Pos = pos; 
+		    Pos.y *= 3.0/1.2;
+		    highp ivec3 i = ivec3(abs(Pos.xyz));
+		    vec3 D = abs(Pos.xyz)-vec3(i);
+		    D = abs(0.5-D.xyz)*t.xyz;
+		    vec3 col = vec3(0.0, 0.7, 1.0);
+		    if (length(D) &lt; 0.4) 
+				col = vec3(0.7, 0.9, 1.0);
+				
+		    vec3 l = vec3(0.7, 1.0, 0.4);
+		    l = normalize(l);
+		    gl_FragColor = vec4(col * max(0.0, dot(norm, l)), 1.0);
+		}
+		&lt;/script&gt;
+
+		&lt;script&gt;
+			var camera, scene, renderer, mesh, geo;
+			var width = 200;
+			var height = 200;
+			var bX = 4;
+			var bY = 3;
+			var bZ = 4;
+
+			function onWindowResize() {
+				camera.aspect = width/height;
+				camera.updateProjectionMatrix();
+				renderer.setSize( width, height );
+			}
+
+			function animate() {
+				requestAnimationFrame( animate );
+				controls.update();
+			}
+			
+			function render() {
+				renderer.render( scene, camera );
+			}
+
+			init();
+			animate();
+			render();
+			
+			function brickMaterial() {
+				/*var texture = THREE.ImageUtils.loadTexture( 'CaveKeeper.png' );
+				texture.anisotropy = renderer.getMaxAnisotropy();
+				return new THREE.MeshBasicMaterial( { map: texture } );*/
+				
+				return new THREE.ShaderMaterial( { 
+					uniforms: { radius: { type: "f", value: 0.8 } }, 
+					vertexShader: document.getElementById( 'vertexShader' ).textContent, 
+					fragmentShader: document.getElementById( 'fragmentShader' ).textContent } );
+			}
+
+			function init() {
+				renderer = new THREE.WebGLRenderer();
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( width, height );
+				renderer.setClearColor( 0xf0f0ff, 1);
+				document.body.appendChild( renderer.domElement );
+
+				camera = new THREE.PerspectiveCamera( 70, width/height, 1, 1000 );
+				camera.position.set(3,3,3);
+				scene = new THREE.Scene();
+				geo = new THREE.BoxGeometry( bX, bY*1.2/3, bZ );
+				mesh = new THREE.Mesh( geo, brickMaterial() );
+				scene.add( mesh );
+				
+				controls = new THREE.TrackballControls( camera, renderer.domElement );
+				controls.target.set( 0, 0, 0 )
+				controls.rotateSpeed = 5.0;
+				controls.zoomSpeed = 1.2;
+				controls.panSpeed = 0.8;
+				controls.noZoom = true;
+				controls.noPan = true;
+				controls.staticMoving = true;
+				controls.dynamicDampingFactor = 0.3;
+				controls.addEventListener( 'change', render );
+
+				window.addEventListener( 'resize', onWindowResize, false );
+			}
+			
+			function dims() {
+				return bX+"_"+bY*1.2/3+"_"+bZ;
+			}
+			
+			function brick(i,v) {
+				if (i == 1) bX = v;
+				if (i == 2) bY = v;
+				if (i == 3) bZ = v;
+				mesh.geometry = new THREE.BoxGeometry( bX, bY*1.2/3, bZ );
+				render();
+			}
+		&lt;/script&gt;
+
+&lt;input style="height:45px;width:35px;" type="number" onchange="brick(1,this.value)" min="1" max="4" value="4"&gt;
+&lt;input style="height:45px;width:35px;" type="number" onchange="brick(2,this.value)" min="1" max="3" value="3"&gt;
+&lt;input style="height:45px;width:35px;" type="number" onchange="brick(3,this.value)" min="1" max="4" value="4"&gt;
+&lt;button onmousedown='get(1,1,dims())' onmouseup='get(1,0,dims())'&gt;Create&lt;/button&gt;
+
+
+&lt;/body&gt;&lt;/html&gt;
+</core>
+    </Script>
+    <Script name_suffix="0" base_name="handler" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+	
+	s = 0.1
+		
+	r = VR.getRoot().find('Headlight')
+	
+	k = dev.getKey()
+	m = dev.getMessage()
+	
+	idev = mouse
+	if flystick:
+		idev = flystick
+	
+	if not hasattr(VR, 'bmat'):
+		VR.bmat = VR.Material('bricks')
+		VR.bmat.setDiffuse(0,0.5,1)
+		if not flystick:
+			VR.bmat.setVertexProgram('shdr_v')
+			VR.bmat.setFragmentProgram('shdr_f')
+	
+	if not hasattr(VR, 'snap'):
+		VR.snap = VR.SnappingEngine()
+		
+	if not hasattr(VR, 'anchor'):
+		VR.anchor = VR.Geometry('anchor')
+		bs = str(s*0.1)
+		VR.anchor.setPrimitive('Box ' + bs + ' ' + bs + ' ' + bs + ' 1 1 1')
+		VR.getRoot().find('Headlight').addChild(VR.anchor)
+		VR.anchor.hide()
+	
+	# new brick
+	if k == 1:
+		dims = m.split('_')
+		dims = [float(dims[0])*s, float(dims[1])*s, float(dims[2])*s]
+		g = VR.Geometry('brick')
+		g.setPrimitive('Box '+str(dims[0])+' '+str(dims[1])+' '+str(dims[2])+' 1 1 1')
+		g.setMaterial(VR.bmat)
+		g.setPickable(1)
+		r.addChild(g)
+		idev.drag(g)
+		g.setFrom(0,0,-0.5)
+		idev.getDragGhost().setFrom(0,0,-0.5)
+		
+		h = dims[1]*0.5
+		VR.snap.addObject(g)
+		osnapu = [1,0,0,0,1,0] # orientation to snap to (up, dir)
+		osnapd = [1,0,0,0,1,0] # orientation to snap to (up, dir)
+		for i in range(int(dims[0]/s)):
+			for j in range(int(dims[2]/s)):
+				x = i*s - dims[0]*0.5 +0.5*s
+				y = j*s - dims[2]*0.5 +0.5*s
+				a_u = VR.anchor.duplicate()
+				a_d = VR.anchor.duplicate()
+				a_u.show()
+				a_d.show()
+				a_u.setPose([x,h,y], [0,1,0], [1,0,0])
+				a_d.setPose([x,-h,y], [0,1,0], [1,0,0])
+				g.addChild(a_u)
+				g.addChild(a_d)
+				VR.snap.addObjectAnchor(g,a_u)
+				VR.snap.addObjectAnchor(g,a_d)
+				pu = [0,0,0,x,h,y] # point to snap to
+				pd = [0,0,0,x,-h,y] # point to snap to
+				VR.snap.addRule('POINT', 'POINT', pu, osnapu, s*0.3, 1, g )
+				VR.snap.addRule('POINT', 'POINT', pd, osnapd, s*0.3, 1, g )
+		
+</core>
+      <arg type="VRPyDeviceType" value="flystick" name_suffix="0" base_name="flystick" name_space="handler"/>
+      <arg type="VRPyDeviceType" value="mouse" name_suffix="0" base_name="mouse" name_space="handler"/>
+      <trig type="on_device" dev="mobile" state="Released" param="" key="-1" name_suffix="1" base_name="trigger" name_space="__global__"/>
+    </Script>
+    <Script name_suffix="0" base_name="init" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+	
+	gui = VR.Geometry('gui')
+	gui.setPrimitive('Plane 0.5 0.65 1 1')
+	gui.setPose([-0.5,0,-1], [0,0,1], [0,-1,0])
+	l = VR.getRoot().find('Default')
+	l.addChild(gui)
+	
+	m = VR.Material('gui')
+	m.setLit(False)
+	gui.setMaterial(m)
+	site = VR.CEF()
+	site.setMaterial( gui.getMaterial() )
+		
+	site.setAspectRatio(0.769)
+	site.setResolution(200)
+	site.open('http://localhost:5500/gui')
+	#site.open('http://threejs.org/examples/#webgl_geometry_cube')
+	site.addMouse(mouse, gui, 0, 2, 3, 4)
+	site.addMouse(flystick, gui, 0, 2, 3, 4)
+	site.addKeyboard(keyboard)
+</core>
+      <arg type="VRPyDeviceType" value="flystick" name_suffix="0" base_name="flystick" name_space="init"/>
+      <arg type="VRPyDeviceType" value="keyboard" name_suffix="0" base_name="keyboard" name_space="init"/>
+      <arg type="VRPyDeviceType" value="mouse" name_suffix="0" base_name="mouse" name_space="init"/>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
+    </Script>
+    <Script name_suffix="0" base_name="shdr_f" name_space="__script__" type="GLSL" mobile="">
+      <core>
+varying vec3 norm;
+varying vec3 pos;
+varying vec3 light;
+void main() {
+	vec3 t = abs(abs(norm.xyz)-1.0);
+    
+    vec3 Pos = pos; 
+    Pos.y *= 3.0/1.2;
+    ivec3 i = ivec3(abs(Pos.xyz));
+    vec3 D = abs(Pos.xyz)-vec3(i);
+    D = abs(0.5-D.xyz)*t.xyz;
+    vec3 col = vec3(0.0, 0.7, 1.0);
+    if (length(D) &lt; 0.4) 
+		col = vec3(0.7, 0.9, 1.0);
+		
+    //gl_FragColor = vec4(col * max(0.0, dot(norm, light)), 1.0);
+    gl_FragColor = vec4(col * abs(dot(norm, light)), 1.0);
+}
+</core>
+    </Script>
+    <Script name_suffix="0" base_name="shdr_v" name_space="__script__" type="GLSL" mobile="">
+      <core>
+varying vec3 norm;
+varying vec3 pos;
+varying vec3 light;
+
+attribute vec4 osg_Vertex;
+attribute vec3 osg_Normal;
+
+void main() {
+    gl_Position = gl_ModelViewProjectionMatrix * osg_Vertex;
+    norm = osg_Normal;
+    pos = 10*(osg_Vertex+abs(osg_Vertex));
+    
+    &#13;
+    light = gl_LightSource[0].position.xyz - gl_Position.xyz;
+    light = vec3(0.5, 1.0, -0.7);
+    light = normalize(light);
+}
+</core>
+    </Script>
+  </Scripts>
+  <Sockets/>
+  <Background color="0.6 0.6 0.6" path="" type="0"/>
+  <Navigation active="FlyWalk"/>
+  <Materials/>
+</Scene>

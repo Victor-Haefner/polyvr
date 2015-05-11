@@ -10,7 +10,7 @@ using namespace std;
 
 void VRAnimationManager::updateAnimations() {
     float t = glutGet(GLUT_ELAPSED_TIME)/1000.0;//in seconds
-    vector<int> toRemove;
+    vector<string> toRemove;
 
     for (auto a : anim_map)
         if (a.second->update(t) == false) toRemove.push_back(a.first);
@@ -21,12 +21,16 @@ void VRAnimationManager::updateAnimations() {
 }
 
 VRAnimationManager::VRAnimationManager() {
-    id = 0;
     updateAnimationsFkt = new VRFunction<int>("AnimationUpdateFkt", boost::bind(&VRAnimationManager::updateAnimations, this));
 }
 
-void VRAnimationManager::stopAnimation(int i) {
-    if (anim_map.count(i)) anim_map.erase(i);
+void VRAnimationManager::addAnimation(VRAnimation* anim) {
+    anim_map[anim->getName()] = anim;
+}
+
+void VRAnimationManager::remAnimation(VRAnimation* anim) {
+    string n = anim->getName();
+    if (anim_map.count(n)) anim_map.erase(n);
 }
 
 OSG_END_NAMESPACE;

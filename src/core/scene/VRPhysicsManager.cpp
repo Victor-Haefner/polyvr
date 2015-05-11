@@ -87,6 +87,10 @@ long long VRPhysicsManager::getTime() { // time in seconds
     //return 1e6*clock()/CLOCKS_PER_SEC; // TODO
 }
 
+void VRPhysicsManager::prepareObjects() {
+    for (auto o : OSGobjs) o.second->getPhysics()->prepareStep();
+}
+
 void VRPhysicsManager::updatePhysics(VRThread* thread) {
     if (dynamicsWorld == 0) return;
     long long dt,t0,t1,t2,t3;
@@ -97,6 +101,7 @@ void VRPhysicsManager::updatePhysics(VRThread* thread) {
 
     {
         MLock lock(mtx);
+        prepareObjects();
         for (auto f : updateFktsPre) (*f)(0);
         dynamicsWorld->stepSimulation(1e-6*dt, 30);
         for (auto f : updateFktsPost) (*f)(0);

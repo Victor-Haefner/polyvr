@@ -1,49 +1,81 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scene name_suffix="0" base_name="CaveKeeper" name_space="Scene">
   <Objects>
-    <Root name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
-      <Headlight name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
-        <Default name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
-          <Headlight_beacon name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
-        </Default>
-        <lantern name_suffix="0" base_name="lantern" name_space="__global__" type="Transform" pickable="0" visible="1" from="0 1000 0" at="0 1000 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1">
-          <laterne.1 name_suffix="1" base_name="laterne" name_space="__global__" type="Lod" pickable="0" visible="1" center="0 0 0" distances="1 5">
-            <laterne name_suffix="0" base_name="laterne" name_space="__global__" type="Transform" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1">
-              <Scene name_suffix="0" base_name="Scene" name_space="__global__" type="Object" pickable="0" visible="1">
-                <Cube.1 name_suffix="1" base_name="Cube" name_space="__global__" type="Geometry" pickable="0" visible="1" from="0 0 0" at="0 -1 1.19209e-07" up="0 -1.19209e-07 -1" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" sourcetype="2" sourceparam="data/cavekeeper/laterne.dae Cube.001"/>
-                <Cube.2 name_suffix="2" base_name="Cube" name_space="__global__" type="Geometry" pickable="0" visible="1" from="0 0 0" at="0 -1 1.19209e-07" up="0 -1.19209e-07 -1" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" sourcetype="2" sourceparam="data/cavekeeper/laterne.dae Cube.002"/>
-              </Scene>
-            </laterne>
-            <laterne_2 name_suffix="0" base_name="laterne_2" name_space="__global__" type="Transform" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1">
-              <Scene.1 name_suffix="1" base_name="Scene" name_space="__global__" type="Object" pickable="0" visible="1">
-                <Cube0 name_suffix="0" base_name="Cube0" name_space="__global__" type="Geometry" pickable="0" visible="1" from="0 0 0" at="0 -1 1.19209e-07" up="0 -1.19209e-07 -1" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" sourcetype="2" sourceparam="data/cavekeeper/laterne_2.dae Cube0"/>
-                <Cube.1 name_suffix="1" base_name="Cube" name_space="__global__" type="Geometry" pickable="0" visible="1" from="0 0 0" at="0 -1 1.19209e-07" up="0 -1.19209e-07 -1" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" sourcetype="2" sourceparam="data/cavekeeper/laterne_2.dae Cube.001"/>
-                <Cube.2 name_suffix="2" base_name="Cube" name_space="__global__" type="Geometry" pickable="0" visible="1" from="0 0 0" at="0 -1 1.19209e-07" up="0 -1.19209e-07 -1" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" sourcetype="2" sourceparam="data/cavekeeper/laterne_2.dae Cube.002"/>
-              </Scene.1>
-            </laterne_2>
-          </laterne.1>
-        </lantern>
-      </Headlight>
-    </Root>
+    <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
+      <Object name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
+        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
+          <Object name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
+        </Object>
+      </Object>
+    </Object>
   </Objects>
-  <Rendering frustum_culling="1" occlusion_culling="0"/>
+  <Rendering frustum_culling="1" occlusion_culling="0" two_sided="1"/>
   <Scripts>
-    <dig core="&#9;import VR&#10;&#9;VR.CK.dig(dev)" type="Python" mobile="">
+    <Script name_suffix="0" base_name="dig" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+	VR.CK.dig(dev)
+</core>
       <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" name_suffix="1" base_name="trigger" name_space="__global__"/>
-    </dig>
-    <init core="&#9;import VR&#10;&#9;VR.CK = VR.CaveKeeper(&quot;ck&quot;)&#10;&#9;VR.CK.init(root)" type="Python" mobile="">
+    </Script>
+    <Script name_suffix="0" base_name="init" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+	VR.CK = VR.CaveKeeper("ck")
+	VR.CK.init(root)
+	
+	root.find('Default').setIdentity()
+	
+	VR.light(dev)
+</core>
+      <arg type="VRPyDeviceType" value="mouse" name_suffix="0" base_name="dev" name_space="init"/>
       <arg type="VRPyObjectType" value="Headlight" name_suffix="0" base_name="root" name_space="init"/>
       <trig type="on_scene_load" dev="" state="pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
-    </init>
-    <light core="&#9;import VR&#10;&#9;VR.CK.place(dev, &quot;lantern&quot;,obj)" type="Python" mobile="">
-      <arg type="VRPyTransformType" value="lantern" name_suffix="0" base_name="obj" name_space="light"/>
+    </Script>
+    <Script name_suffix="0" base_name="light" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+	
+	if not hasattr(VR, 'lantern'):
+		VR.lantern = VR.Geometry('lantern')
+		VR.lmat = VR.Material('lantern')
+		VR.getRoot().find('Headlight').addChild(VR.lantern)
+		
+	VR.lantern.setPrimitive('Box 0.1 0.1 0.1 1 1 1')
+	VR.lantern.setMaterial(VR.lmat)
+	VR.lantern.hide()
+	VR.lmat.setLit(False)
+	VR.lmat.setDiffuse(1,1,0.7)
+	
+	VR.CK.place(dev, "lantern", VR.lantern)
+</core>
       <trig type="on_device" dev="mouse" state="Pressed" param="" key="2" name_suffix="2" base_name="trigger" name_space="__global__"/>
-    </light>
-    <nav core="&#9;k = chr(dev.getKey())&#10;&#9;print k&#10;&#9;if k == 'w':&#10;&#9;&#9;cam.move(0.1)&#10;&#9;if k == 's':&#10;&#9;&#9;cam.move(-0.1)&#10;&#9;&#9;&#10;&#9;if k == 'a':&#10;&#9;&#9;cam.rotate(0,1,0,0.1)&#10;&#9;if k == 'd':&#10;&#9;&#9;cam.rotate(0,1,0,-0.1)&#10;&#9;&#9;&#10;&#9;if k == 'q':&#10;&#9;&#9;cam.translate(0,-0.1,0)&#10;&#9;if k == 'e':&#10;&#9;&#9;cam.translate(0,0.1,0)" type="Python" mobile="">
+    </Script>
+    <Script name_suffix="0" base_name="nav" name_space="__script__" type="Python" mobile="">
+      <core>
+	k = chr(dev.getKey())
+	print k
+	if k == 'w':
+		cam.move(0.1)
+	if k == 's':
+		cam.move(-0.1)
+		
+	if k == 'a':
+		cam.rotate(0,1,0,0.1)
+	if k == 'd':
+		cam.rotate(0,1,0,-0.1)
+		
+	if k == 'q':
+		cam.translate(0,-0.1,0)
+	if k == 'e':
+		cam.translate(0,0.1,0)
+</core>
       <arg type="VRPyTransformType" value="Default" name_suffix="0" base_name="cam" name_space="nav"/>
       <trig type="on_device" dev="keyboard" state="Pressed" param="" key="-1" name_suffix="3" base_name="trigger" name_space="__global__"/>
-    </nav>
+    </Script>
   </Scripts>
   <Sockets/>
   <Background color="0.6 0.6 0.6" path="" type="0"/>
+  <Navigation active="Orbit"/>
+  <Materials/>
 </Scene>

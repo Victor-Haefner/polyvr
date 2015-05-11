@@ -4,7 +4,7 @@
 #include "BaseWorldObject.h"
 #include "../OSM/OSMMapDB.h"
 #include "core/objects/material/VRShader.h"
-#include "addons/RealWorld/VRTree.h"
+#include "addons/RealWorld/nature/VRTree.h"
 #include <iostream>
 #include <string>
 

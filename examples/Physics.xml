@@ -3,7 +3,7 @@
   <Objects>
     <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
       <Object name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
-        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="2.43891 1.19921 -1.69966" at="0.0982124 0.322221 -0.00898802" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
+        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="3.86321 0.797429 -3.13323" at="0.0982124 0.322221 -0.00898802" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
           <Object name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" light="Headlight"/>
         </Object>
       </Object>
@@ -11,16 +11,79 @@
   </Objects>
   <Rendering frustum_culling="1" occlusion_culling="0" two_sided="1"/>
   <Scripts>
-    <Script name_suffix="0" base_name="Init" name_space="__script__" core="&#9;import VR&#10;&#9;&#10;&#9;if hasattr(VR, 'pendel'):&#10;&#9;&#9;VR.pendel.destroy()&#10;&#9;VR.pendel = VR.Object('pendel')&#10;&#9;root.addChild(VR.pendel)&#10;&#9;pendel = VR.pendel&#10;&#9;&#10;&#9;a = VR.Geometry(&quot;anchor&quot;)&#10;&#9;a.setPrimitive('Box 1 1 1 1 1 1')&#10;&#9;a.translate(0,2,0)&#10;&#9;pendel.addChild(a)&#10;&#9;&#10;&#9;z1 = VR.Geometry('z1')&#10;&#9;z2 = VR.Geometry('z2')&#10;&#9;j1 = VR.Geometry('j1')&#10;&#9;j2 = VR.Geometry('j2')&#10;&#9;s = VR.Geometry('s')&#10;&#9;&#10;&#9;z1.setPrimitive('Cylinder 1 0.1 16 1 1 1')&#10;&#9;z2.setPrimitive('Cylinder 1 0.1 16 1 1 1')&#10;&#9;s.setPrimitive('Sphere 0.3 2')&#10;&#9;j1.setPrimitive('Sphere 0.11 1')&#10;&#9;j2.setPrimitive('Sphere 0.12 1')&#10;&#9;z1.translate(0,1.1,0)&#10;&#9;s.translate(0,-0.9,0)&#10;&#9;j1.translate(0,0.55,0)&#10;&#9;j2.translate(0,-0.6,0)&#10;&#9;s.setPickable(True)&#10;&#9;pendel.addChild(z1)&#10;&#9;pendel.addChild(z2)&#10;&#9;pendel.addChild(j1)&#10;&#9;pendel.addChild(j2)&#10;&#9;pendel.addChild(s)&#10;&#9;&#10;&#9;a.physicalize(True, False, False)&#10;&#9;z1.physicalize(True, True, False)&#10;&#9;z2.physicalize(True, True, False)&#10;&#9;j1.physicalize(True, True, False)&#10;&#9;j2.physicalize(True, True, False)&#10;&#9;s.physicalize(True, True, False)&#10;&#9;&#10;&#9;z2.setCollisionMargin(0)&#10;&#9;&#10;&#9;c = VR.Constraint()&#10;&#9;c.free([3,4,5])&#10;&#9;c.setLocalOffset(0,1,0,0,0,0)&#10;&#9;cs = VR.Constraint()&#10;&#9;a.attach(z1, c, cs)&#10;&#9;&#10;&#9;c = VR.Constraint()&#10;&#9;c.setLocalOffset(0,0.55,0,0,0,0)&#10;&#9;z1.attach(j1, c, cs)&#10;&#9;&#10;&#9;c = VR.Constraint()&#10;&#9;c.free([3,4,5])&#10;&#9;c.setLocalOffset(0,0.55,0,0,0,0)&#10;&#9;j1.attach(z2, c, cs)&#10;&#9;&#10;&#9;&#10;&#9;c = VR.Constraint()&#10;&#9;c.setLocalOffset(0,0.55,0,0,0,0)&#10;&#9;z2.attach(j2, c, cs)&#10;&#9;&#10;&#9;c = VR.Constraint()&#10;&#9;c.free([3,4,5])&#10;&#9;c.setLocalOffset(0,0.35,0,0,0,0)&#10;&#9;j2.attach(s, c, cs)&#10;&#9;&#10;&#9;j2.applyImpulse(0,0,10) #no effekt??" type="Python" mobile="">
+    <Script name_suffix="0" base_name="Init" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+	
+	if hasattr(VR, 'pendel'):
+		VR.pendel.destroy()
+	VR.pendel = VR.Object('pendel')
+	root.addChild(VR.pendel)
+	pendel = VR.pendel
+	
+	a = VR.Geometry("anchor")
+	a.setPrimitive('Box 1 1 1 1 1 1')
+	a.translate(0,2,0)
+	pendel.addChild(a)
+	
+	z1 = VR.Geometry('z1')
+	z2 = VR.Geometry('z2')
+	j1 = VR.Geometry('j1')
+	j2 = VR.Geometry('j2')
+	s = VR.Geometry('s')
+	
+	z1.setPrimitive('Cylinder 1 0.1 16 1 1 1')
+	z2.setPrimitive('Cylinder 1 0.1 16 1 1 1')
+	s.setPrimitive('Sphere 0.3 2')
+	j1.setPrimitive('Sphere 0.11 1')
+	j2.setPrimitive('Sphere 0.12 1')
+	z1.translate(0,1.1,0)
+	s.translate(0,-1,0)
+	j1.translate(0,0.55,0)
+	j2.translate(0,-0.6,0)
+	s.setPickable(True)
+	pendel.addChild(z1)
+	pendel.addChild(z2)
+	pendel.addChild(j1)
+	pendel.addChild(j2)
+	pendel.addChild(s)
+	
+	a.physicalize(True, False, False)
+	z1.physicalize(True, True, False)
+	z2.physicalize(True, True, False)
+	j1.physicalize(True, True, False)
+	j2.physicalize(True, True, False)
+	s.physicalize(True, True, False)
+	
+	z2.setCollisionMargin(0)
+	
+	c = VR.Constraint()
+	c.free([3,4,5])
+	c.setLocalOffset(0,1,0,0,0,0)
+	cs = VR.Constraint()
+	a.attach(z1, c, cs)
+	
+	c = VR.Constraint()
+	c.setLocalOffset(0,0.55,0,0,0,0)
+	z1.attach(j1, c, cs)
+	
+	c = VR.Constraint()
+	c.free([3,4,5])
+	c.setLocalOffset(0,0.55,0,0,0,0)
+	j1.attach(z2, c, cs)
+	
+	
+	c = VR.Constraint()
+	c.setLocalOffset(0,0.55,0,0,0,0)
+	z2.attach(j2, c, cs)
+	
+	c = VR.Constraint()
+	c.free([3,4,5])
+	c.setLocalOffset(0,0.35,0,0,0,0)
+	j2.attach(s, c, cs)
+</core>
       <arg type="VRPyObjectType" value="Headlight" name_suffix="0" base_name="root" name_space="Init"/>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
-    </Script>
-    <Script name_suffix="0" base_name="mobile_nav" name_space="__script__" core="&#9;k = dev.getKey()&#10;&#9;s = dev.getKeyState(k)&#10;&#9;if (s == 0) :&#10;&#9;&#9;return&#10;&#9;&#10;&#9;c = dev.getTarget()&#10;&#9;&#10;&#9;if (k == 0) :&#10;&#9;&#9;c.move(0.1)&#10;&#9;if (k == 1) :&#10;&#9;&#9;c.move(-0.1)&#10;&#9;if (k == 2) :&#10;&#9;&#9;c.rotate(0,1,0,0.1)&#10;&#9;if (k == 3) :&#10;&#9;&#9;c.rotate(0,1,0,-0.1)" type="Python" mobile="">
-      <trig type="on_device" dev="mobile" state="Pressed" param="" key="0" name_suffix="3" base_name="trigger" name_space="__global__"/>
-      <trig type="on_device" dev="mobile" state="Pressed" param="" key="1" name_suffix="4" base_name="trigger" name_space="__global__"/>
-      <trig type="on_device" dev="mobile" state="Pressed" param="" key="2" name_suffix="5" base_name="trigger" name_space="__global__"/>
-      <trig type="on_device" dev="mobile" state="Pressed" param="" key="3" name_suffix="6" base_name="trigger" name_space="__global__"/>
-      <trig type="on_timeout" dev="" state="Pressed" param="50" key="0" name_suffix="7" base_name="trigger" name_space="__global__"/>
     </Script>
   </Scripts>
   <Sockets/>

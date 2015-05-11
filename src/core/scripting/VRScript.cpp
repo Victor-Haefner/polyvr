@@ -88,12 +88,17 @@ void VRScript::update() {
 
         if (t->trigger == "on_device") {
             VRDevice* dev = VRSetupManager::getCurrent()->getDevice(t->dev);
-            int state = 0;
+            int state = -1;
+            if (t->state == "Released") state = 0;
             if (t->state == "Pressed") state = 1;
-            else if (t->state == "Released") state = 0;
-            else continue;
+            if (t->state == "Drag") state = 2;
+            if (t->state == "Drop") state = 3;
+            if (state == -1) continue;
+
             if (dev != 0) {
-                t->sig = dev->addSignal(t->key, state);
+                if (state <= 1) t->sig = dev->addSignal(t->key, state);
+                if (state == 2) t->sig = dev->getDragSignal();
+                if (state == 3) t->sig = dev->getDropSignal();
                 if (t->sig == 0) continue;
                 t->sig->add(cbfkt_dev);
             }
@@ -305,7 +310,6 @@ void VRScript::execute_dev(VRDevice* dev) {
     if (dev->getType() == "haptic") args["dev"]->type = "VRPyHapticType";
     args["dev"]->val = dev->getName();
     args["dev"]->ptr = dev;
-
     execute();
 }
 

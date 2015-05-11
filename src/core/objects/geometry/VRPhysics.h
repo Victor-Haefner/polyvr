@@ -48,6 +48,9 @@ class VRPhysics : public OSG::VRStorage {
         map<VRPhysics*, VRPhysicsJoint*> joints ;
         map<VRPhysics*, VRPhysicsJoint*> joints2;
 
+        btVector3 constantForce;
+        btVector3 constantTorque;
+
         OSG::VRTransform* vr_obj = 0;
         OSG::VRConstraint* constraint = 0;
         OSG::Vec3f scale;
@@ -63,6 +66,8 @@ class VRPhysics : public OSG::VRStorage {
     public:
         VRPhysics(OSG::VRTransform* t);
         ~VRPhysics();
+
+        void prepareStep();
 
         btRigidBody* getRigidBody();
         btPairCachingGhostObject* getGhostBody();
@@ -108,11 +113,8 @@ class VRPhysics : public OSG::VRStorage {
         void addForce(OSG::Vec3f i);
         void addTorque(OSG::Vec3f i);
 
-        /** applies the force/torque, which was handled. then resets the requested force/torque**/
-        void applyRequestedForce();
-        void applyRequestedTorque();
-
-
+        void addConstantForce(OSG::Vec3f i);
+        void addConstantTorque(OSG::Vec3f i);
         float getConstraintAngle(VRPhysics *to, int axis);
         void deleteConstraints(VRPhysics* with);
         /**get the requested total force in this frame **/
@@ -138,6 +140,7 @@ class VRPhysics : public OSG::VRStorage {
 
 
 
+        static btVector3 toBtVector3(OSG::Vec3f);
         static OSG::Vec3f toVec3f(btVector3);
 
 

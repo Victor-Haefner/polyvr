@@ -23,6 +23,8 @@ VRObject* VRTransform::copy(vector<VRObject*> children) {
     VRTransform* geo = new VRTransform(getBaseName());
     geo->setPickable(isPickable());
     geo->setMatrix(getMatrix());
+    geo->setVisible(isVisible());
+    geo->setPickable(isPickable());
     return geo;
 }
 
@@ -289,6 +291,22 @@ void VRTransform::setWorldPosition(Vec3f pos) {
     wm.invert();
     wm.mult(m);
     _from = Vec3f(wm[3]);
+
+    reg_change();
+}
+
+/** Set the world position of the object **/
+void VRTransform::setWorldOrientation(Vec3f dir, Vec3f up) {
+    if (isNan(dir)) return;
+
+    Matrix m;
+    MatrixLookAt(m, Vec3f(), dir, up);
+
+    Matrix wm = getWorldMatrix(true);
+    wm.invert();
+    wm.mult(m);
+    wm.setTranslate(_from);
+    setMatrix(wm);
 
     reg_change();
 }
@@ -741,17 +759,22 @@ void setFromPath(VRTransform* tr, path* p, bool redirect, float t) {
     }
 }
 
+void VRTransform::addAnimation(VRAnimation* anim) { animations[anim->getName()] = anim; }
+vector<VRAnimation*> VRTransform::getAnimations() {
+    vector<VRAnimation*> res;
+    for (auto a : animations) res.push_back(a.second);
+    return res;
+}
+
 void VRTransform::startPathAnimation(path* p, float time, float offset, bool redirect, bool loop) {
     VRFunction<float>* fkt = new VRFunction<float>("TransAnim", boost::bind(setFromPath, this, p, redirect, _1));
     VRScene* scene = VRSceneManager::getCurrent();
-    int a = scene->addAnimation(time, offset, fkt, 0.f, 1.f, loop);
-    animations.push_back(a);
+    VRAnimation* a = scene->addAnimation(time, offset, fkt, 0.f, 1.f, loop);
+    addAnimation(a);
 }
 
 void VRTransform::stopAnimation() {
-    VRScene* scene = VRSceneManager::getCurrent();
-    for (auto a : animations) scene->stopAnimation(a);
-    animations.clear();
+    for (auto a : animations) a.second->stop();
 }
 
 list<VRTransform* > VRTransform::dynamicObjects = list<VRTransform* >();

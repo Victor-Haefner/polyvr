@@ -98,29 +98,25 @@ void VRIntersect::drag(VRObject* obj, VRTransform* caster) {
     dragged->drag(caster);
     dragged_ghost->setMatrix(dragged->getMatrix());
     dragged_ghost->switchParent(caster);
+
+    dragSignal->trigger();
 }
 
 void VRIntersect::drop(VRDevice* dev) {
     auto d = getDraggedObject();
     if (d != 0) {
+        dropSignal->trigger();
         d->drop();
         drop_time = VRGlobals::get()->CURRENT_FRAME;
+        dragged = 0;
     }
 }
 
-VRTransform* VRIntersect::getDraggedObject() {
-    if (dragged) {
-        uint now = VRGlobals::get()->CURRENT_FRAME;
-        if (now > drop_time+1 && drop_time > 0) {
-            dragged = 0;
-            drop_time = 0;
-        }
-    }
-
-    return dragged;
-}
+VRTransform* VRIntersect::getDraggedObject() { return dragged; }
 
 VRTransform* VRIntersect::getDraggedGhost() { return dragged_ghost; }
+VRSignal* VRIntersect::getDragSignal() { return dragSignal; }
+VRSignal* VRIntersect::getDropSignal() { return dropSignal; }
 
 void VRIntersect::initCross() {
     cross = new VRGeometry("Hit cross");
@@ -158,11 +154,15 @@ VRIntersect::VRIntersect() {
     initCross();
     drop_fkt = new VRDevCb("Intersect_drop", boost::bind(&VRIntersect::drop, this, _1));
     dragged_ghost = new VRTransform("dev_ghost");
+    dragSignal = new VRSignal((VRDevice*)this);
+    dropSignal = new VRSignal((VRDevice*)this);
 }
 
 VRIntersect::~VRIntersect() {
     delete cross;
     delete dragged_ghost;
+    delete dragSignal;
+    delete dropSignal;
 }
 
 VRDevCb* VRIntersect::addDrag(VRTransform* caster, VRObject* tree) {

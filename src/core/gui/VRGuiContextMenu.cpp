@@ -49,9 +49,13 @@ bool VRGuiContextMenu::on_widget_rightclick(GdkEventButton * event, string menu)
 }
 
 void VRGuiContextMenu::connectWidget(string menu, Glib::RefPtr<Gtk::Widget> widget) {
+    widget->add_events((Gdk::EventMask)GDK_BUTTON_PRESS_MASK);
+    widget->add_events((Gdk::EventMask)GDK_BUTTON_RELEASE_MASK);
     widget->signal_button_release_event().connect( sigc::bind( sigc::mem_fun(*this, &VRGuiContextMenu::on_widget_rightclick), menu) );
 }
 
 void VRGuiContextMenu::connectWidget(string menu, Gtk::Widget* widget) {
+    widget->add_events((Gdk::EventMask)GDK_BUTTON_PRESS_MASK);
+    widget->add_events((Gdk::EventMask)GDK_BUTTON_RELEASE_MASK);
     widget->signal_button_release_event().connect( sigc::bind( sigc::mem_fun(*this, &VRGuiContextMenu::on_widget_rightclick), menu) );
 }

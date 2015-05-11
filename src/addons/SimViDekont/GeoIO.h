@@ -2,6 +2,7 @@
 #define GEOIO_H
 
 #include <OpenSG/OSGSceneFileHandler.h>
+#include <OpenSG/OSGGeometry.h>
 
 using namespace std;
 

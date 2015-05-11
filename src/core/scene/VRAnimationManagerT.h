@@ -7,65 +7,29 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 template<typename T>
-VRAnimation<T>::VRAnimation(float _duration, float _offset, VRFunction<T>* _fkt, T _start, T _end, bool _loop) {
+VRAnimation::VRAnimation(float _duration, float _offset, VRFunction<T>* _fkt, T _start, T _end, bool _loop) : VRAnimation(_fkt->getBaseName()) {
     run = false;
 
     duration = _duration;
-    fkt = _fkt;
-    start_value = _start;
-    end_value = _end;
     offset = _offset;
     loop = _loop;
+
+    auto i = new interpolatorT<T>();
+    i->fkt = _fkt;
+    i->start_value = _start;
+    i->end_value = _end;
+    interp = i;
+
+    setNameSpace("animation");
+    setName("anim"); // TODO: _fkt->getBaseName() is an empty string??
 }
 
 template<typename T>
-void VRAnimation<T>::start() {
-    //cout << "\nSTART ANIM";
-    start_time = glutGet(GLUT_ELAPSED_TIME)/1000.0;
-    run = true;
-}
-
-template<typename T>
-void VRAnimation<T>::end() { run = false; }
-
-template<typename T>
-bool VRAnimation<T>::update(float current_time) {
-    if (!run) return false;
-
-    float t = current_time - start_time - offset;
-    if (t < 0) return true;
-
-    if (duration > 0.00001) t /= duration;
-    else t = 2;
-
-    if (t > 1) {
-        if (loop) start();
-        else {
-            end();
-            (*fkt)(end_value);
-        }
-        return true;
-    }
-
-    T val = start_value + (end_value - start_value)*t;
-    (*fkt)(val);
-
-    return true;
-}
-
-template<typename T>
-int VRAnimationManager::addAnimation(VRAnimation<T>* anim) {
+VRAnimation* VRAnimationManager::addAnimation(float duration, float offset, VRFunction<T>* fkt, T start, T end, bool loop) {//Todo: replace VRFunction, template?
+    VRAnimation* anim = new VRAnimation(duration, offset, fkt, start, end, loop);
+    addAnimation(anim);
     anim->start();
-
-    id++;
-    anim_map[id] = anim;
-    return id;
-}
-
-template<typename T>
-int VRAnimationManager::addAnimation(float duration, float offset, VRFunction<T>* fkt, T start, T end, bool loop) {//Todo: replace VRFunction, template?
-    VRAnimation<T>* anim = new VRAnimation<T>(duration, offset, fkt, start, end, loop);
-    return addAnimation(anim);
+    return anim;
 }
 
 OSG_END_NAMESPACE;

@@ -42,6 +42,8 @@ class VRCallbackManager {
         void clearJobs();
 
         void updateCallbacks();
+
+        void printCallbacks();
 };
 
 OSG_END_NAMESPACE;
