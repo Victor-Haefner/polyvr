@@ -53,6 +53,8 @@ class VRPhysicsManager {
 
         vector<Vec3f> collisionPoints;
         boost::recursive_mutex mtx;
+        boost::recursive_mutex lpmtx;
+        boost::recursive_mutex namtx;
 
         long long getTime();
         int fps = 500;
@@ -83,6 +85,8 @@ class VRPhysicsManager {
         bool getShowPhysics();
 
         boost::recursive_mutex& physicsMutex();
+        boost::recursive_mutex& lowPriorityMutex();
+        boost::recursive_mutex& nextAccessMutex();
 };
 
 OSG_END_NAMESPACE;

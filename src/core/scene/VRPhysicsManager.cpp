@@ -134,6 +134,13 @@ void VRPhysicsManager::updatePhysObjects() {
         btCollisionObject* obj = dynamicsWorld->getCollisionObjectArray()[j];
         body = btRigidBody::upcast(obj);
         if (body && body->getMotionState() && OSGobjs.count(body) == 1) OSGobjs[body]->updateFromBullet();
+
+    }
+
+    //apply requested forces and torques
+    for (auto o : OSGobjs) {
+        o.second->getPhysics()->applyRequestedForce();
+        o.second->getPhysics()->applyRequestedTorque();
     }
 
     // update physics visualisation shapes

@@ -6,7 +6,10 @@
 #include <OpenSG/OSGTriangleIterator.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 
+
 typedef boost::recursive_mutex::scoped_lock Lock;
+
+#define VRPHYSICS_LOCK_HIGH_PRIORITY Lock lock(naMtx());Lock lock(mtx());
 
 struct VRPhysicsJoint {
     OSG::VRConstraint* constraint;
@@ -76,6 +79,15 @@ boost::recursive_mutex& VRPhysics::mtx() {
         return m;
     };
 }
+boost::recursive_mutex& VRPhysics::naMtx() {
+    auto scene = OSG::VRSceneManager::getCurrent();
+    if (scene) return scene->nextAccessMutex();
+    else {
+        boost::recursive_mutex m;
+        return m;
+    };
+}
+
 
 btCollisionObject* VRPhysics::getCollisionObject() { Lock lock(mtx()); return ghost ? (btCollisionObject*)ghost_body : (btCollisionObject*)body; }
 btRigidBody* VRPhysics::getRigidBody() { Lock lock(mtx()); return body; }
@@ -103,8 +115,8 @@ void VRPhysics::setGhost(bool b) { ghost = b; update(); }
 bool VRPhysics::isGhost() { return ghost; }
 OSG::Vec3f VRPhysics::toVec3f(btVector3 v) { return OSG::Vec3f(v[0], v[1], v[2]); }
 void VRPhysics::setDamping(float lin, float ang) { Lock lock(mtx()); body->setDamping(btScalar(lin),btScalar(ang)); }
-OSG::Vec3f VRPhysics::getForce() { Lock lock(mtx()); return toVec3f(body->getTotalForce());}
-OSG::Vec3f VRPhysics::getTorque() { Lock lock(mtx()); return toVec3f(body->getTotalTorque());}
+OSG::Vec3f VRPhysics::getForce() { Lock lock(mtx()); return totalForce;}
+OSG::Vec3f VRPhysics::getTorque() { Lock lock(mtx()); return totalTorque;}
 
 
 
@@ -442,18 +454,35 @@ void VRPhysics::addForce(OSG::Vec3f i) {
    if (body == 0) return;
    if (mass == 0) return;
    Lock lock(mtx());
-   btVector3 force = btVector3(i.x(), i.y(), i.z());
-   body->applyForce(force,btVector3(0.0,0.0,0.0));
+   totalForce = i;
+
 }
 
 void VRPhysics::addTorque(OSG::Vec3f i) {
    if (body == 0) return;
    if (mass == 0) return;
-   btVector3 ttlTorque = btVector3(i.x(), i.y(), i.z());
-   Lock lock(mtx());
-   body->applyTorque(ttlTorque);
+  Lock lock(mtx());
+    totalTorque = i;
+
 }
 
+
+void VRPhysics::applyRequestedForce() {
+   if (body == 0) return;
+   Lock lock(mtx());
+   btVector3 force = btVector3(totalForce.x(), totalForce.y(), totalForce.z());
+   body->applyForce(force,btVector3(0.0,0.0,0.0));
+   //totalForce = OSG::Vec3f(0.0,0.0,0.0);
+}
+
+void VRPhysics::applyRequestedTorque() {
+   if (body == 0) return;
+   Lock lock(mtx());
+   btVector3 torque = btVector3(totalTorque.x(), totalTorque.y(), totalTorque.z());
+   body->applyTorque(torque);
+  // totalTorque = OSG::Vec3f(0.0,0.0,0.0);
+
+}
 
 
 

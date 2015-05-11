@@ -39,6 +39,11 @@ class VRPhysics : public OSG::VRStorage {
         bool ghost = false;
         float mass = 1.0;
         float collisionMargin = 0.3;
+
+        /** total force & torque added by addForce() or addTorque() in this frame **/
+        OSG::Vec3f totalForce = OSG::Vec3f(0.0,0.0,0.0);
+        OSG::Vec3f totalTorque = OSG::Vec3f(0.0,0.0,0.0);
+
         string physicsShape;
         map<VRPhysics*, VRPhysicsJoint*> joints ;
         map<VRPhysics*, VRPhysicsJoint*> joints2;
@@ -53,6 +58,7 @@ class VRPhysics : public OSG::VRStorage {
         btCollisionShape* getConcaveShape();
 
         boost::recursive_mutex& mtx();
+        boost::recursive_mutex& naMtx();
         void update();
 
     public:
@@ -99,13 +105,20 @@ class VRPhysics : public OSG::VRStorage {
         void pause(bool b = true);
         void resetForces();
         void applyImpulse(OSG::Vec3f i);
+        /** requests a force, which is handled in the physics thread later**/
         void addForce(OSG::Vec3f i);
         void addTorque(OSG::Vec3f i);
+
+        /** applies the force/torque, which was handled. then resets the requested force/torque**/
+        void applyRequestedForce();
+        void applyRequestedTorque();
+
+
         float getConstraintAngle(VRPhysics *to, int axis);
         void deleteConstraints(VRPhysics* with);
-        /**get the total force in this frame **/
+        /**get the requested total force in this frame **/
         OSG::Vec3f getForce();
-        /** get total torque**/
+        /** get requested total torque**/
         OSG::Vec3f getTorque();
 
         OSG::Vec3f getLinearVelocity();

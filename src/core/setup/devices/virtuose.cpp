@@ -156,6 +156,7 @@ void virtuose::fillPosition(VRPhysics* p, float *to, VRPhysics* origin)
     btTransform pos = p->getTransform();
     if (origin != 0) {
         pos.setOrigin(( p->getTransform().getOrigin() - origin->getTransform().getOrigin()));
+        pos.setRotation(p->getTransform().getRotation() + origin->getTransform().getRotation());
     }
 
     to[0] =  pos.getOrigin().getZ();
@@ -176,6 +177,7 @@ void virtuose::fillSpeed(VRPhysics* p, float *to,VRPhysics* origin)
     to[1] = vel.x();
     to[2] = vel.y();
     Vec3f ang = p->getAngularVelocity();
+    if(origin!=0)   ang -= origin->getAngularVelocity();
     to[3] = ang.z();
     to[4] = ang.x();
     to[5] = ang.y();
