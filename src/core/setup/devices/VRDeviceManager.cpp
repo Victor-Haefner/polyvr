@@ -32,6 +32,10 @@ VRDeviceManager::~VRDeviceManager() { for (auto dev : devices) delete dev.second
 void VRDeviceManager::clearSignals() { for (auto dev : devices) dev.second->clearSignals(); }
 void VRDeviceManager::setDeviceRoot(VRTransform* root) { device_root = root; }
 
+void VRDeviceManager::updateDevices() {
+    for (auto itr : devices) itr.second->updateBeacon();
+}
+
 void VRDeviceManager::addDevice(VRDevice* dev) {
     devices[dev->getName()] = dev;
     dev->getBeacon()->switchParent(device_root);

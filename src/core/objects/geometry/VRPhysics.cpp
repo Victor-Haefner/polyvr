@@ -102,11 +102,15 @@ int VRPhysics::getActivationMode() { return activation_mode; }
 void VRPhysics::setGhost(bool b) { ghost = b; update(); }
 bool VRPhysics::isGhost() { return ghost; }
 OSG::Vec3f VRPhysics::toVec3f(btVector3 v) { return OSG::Vec3f(v[0], v[1], v[2]); }
+btVector3 VRPhysics::toBtVector3(OSG::Vec3f v) { return btVector3(v[0], v[1], v[2]); }
 void VRPhysics::setDamping(float lin, float ang) { Lock lock(mtx()); body->setDamping(btScalar(lin),btScalar(ang)); }
 OSG::Vec3f VRPhysics::getForce() { Lock lock(mtx()); return toVec3f(body->getTotalForce());}
 OSG::Vec3f VRPhysics::getTorque() { Lock lock(mtx()); return toVec3f(body->getTotalTorque());}
 
-
+void VRPhysics::prepareStep() {
+   body->applyForce(constantForce, btVector3(0.0,0.0,0.0));
+   body->applyTorque(constantTorque);
+}
 
 
 vector<VRCollision> VRPhysics::getCollisions() {
@@ -329,16 +333,27 @@ btCollisionShape* VRPhysics::getSphereShape() {
 btCollisionShape* VRPhysics::getConvexShape() {
     btConvexHullShape* shape = new btConvexHullShape();
 
+    OSG::Matrix m;
+    OSG::Matrix M = vr_obj->getWorldMatrix();
+    M.invert();
+
     vector<OSG::VRObject*> geos = vr_obj->getObjectListByType("Geometry");
-	for (unsigned int j = 0; j<geos.size(); j++) {
-        OSG::VRGeometry* geo = (OSG::VRGeometry*)geos[j];
+	for (auto g : geos) {
+        OSG::VRGeometry* geo = (OSG::VRGeometry*)g;
         if (geo == 0) continue;
         if (geo->getMesh() == 0) continue;
         OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->getPositions();
         if (pos == 0) continue;
+
+        if (geo != vr_obj) {
+            m = geo->getWorldMatrix();
+            m.multLeft(M);
+        }
+
 		for (unsigned int i = 0; i<pos->size(); i++) {
             OSG::Pnt3f p;
             pos->getValue(p,i);
+            if (geo != vr_obj) m.mult(p,p);
             for (int i=0; i<3; i++) p[i] *= scale[i];
             shape->addPoint(btVector3(p[0], p[1], p[2]));
         }
@@ -429,6 +444,8 @@ void VRPhysics::resetForces() {
     body->setAngularVelocity(btVector3(0,0,0));
     body->setLinearVelocity(btVector3(0,0,0));
     body->clearForces();
+    constantForce = btVector3();
+    constantTorque = btVector3();
 }
 
 void VRPhysics::applyImpulse(OSG::Vec3f i) {
@@ -439,23 +456,19 @@ void VRPhysics::applyImpulse(OSG::Vec3f i) {
 }
 
 void VRPhysics::addForce(OSG::Vec3f i) {
-   if (body == 0) return;
-   if (mass == 0) return;
+   if (body == 0 || mass == 0) return;
    Lock lock(mtx());
-   btVector3 force = btVector3(i.x(), i.y(), i.z());
-   body->applyForce(force,btVector3(0.0,0.0,0.0));
+   body->applyForce(toBtVector3(i), btVector3(0.0,0.0,0.0));
 }
 
 void VRPhysics::addTorque(OSG::Vec3f i) {
-   if (body == 0) return;
-   if (mass == 0) return;
-   btVector3 ttlTorque = btVector3(i.x(), i.y(), i.z());
+   if (body == 0 || mass == 0) return;
    Lock lock(mtx());
-   body->applyTorque(ttlTorque);
+   body->applyTorque(toBtVector3(i));
 }
 
-
-
+void VRPhysics::addConstantForce(OSG::Vec3f i) { Lock lock(mtx()); constantForce = toBtVector3(i); }
+void VRPhysics::addConstantTorque(OSG::Vec3f i) { Lock lock(mtx()); constantTorque = toBtVector3(i); }
 
 OSG::Vec3f VRPhysics::getLinearVelocity() {
      if (body == 0) return OSG::Vec3f (0.0f,0.0f,0.0f);

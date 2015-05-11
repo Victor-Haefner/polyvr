@@ -71,9 +71,10 @@ void VRAvatar::addAvatar(VRObject* geo) {
 }
 
 VRAvatar::VRAvatar(string name) {
-    deviceRoot = 0;
     deviceRoot = new VRTransform(name + "_beacon");
     deviceRoot->addAttachment("global", 0);
+    tmpContainer = new VRTransform(name + "_tmp_beacon");
+    tmpContainer->addAttachment("global", 0);
 
     avatars["ray"] = initRay();
     //avatars["cone"] = initCone();
@@ -91,11 +92,14 @@ void VRAvatar::enableAvatar(string avatar) { if (avatars.count(avatar)) avatars[
 void VRAvatar::disableAvatar(string avatar) { if (avatars.count(avatar)) avatars[avatar]->hide(); }
 
 VRTransform* VRAvatar::getBeacon() { return deviceRoot; }
+VRTransform* VRAvatar::editBeacon() { return tmpContainer; }
 void VRAvatar::setBeacon(VRTransform* b) {
     deviceRoot = b;
-    map<string, VRObject*>::iterator itr = avatars.begin();
+    for (auto a : avatars) a.second->switchParent(b);
+}
 
-    for (; itr != avatars.end(); itr++) itr->second->switchParent(b);
+void VRAvatar::updateBeacon() {
+    deviceRoot->setMatrix(tmpContainer->getMatrix()); // TODO: may need world matrix here
 }
 
 OSG_END_NAMESPACE;

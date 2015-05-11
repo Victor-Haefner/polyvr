@@ -6,8 +6,8 @@
         <Object name_suffix="0" base_name="l2" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="l2_beacon" diffuse="1 1 1 1" lightType="directional" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
           <Object name_suffix="0" base_name="l2_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0.2 0.2 1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="l2"/>
           <Object name_suffix="0" base_name="strokes" name_space="__global__" type="Object" pickable="0" visible="1"/>
-          <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="0 0 1.5" at="0 0 0.5" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472"/>
-          <Object name_suffix="0" base_name="Box" name_space="__global__" type="Geometry" pickable="1" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" sourcetype="3" sourceparam="Box 0.2 0.2 0.2 1 1 1"/>
+          <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="0 0 1" at="0 0 0" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472"/>
+          <Object name_suffix="0" base_name="Box" name_space="__global__" type="Geometry" pickable="1" visible="1" from="0.360226 -0.486896 0.232858" at="0.650246 -0.78194 -0.677547" up="-0.237546 0.899327 -0.367127" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" sourcetype="3" sourceparam="Box 0.2 0.2 0.2 1 1 1"/>
         </Object>
       </Object>
     </Object>
@@ -22,7 +22,7 @@
 		VR.col = VR.colChooser.get()
 </core>
       <trig type="on_device" dev="mouse" state="Pressed" param="" key="1" name_suffix="2" base_name="trigger" name_space="__global__"/>
-      <trig type="on_device" dev="flystick" state="Pressed" param="" key="3" name_suffix="3" base_name="trigger" name_space="__global__"/>
+      <trig type="on_device" dev="flystick" state="Pressed" param="" key="2" name_suffix="3" base_name="trigger" name_space="__global__"/>
     </Script>
     <Script name_suffix="0" base_name="init" name_space="__script__" type="Python" mobile="">
       <core>
@@ -51,7 +51,7 @@
 	
 	cam = VR.getRoot().find('Default')
 	cam.setIdentity()
-	cam.setFrom(0,0,1.5)
+	cam.setFrom(0,0,1)
 	pencil.setIdentity()
 </core>
       <arg type="VRPyGeometryType" value="Box" name_suffix="0" base_name="pencil" name_space="init"/>
@@ -119,6 +119,6 @@
   </Scripts>
   <Sockets/>
   <Background color="1 1 1" path="" type="0"/>
-  <Navigation active="Orbit"/>
+  <Navigation active="FlyWalk"/>
   <Materials/>
 </Scene>

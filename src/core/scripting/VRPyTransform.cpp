@@ -91,6 +91,8 @@ PyMethodDef VRPyTransform::methods[] = {
     {"applyImpulse", (PyCFunction)VRPyTransform::applyImpulse, METH_VARARGS, "Apply impulse on the physics object" },
     {"applyForce", (PyCFunction)VRPyTransform::applyForce, METH_VARARGS, "Apply force on the physics object (e.g. obj.applyForce(1.0,0.0,0.0) )" },
     {"applyTorque", (PyCFunction)VRPyTransform::applyTorque, METH_VARARGS, "Apply torque on the physics object  (e.g. obj.applyTorque(1.0,0.0,0.0) )" },
+    {"applyConstantForce", (PyCFunction)VRPyTransform::applyConstantForce, METH_VARARGS, "Apply a constant force on the physics object (e.g. obj.applyConstantForce(1.0,0.0,0.0) )" },
+    {"applyConstantTorque", (PyCFunction)VRPyTransform::applyConstantTorque, METH_VARARGS, "Apply a constant torque on the physics object  (e.g. obj.applyConstantTorque(1.0,0.0,0.0) )" },
     {"getForce", (PyCFunction)VRPyTransform::getForce, METH_NOARGS, "get the total force put on this transform during this frame. returns 3-Tuple" },
     {"getTorque", (PyCFunction)VRPyTransform::getTorque, METH_NOARGS, "get the total torque put on this transform during this frame. returns 3-Tuple" },
     {"setPhysicsActivationMode", (PyCFunction)VRPyTransform::setPhysicsActivationMode, METH_VARARGS, "Set the physics activation mode of the physics object (normal:1 , no deactivation:4, stay deactivated: 5)" },
@@ -388,10 +390,24 @@ PyObject* VRPyTransform::applyForce(VRPyTransform* self, PyObject *args) {
     Py_RETURN_TRUE;
 }
 
+PyObject* VRPyTransform::applyConstantForce(VRPyTransform* self, PyObject *args) {
+    OSG::Vec3f i = parseVec3f(args);
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::applyForce: C Object is invalid"); return NULL; }
+    self->obj->getPhysics()->addConstantForce(i);
+    Py_RETURN_TRUE;
+}
+
 PyObject* VRPyTransform::applyTorque(VRPyTransform* self, PyObject *args) {
     OSG::Vec3f i = parseVec3f(args);
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::applyTorque: C Object is invalid"); return NULL; }
     self->obj->getPhysics()->addTorque(i);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyTransform::applyConstantTorque(VRPyTransform* self, PyObject *args) {
+    OSG::Vec3f i = parseVec3f(args);
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::applyTorque: C Object is invalid"); return NULL; }
+    self->obj->getPhysics()->addConstantTorque(i);
     Py_RETURN_TRUE;
 }
 

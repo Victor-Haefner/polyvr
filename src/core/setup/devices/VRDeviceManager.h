@@ -41,6 +41,7 @@ class VRDeviceManager {
 
         void updateActivatedSignals();
         void updateDeviceDynNodes(VRObject* ancestor);
+        void updateDevices();
 
         void save(xmlpp::Element* node);
         void load(xmlpp::Element* node);

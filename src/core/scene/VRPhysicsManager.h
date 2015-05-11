@@ -63,6 +63,7 @@ class VRPhysicsManager {
         VRPhysicsManager();
         ~VRPhysicsManager();
 
+        void prepareObjects();
         void updatePhysics(VRThread* t);
         void updatePhysObjects();
 

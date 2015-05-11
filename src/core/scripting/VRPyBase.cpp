@@ -182,7 +182,7 @@ int VRPyBase::toGLConst(string s) {
     if (s == "GL_QUAD_STRIP") return GL_QUAD_STRIP;
     if (s == "GL_POLYGON") return GL_POLYGON;
 
-    return 0;
+    return -1;
 }
 
 bool VRPyBase::isNone(PyObject* o) { return (o == Py_None); }
