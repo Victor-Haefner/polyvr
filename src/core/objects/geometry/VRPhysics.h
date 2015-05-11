@@ -58,7 +58,6 @@ class VRPhysics : public OSG::VRStorage {
         btCollisionShape* getConcaveShape();
 
         boost::recursive_mutex& mtx();
-        boost::recursive_mutex& naMtx();
         void update();
 
     public:

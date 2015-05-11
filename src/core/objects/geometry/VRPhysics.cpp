@@ -6,10 +6,7 @@
 #include <OpenSG/OSGTriangleIterator.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 
-
 typedef boost::recursive_mutex::scoped_lock Lock;
-
-#define VRPHYSICS_LOCK_HIGH_PRIORITY Lock lock(naMtx());Lock lock(mtx());
 
 struct VRPhysicsJoint {
     OSG::VRConstraint* constraint;
@@ -75,19 +72,11 @@ boost::recursive_mutex& VRPhysics::mtx() {
     auto scene = OSG::VRSceneManager::getCurrent();
     if (scene) return scene->physicsMutex();
     else {
+            cout << "generate mutex"<< "\n";
         boost::recursive_mutex m;
         return m;
     };
 }
-boost::recursive_mutex& VRPhysics::naMtx() {
-    auto scene = OSG::VRSceneManager::getCurrent();
-    if (scene) return scene->nextAccessMutex();
-    else {
-        boost::recursive_mutex m;
-        return m;
-    };
-}
-
 
 btCollisionObject* VRPhysics::getCollisionObject() { Lock lock(mtx()); return ghost ? (btCollisionObject*)ghost_body : (btCollisionObject*)body; }
 btRigidBody* VRPhysics::getRigidBody() { Lock lock(mtx()); return body; }
