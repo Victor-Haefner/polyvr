@@ -138,10 +138,7 @@ void virtuose::setBase(VRTransform* tBase) {
 void virtuose::attachTransform(VRTransform* trans)
 {
     if(vc == 0) return;
-    if(base == 0) {
-        cout << "attachTransform : Error: no base frame representation defined (do setBase() first).";
-        return;
-    }
+
     isAttached = true;
     attached = trans;
     VRPhysics* o = trans->getPhysics();
@@ -156,12 +153,11 @@ void virtuose::attachTransform(VRTransform* trans)
 void virtuose::fillPosition(VRPhysics* p, float *to, VRPhysics* origin)
 {
     //no origin->take zero as origin
-
+    btTransform pos = p->getTransform();
     if (origin != 0) {
-
+        pos.setOrigin(( p->getTransform().getOrigin() - origin->getTransform().getOrigin()));
     }
 
-    btTransform pos = p->getTransform();
     to[0] =  pos.getOrigin().getZ();
     to[1] = pos.getOrigin().getX();
     to[2] =  pos.getOrigin().getY();
@@ -170,9 +166,12 @@ void virtuose::fillPosition(VRPhysics* p, float *to, VRPhysics* origin)
     to[5] =  pos.getRotation().getY();
     to[6] =  pos.getRotation().getW();
 }
-void virtuose::fillSpeed(VRPhysics* p, float *to)
+void virtuose::fillSpeed(VRPhysics* p, float *to,VRPhysics* origin)
 {
+
+
     Vec3f vel = p->getLinearVelocity();
+    if(origin!=0)   vel -= origin->getLinearVelocity();
     to[0] = vel.z();
     to[1] = vel.x();
     to[2] = vel.y();
@@ -238,7 +237,8 @@ void virtuose::updateVirtMechPre() {
 			virtSetSpeed(vc, speed);
 		} else {
                 //apply position&speed to the haptic
-                fillPosition(this->attached->getPhysics(),position,0);
+                VRPhysics* phBase = (base == 0) ? 0 : base->getPhysics();
+                fillPosition(this->attached->getPhysics(),position,phBase);
                 //"diff"
                 float tmpPos[7];
                 CHECK(virtGetPosition(vc, tmpPos));
@@ -248,7 +248,7 @@ void virtuose::updateVirtMechPre() {
                 pPos = Vec3f(tmpPos[0],tmpPos[1],tmpPos[2]);
                 CHECK(virtSetPosition(vc, position));
                 //speed
-                fillSpeed(this->attached->getPhysics(),speed);
+                fillSpeed(this->attached->getPhysics(),speed,phBase);
                 //"diff"
                 float tmpSp[6];
                 CHECK(virtGetSpeed(vc, tmpSp));

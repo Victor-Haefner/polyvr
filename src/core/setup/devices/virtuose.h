@@ -63,7 +63,7 @@ class virtuose {
         /** parses position/rotation data of given VRPhysics into the given float[7] array**/
         void fillPosition(VRPhysics* p, float *to, VRPhysics* origin);
         /** parses speed data of given VRPhysics into the given float[6] array**/
-        void fillSpeed(VRPhysics* p, float *to);
+        void fillSpeed(VRPhysics* p, float *to,VRPhysics* origin);
         /** parses given btMatrix3x3 into the given float[9] array**/
         void Matrix3ToArray(btMatrix3x3 m, float *to);
         /** sets the base **/
