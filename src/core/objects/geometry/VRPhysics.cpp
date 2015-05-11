@@ -104,8 +104,8 @@ bool VRPhysics::isGhost() { return ghost; }
 OSG::Vec3f VRPhysics::toVec3f(btVector3 v) { return OSG::Vec3f(v[0], v[1], v[2]); }
 btVector3 VRPhysics::toBtVector3(OSG::Vec3f v) { return btVector3(v[0], v[1], v[2]); }
 void VRPhysics::setDamping(float lin, float ang) { Lock lock(mtx()); body->setDamping(btScalar(lin),btScalar(ang)); }
-OSG::Vec3f VRPhysics::getForce() { Lock lock(mtx()); return totalForce;}
-OSG::Vec3f VRPhysics::getTorque() { Lock lock(mtx()); return totalTorque;}
+OSG::Vec3f VRPhysics::getForce() { Lock lock(mtx()); return OSG::Vec3f(constantForce.getX(),constantForce.getY(),constantForce.getZ());}
+OSG::Vec3f VRPhysics::getTorque() { Lock lock(mtx()); return OSG::Vec3f(constantTorque.getX(),constantTorque.getY(),constantTorque.getZ());}
 
 void VRPhysics::prepareStep() {
    body->applyForce(constantForce, btVector3(0.0,0.0,0.0));
@@ -468,7 +468,7 @@ void VRPhysics::addTorque(OSG::Vec3f i) {
    body->applyTorque(toBtVector3(i));
 }
 
-void VRPhysics::addConstantForce(OSG::Vec3f i) { Lock lock(mtx()); constantForce = toBtVector3(i); }
+void VRPhysics::addConstantForce(OSG::Vec3f i) { Lock lock(mtx()); constantForce = toBtVector3(i); cout << constantForce << "\n"; }
 void VRPhysics::addConstantTorque(OSG::Vec3f i) { Lock lock(mtx()); constantTorque = toBtVector3(i); }
 
 OSG::Vec3f VRPhysics::getLinearVelocity() {

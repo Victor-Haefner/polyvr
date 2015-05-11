@@ -79,8 +79,8 @@ void virtuose::connect(string IP,float pTimeStep) {
 
 void virtuose::disconnect()
 {
-    if (vc)
-    {
+    if(vc == 0) return;
+
         CHECK( virtSetPowerOn(vc, 0) );
         CHECK( virtDetachVO(vc) );
         //CHECK( virtStopLoop(vc) );
@@ -88,7 +88,6 @@ void virtuose::disconnect()
 
         vc = 0;
         isAttached = false;
-    }
 }
 
 void virtuose::setSimulationScales(float translation, float forces)
@@ -156,7 +155,7 @@ void virtuose::fillPosition(VRPhysics* p, float *to, VRPhysics* origin)
     btTransform pos = p->getTransform();
     if (origin != 0) {
         pos.setOrigin(( p->getTransform().getOrigin() - origin->getTransform().getOrigin()));
-        pos.setRotation(p->getTransform().getRotation() + origin->getTransform().getRotation());
+        pos.setRotation(p->getTransform().getRotation() * origin->getTransform().getRotation());
     }
 
     to[0] =  pos.getOrigin().getZ();

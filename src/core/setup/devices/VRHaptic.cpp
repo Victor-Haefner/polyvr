@@ -38,9 +38,9 @@ VRHaptic::~VRHaptic() {
 
 void VRHaptic::on_scene_changed(VRDevice* dev) {
     //disconnect
-    //v->setBase(0);
-    //v->detachTransform();
-    //v->disconnect();
+    v->setBase(0);
+    v->detachTransform();
+    v->disconnect();
 
     timestepWatchdog = new VRFunction<int>( "Haptic Timestep Watchdog", boost::bind(&VRHaptic::updateHapticTimestep, this, getBeacon()) );
     updateFktPre = new VRFunction<int>( "Haptic pre update", boost::bind(&VRHaptic::updateHapticPre, this, getBeacon()) );
@@ -112,12 +112,14 @@ void VRHaptic::updateHapticTimestep(VRTransform* t) {
 }
 
 void VRHaptic::updateHapticPre(VRTransform* t) { // TODO: rotation
-    //COMMAND_MODE_VIRTMECH
+     if (!v->connected()) return;
+   //COMMAND_MODE_VIRTMECH
     updateVirtMechPre();
 }
 
 void VRHaptic::updateHapticPost(VRTransform* t) { // TODO: rotation
-    //COMMAND_MODE_VIRTMECH
+     if (!v->connected()) return;
+   //COMMAND_MODE_VIRTMECH
     updateVirtMechPost();
 }
 
@@ -139,8 +141,10 @@ void VRHaptic::updateVirtMechPost() {
     for (int i=0; i<3; i++) {
         if (states[i] != button_states[i]) {
             //cout << "updateVirtMech trigger " << i << " " << states[i] << endl;
-            change_button(i, states[i]);
-            button_states[i] = states[i];
+
+            // leads to unexpected behaviour (virtual obj is set to origin immediately)
+            //change_button(i, states[i]);
+         //   button_states[i] = states[i];
         }
     }
 }

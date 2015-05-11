@@ -142,11 +142,7 @@ void VRPhysicsManager::updatePhysObjects() {
 
     }
 
-    //apply requested forces and torques
-    for (auto o : OSGobjs) {
-        o.second->getPhysics()->applyRequestedForce();
-        o.second->getPhysics()->applyRequestedTorque();
-    }
+
 
     // update physics visualisation shapes
     for (auto v : physics_visuals_to_update) {

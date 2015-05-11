@@ -40,14 +40,12 @@ class VRPhysics : public OSG::VRStorage {
         float mass = 1.0;
         float collisionMargin = 0.3;
 
-        /** total force & torque added by addForce() or addTorque() in this frame **/
-        OSG::Vec3f totalForce = OSG::Vec3f(0.0,0.0,0.0);
-        OSG::Vec3f totalTorque = OSG::Vec3f(0.0,0.0,0.0);
 
         string physicsShape;
         map<VRPhysics*, VRPhysicsJoint*> joints ;
         map<VRPhysics*, VRPhysicsJoint*> joints2;
 
+        /** total force & torque added by addForce() or addTorque() in this frame **/
         btVector3 constantForce;
         btVector3 constantTorque;
 
