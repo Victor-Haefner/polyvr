@@ -18,9 +18,9 @@ VRHaptic::VRHaptic() : VRDevice("haptic") {
     v = new virtuose();
     setIP("172.22.151.200");
 
-    auto updateObjFkt = new VRFunction<int>( "Haptic object update", boost::bind(&VRHaptic::applyTransformation, this, getBeacon()) );
-    VRSceneManager::get()->dropUpdateFkt(updateObjFkt);
-    VRSceneManager::get()->addUpdateFkt(updateObjFkt);
+    //auto updateObjFkt = new VRFunction<int>( "Haptic object update", boost::bind(&VRHaptic::applyTransformation, this, getBeacon()) );
+    //VRSceneManager::get()->dropUpdateFkt(updateObjFkt);
+    //VRSceneManager::get()->addUpdateFkt(updateObjFkt);
 
     auto fkt = new VRFunction<VRDevice*>( "Haptic on scene changed", boost::bind(&VRHaptic::on_scene_changed, this, _1) );
     VRSceneManager::get()->getSignal_on_scene_load()->add(fkt);
@@ -30,9 +30,9 @@ VRHaptic::VRHaptic() : VRDevice("haptic") {
 }
 
 VRHaptic::~VRHaptic() {
-    VRSceneManager::get()->dropUpdateFkt(timestepWatchdog);
-    VRSceneManager::get()->dropUpdateFkt(updateFktPre);
-    VRSceneManager::get()->dropUpdateFkt(updateFktPost);
+    VRSceneManager::getCurrent()->dropUpdateFkt(timestepWatchdog);
+    VRSceneManager::getCurrent()->dropPhysicsUpdateFunction(updateFktPre,false);
+    VRSceneManager::getCurrent()->dropPhysicsUpdateFunction(updateFktPost,true);
     v->disconnect();
 }
 
@@ -46,12 +46,13 @@ void VRHaptic::on_scene_changed(VRDevice* dev) {
     updateFktPre = new VRFunction<int>( "Haptic pre update", boost::bind(&VRHaptic::updateHapticPre, this, getBeacon()) );
     updateFktPost = new VRFunction<int>( "Haptic post update", boost::bind(&VRHaptic::updateHapticPost, this, getBeacon()) );
 
-    VRSceneManager::getCurrent()->dropPhysicsUpdateFunction(timestepWatchdog,false);
+    VRSceneManager::getCurrent()->dropUpdateFkt(timestepWatchdog);
     VRSceneManager::getCurrent()->dropPhysicsUpdateFunction(updateFktPre,false);
     VRSceneManager::getCurrent()->dropPhysicsUpdateFunction(updateFktPost,true);
-    VRSceneManager::getCurrent()->addPhysicsUpdateFunction(timestepWatchdog,false);
+    VRSceneManager::getCurrent()->addUpdateFkt(timestepWatchdog);
     VRSceneManager::getCurrent()->addPhysicsUpdateFunction(updateFktPre,false);
     VRSceneManager::getCurrent()->addPhysicsUpdateFunction(updateFktPost,true);
+
 
     //reconnect
     setIP("172.22.151.200");
