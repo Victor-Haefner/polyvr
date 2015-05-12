@@ -163,6 +163,7 @@ class FContainer : public FObject {
 
         bool isFull();
         bool isEmpty();
+        int getCount();
 
         void clear();
 

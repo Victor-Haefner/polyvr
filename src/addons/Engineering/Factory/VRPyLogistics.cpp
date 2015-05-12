@@ -374,6 +374,7 @@ PyMethodDef FPyContainer::methods[] = {
     {"isEmpty", (PyCFunction)FPyContainer::isEmpty, METH_NOARGS, "Set container capacity" },
     {"isFull", (PyCFunction)FPyContainer::isFull, METH_NOARGS, "Set container capacity" },
     {"clear", (PyCFunction)FPyContainer::clear, METH_NOARGS, "Set container capacity" },
+    {"getCount", (PyCFunction)FPyContainer::getCount, METH_NOARGS, "Get number of products in the container" },
     {NULL}  /* Sentinel */
 };
 
@@ -402,6 +403,11 @@ PyObject* FPyContainer::setCapacity(FPyContainer* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "FPyContainer::setCapacity - Object is invalid"); return NULL; }
     self->obj->setCapacity( parseFloat(args) );
     Py_RETURN_TRUE;
+}
+
+PyObject* FPyContainer::getCount(FPyContainer* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "FPyContainer::getCount - Object is invalid"); return NULL; }
+    return PyInt_FromLong( self->obj->getCount() );
 }
 
 
