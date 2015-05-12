@@ -142,7 +142,7 @@ void VRDemos::setButton(demoEntry* e) {
     ebox->signal_event().connect( sigc::bind<demoEntry*>( sigc::mem_fun(*this, &VRDemos::on_any_event), e) );
 
     e->butPlay->signal_clicked().connect( sigc::bind<demoEntry*>( sigc::mem_fun(*this, &VRDemos::toggleDemo), e) );
-    e->butOpts->signal_clicked().connect( sigc::mem_fun(*this, &VRDemos::on_menu_advanced) );
+    e->butOpts->signal_clicked().connect( sigc::bind<demoEntry*>( sigc::mem_fun(*this, &VRDemos::on_menu_advanced), e) );
     e->butLock->signal_clicked().connect( sigc::bind<demoEntry*>( sigc::mem_fun(*this, &VRDemos::on_lock_toggle), e) );
     e->widget->show_all();
 }
@@ -245,7 +245,7 @@ void VRDemos::initMenu() {
     menu = new VRGuiContextMenu("DemoMenu");
     menu->appendItem("DemoMenu", "Unpin", sigc::mem_fun(*this, &VRDemos::on_menu_unpin));
     menu->appendItem("DemoMenu", "Delete", sigc::mem_fun(*this, &VRDemos::on_menu_delete));
-    menu->appendItem("DemoMenu", "Advanced..", sigc::mem_fun(*this, &VRDemos::on_menu_advanced));
+    menu->appendItem("DemoMenu", "Advanced..", sigc::bind<demoEntry*>( sigc::mem_fun(*this, &VRDemos::on_menu_advanced), 0));
 
     setButtonCallback("button10", sigc::mem_fun(*this, &VRDemos::on_advanced_cancel));
     setButtonCallback("button26", sigc::mem_fun(*this, &VRDemos::on_advanced_start));
@@ -284,7 +284,8 @@ void VRDemos::on_menu_unpin() {
     VRSceneManager::get()->remFavorite(path);
 }
 
-void VRDemos::on_menu_advanced() {
+void VRDemos::on_menu_advanced(demoEntry* e) {
+    if (e) current_demo = e;
     setCheckButton("checkbutton34", false);
     setCheckButton("checkbutton36", false);
     showDialog("advanced_start");
