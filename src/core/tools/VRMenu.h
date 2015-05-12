@@ -8,21 +8,36 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRMenu : public VRGeometry {
-    private:
+    public:
         enum TYPE {
             SPRITE,
         };
 
+        enum LAYOUT {
+            LINEAR,
+            CIRCULAR,
+        };
+
+    private:
         TYPE mtype = SPRITE;
         string group;
+
+        LAYOUT layout = LINEAR;
+        Vec2f scale = Vec2f(0.3,0.4);
+        float param = 0.1;
 
         VRMenu* active;
         VRMenu* selected;
 
         VRFunction<int>* fkt;
 
+        void setLinear();
+
     public:
-        VRMenu(string path);
+        VRMenu(string path = "");
+
+        void setLeafType(TYPE l, Vec2f scale);
+        void setLayout(LAYOUT l, float param);
 
         VRMenu* append(string path);
         VRMenu* getActive();
@@ -30,6 +45,9 @@ class VRMenu : public VRGeometry {
 
         void enter();
         void move(int dir);
+
+        void open();
+        void close();
 };
 
 OSG_END_NAMESPACE;

@@ -2,6 +2,7 @@
 
 #include "core/objects/material/VRMaterial.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/toString.h"
 
 using namespace std;
 using namespace OSG;
@@ -9,18 +10,23 @@ using namespace OSG;
 VRMenu::VRMenu(string path) : VRGeometry("menu") {
     type = "Menu";
     group = getName();
+    if (path == "") return;
 
-    if (mtype == SPRITE) setPrimitive("Plane 0.2 0.2 1 1");
+    setLeafType(mtype, scale);
 
     VRMaterial* mat = VRMaterial::get(path);
     mat->setLit(false);
     mat->setTexture(path);
+    setMaterial(mat);
+
+    hide();
 }
 
 VRMenu* VRMenu::append(string path) {
     VRMenu* m = new VRMenu(path);
     m->group = group;
-    m->mtype = mtype;
+    m->setLeafType(mtype, scale);
+    m->setLayout(layout, param);
     addChild(m);
     return m;
 }
@@ -30,6 +36,35 @@ VRMenu* VRMenu::getSelected() { return selected; }
 
 void VRMenu::enter() { ; }
 void VRMenu::move(int dir) { ; }
+
+void VRMenu::setLinear() {
+    auto children = getChildren("Menu");
+    int a = 0;
+    for (int i=0; i<children.size(); i++) if (children[i] == active) a = i;
+
+    for (int i=0; i<children.size(); i++) {
+        float x = (i-a)*(param+scale[0]);
+        VRMenu* m = (VRMenu*)children[i];
+        m->setFrom(Vec3f(x,0,0));
+        m->show();
+    }
+}
+
+void VRMenu::setLeafType(TYPE t, Vec2f s) {
+    mtype = t;
+    scale = s;
+    if (t == SPRITE) setPrimitive("Plane", toString(s) + " 1 1");
+}
+
+void VRMenu::setLayout(LAYOUT l, float p) {
+    layout = l;
+    param = p;
+    if (l == LINEAR) setLinear();
+    //if (l == CIRCULAR) setCircular();
+}
+
+void VRMenu::open() { show(); setLayout(layout, param); }
+void VRMenu::close() { active->hide(); }
 
 /*
 
