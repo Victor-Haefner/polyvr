@@ -70,9 +70,9 @@ class virtuose {
         void setBase(VRTransform* tBase);
         /**connect a physicalized Object to this virtuose and push it in the same direction the virtuose moves.**/
         void attachTransform(VRTransform* trans);
-        /** detach the previously attached Transform**/
-        void detachTransform();
-        /** update functions of the Virtuose, has to be called each frame**/
+        /** detach the previously attached Transform and returns it**/
+        VRTransform* detachTransform();
+        /** update functions of the Virtuose, have to be called each frame**/
         void updateVirtMechPre();
         void updateVirtMechPost();
         /** 1 means button pressed, 0 means released**/

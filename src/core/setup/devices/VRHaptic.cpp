@@ -45,11 +45,11 @@ void VRHaptic::on_scene_changed(VRDevice* dev) {
     timestepWatchdog = new VRFunction<int>( "Haptic Timestep Watchdog", boost::bind(&VRHaptic::updateHapticTimestep, this, getBeacon()) );
     updateFktPre = new VRFunction<int>( "Haptic pre update", boost::bind(&VRHaptic::updateHapticPre, this, getBeacon()) );
     updateFktPost = new VRFunction<int>( "Haptic post update", boost::bind(&VRHaptic::updateHapticPost, this, getBeacon()) );
-    VRSceneManager::getCurrent()->dropUpdateFkt(timestepWatchdog);
 
-    VRSceneManager::getCurrent()->dropUpdateFkt(updateFktPre);
-    VRSceneManager::getCurrent()->dropUpdateFkt(updateFktPost);
-    VRSceneManager::getCurrent()->addUpdateFkt(timestepWatchdog,false);
+    VRSceneManager::getCurrent()->dropPhysicsUpdateFunction(timestepWatchdog,false);
+    VRSceneManager::getCurrent()->dropPhysicsUpdateFunction(updateFktPre,false);
+    VRSceneManager::getCurrent()->dropPhysicsUpdateFunction(updateFktPost,true);
+    VRSceneManager::getCurrent()->addPhysicsUpdateFunction(timestepWatchdog,false);
     VRSceneManager::getCurrent()->addPhysicsUpdateFunction(updateFktPre,false);
     VRSceneManager::getCurrent()->addPhysicsUpdateFunction(updateFktPost,true);
 
@@ -105,8 +105,7 @@ void VRHaptic::updateHapticTimestep(VRTransform* t) {
                 fps_stable = 1;
                 cout << "reconnect haptic" << VRGlobals::get()->PHYSICS_FRAME_RATE << "\n";
                 //reconnect haptic
-                v->disconnect();
-                v->connect(getIP(), (1.0f/(float)VRGlobals::get()->PHYSICS_FRAME_RATE));
+                on_scene_changed(this);
             }
         }
 }

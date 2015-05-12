@@ -123,6 +123,13 @@ void VRPhysicsManager::addPhysicsUpdateFunction(VRFunction<int>* fkt, bool after
     if (after) updateFktsPost.push_back(fkt);
     else updateFktsPre.push_back(fkt);
 }
+void VRPhysicsManager::dropPhysicsUpdateFunction(VRFunction<int>* fkt, bool after) {
+    MLock lock(mtx);
+    vector<VRFunction<int>* >* fkts = after ? &updateFktsPost : &updateFktsPre;
+    for(int i = 0; i < fkts->size() ; i++) {
+            if(fkts->at(i) == fkt) {fkts->erase(fkts->begin() + i);return;}
+    }
+ }
 
 void VRPhysicsManager::updatePhysObjects() {
     //mtx.try_lock();

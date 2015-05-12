@@ -74,6 +74,7 @@ class VRPhysicsManager {
         void unphysicalize(VRTransform* obj);
 
         void addPhysicsUpdateFunction(VRFunction<int>* fkt, bool after);
+        void dropPhysicsUpdateFunction(VRFunction<int>* fkt, bool after);
 
         void setGravity(Vec3f g);
 
