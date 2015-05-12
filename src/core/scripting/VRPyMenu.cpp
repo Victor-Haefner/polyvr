@@ -3,6 +3,8 @@
 #include "VRPyDevice.h"
 #include "VRPyBaseT.h"
 
+#include <boost/bind.hpp>
+
 template<> PyTypeObject VRPyBaseT<OSG::VRMenu>::type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
@@ -51,8 +53,50 @@ PyMethodDef VRPyMenu::methods[] = {
     {"setLayout", (PyCFunction)VRPyMenu::setLayout, METH_VARARGS, "Set menu layout - setLayout(str layout, float param)" },
     {"open", (PyCFunction)VRPyMenu::open, METH_NOARGS, "Open menu" },
     {"close", (PyCFunction)VRPyMenu::close, METH_NOARGS, "Close menu" },
+    {"setCallback", (PyCFunction)VRPyMenu::setCallback, METH_VARARGS, "Set a menu callback - setCallback(fkt, [params])" },
+    {"trigger", (PyCFunction)VRPyMenu::trigger, METH_NOARGS, "Trigger menu or enter next layer if no callback is set" },
+    {"move", (PyCFunction)VRPyMenu::setCallback, METH_VARARGS, "Move the cursor - move(int dir)\n left: dir=-1 right: dir=1" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyMenu::trigger(VRPyMenu* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyMenu::trigger - Object is invalid"); return NULL; }
+    self->obj->trigger();
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyMenu::move(VRPyMenu* self, PyObject *args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyMenu::move - Object is invalid"); return NULL; }
+    self->obj->move( parseInt(args) );
+    Py_RETURN_TRUE;
+}
+
+void execCall(PyObject* pyFkt, PyObject* pArgs, OSG::VRMenu* menu) {
+    if (pyFkt == 0) return;
+    if (PyErr_Occurred() != NULL) PyErr_Print();
+
+    if (pArgs == 0) pArgs = PyTuple_New(0);
+    PyObject_CallObject(pyFkt, pArgs);
+    Py_XDECREF(pArgs);
+    Py_DecRef(pyFkt);
+
+    if (PyErr_Occurred() != NULL) PyErr_Print();
+}
+
+PyObject* VRPyMenu::setCallback(VRPyMenu* self, PyObject *args) {
+    PyObject *pyFkt, *pArgs = 0;
+    if (PyTuple_Size(args) == 1) { if (! PyArg_ParseTuple(args, "O", &pyFkt)) return NULL; }
+    else if (! PyArg_ParseTuple(args, "OO", &pyFkt, &pArgs)) return NULL;
+    Py_IncRef(pyFkt);
+
+    if (pArgs != 0) {
+        std::string type = pArgs->ob_type->tp_name;
+        if (type == "list") pArgs = PyList_AsTuple(pArgs);
+    }
+
+    self->obj->setCallback(new VRFunction<OSG::VRMenu*>( "pyMenuCB", boost::bind(execCall, pyFkt, pArgs, _1) ));
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyMenu::open(VRPyMenu* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyMenu::open - Object is invalid"); return NULL; }
@@ -91,6 +135,5 @@ PyObject* VRPyMenu::setLayout(VRPyMenu* self, PyObject* args) {
 
 PyObject* VRPyMenu::append(VRPyMenu* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyMenu::append - Object is invalid"); return NULL; }
-    self->obj->append( parseString(args) );
-    Py_RETURN_TRUE;
+    return fromPtr( self->obj->append( parseString(args) ) );
 }

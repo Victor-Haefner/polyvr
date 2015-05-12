@@ -59,6 +59,7 @@ class VRGeometry : public VRTransform {
 
         Reference getReference();
         void makeUnique();
+        void setMeshVisibility(bool b);
 
         void setPrimitive(string primitive, string args = "");
 
