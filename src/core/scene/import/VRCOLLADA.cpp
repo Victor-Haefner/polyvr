@@ -9,6 +9,7 @@
 #include "core/objects/object/VRObjectT.h"
 
 #include <fstream>
+#include <math.h>
 
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGGeometry.h>
@@ -91,7 +92,6 @@ AnimationLibrary parseColladaAnimations(string data) {
         node = node->first_node("library_animations");
         if (node) { //found animations tag...look for animations
             for (xNode* animxNode : getxNodes(node, "animation")) {
-                cout << "going through animation tag..."<<endl<<endl;
                 Attrib* animID = animxNode->first_attribute("id");
                 xNode* channels = animxNode->first_node("channel");
                 xNode* sampler = animxNode->first_node("sampler");
@@ -177,27 +177,21 @@ void printAll(const AnimationLibrary& library) {
 }
 
 void setPose(OSG::VRTransform* o, int i, float t) {// object, axis, new axis values
-    cout << "setPose " << o->getName() << " " << t << endl;
+    if (i < 0 || i > 2) { return; }
     Vec3f f = o->getFrom();
     f[i] = t;
     o->setFrom(f);
 }
 
 void setRot(OSG::VRTransform* o, int i, float t) {
-    cout << "setRot " << o->getName() << " " << t << endl;
+    if (i < 0 || i > 2) { return; }
     Vec3f f = o->getEuler();
-    cout << "A"<< endl;
-
     f[i] = t;
-        cout << "C"<< endl;
-
     o->setEuler(f);
-        cout << "B"<< endl;
-
 }
 
 void setScale(OSG::VRTransform* o, int i, float t) {
-    cout << "setScale " << o->getName() << " " << t << endl;
+    if (i < 0 || i > 2) { return; }
     Vec3f f = o->getScale();
     f[i] = t;
     o->setScale(f);
@@ -279,36 +273,28 @@ void buildAnimations(AnimationLibrary& lib, VRObject* objects) {
 
         int inputArrayCount = toInt(inputSource.array_element->first_attribute("count")->value());
 
-        cout << "input values: ";
-        for(float i : inputValues) cout << i <<" ";
-        for(string i : interpolationValues) cout << i <<" ";
-        cout << "accessor count " << inputCount << endl;
-        cout << "accessor stride " << inputStride << endl;
-       // cout << "arrayType " << inputArrayType << endl;
-
         VRTransform* t = (VRTransform*)obj;
         int axis = -1;
         VRFunction<float>* fkt;
 
-        if(a.second.channel.type.find("rotation") != string::npos) {
-            if(a.second.channel.target.find("X") != string::npos) axis = 0;
-            else if(a.second.channel.target.find("Y") != string::npos) axis = 1;
-            else if(a.second.channel.target.find("Z") != string::npos) axis = 2;
-            cout << "found rotation animation " << endl;
+        if(a.second.channel.type.find("rotation") != string::npos) { // check if rotation
+            for (int i=0; i<outputValues.size(); i++) outputValues[i] = outputValues[i]*Pi/180.f; // convert degrees to radians
+
+            if(a.second.channel.type.find("X") != string::npos) axis = 0;
+            else if(a.second.channel.type.find("Y") != string::npos) axis = 1;
+            else if(a.second.channel.type.find("Z") != string::npos) axis = 2;
             fkt = new VRFunction<float>(a.first, boost::bind(setRot, t, axis, _1) );
 
-        } else {
+        } else { // translation or scale
             if(a.second.channel.axis.find("X") != string::npos) axis = 0;
             else if(a.second.channel.axis.find("Y") != string::npos) axis = 1;
             else if(a.second.channel.axis.find("Z") != string::npos) axis = 2;
 
             if(a.second.channel.type.find("location") != string::npos) {
-                cout << "found location animation " << endl;
                 fkt = new VRFunction<float>(a.first, boost::bind(setPose, t, axis, _1) );
                 //(*fkt)(1.0)
             }
             else if(a.second.channel.type.find("scale") != string::npos){
-                 cout << "found scale animation " << endl;
                 fkt = new VRFunction<float>(a.first, boost::bind(setScale, t, axis, _1) );
             }
 
@@ -339,7 +325,7 @@ VRObject* OSG::loadCollada(string path, VRObject* objects) {
     auto library = parseColladaAnimations(data);
     buildAnimations(library, objects);
 
-    printAll(library);
+    //printAll(library);
 
     VRObject* res = new VRObject("COLLADA");
     //res->addChild(n);

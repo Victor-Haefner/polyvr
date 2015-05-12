@@ -298,6 +298,7 @@ void VRDemos::on_advanced_start() {
     bool no_scripts = getCheckButtonState("checkbutton34");
     bool lightweight = getCheckButtonState("checkbutton36");
     hideDialog("advanced_start");
+    if (current_demo == 0) return;
 
     if (lightweight) VRSceneLoader::get()->ingoreHeavyRessources(); // just for the next scene
 
