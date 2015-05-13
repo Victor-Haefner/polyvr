@@ -16,6 +16,9 @@ class VRMouse : public VRDevice {
         VRView* view;
         Line ray;
 
+        VRSignal* on_edge = 0;
+        bool onEdge = false;
+
         void multFull(Matrix _matrix, const Pnt3f &pntIn, Pnt3f  &pntOut);
 
         bool calcViewRay(PerspectiveCameraRecPtr pcam, Line &line, float x, float y, int W, int H);
@@ -29,17 +32,15 @@ class VRMouse : public VRDevice {
         void updatePosition(int x, int y);
 
         void mouse(int button, int state, int x, int y);
-
         void motion(int x, int y);
 
         void setCamera(VRCamera* _cam);
-
         void setViewport(VRView* _view);
 
         Line getRay();
+        VRSignal* getEdgeSignal();
 
         void save(xmlpp::Element* e);
-
         void load(xmlpp::Element* e);
 };
 

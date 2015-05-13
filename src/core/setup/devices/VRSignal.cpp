@@ -30,9 +30,7 @@ VRSignal::~VRSignal() {
     delete trig_fkt;
 }
 
-void VRSignal::trigger() {
-    for(itr = callbacks.begin(); itr != callbacks.end(); ++itr) (*(*itr))(dev);
-}
+void VRSignal::trigger() { for (auto c : callbacks) (*c)(dev); }
 
 void VRSignal::setUpdate(bool b) { _doUpdate = b; }
 bool VRSignal::doUpdate() { return _doUpdate; }

@@ -34,6 +34,8 @@ void VRDevice::triggerSignal(int key, int state) {
     }
 }
 
+VRSignal* VRDevice::getEdgeSignal() { return 0; }
+
 void VRDevice::addUpdateSignal(VRSignal* sig) {
     activatedSignals.push_back(sig);
 }

@@ -45,6 +45,8 @@ class VRDevice : public VRIntersect, public VRAvatar, public VRName, public VRSt
 
         virtual void clearSignals();
 
+        virtual VRSignal* getEdgeSignal();
+
         void change_button(int key, int state);
         void change_slider(int key, float state);
 
