@@ -16,6 +16,7 @@ using namespace std;
 
 VRHaptic::VRHaptic() : VRDevice("haptic") {
     v = new virtuose();
+    v->disconnect();
     setIP("172.22.151.200");
 
     //auto updateObjFkt = new VRFunction<int>( "Haptic object update", boost::bind(&VRHaptic::applyTransformation, this, getBeacon()) );
@@ -37,6 +38,9 @@ VRHaptic::~VRHaptic() {
 }
 
 void VRHaptic::on_scene_changed(VRDevice* dev) {
+
+    VRSceneManager::getCurrent()->dropPhysicsUpdateFunction(updateFktPre,false);
+    VRSceneManager::getCurrent()->dropPhysicsUpdateFunction(updateFktPost,true);
     //disconnect
     v->setBase(0);
     v->detachTransform();
@@ -47,8 +51,7 @@ void VRHaptic::on_scene_changed(VRDevice* dev) {
     updateFktPost = new VRFunction<int>( "Haptic post update", boost::bind(&VRHaptic::updateHapticPost, this, getBeacon()) );
 
     VRSceneManager::getCurrent()->dropUpdateFkt(timestepWatchdog);
-    VRSceneManager::getCurrent()->dropPhysicsUpdateFunction(updateFktPre,false);
-    VRSceneManager::getCurrent()->dropPhysicsUpdateFunction(updateFktPost,true);
+
     VRSceneManager::getCurrent()->addUpdateFkt(timestepWatchdog);
     VRSceneManager::getCurrent()->addPhysicsUpdateFunction(updateFktPre,false);
     VRSceneManager::getCurrent()->addPhysicsUpdateFunction(updateFktPost,true);
@@ -104,7 +107,7 @@ void VRHaptic::updateHapticTimestep(VRTransform* t) {
                 //fps now stable
                 fps_change = 0;
                 fps_stable = 1;
-                cout << "reconnect haptic" << VRGlobals::get()->PHYSICS_FRAME_RATE << "\n";
+                //cout << "reconnect haptic" << VRGlobals::get()->PHYSICS_FRAME_RATE << "\n";
                 //reconnect haptic
                 on_scene_changed(this);
             }
@@ -142,9 +145,9 @@ void VRHaptic::updateVirtMechPost() {
         if (states[i] != button_states[i]) {
             //cout << "updateVirtMech trigger " << i << " " << states[i] << endl;
 
-            // leads to unexpected behaviour (virtual obj is set to origin immediately)
+            // leads to unexpected behaviour: (virtual obj is set to origin immediately)
             //change_button(i, states[i]);
-         //   button_states[i] = states[i];
+            //button_states[i] = states[i];
         }
     }
 }
@@ -152,7 +155,7 @@ Vec3i VRHaptic::getButtonStates() {return (v->getButtonStates());}
 
 
 
-void VRHaptic::setIP(string IP) { this->IP = IP; v->connect(IP,0.002f);}
+void VRHaptic::setIP(string IP) { this->IP = IP; v->connect(IP,1.0f/(float)VRGlobals::get()->PHYSICS_FRAME_RATE);}
 string VRHaptic::getIP() { return IP; }
 
 void VRHaptic::setType(string type) { this->type = type; } // TODO: use type for configuration

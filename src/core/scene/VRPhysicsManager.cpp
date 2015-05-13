@@ -18,6 +18,8 @@
 
 #include <unistd.h>
 
+#define PHYSICS_THREAD_TIMESTEP_MS 2
+
 typedef boost::recursive_mutex::scoped_lock MLock;
 
 OSG_BEGIN_NAMESPACE;
@@ -111,7 +113,7 @@ void VRPhysicsManager::updatePhysics(VRThread* thread) {
     dt = t2-t1;
 
     //sleep up to 500 fps
-    if (dt < 2e3) usleep(2e3-dt);
+    if (dt < PHYSICS_THREAD_TIMESTEP_MS * 1000) usleep(PHYSICS_THREAD_TIMESTEP_MS * 1000 -dt);
     t3 = getTime();
 
     MLock lock(mtx);

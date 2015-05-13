@@ -52,7 +52,7 @@ void virtuose::connect(string IP,float pTimeStep) {
     disconnect();
     VRPing ping;
     //ping.start(IP, port); // TODO: test it with right port
-    cout << "Open virtuose " << IP << endl;
+    cout << "Open virtuose " << IP << ", timestep delta: " << pTimeStep << endl;
     vc = virtOpen(IP.c_str());
     CHECK_INIT(vc);
     if (vc == 0) return;
