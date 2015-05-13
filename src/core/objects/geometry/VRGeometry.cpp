@@ -454,6 +454,11 @@ GeometryRecPtr VRGeometry::getMesh() {
 
 VRPrimitive* VRGeometry::getPrimitive() { return primitive; }
 
+void VRGeometry::setMeshVisibility(bool b) {
+    if (!mesh_node) return;
+    if (b) mesh_node->setTravMask(0xffffffff);
+    else mesh_node->setTravMask(0);
+}
 
 /** Set the material of the mesh **/
 void VRGeometry::setMaterial(VRMaterial* mat) {

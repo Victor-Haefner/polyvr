@@ -2,6 +2,8 @@
 
 #include "core/objects/material/VRMaterial.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/toString.h"
+#include "VRSelector.h"
 
 using namespace std;
 using namespace OSG;
@@ -9,28 +11,92 @@ using namespace OSG;
 VRMenu::VRMenu(string path) : VRGeometry("menu") {
     type = "Menu";
     group = getName();
+    if (path == "") return;
 
-    if (mtype == SPRITE) setPrimitive("Plane 0.2 0.2 1 1");
+    setLeafType(mtype, scale);
 
     VRMaterial* mat = VRMaterial::get(path);
     mat->setLit(false);
     mat->setTexture(path);
+    setMaterial(mat);
+
+    close();
 }
 
 VRMenu* VRMenu::append(string path) {
     VRMenu* m = new VRMenu(path);
     m->group = group;
-    m->mtype = mtype;
+    m->parent = this;
+    m->setLeafType(mtype, scale);
+    m->setLayout(layout, param);
+    m->close();
     addChild(m);
     return m;
 }
 
-VRMenu* VRMenu::getActive() { return active; }
+VRMenu* VRMenu::getParent() { return parent; }
 VRMenu* VRMenu::getSelected() { return selected; }
 
-void VRMenu::enter() { ; }
+void VRMenu::setCallback(VRFunction<VRMenu*>* cb) { callback = cb; }
+
+void VRMenu::trigger() {
+    if (callback) (*callback)(this);
+    else open();
+}
+
 void VRMenu::move(int dir) { ; }
 
+void VRMenu::setLinear() {
+    auto children = getChildren(false, "Menu");
+    int a = 0;
+    for (int i=0; i<children.size(); i++) if (children[i] == selected) a = i;
+
+    for (int i=0; i<children.size(); i++) {
+        float x = (i-a)*(param+scale[0]);
+        VRMenu* m = (VRMenu*)children[i];
+        m->setFrom(Vec3f(x,0,0));
+        m->show();
+        m->setMeshVisibility(true);
+    }
+}
+
+void VRMenu::setLeafType(TYPE t, Vec2f s) {
+    mtype = t;
+    scale = s;
+    if (t == SPRITE) setPrimitive("Plane", toString(s) + " 1 1");
+}
+
+void VRMenu::setLayout(LAYOUT l, float p) {
+    layout = l;
+    param = p;
+    show();
+    setMeshVisibility(false);
+    if (l == LINEAR) setLinear();
+    //if (l == CIRCULAR) setCircular(); // TODO
+}
+
+void VRMenu::open() {
+    VRMenu* a = getActive();
+    if (a) a->close();
+    setActive();
+    setLayout(layout, param);
+}
+
+void VRMenu::close() {
+    for (auto o : getChildren(false, "Menu")) {
+        VRMenu* m = (VRMenu*)o;
+        m->setMeshVisibility(false);
+    }
+}
+
+VRMenu* VRMenu::getActive() { return getTopMenu()->active; }
+void VRMenu::setActive() { getTopMenu()->active = this; }
+
+VRMenu* VRMenu::getTopMenu() {
+    VRMenu* p = this;
+    while(p->parent) p = p->parent;
+    return p;
+}
 /*
 
 	class menu:

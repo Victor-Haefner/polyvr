@@ -28,6 +28,7 @@
 #include "VRPyPathtool.h"
 #include "VRPySnappingEngine.h"
 #include "VRPySelector.h"
+#include "VRPyMenu.h"
 #include "VRPyClipPlane.h"
 #include "VRPyListMath.h"
 #include "VRPyNavigator.h"
@@ -264,6 +265,7 @@ void VRScriptManager::initPyModules() {
     VRPyNavigator::registerModule("Navigator", pModVR);
     VRPyNavPreset::registerModule("NavPreset", pModVR);
 
+    VRPyMenu::registerModule("Menu", pModVR, VRPyGeometry::typeRef);
     VRPyClipPlane::registerModule("ClipPlane", pModVR, VRPyGeometry::typeRef);
 	VRPyColorChooser::registerModule("ColorChooser", pModVR);
     VRPyCaveKeeper::registerModule("CaveKeeper", pModVR);

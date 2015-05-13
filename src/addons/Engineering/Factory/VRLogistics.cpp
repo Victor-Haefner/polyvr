@@ -210,6 +210,7 @@ void FContainer::clear() { products.clear(); }
 
 bool FContainer::isFull() { return ((int)products.size() == capacity); }
 bool FContainer::isEmpty() { return ((int)products.size() == 0); }
+int FContainer::getCount() { return products.size(); }
 
 // --------------------------------------------------------------------- TRANSPORTER
 

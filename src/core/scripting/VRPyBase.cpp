@@ -56,6 +56,16 @@ OSG::Line VRPyBase::PyToLine(PyObject *li) {
     return OSG::Line(OSG::Pnt3f(r[3],r[4],r[5]), OSG::Vec3f(r[0],r[1],r[2]));
 }
 
+OSG::Vec2f VRPyBase::parseVec2fList(PyObject *li) {
+    if (li == 0) return OSG::Vec2f();
+    vector<PyObject*> lis = pyListToVector(li);
+    if (lis.size() != 2) return OSG::Vec2f();
+    float x,y;
+    x = PyFloat_AsDouble(lis[0]);
+    y = PyFloat_AsDouble(lis[1]);
+    return OSG::Vec2f(x,y);
+}
+
 OSG::Vec3f VRPyBase::parseVec3fList(PyObject *li) {
     if (li == 0) return OSG::Vec3f();
     vector<PyObject*> lis = pyListToVector(li);

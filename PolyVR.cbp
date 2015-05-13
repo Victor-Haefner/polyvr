@@ -546,6 +546,8 @@
 		<Unit filename="src/core/scripting/VRPyLod.h" />
 		<Unit filename="src/core/scripting/VRPyMaterial.cpp" />
 		<Unit filename="src/core/scripting/VRPyMaterial.h" />
+		<Unit filename="src/core/scripting/VRPyMenu.cpp" />
+		<Unit filename="src/core/scripting/VRPyMenu.h" />
 		<Unit filename="src/core/scripting/VRPyNavPreset.cpp" />
 		<Unit filename="src/core/scripting/VRPyNavPreset.h" />
 		<Unit filename="src/core/scripting/VRPyNavigator.cpp" />
