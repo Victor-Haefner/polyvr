@@ -219,6 +219,8 @@
 		<Unit filename="src/addons/CaveKeeper/CaveKeeper.h" />
 		<Unit filename="src/addons/CaveKeeper/VRPyCaveKeeper.cpp" />
 		<Unit filename="src/addons/CaveKeeper/VRPyCaveKeeper.h" />
+		<Unit filename="src/addons/Classification/VROntology.cpp" />
+		<Unit filename="src/addons/Classification/VROntology.h" />
 		<Unit filename="src/addons/Classification/VRPySegmentation.cpp" />
 		<Unit filename="src/addons/Classification/VRPySegmentation.h" />
 		<Unit filename="src/addons/Classification/VRSegmentation.cpp" />
@@ -248,6 +250,8 @@
 		<Unit filename="src/addons/Engineering/Factory/VRPyFactory.h" />
 		<Unit filename="src/addons/Engineering/Factory/VRPyLogistics.cpp" />
 		<Unit filename="src/addons/Engineering/Factory/VRPyLogistics.h" />
+		<Unit filename="src/addons/Engineering/Factory/VRPyProduction.cpp" />
+		<Unit filename="src/addons/Engineering/Factory/VRPyProduction.h" />
 		<Unit filename="src/addons/Engineering/Factory/network.cpp" />
 		<Unit filename="src/addons/Engineering/Factory/network.h" />
 		<Unit filename="src/addons/Engineering/Mechanics/VRMechanism.cpp" />

@@ -2,83 +2,14 @@
 #include "VRLogistics.h"
 #include "core/objects/geometry/VRGeometry.h"
 
+#include "core/utils/VRFunction.h"
+#include "core/scene/VRScene.h"
+#include "core/scene/VRSceneManager.h"
+
+#include <GL/glut.h>
+
 using namespace std;
 using namespace OSG;
-
-// Ontology --------------------------------------------------
-
-int guid() {
-    static int id = 0;
-    id++;
-    return id;
-}
-
-VRNamedID::VRNamedID() {
-    ID = guid();
-}
-
-VRConcept::VRConcept(string name) {
-    this->name = name;
-}
-
-void VRConcept::append(VRConcept* c) {
-    children[c->ID] = c;
-}
-
-VRConcept* VRConcept::append(string name) {
-    auto c = new VRConcept(name);
-    append(c);
-    return c;
-}
-
-VRTaxonomy::VRTaxonomy() {
-    thing = new VRConcept("Thing");
-}
-
-VRConcept* VRTaxonomy::get(string name, VRConcept* p) {
-    if (p == 0) p = thing;
-    if (p->name == name) return p;
-    VRConcept* c = 0;
-    for (auto ci : p->children) {
-        c = get(name, ci.second);
-        if (c) return c;
-    }
-    return c;
-}
-
-VROntology::VROntology() {
-    taxonomy = new VRTaxonomy();
-}
-
-void VROntology::merge(VROntology* o) {
-    for (auto c : o->taxonomy->thing->children)
-        taxonomy->thing->append(c.second);
-}
-
-void VROntologyInstance::set(string name, string value) {
-    for (auto p : concept->properties) {
-        if (p.second->name != name) continue;
-        properties[p.second->ID] = value;
-        break;
-    }
-}
-
-void VROntologyInstance::set(string name, VROntologyInstance* i) {
-    set(name, i->name);
-}
-
-VROntologyInstance::VROntologyInstance(string name, VRConcept* c) {
-    this->name = name;
-    concept = c;
-    for (auto p : c->properties) properties[p.first] = ""; // init empty properties -> default values?
-}
-
-VROntologyInstance* VROntology::addInstance(string concept, string name) {
-    auto c = taxonomy->get(concept);
-    auto i = new VROntologyInstance(name, c);
-    return i;
-}
-
 
 // Production --------------------------------------------------
 
@@ -86,13 +17,17 @@ void VRProcess::addFragment(VRProcessFragment* f) {
     fragments[f->ID] = f;
 }
 
-VRProductionJob::VRProductionJob(VRProcess* p) {
-    process = p;
+VRProductionJob::VRProductionJob(VRProduct* p) {
+    product = p;
+    process = new VRProcess();
 }
 
 VRProduction::VRProduction() {
     intraLogistics = new FLogistics();
     network = intraLogistics->addNetwork();
+
+    auto fkt = new VRFunction<int>("production_update", boost::bind(&VRProduction::update, this));
+    VRSceneManager::getCurrent()->addUpdateFkt(fkt);
 }
 
 VRProductionMachine::VRProductionMachine() {
@@ -108,13 +43,7 @@ VRProductionMachine* VRProduction::addMachine(VRGeometry* m) {
     return pm;
 }
 
-VRProcess* VRProduction::getProcess(VRProduct* p) {
-    auto pr = new VRProcess();
-    processes.push_back(pr);
-    return pr;
-}
-
-VRProductionJob* VRProduction::queueJob(VRProcess* p) {
+VRProductionJob* VRProduction::queueJob(VRProduct* p) {
     auto j = new VRProductionJob(p);
     jobs.push_back(j);
     return j;
@@ -124,10 +53,29 @@ VRProduct::VRProduct() {
     description = new VROntology();
 }
 
-void VRProduction::start() { ; }
-void VRProduction::stop() { ; }
+void VRProduction::stop() { running = false; }
+void VRProduction::start() { running = true; }
 
-VRProduction* VRProduction::test() {
+void VRProduction::update() {
+    if (!running) return;
+
+    int t = glutGet(GLUT_ELAPSED_TIME);
+    int dt = t-last_takt;
+    if (dt < takt) return;
+    last_takt = t;
+
+    cout << "production jobs " << jobs.size() << endl;
+    for (VRProductionJob* job : jobs) {
+        auto features = job->product->description->getInstances("Feature"); // get all features and derived concepts
+        cout << " job with " << features.size() << " features" << endl;
+        for (VROntologyInstance* feature : features) {
+            cout << "  feature " << feature->name << endl;
+            //if ()
+        }
+    }
+}
+
+VRObject* VRProduction::test() {
     // ontologies
     auto mathOnto = new VROntology();
     auto featureOnto = new VROntology();
@@ -136,6 +84,9 @@ VRProduction* VRProduction::test() {
 
     mathOnto->taxonomy->thing->append("Volume");
     mathOnto->taxonomy->thing->append("Vector");
+    mathOnto->taxonomy->get("Vector")->addProperty("x", "float");
+    mathOnto->taxonomy->get("Vector")->addProperty("y", "float");
+    mathOnto->taxonomy->get("Vector")->addProperty("z", "float");
     mathOnto->taxonomy->get("Vector")->append("Position");
     mathOnto->taxonomy->get("Vector")->append("Normal");
     mathOnto->taxonomy->get("Vector")->append("Direction");
@@ -145,6 +96,11 @@ VRProduction* VRProduction::test() {
     featureOnto->merge(mathOnto);
     featureOnto->taxonomy->thing->append("Feature");
     featureOnto->taxonomy->get("Feature")->append("Borehole");
+    featureOnto->taxonomy->get("Feature")->addProperty("State", "int");
+    featureOnto->taxonomy->get("Borehole")->addProperty("Radius", "float");
+    featureOnto->taxonomy->get("Borehole")->addProperty("Direction", "Direction");
+    featureOnto->taxonomy->get("Borehole")->addProperty("Entrypoint", "Position");
+    featureOnto->taxonomy->get("Borehole")->addProperty("Depth", "float");
 
     kinematicsOnto->merge(mathOnto);
     kinematicsOnto->taxonomy->thing->append("Body");
@@ -156,36 +112,51 @@ VRProduction* VRProduction::test() {
 
 
     auto productOnto = new VROntology();
-    auto drillOnto = new VROntology();
-    auto robotOnto = new VROntology();
     productOnto->merge(featureOnto);
+    productOnto->taxonomy->thing->append("Product");
+    productOnto->taxonomy->get("Product")->addProperty("Feature", "Feature");
 
+    auto drillOnto = new VROntology();
     drillOnto->merge(featureOnto);
     drillOnto->merge(machineOnto);
     drillOnto->merge(kinematicsOnto);
+
+    auto robotOnto = new VROntology();
     robotOnto->merge(mathOnto);
     robotOnto->merge(machineOnto);
     robotOnto->merge(kinematicsOnto);
 
 
+    // production -----------------------------------------------
+    auto production = new VRProduction();
+    VRObject* anchor = new VRObject("production");
+    auto machine = new VRGeometry("machine");
+    machine->setPrimitive("Box", "1 2 1 1 1 1");
+
     // drill ----------
-    auto drillPos = drillOnto->addInstance("Position", "position"); // working space
+    auto drill = production->addMachine((VRGeometry*)machine->duplicate());
+    drill->geo->translate(Vec3f(-1.5,0,0));
+    drill->description->merge(drillOnto);
+    auto drillPos = drill->description->addInstance("Position", "position"); // working space
     drillPos->set("x", "range -100mm 100mm");
     drillPos->set("y", "range -100mm 100mm");
     drillPos->set("z", "range -100mm 100mm");
-    auto drillDir = drillOnto->addInstance("Direction", "direction"); // drill direction
+    auto drillDir = drill->description->addInstance("Direction", "direction"); // drill direction
     drillDir->set("x", "0");
     drillDir->set("y", "-1");
     drillDir->set("z", "0");
-    auto drill = drillOnto->addInstance("Skill", "drill");
-    drill->set("position", drillPos);
-    drill->set("direction", drillDir);
-    drill->set("depth", "range 0mm 50mm"); // hole depth
-    drill->set("radius", "range 3mm 10mm"); // hole radius
+    auto drilling = drill->description->addInstance("Skill", "drill");
+    drilling->set("position", "position");
+    drilling->set("direction", "direction");
+    drilling->set("depth", "range 0mm 50mm"); // hole depth
+    drilling->set("radius", "range 3mm 10mm"); // hole radius
 
     // robot ----------
+    auto robot = production->addMachine((VRGeometry*)machine->duplicate());
+    robot->geo->translate(Vec3f(1.5,0,0));
+    robot->description->merge(robotOnto);
     auto grabFrom = drillOnto->addInstance("Position", "grabFrom"); // working space
-    grabFrom->set("x", "range -100mm 100mm");
+    grabFrom->set("x", "range -100mm 100mm"); // TODO: those ranges should be in rules
     grabFrom->set("y", "range -100mm 100mm");
     grabFrom->set("z", "range -100mm 100mm");
     auto grabDir = drillOnto->addInstance("Direction", "grabDir"); // drill direction
@@ -193,8 +164,8 @@ VRProduction* VRProduction::test() {
     grabDir->set("y", "range -100mm 100mm");
     grabDir->set("z", "range -100mm 100mm");
     auto grab = robotOnto->addInstance("Skill", "grab");
-    grab->set("position", grabFrom);
-    grab->set("direction", grabDir);
+    grab->set("position", "grabFrom");
+    grab->set("direction", "grabDir");
 
     auto moveBeg = drillOnto->addInstance("Position", "moveBeg"); // working space
     moveBeg->set("x", "range -100mm 100mm");
@@ -205,28 +176,48 @@ VRProduction* VRProduction::test() {
     moveEnd->set("y", "range -100mm 100mm");
     moveEnd->set("z", "range -100mm 100mm");
     auto move = robotOnto->addInstance("Skill", "move");
-    move->set("position", moveBeg);
-    move->set("position", moveEnd);
+    move->set("position", "moveBeg");
+    move->set("position", "moveEnd");
     move->set("speed", "range 0mm/s 500mm/s"); // robot speed
 
-
-    // production -----------------------------------------------
-    auto machine = new VRGeometry("machine");
-    machine->setPrimitive("Box", "1 2 1 1 1 1");
-
-    auto p = new VRProduction();
-    auto m1 = p->addMachine((VRGeometry*)machine->duplicate());
-    auto m2 = p->addMachine((VRGeometry*)machine->duplicate());
-    m1->description->merge(machineOnto);
-    m2->description->merge(robotOnto);
-
+    // product ---------------
     auto product = new VRProduct();
     product->description->merge(productOnto);
+    auto Product = product->description->addInstance("Product", "testProduct");
+    auto Btop = product->description->addInstance("Borehole", "Btop");
+    auto Bbottom = product->description->addInstance("Borehole", "Bbottom");
+    Product->add("Borehole", "Btop");
+    Product->add("Borehole", "Bbottom");
+    Btop->set("Radius", "0.1");
+    Btop->set("Depth", "0.3");
+    Btop->set("Entrypoint", "entryTop");
+    Btop->set("Direction", "dirTop");
+    auto entryTop = product->description->addInstance("Position", "entryTop");
+    auto dirTop = product->description->addInstance("Direction", "dirTop");
+    entryTop->set("x", "0");
+    entryTop->set("y", "0.5");
+    entryTop->set("z", "0");
+    dirTop->set("x", "0");
+    dirTop->set("y", "-1");
+    dirTop->set("z", "0");
+    Bbottom->set("Radius", "0.1");
+    Bbottom->set("Depth", "0.3");
+    Bbottom->set("Entrypoint", "entryBottom");
+    Bbottom->set("Direction", "dirBottom");
+    auto entryBottom = product->description->addInstance("Position", "entryBottom");
+    auto dirBottom = product->description->addInstance("Direction", "dirBottom");
+    entryBottom->set("x", "0");
+    entryBottom->set("y", "-0.5");
+    entryBottom->set("z", "0");
+    dirBottom->set("x", "0");
+    dirBottom->set("y", "1");
+    dirBottom->set("z", "0");
 
-    auto proc = p->getProcess(product);
-    p->queueJob(proc);
+    // production job -----------------------
+    production->queueJob(product);
+    production->start();
 
-    p->start();
-
-    return p;
+    anchor->addChild(drill->geo);
+    anchor->addChild(robot->geo);
+    return anchor;
 }

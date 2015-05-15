@@ -375,8 +375,22 @@ PyMethodDef FPyContainer::methods[] = {
     {"isFull", (PyCFunction)FPyContainer::isFull, METH_NOARGS, "Set container capacity" },
     {"clear", (PyCFunction)FPyContainer::clear, METH_NOARGS, "Set container capacity" },
     {"getCount", (PyCFunction)FPyContainer::getCount, METH_NOARGS, "Get number of products in the container" },
+    {"add", (PyCFunction)FPyContainer::add, METH_VARARGS, "Add a product to the container - add(product)" },
+    {"get", (PyCFunction)FPyContainer::get, METH_NOARGS, "Get the product last put in the container - product get()" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* FPyContainer::add(FPyContainer* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "FPyContainer::add - Object is invalid"); return NULL; }
+    FPyProduct* p = (FPyProduct*)parseObject(args);
+    self->obj->add(p->obj);
+    Py_RETURN_TRUE;
+}
+
+PyObject* FPyContainer::get(FPyContainer* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "FPyContainer::get - Object is invalid"); return NULL; }
+    return FPyProduct::fromPtr( self->obj->pop() );
+}
 
 PyObject* FPyContainer::clear(FPyContainer* self) {
     if (self->obj == 0) { PyErr_SetString(err, "FPyContainer::getCapacity - Object is invalid"); return NULL; }

@@ -45,6 +45,7 @@
 #include "addons/CaveKeeper/VRPyCaveKeeper.h"
 #include "addons/Bullet/CarDynamics/VRPyCarDynamics.h"
 #include "addons/Engineering/Factory/VRPyLogistics.h"
+#include "addons/Engineering/Factory/VRPyProduction.h"
 #include "addons/Engineering/Factory/VRPyAMLLoader.h"
 #include "addons/Engineering/Mechanics/VRPyMechanism.h"
 #include "addons/Engineering/VRPyNumberingEngine.h"
@@ -295,6 +296,7 @@ void VRScriptManager::initPyModules() {
     FPyProduct::registerModule("Product", pModFactory);
     FPyLogistics::registerModule("Logistics", pModFactory);
     VRPyFactory::registerModule("Factory", pModFactory);
+    VRPyProduction::registerModule("Production", pModFactory);
     VRPyAMLLoader::registerModule("AMLLoader", pModFactory);
     PyModule_AddObject(pModVR, "Factory", pModFactory);
 
