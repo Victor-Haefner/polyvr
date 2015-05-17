@@ -17,6 +17,11 @@ VRProperty::VRProperty(string name, string type) {
     this->type = type;
 }
 
+VROntologyRule::VROntologyRule(string rule) {
+    this->name = "rule";
+    this->rule = rule;
+}
+
 VRConcept::VRConcept(string name) {
     this->name = name;
 }
@@ -36,28 +41,36 @@ VRProperty* VRConcept::addProperty(string name, string type) {
     return p;
 }
 
-VRTaxonomy::VRTaxonomy() {
+VROntology::VROntology() {
     thing = new VRConcept("Thing");
 }
 
-VRConcept* VRTaxonomy::get(string name, VRConcept* p) {
+VRConcept* VROntology::getConcept(string name, VRConcept* p) {
     if (p == 0) p = thing;
     if (p->name == name) return p;
     VRConcept* c = 0;
     for (auto ci : p->children) {
-        c = get(name, ci.second);
+        c = getConcept(name, ci.second);
         if (c) return c;
     }
     return c;
 }
 
-VROntology::VROntology() {
-    taxonomy = new VRTaxonomy();
+VRConcept* VROntology::addConcept(string concept, string parent) {
+    if (parent == "") thing->append(concept);
+    return getConcept(parent)->append(concept);
+}
+
+string VROntology::answer(string question) {
+    string res;
+    return res;
 }
 
 void VROntology::merge(VROntology* o) {
-    for (auto c : o->taxonomy->thing->children)
-        taxonomy->thing->append(c.second);
+    for (auto c : o->thing->children)
+        thing->append(c.second);
+    for (auto c : o->rules)
+        rules[c.first] = c.second;
 }
 
 int VRConcept::getPropertyID(string name) {
@@ -99,6 +112,20 @@ string VROntologyInstance::toString() {
     return data;
 }
 
+VROntologyRule* VROntology::addRule(string rule) {
+    VROntologyRule* r = new VROntologyRule(rule);
+    rules[r->ID] = r;
+    return r;
+}
+
+VROntologyInstance* VROntology::addVectorInstance(string name, string concept, string x, string y, string z) {
+    auto i = addInstance(name, concept);
+    i->set("x", x);
+    i->set("y", y);
+    i->set("z", z);
+    return i;
+}
+
 bool VRConcept::is_a(string concept) {
     VRConcept* c = this;
     while (c) {
@@ -108,8 +135,8 @@ bool VRConcept::is_a(string concept) {
     return false;
 }
 
-VROntologyInstance* VROntology::addInstance(string concept, string name) {
-    auto c = taxonomy->get(concept);
+VROntologyInstance* VROntology::addInstance(string name, string concept) {
+    auto c = getConcept(concept);
     auto i = new VROntologyInstance(name, c);
     instances[i->ID] = i;
     return i;

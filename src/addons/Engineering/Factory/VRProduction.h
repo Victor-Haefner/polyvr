@@ -17,21 +17,43 @@ using namespace std;
 class VRObject;
 class VRGeometry;
 
-struct VRProcessFragment : VRNamedID {
-    void* operation = 0;
-    void* in = 0;
-    void* out = 0;
+struct VRProcessFragment;
+struct VRProcessRequirement;
+struct VRProcessDependency;
+
+struct VRProcessResult : VRNamedID {
+    string state;
+    VRProcessResult(string name);
 };
 
-struct VRProcess {
+struct VRProcessDependency {
+    vector<VRProcessFragment*> subprocess;
+};
+
+struct VRProcessAction : VRNamedID {
+    vector<VRProcessFragment*> subprocess;
+};
+
+struct VRProcessFragment : VRNamedID {
+    VRProcessAction* action = 0;
+    vector<VRProcessDependency*> dependencies;
+    vector<VRProcessResult*> results;
+
+    VRProcessFragment(string name);
+    VRProcessResult* addResult(string name);
+};
+
+struct VRProcess : VRNamedID {
     map<int, VRProcessFragment*> fragments;
 
+    VRProcess(string name);
     void addFragment(VRProcessFragment* f);
+    string toString();
 };
 
-struct VRProduct {
+struct VRProduct : VRNamedID {
     VROntology* description;
-    VRProduct();
+    VRProduct(string name);
 };
 
 struct VRProductionMachine : VRNamedID {
@@ -48,6 +70,7 @@ struct VRProductionJob {
 
 class VRProduction {
     private:
+        VROntology* description;
         map<int, VRProductionMachine*> machines;
         vector<VRProductionJob*> jobs;
         FLogistics* intraLogistics = 0;

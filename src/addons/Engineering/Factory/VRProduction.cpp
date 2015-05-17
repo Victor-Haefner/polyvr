@@ -19,7 +19,7 @@ void VRProcess::addFragment(VRProcessFragment* f) {
 
 VRProductionJob::VRProductionJob(VRProduct* p) {
     product = p;
-    process = new VRProcess();
+    process = new VRProcess("production_of_"+p->name);
 }
 
 VRProduction::VRProduction() {
@@ -49,12 +49,22 @@ VRProductionJob* VRProduction::queueJob(VRProduct* p) {
     return j;
 }
 
-VRProduct::VRProduct() {
+VRProduct::VRProduct(string name) {
+    this->name = name;
     description = new VROntology();
 }
 
 void VRProduction::stop() { running = false; }
 void VRProduction::start() { running = true; }
+
+VRProcessResult::VRProcessResult(string name) { this->name = name;}
+
+VRProcessFragment::VRProcessFragment(string name) { this->name = name; }
+VRProcessResult* VRProcessFragment::addResult(string name) {
+    auto r = new VRProcessResult(name);
+    results.push_back(r);
+    return r;
+}
 
 void VRProduction::update() {
     if (!running) return;
@@ -64,67 +74,146 @@ void VRProduction::update() {
     if (dt < takt) return;
     last_takt = t;
 
-    cout << "production jobs " << jobs.size() << endl;
+    VROntology* production = description;
     for (VRProductionJob* job : jobs) {
-        auto features = job->product->description->getInstances("Feature"); // get all features and derived concepts
+        VROntology* product = job->product->description;
+
+        VROntology* jobOnto = new VROntology();
+        jobOnto->merge(production);
+        jobOnto->merge(product);
+
+
+        // what process to produce product p
+        string q = "r(process) : r.result.state=done";
+
+        cout << jobOnto->answer(q) << endl;
+
+        /*auto features = product->getInstances("Feature"); // get all features and derived concepts
         cout << " job with " << features.size() << " features" << endl;
-        for (VROntologyInstance* feature : features) {
+        for (auto feature : features) {
+            // new process fragment with result state of feature
+            auto fragment = new VRProcessFragment(feature->name);
+            fragment->addResult(feature->name)->state = "done";
+            job->process->addFragment(fragment);
             cout << "  feature " << feature->name << endl;
-            //if ()
+
+            // get fragment action by asking the
         }
+
+        cout << job->process->toString() << endl;*/
     }
+}
+
+VRProcess::VRProcess(string name) { this->name = name; }
+
+string VRProcess::toString() {
+    string data = "process " + name + "\n";
+    for (auto f : fragments) data += " fragment " + f.second->name + "\n";
+    return data;
 }
 
 VRObject* VRProduction::test() {
     // ontologies
     auto mathOnto = new VROntology();
     auto featureOnto = new VROntology();
-    auto kinematicsOnto = new VROntology();
     auto machineOnto = new VROntology();
+    auto drillingOnto = new VROntology();
+    auto processingOnto = new VROntology();
+    auto actionOnto = new VROntology();
+    auto processOnto = new VROntology();
+    auto productOnto = new VROntology();
+    auto productionOnto = new VROntology();
+    auto drillOnto = new VROntology();
+    auto robotOnto = new VROntology();
+    auto objectOnto = new VROntology();
 
-    mathOnto->taxonomy->thing->append("Volume");
-    mathOnto->taxonomy->thing->append("Vector");
-    mathOnto->taxonomy->get("Vector")->addProperty("x", "float");
-    mathOnto->taxonomy->get("Vector")->addProperty("y", "float");
-    mathOnto->taxonomy->get("Vector")->addProperty("z", "float");
-    mathOnto->taxonomy->get("Vector")->append("Position");
-    mathOnto->taxonomy->get("Vector")->append("Normal");
-    mathOnto->taxonomy->get("Vector")->append("Direction");
-    mathOnto->taxonomy->get("Volume")->append("Cylinder");
-    mathOnto->taxonomy->get("Volume")->append("Box");
+    mathOnto->addConcept("Volume");
+    mathOnto->addConcept("Vector");
+    mathOnto->addConcept("Quaternion");
+    mathOnto->getConcept("Vector")->addProperty("x", "float");
+    mathOnto->getConcept("Vector")->addProperty("y", "float");
+    mathOnto->getConcept("Vector")->addProperty("z", "float");
+    mathOnto->getConcept("Quaternion")->addProperty("x", "float");
+    mathOnto->getConcept("Quaternion")->addProperty("y", "float");
+    mathOnto->getConcept("Quaternion")->addProperty("z", "float");
+    mathOnto->getConcept("Quaternion")->addProperty("w", "float");
+    mathOnto->addConcept("Position", "Vector");
+    mathOnto->addConcept("Normal", "Vector");
+    mathOnto->addConcept("Direction", "Vector");
+    mathOnto->addConcept("Orientation", "Quaternion");
+    mathOnto->addConcept("Box", "Volume");
+    mathOnto->getConcept("Box")->addProperty("min", "Vector");
+    mathOnto->getConcept("Box")->addProperty("max", "Vector");
+    mathOnto->addRule("b(Box).min>=p(Position) & b.max<=p ? inside(p,b)=1");
+    // TODO: quaternion rotation rule to change direction
+
+    objectOnto->addConcept("Object");
+    objectOnto->getConcept("Object")->addProperty("position", "Position");
+    objectOnto->getConcept("Object")->addProperty("orientation", "Orientation");
+
+    processOnto->addConcept("Feature");
 
     featureOnto->merge(mathOnto);
-    featureOnto->taxonomy->thing->append("Feature");
-    featureOnto->taxonomy->get("Feature")->append("Borehole");
-    featureOnto->taxonomy->get("Feature")->addProperty("State", "int");
-    featureOnto->taxonomy->get("Borehole")->addProperty("Radius", "float");
-    featureOnto->taxonomy->get("Borehole")->addProperty("Direction", "Direction");
-    featureOnto->taxonomy->get("Borehole")->addProperty("Entrypoint", "Position");
-    featureOnto->taxonomy->get("Borehole")->addProperty("Depth", "float");
+    featureOnto->addConcept("Feature");
+    featureOnto->getConcept("Feature")->addProperty("State", "int");
 
-    kinematicsOnto->merge(mathOnto);
-    kinematicsOnto->taxonomy->thing->append("Body");
-    kinematicsOnto->taxonomy->thing->append("Joint");
+    actionOnto->addConcept("Action");
+    actionOnto->getConcept("Action")->append("Task");
+    actionOnto->getConcept("Action")->append("Skill");
 
-    machineOnto->taxonomy->thing->append("Action");
-    machineOnto->taxonomy->get("Action")->append("Task");
-    machineOnto->taxonomy->get("Action")->append("Skill");
+    machineOnto->merge(mathOnto);
+    machineOnto->addConcept("Machine");
+    machineOnto->getConcept("Machine")->append("Productionmachine");
 
+    processingOnto->merge(featureOnto);
+    processingOnto->merge(actionOnto);
+    processingOnto->addConcept("Processing", "Action");
+    processingOnto->getConcept("Processing")->addProperty("result", "Feature");
+    // if processing unset and feature unset and feature and processing result have same concept, result is set to feature
+    processingOnto->addRule("s(Processing).state=unset & f(Feature).state=unset & s.result.CONCEPT=f.CONCEPT ? f.state=set & s.state=set & s.result=f");
+    // if processing done, then result is done and skill is unset
+    processingOnto->addRule("s(Processing).state=done ? s.result.state=done & s.state=unset");
 
-    auto productOnto = new VROntology();
+    drillingOnto->merge(processingOnto);
+    drillingOnto->addConcept("Borehole", "Feature");
+    drillingOnto->getConcept("Borehole")->addProperty("radius", "float");
+    drillingOnto->getConcept("Borehole")->addProperty("direction", "Direction");
+    drillingOnto->getConcept("Borehole")->addProperty("position", "Position");
+    drillingOnto->getConcept("Borehole")->addProperty("depth", "float");
+    drillingOnto->addConcept("Drilling", "Processing");
+    drillingOnto->getConcept("Drilling")->addProperty("volume", "Box");
+    drillingOnto->getConcept("Drilling")->addProperty("direction", "Direction");
+    drillingOnto->addRule("b(Drilling).state=set & inside(b.result.position,b.volume) & b.result.direction=b.direction ? b.state=done");
+
     productOnto->merge(featureOnto);
-    productOnto->taxonomy->thing->append("Product");
-    productOnto->taxonomy->get("Product")->addProperty("Feature", "Feature");
+    productOnto->merge(objectOnto);
+    productOnto->addConcept("Product", "Object");
+    productOnto->getConcept("Product")->addProperty("feature", "Feature");
 
-    auto drillOnto = new VROntology();
-    drillOnto->merge(featureOnto);
+    productionOnto->merge(productOnto);
+    productionOnto->merge(machineOnto);
+    productionOnto->merge(processingOnto);
+
     drillOnto->merge(machineOnto);
-    drillOnto->merge(kinematicsOnto);
+    drillOnto->merge(processingOnto);
+    drillOnto->merge(drillingOnto);
 
-    auto robotOnto = new VROntology();
-    robotOnto->merge(mathOnto);
+    robotOnto->merge(actionOnto);
     robotOnto->merge(machineOnto);
-    robotOnto->merge(kinematicsOnto);
+    robotOnto->merge(objectOnto);
+    robotOnto->addConcept("Manipulation", "Skill");
+    robotOnto->addConcept("Grab", "Manipulation");
+    robotOnto->addConcept("Translate", "Manipulation");
+    robotOnto->addConcept("Rotate", "Manipulation");
+    robotOnto->getConcept("Manipulation")->addProperty("volume", "Box");
+    robotOnto->getConcept("Manipulation")->addProperty("state", "String");
+    robotOnto->getConcept("Manipulation")->addProperty("object", "Object");
+    robotOnto->addRule("g(Grab).state=unset & inside(o(Object).position,g.volume) ? g.object=o & g.state=set");
+    robotOnto->addRule("g(Grab).state=set & t(Translate).state=unset & inside(o(Object).position,t.volume) ? t.object=o & t.state=set");
+    robotOnto->addRule("g(Grab).state=set & r(Rotate).state=unset & inside(o(Object).position,r.volume) ? r.object=o & r.state=set");
+    robotOnto->addRule("t(Translate).state=set & inside(p(Position), t.volume)? t.state=done");
+    robotOnto->addRule("g(Grab).state=set ? g.state=done");
+    robotOnto->addRule("r(Rotation).state=set ? r.state=done");
 
 
     // production -----------------------------------------------
@@ -137,15 +226,15 @@ VRObject* VRProduction::test() {
     auto drill = production->addMachine((VRGeometry*)machine->duplicate());
     drill->geo->translate(Vec3f(-1.5,0,0));
     drill->description->merge(drillOnto);
-    auto drillPos = drill->description->addInstance("Position", "position"); // working space
+    auto drillPos = drill->description->addInstance("position", "Position"); // working space
     drillPos->set("x", "range -100mm 100mm");
     drillPos->set("y", "range -100mm 100mm");
     drillPos->set("z", "range -100mm 100mm");
-    auto drillDir = drill->description->addInstance("Direction", "direction"); // drill direction
+    auto drillDir = drill->description->addInstance("direction", "Direction"); // drill direction
     drillDir->set("x", "0");
     drillDir->set("y", "-1");
     drillDir->set("z", "0");
-    auto drilling = drill->description->addInstance("Skill", "drill");
+    auto drilling = drill->description->addInstance("drill", "Skill");
     drilling->set("position", "position");
     drilling->set("direction", "direction");
     drilling->set("depth", "range 0mm 50mm"); // hole depth
@@ -155,17 +244,19 @@ VRObject* VRProduction::test() {
     auto robot = production->addMachine((VRGeometry*)machine->duplicate());
     robot->geo->translate(Vec3f(1.5,0,0));
     robot->description->merge(robotOnto);
-    auto grabFrom = drillOnto->addInstance("Position", "grabFrom"); // working space
+
+    robotOnto->addVectorInstance("wsMin", "Vector", "-1", "-1", "-1");
+    robotOnto->addVectorInstance("wsMax", "Vector", "1", "1", "1");
+    auto workSpace = robotOnto->addInstance("workSpace", "Box");
+    workSpace->set("min", "wsMin");
+    workSpace->set("max", "wsMax");
+    auto translate = robotOnto->addInstance("translate", "Translate");
+    translate->set("volume", "workSpace");
+
+    auto grabFrom = robot->description->addInstance("grabFrom", "Position"); // working space
     grabFrom->set("x", "range -100mm 100mm"); // TODO: those ranges should be in rules
     grabFrom->set("y", "range -100mm 100mm");
     grabFrom->set("z", "range -100mm 100mm");
-    auto grabDir = drillOnto->addInstance("Direction", "grabDir"); // drill direction
-    grabDir->set("x", "range -100mm 100mm");
-    grabDir->set("y", "range -100mm 100mm");
-    grabDir->set("z", "range -100mm 100mm");
-    auto grab = robotOnto->addInstance("Skill", "grab");
-    grab->set("position", "grabFrom");
-    grab->set("direction", "grabDir");
 
     auto moveBeg = drillOnto->addInstance("Position", "moveBeg"); // working space
     moveBeg->set("x", "range -100mm 100mm");
@@ -175,13 +266,9 @@ VRObject* VRProduction::test() {
     moveEnd->set("x", "range -100mm 100mm");
     moveEnd->set("y", "range -100mm 100mm");
     moveEnd->set("z", "range -100mm 100mm");
-    auto move = robotOnto->addInstance("Skill", "move");
-    move->set("position", "moveBeg");
-    move->set("position", "moveEnd");
-    move->set("speed", "range 0mm/s 500mm/s"); // robot speed
 
     // product ---------------
-    auto product = new VRProduct();
+    auto product = new VRProduct("testProduct");
     product->description->merge(productOnto);
     auto Product = product->description->addInstance("Product", "testProduct");
     auto Btop = product->description->addInstance("Borehole", "Btop");
