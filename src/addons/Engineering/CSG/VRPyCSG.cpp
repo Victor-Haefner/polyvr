@@ -50,7 +50,7 @@ PyMemberDef VRPyCSG::members[] = {
 
 PyMethodDef VRPyCSG::methods[] = {
     {"getOperation", (PyCFunction)VRPyCSG::getOperation, METH_VARARGS, "get CSG operation" },
-    {"setOperation", (PyCFunction)VRPyCSG::setOperation, METH_VARARGS, "set CSG operation - setOperation(string s)" },
+    {"setOperation", (PyCFunction)VRPyCSG::setOperation, METH_VARARGS, "set CSG operation - setOperation(string s)\n 'unite', 'subtract', 'intersect'" },
     {"getEditMode", (PyCFunction)VRPyCSG::getEditMode, METH_VARARGS, "get CSG object edit mode" },
     {"setEditMode", (PyCFunction)VRPyCSG::setEditMode, METH_VARARGS, "set CSG object edit mode - setEditMode(bool b)" },
     {NULL}  /* Sentinel */
