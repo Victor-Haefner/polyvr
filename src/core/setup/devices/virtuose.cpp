@@ -202,7 +202,7 @@ void virtuose::Matrix3ToArray(btMatrix3x3 m, float *to)
 VRTransform* virtuose::detachTransform()
 {
     VRTransform* ret = 0;
-    if(vc == 0) return ret;
+    if(vc == 0 || !isAttached) return ret;
     isAttached = false;
     CHECK(virtDetachVO(vc));
     ret = attached;
