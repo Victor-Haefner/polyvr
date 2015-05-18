@@ -253,7 +253,7 @@ void VRScriptManager::initPyModules() {
     VRPySprite::registerModule("Sprite", pModVR, VRPyGeometry::typeRef);
     VRPySound::registerModule("Sound", pModVR);
     VRPySocket::registerModule("Socket", pModVR);
-    VRPyStroke::registerModule("Stroke", pModVR, VRPyObject::typeRef);
+    VRPyStroke::registerModule("Stroke", pModVR, VRPyGeometry::typeRef);
     VRPyConstraint::registerModule("Constraint", pModVR);
     VRPyDevice::registerModule("Device", pModVR);
     VRPyHaptic::registerModule("Haptic", pModVR, VRPyDevice::typeRef);

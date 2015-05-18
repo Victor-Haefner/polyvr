@@ -1,6 +1,5 @@
 #include "VRStroke.h"
 #include "core/math/path.h"
-#include "VRGeometry.h"
 
 #include <OpenSG/OSGSimpleMaterial.h>
 #include <OpenSG/OSGMatrixUtility.h>
@@ -9,11 +8,10 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-VRStroke::VRStroke(string name) : VRObject(name) {
+VRStroke::VRStroke(string name) : VRGeometry(name) {
     mode = -1;
     closed = false;
     lit = false;
-    geo = 0;
 }
 
 void VRStroke::setPath(path* p) {
@@ -129,16 +127,14 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool lit) {
     g->setMaterial(Mat);
     Mat->setLit(lit);
 
-    VRGeometry* geo = new VRGeometry("stroke");
-    geo->setMesh(g);
-    addChild(geo);
+    setMesh(g);
 }
 
 void VRStroke::strokeStrew(VRGeometry* geo) {
     if (geo == 0) return;
 
     mode = 1;
-    this->geo = geo;
+    strewGeo = geo;
 
     clearChildren();
     for (uint i=0; i<paths.size(); i++) {
@@ -158,7 +154,7 @@ void VRStroke::update() {
             strokeProfile(profile, closed, lit);
             break;
         case 1:
-            strokeStrew(geo);
+            strokeStrew(strewGeo);
             break;
         default:
             break;
