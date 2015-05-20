@@ -8,6 +8,8 @@
 #include "core/utils/toString.h"
 #include "core/objects/object/VRObjectT.h"
 
+#include "core/math/path.h"
+
 #include <fstream>
 #include <math.h>
 
@@ -21,6 +23,12 @@ using namespace OSG;
 
 typedef xml_node<> xNode;
 typedef xml_attribute<> Attrib;
+
+enum AnimType{
+    ANIM_TRANSLATE = 0,
+    ANIM_ROTATE,
+    ANIM_SCALE
+};
 
 struct SamplerIn {
     string semantic;//common name like INTANGENT
@@ -36,6 +44,7 @@ struct Channel {
     string source;
     string target;
     string type;
+    AnimType aType;
     string axis;
 };
 
@@ -96,14 +105,27 @@ AnimationLibrary parseColladaAnimations(string data) {
                 string tta = target->value();
                 int ttaSlash = 0;
                 for (int i=tta.size()-1; i>= 0; i--) if (tta[i] == '/') { ttaSlash = i; break; }
+                int ttaDot = 0;
+                for (int i=tta.size()-1; i>= 0; i--) if (tta[i] == '.') { ttaDot = i; break; }
 
                 Animation anim;
                 anim.ID = animID->value();
                 anim.channel = Channel();
                 anim.channel.source = source->value();
+                //preparation for enums
+                //string target = tta.substr(0, ttaSlash);
+                //string type = tta.substr(ttaSlash+1, tta.size()-ttaSlash-3);
+                //string axis = tta.substr(tta.size()-1, 1);
+                //TODO FILIP add angle parameter
                 anim.channel.target = tta.substr(0, ttaSlash);
-                anim.channel.type = tta.substr(ttaSlash+1, tta.size()-ttaSlash-3);
+                anim.channel.type = tta.substr(ttaSlash+1, ttaDot-ttaSlash-1);
                 anim.channel.axis = tta.substr(tta.size()-1, 1);
+
+                if(anim.channel.type.find("rotation") != string::npos){
+                    anim.channel.axis = anim.channel.type.substr(anim.channel.type.size()-1, 1);
+                    anim.channel.type = anim.channel.type.substr(0, anim.channel.type.size()-1);
+                }
+
                 anim.sampler = Sampler();
                 anim.sampler.ID = samplerID->value();
 
@@ -190,24 +212,28 @@ void printAll(const AnimationLibrary& library) {
 
 
 
-void setPose(OSG::VRTransform* o, int i, float t) {// object, axis, new axis values
+void setPose(OSG::VRTransform* o, int i, path *p, float t) {// object, axis, new axis values
     if (i < 0 || i > 2) { return; }
     Vec3f f = o->getFrom();
-    f[i] = t;
+    if(p) f[i] = p->getPosition(t)[1];
+    else f[i] = t;
     o->setFrom(f);
 }
 
-void setRot(OSG::VRTransform* o, int i, float t) {
+void setRot(OSG::VRTransform* o, int i, path *p, float t) {
     if (i < 0 || i > 2) { return; }
     Vec3f f = o->getEuler();
-    f[i] = t;
+    if(p) cout << "setRot " << i << " " << p->getPosition(t)[1] << endl;
+    if(p) f[i] = p->getPosition(t)[1];
+    else f[i] = t;
     o->setEuler(f);
 }
 
-void setScale(OSG::VRTransform* o, int i, float t) {
+void setScale(OSG::VRTransform* o, int i, path *p, float t) {
     if (i < 0 || i > 2) { return; }
     Vec3f f = o->getScale();
-    f[i] = t;
+    if(p) f[i] = p->getPosition(t)[1];
+    else f[i] = t;
     o->setScale(f);
 }
 
@@ -216,6 +242,7 @@ void setPose3(VRTransform* o, int i, Vec3f t) {
 }
 
 VRObject* findTarget(VRObject* o, string Name) {
+    if (o->hasAttachment("collada_name")) cout << "findTarget " << Name << " current " << o->getAttachment<string>("collada_name") << endl;
     if (o->hasAttachment("collada_name")) {
         if (o->getAttachment<string>("collada_name") == Name) return o;
     }
@@ -235,90 +262,81 @@ void string2Vector(string &input, vector<T> &output){
         std::istream_iterator<T>(),
         std::back_inserter(output));
 }
+
+int getAxis(const Animation& a) {
+    if (a.channel.axis == "X") return 0;
+    else if (a.channel.axis == "Y") return 1;
+    else if (a.channel.axis == "Z") return 2;
+    return -1;
+}
+
 void buildAnimations(AnimationLibrary& lib, VRObject* objects) {
     for (auto a : lib.animations) {
+        cout << "search object " << a.second.channel.target << endl;
         VRObject* obj = findTarget(objects, a.second.channel.target);
+        if(obj==0) cout << "object is 0 "<< endl;
         if (obj == 0) continue;
+        if(!obj->hasAttachment("transform")) cout << "has no attachment " << obj->getName() << endl;
         if (!obj->hasAttachment("transform")) continue;
 
         map<string, Source> sources = a.second.sources;
         Sampler sampler = a.second.sampler;
         Source inputSource = sources.find(sampler.inputs.find("INPUT")->second)->second;
         Source outputSource = sources.find(sampler.inputs.find("OUTPUT")->second)->second;
-        //Source interpolationSource = sources.find(sampler.inputs.find("INTERPOLATION")->second)->second;
-        //Source intangentSource = sources.find(sampler.inputs.find("IN_TANGENT")->second)->second;
-        //Source outtangentSource = sources.find(sampler.inputs.find("OUT_TANGENT")->second)->second;
+        Source interpolationSource = sources.find(sampler.inputs.find("INTERPOLATION")->second)->second;
+        Source intangentSource = sources.find(sampler.inputs.find("IN_TANGENT")->second)->second;
+        Source outtangentSource = sources.find(sampler.inputs.find("OUT_TANGENT")->second)->second;
 
         vector<float> inputValues;
         vector<float> outputValues;
-        //vector<string> interpolationValues;
-        //vector<float> intangentValues;
-        //vector<float> outtangentValues;
+        vector<string> interpolationValues;
+        vector<float> intangentValues;
+        vector<float> outtangentValues;
 
         string2Vector(inputSource.array_element, inputValues);
         string2Vector(outputSource.array_element, outputValues);
-        //string2Vector(interpolationSource.array_element->value(), interpolationValues);
-        //string2Vector(intangentSource.array_element->value(), intangentValues);
-        //string2Vector(outtangentSource.array_element->value(), outtangentValues);
-
-/*
- *         string inputArrayType =  accessor->first_node("param")->first_attribute("type")->value();//differentiate type
- *         string outputArrayType =  accessor->first_node("param")->first_attribute("type")->value();//differentiate type
- *         string interpolationArrayType =  accessor->first_node("param")->first_attribute("type")->value();//differentiate type
- *         string intangentArrayType =  accessor->first_node("param")->first_attribute("type")->value();//differentiate type
- *         string outtangentArrayType =  accessor->first_node("param")->first_attribute("type")->value();//differentiate type
- */
-/*
-        xNode* technique_common = inputSource.technique_common;
-        xNode* accessor = technique_common->first_node("accessor");
-        int inputCount = toInt(accessor->first_attribute("count")->value());
-        int outputCount = toInt(accessor->first_attribute("count")->value());
-        int interpolationCount = toInt(accessor->first_attribute("count")->value());
-        int intangenCount = toInt(accessor->first_attribute("count")->value());
-        int outtangentCount = toInt(accessor->first_attribute("count")->value());
-
-        int inputStride = toInt(accessor->first_attribute("stride")->value());
-        int outputStride = toInt(accessor->first_attribute("stride")->value());
-        int interpolationStride = toInt(accessor->first_attribute("stride")->value());
-        int intangentStride = toInt(accessor->first_attribute("stride")->value());
-        int outtangentStride = toInt(accessor->first_attribute("stride")->value());
-*/
+        string2Vector(interpolationSource.array_element, interpolationValues);
+        string2Vector(intangentSource.array_element, intangentValues);
+        string2Vector(outtangentSource.array_element, outtangentValues);
 
         VRTransform* t = (VRTransform*)obj;
-        int axis = -1;
+        int axis = getAxis(a.second);
+
         VRFunction<float>* fkt;
+        bool bezier = true;
 
-        if(a.second.channel.type.find("rotation") != string::npos) { // check if rotation
+        path* p = 0;
+
+        void (*callback)(OSG::VRTransform* o, int i, path *p, float t) = 0;
+        if (a.second.channel.type == "rotation") callback = setRot;
+        if (a.second.channel.type == "location") callback = setPose;
+        if (a.second.channel.type == "scale") callback = setScale;
+
+        if (a.second.channel.type == "rotation") {
             for (size_t i=0; i<outputValues.size(); i++) outputValues[i] = outputValues[i]*Pi/180.f; // convert degrees to radians
-
-            if(a.second.channel.type.find("X") != string::npos) axis = 0;
-            else if(a.second.channel.type.find("Y") != string::npos) axis = 2;//switch y and z because of blender to opengl convention
-            else if(a.second.channel.type.find("Z") != string::npos) axis = 1;
-            fkt = new VRFunction<float>(a.first, boost::bind(setRot, t, axis, _1) );
-
-        } else { // translation or scale
-            if(a.second.channel.axis.find("X") != string::npos) axis = 0;
-            else if(a.second.channel.axis.find("Y") != string::npos) axis = 1;
-            else if(a.second.channel.axis.find("Z") != string::npos) axis = 2;
-
-            if(a.second.channel.type.find("location") != string::npos) {
-                fkt = new VRFunction<float>(a.first, boost::bind(setPose, t, axis, _1) );
-            }
-            else if(a.second.channel.type.find("scale") != string::npos){
-                fkt = new VRFunction<float>(a.first, boost::bind(setScale, t, axis, _1) );
-            } else { // used incase no rotation/scale/translation found
-                continue;
-            }
-
+            for (size_t i=1; i<outtangentValues.size(); i+=2) outtangentValues[i] = outtangentValues[i]*Pi/180.f; // convert degrees to radians
+            for (size_t i=1; i<intangentValues.size(); i+=2) intangentValues[i] = intangentValues[i]*Pi/180.f; // convert degrees to radians
         }
 
+        //used for linear interpolation
         for(int i = 0; i < inputSource.array_element_count - 1; i++){
-            float start = outputValues[i];
-            float end = outputValues[i+1];
-            float duration = inputValues[i+1] - inputValues[i];
-            float offset = inputValues[i];
+            Vec3f start(inputValues[i], outputValues[i], 0);
+            Vec3f end(inputValues[i+1], outputValues[i+1], 0);
+            float duration = end[0] - start[0];
+            if (bezier) {
+                p = new path();
+                Vec3f h0 = Vec3f(outtangentValues[2*i], outtangentValues[2*i+1], 0) - start;
+                Vec3f h1 = Vec3f(intangentValues[2*i+2], intangentValues[2*i+1+2], 0) - end;
+                p->addPoint( start, h0, Vec3f() );
+                p->addPoint( end, h1, Vec3f() );
+                p->compute(80);
+            }
             bool loop = false;
-            VRAnimation* anim = new VRAnimation(duration, offset, fkt, start, end, loop);
+            fkt = new VRFunction<float>(a.first, boost::bind(callback, t, axis, p, _1) );
+
+            VRAnimation* anim = 0;
+            if (bezier) anim = new VRAnimation(duration, start[0], fkt, 0.f, 1.f, loop);
+            else anim = new VRAnimation(duration, start[0], fkt, start[1], end[1], loop);
             t->addAnimation(anim);
         }
     }
@@ -331,7 +349,7 @@ VRObject* OSG::loadCollada(string path, VRObject* objects) {
 
     auto library = parseColladaAnimations(data);
 
-    //printAll(library);
+    printAll(library);
 
     buildAnimations(library, objects);
 

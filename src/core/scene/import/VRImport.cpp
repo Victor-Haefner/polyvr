@@ -149,6 +149,7 @@ VRObject* VRImport::OSGConstruct(NodeRecPtr n, VRObject* parent, string name, st
             tmp_e = new VRTransform(name);
             tmp_e->setMatrix(dynamic_cast<Transform *>(n->getCore())->getMatrix());
             tmp = tmp_e;
+            tmp->addAttachment("collada_name", name);
         }
     }
 
