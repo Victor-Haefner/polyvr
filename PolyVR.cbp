@@ -534,6 +534,8 @@
 		<Unit filename="src/core/scripting/VRPyColorChooser.h" />
 		<Unit filename="src/core/scripting/VRPyConstraint.cpp" />
 		<Unit filename="src/core/scripting/VRPyConstraint.h" />
+		<Unit filename="src/core/scripting/VRPyConstructionKit.cpp" />
+		<Unit filename="src/core/scripting/VRPyConstructionKit.h" />
 		<Unit filename="src/core/scripting/VRPyDevice.cpp" />
 		<Unit filename="src/core/scripting/VRPyDevice.h" />
 		<Unit filename="src/core/scripting/VRPyGeometry.cpp" />
@@ -638,6 +640,8 @@
 		<Unit filename="src/core/tools/VRClipPlane.h" />
 		<Unit filename="src/core/tools/VRColorChooser.cpp" />
 		<Unit filename="src/core/tools/VRColorChooser.h" />
+		<Unit filename="src/core/tools/VRConstructionKit.cpp" />
+		<Unit filename="src/core/tools/VRConstructionKit.h" />
 		<Unit filename="src/core/tools/VRMenu.cpp" />
 		<Unit filename="src/core/tools/VRMenu.h" />
 		<Unit filename="src/core/tools/VRMesure.cpp" />

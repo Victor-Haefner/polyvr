@@ -125,6 +125,7 @@ VRObject* VRImport::OSGConstruct(NodeRecPtr n, VRObject* parent, string name, st
     else if (t_name == "Group") {//OpenSG Group
         tmp = new VRObject(name);
         tmp->setCore(core, "Object");
+        tmp->addAttachment("collada_name", name);
     }
 
     else if (t_name == "ComponentTransform") {

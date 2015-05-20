@@ -26,6 +26,7 @@
 #include "VRPyLod.h"
 #include "VRPyRecorder.h"
 #include "VRPyPathtool.h"
+#include "VRPyConstructionKit.h"
 #include "VRPySnappingEngine.h"
 #include "VRPySelector.h"
 #include "VRPyMenu.h"
@@ -261,6 +262,7 @@ void VRScriptManager::initPyModules() {
     VRPyPath::registerModule("Path", pModVR);
     VRPyRecorder::registerModule("Recorder", pModVR);
     VRPySnappingEngine::registerModule("SnappingEngine", pModVR);
+    VRPyConstructionKit::registerModule("ConstructionKit", pModVR);
     VRPyPathtool::registerModule("Pathtool", pModVR);
     VRPySelector::registerModule("Selector", pModVR);
     VRPyNavigator::registerModule("Navigator", pModVR);
