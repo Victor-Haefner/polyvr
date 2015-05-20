@@ -6,6 +6,11 @@
 #include <OpenSG/OSGTriangleIterator.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 
+#include <BulletSoftBody/btSoftbodyHelper/btSoftBodyRigidBodyCollisionConfiguration.h>
+#include <BulletSoftBody/btSoftbodyHelper/btSoftBodyHelpers.h>
+
+
+
 typedef boost::recursive_mutex::scoped_lock Lock;
 
 struct VRPhysicsJoint {
@@ -251,14 +256,28 @@ void VRPhysics::update() {
 
     if (_mass != 0) shape->calculateLocalInertia(_mass, inertiaVector);
 
-    btRigidBody::btRigidBodyConstructionInfo rbInfo( _mass, motionState, shape, inertiaVector );
     if (ghost) {
         ghost_body = new btPairCachingGhostObject();
         ghost_body->setCollisionShape( shape );
         ghost_body->setUserPointer( vr_obj );
         ghost_body->setCollisionFlags( btCollisionObject::CF_KINEMATIC_OBJECT | btCollisionObject::CF_NO_CONTACT_RESPONSE );
         world->addCollisionObject(ghost_body, collisionGroup, collisionMask);
+    } else if (soft) {
+        //TODO if śhape == "Rope"
+        const btVector3	h=s*0.5;
+        const btVector3	c[]={	p+h*    (-1,-1,-1),
+            p+h*btVector3(+1,-1,-1),
+            p+h*btVector3(-1,+1,-1),
+            p+h*btVector3(+1,+1,-1),
+            p+h*btVector3(-1,-1,+1),
+            p+h*btVector3(+1,-1,+1),
+            p+h*btVector3(-1,+1,+1),
+            p+h*btVector3(+1,+1,+1)};
+        soft_body = btSoftBodyHelpers::CreateFromConvexHull(world->getWorldInfo(),c,8);
+        soft_body->generateBendingConstraints(2);
+        world->addSoftBody(soft_body);
     } else {
+        btRigidBody::btRigidBodyConstructionInfo rbInfo( _mass, motionState, shape, inertiaVector );
         body = new btRigidBody(rbInfo);
         body->setActivationState(activation_mode);
         world->addRigidBody(body, collisionGroup, collisionMask);
