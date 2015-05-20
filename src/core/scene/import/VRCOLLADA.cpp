@@ -511,21 +511,27 @@ void printAllKinematics(const kin_scene& scene) {
 }
 
 VRTransform* buildLinks(klink l, VRObject* objects, map<string, VRConstraint*>& constraints) {
+    VRTransform* t1 = 0;
     auto o1 = findTarget(objects, l.parent);
     if (o1 == 0) { cout << "did not find " << l.parent << endl; return 0; }
-    auto t1 = new VRTransform(o1->getBaseName());
-    t1->switchParent(o1->getParent());
-    o1->switchParent(t1);
+    if (o1->hasAttachment("transform")) t1 = (VRTransform*)o1;
+    else {
+        t1 = new VRTransform(o1->getBaseName());
+        t1->switchParent(o1->getParent());
+        o1->switchParent(t1);
+    }
 
     t1->getPhysics()->setDynamic(true);
     t1->getPhysics()->setShape("Convex");
+    t1->getPhysics()->setActivationMode(4);
     t1->getPhysics()->setPhysicalized(true);
 
     for (auto a : l.attachments) {
         VRConstraint* c = constraints[a.second.joint];
         Matrix ref;
-        ref.setTranslate(-a.second.translate);
-        c->setReference(ref);
+        ref.setTranslate(a.second.translate);
+        c->setReferenceA(ref);
+        //c->setReferenceB(ref);
 
         for (auto cl : a.second.links) {
             auto t2 = buildLinks(cl.second, objects, constraints);

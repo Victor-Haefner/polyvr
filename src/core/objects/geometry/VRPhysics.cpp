@@ -623,8 +623,8 @@ void VRPhysics::updateConstraint(VRPhysics* p) {
     localB.setIdentity();
 
     //Constraint.getReferenceFrameInB
-    OSG::Matrix m = c->getReference();
-    localB = fromMatrix(m);
+    localA = fromMatrix( c->getReferenceA() );
+    localB = fromMatrix( c->getReferenceB() );
 
     // TODO: possible bug - p is not valid, may have been deleted!
 
@@ -632,7 +632,7 @@ void VRPhysics::updateConstraint(VRPhysics* p) {
     //btTransform t = p->body->getWorldTransform().inverse();
     //t.mult(t, body->getWorldTransform()); // the position of the first object in the local coords of the second
 
-    joint->btJoint = new btGeneric6DofSpringConstraint(*body, *p->body, localA, localB, false);
+    joint->btJoint = new btGeneric6DofSpringConstraint(*body, *p->body, localA, localB, true);
     world->addConstraint(joint->btJoint, true);
 
     for (int i=0; i<6; i++) {

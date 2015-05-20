@@ -12,7 +12,8 @@ class VRConstraint {
     private:
         bool active;
         bool local;
-        Matrix refMatrix;
+        Matrix refMatrixA;
+        Matrix refMatrixB;
 
         float min[6];
         float max[6];
@@ -37,8 +38,10 @@ class VRConstraint {
         void updateMatrix(Matrix& m);
         void updatePose(Vec3f& from, Vec3f& at, Vec3f& up);
 
-        void setReference(Matrix m);
-        Matrix getReference();
+        void setReferenceA(Matrix m);
+        void setReferenceB(Matrix m);
+        Matrix getReferenceA();
+        Matrix getReferenceB();
 };
 
 OSG_END_NAMESPACE;
