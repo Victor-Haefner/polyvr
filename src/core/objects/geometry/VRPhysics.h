@@ -27,6 +27,9 @@ class VRPhysics : public OSG::VRStorage {
     private:
         btRigidBody* body = 0;
         btPairCachingGhostObject* ghost_body = 0;
+        /**soft body**/
+        btSoftBody* soft_body = 0;
+
         btCollisionShape* shape = 0;
         float shape_param = -1;
         btDefaultMotionState* motionState = 0;
@@ -37,6 +40,8 @@ class VRPhysics : public OSG::VRStorage {
         bool physicalized = false;
         bool dynamic = false;
         bool ghost = false;
+        /** soft flag **/
+        bool soft = false;
         float mass = 1.0;
         float collisionMargin = 0.3;
 

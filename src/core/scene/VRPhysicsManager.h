@@ -15,7 +15,12 @@ class btBroadphaseInterface;
 class btDefaultCollisionConfiguration;
 class btCollisionDispatcher;
 class btSequentialImpulseConstraintSolver;
+
 class btDiscreteDynamicsWorld;
+
+//TODO SOFT BODY
+class btSoftRigidDynamicsWorld;
+
 class btRigidBody;
 class btCollisionShape;
 class btCollisionObject;
@@ -40,7 +45,8 @@ class VRPhysicsManager {
         btDefaultCollisionConfiguration* collisionConfiguration;
         btCollisionDispatcher* dispatcher;
         btSequentialImpulseConstraintSolver* solver;
-        btDiscreteDynamicsWorld* dynamicsWorld;
+        //TODO SOFT BODY
+        btSoftRigidDynamicsWorld* dynamicsWorld;
 
         btAlignedObjectArray<btCollisionShape*> collisionShapes;
         btRigidBody* body;
