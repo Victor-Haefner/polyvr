@@ -6,6 +6,8 @@
 #include <OpenSG/OSGMatrix.h>
 #include <boost/thread/recursive_mutex.hpp>
 
+class btSoftBody;
+class btSoftRigidDynamicsWorld;
 
 using namespace std;
 
@@ -33,7 +35,7 @@ class VRPhysics : public OSG::VRStorage {
         btCollisionShape* shape = 0;
         float shape_param = -1;
         btDefaultMotionState* motionState = 0;
-        btDiscreteDynamicsWorld* world = 0;
+        btSoftRigidDynamicsWorld* world = 0;
         int activation_mode = 0;
         int collisionGroup = 0;
         int collisionMask = 0;
@@ -63,6 +65,8 @@ class VRPhysics : public OSG::VRStorage {
         btCollisionShape* getConvexShape();
         btCollisionShape* getConcaveShape();
 
+        btSoftBody*       createConvex();
+
         boost::recursive_mutex& mtx();
         void update();
 
@@ -90,6 +94,8 @@ class VRPhysics : public OSG::VRStorage {
 
         void setGhost(bool b);
         bool isGhost();
+        void setSoft(bool b);
+        bool isSoft();
 
         void setMass(float m);
         float getMass();

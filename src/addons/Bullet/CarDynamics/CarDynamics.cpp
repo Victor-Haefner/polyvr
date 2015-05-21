@@ -79,7 +79,7 @@ void CarDynamics::initPhysics(){
     VRScene* scene = VRSceneManager::getCurrent();
     VRFunction<int>* fkt = new VRFunction<int>("cardyn_update", boost::bind(&CarDynamics::updateWheels, this));
     scene->addUpdateFkt(fkt);
-    m_dynamicsWorld = scene->bltWorld();
+    m_dynamicsWorld = (btDynamicsWorld*) scene->bltWorld();
 }
 
 //only to be done once

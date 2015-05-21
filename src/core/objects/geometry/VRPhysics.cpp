@@ -6,8 +6,11 @@
 #include <OpenSG/OSGTriangleIterator.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 
-#include <BulletSoftBody/btSoftbodyHelper/btSoftBodyRigidBodyCollisionConfiguration.h>
-#include <BulletSoftBody/btSoftbodyHelper/btSoftBodyHelpers.h>
+#include <BulletSoftBody/btSoftBodyRigidBodyCollisionConfiguration.h>
+#include <BulletSoftBody/btSoftBodyHelpers.h>
+#include <BulletSoftBody/btSoftRigidDynamicsWorld.h>
+
+
 
 
 
@@ -53,6 +56,9 @@ VRPhysics::VRPhysics(OSG::VRTransform* t) {
     physicsShape = "Convex";
     activation_mode = ACTIVE_TAG;
 
+    soft_body = 0;
+    soft = false;
+
     collisionGroup = 1;
     collisionMask = 1;
 }
@@ -82,7 +88,7 @@ boost::recursive_mutex& VRPhysics::mtx() {
     };
 }
 
-btCollisionObject* VRPhysics::getCollisionObject() { Lock lock(mtx()); return ghost ? (btCollisionObject*)ghost_body : (btCollisionObject*)body; }
+
 btRigidBody* VRPhysics::getRigidBody() { Lock lock(mtx()); return body; }
 btPairCachingGhostObject* VRPhysics::getGhostBody() { Lock lock(mtx()); return ghost_body; }
 btCollisionShape* VRPhysics::getCollisionShape() { Lock lock(mtx()); return shape; }
@@ -106,6 +112,8 @@ void VRPhysics::setActivationMode(int m) { activation_mode = m; update(); }
 int VRPhysics::getActivationMode() { return activation_mode; }
 void VRPhysics::setGhost(bool b) { ghost = b; update(); }
 bool VRPhysics::isGhost() { return ghost; }
+void VRPhysics::setSoft(bool b) { soft = b; update(); }
+bool VRPhysics::isSoft() { return soft; }
 OSG::Vec3f VRPhysics::toVec3f(btVector3 v) { return OSG::Vec3f(v[0], v[1], v[2]); }
 btVector3 VRPhysics::toBtVector3(OSG::Vec3f v) { return btVector3(v[0], v[1], v[2]); }
 void VRPhysics::setDamping(float lin, float ang) { Lock lock(mtx()); body->setDamping(btScalar(lin),btScalar(ang)); }
@@ -117,7 +125,12 @@ void VRPhysics::prepareStep() {
    body->applyTorque(constantTorque);
 }
 
-
+btCollisionObject* VRPhysics::getCollisionObject() {
+     Lock lock(mtx());
+     if(ghost) return (btCollisionObject*)ghost_body;
+     if(soft)  return (btCollisionObject*)soft_body;
+     else return body;
+}
 vector<VRCollision> VRPhysics::getCollisions() {
     Lock lock(mtx());
     vector<VRCollision> res;
@@ -192,6 +205,7 @@ vector<string> VRPhysics::getPhysicsShapes() {
         shapes.push_back("Sphere");
         shapes.push_back("Convex");
         shapes.push_back("Concave");
+        shapes.push_back("Patch");
     }
     return shapes;
 }
@@ -237,12 +251,46 @@ void VRPhysics::update() {
         ghost_body = 0;
     }
 
+    if (soft_body != 0) {
+        world->removeCollisionObject(soft_body);
+        delete soft_body;
+        soft_body = 0;
+    }
+
     if (shape != 0) { delete shape; shape = 0; }
     if (motionState != 0) { delete motionState; motionState = 0; }
 
     if (!physicalized) return;
 
+
+
+
     motionState = new btDefaultMotionState(fromVRTransform( vr_obj, scale ));
+
+
+
+    btVector3 inertiaVector(0,0,0);
+    float _mass = mass;
+    if (!dynamic) _mass = 0;
+
+
+
+    if(soft) {
+        //if (physicsShape == "Rope") soft_body = getRope();
+        if (physicsShape == "Convex") soft_body = createConvex();
+        //if (physicsShape == "Convex") soft_body = getSoftConvex();
+        //if (physicsShape == "Concave") soft_body = getSoftConcave();
+        world->addSoftBody(soft_body,collisionGroup, collisionMask);
+        cout << "soft body added" << "\n";
+        scene->physicalize(vr_obj);
+        cout << "object physicalized" << "\n";
+        updateConstraints();
+
+        return;
+    }
+
+
+
 
     if (physicsShape == "Box") shape = getBoxShape();
     if (physicsShape == "Sphere") shape = getSphereShape();
@@ -250,9 +298,6 @@ void VRPhysics::update() {
     if (physicsShape == "Concave") shape = getConcaveShape();
     if (shape == 0) return;
 
-    btVector3 inertiaVector(0,0,0);
-    float _mass = mass;
-    if (!dynamic) _mass = 0;
 
     if (_mass != 0) shape->calculateLocalInertia(_mass, inertiaVector);
 
@@ -262,20 +307,6 @@ void VRPhysics::update() {
         ghost_body->setUserPointer( vr_obj );
         ghost_body->setCollisionFlags( btCollisionObject::CF_KINEMATIC_OBJECT | btCollisionObject::CF_NO_CONTACT_RESPONSE );
         world->addCollisionObject(ghost_body, collisionGroup, collisionMask);
-    } else if (soft) {
-        //TODO if śhape == "Rope"
-        const btVector3	h=s*0.5;
-        const btVector3	c[]={	p+h*    (-1,-1,-1),
-            p+h*btVector3(+1,-1,-1),
-            p+h*btVector3(-1,+1,-1),
-            p+h*btVector3(+1,+1,-1),
-            p+h*btVector3(-1,-1,+1),
-            p+h*btVector3(+1,-1,+1),
-            p+h*btVector3(-1,+1,+1),
-            p+h*btVector3(+1,+1,+1)};
-        soft_body = btSoftBodyHelpers::CreateFromConvexHull(world->getWorldInfo(),c,8);
-        soft_body->generateBendingConstraints(2);
-        world->addSoftBody(soft_body);
     } else {
         btRigidBody::btRigidBodyConstructionInfo rbInfo( _mass, motionState, shape, inertiaVector );
         body = new btRigidBody(rbInfo);
@@ -288,7 +319,43 @@ void VRPhysics::update() {
 }
 
 
+btSoftBody* VRPhysics::createConvex() {
 
+        const btVector3	s=btVector3(1,1,1);
+        const btVector3	p=toBtVector3(vr_obj->getWorldPosition());
+/*
+        vector<btVector3> vertices;
+
+        vector<OSG::VRObject*> geos = vr_obj->getObjectListByType("Geometry");
+        for (unsigned int j=0; j<geos.size(); j++) {
+            OSG::VRGeometry* geo = (OSG::VRGeometry*)geos[j];
+            if (geo == 0) continue;
+            OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->getPositions();
+            for (unsigned int i = 0; i<pos->size(); i++) {
+                OSG::Pnt3f p;
+                pos->getValue(p,i);
+                vertices.push_back(btVector3(p[0],p[1],p[2]));
+
+            }
+        }
+        btSoftBody* ret = btSoftBodyHelpers::CreateFromConvexHull(world->getWorldInfo(),&vertices[0],vertices.size());
+        ret->generateBendingConstraints(2);*/
+        const btVector3 h=s*0.5;
+const btVector3 c[]={ p+h*btVector3(-1,-1,-1),
+p+h*btVector3(+1,-1,-1),
+p+h*btVector3(-1,+1,-1),
+p+h*btVector3(+1,+1,-1),
+p+h*btVector3(-1,-1,+1),
+p+h*btVector3(+1,-1,+1),
+p+h*btVector3(-1,+1,+1),
+p+h*btVector3(+1,+1,+1)};
+btSoftBody* psb=btSoftBodyHelpers::CreateFromConvexHull(*(OSG::VRSceneManager::getCurrent()->getSoftBodyWorldInfo()),c,8);
+psb->generateBendingConstraints(2);
+        cout << "convex func called" << "\n";
+        //return ret;
+        return psb;
+
+}
 
 btCollisionShape* VRPhysics::getBoxShape() {
     if (shape_param > 0) return new btBoxShape( btVector3(shape_param, shape_param, shape_param) );

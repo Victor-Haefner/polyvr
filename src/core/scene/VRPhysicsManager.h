@@ -20,6 +20,7 @@ class btDiscreteDynamicsWorld;
 
 //TODO SOFT BODY
 class btSoftRigidDynamicsWorld;
+class btSoftBodyWorldInfo;
 
 class btRigidBody;
 class btCollisionShape;
@@ -46,6 +47,7 @@ class VRPhysicsManager {
         btCollisionDispatcher* dispatcher;
         btSequentialImpulseConstraintSolver* solver;
         //TODO SOFT BODY
+        btSoftBodyWorldInfo* softBodyWorldInfo;
         btSoftRigidDynamicsWorld* dynamicsWorld;
 
         btAlignedObjectArray<btCollisionShape*> collisionShapes;
@@ -84,7 +86,10 @@ class VRPhysicsManager {
 
         void setGravity(Vec3f g);
 
-        btDiscreteDynamicsWorld* bltWorld();
+        btSoftRigidDynamicsWorld* bltWorld();
+
+        btSoftBodyWorldInfo* getSoftBodyWorldInfo();
+
 
         void collectCollisionPoints();
         vector<Vec3f>& getCollisionPoints();

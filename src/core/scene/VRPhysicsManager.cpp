@@ -4,6 +4,7 @@
 #include <BulletCollision/CollisionShapes/btShapeHull.h>
 #include <BulletCollision/CollisionShapes/btConvexPolyhedron.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
+#include <BulletSoftBody/btSoftRigidDynamicsWorld.h>
 #include <iostream>
 #include <OpenSG/OSGGLUT.h>
 #include <OpenSG/OSGTriangleIterator.h>
@@ -39,9 +40,19 @@ VRPhysicsManager::VRPhysicsManager() {
     solver = new btSequentialImpulseConstraintSolver;
 
     // The world.
-    dynamicsWorld = new btDiscreteDynamicsWorld(dispatcher,broadphase,solver,collisionConfiguration);
+    dynamicsWorld = new btSoftRigidDynamicsWorld(dispatcher,broadphase,solver,collisionConfiguration);
     dynamicsWorld->setGravity(btVector3(0,-10,0));
     dynamicsWorld->getPairCache()->setInternalGhostPairCallback( new btGhostPairCallback() );
+
+    //The soft world attributes
+    softBodyWorldInfo = new btSoftBodyWorldInfo();
+   	softBodyWorldInfo->m_dispatcher = dispatcher;
+   	softBodyWorldInfo->m_broadphase = broadphase;
+	softBodyWorldInfo->m_gravity.setValue(0,-10,0);
+    softBodyWorldInfo->air_density	= (btScalar)1.2;
+    softBodyWorldInfo->water_density	= 0;
+    softBodyWorldInfo->water_offset	= 0;
+    softBodyWorldInfo->water_normal	= btVector3(0,0,0);
 
     updatePhysObjectsFkt = new VRFunction<int>("Physics object update", boost::bind(&VRPhysicsManager::updatePhysObjects, this));
     updatePhysicsFkt = new VRFunction<VRThread*>("Physics update", boost::bind(&VRPhysicsManager::updatePhysics, this, _1));
@@ -88,6 +99,7 @@ long long VRPhysicsManager::getTime() { // time in seconds
     return 1000*glutGet(GLUT_ELAPSED_TIME);
     //return 1e6*clock()/CLOCKS_PER_SEC; // TODO
 }
+btSoftBodyWorldInfo* VRPhysicsManager::getSoftBodyWorldInfo() {return softBodyWorldInfo;}
 
 void VRPhysicsManager::prepareObjects() {
     for (auto o : OSGobjs) o.second->getPhysics()->prepareStep();
@@ -118,6 +130,7 @@ void VRPhysicsManager::updatePhysics(VRThread* thread) {
 
     MLock lock(mtx);
     fps = 1e6/(t3-t1);
+
 }
 
 void VRPhysicsManager::addPhysicsUpdateFunction(VRFunction<int>* fkt, bool after) {
@@ -232,9 +245,8 @@ void VRPhysicsManager::updatePhysObjects() {
 void VRPhysicsManager::physicalize(VRTransform* obj) {
     //cout << "physicalize transform: " << obj;
     btCollisionObject* bdy = obj->getPhysics()->getCollisionObject();
-    //cout << " with bt_body " << bdy << endl;
+    cout << " with bt_body " << (bdy == 0) << endl;
     if (bdy == 0) return;
-
     OSGobjs[bdy] = obj;
     physics_visuals_to_update.push_back(bdy);
 
@@ -289,7 +301,7 @@ void VRPhysicsManager::collectCollisionPoints() {
 	}
 }
 
-btDiscreteDynamicsWorld* VRPhysicsManager::bltWorld() { return dynamicsWorld; }
+btSoftRigidDynamicsWorld* VRPhysicsManager::bltWorld() { return dynamicsWorld; }
 
 vector<Vec3f>& VRPhysicsManager::getCollisionPoints() {
     return collisionPoints;
