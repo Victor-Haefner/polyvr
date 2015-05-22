@@ -205,14 +205,6 @@
 		<Unit filename="src/addons/CEF/VRPyWebCam.h" />
 		<Unit filename="src/addons/CEF/VRWebCam.cpp" />
 		<Unit filename="src/addons/CEF/VRWebCam.h" />
-		<Unit filename="src/addons/CSG/CGALTypedefs.h" />
-		<Unit filename="src/addons/CSG/CSGGeometry.h" />
-		<Unit filename="src/addons/CSG/CsgjsWrapper.h" />
-		<Unit filename="src/addons/CSG/GTSGeometry.h" />
-		<Unit filename="src/addons/CSG/Octree/Octree.h" />
-		<Unit filename="src/addons/CSG/PolyhedronBuilder.h" />
-		<Unit filename="src/addons/CSG/VRPyCSG.h" />
-		<Unit filename="src/addons/CSG/csgjs.h" />
 		<Unit filename="src/addons/CaveKeeper/CKOctree.cpp" />
 		<Unit filename="src/addons/CaveKeeper/CKOctree.h" />
 		<Unit filename="src/addons/CaveKeeper/CaveKeeper.cpp" />

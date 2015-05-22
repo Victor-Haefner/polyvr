@@ -432,11 +432,14 @@ PyObject* VRScriptManager::getRoot(VRScriptManager* self) {
 }
 
 PyObject* VRScriptManager::loadGeometry(VRScriptManager* self, PyObject *args) {
-    PyObject* path; int ignoreCache;
+    PyObject* path = 0;
     PyObject *preset = 0;
+    int ignoreCache = 0;
 
+    if (pySize(args) == 1) if (! PyArg_ParseTuple(args, "O", &path)) return NULL;
     if (pySize(args) == 2) if (! PyArg_ParseTuple(args, "Oi", &path, &ignoreCache)) return NULL;
     if (pySize(args) == 3) if (! PyArg_ParseTuple(args, "OiO", &path, &ignoreCache, &preset)) return NULL;
+    if (pySize(args) < 1 || pySize(args) > 3) { PyErr_SetString(err, "VRScriptManager::loadGeometry: wrong number of arguments"); return NULL; }
 
     string p = PyString_AsString(path);
     string pre = "OSG";
