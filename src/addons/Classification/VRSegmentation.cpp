@@ -325,10 +325,6 @@ VRObject* VRSegmentation::extractPatches(VRGeometry* geo, SEGMENTATION_ALGORITHM
     return anchor;
 }
 
-
-//#include "addons/Engineering/CSG/CGALTypedefs.h"
-//#include "addons/Engineering/CSG/PolyhedronBuilder.h"
-
 void VRSegmentation::removeDuplicates(VRGeometry* geo) {
     if (geo == 0) return;
     if (geo->getMesh() == 0) return;
@@ -381,8 +377,84 @@ void VRSegmentation::removeDuplicates(VRGeometry* geo) {
 	for (void* o : oct.getData()) delete (size_t*)o; // Cleanup
 }
 
+//#include "addons/Engineering/CSG/CGALTypedefs.h"
+//#include "addons/Engineering/CSG/PolyhedronBuilder.h"
+
+struct Vertex;
+struct Edge;
+struct Triangle;
+
+struct Vertex {
+    vector<Edge*> edges;
+    vector<Triangle*> triangles;
+    Vec3f v;
+    Vertex(Pnt3f p) : v(p) {;}
+};
+
+struct Edge {
+    vector<Vertex*> vertices;
+    vector<Triangle*> triangles;
+    Edge() {
+        vertices = vector<Vertex*>(2,0);
+    }
+};
+
+struct Triangle {
+    vector<Vertex*> vertices;
+    vector<Edge*> edges;
+    Triangle() {
+        edges = vector<Edge*>(3,0);
+        vertices = vector<Vertex*>(3,0);
+    }
+};
+
 void VRSegmentation::fillHoles(VRGeometry* geo) {
-    ;
+    if (geo == 0) return;
+    if (geo->getMesh() == 0) return;
+    // TODO: check if type is GL_TRIANGLES and just one length!
+
+    vector<Triangle*> triangles;
+    map<int, Vertex*> vertices;
+    map<int, Edge*> edges;
+
+    /*auto inds = geo->getMesh()->getIndices();
+    for (auto i=0; i<inds->size(); i+=3) {
+        ;
+    }*/
+
+	TriangleIterator it(geo->getMesh());
+	for (; !it.isAtEnd() ;++it) {
+        Triangle* t = new Triangle();
+
+        for (int i=0; i<3; i++) {
+            Pnt3f p = it.getPosition(i);
+            Vertex* v = 0;
+            int ID = it.getIndex(i);
+            if (vertices.count(ID)) v = vertices[ID];
+            if (v == 0) v = new Vertex(p);
+            vertices[ID] = v;
+            t->vertices[i] = v;
+            v->triangles.push_back(t);
+        }
+
+        for (int i=0; i<3; i++) {
+            int ID1 = it.getIndex(i);
+            int ID2 = it.getIndex((i+1)%3);
+            int ID = (ID1+ID2)*(ID1+ID2+1)*0.5+ID2; // hash IDs edge map
+            Edge* e = 0;
+            if (edges.count(ID)) e = edges[ID];
+            if (e == 0) {
+                e = new Edge();
+                e->vertices[0] = t->vertices[i];
+                e->vertices[1] = t->vertices[(i+1)%3];
+                t->vertices[i]->edges.push_back(e);
+                t->vertices[(i+1)%3]->edges.push_back(e);
+            }
+            edges[ID] = e;
+            t->edges[i] = e;
+            e->triangles.push_back(t);
+        }
+	}
 }
 
 VRObject* VRSegmentation::convexDecompose(VRGeometry* geo) {
