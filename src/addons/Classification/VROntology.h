@@ -67,6 +67,7 @@ struct VROntology {
     VROntologyInstance* addVectorInstance(string name, string concept, string x, string y, string z);
 
     VRConcept* getConcept(string name, VRConcept* p = 0);
+    VROntologyInstance* getInstance(string instance);
     vector<VROntologyInstance*> getInstances(string concept);
 
     string answer(string question);
