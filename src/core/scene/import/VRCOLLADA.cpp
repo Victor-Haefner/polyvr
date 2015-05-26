@@ -223,7 +223,6 @@ void setPose(OSG::VRTransform* o, int i, path *p, float t) {// object, axis, new
 void setRot(OSG::VRTransform* o, int i, path *p, float t) {
     if (i < 0 || i > 2) { return; }
     Vec3f f = o->getEuler();
-    if(p) cout << "setRot " << i << " " << p->getPosition(t)[1] << endl;
     if(p) f[i] = p->getPosition(t)[1];
     else f[i] = t;
     o->setEuler(f);
@@ -284,8 +283,11 @@ void buildAnimations(AnimationLibrary& lib, VRObject* objects) {
         Source inputSource = sources.find(sampler.inputs.find("INPUT")->second)->second;
         Source outputSource = sources.find(sampler.inputs.find("OUTPUT")->second)->second;
         Source interpolationSource = sources.find(sampler.inputs.find("INTERPOLATION")->second)->second;
-        Source intangentSource = sources.find(sampler.inputs.find("IN_TANGENT")->second)->second;
-        Source outtangentSource = sources.find(sampler.inputs.find("OUT_TANGENT")->second)->second;
+        Source intangentSource;
+        Source outtangentSource;
+
+        if(sampler.inputs.find("IN_TANGENT") != sampler.inputs.end()) intangentSource = sources.find(sampler.inputs.find("IN_TANGENT")->second)->second;
+        if(sampler.inputs.find("OUT_TANGENT") != sampler.inputs.end()) outtangentSource = sources.find(sampler.inputs.find("OUT_TANGENT")->second)->second;
 
         vector<float> inputValues;
         vector<float> outputValues;
@@ -303,7 +305,7 @@ void buildAnimations(AnimationLibrary& lib, VRObject* objects) {
         int axis = getAxis(a.second);
 
         VRFunction<float>* fkt;
-        bool bezier = true;
+        bool bezier = false;
 
         path* p = 0;
 
@@ -320,6 +322,9 @@ void buildAnimations(AnimationLibrary& lib, VRObject* objects) {
 
         //used for linear interpolation
         for(int i = 0; i < inputSource.array_element_count - 1; i++){
+            if(interpolationValues[i] == "BEZIER") bezier = true;
+            else bezier = false;
+
             Vec3f start(inputValues[i], outputValues[i], 0);
             Vec3f end(inputValues[i+1], outputValues[i+1], 0);
             float duration = end[0] - start[0];
@@ -349,7 +354,7 @@ VRObject* OSG::loadCollada(string path, VRObject* objects) {
 
     auto library = parseColladaAnimations(data);
 
-    printAll(library);
+    //printAll(library);
 
     buildAnimations(library, objects);
 
