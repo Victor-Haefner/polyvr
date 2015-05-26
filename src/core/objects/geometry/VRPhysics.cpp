@@ -121,6 +121,7 @@ OSG::Vec3f VRPhysics::getForce() { Lock lock(mtx()); return OSG::Vec3f(constantF
 OSG::Vec3f VRPhysics::getTorque() { Lock lock(mtx()); return OSG::Vec3f(constantTorque.getX(),constantTorque.getY(),constantTorque.getZ());}
 
 void VRPhysics::prepareStep() {
+    if(soft) return;
    body->applyForce(constantForce, btVector3(0.0,0.0,0.0));
    body->applyTorque(constantTorque);
 }
@@ -277,16 +278,19 @@ void VRPhysics::update() {
 
     if(soft) {
         //if (physicsShape == "Rope") soft_body = getRope();
-        if (physicsShape == "Convex") soft_body = createConvex();
+        //if (physicsShape == "Convex")
+        soft_body = createConvex();
         //if (physicsShape == "Convex") soft_body = getSoftConvex();
         //if (physicsShape == "Concave") soft_body = getSoftConcave();
+        physicsShape = "Rope";
+        soft_body->setActivationState(activation_mode);
         world->addSoftBody(soft_body,collisionGroup, collisionMask);
-        cout << "soft body added" << "\n";
+        cout << "soft body added" << "   " << soft_body << "\n";
         scene->physicalize(vr_obj);
-        cout << "object physicalized" << "\n";
+        cout << "object physicalized" << "   " << vr_obj << "\n";
         updateConstraints();
-
         return;
+
     }
 
 
@@ -349,8 +353,11 @@ p+h*btVector3(-1,-1,+1),
 p+h*btVector3(+1,-1,+1),
 p+h*btVector3(-1,+1,+1),
 p+h*btVector3(+1,+1,+1)};
-btSoftBody* psb=btSoftBodyHelpers::CreateFromConvexHull(*(OSG::VRSceneManager::getCurrent()->getSoftBodyWorldInfo()),c,8);
+btSoftBodyWorldInfo* info = OSG::VRSceneManager::getCurrent()->getSoftBodyWorldInfo();
+        cout << "info  " <<info->air_density<<   "\n";
+btSoftBody* psb=btSoftBodyHelpers::CreateFromConvexHull(*info,c,8);
 psb->generateBendingConstraints(2);
+psb->setMass(0,1);
         cout << "convex func called" << "\n";
         //return ret;
         return psb;
@@ -605,11 +612,15 @@ btTransform VRPhysics::getTransform() {
 }
 
 OSG::Matrix VRPhysics::getTransformation() {
-    if (body == 0) return OSG::Matrix();
+    if (body == 0 && soft_body == 0) return OSG::Matrix();
     btTransform t;
     Lock lock(mtx());
-    if (body->getMotionState() == 0) return OSG::Matrix();
-    body->getMotionState()->getWorldTransform(t);
+    if(body!=0) {
+        if (body->getMotionState() == 0) return OSG::Matrix();
+        body->getMotionState()->getWorldTransform(t);
+    } else {
+        t.setOrigin(soft_body->m_nodes[0].m_x);
+    }
     return fromBTTransform(t, scale);
 }
 

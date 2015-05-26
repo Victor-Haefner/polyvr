@@ -4,6 +4,8 @@
 #include <BulletCollision/CollisionShapes/btShapeHull.h>
 #include <BulletCollision/CollisionShapes/btConvexPolyhedron.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
+#include <BulletSoftBody/btSoftBodyRigidBodyCollisionConfiguration.h>
+#include <BulletSoftBody/btSoftRigidDynamicsWorld.h>
 #include <BulletSoftBody/btSoftRigidDynamicsWorld.h>
 #include <iostream>
 #include <OpenSG/OSGGLUT.h>
@@ -33,7 +35,7 @@ VRPhysicsManager::VRPhysicsManager() {
     broadphase = new btDbvtBroadphase();
 
     // Set up the collision configuration && dispatcher
-    collisionConfiguration = new btDefaultCollisionConfiguration();
+    collisionConfiguration = new btSoftBodyRigidBodyCollisionConfiguration();
     dispatcher = new btCollisionDispatcher(collisionConfiguration);
 
     // The actual physics solver
@@ -45,7 +47,7 @@ VRPhysicsManager::VRPhysicsManager() {
     dynamicsWorld->getPairCache()->setInternalGhostPairCallback( new btGhostPairCallback() );
 
     //The soft world attributes
-    softBodyWorldInfo = new btSoftBodyWorldInfo();
+    softBodyWorldInfo =     &(dynamicsWorld->getWorldInfo());
    	softBodyWorldInfo->m_dispatcher = dispatcher;
    	softBodyWorldInfo->m_broadphase = broadphase;
 	softBodyWorldInfo->m_gravity.setValue(0,-10,0);
@@ -53,6 +55,7 @@ VRPhysicsManager::VRPhysicsManager() {
     softBodyWorldInfo->water_density	= 0;
     softBodyWorldInfo->water_offset	= 0;
     softBodyWorldInfo->water_normal	= btVector3(0,0,0);
+
 
     updatePhysObjectsFkt = new VRFunction<int>("Physics object update", boost::bind(&VRPhysicsManager::updatePhysObjects, this));
     updatePhysicsFkt = new VRFunction<VRThread*>("Physics update", boost::bind(&VRPhysicsManager::updatePhysics, this, _1));
@@ -161,7 +164,14 @@ void VRPhysicsManager::updatePhysObjects() {
         btCollisionObject* obj = dynamicsWorld->getCollisionObjectArray()[j];
         body = btRigidBody::upcast(obj);
         if (body && body->getMotionState() && OSGobjs.count(body) == 1) OSGobjs[body]->updateFromBullet();
+    }
 
+    //the soft bodies
+    btSoftBodyArray arr = dynamicsWorld->getSoftBodyArray();
+    for(int i = 0; i < arr.size() ;i++) {
+        btSoftBody* body = arr[i];
+        if(OSGobjs.count(body) == 1) OSGobjs[body]->updateFromBullet();
+        //visualization has always to be updated
     }
 
 
@@ -178,6 +188,7 @@ void VRPhysicsManager::updatePhysObjects() {
         // 8 : sphere
         // 0 : box
         // 21 : concave
+
 
         if (stype == 8) { // sphere
             btSphereShape* sshape = (btSphereShape*)shape;
@@ -227,6 +238,18 @@ void VRPhysicsManager::updatePhysObjects() {
             geo->setIndices(inds);
         }
 
+        if(shape->isSoftBody()) {
+            cout << "is soft!" << endl;
+            btSphereShape* sshape = (btSphereShape*)shape;
+            btScalar radius = sshape->getRadius();
+            stringstream params;
+            params << radius*1.01 << " 2";
+            geo->setPrimitive("Sphere", params.str());
+        }
+
+
+
+
         geo->setMaterial(phys_mat);
     }
     physics_visuals_to_update.clear();
@@ -245,8 +268,8 @@ void VRPhysicsManager::updatePhysObjects() {
 void VRPhysicsManager::physicalize(VRTransform* obj) {
     //cout << "physicalize transform: " << obj;
     btCollisionObject* bdy = obj->getPhysics()->getCollisionObject();
-    cout << " with bt_body " << (bdy == 0) << endl;
     if (bdy == 0) return;
+    cout << " with bt_body " << (bdy == 0) << endl;
     OSGobjs[bdy] = obj;
     physics_visuals_to_update.push_back(bdy);
 

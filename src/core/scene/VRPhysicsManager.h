@@ -13,6 +13,7 @@ template<class T> class VRFunction;
 
 class btBroadphaseInterface;
 class btDefaultCollisionConfiguration;
+class btSoftBodyRigidBodyCollisionConfiguration;
 class btCollisionDispatcher;
 class btSequentialImpulseConstraintSolver;
 
@@ -43,7 +44,7 @@ class VRPhysicsManager {
         vector<VRFunction<int>* > updateFktsPost;
 
         btBroadphaseInterface* broadphase;
-        btDefaultCollisionConfiguration* collisionConfiguration;
+        btSoftBodyRigidBodyCollisionConfiguration* collisionConfiguration;
         btCollisionDispatcher* dispatcher;
         btSequentialImpulseConstraintSolver* solver;
         //TODO SOFT BODY
