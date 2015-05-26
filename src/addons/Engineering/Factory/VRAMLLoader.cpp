@@ -109,7 +109,7 @@ void VRAMLLoader::buildMesh(string path, Matrix4f m) {
 
 
 cout << "Building Mesh" << endl;
-    Assimp::Importer importer;
+    /*Assimp::Importer importer;
 
     const aiScene* scene = importer.ReadFile( path,
         aiProcess_CalcTangentSpace       |
@@ -213,7 +213,7 @@ cout << "Building Mesh" << endl;
 
         geo.geo->setMatrix(m);
         root->addChild(geo.geo);
-    }
+    }*/
 
 }
 int meshNumber = 0;
@@ -316,7 +316,7 @@ void VRAMLLoader::print(boost::property_tree::ptree const& pt, Matrix4f m)
 }
 void VRAMLLoader::loadProducts(string path, Matrix4f m)
 {
-    Assimp::Importer importer;
+    /*Assimp::Importer importer;
 
     const aiScene* scene = importer.ReadFile( path,
         aiProcess_CalcTangentSpace       |
@@ -353,7 +353,7 @@ void VRAMLLoader::loadProducts(string path, Matrix4f m)
     {
         m.transpose();
         buildMesh(path,m);
-    }
+    }*/
 
 }
 
