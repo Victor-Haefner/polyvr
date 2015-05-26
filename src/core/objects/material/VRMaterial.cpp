@@ -177,7 +177,7 @@ void VRMaterial::setStencilBuffer(bool clear, float value, float mask, int func,
     auto md = mats[activePass];
     if (md->stencilChunk == 0) { md->stencilChunk = StencilChunk::create(); md->mat->addChunk(md->stencilChunk); }
 
-    if (clear) md->stencilChunk->setClearBuffer(1);
+    md->stencilChunk->setClearBuffer(clear);
     md->stencilChunk->setStencilFunc(func);
     md->stencilChunk->setStencilValue(value);
     md->stencilChunk->setStencilMask(mask);

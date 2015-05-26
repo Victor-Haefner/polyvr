@@ -22,6 +22,11 @@ class VRSegmentation {
     public:
 
         static VRObject* extractPatches(VRGeometry* geo, SEGMENTATION_ALGORITHM algo, float curvature, float curvature_delta, Vec3f normal, Vec3f normal_delta);
+
+        static void removeDuplicates(VRGeometry* geo);
+        static void fillHoles(VRGeometry* geo);
+
+        static VRObject* convexDecompose(VRGeometry* geo);
 };
 
 OSG_END_NAMESPACE;

@@ -1,23 +1,23 @@
 #ifndef VRStroke_H_INCLUDED
 #define VRStroke_H_INCLUDED
 
-#include "core/objects/object/VRObject.h"
+#include "VRGeometry.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class path;
-class VRGeometry;
 
-class VRStroke : public VRObject {
+class VRStroke : public VRGeometry {
     private:
         vector<path*> paths;
 
-        int mode;
+        int mode = 0;
         vector<Vec3f> profile;
-        bool closed;
-        bool lit;
-        VRGeometry* geo;
+        bool closed = true;
+        bool lit = true;
+
+        VRGeometry* strewGeo = 0;
 
     public:
         VRStroke(string name);

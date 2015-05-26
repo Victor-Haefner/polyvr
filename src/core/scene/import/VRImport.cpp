@@ -125,6 +125,7 @@ VRObject* VRImport::OSGConstruct(NodeRecPtr n, VRObject* parent, string name, st
     else if (t_name == "Group") {//OpenSG Group
         tmp = new VRObject(name);
         tmp->setCore(core, "Object");
+        tmp->addAttachment("collada_name", name);
     }
 
     else if (t_name == "ComponentTransform") {
@@ -149,6 +150,7 @@ VRObject* VRImport::OSGConstruct(NodeRecPtr n, VRObject* parent, string name, st
             tmp_e = new VRTransform(name);
             tmp_e->setMatrix(dynamic_cast<Transform *>(n->getCore())->getMatrix());
             tmp = tmp_e;
+            tmp->addAttachment("collada_name", name);
         }
     }
 

@@ -15,6 +15,7 @@ struct VRPyDevice : VRPyBaseT<OSG::VRDevice> {
     static PyObject* getTarget(VRPyDevice* self);
     static PyObject* setTarget(VRPyDevice* self, PyObject *args);
     static PyObject* getKey(VRPyDevice* self);
+    static PyObject* getState(VRPyDevice* self);
     static PyObject* getKeyState(VRPyDevice* self, PyObject *args);
     static PyObject* getSlider(VRPyDevice* self, PyObject *args);
     static PyObject* getMessage(VRPyDevice* self);

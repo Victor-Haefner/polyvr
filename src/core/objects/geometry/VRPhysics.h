@@ -48,6 +48,7 @@ class VRPhysics : public OSG::VRStorage {
         float collisionMargin = 0.3;
 
 
+        OSG::Pnt3f CoMOffset; // center of mass offset
         string physicsShape;
         map<VRPhysics*, VRPhysicsJoint*> joints ;
         map<VRPhysics*, VRPhysicsJoint*> joints2;
@@ -62,7 +63,7 @@ class VRPhysics : public OSG::VRStorage {
 
         btCollisionShape* getBoxShape();
         btCollisionShape* getSphereShape();
-        btCollisionShape* getConvexShape();
+        btCollisionShape* getConvexShape(OSG::Pnt3f& mc);
         btCollisionShape* getConcaveShape();
 
         btSoftBody*       createConvex();
@@ -143,9 +144,9 @@ class VRPhysics : public OSG::VRStorage {
 
 
         static vector<string> getPhysicsShapes();
-        static btTransform fromVRTransform(OSG::VRTransform* t, OSG::Vec3f& scale);
+        static btTransform fromVRTransform(OSG::VRTransform* t, OSG::Vec3f& scale, OSG::Pnt3f& mc);
         static OSG::Matrix fromBTTransform(const btTransform t);
-        static OSG::Matrix fromBTTransform(const btTransform t, OSG::Vec3f scale);
+        static OSG::Matrix fromBTTransform(const btTransform t, OSG::Vec3f& scale, OSG::Pnt3f& mc);
 
 
 

@@ -34,6 +34,9 @@ void VRDevice::triggerSignal(int key, int state) {
     }
 }
 
+VRSignal* VRDevice::getToEdgeSignal() { return 0; }
+VRSignal* VRDevice::getFromEdgeSignal() { return 0; }
+
 void VRDevice::addUpdateSignal(VRSignal* sig) {
     activatedSignals.push_back(sig);
 }
@@ -57,8 +60,6 @@ void VRDevice::updateSignals() {
 VRDevice::VRDevice(string _type) : VRAvatar(_type) {
     type = _type;
     setName(_type);
-    sig_key = -1;
-    target = 0;
 
     store("type", &type);
     store("name", &name);
@@ -115,6 +116,7 @@ VRSignal* VRDevice::addSlider(int key) {
 void VRDevice::change_button(int key, int state) {
     if (BStates.count(key) == 0) BStates[key] = state;
     sig_key = key;
+    sig_state = state;
     BStates[key] = state;
     triggerSignal(key, state);
     triggerSignal(-1, state);
@@ -124,10 +126,12 @@ void VRDevice::change_slider(int key, float state) {
     if (SStates.count(key) == 0) SStates[key] = state;
     SStates[key] = state;
     sig_key = key;
+    sig_state = state;
     if (abs(state) > 0.001) triggerSignal(key, 0);
 }
 
 int VRDevice::key() { return sig_key; }
+int VRDevice::getState() { return sig_state; }
 string VRDevice::getMessage() { return message; }
 void VRDevice::setMessage(string s) { message = s; }
 

@@ -46,6 +46,8 @@ struct FPyContainer : VRPyBaseT<FContainer> {
     static PyObject* isFull(FPyContainer* self);
     static PyObject* clear(FPyContainer* self);
     static PyObject* getCount(FPyContainer* self);
+    static PyObject* add(FPyContainer* self, PyObject* args);
+    static PyObject* get(FPyContainer* self);
 };
 
 struct FPyProduct : VRPyBaseT<FProduct> {

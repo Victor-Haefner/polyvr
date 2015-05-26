@@ -80,7 +80,7 @@ PyObject* VRPyConstraint::setLocalOffset(VRPyConstraint* self, PyObject* args) {
     m.setRotate(qtwo);
 
     if (self->obj == 0) self->obj = new OSG::VRConstraint();
-    self->obj->setReference(m);
+    self->obj->setReferenceB(m);
     Py_RETURN_TRUE;
 }
 PyObject* VRPyConstraint::setLocal(VRPyConstraint* self, PyObject* args) {

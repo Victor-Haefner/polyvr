@@ -32,6 +32,7 @@ void FObject::setTransformation(VRTransform* t) {
 }
 
 void FObject::setMetaData(string s) {
+    return;
     if (metaData == 0) {
         metaData = new OSG::VRSprite("meta");
         metaData->setMaterial(new VRMaterial("metasprite"));

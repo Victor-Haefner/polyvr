@@ -12,6 +12,8 @@ VRMouse::VRMouse() : VRDevice("mouse") {
     cam = 0;
     view = 0;
     clearSignals();
+    on_to_edge = new VRSignal(this);
+    on_from_edge = new VRSignal(this);
 }
 
 void VRMouse::clearSignals() {
@@ -100,6 +102,9 @@ bool VRMouse::calcViewRay(PerspectiveCameraRecPtr pcam, Line &line, float x, flo
     return true;
 }
 
+VRSignal* VRMouse::getToEdgeSignal() { return on_to_edge; }
+VRSignal* VRMouse::getFromEdgeSignal() { return on_from_edge; }
+
 //3d object to emulate a hand in VRSpace
 void VRMouse::updatePosition(int x, int y) {
     if (cam == 0) return;
@@ -113,6 +118,24 @@ void VRMouse::updatePosition(int x, int y) {
 
     calcViewRay(cam->getCam(), ray, rx,ry,w,h);
     editBeacon()->setDir(ray.getDirection());
+
+    int side = -1;
+    if (rx > 0.95) side = 0;
+    if (rx < -0.95) side = 1;
+    if (ry > 0.95) side = 2;
+    if (ry < -0.95) side = 3;
+    if (rx > 0.95 && ry > 0.95) side = 4;
+    if (rx < -0.95 && ry < -0.95) side = 5;
+    if (rx > 0.95 && ry < -0.95) side = 6;
+    if (rx < -0.95 && ry > 0.95) side = 7;
+
+    if (side != onEdge) {
+        sig_state = (side == -1) ? 5 : 4;
+        sig_key = (side == -1) ? (1+view->getID())*10+onEdge : (1+view->getID())*10+side;
+        if (side == -1) on_from_edge->trigger();
+        else on_to_edge->trigger();
+    }
+    onEdge = side;
 }
 
 void VRMouse::mouse(int button, int state, int x, int y) {

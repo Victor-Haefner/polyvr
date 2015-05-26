@@ -173,16 +173,17 @@ CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryRecPtr geometry, Matrix worl
 	// Convert triangles to indices && vertices, leaving out redundant vertices
 	// (f.e. from different normals at an edge)
 	TriangleIterator it(geometry);
-	while (!it.isAtEnd()) {
-		for (size_t i = 0; i < 3; i++) {
-			Pnt3f osgPos = it.getPosition(i);
+    cout << " toPolyhedron\n";
+	for (; !it.isAtEnd() ;++it) {
+        vector<size_t> IDs(3);
+        for (int i=0; i<3; i++) IDs[i] = isKnownPoint( it.getPosition(i) );
 
-			size_t knownIndex = isKnownPoint(osgPos);
-			if (knownIndex < numeric_limits<size_t>::max()) indices.push_back(knownIndex);
-			else {
+		for (int i=0; i<3; i++) {
+			if (IDs[i] == numeric_limits<size_t>::max()) {
+                Pnt3f osgPos = it.getPosition(i);
 				CGAL::Point cgalPos(osgPos.x(), osgPos.y(), osgPos.z());
 				positions.push_back(cgalPos);
-				indices.push_back(curIndex);
+				IDs[i] = curIndex;
 				size_t *curIndexPtr = new size_t;
 				*curIndexPtr = curIndex;
 				oct->add(OcPoint(osgPos.x(), osgPos.y(), osgPos.z()), curIndexPtr);
@@ -190,7 +191,9 @@ CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryRecPtr geometry, Matrix worl
 			}
 		}
 
-		++it;
+		if (IDs[0] == IDs[1] || IDs[0] == IDs[2] || IDs[1] == IDs[2]) continue; // testing
+
+		for (int i=0; i<3; i++) indices.push_back(IDs[i]);
 	}
 
 	// Cleanup
@@ -200,10 +203,10 @@ CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryRecPtr geometry, Matrix worl
 	oct = new Octree(THRESHOLD);
 
 
-    cout << "\ntoPolyhedron " << getName() << " transformation : \n" << worldTransform << endl;
-	cout << "size: " << positions.size() << " " << indices.size() << endl;
-	for (size_t i = 0; i < positions.size(); i++) cout << positions[i] << endl;
-	for (size_t i = 0; i < indices.size(); i += 3) cout << indices[i] << indices[i+1] << indices[i+2] << endl;
+    //cout << "\ntoPolyhedron " << getName() << " transformation : \n" << worldTransform << endl;
+	//cout << "size: " << positions.size() << " " << indices.size() << endl;
+	//for (size_t i = 0; i < positions.size(); i++) cout << positions[i] << endl;
+	//for (size_t i = 0; i < indices.size(); i += 3) cout << indices[i] << indices[i+1] << indices[i+2] << endl;
 
 
 	// Construct the polyhedron from raw data

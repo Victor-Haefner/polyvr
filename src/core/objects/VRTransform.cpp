@@ -405,8 +405,13 @@ void VRTransform::setEuler(Vec3f e) {
     Vec3f s = Vec3f(sin(e[0]), sin(e[1]), sin(e[2]));
     Vec3f c = Vec3f(cos(e[0]), cos(e[1]), cos(e[2]));
     //orientation_mode = OM_EULER;
-    setDir( Vec3f( -c[1]*c[2], -c[1]*s[2], s[1]) );
-    setUp( Vec3f( s[0]*s[1]*c[2]-s[2]*c[0], s[0]*s[1]*s[2]+c[2]*c[0], c[1]*s[0]) );
+
+    //Vec3f d = Vec3f( -c[1]*c[2], -c[1]*s[2], s[1]);
+    Vec3f d = Vec3f( -c[0]*c[2]*s[1]-s[0]*s[2], -c[0]*s[1]*s[2]+s[0]*c[2], -c[0]*c[1]);
+    Vec3f u = Vec3f( s[0]*s[1]*c[2]-s[2]*c[0], s[0]*s[1]*s[2]+c[2]*c[0], c[1]*s[0]);
+
+    setDir( d );
+    setUp( u );
     reg_change();
 }
 

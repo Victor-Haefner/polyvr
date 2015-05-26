@@ -93,12 +93,16 @@ void VRScript::update() {
             if (t->state == "Pressed") state = 1;
             if (t->state == "Drag") state = 2;
             if (t->state == "Drop") state = 3;
+            if (t->state == "To edge") state = 4;
+            if (t->state == "From edge") state = 5;
             if (state == -1) continue;
 
             if (dev != 0) {
                 if (state <= 1) t->sig = dev->addSignal(t->key, state);
                 if (state == 2) t->sig = dev->getDragSignal();
                 if (state == 3) t->sig = dev->getDropSignal();
+                if (state == 4) t->sig = dev->getToEdgeSignal();
+                if (state == 5) t->sig = dev->getFromEdgeSignal();
                 if (t->sig == 0) continue;
                 t->sig->add(cbfkt_dev);
             }
@@ -304,6 +308,7 @@ void VRScript::execute() {
 }
 
 void VRScript::execute_dev(VRDevice* dev) {
+    if (dev == 0) return;
     if (type != "Python") return;
 
     args["dev"]->type = "VRPyDeviceType";
