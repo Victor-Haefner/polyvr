@@ -82,8 +82,8 @@ class VRProduction {
     public:
         VRProduction();
 
-        VRProductionMachine* addMachine(VRGeometry* m);
-        VRProductionJob* queueJob(VRProduct* p);
+        void addMachine(VRProductionMachine* pm, string machine, VRGeometry* m);
+        VRProductionJob* queueJob(VRProduct* p, string prod);
 
         void setRate(float seconds);
 

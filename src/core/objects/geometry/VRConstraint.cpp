@@ -20,8 +20,10 @@ void VRConstraint::setMax(int i, float f) { max[i] = f; }
 float VRConstraint::getMin(int i) { return min[i]; }
 float VRConstraint::getMax(int i) { return max[i]; }
 
-void VRConstraint::setReference(Matrix m) {refMatrix = m;};
-Matrix VRConstraint::getReference(){return refMatrix;};
+void VRConstraint::setReferenceA(Matrix m) { refMatrixA = m; };
+void VRConstraint::setReferenceB(Matrix m) { refMatrixB = m; };
+Matrix VRConstraint::getReferenceA() { return refMatrixA; };
+Matrix VRConstraint::getReferenceB() { return refMatrixB; };
 
 void VRConstraint::updateMatrix(Matrix& m) {;} // TODO
 void VRConstraint::updatePose(Vec3f& from, Vec3f& at, Vec3f& up) {;} // TODO

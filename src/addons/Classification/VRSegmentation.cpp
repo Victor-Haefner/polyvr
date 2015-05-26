@@ -4,6 +4,7 @@
 #include "core/math/Octree.h"
 #include <OpenSG/OSGGeometry.h>
 #include <OpenSG/OSGGeoProperties.h>
+#include <OpenSG/OSGTriangleIterator.h>
 #include <boost/range/adaptor/reversed.hpp>
 
 OSG_BEGIN_NAMESPACE;
@@ -322,6 +323,142 @@ VRObject* VRSegmentation::extractPatches(VRGeometry* geo, SEGMENTATION_ALGORITHM
 	}
 
     return anchor;
+}
+
+void VRSegmentation::removeDuplicates(VRGeometry* geo) {
+    if (geo == 0) return;
+    if (geo->getMesh() == 0) return;
+
+    GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
+    GeoVec3fPropertyRecPtr norms = GeoVec3fProperty::create();
+    GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
+    GeoUInt32PropertyRecPtr lengths = GeoUInt32Property::create();
+	size_t curIndex = 0;
+	float threshold = 1e-4;
+	size_t NLM = numeric_limits<size_t>::max();
+	Octree oct(threshold);
+
+	TriangleIterator it(geo->getMesh());
+	for (; !it.isAtEnd() ;++it) {
+        vector<size_t> IDs(3);
+        for (int i=0; i<3; i++) {
+            Pnt3f p = it.getPosition(i);
+            vector<void*> resultData = oct.radiusSearch(p.x(), p.y(), p.z(), threshold);
+            if (resultData.size() > 0) IDs[i] = *(size_t*)resultData.at(0);
+            else IDs[i] = NLM;
+        }
+
+		for (int i=0; i<3; i++) {
+			if (IDs[i] == NLM) {
+                Pnt3f p = it.getPosition(i);
+                Vec3f n = it.getNormal(i);
+				pos->addValue(p);
+				norms->addValue(n);
+				IDs[i] = curIndex;
+				size_t *curIndexPtr = new size_t;
+				*curIndexPtr = curIndex;
+				oct.add(p.x(), p.y(), p.z(), curIndexPtr);
+				curIndex++;
+			}
+		}
+
+		if (IDs[0] == IDs[1] || IDs[0] == IDs[2] || IDs[1] == IDs[2]) continue;
+
+		for (int i=0; i<3; i++) inds->addValue(IDs[i]);
+	}
+
+    lengths->addValue(inds->size());
+	geo->setPositions(pos);
+	geo->setNormals(norms);
+	geo->setIndices(inds);
+	geo->setType(GL_TRIANGLES);
+	geo->setLengths(lengths);
+
+	for (void* o : oct.getData()) delete (size_t*)o; // Cleanup
+}
+
+//#include "addons/Engineering/CSG/CGALTypedefs.h"
+//#include "addons/Engineering/CSG/PolyhedronBuilder.h"
+
+struct Vertex;
+struct Edge;
+struct Triangle;
+
+struct Vertex {
+    vector<Edge*> edges;
+    vector<Triangle*> triangles;
+    Vec3f v;
+    Vertex(Pnt3f p) : v(p) {;}
+};
+
+struct Edge {
+    vector<Vertex*> vertices;
+    vector<Triangle*> triangles;
+    Edge() {
+        vertices = vector<Vertex*>(2,0);
+    }
+};
+
+struct Triangle {
+    vector<Vertex*> vertices;
+    vector<Edge*> edges;
+    Triangle() {
+        edges = vector<Edge*>(3,0);
+        vertices = vector<Vertex*>(3,0);
+    }
+};
+
+void VRSegmentation::fillHoles(VRGeometry* geo) {
+    if (geo == 0) return;
+    if (geo->getMesh() == 0) return;
+    // TODO: check if type is GL_TRIANGLES and just one length!
+
+    vector<Triangle*> triangles;
+    map<int, Vertex*> vertices;
+    map<int, Edge*> edges;
+
+    /*auto inds = geo->getMesh()->getIndices();
+    for (auto i=0; i<inds->size(); i+=3) {
+        ;
+    }*/
+
+	TriangleIterator it(geo->getMesh());
+	for (; !it.isAtEnd() ;++it) {
+        Triangle* t = new Triangle();
+
+        for (int i=0; i<3; i++) {
+            Pnt3f p = it.getPosition(i);
+            Vertex* v = 0;
+            int ID = it.getIndex(i);
+            if (vertices.count(ID)) v = vertices[ID];
+            if (v == 0) v = new Vertex(p);
+            vertices[ID] = v;
+            t->vertices[i] = v;
+            v->triangles.push_back(t);
+        }
+
+        for (int i=0; i<3; i++) {
+            int ID1 = it.getIndex(i);
+            int ID2 = it.getIndex((i+1)%3);
+            int ID = (ID1+ID2)*(ID1+ID2+1)*0.5+ID2; // hash IDs edge map
+            Edge* e = 0;
+            if (edges.count(ID)) e = edges[ID];
+            if (e == 0) {
+                e = new Edge();
+                e->vertices[0] = t->vertices[i];
+                e->vertices[1] = t->vertices[(i+1)%3];
+                t->vertices[i]->edges.push_back(e);
+                t->vertices[(i+1)%3]->edges.push_back(e);
+            }
+            edges[ID] = e;
+            t->edges[i] = e;
+            e->triangles.push_back(t);
+        }
+	}
+}
+
+VRObject* VRSegmentation::convexDecompose(VRGeometry* geo) {
+    return 0;
 }
 
 OSG_END_NAMESPACE;

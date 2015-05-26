@@ -142,6 +142,11 @@ VROntologyInstance* VROntology::addInstance(string name, string concept) {
     return i;
 }
 
+VROntologyInstance* VROntology::getInstance(string instance) {
+    for (auto i : instances) if (i.second->name == instance) return i.second;
+    return 0;
+}
+
 vector<VROntologyInstance*> VROntology::getInstances(string concept) {
     vector<VROntologyInstance*> res;
     for (auto i : instances) if (i.second->concept->is_a(concept)) res.push_back(i.second);

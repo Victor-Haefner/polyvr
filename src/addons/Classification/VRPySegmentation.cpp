@@ -46,9 +46,36 @@ template<> PyTypeObject VRPyBaseT<OSG::VRSegmentation>::type = {
 };
 
 PyMethodDef VRPySegmentation::methods[] = {
-    {"extractPatches", (PyCFunction)VRPySegmentation::extractPatches, METH_VARARGS, "Init real world" },
+    {"extractPatches", (PyCFunction)VRPySegmentation::extractPatches, METH_VARARGS, "Extract patches from the geometry" },
+    {"fillHoles", (PyCFunction)VRPySegmentation::fillHoles, METH_VARARGS, "Fill the holes of a geometry" },
+    {"convexDecompose", (PyCFunction)VRPySegmentation::convexDecompose, METH_VARARGS, "Decompose the geometry in convex parts" },
+    {"removeDuplicates", (PyCFunction)VRPySegmentation::removeDuplicates, METH_VARARGS, "Make all vertices single index and remove the duplicates" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPySegmentation::convexDecompose(VRPySegmentation* self, PyObject* args) {
+    VRPyGeometry* geo = NULL;
+    if (! PyArg_ParseTuple(args, "O", &geo)) return NULL;
+    if (geo == NULL) { PyErr_SetString(err, "VRPySegmentation::convexDecompose: Missing geometry parameter"); return NULL; }
+    OSG::VRObject* objects = self->obj->convexDecompose(geo->obj);
+    return VRPyTypeCaster::cast( objects );
+}
+
+PyObject* VRPySegmentation::fillHoles(VRPySegmentation* self, PyObject* args) {
+    VRPyGeometry* geo = NULL;
+    if (! PyArg_ParseTuple(args, "O", &geo)) return NULL;
+    if (geo == NULL) { PyErr_SetString(err, "VRPySegmentation::fillHoles: Missing geometry parameter"); return NULL; }
+    self->obj->fillHoles(geo->obj);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPySegmentation::removeDuplicates(VRPySegmentation* self, PyObject* args) {
+    VRPyGeometry* geo = NULL;
+    if (! PyArg_ParseTuple(args, "O", &geo)) return NULL;
+    if (geo == NULL) { PyErr_SetString(err, "VRPySegmentation::removeDuplicates: Missing geometry parameter"); return NULL; }
+    self->obj->removeDuplicates(geo->obj);
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPySegmentation::extractPatches(VRPySegmentation* self, PyObject* args) {
     VRPyGeometry* geo = NULL;
