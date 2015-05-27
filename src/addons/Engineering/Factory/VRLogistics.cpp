@@ -167,7 +167,7 @@ void FPath::update() {
     for (auto p : paths) delete p.second;
     paths.clear();
 
-    for (int i=1; i<nodes.size(); i++) {
+    for (unsigned int i=1; i<nodes.size(); i++) {
         FNode* n0 = nodes[i-1];
         FNode* n1 = nodes[i];
         path* p = new path();

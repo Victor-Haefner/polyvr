@@ -324,8 +324,7 @@ btSoftBody* VRPhysics::createConvex() {
         vector<btVector3> vertices;
         vector<OSG::VRObject*> geos = vr_obj->getObjectListByType("Geometry");
         OSG::Vec3f glblpos = vr_obj->getWorldPosition();
-        int numVertices = 0;
-         btSoftBodyWorldInfo* info = OSG::VRSceneManager::getCurrent()->getSoftBodyWorldInfo();
+        btSoftBodyWorldInfo* info = OSG::VRSceneManager::getCurrent()->getSoftBodyWorldInfo();
         for (unsigned int j=0; j<geos.size(); j++) {
             OSG::VRGeometry* geo = (OSG::VRGeometry*)geos[j];
             if (geo == 0) continue;

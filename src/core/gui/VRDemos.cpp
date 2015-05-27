@@ -170,7 +170,7 @@ void VRDemos::updateTable(string t) {
     int x,y;
 
     Gtk::AttachOptions opts = Gtk::FILL|Gtk::EXPAND;
-    Gtk::AttachOptions opts2;
+    Gtk::AttachOptions opts2 = Gtk::AttachOptions(0);
 
     int N = 4;
     for (auto d : demos) if(d.second->favorite) N++;

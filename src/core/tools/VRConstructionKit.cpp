@@ -19,6 +19,7 @@ int VRConstructionKit::addAnchor(float size, Vec3f color) {
     auto g = new VRGeometry("anchor");
     string bs = toString(size);
     g->setPrimitive("Box", bs + " " + bs + " " + bs + " 1 1 1");
+    return 0;
 }
 
 OSG_END_NAMESPACE;

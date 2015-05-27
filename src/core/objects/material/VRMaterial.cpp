@@ -261,7 +261,7 @@ void VRMaterial::loadContent(xmlpp::Element* e) {
 void VRMaterial::setMaterial(MaterialRecPtr m) {
     if ( dynamic_pointer_cast<MultiPassMaterial>(m) ) {
         MultiPassMaterialRecPtr mm = dynamic_pointer_cast<MultiPassMaterial>(m);
-        for (int i=0; i<mm->getNPasses(); i++) {
+        for (unsigned int i=0; i<mm->getNPasses(); i++) {
             if (i > 0) addPass();
             setMaterial(mm->getMaterials(i));
         }

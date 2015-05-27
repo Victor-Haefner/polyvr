@@ -144,7 +144,7 @@ void VRPhysicsManager::addPhysicsUpdateFunction(VRFunction<int>* fkt, bool after
 void VRPhysicsManager::dropPhysicsUpdateFunction(VRFunction<int>* fkt, bool after) {
     MLock lock(mtx);
     vector<VRFunction<int>* >* fkts = after ? &updateFktsPost : &updateFktsPre;
-    for(int i = 0; i < fkts->size() ; i++) {
+    for(unsigned int i = 0; i < fkts->size() ; i++) {
             if(fkts->at(i) == fkt) {fkts->erase(fkts->begin() + i);return;}
     }
  }
@@ -178,9 +178,6 @@ void VRPhysicsManager::updatePhysObjects() {
         GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
         GeoVec3fPropertyRecPtr norms = GeoVec3fProperty::create();
         GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
-        for (int i=0; i<inds->size() ; i++) {
-            int index = inds->getValue(i);
-        }
         btSoftBody::tNodeArray&   nodes(soft_body->m_nodes);
         btSoftBody::tLinkArray&   links(soft_body->m_links);
         inds->addValue( links[0].m_n[0]-&nodes[0]);
