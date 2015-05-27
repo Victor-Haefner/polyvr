@@ -265,7 +265,7 @@ void VRPhysics::update() {
     if (!physicalized) return;
 
 
-    motionState = new btDefaultMotionState(fromVRTransform( vr_obj, scale ));
+    motionState = new btDefaultMotionState(fromVRTransform( vr_obj, scale,CoMOffset ));
 
 
 
@@ -281,12 +281,9 @@ void VRPhysics::update() {
         soft_body = createConvex();
         //if (physicsShape == "Convex") soft_body = getSoftConvex();
         //if (physicsShape == "Concave") soft_body = getSoftConcave();
-        physicsShape = "Rope";
         soft_body->setActivationState(activation_mode);
         world->addSoftBody(soft_body,collisionGroup, collisionMask);
-        cout << "soft body added" << "   " << soft_body << "\n";
         scene->physicalize(vr_obj);
-        cout << "object physicalized" << "   " << vr_obj << "\n";
         updateConstraints();
         return;
 
@@ -324,44 +321,26 @@ void VRPhysics::update() {
 
 
 btSoftBody* VRPhysics::createConvex() {
-
-        const btVector3	s=btVector3(1,1,1);
-        const btVector3	p=toBtVector3(vr_obj->getWorldPosition());
-/*
         vector<btVector3> vertices;
-
         vector<OSG::VRObject*> geos = vr_obj->getObjectListByType("Geometry");
+        OSG::Vec3f glblpos = vr_obj->getWorldPosition();
+        int numVertices = 0;
+         btSoftBodyWorldInfo* info = OSG::VRSceneManager::getCurrent()->getSoftBodyWorldInfo();
         for (unsigned int j=0; j<geos.size(); j++) {
             OSG::VRGeometry* geo = (OSG::VRGeometry*)geos[j];
             if (geo == 0) continue;
             OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->getPositions();
+            //vertices
             for (unsigned int i = 0; i<pos->size(); i++) {
                 OSG::Pnt3f p;
                 pos->getValue(p,i);
+                p += glblpos;
                 vertices.push_back(btVector3(p[0],p[1],p[2]));
-
             }
         }
-        btSoftBody* ret = btSoftBodyHelpers::CreateFromConvexHull(world->getWorldInfo(),&vertices[0],vertices.size());
-        ret->generateBendingConstraints(2);*/
-        const btVector3 h=s*0.5;
-const btVector3 c[]={ p+h*btVector3(-1,-1,-1),
-p+h*btVector3(+1,-1,-1),
-p+h*btVector3(-1,+1,-1),
-p+h*btVector3(+1,+1,-1),
-p+h*btVector3(-1,-1,+1),
-p+h*btVector3(+1,-1,+1),
-p+h*btVector3(-1,+1,+1),
-p+h*btVector3(+1,+1,+1)};
-btSoftBodyWorldInfo* info = OSG::VRSceneManager::getCurrent()->getSoftBodyWorldInfo();
-        cout << "info  " <<info->air_density<<   "\n";
-btSoftBody* psb=btSoftBodyHelpers::CreateFromConvexHull(*info,c,8);
-psb->generateBendingConstraints(2);
-psb->setMass(0,1);
-        cout << "convex func called" << "\n";
-        //return ret;
-        return psb;
-
+        btSoftBody* ret=btSoftBodyHelpers::CreateFromConvexHull(*info,&vertices[0],vertices.size(),false);
+        //ret->generateBendingConstraints(2);
+        return ret;
 }
 
 btCollisionShape* VRPhysics::getBoxShape() {
@@ -427,7 +406,6 @@ btCollisionShape* VRPhysics::getConvexShape(OSG::Pnt3f& mc) {
     OSG::Matrix m;
     OSG::Matrix M = vr_obj->getWorldMatrix();
     M.invert();
-
     mc = OSG::Pnt3f(); // center of mass
     vector<OSG::Pnt3f> points;
     vector<OSG::VRObject*> geos = vr_obj->getObjectListByType("Geometry");
@@ -452,7 +430,6 @@ btCollisionShape* VRPhysics::getConvexShape(OSG::Pnt3f& mc) {
             mc += OSG::Vec3f(p);
         }
     }
-
     // displace around center of mass (approx. geom center)
     mc *= 1.0/points.size();
 
@@ -626,9 +603,15 @@ OSG::Matrix VRPhysics::getTransformation() {
         if (body->getMotionState() == 0) return OSG::Matrix();
         body->getMotionState()->getWorldTransform(t);
     } else {
-        t.setOrigin(soft_body->m_nodes[0].m_x);
+        btSoftBody::tNodeArray&   nodes(soft_body->m_nodes);
+        btVector3 result = btVector3(0.0,0.0,0.0);
+        for(int j=0;j<nodes.size();++j) {
+            result += soft_body->m_nodes[j].m_x;
+        }
+        result /= nodes.size();
+        t.setOrigin(result);
     }
-    return fromBTTransform(t, scale);
+    return fromBTTransform(t, scale,CoMOffset);
 
 }
 

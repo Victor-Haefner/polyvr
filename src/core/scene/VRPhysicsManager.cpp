@@ -50,7 +50,7 @@ VRPhysicsManager::VRPhysicsManager() {
     softBodyWorldInfo =     &(dynamicsWorld->getWorldInfo());
    	softBodyWorldInfo->m_dispatcher = dispatcher;
    	softBodyWorldInfo->m_broadphase = broadphase;
-	softBodyWorldInfo->m_gravity.setValue(0,-10,0);
+	softBodyWorldInfo->m_gravity.setValue(0,0,0);
     softBodyWorldInfo->air_density	= (btScalar)1.2;
     softBodyWorldInfo->water_density	= 0;
     softBodyWorldInfo->water_offset	= 0;
@@ -168,10 +168,40 @@ void VRPhysicsManager::updatePhysObjects() {
 
     //the soft bodies
     btSoftBodyArray arr = dynamicsWorld->getSoftBodyArray();
+
     for(int i = 0; i < arr.size() ;i++) {
-        btSoftBody* body = arr[i];
-        if(OSGobjs.count(body) == 1) OSGobjs[body]->updateFromBullet();
+        btSoftBody* soft_body = arr[i];
+        if(OSGobjs.count(soft_body) == 1) OSGobjs[soft_body]->updateFromBullet();
+
         //visualization has always to be updated
+        VRGeometry* geo = physics_visuals[soft_body];
+        GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
+        GeoVec3fPropertyRecPtr norms = GeoVec3fProperty::create();
+        GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
+        for (int i=0; i<inds->size() ; i++) {
+            int index = inds->getValue(i);
+        }
+        btSoftBody::tNodeArray&   nodes(soft_body->m_nodes);
+        btSoftBody::tLinkArray&   links(soft_body->m_links);
+        inds->addValue( links[0].m_n[0]-&nodes[0]);
+        //indices
+        for(int j=0;j<links.size();++j)
+        {
+            inds->addValue( int(links[j].m_n[0]-&nodes[0]));
+            inds->addValue( int(links[j].m_n[1]-&nodes[0]));
+        }
+        //vertices
+        for(int j=0;j<nodes.size();++j)
+        {
+            Vec3f p = VRPhysics::toVec3f(nodes[j].m_x);
+            pos->addValue(p);
+            p.normalize();
+            norms->addValue( p );
+        }
+        geo->setType(GL_TRIANGLES);
+        geo->setPositions(pos);
+        geo->setNormals(norms);
+        geo->setIndices(inds);
     }
 
 
@@ -217,7 +247,7 @@ void VRPhysicsManager::updatePhysObjects() {
 
             int Ni = hull.numIndices();
             int Nv = hull.numVertices();
-            const unsigned int* bt_inds = hull.getIndexPointer();
+            const unsigned int* bt_inds =   hull.getIndexPointer();
             const btVector3* verts = hull.getVertexPointer();
 
             GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
@@ -236,15 +266,6 @@ void VRPhysicsManager::updatePhysObjects() {
             geo->setPositions(pos);
             geo->setNormals(norms);
             geo->setIndices(inds);
-        }
-
-        if(shape->isSoftBody()) {
-            cout << "is soft!" << endl;
-            btSphereShape* sshape = (btSphereShape*)shape;
-            btScalar radius = sshape->getRadius();
-            stringstream params;
-            params << radius*1.01 << " 2";
-            geo->setPrimitive("Sphere", params.str());
         }
 
 
