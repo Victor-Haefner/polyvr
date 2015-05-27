@@ -13,9 +13,16 @@ template<class T> class VRFunction;
 
 class btBroadphaseInterface;
 class btDefaultCollisionConfiguration;
+class btSoftBodyRigidBodyCollisionConfiguration;
 class btCollisionDispatcher;
 class btSequentialImpulseConstraintSolver;
+
 class btDiscreteDynamicsWorld;
+
+//TODO SOFT BODY
+class btSoftRigidDynamicsWorld;
+class btSoftBodyWorldInfo;
+
 class btRigidBody;
 class btCollisionShape;
 class btCollisionObject;
@@ -37,10 +44,12 @@ class VRPhysicsManager {
         vector<VRFunction<int>* > updateFktsPost;
 
         btBroadphaseInterface* broadphase;
-        btDefaultCollisionConfiguration* collisionConfiguration;
+        btSoftBodyRigidBodyCollisionConfiguration* collisionConfiguration;
         btCollisionDispatcher* dispatcher;
         btSequentialImpulseConstraintSolver* solver;
-        btDiscreteDynamicsWorld* dynamicsWorld;
+        //TODO SOFT BODY
+        btSoftBodyWorldInfo* softBodyWorldInfo;
+        btSoftRigidDynamicsWorld* dynamicsWorld;
 
         btAlignedObjectArray<btCollisionShape*> collisionShapes;
         btRigidBody* body;
@@ -53,6 +62,8 @@ class VRPhysicsManager {
 
         vector<Vec3f> collisionPoints;
         boost::recursive_mutex mtx;
+        boost::recursive_mutex lpmtx;
+        boost::recursive_mutex namtx;
 
         long long getTime();
         int fps = 500;
@@ -72,10 +83,14 @@ class VRPhysicsManager {
         void unphysicalize(VRTransform* obj);
 
         void addPhysicsUpdateFunction(VRFunction<int>* fkt, bool after);
+        void dropPhysicsUpdateFunction(VRFunction<int>* fkt, bool after);
 
         void setGravity(Vec3f g);
 
-        btDiscreteDynamicsWorld* bltWorld();
+        btSoftRigidDynamicsWorld* bltWorld();
+
+        btSoftBodyWorldInfo* getSoftBodyWorldInfo();
+
 
         void collectCollisionPoints();
         vector<Vec3f>& getCollisionPoints();
@@ -84,6 +99,8 @@ class VRPhysicsManager {
         bool getShowPhysics();
 
         boost::recursive_mutex& physicsMutex();
+        boost::recursive_mutex& lowPriorityMutex();
+        boost::recursive_mutex& nextAccessMutex();
 };
 
 OSG_END_NAMESPACE;
