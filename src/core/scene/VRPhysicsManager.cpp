@@ -19,7 +19,8 @@
 #include "core/utils/VRVisualLayer.h"
 #include "VRThreadManager.h"
 
-#include <unistd.h>
+#include <chrono>
+#include <thread>
 
 #define PHYSICS_THREAD_TIMESTEP_MS 2
 
@@ -128,7 +129,7 @@ void VRPhysicsManager::updatePhysics(VRThread* thread) {
     dt = t2-t1;
 
     //sleep up to 500 fps
-    if (dt < PHYSICS_THREAD_TIMESTEP_MS * 1000) usleep(PHYSICS_THREAD_TIMESTEP_MS * 1000 -dt);
+    if (dt < PHYSICS_THREAD_TIMESTEP_MS * 1000) this_thread::sleep_for(chrono::microseconds(PHYSICS_THREAD_TIMESTEP_MS * 1000 -dt));
     t3 = getTime();
 
     MLock lock(mtx);
