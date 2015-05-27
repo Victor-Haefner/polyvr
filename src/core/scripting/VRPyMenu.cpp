@@ -77,8 +77,6 @@ void execCall(PyObject* pyFkt, PyObject* pArgs, OSG::VRMenu* menu) {
 
     if (pArgs == 0) pArgs = PyTuple_New(0);
     PyObject_CallObject(pyFkt, pArgs);
-    Py_XDECREF(pArgs);
-    Py_DecRef(pyFkt);
 
     if (PyErr_Occurred() != NULL) PyErr_Print();
 }
@@ -94,6 +92,7 @@ PyObject* VRPyMenu::setCallback(VRPyMenu* self, PyObject *args) {
         if (type == "list") pArgs = PyList_AsTuple(pArgs);
     }
 
+    Py_IncRef(pArgs);
     self->obj->setCallback(new VRFunction<OSG::VRMenu*>( "pyMenuCB", boost::bind(execCall, pyFkt, pArgs, _1) ));
     Py_RETURN_TRUE;
 }

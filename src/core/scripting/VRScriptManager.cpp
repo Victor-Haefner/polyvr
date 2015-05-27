@@ -416,7 +416,7 @@ string VRScriptManager::getPyVRMethodDoc(string type, string method) {
 // ==============
 
 PyObject* VRScriptManager::getSetup(VRScriptManager* self) {
-    return VRPySetup::fromPtr((VRSetup*)VRSetupManager::getCurrent());
+    return VRPySetup::fromPtr(VRSetupManager::getCurrent());
 }
 
 PyObject* VRScriptManager::getNavigator(VRScriptManager* self) {
