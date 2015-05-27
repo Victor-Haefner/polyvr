@@ -32,6 +32,7 @@
 #include "VRPyMenu.h"
 #include "VRPyClipPlane.h"
 #include "VRPyListMath.h"
+#include "VRPySetup.h"
 #include "VRPyNavigator.h"
 #include "VRPyNavPreset.h"
 #include "VRPyImage.h"
@@ -217,6 +218,7 @@ static PyMethodDef VRScriptManager_module_methods[] = {
 	{"getRoot", (PyCFunction)VRScriptManager::getRoot, METH_NOARGS, "Return the root node of the scenegraph - object getRoot()" },
 	{"printOSG", (PyCFunction)VRScriptManager::printOSG, METH_NOARGS, "Print the OSG tree to console" },
 	{"getNavigator", (PyCFunction)VRScriptManager::getNavigator, METH_NOARGS, "Return a handle to the navigator object" },
+	{"getSetup", (PyCFunction)VRScriptManager::getSetup, METH_NOARGS, "Return a handle to the active hardware setup" },
     {NULL}  /* Sentinel */
 };
 
@@ -265,6 +267,7 @@ void VRScriptManager::initPyModules() {
     VRPyConstructionKit::registerModule("ConstructionKit", pModVR);
     VRPyPathtool::registerModule("Pathtool", pModVR);
     VRPySelector::registerModule("Selector", pModVR);
+    VRPySetup::registerModule("Setup", pModVR);
     VRPyNavigator::registerModule("Navigator", pModVR);
     VRPyNavPreset::registerModule("NavPreset", pModVR);
 
@@ -411,6 +414,10 @@ string VRScriptManager::getPyVRMethodDoc(string type, string method) {
 // ==============
 // Python methods
 // ==============
+
+PyObject* VRScriptManager::getSetup(VRScriptManager* self) {
+    return VRPySetup::fromPtr((VRSetup*)VRSetupManager::getCurrent());
+}
 
 PyObject* VRScriptManager::getNavigator(VRScriptManager* self) {
     return VRPyNavigator::fromPtr((VRNavigator*)VRSceneManager::getCurrent());

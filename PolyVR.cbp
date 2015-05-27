@@ -558,6 +558,8 @@
 		<Unit filename="src/core/scripting/VRPyRecorder.h" />
 		<Unit filename="src/core/scripting/VRPySelector.cpp" />
 		<Unit filename="src/core/scripting/VRPySelector.h" />
+		<Unit filename="src/core/scripting/VRPySetup.cpp" />
+		<Unit filename="src/core/scripting/VRPySetup.h" />
 		<Unit filename="src/core/scripting/VRPySnappingEngine.cpp" />
 		<Unit filename="src/core/scripting/VRPySnappingEngine.h" />
 		<Unit filename="src/core/scripting/VRPySocket.cpp" />
