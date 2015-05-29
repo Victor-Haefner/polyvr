@@ -219,8 +219,8 @@ void VRDemos::setGuiState(demoEntry* e) {
     }
 
     if (e) if (e->widget) e->widget->set_sensitive(true);
-    if (running) if (e->imgPlay) e->imgPlay->set(Gtk::Stock::MEDIA_STOP, Gtk::ICON_SIZE_BUTTON);
-    else if (e) if (e->imgPlay) e->imgPlay->set(Gtk::Stock::MEDIA_PLAY, Gtk::ICON_SIZE_BUTTON);
+    if (running) { if (e->imgPlay) e->imgPlay->set(Gtk::Stock::MEDIA_STOP, Gtk::ICON_SIZE_BUTTON); }
+    else if (e) { if (e->imgPlay) e->imgPlay->set(Gtk::Stock::MEDIA_PLAY, Gtk::ICON_SIZE_BUTTON); }
 }
 
 void VRDemos::addEntry(string path, string table, bool running) {
