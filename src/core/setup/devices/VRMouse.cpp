@@ -93,12 +93,13 @@ bool VRMouse::calcViewRay(PerspectiveCameraRecPtr pcam, Line &line, float x, flo
 
 
     Pnt3f from, at;
-    multFull(cctowc, Pnt3f(x, y, -1), from);
-    multFull(cctowc, Pnt3f(x, y, 0.1), at );
+    multFull(cctowc, Pnt3f(x, y, 0), from); // -1
+    multFull(cctowc, Pnt3f(x, y, 1), at ); // 0.1
 
     Vec3f dir = at - from;
-    line.setValue(from, dir);
+    dir.normalize();
 
+    line.setValue(from, dir);
     return true;
 }
 
@@ -116,6 +117,7 @@ void VRMouse::updatePosition(int x, int y) {
     h = view->getViewport()->calcPixelHeight();
     view->getViewport()->calcNormalizedCoordinates(rx, ry, x, y);
 
+    //cam->getCam()->calcViewRay(ray,x,y,*view->getViewport());
     calcViewRay(cam->getCam(), ray, rx,ry,w,h);
     editBeacon()->setDir(ray.getDirection());
 
