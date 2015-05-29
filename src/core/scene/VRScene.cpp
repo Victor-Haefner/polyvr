@@ -38,9 +38,9 @@ VRScene::VRScene() {
     initDevices();
     VRMaterial::getDefault()->resetDefault();
 
-    referentials_layer = new VRVisualLayer("referentials", "refs.png");
-    cameras_layer = new VRVisualLayer("cameras", "cameras.png");
-    lights_layer = new VRVisualLayer("lights", "lights.png");
+    referentials_layer = new VRVisualLayer("Referentials", "refs.png");
+    cameras_layer = new VRVisualLayer("Cameras", "cameras.png");
+    lights_layer = new VRVisualLayer("Lights", "lights.png");
 
     referentials_layer->setCallback( new VRFunction<bool>("showReferentials", boost::bind(&VRScene::showReferentials, this, _1, (VRObject*)0) ) );
     cameras_layer->setCallback( new VRFunction<bool>("showCameras", boost::bind(&VRScene::showCameras, this, _1) ) );
