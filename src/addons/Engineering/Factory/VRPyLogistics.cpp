@@ -376,7 +376,7 @@ PyMethodDef FPyContainer::methods[] = {
     {"clear", (PyCFunction)FPyContainer::clear, METH_NOARGS, "Set container capacity" },
     {"getCount", (PyCFunction)FPyContainer::getCount, METH_NOARGS, "Get number of products in the container" },
     {"add", (PyCFunction)FPyContainer::add, METH_VARARGS, "Add a product to the container - add(product)" },
-    {"get", (PyCFunction)FPyContainer::get, METH_NOARGS, "Get the product last put in the container - product get()" },
+    {"get", (PyCFunction)FPyContainer::get, METH_NOARGS, "Get the product last put in the container - product get(). Alisa sagt: Achtung! intern wird 'pop' aufgerufen, das Objekt ist danach NICHT mehr im Container." },
     {NULL}  /* Sentinel */
 };
 
@@ -519,6 +519,7 @@ template<> PyTypeObject VRPyBaseT<FLogistics>::type = {
 };
 
 PyMethodDef FPyLogistics::methods[] = {
+    {"addProduct", (PyCFunction)FPyLogistics::addProduct, METH_VARARGS, "Add a new product from geometry - FProduct addProduct(Geometry geo)" },
     {"addNetwork", (PyCFunction)FPyLogistics::addNetwork, METH_NOARGS, "Add a new network" },
     {"addPath", (PyCFunction)FPyLogistics::addPath, METH_NOARGS, "Add a new path" },
     {"addTransporter", (PyCFunction)FPyLogistics::addTransporter, METH_VARARGS, "Add a new transporter" },
@@ -529,6 +530,13 @@ PyMethodDef FPyLogistics::methods[] = {
     {"getContainers", (PyCFunction)FPyLogistics::getContainers, METH_NOARGS, "Destroy logistics simulation" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* FPyLogistics::addProduct(FPyLogistics* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "FPyLogistics::addProduct - Object is invalid"); return NULL; }
+    VRPyTransform* t;
+    if (! PyArg_ParseTuple(args, "O", &t)) return NULL;
+    return FPyProduct::fromPtr( self->obj->addProduct( t->obj ) );
+}
 
 PyObject* FPyLogistics::getContainers(FPyLogistics* self) {
     if (self->obj == 0) { PyErr_SetString(err, "FPyLogistics::getContainers - Object is invalid"); return NULL; }

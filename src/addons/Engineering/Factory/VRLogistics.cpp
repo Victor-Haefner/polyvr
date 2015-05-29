@@ -413,9 +413,10 @@ FLogistics::~FLogistics() {
     networks.clear();
 }
 
-FProduct* FLogistics::addProduct() {
+FProduct* FLogistics::addProduct(OSG::VRTransform* t) {
     FProduct* p = new FProduct();
     objects[p->getID()] = p;
+    if (t) p->setTransformation(t);
     return p;
 }
 
