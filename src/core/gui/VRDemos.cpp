@@ -116,6 +116,9 @@ void VRDemos::setButton(demoEntry* e) {
     e->label->set_alignment(0.5, 0.5);
     e->label->set_ellipsize(Pango::ELLIPSIZE_START);
     e->label->set_max_width_chars(20);
+    e->butPlay->set_tooltip_text("Play/Stop");
+    e->butOpts->set_tooltip_text("Options");
+    e->butLock->set_tooltip_text("Write protection");
 
     // build widget
     vb2->pack_start(*e->butOpts, false, false, 0);
