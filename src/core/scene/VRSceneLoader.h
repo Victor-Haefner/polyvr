@@ -48,7 +48,7 @@ class VRSceneLoader {
         void ingoreHeavyRessources();
 
         void saveScene(string file, xmlpp::Element* guiN = 0);
-        void loadScene(string file);
+        void loadScene(string file, string key = "");
 
 };
 

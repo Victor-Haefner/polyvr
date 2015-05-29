@@ -283,6 +283,7 @@ void VRScript::execute() {
             PyTuple_SetItem(pArgs, i, a->pyo);
             a_itr->second = a;
         }
+
         PyObject_CallObject(fkt, pArgs);
 
         execution_time = timer.stop();

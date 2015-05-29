@@ -219,6 +219,7 @@ static PyMethodDef VRScriptManager_module_methods[] = {
 	{"printOSG", (PyCFunction)VRScriptManager::printOSG, METH_NOARGS, "Print the OSG tree to console" },
 	{"getNavigator", (PyCFunction)VRScriptManager::getNavigator, METH_NOARGS, "Return a handle to the navigator object" },
 	{"getSetup", (PyCFunction)VRScriptManager::getSetup, METH_NOARGS, "Return a handle to the active hardware setup" },
+	{"loadScene", (PyCFunction)VRScriptManager::loadScene, METH_VARARGS, "Close the current scene and open another - loadScene( str path/to/my/scene.xml )" },
     {NULL}  /* Sentinel */
 };
 
@@ -414,6 +415,12 @@ string VRScriptManager::getPyVRMethodDoc(string type, string method) {
 // ==============
 // Python methods
 // ==============
+
+PyObject* VRScriptManager::loadScene(VRScriptManager* self, PyObject *args) {
+    auto fkt = new VRFunction<int>( "scheduled scene load", boost::bind(&VRSceneManager::loadScene, VRSceneManager::get(), parseString(args), false ) );
+    VRSceneManager::get()->queueJob(fkt);
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRScriptManager::getSetup(VRScriptManager* self) {
     return VRPySetup::fromPtr(VRSetupManager::getCurrent());
