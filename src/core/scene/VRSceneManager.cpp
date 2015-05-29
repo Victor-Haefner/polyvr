@@ -46,8 +46,12 @@ void VRSceneManager::addScene(VRScene* s) {
 }
 
 void VRSceneManager::loadScene(string path, bool write_protected) {
+    if (!boost::filesystem::exists(path)) { cout << "loadScene " << path << " not found" << endl; return; }
+    string apath = boost::filesystem::canonical(path).string();
+    cout << "loadScene " << apath << endl;
+
     removeScene(getCurrent());
-    VRSceneLoader::get()->loadScene(path);
+    VRSceneLoader::get()->loadScene(apath, path);
     VRSceneManager::getCurrent()->setFlag("write_protected", write_protected);
     VRGuiSignals::get()->getSignal("scene_changed")->trigger(); // update gui
 }
@@ -132,6 +136,7 @@ void VRSceneManager::storeFavorites() {
 }
 
 void VRSceneManager::addFavorite(string path) {
+    for (auto p : favorite_paths) if (p == path) return;
     favorite_paths.push_back(path);
     storeFavorites();
 }

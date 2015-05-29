@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <fstream>
 #include <unistd.h>
+#include <boost/filesystem.hpp>
 
 #include "import/VRImport.h"
 
@@ -168,9 +169,10 @@ xmlpp::Element* VRSceneLoader_getElementChild_(xmlpp::Element* e, int i) {
     return 0;
 }
 
-void VRSceneLoader::loadScene(string path) {
+void VRSceneLoader::loadScene(string path, string key) {
     xmlpp::DomParser parser;
     parser.set_validate(false);
+
     parser.parse_file(path.c_str());
 
     xmlpp::Node* n = parser.get_document()->get_root_node();
@@ -180,7 +182,8 @@ void VRSceneLoader::loadScene(string path) {
     xmlpp::Element* objectsN = VRSceneLoader_getElementChild_(sceneN, "Objects");
     xmlpp::Element* root = VRSceneLoader_getElementChild_(objectsN, 0);
     VRScene* scene = new VRScene();
-    scene->setPath(path);
+    if (key == "") key = path;
+    scene->setPath(key);
     VRSceneManager::get()->setWorkdir(scene->getWorkdir());
     scene->setName(scene->getFileName());
     VRSceneLoader_current_scene = scene;

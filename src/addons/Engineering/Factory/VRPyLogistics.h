@@ -57,6 +57,7 @@ struct FPyProduct : VRPyBaseT<FProduct> {
 struct FPyLogistics : VRPyBaseT<FLogistics> {
     static PyMethodDef methods[];
 
+    static PyObject* addProduct(FPyLogistics* self, PyObject* args);
     static PyObject* addNetwork(FPyLogistics* self);
     static PyObject* addPath(FPyLogistics* self);
     static PyObject* addTransporter(FPyLogistics* self, PyObject* args);

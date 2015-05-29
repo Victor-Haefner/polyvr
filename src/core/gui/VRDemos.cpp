@@ -221,9 +221,9 @@ void VRDemos::setGuiState(demoEntry* e) {
         if (d != e) d->running = false;
     }
 
-    if (e) e->widget->set_sensitive(true);
-    if (running) e->imgPlay->set(Gtk::Stock::MEDIA_STOP, Gtk::ICON_SIZE_BUTTON);
-    else if (e) e->imgPlay->set(Gtk::Stock::MEDIA_PLAY, Gtk::ICON_SIZE_BUTTON);
+    if (e) if (e->widget) e->widget->set_sensitive(true);
+    if (running) if (e->imgPlay) e->imgPlay->set(Gtk::Stock::MEDIA_STOP, Gtk::ICON_SIZE_BUTTON);
+    else if (e) if (e->imgPlay) e->imgPlay->set(Gtk::Stock::MEDIA_PLAY, Gtk::ICON_SIZE_BUTTON);
 }
 
 void VRDemos::addEntry(string path, string table, bool running) {
@@ -314,10 +314,8 @@ void VRDemos::on_advanced_start() {
 
 void VRDemos::on_diag_save_clicked() {
     string path = VRGuiFile::getRelativePath_toWorkdir();
-    if (demos.count(path) == 0) {
-        addEntry(path, "favorites_tab", false);
-        VRSceneManager::get()->addFavorite(path);
-    }
+    addEntry(path, "favorites_tab", false);
+    VRSceneManager::get()->addFavorite(path);
     saveScene(path);
 }
 
@@ -334,10 +332,8 @@ void VRDemos::on_saveas_clicked() {
 void VRDemos::on_diag_load_clicked() {
     string path = VRGuiFile::getRelativePath_toWorkdir();
     if (current_demo) if (current_demo->running) toggleDemo(current_demo); // close demo if it is running
-    if (demos.count(path) == 0) {
-        addEntry(path, "favorites_tab", false);
-        VRSceneManager::get()->addFavorite(path);
-    }
+    addEntry(path, "favorites_tab", false);
+    VRSceneManager::get()->addFavorite(path);
     toggleDemo(demos[path]);
 }
 
@@ -354,10 +350,8 @@ void VRDemos::on_diag_new_clicked() {
     string path = VRGuiFile::getRelativePath_toOrigin();
     if (path == "") return;
     VRSceneManager::get()->newScene(path);
-    if (demos.count(path) == 0) {
-        addEntry(path, "favorites_tab", true);
-        VRSceneManager::get()->addFavorite(path);
-    }
+    addEntry(path, "favorites_tab", true);
+    VRSceneManager::get()->addFavorite(path);
     saveScene(path);
 }
 
@@ -371,10 +365,11 @@ void VRDemos::on_new_clicked() {
 
 void VRDemos::update() {
     VRScene* scene = VRSceneManager::getCurrent();
-    if (scene == 0 && current_demo == 0) return;
-    if (scene == 0 && current_demo != 0) {
-        current_demo->running = false;
-        setGuiState(current_demo);
+    if (scene == 0) {
+        if (current_demo) {
+            current_demo->running = false;
+            setGuiState(current_demo);
+        }
         return;
     }
 
@@ -389,9 +384,16 @@ void VRDemos::update() {
         setGuiState(current_demo);
     }
 
-    if (demos.count(sPath) == 0) return;
-    current_demo = demos[sPath];
+    if (demos.count(sPath)) {
+        current_demo = demos[sPath];
+        current_demo->running = true;
+        setGuiState(current_demo);
+        return;
+    }
+
+    current_demo = new demoEntry();
     current_demo->running = true;
+    demos[sPath] = current_demo;
     setGuiState(current_demo);
 }
 

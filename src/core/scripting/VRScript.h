@@ -53,8 +53,8 @@ class VRScript : public VRName {
         string head;
         string type = "Python";
         string mobile;
-        PyObject* fkt;
-        PyObject* pargs;
+        PyObject* fkt = 0;
+        PyObject* pargs = 0;
         map<string, arg*> args;
         map<string, arg*>::iterator a_itr;
         map<string, trig*> trigs;
