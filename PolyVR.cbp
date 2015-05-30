@@ -189,6 +189,11 @@
 			<Add directory="/usr/lib" />
 			<Add directory="/usr/lib/x86_64-linux-gnu" />
 		</Linker>
+		<ExtraCommands>
+			<Add after='/bin/bash -c &quot;cp -u -p ressources/cef/icudtl.dat bin/Debug/ 2&gt;/dev/null&quot;' />
+			<Add after='/bin/bash -c &quot;cp -u -p ressources/cef/icudtl.dat bin/Release/ 2&gt;/dev/null&quot;' />
+			<Mode after="always" />
+		</ExtraCommands>
 		<Unit filename="src/PolyVR.cpp" />
 		<Unit filename="src/PolyVR.h" />
 		<Unit filename="src/addons/Bullet/CarDynamics/CarDynamics.cpp" />
@@ -197,6 +202,7 @@
 		<Unit filename="src/addons/Bullet/CarDynamics/VRPyCarDynamics.h" />
 		<Unit filename="src/addons/CEF/CEF.cpp" />
 		<Unit filename="src/addons/CEF/CEF.h" />
+		<Unit filename="src/addons/CEF/CEFWindowsKey.h" />
 		<Unit filename="src/addons/CEF/VRPyCEF.cpp" />
 		<Unit filename="src/addons/CEF/VRPyCEF.h" />
 		<Unit filename="src/addons/CEF/VRPyWebCam.cpp" />
