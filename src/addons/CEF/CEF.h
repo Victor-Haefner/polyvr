@@ -7,7 +7,6 @@
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGImage.h>
 
-
 using namespace std;
 
 namespace OSG{ class VRMaterial; class VRDevice; class VRObject; }
