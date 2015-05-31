@@ -122,11 +122,12 @@ void CEF::addMouse(VRDevice* dev, VRObject* obj, int lb, int rb, int wu, int wd)
 
 void CEF::addKeyboard(VRDevice* dev) {
     if (dev == 0) return;
-    dev->addSignal(-1, 0)->add( new VRFunction<VRDevice*>( "CEF::KP", boost::bind(&CEF::keyboard, this, 0, _1 ) ) );
-    //dev->addSignal(-1, 1)->add( new VRFunction<VRDevice*>( "CEF::KR", boost::bind(&CEF::keyboard, this, 1, _1 ) ) );
+    dev->addSignal(-1, 0)->add( new VRFunction<VRDevice*>( "CEF::KR", boost::bind(&CEF::keyboard, this, 0, _1 ) ) );
+    dev->addSignal(-1, 1)->add( new VRFunction<VRDevice*>( "CEF::KP", boost::bind(&CEF::keyboard, this, 1, _1 ) ) );
 }
 
 void CEF::mouse_move(VRDevice* dev, int i) {
+    if (dev == 0) return;
     VRIntersection ins = dev->intersect(obj);
 
     if (!ins.hit) return;
@@ -201,18 +202,10 @@ void CEF::keyboard(bool down, VRDevice* dev) {
     if (kev.modifiers & EVENTFLAG_CONTROL_DOWN) kev.character = GetControlCharacter(windows_key_code, kev.modifiers & EVENTFLAG_SHIFT_DOWN); else
     kev.character = kev.unmodified_character;
 
-    if (event->keyval ==  65288) { // backspace
-        kev.unmodified_character = 8;
-        kev.character = 8;
-        kev.native_key_code = 8;
-        kev.windows_key_code = VKEY_BACK;
-    }
-
-    cout << "keys " << event->keyval << " " << kev.unmodified_character << endl;
-
     if (event->type == GDK_KEY_PRESS) {
         kev.type = KEYEVENT_RAWKEYDOWN; host->SendKeyEvent(kev);
     } else {
+        cout << "key up\n";
         kev.type = KEYEVENT_KEYUP; host->SendKeyEvent(kev);
         kev.type = KEYEVENT_CHAR; host->SendKeyEvent(kev);
     }
