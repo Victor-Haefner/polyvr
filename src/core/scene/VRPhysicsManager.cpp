@@ -72,29 +72,12 @@ VRPhysicsManager::VRPhysicsManager() {
 }
 
 VRPhysicsManager::~VRPhysicsManager() {
-    return; // TODO
-
-    //remove the rigidbodies from the dynamics world && delete them
-    for (int i=dynamicsWorld->getNumCollisionObjects()-1; i>=0 ;i--) {
-        btCollisionObject* obj = dynamicsWorld->getCollisionObjectArray()[i];
-        btRigidBody* body = btRigidBody::upcast(obj);
-        if (body && body->getMotionState()) delete body->getMotionState();
-        dynamicsWorld->removeCollisionObject( obj );
-        delete obj;
-    }
-
-    //delete collision shapes
-    for (int j=0;j<collisionShapes.size();j++) {
-        btCollisionShape* shape = collisionShapes[j];
-        collisionShapes[j] = 0;
-        delete shape;
-    }
-
     delete dynamicsWorld;
     delete solver;
     delete dispatcher;
     delete collisionConfiguration;
     delete broadphase;
+    delete phys_mat;
 }
 
 boost::recursive_mutex& VRPhysicsManager::physicsMutex() { return mtx; }
@@ -292,7 +275,7 @@ void VRPhysicsManager::physicalize(VRTransform* obj) {
     //cout << "physicalize transform: " << obj;
     btCollisionObject* bdy = obj->getPhysics()->getCollisionObject();
     if (bdy == 0) return;
-    cout << " with bt_body " << (bdy == 0) << endl;
+    //cout << " with bt_body " << (bdy == 0) << endl;
     OSGobjs[bdy] = obj;
     physics_visuals_to_update.push_back(bdy);
 
