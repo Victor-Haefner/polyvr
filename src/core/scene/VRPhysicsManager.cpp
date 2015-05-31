@@ -106,7 +106,11 @@ long long VRPhysicsManager::getTime() { // time in seconds
 btSoftBodyWorldInfo* VRPhysicsManager::getSoftBodyWorldInfo() {return softBodyWorldInfo;}
 
 void VRPhysicsManager::prepareObjects() {
-    for (auto o : OSGobjs) o.second->getPhysics()->prepareStep();
+    for (auto o : OSGobjs) {
+        if (o.second) {
+            if (o.second->getPhysics()) o.second->getPhysics()->prepareStep();
+        }
+    }
 }
 
 void VRPhysicsManager::updatePhysics(VRThread* thread) {

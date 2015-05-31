@@ -123,8 +123,9 @@ OSG::Vec3f VRPhysics::getTorque() { Lock lock(mtx()); return OSG::Vec3f(constant
 
 void VRPhysics::prepareStep() {
     if(soft) return;
-   body->applyForce(constantForce, btVector3(0.0,0.0,0.0));
-   body->applyTorque(constantTorque);
+    if(body == 0) return;
+    body->applyForce(constantForce, btVector3(0.0,0.0,0.0));
+    body->applyTorque(constantTorque);
 }
 
 btCollisionObject* VRPhysics::getCollisionObject() {
