@@ -158,9 +158,10 @@ void CEF::mouse(int b, bool down, VRDevice* dev) {
         VRLog::log("net", ss.str());
     }
 
-    browser->GetHost()->SendFocusEvent(ins.hit);
-    if (!ins.hit) return;
-    if (ins.object != obj) return;
+
+    if (!ins.hit) { browser->GetHost()->SendFocusEvent(false); focus = false; return; }
+    if (ins.object != obj) { browser->GetHost()->SendFocusEvent(false); focus = false; return; }
+    browser->GetHost()->SendFocusEvent(true); focus = true;
 
     CefMouseEvent me;
     me.x = ins.texel[0]*width;
@@ -181,6 +182,7 @@ void CEF::mouse(int b, bool down, VRDevice* dev) {
 }
 
 void CEF::keyboard(bool down, VRDevice* dev) {
+    if (!focus) return;
     if (dev->getType() != "keyboard") return;
     VRKeyboard* kb = (VRKeyboard*)dev;
     auto event = kb->getGtkEvent();
@@ -205,7 +207,6 @@ void CEF::keyboard(bool down, VRDevice* dev) {
     if (event->type == GDK_KEY_PRESS) {
         kev.type = KEYEVENT_RAWKEYDOWN; host->SendKeyEvent(kev);
     } else {
-        cout << "key up\n";
         kev.type = KEYEVENT_KEYUP; host->SendKeyEvent(kev);
         kev.type = KEYEVENT_CHAR; host->SendKeyEvent(kev);
     }

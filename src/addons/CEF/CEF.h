@@ -21,6 +21,7 @@ class CEF : public CefClient, public CefRenderHandler {
         int height = 1024;
         float aspect = 1;
         bool init = false;
+        bool focus = false;
 
         CefRefPtr<CefBrowser> browser;
         CefRefPtr<CefRenderHandler> GetRenderHandler();
