@@ -23,6 +23,9 @@ void VRMouse::clearSignals() {
 
     addSignal( 0, 0)->add( getDrop() );
     addSignal( 0, 1)->add( addDrag( getBeacon(), 0) );
+
+    if (on_to_edge) on_to_edge->clear();
+    if (on_from_edge) on_from_edge->clear();
 }
 
 void VRMouse::multFull(Matrix _matrix, const Pnt3f &pntIn, Pnt3f  &pntOut) {

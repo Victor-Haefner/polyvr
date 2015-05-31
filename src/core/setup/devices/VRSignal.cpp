@@ -14,11 +14,9 @@ void VRSignal::add(VRDevCb* fkt) {
 
 void VRSignal::sub(VRDevCb* fkt) {
     if (callbacks.size() == 0) return;
-    for(itr = callbacks.begin(); itr != callbacks.end(); ++itr) {
-        if (*itr != fkt) continue;
-        callbacks.erase(itr);
-        return;
-    }
+    auto pos = find(callbacks.begin(), callbacks.end(), fkt);
+    if (pos != callbacks.end()) callbacks.erase(pos);
+    //callbacks.erase(remove(callbacks.begin(), callbacks.end(), fkt), callbacks.end());
 }
 
 VRSignal::VRSignal(VRDevice* _dev) : dev(_dev) {
@@ -28,6 +26,10 @@ VRSignal::VRSignal(VRDevice* _dev) : dev(_dev) {
 
 VRSignal::~VRSignal() {
     delete trig_fkt;
+}
+
+void VRSignal::clear() {
+    callbacks.clear();
 }
 
 void VRSignal::trigger() { for (auto c : callbacks) (*c)(dev); }

@@ -16,7 +16,6 @@ typedef VRFunction<VRDevice*> VRDevCb;
 class VRSignal : public VRName {
     private:
         vector<VRDevCb*> callbacks;
-        vector<VRDevCb*>::iterator itr;
         VRDevice* dev;
         VRFunction<int>* trig_fkt;
         bool _doUpdate;
@@ -31,10 +30,11 @@ class VRSignal : public VRName {
         void trigger();
 
         void setUpdate(bool b);
-
         bool doUpdate();
 
         VRFunction<int>* getTriggerFkt();
+
+        void clear();
 };
 
 OSG_END_NAMESPACE
