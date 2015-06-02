@@ -58,7 +58,7 @@ void VRGuiBits_on_camera_changed(GtkComboBox* cb, gpointer data) {
     VRScene* scene = VRSceneManager::getCurrent();
     scene->setActiveCamera(i);
 
-    VRGuiSignals::get()->getSignal("camera_changed")->trigger();
+    VRGuiSignals::get()->getSignal("camera_changed")->trigger<VRDevice>();
 }
 
 void VRGuiBits_on_navigation_changed(GtkComboBox* cb, gpointer data) {

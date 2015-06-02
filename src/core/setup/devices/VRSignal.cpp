@@ -25,30 +25,22 @@ VRFunction<int>* VRSignal_base::getTriggerFkt() { return trig_fkt; }
 
 
 
-VRSignal::VRSignal(VRDevice* _dev) : dev(_dev) {
-    trig_fkt = new VRFunction<int>("Signal_trigger", boost::bind(&VRSignal::trigger, this, (VRDevice*)0));
+VRSignal::VRSignal(VRDevice* _dev) : event(_dev) {
+    trig_fkt = new VRFunction<int>("Signal_trigger", boost::bind(&VRSignal::trigger<VRDevice>, this, (VRDevice*)0));
 }
 
 VRSignal::~VRSignal() {
     ;
 }
 
-void VRSignal::add(VRDevCb* fkt) {
+void VRSignal::add(VRFunction_base* fkt) {
     callbacks.push_back(fkt);
 }
 
-void VRSignal::sub(VRDevCb* fkt) {
+void VRSignal::sub(VRFunction_base* fkt) {
     if (callbacks.size() == 0) return;
     auto pos = find(callbacks.begin(), callbacks.end(), fkt);
     if (pos != callbacks.end()) callbacks.erase(pos);
-}
-
-void VRSignal::trigger(VRDevice* dev) {
-    if (dev == 0) dev = this->dev;
-    for (auto c : callbacks) {
-        auto cb = (VRDevCb*)c;
-        (*cb)(dev);
-    }
 }
 
 OSG_END_NAMESPACE

@@ -29,7 +29,7 @@ VRSignal* VRDevice::createSignal(int key, int state) {
 void VRDevice::triggerSignal(int key, int state) {
     VRSignal* sig = signalExist(key, state);
     if (sig) {
-        sig->trigger();
+        sig->trigger<VRDevice>();
         if (sig->doUpdate()) addUpdateSignal(sig);
     }
 }
@@ -44,7 +44,7 @@ void VRDevice::addUpdateSignal(VRSignal* sig) {
 void VRDevice::remUpdateSignal(VRSignal* sig, VRDevice* dev) {
     for (auto itr : activatedSignals) {
         if (itr == sig) {
-            sig->trigger();
+            sig->trigger<VRDevice>();
             activatedSignals.erase(remove(activatedSignals.begin(), activatedSignals.end(), sig), activatedSignals.end());
             return;
         }
@@ -53,7 +53,7 @@ void VRDevice::remUpdateSignal(VRSignal* sig, VRDevice* dev) {
 
 void VRDevice::updateSignals() {
     for(uint i=0; i<activatedSignals.size(); i++) {
-        activatedSignals[i]->trigger();
+        activatedSignals[i]->trigger<VRDevice>();
     }
 }
 

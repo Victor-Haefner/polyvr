@@ -116,13 +116,13 @@ void VRIntersect::drag(VRObject* obj, VRTransform* caster) {
     dragged_ghost->setMatrix(dragged->getMatrix());
     dragged_ghost->switchParent(caster);
 
-    dragSignal->trigger();
+    dragSignal->trigger<VRDevice>();
 }
 
 void VRIntersect::drop(VRDevice* dev) {
     auto d = getDraggedObject();
     if (d != 0) {
-        dropSignal->trigger();
+        dropSignal->trigger<VRDevice>();
         d->drop();
         drop_time = VRGlobals::get()->CURRENT_FRAME;
         dragged = 0;

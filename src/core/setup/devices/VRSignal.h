@@ -34,15 +34,21 @@ class VRSignal_base : public VRName {
 
 class VRSignal : public VRSignal_base {
     private:
-        VRDevice* dev;
+        void* event = 0;
 
     public:
         VRSignal(VRDevice* dev = 0);
         ~VRSignal();
 
-        void add(VRDevCb* fkt);
-        void sub(VRDevCb* fkt);
-        void trigger(VRDevice* dev = 0);
+        void add(VRFunction_base* fkt);
+        void sub(VRFunction_base* fkt);
+        template<typename Event> void trigger(Event* event = 0) {
+            if (event == 0) event = (Event*)this->event;
+            for (auto c : callbacks) {
+                auto cb = (VRFunction<Event*>*)c;
+                (*cb)(event);
+            }
+        }
 };
 
 OSG_END_NAMESPACE
