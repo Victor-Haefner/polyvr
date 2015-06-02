@@ -72,6 +72,8 @@ VRPhysicsManager::VRPhysicsManager() {
 }
 
 VRPhysicsManager::~VRPhysicsManager() {
+    //for (auto o : OSGobjs) unphysicalize(o.second);
+
     delete dynamicsWorld;
     delete solver;
     delete dispatcher;
@@ -86,6 +88,7 @@ long long VRPhysicsManager::getTime() { // time in seconds
     return 1000*glutGet(GLUT_ELAPSED_TIME);
     //return 1e6*clock()/CLOCKS_PER_SEC; // TODO
 }
+
 btSoftBodyWorldInfo* VRPhysicsManager::getSoftBodyWorldInfo() {return softBodyWorldInfo;}
 
 void VRPhysicsManager::prepareObjects() {
@@ -129,6 +132,7 @@ void VRPhysicsManager::addPhysicsUpdateFunction(VRFunction<int>* fkt, bool after
     if (after) updateFktsPost.push_back(fkt);
     else updateFktsPre.push_back(fkt);
 }
+
 void VRPhysicsManager::dropPhysicsUpdateFunction(VRFunction<int>* fkt, bool after) {
     MLock lock(mtx);
     vector<VRFunction<int>* >* fkts = after ? &updateFktsPost : &updateFktsPre;
@@ -287,9 +291,7 @@ void VRPhysicsManager::physicalize(VRTransform* obj) {
 }
 
 void VRPhysicsManager::unphysicalize(VRTransform* obj) {
-  //cout << "unphysicalize transform: " << obj;
     btCollisionObject* bdy = obj->getPhysics()->getCollisionObject();
-    //cout << " with bt_body " << bdy << endl;
     if (bdy == 0) return;
     if (OSGobjs.count(bdy)) OSGobjs.erase(bdy);
 

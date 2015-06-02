@@ -61,12 +61,12 @@ string VRSceneManager::getOriginalWorkdir() { return original_workdir; }
 void VRSceneManager::removeScene(VRScene* s) {
     if (s == 0) return;
     scenes.erase(s->getName());
+    active = "NO_SCENE_ACTIVE";
     delete s;
 
     VRSetupManager::getCurrent()->resetViewports();
     VRSetupManager::getCurrent()->clearSignals();
     VRTransform::dynamicObjects.clear();
-    active = "NO_SCENE_ACTIVE";
 
     // deactivate windows
     auto windows = VRSetupManager::getCurrent()->getWindows();

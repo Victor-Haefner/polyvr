@@ -5,6 +5,7 @@
 #include <OpenSG/OSGConfig.h>
 #include <vector>
 
+class VRFunction_base;
 template<class T> class VRFunction;
 
 OSG_BEGIN_NAMESPACE;
@@ -13,12 +14,27 @@ using namespace std;
 class VRDevice;
 typedef VRFunction<VRDevice*> VRDevCb;
 
-class VRSignal : public VRName {
+class VRSignal_base : public VRName {
+    protected:
+        vector<VRFunction_base*> callbacks;
+        VRFunction<int>* trig_fkt = 0;
+        bool _doUpdate = false;
+
+    public:
+        VRSignal_base();
+        virtual ~VRSignal_base();
+
+        void setUpdate(bool b);
+        bool doUpdate();
+
+        VRFunction<int>* getTriggerFkt();
+
+        void clear();
+};
+
+class VRSignal : public VRSignal_base {
     private:
-        vector<VRDevCb*> callbacks;
         VRDevice* dev;
-        VRFunction<int>* trig_fkt;
-        bool _doUpdate;
 
     public:
         void add(VRDevCb* fkt);
@@ -28,13 +44,6 @@ class VRSignal : public VRName {
         ~VRSignal();
 
         void trigger();
-
-        void setUpdate(bool b);
-        bool doUpdate();
-
-        VRFunction<int>* getTriggerFkt();
-
-        void clear();
 };
 
 OSG_END_NAMESPACE
