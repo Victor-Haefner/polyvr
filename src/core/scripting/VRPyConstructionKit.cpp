@@ -1,6 +1,7 @@
 #include "VRPyConstructionKit.h"
 #include "VRPySnappingEngine.h"
 #include "VRPySelector.h"
+#include "VRPyGeometry.h"
 #include "VRPyBaseT.h"
 
 template<> PyTypeObject VRPyBaseT<OSG::VRConstructionKit>::type = {
@@ -48,17 +49,37 @@ template<> PyTypeObject VRPyBaseT<OSG::VRConstructionKit>::type = {
 PyMethodDef VRPyConstructionKit::methods[] = {
     {"getSnappingEngine", (PyCFunction)VRPyConstructionKit::getSnappingEngine, METH_NOARGS, "Get internal snapping engine - getSnappingEngine()" },
     {"getSelector", (PyCFunction)VRPyConstructionKit::getSelector, METH_NOARGS, "Get internal selector - getSelector(obj)" },
+    {"addAnchorType", (PyCFunction)VRPyConstructionKit::addAnchorType, METH_VARARGS, "Add new anchor type - addAnchorType(size, color)" },
+    {"addObjectAnchor", (PyCFunction)VRPyConstructionKit::addObjectAnchor, METH_VARARGS, "Add anchor to object - addObjectAnchor(obj, int anchor, position, flt radius)" },
+    {"addObject", (PyCFunction)VRPyConstructionKit::addObject, METH_VARARGS, "Get internal selector - addObject(obj)" },
     {NULL}  /* Sentinel */
 };
 
-PyObject* VRPyConstructionKit::getSnappingEngine(VRPyConstructionKit* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyConstructionKit::getSnappingEngine - Object is invalid"); return NULL; }
-    return VRPySnappingEngine::fromPtr( self->obj->getSnappingEngine() );
+PyObject* VRPyConstructionKit::getSnappingEngine(VRPyConstructionKit* self) { return VRPySnappingEngine::fromPtr(self->obj->getSnappingEngine()); }
+PyObject* VRPyConstructionKit::getSelector(VRPyConstructionKit* self) { return VRPySelector::fromPtr(self->obj->getSelector()); }
+
+PyObject* VRPyConstructionKit::addAnchorType(VRPyConstructionKit* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyConstructionKit::addAnchorType - Object is invalid"); return NULL; }
+    float f; PyObject* o = 0;
+    if (! PyArg_ParseTuple(args, "fO", &f, &o)) return NULL;
+    return PyInt_FromLong( self->obj->addAnchorType(f, parseVec3fList(o)) );
 }
 
-PyObject* VRPyConstructionKit::getSelector(VRPyConstructionKit* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyConstructionKit::getSelector - Object is invalid"); return NULL; }
-    return VRPySelector::fromPtr( self->obj->getSelector() );
+PyObject* VRPyConstructionKit::addObjectAnchor(VRPyConstructionKit* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyConstructionKit::addObjectAnchor - Object is invalid"); return NULL; }
+    PyObject *o, *p; int a; float d;
+    if (! PyArg_ParseTuple(args, "OiOf", &o, &a, &p, &d)) return NULL;
+    VRPyGeometry* g = (VRPyGeometry*)o;
+    self->obj->addObjectAnchor(g->obj, a, parseVec3fList(p), d);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyConstructionKit::addObject(VRPyConstructionKit* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyConstructionKit::addObject - Object is invalid"); return NULL; }
+    OSG::VRGeometry* geo = 0;
+    if (!VRPyGeometry::parse(args, &geo)) return NULL;
+    self->obj->addObject(geo);
+    Py_RETURN_TRUE;
 }
 
 

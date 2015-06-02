@@ -187,16 +187,9 @@
 			VR.bmat.setVertexProgram('shdr_v')
 			VR.bmat.setFragmentProgram('shdr_f')
 	
-	if not hasattr(VR, 'snap'):
+	if not hasattr(VR, 'kit'):
 		VR.kit = VR.ConstructionKit()
-		VR.snap = VR.kit.getSnappingEngine()
-		
-	if not hasattr(VR, 'anchor'):
-		VR.anchor = VR.Geometry('anchor')
-		bs = str(s*0.1)
-		VR.anchor.setPrimitive('Box ' + bs + ' ' + bs + ' ' + bs + ' 1 1 1')
-		VR.getRoot().find('Headlight').addChild(VR.anchor)
-		VR.anchor.hide()
+		VR.a1_ID = VR.kit.addAnchorType(s*0.1, [1,1,1])
 	
 	# new brick
 	if k == 1:
@@ -212,27 +205,14 @@
 		idev.getDragGhost().setFrom(0,0,-0.5)
 		
 		h = dims[1]*0.5
-		VR.snap.addObject(g)
-		osnapu = [1,0,0,0,1,0] # orientation to snap to (up, dir)
-		osnapd = [1,0,0,0,1,0] # orientation to snap to (up, dir)
+		VR.kit.addObject(g)
+
 		for i in range(int(dims[0]/s)):
 			for j in range(int(dims[2]/s)):
 				x = i*s - dims[0]*0.5 +0.5*s
 				y = j*s - dims[2]*0.5 +0.5*s
-				a_u = VR.anchor.duplicate()
-				a_d = VR.anchor.duplicate()
-				a_u.show()
-				a_d.show()
-				a_u.setPose([x,h,y], [0,1,0], [1,0,0])
-				a_d.setPose([x,-h,y], [0,1,0], [1,0,0])
-				g.addChild(a_u)
-				g.addChild(a_d)
-				VR.snap.addObjectAnchor(g,a_u)
-				VR.snap.addObjectAnchor(g,a_d)
-				pu = [0,0,0,x,h,y] # point to snap to
-				pd = [0,0,0,x,-h,y] # point to snap to
-				VR.snap.addRule('POINT', 'POINT', pu, osnapu, s*0.3, 1, g )
-				VR.snap.addRule('POINT', 'POINT', pd, osnapd, s*0.3, 1, g )
+				VR.kit.addObjectAnchor(g, VR.a1_ID, [x,h,y], s*0.3)
+				VR.kit.addObjectAnchor(g, VR.a1_ID, [x,-h,y], s*0.3)
 		
 </core>
       <arg type="VRPyDeviceType" value="flystick" name_suffix="0" base_name="flystick" name_space="handler"/>
