@@ -56,6 +56,12 @@ void CEF::initiate() {
     CefWindowInfo win;
     CefBrowserSettings browser_settings;
 
+    /* NOT COMPILING?
+    go to polyvr/dependencies
+    > git pull
+    > sudo gdebi -n ubuntu_14.04/libcef-dev.deb
+    */
+
     win.SetAsWindowless(0, false);
     //win.SetTransparentPainting(true);
     browser = CefBrowserHost::CreateBrowserSync(win, this, "www.google.de", browser_settings, 0);
