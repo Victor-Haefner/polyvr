@@ -26,7 +26,7 @@ VRFunction<int>* VRSignal_base::getTriggerFkt() { return trig_fkt; }
 
 
 VRSignal::VRSignal(VRDevice* _dev) : dev(_dev) {
-    trig_fkt = new VRFunction<int>("Signal_trigger", boost::bind(&VRSignal::trigger, this));
+    trig_fkt = new VRFunction<int>("Signal_trigger", boost::bind(&VRSignal::trigger, this, (VRDevice*)0));
 }
 
 VRSignal::~VRSignal() {
@@ -41,10 +41,10 @@ void VRSignal::sub(VRDevCb* fkt) {
     if (callbacks.size() == 0) return;
     auto pos = find(callbacks.begin(), callbacks.end(), fkt);
     if (pos != callbacks.end()) callbacks.erase(pos);
-    //callbacks.erase(remove(callbacks.begin(), callbacks.end(), fkt), callbacks.end());
 }
 
-void VRSignal::trigger() {
+void VRSignal::trigger(VRDevice* dev) {
+    if (dev == 0) dev = this->dev;
     for (auto c : callbacks) {
         auto cb = (VRDevCb*)c;
         (*cb)(dev);

@@ -37,13 +37,12 @@ class VRSignal : public VRSignal_base {
         VRDevice* dev;
 
     public:
-        void add(VRDevCb* fkt);
-        void sub(VRDevCb* fkt);
-
         VRSignal(VRDevice* dev = 0);
         ~VRSignal();
 
-        void trigger();
+        void add(VRDevCb* fkt);
+        void sub(VRDevCb* fkt);
+        void trigger(VRDevice* dev = 0);
 };
 
 OSG_END_NAMESPACE
