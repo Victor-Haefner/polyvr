@@ -16,6 +16,7 @@ class VRObject;
 class VRTransform;
 class VRGeometry;
 class VRSignal;
+class VRDevice;
 
 
 class VRSnappingEngine {
@@ -39,11 +40,12 @@ class VRSnappingEngine {
         };
 
         struct EventSnap {
-            VRObject* o1 = 0;
-            VRObject* o2 = 0;
+            VRTransform* o1 = 0;
+            VRTransform* o2 = 0;
             Matrix m;
-            void set(VRObject* O1, VRObject* O2, Matrix M) {
-                o1 = O1; o2 = O2; m = M;
+            VRDevice* dev = 0;
+            void set(VRTransform* O1, VRTransform* O2, Matrix M, VRDevice* DEV) {
+                o1 = O1; o2 = O2; m = M; dev = DEV;
             }
         };
 

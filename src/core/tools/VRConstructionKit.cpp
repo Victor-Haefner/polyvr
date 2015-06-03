@@ -6,6 +6,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
+#include "core/setup/devices/VRDevice.h"
 #include "core/setup/devices/VRSignal.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -24,37 +25,46 @@ VRSnappingEngine* VRConstructionKit::getSnappingEngine() { return snapping; }
 VRSelector* VRConstructionKit::getSelector() { return selector; }
 
 void VRConstructionKit_on_snap(VRConstructionKit* kit, VRSnappingEngine::EventSnap* e) {
-    return;
-
     if (e->o1 == 0 || e->o2 == 0) return;
-    VRObject* p1 = e->o1->getParent();
+    VRObject* p1 = e->o1->getDragParent();
     VRObject* p2 = e->o2->getParent();
     if (p1 == 0 || p2 == 0) return;
-
     if (p1 == p2) if (p1->hasAttachment("kit_group")) return;
 
     if (p2->hasAttachment("kit_group")) {
-        e->o1->switchParent(p2);
+        e->o1->rebaseDrag(p2);
         e->o1->setPickable(false);
+        e->o2->setPickable(false);
+        e->o1->setWorldMatrix(e->m);
         return;
     }
 
     VRTransform* group = new VRTransform("kit_group");
+    group->addAttachment("dynamicaly_generated", 0);
     group->setPickable(true);
     group->addAttachment("kit_group", 0);
-    e->o1->switchParent(group);
+    p2->addChild(group);
+    e->o1->rebaseDrag(group);
+    Matrix m = e->o2->getWorldMatrix();
     e->o2->switchParent(group);
     e->o1->setPickable(false);
     e->o2->setPickable(false);
-
-    // TODO: compute the relative transformation to the new parent!
-
-    cout << "snap " << e->o1->getName() << " to " << e->o2->getName() << endl;
+    e->o1->setWorldMatrix(e->m);
+    e->o2->setWorldMatrix(m);
 }
 
 int VRConstructionKit::ID() {
     static int i = 0; i++;
     return i;
+}
+
+void VRConstructionKit::breakup(VRObject* obj) {
+    if (obj == 0) return;
+    auto p = obj->getParent();
+    if (!p->hasAttachment("kit_group")) return;
+    p = p->getParent();
+    obj->switchParent(p);
+    obj->setPickable(true);
 }
 
 int VRConstructionKit::addAnchorType(float size, Vec3f color) {

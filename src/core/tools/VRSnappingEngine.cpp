@@ -171,7 +171,7 @@ void VRSnappingEngine::update() {
                     r->snap(m);
                     maL.invert();
                     m.mult(maL);
-                    event->set(obj, r->csys, m);
+                    event->set(obj, r->csys, m, dev.second);
                     snapSignal->trigger<EventSnap>(event);
                     break;
                 }
@@ -180,7 +180,7 @@ void VRSnappingEngine::update() {
                 float D = (p2-p).length(); // check distance
                 if (!r->inRange(D)) continue;
                 r->snap(m);
-                event->set(obj, r->csys, m);
+                event->set(obj, r->csys, m, dev.second);
                 snapSignal->trigger<EventSnap>(event);
             }
         }

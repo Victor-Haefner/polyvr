@@ -25,8 +25,11 @@ extern "C" void coreDump(int sig) {
     string path = mgr->getOriginalWorkdir();
     cout << "\n dump core to " << path << "/core" << endl;
     mgr->setWorkdir(path);
+
     //kill(getpid(), sig);
-    abort();
+    //abort();
+    //raise(SIGABRT);
+    kill(getpid(), SIGABRT);
 }
 
 OSG_BEGIN_NAMESPACE;

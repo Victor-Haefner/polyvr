@@ -3,7 +3,7 @@
   <Objects>
     <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
       <Object name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
-        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="17.4531 23.9402 2.51137" at="17.2801 24.2979 3.2095" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
+        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="18.2848 24.3417 2.14507" at="17.55 24.4027 2.15786" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
           <Object name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
         </Object>
       </Object>
@@ -247,6 +247,18 @@
       <arg type="VRPyDeviceType" value="keyboard" name_suffix="0" base_name="keyboard" name_space="init"/>
       <arg type="VRPyDeviceType" value="mouse" name_suffix="0" base_name="mouse" name_space="init"/>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
+    </Script>
+    <Script name_suffix="0" base_name="kit_break" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+	
+	dev.intersect()
+	i = dev.getIntersected()
+	VR.kit.breakup(i)
+	dev.drag(i)
+	
+</core>
+      <trig type="on_device" dev="mouse" state="Pressed" param="" key="2" name_suffix="2" base_name="trigger" name_space="__global__"/>
     </Script>
     <Script name_suffix="0" base_name="shdr_f" name_space="__script__" type="GLSL" mobile="">
       <core>
