@@ -58,7 +58,7 @@ void CEF::initiate() {
 
     /* NOT COMPILING?
     go to polyvr/dependencies
-    > git pull
+    > sudo git pull origin master
     > sudo gdebi -n ubuntu_14.04/libcef-dev.deb
     */
 
