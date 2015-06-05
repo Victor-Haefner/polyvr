@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <string>
+#include <vector>
 
 using namespace std;
 
@@ -15,7 +16,16 @@ class VRReasoner {
             string toString();
         };
 
+        struct Job {
+            string content;
+            Job(string s);
+        };
+
     private:
+        vector<string> split(string s, string d);
+        vector<string> split(string s, char d);
+        bool startswith(string s, string subs);
+
         VRReasoner();
 
     public:

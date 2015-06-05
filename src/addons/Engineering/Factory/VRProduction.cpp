@@ -317,7 +317,7 @@ VRObject* VRProduction::test() {
     production->queueJob(product, "testProduct");
     production->start();
 
-    string q = "q(x) : Process(x), is(x.state,1), Production(y), has(y,x), has(factory,y), is(y.result,testProduct)";
+    string q = "q(x) : Process(x); is(x.state,1); Production(y); has(y,x); has(factory,y); is(y.result,testProduct)";
     production->description->answer(q);
 
     VRObject* anchor = new VRObject("production");

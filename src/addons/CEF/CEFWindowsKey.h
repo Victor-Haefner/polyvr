@@ -2,7 +2,9 @@
 #define CEFWINDOWSKEY_H_INCLUDED
 
 #include <gdk/gdkkeysyms.h>
+#ifdef _WIN32
 #include <gdk/gdkwin32.h>
+#endif
 #define XK_3270  // for XK_3270_BackTab
 #ifndef _WIN32
 #include <gdk/gdkx.h>
