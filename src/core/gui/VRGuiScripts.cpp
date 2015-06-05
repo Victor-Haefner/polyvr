@@ -281,7 +281,7 @@ void VRGuiScripts::on_exec_clicked() {
 
     VRSceneManager::getCurrent()->triggerScript(script->getName());
 
-    VRGuiSignals::get()->getSignal("scene_modified")->trigger();
+    VRGuiSignals::get()->getSignal("scene_modified")->trigger<VRDevice>();
 }
 
 void VRGuiScripts::on_del_clicked() {

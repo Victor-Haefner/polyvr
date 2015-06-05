@@ -1,4 +1,5 @@
 #include "VROntology.h"
+#include "VRReasoner.h"
 
 #include <iostream>
 
@@ -57,13 +58,15 @@ VRConcept* VROntology::getConcept(string name, VRConcept* p) {
 }
 
 VRConcept* VROntology::addConcept(string concept, string parent) {
-    if (parent == "") thing->append(concept);
+    if (parent == "") return thing->append(concept);
+    auto p = getConcept(parent);
+    if (p == 0) { cout << "WARNING in VROntology::addConcept, " << parent << " not found while adding " << concept << "!\n"; return 0;  }
     return getConcept(parent)->append(concept);
 }
 
 string VROntology::answer(string question) {
-    string res;
-    return res;
+    auto res = VRReasoner::get()->process(question);
+    return res.toString();
 }
 
 void VROntology::merge(VROntology* o) {

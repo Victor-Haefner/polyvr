@@ -56,9 +56,9 @@ class VRTransform : public VRObject {
         Vec3f tConstraint;
         Vec3i rConstraint;
 
-        bool held;//drag n drop
-        VRObject* old_parent;
-        int old_child_id;
+        bool held = false;//drag n drop
+        VRObject* old_parent = 0;
+        int old_child_id = 0;
 
         VRObject* copy(vector<VRObject*> children);
 
@@ -141,6 +141,8 @@ class VRTransform : public VRObject {
 
         void drag(VRTransform* new_parent);
         void drop();
+        void rebaseDrag(VRObject* new_parent);
+        VRObject* getDragParent();
 
         /** Cast a ray in world coordinates from the object in its local coordinates, -z axis defaults **/
         Line castRay(VRObject* obj = 0, Vec3f dir = Vec3f(0,0,-1));

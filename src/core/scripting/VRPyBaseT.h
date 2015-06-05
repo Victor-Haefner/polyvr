@@ -13,6 +13,17 @@ PyObject* VRPyBaseT<T>::fromPtr(T* obj) {
 }
 
 template<class T>
+bool VRPyBaseT<T>::parse(PyObject *args, T** obj) {
+    *obj = 0;
+    if (args == 0) return false;
+    VRPyBaseT<T>* o = NULL;
+    if (! PyArg_ParseTuple(args, "O", &o)) return false;
+    if (isNone((PyObject*)o)) { PyErr_SetString(err, "Object passed is None!"); return false; }
+    *obj = o->obj;
+    return true;
+}
+
+template<class T>
 PyObject* VRPyBaseT<T>::alloc(PyTypeObject* type, T* t) {
     VRPyBaseT<T>* self = (VRPyBaseT<T> *)type->tp_alloc(type, 0);
     if (self != NULL) {

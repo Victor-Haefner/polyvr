@@ -65,6 +65,7 @@ struct VRPyBaseT : public VRPyBase {
     VRPyBaseT();
 
     static PyObject* fromPtr(T* obj);
+    static bool      parse(PyObject *args, T** obj);
     static PyObject* New(PyTypeObject *type, PyObject *args, PyObject *kwds);
     static PyObject* New_named(PyTypeObject *type, PyObject *args, PyObject *kwds);
     static PyObject* New_toZero(PyTypeObject *type, PyObject *args, PyObject *kwds);

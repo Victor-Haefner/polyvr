@@ -558,6 +558,13 @@ void VRTransform::drop() {
     update();
 }
 
+void VRTransform::rebaseDrag(VRObject* new_parent) {
+    if (!held) { switchParent(new_parent); return; }
+    old_parent = new_parent;
+}
+
+VRObject* VRTransform::getDragParent() { return old_parent; }
+
 /** Cast a ray in world coordinates from the object in its local coordinates, -z axis defaults **/
 Line VRTransform::castRay(VRObject* obj, Vec3f dir) {
     Matrix m = getWorldMatrix();

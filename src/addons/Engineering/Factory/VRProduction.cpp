@@ -23,15 +23,17 @@ VRProductionJob::VRProductionJob(VRProduct* p) {
 }
 
 VRProduction::VRProduction() {
+    description = new VROntology();
     intraLogistics = new FLogistics();
     network = intraLogistics->addNetwork();
 
-    auto fkt = new VRFunction<int>("production_update", boost::bind(&VRProduction::update, this));
-    VRSceneManager::getCurrent()->addUpdateFkt(fkt);
+    //auto fkt = new VRFunction<int>("production_update", boost::bind(&VRProduction::update, this));
+    //VRSceneManager::getCurrent()->addUpdateFkt(fkt);
 }
 
 VRProductionMachine::VRProductionMachine() {
     description = new VROntology();
+    geo = new VRGeometry("ProductionMachine");
 }
 
 void VRProduction::addMachine(VRProductionMachine* pm, string machine, VRGeometry* m) {
@@ -217,7 +219,7 @@ VRObject* VRProduction::test() {
     drillOnto->merge(prodMachineOnto);
     drillOnto->merge(processingOnto);
     drillOnto->merge(drillingOnto);
-    drillOnto->addConcept("Drill", "ProductionMachine");
+    drillOnto->addConcept("Drill", "Productionmachine");
 
     manipOnto->merge(objectOnto);
     manipOnto->merge(actionOnto);
@@ -314,6 +316,9 @@ VRObject* VRProduction::test() {
     production->addMachine(drill, "drill", (VRGeometry*)machine->duplicate());
     production->queueJob(product, "testProduct");
     production->start();
+
+    string q = "q(x) : Process(x), is(x.state,1), Production(y), has(y,x), has(factory,y), is(y.result,testProduct)";
+    production->description->answer(q);
 
     VRObject* anchor = new VRObject("production");
     anchor->addChild(drill->geo);

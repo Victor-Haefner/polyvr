@@ -67,7 +67,8 @@ VRPhysics::VRPhysics(OSG::VRTransform* t) {
 VRPhysics::~VRPhysics() {
     Lock lock(mtx());
     if (body) {
-        OSG::VRSceneManager::getCurrent()->unphysicalize(vr_obj);
+        auto s = OSG::VRSceneManager::getCurrent();
+        if (s) s->unphysicalize(vr_obj);
         if (world) world->removeRigidBody(body);
         delete body;
     }

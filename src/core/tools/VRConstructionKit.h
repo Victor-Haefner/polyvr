@@ -10,6 +10,7 @@ OSG_BEGIN_NAMESPACE;
 
 class VRSnappingEngine;
 class VRSelector;
+class VRTransform;
 class VRGeometry;
 class VRObject;
 
@@ -17,10 +18,12 @@ class VRConstructionKit {
     private:
         VRSnappingEngine* snapping = 0;
         VRSelector* selector = 0;
+        VRObject* root = 0;
 
         map<int, VRGeometry*> anchors;
+        map<VRTransform*, VRTransform*> objects;
 
-        VRObject* root = 0;
+        int ID();
 
     public:
         VRConstructionKit();
@@ -28,7 +31,11 @@ class VRConstructionKit {
         VRSnappingEngine* getSnappingEngine();
         VRSelector* getSelector();
 
-        int addAnchor(float size, Vec3f color);
+        int addAnchorType(float size, Vec3f color);
+        void addObject(VRTransform* t);
+        void addObjectAnchor(VRTransform* t, int a, Vec3f pos, float radius);
+
+        void breakup(VRObject* obj);
 };
 
 OSG_END_NAMESPACE;

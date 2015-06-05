@@ -42,7 +42,7 @@ VRSceneManager* VRSceneManager::get() {
 void VRSceneManager::addScene(VRScene* s) {
     scenes[s->getName()] = s;
     setActiveScene(s);
-    VRGuiSignals::get()->getSignal("scene_changed")->trigger(); // update gui
+    VRGuiSignals::get()->getSignal("scene_changed")->trigger<VRDevice>(); // update gui
 }
 
 void VRSceneManager::loadScene(string path, bool write_protected) {
@@ -53,7 +53,7 @@ void VRSceneManager::loadScene(string path, bool write_protected) {
     removeScene(getCurrent());
     VRSceneLoader::get()->loadScene(apath, path);
     VRSceneManager::getCurrent()->setFlag("write_protected", write_protected);
-    VRGuiSignals::get()->getSignal("scene_changed")->trigger(); // update gui
+    VRGuiSignals::get()->getSignal("scene_changed")->trigger<VRDevice>(); // update gui
 }
 
 string VRSceneManager::getOriginalWorkdir() { return original_workdir; }
@@ -61,19 +61,19 @@ string VRSceneManager::getOriginalWorkdir() { return original_workdir; }
 void VRSceneManager::removeScene(VRScene* s) {
     if (s == 0) return;
     scenes.erase(s->getName());
+    active = "NO_SCENE_ACTIVE";
     delete s;
 
     VRSetupManager::getCurrent()->resetViewports();
     VRSetupManager::getCurrent()->clearSignals();
     VRTransform::dynamicObjects.clear();
-    active = "NO_SCENE_ACTIVE";
 
     // deactivate windows
     auto windows = VRSetupManager::getCurrent()->getWindows();
     for (auto w : windows) w.second->setContent(false);
 
     setWorkdir(original_workdir);
-    VRGuiSignals::get()->getSignal("scene_changed")->trigger(); // update gui
+    VRGuiSignals::get()->getSignal("scene_changed")->trigger<VRDevice>(); // update gui
 }
 
 void VRSceneManager::setWorkdir(string path) {
@@ -119,7 +119,7 @@ void VRSceneManager::setActiveScene(VRScene* s) {
     VRSetupManager::getCurrent()->setScene(s);
     s->setActiveCamera(0);
 
-    on_scene_load->trigger();
+    on_scene_load->trigger<VRDevice>();
 
     // todo:
     //  - add scene signals to setup devices

@@ -1,5 +1,6 @@
 #include "VRMouse.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRFunction.h"
 #include "core/setup/VRSetupManager.h"
 #include "core/objects/VRCamera.h"
 #include "VRSignal.h"
@@ -137,8 +138,8 @@ void VRMouse::updatePosition(int x, int y) {
     if (side != onEdge) {
         sig_state = (side == -1) ? 5 : 4;
         sig_key = (side == -1) ? (1+view->getID())*10+onEdge : (1+view->getID())*10+side;
-        if (side == -1) on_from_edge->trigger();
-        else on_to_edge->trigger();
+        if (side == -1) on_from_edge->trigger<VRDevice>();
+        else on_to_edge->trigger<VRDevice>();
     }
     onEdge = side;
 }

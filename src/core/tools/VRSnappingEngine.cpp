@@ -70,6 +70,8 @@ struct VRSnappingEngine::Rule {
 VRSnappingEngine::VRSnappingEngine() {
     hintGeo = new VRGeometry("snapping_engine_hint");
     positions = new Octree(0.1);
+    event = new EventSnap();
+    snapSignal = new VRSignal();
 
     VRFunction<int>* fkt = new VRFunction<int>("snapping engine update", boost::bind(&VRSnappingEngine::update, this) );
     VRSceneManager::getCurrent()->addUpdateFkt(fkt, 999);
@@ -81,6 +83,7 @@ void VRSnappingEngine::clear() {
     objects.clear();
     for (auto r : rules) delete r.second;
     rules.clear();
+    delete event;
 }
 
 
@@ -138,6 +141,8 @@ void VRSnappingEngine::addTree(VRObject* obj, float weight) {
     for (auto o : objs) addObject((VRTransform*)o, weight);
 }
 
+VRSignal* VRSnappingEngine::getSignalSnap() { return snapSignal; }
+
 void VRSnappingEngine::update() {
     for (auto dev : VRSetupManager::getCurrent()->getDevices()) { // get dragged objects
         VRTransform* obj = dev.second->getDraggedObject();
@@ -166,6 +171,8 @@ void VRSnappingEngine::update() {
                     r->snap(m);
                     maL.invert();
                     m.mult(maL);
+                    event->set(obj, r->csys, m, dev.second);
+                    snapSignal->trigger<EventSnap>(event);
                     break;
                 }
             } else {
@@ -173,6 +180,8 @@ void VRSnappingEngine::update() {
                 float D = (p2-p).length(); // check distance
                 if (!r->inRange(D)) continue;
                 r->snap(m);
+                event->set(obj, r->csys, m, dev.second);
+                snapSignal->trigger<EventSnap>(event);
             }
         }
 
