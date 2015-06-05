@@ -3,8 +3,6 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGGeometry.h>
-#include <assimp/postprocess.h>
-#include <assimp/mesh.h>
 #include <string>
 #include <map>
 #include <vector>

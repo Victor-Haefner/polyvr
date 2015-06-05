@@ -2,6 +2,7 @@
 
 #include <GL/glut.h>
 #include <OpenSG/OSGBaseInitFunctions.h>
+#include <gdk/gdkevents.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

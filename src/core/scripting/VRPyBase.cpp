@@ -175,10 +175,14 @@ int VRPyBase::toGLConst(string s) {
     if (s == "GL_KEEP") return GL_KEEP;
     if (s == "GL_ZERO") return GL_ZERO;
     if (s == "GL_REPLACE") return GL_REPLACE;
-    if (s == "GL_INCR") return GL_INCR;
+	if (s == "GL_INCR") return GL_INCR;
+	if (s == "GL_DECR") return GL_DECR;
+#ifdef GL_INCR_WRAP
     if (s == "GL_INCR_WRAP") return GL_INCR_WRAP;
-    if (s == "GL_DECR") return GL_DECR;
-    if (s == "GL_DECR_WRAP") return GL_DECR_WRAP;
+#endif
+#ifdef GL_DECR_WRAP
+	if (s == "GL_DECR_WRAP") return GL_DECR_WRAP;
+#endif
     if (s == "GL_INVERT") return GL_INVERT;
 
     if (s == "GL_QUADS") return GL_QUADS;

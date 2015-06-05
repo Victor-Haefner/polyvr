@@ -2,10 +2,13 @@
 #define CEFWINDOWSKEY_H_INCLUDED
 
 #include <gdk/gdkkeysyms.h>
-#include <gdk/gdkx.h>
+#include <gdk/gdkwin32.h>
 #define XK_3270  // for XK_3270_BackTab
+#ifndef _WIN32
+#include <gdk/gdkx.h>
 #include <X11/keysym.h>
 #include <X11/XF86keysym.h>
+#endif
 
 template <typename T, size_t N>
 char (&ArraySizeHelper(T (&array)[N]))[N];
@@ -15,7 +18,7 @@ char (&ArraySizeHelper(const T (&array)[N]))[N];
 #endif
 #define arraysize(array) (sizeof(ArraySizeHelper(array)))
 
-int GetCefStateModifiers(guint state) {
+int GetCefStateModifiers(unsigned int state) {
   int modifiers = 0;
   if (state & GDK_SHIFT_MASK)
     modifiers |= EVENTFLAG_SHIFT_DOWN;
@@ -233,6 +236,7 @@ enum KeyboardCode {
 // the same values.
 
 KeyboardCode KeyboardCodeFromXKeysym(unsigned int keysym) {
+#ifndef _WIN32
   switch (keysym) {
     case XK_BackSpace:
       return VKEY_BACK;
@@ -630,6 +634,8 @@ KeyboardCode KeyboardCodeFromXKeysym(unsigned int keysym) {
     // TODO(sad): some keycodes are still missing.
   }
   return VKEY_UNKNOWN;
+#endif
+  return KeyboardCode(keysym);
 }
 
 // From content/browser/renderer_host/input/web_input_event_util_posix.cc.

@@ -112,7 +112,7 @@ void ART::updateL() { updateT(0); }
 //update thread
 void ART::updateT(VRThread* t) {
     if (!active) {
-        sleep(1);
+        osgSleep(1);
         return;
     }
 

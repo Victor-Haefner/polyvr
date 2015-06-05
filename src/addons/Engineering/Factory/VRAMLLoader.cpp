@@ -2,11 +2,6 @@
 
 #include <iostream>
 
-#include <assimp/Importer.hpp>
-#include <assimp/postprocess.h>
-#include <assimp/scene.h>
-#include <assimp/mesh.h>
-
 #include <boost/foreach.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
@@ -460,10 +455,10 @@ VRObject* VRAMLLoader::load(string path) {
            //print(pt.get_child("COLLADA").get_child("library_nodes"));
            Matrix4f m {
 
-            0.001,0,0,0,
-            0,0.001,0,0,
-            0,0,0.001,0,
-            0,0,0,0.001
+            0.001f,0,0,0,
+            0,0.001f,0,0,
+            0,0,0.001f,0,
+            0,0,0,0.001f
 
         };
             loadProducts(path,m);

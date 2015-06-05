@@ -18,6 +18,7 @@
 #include "core/setup/VRSetup.h"
 #include "core/objects/material/VRMaterial.h"
 #include <libxml++/nodes/element.h>
+#include <libxml++/nodes/textnode.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
