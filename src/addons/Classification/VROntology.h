@@ -50,6 +50,8 @@ struct VROntologyInstance : public VRNamedID {
     void set(string name, string value);
     void add(string name, string value);
     string toString();
+
+    string getAtPath(vector<string> path);
 };
 
 struct VROntology {

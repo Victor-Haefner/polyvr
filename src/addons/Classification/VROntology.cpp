@@ -65,7 +65,7 @@ VRConcept* VROntology::addConcept(string concept, string parent) {
 }
 
 string VROntology::answer(string question) {
-    auto res = VRReasoner::get()->process(question);
+    auto res = VRReasoner::get()->process(question, this);
     return res.toString();
 }
 
@@ -102,6 +102,15 @@ void VROntologyInstance::add(string name, string value) {
 VROntologyInstance::VROntologyInstance(string name, VRConcept* c) {
     this->name = name;
     concept = c;
+}
+
+string VROntologyInstance::getAtPath(vector<string> path) {
+    cout << "  get value at path ";
+    for (auto p : path) cout << "/" << p;
+    cout << endl;
+
+    string res;
+    return res;
 }
 
 string VROntologyInstance::toString() {

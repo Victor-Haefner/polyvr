@@ -30,7 +30,7 @@ class VRReasoner {
 
     public:
         static VRReasoner* get();
-        Result process(string query);
+        Result process(string query, VROntology* onto);
 };
 
 
