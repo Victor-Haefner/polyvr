@@ -153,7 +153,7 @@ VRObject* VRProduction::test() {
     mathOnto->addConcept("Box", "Volume");
     mathOnto->getConcept("Box")->addProperty("min", "Vector");
     mathOnto->getConcept("Box")->addProperty("max", "Vector");
-    mathOnto->addRule("b(Box).min>=p(Position) & b.max<=p ? inside(p,b)=1");
+    mathOnto->addRule("inside(p,b):Box(b);Position(p);is_ge(p,b.min);is_ge(b.max,p)");
     // TODO: quaternion rotation rule to change direction
 
     objectOnto->merge(mathOnto);
@@ -163,6 +163,8 @@ VRObject* VRProduction::test() {
 
     processOnto->addConcept("Process");
     processOnto->getConcept("Process")->addProperty("fragment", "Process");
+    processOnto->getConcept("Process")->addProperty("state", "int");
+    processOnto->addRule("is(p.state,1):Process(p);is_not(p.state,1);is_all(p.fragment.state,1)");
 
     featureOnto->addConcept("Feature");
     featureOnto->getConcept("Feature")->addProperty("state", "int");
@@ -178,9 +180,9 @@ VRObject* VRProduction::test() {
     processingOnto->getConcept("Processing")->addProperty("result", "Feature");
     processingOnto->getConcept("Processing")->addProperty("state", "int");
     // if processing unset and feature unset and feature and processing result have same concept, result is set to feature
-    processingOnto->addRule("s(Processing).state=unset & f(Feature).state=unset & s.result.CONCEPT=f.CONCEPT ? f.state=set & s.state=set & s.result=f");
+    //processingOnto->addRule("s(Processing).state=unset & f(Feature).state=unset & s.result.CONCEPT=f.CONCEPT ? f.state=set & s.state=set & s.result=f");
     // if processing done, then result is done and skill is unset
-    processingOnto->addRule("s(Processing).state=done ? s.result.state=done & s.state=unset");
+    processingOnto->addRule("is(s.result.state,1):Processing(s);is(s.state,1)");
 
     prodMachineOnto->merge(machineOnto);
     prodMachineOnto->merge(processingOnto);
@@ -202,7 +204,7 @@ VRObject* VRProduction::test() {
     drillingOnto->getConcept("Drilling")->addProperty("position", "Position");
     drillingOnto->getConcept("Drilling")->addProperty("direction", "Direction");
     drillingOnto->getConcept("Drilling")->addProperty("speed", "float");
-    drillingOnto->addRule("b(Drilling).state=set & inside(b.result.position,b.volume) & b.result.direction=b.direction ? b.state=done");
+    //drillingOnto->addRule("b(Drilling).state=set & inside(b.result.position,b.volume) & b.result.direction=b.direction ? b.state=done");
 
     productOnto->merge(featureOnto);
     productOnto->merge(objectOnto);
@@ -230,12 +232,12 @@ VRObject* VRProduction::test() {
     manipOnto->getConcept("Manipulation")->addProperty("volume", "Box");
     manipOnto->getConcept("Manipulation")->addProperty("state", "String");
     manipOnto->getConcept("Manipulation")->addProperty("object", "Object");
-    manipOnto->addRule("g(Grab).state=unset & inside(o(Object).position,g.volume) ? g.object=o & g.state=set");
-    manipOnto->addRule("g(Grab).state=set & t(Translation).state=unset & inside(o(Object).position,t.volume) ? t.object=o & t.state=set");
-    manipOnto->addRule("g(Grab).state=set & r(Rotate).state=unset & inside(o(Object).position,r.volume) ? r.object=o & r.state=set");
-    manipOnto->addRule("t(Translation).state=set & inside(p(Position), t.volume)? t.state=done");
-    manipOnto->addRule("g(Grab).state=set ? g.state=done");
-    manipOnto->addRule("r(Rotation).state=set ? r.state=done");
+    //manipOnto->addRule("g(Grab).state=unset & inside(o(Object).position,g.volume) ? g.object=o & g.state=set");
+    //manipOnto->addRule("g(Grab).state=set & t(Translation).state=unset & inside(o(Object).position,t.volume) ? t.object=o & t.state=set");
+    //manipOnto->addRule("g(Grab).state=set & r(Rotate).state=unset & inside(o(Object).position,r.volume) ? r.object=o & r.state=set");
+    //manipOnto->addRule("t(Translation).state=set & inside(p(Position), t.volume)? t.state=done");
+    //manipOnto->addRule("g(Grab).state=set ? g.state=done");
+    //manipOnto->addRule("r(Rotation).state=set ? r.state=done");
 
     robotOnto->merge(manipOnto);
     robotOnto->merge(machineOnto);
@@ -318,7 +320,7 @@ VRObject* VRProduction::test() {
     production->queueJob(product, "testProduct");
     production->start();
 
-    string q = "q(x):Process(x);is(x/state,1);Production(y);has(y,x);has(factory,y);is(y/result,testProduct)";
+    string q = "q(x):Process(x);is(x/state,1);Production(y);has(y,x);has(factory,y);is(y/job,testProduct)";
     production->description->answer(q);
 
     VRObject* anchor = new VRObject("production");

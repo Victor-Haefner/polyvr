@@ -8,29 +8,24 @@
 using namespace std;
 
 class VROntology;
+class VROntologyInstance;
 
 class VRReasoner {
     public:
         struct Result {
-            VROntology* o = 0;
-            string toString();
+            vector<VROntologyInstance*> instances;
         };
 
-        struct Job {
-            string content;
-            Job(string s);
-        };
+        static vector<string> split(string s, string d);
+        static vector<string> split(string s, char d);
+        static bool startswith(string s, string subs);
 
     private:
-        vector<string> split(string s, string d);
-        vector<string> split(string s, char d);
-        bool startswith(string s, string subs);
-
         VRReasoner();
 
     public:
         static VRReasoner* get();
-        Result process(string query, VROntology* onto);
+        vector<VRReasoner::Result> process(string query, VROntology* onto);
 };
 
 

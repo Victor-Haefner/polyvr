@@ -66,7 +66,7 @@ VRConcept* VROntology::addConcept(string concept, string parent) {
 
 string VROntology::answer(string question) {
     auto res = VRReasoner::get()->process(question, this);
-    return res.toString();
+    return "";//res.toString();
 }
 
 void VROntology::merge(VROntology* o) {
@@ -79,6 +79,12 @@ void VROntology::merge(VROntology* o) {
 int VRConcept::getPropertyID(string name) {
     for (auto p : properties) if (p.second->name == name) return p.second->ID;
     return -1;
+}
+
+vector<VROntologyRule*> VROntology::getRules() {
+    vector<VROntologyRule*> res;
+    for (auto r : rules) res.push_back(r.second);
+    return res;
 }
 
 void VROntologyInstance::set(string name, string value) {
@@ -104,12 +110,22 @@ VROntologyInstance::VROntologyInstance(string name, VRConcept* c) {
     concept = c;
 }
 
-string VROntologyInstance::getAtPath(vector<string> path) {
+vector<string> VROntologyInstance::getAtPath(vector<string> path) {
     cout << "  get value at path ";
     for (auto p : path) cout << "/" << p;
     cout << endl;
 
-    string res;
+    vector<string> res;
+
+    if (path.size() == 2) {
+        string m = path[1];
+        int id = concept->getPropertyID(m);
+        cout << "  get value of member " << m << " with id " << id << endl;
+        if (id < 0) return res;
+        if (!properties.count(id)) return res;
+        return properties[id];
+    }
+
     return res;
 }
 
