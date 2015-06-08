@@ -52,8 +52,8 @@ VRTransform* VRImport::prependTransform(VRObject* o, string path) {
 }
 
 VRTransform* VRImport::load(string path, VRObject* parent, bool reload, string preset) {           cout << "VRImport::load " << path << endl;
-    reload = reload? reload : (cache.count(path) == 0);
-    if (!reload) return cache[path].root;
+    reload = reload? true : (cache.count(path) == 0);
+    if (!reload) return (VRTransform*)cache[path].root->duplicate();
     if (path.size() < 4) return 0;
 
     setlocale(LC_ALL, "C");
@@ -80,7 +80,7 @@ VRTransform* VRImport::load(string path, VRObject* parent, bool reload, string p
 
     cache[path].root = prependTransform(cache[path].root, path);
     if (parent) parent->addChild(cache[path].root);
-    return cache[path].root;
+    return (VRTransform*)cache[path].root->duplicate();
 }
 
 VRObject* VRImport::OSGConstruct(NodeRecPtr n, VRObject* parent, string name, string currentFile, NodeCore* geoTrans, string geoTransName) {
