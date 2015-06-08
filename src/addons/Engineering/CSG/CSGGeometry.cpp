@@ -169,12 +169,29 @@ CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryRecPtr geometry, Matrix worl
 	vector<CGAL::Point> positions;
 	vector<size_t> indices;
 	size_t curIndex = 0;
-
-	// Convert triangles to indices && vertices, leaving out redundant vertices
-	// (f.e. from different normals at an edge)
-	TriangleIterator it(geometry);
+	TriangleIterator it;
+	auto gpos = geometry->getPositions();
     cout << " toPolyhedron\n";
-	for (; !it.isAtEnd() ;++it) {
+
+	// fix flat triangles (all three points aligned)
+	for (it = TriangleIterator(geometry); !it.isAtEnd() ;++it) {
+        vector<Pnt3f> p(3);
+        vector<Vec3f> v(3);
+        Vec3i vi = Vec3i(it.getPositionIndex(0), it.getPositionIndex(1), it.getPositionIndex(2));
+        for (int i=0; i<3; i++) p[i] = it.getPosition(i);
+        v[0] = p[2]-p[1]; v[1] = p[2]-p[0]; v[2] = p[1]-p[0];
+        float A = (v[2].cross(v[1])).length();
+        if (A < 1e-16) { // small area, flat triangle?
+            for (int i=0; i<3; i++) if (v[i].squareLength() < 1e-8) continue; // check if two points close, then ignore
+
+            int im = 0;
+            for (int i=1; i<3; i++) if (v[i].squareLength() > v[im].squareLength()) im = i;
+            gpos->setValue(p[(im+1)%3], vi[im]);
+        }
+	}
+
+	// Convert triangles to cgal indices and vertices
+	for (it = TriangleIterator(geometry); !it.isAtEnd() ;++it) {
         vector<size_t> IDs(3);
         for (int i=0; i<3; i++) IDs[i] = isKnownPoint( it.getPosition(i) );
 
@@ -184,6 +201,7 @@ CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryRecPtr geometry, Matrix worl
 				CGAL::Point cgalPos(osgPos.x(), osgPos.y(), osgPos.z());
 				positions.push_back(cgalPos);
 				IDs[i] = curIndex;
+                //cout << "add point " << curIndex << "   " << osgPos << endl;
 				size_t *curIndexPtr = new size_t;
 				*curIndexPtr = curIndex;
 				oct->add(OcPoint(osgPos.x(), osgPos.y(), osgPos.z()), curIndexPtr);
@@ -191,7 +209,8 @@ CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryRecPtr geometry, Matrix worl
 			}
 		}
 
-		if (IDs[0] == IDs[1] || IDs[0] == IDs[2] || IDs[1] == IDs[2]) continue; // testing
+        //cout << "add triangle " << IDs[0] << " " << IDs[1] << " " << IDs[2] << endl;
+		if (IDs[0] == IDs[1] || IDs[0] == IDs[2] || IDs[1] == IDs[2]) continue; // ignore flat triangles
 
 		for (int i=0; i<3; i++) indices.push_back(IDs[i]);
 	}
