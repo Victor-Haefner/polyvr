@@ -175,7 +175,10 @@ void path::update() { compute(iterations); }
 void path::close() {
     if (points.size() <= 1) return;
     points.push_back( getPoint(0) );
+    closed = true;
 }
+
+bool path::isClosed() { return closed; }
 
 Vec3f path::interp(vector<Vec3f>& vec, float t) {
     if (direction == -1) t = 1-t;

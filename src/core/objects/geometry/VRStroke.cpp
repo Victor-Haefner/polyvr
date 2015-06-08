@@ -122,6 +122,8 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool lit) {
     if (doCaps) {
         int Nt = 0;
         for (uint i=0; i<paths.size(); i++) {
+            if (paths[i]->isClosed()) continue;
+
             vector<Vec3f> pnts = paths[i]->getPositions();
             vector<Vec3f> directions = paths[i]->getDirections();
             vector<Vec3f> up_vectors = paths[i]->getUpvectors();
@@ -193,8 +195,10 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool lit) {
             }
         }
 
-        Type->addValue(GL_TRIANGLES);
-        Length->addValue(Nt); // caps triangles
+        if (Nt > 0) {
+            Type->addValue(GL_TRIANGLES);
+            Length->addValue(Nt); // caps triangles
+        }
     }
 
     SimpleMaterialRecPtr Mat = SimpleMaterial::create();
