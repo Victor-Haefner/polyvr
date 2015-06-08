@@ -196,7 +196,7 @@ void VRPhysicsManager::updatePhysObjects() {
 
 
     // update physics visualisation shapes
-    for (auto v : physics_visuals_to_update) {
+    for (btCollisionObject* v : physics_visuals_to_update) {
         if (physics_visuals.count(v) == 0) continue;
         VRGeometry* geo = physics_visuals[v];
         //cout << "try " << v << " " << geo << endl;
