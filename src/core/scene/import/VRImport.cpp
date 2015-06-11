@@ -193,6 +193,7 @@ VRObject* VRImport::OSGConstruct(NodeRecPtr n, VRObject* parent, string name, st
     if (cache.count(currentFile) == 0) cache[currentFile] = Cache();
     cache[currentFile].objects[name] = tmp;
     cache[currentFile].root = (VRTransform*)tmp; // TODO
+    cache[currentFile].copy = 0; // TODO
     return tmp;
 }
 
