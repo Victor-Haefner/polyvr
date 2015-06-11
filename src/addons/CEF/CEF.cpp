@@ -62,7 +62,7 @@ void CEF::initiate() {
     > sudo gdebi -n ubuntu_14.04/libcef-dev.deb
     */
 
-    win.SetAsWindowless(0, false);
+    win.SetAsWindowless(0, true);
     //win.SetTransparentPainting(true);
     browser = CefBrowserHost::CreateBrowserSync(win, this, "www.google.de", browser_settings, 0);
 }
