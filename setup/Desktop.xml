@@ -2,7 +2,7 @@
 <Setup>
   <Displays>
     <Window active="1" type="2" width="300" height="300" name="screen" mouse="mouse" keyboard="keyboard">
-      <View stereo="0" active_stereo="0" projection="0" eye_inverted="0" eye_separation="0.06" stats="1" position="0 0 1 1" center="0 0 0" normal="0 0 1" up="0 1 0" size="2 1"/>
+      <View stereo="0" active_stereo="0" projection="0" eye_inverted="0" eye_separation="0.06" position="0 0 1 1" center="0 0 -1" normal="0 0 1" up="0 1 0" size="2 1" user=""/>
     </Window>
   </Displays>
   <Devices>
@@ -10,6 +10,6 @@
     <Device name="mobile" type="mobile"/>
     <Device name="mouse" type="mouse"/>
   </Devices>
-  <TrackingART active="0" port="5000" offset="0 0 0"/>
+  <TrackingART active="0" offset="0 0 0" port="5000" up=""/>
   <TrackingVRPN active="1"/>
 </Setup>

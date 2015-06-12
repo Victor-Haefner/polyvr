@@ -55,9 +55,10 @@ list<VRProfiler::Frame> VRProfiler::getFrames() {
 }
 
 VRProfiler::Frame VRProfiler::getFrame(int f) {
+    boost::mutex::scoped_lock lock(mutex);
     int i=0;
     for (auto fr : frames) {
-        if (i == f) return fr;
+        if (i == f) return (Frame)fr;
         i++;
     }
     return Frame();
@@ -71,7 +72,7 @@ void VRProfiler::swap() {
     Frame f;
     f.t0 = getTime();
     frames.push_front(f);
-    if (history <= frames.size()) frames.pop_back();
+    if (history <= (int)frames.size()) frames.pop_back();
     current = &frames.front();
 }
 

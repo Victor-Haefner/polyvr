@@ -26,10 +26,13 @@
 #include "VRPyLod.h"
 #include "VRPyRecorder.h"
 #include "VRPyPathtool.h"
+#include "VRPyConstructionKit.h"
 #include "VRPySnappingEngine.h"
 #include "VRPySelector.h"
+#include "VRPyMenu.h"
 #include "VRPyClipPlane.h"
 #include "VRPyListMath.h"
+#include "VRPySetup.h"
 #include "VRPyNavigator.h"
 #include "VRPyNavPreset.h"
 #include "VRPyImage.h"
@@ -45,6 +48,7 @@
 #include "addons/Bullet/Particles/VRPyParticles.h"
 #include "addons/Bullet/CarDynamics/VRPyCarDynamics.h"
 #include "addons/Engineering/Factory/VRPyLogistics.h"
+#include "addons/Engineering/Factory/VRPyProduction.h"
 #include "addons/Engineering/Factory/VRPyAMLLoader.h"
 #include "addons/Engineering/Mechanics/VRPyMechanism.h"
 #include "addons/Engineering/VRPyNumberingEngine.h"
@@ -54,6 +58,7 @@
 #include "addons/Engineering/Chemistry/VRPyMolecule.h"
 #include "addons/Engineering/Factory/VRPyFactory.h"
 #include "addons/Engineering/Milling/VRPyMillingMachine.h"
+#include "addons/RealWorld/nature/VRPyTree.h"
 #include "VRPyTypeCaster.h"
 #include "PolyVR.h"
 
@@ -214,6 +219,8 @@ static PyMethodDef VRScriptManager_module_methods[] = {
 	{"getRoot", (PyCFunction)VRScriptManager::getRoot, METH_NOARGS, "Return the root node of the scenegraph - object getRoot()" },
 	{"printOSG", (PyCFunction)VRScriptManager::printOSG, METH_NOARGS, "Print the OSG tree to console" },
 	{"getNavigator", (PyCFunction)VRScriptManager::getNavigator, METH_NOARGS, "Return a handle to the navigator object" },
+	{"getSetup", (PyCFunction)VRScriptManager::getSetup, METH_NOARGS, "Return a handle to the active hardware setup" },
+	{"loadScene", (PyCFunction)VRScriptManager::loadScene, METH_VARARGS, "Close the current scene and open another - loadScene( str path/to/my/scene.xml )" },
     {NULL}  /* Sentinel */
 };
 
@@ -230,7 +237,9 @@ void VRScriptManager::initPyModules() {
 
     PyDict_SetItemString(pLocal, "__builtins__", PyEval_GetBuiltins());
     PyDict_SetItemString(pGlobal, "__builtins__", PyEval_GetBuiltins());
+#ifndef _WIN32
     VRPyListMath::init(pModBase);
+#endif
 
     PyObject* sys_path = PySys_GetObject((char*)"path");
     PyList_Append(sys_path, PyString_FromString(".") );
@@ -251,7 +260,7 @@ void VRScriptManager::initPyModules() {
     VRPySprite::registerModule("Sprite", pModVR, VRPyGeometry::typeRef);
     VRPySound::registerModule("Sound", pModVR);
     VRPySocket::registerModule("Socket", pModVR);
-    VRPyStroke::registerModule("Stroke", pModVR, VRPyObject::typeRef);
+    VRPyStroke::registerModule("Stroke", pModVR, VRPyGeometry::typeRef);
     VRPyConstraint::registerModule("Constraint", pModVR);
     VRPyDevice::registerModule("Device", pModVR);
     VRPyHaptic::registerModule("Haptic", pModVR, VRPyDevice::typeRef);
@@ -259,11 +268,14 @@ void VRScriptManager::initPyModules() {
     VRPyPath::registerModule("Path", pModVR);
     VRPyRecorder::registerModule("Recorder", pModVR);
     VRPySnappingEngine::registerModule("SnappingEngine", pModVR);
+    VRPyConstructionKit::registerModule("ConstructionKit", pModVR);
     VRPyPathtool::registerModule("Pathtool", pModVR);
     VRPySelector::registerModule("Selector", pModVR);
+    VRPySetup::registerModule("Setup", pModVR);
     VRPyNavigator::registerModule("Navigator", pModVR);
     VRPyNavPreset::registerModule("NavPreset", pModVR);
 
+    VRPyMenu::registerModule("Menu", pModVR, VRPyGeometry::typeRef);
     VRPyClipPlane::registerModule("ClipPlane", pModVR, VRPyGeometry::typeRef);
 	VRPyColorChooser::registerModule("ColorChooser", pModVR);
     VRPyCaveKeeper::registerModule("CaveKeeper", pModVR);
@@ -274,6 +286,7 @@ void VRScriptManager::initPyModules() {
     VRPySegmentation::registerModule("Segmentation", pModVR);
     VRPyMechanism::registerModule("Mechanism", pModVR);
     VRPyNumberingEngine::registerModule("NumberingEngine", pModVR, VRPyGeometry::typeRef);
+    VRPyTree::registerModule("Tree", pModVR, VRPyGeometry::typeRef);
     VRPyMillingMachine::registerModule("MillingMachine", pModVR);
     VRPyMolecule::registerModule("Molecule", pModVR, VRPyGeometry::typeRef);
 
@@ -293,6 +306,7 @@ void VRScriptManager::initPyModules() {
     FPyProduct::registerModule("Product", pModFactory);
     FPyLogistics::registerModule("Logistics", pModFactory);
     VRPyFactory::registerModule("Factory", pModFactory);
+    VRPyProduction::registerModule("Production", pModFactory);
     VRPyAMLLoader::registerModule("AMLLoader", pModFactory);
     PyModule_AddObject(pModVR, "Factory", pModFactory);
 
@@ -406,6 +420,16 @@ string VRScriptManager::getPyVRMethodDoc(string type, string method) {
 // Python methods
 // ==============
 
+PyObject* VRScriptManager::loadScene(VRScriptManager* self, PyObject *args) {
+    auto fkt = new VRFunction<int>( "scheduled scene load", boost::bind(&VRSceneManager::loadScene, VRSceneManager::get(), parseString(args), false ) );
+    VRSceneManager::get()->queueJob(fkt);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRScriptManager::getSetup(VRScriptManager* self) {
+    return VRPySetup::fromPtr(VRSetupManager::getCurrent());
+}
+
 PyObject* VRScriptManager::getNavigator(VRScriptManager* self) {
     return VRPyNavigator::fromPtr((VRNavigator*)VRSceneManager::getCurrent());
 }
@@ -426,11 +450,14 @@ PyObject* VRScriptManager::getRoot(VRScriptManager* self) {
 }
 
 PyObject* VRScriptManager::loadGeometry(VRScriptManager* self, PyObject *args) {
-    PyObject* path; int ignoreCache;
+    PyObject* path = 0;
     PyObject *preset = 0;
+    int ignoreCache = 0;
 
+    if (pySize(args) == 1) if (! PyArg_ParseTuple(args, "O", &path)) return NULL;
     if (pySize(args) == 2) if (! PyArg_ParseTuple(args, "Oi", &path, &ignoreCache)) return NULL;
     if (pySize(args) == 3) if (! PyArg_ParseTuple(args, "OiO", &path, &ignoreCache, &preset)) return NULL;
+    if (pySize(args) < 1 || pySize(args) > 3) { PyErr_SetString(err, "VRScriptManager::loadGeometry: wrong number of arguments"); return NULL; }
 
     string p = PyString_AsString(path);
     string pre = "OSG";

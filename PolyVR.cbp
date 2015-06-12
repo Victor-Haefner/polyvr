@@ -177,8 +177,6 @@
 			<Add option="-lqrencode" />
 			<Add option="-ludev" />
 			<Add option="-lffmpegsumo" />
-			<Add option="-lusb" />
-			<Add option="-lassimp" />
 			<Add directory="/usr/X11R6/lib64" />
 			<Add directory="/usr/lib/virtuose" />
 			<Add directory="/usr/lib/i386-linux-gnu" />
@@ -191,6 +189,10 @@
 			<Add directory="/usr/lib" />
 			<Add directory="/usr/lib/x86_64-linux-gnu" />
 		</Linker>
+		<ExtraCommands>
+			<Add after='/bin/bash -c &quot;cp -u -p ressources/cef/icudtl.dat bin/Debug/ 2&gt;/dev/null&quot;' />
+			<Add after='/bin/bash -c &quot;cp -u -p ressources/cef/icudtl.dat bin/Release/ 2&gt;/dev/null&quot;' />
+		</ExtraCommands>
 		<Unit filename="src/PolyVR.cpp" />
 		<Unit filename="src/PolyVR.h" />
 		<Unit filename="src/addons/Bullet/CarDynamics/CarDynamics.cpp" />
@@ -205,28 +207,25 @@
 		<Unit filename="src/addons/Bullet/Particles/VRPyParticles.h" />
 		<Unit filename="src/addons/CEF/CEF.cpp" />
 		<Unit filename="src/addons/CEF/CEF.h" />
+		<Unit filename="src/addons/CEF/CEFWindowsKey.h" />
 		<Unit filename="src/addons/CEF/VRPyCEF.cpp" />
 		<Unit filename="src/addons/CEF/VRPyCEF.h" />
 		<Unit filename="src/addons/CEF/VRPyWebCam.cpp" />
 		<Unit filename="src/addons/CEF/VRPyWebCam.h" />
 		<Unit filename="src/addons/CEF/VRWebCam.cpp" />
 		<Unit filename="src/addons/CEF/VRWebCam.h" />
-		<Unit filename="src/addons/CSG/CGALTypedefs.h" />
-		<Unit filename="src/addons/CSG/CSGGeometry.h" />
-		<Unit filename="src/addons/CSG/CsgjsWrapper.h" />
-		<Unit filename="src/addons/CSG/GTSGeometry.h" />
-		<Unit filename="src/addons/CSG/Octree/Octree.h" />
-		<Unit filename="src/addons/CSG/PolyhedronBuilder.h" />
-		<Unit filename="src/addons/CSG/VRPyCSG.h" />
-		<Unit filename="src/addons/CSG/csgjs.h" />
 		<Unit filename="src/addons/CaveKeeper/CKOctree.cpp" />
 		<Unit filename="src/addons/CaveKeeper/CKOctree.h" />
 		<Unit filename="src/addons/CaveKeeper/CaveKeeper.cpp" />
 		<Unit filename="src/addons/CaveKeeper/CaveKeeper.h" />
 		<Unit filename="src/addons/CaveKeeper/VRPyCaveKeeper.cpp" />
 		<Unit filename="src/addons/CaveKeeper/VRPyCaveKeeper.h" />
+		<Unit filename="src/addons/Classification/VROntology.cpp" />
+		<Unit filename="src/addons/Classification/VROntology.h" />
 		<Unit filename="src/addons/Classification/VRPySegmentation.cpp" />
 		<Unit filename="src/addons/Classification/VRPySegmentation.h" />
+		<Unit filename="src/addons/Classification/VRReasoner.cpp" />
+		<Unit filename="src/addons/Classification/VRReasoner.h" />
 		<Unit filename="src/addons/Classification/VRSegmentation.cpp" />
 		<Unit filename="src/addons/Classification/VRSegmentation.h" />
 		<Unit filename="src/addons/Engineering/CSG/CGALTypedefs.h" />
@@ -254,6 +253,8 @@
 		<Unit filename="src/addons/Engineering/Factory/VRPyFactory.h" />
 		<Unit filename="src/addons/Engineering/Factory/VRPyLogistics.cpp" />
 		<Unit filename="src/addons/Engineering/Factory/VRPyLogistics.h" />
+		<Unit filename="src/addons/Engineering/Factory/VRPyProduction.cpp" />
+		<Unit filename="src/addons/Engineering/Factory/VRPyProduction.h" />
 		<Unit filename="src/addons/Engineering/Factory/network.cpp" />
 		<Unit filename="src/addons/Engineering/Factory/network.h" />
 		<Unit filename="src/addons/Engineering/Mechanics/VRMechanism.cpp" />
@@ -319,10 +320,8 @@
 		<Unit filename="src/addons/RealWorld/TestMover.h" />
 		<Unit filename="src/addons/RealWorld/TextureManager.h" />
 		<Unit filename="src/addons/RealWorld/Timer.h" />
-		<Unit filename="src/addons/RealWorld/VRNatureManager.h" />
 		<Unit filename="src/addons/RealWorld/VRPyRealWorld.cpp" />
 		<Unit filename="src/addons/RealWorld/VRPyRealWorld.h" />
-		<Unit filename="src/addons/RealWorld/VRTree.h" />
 		<Unit filename="src/addons/RealWorld/Vec2Helper.h" />
 		<Unit filename="src/addons/RealWorld/World.h" />
 		<Unit filename="src/addons/RealWorld/WorldFeatures/WorldFeatureExtractor.h" />
@@ -334,6 +333,11 @@
 		<Unit filename="src/addons/RealWorld/json/reader.h" />
 		<Unit filename="src/addons/RealWorld/json/value.h" />
 		<Unit filename="src/addons/RealWorld/json/writer.h" />
+		<Unit filename="src/addons/RealWorld/nature/VRNatureManager.h" />
+		<Unit filename="src/addons/RealWorld/nature/VRPyTree.cpp" />
+		<Unit filename="src/addons/RealWorld/nature/VRPyTree.h" />
+		<Unit filename="src/addons/RealWorld/nature/VRTree.cpp" />
+		<Unit filename="src/addons/RealWorld/nature/VRTree.h" />
 		<Unit filename="src/addons/RealWorld/traffic/JsonClient.cpp" />
 		<Unit filename="src/addons/RealWorld/traffic/JsonClient.h" />
 		<Unit filename="src/addons/RealWorld/traffic/ModuleTraffic.h" />
@@ -533,6 +537,8 @@
 		<Unit filename="src/core/scripting/VRPyColorChooser.h" />
 		<Unit filename="src/core/scripting/VRPyConstraint.cpp" />
 		<Unit filename="src/core/scripting/VRPyConstraint.h" />
+		<Unit filename="src/core/scripting/VRPyConstructionKit.cpp" />
+		<Unit filename="src/core/scripting/VRPyConstructionKit.h" />
 		<Unit filename="src/core/scripting/VRPyDevice.cpp" />
 		<Unit filename="src/core/scripting/VRPyDevice.h" />
 		<Unit filename="src/core/scripting/VRPyGeometry.cpp" />
@@ -549,6 +555,8 @@
 		<Unit filename="src/core/scripting/VRPyLod.h" />
 		<Unit filename="src/core/scripting/VRPyMaterial.cpp" />
 		<Unit filename="src/core/scripting/VRPyMaterial.h" />
+		<Unit filename="src/core/scripting/VRPyMenu.cpp" />
+		<Unit filename="src/core/scripting/VRPyMenu.h" />
 		<Unit filename="src/core/scripting/VRPyNavPreset.cpp" />
 		<Unit filename="src/core/scripting/VRPyNavPreset.h" />
 		<Unit filename="src/core/scripting/VRPyNavigator.cpp" />
@@ -563,6 +571,8 @@
 		<Unit filename="src/core/scripting/VRPyRecorder.h" />
 		<Unit filename="src/core/scripting/VRPySelector.cpp" />
 		<Unit filename="src/core/scripting/VRPySelector.h" />
+		<Unit filename="src/core/scripting/VRPySetup.cpp" />
+		<Unit filename="src/core/scripting/VRPySetup.h" />
 		<Unit filename="src/core/scripting/VRPySnappingEngine.cpp" />
 		<Unit filename="src/core/scripting/VRPySnappingEngine.h" />
 		<Unit filename="src/core/scripting/VRPySocket.cpp" />
@@ -635,6 +645,10 @@
 		<Unit filename="src/core/tools/VRClipPlane.h" />
 		<Unit filename="src/core/tools/VRColorChooser.cpp" />
 		<Unit filename="src/core/tools/VRColorChooser.h" />
+		<Unit filename="src/core/tools/VRConstructionKit.cpp" />
+		<Unit filename="src/core/tools/VRConstructionKit.h" />
+		<Unit filename="src/core/tools/VRMenu.cpp" />
+		<Unit filename="src/core/tools/VRMenu.h" />
 		<Unit filename="src/core/tools/VRMesure.cpp" />
 		<Unit filename="src/core/tools/VRMesure.h" />
 		<Unit filename="src/core/tools/VRPathtool.cpp" />

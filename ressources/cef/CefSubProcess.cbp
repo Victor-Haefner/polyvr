@@ -81,11 +81,35 @@
 			<Add option="-DNVALGRIND" />
 			<Add option="-DDYNAMIC_ANNOTATIONS_ENABLED=0" />
 			<Add option="-D_FORTIFY_SOURCE=2" />
-			<Add directory="../WebKit" />
+			<Add directory="/usr/include/CEF" />
 		</Compiler>
 		<Linker>
-			<Add option="-Wl,-z,now -Wl,-z,relro -pthread -Wl,-z,noexecstack -fPIC -Wl,-rpath,.   -Wl,-O1 -Wl,--as-needed -Wl,--gc-sections -Wl,--start-group -Wl,--end-group -lcef -lgmodule-2.0 -lgthread-2.0 -lgtk-x11-2.0 -lgdk-x11-2.0 -latk-1.0 -lgio-2.0 -lpangoft2-1.0 -lpangocairo-1.0 -lgdk_pixbuf-2.0 -lcairo -lpango-1.0 -lfontconfig -lgobject-2.0 -lglib-2.0 -lfreetype include/libcef_dll_wrapper.a" />
-			<Add directory="include" />
+			<Add option="-Wl,-z,now" />
+			<Add option="-Wl,-z,relro" />
+			<Add option="-pthread" />
+			<Add option="-Wl,-z,noexecstack" />
+			<Add option="-fPIC" />
+			<Add option="-Wl,-rpath,." />
+			<Add option="-Wl,-O1" />
+			<Add option="-Wl,--as-needed" />
+			<Add option="-Wl,--gc-sections" />
+			<Add option="-Wl,--start-group" />
+			<Add option="-Wl,--end-group" />
+			<Add option="-lcef" />
+			<Add option="-lgmodule-2.0" />
+			<Add option="-lgthread-2.0" />
+			<Add option="-lgtk-x11-2.0" />
+			<Add option="-lgdk-x11-2.0" />
+			<Add option="-latk-1.0" />
+			<Add option="-lgio-2.0" />
+			<Add option="-lpangoft2-1.0" />
+			<Add option="-lpangocairo-1.0" />
+			<Add option="-lgdk_pixbuf-2.0" />
+			<Add option="-lcairo -lpango-1.0 -lfontconfig -lgobject-2.0 -lglib-2.0" />
+			<Add option="-lfreetype" />
+			<Add option="/usr/include/CEF/include/libcef_dll_wrapper.a" />
+			<Add directory="/usr/include/CEF" />
+			<Add directory="/usr/lib/CEF" />
 		</Linker>
 		<Unit filename="WKSubProcess.cpp" />
 		<Extensions>

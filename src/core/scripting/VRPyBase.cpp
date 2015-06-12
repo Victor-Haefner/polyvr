@@ -56,6 +56,16 @@ OSG::Line VRPyBase::PyToLine(PyObject *li) {
     return OSG::Line(OSG::Pnt3f(r[3],r[4],r[5]), OSG::Vec3f(r[0],r[1],r[2]));
 }
 
+OSG::Vec2f VRPyBase::parseVec2fList(PyObject *li) {
+    if (li == 0) return OSG::Vec2f();
+    vector<PyObject*> lis = pyListToVector(li);
+    if (lis.size() != 2) return OSG::Vec2f();
+    float x,y;
+    x = PyFloat_AsDouble(lis[0]);
+    y = PyFloat_AsDouble(lis[1]);
+    return OSG::Vec2f(x,y);
+}
+
 OSG::Vec3f VRPyBase::parseVec3fList(PyObject *li) {
     if (li == 0) return OSG::Vec3f();
     vector<PyObject*> lis = pyListToVector(li);
@@ -165,10 +175,14 @@ int VRPyBase::toGLConst(string s) {
     if (s == "GL_KEEP") return GL_KEEP;
     if (s == "GL_ZERO") return GL_ZERO;
     if (s == "GL_REPLACE") return GL_REPLACE;
-    if (s == "GL_INCR") return GL_INCR;
+	if (s == "GL_INCR") return GL_INCR;
+	if (s == "GL_DECR") return GL_DECR;
+#ifdef GL_INCR_WRAP
     if (s == "GL_INCR_WRAP") return GL_INCR_WRAP;
-    if (s == "GL_DECR") return GL_DECR;
-    if (s == "GL_DECR_WRAP") return GL_DECR_WRAP;
+#endif
+#ifdef GL_DECR_WRAP
+	if (s == "GL_DECR_WRAP") return GL_DECR_WRAP;
+#endif
     if (s == "GL_INVERT") return GL_INVERT;
 
     if (s == "GL_QUADS") return GL_QUADS;

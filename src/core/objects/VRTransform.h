@@ -17,6 +17,13 @@ class Transform; OSG_GEN_CONTAINERPTR(Transform);
 class VRAnimation;
 
 class VRTransform : public VRObject {
+    public:
+        enum ORIANTATION_MODE {
+            OM_AT = 0,
+            OM_DIR = 1,
+            OM_EULER = 2
+        };
+
     protected:
         doubleBuffer* dm;
         TransformRecPtr t;//OSG Transform
@@ -29,12 +36,13 @@ class VRTransform : public VRObject {
         bool change;
         bool fixed;
         bool cam_invert_z;
-        bool orientation_mode;
+        int orientation_mode = OM_DIR;
 
         Vec3f _at;
         Vec3f _from;
         Vec3f _up;
         Vec3f _scale;
+        Vec3f _euler;
         NodeRecPtr coords;
         NodeRecPtr translator;
 
@@ -48,9 +56,9 @@ class VRTransform : public VRObject {
         Vec3f tConstraint;
         Vec3i rConstraint;
 
-        bool held;//drag n drop
-        VRObject* old_parent;
-        int old_child_id;
+        bool held = false;//drag n drop
+        VRObject* old_parent = 0;
+        int old_child_id = 0;
 
         VRObject* copy(vector<VRObject*> children);
 
@@ -89,6 +97,7 @@ class VRTransform : public VRObject {
         Vec3f getAt();
         Vec3f getUp();
         Vec3f getScale();
+        Vec3f getEuler();
         void getMatrix(Matrix& _m);
         Matrix getMatrix();
 
@@ -99,6 +108,7 @@ class VRTransform : public VRObject {
         void setScale(float s);
         void setScale(Vec3f s);
         void setOrientation(Vec3f at, Vec3f up);
+        void setEuler(Vec3f euler);
         void setPose(Vec3f from, Vec3f dir, Vec3f up);
         void setMatrix(Matrix _m);
 
@@ -111,8 +121,8 @@ class VRTransform : public VRObject {
         void setWorldPosition(Vec3f pos);
         void setWorldOrientation(Vec3f dir, Vec3f up);
 
-        bool get_orientation_mode();
-        void set_orientation_mode(bool b);
+        int get_orientation_mode();
+        void set_orientation_mode(int b);
 
         void setFixed(bool b);
 
@@ -131,6 +141,8 @@ class VRTransform : public VRObject {
 
         void drag(VRTransform* new_parent);
         void drop();
+        void rebaseDrag(VRObject* new_parent);
+        VRObject* getDragParent();
 
         /** Cast a ray in world coordinates from the object in its local coordinates, -z axis defaults **/
         Line castRay(VRObject* obj = 0, Vec3f dir = Vec3f(0,0,-1));

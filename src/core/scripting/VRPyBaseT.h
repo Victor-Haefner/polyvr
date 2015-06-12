@@ -13,6 +13,17 @@ PyObject* VRPyBaseT<T>::fromPtr(T* obj) {
 }
 
 template<class T>
+bool VRPyBaseT<T>::parse(PyObject *args, T** obj) {
+    *obj = 0;
+    if (args == 0) return false;
+    VRPyBaseT<T>* o = NULL;
+    if (! PyArg_ParseTuple(args, "O", &o)) return false;
+    if (isNone((PyObject*)o)) { PyErr_SetString(err, "Object passed is None!"); return false; }
+    *obj = o->obj;
+    return true;
+}
+
+template<class T>
 PyObject* VRPyBaseT<T>::alloc(PyTypeObject* type, T* t) {
     VRPyBaseT<T>* self = (VRPyBaseT<T> *)type->tp_alloc(type, 0);
     if (self != NULL) {
@@ -29,6 +40,15 @@ template<class T> PyObject* VRPyBaseT<T>::New_toZero(PyTypeObject *type, PyObjec
 template<class T>
 PyObject* VRPyBaseT<T>::New_VRObjects(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     VRPyBaseT<T>* self = (VRPyBaseT<T> *)New_named(type, args, kwds);
+    if (self != NULL) self->obj->addAttachment("dynamicaly_generated", 0);
+    return (PyObject *)self;
+}
+
+template<class T>
+PyObject* VRPyBaseT<T>::New_VRObjects_optional(PyTypeObject *type, PyObject *args, PyObject *kwds) {
+    VRPyBaseT<T>* self = 0;
+    if (pySize(args) == 0) self = (VRPyBaseT<T> *)New(type, args, kwds);
+    else self = (VRPyBaseT<T> *)New_named(type, args, kwds);
     if (self != NULL) self->obj->addAttachment("dynamicaly_generated", 0);
     return (PyObject *)self;
 }

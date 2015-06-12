@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <fstream>
 #include <unistd.h>
+#include <boost/filesystem.hpp>
 
 #include "import/VRImport.h"
 
@@ -81,6 +82,7 @@ void VRSceneLoader_saveObject(VRObject* p, xmlpp::Element* e) {
 }
 
 void VRSceneLoader::saveScene(string file, xmlpp::Element* guiN) {
+    file = boost::filesystem::canonical(file).string();
     cout << " save " << file << endl;
     VRScene* scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
@@ -171,6 +173,7 @@ xmlpp::Element* VRSceneLoader_getElementChild_(xmlpp::Element* e, int i) {
 void VRSceneLoader::loadScene(string path) {
     xmlpp::DomParser parser;
     parser.set_validate(false);
+
     parser.parse_file(path.c_str());
 
     xmlpp::Node* n = parser.get_document()->get_root_node();

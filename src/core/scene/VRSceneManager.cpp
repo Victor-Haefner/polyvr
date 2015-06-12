@@ -42,14 +42,19 @@ VRSceneManager* VRSceneManager::get() {
 void VRSceneManager::addScene(VRScene* s) {
     scenes[s->getName()] = s;
     setActiveScene(s);
-    VRGuiSignals::get()->getSignal("scene_changed")->trigger(); // update gui
+    VRGuiSignals::get()->getSignal("scene_changed")->trigger<VRDevice>(); // update gui
 }
 
 void VRSceneManager::loadScene(string path, bool write_protected) {
+    if (!boost::filesystem::exists(path)) { cout << "loadScene " << path << " not found" << endl; return; }
+    path = boost::filesystem::canonical(path).string();
+    cout << "loadScene " << path << endl;
+    if (getCurrent()) if (getCurrent()->getPath() == path) return;
+
     removeScene(getCurrent());
     VRSceneLoader::get()->loadScene(path);
     VRSceneManager::getCurrent()->setFlag("write_protected", write_protected);
-    VRGuiSignals::get()->getSignal("scene_changed")->trigger(); // update gui
+    VRGuiSignals::get()->getSignal("scene_changed")->trigger<VRDevice>(); // update gui
 }
 
 string VRSceneManager::getOriginalWorkdir() { return original_workdir; }
@@ -57,19 +62,19 @@ string VRSceneManager::getOriginalWorkdir() { return original_workdir; }
 void VRSceneManager::removeScene(VRScene* s) {
     if (s == 0) return;
     scenes.erase(s->getName());
+    active = "NO_SCENE_ACTIVE";
     delete s;
 
     VRSetupManager::getCurrent()->resetViewports();
     VRSetupManager::getCurrent()->clearSignals();
     VRTransform::dynamicObjects.clear();
-    active = "NO_SCENE_ACTIVE";
 
     // deactivate windows
     auto windows = VRSetupManager::getCurrent()->getWindows();
     for (auto w : windows) w.second->setContent(false);
 
     setWorkdir(original_workdir);
-    VRGuiSignals::get()->getSignal("scene_changed")->trigger(); // update gui
+    VRGuiSignals::get()->getSignal("scene_changed")->trigger<VRDevice>(); // update gui
 }
 
 void VRSceneManager::setWorkdir(string path) {
@@ -79,6 +84,7 @@ void VRSceneManager::setWorkdir(string path) {
 }
 
 void VRSceneManager::newScene(string path) {
+    path = boost::filesystem::canonical(path).string();
     removeScene(getCurrent());
 
     VRScene* scene = new VRScene();
@@ -115,7 +121,7 @@ void VRSceneManager::setActiveScene(VRScene* s) {
     VRSetupManager::getCurrent()->setScene(s);
     s->setActiveCamera(0);
 
-    on_scene_load->trigger();
+    on_scene_load->trigger<VRDevice>();
 
     // todo:
     //  - add scene signals to setup devices
@@ -132,6 +138,7 @@ void VRSceneManager::storeFavorites() {
 }
 
 void VRSceneManager::addFavorite(string path) {
+    for (auto p : favorite_paths) if (p == path) return;
     favorite_paths.push_back(path);
     storeFavorites();
 }
@@ -153,7 +160,7 @@ void VRSceneManager::searchExercisesAndFavorites() {
 		string ending = file.substr(N - 4, N - 1);
 		if (ending != ".xml") continue;
 
-		string path = "examples/" + file;
+		string path = boost::filesystem::canonical("examples/" + file).string();
 		example_paths.push_back(path);
 	}
 
@@ -165,6 +172,7 @@ void VRSceneManager::searchExercisesAndFavorites() {
     while ( getline (file,line) ) {
         ifstream f(line.c_str());
         if (!f.good()) continue;
+		line = boost::filesystem::canonical(line).string();
         favorite_paths.push_back(line);
     }
     file.close();

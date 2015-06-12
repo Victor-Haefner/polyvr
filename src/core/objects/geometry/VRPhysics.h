@@ -6,6 +6,8 @@
 #include <OpenSG/OSGMatrix.h>
 #include <boost/thread/recursive_mutex.hpp>
 
+class btSoftBody;
+class btSoftRigidDynamicsWorld;
 
 using namespace std;
 
@@ -27,22 +29,31 @@ class VRPhysics : public OSG::VRStorage {
     private:
         btRigidBody* body = 0;
         btPairCachingGhostObject* ghost_body = 0;
+        /**soft body**/
+        btSoftBody* soft_body = 0;
+
         btCollisionShape* shape = 0;
         float shape_param = -1;
         btDefaultMotionState* motionState = 0;
-        btDiscreteDynamicsWorld* world = 0;
+        btSoftRigidDynamicsWorld* world = 0;
         int activation_mode = 0;
         int collisionGroup = 0;
         int collisionMask = 0;
         bool physicalized = false;
         bool dynamic = false;
         bool ghost = false;
+        /** soft flag **/
+        bool soft = false;
         float mass = 1.0;
         float collisionMargin = 0.3;
+
+
+        OSG::Pnt3f CoMOffset; // center of mass offset
         string physicsShape;
         map<VRPhysics*, VRPhysicsJoint*> joints ;
         map<VRPhysics*, VRPhysicsJoint*> joints2;
 
+        /** total force & torque added by addForce() or addTorque() in this frame **/
         btVector3 constantForce;
         btVector3 constantTorque;
 
@@ -52,8 +63,10 @@ class VRPhysics : public OSG::VRStorage {
 
         btCollisionShape* getBoxShape();
         btCollisionShape* getSphereShape();
-        btCollisionShape* getConvexShape();
+        btCollisionShape* getConvexShape(OSG::Pnt3f& mc);
         btCollisionShape* getConcaveShape();
+
+        btSoftBody*       createConvex();
 
         boost::recursive_mutex& mtx();
         void update();
@@ -82,6 +95,8 @@ class VRPhysics : public OSG::VRStorage {
 
         void setGhost(bool b);
         bool isGhost();
+        void setSoft(bool b);
+        bool isSoft();
 
         void setMass(float m);
         float getMass();
@@ -104,15 +119,17 @@ class VRPhysics : public OSG::VRStorage {
         void pause(bool b = true);
         void resetForces();
         void applyImpulse(OSG::Vec3f i);
+        /** requests a force, which is handled in the physics thread later**/
         void addForce(OSG::Vec3f i);
         void addTorque(OSG::Vec3f i);
+
         void addConstantForce(OSG::Vec3f i);
         void addConstantTorque(OSG::Vec3f i);
         float getConstraintAngle(VRPhysics *to, int axis);
         void deleteConstraints(VRPhysics* with);
-        /**get the total force in this frame **/
+        /**get the requested total force in this frame **/
         OSG::Vec3f getForce();
-        /** get total torque**/
+        /** get requested total torque**/
         OSG::Vec3f getTorque();
 
         OSG::Vec3f getLinearVelocity();
@@ -127,9 +144,9 @@ class VRPhysics : public OSG::VRStorage {
 
 
         static vector<string> getPhysicsShapes();
-        static btTransform fromVRTransform(OSG::VRTransform* t, OSG::Vec3f& scale);
+        static btTransform fromVRTransform(OSG::VRTransform* t, OSG::Vec3f& scale, OSG::Pnt3f& mc);
         static OSG::Matrix fromBTTransform(const btTransform t);
-        static OSG::Matrix fromBTTransform(const btTransform t, OSG::Vec3f scale);
+        static OSG::Matrix fromBTTransform(const btTransform t, OSG::Vec3f& scale, OSG::Pnt3f& mc);
 
 
 

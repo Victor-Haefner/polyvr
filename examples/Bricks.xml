@@ -3,7 +3,7 @@
   <Objects>
     <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
       <Object name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
-        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="17.1448 24.262 2.9627" at="17.9488 23.6779 2.07249" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
+        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="18.2848 24.3417 2.14507" at="17.55 24.4027 2.15786" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
           <Object name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
         </Object>
       </Object>
@@ -22,6 +22,14 @@
 		background:#f0f0ff;
 		color:#111166;
 		margin:0;}
+		input[type=number]::-webkit-inner-spin-button {
+		  cursor: pointer;
+		  display: block;
+		  width: 60px;
+		  text-align: center;
+		  position: relative;
+		  background: transparent;
+		}
  &lt;/style&gt;
 &lt;/head&gt;
 
@@ -148,10 +156,9 @@
 			}
 		&lt;/script&gt;
 
-&lt;input type="number" onchange="brick(1,this.value)" min="1" max="4" value="4"&gt;
-&lt;input type="number" onchange="brick(2,this.value)" min="1" max="3" value="3"&gt;
-&lt;input type="number" onchange="brick(3,this.value)" min="1" max="4" value="4"&gt;
-&lt;br/&gt;
+&lt;input style="height:45px;width:35px;" type="number" onchange="brick(1,this.value)" min="1" max="4" value="4"&gt;
+&lt;input style="height:45px;width:35px;" type="number" onchange="brick(2,this.value)" min="1" max="3" value="3"&gt;
+&lt;input style="height:45px;width:35px;" type="number" onchange="brick(3,this.value)" min="1" max="4" value="4"&gt;
 &lt;button onmousedown='get(1,1,dims())' onmouseup='get(1,0,dims())'&gt;Create&lt;/button&gt;
 
 
@@ -180,15 +187,9 @@
 			VR.bmat.setVertexProgram('shdr_v')
 			VR.bmat.setFragmentProgram('shdr_f')
 	
-	if not hasattr(VR, 'snap'):
-		VR.snap = VR.SnappingEngine()
-		
-	if not hasattr(VR, 'anchor'):
-		VR.anchor = VR.Geometry('anchor')
-		bs = str(s*0.1)
-		VR.anchor.setPrimitive('Box ' + bs + ' ' + bs + ' ' + bs + ' 1 1 1')
-		VR.getRoot().find('Headlight').addChild(VR.anchor)
-		VR.anchor.hide()
+	if not hasattr(VR, 'kit'):
+		VR.kit = VR.ConstructionKit()
+		VR.a1_ID = VR.kit.addAnchorType(s*0.1, [1,1,1])
 	
 	# new brick
 	if k == 1:
@@ -204,27 +205,14 @@
 		idev.getDragGhost().setFrom(0,0,-0.5)
 		
 		h = dims[1]*0.5
-		VR.snap.addObject(g)
-		osnapu = [1,0,0,0,1,0] # orientation to snap to (up, dir)
-		osnapd = [1,0,0,0,1,0] # orientation to snap to (up, dir)
+		VR.kit.addObject(g)
+
 		for i in range(int(dims[0]/s)):
 			for j in range(int(dims[2]/s)):
 				x = i*s - dims[0]*0.5 +0.5*s
 				y = j*s - dims[2]*0.5 +0.5*s
-				a_u = VR.anchor.duplicate()
-				a_d = VR.anchor.duplicate()
-				a_u.show()
-				a_d.show()
-				a_u.setPose([x,h,y], [0,1,0], [1,0,0])
-				a_d.setPose([x,-h,y], [0,1,0], [1,0,0])
-				g.addChild(a_u)
-				g.addChild(a_d)
-				VR.snap.addObjectAnchor(g,a_u)
-				VR.snap.addObjectAnchor(g,a_d)
-				pu = [0,0,0,x,h,y] # point to snap to
-				pd = [0,0,0,x,-h,y] # point to snap to
-				VR.snap.addRule('POINT', 'POINT', pu, osnapu, s*0.3, 1, g )
-				VR.snap.addRule('POINT', 'POINT', pd, osnapd, s*0.3, 1, g )
+				VR.kit.addObjectAnchor(g, VR.a1_ID, [x,h,y], s*0.3)
+				VR.kit.addObjectAnchor(g, VR.a1_ID, [x,-h,y], s*0.3)
 		
 </core>
       <arg type="VRPyDeviceType" value="flystick" name_suffix="0" base_name="flystick" name_space="handler"/>
@@ -259,6 +247,18 @@
       <arg type="VRPyDeviceType" value="keyboard" name_suffix="0" base_name="keyboard" name_space="init"/>
       <arg type="VRPyDeviceType" value="mouse" name_suffix="0" base_name="mouse" name_space="init"/>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
+    </Script>
+    <Script name_suffix="0" base_name="kit_break" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+	
+	dev.intersect()
+	i = dev.getIntersected()
+	VR.kit.breakup(i)
+	dev.drag(i)
+	
+</core>
+      <trig type="on_device" dev="mouse" state="Pressed" param="" key="2" name_suffix="2" base_name="trigger" name_space="__global__"/>
     </Script>
     <Script name_suffix="0" base_name="shdr_f" name_space="__script__" type="GLSL" mobile="">
       <core>

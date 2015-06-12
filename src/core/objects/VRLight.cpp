@@ -53,7 +53,7 @@ VRLight::~VRLight() {
     d_light = 0;
     p_light = 0;
     s_light = 0;
-    if (beacon) delete beacon;
+    //if (beacon) delete beacon; // should be deleted system
 }
 
 void VRLight::update() {

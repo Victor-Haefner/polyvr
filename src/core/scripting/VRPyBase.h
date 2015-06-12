@@ -40,6 +40,7 @@ struct VRPyBase {
     static int pySize(PyObject* v);
     static PyObject* getItem(PyObject* v, int i);
     static vector<PyObject*> pyListToVector(PyObject *v);
+    static OSG::Vec2f parseVec2fList(PyObject *li);
     static OSG::Vec3f parseVec3fList(PyObject *li);
     static OSG::Vec4f parseVec4fList(PyObject *li);
     static OSG::Vec3i parseVec3iList(PyObject *li);
@@ -64,11 +65,13 @@ struct VRPyBaseT : public VRPyBase {
     VRPyBaseT();
 
     static PyObject* fromPtr(T* obj);
+    static bool      parse(PyObject *args, T** obj);
     static PyObject* New(PyTypeObject *type, PyObject *args, PyObject *kwds);
     static PyObject* New_named(PyTypeObject *type, PyObject *args, PyObject *kwds);
     static PyObject* New_toZero(PyTypeObject *type, PyObject *args, PyObject *kwds);
     static PyObject* New_VRObjects(PyTypeObject *type, PyObject *args, PyObject *kwds);
     static PyObject* New_VRObjects_unnamed(PyTypeObject *type, PyObject *args, PyObject *kwds);
+    static PyObject* New_VRObjects_optional(PyTypeObject *type, PyObject *args, PyObject *kwds);
 
     static PyObject* alloc(PyTypeObject* type, T* t);
     static void dealloc(VRPyBaseT<T>* self);

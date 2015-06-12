@@ -281,7 +281,7 @@ void VRGuiScripts::on_exec_clicked() {
 
     VRSceneManager::getCurrent()->triggerScript(script->getName());
 
-    VRGuiSignals::get()->getSignal("scene_modified")->trigger();
+    VRGuiSignals::get()->getSignal("scene_modified")->trigger<VRDevice>();
 }
 
 void VRGuiScripts::on_del_clicked() {
@@ -947,7 +947,7 @@ VRGuiScripts::VRGuiScripts() {
     const char *arg_types[] = {"int", "float", "str", "VRPyObjectType", "VRPyTransformType", "VRPyGeometryType", "VRPyLightType", "VRPyLodType", "VRPyDeviceType", "VRPyHapticType", "VRPySocketType"};
     const char *trigger_types[] = {"none", "on_scene_load", "on_timeout", "on_device", "on_socket"};
     const char *device_types[] = {"mouse", "keyboard", "flystick", "haptic", "mobile", "vrpn_device"}; // TODO: get from a list in devicemanager || something
-    const char *trigger_states[] = {"Pressed", "Released", "Drag", "Drop"};
+    const char *trigger_states[] = {"Pressed", "Released", "Drag", "Drop", "To edge", "From edge"};
     const char *script_types[] = {"Python", "GLSL", "HTML"};
     fillStringListstore("arg_types", vector<string>(arg_types, end(arg_types)) );
     fillStringListstore("ScriptTrigger", vector<string>(trigger_types, end(trigger_types)) );

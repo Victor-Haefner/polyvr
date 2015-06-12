@@ -58,7 +58,7 @@ void VRGuiBits_on_camera_changed(GtkComboBox* cb, gpointer data) {
     VRScene* scene = VRSceneManager::getCurrent();
     scene->setActiveCamera(i);
 
-    VRGuiSignals::get()->getSignal("camera_changed")->trigger();
+    VRGuiSignals::get()->getSignal("camera_changed")->trigger<VRDevice>();
 }
 
 void VRGuiBits_on_navigation_changed(GtkComboBox* cb, gpointer data) {
@@ -243,7 +243,7 @@ VRGuiBits::VRGuiBits() {
     // recorder
     recorder = new VRRecorder();
     recorder->setView(0);
-    recorder_visual_layer = new VRVisualLayer("recorder", "recorder.png");
+    recorder_visual_layer = new VRVisualLayer("Recorder", "recorder.png");
     recorder_visual_layer->setCallback( recorder->getToggleCallback() );
 
     // About Dialog
@@ -295,6 +295,8 @@ void VRGuiBits::updateVisualLayer() {
         VRVisualLayer* ly = VRVisualLayer::getLayer(l);
         Gtk::ToggleToolButton* tb = Gtk::manage( new Gtk::ToggleToolButton() );
         Gtk::Image* icon = Gtk::manage( new Gtk::Image() );
+
+        tb->set_tooltip_text(l);
 
         sigc::slot<void> slot = sigc::bind<VRVisualLayer*, Gtk::ToggleToolButton*>( sigc::mem_fun(*this, &VRGuiBits::on_view_option_toggle), ly, tb);
         bar->append(*tb, slot);

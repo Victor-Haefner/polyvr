@@ -68,8 +68,6 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"setTexCoords", (PyCFunction)VRPyGeometry::setTexCoords, METH_VARARGS, "set geometry texture coordinates - setTexCoords(tc[])" },
     {"setTexture", (PyCFunction)VRPyGeometry::setTexture, METH_VARARGS, "set texture from file - setTexture(path)" },
     {"setMaterial", (PyCFunction)VRPyGeometry::setMaterial, METH_VARARGS, "set material" },
-    {"getType", (PyCFunction)VRPyGeometry::getType, METH_NOARGS, "get geometry type" },
-    {"getTypes", (PyCFunction)VRPyGeometry::getTypes, METH_NOARGS, "get geometry types" },
     {"getPositions", (PyCFunction)VRPyGeometry::getPositions, METH_NOARGS, "get geometry positions" },
     {"getNormals", (PyCFunction)VRPyGeometry::getNormals, METH_NOARGS, "get geometry normals" },
     {"getColors", (PyCFunction)VRPyGeometry::getColors, METH_NOARGS, "get geometry colors" },
@@ -411,20 +409,6 @@ PyObject* VRPyGeometry::setMaterial(VRPyGeometry* self, PyObject *args) {
 	VRPyMaterial *pyMat = (VRPyMaterial*)obj;
     geo->setMaterial((OSG::VRMaterial*)pyMat->obj);
     Py_RETURN_TRUE;
-}
-
-PyObject* VRPyGeometry::getType(VRPyGeometry* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyGeometry::getType - Object is invalid"); return NULL; }
-
-    //int t = self->obj->getMesh()->getType();
-    //string ts = VRPyGeometry::GL_types_int[t];
-    //return PyString_FromString(ts.c_str());
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyGeometry::getTypes(VRPyGeometry* self) {
-	// also TODO (getType isn't implemented for a reason, isn't it?)
-	Py_RETURN_TRUE;
 }
 
 PyObject* VRPyGeometry::getPositions(VRPyGeometry* self) {

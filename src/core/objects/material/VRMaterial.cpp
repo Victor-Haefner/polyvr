@@ -177,7 +177,7 @@ void VRMaterial::setStencilBuffer(bool clear, float value, float mask, int func,
     auto md = mats[activePass];
     if (md->stencilChunk == 0) { md->stencilChunk = StencilChunk::create(); md->mat->addChunk(md->stencilChunk); }
 
-    if (clear) md->stencilChunk->setClearBuffer(1);
+    md->stencilChunk->setClearBuffer(clear);
     md->stencilChunk->setStencilFunc(func);
     md->stencilChunk->setStencilValue(value);
     md->stencilChunk->setStencilMask(mask);
@@ -261,7 +261,7 @@ void VRMaterial::loadContent(xmlpp::Element* e) {
 void VRMaterial::setMaterial(MaterialRecPtr m) {
     if ( dynamic_pointer_cast<MultiPassMaterial>(m) ) {
         MultiPassMaterialRecPtr mm = dynamic_pointer_cast<MultiPassMaterial>(m);
-        for (int i=0; i<mm->getNPasses(); i++) {
+        for (unsigned int i=0; i<mm->getNPasses(); i++) {
             if (i > 0) addPass();
             setMaterial(mm->getMaterials(i));
         }
@@ -341,6 +341,8 @@ void VRMaterial::setTexture(string img_path, bool alpha) { // TODO: improve with
 }
 
 void VRMaterial::setTexture(ImageRecPtr img, bool alpha) {
+    if (img == 0) return;
+
     auto md = mats[activePass];
     if (md->texChunk == 0) { md->texChunk = TextureObjChunk::create(); md->mat->addChunk(md->texChunk); }
     if (md->envChunk == 0) { md->envChunk = TextureEnvChunk::create(); md->mat->addChunk(md->envChunk); }

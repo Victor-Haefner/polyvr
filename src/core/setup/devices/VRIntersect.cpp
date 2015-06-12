@@ -41,6 +41,22 @@ Vec2f VRIntersect_computeTexel(VRIntersection& ins, NodeRecPtr node) {
     return iter.getTexCoords(0) * a + iter.getTexCoords(1) * b + iter.getTexCoords(2) * c;
 }
 
+class VRIntersectAction : public IntersectAction {
+    private:
+        /*Action::ResultE GeoInstancer::intersectEnter(Action  *action) {
+            if(_sfBaseGeometry.getValue() == NULL) return Action::Continue;
+            return _sfBaseGeometry.getValue()->intersectEnter(action);
+            return Action::Continue;
+        }*/
+
+    public:
+        VRIntersectAction() {
+            // TODO: check OSG::Geometry::intersectEnter
+
+            //IntersectAction::registerEnterDefault( getClassType(), reinterpret_cast<Action::Callback>(&GeoInstancer::intersectEnter));
+        }
+};
+
 VRIntersection VRIntersect::intersect(VRObject* tree) {
     VRDevice* dev = (VRDevice*)this;
     VRTransform* caster = dev->getBeacon();
@@ -55,20 +71,21 @@ VRIntersection VRIntersect::intersect(VRObject* tree) {
     ins.time = now;
 
     Line ray = caster->castRay(tree);
-    IntersectActionRefPtr iAct = IntersectAction::create();
-    iAct->setTravMask(8);
-    iAct->setLine(ray);
-    iAct->apply(tree->getNode());
+    VRIntersectAction iAct;
+    //IntersectActionRefPtr iAct = IntersectAction::create();
+    iAct.setTravMask(8);
+    iAct.setLine(ray);
+    iAct.apply(tree->getNode());
 
-    ins.hit = iAct->didHit();
+    ins.hit = iAct.didHit();
     if (ins.hit) {
-        ins.object = tree->find(iAct->getHitObject()->getParent());
-        ins.point = iAct->getHitPoint();
-        ins.normal = iAct->getHitNormal();
+        ins.object = tree->find(iAct.getHitObject()->getParent());
+        ins.point = iAct.getHitPoint();
+        ins.normal = iAct.getHitNormal();
         if (tree->getParent()) tree->getParent()->getNode()->getToWorld().mult( ins.point, ins.point );
         if (tree->getParent()) tree->getParent()->getNode()->getToWorld().mult( ins.normal, ins.normal );
-        ins.triangle = iAct->getHitTriangle();
-        ins.texel = VRIntersect_computeTexel(ins, iAct->getHitObject());
+        ins.triangle = iAct.getHitTriangle();
+        ins.texel = VRIntersect_computeTexel(ins, iAct.getHitObject());
         lastIntersection = ins;
     } else {
         ins.object = 0;
@@ -99,13 +116,13 @@ void VRIntersect::drag(VRObject* obj, VRTransform* caster) {
     dragged_ghost->setMatrix(dragged->getMatrix());
     dragged_ghost->switchParent(caster);
 
-    dragSignal->trigger();
+    dragSignal->trigger<VRDevice>();
 }
 
 void VRIntersect::drop(VRDevice* dev) {
     auto d = getDraggedObject();
     if (d != 0) {
-        dropSignal->trigger();
+        dropSignal->trigger<VRDevice>();
         d->drop();
         drop_time = VRGlobals::get()->CURRENT_FRAME;
         dragged = 0;

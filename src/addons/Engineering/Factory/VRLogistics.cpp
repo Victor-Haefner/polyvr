@@ -32,6 +32,7 @@ void FObject::setTransformation(VRTransform* t) {
 }
 
 void FObject::setMetaData(string s) {
+    return;
     if (metaData == 0) {
         metaData = new OSG::VRSprite("meta");
         metaData->setMaterial(new VRMaterial("metasprite"));
@@ -166,7 +167,7 @@ void FPath::update() {
     for (auto p : paths) delete p.second;
     paths.clear();
 
-    for (int i=1; i<nodes.size(); i++) {
+    for (unsigned int i=1; i<nodes.size(); i++) {
         FNode* n0 = nodes[i-1];
         FNode* n1 = nodes[i];
         path* p = new path();
@@ -210,6 +211,7 @@ void FContainer::clear() { products.clear(); }
 
 bool FContainer::isFull() { return ((int)products.size() == capacity); }
 bool FContainer::isEmpty() { return ((int)products.size() == 0); }
+int FContainer::getCount() { return products.size(); }
 
 // --------------------------------------------------------------------- TRANSPORTER
 
@@ -411,9 +413,10 @@ FLogistics::~FLogistics() {
     networks.clear();
 }
 
-FProduct* FLogistics::addProduct() {
+FProduct* FLogistics::addProduct(OSG::VRTransform* t) {
     FProduct* p = new FProduct();
     objects[p->getID()] = p;
+    if (t) p->setTransformation(t);
     return p;
 }
 

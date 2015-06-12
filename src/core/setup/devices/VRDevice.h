@@ -13,6 +13,7 @@ class VRSignal;
 class VRDevice : public VRIntersect, public VRAvatar, public VRName, public VRStorage {
     protected:
         int sig_key = -1;
+        int sig_state = -1;
         string message;
         string type;
         VRTransform* target = 0;
@@ -45,6 +46,9 @@ class VRDevice : public VRIntersect, public VRAvatar, public VRName, public VRSt
 
         virtual void clearSignals();
 
+        virtual VRSignal* getToEdgeSignal();
+        virtual VRSignal* getFromEdgeSignal();
+
         void change_button(int key, int state);
         void change_slider(int key, float state);
 
@@ -53,6 +57,7 @@ class VRDevice : public VRIntersect, public VRAvatar, public VRName, public VRSt
         void updateSignals();
 
         int key();
+        int getState();
         string getMessage();
         void setMessage(string s);
 

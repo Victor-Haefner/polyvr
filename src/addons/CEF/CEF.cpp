@@ -1,4 +1,5 @@
 #include "CEF.h"
+#include "CEFWindowsKey.h"
 
 #include <OpenSG/OSGTextureEnvChunk.h>
 #include <OpenSG/OSGTextureObjChunk.h>
@@ -8,6 +9,7 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/setup/devices/VRDevice.h"
+#include "core/setup/devices/VRKeyboard.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/utils/VRLogger.h"
 
@@ -54,11 +56,14 @@ void CEF::initiate() {
     CefWindowInfo win;
     CefBrowserSettings browser_settings;
 
-#ifdef _WIN32
-    win.SetAsWindowless(0, false);
-#else
-    win.SetAsOffScreen(0);
-#endif
+    /* NOT COMPILING?
+    go to polyvr/dependencies
+    > sudo git pull origin master
+    > sudo gdebi -n ubuntu_14.04/libcef-dev.deb
+    */
+
+    win.SetAsWindowless(0, true);
+    //win.SetTransparentPainting(true);
     browser = CefBrowserHost::CreateBrowserSync(win, this, "www.google.de", browser_settings, 0);
 }
 
@@ -123,11 +128,12 @@ void CEF::addMouse(VRDevice* dev, VRObject* obj, int lb, int rb, int wu, int wd)
 
 void CEF::addKeyboard(VRDevice* dev) {
     if (dev == 0) return;
-    dev->addSignal(-1, 0)->add( new VRFunction<VRDevice*>( "CEF::KP", boost::bind(&CEF::keyboard, this, 0, _1 ) ) );
-    //dev->addSignal(-1, 1)->add( new VRFunction<VRDevice*>( "CEF::KR", boost::bind(&CEF::keyboard, this, 1, _1 ) ) );
+    dev->addSignal(-1, 0)->add( new VRFunction<VRDevice*>( "CEF::KR", boost::bind(&CEF::keyboard, this, 0, _1 ) ) );
+    dev->addSignal(-1, 1)->add( new VRFunction<VRDevice*>( "CEF::KP", boost::bind(&CEF::keyboard, this, 1, _1 ) ) );
 }
 
 void CEF::mouse_move(VRDevice* dev, int i) {
+    if (dev == 0) return;
     VRIntersection ins = dev->intersect(obj);
 
     if (!ins.hit) return;
@@ -142,7 +148,7 @@ void CEF::mouse_move(VRDevice* dev, int i) {
 
 void CEF::mouse(int b, bool down, VRDevice* dev) {
     /*browser->GetHost()->SendCaptureLostEvent();
-    browser->GetHost()->SendFocusEvent();*/
+    */
 
     VRIntersection ins = dev->intersect(obj);
 
@@ -158,8 +164,10 @@ void CEF::mouse(int b, bool down, VRDevice* dev) {
         VRLog::log("net", ss.str());
     }
 
-    if (!ins.hit) return;
-    if (ins.object != obj) return;
+
+    if (!ins.hit) { browser->GetHost()->SendFocusEvent(false); focus = false; return; }
+    if (ins.object != obj) { browser->GetHost()->SendFocusEvent(false); focus = false; return; }
+    browser->GetHost()->SendFocusEvent(true); focus = true;
 
     CefMouseEvent me;
     me.x = ins.texel[0]*width;
@@ -180,18 +188,32 @@ void CEF::mouse(int b, bool down, VRDevice* dev) {
 }
 
 void CEF::keyboard(bool down, VRDevice* dev) {
-    char k = dev->key();
+    if (!focus) return;
+    if (dev->getType() != "keyboard") return;
+    VRKeyboard* kb = (VRKeyboard*)dev;
+    auto event = kb->getGtkEvent();
+    CefRefPtr<CefBrowserHost> host = browser->GetHost();
 
-    CefKeyEvent ke;
-    ke.type = KEYEVENT_CHAR;
-    ke.modifiers = EVENTFLAG_NONE;
-    ke.windows_key_code = k;
-    ke.native_key_code = k;
-    //ke.is_system_key = k;
-    ke.unmodified_character = k;
-    //ke.focus_on_editable_field = ;
-    ke.character = k;
+    CefKeyEvent kev;
+    kev.modifiers = GetCefStateModifiers(event->state);
+    if (event->keyval >= GDK_KP_Space && event->keyval <= GDK_KP_9) kev.modifiers |= EVENTFLAG_IS_KEY_PAD;
+    if (kev.modifiers & EVENTFLAG_ALT_DOWN) kev.is_system_key = true;
 
-    cout << "KEY " << dev->key() << endl;
-    browser->GetHost()->SendKeyEvent(ke);
+    KeyboardCode windows_key_code = GdkEventToWindowsKeyCode(event);
+    kev.windows_key_code = GetWindowsKeyCodeWithoutLocation(windows_key_code);
+
+    kev.native_key_code = event->keyval;
+
+    if (windows_key_code == VKEY_RETURN) kev.unmodified_character = '\r'; else
+    kev.unmodified_character = static_cast<int>(gdk_keyval_to_unicode(event->keyval));
+
+    if (kev.modifiers & EVENTFLAG_CONTROL_DOWN) kev.character = GetControlCharacter(windows_key_code, kev.modifiers & EVENTFLAG_SHIFT_DOWN); else
+    kev.character = kev.unmodified_character;
+
+    if (event->type == GDK_KEY_PRESS) {
+        kev.type = KEYEVENT_RAWKEYDOWN; host->SendKeyEvent(kev);
+    } else {
+        kev.type = KEYEVENT_KEYUP; host->SendKeyEvent(kev);
+        kev.type = KEYEVENT_CHAR; host->SendKeyEvent(kev);
+    }
 }

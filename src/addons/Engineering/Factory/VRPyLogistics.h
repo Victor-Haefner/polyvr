@@ -45,15 +45,20 @@ struct FPyContainer : VRPyBaseT<FContainer> {
     static PyObject* isEmpty(FPyContainer* self);
     static PyObject* isFull(FPyContainer* self);
     static PyObject* clear(FPyContainer* self);
+    static PyObject* getCount(FPyContainer* self);
+    static PyObject* add(FPyContainer* self, PyObject* args);
+    static PyObject* get(FPyContainer* self);
 };
 
 struct FPyProduct : VRPyBaseT<FProduct> {
     static PyMethodDef methods[];
+    static PyObject* getGeometry(FPyProduct* self);
 };
 
 struct FPyLogistics : VRPyBaseT<FLogistics> {
     static PyMethodDef methods[];
 
+    static PyObject* addProduct(FPyLogistics* self, PyObject* args);
     static PyObject* addNetwork(FPyLogistics* self);
     static PyObject* addPath(FPyLogistics* self);
     static PyObject* addTransporter(FPyLogistics* self, PyObject* args);

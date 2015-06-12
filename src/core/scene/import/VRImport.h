@@ -15,10 +15,13 @@ class NodeCore;
 class VRImport {
     private:
         struct Cache {
+            VRTransform* copy = 0;
             VRTransform* root = 0;
             map<string,VRObject*> objects;
             Cache();
             Cache(VRTransform* root);
+
+            VRTransform* retrieve();
         };
         map<string, Cache> cache;
 

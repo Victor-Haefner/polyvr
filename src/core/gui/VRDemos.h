@@ -67,7 +67,7 @@ class VRDemos {
 
         void initMenu();
         void on_menu_delete();
-        void on_menu_advanced();
+        void on_menu_advanced(demoEntry* e = 0);
         void on_menu_unpin();
 
         void on_advanced_cancel();

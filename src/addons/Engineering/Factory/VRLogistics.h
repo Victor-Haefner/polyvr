@@ -163,6 +163,7 @@ class FContainer : public FObject {
 
         bool isFull();
         bool isEmpty();
+        int getCount();
 
         void clear();
 
@@ -211,7 +212,7 @@ class FLogistics {
         FLogistics();
         ~FLogistics();
 
-        FProduct* addProduct();
+        FProduct* addProduct(OSG::VRTransform* t = 0);
         FNetwork* addNetwork();
         FTransporter* addTransporter(FTransporter::FTType type);
         FPath* addPath();

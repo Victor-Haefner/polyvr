@@ -51,9 +51,15 @@ VRTransform* VRImport::prependTransform(VRObject* o, string path) {
     return trans;
 }
 
+VRTransform* VRImport::Cache::retrieve() {
+    if (copy == 0) copy = (VRTransform*)root->duplicate(); // keep a copy, TODO: try to change the namespace of the copy, maybe helpful
+    else root = (VRTransform*)copy->duplicate();
+    return root;
+}
+
 VRTransform* VRImport::load(string path, VRObject* parent, bool reload, string preset) {           cout << "VRImport::load " << path << endl;
-    reload = reload? reload : (cache.count(path) == 0);
-    if (!reload) return cache[path].root;
+    reload = reload? true : (cache.count(path) == 0);
+    if (!reload) return cache[path].retrieve();
     if (path.size() < 4) return 0;
 
     setlocale(LC_ALL, "C");
@@ -80,7 +86,7 @@ VRTransform* VRImport::load(string path, VRObject* parent, bool reload, string p
 
     cache[path].root = prependTransform(cache[path].root, path);
     if (parent) parent->addChild(cache[path].root);
-    return cache[path].root;
+    return cache[path].retrieve();
 }
 
 VRObject* VRImport::OSGConstruct(NodeRecPtr n, VRObject* parent, string name, string currentFile, NodeCore* geoTrans, string geoTransName) {
@@ -125,6 +131,7 @@ VRObject* VRImport::OSGConstruct(NodeRecPtr n, VRObject* parent, string name, st
     else if (t_name == "Group") {//OpenSG Group
         tmp = new VRObject(name);
         tmp->setCore(core, "Object");
+        tmp->addAttachment("collada_name", name);
     }
 
     else if (t_name == "ComponentTransform") {
@@ -149,6 +156,7 @@ VRObject* VRImport::OSGConstruct(NodeRecPtr n, VRObject* parent, string name, st
             tmp_e = new VRTransform(name);
             tmp_e->setMatrix(dynamic_cast<Transform *>(n->getCore())->getMatrix());
             tmp = tmp_e;
+            tmp->addAttachment("collada_name", name);
         }
     }
 
@@ -185,6 +193,7 @@ VRObject* VRImport::OSGConstruct(NodeRecPtr n, VRObject* parent, string name, st
     if (cache.count(currentFile) == 0) cache[currentFile] = Cache();
     cache[currentFile].objects[name] = tmp;
     cache[currentFile].root = (VRTransform*)tmp; // TODO
+    cache[currentFile].copy = 0; // TODO
     return tmp;
 }
 

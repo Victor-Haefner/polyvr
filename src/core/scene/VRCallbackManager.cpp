@@ -99,7 +99,9 @@ void VRCallbackManager::updateCallbacks() {
             }
 
     for (auto cb : cbs) { // trigger all callbacks
-        (*cb)(0);
+        VRFunction<int>& rcb = *cb;
+        rcb(0);
+        //(*cb)(0);
         if (jobFkts.count(cb)) { // if a job erase it
             dropUpdateFkt(cb);
             jobFkts.erase(cb);

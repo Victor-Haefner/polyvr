@@ -86,7 +86,6 @@ VRTransform::VRTransform(string name) : VRObject(name) {
     _up = Vec3f(0,1,0);
     _scale = Vec3f(1,1,1);
 
-    orientation_mode = true;
     change = false;
     held = false;
     fixed = true;
@@ -319,9 +318,9 @@ void VRTransform::setFrom(Vec3f pos) {
     if (isNan(pos)) return;
     //cout << "\nSet From : " << name << getID() << " : " << pos;
     Vec3f dir;
-    if (orientation_mode) dir = _at - _from; // TODO: there may a better way
+    if (orientation_mode == OM_DIR) dir = _at - _from; // TODO: there may a better way
     _from = pos;
-    if (orientation_mode) _at = _from + dir;
+    if (orientation_mode == OM_DIR) _at = _from + dir;
     reg_change();
 }
 
@@ -329,7 +328,7 @@ void VRTransform::setFrom(Vec3f pos) {
 void VRTransform::setAt(Vec3f at) {
     if (isNan(at)) return;
     _at = at;
-    orientation_mode = false;
+    orientation_mode = OM_AT;
     reg_change();
 }
 
@@ -343,12 +342,12 @@ void VRTransform::setUp(Vec3f up) {
 void VRTransform::setDir(Vec3f dir) {
     if (isNan(dir)) return;
     _at = _from + dir;
-    orientation_mode = true;
+    orientation_mode = OM_DIR;
     reg_change();
 }
 
-bool VRTransform::get_orientation_mode() { return orientation_mode; }
-void VRTransform::set_orientation_mode(bool b) { orientation_mode = b; }
+int VRTransform::get_orientation_mode() { return orientation_mode; }
+void VRTransform::set_orientation_mode(int b) { orientation_mode = b; }
 
 /** Set the orientation of the object with the at && up vectors **/
 void VRTransform::setOrientation(Vec3f at, Vec3f up) {
@@ -400,7 +399,24 @@ void VRTransform::setScale(Vec3f s) {
     reg_change();
 }
 
+void VRTransform::setEuler(Vec3f e) {
+    if (isNan(e)) return;
+    _euler = e;
+    Vec3f s = Vec3f(sin(e[0]), sin(e[1]), sin(e[2]));
+    Vec3f c = Vec3f(cos(e[0]), cos(e[1]), cos(e[2]));
+    //orientation_mode = OM_EULER;
+
+    //Vec3f d = Vec3f( -c[1]*c[2], -c[1]*s[2], s[1]);
+    Vec3f d = Vec3f( -c[0]*c[2]*s[1]-s[0]*s[2], -c[0]*s[1]*s[2]+s[0]*c[2], -c[0]*c[1]);
+    Vec3f u = Vec3f( s[0]*s[1]*c[2]-s[2]*c[0], s[0]*s[1]*s[2]+c[2]*c[0], c[1]*s[0]);
+
+    setDir( d );
+    setUp( u );
+    reg_change();
+}
+
 Vec3f VRTransform::getScale() { return _scale; }
+Vec3f VRTransform::getEuler() { return _euler; }
 
 /** Rotate the object around its up axis **/
 void VRTransform::rotate(float a) {//rotate around up axis
@@ -462,7 +478,7 @@ void VRTransform::rotateX(float a) {//rotate around x axis
 /** Rotate the object around the point where at indicates && the up axis **/
 void VRTransform::rotateAround(float a) {//rotate around focus using up axis
     if (isNan(a)) return;
-    orientation_mode = false;
+    orientation_mode = OM_AT;
     Vec3f d = _at - _from;
 
     Quaternion q = Quaternion(_up, -a);
@@ -541,6 +557,13 @@ void VRTransform::drop() {
     reg_change();
     update();
 }
+
+void VRTransform::rebaseDrag(VRObject* new_parent) {
+    if (!held) { switchParent(new_parent); return; }
+    old_parent = new_parent;
+}
+
+VRObject* VRTransform::getDragParent() { return old_parent; }
 
 /** Cast a ray in world coordinates from the object in its local coordinates, -z axis defaults **/
 Line VRTransform::castRay(VRObject* obj, Vec3f dir) {
@@ -744,7 +767,7 @@ void VRTransform::loadContent(xmlpp::Element* e) {
     if (e->get_attribute("cT")) tConstraint = toVec3f(e->get_attribute("cT")->get_value());
     if (e->get_attribute("cR")) rConstraint = toVec3i(e->get_attribute("cR")->get_value());
 
-    if (e->get_attribute("at_dir")) orientation_mode = toBool(e->get_attribute("at_dir")->get_value());
+    if (e->get_attribute("at_dir")) orientation_mode = toInt(e->get_attribute("at_dir")->get_value());
 
     if(doTConstraint || doRConstraint) setFixed(false);
 }

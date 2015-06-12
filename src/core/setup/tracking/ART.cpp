@@ -112,7 +112,7 @@ void ART::updateL() { updateT(0); }
 //update thread
 void ART::updateT(VRThread* t) {
     if (!active) {
-        sleep(1);
+        osgSleep(1);
         return;
     }
 
@@ -145,7 +145,7 @@ void ART::checkNewDevices(int type, int N) {
         int k = ART_device::key(i,type);
         if (devices.count(k) == 0) {
             devices[k] = new ART_device(i,type);
-            VRSetupManager::getCurrent()->getSignal_on_new_art_device()->trigger();
+            VRSetupManager::getCurrent()->getSignal_on_new_art_device()->trigger<VRDevice>();
         }
     }
 }

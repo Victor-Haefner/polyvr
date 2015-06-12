@@ -60,6 +60,7 @@ PyMethodDef VRPyDevice::methods[] = {
     {"getTarget", (PyCFunction)VRPyDevice::getTarget, METH_NOARGS, "Get device target." },
     {"setTarget", (PyCFunction)VRPyDevice::setTarget, METH_VARARGS, "Set device target." },
     {"getKey", (PyCFunction)VRPyDevice::getKey, METH_NOARGS, "Get activated device key." },
+    {"getState", (PyCFunction)VRPyDevice::getState, METH_NOARGS, "Get device state." },
     {"getKeyState", (PyCFunction)VRPyDevice::getKeyState, METH_VARARGS, "Get device key state." },
     {"getSlider", (PyCFunction)VRPyDevice::getSlider, METH_VARARGS, "Get device slider state." },
     {"getMessage", (PyCFunction)VRPyDevice::getMessage, METH_NOARGS, "Get device received message." },
@@ -100,8 +101,10 @@ PyObject* VRPyDevice::intersect(VRPyDevice* self) {
 
 PyObject* VRPyDevice::drag(VRPyDevice* self, PyObject *args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::drag, Object is invalid"); return NULL; }
-    VRPyObject* p = (VRPyObject*)parseObject(args); // TODO: check the type
-    self->obj->drag(p->obj, self->obj->getBeacon());
+    OSG::VRObject* obj = 0;
+    if (!VRPyObject::parse(args, &obj)) return NULL;
+    string name = obj->getName();
+    self->obj->drag(obj, self->obj->getBeacon());
     Py_RETURN_TRUE;
 }
 
@@ -149,6 +152,11 @@ PyObject* VRPyDevice::setTarget(VRPyDevice* self, PyObject *args) {
     VRPyTransform* t = (VRPyTransform*)target;
     self->obj->setTarget(t->obj);
     Py_RETURN_TRUE;
+}
+
+PyObject* VRPyDevice::getState(VRPyDevice* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getState, Object is invalid"); return NULL; }
+    return PyInt_FromLong(self->obj->getState());
 }
 
 PyObject* VRPyDevice::getKeyState(VRPyDevice* self, PyObject *args) {

@@ -116,6 +116,10 @@ void VRDemos::setButton(demoEntry* e) {
     e->label->set_alignment(0.5, 0.5);
     e->label->set_ellipsize(Pango::ELLIPSIZE_START);
     e->label->set_max_width_chars(20);
+    e->butPlay->set_tooltip_text("Play/Stop");
+    e->butOpts->set_tooltip_text("Options");
+    e->butLock->set_tooltip_text("Write protection");
+    e->label->set_tooltip_text(e->path);
 
     // build widget
     vb2->pack_start(*e->butOpts, false, false, 0);
@@ -142,7 +146,7 @@ void VRDemos::setButton(demoEntry* e) {
     ebox->signal_event().connect( sigc::bind<demoEntry*>( sigc::mem_fun(*this, &VRDemos::on_any_event), e) );
 
     e->butPlay->signal_clicked().connect( sigc::bind<demoEntry*>( sigc::mem_fun(*this, &VRDemos::toggleDemo), e) );
-    e->butOpts->signal_clicked().connect( sigc::mem_fun(*this, &VRDemos::on_menu_advanced) );
+    e->butOpts->signal_clicked().connect( sigc::bind<demoEntry*>( sigc::mem_fun(*this, &VRDemos::on_menu_advanced), e) );
     e->butLock->signal_clicked().connect( sigc::bind<demoEntry*>( sigc::mem_fun(*this, &VRDemos::on_lock_toggle), e) );
     e->widget->show_all();
 }
@@ -170,7 +174,7 @@ void VRDemos::updateTable(string t) {
     int x,y;
 
     Gtk::AttachOptions opts = Gtk::FILL|Gtk::EXPAND;
-    Gtk::AttachOptions opts2;
+    Gtk::AttachOptions opts2 = Gtk::AttachOptions(0);
 
     int N = 4;
     for (auto d : demos) if(d.second->favorite) N++;
@@ -218,9 +222,9 @@ void VRDemos::setGuiState(demoEntry* e) {
         if (d != e) d->running = false;
     }
 
-    if (e) e->widget->set_sensitive(true);
-    if (running) e->imgPlay->set(Gtk::Stock::MEDIA_STOP, Gtk::ICON_SIZE_BUTTON);
-    else if (e) e->imgPlay->set(Gtk::Stock::MEDIA_PLAY, Gtk::ICON_SIZE_BUTTON);
+    if (e) if (e->widget) e->widget->set_sensitive(true);
+    if (running) { if (e->imgPlay) e->imgPlay->set(Gtk::Stock::MEDIA_STOP, Gtk::ICON_SIZE_BUTTON); }
+    else if (e) { if (e->imgPlay) e->imgPlay->set(Gtk::Stock::MEDIA_PLAY, Gtk::ICON_SIZE_BUTTON); }
 }
 
 void VRDemos::addEntry(string path, string table, bool running) {
@@ -245,7 +249,7 @@ void VRDemos::initMenu() {
     menu = new VRGuiContextMenu("DemoMenu");
     menu->appendItem("DemoMenu", "Unpin", sigc::mem_fun(*this, &VRDemos::on_menu_unpin));
     menu->appendItem("DemoMenu", "Delete", sigc::mem_fun(*this, &VRDemos::on_menu_delete));
-    menu->appendItem("DemoMenu", "Advanced..", sigc::mem_fun(*this, &VRDemos::on_menu_advanced));
+    menu->appendItem("DemoMenu", "Advanced..", sigc::bind<demoEntry*>( sigc::mem_fun(*this, &VRDemos::on_menu_advanced), 0));
 
     setButtonCallback("button10", sigc::mem_fun(*this, &VRDemos::on_advanced_cancel));
     setButtonCallback("button26", sigc::mem_fun(*this, &VRDemos::on_advanced_start));
@@ -284,7 +288,8 @@ void VRDemos::on_menu_unpin() {
     VRSceneManager::get()->remFavorite(path);
 }
 
-void VRDemos::on_menu_advanced() {
+void VRDemos::on_menu_advanced(demoEntry* e) {
+    if (e) current_demo = e;
     setCheckButton("checkbutton34", false);
     setCheckButton("checkbutton36", false);
     showDialog("advanced_start");
@@ -298,6 +303,7 @@ void VRDemos::on_advanced_start() {
     bool no_scripts = getCheckButtonState("checkbutton34");
     bool lightweight = getCheckButtonState("checkbutton36");
     hideDialog("advanced_start");
+    if (current_demo == 0) return;
 
     if (lightweight) VRSceneLoader::get()->ingoreHeavyRessources(); // just for the next scene
 
@@ -309,10 +315,8 @@ void VRDemos::on_advanced_start() {
 
 void VRDemos::on_diag_save_clicked() {
     string path = VRGuiFile::getRelativePath_toWorkdir();
-    if (demos.count(path) == 0) {
-        addEntry(path, "favorites_tab", false);
-        VRSceneManager::get()->addFavorite(path);
-    }
+    addEntry(path, "favorites_tab", false);
+    VRSceneManager::get()->addFavorite(path);
     saveScene(path);
 }
 
@@ -327,12 +331,10 @@ void VRDemos::on_saveas_clicked() {
 }
 
 void VRDemos::on_diag_load_clicked() {
-    string path = VRGuiFile::getRelativePath_toWorkdir();
+    string path = VRGuiFile::getPath();
     if (current_demo) if (current_demo->running) toggleDemo(current_demo); // close demo if it is running
-    if (demos.count(path) == 0) {
-        addEntry(path, "favorites_tab", false);
-        VRSceneManager::get()->addFavorite(path);
-    }
+    addEntry(path, "favorites_tab", false);
+    VRSceneManager::get()->addFavorite(path);
     toggleDemo(demos[path]);
 }
 
@@ -346,13 +348,12 @@ void VRDemos::on_load_clicked() {
 }
 
 void VRDemos::on_diag_new_clicked() {
-    string path = VRGuiFile::getRelativePath_toOrigin();
+    //string path = VRGuiFile::getRelativePath_toOrigin();
+    string path = VRGuiFile::getPath();
     if (path == "") return;
     VRSceneManager::get()->newScene(path);
-    if (demos.count(path) == 0) {
-        addEntry(path, "favorites_tab", true);
-        VRSceneManager::get()->addFavorite(path);
-    }
+    addEntry(path, "favorites_tab", true);
+    VRSceneManager::get()->addFavorite(path);
     saveScene(path);
 }
 
@@ -366,10 +367,11 @@ void VRDemos::on_new_clicked() {
 
 void VRDemos::update() {
     VRScene* scene = VRSceneManager::getCurrent();
-    if (scene == 0 && current_demo == 0) return;
-    if (scene == 0 && current_demo != 0) {
-        current_demo->running = false;
-        setGuiState(current_demo);
+    if (scene == 0) {
+        if (current_demo) {
+            current_demo->running = false;
+            setGuiState(current_demo);
+        }
         return;
     }
 
@@ -384,9 +386,16 @@ void VRDemos::update() {
         setGuiState(current_demo);
     }
 
-    if (demos.count(sPath) == 0) return;
-    current_demo = demos[sPath];
+    if (demos.count(sPath)) {
+        current_demo = demos[sPath];
+        current_demo->running = true;
+        setGuiState(current_demo);
+        return;
+    }
+
+    current_demo = new demoEntry();
     current_demo->running = true;
+    demos[sPath] = current_demo;
     setGuiState(current_demo);
 }
 
