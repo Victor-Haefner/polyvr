@@ -4,6 +4,7 @@
 #include <iostream>
 #include <sstream>
 #include <list>
+#include "core/utils/toString.h"
 
 using namespace std;
 
@@ -41,8 +42,6 @@ bool VRReasoner::startswith(string s, string subs) {
     return s.compare(0, subs.size(), subs);
 }
 
-
-
 struct Variable {
     vector<VROntologyInstance*> instances;
     string value;
@@ -51,12 +50,19 @@ struct Variable {
 
     Variable() {;}
 
+    string toString() {
+        string s = value+"[";
+        for (auto i : instances) s += i->name+",";
+        if (instances.size() > 0) s.pop_back();
+        s +="]{"+::toString(isAnonymous)+","+::toString(valid)+"}";
+        return s;
+    }
+
     Variable(VROntology* onto, string concept, string var) {
         auto cl = onto->getConcept(concept);
         if (cl == 0) return;
         instances = onto->getInstances(concept);
         if (instances.size() == 0) {
-            cout << "ADD INST\n";
             instances.push_back( onto->addInstance(var, concept) );
             isAnonymous = true;
         }
@@ -87,6 +93,13 @@ struct Path {
         root = path[0];
         var = path[path.size()-1];
     }
+
+    string toString() {
+        string s;
+        for (auto p : path) s += p + "/";
+        if (path.size() > 0) s.pop_back();
+        return s;
+    }
 };
 
 struct Statement {
@@ -102,6 +115,14 @@ struct Statement {
         verb = s1[0];
         auto s2 = VRReasoner::split( VRReasoner::split(s1[1], ')')[0] , ',');
         for (string s : s2) paths.push_back(Path(s));
+    }
+
+    string toString() {
+        string s = verb + "(";
+        for (auto p : paths) s += p.toString() + ",";
+        if (paths.size() > 0) s.pop_back();
+        s += ")";
+        return s;
     }
 
     void updateLocalVariables(map<string, Variable>& globals, VROntology* onto) {
@@ -140,6 +161,10 @@ struct Query {
         parts = VRReasoner::split(parts[1], ';');
         for (auto p : parts) statements.push_back(Statement(p));
     }
+
+    string toString() {
+        return query.toString();
+    }
 };
 
 bool IS(Variable& v0, Variable& v1, Path& p0, Path& p1) {
@@ -158,12 +183,14 @@ bool IS(Variable& v0, Variable& v1, Path& p0, Path& p1) {
 }
 
 bool Eval(Statement& s, map<string, Variable>& vars, VROntology* onto, list<Query>& queries) {
+    cout << " eval " << s.toString() << endl;
     if (s.state == 1) return true;
     s.updateLocalVariables(vars, onto);
 
     if (!s.isSimpleVerb()) { // resolve anonymous variables
         string var = s.paths[0].root;
         vars[var] = Variable( onto, s.verb, var );
+        cout << "  added variable " << vars[var].toString() << endl;
         return true;
     }
 
@@ -190,6 +217,7 @@ bool Eval(Statement& s, map<string, Variable>& vars, VROntology* onto, list<Quer
         //if (vars.count(var[1]) == 0) continue;
         return false;
     }
+    return false;
 }
 
     // TODO: introduce requirements rules for the existence of some individuals
@@ -207,16 +235,16 @@ vector<VRReasoner::Result> VRReasoner::process(string query, VROntology* onto) {
 
     for(; queries.size() > 0 && itr < itr_max; itr++) {
         Query q = queries.back();
+        cout << "query " << q.toString() << endl;
 
         if (q.query.state == 1) { queries.pop_back(); continue; };
         q.query.updateLocalVariables(vars, onto);
 
         if (Eval(q.query, vars, onto, queries)) {
             if (q.query.verb == "q") {
-                Result r;
                 string v = q.query.lvars[0].value;
-                r.instances = vars[v].instances;
-                results[v] = (r);
+                if (results.count(v) == 0) results[v] = Result();
+                results[v].instances = vars[v].instances;
             }
         }
 
