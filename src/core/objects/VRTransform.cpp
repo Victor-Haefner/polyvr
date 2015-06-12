@@ -734,6 +734,7 @@ void VRTransform::update() {
 
 void VRTransform::saveContent(xmlpp::Element* e) {
     VRObject::saveContent(e);
+    if (getPersistency() < 2) return;
 
     e->set_attribute("from", toString(_from).c_str());
     e->set_attribute("at", toString(_at).c_str());
