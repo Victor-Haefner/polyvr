@@ -52,6 +52,7 @@ struct FPyContainer : VRPyBaseT<FContainer> {
 
 struct FPyProduct : VRPyBaseT<FProduct> {
     static PyMethodDef methods[];
+    static PyObject* getGeometry(FPyProduct* self);
 };
 
 struct FPyLogistics : VRPyBaseT<FLogistics> {

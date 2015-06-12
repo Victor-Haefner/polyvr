@@ -1,5 +1,6 @@
 #include "VRPyLogistics.h"
 #include "core/scripting/VRPyBaseT.h"
+#include "core/scripting/VRPyTypeCaster.h"
 #include "core/scripting/VRPyTransform.h"
 #include "core/scripting/VRPyObject.h"
 
@@ -470,9 +471,13 @@ template<> PyTypeObject VRPyBaseT<FProduct>::type = {
 };
 
 PyMethodDef FPyProduct::methods[] = {
+    {"getGeometry", (PyCFunction)FPyProduct::getGeometry, METH_NOARGS, "Get product geometry" },
     {NULL}  /* Sentinel */
 };
 
+PyObject* FPyProduct::getGeometry(FPyProduct* self) {
+    return VRPyTypeCaster::cast(self->obj->getTransformation());
+}
 
 // ------------------------------------------------------------------------ LOGISTICS
 
