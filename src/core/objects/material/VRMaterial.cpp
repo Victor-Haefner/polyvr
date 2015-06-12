@@ -341,6 +341,8 @@ void VRMaterial::setTexture(string img_path, bool alpha) { // TODO: improve with
 }
 
 void VRMaterial::setTexture(ImageRecPtr img, bool alpha) {
+    if (img == 0) return;
+
     auto md = mats[activePass];
     if (md->texChunk == 0) { md->texChunk = TextureObjChunk::create(); md->mat->addChunk(md->texChunk); }
     if (md->envChunk == 0) { md->envChunk = TextureEnvChunk::create(); md->mat->addChunk(md->envChunk); }

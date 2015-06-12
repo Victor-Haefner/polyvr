@@ -119,6 +119,7 @@ void VRDemos::setButton(demoEntry* e) {
     e->butPlay->set_tooltip_text("Play/Stop");
     e->butOpts->set_tooltip_text("Options");
     e->butLock->set_tooltip_text("Write protection");
+    e->label->set_tooltip_text(e->path);
 
     // build widget
     vb2->pack_start(*e->butOpts, false, false, 0);
@@ -330,7 +331,7 @@ void VRDemos::on_saveas_clicked() {
 }
 
 void VRDemos::on_diag_load_clicked() {
-    string path = VRGuiFile::getRelativePath_toWorkdir();
+    string path = VRGuiFile::getPath();
     if (current_demo) if (current_demo->running) toggleDemo(current_demo); // close demo if it is running
     addEntry(path, "favorites_tab", false);
     VRSceneManager::get()->addFavorite(path);
@@ -347,7 +348,8 @@ void VRDemos::on_load_clicked() {
 }
 
 void VRDemos::on_diag_new_clicked() {
-    string path = VRGuiFile::getRelativePath_toOrigin();
+    //string path = VRGuiFile::getRelativePath_toOrigin();
+    string path = VRGuiFile::getPath();
     if (path == "") return;
     VRSceneManager::get()->newScene(path);
     addEntry(path, "favorites_tab", true);
