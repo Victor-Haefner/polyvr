@@ -191,7 +191,7 @@ VRObject* VRFactory::loadVRML(string path) { // wrl filepath
     cout << "\nloaded " << geos.size() << " geometries" << endl;
 
     VRObject* res = new VRObject("factory");
-    res->addAttachment("dynamicaly_generated", 0);
+    res->setPersistency(0);
 
     for (auto g : geos) {
         //Vec3f d = g.vmax - g.vmin;
@@ -237,7 +237,7 @@ class VRLODSpace : public VRObject {
 
     public:
         VRLODSpace() : VRObject("VRLODSpace") {
-            addAttachment("dynamicaly_generated", 0);
+            setPersistency(0);
         }
 
         void add(VRObject* g) {
@@ -274,7 +274,7 @@ VRObject* VRFactory::setupLod(vector<string> paths) {
 
     // use all geometry to create micro lods
     VRObject* root = new VRObject("factory_lod_root");
-    root->addAttachment("dynamicaly_generated", 0);
+    root->setPersistency(0);
     vector<VRLod*> micro_lods;
     for (uint i = 0; i<objects.size(); i++) {
         vector<VRObject*> geos = objects[i]->getChildren(true, "Geometry");

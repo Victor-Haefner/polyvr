@@ -40,7 +40,7 @@ void VRConstructionKit_on_snap(VRConstructionKit* kit, VRSnappingEngine::EventSn
     }
 
     VRTransform* group = new VRTransform("kit_group");
-    group->addAttachment("dynamicaly_generated", 0);
+    group->setPersistency(0);
     group->setPickable(true);
     group->addAttachment("kit_group", 0);
     p2->addChild(group);

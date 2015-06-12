@@ -85,12 +85,12 @@ void VRObject::setCore(NodeCoreRecPtr c, string _type) {
     }
 
     type = _type;
-
     node->setCore(c);
-
     specialized = true;
 }
 
+void VRObject::setPersistency(int p) { persistency = p; }
+int VRObject::getPersistency() { return persistency; }
 
 /** Returns the object OSG core **/
 NodeCoreRecPtr VRObject::getCore() { return node->getCore(); }

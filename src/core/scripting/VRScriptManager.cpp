@@ -466,7 +466,7 @@ PyObject* VRScriptManager::loadGeometry(VRScriptManager* self, PyObject *args) {
         VRGuiManager::get()->printInfo("Warning: " + p + " not found.\n");
         Py_RETURN_NONE;
     }
-    obj->addAttachment("dynamicaly_generated", 0);
+    obj->setPersistency(0);
     return VRPyTypeCaster::cast(obj);
 }
 

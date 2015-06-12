@@ -232,7 +232,7 @@ PyObject* VRPyObject::switchParent(VRPyObject* self, PyObject* args, PyObject *k
 PyObject* VRPyObject::duplicate(VRPyObject* self) {
     if (self->obj == 0) { PyErr_SetString(err, "C Child is invalid"); return NULL; }
     OSG::VRObject* d = (OSG::VRObject*)self->obj->duplicate(true);
-    d->addAttachment("dynamicaly_generated", 0);
+    d->setPersistency(0);
     return VRPyTypeCaster::cast(d);
 }
 

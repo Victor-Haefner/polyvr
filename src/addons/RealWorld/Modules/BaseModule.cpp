@@ -19,5 +19,5 @@ BaseModule::BaseModule(MapCoordinator* mapCoordinator, TextureManager* texManage
     this->mapCoordinator = mapCoordinator;
     this->texManager = texManager;
     root = new VRObject("ModuleRoot");
-    root->addAttachment("dynamicaly_generated", 0);
+    root->setPersistency(0);
 }

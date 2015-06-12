@@ -73,7 +73,7 @@ void VRSceneLoader_saveObject(VRObject* p, xmlpp::Element* e) {
     p->save(e);
     for (uint i=0; i<p->getChildrenCount(); i++) {
         VRObject* c = p->getChild(i);
-        if (c->hasAttachment("dynamicaly_generated")) continue; // generated objects are not be saved
+        if (c->getPersistency() == 0) continue; // generated objects are not be saved
         if (c->hasAttachment("global")) continue; // global objects are not be saved
         //xmlpp::Element* ce = e->add_child(c->getName());
         xmlpp::Element* ce = e->add_child("Object");

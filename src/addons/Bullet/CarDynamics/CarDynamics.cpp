@@ -205,10 +205,10 @@ void CarDynamics::setWheelGeo(VRGeometry* geo) { // TODO
     w2 = (VRGeometry*)geo->duplicate();
     w3 = (VRGeometry*)geo->duplicate();
     w4 = (VRGeometry*)geo->duplicate();
-    w1->addAttachment("dynamicaly_generated", 0);
-    w2->addAttachment("dynamicaly_generated", 0);
-    w3->addAttachment("dynamicaly_generated", 0);
-    w4->addAttachment("dynamicaly_generated", 0);
+    w1->setPersistency(0);
+    w2->setPersistency(0);
+    w3->setPersistency(0);
+    w4->setPersistency(0);
     geo->getParent()->addChild(w1);
     geo->getParent()->addChild(w2);
     geo->getParent()->addChild(w3);

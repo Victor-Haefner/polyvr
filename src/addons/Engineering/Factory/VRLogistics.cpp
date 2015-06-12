@@ -444,7 +444,7 @@ FContainer* FLogistics::addContainer(VRTransform* t) {
     FContainer* c = new FContainer();
     t = (VRTransform*)t->duplicate(true);
     t->setVisible(true);
-    t->addAttachment("dynamicaly_generated", 0);
+    t->setPersistency(0);
     c->setTransformation(t);
     objects[c->getID()] = c;
     return c;
@@ -455,7 +455,7 @@ void FLogistics::fillContainer(FContainer* c, int N, VRTransform* t) {
         FProduct* p = addProduct();
         t = (VRTransform*)t->duplicate(true);
         t->setVisible(true);
-        t->addAttachment("dynamicaly_generated", 0);
+        t->setPersistency(0);
         p->setTransformation(t);
         c->add( p );
     }

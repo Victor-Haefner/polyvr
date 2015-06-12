@@ -171,7 +171,7 @@ void BlockWorld::updateShaderCamPos() {
 
 BlockWorld::BlockWorld() {
     anchor = new VRObject("cavekeeper_anchor");
-    anchor->addAttachment("dynamicaly_generated", 0);
+    anchor->setPersistency(0);
     anchor->addAttachment("global", 0);
 }
 
@@ -280,7 +280,7 @@ void CaveKeeper::place(VRDevice* dev, string obj, VRTransform* geo) {
         geo->setVisible(true);
         geo->setFrom(p);
         geo->setAt(e->pos);
-        geo->addAttachment("dynamicaly_generated", 0);
+        geo->setPersistency(0);
 
         redraw();
     }

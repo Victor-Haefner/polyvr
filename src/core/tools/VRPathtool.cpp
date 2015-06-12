@@ -57,7 +57,7 @@ VRGeometry* VRPathtool::newHandle() {
     h->setMaterial(VRMaterial::get("pathHandle"));
     h->getMaterial()->setDiffuse(Vec3f(0.5,0.5,0.9));
     //calcFaceNormals(h->getMesh()); // not working ??
-    h->addAttachment("dynamicaly_generated", 0);
+    h->setPersistency(0);
     return h;
 }
 
@@ -124,7 +124,7 @@ void VRPathtool::updateHandle(VRGeometry* handle) {
     // update path line
     if (e->line == 0) {
         e->line = new VRGeometry("path");
-        e->line->addAttachment("dynamicaly_generated", 0);
+        e->line->setPersistency(0);
         VRMaterial* matl = new VRMaterial("pline");
         matl->setLit(false);
         matl->setDiffuse(Vec3f(0.1,0.9,0.2));
