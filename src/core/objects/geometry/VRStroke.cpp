@@ -140,13 +140,13 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool lit) {
             Vec3f n = directions[0];
             Vec3f u = up_vectors[0];
             Vec3f c = cols[0];
+            MatrixLookAt(m, Vec3f(0,0,0), n, u);
+            Vec3f tmp; m.mult(pCenter, tmp);
 
             int Ni = Pos->size();
-            Pos->addValue(p);
+            Pos->addValue(p + tmp);
             Norms->addValue(-n);
             Colors->addValue(c);
-
-            MatrixLookAt(m, Vec3f(0,0,0), n, u);
 
             for (uint k=0; k<profile.size(); k++) {
                 Vec3f tmp = profile[k];
@@ -173,12 +173,13 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool lit) {
             n = directions[N];
             u = up_vectors[N];
             c = cols[N];
+            MatrixLookAt(m, Vec3f(0,0,0), n, u);
+            tmp; m.mult(pCenter, tmp);
 
-            Pos->addValue(p);
+            Pos->addValue(p + tmp);
             Norms->addValue(n);
             Colors->addValue(c);
 
-            MatrixLookAt(m, Vec3f(0,0,0), n, u);
 
             for (uint k=0; k<profile.size(); k++) {
                 Vec3f tmp = profile[k];
