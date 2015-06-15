@@ -253,7 +253,7 @@ void CSGGeometry::enableEditMode() {
 bool CSGGeometry::disableEditMode() {
 	if (children.size() != 2) { cout << "CSGGeometry: Warning: editMode disabled with less than 2 children. Doing nothing.\n"; return false; }
 
-	vector<CGAL::Polyhedron*> polys(2); // We need two child geometries to work with
+	vector<CGAL::Polyhedron*> polys(2,0); // We need two child geometries to work with
 
 	for (int i=0; i<2; i++) { // Prepare the polyhedra
 		VRObject *obj = children[i];
@@ -268,11 +268,23 @@ bool CSGGeometry::disableEditMode() {
 				obj->setVisible(true); // We stay in edit mode, so both children need to be visible
 				return false;
 			}
-		} else if(obj->getType() == "CSGGeometry") {
+			continue;
+		}
+
+		if(obj->getType() == "CSGGeometry") {
 			CSGGeometry *geo = dynamic_cast<CSGGeometry*>(obj);
 			polys[i] = geo->getCSGGeometry(); // TODO: where does this come from?? keep the old!
+			continue;
 		}
+
+		cout << "Warning! polyhedron " << i << " not acquired because ";
+		cout << obj->getName() << " has wrong type " << obj->getType();
+		cout << ", it should be 'Geometry' or 'CSGGeometry'!" << endl;
 	}
+
+	if (polys[0] == 0) cout << "Warning! first polyhedron is 0! " << children[0]->getName() << endl;
+	if (polys[1] == 0) cout << "Warning! second polyhedron is 0! " << children[1]->getName() << endl;
+	if (polys[0] == 0 || polys[1] == 0) return false;
 
     if (polyhedron) delete polyhedron;
     polyhedron = 0;

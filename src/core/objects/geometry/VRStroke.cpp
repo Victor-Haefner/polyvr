@@ -40,6 +40,10 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool lit) {
     this->closed = closed;
     this->lit = lit;
 
+    Vec3f pCenter;
+    for (auto p : profile) pCenter += p;
+    pCenter *= 1.0/profile.size();
+
     GeoUInt8PropertyRecPtr      Type = GeoUInt8Property::create();
     GeoUInt32PropertyRecPtr     Length = GeoUInt32Property::create();
     GeoPnt3fPropertyRecPtr      Pos = GeoPnt3fProperty::create();
