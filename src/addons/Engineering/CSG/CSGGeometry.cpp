@@ -264,7 +264,7 @@ bool CSGGeometry::disableEditMode() {
 			try {
 			    polys[i] = toPolyhedron( geo->getMesh(), geo->getWorldMatrix() );
 			} catch (exception e) {
-			    cout << getName() << ": Could not convert mesh data to polyhedron: " << e.what();
+			    cout << getName() << ": Could not convert mesh data to polyhedron: " << e.what() << endl;
 				obj->setVisible(true); // We stay in edit mode, so both children need to be visible
 				return false;
 			}

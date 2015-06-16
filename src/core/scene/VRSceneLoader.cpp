@@ -82,7 +82,8 @@ void VRSceneLoader_saveObject(VRObject* p, xmlpp::Element* e) {
 }
 
 void VRSceneLoader::saveScene(string file, xmlpp::Element* guiN) {
-    file = boost::filesystem::canonical(file).string();
+    if (boost::filesystem::exists(file))
+        file = boost::filesystem::canonical(file).string();
     cout << " save " << file << endl;
     VRScene* scene = VRSceneManager::getCurrent();
     if (scene == 0) return;

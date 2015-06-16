@@ -84,7 +84,8 @@ void VRSceneManager::setWorkdir(string path) {
 }
 
 void VRSceneManager::newScene(string path) {
-    path = boost::filesystem::canonical(path).string();
+    if (boost::filesystem::exists(path))
+        path = boost::filesystem::canonical(path).string();
     removeScene(getCurrent());
 
     VRScene* scene = new VRScene();
