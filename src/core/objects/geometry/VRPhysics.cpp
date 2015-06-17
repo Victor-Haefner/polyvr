@@ -268,10 +268,6 @@ void VRPhysics::update() {
     if (!physicalized) return;
 
 
-    motionState = new btDefaultMotionState(fromVRTransform( vr_obj, scale,CoMOffset ));
-
-
-
     btVector3 inertiaVector(0,0,0);
     float _mass = mass;
     if (!dynamic) _mass = 0;
@@ -292,16 +288,14 @@ void VRPhysics::update() {
 
     }
 
-
-
-
+    CoMOffset = OSG::Pnt3f(0,0,0);
     if (physicsShape == "Box") shape = getBoxShape();
     if (physicsShape == "Sphere") shape = getSphereShape();
     if (physicsShape == "Convex") shape = getConvexShape(CoMOffset);
     if (physicsShape == "Concave") shape = getConcaveShape();
     if (shape == 0) return;
 
-
+    motionState = new btDefaultMotionState(fromVRTransform( vr_obj, scale,CoMOffset ));
 
     if (_mass != 0) shape->calculateLocalInertia(_mass, inertiaVector);
 
@@ -472,19 +466,28 @@ btCollisionShape* VRPhysics::getConcaveShape() {
     return shape;
 }
 
-btTransform VRPhysics::fromVRTransform(OSG::VRTransform* t, OSG::Vec3f& scale, OSG::Pnt3f& mc) {
+btTransform VRPhysics::fromVRTransform(OSG::VRTransform* t, OSG::Vec3f& scale, OSG::Pnt3f mc) {
     OSG::Matrix m = t->getWorldMatrix();
+    return fromMatrix(m,scale,mc);
+}
 
+btTransform VRPhysics::fromMatrix(OSG::Matrix m, OSG::Vec3f& scale, OSG::Pnt3f mc) {
     for (int i=0; i<3; i++) m[3][i] += mc[i]; // center of mass offset
     for (int i=0; i<3; i++) scale[i] = m[i].length(); // store scale
     for (int i=0; i<3; i++) m[i] *= 1.0/scale[i]; // normalize
-
-    btTransform bltTrans;
+    btTransform bltTrans;//Bullets transform
     bltTrans.setFromOpenGLMatrix(&m[0][0]);
     return bltTrans;
 }
 
-OSG::Matrix VRPhysics::fromBTTransform(const btTransform bt, OSG::Vec3f& scale, OSG::Pnt3f& mc) {
+btTransform VRPhysics::fromMatrix(OSG::Matrix m, OSG::Pnt3f mc) {
+    for (int i=0; i<3; i++) m[3][i] += mc[i]; // center of mass offset
+    btTransform bltTrans;//Bullets transform
+    bltTrans.setFromOpenGLMatrix(&m[0][0]);
+    return bltTrans;
+}
+
+OSG::Matrix VRPhysics::fromBTTransform(const btTransform bt, OSG::Vec3f& scale, OSG::Pnt3f mc) {
     OSG::Matrix m = fromBTTransform(bt);
 
     OSG::Matrix t,s;
@@ -575,15 +578,9 @@ OSG::Vec3f VRPhysics::getAngularVelocity() {
 
 void VRPhysics::updateTransformation(OSG::VRTransform* t) {
     Lock lock(mtx());
-    if (body) {
-        body->setWorldTransform(fromVRTransform(t, scale, CoMOffset));
-        body->activate();
-    }
-
-    if (ghost_body) {
-        ghost_body->setWorldTransform(fromVRTransform(t, scale, CoMOffset));
-        ghost_body->activate();
-    }
+    auto bt = fromVRTransform(t, scale, CoMOffset);
+    if (body) { body->setWorldTransform(bt); body->activate(); }
+    if (ghost_body) { ghost_body->setWorldTransform(bt); ghost_body->activate(); }
 }
 
 
@@ -656,30 +653,6 @@ void VRPhysics::deleteConstraints(VRPhysics* with) {
     }
 }
 
-btTransform VRPhysics::fromMatrix(const OSG::Matrix& m) {
-    /*btVector3 pos = btVector3(m[3][0], m[3][1], m[3][2]);
-    btVector3 pos = btVector3(m[3][0]-CoMOffset[0], m[3][1]-CoMOffset[1], m[3][2]-CoMOffset[2]);
-
-    btMatrix3x3 mat = btMatrix3x3(m[0][0], m[1][0], m[2][0],
-    m[0][1], m[1][1], m[2][1],
-    m[0][2], m[1][2], m[2][2]);
-    btQuaternion q;
-    mat.getRotation(q);
-
-    btTransform bltTrans;//Bullets transform
-    bltTrans.setIdentity();
-    bltTrans.setOrigin(pos);
-    bltTrans.setRotation(q);*/
-
-    OSG::Matrix m2 = m;
-    for (int i=0; i<3; i++) m2[3][i] -= CoMOffset[i]; // center of mass offset
-
-    cout << "CoMOffset" << CoMOffset << endl;
-
-    btTransform bltTrans;//Bullets transform
-    bltTrans.setFromOpenGLMatrix(&m2[0][0]);
-    return bltTrans;
-}
 
 void VRPhysics::setConstraint(VRPhysics* p, OSG::VRConstraint* c, OSG::VRConstraint* cs) {
     if (body == 0) return;
@@ -721,8 +694,8 @@ void VRPhysics::updateConstraint(VRPhysics* p) {
     localB.setIdentity();
 
     //Constraint.getReferenceFrameInB
-    localA = fromMatrix( c->getReferenceA() );
-    localB = p->fromMatrix( c->getReferenceB() );
+    localA = fromMatrix( c->getReferenceA(), -CoMOffset );
+    localB = p->fromMatrix( c->getReferenceB(), -p->CoMOffset );
 
     // TODO: possible bug - p is not valid, may have been deleted!
 

@@ -139,14 +139,12 @@ class VRPhysics : public OSG::VRStorage {
 
 
 
-
-        btTransform fromMatrix(const OSG::Matrix& m);
-
-
         static vector<string> getPhysicsShapes();
-        static btTransform fromVRTransform(OSG::VRTransform* t, OSG::Vec3f& scale, OSG::Pnt3f& mc);
+        static btTransform fromMatrix(OSG::Matrix m, OSG::Vec3f& scale, OSG::Pnt3f mc);
+        static btTransform fromMatrix(OSG::Matrix m, OSG::Pnt3f mc);
+        static btTransform fromVRTransform(OSG::VRTransform* t, OSG::Vec3f& scale, OSG::Pnt3f mc);
         static OSG::Matrix fromBTTransform(const btTransform t);
-        static OSG::Matrix fromBTTransform(const btTransform t, OSG::Vec3f& scale, OSG::Pnt3f& mc);
+        static OSG::Matrix fromBTTransform(const btTransform t, OSG::Vec3f& scale, OSG::Pnt3f mc);
 
 
 
