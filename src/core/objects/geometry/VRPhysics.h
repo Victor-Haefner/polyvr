@@ -50,6 +50,10 @@ class VRPhysics : public OSG::VRStorage {
         float angDamping = 0;
         btVector3 gravity;
 
+        vector<OSG::Vec3f> torqueJob;
+        vector<OSG::Vec3f> forceJob;
+        vector<OSG::Vec3f> torqueJob2;
+        vector<OSG::Vec3f> forceJob2;
 
         OSG::Vec3f CoMOffset; // center of mass offset
         string physicsShape;
@@ -122,6 +126,7 @@ class VRPhysics : public OSG::VRStorage {
         void pause(bool b = true);
         void resetForces();
         void applyImpulse(OSG::Vec3f i);
+        void applyTorqueImpulse(OSG::Vec3f i);
         /** requests a force, which is handled in the physics thread later**/
         void addForce(OSG::Vec3f i);
         void addTorque(OSG::Vec3f i);

@@ -90,6 +90,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setCollisionShape", (PyCFunction)VRPyTransform::setCollisionShape, METH_VARARGS, "Set the collision mask of the physics object" },
     {"getCollisions", (PyCFunction)VRPyTransform::getCollisions, METH_NOARGS, "Return the current collisions with other objects" },
     {"applyImpulse", (PyCFunction)VRPyTransform::applyImpulse, METH_VARARGS, "Apply impulse on the physics object" },
+    {"applyTorqueImpulse", (PyCFunction)VRPyTransform::applyTorqueImpulse, METH_VARARGS, "Apply torque impulse on the physics object" },
     {"applyForce", (PyCFunction)VRPyTransform::applyForce, METH_VARARGS, "Apply force on the physics object (e.g. obj.applyForce(1.0,0.0,0.0) )" },
     {"applyTorque", (PyCFunction)VRPyTransform::applyTorque, METH_VARARGS, "Apply torque on the physics object  (e.g. obj.applyTorque(1.0,0.0,0.0) )" },
     {"applyConstantForce", (PyCFunction)VRPyTransform::applyConstantForce, METH_VARARGS, "Apply a constant force on the physics object (e.g. obj.applyConstantForce(1.0,0.0,0.0) )" },
@@ -387,6 +388,13 @@ PyObject* VRPyTransform::applyImpulse(VRPyTransform* self, PyObject *args) {
     OSG::Vec3f i = parseVec3f(args);
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::applyImpulse: C Object is invalid"); return NULL; }
     self->obj->getPhysics()->applyImpulse(i);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyTransform::applyTorqueImpulse(VRPyTransform* self, PyObject *args) {
+    OSG::Vec3f i = parseVec3f(args);
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::applyTorqueImpulse: C Object is invalid"); return NULL; }
+    self->obj->getPhysics()->applyTorqueImpulse(i);
     Py_RETURN_TRUE;
 }
 

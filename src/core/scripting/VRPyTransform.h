@@ -44,6 +44,7 @@ struct VRPyTransform : VRPyBaseT<OSG::VRTransform> {
     static PyObject* getCollisions(VRPyTransform* self);
     static PyObject* setPhysicsActivationMode(VRPyTransform* self, PyObject *args);
     static PyObject* applyImpulse(VRPyTransform* self, PyObject *args);
+    static PyObject* applyTorqueImpulse(VRPyTransform* self, PyObject *args);
     static PyObject* applyForce(VRPyTransform* self, PyObject *args);
     static PyObject* applyTorque(VRPyTransform* self, PyObject *args);
     static PyObject* applyConstantForce(VRPyTransform* self, PyObject *args);

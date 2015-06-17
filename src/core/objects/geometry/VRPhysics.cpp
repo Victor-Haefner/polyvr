@@ -123,14 +123,20 @@ bool VRPhysics::isGhost() { return ghost; }
 void VRPhysics::setSoft(bool b) { soft = b; update(); }
 bool VRPhysics::isSoft() { return soft; }
 void VRPhysics::setDamping(float lin, float ang) { linDamping = lin; angDamping = ang; update(); }
-OSG::Vec3f VRPhysics::getForce() { Lock lock(mtx()); return OSG::Vec3f(constantForce.getX(),constantForce.getY(),constantForce.getZ());}
-OSG::Vec3f VRPhysics::getTorque() { Lock lock(mtx()); return OSG::Vec3f(constantTorque.getX(),constantTorque.getY(),constantTorque.getZ());}
+OSG::Vec3f VRPhysics::getForce() { Lock lock(mtx()); return toVec3f(constantForce); }
+OSG::Vec3f VRPhysics::getTorque() { Lock lock(mtx()); return toVec3f(constantTorque); }
 
 void VRPhysics::prepareStep() {
     if(soft) return;
     if(body == 0) return;
-    body->applyForce(constantForce, btVector3(0.0,0.0,0.0));
-    body->applyTorque(constantTorque);
+    auto f = constantForce;
+    auto t = constantTorque;
+    for (auto j : forceJob) { f += toBtVector3(j); forceJob2.push_back(j); }
+    for (auto j : torqueJob) { t += toBtVector3(j); torqueJob2.push_back(j); }
+    forceJob.clear();
+    torqueJob.clear();
+    body->applyCentralForce(f);
+    body->applyTorque(t);
 }
 
 btCollisionObject* VRPhysics::getCollisionObject() {
@@ -473,7 +479,6 @@ btCollisionShape* VRPhysics::getConcaveShape() {
 
 void VRPhysics::updateTransformation(OSG::VRTransform* t) {
     Lock lock(mtx());
-    if (vr_obj->getName() == "L30") cout << "CM " << this << "     " << CoMOffset << endl;
     auto bt = fromVRTransform(t, scale, CoMOffset);
     if (body) { body->setWorldTransform(bt); body->activate(); }
     if (ghost_body) { ghost_body->setWorldTransform(bt); ghost_body->activate(); }
@@ -547,20 +552,28 @@ void VRPhysics::applyImpulse(OSG::Vec3f i) {
     if (body == 0) return;
     if (mass == 0) return;
     Lock lock(mtx());
-    body->setLinearVelocity(btVector3(i[0]/mass, i[1]/mass, i[2]/mass));
+    i *= 1.0/mass;
+    body->setLinearVelocity(toBtVector3(i));
+}
+
+void VRPhysics::applyTorqueImpulse(OSG::Vec3f i) {
+    if (body == 0) return;
+    if (mass == 0) return;
+    Lock lock(mtx());
+    //body->setAngularVelocity(btVector3(i[0]/mass, i[1]/mass, i[2]/mass));
+    body->applyTorqueImpulse(toBtVector3(i));
 }
 
 void VRPhysics::addForce(OSG::Vec3f i) {
    if (body == 0 || mass == 0) return;
    Lock lock(mtx());
-
-   body->applyForce(toBtVector3(i), btVector3(0.0,0.0,0.0));
+   forceJob.push_back(i);
 }
 
 void VRPhysics::addTorque(OSG::Vec3f i) {
    if (body == 0 || mass == 0) return;
    Lock lock(mtx());
-   body->applyTorque(toBtVector3(i));
+   torqueJob.push_back(i);
 }
 
 void VRPhysics::addConstantForce(OSG::Vec3f i) { Lock lock(mtx()); constantForce = toBtVector3(i); cout << constantForce << "\n"; }
