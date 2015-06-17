@@ -288,7 +288,7 @@ void VRPhysics::update() {
 
     }
 
-    CoMOffset = OSG::Pnt3f(0,0,0);
+    CoMOffset = OSG::Vec3f(0,0,0);
     if (physicsShape == "Box") shape = getBoxShape();
     if (physicsShape == "Sphere") shape = getSphereShape();
     if (physicsShape == "Convex") shape = getConvexShape(CoMOffset);
@@ -328,7 +328,7 @@ btSoftBody* VRPhysics::createConvex() {
             OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->getPositions();
             //vertices
             for (unsigned int i = 0; i<pos->size(); i++) {
-                OSG::Pnt3f p;
+                OSG::Vec3f p;
                 pos->getValue(p,i);
                 p += glblpos;
                 vertices.push_back(btVector3(p[0],p[1],p[2]));
@@ -350,7 +350,7 @@ btCollisionShape* VRPhysics::getBoxShape() {
         if (geo == 0) continue;
         OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->getPositions();
 		for (unsigned int i = 0; i<pos->size(); i++) {
-            OSG::Pnt3f p;
+            OSG::Vec3f p;
             pos->getValue(p,i);
             x = max(x, p[0]*scale[0]);
             y = max(y, p[1]*scale[1]);
@@ -367,8 +367,8 @@ btCollisionShape* VRPhysics::getSphereShape() {
 
     float r2 = 0;
     //int N = 0;
-    OSG::Pnt3f p;
-    OSG::Pnt3f center;
+    OSG::Vec3f p;
+    OSG::Vec3f center;
 
     auto geos = vr_obj->getObjectListByType("Geometry");
 
@@ -398,12 +398,12 @@ btCollisionShape* VRPhysics::getSphereShape() {
     return new btSphereShape(sqrt(r2));
 }
 
-btCollisionShape* VRPhysics::getConvexShape(OSG::Pnt3f& mc) {
+btCollisionShape* VRPhysics::getConvexShape(OSG::Vec3f& mc) {
     OSG::Matrix m;
     OSG::Matrix M = vr_obj->getWorldMatrix();
     M.invert();
-    mc = OSG::Pnt3f(); // center of mass
-    vector<OSG::Pnt3f> points;
+    mc = OSG::Vec3f(); // center of mass
+    vector<OSG::Vec3f> points;
     vector<OSG::VRObject*> geos = vr_obj->getObjectListByType("Geometry");
 	for (auto g : geos) {
         OSG::VRGeometry* geo = (OSG::VRGeometry*)g;
@@ -418,7 +418,7 @@ btCollisionShape* VRPhysics::getConvexShape(OSG::Pnt3f& mc) {
         }
 
 		for (unsigned int i = 0; i<pos->size(); i++) {
-            OSG::Pnt3f p;
+            OSG::Vec3f p;
             pos->getValue(p,i);
             if (geo != vr_obj) m.mult(p,p);
             for (int i=0; i<3; i++) p[i] *= scale[i];
@@ -430,7 +430,7 @@ btCollisionShape* VRPhysics::getConvexShape(OSG::Pnt3f& mc) {
     mc *= 1.0/points.size();
 
     btConvexHullShape* shape = new btConvexHullShape();
-    for (OSG::Pnt3f& p : points) shape->addPoint(btVector3(p[0]-mc[0], p[1]-mc[1], p[2]-mc[2]));
+    for (OSG::Vec3f& p : points) shape->addPoint(btVector3(p[0]-mc[0], p[1]-mc[1], p[2]-mc[2]));
     shape->setMargin(collisionMargin);
     return shape;
 }
@@ -466,28 +466,28 @@ btCollisionShape* VRPhysics::getConcaveShape() {
     return shape;
 }
 
-btTransform VRPhysics::fromVRTransform(OSG::VRTransform* t, OSG::Vec3f& scale, OSG::Pnt3f mc) {
-    OSG::Matrix m = t->getWorldMatrix();
+btTransform VRPhysics::fromVRTransform(OSG::VRTransform* t, OSG::Vec3f& scale, OSG::Vec3f mc) {
+    OSG::Matrix mp = t->getWorldMatrix(true);
+    OSG::Matrix m = t->getMatrix();
+    m.multLeft(mp);
+    mp.mult(mc,mc);
     return fromMatrix(m,scale,mc);
 }
 
-btTransform VRPhysics::fromMatrix(OSG::Matrix m, OSG::Vec3f& scale, OSG::Pnt3f mc) {
-    for (int i=0; i<3; i++) m[3][i] += mc[i]; // center of mass offset
+btTransform VRPhysics::fromMatrix(OSG::Matrix m, OSG::Vec3f& scale, OSG::Vec3f mc) {
     for (int i=0; i<3; i++) scale[i] = m[i].length(); // store scale
     for (int i=0; i<3; i++) m[i] *= 1.0/scale[i]; // normalize
-    btTransform bltTrans;//Bullets transform
-    bltTrans.setFromOpenGLMatrix(&m[0][0]);
-    return bltTrans;
+    return fromMatrix(m, mc);
 }
 
-btTransform VRPhysics::fromMatrix(OSG::Matrix m, OSG::Pnt3f mc) {
+btTransform VRPhysics::fromMatrix(OSG::Matrix m, OSG::Vec3f mc) {
     for (int i=0; i<3; i++) m[3][i] += mc[i]; // center of mass offset
     btTransform bltTrans;//Bullets transform
     bltTrans.setFromOpenGLMatrix(&m[0][0]);
     return bltTrans;
 }
 
-OSG::Matrix VRPhysics::fromBTTransform(const btTransform bt, OSG::Vec3f& scale, OSG::Pnt3f mc) {
+OSG::Matrix VRPhysics::fromBTTransform(const btTransform bt, OSG::Vec3f& scale, OSG::Vec3f mc) {
     OSG::Matrix m = fromBTTransform(bt);
 
     OSG::Matrix t,s;
