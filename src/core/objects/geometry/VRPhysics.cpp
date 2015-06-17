@@ -119,7 +119,7 @@ void VRPhysics::setSoft(bool b) { soft = b; update(); }
 bool VRPhysics::isSoft() { return soft; }
 OSG::Vec3f VRPhysics::toVec3f(btVector3 v) { return OSG::Vec3f(v[0], v[1], v[2]); }
 btVector3 VRPhysics::toBtVector3(OSG::Vec3f v) { return btVector3(v[0], v[1], v[2]); }
-void VRPhysics::setDamping(float lin, float ang) { Lock lock(mtx()); body->setDamping(btScalar(lin),btScalar(ang)); }
+void VRPhysics::setDamping(float lin, float ang) { linDamping = lin; angDamping = ang; update(); }
 OSG::Vec3f VRPhysics::getForce() { Lock lock(mtx()); return OSG::Vec3f(constantForce.getX(),constantForce.getY(),constantForce.getZ());}
 OSG::Vec3f VRPhysics::getTorque() { Lock lock(mtx()); return OSG::Vec3f(constantTorque.getX(),constantTorque.getY(),constantTorque.getZ());}
 
@@ -309,6 +309,7 @@ void VRPhysics::update() {
         btRigidBody::btRigidBodyConstructionInfo rbInfo( _mass, motionState, shape, inertiaVector );
         body = new btRigidBody(rbInfo);
         body->setActivationState(activation_mode);
+        body->setDamping(btScalar(linDamping),btScalar(angDamping));
         world->addRigidBody(body, collisionGroup, collisionMask);
     }
 
