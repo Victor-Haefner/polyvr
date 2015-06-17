@@ -57,6 +57,8 @@ VRPhysics::VRPhysics(OSG::VRTransform* t) {
     physicsShape = "Convex";
     activation_mode = ACTIVE_TAG;
 
+    gravity = btVector3(0,-10,0);
+
     soft_body = 0;
     soft = false;
 
@@ -104,7 +106,7 @@ void VRPhysics::setDynamic(bool b) { dynamic = b; update(); }
 bool VRPhysics::isDynamic() { return dynamic; }
 void VRPhysics::setMass(float m) { mass = m; update(); }
 float VRPhysics::getMass() { return mass; }
-void VRPhysics::setGravity(OSG::Vec3f v) { Lock lock(mtx()); if (body) body->setGravity(btVector3 (v.x(),v.y(),v.z())); }
+void VRPhysics::setGravity(OSG::Vec3f v) { gravity = toBtVector3(v); }
 void VRPhysics::setCollisionMargin(float m) { collisionMargin = m; update(); }
 float VRPhysics::getCollisionMargin() { return collisionMargin; }
 void VRPhysics::setCollisionGroup(int g) { collisionGroup = g; update(); }
@@ -311,6 +313,7 @@ void VRPhysics::update() {
         body->setActivationState(activation_mode);
         body->setDamping(btScalar(linDamping),btScalar(angDamping));
         world->addRigidBody(body, collisionGroup, collisionMask);
+        body->setGravity(gravity);
     }
 
     scene->physicalize(vr_obj);

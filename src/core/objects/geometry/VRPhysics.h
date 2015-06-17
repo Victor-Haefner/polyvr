@@ -48,6 +48,7 @@ class VRPhysics : public OSG::VRStorage {
         float collisionMargin = 0.3;
         float linDamping = 0;
         float angDamping = 0;
+        btVector3 gravity;
 
 
         OSG::Vec3f CoMOffset; // center of mass offset
