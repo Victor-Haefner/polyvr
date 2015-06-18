@@ -7,8 +7,10 @@
 
 using namespace std;
 
-class VROntology;
-class VROntologyInstance;
+
+#include "VROntology.h"
+//class VROntology;
+//class VROntologyInstance;
 
 class VRReasoner {
     public:
