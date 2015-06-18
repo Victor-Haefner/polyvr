@@ -11,6 +11,13 @@
 #include <X11/keysym.h>
 #include <X11/XF86keysym.h>
 #endif
+#ifdef _WIN32
+#define XK_MISCELLANY
+#define XK_XKB_KEYS
+#define XK_LATIN1
+#define XK_KOREAN
+#include "CEFkeyssymdef.h"
+#endif
 
 template <typename T, size_t N>
 char (&ArraySizeHelper(T (&array)[N]))[N];
@@ -238,7 +245,6 @@ enum KeyboardCode {
 // the same values.
 
 KeyboardCode KeyboardCodeFromXKeysym(unsigned int keysym) {
-#ifndef _WIN32
   switch (keysym) {
     case XK_BackSpace:
       return VKEY_BACK;
@@ -302,7 +308,7 @@ KeyboardCode KeyboardCodeFromXKeysym(unsigned int keysym) {
       return VKEY_NONCONVERT;
     case XK_Zenkaku_Hankaku:
       return VKEY_DBE_DBCSCHAR;
-    case XK_A:
+    /*case XK_A:
     case XK_a:
       return VKEY_A;
     case XK_B:
@@ -472,7 +478,7 @@ KeyboardCode KeyboardCodeFromXKeysym(unsigned int keysym) {
       return VKEY_OEM_6;
     case XK_quoteright:
     case XK_quotedbl:
-      return VKEY_OEM_7;
+      return VKEY_OEM_7;*/
     case XK_ISO_Level5_Shift:
       return VKEY_OEM_8;
     case XK_Shift_L:
@@ -636,8 +642,6 @@ KeyboardCode KeyboardCodeFromXKeysym(unsigned int keysym) {
     // TODO(sad): some keycodes are still missing.
   }
   return VKEY_UNKNOWN;
-#endif
-  return KeyboardCode(keysym);
 }
 
 // From content/browser/renderer_host/input/web_input_event_util_posix.cc.
@@ -777,15 +781,13 @@ KeyboardCode GdkEventToWindowsKeyCode(const GdkEventKey* event) {
   // even when we change the layout options, e.g. when we swap a control
   // key and a caps-lock key, GTK doesn't swap their
   // |event->hardware_keycode| values but swap their |event->keyval| values.
-  KeyboardCode windows_key_code =
-      KeyboardCodeFromXKeysym(event->keyval);
-  if (windows_key_code)
-    return windows_key_code;
+  KeyboardCode windows_key_code = KeyboardCodeFromXKeysym(event->keyval);
+  if (windows_key_code) return windows_key_code;
+  else return KeyboardCode(event->keyval);
 
   if (event->hardware_keycode < arraysize(kHardwareCodeToGDKKeyval)) {
     int keyval = kHardwareCodeToGDKKeyval[event->hardware_keycode];
-    if (keyval)
-      return KeyboardCodeFromXKeysym(keyval);
+    if (keyval) return KeyboardCodeFromXKeysym(keyval);
   }
 
   // This key is one that keyboard-layout drivers cannot change.
