@@ -78,9 +78,10 @@ void VRSceneManager::removeScene(VRScene* s) {
 }
 
 void VRSceneManager::setWorkdir(string path) {
-    if (path == "") return;
-    string full_path = path[0] != '/' ? original_workdir + '/' + path : path;
-	boost::filesystem::current_path(full_path);
+	if (path == "") return;
+	if (boost::filesystem::exists(path))
+		path = boost::filesystem::canonical(path).string();
+	boost::filesystem::current_path(path);
 }
 
 void VRSceneManager::newScene(string path) {
