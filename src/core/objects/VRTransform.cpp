@@ -775,12 +775,13 @@ void VRTransform::loadContent(xmlpp::Element* e) {
 
 void setFromPath(VRTransform* tr, path* p, bool redirect, float t) {
     tr->setFrom( p->getPosition(t) );
-    if (redirect) {
-        Vec3f d,u;
-        p->getOrientation(t, d, u);
-        tr->setDir( d );
-        tr->setUp( u );
-    }
+    if (!redirect) return;
+
+    Vec3f d,u;
+    p->getOrientation(t, d, u);
+    tr->setUp( u );
+    if (tr->get_orientation_mode() == VRTransform::OM_DIR) tr->setDir( d );
+    if (tr->get_orientation_mode() == VRTransform::OM_AT) tr->setAt( p->getColor(t) );
 }
 
 void VRTransform::addAnimation(VRAnimation* anim) { animations[anim->getName()] = anim; }
