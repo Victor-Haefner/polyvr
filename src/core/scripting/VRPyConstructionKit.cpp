@@ -79,8 +79,8 @@ PyObject* VRPyConstructionKit::addObjectAnchor(VRPyConstructionKit* self, PyObje
     PyObject *o, *p; int a; float d;
     if (! PyArg_ParseTuple(args, "OiOf", &o, &a, &p, &d)) return NULL;
     VRPyGeometry* g = (VRPyGeometry*)o;
-    self->obj->addObjectAnchor(g->obj, a, parseVec3fList(p), d);
-    Py_RETURN_TRUE;
+    auto anc = self->obj->addObjectAnchor(g->obj, a, parseVec3fList(p), d);
+    return VRPyGeometry::fromPtr(anc);
 }
 
 PyObject* VRPyConstructionKit::addObject(VRPyConstructionKit* self, PyObject* args) {

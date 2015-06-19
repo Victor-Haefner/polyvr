@@ -33,7 +33,7 @@ class VRConstructionKit {
 
         int addAnchorType(float size, Vec3f color);
         void addObject(VRTransform* t);
-        void addObjectAnchor(VRTransform* t, int a, Vec3f pos, float radius);
+        VRGeometry* addObjectAnchor(VRTransform* t, int a, Vec3f pos, float radius);
 
         void breakup(VRObject* obj);
 };

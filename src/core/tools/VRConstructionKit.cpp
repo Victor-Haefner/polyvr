@@ -84,13 +84,14 @@ void VRConstructionKit::addObject(VRTransform* t) {
     snapping->addObject(t);
 }
 
-void VRConstructionKit::addObjectAnchor(VRTransform* t, int a, Vec3f pos, float radius) {
+VRGeometry* VRConstructionKit::addObjectAnchor(VRTransform* t, int a, Vec3f pos, float radius) {
     VRGeometry* anc = (VRGeometry*)anchors[a]->duplicate();
     anc->setPose(pos, Vec3f(0,1,0), Vec3f(1,0,0));
     anc->show();
     anc->switchParent(t);
     snapping->addObjectAnchor(t, anc);
     snapping->addRule(VRSnappingEngine::POINT, VRSnappingEngine::POINT, Line(Pnt3f(pos), Vec3f(0,0,0)), Line(Pnt3f(0,1,0), Vec3f(1,0,0)), radius, 1, t );
+    return anc;
 }
 
 OSG_END_NAMESPACE;
