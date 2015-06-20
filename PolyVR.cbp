@@ -527,6 +527,8 @@
 		<Unit filename="src/core/scripting/VRPyBase.cpp" />
 		<Unit filename="src/core/scripting/VRPyBase.h" />
 		<Unit filename="src/core/scripting/VRPyBaseT.h" />
+		<Unit filename="src/core/scripting/VRPyCamera.cpp" />
+		<Unit filename="src/core/scripting/VRPyCamera.h" />
 		<Unit filename="src/core/scripting/VRPyClipPlane.cpp" />
 		<Unit filename="src/core/scripting/VRPyClipPlane.h" />
 		<Unit filename="src/core/scripting/VRPyColorChooser.cpp" />

@@ -59,19 +59,15 @@ bool initialBuilt = false;
 
 #define CUBE_HALF_EXTENTS 1
 CarDynamics::CarDynamics() {
-    m_carChassis = 0;
+    root = new VRObject("car");
+    root->setPersistency(0);
     m_defaultContactProcessingThreshold = BT_LARGE_FLOAT;
-	m_vehicle = 0;
-	m_vehicleRayCaster = 0;
-	chassis = 0;
 	w1 = 0;
 	w2 = 0;
 	w3 = 0;
 	w4 = 0;
-	m_dynamicsWorld=0;
 
 	initPhysics();
-    //initVehicle();
 }
 
 //only to be done once
@@ -192,6 +188,7 @@ void CarDynamics::setChassisGeo(VRGeometry* geo) {
     cout << "\nset chassis geo " << geo->getName() << endl;
 
     initVehicle();
+    root->addChild(geo);
 }
 
 void CarDynamics::setWheelGeo(VRGeometry* geo) { // TODO
@@ -200,7 +197,6 @@ void CarDynamics::setWheelGeo(VRGeometry* geo) { // TODO
     if (w3) delete w3;
     if (w4) delete w4;
 
-    geo->hide();
     w1 = (VRGeometry*)geo->duplicate();
     w2 = (VRGeometry*)geo->duplicate();
     w3 = (VRGeometry*)geo->duplicate();
@@ -209,13 +205,16 @@ void CarDynamics::setWheelGeo(VRGeometry* geo) { // TODO
     w2->setPersistency(0);
     w3->setPersistency(0);
     w4->setPersistency(0);
-    geo->getParent()->addChild(w1);
-    geo->getParent()->addChild(w2);
-    geo->getParent()->addChild(w3);
-    geo->getParent()->addChild(w4);
+
+    root->addChild(w1);
+    root->addChild(w2);
+    root->addChild(w3);
+    root->addChild(w4);
 
     cout << "\nset wheel geo " << geo->getName() << endl;
 }
+
+VRObject* CarDynamics::getRoot() { return root; }
 
 void CarDynamics::setWheelOffsets(float x, float fZ, float rZ, float h){
     if(x!=-1) xOffset = x;

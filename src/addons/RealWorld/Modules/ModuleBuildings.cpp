@@ -18,7 +18,7 @@ ModuleBuildings::ModuleBuildings(OSMMapDB* mapDB, MapCoordinator* mapCoordinator
     this->mapDB = mapDB;
 
     b_mat = new VRMaterial("Buildings");
-    b_mat->setTexture("textures/Buildings.png", false);
+    b_mat->setTexture("world/textures/Buildings.png", false);
     b_mat->setAmbient(Color3f(0.7, 0.7, 0.7)); //light reflection in all directions
     b_mat->setDiffuse(Color3f(1.0, 1.0, 1.0)); //light from ambient (without lightsource)
     b_mat->setSpecular(Color3f(0.2, 0.2, 0.2)); //light reflection in camera direction

@@ -1,11 +1,11 @@
-#include "VRPyLod.h"
+#include "VRPyCamera.h"
 #include "VRPyBaseT.h"
 
-template<> PyTypeObject VRPyBaseT<OSG::VRLod>::type = {
+template<> PyTypeObject VRPyBaseT<OSG::VRCamera>::type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
-    "VR.Lod",             /*tp_name*/
-    sizeof(VRPyLod),             /*tp_basicsize*/
+    "VR.Camera",             /*tp_name*/
+    sizeof(VRPyCamera),             /*tp_basicsize*/
     0,                         /*tp_itemsize*/
     (destructor)dealloc, /*tp_dealloc*/
     0,                         /*tp_print*/
@@ -23,14 +23,14 @@ template<> PyTypeObject VRPyBaseT<OSG::VRLod>::type = {
     0,                         /*tp_setattro*/
     0,                         /*tp_as_buffer*/
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
-    "VRLod binding",           /* tp_doc */
+    "VRCamera binding",           /* tp_doc */
     0,		               /* tp_traverse */
     0,		               /* tp_clear */
     0,		               /* tp_richcompare */
     0,		               /* tp_weaklistoffset */
     0,		               /* tp_iter */
     0,		               /* tp_iternext */
-    VRPyLod::methods,             /* tp_methods */
+    VRPyCamera::methods,             /* tp_methods */
     0,             /* tp_members */
     0,                         /* tp_getset */
     0,                         /* tp_base */
@@ -43,27 +43,12 @@ template<> PyTypeObject VRPyBaseT<OSG::VRLod>::type = {
     New_VRObjects,                 /* tp_new */
 };
 
-PyMethodDef VRPyLod::methods[] = {
-	{"setCenter", (PyCFunction)VRPyLod::setCenter, METH_VARARGS, "Set the center from which the LOD distance is calculated" },
-	{"setDistance", (PyCFunction)VRPyLod::setDistance, METH_VARARGS, "Set the distance at which the specified LOD stage should be shown" },
+PyMethodDef VRPyCamera::methods[] = {
+    {"activate", (PyCFunction)VRPyCamera::activate, METH_NOARGS, "Switch to camera - activate()" },
     {NULL}  /* Sentinel */
 };
 
-PyObject* VRPyLod::setCenter(VRPyLod* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyLod::setCenter, Object is invalid"); return NULL; }
-    OSG::Vec3f t = parseVec3f(args);
-
-    OSG::VRLod* e = (OSG::VRLod*) self->obj;
-    e->setCenter(t);
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyLod::setDistance(VRPyLod* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyLod::setCenter, Object is invalid"); return NULL; }
-	int childIndex;
-	float distance;
-    if (!PyArg_ParseTuple(args, "if", &childIndex, &distance)) return NULL;
-    OSG::VRLod* e = (OSG::VRLod*) self->obj;
-    e->setDistance(childIndex, distance);
+PyObject* VRPyCamera::activate(VRPyCamera* self) {
+    //self->obj->activate();
     Py_RETURN_TRUE;
 }

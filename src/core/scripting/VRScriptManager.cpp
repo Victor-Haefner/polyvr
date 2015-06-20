@@ -23,6 +23,7 @@
 #include "VRPyMaterial.h"
 #include "VRPyTextureGenerator.h"
 #include "VRPyLight.h"
+#include "VRPyCamera.h"
 #include "VRPyLod.h"
 #include "VRPyRecorder.h"
 #include "VRPyPathtool.h"
@@ -255,6 +256,7 @@ void VRScriptManager::initPyModules() {
     VRPyTextureGenerator::registerModule("TextureGenerator", pModVR);
     VRPyImage::registerModule("Image", pModVR);
     VRPyLight::registerModule("Light", pModVR, VRPyObject::typeRef);
+    VRPyCamera::registerModule("Camera", pModVR, VRPyTransform::typeRef);
     VRPyLod::registerModule("Lod", pModVR, VRPyObject::typeRef);
     VRPySprite::registerModule("Sprite", pModVR, VRPyGeometry::typeRef);
     VRPySound::registerModule("Sound", pModVR);

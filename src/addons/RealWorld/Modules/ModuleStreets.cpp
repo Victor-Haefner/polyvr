@@ -25,7 +25,7 @@ ModuleStreets::ModuleStreets(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, Te
 
     // create material
     matStreet = new VRMaterial("Street");
-    matStreet->setTexture("textures/street1.png");
+    matStreet->setTexture("world/textures/street1.png");
 
     matStreet->setAmbient(Color3f(0.5, 0.5, 0.5)); //light reflection in all directions
     matStreet->setDiffuse(Color3f(1.0, 1.0, 1.0)); //light from ambient (without lightsource)

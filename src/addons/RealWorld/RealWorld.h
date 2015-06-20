@@ -48,7 +48,11 @@ namespace realworld {
             TrafficSimulation *getTrafficSimulation();
 
             void physicalize(bool b);
+            void enableModule(string mod);
+            void disableModule(string mod);
     };
 }
+
+
 
 #endif // REALWORLD_H
