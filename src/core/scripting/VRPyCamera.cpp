@@ -49,6 +49,6 @@ PyMethodDef VRPyCamera::methods[] = {
 };
 
 PyObject* VRPyCamera::activate(VRPyCamera* self) {
-    //self->obj->activate();
+    self->obj->activate();
     Py_RETURN_TRUE;
 }

@@ -1,6 +1,8 @@
 #include "VRCamera.h"
 #include "core/utils/toString.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/scene/VRScene.h"
+#include "core/scene/VRSceneManager.h"
 #include <OpenSG/OSGTransform.h>
 #include <OpenSG/OSGSimpleMaterial.h>
 #include <OpenSG/OSGSimpleGeometry.h>
@@ -59,6 +61,13 @@ VRCamera::VRCamera(string name) : VRTransform(name) {
 
 VRCamera::~VRCamera() {
     cam = 0;
+}
+
+void VRCamera::activate() {
+    cout << "VRCamera::activate " << camID << endl;
+    auto scene = VRSceneManager::getCurrent();
+    if (camID == -1 && scene) scene->addCamera(this);
+    if (scene) scene->setActiveCamera(camID);
 }
 
 void VRCamera::showCamGeo(bool b) {

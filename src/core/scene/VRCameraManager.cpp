@@ -9,21 +9,20 @@ VRCameraManager::VRCameraManager() {
     active=-1;
 }
 
-VRCameraManager::~VRCameraManager() {
-    // cameras get destroyed from the tree
-    //for (int i=0; i<cameras.size(); i++) delete cameras[i];
-}
+VRCameraManager::~VRCameraManager() {;}
 
 VRTransform* VRCameraManager::addCamera(string name) {
     VRCamera* c = new VRCamera(name);
-    cameras.push_back(c);
-    setActiveCamera(cameras.size()-1);
-
+    int i = cameras.size();
+    addCamera(c);
+    setActiveCamera(i);
     return c;
 }
 
 void VRCameraManager::addCamera(VRCamera* cam) {
+    int i = cameras.size();
     cameras.push_back(cam);
+    cam->camID = i;
 }
 
 VRCamera* VRCameraManager::getCamera(int ID) {

@@ -27,6 +27,9 @@ class VRCamera : public VRTransform {
         VRCamera(string name = "");
         ~VRCamera();
 
+        int camID = -1;
+        void activate();
+
         PerspectiveCameraRecPtr getCam();
 
         void setAcceptRoot(bool b);
