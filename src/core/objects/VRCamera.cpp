@@ -62,8 +62,8 @@ VRCamera::VRCamera(string name) : VRTransform(name) {
 }
 
 VRCamera::~VRCamera() {
-    VRGuiManager::broadcast("camera_added");
     getAll().remove(this);
+    VRGuiManager::broadcast("camera_added");
     cam = 0;
 }
 
@@ -71,6 +71,7 @@ void VRCamera::activate() {
     cout << "VRCamera::activate " << camID << endl;
     auto scene = VRSceneManager::getCurrent();
     if (scene) scene->setActiveCamera(getName());
+    VRGuiManager::broadcast("camera_added");
 }
 
 void VRCamera::showCamGeo(bool b) {
