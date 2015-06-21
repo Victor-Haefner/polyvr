@@ -134,7 +134,7 @@ VRObject* VRScene::get(string name) {
 }
 
 void VRScene::setActiveCamera(string camname) {
-    setMActiveCamera();
+    setMActiveCamera(camname);
     VRSetup* setup = VRSetupManager::getCurrent();
 
     // TODO: refactor the following workaround
