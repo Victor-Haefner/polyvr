@@ -13,9 +13,7 @@ class VRTransform;
 
 class VRCameraManager {
     private:
-        vector<VRCamera*> cameras;
-
-        int active;
+        VRCamera* active = 0;
 
     public:
         VRCameraManager();
@@ -31,7 +29,6 @@ class VRCameraManager {
         VRCamera* getActiveCamera();
         int getActiveCameraIndex();
 
-        vector<VRCamera*> getCameras();
         vector<string> getCameraNames();
 };
 

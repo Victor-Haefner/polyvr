@@ -6,43 +6,36 @@ using namespace std;
 
 VRCameraManager::VRCameraManager() {
     cout << "Init VRCameraManager\n";
-    active=-1;
 }
 
 VRCameraManager::~VRCameraManager() {;}
 
 VRTransform* VRCameraManager::addCamera(string name) {
     VRCamera* c = new VRCamera(name);
-    int i = cameras.size();
-    addCamera(c);
     setMActiveCamera(c->getName());
     return c;
 }
 
-void VRCameraManager::addCamera(VRCamera* cam) {
-    int i = cameras.size();
-    cameras.push_back(cam);
-    cam->camID = i;
-}
-
 VRCamera* VRCameraManager::getCamera(int ID) {
-    if (ID < 0 || ID > (int)cameras.size()) return 0;
-    return cameras[ID];
+    int i=0;
+    for (auto c : VRCamera::getAll()) { if (i == ID) return c; i++; }
+    return 0;
 }
 
 void VRCameraManager::setMActiveCamera(string cam) {
-    int i=0;
-    for (auto c : cameras) { if (c->getName() == cam) active = i; i++; }
+    for (auto c : VRCamera::getAll()) { if (c->getName() == cam) active = c; }
 }
 
 VRCamera* VRCameraManager::getActiveCamera() {
-    if (active < 0 || active > (int)cameras.size()) return 0;
-    return cameras[active];
+    return active;
 }
 
-int VRCameraManager::getActiveCameraIndex() { return active; }
-vector<VRCamera*> VRCameraManager::getCameras() { return cameras; }
-//vector<string> VRCameraManager::getCameraNames() { vector<string> res; for(auto c : cameras) res.push_back(c->getName()); return res; }
+int VRCameraManager::getActiveCameraIndex() {
+    int i=0;
+    for (auto c : VRCamera::getAll()) { if (c == active) return i; i++; }
+    return -1;
+}
+
 vector<string> VRCameraManager::getCameraNames() { vector<string> res; for(auto c : VRCamera::getAll()) res.push_back(c->getName()); return res; }
 
 OSG_END_NAMESPACE;

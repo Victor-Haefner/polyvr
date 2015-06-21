@@ -74,8 +74,6 @@ void VRSetup::setScene(VRScene* scene) {
 
     for (auto w : getWindows()) w.second->setContent(true);
 
-    scene->addCamera(setup_cam);
-
     //scene->initDevices();
 }
 

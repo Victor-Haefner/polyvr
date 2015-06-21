@@ -69,7 +69,6 @@ VRCamera::~VRCamera() {
 void VRCamera::activate() {
     cout << "VRCamera::activate " << camID << endl;
     auto scene = VRSceneManager::getCurrent();
-    if (camID == -1 && scene) scene->addCamera(this);
     if (scene) scene->setActiveCamera(getName());
 }
 
