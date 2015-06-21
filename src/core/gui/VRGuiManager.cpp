@@ -113,6 +113,10 @@ VRGuiManager* VRGuiManager::get() {
     return instance;
 }
 
+void VRGuiManager::broadcast(string sig) {
+    VRGuiSignals::get()->getSignal(sig)->trigger<VRDevice*>();
+}
+
 void VRGuiManager::wakeWindow() {
     setVPanedSensitivity("vpaned1", true);
     setNotebookSensitivity("notebook3", true);

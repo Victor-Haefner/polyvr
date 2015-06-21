@@ -19,6 +19,8 @@ class VRGuiManager {
         static VRGuiManager* get();
         ~VRGuiManager();
 
+        static void broadcast(string sig);
+
         void printInfo(string s);
 
         void updateGtk();

@@ -3,6 +3,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneManager.h"
+#include "core/gui/VRGuiManager.h"
 #include <OpenSG/OSGTransform.h>
 #include <OpenSG/OSGSimpleMaterial.h>
 #include <OpenSG/OSGSimpleGeometry.h>
@@ -57,11 +58,11 @@ VRCamera::VRCamera(string name) : VRTransform(name) {
     t2->addChild(camGeo2);
 
     getAll().push_back(this);
-    //VRGuiManager::broadcast("camera_added");
+    VRGuiManager::broadcast("camera_added");
 }
 
 VRCamera::~VRCamera() {
-    //VRGuiManager::broadcast("camera_added");
+    VRGuiManager::broadcast("camera_added");
     getAll().remove(this);
     cam = 0;
 }
