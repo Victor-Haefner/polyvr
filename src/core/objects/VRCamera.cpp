@@ -57,9 +57,12 @@ VRCamera::VRCamera(string name) : VRTransform(name) {
     t2->addChild(camGeo2);
 
     getAll().push_back(this);
+    //VRGuiManager::broadcast("camera_added");
 }
 
 VRCamera::~VRCamera() {
+    //VRGuiManager::broadcast("camera_added");
+    getAll().remove(this);
     cam = 0;
 }
 
@@ -75,8 +78,8 @@ void VRCamera::showCamGeo(bool b) {
     else camGeo->setTravMask(0);
 }
 
-vector<VRCamera*>& VRCamera::getAll() {
-    static vector<VRCamera*> objs;
+list<VRCamera*>& VRCamera::getAll() {
+    static list<VRCamera*> objs;
     return objs;
 }
 

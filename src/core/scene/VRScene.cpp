@@ -58,8 +58,6 @@ VRScene::~VRScene() {
     root->destroy();
     VRGroup::clearGroups();
     VRLightBeacon::getAll().clear();
-    VRCamera::getAll().clear();
-
 }
 
 void VRScene::initDevices() { // TODO: remove this after refactoring the navigation stuff

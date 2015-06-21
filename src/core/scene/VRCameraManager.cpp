@@ -42,6 +42,7 @@ VRCamera* VRCameraManager::getActiveCamera() {
 
 int VRCameraManager::getActiveCameraIndex() { return active; }
 vector<VRCamera*> VRCameraManager::getCameras() { return cameras; }
-vector<string> VRCameraManager::getCameraNames() { vector<string> res; for(auto c : cameras) res.push_back(c->getName()); return res; }
+//vector<string> VRCameraManager::getCameraNames() { vector<string> res; for(auto c : cameras) res.push_back(c->getName()); return res; }
+vector<string> VRCameraManager::getCameraNames() { vector<string> res; for(auto c : VRCamera::getAll()) res.push_back(c->getName()); return res; }
 
 OSG_END_NAMESPACE;
