@@ -177,15 +177,8 @@ void VRScene::showReferentials(bool b, VRObject* o) {
     for (uint i=0; i<o->getChildrenCount(); i++) showReferentials(b, o->getChild(i));
 }
 
-void VRScene::showLights(bool b) {
-    vector<VRLightBeacon*> beacons = VRLightBeacon::getAll();
-    for (uint i=0; i<beacons.size(); i++) beacons[i]->showLightGeo(b);
-}
-
-void VRScene::showCameras(bool b) {
-    vector<VRCamera*> cams = VRCamera::getAll();
-    for (uint i=0; i<cams.size(); i++) cams[i]->showCamGeo(b);
-}
+void VRScene::showLights(bool b) { for (auto b : VRLightBeacon::getAll()) b->showLightGeo(b); }
+void VRScene::showCameras(bool b) { for (auto c : VRCamera::getAll()) c->showCamGeo(b); }
 
 void VRScene::update() {
     //Vec3f min,max;
@@ -195,14 +188,9 @@ void VRScene::update() {
 }
 
 xmlpp::Element* VRSceneLoader_getElementChild(xmlpp::Element* e, string name) {
-    xmlpp::Node::NodeList nl = e->get_children();
-    xmlpp::Node::NodeList::iterator itr;
-    for (itr = nl.begin(); itr != nl.end(); itr++) {
-        xmlpp::Node* n = *itr;
-
+    for (auto n : e->get_children()) {
         xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
         if (!el) continue;
-
         if (el->get_name() == name) return el;
     }
     return 0;
