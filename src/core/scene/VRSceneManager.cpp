@@ -121,7 +121,7 @@ void VRSceneManager::setActiveScene(VRScene* s) {
 
     active = s->getName();
     VRSetupManager::getCurrent()->setScene(s);
-    s->setActiveCamera(0);
+    s->setActiveCamera();
 
     on_scene_load->trigger<VRDevice>();
 

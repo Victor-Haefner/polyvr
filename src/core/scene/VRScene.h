@@ -69,7 +69,7 @@ class VRScene : public VRObjectManager,
         VRObject* get(string name);
         VRObject* getRoot();
 
-        void setActiveCamera(int i);
+        void setActiveCamera(string name = "");
 
         void printTree();
         void showReferentials(bool b, VRObject* o);

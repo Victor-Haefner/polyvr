@@ -26,7 +26,7 @@ class VRCameraManager {
 
         VRCamera* getCamera(int ID);
 
-        void setActiveCamera(int ID);
+        void setMActiveCamera(int ID);
 
         VRCamera* getActiveCamera();
         int getActiveCameraIndex();

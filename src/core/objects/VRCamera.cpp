@@ -70,7 +70,7 @@ void VRCamera::activate() {
     cout << "VRCamera::activate " << camID << endl;
     auto scene = VRSceneManager::getCurrent();
     if (camID == -1 && scene) scene->addCamera(this);
-    if (scene) scene->setActiveCamera(camID);
+    if (scene) scene->setActiveCamera(getName());
 }
 
 void VRCamera::showCamGeo(bool b) {

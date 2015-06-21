@@ -15,7 +15,7 @@ VRTransform* VRCameraManager::addCamera(string name) {
     VRCamera* c = new VRCamera(name);
     int i = cameras.size();
     addCamera(c);
-    setActiveCamera(i);
+    setMActiveCamera(i);
     return c;
 }
 
@@ -30,7 +30,7 @@ VRCamera* VRCameraManager::getCamera(int ID) {
     return cameras[ID];
 }
 
-void VRCameraManager::setActiveCamera(int ID) {
+void VRCameraManager::setMActiveCamera(int ID) {
     if (ID < 0 || ID > (int)cameras.size()) return;
     active = ID;
 }

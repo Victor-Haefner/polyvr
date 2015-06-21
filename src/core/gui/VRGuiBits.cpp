@@ -54,9 +54,11 @@ void VRGuiBits::on_view_option_toggle(VRVisualLayer* l, Gtk::ToggleToolButton* t
 }
 
 void VRGuiBits_on_camera_changed(GtkComboBox* cb, gpointer data) {
-    int i = gtk_combo_box_get_active(cb);
+    char* cam = gtk_combo_box_get_active_text(cb);
+    if (cam == 0) return;
     VRScene* scene = VRSceneManager::getCurrent();
-    scene->setActiveCamera(i);
+    string name = string(cam);
+    scene->setActiveCamera(name);
 
     VRGuiSignals::get()->getSignal("camera_changed")->trigger<VRDevice>();
 }
