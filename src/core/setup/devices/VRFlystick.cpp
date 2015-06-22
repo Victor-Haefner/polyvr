@@ -1,5 +1,6 @@
 #include "VRFlystick.h"
 #include "VRSignal.h"
+#include "core/utils/VRFunction.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

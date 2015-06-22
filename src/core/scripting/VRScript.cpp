@@ -18,6 +18,7 @@
 #include "core/setup/VRSetup.h"
 #include "core/objects/material/VRMaterial.h"
 #include <libxml++/nodes/element.h>
+#include <libxml++/nodes/textnode.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -283,6 +284,7 @@ void VRScript::execute() {
             PyTuple_SetItem(pArgs, i, a->pyo);
             a_itr->second = a;
         }
+
         PyObject_CallObject(fkt, pArgs);
 
         execution_time = timer.stop();

@@ -49,9 +49,9 @@ void VRMenu::move(int dir) { ; }
 void VRMenu::setLinear() {
     auto children = getChildren(false, "Menu");
     int a = 0;
-    for (int i=0; i<children.size(); i++) if (children[i] == selected) a = i;
+    for (unsigned int i=0; i<children.size(); i++) if (children[i] == selected) a = i;
 
-    for (int i=0; i<children.size(); i++) {
+    for (unsigned int i=0; i<children.size(); i++) {
         float x = (i-a)*(param+scale[0]);
         VRMenu* m = (VRMenu*)children[i];
         m->setFrom(Vec3f(x,0,0));

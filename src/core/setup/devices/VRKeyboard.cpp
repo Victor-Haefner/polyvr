@@ -2,6 +2,7 @@
 
 #include <GL/glut.h>
 #include <OpenSG/OSGBaseInitFunctions.h>
+#include <gdk/gdkevents.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -12,5 +13,8 @@ void VRKeyboard::keyboard_special(int k, bool pressed, int x, int y) { change_bu
 
 VRKeyboard::VRKeyboard() : VRDevice("keyboard") {;}
 VRKeyboard::~VRKeyboard() {;}
+
+void VRKeyboard::setGtkEvent(_GdkEventKey* event) { gdk_event = event; }
+_GdkEventKey* VRKeyboard::getGtkEvent() { return gdk_event; }
 
 OSG_END_NAMESPACE;

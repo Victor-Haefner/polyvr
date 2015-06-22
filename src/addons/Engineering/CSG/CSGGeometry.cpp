@@ -169,12 +169,29 @@ CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryRecPtr geometry, Matrix worl
 	vector<CGAL::Point> positions;
 	vector<size_t> indices;
 	size_t curIndex = 0;
-
-	// Convert triangles to indices && vertices, leaving out redundant vertices
-	// (f.e. from different normals at an edge)
-	TriangleIterator it(geometry);
+	TriangleIterator it;
+	auto gpos = geometry->getPositions();
     cout << " toPolyhedron\n";
-	for (; !it.isAtEnd() ;++it) {
+
+	// fix flat triangles (all three points aligned)
+	for (it = TriangleIterator(geometry); !it.isAtEnd() ;++it) {
+        vector<Pnt3f> p(3);
+        vector<Vec3f> v(3);
+        Vec3i vi = Vec3i(it.getPositionIndex(0), it.getPositionIndex(1), it.getPositionIndex(2));
+        for (int i=0; i<3; i++) p[i] = it.getPosition(i);
+        v[0] = p[2]-p[1]; v[1] = p[2]-p[0]; v[2] = p[1]-p[0];
+        float A = (v[2].cross(v[1])).length();
+        if (A < 1e-16) { // small area, flat triangle?
+            for (int i=0; i<3; i++) if (v[i].squareLength() < 1e-8) continue; // check if two points close, then ignore
+
+            int im = 0;
+            for (int i=1; i<3; i++) if (v[i].squareLength() > v[im].squareLength()) im = i;
+            gpos->setValue(p[(im+1)%3], vi[im]);
+        }
+	}
+
+	// Convert triangles to cgal indices and vertices
+	for (it = TriangleIterator(geometry); !it.isAtEnd() ;++it) {
         vector<size_t> IDs(3);
         for (int i=0; i<3; i++) IDs[i] = isKnownPoint( it.getPosition(i) );
 
@@ -184,6 +201,7 @@ CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryRecPtr geometry, Matrix worl
 				CGAL::Point cgalPos(osgPos.x(), osgPos.y(), osgPos.z());
 				positions.push_back(cgalPos);
 				IDs[i] = curIndex;
+                //cout << "add point " << curIndex << "   " << osgPos << endl;
 				size_t *curIndexPtr = new size_t;
 				*curIndexPtr = curIndex;
 				oct->add(OcPoint(osgPos.x(), osgPos.y(), osgPos.z()), curIndexPtr);
@@ -191,7 +209,8 @@ CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryRecPtr geometry, Matrix worl
 			}
 		}
 
-		if (IDs[0] == IDs[1] || IDs[0] == IDs[2] || IDs[1] == IDs[2]) continue; // testing
+        //cout << "add triangle " << IDs[0] << " " << IDs[1] << " " << IDs[2] << endl;
+		if (IDs[0] == IDs[1] || IDs[0] == IDs[2] || IDs[1] == IDs[2]) continue; // ignore flat triangles
 
 		for (int i=0; i<3; i++) indices.push_back(IDs[i]);
 	}
@@ -234,7 +253,7 @@ void CSGGeometry::enableEditMode() {
 bool CSGGeometry::disableEditMode() {
 	if (children.size() != 2) { cout << "CSGGeometry: Warning: editMode disabled with less than 2 children. Doing nothing.\n"; return false; }
 
-	vector<CGAL::Polyhedron*> polys(2); // We need two child geometries to work with
+	vector<CGAL::Polyhedron*> polys(2,0); // We need two child geometries to work with
 
 	for (int i=0; i<2; i++) { // Prepare the polyhedra
 		VRObject *obj = children[i];
@@ -245,15 +264,27 @@ bool CSGGeometry::disableEditMode() {
 			try {
 			    polys[i] = toPolyhedron( geo->getMesh(), geo->getWorldMatrix() );
 			} catch (exception e) {
-			    cout << getName() << ": Could not convert mesh data to polyhedron: " << e.what();
+			    cout << getName() << ": Could not convert mesh data to polyhedron: " << e.what() << endl;
 				obj->setVisible(true); // We stay in edit mode, so both children need to be visible
 				return false;
 			}
-		} else if(obj->getType() == "CSGGeometry") {
+			continue;
+		}
+
+		if(obj->getType() == "CSGGeometry") {
 			CSGGeometry *geo = dynamic_cast<CSGGeometry*>(obj);
 			polys[i] = geo->getCSGGeometry(); // TODO: where does this come from?? keep the old!
+			continue;
 		}
+
+		cout << "Warning! polyhedron " << i << " not acquired because ";
+		cout << obj->getName() << " has wrong type " << obj->getType();
+		cout << ", it should be 'Geometry' or 'CSGGeometry'!" << endl;
 	}
+
+	if (polys[0] == 0) cout << "Warning! first polyhedron is 0! " << children[0]->getName() << endl;
+	if (polys[1] == 0) cout << "Warning! second polyhedron is 0! " << children[1]->getName() << endl;
+	if (polys[0] == 0 || polys[1] == 0) return false;
 
     if (polyhedron) delete polyhedron;
     polyhedron = 0;

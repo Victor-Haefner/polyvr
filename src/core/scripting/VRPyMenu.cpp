@@ -49,13 +49,13 @@ template<> PyTypeObject VRPyBaseT<OSG::VRMenu>::type = {
 
 PyMethodDef VRPyMenu::methods[] = {
     {"append", (PyCFunction)VRPyMenu::append, METH_VARARGS, "Append a child menu - append(str texture_path)" },
-    {"setLeafType", (PyCFunction)VRPyMenu::setLeafType, METH_VARARGS, "Set menu layout - setLeafType(str type, float scale)" },
-    {"setLayout", (PyCFunction)VRPyMenu::setLayout, METH_VARARGS, "Set menu layout - setLayout(str layout, float param)" },
+    {"setLeafType", (PyCFunction)VRPyMenu::setLeafType, METH_VARARGS, "Set menu layout - setLeafType(str type, vec2f scale)\n\ttype : ['SPRITE'], scale is the size of the sprite" },
+    {"setLayout", (PyCFunction)VRPyMenu::setLayout, METH_VARARGS, "Set menu layout - setLayout(str layout, float param)\n\tlayout : ['LINEAR', 'CIRCULAR'], param is the distance between leafs" },
     {"open", (PyCFunction)VRPyMenu::open, METH_NOARGS, "Open menu" },
     {"close", (PyCFunction)VRPyMenu::close, METH_NOARGS, "Close menu" },
     {"setCallback", (PyCFunction)VRPyMenu::setCallback, METH_VARARGS, "Set a menu callback - setCallback(fkt, [params])" },
     {"trigger", (PyCFunction)VRPyMenu::trigger, METH_NOARGS, "Trigger menu or enter next layer if no callback is set" },
-    {"move", (PyCFunction)VRPyMenu::setCallback, METH_VARARGS, "Move the cursor - move(int dir)\n left: dir=-1 right: dir=1" },
+    {"move", (PyCFunction)VRPyMenu::setCallback, METH_VARARGS, "Move the cursor - move(int dir)\n\tleft: dir=-1, right: dir=1" },
     {NULL}  /* Sentinel */
 };
 
@@ -77,8 +77,6 @@ void execCall(PyObject* pyFkt, PyObject* pArgs, OSG::VRMenu* menu) {
 
     if (pArgs == 0) pArgs = PyTuple_New(0);
     PyObject_CallObject(pyFkt, pArgs);
-    Py_XDECREF(pArgs);
-    Py_DecRef(pyFkt);
 
     if (PyErr_Occurred() != NULL) PyErr_Print();
 }
@@ -94,6 +92,7 @@ PyObject* VRPyMenu::setCallback(VRPyMenu* self, PyObject *args) {
         if (type == "list") pArgs = PyList_AsTuple(pArgs);
     }
 
+    Py_IncRef(pArgs);
     self->obj->setCallback(new VRFunction<OSG::VRMenu*>( "pyMenuCB", boost::bind(execCall, pyFkt, pArgs, _1) ));
     Py_RETURN_TRUE;
 }

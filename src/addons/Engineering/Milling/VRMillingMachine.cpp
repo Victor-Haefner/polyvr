@@ -2,7 +2,9 @@
 #include "core/objects/VRTransform.h"
 #include "core/networking/VRSocket.h"
 #include "core/utils/toString.h"
+#ifndef _WIN32
 #include <curl/curl.h>
+#endif
 
 using namespace OSG;
 
@@ -37,7 +39,7 @@ void VRMillingMachine::setSpeed(Vec3f v) {
     v = t*1000;
 
     float vmin = 0.3;
-    if (online and state == 4 and mode == 1) {
+    if (online && state == 4 && mode == 1) {
         if (abs(v[0]) > vmin) post("c","jog(1,0,"+toString(v[0])+")");
         else post("c","jog(0,0)");
         if (abs(v[1]) > vmin) post("c","jog(1,1,"+toString(v[1])+")");
@@ -82,6 +84,7 @@ size_t httpwritefkt( char *ptr, size_t size, size_t nmemb, void *userdata) {
 }
 
 string VRMillingMachine::post(string cmd, string data) {
+#ifndef _WIN32
     if (cmd == "c") cout << "POST " << data << endl;
 
     auto curl = curl_easy_init();
@@ -106,4 +109,6 @@ string VRMillingMachine::post(string cmd, string data) {
     curl_slist_free_all(headers);
     curl_easy_cleanup(curl);
     return res;
+#endif
+	return "";
 }

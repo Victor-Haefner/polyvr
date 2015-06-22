@@ -25,7 +25,7 @@ ModuleStreets::ModuleStreets(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, Te
 
     // create material
     matStreet = new VRMaterial("Street");
-    matStreet->setTexture("textures/street1.png");
+    matStreet->setTexture("world/textures/street1.png");
 
     matStreet->setAmbient(Color3f(0.5, 0.5, 0.5)); //light reflection in all directions
     matStreet->setDiffuse(Color3f(1.0, 1.0, 1.0)); //light from ambient (without lightsource)
@@ -100,13 +100,14 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
                 if(way->tags["bridge"] == "yes") {
                     seg->bridge = true;
                     //make all segments of bridge small, if one is small
-                    if(seg->getDistance()<Config::get()->BRIDGE_HEIGHT)
+                    if(seg->getDistance()<Config::get()->BRIDGE_HEIGHT) {
                         seg->smallBridge = true;
-                        if(segPrev->bridge) segPrev->smallBridge = true;
-                    else if(segPrev->smallBridge){
-                        seg->smallBridge = true;
+                        if (segPrev) if (segPrev->bridge) segPrev->smallBridge = true;
+                    } else if(segPrev) {
+                        if(segPrev->smallBridge) seg->smallBridge = true;
                     }
-                    if(segPrev != NULL){
+
+                    if(segPrev != NULL) {
                         segPrev->leftBridge = true;
                         if(segPrev->bridge) seg->rightBridge = true;
                     }

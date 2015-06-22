@@ -29,6 +29,7 @@ struct VRConcept : public VRNamedID {
     VRConcept* parent = 0;
     map<int, VRConcept*> children;
     map<int, VRProperty*> properties;
+    vector<VROntologyRule*> rules;
 
     VRConcept(string name);
 
@@ -50,6 +51,8 @@ struct VROntologyInstance : public VRNamedID {
     void set(string name, string value);
     void add(string name, string value);
     string toString();
+
+    vector<string> getAtPath(vector<string> path);
 };
 
 struct VROntology {
@@ -69,6 +72,8 @@ struct VROntology {
     VRConcept* getConcept(string name, VRConcept* p = 0);
     VROntologyInstance* getInstance(string instance);
     vector<VROntologyInstance*> getInstances(string concept);
+
+    vector<VROntologyRule*> getRules();
 
     string answer(string question);
 };

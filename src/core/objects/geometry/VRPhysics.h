@@ -46,9 +46,16 @@ class VRPhysics : public OSG::VRStorage {
         bool soft = false;
         float mass = 1.0;
         float collisionMargin = 0.3;
+        float linDamping = 0;
+        float angDamping = 0;
+        btVector3 gravity;
 
+        vector<OSG::Vec3f> torqueJob;
+        vector<OSG::Vec3f> forceJob;
+        vector<OSG::Vec3f> torqueJob2;
+        vector<OSG::Vec3f> forceJob2;
 
-        OSG::Pnt3f CoMOffset; // center of mass offset
+        OSG::Vec3f CoMOffset; // center of mass offset
         string physicsShape;
         map<VRPhysics*, VRPhysicsJoint*> joints ;
         map<VRPhysics*, VRPhysicsJoint*> joints2;
@@ -63,7 +70,7 @@ class VRPhysics : public OSG::VRStorage {
 
         btCollisionShape* getBoxShape();
         btCollisionShape* getSphereShape();
-        btCollisionShape* getConvexShape(OSG::Pnt3f& mc);
+        btCollisionShape* getConvexShape(OSG::Vec3f& mc);
         btCollisionShape* getConcaveShape();
 
         //btSoftBody*       createConvex();
@@ -119,6 +126,7 @@ class VRPhysics : public OSG::VRStorage {
         void pause(bool b = true);
         void resetForces();
         void applyImpulse(OSG::Vec3f i);
+        void applyTorqueImpulse(OSG::Vec3f i);
         /** requests a force, which is handled in the physics thread later**/
         void addForce(OSG::Vec3f i);
         void addTorque(OSG::Vec3f i);
@@ -139,14 +147,12 @@ class VRPhysics : public OSG::VRStorage {
 
 
 
-
-        btTransform fromMatrix(const OSG::Matrix& m);
-
-
         static vector<string> getPhysicsShapes();
-        static btTransform fromVRTransform(OSG::VRTransform* t, OSG::Vec3f& scale, OSG::Pnt3f& mc);
+        static btTransform fromMatrix(OSG::Matrix m, OSG::Vec3f& scale, OSG::Vec3f mc);
+        static btTransform fromMatrix(OSG::Matrix m, OSG::Vec3f mc);
+        static btTransform fromVRTransform(OSG::VRTransform* t, OSG::Vec3f& scale, OSG::Vec3f mc);
         static OSG::Matrix fromBTTransform(const btTransform t);
-        static OSG::Matrix fromBTTransform(const btTransform t, OSG::Vec3f& scale, OSG::Pnt3f& mc);
+        static OSG::Matrix fromBTTransform(const btTransform t, OSG::Vec3f& scale, OSG::Vec3f mc);
 
 
 

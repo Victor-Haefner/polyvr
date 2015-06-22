@@ -72,7 +72,7 @@ void VRProfiler::swap() {
     Frame f;
     f.t0 = getTime();
     frames.push_front(f);
-    if (history <= frames.size()) frames.pop_back();
+    if (history <= (int)frames.size()) frames.pop_back();
     current = &frames.front();
 }
 

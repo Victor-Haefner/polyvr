@@ -9,7 +9,9 @@
 #include "core/utils/VRLogger.h"
 
 #include <algorithm>
+#ifndef WIN32 
 #include <curl/curl.h> // TODO: windows port
+#endif
 #include <stdint.h>
 #include <libxml++/nodes/element.h>
 #include <jsoncpp/json/json.h>

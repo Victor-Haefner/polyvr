@@ -92,6 +92,7 @@ bool VRGtkWindow::on_key(GdkEventKey *event) {
 	//cout << "\n KEY: " << event->keyval << " " << event->type << " " << event->state << endl;
 
     if (getKeyboard() == 0) return false;
+    getKeyboard()->setGtkEvent(event);
     getKeyboard()->keyboard(event->keyval, (event->type == 8), 0, 0);
 
 	return true;

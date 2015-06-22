@@ -40,6 +40,10 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool lit) {
     this->closed = closed;
     this->lit = lit;
 
+    Vec3f pCenter;
+    for (auto p : profile) pCenter += p;
+    pCenter *= 1.0/profile.size();
+
     GeoUInt8PropertyRecPtr      Type = GeoUInt8Property::create();
     GeoUInt32PropertyRecPtr     Length = GeoUInt32Property::create();
     GeoPnt3fPropertyRecPtr      Pos = GeoPnt3fProperty::create();
@@ -122,6 +126,8 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool lit) {
     if (doCaps) {
         int Nt = 0;
         for (uint i=0; i<paths.size(); i++) {
+            if (paths[i]->isClosed()) continue;
+
             vector<Vec3f> pnts = paths[i]->getPositions();
             vector<Vec3f> directions = paths[i]->getDirections();
             vector<Vec3f> up_vectors = paths[i]->getUpvectors();
@@ -134,13 +140,13 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool lit) {
             Vec3f n = directions[0];
             Vec3f u = up_vectors[0];
             Vec3f c = cols[0];
+            MatrixLookAt(m, Vec3f(0,0,0), n, u);
+            Vec3f tmp; m.mult(pCenter, tmp);
 
             int Ni = Pos->size();
-            Pos->addValue(p);
+            Pos->addValue(p + tmp);
             Norms->addValue(-n);
             Colors->addValue(c);
-
-            MatrixLookAt(m, Vec3f(0,0,0), n, u);
 
             for (uint k=0; k<profile.size(); k++) {
                 Vec3f tmp = profile[k];
@@ -167,12 +173,13 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool lit) {
             n = directions[N];
             u = up_vectors[N];
             c = cols[N];
+            MatrixLookAt(m, Vec3f(0,0,0), n, u);
+            tmp; m.mult(pCenter, tmp);
 
-            Pos->addValue(p);
+            Pos->addValue(p + tmp);
             Norms->addValue(n);
             Colors->addValue(c);
 
-            MatrixLookAt(m, Vec3f(0,0,0), n, u);
 
             for (uint k=0; k<profile.size(); k++) {
                 Vec3f tmp = profile[k];
@@ -193,8 +200,10 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool lit) {
             }
         }
 
-        Type->addValue(GL_TRIANGLES);
-        Length->addValue(Nt); // caps triangles
+        if (Nt > 0) {
+            Type->addValue(GL_TRIANGLES);
+            Length->addValue(Nt); // caps triangles
+        }
     }
 
     SimpleMaterialRecPtr Mat = SimpleMaterial::create();

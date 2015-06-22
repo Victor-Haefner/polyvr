@@ -1,5 +1,6 @@
 #include "VRMouse.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRFunction.h"
 #include "core/setup/VRSetupManager.h"
 #include "core/objects/VRCamera.h"
 #include "VRSignal.h"
@@ -23,6 +24,9 @@ void VRMouse::clearSignals() {
 
     addSignal( 0, 0)->add( getDrop() );
     addSignal( 0, 1)->add( addDrag( getBeacon(), 0) );
+
+    if (on_to_edge) on_to_edge->clear();
+    if (on_from_edge) on_from_edge->clear();
 }
 
 void VRMouse::multFull(Matrix _matrix, const Pnt3f &pntIn, Pnt3f  &pntOut) {
@@ -93,12 +97,13 @@ bool VRMouse::calcViewRay(PerspectiveCameraRecPtr pcam, Line &line, float x, flo
 
 
     Pnt3f from, at;
-    multFull(cctowc, Pnt3f(x, y, -1), from);
-    multFull(cctowc, Pnt3f(x, y, 0.1), at );
+    multFull(cctowc, Pnt3f(x, y, 0), from); // -1
+    multFull(cctowc, Pnt3f(x, y, 1), at ); // 0.1
 
     Vec3f dir = at - from;
-    line.setValue(from, dir);
+    dir.normalize();
 
+    line.setValue(from, dir);
     return true;
 }
 
@@ -116,6 +121,7 @@ void VRMouse::updatePosition(int x, int y) {
     h = view->getViewport()->calcPixelHeight();
     view->getViewport()->calcNormalizedCoordinates(rx, ry, x, y);
 
+    //cam->getCam()->calcViewRay(ray,x,y,*view->getViewport());
     calcViewRay(cam->getCam(), ray, rx,ry,w,h);
     editBeacon()->setDir(ray.getDirection());
 
@@ -132,8 +138,8 @@ void VRMouse::updatePosition(int x, int y) {
     if (side != onEdge) {
         sig_state = (side == -1) ? 5 : 4;
         sig_key = (side == -1) ? (1+view->getID())*10+onEdge : (1+view->getID())*10+side;
-        if (side == -1) on_from_edge->trigger();
-        else on_to_edge->trigger();
+        if (side == -1) on_from_edge->trigger<VRDevice>();
+        else on_to_edge->trigger<VRDevice>();
     }
     onEdge = side;
 }

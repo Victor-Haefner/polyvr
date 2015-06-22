@@ -7,7 +7,6 @@
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGImage.h>
 
-
 using namespace std;
 
 namespace OSG{ class VRMaterial; class VRDevice; class VRObject; }
@@ -22,6 +21,7 @@ class CEF : public CefClient, public CefRenderHandler {
         int height = 1024;
         float aspect = 1;
         bool init = false;
+        bool focus = false;
 
         CefRefPtr<CefBrowser> browser;
         CefRefPtr<CefRenderHandler> GetRenderHandler();

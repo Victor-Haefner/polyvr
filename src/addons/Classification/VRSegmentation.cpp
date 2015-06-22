@@ -260,7 +260,7 @@ void finalizeClusterGeometries(vector<VRGeometry*>& res) {
         geo->getMaterial()->setDiffuse(randC());
         geo->getMaterial()->setPointSize(5);
         geo->getMaterial()->setLit(false);
-        geo->addAttachment("dynamicaly_generated", 0);
+        geo->setPersistency(0);
     }
 }
 
@@ -315,7 +315,7 @@ VRObject* VRSegmentation::extractPatches(VRGeometry* geo, SEGMENTATION_ALGORITHM
     vector<VRGeometry*> patches = extractPlanes(geo, curvature, curvature_delta);
 
     VRObject* anchor = new VRObject("segmentation");
-    anchor->addAttachment("dynamicaly_generated", 0);
+    anchor->setPersistency(0);
     geo->getParent()->addChild(anchor);
 	for (auto p : patches) {
         anchor->addChild(p);

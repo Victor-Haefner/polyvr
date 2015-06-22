@@ -8,15 +8,14 @@ using namespace std;
 
 namespace realworld {
 
-    class OSMMapDB
-    {
+class OSMMapDB {
     public:
         map<string, OSMMap*> maps;
 
         OSMMap* getMap(string posStr) {
             if (maps.count(posStr)) return maps[posStr];
 
-            string filename = "mapdata/map-"+posStr+".osm";
+            string filename = "world/mapdata/map-"+posStr+".osm";
 
             // check if file exists
             ifstream ifile(filename.c_str());
@@ -34,8 +33,9 @@ namespace realworld {
 
             // TODO: Garbage Collection. While ->maps has more than 30 entries, remove least recently used.
         }
-    };
 };
+
+}
 
 
 #endif // OSMMAPDB_H

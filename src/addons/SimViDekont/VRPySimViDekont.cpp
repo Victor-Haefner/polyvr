@@ -69,7 +69,7 @@ PyObject* VRPySimViDekont::load(VRPySimViDekont* self, PyObject* args) {
 
     if (self->svd == 0) {
         self->svd = new OSG::SimViDekont();
-        self->svd->getAnchor()->addAttachment("dynamicaly_generated", 0);
+        self->svd->getAnchor()->setPersistency(0);
     }
     self->svd->getAnchor()->switchParent(child->obj);
     Py_RETURN_TRUE;

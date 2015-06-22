@@ -352,7 +352,7 @@ TrafficSimulation::TrafficSimulation(MapCoordinator *mapCoordinator, const strin
 
     // Add a dummy model for unknown vehicle types
     VRGeometry* geo = new VRGeometry("vehicle_type_unknown");
-    geo->addAttachment("dynamicaly_generated", 0);
+    geo->setPersistency(0);
     geo->setPrimitive("Box", "1 1 2 1 1 1");
     meshes[404] = geo;
 
@@ -741,7 +741,7 @@ void TrafficSimulation::update() {
 
                     if (meshes.count(v.vehicleTypeId) == 0) v.vehicleTypeId = 404;
                     v.geometry = (VRGeometry*)meshes[v.vehicleTypeId]->duplicate(true);
-                    v.geometry->addAttachment("dynamicaly_generated", 0);
+                    v.geometry->setPersistency(0);
 
                     // Add it to the map
                     vehicles.insert(make_pair(v.id, v));
@@ -890,7 +890,7 @@ void TrafficSimulation::update() {
 
                         // Create a new light
                         VRGeometry* geo = new VRGeometry("ampel");
-                        geo->addAttachment("dynamicaly_generated", 0);
+                        geo->setPersistency(0);
                         geo->setPrimitive("Sphere", "0.5 2"); // The first value has to be half of bulbSize
                         geo->setMaterial(a_red);
 

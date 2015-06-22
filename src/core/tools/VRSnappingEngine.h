@@ -15,6 +15,8 @@ class Octree;
 class VRObject;
 class VRTransform;
 class VRGeometry;
+class VRSignal;
+class VRDevice;
 
 
 class VRSnappingEngine {
@@ -37,6 +39,16 @@ class VRSnappingEngine {
             PLANE_LOCAL
         };
 
+        struct EventSnap {
+            VRTransform* o1 = 0;
+            VRTransform* o2 = 0;
+            Matrix m;
+            VRDevice* dev = 0;
+            void set(VRTransform* O1, VRTransform* O2, Matrix M, VRDevice* DEV) {
+                o1 = O1; o2 = O2; m = M; dev = DEV;
+            }
+        };
+
     private:
         map<int, Rule*> rules; // snapping rules, translation and orientation
         map<VRTransform*, Matrix> objects; // map objects to reference matrix
@@ -48,8 +60,13 @@ class VRSnappingEngine {
         float distance_snap = 0.05;
         bool showHints = false;
 
+        EventSnap* event = 0;
+        VRSignal* snapSignal = 0;
+
     public:
         VRSnappingEngine();
+
+        VRSignal* getSignalSnap();
 
         void clear();
 

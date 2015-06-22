@@ -2,11 +2,6 @@
 
 #include <iostream>
 
-#include <assimp/Importer.hpp>
-#include <assimp/postprocess.h>
-#include <assimp/scene.h>
-#include <assimp/mesh.h>
-
 #include <boost/foreach.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
@@ -109,7 +104,7 @@ void VRAMLLoader::buildMesh(string path, Matrix4f m) {
 
 
 cout << "Building Mesh" << endl;
-    Assimp::Importer importer;
+    /*Assimp::Importer importer;
 
     const aiScene* scene = importer.ReadFile( path,
         aiProcess_CalcTangentSpace       |
@@ -213,7 +208,7 @@ cout << "Building Mesh" << endl;
 
         geo.geo->setMatrix(m);
         root->addChild(geo.geo);
-    }
+    }*/
 
 }
 int meshNumber = 0;
@@ -316,7 +311,7 @@ void VRAMLLoader::print(boost::property_tree::ptree const& pt, Matrix4f m)
 }
 void VRAMLLoader::loadProducts(string path, Matrix4f m)
 {
-    Assimp::Importer importer;
+    /*Assimp::Importer importer;
 
     const aiScene* scene = importer.ReadFile( path,
         aiProcess_CalcTangentSpace       |
@@ -353,7 +348,7 @@ void VRAMLLoader::loadProducts(string path, Matrix4f m)
     {
         m.transpose();
         buildMesh(path,m);
-    }
+    }*/
 
 }
 
@@ -460,10 +455,10 @@ VRObject* VRAMLLoader::load(string path) {
            //print(pt.get_child("COLLADA").get_child("library_nodes"));
            Matrix4f m {
 
-            0.001,0,0,0,
-            0,0.001,0,0,
-            0,0,0.001,0,
-            0,0,0,0.001
+            0.001f,0,0,0,
+            0,0.001f,0,0,
+            0,0,0.001f,0,
+            0,0,0,0.001f
 
         };
             loadProducts(path,m);

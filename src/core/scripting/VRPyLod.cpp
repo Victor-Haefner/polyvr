@@ -31,7 +31,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRLod>::type = {
     0,		               /* tp_iter */
     0,		               /* tp_iternext */
     VRPyLod::methods,             /* tp_methods */
-    VRPyLod::members,             /* tp_members */
+    0,             /* tp_members */
     0,                         /* tp_getset */
     0,                         /* tp_base */
     0,                         /* tp_dict */
@@ -41,10 +41,6 @@ template<> PyTypeObject VRPyBaseT<OSG::VRLod>::type = {
     (initproc)init,      /* tp_init */
     0,                         /* tp_alloc */
     New_VRObjects,                 /* tp_new */
-};
-
-PyMemberDef VRPyLod::members[] = {
-    {NULL}  /* Sentinel */
 };
 
 PyMethodDef VRPyLod::methods[] = {

@@ -23,6 +23,7 @@
 #include "VRPyMaterial.h"
 #include "VRPyTextureGenerator.h"
 #include "VRPyLight.h"
+#include "VRPyCamera.h"
 #include "VRPyLod.h"
 #include "VRPyRecorder.h"
 #include "VRPyPathtool.h"
@@ -32,6 +33,7 @@
 #include "VRPyMenu.h"
 #include "VRPyClipPlane.h"
 #include "VRPyListMath.h"
+#include "VRPySetup.h"
 #include "VRPyNavigator.h"
 #include "VRPyNavPreset.h"
 #include "VRPyImage.h"
@@ -217,6 +219,8 @@ static PyMethodDef VRScriptManager_module_methods[] = {
 	{"getRoot", (PyCFunction)VRScriptManager::getRoot, METH_NOARGS, "Return the root node of the scenegraph - object getRoot()" },
 	{"printOSG", (PyCFunction)VRScriptManager::printOSG, METH_NOARGS, "Print the OSG tree to console" },
 	{"getNavigator", (PyCFunction)VRScriptManager::getNavigator, METH_NOARGS, "Return a handle to the navigator object" },
+	{"getSetup", (PyCFunction)VRScriptManager::getSetup, METH_NOARGS, "Return a handle to the active hardware setup" },
+	{"loadScene", (PyCFunction)VRScriptManager::loadScene, METH_VARARGS, "Close the current scene and open another - loadScene( str path/to/my/scene.xml )" },
     {NULL}  /* Sentinel */
 };
 
@@ -233,7 +237,9 @@ void VRScriptManager::initPyModules() {
 
     PyDict_SetItemString(pLocal, "__builtins__", PyEval_GetBuiltins());
     PyDict_SetItemString(pGlobal, "__builtins__", PyEval_GetBuiltins());
+#ifndef _WIN32
     VRPyListMath::init(pModBase);
+#endif
 
     PyObject* sys_path = PySys_GetObject((char*)"path");
     PyList_Append(sys_path, PyString_FromString(".") );
@@ -250,6 +256,7 @@ void VRScriptManager::initPyModules() {
     VRPyTextureGenerator::registerModule("TextureGenerator", pModVR);
     VRPyImage::registerModule("Image", pModVR);
     VRPyLight::registerModule("Light", pModVR, VRPyObject::typeRef);
+    VRPyCamera::registerModule("Camera", pModVR, VRPyTransform::typeRef);
     VRPyLod::registerModule("Lod", pModVR, VRPyObject::typeRef);
     VRPySprite::registerModule("Sprite", pModVR, VRPyGeometry::typeRef);
     VRPySound::registerModule("Sound", pModVR);
@@ -265,6 +272,7 @@ void VRScriptManager::initPyModules() {
     VRPyConstructionKit::registerModule("ConstructionKit", pModVR);
     VRPyPathtool::registerModule("Pathtool", pModVR);
     VRPySelector::registerModule("Selector", pModVR);
+    VRPySetup::registerModule("Setup", pModVR);
     VRPyNavigator::registerModule("Navigator", pModVR);
     VRPyNavPreset::registerModule("NavPreset", pModVR);
 
@@ -412,6 +420,16 @@ string VRScriptManager::getPyVRMethodDoc(string type, string method) {
 // Python methods
 // ==============
 
+PyObject* VRScriptManager::loadScene(VRScriptManager* self, PyObject *args) {
+    auto fkt = new VRFunction<int>( "scheduled scene load", boost::bind(&VRSceneManager::loadScene, VRSceneManager::get(), parseString(args), false ) );
+    VRSceneManager::get()->queueJob(fkt);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRScriptManager::getSetup(VRScriptManager* self) {
+    return VRPySetup::fromPtr(VRSetupManager::getCurrent());
+}
+
 PyObject* VRScriptManager::getNavigator(VRScriptManager* self) {
     return VRPyNavigator::fromPtr((VRNavigator*)VRSceneManager::getCurrent());
 }
@@ -450,7 +468,7 @@ PyObject* VRScriptManager::loadGeometry(VRScriptManager* self, PyObject *args) {
         VRGuiManager::get()->printInfo("Warning: " + p + " not found.\n");
         Py_RETURN_NONE;
     }
-    obj->addAttachment("dynamicaly_generated", 0);
+    obj->setPersistency(0);
     return VRPyTypeCaster::cast(obj);
 }
 

@@ -57,8 +57,14 @@ PyMethodDef VRPyCarDynamics::methods[] = {
     {"setWheelOffsets", (PyCFunction)VRPyCarDynamics::setWheelOffsets, METH_VARARGS, "Set wheel offsets, -1 sets default value\n\tpos 0 = xOffset\n\tpos 1 = frontZOffset\n\tpos 2 = rearZOffset\n\tpos 3 = height" },
     {"reset", (PyCFunction)VRPyCarDynamics::reset, METH_NOARGS, "Reset car" },
     {"getSpeed", (PyCFunction)VRPyCarDynamics::getSpeed, METH_NOARGS, "Get car speed" },
+    {"getRoot", (PyCFunction)VRPyCarDynamics::getRoot, METH_NOARGS, "Get car root node" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyCarDynamics::getRoot(VRPyCarDynamics* self) {
+    if (self->obj == 0) self->obj = new OSG::CarDynamics();
+    return VRPyObject::fromPtr(self->obj->getRoot());
+}
 
 PyObject* VRPyCarDynamics::getSpeed(VRPyCarDynamics* self) {
     if (self->obj == 0) self->obj = new OSG::CarDynamics();

@@ -167,7 +167,7 @@ void FPath::update() {
     for (auto p : paths) delete p.second;
     paths.clear();
 
-    for (int i=1; i<nodes.size(); i++) {
+    for (unsigned int i=1; i<nodes.size(); i++) {
         FNode* n0 = nodes[i-1];
         FNode* n1 = nodes[i];
         path* p = new path();
@@ -413,9 +413,10 @@ FLogistics::~FLogistics() {
     networks.clear();
 }
 
-FProduct* FLogistics::addProduct() {
+FProduct* FLogistics::addProduct(OSG::VRTransform* t) {
     FProduct* p = new FProduct();
     objects[p->getID()] = p;
+    if (t) p->setTransformation(t);
     return p;
 }
 
@@ -443,7 +444,7 @@ FContainer* FLogistics::addContainer(VRTransform* t) {
     FContainer* c = new FContainer();
     t = (VRTransform*)t->duplicate(true);
     t->setVisible(true);
-    t->addAttachment("dynamicaly_generated", 0);
+    t->setPersistency(0);
     c->setTransformation(t);
     objects[c->getID()] = c;
     return c;
@@ -454,7 +455,7 @@ void FLogistics::fillContainer(FContainer* c, int N, VRTransform* t) {
         FProduct* p = addProduct();
         t = (VRTransform*)t->duplicate(true);
         t->setVisible(true);
-        t->addAttachment("dynamicaly_generated", 0);
+        t->setPersistency(0);
         p->setTransformation(t);
         c->add( p );
     }

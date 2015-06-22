@@ -46,6 +46,7 @@ class VRObject : public VRName {
         bool pickable = false;
         bool visible = true;
         bool intern = false;
+        int persistency = 666;
         unsigned int graphChanged = 0; //is frame number
 
         map<string, VRAttachment*> attachments;
@@ -83,6 +84,8 @@ class VRObject : public VRName {
         string getType();
 
         bool getIntern();
+        void setPersistency(int p);
+        int getPersistency();
 
         VRObject* getRoot();
         string getPath();

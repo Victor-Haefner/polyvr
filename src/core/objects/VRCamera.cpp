@@ -1,6 +1,9 @@
 #include "VRCamera.h"
 #include "core/utils/toString.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/scene/VRScene.h"
+#include "core/scene/VRSceneManager.h"
+#include "core/gui/VRGuiManager.h"
 #include <OpenSG/OSGTransform.h>
 #include <OpenSG/OSGSimpleMaterial.h>
 #include <OpenSG/OSGSimpleGeometry.h>
@@ -55,10 +58,20 @@ VRCamera::VRCamera(string name) : VRTransform(name) {
     t2->addChild(camGeo2);
 
     getAll().push_back(this);
+    VRGuiManager::broadcast("camera_added");
 }
 
 VRCamera::~VRCamera() {
+    getAll().remove(this);
+    VRGuiManager::broadcast("camera_added");
     cam = 0;
+}
+
+void VRCamera::activate() {
+    cout << "VRCamera::activate " << camID << endl;
+    auto scene = VRSceneManager::getCurrent();
+    if (scene) scene->setActiveCamera(getName());
+    VRGuiManager::broadcast("camera_added");
 }
 
 void VRCamera::showCamGeo(bool b) {
@@ -66,8 +79,8 @@ void VRCamera::showCamGeo(bool b) {
     else camGeo->setTravMask(0);
 }
 
-vector<VRCamera*>& VRCamera::getAll() {
-    static vector<VRCamera*> objs;
+list<VRCamera*>& VRCamera::getAll() {
+    static list<VRCamera*> objs;
     return objs;
 }
 

@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <fstream>
 #include <unistd.h>
+#include <boost/filesystem.hpp>
 
 #include "import/VRImport.h"
 
@@ -72,7 +73,7 @@ void VRSceneLoader_saveObject(VRObject* p, xmlpp::Element* e) {
     p->save(e);
     for (uint i=0; i<p->getChildrenCount(); i++) {
         VRObject* c = p->getChild(i);
-        if (c->hasAttachment("dynamicaly_generated")) continue; // generated objects are not be saved
+        if (c->getPersistency() == 0) continue; // generated objects are not be saved
         if (c->hasAttachment("global")) continue; // global objects are not be saved
         //xmlpp::Element* ce = e->add_child(c->getName());
         xmlpp::Element* ce = e->add_child("Object");
@@ -81,6 +82,8 @@ void VRSceneLoader_saveObject(VRObject* p, xmlpp::Element* e) {
 }
 
 void VRSceneLoader::saveScene(string file, xmlpp::Element* guiN) {
+    if (boost::filesystem::exists(file))
+        file = boost::filesystem::canonical(file).string();
     cout << " save " << file << endl;
     VRScene* scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
@@ -171,6 +174,7 @@ xmlpp::Element* VRSceneLoader_getElementChild_(xmlpp::Element* e, int i) {
 void VRSceneLoader::loadScene(string path) {
     xmlpp::DomParser parser;
     parser.set_validate(false);
+
     parser.parse_file(path.c_str());
 
     xmlpp::Node* n = parser.get_document()->get_root_node();

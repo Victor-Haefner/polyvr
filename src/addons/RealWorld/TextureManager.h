@@ -21,7 +21,7 @@ namespace realworld {
                 if (texMap.count(key)) return texMap[key];
 
                 ImageRecPtr image = Image::create();
-                image->read(("textures/"+key).c_str());
+                image->read(("world/textures/"+key).c_str());
                 TextureObjChunkRecPtr tex = TextureObjChunk::create();
                 tex->setImage(image);
                 texMap[key] = tex;
@@ -30,17 +30,17 @@ namespace realworld {
 
             TextureManager() {
                 ImageRecPtr imageStreetSegment = Image::create();
-                imageStreetSegment->read("textures/street1.png");
+                imageStreetSegment->read("world/textures/street1.png");
                 texStreetSegment = TextureObjChunk::create();
                 texStreetSegment->setImage(imageStreetSegment);
 
                 ImageRecPtr imageStreetJoint = Image::create();
-                imageStreetJoint->read("textures/street1.png");
+                imageStreetJoint->read("world/textures/street1.png");
                 texStreetJoint = TextureObjChunk::create();
                 texStreetJoint->setImage(imageStreetJoint);
 
                 ImageRecPtr imageSubQuad = Image::create();
-                imageSubQuad->read("textures/asphalt.jpg");
+                imageSubQuad->read("world/textures/asphalt.jpg");
                 texSubQuad = TextureObjChunk::create();
                 texSubQuad->setImage(imageSubQuad);
 
@@ -57,7 +57,7 @@ namespace realworld {
                     stringstream ss;
                     ss << i;
                     string str = ss.str();
-                    imageTree->read(("textures/Tree/tree"+str+".png").c_str());
+                    imageTree->read(("world/textures/Tree/tree"+str+".png").c_str());
                     texTree->setImage(imageTree);
                     treeMapList.push_back(texTree);
                 }

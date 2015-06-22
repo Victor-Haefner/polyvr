@@ -153,10 +153,10 @@ void VRView::setDecorators() {//set decorators, only if projection true
         screenUpperRight = Pnt3f(proj_center + proj_up*h*0.5 - x*w*0.5);
         screenUpperLeft = Pnt3f(proj_center + proj_up*h*0.5 + x*w*0.5);
     } else {
-        screenLowerLeft = Pnt3f(-1, -1, -1);
-        screenLowerRight = Pnt3f(1, -1, -1);
-        screenUpperRight = Pnt3f(1,  1, -1);
-        screenUpperLeft = Pnt3f(-1,  1, -1);
+        screenLowerLeft = Pnt3f(-1, -0.6, -1);
+        screenLowerRight = Pnt3f(1,-0.6, -1);
+        screenUpperRight = Pnt3f(1,0.6, -1);
+        screenUpperLeft = Pnt3f(-1,0.6, -1);
     }
 
     GeometryRecPtr geo = dynamic_cast<Geometry*>(viewGeo->getCore());
@@ -236,7 +236,7 @@ VRView::VRView(string n) {
 
     // data
     position = Vec4f(0,0,1,1);
-    proj_center = Vec3f(0,0,0);
+    proj_center = Vec3f(0,0,-1);
     proj_up = Vec3f(0,1,0);
     proj_normal = Vec3f(0,0,1);
     proj_size = Vec2f(2,1);
@@ -253,7 +253,6 @@ VRView::VRView(string n) {
     stats = 0;
     grabfg = 0;
     dummy_user = new VRTransform("view_user");
-    dummy_user->translate(Vec3f(0,0,1));
     dummy_user->addAttachment("global", 0);
 
     viewGeo = makeNodeFor(makePlaneGeo(1,1,1,1));

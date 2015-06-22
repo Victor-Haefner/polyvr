@@ -36,6 +36,8 @@ struct VRPyObject : VRPyBaseT<OSG::VRObject> {
     static PyObject* hasAncestorWithTag(VRPyObject* self, PyObject* args);
     static PyObject* getChildrenWithTag(VRPyObject* self, PyObject* args);
     static PyObject* setTravMask(VRPyObject* self, PyObject* args);
+    static PyObject* setPersistency(VRPyObject* self, PyObject* args);
+    static PyObject* getPersistency(VRPyObject* self);
 };
 
 #endif // VRPYOBJECT_H_INCLUDED

@@ -113,7 +113,7 @@ int path::addPoint(VRTransform* t) {
 float path::getLength() { return (points[points.size()-1].p - points[0].p).length();}
 
 void path::setPoint(int i, Vec3f p, Vec3f n, Vec3f c, Vec3f u) {
-    if (i < 0 || i >= points.size()) return;
+    if (i < 0 || i >= (int)points.size()) return;
     points[i].p = p;
     points[i].n = n;
     points[i].c = c;
@@ -139,7 +139,7 @@ void path::compute(int N) {
     Vec3f* _cls = &colors[0];
 
     // berechne die hilfspunkte fuer die positionen
-    for (int i=0; i<points.size()-1; i++) {
+    for (unsigned int i=0; i<points.size()-1; i++) {
         pnt p1 = points[i];
         pnt p2 = points[i+1];
         Vec3f r = p2.p - p1.p;
@@ -175,14 +175,17 @@ void path::update() { compute(iterations); }
 void path::close() {
     if (points.size() <= 1) return;
     points.push_back( getPoint(0) );
+    closed = true;
 }
+
+bool path::isClosed() { return closed; }
 
 Vec3f path::interp(vector<Vec3f>& vec, float t) {
     if (direction == -1) t = 1-t;
     int N = vec.size() -1;
     if (N == -1) return Vec3f();
     float tN = t*N;
-    uint ti = floor(tN);
+    int ti = floor(tN);
     float x = tN-ti;
     if (ti > N) return vec[N];
     return (1-x)*vec[ti] + x*vec[ti+1];

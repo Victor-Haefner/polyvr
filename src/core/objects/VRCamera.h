@@ -27,6 +27,9 @@ class VRCamera : public VRTransform {
         VRCamera(string name = "");
         ~VRCamera();
 
+        int camID = -1;
+        void activate();
+
         PerspectiveCameraRecPtr getCam();
 
         void setAcceptRoot(bool b);
@@ -45,7 +48,7 @@ class VRCamera : public VRTransform {
 
         void showCamGeo(bool b);
 
-        static vector<VRCamera*>& getAll();
+        static list<VRCamera*>& getAll();
         static vector<string> getProjectionTypes();
 };
 

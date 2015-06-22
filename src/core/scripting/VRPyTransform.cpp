@@ -90,6 +90,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setCollisionShape", (PyCFunction)VRPyTransform::setCollisionShape, METH_VARARGS, "Set the collision mask of the physics object" },
     {"getCollisions", (PyCFunction)VRPyTransform::getCollisions, METH_NOARGS, "Return the current collisions with other objects" },
     {"applyImpulse", (PyCFunction)VRPyTransform::applyImpulse, METH_VARARGS, "Apply impulse on the physics object" },
+    {"applyTorqueImpulse", (PyCFunction)VRPyTransform::applyTorqueImpulse, METH_VARARGS, "Apply torque impulse on the physics object" },
     {"applyForce", (PyCFunction)VRPyTransform::applyForce, METH_VARARGS, "Apply force on the physics object (e.g. obj.applyForce(1.0,0.0,0.0) )" },
     {"applyTorque", (PyCFunction)VRPyTransform::applyTorque, METH_VARARGS, "Apply torque on the physics object  (e.g. obj.applyTorque(1.0,0.0,0.0) )" },
     {"applyConstantForce", (PyCFunction)VRPyTransform::applyConstantForce, METH_VARARGS, "Apply a constant force on the physics object (e.g. obj.applyConstantForce(1.0,0.0,0.0) )" },
@@ -408,6 +409,13 @@ PyObject* VRPyTransform::applyImpulse(VRPyTransform* self, PyObject *args) {
     Py_RETURN_TRUE;
 }
 
+PyObject* VRPyTransform::applyTorqueImpulse(VRPyTransform* self, PyObject *args) {
+    OSG::Vec3f i = parseVec3f(args);
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::applyTorqueImpulse: C Object is invalid"); return NULL; }
+    self->obj->getPhysics()->applyTorqueImpulse(i);
+    Py_RETURN_TRUE;
+}
+
 PyObject* VRPyTransform::applyForce(VRPyTransform* self, PyObject *args) {
     OSG::Vec3f i = parseVec3f(args);
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::applyForce: C Object is invalid"); return NULL; }
@@ -457,13 +465,14 @@ PyObject* VRPyTransform::setGravity(VRPyTransform* self, PyObject *args) {
 }
 
 PyObject* VRPyTransform::animate(VRPyTransform* self, PyObject *args) {
-    VRPyPath* path; float t; float o; int b;
+    VRPyPath* path = 0; float t; float o; int b;
     int l = 0;
     if (pySize(args) == 4)
         if (! PyArg_ParseTuple(args, "Offi", &path, &t, &o, &b)) return NULL;
     if (pySize(args) == 5)
         if (! PyArg_ParseTuple(args, "Offii", &path, &t, &o, &b, &l)) return NULL;
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::animate: C Object is invalid"); return NULL; }
+	if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::animate: C Object is invalid"); return NULL; }
+	if (path == 0) { PyErr_SetString(err, "VRPyTransform::animate: path is invalid"); return NULL; }
     self->obj->startPathAnimation(path->obj, t, o, b, l);
     Py_RETURN_TRUE;
 }

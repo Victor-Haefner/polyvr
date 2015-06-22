@@ -20,10 +20,19 @@
 #include <OpenSG/OSGNameAttachment.h>
 
 #include <signal.h>
-extern "C" void my_function_to_handle_aborts(int signal_number) {
-    cout << "\nARG - ABORT!\n";
-    return;
+#ifndef _WIN32
+extern "C" void coreDump(int sig) {
+    auto mgr = OSG::VRSceneManager::get();
+    string path = mgr->getOriginalWorkdir();
+    cout << "\n dump core to " << path << "/core" << endl;
+    mgr->setWorkdir(path);
+
+    //kill(getpid(), sig);
+    //abort();
+    //raise(SIGABRT);
+    kill(getpid(), SIGABRT);
 }
+#endif
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -59,7 +68,10 @@ void initPolyVR(int argc, char **argv) {
     cout << "Init PolyVR\n\n";
     setlocale(LC_ALL, "C");
 
-    signal(SIGABRT, &my_function_to_handle_aborts);
+#ifndef _WIN32
+    signal(SIGSEGV, &coreDump);
+    signal(SIGFPE, &coreDump);
+#endif
 
     //Options
     VROptions::get()->parse(argc,argv);

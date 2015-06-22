@@ -21,6 +21,7 @@ class path {
 
         int direction = 1;
         int iterations = 80;
+        bool closed = false;
 
         vector<Vec3f> positions;
         vector<Vec3f> directions;
@@ -44,6 +45,7 @@ class path {
 
         void invert();
         void close();
+        bool isClosed();
         void compute(int N);
         vector<Vec3f> getPositions();
         vector<Vec3f> getDirections();

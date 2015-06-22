@@ -101,8 +101,10 @@ PyObject* VRPyDevice::intersect(VRPyDevice* self) {
 
 PyObject* VRPyDevice::drag(VRPyDevice* self, PyObject *args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::drag, Object is invalid"); return NULL; }
-    VRPyObject* p = (VRPyObject*)parseObject(args); // TODO: check the type
-    self->obj->drag(p->obj, self->obj->getBeacon());
+    OSG::VRObject* obj = 0;
+    if (!VRPyObject::parse(args, &obj)) return NULL;
+    string name = obj->getName();
+    self->obj->drag(obj, self->obj->getBeacon());
     Py_RETURN_TRUE;
 }
 

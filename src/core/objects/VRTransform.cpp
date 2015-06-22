@@ -558,6 +558,13 @@ void VRTransform::drop() {
     update();
 }
 
+void VRTransform::rebaseDrag(VRObject* new_parent) {
+    if (!held) { switchParent(new_parent); return; }
+    old_parent = new_parent;
+}
+
+VRObject* VRTransform::getDragParent() { return old_parent; }
+
 /** Cast a ray in world coordinates from the object in its local coordinates, -z axis defaults **/
 Line VRTransform::castRay(VRObject* obj, Vec3f dir) {
     Matrix m = getWorldMatrix();
@@ -727,6 +734,7 @@ void VRTransform::update() {
 
 void VRTransform::saveContent(xmlpp::Element* e) {
     VRObject::saveContent(e);
+    if (getPersistency() < 2) return;
 
     e->set_attribute("from", toString(_from).c_str());
     e->set_attribute("at", toString(_at).c_str());
@@ -767,12 +775,13 @@ void VRTransform::loadContent(xmlpp::Element* e) {
 
 void setFromPath(VRTransform* tr, path* p, bool redirect, float t) {
     tr->setFrom( p->getPosition(t) );
-    if (redirect) {
-        Vec3f d,u;
-        p->getOrientation(t, d, u);
-        tr->setDir( d );
-        tr->setUp( u );
-    }
+    if (!redirect) return;
+
+    Vec3f d,u;
+    p->getOrientation(t, d, u);
+    tr->setUp( u );
+    if (tr->get_orientation_mode() == VRTransform::OM_DIR) tr->setDir( d );
+    if (tr->get_orientation_mode() == VRTransform::OM_AT) tr->setAt( p->getColor(t) );
 }
 
 void VRTransform::addAnimation(VRAnimation* anim) { animations[anim->getName()] = anim; }

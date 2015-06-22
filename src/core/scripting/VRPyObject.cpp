@@ -76,8 +76,21 @@ PyMethodDef VRPyObject::methods[] = {
     {"hasAncestorWithTag", (PyCFunction)VRPyObject::hasAncestorWithTag, METH_VARARGS, "Check if the object or an ancestor has a tag - obj hasAncestorWithTag( str tag )" },
     {"getChildrenWithTag", (PyCFunction)VRPyObject::getChildrenWithTag, METH_VARARGS, "Get all children which have the tag - [objs] getChildrenWithTag( str tag )" },
     {"setTravMask", (PyCFunction)VRPyObject::setTravMask, METH_VARARGS, "Set the traversal mask of the object - setTravMask( int mask )" },
+    {"setPersistency", (PyCFunction)VRPyObject::setPersistency, METH_VARARGS, "Set the persistency level - setPersistency( int persistency )\n   0: not persistent\n   1: persistent hiarchy\n   2: transformation\n   3: geometry\n   4: fully persistent" },
+    {"getPersistency", (PyCFunction)VRPyObject::getPersistency, METH_NOARGS, "Get the persistency level - getPersistency()" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyObject::setPersistency(VRPyObject* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::setPersistency - C Object is invalid"); return NULL; }
+    self->obj->setPersistency( parseInt(args) );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyObject::getPersistency(VRPyObject* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::getPersistency - C Object is invalid"); return NULL; }
+    return PyInt_FromLong( self->obj->getPersistency() );
+}
 
 PyObject* VRPyObject::getChildrenWithTag(VRPyObject* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::getChildrenWithTag - C Object is invalid"); return NULL; }
@@ -232,7 +245,7 @@ PyObject* VRPyObject::switchParent(VRPyObject* self, PyObject* args, PyObject *k
 PyObject* VRPyObject::duplicate(VRPyObject* self) {
     if (self->obj == 0) { PyErr_SetString(err, "C Child is invalid"); return NULL; }
     OSG::VRObject* d = (OSG::VRObject*)self->obj->duplicate(true);
-    d->addAttachment("dynamicaly_generated", 0);
+    d->setPersistency(0);
     return VRPyTypeCaster::cast(d);
 }
 

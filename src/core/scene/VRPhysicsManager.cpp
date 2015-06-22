@@ -20,7 +20,8 @@
 #include "VRThreadManager.h"
 #include "core/objects/geometry/VRPrimitive.h"
 
-#include <unistd.h>
+#include <chrono>
+#include <thread>
 
 #define PHYSICS_THREAD_TIMESTEP_MS 2
 
@@ -61,7 +62,7 @@ VRPhysicsManager::VRPhysicsManager() {
     updatePhysObjectsFkt = new VRFunction<int>("Physics object update", boost::bind(&VRPhysicsManager::updatePhysObjects, this));
     updatePhysicsFkt = new VRFunction<VRThread*>("Physics update", boost::bind(&VRPhysicsManager::updatePhysics, this, _1));
 
-    physics_visual_layer = new VRVisualLayer("physics", "physics.png");
+    physics_visual_layer = new VRVisualLayer("Physics", "physics.png");
 
     phys_mat = new VRMaterial("phys_mat");
     phys_mat->setLit(false);
@@ -72,29 +73,14 @@ VRPhysicsManager::VRPhysicsManager() {
 }
 
 VRPhysicsManager::~VRPhysicsManager() {
-    return; // TODO
-
-    //remove the rigidbodies from the dynamics world && delete them
-    for (int i=dynamicsWorld->getNumCollisionObjects()-1; i>=0 ;i--) {
-        btCollisionObject* obj = dynamicsWorld->getCollisionObjectArray()[i];
-        btRigidBody* body = btRigidBody::upcast(obj);
-        if (body && body->getMotionState()) delete body->getMotionState();
-        dynamicsWorld->removeCollisionObject( obj );
-        delete obj;
-    }
-
-    //delete collision shapes
-    for (int j=0;j<collisionShapes.size();j++) {
-        btCollisionShape* shape = collisionShapes[j];
-        collisionShapes[j] = 0;
-        delete shape;
-    }
+    //for (auto o : OSGobjs) unphysicalize(o.second);
 
     delete dynamicsWorld;
     delete solver;
     delete dispatcher;
     delete collisionConfiguration;
     delete broadphase;
+    delete phys_mat;
 }
 
 boost::recursive_mutex& VRPhysicsManager::physicsMutex() { return mtx; }
@@ -103,10 +89,15 @@ long long VRPhysicsManager::getTime() { // time in seconds
     return 1000*glutGet(GLUT_ELAPSED_TIME);
     //return 1e6*clock()/CLOCKS_PER_SEC; // TODO
 }
+
 btSoftBodyWorldInfo* VRPhysicsManager::getSoftBodyWorldInfo() {return softBodyWorldInfo;}
 
 void VRPhysicsManager::prepareObjects() {
-    for (auto o : OSGobjs) o.second->getPhysics()->prepareStep();
+    for (auto o : OSGobjs) {
+        if (o.second) {
+            if (o.second->getPhysics()) o.second->getPhysics()->prepareStep();
+        }
+    }
 }
 
 void VRPhysicsManager::updatePhysics(VRThread* thread) {
@@ -129,7 +120,7 @@ void VRPhysicsManager::updatePhysics(VRThread* thread) {
     dt = t2-t1;
 
     //sleep up to 500 fps
-    if (dt < PHYSICS_THREAD_TIMESTEP_MS * 1000) usleep(PHYSICS_THREAD_TIMESTEP_MS * 1000 -dt);
+    if (dt < PHYSICS_THREAD_TIMESTEP_MS * 1000) this_thread::sleep_for(chrono::microseconds(PHYSICS_THREAD_TIMESTEP_MS * 1000 -dt));
     t3 = getTime();
 
     MLock lock(mtx);
@@ -142,10 +133,11 @@ void VRPhysicsManager::addPhysicsUpdateFunction(VRFunction<int>* fkt, bool after
     if (after) updateFktsPost.push_back(fkt);
     else updateFktsPre.push_back(fkt);
 }
+
 void VRPhysicsManager::dropPhysicsUpdateFunction(VRFunction<int>* fkt, bool after) {
     MLock lock(mtx);
     vector<VRFunction<int>* >* fkts = after ? &updateFktsPost : &updateFktsPre;
-    for(int i = 0; i < fkts->size() ; i++) {
+    for(unsigned int i = 0; i < fkts->size() ; i++) {
             if(fkts->at(i) == fkt) {fkts->erase(fkts->begin() + i);return;}
     }
  }
@@ -242,6 +234,7 @@ void VRPhysicsManager::updatePhysObjects() {
                 geo->setPositions(positions);
                 geo->setNormals(norms);
            }
+
         }
     }
 
@@ -249,7 +242,7 @@ void VRPhysicsManager::updatePhysObjects() {
 
 
     // update physics visualisation shapes
-    for (auto v : physics_visuals_to_update) {
+    for (btCollisionObject* v : physics_visuals_to_update) {
         if (physics_visuals.count(v) == 0) continue;
         VRGeometry* geo = physics_visuals[v];
         //cout << "try " << v << " " << geo << endl;
@@ -332,7 +325,7 @@ void VRPhysicsManager::physicalize(VRTransform* obj) {
     //cout << "physicalize transform: " << obj;
     btCollisionObject* bdy = obj->getPhysics()->getCollisionObject();
     if (bdy == 0) return;
-    cout << " with bt_body " << (bdy == 0) << endl;
+    //cout << " with bt_body " << (bdy == 0) << endl;
     OSGobjs[bdy] = obj;
     physics_visuals_to_update.push_back(bdy);
 
@@ -344,9 +337,7 @@ void VRPhysicsManager::physicalize(VRTransform* obj) {
 }
 
 void VRPhysicsManager::unphysicalize(VRTransform* obj) {
-  //cout << "unphysicalize transform: " << obj;
     btCollisionObject* bdy = obj->getPhysics()->getCollisionObject();
-    //cout << " with bt_body " << bdy << endl;
     if (bdy == 0) return;
     if (OSGobjs.count(bdy)) OSGobjs.erase(bdy);
 
