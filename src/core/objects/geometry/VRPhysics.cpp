@@ -11,6 +11,7 @@
 #include <BulletSoftBody/btSoftRigidDynamicsWorld.h>
 
 
+#include "core/objects/geometry/VRPrimitive.h"
 
 
 
@@ -276,11 +277,7 @@ void VRPhysics::update() {
 
 
     if(soft) {
-        //if (physicsShape == "Rope") soft_body = getRope();
-        //if (physicsShape == "Convex")
-        soft_body = createConvex();
-        //if (physicsShape == "Convex") soft_body = getSoftConvex();
-        //if (physicsShape == "Concave") soft_body = getSoftConcave();
+        if(physicsShape == "Patch") soft_body = createPatch();
         soft_body->setActivationState(activation_mode);
         world->addSoftBody(soft_body,collisionGroup, collisionMask);
         scene->physicalize(vr_obj);
@@ -319,29 +316,92 @@ void VRPhysics::update() {
     updateConstraints();
 }
 
+btSoftBody* VRPhysics::createPatch() {
+    vector<OSG::VRObject*> geos = vr_obj->getObjectListByType("Geometry");
 
-btSoftBody* VRPhysics::createConvex() {
-        vector<btVector3> vertices;
-        vector<OSG::VRObject*> geos = vr_obj->getObjectListByType("Geometry");
-        OSG::Vec3f glblpos = vr_obj->getWorldPosition();
-        int numVertices = 0;
-         btSoftBodyWorldInfo* info = OSG::VRSceneManager::getCurrent()->getSoftBodyWorldInfo();
-        for (unsigned int j=0; j<geos.size(); j++) {
-            OSG::VRGeometry* geo = (OSG::VRGeometry*)geos[j];
-            if (geo == 0) continue;
-            OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->getPositions();
-            //vertices
-            for (unsigned int i = 0; i<pos->size(); i++) {
-                OSG::Pnt3f p;
-                pos->getValue(p,i);
-                p += glblpos;
-                vertices.push_back(btVector3(p[0],p[1],p[2]));
+    //btVector3 glblpos = toBtVector3(vr_obj->getWorldPosition());
+    OSG::Matrix m = vr_obj->getWorldMatrix();
+    btSoftBodyWorldInfo* info = OSG::VRSceneManager::getCurrent()->getSoftBodyWorldInfo();
+    for (unsigned int j=0; j<geos.size(); j++) {
+        OSG::VRGeometry* geo = (OSG::VRGeometry*)geos[j];
+
+        if(geo->getPrimitive()->getType() == "Plane") {
+            VRPlane* prim = (VRPlane*)geo->getPrimitive();
+            float nx = prim->Nx;
+            float ny = prim->Ny;
+            float h = prim->height;
+            float w = prim->width;
+
+            OSG::GeoVectorPropertyRecPtr      positions = geo->getMesh()->getPositions();
+            vector<btVector3> vertices;
+            vector<btScalar> masses;
+
+            //add all vertices
+            for(int i = 0; i < positions->size();i++) {
+                OSG::Vec3f p;
+                positions->getValue(p,i);
+                //p += glblpos;
+                btVector3* pos =new btVector3(p.x(),p.y(),p.z());
+                vertices.push_back(*pos);
+                masses.push_back(5.0);
             }
+            btVector3* start = &vertices.front();
+            btScalar* startm = &masses.front();
+
+            btSoftBody* ret = new btSoftBody(info,(int)positions->size(),start,startm);
+
+            //add all indices
+            int ind1;
+            int ind2;
+            vector<int> indices;
+            for(int y = 0; y < ny; y++)
+                {
+                    for(int x = 0; x <= nx; x++)
+                    {
+                        ind1 = ((y + 1) * ((nx) + 1) + x);
+                        ind2 =  (y      * ((nx) + 1) + x);
+                        indices.push_back(ind1);
+                        indices.push_back(ind2);
+                    }
+            }
+            //nx is segments in polyvr, but we need resolution ( #vertices in x direction) so nx+1 and <= nx
+ #define IDX(_x_,_y_)    ((_y_)*(nx+1)+(_x_))
+            /* Create links and faces */
+           for(int iy=0;iy<=ny;++iy)
+           {
+                   for(int ix=0;ix<=nx;++ix)
+                   {
+                           const int       idx=IDX(ix,iy);
+                           const bool      mdx=(ix+1)<=nx;
+                           const bool      mdy=(iy+1)<=ny;
+                           if(mdx) ret->appendLink(idx,IDX(ix+1,iy));
+                           if(mdy) ret->appendLink(idx,IDX(ix,iy+1));
+                           if(mdx&&mdy)
+                           {
+                                   if((ix+iy)&1)
+                                   {
+                                           ret->appendFace(IDX(ix,iy),IDX(ix+1,iy),IDX(ix+1,iy+1));
+                                           ret->appendFace(IDX(ix,iy),IDX(ix+1,iy+1),IDX(ix,iy+1));
+                                                   ret->appendLink(IDX(ix,iy),IDX(ix+1,iy+1));
+                                   }
+                                   else
+                                   {
+                                           ret->appendFace(IDX(ix,iy+1),IDX(ix,iy),IDX(ix+1,iy));
+                                           ret->appendFace(IDX(ix,iy+1),IDX(ix+1,iy),IDX(ix+1,iy+1));
+                                                   ret->appendLink(IDX(ix+1,iy),IDX(ix,iy+1));
+                                   }
+                           }
+                   }
+           }
+ #undef IDX
+
+            return ret;//return the first and only plane....
         }
-        btSoftBody* ret=btSoftBodyHelpers::CreateFromConvexHull(*info,&vertices[0],vertices.size(),false);
-        //ret->generateBendingConstraints(2);
-        return ret;
+
+    }
+
 }
+
 
 btCollisionShape* VRPhysics::getBoxShape() {
     if (shape_param > 0) return new btBoxShape( btVector3(shape_param, shape_param, shape_param) );

@@ -79,8 +79,8 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setAxisConstraints", (PyCFunction)VRPyTransform::setAxisConstraints, METH_VARARGS, "Constraint the object on an axis - TODO -> to test, may work" },
     {"setRotationConstraints", (PyCFunction)VRPyTransform::setRotationConstraints, METH_VARARGS, "Constraint the object's rotation - setRotationConstraints(xi, yi, zi)" },
     {"physicalize", (PyCFunction)VRPyTransform::physicalize, METH_VARARGS, "physicalize subtree - physicalize( physicalized , dynamic , concave )" },
+    {"makePatch", (PyCFunction)VRPyTransform::makePatch, METH_NOARGS, "creates a Patch and sets it as this transform's child" },
     {"setGhost", (PyCFunction)VRPyTransform::setGhost, METH_VARARGS, "Set the physics object to be a ghost object - setGhost(bool)" },
-    {"setSoft", (PyCFunction)VRPyTransform::setSoft, METH_VARARGS, "Set the physics object to be a soft body - setSoft(bool)" },
     {"attach", (PyCFunction)VRPyTransform::setPhysicsConstraintTo, METH_VARARGS, "create a constraint between this object and another - attach( Transform , Constraint, Spring )" },
     {"detach", (PyCFunction)VRPyTransform::deletePhysicsConstraints, METH_VARARGS, "delete constraint made to this transform with given transform through attach(toTransform). Example call : trans1.detach(trans2)" },
     {"setMass", (PyCFunction)VRPyTransform::setMass, METH_VARARGS, "Set the mass of the physics object" },
@@ -135,11 +135,6 @@ PyObject* VRPyTransform::setGhost(VRPyTransform* self, PyObject* args) {
     Py_RETURN_TRUE;
 }
 
-PyObject* VRPyTransform::setSoft(VRPyTransform* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setSoft, Object is invalid"); return NULL; }
-    self->obj->getPhysics()->setSoft(parseBool(args));
-    Py_RETURN_TRUE;
-}
 PyObject* VRPyTransform::setDamping(VRPyTransform* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setDamping, Object is invalid"); return NULL; }
     float lin,ang;
@@ -327,6 +322,15 @@ PyObject* VRPyTransform::physicalize(VRPyTransform* self, PyObject *args) {
     if (b3) geo->getPhysics()->setShape("Concave");
     else geo->getPhysics()->setShape("Convex");
     geo->getPhysics()->setPhysicalized(b1);
+    Py_RETURN_TRUE;
+}
+PyObject* VRPyTransform::makePatch(VRPyTransform* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::makePatch: C Object is invalid"); return NULL; }
+    OSG::VRTransform* geo = (OSG::VRTransform*) self->obj;
+    geo->getPhysics()->setDynamic(true);
+    geo->getPhysics()->setShape("Patch");
+    geo->getPhysics()->setSoft(true);
+    geo->getPhysics()->setPhysicalized(true);
     Py_RETURN_TRUE;
 }
 
