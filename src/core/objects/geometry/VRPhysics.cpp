@@ -321,7 +321,8 @@ btSoftBody* VRPhysics::createPatch() {
 
     OSG::Matrix m = vr_obj->getMatrix();//get Transformation
     vr_obj->setOrientation(OSG::Vec3f(0,0,-1),OSG::Vec3f(0,1,0));//set orientation to identity. ugly solution.
-    cout << m[0][0] << " " << m[1][0] << " " << m[2][0] << " " << m[3][0] << "\n " << m[0][1] << " " << m[1][1] << " " << m[2][1] << " " << m[3][1] << "\n "  << m[0][2] << " " << m[1][2] << " " << m[2][2] << " " << m[3][2] ;
+    vr_obj->setWorldPosition(OSG::Vec3f(0.0,0.0,0.0));
+    cout << m[0][0] << " " << m[1][0] << " " << m[2][0] << " " << m[3][0] << "\n " << m[0][1] << " " << m[1][1] << " " << m[2][1] << " " << m[3][1] << "\n "  << m[0][2] << " " << m[1][2] << " " << m[2][2] << " " << m[3][2]  << " " << m[3][3];
 
     btSoftBodyWorldInfo* info = OSG::VRSceneManager::getCurrent()->getSoftBodyWorldInfo();
     for (unsigned int j=0; j<geos.size(); j++) {
@@ -743,6 +744,14 @@ btTransform VRPhysics::fromMatrix(const OSG::Matrix& m) {
     bltTrans.setFromOpenGLMatrix(&m2[0][0]);
     return bltTrans;
 }
+
+void  VRPhysics::setConstraint(VRPhysics* p,int nodeIndex,OSG::Vec3f localPivot,bool ignoreCollision,float influence) {
+    if(soft_body==0) return;
+    if(p->body == 0) return;
+    Lock lock(mtx());
+    soft_body->appendAnchor(nodeIndex,p->body,toBtVector3(localPivot),!ignoreCollision,influence);
+}
+
 
 void VRPhysics::setConstraint(VRPhysics* p, OSG::VRConstraint* c, OSG::VRConstraint* cs) {
     if (body == 0) return;

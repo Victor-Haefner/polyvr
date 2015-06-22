@@ -154,7 +154,8 @@ class VRPhysics : public OSG::VRStorage {
         static OSG::Vec3f toVec3f(btVector3);
 
 
-        void setConstraint(VRPhysics* p, OSG::VRConstraint* c, OSG::VRConstraint* cs);
+        void setConstraint(VRPhysics* p, OSG::VRConstraint* c, OSG::VRConstraint* cs); //for Rigid to Rigid
+        void setConstraint(VRPhysics* p, int nodeIndex,OSG::Vec3f localPivot,bool ignoreCollision,float influence);//for Soft to Rigid
         void updateConstraint(VRPhysics* p);
         void updateConstraints();
 };

@@ -51,7 +51,7 @@ VRPhysicsManager::VRPhysicsManager() {
     softBodyWorldInfo =     &(dynamicsWorld->getWorldInfo());
    	softBodyWorldInfo->m_dispatcher = dispatcher;
    	softBodyWorldInfo->m_broadphase = broadphase;
-	softBodyWorldInfo->m_gravity.setValue(0,-10,0);
+	softBodyWorldInfo->m_gravity.setValue(0,10,0);
     softBodyWorldInfo->air_density	= (btScalar)1.2;
     softBodyWorldInfo->water_density	= 0;
     softBodyWorldInfo->water_offset	= 0;
