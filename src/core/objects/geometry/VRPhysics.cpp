@@ -319,8 +319,10 @@ void VRPhysics::update() {
 btSoftBody* VRPhysics::createPatch() {
     vector<OSG::VRObject*> geos = vr_obj->getObjectListByType("Geometry");
 
-    //btVector3 glblpos = toBtVector3(vr_obj->getWorldPosition());
-    OSG::Matrix m = vr_obj->getWorldMatrix();
+    OSG::Matrix m = vr_obj->getMatrix();//get Transformation
+    vr_obj->setOrientation(OSG::Vec3f(0,0,-1),OSG::Vec3f(0,1,0));//set orientation to identity. ugly solution.
+    cout << m[0][0] << " " << m[1][0] << " " << m[2][0] << " " << m[3][0] << "\n " << m[0][1] << " " << m[1][1] << " " << m[2][1] << " " << m[3][1] << "\n "  << m[0][2] << " " << m[1][2] << " " << m[2][2] << " " << m[3][2] ;
+
     btSoftBodyWorldInfo* info = OSG::VRSceneManager::getCurrent()->getSoftBodyWorldInfo();
     for (unsigned int j=0; j<geos.size(); j++) {
         OSG::VRGeometry* geo = (OSG::VRGeometry*)geos[j];
@@ -340,8 +342,11 @@ btSoftBody* VRPhysics::createPatch() {
             for(int i = 0; i < positions->size();i++) {
                 OSG::Vec3f p;
                 positions->getValue(p,i);
-                //p += glblpos;
-                btVector3* pos =new btVector3(p.x(),p.y(),p.z());
+                OSG::Vec3f transformed;
+                //apply rotation &translation
+                for(int k=0;k<3;k++) transformed[k] = (m[0][k] * p[0] + m[1][k] * p[1] + m[2][k] * p[2]) + m[3][k];
+
+                btVector3* pos =new btVector3(transformed.x(),transformed.y(),transformed.z());
                 vertices.push_back(*pos);
                 masses.push_back(5.0);
             }
