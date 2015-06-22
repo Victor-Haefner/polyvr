@@ -100,13 +100,14 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
                 if(way->tags["bridge"] == "yes") {
                     seg->bridge = true;
                     //make all segments of bridge small, if one is small
-                    if(seg->getDistance()<Config::get()->BRIDGE_HEIGHT)
+                    if(seg->getDistance()<Config::get()->BRIDGE_HEIGHT) {
                         seg->smallBridge = true;
-                        if(segPrev->bridge) segPrev->smallBridge = true;
-                    else if(segPrev->smallBridge){
-                        seg->smallBridge = true;
+                        if (segPrev) if (segPrev->bridge) segPrev->smallBridge = true;
+                    } else if(segPrev) {
+                        if(segPrev->smallBridge) seg->smallBridge = true;
                     }
-                    if(segPrev != NULL){
+
+                    if(segPrev != NULL) {
                         segPrev->leftBridge = true;
                         if(segPrev->bridge) seg->rightBridge = true;
                     }
