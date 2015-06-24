@@ -177,12 +177,13 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
 
 
     GeometryData* sdata = new GeometryData();
+    GeometryData* jdata = new GeometryData();
 
     // load street joints
     for (string jointId : listLoadJoints) {
         StreetJoint* joint = streetJointMap[jointId];
         if (joint->segmentIds.size() == 0) continue;
-        makeStreetJointGeometry(joint, sdata);
+        makeStreetJointGeometry(joint, jdata);
     }
 
     // load street segments
@@ -192,9 +193,13 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
     }
 
     VRGeometry* streets = new VRGeometry("streets");
+    VRGeometry* joints = new VRGeometry("joints");
     streets->create(GL_QUADS, sdata->pos, sdata->norms, sdata->inds, sdata->texs);
+    joints->create(GL_TRIANGLES, jdata->pos, jdata->norms, jdata->inds, jdata->texs);
     streets->setMaterial(matStreet);
+    joints->setMaterial(matStreet);
     root->addChild(streets);
+    root->addChild(joints);
 }
 
 void ModuleStreets::unloadBbox(AreaBoundingBox* bbox) {
@@ -396,37 +401,32 @@ void ModuleStreets::pushQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f norma
 }
 
 void ModuleStreets::makeStreetJointGeometry(StreetJoint* sj, GeometryData* geo) {
-    VRGeometry* geom = new VRGeometry("StreetSegment");
-    vector<Vec3f> pos;
-    vector<Vec3f> norms;
-    vector<int> inds;
-    vector<Vec2f> texs;
-
     vector<JointPoints*> jointPoints = StreetAlgos::jointCalculateJointPoints(sj, streetSegmentMap, streetJointMap);
 
     /* look up, if street joint is part of a bridge */
     float jointHeight = Config::get()->STREET_HEIGHT;
-    if(sj->segmentIds.size() > 1){
+    if (sj->segmentIds.size() > 1) {
         StreetSegment* seg1 = streetSegmentMap[sj->segmentIds[0]];
         StreetSegment* seg2 = streetSegmentMap[sj->segmentIds[1]];
-        if(seg1->bridge && seg2->bridge) {
+        if (seg1->bridge && seg2->bridge) {
             jointHeight += Config::get()->BRIDGE_HEIGHT;
             sj->bridge = true;
-            if(seg1->smallBridge || seg2->smallBridge)
+            if (seg1->smallBridge || seg2->smallBridge) {
                 sj->smallBridge = true;
                 jointHeight = Config::get()->STREET_HEIGHT + Config::get()->SMALL_BRIDGE_HEIGHT;
+            }
         }
     }
 
     Vec3f middle, right, left, leftExt, rightExt, firstRight, firstLeft, prevLeft;
     Vec3f _NULL;
 
-    int ind = 0;
+    int ind = geo->inds->size();
     middle = Vec3f(sj->position.getValues()[0], this->mapCoordinator->getElevation(sj->position) +  jointHeight, sj->position.getValues()[1]);
     float width = 0;
     float mx, my;
 
-    BOOST_FOREACH(JointPoints* jp, jointPoints) {
+    for (JointPoints* jp : jointPoints) {
         right = Vec3f(jp->right.getValues()[0], this->mapCoordinator->getElevation(jp->right) +jointHeight, jp->right.getValues()[1]);
         left = Vec3f(jp->left.getValues()[0], this->mapCoordinator->getElevation(jp->left) + jointHeight, jp->left.getValues()[1]);
         leftExt = Vec3f(jp->leftExt.getValues()[0], this->mapCoordinator->getElevation(jp->leftExt) + jointHeight, jp->leftExt.getValues()[1]);
@@ -435,57 +435,59 @@ void ModuleStreets::makeStreetJointGeometry(StreetJoint* sj, GeometryData* geo) 
         mx = 0.5;
         my = ((right + (left-right)/2)-middle).length()/width;
 
-        pos.push_back(right); pos.push_back(left); pos.push_back(middle);
+        geo->pos->addValue(right);
+        geo->pos->addValue(left);
+        geo->pos->addValue(middle);
 
         for (int j=0; j<3; j++) {
-            norms.push_back(Vec3f(0, 1, 0));
-            inds.push_back(ind++);
+            geo->norms->addValue(Vec3f(0, 1, 0));
+            geo->inds->addValue(ind++);
         }
 
         if(sj->segmentIds.size() <= 2){
-            texs.push_back(Vec2f(0, 0));
-            texs.push_back(Vec2f(1, 0));
-            texs.push_back(Vec2f(mx, my));
+            geo->texs->addValue(Vec2f(0, 0));
+            geo->texs->addValue(Vec2f(1, 0));
+            geo->texs->addValue(Vec2f(mx, my));
         } else {
-            texs.push_back(Vec2f(0, 1));
-            texs.push_back(Vec2f(1, 1));
-            texs.push_back(Vec2f(0.5, 1));
+            geo->texs->addValue(Vec2f(0, 1));
+            geo->texs->addValue(Vec2f(1, 1));
+            geo->texs->addValue(Vec2f(0.5, 1));
         }
 
 
         if (sj->segmentIds.size() <= 2) { //joint with only 1 || 2 connecting street segments
             if ((leftExt-middle).length() < 3) {
                 for (int j=0; j<3; j++) {
-                    norms.push_back(Vec3f(0, 1, 0));
-                    inds.push_back(ind++);
+                    geo->norms->addValue(Vec3f(0, 1, 0));
+                    geo->inds->addValue(ind++);
                 }
-                pos.push_back(left);
-                pos.push_back(leftExt);
-                pos.push_back(middle);
-                texs.push_back(Vec2f(1, 0));
-                texs.push_back(Vec2f(1, (left-leftExt).length()/width));
-                texs.push_back(Vec2f(mx, my));
+                geo->pos->addValue(left);
+                geo->pos->addValue(leftExt);
+                geo->pos->addValue(middle);
+                geo->texs->addValue(Vec2f(1, 0));
+                geo->texs->addValue(Vec2f(1, (left-leftExt).length()/width));
+                geo->texs->addValue(Vec2f(mx, my));
             }
             if (rightExt != _NULL && (rightExt-middle).length() < 3) {
                 for (int j=0; j<3; j++) {
-                    norms.push_back(Vec3f(0, 1, 0));
-                    inds.push_back(ind++);
+                    geo->norms->addValue(Vec3f(0, 1, 0));
+                    geo->inds->addValue(ind++);
                 }
-                pos.push_back(right);
-                pos.push_back(rightExt);
-                pos.push_back(middle);
-                texs.push_back(Vec2f(0, 0));
-                texs.push_back(Vec2f(0, (right-rightExt).length()/width));
-                texs.push_back(Vec2f(mx, my));
+                geo->pos->addValue(right);
+                geo->pos->addValue(rightExt);
+                geo->pos->addValue(middle);
+                geo->texs->addValue(Vec2f(0, 0));
+                geo->texs->addValue(Vec2f(0, (right-rightExt).length()/width));
+                geo->texs->addValue(Vec2f(mx, my));
             }
         } else {   //joint with more than 2 connecting street segments
             if(prevLeft != _NULL) {
                 for (int j=0; j<3; j++) {
-                    norms.push_back(Vec3f(0, 1, 0));
-                    inds.push_back(ind++);
+                    geo->norms->addValue(Vec3f(0, 1, 0));
+                    geo->inds->addValue(ind++);
                 }
-                pos.push_back(right); pos.push_back(prevLeft); pos.push_back(middle);
-                texs.push_back(Vec2f(1, 1)); texs.push_back(Vec2f(1, 1)); texs.push_back(Vec2f(0.5, 0.5));
+                geo->pos->addValue(right); geo->pos->addValue(prevLeft); geo->pos->addValue(middle);
+                geo->texs->addValue(Vec2f(1, 1)); geo->texs->addValue(Vec2f(1, 1)); geo->texs->addValue(Vec2f(0.5, 0.5));
             }
         }
 
@@ -497,27 +499,27 @@ void ModuleStreets::makeStreetJointGeometry(StreetJoint* sj, GeometryData* geo) 
 
     if(sj->segmentIds.size() <= 2){ //joint with only 1 || 2 connecting street segments
         for (int j=0; j<3; j++) {
-            norms.push_back(Vec3f(0, 1, 0));
-            inds.push_back(ind++);
+            geo->norms->addValue(Vec3f(0, 1, 0));
+            geo->inds->addValue(ind++);
         }
-        pos.push_back(firstRight);
-        pos.push_back(rightExt);
-        pos.push_back(middle);
-        texs.push_back(Vec2f(0, 0));
-        texs.push_back(Vec2f(0, (firstRight-rightExt).length()/width));
-        texs.push_back(Vec2f(mx, my));
-        //texs.push_back(Vec2f(1, 1)); texs.push_back(Vec2f(1, 1)); texs.push_back(Vec2f(0.5, 0.5));
+        geo->pos->addValue(firstRight);
+        geo->pos->addValue(rightExt);
+        geo->pos->addValue(middle);
+        geo->texs->addValue(Vec2f(0, 0));
+        geo->texs->addValue(Vec2f(0, (firstRight-rightExt).length()/width));
+        geo->texs->addValue(Vec2f(mx, my));
+        //geo->texs->addValue(Vec2f(1, 1)); geo->texs->addValue(Vec2f(1, 1)); geo->texs->addValue(Vec2f(0.5, 0.5));
     } else {   //joint with more than 2 connecting street segments
         for (int j=0; j<3; j++) {
-            norms.push_back(Vec3f(0, 1, 0));
-            inds.push_back(ind++);
+            geo->norms->addValue(Vec3f(0, 1, 0));
+            geo->inds->addValue(ind++);
         }
-        pos.push_back(firstRight);
-        pos.push_back(prevLeft);
-        pos.push_back(middle);
-        texs.push_back(Vec2f(1, 1));
-        texs.push_back(Vec2f(1, 1));
-        texs.push_back(Vec2f(0.5, 0.5));
+        geo->pos->addValue(firstRight);
+        geo->pos->addValue(prevLeft);
+        geo->pos->addValue(middle);
+        geo->texs->addValue(Vec2f(1, 1));
+        geo->texs->addValue(Vec2f(1, 1));
+        geo->texs->addValue(Vec2f(0.5, 0.5));
     }
 
 
@@ -533,67 +535,67 @@ void ModuleStreets::makeStreetJointGeometry(StreetJoint* sj, GeometryData* geo) 
             left = Vec3f(jp->left.getValues()[0], this->mapCoordinator->getElevation(jp->left) + jointHeight, jp->left.getValues()[1]);
             leftExt = Vec3f(jp->leftExt.getValues()[0], this->mapCoordinator->getElevation(jp->leftExt) + jointHeight, jp->leftExt.getValues()[1]);
 
-            pos.push_back(right); pos.push_back(left); pos.push_back(middle);
-            inds.push_back(ind++); inds.push_back(ind++); inds.push_back(ind++);
-            norms.push_back(Vec3f(0, -1, 0)); norms.push_back(Vec3f(0, -1, 0)); norms.push_back(Vec3f(0, -1, 0));
-            texs.push_back(Vec2f(0, 1)); texs.push_back(Vec2f(1, 1)); texs.push_back(Vec2f(0.5, 0.5));
+            geo->pos->addValue(right); geo->pos->addValue(left); geo->pos->addValue(middle);
+            geo->inds->addValue(ind++); geo->inds->addValue(ind++); geo->inds->addValue(ind++);
+            geo->norms->addValue(Vec3f(0, -1, 0)); geo->norms->addValue(Vec3f(0, -1, 0)); geo->norms->addValue(Vec3f(0, -1, 0));
+            geo->texs->addValue(Vec2f(0, 1)); geo->texs->addValue(Vec2f(1, 1)); geo->texs->addValue(Vec2f(0.5, 0.5));
 
             if ((leftExt-middle).length() < 3) {
-                pos.push_back(left); pos.push_back(leftExt); pos.push_back(middle);
-                inds.push_back(ind++); inds.push_back(ind++); inds.push_back(ind++);
-                norms.push_back(Vec3f(0, -1, 0)); norms.push_back(Vec3f(0, -1, 0)); norms.push_back(Vec3f(0, -1, 0));
-                texs.push_back(Vec2f(1, 1)); texs.push_back(Vec2f(1, 1)); texs.push_back(Vec2f(0.5, 0.5));
+                geo->pos->addValue(left); geo->pos->addValue(leftExt); geo->pos->addValue(middle);
+                geo->inds->addValue(ind++); geo->inds->addValue(ind++); geo->inds->addValue(ind++);
+                geo->norms->addValue(Vec3f(0, -1, 0)); geo->norms->addValue(Vec3f(0, -1, 0)); geo->norms->addValue(Vec3f(0, -1, 0));
+                geo->texs->addValue(Vec2f(1, 1)); geo->texs->addValue(Vec2f(1, 1)); geo->texs->addValue(Vec2f(0.5, 0.5));
 
                 Vec3f normal = Vec3f(-(left-leftExt).getValues()[2], 0, (left-leftExt).getValues()[0]);
 
-                pos.push_back(left); pos.push_back(leftExt); pos.push_back(leftExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0));
-                inds.push_back(ind++); inds.push_back(ind++); inds.push_back(ind++);
-                norms.push_back(normal); norms.push_back(normal); norms.push_back(normal);
-                texs.push_back(Vec2f(0.5, 0.5)); texs.push_back(Vec2f(0.5, 0.5)); texs.push_back(Vec2f(0.5, 0.5));
+                geo->pos->addValue(left); geo->pos->addValue(leftExt); geo->pos->addValue(leftExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0));
+                geo->inds->addValue(ind++); geo->inds->addValue(ind++); geo->inds->addValue(ind++);
+                geo->norms->addValue(normal); geo->norms->addValue(normal); geo->norms->addValue(normal);
+                geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5));
 
-                pos.push_back(leftExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0)); pos.push_back(left+Vec3f(0, Config::get()->BRIDGE_SIZE, 0)); pos.push_back(left);
-                inds.push_back(ind++); inds.push_back(ind++); inds.push_back(ind++);
-                norms.push_back(normal); norms.push_back(normal); norms.push_back(normal);
-                texs.push_back(Vec2f(0.5, 0.5)); texs.push_back(Vec2f(0.5, 0.5)); texs.push_back(Vec2f(0.5, 0.5));
+                geo->pos->addValue(leftExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0)); geo->pos->addValue(left+Vec3f(0, Config::get()->BRIDGE_SIZE, 0)); geo->pos->addValue(left);
+                geo->inds->addValue(ind++); geo->inds->addValue(ind++); geo->inds->addValue(ind++);
+                geo->norms->addValue(normal); geo->norms->addValue(normal); geo->norms->addValue(normal);
+                geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5));
             }
 
             if (rightExt != _NULL && (rightExt-middle).length() < 3) {
-                pos.push_back(right); pos.push_back(rightExt); pos.push_back(middle);
-                inds.push_back(ind++); inds.push_back(ind++); inds.push_back(ind++);
-                norms.push_back(Vec3f(0, -1, 0)); norms.push_back(Vec3f(0, -1, 0)); norms.push_back(Vec3f(0, -1, 0));
-                texs.push_back(Vec2f(1, 1)); texs.push_back(Vec2f(1, 1)); texs.push_back(Vec2f(0.5, 0.5));
+                geo->pos->addValue(right); geo->pos->addValue(rightExt); geo->pos->addValue(middle);
+                geo->inds->addValue(ind++); geo->inds->addValue(ind++); geo->inds->addValue(ind++);
+                geo->norms->addValue(Vec3f(0, -1, 0)); geo->norms->addValue(Vec3f(0, -1, 0)); geo->norms->addValue(Vec3f(0, -1, 0));
+                geo->texs->addValue(Vec2f(1, 1)); geo->texs->addValue(Vec2f(1, 1)); geo->texs->addValue(Vec2f(0.5, 0.5));
 
                 Vec3f normal = Vec3f((right-rightExt).getValues()[2], 0, -(right-rightExt).getValues()[0]);
 
-                pos.push_back(right); pos.push_back(rightExt); pos.push_back(rightExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0));
-                inds.push_back(ind++); inds.push_back(ind++); inds.push_back(ind++);
-                norms.push_back(normal); norms.push_back(normal); norms.push_back(normal);
-                texs.push_back(Vec2f(0.5, 0.5)); texs.push_back(Vec2f(0.5, 0.5)); texs.push_back(Vec2f(0.5, 0.5));
+                geo->pos->addValue(right); geo->pos->addValue(rightExt); geo->pos->addValue(rightExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0));
+                geo->inds->addValue(ind++); geo->inds->addValue(ind++); geo->inds->addValue(ind++);
+                geo->norms->addValue(normal); geo->norms->addValue(normal); geo->norms->addValue(normal);
+                geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5));
 
-                pos.push_back(rightExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0)); pos.push_back(right+Vec3f(0, Config::get()->BRIDGE_SIZE, 0)); pos.push_back(right);
-                inds.push_back(ind++); inds.push_back(ind++); inds.push_back(ind++);
-                norms.push_back(normal); norms.push_back(normal); norms.push_back(normal);
-                texs.push_back(Vec2f(0.5, 0.5)); texs.push_back(Vec2f(0.5, 0.5)); texs.push_back(Vec2f(0.5, 0.5));
+                geo->pos->addValue(rightExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0)); geo->pos->addValue(right+Vec3f(0, Config::get()->BRIDGE_SIZE, 0)); geo->pos->addValue(right);
+                geo->inds->addValue(ind++); geo->inds->addValue(ind++); geo->inds->addValue(ind++);
+                geo->norms->addValue(normal); geo->norms->addValue(normal); geo->norms->addValue(normal);
+                geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5));
             } else firstRight = right;
 
             rightExt = leftExt;
         }
 
-        pos.push_back(firstRight); pos.push_back(rightExt); pos.push_back(middle);
-        inds.push_back(ind++); inds.push_back(ind++); inds.push_back(ind++);
-        norms.push_back(Vec3f(0, -1, 0)); norms.push_back(Vec3f(0, -1, 0)); norms.push_back(Vec3f(0, -1, 0));
-        texs.push_back(Vec2f(1, 1)); texs.push_back(Vec2f(1, 1)); texs.push_back(Vec2f(0.5, 0.5));
+        geo->pos->addValue(firstRight); geo->pos->addValue(rightExt); geo->pos->addValue(middle);
+        geo->inds->addValue(ind++); geo->inds->addValue(ind++); geo->inds->addValue(ind++);
+        geo->norms->addValue(Vec3f(0, -1, 0)); geo->norms->addValue(Vec3f(0, -1, 0)); geo->norms->addValue(Vec3f(0, -1, 0));
+        geo->texs->addValue(Vec2f(1, 1)); geo->texs->addValue(Vec2f(1, 1)); geo->texs->addValue(Vec2f(0.5, 0.5));
 
         Vec3f normal = Vec3f((firstRight-rightExt).getValues()[2], 0, -(firstRight-rightExt).getValues()[0]);
 
-        pos.push_back(firstRight); pos.push_back(rightExt); pos.push_back(rightExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0));
-        inds.push_back(ind++); inds.push_back(ind++); inds.push_back(ind++);
-        norms.push_back(normal); norms.push_back(normal); norms.push_back(normal);
-        texs.push_back(Vec2f(0.5, 0.5)); texs.push_back(Vec2f(0.5, 0.5)); texs.push_back(Vec2f(0.5, 0.5));
+        geo->pos->addValue(firstRight); geo->pos->addValue(rightExt); geo->pos->addValue(rightExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0));
+        geo->inds->addValue(ind++); geo->inds->addValue(ind++); geo->inds->addValue(ind++);
+        geo->norms->addValue(normal); geo->norms->addValue(normal); geo->norms->addValue(normal);
+        geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5));
 
-        pos.push_back(rightExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0)); pos.push_back(firstRight+Vec3f(0, Config::get()->BRIDGE_SIZE, 0)); pos.push_back(firstRight);
-        inds.push_back(ind++); inds.push_back(ind++); inds.push_back(ind++);
-        norms.push_back(normal); norms.push_back(normal); norms.push_back(normal);
-        texs.push_back(Vec2f(0.5, 0.5)); texs.push_back(Vec2f(0.5, 0.5)); texs.push_back(Vec2f(0.5, 0.5));
+        geo->pos->addValue(rightExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0)); geo->pos->addValue(firstRight+Vec3f(0, Config::get()->BRIDGE_SIZE, 0)); geo->pos->addValue(firstRight);
+        geo->inds->addValue(ind++); geo->inds->addValue(ind++); geo->inds->addValue(ind++);
+        geo->norms->addValue(normal); geo->norms->addValue(normal); geo->norms->addValue(normal);
+        geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5));
     }
 }
