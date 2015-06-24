@@ -39,6 +39,31 @@ ModuleStreets::ModuleStreets(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, Te
 
 string ModuleStreets::getName() { return "ModuleStreets"; }
 
+bool isStreet(OSMWay* way) {
+    return (
+    way->tags["highway"] == "motorway" ||
+    way->tags["highway"] == "trunk" ||
+    way->tags["highway"] == "primary" ||
+    way->tags["highway"] == "secondary" ||
+    way->tags["highway"] == "tertiary" ||
+    way->tags["highway"] == "living_street" ||
+    way->tags["highway"] == "residential" ||
+    way->tags["highway"] == "unclassified" ||
+    way->tags["highway"] == "service" ||
+    way->tags["highway"] == "motorway_link" ||
+    way->tags["highway"] == "trunk_link" ||
+    way->tags["highway"] == "primary_link" ||
+    way->tags["highway"] == "raceway" ||
+    way->tags["highway"] == "cycleway" ||
+    way->tags["highway"] == "path" ||
+    way->tags["highway"] == "pedestrian" ||
+    way->tags["highway"] == "road" ||
+    way->tags["highway"] == "bridleway" ||
+    way->tags["highway"] == "track" ||
+    way->tags["highway"] == "footway" ||
+    way->tags["bridge"] == "yes");
+}
+
 void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
     OSMMap* osmMap = mapDB->getMap(bbox->str);
     if (!osmMap) return;
@@ -47,48 +72,19 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
     vector<string> listLoadSegments;
     vector<string> listReloadJoints;
 
-    Timer t;
-
-    t.start("LOAD STREET DATA");
-    // Load StreetJoints
-    BOOST_FOREACH(OSMNode* node, osmMap->osmNodes) {
+    for (OSMNode* node : osmMap->osmNodes) { // Load StreetJoints
         Vec2f pos = this->mapCoordinator->realToWorld(Vec2f(node->lat, node->lon));
         StreetJoint* joint = new StreetJoint(pos, node->id);
         if (streetJointMap.count(node->id)) {
             listReloadJoints.push_back(node->id);
             streetJointMap[node->id]->merge(joint);
-        } else {
-            streetJointMap[node->id] = joint;
-        }
+        } else streetJointMap[node->id] = joint;
         listLoadJoints.push_back(node->id);
     }
 
-    StreetSegment* segPrev = NULL;
-    // Load StreetSegments
-    BOOST_FOREACH(OSMWay* way, osmMap->osmWays) {
-        if (
-                way->tags["highway"] == "motorway" ||
-                way->tags["highway"] == "trunk" ||
-                way->tags["highway"] == "primary" ||
-                way->tags["highway"] == "secondary" ||
-                way->tags["highway"] == "tertiary" ||
-                way->tags["highway"] == "living_street" ||
-                way->tags["highway"] == "residential" ||
-                way->tags["highway"] == "unclassified" ||
-                way->tags["highway"] == "service" ||
-                way->tags["highway"] == "motorway_link" ||
-                way->tags["highway"] == "trunk_link" ||
-                way->tags["highway"] == "primary_link" ||
-                way->tags["highway"] == "raceway" ||
-                way->tags["highway"] == "cycleway" ||
-                way->tags["highway"] == "path" ||
-                way->tags["highway"] == "pedestrian" ||
-                way->tags["highway"] == "road" ||
-                way->tags["highway"] == "bridleway" ||
-                way->tags["highway"] == "track" ||
-                way->tags["highway"] == "footway" ||
-                way->tags["bridge"] == "yes") {
-            // load street segment
+    StreetSegment* segPrev = NULL; // Load StreetSegments
+    for (OSMWay* way : osmMap->osmWays) {
+        if (isStreet(way)) { // load street segment
             for (unsigned int i=0; i < way->nodeRefs.size()-1; i++) {
                 string nodeId1 = way->nodeRefs[i];
                 string nodeId2 = way->nodeRefs[i+1];
@@ -100,7 +96,7 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
                 if(way->tags["bridge"] == "yes") {
                     seg->bridge = true;
                     //make all segments of bridge small, if one is small
-                    if(seg->getDistance()<Config::get()->BRIDGE_HEIGHT) {
+                    if(seg->getDistance() < Config::get()->BRIDGE_HEIGHT) {
                         seg->smallBridge = true;
                         if (segPrev) if (segPrev->bridge) segPrev->smallBridge = true;
                     } else if(segPrev) {
@@ -133,10 +129,9 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
             }
         }
     }
-    t.printTime("LOAD STREET DATA");
 
     // fix up broken segmendIds in joints
-    BOOST_FOREACH(string jointId, listLoadJoints) {
+    for (string jointId : listLoadJoints) {
         StreetJoint* joint = streetJointMap[jointId];
 
         for (vector<string>::iterator it = joint->segmentIds.begin(); it != joint->segmentIds.end();) {
@@ -148,9 +143,8 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
         }
     }
 
-    t.start("TEMP UNLOAD JOINTS");
     // unload joints
-    BOOST_FOREACH(string jointId, listReloadJoints) {
+    for (string jointId : listReloadJoints) {
         if (meshes.count(jointId)) {
             // delete mesh from scene && from world.meshes
             VRObject* obj = meshes[jointId];
@@ -160,7 +154,7 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
 
         // unload segments attached to this joint
         StreetJoint* joint = streetJointMap[jointId];
-        BOOST_FOREACH(string segId, joint->segmentIds) {
+        for (string segId : joint->segmentIds) {
             if (meshes.count(segId)) {
                 // delete mesh from scene && from world.meshes
                 VRObject* obj = meshes[segId];
@@ -171,7 +165,6 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
             }
         }
     }
-    t.printTime("TEMP UNLOAD JOINTS");
 
     // prepare load lists
     StreetAlgos::vectorStrRemoveDuplicates(listLoadJoints);
@@ -179,19 +172,19 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
 
 //            t.start("PREPARE STREET DATA");
     // prepare joints
-    BOOST_FOREACH(string jointId, listLoadJoints) {
+    for (string jointId : listLoadJoints) {
         StreetJoint* joint = streetJointMap[jointId];
         if (joint->segmentIds.size() == 0) continue;
         StreetAlgos::jointCalculateSegmentPoints(joint, streetSegmentMap, streetJointMap);
     }
-    BOOST_FOREACH(string jointId, listLoadJoints) {
+    for (string jointId: listLoadJoints) {
         StreetJoint* joint = streetJointMap[jointId];
         if (joint->segmentIds.size() == 0) continue;
         StreetAlgos::jointCalculateJointPoints(joint, streetSegmentMap, streetJointMap);
     }
 //            t.printTime("PREPARE STREET DATA");
     // load street joints
-    BOOST_FOREACH(string jointId, listLoadJoints) {
+    for (string jointId : listLoadJoints) {
         if (meshes.count(jointId)) {
             cout << "DOUBLE JOINT LOAD: " << jointId << "\n";
             continue;
@@ -206,7 +199,7 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
     }
 
     // load street segments
-    BOOST_FOREACH(string segId, listLoadSegments) {
+    for (string segId : listLoadSegments) {
         if (meshes.count(segId)) {
             cout << "DOUBLE SEGMENT LOAD: " << segId << "\n";
             continue;
