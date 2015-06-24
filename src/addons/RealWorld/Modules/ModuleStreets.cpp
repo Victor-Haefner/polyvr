@@ -14,6 +14,7 @@
 #include "../MapGeometryGenerator.h"
 
 #include <boost/exception/to_string.hpp>
+#include <OpenSG/OSGGeometry.h>
 
 using namespace OSG;
 using namespace std;
@@ -34,6 +35,7 @@ ModuleStreets::ModuleStreets(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, Te
     matStreet->readVertexShader(wdir+"/shader/TexturePhong/phong.vp");
     matStreet->readFragmentShader(wdir+"/shader/TexturePhong/phong.fp");
     matStreet->setMagMinFilter("GL_LINEAR", "GL_NEAREST_MIPMAP_NEAREST");
+    matStreet->setZOffset(-1,-1);
     //matStreet->setWireFrame(true);
 }
 
@@ -118,9 +120,7 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
                     seg->width = seg->width * seg->lanes;
                 }
 
-                if (way->tags.count("name")) {
-                    seg->name = way->tags["name"];
-                }
+                if (way->tags.count("name")) seg->name = way->tags["name"];
 
                 streetJointMap[nodeId1]->segmentIds.push_back(segId);
                 streetJointMap[nodeId2]->segmentIds.push_back(segId);
@@ -130,23 +130,17 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
         }
     }
 
-    // fix up broken segmendIds in joints
-    for (string jointId : listLoadJoints) {
+    for (string jointId : listLoadJoints) { // fix up broken segmendIds in joints
         StreetJoint* joint = streetJointMap[jointId];
-
         for (vector<string>::iterator it = joint->segmentIds.begin(); it != joint->segmentIds.end();) {
-            if (!streetSegmentMap.count(*it)) {
-                it = joint->segmentIds.erase(it);
-            } else {
-                it++;
-            }
+            if (!streetSegmentMap.count(*it)) { it = joint->segmentIds.erase(it); cout << "haeh!\n"; }
+            else it++;
         }
     }
 
     // unload joints
     for (string jointId : listReloadJoints) {
-        if (meshes.count(jointId)) {
-            // delete mesh from scene && from world.meshes
+        if (meshes.count(jointId)) { // delete mesh from scene && from world.meshes
             VRObject* obj = meshes[jointId];
             meshes.erase(jointId);
             delete obj;
@@ -155,8 +149,7 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
         // unload segments attached to this joint
         StreetJoint* joint = streetJointMap[jointId];
         for (string segId : joint->segmentIds) {
-            if (meshes.count(segId)) {
-                // delete mesh from scene && from world.meshes
+            if (meshes.count(segId)) { // delete mesh from scene && from world.meshes
                 VRObject* obj = meshes[segId];
                 meshes.erase(segId);
                 delete obj;
@@ -170,7 +163,6 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
     StreetAlgos::vectorStrRemoveDuplicates(listLoadJoints);
     StreetAlgos::vectorStrRemoveDuplicates(listLoadSegments);
 
-//            t.start("PREPARE STREET DATA");
     // prepare joints
     for (string jointId : listLoadJoints) {
         StreetJoint* joint = streetJointMap[jointId];
@@ -182,45 +174,27 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
         if (joint->segmentIds.size() == 0) continue;
         StreetAlgos::jointCalculateJointPoints(joint, streetSegmentMap, streetJointMap);
     }
-//            t.printTime("PREPARE STREET DATA");
+
+
+    GeometryData* sdata = new GeometryData();
+
     // load street joints
     for (string jointId : listLoadJoints) {
-        if (meshes.count(jointId)) {
-            cout << "DOUBLE JOINT LOAD: " << jointId << "\n";
-            continue;
-        }
         StreetJoint* joint = streetJointMap[jointId];
         if (joint->segmentIds.size() == 0) continue;
-        VRGeometry* geom = makeStreetJointGeometry(joint);
-        geom->setMaterial(matStreet);
-        root->addChild(geom);
-//                this->scene->physicalize(geom, true);
-        meshes[jointId] = geom;
+        makeStreetJointGeometry(joint, sdata);
     }
 
     // load street segments
     for (string segId : listLoadSegments) {
-        if (meshes.count(segId)) {
-            cout << "DOUBLE SEGMENT LOAD: " << segId << "\n";
-            continue;
-        }
         StreetSegment* seg = streetSegmentMap[segId];
-
-        // TODO
-        /*if (seg->id.find("-0") != string::npos) {
-            SimpleTexturedMaterialRecPtr matSign = VRText::get()->getTexture(seg->name, "SANS 20", seg->name.length()*20, 30, Color4f(255,255,255,255), Color4f(78,93,157,255));
-            VRGeometry* sign = makeSignGeometry(seg);
-            sign->setMaterial(matSign);
-            root->addChild(sign);
-            // TODO: method to unload signs
-        }*/
-
-        VRGeometry* geom = makeStreetSegmentGeometry(seg);
-        geom->setMaterial(matStreet);
-        root->addChild(geom);
-//                this->scene->physicalize(geom, true);
-        meshes[segId] = geom;
+        makeStreetSegmentGeometry(seg, sdata);
     }
+
+    VRGeometry* streets = new VRGeometry("streets");
+    streets->create(GL_QUADS, sdata->pos, sdata->norms, sdata->inds, sdata->texs);
+    streets->setMaterial(matStreet);
+    root->addChild(streets);
 }
 
 void ModuleStreets::unloadBbox(AreaBoundingBox* bbox) {
@@ -269,7 +243,7 @@ void ModuleStreets::physicalize(bool b) {
     }
 }
 
-VRGeometry* ModuleStreets::makeSignGeometry(StreetSegment* seg) {
+void ModuleStreets::makeSignGeometry(StreetSegment* seg, GeometryData* geo) {
     Vec2f dir = (seg->leftA - seg->leftB)*-1;
     dir.normalize();
     Vec2f dirOrtho = (seg->leftA - seg->rightA);
@@ -304,19 +278,9 @@ VRGeometry* ModuleStreets::makeSignGeometry(StreetSegment* seg) {
     data->norms->addValue(Vec3f(1, 0, 0));
     data->pos->addValue(Vec3f(w1.getValues()[0], high, w1.getValues()[1]));
     data->texs->addValue(Vec2f(0, 1));
-
-
-    VRGeometry* geom = new VRGeometry("StreetSign");
-    geom->create(GL_QUADS, data->pos, data->norms, data->inds, data->texs);
-    return geom;
 }
 
-VRGeometry* ModuleStreets::makeStreetSegmentGeometry(StreetSegment* s) {
-    vector<Vec3f> pos;
-    vector<Vec3f> norms;
-    vector<int> inds;
-    vector<Vec2f> texs;
-
+void ModuleStreets::makeStreetSegmentGeometry(StreetSegment* s, GeometryData* streets) {
     Vec2f leftA = Vec2f(s->leftA);
     Vec2f rightA = Vec2f(s->rightA);
     Vec2f leftB = Vec2f(s->leftB);
@@ -324,7 +288,7 @@ VRGeometry* ModuleStreets::makeStreetSegmentGeometry(StreetSegment* s) {
 
     int ind = 0;
 
-    if(s->bridge){ //bridge
+    if (s->bridge){ //bridge
         float low = Config::get()->STREET_HEIGHT;
         float high = Config::get()->STREET_HEIGHT + Config::get()->BRIDGE_HEIGHT;
         Vec3f th = Vec3f(0, Config::get()->BRIDGE_SIZE, 0);
@@ -341,10 +305,10 @@ VRGeometry* ModuleStreets::makeStreetSegmentGeometry(StreetSegment* s) {
         a2 = Vec3f(rightA.getValues()[0], this->mapCoordinator->getElevation(rightA) + low, rightA.getValues()[1]);
         b1 = Vec3f(leftB.getValues()[0], this->mapCoordinator->getElevation(leftB) + high, leftB.getValues()[1]);
         b2 = Vec3f(rightB.getValues()[0], this->mapCoordinator->getElevation(rightB) + high, rightB.getValues()[1]);
-        pushQuad(a1, a2, b2, b1, -getNormal3D(a2-a1, b1-a1), &ind, &pos, &norms, &inds, &texs);
-        pushQuad(a1-th, a2-th, b2-th, b1-th, getNormal3D(a2-a1, b1-a1), &ind, &pos, &norms, &inds, &texs);
-        pushQuad(a1, a1-th, b1-th, b1, Vec3f(-(b1-a1).getValues()[2], 0, (b1-a1).getValues()[0]), &ind, &pos, &norms, &inds, &texs, true); //side1
-        pushQuad(a2, a2-th, b2-th, b2, Vec3f((b2-a2).getValues()[2], 0, -(b2-a2).getValues()[0]), &ind, &pos, &norms, &inds, &texs, true); //side2
+        pushQuad(a1, a2, b2, b1, -getNormal3D(a2-a1, b1-a1), streets);
+        pushQuad(a1-th, a2-th, b2-th, b1-th, getNormal3D(a2-a1, b1-a1), streets);
+        pushQuad(a1, a1-th, b1-th, b1, Vec3f(-(b1-a1).getValues()[2], 0, (b1-a1).getValues()[0]), streets, true); //side1
+        pushQuad(a2, a2-th, b2-th, b2, Vec3f((b2-a2).getValues()[2], 0, -(b2-a2).getValues()[0]), streets, true); //side2
 
         //middle part of bridge
         low = Config::get()->STREET_HEIGHT;
@@ -357,10 +321,10 @@ VRGeometry* ModuleStreets::makeStreetSegmentGeometry(StreetSegment* s) {
         a2 = Vec3f(rightA.getValues()[0], this->mapCoordinator->getElevation(rightA) + high, rightA.getValues()[1]);
         b1 = Vec3f(leftB.getValues()[0], this->mapCoordinator->getElevation(leftB) + high, leftB.getValues()[1]);
         b2 = Vec3f(rightB.getValues()[0], this->mapCoordinator->getElevation(rightB) + high, rightB.getValues()[1]);
-        pushQuad(a1, a2, b2, b1, Vec3f(0, 1, 0), &ind, &pos, &norms, &inds, &texs); //top
-        pushQuad(a1-th, a2-th, b2-th, b1-th, Vec3f(0, -1, 0), &ind, &pos, &norms, &inds, &texs); //bottom
-        pushQuad(a1, a1-th, b1-th, b1, Vec3f(-(b1-a1).getValues()[2], 0, (b1-a1).getValues()[0]), &ind, &pos, &norms, &inds, &texs, true); //side1
-        pushQuad(a2, a2-th, b2-th, b2, Vec3f((b2-a2).getValues()[2], 0, -(b2-a2).getValues()[0]), &ind, &pos, &norms, &inds, &texs, true); //side2
+        pushQuad(a1, a2, b2, b1, Vec3f(0, 1, 0), streets); //top
+        pushQuad(a1-th, a2-th, b2-th, b1-th, Vec3f(0, -1, 0), streets); //bottom
+        pushQuad(a1, a1-th, b1-th, b1, Vec3f(-(b1-a1).getValues()[2], 0, (b1-a1).getValues()[0]), streets, true); //side1
+        pushQuad(a2, a2-th, b2-th, b2, Vec3f((b2-a2).getValues()[2], 0, -(b2-a2).getValues()[0]), streets, true); //side2
 
 
         //end part of bridge
@@ -373,22 +337,17 @@ VRGeometry* ModuleStreets::makeStreetSegmentGeometry(StreetSegment* s) {
         a2 = Vec3f(rightA.getValues()[0], this->mapCoordinator->getElevation(rightA) + high, rightA.getValues()[1]);
         b1 = Vec3f(s->leftB.getValues()[0], this->mapCoordinator->getElevation(s->leftB) + low, s->leftB.getValues()[1]);
         b2 = Vec3f(s->rightB.getValues()[0], this->mapCoordinator->getElevation(s->rightB) + low, s->rightB.getValues()[1]);
-        pushQuad(a1, a2, b2, b1, -getNormal3D(a2-a1, b1-a1), &ind, &pos, &norms, &inds, &texs);
-        pushQuad(a1-th, a2-th, b2-th, b1-th, getNormal3D(a2-a1, b1-a1), &ind, &pos, &norms, &inds, &texs);
-        pushQuad(a1, a1-th, b1-th, b1, Vec3f(-(b1-a1).getValues()[2], 0, (b1-a1).getValues()[0]), &ind, &pos, &norms, &inds, &texs, true); //side1
-        pushQuad(a2, a2-th, b2-th, b2, Vec3f((b2-a2).getValues()[2], 0, -(b2-a2).getValues()[0]), &ind, &pos, &norms, &inds, &texs, true); //side2
+        pushQuad(a1, a2, b2, b1, -getNormal3D(a2-a1, b1-a1), streets);
+        pushQuad(a1-th, a2-th, b2-th, b1-th, getNormal3D(a2-a1, b1-a1), streets);
+        pushQuad(a1, a1-th, b1-th, b1, Vec3f(-(b1-a1).getValues()[2], 0, (b1-a1).getValues()[0]), streets, true); //side1
+        pushQuad(a2, a2-th, b2-th, b2, Vec3f((b2-a2).getValues()[2], 0, -(b2-a2).getValues()[0]), streets, true); //side2
     } else{ //normal street
         pushQuad(Vec3f(leftA.getValues()[0], this->mapCoordinator->getElevation(leftA) + Config::get()->STREET_HEIGHT, leftA.getValues()[1]),
                  Vec3f(rightA.getValues()[0], this->mapCoordinator->getElevation(rightA) + Config::get()->STREET_HEIGHT, rightA.getValues()[1]),
                  Vec3f(rightB.getValues()[0], this->mapCoordinator->getElevation(rightB) + Config::get()->STREET_HEIGHT, rightB.getValues()[1]),
                  Vec3f(leftB.getValues()[0], this->mapCoordinator->getElevation(leftB) + Config::get()->STREET_HEIGHT, leftB.getValues()[1]),
-                 Vec3f(0,1,0), &ind, &pos, &norms, &inds, &texs);
+                 Vec3f(0,1,0), streets);
     }
-
-    // generate the actual geometry object
-    VRGeometry* geom = new VRGeometry("StreetSegment");
-    geom->create(GL_QUADS, pos, norms, inds, texs);
-    return geom;
 }
 
 Vec3f ModuleStreets::getNormal3D(Vec3f v1, Vec3f v2){
@@ -405,41 +364,38 @@ Vec3f ModuleStreets::getNormal3D(Vec3f v1, Vec3f v2){
 }
 
 
-void ModuleStreets::pushQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f normal, int* i,
-              vector<Vec3f>* pos, vector<Vec3f>* norms, vector<int>* inds, vector<Vec2f>* texs){
-                pushQuad(a1, a2, b2, b1, normal, i, pos, norms, inds, texs, false);
+void ModuleStreets::pushQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f normal, GeometryData* geo) {
+    pushQuad(a1, a2, b2, b1, normal, geo, false);
 }
 
-void ModuleStreets::pushQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f normal, int* i,
-              vector<Vec3f>* pos, vector<Vec3f>* norms, vector<int>* inds, vector<Vec2f>* texs, bool isSide){
+void ModuleStreets::pushQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f normal, GeometryData* geo, bool isSide) {
     // calc road length && divide by texture size
     float width = (a2-a1).length();
-
     float len = (b1 - a1).length()/width;
 
-    pos->push_back(a1);
-    pos->push_back(a2);
-    pos->push_back(b2);
-    pos->push_back(b1);
+    geo->pos->addValue(a1);
+    geo->pos->addValue(a2);
+    geo->pos->addValue(b2);
+    geo->pos->addValue(b1);
 
-    for(int j= 0; j<4; j++) norms->push_back(normal);
-    for(int j= 0; j<4; j++) inds->push_back(j+(*i));
-    *i += 4;
+    int N = geo->inds->size();
+    for(int j= 0; j<4; j++) geo->norms->addValue(normal);
+    for(int j= 0; j<4; j++) geo->inds->addValue(j+N);
 
-    if(isSide) {
-        texs->push_back(Vec2f(0.1, 0.1));
-        texs->push_back(Vec2f(0.1, 0.1));
-        texs->push_back(Vec2f(0.1, 0.1));
-        texs->push_back(Vec2f(0.1, 0.1)); //one color of texture only
+    if (isSide) {
+        geo->texs->addValue(Vec2f(0.1, 0.1));
+        geo->texs->addValue(Vec2f(0.1, 0.1));
+        geo->texs->addValue(Vec2f(0.1, 0.1));
+        geo->texs->addValue(Vec2f(0.1, 0.1)); //one color of texture only
     } else {
-        texs->push_back(Vec2f(0, 0));
-        texs->push_back(Vec2f(1, 0));
-        texs->push_back(Vec2f(1, len));
-        texs->push_back(Vec2f(0, len));
+        geo->texs->addValue(Vec2f(0, 0));
+        geo->texs->addValue(Vec2f(1, 0));
+        geo->texs->addValue(Vec2f(1, len));
+        geo->texs->addValue(Vec2f(0, len));
     }
 }
 
-VRGeometry* ModuleStreets::makeStreetJointGeometry(StreetJoint* sj) {
+void ModuleStreets::makeStreetJointGeometry(StreetJoint* sj, GeometryData* geo) {
     VRGeometry* geom = new VRGeometry("StreetSegment");
     vector<Vec3f> pos;
     vector<Vec3f> norms;
@@ -640,7 +596,4 @@ VRGeometry* ModuleStreets::makeStreetJointGeometry(StreetJoint* sj) {
         norms.push_back(normal); norms.push_back(normal); norms.push_back(normal);
         texs.push_back(Vec2f(0.5, 0.5)); texs.push_back(Vec2f(0.5, 0.5)); texs.push_back(Vec2f(0.5, 0.5));
     }
-
-    geom->create(GL_TRIANGLES, pos, norms, inds, texs);
-    return geom;
 }

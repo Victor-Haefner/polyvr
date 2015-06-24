@@ -13,6 +13,7 @@ namespace OSG {
 }
 
 namespace realworld {
+    class GeometryData;
     class OSMMapDB;
     class MapCoordinator;
     class TextureManager;
@@ -39,16 +40,13 @@ namespace realworld {
             map<string, StreetSegment*> streetSegmentMap;
 
 
-            VRGeometry* makeSignGeometry(StreetSegment* seg);
-            VRGeometry* makeStreetSegmentGeometry(StreetSegment* s);
+            void makeSignGeometry(StreetSegment* seg, GeometryData* geo);
+            void makeStreetSegmentGeometry(StreetSegment* s, GeometryData* geo);
+            void makeStreetJointGeometry(StreetJoint* sj, GeometryData* geo);
             Vec3f getNormal3D(Vec3f v1, Vec3f v2);
 
-
-            void pushQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f normal, int* i,
-                          vector<Vec3f>* pos, vector<Vec3f>* norms, vector<int>* inds, vector<Vec2f>* texs);
-            void pushQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f normal, int* i,
-                          vector<Vec3f>* pos, vector<Vec3f>* norms, vector<int>* inds, vector<Vec2f>* texs, bool isSide);
-            VRGeometry* makeStreetJointGeometry(StreetJoint* sj);
+            void pushQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f normal, GeometryData* geo);
+            void pushQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f normal, GeometryData* geo, bool isSide);
     };
 }
 
