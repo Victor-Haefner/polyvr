@@ -380,6 +380,7 @@ void VRMaterial::setTextureType(string type) {
 void VRMaterial::setQRCode(string s, Vec3f fg, Vec3f bg, int offset) {
     createQRCode(s, this, fg, bg, offset);
     auto md = mats[activePass];
+    if (md->texChunk == 0) { md->texChunk = TextureObjChunk::create(); md->mat->addChunk(md->texChunk); }
     md->texChunk->setMagFilter (GL_NEAREST);
     md->texChunk->setMinFilter (GL_NEAREST_MIPMAP_NEAREST);
 }
@@ -602,6 +603,7 @@ void VRMaterial::setMagMinFilter(string mag, string min) {
     if (min == "GL_LINEAR_MIPMAP_LINEAR") Min = GL_LINEAR_MIPMAP_LINEAR;
 
     auto md = mats[activePass];
+    if (md->texChunk == 0) { md->texChunk = TextureObjChunk::create(); md->mat->addChunk(md->texChunk); }
     md->texChunk->setMagFilter(Mag);
     md->texChunk->setMinFilter(Min);
 }
