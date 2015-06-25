@@ -318,6 +318,7 @@ void VRScript::execute_dev(VRDevice* dev) {
     args["dev"]->val = dev->getName();
     args["dev"]->ptr = dev;
     execute();
+    args["dev"]->val = "";
 }
 
 void VRScript::execute_soc(string s) {
