@@ -30,6 +30,8 @@ namespace realworld {
             virtual void unloadBbox(AreaBoundingBox* bbox);
             void physicalize(bool b);
 
+            Vec3f elevate(Vec2f p, float h);
+
         private:
             OSMMapDB* mapDB;
             map<string, VRGeometry*> meshes;
