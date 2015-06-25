@@ -169,7 +169,7 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
         if (joint->segmentIds.size() == 0) continue;
         StreetAlgos::jointCalculateSegmentPoints(joint, streetSegmentMap, streetJointMap);
     }
-    for (string jointId: listLoadJoints) {
+    for (string jointId : listLoadJoints) {
         StreetJoint* joint = streetJointMap[jointId];
         if (joint->segmentIds.size() == 0) continue;
         StreetAlgos::jointCalculateJointPoints(joint, streetSegmentMap, streetJointMap);

@@ -40,7 +40,7 @@ namespace realworld {
             Vec2f d = posEnd - posStart;
             d.normalize();
             d = d * (seg->width * 0.5f);
-            Vec2f dOrtho = Vec2f(d.getValues()[1], -d.getValues()[0]);
+            Vec2f dOrtho = Vec2f(d[1], -d[0]);
             return new StreetBorder(seg->id, posStart+dOrtho, posEnd+dOrtho);
         }
 
@@ -53,7 +53,7 @@ namespace realworld {
             Vec2f d = posEnd - posStart;
             d.normalize();
             d = d * (seg->width * 0.5f);
-            Vec2f dOrtho = Vec2f(d.getValues()[1], -d.getValues()[0]);
+            Vec2f dOrtho = Vec2f(d[1], -d[0]);
             return new StreetBorder(seg->id, posStart-dOrtho, posEnd-dOrtho);
         }
 
@@ -81,15 +81,14 @@ namespace realworld {
         /** calculates the important points of a given joint */
         static void jointCalculateSegmentPoints(StreetJoint* joint, map<string, StreetSegment*> streetSegments, map<string, StreetJoint*> streetJoints) {
             if (joint->calcSegPoints_) return;
-
             joint->calcSegPoints_ = true;
 
             vectorStrRemoveDuplicates(joint->segmentIds);
             jointOrderSegments(joint, streetSegments, streetJoints);
 
+            Vec2f jCenter = joint->position;
 
-            if (joint->segmentIds.size() == 1) {
-                // special handling
+            if (joint->segmentIds.size() == 1) { // special handling
                 StreetSegment* seg = streetSegments[joint->segmentIds[0]];
                 seg->setLeftPointFor(joint->id, segmentGetLeftBorderTo(seg, joint->id, streetJoints)->end);
                 seg->setRightPointFor(joint->id, segmentGetRightBorderTo(seg, joint->id, streetJoints)->end);
@@ -98,7 +97,7 @@ namespace realworld {
             }
 
             float maxWidth = 0;
-            BOOST_FOREACH(string segId, joint->segmentIds) { //2-4 IDs
+            for (string segId : joint->segmentIds) { //2-4 IDs
                 StreetSegment* seg = streetSegments[segId];
                 if (seg->width > maxWidth) maxWidth = seg->width;
             }
@@ -110,17 +109,17 @@ namespace realworld {
 
                 StreetBorder* s1BorderLeft = segmentGetLeftBorderTo(s1, joint->id, streetJoints);
                 StreetBorder* s2BorderRight = segmentGetRightBorderTo(s2, joint->id, streetJoints);
-                pair<bool, Vec2f> p = Vec2Helper::lineIntersectionPoint(s1BorderLeft->start, s1BorderLeft->dir(), s2BorderRight->start, s2BorderRight->dir());
+                pair<bool, Vec2f> point = Vec2Helper::lineIntersectionPoint(s1BorderLeft->start, s1BorderLeft->dir(), s2BorderRight->start, s2BorderRight->dir());
                 // calc length from border start to intersection
-                float pDistS1 = (p.second - s1BorderLeft->start).length();
-                float pDistS2 = (p.second - s2BorderRight->start).length();
+                float pDistS1 = (point.second - s1BorderLeft->start).length();
+                float pDistS2 = (point.second - s2BorderRight->start).length();
                 // calc length of border (minus the width of the street)
                 float cDistS1 = (s1BorderLeft->end - s1BorderLeft->start).length() - maxWidth;
                 float cDistS2 = (s2BorderRight->end - s2BorderRight->start).length() - maxWidth;
 
-                if (pDistS1 < cDistS1 && pDistS2 < cDistS2 && p.first != false) {
-                    s1->setLeftPointFor(joint->id, p.second);
-                    s2->setRightPointFor(joint->id, p.second);
+                if (pDistS1 < cDistS1 && pDistS2 < cDistS2 && point.first) {
+                    s1->setLeftPointFor(joint->id, point.second);
+                    s2->setRightPointFor(joint->id, point.second);
                     //s1->setLeftExtPointFor(joint->id, p.second);
                 } else {
                     StreetJoint* s1_oJoint = streetJoints[s1->getOtherJointId(joint->id)];
@@ -137,7 +136,7 @@ namespace realworld {
 
                     Vec2f dirLR = rightMidPoint-leftMidPoint;
                     dirLR.normalize();
-                    Vec2f dirLR_ortho = Vec2f(dirLR.getValues()[1], -dirLR.getValues()[0]);
+                    Vec2f dirLR_ortho = Vec2f(dirLR[1], -dirLR[0]);
                     pair<bool, float> intersectionLeft = Vec2Helper::lineIntersection(s1BorderLeft->start, s1BorderLeft->dir(), joint->position, dirLR_ortho);
                     pair<bool, float> intersectionRight = Vec2Helper::lineIntersection(s2BorderRight->start, s2BorderRight->dir(), joint->position, dirLR_ortho);
 
@@ -157,7 +156,7 @@ namespace realworld {
             if (joint->jointPointCache_.size() > 0) return joint->jointPointCache_;
 
             vector<JointPoints*> jointPoints;
-            BOOST_FOREACH(string segId, joint->segmentIds) {
+            for(string segId : joint->segmentIds) {
                 StreetSegment* seg = streetSegments[segId];
 
                 // make borders the same length (use the smaller border length as reference)
@@ -194,15 +193,15 @@ namespace realworld {
 
         /** orders points of joint, so they are at the right position to work with*/
         static void jointOrderSegments(StreetJoint* joint, map<string, StreetSegment*> streetSegments, map<string, StreetJoint*> streetJoints) {
+            if (joint == 0) return;
             Vec2f center = joint->position;
             vector<Vec2WithId*> points;
-            BOOST_FOREACH(string segId, joint->segmentIds) {
-                if (!streetSegments.count(segId)) {
-                    cout << "SEGMENT NOT AVAILABLE: " << segId;
-                    continue;
-                }
+            for (string segId : joint->segmentIds) {
+                if (!streetSegments.count(segId)) { cout << "SEGMENT NOT AVAILABLE: " << segId; continue; }
                 StreetSegment* seg = streetSegments[segId];
+                if (seg == 0) continue;
                 StreetJoint* oJoint = streetJoints[seg->getOtherJointId(joint->id)];
+                if (oJoint == 0) continue;
                 Vec2WithId* p = new Vec2WithId();
                 p->vec = oJoint->position;
                 p->id = segId;
@@ -212,9 +211,7 @@ namespace realworld {
             points = Vec2Helper::orderCW(points, center);
 
             joint->segmentIds.clear();
-            BOOST_FOREACH(Vec2WithId* point, points) {
-                joint->segmentIds.push_back(point->id);
-            }
+            for (Vec2WithId* point : points) joint->segmentIds.push_back(point->id);
         }
     };
 }
