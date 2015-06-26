@@ -46,6 +46,7 @@ class CarDynamics {
         void setWheelGeo(VRGeometry* geo);
         void setWheelOffsets(float xOffset, float frontZOffset, float rearZOffset, float height);
         void setWheelParams(float w, float r);
+        void setCarMass(float m);
 
         void updateWheels();
 

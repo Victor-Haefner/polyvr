@@ -30,7 +30,7 @@ btScalar suspensionRestLength(0.6);
 //float	gEngineForce = 0.f;
 //float	gBreakingForce = 0.f;
 //
-float	maxEngineForce = 1000.f;//this should be engine/velocity dependent
+float	maxEngineForce = 10000.f;//this should be engine/velocity dependent
 float	maxBreakingForce = 100.f;
 //
 float	gVehicleSteering = 0.f;
@@ -43,6 +43,7 @@ float	suspensionStiffness = 20.f;
 float	suspensionDamping = 2.3f;
 float	suspensionCompression = 4.4f;
 float	rollInfluence = 0.1f;//1.0f;
+float m_mass = 850.0f;
 
 //params for the setting the wheels && axis
 float xOffset = 1.78f;
@@ -104,7 +105,7 @@ void CarDynamics::initVehicle() {
 
         tr.setOrigin(btVector3(0, 0.f, 0));
 
-        m_carChassis = createRigitBody(1, tr, compound);//chassisShape);
+        m_carChassis = createRigitBody(m_mass, tr, compound);//chassisShape);
     }
 
 	m_vehicleRayCaster = new btDefaultVehicleRaycaster(m_dynamicsWorld);
@@ -173,6 +174,7 @@ void CarDynamics::updateWheels() {
 void CarDynamics::setChassisGeo(VRGeometry* geo) {
     geo->setMatrix(Matrix());
     geo->getPhysics()->setShape("Convex");
+    geo->getPhysics()->setMass(m_mass);
     geo->getPhysics()->setDynamic(true);
     geo->getPhysics()->setPhysicalized(true);
     geo->getPhysics()->updateTransformation(geo);
@@ -236,7 +238,7 @@ void CarDynamics::setThrottle(float t) {
     m_vehicle->applyEngineForce(t, 2);
     m_vehicle->applyEngineForce(t, 3);
 
-    cout << "\nset throttle " << t << endl;
+    //cout << "\nset throttle " << t << endl;
 }
 
 void CarDynamics::setBreak(float b) {
@@ -246,17 +248,31 @@ void CarDynamics::setBreak(float b) {
     m_vehicle->setBrake(b, 2);
     m_vehicle->setBrake(b, 3);
 
-    cout << "\nset breaks " << b << endl;
 }
 
 void CarDynamics::setSteering(float s) {
-    s = max(-0.3f, s);
-    s = min(0.3f, s);
 
-    m_vehicle->setSteeringValue(s, 0);
-    m_vehicle->setSteeringValue(s, 1);
+    float max_steer = .3f;
 
-    cout << "\nset steering " << s << endl;
+    if(s < -1){
+        m_vehicle->setSteeringValue(-max_steer, 0);
+        m_vehicle->setSteeringValue(-max_steer, 1);
+        return;
+    }
+    else if(s > 1){
+        m_vehicle->setSteeringValue(max_steer, 0);
+        m_vehicle->setSteeringValue(max_steer, 1);
+        return;
+    }
+
+    float res = (((s+1)*(2*max_steer)) / (2)) - max_steer;
+
+    m_vehicle->setSteeringValue(res, 0);
+    m_vehicle->setSteeringValue(res, 1);
+}
+
+void CarDynamics::setCarMass(float m) {
+    if(m > 0) m_mass = m;
 }
 
 void CarDynamics::resetVehicle() {

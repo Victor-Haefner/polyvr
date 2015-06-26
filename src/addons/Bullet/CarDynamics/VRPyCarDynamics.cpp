@@ -50,9 +50,10 @@ PyMemberDef VRPyCarDynamics::members[] = {
 };
 
 PyMethodDef VRPyCarDynamics::methods[] = {
-    {"update", (PyCFunction)VRPyCarDynamics::update, METH_VARARGS, "Update vehicle physics input" },
+    {"update", (PyCFunction)VRPyCarDynamics::update, METH_VARARGS, "Update vehicle physics input (throttle force, break, steering [-1,1])" },
     {"setChassis", (PyCFunction)VRPyCarDynamics::setChassis, METH_VARARGS, "Set chassis geometry" },
     {"setWheel", (PyCFunction)VRPyCarDynamics::setWheel, METH_VARARGS, "Set wheel geometry" },
+    {"setCarMass", (PyCFunction)VRPyCarDynamics::setWheel, METH_VARARGS, "Set car weight, must be done before creating car." },
     {"setWheelParams", (PyCFunction)VRPyCarDynamics::setWheelParams, METH_VARARGS, "Set wheel parameters, -1 uses default valuen\tpos 0 = widthn\tpos 1 = radius" },
     {"setWheelOffsets", (PyCFunction)VRPyCarDynamics::setWheelOffsets, METH_VARARGS, "Set wheel offsets, -1 sets default value\n\tpos 0 = xOffset\n\tpos 1 = frontZOffset\n\tpos 2 = rearZOffset\n\tpos 3 = height" },
     {"reset", (PyCFunction)VRPyCarDynamics::reset, METH_NOARGS, "Reset car" },
@@ -107,6 +108,14 @@ PyObject* VRPyCarDynamics::setWheel(VRPyCarDynamics* self, PyObject* args) {
     if (self->obj == 0) self->obj = new OSG::CarDynamics();
     self->obj->setWheelGeo(_dev->obj);
     Py_RETURN_TRUE;
+}
+
+PyObject* VRPyCarDynamics::setCarMass(VRPyCarDynamics* self, PyObject* args) {
+	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setCarMass, C obj is invalid"); return NULL; }
+    cout << "setting car mass" << endl;
+	self->obj->setCarMass(parseFloat(args));
+	cout << "setting car mass" << endl;
+	Py_RETURN_TRUE;
 }
 
 PyObject* VRPyCarDynamics::setWheelOffsets(VRPyCarDynamics* self, PyObject* args){
