@@ -197,7 +197,7 @@ namespace realworld {
             Vec2f center = joint->position;
             vector<Vec2WithId*> points;
             for (string segId : joint->segmentIds) {
-                if (!streetSegments.count(segId)) { cout << "SEGMENT NOT AVAILABLE: " << segId; continue; }
+                if (!streetSegments.count(segId)) { continue; }
                 StreetSegment* seg = streetSegments[segId];
                 if (seg == 0) continue;
                 StreetJoint* oJoint = streetJoints[seg->getOtherJointId(joint->id)];
