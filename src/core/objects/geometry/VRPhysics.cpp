@@ -227,6 +227,7 @@ vector<string> VRPhysics::getPhysicsShapes() {
 void VRPhysics::setCenterOfMass(OSG::Vec3f com) {
     CoMOffset = com;
     comType = "custom";
+    update();
 }
 
 void VRPhysics::update() {
