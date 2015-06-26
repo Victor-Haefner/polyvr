@@ -72,18 +72,12 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
 
     vector<string> listLoadJoints;
     vector<string> listLoadSegments;
-    vector<string> listReloadJoints;
-
-    //for (auto j : streetJointMap) delete j.second;
-    //streetJointMap.clear();
 
     for (OSMNode* node : osmMap->osmNodes) { // Load StreetJoints
         Vec2f pos = this->mapCoordinator->realToWorld(Vec2f(node->lat, node->lon));
         StreetJoint* joint = new StreetJoint(pos, node->id);
-        if (streetJointMap.count(node->id)) {
-            listReloadJoints.push_back(node->id);
-            streetJointMap[node->id]->merge(joint);
-        } else streetJointMap[node->id] = joint;
+        if (streetJointMap.count(node->id)) streetJointMap[node->id]->merge(joint);
+        else streetJointMap[node->id] = joint;
         listLoadJoints.push_back(node->id);
     }
 
@@ -94,6 +88,7 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
                 string nodeId1 = way->nodeRefs[i];
                 string nodeId2 = way->nodeRefs[i+1];
                 string segId = way->id + "-" + boost::to_string(i);
+                listLoadSegments.push_back(segId);
 
                 if (streetSegmentMap.count(segId)) continue;
 
@@ -127,7 +122,7 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
 
                 streetJointMap[nodeId1]->segmentIds.push_back(segId);
                 streetJointMap[nodeId2]->segmentIds.push_back(segId);
-                listLoadSegments.push_back(seg->id);
+                //listLoadSegments.push_back(seg->id);
                 segPrev = seg;
             }
         }
@@ -150,13 +145,8 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
         StreetJoint* joint = streetJointMap[jointId];
         if (joint->segmentIds.size() == 0) continue;
         StreetAlgos::jointCalculateSegmentPoints(joint, streetSegmentMap, streetJointMap);
-    }
-    for (string jointId : listLoadJoints) {
-        StreetJoint* joint = streetJointMap[jointId];
-        if (joint->segmentIds.size() == 0) continue;
         StreetAlgos::jointCalculateJointPoints(joint, streetSegmentMap, streetJointMap);
     }
-
 
     GeometryData* sdata = new GeometryData();
     GeometryData* jdata = new GeometryData();
@@ -185,6 +175,9 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
 
     meshes[bbox->str+"_streets"] = streets;
     meshes[bbox->str+"_joints"] = joints;
+
+    delete sdata;
+    delete jdata;
 }
 
 void ModuleStreets::unloadBbox(AreaBoundingBox* bbox) {
