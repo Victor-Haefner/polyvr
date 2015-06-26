@@ -91,13 +91,9 @@ void ModuleBuildings::loadBbox(AreaBoundingBox* bbox) {
 }
 
 void ModuleBuildings::unloadBbox(AreaBoundingBox* bbox) {
-    OSMMap* osmMap = mapDB->getMap(bbox->str);
-    if (!osmMap) return;
-
-    b_geos[bbox->str]->destroy();
-    r_geos[bbox->str]->destroy();
-    b_geos.erase(bbox->str);
-    r_geos.erase(bbox->str);
+    string id = bbox->str;
+    if (b_geos.count(id)) { b_geos[id]->destroy(); b_geos.erase(id); }
+    if (r_geos.count(id)) { r_geos[id]->destroy(); r_geos.erase(id); }
 }
 
 void ModuleBuildings::physicalize(bool b) {

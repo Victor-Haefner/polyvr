@@ -74,6 +74,9 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
     vector<string> listLoadSegments;
     vector<string> listReloadJoints;
 
+    //for (auto j : streetJointMap) delete j.second;
+    //streetJointMap.clear();
+
     for (OSMNode* node : osmMap->osmNodes) { // Load StreetJoints
         Vec2f pos = this->mapCoordinator->realToWorld(Vec2f(node->lat, node->lon));
         StreetJoint* joint = new StreetJoint(pos, node->id);
@@ -138,27 +141,6 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
         }
     }
 
-    // unload joints
-    for (string jointId : listReloadJoints) {
-        if (meshes.count(jointId)) { // delete mesh from scene && from world.meshes
-            VRObject* obj = meshes[jointId];
-            meshes.erase(jointId);
-            delete obj;
-        }
-
-        // unload segments attached to this joint
-        StreetJoint* joint = streetJointMap[jointId];
-        for (string segId : joint->segmentIds) {
-            if (meshes.count(segId)) { // delete mesh from scene && from world.meshes
-                VRObject* obj = meshes[segId];
-                meshes.erase(segId);
-                delete obj;
-
-                listLoadSegments.push_back(segId);
-            }
-        }
-    }
-
     // prepare load lists
     StreetAlgos::vectorStrRemoveDuplicates(listLoadJoints);
     StreetAlgos::vectorStrRemoveDuplicates(listLoadSegments);
@@ -200,44 +182,16 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
     joints->setMaterial(matStreet);
     root->addChild(streets);
     root->addChild(joints);
+
+    meshes[bbox->str+"_streets"] = streets;
+    meshes[bbox->str+"_joints"] = joints;
 }
 
 void ModuleStreets::unloadBbox(AreaBoundingBox* bbox) {
-    OSMMap* osmMap = mapDB->getMap(bbox->str);
-    if (!osmMap) return;
-
-    // TODO: use map->diff() to remove all joints etc in osmMap, which are also available in active bboxes
-
-//            vector<string> listUnloadJoints;
-//            vector<string> listUnloadSegments;
-
-    // Load StreetJoints
-    BOOST_FOREACH(OSMNode* node, osmMap->osmNodes) {
-        string jointId = node->id;
-
-        if (meshes.count(jointId)) {
-            // delete mesh from scene && from world.meshes
-            VRObject* obj = meshes[jointId];
-            meshes.erase(jointId);
-            delete obj;
-        }
-
-        // unload segments attached to this joint
-        if (streetJointMap.count(jointId)) {
-            StreetJoint* joint = streetJointMap[jointId];
-            streetJointMap.erase(jointId);
-
-            BOOST_FOREACH(string segId, joint->segmentIds) {
-                if (meshes.count(segId)) {
-                    // delete mesh from scene && from world.meshes
-                    VRObject* obj = meshes[segId];
-                    meshes.erase(segId);
-                    streetSegmentMap.erase(segId);
-                    delete obj;
-                }
-            }
-        }
-    }
+    string sid = bbox->str+"_streets";
+    string jid = bbox->str+"_joints";
+    if (meshes.count(sid)) { meshes[sid]->destroy(); meshes.erase(sid); }
+    if (meshes.count(jid)) { meshes[jid]->destroy(); meshes.erase(jid); }
 }
 
 void ModuleStreets::physicalize(bool b) {
