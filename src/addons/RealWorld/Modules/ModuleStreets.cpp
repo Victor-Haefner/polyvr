@@ -76,8 +76,6 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
     for (OSMNode* node : osmMap->osmNodes) { // Load StreetJoints
         Vec2f pos = this->mapCoordinator->realToWorld(Vec2f(node->lat, node->lon));
         StreetJoint* joint = new StreetJoint(pos, node->id);
-        if (listLoadJoints.count(node->id)) listLoadJoints[node->id]->merge(joint);
-        else listLoadJoints[node->id] = joint;
         listLoadJoints[node->id] = joint;
     }
 
