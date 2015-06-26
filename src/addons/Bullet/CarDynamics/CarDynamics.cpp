@@ -277,6 +277,7 @@ void CarDynamics::setCarMass(float m) {
 void CarDynamics::reset(float x, float y, float z) {
 	gVehicleSteering = 0.f;
 	btTransform t;
+	t.setIdentity();
 	t.setOrigin(btVector3(x,y,z));
 	m_carChassis->setCenterOfMassTransform(t);
 	m_carChassis->setLinearVelocity(btVector3(0, 0, 0));

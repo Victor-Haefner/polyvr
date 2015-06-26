@@ -45,7 +45,8 @@ namespace realworld {
             return getElevation(Vec2f(x, y));
         }
 
-        float getElevation(Vec2f v){
+        float getElevation(Vec2f v) {
+            return 0; // TODO
             Vec2f real = worldToReal(v);
             float res = ele->getElevation(real.getValues()[0], real.getValues()[1]) - startElevation - 1;
             //cout << "Elevation: " << res << endl;
