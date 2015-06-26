@@ -80,7 +80,6 @@ void CarDynamics::initPhysics(){
 }
 
 //only to be done once
-void CarDynamics::reset() { resetVehicle(); }
 float CarDynamics::getSpeed() { return m_vehicle->getCurrentSpeedKmHour(); }
 
 void CarDynamics::initVehicle() {
@@ -275,9 +274,11 @@ void CarDynamics::setCarMass(float m) {
     if(m > 0) m_mass = m;
 }
 
-void CarDynamics::resetVehicle() {
+void CarDynamics::reset(float x, float y, float z) {
 	gVehicleSteering = 0.f;
-	m_carChassis->setCenterOfMassTransform(btTransform::getIdentity());
+	btTransform t;
+	t.setOrigin(btVector3(x,y,z));
+	m_carChassis->setCenterOfMassTransform(t);
 	m_carChassis->setLinearVelocity(btVector3(0, 0, 0));
 	m_carChassis->setAngularVelocity(btVector3(0, 0, 0));
 	m_dynamicsWorld->getBroadphase()->getOverlappingPairCache()->cleanProxyFromPairs(m_carChassis->getBroadphaseHandle(), m_dynamicsWorld->getDispatcher());

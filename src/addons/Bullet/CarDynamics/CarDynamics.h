@@ -28,7 +28,6 @@ class CarDynamics {
 
         void initPhysics();
         void initVehicle();
-        void resetVehicle();
 
         btRigidBody* createRigitBody(float mass, const btTransform& startTransform, btCollisionShape* shape);
 
@@ -50,7 +49,7 @@ class CarDynamics {
 
         void updateWheels();
 
-        void reset();
+        void reset(float x, float y, float z);
         float getSpeed();
 };
 
