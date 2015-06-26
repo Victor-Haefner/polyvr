@@ -70,15 +70,13 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
     OSMMap* osmMap = mapDB->getMap(bbox->str);
     if (!osmMap) return;
 
-    vector<string> listLoadJoints;
-    vector<string> listLoadSegments;
+    map<string, StreetJoint*> listLoadJoints;
+    map<string, StreetSegment*> listLoadSegments;
 
     for (OSMNode* node : osmMap->osmNodes) { // Load StreetJoints
         Vec2f pos = this->mapCoordinator->realToWorld(Vec2f(node->lat, node->lon));
         StreetJoint* joint = new StreetJoint(pos, node->id);
-        if (streetJointMap.count(node->id)) streetJointMap[node->id]->merge(joint);
-        else streetJointMap[node->id] = joint;
-        listLoadJoints.push_back(node->id);
+        listLoadJoints[node->id] = joint;
     }
 
     StreetSegment* segPrev = NULL; // Load StreetSegments
@@ -88,27 +86,21 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
                 string nodeId1 = way->nodeRefs[i];
                 string nodeId2 = way->nodeRefs[i+1];
                 string segId = way->id + "-" + boost::to_string(i);
-                listLoadSegments.push_back(segId);
-
-                if (streetSegmentMap.count(segId)) continue;
 
                 StreetSegment* seg = new StreetSegment(nodeId1, nodeId2, Config::get()->STREET_WIDTH, segId);
-                if(way->tags["bridge"] == "yes") {
+                if (way->tags["bridge"] == "yes") {
                     seg->bridge = true;
                     //make all segments of bridge small, if one is small
-                    if(seg->getDistance() < Config::get()->BRIDGE_HEIGHT) {
-                        seg->smallBridge = true;
-                        if (segPrev) if (segPrev->bridge) segPrev->smallBridge = true;
-                    } else if(segPrev) {
-                        if(segPrev->smallBridge) seg->smallBridge = true;
-                    }
+                    if (seg->getDistance() < Config::get()->BRIDGE_HEIGHT) seg->smallBridge = true;
+                    if (segPrev) if (segPrev->bridge && seg->smallBridge) segPrev->smallBridge = true;
+                    if (segPrev) if (segPrev->smallBridge) seg->smallBridge = true;
 
-                    if(segPrev != NULL) {
+                    if (segPrev) {
                         segPrev->leftBridge = true;
-                        if(segPrev->bridge) seg->rightBridge = true;
+                        if (segPrev->bridge) seg->rightBridge = true;
                     }
                 }
-                streetSegmentMap[seg->id] = seg;
+                listLoadSegments[segId] = seg;
 
                 if (way->tags.count("lanes")) {
                     seg->lanes = toFloat(way->tags["lanes"].c_str());
@@ -120,49 +112,31 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
 
                 if (way->tags.count("name")) seg->name = way->tags["name"];
 
-                streetJointMap[nodeId1]->segmentIds.push_back(segId);
-                streetJointMap[nodeId2]->segmentIds.push_back(segId);
-                //listLoadSegments.push_back(seg->id);
+                listLoadJoints[nodeId1]->segmentIds.push_back(segId);
+                listLoadJoints[nodeId2]->segmentIds.push_back(segId);
                 segPrev = seg;
             }
         }
     }
 
-    for (string jointId : listLoadJoints) { // fix up broken segmendIds in joints
-        StreetJoint* joint = streetJointMap[jointId];
-        for (vector<string>::iterator it = joint->segmentIds.begin(); it != joint->segmentIds.end();) {
-            if (!streetSegmentMap.count(*it)) { it = joint->segmentIds.erase(it); cout << "haeh!\n"; }
-            else it++;
-        }
-    }
-
-    // prepare load lists
-    StreetAlgos::vectorStrRemoveDuplicates(listLoadJoints);
-    StreetAlgos::vectorStrRemoveDuplicates(listLoadSegments);
-
     // prepare joints
-    for (string jointId : listLoadJoints) {
-        StreetJoint* joint = streetJointMap[jointId];
+    for (auto jointId : listLoadJoints) {
+        StreetJoint* joint = jointId.second;
         if (joint->segmentIds.size() == 0) continue;
-        StreetAlgos::jointCalculateSegmentPoints(joint, streetSegmentMap, streetJointMap);
-        StreetAlgos::jointCalculateJointPoints(joint, streetSegmentMap, streetJointMap);
+        StreetAlgos::jointCalculateSegmentPoints(joint, listLoadSegments, listLoadJoints);
     }
 
     GeometryData* sdata = new GeometryData();
     GeometryData* jdata = new GeometryData();
 
     // load street joints
-    for (string jointId : listLoadJoints) {
-        StreetJoint* joint = streetJointMap[jointId];
+    for (auto jointId : listLoadJoints) {
+        StreetJoint* joint = jointId.second;
         if (joint->segmentIds.size() == 0) continue;
-        makeStreetJointGeometry(joint, jdata);
+        makeStreetJointGeometry(joint, listLoadSegments, listLoadJoints, jdata);
     }
 
-    // load street segments
-    for (string segId : listLoadSegments) {
-        StreetSegment* seg = streetSegmentMap[segId];
-        makeStreetSegmentGeometry(seg, sdata);
-    }
+    for (auto seg : listLoadSegments) makeStreetSegmentGeometry(seg.second, sdata); // load street segments
 
     VRGeometry* streets = new VRGeometry("streets");
     VRGeometry* joints = new VRGeometry("joints");
@@ -352,23 +326,22 @@ Vec3f ModuleStreets::elevate(Vec2f p, float h) {
     return Vec3f(p[0], mapCoordinator->getElevation(p) + h, p[1]);
 }
 
-void ModuleStreets::makeStreetJointGeometry(StreetJoint* sj, GeometryData* geo) {
-    vector<JointPoints*> jointPoints = StreetAlgos::jointCalculateJointPoints(sj, streetSegmentMap, streetJointMap);
+void ModuleStreets::makeStreetJointGeometry(StreetJoint* sj, map<string, StreetSegment*>& streets, map<string, StreetJoint*>& joints, GeometryData* geo) {
+    vector<JointPoints*> jointPoints = StreetAlgos::jointCalculateJointPoints(sj, streets, joints);
 
     int Nsegs = sj->segmentIds.size();
+    if (Nsegs <= 1) return;
 
     /* look up, if street joint is part of a bridge */
     float jointHeight = Config::get()->STREET_HEIGHT;
-    if (Nsegs > 1) {
-        StreetSegment* seg1 = streetSegmentMap[sj->segmentIds[0]];
-        StreetSegment* seg2 = streetSegmentMap[sj->segmentIds[1]];
-        if (seg1->bridge && seg2->bridge) {
-            jointHeight += Config::get()->BRIDGE_HEIGHT;
-            sj->bridge = true;
-            if (seg1->smallBridge || seg2->smallBridge) {
-                sj->smallBridge = true;
-                jointHeight = Config::get()->STREET_HEIGHT + Config::get()->SMALL_BRIDGE_HEIGHT;
-            }
+    StreetSegment* seg1 = streets[sj->segmentIds[0]];
+    StreetSegment* seg2 = streets[sj->segmentIds[1]];
+    if (seg1->bridge && seg2->bridge) {
+        jointHeight += Config::get()->BRIDGE_HEIGHT;
+        sj->bridge = true;
+        if (seg1->smallBridge || seg2->smallBridge) {
+            sj->smallBridge = true;
+            jointHeight = Config::get()->STREET_HEIGHT + Config::get()->SMALL_BRIDGE_HEIGHT;
         }
     }
 
@@ -389,7 +362,7 @@ void ModuleStreets::makeStreetJointGeometry(StreetJoint* sj, GeometryData* geo) 
         fan.push_back( elevate(jp->left, jointHeight) );
         fantex.push_back(Vec2f(0+i%2, i%2));
         fantex.push_back(Vec2f(1-i%2, i%2));
-        if (Nsegs <= 2 && jp->leftExt != _NULL2) {
+        if (Nsegs == 2 && jp->leftExt != _NULL2) {
             fan.push_back( elevate(jp->leftExt, jointHeight) );
             fantex.push_back(Vec2f(1-i%2, 0.5));
         }
@@ -401,7 +374,7 @@ void ModuleStreets::makeStreetJointGeometry(StreetJoint* sj, GeometryData* geo) 
 
     for (int i=1; i<fan.size(); i++) {
         pushTriangle(fan[i], fan[i-1], middle, norm, geo);
-        float my = (Nsegs <= 2) ? 0.5 : fantex[i][1];
+        float my = (Nsegs == 2) ? 0.5 : fantex[i][1];
         geo->texs->addValue(fantex[i-1]);
         geo->texs->addValue(fantex[i]);
         geo->texs->addValue(Vec2f(0.5, my));
