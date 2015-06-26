@@ -120,6 +120,7 @@ class ModuleFloor: public BaseModule {
             //this->scene->physicalize(geom, true);
 
             meshes[bbox->str] = geom;
+            physicalize(physicalized);
         }
 
         virtual void unloadBbox(AreaBoundingBox* bbox) {
@@ -130,8 +131,9 @@ class ModuleFloor: public BaseModule {
         }
 
         void physicalize(bool b) {
+            physicalized = b;
             for (auto mesh : meshes) {
-                mesh.second->getPhysics()->setPhysicalized(true);
+                mesh.second->getPhysics()->setPhysicalized(b);
                 mesh.second->getPhysics()->setShape("Concave");
             }
         }

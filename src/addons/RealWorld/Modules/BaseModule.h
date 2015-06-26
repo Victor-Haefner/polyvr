@@ -26,6 +26,7 @@ class BaseModule {
         virtual string getName() = 0;
         virtual void physicalize(bool b) = 0;
 
+        bool physicalized = false;
         OSG::VRObject* getRoot();
 
     protected:
