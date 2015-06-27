@@ -12,6 +12,8 @@
 
 #include <stdio.h> //printf debugging
 
+typedef boost::recursive_mutex::scoped_lock PLock;
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -80,9 +82,10 @@ void CarDynamics::initPhysics(){
 }
 
 //only to be done once
-float CarDynamics::getSpeed() { return m_vehicle->getCurrentSpeedKmHour(); }
+float CarDynamics::getSpeed() { PLock lock(mtx()); return m_vehicle->getCurrentSpeedKmHour(); }
 
 void CarDynamics::initVehicle() {
+    PLock lock(mtx());
     //called only if no custom chassis set
     if (m_carChassis == 0) {
         cout << "\nINIT with default BOX\n";
@@ -141,8 +144,7 @@ void CarDynamics::initVehicle() {
 	connectionPointCS0 = btVector3(-xOffset, height,rearZOffset);
 	m_vehicle->addWheel(connectionPointCS0, wheelDirectionCS0, wheelAxleCS, suspensionRestLength, wheelRadius, m_tuning, isFrontWheel);
 
-	for (int i = 0; i<m_vehicle->getNumWheels(); i++)
-	{
+	for (int i = 0; i<m_vehicle->getNumWheels(); i++) {
 		btWheelInfo& wheel = m_vehicle->getWheelInfo(i);
 		wheel.m_suspensionStiffness = suspensionStiffness;
 		wheel.m_wheelsDampingRelaxation = suspensionDamping;
@@ -151,9 +153,7 @@ void CarDynamics::initVehicle() {
 		wheel.m_rollInfluence = rollInfluence;
 	}
 
-    if(!initialBuilt) {
-        initialBuilt = true;
-    }
+    if (!initialBuilt) initialBuilt = true;
 
     cout << "\n---done with INIT vehicle\n";
 }
@@ -162,6 +162,7 @@ void CarDynamics::updateWheels() {
     //if (chassis && m_carChassis) chassis->updateFromBullet(m_carChassis->getWorldTransform());
     //if(!initialBuilt) return;
     if (!m_vehicle) return;
+    PLock lock(mtx());
     for(int i = 0; i<4;i++) m_vehicle->updateWheelTransform(i,true);
 
     if (w1) { w1->setWorldMatrix( VRPhysics::fromBTTransform(m_vehicle->getWheelInfo(0).m_worldTransform) ); w1->setNoBltFlag(); }
@@ -184,7 +185,10 @@ void CarDynamics::setChassisGeo(VRGeometry* geo) {
         return;
     }
 
-    m_carChassis = geo->getPhysics()->getRigidBody();
+    {
+        PLock lock(mtx());
+        m_carChassis = geo->getPhysics()->getRigidBody();
+    }
 
     cout << "\nset chassis geo " << geo->getName() << endl;
 
@@ -234,6 +238,7 @@ void CarDynamics::setThrottle(float t) {
     if (t>0) t = min(maxEngineForce,t);
     else     t = max(-maxEngineForce,t);
 
+    PLock lock(mtx());
     m_vehicle->applyEngineForce(t, 2);
     m_vehicle->applyEngineForce(t, 3);
 
@@ -244,21 +249,21 @@ void CarDynamics::setBreak(float b) {
     b = max(0.f,b);
     b = min(maxBreakingForce,b);
 
+    PLock lock(mtx());
     m_vehicle->setBrake(b, 2);
     m_vehicle->setBrake(b, 3);
 
 }
 
 void CarDynamics::setSteering(float s) {
-
     float max_steer = .3f;
+    PLock lock(mtx());
 
-    if(s < -1){
+    if (s < -1) {
         m_vehicle->setSteeringValue(-max_steer, 0);
         m_vehicle->setSteeringValue(-max_steer, 1);
         return;
-    }
-    else if(s > 1){
+    } else if (s > 1) {
         m_vehicle->setSteeringValue(max_steer, 0);
         m_vehicle->setSteeringValue(max_steer, 1);
         return;
@@ -274,7 +279,18 @@ void CarDynamics::setCarMass(float m) {
     if(m > 0) m_mass = m;
 }
 
+boost::recursive_mutex& CarDynamics::mtx() {
+    auto scene = OSG::VRSceneManager::getCurrent();
+    if (scene) return scene->physicsMutex();
+    else {
+        static boost::recursive_mutex m;
+        return m;
+    };
+}
+
 void CarDynamics::reset(float x, float y, float z) {
+    PLock lock(mtx());
+
 	gVehicleSteering = 0.f;
 	btTransform t;
 	t.setIdentity();
@@ -295,6 +311,9 @@ void CarDynamics::reset(float x, float y, float z) {
 
 btRigidBody* CarDynamics::createRigitBody(float mass, const btTransform& startTransform, btCollisionShape* shape) {
 	if (shape == 0) return 0;
+
+    PLock lock(mtx());
+
 	if (shape->getShapeType() == INVALID_SHAPE_PROXYTYPE) return 0;
 
 	btVector3 localInertia(0, 0, 0);

@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <btBulletDynamicsCommon.h>
+#include <boost/thread/recursive_mutex.hpp>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -25,6 +26,8 @@ class CarDynamics {
         btDynamicsWorld* m_dynamicsWorld = 0;
 
         btScalar m_defaultContactProcessingThreshold;
+
+        boost::recursive_mutex& mtx();
 
         void initPhysics();
         void initVehicle();
