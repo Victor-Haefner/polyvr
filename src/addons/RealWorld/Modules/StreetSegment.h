@@ -1,6 +1,8 @@
 #ifndef STREETSEGMENT_H
 #define	STREETSEGMENT_H
 
+#include <OpenSG/OSGVector.h>
+
 using namespace OSG;
 using namespace std;
 
