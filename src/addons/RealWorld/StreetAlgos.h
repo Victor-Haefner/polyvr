@@ -31,10 +31,10 @@ class StreetAlgos {
         static void vectorStrRemoveDuplicates(vector<string> vec);
 
         /** calculates the important points of a given joint */
-        static void jointCalculateSegmentPoints(StreetJoint* joint, map<string, StreetSegment*> streetSegments, map<string, StreetJoint*> streetJoints);
+        static void calcSegments(StreetJoint* joint, map<string, StreetSegment*> streetSegments, map<string, StreetJoint*> streetJoints);
 
         /** calculates the important points to a given joint */
-        static vector<JointPoints*> jointCalculateJointPoints(StreetJoint* joint, map<string, StreetSegment*> streetSegments, map<string, StreetJoint*> streetJoints);
+        static vector<JointPoints*> calcJoints(StreetJoint* joint, map<string, StreetSegment*> streetSegments, map<string, StreetJoint*> streetJoints);
 
         /** orders points of joint, so they are at the right position to work with*/
         static void jointOrderSegments(StreetJoint* joint, map<string, StreetSegment*> streetSegments, map<string, StreetJoint*> streetJoints);

@@ -124,7 +124,7 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
     for (auto jointId : listLoadJoints) {
         StreetJoint* joint = jointId.second;
         if (joint->segmentIds.size() == 0) continue;
-        StreetAlgos::jointCalculateSegmentPoints(joint, listLoadSegments, listLoadJoints);
+        StreetAlgos::calcSegments(joint, listLoadSegments, listLoadJoints);
     }
 
     GeometryData* sdata = new GeometryData();
@@ -325,7 +325,7 @@ Vec3f ModuleStreets::elevate(Vec2f p, float h) {
 }
 
 void ModuleStreets::makeStreetJointGeometry(StreetJoint* sj, map<string, StreetSegment*>& streets, map<string, StreetJoint*>& joints, GeometryData* geo) {
-    vector<JointPoints*> jointPoints = StreetAlgos::jointCalculateJointPoints(sj, streets, joints);
+    vector<JointPoints*> jointPoints = StreetAlgos::calcJoints(sj, streets, joints);
 
     int Nsegs = sj->segmentIds.size();
     if (Nsegs <= 1) return;

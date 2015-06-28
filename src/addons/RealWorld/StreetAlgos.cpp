@@ -79,7 +79,7 @@ void StreetAlgos::vectorStrRemoveDuplicates(vector<string> vec) {
 }
 
 /** calculates the important points of a given joint */
-void StreetAlgos::jointCalculateSegmentPoints(StreetJoint* joint, map<string, StreetSegment*> streetSegments, map<string, StreetJoint*> streetJoints) {
+void StreetAlgos::calcSegments(StreetJoint* joint, map<string, StreetSegment*> streetSegments, map<string, StreetJoint*> streetJoints) {
     if (joint->calcSegPoints_) return;
     joint->calcSegPoints_ = true;
 
@@ -152,7 +152,7 @@ void StreetAlgos::jointCalculateSegmentPoints(StreetJoint* joint, map<string, St
 }
 
 /** calculates the important points to a given joint */
-vector<JointPoints*> StreetAlgos::jointCalculateJointPoints(StreetJoint* joint, map<string, StreetSegment*> streetSegments, map<string, StreetJoint*> streetJoints) {
+vector<JointPoints*> StreetAlgos::calcJoints(StreetJoint* joint, map<string, StreetSegment*> streetSegments, map<string, StreetJoint*> streetJoints) {
     if (joint->jointPointCache_.size() > 0) return joint->jointPointCache_;
 
     vector<JointPoints*> jointPoints;
