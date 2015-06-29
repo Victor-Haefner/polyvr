@@ -485,6 +485,24 @@ VRMaterial* VRGeometry::getMaterial() {
     return mat;
 }
 
+float VRGeometry::calcSurfaceArea() {
+    if (!meshSet) return 0;
+
+    float A = 0;
+    TriangleIterator it(mesh);
+
+	for(int i=0; !it.isAtEnd(); ++it, i++) {
+        Pnt3f p0 = it.getPosition(0);
+        Pnt3f p1 = it.getPosition(1);
+        Pnt3f p2 = it.getPosition(2);
+        Vec3f d1 = p1-p0;
+        Vec3f d2 = p2-p0;
+        A += d1.cross(d2).length();
+	}
+
+    return 0.5*A;
+}
+
 VRGeometry::Reference VRGeometry::getReference() { return source; }
 
 void VRGeometry::showGeometricData(string type, bool b) {

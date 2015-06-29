@@ -85,6 +85,7 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"makeUnique", (PyCFunction)VRPyGeometry::makeUnique, METH_NOARGS, "Make the geometry data unique" },
     {"influence", (PyCFunction)VRPyGeometry::influence, METH_VARARGS, "Pass a points and value vector to influence the geometry - influence([points,f3], [values,f3], int power)" },
     {"showGeometricData", (PyCFunction)VRPyGeometry::showGeometricData, METH_VARARGS, "Enable or disable a data layer - showGeometricData(string type, bool)\n layers are: ['Normals']" },
+    {"calcSurfaceArea", (PyCFunction)VRPyGeometry::calcSurfaceArea, METH_NOARGS, "Compute and return the total surface area - flt calcSurfaceArea()" },
     {NULL}  /* Sentinel */
 };
 
@@ -160,6 +161,11 @@ void feed1D(PyObject* o, T& vec) {
         int j = PyInt_AsLong(pi);
         vec->addValue(j);
     }
+}
+
+PyObject* VRPyGeometry::calcSurfaceArea(VRPyGeometry* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyGeometry::showGeometricData - Object is invalid"); return NULL; }
+    return PyFloat_FromDouble( self->obj->calcSurfaceArea() );
 }
 
 PyObject* VRPyGeometry::showGeometricData(VRPyGeometry* self, PyObject *args) {
