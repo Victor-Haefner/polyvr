@@ -72,6 +72,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setFrom", (PyCFunction)VRPyTransform::setFrom, METH_VARARGS, "Set the object's from vector" },
     {"setAt", (PyCFunction)VRPyTransform::setAt, METH_VARARGS, "Set the object's at vector" },
     {"setDir", (PyCFunction)VRPyTransform::setDir, METH_VARARGS, "Set the object's dir vector" },
+    {"setEuler", (PyCFunction)VRPyTransform::setEuler, METH_VARARGS, "Set the object's orientation using Euler angles - setEuler(x,y,z)" },
     {"setUp", (PyCFunction)VRPyTransform::setUp, METH_VARARGS, "Set the object's up vector" },
     {"setScale", (PyCFunction)VRPyTransform::setScale, METH_VARARGS, "Set the object's scale vector" },
     {"setPickable", (PyCFunction)VRPyTransform::setPickable, METH_VARARGS, "Set the object pickable - setPickable(True/False)" },
@@ -108,6 +109,12 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setCenterOfMass", (PyCFunction)VRPyTransform::setCenterOfMass, METH_VARARGS, "Set a custom center of mass - setCenterOfMass([x,y,z])"  },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyTransform::setEuler(VRPyTransform* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setEuler, Object is invalid"); return NULL; }
+    self->obj->setEuler(parseVec3f(args));
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyTransform::setCenterOfMass(VRPyTransform* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setCenterOfMass, Object is invalid"); return NULL; }
