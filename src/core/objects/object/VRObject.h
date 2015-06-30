@@ -159,6 +159,7 @@ class VRObject : public VRName {
         VRObject* find(VRObject* obj);
         VRObject* find(string Name);
         VRObject* find(int id);
+        vector<VRObject*> findAll(string Name, vector<VRObject*> res = vector<VRObject*>() );
 
         vector<VRObject*> filterByType(string Type, vector<VRObject*> res = vector<VRObject*>() );
 
