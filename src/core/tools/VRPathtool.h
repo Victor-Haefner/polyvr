@@ -125,7 +125,7 @@ class VRPathtool {
         VRPathtool();
 
         path* newPath(VRDevice* dev, VRObject* anchor);
-        void extrude(VRDevice* dev, path* p);
+        VRGeometry* extrude(VRDevice* dev, path* p);
         void remPath(path* p);
 
         void addPath(path* p, VRObject* anchor);

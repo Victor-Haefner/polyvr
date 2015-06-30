@@ -82,8 +82,8 @@ vector<VRGeometry*> VRPathtool::getHandles(path* p) {
     return res;
 }
 
-void VRPathtool::extrude(VRDevice* dev, path* p) {
-    if (paths.count(p) == 0) return;
+VRGeometry* VRPathtool::extrude(VRDevice* dev, path* p) {
+    if (paths.count(p) == 0) return 0;
     entry* e = paths[p];
     e->p->addPoint(Vec3f(0,0,-1), Vec3f(1,0,0), Vec3f(1,1,1));
 
@@ -97,6 +97,7 @@ void VRPathtool::extrude(VRDevice* dev, path* p) {
     }
 
     updateHandle(h);
+    return h;
 }
 
 void VRPathtool::remPath(path* p) {

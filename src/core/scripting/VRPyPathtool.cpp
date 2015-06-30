@@ -143,7 +143,6 @@ PyObject* VRPyPathtool::extrude(VRPyPathtool* self, PyObject* args) {
     if (! PyArg_ParseTuple(args, "OO", &dev, &p)) return NULL;
     OSG::VRDevice* d = 0;
     if (!isNone((PyObject*)dev)) d = dev->obj;
-    self->obj->extrude( d, p->obj );
-    Py_RETURN_TRUE;
+    return VRPyGeometry::fromPtr( self->obj->extrude( d, p->obj ) );
 }
 
