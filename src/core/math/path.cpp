@@ -198,5 +198,13 @@ void path::getOrientation(float t, Vec3f& dir, Vec3f& up) {
     up = interp(up_vectors, t);
 }
 
+void path::clear() {
+    points.clear();
+    positions.clear();
+    directions.clear();
+    up_vectors.clear();
+    colors.clear();
+}
+
 
 OSG_END_NAMESPACE;

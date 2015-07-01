@@ -106,6 +106,7 @@ class VRPathtool {
     private:
         struct entry {
             path* p = 0;
+            int resolution = 10;
             map<VRGeometry*, int> handles;
             VRGeometry* line = 0;
             VRObject* anchor = 0;
@@ -124,12 +125,13 @@ class VRPathtool {
     public:
         VRPathtool();
 
-        path* newPath(VRDevice* dev, VRObject* anchor);
+        path* newPath(VRDevice* dev, VRObject* anchor, int resolution = 10);
         VRGeometry* extrude(VRDevice* dev, path* p);
         void remPath(path* p);
 
         void addPath(path* p, VRObject* anchor);
         void setVisible(bool b);
+        void clear(path* p);
 
         vector<path*> getPaths();
         vector<VRGeometry*> getHandles(path* p);

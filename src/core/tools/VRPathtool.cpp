@@ -39,10 +39,11 @@ void VRPathtool::addPath(path* p, VRObject* anchor) {
     }
 }
 
-path* VRPathtool::newPath(VRDevice* dev, VRObject* anchor) {
+path* VRPathtool::newPath(VRDevice* dev, VRObject* anchor, int resolution) {
     entry* e = new entry();
     e->anchor = anchor;
     e->p = new path();
+    e->resolution = resolution;
     paths[e->p] = e;
 
     extrude(0,e->p);
@@ -104,6 +105,14 @@ VRGeometry* VRPathtool::extrude(VRDevice* dev, path* p) {
     return h;
 }
 
+void VRPathtool::clear(path* p) {
+    if (paths.count(p) == 0) return;
+    entry* e = paths[p];
+    for (auto h : e->handles) delete h.first;
+    delete e->line;
+    p->clear();
+}
+
 void VRPathtool::remPath(path* p) {
     if (paths.count(p) == 0) return;
     entry* e = paths[p];
@@ -122,7 +131,7 @@ void VRPathtool::updateHandle(VRGeometry* handle) {
     int hN = e->handles.size();
     if (hN <= 0) return;
 
-    e->p->compute(5*hN);
+    e->p->compute(e->resolution);
     int pN = e->p->getPositions().size();
     if (pN <= 2) return;
 
