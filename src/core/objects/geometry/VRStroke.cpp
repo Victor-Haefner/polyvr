@@ -174,7 +174,7 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool lit) {
             u = up_vectors[N];
             c = cols[N];
             MatrixLookAt(m, Vec3f(0,0,0), n, u);
-            tmp; m.mult(pCenter, tmp);
+            m.mult(pCenter, tmp);
 
             Pos->addValue(p + tmp);
             Norms->addValue(n);

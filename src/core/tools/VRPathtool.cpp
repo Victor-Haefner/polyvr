@@ -108,8 +108,15 @@ VRGeometry* VRPathtool::extrude(VRDevice* dev, path* p) {
 void VRPathtool::clear(path* p) {
     if (paths.count(p) == 0) return;
     entry* e = paths[p];
-    for (auto h : e->handles) delete h.first;
+
+    for (auto h : e->handles) {
+        handles_dict.erase(h.first);
+        delete h.first;
+    }
+    e->handles.clear();
     delete e->line;
+    e->line = 0;
+
     p->clear();
 }
 
