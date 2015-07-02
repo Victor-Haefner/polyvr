@@ -13,7 +13,8 @@ VRAnimation::VRAnimation(string name) {
     setName(name);
 }
 
-void VRAnimation::start() {
+void VRAnimation::start(float offset) {
+    this->offset = offset;
     start_time = glutGet(GLUT_ELAPSED_TIME)/1000.0;
     run = true;
     VRSceneManager::getCurrent()->addAnimation(this);

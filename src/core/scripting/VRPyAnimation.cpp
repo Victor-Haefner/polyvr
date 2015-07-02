@@ -48,15 +48,17 @@ template<> PyTypeObject VRPyBaseT<OSG::VRAnimation>::type = {
 };
 
 PyMethodDef VRPyAnimation::methods[] = {
-    {"start", (PyCFunction)VRPyAnimation::start, METH_NOARGS, "Start animation" },
+    {"start", (PyCFunction)VRPyAnimation::start, METH_VARARGS, "Start animation" },
     {"stop", (PyCFunction)VRPyAnimation::stop, METH_NOARGS, "Stop animation" },
     {"isActive", (PyCFunction)VRPyAnimation::isActive, METH_NOARGS, "Check if running - bool isActive()" },
     {NULL}  /* Sentinel */
 };
 
-PyObject* VRPyAnimation::start(VRPyAnimation* self) {
+PyObject* VRPyAnimation::start(VRPyAnimation* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyAnimation::start - Object is invalid"); return NULL; }
-    self->obj->start();
+    float offset = 0;
+    if (pySize(args) == 1) offset = parseFloat(args);
+    self->obj->start(offset);
     Py_RETURN_TRUE;
 }
 

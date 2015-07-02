@@ -8,7 +8,7 @@
 struct VRPyAnimation : public VRPyBaseT<OSG::VRAnimation> {
     static PyMethodDef methods[];
 
-    static PyObject* start(VRPyAnimation* self);
+    static PyObject* start(VRPyAnimation* self, PyObject* args);
 	static PyObject* stop(VRPyAnimation* self);
 	static PyObject* isActive(VRPyAnimation* self);
 };
