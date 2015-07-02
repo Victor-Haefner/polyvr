@@ -23,6 +23,21 @@ void VRAnimation::start(float offset) {
 void VRAnimation::stop() { run = false; }
 bool VRAnimation::isActive() { return run; }
 
+void VRAnimation::setSimpleCallback(VRFunction<float>* fkt, float _duration) {
+    run = false;
+    duration = _duration;
+
+    if (interp) delete interp;
+    auto i = new interpolatorT<float>();
+    i->fkt = fkt;
+    i->start_value = 0;
+    i->end_value = 1;
+    interp = i;
+}
+
+void VRAnimation::setLoop(bool b) { loop = b; }
+bool VRAnimation::getLoop() { return loop; }
+
 bool VRAnimation::update(float current_time) {
     if (!run) return false;
 

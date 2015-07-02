@@ -1,5 +1,34 @@
+#include <boost/bind.hpp>
+
 template<class T> PyTypeObject* VRPyBaseT<T>::typeRef = &VRPyBaseT<T>::type;
 template<class T> VRPyBaseT<T>::VRPyBaseT() {;}
+
+template <typename T>
+void VRPyBase::execPyCall(PyObject* pyFkt, PyObject* pArgs, T t) {
+    if (pyFkt == 0) return;
+    if (PyErr_Occurred() != NULL) PyErr_Print();
+
+    PyTuple_SetItem(pArgs, pySize(pArgs)-1, toPyObject(t));
+    PyObject_CallObject(pyFkt, pArgs);
+
+    //Py_XDECREF(pArgs); Py_DecRef(pyFkt); // TODO!!
+
+    if (PyErr_Occurred() != NULL) PyErr_Print();
+}
+
+template <typename T>
+VRFunction<T>* VRPyBase::parseCallback(PyObject* args) {
+    PyObject *pyFkt, *pArgs = 0;
+    if (pySize(args) == 1) if (! PyArg_ParseTuple(args, "O", &pyFkt)) return 0;
+    if (pySize(args) == 2) if (! PyArg_ParseTuple(args, "OO", &pyFkt, &pArgs)) return 0;
+    Py_IncRef(pyFkt);
+
+    if (pArgs == 0) pArgs = PyTuple_New(0);
+    else if (string(pArgs->ob_type->tp_name) == "list") pArgs = PyList_AsTuple(pArgs);
+    _PyTuple_Resize(&pArgs, pySize(pArgs)+1);
+
+    return new VRFunction<T>( "pyExecCall", boost::bind(VRPyBase::execPyCall<T>, pyFkt, pArgs, _1) );
+}
 
 template<class T>
 PyObject* VRPyBaseT<T>::fromPtr(T* obj) {

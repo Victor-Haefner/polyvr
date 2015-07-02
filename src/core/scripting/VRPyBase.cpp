@@ -23,6 +23,8 @@ vector<PyObject*> VRPyBase::parseList(PyObject *args) {
 bool VRPyBase::isList(PyObject* o) { return PyList_Check(o); }
 bool VRPyBase::isTuple(PyObject* o) { return PyTuple_Check(o); }
 
+PyObject* VRPyBase::toPyObject(float f) { return PyFloat_FromDouble(f); }
+
 int VRPyBase::pySize(PyObject* v) {
     if (isList(v)) return PyList_Size(v);
     if (isTuple(v)) return PyTuple_Size(v);

@@ -51,8 +51,23 @@ PyMethodDef VRPyAnimation::methods[] = {
     {"start", (PyCFunction)VRPyAnimation::start, METH_VARARGS, "Start animation" },
     {"stop", (PyCFunction)VRPyAnimation::stop, METH_NOARGS, "Stop animation" },
     {"isActive", (PyCFunction)VRPyAnimation::isActive, METH_NOARGS, "Check if running - bool isActive()" },
+    {"setCallback", (PyCFunction)VRPyAnimation::setCallback, METH_VARARGS, "Set animation callback - setCallback(cb)" },
+    {"setLoop", (PyCFunction)VRPyAnimation::setLoop, METH_VARARGS, "Set animation loop flag - setLoop(bool)" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyAnimation::setLoop(VRPyAnimation* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyAnimation::setLoop - Object is invalid"); return NULL; }
+    self->obj->setLoop( parseBool(args) );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyAnimation::setCallback(VRPyAnimation* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyAnimation::setCallback - Object is invalid"); return NULL; }
+    auto cb = parseCallback<float>(args); if (cb == 0) return NULL;
+    self->obj->setSimpleCallback(cb, 1);
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyAnimation::start(VRPyAnimation* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyAnimation::start - Object is invalid"); return NULL; }

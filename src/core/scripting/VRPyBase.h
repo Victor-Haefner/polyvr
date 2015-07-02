@@ -10,6 +10,7 @@
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGVector.h>
 #include <OpenSG/OSGLine.h>
+#include "core/utils/VRFunction.h"
 
 using namespace std;
 
@@ -24,6 +25,11 @@ struct VRPyBase {
         if (! PyArg_ParseTuple(args, "O", &t)) return;
         if ((PyObject*)t == Py_None) t = 0;
     }
+
+    template <typename T>
+    static void execPyCall(PyObject* pyFkt, PyObject* pArgs, T t);
+    template <typename T>
+    static VRFunction<T>* parseCallback(PyObject *args);
 
     static vector<PyObject*> parseList(PyObject *args);
     static OSG::Vec2f parseVec2f(PyObject *args);
@@ -49,6 +55,8 @@ struct VRPyBase {
     static PyObject* toPyTuple(OSG::Vec3f v);
     static PyObject* toPyTuple(OSG::Vec3i v);
     static PyObject* toPyTuple(OSG::Vec2f v);
+
+    static PyObject* toPyObject(float f);
 
     static int toGLConst(string cst);
     static int toGLConst(PyObject* o);
