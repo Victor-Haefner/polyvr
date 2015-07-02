@@ -45,6 +45,9 @@ class VRAnimation : public VRName {
         void setLoop(bool b);
         bool getLoop();
 
+        void setDuration(float t);
+        float getDuration();
+
         void start(float offset = 0);
         void stop();
         bool isActive();

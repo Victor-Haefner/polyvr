@@ -38,6 +38,9 @@ void VRAnimation::setSimpleCallback(VRFunction<float>* fkt, float _duration) {
 void VRAnimation::setLoop(bool b) { loop = b; }
 bool VRAnimation::getLoop() { return loop; }
 
+void VRAnimation::setDuration(float t) { duration = t; }
+float VRAnimation::getDuration() { return duration; }
+
 bool VRAnimation::update(float current_time) {
     if (!run) return false;
 

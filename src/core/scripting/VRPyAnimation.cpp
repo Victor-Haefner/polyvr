@@ -51,10 +51,17 @@ PyMethodDef VRPyAnimation::methods[] = {
     {"start", (PyCFunction)VRPyAnimation::start, METH_VARARGS, "Start animation" },
     {"stop", (PyCFunction)VRPyAnimation::stop, METH_NOARGS, "Stop animation" },
     {"isActive", (PyCFunction)VRPyAnimation::isActive, METH_NOARGS, "Check if running - bool isActive()" },
-    {"setCallback", (PyCFunction)VRPyAnimation::setCallback, METH_VARARGS, "Set animation callback - setCallback(cb)" },
+    {"setCallback", (PyCFunction)VRPyAnimation::setCallback, METH_VARARGS, "Set animation callback - setCallback(callback)" },
+    {"setDuration", (PyCFunction)VRPyAnimation::setDuration, METH_VARARGS, "Set animation duration - setDuration(float)" },
     {"setLoop", (PyCFunction)VRPyAnimation::setLoop, METH_VARARGS, "Set animation loop flag - setLoop(bool)" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyAnimation::setDuration(VRPyAnimation* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyAnimation::setDuration - Object is invalid"); return NULL; }
+    self->obj->setDuration( parseFloat(args) );
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyAnimation::setLoop(VRPyAnimation* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyAnimation::setLoop - Object is invalid"); return NULL; }
