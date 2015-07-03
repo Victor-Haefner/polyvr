@@ -164,6 +164,13 @@ size_t CSGGeometry::isKnownPoint(OSG::Pnt3f newPoint) {
 	return numeric_limits<size_t>::max();
 }
 
+
+float triangleArea(Vec3f p1, Vec3f p2, Vec3f p3) {
+    Vec3f v1 = p2-p1;
+    Vec3f v2 = p3-p1;
+    return v1.cross(v2).length()*0.5;
+}
+
 // Converts geometry to a polyhedron && applies the geometry node's world transform to the polyhedron.
 // OpenSG geometry data isn't transformed itself but has an associated transform core. Both are unified for CGAL.
 CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryRecPtr geometry, Matrix worldTransform, bool& success) {
@@ -219,6 +226,9 @@ CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryRecPtr geometry, Matrix worl
 			}
 		}
 
+		float A = triangleArea(Vec3f(it.getPosition(0)), Vec3f(it.getPosition(1)), Vec3f(it.getPosition(2)));
+		if (A < 1e-16) { cout << " tiny Area: " << A << endl; continue; }
+
         //cout << "add triangle " << IDs[0] << " " << IDs[1] << " " << IDs[2] << endl;
 		if (IDs[0] == IDs[1] || IDs[0] == IDs[2] || IDs[1] == IDs[2]) continue; // ignore flat triangles
 
@@ -273,19 +283,20 @@ bool CSGGeometry::disableEditMode() {
 		if (obj->getType() == string("Geometry")) {
 			VRGeometry *geo = dynamic_cast<VRGeometry*>(obj);
             cout << "child: " << geo->getName() << " toPolyhedron\n";
+            bool success;
 			try {
-			    bool success;
 			    polys[i] = toPolyhedron( geo->getMesh(), geo->getWorldMatrix(), success );
-			    if (!success) {
-                    setCSGGeometry(polys[i]);
-                    //obj->setVisible(true); // We stay in edit mode, so both children need to be visible
-                    return false;
-			    }
 			} catch (exception e) {
-			    cout << getName() << ": Could not convert mesh data to polyhedron: " << e.what() << endl;
-				obj->setVisible(true); // We stay in edit mode, so both children need to be visible
+			    success = false;
+			    cout << getName() << ": toPolyhedron exception: " << e.what() << endl;
 				return false;
 			}
+
+            if (!success) {
+                setCSGGeometry(polys[i]);
+                //obj->setVisible(true); // We stay in edit mode, so both children need to be visible
+                return false;
+            }
 			continue;
 		}
 
