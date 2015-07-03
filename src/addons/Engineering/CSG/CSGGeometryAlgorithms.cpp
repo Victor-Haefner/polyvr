@@ -14,12 +14,8 @@ using namespace OSG;
  // Converts geometry to a polyhedron && applies the geometry node's world transform to the polyhedron.
 // OpenSG geometry data isn't transformed itself but has an associated transform core. Both are unified for CGAL.
 CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryRecPtr geometry, Matrix worldTransform, bool& success) {
-	vector<CGAL::Point> positions;
-	vector<size_t> indices;
-	size_t curIndex = 0;
 	TriangleIterator it;
 	auto gpos = geometry->getPositions();
-    cout << " toPolyhedron\n";
 
 	// fix flat triangles (all three points aligned)
 	for (it = TriangleIterator(geometry); !it.isAtEnd() ;++it) {
@@ -30,13 +26,28 @@ CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryRecPtr geometry, Matrix worl
         v[0] = p[2]-p[1]; v[1] = p[2]-p[0]; v[2] = p[1]-p[0];
         float A = (v[2].cross(v[1])).length();
         if (A < 1e-16) { // small area, flat triangle?
-            for (int i=0; i<3; i++) if (v[i].squareLength() < 1e-8) continue; // check if two points close, then ignore
+            cout << "small area " << A << endl;
+            for (int i=0; i<3; i++) cout << " pi " << p[i] << " vi " << vi[i] << " L " << v[i].squareLength() << endl;
+            if (v[0].squareLength() < 1e-8) continue; // check if two points close, then ignore
+            if (v[1].squareLength() < 1e-8) continue;
+            if (v[2].squareLength() < 1e-8) continue;
 
             int im = 0;
             for (int i=1; i<3; i++) if (v[i].squareLength() > v[im].squareLength()) im = i;
-            gpos->setValue(p[(im+1)%3], vi[im]);
+            int j = (im+1)%3;
+            cout << "set p[" << j << "] = " << p[j] << " with index i[" << im << "] = " << vi[im] << endl;
+            gpos->setValue(p[j], vi[im]);
+            for (int i=0; i<3; i++) p[i] = it.getPosition(i);
+            cout << " result: " << endl;
+            for (int i=0; i<3; i++) cout << "  pi " << p[i] << endl;
         }
 	}
+
+    vector<CGAL::Point> positions;
+	vector<size_t> indices;
+    vector<Vec3f> pos;
+	vector<int> inds;
+	size_t curIndex = 0;
 
 	// Convert triangles to cgal indices and vertices
 	for (it = TriangleIterator(geometry); !it.isAtEnd() ;++it) {
@@ -45,14 +56,14 @@ CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryRecPtr geometry, Matrix worl
 
 		for (int i=0; i<3; i++) {
 			if (IDs[i] == numeric_limits<size_t>::max()) {
-                Pnt3f osgPos = it.getPosition(i);
-				CGAL::Point cgalPos(osgPos.x(), osgPos.y(), osgPos.z());
-				positions.push_back(cgalPos);
+                Vec3f p = Vec3f(it.getPosition(i));
+				pos.push_back(p);
+				positions.push_back( CGAL::Point(p[0], p[1], p[2]) );
 				IDs[i] = curIndex;
                 //cout << "add point " << curIndex << "   " << osgPos << endl;
 				size_t *curIndexPtr = new size_t;
 				*curIndexPtr = curIndex;
-				oct->add(OcPoint(osgPos.x(), osgPos.y(), osgPos.z()), curIndexPtr);
+				oct->add(OcPoint(p[0], p[1], p[2]), curIndexPtr);
 				curIndex++;
 			}
 		}
@@ -61,26 +72,24 @@ CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryRecPtr geometry, Matrix worl
 		if (IDs[0] == IDs[1] || IDs[0] == IDs[2] || IDs[1] == IDs[2]) continue; // ignore flat triangles
 
 		for (int i=0; i<3; i++) indices.push_back(IDs[i]);
+		for (int i=0; i<3; i++) inds.push_back(IDs[i]);
 	}
 
 	// Cleanup
 	for (void* o : oct->getData()) delete (size_t*)o;
 	delete oct;
-
 	oct = new Octree(THRESHOLD);
 
-
-    //cout << "\ntoPolyhedron " << getName() << " transformation : \n" << worldTransform << endl;
-	//cout << "size: " << positions.size() << " " << indices.size() << endl;
-	//for (size_t i = 0; i < positions.size(); i++) cout << positions[i] << endl;
-	//for (size_t i = 0; i < indices.size(); i += 3) cout << indices[i] << indices[i+1] << indices[i+2] << endl;
-
-
 	// Construct the polyhedron from raw data
+    success = true;
 	CGAL::Polyhedron *result = new CGAL::Polyhedron();
 	PolyhedronBuilder<CGAL::HalfedgeDS> builder(positions, indices);
 	result->delegate(builder);
-	if (!result->is_closed()) throw std::runtime_error("The polyhedron is not a closed mesh!");
+	if (!result->is_closed()) {
+        success = false;
+        cout << "Error: The polyhedron is not a closed mesh!" << endl;
+        create(GL_TRIANGLES, pos, pos, inds);
+	}
 
 	// Transform the polyhedron with the geometry's world transform matrix
 	applyTransform(result, worldTransform);
@@ -99,14 +108,21 @@ bool CSGGeometry::disableEditMode() {
 
 		if (obj->getType() == string("Geometry")) {
 			VRGeometry *geo = dynamic_cast<VRGeometry*>(obj);
+            cout << "child: " << geo->getName() << " toPolyhedron\n";
+            bool success;
 			try {
-			    bool success;
 			    polys[i] = toPolyhedron( geo->getMesh(), geo->getWorldMatrix(), success );
 			} catch (exception e) {
-			    cout << getName() << ": Could not convert mesh data to polyhedron: " << e.what() << endl;
-				obj->setVisible(true); // We stay in edit mode, so both children need to be visible
-				return false;
+			    success = false;
+			    cout << getName() << ": toPolyhedron exception: " << e.what() << endl;
 			}
+
+            if (!success) {
+			    cout << getName() << ": toPolyhedron went totaly wrong :(\n";
+                //setCSGGeometry(polys[i]);
+                obj->setVisible(true); // We stay in edit mode, so both children need to be visible
+                return false;
+            }
 			continue;
 		}
 
