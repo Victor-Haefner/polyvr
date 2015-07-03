@@ -28,6 +28,7 @@
 #include "VRVideo.h"
 #include "core/tools/VRQRCode.h"
 #include <libxml++/nodes/element.h>
+#include <boost/filesystem.hpp>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -334,6 +335,8 @@ void VRMaterial::setTextureParams(int min, int mag, int envMode, int wrapS, int 
 
 /** Load a texture && apply it to the mesh as new material **/
 void VRMaterial::setTexture(string img_path, bool alpha) { // TODO: improve with texture map
+    if (boost::filesystem::exists(img_path))
+        img_path = boost::filesystem::canonical(img_path).string();
     auto md = mats[activePass];
     if (md->texture == 0) md->texture = Image::create();
     md->texture->read(img_path.c_str());

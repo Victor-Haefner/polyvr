@@ -174,7 +174,7 @@ void VRPathtool::updateDevs() {
 }
 
 void VRPathtool::setVisible(bool b) {
-    for (auto p : paths) p.second->line->setVisible(b);
+    for (auto p : paths) if (p.second->line) p.second->line->setVisible(b);
     for (auto h : handles_dict) h.first->setVisible(b);
 }
 
