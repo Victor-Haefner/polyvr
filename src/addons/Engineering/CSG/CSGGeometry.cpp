@@ -92,6 +92,7 @@ CGAL::Polyhedron* CSGGeometry::intersect(CGAL::Polyhedron *first, CGAL::Polyhedr
 }
 
 void CSGGeometry::applyTransform(CGAL::Polyhedron* p, Matrix m) {
+    if (p == 0) return;
     CGAL::Transformation t(m[0][0], m[1][0], m[2][0], m[3][0],
                            m[0][1], m[1][1], m[2][1], m[3][1],
                            m[0][2], m[1][2], m[2][2], m[3][2],
@@ -173,65 +174,6 @@ void CSGGeometry::enableEditMode() {
 	for (auto c : children) {
 		if (c->getType() == string("Geometry") || c->getType() == string("CSGGeometry")) c->setVisible(true);
 	}
-}
-
-bool CSGGeometry::disableEditMode() {
-	if (children.size() != 2) { cout << "CSGGeometry: Warning: editMode disabled with less than 2 children. Doing nothing.\n"; return false; }
-
-	vector<CGAL::Polyhedron*> polys(2,0); // We need two child geometries to work with
-
-	for (int i=0; i<2; i++) { // Prepare the polyhedra
-		VRObject *obj = children[i];
-        obj->setVisible(false);
-
-		if (obj->getType() == string("Geometry")) {
-			VRGeometry *geo = dynamic_cast<VRGeometry*>(obj);
-            cout << "child: " << geo->getName() << " toPolyhedron\n";
-            bool success;
-			try {
-			    polys[i] = toPolyhedron( geo->getMesh(), geo->getWorldMatrix(), success );
-			} catch (exception e) {
-			    success = false;
-			    cout << getName() << ": toPolyhedron exception: " << e.what() << endl;
-				return false;
-			}
-
-            if (!success) {
-                setCSGGeometry(polys[i]);
-                //obj->setVisible(true); // We stay in edit mode, so both children need to be visible
-                return false;
-            }
-			continue;
-		}
-
-		if(obj->getType() == "CSGGeometry") {
-			CSGGeometry *geo = dynamic_cast<CSGGeometry*>(obj);
-			polys[i] = geo->getCSGGeometry(); // TODO: where does this come from?? keep the old!
-			continue;
-		}
-
-		cout << "Warning! polyhedron " << i << " not acquired because ";
-		cout << obj->getName() << " has wrong type " << obj->getType();
-		cout << ", it should be 'Geometry' or 'CSGGeometry'!" << endl;
-	}
-
-	if (polys[0] == 0) cout << "Warning! first polyhedron is 0! " << children[0]->getName() << endl;
-	if (polys[1] == 0) cout << "Warning! second polyhedron is 0! " << children[1]->getName() << endl;
-	if (polys[0] == 0 || polys[1] == 0) return false;
-
-    if (polyhedron) delete polyhedron;
-    polyhedron = 0;
-	if (operation == "unite") polyhedron = unite(polys[0], polys[1]);
-	else if(operation == "subtract") polyhedron = subtract(polys[0], polys[1]);
-	else if(operation == "intersect") polyhedron = intersect(polys[0], polys[1]);
-	else cout << "CSGGeometry: Warning: unexpected CSG operation!\n";
-
-	// Clean up
-	for (auto p : polys) delete p;
-
-	if (polyhedron == 0) return false;
-    setCSGGeometry(polyhedron);
-	return true;
 }
 
 bool CSGGeometry::setEditMode(const bool editModeActive) {
