@@ -1,12 +1,14 @@
 #include "CSGGeometry.h"
 #include "CGALTypedefs.h"
 #include "core/math/Octree.h"
+#include "core/objects/material/VRMaterial.h"
 
 #include "PolyhedronBuilder.h"
 
 #include <OpenSG/OSGVector.h>
 #include <OpenSG/OSGGeometry.h>
 #include <OpenSG/OSGTriangleIterator.h>
+#include <OpenSG/OSGGeoFunctions.h>
 
 using namespace std;
 using namespace OSG;
@@ -89,6 +91,10 @@ CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryRecPtr geometry, Matrix worl
         success = false;
         cout << "Error: The polyhedron is not a closed mesh!" << endl;
         create(GL_TRIANGLES, pos, pos, inds);
+        setWorldMatrix(worldTransform);
+        createSharedIndex(mesh);
+        calcVertexNormals(mesh, 0.523598775598 /*30 deg in rad*/);
+        getMaterial()->setFrontBackModes(GL_FILL, GL_NONE);
 	}
 
 	// Transform the polyhedron with the geometry's world transform matrix
@@ -120,7 +126,7 @@ bool CSGGeometry::disableEditMode() {
             if (!success) {
 			    cout << getName() << ": toPolyhedron went totaly wrong :(\n";
                 //setCSGGeometry(polys[i]);
-                obj->setVisible(true); // We stay in edit mode, so both children need to be visible
+                //obj->setVisible(true); // We stay in edit mode, so both children need to be visible
                 return false;
             }
 			continue;
