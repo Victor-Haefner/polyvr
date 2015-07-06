@@ -66,6 +66,7 @@ PyMethodDef VRPyObject::methods[] = {
     {"getChildren", (PyCFunction)VRPyObject::getChildren, METH_VARARGS, "Return the list of children objects\n\t - getChildren() : return immediate children\n\t - getChildren(bool recursive) : if true returns whole subtree\n\t - getChildren(bool recursive, str type) : filter by type" },
     {"getParent", (PyCFunction)VRPyObject::getParent, METH_NOARGS, "Return parent object" },
     {"find", (PyCFunction)VRPyObject::find, METH_VARARGS, "Find node with given name (str) in scene graph below this node" },
+    {"findAll", (PyCFunction)VRPyObject::findAll, METH_VARARGS, "Find node with given base name (str) in scene graph below this node" },
     {"isPickable", (PyCFunction)VRPyObject::isPickable, METH_NOARGS, "Return if the object is pickable" },
     {"setPickable", (PyCFunction)VRPyObject::setPickable, METH_VARARGS, "Set if the object is pickable" },
     {"printOSG", (PyCFunction)VRPyObject::printOSG, METH_NOARGS, "Print the OSG structure to console" },
@@ -291,6 +292,20 @@ PyObject* VRPyObject::find(VRPyObject* self, PyObject* args) {
     OSG::VRObject* c = self->obj->find(name);
     if (c) { return VRPyTypeCaster::cast(c); }
     else { Py_RETURN_NONE; }
+}
+
+PyObject* VRPyObject::findAll(VRPyObject* self, PyObject* args) {
+	if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::find, C object is invalid"); return NULL; }
+
+    string name = parseString(args);
+    vector<OSG::VRObject*> objs = self->obj->findAll(name);
+
+    PyObject* li = PyList_New(objs.size());
+    for (uint i=0; i<objs.size(); i++) {
+        PyList_SetItem(li, i, VRPyTypeCaster::cast(objs[i]));
+    }
+
+    return li;
 }
 
 PyObject* VRPyObject::isPickable(VRPyObject* self) {

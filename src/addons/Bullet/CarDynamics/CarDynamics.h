@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <btBulletDynamicsCommon.h>
+#include <boost/thread/recursive_mutex.hpp>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -26,9 +27,10 @@ class CarDynamics {
 
         btScalar m_defaultContactProcessingThreshold;
 
+        boost::recursive_mutex& mtx();
+
         void initPhysics();
         void initVehicle();
-        void resetVehicle();
 
         btRigidBody* createRigitBody(float mass, const btTransform& startTransform, btCollisionShape* shape);
 
@@ -46,10 +48,11 @@ class CarDynamics {
         void setWheelGeo(VRGeometry* geo);
         void setWheelOffsets(float xOffset, float frontZOffset, float rearZOffset, float height);
         void setWheelParams(float w, float r);
+        void setCarMass(float m);
 
         void updateWheels();
 
-        void reset();
+        void reset(float x, float y, float z);
         float getSpeed();
 };
 

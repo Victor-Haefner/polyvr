@@ -13,7 +13,8 @@ VRAnimation::VRAnimation(string name) {
     setName(name);
 }
 
-void VRAnimation::start() {
+void VRAnimation::start(float offset) {
+    this->offset = offset;
     start_time = glutGet(GLUT_ELAPSED_TIME)/1000.0;
     run = true;
     VRSceneManager::getCurrent()->addAnimation(this);
@@ -21,6 +22,24 @@ void VRAnimation::start() {
 
 void VRAnimation::stop() { run = false; }
 bool VRAnimation::isActive() { return run; }
+
+void VRAnimation::setSimpleCallback(VRFunction<float>* fkt, float _duration) {
+    run = false;
+    duration = _duration;
+
+    if (interp) delete interp;
+    auto i = new interpolatorT<float>();
+    i->fkt = fkt;
+    i->start_value = 0;
+    i->end_value = 1;
+    interp = i;
+}
+
+void VRAnimation::setLoop(bool b) { loop = b; }
+bool VRAnimation::getLoop() { return loop; }
+
+void VRAnimation::setDuration(float t) { duration = t; }
+float VRAnimation::getDuration() { return duration; }
 
 bool VRAnimation::update(float current_time) {
     if (!run) return false;

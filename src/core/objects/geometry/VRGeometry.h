@@ -84,6 +84,7 @@ class VRGeometry : public VRTransform {
         void fixColorMapping();
 
         void showGeometricData(string type, bool b);
+        float calcSurfaceArea();
 
         Vec3f getGeometricCenter();
         Vec3f getAverageNormal();

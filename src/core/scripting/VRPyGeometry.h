@@ -38,6 +38,7 @@ struct VRPyGeometry : VRPyBaseT<OSG::VRGeometry> {
     static PyObject* merge(VRPyGeometry* self, PyObject *args);
     static PyObject* influence(VRPyGeometry* self, PyObject *args);
     static PyObject* showGeometricData(VRPyGeometry* self, PyObject *args);
+    static PyObject* calcSurfaceArea(VRPyGeometry* self);
 };
 
 #endif // VRPYGEOMETRY_H_INCLUDED

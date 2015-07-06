@@ -39,10 +39,11 @@ void VRPathtool::addPath(path* p, VRObject* anchor) {
     }
 }
 
-path* VRPathtool::newPath(VRDevice* dev, VRObject* anchor) {
+path* VRPathtool::newPath(VRDevice* dev, VRObject* anchor, int resolution) {
     entry* e = new entry();
     e->anchor = anchor;
     e->p = new path();
+    e->resolution = resolution;
     paths[e->p] = e;
 
     extrude(0,e->p);
@@ -82,8 +83,12 @@ vector<VRGeometry*> VRPathtool::getHandles(path* p) {
     return res;
 }
 
-void VRPathtool::extrude(VRDevice* dev, path* p) {
-    if (paths.count(p) == 0) return;
+VRGeometry* VRPathtool::extrude(VRDevice* dev, path* p) {
+    if (paths.count(p) == 0) {
+        cout << "Warning: VRPathtool::extrude, path " << p << " unknown\n";
+        return 0;
+    }
+
     entry* e = paths[p];
     e->p->addPoint(Vec3f(0,0,-1), Vec3f(1,0,0), Vec3f(1,1,1));
 
@@ -97,6 +102,22 @@ void VRPathtool::extrude(VRDevice* dev, path* p) {
     }
 
     updateHandle(h);
+    return h;
+}
+
+void VRPathtool::clear(path* p) {
+    if (paths.count(p) == 0) return;
+    entry* e = paths[p];
+
+    for (auto h : e->handles) {
+        handles_dict.erase(h.first);
+        delete h.first;
+    }
+    e->handles.clear();
+    delete e->line;
+    e->line = 0;
+
+    p->clear();
 }
 
 void VRPathtool::remPath(path* p) {
@@ -117,7 +138,7 @@ void VRPathtool::updateHandle(VRGeometry* handle) {
     int hN = e->handles.size();
     if (hN <= 0) return;
 
-    e->p->compute(5*hN);
+    e->p->compute(e->resolution);
     int pN = e->p->getPositions().size();
     if (pN <= 2) return;
 
@@ -153,7 +174,7 @@ void VRPathtool::updateDevs() {
 }
 
 void VRPathtool::setVisible(bool b) {
-    for (auto p : paths) p.second->line->setVisible(b);
+    for (auto p : paths) if (p.second->line) p.second->line->setVisible(b);
     for (auto h : handles_dict) h.first->setVisible(b);
 }
 

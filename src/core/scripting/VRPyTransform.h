@@ -27,6 +27,7 @@ struct VRPyTransform : VRPyBaseT<OSG::VRTransform> {
     static PyObject* setFrom(VRPyTransform* self, PyObject* args);
     static PyObject* setAt(VRPyTransform* self, PyObject* args);
     static PyObject* setDir(VRPyTransform* self, PyObject* args);
+    static PyObject* setEuler(VRPyTransform* self, PyObject* args);
     static PyObject* setUp(VRPyTransform* self, PyObject* args);
     static PyObject* setScale(VRPyTransform* self, PyObject* args);
 
@@ -55,6 +56,7 @@ struct VRPyTransform : VRPyBaseT<OSG::VRTransform> {
     static PyObject* deletePhysicsConstraints(VRPyTransform* self, PyObject* args);
     static PyObject* setDamping(VRPyTransform* self, PyObject* args);
     static PyObject* applyChange(VRPyTransform* self);
+    static PyObject* setCenterOfMass(VRPyTransform* self, PyObject* args);
 
     static PyObject* setPickable(VRPyTransform* self, PyObject* args);
     static PyObject* setPlaneConstraints(VRPyTransform* self, PyObject* args);

@@ -55,7 +55,9 @@ class VRPhysics : public OSG::VRStorage {
         vector<OSG::Vec3f> torqueJob2;
         vector<OSG::Vec3f> forceJob2;
 
+        string comType = "geometric";
         OSG::Vec3f CoMOffset; // center of mass offset
+        OSG::Vec3f CoMOffset_custom; // center of mass offset
         string physicsShape;
         map<VRPhysics*, VRPhysicsJoint*> joints ;
         map<VRPhysics*, VRPhysicsJoint*> joints2;
@@ -145,7 +147,7 @@ class VRPhysics : public OSG::VRStorage {
         btMatrix3x3 getInertiaTensor();
         void setDamping(float lin,float ang);
 
-
+        void setCenterOfMass(OSG::Vec3f com);
 
         static vector<string> getPhysicsShapes();
         static btTransform fromMatrix(OSG::Matrix m, OSG::Vec3f& scale, OSG::Vec3f mc);
@@ -154,14 +156,13 @@ class VRPhysics : public OSG::VRStorage {
         static OSG::Matrix fromBTTransform(const btTransform t);
         static OSG::Matrix fromBTTransform(const btTransform t, OSG::Vec3f& scale, OSG::Vec3f mc);
 
-
-
         static btVector3 toBtVector3(OSG::Vec3f);
         static OSG::Vec3f toVec3f(btVector3);
 
 
         void setConstraint(VRPhysics* p, OSG::VRConstraint* c, OSG::VRConstraint* cs); //for Rigid to Rigid
         void setConstraint(VRPhysics* p, int nodeIndex,OSG::Vec3f localPivot,bool ignoreCollision,float influence);//for Soft to Rigid
+
         void updateConstraint(VRPhysics* p);
         void updateConstraints();
 };

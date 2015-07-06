@@ -26,7 +26,7 @@ class CSGGeometry : public VRGeometry {
         CGAL::Polyhedron* getCSGGeometry();
         size_t isKnownPoint(OSG::Pnt3f newPoint);
         GeometryTransitPtr toOsgGeometry(CGAL::Polyhedron* p);
-        CGAL::Polyhedron* toPolyhedron(GeometryRecPtr geometry, Matrix worldTransform);
+        CGAL::Polyhedron* toPolyhedron(GeometryRecPtr geometry, Matrix worldTransform, bool& success);
 
         CGAL::Polyhedron* subtract(CGAL::Polyhedron* minuend, CGAL::Polyhedron* subtrahend);
         CGAL::Polyhedron* unite(CGAL::Polyhedron* first, CGAL::Polyhedron* second);

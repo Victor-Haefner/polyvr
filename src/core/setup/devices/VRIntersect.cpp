@@ -19,7 +19,10 @@ Vec2f VRIntersect_computeTexel(VRIntersection& ins, NodeRecPtr node) {
 
     GeometryRefPtr geo = dynamic_cast<Geometry*>( node->getCore() );
     if (geo == 0) return Vec2f(0,0);
+    auto texcoords = geo->getTexCoords();
+    if (texcoords == 0) return Vec2f(0,0);
     TriangleIterator iter = geo->beginTriangles(); iter.seek( ins.triangle );
+
 
     Matrix m = node->getToWorld();
     m.invert();

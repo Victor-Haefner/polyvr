@@ -3,7 +3,7 @@
 
 #include "Terrain.h"
 #include "../OSM/OSMMapDB.h"
-#include "core/objects/material/VRShader.h"
+#include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRPhysics.h"
 #include "triangulate.h"
 
@@ -12,7 +12,7 @@ using namespace std;
 
 namespace realworld {
     struct TerrainMaterial {
-        SimpleMaterialRecPtr material;
+        VRMaterial* material;
         string k;
         string v;
         float height;
@@ -28,15 +28,13 @@ namespace realworld {
 
                 cout << "LOADING TERRAINS FOR " << bbox->str << "\n" << flush;
 
-                BOOST_FOREACH(OSMWay* way, osmMap->osmWays) {
-
-                    BOOST_FOREACH(TerrainMaterial* mat, terrainList) {
-
+                for (OSMWay* way : osmMap->osmWays) {
+                    for (auto mat : terrainList) {
                         if (way->tags[mat->k] == mat->v) {
                             if (meshes.count(way->id)) continue;
                             // load Polygons from osmMap
                             Terrain* ter = new Terrain(way->id);
-                            BOOST_FOREACH(string nodeId, way->nodeRefs) {
+                            for (string nodeId : way->nodeRefs) {
                                 OSMNode* node = osmMap->osmNodeMap[nodeId];
                                 Vec2f pos = this->mapCoordinator->realToWorld(Vec2f(node->lat, node->lon));
                                 ter->positions.push_back(pos);
@@ -57,10 +55,8 @@ namespace realworld {
         virtual void unloadBbox(AreaBoundingBox* bbox) {
             OSMMap* osmMap = mapDB->getMap(bbox->str);
             if (!osmMap) return;
-
-            BOOST_FOREACH(OSMWay* way, osmMap->osmWays) {
-
-                BOOST_FOREACH(TerrainMaterial* mat, terrainList) {
+            for (OSMWay* way : osmMap->osmWays) {
+                for (TerrainMaterial* mat : terrainList) {
                     if (way->tags[mat->k] == mat->v) {
                         if (meshes.count(way->id)) {
                             VRGeometry* geom = meshes[way->id];
@@ -84,14 +80,13 @@ namespace realworld {
         ModuleTerrain(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, TextureManager* texManager) : BaseModule(mapCoordinator, texManager) {
             this->mapDB = mapDB;
 
-
             // create List with materials
             fillTerrainList();
-
         }
 
     private:
         vector<TerrainMaterial*> terrainList;
+        map<string, VRMaterial*> materials;
         //TerrainMaterials* matTerrain;
         OSMMapDB* mapDB;
         map<string, VRGeometry*> meshes;
@@ -148,29 +143,30 @@ namespace realworld {
         }
 
         void addTerrain(string t, string k, string v){ addTerrain(t, k, v, 1); }
-        void addTerrain(string texture, string key, string value, int height){
+        void addTerrain(string texture, string key, string value, int height) {
+            texture = "world/textures/"+texture;
+            if (materials.count(texture) == 0) {
+                materials[texture] = new VRMaterial(texture);
+                materials[texture]->setTexture(texture);
+                string wdir = VRSceneManager::get()->getOriginalWorkdir();
+                materials[texture]->readVertexShader(wdir+"/shader/TexturePhong/phong.vp");
+                materials[texture]->readFragmentShader(wdir+"/shader/TexturePhong/phong.fp");
+                materials[texture]->setMagMinFilter("GL_LINEAR", "GL_NEAREST_MIPMAP_NEAREST");
+            }
+
             TerrainMaterial* m = new TerrainMaterial();
-            m->material = SimpleMaterial::create();
-            m->material->addChunk(texManager->getTexture(texture));
+            m->material = materials[texture];
             m->k = key;
             m->v = value;
             m->height = height;
-
-            createTerrainShader(m->material);
-
             terrainList.push_back(m);
-        }
-
-        //using same shader as for houses
-        void createTerrainShader(SimpleMaterial* mat) {
-            Config::createPhongShader(mat);
         }
 
         void addTerrain(Terrain* ter, GeometryData* gdTerrain, int height){
             //create && fill vector a with polygon corners
             Vector2dVector a;
             bool first = true;
-            BOOST_FOREACH(Vec2f corner, ter->getCorners()) {
+            for (Vec2f corner : ter->getCorners()) {
                 if(first){ first=false; continue;} //first && last corners are equal, so ignoring first one
                  a.push_back( Vector2d(corner[0], corner[1]));
             }
@@ -189,8 +185,7 @@ namespace realworld {
 
             //float scale = this->mapCoordinator->SCALE_REAL_TO_WORLD;
 
-            for (int i=0; i<tcount; i++)
-            {
+            for (int i=0; i<tcount; i++) {
                 const Vector2d &p1 = result[i*3+0];
                 const Vector2d &p2 = result[i*3+1];
                 const Vector2d &p3 = result[i*3+2];
@@ -205,8 +200,6 @@ namespace realworld {
                 else if(area < 100000) height = 3;
                 else if(area < 300000) height = 2;
                 //if(height > 10) height = 10;*/
-
-
 
                 float groundLevel = (float)height * Config::get()->LAYER_DISTANCE ;
 
@@ -224,29 +217,29 @@ namespace realworld {
             Vec2f p1 = Vec2f(p1X, p1Y);
             Vec2f p2 = Vec2f(p2X, p2Y);
             Vec2f p3 = Vec2f(p3X, p3Y);
-            if(p1==p2 || p2==p3 || p1==p3) return res;
-            if((p1-p2).length() > Config::get()->maxTriangleSize && (p1-p2).length() > (p1-p3).length() && (p1-p2).length() > (p2-p3).length()){
+            if (p1==p2 || p2==p3 || p1==p3) return res;
+            if ((p1-p2).length() > Config::get()->maxTriangleSize && (p1-p2).length() > (p1-p3).length() && (p1-p2).length() > (p2-p3).length()){
                 Vec2f p12 = p1 + (p2-p1)/2;
                 float p12X = p12.getValues()[0];
                 float p12Y = p12.getValues()[1];
                 res = tesselateTriangle(p1X, p1Y, p12X, p12Y, p3X, p3Y, height, gdTerrain);
                 tesselateTriangle(p12X, p12Y, p2X, p2Y, p3X, p3Y, height, gdTerrain, Vec3f(res.getValues()[1], 0, res.getValues()[2]));
                 return Vec3f(0,0,0);
-            }else if((p1-p3).length() > Config::get()->maxTriangleSize && (p1-p3).length() > (p2-p3).length()){
+            } else if((p1-p3).length() > Config::get()->maxTriangleSize && (p1-p3).length() > (p2-p3).length()){
                 Vec2f p13 = p1 + (p3-p1)/2;
                 float p13X = p13.getValues()[0];
                 float p13Y = p13.getValues()[1];
                 res = tesselateTriangle(p1X, p1Y, p2X, p2Y, p13X, p13Y, height, gdTerrain);
                 tesselateTriangle(p13X, p13Y, p2X, p2Y, p3X, p3Y, height, gdTerrain, Vec3f(res.getValues()[2], res.getValues()[1], 0));
                 return Vec3f(0,0,0);
-            }else if((p2-p3).length() > Config::get()->maxTriangleSize){
+            } else if((p2-p3).length() > Config::get()->maxTriangleSize){
                 Vec2f p23 = p2 + (p3-p2)/2;
                 float p23X = p23.getValues()[0];
                 float p23Y = p23.getValues()[1];
                 res = tesselateTriangle(p1X, p1Y, p2X, p2Y, p23X, p23Y, height, gdTerrain);
                 tesselateTriangle(p1X, p1Y, p23X, p23Y, p3X, p3Y, height, gdTerrain, Vec3f(res.getValues()[0], 0, res.getValues()[2]));
                 return Vec3f(0,0,0);
-            }else{ //only if triangle is small enough, create geometry for it
+            } else { //only if triangle is small enough, create geometry for it
 
                 gdTerrain->norms->addValue(Vec3f(0, 1, 0));
                 gdTerrain->pos->addValue(Vec3f(p1X, this->mapCoordinator->getElevation(p1X,p1Y) + height, p1Y)); // + getHight(p1.GetX(), p1.GetY())
@@ -269,12 +262,9 @@ namespace realworld {
             return Vec3f(0,0,0);
         }
 
-
         VRGeometry* makeTerrainGeometry(Terrain* ter, TerrainMaterial* terrainMat) {
             GeometryData* gdTerrain = new GeometryData();
-
             addTerrain(ter, gdTerrain, terrainMat->height);
-
             VRGeometry* geomTerrain = new VRGeometry(terrainMat->v);
 
             geomTerrain->create(GL_TRIANGLES, gdTerrain->pos, gdTerrain->norms, gdTerrain->inds, gdTerrain->texs);

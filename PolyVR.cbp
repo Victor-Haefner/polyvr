@@ -225,6 +225,7 @@
 		<Unit filename="src/addons/Engineering/CSG/CGALTypedefs.h" />
 		<Unit filename="src/addons/Engineering/CSG/CSGGeometry.cpp" />
 		<Unit filename="src/addons/Engineering/CSG/CSGGeometry.h" />
+		<Unit filename="src/addons/Engineering/CSG/CSGGeometryAlgorithms.cpp" />
 		<Unit filename="src/addons/Engineering/CSG/Octree/Octree.h" />
 		<Unit filename="src/addons/Engineering/CSG/PolyhedronBuilder.h" />
 		<Unit filename="src/addons/Engineering/CSG/VRPyCSG.cpp" />
@@ -309,6 +310,7 @@
 		<Unit filename="src/addons/RealWorld/OSM/OSMWay.h" />
 		<Unit filename="src/addons/RealWorld/RealWorld.cpp" />
 		<Unit filename="src/addons/RealWorld/RealWorld.h" />
+		<Unit filename="src/addons/RealWorld/StreetAlgos.cpp" />
 		<Unit filename="src/addons/RealWorld/StreetAlgos.h" />
 		<Unit filename="src/addons/RealWorld/StreetBorder.h" />
 		<Unit filename="src/addons/RealWorld/TestMover.h" />

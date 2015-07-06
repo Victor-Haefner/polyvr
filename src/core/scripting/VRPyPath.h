@@ -21,6 +21,7 @@ struct VRPyPath : VRPyBaseT<OSG::path> {
     static PyObject* getDirections(VRPyPath* self);
     static PyObject* getUpVectors(VRPyPath* self);
     static PyObject* getColors(VRPyPath* self);
+    static PyObject* getPoints(VRPyPath* self);
 };
 
 #endif // VRPyPath_H_INCLUDED

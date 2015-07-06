@@ -225,6 +225,12 @@ vector<string> VRPhysics::getPhysicsShapes() {
     return shapes;
 }
 
+void VRPhysics::setCenterOfMass(OSG::Vec3f com) {
+    CoMOffset = com;
+    comType = "custom";
+    update();
+}
+
 void VRPhysics::update() {
     OSG::VRScene* scene = OSG::VRSceneManager::getCurrent();
     if (scene == 0) return;
@@ -295,6 +301,7 @@ void VRPhysics::update() {
     }
 
     CoMOffset = OSG::Vec3f(0,0,0);
+    if (comType == "custom") CoMOffset = CoMOffset_custom;
     if (physicsShape == "Box") shape = getBoxShape();
     if (physicsShape == "Sphere") shape = getSphereShape();
     if (physicsShape == "Convex") shape = getConvexShape(CoMOffset);
@@ -467,9 +474,10 @@ btCollisionShape* VRPhysics::getConvexShape(OSG::Vec3f& mc) {
     OSG::Matrix m;
     OSG::Matrix M = vr_obj->getWorldMatrix();
     M.invert();
-    mc = OSG::Vec3f(); // center of mass
     vector<OSG::Vec3f> points;
     vector<OSG::VRObject*> geos = vr_obj->getObjectListByType("Geometry");
+
+    if (comType == "geometric") mc = OSG::Vec3f(); // center of mass
 	for (auto g : geos) {
         OSG::VRGeometry* geo = (OSG::VRGeometry*)g;
         if (geo == 0) continue;
@@ -488,11 +496,11 @@ btCollisionShape* VRPhysics::getConvexShape(OSG::Vec3f& mc) {
             if (geo != vr_obj) m.mult(p,p);
             for (int i=0; i<3; i++) p[i] *= scale[i];
             points.push_back(p);
-            mc += OSG::Vec3f(p);
+            if (comType == "geometric") mc += OSG::Vec3f(p);
         }
     }
-    // displace around center of mass (approx. geom center)
-    mc *= 1.0/points.size();
+
+    if (comType == "geometric") mc *= 1.0/points.size(); // displace around center of mass (approx. geom center)
 
     btConvexHullShape* shape = new btConvexHullShape();
     for (OSG::Vec3f& p : points) shape->addPoint(btVector3(p[0]-mc[0], p[1]-mc[1], p[2]-mc[2]));

@@ -51,11 +51,7 @@ namespace realworld {
         static pair<bool, Vec2f> lineIntersectionPoint(Vec2f startLineA, Vec2f dirLineA, Vec2f startLineB, Vec2f dirLineB) {
             pair<bool, float> s = lineIntersection(startLineA, dirLineA, startLineB, dirLineB);
             if (!s.first) return make_pair(false, Vec2f(0,0));
-
-            return make_pair(true,
-                    Vec2f(
-                    startLineA.getValues()[0] + (s.second * dirLineA.getValues()[0]),
-                    startLineA.getValues()[1] + (s.second * dirLineA.getValues()[1])));
+            return make_pair(true, startLineA + dirLineA*s.second);
         }
 
         static vector<Vec2WithId*> orderCW(vector<Vec2WithId*> points, Vec2f center) {

@@ -66,7 +66,7 @@ void RealWorld::enableModule(string mod) {
     if (mod == "Streets") mapManager->addModule(new ModuleStreets(mapDB, mapCoordinator, texManager));
     if (mod == "Buildings") mapManager->addModule(new ModuleBuildings(mapDB, mapCoordinator, texManager));
     if (mod == "Walls") mapManager->addModule(new ModuleWalls(mapDB, mapCoordinator, texManager));
-    if (mod == "Topology") mapManager->addModule(new ModuleTerrain(mapDB, mapCoordinator, texManager));
+    if (mod == "Terrain") mapManager->addModule(new ModuleTerrain(mapDB, mapCoordinator, texManager));
     if (mod == "Trees") mapManager->addModule(new ModuleTree(mapDB, mapCoordinator, texManager));
     if (mod == "Traffic") {
         auto tsim = new ModuleTraffic(mapDB, mapCoordinator, texManager);

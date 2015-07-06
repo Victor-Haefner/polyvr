@@ -72,6 +72,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setFrom", (PyCFunction)VRPyTransform::setFrom, METH_VARARGS, "Set the object's from vector" },
     {"setAt", (PyCFunction)VRPyTransform::setAt, METH_VARARGS, "Set the object's at vector" },
     {"setDir", (PyCFunction)VRPyTransform::setDir, METH_VARARGS, "Set the object's dir vector" },
+    {"setEuler", (PyCFunction)VRPyTransform::setEuler, METH_VARARGS, "Set the object's orientation using Euler angles - setEuler(x,y,z)" },
     {"setUp", (PyCFunction)VRPyTransform::setUp, METH_VARARGS, "Set the object's up vector" },
     {"setScale", (PyCFunction)VRPyTransform::setScale, METH_VARARGS, "Set the object's scale vector" },
     {"setPickable", (PyCFunction)VRPyTransform::setPickable, METH_VARARGS, "Set the object pickable - setPickable(True/False)" },
@@ -104,9 +105,22 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setGravity", (PyCFunction)VRPyTransform::setGravity, METH_VARARGS, "set Gravity (Vector) of given physicalized object" },
     {"getConstraintAngleWith", (PyCFunction)VRPyTransform::getConstraintAngleWith, METH_VARARGS, "return the relative rotation Angles/position diffs (Vector3) to the given constraint partner (if there is one, otherwise return (0.0,0.0,0.0)) example: transform.getConstraintAngleWith(othertransform, 0) returns rotationAngles  (0:rotation , 1:position)"  },
     {"setDamping", (PyCFunction)VRPyTransform::setDamping, METH_VARARGS, "sets the damping of this object. 1st param is the linear, 2nd the angular damping. e.g. physicalizedObject.setDamping(0.4,0.5)"  },
-    {"applyChange", (PyCFunction)VRPyTransform::applyChange, METH_VARARGS, "Apply all changes"  },
+    {"applyChange", (PyCFunction)VRPyTransform::applyChange, METH_NOARGS, "Apply all changes"  },
+    {"setCenterOfMass", (PyCFunction)VRPyTransform::setCenterOfMass, METH_VARARGS, "Set a custom center of mass - setCenterOfMass([x,y,z])"  },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyTransform::setEuler(VRPyTransform* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setEuler, Object is invalid"); return NULL; }
+    self->obj->setEuler(parseVec3f(args));
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyTransform::setCenterOfMass(VRPyTransform* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setCenterOfMass, Object is invalid"); return NULL; }
+    self->obj->getPhysics()->setCenterOfMass(parseVec3f(args));
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyTransform::applyChange(VRPyTransform* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::applyChange, Object is invalid"); return NULL; }

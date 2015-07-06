@@ -40,7 +40,15 @@ class VRAnimation : public VRName {
         template<typename T>
         VRAnimation(float _duration, float _offset, VRFunction<T>* _fkt, T _start, T _end, bool _loop);
 
-        void start();
+        void setSimpleCallback(VRFunction<float>* fkt, float _duration);
+
+        void setLoop(bool b);
+        bool getLoop();
+
+        void setDuration(float t);
+        float getDuration();
+
+        void start(float offset = 0);
         void stop();
         bool isActive();
 

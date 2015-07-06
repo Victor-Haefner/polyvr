@@ -58,6 +58,7 @@ class path {
         float getLength();
 
         void update();
+        void clear();
 };
 
 OSG_END_NAMESPACE;

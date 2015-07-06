@@ -4,52 +4,16 @@
 #include <GL/gl.h>
 #include <GL/glut.h>
 #include "core/objects/geometry/VRPhysics.h"
+#include "core/objects/material/VRMaterial.h"
 
 using namespace OSG;
 using namespace std;
 
 namespace realworld {
 
-    class ModuleFloor: public BaseModule {
-    public:
-        ModuleFloor(MapCoordinator* mapCoordinator, TextureManager* texManager) : BaseModule(mapCoordinator, texManager) {
-            // create material
-            matSubquad = SimpleMaterial::create();
-            //matSubquad->setDiffuse(Color3f(1, 1, 1));
-            Config::createPhongShader(matSubquad);
-            matSubquad->addChunk(texManager->texSubQuad);
-        }
-
-        virtual string getName() { return "ModuleFloor"; }
-
-        virtual void loadBbox(AreaBoundingBox* bbox) {
-            Vec2f min = this->mapCoordinator->realToWorld(bbox->min);
-            Vec2f max = this->mapCoordinator->realToWorld(bbox->max);
-
-            VRGeometry* geom = makeSubQuadGeometry(min, max);
-            geom->setMaterial(matSubquad);
-            root->addChild(geom);
-            //this->scene->physicalize(geom, true);
-
-            meshes[bbox->str] = geom;
-        }
-
-        virtual void unloadBbox(AreaBoundingBox* bbox) {
-            VRGeometry* geom = meshes[bbox->str];
-            meshes.erase(bbox->str);
-            //this->scene->removePhysics(geom);
-            delete geom;
-        }
-
-        void physicalize(bool b) {
-            for (auto mesh : meshes) {
-                mesh.second->getPhysics()->setPhysicalized(true);
-                mesh.second->getPhysics()->setShape("Concave");
-            }
-        }
-
+class ModuleFloor: public BaseModule {
     private:
-        SimpleMaterialRecPtr matSubquad;
+        VRMaterial* matSubquad;
 
         map<string, VRGeometry*> meshes;
         map<string, VRGeometry*>::iterator mesh_itr;
@@ -124,6 +88,54 @@ namespace realworld {
             VRGeometry* geom = new VRGeometry("Subquad");
             geom->create(GL_TRIANGLES, pos, norms, inds, texs);
             return geom;
+        }
+
+    public:
+        ModuleFloor(MapCoordinator* mapCoordinator, TextureManager* texManager) : BaseModule(mapCoordinator, texManager) {
+            // create material
+            matSubquad = new VRMaterial("ground");
+            matSubquad->setTexture("world/textures/asphalt.jpg");
+            matSubquad->setAmbient(Color3f(0.5, 0.5, 0.5));
+            matSubquad->setDiffuse(Color3f(0.5, 0.6, 0.1));
+            matSubquad->setSpecular(Color3f(0.2, 0.2, 0.2));
+            string wdir = VRSceneManager::get()->getOriginalWorkdir();
+            matSubquad->readVertexShader(wdir+"/shader/TexturePhong/phong.vp");
+            matSubquad->readFragmentShader(wdir+"/shader/TexturePhong/phong.fp");
+            matSubquad->setMagMinFilter("GL_LINEAR", "GL_NEAREST_MIPMAP_NEAREST");
+            matSubquad->setZOffset(1,1);
+
+            //Config::createPhongShader(matSubquad);
+            //matSubquad->addChunk(texManager->texSubQuad);
+        }
+
+        virtual string getName() { return "ModuleFloor"; }
+
+        virtual void loadBbox(AreaBoundingBox* bbox) {
+            Vec2f min = this->mapCoordinator->realToWorld(bbox->min);
+            Vec2f max = this->mapCoordinator->realToWorld(bbox->max);
+
+            VRGeometry* geom = makeSubQuadGeometry(min, max);
+            geom->setMaterial(matSubquad);
+            root->addChild(geom);
+            //this->scene->physicalize(geom, true);
+
+            meshes[bbox->str] = geom;
+            physicalize(physicalized);
+        }
+
+        virtual void unloadBbox(AreaBoundingBox* bbox) {
+            VRGeometry* geom = meshes[bbox->str];
+            meshes.erase(bbox->str);
+            //this->scene->removePhysics(geom);
+            delete geom;
+        }
+
+        void physicalize(bool b) {
+            physicalized = b;
+            for (auto mesh : meshes) {
+                mesh.second->getPhysics()->setPhysicalized(b);
+                mesh.second->getPhysics()->setShape("Concave");
+            }
         }
     };
 }

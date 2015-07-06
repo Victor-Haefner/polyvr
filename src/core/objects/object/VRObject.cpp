@@ -259,6 +259,15 @@ VRObject* VRObject::find(string Name) {
     return 0;
 }
 
+vector<VRObject*> VRObject::findAll(string Name, vector<VRObject*> res ) {
+    if (base_name == Name) res.push_back(this);
+    for (auto c : children) {
+        if (c == this) continue; // workaround! TODO: find why this can happn
+        res = c->findAll(Name, res);
+    }
+    return res;
+}
+
 VRObject* VRObject::find(int id) {
     if (ID == -1) return 0;
     if (ID == id) return this;
