@@ -17,7 +17,8 @@ class CSGGeometry : public VRGeometry {
         string operation = "unite";
         bool editMode = true;
         Matrix oldWorldTrans;
-        float THRESHOLD = 1e-4;
+        float thresholdL = 1e-4;
+        float thresholdA = 1e-8;
         Octree* oct = 0;
 
     protected:
@@ -42,12 +43,17 @@ class CSGGeometry : public VRGeometry {
         CSGGeometry(std::string name);
         virtual ~CSGGeometry();
 
+        void setThreshold(float tL, float tA);
+        Vec2f getThreshold();
+
         bool setEditMode(bool b);
         bool getEditMode();
 
         void setOperation(string op);
         string getOperation();
         static vector<string> getOperations();
+
+        void markEdges(vector<Vec2i> edges);
 };
 
 OSG_END_NAMESPACE;

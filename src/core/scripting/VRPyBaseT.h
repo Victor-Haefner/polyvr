@@ -30,6 +30,22 @@ VRFunction<T>* VRPyBase::parseCallback(PyObject* args) {
     return new VRFunction<T>( "pyExecCall", boost::bind(VRPyBase::execPyCall<T>, pyFkt, pArgs, _1) );
 }
 
+template <class T, class t>
+bool VRPyBase::pyListToVector(PyObject* o, T& vec) {
+    PyObject *pi, *pj;
+    t tmp;
+    Py_ssize_t N = PyList_Size(o);
+
+    for (Py_ssize_t i=0; i<N; i++) {
+        pi = PyList_GetItem(o, i);
+        for (Py_ssize_t j=0; j<PyList_Size(pi); j++) {
+            pj = PyList_GetItem(pi, j);
+            tmp[j] = PyFloat_AsDouble(pj);
+        }
+        vec.push_back(tmp);
+    }
+}
+
 template<class T>
 PyObject* VRPyBaseT<T>::fromPtr(T* obj) {
     if (obj == 0) Py_RETURN_NONE;

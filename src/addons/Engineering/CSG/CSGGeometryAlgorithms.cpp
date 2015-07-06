@@ -13,37 +13,65 @@
 using namespace std;
 using namespace OSG;
 
+void CSGGeometry::setThreshold(float tL, float tA) { thresholdL = tL; thresholdA = tA; }
+Vec2f CSGGeometry::getThreshold() { return Vec2f(thresholdL, thresholdA); }
+
+float calcArea(Vec3f p1, Vec3f p2, Vec3f p3) {
+    Vec3f v1 = p2-p1;
+    Vec3f v2 = p3-p1;
+    return v1.cross(v2).length()*0.5;
+}
+
+/*void removeFlatTriangles() {
+    ;
+}*/
+
+
  // Converts geometry to a polyhedron && applies the geometry node's world transform to the polyhedron.
 // OpenSG geometry data isn't transformed itself but has an associated transform core. Both are unified for CGAL.
 CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryRecPtr geometry, Matrix worldTransform, bool& success) {
 	TriangleIterator it;
 	auto gpos = geometry->getPositions();
 
-	// fix flat triangles (all three points aligned)
-	for (it = TriangleIterator(geometry); !it.isAtEnd() ;++it) {
-        vector<Pnt3f> p(3);
-        vector<Vec3f> v(3);
-        Vec3i vi = Vec3i(it.getPositionIndex(0), it.getPositionIndex(1), it.getPositionIndex(2));
-        for (int i=0; i<3; i++) p[i] = it.getPosition(i);
-        v[0] = p[2]-p[1]; v[1] = p[2]-p[0]; v[2] = p[1]-p[0];
-        float A = (v[2].cross(v[1])).length();
-        if (A < 1e-16) { // small area, flat triangle?
-            cout << "small area " << A << endl;
-            for (int i=0; i<3; i++) cout << " pi " << p[i] << " vi " << vi[i] << " L " << v[i].squareLength() << endl;
-            if (v[0].squareLength() < 1e-8) continue; // check if two points close, then ignore
-            if (v[1].squareLength() < 1e-8) continue;
-            if (v[2].squareLength() < 1e-8) continue;
+	float THRESHOLD2 = thresholdL*thresholdL;
 
-            int im = 0;
-            for (int i=1; i<3; i++) if (v[i].squareLength() > v[im].squareLength()) im = i;
-            int j = (im+1)%3;
-            cout << "set p[" << j << "] = " << p[j] << " with index i[" << im << "] = " << vi[im] << endl;
-            gpos->setValue(p[j], vi[im]);
+	// TODO: first merge all points!
+	//       second fix flat triangles
+
+	// fix flat triangles (all three points aligned)
+	int NA = 0;
+	do {
+        NA = 0;
+        for (it = TriangleIterator(geometry); !it.isAtEnd() ;++it) {
+            vector<Pnt3f> p(3);
+            vector<Vec3f> v(3);
+            Vec3i vi = Vec3i(it.getPositionIndex(0), it.getPositionIndex(1), it.getPositionIndex(2));
             for (int i=0; i<3; i++) p[i] = it.getPosition(i);
-            cout << " result: " << endl;
-            for (int i=0; i<3; i++) cout << "  pi " << p[i] << endl;
+            v[0] = p[2]-p[1]; v[1] = p[2]-p[0]; v[2] = p[1]-p[0];
+            float A = (v[2].cross(v[1])).length();
+            if (A < thresholdA) { // small area, flat triangle?
+                //cout << "small area " << A << endl;
+                //for (int i=0; i<3; i++) cout << " pi " << p[i] << " vi " << vi[i] << " L " << v[i].squareLength() << endl;
+                if (v[0].squareLength() == 0) continue; // check if two points close, then ignore
+                if (v[1].squareLength() == 0) continue;
+                if (v[2].squareLength() == 0) continue;
+
+                int imax = 0; int imax2 = 0; // point to move, point to move to
+                for (int i=1; i<3; i++) if (v[i].squareLength() > v[imax].squareLength()) imax = i;
+                if (imax2 == imax) imax2++;
+                for (int i=1; i<3; i++) if (v[i].squareLength() > v[imax2].squareLength() && i != imax) imax2 = i;
+
+                int j = imax2;//(im+1)%3;
+                cout << "set p[" << j << "] = " << p[j] << " with index i[" << imax << "] = " << vi[imax] << endl;
+                gpos->setValue(p[j], vi[imax]);
+                NA++;
+                for (int i=0; i<3; i++) p[i] = it.getPosition(i);
+                //cout << " result: " << endl;
+                //for (int i=0; i<3; i++) cout << "  pi " << p[i] << endl;
+            }
         }
-	}
+        cout << "fixed " << NA << " flat triangles\n";
+	} while(NA);
 
     vector<CGAL::Point> positions;
 	vector<size_t> indices;
@@ -73,6 +101,20 @@ CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryRecPtr geometry, Matrix worl
         //cout << "add triangle " << IDs[0] << " " << IDs[1] << " " << IDs[2] << endl;
 		if (IDs[0] == IDs[1] || IDs[0] == IDs[2] || IDs[1] == IDs[2]) continue; // ignore flat triangles
 
+		//if (calcArea(pos[IDs[0]], pos[IDs[1]], pos[IDs[2]]) < thresholdA) continue; // induces holes
+		if (calcArea(pos[IDs[0]], pos[IDs[1]], pos[IDs[2]]) == 0) continue;
+
+		bool verbose = false;
+		vector<size_t> debIDs;
+		debIDs.push_back(754);
+		debIDs.push_back(755);
+		for (int i : IDs) for (int j : debIDs) if (i == j) verbose = true;
+		if (verbose) {
+            cout << "IDs " << IDs[0] << " " << IDs[1] << " " << IDs[2] << endl;
+            cout << " pos " << pos[IDs[0]] << "   " << pos[IDs[1]] << "   " << pos[IDs[2]] << endl;
+            cout << " A " << calcArea(pos[IDs[0]], pos[IDs[1]], pos[IDs[2]]) << endl;
+		}
+
 		for (int i=0; i<3; i++) indices.push_back(IDs[i]);
 		for (int i=0; i<3; i++) inds.push_back(IDs[i]);
 	}
@@ -80,7 +122,7 @@ CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryRecPtr geometry, Matrix worl
 	// Cleanup
 	for (void* o : oct->getData()) delete (size_t*)o;
 	delete oct;
-	oct = new Octree(THRESHOLD);
+	oct = new Octree(thresholdL);
 
 	// Construct the polyhedron from raw data
     success = true;
@@ -102,6 +144,17 @@ CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryRecPtr geometry, Matrix worl
 	return result;
 }
 
+void CSGGeometry::markEdges(vector<Vec2i> edges) {
+    int N = getMesh()->getPositions()->size();
+    GeoColor3fPropertyRecPtr cols = GeoColor3fProperty::create();
+    cols->resize(N);
+    for (int i=0; i<N; i++) cols->setValue(Color3f(1,1,1),i);
+    for (auto e : edges) {
+        cols->setValue(Color3f(1,0,0),e[0]);
+        cols->setValue(Color3f(1,0,0),e[1]);
+    }
+    setColors(cols);
+}
 
 bool CSGGeometry::disableEditMode() {
 	if (children.size() != 2) { cout << "CSGGeometry: Warning: editMode disabled with less than 2 children. Doing nothing.\n"; return false; }
