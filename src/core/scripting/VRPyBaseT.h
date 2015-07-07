@@ -44,6 +44,7 @@ bool VRPyBase::pyListToVector(PyObject* o, T& vec) {
         }
         vec.push_back(tmp);
     }
+    return true;
 }
 
 template<class T>

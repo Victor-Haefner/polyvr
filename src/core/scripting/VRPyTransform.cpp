@@ -81,7 +81,10 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setRotationConstraints", (PyCFunction)VRPyTransform::setRotationConstraints, METH_VARARGS, "Constraint the object's rotation - setRotationConstraints(xi, yi, zi)" },
     {"physicalize", (PyCFunction)VRPyTransform::physicalize, METH_VARARGS, "physicalize subtree - physicalize( physicalized , dynamic , concave )" },
     {"setGhost", (PyCFunction)VRPyTransform::setGhost, METH_VARARGS, "Set the physics object to be a ghost object - setGhost(bool)" },
-    {"attach", (PyCFunction)VRPyTransform::setPhysicsConstraintTo, METH_VARARGS, "create a constraint between this object and another - attach( Transform , Constraint, Spring ), or if this is soft, the args have to be: RigidBody other, int nodeIndex, localpivotX,localpivotY,localpivotZ, bool ignoreCollision, float influenceVRPyTransform *t;" },
+    {"attach", (PyCFunction)VRPyTransform::setPhysicsConstraintTo, METH_VARARGS,
+        "create a constraint between this object and another - \n"
+        " For rigid bodies: attach( Transform , VRConstraint constraint, VRConstraint spring )\n"
+        " For soft bodies: attach( Transform, int nodeIndex, local pivot [x,y,z], bool ignoreCollision, float influence" },
     {"detach", (PyCFunction)VRPyTransform::deletePhysicsConstraints, METH_VARARGS, "delete constraint made to this transform with given transform through attach(toTransform). Example call : trans1.detach(trans2)" },
     {"setMass", (PyCFunction)VRPyTransform::setMass, METH_VARARGS, "Set the mass of the physics object" },
     {"setCollisionMargin", (PyCFunction)VRPyTransform::setCollisionMargin, METH_VARARGS, "Set the collision margin of the physics object" },
@@ -348,11 +351,9 @@ PyObject* VRPyTransform::setPhysicsConstraintTo(VRPyTransform* self, PyObject *a
         int nodeIndex;
         int ignoreCollision;
         float influence;
-        float localPivX;
-        float localPivY;
-        float localPivZ;
-        if (! PyArg_ParseTuple(args, "Oifffif", &t, &nodeIndex,&localPivX,&localPivY,&localPivZ, &ignoreCollision, &influence)) return NULL;
-        self->obj->getPhysics()->setConstraint(t->obj->getPhysics(),nodeIndex,OSG::Vec3f(localPivX,localPivY,localPivZ),ignoreCollision,influence);
+        PyObject* localPiv;
+        if (! PyArg_ParseTuple(args, "OiOif", &t, &nodeIndex, &localPiv, &ignoreCollision, &influence)) return NULL;
+        self->obj->getPhysics()->setConstraint(t->obj->getPhysics(), nodeIndex, parseVec3fList(localPiv), ignoreCollision, influence);
     }
     else {
         VRPyTransform *t; VRPyConstraint *c; VRPyConstraint *cs;
