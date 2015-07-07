@@ -76,7 +76,8 @@ class VRPhysics : public OSG::VRStorage {
         btCollisionShape* getConcaveShape();
 
         //btSoftBody*       createConvex();
-        btSoftBody* createPatch();
+        btSoftBody* createCloth();
+        btSoftBody* createRope();
         boost::recursive_mutex& mtx();
         void update();
 

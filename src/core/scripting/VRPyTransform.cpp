@@ -80,7 +80,6 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setAxisConstraints", (PyCFunction)VRPyTransform::setAxisConstraints, METH_VARARGS, "Constraint the object on an axis - TODO -> to test, may work" },
     {"setRotationConstraints", (PyCFunction)VRPyTransform::setRotationConstraints, METH_VARARGS, "Constraint the object's rotation - setRotationConstraints(xi, yi, zi)" },
     {"physicalize", (PyCFunction)VRPyTransform::physicalize, METH_VARARGS, "physicalize subtree - physicalize( physicalized , dynamic , concave )" },
-    {"makePatch", (PyCFunction)VRPyTransform::makePatch, METH_NOARGS, "creates a Patch and sets it as this transform's child" },
     {"setGhost", (PyCFunction)VRPyTransform::setGhost, METH_VARARGS, "Set the physics object to be a ghost object - setGhost(bool)" },
     {"attach", (PyCFunction)VRPyTransform::setPhysicsConstraintTo, METH_VARARGS, "create a constraint between this object and another - attach( Transform , Constraint, Spring ), or if this is soft, the args have to be: RigidBody other, int nodeIndex, localpivotX,localpivotY,localpivotZ, bool ignoreCollision, float influenceVRPyTransform *t;" },
     {"detach", (PyCFunction)VRPyTransform::deletePhysicsConstraints, METH_VARARGS, "delete constraint made to this transform with given transform through attach(toTransform). Example call : trans1.detach(trans2)" },
@@ -339,15 +338,8 @@ PyObject* VRPyTransform::physicalize(VRPyTransform* self, PyObject *args) {
     geo->getPhysics()->setPhysicalized(b1);
     Py_RETURN_TRUE;
 }
-PyObject* VRPyTransform::makePatch(VRPyTransform* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::makePatch: C Object is invalid"); return NULL; }
-    OSG::VRTransform* geo = (OSG::VRTransform*) self->obj;
-    geo->getPhysics()->setDynamic(true);
-    geo->getPhysics()->setShape("Patch");
-    geo->getPhysics()->setSoft(true);
-    geo->getPhysics()->setPhysicalized(true);
-    Py_RETURN_TRUE;
-}
+
+
 
 PyObject* VRPyTransform::setPhysicsConstraintTo(VRPyTransform* self, PyObject *args) {
     //if this is soft, the args have to be: RigidBody other, int nodeIndex, vec3 localpivot, bool ignoreCollision, float influence

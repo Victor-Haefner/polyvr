@@ -33,7 +33,6 @@ struct VRPyTransform : VRPyBaseT<OSG::VRTransform> {
 
     static PyObject* duplicate(VRPyTransform* self);
     static PyObject* physicalize(VRPyTransform* self, PyObject *args);
-    static PyObject* makePatch(VRPyTransform* self);
     static PyObject* setGhost(VRPyTransform* self, PyObject *args);
     static PyObject* setPhysicsConstraintTo(VRPyTransform* self, PyObject *args);
     static PyObject* setMass(VRPyTransform* self, PyObject *args);

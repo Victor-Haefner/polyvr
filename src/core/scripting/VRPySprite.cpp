@@ -1,6 +1,7 @@
 #include "VRPySprite.h"
 #include "VRPyTransform.h"
 #include "VRPyBaseT.h"
+#include "core/objects/geometry/VRPhysics.h"
 
 template<> PyTypeObject VRPyBaseT<OSG::VRSprite>::type = {
     PyObject_HEAD_INIT(NULL)
@@ -53,6 +54,7 @@ PyMethodDef VRPySprite::methods[] = {
     {"setText", (PyCFunction)VRPySprite::setText, METH_VARARGS, "Set label text from sprite." },
     {"setSize", (PyCFunction)VRPySprite::setSize, METH_VARARGS, "Set sprite size." },
     {"webOpen", (PyCFunction)VRPySprite::webOpen, METH_VARARGS, "Open and display a website - webOpen(str uri, int width, flt ratio)" },
+    {"convertToCloth", (PyCFunction)VRPySprite::convertToCloth, METH_VARARGS, "convert this Sprite to cloth (softbody)" },
     {NULL}  /* Sentinel */
 };
 
@@ -93,3 +95,13 @@ PyObject* VRPySprite::setText(VRPySprite* self, PyObject* args) {
 
     Py_RETURN_TRUE;
 }
+
+PyObject* VRPySprite::convertToCloth(VRPySprite* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::convertToCloth: C Object is invalid"); return NULL; }
+    self->obj->getPhysics()->setDynamic(true);
+    self->obj->getPhysics()->setShape("Cloth");
+    self->obj->getPhysics()->setSoft(true);
+    self->obj->getPhysics()->setPhysicalized(true);
+    Py_RETURN_TRUE;
+}
+
