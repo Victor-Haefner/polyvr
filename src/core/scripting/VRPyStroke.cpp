@@ -2,6 +2,7 @@
 #include "VRPyPath.h"
 #include "VRPyGeometry.h"
 #include "VRPyBaseT.h"
+#include "core/objects/geometry/VRPhysics.h"
 
 template<> PyTypeObject VRPyBaseT<OSG::VRStroke>::type = {
     PyObject_HEAD_INIT(NULL)
@@ -57,6 +58,7 @@ PyMethodDef VRPyStroke::methods[] = {
     {"strokeProfile", (PyCFunction)VRPyStroke::strokeProfile, METH_VARARGS, "Stroke along path using a profile" },
     {"strokeStrew", (PyCFunction)VRPyStroke::strokeStrew, METH_VARARGS, "Stew objects along path" },
     {"update", (PyCFunction)VRPyStroke::update, METH_NOARGS, "Update stroke" },
+    {"convertToRope", (PyCFunction)VRPyStroke::convertToRope, METH_NOARGS, "converts this Stroke  to a rope (softbody)" },
     //{"getGeometry", (PyCFunction)VRPyStroke::getGeometry, METH_NOARGS, "Return the stroke's geometry" },
     {NULL}  /* Sentinel */
 };
@@ -158,3 +160,11 @@ PyObject* VRPyStroke::update(VRPyStroke* self) {
     Py_RETURN_TRUE;
 }
 
+PyObject* VRPyStroke::convertToRope(VRPyStroke* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyStroke::convertToRope: C Object is invalid"); return NULL; }
+    self->obj->getPhysics()->setDynamic(true);
+    self->obj->getPhysics()->setShape("Rope");
+    self->obj->getPhysics()->setSoft(true);
+    self->obj->getPhysics()->setPhysicalized(true);
+    Py_RETURN_TRUE;
+}

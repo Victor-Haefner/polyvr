@@ -11,6 +11,7 @@
 #include <BulletSoftBody/btSoftRigidDynamicsWorld.h>
 
 
+#include "core/objects/geometry/VRPrimitive.h"
 
 
 
@@ -73,6 +74,13 @@ VRPhysics::~VRPhysics() {
         if (s) s->unphysicalize(vr_obj);
         if (world) world->removeRigidBody(body);
         delete body;
+    }
+
+    if (soft_body) {
+        auto s = OSG::VRSceneManager::getCurrent();
+        if (s) s->unphysicalize(vr_obj);
+        if (world) world->removeCollisionObject(soft_body);
+        delete soft_body;
     }
 
     if (shape) delete shape;
@@ -145,6 +153,7 @@ btCollisionObject* VRPhysics::getCollisionObject() {
      if(soft)  return (btCollisionObject*)soft_body;
      else return body;
 }
+
 vector<VRCollision> VRPhysics::getCollisions() {
     Lock lock(mtx());
     vector<VRCollision> res;
@@ -290,17 +299,14 @@ void VRPhysics::update() {
 
 
     if(soft) {
-        //if (physicsShape == "Rope") soft_body = getRope();
-        //if (physicsShape == "Convex")
-        soft_body = createConvex();
-        //if (physicsShape == "Convex") soft_body = getSoftConvex();
-        //if (physicsShape == "Concave") soft_body = getSoftConcave();
+        if(physicsShape == "Cloth") soft_body = createCloth();
+        if(physicsShape == "Rope") soft_body = createRope();
+        if (soft_body == 0) { return; }
         soft_body->setActivationState(activation_mode);
         world->addSoftBody(soft_body,collisionGroup, collisionMask);
         scene->physicalize(vr_obj);
         updateConstraints();
         return;
-
     }
 
     CoMOffset = OSG::Vec3f(0,0,0);
@@ -334,28 +340,72 @@ void VRPhysics::update() {
     updateConstraints();
 }
 
+btSoftBody* VRPhysics::createCloth() {
+    if ( !vr_obj->hasAttachment("geometry") ) { cout << "VRPhysics::createCloth only works on geometries" << endl; return 0; }
+    OSG::VRGeometry* geo = (OSG::VRGeometry*)vr_obj;
+    if ( geo->getPrimitive()->getType() != "Plane") { cout << "VRPhysics::createCloth only works on Plane primitives" << endl; return 0; }
 
-btSoftBody* VRPhysics::createConvex() {
-        vector<btVector3> vertices;
-        vector<OSG::VRObject*> geos = vr_obj->getObjectListByType("Geometry");
-        OSG::Vec3f glblpos = vr_obj->getWorldPosition();
-        btSoftBodyWorldInfo* info = OSG::VRSceneManager::getCurrent()->getSoftBodyWorldInfo();
-        for (unsigned int j=0; j<geos.size(); j++) {
-            OSG::VRGeometry* geo = (OSG::VRGeometry*)geos[j];
-            if (geo == 0) continue;
-            OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->getPositions();
-            //vertices
-            for (unsigned int i = 0; i<pos->size(); i++) {
-                OSG::Vec3f p;
-                pos->getValue(p,i);
-                p += glblpos;
-                vertices.push_back(btVector3(p[0],p[1],p[2]));
-            }
-        }
-        btSoftBody* ret=btSoftBodyHelpers::CreateFromConvexHull(*info,&vertices[0],vertices.size(),false);
-        //ret->generateBendingConstraints(2);
-        return ret;
+    OSG::Matrix m = vr_obj->getMatrix();//get Transformation
+    vr_obj->setOrientation(OSG::Vec3f(0,0,-1),OSG::Vec3f(0,1,0));//set orientation to identity. ugly solution.
+    vr_obj->setWorldPosition(OSG::Vec3f(0.0,0.0,0.0));
+    btSoftBodyWorldInfo* info = OSG::VRSceneManager::getCurrent()->getSoftBodyWorldInfo();
+
+    VRPlane* prim = (VRPlane*)geo->getPrimitive();
+    float nx = prim->Nx;
+    float ny = prim->Ny;
+    float h = prim->height;
+    float w = prim->width;
+
+    OSG::GeoVectorPropertyRecPtr positions = geo->getMesh()->getPositions();
+    vector<btVector3> vertices;
+    vector<btScalar> masses;
+
+    OSG::Pnt3f p;
+    for(int i = 0; i < positions->size();i++) { //add all vertices
+        positions->getValue(p,i);
+        m.mult(p,p);
+        vertices.push_back( toBtVector3(OSG::Vec3f(p)) );
+        masses.push_back(5.0);
+    }
+
+    btVector3* start = &vertices.front();
+    btScalar* startm = &masses.front();
+    btSoftBody* ret = new btSoftBody(info,(int)positions->size(),start,startm);
+
+
+    //nx is segments in polyvr, but we need resolution ( #vertices in x direction) so nx+1 and <= nx
+#define IDX(_x_,_y_)    ((_y_)*(nx+1)+(_x_))
+    /* Create links and faces */
+   for(int iy=0;iy<=ny;++iy) {
+       for(int ix=0;ix<=nx;++ix) {
+           const int       idx=IDX(ix,iy);
+           const bool      mdx=(ix+1)<=nx;
+           const bool      mdy=(iy+1)<=ny;
+           if(mdx) ret->appendLink(idx,IDX(ix+1,iy));
+           if(mdy) ret->appendLink(idx,IDX(ix,iy+1));
+           if(mdx&&mdy) {
+               if((ix+iy)&1) {
+                   ret->appendFace(IDX(ix,iy),IDX(ix+1,iy),IDX(ix+1,iy+1));
+                   ret->appendFace(IDX(ix,iy),IDX(ix+1,iy+1),IDX(ix,iy+1));
+                   ret->appendLink(IDX(ix,iy),IDX(ix+1,iy+1));
+               } else {
+                   ret->appendFace(IDX(ix,iy+1),IDX(ix,iy),IDX(ix+1,iy));
+                   ret->appendFace(IDX(ix,iy+1),IDX(ix+1,iy),IDX(ix+1,iy+1));
+                   ret->appendLink(IDX(ix+1,iy),IDX(ix,iy+1));
+               }
+           }
+       }
+   }
+#undef IDX
+
+    return ret;//return the first and only plane....
 }
+
+
+btSoftBody* VRPhysics::createRope() {
+   return 0;
+}
+
 
 btCollisionShape* VRPhysics::getBoxShape() {
     if (shape_param > 0) return new btBoxShape( btVector3(shape_param, shape_param, shape_param) );
@@ -673,6 +723,14 @@ void VRPhysics::deleteConstraints(VRPhysics* with) {
         Lock lock(mtx());
         world->removeConstraint(joint->btJoint);
     }
+}
+
+
+void  VRPhysics::setConstraint(VRPhysics* p,int nodeIndex,OSG::Vec3f localPivot,bool ignoreCollision,float influence) {
+    if(soft_body==0) return;
+    if(p->body == 0) return;
+    Lock lock(mtx());
+    soft_body->appendAnchor(nodeIndex,p->body,toBtVector3(localPivot),!ignoreCollision,influence);
 }
 
 

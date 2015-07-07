@@ -18,6 +18,10 @@ struct VRPyStroke : VRPyBaseT<OSG::VRStroke> {
     static PyObject* getGeometry(VRPyStroke* self);
 
     static PyObject* update(VRPyStroke* self);
+
+    static PyObject* convertToRope(VRPyStroke* self);
+
+
 };
 
 #endif // VRPyStroke_H_INCLUDED

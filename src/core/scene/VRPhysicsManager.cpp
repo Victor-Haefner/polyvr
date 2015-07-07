@@ -18,6 +18,7 @@
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRVisualLayer.h"
 #include "VRThreadManager.h"
+#include "core/objects/geometry/VRPrimitive.h"
 
 #include <chrono>
 #include <thread>
@@ -51,7 +52,7 @@ VRPhysicsManager::VRPhysicsManager() {
     softBodyWorldInfo =     &(dynamicsWorld->getWorldInfo());
    	softBodyWorldInfo->m_dispatcher = dispatcher;
    	softBodyWorldInfo->m_broadphase = broadphase;
-	softBodyWorldInfo->m_gravity.setValue(0,0,0);
+	softBodyWorldInfo->m_gravity.setValue(0,-10,0);
     softBodyWorldInfo->air_density	= (btScalar)1.2;
     softBodyWorldInfo->water_density	= 0;
     softBodyWorldInfo->water_offset	= 0;
@@ -160,38 +161,77 @@ void VRPhysicsManager::updatePhysObjects() {
 
     //the soft bodies
     btSoftBodyArray arr = dynamicsWorld->getSoftBodyArray();
+    //Patches
+    VRTransform* soft_trans;
+    btSoftBody* patch;
+    for(int i = 0; i < arr.size() ;i++) { //for all soft bodies
+        soft_trans = OSGobjs[arr[i]]; //get the corresponding transform to this soft body
+        if (soft_trans == 0) continue;
+        patch = arr[i]; //the soft body
+        if (soft_trans->getType() == "Sprite") {
+            OSG::VRGeometry* geo = (OSG::VRGeometry*)soft_trans;
+            OSG::VRGeometry* visualgeo = physics_visuals[patch]; //render the visual
 
-    for(int i = 0; i < arr.size() ;i++) {
-        btSoftBody* soft_body = arr[i];
-        if(OSGobjs.count(soft_body) == 1) OSGobjs[soft_body]->updateFromBullet();
+            btSoftBody::tNodeArray&   nodes(patch->m_nodes);
+            btSoftBody::tFaceArray&   faces(patch->m_faces);
+            btSoftBody::tLinkArray&   links(patch->m_links);
+            GeoPnt3fPropertyRecPtr visualpos = GeoPnt3fProperty::create();
+            GeoUInt32PropertyRecPtr visualinds = GeoUInt32Property::create();
+            GeoVec3fPropertyRecPtr visualnorms = GeoVec3fProperty::create();
 
-        //visualization has always to be updated
-        VRGeometry* geo = physics_visuals[soft_body];
-        GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
-        GeoVec3fPropertyRecPtr norms = GeoVec3fProperty::create();
-        GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
-        btSoftBody::tNodeArray&   nodes(soft_body->m_nodes);
-        btSoftBody::tLinkArray&   links(soft_body->m_links);
-        inds->addValue( links[0].m_n[0]-&nodes[0]);
-        //indices
-        for(int j=0;j<links.size();++j)
-        {
-            inds->addValue( int(links[j].m_n[0]-&nodes[0]));
-            inds->addValue( int(links[j].m_n[1]-&nodes[0]));
+            for (unsigned int i = 0; i<nodes.size(); i++) { //go through the nodes and copy positions to mesh positionarray
+                    Vec3f p = VRPhysics::toVec3f(nodes[i].m_x);
+                    OSG::Vec3f tmp;
+                    visualpos->addValue(p);
+                    Vec3f n = VRPhysics::toVec3f(nodes[i].m_n);
+                    visualnorms->addValue( n );
+            }
+
+            for(int j=0;j<faces.size();++j) {
+              btSoftBody::Node*   node_0=faces[j].m_n[0];
+              btSoftBody::Node*   node_1=faces[j].m_n[1];
+              btSoftBody::Node*   node_2=faces[j].m_n[2];
+             const int indices[]={   int(node_0-&nodes[0]),
+                                      int(node_1-&nodes[0]),
+                                      int(node_2-&nodes[0])};
+                visualinds->addValue(indices[0]);
+                visualinds->addValue(indices[1]);
+                visualinds->addValue(indices[2]);
+           }
+            GeoUInt32PropertyRecPtr vtypes = GeoUInt32Property::create();
+            GeoUInt32PropertyRecPtr vlens = GeoUInt32Property::create();
+            vtypes->addValue(GL_TRIANGLES);
+            vlens->addValue(faces.size());
+            vtypes->addValue(GL_LINES);
+            vlens->addValue(links.size());
+
+            visualgeo->setType(GL_TRIANGLES    );
+            visualgeo->setPositions(visualpos);
+            visualgeo->setIndices(visualinds);
+            visualgeo->setNormals(visualnorms);
+
+            if(geo->getPrimitive()->getType() == "Plane") { //only for plane soft bodies : directly apply nodes to vertices of geometry model
+                VRPlane* prim = (VRPlane*)geo->getPrimitive();
+                GeoPnt3fPropertyRecPtr positions = GeoPnt3fProperty::create();
+                GeoVec3fPropertyRecPtr norms = GeoVec3fProperty::create();
+                GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
+                for (unsigned int i = 0; i<nodes.size(); i++) { //go through the nodes and copy positions to mesh positionarray
+                    Vec3f p = VRPhysics::toVec3f(nodes[i].m_x);
+                    positions->addValue(p);
+                    Vec3f n = VRPhysics::toVec3f(nodes[i].m_n);
+                    norms->addValue( n );
+                }
+                geo->setPositions(positions);
+                geo->setNormals(norms);
+           }
+
+        /*   if(soft_trans->getPhysics()->getShape() == "Rope") { //only for Ropes
+
+            }*/
+
         }
-        //vertices
-        for(int j=0;j<nodes.size();++j)
-        {
-            Vec3f p = VRPhysics::toVec3f(nodes[j].m_x);
-            pos->addValue(p);
-            p.normalize();
-            norms->addValue( p );
-        }
-        geo->setType(GL_TRIANGLES);
-        geo->setPositions(pos);
-        geo->setNormals(norms);
-        geo->setIndices(inds);
     }
+
 
 
 
