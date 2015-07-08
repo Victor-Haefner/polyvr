@@ -51,7 +51,7 @@ bool VRAnimation::update(float current_time) {
     else t = 2;
 
     if (t > 1) {
-        if (loop) start();
+        if (loop) start(offset);
         else {
             stop();
             interp->update(1);
