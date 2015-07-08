@@ -109,8 +109,23 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setDamping", (PyCFunction)VRPyTransform::setDamping, METH_VARARGS, "sets the damping of this object. 1st param is the linear, 2nd the angular damping. e.g. physicalizedObject.setDamping(0.4,0.5)"  },
     {"applyChange", (PyCFunction)VRPyTransform::applyChange, METH_NOARGS, "Apply all changes"  },
     {"setCenterOfMass", (PyCFunction)VRPyTransform::setCenterOfMass, METH_VARARGS, "Set a custom center of mass - setCenterOfMass([x,y,z])"  },
+    {"drag", (PyCFunction)VRPyTransform::drag, METH_VARARGS, "Drag this object by new parent - drag(new parent)"  },
+    {"drop", (PyCFunction)VRPyTransform::drop, METH_NOARGS, "Drop this object, if held, to old parent - drop()"  },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyTransform::drag(VRPyTransform* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::drag, Object is invalid"); return NULL; }
+    VRPyTransform* t = 0; parseObject(args, t);
+    self->obj->drag( t->obj );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyTransform::drop(VRPyTransform* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::drop, Object is invalid"); return NULL; }
+    self->obj->drop();
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyTransform::setEuler(VRPyTransform* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setEuler, Object is invalid"); return NULL; }
