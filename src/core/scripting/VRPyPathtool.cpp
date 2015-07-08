@@ -109,7 +109,13 @@ PyObject* VRPyPathtool::getHandles(VRPyPathtool* self, PyObject* args) {
 
 PyObject* VRPyPathtool::setVisible(VRPyPathtool* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyPathtool::setVisible - Object is invalid"); return NULL; }
-    self->obj->setVisible( parseBool(args) );
+    int b1, b2;
+    if (pySize(args) == 2) { if (! PyArg_ParseTuple(args, "ii", &b1, &b2)) return NULL; }
+    else {
+        if (! PyArg_ParseTuple(args, "i", &b1)) return NULL;
+        b2 = b1;
+    }
+    self->obj->setVisible( b1, b2 );
     Py_RETURN_TRUE;
 }
 

@@ -207,6 +207,11 @@ FProduct* FContainer::pop() {
     return p;
 }
 
+FProduct* FContainer::peek() {
+    FProduct* p = products.back();
+    return p;
+}
+
 void FContainer::clear() { products.clear(); }
 
 bool FContainer::isFull() { return ((int)products.size() == capacity); }

@@ -160,6 +160,7 @@ class FContainer : public FObject {
 
         void add(FProduct* p);
         FProduct* pop();
+        FProduct* peek();
 
         bool isFull();
         bool isEmpty();
