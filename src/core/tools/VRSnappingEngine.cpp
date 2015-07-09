@@ -187,7 +187,10 @@ void VRSnappingEngine::update() {
         }
 
         obj->setWorldMatrix(m);
-        if (lastEvent != event->snap) snapSignal->trigger<EventSnap>(event);
+        if (lastEvent != event->snap) {
+            if (event->snap) snapSignal->trigger<EventSnap>(event);
+            else if (obj == event->o1) snapSignal->trigger<EventSnap>(event);
+        }
     }
 
     // update geo
