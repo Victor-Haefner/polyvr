@@ -130,7 +130,7 @@ class VRPathtool {
         void remPath(path* p);
 
         void addPath(path* p, VRObject* anchor);
-        void setVisible(bool b);
+        void setVisible(bool handles, bool lines);
         void clear(path* p);
 
         vector<path*> getPaths();

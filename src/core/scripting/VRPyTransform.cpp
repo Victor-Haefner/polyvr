@@ -81,8 +81,10 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setRotationConstraints", (PyCFunction)VRPyTransform::setRotationConstraints, METH_VARARGS, "Constraint the object's rotation - setRotationConstraints(xi, yi, zi)" },
     {"physicalize", (PyCFunction)VRPyTransform::physicalize, METH_VARARGS, "physicalize subtree - physicalize( physicalized , dynamic , concave )" },
     {"setGhost", (PyCFunction)VRPyTransform::setGhost, METH_VARARGS, "Set the physics object to be a ghost object - setGhost(bool)" },
-    {"setSoft", (PyCFunction)VRPyTransform::setSoft, METH_VARARGS, "Set the physics object to be a soft body - setSoft(bool)" },
-    {"attach", (PyCFunction)VRPyTransform::setPhysicsConstraintTo, METH_VARARGS, "create a constraint between this object and another - attach( Transform , Constraint, Spring )" },
+    {"attach", (PyCFunction)VRPyTransform::setPhysicsConstraintTo, METH_VARARGS,
+        "create a constraint between this object and another - \n"
+        " For rigid bodies: attach( Transform , VRConstraint constraint, VRConstraint spring )\n"
+        " For soft bodies: attach( Transform, int nodeIndex, local pivot [x,y,z], bool ignoreCollision, float influence" },
     {"detach", (PyCFunction)VRPyTransform::deletePhysicsConstraints, METH_VARARGS, "delete constraint made to this transform with given transform through attach(toTransform). Example call : trans1.detach(trans2)" },
     {"setMass", (PyCFunction)VRPyTransform::setMass, METH_VARARGS, "Set the mass of the physics object" },
     {"setCollisionMargin", (PyCFunction)VRPyTransform::setCollisionMargin, METH_VARARGS, "Set the collision margin of the physics object" },
@@ -107,8 +109,23 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setDamping", (PyCFunction)VRPyTransform::setDamping, METH_VARARGS, "sets the damping of this object. 1st param is the linear, 2nd the angular damping. e.g. physicalizedObject.setDamping(0.4,0.5)"  },
     {"applyChange", (PyCFunction)VRPyTransform::applyChange, METH_NOARGS, "Apply all changes"  },
     {"setCenterOfMass", (PyCFunction)VRPyTransform::setCenterOfMass, METH_VARARGS, "Set a custom center of mass - setCenterOfMass([x,y,z])"  },
+    {"drag", (PyCFunction)VRPyTransform::drag, METH_VARARGS, "Drag this object by new parent - drag(new parent)"  },
+    {"drop", (PyCFunction)VRPyTransform::drop, METH_NOARGS, "Drop this object, if held, to old parent - drop()"  },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyTransform::drag(VRPyTransform* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::drag, Object is invalid"); return NULL; }
+    VRPyTransform* t = 0; parseObject(args, t);
+    self->obj->drag( t->obj );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyTransform::drop(VRPyTransform* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::drop, Object is invalid"); return NULL; }
+    self->obj->drop();
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyTransform::setEuler(VRPyTransform* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setEuler, Object is invalid"); return NULL; }
@@ -150,11 +167,6 @@ PyObject* VRPyTransform::setGhost(VRPyTransform* self, PyObject* args) {
     Py_RETURN_TRUE;
 }
 
-PyObject* VRPyTransform::setSoft(VRPyTransform* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setSoft, Object is invalid"); return NULL; }
-    self->obj->getPhysics()->setSoft(parseBool(args));
-    Py_RETURN_TRUE;
-}
 PyObject* VRPyTransform::setDamping(VRPyTransform* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setDamping, Object is invalid"); return NULL; }
     float lin,ang;
@@ -345,11 +357,25 @@ PyObject* VRPyTransform::physicalize(VRPyTransform* self, PyObject *args) {
     Py_RETURN_TRUE;
 }
 
+
+
 PyObject* VRPyTransform::setPhysicsConstraintTo(VRPyTransform* self, PyObject *args) {
-    VRPyTransform *t; VRPyConstraint *c; VRPyConstraint *cs;
-    if (! PyArg_ParseTuple(args, "OOO", &t, &c, &cs)) return NULL;
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setPhysicsConstraintTo: C Object is invalid"); return NULL; }
-    self->obj->getPhysics()->setConstraint( t->obj->getPhysics(), c->obj, cs->obj );
+    //if this is soft, the args have to be: RigidBody other, int nodeIndex, vec3 localpivot, bool ignoreCollision, float influence
+    VRPyTransform *t;
+    if(self->obj->getPhysics()->isSoft()) {
+        int nodeIndex;
+        int ignoreCollision;
+        float influence;
+        PyObject* localPiv;
+        if (! PyArg_ParseTuple(args, "OiOif", &t, &nodeIndex, &localPiv, &ignoreCollision, &influence)) return NULL;
+        self->obj->getPhysics()->setConstraint(t->obj->getPhysics(), nodeIndex, parseVec3fList(localPiv), ignoreCollision, influence);
+    }
+    else {
+        VRPyTransform *t; VRPyConstraint *c; VRPyConstraint *cs;
+        if (! PyArg_ParseTuple(args, "OOO", &t, &c, &cs)) return NULL;
+        if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setPhysicsConstraintTo: C Object is invalid"); return NULL; }
+        self->obj->getPhysics()->setConstraint( t->obj->getPhysics(), c->obj, cs->obj );
+    }
     Py_RETURN_TRUE;
 }
 

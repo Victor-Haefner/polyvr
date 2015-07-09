@@ -45,7 +45,9 @@ struct VRPyBase {
     static bool isTuple(PyObject* o);
     static int pySize(PyObject* v);
     static PyObject* getItem(PyObject* v, int i);
-    static vector<PyObject*> pyListToVector(PyObject *v);
+    static vector<PyObject*> pyListToVector(PyObject* v);
+    template <class T, class t>
+    static bool pyListToVector(PyObject* data, T& vec);
     static OSG::Vec2f parseVec2fList(PyObject *li);
     static OSG::Vec3f parseVec3fList(PyObject *li);
     static OSG::Vec4f parseVec4fList(PyObject *li);

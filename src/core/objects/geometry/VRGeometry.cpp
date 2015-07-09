@@ -85,13 +85,17 @@ void VRGeometry::setPrimitive(string primitive, string args) {
 
 /** Create a mesh using vectors with positions, normals, indices && optionaly texture coordinates **/
 void VRGeometry::create(int type, vector<Vec3f> pos, vector<Vec3f> norms, vector<int> inds, vector<Vec2f> texs) {
+    bool doTex = (texs.size() == pos.size());
+
     GeoUInt8PropertyRecPtr      Type = GeoUInt8Property::create();
     GeoUInt32PropertyRecPtr     Length = GeoUInt32Property::create();
     GeoPnt3fPropertyRecPtr      Pos = GeoPnt3fProperty::create();
     GeoVec3fPropertyRecPtr      Norms = GeoVec3fProperty::create();
     GeoUInt32PropertyRecPtr     Indices = GeoUInt32Property::create();
     SimpleMaterialRecPtr        Mat = SimpleMaterial::create();
-    GeoVec2fPropertyRecPtr      Tex = GeoVec2fProperty::create();
+    GeoVec2fPropertyRecPtr      Tex = 0;
+    if (doTex) Tex = GeoVec2fProperty::create();
+
 
     Type->addValue(type);
     Length->addValue(inds.size());
@@ -100,7 +104,7 @@ void VRGeometry::create(int type, vector<Vec3f> pos, vector<Vec3f> norms, vector
     for(uint i=0;i<pos.size();i++) {
             Pos->addValue(pos[i]);
             Norms->addValue(norms[i]);
-            if (texs.size() == pos.size()) Tex->addValue(texs[i]);
+            if (doTex) Tex->addValue(texs[i]);
     }
 
     for(uint i=0;i<inds.size();i++) {
@@ -117,7 +121,7 @@ void VRGeometry::create(int type, vector<Vec3f> pos, vector<Vec3f> norms, vector
     geo->setIndices(Indices);
     geo->setPositions(Pos);
     geo->setNormals(Norms);
-    geo->setTexCoords(Tex);
+    if (doTex) geo->setTexCoords(Tex);
     geo->setMaterial(Mat);
 
     setMesh(geo);

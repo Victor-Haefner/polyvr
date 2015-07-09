@@ -2,6 +2,8 @@
 #include "core/scripting/VRPyTransform.h"
 #include "core/scripting/VRPyBaseT.h"
 
+#include <OpenSG/OSGGeoProperties.h>
+
 template<> PyTypeObject VRPyBaseT<OSG::CSGGeometry>::type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
@@ -32,7 +34,7 @@ template<> PyTypeObject VRPyBaseT<OSG::CSGGeometry>::type = {
     0,		               /* tp_iter */
     0,		               /* tp_iternext */
     VRPyCSG::methods,             /* tp_methods */
-    VRPyCSG::members,             /* tp_members */
+    0,             /* tp_members */
     0,                         /* tp_getset */
     0,                         /* tp_base */
     0,                         /* tp_dict */
@@ -44,17 +46,35 @@ template<> PyTypeObject VRPyBaseT<OSG::CSGGeometry>::type = {
     New_VRObjects,                 /* tp_new */
 };
 
-PyMemberDef VRPyCSG::members[] = {
+PyMethodDef VRPyCSG::methods[] = {
+    {"getOperation", (PyCFunction)VRPyCSG::getOperation, METH_VARARGS, "get CSG operation" },
+    {"setOperation", (PyCFunction)VRPyCSG::setOperation, METH_VARARGS, "set CSG operation - setOperation(string s)\n use one of: 'unite', 'subtract', 'intersect'" },
+    {"getEditMode", (PyCFunction)VRPyCSG::getEditMode, METH_VARARGS, "get CSG object edit mode" },
+    {"setEditMode", (PyCFunction)VRPyCSG::setEditMode, METH_VARARGS, "set CSG object edit mode, set it to false to compute and show the result - setEditMode(bool b)" },
+    {"markEdges", (PyCFunction)VRPyCSG::markEdges, METH_VARARGS, "Color the edges of the polyhedron, pass a list of int pairs - markEdges([[i1,i2],[i1,i3],...])\nPass an empty list to hide edges." },
+    {"setThreshold", (PyCFunction)VRPyCSG::setThreshold, METH_VARARGS, "Set the threashold used to merge double vertices - setThreshold( float )\n default is 1e-4" },
     {NULL}  /* Sentinel */
 };
 
-PyMethodDef VRPyCSG::methods[] = {
-    {"getOperation", (PyCFunction)VRPyCSG::getOperation, METH_VARARGS, "get CSG operation" },
-    {"setOperation", (PyCFunction)VRPyCSG::setOperation, METH_VARARGS, "set CSG operation - setOperation(string s)\n 'unite', 'subtract', 'intersect'" },
-    {"getEditMode", (PyCFunction)VRPyCSG::getEditMode, METH_VARARGS, "get CSG object edit mode" },
-    {"setEditMode", (PyCFunction)VRPyCSG::setEditMode, METH_VARARGS, "set CSG object edit mode - setEditMode(bool b)" },
-    {NULL}  /* Sentinel */
-};
+PyObject* VRPyCSG::setThreshold(VRPyCSG* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyCSG::setThreshold, Object is invalid"); return NULL; }
+    auto t = parseVec2f(args);
+    self->obj->setThreshold( t[0], t[1] );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyCSG::markEdges(VRPyCSG* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyCSG::markEdges, Object is invalid"); return NULL; }
+
+    PyObject* vec;
+    if (! PyArg_ParseTuple(args, "O", &vec)) return NULL;
+    if (pySize(vec) == 0) Py_RETURN_TRUE;
+
+    vector<OSG::Vec2i> edges;
+    pyListToVector<vector<OSG::Vec2i>, OSG::Vec2i>(vec, edges);
+    self->obj->markEdges(edges);
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyCSG::getOperation(VRPyCSG* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyCSG::getOperation, Object is invalid"); return NULL; }
@@ -63,8 +83,7 @@ PyObject* VRPyCSG::getOperation(VRPyCSG* self) {
 
 PyObject* VRPyCSG::setOperation(VRPyCSG* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyCSG::setOperation, Object is invalid"); return NULL; }
-    string op = parseString(args);
-    self->obj->setOperation(op);
+    self->obj->setOperation( parseString(args) );
     Py_RETURN_TRUE;
 }
 

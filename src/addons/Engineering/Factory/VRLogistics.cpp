@@ -87,8 +87,11 @@ void FNode::set(FObject* o) {
     if (o->getType() == FObject::PRODUCT) setState(PRODUCT);
     if (o->getTransformation() == 0) return;
 
-    getTransform()->addChild(o->getTransformation());
-    o->getTransformation()->setMatrix(OSG::Matrix());
+    auto t = o->getTransformation();
+    Matrix wm = t->getWorldMatrix();
+    t->switchParent(getTransform());
+    t->setWorldMatrix(wm);
+    t->update();
 }
 
 void FNode::connect(FNode* n) {
@@ -204,6 +207,11 @@ FProduct* FContainer::pop() {
     p->getTransformation()->show();
     setMetaData("Nb: " + toString(products.size()));
     //p->setMetaData("ID: " + toString(p->getID()));
+    return p;
+}
+
+FProduct* FContainer::peek() {
+    FProduct* p = products.back();
     return p;
 }
 

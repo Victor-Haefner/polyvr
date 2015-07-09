@@ -173,9 +173,9 @@ void VRPathtool::updateDevs() {
     }
 }
 
-void VRPathtool::setVisible(bool b) {
-    for (auto p : paths) if (p.second->line) p.second->line->setVisible(b);
-    for (auto h : handles_dict) h.first->setVisible(b);
+void VRPathtool::setVisible(bool handles, bool lines) {
+    for (auto p : paths) if (p.second->line) p.second->line->setVisible(lines);
+    for (auto h : handles_dict) h.first->setVisible(handles);
 }
 
 void VRPathtool::select(VRGeometry* h) {

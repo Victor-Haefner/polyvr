@@ -377,7 +377,8 @@ PyMethodDef FPyContainer::methods[] = {
     {"clear", (PyCFunction)FPyContainer::clear, METH_NOARGS, "Set container capacity" },
     {"getCount", (PyCFunction)FPyContainer::getCount, METH_NOARGS, "Get number of products in the container" },
     {"add", (PyCFunction)FPyContainer::add, METH_VARARGS, "Add a product to the container - add(product)" },
-    {"get", (PyCFunction)FPyContainer::get, METH_NOARGS, "Get the product last put in the container - product get(). Alisa sagt: Achtung! intern wird 'pop' aufgerufen, das Objekt ist danach NICHT mehr im Container." },
+    {"get", (PyCFunction)FPyContainer::get, METH_NOARGS, "Get the product last put in the container and remove it from the container - product get()." },
+    {"peek", (PyCFunction)FPyContainer::peek, METH_NOARGS, "Get the product last put in the container - product peek()." },
     {NULL}  /* Sentinel */
 };
 
@@ -386,6 +387,11 @@ PyObject* FPyContainer::add(FPyContainer* self, PyObject* args) {
     FPyProduct* p = (FPyProduct*)parseObject(args);
     self->obj->add(p->obj);
     Py_RETURN_TRUE;
+}
+
+PyObject* FPyContainer::peek(FPyContainer* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "FPyContainer::get - Object is invalid"); return NULL; }
+    return FPyProduct::fromPtr( self->obj->peek() );
 }
 
 PyObject* FPyContainer::get(FPyContainer* self) {

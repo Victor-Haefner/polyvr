@@ -28,7 +28,7 @@ template<typename T>
 VRAnimation* VRAnimationManager::addAnimation(float duration, float offset, VRFunction<T>* fkt, T start, T end, bool loop) {//Todo: replace VRFunction, template?
     VRAnimation* anim = new VRAnimation(duration, offset, fkt, start, end, loop);
     addAnimation(anim);
-    anim->start();
+    anim->start(offset);
     return anim;
 }
 
