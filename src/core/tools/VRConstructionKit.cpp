@@ -25,6 +25,8 @@ VRSnappingEngine* VRConstructionKit::getSnappingEngine() { return snapping; }
 VRSelector* VRConstructionKit::getSelector() { return selector; }
 
 void VRConstructionKit_on_snap(VRConstructionKit* kit, VRSnappingEngine::EventSnap* e) {
+    if (e == 0) { kit->breakup(e->o1); return; }
+
     if (e->o1 == 0 || e->o2 == 0) return;
     VRObject* p1 = e->o1->getDragParent();
     VRObject* p2 = e->o2->getParent();

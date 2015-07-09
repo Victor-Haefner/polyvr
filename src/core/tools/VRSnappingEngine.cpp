@@ -153,6 +153,9 @@ void VRSnappingEngine::update() {
         Matrix m = gobj->getWorldMatrix();
         Vec3f p = Vec3f(m[3]);
 
+        bool lastEvent = event->snap;
+        event->snap = 0;
+
         for (auto ri : rules) {
             Rule* r = ri.second;
             if (r->csys == obj) continue;
@@ -171,7 +174,7 @@ void VRSnappingEngine::update() {
                     r->snap(m);
                     maL.invert();
                     m.mult(maL);
-                    event->set(obj, r->csys, m, dev.second);
+                    event->set(obj, r->csys, m, dev.second, 1);
                     snapSignal->trigger<EventSnap>(event);
                     break;
                 }
@@ -180,12 +183,12 @@ void VRSnappingEngine::update() {
                 float D = (p2-p).length(); // check distance
                 if (!r->inRange(D)) continue;
                 r->snap(m);
-                event->set(obj, r->csys, m, dev.second);
-                snapSignal->trigger<EventSnap>(event);
+                event->set(obj, r->csys, m, dev.second, 1);
             }
         }
 
         obj->setWorldMatrix(m);
+        if (lastEvent != event->snap) snapSignal->trigger<EventSnap>(event);
     }
 
     // update geo
