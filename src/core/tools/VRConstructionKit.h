@@ -35,7 +35,7 @@ class VRConstructionKit {
         void addObject(VRTransform* t);
         VRGeometry* addObjectAnchor(VRTransform* t, int a, Vec3f pos, float radius);
 
-        void breakup(VRObject* obj);
+        void breakup(VRTransform* obj);
 };
 
 OSG_END_NAMESPACE;

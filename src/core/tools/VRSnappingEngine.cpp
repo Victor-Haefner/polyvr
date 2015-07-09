@@ -175,7 +175,6 @@ void VRSnappingEngine::update() {
                     maL.invert();
                     m.mult(maL);
                     event->set(obj, r->csys, m, dev.second, 1);
-                    snapSignal->trigger<EventSnap>(event);
                     break;
                 }
             } else {

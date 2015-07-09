@@ -25,7 +25,7 @@ VRSnappingEngine* VRConstructionKit::getSnappingEngine() { return snapping; }
 VRSelector* VRConstructionKit::getSelector() { return selector; }
 
 void VRConstructionKit_on_snap(VRConstructionKit* kit, VRSnappingEngine::EventSnap* e) {
-    if (e == 0) { kit->breakup(e->o1); return; }
+    if (e->snap == 0) { kit->breakup(e->o1); return; }
 
     if (e->o1 == 0 || e->o2 == 0) return;
     VRObject* p1 = e->o1->getDragParent();
@@ -60,13 +60,23 @@ int VRConstructionKit::ID() {
     return i;
 }
 
-void VRConstructionKit::breakup(VRObject* obj) {
+void VRConstructionKit::breakup(VRTransform* obj) {
     if (obj == 0) return;
+
     auto p = obj->getParent();
-    if (!p->hasAttachment("kit_group")) return;
-    p = p->getParent();
-    obj->switchParent(p);
-    obj->setPickable(true);
+    if (p == 0) return;
+    if (p->hasAttachment("kit_group")) {
+        obj->switchParent( p->getParent() );
+        obj->setPickable(true);
+        return;
+    }
+
+    p = obj->getDragParent();
+    if (p == 0) return;
+    if (p->hasAttachment("kit_group")) {
+        obj->rebaseDrag( p->getParent() );
+        obj->setPickable(true);
+    }
 }
 
 int VRConstructionKit::addAnchorType(float size, Vec3f color) {
