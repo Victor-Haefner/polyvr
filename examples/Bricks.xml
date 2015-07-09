@@ -83,7 +83,7 @@
 			var height = 200;
 			var bX = 4;
 			var bY = 3;
-			var bZ = 4;
+			var bZ = 2;
 
 			function onWindowResize() {
 				camera.aspect = width/height;
@@ -131,7 +131,7 @@
 				
 				controls = new THREE.TrackballControls( camera, renderer.domElement );
 				controls.target.set( 0, 0, 0 )
-				controls.rotateSpeed = 5.0;
+				controls.rotateSpeed = 2.0;
 				controls.zoomSpeed = 1.2;
 				controls.panSpeed = 0.8;
 				controls.noZoom = true;
@@ -158,7 +158,7 @@
 
 &lt;input style="height:45px;width:35px;" type="number" onchange="brick(1,this.value)" min="1" max="4" value="4"&gt;
 &lt;input style="height:45px;width:35px;" type="number" onchange="brick(2,this.value)" min="1" max="3" value="3"&gt;
-&lt;input style="height:45px;width:35px;" type="number" onchange="brick(3,this.value)" min="1" max="4" value="4"&gt;
+&lt;input style="height:45px;width:35px;" type="number" onchange="brick(3,this.value)" min="1" max="4" value="2"&gt;
 &lt;button onmousedown='get(1,1,dims())' onmouseup='get(1,0,dims())'&gt;Create&lt;/button&gt;
 
 
@@ -259,6 +259,7 @@
 	
 </core>
       <trig type="on_device" dev="mouse" state="Pressed" param="" key="2" name_suffix="2" base_name="trigger" name_space="__global__"/>
+      <trig type="on_device" dev="flystick" state="Pressed" param="" key="3" name_suffix="3" base_name="trigger" name_space="__global__"/>
     </Script>
     <Script name_suffix="0" base_name="shdr_f" name_space="__script__" type="GLSL" mobile="">
       <core>
