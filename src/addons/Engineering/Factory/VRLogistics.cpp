@@ -88,8 +88,10 @@ void FNode::set(FObject* o) {
     if (o->getTransformation() == 0) return;
 
     auto t = o->getTransformation();
-    Matrix wm = t->getWorldMatrix();
+    Matrix wm;
+    wm = t->getWorldMatrix();
     t->switchParent(getTransform());
+    wm.setTranslate(getTransform()->getWorldPosition());
     t->setWorldMatrix(wm);
     t->update();
 }
