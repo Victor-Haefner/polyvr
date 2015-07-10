@@ -47,12 +47,26 @@ template<> PyTypeObject VRPyBaseT<OSG::VRSetup>::type = {
 
 PyMethodDef VRPySetup::methods[] = {
     {"toggleStereo", (PyCFunction)VRPySetup::toggleStereo, METH_VARARGS, "Toggle stereo of view i - toggleStereo(int i)" },
+    {"setViewPose", (PyCFunction)VRPySetup::setViewPose, METH_VARARGS, "Set pose of view i - setViewPose(int i, [from], [dir], [up])" },
     {NULL}  /* Sentinel */
 };
 
 
+PyObject* VRPySetup::setViewPose(VRPySetup* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPySetup::setViewPose - Object is invalid"); return NULL; }
+    int i; PyObject *p, *d, *u;
+    if (! PyArg_ParseTuple(args, "iOOO", &i, &p, &d, &u)) return NULL;
+    auto v = self->obj->getView(i);
+    if (v) {
+        v->setProjectionCenter( parseVec3fList(p) );
+        v->setProjectionNormal( parseVec3fList(d) );
+        v->setProjectionUp( parseVec3fList(u) );
+    }
+    Py_RETURN_TRUE;
+}
+
 PyObject* VRPySetup::toggleStereo(VRPySetup* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPySetup::activate - Object is invalid"); return NULL; }
+    if (self->obj == 0) { PyErr_SetString(err, "VRPySetup::toggleStereo - Object is invalid"); return NULL; }
     int i = parseInt(args);
     auto v = self->obj->getView(i);
     if (v) v->setStereo(!v->isStereo());
