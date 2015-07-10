@@ -7,6 +7,7 @@
 #include <OpenSG/OSGVector.h>
 
 #include "core/utils/VRName.h"
+#include "core/utils/VRStorage.h"
 
 namespace xmlpp{ class Element; }
 class VRAttachment;
@@ -36,7 +37,7 @@ class VRGlobals {
         static VRGlobals* get();
 };
 
-class VRObject : public VRName {
+class VRObject : public VRName, public VRStorage {
     private:
         bool specialized = false;
         VRObject* parent = 0;

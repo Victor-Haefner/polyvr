@@ -13,7 +13,7 @@ using namespace std;
 
 class VRLightBeacon;
 
-class VRLight : public VRObject, public VRStorage {
+class VRLight : public VRObject {
     protected:
         DirectionalLightRecPtr d_light = 0;
         PointLightRecPtr p_light = 0;
