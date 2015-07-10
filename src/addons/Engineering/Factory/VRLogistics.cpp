@@ -195,11 +195,17 @@ void FContainer::setCapacity(int i) { capacity = i; }
 int FContainer::getCapacity() { return capacity; }
 
 void FContainer::add(FProduct* p) {
-    //p->getTransformation()->setMatrix(getTransformation()->getMatrix());
-    getTransformation()->addChild(p->getTransformation());
-    p->getTransformation()->hide();
+    auto t = p->getTransformation();
+    t->hide();
     products.push_back(p);
     setMetaData("Nb: " + toString(products.size()));
+
+    Matrix wm;
+    wm = t->getWorldMatrix();
+    t->switchParent(getTransformation());
+    wm.setTranslate(getTransformation()->getWorldPosition());
+    t->setWorldMatrix(wm);
+    t->update();
 }
 
 FProduct* FContainer::pop() {
