@@ -327,6 +327,7 @@ void VRGuiScripts::on_select_script() { // selected a script
     string core = script->getHead() + script->getCore();
     gtk_text_buffer_set_text(GTK_TEXT_BUFFER(VRGuiScripts_sourceBuffer), core.c_str(), core.size());
 
+
     // update arguments liststore
     Glib::RefPtr<Gtk::ListStore> args = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("liststore2"));
     args->clear();
