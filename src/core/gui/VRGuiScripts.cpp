@@ -30,7 +30,8 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 using namespace Gtk;
 
-GtkSourceBuffer* VRGuiScripts_sourceBuffer;
+GtkSourceBuffer* VRGuiScripts_sourceBuffer = 0;
+VRScript* lastSelectedScript = 0;
 
 class VRGuiScripts_ModelColumns : public Gtk::TreeModelColumnRecord {
     public:
@@ -89,6 +90,7 @@ VRScript* VRGuiScripts::getSelectedScript() {
     Gtk::TreeModel::Row row = *iter;
     string name = row.get_value(cols.script);
     VRScript* script = VRSceneManager::getCurrent()->getScript(name);
+    lastSelectedScript = script;
 
     return script;
 }
@@ -307,6 +309,9 @@ void VRGuiScripts::on_del_clicked() {
 }
 
 void VRGuiScripts::on_select_script() { // selected a script
+    auto adjustment = Glib::RefPtr<Gtk::ScrolledWindow>::cast_static(VRGuiBuilder()->get_object("scrolledwindow4"))->get_vadjustment();
+    if (lastSelectedScript) pages[lastSelectedScript].line = adjustment->get_value();
+
     VRScript* script = VRGuiScripts::getSelectedScript();
     if (script == 0) {
         setToolButtonSensitivity("toolbutton8", false);
@@ -326,7 +331,7 @@ void VRGuiScripts::on_select_script() { // selected a script
     // update editor content && script head
     string core = script->getHead() + script->getCore();
     gtk_text_buffer_set_text(GTK_TEXT_BUFFER(VRGuiScripts_sourceBuffer), core.c_str(), core.size());
-
+    adjustment->set_value(pages[script].line);
 
     // update arguments liststore
     Glib::RefPtr<Gtk::ListStore> args = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("liststore2"));
@@ -859,7 +864,15 @@ void VRGuiScripts::updateList() {
     Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("script_list"));
     store->clear();
 
-    for (auto script : scene->getScripts()) setScriptListRow(store->append(), script.second);
+    auto oldpages = pages;
+    pages.clear();
+
+    for (auto script : scene->getScripts()) {
+        auto s = script.second;
+        setScriptListRow(store->append(), s);
+        if (oldpages.count(s)) pages[s] = oldpages[s];
+        else pages[s] = page();
+    }
     on_select_script();
 }
 

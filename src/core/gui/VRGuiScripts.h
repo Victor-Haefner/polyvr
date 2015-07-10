@@ -18,10 +18,15 @@ class VRScript;
 
 class VRGuiScripts {
     private:
+        struct page {
+            int line = 0;
+        };
+
         bool trigger_cbs = true;
         _GtkSourceLanguage* python = 0;
         _GtkSourceLanguage* web = 0;
         _GtkSourceLanguage* glsl = 0;
+        map<VRScript*, page> pages;
 
         Gtk::Table* scriptImportWidget = 0;
         Gtk::TreeView* import_treeview1 = 0;

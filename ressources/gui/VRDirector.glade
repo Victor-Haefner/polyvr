@@ -1340,12 +1340,6 @@ cave allocated</property>
       <column type="gchararray"/>
     </columns>
   </object>
-  <object class="GtkListStore" id="phys_shapes">
-    <columns>
-      <!-- column-name shapes -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
   <object class="GtkListStore" id="prim_list">
     <columns>
       <!-- column-name prims -->
@@ -1360,17 +1354,6 @@ cave allocated</property>
       <column type="gchararray"/>
     </columns>
   </object>
-  <object class="GtkListStore" id="prof_fkts">
-    <columns>
-      <!-- column-name fkt -->
-      <column type="gchararray"/>
-      <!-- column-name time -->
-      <column type="gchararray"/>
-      <!-- column-name color -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
-  <object class="GtkTextBuffer" id="pydoc"/>
   <object class="GtkTreeStore" id="scenegraph">
     <columns>
       <!-- column-name Object -->
@@ -1405,6 +1388,23 @@ cave allocated</property>
       <column type="gchararray"/>
     </columns>
   </object>
+  <object class="GtkListStore" id="phys_shapes">
+    <columns>
+      <!-- column-name shapes -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+  <object class="GtkListStore" id="prof_fkts">
+    <columns>
+      <!-- column-name fkt -->
+      <column type="gchararray"/>
+      <!-- column-name time -->
+      <column type="gchararray"/>
+      <!-- column-name color -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+  <object class="GtkTextBuffer" id="pydoc"/>
   <object class="GtkListStore" id="serverlist">
     <columns>
       <!-- column-name y -->
