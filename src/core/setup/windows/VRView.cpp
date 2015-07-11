@@ -350,10 +350,7 @@ void VRView::showViewGeo(bool b) {
 }
 
 Vec4f VRView::getPosition() { return position; }
-void VRView::setPosition(Vec4f pos) {
-    position = pos;
-    setViewports();
-}
+void VRView::setPosition(Vec4f pos) { position = pos; update(); }
 
 void VRView::setRoot(VRObject* root, VRTransform* real) { view_root = root; real_root = real; update(); }
 
