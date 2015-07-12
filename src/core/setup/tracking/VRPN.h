@@ -51,6 +51,8 @@ class VRPN : public VRStorage {
         int threadID;
         bool active = true;
 
+        VRFunction<int>* testServer = 0;
+
         //update thread
         void update_t(VRThread* thread);
         void update();
@@ -72,6 +74,7 @@ class VRPN : public VRStorage {
         void changeVRPNDeviceName(VRPN_device* dev, string name);
 
         void startVRPNTestServer();
+        void stopVRPNTestServer();
 };
 
 OSG_END_NAMESPACE

@@ -401,10 +401,6 @@ void VRGuiSetup::on_menu_add_vrpn_tracker() {
     setToolButtonSensitivity("toolbutton12", true);
 }
 
-void VRGuiSetup::on_menu_add_vrpn_test_server() {
-    current_setup->startVRPNTestServer();
-}
-
 void VRGuiSetup::on_menu_add_mouse() {
     VRMouse* m = new VRMouse();
     current_setup->addDevice(m);
@@ -725,6 +721,13 @@ void VRGuiSetup::on_toggle_dev_cross() {
     dev->showHitPoint(b);
 }
 
+void VRGuiSetup::on_toggle_vrpn_test_server() {
+    if (guard) return;
+    bool b = getCheckButtonState("checkbutton39");
+    if (b) current_setup->startVRPNTestServer();
+    else current_setup->stopVRPNTestServer();
+}
+
 // --------------------------
 // ---------Main-------------
 // --------------------------
@@ -750,7 +753,6 @@ VRGuiSetup::VRGuiSetup() {
     menu->appendItem("SM_AddDevMenu", "Haptic", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_haptic) );
     menu->appendItem("SM_AddDevMenu", "Mobile", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_mobile) );
     menu->appendItem("SM_AddVRPNMenu", "VRPN tracker", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_vrpn_tracker) );
-    menu->appendItem("SM_AddVRPNMenu", "VRPN test server", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_vrpn_test_server) );
 
     Glib::RefPtr<Gtk::ToolButton> tbutton;
     Glib::RefPtr<Gtk::CheckButton> cbutton;
@@ -819,6 +821,7 @@ VRGuiSetup::VRGuiSetup() {
     setCheckButtonCallback("checkbutton26", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_view_user));
     setCheckButtonCallback("checkbutton4", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_view_stats));
     setCheckButtonCallback("checkbutton37", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_dev_cross));
+    setCheckButtonCallback("checkbutton39", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_vrpn_test_server));
 
     // primitive list
     fillStringListstore("prim_list", VRPrimitive::getTypes());

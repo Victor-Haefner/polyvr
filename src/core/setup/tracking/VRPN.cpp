@@ -347,7 +347,19 @@ void vrpn_test_server_main() {
     //vrpn_SleepMsecs(1);
 }
 
+void VRPN::stopVRPNTestServer() {
+    if (testServer == 0) return;
+    VRSceneManager::get()->dropUpdateFkt(testServer);
+    delete testServer;
+    testServer = 0;
+    delete serverButton;
+    delete serverAnalog;
+    delete serverTracker;
+    delete m_Connection;
+}
+
 void VRPN::startVRPNTestServer() {
+    if (testServer != 0) return;
     // Creating the network server
     m_Connection = new vrpn_Connection_IP();
 
@@ -358,8 +370,8 @@ void VRPN::startVRPNTestServer() {
 
     cout << "Created VRPN server." << endl;
 
-    auto update_cb = new VRFunction<int>("VRPN_test_server", boost::bind(vrpn_test_server_main));
-    VRSceneManager::get()->addUpdateFkt(update_cb);
+    testServer = new VRFunction<int>("VRPN_test_server", boost::bind(vrpn_test_server_main));
+    VRSceneManager::get()->addUpdateFkt(testServer);
 }
 
 OSG_END_NAMESPACE

@@ -1247,6 +1247,12 @@ cave allocated</property>
       <column type="gchararray"/>
     </columns>
   </object>
+  <object class="GtkListStore" id="liststore3">
+    <columns>
+      <!-- column-name group -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
   <object class="GtkListStore" id="liststore1">
     <columns>
       <!-- column-name MenuList -->
@@ -1267,12 +1273,6 @@ cave allocated</property>
       <!-- column-name obj -->
       <column type="gpointer"/>
       <!-- column-name type -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
-  <object class="GtkListStore" id="liststore3">
-    <columns>
-      <!-- column-name group -->
       <column type="gchararray"/>
     </columns>
   </object>
@@ -1340,6 +1340,12 @@ cave allocated</property>
       <column type="gchararray"/>
     </columns>
   </object>
+  <object class="GtkListStore" id="phys_shapes">
+    <columns>
+      <!-- column-name shapes -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
   <object class="GtkListStore" id="prim_list">
     <columns>
       <!-- column-name prims -->
@@ -1351,6 +1357,17 @@ cave allocated</property>
       <!-- column-name param -->
       <column type="gchararray"/>
       <!-- column-name value -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+  <object class="GtkTextBuffer" id="pydoc"/>
+  <object class="GtkListStore" id="prof_fkts">
+    <columns>
+      <!-- column-name fkt -->
+      <column type="gchararray"/>
+      <!-- column-name time -->
+      <column type="gchararray"/>
+      <!-- column-name color -->
       <column type="gchararray"/>
     </columns>
   </object>
@@ -1388,23 +1405,6 @@ cave allocated</property>
       <column type="gchararray"/>
     </columns>
   </object>
-  <object class="GtkListStore" id="phys_shapes">
-    <columns>
-      <!-- column-name shapes -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
-  <object class="GtkListStore" id="prof_fkts">
-    <columns>
-      <!-- column-name fkt -->
-      <column type="gchararray"/>
-      <!-- column-name time -->
-      <column type="gchararray"/>
-      <!-- column-name color -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
-  <object class="GtkTextBuffer" id="pydoc"/>
   <object class="GtkListStore" id="serverlist">
     <columns>
       <!-- column-name y -->
@@ -1726,6 +1726,12 @@ cave allocated</property>
                                 <child>
                                   <placeholder/>
                                 </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
                               </object>
                             </child>
                           </object>
@@ -1757,6 +1763,12 @@ cave allocated</property>
                                 <property name="can_focus">False</property>
                                 <property name="n_columns">2</property>
                                 <property name="homogeneous">True</property>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
                                 <child>
                                   <placeholder/>
                                 </child>
@@ -3189,6 +3201,7 @@ cave allocated</property>
                                       <object class="GtkTable" id="table27">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
+                                        <property name="n_rows">2</property>
                                         <property name="n_columns">2</property>
                                         <child>
                                           <object class="GtkCheckButton" id="checkbutton25">
@@ -3210,6 +3223,20 @@ cave allocated</property>
                                           <packing>
                                             <property name="left_attach">1</property>
                                             <property name="right_attach">2</property>
+                                            <property name="bottom_attach">2</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkCheckButton" id="checkbutton39">
+                                            <property name="label" translatable="yes">test server</property>
+                                            <property name="visible">True</property>
+                                            <property name="can_focus">True</property>
+                                            <property name="receives_default">False</property>
+                                            <property name="draw_indicator">True</property>
+                                          </object>
+                                          <packing>
+                                            <property name="top_attach">1</property>
+                                            <property name="bottom_attach">2</property>
                                           </packing>
                                         </child>
                                       </object>

@@ -53,7 +53,6 @@ class VRGuiSetup {
         void on_menu_add_window();
         void on_menu_add_viewport();
         void on_menu_add_vrpn_tracker();
-        void on_menu_add_vrpn_test_server();
         void on_menu_add_mouse();
 
         void on_menu_add_keyboard();
@@ -90,6 +89,7 @@ class VRGuiSetup {
         void on_art_edit_id();
         void on_art_edit_offset();
 
+        void on_toggle_vrpn_test_server();
         void on_vrpn_trans_axis_edit(Vec3f v);
         void on_vrpn_rot_axis_edit(Vec3f v);
 
