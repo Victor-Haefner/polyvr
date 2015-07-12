@@ -401,6 +401,10 @@ void VRGuiSetup::on_menu_add_vrpn_tracker() {
     setToolButtonSensitivity("toolbutton12", true);
 }
 
+void VRGuiSetup::on_menu_add_vrpn_test_server() {
+    current_setup->startVRPNTestServer();
+}
+
 void VRGuiSetup::on_menu_add_mouse() {
     VRMouse* m = new VRMouse();
     current_setup->addDevice(m);
@@ -746,6 +750,7 @@ VRGuiSetup::VRGuiSetup() {
     menu->appendItem("SM_AddDevMenu", "Haptic", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_haptic) );
     menu->appendItem("SM_AddDevMenu", "Mobile", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_mobile) );
     menu->appendItem("SM_AddVRPNMenu", "VRPN tracker", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_vrpn_tracker) );
+    menu->appendItem("SM_AddVRPNMenu", "VRPN test server", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_vrpn_test_server) );
 
     Glib::RefPtr<Gtk::ToolButton> tbutton;
     Glib::RefPtr<Gtk::CheckButton> cbutton;

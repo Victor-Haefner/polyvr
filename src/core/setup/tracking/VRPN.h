@@ -70,6 +70,8 @@ class VRPN : public VRStorage {
         bool getVRPNActive();
 
         void changeVRPNDeviceName(VRPN_device* dev, string name);
+
+        void startVRPNTestServer();
 };
 
 OSG_END_NAMESPACE
