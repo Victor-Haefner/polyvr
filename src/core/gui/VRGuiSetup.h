@@ -92,6 +92,7 @@ class VRGuiSetup {
         void on_art_edit_id();
         void on_art_edit_offset();
 
+        void on_toggle_vrpn_verbose();
         void on_toggle_vrpn_test_server();
         void on_vrpn_trans_axis_edit(Vec3f v);
         void on_vrpn_rot_axis_edit(Vec3f v);

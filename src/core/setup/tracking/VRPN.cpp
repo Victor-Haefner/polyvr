@@ -1,5 +1,6 @@
 #include "VRPN.h"
 #include "core/utils/VROptions.h"
+#include "core/gui/VRGuiManager.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
@@ -118,6 +119,8 @@ VRPN::VRPN() {
     auto update_cb = new VRFunction<int>("VRPN_update", boost::bind(&VRPN::update, this));
     VRSceneManager::get()->addUpdateFkt(update_cb);
 
+    vrpn_System_TextPrinter.set_ostream_to_use(NULL);
+
     storeMap("Tracker", &devices);
     store("active", &active);
     store("port", &port);
@@ -130,8 +133,13 @@ VRPN::~VRPN() {
 void VRPN::update_t(VRThread* thread) {}
 void VRPN::update() {
     if (!active) return;
+
+    if (verbose) VRGuiManager::get()->printInfo("vrpn verbooooose\n");
+
     for (auto tr : devices) tr.second->loop();
 }
+
+void VRPN::setVRPNVerbose(bool b) { verbose = b; }
 
 void VRPN::addVRPNTracker(int ID, string addr, Vec3f offset, float scale) {
     while(devices.count(ID)) ID++;

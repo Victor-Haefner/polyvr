@@ -186,6 +186,7 @@ void VRGuiSetup::updateObjectData() {
 
         if (selected_name == "VRPN") {
             setExpanderSensitivity("expander7", true);
+            setTextEntry("entry13", toString(current_setup->getVRPNPort()));
             setCheckButton("checkbutton25", current_setup->getVRPNActive());
         }
     }
@@ -732,6 +733,12 @@ void VRGuiSetup::on_toggle_vrpn_test_server() {
     else current_setup->stopVRPNTestServer();
 }
 
+void VRGuiSetup::on_toggle_vrpn_verbose() {
+    if (guard) return;
+    bool b = getCheckButtonState("checkbutton40");
+    current_setup->setVRPNVerbose(b);
+}
+
 // --------------------------
 // ---------Main-------------
 // --------------------------
@@ -791,6 +798,7 @@ VRGuiSetup::VRGuiSetup() {
     setEntryCallback("entry56", sigc::mem_fun(*this, &VRGuiSetup::on_pos_edit) );
     setEntryCallback("entry57", sigc::mem_fun(*this, &VRGuiSetup::on_pos_edit) );
     setEntryCallback("entry12", sigc::mem_fun(*this, &VRGuiSetup::on_eyesep_edit) );
+    setEntryCallback("entry13", sigc::mem_fun(*this, &VRGuiSetup::on_vrpn_edit_port) );
     setEntryCallback("entry33", sigc::mem_fun(*this, &VRGuiSetup::on_servern_edit) );
     setEntryCallback("entry34", sigc::mem_fun(*this, &VRGuiSetup::on_servern_edit) );
     setEntryCallback("entry39", sigc::mem_fun(*this, &VRGuiSetup::on_art_edit_port) );
@@ -826,6 +834,7 @@ VRGuiSetup::VRGuiSetup() {
     setCheckButtonCallback("checkbutton4", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_view_stats));
     setCheckButtonCallback("checkbutton37", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_dev_cross));
     setCheckButtonCallback("checkbutton39", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_vrpn_test_server));
+    setCheckButtonCallback("checkbutton40", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_vrpn_verbose));
 
     // primitive list
     fillStringListstore("prim_list", VRPrimitive::getTypes());
