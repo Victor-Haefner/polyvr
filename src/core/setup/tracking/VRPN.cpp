@@ -120,6 +120,7 @@ VRPN::VRPN() {
 
     storeMap("Tracker", &devices);
     store("active", &active);
+    store("port", &port);
 }
 
 VRPN::~VRPN() {
@@ -168,6 +169,8 @@ void VRPN::changeVRPNDeviceName(VRPN_device* dev, string name) {
 void VRPN::setVRPNActive(bool b) { active = b; }
 bool VRPN::getVRPNActive() { return active; }
 
+void VRPN::setVRPNPort(int p) { port = p; }
+int VRPN::getVRPNPort() { return port; }
 
 
 // ----------------------------- test server -----------------------------------

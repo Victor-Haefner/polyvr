@@ -50,6 +50,7 @@ class VRPN : public VRStorage {
         map<int, VRPN_device*> devices;//pointer map auf die objecte
         int threadID;
         bool active = true;
+        int port = 3883;
 
         VRFunction<int>* testServer = 0;
 
@@ -70,6 +71,9 @@ class VRPN : public VRStorage {
         VRPN_device* getVRPNTracker(int ID);
         void setVRPNActive(bool b);
         bool getVRPNActive();
+
+        void setVRPNPort(int p);
+        int getVRPNPort();
 
         void changeVRPNDeviceName(VRPN_device* dev, string name);
 

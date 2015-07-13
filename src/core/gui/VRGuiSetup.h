@@ -40,6 +40,8 @@ class VRGuiSetup {
 
         bool guard; // update guard
 
+        string setupDir();
+
         void on_treeview_select();
         void on_name_edited(const Glib::ustring& path, const Glib::ustring& new_name);
         void on_save_clicked();
@@ -82,6 +84,7 @@ class VRGuiSetup {
         void on_proj_up_edit(Vec3f v);
         void on_proj_size_edit(Vec2f v);
 
+        void on_vrpn_edit_port();
         void on_edit_VRPN_tracker_address();
         void on_toggle_vrpn();
         void on_toggle_art();

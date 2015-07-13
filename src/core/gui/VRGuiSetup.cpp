@@ -211,6 +211,7 @@ void VRGuiSetup::updateObjectData() {
 //TODO:
 // - win->init in a thread
 
+string VRGuiSetup::setupDir() { return VRSceneManager::get()->getOriginalWorkdir()+"/setup/"; }
 
 // --------------------------
 // ---------Callbacks--------
@@ -267,10 +268,7 @@ void VRGuiSetup::on_del_clicked() { //TODO, should delete setup
 
 void VRGuiSetup::on_save_clicked() {
     if (current_setup == 0) return;
-
-    string defWorkDir = VRSceneManager::get()->getOriginalWorkdir();
-    current_setup->save(defWorkDir+"/setup/" + current_setup->getName() + ".xml");
-
+    current_setup->save(setupDir() + current_setup->getName() + ".xml");
     setToolButtonSensitivity("toolbutton12", false);
 }
 
@@ -278,9 +276,8 @@ void VRGuiSetup::on_save_clicked() {
 
 void VRGuiSetup::on_setup_changed() {
     string name = getComboboxText("combobox6");
-    ofstream f("setup/.local"); f.write(name.c_str(), name.size()); f.close(); // remember setup
-    string defWorkDir = VRSceneManager::get()->getOriginalWorkdir();
-    current_setup = VRSetupManager::get()->load(name, defWorkDir+"/setup/" + name + ".xml");
+    ofstream f(setupDir()+".local"); f.write(name.c_str(), name.size()); f.close(); // remember setup
+    current_setup = VRSetupManager::get()->load(name, setupDir() + name + ".xml");
     updateSetup();
 }
 
@@ -687,6 +684,13 @@ void VRGuiSetup::on_art_edit_id() {
     setToolButtonSensitivity("toolbutton12", true);
 }
 
+void VRGuiSetup::on_vrpn_edit_port() {
+    if (guard) return;
+    int p = toInt(getTextEntry("entry13"));
+    current_setup->setVRPNPort(p);
+    setToolButtonSensitivity("toolbutton12", true);
+}
+
 void VRGuiSetup::on_edit_VRPN_tracker_address() {
     if (guard) return;
 
@@ -952,12 +956,12 @@ void VRGuiSetup::updateSetupList() {
     Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("setups"));
     store->clear();
 
-    string dir = VRSceneManager::get()->getOriginalWorkdir() + "/setup";
+    string dir = setupDir();
     if (!VRGuiFile::exists(dir)) { cerr << "Error: no local directory setup\n"; return; }
 
     string last;
-    ifstream f(dir+"/.local");
-    if (!f.good()) f.open(dir+"/.default");
+    ifstream f(dir+".local");
+    if (!f.good()) f.open(dir+".default");
     if (!f.good()) { cerr << "Error: no setup file found\n"; return; }
     getline(f, last);
     f.close();
