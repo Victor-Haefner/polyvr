@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Setup>
   <Displays>
+    <Window active="1" type="0" width="640" height="480" name="Display" mouse="None" keyboard="None" Nx="1" Ny="1">
+      <View stereo="0" active_stereo="0" projection="1" eye_inverted="0" eye_separation="0.06" position="0 0 1 1" center="-0.499433 0 -0.976185" normal="0.0476295 0 0.998865" up="0 1 0" size="0.4 0.3" user=""/>
+      <Server Address="local"/>
+    </Window>
     <Window active="1" type="2" width="300" height="300" name="screen" mouse="mouse" keyboard="keyboard">
-      <View stereo="0" active_stereo="0" projection="1" eye_inverted="0" eye_separation="0.06" position="0 0 0.5 1" center="-0.999977 0 -0.993193" normal="-0.00680673 0 0.999977" up="0 1 0" size="1 1" user=""/>
-      <View stereo="0" active_stereo="0" projection="1" eye_inverted="0" eye_separation="0.06" position="0.5 0 1 1" center="0.5 0 -1" normal="0 0 1" up="0 1 0" size="1 1" user=""/>
+      <View stereo="0" active_stereo="0" projection="1" eye_inverted="0" eye_separation="0.06" position="0 0 1 1" center="0.2 0 -0.5" normal="0 0 1" up="0 1 0" size="0.4 0.3" user=""/>
     </Window>
   </Displays>
   <Devices>
