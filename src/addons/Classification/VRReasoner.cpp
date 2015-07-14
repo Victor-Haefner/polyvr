@@ -43,7 +43,7 @@ bool VRReasoner::startswith(string s, string subs) {
 }
 
 struct Variable {
-    vector<VROntologyInstance*> instances;
+    vector<VREntity*> instances;
     string value;
     bool isAnonymous = false;
     bool valid = false;

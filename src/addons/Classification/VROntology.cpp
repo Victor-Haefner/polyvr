@@ -87,7 +87,7 @@ vector<VROntologyRule*> VROntology::getRules() {
     return res;
 }
 
-void VROntologyInstance::set(string name, string value) {
+void VREntity::set(string name, string value) {
     int id = concept->getPropertyID(name);
     if (id < 0) return;
 
@@ -96,7 +96,7 @@ void VROntologyInstance::set(string name, string value) {
     properties[id][0] = value;
 }
 
-void VROntologyInstance::add(string name, string value) {
+void VREntity::add(string name, string value) {
     int id = concept->getPropertyID(name);
     if (id < 0) return;
 
@@ -105,12 +105,12 @@ void VROntologyInstance::add(string name, string value) {
     properties[id].push_back(value);
 }
 
-VROntologyInstance::VROntologyInstance(string name, VRConcept* c) {
+VREntity::VREntity(string name, VRConcept* c) {
     this->name = name;
     concept = c;
 }
 
-vector<string> VROntologyInstance::getAtPath(vector<string> path) {
+vector<string> VREntity::getAtPath(vector<string> path) {
     cout << "  get value at path ";
     for (auto p : path) cout << "/" << p;
     cout << endl;
@@ -129,7 +129,7 @@ vector<string> VROntologyInstance::getAtPath(vector<string> path) {
     return res;
 }
 
-string VROntologyInstance::toString() {
+string VREntity::toString() {
     string data = "Instance " + name + " of type " + concept->name;
     data += " with properties:";
     for (auto p : properties) {
@@ -146,7 +146,7 @@ VROntologyRule* VROntology::addRule(string rule) {
     return r;
 }
 
-VROntologyInstance* VROntology::addVectorInstance(string name, string concept, string x, string y, string z) {
+VREntity* VROntology::addVectorInstance(string name, string concept, string x, string y, string z) {
     auto i = addInstance(name, concept);
     i->set("x", x);
     i->set("y", y);
@@ -163,20 +163,20 @@ bool VRConcept::is_a(string concept) {
     return false;
 }
 
-VROntologyInstance* VROntology::addInstance(string name, string concept) {
+VREntity* VROntology::addInstance(string name, string concept) {
     auto c = getConcept(concept);
-    auto i = new VROntologyInstance(name, c);
+    auto i = new VREntity(name, c);
     instances[i->ID] = i;
     return i;
 }
 
-VROntologyInstance* VROntology::getInstance(string instance) {
+VREntity* VROntology::getInstance(string instance) {
     for (auto i : instances) if (i.second->name == instance) return i.second;
     return 0;
 }
 
-vector<VROntologyInstance*> VROntology::getInstances(string concept) {
-    vector<VROntologyInstance*> res;
+vector<VREntity*> VROntology::getInstances(string concept) {
+    vector<VREntity*> res;
     for (auto i : instances) if (i.second->concept->is_a(concept)) res.push_back(i.second);
     return res;
 }

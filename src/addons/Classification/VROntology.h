@@ -44,10 +44,10 @@ struct VRConcept : public VRNamedID {
     bool is_a(string concept);
 };
 
-struct VROntologyInstance : public VRNamedID {
+struct VREntity : public VRNamedID {
     VRConcept* concept;
     map<int, vector<string> > properties;
-    VROntologyInstance(string name, VRConcept* c);
+    VREntity(string name, VRConcept* c);
     void set(string name, string value);
     void add(string name, string value);
     string toString();
@@ -57,7 +57,7 @@ struct VROntologyInstance : public VRNamedID {
 
 struct VROntology {
     VRConcept* thing = 0;
-    map<int, VROntologyInstance*> instances;
+    map<int, VREntity*> instances;
     map<int, VROntologyRule*> rules;
 
     VROntology();
@@ -66,12 +66,12 @@ struct VROntology {
 
     VRConcept* addConcept(string concept, string parent = "");
     VROntologyRule* addRule(string rule);
-    VROntologyInstance* addInstance(string name, string concept);
-    VROntologyInstance* addVectorInstance(string name, string concept, string x, string y, string z);
+    VREntity* addInstance(string name, string concept);
+    VREntity* addVectorInstance(string name, string concept, string x, string y, string z);
 
     VRConcept* getConcept(string name, VRConcept* p = 0);
-    VROntologyInstance* getInstance(string instance);
-    vector<VROntologyInstance*> getInstances(string concept);
+    VREntity* getInstance(string instance);
+    vector<VREntity*> getInstances(string concept);
 
     vector<VROntologyRule*> getRules();
 

@@ -10,12 +10,12 @@ using namespace std;
 
 #include "VROntology.h"
 //class VROntology;
-//class VROntologyInstance;
+//class VREntity;
 
 class VRReasoner {
     public:
         struct Result {
-            vector<VROntologyInstance*> instances;
+            vector<VREntity*> instances;
         };
 
         static vector<string> split(string s, string d);
