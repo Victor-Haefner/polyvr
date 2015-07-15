@@ -18,9 +18,11 @@ void VRPyBase::execPyCall(PyObject* pyFkt, PyObject* pArgs, T t) {
 
 template <typename T>
 VRFunction<T>* VRPyBase::parseCallback(PyObject* args) {
-    PyObject *pyFkt, *pArgs = 0;
+	PyObject* pyFkt = 0;
+	PyObject* pArgs = 0;
     if (pySize(args) == 1) if (! PyArg_ParseTuple(args, "O", &pyFkt)) return 0;
     if (pySize(args) == 2) if (! PyArg_ParseTuple(args, "OO", &pyFkt, &pArgs)) return 0;
+	if (pyFkt == 0) return 0;
     Py_IncRef(pyFkt);
 
     if (pArgs == 0) pArgs = PyTuple_New(0);
