@@ -32,6 +32,7 @@ CSGGeometry::CSGGeometry(string name) : VRGeometry(name) {
 	oct = new Octree(thresholdL);
 	type = "CSGGeometry";
 	dm->read(oldWorldTrans);
+	polyhedron = new CGAL::Polyhedron();
 }
 
 CSGGeometry::~CSGGeometry() {}
@@ -52,43 +53,17 @@ CGAL::Polyhedron* CSGGeometry::getCSGGeometry() {
 	return polyhedron;
 }
 
-CGAL::Polyhedron* CSGGeometry::subtract(CGAL::Polyhedron *minuend, CGAL::Polyhedron *subtrahend) {
-	if (!minuend->is_closed()) return 0;
-	if (!subtrahend->is_closed()) return 0;
+void CSGGeometry::operate(CGAL::Polyhedron *p1, CGAL::Polyhedron *p2) {
+	if (!p1->is_closed() || !p2->is_closed()) return;
 
-	CGAL::Nef_Polyhedron nef_minuend(*minuend);
-	CGAL::Nef_Polyhedron nef_subtrahend(*subtrahend);
-	nef_minuend -= nef_subtrahend;
+	CGAL::Nef_Polyhedron np1(*p1), np2(*p2);
 
-	CGAL::Polyhedron *result = new CGAL::Polyhedron();
-	nef_minuend.convert_to_polyhedron(*result);
-	return result;
-}
+	if (operation == "unite") np1 += np2;
+	else if(operation == "subtract") np1 -= np2;
+	else if(operation == "intersect") np1 = np1.intersection(np2);
+	else cout << "CSGGeometry: Warning: unexpected CSG operation!\n";
 
-CGAL::Polyhedron* CSGGeometry::unite(CGAL::Polyhedron *first, CGAL::Polyhedron *second) {
-	if (!first->is_closed()) return 0;
-	if (!second->is_closed()) return 0;
-
-	CGAL::Nef_Polyhedron nef_first(*first);
-	CGAL::Nef_Polyhedron nef_second(*second);
-	nef_first += nef_second;
-
-	CGAL::Polyhedron* result = new CGAL::Polyhedron();
-	nef_first.convert_to_polyhedron(*result);
-	return result;
-}
-
-CGAL::Polyhedron* CSGGeometry::intersect(CGAL::Polyhedron *first, CGAL::Polyhedron *second) {
-	if (!first->is_closed()) return 0;
-	if (!second->is_closed()) return 0;
-
-	CGAL::Nef_Polyhedron nef_first(*first);
-	CGAL::Nef_Polyhedron nef_second(*second);
-	CGAL::Nef_Polyhedron nef_result = nef_first.intersection(nef_second);
-
-	CGAL::Polyhedron *result = new CGAL::Polyhedron();
-	nef_result.convert_to_polyhedron(*result);
-	return result;
+	np1.convert_to_polyhedron(*polyhedron);
 }
 
 void CSGGeometry::applyTransform(CGAL::Polyhedron* p, Matrix m) {

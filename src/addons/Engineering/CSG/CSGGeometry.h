@@ -29,9 +29,7 @@ class CSGGeometry : public VRGeometry {
         GeometryTransitPtr toOsgGeometry(CGAL::Polyhedron* p);
         CGAL::Polyhedron* toPolyhedron(GeometryRecPtr geometry, Matrix worldTransform, bool& success);
 
-        CGAL::Polyhedron* subtract(CGAL::Polyhedron* minuend, CGAL::Polyhedron* subtrahend);
-        CGAL::Polyhedron* unite(CGAL::Polyhedron* first, CGAL::Polyhedron* second);
-        CGAL::Polyhedron* intersect(CGAL::Polyhedron* first, CGAL::Polyhedron* second);
+        void operate(CGAL::Polyhedron* minuend, CGAL::Polyhedron* subtrahend);
 
         void enableEditMode();
         bool disableEditMode();

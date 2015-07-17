@@ -199,18 +199,10 @@ bool CSGGeometry::disableEditMode() {
 	if (polys[0] == 0) cout << "Warning! first polyhedron is 0! " << children[0]->getName() << endl;
 	if (polys[1] == 0) cout << "Warning! second polyhedron is 0! " << children[1]->getName() << endl;
 	if (polys[0] == 0 || polys[1] == 0) return false;
+    if (!polys[0]->is_closed() || !polys[1]->is_closed()) return false;
 
-    if (polyhedron) delete polyhedron;
-    polyhedron = 0;
-	if (operation == "unite") polyhedron = unite(polys[0], polys[1]);
-	else if(operation == "subtract") polyhedron = subtract(polys[0], polys[1]);
-	else if(operation == "intersect") polyhedron = intersect(polys[0], polys[1]);
-	else cout << "CSGGeometry: Warning: unexpected CSG operation!\n";
-
-	// Clean up
-	for (auto p : polys) delete p;
-
-	if (polyhedron == 0) return false;
+    operate(polys[0], polys[1]);
+	for (auto p : polys) delete p; // clean up
     setCSGGeometry(polyhedron);
 	return true;
 }
