@@ -383,28 +383,87 @@ void VRSegmentation::removeDuplicates(VRGeometry* geo) {
 struct Vertex;
 struct Edge;
 struct Triangle;
-
-struct Vertex {
-    vector<Edge*> edges;
-    vector<Triangle*> triangles;
-    Vec3f v;
-    Vertex(Pnt3f p) : v(p) {;}
-};
+struct Border;
 
 struct Edge {
     vector<Vertex*> vertices;
     vector<Triangle*> triangles;
+    Border* border = 0;
     Edge() {
         vertices = vector<Vertex*>(2,0);
+    }
+
+    Vertex* other(Vertex* v) {
+        return vertices[0] == v ? vertices[1] : vertices[0];
+    }
+};
+
+struct Vertex {
+    vector<Edge*> edges;
+    vector<Triangle*> triangles;
+    Border* border = 0;
+    bool isBorder = false;
+    Vec3f v;
+    Vec3f n;
+    int ID;
+    Vertex(Pnt3f p, Vec3f n, int i) : v(p), n(n), ID(i) {;}
+
+    vector<Vertex*> neighbors() {
+        vector<Vertex*> res;
+        for (auto e : edges) res.push_back(e->other(this));
+        return res;
     }
 };
 
 struct Triangle {
     vector<Vertex*> vertices;
     vector<Edge*> edges;
+    Border* border = 0;
     Triangle() {
         edges = vector<Edge*>(3,0);
         vertices = vector<Vertex*>(3,0);
+    }
+
+    void addEdges(map<int, Edge*>& Edges) {
+        Vec3i IDs(vertices[0]->ID, vertices[1]->ID, vertices[2]->ID);
+        for (int i=0; i<3; i++) {
+            int ID1 = IDs[i];
+            int ID2 = IDs[(i+1)%3];
+            int eID_h1 = (ID1+ID2)*(ID1+ID2+1)*0.5+ID2; // hash IDs edge map
+            int eID_h2 = (ID1+ID2)*(ID1+ID2+1)*0.5+ID1; // hash IDs edge map
+            int ID = min(eID_h1, eID_h2);
+            Edge* e = 0;
+            if (Edges.count(ID)) e = Edges[ID];
+            if (e == 0) {
+                e = new Edge();
+                e->vertices[0] = vertices[i];
+                e->vertices[1] = vertices[(i+1)%3];
+                vertices[i]->edges.push_back(e);
+                vertices[(i+1)%3]->edges.push_back(e);
+            }
+            Edges[ID] = e;
+            edges[i] = e;
+            e->triangles.push_back(this);
+        }
+    }
+
+    void addVertices(Vertex* v1, Vertex* v2, Vertex* v3) {
+        vertices[0] = v1;
+        vertices[1] = v2;
+        vertices[2] = v3;
+        v1->triangles.push_back(this);
+        v2->triangles.push_back(this);
+        v3->triangles.push_back(this);
+    }
+};
+
+struct Border {
+    vector<Vertex*> vertices;
+    Border() {;}
+
+    void add(Vertex* v) {
+        vertices.push_back(v);
+        v->border = this;
     }
 };
 
@@ -417,44 +476,117 @@ void VRSegmentation::fillHoles(VRGeometry* geo) {
     map<int, Vertex*> vertices;
     map<int, Edge*> edges;
 
-    /*auto inds = geo->getMesh()->getIndices();
-    for (auto i=0; i<inds->size(); i+=3) {
-        ;
-    }*/
-
+    // ---- build linked structure ---- //
 	TriangleIterator it(geo->getMesh());
 	for (; !it.isAtEnd() ;++it) {
         Triangle* t = new Triangle();
+        triangles.push_back(t);
+
+        Vec3i IDs(it.getPositionIndex(0), it.getPositionIndex(1), it.getPositionIndex(2));
 
         for (int i=0; i<3; i++) {
             Pnt3f p = it.getPosition(i);
+            Vec3f n = it.getNormal(i);
             Vertex* v = 0;
-            int ID = it.getIndex(i);
+
+            int ID = IDs[i];
             if (vertices.count(ID)) v = vertices[ID];
-            if (v == 0) v = new Vertex(p);
+            if (v == 0) v = new Vertex(p, n, ID);
+
             vertices[ID] = v;
             t->vertices[i] = v;
             v->triangles.push_back(t);
         }
 
-        for (int i=0; i<3; i++) {
-            int ID1 = it.getIndex(i);
-            int ID2 = it.getIndex((i+1)%3);
-            int ID = (ID1+ID2)*(ID1+ID2+1)*0.5+ID2; // hash IDs edge map
-            Edge* e = 0;
-            if (edges.count(ID)) e = edges[ID];
-            if (e == 0) {
-                e = new Edge();
-                e->vertices[0] = t->vertices[i];
-                e->vertices[1] = t->vertices[(i+1)%3];
-                t->vertices[i]->edges.push_back(e);
-                t->vertices[(i+1)%3]->edges.push_back(e);
+        t->addEdges(edges);
+	}
+
+    vector<Vertex*> borderVertices;
+    vector<Border*> borders;
+
+	// ---- search border vertices ---- //
+	for (auto v : vertices) {
+        v.second->isBorder = (v.second->edges.size() > v.second->triangles.size());
+        if (!v.second->isBorder) continue;
+        borderVertices.push_back(v.second);
+	}
+
+	for (auto v : borderVertices) {
+        if (v->border != 0) continue;
+        Border* b = new Border();
+        borders.push_back(b);
+        b->add(v);
+        for (auto v2 : v->neighbors()) {
+            while (v2->isBorder && v2->border == 0) {
+                b->add(v2);
+                for (auto v3 : v2->neighbors()) if (v3->isBorder && v3->border == 0) {
+                    v2 = v3; break;
+                }
             }
-            edges[ID] = e;
-            t->edges[i] = e;
-            e->triangles.push_back(t);
         }
 	}
+
+	cout << "found " << borderVertices.size() << " border vertices" << endl;
+	cout << "found " << borders.size() << " borders" << endl;
+
+    vector<Vertex*> convexVerts;
+
+	// ---- fill holes ---- //
+	int itr = 0;
+	for (auto b : borders) {
+        while (b->vertices.size() > 0) {
+            for (uint i=0; i<b->vertices.size(); i++) {
+                Vertex* v1 = b->vertices[(i-1)%b->vertices.size()];
+                Vertex* v2 = b->vertices[i];
+                Vertex* v3 = b->vertices[(i+1)%b->vertices.size()];
+
+                Vec3f e1 = v2->v - v1->v;
+                Vec3f e2 = v3->v - v2->v;
+                float ca = e1.dot(e2);
+                Vec3f vn = e1.cross(e2);
+                Vec3f n = v2->n;
+                if (n.dot(vn) >= 0) { convexVerts.push_back(v2); continue; } // convex
+
+                cout << v1->v << "   " << v2->v << "   " << v2->v << "   " << e1 << "   " << e1 << "   " << vn << "   " << n << endl;
+
+                Triangle* t = new Triangle();
+                triangles.push_back(t);
+                t->addVertices(v1,v2,v3);
+                t->addEdges(edges);
+
+                v2->border = 0;
+                v2->isBorder = false;
+                //b->vertices.erase(b->vertices.begin()+i);
+                //cout << " erase " << i << " " << b->vertices.size() << endl;
+                break;
+            }
+
+            itr++;
+            if (itr == 1) break;
+        }
+	}
+
+	// ---- convert back to mesh ---- //
+	GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
+	GeoVec3fPropertyRecPtr norms = GeoVec3fProperty::create();
+	GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
+	for (auto v : vertices) {
+        pos->addValue(Pnt3f(v.second->v));
+        norms->addValue(Vec3f(v.second->n));
+	}
+	for (auto t : triangles) for (auto v : t->vertices) inds->addValue(v->ID);
+	geo->setPositions(pos);
+	geo->setNormals(norms);
+	geo->setIndices(inds);
+
+    // ---- colorize borders ---- //
+    int N = geo->getMesh()->getPositions()->size();
+    GeoColor3fPropertyRecPtr cols = GeoColor3fProperty::create();
+    cols->resize(N);
+    for (int i=0; i<N; i++) cols->setValue(Color3f(1,1,1),i);
+    for (auto v : borderVertices) cols->setValue(Color3f(1,0,0),v->ID);
+    for (auto v : convexVerts) cols->setValue(Color3f(0,0,1),v->ID);
+	geo->setColors(cols, true);
 }
 
 VRObject* VRSegmentation::convexDecompose(VRGeometry* geo) {
