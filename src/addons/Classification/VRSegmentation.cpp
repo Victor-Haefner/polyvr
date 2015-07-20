@@ -536,9 +536,10 @@ void VRSegmentation::fillHoles(VRGeometry* geo) {
 	for (auto b : borders) {
         while (b->vertices.size() > 0) {
             for (uint i=0; i<b->vertices.size(); i++) {
-                Vertex* v1 = b->vertices[(i-1)%b->vertices.size()];
-                Vertex* v2 = b->vertices[i];
-                Vertex* v3 = b->vertices[(i+1)%b->vertices.size()];
+                Vec3i ids(i, (i+1)%b->vertices.size(), (i+2)%b->vertices.size());
+                Vertex* v1 = b->vertices[ids[0]];
+                Vertex* v2 = b->vertices[ids[1]];
+                Vertex* v3 = b->vertices[ids[2]];
 
                 Vec3f e1 = v2->v - v1->v;
                 Vec3f e2 = v3->v - v2->v;
@@ -547,22 +548,20 @@ void VRSegmentation::fillHoles(VRGeometry* geo) {
                 Vec3f n = v2->n;
                 if (n.dot(vn) >= 0) { convexVerts.push_back(v2); continue; } // convex
 
-                cout << v1->v << "   " << v2->v << "   " << v2->v << "   " << e1 << "   " << e1 << "   " << vn << "   " << n << endl;
-
                 Triangle* t = new Triangle();
                 triangles.push_back(t);
-                t->addVertices(v1,v2,v3);
+                t->addVertices(v3,v2,v1);
                 t->addEdges(edges);
 
                 v2->border = 0;
                 v2->isBorder = false;
-                //b->vertices.erase(b->vertices.begin()+i);
-                //cout << " erase " << i << " " << b->vertices.size() << endl;
+                b->vertices.erase(b->vertices.begin()+ids[1]);
+                cout << " erase " << i << " " << b->vertices.size() << endl;
                 break;
             }
 
             itr++;
-            if (itr == 1) break;
+            if (itr == 100) break;
         }
 	}
 
@@ -570,14 +569,18 @@ void VRSegmentation::fillHoles(VRGeometry* geo) {
 	GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
 	GeoVec3fPropertyRecPtr norms = GeoVec3fProperty::create();
 	GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
+	GeoUInt32PropertyRecPtr lengths = GeoUInt32Property::create();
 	for (auto v : vertices) {
         pos->addValue(Pnt3f(v.second->v));
         norms->addValue(Vec3f(v.second->n));
 	}
 	for (auto t : triangles) for (auto v : t->vertices) inds->addValue(v->ID);
+	lengths->addValue(triangles.size()*3);
 	geo->setPositions(pos);
 	geo->setNormals(norms);
 	geo->setIndices(inds);
+	geo->setLengths(lengths);
+	geo->setType(GL_TRIANGLES);
 
     // ---- colorize borders ---- //
     int N = geo->getMesh()->getPositions()->size();
