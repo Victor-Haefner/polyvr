@@ -47,7 +47,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRSegmentation>::type = {
 
 PyMethodDef VRPySegmentation::methods[] = {
     {"extractPatches", (PyCFunction)VRPySegmentation::extractPatches, METH_VARARGS, "Extract patches from the geometry" },
-    {"fillHoles", (PyCFunction)VRPySegmentation::fillHoles, METH_VARARGS, "Fill the holes of a geometry" },
+    {"fillHoles", (PyCFunction)VRPySegmentation::fillHoles, METH_VARARGS, "Fill the holes of a geometry - fillHoles(geo, steps)" },
     {"convexDecompose", (PyCFunction)VRPySegmentation::convexDecompose, METH_VARARGS, "Decompose the geometry in convex parts" },
     {"removeDuplicates", (PyCFunction)VRPySegmentation::removeDuplicates, METH_VARARGS, "Make all vertices single index and remove the duplicates" },
     {NULL}  /* Sentinel */
@@ -62,10 +62,10 @@ PyObject* VRPySegmentation::convexDecompose(VRPySegmentation* self, PyObject* ar
 }
 
 PyObject* VRPySegmentation::fillHoles(VRPySegmentation* self, PyObject* args) {
-    VRPyGeometry* geo = NULL;
-    if (! PyArg_ParseTuple(args, "O", &geo)) return NULL;
+    VRPyGeometry* geo = NULL; int N = 0;
+    if (! PyArg_ParseTuple(args, "Oi", &geo, &N)) return NULL;
     if (geo == NULL) { PyErr_SetString(err, "VRPySegmentation::fillHoles: Missing geometry parameter"); return NULL; }
-    self->obj->fillHoles(geo->obj);
+    self->obj->fillHoles(geo->obj, N);
     Py_RETURN_TRUE;
 }
 
