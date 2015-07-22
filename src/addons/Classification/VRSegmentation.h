@@ -29,9 +29,12 @@ struct Edge {
 
     Edge();
     Vertex* other(Vertex* v);
+    Triangle* other(Triangle* t);
     vector<Edge*> borderNeighbors();
     Vec3f segment();
-    Vertex* vertexTo(Edge* E);
+    Vertex* vertexTo(Edge* e);
+    bool isLinked(Edge* e);
+    bool has(Vertex* v);
 };
 
 struct Vertex {
@@ -56,6 +59,7 @@ struct Triangle {
     Triangle();
     void addEdges(map<int, Edge*>& Edges);
     void addVertices(Vertex* v1, Vertex* v2, Vertex* v3);
+    Edge* getOtherEdge(Edge* e, Vertex* v);
 };
 
 struct Border {

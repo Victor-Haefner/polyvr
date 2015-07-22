@@ -394,12 +394,47 @@ Vertex* Edge::other(Vertex* v) {
 
 vector<Edge*> Edge::borderNeighbors() {
     vector<Edge*> res;
-    for (auto v : vertices) for (auto e : v->edges) if (e->isBorder) res.push_back(e);
+    for (auto v : vertices) for (auto e : v->edges) if (e->isBorder && e != this) res.push_back(e);
+    if (res.size() < 2) return res;
+
+    if (res.size() > 2) { // special case
+        vector<Edge*> tmp;
+        for(auto e : res) if(isLinked(e)) tmp.push_back(e);
+        res = tmp;
+    }
+
+    Vec3f ed1 = segment();
+    Vec3f ed2 = res[0]->segment();
+    Vertex* v = vertexTo(res[0]);
+    if (v->n.dot(ed1.cross(ed2)) <= 0) iter_swap(res.begin(), res.begin() +1);
+
     return res;
+}
+
+bool Edge::isLinked(Edge* E) {
+    Vertex* v = vertexTo(E);
+    if (v == 0) return false;
+
+    for (auto t : triangles) {
+        Edge* e = this;
+        while(e && t) {
+            e = t->getOtherEdge(e,v);
+            if (e == E) return true;
+            if (e == this) break;
+            t = e->other(t);
+        }
+    }
+
+    return false;
 }
 
 Vec3f Edge::segment() {
     return vertices[1]->v-vertices[0]->v;
+}
+
+Triangle* Edge::other(Triangle* t) {
+    if (triangles.size() < 2) return 0;
+    return t == triangles[0] ? triangles[1] : triangles[0];
 }
 
 Vertex* Edge::vertexTo(Edge* E) {
@@ -407,6 +442,11 @@ Vertex* Edge::vertexTo(Edge* E) {
     return 0;
 }
 
+bool Edge::has(Vertex* v) {
+    if (vertices[0] == v) return true;
+    if (vertices[1] == v) return true;
+    return false;
+}
 
 Vertex::Vertex(Pnt3f p, Vec3f n, int i) : v(p), n(n), ID(i) {;}
 
@@ -426,6 +466,11 @@ vector<Vertex*> Vertex::borderNeighbors() {
 Triangle::Triangle() {
     edges = vector<Edge*>(3,0);
     vertices = vector<Vertex*>(3,0);
+}
+
+Edge* Triangle::getOtherEdge(Edge* E, Vertex* v) {
+    for (auto e : edges) if(e->has(v) && e != E) return e;
+    return 0;
 }
 
 void Triangle::addEdges(map<int, Edge*>& Edges) {
@@ -504,43 +549,43 @@ void VRSegmentation::fillHoles(VRGeometry* geo, int steps) {
     vector<Edge*> borderEdges;
     vector<Border*> borders;
 
-	// ---- search border vertices ---- //
+	// ---- search border edges and vertices ---- //
 	for (auto e : edges) {
-        e.second->isBorder = (e.second->triangles.size() == 1);
-        if (!e.second->isBorder) continue;
+        if (e.second->triangles.size() != 1) continue; // not a border edge
+        e.second->isBorder = true;
         borderEdges.push_back(e.second);
         for (auto v : e.second->vertices) v->isBorder = true;
 	}
 
+	// ---- search borders ---- //
 	for (auto e : borderEdges) {
-        if (e->border != 0) continue;
+        if (e->border != 0) continue; // belongs allready to a border
 
-        auto neighbors = e->borderNeighbors();
-        if (neighbors.size() < 2) continue;
-        auto e2 = neighbors[1];
-        auto e3 = neighbors[0];
-
-        Vec3f ed1 = e->segment();
-        Vec3f ed2 = neighbors[0]->segment();
-        Vertex* v = e->vertexTo(neighbors[0]);
-        if (v == 0) continue;
-        if (v->n.dot(ed1.cross(ed2)) >= 0) { e2 = neighbors[0]; e3 = neighbors[0]; }
+        auto en = e->borderNeighbors();
+        if (en.size() < 2) continue; // should not happen
 
         Border* b = new Border();
+        Vertex* v = e->vertexTo(en[1]);
+        e->border = b;
         b->add(v);
 
         Vertex* lv = v;
-        while (e2->isBorder && e2->border == 0) {
-            b->add(e2->other(lv));
-            e2->border = b;
-            for (auto e4 : e2->borderNeighbors()) if (e4->border == 0) { e2 = e4; break; }
+        while (en[1]->isBorder && en[1]->border == 0) {
+            lv = en[1]->other(lv);
+            b->add(lv);
+            en[1]->border = b;
+            for (auto e4 : en[1]->borderNeighbors()) if (e4->border == 0) { en[1] = e4; break; }
         }
 
+        v = e->vertexTo(en[0]);
+        if (v->border == 0) b->add(v, true);
+
         lv = v;
-        while (e3->isBorder && e3->border == 0) {
-            b->add(e3->other(lv), true);
-            e3->border = b;
-            for (auto e4 : e3->borderNeighbors()) if (e4->border == 0) { e3 = e4; break; }
+        while (en[0]->isBorder && en[0]->border == 0) {
+            lv = en[0]->other(lv);
+            b->add(lv, true);
+            en[0]->border = b;
+            for (auto e4 : en[0]->borderNeighbors()) if (e4->border == 0) { en[0] = e4; break; }
         }
 
         //if (b->vertices.size() < 3) continue;
@@ -557,7 +602,7 @@ void VRSegmentation::fillHoles(VRGeometry* geo, int steps) {
         Border* b = borders[ib];
         int N0 = b->vertices.size();
 
-        for (int itr = 0; b->vertices.size() > 0 && itr <= steps; itr++) {
+        for (int itr = 0; b->vertices.size() > 0 && (itr < steps || steps == 0 && itr == 0); itr++) {
             vector<int> toErase;
 
             for (uint i=0; i<b->vertices.size()-1; i++) {
@@ -577,12 +622,12 @@ void VRSegmentation::fillHoles(VRGeometry* geo, int steps) {
                 //if (n.dot(vn) >= 0) cout << " convex" << endl;
                 //else cout << " concave" << endl;
 
-                if (n.dot(vn) <= 0) { convexVerts.push_back(v2); continue; } // convex
+                if (n.dot(vn) >= 0) { convexVerts.push_back(v2); continue; } // convex
                 if (steps == 0) continue;
 
                 Triangle* t = new Triangle();
                 triangles.push_back(t);
-                t->addVertices(v1,v2,v3);
+                t->addVertices(v3,v2,v1);
                 t->addEdges(edges);
 
                 v2->border = 0;
@@ -625,7 +670,8 @@ void VRSegmentation::fillHoles(VRGeometry* geo, int steps) {
         float b = float(rand())/RAND_MAX;
         for (auto v : borders[i]->vertices) cols->setValue(Color3f(r,g,b),v->ID);
     }
-    //for (auto v : convexVerts) cols->setValue(Color3f(0,0,1),v->ID);
+    for (auto v : convexVerts) cols->setValue(Color3f(0,0,1),v->ID);
+    cout << "found " << convexVerts.size() << " convex vertices" << endl;
 	geo->setColors(cols, true);
 }
 
