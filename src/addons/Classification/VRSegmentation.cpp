@@ -605,8 +605,13 @@ void VRSegmentation::fillHoles(VRGeometry* geo, int steps) {
         for (int itr = 0; b->vertices.size() > 0 && (itr < steps || steps == 0 && itr == 0); itr++) {
             vector<int> toErase;
 
-            for (uint i=0; i<b->vertices.size()-1; i++) {
-                Vec3i ids(i, (i+1)%b->vertices.size(), (i+2)%b->vertices.size());
+            //cout << "process border: ";
+            //for (auto v : b->vertices) cout << " " << v->ID;
+            //cout << endl;
+
+            int N = b->vertices.size();
+            for (uint i=0; i<N-1; i++) {
+                Vec3i ids(i, (i+1)%N, (i+2)%N);
                 Vertex* v1 = b->vertices[ids[0]];
                 Vertex* v2 = b->vertices[ids[1]];
                 Vertex* v3 = b->vertices[ids[2]];
@@ -623,6 +628,8 @@ void VRSegmentation::fillHoles(VRGeometry* geo, int steps) {
                 //else cout << " concave" << endl;
 
                 if (n.dot(vn) >= 0) { convexVerts.push_back(v2); continue; } // convex
+                if (ca > 0.5) continue; // limit to max 120 deg angles
+                //cout << "angle " << ca << " v " << b->vertices[ids[1]]->ID << endl;
                 if (steps == 0) continue;
 
                 Triangle* t = new Triangle();
@@ -637,9 +644,12 @@ void VRSegmentation::fillHoles(VRGeometry* geo, int steps) {
             }
 
             std::sort(toErase.rbegin(), toErase.rend());
-            for (int i : toErase) b->vertices.erase(b->vertices.begin()+i);
+            for (int i : toErase) {
+                //cout << "erase vertex " << b->vertices[i]->ID << endl;
+                b->vertices.erase(b->vertices.begin()+i);
+            }
         }
-        cout << " processed hole " << ib << "/" << borders.size() << " , reduced " << b->vertices.size() << "/" << N0 << endl;
+        //cout << " processed hole " << ib << "/" << borders.size() << " , reduced " << b->vertices.size() << "/" << N0 << endl;
 	}
 
 	// ---- convert back to mesh ---- //
