@@ -152,6 +152,7 @@
 			<Add option="-lboost_program_options" />
 			<Add option="-lboost_serialization" />
 			<Add option="-lboost_filesystem" />
+			<Add option="-lrt" />
 			<Add option="-ljpeg" />
 			<Add option="-lpng" />
 			<Add option="-lz" />

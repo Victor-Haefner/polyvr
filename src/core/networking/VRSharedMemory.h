@@ -2,23 +2,29 @@
 #define VRSHAREDMEMORY_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
-#include <vector>
+#include <map>
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 class VRSharedMemory {
     private:
-        size_t size = 0;
+        struct Segment;
+        Segment* segment = 0;
 
     public:
-        VRSharedMemory();
+        VRSharedMemory(string segment, bool init = true);
+        ~VRSharedMemory();
 
-        void allocate(size_t N);
-        void deallocate();
+        void* getPtr(string handle);
+        string getHandle(void* data);
 
-        void* get(size_t offset);
-        void write(size_t offset, void* data);
+        template<class T>
+        T* addObject(string name);
+        template<class T>
+        T getObject(string name);
+
+        static void test();
 };
 
 OSG_END_NAMESPACE;
