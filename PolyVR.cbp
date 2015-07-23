@@ -433,6 +433,8 @@
 		<Unit filename="src/core/networking/VRPing.h" />
 		<Unit filename="src/core/networking/VRProtocol.cpp" />
 		<Unit filename="src/core/networking/VRProtocol.h" />
+		<Unit filename="src/core/networking/VRSharedMemory.cpp" />
+		<Unit filename="src/core/networking/VRSharedMemory.h" />
 		<Unit filename="src/core/networking/VRSocket.cpp" />
 		<Unit filename="src/core/networking/VRSocket.h" />
 		<Unit filename="src/core/networking/mongoose/mongoose.c">
