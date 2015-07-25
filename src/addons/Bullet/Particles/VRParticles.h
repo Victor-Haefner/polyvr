@@ -16,16 +16,17 @@ struct Particle;
 
 class VRParticles : public VRGeometry {
     private:
+        int N = 1000;
+        vector<Particle*> particles;
+
         VRFunction<int>* fkt = 0;
         VRMaterial* mat = 0;
         GeoPnt3fPropertyRecPtr pos;
-        int N = 1000;
-
         btDiscreteDynamicsWorld* world = 0;
-        vector<Particle*> particles;
 
     public:
-        VRParticles();
+        VRParticles(): VRParticles(200){}
+        VRParticles(int particleAmount);
         ~VRParticles();
 
         void update(int b = 0, int e = -1);

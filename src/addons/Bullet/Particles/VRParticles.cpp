@@ -4,6 +4,7 @@
 #include "core/scene/VRScene.h"
 
 #include <btBulletDynamicsCommon.h>
+#include <BulletSoftBody/btSoftRigidDynamicsWorld.h>
 
 typedef boost::recursive_mutex::scoped_lock BLock;
 
@@ -20,13 +21,16 @@ boost::recursive_mutex& mtx() {
 }
 
 struct OSG::Particle {
+    float mass = 1.0; // unit is TODO
+    float radius = 0.01; // unit is meter
+    unsigned int age = 0; // current age
+    unsigned int lifetime = 0; // max age. 0 means immortal.
+
     btRigidBody* body = 0;
     btCollisionShape* shape = 0;
     btDefaultMotionState* motionState = 0;
-    float radius = 0.01;
     int collisionGroup = 1;
     int collisionMask = 1;
-    float mass = 1.0;
 
     //Particle(btDiscreteDynamicsWorld* world);
     Particle(btDiscreteDynamicsWorld* world = 0) {
@@ -53,7 +57,7 @@ struct OSG::Particle {
     }
 
     ~Particle() {
-        btDiscreteDynamicsWorld* world = 0;
+        //btDiscreteDynamicsWorld* world = 0; // TODO delete?
         VRScene* scene = VRSceneManager::getCurrent();
         if (scene) scene->bltWorld()->removeRigidBody(body);
         delete body;
@@ -65,13 +69,13 @@ struct OSG::Particle {
 Vec3f toVec3f(btVector3 v) { return Vec3f(v[0], v[1], v[2]); }
 btVector3 toBtVector3(Vec3f v) { return btVector3(v[0], v[1], v[2]); }
 
-VRParticles::VRParticles() : VRGeometry("particles") {
-    N = 500;
+VRParticles::VRParticles(int particleAmount) : VRGeometry("particles") {
+    N = particleAmount;
+    particles.resize(N, 0);
 
     // physics
     VRScene* scene = VRSceneManager::getCurrent();
     if (scene) world = scene->bltWorld();
-    particles.resize(N, 0);
 
     {
         BLock lock(mtx());
