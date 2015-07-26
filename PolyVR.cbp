@@ -529,6 +529,8 @@
 		<Unit filename="src/core/scene/import/VRPLY.h" />
 		<Unit filename="src/core/scripting/VRPyAnimation.cpp" />
 		<Unit filename="src/core/scripting/VRPyAnimation.h" />
+		<Unit filename="src/core/scripting/VRPyAnnotationEngine.cpp" />
+		<Unit filename="src/core/scripting/VRPyAnnotationEngine.h" />
 		<Unit filename="src/core/scripting/VRPyBase.cpp" />
 		<Unit filename="src/core/scripting/VRPyBase.h" />
 		<Unit filename="src/core/scripting/VRPyBaseT.h" />
@@ -644,6 +646,10 @@
 		<Unit filename="src/core/setup/windows/VRWindow.h" />
 		<Unit filename="src/core/setup/windows/VRWindowManager.cpp" />
 		<Unit filename="src/core/setup/windows/VRWindowManager.h" />
+		<Unit filename="src/core/tools/VRAnalyticGeometry.cpp" />
+		<Unit filename="src/core/tools/VRAnalyticGeometry.h" />
+		<Unit filename="src/core/tools/VRAnnotationEngine.cpp" />
+		<Unit filename="src/core/tools/VRAnnotationEngine.h" />
 		<Unit filename="src/core/tools/VRClipPlane.cpp" />
 		<Unit filename="src/core/tools/VRClipPlane.h" />
 		<Unit filename="src/core/tools/VRColorChooser.cpp" />
