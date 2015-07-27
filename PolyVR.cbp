@@ -527,6 +527,8 @@
 		<Unit filename="src/core/scene/import/VRImport.h" />
 		<Unit filename="src/core/scene/import/VRPLY.cpp" />
 		<Unit filename="src/core/scene/import/VRPLY.h" />
+		<Unit filename="src/core/scripting/VRPyAnalyticGeometry.cpp" />
+		<Unit filename="src/core/scripting/VRPyAnalyticGeometry.h" />
 		<Unit filename="src/core/scripting/VRPyAnimation.cpp" />
 		<Unit filename="src/core/scripting/VRPyAnimation.h" />
 		<Unit filename="src/core/scripting/VRPyAnnotationEngine.cpp" />
