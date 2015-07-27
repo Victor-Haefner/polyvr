@@ -46,7 +46,7 @@ VRAnalyticGeometry::VRAnalyticGeometry() : VRObject("AnalyticGeometry") {
 
     mat = new VRMaterial("AnalyticGeometry2");
     mat->setLit(false);
-    mat->setPointSize(10);
+    mat->setPointSize(11);
     vectorEndsGeometry->setMaterial(mat);
 }
 
@@ -54,8 +54,10 @@ VRAnalyticGeometry::~VRAnalyticGeometry() {
     delete ae;
 }
 
+void VRAnalyticGeometry::setLabelSize(float s) { ae->setSize(s); }
+
 void VRAnalyticGeometry::setVector(int i, Vec3f p, Vec3f vec, Vec3f color, string label) {
-    ae->set(i, p, label);
+    ae->set(i, p+vec*0.5, label);
     Vector v;
     v.p = p; v.v = vec; v.color = color; v.label = label;
     vectors.push_back(v);

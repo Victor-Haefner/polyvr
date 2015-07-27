@@ -36,6 +36,8 @@ class VRAnalyticGeometry : public VRObject {
         VRAnalyticGeometry();
         ~VRAnalyticGeometry();
 
+        void setLabelSize(float s);
+
         void setVector(int i, Vec3f pos, Vec3f vec, Vec3f color, string label="");
         void clear();
 };

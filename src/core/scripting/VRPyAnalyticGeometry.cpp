@@ -47,9 +47,16 @@ template<> PyTypeObject VRPyBaseT<OSG::VRAnalyticGeometry>::type = {
 
 PyMethodDef VRPyAnalyticGeometry::methods[] = {
     {"setVector", (PyCFunction)VRPyAnalyticGeometry::setVector, METH_VARARGS, "Add/set a an annotated vector - setVector(int i, [pos], [vec], [col], str label)" },
-    {"clear", (PyCFunction)VRPyAnalyticGeometry::clear, METH_NOARGS, "Clear" },
+    {"setLabelSize", (PyCFunction)VRPyAnalyticGeometry::setLabelSize, METH_VARARGS, "Set the size of the labels - setLabelSize( float s )" },
+    {"clear", (PyCFunction)VRPyAnalyticGeometry::clear, METH_NOARGS, "Clear data" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyAnalyticGeometry::setLabelSize(VRPyAnalyticGeometry* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyAnalyticGeometry::setLabelSize - Object is invalid"); return NULL; }
+    self->obj->setLabelSize( parseFloat(args) );
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyAnalyticGeometry::setVector(VRPyAnalyticGeometry* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyAnalyticGeometry::set - Object is invalid"); return NULL; }

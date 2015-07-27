@@ -8,6 +8,7 @@ struct VRPyAnalyticGeometry : VRPyBaseT<OSG::VRAnalyticGeometry> {
     static PyMethodDef methods[];
 
     static PyObject* setVector(VRPyAnalyticGeometry* self, PyObject* args);
+    static PyObject* setLabelSize(VRPyAnalyticGeometry* self, PyObject* args);
     static PyObject* clear(VRPyAnalyticGeometry* self);
 };
 
