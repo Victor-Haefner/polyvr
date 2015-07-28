@@ -4,7 +4,9 @@
 
 using namespace OSG;
 
-VRRobotArm::VRRobotArm() {;}
+VRRobotArm::VRRobotArm() {
+    angles.resize(N,0);
+}
 
 void VRRobotArm::setParts(vector<VRTransform*> parts) { this->parts = parts; }
 void VRRobotArm::setAngleOffsets(vector<float> offsets) { angle_offsets = offsets; }
@@ -20,9 +22,11 @@ void VRRobotArm::applyAngles() {
 }
 
 void VRRobotArm::calcReverseKinematics(Vec3f pos, Vec3f dir) {
+    pos += dir* lengths[3];
+
     pos[1] -= lengths[0];
-    float r1 = lengths[0];
-    float r2 = lengths[1];
+    float r1 = lengths[1];
+    float r2 = lengths[2];
     float L = pos.length();
     float b = acos((L*L-r1*r1-r2*r2)/(-2*r1*r2));
     angles[2] = b;
