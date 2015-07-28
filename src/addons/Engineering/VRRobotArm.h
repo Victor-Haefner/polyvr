@@ -14,6 +14,7 @@ class VRRobotArm {
         VRAnimation* anim = 0;
 
         int N = 5;
+        float grab = 1;
 
         vector<VRTransform*> parts;
         vector<float> angles;
@@ -34,6 +35,7 @@ class VRRobotArm {
 
         void moveTo(Vec3f pos, Vec3f dir);
         void setGrab(float g);
+        void toggleGrab();
 };
 
 OSG_END_NAMESPACE;

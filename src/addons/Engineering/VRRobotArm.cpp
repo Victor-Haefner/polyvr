@@ -56,5 +56,11 @@ void VRRobotArm::moveTo(Vec3f pos, Vec3f dir) {
 }
 
 void VRRobotArm::setGrab(float g) {
-    ;
+    float l = lengths[4]*g;
+    Vec3f p; p[0] = l;
+    parts[5]->setFrom(p);
+    parts[6]->setFrom(-p);
+    grab = g;
 }
+
+void VRRobotArm::toggleGrab() { setGrab(1-grab); }

@@ -13,6 +13,7 @@ struct VRPyRobotArm : VRPyBaseT<OSG::VRRobotArm> {
     static PyObject* setLengths(VRPyRobotArm* self, PyObject* args);
     static PyObject* moveTo(VRPyRobotArm* self, PyObject* args);
     static PyObject* setGrab(VRPyRobotArm* self, PyObject* args);
+    static PyObject* toggleGrab(VRPyRobotArm* self);
 };
 
 #endif // VRPYROBOTARM_H_INCLUDED

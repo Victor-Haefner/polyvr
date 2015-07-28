@@ -52,8 +52,15 @@ PyMethodDef VRPyRobotArm::methods[] = {
     {"setLengths", (PyCFunction)VRPyRobotArm::setLengths, METH_VARARGS, "Set kinematic lengths between joints - setLengths([base_height, upper_arm length, forearm length, grab position])" },
     {"moveTo", (PyCFunction)VRPyRobotArm::moveTo, METH_VARARGS, "Move the end effector to a certain position - moveTo([x,y,z])" },
     {"setGrab", (PyCFunction)VRPyRobotArm::setGrab, METH_VARARGS, "Set grab state - setGrab(float d)\n d: 0 is closed, 1 is open" },
+    {"toggleGrab", (PyCFunction)VRPyRobotArm::toggleGrab, METH_NOARGS, "Toggle the grab - toggleGrab()" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyRobotArm::toggleGrab(VRPyRobotArm* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyRobotArm::toggleGrab - Object is invalid"); return NULL; }
+    self->obj->toggleGrab();
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyRobotArm::moveTo(VRPyRobotArm* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyRobotArm::moveTo - Object is invalid"); return NULL; }
