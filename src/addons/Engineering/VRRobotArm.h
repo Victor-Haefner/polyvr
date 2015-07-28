@@ -14,7 +14,7 @@ class VRRobotArm {
         VRAnimation* anim = 0;
 
         int N = 5;
-        float grab = 1;
+        float grab = 0;
 
         vector<VRTransform*> parts;
         vector<float> angles;
@@ -32,6 +32,8 @@ class VRRobotArm {
         void setAngleOffsets(vector<float> offsets);
         void setAxis(vector<int> axis);
         void setLengths(vector<float> lengths);
+        void setAngles(vector<float> angles);
+        vector<float> getAngles();
 
         void moveTo(Vec3f pos, Vec3f dir);
         void setGrab(float g);

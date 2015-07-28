@@ -50,6 +50,9 @@ void VRRobotArm::calcReverseKinematics(Vec3f pos, Vec3f dir) {
     angles[4] = acos( av.dot(dir) );
 }
 
+void VRRobotArm::setAngles(vector<float> angles) { this->angles = angles; applyAngles(); }
+vector<float> VRRobotArm::getAngles() { return angles; }
+
 void VRRobotArm::moveTo(Vec3f pos, Vec3f dir) {
     calcReverseKinematics(pos, dir);
     applyAngles();

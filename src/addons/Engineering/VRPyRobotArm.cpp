@@ -53,8 +53,27 @@ PyMethodDef VRPyRobotArm::methods[] = {
     {"moveTo", (PyCFunction)VRPyRobotArm::moveTo, METH_VARARGS, "Move the end effector to a certain position - moveTo([x,y,z])" },
     {"setGrab", (PyCFunction)VRPyRobotArm::setGrab, METH_VARARGS, "Set grab state - setGrab(float d)\n d: 0 is closed, 1 is open" },
     {"toggleGrab", (PyCFunction)VRPyRobotArm::toggleGrab, METH_NOARGS, "Toggle the grab - toggleGrab()" },
+    {"setAngles", (PyCFunction)VRPyRobotArm::setAngles, METH_VARARGS, "Set joint angles - setAngles()" },
+    {"getAngles", (PyCFunction)VRPyRobotArm::getAngles, METH_NOARGS, "Get joint angles - getAngles()" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyRobotArm::setAngles(VRPyRobotArm* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyRobotArm::setAngles - Object is invalid"); return NULL; }
+    auto prts = parseList(args);
+    vector<float> res;
+    for (auto p : prts) res.push_back( PyFloat_AsDouble(p) );
+    self->obj->setAngles( res );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyRobotArm::getAngles(VRPyRobotArm* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyRobotArm::toggleGrab - Object is invalid"); return NULL; }
+    auto v = self->obj->getAngles();
+    PyObject* res = PyList_New(v.size());
+    for (int i=0; i<v.size(); i++) PyList_SetItem(res, i, PyFloat_FromDouble(v[i]));
+    return res;
+}
 
 PyObject* VRPyRobotArm::toggleGrab(VRPyRobotArm* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyRobotArm::toggleGrab - Object is invalid"); return NULL; }
