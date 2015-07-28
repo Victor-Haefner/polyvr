@@ -60,6 +60,7 @@
 #include "addons/Engineering/Chemistry/VRPyMolecule.h"
 #include "addons/Engineering/Factory/VRPyFactory.h"
 #include "addons/Engineering/Milling/VRPyMillingMachine.h"
+#include "addons/Engineering/VRPyRobotArm.h"
 #include "addons/RealWorld/nature/VRPyTree.h"
 #include "VRPyTypeCaster.h"
 #include "PolyVR.h"
@@ -293,6 +294,7 @@ void VRScriptManager::initPyModules() {
     VRPyTree::registerModule("Tree", pModVR, VRPyGeometry::typeRef);
     VRPyMillingMachine::registerModule("MillingMachine", pModVR);
     VRPyMolecule::registerModule("Molecule", pModVR, VRPyGeometry::typeRef);
+    VRPyRobotArm::registerModule("RobotArm", pModVR);
 
 #ifndef _WIN32
 	VRPyCSG::registerModule("CSGGeometry", pModVR, VRPyGeometry::typeRef);

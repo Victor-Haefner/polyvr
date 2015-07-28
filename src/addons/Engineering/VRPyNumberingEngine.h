@@ -1,7 +1,7 @@
 #ifndef VRPYNUMBERINGENGINE_H_INCLUDED
 #define VRPYNUMBERINGENGINE_H_INCLUDED
 
-#include "../../core/scripting/VRPyObject.h"
+#include "core/scripting/VRPyObject.h"
 #include "VRNumberingEngine.h"
 
 struct VRPyNumberingEngine : VRPyBaseT<VRNumberingEngine> {

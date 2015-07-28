@@ -1,6 +1,6 @@
 #include "VRPyNumberingEngine.h"
-#include "../../core/scripting/VRPyBaseT.h"
-#include "../../core/scripting/VRPyGeometry.h"
+#include "core/scripting/VRPyBaseT.h"
+#include "core/scripting/VRPyGeometry.h"
 
 
 template<> PyTypeObject VRPyBaseT<VRNumberingEngine>::type = {
