@@ -48,6 +48,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRRobotArm>::type = {
 PyMethodDef VRPyRobotArm::methods[] = {
     {"setParts", (PyCFunction)VRPyRobotArm::setParts, METH_VARARGS, "Set robot parts - setParts([base, upper_arm, forearm, wrist, grab, jaw1, jaw2])" },
     {"setAngleOffsets", (PyCFunction)VRPyRobotArm::setAngleOffsets, METH_VARARGS, "Set angle offset for each part - setAngleOffsets([float rad])" },
+    {"setAngleDirections", (PyCFunction)VRPyRobotArm::setAngleDirections, METH_VARARGS, "Set angles rotation direction - setAngleDirections([1/-1])" },
     {"setAxis", (PyCFunction)VRPyRobotArm::setAxis, METH_VARARGS, "Set rotation axis for each part - setAxis([int a])\n a: 0 = 'x', 1 = 'y', 2 = 'z'" },
     {"setLengths", (PyCFunction)VRPyRobotArm::setLengths, METH_VARARGS, "Set kinematic lengths between joints - setLengths([base_height, upper_arm length, forearm length, grab position])" },
     {"moveTo", (PyCFunction)VRPyRobotArm::moveTo, METH_VARARGS, "Move the end effector to a certain position - moveTo([x,y,z])" },
@@ -101,6 +102,15 @@ PyObject* VRPyRobotArm::setParts(VRPyRobotArm* self, PyObject* args) {
     vector<OSG::VRTransform*> res;
     for (auto p : prts) res.push_back( ((VRPyTransform*)p)->obj );
     self->obj->setParts( res );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyRobotArm::setAngleDirections(VRPyRobotArm* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyRobotArm::setAngleDirections - Object is invalid"); return NULL; }
+    auto prts = parseList(args);
+    vector<int> res;
+    for (auto p : prts) res.push_back( PyInt_AsLong(p) );
+    self->obj->setAngleDirections( res );
     Py_RETURN_TRUE;
 }
 

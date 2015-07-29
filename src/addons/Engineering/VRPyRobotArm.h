@@ -9,6 +9,7 @@ struct VRPyRobotArm : VRPyBaseT<OSG::VRRobotArm> {
 
     static PyObject* setParts(VRPyRobotArm* self, PyObject* args);
     static PyObject* setAngleOffsets(VRPyRobotArm* self, PyObject* args);
+    static PyObject* setAngleDirections(VRPyRobotArm* self, PyObject* args);
     static PyObject* setAxis(VRPyRobotArm* self, PyObject* args);
     static PyObject* setLengths(VRPyRobotArm* self, PyObject* args);
     static PyObject* moveTo(VRPyRobotArm* self, PyObject* args);

@@ -21,6 +21,7 @@ class VRRobotArm {
         vector<VRTransform*> parts;
         vector<float> angles;
         vector<float> angle_offsets;
+        vector<int> angle_directions;
         vector<float> lengths;
         vector<int> axis;
 
@@ -33,6 +34,7 @@ class VRRobotArm {
 
         void setParts(vector<VRTransform*> parts);
         void setAngleOffsets(vector<float> offsets);
+        void setAngleDirections(vector<int> directions);
         void setAxis(vector<int> axis);
         void setLengths(vector<float> lengths);
         void setAngles(vector<float> angles);

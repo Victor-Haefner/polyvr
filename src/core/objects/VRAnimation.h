@@ -26,8 +26,7 @@ class VRAnimation : public VRName {
             }
         };
 
-        interpolator* interp;
-
+        interpolator* interp = 0 ;
         float start_time = 0;
         float duration = 0;
         float offset = 0;

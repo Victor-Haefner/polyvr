@@ -18,13 +18,14 @@ VRRobotArm::VRRobotArm() {
 
 void VRRobotArm::setParts(vector<VRTransform*> parts) { this->parts = parts; }
 void VRRobotArm::setAngleOffsets(vector<float> offsets) { angle_offsets = offsets; }
+void VRRobotArm::setAngleDirections(vector<int> dirs) { angle_directions = dirs; }
 void VRRobotArm::setAxis(vector<int> axis) { this->axis = axis; }
 void VRRobotArm::setLengths(vector<float> lengths) { this->lengths = lengths; }
 
 void VRRobotArm::applyAngles() {
     for (int i=0; i<N; i++) {
         Vec3f euler;
-        euler[axis[i]] = angles[i];
+        euler[axis[i]] = angle_directions[i]*angles[i] + angle_offsets[i];
         parts[i]->setEuler(euler);
     }
 }

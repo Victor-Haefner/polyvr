@@ -1,4 +1,4 @@
-
+#!/usr/bin/python
 """
 This script starts a web server that accepts any data string via post:
 	import VR, httplib, urllib
@@ -29,7 +29,7 @@ def initNonBash():
     os.environ['ROS_PACKAGE_PATH']='/opt/ros/jade/share:/opt/ros/jade/stacks'
     os.environ['ROS_MASTER_URI']='http://localhost:11311'
 
-initNonBash()
+#initNonBash()
 import rospy, std_msgs
 from sensor_msgs.msg import JointState
 
