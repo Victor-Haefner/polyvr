@@ -258,6 +258,13 @@ Vec3f VRTransform::getWorldDirection(bool parentOnly) {
     return Vec3f(m[2]);
 }
 
+/** Returns the world direction vector (not normalized) **/
+Vec3f VRTransform::getWorldUp(bool parentOnly) {
+    Matrix m;
+    getWorldMatrix(m, parentOnly);
+    return Vec3f(m[1]);
+}
+
 /** Set the object fixed || not **/
 void VRTransform::setFixed(bool b) {
     if (b == fixed) return;

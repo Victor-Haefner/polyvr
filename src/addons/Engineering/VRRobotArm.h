@@ -15,10 +15,12 @@ class VRRobotArm {
     private:
         VRAnalyticGeometry* ageo = 0;
         VRAnimation* anim = 0;
-        path* Path = 0;
+        path* animPath = 0;
+        path* robotPath = 0;
 
         int N = 5;
         float grab = 0;
+        float pathPos = 0;
 
         vector<VRTransform*> parts;
         vector<float> angles;
@@ -28,7 +30,7 @@ class VRRobotArm {
         vector<int> axis;
 
         void applyAngles();
-        void calcReverseKinematics(Vec3f pos, Vec3f dir);
+        void calcReverseKinematics(Vec3f pos, Vec3f dir, Vec3f up);
         void animOnPath(float t);
 
     public:
@@ -39,15 +41,19 @@ class VRRobotArm {
         void setAngleDirections(vector<int> directions);
         void setAxis(vector<int> axis);
         void setLengths(vector<float> lengths);
-        void setAngles(vector<float> angles);
 
         vector<float> getAngles();
-        Vec3f getPosition();
-        Vec3f getDirection();
+        void getPose(Vec3f& pos, Vec3f& dir, Vec3f& up);
 
-        void moveTo(Vec3f pos, Vec3f dir);
+        void moveTo(Vec3f pos, Vec3f dir, Vec3f up);
+        void setAngles(vector<float> angles);
         void setGrab(float g);
         void toggleGrab();
+
+        // TODO
+        //void clearPath();
+        //void setPath(path* p);
+        //void extendPath(Vec3f pos, Vec3f dir, Vec3f up);
 };
 
 OSG_END_NAMESPACE;

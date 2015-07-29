@@ -84,9 +84,9 @@ PyObject* VRPyRobotArm::toggleGrab(VRPyRobotArm* self) {
 
 PyObject* VRPyRobotArm::moveTo(VRPyRobotArm* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyRobotArm::moveTo - Object is invalid"); return NULL; }
-    PyObject *v1, *v2;
-    if (! PyArg_ParseTuple(args, "OO", &v1, &v2)) return NULL;
-    self->obj->moveTo( parseVec3fList(v1), parseVec3fList(v2) );
+    PyObject *v1, *v2, *v3;
+    if (! PyArg_ParseTuple(args, "OOO", &v1, &v2, &v3)) return NULL;
+    self->obj->moveTo( parseVec3fList(v1), parseVec3fList(v2), parseVec3fList(v3) );
     Py_RETURN_TRUE;
 }
 

@@ -10,7 +10,8 @@ using namespace OSG;
 
 VRRobotArm::VRRobotArm() {
     angles.resize(N,0);
-    Path = new path();
+    animPath = new path();
+    robotPath = new path();
     anim = new VRAnimation("animOnPath");
     ageo = new VRAnalyticGeometry();
     ageo->setLabelSize(0.03);
@@ -37,7 +38,7 @@ void VRRobotArm::applyAngles() {
     }
 }
 
-void VRRobotArm::calcReverseKinematics(Vec3f pos, Vec3f dir) {
+void VRRobotArm::calcReverseKinematics(Vec3f pos, Vec3f dir, Vec3f up) {
     pos -= dir* lengths[3];
 
     pos[1] -= lengths[0];
@@ -70,19 +71,26 @@ void VRRobotArm::calcReverseKinematics(Vec3f pos, Vec3f dir) {
     ageo->setVector(3, pos, e1, Vec3f(0,1,1), "e1");
 }
 
-void VRRobotArm::setAngles(vector<float> angles) { this->angles = angles; applyAngles(); }
-vector<float> VRRobotArm::getAngles() { return angles; }
-
 void VRRobotArm::animOnPath(float t) {
     Vec3f dir, up;
-    Path->getOrientation(t, dir, up);
-    auto pos = Path->getPosition(t);
+    animPath->getOrientation(t, dir, up);
+    auto pos = animPath->getPosition(t);
 
-    calcReverseKinematics(pos, dir);
+    calcReverseKinematics(pos, dir, up);
     applyAngles();
 }
 
-Vec3f VRRobotArm::getPosition() {
+vector<float> VRRobotArm::getAngles() { return angles; }
+
+void VRRobotArm::setAngles(vector<float> angles) {
+    this->angles = angles;
+    applyAngles(); // TODO: animate from current pose
+}
+
+void VRRobotArm::getPose(Vec3f& pos, Vec3f& dir, Vec3f& up) {
+    dir = parts[5]->getWorldDirection();
+    up = parts[5]->getWorldUp();
+
     float r1 = lengths[1];
     float r2 = lengths[2];
     float b = Pi-angles[2];
@@ -94,26 +102,19 @@ Vec3f VRRobotArm::getPosition() {
     Vec3f p( L*cos(d)*sin(f), L*sin(d), L*cos(d)*cos(f));
     p[1] += lengths[0]; // base
     ageo->setVector(4, Vec3f(0,0,0), p, Vec3f(0,0,0), "p");
-    return p;
+    p += dir*lengths[3];
+    pos = p;
 }
 
-Vec3f VRRobotArm::getDirection() { return parts[5]->getWorldDirection(); }
+void VRRobotArm::moveTo(Vec3f pos, Vec3f dir, Vec3f up) {
+    Vec3f cpos, cdir, cup;
+    getPose(cpos, cdir, cup);
 
-void VRRobotArm::moveTo(Vec3f pos, Vec3f dir) {
-    Path->clear();
+    animPath->clear();
+    animPath->addPoint(cpos, cdir, Vec3f(0,0,0), cup);
+    animPath->addPoint(pos, dir, Vec3f(0,0,0), up);
+    animPath->compute(2);
 
-    if (Path->size() == 0) { // initial position
-        Vec3f d = getDirection();
-        Vec3f u = d[1] > 0.9 ? Vec3f(1,0,0) : Vec3f(0,1,0);
-        Vec3f p = getPosition(); p += d*lengths[3];
-        cout << "moveTo p0 " << p << "  " << d << "  " << u << "  " << parts[4]->getName() << endl;
-        Path->addPoint(p, d, Vec3f(0,0,0), u);
-    }
-
-    Vec3f up = dir[1] > 0.9 ? Vec3f(1,0,0) : Vec3f(0,1,0);
-    cout << "moveTo p1 " << pos << "  " << dir << "  " << up << endl;
-    Path->addPoint(pos, dir, Vec3f(0,0,0), up);
-    Path->compute(2);
     anim->start();
 }
 
