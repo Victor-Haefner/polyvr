@@ -15,6 +15,7 @@ class VRGeometry;
 struct Particle;
 
 class VRParticles : public VRGeometry {
+    // TODO BUG: Execute Script without spawn or emit a second time manually to crash polyvr.
     private:
         int N = 1000;
         vector<Particle*> particles;
@@ -29,6 +30,7 @@ class VRParticles : public VRGeometry {
         VRParticles(int particleAmount);
         ~VRParticles();
 
+        void spawnCube();
         void update(int b = 0, int e = -1);
 };
 

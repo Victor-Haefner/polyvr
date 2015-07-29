@@ -8,6 +8,7 @@ struct VRPyParticles : VRPyBaseT<OSG::VRParticles> {
     static PyMethodDef methods[];
 
     static PyObject* getGeometry(VRPyParticles* self);
+    static PyObject* spawnCube(VRPyParticles* self, PyObject* args);
 };
 
 #endif // VRPYPARTICLES_H_INCLUDED

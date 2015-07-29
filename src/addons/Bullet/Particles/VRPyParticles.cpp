@@ -46,9 +46,16 @@ template<> PyTypeObject VRPyBaseT<OSG::VRParticles>::type = {
 
 PyMethodDef VRPyParticles::methods[] = {
     {"getGeometry", (PyCFunction)VRPyParticles::getGeometry, METH_VARARGS, "Get geometry - Geometry getGeometry()" },
+    {"spawnCube", (PyCFunction)VRPyParticles::spawnCube, METH_VARARGS, "Spawn particles within a cube. - spawnCube()"},
     {NULL}  /* Sentinel */
 };
 
 PyObject* VRPyParticles::getGeometry(VRPyParticles* self) {
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyParticles::spawnCube(VRPyParticles* self, PyObject* args) {
+    if (self->obj == 0) self->obj = new OSG::VRParticles();
+    self->obj->spawnCube();
     Py_RETURN_TRUE;
 }

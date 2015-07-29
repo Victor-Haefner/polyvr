@@ -21,7 +21,7 @@ boost::recursive_mutex& mtx() {
 }
 
 struct OSG::Particle {
-    float mass = 1.0; // unit is TODO
+    float mass = 1.0; // TODO unit is ???
     float radius = 0.01; // unit is meter
     unsigned int age = 0; // current age
     unsigned int lifetime = 0; // max age. 0 means immortal.
@@ -32,16 +32,11 @@ struct OSG::Particle {
     int collisionGroup = 1;
     int collisionMask = 1;
 
-    //Particle(btDiscreteDynamicsWorld* world);
-    Particle(btDiscreteDynamicsWorld* world = 0) {
+    void spawnAt(btVector3 v, btDiscreteDynamicsWorld* world = 0) {
         if (world == 0) return;
 
-        float x = 0.1*float(rand())/RAND_MAX;
-        float y = 0.1*float(rand())/RAND_MAX;
-        float z = 0.1*float(rand())/RAND_MAX;
-
         btTransform t;
-        t.setOrigin(btVector3(x,y,z));
+        t.setOrigin(btVector3(v.x(),v.y(),v.z()));
         motionState = new btDefaultMotionState(t);
 
         shape = new btSphereShape(radius);
@@ -56,8 +51,9 @@ struct OSG::Particle {
         world->addRigidBody(body, collisionGroup, collisionMask);
     }
 
+    Particle(btDiscreteDynamicsWorld* world = 0) {}
+
     ~Particle() {
-        //btDiscreteDynamicsWorld* world = 0; // TODO delete?
         VRScene* scene = VRSceneManager::getCurrent();
         if (scene) scene->bltWorld()->removeRigidBody(body);
         delete body;
@@ -74,12 +70,12 @@ VRParticles::VRParticles(int particleAmount) : VRGeometry("particles") {
     particles.resize(N, 0);
 
     // physics
-    VRScene* scene = VRSceneManager::getCurrent();
-    if (scene) world = scene->bltWorld();
+    // VRScene* scene = VRSceneManager::getCurrent();
+    // if (scene) world = scene->bltWorld();
 
     {
         BLock lock(mtx());
-        for(int i=0;i<N;i++) particles[i] = new Particle(world);
+        for(int i=0;i<N;i++) particles[i] = new Particle();
     }
 
     // material
@@ -106,6 +102,21 @@ VRParticles::VRParticles(int particleAmount) : VRGeometry("particles") {
 
     // update loop
     fkt = new VRFunction<int>("particles_update", boost::bind(&VRParticles::update, this,0,-1));
+}
+
+void VRParticles::spawnCube() {
+    VRScene* scene = VRSceneManager::getCurrent();
+    if (scene) world = scene->bltWorld();
+    // spawn
+    btVector3 v;
+    int i;
+    for (i=0;i<N;i++) {
+        v.setX (0.1*float(rand())/RAND_MAX);
+        v.setY (0.1*float(rand())/RAND_MAX);
+        v.setZ (0.1*float(rand())/RAND_MAX);
+        particles[i]->spawnAt(v, world);
+    }
+    // activate update loop
     scene->addUpdateFkt(fkt);
 }
 
@@ -114,8 +125,10 @@ VRParticles::~VRParticles() {
     if (scene) scene->dropUpdateFkt(fkt);
     delete mat;
 
-    BLock lock(mtx());
-    for (int i=0;i<N;i++) delete particles[i];
+    {
+        BLock lock(mtx());
+        for (int i=0;i<N;i++) delete particles[i];
+    }
 }
 
 void VRParticles::update(int b, int e) {
