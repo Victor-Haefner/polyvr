@@ -8,10 +8,12 @@ using namespace std;
 
 class VRTransform;
 class VRAnimation;
+class path;
 
 class VRRobotArm {
     private:
         VRAnimation* anim = 0;
+        path* Path = 0;
 
         int N = 5;
         float grab = 0;
@@ -24,6 +26,7 @@ class VRRobotArm {
 
         void applyAngles();
         void calcReverseKinematics(Vec3f pos, Vec3f dir);
+        void animOnPath(float t);
 
     public:
         VRRobotArm();
@@ -33,7 +36,10 @@ class VRRobotArm {
         void setAxis(vector<int> axis);
         void setLengths(vector<float> lengths);
         void setAngles(vector<float> angles);
+
         vector<float> getAngles();
+        Vec3f getPosition();
+        Vec3f getDirection();
 
         void moveTo(Vec3f pos, Vec3f dir);
         void setGrab(float g);

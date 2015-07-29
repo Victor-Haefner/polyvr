@@ -111,6 +111,7 @@ int path::addPoint(VRTransform* t) {
 }
 
 float path::getLength() { return (points[points.size()-1].p - points[0].p).length();}
+int path::size() { return points.size(); }
 
 void path::setPoint(int i, Vec3f p, Vec3f n, Vec3f c, Vec3f u) {
     if (i < 0 || i >= (int)points.size()) return;

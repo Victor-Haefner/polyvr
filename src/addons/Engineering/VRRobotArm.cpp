@@ -1,11 +1,19 @@
 #include "VRRobotArm.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/math/path.h"
+#include "core/objects/VRAnimation.h"
+#include "core/utils/VRFunction.h"
 
 
 using namespace OSG;
 
 VRRobotArm::VRRobotArm() {
     angles.resize(N,0);
+    Path = new path();
+    anim = new VRAnimation("animOnPath");
+
+    auto fkt = new VRFunction<float>("animOnPath", boost::bind(&VRRobotArm::animOnPath, this, _1 ) );
+    anim->setSimpleCallback(fkt, 1);
 }
 
 void VRRobotArm::setParts(vector<VRTransform*> parts) { this->parts = parts; }
@@ -53,9 +61,32 @@ void VRRobotArm::calcReverseKinematics(Vec3f pos, Vec3f dir) {
 void VRRobotArm::setAngles(vector<float> angles) { this->angles = angles; applyAngles(); }
 vector<float> VRRobotArm::getAngles() { return angles; }
 
-void VRRobotArm::moveTo(Vec3f pos, Vec3f dir) {
+void VRRobotArm::animOnPath(float t) {
+    Vec3f dir, up;
+    Path->getOrientation(t, dir, up);
+    auto pos = Path->getPosition(t);
+
     calcReverseKinematics(pos, dir);
     applyAngles();
+}
+
+Vec3f VRRobotArm::getPosition() { return parts[4]->getWorldPosition(); }
+Vec3f VRRobotArm::getDirection() { return parts[5]->getWorldDirection(); }
+
+void VRRobotArm::moveTo(Vec3f pos, Vec3f dir) {
+    Path->clear();
+
+    if (Path->size() == 0) { // initial position
+        Vec3f d = getDirection();
+        Vec3f u = d[1] > 0.9 ? Vec3f(1,0,0) : Vec3f(0,1,0);
+        Vec3f p = getPosition(); p += d*lengths[3];
+        Path->addPoint(p, -d, Vec3f(0,0,0), u);
+    }
+
+    Vec3f up = dir[1] > 0.9 ? Vec3f(1,0,0) : Vec3f(0,1,0);
+    Path->addPoint(pos, dir, Vec3f(0,0,0), up);
+    Path->compute(2);
+    anim->start();
 }
 
 void VRRobotArm::setGrab(float g) {

@@ -71,7 +71,7 @@ PyObject* VRPyRobotArm::getAngles(VRPyRobotArm* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyRobotArm::toggleGrab - Object is invalid"); return NULL; }
     auto v = self->obj->getAngles();
     PyObject* res = PyList_New(v.size());
-    for (int i=0; i<v.size(); i++) PyList_SetItem(res, i, PyFloat_FromDouble(v[i]));
+    for (uint i=0; i<v.size(); i++) PyList_SetItem(res, i, PyFloat_FromDouble(v[i]));
     return res;
 }
 
