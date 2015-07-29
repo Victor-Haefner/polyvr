@@ -8,10 +8,12 @@ using namespace std;
 
 class VRTransform;
 class VRAnimation;
+class VRAnalyticGeometry;
 class path;
 
 class VRRobotArm {
     private:
+        VRAnalyticGeometry* ageo = 0;
         VRAnimation* anim = 0;
         path* Path = 0;
 
