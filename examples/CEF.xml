@@ -3,7 +3,7 @@
   <Objects>
     <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
       <Object name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
-        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="-1.69006 5.77738 4.52807" at="0 0 -0.1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
+        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="-1.63126 6.35925 3.71475" at="0 0 -0.1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
           <Object name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
         </Object>
         <Object name_suffix="0" base_name="Cylinder" name_space="__global__" type="Geometry" pickable="0" visible="1" from="-2 0 0" at="-2 0 1" up="0 -1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" sourcetype="3" sourceparam="Cylinder 4 2 128 0 0 1"/>
@@ -17,19 +17,25 @@
       <core>
 	import VR
 	k = dev.getKey()
+	s = dev.getState()
+	m = dev.getMessage()
+	print k,s,m
 	
-	s = ''
+	if s == 1: return
+	
+	site = ''
 	if k == 101:
-		s = 'http://www.imi.kit.edu'
+		site = 'http://www.imi.kit.edu'
 	if k == 102:
-		s = 'http://www.kit.de'
+		site = 'http://www.kit.de'
 	if k == 103:
-		s = 'http://www.google.de'
+		site = 'http://www.google.de'
 	
 	if hasattr(VR, 'web'):
-		VR.web.open(s)
+		VR.web.open(site)
 </core>
       <trig type="on_device" dev="mobile" state="Pressed" param="" key="-1" name_suffix="1" base_name="trigger" name_space="__global__"/>
+      <trig type="on_device" dev="mobile" state="Released" param="" key="-1" name_suffix="2" base_name="trigger" name_space="__global__"/>
     </Script>
     <Script name_suffix="0" base_name="init" name_space="__script__" type="Python" mobile="">
       <core>
@@ -91,9 +97,9 @@
 
 &lt;body&gt;
  &lt;script&gt;
-  function get(b,s) {
+  function get(b,s,m) {
    var xmlHttp = new XMLHttpRequest();
-   var uri = document.URL+'mobile?button='+b+'&amp;state='+s;
+   var uri = document.URL+'mobile?button='+b+'&amp;state='+s+'&amp;message='+m;
    xmlHttp.open( "GET", uri, true );
    xmlHttp.send( null );
   }
@@ -106,9 +112,9 @@
 	&lt;td&gt;&lt;/td&gt;
  &lt;/tr&gt;
  &lt;tr&gt;
-	&lt;td&gt;&lt;button onmousedown='get(101,1)' onmouseup='get(101,0)' type='button'&gt;IMI&lt;/button&gt;&lt;/td&gt;
-	&lt;td&gt;&lt;button onmousedown='get(102,1)' onmouseup='get(102,0)' type='button'&gt;KIT&lt;/button&gt;&lt;/td&gt;
-	&lt;td&gt;&lt;button onmousedown='get(103,1)' onmouseup='get(103,0)' type='button'&gt;Google&lt;/button&gt;&lt;/td&gt;
+	&lt;td&gt;&lt;button onmousedown='get(101,1,"IMI")' onmouseup='get(101,0,"IMI")' type='button'&gt;IMI&lt;/button&gt;&lt;/td&gt;
+	&lt;td&gt;&lt;button onmousedown='get(102,1,"KIT")' onmouseup='get(102,0,"KIT")' type='button'&gt;KIT&lt;/button&gt;&lt;/td&gt;
+	&lt;td&gt;&lt;button onmousedown='get(103,1,"GOOGLE")' onmouseup='get(103,0,"GOOGLE")' type='button'&gt;Google&lt;/button&gt;&lt;/td&gt;
  &lt;/tr&gt;
 &lt;/table&gt;
 

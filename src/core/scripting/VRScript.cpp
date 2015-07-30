@@ -10,6 +10,7 @@
 #include "core/setup/devices/VRMobile.h"
 #include "VRPySocket.h"
 #include "VRPyHaptic.h"
+#include "VRPyMobile.h"
 #include "VRPyBaseT.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/utils/VRTimer.h"
@@ -36,7 +37,7 @@ void updateArgPtr(VRScript::arg* a) {
         a->ptr = (void*)scene->getSocket(a->val);
         return;
     }
-    if (t == "VRPyDeviceType" || t == "VRPyHapticType") {
+    if (t == "VRPyDeviceType" || t == "VRPyHapticType" || t == "VRPyMobileType") {
         a->ptr = (void*)setup->getDevice(a->val);
         return;
     }
@@ -192,6 +193,7 @@ PyObject* VRScript::getPyObj(arg* a) {
     else if (a->type == "VRPyLodType") return VRPyLod::fromPtr((VRLod*)a->ptr);
     else if (a->type == "VRPyDeviceType") return VRPyDevice::fromPtr((VRDevice*)a->ptr);
     else if (a->type == "VRPyHapticType") return VRPyHaptic::fromPtr((VRHaptic*)a->ptr);
+    else if (a->type == "VRPyMobileType") return VRPyMobile::fromPtr((VRMobile*)a->ptr);
     else if (a->type == "VRPySocketType") return VRPySocket::fromPtr((VRSocket*)a->ptr);
     else { cout << "\ngetPyObj ERROR: " << a->type << " unknown!\n"; return NULL; }
 }
@@ -315,6 +317,7 @@ void VRScript::execute_dev(VRDevice* dev) {
 
     args["dev"]->type = "VRPyDeviceType";
     if (dev->getType() == "haptic") args["dev"]->type = "VRPyHapticType";
+    if (dev->getType() == "mobile") args["dev"]->type = "VRPyMobileType";
     args["dev"]->val = dev->getName();
     args["dev"]->ptr = dev;
     execute();

@@ -568,6 +568,8 @@
 		<Unit filename="src/core/scripting/VRPyMaterial.h" />
 		<Unit filename="src/core/scripting/VRPyMenu.cpp" />
 		<Unit filename="src/core/scripting/VRPyMenu.h" />
+		<Unit filename="src/core/scripting/VRPyMobile.cpp" />
+		<Unit filename="src/core/scripting/VRPyMobile.h" />
 		<Unit filename="src/core/scripting/VRPyNavPreset.cpp" />
 		<Unit filename="src/core/scripting/VRPyNavPreset.h" />
 		<Unit filename="src/core/scripting/VRPyNavigator.cpp" />

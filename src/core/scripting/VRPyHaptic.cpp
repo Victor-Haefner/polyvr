@@ -34,7 +34,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRHaptic>::type = {
     0,		               /* tp_iter */
     0,		               /* tp_iternext */
     VRPyHaptic::methods,             /* tp_methods */
-    VRPyHaptic::members,             /* tp_members */
+    0,             /* tp_members */
     0,                         /* tp_getset */
     0,                         /* tp_base */
     0,                         /* tp_dict */
@@ -44,10 +44,6 @@ template<> PyTypeObject VRPyBaseT<OSG::VRHaptic>::type = {
     (initproc)init,      /* tp_init */
     0,                         /* tp_alloc */
     0,                 /* tp_new */
-};
-
-PyMemberDef VRPyHaptic::members[] = {
-    {NULL}  /* Sentinel */
 };
 
 PyMethodDef VRPyHaptic::methods[] = {

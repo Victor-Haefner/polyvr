@@ -32,6 +32,8 @@ class VRMobile : public VRDevice {
         void remWebSite(string uri);
         void addWebSite(string uri, string website);
         void updateClients(string uri);
+
+        void answerWebSocket(int id, string msg);
 };
 
 

@@ -18,10 +18,14 @@ typedef VRFunction<void*> VRHTTP_cb;
 typedef VRFunction<string> VRTCP_cb;
 
 struct HTTP_args {
+    HTTPServer* serv = 0;
     VRHTTP_cb* cb = 0;
     map<string, string>* params = 0;
     map<string, string*>* pages = 0;
     string path;
+    bool websocket = false;
+    string ws_data;
+    int ws_id = -1;
 
     HTTP_args();
     ~HTTP_args();
@@ -80,6 +84,8 @@ class VRSocket : public VRName {
         void setPort(int i);
         void addHTTPPage(string path, string page);
         void remHTTPPage(string path);
+
+        void answerWebSocket(int id, string msg);
 
         string getType();
         string getIP();

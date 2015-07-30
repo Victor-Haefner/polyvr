@@ -19,6 +19,7 @@
 #include "VRPyColorChooser.h"
 #include "VRPyConstraint.h"
 #include "VRPyHaptic.h"
+#include "VRPyMobile.h"
 #include "VRPyBaseT.h"
 #include "VRPyMaterial.h"
 #include "VRPyTextureGenerator.h"
@@ -268,6 +269,7 @@ void VRScriptManager::initPyModules() {
     VRPyConstraint::registerModule("Constraint", pModVR);
     VRPyDevice::registerModule("Device", pModVR);
     VRPyHaptic::registerModule("Haptic", pModVR, VRPyDevice::typeRef);
+    VRPyMobile::registerModule("Mobile", pModVR, VRPyDevice::typeRef);
     VRPyAnimation::registerModule("Animation", pModVR);
     VRPyPath::registerModule("Path", pModVR);
     VRPyRecorder::registerModule("Recorder", pModVR);
