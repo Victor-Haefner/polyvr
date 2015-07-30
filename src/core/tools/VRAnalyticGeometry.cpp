@@ -66,7 +66,7 @@ void VRAnalyticGeometry::setVector(int i, Vec3f p, Vec3f vec, Vec3f color, strin
     auto pos = vectorLinesGeometry->getMesh()->getPositions();
     auto cols = vectorLinesGeometry->getMesh()->getColors();
     auto lengths = vectorLinesGeometry->getMesh()->getLengths();
-    while (2*i+1 >= pos->size()) {
+    while (2*i+1 >= (int)pos->size()) {
         pos->addValue(p);
         cols->addValue(color);
         lengths->setValue(pos->size(), 0);
@@ -81,7 +81,7 @@ void VRAnalyticGeometry::setVector(int i, Vec3f p, Vec3f vec, Vec3f color, strin
     pos = vectorEndsGeometry->getMesh()->getPositions();
     cols = vectorEndsGeometry->getMesh()->getColors();
     lengths = vectorEndsGeometry->getMesh()->getLengths();
-    while (i >= pos->size()) {
+    while (i >= (int)pos->size()) {
         pos->addValue(p);
         cols->addValue(color);
         lengths->setValue(pos->size(), 0);

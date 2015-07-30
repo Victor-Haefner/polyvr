@@ -78,7 +78,7 @@ void VRAnnotationEngine::set(int i, Vec3f p, string s) {
     for (int j=0; j<N; j++) {
         char c[] = {0,0,0};
         for (int k = 0; k<3; k++) {
-            int si = j*3+k;
+            uint si = j*3+k;
             if (si < s.size()) c[k] = s[si];
         }
         float f = c[0] + c[1]*256 + c[2]*256*256;

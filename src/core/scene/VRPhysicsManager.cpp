@@ -179,7 +179,7 @@ void VRPhysicsManager::updatePhysObjects() {
             GeoUInt32PropertyRecPtr visualinds = GeoUInt32Property::create();
             GeoVec3fPropertyRecPtr visualnorms = GeoVec3fProperty::create();
 
-            for (unsigned int i = 0; i<nodes.size(); i++) { //go through the nodes and copy positions to mesh positionarray
+            for (int i = 0; i<nodes.size(); i++) { //go through the nodes and copy positions to mesh positionarray
                     Vec3f p = VRPhysics::toVec3f(nodes[i].m_x);
                     OSG::Vec3f tmp;
                     visualpos->addValue(p);
@@ -211,11 +211,11 @@ void VRPhysicsManager::updatePhysObjects() {
             visualgeo->setNormals(visualnorms);
 
             if(geo->getPrimitive()->getType() == "Plane") { //only for plane soft bodies : directly apply nodes to vertices of geometry model
-                VRPlane* prim = (VRPlane*)geo->getPrimitive();
+                //VRPlane* prim = (VRPlane*)geo->getPrimitive();
                 GeoPnt3fPropertyRecPtr positions = GeoPnt3fProperty::create();
                 GeoVec3fPropertyRecPtr norms = GeoVec3fProperty::create();
                 GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
-                for (unsigned int i = 0; i<nodes.size(); i++) { //go through the nodes and copy positions to mesh positionarray
+                for (int i = 0; i<nodes.size(); i++) { //go through the nodes and copy positions to mesh positionarray
                     Vec3f p = VRPhysics::toVec3f(nodes[i].m_x);
                     positions->addValue(p);
                     Vec3f n = VRPhysics::toVec3f(nodes[i].m_n);

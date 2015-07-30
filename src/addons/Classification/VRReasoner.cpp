@@ -77,7 +77,7 @@ struct Variable {
 
     bool operator==(Variable v) {
         if (!v.valid || !valid) return false;
-        for (int i=0; i<instances.size(); i++) {
+        for (uint i=0; i<instances.size(); i++) {
             if (v.instances[i] != instances[i]) return false;
         }
         return true;
@@ -142,7 +142,7 @@ struct Statement {
     }
 
     bool match(Statement s) {
-        for (int i=0; i<lvars.size(); i++) {
+        for (uint i=0; i<lvars.size(); i++) {
             auto vS = s.lvars[i];
             auto vR = lvars[i];
             if (!vS.valid || !vR.valid) return false;
