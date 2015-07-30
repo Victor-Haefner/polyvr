@@ -11,10 +11,11 @@ using namespace std;
 
 class VRGuiGeneral {
     private:
-        bool updating;
+        bool updating = false;
 
         // background signals
         bool setColor(GdkEventButton* b);
+        void setExtension();
         void setPath();
         void setMode();
 

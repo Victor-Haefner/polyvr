@@ -48,6 +48,9 @@ class VRBackground : public VRStorage {
         Color3f getBackgroundColor();
         string getBackgroundPath();
 
+        void setSkyBGExtension(string f);
+        string getSkyBGExtension();
+
         void updateBackground();
 };
 
