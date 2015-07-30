@@ -139,7 +139,6 @@ void VRGuiBits::clear_terminal() {
 
 void VRGuiBits::update_terminal() {
     boost::mutex::scoped_lock lock(msg_mutex);
-    bool u = !msg_queue.empty();
     while(!msg_queue.empty()) {
         terminal->insert(terminal->end(), msg_queue.front());
 		msg_queue.pop();

@@ -1,12 +1,17 @@
 #include "VRLight.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRStorage_template.h"
+#include "VRLightBeacon.h"
+
 #include <OpenSG/OSGShadowStage.h>
 #include <OpenSG/OSGImage.h>
 #include <OpenSG/OSGTextureObjChunk.h>
 #include <OpenSG/OSGTextureEnvChunk.h>
 #include <OpenSG/OSGSimpleMaterial.h>
-#include "core/utils/VRStorage_template.h"
-#include "VRLightBeacon.h"
+#include <OpenSG/OSGPointLight.h>
+#include <OpenSG/OSGDirectionalLight.h>
+#include <OpenSG/OSGSpotLight.h>
+#include <OpenSG/OSGSimpleShadowMapEngine.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

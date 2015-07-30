@@ -598,11 +598,11 @@ void VRSegmentation::fillHoles(VRGeometry* geo, int steps) {
     vector<Vertex*> convexVerts;
 
 	// ---- fill holes ---- //
-	for (int ib = 0; ib<borders.size(); ib++) {
+	for (uint ib = 0; ib<borders.size(); ib++) {
         Border* b = borders[ib];
-        int N0 = b->vertices.size();
+        //int N0 = b->vertices.size();
 
-        for (int itr = 0; b->vertices.size() > 0 && (itr < steps || steps == 0 && itr == 0); itr++) {
+        for (int itr = 0; b->vertices.size() > 0 && (itr < steps || (steps == 0 && itr == 0)); itr++) {
             vector<int> toErase;
 
             //cout << "process border: ";
@@ -610,7 +610,7 @@ void VRSegmentation::fillHoles(VRGeometry* geo, int steps) {
             //cout << endl;
 
             int N = b->vertices.size();
-            for (uint i=0; i<N-1; i++) {
+            for (int i=0; i<N-1; i++) {
                 Vec3i ids(i, (i+1)%N, (i+2)%N);
                 Vertex* v1 = b->vertices[ids[0]];
                 Vertex* v2 = b->vertices[ids[1]];
@@ -674,7 +674,7 @@ void VRSegmentation::fillHoles(VRGeometry* geo, int steps) {
     GeoColor3fPropertyRecPtr cols = GeoColor3fProperty::create();
     cols->resize(N);
     for (int i=0; i<N; i++) cols->setValue(Color3f(1,1,1),i);
-    for (int i=0; i<borders.size(); i++) {
+    for (uint i=0; i<borders.size(); i++) {
         float r = float(rand())/RAND_MAX;
         float g = float(rand())/RAND_MAX;
         float b = float(rand())/RAND_MAX;

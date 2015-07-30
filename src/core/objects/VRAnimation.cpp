@@ -8,6 +8,8 @@
 
 OSG_BEGIN_NAMESPACE;
 
+VRAnimation::interpolator::~interpolator() {;}
+
 VRAnimation::VRAnimation(string name) {
     setNameSpace("animation");
     setName(name);

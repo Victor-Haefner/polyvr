@@ -13,6 +13,7 @@ using namespace std;
 class VRAnimation : public VRName {
     protected:
         struct interpolator {
+            virtual ~interpolator();
             virtual void update(float t) = 0;
         };
 

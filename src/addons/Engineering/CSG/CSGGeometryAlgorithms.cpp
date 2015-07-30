@@ -33,7 +33,7 @@ CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryRecPtr geometry, Matrix worl
 	TriangleIterator it;
 	auto gpos = geometry->getPositions();
 
-	float THRESHOLD2 = thresholdL*thresholdL;
+	//float THRESHOLD2 = thresholdL*thresholdL;
 
 	// TODO: first merge all points!
 	//       second fix flat triangles

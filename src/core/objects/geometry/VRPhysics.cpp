@@ -353,15 +353,15 @@ btSoftBody* VRPhysics::createCloth() {
     VRPlane* prim = (VRPlane*)geo->getPrimitive();
     float nx = prim->Nx;
     float ny = prim->Ny;
-    float h = prim->height;
-    float w = prim->width;
+    //float h = prim->height;
+    //float w = prim->width;
 
     OSG::GeoVectorPropertyRecPtr positions = geo->getMesh()->getPositions();
     vector<btVector3> vertices;
     vector<btScalar> masses;
 
     OSG::Pnt3f p;
-    for(int i = 0; i < positions->size();i++) { //add all vertices
+    for(uint i = 0; i < positions->size();i++) { //add all vertices
         positions->getValue(p,i);
         m.mult(p,p);
         vertices.push_back( toBtVector3(OSG::Vec3f(p)) );

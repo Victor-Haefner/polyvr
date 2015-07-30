@@ -210,14 +210,14 @@ void ModuleStreets::makeStreetSegmentGeometry(StreetSegment* s, GeometryData* st
     Vec2f leftB = Vec2f(s->leftB);
     Vec2f rightB = Vec2f(s->rightB);
 
-    int ind = 0;
+    //int ind = 0;
 
     if (s->bridge){ //bridge
         float low = Config::get()->STREET_HEIGHT;
         float high = Config::get()->STREET_HEIGHT + Config::get()->BRIDGE_HEIGHT;
         Vec3f th = Vec3f(0, Config::get()->BRIDGE_SIZE, 0);
         Vec3f a1, a2, b1, b2;
-        int ind = 0;
+        //int ind = 0;
         Vec2f ABPart = (leftB - leftA)/3;
         if(s->smallBridge) high = Config::get()->STREET_HEIGHT + Config::get()->SMALL_BRIDGE_HEIGHT;
 
@@ -349,7 +349,7 @@ void ModuleStreets::makeStreetJointGeometry(StreetJoint* sj, map<string, StreetS
     Vec3f norm = Vec3f(0, 1, 0);
 
     middle = elevate(sj->position, jointHeight);
-    float width = 0;
+    //float width = 0;
 
     vector<Vec3f> fan;
     vector<Vec2f> fantex;
@@ -370,7 +370,7 @@ void ModuleStreets::makeStreetJointGeometry(StreetJoint* sj, map<string, StreetS
     fan.push_back( elevate(jointPoints[0]->right, jointHeight) ); // close fan
     fantex.push_back(Vec2f(0, 0));
 
-    for (int i=1; i<fan.size(); i++) {
+    for (uint i=1; i<fan.size(); i++) {
         pushTriangle(fan[i], fan[i-1], middle, norm, geo);
         float my = (Nsegs == 2) ? 0.5 : fantex[i][1];
         geo->texs->addValue(fantex[i-1]);
@@ -380,7 +380,7 @@ void ModuleStreets::makeStreetJointGeometry(StreetJoint* sj, map<string, StreetS
 
     return; // TODO
 
-    float mx,my;
+    //float mx,my;
     if (sj->bridge) {
         rightExt = _NULL;
         firstRight = _NULL;
