@@ -50,10 +50,8 @@ class VRRobotArm {
         void setGrab(float g);
         void toggleGrab();
 
-        // TODO
-        //void clearPath();
-        //void setPath(path* p);
-        //void extendPath(Vec3f pos, Vec3f dir, Vec3f up);
+        void setPath(path* p);
+        path* getPath();
 };
 
 OSG_END_NAMESPACE;

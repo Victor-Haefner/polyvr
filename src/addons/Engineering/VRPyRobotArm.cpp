@@ -1,6 +1,7 @@
 #include "VRPyRobotArm.h"
 #include "core/scripting/VRPyBaseT.h"
 #include "core/scripting/VRPyGeometry.h"
+#include "core/scripting/VRPyPath.h"
 
 
 template<> PyTypeObject VRPyBaseT<OSG::VRRobotArm>::type = {
@@ -56,8 +57,23 @@ PyMethodDef VRPyRobotArm::methods[] = {
     {"toggleGrab", (PyCFunction)VRPyRobotArm::toggleGrab, METH_NOARGS, "Toggle the grab - toggleGrab()" },
     {"setAngles", (PyCFunction)VRPyRobotArm::setAngles, METH_VARARGS, "Set joint angles - setAngles()" },
     {"getAngles", (PyCFunction)VRPyRobotArm::getAngles, METH_NOARGS, "Get joint angles - getAngles()" },
+    {"setPath", (PyCFunction)VRPyRobotArm::setPath, METH_VARARGS, "Set robot path - setPath()" },
+    {"getPath", (PyCFunction)VRPyRobotArm::getPath, METH_NOARGS, "Get robot path - getPath()" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyRobotArm::getPath(VRPyRobotArm* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyRobotArm::getPath - Object is invalid"); return NULL; }
+    return VRPyPath::fromPtr( self->obj->getPath() );
+}
+
+PyObject* VRPyRobotArm::setPath(VRPyRobotArm* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyRobotArm::setPath - Object is invalid"); return NULL; }
+    VRPyPath* path = 0;
+    parseObject(args, path);
+    self->obj->setPath( path->obj );
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyRobotArm::setAngles(VRPyRobotArm* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyRobotArm::setAngles - Object is invalid"); return NULL; }

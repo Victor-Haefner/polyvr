@@ -48,8 +48,6 @@ PyMethodDef VRPyMobile::methods[] = {
     {NULL}  /* Sentinel */
 };
 
-static PyObject* answer(VRPyMobile* self, PyObject* args);
-
 PyObject* VRPyMobile::answer(VRPyMobile* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyMobile::answer - Object is invalid"); return NULL; }
     int id; PyObject* msg;

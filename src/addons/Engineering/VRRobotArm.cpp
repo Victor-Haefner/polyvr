@@ -127,3 +127,6 @@ void VRRobotArm::setGrab(float g) {
 }
 
 void VRRobotArm::toggleGrab() { setGrab(1-grab); }
+
+void VRRobotArm::setPath(path* p) { robotPath = p; }
+path* VRRobotArm::getPath() { return robotPath; }
