@@ -19,6 +19,7 @@ struct VRPyRobotArm : VRPyBaseT<OSG::VRRobotArm> {
     static PyObject* getAngles(VRPyRobotArm* self);
     static PyObject* setPath(VRPyRobotArm* self, PyObject* args);
     static PyObject* getPath(VRPyRobotArm* self);
+    static PyObject* moveOnPath(VRPyRobotArm* self, PyObject* args);
 };
 
 #endif // VRPYROBOTARM_H_INCLUDED

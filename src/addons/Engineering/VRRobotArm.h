@@ -52,6 +52,7 @@ class VRRobotArm {
 
         void setPath(path* p);
         path* getPath();
+        void moveOnPath(float t0, float t1, bool loop = false);
 };
 
 OSG_END_NAMESPACE;

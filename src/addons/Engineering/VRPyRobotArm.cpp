@@ -59,8 +59,17 @@ PyMethodDef VRPyRobotArm::methods[] = {
     {"getAngles", (PyCFunction)VRPyRobotArm::getAngles, METH_NOARGS, "Get joint angles - getAngles()" },
     {"setPath", (PyCFunction)VRPyRobotArm::setPath, METH_VARARGS, "Set robot path - setPath()" },
     {"getPath", (PyCFunction)VRPyRobotArm::getPath, METH_NOARGS, "Get robot path - getPath()" },
+    {"moveOnPath", (PyCFunction)VRPyRobotArm::moveOnPath, METH_VARARGS, "Move robot on internal path - moveOnPath(float t0, float t1, bool loop)" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyRobotArm::moveOnPath(VRPyRobotArm* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyRobotArm::moveOnPath - Object is invalid"); return NULL; }
+    float t0, t1; int l;
+    if (! PyArg_ParseTuple(args, "ffi", &t0, &t0, &l)) return NULL;
+    self->obj->moveOnPath(t0,t1,l);
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyRobotArm::getPath(VRPyRobotArm* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyRobotArm::getPath - Object is invalid"); return NULL; }

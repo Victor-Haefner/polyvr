@@ -126,6 +126,17 @@ void VRRobotArm::setGrab(float g) {
     grab = g;
 }
 
+void VRRobotArm::moveOnPath(float t0, float t1, bool loop) {
+    Vec3f p,d,u;
+    p = robotPath->getPosition(t0);
+    robotPath->getOrientation(t0,d,u);
+    moveTo(p,d,u);
+
+    //TODO
+    // the animation has to be refactored to use a queue of jobs
+    //  - path, t0, t1, loop (restart job if done)
+}
+
 void VRRobotArm::toggleGrab() { setGrab(1-grab); }
 
 void VRRobotArm::setPath(path* p) { robotPath = p; }
