@@ -3,6 +3,7 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 
+#include <cmath> /* cbrtf() */
 #include <btBulletDynamicsCommon.h>
 #include <BulletSoftBody/btSoftRigidDynamicsWorld.h>
 
@@ -21,7 +22,7 @@ boost::recursive_mutex& mtx() {
 }
 
 struct OSG::Particle {
-    float mass = 1.0; // TODO unit is ???
+    float mass = 0.01; // TODO unit is ???
     float radius = 0.01; // unit is meter
     unsigned int age = 0; // current age
     unsigned int lifetime = 0; // max age. 0 means immortal.
@@ -70,8 +71,8 @@ VRParticles::VRParticles(int particleAmount) : VRGeometry("particles") {
     particles.resize(N, 0);
 
     // physics
-    // VRScene* scene = VRSceneManager::getCurrent();
-    // if (scene) world = scene->bltWorld();
+    VRScene* scene = VRSceneManager::getCurrent();
+    if (scene) world = scene->bltWorld();
 
     {
         BLock lock(mtx());
@@ -104,22 +105,6 @@ VRParticles::VRParticles(int particleAmount) : VRGeometry("particles") {
     fkt = new VRFunction<int>("particles_update", boost::bind(&VRParticles::update, this,0,-1));
 }
 
-void VRParticles::spawnCube() {
-    VRScene* scene = VRSceneManager::getCurrent();
-    if (scene) world = scene->bltWorld();
-    // spawn
-    btVector3 v;
-    int i;
-    for (i=0;i<N;i++) {
-        v.setX (0.1*float(rand())/RAND_MAX);
-        v.setY (0.1*float(rand())/RAND_MAX);
-        v.setZ (0.1*float(rand())/RAND_MAX);
-        particles[i]->spawnAt(v, world);
-    }
-    // activate update loop
-    scene->addUpdateFkt(fkt);
-}
-
 VRParticles::~VRParticles() {
     VRScene* scene = VRSceneManager::getCurrent();
     if (scene) scene->dropUpdateFkt(fkt);
@@ -141,4 +126,71 @@ void VRParticles::update(int b, int e) {
         }
     }
     setPositions(pos);
+}
+
+float VRParticles::getMaxRadius() {
+    int i;
+    float maximum = 0;
+    {
+        BLock lock(mtx());
+        for (i=0; i<N; i++) {
+            if (maximum < particles[i]->radius) maximum = particles[i]->radius;
+        }
+    }
+
+    return maximum;
+}
+
+int VRParticles::spawnRect(Vec3f base, ArgType type, float a, float b, float c) {
+    VRScene* scene = VRSceneManager::getCurrent();
+    // if (scene) world = scene->bltWorld();
+
+    float radius;
+    int required;
+    radius = getMaxRadius();
+
+    switch (type) {
+        case SIZE:
+            break;
+        case NOTHING: // default case: spawn 10 Liter!
+            a = 10;
+            type = LITER;
+            // go on with LITER (therefore no break;)
+        case LITER:
+            a = b = c = cbrtf(a);
+            break;
+    }
+    required = (int)  ( (a/radius) * (b/radius) * (c/radius) );
+    if (required > N) required = N;
+
+    // now, randomly place particles in rectangle.
+    // TODO place more intelligent (grid, not random) to avoid problems
+    btVector3 v;
+    float y,x,z; x=y=z=0;
+    int i;
+    {
+        BLock lock(mtx());
+        for (i=0; i<required; i++)
+        {
+            // FIXME: for some reason, base is still not the middle point between all particles.
+            v.setZero();
+            x = (a*float(rand())/RAND_MAX);
+            x = x - (x/2);
+            v.setX (x);
+
+            y = (b*float(rand())/RAND_MAX);
+            y = y - (y/2);
+            v.setY (y);
+
+            z = (c*float(rand())/RAND_MAX);
+            z = z - (z/2);
+            v.setZ (z);
+
+            v += toBtVector3(base);
+            particles[i]->spawnAt(v, this->world);
+        }
+    // activate update loop
+    scene->addUpdateFkt(fkt);
+    }
+    return required;
 }

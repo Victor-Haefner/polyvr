@@ -46,7 +46,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRParticles>::type = {
 
 PyMethodDef VRPyParticles::methods[] = {
     {"getGeometry", (PyCFunction)VRPyParticles::getGeometry, METH_VARARGS, "Get geometry - Geometry getGeometry()" },
-    {"spawnCube", (PyCFunction)VRPyParticles::spawnCube, METH_VARARGS, "Spawn particles within a cube. - spawnCube()"},
+    {"spawnRect", (PyCFunction)VRPyParticles::spawnRect, METH_VARARGS, "Examples:\nspawnRect(x,y,z)\nspawnRect(x,y,z,'size',a,b,c)\nspawnRect(x,y,z,'liter',l)"},
     {NULL}  /* Sentinel */
 };
 
@@ -54,8 +54,25 @@ PyObject* VRPyParticles::getGeometry(VRPyParticles* self) {
     Py_RETURN_TRUE;
 }
 
-PyObject* VRPyParticles::spawnCube(VRPyParticles* self, PyObject* args) {
+PyObject* VRPyParticles::spawnRect(VRPyParticles* self, PyObject* args) {
     if (self->obj == 0) self->obj = new OSG::VRParticles();
-    self->obj->spawnCube();
+    OSG::Vec3f position;
+    float x,y,z, a=1,b=1,c=1;
+    char* mode = NULL; int modeLength=0;
+
+    if (! PyArg_ParseTuple(args, "fff|s#fff", &x,&y,&z, &mode, &modeLength, &a,&b,&c)) {
+        // ERROR!
+        Py_RETURN_FALSE;
+    }
+    position.setValues(x, y, z);
+
+    if (mode != NULL && strncmp(mode, "size", modeLength)==0) {
+        self->obj->spawnRect(position, OSG::VRParticles::SIZE, a,b,c);
+    } else if (mode != NULL && strncmp(mode, "liter", modeLength)==0) {
+        self->obj->spawnRect(position, OSG::VRParticles::LITER, a);
+    } else {
+        self->obj->spawnRect(position);
+    }
+
     Py_RETURN_TRUE;
 }

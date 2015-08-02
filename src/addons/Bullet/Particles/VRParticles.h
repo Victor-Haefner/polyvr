@@ -15,7 +15,8 @@ class VRGeometry;
 struct Particle;
 
 class VRParticles : public VRGeometry {
-    // TODO BUG: Execute Script without spawn or emit a second time manually to crash polyvr.
+    // FIXME: PolyVR crashes when Particles are not spawned or emitted and script is executed the second time.
+    // FIXME: Particles do not collide in ~50% of all polyvr sessions. Restart polyvr until it works.
     private:
         int N = 1000;
         vector<Particle*> particles;
@@ -25,12 +26,16 @@ class VRParticles : public VRGeometry {
         GeoPnt3fPropertyRecPtr pos;
         btDiscreteDynamicsWorld* world = 0;
 
+        float getMaxRadius();
+
     public:
+        enum ArgType { NOTHING, SIZE, LITER };
+
         VRParticles(): VRParticles(200){}
         VRParticles(int particleAmount);
         ~VRParticles();
 
-        void spawnCube();
+        int spawnRect(Vec3f v, ArgType t=NOTHING, float a=1, float b=1, float c=1);
         void update(int b = 0, int e = -1);
 };
 
