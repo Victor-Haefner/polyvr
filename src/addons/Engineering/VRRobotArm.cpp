@@ -29,6 +29,7 @@ void VRRobotArm::setAngleOffsets(vector<float> offsets) { angle_offsets = offset
 void VRRobotArm::setAngleDirections(vector<int> dirs) { angle_directions = dirs; }
 void VRRobotArm::setAxis(vector<int> axis) { this->axis = axis; }
 void VRRobotArm::setLengths(vector<float> lengths) { this->lengths = lengths; }
+vector<float> VRRobotArm::getAngles() { return angles; }
 
 void VRRobotArm::applyAngles() {
     for (int i=0; i<N; i++) {
@@ -72,15 +73,25 @@ void VRRobotArm::calcReverseKinematics(Vec3f pos, Vec3f dir, Vec3f up) {
 }
 
 void VRRobotArm::animOnPath(float t) {
-    Vec3f dir, up;
-    animPath->getOrientation(t, dir, up);
-    auto pos = animPath->getPosition(t);
+    if (job_queue.size() == 0) { anim->stop(); return; }
+    auto job = job_queue.front();
+
+    t += job.t0;
+    if (t >= job.t1 and !job.loop) { job_queue.pop_front(); anim->start(); return; }
+    if (t >= job.t1 and job.loop) { anim->start(); return; }
+
+    Vec3f pos, dir, up;
+    job.p->getOrientation(t, dir, up);
+    pos = job.p->getPosition(t);
 
     calcReverseKinematics(pos, dir, up);
     applyAngles();
 }
 
-vector<float> VRRobotArm::getAngles() { return angles; }
+void VRRobotArm::addJob(job j) {
+    job_queue.push_back(j);
+    if (!anim->isActive()) anim->start();
+}
 
 void VRRobotArm::setAngles(vector<float> angles) {
     this->angles = angles;
@@ -115,7 +126,7 @@ void VRRobotArm::moveTo(Vec3f pos, Vec3f dir, Vec3f up) {
     animPath->addPoint(pos, dir, Vec3f(0,0,0), up);
     animPath->compute(2);
 
-    anim->start();
+    addJob( job(animPath) );
 }
 
 void VRRobotArm::setGrab(float g) {
@@ -131,10 +142,7 @@ void VRRobotArm::moveOnPath(float t0, float t1, bool loop) {
     p = robotPath->getPosition(t0);
     robotPath->getOrientation(t0,d,u);
     moveTo(p,d,u);
-
-    //TODO
-    // the animation has to be refactored to use a queue of jobs
-    //  - path, t0, t1, loop (restart job if done)
+    addJob( job(robotPath, t0, t1, loop) );
 }
 
 void VRRobotArm::toggleGrab() { setGrab(1-grab); }

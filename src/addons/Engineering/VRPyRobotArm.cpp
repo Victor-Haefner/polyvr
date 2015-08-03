@@ -66,7 +66,7 @@ PyMethodDef VRPyRobotArm::methods[] = {
 PyObject* VRPyRobotArm::moveOnPath(VRPyRobotArm* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyRobotArm::moveOnPath - Object is invalid"); return NULL; }
     float t0, t1; int l;
-    if (! PyArg_ParseTuple(args, "ffi", &t0, &t0, &l)) return NULL;
+    if (! PyArg_ParseTuple(args, "ffi", &t0, &t1, &l)) return NULL;
     self->obj->moveOnPath(t0,t1,l);
     Py_RETURN_TRUE;
 }

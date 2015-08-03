@@ -13,10 +13,20 @@ class path;
 
 class VRRobotArm {
     private:
+        struct job {
+            path* p = 0;
+            float t0 = 0;
+            float t1 = 1;
+            bool loop = false;
+            job(path* p, float t0 = 0, float t1 = 1, bool loop = false) : p(p), t0(t0), t1(t1), loop(loop) {;}
+        };
+
         VRAnalyticGeometry* ageo = 0;
         VRAnimation* anim = 0;
         path* animPath = 0;
         path* robotPath = 0;
+
+        list<job> job_queue;
 
         int N = 5;
         float grab = 0;
@@ -32,6 +42,7 @@ class VRRobotArm {
         void applyAngles();
         void calcReverseKinematics(Vec3f pos, Vec3f dir, Vec3f up);
         void animOnPath(float t);
+        void addJob(job j);
 
     public:
         VRRobotArm();
