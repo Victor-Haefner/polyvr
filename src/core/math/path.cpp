@@ -129,7 +129,7 @@ void path::compute(int N) {
     if (points.size() <= 1) return;
 
     iterations = N;
-    int tN = N*(points.size()-1);
+    int tN = N*(points.size()-1) - (points.size()-2); // (points.size()-2) is the number of segments minus one
     positions.assign(tN, Vec3f());
     directions.assign(tN, Vec3f());
     up_vectors.assign(tN, Vec3f());
@@ -158,10 +158,10 @@ void path::compute(int N) {
         Vec3f u = (p1.u+p2.u)*0.5;//x.cross(n);
         u.normalize();
 
-        cubicBezier    (_pts+N*i, N, p1.p, p2.p, h1, h2);
-        quadraticBezier(_drs+N*i, N, p1.n, p2.n, n);
-        quadraticBezier(_ups+N*i, N, p1.u, p2.u, u);
-        linearBezier   (_cls+N*i, N, p1.c, p2.c);
+        cubicBezier    (_pts+(N-1)*i, N, p1.p, p2.p, h1, h2);
+        quadraticBezier(_drs+(N-1)*i, N, p1.n, p2.n, n);
+        quadraticBezier(_ups+(N-1)*i, N, p1.u, p2.u, u);
+        linearBezier   (_cls+(N-1)*i, N, p1.c, p2.c);
     }
 }
 

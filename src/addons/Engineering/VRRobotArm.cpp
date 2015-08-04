@@ -75,6 +75,7 @@ void VRRobotArm::calcReverseKinematics(Vec3f pos, Vec3f dir, Vec3f up) {
 void VRRobotArm::animOnPath(float t) {
     if (job_queue.size() == 0) { anim->stop(); return; }
     auto job = job_queue.front();
+    anim->setDuration(job.d);
 
     t += job.t0;
     if (t >= job.t1 and !job.loop) { job_queue.pop_front(); anim->start(); return; }
@@ -83,7 +84,6 @@ void VRRobotArm::animOnPath(float t) {
     Vec3f pos, dir, up;
     job.p->getOrientation(t, dir, up);
     pos = job.p->getPosition(t);
-
     calcReverseKinematics(pos, dir, up);
     applyAngles();
 }
@@ -142,7 +142,7 @@ void VRRobotArm::moveOnPath(float t0, float t1, bool loop) {
     p = robotPath->getPosition(t0);
     robotPath->getOrientation(t0,d,u);
     moveTo(p,d,u);
-    addJob( job(robotPath, t0, t1, loop) );
+    addJob( job(robotPath, t0, t1, robotPath->size(), loop) );
 }
 
 void VRRobotArm::toggleGrab() { setGrab(1-grab); }
