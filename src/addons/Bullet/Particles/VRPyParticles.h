@@ -8,7 +8,12 @@ struct VRPyParticles : VRPyBaseT<OSG::VRParticles> {
     static PyMethodDef methods[];
 
     static PyObject* getGeometry(VRPyParticles* self);
-    static PyObject* spawnRect(VRPyParticles* self, PyObject* args);
+    static PyObject* spawnCuboid(VRPyParticles* self, PyObject* args);
+
+    static PyObject* setRadius(VRPyParticles* self, PyObject* args);
+    static PyObject* setMass(VRPyParticles* self, PyObject* args);
+    static PyObject* setMassByRadius(VRPyParticles* self, PyObject* args);
+    static PyObject* setMassForOneLiter(VRPyParticles* self, PyObject* args);
 };
 
 #endif // VRPYPARTICLES_H_INCLUDED

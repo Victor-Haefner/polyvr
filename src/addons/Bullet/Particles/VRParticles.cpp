@@ -35,6 +35,7 @@ struct OSG::Particle {
 
     void spawnAt(btVector3 v, btDiscreteDynamicsWorld* world = 0) {
         if (world == 0) return;
+        // TODO if Particles shall be spawned a second time, handle it.
 
         btTransform t;
         t.setOrigin(btVector3(v.x(),v.y(),v.z()));
@@ -128,20 +129,90 @@ void VRParticles::update(int b, int e) {
     setPositions(pos);
 }
 
+// NOTE @depricated (probably)
 float VRParticles::getMaxRadius() {
     int i;
-    float maximum = 0;
+    float maximum = 0.0;
     {
         BLock lock(mtx());
         for (i=0; i<N; i++) {
             if (maximum < particles[i]->radius) maximum = particles[i]->radius;
         }
     }
-
     return maximum;
 }
 
-int VRParticles::spawnRect(Vec3f base, ArgType type, float a, float b, float c) {
+void VRParticles::setMass(float newMass, float variation) {
+    int i;
+    float result;
+    {
+        BLock lock(mtx());
+        for (i=0; i<N; i++) {
+            result = newMass;
+            result += (2*variation) * ( ((float) rand()) / RAND_MAX );
+            result -= variation;
+            particles[i]->mass = result;
+        }
+    }
+}
+
+void VRParticles::setMassByRadius(float massFor1mRadius) {
+    int i;
+    float result;
+    {
+        BLock lock(mtx());
+        for (i=0; i<N; i++) {
+            result = this->particles[i]->radius;
+            this->particles[i]->mass = massFor1mRadius * pow(result, 3);
+        }
+    }
+}
+
+void VRParticles::setMassForOneLiter(float massPerLiter) {
+    this->setMassByRadius(10*massPerLiter);
+}
+
+void VRParticles::setRadius(float newRadius, float variation) {
+    int i;
+    float result;
+    {
+        BLock lock(mtx());
+        for (i=0; i<N; i++) {
+            result = newRadius;
+            result += (2 * variation * float(rand()) / RAND_MAX );
+            result -= variation;
+            particles[i]->radius = result;
+        }
+    }
+}
+
+void VRParticles::setAge(int newAge, int variation) {
+    int i, result;
+    {
+        BLock lock(mtx());
+        for (i=0; i<N; i++) {
+            result = newAge;
+            result += (2*variation) * (rand() / RAND_MAX);
+            result -= variation;
+            particles[i]->age = result;
+        }
+    }
+}
+
+void VRParticles::setLifetime(int newLifetime, int variation) {
+    int i, result;
+    {
+        BLock lock(mtx());
+        for (i=0; i<N; i++) {
+            result = newLifetime;
+            result += (2*variation) * (rand() / RAND_MAX);
+            result -= variation;
+            particles[i]->lifetime = result;
+        }
+    }
+}
+
+int VRParticles::spawnCuboid(Vec3f base, ArgType type, float a, float b, float c) {
     VRScene* scene = VRSceneManager::getCurrent();
     // if (scene) world = scene->bltWorld();
 
@@ -160,7 +231,7 @@ int VRParticles::spawnRect(Vec3f base, ArgType type, float a, float b, float c) 
             a = b = c = cbrtf(a);
             break;
     }
-    required = (int)  ( (a/radius) * (b/radius) * (c/radius) );
+    required = (int)  ( 0.5 * (a/radius) * (b/radius) * (c/radius) );
     if (required > N) required = N;
 
     // now, randomly place particles in rectangle.
@@ -189,8 +260,10 @@ int VRParticles::spawnRect(Vec3f base, ArgType type, float a, float b, float c) 
             v += toBtVector3(base);
             particles[i]->spawnAt(v, this->world);
         }
-    // activate update loop
-    scene->addUpdateFkt(fkt);
+        // activate update loop, only update spawned particles! (required)
+        scene->dropUpdateFkt(fkt);
+        fkt = new VRFunction<int>("particles_update", boost::bind(&VRParticles::update, this,0,required));
+        scene->addUpdateFkt(fkt);
     }
     return required;
 }
