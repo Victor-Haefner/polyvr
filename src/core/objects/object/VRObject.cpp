@@ -78,8 +78,8 @@ VRObject* VRObject::hasAncestorWithAttachment(string name) {
     return parent->hasAncestorWithAttachment(name);
 }
 
-void VRObject::setCore(NodeCoreRecPtr c, string _type) {
-    if (specialized) {
+void VRObject::setCore(NodeCoreRecPtr c, string _type, bool force) {
+    if (specialized && !force) {
         cout << "\nError, Object allready specialized, skip setCore()\n";
         return;
     }

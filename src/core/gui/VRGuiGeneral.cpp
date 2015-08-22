@@ -85,14 +85,14 @@ void VRGuiGeneral::toggleDefferedShader() {
     if (updating) return;
     VRScene* scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
-    scene->setDefferedShading( getCheckButtonState("checkbutton_03") );
+    scene->setDefferedShading( getCheckButtonState("checkbutton_3") );
 }
 
 void VRGuiGeneral::toggleSSAO() {
     if (updating) return;
     VRScene* scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
-    scene->setSSAO( getCheckButtonState("checkbutton_04") );
+    scene->setSSAO( getCheckButtonState("checkbutton_4") );
 }
 
 void VRGuiGeneral::toggleFrustumCulling() {

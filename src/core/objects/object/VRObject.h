@@ -102,7 +102,7 @@ class VRObject : public VRName, public VRStorage {
         vector<VRObject*> getChildrenWithAttachment(string name);
 
         /** Set the object OSG core && specify the type**/
-        void setCore(NodeCoreRecPtr c, string _type);
+        void setCore(NodeCoreRecPtr c, string _type, bool force = false);
 
         /** Returns the object OSG core **/
         NodeCoreRecPtr getCore();

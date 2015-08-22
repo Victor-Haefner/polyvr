@@ -120,8 +120,8 @@ void VRDefShading::initDeferredShading(VRObject* o) {
 
 void VRDefShading::setDefferedShading(bool b) {
     enabled = b;
-    if (b) stageObject->setCore(dsStage, "defShading");
-    else stageObject->setCore(Group::create(), "core");
+    if (b) stageObject->setCore(dsStage, "defShading", true);
+    else stageObject->setCore(Group::create(), "core", true);
 }
 
 bool VRDefShading::getDefferedShading() { return enabled; }
