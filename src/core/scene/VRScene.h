@@ -24,7 +24,6 @@ class VRObject;
 class VRVisualLayer;
 
 class VRScene : public VRObjectManager,
-                public VRLightManager,
                 public VRCameraManager,
                 public VRAnimationManager,
                 public VRPhysicsManager,

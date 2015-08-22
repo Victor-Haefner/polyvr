@@ -19,7 +19,7 @@ class VRRobotArm {
             float t1 = 1;
             bool loop = false;
             float d = 1;
-            job(path* p, float t0 = 0, float t1 = 1, float d = 1, bool loop = false) : p(p), t0(t0), t1(t1), d(d), loop(loop) {;}
+            job(path* p, float t0 = 0, float t1 = 1, float d = 1, bool loop = false) : p(p), t0(t0), t1(t1), loop(loop), d(d) {;}
         };
 
         VRAnalyticGeometry* ageo = 0;

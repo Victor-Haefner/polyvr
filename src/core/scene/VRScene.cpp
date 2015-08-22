@@ -21,7 +21,6 @@ using namespace std;
 VRScene::VRScene() {
     cout << "Init Scene" << endl;
 
-    root = new VRObject("Root");
     setNameSpace("Scene");
     setName("Scene");
 

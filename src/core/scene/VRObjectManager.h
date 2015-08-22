@@ -17,7 +17,6 @@ class VRObject;
 
 class VRObjectManager {
     protected:
-        VRObject* root;
         map<string, list<VRGroup*>* > groups;
         VRFunction<int>* updateObjectsFkt;
 

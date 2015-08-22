@@ -36,6 +36,13 @@ string dsSpotLightShadowFPFile ("shader/DeferredShading/DSSpotLightShadow.fp.gls
 
 string dsUnknownFile           ("unknownFile");
 
+VRDefShading::VRDefShading() {
+    dsInit = false;
+    defaultShadowType = ST_TRAPEZOID;
+    shadowRes = 1024;
+    shadowColor = 0.3;
+}
+
 void VRDefShading::init() {
     currentLight    = -1;
     shadowMapWidth  = shadowRes;
@@ -91,21 +98,9 @@ void VRDefShading::init() {
 
 
 void VRDefShading::initDeferredShading(VRObject* o) {
+    init();
     o->setCore(dsStage, "defShading");
     dsInit = true;
-}
-
-VRDefShading::VRDefShading() {
-
-    dsInit = false;
-
-    defaultShadowType   = ShadowTypeE(VROptions::get()->getOption<int>("shadowType"));
-
-    shadowRes = VROptions::get()->getOption<int>("shadowMapSize");
-    shadowColor = VROptions::get()->getOption<float>("shadowColor");
-
-    if ( VROptions::get()->getOption<bool>("deferredShading") ) return;
-    init();
 }
 
 void VRDefShading::setDSCamera(VRCamera* cam) {

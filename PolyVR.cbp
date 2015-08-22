@@ -503,8 +503,6 @@
 		<Unit filename="src/core/scene/VRCameraManager.h" />
 		<Unit filename="src/core/scene/VRDefShading.cpp" />
 		<Unit filename="src/core/scene/VRDefShading.h" />
-		<Unit filename="src/core/scene/VRLightManager.cpp" />
-		<Unit filename="src/core/scene/VRLightManager.h" />
 		<Unit filename="src/core/scene/VRMaterialManager.cpp" />
 		<Unit filename="src/core/scene/VRMaterialManager.h" />
 		<Unit filename="src/core/scene/VRObjectManager.cpp" />

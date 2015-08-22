@@ -66,20 +66,13 @@ class VRDefShading {
         VRDefShading();
 
         void setDSCamera(VRCamera* cam);
-
         void addDSLight(VRLight* light);
-
         void addDSLight(LightRecPtr light, string type, bool shadows = false);
-
+        void subLight(UInt32 lightIdx);
         void setShadow(LightInfo &li);
 
-        // file containing vertex shader code for the light type
         const std::string &getLightVPFile(LightEngine::LightTypeE lightType);
-
-        // file containing fragment shader code for the light type
         const std::string &getLightFPFile( LightEngine::LightTypeE lightType, ShadowTypeE shadowType);
-
-        void subLight(UInt32 lightIdx);
 };
 
 OSG_END_NAMESPACE;
