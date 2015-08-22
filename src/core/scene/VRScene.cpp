@@ -141,6 +141,8 @@ void VRScene::setActiveCamera(string camname) {
     if (cam == 0) return;
     cout << " set active camera to " << cam->getName() << endl;
 
+    setDSCamera(cam);
+
     VRMouse* mouse = (VRMouse*)setup->getDevice("mouse");
     if (mouse) {
         mouse->setTarget(cam);

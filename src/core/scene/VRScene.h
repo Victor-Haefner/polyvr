@@ -2,7 +2,6 @@
 #define VRSCENE_H_INCLUDED
 
 #include "VRObjectManager.h"
-#include "VRLightManager.h"
 #include "VRCameraManager.h"
 #include "VRAnimationManager.h"
 #include "VRPhysicsManager.h"

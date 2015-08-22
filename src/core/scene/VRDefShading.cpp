@@ -12,6 +12,7 @@
 #include "core/utils/VROptions.h"
 #include "core/objects/VRLight.h"
 #include "core/objects/VRCamera.h"
+#include "core/scene/VRSceneManager.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -37,7 +38,7 @@ string dsSpotLightShadowFPFile ("shader/DeferredShading/DSSpotLightShadow.fp.gls
 string dsUnknownFile           ("unknownFile");
 
 VRDefShading::VRDefShading() {
-    dsInit = false;
+    enabled = false;
     defaultShadowType = ST_TRAPEZOID;
     shadowRes = 1024;
     shadowColor = 0.3;
@@ -47,6 +48,21 @@ void VRDefShading::init() {
     currentLight    = -1;
     shadowMapWidth  = shadowRes;
     shadowMapHeight = shadowRes;
+
+    string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/DeferredShading/";
+    dsGBufferVPFile = resDir + "DSGBuffer.vp.glsl";
+    dsGBufferFPFile = resDir + "DSGBuffer.fp.glsl";
+    dsAmbientVPFile = resDir + "DSAmbient.vp.glsl";
+    dsAmbientFPFile = resDir + "DSAmbient.fp.glsl";
+    dsDirLightVPFile = resDir + "DSDirLight.vp.glsl";
+    dsDirLightFPFile = resDir + "DSDirLight.fp.glsl";
+    dsDirLightShadowFPFile = resDir + "DSDirLightShadow.fp.glsl";
+    dsPointLightVPFile = resDir + "DSPointLight.vp.glsl";
+    dsPointLightFPFile = resDir + "DSPointLight.fp.glsl";
+    dsPointLightShadowFPFile = resDir + "DSPointLightShadow.fp.glsl";
+    dsSpotLightVPFile = resDir + "DSSpotLight.vp.glsl";
+    dsSpotLightFPFile = resDir + "DSSpotLight.fp.glsl";
+    dsSpotLightShadowFPFile = resDir + "DSSpotLightShadow.fp.glsl";
 
     dsStage  = DeferredShadingStage::create();
 
@@ -94,17 +110,24 @@ void VRDefShading::init() {
     shAmbient->addShader(fpAmbient);
 
     dsStage->setAmbientProgram(shAmbient);
+    initiated = true;
 }
-
 
 void VRDefShading::initDeferredShading(VRObject* o) {
     init();
-    o->setCore(dsStage, "defShading");
-    dsInit = true;
+    stageObject = o;
 }
 
+void VRDefShading::setDefferedShading(bool b) {
+    enabled = b;
+    if (b) stageObject->setCore(dsStage, "defShading");
+    else stageObject->setCore(Group::create(), "core");
+}
+
+bool VRDefShading::getDefferedShading() { return enabled; }
+
 void VRDefShading::setDSCamera(VRCamera* cam) {
-    if (!dsInit) return;
+    if (!initiated) return;
     dsStage->setCamera(cam->getCam());
 }
 
@@ -113,7 +136,7 @@ void VRDefShading::addDSLight(VRLight* light) {
 }
 
 void VRDefShading::addDSLight(LightRecPtr light, string type, bool shadows) {
-    if (!dsInit) return;
+    if (!initiated) return;
 
     LightInfo li;
 

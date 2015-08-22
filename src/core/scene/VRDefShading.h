@@ -54,16 +54,20 @@ class VRDefShading {
         ShadowTypeE defaultShadowType;
         int shadowRes;
         float shadowColor;
+        bool initiated = false;
+        bool enabled = false;
+        VRObject* stageObject = 0;
 
         void init();
 
     protected:
-        bool dsInit;
-
         void initDeferredShading(VRObject* o);
 
     public:
         VRDefShading();
+
+        void setDefferedShading(bool b);
+        bool getDefferedShading();
 
         void setDSCamera(VRCamera* cam);
         void addDSLight(VRLight* light);

@@ -14,7 +14,8 @@ VRRenderManager::VRRenderManager() {
     update();
 
     root = new VRObject("Root");
-    //initDeferredShading(root);
+    initDeferredShading(root);
+    setDefferedShading(false);
 
     store("frustum_culling", &frustumCulling);
     store("occlusion_culling", &occlusionCulling);
@@ -37,12 +38,16 @@ void VRRenderManager::update() {
 VRLight* VRRenderManager::addLight(string name) {
     VRLight* l = new VRLight(name);
     light_map[l->getID()] = l;
+    addDSLight(l);
     return l;
 }
 
 VRLight* VRRenderManager::getLight(int ID) {
     return light_map[ID];
 }
+
+void VRRenderManager::setSSAO(bool b) { ssao = b; update(); }
+bool VRRenderManager::getSSAO() { return ssao; }
 
 void VRRenderManager::setFrustumCulling(bool b) { frustumCulling = b; update(); }
 bool VRRenderManager::getFrustumCulling() { return frustumCulling; }
