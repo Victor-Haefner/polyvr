@@ -51,23 +51,22 @@ void VRDefShading::init() {
     dsStage->editMFPixelFormats()->push_back(Image::OSG_RGB_PF); // diffuse (RGB) buffer
     dsStage->editMFPixelTypes  ()->push_back(Image::OSG_UINT8_IMAGEDATA);
 
-    ShaderProgramRecPtr      vpGBuffer = ShaderProgram::createVertexShader  ();
-    ShaderProgramRecPtr      fpGBuffer = ShaderProgram::createFragmentShader();
-    ShaderProgramRecPtr      vpAmbient = ShaderProgram::createVertexShader  ();
-    ShaderProgramRecPtr      fpAmbient = ShaderProgram::createFragmentShader();
-    ShaderProgramChunkRecPtr shGBuffer = ShaderProgramChunk::create();
-    ShaderProgramChunkRecPtr shAmbient = ShaderProgramChunk::create();
-
     // G Buffer shader (one for the whole scene)
+    /*ShaderProgramRecPtr      vpGBuffer = ShaderProgram::createVertexShader  ();
+    ShaderProgramRecPtr      fpGBuffer = ShaderProgram::createFragmentShader();
+    ShaderProgramChunkRecPtr shGBuffer = ShaderProgramChunk::create();
     vpGBuffer->readProgram(dsGBufferVPFile.c_str());
     fpGBuffer->readProgram(dsGBufferFPFile.c_str());
     fpGBuffer->addUniformVariable<Int32>("tex0", 0);
     shGBuffer->addShader(vpGBuffer);
     shGBuffer->addShader(fpGBuffer);
-    //dsStage->setGBufferProgram(shGBuffer);
+    dsStage->setGBufferProgram(shGBuffer);*/
     dsStage->setGBufferProgram(NULL);
 
     // ambient shader
+    ShaderProgramRecPtr      vpAmbient = ShaderProgram::createVertexShader  ();
+    ShaderProgramRecPtr      fpAmbient = ShaderProgram::createFragmentShader();
+    ShaderProgramChunkRecPtr shAmbient = ShaderProgramChunk::create();
     vpAmbient->readProgram(dsAmbientVPFile.c_str());
     fpAmbient->readProgram(dsAmbientFPFile.c_str());
     fpAmbient->addUniformVariable<Int32>("texBufNorm", 1);
