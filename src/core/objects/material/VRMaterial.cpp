@@ -61,6 +61,13 @@ struct VRMatData {
         if (video) delete video;
     }
 
+    int getTextureDimension() {
+        if (texChunk == 0) return 0;
+        ImageRecPtr img = texChunk->getImage();
+        if (img == 0) return 0;
+        return img->getDimension();
+    }
+
     void reset() {
         mat = ChunkMaterial::create();
         colChunk = MaterialChunk::create();
@@ -132,6 +139,63 @@ VRMaterial::VRMaterial(string name) : VRObject(name) {
 }
 
 VRMaterial::~VRMaterial() { for (auto m : mats) delete m; }
+
+string VRMaterial::constructShaderVP(VRMatData* data) {
+    int texD = data->getTextureDimension();
+
+    string vp;
+    vp += "#version 120\n";
+    vp += "attribute vec4 osg_Vertex;\n";
+    vp += "attribute vec3 osg_Normal;\n";
+    //vp += "attribute vec4 osg_Color;\n";
+    if (texD == 2) vp += "attribute vec2 osg_MultiTexCoord0;\n";
+    if (texD == 3) vp += "attribute vec3 osg_MultiTexCoord0;\n";
+    vp += "varying vec4 vertPos;\n";
+    vp += "varying vec3 vertNorm;\n";
+    vp += "void main(void) {\n";
+    vp += "  vertPos = gl_ModelViewMatrix * osg_Vertex;\n";
+    vp += "  vertNorm = gl_NormalMatrix * osg_Normal;\n";
+    if (texD == 2) vp += "  gl_TexCoord[0] = vec4(osg_MultiTexCoord0,0.0,0.0);\n";
+    if (texD == 3) vp += "  gl_TexCoord[0] = vec4(osg_MultiTexCoord0,0.0);\n";
+    vp += "  gl_FrontColor  = gl_Color;\n";
+    vp += "  gl_Position    = gl_ModelViewProjectionMatrix*osg_Vertex;\n";
+    vp += "}\n";
+    return vp;
+}
+
+string VRMaterial::constructShaderFP(VRMatData* data) {
+    int texD = data->getTextureDimension();
+
+    string fp;
+    fp += "#version 120\n";
+    fp += "varying vec4 vertPos;\n";
+    fp += "varying vec3 vertNorm;\n";
+    fp += "float luminance(vec4 color) { return dot(color, vec4(0.3, 0.59, 0.11, 0.0)); }\n";
+    if (texD == 2) fp += "uniform sampler2D tex0;\n";
+    if (texD == 3) fp += "uniform sampler3D tex0;\n";
+    fp += "void main(void) {\n";
+    fp += "  vec3 pos = vertPos.xyz / vertPos.w;\n";
+    if (texD == 0) fp += "  vec3 diffCol = gl_Color.rgb;\n";
+    if (texD == 2) fp += "  vec3 diffCol = texture2D(tex0, gl_TexCoord[0].xy).rgb;\n";
+    if (texD == 3) fp += "  vec3 diffCol = texture3D(tex0, gl_TexCoord[0].xyz).rgb;\n";
+    fp += "  float ambVal  = luminance(gl_Color);\n";
+    fp += "  gl_FragData[0] = vec4(pos, ambVal);\n";
+    fp += "  gl_FragData[1] = vec4(normalize(vertNorm), 0);\n";
+    fp += "  gl_FragData[2] = vec4(diffCol, 0);\n";
+    fp += "}\n";
+    return fp;
+}
+
+void VRMaterial::setDeffered(bool b) {
+    deffered = b;
+    if (b) {
+        for (uint i=0; i<mats.size(); i++) {
+            setActivePass(i);
+            setVertexShader( constructShaderVP(mats[i]) );
+            setFragmentShader( constructShaderFP(mats[i]) );
+        }
+    }
+}
 
 void VRMaterial::clearAll() {
     for (auto m : materials) delete m.second;
@@ -542,6 +606,7 @@ void VRMaterial::setTexture(char* data, int format, Vec3i dims, bool isfloat) {
     img->set( pf, dims[0], dims[1], dims[2], 1, 1, 0, (const UInt8*)data, f);
     if (format == 4) setTexture(img, true);
     if (format == 3) setTexture(img, false);
+    setShaderParameter<int>("is3DTexture", dims[2] > 1);
 }
 
 void VRMaterial::initShaderChunk() {

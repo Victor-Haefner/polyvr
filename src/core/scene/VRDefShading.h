@@ -40,14 +40,16 @@ class VRDefShading {
 
         };
 
+        string dsGBufferVPFile, dsGBufferFPFile;
+        string dsAmbientVPFile, dsAmbientFPFile;
+        string dsDirLightVPFile, dsDirLightFPFile, dsDirLightShadowFPFile;
+        string dsPointLightVPFile, dsPointLightFPFile, dsPointLightShadowFPFile;
+        string dsSpotLightVPFile, dsSpotLightFPFile, dsSpotLightShadowFPFile;
+        string dsUnknownFile = "unknownFile";
+
         NodeRecPtr                   dsStageN;
         DeferredShadingStageRecPtr   dsStage;
-
         vector<LightInfo>         lightInfos;
-
-
-        Int32                          currentLight;
-
         UInt32                         shadowMapWidth;
         UInt32                         shadowMapHeight;
 

@@ -27,10 +27,14 @@ class VRMaterial : public VRObject {
         static map<string, VRMaterial*> materials;
         static map<MaterialRecPtr, VRMaterial*> materialsByPtr;
 
+        string constructShaderVP(VRMatData* data);
+        string constructShaderFP(VRMatData* data);
+
     protected:
         MultiPassMaterialRecPtr passes;
         vector<VRMatData*> mats;
         int activePass = 0;
+        bool deffered = false;
 
         VRObject* copy(vector<VRObject*> children);
 
@@ -44,6 +48,8 @@ class VRMaterial : public VRObject {
     public:
         VRMaterial(string name);
         virtual ~VRMaterial();
+
+        void setDeffered(bool b);
 
         void setActivePass(int i);
         int getActivePass();

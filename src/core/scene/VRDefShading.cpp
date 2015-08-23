@@ -12,40 +12,19 @@
 #include "core/utils/VROptions.h"
 #include "core/objects/VRLight.h"
 #include "core/objects/VRCamera.h"
+#include "core/objects/material/VRMaterial.h"
 #include "core/scene/VRSceneManager.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-string dsGBufferVPFile         ("shader/DeferredShading/DSGBuffer.vp.glsl"         );
-string dsGBufferFPFile         ("shader/DeferredShading/DSGBuffer.fp.glsl"         );
-
-string dsAmbientVPFile         ("shader/DeferredShading/DSAmbient.vp.glsl"         );
-string dsAmbientFPFile         ("shader/DeferredShading/DSAmbient.fp.glsl"         );
-
-string dsDirLightVPFile        ("shader/DeferredShading/DSDirLight.vp.glsl"        );
-string dsDirLightFPFile        ("shader/DeferredShading/DSDirLight.fp.glsl"        );
-string dsDirLightShadowFPFile  ("shader/DeferredShading/DSDirLightShadow.fp.glsl"  );
-
-string dsPointLightVPFile      ("shader/DeferredShading/DSPointLight.vp.glsl"      );
-string dsPointLightFPFile      ("shader/DeferredShading/DSPointLight.fp.glsl"      );
-string dsPointLightShadowFPFile("shader/DeferredShading/DSPointLightShadow.fp.glsl");
-
-string dsSpotLightVPFile       ("shader/DeferredShading/DSSpotLight.vp.glsl"       );
-string dsSpotLightFPFile       ("shader/DeferredShading/DSSpotLight.fp.glsl"       );
-string dsSpotLightShadowFPFile ("shader/DeferredShading/DSSpotLightShadow.fp.glsl" );
-
-string dsUnknownFile           ("unknownFile");
-
 VRDefShading::VRDefShading() {
-    enabled = false;
     defaultShadowType = ST_TRAPEZOID;
     shadowRes = 1024;
     shadowColor = 0.3;
 }
 
 void VRDefShading::init() {
-    currentLight    = -1;
     shadowMapWidth  = shadowRes;
     shadowMapHeight = shadowRes;
 
@@ -65,51 +44,37 @@ void VRDefShading::init() {
     dsSpotLightShadowFPFile = resDir + "DSSpotLightShadow.fp.glsl";
 
     dsStage  = DeferredShadingStage::create();
-
-
-    // positions (RGB) + ambient (A) term buffer
-    dsStage->editMFPixelFormats()->push_back(Image::OSG_RGBA_PF          );
+    dsStage->editMFPixelFormats()->push_back(Image::OSG_RGBA_PF          ); // positions (RGB) + ambient (A) term buffer
     dsStage->editMFPixelTypes  ()->push_back(Image::OSG_FLOAT32_IMAGEDATA);
-
-    // normals (RGB) buffer
-    dsStage->editMFPixelFormats()->push_back(Image::OSG_RGB_PF           );
+    dsStage->editMFPixelFormats()->push_back(Image::OSG_RGB_PF           ); // normals (RGB) buffer
     dsStage->editMFPixelTypes  ()->push_back(Image::OSG_FLOAT32_IMAGEDATA);
-
-    // diffuse (RGB) buffer
-    dsStage->editMFPixelFormats()->push_back(Image::OSG_RGB_PF);
+    dsStage->editMFPixelFormats()->push_back(Image::OSG_RGB_PF); // diffuse (RGB) buffer
     dsStage->editMFPixelTypes  ()->push_back(Image::OSG_UINT8_IMAGEDATA);
 
     ShaderProgramRecPtr      vpGBuffer = ShaderProgram::createVertexShader  ();
     ShaderProgramRecPtr      fpGBuffer = ShaderProgram::createFragmentShader();
-
     ShaderProgramRecPtr      vpAmbient = ShaderProgram::createVertexShader  ();
     ShaderProgramRecPtr      fpAmbient = ShaderProgram::createFragmentShader();
-
     ShaderProgramChunkRecPtr shGBuffer = ShaderProgramChunk::create();
     ShaderProgramChunkRecPtr shAmbient = ShaderProgramChunk::create();
 
     // G Buffer shader (one for the whole scene)
     vpGBuffer->readProgram(dsGBufferVPFile.c_str());
     fpGBuffer->readProgram(dsGBufferFPFile.c_str());
-
     fpGBuffer->addUniformVariable<Int32>("tex0", 0);
-
     shGBuffer->addShader(vpGBuffer);
     shGBuffer->addShader(fpGBuffer);
-
-    dsStage->setGBufferProgram(shGBuffer);
-    //dsStage->setGBufferProgram(NULL);
+    //dsStage->setGBufferProgram(shGBuffer);
+    dsStage->setGBufferProgram(NULL);
 
     // ambient shader
     vpAmbient->readProgram(dsAmbientVPFile.c_str());
     fpAmbient->readProgram(dsAmbientFPFile.c_str());
-
     fpAmbient->addUniformVariable<Int32>("texBufNorm", 1);
-
     shAmbient->addShader(vpAmbient);
     shAmbient->addShader(fpAmbient);
-
     dsStage->setAmbientProgram(shAmbient);
+
     initiated = true;
 }
 
@@ -122,6 +87,7 @@ void VRDefShading::setDefferedShading(bool b) {
     enabled = b;
     if (b) stageObject->setCore(dsStage, "defShading", true);
     else stageObject->setCore(Group::create(), "core", true);
+    for (auto m : VRMaterial::materials) m.second->setDeffered(b);
 }
 
 bool VRDefShading::getDefferedShading() { return enabled; }
