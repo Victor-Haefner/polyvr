@@ -3,7 +3,7 @@
   <Objects>
     <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
       <Object name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
-        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="-2.61948 2.16162 -2.47554" at="-0.5 -0.834331 -0.0732093" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
+        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="-4.58161 4.93515 -4.6995" at="-0.5 -0.834331 -0.0732093" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
           <Object name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
         </Object>
       </Object>
@@ -11,6 +11,33 @@
   </Objects>
   <Rendering frustum_culling="1" occlusion_culling="0" two_sided="1"/>
   <Scripts>
+    <Script name_suffix="0" base_name="fluid_fp" name_space="__script__" type="GLSL" mobile="">
+      <core>
+#version 120
+
+void main( void ) {
+   gl_FragColor = vec4(1.0,1.0,0.0,1.0);
+}
+</core>
+    </Script>
+    <Script name_suffix="0" base_name="fluid_vp" name_space="__script__" type="GLSL" mobile="mobile">
+      <core>
+#version 120
+
+varying vec4 vertPos;
+varying vec3 vertNorm;
+
+void main(void)
+{
+    vertPos        = gl_ModelViewMatrix * gl_Vertex;
+    vertNorm       = gl_NormalMatrix    * gl_Normal;
+
+    gl_TexCoord[0] = gl_MultiTexCoord0;
+    gl_FrontColor  = gl_Color;
+    gl_Position    = ftransform();
+}
+</core>
+    </Script>
     <Script name_suffix="0" base_name="init" name_space="__script__" type="Python" mobile="">
       <core>
 	import VR
@@ -22,11 +49,18 @@
 	VR.test = VR.Object('test')
 	r.addChild(VR.test)
 	
+	def initFluidMaterial():
+		m = VR.Material('fluid')
+		m.setVertexProgram('fluid_vp')
+		m.setFragmentProgram('fluid_fp')
+		return m
+	
 	def doParticles():
 		p = VR.Particles(42)
+		p.setMaterial( initFluidMaterial() )
 		# test setter
 		p.setRadius(0.02, 0.01)
-		p.setRadius(0.02)
+		p.setRadius(0.03)
 		p.setMass(0.1)
 		p.setMass(0.3, 0.1)
 		p.setMassByRadius(1000.0)
@@ -37,7 +71,7 @@
 	
 	def doGround():
 		ground = VR.Geometry('ground')
-		ground.setPrimitive('Box 1 1 1 1 1 1')
+		ground.setPrimitive('Box 10 1 10 1 1 1')
 		#ground.setColors([255,255,255])
 		#mat = VR.Material()
 		#mat.setSpecular([250,250,250])
