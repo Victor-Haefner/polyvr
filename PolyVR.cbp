@@ -189,6 +189,7 @@
 			<Add directory="/usr/lib/1.4" />
 			<Add directory="/usr/lib" />
 			<Add directory="/usr/lib/x86_64-linux-gnu" />
+			<Add directory="/usr/local/cuda/lib64" />
 		</Linker>
 		<ExtraCommands>
 			<Add after='/bin/bash -c &quot;cp -u -p ressources/cef/icudtl.dat bin/Debug/ 2&gt;/dev/null&quot;' />
