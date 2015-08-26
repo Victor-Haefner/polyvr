@@ -225,6 +225,7 @@ static PyMethodDef VRScriptManager_module_methods[] = {
 	{"getNavigator", (PyCFunction)VRScriptManager::getNavigator, METH_NOARGS, "Return a handle to the navigator object" },
 	{"getSetup", (PyCFunction)VRScriptManager::getSetup, METH_NOARGS, "Return a handle to the active hardware setup" },
 	{"loadScene", (PyCFunction)VRScriptManager::loadScene, METH_VARARGS, "Close the current scene and open another - loadScene( str path/to/my/scene.xml )" },
+	{"startThread", (PyCFunction)VRScriptManager::startThread, METH_VARARGS, "Start a thread - int startThread( callback, [params] )" },
     {NULL}  /* Sentinel */
 };
 
@@ -495,6 +496,26 @@ void execCall(PyObject* pyFkt, PyObject* pArgs, int i) {
     Py_DecRef(pyFkt);
 
     if (PyErr_Occurred() != NULL) PyErr_Print();
+}
+
+void execThread(PyObject* pyFkt, PyObject* pArgs, VRThread* thread) {
+    execCall(pyFkt, pArgs, 0);
+}
+
+PyObject* VRScriptManager::startThread(VRScriptManager* self, PyObject *args) {
+    PyObject *pyFkt, *pArgs = 0;
+    if (PyTuple_Size(args) == 1) { if (! PyArg_ParseTuple(args, "O", &pyFkt)) return NULL; }
+    else { if (! PyArg_ParseTuple(args, "OO", &pyFkt, &pArgs)) return NULL; }
+    Py_IncRef(pyFkt);
+
+    if (pArgs != 0) {
+        std::string type = pArgs->ob_type->tp_name;
+        if (type == "list") pArgs = PyList_AsTuple(pArgs);
+    }
+
+    auto fkt = new VRFunction<VRThread*>( "pyExecCall", boost::bind(execThread, pyFkt, pArgs, _1) );
+    int t = VRSceneManager::getCurrent()->initThread(fkt, "python thread");
+    return PyInt_FromLong(t);
 }
 
 PyObject* VRScriptManager::stackCall(VRScriptManager* self, PyObject *args) {
