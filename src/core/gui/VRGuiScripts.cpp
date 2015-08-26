@@ -108,19 +108,20 @@ void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScript* script, bool on
     int trig_lvl = 0;
     for (auto trig : script->getTriggers()) {
         if (trig.second->trigger == "on_scene_load") trig_lvl |= 1;
-        if (trig.second->trigger == "on_timeout") trig_lvl |= 2;
-        if (trig.second->trigger == "on_device") trig_lvl |= 4;
-        if (trig.second->trigger == "on_socket") trig_lvl |= 8;
-        if (trig.second->trigger == "on_device_drag") trig_lvl |= 16;
-        if (trig.second->trigger == "on_device_drop") trig_lvl |= 32;
+        if (trig.second->trigger == "on_scene_close") trig_lvl |= 2;
+        if (trig.second->trigger == "on_timeout") trig_lvl |= 4;
+        if (trig.second->trigger == "on_device") trig_lvl |= 8;
+        if (trig.second->trigger == "on_socket") trig_lvl |= 16;
+        if (trig.second->trigger == "on_device_drag") trig_lvl |= 32;
+        if (trig.second->trigger == "on_device_drop") trig_lvl |= 64;
     }
 
     if (trig_lvl >= 1) bg = "#AAFF88";
-    if (trig_lvl >= 2) bg = "#FF8866";
-    if (trig_lvl >= 4) bg = "#FFBB33";
-    if (trig_lvl >= 8) bg = "#3388FF";
-    if (trig_lvl >= 16) bg = "#FFCCAA";
-    if (trig_lvl >= 32) bg = "#FFCC88";
+    if (trig_lvl >= 4) bg = "#FF8866";
+    if (trig_lvl >= 8) bg = "#FFBB33";
+    if (trig_lvl >= 16) bg = "#3388FF";
+    if (trig_lvl >= 32) bg = "#FFCCAA";
+    if (trig_lvl >= 64) bg = "#FFCC88";
 
     string time = " ";
     float exec_time = script->getExecutionTime();
@@ -959,7 +960,7 @@ VRGuiScripts::VRGuiScripts() {
 
     // fill combolists
     const char *arg_types[] = {"int", "float", "str", "VRPyObjectType", "VRPyTransformType", "VRPyGeometryType", "VRPyLightType", "VRPyLodType", "VRPyDeviceType", "VRPyHapticType", "VRPySocketType"};
-    const char *trigger_types[] = {"none", "on_scene_load", "on_timeout", "on_device", "on_socket"};
+    const char *trigger_types[] = {"none", "on_scene_load", "on_scene_close", "on_timeout", "on_device", "on_socket"};
     const char *device_types[] = {"mouse", "keyboard", "flystick", "haptic", "mobile", "vrpn_device"}; // TODO: get from a list in devicemanager || something
     const char *trigger_states[] = {"Pressed", "Released", "Drag", "Drop", "To edge", "From edge"};
     const char *script_types[] = {"Python", "GLSL", "HTML"};

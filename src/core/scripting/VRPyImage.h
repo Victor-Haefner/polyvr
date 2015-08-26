@@ -6,6 +6,8 @@
 
 struct VRPyImage : VRPyBaseT<OSG::Image> {
     static PyMethodDef methods[];
+
+    static PyObject* NewImg(PyTypeObject *type, PyObject *args, PyObject *kwds);
 };
 
 #endif // VRPYIMAGE_H_INCLUDED

@@ -47,6 +47,7 @@ class VRDemos {
         string active;
         VRScene* demo = 0;
         VRSignal* on_scene_loaded = 0;
+        VRSignal* on_scene_closing = 0;
         demoEntry* current_demo = 0;
         map<string, demoEntry*> demos;
         VRGuiContextMenu* menu;

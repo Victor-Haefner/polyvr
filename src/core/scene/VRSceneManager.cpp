@@ -28,6 +28,7 @@ VRSceneManager::VRSceneManager() {
     searchExercisesAndFavorites();
 
     on_scene_load = new VRSignal();
+    on_scene_close = new VRSignal();
 }
 
 VRSceneManager::~VRSceneManager() { for (auto scene : scenes) delete scene.second; }
@@ -61,6 +62,7 @@ string VRSceneManager::getOriginalWorkdir() { return original_workdir; }
 
 void VRSceneManager::removeScene(VRScene* s) {
     if (s == 0) return;
+    on_scene_close->trigger<VRDevice>();
     scenes.erase(s->getName());
     active = "NO_SCENE_ACTIVE";
     delete s;
@@ -110,6 +112,7 @@ void VRSceneManager::newScene(string path) {
 }
 
 VRSignal* VRSceneManager::getSignal_on_scene_load() { return on_scene_load; }
+VRSignal* VRSceneManager::getSignal_on_scene_close() { return on_scene_close; }
 
 void VRSceneManager::setActiveScene(VRScene* s) {
     if (scenes.size() == 0) { cout << "\n ERROR: No scenes defined " << flush; return; }
@@ -124,12 +127,6 @@ void VRSceneManager::setActiveScene(VRScene* s) {
     s->setActiveCamera();
 
     on_scene_load->trigger<VRDevice>();
-
-    // todo:
-    //  - add scene signals to setup devices
-    //  - the setup mouse needs the active camera
-    //  - setup views need the scene root for rendering
-    //  - the setup real_root has to be added to the current camera
 }
 
 void VRSceneManager::storeFavorites() {

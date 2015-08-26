@@ -60,12 +60,13 @@ void VRScript::clean() {
 
     VRScene* scene = VRSceneManager::getCurrent();
 
-    for (t_itr = trigs.begin(); t_itr != trigs.end(); t_itr++) {
-        trig* t = t_itr->second;
+    for (auto tr : trigs) {
+        trig* t = tr.second;
         if (t->a && args.count("dev")) { args.erase("dev"); delete t->a; }
         if (t->soc) t->soc->unsetCallbacks();
         if (t->sig) t->sig->sub(cbfkt_dev);
         if (t->trigger == "on_timeout") scene->dropTimeoutFkt(cbfkt_sys);
+        if (t->trigger == "on_scene_close") VRSceneManager::get()->getSignal_on_scene_close()->sub(cbfkt_sys);
         t->soc = 0;
         t->sig = 0;
         t->a = 0;
@@ -80,8 +81,13 @@ void VRScript::update() {
 
     VRScene* scene = VRSceneManager::getCurrent();
 
-    for (t_itr = trigs.begin(); t_itr != trigs.end(); t_itr++) {
-        trig* t = t_itr->second;
+    for (auto tr : trigs) {
+        trig* t = tr.second;
+        if (t->trigger == "on_scene_close") {
+            VRSceneManager::get()->getSignal_on_scene_close()->add(cbfkt_sys);
+            continue;
+        }
+
         if (t->trigger == "on_timeout") {
             int i = toInt(t->param.c_str());
             scene->addTimeoutFkt(cbfkt_sys, 0, i);
@@ -168,6 +174,10 @@ VRScript::VRScript(string _name) {
 }
 
 VRScript::~VRScript() {
+    for (auto t : trigs) {
+        if (t.second->trigger == "on_scene_close") VRSceneManager::get()->getSignal_on_scene_close()->sub(cbfkt_sys);
+    }
+
     for (auto a : args) delete a.second;
     for (auto t : trigs) delete t.second;
 }

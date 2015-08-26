@@ -3,6 +3,9 @@
 #include "VRPyDevice.h"
 #include "VRPyBaseT.h"
 
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include "numpy/ndarrayobject.h"
+
 template<> PyTypeObject VRPyBaseT<OSG::Image>::type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
@@ -42,9 +45,25 @@ template<> PyTypeObject VRPyBaseT<OSG::Image>::type = {
     0,                         /* tp_dictoffset */
     (initproc)init,      /* tp_init */
     0,                         /* tp_alloc */
-    0,                 /* tp_new */
+    VRPyImage::NewImg,                 /* tp_new */
 };
 
 PyMethodDef VRPyImage::methods[] = {
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyImage::NewImg(PyTypeObject *type, PyObject *args, PyObject *kwds) {
+    OSG::ImageRecPtr img = OSG::Image::create();
+    if (pySize(args) == 3) {
+        import_array1(NULL);
+        PyArrayObject* data = 0;
+        int W, H;
+        if (! PyArg_ParseTuple(args, "Oii", &data, &W, &H)) return NULL;
+        if ((PyObject*)data == Py_None) Py_RETURN_TRUE;
+        unsigned char* cdata  = (unsigned char*)PyArray_DATA(data);
+        img->set(OSG::Image::OSG_RGB_PF, W, H, 1, 1, 2, 0, cdata, OSG::Image::OSG_UINT8_IMAGEDATA, false);
+    }
+    return alloc( type, img );
+}
+
+
