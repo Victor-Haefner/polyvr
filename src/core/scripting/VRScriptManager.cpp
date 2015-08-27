@@ -231,6 +231,7 @@ static PyMethodDef VRScriptManager_module_methods[] = {
 
 void VRScriptManager::initPyModules() {
     Py_Initialize();
+    PyEval_InitThreads();
     VRPyBase::err = PyErr_NewException((char *)"VR.Error", NULL, NULL);
 
     pGlobal = PyDict_New();
@@ -489,9 +490,10 @@ PyObject* VRScriptManager::pyTriggerScript(VRScriptManager* self, PyObject *args
 void execCall(PyObject* pyFkt, PyObject* pArgs, int i) {
     if (pyFkt == 0) return;
     if (PyErr_Occurred() != NULL) PyErr_Print();
-
     if (pArgs == 0) pArgs = PyTuple_New(0);
+
     PyObject_CallObject(pyFkt, pArgs);
+
     Py_XDECREF(pArgs);
     Py_DecRef(pyFkt);
 
@@ -499,7 +501,15 @@ void execCall(PyObject* pyFkt, PyObject* pArgs, int i) {
 }
 
 void execThread(PyObject* pyFkt, PyObject* pArgs, VRThread* thread) {
+    PyGILState_STATE gstate = PyGILState_Ensure();
     execCall(pyFkt, pArgs, 0);
+    PyGILState_Release(gstate);
+}
+
+void VRScriptManager::updateScriptThreads() {
+    Py_BEGIN_ALLOW_THREADS
+    osgSleep(1);
+    Py_END_ALLOW_THREADS
 }
 
 PyObject* VRScriptManager::startThread(VRScriptManager* self, PyObject *args) {

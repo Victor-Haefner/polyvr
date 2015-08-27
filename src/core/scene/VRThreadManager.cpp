@@ -27,9 +27,8 @@ void VRThreadManager::runLoop(VRThread* t) {
     t->osg_t = tr;
     t->status = 1;
 
-    while(t->control_flag) {
-        (*t->fkt)(t);
-    }
+    do (*t->fkt)(t);
+    while(t->control_flag);
 
     t->status = 2;
 }
