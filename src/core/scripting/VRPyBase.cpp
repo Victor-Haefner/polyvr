@@ -92,6 +92,8 @@ OSG::Vec4f VRPyBase::parseVec4fList(PyObject *li) {
 }
 
 OSG::Vec2f VRPyBase::parseVec2f(PyObject *args) {
+    if (pySize(args) == 1) return parseVec2fList( parseObject(args) );
+
     float x,y; x=y=0;
     if (! PyArg_ParseTuple(args, "ff", &x, &y)) return OSG::Vec2f();
     return OSG::Vec2f(x,y);
@@ -106,6 +108,8 @@ OSG::Vec3f VRPyBase::parseVec3f(PyObject *args) {
 }
 
 OSG::Vec4f VRPyBase::parseVec4f(PyObject *args) {
+    if (pySize(args) == 1) return parseVec4fList( parseObject(args) );
+
     float x,y,z,w; x=y=z=w=0;
     if (! PyArg_ParseTuple(args, "ffff", &x, &y, &z, &w)) return OSG::Vec4f();
     return OSG::Vec4f(x,y,z,w);

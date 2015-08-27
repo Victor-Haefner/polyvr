@@ -14,6 +14,9 @@ using namespace OSG;
 using namespace std;
 
 VRAnnotationEngine::VRAnnotationEngine() : VRGeometry("AnnEng") {
+    fg = Vec4f(0,0,0,1);
+    bg = Vec4f(1,0,1,0);
+
     mat = VRMaterial::get("AnnEngMat");
     mat->setVertexShader(vp);
     mat->setFragmentShader(fp);
@@ -44,6 +47,9 @@ void VRAnnotationEngine::clear() {
     mesh->getLengths()->setValue(0, 0);
     setMaterial(mat);
 }
+
+void VRAnnotationEngine::setColor(Vec4f c) { fg = c; updateTexture(); }
+void VRAnnotationEngine::setBackground(Vec4f c) { bg = c; updateTexture(); }
 
 bool VRAnnotationEngine::checkUIn(int i) {
     if (i < 0 || i > (int)pos->size()) return true;
@@ -95,7 +101,7 @@ void VRAnnotationEngine::setBillboard(bool b) { mat->setShaderParameter("doBillb
 void VRAnnotationEngine::updateTexture() {
     string txt;
     for (int i=32; i<128; i++) txt += char(i);
-    ImageRecPtr img = VRText::get()->create(txt, "MONO 20", 20, Color4f(0,0,0,255), Color4f(0,0,0,0) );
+    ImageRecPtr img = VRText::get()->create(txt, "MONO 20", 20, fg*255, bg*255 );
     mat->setTexture(img);
 }
 

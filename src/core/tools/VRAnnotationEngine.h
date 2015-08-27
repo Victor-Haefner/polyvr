@@ -10,6 +10,7 @@ class VRAnnotationEngine : public VRGeometry {
         GeoVectorProperty* pos = 0;
         GeoVectorProperty* norms = 0; // n[0] is the number, n[1] is the ID
         VRMaterial* mat = 0;
+        Vec4f fg, bg;
 
         static string vp;
         static string fp;
@@ -34,6 +35,8 @@ class VRAnnotationEngine : public VRGeometry {
         void set(int i, Vec3f p, string s);
 
         void setSize(float f);
+        void setColor(Vec4f c);
+        void setBackground(Vec4f c);
         void setBillboard(bool b);
         void setOnTop(bool b);
 };
