@@ -74,11 +74,7 @@ VRParticles::VRParticles(int particleAmount) : VRGeometry("particles") {
     // physics
     VRScene* scene = VRSceneManager::getCurrent();
     if (scene) world = scene->bltWorld();
-
-    {
-        BLock lock(mtx());
-        for(int i=0;i<N;i++) particles[i] = new Particle();
-    }
+    initParticles<Particle>();
 
     // material
     mat = new VRMaterial("particles");
@@ -114,6 +110,14 @@ VRParticles::~VRParticles() {
     {
         BLock lock(mtx());
         for (int i=0;i<N;i++) delete particles[i];
+    }
+}
+
+template<class P>
+void VRParticles::initParticles() {
+    BLock lock(mtx());
+    for(int i=0;i<N;i++) {
+        particles[i] = new P(world);
     }
 }
 
