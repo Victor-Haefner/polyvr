@@ -52,6 +52,7 @@ struct VRMatData {
     ShaderProgramRecPtr fProgram;
     ShaderProgramRecPtr gProgram;
     VRVideo* video = 0;
+    bool deffered = false;
 
     string vertexScript;
     string fragmentScript;
@@ -87,6 +88,7 @@ struct VRMatData {
         shaderChunk = 0;
         clipChunk = 0;
         stencilChunk = 0;
+        deffered = false;
 
         colChunk->setDiffuse( Color4f(1, 1, 1, 1) );
         colChunk->setAmbient( Color4f(0.3, 0.3, 0.3, 1) );
@@ -189,12 +191,20 @@ string VRMaterial::constructShaderFP(VRMatData* data) {
 }
 
 void VRMaterial::setDeffered(bool b) {
-    deffered = b;
     if (b) {
         for (uint i=0; i<mats.size(); i++) {
+            if (mats[i]->shaderChunk != 0) continue;
+            mats[i]->deffered = true;
             setActivePass(i);
             setVertexShader( constructShaderVP(mats[i]) );
             setFragmentShader( constructShaderFP(mats[i]) );
+        }
+    } else {
+        for (uint i=0; i<mats.size(); i++) {
+            if (!mats[i]->deffered) continue;
+            mats[i]->deffered = false;
+            setActivePass(i);
+            remShaderChunk();
         }
     }
 }
@@ -626,6 +636,16 @@ void VRMaterial::initShaderChunk() {
 
     md->vProgram->createDefaulAttribMapping();
     md->vProgram->addOSGVariable("OSGViewportSize");
+}
+
+void VRMaterial::remShaderChunk() {
+    auto md = mats[activePass];
+    if (md->shaderChunk == 0) return;
+    md->mat->subChunk(md->shaderChunk);
+    md->vProgram = 0;
+    md->fProgram = 0;
+    md->gProgram = 0;
+    md->shaderChunk = 0;
 }
 
 ShaderProgramRecPtr VRMaterial::getShaderProgram() { return mats[activePass]->vProgram; }

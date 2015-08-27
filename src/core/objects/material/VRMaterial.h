@@ -34,7 +34,6 @@ class VRMaterial : public VRObject {
         MultiPassMaterialRecPtr passes;
         vector<VRMatData*> mats;
         int activePass = 0;
-        bool deffered = false;
 
         VRObject* copy(vector<VRObject*> children);
 
@@ -104,6 +103,7 @@ class VRMaterial : public VRObject {
         float getTransparency();
 
         void initShaderChunk();
+        void remShaderChunk();
         void setVertexShader(string s);
         void setFragmentShader(string s);
         void setGeometryShader(string s);
