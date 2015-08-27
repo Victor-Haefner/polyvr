@@ -24,6 +24,50 @@ VRDefShading::VRDefShading() {
     shadowColor = 0.3;
 }
 
+float random(float f1, float f2) {
+    float r = float(rand())/RAND_MAX;
+    r *= (f2-f1);
+    r += f1;
+    return r;
+}
+
+float lerp(float f1, float f2, float f3) {
+    return (f2-f1)*f3;
+}
+
+void VRDefShading::prepSSAOKernel() {
+    int kernelSize = 16;
+    int noiseSize = 16;
+
+    // kernel
+    vector<float> kernel(3*kernelSize);
+    vector<float> noise(3*noiseSize);
+
+    for (int i = 0; i < kernelSize; i++) {
+        Vec3f k(random(-1,1), random(-1,1), random(0,1));
+        k.normalize();
+        k *= random(0,1);
+        float scale = float(i) / float(kernelSize);
+        k *= lerp(0.1, 1, scale * scale);
+
+        kernel[i*3+0] = k[0];
+        kernel[i*3+1] = k[1];
+        kernel[i*3+2] = k[2];
+    }
+
+    // noise texture
+    for (int i = 0; i < noiseSize; i++) {
+        Vec3f n(random(-1,1), random(-1,1), 0);
+        n.normalize();
+
+        noise[i*3+0] = n[0];
+        noise[i*3+1] = n[1];
+        noise[i*3+2] = n[2];
+    }
+
+    // put the noise data in a texture 4x4
+}
+
 void VRDefShading::init() {
     shadowMapWidth  = shadowRes;
     shadowMapHeight = shadowRes;
@@ -70,6 +114,7 @@ void VRDefShading::init() {
     vpAmbient->readProgram(dsAmbientVPFile.c_str());
     fpAmbient->readProgram(dsAmbientFPFile.c_str());
     fpAmbient->addUniformVariable<Int32>("texBufNorm", 1);
+    fpAmbient->addUniformVariable<Int32>("uTexRandom", 4); // noise random texture
     shAmbient->addShader(vpAmbient);
     shAmbient->addShader(fpAmbient);
     dsStage->setAmbientProgram(shAmbient);
@@ -85,7 +130,7 @@ void VRDefShading::initDeferredShading(VRObject* o) {
 void VRDefShading::setDefferedShading(bool b) {
     enabled = b;
     if (b) stageObject->setCore(dsStage, "defShading", true);
-    else stageObject->setCore(Group::create(), "core", true);
+    else stageObject->setCore(Group::create(), "Object", true);
     for (auto m : VRMaterial::materials) m.second->setDeffered(b);
 }
 

@@ -60,6 +60,8 @@ class VRDefShading {
         bool enabled = false;
         VRObject* stageObject = 0;
 
+        void prepSSAOKernel();
+
         void init();
 
     protected:
