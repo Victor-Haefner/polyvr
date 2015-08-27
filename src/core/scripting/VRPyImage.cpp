@@ -61,9 +61,13 @@ PyObject* VRPyImage::NewImg(PyTypeObject *type, PyObject *args, PyObject *kwds) 
         if (! PyArg_ParseTuple(args, "Oii", &data, &W, &H)) return NULL;
         if ((PyObject*)data == Py_None) Py_RETURN_TRUE;
         unsigned char* cdata  = (unsigned char*)PyArray_DATA(data);
-        img->set(OSG::Image::OSG_RGB_PF, W, H, 1, 1, 2, 0, cdata, OSG::Image::OSG_UINT8_IMAGEDATA, false);
-    }
-    return alloc( type, img );
+        img->set(OSG::Image::OSG_RGB_PF, W, H, 1, 1, 1, 0, cdata, OSG::Image::OSG_UINT8_IMAGEDATA, true);
+    } else cout << "VRPyImage::NewImg - pass data, width and height" << endl;
+
+    VRPyImage* pyimg = (VRPyImage*)alloc( type, img );
+    pyimg->img = img;
+
+    return (PyObject*)pyimg;
 }
 
 

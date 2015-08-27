@@ -226,6 +226,7 @@ static PyMethodDef VRScriptManager_module_methods[] = {
 	{"getSetup", (PyCFunction)VRScriptManager::getSetup, METH_NOARGS, "Return a handle to the active hardware setup" },
 	{"loadScene", (PyCFunction)VRScriptManager::loadScene, METH_VARARGS, "Close the current scene and open another - loadScene( str path/to/my/scene.xml )" },
 	{"startThread", (PyCFunction)VRScriptManager::startThread, METH_VARARGS, "Start a thread - int startThread( callback, [params] )" },
+	{"joinThread", (PyCFunction)VRScriptManager::joinThread, METH_VARARGS, "Join a thread - joinThread( int ID )" },
     {NULL}  /* Sentinel */
 };
 
@@ -526,6 +527,12 @@ PyObject* VRScriptManager::startThread(VRScriptManager* self, PyObject *args) {
     auto fkt = new VRFunction<VRThread*>( "pyExecCall", boost::bind(execThread, pyFkt, pArgs, _1) );
     int t = VRSceneManager::getCurrent()->initThread(fkt, "python thread");
     return PyInt_FromLong(t);
+}
+
+PyObject* VRScriptManager::joinThread(VRScriptManager* self, PyObject *args) {
+    int ID = parseInt(args);
+    VRSceneManager::getCurrent()->stopThread(ID);
+    Py_RETURN_TRUE;
 }
 
 PyObject* VRScriptManager::stackCall(VRScriptManager* self, PyObject *args) {
