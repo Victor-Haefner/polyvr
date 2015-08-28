@@ -26,6 +26,7 @@ class VRScriptManager : public VRStorage, public VRPyBase {
         PyObject* pModVR;
         map<string, VRScript*> scripts;
         map<string, VRSignal*> triggers;
+        PyThreadState* pyThreadState = 0;
 
         void test();
 
@@ -38,7 +39,8 @@ class VRScriptManager : public VRStorage, public VRPyBase {
         VRScriptManager();
         ~VRScriptManager();
 
-        void updateScriptThreads();
+        void allowScriptThreads();
+        void blockScriptThreads();
 
         VRScript* newScript(string name, string function);
         void addScript(VRScript* script);

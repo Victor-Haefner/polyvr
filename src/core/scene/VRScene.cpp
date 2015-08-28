@@ -183,8 +183,9 @@ void VRScene::update() {
     //Vec3f min,max;
     //root->getNode()->updateVolume();
     //root->getNode()->getVolume().getBounds( min, max );
+    blockScriptThreads();
     updateCallbacks();
-    updateScriptThreads();
+    allowScriptThreads();
 }
 
 xmlpp::Element* VRSceneLoader_getElementChild(xmlpp::Element* e, string name) {

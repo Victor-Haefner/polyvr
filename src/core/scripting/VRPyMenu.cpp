@@ -73,12 +73,14 @@ PyObject* VRPyMenu::move(VRPyMenu* self, PyObject *args) {
 
 void execCall(PyObject* pyFkt, PyObject* pArgs, OSG::VRMenu* menu) {
     if (pyFkt == 0) return;
+    PyGILState_STATE gstate = PyGILState_Ensure();
     if (PyErr_Occurred() != NULL) PyErr_Print();
 
     if (pArgs == 0) pArgs = PyTuple_New(0);
     PyObject_CallObject(pyFkt, pArgs);
 
     if (PyErr_Occurred() != NULL) PyErr_Print();
+    PyGILState_Release(gstate);
 }
 
 PyObject* VRPyMenu::setCallback(VRPyMenu* self, PyObject *args) {

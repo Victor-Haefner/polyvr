@@ -6,6 +6,7 @@ template<class T> VRPyBaseT<T>::VRPyBaseT() {;}
 template <typename T>
 void VRPyBase::execPyCall(PyObject* pyFkt, PyObject* pArgs, T t) {
     if (pyFkt == 0) return;
+    PyGILState_STATE gstate = PyGILState_Ensure();
     if (PyErr_Occurred() != NULL) PyErr_Print();
 
     PyTuple_SetItem(pArgs, pySize(pArgs)-1, toPyObject(t));
@@ -14,6 +15,7 @@ void VRPyBase::execPyCall(PyObject* pyFkt, PyObject* pArgs, T t) {
     //Py_XDECREF(pArgs); Py_DecRef(pyFkt); // TODO!!
 
     if (PyErr_Occurred() != NULL) PyErr_Print();
+    PyGILState_Release(gstate);
 }
 
 template <typename T>

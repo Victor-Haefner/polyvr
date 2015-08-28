@@ -328,6 +328,9 @@ void VRScriptManager::initPyModules() {
         "import sys\n"
         "sys.path.append('cython/')\n"
     );
+
+    //PyEval_ReleaseLock();
+    //PyEval_SaveThread();
 }
 
 vector<string> VRScriptManager::getPyVRTypes() {
@@ -490,6 +493,7 @@ PyObject* VRScriptManager::pyTriggerScript(VRScriptManager* self, PyObject *args
 
 void execCall(PyObject* pyFkt, PyObject* pArgs, int i) {
     if (pyFkt == 0) return;
+    PyGILState_STATE gstate = PyGILState_Ensure();
     if (PyErr_Occurred() != NULL) PyErr_Print();
     if (pArgs == 0) pArgs = PyTuple_New(0);
 
@@ -499,19 +503,15 @@ void execCall(PyObject* pyFkt, PyObject* pArgs, int i) {
     Py_DecRef(pyFkt);
 
     if (PyErr_Occurred() != NULL) PyErr_Print();
-}
-
-void execThread(PyObject* pyFkt, PyObject* pArgs, VRThread* thread) {
-    PyGILState_STATE gstate = PyGILState_Ensure();
-    execCall(pyFkt, pArgs, 0);
     PyGILState_Release(gstate);
 }
 
-void VRScriptManager::updateScriptThreads() {
-    Py_BEGIN_ALLOW_THREADS
-    osgSleep(1);
-    Py_END_ALLOW_THREADS
+void execThread(PyObject* pyFkt, PyObject* pArgs, VRThread* thread) {
+    execCall(pyFkt, pArgs, 0);
 }
+
+void VRScriptManager::allowScriptThreads() { pyThreadState = PyEval_SaveThread(); }
+void VRScriptManager::blockScriptThreads() { if (pyThreadState) PyEval_RestoreThread(pyThreadState); }
 
 PyObject* VRScriptManager::startThread(VRScriptManager* self, PyObject *args) {
     PyObject *pyFkt, *pArgs = 0;

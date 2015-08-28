@@ -283,6 +283,7 @@ void VRScript::execute() {
     if (type == "Python") {
         if (fkt == 0) return;
         if (!active) return;
+        PyGILState_STATE gstate = PyGILState_Ensure();
         if (PyErr_Occurred() != NULL) PyErr_Print();
 
         VRTimer timer; timer.start();
@@ -304,6 +305,7 @@ void VRScript::execute() {
         Py_XDECREF(pArgs);
 
         if (PyErr_Occurred() != NULL) PyErr_Print();
+        PyGILState_Release(gstate);
     }
 
     if (type == "HTML") {
