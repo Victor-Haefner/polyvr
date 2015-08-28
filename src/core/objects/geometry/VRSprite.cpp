@@ -65,6 +65,7 @@ void VRSprite::setFont(string f) { font = f; }
 void VRSprite::setFontColor(Color4f c) { fontColor = c; }
 
 string VRSprite::getLabel() { return label; }
+Vec2f VRSprite::getSize() { return Vec2f(width, height); }
 
 void VRSprite::setSize(float w, float h) {
     width = w;

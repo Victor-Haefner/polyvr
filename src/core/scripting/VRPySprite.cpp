@@ -51,6 +51,7 @@ PyMemberDef VRPySprite::members[] = {
 
 PyMethodDef VRPySprite::methods[] = {
     {"getText", (PyCFunction)VRPySprite::getText, METH_NOARGS, "Get label text from sprite." },
+    {"getSize", (PyCFunction)VRPySprite::getSize, METH_NOARGS, "Get size of sprite." },
     {"setText", (PyCFunction)VRPySprite::setText, METH_VARARGS, "Set label text from sprite." },
     {"setSize", (PyCFunction)VRPySprite::setSize, METH_VARARGS, "Set sprite size." },
     {"webOpen", (PyCFunction)VRPySprite::webOpen, METH_VARARGS, "Open and display a website - webOpen(str uri, int width, flt ratio)" },
@@ -69,6 +70,11 @@ PyObject* VRPySprite::webOpen(VRPySprite* self, PyObject* args) {
 PyObject* VRPySprite::getText(VRPySprite* self) {
 	if (self->obj == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
 	return PyString_FromString(self->obj->getLabel().c_str());
+}
+
+PyObject* VRPySprite::getSize(VRPySprite* self) {
+	if (self->obj == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
+	return toPyTuple(self->obj->getSize());
 }
 
 PyObject* VRPySprite::setSize(VRPySprite* self, PyObject* args) {

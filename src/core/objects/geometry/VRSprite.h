@@ -26,6 +26,7 @@ class VRSprite : public VRGeometry {
         void setFont(string f);
         void setFontColor(Color4f c);
 
+        Vec2f getSize();
         string getLabel();
 };
 
