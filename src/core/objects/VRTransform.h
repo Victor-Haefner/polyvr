@@ -151,7 +151,7 @@ class VRTransform : public VRObject {
         map<string, VRAnimation*> animations;
         void addAnimation(VRAnimation* animation);
         vector<VRAnimation*> getAnimations();
-        void startPathAnimation(path* p, float time, float offset, bool redirect = true, bool loop = false);
+        VRAnimation* startPathAnimation(path* p, float time, float offset, bool redirect = true, bool loop = false);
         void stopAnimation();
 
         /** Print the position of the object in local && world coords **/

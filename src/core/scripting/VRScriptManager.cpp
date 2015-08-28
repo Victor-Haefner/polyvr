@@ -83,6 +83,7 @@ VRScriptManager::VRScriptManager() {
 }
 
 VRScriptManager::~VRScriptManager() {
+    blockScriptThreads();
     for (auto s : scripts) delete s.second;
     scripts.clear();
     if (PyErr_Occurred() != NULL) PyErr_Print();
@@ -493,7 +494,7 @@ PyObject* VRScriptManager::pyTriggerScript(VRScriptManager* self, PyObject *args
 
 void execCall(PyObject* pyFkt, PyObject* pArgs, int i) {
     if (pyFkt == 0) return;
-    PyGILState_STATE gstate = PyGILState_Ensure();
+    //PyGILState_STATE gstate = PyGILState_Ensure();
     if (PyErr_Occurred() != NULL) PyErr_Print();
     if (pArgs == 0) pArgs = PyTuple_New(0);
 
@@ -503,15 +504,22 @@ void execCall(PyObject* pyFkt, PyObject* pArgs, int i) {
     Py_DecRef(pyFkt);
 
     if (PyErr_Occurred() != NULL) PyErr_Print();
-    PyGILState_Release(gstate);
+    //PyGILState_Release(gstate);
 }
 
 void execThread(PyObject* pyFkt, PyObject* pArgs, VRThread* thread) {
+    PyGILState_STATE gstate = PyGILState_Ensure();
     execCall(pyFkt, pArgs, 0);
+    PyGILState_Release(gstate);
 }
 
-void VRScriptManager::allowScriptThreads() { pyThreadState = PyEval_SaveThread(); }
-void VRScriptManager::blockScriptThreads() { if (pyThreadState) PyEval_RestoreThread(pyThreadState); }
+void VRScriptManager::allowScriptThreads() {
+    if (pyThreadState == 0) pyThreadState = PyEval_SaveThread();
+}
+
+void VRScriptManager::blockScriptThreads() {
+    if (pyThreadState) { PyEval_RestoreThread(pyThreadState); pyThreadState = 0; }
+}
 
 PyObject* VRScriptManager::startThread(VRScriptManager* self, PyObject *args) {
     PyObject *pyFkt, *pArgs = 0;

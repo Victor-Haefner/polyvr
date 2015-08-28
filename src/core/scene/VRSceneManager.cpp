@@ -207,13 +207,20 @@ void VRSceneManager::update() {
     VRProfiler::get()->swap();
     int fps = VRRate::get()->getRate();
 
+    VRScene* scene = 0;
+    if (scenes.count(active)) if (scenes[active]) scene = scenes[active];
+
+    if (scene) scene->blockScriptThreads();
     VRGuiManager::get()->updateGtk();
     updateCallbacks();
     VRSetupManager::getCurrent()->updateDevices();//device beacon update
     updateScene();
+    //if (scene) scene->allowScriptThreads();
 
     if (VRSetupManager::getCurrent()) VRSetupManager::getCurrent()->updateWindows();//rendering
+    //if (scene) scene->blockScriptThreads();
     VRGuiManager::get()->updateGtk();
+    if (scene) scene->allowScriptThreads();
 
     VRGlobals::get()->CURRENT_FRAME++;
     VRGlobals::get()->FRAME_RATE = fps;

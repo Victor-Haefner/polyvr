@@ -798,11 +798,12 @@ vector<VRAnimation*> VRTransform::getAnimations() {
     return res;
 }
 
-void VRTransform::startPathAnimation(path* p, float time, float offset, bool redirect, bool loop) {
+VRAnimation* VRTransform::startPathAnimation(path* p, float time, float offset, bool redirect, bool loop) {
     VRFunction<float>* fkt = new VRFunction<float>("TransAnim", boost::bind(setFromPath, this, p, redirect, _1));
     VRScene* scene = VRSceneManager::getCurrent();
     VRAnimation* a = scene->addAnimation(time, offset, fkt, 0.f, 1.f, loop);
     addAnimation(a);
+    return a;
 }
 
 void VRTransform::stopAnimation() {

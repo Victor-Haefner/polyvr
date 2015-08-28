@@ -337,11 +337,10 @@ void VRGuiScripts::on_select_script() { // selected a script
     // update arguments liststore
     Glib::RefPtr<Gtk::ListStore> args = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("liststore2"));
     args->clear();
-    map<string, VRScript::arg*> arg_map = script->getArguments();
-    map<string, VRScript::arg*>::iterator itr;
-    if (PyErr_Occurred() != NULL) PyErr_Print();
-    for (itr = arg_map.begin(); itr != arg_map.end(); itr++) {
-        VRScript::arg* a = itr->second;
+
+    //if (PyErr_Occurred() != NULL) PyErr_Print();
+    for (auto ar : script->getArguments()) {
+        VRScript::arg* a = ar.second;
         Gtk::ListStore::Row row = *args->append();
         gtk_list_store_set(args->gobj(), row.gobj(), 0, a->getName().c_str(), -1);
         gtk_list_store_set(args->gobj(), row.gobj(), 1, a->val.c_str(), -1);
@@ -354,7 +353,7 @@ void VRGuiScripts::on_select_script() { // selected a script
     trigs->clear();
     map<string, VRScript::trig*> trig_map = script->getTriggers();
     map<string, VRScript::trig*>::iterator itr2;
-    if (PyErr_Occurred() != NULL) PyErr_Print();
+    //if (PyErr_Occurred() != NULL) PyErr_Print();
     for (itr2 = trig_map.begin(); itr2 != trig_map.end(); itr2++) {
         VRScript::trig* t = itr2->second;
         string key = toString(t->key);
