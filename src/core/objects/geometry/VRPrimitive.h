@@ -113,6 +113,18 @@ struct VRCylinder : public VRPrimitive {
     OSG::GeometryRecPtr make();
 };
 
+struct VRArrow : public VRPrimitive {
+    float height = 1;
+    float width = 1;
+    float trunc = 0.5;
+    float hat = 0.2;
+
+    VRArrow();
+    void fromStream(stringstream& ss);
+    void toStream(stringstream& ss);
+    OSG::GeometryRecPtr make();
+};
+
 struct VRThread : public VRPrimitive {
     float length = 1;
     float radius = 0.5;
