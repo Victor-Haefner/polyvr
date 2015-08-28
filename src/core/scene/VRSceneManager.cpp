@@ -195,12 +195,13 @@ void sleep_to(int fps) {
 }
 
 void VRSceneManager::updateScene() {
-    if (scenes.count(active) == 1) {
-        if (scenes[active] != 0) {
-            VRSetupManager::getCurrent()->updateActivatedSignals();
-            scenes[active]->update();
-        }
-    }
+    if (scenes.count(active) == 0) return;
+    if (scenes[active] == 0) return;
+    VRSetupManager::getCurrent()->updateActivatedSignals();
+
+    //scenes[active]->blockScriptThreads();
+    scenes[active]->update();
+    //scenes[active]->allowScriptThreads();
 }
 
 void VRSceneManager::update() {
@@ -210,17 +211,15 @@ void VRSceneManager::update() {
     VRScene* scene = 0;
     if (scenes.count(active)) if (scenes[active]) scene = scenes[active];
 
-    if (scene) scene->blockScriptThreads();
+if (scene) scene->blockScriptThreads();
     VRGuiManager::get()->updateGtk();
     updateCallbacks();
     VRSetupManager::getCurrent()->updateDevices();//device beacon update
     updateScene();
-    //if (scene) scene->allowScriptThreads();
 
     if (VRSetupManager::getCurrent()) VRSetupManager::getCurrent()->updateWindows();//rendering
-    //if (scene) scene->blockScriptThreads();
     VRGuiManager::get()->updateGtk();
-    if (scene) scene->allowScriptThreads();
+if (scene) scene->allowScriptThreads();
 
     VRGlobals::get()->CURRENT_FRAME++;
     VRGlobals::get()->FRAME_RATE = fps;

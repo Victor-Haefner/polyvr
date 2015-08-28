@@ -144,6 +144,9 @@ void VRWindowManager::updateWindows() {
     //timer.start("VRWindowManager::updateWindows");
     if (rendering_paused) return;
 
+    auto scene = VRSceneManager::getCurrent();
+    if (scene) scene->allowScriptThreads();
+
     ract->setResetStatistics(false);
     StatCollector* sc = ract->getStatCollector();
     if (sc) {
@@ -163,6 +166,7 @@ void VRWindowManager::updateWindows() {
     Thread::getCurrentChangeList()->clear();
     //timer.stop("VRWindowManager::updateWindows");
     //timer.print();
+    if (scene) scene->blockScriptThreads();
 }
 
 void VRWindowManager::setWindowView(string name, VRView* view) {
