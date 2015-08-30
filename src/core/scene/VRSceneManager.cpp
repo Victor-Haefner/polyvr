@@ -118,9 +118,9 @@ void VRSceneManager::setActiveScene(VRScene* s) {
     if (scenes.size() == 0) { cout << "\n ERROR: No scenes defined " << flush; return; }
 
     if (scenes.count(s->getName()) == 0) { cout << "\n ERROR: No scene " << s->getName() << flush; return; }
-    else s->getRoot()->show(); //activate new scene
+    else s->getSystemRoot()->show(); //activate new scene
 
-    if (active != "NO_SCENE_ACTIVE") scenes[active]->getRoot()->hide(); //hide old scene
+    if (active != "NO_SCENE_ACTIVE") scenes[active]->getSystemRoot()->hide(); //hide old scene
 
     active = s->getName();
     VRSetupManager::getCurrent()->setScene(s);

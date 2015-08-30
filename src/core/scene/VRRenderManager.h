@@ -20,6 +20,9 @@ class VRRenderManager : public VRStorage, public VRDefShading {
 
     protected:
         VRObject* root = 0;
+        VRObject* root_def_shading = 0;
+        VRObject* root_ssao = 0;
+        VRObject* root_system = 0;
         map<int, VRLight*> light_map;
 
     public:

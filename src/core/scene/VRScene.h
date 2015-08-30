@@ -66,6 +66,7 @@ class VRScene : public VRObjectManager,
         VRObject* get(int ID);
         VRObject* get(string name);
         VRObject* getRoot();
+        VRObject* getSystemRoot();
 
         void setActiveCamera(string name = "");
 

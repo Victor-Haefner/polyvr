@@ -54,7 +54,7 @@ VRScene::~VRScene() {
     //kill physics thread
     VRThreadManager::stopThread(physicsThreadID);
     updateObjects();
-    root->destroy();
+    root_system->destroy();
     VRGroup::clearGroups();
     VRLightBeacon::getAll().clear();
 }
@@ -163,6 +163,7 @@ void VRScene::setActiveCamera(string camname) {
 }
 
 VRObject* VRScene::getRoot() { return root; }
+VRObject* VRScene::getSystemRoot() { return root_system; }
 
 void VRScene::printTree() { root->printTree(); }
 
