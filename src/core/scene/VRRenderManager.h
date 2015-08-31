@@ -41,9 +41,6 @@ class VRRenderManager : public VRStorage, public VRDefShading {
         void setTwoSided(bool b);
         bool getTwoSided();
 
-        void setSSAO(bool b);
-        bool getSSAO();
-
         void update();
 };
 

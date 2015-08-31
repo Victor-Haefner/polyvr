@@ -6,6 +6,10 @@
 #include <OpenSG/OSGSpotLight.h>
 #include <OpenSG/OSGImage.h>
 
+#include <OpenSG/OSGPolygonForeground.h>
+#include <OpenSG/OSGGeometry.h>
+#include <OpenSG/OSGSimpleGeometry.h>
+
 #include <OpenSG/OSGShaderShadowMapEngine.h>
 #include <OpenSG/OSGTrapezoidalShadowMapEngine.h>
 
@@ -35,7 +39,7 @@ float lerp(float f1, float f2, float f3) {
     return (f2-f1)*f3;
 }
 
-void VRDefShading::prepSSAOKernel() {
+void VRDefShading::initSSAO() {
     int kernelSize = 16;
     int noiseSize = 16;
 
@@ -66,6 +70,59 @@ void VRDefShading::prepSSAOKernel() {
     }
 
     // put the noise data in a texture 4x4
+
+
+    string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/DeferredShading/";
+    ssaoAmbientVPFile = resDir + "SSAOAmbient.vp.glsl";
+    ssaoAmbientFPFile = resDir + "SSAOAmbient.fp.glsl";
+
+    /*ShaderProgramRecPtr      vpAmbient = ShaderProgram::createVertexShader  ();
+    ShaderProgramRecPtr      fpAmbient = ShaderProgram::createFragmentShader();
+    ShaderProgramChunkRecPtr shAmbient = ShaderProgramChunk::create();
+    vpAmbient->readProgram(ssaoAmbientVPFile.c_str());
+    fpAmbient->readProgram(ssaoAmbientFPFile.c_str());
+    fpAmbient->addUniformVariable<Int32>("texBufNorm", 1);
+    fpAmbient->addUniformVariable<Int32>("uTexRandom", 4); // noise random texture
+    shAmbient->addShader(vpAmbient);
+    shAmbient->addShader(fpAmbient);*/
+
+    VRMaterial* mat = new VRMaterial("ssao");
+    mat->setDiffuse(Vec3f(0,1,0));
+    mat->readVertexShader(ssaoAmbientVPFile);
+    mat->readFragmentShader(ssaoAmbientFPFile);
+    mat->setLit(false);
+
+    /*ChunkMaterialRecPtr mat = ChunkMaterial::create();
+    mat->addChunk(shAmbient);*/
+
+    /*SimpleMaterialRecPtr mat = SimpleMaterial::create();
+    mat->setDiffuse(Vec3f(0,0,1));
+    mat->setLit(false);*/
+
+    PolygonForegroundRecPtr fg = PolygonForeground::create();
+    fg->setMaterial(mat->getMaterial(0));
+    fg->editMFPositions()->push_back(Pnt2f(0,0));
+    fg->editMFPositions()->push_back(Pnt2f(1,0));
+    fg->editMFPositions()->push_back(Pnt2f(1,1));
+    fg->editMFPositions()->push_back(Pnt2f(0,1));
+    fg->editMFTexCoords()->push_back(Vec3f(0,0,0));
+    fg->editMFTexCoords()->push_back(Vec3f(1,0,0));
+    fg->editMFTexCoords()->push_back(Vec3f(1,1,0));
+    fg->editMFTexCoords()->push_back(Vec3f(0,1,0));
+
+
+    /*FrameBufferObjectRefPtr fbo = FrameBufferObject::create();
+    fbo->setWidth (640);
+    fbo->setHeight(480);
+    fbo->setPostProcessOnDeactivate(true);
+    ssaoStage->setRenderTarget(fbo);*/
+
+    ssaoStage = SimpleStage::create();
+    ssaoStage->setSize(0,0,1,1);
+    ssaoStage->pushToForegrounds(fg);
+
+    // pass ssao stuff to shader
+    //ssaoStage->;
 }
 
 void VRDefShading::init() {
@@ -94,17 +151,9 @@ void VRDefShading::init() {
     dsStage->editMFPixelTypes  ()->push_back(Image::OSG_FLOAT32_IMAGEDATA);
     dsStage->editMFPixelFormats()->push_back(Image::OSG_RGB_PF); // diffuse (RGB) buffer
     dsStage->editMFPixelTypes  ()->push_back(Image::OSG_UINT8_IMAGEDATA);
+    dsStage->editMFPixelFormats()->push_back(Image::OSG_RGB_PF); // ambient buffer
+    dsStage->editMFPixelTypes  ()->push_back(Image::OSG_UINT8_IMAGEDATA);
 
-    // G Buffer shader (one for the whole scene)
-    /*ShaderProgramRecPtr      vpGBuffer = ShaderProgram::createVertexShader  ();
-    ShaderProgramRecPtr      fpGBuffer = ShaderProgram::createFragmentShader();
-    ShaderProgramChunkRecPtr shGBuffer = ShaderProgramChunk::create();
-    vpGBuffer->readProgram(dsGBufferVPFile.c_str());
-    fpGBuffer->readProgram(dsGBufferFPFile.c_str());
-    fpGBuffer->addUniformVariable<Int32>("tex0", 0);
-    shGBuffer->addShader(vpGBuffer);
-    shGBuffer->addShader(fpGBuffer);
-    dsStage->setGBufferProgram(shGBuffer);*/
     dsStage->setGBufferProgram(NULL);
 
     // ambient shader
@@ -114,7 +163,6 @@ void VRDefShading::init() {
     vpAmbient->readProgram(dsAmbientVPFile.c_str());
     fpAmbient->readProgram(dsAmbientFPFile.c_str());
     fpAmbient->addUniformVariable<Int32>("texBufNorm", 1);
-    fpAmbient->addUniformVariable<Int32>("uTexRandom", 4); // noise random texture
     shAmbient->addShader(vpAmbient);
     shAmbient->addShader(fpAmbient);
     dsStage->setAmbientProgram(shAmbient);
@@ -127,6 +175,17 @@ void VRDefShading::initDeferredShading(VRObject* o) {
     stageObject = o;
 }
 
+void VRDefShading::initSSAO(VRObject* o) {
+    initSSAO();
+    ssaoObject = o;
+}
+
+void VRDefShading::setSSAO(bool b) {
+    ssao_enabled = b;
+    if (b) ssaoObject->setCore(ssaoStage, "ssaoShading", true);
+    else ssaoObject->setCore(Group::create(), "Object", true);
+}
+
 void VRDefShading::setDefferedShading(bool b) {
     enabled = b;
     if (b) stageObject->setCore(dsStage, "defShading", true);
@@ -134,11 +193,12 @@ void VRDefShading::setDefferedShading(bool b) {
     for (auto m : VRMaterial::materials) m.second->setDeffered(b);
 }
 
+bool VRDefShading::getSSAO() { return ssao_enabled; }
 bool VRDefShading::getDefferedShading() { return enabled; }
 
 void VRDefShading::setDSCamera(VRCamera* cam) {
-    if (!initiated) return;
-    dsStage->setCamera(cam->getCam());
+    if (initiated) dsStage->setCamera(cam->getCam());
+    if (initiated) ssaoStage->setCamera(cam->getCam());
 }
 
 void VRDefShading::addDSLight(VRLight* light) {
@@ -168,6 +228,7 @@ void VRDefShading::addDSLight(LightRecPtr light, string type, bool shadows) {
     li.lightFP->addUniformVariable<Int32>("texBufPos",  0);
     li.lightFP->addUniformVariable<Int32>("texBufNorm", 1);
     li.lightFP->addUniformVariable<Int32>("texBufDiff", 2);
+    li.lightFP->addUniformVariable<Int32>("texBufAmb",  3);
     li.lightFP->addUniformVariable<float>("shadowColor", shadowColor);
 
     li.lightSH->addShader(li.lightVP);

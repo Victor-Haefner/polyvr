@@ -77,6 +77,7 @@ VRBackground::VRBackground () {
     store("type", &type);
     store("color", &color);
     store("path", &path);
+    store("format", &format);
 }
 
 void VRBackground::setBackground(TYPE t) {

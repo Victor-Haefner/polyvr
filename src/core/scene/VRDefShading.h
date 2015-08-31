@@ -42,6 +42,7 @@ class VRDefShading {
 
         string dsGBufferVPFile, dsGBufferFPFile;
         string dsAmbientVPFile, dsAmbientFPFile;
+        string ssaoAmbientVPFile, ssaoAmbientFPFile;
         string dsDirLightVPFile, dsDirLightFPFile, dsDirLightShadowFPFile;
         string dsPointLightVPFile, dsPointLightFPFile, dsPointLightShadowFPFile;
         string dsSpotLightVPFile, dsSpotLightFPFile, dsSpotLightShadowFPFile;
@@ -60,18 +61,26 @@ class VRDefShading {
         bool enabled = false;
         VRObject* stageObject = 0;
 
-        void prepSSAOKernel();
+        SimpleStageRecPtr ssaoStage;
+        bool ssao_enabled = false;
+        VRObject* ssaoObject = 0;
+
+        void initSSAO();
 
         void init();
 
     protected:
         void initDeferredShading(VRObject* o);
+        void initSSAO(VRObject* o);
 
     public:
         VRDefShading();
 
         void setDefferedShading(bool b);
         bool getDefferedShading();
+
+        void setSSAO(bool b);
+        bool getSSAO();
 
         void setDSCamera(VRCamera* cam);
         void addDSLight(VRLight* light);

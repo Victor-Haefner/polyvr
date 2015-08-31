@@ -18,11 +18,12 @@ VRRenderManager::VRRenderManager() {
     root_ssao = new VRObject("SSAO root");
     root_system = new VRObject("System root");
 
-    root_system->addChild(root_def_shading);
-    root_def_shading->addChild(root_ssao);
-    root_ssao->addChild(root);
+    root_system->addChild(root_ssao);
+    root_ssao->addChild(root_def_shading);
+    root_def_shading->addChild(root);
 
     initDeferredShading(root_def_shading);
+    initSSAO(root_ssao);
     setDefferedShading(false);
 
     store("frustum_culling", &frustumCulling);
@@ -54,8 +55,8 @@ VRLight* VRRenderManager::getLight(int ID) {
     return light_map[ID];
 }
 
-void VRRenderManager::setSSAO(bool b) { ssao = b; update(); }
-bool VRRenderManager::getSSAO() { return ssao; }
+//void VRRenderManager::setSSAO(bool b) { ssao = b; update(); }
+//bool VRRenderManager::getSSAO() { return ssao; }
 
 void VRRenderManager::setFrustumCulling(bool b) { frustumCulling = b; update(); }
 bool VRRenderManager::getFrustumCulling() { return frustumCulling; }

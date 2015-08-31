@@ -14,6 +14,7 @@ using namespace std;
 class Material; OSG_GEN_CONTAINERPTR(Material);
 class Image; OSG_GEN_CONTAINERPTR(Image);
 class ShaderProgram; OSG_GEN_CONTAINERPTR(ShaderProgram);
+class ChunkMaterial; OSG_GEN_CONTAINERPTR(ChunkMaterial);
 class MultiPassMaterial; OSG_GEN_CONTAINERPTR(MultiPassMaterial);
 
 struct VRMatData;
@@ -129,7 +130,8 @@ class VRMaterial : public VRObject {
         bool isLit();
 
         /** Returns the mesh material **/
-        MaterialRecPtr getMaterial();
+        MultiPassMaterialRecPtr getMaterial();
+        ChunkMaterialRecPtr getMaterial(int i);
 
         /** Returns the texture || 0 **/
         ImageRecPtr getTexture();

@@ -395,7 +395,8 @@ void VRMaterial::setMaterial(MaterialRecPtr m) {
     if (dynamic_pointer_cast<SwitchMaterial>(m)) cout << "   SwitchMaterial" << endl;
 }
 
-MaterialRecPtr VRMaterial::getMaterial() { return passes; }
+MultiPassMaterialRecPtr VRMaterial::getMaterial() { return passes; }
+ChunkMaterialRecPtr VRMaterial::getMaterial(int i) { return mats[i]->mat; }
 
 void VRMaterial::setTextureParams(int min, int mag, int envMode, int wrapS, int wrapT) {
     auto md = mats[activePass];
