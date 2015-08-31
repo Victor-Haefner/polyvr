@@ -16,15 +16,20 @@ VRRenderManager::VRRenderManager() {
     root = new VRObject("Root");
     root_def_shading = new VRObject("Deffered shading root");
     root_ssao = new VRObject("SSAO root");
-    root_system = new VRObject("System root");
+    //root_system = new VRObject("System root");
 
-    root_system->addChild(root_ssao);
+    root_system = root;
+
+    /*root_system->addChild(root_ssao);
     root_ssao->addChild(root_def_shading);
     root_def_shading->addChild(root);
 
     initDeferredShading(root_def_shading);
     initSSAO(root_ssao);
     setDefferedShading(false);
+    setSSAO(false);*/
+
+
 
     store("frustum_culling", &frustumCulling);
     store("occlusion_culling", &occlusionCulling);
