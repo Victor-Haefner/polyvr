@@ -3,6 +3,7 @@
 #include "VRPyGeometry.h"
 #include "VRPyBaseT.h"
 #include "core/objects/geometry/VRPhysics.h"
+#include "core/objects/material/VRMaterial.h"
 
 template<> PyTypeObject VRPyBaseT<OSG::VRStroke>::type = {
     PyObject_HEAD_INIT(NULL)
@@ -138,7 +139,8 @@ PyObject* VRPyStroke::strokeProfile(VRPyStroke* self, PyObject* args) {
     };
 
     OSG::VRStroke* e = (OSG::VRStroke*) self->obj;
-    e->strokeProfile(profile, closed, lit);
+    e->strokeProfile(profile, closed);
+    e->getMaterial()->setLit(lit);
     Py_RETURN_TRUE;
 }
 

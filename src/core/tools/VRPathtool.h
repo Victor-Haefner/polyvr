@@ -12,7 +12,7 @@
 using namespace std;
 OSG_BEGIN_NAMESPACE
 
-class VRGeometry;
+class VRStroke;
 class VRTransform;
 class VRDevice;
 class VRObject;
@@ -108,7 +108,7 @@ class VRPathtool {
             path* p = 0;
             int resolution = 10;
             map<VRGeometry*, int> handles;
-            VRGeometry* line = 0;
+            VRStroke* line = 0;
             VRObject* anchor = 0;
         };
 

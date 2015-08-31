@@ -1,6 +1,7 @@
 #include "VRPathtool.h"
 #include "core/math/path.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/VRStroke.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneManager.h"
@@ -144,24 +145,21 @@ void VRPathtool::updateHandle(VRGeometry* handle) {
 
     // update path line
     if (e->line == 0) {
-        e->line = new VRGeometry("path");
+        e->line = new VRStroke("path");
         e->line->setPersistency(0);
         VRMaterial* matl = new VRMaterial("pline");
         matl->setLit(false);
         matl->setDiffuse(Vec3f(0.1,0.9,0.2));
         matl->setLineWidth(3);
-        e->anchor->addChild(e->line);
-        e->line->setType(GL_LINE_STRIP);
         e->line->setMaterial(matl);
+        e->anchor->addChild(e->line);
+        vector<Vec3f> profile;
+        profile.push_back(Vec3f());
+        e->line->addPath(e->p);
+        e->line->strokeProfile(profile, 0);
     }
 
-    GeoUInt32PropertyRecPtr Length = GeoUInt32Property::create();
-    GeoPnt3fPropertyRecPtr Pos = GeoPnt3fProperty::create();
-    Length->addValue(pN);
-    for (Vec3f p : e->p->getPositions()) Pos->addValue(p);
-
-    e->line->setPositions(Pos);
-    e->line->setLengths(Length);
+    e->line->update();
 }
 
 void VRPathtool::updateDevs() {

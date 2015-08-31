@@ -15,7 +15,6 @@ class VRStroke : public VRGeometry {
         int mode = 0;
         vector<Vec3f> profile;
         bool closed = true;
-        bool lit = true;
 
         VRGeometry* strewGeo = 0;
 
@@ -28,7 +27,7 @@ class VRStroke : public VRGeometry {
 
         vector<path*>& getPaths();
 
-        void strokeProfile(vector<Vec3f> profile, bool closed, bool lit);
+        void strokeProfile(vector<Vec3f> profile, bool closed);
         void strokeStrew(VRGeometry* geo);
 
         void update();

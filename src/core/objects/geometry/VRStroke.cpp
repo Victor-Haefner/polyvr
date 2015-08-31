@@ -1,7 +1,7 @@
 #include "VRStroke.h"
 #include "core/math/path.h"
+#include "core/objects/material/VRMaterial.h"
 
-#include <OpenSG/OSGSimpleMaterial.h>
 #include <OpenSG/OSGMatrixUtility.h>
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGTriangleIterator.h>
@@ -12,7 +12,6 @@ using namespace std;
 VRStroke::VRStroke(string name) : VRGeometry(name) {
     mode = -1;
     closed = false;
-    lit = false;
 }
 
 void VRStroke::setPath(path* p) {
@@ -34,11 +33,10 @@ vector<path*>& VRStroke::getPaths() { return paths; }
     ;
 }*/
 
-void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool lit) {
+void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed) {
     mode = 0;
     this->profile = profile;
     this->closed = closed;
-    this->lit = lit;
 
     Vec3f pCenter;
     for (auto p : profile) pCenter += p;
@@ -85,7 +83,7 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool lit) {
                 Colors->addValue(c);
             }
 
-            if (j==0 && profile.size() > 1) continue;
+            if (j==0) continue;
 
             // add line
             if (profile.size() == 1) {
@@ -206,7 +204,6 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool lit) {
         }
     }
 
-    SimpleMaterialRecPtr Mat = SimpleMaterial::create();
     GeometryRecPtr g = Geometry::create();
     g->setTypes(Type);
     g->setLengths(Length);
@@ -216,29 +213,7 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool lit) {
     g->setColors(Colors);
     g->setIndices(Indices);
 
-    g->setMaterial(Mat);
-    Mat->setLit(lit);
-
     setMesh(g);
-
-
-    // test for ccw faces
-    /*TriangleIterator it(getMesh());
-	while (!it.isAtEnd()) {
-        Vec3f p0 = Vec3f(it.getPosition(0));
-        Vec3f p1 = Vec3f(it.getPosition(1));
-        Vec3f p2 = Vec3f(it.getPosition(2));
-
-        Vec3f n0 = it.getNormal(0);
-        Vec3f n1 = it.getNormal(1);
-        Vec3f n2 = it.getNormal(2);
-
-        Vec3f np1 = (p1-p0).cross(p2-p0);
-        Vec3f np2 = n0+n1+n2; np2.normalize();
-        cout << " face orientation " << np1.dot(np2) << endl;
-
-		++it;
-	}*/
 }
 
 void VRStroke::strokeStrew(VRGeometry* geo) {
@@ -262,7 +237,7 @@ void VRStroke::strokeStrew(VRGeometry* geo) {
 void VRStroke::update() {
     switch (mode) {
         case 0:
-            strokeProfile(profile, closed, lit);
+            strokeProfile(profile, closed);
             break;
         case 1:
             strokeStrew(strewGeo);

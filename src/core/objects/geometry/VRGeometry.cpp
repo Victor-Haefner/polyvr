@@ -466,11 +466,11 @@ void VRGeometry::setMeshVisibility(bool b) {
 
 /** Set the material of the mesh **/
 void VRGeometry::setMaterial(VRMaterial* mat) {
-    if (!meshSet) return;
     if (mat == 0) mat = this->mat;
     if (mat == 0) return;
 
     this->mat = mat;
+    if (!meshSet) return;
     mesh->setMaterial(mat->getMaterial());
 }
 

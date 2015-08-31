@@ -411,7 +411,7 @@ VRStroke* FNetwork::stroke(Vec3f c, float k) {
     profile.push_back(Vec3f(-k*0.5,k,0));
     profile.push_back(Vec3f(k*0.5,k,0));
     profile.push_back(Vec3f(k,0,0));
-    stroke->strokeProfile(profile, true, false);
+    stroke->strokeProfile(profile, true);
     return stroke;
 }
 
