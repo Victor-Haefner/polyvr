@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGVector.h>
+#include <OpenSG/OSGLine.h>
 #include <vector>
 #include <map>
 
@@ -58,6 +59,7 @@ class VRIntersect {
         VRIntersect();
         ~VRIntersect();
 
+        VRIntersection intersect(VRObject* tree, Line ray);
         VRIntersection intersect(VRObject* tree);
         void drag(VRObject* obj, VRTransform* caster);
         void drop(VRDevice* dev = 0);

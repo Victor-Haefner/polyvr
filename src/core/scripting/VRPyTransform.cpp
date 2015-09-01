@@ -6,6 +6,7 @@
 #include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/geometry/VRConstraint.h"
 #include "core/objects/VRAnimation.h"
+#include "core/setup/devices/VRIntersect.h"
 
 template<> PyTypeObject VRPyBaseT<OSG::VRTransform>::type = {
     PyObject_HEAD_INIT(NULL)
@@ -113,8 +114,19 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setCenterOfMass", (PyCFunction)VRPyTransform::setCenterOfMass, METH_VARARGS, "Set a custom center of mass - setCenterOfMass([x,y,z])"  },
     {"drag", (PyCFunction)VRPyTransform::drag, METH_VARARGS, "Drag this object by new parent - drag(new parent)"  },
     {"drop", (PyCFunction)VRPyTransform::drop, METH_NOARGS, "Drop this object, if held, to old parent - drop()"  },
+    {"castRay", (PyCFunction)VRPyTransform::castRay, METH_VARARGS, "Cast a ray and return the intersection - castRay(obj, dir)"  },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyTransform::castRay(VRPyTransform* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::castRay, Object is invalid"); return NULL; }
+    VRPyObject* o = 0; PyObject* d;
+    if (! PyArg_ParseTuple(args, "OO", &o, &d)) return NULL;
+    auto line = self->obj->castRay( 0, parseVec3fList(d) );
+    OSG::VRIntersect in;
+    auto i = in.intersect(o->obj, line);
+    return toPyTuple( OSG::Vec3f(i.point) );
+}
 
 PyObject* VRPyTransform::drag(VRPyTransform* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::drag, Object is invalid"); return NULL; }

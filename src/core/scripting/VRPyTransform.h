@@ -33,6 +33,7 @@ struct VRPyTransform : VRPyBaseT<OSG::VRTransform> {
 
     static PyObject* drag(VRPyTransform* self, PyObject* args);
     static PyObject* drop(VRPyTransform* self);
+    static PyObject* castRay(VRPyTransform* self, PyObject* args);
 
     static PyObject* duplicate(VRPyTransform* self);
     static PyObject* physicalize(VRPyTransform* self, PyObject *args);
