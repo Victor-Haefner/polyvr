@@ -18,22 +18,15 @@
 typedef boost::recursive_mutex::scoped_lock Lock;
 
 struct VRPhysicsJoint {
-    OSG::VRConstraint* constraint;
-    OSG::VRConstraint* spring;
-    VRPhysics* partner;
-    btGeneric6DofSpringConstraint* btJoint;
+    OSG::VRConstraint* constraint = 0;
+    OSG::VRConstraint* spring = 0;
+    VRPhysics* partner = 0;
+    btGeneric6DofSpringConstraint* btJoint = 0;
 
-
-    VRPhysicsJoint() {
-        constraint = 0;
-        spring = 0;
-        partner = 0;
-        btJoint = 0;
-    }
+    VRPhysicsJoint() {;}
 
     ~VRPhysicsJoint() {
         if (btJoint) delete btJoint;
-        btJoint = 0;
     }
 
     VRPhysicsJoint(VRPhysics* p, OSG::VRConstraint* c, OSG::VRConstraint* cs) {
@@ -69,27 +62,7 @@ VRPhysics::VRPhysics(OSG::VRTransform* t) {
 
 VRPhysics::~VRPhysics() {
     Lock lock(mtx());
-    if (body) {
-        auto s = OSG::VRSceneManager::getCurrent();
-        if (s) s->unphysicalize(vr_obj);
-        if (world) world->removeRigidBody(body);
-        delete body;
-    }
-
-    if (soft_body) {
-        auto s = OSG::VRSceneManager::getCurrent();
-        if (s) s->unphysicalize(vr_obj);
-        if (world) world->removeCollisionObject(soft_body);
-        delete soft_body;
-    }
-
-    if (shape) delete shape;
-    if (motionState) delete motionState;
-
-    for (auto j : joints) {
-        world->removeConstraint(j.second->btJoint);
-        delete j.second;
-    }
+    clear();
 }
 
 boost::recursive_mutex& VRPhysics::mtx() {
@@ -239,15 +212,9 @@ void VRPhysics::setCenterOfMass(OSG::Vec3f com) {
     update();
 }
 
-void VRPhysics::update() {
-    OSG::VRScene* scene = OSG::VRSceneManager::getCurrent();
-    if (scene == 0) return;
-
-    if (world == 0) world = scene->bltWorld();
-    if (world == 0) return;
-
-    Lock lock(mtx());
-    scene->unphysicalize(vr_obj);
+void VRPhysics::clear() {
+    auto scene = OSG::VRSceneManager::getCurrent();
+    if (scene) scene->unphysicalize(vr_obj);
 
     if (body != 0) {
         for (auto j : joints) {
@@ -288,6 +255,17 @@ void VRPhysics::update() {
 
     if (shape != 0) { delete shape; shape = 0; }
     if (motionState != 0) { delete motionState; motionState = 0; }
+}
+
+void VRPhysics::update() {
+    OSG::VRScene* scene = OSG::VRSceneManager::getCurrent();
+    if (scene == 0) return;
+
+    if (world == 0) world = scene->bltWorld();
+    if (world == 0) return;
+
+    Lock lock(mtx());
+    clear();
 
     if (!physicalized) return;
 
@@ -694,16 +672,11 @@ btMatrix3x3 VRPhysics::getInertiaTensor() {
     return m.inverse();
 }
 
-
-
-
 void VRPhysics::setTransformation(btTransform t) {
     if (body == 0) return;
     Lock lock(mtx());
     body->setWorldTransform(t);
 }
-
-
 
 float VRPhysics::getConstraintAngle(VRPhysics* to, int axis) {
     float ret = 0.0;
@@ -725,14 +698,12 @@ void VRPhysics::deleteConstraints(VRPhysics* with) {
     }
 }
 
-
-void  VRPhysics::setConstraint(VRPhysics* p,int nodeIndex,OSG::Vec3f localPivot,bool ignoreCollision,float influence) {
+void VRPhysics::setConstraint(VRPhysics* p,int nodeIndex,OSG::Vec3f localPivot,bool ignoreCollision,float influence) {
     if(soft_body==0) return;
     if(p->body == 0) return;
     Lock lock(mtx());
     soft_body->appendAnchor(nodeIndex,p->body,toBtVector3(localPivot),!ignoreCollision,influence);
 }
-
 
 void VRPhysics::setConstraint(VRPhysics* p, OSG::VRConstraint* c, OSG::VRConstraint* cs) {
     if (body == 0) return;
@@ -747,9 +718,6 @@ void VRPhysics::setConstraint(VRPhysics* p, OSG::VRConstraint* c, OSG::VRConstra
     if (p->joints2.count(this) == 0) p->joints2[this] = joints[p];
     updateConstraint(p);
 }
-
-
-
 
 void VRPhysics::updateConstraint(VRPhysics* p) {
     if (body == 0) return;

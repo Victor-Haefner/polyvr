@@ -80,6 +80,7 @@ class VRPhysics : public OSG::VRStorage {
         btSoftBody* createRope();
         boost::recursive_mutex& mtx();
         void update();
+        void clear();
 
     public:
         VRPhysics(OSG::VRTransform* t);
