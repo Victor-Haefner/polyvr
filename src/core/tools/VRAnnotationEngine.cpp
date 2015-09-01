@@ -17,7 +17,7 @@ VRAnnotationEngine::VRAnnotationEngine() : VRGeometry("AnnEng") {
     fg = Vec4f(0,0,0,1);
     bg = Vec4f(1,0,1,0);
 
-    mat = VRMaterial::get("AnnEngMat");
+    mat = new VRMaterial("AnnEngMat");
     mat->setVertexShader(vp);
     mat->setFragmentShader(fp);
     mat->setGeometryShader(gp);
