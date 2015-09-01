@@ -93,11 +93,11 @@ long long VRPhysicsManager::getTime() { // time in seconds
 btSoftBodyWorldInfo* VRPhysicsManager::getSoftBodyWorldInfo() {return softBodyWorldInfo;}
 
 void VRPhysicsManager::prepareObjects() {
-    for (auto o : OSGobjs) {
+    /*for (auto o : OSGobjs) {
         if (o.second) {
             if (o.second->getPhysics()) o.second->getPhysics()->prepareStep();
         }
-    }
+    }*/
 }
 
 void VRPhysicsManager::updatePhysics(VRThread* thread) {
@@ -151,13 +151,14 @@ void VRPhysicsManager::updatePhysObjects() {
         if (o.second->getPhysics()->isGhost()) o.second->updatePhysics();
     }
 
-    collectCollisionPoints();
+    //collectCollisionPoints();
 
     for (int j=dynamicsWorld->getNumCollisionObjects()-1; j>=0 ;j--) {
         btCollisionObject* obj = dynamicsWorld->getCollisionObjectArray()[j];
         body = btRigidBody::upcast(obj);
         if (body && body->getMotionState() && OSGobjs.count(body) == 1) OSGobjs[body]->updateFromBullet();
     }
+
 
     //the soft bodies
     btSoftBodyArray arr = dynamicsWorld->getSoftBodyArray();
@@ -233,8 +234,6 @@ void VRPhysicsManager::updatePhysObjects() {
     }
 
 
-
-
     // update physics visualisation shapes
     for (btCollisionObject* v : physics_visuals_to_update) {
         if (physics_visuals.count(v) == 0) continue;
@@ -302,6 +301,8 @@ void VRPhysicsManager::updatePhysObjects() {
 
         geo->setMaterial(phys_mat);
     }
+
+
     physics_visuals_to_update.clear();
 
     // update physics visualisation
@@ -347,7 +348,6 @@ void VRPhysicsManager::setGravity(Vec3f g) {
 }
 
 void VRPhysicsManager::collectCollisionPoints() {
-    MLock lock(mtx);
     btVector3 p1, p2, n;
     Vec3f p;
 
