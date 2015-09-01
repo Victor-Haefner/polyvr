@@ -59,8 +59,20 @@ PyMethodDef VRPyPath::methods[] = {
     {"getDirections", (PyCFunction)VRPyPath::getDirections, METH_NOARGS, "Return the directions from the computed path - [[x,y,z]] getDirections()" },
     {"getUpVectors", (PyCFunction)VRPyPath::getUpVectors, METH_NOARGS, "Return the up vectors from the computed path - [[x,y,z]] getUpVectors()" },
     {"getColors", (PyCFunction)VRPyPath::getColors, METH_NOARGS, "Return the colors from the computed path - [[x,y,z]] getColors()" },
+    {"getSize", (PyCFunction)VRPyPath::getSize, METH_NOARGS, "Return the number of path nodes - int getSize()" },
+    {"getLength", (PyCFunction)VRPyPath::getLength, METH_NOARGS, "Return the approximated path length - float getLength()" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyPath::getLength(VRPyPath* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::getLength - Object is invalid"); return NULL; }
+    return PyFloat_FromDouble( self->obj->getLength() );
+}
+
+PyObject* VRPyPath::getSize(VRPyPath* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::getSize - Object is invalid"); return NULL; }
+    return PyInt_FromLong( self->obj->size() );
+}
 
 PyObject* VRPyPath::getPoints(VRPyPath* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::getPoints - Object is invalid"); return NULL; }
