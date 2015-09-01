@@ -135,6 +135,7 @@ class VRPathtool {
 
         vector<path*> getPaths();
         vector<VRGeometry*> getHandles(path* p);
+        VRStroke* getStroke(path* p);
 
         void select(VRGeometry* handle);
         void update();

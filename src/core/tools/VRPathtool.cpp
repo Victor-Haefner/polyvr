@@ -84,6 +84,11 @@ vector<VRGeometry*> VRPathtool::getHandles(path* p) {
     return res;
 }
 
+VRStroke* VRPathtool::getStroke(path* p) {
+    if (paths.count(p) == 0) return 0;
+    return paths[p]->line;
+}
+
 VRGeometry* VRPathtool::extrude(VRDevice* dev, path* p) {
     if (paths.count(p) == 0) {
         cout << "Warning: VRPathtool::extrude, path " << p << " unknown\n";

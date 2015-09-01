@@ -4,6 +4,7 @@
 #include "VRPyDevice.h"
 #include "VRPyPath.h"
 #include "VRPyBaseT.h"
+#include "VRPyStroke.h"
 
 template<> PyTypeObject VRPyBaseT<OSG::VRPathtool>::type = {
     PyObject_HEAD_INIT(NULL)
@@ -56,6 +57,7 @@ PyMethodDef VRPyPathtool::methods[] = {
     {"setVisible", (PyCFunction)VRPyPathtool::setVisible, METH_VARARGS, "Set the tool visibility - setVisible(bool)\n     setVisible(bool stroke, bool handles)" },
     {"getPaths", (PyCFunction)VRPyPathtool::getPaths, METH_NOARGS, "Return alist of all paths - [path] getPaths()" },
     {"getHandles", (PyCFunction)VRPyPathtool::getHandles, METH_VARARGS, "Return a list of paths handles - [handle] getHandles(path)" },
+    {"getStroke", (PyCFunction)VRPyPathtool::getStroke, METH_VARARGS, "Return the stroke object - stroke getStroke(path)" },
     {"update", (PyCFunction)VRPyPathtool::update, METH_NOARGS, "Update the tool - update()" },
     {"clear", (PyCFunction)VRPyPathtool::clear, METH_VARARGS, "Clear all path nodes - clear(path)" },
     {NULL}  /* Sentinel */
@@ -87,6 +89,13 @@ PyObject* VRPyPathtool::getPaths(VRPyPathtool* self) {
     }
 
     return li;
+}
+
+PyObject* VRPyPathtool::getStroke(VRPyPathtool* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyPathtool::getStroke - Object is invalid"); return NULL; }
+    VRPyPath* p = 0;
+    if (! PyArg_ParseTuple(args, "O", &p)) return NULL;
+    return VRPyStroke::fromPtr( self->obj->getStroke(p->obj) );
 }
 
 PyObject* VRPyPathtool::getHandles(VRPyPathtool* self, PyObject* args) {
