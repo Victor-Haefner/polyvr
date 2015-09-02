@@ -52,6 +52,8 @@ VRPhysics::VRPhysics(OSG::VRTransform* t) {
     activation_mode = ACTIVE_TAG;
 
     gravity = btVector3(0,-10,0);
+    constantForce = btVector3(0,0,0);
+    constantTorque = btVector3(0,0,0);
 
     soft_body = 0;
     soft = false;
@@ -116,8 +118,8 @@ void VRPhysics::prepareStep() {
     for (auto j : torqueJob) { t += toBtVector3(j); torqueJob2.push_back(j); }
     forceJob.clear();
     torqueJob.clear();
-    body->applyCentralForce(f);
-    body->applyTorque(t);
+    if (f.length2() > 0) body->applyCentralForce(f);
+    if (t.length2() > 0) body->applyTorque(t);
 }
 
 btCollisionObject* VRPhysics::getCollisionObject() {
