@@ -17,7 +17,6 @@ using namespace std;
 struct VRPyBase {
     PyObject_HEAD;
     static PyObject* err;
-    static PyTypeObject* checkTypeRef;
 
     static PyObject* parseObject(PyObject *args);
     template <typename T>
@@ -31,8 +30,6 @@ struct VRPyBase {
     static void execPyCall(PyObject* pyFkt, PyObject* pArgs, T t);
     template <typename T>
     static VRFunction<T>* parseCallback(PyObject *args);
-
-    static bool check(PyObject* o);
 
     static vector<PyObject*> parseList(PyObject *args);
     static OSG::Vec2f parseVec2f(PyObject *args);
@@ -78,6 +75,8 @@ struct VRPyBaseT : public VRPyBase {
     static PyTypeObject* typeRef;
 
     VRPyBaseT();
+
+    static bool check(PyObject* o);
 
     static PyObject* fromPtr(T* obj);
     static bool      parse(PyObject *args, T** obj);

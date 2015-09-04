@@ -4,7 +4,6 @@
 
 
 PyObject* VRPyBase::err = NULL;
-PyTypeObject* VRPyBase::checkTypeRef = 0;
 
 PyObject* VRPyBase::parseObject(PyObject *args) {
     PyObject* o = NULL;
@@ -251,11 +250,6 @@ int VRPyBase::toGLConst(string s) {
 }
 
 bool VRPyBase::isNone(PyObject* o) { return (o == Py_None); }
-
-bool VRPyBase::check(PyObject* o) {
-    //return checkTypeRef == o->ob_type;
-    return true;
-}
 
 template<class T>
 PyTypeObject VRPyBaseT<T>::type = NULL;

@@ -4,6 +4,9 @@ template<class T> PyTypeObject* VRPyBaseT<T>::typeRef = &VRPyBaseT<T>::type;
 template<class T> VRPyBaseT<T>::VRPyBaseT() {;}
 
 template <typename T>
+bool VRPyBaseT<T>::check(PyObject* o) { return typeRef == o->ob_type; }
+
+template <typename T>
 void VRPyBase::execPyCall(PyObject* pyFkt, PyObject* pArgs, T t) {
     if (pyFkt == 0) return;
     PyGILState_STATE gstate = PyGILState_Ensure();
@@ -123,7 +126,6 @@ int VRPyBaseT<T>::init(VRPyBaseT<T> *self, PyObject *args, PyObject *kwds) {
 
 template<class T>
 void VRPyBaseT<T>::registerModule(string name, PyObject* mod, PyTypeObject* tp_base) {
-    checkTypeRef = typeRef;
     if (tp_base) typeRef->tp_base = tp_base;
 
     if ( PyType_Ready(typeRef) < 0 ) { cout << "\nERROR! could not register " << name << endl; return; }
