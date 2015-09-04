@@ -420,6 +420,12 @@ void VRMaterial::setTexture(string img_path, bool alpha) { // TODO: improve with
     setTexture(md->texture, alpha);
 }
 
+void VRMaterial::setTexture(ImageRecPtr img, int type, bool alpha) {
+    setTexture(img, alpha);
+    auto md = mats[activePass];
+    if (type != -1) md->texChunk->setInternalFormat(type);
+}
+
 void VRMaterial::setTexture(ImageRecPtr img, bool alpha) {
     if (img == 0) return;
 
@@ -650,6 +656,27 @@ void VRMaterial::remShaderChunk() {
 }
 
 ShaderProgramRecPtr VRMaterial::getShaderProgram() { return mats[activePass]->vProgram; }
+
+void VRMaterial::setDefaultVertexShader() {
+    auto md = mats[activePass];
+    int texD = md->getTextureDimension();
+
+    string vp;
+    vp += "#version 120\n";
+    vp += "attribute vec4 osg_Vertex;\n";
+    //vp += "attribute vec3 osg_Normal;\n";
+    //vp += "attribute vec4 osg_Color;\n";
+    if (texD == 2) vp += "attribute vec2 osg_MultiTexCoord0;\n";
+    if (texD == 3) vp += "attribute vec3 osg_MultiTexCoord0;\n";
+    vp += "void main(void) {\n";
+    //vp += "  gl_Normal = gl_NormalMatrix * osg_Normal;\n";
+    if (texD == 2) vp += "  gl_TexCoord[0] = vec4(osg_MultiTexCoord0,0.0,0.0);\n";
+    if (texD == 3) vp += "  gl_TexCoord[0] = vec4(osg_MultiTexCoord0,0.0);\n";
+    vp += "  gl_Position    = gl_ModelViewProjectionMatrix*osg_Vertex;\n";
+    vp += "}\n";
+
+    setVertexShader(vp);
+}
 
 void VRMaterial::setVertexShader(string s) {
     initShaderChunk();

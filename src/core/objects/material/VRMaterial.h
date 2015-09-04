@@ -72,6 +72,7 @@ class VRMaterial : public VRObject {
         /** Load a texture && apply it to the mesh as new material **/
         void setTexture(string img_path, bool alpha = true);
         void setTexture(ImageRecPtr img, bool alpha = true);
+        void setTexture(ImageRecPtr img, int type, bool alpha);
         void setTexture(char* data, int format, Vec3i dims, bool isfloat);
         void setTextureParams(int min, int mag, int envMode, int wrapS, int wrapT);
         void setTextureType(string type);
@@ -105,6 +106,7 @@ class VRMaterial : public VRObject {
 
         void initShaderChunk();
         void remShaderChunk();
+        void setDefaultVertexShader();
         void setVertexShader(string s);
         void setFragmentShader(string s);
         void setGeometryShader(string s);

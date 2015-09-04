@@ -4,6 +4,7 @@
 
 
 PyObject* VRPyBase::err = NULL;
+PyTypeObject* VRPyBase::checkTypeRef = 0;
 
 PyObject* VRPyBase::parseObject(PyObject *args) {
     PyObject* o = NULL;
@@ -185,13 +186,20 @@ int VRPyBase::toOSGConst(string s) {
     if (s == "RGBA_DXT5") return OSG::Image::OSG_RGBA_DXT5;
     if (s == "DEPTH") return OSG::Image::OSG_DEPTH_PF;
     if (s == "DEPTH_STENCIL") return OSG::Image::OSG_DEPTH_STENCIL_PF;
+
+    if (s == "A_FLT") return GL_ALPHA32F_ARB;
+    if (s == "L_FLT") return GL_LUMINANCE32F_ARB;
+    if (s == "LA_FLT") return GL_LUMINANCE_ALPHA32F_ARB;
+    if (s == "RGB_FLT") return GL_RGB32F;
+    if (s == "RGBA_FLT") return GL_RGBA32F;
+
     if (s == "A_INT") return OSG::Image::OSG_ALPHA_INTEGER_PF;
+    if (s == "L_INT") return OSG::Image::OSG_LUMINANCE_INTEGER_PF;
+    if (s == "LA_INT") return OSG::Image::OSG_LUMINANCE_ALPHA_INTEGER_PF;
     if (s == "RGB_INT") return OSG::Image::OSG_RGB_INTEGER_PF;
     if (s == "RGBA_INT") return OSG::Image::OSG_RGBA_INTEGER_PF;
     if (s == "BGR_INT") return OSG::Image::OSG_BGR_INTEGER_PF;
     if (s == "BGRA_INT") return OSG::Image::OSG_BGRA_INTEGER_PF;
-    if (s == "L_INT") return OSG::Image::OSG_LUMINANCE_INTEGER_PF;
-    if (s == "LA_INT") return OSG::Image::OSG_LUMINANCE_ALPHA_INTEGER_PF;
 
     // image data types
     if (s == "UINT8") return OSG::Image::OSG_UINT8_IMAGEDATA;
@@ -243,6 +251,11 @@ int VRPyBase::toGLConst(string s) {
 }
 
 bool VRPyBase::isNone(PyObject* o) { return (o == Py_None); }
+
+bool VRPyBase::check(PyObject* o) {
+    //return checkTypeRef == o->ob_type;
+    return true;
+}
 
 template<class T>
 PyTypeObject VRPyBaseT<T>::type = NULL;

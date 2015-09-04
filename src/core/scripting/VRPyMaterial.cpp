@@ -76,8 +76,25 @@ PyMethodDef VRPyMaterial::methods[] = {
     {"setTexture", (PyCFunction)VRPyMaterial::setTexture, METH_VARARGS, "Set the texture - setTexture(str path)\n - setTexture([[r,g,b]], [xN, yN, zN], bool isFloat)\n - setTexture([[r,g,b,a]], [xN, yN, zN], bool isFloat)" },
     {"setTextureType", (PyCFunction)VRPyMaterial::setTextureType, METH_VARARGS, "Set the texture type - setTexture(str type)\n types are: 'Normal, 'SphereEnv'" },
     {"setStencilBuffer", (PyCFunction)VRPyMaterial::setStencilBuffer, METH_VARARGS, "Set the setStencilBuffer" },
+    {"setShaderParameter", (PyCFunction)VRPyMaterial::setShaderParameter, METH_VARARGS, "Set shader variable - setShaderParameter(str var, value)" },
+    {"setDefaultVertexShader", (PyCFunction)VRPyMaterial::setDefaultVertexShader, METH_NOARGS, "Set a default vertex shader - setDefaultVertexShader()" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyMaterial::setDefaultVertexShader(VRPyMaterial* self) {
+	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setDefaultVertexShader, C obj is invalid"); return NULL; }
+	self->obj->setDefaultVertexShader();
+	Py_RETURN_TRUE;
+}
+
+PyObject* VRPyMaterial::setShaderParameter(VRPyMaterial* self, PyObject* args) {
+	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setShaderParameter, C obj is invalid"); return NULL; }
+	PyStringObject* var;
+	int i=0;
+    if (! PyArg_ParseTuple(args, "Oi", &var, &i)) return NULL;
+	self->obj->setShaderParameter( PyString_AsString((PyObject*)var), i );
+	Py_RETURN_TRUE;
+}
 
 PyObject* VRPyMaterial::setSortKey(VRPyMaterial* self, PyObject* args) {
 	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setSortKey, C obj is invalid"); return NULL; }
@@ -107,9 +124,9 @@ PyObject* VRPyMaterial::setTexture(VRPyMaterial* self, PyObject* args) {
 	if (aN == 1) {
         PyObject* o = parseObject(args);
         if (PyString_Check(o)) self->obj->setTexture( PyString_AsString(o) ); // load a file
-        else {
+        else if (VRPyImage::check(o)) {
             VRPyImage* img = (VRPyImage*)o;
-            self->obj->setTexture( img->obj );
+            self->obj->setTexture( img->obj, img->internal_format, 0 );
         }
 	}
 
