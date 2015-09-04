@@ -8,44 +8,28 @@
 
 template<> PyTypeObject VRPyBaseT<OSG::Image>::type = {
     PyObject_HEAD_INIT(NULL)
-    0,                         /*ob_size*/
-    "VR.Image",             /*tp_name*/
-    sizeof(VRPyImage),             /*tp_basicsize*/
-    0,                         /*tp_itemsize*/
-    (destructor)VRPyImage::dealloc, /*tp_dealloc*/
-    0,                         /*tp_print*/
-    0,                         /*tp_getattr*/
-    0,                         /*tp_setattr*/
-    0,                         /*tp_compare*/
-    0,                         /*tp_repr*/
-    0,                         /*tp_as_number*/
-    0,                         /*tp_as_sequence*/
-    0,                         /*tp_as_mapping*/
-    0,                         /*tp_hash */
-    0,                         /*tp_call*/
-    0,                         /*tp_str*/
-    0,                         /*tp_getattro*/
-    0,                         /*tp_setattro*/
-    0,                         /*tp_as_buffer*/
+    0,
+    "VR.Image",
+    sizeof(VRPyImage),
+    0,
+    (destructor)VRPyImage::dealloc,
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0,
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
-    "Image binding",           /* tp_doc */
-    0,		               /* tp_traverse */
-    0,		               /* tp_clear */
-    0,		               /* tp_richcompare */
-    0,		               /* tp_weaklistoffset */
-    0,		               /* tp_iter */
-    0,		               /* tp_iternext */
-    VRPyImage::methods,             /* tp_methods */
-    0,             /* tp_members */
-    0,                         /* tp_getset */
-    0,                         /* tp_base */
-    0,                         /* tp_dict */
-    0,                         /* tp_descr_get */
-    0,                         /* tp_descr_set */
-    0,                         /* tp_dictoffset */
-    (initproc)init,      /* tp_init */
-    0,                         /* tp_alloc */
-    VRPyImage::New,                 /* tp_new */
+" Constructor:\n\n  VRImage( PyArray data, width, height, pixel format, data type)\n\n"
+"  pixel formats:\n"
+"   A,I,L,LA stands for: GL_ALPHA, GL_INTENSITY, GL_LUMINANCE, GL_LUMINANCE_ALPHA\n"
+"   RGB, RGBA, BGR, BGRA\n"
+"   RGB_DXT1, RGBA_DXT1, RGBA_DXT3, RGBA_DXT5\n"
+"   DEPTH, DEPTH_STENCIL\n"
+"   A_INT, L_INT, LA_INT, RGB_INT, RGBA_INT, BGR_INT, BGRA_INT, \n\n"
+"  data types:\n"
+"   UINT8, UINT16, UINT32, FLOAT16, FLOAT32, INT16, INT32, UINT24_8\n",
+    0,0,0,0,0,0,
+    VRPyImage::methods,
+    0,0,0,0,0,0,0,
+    (initproc)init,
+    0,
+    VRPyImage::New,
 };
 
 PyMethodDef VRPyImage::methods[] = {
@@ -58,10 +42,16 @@ PyObject* VRPyImage::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     import_array1(NULL);
     PyArrayObject* data = 0;
     int W, H;
-    if (! PyArg_ParseTuple(args, "Oii", &data, &W, &H)) return NULL;
+    PyStringObject *channels, *datatype;
+    if (! PyArg_ParseTuple(args, "OiiOO", &data, &W, &H, &channels, &datatype)) return NULL;
     if ((PyObject*)data == Py_None) Py_RETURN_TRUE;
+    if ((PyObject*)channels == Py_None) Py_RETURN_TRUE;
+    if ((PyObject*)datatype == Py_None) Py_RETURN_TRUE;
+
     unsigned char* cdata  = (unsigned char*)PyArray_DATA(data);
-    img->set(OSG::Image::OSG_RGB_PF, W, H, 1, 1, 1, 0, cdata, OSG::Image::OSG_UINT8_IMAGEDATA, true);
+    int pf = toOSGConst(PyString_AsString((PyObject*)channels));
+    int dt = toOSGConst(PyString_AsString((PyObject*)datatype));
+    img->set(pf, W, H, 1, 1, 1, 0, cdata, dt, true);
 
     VRPyImage* pyimg = (VRPyImage*)alloc( type, img );
     pyimg->img = img;

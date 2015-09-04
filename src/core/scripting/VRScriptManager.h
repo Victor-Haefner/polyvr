@@ -24,9 +24,13 @@ class VRScriptManager : public VRStorage, public VRPyBase {
         PyObject* pLocal;
         PyObject* pModBase;
         PyObject* pModVR;
+        map<string, PyTypeObject*> modules;
         map<string, VRScript*> scripts;
         map<string, VRSignal*> triggers;
         PyThreadState* pyThreadState = 0;
+
+        template<class T>
+        void registerModule(string mod, PyObject* parent, PyTypeObject* base = 0);
 
         void test();
 
@@ -60,6 +64,7 @@ class VRScriptManager : public VRStorage, public VRPyBase {
 
         vector<string> getPyVRTypes();
         vector<string> getPyVRMethods(string type);
+        string getPyVRDescription(string type);
         string getPyVRMethodDoc(string type, string method);
 
         // Python Methods

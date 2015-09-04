@@ -743,11 +743,10 @@ void VRGuiScripts::on_select_help() {
     Glib::RefPtr<Gtk::TextBuffer> tb  = Glib::RefPtr<Gtk::TextBuffer>::cast_static(VRGuiBuilder()->get_object("pydoc"));
 
     if (type == "module") {
-        vector<string> methods = sm->getPyVRMethods(obj);
-        string doc = "\n";
-        for (uint i=0; i<methods.size(); i++) {
-            string d = sm->getPyVRMethodDoc(mod, methods[i]);
-            doc += methods[i] + "\n\t" + d + "\n\n";
+        string doc = sm->getPyVRDescription(obj) + "\n\n";
+        for (auto method : sm->getPyVRMethods(obj)) {
+            string d = sm->getPyVRMethodDoc(mod, method);
+            doc += method + "\n\t" + d + "\n\n";
         }
         tb->set_text(doc);
     }

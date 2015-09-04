@@ -1,5 +1,7 @@
 #include "VRPyBase.h"
 
+#include <OpenSG/OSGImage.h>
+
 
 PyObject* VRPyBase::err = NULL;
 
@@ -164,9 +166,44 @@ PyObject* VRPyBase::toPyTuple(OSG::Vec2f v) {
     return res;
 }
 
-int VRPyBase::toGLConst(PyObject* o) {
-    string s = PyString_AsString(o);
-    return toGLConst(s);
+int VRPyBase::toOSGConst(PyObject* o) { return toOSGConst( PyString_AsString(o) ); }
+int VRPyBase::toGLConst(PyObject* o) { return toGLConst( PyString_AsString(o) ); }
+
+int VRPyBase::toOSGConst(string s) {
+    // pixel formats
+    if (s == "A") return OSG::Image::OSG_A_PF;
+    if (s == "I") return OSG::Image::OSG_I_PF;
+    if (s == "L") return OSG::Image::OSG_L_PF;
+    if (s == "LA") return OSG::Image::OSG_LA_PF;
+    if (s == "RGB") return OSG::Image::OSG_RGB_PF;
+    if (s == "RGBA") return OSG::Image::OSG_RGBA_PF;
+    if (s == "BGR") return OSG::Image::OSG_BGR_PF;
+    if (s == "BGRA") return OSG::Image::OSG_BGRA_PF;
+    if (s == "RGB_DXT1") return OSG::Image::OSG_RGB_DXT1;
+    if (s == "RGBA_DXT1") return OSG::Image::OSG_RGBA_DXT1;
+    if (s == "RGBA_DXT3") return OSG::Image::OSG_RGBA_DXT3;
+    if (s == "RGBA_DXT5") return OSG::Image::OSG_RGBA_DXT5;
+    if (s == "DEPTH") return OSG::Image::OSG_DEPTH_PF;
+    if (s == "DEPTH_STENCIL") return OSG::Image::OSG_DEPTH_STENCIL_PF;
+    if (s == "A_INT") return OSG::Image::OSG_ALPHA_INTEGER_PF;
+    if (s == "RGB_INT") return OSG::Image::OSG_RGB_INTEGER_PF;
+    if (s == "RGBA_INT") return OSG::Image::OSG_RGBA_INTEGER_PF;
+    if (s == "BGR_INT") return OSG::Image::OSG_BGR_INTEGER_PF;
+    if (s == "BGRA_INT") return OSG::Image::OSG_BGRA_INTEGER_PF;
+    if (s == "L_INT") return OSG::Image::OSG_LUMINANCE_INTEGER_PF;
+    if (s == "LA_INT") return OSG::Image::OSG_LUMINANCE_ALPHA_INTEGER_PF;
+
+    // image data types
+    if (s == "UINT8") return OSG::Image::OSG_UINT8_IMAGEDATA;
+    if (s == "UINT16") return OSG::Image::OSG_UINT16_IMAGEDATA;
+    if (s == "UINT32") return OSG::Image::OSG_UINT32_IMAGEDATA;
+    if (s == "FLOAT16") return OSG::Image::OSG_FLOAT16_IMAGEDATA;
+    if (s == "FLOAT32") return OSG::Image::OSG_FLOAT32_IMAGEDATA;
+    if (s == "INT16") return OSG::Image::OSG_INT16_IMAGEDATA;
+    if (s == "INT32") return OSG::Image::OSG_INT32_IMAGEDATA;
+    if (s == "UINT24_8") return OSG::Image::OSG_UINT24_8_IMAGEDATA;
+
+    return -1;
 }
 
 int VRPyBase::toGLConst(string s) {

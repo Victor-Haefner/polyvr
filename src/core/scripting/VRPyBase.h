@@ -60,6 +60,8 @@ struct VRPyBase {
 
     static PyObject* toPyObject(float f);
 
+    static int toOSGConst(string cst);
+    static int toOSGConst(PyObject* o);
     static int toGLConst(string cst);
     static int toGLConst(PyObject* o);
     static bool isNone(PyObject* o);
