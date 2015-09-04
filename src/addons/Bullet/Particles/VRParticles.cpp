@@ -1,4 +1,6 @@
 #include "VRParticles.h"
+#include "VRParticlesT.h"
+#include "VRParticle.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
@@ -12,7 +14,7 @@ typedef boost::recursive_mutex::scoped_lock BLock;
 using namespace std;
 using namespace OSG;
 
-boost::recursive_mutex& mtx() {
+boost::recursive_mutex& VRParticles::mtx() {
     auto scene = OSG::VRSceneManager::getCurrent();
     if (scene) return scene->physicsMutex();
     else {
@@ -21,85 +23,16 @@ boost::recursive_mutex& mtx() {
     };
 }
 
-struct OSG::Particle {
-    float mass = 0.01; // TODO unit is ???
-    float radius = 0.01; // unit is meter
-    unsigned int age = 0; // current age
-    unsigned int lifetime = 0; // max age. 0 means immortal.
-
-    btRigidBody* body = 0;
-    btCollisionShape* shape = 0;
-    btDefaultMotionState* motionState = 0;
-    int collisionGroup = 1;
-    int collisionMask = 1;
-
-    void spawnAt(btVector3 v, btDiscreteDynamicsWorld* world = 0) {
-        if (world == 0) return;
-        // TODO if Particles shall be spawned a second time, handle it.
-
-        btTransform t;
-        t.setOrigin(btVector3(v.x(),v.y(),v.z()));
-        motionState = new btDefaultMotionState(t);
-
-        shape = new btSphereShape(radius);
-
-        btVector3 inertiaVector(0,0,0);
-        shape->calculateLocalInertia(mass, inertiaVector);
-        btRigidBody::btRigidBodyConstructionInfo rbInfo( mass, motionState, shape, inertiaVector );
-
-        body = new btRigidBody(rbInfo);
-        body->setActivationState(ACTIVE_TAG);
-
-        world->addRigidBody(body, collisionGroup, collisionMask);
-    }
-
-    Particle(btDiscreteDynamicsWorld* world = 0) {}
-
-    ~Particle() {
-        VRScene* scene = VRSceneManager::getCurrent();
-        if (scene) scene->bltWorld()->removeRigidBody(body);
-        delete body;
-        delete shape;
-        delete motionState;
-    }
-};
-
 Vec3f toVec3f(btVector3 v) { return Vec3f(v[0], v[1], v[2]); }
 btVector3 toBtVector3(Vec3f v) { return btVector3(v[0], v[1], v[2]); }
 
-VRParticles::VRParticles(int particleAmount) : VRGeometry("particles") {
-    N = particleAmount;
-    particles.resize(N, 0);
 
-    // physics
-    VRScene* scene = VRSceneManager::getCurrent();
-    if (scene) world = scene->bltWorld();
-    initParticles<Particle>();
+VRParticles::VRParticles() : VRParticles(true) {
+    //resetParticles<Particle>();
+}
 
-    // material
-    mat = new VRMaterial("particles");
-    mat->setDiffuse(Vec3f(0,0,1));
-    mat->setPointSize(5);
-    mat->setLit(false);
-
-    // geometry
-    GeoUInt32PropertyRecPtr     Length = GeoUInt32Property::create();
-    GeoUInt32PropertyRecPtr     inds = GeoUInt32Property::create();
-    pos = GeoPnt3fProperty::create();
-
-    Length->addValue(N);
-
-    for(int i=0;i<N;i++) pos->addValue(Pnt3f(0,0,0));
-    for(int i=0;i<N;i++) inds->addValue(i);
-
-    setType(GL_POINTS);
-    setLengths(Length);
-    setPositions(pos);
-    setIndices(inds);
-    setMaterial(mat);
-
-    // update loop
-    fkt = new VRFunction<int>("particles_update", boost::bind(&VRParticles::update, this,0,-1));
+VRParticles::VRParticles(bool spawnParticles) : VRGeometry("particles") {
+    if (spawnParticles) resetParticles<Particle>();
 }
 
 VRParticles::~VRParticles() {
@@ -110,14 +43,6 @@ VRParticles::~VRParticles() {
     {
         BLock lock(mtx());
         for (int i=0;i<N;i++) delete particles[i];
-    }
-}
-
-template<class P>
-void VRParticles::initParticles() {
-    BLock lock(mtx());
-    for(int i=0;i<N;i++) {
-        particles[i] = new P(world);
     }
 }
 

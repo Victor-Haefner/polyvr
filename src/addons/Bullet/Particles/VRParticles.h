@@ -5,6 +5,7 @@
 #include <OpenSG/OSGGeoProperties.h>
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/utils/VRFunction.h"
+#include "VRParticle.h"
 
 class btDiscreteDynamicsWorld;
 
@@ -12,14 +13,13 @@ using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 class VRGeometry;
-struct Particle;
 
 class VRParticles : public VRGeometry {
     // FIXME: PolyVR crashes when Particles are not spawned or emitted and script is executed the second time.
     // FIXME: Particles do not collide in ~50% of all polyvr sessions. Restart polyvr until it works.
 
     protected:
-        int N = 1000;
+        int N = 200;
         vector<Particle*> particles;
 
         VRFunction<int>* fkt = 0;
@@ -28,12 +28,14 @@ class VRParticles : public VRGeometry {
         btDiscreteDynamicsWorld* world = 0;
 
         float getMaxRadius();
+        boost::recursive_mutex& mtx();
+
 
     public:
         enum ArgType { NOTHING, SIZE, LITER };
 
-        VRParticles(): VRParticles(400){}
-        VRParticles(int particleAmount);
+        VRParticles();
+        VRParticles(bool spawnParticles);
         ~VRParticles();
 
         void setRadius(float newRadius, float variation=0.0);
@@ -43,7 +45,7 @@ class VRParticles : public VRGeometry {
         void setAge(int newAge, int variation=0);
         void setLifetime(int newLifetime, int variation=0);
 
-        template<class P> void initParticles();
+        template<class P> void resetParticles();
         int spawnCuboid(Vec3f v, ArgType t=NOTHING, float a=1, float b=1, float c=1);
         void update(int b = 0, int e = -1);
 };
