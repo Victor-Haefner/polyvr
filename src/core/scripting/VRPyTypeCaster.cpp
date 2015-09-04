@@ -6,6 +6,7 @@
 #include "VRPyLod.h"
 #include "VRPyClipPlane.h"
 #include "VRPyLight.h"
+#include "VRPyCamera.h"
 #include "VRPyMenu.h"
 #include "VRPyBaseT.h"
 #include "core/objects/object/VRObject.h"
@@ -31,8 +32,8 @@ PyObject* VRPyTypeCaster::cast(OSG::VRObject* obj) {
     else if (type == "Lod") return VRPyLod::fromPtr((OSG::VRLod*)obj);
     else if (type == "ClipPlane") return VRPyClipPlane::fromPtr((OSG::VRClipPlane*)obj);
     else if (type == "Light") return VRPyLight::fromPtr((OSG::VRLight*)obj);
-    else if (type == "Camera") return VRPyTransform::fromPtr((OSG::VRTransform*)obj); // TODO: add camera py type
-    else if (type == "Menu") return VRPyMenu::fromPtr((OSG::VRMenu*)obj); // TODO: add camera py type
+    else if (type == "Camera") return VRPyCamera::fromPtr((OSG::VRCamera*)obj);
+    else if (type == "Menu") return VRPyMenu::fromPtr((OSG::VRMenu*)obj);
     cout << "\nERROR in VRPyTypeCaster::cast: " << type << " not handled!\n";
 
     return VRPyObject::fromPtr(obj);
