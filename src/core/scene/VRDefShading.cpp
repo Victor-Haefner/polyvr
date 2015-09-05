@@ -9,7 +9,10 @@
 #include <OpenSG/OSGPolygonForeground.h>
 #include <OpenSG/OSGGeometry.h>
 #include <OpenSG/OSGSimpleGeometry.h>
+#include <OpenSG/OSGSimpleMaterial.h>
 
+#include <OpenSG/OSGShaderProgramChunk.h>
+#include <OpenSG/OSGShaderProgram.h>
 #include <OpenSG/OSGShaderShadowMapEngine.h>
 #include <OpenSG/OSGTrapezoidalShadowMapEngine.h>
 
@@ -27,6 +30,8 @@ VRDefShading::VRDefShading() {
     shadowRes = 1024;
     shadowColor = 0.3;
 }
+
+VRDefShading::~VRDefShading() {}
 
 float random(float f1, float f2) {
     float r = float(rand())/RAND_MAX;
@@ -293,7 +298,7 @@ void VRDefShading::setShadow(LightInfo &li) {
 
 
 // file containing vertex shader code for the light type
-const std::string& VRDefShading::getLightVPFile(LightEngine::LightTypeE lightType) {
+const std::string& VRDefShading::getLightVPFile(LightTypeE lightType) {
     switch(lightType) {
         case LightEngine::Directional:
             return dsDirLightVPFile;
@@ -307,7 +312,7 @@ const std::string& VRDefShading::getLightVPFile(LightEngine::LightTypeE lightTyp
 }
 
 // file containing fragment shader code for the light type
-const std::string& VRDefShading::getLightFPFile( LightEngine::LightTypeE lightType, ShadowTypeE shadowType) {
+const std::string& VRDefShading::getLightFPFile(LightTypeE lightType, ShadowTypeE shadowType) {
     switch(lightType) {
         case LightEngine::Directional:
             if(shadowType == ST_NONE) return dsDirLightFPFile;

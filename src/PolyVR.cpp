@@ -1,25 +1,20 @@
 #include "PolyVR.h"
 
-#include "core/scene/VRScene.h"
-#include "core/objects/object/VRObject.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/setup/VRSetupManager.h"
-#include "core/setup/VRSetup.h"
-#include "core/scene/VRSceneLoader.h"
-#include "core/gui/VRGuiManager.h"
-#include "core/utils/VROptions.h"
 #include "core/utils/VRInternalMonitor.h"
-#include "core/utils/VRFunction.h"
+#include "core/gui/VRGuiManager.h"
+#include "core/networking/VRMainInterface.h"
+#include "core/utils/VROptions.h"
+#include "core/scene/VRSceneLoader.h"
 #include "core/scene/VRSoundManager.h"
 #include "core/objects/material/VRMaterial.h"
-#include "core/networking/VRMainInterface.h"
-#include <GL/glut.h>
 
-#include <OpenSG/OSGSimpleGeometry.h>
-#include <OpenSG/OSGTypedGeoIntegralProperty.h>
 #include <OpenSG/OSGNameAttachment.h>
-
+#include <OpenSG/OSGNode.h>
+#include <GL/glut.h>
 #include <signal.h>
+
 #ifndef _WIN32
 extern "C" void coreDump(int sig) {
     auto mgr = OSG::VRSceneManager::get();
@@ -125,7 +120,7 @@ void startPolyVR() {
     while(true) VRSceneManager::get()->update();
 }
 
-void startPolyVR_testScene(NodeRecPtr n) {
+void startPolyVR_testScene(Node* n) {
     VRSceneManager::get()->newScene("test");
     VRSceneManager::getCurrent()->getRoot()->find("Headlight")->addChild(n);
     VRGuiManager::get()->wakeWindow();

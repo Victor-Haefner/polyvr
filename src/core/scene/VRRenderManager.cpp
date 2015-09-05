@@ -4,6 +4,7 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/objects/VRLight.h"
+#include "VRDefShading.h"
 
 #include <OpenSG/OSGRenderAction.h>
 
@@ -11,6 +12,8 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 VRRenderManager::VRRenderManager() {
+    defShading = new VRDefShading();
+
     update();
 
     root = new VRObject("Root");
@@ -22,8 +25,8 @@ VRRenderManager::VRRenderManager() {
     root_ssao->addChild(root_def_shading);
     root_def_shading->addChild(root->getNode());
 
-    initDeferredShading(root_def_shading);
-    initSSAO(root_ssao);
+    defShading->initDeferredShading(root_def_shading);
+    defShading->initSSAO(root_ssao);
     setDefferedShading(false);
     setSSAO(false);
 
@@ -36,7 +39,9 @@ VRRenderManager::VRRenderManager() {
     store("ssao", &ssao);
 }
 
-VRRenderManager::~VRRenderManager() {}
+VRRenderManager::~VRRenderManager() {
+    delete defShading;
+}
 
 void VRRenderManager::update() {
     RenderActionRefPtr ract = VRSetupManager::getCurrent()->getRenderAction();
@@ -45,21 +50,21 @@ void VRRenderManager::update() {
     ract->setOcclusionCulling(occlusionCulling);
     ract->setCorrectTwoSidedLighting(twoSided);
     ract->setZWriteTrans(true); // enables the zbuffer for transparent objects
+
+    defShading->setDefferedShading(deferredRendering);
+    defShading->setSSAO(ssao);
 }
 
 VRLight* VRRenderManager::addLight(string name) {
     VRLight* l = new VRLight(name);
     light_map[l->getID()] = l;
-    addDSLight(l);
+    defShading->addDSLight(l);
     return l;
 }
 
 VRLight* VRRenderManager::getLight(int ID) {
     return light_map[ID];
 }
-
-//void VRRenderManager::setSSAO(bool b) { ssao = b; update(); }
-//bool VRRenderManager::getSSAO() { return ssao; }
 
 void VRRenderManager::setFrustumCulling(bool b) { frustumCulling = b; update(); }
 bool VRRenderManager::getFrustumCulling() { return frustumCulling; }
@@ -69,6 +74,13 @@ bool VRRenderManager::getOcclusionCulling() { return occlusionCulling; }
 
 void VRRenderManager::setTwoSided(bool b) { twoSided = b; update(); }
 bool VRRenderManager::getTwoSided() { return twoSided; }
+
+void VRRenderManager::setDSCamera(VRCamera* cam) { defShading->setDSCamera(cam); }
+void VRRenderManager::setDefferedShading(bool b) { deferredRendering = b; update(); }
+bool VRRenderManager::getDefferedShading() { return deferredRendering; }
+
+void VRRenderManager::setSSAO(bool b) { ssao = b; update(); }
+bool VRRenderManager::getSSAO() { return ssao; }
 
 
 OSG_END_NAMESPACE;

@@ -4,6 +4,7 @@
 #include <OpenSG/OSGTextureObjChunk.h>
 #include <OpenSG/OSGGeometry.h>
 #include <OpenSG/OSGGeoProperties.h>
+#include <OpenSG/OSGSimpleMaterial.h>
 
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"

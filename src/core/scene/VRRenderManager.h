@@ -3,14 +3,16 @@
 
 #include <OpenSG/OSGConfig.h>
 #include "core/utils/VRStorage.h"
-#include "VRDefShading.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRLight;
+class VRDefShading;
+class VRObject;
+class VRCamera;
 
-class VRRenderManager : public VRStorage, public VRDefShading {
+class VRRenderManager : public VRStorage {
     private:
         bool frustumCulling = true;
         bool occlusionCulling = false;
@@ -19,6 +21,7 @@ class VRRenderManager : public VRStorage, public VRDefShading {
         bool ssao = false;
 
     protected:
+        VRDefShading* defShading = 0;
         VRObject* root = 0;
         VRObject* root_def_shading = 0;
         VRObject* root_ssao = 0;
@@ -40,6 +43,13 @@ class VRRenderManager : public VRStorage, public VRDefShading {
 
         void setTwoSided(bool b);
         bool getTwoSided();
+
+        void setDSCamera(VRCamera* cam);
+        void setDefferedShading(bool b);
+        bool getDefferedShading();
+
+        void setSSAO(bool b);
+        bool getSSAO();
 
         void update();
 };

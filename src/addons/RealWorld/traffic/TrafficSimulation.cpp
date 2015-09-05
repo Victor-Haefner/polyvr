@@ -1,4 +1,5 @@
 #include <boost/lexical_cast.hpp>
+#include <boost/bind.hpp>
 
 #include "core/scene/VRSceneLoader.h"
 #include "core/scene/VRSceneManager.h"

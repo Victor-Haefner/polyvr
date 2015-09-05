@@ -2,9 +2,11 @@
 #define VRFRAMEWORK_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
-#include <OpenSG/OSGNode.h>
 
 OSG_BEGIN_NAMESPACE;
+
+class Node;
+
 using namespace std;
 
 void setMultisampling(bool on);
@@ -13,7 +15,7 @@ void initPolyVR(int argc, char **argv);
 void startPolyVR();
 void exitPolyVR();
 
-void startPolyVR_testScene(NodeRecPtr n);
+void startPolyVR_testScene(Node* n);
 
 OSG_END_NAMESPACE;
 

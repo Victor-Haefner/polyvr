@@ -16,6 +16,7 @@
 #include <libxml++/nodes/element.h>
 #include <jsoncpp/json/json.h>
 #include <boost/filesystem.hpp>
+#include <boost/bind.hpp>
 
 OSG_BEGIN_NAMESPACE
 using namespace std;

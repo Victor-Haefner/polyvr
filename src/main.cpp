@@ -4,9 +4,6 @@
 #endif
 #include <iostream>
 
-OSG_USING_NAMESPACE;
-using namespace std;
-
 int main(int argc, char **argv) {
 #ifndef _WIN32
     // remove possible core file
@@ -16,11 +13,11 @@ int main(int argc, char **argv) {
     struct rlimit corelim;
     corelim.rlim_cur = -1;
     corelim.rlim_max = -1;
-    if (setrlimit (RLIMIT_CORE, &corelim) != 0) cerr << "Couldn't set core limit\n";
+    if (setrlimit (RLIMIT_CORE, &corelim) != 0) std::cerr << "Couldn't set core limit\n";
 #endif
 
-	initPolyVR(argc,argv);
-    startPolyVR();
+	OSG::initPolyVR(argc,argv);
+    OSG::startPolyVR();
 
 	return 0;
 }

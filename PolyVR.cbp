@@ -679,6 +679,7 @@
 		<Unit filename="src/core/tools/VRSnappingEngine.h" />
 		<Unit filename="src/core/tools/VRText.cpp" />
 		<Unit filename="src/core/tools/VRText.h" />
+		<Unit filename="src/core/tools/VRWaypoint.h" />
 		<Unit filename="src/core/utils/VRDoublebuffer.cpp" />
 		<Unit filename="src/core/utils/VRDoublebuffer.h" />
 		<Unit filename="src/core/utils/VRFlags.cpp" />

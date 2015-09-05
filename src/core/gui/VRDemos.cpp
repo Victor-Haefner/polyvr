@@ -18,6 +18,7 @@
 #include <string>
 #include <iostream>
 #include <boost/filesystem.hpp>
+#include <boost/bind.hpp>
 
 #include "core/scene/VRSceneLoader.h"
 #include "core/scene/VRSceneManager.h"

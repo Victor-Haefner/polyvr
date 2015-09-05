@@ -2,6 +2,8 @@
 
 #include <OpenSG/OSGSkyBackground.h>
 #include <OpenSG/OSGSimpleTexturedMaterial.h>
+#include <OpenSG/OSGTextureBackground.h>
+#include <OpenSG/OSGSolidBackground.h>
 #include <OpenSG/OSGImage.h>
 
 #include "core/setup/VRSetupManager.h"
@@ -12,7 +14,29 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-TextureObjChunkRecPtr VRBackground::createSkyTexture() {
+
+class VRBackgroundBase {
+    public:
+        BackgroundRecPtr bg;
+        SkyBackgroundRecPtr sky;
+        SolidBackgroundRecPtr sbg;
+        TextureBackgroundRecPtr tbg;
+        vector<ImageRecPtr> skyImgs;
+
+        int type;
+        string path;
+        string format;
+        Color3f color;
+
+        TextureObjChunkRecPtr createSkyTexture();
+        void updateSkyTextures();
+        void initSky();
+
+        void updateImgTexture();
+        void initImg();
+};
+
+TextureObjChunkRecPtr VRBackgroundBase::createSkyTexture() {
     ImageRecPtr image = Image::create();
     skyImgs.push_back(image);
     TextureObjChunkRecPtr chunk = TextureObjChunk::create();
@@ -27,7 +51,7 @@ TextureObjChunkRecPtr VRBackground::createSkyTexture() {
     return chunk;
 }
 
-void VRBackground::updateSkyTextures() {
+void VRBackgroundBase::updateSkyTextures() {
     string tmp;
 
     tmp = path + "_back" + format;
@@ -44,7 +68,7 @@ void VRBackground::updateSkyTextures() {
     skyImgs[5]->read(tmp.c_str());
 }
 
-void VRBackground::initSky() {
+void VRBackgroundBase::initSky() {
     sky = SkyBackground::create();
     sky->setBackTexture( createSkyTexture() );
     sky->setFrontTexture( createSkyTexture() );
@@ -54,46 +78,52 @@ void VRBackground::initSky() {
     sky->setTopTexture( createSkyTexture() );
 }
 
-void VRBackground::updateImgTexture() {
+void VRBackgroundBase::updateImgTexture() {
     skyImgs[6]->read(path.c_str());
 }
 
-void VRBackground::initImg() {
+void VRBackgroundBase::initImg() {
     tbg = TextureBackground::create();
     tbg->setTexture( createSkyTexture() );
 }
 
 
 VRBackground::VRBackground () {
-    sbg = SolidBackground::create();
-    initSky();
-    initImg();
+    base = new VRBackgroundBase();
 
-    color = Color3f(0.6, 0.6, 0.6);
+    base->sbg = SolidBackground::create();
+    base->initSky();
+    base->initImg();
+
+    base->color = Color3f(0.6, 0.6, 0.6);
     setBackground(SOLID);
 
-    format = ".png";
+    base->format = ".png";
 
-    store("type", &type);
-    store("color", &color);
-    store("path", &path);
-    store("format", &format);
+    store("type", &base->type);
+    store("color", &base->color);
+    store("path", &base->path);
+    store("format", &base->format);
+}
+
+VRBackground::~VRBackground() {
+    delete base;
 }
 
 void VRBackground::setBackground(TYPE t) {
-    type = t;
+    base->type = t;
     switch(t) {
         case SOLID:
-            bg = sbg;
-            sbg->setColor(color);
+            base->bg = base->sbg;
+            base->sbg->setColor(base->color);
             break;
         case IMAGE:
-            bg = tbg;
-            updateImgTexture();
+            base->bg = base->tbg;
+            base->updateImgTexture();
             break;
         case SKY:
-            bg = sky;
-            updateSkyTextures();
+            base->bg = base->sky;
+            base->updateSkyTextures();
             break;
     }
 
@@ -101,30 +131,30 @@ void VRBackground::setBackground(TYPE t) {
 }
 
 void VRBackground::setBackgroundColor(Color3f c) {
-    color = c;
-    sbg->setColor(c);
-    setBackground(TYPE(type));
+    base->color = c;
+    base->sbg->setColor(c);
+    setBackground(TYPE(base->type));
 }
 
 void VRBackground::setBackgroundPath(string s) {
-    path = s;
-    if (type == IMAGE) updateImgTexture();
-    if (type == SKY) updateSkyTextures();
-    setBackground(TYPE(type));
+    base->path = s;
+    if (base->type == IMAGE) base->updateImgTexture();
+    if (base->type == SKY) base->updateSkyTextures();
+    setBackground(TYPE(base->type));
 }
 
-BackgroundRecPtr VRBackground::getBackground() { return bg; }
-void VRBackground::setSkyBGExtension(string f) { format = f; updateSkyTextures(); }
-string VRBackground::getSkyBGExtension() { return format; }
-VRBackground::TYPE VRBackground::getBackgroundType() { return TYPE(type); }
-Color3f VRBackground::getBackgroundColor() { return color; }
-string VRBackground::getBackgroundPath() { return path; }
+BackgroundRecPtr VRBackground::getBackground() { return base->bg; }
+void VRBackground::setSkyBGExtension(string f) { base->format = f; base->updateSkyTextures(); }
+string VRBackground::getSkyBGExtension() { return base->format; }
+VRBackground::TYPE VRBackground::getBackgroundType() { return TYPE(base->type); }
+Color3f VRBackground::getBackgroundColor() { return base->color; }
+string VRBackground::getBackgroundPath() { return base->path; }
 
 void VRBackground::updateBackground() {
     VRSetupManager::getCurrent()->setViewBackground(getBackground());
 }
 
-void VRBackground::update() { setBackground(TYPE(type)); }
+void VRBackground::update() { setBackground(TYPE(base->type)); }
 
 
 OSG_END_NAMESPACE;
