@@ -371,6 +371,7 @@
 		<Unit filename="src/addons/Semantics/Reasoning/VROntology.cpp" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROntology.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROntologyRule.cpp" />
+		<Unit filename="src/addons/Semantics/Reasoning/VROntologyRule.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROntologyUtils.cpp" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROntologyUtils.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VRProperty.cpp" />
@@ -688,6 +689,7 @@
 		<Unit filename="src/core/tools/VRSnappingEngine.h" />
 		<Unit filename="src/core/tools/VRText.cpp" />
 		<Unit filename="src/core/tools/VRText.h" />
+		<Unit filename="src/core/tools/VRWaypoint.cpp" />
 		<Unit filename="src/core/tools/VRWaypoint.h" />
 		<Unit filename="src/core/utils/VRDoublebuffer.cpp" />
 		<Unit filename="src/core/utils/VRDoublebuffer.h" />
