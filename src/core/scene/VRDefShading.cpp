@@ -6,6 +6,7 @@
 #include <OpenSG/OSGSpotLight.h>
 #include <OpenSG/OSGImage.h>
 
+#include <OpenSG/OSGImageForeground.h>
 #include <OpenSG/OSGPolygonForeground.h>
 #include <OpenSG/OSGGeometry.h>
 #include <OpenSG/OSGSimpleGeometry.h>
@@ -115,6 +116,8 @@ void VRDefShading::initSSAO() {
     fg->editMFTexCoords()->push_back(Vec3f(1,1,0));
     fg->editMFTexCoords()->push_back(Vec3f(0,1,0));
 
+    //ImageForegroundRecPtr fg = ImageForeground::create();
+
 
     /*FrameBufferObjectRefPtr fbo = FrameBufferObject::create();
     fbo->setWidth (640);
@@ -178,21 +181,25 @@ void VRDefShading::init() {
 void VRDefShading::initDeferredShading(VRObject* o) {
     init();
     stageObject = o;
+    setDefferedShading(enabled);
 }
 
 void VRDefShading::initSSAO(VRObject* o) {
     initSSAO();
     ssaoObject = o;
+    setSSAO(ssao_enabled);
 }
 
 void VRDefShading::setSSAO(bool b) {
     ssao_enabled = b;
+    if (ssaoObject == 0) return;
     if (b) ssaoObject->setCore(ssaoStage, "ssaoShading", true);
     else ssaoObject->setCore(Group::create(), "Object", true);
 }
 
 void VRDefShading::setDefferedShading(bool b) {
     enabled = b;
+    if (stageObject == 0) return;
     if (b) stageObject->setCore(dsStage, "defShading", true);
     else stageObject->setCore(Group::create(), "Object", true);
     for (auto m : VRMaterial::materials) m.second->setDeffered(b);
