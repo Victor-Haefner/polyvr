@@ -6,7 +6,7 @@
 #include <map>
 #include <vector>
 
-#include "addons/Classification/VROntology.h"
+#include "addons/Semantics/Reasoning/VROntology.h"
 
 class FLogistics;
 class FNetwork;

@@ -57,7 +57,7 @@
 #include "addons/Engineering/VRPyNumberingEngine.h"
 #include "addons/CEF/VRPyCEF.h"
 #include "addons/CEF/VRPyWebCam.h"
-#include "addons/Classification/VRPySegmentation.h"
+#include "addons/Semantics/Segmentation/VRPySegmentation.h"
 #include "addons/Engineering/Chemistry/VRPyMolecule.h"
 #include "addons/Engineering/Factory/VRPyFactory.h"
 #include "addons/Engineering/Milling/VRPyMillingMachine.h"
