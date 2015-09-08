@@ -32,6 +32,8 @@ VRAnnotationEngine::VRAnnotationEngine() : VRGeometry("AnnEng") {
 }
 
 void VRAnnotationEngine::clear() {
+    labels.clear();
+
     OSG::GeoPnt3fPropertyRecPtr pos = OSG::GeoPnt3fProperty::create();
     OSG::GeoVec3fPropertyRecPtr norms = OSG::GeoVec3fProperty::create();
     OSG::GeoUInt32PropertyRecPtr inds = OSG::GeoUInt32Property::create();
