@@ -293,6 +293,7 @@ vector<VRObject*> VRObject::filterByType(string Type, vector<VRObject*> res) {
 
 /** Returns the first ancestor that is pickable, || 0 if none found **/
 VRObject* VRObject::findPickableAncestor() {
+    if (pickable == -1) return 0;
     if (isPickable()) return this;
     else if (parent == 0) return 0;
     else return parent->findPickableAncestor();
@@ -445,10 +446,10 @@ void VRObject::setVisible(bool b) {
 void VRObject::toggleVisible() { setVisible(!visible); }
 
 /** Returns if this object is pickable || not **/
-bool VRObject::isPickable() {return pickable;}
+bool VRObject::isPickable() { return pickable == 1; }
 
 /** Set the object pickable || not **/
-void VRObject::setPickable(bool b) { if (hasAttachment("transform")) pickable = b; } //TODO: check if the if is necessary!
+void VRObject::setPickable(int b) { if (hasAttachment("transform")) pickable = b; } //TODO: check if the if is necessary!
 
 string VRObject::getPath() {
     VRObject* o = this;

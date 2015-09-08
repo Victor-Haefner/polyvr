@@ -68,7 +68,7 @@ PyMethodDef VRPyObject::methods[] = {
     {"find", (PyCFunction)VRPyObject::find, METH_VARARGS, "Find node with given name (str) in scene graph below this node" },
     {"findAll", (PyCFunction)VRPyObject::findAll, METH_VARARGS, "Find node with given base name (str) in scene graph below this node" },
     {"isPickable", (PyCFunction)VRPyObject::isPickable, METH_NOARGS, "Return if the object is pickable" },
-    {"setPickable", (PyCFunction)VRPyObject::setPickable, METH_VARARGS, "Set if the object is pickable" },
+    {"setPickable", (PyCFunction)VRPyObject::setPickable, METH_VARARGS, "Set if the object is pickable - setPickable(int pickable)\n   pickable can be 0 or 1 to disable or enable picking, as well as -1 to block picking even if an ancestor is pickable" },
     {"printOSG", (PyCFunction)VRPyObject::printOSG, METH_NOARGS, "Print the OSG structure to console" },
     {"flattenHiarchy", (PyCFunction)VRPyObject::flattenHiarchy, METH_NOARGS, "Flatten the scene graph hiarchy" },
     {"addTag", (PyCFunction)VRPyObject::addTag, METH_VARARGS, "Add a tag to the object - addTag( str tag )" },
@@ -315,8 +315,7 @@ PyObject* VRPyObject::isPickable(VRPyObject* self) {
 
 PyObject* VRPyObject::setPickable(VRPyObject* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::setPickable, C Object is invalid"); return NULL; }
-    bool pickable = parseBool(args);
-    self->obj->setPickable(pickable);
+    self->obj->setPickable( parseInt(args) );
     Py_RETURN_TRUE;
 }
 

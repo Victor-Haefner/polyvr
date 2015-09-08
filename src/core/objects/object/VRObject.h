@@ -44,7 +44,7 @@ class VRObject : public VRName, public VRStorage {
         NodeRecPtr node;
         int ID = 0;
         int childIndex = 0; // index of this object in its parent child vector
-        bool pickable = false;
+        int pickable = 0;
         bool visible = true;
         bool intern = false;
         int persistency = 666;
@@ -204,7 +204,7 @@ class VRObject : public VRName, public VRStorage {
         bool isPickable();
 
         /** Set the object pickable || not **/
-        void setPickable(bool b);
+        void setPickable(int b);
 
         void destroy();
 

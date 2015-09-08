@@ -76,7 +76,6 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setEuler", (PyCFunction)VRPyTransform::setEuler, METH_VARARGS, "Set the object's orientation using Euler angles - setEuler(x,y,z)" },
     {"setUp", (PyCFunction)VRPyTransform::setUp, METH_VARARGS, "Set the object's up vector" },
     {"setScale", (PyCFunction)VRPyTransform::setScale, METH_VARARGS, "Set the object's scale vector" },
-    {"setPickable", (PyCFunction)VRPyTransform::setPickable, METH_VARARGS, "Set the object pickable - setPickable(True/False)" },
     {"setPlaneConstraints", (PyCFunction)VRPyTransform::setPlaneConstraints, METH_VARARGS, "Constraint the object on a plane - setPlaneConstraints(nxf, nyf, nzf)" },
     {"setAxisConstraints", (PyCFunction)VRPyTransform::setAxisConstraints, METH_VARARGS, "Constraint the object on an axis - TODO -> to test, may work" },
     {"setRotationConstraints", (PyCFunction)VRPyTransform::setRotationConstraints, METH_VARARGS, "Constraint the object's rotation - setRotationConstraints(xi, yi, zi)" },
@@ -316,13 +315,6 @@ PyObject* VRPyTransform::setScale(VRPyTransform* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setScale, Object is invalid"); return NULL; }
     OSG::Vec3f v = parseVec3f(args);
     self->obj->setScale(v);
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyTransform::setPickable(VRPyTransform* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyTransform::setPickable, Object is invalid"); return NULL; }
-    bool b = parseBool(args);
-    self->obj->setPickable(b);
     Py_RETURN_TRUE;
 }
 
