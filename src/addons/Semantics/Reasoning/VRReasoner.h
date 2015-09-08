@@ -23,6 +23,7 @@ struct Path {
 struct Variable {
     vector<VREntity*> instances;
     string value;
+    string concept;
     bool isAnonymous = false;
     bool valid = false;
 

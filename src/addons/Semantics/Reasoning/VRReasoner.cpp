@@ -45,10 +45,13 @@ bool VRReasoner::startswith(string s, string subs) {
 Variable::Variable() {;}
 
 string Variable::toString() {
-    string s = value+"[";
+    string s = value+"("+concept+"){";
     for (auto i : instances) s += i->name+",";
     if (instances.size() > 0) s.pop_back();
-    s +="]{"+::toString(isAnonymous)+","+::toString(valid)+"}";
+    s +="}[";
+    if (isAnonymous) s += "anonymous, ";
+    s += valid ? "valid" : "invalid";
+    s +="]";
     return s;
 }
 
@@ -61,11 +64,13 @@ Variable::Variable(VROntology* onto, string concept, string var) {
         isAnonymous = true;
     }
     value = var;
+    this->concept = concept;
     valid = true;
 }
 
 Variable::Variable(VROntology* onto, string val) {
     value = val;
+    concept = "var";
     valid = true;
 }
 
@@ -151,7 +156,9 @@ bool IS(Variable& v0, Variable& v1, Path& p0, Path& p1) {
         for (auto i1 : v1.instances) {
             vector<string> val1 = i1->getAtPath(p1.path);
             for (string s1 : val0) {
-                for (string s2 : val1) if (s1 == s2) return true;
+                for (string s2 : val1) {
+                    if (s1 == s2) return true;
+                }
             }
         }
         for (string s1 : val0) if (s1 == v1.value) return true;
@@ -172,9 +179,11 @@ bool VRReasoner::evaluate(Statement& s, VRContext& c, list<Query>& queries) {
     }
 
     if (s.verb == "is") {
-        if (c.vars.count(s.lvars[0].value) == 0) return false;
-        if (!s.lvars[0].valid || !s.lvars[1].valid) return false;
-        if (IS(s.lvars[0],s.lvars[1],s.paths[0],s.paths[1])) { s.state = 1; return true; }
+        if (c.vars.count(s.lvars[0].value) == 0) return false; // check if context has a variable with the left value
+        if (!s.lvars[0].valid || !s.lvars[1].valid) return false; // return if one of the sides invalid
+        bool is = IS(s.lvars[0],s.lvars[1],s.paths[0],s.paths[1]);
+        cout << pre << s.lvars[0].value << " is " << (is?"":" not ") << s.lvars[1].value << endl;
+        if (is) { s.state = 1; return true; }
 
         for ( auto r : c.onto->getRules()) { // no match found -> check rules and initiate new queries
             Query R(r->rule);

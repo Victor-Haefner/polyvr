@@ -6,7 +6,7 @@
 OSG_BEGIN_NAMESPACE;
 
 class VRPose {
-    Vec3f from, at, up;
+    Vec3f from, dir, up;
 };
 
 class VRWaypoint : public VRGeometry {
@@ -17,6 +17,8 @@ class VRWaypoint : public VRGeometry {
         VRWaypoint();
 
         void setPose(VRPose p);
+
+        Vec3f transform(Vec3f v);
 };
 
 OSG_END_NAMESPACE;

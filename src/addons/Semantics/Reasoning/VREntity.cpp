@@ -26,16 +26,16 @@ VREntity::VREntity(string name, VRConcept* c) {
 }
 
 vector<string> VREntity::getAtPath(vector<string> path) {
-    cout << "  get value at path ";
+    /*cout << "  get value at path ";
     for (auto p : path) cout << "/" << p;
-    cout << endl;
+    cout << endl;*/
 
     vector<string> res;
 
     if (path.size() == 2) {
         string m = path[1];
         int id = concept->getPropertyID(m);
-        cout << "  get value of member " << m << " with id " << id << endl;
+        //cout << "  get value of member " << m << " with id " << id << endl;
         if (id < 0) return res;
         if (!properties.count(id)) return res;
         return properties[id];
