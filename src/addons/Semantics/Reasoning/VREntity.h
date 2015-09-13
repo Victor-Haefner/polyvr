@@ -9,6 +9,7 @@ using namespace std;
 struct VREntity : public VRNamedID {
     VRConcept* concept;
     map<int, vector<string> > properties;
+
     VREntity(string name, VRConcept* c);
     void set(string name, string value);
     void add(string name, string value);

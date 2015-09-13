@@ -6,9 +6,7 @@
 using namespace std;
 
 struct VRProperty : public VRNamedID {
-    string value;
     string type;
-
     VRProperty(string name, string type);
 };
 

@@ -21,6 +21,16 @@ VRProperty* VRConcept::addProperty(string name, string type) {
     return p;
 }
 
+VRProperty* VRConcept::getProperty(int ID) {
+    for (auto p : properties) if (p.second->ID == ID) return p.second;
+    return 0;
+}
+
+VRProperty* VRConcept::getProperty(string type) {
+    for (auto p : properties) if (p.second->type == type) return p.second;
+    return 0;
+}
+
 int VRConcept::getPropertyID(string name) {
     for (auto p : properties) if (p.second->name == name) return p.second->ID;
     return -1;

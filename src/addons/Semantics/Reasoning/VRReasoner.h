@@ -30,6 +30,7 @@ struct Variable {
     Variable();
 
     string toString();
+    bool has(Variable& other, VROntology* onto);
 
     Variable(VROntology* onto, string concept, string var);
     Variable(VROntology* onto, string val);
@@ -38,18 +39,6 @@ struct Variable {
 
 struct Result {
     vector<VREntity*> instances;
-};
-
-struct VRContext {
-    map<string, Variable> vars;
-    map<string, Result> results;
-    VROntology* onto = 0;
-
-    int itr=0;
-    int itr_max = 10;
-
-    VRContext(VROntology* onto);
-    VRContext();
 };
 
 struct Term {
@@ -68,15 +57,11 @@ struct Statement {
     int state = 0;
 
     Statement();
-
     Statement(string s);
 
     string toString();
-
-    void updateLocalVariables(VRContext& context);
-
+    void updateLocalVariables(map<string, Variable>& globals, VROntology* onto);
     bool isSimpleVerb();
-
     bool match(Statement s);
 };
 
@@ -86,6 +71,19 @@ struct Query {
 
     Query(string q);
     string toString();
+};
+
+struct Context {
+    map<string, Variable> vars;
+    map<string, Result> results;
+    list<Query> queries;
+    VROntology* onto = 0;
+
+    int itr=0;
+    int itr_max = 5;
+
+    Context(VROntology* onto);
+    Context();
 };
 
 class VRReasoner {
@@ -99,9 +97,10 @@ class VRReasoner {
     private:
         VRReasoner();
 
-        bool evaluate(Statement& s, VRContext& c, list<Query>& queries);
-        bool is(Statement& s, VRContext& c, list<Query>& queries);
-        bool has(Statement& s, VRContext& c, list<Query>& queries);
+        bool evaluate(Statement& s, Context& c);
+        bool is(Statement& s, Context& c);
+        bool has(Statement& s, Context& c);
+        void pushQuery(Statement& s, Context& c);
 
     public:
         static VRReasoner* get();

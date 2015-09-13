@@ -214,9 +214,11 @@ VRObject* VRProduction::test() {
 
     productionOnto->merge(productOnto);
     productionOnto->merge(prodMachineOnto);
+    productionOnto->merge(processOnto);
     productionOnto->addConcept("Production");
     productionOnto->getConcept("Production")->addProperty("machine", "Machine");
     productionOnto->getConcept("Production")->addProperty("job", "Product");
+    productionOnto->getConcept("Production")->addProperty("process", "Process");
 
     drillOnto->merge(prodMachineOnto);
     drillOnto->merge(processingOnto);
@@ -313,7 +315,6 @@ VRObject* VRProduction::test() {
     // production -----------------------------------------------
     auto production = new VRProduction();
     production->description->merge(productionOnto);
-    production->description->merge(processOnto);
     production->description->addInstance("production", "Production");
     production->addMachine(robot, "robot", (VRGeometry*)machine->duplicate());
     production->addMachine(drill, "drill", (VRGeometry*)machine->duplicate());

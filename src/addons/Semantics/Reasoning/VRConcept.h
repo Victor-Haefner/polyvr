@@ -25,6 +25,8 @@ struct VRConcept : public VRNamedID {
     void addProperty(VRProperty* p);
 
     int getPropertyID(string name);
+    VRProperty* getProperty(string type);
+    VRProperty* getProperty(int ID);
 
     bool is_a(string concept);
 };

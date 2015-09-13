@@ -114,10 +114,10 @@ string Statement::toString() {
     return s;
 }
 
-void Statement::updateLocalVariables(VRContext& context) {
+void Statement::updateLocalVariables(map<string, Variable>& globals, VROntology* onto) {
     for (auto& t : terms) {
-        if (context.vars.count(t.path.root)) t.var = context.vars[t.path.root];
-        else t.var = Variable(context.onto,t.path.root);
+        if (globals.count(t.path.root)) t.var = globals[t.path.root];
+        else t.var = Variable(onto,t.path.root);
     }
 }
 
@@ -170,7 +170,16 @@ bool Term::operator==(Term& other) {
     return false;
 }
 
-bool VRReasoner::is(Statement& statement, VRContext& context, list<Query>& queries) {
+void VRReasoner::pushQuery(Statement& statement, Context& context) {
+    for ( auto r : context.onto->getRules()) { // no match found -> check rules and initiate new queries
+        Query query(r->rule);
+        if (query.request.verb != statement.verb) continue;
+        query.request.updateLocalVariables(context.vars, context.onto);
+        if (statement.match(query.request)) context.queries.push_back(query);
+    }
+}
+
+bool VRReasoner::is(Statement& statement, Context& context) {
     auto left = statement.terms[0];
     auto right = statement.terms[1];
 
@@ -183,41 +192,72 @@ bool VRReasoner::is(Statement& statement, VRContext& context, list<Query>& queri
 
     if (b) { statement.state = 1; return true; }
 
-    for ( auto r : context.onto->getRules()) { // no match found -> check rules and initiate new queries
-        Query query(r->rule);
-        if (query.request.verb != statement.verb) continue;
-        query.request.updateLocalVariables(context);
-        if (statement.match(query.request)) queries.push_back(query);
+    pushQuery(statement, context);
+    return false;
+}
+
+bool Variable::has(Variable& other, VROntology* onto) {
+    for (auto i1 : instances) {
+        for (auto p : i1->properties) { // check if instance properties have
+            for (auto v : p.second) { // TODO: compare each v with other.value
+                if (v == other.value) return true;
+            }
+        }
     }
     return false;
 }
 
-bool VRReasoner::has(Statement& s, VRContext& c, list<Query>& queries) { // TODO
-    cout << pre << "  has not implemented, ignoring" << endl;
+bool VRReasoner::has(Statement& statement, Context& context) { // TODO
+    auto left = statement.terms[0];
+    auto right = statement.terms[1];
+
+    bool b = left.var.has(right.var, context.onto);
+    cout << pre << "  " << left.str << " has " << (b?"":"not") << " " << right.str << endl;
+    if (b) { statement.state = 1; return true; }
+
+    auto Cconcept = context.onto->getConcept( right.var.concept ); // child concept
+    auto Pconcept = context.onto->getConcept( left.var.concept ); // parent concept
+    if (Cconcept == 0) { cout << "       Warning! concept " << right.var.concept << " not found!\n"; return false; }
+    if (Pconcept == 0) { cout << "       Warning! concept " << left.var.concept << " not found!\n"; return false; }
+
+    auto prop = Pconcept->getProperty( Cconcept->name );
+    if (prop == 0) { // no property
+        cout << "       Warning! concept " << Pconcept->name << " has no proprty of type " << Cconcept->name << "!\n";
+        return false;
+    }
+
+    for (auto i : left.var.instances) {
+        if (i->properties.count(prop->ID) == 0) {
+            i->properties[prop->ID] = vector<string>();
+        }
+
+        i->properties[prop->ID].push_back(right.var.value);
+    }
+
+    pushQuery(statement, context);
     return false;
 }
 
-bool VRReasoner::evaluate(Statement& s, VRContext& c, list<Query>& queries) {
-    cout << pre << " eval " << s.toString() << endl;
-    if (s.state == 1) return true;
-    s.updateLocalVariables(c);
+bool VRReasoner::evaluate(Statement& statement, Context& context) {
+    statement.updateLocalVariables(context.vars, context.onto);
 
-    if (!s.isSimpleVerb()) { // resolve anonymous variables
-        string var = s.terms[0].path.root;
-        c.vars[var] = Variable( c.onto, s.verb, var );
-        cout << pre << "  added variable " << c.vars[var].toString() << endl;
+    if (!statement.isSimpleVerb()) { // resolve anonymous variables
+        string var = statement.terms[0].path.root;
+        context.vars[var] = Variable( context.onto, statement.verb, var );
+        cout << pre << "  added variable " << context.vars[var].toString() << endl;
+        statement.state = 1;
         return true;
     }
 
-    if (s.verb == "is") return is(s,c,queries);
-    if (s.verb == "is_not") return !is(s,c,queries);
-    if (s.verb == "has") return has(s,c,queries);
-    if (s.verb == "has_not") return !has(s,c,queries);
+    if (statement.verb == "is") return is(statement,context);
+    if (statement.verb == "is_not") return !is(statement,context); // TODO, is wrong
+    if (statement.verb == "has") return has(statement,context);
+    if (statement.verb == "has_not") return !has(statement,context); // TODO, is wrong
     return false;
 }
 
-VRContext::VRContext() { ; }
-VRContext::VRContext(VROntology* onto) {
+Context::Context() { ; }
+Context::Context(VROntology* onto) {
     this->onto = onto;
 }
 
@@ -226,21 +266,19 @@ VRContext::VRContext(VROntology* onto) {
 vector<Result> VRReasoner::process(string initial_query, VROntology* onto) {
     cout << pre << initial_query << endl;
 
-    VRContext context(onto); // create context
+    Context context(onto); // create context
+    context.queries.push_back(Query(initial_query));
 
-    list<Query> queries;
-    queries.push_back(Query(initial_query));
-
-    while( queries.size() ) { // while queries to process
-        Query query = queries.back();
+    while( context.queries.size() ) { // while queries to process
+        Query& query = context.queries.back();
         auto request = query.request;
-        if (request.state == 1) { queries.pop_back(); continue; }; // query answered, pop and continue
+        if (request.state == 1) { context.queries.pop_back(); continue; }; // query answered, pop and continue
 
-        cout << pre << "query " << query.toString() << endl;
+        cout << pre << "QUERY " << query.toString() << endl;
 
-        request.updateLocalVariables(context);
+        request.updateLocalVariables(context.vars, context.onto);
 
-        if ( evaluate(request, context, queries) ) {
+        if ( evaluate(request, context) ) {
             if (request.verb == "q") {
                 string v = request.terms[0].var.value;
                 if (context.results.count(v) == 0) context.results[v] = Result();
@@ -248,13 +286,19 @@ vector<Result> VRReasoner::process(string initial_query, VROntology* onto) {
             }
         }
 
-        for (auto statement : query.statements) evaluate(statement, context, queries);
+        int i=0;
+        for (auto& statement : query.statements) {
+            i++;
+            if (statement.state == 1) continue;
+            cout << pre << " " << i << " eval " << statement.toString() << endl;
+            if (evaluate(statement, context)) statement.state = 1;
+        }
 
         context.itr++;
         if (context.itr >= context.itr_max) break;
     }
 
-    cout << pre << " break after " << context.itr << " queries\n";
+    cout << pre << " break after " << context.itr << " iterations\n";
     for (auto r : context.results) {
         cout << pre << "  result " << r.first << endl;
         for (auto i : r.second.instances) cout << pre << "   instance " << i->toString() << endl;
