@@ -95,6 +95,18 @@ string Path::toString() {
     return s;
 }
 
+Context::Context() {}
+
+Context::Context(VROntology* onto) {
+    this->onto = onto;
+
+    cout << "Init context:" << endl;
+    for (auto i : onto->instances) {
+        vars[i.second->name] = Variable( onto, i.second->concept->name, i.second->name );
+        cout << " add instance " << i.second->name << " of concept " << i.second->concept->name << endl;
+    }
+}
+
 Statement::Statement() {;}
 
 Statement::Statement(string s) {
@@ -118,11 +130,12 @@ void Statement::updateLocalVariables(map<string, Variable>& globals, VROntology*
     for (auto& t : terms) {
         if (globals.count(t.path.root)) t.var = globals[t.path.root];
         else t.var = Variable(onto,t.path.root);
+        //cout << "updateLocalVariables " << t.str << " " << t.var.value << " " << t.var.concept << endl;
     }
 }
 
 bool Statement::isSimpleVerb() {
-    static string verbs[] = {"q", "is", "is_all", "is_not", "has"};
+    static string verbs[] = {"q", "is", "is_all", "is_not", "has", "has_not"};
     for (string v : verbs) if (v == verb) return true;
     return false;
 }
@@ -132,7 +145,7 @@ bool Statement::match(Statement s) {
         auto tS = s.terms[i];
         auto tR = terms[i];
         if (!tS.valid() || !tR.valid()) return false;
-        if (!(tS == tR)) return false;
+        if (tS.path.nodes.size() != tR.path.nodes.size()) return false;
     }
     return true;
 }
@@ -171,11 +184,16 @@ bool Term::operator==(Term& other) {
 }
 
 void VRReasoner::pushQuery(Statement& statement, Context& context) {
+    cout << pre << "     search rule for " << statement.toString() << endl;
     for ( auto r : context.onto->getRules()) { // no match found -> check rules and initiate new queries
         Query query(r->rule);
         if (query.request.verb != statement.verb) continue;
         query.request.updateLocalVariables(context.vars, context.onto);
-        if (statement.match(query.request)) context.queries.push_back(query);
+        cout << pre << "      rule " << query.request.toString() << endl;
+        if (!statement.match(query.request)) continue;
+        context.queries.push_back(query);
+        cout << pre << "      add query " << query.toString() << endl;
+        return;
     }
 }
 
@@ -254,11 +272,6 @@ bool VRReasoner::evaluate(Statement& statement, Context& context) {
     if (statement.verb == "has") return has(statement,context);
     if (statement.verb == "has_not") return !has(statement,context); // TODO, is wrong
     return false;
-}
-
-Context::Context() { ; }
-Context::Context(VROntology* onto) {
-    this->onto = onto;
 }
 
     // TODO: introduce requirements rules for the existence of some individuals
