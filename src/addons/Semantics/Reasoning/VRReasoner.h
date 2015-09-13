@@ -12,9 +12,9 @@ using namespace std;
 #include "VROntology.h"
 
 struct Path {
+    string first;
     string root;
-    string var;
-    vector<string> path;
+    vector<string> nodes;
 
     Path(string p);
     string toString();
@@ -46,16 +46,25 @@ struct VRContext {
     VROntology* onto = 0;
 
     int itr=0;
-    int itr_max = 20;
+    int itr_max = 10;
 
     VRContext(VROntology* onto);
     VRContext();
 };
 
+struct Term {
+    Path path;
+    Variable var;
+    string str;
+
+    Term(string s);
+    bool valid();
+    bool operator==(Term& other);
+};
+
 struct Statement {
     string verb;
-    vector<Path> paths;
-    vector<Variable> lvars;
+    vector<Term> terms;
     int state = 0;
 
     Statement();
@@ -72,7 +81,7 @@ struct Statement {
 };
 
 struct Query {
-    Statement query;
+    Statement request;
     vector<Statement> statements;
 
     Query(string q);
@@ -91,6 +100,8 @@ class VRReasoner {
         VRReasoner();
 
         bool evaluate(Statement& s, VRContext& c, list<Query>& queries);
+        bool is(Statement& s, VRContext& c, list<Query>& queries);
+        bool has(Statement& s, VRContext& c, list<Query>& queries);
 
     public:
         static VRReasoner* get();
