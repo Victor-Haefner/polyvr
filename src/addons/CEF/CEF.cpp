@@ -71,7 +71,7 @@ void CEF::setMaterial(VRMaterial* mat) { if (mat == 0) return; this->mat = mat; 
 void CEF::update() { if (init) CefDoMessageLoopWork(); }
 CefRefPtr<CefRenderHandler> CEF::GetRenderHandler() { return this; }
 string CEF::getSite() { return site; }
-void CEF::reload() { open(site); }
+void CEF::reload() { browser->Reload(); }
 
 void CEF::open(string site) {
     if (!init) initiate();

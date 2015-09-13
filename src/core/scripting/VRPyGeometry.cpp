@@ -97,7 +97,10 @@ int getListDepth(PyObject* o) {
     string tname;
 	tname = o->ob_type->tp_name;
 	if (tname == "list") if (PyList_Size(o) > 0) return getListDepth(PyList_GetItem(o, 0))+1;
-	if (tname == "numpy.ndarray") return 2;
+	if (tname == "numpy.ndarray") {
+        PyArrayObject* a = (PyArrayObject*)o;
+        return PyArray_NDIM(a);
+	}
 	return 0;
 }
 
@@ -152,6 +155,18 @@ void feed2D_v2(PyObject* o, T& vec) {
 }
 
 template<class T>
+void feed1Dnp(PyObject* o, T& vec) {
+    PyArrayObject* a = (PyArrayObject*)o;
+    int N = PyArray_DIMS(a)[0];
+    vec->resize(N);
+
+    for (Py_ssize_t i=0; i<N; i++) {
+        int* j = (int*)PyArray_GETPTR1(a, i);
+        vec->addValue(*j);
+    }
+}
+
+template<class T>
 void feed1D(PyObject* o, T& vec) {
     PyObject *pi;
     Py_ssize_t N = PyList_Size(o);
@@ -160,6 +175,35 @@ void feed1D(PyObject* o, T& vec) {
         pi = PyList_GetItem(o, i);
         int j = PyInt_AsLong(pi);
         vec->addValue(j);
+    }
+}
+
+template<class T, class t>
+void feed1D3np(PyObject* o, T& vec) {
+    PyArrayObject* a = (PyArrayObject*)o;
+    int N = PyArray_DIMS(a)[0];
+    for (Py_ssize_t i=0; i<N; i+=3) {
+        t tmp;
+        float* x = (float*)PyArray_GETPTR1(a, i+0);
+        float* y = (float*)PyArray_GETPTR1(a, i+1);
+        float* z = (float*)PyArray_GETPTR1(a, i+2);
+        tmp[0] = *x;
+        tmp[1] = *y;
+        tmp[2] = *z;
+        vec->addValue(tmp);
+    }
+}
+
+template<class T, class t>
+void feed1D3(PyObject* o, T& vec) {
+    Py_ssize_t N = PyList_Size(o);
+
+    for (Py_ssize_t i=0; i<N; i+=3) {
+        t tmp;
+        tmp[0] = PyFloat_AsDouble( PyList_GetItem(o, i+0) );
+        tmp[1] = PyFloat_AsDouble( PyList_GetItem(o, i+1) );
+        tmp[2] = PyFloat_AsDouble( PyList_GetItem(o, i+2) );
+        vec->addValue(tmp);
     }
 }
 
@@ -281,8 +325,12 @@ PyObject* VRPyGeometry::setPositions(VRPyGeometry* self, PyObject *args) {
 	OSG::GeoPnt3fPropertyRecPtr pos = OSG::GeoPnt3fProperty::create();
 
     int ld = getListDepth(vec);
-    if (ld == 2) {
-        string tname = vec->ob_type->tp_name;
+    string tname = vec->ob_type->tp_name;
+
+    if (ld == 1) {
+        if (tname == "numpy.ndarray") feed1D3np<OSG::GeoPnt3fPropertyRecPtr, OSG::Pnt3f>(vec, pos);
+        else feed1D3<OSG::GeoPnt3fPropertyRecPtr, OSG::Pnt3f>(vec, pos);
+    } else if (ld == 2) {
         if (tname == "numpy.ndarray") feed2Dnp<OSG::GeoPnt3fPropertyRecPtr, OSG::Pnt3f>(vec, pos);
         else feed2D<OSG::GeoPnt3fPropertyRecPtr, OSG::Pnt3f>(vec, pos);
     } else if (ld == 3) {
@@ -309,8 +357,19 @@ PyObject* VRPyGeometry::setNormals(VRPyGeometry* self, PyObject *args) {
 
     OSG::GeoVec3fPropertyRecPtr norms = OSG::GeoVec3fProperty::create();
     string tname = vec->ob_type->tp_name;
-    if (tname == "numpy.ndarray") feed2Dnp<OSG::GeoVec3fPropertyRecPtr, OSG::Vec3f>( vec, norms);
-    else feed2D<OSG::GeoVec3fPropertyRecPtr, OSG::Vec3f>( vec, norms);
+    int ld = getListDepth(vec);
+
+    if (ld == 1) {
+        if (tname == "numpy.ndarray") feed1D3np<OSG::GeoVec3fPropertyRecPtr, OSG::Vec3f>( vec, norms);
+        else feed1D3<OSG::GeoVec3fPropertyRecPtr, OSG::Vec3f>( vec, norms);
+    } else if (ld == 2) {
+        if (tname == "numpy.ndarray") feed2Dnp<OSG::GeoVec3fPropertyRecPtr, OSG::Vec3f>( vec, norms);
+        else feed2D<OSG::GeoVec3fPropertyRecPtr, OSG::Vec3f>( vec, norms);
+    } else {
+        string e = "VRPyGeometry::setNormals - bad argument, ld is " + toString(ld);
+        PyErr_SetString(err, e.c_str());
+        return NULL;
+    }
 
     self->obj->setNormals(norms);
     Py_RETURN_TRUE;
@@ -350,12 +409,17 @@ PyObject* VRPyGeometry::setIndices(VRPyGeometry* self, PyObject *args) {
     if (self->obj == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
 
     OSG::GeoUInt32PropertyRecPtr inds = OSG::GeoUInt32Property::create();
+    string tname = vec->ob_type->tp_name;
 
     int ld = getListDepth(vec);
+    cout << "setIndices ld: " << ld << endl;
     if (ld == 1) {
-        feed1D<OSG::GeoUInt32PropertyRecPtr>( vec, inds );
+        cout << "setIndices ld=1\n";
+        if (tname == "numpy.ndarray") feed1Dnp<OSG::GeoUInt32PropertyRecPtr>( vec, inds);
+        else feed1D<OSG::GeoUInt32PropertyRecPtr>( vec, inds );
         self->obj->setIndices(inds);
     } else if (ld == 2) {
+        cout << "setIndices ld=2\n";
         OSG::GeoUInt32PropertyRecPtr lengths = OSG::GeoUInt32Property::create();
         for(Py_ssize_t i = 0; i < PyList_Size(vec); i++) {
             PyObject* vecList = PyList_GetItem(vec, i);
