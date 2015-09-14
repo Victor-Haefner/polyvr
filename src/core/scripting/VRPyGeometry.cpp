@@ -162,7 +162,7 @@ void feed1Dnp(PyObject* o, T& vec) {
 
     for (Py_ssize_t i=0; i<N; i++) {
         int* j = (int*)PyArray_GETPTR1(a, i);
-        vec->addValue(*j);
+        vec->setValue(*j, i);
     }
 }
 
