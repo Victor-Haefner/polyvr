@@ -62,7 +62,7 @@ struct Statement {
     string toString();
     void updateLocalVariables(map<string, Variable>& globals, VROntology* onto);
     bool isSimpleVerb();
-    bool match(Statement s);
+    bool match(Statement& s);
 };
 
 struct Query {

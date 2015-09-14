@@ -6,6 +6,7 @@
 #include "include/cef_render_handler.h"
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGImage.h>
+#include <memory>
 
 using namespace std;
 
@@ -37,9 +38,10 @@ class CEF : public CefClient, public CefRenderHandler {
 
         IMPLEMENT_REFCOUNTING(CEF);
 
-    public:
         CEF();
+    public:
         ~CEF();
+        static shared_ptr<CEF> create();
 
         void setResolution(float a);
         void setAspectRatio(float a);
@@ -55,5 +57,7 @@ class CEF : public CefClient, public CefRenderHandler {
 
         static void reloadScripts(string path);
 };
+
+typedef shared_ptr<CEF> CEFPtr;
 
 #endif // CAVEKEEPER_H_INCLUDED

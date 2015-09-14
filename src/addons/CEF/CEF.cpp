@@ -32,6 +32,8 @@ CEF::~CEF() {
     instances.erase( remove(instances.begin(), instances.end(), this), instances.end() );
 }
 
+CEFPtr CEF::create() { return CEFPtr(new CEF()); }
+
 void CEF::initiate() {
     init = true;
     cout << "CEF init " << endl;

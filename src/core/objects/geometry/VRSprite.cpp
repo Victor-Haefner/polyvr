@@ -42,17 +42,17 @@ void VRSprite::webOpen(string path, int res, float ratio){
     VRMaterial* mat = VRMaterial::get(getName()+"web");
     setMaterial(mat);
     mat->setLit(false);
-    CEF* w = new CEF();
+    web = CEF::create();
 
     VRDevice* mouse = VRSetupManager::getCurrent()->getDevice("mouse");
     VRDevice* keyboard = VRSetupManager::getCurrent()->getDevice("keyboard");
 
-    w->setMaterial(mat);
-    w->open(path);
-    w->addMouse(mouse, this, 0, 2, 3, 4);
-    w->addKeyboard(keyboard);
-    w->setResolution(res);
-    w->setAspectRatio(ratio);
+    web->setMaterial(mat);
+    web->open(path);
+    web->addMouse(mouse, this, 0, 2, 3, 4);
+    web->addKeyboard(keyboard);
+    web->setResolution(res);
+    web->setAspectRatio(ratio);
 }
 
 void VRSprite::setTexture(string path){

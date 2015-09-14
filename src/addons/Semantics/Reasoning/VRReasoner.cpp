@@ -140,16 +140,21 @@ bool Statement::isSimpleVerb() {
     return false;
 }
 
-bool Statement::match(Statement s) {
+bool Statement::match(Statement& s) {
     for (uint i=0; i<terms.size(); i++) {
         auto tS = s.terms[i];
         auto tR = terms[i];
         if (!tS.valid() || !tR.valid()) return false;
         if (tS.path.nodes.size() != tR.path.nodes.size()) return false;
+
+        cout << "match " << tR.var.value << " " << tS.var.value << endl;
+        cout << "match " << tR.var.concept << " " << tS.var.concept << endl;
+        if (tR.var.concept != tS.var.concept) return false;
     }
     return true;
 }
 
+// TODO: parse concept statements here
 Query::Query(string q) {
     vector<string> parts = VRReasoner::split(q, ':');
     request = Statement(parts[0]);
@@ -184,13 +189,18 @@ bool Term::operator==(Term& other) {
 }
 
 void VRReasoner::pushQuery(Statement& statement, Context& context) {
+
     cout << pre << "     search rule for " << statement.toString() << endl;
     for ( auto r : context.onto->getRules()) { // no match found -> check rules and initiate new queries
         Query query(r->rule);
-        if (query.request.verb != statement.verb) continue;
-        query.request.updateLocalVariables(context.vars, context.onto);
+        if (query.request.verb != statement.verb) continue; // rule verb does not match
         cout << pre << "      rule " << query.request.toString() << endl;
-        if (!statement.match(query.request)) continue;
+
+        query.request.updateLocalVariables(context.vars, context.onto);
+        if (!statement.match(query.request)) continue; // statements are not similar enough
+
+
+
         context.queries.push_back(query);
         cout << pre << "      add query " << query.toString() << endl;
         return;

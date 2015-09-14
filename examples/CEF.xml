@@ -11,7 +11,7 @@
       </Object>
     </Object>
   </Objects>
-  <Rendering frustum_culling="1" occlusion_culling="0" two_sided="1"/>
+  <Rendering deferred_rendering="0" frustum_culling="1" occlusion_culling="0" ssao="0" two_sided="1"/>
   <Scripts>
     <Script name_suffix="0" base_name="controls" name_space="__script__" type="Python" mobile="">
       <core>
@@ -62,6 +62,7 @@
 	cef.addMouse(mouse, geo2, 0, 2, 3, 4)
 	cef.addKeyboard(keyboard)
 	cef.setAspectRatio(2)
+	VR.web2 = cef
 </core>
       <arg type="VRPyGeometryType" value="Cylinder" name_suffix="0" base_name="geo" name_space="init"/>
       <arg type="VRPyGeometryType" value="Cylinder2" name_suffix="0" base_name="geo2" name_space="init"/>
@@ -126,7 +127,7 @@
     </Script>
   </Scripts>
   <Sockets/>
-  <Background color="0.6 0.6 0.6" path="" type="0"/>
+  <Background color="0.6 0.6 0.6" format=".png" path="" type="0"/>
   <Navigation active="Orbit"/>
   <Materials/>
 </Scene>

@@ -4,6 +4,13 @@ template<class T> PyTypeObject* VRPyBaseT<T>::typeRef = &VRPyBaseT<T>::type;
 template<class T> VRPyBaseT<T>::VRPyBaseT() {;}
 
 template <typename T>
+bool VRPyBaseT<T>::valid() {
+    if (obj != 0 || objPtr != 0) return true;
+    PyErr_SetString(err, "Py object is invalid!");
+    return false;
+}
+
+template <typename T>
 bool VRPyBaseT<T>::check(PyObject* o) { return typeRef == o->ob_type; }
 
 template <typename T>
@@ -86,7 +93,18 @@ PyObject* VRPyBaseT<T>::alloc(PyTypeObject* type, T* t) {
     return (PyObject *)self;
 }
 
+template<class T>
+PyObject* VRPyBaseT<T>::allocPtr(PyTypeObject* type, std::shared_ptr<T> t) {
+    VRPyBaseT<T>* self = (VRPyBaseT<T> *)type->tp_alloc(type, 0);
+    if (self != NULL) {
+        self->owner = true;
+        self->objPtr = t;
+    }
+    return (PyObject *)self;
+}
+
 template<class T> PyObject* VRPyBaseT<T>::New(PyTypeObject *type, PyObject *args, PyObject *kwds) { return alloc( type, new T() ); }
+template<class T> PyObject* VRPyBaseT<T>::New_ptr(PyTypeObject *type, PyObject *args, PyObject *kwds) { return allocPtr( type, T::create() ); }
 template<class T> PyObject* VRPyBaseT<T>::New_named(PyTypeObject *type, PyObject *args, PyObject *kwds) { return alloc( type, new T( parseString(args) ) ); }
 template<class T> PyObject* VRPyBaseT<T>::New_toZero(PyTypeObject *type, PyObject *args, PyObject *kwds) { return alloc( type, 0 ); }
 

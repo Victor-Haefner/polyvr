@@ -44,7 +44,7 @@ template<> PyTypeObject VRPyBaseT<CEF>::type = {
     0,                         /* tp_dictoffset */
     (initproc)init,      /* tp_init */
     0,                         /* tp_alloc */
-    New,                 /* tp_new */
+    New_ptr,                 /* tp_new */
 };
 
 PyMethodDef VRPyCEF::methods[] = {
@@ -58,47 +58,47 @@ PyMethodDef VRPyCEF::methods[] = {
 };
 
 PyObject* VRPyCEF::setResolution(VRPyCEF* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyCEF::setResolution, obj is invalid"); return NULL; }
-    self->obj->setResolution(parseFloat(args));
+    if (!self->valid()) return NULL;
+    self->objPtr->setResolution(parseFloat(args));
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyCEF::setAspectRatio(VRPyCEF* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyCEF::setAspectRatio, obj is invalid"); return NULL; }
-    self->obj->setAspectRatio(parseFloat(args));
+    if (!self->valid()) return NULL;
+    self->objPtr->setAspectRatio(parseFloat(args));
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyCEF::open(VRPyCEF* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyCEF::open, obj is invalid"); return NULL; }
-    self->obj->open(parseString(args));
+    if (!self->valid()) return NULL;
+    self->objPtr->open(parseString(args));
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyCEF::setMaterial(VRPyCEF* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyCEF::setMaterial, obj is invalid"); return NULL; }
+    if (!self->valid()) return NULL;
     VRPyMaterial* mat;
     if (! PyArg_ParseTuple(args, "O", &mat)) return NULL;
     if ((PyObject*)mat == Py_None) { PyErr_SetString(err, "VRPyCEF::setMaterial, material is invalid"); return NULL; }
-    self->obj->setMaterial(mat->obj);
+    self->objPtr->setMaterial(mat->obj);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyCEF::addMouse(VRPyCEF* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyCEF::addMouse, obj is invalid"); return NULL; }
+    if (!self->valid()) return NULL;
     VRPyDevice* dev; VRPyObject* surf; int b1,b2,b3,b4;
     if (! PyArg_ParseTuple(args, "OOiiii", &dev, &surf, &b1, &b2, &b3, &b4)) return NULL;
     if ((PyObject*)dev == Py_None) { Py_RETURN_TRUE; }
     if ((PyObject*)surf == Py_None) { PyErr_SetString(err, "VRPyCEF::addMouse, surface is invalid"); return NULL; }
-    self->obj->addMouse(dev->obj, surf->obj, b1, b2, b3, b4);
+    self->objPtr->addMouse(dev->obj, surf->obj, b1, b2, b3, b4);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyCEF::addKeyboard(VRPyCEF* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyCEF::addKeyboard, obj is invalid"); return NULL; }
+    if (!self->valid()) return NULL;
     VRPyDevice* dev;
     if (! PyArg_ParseTuple(args, "O", &dev)) return NULL;
     if ((PyObject*)dev == Py_None) { PyErr_SetString(err, "VRPyCEF::addKeyboard, keyboard is invalid"); return NULL; }
-    self->obj->addKeyboard(dev->obj);
+    self->objPtr->addKeyboard(dev->obj);
     Py_RETURN_TRUE;
 }
