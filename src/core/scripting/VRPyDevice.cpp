@@ -71,6 +71,7 @@ PyMethodDef VRPyDevice::methods[] = {
     {"getIntersection", (PyCFunction)VRPyDevice::getIntersection, METH_NOARGS, "Get device intersection point." },
     {"getIntersectionNormal", (PyCFunction)VRPyDevice::getIntersectionNormal, METH_NOARGS, "Get normal at intersection point." },
     {"getIntersectionUV", (PyCFunction)VRPyDevice::getIntersectionUV, METH_NOARGS, "Get uv at intersection point." },
+    {"getIntersectionTriangle", (PyCFunction)VRPyDevice::getIntersectionTriangle, METH_NOARGS, "Get triangle at intersection point - i,j,k dev.getIntersectionTriangle()" },
     {"addIntersection", (PyCFunction)VRPyDevice::addIntersection, METH_VARARGS, "Add device intersection node." },
     {"remIntersection", (PyCFunction)VRPyDevice::remIntersection, METH_VARARGS, "Remove device intersection node." },
     {"getDragged", (PyCFunction)VRPyDevice::getDragged, METH_NOARGS, "Get dragged object." },
@@ -206,6 +207,12 @@ PyObject* VRPyDevice::getIntersection(VRPyDevice* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getIntersection, Object is invalid"); return NULL; }
     OSG::Pnt3f v = self->obj->getLastIntersection().point;
     return toPyTuple( OSG::Vec3f(v) );
+}
+
+PyObject* VRPyDevice::getIntersectionTriangle(VRPyDevice* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getIntersectionTriangle, Object is invalid"); return NULL; }
+    OSG::Vec3i v = self->obj->getLastIntersection().triangleVertices;
+    return toPyTuple(v);
 }
 
 PyObject* VRPyDevice::getIntersectionNormal(VRPyDevice* self) {

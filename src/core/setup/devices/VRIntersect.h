@@ -28,6 +28,7 @@ struct VRIntersection {
     Vec3f normal;
     Vec2f texel;
     int triangle;
+    Vec3i triangleVertices;
 };
 
 class VRIntersect {

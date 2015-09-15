@@ -44,6 +44,16 @@ Vec2f VRIntersect_computeTexel(VRIntersection& ins, NodeRecPtr node) {
     return iter.getTexCoords(0) * a + iter.getTexCoords(1) * b + iter.getTexCoords(2) * c;
 }
 
+Vec3i VRIntersect_computeVertices(VRIntersection& ins, NodeRecPtr node) {
+    if (!ins.hit) return Vec3i(0,0,0);
+    if (node == 0) return Vec3i(0,0,0);
+
+    GeometryRefPtr geo = dynamic_cast<Geometry*>( node->getCore() );
+    if (geo == 0) return Vec3i(0,0,0);
+    TriangleIterator iter = geo->beginTriangles(); iter.seek( ins.triangle );
+    return Vec3i(iter.getPositionIndex(0), iter.getPositionIndex(1), iter.getPositionIndex(2));
+}
+
 class VRIntersectAction : public IntersectAction {
     private:
         /*Action::ResultE GeoInstancer::intersectEnter(Action  *action) {
@@ -76,6 +86,7 @@ VRIntersection VRIntersect::intersect(VRObject* tree, Line ray) {
         if (tree->getParent()) tree->getParent()->getNode()->getToWorld().mult( ins.point, ins.point );
         if (tree->getParent()) tree->getParent()->getNode()->getToWorld().mult( ins.normal, ins.normal );
         ins.triangle = iAct.getHitTriangle();
+        ins.triangleVertices = VRIntersect_computeVertices(ins, iAct.getHitObject());
         ins.texel = VRIntersect_computeTexel(ins, iAct.getHitObject());
         lastIntersection = ins;
     } else {

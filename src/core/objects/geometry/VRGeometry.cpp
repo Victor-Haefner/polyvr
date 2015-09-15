@@ -174,10 +174,7 @@ void VRGeometry::setTexCoords(GeoVectorProperty* Tex, int i, bool fixMapping) {
     if (i == 5) mesh->setTexCoords5(Tex);
     if (i == 6) mesh->setTexCoords6(Tex);
     if (i == 7) mesh->setTexCoords7(Tex);
-    if (fixMapping) {
-        cout << "FIIIX\n";
-        mesh->setIndex(mesh->getIndex(Geometry::PositionsIndex), Geometry::TexCoordsIndex);
-    }
+    if (fixMapping) mesh->setIndex(mesh->getIndex(Geometry::PositionsIndex), Geometry::TexCoordsIndex);
 }
 
 void VRGeometry::setPositionalTexCoords(float scale) {
