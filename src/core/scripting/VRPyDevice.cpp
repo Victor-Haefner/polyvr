@@ -77,8 +77,8 @@ PyMethodDef VRPyDevice::methods[] = {
     {"getDragGhost", (PyCFunction)VRPyDevice::getDragGhost, METH_NOARGS, "Get drag ghost." },
     {"drag", (PyCFunction)VRPyDevice::drag, METH_VARARGS, "Start to drag an object - drag(obj)" },
     {"drop", (PyCFunction)VRPyDevice::drop, METH_NOARGS, "Drop any object - drop()" },
-    {"setSpeed", (PyCFunction)VRPyDevice::setSpeed, METH_VARARGS, "Drop any object - drop()" },
-    {"getSpeed", (PyCFunction)VRPyDevice::getSpeed, METH_NOARGS, "Drop any object - drop()" },
+    {"setSpeed", (PyCFunction)VRPyDevice::setSpeed, METH_VARARGS, "Set the navigation speed of the device - setSpeed(float)" },
+    {"getSpeed", (PyCFunction)VRPyDevice::getSpeed, METH_NOARGS, "Get the navigation speed of the device - float getSpeed()" },
     {NULL}  /* Sentinel */
 };
 

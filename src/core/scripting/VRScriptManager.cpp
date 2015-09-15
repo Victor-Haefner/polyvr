@@ -219,7 +219,7 @@ initVRPyStdOut(void) {
 
 static PyMethodDef VRScriptManager_module_methods[] = {
 	{"exit", (PyCFunction)VRScriptManager::exit, METH_NOARGS, "Terminate application" },
-	{"loadGeometry", (PyCFunction)VRScriptManager::loadGeometry, METH_VARARGS, "Loads a collada file and returns a VR.Object node - obj loadGeometry('myPath', bool ignore_cache)" },
+	{"loadGeometry", (PyCFunction)VRScriptManager::loadGeometry, METH_VARARGS|METH_KEYWORDS, "Loads a file and returns a VR.Object - obj loadGeometry(str path, bool cached, str preset, str parent)" },
 	{"stackCall", (PyCFunction)VRScriptManager::stackCall, METH_VARARGS, "Schedules a call to a python function - stackCall( function, delay, [args] )" },
 	{"openFileDialog", (PyCFunction)VRScriptManager::openFileDialog, METH_VARARGS, "Open a file dialog - openFileDialog( onLoad, mode, title, default_path, filter )\n mode : {Save, Load, New, Create}" },
 	{"updateGui", (PyCFunction)VRScriptManager::updateGui, METH_NOARGS, "Update the gui" },
@@ -460,23 +460,21 @@ PyObject* VRScriptManager::getRoot(VRScriptManager* self) {
     return VRPyTypeCaster::cast( VRSceneManager::getCurrent()->getRoot() );
 }
 
-PyObject* VRScriptManager::loadGeometry(VRScriptManager* self, PyObject *args) {
-    PyObject* path = 0;
-    PyObject *preset = 0;
+PyObject* VRScriptManager::loadGeometry(VRScriptManager* self, PyObject *args, PyObject *kwargs) {
+    const char* path = "";
     int ignoreCache = 0;
+    const char* preset = "OSG";
+    const char* parent = "";
 
-    if (pySize(args) == 1) if (! PyArg_ParseTuple(args, "O", &path)) return NULL;
-    if (pySize(args) == 2) if (! PyArg_ParseTuple(args, "Oi", &path, &ignoreCache)) return NULL;
-    if (pySize(args) == 3) if (! PyArg_ParseTuple(args, "OiO", &path, &ignoreCache, &preset)) return NULL;
-    if (pySize(args) < 1 || pySize(args) > 3) { PyErr_SetString(err, "VRScriptManager::loadGeometry: wrong number of arguments"); return NULL; }
+    const char* kwlist[] = {"path", "cached", "preset", "parent", NULL};
+    string format = "s|iss:loadGeometry";
+    if (! PyArg_ParseTupleAndKeywords(args, kwargs, format.c_str(), (char**)kwlist, &path, &ignoreCache, &preset, &parent)) return NULL;
 
-    string p = PyString_AsString(path);
-    string pre = "OSG";
-    if (preset) pre = PyString_AsString(preset);
+    VRObject* prnt = VRSceneManager::getCurrent()->getRoot()->find( parent );
 
-    VRTransform* obj = VRImport::get()->load( p, 0, ignoreCache, pre);
+    VRTransform* obj = VRImport::get()->load( path, prnt, ignoreCache, preset);
     if (obj == 0) {
-        VRGuiManager::get()->printInfo("Warning: " + p + " not found.\n");
+        VRGuiManager::get()->printInfo("Warning: " + string(path) + " not found.\n");
         Py_RETURN_NONE;
     }
     obj->setPersistency(0);
