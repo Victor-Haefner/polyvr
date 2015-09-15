@@ -70,7 +70,7 @@ struct VRPyBase {
 template<class T>
 struct VRPyBaseT : public VRPyBase {
     T* obj = 0;
-    shared_ptr<T> objPtr = 0;
+    std::shared_ptr<T> objPtr = 0;
     bool owner = true;
     static PyTypeObject type;
     static PyTypeObject* typeRef;
@@ -82,6 +82,7 @@ struct VRPyBaseT : public VRPyBase {
     static bool check(PyObject* o);
 
     static PyObject* fromPtr(T* obj);
+    static PyObject* fromSharedPtr(std::shared_ptr<T> obj);
     static bool      parse(PyObject *args, T** obj);
     static PyObject* New(PyTypeObject *type, PyObject *args, PyObject *kwds);
     static PyObject* New_ptr(PyTypeObject *type, PyObject *args, PyObject *kwds);
@@ -92,7 +93,7 @@ struct VRPyBaseT : public VRPyBase {
     static PyObject* New_VRObjects_optional(PyTypeObject *type, PyObject *args, PyObject *kwds);
 
     static PyObject* alloc(PyTypeObject* type, T* t);
-    static PyObject* allocPtr(PyTypeObject* type, shared_ptr<T> t);
+    static PyObject* allocPtr(PyTypeObject* type, std::shared_ptr<T> t);
     static void dealloc(VRPyBaseT<T>* self);
     static int init(VRPyBaseT<T> *self, PyObject *args, PyObject *kwds);
     static void registerModule(string name, PyObject* mod, PyTypeObject* tp_base = 0);
