@@ -116,12 +116,15 @@ void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScript* script, bool on
         if (trig.second->trigger == "on_device_drop") trig_lvl |= 64;
     }
 
+    if (script->getType() == "HTML") trig_lvl |= 128;
+
     if (trig_lvl >= 1) bg = "#AAFF88";
     if (trig_lvl >= 4) bg = "#FF8866";
     if (trig_lvl >= 8) bg = "#FFBB33";
     if (trig_lvl >= 16) bg = "#3388FF";
     if (trig_lvl >= 32) bg = "#FFCCAA";
     if (trig_lvl >= 64) bg = "#FFCC88";
+    if (trig_lvl >= 128) bg = "#AACCFF";
 
     string time = " ";
     float exec_time = script->getExecutionTime();
