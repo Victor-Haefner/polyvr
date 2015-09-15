@@ -65,7 +65,7 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"setNormals", (PyCFunction)VRPyGeometry::setNormals, METH_VARARGS, "set geometry normals - setNormals([[x,y,z], ...])" },
     {"setColors", (PyCFunction)VRPyGeometry::setColors, METH_VARARGS, "set geometry colors - setColors([[x,y,z], ...])" },
     {"setIndices", (PyCFunction)VRPyGeometry::setIndices, METH_VARARGS, "set geometry indices - setIndices(int[])" },
-    {"setTexCoords", (PyCFunction)VRPyGeometry::setTexCoords, METH_VARARGS, "set geometry texture coordinates - setTexCoords(tc[])" },
+    {"setTexCoords", (PyCFunction)VRPyGeometry::setTexCoords, METH_VARARGS, "set geometry texture coordinates - setTexCoords( [[x,y]], int channel = 0, bool fixMapping = false)" },
     {"setTexture", (PyCFunction)VRPyGeometry::setTexture, METH_VARARGS, "set texture from file - setTexture(path)" },
     {"setMaterial", (PyCFunction)VRPyGeometry::setMaterial, METH_VARARGS, "set material" },
     {"getPositions", (PyCFunction)VRPyGeometry::getPositions, METH_NOARGS, "get geometry positions" },
@@ -86,6 +86,7 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"influence", (PyCFunction)VRPyGeometry::influence, METH_VARARGS, "Pass a points and value vector to influence the geometry - influence([points,f3], [values,f3], int power)" },
     {"showGeometricData", (PyCFunction)VRPyGeometry::showGeometricData, METH_VARARGS, "Enable or disable a data layer - showGeometricData(string type, bool)\n layers are: ['Normals']" },
     {"calcSurfaceArea", (PyCFunction)VRPyGeometry::calcSurfaceArea, METH_NOARGS, "Compute and return the total surface area - flt calcSurfaceArea()" },
+    {"setPositionalTexCoords", (PyCFunction)VRPyGeometry::setPositionalTexCoords, METH_VARARGS, "Use the positions as texture coordinates - setPositionalTexCoords(float scale)" },
     {NULL}  /* Sentinel */
 };
 
@@ -205,6 +206,12 @@ void feed1D3(PyObject* o, T& vec) {
         tmp[2] = PyFloat_AsDouble( PyList_GetItem(o, i+2) );
         vec->addValue(tmp);
     }
+}
+
+PyObject* VRPyGeometry::setPositionalTexCoords(VRPyGeometry* self, PyObject *args) {
+    if (!self->valid()) return NULL;
+    self->obj->setPositionalTexCoords( parseFloat(args) );
+    Py_RETURN_TRUE;
 }
 
 PyObject* VRPyGeometry::calcSurfaceArea(VRPyGeometry* self) {
@@ -436,7 +443,9 @@ PyObject* VRPyGeometry::setIndices(VRPyGeometry* self, PyObject *args) {
 
 PyObject* VRPyGeometry::setTexCoords(VRPyGeometry* self, PyObject *args) {
     PyObject* vec;
-    if (! PyArg_ParseTuple(args, "O", &vec)) return NULL;
+    int channel = 0;
+    int doIndexFix = false;
+    if (! PyArg_ParseTuple(args, "O|ii", &vec, &channel, &doIndexFix)) return NULL;
     if (self->obj == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
 
     if (pySize(vec) == 0) Py_RETURN_TRUE;
@@ -445,13 +454,13 @@ PyObject* VRPyGeometry::setTexCoords(VRPyGeometry* self, PyObject *args) {
     if (vN == 2) {
         OSG::GeoVec2fPropertyRecPtr tc = OSG::GeoVec2fProperty::create();
         feed2D<OSG::GeoVec2fPropertyRecPtr, OSG::Vec2f>(vec, tc);
-        self->obj->setTexCoords(tc);
+        self->obj->setTexCoords(tc, channel, doIndexFix);
     }
 
     if (vN == 3) {
         OSG::GeoVec3fPropertyRecPtr tc = OSG::GeoVec3fProperty::create();
         feed2D<OSG::GeoVec3fPropertyRecPtr, OSG::Vec3f>(vec, tc);
-        self->obj->setTexCoords(tc);
+        self->obj->setTexCoords(tc, channel, doIndexFix);
     }
 
     Py_RETURN_TRUE;

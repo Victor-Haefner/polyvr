@@ -164,7 +164,7 @@ void VRGeometry::setTypes(GeoIntegralProperty* types) { if (!meshSet) setMesh(Ge
 void VRGeometry::setNormals(GeoVectorProperty* Norms) { if (!meshSet) setMesh(Geometry::create()); mesh->setNormals(Norms); }
 void VRGeometry::setColors(GeoVectorProperty* Colors, bool fixMapping) { if (!meshSet) setMesh(Geometry::create()); mesh->setColors(Colors); if (fixMapping) fixColorMapping(); }
 void VRGeometry::setLengths(GeoIntegralProperty* lengths) { if (!meshSet) setMesh(Geometry::create()); mesh->setLengths(lengths); }
-void VRGeometry::setTexCoords(GeoVectorProperty* Tex, int i) {
+void VRGeometry::setTexCoords(GeoVectorProperty* Tex, int i, bool fixMapping) {
     if (!meshSet) setMesh(Geometry::create());
     if (i == 0) mesh->setTexCoords(Tex);
     if (i == 1) mesh->setTexCoords1(Tex);
@@ -174,6 +174,31 @@ void VRGeometry::setTexCoords(GeoVectorProperty* Tex, int i) {
     if (i == 5) mesh->setTexCoords5(Tex);
     if (i == 6) mesh->setTexCoords6(Tex);
     if (i == 7) mesh->setTexCoords7(Tex);
+    if (fixMapping) {
+        cout << "FIX TEX MAPPING\n";
+        mesh->setIndex(mesh->getIndex(Geometry::PositionsIndex), Geometry::TexCoordsIndex);
+        /*mesh->setIndex(mesh->getIndex(Geometry::PositionsIndex), Geometry::TexCoordsIndex1);
+        mesh->setIndex(mesh->getIndex(Geometry::PositionsIndex), Geometry::TexCoordsIndex2);
+        mesh->setIndex(mesh->getIndex(Geometry::PositionsIndex), Geometry::TexCoordsIndex3);
+        mesh->setIndex(mesh->getIndex(Geometry::PositionsIndex), Geometry::TexCoordsIndex4);
+        mesh->setIndex(mesh->getIndex(Geometry::PositionsIndex), Geometry::TexCoordsIndex5);
+        mesh->setIndex(mesh->getIndex(Geometry::PositionsIndex), Geometry::TexCoordsIndex6);
+        mesh->setIndex(mesh->getIndex(Geometry::PositionsIndex), Geometry::TexCoordsIndex7);*/
+    }
+}
+
+void VRGeometry::setPositionalTexCoords(float scale) {
+    GeoVectorPropertyRefPtr pos = mesh->getPositions();
+    if (scale == 1.0) setTexCoords(pos);
+    else {
+        GeoVec3fPropertyRefPtr tex = GeoVec3fProperty::create();
+        for (int i=0; i<pos->size(); i++) {
+            Pnt3f p = pos->getValue<Pnt3f>(i);
+            p[0] *= scale; p[1] *= scale; p[2] *= scale;
+            tex->addValue(Vec3f(p));
+        }
+        setTexCoords(tex);
+    }
 }
 
 void VRGeometry::setIndices(GeoIntegralProperty* Indices) {
