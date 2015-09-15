@@ -117,6 +117,7 @@ void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScript* script, bool on
     }
 
     if (script->getType() == "HTML") trig_lvl |= 128;
+    if (script->getType() == "GLSL") trig_lvl |= 256;
 
     if (trig_lvl >= 1) bg = "#AAFF88";
     if (trig_lvl >= 4) bg = "#FF8866";
@@ -125,6 +126,7 @@ void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScript* script, bool on
     if (trig_lvl >= 32) bg = "#FFCCAA";
     if (trig_lvl >= 64) bg = "#FFCC88";
     if (trig_lvl >= 128) bg = "#AACCFF";
+    if (trig_lvl >= 256) bg = "#CCAAFF";
 
     string time = " ";
     float exec_time = script->getExecutionTime();
