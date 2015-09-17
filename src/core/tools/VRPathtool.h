@@ -7,6 +7,7 @@
 #include <map>
 
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/utils/VRFunctionFwd.h"
 
 
 using namespace std;
@@ -115,6 +116,7 @@ class VRPathtool {
         map<path*, entry*> paths;
         map<VRGeometry*, entry*> handles_dict;
 
+        VRUpdatePtr updatePtr;
         VRManipulator* manip = 0;
         VRExtruder* ext = 0;
 

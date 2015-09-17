@@ -41,9 +41,12 @@ VRScene::VRScene() {
     cameras_layer = new VRVisualLayer("Cameras", "cameras.png");
     lights_layer = new VRVisualLayer("Lights", "lights.png");
 
-    referentials_layer->setCallback( new VRFunction<bool>("showReferentials", boost::bind(&VRScene::showReferentials, this, _1, (VRObject*)0) ) );
-    cameras_layer->setCallback( new VRFunction<bool>("showCameras", boost::bind(&VRScene::showCameras, this, _1) ) );
-    lights_layer->setCallback( new VRFunction<bool>("showLights", boost::bind(&VRScene::showLights, this, _1) ) );
+    layer_ref_toggle = VRFunction<bool>::create("showReferentials", boost::bind(&VRScene::showReferentials, this, _1, (VRObject*)0) );
+    layer_cam_toggle = VRFunction<bool>::create("showCameras", boost::bind(&VRScene::showCameras, this, _1) );
+    layer_light_toggle = VRFunction<bool>::create("showLights", boost::bind(&VRScene::showLights, this, _1) );
+    referentials_layer->setCallback( layer_ref_toggle );
+    cameras_layer->setCallback( layer_cam_toggle );
+    lights_layer->setCallback( layer_light_toggle );
 
     VRVisualLayer::anchorLayers(root);
 

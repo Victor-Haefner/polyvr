@@ -116,8 +116,8 @@ VRPN::VRPN() {
     //auto update_cb = new VRFunction<VRThread*>("VRPN_update", boost::bind(&VRPN::update_t, this, _1));
     //threadID = VRSceneManager::get()->initThread(update_cb, "VRPN", true);
 
-    auto update_cb = new VRFunction<int>("VRPN_update", boost::bind(&VRPN::update, this));
-    VRSceneManager::get()->addUpdateFkt(update_cb);
+    updatePtr = VRFunction<int>::create("VRPN_update", boost::bind(&VRPN::update, this));
+    VRSceneManager::get()->addUpdateFkt(updatePtr);
 
     vrpn_System_TextPrinter.set_ostream_to_use(NULL);
 
@@ -360,8 +360,6 @@ void vrpn_test_server_main() {
 
 void VRPN::stopVRPNTestServer() {
     if (testServer == 0) return;
-    VRSceneManager::get()->dropUpdateFkt(testServer);
-    delete testServer;
     testServer = 0;
     delete serverButton;
     delete serverAnalog;
@@ -381,7 +379,7 @@ void VRPN::startVRPNTestServer() {
 
     cout << "Created VRPN server." << endl;
 
-    testServer = new VRFunction<int>("VRPN_test_server", boost::bind(vrpn_test_server_main));
+    testServer = VRFunction<int>::create("VRPN_test_server", boost::bind(vrpn_test_server_main));
     VRSceneManager::get()->addUpdateFkt(testServer);
 }
 

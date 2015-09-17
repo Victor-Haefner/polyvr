@@ -73,8 +73,8 @@ VRSnappingEngine::VRSnappingEngine() {
     event = new EventSnap();
     snapSignal = new VRSignal();
 
-    VRFunction<int>* fkt = new VRFunction<int>("snapping engine update", boost::bind(&VRSnappingEngine::update, this) );
-    VRSceneManager::getCurrent()->addUpdateFkt(fkt, 999);
+    updatePtr = VRFunction<int>::create("snapping engine update", boost::bind(&VRSnappingEngine::update, this) );
+    VRSceneManager::getCurrent()->addUpdateFkt(updatePtr, 999);
 }
 
 void VRSnappingEngine::clear() {

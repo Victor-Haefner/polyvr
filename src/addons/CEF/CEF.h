@@ -7,6 +7,7 @@
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGImage.h>
 #include <memory>
+#include "core/utils/VRFunctionFwd.h"
 
 using namespace std;
 
@@ -24,6 +25,11 @@ class CEF : public CefClient, public CefRenderHandler {
         bool init = false;
         bool focus = false;
 
+        shared_ptr<VRFunction<int> > update_callback;
+        shared_ptr<VRFunction<int> > mouse_move_callback;
+        shared_ptr<VRFunction<OSG::VRDevice*> > mouse_dev_callback;
+        shared_ptr<VRFunction<OSG::VRDevice*> > keyboard_dev_callback;
+
         CefRefPtr<CefBrowser> browser;
         CefRefPtr<CefRenderHandler> GetRenderHandler();
 
@@ -32,9 +38,9 @@ class CEF : public CefClient, public CefRenderHandler {
         bool GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect);
         void OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList& dirtyRects, const void* buffer, int width, int height);
 
-        void mouse(int b, bool down, OSG::VRDevice* dev);
+        void mouse(int lb, int rb, int wu, int wd, OSG::VRDevice* dev);
         void mouse_move(OSG::VRDevice* dev, int i);
-        void keyboard(bool down, OSG::VRDevice* dev);
+        void keyboard(OSG::VRDevice* dev);
 
         IMPLEMENT_REFCOUNTING(CEF);
 

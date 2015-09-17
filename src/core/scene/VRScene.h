@@ -46,6 +46,10 @@ class VRScene : public VRObjectManager,
         VRVisualLayer* cameras_layer = 0;
         VRVisualLayer* lights_layer = 0;
 
+        VRTogglePtr layer_ref_toggle;
+        VRTogglePtr layer_cam_toggle;
+        VRTogglePtr layer_light_toggle;
+
     public:
         VRScene();
         ~VRScene();

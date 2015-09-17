@@ -168,7 +168,7 @@ VRScript::VRScript(string _name) {
     setSeparator('_');
     setNameSpace("__script__");
     setName(_name);
-    cbfkt_sys = new VRFunction<int>(_name + "_ScriptCallback_sys", boost::bind(&VRScript::execute, this));
+    cbfkt_sys = VRFunction<int>::create(_name + "_ScriptCallback_sys", boost::bind(&VRScript::execute, this));
     cbfkt_dev = new VRFunction<VRDevice*>(_name + "_ScriptCallback_dev", boost::bind(&VRScript::execute_dev, this, _1));
     cbfkt_soc = new VRFunction<string>(_name + "_ScriptCallback_soc", boost::bind(&VRScript::execute_soc, this, _1));
 }

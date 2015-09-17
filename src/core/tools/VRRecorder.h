@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "core/utils/VRFunction.h"
+#include "core/utils/VRFunctionFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -22,8 +22,8 @@ class VRRecorder {
         vector<VRFrame*> captures;
         int maxFrames = -1;
 
-        VRFunction<bool>* toggleCallback = 0;
-        VRFunction<int>* updateCallback = 0;
+        VRTogglePtr toggleCallback;
+        VRUpdatePtr updateCallback;
 
         void on_record_toggle(bool b);
 
@@ -45,7 +45,7 @@ class VRRecorder {
         Vec3f getUp(int f);
         Image* get(int f);
 
-        VRFunction<bool>* getToggleCallback();
+        weak_ptr<VRFunction<bool> > getToggleCallback();
 };
 
 OSG_END_NAMESPACE;

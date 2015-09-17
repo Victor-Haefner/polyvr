@@ -3,6 +3,7 @@
 
 #include "VRDevice.h"
 #include "core/objects/geometry/VRPhysics.h"
+#include "core/utils/VRFunctionFwd.h"
 
 
 OSG_BEGIN_NAMESPACE;
@@ -16,10 +17,11 @@ class VRHaptic : public VRDevice {
         virtuose* v;
         string IP;
         string type;
-        VRFunction<int>* timestepWatchdog;
         VRFunction<int>* updateFktPre;
         VRFunction<int>* updateFktPost;
         Vec3i button_states;
+        VRUpdatePtr timestepWatchdog;
+        VRUpdatePtr updatePtr;
 
         /**gets positive when fps changes, negative w**/
         int fps_change = 0;

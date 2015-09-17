@@ -4,6 +4,7 @@
 #include <OpenSG/OSGConfig.h>
 #include "core/scene/VRSceneManager.h"
 #include "core/setup/VRSetup.h"
+#include "core/utils/VRFunctionFwd.h"
 #include "VRGuiSignals.h"
 #include "VRGuiContextMenu.h"
 #include "VRGuiVectorEntry.h"
@@ -37,6 +38,7 @@ class VRGuiSetup {
 
         VRGuiContextMenu* menu;
         VRMultiWindow* mwindow;
+	    shared_ptr<VRFunction<int> > updatePtr;
 
         bool guard; // update guard
 

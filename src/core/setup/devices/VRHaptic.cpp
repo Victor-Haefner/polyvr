@@ -19,9 +19,11 @@ VRHaptic::VRHaptic() : VRDevice("haptic") {
     v->disconnect();
     setIP("172.22.151.200");
 
-    auto updateObjFkt = new VRFunction<int>( "Haptic object update", boost::bind(&VRHaptic::applyTransformation, this, editBeacon()) );
-    //VRSceneManager::get()->dropUpdateFkt(updateObjFkt);
-    VRSceneManager::get()->addUpdateFkt(updateObjFkt);
+    updatePtr = VRFunction<int>::create( "Haptic object update", boost::bind(&VRHaptic::applyTransformation, this, editBeacon()) );
+    VRSceneManager::get()->addUpdateFkt(updatePtr);
+
+    timestepWatchdog = VRFunction<int>::create( "Haptic Timestep Watchdog", boost::bind(&VRHaptic::updateHapticTimestep, this, editBeacon()) );
+    VRSceneManager::getCurrent()->addUpdateFkt(timestepWatchdog);
 
     auto fkt = new VRFunction<VRDevice*>( "Haptic on scene changed", boost::bind(&VRHaptic::on_scene_changed, this, _1) );
     VRSceneManager::get()->getSignal_on_scene_load()->add(fkt);
@@ -31,7 +33,6 @@ VRHaptic::VRHaptic() : VRDevice("haptic") {
 }
 
 VRHaptic::~VRHaptic() {
-    VRSceneManager::getCurrent()->dropUpdateFkt(timestepWatchdog);
     VRSceneManager::getCurrent()->dropPhysicsUpdateFunction(updateFktPre,false);
     VRSceneManager::getCurrent()->dropPhysicsUpdateFunction(updateFktPost,true);
     v->disconnect();
@@ -46,16 +47,10 @@ void VRHaptic::on_scene_changed(VRDevice* dev) {
     v->detachTransform();
     v->disconnect();
 
-    timestepWatchdog = new VRFunction<int>( "Haptic Timestep Watchdog", boost::bind(&VRHaptic::updateHapticTimestep, this, editBeacon()) );
     updateFktPre = new VRFunction<int>( "Haptic pre update", boost::bind(&VRHaptic::updateHapticPre, this, editBeacon()) );
     updateFktPost = new VRFunction<int>( "Haptic post update", boost::bind(&VRHaptic::updateHapticPost, this, editBeacon()) );
-
-    VRSceneManager::getCurrent()->dropUpdateFkt(timestepWatchdog);
-
-    VRSceneManager::getCurrent()->addUpdateFkt(timestepWatchdog);
     VRSceneManager::getCurrent()->addPhysicsUpdateFunction(updateFktPre,false);
     VRSceneManager::getCurrent()->addPhysicsUpdateFunction(updateFktPost,true);
-
 
     //reconnect
     setIP("172.22.151.200");

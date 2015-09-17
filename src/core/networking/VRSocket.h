@@ -38,7 +38,7 @@ class VRSocket : public VRName {
         enum CONNECTION_TYPE {UNIX, TCP, HTTP};
 
     private:
-        VRFunction<int>* queued_signal;
+        shared_ptr<VRFunction<int> > queued_signal;
         string tcp_msg;
         HTTP_args* http_args;
         VRSignal* sig;

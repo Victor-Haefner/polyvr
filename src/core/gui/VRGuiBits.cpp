@@ -32,6 +32,7 @@
 #include "core/objects/VRCamera.h"
 #include "core/tools/VRRecorder.h"
 #include "core/utils/VRLogger.h"
+#include "core/setup/devices/VRSignal.h"
 #include "VRGuiManager.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -292,8 +293,8 @@ VRGuiBits::VRGuiBits() {
 
     swin->get_vadjustment()->signal_changed().connect( sigc::mem_fun(*this, &VRGuiBits::on_terminal_changed) );
 
-    VRFunction<int>* fkt = new VRFunction<int>( "IntMonitor_guiUpdate", VRGuiBits_on_internal_update );
-    VRSceneManager::get()->addUpdateFkt(fkt);
+    updatePtr = VRFunction<int>::create( "IntMonitor_guiUpdate", VRGuiBits_on_internal_update );
+    VRSceneManager::get()->addUpdateFkt(updatePtr);
 
     updateVisualLayer();
 }

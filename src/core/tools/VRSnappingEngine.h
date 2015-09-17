@@ -6,6 +6,7 @@
 #include <OpenSG/OSGLine.h>
 #include <OpenSG/OSGPlane.h>
 #include <map>
+#include "core/utils/VRFunctionFwd.h"
 
 
 using namespace std;
@@ -56,6 +57,7 @@ class VRSnappingEngine {
         map<VRTransform*, vector<VRTransform*> > anchors; // object anchors
         Octree* positions = 0; // objects by positions
         VRGeometry* hintGeo = 0;
+        VRUpdatePtr updatePtr;
 
         float influence_radius = 1000;
         float distance_snap = 0.05;

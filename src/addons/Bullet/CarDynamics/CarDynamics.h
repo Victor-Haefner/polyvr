@@ -4,6 +4,7 @@
 #include <OpenSG/OSGConfig.h>
 #include <btBulletDynamicsCommon.h>
 #include <boost/thread/recursive_mutex.hpp>
+#include "core/utils/VRFunctionFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -16,6 +17,7 @@ class CarDynamics {
         VRGeometry *w1, *w2, *w3, *w4;
         VRGeometry* chassis = 0;
         VRObject* root = 0;
+        shared_ptr<VRFunction<int> > updatePtr;
 
         btAlignedObjectArray<btCollisionShape*> m_collisionShapes;
 

@@ -21,7 +21,7 @@ void VRObjectManager::updateObjects() {
 }
 
 VRObjectManager::VRObjectManager() {
-    updateObjectsFkt = new VRFunction<int>("ObjectManagerUpdate", boost::bind(&VRObjectManager::updateObjects, this));
+    updateObjectsFkt = VRFunction<int>::create("ObjectManagerUpdate", boost::bind(&VRObjectManager::updateObjects, this));
 }
 
 //GROUPS------------------------

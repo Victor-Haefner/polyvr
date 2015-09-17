@@ -697,6 +697,7 @@
 		<Unit filename="src/core/utils/VRFlags.h" />
 		<Unit filename="src/core/utils/VRFunction.cpp" />
 		<Unit filename="src/core/utils/VRFunction.h" />
+		<Unit filename="src/core/utils/VRFunctionFwd.h" />
 		<Unit filename="src/core/utils/VRInternalMonitor.cpp" />
 		<Unit filename="src/core/utils/VRInternalMonitor.h" />
 		<Unit filename="src/core/utils/VRLogger.cpp" />

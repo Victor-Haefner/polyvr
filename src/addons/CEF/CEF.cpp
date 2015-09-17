@@ -19,16 +19,16 @@ using namespace OSG;
 vector<CEF*> instances;
 
 CEF::CEF() {
-    VRFunction<int>* fkt = new VRFunction<int>("webkit_update", boost::bind(&CEF::update, this));
-    VRSceneManager::getCurrent()->addUpdateFkt(fkt);
+    update_callback = VRFunction<int>::create("webkit_update", boost::bind(&CEF::update, this));
+    VRSceneManager::getCurrent()->addUpdateFkt(update_callback);
     image = Image::create();
     instances.push_back(this);
 }
 
 CEF::~CEF() {
-    browser = 0;
-    CefShutdown();
-
+    cout << "CEF destroyed " << this << endl;
+    //browser = 0;
+    //CefShutdown();
     instances.erase( remove(instances.begin(), instances.end(), this), instances.end() );
 }
 
@@ -36,7 +36,6 @@ CEFPtr CEF::create() { return CEFPtr(new CEF()); }
 
 void CEF::initiate() {
     init = true;
-    cout << "CEF init " << endl;
     CefSettings settings;
 #ifndef _WIN32
     string bsp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/CefSubProcess";
@@ -117,21 +116,19 @@ void CEF::addMouse(VRDevice* dev, VRObject* obj, int lb, int rb, int wu, int wd)
     if (dev == 0 || obj == 0) return;
     this->obj = obj;
 
-    dev->addSignal(lb, 0)->add( new VRFunction<VRDevice*>( "CEF::LMBP", boost::bind(&CEF::mouse, this, 0, 0, _1 ) ) );
-    dev->addSignal(lb, 1)->add( new VRFunction<VRDevice*>( "CEF::LMBR", boost::bind(&CEF::mouse, this, 0, 1, _1 ) ) );
-    dev->addSignal(rb, 0)->add( new VRFunction<VRDevice*>( "CEF::RMBP", boost::bind(&CEF::mouse, this, 2, 0, _1 ) ) );
-    dev->addSignal(rb, 1)->add( new VRFunction<VRDevice*>( "CEF::RMBR", boost::bind(&CEF::mouse, this, 2, 1, _1 ) ) );
-    dev->addSignal(wu, 1)->add( new VRFunction<VRDevice*>( "CEF::WU", boost::bind(&CEF::mouse, this, 3, 0, _1 ) ) );
-    dev->addSignal(wd, 1)->add( new VRFunction<VRDevice*>( "CEF::WD", boost::bind(&CEF::mouse, this, 4, 0, _1 ) ) );
+    mouse_dev_callback = VRFunction<VRDevice*>::create( "CEF::MOUSE", boost::bind(&CEF::mouse, this, lb,rb,wu,wd,_1 ) );
+    dev->addSignal(-1,0)->add(mouse_dev_callback);
+    dev->addSignal(-1,1)->add(mouse_dev_callback);
 
-    VRFunction<int>* fkt = new VRFunction<int>( "CEF::MM", boost::bind(&CEF::mouse_move, this, dev, _1) );
-    VRSceneManager::getCurrent()->addUpdateFkt(fkt);
+    mouse_move_callback = VRFunction<int>::create( "CEF::MM", boost::bind(&CEF::mouse_move, this, dev, _1) );
+    VRSceneManager::getCurrent()->addUpdateFkt(mouse_move_callback);
 }
 
 void CEF::addKeyboard(VRDevice* dev) {
     if (dev == 0) return;
-    dev->addSignal(-1, 0)->add( new VRFunction<VRDevice*>( "CEF::KR", boost::bind(&CEF::keyboard, this, 0, _1 ) ) );
-    dev->addSignal(-1, 1)->add( new VRFunction<VRDevice*>( "CEF::KP", boost::bind(&CEF::keyboard, this, 1, _1 ) ) );
+    keyboard_dev_callback = VRFunction<VRDevice*>::create( "CEF::KR", boost::bind(&CEF::keyboard, this, _1 ) );
+    dev->addSignal(-1, 0)->add( keyboard_dev_callback );
+    dev->addSignal(-1, 1)->add( keyboard_dev_callback );
 }
 
 void CEF::mouse_move(VRDevice* dev, int i) {
@@ -147,10 +144,15 @@ void CEF::mouse_move(VRDevice* dev, int i) {
     browser->GetHost()->SendMouseMoveEvent(me, dev->b_state(dev->key()));
 }
 
+void CEF::mouse(int lb, int rb, int wu, int wd, VRDevice* dev) {
+    int b = dev->key();
+    bool down = dev->getState();
 
-void CEF::mouse(int b, bool down, VRDevice* dev) {
-    /*browser->GetHost()->SendCaptureLostEvent();
-    */
+    if (b == lb) b = 0;
+    else if (b == rb) b = 2;
+    else if (b == wu) b = 3;
+    else if (b == wd) b = 4;
+    else return;
 
     VRIntersection ins = dev->intersect(obj);
 
@@ -189,9 +191,10 @@ void CEF::mouse(int b, bool down, VRDevice* dev) {
     }
 }
 
-void CEF::keyboard(bool down, VRDevice* dev) {
+void CEF::keyboard(VRDevice* dev) {
     if (!focus) return;
     if (dev->getType() != "keyboard") return;
+    //bool down = dev->getState();
     VRKeyboard* kb = (VRKeyboard*)dev;
     auto event = kb->getGtkEvent();
     CefRefPtr<CefBrowserHost> host = browser->GetHost();

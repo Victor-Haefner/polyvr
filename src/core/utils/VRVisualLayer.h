@@ -5,7 +5,7 @@
 #include <string>
 #include <map>
 #include <vector>
-#include "core/utils/VRFunction.h"
+#include "core/utils/VRFunctionFwd.h"
 #include "core/utils/VRName.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -17,7 +17,7 @@ class VRVisualLayer : public VRName {
     private:
         VRObject* anchor;
         static map<string, VRVisualLayer*> layers;
-        VRFunction<bool>* callback = 0;
+        VRToggleWeakPtr callback;
         string icon;
 
     public:
@@ -34,7 +34,7 @@ class VRVisualLayer : public VRName {
 
         void addObject(VRObject* obj);
 
-        void setCallback(VRFunction<bool>* fkt);
+        void setCallback(VRToggleWeakPtr fkt);
 
         string getIconName();
 };

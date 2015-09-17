@@ -34,8 +34,8 @@ VRRecorder::VRRecorder() {
     av_register_all();
     avcodec_register_all();
 
-    toggleCallback = new VRFunction<bool>("recorder toggle", boost::bind(&VRRecorder::on_record_toggle, this, _1));
-    updateCallback = new VRFunction<int>("recorder update", boost::bind(&VRRecorder::capture, this));
+    toggleCallback = VRFunction<bool>::create("recorder toggle", boost::bind(&VRRecorder::on_record_toggle, this, _1));
+    updateCallback = VRFunction<int>::create("recorder update", boost::bind(&VRRecorder::capture, this));
 }
 
 void VRRecorder::setView(int i) {
@@ -220,6 +220,6 @@ void VRRecorder::on_record_toggle(bool b) {
     }
 }
 
-VRFunction<bool>* VRRecorder::getToggleCallback() { return toggleCallback; }
+weak_ptr<VRFunction<bool> > VRRecorder::getToggleCallback() { return toggleCallback; }
 
 OSG_END_NAMESPACE;

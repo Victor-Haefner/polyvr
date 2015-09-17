@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include "CKOctree.h"
+#include "core/utils/VRFunctionFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -32,6 +33,7 @@ class BlockWorld {
 
         map<string, VRMaterial*> materials;
         map<int, VRGeometry*> chunks;
+        shared_ptr<VRFunction<int> > updatePtr;
 
         // octree population algorithm
 

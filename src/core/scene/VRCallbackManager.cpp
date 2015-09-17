@@ -11,111 +11,105 @@ using namespace std;
 
 VRCallbackManager::VRCallbackManager() { updateListsChanged = false; }
 VRCallbackManager::~VRCallbackManager() {
-    map<int, list<VRFunction<int>*>*>::iterator itr1;
-    list<VRFunction<int>*>::iterator itr2;
+    for (auto ufs : updateFktPtrs) delete ufs.second;
+}
 
-    for (auto ufs : updateFkts) {
-        for (auto uf : *ufs.second) delete uf;
-        delete ufs.second;
+void VRCallbackManager::queueJob(VRUpdatePtr f, int priority) {
+    updateListsChanged = true;
+    jobFktPtrs[f.get()] = job(f,priority);
+}
+
+void VRCallbackManager::addUpdateFkt(VRUpdateWeakPtr f, int priority) {
+    updateListsChanged = true;
+    if (updateFktPtrs.count(priority) == 0) {
+        updateFktPtrs[priority] = new list<VRUpdateWeakPtr>();
     }
+    updateFktPtrs_priorities[f.lock().get()] = priority;
+    updateFktPtrs[priority]->push_back(f);
 }
 
-void VRCallbackManager::queueJob(VRFunction<int>* f, int priority) {
+void VRCallbackManager::addTimeoutFkt(VRUpdateWeakPtr p, int priority, int timeout) {
+    auto f = p.lock().get();
     updateListsChanged = true;
-    jobFkts[f] = priority;
-    addUpdateFkt(f, priority);
-}
+    if (updateFktPtrs_priorities.count(f)) return;
 
-void VRCallbackManager::queueEvent(VRFunction<int>* f, float delay, int priority) {
-    /*updateListsChanged = true;
-    jobFkts[f] = priority;
-    addUpdateFkt(f, priority);*/ // TODO
-}
-
-void VRCallbackManager::addUpdateFkt(VRFunction<int>* f, int priority) {
-    updateListsChanged = true;
-    if (updateFkts.count(priority) == 0) {
-        updateFkts[priority] = new list<VRFunction<int>*>();
-    }
-    updateFkts_priorities[f] = priority;
-    updateFkts[priority]->push_back(f);
-}
-
-void VRCallbackManager::addTimeoutFkt(VRFunction<int>* f, int priority, int timeout) {
-    updateListsChanged = true;
-    if (updateFkts_priorities.count(f)) return;
-
-    if (timeoutFkts.count(priority) == 0) timeoutFkts[priority] = new list<timeoutFkt>();
-    updateFkts_priorities[f] = priority;
+    if (timeoutFktPtrs.count(priority) == 0) timeoutFktPtrs[priority] = new list<timeoutFkt>();
+    updateFktPtrs_priorities[f] = priority;
 
     timeoutFkt tof;
-    tof.fkt = f;
+    tof.fktPtr = p;
     tof.timeout = timeout;
     tof.last_call = glutGet(GLUT_ELAPSED_TIME);
-    timeoutFkts[priority]->push_back(tof);
+    timeoutFktPtrs[priority]->push_back(tof);
 }
 
-void VRCallbackManager::dropUpdateFkt(VRFunction<int>* f) {//replace by list || map || something..
-    if (updateFkts_priorities.count(f) == 0) return;
-    int prio = updateFkts_priorities[f];
-    list<VRFunction<int>*>* l = updateFkts[prio];
+void VRCallbackManager::dropUpdateFkt(VRUpdateWeakPtr p) {//replace by list || map || something..
+    auto f = p.lock().get();
+    if (updateFktPtrs_priorities.count(f) == 0) return;
+    int prio = updateFktPtrs_priorities[f];
+    list<VRUpdateWeakPtr>* l = updateFktPtrs[prio];
     if (l == 0) return;
 
-    l->remove(f);
-    updateFkts_priorities.erase(f);
+    l->remove_if([p](VRUpdateWeakPtr p2){
+        auto sp = p.lock();
+        auto sp2 = p2.lock();
+        return (sp && sp2) ? sp == sp2 : false;
+    });
+
+    updateFktPtrs_priorities.erase(f);
 }
 
-void VRCallbackManager::dropTimeoutFkt(VRFunction<int>* f) {//replace by list || map || something..
+void VRCallbackManager::dropTimeoutFkt(VRUpdateWeakPtr p) {//replace by list || map || something..
+    auto f = p.lock().get();
     updateListsChanged = true;
-    if (updateFkts_priorities.count(f) == 0) return;
-    int prio = updateFkts_priorities[f];
-    if (timeoutFkts.count(prio) == 0) return;
-    list<timeoutFkt>* l = timeoutFkts[prio];
+    if (updateFktPtrs_priorities.count(f) == 0) return;
+    int prio = updateFktPtrs_priorities[f];
+    if (timeoutFktPtrs.count(prio) == 0) return;
+    list<timeoutFkt>* l = timeoutFktPtrs[prio];
     if (l == 0) return;
 
-    //for (auto fkt : *l) if(fkt->fkt == f) { l->erase(fkt); break; }
-
+    auto sp = p.lock();
     list<timeoutFkt>::iterator itr;
-    for (itr = l->begin(); itr != l->end(); itr++)
-        if (itr->fkt == f) { l->erase(itr); break; }
+    for (itr = l->begin(); itr != l->end(); itr++) {
+        auto sp2 = itr->fktPtr.lock();
+        if( (sp && sp2) ? sp == sp2 : false ) { l->erase(itr); break; }
+    }
 
-    updateFkts_priorities.erase(f);
+    updateFktPtrs_priorities.erase(f);
 }
 
 void VRCallbackManager::updateCallbacks() {
     //printCallbacks();
-    vector<VRFunction<int>*> cbs;
+    vector<VRUpdateWeakPtr> cbsPtr;
 
     // gather all update callbacks
-    for (auto fl : updateFkts) for (auto f : *fl.second) cbs.push_back(f);
+    for (auto fl : updateFktPtrs) for (auto f : *fl.second) cbsPtr.push_back(f);
 
     // gather all timeout callbacks
     int time = glutGet(GLUT_ELAPSED_TIME);
-    for (auto tfl : timeoutFkts)
+    for (auto tfl : timeoutFktPtrs)
         for (auto& tf : *tfl.second)
             if (time - tf.last_call >= tf.timeout) {
-                cbs.push_back(tf.fkt);
+                cbsPtr.push_back(tf.fktPtr);
                 tf.last_call = time;
             }
 
-    for (auto cb : cbs) { // trigger all callbacks
-        VRFunction<int>& rcb = *cb;
-        rcb(0);
-        //(*cb)(0);
-        if (jobFkts.count(cb)) { // if a job erase it
-            dropUpdateFkt(cb);
-            jobFkts.erase(cb);
-        }
+    for (auto cb : cbsPtr) { // trigger all callbacks
+        if ( auto scb = cb.lock()) (*scb)(0);
     }
+
+    for (auto j : jobFktPtrs) (*j.second.ptr)(0);
+    jobFktPtrs.clear();
 }
 
 void VRCallbackManager::printCallbacks() {
     cout << "VRCallbackManager " << this << " t " << VRGlobals::get()->CURRENT_FRAME << endl;
-    cout << " update fkts (" << updateFkts.size() << ")\n";
-    for (auto fl : updateFkts) {
+    cout << " update fkts (" << updateFktPtrs.size() << ")\n";
+    for (auto fl : updateFktPtrs) {
         cout << "  prio " << fl.first << " (" << fl.second->size() << ")\n";
         for (auto f : *fl.second) {
-            cout << "   fkt " << f->getName() << endl;
+            auto sp = f.lock();
+            if (sp) cout << "   fkt " << sp->getName() << endl;
         }
     }
 }

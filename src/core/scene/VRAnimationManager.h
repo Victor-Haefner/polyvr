@@ -5,8 +5,7 @@
 #include <map>
 
 #include "core/objects/VRAnimation.h"
-
-template<class T> class VRFunction;
+#include "core/utils/VRFunctionFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -16,7 +15,7 @@ class VRAnimationManager {
         map<string, VRAnimation*> anim_map;
 
     protected:
-        VRFunction<int>* updateAnimationsFkt;
+        shared_ptr<VRFunction<int> > updateAnimationsFkt;
         void updateAnimations();
 
     public:

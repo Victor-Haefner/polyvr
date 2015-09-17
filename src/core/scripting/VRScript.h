@@ -7,7 +7,7 @@
 #include <Python.h>
 #include <string>
 #include <map>
-#include "core/utils/VRFunction.h"
+#include "core/utils/VRFunctionFwd.h"
 #include "core/setup/devices/VRSignal.h"
 #include "../networking/VRSocket.h"
 #include "core/utils/VRName.h"
@@ -65,7 +65,7 @@ class VRScript : public VRName {
 
         PyObject* getPyObj(arg* a);
 
-        VRFunction<int>* cbfkt_sys;
+        shared_ptr<VRFunction<int> > cbfkt_sys;
         VRFunction<VRDevice*>* cbfkt_dev;
         VRFunction<string>* cbfkt_soc;
 

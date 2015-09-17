@@ -4,45 +4,48 @@
 #include <OpenSG/OSGConfig.h>
 #include <map>
 #include <list>
-
-template<class T> class VRFunction;
+#include <memory>
+#include "core/utils/VRFunctionFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRCallbackManager {
     private:
+        struct job {
+            VRUpdatePtr ptr;
+            int prio = 0;
+            job() {}
+            job(VRUpdatePtr j, int p) : ptr(j), prio(p) {}
+        };
+
         struct timeoutFkt {
-            VRFunction<int>* fkt;
+            VRUpdateWeakPtr fktPtr;
             int timeout;
             int last_call;
         };
 
         bool updateListsChanged;
-        map<VRFunction<int>* , int> jobFkts;
-        map<int, list<timeoutFkt>* > timeoutFkts;
-        map<int, list<VRFunction<int>*>* > updateFkts;
-        map<int, list<VRFunction<int>*>* >::reverse_iterator fkt_list_itr;
-        list<VRFunction<int>*>::iterator fkt_itr;
-        map<VRFunction<int>* , int> updateFkts_priorities;//to easier delete functions
+        map<VRFunction<int>* , job> jobFktPtrs;
+        map<int, list<timeoutFkt>* > timeoutFktPtrs;
+        map<int, list<VRUpdateWeakPtr>* > updateFktPtrs;
+        map<int, list<VRUpdateWeakPtr>* >::reverse_iterator fktPtr_list_itr;
+        list<VRUpdateWeakPtr>::iterator fktPtr_itr;
+        map<VRFunction<int>* , int> updateFktPtrs_priorities;//to easier delete functions
 
     public:
         VRCallbackManager();
         ~VRCallbackManager();
 
-        void queueJob(VRFunction<int>* f, int priority = 0);
-        void queueEvent(VRFunction<int>* f, float delay = 0, int priority = 0);
+        void queueJob(VRUpdatePtr f, int priority = 0);
+        void addUpdateFkt(VRUpdateWeakPtr f, int priority = 0);
+        void addTimeoutFkt(VRUpdateWeakPtr f, int priority, int timeout);
 
-        void addUpdateFkt(VRFunction<int>* f, int priority = 0);
-        void addTimeoutFkt(VRFunction<int>* f, int priority, int timeout);
-
-        void dropUpdateFkt(VRFunction<int>* f);
-        void dropTimeoutFkt(VRFunction<int>* f);
+        void dropUpdateFkt(VRUpdateWeakPtr f);
+        void dropTimeoutFkt(VRUpdateWeakPtr f);
 
         void clearJobs();
-
         void updateCallbacks();
-
         void printCallbacks();
 };
 

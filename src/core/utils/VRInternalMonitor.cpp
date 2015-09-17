@@ -13,9 +13,6 @@ void dynObjctsSize(string& s) { s = toString((int)VRTransform::dynamicObjects.si
 void chgObjctsSize(string& s) { s = toString((int)VRTransform::changedObjects.size()); }
 
 VRInternalMonitor::VRInternalMonitor() {
-    //VRFunction<int>* fkt = new VRFunction<int>( "Internal_Monitor_update", boost::bind(&VRInternalMonitor::update, this) );
-    //VRSceneManager::get()->addUpdateFkt(fkt);
-
     add("VRName::nameDict size", new varFkt("Set_test_var", nameDictSize));
     add("VRName::nameDict full size", new varFkt("Set_test_var", nameBaseDictSize));
     add("VRTransform::dynamicObjects size", new varFkt("Set_test_var", dynObjctsSize));

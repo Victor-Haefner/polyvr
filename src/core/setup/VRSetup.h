@@ -26,6 +26,9 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
         VRCamera* setup_cam = 0;
 
         VRVisualLayer* setup_layer = 0;
+        VRVisualLayer* stats_layer = 0;
+        VRTogglePtr layer_setup_toggle;
+        VRTogglePtr layer_stats_toggle;
 
         void parseSetup(xmlpp::Element* setup);
 

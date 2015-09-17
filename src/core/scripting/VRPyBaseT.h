@@ -2,6 +2,9 @@
 
 template<class T> PyTypeObject* VRPyBaseT<T>::typeRef = &VRPyBaseT<T>::type;
 template<class T> VRPyBaseT<T>::VRPyBaseT() {;}
+/*template<class T> VRPyBaseT<T>::~VRPyBaseT() {
+    cout << "VRPyBaseT<T>::destruct " << this << " " << this->obj << " " << this->objPtr << " " << typeRef->tp_name << endl;
+}*/
 
 template <typename T>
 bool VRPyBaseT<T>::valid() {
@@ -142,7 +145,9 @@ PyObject* VRPyBaseT<T>::New_VRObjects_unnamed(PyTypeObject *type, PyObject *args
 
 template<class T>
 void VRPyBaseT<T>::dealloc(VRPyBaseT<T>* self) {
+    //cout << "VRPyBaseT<T>::dealloc " << self << " " << self->obj << " " << self->objPtr << " " << typeRef->tp_name << endl;
     //if (self->owner && self->obj != 0) delete self->obj; // TOCHECK
+    if (self->objPtr) self->objPtr = 0;
     self->ob_type->tp_free((PyObject*)self);
 }
 

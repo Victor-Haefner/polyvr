@@ -7,6 +7,7 @@
 #include <map>
 #include <vector>
 #include <boost/thread/recursive_mutex.hpp>
+#include "core/utils/VRFunctionFwd.h"
 
 
 template<class T> class VRFunction;
@@ -70,7 +71,7 @@ class VRPhysicsManager {
 
     protected:
         VRFunction<VRThread*>* updatePhysicsFkt;
-        VRFunction<int>* updatePhysObjectsFkt;
+        shared_ptr<VRFunction<int> > updatePhysObjectsFkt;
         VRPhysicsManager();
         ~VRPhysicsManager();
 

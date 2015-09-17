@@ -978,8 +978,8 @@ VRGuiScripts::VRGuiScripts() {
     setToolButtonSensitivity("toolbutton9", false);
 
     // update the list each frame to update the execution time
-    VRFunction<int>* fkt = new VRFunction<int>("scripts_gui_update",  boost::bind(&VRGuiScripts::update, this) );
-    VRSceneManager::get()->addUpdateFkt(fkt, 100);
+    updatePtr = VRFunction<int>::create("scripts_gui_update",  boost::bind(&VRGuiScripts::update, this) );
+    VRSceneManager::get()->addUpdateFkt(updatePtr, 100);
 
     // init scriptImportWidget
     scriptImportWidget = manage( new Table() );

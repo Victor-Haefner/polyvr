@@ -15,8 +15,8 @@
 using namespace OSG;
 
 VRPathtool::VRPathtool() {
-    VRFunction<int>* fkt = new VRFunction<int>("path tool update", boost::bind(&VRPathtool::updateDevs, this) );
-    VRSceneManager::getCurrent()->addUpdateFkt(fkt, 100);
+    updatePtr = VRFunction<int>::create("path tool update", boost::bind(&VRPathtool::updateDevs, this) );
+    VRSceneManager::getCurrent()->addUpdateFkt(updatePtr, 100);
 
     manip = new VRManipulator();
 }

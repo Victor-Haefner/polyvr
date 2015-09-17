@@ -3,6 +3,7 @@
 
 #include "core/utils/VRName.h"
 #include "core/utils/VRStorage.h"
+#include "core/utils/VRFunctionFwd.h"
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGMatrix.h>
 #include <map>
@@ -52,6 +53,7 @@ class ART : public VRStorage {
         DTrack* dtrack = 0;
         map<int, ART_device*> devices;
 
+        VRUpdatePtr updatePtr;
         VRSignal* on_new_device = 0;
 
         template<typename dev>

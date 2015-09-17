@@ -49,10 +49,11 @@ VRSetup::VRSetup(string name) {
     tracking = "None";
 
     setup_layer = new VRVisualLayer("Setup", "setup.png");
-    setup_layer->setCallback( new VRFunction<bool>("showSetup", boost::bind(&VRSetup::showSetup, this, _1) ) );
-
-    setup_layer = new VRVisualLayer("Statistics", "stats.png");
-    setup_layer->setCallback( new VRFunction<bool>("showStats", boost::bind(&VRViewManager::showViewStats, this, 0, _1) ) );
+    stats_layer = new VRVisualLayer("Statistics", "stats.png");
+    layer_setup_toggle = VRFunction<bool>::create("showSetup", boost::bind(&VRSetup::showSetup, this, _1) );
+    layer_stats_toggle = VRFunction<bool>::create("showStats", boost::bind(&VRViewManager::showViewStats, this, 0, _1) );
+    setup_layer->setCallback( layer_setup_toggle );
+    stats_layer->setCallback( layer_stats_toggle );
 }
 
 VRSetup::~VRSetup() {

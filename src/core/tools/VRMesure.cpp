@@ -145,7 +145,7 @@ MaterialRecPtr VRMesure::setTransMat() {
 }
 
 void VRMesure::_kill() {
-    scene->dropUpdateFkt(fkt);
+    scene->dropUpdateFkt(updatePtr);
     s1->hide();
     s2->hide();
     l->hide();
@@ -178,7 +178,7 @@ VRMesure::VRMesure() {
     display->setSize(0.2*s.size()*scale, 0.3*scale);
     display->setTexture(texture);
 
-    fkt = new VRFunction<int>("Mesure_check", boost::bind(&VRMesure::check, this));
+    updatePtr = VRFunction<int>::create("Mesure_check", boost::bind(&VRMesure::check, this));
 }
 
 void VRMesure::setKillSignal(VRDevice* dev, VRSignal* sig) {
@@ -191,7 +191,7 @@ void VRMesure::addToScene(VRScene* _scene) {
     scene->add(s1);
     scene->add(s2);
     scene->add(l);
-    scene->addUpdateFkt(fkt);
+    scene->addUpdateFkt(updatePtr);
 }
 
 void VRMesure::setPosition(Vec3f pos) {

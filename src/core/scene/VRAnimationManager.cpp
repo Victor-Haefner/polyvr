@@ -21,7 +21,7 @@ void VRAnimationManager::updateAnimations() {
 }
 
 VRAnimationManager::VRAnimationManager() {
-    updateAnimationsFkt = new VRFunction<int>("AnimationUpdateFkt", boost::bind(&VRAnimationManager::updateAnimations, this));
+    updateAnimationsFkt = VRFunction<int>::create("AnimationUpdateFkt", boost::bind(&VRAnimationManager::updateAnimations, this));
 }
 
 void VRAnimationManager::addAnimation(VRAnimation* anim) {

@@ -83,6 +83,7 @@ VRScriptManager::VRScriptManager() {
 }
 
 VRScriptManager::~VRScriptManager() {
+    //cout << "VRScriptManager destroyed\n";
     blockScriptThreads();
     for (auto s : scripts) delete s.second;
     scripts.clear();
@@ -432,7 +433,7 @@ string VRScriptManager::getPyVRMethodDoc(string type, string method) {
 // ==============
 
 PyObject* VRScriptManager::loadScene(VRScriptManager* self, PyObject *args) {
-    auto fkt = new VRFunction<int>( "scheduled scene load", boost::bind(&VRSceneManager::loadScene, VRSceneManager::get(), parseString(args), false ) );
+    auto fkt = VRFunction<int>::create( "scheduled scene load", boost::bind(&VRSceneManager::loadScene, VRSceneManager::get(), parseString(args), false ) );
     VRSceneManager::get()->queueJob(fkt);
     Py_RETURN_TRUE;
 }

@@ -229,8 +229,6 @@ void VRDefShading::addDSLight(LightRecPtr light, string type, bool shadows) {
     if (shadows) li.shadowType = defaultShadowType;
     else li.shadowType = ST_NONE;
 
-    cout << "\nLS: " << shadows;
-
     li.light = light;
     int t = 1;
     if (type == "directional") t = 2;

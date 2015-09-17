@@ -1,5 +1,6 @@
 #include "VRVisualLayer.h"
 #include "core/objects/object/VRObject.h"
+#include "core/utils/VRFunction.h"
 
 #include <OpenSG/OSGNode.h>
 
@@ -38,12 +39,12 @@ void VRVisualLayer::anchorLayers(VRObject* root) {
 VRVisualLayer* VRVisualLayer::getLayer(string l) { return layers.count(l) ? layers[l] : 0; }
 void VRVisualLayer::clearLayers() { layers.clear(); }
 
-void VRVisualLayer::setVisibility(bool b) { anchor->setVisible(b); if (callback) (*callback)(b); }
+void VRVisualLayer::setVisibility(bool b) { anchor->setVisible(b); if (auto sp = callback.lock()) (*sp)(b); }
 bool VRVisualLayer::getVisibility() { return anchor->isVisible(); }
 
 void VRVisualLayer::addObject(VRObject* obj) { anchor->addChild(obj); }
 
-void VRVisualLayer::setCallback(VRFunction<bool>* fkt) { callback = fkt; }
+void VRVisualLayer::setCallback(VRToggleWeakPtr fkt) { callback = fkt; }
 
 OSG_END_NAMESPACE;
 

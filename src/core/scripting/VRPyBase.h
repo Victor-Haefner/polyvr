@@ -76,6 +76,7 @@ struct VRPyBaseT : public VRPyBase {
     static PyTypeObject* typeRef;
 
     VRPyBaseT();
+    //virtual ~VRPyBaseT();
 
     bool valid();
 

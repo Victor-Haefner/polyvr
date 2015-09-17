@@ -5,6 +5,7 @@
 #include <OpenSG/OSGVector.h>
 #include <OpenSG/OSGMaterial.h>
 #include <string>
+#include "core/utils/VRFunctionFwd.h"
 
 template<class T> class VRFunction;
 
@@ -25,7 +26,7 @@ class VRMesure {
 
         VRBillboard* display;
         //VRSprite* sprite;
-        VRFunction<int>* fkt;
+        VRUpdatePtr updatePtr;
 
         VRScene* scene;
 

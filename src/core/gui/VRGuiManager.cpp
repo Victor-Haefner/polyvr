@@ -45,8 +45,8 @@ VRGuiManager::VRGuiManager() {
         cout << " start in standalone mode\n";
         VRSetupManager::get()->load("Desktop", "setup/Desktop.xml");
 
-        VRFunction<int>* ufkt = new VRFunction<int>("GUI_updateManager", boost::bind(&VRGuiManager::update, this) );
-        VRSceneManager::get()->addUpdateFkt(ufkt, 1);
+        updatePtr = VRFunction<int>::create("GUI_updateManager", boost::bind(&VRGuiManager::update, this) );
+        VRSceneManager::get()->addUpdateFkt(updatePtr, 1);
 
         Gtk::Window* top = 0;
         VRGuiBuilder()->get_widget("window1", top);
@@ -89,8 +89,8 @@ VRGuiManager::VRGuiManager() {
     fkt = new VRDevCb("GUI_updateBackground", boost::bind(&VRGuiGeneral::updateScene, g_gen) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
 
-    VRFunction<int>* ufkt = new VRFunction<int>("GUI_updateManager", boost::bind(&VRGuiManager::update, this) );
-    VRSceneManager::get()->addUpdateFkt(ufkt, 1);
+    updatePtr = VRFunction<int>::create("GUI_updateManager", boost::bind(&VRGuiManager::update, this) );
+    VRSceneManager::get()->addUpdateFkt(updatePtr, 1);
 
     Gtk::Window* top = 0;
     VRGuiBuilder()->get_widget("window1", top);

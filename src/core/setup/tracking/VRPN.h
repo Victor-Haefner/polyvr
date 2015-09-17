@@ -7,6 +7,7 @@
 #include <map>
 
 #include "core/setup/devices/VRDevice.h"
+#include "core/utils/VRFunctionFwd.h"
 
 namespace xmlpp{ class Element; }
 class vrpn_Tracker_Remote;
@@ -53,7 +54,8 @@ class VRPN : public VRStorage {
         bool verbose = false;
         int port = 3883;
 
-        VRFunction<int>* testServer = 0;
+        VRUpdatePtr updatePtr;
+        VRUpdatePtr testServer = 0;
 
         //update thread
         void update_t(VRThread* thread);

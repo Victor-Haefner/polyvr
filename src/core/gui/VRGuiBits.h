@@ -6,7 +6,7 @@
 #include <queue>
 #include <gtkmm/combobox.h>
 #include <boost/thread.hpp>
-#include "core/setup/devices/VRSignal.h"
+#include "core/utils/VRFunctionFwd.h"
 
 namespace Gtk { class ToggleToolButton; class ScrolledWindow; }
 
@@ -15,6 +15,7 @@ using namespace std;
 
 class VRVisualLayer;
 class VRRecorder;
+class VRSignal;
 
 class VRGuiBits {
     private:
@@ -22,6 +23,8 @@ class VRGuiBits {
         Gtk::ScrolledWindow* swin = 0;
 	    std::queue<string> msg_queue;
 	    mutable boost::mutex msg_mutex;
+
+	    shared_ptr<VRFunction<int> > updatePtr;
 
         VRRecorder* recorder = 0;
         VRVisualLayer* recorder_visual_layer = 0;

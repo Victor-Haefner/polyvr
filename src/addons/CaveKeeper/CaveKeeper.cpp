@@ -187,8 +187,8 @@ void BlockWorld::initWorld() {
 
     // TODO ?
     VRScene* scene = VRSceneManager::getCurrent();
-    VRFunction<int>* ufkt = new VRFunction<int>("blockworld_update", boost::bind(&BlockWorld::updateShaderCamPos, this));
-    scene->addUpdateFkt(ufkt, 1);
+    updatePtr = VRFunction<int>::create("blockworld_update", boost::bind(&BlockWorld::updateShaderCamPos, this));
+    scene->addUpdateFkt(updatePtr, 1);
 
     chunks[0] = initChunk();
     anchor->addChild(chunks[0]);
