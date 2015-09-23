@@ -72,7 +72,9 @@ PyObject* VRPyAnimation::setLoop(VRPyAnimation* self, PyObject* args) {
 PyObject* VRPyAnimation::setCallback(VRPyAnimation* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyAnimation::setCallback - Object is invalid"); return NULL; }
     auto cb = parseCallback<float>(args); if (cb == 0) return NULL;
-    self->obj->setSimpleCallback(cb, 1);
+    VRAnimPtr acb = shared_ptr< VRFunction<float> >(cb);
+    self->obj->setSimpleCallback(acb, 1);
+    self->obj->setCallbackOwner(true);
     Py_RETURN_TRUE;
 }
 

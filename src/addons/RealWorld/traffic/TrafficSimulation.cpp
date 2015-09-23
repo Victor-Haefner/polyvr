@@ -367,9 +367,6 @@ TrafficSimulation::TrafficSimulation(MapCoordinator *mapCoordinator, const strin
     a_red->setLit(false);
     a_orange->setLit(false);
     a_green->setLit(false);
-
-    //VRFunction<int>* fkt = new VRFunction<int>( "traffic update fkt", boost::bind(&TrafficSimulation::updateScene, this) );
-    //VRSceneManager::getCurrent()->addUpdateFkt(fkt);
 }
 
 TrafficSimulation::~TrafficSimulation() {
@@ -401,8 +398,6 @@ void TrafficSimulation::setServer(const string& host) {
 
     for (auto m : tmp) {
         addMap(m);
-        //VRFunction<VRThread*>* func = new VRFunction<VRThread*>("trafficAddMap", boost::bind(&realworld::TrafficSimulation::addMap, this, *m));
-        //VRSceneManager::get()->initThread(func, "trafficAddMap", false);
     }
 }
 
@@ -506,10 +501,6 @@ void TrafficSimulation::removeMap(const OSMMap* map) {
 }
 
 void TrafficSimulation::setDrawingDistance(const double distance) {
-
-    //VRFunction<OSG::VRThread*>* func = new VRFunction<OSG::VRThread*>("trafficSetDrawingDistance", boost::bind(&realworld::TrafficSimulation::setDrawingDistance, self->obj, b));
-    //OSG::VRSceneManager::get()->initThread(func, "trafficSetDrawingDistance", false);
-
     if (playerCreated) {
 
         Value value;
@@ -529,9 +520,7 @@ void TrafficSimulation::setDrawingDistance(const double distance) {
         value = client.sendData(value);
         errorMessage("recreating a viewarea", value);
         viewDistance = distance;
-    } else {
-        viewDistance = distance;
-    }
+    } else viewDistance = distance;
 }
 
 void TrafficSimulation::setTrafficDensity(const double density) {
@@ -577,11 +566,6 @@ void TrafficSimulation::addVehicleType(const unsigned int id, const double proba
 }
 
 void TrafficSimulation::addDriverType(const unsigned int id, const double probability, const double lawlessness, const double cautiousness) {
-
-    // void addDriverType(const unsigned int id, const double probability, const double lawlessness, const double cautiousness);
-    //VRFunction<VRThread*>* func = new VRFunction<VRThread*>("trafficAddDriverType", boost::bind(&realworld::TrafficSimulation::addDriverType, self->obj, id, prob,  law, caut));
-    //VRSceneManager::get()->initThread(func, "trafficAddDriverType", false);
-
     Value value, type;
     type["id"]           = id;
     type["probability"]  = probability;
@@ -595,9 +579,6 @@ void TrafficSimulation::addDriverType(const unsigned int id, const double probab
 }
 
 void TrafficSimulation::start() {
-    //VRFunction<VRThread*>* func = new VRFunction<VRThread*>("trafficStart", boost::bind(&realworld::TrafficSimulation::start, self->obj));
-    //VRSceneManager::get()->initThread(func, "trafficStart", false);
-
     if (communicationThreadId < 0) {
         VRFunction<VRThread*>* func = new VRFunction<VRThread*>("trafficCommunicationThread", boost::bind(&TrafficSimulation::communicationThread, this, _1));
         communicationThreadId = VRSceneManager::get()->initThread(func, "trafficCommunicationThread", true);
@@ -611,10 +592,6 @@ void TrafficSimulation::start() {
 }
 
 void TrafficSimulation::pause() {
-
-    //VRFunction<VRThread*>* func = new VRFunction<VRThread*>("trafficPause", boost::bind(&realworld::TrafficSimulation::pause, self->obj));
-    //VRSceneManager::get()->initThread(func, "trafficPause", false);
-
     if (communicationThreadId > 0) {
         VRSceneManager::get()->stopThread(communicationThreadId);
         communicationThreadId = -1;
@@ -630,11 +607,7 @@ bool TrafficSimulation::isRunning() {
     return (client.getSimulatorState() == client.RUNNING);
 }
 
-void TrafficSimulation::tick() {
-    //VRFunction<VRThread*>* func = new VRFunction<VRThread*>("traffic_update", boost::bind(&TrafficSimulation::update, this, _1));
-    //VRSceneManager::get()->initThread(func, "traffic_update", false);
-    update();
-}
+void TrafficSimulation::tick() { update(); }
 
 Vec3f toVec3f(Json::Value val) { // TODO
     Vec3f v;
@@ -952,11 +925,6 @@ void TrafficSimulation::setCollisionHandler(bool (*handler) (Vehicle& a, Vehicle
 }
 
 void TrafficSimulation::setVehiclePosition(const unsigned int id, const OSG::Vec3f& pos, const OSG::Vec3f& orientation) {
-
-
-    //VRFunction<VRThread*>* func = new VRFunction<VRThread*>("trafficSetVehiclePosition", boost::bind(&realworld::TrafficSimulation::setVehiclePosition, self->obj, id, pos, rot));
-    //VRSceneManager::get()->initThread(func, "trafficSetVehiclePosition", false);
-
     // Move the vehicle
     Value vehicle;
     vehicle["id"] = id;
@@ -981,9 +949,6 @@ void TrafficSimulation::setVehiclePosition(const unsigned int id, const OSG::Vec
 }
 
 void TrafficSimulation::setSimulationSpeed(const double speed) {
-    //VRFunction<VRThread*>* func = new VRFunction<VRThread*>("trafficSetSimulationSpeed", boost::bind(&realworld::TrafficSimulation::setSimulationSpeed, self->obj, speed));
-    //VRSceneManager::get()->initThread(func, "trafficSetSimulationSpeed", false);
-
     Value value;
     value["simulationSpeed"] = speed;
     value = client.sendData(value);
@@ -991,9 +956,6 @@ void TrafficSimulation::setSimulationSpeed(const double speed) {
 }
 
 void TrafficSimulation::setPlayerTransform(VRTransform *transform) {
-    //VRFunction<VRThread*>* func = new VRFunction<VRThread*>("trafficSetPlayerTransform", boost::bind(&realworld::TrafficSimulation::setPlayerTransform, self->obj, _child->obj));
-    //VRSceneManager::get()->initThread(func, "trafficSetPlayerTransform", false);
-
     player = transform;
 
     if (player != NULL && !playerCreated) {

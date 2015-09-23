@@ -26,9 +26,6 @@ VRProduction::VRProduction() {
     description = new VROntology();
     intraLogistics = new FLogistics();
     network = intraLogistics->addNetwork();
-
-    //auto fkt = new VRFunction<int>("production_update", boost::bind(&VRProduction::update, this));
-    //VRSceneManager::getCurrent()->addUpdateFkt(fkt);
 }
 
 VRProductionMachine::VRProductionMachine() {

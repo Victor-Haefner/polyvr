@@ -4,6 +4,7 @@
 
 #include "core/utils/rapidxml/rapidxml.hpp"
 #include "core/utils/rapidxml/rapidxml_print.hpp"
+#include "core/utils/VRFunctionFwd.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/toString.h"
 #include "core/objects/object/VRObjectT.h"
@@ -306,7 +307,7 @@ void buildAnimations(AnimationLibrary& lib, VRObject* objects) {
         VRTransform* t = (VRTransform*)obj;
         int axis = getAxis(a.second);
 
-        VRFunction<float>* fkt;
+        VRAnimPtr fkt;
         bool bezier = false;
 
         path* p = 0;
@@ -339,11 +340,13 @@ void buildAnimations(AnimationLibrary& lib, VRObject* objects) {
                 p->compute(80);
             }
             bool loop = false;
-            fkt = new VRFunction<float>(a.first, boost::bind(callback, t, axis, p, _1) );
+            fkt = VRFunction<float>::create(a.first, boost::bind(callback, t, axis, p, _1) );
 
             VRAnimation* anim = 0;
-            if (bezier) anim = new VRAnimation(duration, start[0], fkt, 0.f, 1.f, loop);
-            else anim = new VRAnimation(duration, start[0], fkt, start[1], end[1], loop);
+            VRAnimWeakPtr wkp = fkt;
+            if (bezier) anim = new VRAnimation(duration, start[0], wkp, 0.f, 1.f, loop);
+            else anim = new VRAnimation(duration, start[0], wkp, start[1], end[1], loop);
+            anim->setCallbackOwner(true);
             t->addAnimation(anim);
         }
     }

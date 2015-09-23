@@ -2,6 +2,7 @@
 #define VRROBOTARM_H_INCLUDED
 
 #include <OpenSG/OSGVector.h>
+#include "core/utils/VRFunctionFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -24,6 +25,7 @@ class VRRobotArm {
 
         VRAnalyticGeometry* ageo = 0;
         VRAnimation* anim = 0;
+        VRAnimPtr animPtr;
         path* animPath = 0;
         path* robotPath = 0;
 

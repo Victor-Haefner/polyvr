@@ -22,10 +22,15 @@ void VRAnimation::start(float offset) {
     VRSceneManager::getCurrent()->addAnimation(this);
 }
 
+void VRAnimation::setCallbackOwner(bool b) {
+    if (interp == 0) return;
+    interp->own(b);
+}
+
 void VRAnimation::stop() { run = false; }
 bool VRAnimation::isActive() { return run; }
 
-void VRAnimation::setSimpleCallback(VRFunction<float>* fkt, float _duration) {
+void VRAnimation::setSimpleCallback(VRAnimWeakPtr fkt, float _duration) {
     run = false;
     duration = _duration;
 

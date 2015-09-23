@@ -9,7 +9,7 @@
       </Object>
     </Object>
   </Objects>
-  <Rendering frustum_culling="1" occlusion_culling="0" two_sided="1"/>
+  <Rendering deferred_rendering="0" frustum_culling="1" occlusion_culling="0" ssao="0" two_sided="1"/>
   <Scripts>
     <Script name_suffix="0" base_name="gui" name_space="__script__" type="HTML" mobile="mobile">
       <core>
@@ -242,6 +242,7 @@
 	site.addMouse(mouse, gui, 0, 2, 3, 4)
 	site.addMouse(flystick, gui, 0, 2, 3, 4)
 	site.addKeyboard(keyboard)
+	VR.site = site
 </core>
       <arg type="VRPyDeviceType" value="flystick" name_suffix="0" base_name="flystick" name_space="init"/>
       <arg type="VRPyDeviceType" value="keyboard" name_suffix="0" base_name="keyboard" name_space="init"/>
@@ -306,7 +307,7 @@ void main() {
     </Script>
   </Scripts>
   <Sockets/>
-  <Background color="0.6 0.6 0.6" path="" type="0"/>
+  <Background color="0.6 0.6 0.6" format=".png" path="" type="0"/>
   <Navigation active="FlyWalk"/>
   <Materials/>
 </Scene>

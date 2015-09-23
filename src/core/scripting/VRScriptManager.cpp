@@ -549,10 +549,12 @@ PyObject* VRScriptManager::stackCall(VRScriptManager* self, PyObject *args) {
         if (type == "list") pArgs = PyList_AsTuple(pArgs);
     }
 
-    VRFunction<int>* fkt = new VRFunction<int>( "pyExecCall", boost::bind(execCall, pyFkt, pArgs, _1) );
+    VRUpdatePtr fkt = VRFunction<int>::create( "pyExecCall", boost::bind(execCall, pyFkt, pArgs, _1) );
+    VRUpdateWeakPtr wkp = fkt;
 
     VRScene* scene = VRSceneManager::getCurrent();
-    scene->addAnimation(0, delay, fkt, 0, 0, false);
+    auto a = scene->addAnimation(0, delay, wkp, 0, 0, false);
+    a->setCallbackOwner(true);
     Py_RETURN_TRUE;
 }
 

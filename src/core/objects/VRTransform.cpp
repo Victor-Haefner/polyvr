@@ -799,9 +799,9 @@ vector<VRAnimation*> VRTransform::getAnimations() {
 }
 
 VRAnimation* VRTransform::startPathAnimation(path* p, float time, float offset, bool redirect, bool loop) {
-    VRFunction<float>* fkt = new VRFunction<float>("TransAnim", boost::bind(setFromPath, this, p, redirect, _1));
+    pathAnimPtr = VRFunction<float>::create("TransAnim", boost::bind(setFromPath, this, p, redirect, _1));
     VRScene* scene = VRSceneManager::getCurrent();
-    VRAnimation* a = scene->addAnimation(time, offset, fkt, 0.f, 1.f, loop);
+    VRAnimation* a = scene->addAnimation<float>(time, offset, pathAnimPtr, 0.f, 1.f, loop);
     addAnimation(a);
     return a;
 }

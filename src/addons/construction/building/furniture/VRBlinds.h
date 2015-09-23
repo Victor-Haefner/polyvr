@@ -2,7 +2,7 @@
 #define VRBLINDS_H_INCLUDED
 
 #include "core/objects/VRTransform.h"
-#include "core/utils/VRFunction.h"
+#include "core/utils/VRFunctionFwd.h"
 #include "core/scene/VRScene.h"
 #include "core/setup/devices/VRDevice.h"
 
@@ -23,7 +23,7 @@ class VRBlinds: public VRTransform {
 
 
         VRGeometry* window;
-        VRFunction<float>* fkt;
+        VRAnimPtr fkt;
 
         VRGeometry* blend_geo;
         vector<Vec3f> bl_pos_open;

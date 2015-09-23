@@ -2,6 +2,7 @@
 #define VR3DENTITY_H_INCLUDED
 
 #include "object/VRObject.h"
+#include "core/utils/VRFunctionFwd.h"
 #include <OpenSG/OSGMatrix.h>
 #include <OpenSG/OSGLine.h>
 #include <OpenSG/OSGFieldContainerFields.h>
@@ -29,6 +30,7 @@ class VRTransform : public VRObject {
         TransformRecPtr t;//OSG Transform
         bool noBlt;
         VRPhysics* physics;
+        VRAnimPtr pathAnimPtr;
 
         unsigned int change_time_stamp = 0;
         unsigned int wchange_time_stamp = 0;

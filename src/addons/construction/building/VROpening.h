@@ -4,6 +4,7 @@
 #include "core/objects/VRTransform.h"
 #include "core/setup/devices/VRDevice.h"
 #include "core/scene/VRScene.h"
+#include <memory>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -25,7 +26,8 @@ class VROCtoggle {
 class VROpening: public VRTransform, public VROCtoggle {
     private:
         VRTransform *d1, *d2;
-        VRFunction<Vec3f> *fkt1, *fkt2;
+        shared_ptr< VRFunction<Vec3f> > fkt1;
+        shared_ptr< VRFunction<Vec3f> > fkt2;
         VRDevCb* toggleCallback;
         VRSignal* sig;
         VRScene* scene;

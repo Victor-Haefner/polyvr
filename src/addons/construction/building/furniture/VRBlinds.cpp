@@ -30,7 +30,7 @@ VRBlinds::VRBlinds(string name, VRGeometry* _window, VRScene* _scene): VRTransfo
     blend_geo->addAttachment("blind", 0);
 
     // animation callback
-    fkt = new VRFunction<float>("Blinds_interpolate", boost::bind(&VRBlinds::interpolate, this, _1));
+    fkt = VRFunction<float>::create("Blinds_interpolate", boost::bind(&VRBlinds::interpolate, this, _1));
 
     // toggle callback
     toggleCallback = new VRDevCb("Blinds_toggle", boost::bind(&VRBlinds::toggle, this, _1));
@@ -45,7 +45,7 @@ void VRBlinds::open() {
     if (state == OPEN) return;
     state = OPEN;
 
-    scene->addAnimation(3, 0, fkt, float(0.0), float(1.0), false);
+    scene->addAnimation<float>(3, 0, fkt, float(0.0), float(1.0), false);
     VRSoundManager::get().playSound(sound);
 }
 
@@ -53,7 +53,7 @@ void VRBlinds::close() {
     if (state == CLOSE) return;
     state = CLOSE;
 
-    scene->addAnimation(3, 0, fkt, float(1.0), float(0.0), false);
+    scene->addAnimation<float>(3, 0, fkt, float(1.0), float(0.0), false);
     VRSoundManager::get().playSound(sound);
 }
 

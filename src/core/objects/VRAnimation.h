@@ -4,6 +4,7 @@
 #include <OpenSG/OSGConfig.h>
 
 #include "core/utils/VRName.h"
+#include "core/utils/VRFunctionFwd.h"
 
 template<class T> class VRFunction;
 
@@ -15,15 +16,22 @@ class VRAnimation : public VRName {
         struct interpolator {
             virtual ~interpolator();
             virtual void update(float t) = 0;
+            virtual void own(bool b) = 0;
         };
 
         template<typename T>
         struct interpolatorT : interpolator {
-            VRFunction<T>* fkt;
+            shared_ptr< VRFunction<T> > sp;
+            weak_ptr< VRFunction<T> > fkt;
             T start_value, end_value;
             void update(float t) {
                 T val = start_value + (end_value - start_value)*t;
-                (*fkt)(val);
+                if ( auto sp = fkt.lock() ) (*sp)(val);
+            }
+
+            void own(bool b) {
+                if (b) sp = fkt.lock();
+                else sp = 0;
             }
         };
 
@@ -38,9 +46,11 @@ class VRAnimation : public VRName {
         VRAnimation(string name);
 
         template<typename T>
-        VRAnimation(float _duration, float _offset, VRFunction<T>* _fkt, T _start, T _end, bool _loop);
+        VRAnimation(float _duration, float _offset, weak_ptr< VRFunction<T> > _fkt, T _start, T _end, bool _loop);
 
-        void setSimpleCallback(VRFunction<float>* fkt, float _duration);
+        void setSimpleCallback(VRAnimWeakPtr fkt, float _duration);
+
+        void setCallbackOwner(bool b);
 
         void setLoop(bool b);
         bool getLoop();
