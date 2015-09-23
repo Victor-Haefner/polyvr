@@ -83,6 +83,7 @@ class VRGeometry : public VRTransform {
         void decimate(float f);
         void merge(VRGeometry* geo);
         void fixColorMapping();
+        void updateNormals();
 
         void showGeometricData(string type, bool b);
         float calcSurfaceArea();
