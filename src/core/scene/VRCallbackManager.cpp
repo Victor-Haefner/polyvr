@@ -98,7 +98,12 @@ void VRCallbackManager::updateCallbacks() {
         if ( auto scb = cb.lock()) (*scb)(0);
     }
 
-    for (auto j : jobFktPtrs) (*j.second.ptr)(0);
+    for (auto j : jobFktPtrs) {
+        if (j.second.ptr) {
+            string name = j.second.ptr->getName();
+            (*j.second.ptr)(0);
+        }
+    }
     jobFktPtrs.clear();
 }
 

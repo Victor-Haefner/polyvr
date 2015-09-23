@@ -25,8 +25,8 @@ class CEF : public CefClient, public CefRenderHandler {
         bool init = false;
         bool focus = false;
 
-        shared_ptr<VRFunction<int> > update_callback;
-        shared_ptr<VRFunction<int> > mouse_move_callback;
+        VRUpdatePtr update_callback;
+        VRUpdatePtr mouse_move_callback;
         shared_ptr<VRFunction<OSG::VRDevice*> > mouse_dev_callback;
         shared_ptr<VRFunction<OSG::VRDevice*> > keyboard_dev_callback;
 
@@ -62,6 +62,7 @@ class CEF : public CefClient, public CefRenderHandler {
         void resize();
 
         static void reloadScripts(string path);
+        static void shutdown();
 };
 
 typedef shared_ptr<CEF> CEFPtr;

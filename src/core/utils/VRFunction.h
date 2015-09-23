@@ -25,6 +25,7 @@ class VRFunction : public VRFunction_base {
     boost::function<void (T)> fkt;
     public:
         VRFunction(string name, boost::function<void (T)> fkt) : fkt(fkt) { this->name = name; }
+        ~VRFunction() {}
 
         void operator()(T t) {
             try {

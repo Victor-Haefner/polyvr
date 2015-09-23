@@ -9,6 +9,7 @@
 #include "core/scene/VRSceneLoader.h"
 #include "core/scene/VRSoundManager.h"
 #include "core/objects/material/VRMaterial.h"
+#include "addons/CEF/CEF.h"
 
 #include <OpenSG/OSGNameAttachment.h>
 #include <OpenSG/OSGNode.h>
@@ -108,6 +109,7 @@ void exitPolyVR() {
     delete VRMainInterface::get();
     delete &VRSoundManager::get();
     VRMaterial::clearAll();
+    CEF::shutdown();
 
     //printFieldContainer();
 
