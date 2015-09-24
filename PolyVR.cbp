@@ -378,6 +378,10 @@
 		<Unit filename="src/addons/Semantics/Reasoning/VRProperty.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VRReasoner.cpp" />
 		<Unit filename="src/addons/Semantics/Reasoning/VRReasoner.h" />
+		<Unit filename="src/addons/Semantics/Segmentation/VRAdjacencyGraph.cpp" />
+		<Unit filename="src/addons/Semantics/Segmentation/VRAdjacencyGraph.h" />
+		<Unit filename="src/addons/Semantics/Segmentation/VRPyAdjacencyGraph.cpp" />
+		<Unit filename="src/addons/Semantics/Segmentation/VRPyAdjacencyGraph.h" />
 		<Unit filename="src/addons/Semantics/Segmentation/VRPySegmentation.cpp" />
 		<Unit filename="src/addons/Semantics/Segmentation/VRPySegmentation.h" />
 		<Unit filename="src/addons/Semantics/Segmentation/VRSegmentation.cpp" />
