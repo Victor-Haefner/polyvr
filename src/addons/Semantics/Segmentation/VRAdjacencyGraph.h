@@ -41,6 +41,7 @@ class VRAdjacencyGraph {
         void compute(bool do_neighbors = true, bool do_tri_loockup = true);
 
         vector<int> getNeighbors(int i);
+        vector<int> getBorderVertices();
 };
 
 OSG_END_NAMESPACE;

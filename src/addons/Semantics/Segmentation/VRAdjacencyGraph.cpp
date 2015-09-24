@@ -93,4 +93,17 @@ vector<int> VRAdjacencyGraph::getNeighbors(int i) {
     return res;
 }
 
+vector<int> VRAdjacencyGraph::getBorderVertices() {
+    vector<int> borders;
+
+    for (auto i : edge_triangle_loockup) {
+        for (auto j : i.second) {
+            if (j.second.size() != 1) continue; // not an edge
+            borders.push_back(i.first);
+            borders.push_back(j.first);
+        }
+    }
+
+    return borders;
+}
 

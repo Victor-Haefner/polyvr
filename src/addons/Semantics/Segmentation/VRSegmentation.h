@@ -76,6 +76,7 @@ class VRSegmentation {
     public:
 
         static VRObject* extractPatches(VRGeometry* geo, SEGMENTATION_ALGORITHM algo, float curvature, float curvature_delta, Vec3f normal, Vec3f normal_delta);
+        static vector<int> growPatch(VRGeometry* geo, int i);
 
         static void removeDuplicates(VRGeometry* geo);
         static void fillHoles(VRGeometry* geo, int steps);
