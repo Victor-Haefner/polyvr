@@ -39,9 +39,9 @@ class VRAdjacencyGraph {
 
         void compNeighbors();
         void compTriLoockup();
-        void compCurvatures();
+        void compCurvatures(int range = 1);
 
-        vector<int> getNeighbors(int i);
+        vector<int> getNeighbors(int i, int range = 1);
         vector<int> getBorderVertices();
         float getCurvature(int i);
 };

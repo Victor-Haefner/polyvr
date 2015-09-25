@@ -54,7 +54,7 @@ void VRAdjacencyGraph::compNeighbors() {
     }
 }
 
-void VRAdjacencyGraph::compCurvatures() {
+void VRAdjacencyGraph::compCurvatures(int range) {
     vertex_curvatures.clear();
     if (geo == 0) return;
 
@@ -62,12 +62,12 @@ void VRAdjacencyGraph::compCurvatures() {
     auto norms = geo->getMesh()->getNormals();
     int N = pos->size();
 
-    auto curvMax = [&](int i) {
+    auto curvMax = [&](int i, int range) {
 		Vec3f n = norms->getValue<Vec3f>(i);
 		Vec3f vi = pos->getValue<Vec3f>(i);
 		float K = 0;
 		float Kmax = 0;
-		auto Ne = getNeighbors(i);
+		auto Ne = getNeighbors(i,range);
 		if (Ne.size() == 0) return K;
 
 		for (int j : Ne) {
@@ -83,11 +83,11 @@ void VRAdjacencyGraph::compCurvatures() {
 		return K;
     };
 
-    auto curvAvg = [&](int i) {
+    auto curvAvg = [&](int i, int range) {
 		Vec3f n = norms->getValue<Vec3f>(i);
 		Vec3f vi = pos->getValue<Vec3f>(i);
 		float K = 0;
-		auto Ne = getNeighbors(i);
+		auto Ne = getNeighbors(i,range);
 		if (Ne.size() == 0) return K;
 
 		for (int j : Ne) {
@@ -101,7 +101,7 @@ void VRAdjacencyGraph::compCurvatures() {
     };
 
     vertex_curvatures.resize(N);
-    for (int i = 0; i < N; i++) vertex_curvatures[i] = curvMax(i);
+    for (int i = 0; i < N; i++) vertex_curvatures[i] = curvAvg(i,range);
 }
 
 void VRAdjacencyGraph::compTriLoockup() {
@@ -126,14 +126,33 @@ void VRAdjacencyGraph::compTriLoockup() {
     }
 }
 
-vector<int> VRAdjacencyGraph::getNeighbors(int i) {
+vector<int> VRAdjacencyGraph::getNeighbors(int i, int range) {
     if (geo == 0) return vector<int>();
     if (2*i+1 >= vertex_neighbor_params.size()) return vector<int>();
 
-    int o = vertex_neighbor_params[2*i];
-    int nN = vertex_neighbor_params[2*i+1];
-    vector<int> res(nN,0);
-    for (int j=0; j<nN; j++) res[j] = vertex_neighbors[o+j];
+    vector<int> job;
+    vector<int> nextJob;
+    vector<int> res;
+    map<int, bool> resMask;
+    job.push_back(i);
+    while (range > 0) {
+        nextJob.clear();
+        for (auto j : job) {
+            if (resMask.count(j)) continue;
+            resMask[j] = true;
+            int o = vertex_neighbor_params[2*j];
+            int nN = vertex_neighbor_params[2*j+1];
+            for (int k=0; k<nN; k++) {
+                int n = vertex_neighbors[o+k];
+                if (resMask.count(n)) continue;
+                nextJob.push_back(n);
+                res.push_back(n);
+            }
+        }
+        job = nextJob;
+        range--;
+    }
+
     return res;
 }
 
