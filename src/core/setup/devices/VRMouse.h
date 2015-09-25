@@ -42,6 +42,8 @@ class VRMouse : public VRDevice {
         VRSignal* getToEdgeSignal();
         VRSignal* getFromEdgeSignal();
 
+        void setCursor(string c);
+
         void save(xmlpp::Element* e);
         void load(xmlpp::Element* e);
 };

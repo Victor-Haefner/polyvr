@@ -19,6 +19,7 @@
 #include "VRPyColorChooser.h"
 #include "VRPyConstraint.h"
 #include "VRPyHaptic.h"
+#include "VRPyMouse.h"
 #include "VRPyMobile.h"
 #include "VRPyBaseT.h"
 #include "VRPyMaterial.h"
@@ -280,6 +281,7 @@ void VRScriptManager::initPyModules() {
     registerModule<VRPyDevice>("Device", pModVR);
     registerModule<VRPyHaptic>("Haptic", pModVR, VRPyDevice::typeRef);
     registerModule<VRPyMobile>("Mobile", pModVR, VRPyDevice::typeRef);
+    registerModule<VRPyMouse>("Mouse", pModVR, VRPyDevice::typeRef);
     registerModule<VRPyAnimation>("Animation", pModVR);
     registerModule<VRPyPath>("Path", pModVR);
     registerModule<VRPyRecorder>("Recorder", pModVR);

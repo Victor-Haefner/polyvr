@@ -9,6 +9,7 @@
 #include "VRPyLod.h"
 #include "core/setup/devices/VRMobile.h"
 #include "VRPySocket.h"
+#include "VRPyMouse.h"
 #include "VRPyHaptic.h"
 #include "VRPyMobile.h"
 #include "VRPyBaseT.h"
@@ -37,7 +38,7 @@ void updateArgPtr(VRScript::arg* a) {
         a->ptr = (void*)scene->getSocket(a->val);
         return;
     }
-    if (t == "VRPyDeviceType" || t == "VRPyHapticType" || t == "VRPyMobileType") {
+    if (t == "VRPyDeviceType" || t == "VRPyMouseType" || t == "VRPyHapticType" || t == "VRPyMobileType") {
         a->ptr = (void*)setup->getDevice(a->val);
         return;
     }
@@ -202,6 +203,7 @@ PyObject* VRScript::getPyObj(arg* a) {
     else if (a->type == "VRPyLightType") return VRPyLight::fromPtr((VRLight*)a->ptr);
     else if (a->type == "VRPyLodType") return VRPyLod::fromPtr((VRLod*)a->ptr);
     else if (a->type == "VRPyDeviceType") return VRPyDevice::fromPtr((VRDevice*)a->ptr);
+    else if (a->type == "VRPyMouseType") return VRPyMouse::fromPtr((VRMouse*)a->ptr);
     else if (a->type == "VRPyHapticType") return VRPyHaptic::fromPtr((VRHaptic*)a->ptr);
     else if (a->type == "VRPyMobileType") return VRPyMobile::fromPtr((VRMobile*)a->ptr);
     else if (a->type == "VRPySocketType") return VRPySocket::fromPtr((VRSocket*)a->ptr);
