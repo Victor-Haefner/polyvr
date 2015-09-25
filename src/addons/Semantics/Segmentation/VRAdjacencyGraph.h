@@ -25,9 +25,7 @@ class VRAdjacencyGraph {
         map<int, map<int, vector<triangle> > > edge_triangle_loockup;
         vector<int> vertex_neighbor_params;
         vector<int> vertex_neighbors;
-
-        void compNeighbors();
-        void compTriLoockup();
+        vector<float> vertex_curvatures;
 
     private:
         VRGeometry* geo = 0;
@@ -38,10 +36,14 @@ class VRAdjacencyGraph {
         static shared_ptr<VRAdjacencyGraph> create();
 
         void setGeometry(VRGeometry* geo);
-        void compute(bool do_neighbors = true, bool do_tri_loockup = true);
+
+        void compNeighbors();
+        void compTriLoockup();
+        void compCurvatures();
 
         vector<int> getNeighbors(int i);
         vector<int> getBorderVertices();
+        float getCurvature(int i);
 };
 
 OSG_END_NAMESPACE;

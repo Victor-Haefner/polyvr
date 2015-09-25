@@ -72,7 +72,8 @@ void VRSegmentation::removeDuplicates(VRGeometry* geo) {
 vector<int> VRSegmentation::growPatch(VRGeometry* geo, int i) {
     auto agraph = VRAdjacencyGraph::create();
     agraph->setGeometry(geo);
-    agraph->compute();
+    agraph->compNeighbors();
+    agraph->compCurvatures();
 
     auto pos = geo->getMesh()->getPositions();
     auto norms = geo->getMesh()->getNormals();

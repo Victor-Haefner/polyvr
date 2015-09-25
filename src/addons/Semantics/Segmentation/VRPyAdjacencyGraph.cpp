@@ -47,8 +47,11 @@ template<> PyTypeObject VRPyBaseT<OSG::VRAdjacencyGraph>::type = {
 
 PyMethodDef VRPyAdjacencyGraph::methods[] = {
     {"setGeometry", (PyCFunction)VRPyAdjacencyGraph::setGeometry, METH_VARARGS, "Set the geometry to set up the graph - setGeometry( geo )" },
-    {"compute", (PyCFunction)VRPyAdjacencyGraph::compute, METH_VARARGS, "Compute the vertex neighbors list and the triangle loockup table - compute(bool do_neighbors, bool do_triangles)" },
+    {"computeNeighbors", (PyCFunction)VRPyAdjacencyGraph::computeNeighbors, METH_NOARGS, "Compute the vertex neighbors list - computeNeighbors()" },
+    {"computeTriLoockup", (PyCFunction)VRPyAdjacencyGraph::computeTriLoockup, METH_NOARGS, "Compute the triangle loockup table - computeTriLoockup()" },
+    {"computeCurvatures", (PyCFunction)VRPyAdjacencyGraph::computeCurvatures, METH_NOARGS, "Compute the vertex curvatures list - computeCurvatures()" },
     {"getNeighbors", (PyCFunction)VRPyAdjacencyGraph::getNeighbors, METH_VARARGS, "Return the neighbor indices to index i - [int] getNeighbors(int i)" },
+    {"getCurvature", (PyCFunction)VRPyAdjacencyGraph::getCurvature, METH_VARARGS, "Return the mesh curvature at index i - float getCurvature(int i)" },
     {NULL}  /* Sentinel */
 };
 
@@ -59,11 +62,18 @@ PyObject* VRPyAdjacencyGraph::setGeometry(VRPyAdjacencyGraph* self, PyObject* ar
     Py_RETURN_TRUE;
 }
 
-PyObject* VRPyAdjacencyGraph::compute(VRPyAdjacencyGraph* self, PyObject* args) {
-    bool b1 = true;
-    bool b2 = true;
-    if (! PyArg_ParseTuple(args, "|ii:compute", &b1, &b2)) return NULL;
-    self->objPtr->compute(b1, b2);
+PyObject* VRPyAdjacencyGraph::computeNeighbors(VRPyAdjacencyGraph* self) {
+    self->objPtr->compNeighbors();
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyAdjacencyGraph::computeTriLoockup(VRPyAdjacencyGraph* self) {
+    self->objPtr->compTriLoockup();
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyAdjacencyGraph::computeCurvatures(VRPyAdjacencyGraph* self) {
+    self->objPtr->compCurvatures();
     Py_RETURN_TRUE;
 }
 
@@ -74,4 +84,10 @@ PyObject* VRPyAdjacencyGraph::getNeighbors(VRPyAdjacencyGraph* self, PyObject* a
     PyObject* res = PyList_New(v.size());
     for (uint i=0; i<v.size(); i++) PyList_SetItem(res, i, PyInt_FromLong(v[i]));
     return res;
+}
+
+PyObject* VRPyAdjacencyGraph::getCurvature(VRPyAdjacencyGraph* self, PyObject* args) {
+    int i;
+    if (! PyArg_ParseTuple(args, "i:getCurvature", &i)) return NULL;
+    return PyFloat_FromDouble( self->objPtr->getCurvature(i) );
 }

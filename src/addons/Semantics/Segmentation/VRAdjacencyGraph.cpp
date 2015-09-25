@@ -12,12 +12,6 @@ shared_ptr<VRAdjacencyGraph> VRAdjacencyGraph::create() { return shared_ptr<VRAd
 
 void VRAdjacencyGraph::setGeometry(VRGeometry* geo) { this->geo = geo; }
 
-void VRAdjacencyGraph::compute(bool do_neighbors, bool do_tri_loockup) {
-    if (geo == 0) return;
-    if (do_neighbors) compNeighbors();
-    if (do_tri_loockup) compTriLoockup();
-}
-
 void VRAdjacencyGraph::compNeighbors() {
     vertex_neighbor_params.clear();
     vertex_neighbors.clear();
@@ -58,6 +52,56 @@ void VRAdjacencyGraph::compNeighbors() {
         int k = 0;
         for (auto j : i.second) { vertex_neighbors[o+k] = j.first; k++; }
     }
+}
+
+void VRAdjacencyGraph::compCurvatures() {
+    vertex_curvatures.clear();
+    if (geo == 0) return;
+
+    auto pos = geo->getMesh()->getPositions();
+    auto norms = geo->getMesh()->getNormals();
+    int N = pos->size();
+
+    auto curvMax = [&](int i) {
+		Vec3f n = norms->getValue<Vec3f>(i);
+		Vec3f vi = pos->getValue<Vec3f>(i);
+		float K = 0;
+		float Kmax = 0;
+		auto Ne = getNeighbors(i);
+		if (Ne.size() == 0) return K;
+
+		for (int j : Ne) {
+			if (j >= N) continue;
+			Vec3f d = pos->getValue<Vec3f>(j) - vi;
+			float k = 2*n.dot(d)/d.squareLength();
+			if (abs(k) > Kmax) {
+                K = k;
+                Kmax = abs(k);
+			}
+		}
+
+		return K;
+    };
+
+    auto curvAvg = [&](int i) {
+		Vec3f n = norms->getValue<Vec3f>(i);
+		Vec3f vi = pos->getValue<Vec3f>(i);
+		float K = 0;
+		auto Ne = getNeighbors(i);
+		if (Ne.size() == 0) return K;
+
+		for (int j : Ne) {
+			if (j >= N) continue;
+			Vec3f d = pos->getValue<Vec3f>(j) - vi;
+			K += 2*n.dot(d)/d.squareLength();
+		}
+
+		K /= Ne.size();
+		return K;
+    };
+
+    vertex_curvatures.resize(N);
+    for (int i = 0; i < N; i++) vertex_curvatures[i] = curvMax(i);
 }
 
 void VRAdjacencyGraph::compTriLoockup() {
@@ -106,4 +150,11 @@ vector<int> VRAdjacencyGraph::getBorderVertices() {
 
     return borders;
 }
+
+float VRAdjacencyGraph::getCurvature(int i) {
+    if (geo == 0) return 0;
+    if (i > vertex_curvatures.size() || i < 0) return 0;
+    return vertex_curvatures[i];
+}
+
 
