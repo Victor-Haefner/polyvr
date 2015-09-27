@@ -14,6 +14,9 @@ VRStroke::VRStroke(string name) : VRGeometry(name) {
     closed = false;
 }
 
+VRStrokePtr VRStroke::create(string name) { return shared_ptr<VRStroke>(new VRStroke(name) ); }
+VRStrokePtr VRStroke::ptr() { return static_pointer_cast<VRStroke>( shared_from_this() ); }
+
 void VRStroke::setPath(path* p) {
     paths.clear();
     paths.push_back(p);
@@ -216,7 +219,7 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed) {
     setMesh(g);
 }
 
-void VRStroke::strokeStrew(VRGeometry* geo) {
+void VRStroke::strokeStrew(VRGeometryPtr geo) {
     if (geo == 0) return;
 
     mode = 1;
@@ -227,7 +230,7 @@ void VRStroke::strokeStrew(VRGeometry* geo) {
         vector<Vec3f> pnts = paths[i]->getPositions();
         for (uint j=0; j<pnts.size(); j++) {
             Vec3f p = pnts[j];
-            VRGeometry* g = (VRGeometry*)geo->duplicate();
+            VRGeometryPtr g = static_pointer_cast<VRGeometry>(geo->duplicate());
             addChild(g);
             g->translate(p);
         }

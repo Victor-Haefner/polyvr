@@ -22,7 +22,7 @@ class VRLight : public VRObject {
         SpotLightRecPtr s_light;
         string lightType;
         string shadowType;
-        VRLightBeacon* beacon = 0;
+        VRLightBeaconPtr beacon = 0;
         string beacon_name;
         Color4f lightDiffuse;
         Color4f lightAmbient;
@@ -41,6 +41,9 @@ class VRLight : public VRObject {
     public:
         VRLight(string name = "");
         ~VRLight();
+
+        static VRLightPtr create(string name);
+        VRLightPtr ptr();
 
         void setOn(bool b);
         bool isOn();
@@ -61,8 +64,8 @@ class VRLight : public VRObject {
         void setShadowType(string t);
         string getShadowType();
 
-        VRLightBeacon* getBeacon();
-        void setBeacon(VRLightBeacon* b);
+        VRLightBeaconPtr getBeacon();
+        void setBeacon(VRLightBeaconPtr b);
 
         void setAttenuation(Vec3f a);
         Vec3f getAttenuation();

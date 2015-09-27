@@ -118,7 +118,7 @@ void VRTree::grow(const seg_params& sp, segment* p, int iteration) {
 }
 
 void VRTree::initMaterial() {
-    VRMaterial* mat = new VRMaterial("tree_mat");
+    VRMaterialPtr mat = VRMaterial::create("tree_mat");
 
     mat->setDiffuse(Color3f(0.8,0.8,0.6));
     mat->setAmbient(Color3f(0.4, 0.4, 0.2));

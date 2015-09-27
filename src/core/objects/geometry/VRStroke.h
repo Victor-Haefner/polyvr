@@ -2,6 +2,7 @@
 #define VRStroke_H_INCLUDED
 
 #include "VRGeometry.h"
+#include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -16,10 +17,13 @@ class VRStroke : public VRGeometry {
         vector<Vec3f> profile;
         bool closed = true;
 
-        VRGeometry* strewGeo = 0;
+        VRGeometryPtr strewGeo = 0;
 
     public:
         VRStroke(string name);
+
+        static VRStrokePtr create(string name);
+        VRStrokePtr ptr();
 
         void setPath(path* p);
         void addPath(path* p);
@@ -28,7 +32,7 @@ class VRStroke : public VRGeometry {
         vector<path*>& getPaths();
 
         void strokeProfile(vector<Vec3f> profile, bool closed);
-        void strokeStrew(VRGeometry* geo);
+        void strokeStrew(VRGeometryPtr geo);
 
         void update();
 };

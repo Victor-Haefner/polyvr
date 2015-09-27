@@ -12,7 +12,7 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 VRColorChooser::VRColorChooser() {
-    mat = new VRMaterial("color choose");
+    mat = VRMaterial::create("color choose");
     mat->setLit(false);
     setColor(Vec3f(1,1,1));
 }
@@ -49,7 +49,7 @@ void VRColorChooser::setColor(Color3f c) { last_color = color; color = c; update
 Color3f VRColorChooser::getColor() { return color; }
 Color3f VRColorChooser::getLastColor() { return last_color; }
 
-void VRColorChooser::setGeometry(VRGeometry* g) { geo = g; geo->setMaterial(mat); }
+void VRColorChooser::setGeometry(VRGeometryPtr g) { geo = g; geo->setMaterial(mat); }
 
 void VRColorChooser::resolve(VRDevice* dev) {
     if (dev == 0) return;

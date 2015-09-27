@@ -7,6 +7,7 @@
 #include <string>
 #include <list>
 #include "core/utils/VRFunctionFwd.h"
+#include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -16,7 +17,7 @@ class VRObject;
 
 class VRObjectManager {
     protected:
-        map<string, list<VRGroup*>* > groups;
+        map<string, list<VRGroupPtr>* > groups;
         shared_ptr<VRFunction<int> > updateObjectsFkt;
 
         void addGroup(string group);
@@ -28,9 +29,9 @@ class VRObjectManager {
 
         //GROUPS------------------------
 
-        void addToGroup(VRGroup* obj, string group);
+        void addToGroup(VRGroupPtr obj, string group);
 
-        list<VRGroup*>* getGroup(string group);
+        list<VRGroupPtr>* getGroup(string group);
 
         vector<string> getGroupList();
 };

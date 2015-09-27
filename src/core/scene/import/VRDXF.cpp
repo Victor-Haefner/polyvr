@@ -745,7 +745,7 @@ void handleBlock(block, infile) {
 			block.data.push_back(obj)
 }
 
-VRGeometry* loadDXF(string filename) {
+VRGeometryPtr loadDXF(string filename) {
     ifstream file(filename.c_str());
     string s;
     for(int i=0; i<16; i++) getline(file, s); // jump to data
@@ -795,7 +795,7 @@ VRGeometry* loadDXF(string filename) {
     geo->setColors(Cols);
     geo->setMaterial(Mat);
 
-    VRGeometry* res = new VRGeometry(filename);
+    VRGeometryPtr res = VRGeometry::create(filename);
     res->setMesh(geo);
     return res;
 }

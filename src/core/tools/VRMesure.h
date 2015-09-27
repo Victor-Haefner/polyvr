@@ -6,36 +6,32 @@
 #include <OpenSG/OSGMaterial.h>
 #include <string>
 #include "core/utils/VRFunctionFwd.h"
-
-template<class T> class VRFunction;
+#include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRBillboard;
-class VRGeometry;
 class VRScene;
 class VRDevice;
 class VRSignal;
 
 class VRMesure {
     private:
-        VRGeometry* s1;//spheren die mit drag && drop plaziert werden
-        VRGeometry* s2;
-        VRGeometry* l;
+        VRGeometryPtr s1;//spheren die mit drag && drop plaziert werden
+        VRGeometryPtr s2;
+        VRGeometryPtr l;
 
-        VRBillboard* display;
-        //VRSprite* sprite;
+        VRBillboardPtr display;
+        //VRSpritePtr sprite;
         VRUpdatePtr updatePtr;
 
         VRScene* scene;
 
-        //VRTransform* dummy;
+        //VRTransformPtr dummy;
 
         string convertToString(float f, int p);
 
         void processBar(Vec3f p1, Vec3f p2);
-
         void processLabel(Vec3f p1, Vec3f p2, Vec3f cpos);
 
         void check();

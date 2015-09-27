@@ -7,7 +7,7 @@ using namespace std;
 namespace realworld {
     class BaseWorldObject {
         public:
-            VRGeometry* mesh;
+            VRGeometryPtr mesh;
     };
 }
 

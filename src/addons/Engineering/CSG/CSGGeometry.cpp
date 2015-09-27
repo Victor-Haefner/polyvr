@@ -162,9 +162,9 @@ bool CSGGeometry::setEditMode(const bool editModeActive) {
 			result = disableEditMode();
 
 			// Promote news to our parents, but only if parents had edit mode disabled before
-			VRObject *obj = getParent();
-			if(obj->getType() == "CSGGeometry" && !((CSGGeometry*)obj)->getEditMode()) {
-				CSGGeometry *geo = (CSGGeometry*)obj;
+			VRObjectPtr obj = getParent();
+            CSGGeometryPtr geo = static_pointer_cast<CSGGeometry>(obj);
+			if (obj->getType() == "CSGGeometry" && !geo->getEditMode()) {
 				if (result) result = geo->setEditMode(true);
 				if (result) result = geo->setEditMode(false);
 			}
@@ -173,7 +173,7 @@ bool CSGGeometry::setEditMode(const bool editModeActive) {
 			// Even if they had Edit Mode enabled till now we need their computed geometry to work on it
 			for (auto c : children) {
 				if (c->getType() != "CSGGeometry") continue;
-                CSGGeometry *geo = (CSGGeometry*)c;
+                geo = static_pointer_cast<CSGGeometry>(c);
                 if (geo->getEditMode() && result) result = geo->setEditMode(false);
 			}
 		}

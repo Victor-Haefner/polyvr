@@ -66,7 +66,7 @@ void CEF::initiate() {
     browser = CefBrowserHost::CreateBrowserSync(win, this, "www.google.de", browser_settings, 0);
 }
 
-void CEF::setMaterial(VRMaterial* mat) { if (mat == 0) return; this->mat = mat; mat->setTexture(image); }
+void CEF::setMaterial(VRMaterialPtr mat) { if (mat == 0) return; this->mat = mat; mat->setTexture(image); }
 CefRefPtr<CefRenderHandler> CEF::GetRenderHandler() { return this; }
 string CEF::getSite() { return site; }
 void CEF::reload() { browser->Reload(); }
@@ -113,7 +113,7 @@ void CEF::OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const Re
     image->set(Image::OSG_BGRA_PF, width, height, 1, 0, 1, 0.0, (const uint8_t*)buffer, Image::OSG_UINT8_IMAGEDATA, true, 1);
 }
 
-void CEF::addMouse(VRDevice* dev, VRObject* obj, int lb, int rb, int wu, int wd) {
+void CEF::addMouse(VRDevice* dev, VRObjectPtr obj, int lb, int rb, int wu, int wd) {
     if (dev == 0 || obj == 0) return;
     this->obj = obj;
 

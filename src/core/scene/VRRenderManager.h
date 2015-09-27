@@ -2,6 +2,7 @@
 #define VRRENDERMANAGER_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
+#include "core/objects/VRObjectFwd.h"
 #include "core/utils/VRStorage.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -22,18 +23,18 @@ class VRRenderManager : public VRStorage {
 
     protected:
         VRDefShading* defShading = 0;
-        VRObject* root = 0;
-        VRObject* root_def_shading = 0;
-        VRObject* root_ssao = 0;
-        VRObject* root_system = 0;
-        map<int, VRLight*> light_map;
+        VRObjectPtr root = 0;
+        VRObjectPtr root_def_shading = 0;
+        VRObjectPtr root_ssao = 0;
+        VRObjectPtr root_system = 0;
+        map<int, VRLightPtr> light_map;
 
     public:
         VRRenderManager();
         ~VRRenderManager();
 
-        VRLight* addLight(string name);
-        VRLight* getLight(int ID);
+        VRLightPtr addLight(string name);
+        VRLightPtr getLight(int ID);
 
         void setFrustumCulling(bool b);
         bool getFrustumCulling();
@@ -44,7 +45,7 @@ class VRRenderManager : public VRStorage {
         void setTwoSided(bool b);
         bool getTwoSided();
 
-        void setDSCamera(VRCamera* cam);
+        void setDSCamera(VRCameraPtr cam);
         void setDefferedShading(bool b);
         bool getDefferedShading();
 

@@ -60,7 +60,7 @@ PyObject* VRPyMechanism::add(VRPyMechanism* self, PyObject* args) {
     VRPyGeometry* geo;
     if (! PyArg_ParseTuple(args, "O", &geo)) return NULL;
 
-    self->obj->add(geo->obj);
+    self->obj->add(geo->objPtr);
     Py_RETURN_TRUE;
 }
 
@@ -81,10 +81,10 @@ PyObject* VRPyMechanism::addChain(VRPyMechanism* self, PyObject* args) {
     float w; PyObject *l, *dirs;
     if (! PyArg_ParseTuple(args, "fOO", &w, &l, &dirs)) return NULL;
     vector<PyObject*> objs = pyListToVector(l);
-    vector<OSG::VRGeometry*> geos;
+    vector<OSG::VRGeometryPtr> geos;
     for (auto o : objs) {
         VRPyGeometry* g = (VRPyGeometry*)o;
-        geos.push_back( g->obj );
+        geos.push_back( g->objPtr );
     }
     return VRPyTypeCaster::cast( self->obj->addChain(w, geos, PyString_AsString(dirs) ) );
 }

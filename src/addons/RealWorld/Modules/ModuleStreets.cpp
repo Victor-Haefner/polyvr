@@ -26,7 +26,7 @@ ModuleStreets::ModuleStreets(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, Te
     //this->streetHeight = Config::STREET_HEIGHT + Config::GROUND_LVL;
 
     // create material
-    matStreet = new VRMaterial("Street");
+    matStreet = VRMaterial::create("Street");
     matStreet->setTexture("world/textures/street1.png");
 
     matStreet->setAmbient(Color3f(0.5, 0.5, 0.5)); //light reflection in all directions
@@ -141,13 +141,13 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
         makeStreetSegmentGeometry(seg.second, sdata); // load street segments
         auto sign = makeSignGeometry(seg.second);
         if (sign == 0) continue;
-        if (signs.count(bbox->str) == 0) signs[bbox->str] = vector<VRGeometry*>();
+        if (signs.count(bbox->str) == 0) signs[bbox->str] = vector<VRGeometryPtr>();
         signs[bbox->str].push_back(sign);
         root->addChild(sign);
     }
 
-    VRGeometry* streets = new VRGeometry("streets");
-    VRGeometry* joints = new VRGeometry("joints");
+    VRGeometryPtr streets = VRGeometry::create("streets");
+    VRGeometryPtr joints = VRGeometry::create("joints");
     streets->create(GL_QUADS, sdata->pos, sdata->norms, sdata->inds, sdata->texs);
     joints->create(GL_TRIANGLES, jdata->pos, jdata->norms, jdata->inds, jdata->texs);
     streets->setMaterial(matStreet);
@@ -181,7 +181,7 @@ void ModuleStreets::physicalize(bool b) {
     }
 }
 
-VRGeometry* ModuleStreets::makeSignGeometry(StreetSegment* seg) {
+VRGeometryPtr ModuleStreets::makeSignGeometry(StreetSegment* seg) {
     return 0; // TODO
     if (seg->name == "") return 0;
 
@@ -191,8 +191,8 @@ VRGeometry* ModuleStreets::makeSignGeometry(StreetSegment* seg) {
     Vec2f dir = (seg->leftA - seg->rightA); dir.normalize();
     Vec2f pos = (seg->leftA + seg->leftB)*0.5;
 
-    VRSprite* sign = new VRSprite("sign", false, 3*h2, h2);
-    sign->setMaterial(new VRMaterial("sign"));
+    VRSpritePtr sign = VRSprite::create("sign", false, 3*h2, h2);
+    sign->setMaterial(VRMaterial::create("sign"));
 
     sign->setFontColor(Color4f(1,1,1,1));
     //sign->setLabel(seg->name, 20);

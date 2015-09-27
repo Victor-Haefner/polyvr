@@ -26,7 +26,7 @@ class VRFurnitureManager {
 
         void addType(string s) { types->push_back(s); }
 
-        void parseGraph(VRScene* scene, VRObject* o) {
+        void parseGraph(VRScene* scene, VRObjectPtr o) {
             //if (types.count(scene) == 0) return;
             if (types == 0) return;
             string name = o->getName();
@@ -36,9 +36,9 @@ class VRFurnitureManager {
                     //scene->addToGroup(o, types[scene]->at(i), false);
             for (uint i=0;i<types->size();i++) {
                 if (name.find(types->at(i)) != string::npos) {
-                    vector<VRObject*>* geos = o->getObjectListByType("Geometry");
+                    vector<VRObjectPtr>* geos = o->getObjectListByType("Geometry");
                     for (uint j=0;j<geos->size();j++) {
-                        VRGeometry* geo = (VRGeometry*)(geos->at(j));
+                        VRGeometryPtr geo = static_pointer_cast<VRGeometry>((geos->at(j));
                         scene->addToGroup(geo, types->at(i), false);
                     }
                 }

@@ -91,14 +91,14 @@ PyObject* VRPyHaptic::attachTransform(VRPyHaptic* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyHaptic::attachTransform - Object is invalid"); return NULL; }
     VRPyTransform* tr;
     if (! PyArg_ParseTuple(args, "O", &tr)) return NULL;
-    self->obj->attachTransform(tr->obj);
+    self->obj->attachTransform(tr->objPtr);
     Py_RETURN_TRUE;
 }
 PyObject* VRPyHaptic::setBase(VRPyHaptic* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyHaptic::setBase - Object is invalid"); return NULL; }
     VRPyTransform* tr;
     if (! PyArg_ParseTuple(args, "O", &tr)) return NULL;
-    self->obj->setBase(tr->obj);
+    self->obj->setBase(tr->objPtr);
     Py_RETURN_TRUE;
 }
 

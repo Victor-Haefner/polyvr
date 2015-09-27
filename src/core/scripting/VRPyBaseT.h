@@ -96,6 +96,16 @@ bool VRPyBaseT<T>::parse(PyObject *args, T** obj) {
 }
 
 template<class T>
+bool VRPyBaseT<T>::parse(PyObject *args, std::shared_ptr<T>* obj) {
+    if (args == 0) return false;
+    VRPyBaseT<T>* o = NULL;
+    if (! PyArg_ParseTuple(args, "O", &o)) return false;
+    if (isNone((PyObject*)o)) { PyErr_SetString(err, "Object passed is None!"); return false; }
+    *obj = o->objPtr;
+    return true;
+}
+
+template<class T>
 PyObject* VRPyBaseT<T>::alloc(PyTypeObject* type, T* t) {
     VRPyBaseT<T>* self = (VRPyBaseT<T> *)type->tp_alloc(type, 0);
     if (self != NULL) {
@@ -118,7 +128,15 @@ PyObject* VRPyBaseT<T>::allocPtr(PyTypeObject* type, std::shared_ptr<T> t) {
 template<class T> PyObject* VRPyBaseT<T>::New(PyTypeObject *type, PyObject *args, PyObject *kwds) { return alloc( type, new T() ); }
 template<class T> PyObject* VRPyBaseT<T>::New_ptr(PyTypeObject *type, PyObject *args, PyObject *kwds) { return allocPtr( type, T::create() ); }
 template<class T> PyObject* VRPyBaseT<T>::New_named(PyTypeObject *type, PyObject *args, PyObject *kwds) { return alloc( type, new T( parseString(args) ) ); }
+template<class T> PyObject* VRPyBaseT<T>::New_named_ptr(PyTypeObject *type, PyObject *args, PyObject *kwds) { return allocPtr( type, T::create( parseString(args) ) ); }
 template<class T> PyObject* VRPyBaseT<T>::New_toZero(PyTypeObject *type, PyObject *args, PyObject *kwds) { return alloc( type, 0 ); }
+
+template<class T>
+PyObject* VRPyBaseT<T>::New_VRObjects_ptr(PyTypeObject *type, PyObject *args, PyObject *kwds) {
+    VRPyBaseT<T>* self = (VRPyBaseT<T> *)New_named_ptr(type, args, kwds);
+    if (self != NULL) self->obj->setPersistency(0);
+    return (PyObject *)self;
+}
 
 template<class T>
 PyObject* VRPyBaseT<T>::New_VRObjects(PyTypeObject *type, PyObject *args, PyObject *kwds) {

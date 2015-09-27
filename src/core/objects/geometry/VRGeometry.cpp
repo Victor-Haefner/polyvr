@@ -23,8 +23,8 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-VRObject* VRGeometry::copy(vector<VRObject*> children) {
-    VRGeometry* geo = new VRGeometry(getBaseName());
+VRObjectPtr VRGeometry::copy(vector<VRObjectPtr> children) {
+    VRGeometryPtr geo = VRGeometry::create(getBaseName());
     geo->setMesh(mesh);
     geo->setMaterial(mat);
     geo->source = source;
@@ -47,9 +47,12 @@ VRGeometry::VRGeometry(string name, bool hidden) : VRTransform(name) {
     addAttachment("geometry", 0);
 }
 
-VRGeometry::~VRGeometry() {
-    ;
-}
+VRGeometry::~VRGeometry() {}
+
+VRGeometryPtr VRGeometry::create(string name) { return shared_ptr<VRGeometry>(new VRGeometry(name) ); }
+VRGeometryPtr VRGeometry::create(string name, bool hidden) { return shared_ptr<VRGeometry>(new VRGeometry(name, hidden) ); }
+
+VRGeometryPtr VRGeometry::ptr() { return static_pointer_cast<VRGeometry>( shared_from_this() ); }
 
 /** Set the geometry mesh (OSG geometry core) **/
 void VRGeometry::setMesh(GeometryRecPtr g, Reference ref, bool keep_material) {
@@ -218,7 +221,7 @@ GeoVec4fPropertyRecPtr convertColors(GeoVectorProperty* v) {
     return res;
 }
 
-void VRGeometry::merge(VRGeometry* geo) {
+void VRGeometry::merge(VRGeometryPtr geo) {
     if (!meshSet) {
         setIndices(GeoUInt32PropertyRecPtr( GeoUInt32Property::create()) );
         setTypes(GeoUInt8PropertyRecPtr( GeoUInt8Property::create()) );
@@ -485,7 +488,7 @@ void VRGeometry::setMeshVisibility(bool b) {
 }
 
 /** Set the material of the mesh **/
-void VRGeometry::setMaterial(VRMaterial* mat) {
+void VRGeometry::setMaterial(VRMaterialPtr mat) {
     if (mat == 0) mat = this->mat;
     if (mat == 0) return;
 
@@ -498,13 +501,13 @@ void VRGeometry::setMaterial(MaterialRecPtr mat) {
     if (!meshSet) return;
     if (mat == 0) return;
 
-    if (this->mat == 0) this->mat = new VRMaterial("mat");
+    if (this->mat == 0) this->mat = VRMaterial::create("mat");
     this->mat->setMaterial(mat);
 
     setMaterial(this->mat);
 }
 
-VRMaterial* VRGeometry::getMaterial() {
+VRMaterialPtr VRGeometry::getMaterial() {
     if (!meshSet) return 0;
     return mat;
 }
@@ -532,7 +535,7 @@ VRGeometry::Reference VRGeometry::getReference() { return source; }
 void VRGeometry::showGeometricData(string type, bool b) {
     if (dataLayer.count(type)) dataLayer[type]->destroy();
 
-    VRGeometry* geo = new VRGeometry("DATALAYER_"+getName()+"_"+type, true);
+    VRGeometryPtr geo = VRGeometry::create("DATALAYER_"+getName()+"_"+type, true);
     dataLayer[type] = geo;
     addChild(geo);
 
@@ -563,7 +566,7 @@ void VRGeometry::showGeometricData(string type, bool b) {
         geo->setIndices(inds);
     }
 
-    VRMaterial* m = new VRMaterial("some-mat");
+    VRMaterialPtr m = VRMaterial::create("some-mat");
     geo->setMaterial(m);
     m->setLit(false);
 }
@@ -584,7 +587,7 @@ void VRGeometry::loadContent(xmlpp::Element* e) {
 
     string p1, p2;
     stringstream ss;
-    VRGeometry* g;
+    VRGeometryPtr g;
     // get source info
     // construct data from that
 

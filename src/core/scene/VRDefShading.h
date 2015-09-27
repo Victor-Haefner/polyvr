@@ -4,13 +4,10 @@
 #include <OpenSG/OSGDeferredShadingStage.h>
 #include <OpenSG/OSGShaderShadowMapEngine.h>
 #include <OpenSG/OSGTrapezoidalShadowMapEngine.h>
+#include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
-
-class VRLight;
-class VRCamera;
-class VRObject;
 
 class VRDefShading {
     private:
@@ -57,11 +54,11 @@ class VRDefShading {
         float shadowColor;
         bool initiated = false;
         bool enabled = false;
-        VRObject* stageObject = 0;
+        VRObjectPtr stageObject = 0;
 
         SimpleStageRecPtr ssaoStage;
         bool ssao_enabled = false;
-        VRObject* ssaoObject = 0;
+        VRObjectPtr ssaoObject = 0;
 
         void initSSAO();
 
@@ -71,8 +68,8 @@ class VRDefShading {
         VRDefShading();
         ~VRDefShading();
 
-        void initDeferredShading(VRObject* o);
-        void initSSAO(VRObject* o);
+        void initDeferredShading(VRObjectPtr o);
+        void initSSAO(VRObjectPtr o);
 
         void setDefferedShading(bool b);
         bool getDefferedShading();
@@ -80,8 +77,8 @@ class VRDefShading {
         void setSSAO(bool b);
         bool getSSAO();
 
-        void setDSCamera(VRCamera* cam);
-        void addDSLight(VRLight* light);
+        void setDSCamera(VRCameraPtr cam);
+        void addDSLight(VRLightPtr light);
         void addDSLight(LightRecPtr light, string type, bool shadows = false);
         void subLight(UInt32 lightIdx);
         void setShadow(LightInfo &li);

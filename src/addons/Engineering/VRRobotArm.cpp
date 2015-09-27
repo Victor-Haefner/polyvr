@@ -13,14 +13,14 @@ VRRobotArm::VRRobotArm() {
     animPath = new path();
     robotPath = new path();
     anim = new VRAnimation("animOnPath");
-    ageo = new VRAnalyticGeometry();
+    ageo = VRAnalyticGeometry::create();
     ageo->setLabelSize(0.03);
 
     animPtr = VRFunction<float>::create("animOnPath", boost::bind(&VRRobotArm::animOnPath, this, _1 ) );
     anim->setSimpleCallback(animPtr, 1);
 }
 
-void VRRobotArm::setParts(vector<VRTransform*> parts) {
+void VRRobotArm::setParts(vector<VRTransformPtr> parts) {
     this->parts = parts;
     ageo->switchParent(parts[0]->getParent());
 }

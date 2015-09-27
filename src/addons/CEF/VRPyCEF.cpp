@@ -80,7 +80,7 @@ PyObject* VRPyCEF::setMaterial(VRPyCEF* self, PyObject* args) {
     VRPyMaterial* mat;
     if (! PyArg_ParseTuple(args, "O", &mat)) return NULL;
     if ((PyObject*)mat == Py_None) { PyErr_SetString(err, "VRPyCEF::setMaterial, material is invalid"); return NULL; }
-    self->objPtr->setMaterial(mat->obj);
+    self->objPtr->setMaterial(mat->objPtr);
     Py_RETURN_TRUE;
 }
 
@@ -90,7 +90,7 @@ PyObject* VRPyCEF::addMouse(VRPyCEF* self, PyObject* args) {
     if (! PyArg_ParseTuple(args, "OOiiii", &dev, &surf, &b1, &b2, &b3, &b4)) return NULL;
     if ((PyObject*)dev == Py_None) { Py_RETURN_TRUE; }
     if ((PyObject*)surf == Py_None) { PyErr_SetString(err, "VRPyCEF::addMouse, surface is invalid"); return NULL; }
-    self->objPtr->addMouse(dev->obj, surf->obj, b1, b2, b3, b4);
+    self->objPtr->addMouse(dev->obj, surf->objPtr, b1, b2, b3, b4);
     Py_RETURN_TRUE;
 }
 

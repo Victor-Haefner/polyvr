@@ -62,7 +62,7 @@ bool initialBuilt = false;
 
 #define CUBE_HALF_EXTENTS 1
 CarDynamics::CarDynamics() {
-    root = new VRObject("car");
+    root = VRObject::create("car");
     root->setPersistency(0);
     m_defaultContactProcessingThreshold = BT_LARGE_FLOAT;
 	w1 = 0;
@@ -171,7 +171,7 @@ void CarDynamics::updateWheels() {
     if (w4) { w4->setWorldMatrix( VRPhysics::fromBTTransform(m_vehicle->getWheelInfo(3).m_worldTransform) ); w4->setNoBltFlag(); }
 }
 
-void CarDynamics::setChassisGeo(VRGeometry* geo) {
+void CarDynamics::setChassisGeo(VRGeometryPtr geo) {
     geo->setMatrix(Matrix());
     geo->getPhysics()->setShape("Convex");
     geo->getPhysics()->setMass(m_mass);
@@ -196,16 +196,11 @@ void CarDynamics::setChassisGeo(VRGeometry* geo) {
     root->addChild(geo);
 }
 
-void CarDynamics::setWheelGeo(VRGeometry* geo) { // TODO
-    if (w1) delete w1;
-    if (w2) delete w2;
-    if (w3) delete w3;
-    if (w4) delete w4;
-
-    w1 = (VRGeometry*)geo->duplicate();
-    w2 = (VRGeometry*)geo->duplicate();
-    w3 = (VRGeometry*)geo->duplicate();
-    w4 = (VRGeometry*)geo->duplicate();
+void CarDynamics::setWheelGeo(VRGeometryPtr geo) { // TODO
+    w1 = static_pointer_cast<VRGeometry>( geo->duplicate() );
+    w2 = static_pointer_cast<VRGeometry>( geo->duplicate() );
+    w3 = static_pointer_cast<VRGeometry>( geo->duplicate() );
+    w4 = static_pointer_cast<VRGeometry>( geo->duplicate() );
     w1->setPersistency(0);
     w2->setPersistency(0);
     w3->setPersistency(0);
@@ -219,7 +214,7 @@ void CarDynamics::setWheelGeo(VRGeometry* geo) { // TODO
     cout << "\nset wheel geo " << geo->getName() << endl;
 }
 
-VRObject* CarDynamics::getRoot() { return root; }
+VRObjectPtr CarDynamics::getRoot() { return root; }
 
 void CarDynamics::setWheelOffsets(float x, float fZ, float rZ, float h){
     if(x!=-1) xOffset = x;

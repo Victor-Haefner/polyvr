@@ -5,13 +5,11 @@
 #include <OpenSG/OSGVector.h>
 #include <string>
 
+#include "core/objects/VRObjectFwd.h"
 #include "core/objects/object/VRObject.h"
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
-
-class VRAnnotationEngine;
-class VRGeometry;
 
 class VRAnalyticGeometry : public VRObject {
     public:
@@ -27,14 +25,17 @@ class VRAnalyticGeometry : public VRObject {
         };
 
     private:
-        VRAnnotationEngine* ae = 0;
-        VRGeometry* vectorLinesGeometry = 0;
-        VRGeometry* vectorEndsGeometry = 0;
+        VRAnnotationEnginePtr ae = 0;
+        VRGeometryPtr vectorLinesGeometry = 0;
+        VRGeometryPtr vectorEndsGeometry = 0;
         vector<Vector> vectors;
 
     public:
         VRAnalyticGeometry();
         ~VRAnalyticGeometry();
+
+        static VRAnalyticGeometryPtr create();
+        VRAnalyticGeometryPtr ptr();
 
         void setLabelSize(float s);
 

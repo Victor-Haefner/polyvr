@@ -245,13 +245,13 @@ void VRAtom::propagateTransformation(Matrix& T, uint flag, bool self) {
 
 
 VRMolecule::VRMolecule(string definition) : VRGeometry(definition) {
-    bonds_geo = new VRGeometry("bonds");
+    bonds_geo = VRGeometry::create("bonds");
     addChild(bonds_geo);
 
-    coords_geo = new VRGeometry("coords");
+    coords_geo = VRGeometry::create("coords");
     addChild(coords_geo);
 
-    labels = new VRNumberingEngine();
+    labels = VRNumberingEngine::create();
     labels->setBillboard(true);
     labels->setOnTop(false);
     labels->setSize(0.1);
@@ -330,7 +330,7 @@ void VRMolecule::updateGeo() {
     }
 
     // atoms geometry
-    VRMaterial* mat = VRMaterial::get("atoms");
+    VRMaterialPtr mat = VRMaterial::get("atoms");
     mat->setPointSize(40);
     mat->setLit(false);
     mat->setVertexShader(a_vp);
@@ -345,7 +345,7 @@ void VRMolecule::updateGeo() {
     setMaterial(mat);
 
     // bonds geometry
-    VRMaterial* mat2 = VRMaterial::get("molecule_bonds");
+    VRMaterialPtr mat2 = VRMaterial::get("molecule_bonds");
     mat2->setLineWidth(5);
     mat2->setLit(false);
     mat2->setVertexShader(b_vp);
@@ -656,7 +656,7 @@ void VRMolecule::updateCoords() {
     }
 
     // atoms geometry
-    VRMaterial* mat = VRMaterial::get("coords");
+    VRMaterialPtr mat = VRMaterial::get("coords");
     mat->setLineWidth(2);
     mat->setLit(false);
 

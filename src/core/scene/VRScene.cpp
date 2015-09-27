@@ -41,7 +41,7 @@ VRScene::VRScene() {
     cameras_layer = new VRVisualLayer("Cameras", "cameras.png");
     lights_layer = new VRVisualLayer("Lights", "lights.png");
 
-    layer_ref_toggle = VRFunction<bool>::create("showReferentials", boost::bind(&VRScene::showReferentials, this, _1, (VRObject*)0) );
+    layer_ref_toggle = VRFunction<bool>::create("showReferentials", boost::bind(&VRScene::showReferentials, this, _1, (VRObjectPtr)0) );
     layer_cam_toggle = VRFunction<bool>::create("showCameras", boost::bind(&VRScene::showCameras, this, _1) );
     layer_light_toggle = VRFunction<bool>::create("showLights", boost::bind(&VRScene::showLights, this, _1) );
     referentials_layer->setCallback( layer_ref_toggle );
@@ -113,25 +113,25 @@ string VRScene::getWorkdir() {
     return wdir;
 }
 
-void VRScene::add(VRObject* obj, int parentID) {
+void VRScene::add(VRObjectPtr obj, int parentID) {
     if (obj == 0) return;
 
-    VRObject* o = get(parentID);
+    VRObjectPtr o = get(parentID);
     if (o != 0) o->addChild(obj);
     else root->addChild(obj);
 }
 
 void VRScene::add(NodeRecPtr n) { root->addChild(n); }
 
-VRObject* VRScene::get(int ID) {
+VRObjectPtr VRScene::get(int ID) {
     if (ID == -1) return 0;
-    VRObject* o = 0;
+    VRObjectPtr o = 0;
     o = root->find(ID);
     return o;
 }
 
-VRObject* VRScene::get(string name) {
-    VRObject* o = 0;
+VRObjectPtr VRScene::get(string name) {
+    VRObjectPtr o = 0;
     o = root->find(name);
     return o;
 }
@@ -141,7 +141,7 @@ void VRScene::setActiveCamera(string camname) {
     VRSetup* setup = VRSetupManager::getCurrent();
 
     // TODO: refactor the following workaround
-    VRCamera* cam = getActiveCamera();
+    VRCameraPtr cam = getActiveCamera();
     if (cam == 0) return;
     cout << " set active camera to " << cam->getName() << endl;
 
@@ -166,22 +166,22 @@ void VRScene::setActiveCamera(string camname) {
     if (cam->getAcceptRoot()) setup->getRoot()->switchParent(cam);
 }
 
-VRObject* VRScene::getRoot() { return root; }
-VRObject* VRScene::getSystemRoot() { return root_system; }
+VRObjectPtr VRScene::getRoot() { return root; }
+VRObjectPtr VRScene::getSystemRoot() { return root_system; }
 
 void VRScene::printTree() { root->printTree(); }
 
-void VRScene::showReferentials(bool b, VRObject* o) {
+void VRScene::showReferentials(bool b, VRObjectPtr o) {
     if (o == 0) o = root;
 
-    VRTransform* t = 0;
-    if (o->hasAttachment("transform")) t = (VRTransform*)o;
+    VRTransformPtr t = 0;
+    if (o->hasAttachment("transform")) t = static_pointer_cast<VRTransform>(o);
     if (t) t->showCoordAxis(b);
 
     for (uint i=0; i<o->getChildrenCount(); i++) showReferentials(b, o->getChild(i));
 }
 
-void VRScene::showLights(bool b) { for (auto b : VRLightBeacon::getAll()) b->showLightGeo(b); }
+void VRScene::showLights(bool b) { for (auto be : VRLightBeacon::getAll()) be->showLightGeo(b); }
 void VRScene::showCameras(bool b) { for (auto c : VRCamera::getAll()) c->showCamGeo(b); }
 
 void VRScene::update() {

@@ -8,12 +8,11 @@
 #include <vector>
 
 #include <boost/property_tree/ptree.hpp>
+#include "core/objects/VRObjectFwd.h"
 
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
-
-class VRObject;
 
 class VRAMLLoader {
     private:
@@ -27,7 +26,7 @@ class VRAMLLoader {
     public:
         static VRAMLLoader* get();
 
-        VRObject* load(string path);
+        VRObjectPtr load(string path);
 };
 
 OSG_END_NAMESPACE;

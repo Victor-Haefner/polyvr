@@ -27,11 +27,11 @@ class BaseModule {
         virtual void physicalize(bool b) = 0;
 
         bool physicalized = false;
-        OSG::VRObject* getRoot();
+        OSG::VRObjectPtr getRoot();
 
     protected:
         MapCoordinator* mapCoordinator;
-        OSG::VRObject* root;
+        OSG::VRObjectPtr root;
         TextureManager* texManager;
 
         BaseModule(MapCoordinator* mapCoordinator, TextureManager* texManager);

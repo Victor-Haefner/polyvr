@@ -16,10 +16,10 @@ VRRenderManager::VRRenderManager() {
 
     update();
 
-    root = new VRObject("Root");
-    root_def_shading = new VRObject("Deffered shading root");
-    root_ssao = new VRObject("SSAO root");
-    root_system = new VRObject("System root");
+    root = VRObject::create("Root");
+    root_def_shading = VRObject::create("Deffered shading root");
+    root_ssao = VRObject::create("SSAO root");
+    root_system = VRObject::create("System root");
 
     root_system->addChild(root_ssao);
     root_ssao->addChild(root_def_shading);
@@ -55,14 +55,14 @@ void VRRenderManager::update() {
     defShading->setSSAO(ssao);
 }
 
-VRLight* VRRenderManager::addLight(string name) {
-    VRLight* l = new VRLight(name);
+VRLightPtr VRRenderManager::addLight(string name) {
+    VRLightPtr l = VRLight::create(name);
     light_map[l->getID()] = l;
     defShading->addDSLight(l);
     return l;
 }
 
-VRLight* VRRenderManager::getLight(int ID) {
+VRLightPtr VRRenderManager::getLight(int ID) {
     return light_map[ID];
 }
 
@@ -75,7 +75,7 @@ bool VRRenderManager::getOcclusionCulling() { return occlusionCulling; }
 void VRRenderManager::setTwoSided(bool b) { twoSided = b; update(); }
 bool VRRenderManager::getTwoSided() { return twoSided; }
 
-void VRRenderManager::setDSCamera(VRCamera* cam) { defShading->setDSCamera(cam); }
+void VRRenderManager::setDSCamera(VRCameraPtr cam) { defShading->setDSCamera(cam); }
 void VRRenderManager::setDefferedShading(bool b) { deferredRendering = b; update(); }
 bool VRRenderManager::getDefferedShading() { return deferredRendering; }
 

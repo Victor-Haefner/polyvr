@@ -3,13 +3,12 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <string>
+#include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRObject;
-
-VRObject* loadCollada(string path, VRObject* objects);
+VRObjectPtr loadCollada(string path, VRObjectPtr objects);
 
 OSG_END_NAMESPACE;
 

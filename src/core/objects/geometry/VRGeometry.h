@@ -1,6 +1,7 @@
 #ifndef VRGEOMETRY_H_INCLUDED
 #define VRGEOMETRY_H_INCLUDED
 
+#include "core/objects/VRObjectFwd.h"
 #include "../VRTransform.h"
 #include <OpenSG/OSGFieldContainerFields.h>
 #include <OpenSG/OSGImage.h> // TODO
@@ -29,29 +30,31 @@ class VRGeometry : public VRTransform {
         };
 
     protected:
-        VRMaterial* mat = 0;
+        VRMaterialPtr mat = 0;
         VRPrimitive* primitive = 0;
         GeometryRecPtr mesh;
         NodeRecPtr mesh_node;
         ImageRecPtr texture;
         bool meshSet = false;
 
-        map<string, VRGeometry*> dataLayer;
+        map<string, VRGeometryPtr> dataLayer;
 
         Reference source;
 
-        VRObject* copy(vector<VRObject*> children);
+        VRObjectPtr copy(vector<VRObjectPtr> children);
 
         virtual void saveContent(xmlpp::Element* e);
         virtual void loadContent(xmlpp::Element* e);
 
         VRGeometry(string name, bool hidden);
+        static VRGeometryPtr create(string name, bool hidden);
 
     public:
-
-        /** initialise a geometry object with his name **/
         VRGeometry(string name = "0");
         virtual ~VRGeometry();
+
+        static VRGeometryPtr create(string name);
+        VRGeometryPtr ptr();
 
         /** Set the geometry mesh (OSG geometry core) **/
         void setMesh(GeometryRecPtr g);
@@ -81,7 +84,7 @@ class VRGeometry : public VRTransform {
         void setRandomColors();
         void removeDoubles(float minAngle);
         void decimate(float f);
-        void merge(VRGeometry* geo);
+        void merge(VRGeometryPtr geo);
         void fixColorMapping();
         void updateNormals();
 
@@ -99,11 +102,11 @@ class VRGeometry : public VRTransform {
         VRPrimitive* getPrimitive();
 
         /** Set the material of the mesh **/
-        void setMaterial(VRMaterial* mat = 0);
+        void setMaterial(VRMaterialPtr mat = 0);
         void setMaterial(MaterialRecPtr mat);
 
         /** Returns the mesh material **/
-        VRMaterial* getMaterial();
+        VRMaterialPtr getMaterial();
 
         /** Returns the texture || 0 **/
         ImageRecPtr getTexture() { return texture; }

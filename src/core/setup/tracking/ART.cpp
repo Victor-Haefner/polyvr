@@ -23,7 +23,7 @@ int ART_device::key() { return key(ID, type); }
 int ART_device::key(int ID, int type) { return ID*1000 + type; }
 
 void ART_device::init() {
-    if (type != 1) ent = new VRTransform("ART_tracker");
+    if (type != 1) ent = VRTransform::create("ART_tracker");
     if (type == 1) {
         dev = new VRFlystick();
         ent = dev->editBeacon();

@@ -8,16 +8,21 @@ using namespace std;
 
 
 void VRObjectManager::addGroup(string group) {
-    groups[group] = new list<VRGroup*>();
+    groups[group] = new list<VRGroupPtr>();
 }
 
 void VRObjectManager::updateObjects() {
     //update the Transform changelists
-    for ( auto t : VRTransform::changedObjects ) t->update();
+    for ( auto t : VRTransform::changedObjects ) {
+        if (auto sp = t.lock()) sp->update();
+    }
     VRTransform::changedObjects.clear();
 
     //update the dynamic objects
-    for ( auto t : VRTransform::dynamicObjects ) t->update();
+    for ( auto t : VRTransform::dynamicObjects ) {
+        if (auto sp = t.lock()) sp->update();
+        // TODO: else: remove the t from dynamicObjects
+    }
 }
 
 VRObjectManager::VRObjectManager() {
@@ -26,13 +31,13 @@ VRObjectManager::VRObjectManager() {
 
 //GROUPS------------------------
 
-void VRObjectManager::addToGroup(VRGroup* obj, string group) {
+void VRObjectManager::addToGroup(VRGroupPtr obj, string group) {
     if (!groups.count(group)) addGroup(group);
     groups[group]->push_back(obj);
     obj->setGroup(group);
 }
 
-list<VRGroup*>* VRObjectManager::getGroup(string group) {
+list<VRGroupPtr>* VRObjectManager::getGroup(string group) {
     if (groups.count(group))
         return groups[group];
     else return 0;
@@ -40,7 +45,7 @@ list<VRGroup*>* VRObjectManager::getGroup(string group) {
 
 vector<string> VRObjectManager::getGroupList() {
     vector<string> grps;
-    for (map<string, list<VRGroup*>* >::iterator it = groups.begin(); it != groups.end(); it++) {
+    for (map<string, list<VRGroupPtr>* >::iterator it = groups.begin(); it != groups.end(); it++) {
         grps.push_back(it->first);
     }
     return grps;

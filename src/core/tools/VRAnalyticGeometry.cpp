@@ -10,9 +10,9 @@
 using namespace OSG;
 
 VRAnalyticGeometry::VRAnalyticGeometry() : VRObject("AnalyticGeometry") {
-    ae = new VRAnnotationEngine();
-    vectorLinesGeometry = new VRGeometry("AGLines");
-    vectorEndsGeometry = new VRGeometry("AGPoints");
+    ae = VRAnnotationEngine::create();
+    vectorLinesGeometry = VRGeometry::create("AGLines");
+    vectorEndsGeometry = VRGeometry::create("AGPoints");
     addChild(vectorLinesGeometry);
     addChild(vectorEndsGeometry);
     addChild(ae);
@@ -28,7 +28,7 @@ VRAnalyticGeometry::VRAnalyticGeometry() : VRObject("AnalyticGeometry") {
     vectorLinesGeometry->setColors(cols);
     vectorLinesGeometry->setLengths(lengths);
 
-    auto mat = new VRMaterial("AnalyticGeometry");
+    auto mat = VRMaterial::create("AnalyticGeometry");
     mat->setLit(false);
     mat->setLineWidth(3);
     vectorLinesGeometry->setMaterial(mat);
@@ -44,15 +44,16 @@ VRAnalyticGeometry::VRAnalyticGeometry() : VRObject("AnalyticGeometry") {
     vectorEndsGeometry->setColors(cols);
     vectorEndsGeometry->setLengths(lengths);
 
-    mat = new VRMaterial("AnalyticGeometry2");
+    mat = VRMaterial::create("AnalyticGeometry2");
     mat->setLit(false);
     mat->setPointSize(11);
     vectorEndsGeometry->setMaterial(mat);
 }
 
-VRAnalyticGeometry::~VRAnalyticGeometry() {
-    delete ae;
-}
+VRAnalyticGeometry::~VRAnalyticGeometry() {}
+
+VRAnalyticGeometryPtr VRAnalyticGeometry::create() { return shared_ptr<VRAnalyticGeometry>(new VRAnalyticGeometry() ); }
+VRAnalyticGeometryPtr VRAnalyticGeometry::ptr() { return static_pointer_cast<VRAnalyticGeometry>( shared_from_this() ); }
 
 void VRAnalyticGeometry::setLabelSize(float s) { ae->setSize(s); }
 

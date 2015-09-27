@@ -30,7 +30,7 @@ void updateArgPtr(VRScript::arg* a) {
     VRSetup* setup = VRSetupManager::getCurrent();
 
     if (t == "VRPyObjectType" || t == "VRPyGeometryType" || t == "VRPyTransformType" || t == "VRPyLightType" || t == "VRPyLodType") {
-        a->ptr = (void*)scene->get(a->val);
+        a->ptr = (void*)scene->get(a->val).get();
         return;
     }
     if (t == "VRPySocketType") {
@@ -196,11 +196,11 @@ PyObject* VRScript::getPyObj(arg* a) {
     else if (a->type == "float") return Py_BuildValue("f", toFloat(a->val.c_str()));
     else if (a->type == "NoneType") return Py_None;
     else if (a->type == "str") return PyString_FromString(a->val.c_str());
-    else if (a->type == "VRPyObjectType") return VRPyObject::fromPtr((VRObject*)a->ptr);
-    else if (a->type == "VRPyTransformType") return VRPyTransform::fromPtr((VRTransform*)a->ptr);
-    else if (a->type == "VRPyGeometryType") return VRPyGeometry::fromPtr((VRGeometry*)a->ptr);
-    else if (a->type == "VRPyLightType") return VRPyLight::fromPtr((VRLight*)a->ptr);
-    else if (a->type == "VRPyLodType") return VRPyLod::fromPtr((VRLod*)a->ptr);
+    else if (a->type == "VRPyObjectType") return VRPyObject::fromSharedPtr(((VRObject*)a->ptr)->ptr());
+    else if (a->type == "VRPyTransformType") return VRPyTransform::fromSharedPtr(((VRTransform*)a->ptr)->ptr());
+    else if (a->type == "VRPyGeometryType") return VRPyGeometry::fromSharedPtr(((VRGeometry*)a->ptr)->ptr());
+    else if (a->type == "VRPyLightType") return VRPyLight::fromSharedPtr(((VRLight*)a->ptr)->ptr());
+    else if (a->type == "VRPyLodType") return VRPyLod::fromSharedPtr(((VRLod*)a->ptr)->ptr());
     else if (a->type == "VRPyDeviceType") return VRPyDevice::fromPtr((VRDevice*)a->ptr);
     else if (a->type == "VRPyHapticType") return VRPyHaptic::fromPtr((VRHaptic*)a->ptr);
     else if (a->type == "VRPyMobileType") return VRPyMobile::fromPtr((VRMobile*)a->ptr);
@@ -315,7 +315,7 @@ void VRScript::execute() {
 
     if (type == "GLSL") {
         for (auto m : VRMaterial::materials) {
-            VRMaterial* mat = m.second;
+            VRMaterialPtr mat = m.second;
             if (mat->getVertexScript() == getName()) mat->setVertexScript(getName());
             if (mat->getFragmentScript() == getName()) mat->setFragmentScript(getName());
             if (mat->getGeometryScript() == getName()) mat->setGeometryScript(getName());

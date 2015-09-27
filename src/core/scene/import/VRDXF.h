@@ -9,7 +9,7 @@ using namespace std;
 
 class VRGeometry;
 
-VRGeometry* loadDXF(string path);
+VRGeometryPtr loadDXF(string path);
 
 OSG_END_NAMESPACE;
 

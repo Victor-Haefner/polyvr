@@ -5,18 +5,16 @@
 #include <btBulletDynamicsCommon.h>
 #include <boost/thread/recursive_mutex.hpp>
 #include "core/utils/VRFunctionFwd.h"
+#include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRObject;
-class VRGeometry;
-
 class CarDynamics {
     private:
-        VRGeometry *w1, *w2, *w3, *w4;
-        VRGeometry* chassis = 0;
-        VRObject* root = 0;
+        VRGeometryPtr w1, w2, w3, w4;
+        VRGeometryPtr chassis = 0;
+        VRObjectPtr root = 0;
         shared_ptr<VRFunction<int> > updatePtr;
 
         btAlignedObjectArray<btCollisionShape*> m_collisionShapes;
@@ -40,14 +38,14 @@ class CarDynamics {
         CarDynamics();
         ~CarDynamics();
 
-        VRObject* getRoot();
+        VRObjectPtr getRoot();
 
         void setThrottle(float t);
         void setBreak(float b);
         void setSteering(float s);
 
-        void setChassisGeo(VRGeometry* geo);
-        void setWheelGeo(VRGeometry* geo);
+        void setChassisGeo(VRGeometryPtr geo);
+        void setWheelGeo(VRGeometryPtr geo);
         void setWheelOffsets(float xOffset, float frontZOffset, float rearZOffset, float height);
         void setWheelParams(float w, float r);
         void setCarMass(float m);

@@ -34,11 +34,11 @@ namespace realworld {
 
         private:
             OSMMapDB* mapDB;
-            map<string, VRGeometry*> meshes;
-            map<string, vector<VRGeometry*> > signs;
-            VRMaterial* matStreet = 0;
+            map<string, VRGeometryPtr> meshes;
+            map<string, vector<VRGeometryPtr> > signs;
+            VRMaterialPtr matStreet = 0;
 
-            VRGeometry* makeSignGeometry(StreetSegment* seg);
+            VRGeometryPtr makeSignGeometry(StreetSegment* seg);
             void makeStreetSegmentGeometry(StreetSegment* s, GeometryData* geo);
             void makeStreetJointGeometry(StreetJoint* sj, map<string, StreetSegment*>& streets, map<string, StreetJoint*>& joints, GeometryData* geo);
             Vec3f getNormal3D(Vec3f v1, Vec3f v2);

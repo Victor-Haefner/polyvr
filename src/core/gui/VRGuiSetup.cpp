@@ -276,9 +276,12 @@ void VRGuiSetup::on_save_clicked() {
 // setup list
 
 void VRGuiSetup::on_setup_changed() {
+    cout << "on_setup_changed\n";
     string name = getComboboxText("combobox6");
     ofstream f(setupDir()+".local"); f.write(name.c_str(), name.size()); f.close(); // remember setup
-    current_setup = VRSetupManager::get()->load(name, setupDir() + name + ".xml");
+    string d = setupDir() + name + ".xml";
+    auto mgr = VRSetupManager::get();
+    current_setup = mgr->load(name, d);
     updateSetup();
 }
 
@@ -573,7 +576,8 @@ void VRGuiSetup::on_change_view_user() {
 
     VRGuiSetup_UserColumns cols;
     Gtk::TreeModel::Row row = *getComboboxIter("combobox18");
-    VRTransform* u = (VRTransform*)row.get_value(cols.user);
+    //VRTransformPtr u = static_pointer_cast<VRTransform>(row.get_value(cols.user));
+    VRTransformPtr u = ( (VRTransform*)row.get_value(cols.user) )->ptr();
 
     VRView* view = (VRView*)selected_object;
     view->setUser(u);
@@ -951,7 +955,7 @@ void VRGuiSetup::updateSetup() {
         if (dev->ent) {
             row = *user_list->append();
             gtk_list_store_set (user_list->gobj(), row.gobj(), 0, dev->ent->getName().c_str(), -1);
-            gtk_list_store_set (user_list->gobj(), row.gobj(), 1, dev->ent, -1);
+            gtk_list_store_set (user_list->gobj(), row.gobj(), 1, dev->ent.get(), -1);
         }
     }
 

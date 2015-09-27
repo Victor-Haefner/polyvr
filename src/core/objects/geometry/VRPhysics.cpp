@@ -37,7 +37,7 @@ struct VRPhysicsJoint {
     }
 };
 
-VRPhysics::VRPhysics(OSG::VRTransform* t) {
+VRPhysics::VRPhysics(OSG::VRTransformWeakPtr t) {
     vr_obj = t;
     world = 0;
     body = 0;
@@ -297,14 +297,14 @@ void VRPhysics::update() {
     if (physicsShape == "Concave") shape = getConcaveShape();
     if (shape == 0) return;
 
-    motionState = new btDefaultMotionState(fromVRTransform( vr_obj, scale,CoMOffset ));
+    motionState = new btDefaultMotionState( fromVRTransform( vr_obj, scale, CoMOffset ) );
 
     if (_mass != 0) shape->calculateLocalInertia(_mass, inertiaVector);
 
     if (ghost) {
         ghost_body = new btPairCachingGhostObject();
         ghost_body->setCollisionShape( shape );
-        ghost_body->setUserPointer( vr_obj );
+        if ( auto sp = vr_obj.lock() ) ghost_body->setUserPointer( sp.get() );
         ghost_body->setCollisionFlags( btCollisionObject::CF_KINEMATIC_OBJECT | btCollisionObject::CF_NO_CONTACT_RESPONSE );
         world->addCollisionObject(ghost_body, collisionGroup, collisionMask);
     } else {
@@ -321,13 +321,16 @@ void VRPhysics::update() {
 }
 
 btSoftBody* VRPhysics::createCloth() {
-    if ( !vr_obj->hasAttachment("geometry") ) { cout << "VRPhysics::createCloth only works on geometries" << endl; return 0; }
-    OSG::VRGeometry* geo = (OSG::VRGeometry*)vr_obj;
+    auto obj = vr_obj.lock();
+    if (!obj) return 0;
+
+    if ( !obj->hasAttachment("geometry") ) { cout << "VRPhysics::createCloth only works on geometries" << endl; return 0; }
+    OSG::VRGeometryPtr geo = static_pointer_cast<OSG::VRGeometry>(obj);
     if ( geo->getPrimitive()->getType() != "Plane") { cout << "VRPhysics::createCloth only works on Plane primitives" << endl; return 0; }
 
-    OSG::Matrix m = vr_obj->getMatrix();//get Transformation
-    vr_obj->setOrientation(OSG::Vec3f(0,0,-1),OSG::Vec3f(0,1,0));//set orientation to identity. ugly solution.
-    vr_obj->setWorldPosition(OSG::Vec3f(0.0,0.0,0.0));
+    OSG::Matrix m = geo->getMatrix();//get Transformation
+    geo->setOrientation(OSG::Vec3f(0,0,-1),OSG::Vec3f(0,1,0));//set orientation to identity. ugly solution.
+    geo->setWorldPosition(OSG::Vec3f(0.0,0.0,0.0));
     btSoftBodyWorldInfo* info = OSG::VRSceneManager::getCurrent()->getSoftBodyWorldInfo();
 
     VRPlane* prim = (VRPlane*)geo->getPrimitive();
@@ -388,13 +391,16 @@ btSoftBody* VRPhysics::createRope() {
 
 
 btCollisionShape* VRPhysics::getBoxShape() {
+    auto obj = vr_obj.lock();
+    if (!obj) return 0;
+
     if (shape_param > 0) return new btBoxShape( btVector3(shape_param, shape_param, shape_param) );
     float x,y,z;
     x=y=z=0;
 
-    vector<OSG::VRObject*> geos = vr_obj->getObjectListByType("Geometry");
+    auto geos = obj->getObjectListByType("Geometry");
     for (unsigned int j=0; j<geos.size(); j++) {
-        OSG::VRGeometry* geo = (OSG::VRGeometry*)geos[j];
+        OSG::VRGeometryPtr geo = static_pointer_cast<OSG::VRGeometry>( geos[j] );
         if (geo == 0) continue;
         OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->getPositions();
 		for (unsigned int i = 0; i<pos->size(); i++) {
@@ -411,6 +417,9 @@ btCollisionShape* VRPhysics::getBoxShape() {
 }
 
 btCollisionShape* VRPhysics::getSphereShape() {
+    auto obj = vr_obj.lock();
+    if (!obj) return 0;
+
     if (shape_param > 0) return new btSphereShape( shape_param );
 
     float r2 = 0;
@@ -418,10 +427,10 @@ btCollisionShape* VRPhysics::getSphereShape() {
     OSG::Vec3f p;
     OSG::Vec3f center;
 
-    auto geos = vr_obj->getObjectListByType("Geometry");
+    auto geos = obj->getObjectListByType("Geometry");
 
     /*for (auto _g : geos ) { // get geometric center // makes no sense as you would have to change the center of the shape..
-        OSG::VRGeometry* geo = (OSG::VRGeometry*)_g;
+        OSG::VRGeometryPtr geo = (OSG::VRGeometryPtr)_g;
         OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->getPositions();
         N += pos->size();
         for (unsigned int i=0; i<pos->size(); i++) {
@@ -433,7 +442,7 @@ btCollisionShape* VRPhysics::getSphereShape() {
     center *= 1.0/N;*/
 
     for (auto _g : geos ) {
-        OSG::VRGeometry* geo = (OSG::VRGeometry*)_g;
+        OSG::VRGeometryPtr geo = static_pointer_cast<OSG::VRGeometry>(_g);
         OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->getPositions();
 		for (unsigned int i = 0; i<pos->size(); i++) {
             pos->getValue(p,i);
@@ -447,21 +456,24 @@ btCollisionShape* VRPhysics::getSphereShape() {
 }
 
 btCollisionShape* VRPhysics::getConvexShape(OSG::Vec3f& mc) {
+    auto obj = vr_obj.lock();
+    if (!obj) return 0;
+
     OSG::Matrix m;
-    OSG::Matrix M = vr_obj->getWorldMatrix();
+    OSG::Matrix M = obj->getWorldMatrix();
     M.invert();
     vector<OSG::Vec3f> points;
-    vector<OSG::VRObject*> geos = vr_obj->getObjectListByType("Geometry");
+    auto geos = obj->getObjectListByType("Geometry");
 
     if (comType == "geometric") mc = OSG::Vec3f(); // center of mass
 	for (auto g : geos) {
-        OSG::VRGeometry* geo = (OSG::VRGeometry*)g;
+        OSG::VRGeometryPtr geo = static_pointer_cast<OSG::VRGeometry>(g);
         if (geo == 0) continue;
         if (geo->getMesh() == 0) continue;
         OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->getPositions();
         if (pos == 0) continue;
 
-        if (geo != vr_obj) {
+        if (geo != obj) {
             m = geo->getWorldMatrix();
             m.multLeft(M);
         }
@@ -469,7 +481,7 @@ btCollisionShape* VRPhysics::getConvexShape(OSG::Vec3f& mc) {
 		for (unsigned int i = 0; i<pos->size(); i++) {
             OSG::Vec3f p;
             pos->getValue(p,i);
-            if (geo != vr_obj) m.mult(p,p);
+            if (geo != obj) m.mult(p,p);
             for (int i=0; i<3; i++) p[i] *= scale[i];
             points.push_back(p);
             if (comType == "geometric") mc += OSG::Vec3f(p);
@@ -485,12 +497,15 @@ btCollisionShape* VRPhysics::getConvexShape(OSG::Vec3f& mc) {
 }
 
 btCollisionShape* VRPhysics::getConcaveShape() {
+    auto obj = vr_obj.lock();
+    if (!obj) return 0;
+
     btTriangleMesh* tri_mesh = new btTriangleMesh();
 
-    vector<OSG::VRObject*> geos = vr_obj->getObjectListByType("Geometry");
+    auto geos = obj->getObjectListByType("Geometry");
     int N = 0;
 	for (unsigned int j = 0; j<geos.size(); j++) {
-        OSG::VRGeometry* geo = (OSG::VRGeometry*)geos[j];
+        OSG::VRGeometryPtr geo = static_pointer_cast<OSG::VRGeometry>(geos[j]);
         if (geo == 0) continue;
         if (geo->getMesh() == 0) continue;
         OSG::TriangleIterator ti(geo->getMesh());
@@ -515,15 +530,16 @@ btCollisionShape* VRPhysics::getConcaveShape() {
     return shape;
 }
 
-void VRPhysics::updateTransformation(OSG::VRTransform* t) {
+void VRPhysics::updateTransformation(OSG::VRTransformWeakPtr t) {
     Lock lock(mtx());
     auto bt = fromVRTransform(t, scale, CoMOffset);
     if (body) { body->setWorldTransform(bt); body->activate(); }
     if (ghost_body) { ghost_body->setWorldTransform(bt); ghost_body->activate(); }
 }
 
-btTransform VRPhysics::fromVRTransform(OSG::VRTransform* t, OSG::Vec3f& scale, OSG::Vec3f mc) {
-    OSG::Matrix m = t->getWorldMatrix();
+btTransform VRPhysics::fromVRTransform(OSG::VRTransformWeakPtr t, OSG::Vec3f& scale, OSG::Vec3f mc) {
+    OSG::Matrix m;
+    if (auto sp = t.lock()) m = sp->getWorldMatrix();
     return fromMatrix(m,scale,mc);
 }
 

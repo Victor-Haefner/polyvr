@@ -64,7 +64,7 @@ PyMethodDef VRPyCarDynamics::methods[] = {
 
 PyObject* VRPyCarDynamics::getRoot(VRPyCarDynamics* self) {
     if (self->obj == 0) self->obj = new OSG::CarDynamics();
-    return VRPyObject::fromPtr(self->obj->getRoot());
+    return VRPyObject::fromSharedPtr(self->obj->getRoot());
 }
 
 PyObject* VRPyCarDynamics::getSpeed(VRPyCarDynamics* self) {
@@ -90,24 +90,18 @@ PyObject* VRPyCarDynamics::update(VRPyCarDynamics* self, PyObject* args) {
 }
 
 PyObject* VRPyCarDynamics::setChassis(VRPyCarDynamics* self, PyObject* args) {
-    PyObject* dev = NULL;
+    VRPyGeometry* dev = NULL;
     if (! PyArg_ParseTuple(args, "O", &dev)) return NULL;
-    if (dev == NULL) { PyErr_SetString(err, "Missing device parameter"); return NULL; }
-    VRPyGeometry* _dev = (VRPyGeometry*)dev;
-
     if (self->obj == 0) self->obj = new OSG::CarDynamics();
-    self->obj->setChassisGeo(_dev->obj);
+    self->obj->setChassisGeo(dev->objPtr);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyCarDynamics::setWheel(VRPyCarDynamics* self, PyObject* args) {
-    PyObject* dev = NULL;
+    VRPyGeometry* dev = NULL;
     if (! PyArg_ParseTuple(args, "O", &dev)) return NULL;
-    if (dev == NULL) { PyErr_SetString(err, "Missing device parameter"); return NULL; }
-    VRPyGeometry* _dev = (VRPyGeometry*)dev;
-
     if (self->obj == 0) self->obj = new OSG::CarDynamics();
-    self->obj->setWheelGeo(_dev->obj);
+    self->obj->setWheelGeo(dev->objPtr);
     Py_RETURN_TRUE;
 }
 

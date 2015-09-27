@@ -35,8 +35,8 @@ using namespace std;
 
 VRScene* VRSceneLoader_current_scene = 0;
 
-void VRSceneLoader::optimizeGraph(VRObject* obj) { //TODO
-    VRObject* p = obj->getParent();
+void VRSceneLoader::optimizeGraph(VRObjectPtr obj) { //TODO
+    VRObjectPtr p = obj->getParent();
     if (obj->getType() == "Geometry" && p->getType() == "Transform" && p->getChildrenCount() == 1) {
         obj->switchParent(p->getParent());
         obj->setName(p->getName());
@@ -63,16 +63,16 @@ int VRSceneLoader::fileSize(string path) {
     return L;
 }
 
-VRTransform* VRSceneLoader::load3DContent(string filepath, VRObject* parent, bool reload) {
+VRTransformPtr VRSceneLoader::load3DContent(string filepath, VRObjectPtr parent, bool reload) {
     if (ihr_flag) if (fileSize(filepath) > 3e7) return 0;
     return VRImport::get()->load(filepath, parent, reload);
 }
 
-void VRSceneLoader_saveObject(VRObject* p, xmlpp::Element* e) {
+void VRSceneLoader_saveObject(VRObjectPtr p, xmlpp::Element* e) {
     if (e == 0) return;
     p->save(e);
     for (uint i=0; i<p->getChildrenCount(); i++) {
-        VRObject* c = p->getChild(i);
+        VRObjectPtr c = p->getChild(i);
         if (c->getPersistency() == 0) continue; // generated objects are not be saved
         if (c->hasAttachment("global")) continue; // global objects are not be saved
         //xmlpp::Element* ce = e->add_child(c->getName());
@@ -95,33 +95,33 @@ void VRSceneLoader::saveScene(string file, xmlpp::Element* guiN) {
 
     // save scenegraph
     scene->setPath(file);
-    VRObject* root = scene->getRoot();
+    VRObjectPtr root = scene->getRoot();
     xmlpp::Element* rootN = objectsN->add_child("Object");
     VRSceneLoader_saveObject(root, rootN);
     scene->save(sceneN);
     doc.write_to_file_formatted(file);
 }
 
-VRObject* VRSceneLoader_createFromElement(VRScene* scene, xmlpp::Element* e) {
+VRObjectPtr VRSceneLoader_createFromElement(VRScene* scene, xmlpp::Element* e) {
     string type = e->get_attribute("type")->get_value();
     string base_name = e->get_attribute("base_name")->get_value();
     //string name = e->get_name();
 
 
-    if (type == "Transform") return new VRTransform(base_name);
-    if (type == "Geometry") return new VRGeometry(base_name);
+    if (type == "Transform") return VRTransform::create(base_name);
+    if (type == "Geometry") return VRGeometry::create(base_name);
     //if (type == "CSGGeometry") return new CSGGeometry(base_name);
     if (type == "Camera") return scene->addCamera(base_name);
-    if (type == "LightBeacon") return new VRLightBeacon(base_name);
+    if (type == "LightBeacon") return VRLightBeacon::create(base_name);
     if (type == "Light") return scene->addLight(base_name);
-    if (type == "Group") return new VRGroup(base_name);
-    if (type == "Lod") return new VRLod(base_name);
+    if (type == "Group") return VRGroup::create(base_name);
+    if (type == "Lod") return VRLod::create(base_name);
 
     if (type != "Object") cout << "\nERROR in VRSceneLoader_createFromElement: " << type << " is not handled!\n";
-    return new VRObject(base_name);
+    return VRObject::create(base_name);
 }
 
-void VRSceneLoader_loadObject(VRScene* scene, VRObject* p, xmlpp::Element* e) {
+void VRSceneLoader_loadObject(VRScene* scene, VRObjectPtr p, xmlpp::Element* e) {
     if (e == 0) return;
     xmlpp::Node::NodeList nl = e->get_children();
     xmlpp::Node::NodeList::iterator itr;
@@ -131,7 +131,7 @@ void VRSceneLoader_loadObject(VRScene* scene, VRObject* p, xmlpp::Element* e) {
         xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
         if (!el) continue;
 
-        VRObject* c = VRSceneLoader_createFromElement(scene, el);
+        VRObjectPtr c = VRSceneLoader_createFromElement(scene, el);
 
         p->addChild(c);
         c->load(el);

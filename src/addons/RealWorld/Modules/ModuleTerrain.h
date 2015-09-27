@@ -12,7 +12,7 @@ using namespace std;
 
 namespace realworld {
     struct TerrainMaterial {
-        VRMaterial* material;
+        VRMaterialPtr material;
         string k;
         string v;
         float height;
@@ -43,7 +43,7 @@ namespace realworld {
                             if (ter->positions.size() < 3) continue;
 
                             // generate mesh
-                            VRGeometry* geom = makeTerrainGeometry(ter, mat);
+                            VRGeometryPtr geom = makeTerrainGeometry(ter, mat);
                             root->addChild(geom);
                             meshes[ter->id] = geom;
                         }
@@ -58,11 +58,7 @@ namespace realworld {
             for (OSMWay* way : osmMap->osmWays) {
                 for (TerrainMaterial* mat : terrainList) {
                     if (way->tags[mat->k] == mat->v) {
-                        if (meshes.count(way->id)) {
-                            VRGeometry* geom = meshes[way->id];
-                            meshes.erase(way->id);
-                            delete geom;
-                        }
+                        if (meshes.count(way->id)) meshes.erase(way->id);
                     }
 
                 }
@@ -86,11 +82,11 @@ namespace realworld {
 
     private:
         vector<TerrainMaterial*> terrainList;
-        map<string, VRMaterial*> materials;
+        map<string, VRMaterialPtr> materials;
         //TerrainMaterials* matTerrain;
         OSMMapDB* mapDB;
-        map<string, VRGeometry*> meshes;
-        map<string, VRGeometry*>::iterator mesh_itr;
+        map<string, VRGeometryPtr> meshes;
+        map<string, VRGeometryPtr>::iterator mesh_itr;
 
         void fillTerrainList() {
             //grass
@@ -146,7 +142,7 @@ namespace realworld {
         void addTerrain(string texture, string key, string value, int height) {
             texture = "world/textures/"+texture;
             if (materials.count(texture) == 0) {
-                materials[texture] = new VRMaterial(texture);
+                materials[texture] = VRMaterial::create(texture);
                 materials[texture]->setTexture(texture);
                 string wdir = VRSceneManager::get()->getOriginalWorkdir();
                 materials[texture]->readVertexShader(wdir+"/shader/TexturePhong/phong.vp");
@@ -262,15 +258,15 @@ namespace realworld {
             return Vec3f(0,0,0);
         }
 
-        VRGeometry* makeTerrainGeometry(Terrain* ter, TerrainMaterial* terrainMat) {
+        VRGeometryPtr makeTerrainGeometry(Terrain* ter, TerrainMaterial* terrainMat) {
             GeometryData* gdTerrain = new GeometryData();
             addTerrain(ter, gdTerrain, terrainMat->height);
-            VRGeometry* geomTerrain = new VRGeometry(terrainMat->v);
+            VRGeometryPtr geomTerrain = VRGeometry::create(terrainMat->v);
 
             geomTerrain->create(GL_TRIANGLES, gdTerrain->pos, gdTerrain->norms, gdTerrain->inds, gdTerrain->texs);
             geomTerrain->setMaterial(terrainMat->material);
 
-            VRGeometry* geom = new VRGeometry("Terrain");
+            VRGeometryPtr geom = VRGeometry::create("Terrain");
             if (gdTerrain->inds->size() > 0) geom->addChild(geomTerrain);
             return geom;
         }

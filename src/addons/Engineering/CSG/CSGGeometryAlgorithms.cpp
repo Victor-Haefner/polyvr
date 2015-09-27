@@ -132,7 +132,7 @@ CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryRecPtr geometry, Matrix worl
 	if (!result->is_closed()) {
         success = false;
         cout << "Error: The polyhedron is not a closed mesh!" << endl;
-        create(GL_TRIANGLES, pos, pos, inds);
+        VRGeometry::create(GL_TRIANGLES, pos, pos, inds);
         setWorldMatrix(worldTransform);
         createSharedIndex(mesh);
         calcVertexNormals(mesh, 0.523598775598 /*30 deg in rad*/);
@@ -162,11 +162,11 @@ bool CSGGeometry::disableEditMode() {
 	vector<CGAL::Polyhedron*> polys(2,0); // We need two child geometries to work with
 
 	for (int i=0; i<2; i++) { // Prepare the polyhedra
-		VRObject *obj = children[i];
+		VRObjectPtr obj = children[i];
         obj->setVisible(false);
 
 		if (obj->getType() == string("Geometry")) {
-			VRGeometry *geo = dynamic_cast<VRGeometry*>(obj);
+			VRGeometryPtr geo = static_pointer_cast<VRGeometry>(obj);
             cout << "child: " << geo->getName() << " toPolyhedron\n";
             bool success;
 			try {
@@ -186,7 +186,7 @@ bool CSGGeometry::disableEditMode() {
 		}
 
 		if(obj->getType() == "CSGGeometry") {
-			CSGGeometry *geo = dynamic_cast<CSGGeometry*>(obj);
+			CSGGeometryPtr geo = static_pointer_cast<CSGGeometry>(obj);
 			polys[i] = geo->getCSGGeometry(); // TODO: where does this come from?? keep the old!
 			continue;
 		}

@@ -4,6 +4,7 @@
 #include "core/utils/VRName.h"
 #include "core/utils/VRStorage.h"
 #include "core/utils/VRFunctionFwd.h"
+#include "core/objects/VRObjectFwd.h"
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGMatrix.h>
 #include <map>
@@ -17,7 +18,6 @@ using namespace std;
 
 class VRSignal;
 class VRFlystick;
-class VRTransform;
 class VRThread;
 
 struct ART_device : public VRName {
@@ -25,7 +25,7 @@ struct ART_device : public VRName {
     list<vector<int> > buttons;
     list<vector<float> > joysticks;
 
-    VRTransform* ent = 0;
+    VRTransformPtr ent = 0;
     VRFlystick* dev = 0;
     Vec3f offset;
     float scale = 1;

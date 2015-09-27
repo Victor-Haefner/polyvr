@@ -14,7 +14,10 @@ class VRWaypoint : public VRGeometry {
         VRPose pose;
 
     public:
-        VRWaypoint();
+        VRWaypoint(string name);
+
+        static VRWaypointPtr create(string name);
+        VRWaypointPtr ptr();
 
         void setPose(VRPose p);
 

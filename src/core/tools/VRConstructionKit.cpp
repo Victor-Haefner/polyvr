@@ -28,8 +28,8 @@ void VRConstructionKit_on_snap(VRConstructionKit* kit, VRSnappingEngine::EventSn
     if (e->snap == 0) { kit->breakup(e->o1); return; }
 
     if (e->o1 == 0 || e->o2 == 0) return;
-    VRObject* p1 = e->o1->getDragParent();
-    VRObject* p2 = e->o2->getParent();
+    VRObjectPtr p1 = e->o1->getDragParent();
+    VRObjectPtr p2 = e->o2->getParent();
     if (p1 == 0 || p2 == 0) return;
     if (p1 == p2) if (p1->hasAttachment("kit_group")) return;
 
@@ -41,7 +41,7 @@ void VRConstructionKit_on_snap(VRConstructionKit* kit, VRSnappingEngine::EventSn
         return;
     }
 
-    VRTransform* group = new VRTransform("kit_group");
+    VRTransformPtr group = VRTransform::create("kit_group");
     group->setPersistency(0);
     group->setPickable(true);
     group->addAttachment("kit_group", 0);
@@ -60,7 +60,7 @@ int VRConstructionKit::ID() {
     return i;
 }
 
-void VRConstructionKit::breakup(VRTransform* obj) {
+void VRConstructionKit::breakup(VRTransformPtr obj) {
     if (obj == 0) return;
 
     auto p = obj->getParent();
@@ -80,10 +80,10 @@ void VRConstructionKit::breakup(VRTransform* obj) {
 }
 
 int VRConstructionKit::addAnchorType(float size, Vec3f color) {
-    auto g = new VRGeometry("anchor");
+    auto g = VRGeometry::create("anchor");
     string bs = toString(size);
     g->setPrimitive("Box", bs + " " + bs + " " + bs + " 1 1 1");
-    auto m = new VRMaterial("anchor");
+    auto m = VRMaterial::create("anchor");
     m->setDiffuse(color);
     g->setMaterial(m);
     int id = ID();
@@ -91,13 +91,13 @@ int VRConstructionKit::addAnchorType(float size, Vec3f color) {
     return id;
 }
 
-void VRConstructionKit::addObject(VRTransform* t) {
+void VRConstructionKit::addObject(VRTransformPtr t) {
     objects[t] = t;
     snapping->addObject(t);
 }
 
-VRGeometry* VRConstructionKit::addObjectAnchor(VRTransform* t, int a, Vec3f pos, float radius) {
-    VRGeometry* anc = (VRGeometry*)anchors[a]->duplicate();
+VRGeometryPtr VRConstructionKit::addObjectAnchor(VRTransformPtr t, int a, Vec3f pos, float radius) {
+    VRGeometryPtr anc = static_pointer_cast<VRGeometry>(anchors[a]->duplicate());
     anc->setPose(pos, Vec3f(0,1,0), Vec3f(1,0,0));
     anc->show();
     anc->switchParent(t);

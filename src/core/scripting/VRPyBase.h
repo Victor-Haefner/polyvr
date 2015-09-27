@@ -85,11 +85,14 @@ struct VRPyBaseT : public VRPyBase {
     static PyObject* fromPtr(T* obj);
     static PyObject* fromSharedPtr(std::shared_ptr<T> obj);
     static bool      parse(PyObject *args, T** obj);
+    static bool      parse(PyObject *args, std::shared_ptr<T>* obj);
     static PyObject* New(PyTypeObject *type, PyObject *args, PyObject *kwds);
     static PyObject* New_ptr(PyTypeObject *type, PyObject *args, PyObject *kwds);
     static PyObject* New_named(PyTypeObject *type, PyObject *args, PyObject *kwds);
+    static PyObject* New_named_ptr(PyTypeObject *type, PyObject *args, PyObject *kwds);
     static PyObject* New_toZero(PyTypeObject *type, PyObject *args, PyObject *kwds);
     static PyObject* New_VRObjects(PyTypeObject *type, PyObject *args, PyObject *kwds);
+    static PyObject* New_VRObjects_ptr(PyTypeObject *type, PyObject *args, PyObject *kwds);
     static PyObject* New_VRObjects_unnamed(PyTypeObject *type, PyObject *args, PyObject *kwds);
     static PyObject* New_VRObjects_optional(PyTypeObject *type, PyObject *args, PyObject *kwds);
 

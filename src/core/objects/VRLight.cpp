@@ -29,7 +29,7 @@ VRLight::VRLight(string name) : VRObject(name) {
 
     ssme = SimpleShadowMapEngine::create();
     setShadowColor(Color4f(0.1f, 0.1f, 0.1f, 1.0f));
-    setShadowType("4096");
+    shadowType = "4096";
 
     setCore(p_light, "Light");
     lightType = "point";
@@ -54,12 +54,10 @@ VRLight::VRLight(string name) : VRObject(name) {
     //addChild(sts->rootNode);
 }
 
-VRLight::~VRLight() {
-    d_light = 0;
-    p_light = 0;
-    s_light = 0;
-    //if (beacon) delete beacon; // should be deleted system
-}
+VRLight::~VRLight() {}
+
+VRLightPtr VRLight::create(string name) { return shared_ptr<VRLight>(new VRLight(name) ); }
+VRLightPtr VRLight::ptr() { return static_pointer_cast<VRLight>( shared_from_this() ); }
 
 void VRLight::update() {
     ssme = SimpleShadowMapEngine::create();
@@ -74,8 +72,8 @@ void VRLight::update() {
 
     setOn(on);
 
-    VRObject* tmp = getRoot()->find(beacon_name);
-    if (tmp) setBeacon((VRLightBeacon*)tmp);
+    VRObjectPtr tmp = getRoot()->find(beacon_name);
+    if (tmp) setBeacon( static_pointer_cast<VRLightBeacon>(tmp) );
 }
 
 void VRLight::setType(string type) {
@@ -85,11 +83,9 @@ void VRLight::setType(string type) {
     if (type == "spot") setSpotlight();
 }
 
-void VRLight::setBeacon(VRLightBeacon* b) {
-    if (beacon && b != beacon) delete beacon;
+void VRLight::setBeacon(VRLightBeaconPtr b) {
     beacon = b;
-
-    b->setLight(this);
+    beacon->setLight( ptr() );
     d_light->setBeacon(beacon->getNode());
     p_light->setBeacon(beacon->getNode());
     s_light->setBeacon(beacon->getNode());
@@ -230,7 +226,7 @@ vector<string> VRLight::getTypeParameter(string type) {
 
 // IDEE: licht sucht ob beacon schon da ist, danach sucht beacon ob licht schon da ist.. je nachdem wer wann erstellt wird..
 
-VRLightBeacon* VRLight::getBeacon() { return beacon; }
+VRLightBeaconPtr VRLight::getBeacon() { return beacon; }
 
 void VRLight::setPointlight() { switchCore(p_light); }
 void VRLight::setSpotlight() { switchCore(s_light); }

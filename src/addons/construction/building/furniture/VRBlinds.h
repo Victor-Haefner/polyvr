@@ -1,6 +1,7 @@
 #ifndef VRBLINDS_H_INCLUDED
 #define VRBLINDS_H_INCLUDED
 
+#include "core/objects/VRObjectFwd.h"
 #include "core/objects/VRTransform.h"
 #include "core/utils/VRFunctionFwd.h"
 #include "core/scene/VRScene.h"
@@ -22,18 +23,20 @@ class VRBlinds: public VRTransform {
         string param;
 
 
-        VRGeometry* window;
+        VRGeometryPtr window;
         VRAnimPtr fkt;
 
-        VRGeometry* blend_geo;
+        VRGeometryPtr blend_geo;
         vector<Vec3f> bl_pos_open;
         vector<Vec3f> bl_pos_closed;
 
     protected:
-        VRObject* copy(vector<VRObject*> children);
+        VRObjectPtr copy(vector<VRObjectPtr> children);
 
     public:
-        VRBlinds(string name, VRGeometry* _window, VRScene* _scene);
+        VRBlinds(string name, VRGeometryPtr _window, VRScene* _scene);
+        static VRBlindsPtr create(string name, VRGeometryPtr _window, VRScene* _scene);
+        VRBlindsPtr ptr();
 
         void setSound(string s);
 

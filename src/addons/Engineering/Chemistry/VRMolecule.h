@@ -72,9 +72,9 @@ class VRMolecule : public VRGeometry {
         string definition;
         map<int, VRAtom*> atoms;
 
-        VRGeometry* bonds_geo = 0;
-        VRGeometry* coords_geo = 0;
-        VRNumberingEngine* labels = 0;
+        VRGeometryPtr bonds_geo = 0;
+        VRGeometryPtr coords_geo = 0;
+        VRNumberingEnginePtr labels = 0;
         bool doLabels = false;
         bool doCoords = false;
 

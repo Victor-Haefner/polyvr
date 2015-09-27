@@ -18,10 +18,10 @@ class VRGroup : public VRObject {
     private:
         string group;
         bool active;
-        static map<string, vector<VRGroup*>* > groups;
-        static map<string, VRObject* > templates;
+        static map<string, vector<VRGroupPtr>* > groups;
+        static map<string, VRObjectPtr > templates;
 
-        VRObject* copy(vector<VRObject*> children);
+        VRObjectPtr copy(vector<VRObjectPtr> children);
 
     protected:
         void saveContent(xmlpp::Element* e);
@@ -30,6 +30,9 @@ class VRGroup : public VRObject {
     public:
         VRGroup(string name);
         ~VRGroup();
+
+        static VRGroupPtr create(string name);
+        VRGroupPtr ptr();
 
         /** Returns the group **/
         void setGroup(string g);
@@ -49,7 +52,7 @@ class VRGroup : public VRObject {
         static vector<string> getGroups();
         static void clearGroups();
 
-        vector<VRGroup*>* getGroupObjects();
+        vector<VRGroupPtr>* getGroupObjects();
 };
 
 OSG_END_NAMESPACE;

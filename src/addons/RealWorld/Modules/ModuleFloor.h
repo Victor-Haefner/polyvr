@@ -13,12 +13,12 @@ namespace realworld {
 
 class ModuleFloor: public BaseModule {
     private:
-        VRMaterial* matSubquad;
+        VRMaterialPtr matSubquad;
 
-        map<string, VRGeometry*> meshes;
-        map<string, VRGeometry*>::iterator mesh_itr;
+        map<string, VRGeometryPtr> meshes;
+        map<string, VRGeometryPtr>::iterator mesh_itr;
 
-        VRGeometry* makeSubQuadGeometry(Vec2f pointA, Vec2f pointB) {
+        VRGeometryPtr makeSubQuadGeometry(Vec2f pointA, Vec2f pointB) {
             vector<Vec3f> pos;
             vector<Vec3f> norms;
             vector<int> inds;
@@ -85,7 +85,7 @@ class ModuleFloor: public BaseModule {
                 }
             }
 
-            VRGeometry* geom = new VRGeometry("Subquad");
+            VRGeometryPtr geom = VRGeometry::create("Subquad");
             geom->create(GL_TRIANGLES, pos, norms, inds, texs);
             return geom;
         }
@@ -93,7 +93,7 @@ class ModuleFloor: public BaseModule {
     public:
         ModuleFloor(MapCoordinator* mapCoordinator, TextureManager* texManager) : BaseModule(mapCoordinator, texManager) {
             // create material
-            matSubquad = new VRMaterial("ground");
+            matSubquad = VRMaterial::create("ground");
             matSubquad->setTexture("world/textures/asphalt.jpg");
             matSubquad->setAmbient(Color3f(0.5, 0.5, 0.5));
             matSubquad->setDiffuse(Color3f(0.5, 0.6, 0.1));
@@ -114,7 +114,7 @@ class ModuleFloor: public BaseModule {
             Vec2f min = this->mapCoordinator->realToWorld(bbox->min);
             Vec2f max = this->mapCoordinator->realToWorld(bbox->max);
 
-            VRGeometry* geom = makeSubQuadGeometry(min, max);
+            VRGeometryPtr geom = makeSubQuadGeometry(min, max);
             geom->setMaterial(matSubquad);
             root->addChild(geom);
             //this->scene->physicalize(geom, true);
@@ -124,10 +124,7 @@ class ModuleFloor: public BaseModule {
         }
 
         virtual void unloadBbox(AreaBoundingBox* bbox) {
-            VRGeometry* geom = meshes[bbox->str];
             meshes.erase(bbox->str);
-            //this->scene->removePhysics(geom);
-            delete geom;
         }
 
         void physicalize(bool b) {

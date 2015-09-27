@@ -7,15 +7,13 @@
 #include <vector>
 #include "CKOctree.h"
 #include "core/utils/VRFunctionFwd.h"
+#include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRDevice;
-class VRGeometry;
 class VRMaterial;
-class VRObject;
-class VRTransform;
 
 // -------------- TODO --------
 // check if element exists when adding to octree
@@ -26,13 +24,13 @@ class BlockWorld {
     public:
 		CKOctree* tree;
 
-        VRObject* getAnchor();
+        VRObjectPtr getAnchor();
 
     private:
-        VRObject* anchor;
+        VRObjectPtr anchor;
 
-        map<string, VRMaterial*> materials;
-        map<int, VRGeometry*> chunks;
+        map<string, VRMaterialPtr> materials;
+        map<int, VRGeometryPtr> chunks;
         shared_ptr<VRFunction<int> > updatePtr;
 
         // octree population algorithm
@@ -41,11 +39,11 @@ class BlockWorld {
         void createSphere(int r, Vec3i p0);
         // mesh methods
 
-        VRMaterial* initMaterial(string texture);
+        VRMaterialPtr initMaterial(string texture);
 
-		VRGeometry* createChunk(vector<CKOctree::element*>& elements);
+		VRGeometryPtr createChunk(vector<CKOctree::element*>& elements);
 
-        VRGeometry* initChunk();
+        VRGeometryPtr initChunk();
 
 		void appendToVector(vector<CKOctree::element*>* elements, CKOctree::element* e);
 
@@ -72,7 +70,7 @@ class CaveKeeper : public BlockWorld {
 
         void dig(VRDevice* dev);
 
-        void place(VRDevice* dev, string s, VRTransform* geo);
+        void place(VRDevice* dev, string s, VRTransformPtr geo);
 };
 
 OSG_END_NAMESPACE

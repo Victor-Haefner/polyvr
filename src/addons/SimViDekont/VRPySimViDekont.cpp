@@ -71,7 +71,7 @@ PyObject* VRPySimViDekont::load(VRPySimViDekont* self, PyObject* args) {
         self->svd = new OSG::SimViDekont();
         self->svd->getAnchor()->setPersistency(0);
     }
-    self->svd->getAnchor()->switchParent(child->obj);
+    self->svd->getAnchor()->switchParent(child->objPtr);
     Py_RETURN_TRUE;
 }
 

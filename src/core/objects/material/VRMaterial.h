@@ -5,6 +5,7 @@
 #include <OpenSG/OSGColor.h>
 
 #include "core/objects/object/VRObject.h"
+#include "core/objects/VRObjectFwd.h"
 
 class VRVideo;
 
@@ -18,15 +19,14 @@ class ChunkMaterial; OSG_GEN_CONTAINERPTR(ChunkMaterial);
 class MultiPassMaterial; OSG_GEN_CONTAINERPTR(MultiPassMaterial);
 
 struct VRMatData;
-class VRTransform;
 
 Color4f toColor4f(Color3f c, float t = 1);
 Color3f toColor3f(Color4f c);
 
 class VRMaterial : public VRObject {
     public:
-        static map<string, VRMaterial*> materials;
-        static map<MaterialRecPtr, VRMaterial*> materialsByPtr;
+        static map<string, VRMaterialPtr> materials;
+        static map<MaterialRecPtr, VRMaterialPtr> materialsByPtr;
 
         string constructShaderVP(VRMatData* data);
         string constructShaderFP(VRMatData* data);
@@ -36,7 +36,7 @@ class VRMaterial : public VRObject {
         vector<VRMatData*> mats;
         int activePass = 0;
 
-        VRObject* copy(vector<VRObject*> children);
+        VRObjectPtr copy(vector<VRObjectPtr> children);
 
         bool isCMat(MaterialUnrecPtr matPtr);
         bool isSMat(MaterialUnrecPtr matPtr);
@@ -49,6 +49,9 @@ class VRMaterial : public VRObject {
         VRMaterial(string name);
         virtual ~VRMaterial();
 
+        static VRMaterialPtr create(string name);
+        VRMaterialPtr ptr();
+
         void setDeffered(bool b);
 
         void setActivePass(int i);
@@ -56,13 +59,13 @@ class VRMaterial : public VRObject {
         int getNPasses();
         int addPass();
         void remPass(int i);
-        void appendPasses(VRMaterial* mat);
-        void prependPasses(VRMaterial* mat);
+        void appendPasses(VRMaterialPtr mat);
+        void prependPasses(VRMaterialPtr mat);
         void clearExtraPasses();
 
-        static VRMaterial* getDefault();
-        static VRMaterial* get(MaterialRecPtr mat);
-        static VRMaterial* get(string s);
+        static VRMaterialPtr getDefault();
+        static VRMaterialPtr get(MaterialRecPtr mat);
+        static VRMaterialPtr get(string s);
         static void clearAll();
 
         //** Set the material of the mesh **/
@@ -94,7 +97,7 @@ class VRMaterial : public VRObject {
         void setZOffset(float factor, float bias);
         void setSortKey(int key);
         void setFrontBackModes(int front, int back);
-        void setClipPlane(bool active, Vec4f equation, VRTransform* beacon);
+        void setClipPlane(bool active, Vec4f equation, VRTransformPtr beacon);
         void setStencilBuffer(bool clear, float value, float mask, int func, int opFail, int opZFail, int opPass);
 
         Color3f getDiffuse();

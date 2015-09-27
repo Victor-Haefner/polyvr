@@ -95,7 +95,7 @@ PyObject* VRPyPathtool::getStroke(VRPyPathtool* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyPathtool::getStroke - Object is invalid"); return NULL; }
     VRPyPath* p = 0;
     if (! PyArg_ParseTuple(args, "O", &p)) return NULL;
-    return VRPyStroke::fromPtr( self->obj->getStroke(p->obj) );
+    return VRPyStroke::fromSharedPtr( self->obj->getStroke(p->obj) );
 }
 
 PyObject* VRPyPathtool::getHandles(VRPyPathtool* self, PyObject* args) {
@@ -106,11 +106,11 @@ PyObject* VRPyPathtool::getHandles(VRPyPathtool* self, PyObject* args) {
     OSG::path* pa = 0;
     if (p) pa = p->obj;
 
-    vector<OSG::VRGeometry*> objs = self->obj->getHandles(pa);
+    vector<OSG::VRGeometryPtr> objs = self->obj->getHandles(pa);
 
     PyObject* li = PyList_New(objs.size());
     for (uint i=0; i<objs.size(); i++) {
-        PyList_SetItem(li, i, VRPyGeometry::fromPtr(objs[i]));
+        PyList_SetItem(li, i, VRPyGeometry::fromSharedPtr(objs[i]));
     }
 
     return li;
@@ -132,7 +132,7 @@ PyObject* VRPyPathtool::select(VRPyPathtool* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyPathtool::select - Object is invalid"); return NULL; }
     VRPyGeometry* obj;
     if (! PyArg_ParseTuple(args, "O", &obj)) return NULL;
-    self->obj->select( obj->obj );
+    self->obj->select( obj->objPtr );
     Py_RETURN_TRUE;
 }
 
@@ -141,7 +141,7 @@ PyObject* VRPyPathtool::addPath(VRPyPathtool* self, PyObject* args) {
     VRPyPath* p;
     VRPyObject* obj;
     if (! PyArg_ParseTuple(args, "OO", &p, &obj)) return NULL;
-    self->obj->addPath( p->obj, obj->obj );
+    self->obj->addPath( p->obj, obj->objPtr );
     Py_RETURN_TRUE;
 }
 
@@ -152,7 +152,7 @@ PyObject* VRPyPathtool::newPath(VRPyPathtool* self, PyObject* args) {
     else if (! PyArg_ParseTuple(args, "OOi", &dev, &obj, &res)) return NULL;
     OSG::VRDevice* d = 0;
     if (!isNone((PyObject*)dev)) d = dev->obj;
-    OSG::path* p = self->obj->newPath( d, obj->obj, res );
+    OSG::path* p = self->obj->newPath( d, obj->objPtr, res );
     return VRPyPath::fromPtr(p);
 }
 
@@ -169,6 +169,6 @@ PyObject* VRPyPathtool::extrude(VRPyPathtool* self, PyObject* args) {
     if (! PyArg_ParseTuple(args, "OO", &dev, &p)) return NULL;
     OSG::VRDevice* d = 0;
     if (!isNone((PyObject*)dev)) d = dev->obj;
-    return VRPyGeometry::fromPtr( self->obj->extrude( d, p->obj) );
+    return VRPyGeometry::fromSharedPtr( self->obj->extrude( d, p->obj) );
 }
 

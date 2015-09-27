@@ -57,12 +57,12 @@ void VRHaptic::on_scene_changed(VRDevice* dev) {
 
 }
 
-void VRHaptic::applyTransformation(VRTransform* t) { // TODO: rotation
+void VRHaptic::applyTransformation(VRTransformPtr t) { // TODO: rotation
     if (!v->connected()) return;
     t->setMatrix(v->getPose());
 }
 
-void VRHaptic::updateHapticTimestep(VRTransform* t) {
+void VRHaptic::updateHapticTimestep(VRTransformPtr t) {
     list<VRProfiler::Frame> frames = VRProfiler::get()->getFrames();
 
         VRProfiler::Frame tmpOlder;
@@ -109,13 +109,13 @@ void VRHaptic::updateHapticTimestep(VRTransform* t) {
         }
 }
 
-void VRHaptic::updateHapticPre(VRTransform* t) { // TODO: rotation
+void VRHaptic::updateHapticPre(VRTransformPtr t) { // TODO: rotation
      if (!v->connected()) return;
    //COMMAND_MODE_VIRTMECH
     updateVirtMechPre();
 }
 
-void VRHaptic::updateHapticPost(VRTransform* t) { // TODO: rotation
+void VRHaptic::updateHapticPost(VRTransformPtr t) { // TODO: rotation
      if (!v->connected()) return;
    //COMMAND_MODE_VIRTMECH
     updateVirtMechPost();
@@ -124,8 +124,8 @@ void VRHaptic::updateHapticPost(VRTransform* t) { // TODO: rotation
 void VRHaptic::setForce(Vec3f force, Vec3f torque) { v->applyForce(force, torque); }
 Vec3f VRHaptic::getForce() {return v->getForce(); }
 void VRHaptic::setSimulationScales(float scale, float forces) { v->setSimulationScales(scale, forces); }
-void VRHaptic::attachTransform(VRTransform* trans) {v->attachTransform(trans);}
-void VRHaptic::setBase(VRTransform* trans) {v->setBase(trans);}
+void VRHaptic::attachTransform(VRTransformPtr trans) {v->attachTransform(trans);}
+void VRHaptic::setBase(VRTransformPtr trans) {v->setBase(trans);}
 void VRHaptic::detachTransform() {v->detachTransform();}
 void VRHaptic::updateVirtMechPre() {
     v->updateVirtMechPre();

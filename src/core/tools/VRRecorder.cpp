@@ -47,7 +47,7 @@ void VRRecorder::setView(int i) {
 void VRRecorder::setMaxFrames(int maxf) { maxFrames = maxf; }
 bool VRRecorder::frameLimitReached() { return ((int)captures.size() == maxFrames); }
 
-void VRRecorder::setTransform(VRTransform* t, int f) {
+void VRRecorder::setTransform(VRTransformPtr t, int f) {
     if (f >= (int)captures.size() || f < 0) return;
     VRFrame* fr = captures[f];
     cout << "setTransform " << t->getName() << " " << fr->f << endl;
@@ -72,7 +72,7 @@ void VRRecorder::capture() {
     f->capture = view->grab();
     f->timestamp = glutGet(GLUT_ELAPSED_TIME);
 
-    VRTransform* t = view->getCamera();
+    VRTransformPtr t = view->getCamera();
     if (t == 0) return;
     f->f = t->getFrom();
     f->a = t->getAt();

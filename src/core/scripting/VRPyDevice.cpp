@@ -103,7 +103,7 @@ PyObject* VRPyDevice::intersect(VRPyDevice* self) {
 
 PyObject* VRPyDevice::drag(VRPyDevice* self, PyObject *args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::drag, Object is invalid"); return NULL; }
-    OSG::VRObject* obj = 0;
+    OSG::VRObjectPtr obj = 0;
     if (!VRPyObject::parse(args, &obj)) return NULL;
     string name = obj->getName();
     self->obj->drag(obj, self->obj->getBeacon());
@@ -130,29 +130,27 @@ PyObject* VRPyDevice::destroy(VRPyDevice* self) {
 
 PyObject* VRPyDevice::getBeacon(VRPyDevice* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getBeacon, Object is invalid"); return NULL; }
-    return VRPyTransform::fromPtr(self->obj->getBeacon());
+    return VRPyTransform::fromSharedPtr(self->obj->getBeacon());
 }
 
 PyObject* VRPyDevice::setBeacon(VRPyDevice* self, PyObject *args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::setBeacon, Object is invalid"); return NULL; }
-    PyObject* beacon = NULL;
+    VRPyTransform* beacon = NULL;
     if (! PyArg_ParseTuple(args, "O", &beacon)) return NULL;
-    VRPyTransform* t = (VRPyTransform*)beacon;
-    self->obj->setBeacon(t->obj);
+    self->obj->setBeacon(beacon->objPtr);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyDevice::getTarget(VRPyDevice* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getTarget, Object is invalid"); return NULL; }
-    return VRPyTransform::fromPtr(self->obj->getTarget());
+    return VRPyTransform::fromSharedPtr(self->obj->getTarget());
 }
 
 PyObject* VRPyDevice::setTarget(VRPyDevice* self, PyObject *args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::setTarget, Object is invalid"); return NULL; }
-    PyObject* target = NULL;
+    VRPyTransform* target = NULL;
     if (! PyArg_ParseTuple(args, "O", &target)) return NULL;
-    VRPyTransform* t = (VRPyTransform*)target;
-    self->obj->setTarget(t->obj);
+    self->obj->setTarget(target->objPtr);
     Py_RETURN_TRUE;
 }
 
@@ -229,19 +227,17 @@ PyObject* VRPyDevice::getIntersectionUV(VRPyDevice* self) {
 
 PyObject* VRPyDevice::addIntersection(VRPyDevice* self, PyObject *args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::addIntersection, Object is invalid"); return NULL; }
-    PyObject* iobj = NULL;
+    VRPyObject* iobj = NULL;
     if (! PyArg_ParseTuple(args, "O", &iobj)) return NULL;
-    VRPyObject* t = (VRPyObject*)iobj;
-    self->obj->addDynTree(t->obj);
+    self->obj->addDynTree(iobj->objPtr);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyDevice::remIntersection(VRPyDevice* self, PyObject *args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::remIntersection, Object is invalid"); return NULL; }
-    PyObject* iobj = NULL;
+    VRPyObject* iobj = NULL;
     if (! PyArg_ParseTuple(args, "O", &iobj)) return NULL;
-    VRPyObject* t = (VRPyObject*)iobj;
-    self->obj->remDynTree(t->obj);
+    self->obj->remDynTree(iobj->objPtr);
     Py_RETURN_TRUE;
 }
 

@@ -45,7 +45,7 @@ namespace realworld {
                             if (wall->positions.size() < 3) continue;
 
                             // generate mesh
-                            VRGeometry* geom = makeWallGeometry(wall, mat);
+                            VRGeometryPtr geom = makeWallGeometry(wall, mat);
                             root->addChild(geom);
                             //meshes[wall->id] = geom;
                         }
@@ -63,7 +63,7 @@ namespace realworld {
 //                BOOST_FOREACH(WallMaterial* mat, wallList) {
 //                    if (way->tags[mat->k] == mat->v) {
 //                        if (meshes.count(way->id)) {
-//                            VRGeometry* geom = meshes[way->id];
+//                            VRGeometryPtr geom = meshes[way->id];
 //                            meshes.erase(way->id);
 //                            delete geom;
 //                        }
@@ -88,7 +88,7 @@ namespace realworld {
         vector<WallMaterial*> wallList;
         //TerrainMaterials* matTerrain;
         OSMMapDB* mapDB;
-        //map<string, VRGeometry*> meshes;
+        //map<string, VRGeometryPtr> meshes;
 
         void fillWallList() {
             //simple Wall Texture
@@ -258,17 +258,17 @@ namespace realworld {
         }
 
 
-        VRGeometry* makeWallGeometry(Wall* wall, WallMaterial* wallMat) {
+        VRGeometryPtr makeWallGeometry(Wall* wall, WallMaterial* wallMat) {
             GeometryData* gdWall = new GeometryData();
 
             addWall(wall, gdWall, wallMat->width, wallMat->height);
 
-            VRGeometry* geomWall = new VRGeometry(wallMat->v);
+            VRGeometryPtr geomWall = VRGeometry::create(wallMat->v);
 
             geomWall->create(GL_QUADS, gdWall->pos, gdWall->norms, gdWall->inds, gdWall->texs);
             geomWall->setMaterial(wallMat->material);
 
-            VRGeometry* geom = new VRGeometry("Wall");
+            VRGeometryPtr geom = VRGeometry::create("Wall");
             if (gdWall->inds->size() > 0) geom->addChild(geomWall);
             return geom;
         }

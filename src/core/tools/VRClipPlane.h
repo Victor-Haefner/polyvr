@@ -15,8 +15,8 @@ class VRMaterial;
 
 class VRClipPlane : public VRGeometry {
     private:
-        vector<VRMaterial*> mats;
-        VRObject* tree = 0;
+        vector<VRMaterialPtr> mats;
+        VRObjectPtr tree = 0;
         bool active = false;
 
         Vec4f getEquation();
@@ -26,9 +26,12 @@ class VRClipPlane : public VRGeometry {
     public:
         VRClipPlane(string name);
 
+        static VRClipPlanePtr create(string name);
+        VRClipPlanePtr ptr();
+
         bool isActive();
         void setActive(bool a);
-        void setTree(VRObject* obj);
+        void setTree(VRObjectPtr obj);
 };
 
 OSG_END_NAMESPACE;

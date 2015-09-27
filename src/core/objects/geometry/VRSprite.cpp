@@ -26,9 +26,10 @@ VRSprite::VRSprite (string name, bool alpha, float w, float h) : VRGeometry(name
     label = "";
 }
 
-VRSprite::~VRSprite() {
-    ;
-}
+VRSprite::~VRSprite() {}
+
+VRSpritePtr VRSprite::create(string name, bool alpha, float w, float h) { return shared_ptr<VRSprite>(new VRSprite(name, alpha, w, h) ); }
+VRSpritePtr VRSprite::ptr() { return static_pointer_cast<VRSprite>( shared_from_this() ); }
 
 void VRSprite::setLabel (string l, float res) {
     if (l == label) return;
@@ -39,7 +40,7 @@ void VRSprite::setLabel (string l, float res) {
 }
 
 void VRSprite::webOpen(string path, int res, float ratio){
-    VRMaterial* mat = VRMaterial::get(getName()+"web");
+    VRMaterialPtr mat = VRMaterial::get(getName()+"web");
     setMaterial(mat);
     mat->setLit(false);
     web = CEF::create();
@@ -49,7 +50,7 @@ void VRSprite::webOpen(string path, int res, float ratio){
 
     web->setMaterial(mat);
     web->open(path);
-    web->addMouse(mouse, this, 0, 2, 3, 4);
+    web->addMouse(mouse, ptr(), 0, 2, 3, 4);
     web->addKeyboard(keyboard);
     web->setResolution(res);
     web->setAspectRatio(ratio);

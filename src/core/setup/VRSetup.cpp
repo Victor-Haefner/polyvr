@@ -37,8 +37,8 @@ void VRSetup::processOptions() {
 
 VRSetup::VRSetup(string name) {
     setName(name);
-    real_root = new VRTransform("VR Setup");
-    setup_cam = new VRCamera("Setup");
+    real_root = VRTransform::create("VR Setup");
+    setup_cam = VRCamera::create("Setup");
     setViewAnchor(real_root);
     setDeviceRoot(real_root);
     real_root->addAttachment("treeviewNotDragable", 0);
@@ -56,14 +56,11 @@ VRSetup::VRSetup(string name) {
     stats_layer->setCallback( layer_stats_toggle );
 }
 
-VRSetup::~VRSetup() {
-    if (user) delete user;
-    delete real_root;
-}
+VRSetup::~VRSetup() {}
 
 void VRSetup::setScene(VRScene* scene) {
     if (scene == 0) return;
-    VRCamera* cam = scene->getActiveCamera();
+    VRCameraPtr cam = scene->getActiveCamera();
     if (cam == 0) return;
     setViewRoot(scene->getSystemRoot(), -1);
     setViewCamera(cam, -1);
@@ -78,16 +75,16 @@ void VRSetup::setScene(VRScene* scene) {
     //scene->initDevices();
 }
 
-void VRSetup::addObject(VRObject* o) { real_root->addChild(o); }
+void VRSetup::addObject(VRObjectPtr o) { real_root->addChild(o); }
 
 void VRSetup::showSetup(bool b) { // TODO
     showViewportGeos(b);
 }
 
-VRTransform* VRSetup::getUser() { return user; }
-VRTransform* VRSetup::getRoot() { return real_root; }
+VRTransformPtr VRSetup::getUser() { return user; }
+VRTransformPtr VRSetup::getRoot() { return real_root; }
 
-VRTransform* VRSetup::getTracker(string t) {
+VRTransformPtr VRSetup::getTracker(string t) {
     for (int ID : getARTDevices()) {
         ART_device* dev = getARTDevice(ID);
         if (dev->ent->getName() == t) return dev->ent;

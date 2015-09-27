@@ -21,8 +21,8 @@ struct VRCollision {
     OSG::Vec3f pos2;
     OSG::Vec3f norm;
     float distance;
-    OSG::VRTransform* obj1 = 0;
-    OSG::VRTransform* obj2 = 0;
+    OSG::VRTransformWeakPtr obj1;
+    OSG::VRTransformWeakPtr obj2;
 };
 
 class VRPhysics : public OSG::VRStorage {
@@ -66,7 +66,7 @@ class VRPhysics : public OSG::VRStorage {
         btVector3 constantForce;
         btVector3 constantTorque;
 
-        OSG::VRTransform* vr_obj = 0;
+        OSG::VRTransformWeakPtr vr_obj;
         OSG::VRConstraint* constraint = 0;
         OSG::Vec3f scale;
 
@@ -83,7 +83,7 @@ class VRPhysics : public OSG::VRStorage {
         void clear();
 
     public:
-        VRPhysics(OSG::VRTransform* t);
+        VRPhysics(OSG::VRTransformWeakPtr t);
         ~VRPhysics();
 
         void prepareStep();
@@ -122,7 +122,7 @@ class VRPhysics : public OSG::VRStorage {
 
         vector<VRCollision> getCollisions();
 
-        void updateTransformation(OSG::VRTransform* t);
+        void updateTransformation(OSG::VRTransformWeakPtr t);
         OSG::Matrix getTransformation();
         btTransform getTransform();
         void setTransformation(btTransform t);
@@ -154,7 +154,7 @@ class VRPhysics : public OSG::VRStorage {
         static vector<string> getPhysicsShapes();
         static btTransform fromMatrix(OSG::Matrix m, OSG::Vec3f& scale, OSG::Vec3f mc);
         static btTransform fromMatrix(OSG::Matrix m, OSG::Vec3f mc);
-        static btTransform fromVRTransform(OSG::VRTransform* t, OSG::Vec3f& scale, OSG::Vec3f mc);
+        static btTransform fromVRTransform(OSG::VRTransformWeakPtr t, OSG::Vec3f& scale, OSG::Vec3f mc);
         static OSG::Matrix fromBTTransform(const btTransform t);
         static OSG::Matrix fromBTTransform(const btTransform t, OSG::Vec3f& scale, OSG::Vec3f mc);
 

@@ -215,7 +215,7 @@ void printAll(const AnimationLibrary& library) {
 
 
 
-void setPose(OSG::VRTransform* o, int i, path *p, float t) {// object, axis, new axis values
+void setPose(OSG::VRTransformPtr o, int i, path *p, float t) {// object, axis, new axis values
     if (i < 0 || i > 2) { return; }
     Vec3f f = o->getFrom();
     if(p) f[i] = p->getPosition(t)[1];
@@ -223,7 +223,7 @@ void setPose(OSG::VRTransform* o, int i, path *p, float t) {// object, axis, new
     o->setFrom(f);
 }
 
-void setRot(OSG::VRTransform* o, int i, path *p, float t) {
+void setRot(OSG::VRTransformPtr o, int i, path *p, float t) {
     if (i < 0 || i > 2) { return; }
     Vec3f f = o->getEuler();
     if(p) f[i] = p->getPosition(t)[1];
@@ -231,7 +231,7 @@ void setRot(OSG::VRTransform* o, int i, path *p, float t) {
     o->setEuler(f);
 }
 
-void setScale(OSG::VRTransform* o, int i, path *p, float t) {
+void setScale(OSG::VRTransformPtr o, int i, path *p, float t) {
     if (i < 0 || i > 2) { return; }
     Vec3f f = o->getScale();
     if(p) f[i] = p->getPosition(t)[1];
@@ -239,11 +239,11 @@ void setScale(OSG::VRTransform* o, int i, path *p, float t) {
     o->setScale(f);
 }
 
-void setPose3(VRTransform* o, int i, Vec3f t) {
+void setPose3(VRTransformPtr o, int i, Vec3f t) {
     o->setFrom(t);
 }
 
-VRObject* findTarget(VRObject* o, string Name) {
+VRObjectPtr findTarget(VRObjectPtr o, string Name) {
     if (o->hasAttachment("collada_name")) cout << "findTarget " << Name << " current " << o->getAttachment<string>("collada_name") << endl;
     if (o->hasAttachment("collada_name")) {
         if (o->getAttachment<string>("collada_name") == Name) return o;
@@ -251,7 +251,7 @@ VRObject* findTarget(VRObject* o, string Name) {
 
     for (auto c : o->getChildren(false)) {
         if (c == o) continue;
-        VRObject* tmp = findTarget(c,Name);
+        VRObjectPtr tmp = findTarget(c,Name);
         if (tmp != 0) return tmp;
     }
     return 0;
@@ -272,10 +272,10 @@ int getAxis(const Animation& a) {
     return -1;
 }
 
-void buildAnimations(AnimationLibrary& lib, VRObject* objects) {
+void buildAnimations(AnimationLibrary& lib, VRObjectPtr objects) {
     for (auto a : lib.animations) {
         cout << "search object " << a.second.channel.target << endl;
-        VRObject* obj = findTarget(objects, a.second.channel.target);
+        VRObjectPtr obj = findTarget(objects, a.second.channel.target);
         if(obj==0) cout << "object is 0 "<< endl;
         if (obj == 0) continue;
         if(!obj->hasAttachment("transform")) cout << "has no attachment " << obj->getName() << endl;
@@ -304,7 +304,7 @@ void buildAnimations(AnimationLibrary& lib, VRObject* objects) {
         string2Vector(intangentSource.array_element, intangentValues);
         string2Vector(outtangentSource.array_element, outtangentValues);
 
-        VRTransform* t = (VRTransform*)obj;
+        VRTransformPtr t = static_pointer_cast<VRTransform>(obj);
         int axis = getAxis(a.second);
 
         VRAnimPtr fkt;
@@ -312,7 +312,7 @@ void buildAnimations(AnimationLibrary& lib, VRObject* objects) {
 
         path* p = 0;
 
-        void (*callback)(OSG::VRTransform* o, int i, path *p, float t) = 0;
+        void (*callback)(OSG::VRTransformPtr o, int i, path *p, float t) = 0;
         if (a.second.channel.type == "rotation") callback = setRot;
         if (a.second.channel.type == "location") callback = setPose;
         if (a.second.channel.type == "scale") callback = setScale;
@@ -518,13 +518,13 @@ void printAllKinematics(const kin_scene& scene) {
     }
 }
 
-VRTransform* buildLinks(klink l, VRObject* objects, map<string, VRConstraint*>& constraints) {
-    VRTransform* t1 = 0;
+VRTransformPtr buildLinks(klink l, VRObjectPtr objects, map<string, VRConstraint*>& constraints) {
+    VRTransformPtr t1 = 0;
     auto o1 = findTarget(objects, l.parent);
     if (o1 == 0) { cout << "did not find " << l.parent << endl; return 0; }
-    if (o1->hasAttachment("transform")) t1 = (VRTransform*)o1;
+    if (o1->hasAttachment("transform")) t1 = static_pointer_cast<VRTransform>(o1);
     else {
-        t1 = new VRTransform(o1->getBaseName());
+        t1 = VRTransform::create(o1->getBaseName());
         t1->switchParent(o1->getParent());
         o1->switchParent(t1);
     }
@@ -551,7 +551,7 @@ VRTransform* buildLinks(klink l, VRObject* objects, map<string, VRConstraint*>& 
     return t1;
 }
 
-void buildKinematics(const kin_scene& scene, VRObject* objects) {
+void buildKinematics(const kin_scene& scene, VRObjectPtr objects) {
     for (auto m : scene.models) {
         map<string, VRConstraint*> constraints;
         for (auto j : m.second.joints) {
@@ -569,7 +569,7 @@ void buildKinematics(const kin_scene& scene, VRObject* objects) {
     }
 }
 
-VRObject* OSG::loadCollada(string path, VRObject* objects) {
+VRObjectPtr OSG::loadCollada(string path, VRObjectPtr objects) {
     ifstream file(path);
     string data( (std::istreambuf_iterator<char>(file) ), (std::istreambuf_iterator<char>() ) );
     file.close();
@@ -584,7 +584,7 @@ VRObject* OSG::loadCollada(string path, VRObject* objects) {
     printAllKinematics(kscene);
     buildKinematics(kscene, objects);
 
-    VRObject* res = new VRObject("COLLADA");
+    VRObjectPtr res = VRObject::create("COLLADA");
     //res->addChild(n);
     return res;
 }

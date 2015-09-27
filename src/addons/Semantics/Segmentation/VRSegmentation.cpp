@@ -55,7 +55,7 @@ struct Accumulator {
 
     virtual void pushPoint(Pnt3f p, Vec3f n) = 0;
 
-    void pushGeometry(VRGeometry* geo_in) {
+    void pushGeometry(VRGeometryPtr geo_in) {
         GeoVectorPropertyRecPtr positions = geo_in->getMesh()->getPositions();
         GeoVectorPropertyRecPtr normals = geo_in->getMesh()->getNormals();
 
@@ -190,12 +190,12 @@ struct Accumulator_octree : public Accumulator {
     }
 };
 
-vector<VRGeometry*> extractPointsOnPlane(VRGeometry* geo_in, VRPlane plane, float Dp) {
+vector<VRGeometryPtr> extractPointsOnPlane(VRGeometryPtr geo_in, VRPlane plane, float Dp) {
     GeoVectorPropertyRecPtr positions = geo_in->getMesh()->getPositions();
 
-    vector<VRGeometry*> res; // two geometries, the plane && the rest
+    vector<VRGeometryPtr> res; // two geometries, the plane && the rest
     for (int i=0; i<2; i++) {
-        VRGeometry* geo = new VRGeometry(geo_in->getName() + "_p");
+        VRGeometryPtr geo = VRGeometry::create(geo_in->getName() + "_p");
         GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
         geo->setPositions(pos);
         res.push_back(geo);
@@ -211,9 +211,9 @@ vector<VRGeometry*> extractPointsOnPlane(VRGeometry* geo_in, VRPlane plane, floa
     return res;
 }
 
-vector<VRGeometry*> clusterByPlanes(VRGeometry* geo_in, vector<VRPlane> planes, float Dp, int pMax) {
+vector<VRGeometryPtr> clusterByPlanes(VRGeometryPtr geo_in, vector<VRPlane> planes, float Dp, int pMax) {
     GeoVectorPropertyRecPtr positions = geo_in->getMesh()->getPositions();
-    map<int, VRGeometry*> res_map;
+    map<int, VRGeometryPtr> res_map;
     Pnt3f p;
     int N = min(pMax+1, (int)planes.size());
 
@@ -235,7 +235,7 @@ vector<VRGeometry*> clusterByPlanes(VRGeometry* geo_in, vector<VRPlane> planes, 
         if (dmin > Dp) continue;
 
         if (res_map.count(pl) == 0) { // init geometries for each plane
-            VRGeometry* geo = new VRGeometry(geo_in->getName() + "_p");
+            VRGeometryPtr geo = VRGeometry::create(geo_in->getName() + "_p");
             GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
             geo->setPositions(pos);
             res_map[pl] = geo;
@@ -244,18 +244,18 @@ vector<VRGeometry*> clusterByPlanes(VRGeometry* geo_in, vector<VRPlane> planes, 
         res_map[pl]->getMesh()->getPositions()->addValue(p);
     }
 
-    vector<VRGeometry*> res;
+    vector<VRGeometryPtr> res;
     for (auto r : res_map) res.push_back(r.second);
     return res;
 }
 
-void finalizeClusterGeometries(vector<VRGeometry*>& res) {
+void finalizeClusterGeometries(vector<VRGeometryPtr>& res) {
     for (auto geo : res) { // finalize geometries
         geo->setType(GL_POINTS);
         GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
         for (uint i=0; i<geo->getMesh()->getPositions()->size(); i++) inds->addValue(i);
         geo->setIndices(inds);
-        geo->setMaterial(new VRMaterial("pmat"));
+        geo->setMaterial(VRMaterial::create("pmat"));
 
         //geo->getMaterial()->setDiffuse(Vec3f(pl));
         geo->getMaterial()->setDiffuse(randC());
@@ -265,7 +265,7 @@ void finalizeClusterGeometries(vector<VRGeometry*>& res) {
     }
 }
 
-void fixNormalsIndices(VRGeometry* geo_in) {
+void fixNormalsIndices(VRGeometryPtr geo_in) {
     map<int, int> inds_map;
 
     GeoIntegralPropertyRecPtr i_n = geo_in->getMesh()->getIndex(Geometry::PositionsIndex);
@@ -296,7 +296,7 @@ void fixNormalsIndices(VRGeometry* geo_in) {
     //geo_in->getMesh()->setIndex(geo_in->getMesh()->getIndex(Geometry::PositionsIndex), Geometry::NormalsIndex);
 }
 
-vector<VRGeometry*> extractPlanes(VRGeometry* geo_in, int N, float delta) {
+vector<VRGeometryPtr> extractPlanes(VRGeometryPtr geo_in, int N, float delta) {
     srand(time(0));
 
     fixNormalsIndices(geo_in);
@@ -304,18 +304,18 @@ vector<VRGeometry*> extractPlanes(VRGeometry* geo_in, int N, float delta) {
     Accumulator_grid accu( delta, delta ); cout << "gen accu grid with size " << accu.size() << endl;
     accu.pushGeometry(geo_in);
     vector<VRPlane> planes = accu.eval();  cout << "found " << planes.size() << " planes" << endl;
-    //vector<VRGeometry*> res = extractPointsOnPlane(geo_in, planes[0], 0.02);
-    vector<VRGeometry*> res = clusterByPlanes(geo_in, planes, 0.005, N);
+    //vector<VRGeometryPtr> res = extractPointsOnPlane(geo_in, planes[0], 0.02);
+    vector<VRGeometryPtr> res = clusterByPlanes(geo_in, planes, 0.005, N);
     finalizeClusterGeometries(res);
 
     cout << "return " << res.size() << " planes " << endl;
     return res;
 }
 
-VRObject* VRSegmentation::extractPatches(VRGeometry* geo, SEGMENTATION_ALGORITHM algo, float curvature, float curvature_delta, Vec3f normal, Vec3f normal_delta) {
-    vector<VRGeometry*> patches = extractPlanes(geo, curvature, curvature_delta);
+VRObjectPtr VRSegmentation::extractPatches(VRGeometryPtr geo, SEGMENTATION_ALGORITHM algo, float curvature, float curvature_delta, Vec3f normal, Vec3f normal_delta) {
+    vector<VRGeometryPtr> patches = extractPlanes(geo, curvature, curvature_delta);
 
-    VRObject* anchor = new VRObject("segmentation");
+    VRObjectPtr anchor = VRObject::create("segmentation");
     anchor->setPersistency(0);
     geo->getParent()->addChild(anchor);
 	for (auto p : patches) {
@@ -326,7 +326,7 @@ VRObject* VRSegmentation::extractPatches(VRGeometry* geo, SEGMENTATION_ALGORITHM
     return anchor;
 }
 
-void VRSegmentation::removeDuplicates(VRGeometry* geo) {
+void VRSegmentation::removeDuplicates(VRGeometryPtr geo) {
     if (geo == 0) return;
     if (geo->getMesh() == 0) return;
 
@@ -512,7 +512,7 @@ void Border::add(Vertex* v, bool prepend) {
     v->border = this;
 }
 
-void VRSegmentation::fillHoles(VRGeometry* geo, int steps) {
+void VRSegmentation::fillHoles(VRGeometryPtr geo, int steps) {
     if (geo == 0) return;
     if (geo->getMesh() == 0) return;
     // TODO: check if type is GL_TRIANGLES and just one length!
@@ -685,7 +685,7 @@ void VRSegmentation::fillHoles(VRGeometry* geo, int steps) {
 	geo->setColors(cols, true);
 }
 
-VRObject* VRSegmentation::convexDecompose(VRGeometry* geo) {
+VRObjectPtr VRSegmentation::convexDecompose(VRGeometryPtr geo) {
     return 0;
 }
 

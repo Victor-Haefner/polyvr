@@ -17,7 +17,7 @@ using namespace realworld;
 ModuleBuildings::ModuleBuildings(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, TextureManager* texManager) : BaseModule(mapCoordinator, texManager) {
     this->mapDB = mapDB;
 
-    b_mat = new VRMaterial("Buildings");
+    b_mat = VRMaterial::create("Buildings");
     b_mat->setTexture("world/textures/Buildings.png", false);
     b_mat->setAmbient(Color3f(0.7, 0.7, 0.7)); //light reflection in all directions
     b_mat->setDiffuse(Color3f(1.0, 1.0, 1.0)); //light from ambient (without lightsource)
@@ -48,8 +48,8 @@ void ModuleBuildings::loadBbox(AreaBoundingBox* bbox) {
     OSMMap* osmMap = mapDB->getMap(bbox->str);
     if (!osmMap) return;
 
-    VRGeometry* b_geo = new VRGeometry("Buildings");
-    VRGeometry* r_geo = new VRGeometry("Roofs");
+    VRGeometryPtr b_geo = VRGeometry::create("Buildings");
+    VRGeometryPtr r_geo = VRGeometry::create("Roofs");
     root->addChild(b_geo);
     root->addChild(r_geo);
 

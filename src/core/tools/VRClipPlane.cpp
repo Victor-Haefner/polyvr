@@ -10,7 +10,7 @@ VRClipPlane::VRClipPlane(string name) : VRGeometry(name) {
     // init plane geometry
     type = "ClipPlane";
     setPrimitive("Plane", "0.2 0.2 1 1");
-    VRMaterial* m = new VRMaterial("clipPlane");
+    VRMaterialPtr m = VRMaterial::create("clipPlane");
     setMaterial(m);
     setVisible(false);
 
@@ -21,7 +21,10 @@ VRClipPlane::VRClipPlane(string name) : VRGeometry(name) {
     m->setLineWidth(3);
 }
 
-void VRClipPlane::setTree(VRObject* obj) {
+VRClipPlanePtr VRClipPlane::create(string name) { return shared_ptr<VRClipPlane>(new VRClipPlane(name) ); }
+VRClipPlanePtr VRClipPlane::ptr() { return static_pointer_cast<VRClipPlane>( shared_from_this() ); }
+
+void VRClipPlane::setTree(VRObjectPtr obj) {
     if (tree == obj) return;
     tree = obj;
     deactivate();
@@ -50,13 +53,13 @@ Vec4f VRClipPlane::getEquation() { // not used, but may come in handy
 }
 
 void VRClipPlane::activate() {
-    vector<VRObject*> objs = tree->getChildren(true, "Geometry");
+    vector<VRObjectPtr> objs = tree->getChildren(true, "Geometry");
     for (auto o : objs) {
         if (o->getType() == "ClipPlane") continue;
-        VRGeometry* g = (VRGeometry*)o;
-        VRMaterial* m = g->getMaterial();
+        VRGeometryPtr g = static_pointer_cast<VRGeometry>(o);
+        VRMaterialPtr m = g->getMaterial();
         if (m == 0) continue;
-        m->setClipPlane(true, Vec4f(0,0,-1,0), this);
+        m->setClipPlane(true, Vec4f(0,0,-1,0), ptr() );
         mats.push_back(m);
     }
 }

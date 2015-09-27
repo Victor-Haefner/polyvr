@@ -14,14 +14,14 @@ class VRLod : public VRObject {
         Vec3f center;
         uint decimateNumber = 0;
         map<uint, float> distances;
-        map<uint, VRObject*> decimated;
+        map<uint, VRObjectPtr> decimated;
         map<uint, float> decimation;
 
         void update();
-        void decimateGeometries(VRObject* o, float f);
+        void decimateGeometries(VRObjectPtr o, float f);
 
     protected:
-        VRObject* copy(vector<VRObject*> childs);
+        VRObjectPtr copy(vector<VRObjectPtr> childs);
 
         void saveContent(xmlpp::Element* e);
         void loadContent(xmlpp::Element* e);
@@ -30,6 +30,9 @@ class VRLod : public VRObject {
         /** initialise **/
         VRLod(string name = "0");
         ~VRLod();
+
+        static VRLodPtr create(string name);
+        VRLodPtr ptr();
 
         void setCenter(Vec3f c);
         Vec3f getCenter();

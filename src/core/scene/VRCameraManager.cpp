@@ -10,13 +10,13 @@ VRCameraManager::VRCameraManager() {
 
 VRCameraManager::~VRCameraManager() {;}
 
-VRTransform* VRCameraManager::addCamera(string name) {
-    VRCamera* c = new VRCamera(name);
+VRTransformPtr VRCameraManager::addCamera(string name) {
+    VRCameraPtr c = VRCamera::create(name);
     setMActiveCamera(c->getName());
     return c;
 }
 
-VRCamera* VRCameraManager::getCamera(int ID) {
+VRCameraPtr VRCameraManager::getCamera(int ID) {
     int i=0;
     for (auto c : VRCamera::getAll()) { if (i == ID) return c; i++; }
     return 0;
@@ -26,7 +26,7 @@ void VRCameraManager::setMActiveCamera(string cam) {
     for (auto c : VRCamera::getAll()) { if (c->getName() == cam) active = c; }
 }
 
-VRCamera* VRCameraManager::getActiveCamera() {
+VRCameraPtr VRCameraManager::getActiveCamera() {
     return active;
 }
 

@@ -6,11 +6,10 @@
 #include <vector>
 #include <map>
 
+#include "core/objects/VRObjectFwd.h"
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
-
-class VRObject;
-class VRGeometry;
 
 enum SEGMENTATION_ALGORITHM {
     HOUGH = 0
@@ -75,12 +74,12 @@ class VRSegmentation {
 
     public:
 
-        static VRObject* extractPatches(VRGeometry* geo, SEGMENTATION_ALGORITHM algo, float curvature, float curvature_delta, Vec3f normal, Vec3f normal_delta);
+        static VRObjectPtr extractPatches(VRGeometryPtr geo, SEGMENTATION_ALGORITHM algo, float curvature, float curvature_delta, Vec3f normal, Vec3f normal_delta);
 
-        static void removeDuplicates(VRGeometry* geo);
-        static void fillHoles(VRGeometry* geo, int steps);
+        static void removeDuplicates(VRGeometryPtr geo);
+        static void fillHoles(VRGeometryPtr geo, int steps);
 
-        static VRObject* convexDecompose(VRGeometry* geo);
+        static VRObjectPtr convexDecompose(VRGeometryPtr geo);
 };
 
 OSG_END_NAMESPACE;

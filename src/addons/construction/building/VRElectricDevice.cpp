@@ -5,7 +5,7 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 
-VRElectricDevice::VRElectricDevice(VRObject* obj, VRFunction<bool>* cb) : active(false), callback(cb), EDev(obj) {}
+VRElectricDevice::VRElectricDevice(VRObjectPtr obj, VRFunction<bool>* cb) : active(false), callback(cb), EDev(obj) {}
 
 bool VRElectricDevice::isActive() { return active; }
 

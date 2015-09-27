@@ -252,12 +252,12 @@ VRView::VRView(string n) {
 
     stats = 0;
     grabfg = 0;
-    dummy_user = new VRTransform("view_user");
+    dummy_user = VRTransform::create("view_user");
     dummy_user->addAttachment("global", 0);
 
     viewGeo = makeNodeFor(makePlaneGeo(1,1,1,1));
     viewGeo->setTravMask(0);
-    viewGeoMat = new VRMaterial("setup view mat");
+    viewGeoMat = VRMaterial::create("setup view mat");
     GeometryRecPtr geo = dynamic_cast<Geometry*>( viewGeo->getCore() );
     geo->setMaterial(viewGeoMat->getMaterial());
     update();
@@ -275,7 +275,6 @@ VRView::~VRView() {
     PCDecoratorLeft = 0;
     PCDecoratorRight = 0;
     stats = 0;
-    delete dummy_user;
 }
 
 int VRView::getID() { return ID; }
@@ -352,7 +351,7 @@ void VRView::showViewGeo(bool b) {
 Vec4f VRView::getPosition() { return position; }
 void VRView::setPosition(Vec4f pos) { position = pos; update(); }
 
-void VRView::setRoot(VRObject* root, VRTransform* real) { view_root = root; real_root = real; update(); }
+void VRView::setRoot(VRObjectPtr root, VRTransformPtr real) { view_root = root; real_root = real; update(); }
 
 void VRView::setRoot() {
     if (real_root && viewGeo) real_root->addChild(viewGeo);
@@ -365,7 +364,7 @@ void VRView::setRoot() {
     if (rView) rView->setRoot(n);
 }
 
-void VRView::setUser(VRTransform* u) {
+void VRView::setUser(VRTransformPtr u) {
     user = u;
     user_name = user ? user->getName() : "";
     update();
@@ -384,7 +383,7 @@ void VRView::setUser() {
     }
 }
 
-void VRView::setCamera(VRCamera* c) { cam = c; update(); }
+void VRView::setCamera(VRCameraPtr c) { cam = c; update(); }
 
 void VRView::setCam() {
     if (cam == 0) return;
@@ -572,8 +571,8 @@ void VRView::load(xmlpp::Element* node) {
     update();
 }
 
-VRTransform* VRView::getUser() { if (user) return user; else return dummy_user; }
-VRCamera* VRView::getCamera() { return cam; }
+VRTransformPtr VRView::getUser() { if (user) return user; else return dummy_user; }
+VRCameraPtr VRView::getCamera() { return cam; }
 ViewportRecPtr VRView::getViewport() { return lView; }
 float VRView::getEyeSeparation() { return eyeSeparation; }
 bool VRView::isStereo() { return stereo; }

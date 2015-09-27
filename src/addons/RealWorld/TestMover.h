@@ -11,7 +11,7 @@ namespace realworld {
     class TestMover {
         private:
             VRScene* scene;
-            VRTransform* obj;
+            VRTransformPtr obj;
             bool shouldRotateLeft;
             bool shouldRotateRight;
             bool shouldMoveForward;
@@ -21,7 +21,7 @@ namespace realworld {
             float timeLastFrame;
 
         public:
-            TestMover(VRScene* scene, VRTransform* obj) {
+            TestMover(VRScene* scene, VRTransformPtr obj) {
                 this->scene = scene;
                 this->obj = obj;
 

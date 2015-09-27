@@ -56,24 +56,21 @@ PyMethodDef VRPySegmentation::methods[] = {
 PyObject* VRPySegmentation::convexDecompose(VRPySegmentation* self, PyObject* args) {
     VRPyGeometry* geo = NULL;
     if (! PyArg_ParseTuple(args, "O", &geo)) return NULL;
-    if (geo == NULL) { PyErr_SetString(err, "VRPySegmentation::convexDecompose: Missing geometry parameter"); return NULL; }
-    OSG::VRObject* objects = self->obj->convexDecompose(geo->obj);
+    OSG::VRObjectPtr objects = self->obj->convexDecompose(geo->objPtr);
     return VRPyTypeCaster::cast( objects );
 }
 
 PyObject* VRPySegmentation::fillHoles(VRPySegmentation* self, PyObject* args) {
     VRPyGeometry* geo = NULL; int N = 0;
     if (! PyArg_ParseTuple(args, "Oi", &geo, &N)) return NULL;
-    if (geo == NULL) { PyErr_SetString(err, "VRPySegmentation::fillHoles: Missing geometry parameter"); return NULL; }
-    self->obj->fillHoles(geo->obj, N);
+    self->obj->fillHoles(geo->objPtr, N);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPySegmentation::removeDuplicates(VRPySegmentation* self, PyObject* args) {
     VRPyGeometry* geo = NULL;
     if (! PyArg_ParseTuple(args, "O", &geo)) return NULL;
-    if (geo == NULL) { PyErr_SetString(err, "VRPySegmentation::removeDuplicates: Missing geometry parameter"); return NULL; }
-    self->obj->removeDuplicates(geo->obj);
+    self->obj->removeDuplicates(geo->objPtr);
     Py_RETURN_TRUE;
 }
 
@@ -83,11 +80,10 @@ PyObject* VRPySegmentation::extractPatches(VRPySegmentation* self, PyObject* arg
     float curv, curv_d;
     PyObject *norm, *norm_d;
     if (! PyArg_ParseTuple(args, "OiffOO", &geo, &algo, &curv, &curv_d, &norm, &norm_d)) return NULL;
-    if (geo == NULL) { PyErr_SetString(err, "VRPySegmentation::extractPatches: Missing geometry parameter"); return NULL; }
 
     OSG::Vec3f vnorm = parseVec3fList(norm);
     OSG::Vec3f vnorm_d = parseVec3fList(norm_d);
 
-    OSG::VRObject* patches = self->obj->extractPatches(geo->obj, OSG::SEGMENTATION_ALGORITHM(algo), curv, curv_d, vnorm, vnorm_d);
+    OSG::VRObjectPtr patches = self->obj->extractPatches(geo->objPtr, OSG::SEGMENTATION_ALGORITHM(algo), curv, curv_d, vnorm, vnorm_d);
     return VRPyTypeCaster::cast( patches );
 }

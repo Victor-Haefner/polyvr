@@ -19,8 +19,27 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-VRObject* VRTransform::copy(vector<VRObject*> children) {
-    VRTransform* geo = new VRTransform(getBaseName());
+VRTransform::VRTransform(string name) : VRObject(name) {
+    dm = new doubleBuffer;
+    t = Transform::create();
+    setCore(t, "Transform");
+    addAttachment("transform", 0);
+}
+
+VRTransform::~VRTransform() {
+    delete physics;
+    delete dm;
+}
+
+VRTransformPtr VRTransform::ptr() { return static_pointer_cast<VRTransform>( shared_from_this() ); }
+VRTransformPtr VRTransform::create(string name) {
+    auto ptr = shared_ptr<VRTransform>(new VRTransform(name) );
+    ptr->physics = new VRPhysics( ptr );
+    return ptr;
+}
+
+VRObjectPtr VRTransform::copy(vector<VRObjectPtr> children) {
+    VRTransformPtr geo = VRTransform::create(getBaseName());
     geo->setPickable(isPickable());
     geo->setMatrix(getMatrix());
     geo->setVisible(isVisible());
@@ -45,6 +64,7 @@ void VRTransform::computeMatrix() {
 //should be called from the main thread only
 void VRTransform::updatePhysics() {
     //update bullets transform
+    if (physics == 0) return;
     if (noBlt && !held) { noBlt = false; return; }
     if (!physics->isPhysicalized()) return;
 
@@ -54,7 +74,7 @@ void VRTransform::updatePhysics() {
     getWorldMatrix(pm, true);
     pm.mult(m);*/
 
-    physics->updateTransformation(this);
+    physics->updateTransformation( ptr() );
     physics->pause();
     physics->resetForces();
 }
@@ -67,50 +87,13 @@ void VRTransform::updateTransformation() {
 
 void VRTransform::reg_change() {
     if (change == false) {
-        if (fixed) changedObjects.push_back(this);
+        if (fixed) changedObjects.push_back( ptr() );
         change = true;
         change_time_stamp = VRGlobals::get()->CURRENT_FRAME;
     }
 }
 
 void VRTransform::printInformation() { Matrix m; getMatrix(m); cout << " pos " << m[3]; }
-
-/** initialise a point 3D object with his name **/
-VRTransform::VRTransform(string name) : VRObject(name) {
-    dm = new doubleBuffer;
-    t = Transform::create();
-    setCore(t, "Transform");
-
-    _from = Vec3f(0,0,0);
-    _at = Vec3f(0,0,-1); //equivalent to identity matrix!
-    _up = Vec3f(0,1,0);
-    _scale = Vec3f(1,1,1);
-
-    change = false;
-    held = false;
-    fixed = true;
-    cam_invert_z = false;
-    frame = 0;
-
-    physics = new VRPhysics(this);
-    noBlt = false;
-    doTConstraint = false;
-    doRConstraint = false;
-    tConPlane = true;
-    tConstraint = Vec3f(0,1,0);
-    rConstraint = Vec3i(0,0,0);
-    addAttachment("transform", 0);
-
-    coords = 0;
-    translator = 0;
-}
-
-VRTransform::~VRTransform() {
-    dynamicObjects.remove(this);
-    changedObjects.remove(this);
-    delete physics;
-    delete dm;
-}
 
 uint VRTransform::getLastChange() { return change_time_stamp; }
 //bool VRTransform::changedNow() { return (change_time_stamp >= VRGlobals::get()->CURRENT_FRAME-1); }
@@ -200,11 +183,11 @@ bool VRTransform::checkWorldChange() {
     if (hasGraphChanged()) return true;
 
 
-    VRObject* obj = this;
-    VRTransform* ent;
+    VRObjectPtr obj = ptr();
+    VRTransformPtr ent;
     while(obj) {
         if (obj->hasAttachment("transform")) {
-            ent = (VRTransform*)obj;
+            ent = static_pointer_cast<VRTransform>(obj);
             if (ent->change_time_stamp > wchange_time_stamp) {
                 wchange_time_stamp = ent->change_time_stamp;
                 return true;
@@ -218,16 +201,16 @@ bool VRTransform::checkWorldChange() {
 
 /** Returns the world matrix **/
 void VRTransform::getWorldMatrix(Matrix& M, bool parentOnly) {
-    VRTransform* t = 0;
+    VRTransformPtr t = 0;
     M.setIdentity();
 
     Matrix m;
-    VRObject* o = this;
+    VRObjectPtr o = ptr();
     if (parentOnly && o->getParent() != 0) o = o->getParent();
 
     while(o) {
         if (o->hasAttachment("transform")) {
-            t = (VRTransform*)o;
+            t = static_pointer_cast<VRTransform>(o);
             t->getMatrix(m);
             M.multLeft(m);
         }
@@ -265,15 +248,18 @@ Vec3f VRTransform::getWorldUp(bool parentOnly) {
     return Vec3f(m[1]);
 }
 
-/** Set the object fixed || not **/
+/** Set the object fixed or not **/
 void VRTransform::setFixed(bool b) {
     if (b == fixed) return;
     fixed = b;
+    VRTransformPtr This = ptr();
 
-    if(b) { dynamicObjects.remove(this); return; }
+    dynamicObjects.remove_if([This](VRTransformWeakPtr p2){
+        auto sp = p2.lock();
+        return (This && sp) ? This == sp : false;
+    });
 
-    bool inDO = (std::find(dynamicObjects.begin(), dynamicObjects.end(),this) != dynamicObjects.end());
-    if(!inDO) dynamicObjects.push_back(this);
+    if (!b) dynamicObjects.push_back(This);
 }
 
 /** Set the world matrix of the object **/
@@ -526,7 +512,7 @@ void VRTransform::move(float d) {
 }
 
 /** Drag the object with another **/
-void VRTransform::drag(VRTransform* new_parent) {
+void VRTransform::drag(VRTransformPtr new_parent) {
     if (held) return;
     held = true;
     old_parent = getParent();
@@ -540,7 +526,7 @@ void VRTransform::drag(VRTransform* new_parent) {
     switchParent(new_parent);
     setWorldMatrix(m);
 
-    physics->updateTransformation(this);
+    physics->updateTransformation( ptr() );
     physics->resetForces();
     physics->pause(true);
     reg_change();
@@ -558,29 +544,29 @@ void VRTransform::drop() {
     switchParent(old_parent, old_child_id);
     setWorldMatrix(m);
 
-    physics->updateTransformation(this);
+    physics->updateTransformation( ptr() );
     physics->resetForces();
     physics->pause(false);
     reg_change();
     update();
 }
 
-void VRTransform::rebaseDrag(VRObject* new_parent) {
+void VRTransform::rebaseDrag(VRObjectPtr new_parent) {
     if (!held) { switchParent(new_parent); return; }
     old_parent = new_parent;
 }
 
-VRObject* VRTransform::getDragParent() { return old_parent; }
+VRObjectPtr VRTransform::getDragParent() { return old_parent; }
 
 /** Cast a ray in world coordinates from the object in its local coordinates, -z axis defaults **/
-Line VRTransform::castRay(VRObject* obj, Vec3f dir) {
+Line VRTransform::castRay(VRObjectPtr obj, Vec3f dir) {
     Matrix m = getWorldMatrix();
     if (obj) obj = obj->getParent();
 
     if (obj != 0) {
         while (!obj->hasAttachment("transform")) { obj = obj->getParent(); if(obj == 0) break; }
         if (obj != 0) {
-            VRTransform* tr = (VRTransform*)obj;
+            VRTransformPtr tr = static_pointer_cast<VRTransform>(obj);
             Matrix om = tr->getWorldMatrix();
             om.invert();
             om.mult(m);
@@ -612,13 +598,12 @@ void VRTransform::printTransformationTree(int indent) {
     cout << "\n";
     for (int i=0;i<indent;i++) cout << "  ";
     if (getType() == "Transform" || getType() == "Geometry") {
-        VRTransform* _this = (VRTransform*) this;
-        _this->printPos();
+        printPos();
     }
 
     for (uint i=0;i<getChildrenCount();i++) {
         if (getChild(i)->getType() == "Transform" || getChild(i)->getType() == "Geometry") {
-            VRTransform* tmp = (VRTransform*) getChild(i);
+            VRTransformPtr tmp = static_pointer_cast<VRTransform>( getChild(i) );
             tmp->printTransformationTree(indent+1);
         }
     }
@@ -780,7 +765,7 @@ void VRTransform::loadContent(xmlpp::Element* e) {
     if(doTConstraint || doRConstraint) setFixed(false);
 }
 
-void setFromPath(VRTransform* tr, path* p, bool redirect, float t) {
+void setFromPath(VRTransformPtr tr, path* p, bool redirect, float t) {
     tr->setFrom( p->getPosition(t) );
     if (!redirect) return;
 
@@ -799,7 +784,7 @@ vector<VRAnimation*> VRTransform::getAnimations() {
 }
 
 VRAnimation* VRTransform::startPathAnimation(path* p, float time, float offset, bool redirect, bool loop) {
-    pathAnimPtr = VRFunction<float>::create("TransAnim", boost::bind(setFromPath, this, p, redirect, _1));
+    pathAnimPtr = VRFunction<float>::create("TransAnim", boost::bind(setFromPath, ptr(), p, redirect, _1));
     VRScene* scene = VRSceneManager::getCurrent();
     VRAnimation* a = scene->addAnimation<float>(time, offset, pathAnimPtr, 0.f, 1.f, loop);
     addAnimation(a);
@@ -810,7 +795,7 @@ void VRTransform::stopAnimation() {
     for (auto a : animations) a.second->stop();
 }
 
-list<VRTransform* > VRTransform::dynamicObjects = list<VRTransform* >();
-list<VRTransform* > VRTransform::changedObjects = list<VRTransform* >();
+list<VRTransformWeakPtr > VRTransform::dynamicObjects = list<VRTransformWeakPtr >();
+list<VRTransformWeakPtr > VRTransform::changedObjects = list<VRTransformWeakPtr >();
 
 OSG_END_NAMESPACE;

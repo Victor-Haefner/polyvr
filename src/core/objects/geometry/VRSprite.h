@@ -23,6 +23,9 @@ class VRSprite : public VRGeometry {
         VRSprite (string name, bool alpha = true, float w = 0.5, float h = 0.5);
         ~VRSprite();
 
+        static VRSpritePtr create(string name, bool alpha = true, float w = 0.5, float h = 0.5);
+        VRSpritePtr ptr();
+
         void setSize(float w, float h);
         void setLabel(string l, float res = 1);
         void setTexture(string path);

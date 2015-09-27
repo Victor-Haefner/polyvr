@@ -13,7 +13,7 @@ class VRTree : public VRGeometry {
     private:
         segment* trunc;
         vector<segment*>* branches;
-        VRGeometry* armatureGeo;
+        VRGeometryPtr armatureGeo;
 
         float random (float min, float max);
         float variation(float val, float var);

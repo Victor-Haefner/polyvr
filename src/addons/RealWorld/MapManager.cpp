@@ -2,7 +2,7 @@
 
 using namespace realworld;
 
-MapManager::MapManager(Vec2f position, MapLoader* mapLoader, MapGeometryGenerator* mapGeometryGenerator, MapCoordinator* mapCoordinator, World* world, VRObject* root) {
+MapManager::MapManager(Vec2f position, MapLoader* mapLoader, MapGeometryGenerator* mapGeometryGenerator, MapCoordinator* mapCoordinator, World* world, VRObjectPtr root) {
     this->position = position;
     this->mapLoader = mapLoader;
     this->mapGeometryGenerator = mapGeometryGenerator;

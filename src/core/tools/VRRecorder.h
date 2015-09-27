@@ -6,13 +6,13 @@
 #include <vector>
 
 #include "core/utils/VRFunctionFwd.h"
+#include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRView;
 class VRFrame;
-class VRTransform;
 class Image;
 
 class VRRecorder {
@@ -38,7 +38,7 @@ class VRRecorder {
         float getRecordingLength();
         void setMaxFrames(int maxf);
         bool frameLimitReached();
-        void setTransform(VRTransform* t, int f);
+        void setTransform(VRTransformPtr t, int f);
         Vec3f getFrom(int f);
         Vec3f getDir(int f);
         Vec3f getAt(int f);

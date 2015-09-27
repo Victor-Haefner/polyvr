@@ -8,16 +8,19 @@
 #include <OpenSG/OSGImage.h>
 #include <memory>
 #include "core/utils/VRFunctionFwd.h"
+#include "core/objects/VRObjectFwd.h"
 
 using namespace std;
 
-namespace OSG{ class VRMaterial; class VRDevice; class VRObject; }
+namespace OSG{
+class VRMaterial; class VRDevice;
+}
 
 class CEF : public CefClient, public CefRenderHandler {
     private:
         string site;
-        OSG::VRMaterial* mat = 0;
-        OSG::VRObject* obj = 0;
+        OSG::VRMaterialPtr mat = 0;
+        OSG::VRObjectPtr obj = 0;
         OSG::ImageRecPtr image = 0;
         int width = 1024;
         int height = 1024;
@@ -52,8 +55,8 @@ class CEF : public CefClient, public CefRenderHandler {
         void setResolution(float a);
         void setAspectRatio(float a);
 
-        void setMaterial(OSG::VRMaterial* mat);
-        void addMouse(OSG::VRDevice* dev, OSG::VRObject* obj, int lb, int rb, int wu, int wd);
+        void setMaterial(OSG::VRMaterialPtr mat);
+        void addMouse(OSG::VRDevice* dev, OSG::VRObjectPtr obj, int lb, int rb, int wu, int wd);
         void addKeyboard(OSG::VRDevice* dev);
 
         void open(string site);

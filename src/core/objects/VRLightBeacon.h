@@ -10,7 +10,7 @@ class VRLight;
 
 class VRLightBeacon : public VRTransform {
     protected:
-        VRLight* light;
+        VRLightPtr light;
         NodeRecPtr lightGeo;
 
         void saveContent(xmlpp::Element* e);
@@ -20,12 +20,15 @@ class VRLightBeacon : public VRTransform {
         VRLightBeacon(string name);
         ~VRLightBeacon();
 
-        VRLight* getLight();
-        void setLight(VRLight* l);
+        static VRLightBeaconPtr create(string name);
+        VRLightBeaconPtr ptr();
+
+        VRLightPtr getLight();
+        void setLight(VRLightPtr l);
 
         void showLightGeo(bool b);
 
-        static vector<VRLightBeacon*>& getAll();
+        static vector<VRLightBeaconPtr>& getAll();
 };
 
 OSG_END_NAMESPACE;

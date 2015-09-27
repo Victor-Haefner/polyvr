@@ -38,8 +38,11 @@ class CSGGeometry : public VRGeometry {
         void loadContent(xmlpp::Element* e);
 
     public:
-        CSGGeometry(std::string name);
+        CSGGeometry(string name);
         virtual ~CSGGeometry();
+
+        static CSGGeometryPtr create(string name);
+        CSGGeometryPtr ptr();
 
         void setThreshold(float tL, float tA);
         Vec2f getThreshold();

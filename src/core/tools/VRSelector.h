@@ -5,30 +5,27 @@
 #include <OpenSG/OSGVector.h>
 #include <OpenSG/OSGMaterial.h>
 #include <string>
+#include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
-
-class VRObject;
-class VRMaterial;
-class VRGeometry;
 
 class VRSelector {
     private:
         Vec3f color;
 
-        map<VRGeometry*, VRMaterial*> orig_mats;
-        VRObject* selection = 0;
+        map<VRGeometryPtr, VRMaterialPtr> orig_mats;
+        VRObjectPtr selection = 0;
 
-        VRMaterial* getMat();
+        VRMaterialPtr getMat();
 
         void deselect();
 
     public:
         VRSelector();
 
-        void select(VRObject* obj);
-        VRObject* get();
+        void select(VRObjectPtr obj);
+        VRObjectPtr get();
 
         void setColor(Vec3f c);
 };

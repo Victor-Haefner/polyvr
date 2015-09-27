@@ -9,10 +9,10 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-VRMaterial* getLightGeoMat() {
-    static VRMaterial* mat = 0;
+VRMaterialPtr getLightGeoMat() {
+    static VRMaterialPtr mat = 0;
     if (mat == 0) {
-        mat = new VRMaterial("light_geo_mat");
+        mat = VRMaterial::create("light_geo_mat");
         mat->setAmbient(Color3f(0.7, 0.7, 0.7));
         mat->setDiffuse(Color3f(0.9, 0.9, 0.9));
         mat->setSpecular(Color3f(0.4, 0.4, 0.4));
@@ -33,12 +33,15 @@ VRLightBeacon::VRLightBeacon(string name) : VRTransform(name) {
     lightGeo->setTravMask(0);
     lightGeo_->setMaterial(getLightGeoMat()->getMaterial());
     addChild(lightGeo);
-
-    getAll().push_back(this);
 }
 
-VRLightBeacon::~VRLightBeacon() {
-    ;//TODO: remove from getAll vector
+VRLightBeacon::~VRLightBeacon() {}
+
+VRLightBeaconPtr VRLightBeacon::ptr() { return static_pointer_cast<VRLightBeacon>( shared_from_this() ); }
+VRLightBeaconPtr VRLightBeacon::create(string name) {
+    auto p = shared_ptr<VRLightBeacon>(new VRLightBeacon(name) );
+    getAll().push_back( p );
+    return p;
 }
 
 void VRLightBeacon::showLightGeo(bool b) {
@@ -46,8 +49,8 @@ void VRLightBeacon::showLightGeo(bool b) {
     else lightGeo->setTravMask(0);
 }
 
-VRLight* VRLightBeacon::getLight() { return light; }
-void VRLightBeacon::setLight(VRLight* l) { light = l; }
+VRLightPtr VRLightBeacon::getLight() { return light; }
+void VRLightBeacon::setLight(VRLightPtr l) { light = l; }
 
 void VRLightBeacon::saveContent(xmlpp::Element* e) {
     VRTransform::saveContent(e);
@@ -59,14 +62,15 @@ void VRLightBeacon::loadContent(xmlpp::Element* e) {
     string lightName = e->get_attribute("light")->get_value();
 
     // try to find light!
-    VRObject* tmp = this;
+    VRLightBeaconPtr lbp = ptr();
+    VRObjectPtr tmp = lbp;
     while(tmp->getParent()) tmp = tmp->getParent();
-    if (tmp) light = (VRLight*)tmp->find(lightName);
-    if (light) light->setBeacon(this);
+    if (tmp) light = static_pointer_cast<VRLight>( tmp->find(lightName) );
+    if (light) light->setBeacon(ptr());
 }
 
-vector<VRLightBeacon*>& VRLightBeacon::getAll() {
-    static vector<VRLightBeacon*> objs;
+vector<VRLightBeaconPtr>& VRLightBeacon::getAll() {
+    static vector<VRLightBeaconPtr> objs;
     return objs;
 }
 

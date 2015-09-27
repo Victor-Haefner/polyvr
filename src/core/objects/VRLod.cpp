@@ -6,8 +6,8 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-VRObject* VRLod::copy(vector<VRObject*> childs) {
-    VRLod* _lod = new VRLod(getName() + "_copy");
+VRObjectPtr VRLod::copy(vector<VRObjectPtr> childs) {
+    VRLodPtr _lod = VRLod::create(getName() + "_copy");
     _lod->setCenter(Vec3f(lod->getCenter()));
 
     MFReal32* vec = lod->editMFRange();
@@ -25,7 +25,10 @@ VRLod::VRLod(string name) : VRObject(name) {
     setCore(lod, "Lod");
 }
 
-VRLod::~VRLod() { lod=0;}
+VRLod::~VRLod() {}
+
+VRLodPtr VRLod::create(string name) { return shared_ptr<VRLod>(new VRLod(name) ); }
+VRLodPtr VRLod::ptr() { return static_pointer_cast<VRLod>( shared_from_this() ); }
 
 void VRLod::setCenter(Vec3f c) { center = c; update(); }
 void VRLod::setDecimate(bool b, int N) { decimate = b; decimateNumber = N; update(); }
@@ -45,10 +48,10 @@ vector<float> VRLod::getDistances() {
     return res;
 }
 
-void VRLod::decimateGeometries(VRObject* o, float f) {
-    vector<VRObject*> v = o->getObjectListByType("Geometry");
+void VRLod::decimateGeometries(VRObjectPtr o, float f) {
+    vector<VRObjectPtr> v = o->getObjectListByType("Geometry");
     for (auto o : v) {
-        VRGeometry* g = (VRGeometry*)o;
+        VRGeometryPtr g = static_pointer_cast<VRGeometry>(o);
         string n = g->getName();
         string t = g->getType();
         cout << " dG " << n << " " << t << endl;
@@ -58,7 +61,7 @@ void VRLod::decimateGeometries(VRObject* o, float f) {
 
 void VRLod::update() {
     if (decimate) { // use decimated geometries
-        VRObject* o = getChild(0);
+        VRObjectPtr o = getChild(0);
         decimateNumber = min(decimateNumber, 7u);// max 7 decimation geometries?
 
         if (o != 0) { // has a child to decimate
@@ -114,7 +117,7 @@ void VRLod::loadContent(xmlpp::Element* e) {
 }
 
 void VRLod::addEmpty() {
-    addChild(new VRObject("lod_empty"));
+    addChild(VRObject::create("lod_empty"));
 }
 
 OSG_END_NAMESPACE;

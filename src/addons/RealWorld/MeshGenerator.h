@@ -19,7 +19,7 @@ class MeshGenerator
 
         static void addWorld(list<WorldFeature*> features, VRScene* scene) {
             WorldFeature* f = features.front();
-            VRTransform* ent = new VRTransform("FOO");
+            VRTransformPtr ent = VRTransform::create("FOO");
 
 //            for (int i=0; i<1000; i++) {
             BOOST_FOREACH(WorldFeature* f, features) {
@@ -31,14 +31,14 @@ class MeshGenerator
     protected:
     private:
 
-        static void createGeometry(WorldFeature* feature, VRTransform* scene) {
+        static void createGeometry(WorldFeature* feature, VRTransformPtr scene) {
             //if (feature->featureClass != "Building") return;
 
             SimpleMaterialRecPtr mat = SimpleMaterial::create();
             Color3f white(1, 1, 1);
             mat->setDiffuse(white);
 
-            VRGeometry* geo = new VRGeometry("featureMesh-"+feature->geom->way->id);
+            VRGeometryPtr geo = VRGeometry::create("featureMesh-"+feature->geom->way->id);
             vector<Vec3f> pos;
             vector<Vec3f> norms;
             vector<int> inds;

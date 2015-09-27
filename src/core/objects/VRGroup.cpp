@@ -5,8 +5,8 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-map<string, vector<VRGroup*>* > VRGroup::groups = map<string, vector<VRGroup*>* >();
-map<string, VRObject* > VRGroup::templates = map<string, VRObject* >();
+map<string, vector<VRGroupPtr>* > VRGroup::groups = map<string, vector<VRGroupPtr>* >();
+map<string, VRObjectPtr > VRGroup::templates = map<string, VRObjectPtr >();
 
 void VRGroup::saveContent(xmlpp::Element* e) {
     VRObject::saveContent(e);
@@ -28,8 +28,11 @@ VRGroup::VRGroup(string name) : VRObject(name) {
 
 VRGroup::~VRGroup() {;}
 
-VRObject* VRGroup::copy(vector<VRObject*> children) {
-    VRGroup* g = new VRGroup(getName());
+VRGroupPtr VRGroup::create(string name) { return shared_ptr<VRGroup>(new VRGroup(name) ); }
+VRGroupPtr VRGroup::ptr() { return static_pointer_cast<VRGroup>( shared_from_this() ); }
+
+VRObjectPtr VRGroup::copy(vector<VRObjectPtr> children) {
+    VRGroupPtr g = VRGroup::create(getName());
     g->setActive(getActive());
     g->setGroup(getGroup());
     return g;
@@ -41,14 +44,14 @@ void VRGroup::setGroup(string g) {
 
     // remove from old group!!
     if (groups.count(group) == 1) {
-        vector<VRGroup*>* v = groups[group];
-        v->erase(std::remove(v->begin(), v->end(), this), v->end());
+        vector<VRGroupPtr>* v = groups[group];
+        v->erase(std::remove(v->begin(), v->end(), ptr()), v->end());
     }
 
     // add to new group
     group = g;
-    if (groups.count(g) == 0) groups[g] = new vector<VRGroup*>();
-    groups[g]->push_back(this);
+    if (groups.count(g) == 0) groups[g] = new vector<VRGroupPtr>();
+    groups[g]->push_back(ptr());
 }
 
 string VRGroup::getGroup() { return group; }
@@ -63,26 +66,24 @@ void VRGroup::sync() {
 }
 
 void VRGroup::apply() {
-    if (templates.count(group) == 1) delete templates[group];
-
-    templates[group] = new VRObject("Group_anchor");
+    templates[group] = VRObject::create("Group_anchor");
     for (uint i=0; i<getChildrenCount(); i++)
         templates[group]->addChild(getChild(i)->duplicate());
 
     for (uint i=0; i< groups[group]->size(); i++) {
-        VRGroup* g = groups[group]->at(i);
+        VRGroupPtr g = groups[group]->at(i);
         if (g->getActive()) g->sync();
     }
 }
 
 vector<string> VRGroup::getGroups() {
     vector<string> v;
-    map<string, vector<VRGroup*>* >::iterator itr;
+    map<string, vector<VRGroupPtr>* >::iterator itr;
     for (itr = groups.begin(); itr != groups.end(); itr++) v.push_back(itr->first);
     return v;
 }
 
-vector<VRGroup*>* VRGroup::getGroupObjects() {
+vector<VRGroupPtr>* VRGroup::getGroupObjects() {
     if (groups.count(group) == 0) return 0;
     else return groups[group];
 }
@@ -92,8 +93,6 @@ void VRGroup::setActive(bool b) { active = b; }
 
 void VRGroup::clearGroups() {
     groups.clear();
-    map<string, VRObject* >::iterator itr;
-    for (itr = templates.begin(); itr != templates.end(); itr++) delete itr->second;
     templates.clear();
 }
 

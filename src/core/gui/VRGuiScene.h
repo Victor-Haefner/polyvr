@@ -12,7 +12,7 @@ using namespace std;
 
 class VRGuiScene {
     private:
-        VRObject* dragDest;
+        VRObjectPtr dragDest;
         string dragPath;
         int dragPos = 0;
         VRGuiContextMenu* menu;

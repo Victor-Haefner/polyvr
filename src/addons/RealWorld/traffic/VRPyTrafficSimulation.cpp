@@ -120,7 +120,7 @@ PyObject* VRPyTrafficSimulation::addVehicleType(VRPyTrafficSimulation* self, PyO
     if (rot < 0) { PyErr_SetString(err, "VRPyTrafficSimulation::addVehicleType, maxRoration is <0"); return NULL; }
     if (geo == NULL) { PyErr_SetString(err, "VRPyTrafficSimulation::addVehicleType, no geometry has been given"); return NULL; }
 
-    self->obj->addVehicleType(id, prob, radius, speed, acc, rot, (VRGeometry*)geo->obj);
+    self->obj->addVehicleType(id, prob, radius, speed, acc, rot, static_pointer_cast<VRGeometry>(geo->objPtr));
 
     Py_RETURN_TRUE;
 }

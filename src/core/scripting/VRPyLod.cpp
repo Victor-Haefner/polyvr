@@ -53,7 +53,7 @@ PyObject* VRPyLod::setCenter(VRPyLod* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyLod::setCenter, Object is invalid"); return NULL; }
     OSG::Vec3f t = parseVec3f(args);
 
-    OSG::VRLod* e = (OSG::VRLod*) self->obj;
+    OSG::VRLodPtr e = (OSG::VRLodPtr) self->obj;
     e->setCenter(t);
     Py_RETURN_TRUE;
 }
@@ -63,7 +63,7 @@ PyObject* VRPyLod::setDistance(VRPyLod* self, PyObject* args) {
 	int childIndex;
 	float distance;
     if (!PyArg_ParseTuple(args, "if", &childIndex, &distance)) return NULL;
-    OSG::VRLod* e = (OSG::VRLod*) self->obj;
+    OSG::VRLodPtr e = (OSG::VRLodPtr) self->obj;
     e->setDistance(childIndex, distance);
     Py_RETURN_TRUE;
 }

@@ -22,11 +22,11 @@ class MapManager {
         MapCoordinator* mapCoordinator;
         World* world;
         vector<BaseModule*> modules;
-        VRObject* root;
+        VRObjectPtr root;
 
         map<string, AreaBoundingBox*> loadedBboxes;
 
-        MapManager(Vec2f position, MapLoader* mapLoader, MapGeometryGenerator* mapGeometryGenerator, MapCoordinator* mapCoordinator, World* world, VRObject* root);
+        MapManager(Vec2f position, MapLoader* mapLoader, MapGeometryGenerator* mapGeometryGenerator, MapCoordinator* mapCoordinator, World* world, VRObjectPtr root);
 
         void addModule(BaseModule* mod);
 

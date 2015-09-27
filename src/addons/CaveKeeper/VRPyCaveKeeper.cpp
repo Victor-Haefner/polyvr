@@ -54,14 +54,12 @@ PyMethodDef VRPyCaveKeeper::methods[] = {
 };
 
 PyObject* VRPyCaveKeeper::initWorld(VRPyCaveKeeper* self, PyObject* args) {
-    PyObject* child = NULL;
+    VRPyObject* child = NULL;
     if (! PyArg_ParseTuple(args, "O", &child)) return NULL;
-    if (child == NULL) { PyErr_SetString(err, "Missing child parameter"); return NULL; }
-    VRPyObject* _child = (VRPyObject*)child;
 
-    if (_child->obj == 0) { PyErr_SetString(err, "VRPyCaveKeeper::initWorld, root is invalid"); return NULL; }
+    if (child->obj == 0) { PyErr_SetString(err, "VRPyCaveKeeper::initWorld, root is invalid"); return NULL; }
 
-    _child->obj->addChild(self->obj->getAnchor());
+    child->obj->addChild(self->obj->getAnchor());
     Py_RETURN_TRUE;
 }
 
@@ -88,17 +86,10 @@ PyObject* VRPyCaveKeeper::dig(VRPyCaveKeeper* self, PyObject* args) {
 }
 
 PyObject* VRPyCaveKeeper::place(VRPyCaveKeeper* self, PyObject* args) {
-    PyObject* dev = NULL;
-    PyObject* obj_t = NULL;
-    PyObject* _geo = NULL;
-    if (! PyArg_ParseTuple(args, "OOO", &dev, &obj_t, &_geo)) return NULL;
-    if (dev == NULL) { PyErr_SetString(err, "Missing device parameter"); return NULL; }
-    if (obj_t == NULL) { PyErr_SetString(err, "Missing type parameter"); return NULL; }
-    if (_geo == NULL) { PyErr_SetString(err, "Missing object parameter"); return NULL; }
-    VRPyDevice* _dev = (VRPyDevice*)dev;
-    VRPyTransform* geo = (VRPyTransform*)_geo;
-    string _obj = PyString_AsString(obj_t);
-
-    self->obj->place(_dev->obj, _obj, geo->obj);
+    VRPyDevice* dev = NULL;
+    const char *obj_t;
+    VRPyTransform* geo = NULL;
+    if (! PyArg_ParseTuple(args, "OsO", &dev, &obj_t, &geo)) return NULL;
+    self->obj->place(dev->obj, obj_t, geo->objPtr);
     Py_RETURN_TRUE;
 }

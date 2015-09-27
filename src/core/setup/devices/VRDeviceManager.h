@@ -5,6 +5,7 @@
 #include <map>
 #include <vector>
 #include <string>
+#include "core/objects/VRObjectFwd.h"
 
 namespace xmlpp{ class Element; }
 
@@ -12,8 +13,6 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRDevice;
-class VRTransform;
-class VRObject;
 
 class VRDeviceManager {
     private:
@@ -22,7 +21,7 @@ class VRDeviceManager {
 
         void dev_test(VRDevice* dev);
 
-        VRTransform* device_root;
+        VRTransformPtr device_root;
 
     public:
         VRDeviceManager();
@@ -30,7 +29,7 @@ class VRDeviceManager {
 
         void clearSignals();
 
-        void setDeviceRoot(VRTransform* root);
+        void setDeviceRoot(VRTransformPtr root);
         void addDevice(VRDevice* dev);
 
         //VRDevice* getDevice(string type, int i);
@@ -40,7 +39,7 @@ class VRDeviceManager {
         map<string, VRDevice* > getDevices();
 
         void updateActivatedSignals();
-        void updateDeviceDynNodes(VRObject* ancestor);
+        void updateDeviceDynNodes(VRObjectPtr ancestor);
         void updateDevices();
 
         void save(xmlpp::Element* node);

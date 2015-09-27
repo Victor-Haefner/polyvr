@@ -2,6 +2,7 @@
 #define path_H_INCLUDED
 
 #include <OpenSG/OSGGeometry.h>
+#include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -38,7 +39,7 @@ class path {
         path();
 
         int addPoint(Vec3f p, Vec3f n, Vec3f c, Vec3f u = Vec3f(0,1,0));
-        int addPoint(VRTransform* t);
+        int addPoint(VRTransformPtr t);
         void setPoint(int i, Vec3f p, Vec3f n, Vec3f c, Vec3f u = Vec3f(0,1,0));
         pnt getPoint(int i);
         vector<pnt> getPoints();

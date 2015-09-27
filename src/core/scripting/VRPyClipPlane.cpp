@@ -56,7 +56,7 @@ PyObject* VRPyClipPlane::setTree(VRPyClipPlane* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyClipPlane::setTree - Object is invalid"); return NULL; }
     VRPyObject* o = 0;
     parseObject(args, o);
-    if (o) self->obj->setTree(o->obj);
+    if (o) self->obj->setTree(o->objPtr);
     Py_RETURN_TRUE;
 }
 

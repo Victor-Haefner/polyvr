@@ -13,11 +13,11 @@ AreaBoundingBox::AreaBoundingBox(OSG::Vec2f min, float gridSize) {
                 (boost::format("%.3f") % (round(min.getValues()[1]*1000) / 1000)).str();
 }
 
-VRObject* BaseModule::getRoot() { return root; }
+VRObjectPtr BaseModule::getRoot() { return root; }
 
 BaseModule::BaseModule(MapCoordinator* mapCoordinator, TextureManager* texManager) {
     this->mapCoordinator = mapCoordinator;
     this->texManager = texManager;
-    root = new VRObject("ModuleRoot");
+    root = VRObject::create("ModuleRoot");
     root->setPersistency(0);
 }

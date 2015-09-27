@@ -203,7 +203,7 @@ void SimViDekont::createGeo(frame* f) {
         GeoIO::save(f->id, geo, path);
     //--- END Save Geo in .osb binary
 
-    f->geo = new VRGeometry("myNewMesh");
+    f->geo = VRGeometry::create("myNewMesh");
     f->geo->setMesh(geo);
 }
 
@@ -321,7 +321,7 @@ SimViDekont::SimViDekont() {
 
     */
 
-    root = new VRObject("SimViDekont");
+    root = VRObject::create("SimViDekont");
     loadAbaqusFile(0, 100); // load odb file && parse data to frames
     initFrameGeometries(); // create geometries for each frame && hide it
 
@@ -332,6 +332,6 @@ SimViDekont::SimViDekont() {
 
 Player* SimViDekont::getPlayer() { return player; }
 
-VRObject* SimViDekont::getAnchor() { return root; }
+VRObjectPtr SimViDekont::getAnchor() { return root; }
 
 OSG_END_NAMESPACE;

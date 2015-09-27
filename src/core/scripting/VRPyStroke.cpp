@@ -72,7 +72,7 @@ PyObject* VRPyStroke::setPath(VRPyStroke* self, PyObject* args) {
     if (! PyArg_ParseTuple(args, "O", &o)) return NULL;
     VRPyPath* path = (VRPyPath*)o;
 
-    OSG::VRStroke* e = (OSG::VRStroke*) self->obj;
+    OSG::VRStrokePtr e = (OSG::VRStrokePtr) self->obj;
     e->setPath(path->obj);
     Py_RETURN_TRUE;
 }
@@ -84,7 +84,7 @@ PyObject* VRPyStroke::addPath(VRPyStroke* self, PyObject* args) {
     if (! PyArg_ParseTuple(args, "O", &o)) return NULL;
     VRPyPath* path = (VRPyPath*)o;
 
-    OSG::VRStroke* e = (OSG::VRStroke*) self->obj;
+    OSG::VRStrokePtr e = (OSG::VRStrokePtr) self->obj;
     e->addPath(path->obj);
     Py_RETURN_TRUE;
 }
@@ -101,7 +101,7 @@ PyObject* VRPyStroke::setPaths(VRPyStroke* self, PyObject* args) {
         paths.push_back(path->obj);
     };
 
-    OSG::VRStroke* e = (OSG::VRStroke*) self->obj;
+    OSG::VRStrokePtr e = (OSG::VRStrokePtr) self->obj;
     e->setPaths(paths);
     Py_RETURN_TRUE;
 }
@@ -138,32 +138,28 @@ PyObject* VRPyStroke::strokeProfile(VRPyStroke* self, PyObject* args) {
         profile.push_back(r);
     };
 
-    OSG::VRStroke* e = (OSG::VRStroke*) self->obj;
+    OSG::VRStrokePtr e = (OSG::VRStrokePtr) self->obj;
     e->strokeProfile(profile, closed);
     e->getMaterial()->setLit(lit);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyStroke::strokeStrew(VRPyStroke* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyStroke::strokeStrew - Object is invalid"); return NULL; }
-
-    PyObject* o = 0;
-    if (! PyArg_ParseTuple(args, "O", &o)) return NULL;
-    VRPyGeometry* geo = (VRPyGeometry*)o;
-
-    OSG::VRStroke* e = (OSG::VRStroke*) self->obj;
-    e->strokeStrew(geo->obj);
+    if (!self->valid()) return NULL;
+    VRPyGeometry* geo = 0;
+    if (! PyArg_ParseTuple(args, "O", &geo)) return NULL;
+    self->obj->strokeStrew(geo->objPtr);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyStroke::update(VRPyStroke* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyStroke::update - Object is invalid"); return NULL; }
+    if (!self->valid()) return NULL;
     self->obj->update();
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyStroke::convertToRope(VRPyStroke* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyStroke::convertToRope: C Object is invalid"); return NULL; }
+    if (!self->valid()) return NULL;
     self->obj->getPhysics()->setDynamic(true);
     self->obj->getPhysics()->setShape("Rope");
     self->obj->getPhysics()->setSoft(true);

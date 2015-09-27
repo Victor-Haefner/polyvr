@@ -96,7 +96,7 @@ PyObject* VRPyObject::getPersistency(VRPyObject* self) {
 PyObject* VRPyObject::getChildrenWithTag(VRPyObject* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::getChildrenWithTag - C Object is invalid"); return NULL; }
 
-    vector<OSG::VRObject*> objs = self->obj->getChildrenWithAttachment( parseString(args) );
+    vector<OSG::VRObjectPtr> objs = self->obj->getChildrenWithAttachment( parseString(args) );
 
     PyObject* li = PyList_New(objs.size());
     for (uint i=0; i<objs.size(); i++) {
@@ -224,7 +224,7 @@ PyObject* VRPyObject::addChild(VRPyObject* self, PyObject* args, PyObject *kwds)
     if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::addChild, Parent is invalid"); return NULL; }
     if (child->obj == 0) { PyErr_SetString(err, "VRPyObject::addChild, Child is invalid"); return NULL; }
 
-    self->obj->addChild(child->obj);
+    self->obj->addChild(child->objPtr);
     Py_RETURN_TRUE;
 }
 
@@ -239,13 +239,13 @@ PyObject* VRPyObject::switchParent(VRPyObject* self, PyObject* args, PyObject *k
     if (self->obj == 0) { PyErr_SetString(err, "C Child is invalid"); return NULL; }
     if (parent->obj == 0) { PyErr_SetString(err, "C Parent is invalid"); return NULL; }
 
-    self->obj->switchParent(parent->obj);
+    self->obj->switchParent(parent->objPtr);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyObject::duplicate(VRPyObject* self) {
     if (self->obj == 0) { PyErr_SetString(err, "C Child is invalid"); return NULL; }
-    OSG::VRObject* d = (OSG::VRObject*)self->obj->duplicate(true);
+    OSG::VRObjectPtr d = (OSG::VRObjectPtr)self->obj->duplicate(true);
     d->setPersistency(0);
     return VRPyTypeCaster::cast(d);
 }
@@ -255,7 +255,7 @@ PyObject* VRPyObject::getChild(VRPyObject* self, PyObject* args) {
 
     int i = 0;
     if (! PyArg_ParseTuple(args, "i", &i)) return NULL;
-    OSG::VRObject* c = self->obj->getChild(i);
+    OSG::VRObjectPtr c = self->obj->getChild(i);
 
     return VRPyTypeCaster::cast(c);
 }
@@ -270,7 +270,7 @@ PyObject* VRPyObject::getChildren(VRPyObject* self, PyObject* args) {
     string type;
     if (ptype) type = PyString_AsString(ptype);
 
-    vector<OSG::VRObject*> objs = self->obj->getChildren(doRecursive, type);
+    vector<OSG::VRObjectPtr> objs = self->obj->getChildren(doRecursive, type);
 
     PyObject* li = PyList_New(objs.size());
     for (uint i=0; i<objs.size(); i++) {
@@ -289,7 +289,7 @@ PyObject* VRPyObject::find(VRPyObject* self, PyObject* args) {
 	if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::find, C object is invalid"); return NULL; }
 
     string name = parseString(args);
-    OSG::VRObject* c = self->obj->find(name);
+    OSG::VRObjectPtr c = self->obj->find(name);
     if (c) { return VRPyTypeCaster::cast(c); }
     else { Py_RETURN_NONE; }
 }
@@ -298,7 +298,7 @@ PyObject* VRPyObject::findAll(VRPyObject* self, PyObject* args) {
 	if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::find, C object is invalid"); return NULL; }
 
     string name = parseString(args);
-    vector<OSG::VRObject*> objs = self->obj->findAll(name);
+    vector<OSG::VRObjectPtr> objs = self->obj->findAll(name);
 
     PyObject* li = PyList_New(objs.size());
     for (uint i=0; i<objs.size(); i++) {

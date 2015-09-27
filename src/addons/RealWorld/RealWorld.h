@@ -7,11 +7,10 @@
             http://wiki.openstreetmap.org/wiki/Osmconvert#Clipping_based_on_Longitude_and_Latitude
 */
 
+#include "core/objects/VRObjectFwd.h"
 #include "Altitude.h"
 
 using namespace std;
-
-namespace OSG{ class VRObject; }
 
 namespace realworld {
     class TrafficSimulation;
@@ -40,7 +39,7 @@ namespace realworld {
             bool physicalized;
 
         public:
-            RealWorld(OSG::VRObject* root);
+            RealWorld(OSG::VRObjectPtr root);
             ~RealWorld();
 
             void update(OSG::Vec3f pos);

@@ -64,18 +64,18 @@ class VRScene : public VRObjectManager,
 
         void initDevices();
 
-        void add(VRObject* obj, int parentID = -1);
+        void add(VRObjectPtr obj, int parentID = -1);
         void add(NodeRecPtr n);
 
-        VRObject* get(int ID);
-        VRObject* get(string name);
-        VRObject* getRoot();
-        VRObject* getSystemRoot();
+        VRObjectPtr get(int ID);
+        VRObjectPtr get(string name);
+        VRObjectPtr getRoot();
+        VRObjectPtr getSystemRoot();
 
         void setActiveCamera(string name = "");
 
         void printTree();
-        void showReferentials(bool b, VRObject* o);
+        void showReferentials(bool b, VRObjectPtr o);
         void showLights(bool b);
         void showCameras(bool b);
 

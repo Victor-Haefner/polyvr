@@ -124,8 +124,8 @@ PyObject* VRPyRobotArm::setGrab(VRPyRobotArm* self, PyObject* args) {
 PyObject* VRPyRobotArm::setParts(VRPyRobotArm* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyRobotArm::setParts - Object is invalid"); return NULL; }
     auto prts = parseList(args);
-    vector<OSG::VRTransform*> res;
-    for (auto p : prts) res.push_back( ((VRPyTransform*)p)->obj );
+    vector<OSG::VRTransformPtr> res;
+    for (auto p : prts) res.push_back( ((VRPyTransform*)p)->objPtr );
     self->obj->setParts( res );
     Py_RETURN_TRUE;
 }

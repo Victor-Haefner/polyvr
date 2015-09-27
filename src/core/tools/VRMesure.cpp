@@ -125,8 +125,8 @@ void VRMesure::processLabel(Vec3f p1, Vec3f p2, Vec3f cpos) {
 void VRMesure::check() {//check spheres for change of position
     Vec3f p1, p2;
 
-    VRCamera* cam = scene->getActiveCamera();
-    VRTransform* user = VRSetupManager::getCurrent()->getUser();
+    VRCameraPtr cam = scene->getActiveCamera();
+    VRTransformPtr user = VRSetupManager::getCurrent()->getUser();
 
     p1 = s1->getWorldPosition();
     p2 = s2->getWorldPosition();
@@ -152,10 +152,10 @@ void VRMesure::_kill() {
 }
 
 VRMesure::VRMesure() {
-    s1 = new VRGeometry("mesure_s1");//unique names?
-    s2 = new VRGeometry("mesure_s2");
-    l = new VRGeometry("mesure_l");
-    display = new VRBillboard("ecoflex_nametag", false);
+    s1 = VRGeometry::create("mesure_s1");//unique names?
+    s2 = VRGeometry::create("mesure_s2");
+    l = VRGeometry::create("mesure_l");
+    display = VRBillboard::create("ecoflex_nametag", false);
 
     s1->setPickable(true);
     s2->setPickable(true);

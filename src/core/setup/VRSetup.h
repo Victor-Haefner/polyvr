@@ -21,9 +21,9 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
         string cfgfile;
         string tracking;
 
-        VRTransform* real_root = 0;
-        VRTransform* user = 0;
-        VRCamera* setup_cam = 0;
+        VRTransformPtr real_root = 0;
+        VRTransformPtr user = 0;
+        VRCameraPtr setup_cam = 0;
 
         VRVisualLayer* setup_layer = 0;
         VRVisualLayer* stats_layer = 0;
@@ -40,11 +40,11 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
         VRSetup(string name);
         ~VRSetup();
 
-        VRTransform* getUser();
+        VRTransformPtr getUser();
 
-        void addObject(VRObject* o);
-        VRTransform* getRoot();
-        VRTransform* getTracker(string t);
+        void addObject(VRObjectPtr o);
+        VRTransformPtr getRoot();
+        VRTransformPtr getTracker(string t);
 
         void setScene(VRScene* s);
         void showSetup(bool b);

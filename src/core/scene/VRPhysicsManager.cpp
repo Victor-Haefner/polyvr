@@ -64,7 +64,7 @@ VRPhysicsManager::VRPhysicsManager() {
 
     physics_visual_layer = new VRVisualLayer("Physics", "physics.png");
 
-    phys_mat = new VRMaterial("phys_mat");
+    phys_mat = VRMaterial::create("phys_mat");
     phys_mat->setLit(false);
     phys_mat->setDiffuse(Vec3f(0.8,0.8,0.4));
     phys_mat->setTransparency(0.4);
@@ -80,7 +80,6 @@ VRPhysicsManager::~VRPhysicsManager() {
     delete dispatcher;
     delete collisionConfiguration;
     delete broadphase;
-    delete phys_mat;
 }
 
 boost::recursive_mutex& VRPhysicsManager::physicsMutex() { return mtx; }
@@ -167,15 +166,15 @@ void VRPhysicsManager::updatePhysObjects() {
     //the soft bodies
     btSoftBodyArray arr = dynamicsWorld->getSoftBodyArray();
     //Patches
-    VRTransform* soft_trans;
+    VRTransformPtr soft_trans;
     btSoftBody* patch;
     for(int i = 0; i < arr.size() ;i++) { //for all soft bodies
         soft_trans = OSGobjs[arr[i]]; //get the corresponding transform to this soft body
         if (soft_trans == 0) continue;
         patch = arr[i]; //the soft body
         if (soft_trans->getType() == "Sprite") {
-            OSG::VRGeometry* geo = (OSG::VRGeometry*)soft_trans;
-            OSG::VRGeometry* visualgeo = physics_visuals[patch]; //render the visual
+            OSG::VRGeometryPtr geo = static_pointer_cast<OSG::VRGeometry>(soft_trans);
+            OSG::VRGeometryPtr visualgeo = physics_visuals[patch]; //render the visual
 
             btSoftBody::tNodeArray&   nodes(patch->m_nodes);
             btSoftBody::tFaceArray&   faces(patch->m_faces);
@@ -241,7 +240,7 @@ void VRPhysicsManager::updatePhysObjects() {
     // update physics visualisation shapes
     for (btCollisionObject* v : physics_visuals_to_update) {
         if (physics_visuals.count(v) == 0) continue;
-        VRGeometry* geo = physics_visuals[v];
+        VRGeometryPtr geo = physics_visuals[v];
         //cout << "try " << v << " " << geo << endl;
         btCollisionShape* shape = v->getCollisionShape();
         int stype = shape->getShapeType();
@@ -312,7 +311,7 @@ void VRPhysicsManager::updatePhysObjects() {
     // update physics visualisation
     if (physics_visual_layer->getVisibility()) {
         for (auto obj : physics_visuals) {
-            VRGeometry* geo = obj.second; // transfer transformation
+            VRGeometryPtr geo = obj.second; // transfer transformation
             btTransform trans = obj.first->getWorldTransform();
             geo->setMatrix( VRPhysics::fromBTTransform( trans ) );
         }
@@ -320,8 +319,10 @@ void VRPhysicsManager::updatePhysObjects() {
 
 }
 
-void VRPhysicsManager::physicalize(VRTransform* obj) {
+void VRPhysicsManager::physicalize(VRTransformWeakPtr objPtr) {
     //cout << "physicalize transform: " << obj;
+    VRTransformPtr obj = objPtr.lock();
+    if (!obj) return;
     btCollisionObject* bdy = obj->getPhysics()->getCollisionObject();
     if (bdy == 0) return;
     //cout << " with bt_body " << (bdy == 0) << endl;
@@ -329,19 +330,20 @@ void VRPhysicsManager::physicalize(VRTransform* obj) {
     physics_visuals_to_update.push_back(bdy);
 
     if (physics_visuals.count(bdy) == 0) { // TODO: refactor this
-        VRGeometry* pshape = new VRGeometry("phys_shape");
+        VRGeometryPtr pshape = VRGeometry::create("phys_shape");
         physics_visuals[bdy] = pshape;
         physics_visual_layer->addObject(pshape);
     }
 }
 
-void VRPhysicsManager::unphysicalize(VRTransform* obj) {
+void VRPhysicsManager::unphysicalize(VRTransformWeakPtr objPtr) {
+    VRTransformPtr obj = objPtr.lock();
+    if (!obj) return;
     btCollisionObject* bdy = obj->getPhysics()->getCollisionObject();
     if (bdy == 0) return;
     if (OSGobjs.count(bdy)) OSGobjs.erase(bdy);
 
     if (physics_visuals.count(bdy)) { // TODO: refactor this
-        delete physics_visuals[bdy];
         physics_visuals.erase(bdy);
     }
 }

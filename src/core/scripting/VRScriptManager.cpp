@@ -471,9 +471,9 @@ PyObject* VRScriptManager::loadGeometry(VRScriptManager* self, PyObject *args, P
     string format = "s|iss:loadGeometry";
     if (! PyArg_ParseTupleAndKeywords(args, kwargs, format.c_str(), (char**)kwlist, &path, &ignoreCache, &preset, &parent)) return NULL;
 
-    VRObject* prnt = VRSceneManager::getCurrent()->getRoot()->find( parent );
+    VRObjectPtr prnt = VRSceneManager::getCurrent()->getRoot()->find( parent );
 
-    VRTransform* obj = VRImport::get()->load( path, prnt, ignoreCache, preset);
+    VRTransformPtr obj = VRImport::get()->load( path, prnt, ignoreCache, preset);
     if (obj == 0) {
         VRGuiManager::get()->printInfo("Warning: " + string(path) + " not found.\n");
         Py_RETURN_NONE;

@@ -95,13 +95,13 @@ void VRSceneManager::newScene(string path) {
     scene->setPath(path);
     setWorkdir(scene->getWorkdir());
     scene->setName(scene->getFileName());
-    VRTransform* cam = scene->addCamera("Default");
+    VRTransformPtr cam = scene->addCamera("Default");
 
-    VRLight* headlight = scene->addLight("Headlight");
+    VRLightPtr headlight = scene->addLight("Headlight");
     headlight->setType("point");
-    VRLightBeacon* headlight_B = new VRLightBeacon("Headlight_beacon");
+    VRLightBeaconPtr headlight_B = VRLightBeacon::create("Headlight_beacon");
     headlight->setBeacon(headlight_B);
-    VRTransform* user = VRSetupManager::getCurrent()->getUser();
+    VRTransformPtr user = VRSetupManager::getCurrent()->getUser();
     scene->add(headlight);
     headlight->addChild(cam);
     if (user) user->addChild(headlight_B);

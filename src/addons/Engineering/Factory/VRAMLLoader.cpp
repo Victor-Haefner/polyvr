@@ -24,7 +24,7 @@ using namespace boost;
 using namespace boost::property_tree;
 OSG_BEGIN_NAMESPACE;
 
-VRObject* root;
+VRObjectPtr root;
 string directory;
 
 VRAMLLoader::VRAMLLoader() {
@@ -55,12 +55,12 @@ struct Geo {
     GeoIntegralPropertyRefPtr inds_c = 0;
     GeoIntegralPropertyRefPtr types = 0;
     GeoIntegralPropertyRefPtr lengths = 0;
-    VRGeometry* geo = 0;
-    VRMaterial* mat = 0;
+    VRGeometryPtr geo = 0;
+    VRMaterialPtr mat = 0;
 
     Geo(string name) {
-        geo = new VRGeometry(name);
-        mat = new VRMaterial(name);
+        geo = VRGeometry::create(name);
+        mat = VRMaterial::create(name);
 
         tc1 = GeoPnt3fProperty::create();
         tc2 = GeoPnt3fProperty::create();
@@ -352,9 +352,9 @@ void VRAMLLoader::loadProducts(string path, Matrix4f m)
 
 }
 
-VRObject* VRAMLLoader::load(string path) {
+VRObjectPtr VRAMLLoader::load(string path) {
+    root = VRObject::create("aml_root");
 
-    root = new VRObject("aml_root");
     /**
     Assimp::Importer importer;
 

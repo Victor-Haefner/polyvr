@@ -25,7 +25,7 @@ FObject::~FObject() {
     ;
 }
 
-void FObject::setTransformation(VRTransform* t) {
+void FObject::setTransformation(VRTransformPtr t) {
     transform = t;
     t->set_orientation_mode(true);
     if (metaData) metaData->switchParent(t);
@@ -34,8 +34,8 @@ void FObject::setTransformation(VRTransform* t) {
 void FObject::setMetaData(string s) {
     return;
     if (metaData == 0) {
-        metaData = new OSG::VRSprite("meta");
-        metaData->setMaterial(new VRMaterial("metasprite"));
+        metaData = OSG::VRSprite::create("meta");
+        metaData->setMaterial(VRMaterial::create("metasprite"));
         metaData->switchParent(transform);
         metaData->setFrom(Vec3f(0,1,0));
         metaData->setDir(Vec3f(0,0,-1));
@@ -47,7 +47,7 @@ void FObject::setMetaData(string s) {
     metaData->setSize(0.5*k*s.size(), k);
 }
 
-VRTransform* FObject::getTransformation() {
+VRTransformPtr FObject::getTransformation() {
     return transform;
 }
 
@@ -55,7 +55,7 @@ void FObject::setType(FObject::Type t) { type = t; }
 FObject::Type FObject::getType() { return type; }
 
 bool FObject::move(OSG::path* p, float dx) {
-    VRTransform* trans = getTransformation();
+    VRTransformPtr trans = getTransformation();
     if (trans == 0) return true;
 
     bool done = false;
@@ -129,8 +129,8 @@ map<int, FNode*>& FNode::getOutgoing() { return out; }
 FNode* FNode::previous() { if (in.size() > 0) return in.begin()->second; else return 0; }
 FNode* FNode::next() { if (out.size() > 0) return out.begin()->second; else return 0; }
 
-void FNode::setTransform(OSG::VRTransform* t) { transform = t; }
-VRTransform* FNode::getTransform() { return transform; }
+void FNode::setTransform(OSG::VRTransformPtr t) { transform = t; }
+VRTransformPtr FNode::getTransform() { return transform; }
 
 Vec3f FNode::getTangent() {
     int Nout = out.size();
@@ -383,7 +383,7 @@ vector<FNode*> FNetwork::getNodes() {
     return res;
 }
 
-VRStroke* FNetwork::stroke(Vec3f c, float k) {
+VRStrokePtr FNetwork::stroke(Vec3f c, float k) {
     vector<path*> paths;
     for (itr = nodes.begin(); itr != nodes.end(); itr++) {
         FNode* n1 = itr->second;
@@ -404,7 +404,7 @@ VRStroke* FNetwork::stroke(Vec3f c, float k) {
     }
 
 
-    VRStroke* stroke = new VRStroke("FNetwork_stroke");
+    VRStrokePtr stroke = VRStroke::create("FNetwork_stroke");
     stroke->setPaths(paths);
     vector<Vec3f> profile;
     profile.push_back(Vec3f(-k,0,0));
@@ -429,7 +429,7 @@ FLogistics::~FLogistics() {
     networks.clear();
 }
 
-FProduct* FLogistics::addProduct(OSG::VRTransform* t) {
+FProduct* FLogistics::addProduct(OSG::VRTransformPtr t) {
     FProduct* p = new FProduct();
     objects[p->getID()] = p;
     if (t) p->setTransformation(t);
@@ -455,10 +455,10 @@ FPath* FLogistics::addPath() {
     return p;
 }
 
-FContainer* FLogistics::addContainer(VRTransform* t) {
+FContainer* FLogistics::addContainer(VRTransformPtr t) {
     if (t == 0) return 0;
     FContainer* c = new FContainer();
-    t = (VRTransform*)t->duplicate(true);
+    t = static_pointer_cast<VRTransform>(t->duplicate(true));
     t->setVisible(true);
     t->setPersistency(0);
     c->setTransformation(t);
@@ -466,10 +466,10 @@ FContainer* FLogistics::addContainer(VRTransform* t) {
     return c;
 }
 
-void FLogistics::fillContainer(FContainer* c, int N, VRTransform* t) {
+void FLogistics::fillContainer(FContainer* c, int N, VRTransformPtr t) {
     for (int i=0; i<N; i++) {
         FProduct* p = addProduct();
-        t = (VRTransform*)t->duplicate(true);
+        t = static_pointer_cast<VRTransform>(t->duplicate(true));
         t->setVisible(true);
         t->setPersistency(0);
         p->setTransformation(t);

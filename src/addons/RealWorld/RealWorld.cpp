@@ -30,7 +30,7 @@
 using namespace realworld;
 
 
-RealWorld::RealWorld(VRObject* root) {
+RealWorld::RealWorld(VRObjectPtr root) {
     physicalized = false;
 
     mapCoordinator = new MapCoordinator(OSG::Vec2f(49.005f, 8.395f), 0.002f); //Kreuzung Kriegsstr. und Karlstr.

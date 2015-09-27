@@ -6,14 +6,14 @@
 #include <map>
 #include <vector>
 
+#include "core/objects/VRObjectFwd.h"
+
 namespace xmlpp{ class Element; }
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRScene;
-class VRObject;
-class VRTransform;
 
 /**
     The class VRSceneLoader loads the scene elements parsing a XML file. How to write proper XML files see ....
@@ -31,19 +31,19 @@ class VRSceneLoader {
 
         typedef map<xmlpp::Element*, map<string, string> > children_attribs;
 
-        void optimizeGraph(VRObject* obj);
+        void optimizeGraph(VRObjectPtr obj);
         int fileSize(string path);
 
         VRSceneLoader();
 
         //parser callback for the xml scene import
-        void parseScene(xmlpp::Element* node, xmlpp::Element* xmlparent, VRObject* parent = 0);
+        void parseScene(xmlpp::Element* node, xmlpp::Element* xmlparent, VRObjectPtr parent = 0);
 
     public:
         static VRSceneLoader* get();
         ~VRSceneLoader();
 
-        VRTransform* load3DContent(string filename, VRObject* parent = 0, bool reload = false);
+        VRTransformPtr load3DContent(string filename, VRObjectPtr parent = 0, bool reload = false);
 
         void ingoreHeavyRessources();
 

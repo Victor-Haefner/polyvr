@@ -3,11 +3,11 @@
 
 #include <OpenSG/OSGVector.h>
 #include "core/utils/VRFunctionFwd.h"
+#include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRTransform;
 class VRAnimation;
 class VRAnalyticGeometry;
 class path;
@@ -23,7 +23,7 @@ class VRRobotArm {
             job(path* p, float t0 = 0, float t1 = 1, float d = 1, bool loop = false) : p(p), t0(t0), t1(t1), loop(loop), d(d) {;}
         };
 
-        VRAnalyticGeometry* ageo = 0;
+        VRAnalyticGeometryPtr ageo = 0;
         VRAnimation* anim = 0;
         VRAnimPtr animPtr;
         path* animPath = 0;
@@ -35,7 +35,7 @@ class VRRobotArm {
         float grab = 0;
         float pathPos = 0;
 
-        vector<VRTransform*> parts;
+        vector<VRTransformPtr> parts;
         vector<float> angles;
         vector<float> angle_offsets;
         vector<int> angle_directions;
@@ -50,7 +50,7 @@ class VRRobotArm {
     public:
         VRRobotArm();
 
-        void setParts(vector<VRTransform*> parts);
+        void setParts(vector<VRTransformPtr> parts);
         void setAngleOffsets(vector<float> offsets);
         void setAngleDirections(vector<int> directions);
         void setAxis(vector<int> axis);

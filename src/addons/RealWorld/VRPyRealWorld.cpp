@@ -58,16 +58,12 @@ PyMethodDef VRPyRealWorld::methods[] = {
 };
 
 PyObject* VRPyRealWorld::initWorld(VRPyRealWorld* self, PyObject* args) {
-    PyObject* child = NULL;
+    VRPyObject* child = NULL;
     if (! PyArg_ParseTuple(args, "O", &child)) return NULL;
-    if (child == NULL) { PyErr_SetString(err, "Missing child parameter"); return NULL; }
-    VRPyObject* _child = (VRPyObject*)child;
 
-    if (_child->obj == 0) { PyErr_SetString(err, "VRPyRealWorld::initWorld, root is invalid"); return NULL; }
+    if (child->obj == 0) { PyErr_SetString(err, "VRPyRealWorld::initWorld, root is invalid"); return NULL; }
 
-    if (self->obj == 0) {
-        self->obj = new realworld::RealWorld(_child->obj);
-    }
+    if (self->obj == 0) self->obj = new realworld::RealWorld( child->objPtr );
     Py_RETURN_TRUE;
 }
 

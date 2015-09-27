@@ -8,6 +8,7 @@
 #include <vector>
 #include <boost/thread/recursive_mutex.hpp>
 #include "core/utils/VRFunctionFwd.h"
+#include "core/objects/VRObjectFwd.h"
 
 
 template<class T> class VRFunction;
@@ -55,11 +56,11 @@ class VRPhysicsManager {
         btAlignedObjectArray<btCollisionShape*> collisionShapes;
         btRigidBody* body;
 
-        map<btCollisionObject*, VRTransform*> OSGobjs;
-        map<btCollisionObject*, VRGeometry*> physics_visuals;
+        map<btCollisionObject*, VRTransformPtr> OSGobjs;
+        map<btCollisionObject*, VRGeometryPtr> physics_visuals;
         vector<btCollisionObject*> physics_visuals_to_update;
         VRVisualLayer* physics_visual_layer = 0;
-        VRMaterial* phys_mat = 0;
+        VRMaterialPtr phys_mat = 0;
 
         vector<Vec3f> collisionPoints;
         boost::recursive_mutex mtx;
@@ -80,8 +81,8 @@ class VRPhysicsManager {
         void updatePhysObjects();
 
     public:
-        void physicalize(VRTransform* obj);
-        void unphysicalize(VRTransform* obj);
+        void physicalize(VRTransformWeakPtr obj);
+        void unphysicalize(VRTransformWeakPtr obj);
 
         void addPhysicsUpdateFunction(VRFunction<int>* fkt, bool after);
         void dropPhysicsUpdateFunction(VRFunction<int>* fkt, bool after);

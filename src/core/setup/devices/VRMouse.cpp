@@ -170,7 +170,7 @@ void VRMouse::motion(int x, int y) {
     updatePosition(x,y);
 }
 
-void VRMouse::setCamera(VRCamera* _cam) { cam = _cam; }
+void VRMouse::setCamera(VRCameraPtr _cam) { cam = _cam; }
 
 void VRMouse::setViewport(VRView* _view) { view = _view; }
 

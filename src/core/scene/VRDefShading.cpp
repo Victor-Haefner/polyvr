@@ -92,7 +92,7 @@ void VRDefShading::initSSAO() {
     shAmbient->addShader(vpAmbient);
     shAmbient->addShader(fpAmbient);*/
 
-    VRMaterial* mat = new VRMaterial("ssao");
+    VRMaterialPtr mat = VRMaterial::create("ssao");
     mat->setDiffuse(Vec3f(0,1,0));
     mat->readVertexShader(ssaoAmbientVPFile);
     mat->readFragmentShader(ssaoAmbientFPFile);
@@ -178,13 +178,13 @@ void VRDefShading::init() {
     initiated = true;
 }
 
-void VRDefShading::initDeferredShading(VRObject* o) {
+void VRDefShading::initDeferredShading(VRObjectPtr o) {
     init();
     stageObject = o;
     setDefferedShading(enabled);
 }
 
-void VRDefShading::initSSAO(VRObject* o) {
+void VRDefShading::initSSAO(VRObjectPtr o) {
     initSSAO();
     ssaoObject = o;
     setSSAO(ssao_enabled);
@@ -208,12 +208,12 @@ void VRDefShading::setDefferedShading(bool b) {
 bool VRDefShading::getSSAO() { return ssao_enabled; }
 bool VRDefShading::getDefferedShading() { return enabled; }
 
-void VRDefShading::setDSCamera(VRCamera* cam) {
+void VRDefShading::setDSCamera(VRCameraPtr cam) {
     if (initiated) dsStage->setCamera(cam->getCam());
     if (initiated) ssaoStage->setCamera(cam->getCam());
 }
 
-void VRDefShading::addDSLight(VRLight* light) {
+void VRDefShading::addDSLight(VRLightPtr light) {
     addDSLight(light->getLightCore(), light->getLightType(), light->getShadows());
 }
 

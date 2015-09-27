@@ -17,7 +17,7 @@ VRAnnotationEngine::VRAnnotationEngine() : VRGeometry("AnnEng") {
     fg = Vec4f(0,0,0,1);
     bg = Vec4f(1,0,1,0);
 
-    mat = new VRMaterial("AnnEngMat");
+    mat = VRMaterial::create("AnnEngMat");
     mat->setVertexShader(vp);
     mat->setFragmentShader(fp);
     mat->setGeometryShader(gp);
@@ -30,6 +30,9 @@ VRAnnotationEngine::VRAnnotationEngine() : VRGeometry("AnnEng") {
 
     clear();
 }
+
+VRAnnotationEnginePtr VRAnnotationEngine::create() { return shared_ptr<VRAnnotationEngine>(new VRAnnotationEngine() ); }
+VRAnnotationEnginePtr VRAnnotationEngine::ptr() { return static_pointer_cast<VRAnnotationEngine>( shared_from_this() ); }
 
 void VRAnnotationEngine::clear() {
     labels.clear();

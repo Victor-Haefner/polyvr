@@ -127,20 +127,25 @@ struct VRMatData {
     }
 };
 
-map<string, VRMaterial*> VRMaterial::materials;
-map<MaterialRecPtr, VRMaterial*> VRMaterial::materialsByPtr;
+map<string, VRMaterialPtr> VRMaterial::materials;
+map<MaterialRecPtr, VRMaterialPtr> VRMaterial::materialsByPtr;
 
 VRMaterial::VRMaterial(string name) : VRObject(name) {
     type = "Material";
     addAttachment("material", 0);
-    materials[getName()] = this;
-
     passes = MultiPassMaterial::create();
     addPass();
     activePass = 0;
 }
 
 VRMaterial::~VRMaterial() { for (auto m : mats) delete m; }
+
+VRMaterialPtr VRMaterial::ptr() { return static_pointer_cast<VRMaterial>( shared_from_this() ); }
+VRMaterialPtr VRMaterial::create(string name) {
+    auto p = shared_ptr<VRMaterial>(new VRMaterial(name) );
+    materials[p->getName()] = p;
+    return p;
+}
 
 string VRMaterial::constructShaderVP(VRMatData* data) {
     int texD = data->getTextureDimension();
@@ -210,18 +215,16 @@ void VRMaterial::setDeffered(bool b) {
 }
 
 void VRMaterial::clearAll() {
-    for (auto m : materials) delete m.second;
     materials.clear();
     materialsByPtr.clear();
 }
 
-VRMaterial* VRMaterial::getDefault() {
+VRMaterialPtr VRMaterial::getDefault() {
     if (materials.count("default") == 1) return materials["default"];
-    return new VRMaterial("default");
+    return VRMaterial::create("default");
 }
 
 void VRMaterial::resetDefault() {
-    delete getDefault();
     materials.erase("default");
 }
 
@@ -264,7 +267,7 @@ void VRMaterial::setStencilBuffer(bool clear, float value, float mask, int func,
 }
 
 void VRMaterial::clearExtraPasses() { for (int i=1; i<getNPasses(); i++) remPass(i); }
-void VRMaterial::appendPasses(VRMaterial* mat) {
+void VRMaterial::appendPasses(VRMaterialPtr mat) {
     for (int i=0; i<mat->getNPasses(); i++) {
         VRMatData* md = mat->mats[i]->copy();
         passes->addMaterial(md->mat);
@@ -272,7 +275,7 @@ void VRMaterial::appendPasses(VRMaterial* mat) {
     }
 }
 
-void VRMaterial::prependPasses(VRMaterial* mat) {
+void VRMaterial::prependPasses(VRMaterialPtr mat) {
     vector<VRMatData*> pses;
     for (int i=0; i<mat->getNPasses(); i++) pses.push_back( mat->mats[i]->copy() );
     for (int i=0; i<getNPasses(); i++) pses.push_back(mats[i]);
@@ -286,22 +289,22 @@ void VRMaterial::prependPasses(VRMaterial* mat) {
     }
 }
 
-VRMaterial* VRMaterial::get(MaterialRecPtr mat) {
+VRMaterialPtr VRMaterial::get(MaterialRecPtr mat) {
     if (materialsByPtr.count(mat) == 0) {
-        materialsByPtr[mat] = new VRMaterial("mat");
+        materialsByPtr[mat] = VRMaterial::create("mat");
         materialsByPtr[mat]->setMaterial(mat);
     }
 
     return materialsByPtr[mat];
 }
 
-VRMaterial* VRMaterial::get(string s) {
-    if (materials.count(s) == 0) materials[s] = new VRMaterial(s);
+VRMaterialPtr VRMaterial::get(string s) {
+    if (materials.count(s) == 0) materials[s] = VRMaterial::create(s);
     return materials[s];
 }
 
-VRObject* VRMaterial::copy(vector<VRObject*> children) {
-    VRMaterial* mat = new VRMaterial(getBaseName());
+VRObjectPtr VRMaterial::copy(vector<VRObjectPtr> children) {
+    VRMaterialPtr mat = VRMaterial::create(getBaseName());
     cout << "Warning: VRMaterial::copy not implemented!\n";
     // TODO: copy all the stuff
     return mat;
@@ -464,7 +467,7 @@ void VRMaterial::setTextureType(string type) {
 }
 
 void VRMaterial::setQRCode(string s, Vec3f fg, Vec3f bg, int offset) {
-    createQRCode(s, this, fg, bg, offset);
+    createQRCode(s, ptr(), fg, bg, offset);
     auto md = mats[activePass];
     if (md->texChunk == 0) { md->texChunk = TextureObjChunk::create(); md->mat->addChunk(md->texChunk); }
     md->texChunk->setMagFilter (GL_NEAREST);
@@ -502,7 +505,7 @@ void VRMaterial::setFrontBackModes(int front, int back) {
     } else md->polygonChunk->setBackMode(back);
 }
 
-void VRMaterial::setClipPlane(bool active, Vec4f equation, VRTransform* beacon) {
+void VRMaterial::setClipPlane(bool active, Vec4f equation, VRTransformPtr beacon) {
     for (int i=0; i<getNPasses(); i++) {
         auto md = mats[i];
         if (md->clipChunk == 0) { md->clipChunk = ClipPlaneChunk::create(); md->mat->addChunk(md->clipChunk); }
@@ -520,7 +523,7 @@ void VRMaterial::setWireFrame(bool b) {
 
 void VRMaterial::setVideo(string vid_path) {
     auto md = mats[activePass];
-    if (md->video == 0) md->video = new VRVideo(this);
+    if (md->video == 0) md->video = new VRVideo( ptr() );
     md->video->open(vid_path);
 }
 

@@ -250,7 +250,7 @@ PyObject* VRPyGeometry::merge(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
 	VRPyGeometry* geo;
     if (!PyArg_ParseTuple(args, "O", &geo)) return NULL;
-    self->obj->merge(geo->obj);
+    self->obj->merge(geo->objPtr);
     Py_RETURN_TRUE;
 }
 
@@ -289,7 +289,7 @@ PyObject* VRPyGeometry::setType(VRPyGeometry* self, PyObject *args) {
         return NULL;
     }
 
-    OSG::VRGeometry* geo = (OSG::VRGeometry*) self->obj;
+    OSG::VRGeometryPtr geo = (OSG::VRGeometryPtr) self->obj;
     geo->setType(type);
     Py_RETURN_TRUE;
 }
@@ -299,7 +299,7 @@ PyObject* VRPyGeometry::setTypes(VRPyGeometry* self, PyObject *args) {
 	PyObject* typeList;
     if (!PyArg_ParseTuple(args, "O", &typeList)) return NULL;
 
-    OSG::VRGeometry* geo = (OSG::VRGeometry*) self->obj;
+    OSG::VRGeometryPtr geo = (OSG::VRGeometryPtr) self->obj;
     OSG::GeoUInt8PropertyRecPtr types = OSG::GeoUInt8Property::create();
 
 	for (int i = 0; i < pySize(typeList); i++) {
@@ -388,7 +388,7 @@ PyObject* VRPyGeometry::setColors(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
     PyObject* vec;
     if (! PyArg_ParseTuple(args, "O", &vec)) return NULL;
-    OSG::VRGeometry* geo = (OSG::VRGeometry*) self->obj;
+    OSG::VRGeometryPtr geo = (OSG::VRGeometryPtr) self->obj;
 
     OSG::GeoVec4fPropertyRecPtr cols = OSG::GeoVec4fProperty::create();
     string tname = vec->ob_type->tp_name;
@@ -403,7 +403,7 @@ PyObject* VRPyGeometry::setLengths(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
     PyObject* vec;
     if (!PyArg_ParseTuple(args, "O", &vec)) return NULL;
-    OSG::VRGeometry* geo = (OSG::VRGeometry*) self->obj;
+    OSG::VRGeometryPtr geo = (OSG::VRGeometryPtr) self->obj;
 
     OSG::GeoUInt32PropertyRecPtr lens = OSG::GeoUInt32Property::create();
     feed1D<OSG::GeoUInt32PropertyRecPtr>(vec, lens);
@@ -472,7 +472,7 @@ PyObject* VRPyGeometry::setTexture(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
     PyObject* _path;
     if (! PyArg_ParseTuple(args, "O", &_path)) return NULL;
-    OSG::VRGeometry* geo = (OSG::VRGeometry*) self->obj;
+    OSG::VRGeometryPtr geo = (OSG::VRGeometryPtr) self->obj;
 
     string path = PyString_AsString(_path);
 
@@ -485,10 +485,10 @@ PyObject* VRPyGeometry::setMaterial(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
     PyObject* obj;
     if (! PyArg_ParseTuple(args, "O", &obj)) return NULL;
-    OSG::VRGeometry* geo = (OSG::VRGeometry*) self->obj;
+    OSG::VRGeometryPtr geo = (OSG::VRGeometryPtr) self->obj;
 
 	VRPyMaterial *pyMat = (VRPyMaterial*)obj;
-    geo->setMaterial((OSG::VRMaterial*)pyMat->obj);
+    geo->setMaterial((OSG::VRMaterialPtr)pyMat->obj);
     Py_RETURN_TRUE;
 }
 
@@ -585,7 +585,7 @@ PyObject* VRPyGeometry::getTexCoords(VRPyGeometry* self) {
 
 PyObject* VRPyGeometry::setVideo(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
-    OSG::VRGeometry* geo = (OSG::VRGeometry*) self->obj;
+    OSG::VRGeometryPtr geo = (OSG::VRGeometryPtr) self->obj;
 
     string path = parseString(args);
 
@@ -596,7 +596,7 @@ PyObject* VRPyGeometry::setVideo(VRPyGeometry* self, PyObject *args) {
 
 PyObject* VRPyGeometry::playVideo(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
-    OSG::VRGeometry* geo = (OSG::VRGeometry*) self->obj;
+    OSG::VRGeometryPtr geo = (OSG::VRGeometryPtr) self->obj;
 
     OSG::Vec3f params = parseVec3f(args);
 
@@ -607,7 +607,7 @@ PyObject* VRPyGeometry::playVideo(VRPyGeometry* self, PyObject *args) {
 
 PyObject* VRPyGeometry::getMaterial(VRPyGeometry* self) {
     if (!self->valid()) return NULL;
-    return VRPyMaterial::fromPtr(self->obj->getMaterial());
+    return VRPyMaterial::fromSharedPtr(self->obj->getMaterial());
 }
 
 PyObject* VRPyGeometry::setPrimitive(VRPyGeometry* self, PyObject *args) {

@@ -13,8 +13,8 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-VRMaterial* getCamGeoMat() {
-    VRMaterial* mat = VRMaterial::get("cam_geo_mat");
+VRMaterialPtr getCamGeoMat() {
+    VRMaterialPtr mat = VRMaterial::get("cam_geo_mat");
     mat->setDiffuse(Color3f(0.9, 0.9, 0.9));
     mat->setTransparency(0.3);
     mat->setLit(false);
@@ -56,15 +56,20 @@ VRCamera::VRCamera(string name) : VRTransform(name) {
     trans2->editMatrix().setRotate(Quaternion(Vec3f(1,0,0), Pi*0.5));
     camGeo->addChild(t2);
     t2->addChild(camGeo2);
-
-    getAll().push_back(this);
-    VRGuiManager::broadcast("camera_added");
 }
 
 VRCamera::~VRCamera() {
-    getAll().remove(this);
+    getAll().remove( ptr() );
     VRGuiManager::broadcast("camera_added");
     cam = 0;
+}
+
+VRCameraPtr VRCamera::ptr() { return static_pointer_cast<VRCamera>( shared_from_this() ); }
+VRCameraPtr VRCamera::create(string name) {
+    auto p = shared_ptr<VRCamera>(new VRCamera(name) );
+    getAll().push_back( p );
+    VRGuiManager::broadcast("camera_added");
+    return p;
 }
 
 void VRCamera::activate() {
@@ -79,8 +84,8 @@ void VRCamera::showCamGeo(bool b) {
     else camGeo->setTravMask(0);
 }
 
-list<VRCamera*>& VRCamera::getAll() {
-    static list<VRCamera*> objs;
+list<VRCameraPtr>& VRCamera::getAll() {
+    static list<VRCameraPtr> objs;
     return objs;
 }
 

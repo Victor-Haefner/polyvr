@@ -11,7 +11,7 @@ extern "C" {
 
 #include <string>
 
-VRVideo::VRVideo(OSG::VRMaterial* mat) {
+VRVideo::VRVideo(OSG::VRMaterialPtr mat) {
     material = mat;
 
     vFile = 0;

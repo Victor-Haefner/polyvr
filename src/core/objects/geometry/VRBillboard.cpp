@@ -44,6 +44,9 @@ void VRBillboard::initBBMesh(bool alpha) {
 
 }
 
+VRBillboardPtr VRBillboard::create(string name, bool alpha) { return shared_ptr<VRBillboard>(new VRBillboard(name, alpha) ); }
+VRBillboardPtr VRBillboard::ptr() { return static_pointer_cast<VRBillboard>( shared_from_this() ); }
+
 void VRBillboard::updateBBTexture() {
     BBtexChunk->setImage(BBtexture);
 }
@@ -86,7 +89,7 @@ void VRBillboard::createTestScene() {//Todo
     VRSceneManager::get()->VRSceneManager::get()->setKeyboardNavigationCentred(scene->getActiveCamera());
     scene->getActiveCamera()->setFrom(Vec3f(0,0,-1));
     scene->getActiveCamera()->setOrientation(Vec3f(0,0,0), Vec3f(0,1,0));
-    VRBillboard* bb = new VRBillboard("bb");
+    VRBillboardPtr bb = new VRBillboard("bb");
     scene->add(bb);
     bb->setSize(1, 1);
     bb->setTexture(VRText::get()->create(" Hallo Hallo \n Hallo Hallo \n Hallo Hallo", "SANS 20", 200, 100, Color3f(0,0,0)));*/

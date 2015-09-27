@@ -100,7 +100,7 @@ int path::addPoint(Vec3f p, Vec3f n, Vec3f c, Vec3f u) {
     return points.size() - 1;
 }
 
-int path::addPoint(VRTransform* t) {
+int path::addPoint(VRTransformPtr t) {
     OSG::Matrix m = t->getWorldMatrix();
     Vec3f p = Vec3f(m[3]);
     Vec3f d = Vec3f(m[2]);

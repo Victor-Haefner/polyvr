@@ -9,7 +9,7 @@ class VRAnnotationEngine : public VRGeometry {
     private:
         GeoVectorProperty* pos = 0;
         GeoVectorProperty* norms = 0; // n[0] is the number, n[1] is the ID
-        VRMaterial* mat = 0;
+        VRMaterialPtr mat = 0;
         Vec4f fg, bg;
 
         static string vp;
@@ -30,8 +30,10 @@ class VRAnnotationEngine : public VRGeometry {
     public:
         VRAnnotationEngine();
 
-        void clear();
+        static VRAnnotationEnginePtr create();
+        VRAnnotationEnginePtr ptr();
 
+        void clear();
         void set(int i, Vec3f p, string s);
 
         void setSize(float f);

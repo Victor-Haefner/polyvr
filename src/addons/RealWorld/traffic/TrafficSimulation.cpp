@@ -352,15 +352,15 @@ TrafficSimulation::TrafficSimulation(MapCoordinator *mapCoordinator, const strin
       communicationThreadId(-1), networkDataMutex(), receivedData(), dataToSend(), meshes(), vehicles(), lightBulbs(), noConnection(false), communicationThreadMutex() {
 
     // Add a dummy model for unknown vehicle types
-    VRGeometry* geo = new VRGeometry("vehicle_type_unknown");
+    VRGeometryPtr geo = VRGeometry::create("vehicle_type_unknown");
     geo->setPersistency(0);
     geo->setPrimitive("Box", "1 1 2 1 1 1");
     meshes[404] = geo;
 
 
-    a_red = new VRMaterial("a_red");
-    a_orange = new VRMaterial("a_orange");
-    a_green = new VRMaterial("a_green");
+    a_red = VRMaterial::create("a_red");
+    a_orange = VRMaterial::create("a_orange");
+    a_green = VRMaterial::create("a_green");
     a_red->setDiffuse(Vec3f(1,0,0));
     a_orange->setDiffuse(Vec3f(1,0.8,0.1));
     a_green->setDiffuse(Vec3f(0,1,0.1));
@@ -534,11 +534,11 @@ void TrafficSimulation::setTrafficDensity(const double density) {
     errorMessage("setting the traffic density", value);
 }
 
-void TrafficSimulation::addVehicleType(const unsigned int id, const double probability, const double collisionRadius, const double maxSpeed, const double maxAcceleration, const double maxRoration, VRGeometry *geometry) {
+void TrafficSimulation::addVehicleType(const unsigned int id, const double probability, const double collisionRadius, const double maxSpeed, const double maxAcceleration, const double maxRoration, VRGeometryPtr geometry) {
 
 
     //void addVehicleType(const unsigned int id, const double probability, const double collisionRadius, const double maxSpeed, const double maxAcceleration, const double maxRoration);
-    //OSG::VRFunction<VRThread*>* func = new OSG::VRFunction<VRThread*>("trafficAddVehicleType", boost::bind(&realworld::TrafficSimulation::addVehicleType, self->obj, id, prob, radius, speed, acc, rot, (VRGeometry*)geo->obj));
+    //OSG::VRFunction<VRThread*>* func = new OSG::VRFunction<VRThread*>("trafficAddVehicleType", boost::bind(&realworld::TrafficSimulation::addVehicleType, self->obj, id, prob, radius, speed, acc, rot, static_pointer_cast<VRGeometry>(geo->obj));
     //OSG::VRSceneManager::get()->initThread(func, "trafficAddVehicleType", false);
 
 
@@ -714,7 +714,7 @@ void TrafficSimulation::update() {
                     v.driverTypeId = vehicleIter["driver"].asUInt();
 
                     if (meshes.count(v.vehicleTypeId) == 0) v.vehicleTypeId = 404;
-                    v.geometry = (VRGeometry*)meshes[v.vehicleTypeId]->duplicate(true);
+                    v.geometry = static_pointer_cast<VRGeometry>( meshes[v.vehicleTypeId]->duplicate(true) );
                     v.geometry->setPersistency(0);
 
                     // Add it to the map
@@ -798,7 +798,7 @@ void TrafficSimulation::update() {
             // If there are too many bulbs, they are deleted
             size_t bulbIndex = 0;
             static const double postHeight = 2;
-            static const double bulbSize   = 1; // Note: If you change this value from 2, change the value further down in new VRGeometry(), too.
+            static const double bulbSize   = 1; // Note: If you change this value from 2, change the value further down in VRGeometry::create(), too.
 
             for (auto lightpost : receivedData["trafficlights"]) {
                 if (!lightpost.isObject()) continue;
@@ -863,7 +863,7 @@ void TrafficSimulation::update() {
                         if (VRSceneManager::getCurrent() == NULL) break;
 
                         // Create a new light
-                        VRGeometry* geo = new VRGeometry("ampel");
+                        VRGeometryPtr geo = VRGeometry::create("ampel");
                         geo->setPersistency(0);
                         geo->setPrimitive("Sphere", "0.5 2"); // The first value has to be half of bulbSize
                         geo->setMaterial(a_red);
@@ -873,7 +873,7 @@ void TrafficSimulation::update() {
                     }
 
                     // color switch
-                    VRGeometry* bulb = lightBulbs[bulbIndex++];
+                    VRGeometryPtr bulb = lightBulbs[bulbIndex++];
                     Vec3f p = Vec3f(streetOffset[0] + lane * normal[0], postHeight, streetOffset[1] + lane * normal[1]);
                     string lcol = light.asString();
                     if (lcol == "red") {

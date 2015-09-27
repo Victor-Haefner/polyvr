@@ -64,7 +64,7 @@ PyObject* VRPySelector::select(VRPySelector* self, PyObject* args) {
     VRPyObject* obj;
     parseObject(args, obj);
     if (obj == 0) return NULL;
-    self->obj->select(obj->obj);
+    self->obj->select(obj->objPtr);
     Py_RETURN_TRUE;
 }
 

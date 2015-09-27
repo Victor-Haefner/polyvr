@@ -83,7 +83,7 @@ PyObject* VRPySprite::setSize(VRPySprite* self, PyObject* args) {
 
     if (self->obj == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
 
-    OSG::VRSprite* s = (OSG::VRSprite*) self->obj;
+    OSG::VRSpritePtr s = (OSG::VRSpritePtr) self->obj;
     s->setSize(x,y);
 
     Py_RETURN_TRUE;
@@ -96,7 +96,7 @@ PyObject* VRPySprite::setText(VRPySprite* self, PyObject* args) {
 
     if (self->obj == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
 
-    OSG::VRSprite* s = (OSG::VRSprite*) self->obj;
+    OSG::VRSpritePtr s = (OSG::VRSpritePtr) self->obj;
     s->setLabel(text);
 
     Py_RETURN_TRUE;

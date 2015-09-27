@@ -12,12 +12,12 @@ bool VROCtoggle::isClose() { return (state == CLOSE); }
 bool VROCtoggle::isOpen() { return (state == OPEN); }
 
 
-void VROpening::initAnimations(VRObject* _d1, VRObject* _d2) {
+void VROpening::initAnimations(VRObjectPtr _d1, VRObjectPtr _d2) {
     // Door Animation
     fkt1 = 0;
     fkt2 = 0;
-    d1 = (VRTransform*)_d1;
-    d2 = (VRTransform*)_d2;
+    d1 = static_pointer_cast<VRTransform>( _d1 );
+    d2 = static_pointer_cast<VRTransform>( _d2 );
 
     if (d2 == 0 && param == "CW") {
         d2 = d1;
@@ -28,11 +28,11 @@ void VROpening::initAnimations(VRObject* _d1, VRObject* _d2) {
     if (d2) fkt2 = VRFunction<Vec3f>::create("3DEntSetUp", boost::bind(&VRTransform::setUp, d2, _1));
 }
 
-VRObject* VROpening::copy(vector<VRObject*> children) {
-    VROpening* d = new VROpening(getBaseName(), 0, scene, sig, param);
+VRObjectPtr VROpening::copy(vector<VRObjectPtr> children) {
+    VROpeningPtr d = VROpening::create(getBaseName(), 0, scene, sig, param);
 
-    VRObject *d1 = 0;
-    VRObject *d2 = 0;
+    VRObjectPtr d1 = 0;
+    VRObjectPtr d2 = 0;
     for (uint i=0;i<children.size();i++) {
         if (d1 == 0) d1 = children[i]->find("opening");
         if (d2 == 0) d2 = children[i]->find("opening2");
@@ -46,7 +46,7 @@ VRObject* VROpening::copy(vector<VRObject*> children) {
     return d;
 }
 
-VROpening::VROpening(string name, VRObject* obj, VRScene* _scene, VRSignal* _sig, string _param): VRTransform(name) {
+VROpening::VROpening(string name, VRObjectPtr obj, VRScene* _scene, VRSignal* _sig, string _param): VRTransform(name) {
     scene = _scene;
     sig = _sig;
     param = _param;
@@ -60,6 +60,10 @@ VROpening::VROpening(string name, VRObject* obj, VRScene* _scene, VRSignal* _sig
     }
 
     if (sig) sig->add(toggleCallback);
+}
+
+VROpeningPtr VROpening::create(string name, VRObjectPtr obj, VRScene* _scene, VRSignal* _sig, string _param) {
+    return shared_ptr<VROpening>( new VROpening(name, obj, _scene, _sig, _param) );
 }
 
 void VROpening::setSound(string s) { sound = s; }
@@ -86,7 +90,7 @@ void VROpening::toggle(VRDevice* dev) {
     if (d1 == 0 && d2 == 0) return;
 
     if (dev != 0) { //if triggered by a device, check if this is hit
-        VRIntersection ins = dev->intersect(this);
+        VRIntersection ins = dev->intersect( VRObject::ptr() );
         if (!ins.hit) return;
         if ( ins.object == 0 ) return;
 

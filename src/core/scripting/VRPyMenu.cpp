@@ -71,7 +71,7 @@ PyObject* VRPyMenu::move(VRPyMenu* self, PyObject *args) {
     Py_RETURN_TRUE;
 }
 
-void execCall(PyObject* pyFkt, PyObject* pArgs, OSG::VRMenu* menu) {
+void execCall(PyObject* pyFkt, PyObject* pArgs, OSG::VRMenuPtr menu) {
     if (pyFkt == 0) return;
     PyGILState_STATE gstate = PyGILState_Ensure();
     if (PyErr_Occurred() != NULL) PyErr_Print();
@@ -95,7 +95,7 @@ PyObject* VRPyMenu::setCallback(VRPyMenu* self, PyObject *args) {
     }
 
     Py_IncRef(pArgs);
-    self->obj->setCallback(new VRFunction<OSG::VRMenu*>( "pyMenuCB", boost::bind(execCall, pyFkt, pArgs, _1) ));
+    self->obj->setCallback(new VRFunction<OSG::VRMenuPtr>( "pyMenuCB", boost::bind(execCall, pyFkt, pArgs, _1) ));
     Py_RETURN_TRUE;
 }
 
@@ -136,5 +136,5 @@ PyObject* VRPyMenu::setLayout(VRPyMenu* self, PyObject* args) {
 
 PyObject* VRPyMenu::append(VRPyMenu* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyMenu::append - Object is invalid"); return NULL; }
-    return fromPtr( self->obj->append( parseString(args) ) );
+    return fromSharedPtr( self->obj->append( parseString(args) ) );
 }
