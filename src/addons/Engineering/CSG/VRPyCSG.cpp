@@ -43,7 +43,7 @@ template<> PyTypeObject VRPyBaseT<OSG::CSGGeometry>::type = {
     0,                         /* tp_dictoffset */
     (initproc)init,      /* tp_init */
     0,                         /* tp_alloc */
-    New_VRObjects,                 /* tp_new */
+    New_VRObjects_ptr,                 /* tp_new */
 };
 
 PyMethodDef VRPyCSG::methods[] = {
@@ -57,14 +57,14 @@ PyMethodDef VRPyCSG::methods[] = {
 };
 
 PyObject* VRPyCSG::setThreshold(VRPyCSG* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyCSG::setThreshold, Object is invalid"); return NULL; }
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyCSG::setThreshold, Object is invalid"); return NULL; }
     auto t = parseVec2f(args);
-    self->obj->setThreshold( t[0], t[1] );
+    self->objPtr->setThreshold( t[0], t[1] );
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyCSG::markEdges(VRPyCSG* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyCSG::markEdges, Object is invalid"); return NULL; }
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyCSG::markEdges, Object is invalid"); return NULL; }
 
     PyObject* vec;
     if (! PyArg_ParseTuple(args, "O", &vec)) return NULL;
@@ -72,28 +72,28 @@ PyObject* VRPyCSG::markEdges(VRPyCSG* self, PyObject* args) {
 
     vector<OSG::Vec2i> edges;
     pyListToVector<vector<OSG::Vec2i>, OSG::Vec2i>(vec, edges);
-    self->obj->markEdges(edges);
+    self->objPtr->markEdges(edges);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyCSG::getOperation(VRPyCSG* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyCSG::getOperation, Object is invalid"); return NULL; }
-    return PyString_FromString(self->obj->getOperation().c_str());
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyCSG::getOperation, Object is invalid"); return NULL; }
+    return PyString_FromString(self->objPtr->getOperation().c_str());
 }
 
 PyObject* VRPyCSG::setOperation(VRPyCSG* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyCSG::setOperation, Object is invalid"); return NULL; }
-    self->obj->setOperation( parseString(args) );
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyCSG::setOperation, Object is invalid"); return NULL; }
+    self->objPtr->setOperation( parseString(args) );
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyCSG::getEditMode(VRPyCSG* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyCSG::getOperation, Object is invalid"); return NULL; }
-    return PyBool_FromLong(self->obj->getEditMode());
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyCSG::getOperation, Object is invalid"); return NULL; }
+    return PyBool_FromLong(self->objPtr->getEditMode());
 }
 
 PyObject* VRPyCSG::setEditMode(VRPyCSG* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyCSG::setEditMode, Object is invalid"); return NULL; }
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyCSG::setEditMode, Object is invalid"); return NULL; }
     bool b = parseBool(args);
-	return PyBool_FromLong(self->obj->setEditMode(b));
+	return PyBool_FromLong(self->objPtr->setEditMode(b));
 }

@@ -37,6 +37,9 @@ CSGGeometry::CSGGeometry(string name) : VRGeometry(name) {
 
 CSGGeometry::~CSGGeometry() {}
 
+CSGGeometryPtr CSGGeometry::ptr() { return static_pointer_cast<CSGGeometry>( shared_from_this() ); }
+CSGGeometryPtr CSGGeometry::create(string name) { return shared_ptr<CSGGeometry>(new CSGGeometry(name) ); }
+
 void CSGGeometry::setCSGGeometry(CGAL::Polyhedron *p) {
 	if (!p->is_valid()) return;
 	polyhedron = p;

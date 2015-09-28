@@ -41,7 +41,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRLight>::type = {
     0,                         /* tp_dictoffset */
     (initproc)init,      /* tp_init */
     0,                         /* tp_alloc */
-    New_VRObjects,                 /* tp_new */
+    New_VRObjects_ptr,                 /* tp_new */
 };
 
 PyMethodDef VRPyLight::methods[] = {
@@ -50,8 +50,8 @@ PyMethodDef VRPyLight::methods[] = {
 };
 
 PyObject* VRPyLight::setOn(VRPyLight* self, PyObject *args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyLight::setOn - Object is invalid"); return NULL; }
-    self->obj->setOn( parseBool(args) );
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyLight::setOn - Object is invalid"); return NULL; }
+    self->objPtr->setOn( parseBool(args) );
     Py_RETURN_TRUE;
 }
 

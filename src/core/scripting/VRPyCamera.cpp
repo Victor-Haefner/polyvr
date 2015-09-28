@@ -40,7 +40,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRCamera>::type = {
     0,                         /* tp_dictoffset */
     (initproc)init,      /* tp_init */
     0,                         /* tp_alloc */
-    New_VRObjects,                 /* tp_new */
+    New_VRObjects_ptr,                 /* tp_new */
 };
 
 PyMethodDef VRPyCamera::methods[] = {
@@ -49,6 +49,6 @@ PyMethodDef VRPyCamera::methods[] = {
 };
 
 PyObject* VRPyCamera::activate(VRPyCamera* self) {
-    self->obj->activate();
+    self->objPtr->activate();
     Py_RETURN_TRUE;
 }

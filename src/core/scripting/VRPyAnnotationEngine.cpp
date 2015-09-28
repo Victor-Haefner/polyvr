@@ -42,7 +42,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRAnnotationEngine>::type = {
     0,                         /* tp_dictoffset */
     (initproc)init,      /* tp_init */
     0,                         /* tp_alloc */
-    New_VRObjects_unnamed,                 /* tp_new */
+    New_VRObjects_unnamed_ptr,                 /* tp_new */
 };
 
 PyMethodDef VRPyAnnotationEngine::methods[] = {
@@ -55,34 +55,34 @@ PyMethodDef VRPyAnnotationEngine::methods[] = {
 };
 
 PyObject* VRPyAnnotationEngine::setSize(VRPyAnnotationEngine* self, PyObject* args) {
-    self->obj->setSize(parseFloat(args));
+    self->objPtr->setSize(parseFloat(args));
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyAnnotationEngine::setColor(VRPyAnnotationEngine* self, PyObject* args) {
-    self->obj->setColor(parseVec4f(args));
+    self->objPtr->setColor(parseVec4f(args));
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyAnnotationEngine::setBackground(VRPyAnnotationEngine* self, PyObject* args) {
-    self->obj->setBackground(parseVec4f(args));
+    self->objPtr->setBackground(parseVec4f(args));
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyAnnotationEngine::set(VRPyAnnotationEngine* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyAnnotationEngine::set - Object is invalid"); return NULL; }
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyAnnotationEngine::set - Object is invalid"); return NULL; }
 
     int i;
     PyObject* s;
     PyObject* p;
     if (! PyArg_ParseTuple(args, "iOO", &i, &p, &s)) return NULL;
 
-    self->obj->set(i, parseVec3fList(p), PyString_AsString(s));
+    self->objPtr->set(i, parseVec3fList(p), PyString_AsString(s));
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyAnnotationEngine::clear(VRPyAnnotationEngine* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyAnnotationEngine::clear - Object is invalid"); return NULL; }
-    self->obj->clear();
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyAnnotationEngine::clear - Object is invalid"); return NULL; }
+    self->objPtr->clear();
     Py_RETURN_TRUE;
 }

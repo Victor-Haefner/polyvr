@@ -34,7 +34,7 @@ VRTransform::~VRTransform() {
 VRTransformPtr VRTransform::ptr() { return static_pointer_cast<VRTransform>( shared_from_this() ); }
 VRTransformPtr VRTransform::create(string name) {
     auto ptr = shared_ptr<VRTransform>(new VRTransform(name) );
-    ptr->physics = new VRPhysics( ptr );
+    //ptr->physics = new VRPhysics( ptr );
     return ptr;
 }
 
@@ -64,7 +64,7 @@ void VRTransform::computeMatrix() {
 //should be called from the main thread only
 void VRTransform::updatePhysics() {
     //update bullets transform
-    if (physics == 0) return;
+    if (physics == 0) physics = new VRPhysics( ptr() );
     if (noBlt && !held) { noBlt = false; return; }
     if (!physics->isPhysicalized()) return;
 
@@ -526,9 +526,11 @@ void VRTransform::drag(VRTransformPtr new_parent) {
     switchParent(new_parent);
     setWorldMatrix(m);
 
-    physics->updateTransformation( ptr() );
-    physics->resetForces();
-    physics->pause(true);
+    if (physics) {
+        physics->updateTransformation( ptr() );
+        physics->resetForces();
+        physics->pause(true);
+    }
     reg_change();
     update();
 }
@@ -544,9 +546,11 @@ void VRTransform::drop() {
     switchParent(old_parent, old_child_id);
     setWorldMatrix(m);
 
-    physics->updateTransformation( ptr() );
-    physics->resetForces();
-    physics->pause(false);
+    if (physics) {
+        physics->updateTransformation( ptr() );
+        physics->resetForces();
+        physics->pause(false);
+    }
     reg_change();
     update();
 }

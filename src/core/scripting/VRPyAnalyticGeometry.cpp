@@ -42,7 +42,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRAnalyticGeometry>::type = {
     0,                         /* tp_dictoffset */
     (initproc)init,      /* tp_init */
     0,                         /* tp_alloc */
-    New_VRObjects_unnamed,                 /* tp_new */
+    New_VRObjects_unnamed_ptr,                 /* tp_new */
 };
 
 PyMethodDef VRPyAnalyticGeometry::methods[] = {
@@ -53,24 +53,24 @@ PyMethodDef VRPyAnalyticGeometry::methods[] = {
 };
 
 PyObject* VRPyAnalyticGeometry::setLabelSize(VRPyAnalyticGeometry* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyAnalyticGeometry::setLabelSize - Object is invalid"); return NULL; }
-    self->obj->setLabelSize( parseFloat(args) );
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyAnalyticGeometry::setLabelSize - Object is invalid"); return NULL; }
+    self->objPtr->setLabelSize( parseFloat(args) );
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyAnalyticGeometry::setVector(VRPyAnalyticGeometry* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyAnalyticGeometry::set - Object is invalid"); return NULL; }
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyAnalyticGeometry::set - Object is invalid"); return NULL; }
 
     int i;
     PyObject *p, *v, *c, *s;
     if (! PyArg_ParseTuple(args, "iOOOO", &i, &p, &v, &c, &s)) return NULL;
 
-    self->obj->setVector(i, parseVec3fList(p), parseVec3fList(v), parseVec3fList(c), PyString_AsString(s));
+    self->objPtr->setVector(i, parseVec3fList(p), parseVec3fList(v), parseVec3fList(c), PyString_AsString(s));
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyAnalyticGeometry::clear(VRPyAnalyticGeometry* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyAnalyticGeometry::clear - Object is invalid"); return NULL; }
-    self->obj->clear();
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyAnalyticGeometry::clear - Object is invalid"); return NULL; }
+    self->objPtr->clear();
     Py_RETURN_TRUE;
 }

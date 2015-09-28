@@ -42,7 +42,7 @@ template<> PyTypeObject VRPyBaseT<VRNumberingEngine>::type = {
     0,                         /* tp_dictoffset */
     (initproc)init,      /* tp_init */
     0,                         /* tp_alloc */
-    New_VRObjects_unnamed,                 /* tp_new */
+    New_VRObjects_unnamed_ptr,                 /* tp_new */
 };
 
 PyMethodDef VRPyNumberingEngine::methods[] = {
@@ -53,13 +53,13 @@ PyMethodDef VRPyNumberingEngine::methods[] = {
 };
 
 PyObject* VRPyNumberingEngine::add(VRPyNumberingEngine* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyNumberingEngine::add - Object is invalid"); return NULL; }
-    self->obj->add(OSG::Vec3f(), parseInt(args));
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyNumberingEngine::add - Object is invalid"); return NULL; }
+    self->objPtr->add(OSG::Vec3f(), parseInt(args));
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyNumberingEngine::set(VRPyNumberingEngine* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyNumberingEngine::set - Object is invalid"); return NULL; }
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyNumberingEngine::set - Object is invalid"); return NULL; }
 
     int i;
     float f;
@@ -72,12 +72,12 @@ PyObject* VRPyNumberingEngine::set(VRPyNumberingEngine* self, PyObject* args) {
     pos[1] = PyFloat_AsDouble(v[1]);
     pos[2] = PyFloat_AsDouble(v[2]);
 
-    self->obj->set(i, pos, f);
+    self->objPtr->set(i, pos, f);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyNumberingEngine::clear(VRPyNumberingEngine* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyNumberingEngine::clear - Object is invalid"); return NULL; }
-    self->obj->clear();
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyNumberingEngine::clear - Object is invalid"); return NULL; }
+    self->objPtr->clear();
     Py_RETURN_TRUE;
 }

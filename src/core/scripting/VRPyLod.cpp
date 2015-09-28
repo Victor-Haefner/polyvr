@@ -40,7 +40,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRLod>::type = {
     0,                         /* tp_dictoffset */
     (initproc)init,      /* tp_init */
     0,                         /* tp_alloc */
-    New_VRObjects,                 /* tp_new */
+    New_VRObjects_ptr,                 /* tp_new */
 };
 
 PyMethodDef VRPyLod::methods[] = {
@@ -50,20 +50,20 @@ PyMethodDef VRPyLod::methods[] = {
 };
 
 PyObject* VRPyLod::setCenter(VRPyLod* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyLod::setCenter, Object is invalid"); return NULL; }
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyLod::setCenter, Object is invalid"); return NULL; }
     OSG::Vec3f t = parseVec3f(args);
 
-    OSG::VRLodPtr e = (OSG::VRLodPtr) self->obj;
+    OSG::VRLodPtr e = (OSG::VRLodPtr) self->objPtr;
     e->setCenter(t);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyLod::setDistance(VRPyLod* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyLod::setCenter, Object is invalid"); return NULL; }
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyLod::setCenter, Object is invalid"); return NULL; }
 	int childIndex;
 	float distance;
     if (!PyArg_ParseTuple(args, "if", &childIndex, &distance)) return NULL;
-    OSG::VRLodPtr e = (OSG::VRLodPtr) self->obj;
+    OSG::VRLodPtr e = (OSG::VRLodPtr) self->objPtr;
     e->setDistance(childIndex, distance);
     Py_RETURN_TRUE;
 }

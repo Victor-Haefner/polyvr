@@ -42,7 +42,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRClipPlane>::type = {
     0,                         /* tp_dictoffset */
     (initproc)init,      /* tp_init */
     0,                         /* tp_alloc */
-    New_VRObjects,                 /* tp_new */
+    New_VRObjects_ptr,                 /* tp_new */
 };
 
 PyMethodDef VRPyClipPlane::methods[] = {
@@ -53,20 +53,20 @@ PyMethodDef VRPyClipPlane::methods[] = {
 };
 
 PyObject* VRPyClipPlane::setTree(VRPyClipPlane* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyClipPlane::setTree - Object is invalid"); return NULL; }
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyClipPlane::setTree - Object is invalid"); return NULL; }
     VRPyObject* o = 0;
     parseObject(args, o);
-    if (o) self->obj->setTree(o->objPtr);
+    if (o) self->objPtr->setTree(o->objPtr);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyClipPlane::setActive(VRPyClipPlane* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyClipPlane::setActive - Object is invalid"); return NULL; }
-    self->obj->setActive( parseBool(args) );
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyClipPlane::setActive - Object is invalid"); return NULL; }
+    self->objPtr->setActive( parseBool(args) );
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyClipPlane::isActive(VRPyClipPlane* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyClipPlane::isActive - Object is invalid"); return NULL; }
-    return PyBool_FromLong( self->obj->isActive() );
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyClipPlane::isActive - Object is invalid"); return NULL; }
+    return PyBool_FromLong( self->objPtr->isActive() );
 }
