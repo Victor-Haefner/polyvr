@@ -196,16 +196,17 @@ PyObject* VRScript::getPyObj(arg* a) {
     else if (a->type == "float") return Py_BuildValue("f", toFloat(a->val.c_str()));
     else if (a->type == "NoneType") return Py_None;
     else if (a->type == "str") return PyString_FromString(a->val.c_str());
+    else if (a->ptr == 0) { cout << "\ngetPyObj ERROR: " << a->type << " ptr is 0\n"; Py_RETURN_NONE; }
     else if (a->type == "VRPyObjectType") return VRPyObject::fromSharedPtr(((VRObject*)a->ptr)->ptr());
     else if (a->type == "VRPyTransformType") return VRPyTransform::fromSharedPtr(((VRTransform*)a->ptr)->ptr());
-    else if (a->type == "VRPyGeometryType") return VRPyGeometry::fromSharedPtr(((VRGeometry*)a->ptr)->ptr());
+    else if (a->type == "VRPyGeometryType") return VRPyGeometry::fromSharedPtr( ((VRGeometry*)a->ptr)->ptr() );
     else if (a->type == "VRPyLightType") return VRPyLight::fromSharedPtr(((VRLight*)a->ptr)->ptr());
     else if (a->type == "VRPyLodType") return VRPyLod::fromSharedPtr(((VRLod*)a->ptr)->ptr());
     else if (a->type == "VRPyDeviceType") return VRPyDevice::fromPtr((VRDevice*)a->ptr);
     else if (a->type == "VRPyHapticType") return VRPyHaptic::fromPtr((VRHaptic*)a->ptr);
     else if (a->type == "VRPyMobileType") return VRPyMobile::fromPtr((VRMobile*)a->ptr);
     else if (a->type == "VRPySocketType") return VRPySocket::fromPtr((VRSocket*)a->ptr);
-    else { cout << "\ngetPyObj ERROR: " << a->type << " unknown!\n"; return NULL; }
+    else { cout << "\ngetPyObj ERROR: " << a->type << " unknown!\n"; Py_RETURN_NONE; }
 }
 
 void VRScript::changeArgName(string name, string _new) {

@@ -137,12 +137,12 @@ int VRPyObject::compare(PyObject* p1, PyObject* p2) {
     if (Py_TYPE(p1) != Py_TYPE(p2)) return -1;
     VRPyBaseT* o1 = (VRPyBaseT*)p1;
     VRPyBaseT* o2 = (VRPyBaseT*)p2;
-    return (o1->obj == o2->obj) ? 0 : -1;
+    return (o1->objPtr == o2->objPtr) ? 0 : -1;
 }
 
 long VRPyObject::hash(PyObject* p) {
     VRPyBaseT* o = (VRPyBaseT*)p;
-    return (long)o->obj;
+    return (long)o->objPtr.get();
 }
 
 PyObject* VRPyObject::flattenHiarchy(VRPyObject* self) {

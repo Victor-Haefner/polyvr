@@ -56,32 +56,21 @@ PyMethodDef VRPyCaveKeeper::methods[] = {
 PyObject* VRPyCaveKeeper::initWorld(VRPyCaveKeeper* self, PyObject* args) {
     VRPyObject* child = NULL;
     if (! PyArg_ParseTuple(args, "O", &child)) return NULL;
-
-    if (child->obj == 0) { PyErr_SetString(err, "VRPyCaveKeeper::initWorld, root is invalid"); return NULL; }
-
-    child->obj->addChild(self->obj->getAnchor());
+    child->objPtr->addChild(self->obj->getAnchor());
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyCaveKeeper::update(VRPyCaveKeeper* self, PyObject* args) {
-    PyObject* child = NULL;
+    VRPyTransform* child = NULL;
     if (! PyArg_ParseTuple(args, "O", &child)) return NULL;
-    if (child == NULL) { PyErr_SetString(err, "Missing child parameter"); return NULL; }
-    VRPyTransform* _child = (VRPyTransform*)child;
-
-    if (_child->obj == 0) { PyErr_SetString(err, "VRPyCaveKeeper::update, obj is invalid"); return NULL; }
-
-    //self->obj->update(_child->obj->getWorldPosition());
+    //self->obj->update(child->objPtr->getWorldPosition());
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyCaveKeeper::dig(VRPyCaveKeeper* self, PyObject* args) {
-    PyObject* dev = NULL;
+    VRPyDevice* dev = NULL;
     if (! PyArg_ParseTuple(args, "O", &dev)) return NULL;
-    if (dev == NULL) { PyErr_SetString(err, "Missing device parameter"); return NULL; }
-    VRPyDevice* _dev = (VRPyDevice*)dev;
-
-    self->obj->dig(_dev->obj);
+    self->obj->dig(dev->obj);
     Py_RETURN_TRUE;
 }
 

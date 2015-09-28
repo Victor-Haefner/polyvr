@@ -194,6 +194,7 @@ void BlockWorld::initWorld() {
 VRObjectPtr BlockWorld::getAnchor() { return anchor; }
 
 void BlockWorld::redraw(int chunk_id) {
+    if (chunks.count(chunk_id)) chunks[chunk_id]->destroy();
     chunks[chunk_id] = initChunk();
     anchor->addChild(chunks[chunk_id]);
 }

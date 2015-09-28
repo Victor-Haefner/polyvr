@@ -31,7 +31,7 @@ class BlockWorld {
 
         map<string, VRMaterialPtr> materials;
         map<int, VRGeometryPtr> chunks;
-        shared_ptr<VRFunction<int> > updatePtr;
+        VRUpdatePtr updatePtr;
 
         // octree population algorithm
 
@@ -40,9 +40,7 @@ class BlockWorld {
         // mesh methods
 
         VRMaterialPtr initMaterial(string texture);
-
 		VRGeometryPtr createChunk(vector<CKOctree::element*>& elements);
-
         VRGeometryPtr initChunk();
 
 		void appendToVector(vector<CKOctree::element*>* elements, CKOctree::element* e);
