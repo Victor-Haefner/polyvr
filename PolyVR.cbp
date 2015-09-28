@@ -613,6 +613,8 @@
 		<Unit filename="src/core/scripting/VRPyStroke.h" />
 		<Unit filename="src/core/scripting/VRPyTextureGenerator.cpp" />
 		<Unit filename="src/core/scripting/VRPyTextureGenerator.h" />
+		<Unit filename="src/core/scripting/VRPyTextureRenderer.cpp" />
+		<Unit filename="src/core/scripting/VRPyTextureRenderer.h" />
 		<Unit filename="src/core/scripting/VRPyTransform.cpp" />
 		<Unit filename="src/core/scripting/VRPyTransform.h" />
 		<Unit filename="src/core/scripting/VRPyTypeCaster.cpp" />
@@ -695,6 +697,8 @@
 		<Unit filename="src/core/tools/VRSnappingEngine.h" />
 		<Unit filename="src/core/tools/VRText.cpp" />
 		<Unit filename="src/core/tools/VRText.h" />
+		<Unit filename="src/core/tools/VRTextureRenderer.cpp" />
+		<Unit filename="src/core/tools/VRTextureRenderer.h" />
 		<Unit filename="src/core/tools/VRWaypoint.cpp" />
 		<Unit filename="src/core/tools/VRWaypoint.h" />
 		<Unit filename="src/core/utils/VRDoublebuffer.cpp" />

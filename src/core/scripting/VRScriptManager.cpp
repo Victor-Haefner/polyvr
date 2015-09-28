@@ -17,6 +17,7 @@
 #include "VRPyPath.h"
 #include "VRPyStroke.h"
 #include "VRPyColorChooser.h"
+#include "VRPyTextureRenderer.h"
 #include "VRPyConstraint.h"
 #include "VRPyHaptic.h"
 #include "VRPyMouse.h"
@@ -298,6 +299,7 @@ void VRScriptManager::initPyModules() {
     registerModule<VRPyMenu>("Menu", pModVR, VRPyGeometry::typeRef);
     registerModule<VRPyClipPlane>("ClipPlane", pModVR, VRPyGeometry::typeRef);
 	registerModule<VRPyColorChooser>("ColorChooser", pModVR);
+	registerModule<VRPyTextureRenderer>("TextureRenderer", pModVR, VRPyObject::typeRef);
     registerModule<VRPyCaveKeeper>("CaveKeeper", pModVR);
     registerModule<VRPyCarDynamics>("CarDynamics", pModVR);
     registerModule<VRPyCEF>("CEF", pModVR);
