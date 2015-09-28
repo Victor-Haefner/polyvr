@@ -64,7 +64,7 @@ void VRTransform::computeMatrix() {
 //should be called from the main thread only
 void VRTransform::updatePhysics() {
     //update bullets transform
-    if (physics == 0) physics = new VRPhysics( ptr() );
+    if (physics == 0) return;
     if (noBlt && !held) { noBlt = false; return; }
     if (!physics->isPhysicalized()) return;
 
@@ -712,7 +712,10 @@ Vec3i VRTransform::getRConstraint() { return rConstraint; }
 bool VRTransform::hasTConstraint() { return doTConstraint; }
 bool VRTransform::hasRConstraint() { return doRConstraint; }
 
-VRPhysics* VRTransform::getPhysics() { return physics; }
+VRPhysics* VRTransform::getPhysics() {
+    if (physics == 0) physics = new VRPhysics( ptr() );
+    return physics;
+}
 
 /** Update the object OSG transformation **/
 void VRTransform::update() {

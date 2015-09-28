@@ -483,12 +483,9 @@ PyObject* VRPyGeometry::setTexture(VRPyGeometry* self, PyObject *args) {
 
 PyObject* VRPyGeometry::setMaterial(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
-    PyObject* obj;
-    if (! PyArg_ParseTuple(args, "O", &obj)) return NULL;
-    OSG::VRGeometryPtr geo = (OSG::VRGeometryPtr) self->objPtr;
-
-	VRPyMaterial *pyMat = (VRPyMaterial*)obj;
-    geo->setMaterial((OSG::VRMaterialPtr)pyMat->obj);
+    VRPyMaterial* mat;
+    if (! PyArg_ParseTuple(args, "O", &mat)) return NULL;
+    self->objPtr->setMaterial(mat->objPtr);
     Py_RETURN_TRUE;
 }
 

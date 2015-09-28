@@ -125,11 +125,13 @@ void setTransform(VRTransformPtr e) {
     setRadioButton("radiobutton1", !e->getTConstraintMode());
     setRadioButton("radiobutton2", e->getTConstraintMode());
 
-    setCheckButton("checkbutton13", e->getPhysics()->isPhysicalized());
-    setCheckButton("checkbutton33", e->getPhysics()->isDynamic());
-    setTextEntry("entry59", toString(e->getPhysics()->getMass()));
-    setCombobox("combobox8", getListStorePos("phys_shapes", e->getPhysics()->getShape()));
-    setComboboxSensitivity("combobox8", e->getPhysics()->isPhysicalized());
+    if (e->getPhysics()) {
+        setCheckButton("checkbutton13", e->getPhysics()->isPhysicalized());
+        setCheckButton("checkbutton33", e->getPhysics()->isDynamic());
+        setTextEntry("entry59", toString(e->getPhysics()->getMass()));
+        setCombobox("combobox8", getListStorePos("phys_shapes", e->getPhysics()->getShape()));
+        setComboboxSensitivity("combobox8", e->getPhysics()->isPhysicalized());
+    }
 }
 
 void setGeometry(VRGeometryPtr g) {
@@ -933,7 +935,7 @@ void VRGuiScene::on_toggle_phys() {
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
 
     bool phys = getCheckButtonState("checkbutton13");
-    obj->getPhysics()->setPhysicalized(phys);
+    if (obj->getPhysics()) obj->getPhysics()->setPhysicalized(phys);
     setComboboxSensitivity("combobox8", phys);
 }
 
@@ -942,7 +944,7 @@ void VRGuiScene::on_toggle_dynamic() {
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
 
     bool dyn = getCheckButtonState("checkbutton33");
-    obj->getPhysics()->setDynamic(dyn);
+    if (obj->getPhysics()) obj->getPhysics()->setDynamic(dyn);
 }
 
 void VRGuiScene::on_mass_changed() {
@@ -950,14 +952,14 @@ void VRGuiScene::on_mass_changed() {
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
 
     string m = getTextEntry("entry59");
-    obj->getPhysics()->setMass(toFloat(m));
+    if (obj->getPhysics()) obj->getPhysics()->setMass(toFloat(m));
 }
 
 void VRGuiScene::on_change_phys_shape() {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
     string t = getComboboxText("combobox8");
-    obj->getPhysics()->setShape(t);
+    if (obj->getPhysics()) obj->getPhysics()->setShape(t);
 }
 
 

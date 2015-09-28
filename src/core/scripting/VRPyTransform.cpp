@@ -356,10 +356,12 @@ PyObject* VRPyTransform::physicalize(VRPyTransform* self, PyObject *args) {
     if (! PyArg_ParseTuple(args, "iii", &b1, &b2, &b3)) return NULL;
     OSG::VRTransformPtr geo = (OSG::VRTransformPtr) self->objPtr;
 
-    geo->getPhysics()->setDynamic(b2);
-    if (b3) geo->getPhysics()->setShape("Concave");
-    else geo->getPhysics()->setShape("Convex");
-    geo->getPhysics()->setPhysicalized(b1);
+    if (geo->getPhysics()) {
+        geo->getPhysics()->setDynamic(b2);
+        if (b3) geo->getPhysics()->setShape("Concave");
+        else geo->getPhysics()->setShape("Convex");
+        geo->getPhysics()->setPhysicalized(b1);
+    }
     Py_RETURN_TRUE;
 }
 
@@ -375,12 +377,12 @@ PyObject* VRPyTransform::setPhysicsConstraintTo(VRPyTransform* self, PyObject *a
         float influence;
         PyObject* localPiv;
         if (! PyArg_ParseTuple(args, "OiOif", &t, &nodeIndex, &localPiv, &ignoreCollision, &influence)) return NULL;
-        self->objPtr->getPhysics()->setConstraint(t->obj->getPhysics(), nodeIndex, parseVec3fList(localPiv), ignoreCollision, influence);
+        self->objPtr->getPhysics()->setConstraint(t->objPtr->getPhysics(), nodeIndex, parseVec3fList(localPiv), ignoreCollision, influence);
     }
     else {
         VRPyTransform *t; VRPyConstraint *c; VRPyConstraint *cs;
         if (! PyArg_ParseTuple(args, "OOO", &t, &c, &cs)) return NULL;
-        self->objPtr->getPhysics()->setConstraint( t->obj->getPhysics(), c->obj, cs->obj );
+        self->objPtr->getPhysics()->setConstraint( t->objPtr->getPhysics(), c->obj, cs->obj );
     }
     Py_RETURN_TRUE;
 }

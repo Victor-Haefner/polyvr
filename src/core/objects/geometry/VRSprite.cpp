@@ -19,7 +19,6 @@ VRSprite::VRSprite (string name, bool alpha, float w, float h) : VRGeometry(name
     type = "Sprite";
 
     setMesh(makePlaneGeo(width, height, 1, 1));
-    setAt(Vec3f(0,0,-1));
 
     font = "SANS 20";
     fontColor = Color4f(0,0,0,255);

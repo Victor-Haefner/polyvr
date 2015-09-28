@@ -100,6 +100,9 @@ class VRMolecule : public VRGeometry {
     public:
         VRMolecule(string definition);
 
+        static VRMoleculePtr create(string definition);
+        VRMoleculePtr ptr();
+
         void set(string definition);
         void setRandom(int N);
         string getDefinition();
@@ -108,8 +111,8 @@ class VRMolecule : public VRGeometry {
 
         void setLocalOrigin(int ID);
 
-        void substitute(int a, VRMolecule* m, int b);
-        void attachMolecule(int a, VRMolecule* m, int b);
+        void substitute(int a, VRMoleculePtr m, int b);
+        void attachMolecule(int a, VRMoleculePtr m, int b);
         void rotateBond(int a, int b, float f);
         void changeBond(int a, int b, int t);
 		void remAtom(int ID);

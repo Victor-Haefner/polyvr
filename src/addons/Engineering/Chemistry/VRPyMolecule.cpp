@@ -42,7 +42,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRMolecule>::type = {
     0,                         /* tp_dictoffset */
     (initproc)init,      /* tp_init */
     0,                         /* tp_alloc */
-    New_VRObjects,                 /* tp_new */
+    New_VRObjects_ptr,                 /* tp_new */
 };
 
 PyMethodDef VRPyMolecule::methods[] = {
@@ -60,79 +60,79 @@ PyMethodDef VRPyMolecule::methods[] = {
 };
 
 PyObject* VRPyMolecule::set(VRPyMolecule* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyMolecule::set - Object is invalid"); return NULL; }
-    self->obj->set( parseString(args) );
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMolecule::set - Object is invalid"); return NULL; }
+    self->objPtr->set( parseString(args) );
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMolecule::remAtom(VRPyMolecule* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyMolecule::remAtom - Object is invalid"); return NULL; }
-    self->obj->remAtom( parseInt(args) );
-    self->obj->updateGeo();
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMolecule::remAtom - Object is invalid"); return NULL; }
+    self->objPtr->remAtom( parseInt(args) );
+    self->objPtr->updateGeo();
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMolecule::getAtomPosition(VRPyMolecule* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyMolecule::getAtomPosition - Object is invalid"); return NULL; }
-    OSG::VRAtom* a = self->obj->getAtom( parseInt(args) );
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMolecule::getAtomPosition - Object is invalid"); return NULL; }
+    OSG::VRAtom* a = self->objPtr->getAtom( parseInt(args) );
     if (a == 0) return toPyTuple( OSG::Vec3f(0,0,0) );
-    OSG::Matrix m = self->obj->getWorldMatrix();
+    OSG::Matrix m = self->objPtr->getWorldMatrix();
     m.mult( a->getTransformation() );
     return toPyTuple( OSG::Vec3f(m[3]) );
 }
 
 PyObject* VRPyMolecule::setRandom(VRPyMolecule* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyMolecule::setRandom - Object is invalid"); return NULL; }
-    self->obj->setRandom( parseInt(args) );
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMolecule::setRandom - Object is invalid"); return NULL; }
+    self->objPtr->setRandom( parseInt(args) );
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMolecule::showLabels(VRPyMolecule* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyMolecule::showLabels - Object is invalid"); return NULL; }
-    self->obj->showLabels( parseBool(args) );
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMolecule::showLabels - Object is invalid"); return NULL; }
+    self->objPtr->showLabels( parseBool(args) );
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMolecule::showCoords(VRPyMolecule* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyMolecule::showCoords - Object is invalid"); return NULL; }
-    self->obj->showCoords( parseBool(args) );
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMolecule::showCoords - Object is invalid"); return NULL; }
+    self->objPtr->showCoords( parseBool(args) );
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMolecule::rotateBond(VRPyMolecule* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyMolecule::rotateBond - Object is invalid"); return NULL; }
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMolecule::rotateBond - Object is invalid"); return NULL; }
     int a, b; float f;
     if (! PyArg_ParseTuple(args, "iif", &a, &b, &f)) return NULL;
-    self->obj->rotateBond( a, b, f );
+    self->objPtr->rotateBond( a, b, f );
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMolecule::changeBond(VRPyMolecule* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyMolecule::changeBond - Object is invalid"); return NULL; }
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMolecule::changeBond - Object is invalid"); return NULL; }
     int a, b, t;
     if (! PyArg_ParseTuple(args, "iii", &a, &b, &t)) return NULL;
-    self->obj->changeBond( a, b, t );
+    self->objPtr->changeBond( a, b, t );
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMolecule::substitute(VRPyMolecule* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyMolecule::substitute - Object is invalid"); return NULL; }
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMolecule::substitute - Object is invalid"); return NULL; }
 
     VRPyMolecule* mB; int a, b;
     if (! PyArg_ParseTuple(args, "iOi", &a, &mB, &b)) return NULL;
-    if ((PyObject*)mB == Py_None) { PyErr_SetString(err, "VRPyMolecule::substitute - molecule is invalid"); return NULL; }
+    if (isNone((PyObject*)mB)) { PyErr_SetString(err, "VRPyMolecule::substitute - molecule is invalid"); return NULL; }
 
-    self->obj->substitute( a, mB->obj, b );
+    self->objPtr->substitute( a, mB->objPtr, b );
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMolecule::attachMolecule(VRPyMolecule* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyMolecule::attachMolecule - Object is invalid"); return NULL; }
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMolecule::attachMolecule - Object is invalid"); return NULL; }
 
     VRPyMolecule* mB; int a, b;
     if (! PyArg_ParseTuple(args, "iOi", &a, &mB, &b)) return NULL;
-    if ((PyObject*)mB == Py_None) { PyErr_SetString(err, "VRPyMolecule::attachMolecule - molecule is invalid"); return NULL; }
+    if (isNone((PyObject*)mB)) { PyErr_SetString(err, "VRPyMolecule::attachMolecule - molecule is invalid"); return NULL; }
 
-    self->obj->attachMolecule( a, mB->obj, b);
+    self->objPtr->attachMolecule( a, mB->objPtr, b);
     Py_RETURN_TRUE;
 }

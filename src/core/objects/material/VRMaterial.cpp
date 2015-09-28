@@ -617,7 +617,6 @@ bool VRMaterial::isLit() { return mats[activePass]->colChunk->getLit(); }
 ImageRecPtr VRMaterial::getTexture() { return mats[activePass]->texture; }
 
 void VRMaterial::setTexture(char* data, int format, Vec3i dims, bool isfloat) {
-    cout << " setTexture " << format << " " << dims << " " << isfloat << endl;
     ImageRecPtr img = Image::create();
 
     int pf = Image::OSG_RGB_PF;
