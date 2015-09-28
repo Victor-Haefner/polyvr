@@ -3,6 +3,7 @@
 #include <gtkmm/window.h>
 #include <gtkmm/label.h>
 #include <gtkmm/builder.h>
+#include <gdkmm/cursor.h>
 #include <gdk/gdkgl.h>
 #include <gtk/gtkgl.h>
 
@@ -50,6 +51,93 @@ VRGtkWindow::VRGtkWindow(Gtk::DrawingArea* da) {
 VRGtkWindow::~VRGtkWindow() {
     for (unsigned int i=0; i<signals.size(); i++) signals[i].disconnect();
     win = NULL;
+}
+
+void VRGtkWindow::setCursor(string c) {
+    Glib::RefPtr <Gdk::Window> win = drawArea->get_window();
+    if (c == "") { win->set_cursor(); return; }
+
+    Gdk::Cursor cursor;
+
+    if (c == "X_CURSOR") cursor = Gdk::Cursor(Gdk::X_CURSOR);
+    if (c == "ARROW") cursor = Gdk::Cursor(Gdk::ARROW);
+    if (c == "BASED_ARROW_DOWN") cursor = Gdk::Cursor(Gdk::BASED_ARROW_DOWN);
+    if (c == "BASED_ARROW_UP") cursor = Gdk::Cursor(Gdk::BASED_ARROW_UP);
+    if (c == "BOAT") cursor = Gdk::Cursor(Gdk::BOAT);
+    if (c == "BOGOSITY") cursor = Gdk::Cursor(Gdk::BOGOSITY);
+    if (c == "BOTTOM_LEFT_CORNER") cursor = Gdk::Cursor(Gdk::BOTTOM_LEFT_CORNER);
+    if (c == "BOTTOM_RIGHT_CORNER") cursor = Gdk::Cursor(Gdk::BOTTOM_RIGHT_CORNER);
+    if (c == "BOTTOM_SIDE") cursor = Gdk::Cursor(Gdk::BOTTOM_SIDE);
+    if (c == "BOTTOM_TEE") cursor = Gdk::Cursor(Gdk::BOTTOM_TEE);
+    if (c == "BOX_SPIRAL") cursor = Gdk::Cursor(Gdk::BOX_SPIRAL);
+    if (c == "CENTER_PTR") cursor = Gdk::Cursor(Gdk::CENTER_PTR);
+    if (c == "CIRCLE") cursor = Gdk::Cursor(Gdk::CIRCLE);
+    if (c == "CLOCK") cursor = Gdk::Cursor(Gdk::CLOCK);
+    if (c == "COFFEE_MUG") cursor = Gdk::Cursor(Gdk::COFFEE_MUG);
+    if (c == "CROSS") cursor = Gdk::Cursor(Gdk::CROSS);
+    if (c == "CROSS_REVERSE") cursor = Gdk::Cursor(Gdk::CROSS_REVERSE);
+    if (c == "CROSSHAIR") cursor = Gdk::Cursor(Gdk::CROSSHAIR);
+    if (c == "DIAMOND_CROSS") cursor = Gdk::Cursor(Gdk::DIAMOND_CROSS);
+    if (c == "DOT") cursor = Gdk::Cursor(Gdk::DOT);
+    if (c == "DOTBOX") cursor = Gdk::Cursor(Gdk::DOTBOX);
+    if (c == "DOUBLE_ARROW") cursor = Gdk::Cursor(Gdk::DOUBLE_ARROW);
+    if (c == "DRAFT_LARGE") cursor = Gdk::Cursor(Gdk::DRAFT_LARGE);
+    if (c == "DRAFT_SMALL") cursor = Gdk::Cursor(Gdk::DRAFT_SMALL);
+    if (c == "DRAPED_BOX") cursor = Gdk::Cursor(Gdk::DRAPED_BOX);
+    if (c == "EXCHANGE") cursor = Gdk::Cursor(Gdk::EXCHANGE);
+    if (c == "FLEUR") cursor = Gdk::Cursor(Gdk::FLEUR);
+    if (c == "GOBBLER") cursor = Gdk::Cursor(Gdk::GOBBLER);
+    if (c == "GUMBY") cursor = Gdk::Cursor(Gdk::GUMBY);
+    if (c == "HAND1") cursor = Gdk::Cursor(Gdk::HAND1);
+    if (c == "HAND2") cursor = Gdk::Cursor(Gdk::HAND2);
+    if (c == "HEART") cursor = Gdk::Cursor(Gdk::HEART);
+    if (c == "ICON") cursor = Gdk::Cursor(Gdk::ICON);
+    if (c == "IRON_CROSS") cursor = Gdk::Cursor(Gdk::IRON_CROSS);
+    if (c == "LEFT_PTR") cursor = Gdk::Cursor(Gdk::LEFT_PTR);
+    if (c == "LEFT_SIDE") cursor = Gdk::Cursor(Gdk::LEFT_SIDE);
+    if (c == "LEFT_TEE") cursor = Gdk::Cursor(Gdk::LEFT_TEE);
+    if (c == "LEFTBUTTON") cursor = Gdk::Cursor(Gdk::LEFTBUTTON);
+    if (c == "LL_ANGLE") cursor = Gdk::Cursor(Gdk::LL_ANGLE);
+    if (c == "LR_ANGLE") cursor = Gdk::Cursor(Gdk::LR_ANGLE);
+    if (c == "MAN") cursor = Gdk::Cursor(Gdk::MAN);
+    if (c == "MIDDLEBUTTON") cursor = Gdk::Cursor(Gdk::MIDDLEBUTTON);
+    if (c == "MOUSE") cursor = Gdk::Cursor(Gdk::MOUSE);
+    if (c == "PENCIL") cursor = Gdk::Cursor(Gdk::PENCIL);
+    if (c == "PIRATE") cursor = Gdk::Cursor(Gdk::PIRATE);
+    if (c == "PLUS") cursor = Gdk::Cursor(Gdk::PLUS);
+    if (c == "QUESTION_ARROW") cursor = Gdk::Cursor(Gdk::QUESTION_ARROW);
+    if (c == "RIGHT_PTR") cursor = Gdk::Cursor(Gdk::RIGHT_PTR);
+    if (c == "RIGHT_SIDE") cursor = Gdk::Cursor(Gdk::RIGHT_SIDE);
+    if (c == "RIGHT_TEE") cursor = Gdk::Cursor(Gdk::RIGHT_TEE);
+    if (c == "RIGHTBUTTON") cursor = Gdk::Cursor(Gdk::RIGHTBUTTON);
+    if (c == "RTL_LOGO") cursor = Gdk::Cursor(Gdk::RTL_LOGO);
+    if (c == "SAILBOAT") cursor = Gdk::Cursor(Gdk::SAILBOAT);
+    if (c == "SB_DOWN_ARROW") cursor = Gdk::Cursor(Gdk::SB_DOWN_ARROW);
+    if (c == "SB_H_DOUBLE_ARROW") cursor = Gdk::Cursor(Gdk::SB_H_DOUBLE_ARROW);
+    if (c == "SB_LEFT_ARROW") cursor = Gdk::Cursor(Gdk::SB_LEFT_ARROW);
+    if (c == "SB_RIGHT_ARROW") cursor = Gdk::Cursor(Gdk::SB_RIGHT_ARROW);
+    if (c == "SB_UP_ARROW") cursor = Gdk::Cursor(Gdk::SB_UP_ARROW);
+    if (c == "SB_V_DOUBLE_ARROW") cursor = Gdk::Cursor(Gdk::SB_V_DOUBLE_ARROW);
+    if (c == "SHUTTLE") cursor = Gdk::Cursor(Gdk::SHUTTLE);
+    if (c == "SIZING") cursor = Gdk::Cursor(Gdk::SIZING);
+    if (c == "SPIDER") cursor = Gdk::Cursor(Gdk::SPIDER);
+    if (c == "SPRAYCAN") cursor = Gdk::Cursor(Gdk::SPRAYCAN);
+    if (c == "STAR") cursor = Gdk::Cursor(Gdk::STAR);
+    if (c == "TARGET") cursor = Gdk::Cursor(Gdk::TARGET);
+    if (c == "TCROSS") cursor = Gdk::Cursor(Gdk::TCROSS);
+    if (c == "TOP_LEFT_ARROW") cursor = Gdk::Cursor(Gdk::TOP_LEFT_ARROW);
+    if (c == "TOP_LEFT_CORNER") cursor = Gdk::Cursor(Gdk::TOP_LEFT_CORNER);
+    if (c == "TOP_RIGHT_CORNER") cursor = Gdk::Cursor(Gdk::TOP_RIGHT_CORNER);
+    if (c == "TOP_SIDE") cursor = Gdk::Cursor(Gdk::TOP_SIDE);
+    if (c == "TOP_TEE") cursor = Gdk::Cursor(Gdk::TOP_TEE);
+    if (c == "TREK") cursor = Gdk::Cursor(Gdk::TREK);
+    if (c == "UL_ANGLE") cursor = Gdk::Cursor(Gdk::UL_ANGLE);
+    if (c == "UMBRELLA") cursor = Gdk::Cursor(Gdk::UMBRELLA);
+    if (c == "UR_ANGLE") cursor = Gdk::Cursor(Gdk::UR_ANGLE);
+    if (c == "WATCH") cursor = Gdk::Cursor(Gdk::WATCH);
+    if (c == "XTERM") cursor = Gdk::Cursor(Gdk::XTERM);
+
+    win->set_cursor(cursor);
 }
 
 void VRGtkWindow::on_resize(Gtk::Allocation& allocation) {

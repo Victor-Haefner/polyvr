@@ -378,6 +378,10 @@
 		<Unit filename="src/addons/Semantics/Reasoning/VRProperty.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VRReasoner.cpp" />
 		<Unit filename="src/addons/Semantics/Reasoning/VRReasoner.h" />
+		<Unit filename="src/addons/Semantics/Segmentation/VRAdjacencyGraph.cpp" />
+		<Unit filename="src/addons/Semantics/Segmentation/VRAdjacencyGraph.h" />
+		<Unit filename="src/addons/Semantics/Segmentation/VRPyAdjacencyGraph.cpp" />
+		<Unit filename="src/addons/Semantics/Segmentation/VRPyAdjacencyGraph.h" />
 		<Unit filename="src/addons/Semantics/Segmentation/VRPySegmentation.cpp" />
 		<Unit filename="src/addons/Semantics/Segmentation/VRPySegmentation.h" />
 		<Unit filename="src/addons/Semantics/Segmentation/VRSegmentation.cpp" />
@@ -580,6 +584,8 @@
 		<Unit filename="src/core/scripting/VRPyMenu.h" />
 		<Unit filename="src/core/scripting/VRPyMobile.cpp" />
 		<Unit filename="src/core/scripting/VRPyMobile.h" />
+		<Unit filename="src/core/scripting/VRPyMouse.cpp" />
+		<Unit filename="src/core/scripting/VRPyMouse.h" />
 		<Unit filename="src/core/scripting/VRPyNavPreset.cpp" />
 		<Unit filename="src/core/scripting/VRPyNavPreset.h" />
 		<Unit filename="src/core/scripting/VRPyNavigator.cpp" />
@@ -608,6 +614,8 @@
 		<Unit filename="src/core/scripting/VRPyStroke.h" />
 		<Unit filename="src/core/scripting/VRPyTextureGenerator.cpp" />
 		<Unit filename="src/core/scripting/VRPyTextureGenerator.h" />
+		<Unit filename="src/core/scripting/VRPyTextureRenderer.cpp" />
+		<Unit filename="src/core/scripting/VRPyTextureRenderer.h" />
 		<Unit filename="src/core/scripting/VRPyTransform.cpp" />
 		<Unit filename="src/core/scripting/VRPyTransform.h" />
 		<Unit filename="src/core/scripting/VRPyTypeCaster.cpp" />
@@ -690,6 +698,8 @@
 		<Unit filename="src/core/tools/VRSnappingEngine.h" />
 		<Unit filename="src/core/tools/VRText.cpp" />
 		<Unit filename="src/core/tools/VRText.h" />
+		<Unit filename="src/core/tools/VRTextureRenderer.cpp" />
+		<Unit filename="src/core/tools/VRTextureRenderer.h" />
 		<Unit filename="src/core/tools/VRWaypoint.cpp" />
 		<Unit filename="src/core/tools/VRWaypoint.h" />
 		<Unit filename="src/core/utils/VRDoublebuffer.cpp" />

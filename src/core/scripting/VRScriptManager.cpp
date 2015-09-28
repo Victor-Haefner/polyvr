@@ -17,8 +17,10 @@
 #include "VRPyPath.h"
 #include "VRPyStroke.h"
 #include "VRPyColorChooser.h"
+#include "VRPyTextureRenderer.h"
 #include "VRPyConstraint.h"
 #include "VRPyHaptic.h"
+#include "VRPyMouse.h"
 #include "VRPyMobile.h"
 #include "VRPyBaseT.h"
 #include "VRPyMaterial.h"
@@ -58,6 +60,7 @@
 #include "addons/CEF/VRPyCEF.h"
 #include "addons/CEF/VRPyWebCam.h"
 #include "addons/Semantics/Segmentation/VRPySegmentation.h"
+#include "addons/Semantics/Segmentation/VRPyAdjacencyGraph.h"
 #include "addons/Engineering/Chemistry/VRPyMolecule.h"
 #include "addons/Engineering/Factory/VRPyFactory.h"
 #include "addons/Engineering/Milling/VRPyMillingMachine.h"
@@ -279,6 +282,7 @@ void VRScriptManager::initPyModules() {
     registerModule<VRPyDevice>("Device", pModVR);
     registerModule<VRPyHaptic>("Haptic", pModVR, VRPyDevice::typeRef);
     registerModule<VRPyMobile>("Mobile", pModVR, VRPyDevice::typeRef);
+    registerModule<VRPyMouse>("Mouse", pModVR, VRPyDevice::typeRef);
     registerModule<VRPyAnimation>("Animation", pModVR);
     registerModule<VRPyPath>("Path", pModVR);
     registerModule<VRPyRecorder>("Recorder", pModVR);
@@ -295,11 +299,13 @@ void VRScriptManager::initPyModules() {
     registerModule<VRPyMenu>("Menu", pModVR, VRPyGeometry::typeRef);
     registerModule<VRPyClipPlane>("ClipPlane", pModVR, VRPyGeometry::typeRef);
 	registerModule<VRPyColorChooser>("ColorChooser", pModVR);
+	registerModule<VRPyTextureRenderer>("TextureRenderer", pModVR, VRPyObject::typeRef);
     registerModule<VRPyCaveKeeper>("CaveKeeper", pModVR);
     registerModule<VRPyCarDynamics>("CarDynamics", pModVR);
     registerModule<VRPyCEF>("CEF", pModVR);
     registerModule<VRPyWebCam>("Webcam", pModVR, VRPySprite::typeRef);
     registerModule<VRPySegmentation>("Segmentation", pModVR);
+    registerModule<VRPyAdjacencyGraph>("AdjacencyGraph", pModVR);
     registerModule<VRPyMechanism>("Mechanism", pModVR);
     registerModule<VRPyNumberingEngine>("NumberingEngine", pModVR, VRPyGeometry::typeRef);
     registerModule<VRPyTree>("Tree", pModVR, VRPyGeometry::typeRef);

@@ -1,4 +1,5 @@
 #include "VRSegmentation.h"
+#include "VRAdjacencyGraph.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/math/Octree.h"
@@ -12,6 +13,100 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 VRSegmentation::VRSegmentation() {}
+
+void VRSegmentation::removeDuplicates(VRGeometryPtr geo) {
+    if (geo == 0) return;
+    if (geo->getMesh() == 0) return;
+
+    GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
+    GeoVec3fPropertyRecPtr norms = GeoVec3fProperty::create();
+    GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
+    GeoUInt32PropertyRecPtr lengths = GeoUInt32Property::create();
+	size_t curIndex = 0;
+	float threshold = 1e-4;
+	size_t NLM = numeric_limits<size_t>::max();
+	Octree oct(threshold);
+
+	TriangleIterator it(geo->getMesh());
+	for (; !it.isAtEnd() ;++it) {
+        vector<size_t> IDs(3);
+        for (int i=0; i<3; i++) {
+            Pnt3f p = it.getPosition(i);
+            vector<void*> resultData = oct.radiusSearch(p.x(), p.y(), p.z(), threshold);
+            if (resultData.size() > 0) IDs[i] = *(size_t*)resultData.at(0);
+            else IDs[i] = NLM;
+        }
+
+		for (int i=0; i<3; i++) {
+			if (IDs[i] == NLM) {
+                Pnt3f p = it.getPosition(i);
+                Vec3f n = it.getNormal(i);
+				pos->addValue(p);
+				norms->addValue(n);
+				IDs[i] = curIndex;
+				size_t *curIndexPtr = new size_t;
+				*curIndexPtr = curIndex;
+				oct.add(p.x(), p.y(), p.z(), curIndexPtr);
+				curIndex++;
+			}
+		}
+
+		if (IDs[0] == IDs[1] || IDs[0] == IDs[2] || IDs[1] == IDs[2]) continue;
+
+		for (int i=0; i<3; i++) inds->addValue(IDs[i]);
+	}
+
+    lengths->addValue(inds->size());
+	geo->setPositions(pos);
+	geo->setNormals(norms);
+	geo->setIndices(inds);
+	geo->setType(GL_TRIANGLES);
+	geo->setLengths(lengths);
+
+	calcVertexNormals(geo->getMesh());
+
+	for (void* o : oct.getData()) delete (size_t*)o; // Cleanup
+}
+
+
+vector<int> VRSegmentation::growPatch(VRGeometryPtr geo, int i) {
+    auto agraph = VRAdjacencyGraph::create();
+    agraph->setGeometry(geo);
+    agraph->compNeighbors();
+    agraph->compCurvatures();
+
+    auto pos = geo->getMesh()->getPositions();
+    auto norms = geo->getMesh()->getNormals();
+
+    /*auto samePlane = [&](int i0, int i1, float dp, float dn) {
+		p0 = pos[i0]
+		p1 = pos[i1]
+		n0 = norms[i0]
+		n1 = norms[i1]
+		d0 = p0[0]*n0[0]+p0[1]*n0[1]+p0[2]*n0[2]
+		d1 = p1[0]*n1[0]+p1[1]*n1[1]+p1[2]*n1[2]
+		n = n0[0]*n1[0]+n0[1]*n1[1]+n0[2]*n1[2]
+		return abs(d1-d0) < dp and n > dn
+    }
+
+	auto planeCrawl = [&](inds, i0, plane, mask) {
+		pool = inds[:]
+		for i in inds: pool += agraph.getNeighbors(i)
+
+		d = 0.1
+		for p in pool:
+			if samePlane(i0, p, d, 1-d):
+				if mask[p] == 1: continue
+				plane.append(p)
+				mask[p] = 1
+				planeCrawl([p], i0, plane, mask)
+
+		return plane
+	}*/
+}
+
+
+//--------------------- hough transform approach -----------------------------------//
 
 struct VRPlane {
     Vec3f data; // theta, phi, rho
@@ -43,7 +138,6 @@ struct VRPlane {
         return pl[0]*p[0]+pl[1]*p[1]+pl[2]*p[2]+pl[3];
     }
 };
-
 
 Vec3f randC() {return Vec3f(0.5+0.5*rand()/RAND_MAX, 0.5+0.5*rand()/RAND_MAX, 0.5+0.5*rand()/RAND_MAX); }
 
@@ -326,63 +420,10 @@ VRObjectPtr VRSegmentation::extractPatches(VRGeometryPtr geo, SEGMENTATION_ALGOR
     return anchor;
 }
 
-void VRSegmentation::removeDuplicates(VRGeometryPtr geo) {
-    if (geo == 0) return;
-    if (geo->getMesh() == 0) return;
-
-    GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
-    GeoVec3fPropertyRecPtr norms = GeoVec3fProperty::create();
-    GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
-    GeoUInt32PropertyRecPtr lengths = GeoUInt32Property::create();
-	size_t curIndex = 0;
-	float threshold = 1e-4;
-	size_t NLM = numeric_limits<size_t>::max();
-	Octree oct(threshold);
-
-	TriangleIterator it(geo->getMesh());
-	for (; !it.isAtEnd() ;++it) {
-        vector<size_t> IDs(3);
-        for (int i=0; i<3; i++) {
-            Pnt3f p = it.getPosition(i);
-            vector<void*> resultData = oct.radiusSearch(p.x(), p.y(), p.z(), threshold);
-            if (resultData.size() > 0) IDs[i] = *(size_t*)resultData.at(0);
-            else IDs[i] = NLM;
-        }
-
-		for (int i=0; i<3; i++) {
-			if (IDs[i] == NLM) {
-                Pnt3f p = it.getPosition(i);
-                Vec3f n = it.getNormal(i);
-				pos->addValue(p);
-				norms->addValue(n);
-				IDs[i] = curIndex;
-				size_t *curIndexPtr = new size_t;
-				*curIndexPtr = curIndex;
-				oct.add(p.x(), p.y(), p.z(), curIndexPtr);
-				curIndex++;
-			}
-		}
-
-		if (IDs[0] == IDs[1] || IDs[0] == IDs[2] || IDs[1] == IDs[2]) continue;
-
-		for (int i=0; i<3; i++) inds->addValue(IDs[i]);
-	}
-
-    lengths->addValue(inds->size());
-	geo->setPositions(pos);
-	geo->setNormals(norms);
-	geo->setIndices(inds);
-	geo->setType(GL_TRIANGLES);
-	geo->setLengths(lengths);
-
-	calcVertexNormals(geo->getMesh());
-
-	for (void* o : oct.getData()) delete (size_t*)o; // Cleanup
-}
-
 //#include "addons/Engineering/CSG/CGALTypedefs.h"
 //#include "addons/Engineering/CSG/PolyhedronBuilder.h"
 
+//--------------------- hole filling -----------------------------------//
 
 Edge::Edge() {
     vertices = vector<Vertex*>(2,0);
@@ -515,7 +556,19 @@ void Border::add(Vertex* v, bool prepend) {
 void VRSegmentation::fillHoles(VRGeometryPtr geo, int steps) {
     if (geo == 0) return;
     if (geo->getMesh() == 0) return;
-    // TODO: check if type is GL_TRIANGLES and just one length!
+
+    /*auto agraph = VRAdjacencyGraph::create();
+    agraph->setGeometry(geo);
+    agraph->compute();
+
+    vector<int> borderEdges = agraph->getBorderVertices();
+    map<int, int> borders;
+
+    for (int i=0; i<borderEdges.size()/2; i++) {
+        int ev0 = borderEdges[2*i+0];
+        int ev1 = borderEdges[2*i+1];
+        ;
+    }*/
 
     vector<Triangle*> triangles;
     map<int, Vertex*> vertices;

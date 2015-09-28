@@ -41,6 +41,8 @@ class VRGtkWindow : public VRWindow {
         PassiveWindowRecPtr getOSGWindow();
         void render();
 
+        void setCursor(string c);
+
         void save(xmlpp::Element* node);
         void load(xmlpp::Element* node);
 };
