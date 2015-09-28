@@ -93,7 +93,7 @@ void VRAdjacencyGraph::compCurvatures(int range) {
 		for (int j : Ne) {
 			if (j >= N) continue;
 			Vec3f d = pos->getValue<Vec3f>(j) - vi;
-			K += 2*n.dot(d)/d.squareLength();
+			K += 2*n.dot(d)/d.length();
 		}
 
 		K /= Ne.size();

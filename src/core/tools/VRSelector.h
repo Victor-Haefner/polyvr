@@ -18,9 +18,11 @@ class VRSelector {
         Vec3f color;
 
         map<VRGeometry*, VRMaterial*> orig_mats;
-        VRObject* selection = 0;
-
         VRMaterial* getMat();
+
+        VRObject* selection = 0;
+        bool hasSubselection = false;
+        map<int, int> subselection;
 
         void deselect();
 
@@ -28,7 +30,11 @@ class VRSelector {
         VRSelector();
 
         void select(VRObject* obj);
-        VRObject* get();
+        VRObject* getSelection();
+
+        void subselect(vector<int> verts, bool add);
+        void clearSubselection();
+        vector<int> getSubselection();
 
         void setColor(Vec3f c);
 };

@@ -37,6 +37,7 @@ void VRSelector::setColor(Vec3f c) { color = c; }
 
 void VRSelector::deselect() {
     if (selection == 0) return;
+    clearSubselection();
 
     vector<VRGeometry*> geos;
     if (selection->hasAttachment("geometry")) geos.push_back((VRGeometry*)selection);
@@ -79,6 +80,25 @@ void VRSelector::select(VRObject* obj) {
     }
 }
 
-VRObject* VRSelector::get() { return selection; }
+VRObject* VRSelector::getSelection() { return selection; }
+
+void VRSelector::subselect(vector<int> verts, bool add) {
+    hasSubselection = true;
+    if (add) for (auto &v : verts) subselection[v] = 1;
+    else for (auto &v : verts) subselection.erase(v);
+}
+
+vector<int> VRSelector::getSubselection() {
+    auto res = vector<int>();
+    if (!hasSubselection) return res;
+    res.reserve(subselection.size());
+    for (auto &s : subselection) res.push_back( s.first );
+    return res;
+}
+
+void VRSelector::clearSubselection() {
+    subselection.clear();
+    hasSubselection = false;
+}
 
 OSG_END_NAMESPACE;
