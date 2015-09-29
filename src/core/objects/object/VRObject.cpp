@@ -401,7 +401,7 @@ VRObjectPtr VRObject::duplicate(bool anchor) {
 }
 
 void VRObject::destroy() {
-    for (auto c : children) c->detach();
+    for (auto c : children) if(c) c->detach();
     if (parent) parent->subChild( ptr() );
 
     NodeRecPtr p;

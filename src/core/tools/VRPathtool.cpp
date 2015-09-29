@@ -53,9 +53,16 @@ path* VRPathtool::newPath(VRDevice* dev, VRObjectPtr anchor, int resolution) {
 }
 
 VRGeometryPtr VRPathtool::newHandle() {
-    VRGeometryPtr h = VRGeometry::create("handle");
+    VRGeometryPtr h;
+    if (customHandle) {
+        h = static_pointer_cast<VRGeometry>( customHandle->duplicate() );
+    } else {
+        h = VRGeometry::create("handle");
+        h->setPrimitive("Torus", "0.04 0.15 3 4");
+    }
+
     h->setPickable(true);
-    h->setPrimitive("Torus", "0.04 0.15 3 4");
+    h->addAttachment("handle", 0);
     h->setMaterial(VRMaterial::get("pathHandle"));
     h->getMaterial()->setDiffuse(Vec3f(0.5,0.5,0.9));
     //calcFaceNormals(h->getMesh()); // not working ??
@@ -111,12 +118,20 @@ VRGeometryPtr VRPathtool::extrude(VRDevice* dev, path* p) {
     return h;
 }
 
+void VRPathtool::setHandleGeometry(VRGeometryPtr geo) {
+    customHandle = static_pointer_cast<VRGeometry>( geo->duplicate() );
+}
+
 void VRPathtool::clear(path* p) {
     if (paths.count(p) == 0) return;
     entry* e = paths[p];
 
-    for (auto h : e->handles) handles_dict.erase(h.first);
+    for (auto h : e->handles) {
+        handles_dict.erase(h.first);
+        h.first->destroy();
+    }
     e->handles.clear();
+    if (e->line) e->line->destroy();
     e->line = 0;
 
     p->clear();

@@ -41,7 +41,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRTree>::type = {
     0,                         /* tp_dictoffset */
     (initproc)init,      /* tp_init */
     0,                         /* tp_alloc */
-    New_VRObjects_unnamed,                 /* tp_new */
+    New_VRObjects_unnamed_ptr,                 /* tp_new */
 };
 
 PyMethodDef VRPyTree::methods[] = {
@@ -54,6 +54,6 @@ PyObject* VRPyTree::setup(VRPyTree* self, PyObject* args) {
     float d,e,f,g,h,i,j,k;
     if (! PyArg_ParseTuple(args, "iiiffffffff", &a, &b, &c, &d, &e, &f, &g, &h, &i, &j, &k)) return NULL;
 
-    self->obj->setup( a,b,c, d,e,f,g, h,i,j,k );
+    self->objPtr->setup( a,b,c, d,e,f,g, h,i,j,k );
     Py_RETURN_TRUE;
 }

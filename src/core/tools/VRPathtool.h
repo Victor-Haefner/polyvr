@@ -120,6 +120,7 @@ class VRPathtool {
         VRManipulator* manip = 0;
         VRExtruder* ext = 0;
 
+        VRGeometryPtr customHandle;
         VRGeometryPtr newHandle();
         void updateHandle(VRGeometryPtr handle);
         void updateDevs();
@@ -133,6 +134,7 @@ class VRPathtool {
 
         void addPath(path* p, VRObjectPtr anchor);
         void setVisible(bool handles, bool lines);
+        void setHandleGeometry(VRGeometryPtr geo);
         void clear(path* p);
 
         vector<path*> getPaths();

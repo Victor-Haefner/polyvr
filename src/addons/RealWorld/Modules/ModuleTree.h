@@ -57,7 +57,7 @@ namespace realworld {
                             Vec2f pos2D = this->mapCoordinator->realToWorld(Vec2f(node->lat, node->lon));
                             Vec3f pos3D = Vec3f(pos2D.getValues()[0], this->mapCoordinator->getElevation(pos2D), pos2D.getValues()[1]);
 
-                            VRTree* tree = new VRTree();
+                            VRTreePtr tree = VRTree::create();
                             tree->setFrom(pos3D);
                             int treeNum = getRandom(node->id);
 

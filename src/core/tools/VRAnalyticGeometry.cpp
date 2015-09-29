@@ -13,9 +13,6 @@ VRAnalyticGeometry::VRAnalyticGeometry() : VRObject("AnalyticGeometry") {
     ae = VRAnnotationEngine::create();
     vectorLinesGeometry = VRGeometry::create("AGLines");
     vectorEndsGeometry = VRGeometry::create("AGPoints");
-    addChild(vectorLinesGeometry);
-    addChild(vectorEndsGeometry);
-    addChild(ae);
 
     // lines
     GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
@@ -52,8 +49,14 @@ VRAnalyticGeometry::VRAnalyticGeometry() : VRObject("AnalyticGeometry") {
 
 VRAnalyticGeometry::~VRAnalyticGeometry() {}
 
-VRAnalyticGeometryPtr VRAnalyticGeometry::create() { return shared_ptr<VRAnalyticGeometry>(new VRAnalyticGeometry() ); }
 VRAnalyticGeometryPtr VRAnalyticGeometry::ptr() { return static_pointer_cast<VRAnalyticGeometry>( shared_from_this() ); }
+VRAnalyticGeometryPtr VRAnalyticGeometry::create() {
+    auto ptr = shared_ptr<VRAnalyticGeometry>(new VRAnalyticGeometry() );
+    ptr->addChild(ptr->vectorLinesGeometry);
+    ptr->addChild(ptr->vectorEndsGeometry);
+    ptr->addChild(ptr->ae);
+    return ptr;
+}
 
 void VRAnalyticGeometry::setLabelSize(float s) { ae->setSize(s); }
 

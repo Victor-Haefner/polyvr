@@ -63,6 +63,11 @@ struct OSG::segment {
 };
 
 
+VRTree::VRTree() : VRGeometry("tree") {}
+
+VRTreePtr VRTree::create() { return shared_ptr<VRTree>(new VRTree() ); }
+VRTreePtr VRTree::ptr() { return static_pointer_cast<VRTree>( shared_from_this() ); }
+
 float VRTree::random (float min, float max) {
     if (max!=min) {
         float c = 1e5;
@@ -150,7 +155,7 @@ void VRTree::initArmatureGeo() {
         texs.push_back(s->params[1]);
     }
 
-    create(GL_LINES, pos, norms, inds, texs);
+    VRGeometry::create(GL_LINES, pos, norms, inds, texs);
 }
 
 void VRTree::testSetup() {
@@ -187,9 +192,4 @@ void VRTree::setup(int branching, int iterations, int seed,
     grow(sp, trunc);
     initArmatureGeo();
     initMaterial();
-}
-
-VRTree::VRTree() : VRGeometry("tree") {
-    trunc = 0;
-    branches = 0;
 }

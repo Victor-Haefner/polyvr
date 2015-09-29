@@ -84,6 +84,7 @@ void VRRobotArm::animOnPath(float t) {
     Vec3f pos, dir, up;
     job.p->getOrientation(t, dir, up);
     pos = job.p->getPosition(t);
+    cout << "animOnPath " << dir << " " << up << endl;
     calcReverseKinematics(pos, dir, up);
     applyAngles();
 }

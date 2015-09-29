@@ -35,6 +35,7 @@ ptrFwd(VRWaypoint);
 ptrFwd(VRBlinds);
 ptrFwd(VROpening);
 ptrFwd(VRMolecule);
+ptrFwd(VRTree);
 ptrFwd(CSGGeometry);
 
 }
