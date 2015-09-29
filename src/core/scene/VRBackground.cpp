@@ -6,6 +6,8 @@
 #include <OpenSG/OSGSolidBackground.h>
 #include <OpenSG/OSGImage.h>
 
+#include <boost/filesystem.hpp>
+
 #include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
 #include "core/utils/toString.h"
@@ -51,21 +53,26 @@ TextureObjChunkRecPtr VRBackgroundBase::createSkyTexture() {
     return chunk;
 }
 
+string normPath(string p) {
+    if (boost::filesystem::exists(p)) return boost::filesystem::canonical(p).string();
+    return p;
+}
+
 void VRBackgroundBase::updateSkyTextures() {
     string tmp;
 
     tmp = path + "_back" + format;
-    skyImgs[0]->read(tmp.c_str());
+    skyImgs[0]->read(normPath(tmp).c_str());
     tmp = path + "_front" + format;
-    skyImgs[1]->read(tmp.c_str());
+    skyImgs[1]->read(normPath(tmp).c_str());
     tmp = path + "_left" + format;
-    skyImgs[2]->read(tmp.c_str());
+    skyImgs[2]->read(normPath(tmp).c_str());
     tmp = path + "_right" + format;
-    skyImgs[3]->read(tmp.c_str());
+    skyImgs[3]->read(normPath(tmp).c_str());
     tmp = path + "_down" + format;
-    skyImgs[4]->read(tmp.c_str());
+    skyImgs[4]->read(normPath(tmp).c_str());
     tmp = path + "_up" + format;
-    skyImgs[5]->read(tmp.c_str());
+    skyImgs[5]->read(normPath(tmp).c_str());
 }
 
 void VRBackgroundBase::initSky() {
@@ -79,7 +86,7 @@ void VRBackgroundBase::initSky() {
 }
 
 void VRBackgroundBase::updateImgTexture() {
-    skyImgs[6]->read(path.c_str());
+    skyImgs[6]->read(normPath(path).c_str());
 }
 
 void VRBackgroundBase::initImg() {
