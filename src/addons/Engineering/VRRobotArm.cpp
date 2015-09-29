@@ -32,12 +32,17 @@ void VRRobotArm::setLengths(vector<float> lengths) { this->lengths = lengths; }
 vector<float> VRRobotArm::getAngles() { return angles; }
 
 void VRRobotArm::applyAngles() {
+    cout << "applyAngles";
     for (int i=0; i<N; i++) {
         Vec3f euler;
         euler[axis[i]] = angle_directions[i]*angles[i] + angle_offsets[i]*Pi;
+        cout << " " << euler[axis[i]];
         parts[i]->setEuler(euler);
     }
+    cout << endl;
 }
+
+float clamp(float f) { return f<-1 ? -1 : f>1 ? 1 : f; }
 
 void VRRobotArm::calcReverseKinematics(Vec3f pos, Vec3f dir, Vec3f up) {
     pos -= dir* lengths[3];
@@ -46,15 +51,17 @@ void VRRobotArm::calcReverseKinematics(Vec3f pos, Vec3f dir, Vec3f up) {
     float r1 = lengths[1];
     float r2 = lengths[2];
     float L = pos.length();
-    float b = acos((L*L-r1*r1-r2*r2)/(-2*r1*r2));
+    float b = acos( clamp( (L*L-r1*r1-r2*r2)/(-2*r1*r2) ) );
     angles[2] = -b + Pi;
 
-    float a = asin(r2*sin(b)/L) + asin(pos[1]/L);
+    float a = asin( clamp( r2*sin(b)/L ) ) + asin( clamp( pos[1]/L ) );
 	angles[1] = a - Pi*0.5;
+	//angles[1] = a;
 
     float f = pos[2] > 0 ? atan(pos[0]/pos[2]) : Pi - atan(-pos[0]/pos[2]);
     angles[0] = f;
 
+    // end effector
     float e = a+b; // counter angle
     Vec3f e0 = Vec3f(cos(-f),0,sin(-f));
     Vec3f av = Vec3f(-cos(e)*sin(f), -sin(e), -cos(e)*cos(f));
@@ -66,6 +73,7 @@ void VRRobotArm::calcReverseKinematics(Vec3f pos, Vec3f dir, Vec3f up) {
     angles[3] = det < 0 ? -acos(e) : acos(e);
     angles[4] = acos( av.dot(dir) );
 
+    // vector visualization
     ageo->setVector(0, pos, dir, Vec3f(0,1,0), "dir");
     ageo->setVector(1, Vec3f(0,0.6,0), e0, Vec3f(1,1,0), "e0");
     ageo->setVector(2, pos, av, Vec3f(1,0,0), "av");
@@ -84,7 +92,6 @@ void VRRobotArm::animOnPath(float t) {
     Vec3f pos, dir, up;
     job.p->getOrientation(t, dir, up);
     pos = job.p->getPosition(t);
-    cout << "animOnPath " << dir << " " << up << endl;
     calcReverseKinematics(pos, dir, up);
     applyAngles();
 }
@@ -92,6 +99,13 @@ void VRRobotArm::animOnPath(float t) {
 void VRRobotArm::addJob(job j) {
     job_queue.push_back(j);
     if (!anim->isActive()) anim->start();
+}
+
+void VRRobotArm::move() {}
+void VRRobotArm::pause() {}
+void VRRobotArm::stop() {
+    job_queue.clear();
+    anim->stop();
 }
 
 void VRRobotArm::setAngles(vector<float> angles) {
@@ -119,6 +133,7 @@ void VRRobotArm::getPose(Vec3f& pos, Vec3f& dir, Vec3f& up) {
 }
 
 void VRRobotArm::moveTo(Vec3f pos, Vec3f dir, Vec3f up) {
+    stop();
     Vec3f cpos, cdir, cup;
     getPose(cpos, cdir, cup);
 

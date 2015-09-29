@@ -55,8 +55,10 @@ PyMethodDef VRPyRobotArm::methods[] = {
     {"moveTo", (PyCFunction)VRPyRobotArm::moveTo, METH_VARARGS, "Move the end effector to a certain position - moveTo([x,y,z])" },
     {"setGrab", (PyCFunction)VRPyRobotArm::setGrab, METH_VARARGS, "Set grab state - setGrab(float d)\n d: 0 is closed, 1 is open" },
     {"toggleGrab", (PyCFunction)VRPyRobotArm::toggleGrab, METH_NOARGS, "Toggle the grab - toggleGrab()" },
-    {"setAngles", (PyCFunction)VRPyRobotArm::setAngles, METH_VARARGS, "Set joint angles - setAngles()" },
+    {"setAngles", (PyCFunction)VRPyRobotArm::setAngles, METH_VARARGS, "Set joint angles - setAngles( angles )" },
     {"getAngles", (PyCFunction)VRPyRobotArm::getAngles, METH_NOARGS, "Get joint angles - getAngles()" },
+    {"getForwardKinematics", (PyCFunction)VRPyRobotArm::getForwardKinematics, METH_VARARGS, "Get end effector pose from angles - p,d,u getForwardKinematics( angles )" },
+    {"getBackwardKinematics", (PyCFunction)VRPyRobotArm::getBackwardKinematics, METH_VARARGS, "Get angles from end effector pose - angles getBackwardKinematics( p,d,u )" },
     {"setPath", (PyCFunction)VRPyRobotArm::setPath, METH_VARARGS, "Set robot path - setPath()" },
     {"getPath", (PyCFunction)VRPyRobotArm::getPath, METH_NOARGS, "Get robot path - getPath()" },
     {"moveOnPath", (PyCFunction)VRPyRobotArm::moveOnPath, METH_VARARGS, "Move robot on internal path - moveOnPath(float t0, float t1, bool loop)" },
@@ -81,6 +83,25 @@ PyObject* VRPyRobotArm::setPath(VRPyRobotArm* self, PyObject* args) {
     VRPyPath* path = 0;
     parseObject(args, path);
     self->obj->setPath( path->obj );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyRobotArm::getForwardKinematics(VRPyRobotArm* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyRobotArm::setAngles - Object is invalid"); return NULL; }
+    auto prts = parseList(args);
+    vector<float> res;
+    for (auto p : prts) res.push_back( PyFloat_AsDouble(p) );
+    //auto pose = self->obj->getForwardKinematics( res );
+    //return VRPyPose::fromObj(pose);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyRobotArm::getBackwardKinematics(VRPyRobotArm* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyRobotArm::setAngles - Object is invalid"); return NULL; }
+    PyObject* pose;
+    if (! PyArg_ParseTuple(args, "O", &pose)) return NULL;
+    //auto pose = self->obj->getForwardKinematics( res );
+    //return VRPyPose::fromObj(pose);
     Py_RETURN_TRUE;
 }
 

@@ -17,6 +17,8 @@ struct VRPyRobotArm : VRPyBaseT<OSG::VRRobotArm> {
     static PyObject* toggleGrab(VRPyRobotArm* self);
     static PyObject* setAngles(VRPyRobotArm* self, PyObject* args);
     static PyObject* getAngles(VRPyRobotArm* self);
+    static PyObject* getForwardKinematics(VRPyRobotArm* self, PyObject* args);
+    static PyObject* getBackwardKinematics(VRPyRobotArm* self, PyObject* args);
     static PyObject* setPath(VRPyRobotArm* self, PyObject* args);
     static PyObject* getPath(VRPyRobotArm* self);
     static PyObject* moveOnPath(VRPyRobotArm* self, PyObject* args);

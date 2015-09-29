@@ -59,12 +59,13 @@ PyMethodDef VRPyTransform::methods[] = {
     {"translate", (PyCFunction)VRPyTransform::translate, METH_VARARGS, "Translate the object along a vector - translate(xf,yf,zf)" },
     {"move", (PyCFunction)VRPyTransform::move, METH_VARARGS, "Move the object - move(d)" },
     {"rotate", (PyCFunction)VRPyTransform::rotate, METH_VARARGS, "Rotate the object around an axis - rotate(xf,yf,zf,af)" },
-    {"getWorldFrom", (PyCFunction)VRPyTransform::getWFrom, METH_NOARGS, "Return the object's world position" },
     {"getFrom", (PyCFunction)VRPyTransform::getFrom, METH_NOARGS, "Return the object's from vector" },
     {"getAt", (PyCFunction)VRPyTransform::getAt, METH_NOARGS, "Return the object's at vector" },
-    {"getWorldDir", (PyCFunction)VRPyTransform::getWorldDir, METH_NOARGS, "Return the object's dir vector" },
     {"getDir", (PyCFunction)VRPyTransform::getDir, METH_NOARGS, "Return the object's dir vector" },
     {"getUp", (PyCFunction)VRPyTransform::getUp, METH_NOARGS, "Return the object's up vector" },
+    {"getWorldFrom", (PyCFunction)VRPyTransform::getWFrom, METH_NOARGS, "Return the object's world position" },
+    {"getWorldDir", (PyCFunction)VRPyTransform::getWorldDir, METH_NOARGS, "Return the object's dir vector" },
+    {"getWorldUp", (PyCFunction)VRPyTransform::getWorldUp, METH_NOARGS, "Return the object's up vector" },
     {"getScale", (PyCFunction)VRPyTransform::getScale, METH_NOARGS, "Return the object's scale vector" },
     {"setWorldFrom", (PyCFunction)VRPyTransform::setWFrom, METH_VARARGS, "Set the object's world position" },
     {"setWorldOrientation", (PyCFunction)VRPyTransform::setWOrientation, METH_VARARGS, "Set the object's world direction" },
@@ -248,6 +249,11 @@ PyObject* VRPyTransform::getDir(VRPyTransform* self) {
 PyObject* VRPyTransform::getWorldDir(VRPyTransform* self) {
     if (!self->valid()) return NULL;
     return toPyTuple(self->objPtr->getWorldDirection());
+}
+
+PyObject* VRPyTransform::getWorldUp(VRPyTransform* self) {
+    if (!self->valid()) return NULL;
+    return toPyTuple(self->objPtr->getWorldUp());
 }
 
 PyObject* VRPyTransform::getUp(VRPyTransform* self) {
