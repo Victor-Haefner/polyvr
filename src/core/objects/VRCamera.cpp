@@ -59,9 +59,7 @@ VRCamera::VRCamera(string name) : VRTransform(name) {
 }
 
 VRCamera::~VRCamera() {
-    getAll().remove( ptr() );
     VRGuiManager::broadcast("camera_added");
-    cam = 0;
 }
 
 VRCameraPtr VRCamera::ptr() { return static_pointer_cast<VRCamera>( shared_from_this() ); }
@@ -84,8 +82,8 @@ void VRCamera::showCamGeo(bool b) {
     else camGeo->setTravMask(0);
 }
 
-list<VRCameraPtr>& VRCamera::getAll() {
-    static list<VRCameraPtr> objs;
+list<VRCameraWeakPtr>& VRCamera::getAll() {
+    static list<VRCameraWeakPtr> objs;
     return objs;
 }
 

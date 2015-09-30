@@ -17,18 +17,47 @@ using namespace std;
 using namespace OSG;
 
 vector< weak_ptr<CEF> > instances;
+bool cef_gl_init = false;
 
-CEF::CEF() {
-    update_callback = VRFunction<int>::create("webkit_update", boost::bind(&CEF::update, this));
-    VRSceneManager::getCurrent()->addUpdateFkt(update_callback);
+CEF_handler::CEF_handler() {
     image = Image::create();
 }
 
+bool CEF_handler::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
+    rect = CefRect(0, 0, width, height);
+    return true;
+}
+
+void CEF_handler::OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList& dirtyRects, const void* buffer, int width, int height) {
+    image->set(Image::OSG_BGRA_PF, width, height, 1, 0, 1, 0.0, (const uint8_t*)buffer, Image::OSG_UINT8_IMAGEDATA, true, 1);
+}
+
+OSG::ImageRecPtr CEF_handler::getImage() { return image; }
+
+void CEF_handler::resize(int resolution, float aspect) {
+    width = resolution;
+    height = width/aspect;
+}
+
+CEF_client::CEF_client() {
+    handler = new CEF_handler();
+}
+
+CefRefPtr<CefRenderHandler> CEF_client::GetRenderHandler() { return handler; }
+CefRefPtr<CEF_handler> CEF_client::getHandler() { return handler; }
+
+CEF::CEF() {
+    client = new CEF_client();
+    update_callback = VRFunction<int>::create("webkit_update", boost::bind(&CEF::update, this));
+    VRSceneManager::getCurrent()->addUpdateFkt(update_callback);
+}
+
 CEF::~CEF() {
+    browser = 0;
     cout << "CEF destroyed " << this << endl;
 }
 
-void CEF::shutdown() { CefShutdown(); }
+void CEF::shutdown() { if (!cef_gl_init) return; cout << "CEF shutdown\n"; CefShutdown(); }
 
 CEFPtr CEF::create() {
     auto cef = CEFPtr(new CEF());
@@ -41,6 +70,8 @@ void CEF::initiate() {
 
     static bool global_init = false;
     if (!global_init) {
+        cout << "Global CEF init\n";
+        cef_gl_init = true;
         CefSettings settings;
 #ifndef _WIN32
         string bsp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/CefSubProcess";
@@ -65,11 +96,15 @@ void CEF::initiate() {
     CefBrowserSettings browser_settings;
 
     win.SetAsWindowless(0, true);
-    browser = CefBrowserHost::CreateBrowserSync(win, this, "www.google.de", browser_settings, 0);
+    browser = CefBrowserHost::CreateBrowserSync(win, client, "www.google.de", browser_settings, 0);
 }
 
-void CEF::setMaterial(VRMaterialPtr mat) { if (mat) { this->mat = mat; mat->setTexture(image); } }
-CefRefPtr<CefRenderHandler> CEF::GetRenderHandler() { return this; }
+void CEF::setMaterial(VRMaterialPtr mat) {
+    if (!mat) return;
+    this->mat = mat;
+    mat->setTexture(client->getHandler()->getImage());
+}
+
 string CEF::getSite() { return site; }
 void CEF::reload() { browser->Reload(); }
 
@@ -84,7 +119,7 @@ void CEF::open(string site) {
 }
 
 void CEF::resize() {
-    height = width/aspect;
+    client->getHandler()->resize(resolution, aspect);
     if (init) browser->GetHost()->WasResized();
     if (init) reload();
 }
@@ -103,19 +138,10 @@ void CEF::reloadScripts(string path) {
     }
 }
 
-void CEF::setResolution(float a) { width = a; resize(); }
+void CEF::setResolution(float a) { resolution = a; resize(); }
 void CEF::setAspectRatio(float a) { aspect = a; resize(); }
 
-// inherited CEF callbacks:
-
-bool CEF::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
-    rect = CefRect(0, 0, width, height);
-    return true;
-}
-
-void CEF::OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList& dirtyRects, const void* buffer, int width, int height) {
-    image->set(Image::OSG_BGRA_PF, width, height, 1, 0, 1, 0.0, (const uint8_t*)buffer, Image::OSG_UINT8_IMAGEDATA, true, 1);
-}
+// dev callbacks:
 
 void CEF::addMouse(VRDevice* dev, VRObjectWeakPtr obj, int lb, int rb, int wu, int wd) {
     if (dev == 0 || obj.lock() == 0) return;
@@ -146,8 +172,8 @@ void CEF::mouse_move(VRDevice* dev, int i) {
     if (ins.object.lock() != geo) return;
 
     CefMouseEvent me;
-    me.x = ins.texel[0]*width;
-    me.y = ins.texel[1]*height;
+    me.x = ins.texel[0]*resolution;
+    me.y = ins.texel[1]*(resolution/aspect);
     browser->GetHost()->SendMouseMoveEvent(me, dev->b_state(dev->key()));
 }
 
@@ -184,6 +210,9 @@ void CEF::mouse(int lb, int rb, int wu, int wd, VRDevice* dev) {
     if (!ins.hit) { host->SendFocusEvent(false); focus = false; return; }
     if (iobj != geo) { host->SendFocusEvent(false); focus = false; return; }
     host->SendFocusEvent(true); focus = true;
+
+    int width = resolution;
+    int height = resolution/aspect;
 
     CefMouseEvent me;
     me.x = ins.texel[0]*width;

@@ -12,7 +12,7 @@ using namespace std;
 
 class VRCameraManager {
     private:
-        VRCameraPtr active = 0;
+        VRCameraWeakPtr active;
 
     public:
         VRCameraManager();

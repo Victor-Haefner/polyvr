@@ -183,7 +183,7 @@ void VRScene::showReferentials(bool b, VRObjectPtr o) {
 }
 
 void VRScene::showLights(bool b) { for (auto be : VRLightBeacon::getAll()) be->showLightGeo(b); }
-void VRScene::showCameras(bool b) { for (auto c : VRCamera::getAll()) c->showCamGeo(b); }
+void VRScene::showCameras(bool b) { for (auto c : VRCamera::getAll()) if (auto sp = c.lock()) sp->showCamGeo(b); }
 
 void VRScene::update() {
     //Vec3f min,max;

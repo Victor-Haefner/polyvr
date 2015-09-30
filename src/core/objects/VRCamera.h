@@ -51,7 +51,7 @@ class VRCamera : public VRTransform {
 
         void showCamGeo(bool b);
 
-        static list<VRCameraPtr>& getAll();
+        static list<VRCameraWeakPtr>& getAll();
         static vector<string> getProjectionTypes();
 };
 

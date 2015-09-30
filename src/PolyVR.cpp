@@ -3,6 +3,7 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/setup/VRSetupManager.h"
 #include "core/utils/VRInternalMonitor.h"
+#include "core/utils/coreDumpHandler.h"
 #include "core/gui/VRGuiManager.h"
 #include "core/networking/VRMainInterface.h"
 #include "core/utils/VROptions.h"
@@ -14,21 +15,7 @@
 #include <OpenSG/OSGNameAttachment.h>
 #include <OpenSG/OSGNode.h>
 #include <GL/glut.h>
-#include <signal.h>
 
-#ifndef _WIN32
-extern "C" void coreDump(int sig) {
-    auto mgr = OSG::VRSceneManager::get();
-    string path = mgr->getOriginalWorkdir();
-    cout << "\n dump core to " << path << "/core" << endl;
-    mgr->setWorkdir(path);
-
-    //kill(getpid(), sig);
-    //abort();
-    //raise(SIGABRT);
-    kill(getpid(), SIGABRT);
-}
-#endif
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -62,12 +49,8 @@ void printFieldContainer() {
 
 void initPolyVR(int argc, char **argv) {
     cout << "Init PolyVR\n\n";
+    enableCoreDump(true);
     setlocale(LC_ALL, "C");
-
-#ifndef _WIN32
-    signal(SIGSEGV, &coreDump);
-    signal(SIGFPE, &coreDump);
-#endif
 
     //Options
     VROptions::get()->parse(argc,argv);

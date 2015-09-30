@@ -18,24 +18,30 @@ VRTransformPtr VRCameraManager::addCamera(string name) {
 
 VRCameraPtr VRCameraManager::getCamera(int ID) {
     int i=0;
-    for (auto c : VRCamera::getAll()) { if (i == ID) return c; i++; }
+    for (auto c : VRCamera::getAll()) { if (i == ID) return c.lock(); i++; }
     return 0;
 }
 
 void VRCameraManager::setMActiveCamera(string cam) {
-    for (auto c : VRCamera::getAll()) { if (c->getName() == cam) active = c; }
+    for (auto c : VRCamera::getAll()) {
+        if (auto sp = c.lock()) if (sp->getName() == cam) active = sp;
+    }
 }
 
 VRCameraPtr VRCameraManager::getActiveCamera() {
-    return active;
+    return active.lock();
 }
 
 int VRCameraManager::getActiveCameraIndex() {
     int i=0;
-    for (auto c : VRCamera::getAll()) { if (c == active) return i; i++; }
+    for (auto c : VRCamera::getAll()) { if (c.lock() == active.lock()) return i; i++; }
     return -1;
 }
 
-vector<string> VRCameraManager::getCameraNames() { vector<string> res; for(auto c : VRCamera::getAll()) res.push_back(c->getName()); return res; }
+vector<string> VRCameraManager::getCameraNames() {
+    vector<string> res;
+    for(auto c : VRCamera::getAll()) { if (auto sp = c.lock()) res.push_back(sp->getName()); }
+    return res;
+}
 
 OSG_END_NAMESPACE;
