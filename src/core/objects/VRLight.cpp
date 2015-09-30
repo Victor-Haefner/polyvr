@@ -85,10 +85,10 @@ void VRLight::setType(string type) {
 
 void VRLight::setBeacon(VRLightBeaconPtr b) {
     beacon = b;
-    beacon->setLight( ptr() );
-    d_light->setBeacon(beacon->getNode());
-    p_light->setBeacon(beacon->getNode());
-    s_light->setBeacon(beacon->getNode());
+    b->setLight( ptr() );
+    d_light->setBeacon(b->getNode());
+    p_light->setBeacon(b->getNode());
+    s_light->setBeacon(b->getNode());
 }
 
 void VRLight::setLightDiffColor(Color4f c) {
@@ -226,7 +226,7 @@ vector<string> VRLight::getTypeParameter(string type) {
 
 // IDEE: licht sucht ob beacon schon da ist, danach sucht beacon ob licht schon da ist.. je nachdem wer wann erstellt wird..
 
-VRLightBeaconPtr VRLight::getBeacon() { return beacon; }
+VRLightBeaconWeakPtr VRLight::getBeacon() { return beacon; }
 
 void VRLight::setPointlight() { switchCore(p_light); }
 void VRLight::setSpotlight() { switchCore(s_light); }

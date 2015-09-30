@@ -18,8 +18,8 @@ class VRGroup : public VRObject {
     private:
         string group;
         bool active;
-        static map<string, vector<VRGroupPtr>* > groups;
-        static map<string, VRObjectPtr > templates;
+        static map<string, vector<VRGroupWeakPtr> > groups;
+        static map<string, VRObjectWeakPtr > templates;
 
         VRObjectPtr copy(vector<VRObjectPtr> children);
 
@@ -52,7 +52,7 @@ class VRGroup : public VRObject {
         static vector<string> getGroups();
         static void clearGroups();
 
-        vector<VRGroupPtr>* getGroupObjects();
+        vector<VRGroupWeakPtr> getGroupObjects();
 };
 
 OSG_END_NAMESPACE;

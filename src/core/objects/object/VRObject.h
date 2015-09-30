@@ -42,7 +42,7 @@ class VRGlobals {
 class VRObject : public enable_shared_from_this<VRObject>, public VRName, public VRStorage {
     private:
         bool specialized = false;
-        VRObjectPtr parent = 0;
+        VRObjectWeakPtr parent;
         NodeRecPtr node;
         int ID = 0;
         int childIndex = 0; // index of this object in its parent child vector

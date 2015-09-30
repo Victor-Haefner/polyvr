@@ -5,8 +5,8 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-map<string, vector<VRGroupPtr>* > VRGroup::groups = map<string, vector<VRGroupPtr>* >();
-map<string, VRObjectPtr > VRGroup::templates = map<string, VRObjectPtr >();
+map<string, vector<VRGroupWeakPtr> > VRGroup::groups = map<string, vector<VRGroupWeakPtr> >();
+map<string, VRObjectWeakPtr > VRGroup::templates = map<string, VRObjectWeakPtr >();
 
 void VRGroup::saveContent(xmlpp::Element* e) {
     VRObject::saveContent(e);
@@ -38,53 +38,58 @@ VRObjectPtr VRGroup::copy(vector<VRObjectPtr> children) {
     return g;
 }
 
-/** Returns the group **/
 void VRGroup::setGroup(string g) {
     if (group == g) return;
 
     // remove from old group!!
     if (groups.count(group) == 1) {
-        vector<VRGroupPtr>* v = groups[group];
-        v->erase(std::remove(v->begin(), v->end(), ptr()), v->end());
+        for (auto gr : groups[group]) {
+            if (auto sp = gr.lock()) if (sp == ptr()) gr.reset();
+        }
     }
 
     // add to new group
     group = g;
-    if (groups.count(g) == 0) groups[g] = new vector<VRGroupPtr>();
-    groups[g]->push_back(ptr());
+    if (groups.count(g) == 0) groups[g] = vector<VRGroupWeakPtr>();
+    groups[g].push_back( ptr() );
 }
 
 string VRGroup::getGroup() { return group; }
 
 void VRGroup::sync() {
     if (templates.count(group) == 0) return;
+    auto tmp = templates[group].lock();
+    if (tmp == 0) return;
 
     clearChildren();
 
-    for (uint i=0; i<templates[group]->getChildrenCount(); i++)
-        addChild(templates[group]->getChild(i)->duplicate());
+    for (uint i=0; i<tmp->getChildrenCount(); i++)
+        addChild(tmp->getChild(i)->duplicate());
 }
 
 void VRGroup::apply() {
     templates[group] = VRObject::create("Group_anchor");
-    for (uint i=0; i<getChildrenCount(); i++)
-        templates[group]->addChild(getChild(i)->duplicate());
+    auto tmp = templates[group].lock();
+    if (tmp == 0) return;
 
-    for (uint i=0; i< groups[group]->size(); i++) {
-        VRGroupPtr g = groups[group]->at(i);
+    for (uint i=0; i<getChildrenCount(); i++)
+        tmp->addChild(getChild(i)->duplicate());
+
+    for (uint i=0; i< groups[group].size(); i++) {
+        VRGroupPtr g = groups[group][i].lock();
+        if (g == 0) continue;
         if (g->getActive()) g->sync();
     }
 }
 
 vector<string> VRGroup::getGroups() {
     vector<string> v;
-    map<string, vector<VRGroupPtr>* >::iterator itr;
-    for (itr = groups.begin(); itr != groups.end(); itr++) v.push_back(itr->first);
+    for (auto g : groups) v.push_back(g.first);
     return v;
 }
 
-vector<VRGroupPtr>* VRGroup::getGroupObjects() {
-    if (groups.count(group) == 0) return 0;
+vector<VRGroupWeakPtr> VRGroup::getGroupObjects() {
+    if (groups.count(group) == 0) return vector<VRGroupWeakPtr>();
     else return groups[group];
 }
 

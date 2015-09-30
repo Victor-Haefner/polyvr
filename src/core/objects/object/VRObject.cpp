@@ -18,20 +18,6 @@ VRGlobals* VRGlobals::get() {
     return s;
 }
 
-VRObjectPtr VRObject::create(string name) { return shared_ptr<VRObject>(new VRObject(name) ); }
-
-VRObjectPtr VRObject::ptr() { return shared_from_this(); }
-
-void VRObject::printInformation() {;}
-
-VRObjectPtr VRObject::copy(vector<VRObjectPtr> children) {
-    VRObjectPtr o = VRObject::create(getBaseName());
-    if (specialized) o->setCore(getCore(), getType());
-    o->setVisible(visible);
-    o->setPickable(pickable);
-    return o;
-}
-
 VRObject::VRObject(string _name) {
     static int _ID = 0;
     ID = _ID;
@@ -45,7 +31,32 @@ VRObject::VRObject(string _name) {
 }
 
 VRObject::~VRObject() {
-    destroy();
+    cout << "~VRObject " << name << endl;
+    NodeRecPtr p;
+    if (node !=  0) p = node->getParent();
+    if (p !=  0) p->subChild(node);
+}
+
+void VRObject::destroy() {
+    auto p = ptr();
+    for (auto c : children) if(c) c->detach();
+    if (getParent()) getParent()->subChild( ptr() );
+    cout << "destroy " << name << " " << p.use_count() << endl;
+}
+
+VRObjectPtr VRObject::create(string name) { return shared_ptr<VRObject>(new VRObject(name) ); }
+VRObjectPtr VRObject::ptr() {
+    return shared_from_this();
+}
+
+void VRObject::printInformation() {;}
+
+VRObjectPtr VRObject::copy(vector<VRObjectPtr> children) {
+    VRObjectPtr o = VRObject::create(getBaseName());
+    if (specialized) o->setCore(getCore(), getType());
+    o->setVisible(visible);
+    o->setPickable(pickable);
+    return o;
 }
 
 int VRObject::getID() { return ID; }
@@ -63,8 +74,8 @@ vector<VRObjectPtr> VRObject::getChildrenWithAttachment(string name) {
 
 VRObjectPtr VRObject::hasAncestorWithAttachment(string name) {
     if (hasAttachment(name)) return ptr();
-    if (parent == 0) return 0;
-    return parent->hasAncestorWithAttachment(name);
+    if (getParent() == 0) return 0;
+    return getParent()->hasAncestorWithAttachment(name);
 }
 
 void VRObject::setCore(NodeCoreRecPtr c, string _type, bool force) {
@@ -94,11 +105,11 @@ void VRObject::switchCore(NodeCoreRecPtr c) {
 NodeRecPtr VRObject::getNode() { return node; }
 
 void VRObject::setSiblingPosition(int i) {
+    auto parent = getParent();
     if (parent == 0) return;
     if (i < 0 || i >= (int)parent->children.size()) return;
 
     NodeRecPtr p = parent->getNode();
-
     p->subChild(getNode());
     p->insertChild(i, getNode());
 
@@ -116,7 +127,7 @@ void VRObject::addChild(VRObjectPtr child, bool osg, int place) {
     child->graphChanged = VRGlobals::get()->CURRENT_FRAME;
     child->childIndex = children.size();
     children.push_back(child);
-    child->parent=ptr();
+    child->parent = ptr();
     child->setSiblingPosition(place);
     updateChildrenIndices(true);
 }
@@ -130,7 +141,7 @@ void VRObject::subChild(VRObjectPtr child, bool osg) {
     int target = findChild(child);
 
     if (target != -1) children.erase(children.begin() + target);
-    if (child->parent == ptr()) child->parent = 0;
+    if (child->getParent() == ptr()) child->parent.reset();
     child->graphChanged = VRGlobals::get()->CURRENT_FRAME;
     updateChildrenIndices(true);
 }
@@ -138,10 +149,10 @@ void VRObject::subChild(VRObjectPtr child, bool osg) {
 void VRObject::switchParent(VRObjectPtr new_p, int place) {
     if (new_p == 0) { cout << "\nERROR : new parent is 0!\n"; return; }
 
-    if (parent == 0) { new_p->addChild(ptr(), true, place); return; }
-    if (parent == new_p && place == childIndex) { return; }
+    if (getParent() == 0) { new_p->addChild(ptr(), true, place); return; }
+    if (getParent() == new_p && place == childIndex) { return; }
 
-    parent->subChild(ptr(), true);
+    getParent()->subChild(ptr(), true);
     new_p->addChild(ptr(), true, place);
 }
 
@@ -161,9 +172,9 @@ void VRObject::clearChildren() {
 }
 
 void VRObject::detach() {
-    if (parent == 0) return;
-    parent->subChild(ptr(), true);
-    parent = 0;
+    if (getParent() == 0) return;
+    getParent()->subChild(ptr(), true);
+    parent.reset();
 }
 
 VRObjectPtr VRObject::getChild(int i) {
@@ -172,7 +183,7 @@ VRObjectPtr VRObject::getChild(int i) {
 }
 
 /** Returns the parent of ptr() object **/
-VRObjectPtr VRObject::getParent() { return parent; }
+VRObjectPtr VRObject::getParent() { return parent.lock(); }
 
 VRObjectPtr VRObject::getAtPath(string path) {
     vector<int> pvec;
@@ -269,7 +280,7 @@ VRObjectPtr VRObject::find(int id) {
 
 VRObjectPtr VRObject::getRoot() {
     VRObjectPtr o = ptr();
-    while (o->parent) o = o->parent;
+    while (o->getParent()) o = o->getParent();
     return o;
 }
 
@@ -284,20 +295,20 @@ vector<VRObjectPtr> VRObject::filterByType(string Type, vector<VRObjectPtr> res)
 VRObjectPtr VRObject::findPickableAncestor() {
     if (pickable == -1) return 0;
     if (isPickable()) return ptr();
-    else if (parent == 0) return 0;
-    else return parent->findPickableAncestor();
+    else if (getParent() == 0) return 0;
+    else return getParent()->findPickableAncestor();
 }
 
 bool VRObject::hasGraphChanged() {
     if (graphChanged == VRGlobals::get()->CURRENT_FRAME) return true;
-    if (parent == 0) return false;
-    return parent->hasGraphChanged();
+    if (getParent() == 0) return false;
+    return getParent()->hasGraphChanged();
 }
 
 bool VRObject::hasAncestor(VRObjectPtr a) {
     if (ptr() == a) return true;
-    if (parent == a) return true;
-    if (parent != 0) return parent->hasAncestor(a);
+    if (getParent() == a) return true;
+    if (getParent() != 0) return getParent()->hasAncestor(a);
     else return false;
 }
 
@@ -396,17 +407,8 @@ VRObjectPtr VRObject::duplicate(bool anchor) {
     for (uint i=0; i<children.size();i++)
         o->addChild(children[i]); // append children
 
-    if (anchor && parent) parent->addChild(o);
+    if (anchor && getParent()) getParent()->addChild(o);
     return o;
-}
-
-void VRObject::destroy() {
-    for (auto c : children) if(c) c->detach();
-    if (parent) parent->subChild( ptr() );
-
-    NodeRecPtr p;
-    if (node !=  0) p = node->getParent();
-    if (p !=  0) p->subChild(node);
 }
 
 void VRObject::updateChildrenIndices(bool recursive) {

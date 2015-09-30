@@ -760,6 +760,7 @@ void VRTransform::loadContent(xmlpp::Element* e) {
 
     setPose(f, a, u);
     setAt(a);
+    update();
 
     if (e->get_attribute("cT_mode")) tConPlane = toBool(e->get_attribute("cT_mode")->get_value());
     if (e->get_attribute("do_cT")) doTConstraint = toBool(e->get_attribute("do_cT")->get_value());

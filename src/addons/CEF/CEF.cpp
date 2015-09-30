@@ -66,7 +66,7 @@ void CEF::initiate() {
     browser = CefBrowserHost::CreateBrowserSync(win, this, "www.google.de", browser_settings, 0);
 }
 
-void CEF::setMaterial(VRMaterialPtr mat) { if (mat == 0) return; this->mat = mat; mat->setTexture(image); }
+void CEF::setMaterial(VRMaterialPtr mat) { if (mat) { this->mat = mat; mat->setTexture(image); } }
 CefRefPtr<CefRenderHandler> CEF::GetRenderHandler() { return this; }
 string CEF::getSite() { return site; }
 void CEF::reload() { browser->Reload(); }
@@ -134,10 +134,12 @@ void CEF::addKeyboard(VRDevice* dev) {
 
 void CEF::mouse_move(VRDevice* dev, int i) {
     if (dev == 0) return;
-    VRIntersection ins = dev->intersect(obj);
+    auto geo = obj.lock();
+    if (!geo) return;
+    VRIntersection ins = dev->intersect(geo);
 
     if (!ins.hit) return;
-    if (ins.object != obj) return;
+    if (ins.object != geo) return;
 
     CefMouseEvent me;
     me.x = ins.texel[0]*width;
@@ -155,14 +157,17 @@ void CEF::mouse(int lb, int rb, int wu, int wd, VRDevice* dev) {
     else if (b == wd) b = 4;
     else return;
 
-    VRIntersection ins = dev->intersect(obj);
+    auto geo = obj.lock();
+    if (!geo) return;
+
+    VRIntersection ins = dev->intersect(geo);
 
     if (VRLog::tag("net")) {
         string o = "NONE";
         if (ins.object) o = ins.object->getName();
         stringstream ss;
         ss << "CEF::mouse " << this << " dev " << dev->getName();
-        ss << " hit " << ins.hit << " " << o << ", trg " << obj->getName();
+        ss << " hit " << ins.hit << " " << o << ", trg " << geo->getName();
         ss << " b: " << b << " s: " << down;
         ss << " texel: " << ins.texel;
         ss << endl;
@@ -171,7 +176,7 @@ void CEF::mouse(int lb, int rb, int wu, int wd, VRDevice* dev) {
 
 
     if (!ins.hit) { browser->GetHost()->SendFocusEvent(false); focus = false; return; }
-    if (ins.object != obj) { browser->GetHost()->SendFocusEvent(false); focus = false; return; }
+    if (ins.object != geo) { browser->GetHost()->SendFocusEvent(false); focus = false; return; }
     browser->GetHost()->SendFocusEvent(true); focus = true;
 
     CefMouseEvent me;

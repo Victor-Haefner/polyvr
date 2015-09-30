@@ -19,8 +19,8 @@ class VRMaterial; class VRDevice;
 class CEF : public CefClient, public CefRenderHandler {
     private:
         string site;
-        OSG::VRMaterialPtr mat = 0;
-        OSG::VRObjectPtr obj = 0;
+        OSG::VRMaterialWeakPtr mat;
+        OSG::VRObjectWeakPtr obj;
         OSG::ImageRecPtr image = 0;
         int width = 1024;
         int height = 1024;

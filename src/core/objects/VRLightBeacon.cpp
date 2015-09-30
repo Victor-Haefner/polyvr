@@ -25,7 +25,7 @@ VRMaterialPtr getLightGeoMat() {
 
 VRLightBeacon::VRLightBeacon(string name) : VRTransform(name) {
     type = "LightBeacon";
-    light = 0;
+    light;
     lightGeo = 0;
 
     GeometryRecPtr lightGeo_ = makeSphereGeo(2,0.1);
@@ -49,12 +49,12 @@ void VRLightBeacon::showLightGeo(bool b) {
     else lightGeo->setTravMask(0);
 }
 
-VRLightPtr VRLightBeacon::getLight() { return light; }
+VRLightWeakPtr VRLightBeacon::getLight() { return light; }
 void VRLightBeacon::setLight(VRLightPtr l) { light = l; }
 
 void VRLightBeacon::saveContent(xmlpp::Element* e) {
     VRTransform::saveContent(e);
-    e->set_attribute("light", light->getName());
+    if (auto l = light.lock()) e->set_attribute("light", l->getName());
 }
 
 void VRLightBeacon::loadContent(xmlpp::Element* e) {
@@ -65,8 +65,13 @@ void VRLightBeacon::loadContent(xmlpp::Element* e) {
     VRLightBeaconPtr lbp = ptr();
     VRObjectPtr tmp = lbp;
     while(tmp->getParent()) tmp = tmp->getParent();
-    if (tmp) light = static_pointer_cast<VRLight>( tmp->find(lightName) );
-    if (light) light->setBeacon(ptr());
+    if (tmp) {
+        auto l = static_pointer_cast<VRLight>( tmp->find(lightName) );
+        if (l) {
+            l->setBeacon(ptr());
+            light = l;
+        }
+    }
 }
 
 vector<VRLightBeaconPtr>& VRLightBeacon::getAll() {
