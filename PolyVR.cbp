@@ -730,6 +730,8 @@
 		<Unit filename="src/core/utils/VRTimer.h" />
 		<Unit filename="src/core/utils/VRVisualLayer.cpp" />
 		<Unit filename="src/core/utils/VRVisualLayer.h" />
+		<Unit filename="src/core/utils/coreDumpHandler.cpp" />
+		<Unit filename="src/core/utils/coreDumpHandler.h" />
 		<Unit filename="src/core/utils/isNan.cpp" />
 		<Unit filename="src/core/utils/isNan.h" />
 		<Unit filename="src/core/utils/toString.cpp" />

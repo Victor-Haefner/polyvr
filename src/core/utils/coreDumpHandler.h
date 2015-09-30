@@ -1,0 +1,6 @@
+#ifndef COREDUMPHANDLER_H_INCLUDED
+#define COREDUMPHANDLER_H_INCLUDED
+
+void enableCoreDump(bool b);
+
+#endif // COREDUMPHANDLER_H_INCLUDED
