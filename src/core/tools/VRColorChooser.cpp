@@ -49,7 +49,7 @@ void VRColorChooser::setColor(Color3f c) { last_color = color; color = c; update
 Color3f VRColorChooser::getColor() { return color; }
 Color3f VRColorChooser::getLastColor() { return last_color; }
 
-void VRColorChooser::setGeometry(VRGeometryPtr g) { geo = g; geo->setMaterial(mat); }
+void VRColorChooser::setGeometry(VRGeometryPtr g) { geo = g; g->setMaterial(mat); }
 
 void VRColorChooser::resolve(VRDevice* dev) {
     if (dev == 0) return;
@@ -57,10 +57,11 @@ void VRColorChooser::resolve(VRDevice* dev) {
     //VRIntersection ins = dev->getLastIntersection();
     VRIntersection ins = dev->intersect(geo);
     if (!ins.hit) return;
-    if (ins.object == 0) return;
-    if (ins.object != geo) return;
+    auto obj = ins.object.lock();
+    auto g = geo.lock();
+    if (obj != g || !g || !obj) return;
 
-    cout << "VRColorChooser::resolve, geo: " << geo->getName() << " texel: " << ins.texel << endl;
+    cout << "VRColorChooser::resolve, geo: " << g->getName() << " texel: " << ins.texel << endl;
 
     setColor(colFromUV(ins.texel));
 }

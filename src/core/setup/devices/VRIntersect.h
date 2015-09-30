@@ -24,8 +24,9 @@ typedef VRFunction<VRDevice*> VRDevCb;
 struct VRIntersection {
     bool hit = false;
     uint time = 0;
-    VRObjectPtr object = 0; // hit object
-    VRObjectPtr tree = 0; // intersection tree
+    string name;
+    VRObjectWeakPtr object; // hit object
+    VRObjectWeakPtr tree; // intersection tree
     Pnt3f point;
     Vec3f normal;
     Vec2f texel;
@@ -35,7 +36,7 @@ struct VRIntersection {
 
 class VRIntersect {
     private:
-        map<VRObjectPtr, VRIntersection> intersections;
+        map<VRObject*, VRIntersection> intersections;
         VRIntersection lastIntersection;
 
         bool dnd = true;//drag n drop
@@ -43,18 +44,18 @@ class VRIntersect {
 
         VRSignal* dragSignal = 0;
         VRSignal* dropSignal = 0;
-        VRTransformPtr dragged = 0;
-        VRTransformPtr dragged_ghost = 0;
+        VRTransformWeakPtr dragged;
+        VRTransformPtr dragged_ghost;
         uint drop_time = 0;
         VRGeometryPtr cross = 0;
-        vector<VRObjectPtr> dynTrees;
-        VRObjectPtr dynTree = 0;
+        map<VRObject*, VRObjectWeakPtr> dynTrees;
+        VRObjectWeakPtr dynTree;
 
-        map<VRObjectPtr, VRDevCb* > int_fkt_map;
-        map<VRObjectPtr, VRDevCb* > dra_fkt_map;
+        map<VRObject*, VRDevCb* > int_fkt_map;
+        map<VRObject*, VRDevCb* > dra_fkt_map;
         VRDevCb* drop_fkt;
 
-        void dragCB(VRTransformPtr caster, VRObjectPtr tree, VRDevice* dev = 0);
+        void dragCB(VRTransformWeakPtr caster, VRObjectWeakPtr tree, VRDevice* dev = 0);
 
         void initCross();
 
@@ -62,11 +63,13 @@ class VRIntersect {
         VRIntersect();
         ~VRIntersect();
 
-        VRIntersection intersect(VRObjectPtr tree, Line ray);
-        VRIntersection intersect(VRObjectPtr tree);
-        void drag(VRObjectPtr obj, VRTransformPtr caster);
+        VRIntersection intersect(VRObjectWeakPtr tree, Line ray);
+        VRIntersection intersect(VRObjectWeakPtr tree);
+        VRIntersection intersect();
+        void drag(VRObjectWeakPtr obj, VRTransformWeakPtr caster);
         void drop(VRDevice* dev = 0);
-        VRDevCb* addDrag(VRTransformPtr caster, VRObjectPtr tree);
+        VRDevCb* addDrag(VRTransformWeakPtr caster, VRObjectWeakPtr tree);
+        VRDevCb* addDrag(VRTransformWeakPtr caster);
         VRDevCb* getDrop();
 
         void toggleDragnDrop(bool b);
@@ -74,8 +77,8 @@ class VRIntersect {
 
         VRObjectPtr getCross();
 
-        void addDynTree(VRObjectPtr o);
-        void remDynTree(VRObjectPtr o);
+        void addDynTree(VRObjectWeakPtr o);
+        void remDynTree(VRObjectWeakPtr o);
         void updateDynTree(VRObjectPtr a);
 
         VRSignal* getDragSignal();

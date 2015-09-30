@@ -70,17 +70,21 @@ class VRIntersectAction : public IntersectAction {
         }
 };
 
-VRIntersection VRIntersect::intersect(VRObjectPtr tree, Line ray) {
+VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, Line ray) {
+    VRIntersection ins;
+    auto tree = wtree.lock();
+    if (!tree) return ins;
+
     VRIntersectAction iAct;
     //IntersectActionRefPtr iAct = IntersectAction::create();
     iAct.setTravMask(8);
     iAct.setLine(ray);
     iAct.apply(tree->getNode());
 
-    VRIntersection ins;
     ins.hit = iAct.didHit();
     if (ins.hit) {
         ins.object = tree->find(iAct.getHitObject()->getParent());
+        if (auto sp = ins.object.lock()) ins.name = sp->getName();
         ins.point = iAct.getHitPoint();
         ins.normal = iAct.getHitNormal();
         if (tree->getParent()) tree->getParent()->getNode()->getToWorld().mult( ins.point, ins.point );
@@ -90,25 +94,27 @@ VRIntersection VRIntersect::intersect(VRObjectPtr tree, Line ray) {
         ins.texel = VRIntersect_computeTexel(ins, iAct.getHitObject());
         lastIntersection = ins;
     } else {
-        ins.object = 0;
+        ins.object.reset();
         if (lastIntersection.time < ins.time) lastIntersection = ins;
     }
 
-    intersections[tree] = ins;
+    intersections[tree.get()] = ins;
 
     if (showHit) cross->setWorldPosition(Vec3f(ins.point));
     return ins;
 }
 
-VRIntersection VRIntersect::intersect(VRObjectPtr tree) {
+VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree) {
+    VRIntersection ins;
+    auto tree = wtree.lock();
+    if (!tree) return ins;
+
     VRDevice* dev = (VRDevice*)this;
     VRTransformPtr caster = dev->getBeacon();
-    VRIntersection ins;
     if (caster == 0) { cout << "Warning: VRIntersect::intersect, caster is 0!\n"; return ins; }
-    if (tree == 0) tree = dynTree;
     if (tree == 0) return ins;
 
-    if (intersections.count(tree)) ins = intersections[tree];
+    if (intersections.count(tree.get())) ins = intersections[tree.get()];
     uint now = VRGlobals::get()->CURRENT_FRAME;
     if (ins.hit && ins.time == now) return ins; // allready found it
     ins.time = now;
@@ -117,12 +123,18 @@ VRIntersection VRIntersect::intersect(VRObjectPtr tree) {
     return intersect(tree, ray);
 }
 
-void VRIntersect::dragCB(VRTransformPtr caster, VRObjectPtr tree, VRDevice* dev) {
+VRIntersection VRIntersect::intersect() { return intersect(dynTree); }
+
+void VRIntersect::dragCB(VRTransformWeakPtr caster, VRObjectWeakPtr tree, VRDevice* dev) {
     VRIntersection ins = intersect(tree);
     drag(ins.object, caster);
 }
 
-void VRIntersect::drag(VRObjectPtr obj, VRTransformPtr caster) {
+void VRIntersect::drag(VRObjectWeakPtr wobj, VRTransformWeakPtr wcaster) {
+    auto obj = wobj.lock();
+    auto caster = wcaster.lock();
+    if (!obj || !caster) return;
+
     auto d = getDraggedObject();
     if (obj == 0 || d != 0 || !dnd) return;
 
@@ -130,9 +142,11 @@ void VRIntersect::drag(VRObjectPtr obj, VRTransformPtr caster) {
     if (obj == 0) return;
     if (!obj->hasAttachment("transform")) return;
 
-    dragged = static_pointer_cast<VRTransform>(obj);
-    dragged->drag(caster);
-    dragged_ghost->setMatrix(dragged->getMatrix());
+    auto dobj = static_pointer_cast<VRTransform>(obj);
+    dragged = dobj;
+    dobj->drag(caster);
+
+    dragged_ghost->setMatrix(dobj->getMatrix());
     dragged_ghost->switchParent(caster);
 
     dragSignal->trigger<VRDevice>();
@@ -144,11 +158,11 @@ void VRIntersect::drop(VRDevice* dev) {
         dropSignal->trigger<VRDevice>();
         d->drop();
         drop_time = VRGlobals::get()->CURRENT_FRAME;
-        dragged = 0;
+        dragged.reset();
     }
 }
 
-VRTransformPtr VRIntersect::getDraggedObject() { return dragged; }
+VRTransformPtr VRIntersect::getDraggedObject() { return dragged.lock(); }
 
 VRTransformPtr VRIntersect::getDraggedGhost() { return dragged_ghost; }
 VRSignal* VRIntersect::getDragSignal() { return dragSignal; }
@@ -199,12 +213,20 @@ VRIntersect::~VRIntersect() {
     delete dropSignal;
 }
 
-VRDevCb* VRIntersect::addDrag(VRTransformPtr caster, VRObjectPtr tree) {
-    VRDevCb* fkt;
-    if (int_fkt_map.count(tree)) return int_fkt_map[tree];
+VRDevCb* VRIntersect::addDrag(VRTransformWeakPtr caster) {
+    return addDrag(caster, dynTree);
+}
 
-    fkt = new VRDevCb("Intersect_drag", boost::bind(&VRIntersect::dragCB, this, caster, tree, _1));
-    dra_fkt_map[tree] = fkt;
+VRDevCb* VRIntersect::addDrag(VRTransformWeakPtr caster, VRObjectWeakPtr tree) {
+    auto sc = caster.lock();
+    auto st = caster.lock();
+    if (!sc || !st) return 0;
+
+    auto key = st.get();
+    if (int_fkt_map.count(key)) return int_fkt_map[key];
+
+    VRDevCb* fkt = new VRDevCb("Intersect_drag", boost::bind(&VRIntersect::dragCB, this, caster, tree, _1));
+    dra_fkt_map[key] = fkt;
     return fkt;
 }
 
@@ -215,16 +237,17 @@ void VRIntersect::showHitPoint(bool b) {//needs to be optimized for multiple sce
     else cross->hide();
 }
 
-void VRIntersect::addDynTree(VRObjectPtr o) {
-    dynTrees.push_back(o);
-    dynTree = o;
+void VRIntersect::addDynTree(VRObjectWeakPtr o) {
+    if (auto sp = o.lock()) {
+        dynTrees[ sp.get() ] = o;
+        dynTree = o;
+    }
 }
 
-void VRIntersect::remDynTree(VRObjectPtr o) {
-    vector<VRObjectPtr>::iterator it = std::find(dynTrees.begin(), dynTrees.end(), o);
-    if(it != dynTrees.end()) {
-        dynTrees.erase(it);
-        dynTree = 0;
+void VRIntersect::remDynTree(VRObjectWeakPtr o) {
+    if (auto sp = o.lock()) {
+        dynTrees.erase( sp.get() );
+        dynTree.reset();
     }
 }
 
@@ -232,9 +255,9 @@ void VRIntersect::updateDynTree(VRObjectPtr a) {
     dynTree = a;
     return; // TODO ?
 
-    for (uint i=0;i<dynTrees.size();i++) {
-        if (dynTrees[i]->hasAncestor(a)) {
-            dynTree = dynTrees[i];
+    for (auto dt : dynTrees) {
+        if (auto sp = dt.second.lock()) {
+            if (sp->hasAncestor(a)) { dynTree = sp; return; }
         }
     }
 }

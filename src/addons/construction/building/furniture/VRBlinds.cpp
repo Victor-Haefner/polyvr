@@ -67,8 +67,8 @@ void VRBlinds::toggle(VRDevice* dev) {
     if (dev != 0) { //if triggered by a device, check if this is hit
         VRIntersection ins = dev->intersect(ptr());
         if (!ins.hit) return;
-        if ( ins.object == 0 ) return;
-        if ( ins.object->hasAncestorWithAttachment("blind") == false) return;
+        if ( ins.object.lock() == 0 ) return;
+        if ( !ins.object.lock()->hasAncestorWithAttachment("blind")) return;
     }
 
     if (state == CLOSE) open();

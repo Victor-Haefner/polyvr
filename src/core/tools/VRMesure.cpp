@@ -204,8 +204,9 @@ void VRMesure::kill(VRDevice* dev) {
 
     VRIntersection ins = dev->intersect(l);
     if (!ins.hit) return;
-    if (ins.object == 0) return;
-    if (ins.object->hasAncestor(s1) || ins.object->hasAncestor(s2)) _kill();
+    auto obj = ins.object.lock();
+    if (obj == 0) return;
+    if (obj->hasAncestor(s1) || obj->hasAncestor(s2)) _kill();
 }
 
 OSG_END_NAMESPACE

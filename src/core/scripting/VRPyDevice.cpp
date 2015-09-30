@@ -96,7 +96,7 @@ PyObject* VRPyDevice::getSpeed(VRPyDevice* self) {
 
 PyObject* VRPyDevice::intersect(VRPyDevice* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::intersect, Object is invalid"); return NULL; }
-    OSG::VRIntersection ins = self->obj->intersect(0);
+    OSG::VRIntersection ins = self->obj->intersect();
     if (ins.hit) Py_RETURN_TRUE;
     else Py_RETURN_FALSE;
 }
@@ -198,7 +198,7 @@ PyObject* VRPyDevice::setDnD(VRPyDevice* self, PyObject *args) {
 
 PyObject* VRPyDevice::getIntersected(VRPyDevice* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getIntersected, Object is invalid"); return NULL; }
-    return VRPyTypeCaster::cast(self->obj->getLastIntersection().object);
+    return VRPyTypeCaster::cast(self->obj->getLastIntersection().object.lock());
 }
 
 PyObject* VRPyDevice::getIntersection(VRPyDevice* self) {

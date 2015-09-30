@@ -16,23 +16,25 @@
 using namespace std;
 using namespace OSG;
 
-vector<CEF*> instances;
+vector< weak_ptr<CEF> > instances;
 
 CEF::CEF() {
     update_callback = VRFunction<int>::create("webkit_update", boost::bind(&CEF::update, this));
     VRSceneManager::getCurrent()->addUpdateFkt(update_callback);
     image = Image::create();
-    instances.push_back(this);
 }
 
 CEF::~CEF() {
     cout << "CEF destroyed " << this << endl;
-    instances.erase( remove(instances.begin(), instances.end(), this), instances.end() );
 }
 
 void CEF::shutdown() { CefShutdown(); }
 
-CEFPtr CEF::create() { return CEFPtr(new CEF()); }
+CEFPtr CEF::create() {
+    auto cef = CEFPtr(new CEF());
+    instances.push_back(cef);
+    return cef;
+}
 
 void CEF::initiate() {
     init = true;
@@ -89,12 +91,14 @@ void CEF::resize() {
 
 void CEF::reloadScripts(string path) {
     for (auto i : instances) {
-        string s = i->getSite();
+        auto cef = i.lock();
+        if (!cef) return;
+        string s = cef->getSite();
         stringstream ss(s); vector<string> res; while (getline(ss, s, '/')) res.push_back(s); // split by ':'
         if (res.size() == 0) continue;
         if (res[res.size()-1] == path) {
-            i->resize();
-            i->reload();
+            cef->resize();
+            cef->reload();
         }
     }
 }
@@ -113,21 +117,21 @@ void CEF::OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const Re
     image->set(Image::OSG_BGRA_PF, width, height, 1, 0, 1, 0.0, (const uint8_t*)buffer, Image::OSG_UINT8_IMAGEDATA, true, 1);
 }
 
-void CEF::addMouse(VRDevice* dev, VRObjectPtr obj, int lb, int rb, int wu, int wd) {
-    if (dev == 0 || obj == 0) return;
+void CEF::addMouse(VRDevice* dev, VRObjectWeakPtr obj, int lb, int rb, int wu, int wd) {
+    if (dev == 0 || obj.lock() == 0) return;
     this->obj = obj;
 
-    mouse_dev_callback = VRFunction<VRDevice*>::create( "CEF::MOUSE", boost::bind(&CEF::mouse, this, lb,rb,wu,wd,_1 ) );
+    if (!mouse_dev_callback) mouse_dev_callback = VRFunction<VRDevice*>::create( "CEF::MOUSE", boost::bind(&CEF::mouse, this, lb,rb,wu,wd,_1 ) );
     dev->addSignal(-1,0)->add(mouse_dev_callback);
     dev->addSignal(-1,1)->add(mouse_dev_callback);
 
-    mouse_move_callback = VRFunction<int>::create( "CEF::MM", boost::bind(&CEF::mouse_move, this, dev, _1) );
+    if (!mouse_move_callback) mouse_move_callback = VRFunction<int>::create( "CEF::MM", boost::bind(&CEF::mouse_move, this, dev, _1) );
     VRSceneManager::getCurrent()->addUpdateFkt(mouse_move_callback);
 }
 
 void CEF::addKeyboard(VRDevice* dev) {
     if (dev == 0) return;
-    keyboard_dev_callback = VRFunction<VRDevice*>::create( "CEF::KR", boost::bind(&CEF::keyboard, this, _1 ) );
+    if (!keyboard_dev_callback) keyboard_dev_callback = VRFunction<VRDevice*>::create( "CEF::KR", boost::bind(&CEF::keyboard, this, _1 ) );
     dev->addSignal(-1, 0)->add( keyboard_dev_callback );
     dev->addSignal(-1, 1)->add( keyboard_dev_callback );
 }
@@ -139,7 +143,7 @@ void CEF::mouse_move(VRDevice* dev, int i) {
     VRIntersection ins = dev->intersect(geo);
 
     if (!ins.hit) return;
-    if (ins.object != geo) return;
+    if (ins.object.lock() != geo) return;
 
     CefMouseEvent me;
     me.x = ins.texel[0]*width;
@@ -161,10 +165,11 @@ void CEF::mouse(int lb, int rb, int wu, int wd, VRDevice* dev) {
     if (!geo) return;
 
     VRIntersection ins = dev->intersect(geo);
+    auto iobj = ins.object.lock();
 
     if (VRLog::tag("net")) {
         string o = "NONE";
-        if (ins.object) o = ins.object->getName();
+        if (iobj) o = iobj->getName();
         stringstream ss;
         ss << "CEF::mouse " << this << " dev " << dev->getName();
         ss << " hit " << ins.hit << " " << o << ", trg " << geo->getName();
@@ -174,10 +179,11 @@ void CEF::mouse(int lb, int rb, int wu, int wd, VRDevice* dev) {
         VRLog::log("net", ss.str());
     }
 
-
-    if (!ins.hit) { browser->GetHost()->SendFocusEvent(false); focus = false; return; }
-    if (ins.object != geo) { browser->GetHost()->SendFocusEvent(false); focus = false; return; }
-    browser->GetHost()->SendFocusEvent(true); focus = true;
+    auto host = browser->GetHost();
+    if (!host) return;
+    if (!ins.hit) { host->SendFocusEvent(false); focus = false; return; }
+    if (iobj != geo) { host->SendFocusEvent(false); focus = false; return; }
+    host->SendFocusEvent(true); focus = true;
 
     CefMouseEvent me;
     me.x = ins.texel[0]*width;
@@ -188,12 +194,12 @@ void CEF::mouse(int lb, int rb, int wu, int wd, VRDevice* dev) {
         if (b == 0) mbt = MBT_LEFT;
         if (b == 1) mbt = MBT_MIDDLE;
         if (b == 2) mbt = MBT_RIGHT;
-        browser->GetHost()->SendMouseClickEvent(me, mbt, !down, 1);
+        host->SendMouseClickEvent(me, mbt, !down, 1);
     }
 
     if (b == 3 || b == 4) {
         int d = b==3 ? -1 : 1;
-        browser->GetHost()->SendMouseWheelEvent(me, d*width*0.05, d*height*0.05);
+        host->SendMouseWheelEvent(me, d*width*0.05, d*height*0.05);
     }
 }
 
@@ -203,7 +209,8 @@ void CEF::keyboard(VRDevice* dev) {
     //bool down = dev->getState();
     VRKeyboard* kb = (VRKeyboard*)dev;
     auto event = kb->getGtkEvent();
-    CefRefPtr<CefBrowserHost> host = browser->GetHost();
+    auto host = browser->GetHost();
+    if (!host) return;
 
     CefKeyEvent kev;
     kev.modifiers = GetCefStateModifiers(event->state);

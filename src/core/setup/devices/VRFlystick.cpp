@@ -15,7 +15,7 @@ void VRFlystick::clearSignals() {
     VRDevice::clearSignals();
 
     addSignal( 0, 0)->add( getDrop() );
-    addSignal( 0, 1)->add( addDrag( getBeacon(), 0) );
+    addSignal( 0, 1)->add( addDrag( getBeacon() ) );
 }
 
 void VRFlystick::update(vector<int> buttons, vector<float> sliders) {

@@ -199,7 +199,7 @@ void VRGuiSetup::updateObjectData() {
         setLabel("label93", dev->getName());
         fillStringListstore("dev_types_list", current_setup->getDeviceTypes());
         setCombobox("combobox26", getListStorePos("dev_types_list", dev->getType()) );
-        string hobj = ins.object && ins.hit ? ins.object->getName() : "NONE";
+        string hobj = ins.hit ? ins.name : "NONE";
         setLabel("label110", hobj);
         setLabel("label111", toString(ins.point));
         setLabel("label112", toString(ins.texel));

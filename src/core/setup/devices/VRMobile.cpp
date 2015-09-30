@@ -58,7 +58,7 @@ void VRMobile::clearSignals() {
     VRDevice::clearSignals();
 
     addSignal( 0, 0)->add( getDrop() );
-    addSignal( 0, 1)->add( addDrag( getBeacon(), 0) );
+    addSignal( 0, 1)->add( addDrag( getBeacon() ) );
 }
 
 void VRMobile::setPort(int port) { this->port = port; soc->setPort(port); }

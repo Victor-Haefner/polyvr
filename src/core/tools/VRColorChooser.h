@@ -14,7 +14,7 @@ class VRColorChooser {
         float border = 0.05;
         Color3f color;
         Color3f last_color;
-        VRGeometryPtr geo;
+        VRGeometryWeakPtr geo;
         VRMaterialPtr mat;
 
         Color3f colFromUV(Vec2f tc);
