@@ -48,7 +48,6 @@ void printFieldContainer() {
 }
 
 PolyVR::PolyVR() {}
-
 PolyVR::~PolyVR() {
     //CEF::shutdown();
 }
@@ -59,7 +58,9 @@ PolyVR* PolyVR::get() {
 }
 
 void PolyVR::shutdown() {
-    delete get();
+    auto pvr = get();
+    pvr->scene_mgr->stopAllThreads();
+    delete pvr;
     printFieldContainer();
     osgExit();
     std::exit(0);

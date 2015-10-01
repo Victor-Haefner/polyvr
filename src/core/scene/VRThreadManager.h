@@ -18,6 +18,7 @@ class ExternalThread;
 
 class VRThread {
     public:
+        VRThread();
         ~VRThread();
 
         ThreadRefPtr appThread;
@@ -50,8 +51,8 @@ class VRThreadManager {
 
         int initThread(VRFunction<VRThreadWeakPtr>* f, string name, bool loop = false, int aspect = 0);
 
-
         void stopThread(int id, int tries = 100);
+        void stopAllThreads();
         void killThread(int id);
 
         int getThreadNum();

@@ -40,11 +40,9 @@ VRThreadManager::VRThreadManager() {
     appThread = dynamic_cast<Thread *>(ThreadManager::getAppThread());
 }
 
-VRThreadManager::~VRThreadManager() {
-    cout << "VRThreadManager::~VRThreadManager()\n";
-    for (auto t : threads) stopThread(t.first);
-}
+VRThreadManager::~VRThreadManager() {}
 
+VRThread::VRThread() {}
 VRThread::~VRThread() {
     control_flag = false;
     if (boost_t) {
@@ -52,6 +50,28 @@ VRThread::~VRThread() {
         delete boost_t;
     }
     if (fkt) delete fkt;
+}
+
+void VRThreadManager::stopAllThreads() {
+    cout << "VRThreadManager::stopAllThreads() " << threads.size() << endl;
+    for (auto t : threads) t.second->control_flag = false;
+
+    BarrierRefPtr barrier = Barrier::get("PVR_rendering", true);
+    barrier->enter();
+    barrier->enter();
+
+    int count = 0;
+    while(threads.size() > 0) {
+        if (count == 100) break;
+        for (auto t : threads) {
+            //cout << "wait for " << t.second->name << " ID " << t.second->ID << " c " << count << endl;
+            if (t.second->status == 2) { threads.erase(t.first); break; }
+        }
+        count++;
+        osgSleep(10);
+    }
+
+    threads.clear(); // kills remaining threads!
 }
 
 void VRThreadManager::stopThread(int id, int tries) {
