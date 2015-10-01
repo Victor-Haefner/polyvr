@@ -127,8 +127,8 @@ struct VRMatData {
     }
 };
 
-map<string, VRMaterialPtr> VRMaterial::materials;
-map<MaterialRecPtr, VRMaterialPtr> VRMaterial::materialsByPtr;
+map<string, VRMaterialWeakPtr> VRMaterial::materials;
+map<MaterialRecPtr, VRMaterialWeakPtr> VRMaterial::materialsByPtr;
 
 VRMaterial::VRMaterial(string name) : VRObject(name) {
     type = "Material";
@@ -220,7 +220,8 @@ void VRMaterial::clearAll() {
 }
 
 VRMaterialPtr VRMaterial::getDefault() {
-    if (materials.count("default") == 1) return materials["default"];
+    if (materials.count("default"))
+        if (auto sp = materials["default"].lock()) return sp;
     return VRMaterial::create("default");
 }
 
@@ -290,17 +291,35 @@ void VRMaterial::prependPasses(VRMaterialPtr mat) {
 }
 
 VRMaterialPtr VRMaterial::get(MaterialRecPtr mat) {
+    VRMaterialPtr m;
     if (materialsByPtr.count(mat) == 0) {
-        materialsByPtr[mat] = VRMaterial::create("mat");
-        materialsByPtr[mat]->setMaterial(mat);
+        m = VRMaterial::create("mat");
+        m->setMaterial(mat);
+        materialsByPtr[mat] = m;
+        return m;
+    } else if (materialsByPtr[mat].lock() == 0) {
+        m = VRMaterial::create("mat");
+        m->setMaterial(mat);
+        materialsByPtr[mat] = m;
+        return m;
     }
 
-    return materialsByPtr[mat];
+    return materialsByPtr[mat].lock();
 }
 
 VRMaterialPtr VRMaterial::get(string s) {
-    if (materials.count(s) == 0) materials[s] = VRMaterial::create(s);
-    return materials[s];
+    VRMaterialPtr mat;
+    if (materials.count(s) == 0) {
+        mat = VRMaterial::create(s);
+        materials[s] = mat;
+        return mat;
+    } else if (materials[s].lock() == 0) {
+        mat = VRMaterial::create(s);
+        materials[s] = mat;
+        return mat;
+    }
+
+    return materials[s].lock();
 }
 
 VRObjectPtr VRMaterial::copy(vector<VRObjectPtr> children) {

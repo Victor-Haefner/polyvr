@@ -25,8 +25,8 @@ Color3f toColor3f(Color4f c);
 
 class VRMaterial : public VRObject {
     public:
-        static map<string, VRMaterialPtr> materials;
-        static map<MaterialRecPtr, VRMaterialPtr> materialsByPtr;
+        static map<string, VRMaterialWeakPtr> materials;
+        static map<MaterialRecPtr, VRMaterialWeakPtr> materialsByPtr;
 
         string constructShaderVP(VRMatData* data);
         string constructShaderFP(VRMatData* data);

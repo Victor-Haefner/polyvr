@@ -55,11 +55,30 @@ PolyVR& PolyVR::get() {
     return pvr;
 }
 
+void PolyVR::start() { while(true) VRSceneManager::get()->update(); }
+void PolyVR::exit() {
+    options = 0;
+    scene_mgr = 0;
+    setup_mgr = 0;
+    monitor = 0;
+    gui_mgr = 0;
+    interface = 0;
+    loader = 0;
+    sound_mgr = 0;
+    //CEF::shutdown();
+
+    //printFieldContainer();
+
+    osgExit();
+    std::exit(0);
+}
+
 void PolyVR::init(int argc, char **argv) {
     cout << "Init PolyVR\n\n";
     enableCoreDump(true);
     setlocale(LC_ALL, "C");
-    VROptions::get()->parse(argc,argv);
+    options = shared_ptr<VROptions>(VROptions::get());
+    options->parse(argc,argv);
 
     //GLUT
     glutInit(&argc, argv);
@@ -76,38 +95,18 @@ void PolyVR::init(int argc, char **argv) {
     cout << "Init OSG\n";
     osgInit(argc,argv);
 
-    cout << "Init SceneManager\n";
-    VRSceneManager::get();
-    VRSetupManager::get();
-    VRInternalMonitor::get();
+    cout << "Init Modules\n";
 
-    VRGuiManager::get();
-    VRMainInterface::get();
+    scene_mgr = shared_ptr<VRSceneManager>(VRSceneManager::get());
+    setup_mgr = shared_ptr<VRSetupManager>(VRSetupManager::get());
+    monitor = shared_ptr<VRInternalMonitor>(VRInternalMonitor::get());
+    gui_mgr = shared_ptr<VRGuiManager>(VRGuiManager::get());
+    interface = shared_ptr<VRMainInterface>(VRMainInterface::get());
+    loader = shared_ptr<VRSceneLoader>(VRSceneLoader::get());
+    sound_mgr = shared_ptr<VRSoundManager>(&VRSoundManager::get());
 
-    string app = VROptions::get()->getOption<string>("application");
+    string app = options->getOption<string>("application");
     if (app != "") VRSceneManager::get()->loadScene(app);
-}
-
-void PolyVR::exit() {
-    delete VRGuiManager::get();
-    delete VRSetupManager::get();
-    delete VRSceneManager::get();
-    delete VRSceneLoader::get();
-    delete VROptions::get();
-    delete VRInternalMonitor::get();
-    delete VRMainInterface::get();
-    delete &VRSoundManager::get();
-    VRMaterial::clearAll();
-    //CEF::shutdown();
-
-    printFieldContainer();
-
-    osgExit();
-    std::exit(0);
-}
-
-void PolyVR::start() {
-    while(true) VRSceneManager::get()->update();
 }
 
 void PolyVR::startTestScene(Node* n) {

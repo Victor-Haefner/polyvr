@@ -202,7 +202,11 @@ void VRDefShading::setDefferedShading(bool b) {
     if (stageObject == 0) return;
     if (b) stageObject->setCore(dsStage, "defShading", true);
     else stageObject->setCore(Group::create(), "Object", true);
-    for (auto m : VRMaterial::materials) m.second->setDeffered(b);
+    for (auto m : VRMaterial::materials) {
+        auto mat = m.second.lock();
+        if (!mat) continue;
+        mat->setDeffered(b);
+    }
 }
 
 bool VRDefShading::getSSAO() { return ssao_enabled; }

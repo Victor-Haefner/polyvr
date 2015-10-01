@@ -318,7 +318,8 @@ void VRScript::execute() {
 
     if (type == "GLSL") {
         for (auto m : VRMaterial::materials) {
-            VRMaterialPtr mat = m.second;
+            auto mat = m.second.lock();
+            if (!mat) continue;
             if (mat->getVertexScript() == getName()) mat->setVertexScript(getName());
             if (mat->getFragmentScript() == getName()) mat->setFragmentScript(getName());
             if (mat->getGeometryScript() == getName()) mat->setGeometryScript(getName());
