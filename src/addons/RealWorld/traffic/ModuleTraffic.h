@@ -33,7 +33,7 @@ namespace realworld {
                 OSMMap* osmMap = mapDB->getMap(bbox->str);
                 if (!osmMap) return;
 
-                VRFunction<VRThread*>* func = new VRFunction<VRThread*>("trafficAddMap", boost::bind(&realworld::TrafficSimulation::addMap, simulation, osmMap));
+                VRFunction<VRThreadWeakPtr>* func = new VRFunction<VRThreadWeakPtr>("trafficAddMap", boost::bind(&realworld::TrafficSimulation::addMap, simulation, osmMap));
                 VRSceneManager::get()->initThread(func, "trafficAddMap", false);
             }
 

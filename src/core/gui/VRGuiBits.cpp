@@ -58,7 +58,7 @@ void VRGuiBits::on_view_option_toggle(VRVisualLayer* l, Gtk::ToggleToolButton* t
 void VRGuiBits_on_camera_changed(GtkComboBox* cb, gpointer data) {
     char* cam = gtk_combo_box_get_active_text(cb);
     if (cam == 0) return;
-    VRScene* scene = VRSceneManager::getCurrent();
+    auto scene = VRSceneManager::getCurrent();
     string name = string(cam);
     scene->setActiveCamera(name);
 
@@ -66,7 +66,7 @@ void VRGuiBits_on_camera_changed(GtkComboBox* cb, gpointer data) {
 }
 
 void VRGuiBits_on_navigation_changed(GtkComboBox* cb, gpointer data) {
-    VRScene* scene = VRSceneManager::getCurrent();
+    auto scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
 
     char* c = gtk_combo_box_get_active_text(cb);
@@ -86,8 +86,7 @@ void VRGuiBits_on_save_clicked(GtkButton* cb, gpointer data) {
 }
 
 void VRGuiBits_on_quit_clicked(GtkButton* cb, gpointer data) {
-    auto pvr = OSG::PolyVR::get();
-    pvr.exit();
+    PolyVR::shutdown();
 }
 
 void VRGuiBits_on_about_clicked(GtkButton* cb, gpointer data) {
@@ -253,9 +252,9 @@ VRGuiBits::VRGuiBits() {
     setLabel("label24", "Project: None");
 
     // recorder
-    recorder = new VRRecorder();
+    recorder = shared_ptr<VRRecorder>( new VRRecorder() );
     recorder->setView(0);
-    recorder_visual_layer = new VRVisualLayer("Recorder", "recorder.png");
+    recorder_visual_layer = shared_ptr<VRVisualLayer>( new VRVisualLayer("Recorder", "recorder.png") );
     recorder_visual_layer->setCallback( recorder->getToggleCallback() );
 
     // About Dialog
@@ -329,7 +328,7 @@ void VRGuiBits::updateVisualLayer() {
 }
 
 void VRGuiBits::update() { // scene changed
-    VRScene* scene = VRSceneManager::getCurrent();
+    auto scene = VRSceneManager::getCurrent();
     setLabel("label24", "Project: None");
     if (scene == 0) return;
 

@@ -58,8 +58,8 @@ class VRSocket : public VRName {
 
         void handle(string s);
 
-        void scanUnix(VRThread* t);
-        void scanTCP(VRThread* t);
+        void scanUnix(weak_ptr<VRThread> t);
+        void scanTCP(weak_ptr<VRThread> t);
         void scanHTTP();
 
         void update();

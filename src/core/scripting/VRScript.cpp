@@ -27,7 +27,7 @@ using namespace std;
 
 void updateArgPtr(VRScript::arg* a) {
     string t = a->type;
-    VRScene* scene = VRSceneManager::getCurrent();
+    auto scene = VRSceneManager::getCurrent();
     VRSetup* setup = VRSetupManager::getCurrent();
 
     if (t == "VRPyObjectType" || t == "VRPyGeometryType" || t == "VRPyTransformType" || t == "VRPyLightType" || t == "VRPyLodType") {
@@ -59,7 +59,7 @@ void VRScript::clean() {
     VRMobile* mob = (VRMobile*)VRSetupManager::getCurrent()->getDevice(this->mobile);
     if (mob) mob->remWebSite(getName());
 
-    VRScene* scene = VRSceneManager::getCurrent();
+    auto scene = VRSceneManager::getCurrent();
 
     for (auto tr : trigs) {
         trig* t = tr.second;
@@ -80,7 +80,7 @@ void VRScript::update() {
         if (mob) mob->addWebSite(getName(), core);
     }
 
-    VRScene* scene = VRSceneManager::getCurrent();
+    auto scene = VRSceneManager::getCurrent();
 
     for (auto tr : trigs) {
         trig* t = tr.second;
@@ -444,7 +444,7 @@ void VRScript::load(xmlpp::Element* e) {
             trigs[t->getName()] = t;
 
             if (t->trigger == "on_scene_load" && active) {
-                VRScene* scene = VRSceneManager::getCurrent();
+                auto scene = VRSceneManager::getCurrent();
                 scene->queueJob(cbfkt_sys);
             }
         }

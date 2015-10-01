@@ -225,7 +225,7 @@ namespace realworld {
              A helper method to fetch the data from the server.
              Will be called repetitive while the simulator is running.
              */
-            void communicationThread(OSG::VRThread* t);
+            void communicationThread(std::weak_ptr<OSG::VRThread> t);
 
             /**
              * A mutex that will be locked if the communication thread is running.

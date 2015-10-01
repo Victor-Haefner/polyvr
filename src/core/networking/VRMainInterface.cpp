@@ -44,8 +44,11 @@ void VRMainInterface::update() {
     page += "</script>\n";
 
     page += "<h1>Status</h1>";
-    if (VRSceneManager::getCurrent()) page += "<h3> active scene: " + VRSceneManager::getCurrent()->getName() + "</h3>";
-    if (VRSetupManager::getCurrent()) page += "<h3> active setup: " + VRSetupManager::getCurrent()->getName() + "</h3>";
+    auto scene = VRSceneManager::getCurrent();
+    if (scene) {
+        page += "<h3> active scene: " + scene->getName() + "</h3>";
+        page += "<h3> active setup: " + scene->getName() + "</h3>";
+    }
 
     page += "<h1>Scenes</h1>";
     page += "<h2>Favorites:</h2>";

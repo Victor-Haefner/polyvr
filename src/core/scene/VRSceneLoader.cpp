@@ -33,7 +33,7 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-VRScene* VRSceneLoader_current_scene = 0;
+VRSceneWeakPtr VRSceneLoader_current_scene;
 
 void VRSceneLoader::optimizeGraph(VRObjectPtr obj) { //TODO
     VRObjectPtr p = obj->getParent();
@@ -85,7 +85,7 @@ void VRSceneLoader::saveScene(string file, xmlpp::Element* guiN) {
     if (boost::filesystem::exists(file))
         file = boost::filesystem::canonical(file).string();
     cout << " save " << file << endl;
-    VRScene* scene = VRSceneManager::getCurrent();
+    auto scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
 
     xmlpp::Document doc;
@@ -102,7 +102,7 @@ void VRSceneLoader::saveScene(string file, xmlpp::Element* guiN) {
     doc.write_to_file_formatted(file);
 }
 
-VRObjectPtr VRSceneLoader_createFromElement(VRScene* scene, xmlpp::Element* e) {
+VRObjectPtr VRSceneLoader_createFromElement(VRScenePtr scene, xmlpp::Element* e) {
     string type = e->get_attribute("type")->get_value();
     string base_name = e->get_attribute("base_name")->get_value();
     //string name = e->get_name();
@@ -121,7 +121,7 @@ VRObjectPtr VRSceneLoader_createFromElement(VRScene* scene, xmlpp::Element* e) {
     return VRObject::create(base_name);
 }
 
-void VRSceneLoader_loadObject(VRScene* scene, VRObjectPtr p, xmlpp::Element* e) {
+void VRSceneLoader_loadObject(VRScenePtr scene, VRObjectPtr p, xmlpp::Element* e) {
     if (e == 0) return;
     xmlpp::Node::NodeList nl = e->get_children();
     xmlpp::Node::NodeList::iterator itr;
@@ -183,7 +183,7 @@ void VRSceneLoader::loadScene(string path) {
     // load scenegraph
     xmlpp::Element* objectsN = VRSceneLoader_getElementChild_(sceneN, "Objects");
     xmlpp::Element* root = VRSceneLoader_getElementChild_(objectsN, 0);
-    VRScene* scene = new VRScene();
+    auto scene = VRScenePtr( new VRScene() );
     scene->setPath(path);
     VRSceneManager::get()->setWorkdir(scene->getWorkdir());
     scene->setName(scene->getFileName());

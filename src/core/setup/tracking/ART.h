@@ -63,7 +63,7 @@ class ART : public VRStorage {
         void scan(int type = -1, int N = 0);
 
 
-        void updateT(VRThread* t); //update thread
+        void updateT( weak_ptr<VRThread>  t); //update thread
         void updateL(); //update
         void applyEvents(); //main loop update
         void checkNewDevices(int type = -1, int N = 0); //update thread

@@ -90,9 +90,10 @@ class HTTPServer {
             delete data;
         }
 
-        void loop(VRThread* t) {
+        void loop(VRThreadWeakPtr wt) {
             if (server) mg_poll_server(server, 100);
-            if (t->control_flag == false) return;
+            if (auto t = wt.lock())
+                if (t->control_flag == false) return;
         }
 
         void initServer(VRHTTP_cb* fkt, int port) {
@@ -100,7 +101,7 @@ class HTTPServer {
             server = mg_create_server(data, server_answer_to_connection_m);
             mg_set_option(server, "listening_port", toString(port).c_str());
 
-            VRFunction<VRThread*>* lfkt = new VRFunction<VRThread*>("mongoose loop", boost::bind(&HTTPServer::loop, this, _1));
+            VRFunction<VRThreadWeakPtr>* lfkt = new VRFunction<VRThreadWeakPtr>("mongoose loop", boost::bind(&HTTPServer::loop, this, _1));
             threadID = VRSceneManager::get()->initThread(lfkt, "mongoose", true);
 
             //server = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, port, NULL, NULL, &server_answer_to_connection, data, MHD_OPTION_END);
@@ -249,7 +250,8 @@ void VRSocket::trigger() {
 }
 
 void VRSocket::handle(string s) {
-    VRScene* scene = VRSceneManager::getCurrent();
+    auto scene = VRSceneManager::getCurrent();
+    if (scene == 0) return;
     tcp_msg = s;
     scene->queueJob(queued_signal);
 }
@@ -307,7 +309,7 @@ void VRSocket::sendMessage(string msg) {
     //printf("%s\n",buffer);*/
 }
 
-void VRSocket::scanUnix(VRThread* thread) {
+void VRSocket::scanUnix(VRThreadWeakPtr thread) {
     //scan what new stuff is in the socket
     /*unsigned int s, len, contype;
     struct sockaddr_un local_u, remote_u;
@@ -366,7 +368,7 @@ void VRSocket::scanUnix(VRThread* thread) {
     }*/
 }
 
-void VRSocket::scanTCP(VRThread* thread) {
+void VRSocket::scanTCP(VRThreadWeakPtr thread) {
     //scan what new stuff is in the socket
     /*unsigned int socketAcc, len, contype;
     struct sockaddr_in local_i, remote_i;
@@ -428,10 +430,10 @@ void VRSocket::scanTCP(VRThread* thread) {
 }
 
 void VRSocket::initServer(CONNECTION_TYPE t, int _port) {
-    VRFunction<VRThread*>* socket = 0;
+    VRFunction<VRThreadWeakPtr>* socket = 0;
     port = _port;
-    if (t == UNIX) socket = new VRFunction<VRThread*>("UNIXSocket", boost::bind(&VRSocket::scanUnix, this, _1));
-    if (t == TCP) socket = new VRFunction<VRThread*>("TCPSocket", boost::bind(&VRSocket::scanTCP, this, _1));
+    if (t == UNIX) socket = new VRFunction<VRThreadWeakPtr>("UNIXSocket", boost::bind(&VRSocket::scanUnix, this, _1));
+    if (t == TCP) socket = new VRFunction<VRThreadWeakPtr>("TCPSocket", boost::bind(&VRSocket::scanTCP, this, _1));
     run = true;
     threadID = VRSceneManager::get()->initThread(socket, "socket", true);
 }

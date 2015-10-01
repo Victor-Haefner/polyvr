@@ -36,35 +36,36 @@ VRGuiGeneral::VRGuiGeneral() {
 }
 
 void VRGuiGeneral::dumpOSG() {
-     VRScene* scene = VRSceneManager::getCurrent();
-     if (scene == 0) return;
+    auto scene = VRSceneManager::getCurrent();
+    if (scene == 0) return;
 
-     string pg = scene->getName() + "_osg_dump.osg";
-     string pb = scene->getName() + "_osg_dump.osb";
+    string pg = scene->getName() + "_osg_dump.osg";
+    string pb = scene->getName() + "_osg_dump.osb";
 
-     SceneFileHandler::the()->write( scene->getRoot()->getNode(), pg.c_str() );
-     SceneFileHandler::the()->write( scene->getRoot()->getNode(), pb.c_str() );
+    SceneFileHandler::the()->write( scene->getRoot()->getNode(), pg.c_str() );
+    SceneFileHandler::the()->write( scene->getRoot()->getNode(), pb.c_str() );
 }
 
 bool VRGuiGeneral::setColor(GdkEventButton* b) {
     if (updating) return true;
 
-    Color3f col = VRSceneManager::getCurrent()->getBackgroundColor();
+    auto scene = VRSceneManager::getCurrent();
+    Color3f col = scene->getBackgroundColor();
     Color4f c = chooseColor("bg_solid", toColor4f(col));
-    VRSceneManager::getCurrent()->setBackgroundColor(toColor3f(c));
+    scene->setBackgroundColor(toColor3f(c));
     return true;
 }
 
 void VRGuiGeneral::setPath() {
     if (updating) return;
-    VRScene* scene = VRSceneManager::getCurrent();
+    auto scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
     scene->setBackgroundPath( getTextEntry("entry42") );
 }
 
 void VRGuiGeneral::setExtension() {
     if (updating) return;
-    VRScene* scene = VRSceneManager::getCurrent();
+    auto scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
     scene->setSkyBGExtension( getTextEntry("entry14") );
 }
@@ -75,7 +76,8 @@ void VRGuiGeneral::setMode() {
     VRBackground::TYPE t = VRBackground::SOLID;
     if ( getCheckButtonState("radiobutton4") ) t = VRBackground::IMAGE;
     if ( getCheckButtonState("radiobutton5") ) t = VRBackground::SKY;
-    VRSceneManager::getCurrent()->setBackground( t );
+    auto scene = VRSceneManager::getCurrent();
+    scene->setBackground( t );
 
     setEntrySensitivity("entry14", t == VRBackground::SKY);
     setEntrySensitivity("entry42", t == VRBackground::SKY || t == VRBackground::IMAGE);
@@ -83,14 +85,14 @@ void VRGuiGeneral::setMode() {
 
 void VRGuiGeneral::toggleDefferedShader() {
     if (updating) return;
-    VRScene* scene = VRSceneManager::getCurrent();
+    auto scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
     scene->setDefferedShading( getCheckButtonState("checkbutton_3") );
 }
 
 void VRGuiGeneral::toggleSSAO() {
     if (updating) return;
-    VRScene* scene = VRSceneManager::getCurrent();
+    auto scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
     scene->setSSAO( getCheckButtonState("checkbutton_4") );
 }
@@ -98,7 +100,7 @@ void VRGuiGeneral::toggleSSAO() {
 void VRGuiGeneral::toggleFrustumCulling() {
     if (updating) return;
 
-    VRScene* scene = VRSceneManager::getCurrent();
+    auto scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
 
     scene->setFrustumCulling( getCheckButtonState("checkbutton_01") );
@@ -107,7 +109,7 @@ void VRGuiGeneral::toggleFrustumCulling() {
 void VRGuiGeneral::toggleOcclusionCulling() {
     if (updating) return;
 
-    VRScene* scene = VRSceneManager::getCurrent();
+    auto scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
 
     scene->setOcclusionCulling( getCheckButtonState("checkbutton_02") );
@@ -116,14 +118,14 @@ void VRGuiGeneral::toggleOcclusionCulling() {
 void VRGuiGeneral::toggleTwoSided() {
     if (updating) return;
 
-    VRScene* scene = VRSceneManager::getCurrent();
+    auto scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
 
     scene->setTwoSided( getCheckButtonState("checkbutton_2") );
 }
 
 void VRGuiGeneral::updateScene() {
-    VRScene* scene = VRSceneManager::getCurrent();
+    auto scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
 
     updating = true;

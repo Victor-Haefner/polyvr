@@ -48,30 +48,27 @@ void printFieldContainer() {
 }
 
 PolyVR::PolyVR() {}
-PolyVR::~PolyVR() {}
 
-PolyVR& PolyVR::get() {
-    static PolyVR pvr;
+PolyVR::~PolyVR() {
+    //CEF::shutdown();
+}
+
+PolyVR* PolyVR::get() {
+    static PolyVR* pvr = new PolyVR();
     return pvr;
 }
 
-void PolyVR::start() { while(true) VRSceneManager::get()->update(); }
-void PolyVR::exit() {
-    options = 0;
-    scene_mgr = 0;
-    setup_mgr = 0;
-    monitor = 0;
-    gui_mgr = 0;
-    interface = 0;
-    loader = 0;
-    sound_mgr = 0;
-    //CEF::shutdown();
-
-    //printFieldContainer();
-
+void PolyVR::shutdown() {
+    delete get();
+    printFieldContainer();
     osgExit();
     std::exit(0);
 }
+
+void PolyVR::setOption(string name, bool val) { options->setOption(name, val); }
+void PolyVR::setOption(string name, string val) { options->setOption(name, val); }
+void PolyVR::setOption(string name, int val) { options->setOption(name, val); }
+void PolyVR::setOption(string name, float val) { options->setOption(name, val); }
 
 void PolyVR::init(int argc, char **argv) {
     cout << "Init PolyVR\n\n";
@@ -84,9 +81,6 @@ void PolyVR::init(int argc, char **argv) {
     glutInit(&argc, argv);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);
-    if (VROptions::get()->getOption<bool>("active_stereo"))
-        glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STEREO | GLUT_STENCIL);
-    else glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL);
 
     //OSG
     ChangeList::setReadWriteDefault();
@@ -94,19 +88,26 @@ void PolyVR::init(int argc, char **argv) {
     OSG::preloadSharedObject("OSGImageFileIO");
     cout << "Init OSG\n";
     osgInit(argc,argv);
+}
+
+void PolyVR::start() {
+    if (VROptions::get()->getOption<bool>("active_stereo"))
+        glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STEREO | GLUT_STENCIL);
+    else glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL);
 
     cout << "Init Modules\n";
-
-    scene_mgr = shared_ptr<VRSceneManager>(VRSceneManager::get());
+    sound_mgr = shared_ptr<VRSoundManager>(&VRSoundManager::get());
     setup_mgr = shared_ptr<VRSetupManager>(VRSetupManager::get());
+    interface = shared_ptr<VRMainInterface>(VRMainInterface::get());
+    scene_mgr = shared_ptr<VRSceneManager>(VRSceneManager::get());
     monitor = shared_ptr<VRInternalMonitor>(VRInternalMonitor::get());
     gui_mgr = shared_ptr<VRGuiManager>(VRGuiManager::get());
-    interface = shared_ptr<VRMainInterface>(VRMainInterface::get());
     loader = shared_ptr<VRSceneLoader>(VRSceneLoader::get());
-    sound_mgr = shared_ptr<VRSoundManager>(&VRSoundManager::get());
 
     string app = options->getOption<string>("application");
     if (app != "") VRSceneManager::get()->loadScene(app);
+
+    while(true) VRSceneManager::get()->update();
 }
 
 void PolyVR::startTestScene(Node* n) {

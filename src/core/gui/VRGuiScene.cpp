@@ -59,7 +59,7 @@ VRGuiVectorEntry lodCEntry;
 void parseSGTree(VRObjectPtr o);
 VRObjectPtr getSelected() {
     if (selected == "") return 0;
-    VRScene* scene = VRSceneManager::getCurrent();
+    auto scene = VRSceneManager::getCurrent();
     if (scene == 0) return 0;
 
     VRObjectPtr root = scene->getRoot();
@@ -520,7 +520,8 @@ void on_focus_clicked(GtkButton*, gpointer data) {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
 
-    VRSceneManager::getCurrent()->getActiveCamera()->setAt( obj->getWorldPosition() );
+    auto scene = VRSceneManager::getCurrent();
+    if (scene) scene->getActiveCamera()->setAt( obj->getWorldPosition() );
 }
 
 void on_identity_clicked(GtkButton*, gpointer data) {
@@ -734,7 +735,7 @@ void VRGuiScene::on_menu_add_animation() {
 
 void VRGuiScene::on_menu_add_file() {
     if(!selected_itr) return;
-    VRScene* scene = VRSceneManager::getCurrent();
+    auto scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
     VRGuiFile::gotoPath( scene->getWorkdir() );
     VRGuiFile::setCallbacks( sigc::mem_fun(*this, &VRGuiScene::on_collada_import_clicked) );
@@ -749,7 +750,9 @@ void VRGuiScene::on_menu_add_file() {
 
 void VRGuiScene::on_menu_add_light() {
     if(!selected_itr) return;
-    VRLightPtr light = VRSceneManager::getCurrent()->addLight("light");
+    auto scene = VRSceneManager::getCurrent();
+    if (scene == 0) return;
+    VRLightPtr light = scene->addLight("light");
     VRLightBeaconPtr lb = VRLightBeacon::create("light_beacon");
     light->addChild(lb);
     light->setBeacon(lb);
@@ -759,7 +762,9 @@ void VRGuiScene::on_menu_add_light() {
 
 void VRGuiScene::on_menu_add_camera() {
     if(!selected_itr) return;
-    VRTransformPtr cam = VRSceneManager::getCurrent()->addCamera("camera");
+    auto scene = VRSceneManager::getCurrent();
+    if (scene == 0) return;
+    VRTransformPtr cam = scene->addCamera("camera");
     getSelected()->addChild(cam);
     parseSGTree(cam, selected_itr);
     VRGuiSignals::get()->getSignal("camera_added")->trigger<VRDevice>();
@@ -906,12 +911,13 @@ void VRGuiScene::on_drag_data_receive(const Glib::RefPtr<Gdk::DragContext>& dc ,
     Gtk::TreeModel::Row row = *iter;
     string dest_path = row.get_value(cols.obj);*/
 
-    dragDest = VRSceneManager::getCurrent()->getRoot()->getAtPath(dragPath);
+    auto scene = VRSceneManager::getCurrent();
+    if (scene) dragDest = scene->getRoot()->getAtPath(dragPath);
 }
 
 void VRGuiScene_on_notebook_switched(GtkNotebook* notebook, GtkNotebookPage* page, guint pageN, gpointer data) {
     if (pageN == 1) {
-        VRScene* scene = VRSceneManager::getCurrent();
+        auto scene = VRSceneManager::getCurrent();
         if (scene == 0) return;
 
         tree_store->clear();
@@ -1315,7 +1321,7 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
 
 // new scene, update stuff here
 void VRGuiScene::updateTreeView() {
-    VRScene* scene = VRSceneManager::getCurrent();
+    auto scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
 
     tree_store->clear();

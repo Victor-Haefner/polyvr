@@ -8,7 +8,10 @@ using namespace std;
 
 VRSetupManager::VRSetupManager() {}
 
-VRSetupManager::~VRSetupManager() { delete current; }
+VRSetupManager::~VRSetupManager() {
+    cout << "VRSetupManager::~VRSetupManager()\n";
+    delete current;
+}
 
 VRSetup* VRSetupManager::getCurrent() { return get()->current; }
 

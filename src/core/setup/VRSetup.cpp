@@ -61,7 +61,7 @@ VRSetup::~VRSetup() {
     delete stats_layer;
 }
 
-void VRSetup::setScene(VRScene* scene) {
+void VRSetup::setScene(VRScenePtr scene) {
     if (scene == 0) return;
     VRCameraPtr cam = scene->getActiveCamera();
     if (cam == 0) return;

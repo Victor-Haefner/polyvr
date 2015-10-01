@@ -38,12 +38,7 @@ class VROptions {
 
         template <typename T>
         void setOption(string name, const T val) {
-            if (vm.count(name) == 0) {
-                cout << "\nERROR, " << name << " is not an option!" << endl;
-                return;
-            }
-
-            vm.erase(name);
+            if (vm.count(name)) vm.erase(name);
             vm.insert(std::make_pair(name, bpo::variable_value(val, false)));
         }
 

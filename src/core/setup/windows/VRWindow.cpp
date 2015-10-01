@@ -15,7 +15,7 @@ unsigned int VRWindow::active_window_count = 0;
 VRWindow::VRWindow() {
     active_window_count++;
     string n = getName();
-    auto f = new VRFunction<VRThread*>("VRWindow", boost::bind(&VRWindow::update, this, _1) );
+    auto f = new VRFunction< weak_ptr<VRThread> >("VRWindow", boost::bind(&VRWindow::update, this, _1) );
     thread_id = VRSceneManager::get()->initThread(f,n,true,0);
 }
 
@@ -44,8 +44,10 @@ void VRWindow::resize(int w, int h) { _win->resize(w,h); }
 
 void VRWindow::render() { if(_win) _win->render(ract); }
 
-void VRWindow::update(VRThread* t) {
+void VRWindow::update( weak_ptr<VRThread>  wt) {
+    auto t = wt.lock();
     do {
+        t = wt.lock();
         BarrierRefPtr barrier = Barrier::get("PVR_rendering", true);
         barrier->enter(active_window_count+1);
 

@@ -31,7 +31,7 @@ class VRWindow : public VRName {
         int height = 480;
 
         int thread_id = -1;
-        void update(VRThread* t);
+        void update( weak_ptr<VRThread>  t);
 
     public:
         VRWindow();

@@ -384,10 +384,10 @@ void VRGuiSetup::on_menu_add_viewport() {
     int v = current_setup->addView(win->getBaseName());
     win->addView(current_setup->getView(v));
 
-    if (current_scene) {
-        current_setup->setViewCamera(current_scene->getActiveCamera(), v);
-        current_setup->setViewRoot(current_scene->getRoot(), v);
-        current_setup->setViewBackground(current_scene->getBackground(), v);
+    if (auto scene = current_scene.lock()) {
+        current_setup->setViewCamera(scene->getActiveCamera(), v);
+        current_setup->setViewRoot(scene->getRoot(), v);
+        current_setup->setViewBackground(scene->getBackground(), v);
     }
 
     updateSetup();
@@ -750,7 +750,6 @@ void VRGuiSetup::on_toggle_vrpn_verbose() {
 VRGuiSetup::VRGuiSetup() {
     selected_object = 0;
     current_setup = 0;
-    current_scene = 0;
     mwindow = 0;
     guard = false;
 

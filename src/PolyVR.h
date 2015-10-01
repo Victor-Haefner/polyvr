@@ -22,27 +22,29 @@ class PolyVR {
     private:
         void setMultisampling(bool on);
 
-        shared_ptr<VROptions> options;
-        shared_ptr<VRSceneManager> scene_mgr;
-        shared_ptr<VRSetupManager> setup_mgr;
         shared_ptr<VRInternalMonitor> monitor;
         shared_ptr<VRGuiManager> gui_mgr;
         shared_ptr<VRMainInterface> interface;
         shared_ptr<VRSceneLoader> loader;
+        shared_ptr<VRSetupManager> setup_mgr;
+        shared_ptr<VRSceneManager> scene_mgr;
         shared_ptr<VRSoundManager> sound_mgr;
-
-        PolyVR();
+        shared_ptr<VROptions> options;
 
     public:
+        PolyVR();
         ~PolyVR();
-        static PolyVR& get();
+        static PolyVR* get();
+        static void shutdown();
 
         void init(int argc, char **argv);
-
         void start();
-        void exit();
-
         void startTestScene(Node* n);
+
+        void setOption(string name, bool val);
+        void setOption(string name, string val);
+        void setOption(string name, int val);
+        void setOption(string name, float val);
 };
 
 OSG_END_NAMESPACE;

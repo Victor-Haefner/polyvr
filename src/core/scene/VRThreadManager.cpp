@@ -20,15 +20,18 @@ class OSGThread : public ExternalThread {
         }
 };
 
-void VRThreadManager::runLoop(VRThread* t) {
+void VRThreadManager::runLoop(VRThreadWeakPtr wt) {
+    auto t = wt.lock();
     ExternalThreadRefPtr tr = OSGThread::create(t->name.c_str(), 0);
     tr->initialize(t->aspect);//der hauptthread nutzt Aspect 0
 
     t->osg_t = tr;
     t->status = 1;
 
-    do (*t->fkt)(t);
-    while(t->control_flag);
+    do {
+        t = wt.lock();
+        if (t) (*t->fkt)(t);
+    } while(t->control_flag);
 
     t->status = 2;
 }
@@ -37,7 +40,10 @@ VRThreadManager::VRThreadManager() {
     appThread = dynamic_cast<Thread *>(ThreadManager::getAppThread());
 }
 
-VRThreadManager::~VRThreadManager() { for (auto t : threads) delete t.second; }
+VRThreadManager::~VRThreadManager() {
+    cout << "VRThreadManager::~VRThreadManager()\n";
+    for (auto t : threads) stopThread(t.first);
+}
 
 VRThread::~VRThread() {
     control_flag = false;
@@ -48,10 +54,25 @@ VRThread::~VRThread() {
     if (fkt) delete fkt;
 }
 
-int VRThreadManager::initThread(VRFunction<VRThread*>* f, string name, bool loop, int aspect) { //start thread
+void VRThreadManager::stopThread(int id, int tries) {
+    if (threads.count(id) == 0) return;
+    VRThreadPtr t = threads[id];
+    t->control_flag = false;
+
+    int k = 0;
+    while (t->status != 2) {
+        if (k == tries) { cout << "Warning: thread " << id << " won't stop" << endl; return; }
+        k++;
+        osgSleep(10);
+    }
+
+    threads.erase(id);
+}
+
+int VRThreadManager::initThread(VRFunction<VRThreadWeakPtr>* f, string name, bool loop, int aspect) { //start thread
     static int id = 1;
 
-    VRThread* t = new VRThread();
+    VRThreadPtr t = VRThreadPtr( new VRThread() );
     t->aspect = aspect;
     t->control_flag = loop;
     t->appThread = appThread;
@@ -66,27 +87,9 @@ int VRThreadManager::initThread(VRFunction<VRThread*>* f, string name, bool loop
     return t->ID;
 }
 
-void VRThreadManager::stopThread(int id, int tries) {
-
-    if (threads.count(id) == 0) return;
-    VRThread* t = threads[id];
-    t->control_flag = false;
-
-    int k = 0;
-    while (t->status != 2) {
-        if (k == tries) { cout << "Warning: thread " << id << " won't stop" << endl; return; }
-        k++;
-        osgSleep(10);
-    }
-
-    delete threads[id];
-    threads.erase(id);
-}
-
 void VRThreadManager::killThread(int id) {
     if (threads.count(id) == 0) return;
     cout << "\nKILL THREAD " << id << endl;
-    delete threads[id];
     threads.erase(id);
 }
 

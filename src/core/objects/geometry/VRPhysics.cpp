@@ -260,7 +260,7 @@ void VRPhysics::clear() {
 }
 
 void VRPhysics::update() {
-    OSG::VRScene* scene = OSG::VRSceneManager::getCurrent();
+    auto scene = OSG::VRSceneManager::getCurrent();
     if (scene == 0) return;
 
     if (world == 0) world = scene->bltWorld();

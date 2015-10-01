@@ -46,7 +46,7 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
         VRTransformPtr getRoot();
         VRTransformPtr getTracker(string t);
 
-        void setScene(VRScene* s);
+        void setScene( shared_ptr<VRScene> s);
         void showSetup(bool b);
 
         void printOSG();

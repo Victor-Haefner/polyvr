@@ -49,7 +49,7 @@ ART::ART() {
     updatePtr  = VRFunction<int>::create("ART_apply", boost::bind(&ART::applyEvents, this));
     VRSceneManager::get()->addUpdateFkt(updatePtr);
 
-    auto fkt2 = new VRFunction<VRThread*>("ART_fetch", boost::bind(&ART::updateT, this, _1));
+    auto fkt2 = new VRFunction< weak_ptr<VRThread> >("ART_fetch", boost::bind(&ART::updateT, this, _1));
     VRSceneManager::get()->initThread(fkt2, "ART_fetch", true);
 
     on_new_device = new VRSignal();
@@ -60,7 +60,9 @@ ART::ART() {
     store("up", &up);
 }
 
-ART::~ART() {}
+ART::~ART() {
+    //VRSceneManager::get()->stopThread(fetchThread);
+}
 
 template<typename dev>
 void ART::getMatrix(dev t, ART_device* d) {
@@ -107,10 +109,10 @@ void ART::scan(int type, int N) {
     }
 }
 
-void ART::updateL() { updateT(0); }
+void ART::updateL() { updateT( weak_ptr<VRThread>() ); }
 
 //update thread
-void ART::updateT(VRThread* t) {
+void ART::updateT( weak_ptr<VRThread>  t) {
     if (!active) {
         osgSleep(1);
         return;

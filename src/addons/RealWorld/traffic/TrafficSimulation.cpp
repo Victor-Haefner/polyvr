@@ -301,7 +301,7 @@ Value TrafficSimulation::convertStreet(OSMWay *street) {
     return value;
 }
 
-void TrafficSimulation::communicationThread(VRThread* t) {
+void TrafficSimulation::communicationThread(VRThreadWeakPtr t) {
 
     lock_guard<mutex> guardThread(communicationThreadMutex);
 
@@ -580,7 +580,7 @@ void TrafficSimulation::addDriverType(const unsigned int id, const double probab
 
 void TrafficSimulation::start() {
     if (communicationThreadId < 0) {
-        VRFunction<VRThread*>* func = new VRFunction<VRThread*>("trafficCommunicationThread", boost::bind(&TrafficSimulation::communicationThread, this, _1));
+        VRFunction<VRThreadWeakPtr>* func = new VRFunction<VRThreadWeakPtr>("trafficCommunicationThread", boost::bind(&TrafficSimulation::communicationThread, this, _1));
         communicationThreadId = VRSceneManager::get()->initThread(func, "trafficCommunicationThread", true);
     }
 
@@ -860,7 +860,8 @@ void TrafficSimulation::update() {
                     if (!light.isConvertibleTo(stringValue)) continue;
 
                     while (bulbIndex+1 >= lightBulbs.size()) {
-                        if (VRSceneManager::getCurrent() == NULL) break;
+                        auto scene = VRSceneManager::getCurrent();
+                        if (!scene) break;
 
                         // Create a new light
                         VRGeometryPtr geo = VRGeometry::create("ampel");
@@ -868,7 +869,7 @@ void TrafficSimulation::update() {
                         geo->setPrimitive("Sphere", "0.5 2"); // The first value has to be half of bulbSize
                         geo->setMaterial(a_red);
 
-                        VRSceneManager::getCurrent()->add(geo);
+                        scene->add(geo);
                         lightBulbs.push_back(geo);
                     }
 

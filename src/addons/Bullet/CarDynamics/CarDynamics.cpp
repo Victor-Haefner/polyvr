@@ -74,8 +74,8 @@ CarDynamics::CarDynamics() {
 }
 
 //only to be done once
-void CarDynamics::initPhysics(){
-    VRScene* scene = VRSceneManager::getCurrent();
+void CarDynamics::initPhysics() {
+    auto scene = VRSceneManager::getCurrent();
     updatePtr = VRFunction<int>::create("cardyn_update", boost::bind(&CarDynamics::updateWheels, this));
     scene->addUpdateFkt(updatePtr);
     m_dynamicsWorld = (btDynamicsWorld*) scene->bltWorld();
@@ -275,7 +275,7 @@ void CarDynamics::setCarMass(float m) {
 }
 
 boost::recursive_mutex& CarDynamics::mtx() {
-    auto scene = OSG::VRSceneManager::getCurrent();
+    auto scene = VRSceneManager::getCurrent();
     if (scene) return scene->physicsMutex();
     else {
         static boost::recursive_mutex m;

@@ -45,8 +45,7 @@ VROptions::VROptions() : desc("Configuration ") {
 void VROptions::operator= (VROptions v) {;}
 
 VROptions* VROptions::get() {
-    static VROptions* singleton = 0;
-    if (singleton == 0) singleton = new VROptions();
+    static VROptions* singleton = new VROptions();
     return singleton;
 }
 

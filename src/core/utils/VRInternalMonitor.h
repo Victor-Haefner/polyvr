@@ -17,6 +17,7 @@ class VRInternalMonitor {
         VRInternalMonitor();
 
     public:
+        ~VRInternalMonitor();
         static VRInternalMonitor* get();
 
         void add( string name, varFkt* fkt );

@@ -25,7 +25,7 @@ class VRGuiSetup {
         string selected_type;
         string selected_name;
         VRSetup* current_setup;
-        VRScene* current_scene;
+        VRSceneWeakPtr current_scene;
 
         VRGuiVectorEntry centerEntry;
         VRGuiVectorEntry userEntry;

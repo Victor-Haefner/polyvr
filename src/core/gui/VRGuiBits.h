@@ -26,8 +26,8 @@ class VRGuiBits {
 
 	    shared_ptr<VRFunction<int> > updatePtr;
 
-        VRRecorder* recorder = 0;
-        VRVisualLayer* recorder_visual_layer = 0;
+        shared_ptr<VRRecorder> recorder;
+        shared_ptr<VRVisualLayer> recorder_visual_layer;
 
         void hideAbout(int i);
         void updateVisualLayer();

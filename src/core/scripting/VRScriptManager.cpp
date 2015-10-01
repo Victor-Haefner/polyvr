@@ -44,6 +44,7 @@
 #include "VRPyImage.h"
 #include <iostream>
 #include <algorithm>
+#include <memory>
 
 //TODO: refactoring
 #include "core/gui/VRGuiFile.h"
@@ -449,7 +450,8 @@ PyObject* VRScriptManager::getSetup(VRScriptManager* self) {
 }
 
 PyObject* VRScriptManager::getNavigator(VRScriptManager* self) {
-    return VRPyNavigator::fromPtr((VRNavigator*)VRSceneManager::getCurrent());
+    auto scene = VRSceneManager::getCurrent();
+    return VRPyNavigator::fromPtr((VRNavigator*)scene.get());
 }
 
 PyObject* VRScriptManager::printOSG(VRScriptManager* self) {
@@ -459,8 +461,7 @@ PyObject* VRScriptManager::printOSG(VRScriptManager* self) {
 }
 
 PyObject* VRScriptManager::exit(VRScriptManager* self) {
-    auto pvr = OSG::PolyVR::get();
-    pvr.exit();
+    PolyVR::shutdown();
     Py_RETURN_TRUE;
 }
 
@@ -509,7 +510,7 @@ void execCall(PyObject* pyFkt, PyObject* pArgs, int i) {
     PyGILState_Release(gstate);
 }
 
-void execThread(PyObject* pyFkt, PyObject* pArgs, VRThread* thread) {
+void execThread(PyObject* pyFkt, PyObject* pArgs,  std::weak_ptr<VRThread>  thread) {
     execCall(pyFkt, pArgs, 0);
 }
 
@@ -532,7 +533,7 @@ PyObject* VRScriptManager::startThread(VRScriptManager* self, PyObject *args) {
         if (type == "list") pArgs = PyList_AsTuple(pArgs);
     }
 
-    auto fkt = new VRFunction<VRThread*>( "pyExecCall", boost::bind(execThread, pyFkt, pArgs, _1) );
+    auto fkt = new VRFunction< std::weak_ptr<VRThread> >( "pyExecCall", boost::bind(execThread, pyFkt, pArgs, _1) );
     int t = VRSceneManager::getCurrent()->initThread(fkt, "python thread");
     return PyInt_FromLong(t);
 }
@@ -559,7 +560,7 @@ PyObject* VRScriptManager::stackCall(VRScriptManager* self, PyObject *args) {
     VRUpdatePtr fkt = VRFunction<int>::create( "pyExecCall", boost::bind(execCall, pyFkt, pArgs, _1) );
     VRUpdateWeakPtr wkp = fkt;
 
-    VRScene* scene = VRSceneManager::getCurrent();
+    auto scene = VRSceneManager::getCurrent();
     auto a = scene->addAnimation(0, delay, wkp, 0, 0, false);
     a->setCallbackOwner(true);
     Py_RETURN_TRUE;
