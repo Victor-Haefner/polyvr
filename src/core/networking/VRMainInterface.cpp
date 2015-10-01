@@ -17,7 +17,9 @@ VRMainInterface::VRMainInterface() {
     update();
 }
 
-VRMainInterface::~VRMainInterface() {}
+VRMainInterface::~VRMainInterface() {
+    delete mobile;
+}
 
 VRMainInterface* VRMainInterface::get() {
     static VRMainInterface* instance = new VRMainInterface();

@@ -321,8 +321,8 @@ struct VRSoundContext {
 
 struct VRSoundChannel {
     bool running = true;
-    boost::thread* thread;
-    VRSoundContext* context;
+    boost::thread* thread = 0;
+    VRSoundContext* context = 0;
     boost::mutex mutex;
     map<int, VRSound*> current;
 
@@ -363,7 +363,11 @@ VRSoundManager::VRSoundManager() {
     channel = new VRSoundChannel();
 }
 
-VRSoundManager::~VRSoundManager() { clearSoundMap(); }
+VRSoundManager::~VRSoundManager() {
+    clearSoundMap();
+    delete channel;
+}
+
 VRSoundManager& VRSoundManager::get() {
     static VRSoundManager* instance = new VRSoundManager();
     return *instance;

@@ -12,9 +12,7 @@ void nameBaseDictSize(string& s) { s = toString(VRName::getNameNumber()); }
 void dynObjctsSize(string& s) { s = toString((int)VRTransform::dynamicObjects.size()); }
 void chgObjctsSize(string& s) { s = toString((int)VRTransform::changedObjects.size()); }
 
-VRInternalMonitor::~VRInternalMonitor() {
-    cout << "VRInternalMonitor::~VRInternalMonitor()\n";
-}
+VRInternalMonitor::~VRInternalMonitor() {}
 
 VRInternalMonitor::VRInternalMonitor() {
     add("VRName::nameDict size", new varFkt("Set_test_var", nameDictSize));

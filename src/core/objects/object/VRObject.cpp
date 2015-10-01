@@ -31,7 +31,6 @@ VRObject::VRObject(string _name) {
 }
 
 VRObject::~VRObject() {
-    cout << "~VRObject " << name << endl;
     NodeRecPtr p;
     if (node !=  0) p = node->getParent();
     if (p !=  0) p->subChild(node);
@@ -41,7 +40,6 @@ void VRObject::destroy() {
     auto p = ptr();
     for (auto c : children) if(c) c->detach();
     if (getParent()) getParent()->subChild( ptr() );
-    cout << "destroy " << name << " " << p.use_count() << endl;
 }
 
 VRObjectPtr VRObject::create(string name) { return shared_ptr<VRObject>(new VRObject(name) ); }

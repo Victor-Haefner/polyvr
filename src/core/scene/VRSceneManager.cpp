@@ -31,9 +31,7 @@ VRSceneManager::VRSceneManager() {
     on_scene_close = new VRSignal();
 }
 
-VRSceneManager::~VRSceneManager() {
-    cout << "VRSceneManager::~VRSceneManager()\n";
-}
+VRSceneManager::~VRSceneManager() {}
 
 void VRSceneManager::operator= (VRSceneManager v) {;}
 

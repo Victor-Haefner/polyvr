@@ -20,6 +20,7 @@ VRMobile::VRMobile(int port) : VRDevice("mobile") {
     clearSignals();
 
     soc = VRSceneManager::get()->getSocket(port);
+    this->port = port;
     cb = new VRHTTP_cb( "Mobile_server_callback", boost::bind(&VRMobile::callback, this, _1) );
     soc->setHTTPCallback(cb);
     soc->setType("http receive");

@@ -7,6 +7,16 @@
 
 OSG_BEGIN_NAMESPACE;
 
+VRDevice::VRDevice(string _type) : VRAvatar(_type) {
+    type = _type;
+    setName(_type);
+
+    store("type", &type);
+    store("name", &name);
+}
+
+VRDevice::~VRDevice() {}
+
 VRSignal* VRDevice::signalExist(int key, int state) {
     stringstream ss;
     ss << "on_" << name << "_" << key << "_" << state;
@@ -55,20 +65,6 @@ void VRDevice::updateSignals() {
     for(uint i=0; i<activatedSignals.size(); i++) {
         activatedSignals[i]->trigger<VRDevice>();
     }
-}
-
-VRDevice::VRDevice(string _type) : VRAvatar(_type) {
-    type = _type;
-    setName(_type);
-
-    store("type", &type);
-    store("name", &name);
-    cout << "VRDevice " << getName() << endl;
-}
-
-VRDevice::~VRDevice() {
-    cout << "~VRDevice " << getName() << endl;
-    //activatedSignals;
 }
 
 void VRDevice::clearSignals() {

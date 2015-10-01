@@ -126,6 +126,19 @@ VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree) {
 
 VRIntersection VRIntersect::intersect() { return intersect(dynTree); }
 
+VRIntersect::VRIntersect() {
+    initCross();
+    drop_fkt = new VRDevCb("Intersect_drop", boost::bind(&VRIntersect::drop, this, _1));
+    dragged_ghost = VRTransform::create("dev_ghost");
+    dragSignal = new VRSignal((VRDevice*)this);
+    dropSignal = new VRSignal((VRDevice*)this);
+}
+
+VRIntersect::~VRIntersect() {
+    delete dragSignal;
+    delete dropSignal;
+}
+
 void VRIntersect::dragCB(VRTransformWeakPtr caster, VRObjectWeakPtr tree, VRDevice* dev) {
     VRIntersection ins = intersect(tree);
     drag(ins.object, caster);
@@ -199,19 +212,6 @@ void VRIntersect::initCross() {
     mat->setDiffuse(Color3f(1,0,0));
     cross->create(GL_LINES, pos, norms, inds, texs);
     cross->setMaterial(mat);
-}
-
-VRIntersect::VRIntersect() {
-    initCross();
-    drop_fkt = new VRDevCb("Intersect_drop", boost::bind(&VRIntersect::drop, this, _1));
-    dragged_ghost = VRTransform::create("dev_ghost");
-    dragSignal = new VRSignal((VRDevice*)this);
-    dropSignal = new VRSignal((VRDevice*)this);
-}
-
-VRIntersect::~VRIntersect() {
-    delete dragSignal;
-    delete dropSignal;
 }
 
 VRDevCb* VRIntersect::addDrag(VRTransformWeakPtr caster) {
