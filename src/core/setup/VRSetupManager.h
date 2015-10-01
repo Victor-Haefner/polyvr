@@ -12,7 +12,7 @@ class VRSetup;
 
 class VRSetupManager {
     private:
-        VRSetup* current;
+        VRSetup* current = 0;
         string current_path;
 
         VRSetupManager();

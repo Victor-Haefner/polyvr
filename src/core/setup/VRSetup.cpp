@@ -56,7 +56,10 @@ VRSetup::VRSetup(string name) {
     stats_layer->setCallback( layer_stats_toggle );
 }
 
-VRSetup::~VRSetup() {}
+VRSetup::~VRSetup() {
+    delete setup_layer;
+    delete stats_layer;
+}
 
 void VRSetup::setScene(VRScene* scene) {
     if (scene == 0) return;

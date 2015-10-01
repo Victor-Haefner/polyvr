@@ -107,6 +107,7 @@ VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, Line ray) {
 VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree) {
     VRIntersection ins;
     auto tree = wtree.lock();
+    if (!tree) tree = dynTree.lock();
     if (!tree) return ins;
 
     VRDevice* dev = (VRDevice*)this;

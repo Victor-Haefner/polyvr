@@ -86,7 +86,8 @@ void VRGuiBits_on_save_clicked(GtkButton* cb, gpointer data) {
 }
 
 void VRGuiBits_on_quit_clicked(GtkButton* cb, gpointer data) {
-    exitPolyVR();
+    auto pvr = OSG::PolyVR::get();
+    pvr.exit();
 }
 
 void VRGuiBits_on_about_clicked(GtkButton* cb, gpointer data) {

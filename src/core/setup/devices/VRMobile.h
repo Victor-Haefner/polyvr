@@ -23,6 +23,7 @@ class VRMobile : public VRDevice {
 
     public:
         VRMobile(int port);
+        ~VRMobile();
 
         void clearSignals();
 

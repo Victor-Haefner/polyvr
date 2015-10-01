@@ -4,18 +4,27 @@
 #include <OpenSG/OSGConfig.h>
 
 OSG_BEGIN_NAMESPACE;
+using namespace std;
 
 class Node;
 
-using namespace std;
+class PolyVR {
+    private:
+        void setMultisampling(bool on);
 
-void setMultisampling(bool on);
-void initPolyVR(int argc, char **argv);
+        PolyVR();
 
-void startPolyVR();
-void exitPolyVR();
+    public:
+        ~PolyVR();
+        static PolyVR& get();
 
-void startPolyVR_testScene(Node* n);
+        void init(int argc, char **argv);
+
+        void start();
+        void exit();
+
+        void startTestScene(Node* n);
+};
 
 OSG_END_NAMESPACE;
 

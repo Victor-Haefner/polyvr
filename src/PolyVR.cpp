@@ -47,12 +47,18 @@ void printFieldContainer() {
     }
 }
 
-void initPolyVR(int argc, char **argv) {
+PolyVR::PolyVR() {}
+PolyVR::~PolyVR() {}
+
+PolyVR& PolyVR::get() {
+    static PolyVR pvr;
+    return pvr;
+}
+
+void PolyVR::init(int argc, char **argv) {
     cout << "Init PolyVR\n\n";
     enableCoreDump(true);
     setlocale(LC_ALL, "C");
-
-    //Options
     VROptions::get()->parse(argc,argv);
 
     //GLUT
@@ -82,7 +88,7 @@ void initPolyVR(int argc, char **argv) {
     if (app != "") VRSceneManager::get()->loadScene(app);
 }
 
-void exitPolyVR() {
+void PolyVR::exit() {
     delete VRGuiManager::get();
     delete VRSetupManager::get();
     delete VRSceneManager::get();
@@ -92,25 +98,24 @@ void exitPolyVR() {
     delete VRMainInterface::get();
     delete &VRSoundManager::get();
     VRMaterial::clearAll();
-    CEF::shutdown();
+    //CEF::shutdown();
 
-    //printFieldContainer();
+    printFieldContainer();
 
     osgExit();
-    exit(0);
+    std::exit(0);
 }
 
-
-void startPolyVR() {
+void PolyVR::start() {
     while(true) VRSceneManager::get()->update();
 }
 
-void startPolyVR_testScene(Node* n) {
+void PolyVR::startTestScene(Node* n) {
     VRSceneManager::get()->newScene("test");
     VRSceneManager::getCurrent()->getRoot()->find("Headlight")->addChild(n);
     VRGuiManager::get()->wakeWindow();
 
-    startPolyVR();
+    start();
 }
 
 

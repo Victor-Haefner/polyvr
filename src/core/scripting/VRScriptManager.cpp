@@ -459,7 +459,8 @@ PyObject* VRScriptManager::printOSG(VRScriptManager* self) {
 }
 
 PyObject* VRScriptManager::exit(VRScriptManager* self) {
-    exitPolyVR();
+    auto pvr = OSG::PolyVR::get();
+    pvr.exit();
     Py_RETURN_TRUE;
 }
 

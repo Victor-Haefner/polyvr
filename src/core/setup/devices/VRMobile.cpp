@@ -25,6 +25,8 @@ VRMobile::VRMobile(int port) : VRDevice("mobile") {
     soc->setType("http receive");
 }
 
+VRMobile::~VRMobile() {}
+
 void VRMobile::callback(void* _args) { // TODO: implement generic button trigger of device etc..
     //args->print();
 	HTTP_args* args = (HTTP_args*)_args;

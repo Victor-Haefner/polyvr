@@ -63,9 +63,11 @@ VRDevice::VRDevice(string _type) : VRAvatar(_type) {
 
     store("type", &type);
     store("name", &name);
+    cout << "VRDevice " << getName() << endl;
 }
 
 VRDevice::~VRDevice() {
+    cout << "~VRDevice " << getName() << endl;
     //activatedSignals;
 }
 
