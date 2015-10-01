@@ -1,12 +1,8 @@
 #include "VRProfiler.h"
 
-#include "core/scene/VRSceneManager.h"
-
 #include <GL/glut.h>
 #include <time.h>
 #include <iostream>
-
-using namespace OSG;
 
 VRProfiler* VRProfiler::get() {
     static VRProfiler* instance = new VRProfiler();
@@ -41,13 +37,7 @@ int VRProfiler::getTime() {
 }
 
 void VRProfiler::setActive(bool b) { active = b; }
-
-bool VRProfiler::isActive() {
-    if (!active) return false;
-    auto s = VRSceneManager::getCurrent();
-    if (s == 0) return false;
-    return true;
-}
+bool VRProfiler::isActive() { return active; }
 
 list<VRProfiler::Frame> VRProfiler::getFrames() {
     boost::mutex::scoped_lock lock(mutex);

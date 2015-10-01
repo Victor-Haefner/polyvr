@@ -64,6 +64,7 @@ string VRSceneManager::getOriginalWorkdir() { return original_workdir; }
 
 void VRSceneManager::removeScene(VRScenePtr s) {
     if (s == 0) return;
+    VRProfiler::get()->setActive(false);
     on_scene_close->trigger<VRDevice>();
     scenes.erase(s->getName());
     if (s == current) current = 0;
@@ -117,18 +118,19 @@ void VRSceneManager::newScene(string path) {
 VRSignal* VRSceneManager::getSignal_on_scene_load() { return on_scene_load; }
 VRSignal* VRSceneManager::getSignal_on_scene_close() { return on_scene_close; }
 
-void VRSceneManager::setActiveScene(VRScenePtr s) {
+void VRSceneManager::setActiveScene(VRScenePtr scene) {
     if (scenes.size() == 0) { cout << "\n ERROR: No scenes defined " << flush; return; }
 
-    if (scenes.count(s->getName()) == 0) { cout << "\n ERROR: No scene " << s->getName() << flush; return; }
-    else s->getSystemRoot()->show(); //activate new scene
+    if (scenes.count(scene->getName()) == 0) { cout << "\n ERROR: No scene " << scene->getName() << flush; return; }
+    else scene->getSystemRoot()->show(); //activate new scene
 
     if (active != "NO_SCENE_ACTIVE") scenes[active]->getSystemRoot()->hide(); //hide old scene
 
-    active = s->getName();
-    current = s;
-    VRSetupManager::getCurrent()->setScene(s);
-    s->setActiveCamera();
+    active = scene->getName();
+    current = scene;
+    VRSetupManager::getCurrent()->setScene(scene);
+    scene->setActiveCamera();
+    VRProfiler::get()->setActive(true);
 
     on_scene_load->trigger<VRDevice>();
 }
