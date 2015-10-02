@@ -59,6 +59,8 @@ PolyVR* PolyVR::get() {
 
 void PolyVR::shutdown() {
     auto pvr = get();
+    auto scene = VRSceneManager::getCurrent();
+    pvr->scene_mgr->removeScene(scene);
     pvr->scene_mgr->stopAllThreads();
     delete pvr;
     //printFieldContainer();
