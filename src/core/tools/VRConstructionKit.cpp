@@ -1,6 +1,8 @@
 #include "VRConstructionKit.h"
 #include "VRSnappingEngine.h"
-#include "VRSelector.h"
+#include "selection/VRSelector.h"
+
+#include <boost/bind.hpp>
 
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"

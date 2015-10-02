@@ -692,8 +692,6 @@
 		<Unit filename="src/core/tools/VRQRCode.h" />
 		<Unit filename="src/core/tools/VRRecorder.cpp" />
 		<Unit filename="src/core/tools/VRRecorder.h" />
-		<Unit filename="src/core/tools/VRSelector.cpp" />
-		<Unit filename="src/core/tools/VRSelector.h" />
 		<Unit filename="src/core/tools/VRSnappingEngine.cpp" />
 		<Unit filename="src/core/tools/VRSnappingEngine.h" />
 		<Unit filename="src/core/tools/VRText.cpp" />
@@ -702,6 +700,10 @@
 		<Unit filename="src/core/tools/VRTextureRenderer.h" />
 		<Unit filename="src/core/tools/VRWaypoint.cpp" />
 		<Unit filename="src/core/tools/VRWaypoint.h" />
+		<Unit filename="src/core/tools/selection/VRPolygonSelection.cpp" />
+		<Unit filename="src/core/tools/selection/VRPolygonSelection.h" />
+		<Unit filename="src/core/tools/selection/VRSelector.cpp" />
+		<Unit filename="src/core/tools/selection/VRSelector.h" />
 		<Unit filename="src/core/utils/VRDoublebuffer.cpp" />
 		<Unit filename="src/core/utils/VRDoublebuffer.h" />
 		<Unit filename="src/core/utils/VRFlags.cpp" />

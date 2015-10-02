@@ -3,8 +3,8 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGVector.h>
-#include <OpenSG/OSGMaterial.h>
 #include <string>
+#include <map>
 #include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;

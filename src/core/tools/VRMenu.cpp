@@ -3,7 +3,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/toString.h"
-#include "VRSelector.h"
+#include "selection/VRSelector.h"
 
 using namespace std;
 using namespace OSG;

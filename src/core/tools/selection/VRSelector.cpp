@@ -2,6 +2,8 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRGeometry.h"
 
+//#include <OpenSG/OSGMaterial.h>
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
