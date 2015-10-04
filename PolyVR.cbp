@@ -441,6 +441,10 @@
 		<Unit filename="src/core/math/patch.h" />
 		<Unit filename="src/core/math/path.cpp" />
 		<Unit filename="src/core/math/path.h" />
+		<Unit filename="src/core/math/polygon.cpp" />
+		<Unit filename="src/core/math/polygon.h" />
+		<Unit filename="src/core/math/pose.cpp" />
+		<Unit filename="src/core/math/pose.h" />
 		<Unit filename="src/core/navigation/VRNavigator.cpp" />
 		<Unit filename="src/core/navigation/VRNavigator.h" />
 		<Unit filename="src/core/networking/VRCommunication.h" />
