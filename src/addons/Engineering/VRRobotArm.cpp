@@ -4,7 +4,7 @@
 #include "core/objects/VRAnimation.h"
 #include "core/utils/VRFunction.h"
 #include "core/tools/VRAnalyticGeometry.h"
-
+#include <boost/bind.hpp>
 
 using namespace OSG;
 

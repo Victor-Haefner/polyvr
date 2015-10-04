@@ -1,6 +1,4 @@
 #include "path.h"
-
-#include <OpenSG/OSGQuaternion.h>
 #include "core/objects/VRTransform.h"
 
 OSG_BEGIN_NAMESPACE;

@@ -1,13 +1,11 @@
 #ifndef path_H_INCLUDED
 #define path_H_INCLUDED
 
-#include <OpenSG/OSGGeometry.h>
+#include <OpenSG/OSGVector.h>
 #include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
-
-class VRTransform;
 
 class path {
     public:
