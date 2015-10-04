@@ -20,7 +20,9 @@ class VRSelection {
     public:
         VRSelection();
 
+        void add(VRGeometryPtr geo);
         void apply(VRObjectPtr tree);
+        void clear();
 
         vector<VRGeometryWeakPtr> getPartials();
         vector<VRGeometryWeakPtr> getSelected();

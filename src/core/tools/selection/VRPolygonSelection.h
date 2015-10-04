@@ -15,6 +15,7 @@ class VRPolygonSelection : public VRSelection {
         pose origin;
         frustum selection;
         frustum convex_hull;
+        bool needs_update = false;
 
         bool vertSelected(Vec3f p);
         bool objSelected(VRGeometryPtr geo);
@@ -22,6 +23,7 @@ class VRPolygonSelection : public VRSelection {
 
     public:
         VRPolygonSelection();
+        void clear();
 
         void setOrigin(pose orig);
         void addEdge(Vec3f dir);

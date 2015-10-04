@@ -5,11 +5,18 @@
 
 using namespace OSG;
 
+VRSelection::VRSelection() {}
+
 bool VRSelection::vertSelected(Vec3f p) { return false; }
 bool VRSelection::objSelected(VRGeometryPtr geo) { return false; }
 bool VRSelection::partialSelected(VRGeometryPtr geo) { return false; }
 
-VRSelection::VRSelection() {}
+void VRSelection::add(VRGeometryPtr geo) { selected.push_back(geo); }
+
+void VRSelection::clear() {
+    selected.clear();
+    partials.clear();
+}
 
 void VRSelection::apply(VRObjectPtr tree) {
     auto geos = tree->getChildren(true, "Geometry");
