@@ -1,4 +1,5 @@
 #include "pose.h"
+#include <OpenSG/OSGMatrixUtility.h>
 
 using namespace OSG;
 
@@ -15,3 +16,9 @@ void pose::set(Vec3f p, Vec3f d, Vec3f u) {
 Vec3f pose::pos() { return data.size() > 0 ? data[0] : Vec3f(); }
 Vec3f pose::dir() { return data.size() > 1 ? data[1] : Vec3f(); }
 Vec3f pose::up() { return data.size() > 2 ? data[2] : Vec3f(); }
+
+Matrix pose::asMatrix() {
+    Matrix m;
+    MatrixLookAt(m, data[0], data[1], data[2]);
+    return m;
+}

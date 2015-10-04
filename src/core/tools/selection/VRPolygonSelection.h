@@ -1,20 +1,31 @@
 #ifndef VRPOLYGONSELECTION_H_INCLUDED
 #define VRPOLYGONSELECTION_H_INCLUDED
 
-#include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGVector.h>
-#include <OpenSG/OSGMaterial.h>
 #include <string>
-#include "core/objects/VRObjectFwd.h"
+#include "VRSelection.h"
+#include "core/math/frustum.h"
+#include "core/math/pose.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRPolygonSelection {
+class VRPolygonSelection : public VRSelection {
     private:
+        pose origin;
+        frustum selection;
+        frustum convex_hull;
+
+        bool vertSelected(Vec3f p);
+        bool objSelected(VRGeometryPtr geo);
+        bool partialSelected(VRGeometryPtr geo);
 
     public:
         VRPolygonSelection();
+
+        void setOrigin(pose orig);
+        void addEdge(Vec3f dir);
+        void close();
 };
 
 OSG_END_NAMESPACE;

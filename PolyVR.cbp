@@ -435,6 +435,8 @@
 		<Unit filename="src/core/math/Octree.h" />
 		<Unit filename="src/core/math/coordinates.cpp" />
 		<Unit filename="src/core/math/coordinates.h" />
+		<Unit filename="src/core/math/frustum.cpp" />
+		<Unit filename="src/core/math/frustum.h" />
 		<Unit filename="src/core/math/interpolator.cpp" />
 		<Unit filename="src/core/math/interpolator.h" />
 		<Unit filename="src/core/math/patch.cpp" />
@@ -706,6 +708,8 @@
 		<Unit filename="src/core/tools/VRWaypoint.h" />
 		<Unit filename="src/core/tools/selection/VRPolygonSelection.cpp" />
 		<Unit filename="src/core/tools/selection/VRPolygonSelection.h" />
+		<Unit filename="src/core/tools/selection/VRSelection.cpp" />
+		<Unit filename="src/core/tools/selection/VRSelection.h" />
 		<Unit filename="src/core/tools/selection/VRSelector.cpp" />
 		<Unit filename="src/core/tools/selection/VRSelector.h" />
 		<Unit filename="src/core/utils/VRDoublebuffer.cpp" />

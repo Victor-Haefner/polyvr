@@ -2,6 +2,7 @@
 #define POSE_H_INCLUDED
 
 #include <OpenSG/OSGVector.h>
+#include <OpenSG/OSGMatrix.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -18,6 +19,8 @@ class pose {
         Vec3f pos();
         Vec3f dir();
         Vec3f up();
+
+        Matrix asMatrix();
 };
 
 OSG_END_NAMESPACE;

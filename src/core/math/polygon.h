@@ -2,6 +2,7 @@
 #define POLYGON_H_INCLUDED
 
 #include <OpenSG/OSGVector.h>
+#include <OpenSG/OSGMatrix.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -23,6 +24,8 @@ class polygon {
         vector<Vec2f> sort();
         polygon getConvexHull();
         vector< polygon > getConvexDecomposition();
+
+        vector<Vec3f> toSpace(Matrix m);
 
         string toString();
         static void runTest();

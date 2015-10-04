@@ -117,6 +117,16 @@ vector< polygon > polygon::getConvexDecomposition() {
     return res;
 }
 
+vector<Vec3f> polygon::toSpace(Matrix m) {
+    vector<Vec3f> res;
+    for (auto p : points) {
+        Vec3f pp = Vec3f(p[0], p[1], 0);
+        m.mult(pp,pp);
+        res.push_back(pp);
+    }
+    return res;
+}
+
 string polygon::toString() {
     stringstream ss;
     ss << "poly: ";
