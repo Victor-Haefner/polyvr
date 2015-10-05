@@ -598,12 +598,18 @@
 		<Unit filename="src/core/scripting/VRPyNavigator.h" />
 		<Unit filename="src/core/scripting/VRPyObject.cpp" />
 		<Unit filename="src/core/scripting/VRPyObject.h" />
+		<Unit filename="src/core/scripting/VRPyPatchSelection.cpp" />
+		<Unit filename="src/core/scripting/VRPyPatchSelection.h" />
 		<Unit filename="src/core/scripting/VRPyPath.cpp" />
 		<Unit filename="src/core/scripting/VRPyPath.h" />
 		<Unit filename="src/core/scripting/VRPyPathtool.cpp" />
 		<Unit filename="src/core/scripting/VRPyPathtool.h" />
+		<Unit filename="src/core/scripting/VRPyPolygonSelection.cpp" />
+		<Unit filename="src/core/scripting/VRPyPolygonSelection.h" />
 		<Unit filename="src/core/scripting/VRPyRecorder.cpp" />
 		<Unit filename="src/core/scripting/VRPyRecorder.h" />
+		<Unit filename="src/core/scripting/VRPySelection.cpp" />
+		<Unit filename="src/core/scripting/VRPySelection.h" />
 		<Unit filename="src/core/scripting/VRPySelector.cpp" />
 		<Unit filename="src/core/scripting/VRPySelector.h" />
 		<Unit filename="src/core/scripting/VRPySetup.cpp" />
@@ -706,6 +712,8 @@
 		<Unit filename="src/core/tools/VRTextureRenderer.h" />
 		<Unit filename="src/core/tools/VRWaypoint.cpp" />
 		<Unit filename="src/core/tools/VRWaypoint.h" />
+		<Unit filename="src/core/tools/selection/VRPatchSelection.cpp" />
+		<Unit filename="src/core/tools/selection/VRPatchSelection.h" />
 		<Unit filename="src/core/tools/selection/VRPolygonSelection.cpp" />
 		<Unit filename="src/core/tools/selection/VRPolygonSelection.h" />
 		<Unit filename="src/core/tools/selection/VRSelection.cpp" />

@@ -35,6 +35,9 @@
 #include "VRPyAnnotationEngine.h"
 #include "VRPyAnalyticGeometry.h"
 #include "VRPySelector.h"
+#include "VRPySelection.h"
+#include "VRPyPatchSelection.h"
+#include "VRPyPolygonSelection.h"
 #include "VRPyMenu.h"
 #include "VRPyClipPlane.h"
 #include "VRPyListMath.h"
@@ -293,6 +296,9 @@ void VRScriptManager::initPyModules() {
     registerModule<VRPyConstructionKit>("ConstructionKit", pModVR);
     registerModule<VRPyPathtool>("Pathtool", pModVR);
     registerModule<VRPySelector>("Selector", pModVR);
+    registerModule<VRPySelection>("Selection", pModVR);
+    registerModule<VRPyPatchSelection>("PatchSelection", pModVR, VRPySelection::typeRef);
+    registerModule<VRPyPolygonSelection>("PolygonSelection", pModVR, VRPySelection::typeRef);
     registerModule<VRPySetup>("Setup", pModVR);
     registerModule<VRPyNavigator>("Navigator", pModVR);
     registerModule<VRPyNavPreset>("NavPreset", pModVR);

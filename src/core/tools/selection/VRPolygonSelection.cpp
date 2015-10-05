@@ -5,6 +5,8 @@ using namespace OSG;
 
 VRPolygonSelection::VRPolygonSelection() {}
 
+shared_ptr<VRPolygonSelection> VRPolygonSelection::create() { return shared_ptr<VRPolygonSelection>( new VRPolygonSelection() ); }
+
 void VRPolygonSelection::setOrigin(pose orig) { selection.setPose(orig); }
 void VRPolygonSelection::addEdge(Vec3f dir) { selection.addEdge(dir); needs_update = true; }
 void VRPolygonSelection::close() { selection.close(); }

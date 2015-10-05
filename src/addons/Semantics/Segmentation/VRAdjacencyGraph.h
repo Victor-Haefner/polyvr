@@ -12,13 +12,8 @@ using namespace std;
 
 class VRAdjacencyGraph {
     public:
-        struct edge {
-            int v1, v2;
-        };
-
-        struct triangle {
-            int v1, v2, v3;
-        };
+        struct edge { int v1, v2; };
+        struct triangle { int v1, v2, v3; };
 
         map<int, map<int, vector<triangle> > > edge_triangle_loockup;
         vector<int> vertex_neighbor_params;
@@ -26,12 +21,13 @@ class VRAdjacencyGraph {
         vector<float> vertex_curvatures;
 
     private:
-        VRGeometryPtr geo = 0;
+        VRGeometryWeakPtr geo;
 
     public:
         VRAdjacencyGraph();
 
         static shared_ptr<VRAdjacencyGraph> create();
+        void clear();
 
         void setGeometry(VRGeometryPtr geo);
 

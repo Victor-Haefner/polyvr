@@ -25,6 +25,8 @@ class VRPolygonSelection : public VRSelection {
         VRPolygonSelection();
         void clear();
 
+        static shared_ptr<VRPolygonSelection> create();
+
         void setOrigin(pose orig);
         void addEdge(Vec3f dir);
         void close();

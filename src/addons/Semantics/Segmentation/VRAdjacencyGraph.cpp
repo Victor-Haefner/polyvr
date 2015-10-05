@@ -12,13 +12,22 @@ shared_ptr<VRAdjacencyGraph> VRAdjacencyGraph::create() { return shared_ptr<VRAd
 
 void VRAdjacencyGraph::setGeometry(VRGeometryPtr geo) { this->geo = geo; }
 
+void VRAdjacencyGraph::clear() {
+    edge_triangle_loockup.clear();
+    vertex_neighbor_params.clear();
+    vertex_neighbors.clear();
+    vertex_curvatures.clear();
+    geo.reset();
+}
+
 void VRAdjacencyGraph::compNeighbors() {
     vertex_neighbor_params.clear();
     vertex_neighbors.clear();
-    if (geo == 0) return;
+    auto sgeo = geo.lock();
+    if (!sgeo) return;
     map< int, map<int, int> > tmpdict;
 
-    for (TriangleIterator it = TriangleIterator(geo->getMesh()); !it.isAtEnd(); ++it) {
+    for (TriangleIterator it = TriangleIterator(sgeo->getMesh()); !it.isAtEnd(); ++it) {
         int i0 = it.getPositionIndex(0);
         int i1 = it.getPositionIndex(1);
         int i2 = it.getPositionIndex(2);
@@ -36,7 +45,7 @@ void VRAdjacencyGraph::compNeighbors() {
         reg(i2,i0,i1);
     }
 
-    int N = geo->getMesh()->getPositions()->size();
+    int N = sgeo->getMesh()->getPositions()->size();
     vertex_neighbor_params.resize(2*N);
     for (auto i : tmpdict) vertex_neighbor_params[2*i.first+1] = i.second.size();
 
@@ -56,10 +65,11 @@ void VRAdjacencyGraph::compNeighbors() {
 
 void VRAdjacencyGraph::compCurvatures(int range) {
     vertex_curvatures.clear();
-    if (geo == 0) return;
+    auto sgeo = geo.lock();
+    if (!sgeo) return;
 
-    auto pos = geo->getMesh()->getPositions();
-    auto norms = geo->getMesh()->getNormals();
+    auto pos = sgeo->getMesh()->getPositions();
+    auto norms = sgeo->getMesh()->getNormals();
     int N = pos->size();
 
     auto curvMax = [&](int i, int range) {
@@ -106,9 +116,10 @@ void VRAdjacencyGraph::compCurvatures(int range) {
 
 void VRAdjacencyGraph::compTriLoockup() {
     edge_triangle_loockup.clear();
-    if (geo == 0) return;
+    auto sgeo = geo.lock();
+    if (!sgeo) return;
 
-    for (TriangleIterator it = TriangleIterator(geo->getMesh()); !it.isAtEnd(); ++it) {
+    for (TriangleIterator it = TriangleIterator(sgeo->getMesh()); !it.isAtEnd(); ++it) {
         triangle t;
         t.v1 = it.getPositionIndex(0);
         t.v2 = it.getPositionIndex(1);
@@ -127,7 +138,8 @@ void VRAdjacencyGraph::compTriLoockup() {
 }
 
 vector<int> VRAdjacencyGraph::getNeighbors(int i, int range) {
-    if (geo == 0) return vector<int>();
+    auto sgeo = geo.lock();
+    if (!sgeo) return vector<int>();
     if (2*i+1 >= vertex_neighbor_params.size()) return vector<int>();
 
     vector<int> job;
@@ -171,7 +183,8 @@ vector<int> VRAdjacencyGraph::getBorderVertices() {
 }
 
 float VRAdjacencyGraph::getCurvature(int i) {
-    if (geo == 0) return 0;
+    auto sgeo = geo.lock();
+    if (!sgeo) return 0;
     if (i > vertex_curvatures.size() || i < 0) return 0;
     return vertex_curvatures[i];
 }
