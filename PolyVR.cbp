@@ -606,6 +606,8 @@
 		<Unit filename="src/core/scripting/VRPyPathtool.h" />
 		<Unit filename="src/core/scripting/VRPyPolygonSelection.cpp" />
 		<Unit filename="src/core/scripting/VRPyPolygonSelection.h" />
+		<Unit filename="src/core/scripting/VRPyPose.cpp" />
+		<Unit filename="src/core/scripting/VRPyPose.h" />
 		<Unit filename="src/core/scripting/VRPyRecorder.cpp" />
 		<Unit filename="src/core/scripting/VRPyRecorder.h" />
 		<Unit filename="src/core/scripting/VRPySelection.cpp" />

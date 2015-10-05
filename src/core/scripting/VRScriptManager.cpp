@@ -14,6 +14,7 @@
 #include "VRPySprite.h"
 #include "VRPySound.h"
 #include "VRPyDevice.h"
+#include "VRPyPose.h"
 #include "VRPyPath.h"
 #include "VRPyStroke.h"
 #include "VRPyColorChooser.h"
@@ -288,6 +289,7 @@ void VRScriptManager::initPyModules() {
     registerModule<VRPyMobile>("Mobile", pModVR, VRPyDevice::typeRef);
     registerModule<VRPyMouse>("Mouse", pModVR, VRPyDevice::typeRef);
     registerModule<VRPyAnimation>("Animation", pModVR);
+    registerModule<VRPyPose>("Pose", pModVR);
     registerModule<VRPyPath>("Path", pModVR);
     registerModule<VRPyRecorder>("Recorder", pModVR);
     registerModule<VRPySnappingEngine>("SnappingEngine", pModVR);

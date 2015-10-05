@@ -1,13 +1,11 @@
-#include "VRPyPolygonSelection.h"
 #include "VRPyPose.h"
 #include "VRPyBaseT.h"
-#include "VRPyTypeCaster.h"
 
-template<> PyTypeObject VRPyBaseT<OSG::VRPolygonSelection>::type = {
+template<> PyTypeObject VRPyBaseT<OSG::pose>::type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
-    "VR.PolygonSelection",             /*tp_name*/
-    sizeof(VRPyPolygonSelection),             /*tp_basicsize*/
+    "VR.Pose",             /*tp_name*/
+    sizeof(VRPyPose),             /*tp_basicsize*/
     0,                         /*tp_itemsize*/
     (destructor)dealloc, /*tp_dealloc*/
     0,                         /*tp_print*/
@@ -25,14 +23,14 @@ template<> PyTypeObject VRPyBaseT<OSG::VRPolygonSelection>::type = {
     0,                         /*tp_setattro*/
     0,                         /*tp_as_buffer*/
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
-    "ColorChooser binding",           /* tp_doc */
+    "Pose binding",           /* tp_doc */
     0,		               /* tp_traverse */
     0,		               /* tp_clear */
     0,		               /* tp_richcompare */
     0,		               /* tp_weaklistoffset */
     0,		               /* tp_iter */
     0,		               /* tp_iternext */
-    VRPyPolygonSelection::methods,             /* tp_methods */
+    VRPyPose::methods,             /* tp_methods */
     0,             /* tp_members */
     0,                         /* tp_getset */
     0,                         /* tp_base */
@@ -42,43 +40,42 @@ template<> PyTypeObject VRPyBaseT<OSG::VRPolygonSelection>::type = {
     0,                         /* tp_dictoffset */
     (initproc)init,      /* tp_init */
     0,                         /* tp_alloc */
-    New_ptr,                 /* tp_new */
+    VRPyPose::New,                 /* tp_new */
 };
 
-PyMethodDef VRPyPolygonSelection::methods[] = {
-    {"clear", (PyCFunction)VRPyPolygonSelection::clear, METH_NOARGS, "add to the PatchSelection - add(object)" },
-    {"setOrigin", (PyCFunction)VRPyPolygonSelection::setOrigin, METH_VARARGS, "add to the PatchSelection - add(object)" },
-    {"addEdge", (PyCFunction)VRPyPolygonSelection::addEdge, METH_VARARGS, "add to the PatchSelection - add(object)" },
-    {"close", (PyCFunction)VRPyPolygonSelection::close, METH_NOARGS, "add to the PatchSelection - add(object)" },
+PyMethodDef VRPyPose::methods[] = {
+    {"pos", (PyCFunction)VRPyPose::pos, METH_VARARGS, "Get the position - [x,y,z] pos()" },
+    {"dir", (PyCFunction)VRPyPose::dir, METH_VARARGS, "Get the direction - [x,y,z] dir()" },
+    {"up", (PyCFunction)VRPyPose::up, METH_VARARGS, "Get the up vector - [x,y,z] up()" },
+    {"set", (PyCFunction)VRPyPose::set, METH_VARARGS, "Set the pose - set([pos], [dir], [up])" },
     {NULL}  /* Sentinel */
 };
 
-PyObject* VRPyPolygonSelection::setOrigin(VRPyPolygonSelection* self, PyObject* args) {
+PyObject* VRPyPose::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
+    PyObject *p, *d, *u;
+    if (! PyArg_ParseTuple(args, "OOO", &p, &d, &u)) return NULL;
+    return allocPtr( type, OSG::pose::create( parseVec3fList(p), parseVec3fList(d), parseVec3fList(u) ) );
+}
+
+PyObject* VRPyPose::set(VRPyPose* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    VRPyPose* p = 0;
-    if (! PyArg_ParseTuple(args, "O:setOrigin", &p)) return NULL;
-    self->objPtr->setOrigin( *p->objPtr );
+    PyObject *p, *d, *u;
+    if (! PyArg_ParseTuple(args, "OOO", &p, &d, &u)) return NULL;
+    self->objPtr->set( parseVec3fList(p), parseVec3fList(d), parseVec3fList(u) );
     Py_RETURN_TRUE;
 }
 
-PyObject* VRPyPolygonSelection::addEdge(VRPyPolygonSelection* self, PyObject* args) {
+PyObject* VRPyPose::pos(VRPyPose* self) {
     if (!self->valid()) return NULL;
-    self->objPtr->addEdge( parseVec3f(args) );
-    Py_RETURN_TRUE;
+    return toPyTuple( self->objPtr->pos() );
 }
 
-PyObject* VRPyPolygonSelection::clear(VRPyPolygonSelection* self) {
+PyObject* VRPyPose::dir(VRPyPose* self) {
     if (!self->valid()) return NULL;
-    self->objPtr->clear();
-    Py_RETURN_TRUE;
+    return toPyTuple( self->objPtr->dir() );
 }
 
-PyObject* VRPyPolygonSelection::close(VRPyPolygonSelection* self) {
+PyObject* VRPyPose::up(VRPyPose* self) {
     if (!self->valid()) return NULL;
-    self->objPtr->close();
-    Py_RETURN_TRUE;
+    return toPyTuple( self->objPtr->up() );
 }
-
-
-
-
