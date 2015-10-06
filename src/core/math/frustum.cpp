@@ -32,15 +32,31 @@ vector< Vec3f > frustum::getEdges() { return directions; }
 void frustum::computeProfile() {
     profile.clear();
     Matrix m = trans.asMatrix();
+    Matrix m2 = m;
     m.invert();
 
     for (auto d : directions) {
         Vec3f p;
         m.mult(d,p);
+        Vec2f v = Vec2f(p[0], p[1]);
         //cout << "frustum::computeProfile pose " << trans.pos() << " : " << trans.dir() << " : " << trans.up() << endl;
-        //cout << "frustum::computeProfile d : p " << d << " : " << p << endl;
-        profile.addPoint( Vec2f(p[0], p[1]) );
+        profile.addPoint( v );
+        Vec3f p2;
+        m2.mult(Vec3f(v[0], v[1], -sqrt(1-(v[0]*v[0]+v[1]*v[1]))),p2);
+        cout << "frustum::computeProfile " << endl;
+        cout << " d " << d << endl;
+        cout << " p " << p << endl;
+        cout << " v " << v << endl;
+        cout << " p " << p2 << endl;
     }
+}
+
+frustum frustum::fromProfile(polygon p, pose t) {
+    frustum res;
+    res.setPose(t);
+    auto prof3D = p.toSpace( t.asMatrix() );
+    for (auto p : prof3D) res.addEdge( p );
+    return res;
 }
 
 vector<Plane> frustum::getPlanes() {
@@ -56,14 +72,6 @@ vector<Plane> frustum::getPlanes() {
         Plane p = Plane(n, trans.pos() );
         res.push_back(p);
     }
-    return res;
-}
-
-frustum frustum::fromProfile(polygon p, pose t) {
-    frustum res;
-    res.setPose(t);
-    auto prof3D = p.toSpace( t.asMatrix() );
-    for (auto p : prof3D) res.addEdge( p - t.pos() );
     return res;
 }
 

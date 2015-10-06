@@ -208,7 +208,7 @@ vector< polygon > polygon::getConvexDecomposition() {
 vector<Vec3f> polygon::toSpace(Matrix m) {
     vector<Vec3f> res;
     for (auto p : points) {
-        Vec3f pp = Vec3f(p[0], p[1], 0);
+        Vec3f pp = Vec3f(p[0], p[1], -sqrt(1-(p[0]*p[0]+p[1]*p[1])));
         m.mult(pp,pp);
         res.push_back(pp);
     }

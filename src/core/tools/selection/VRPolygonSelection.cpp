@@ -20,6 +20,7 @@ void VRPolygonSelection::close() {
     convex_decomposition = selection.getConvexDecomposition();
     closed = true;
 
+    //updateShape(selection);
     updateShape(convex_hull);
 }
 
@@ -73,32 +74,34 @@ bool VRPolygonSelection::vertSelected(Vec3f p) {
     if (!closed) return false;
 
     auto planes = convex_hull.getPlanes();
-    cout << endl;
+    //cout << endl;
     for (int i=0; i<planes.size(); i++) {
         float d = planes[i].distance(p);
-        cout << "vertSelected i" << i << " p " << p << " d " << d << " pl " << planes[i] << " pls " << planes.size() << endl;
+        //cout << "vertSelected i" << i << " p " << p << " d " << d << " pl " << planes[i] << " pls " << planes.size() << endl;
         if ( d < 0 ) return false;
     }
 
-    for (auto f : convex_decomposition ) {
+    /*for (auto f : convex_decomposition ) {
         for (Plane pl : f.getPlanes()) if ( pl.distance(p) < 0) return true;
-    }
+    }*/
 
-    return false;
+    return true;
 }
 
-void VRPolygonSelection::updateShape(frustum f) {
+void VRPolygonSelection::updateShape(frustum f, bool transform) {
     if (f.getEdges().size() == 0) return;
 
     GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
     GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
 
-    Vec3f p0 = f.getPose().pos();
-    pos->addValue(p0);
+    auto trans = f.getPose();
+    Matrix m = trans.asMatrix();
+    pos->addValue(trans.pos());
     for (auto e : f.getEdges()) {
         inds->addValue(0);
         inds->addValue(pos->size());
-        pos->addValue(p0+e*3);
+        if (transform) m.mult(e,e);
+        pos->addValue(trans.pos()+e*3);
     }
 
     //shape->clear();
