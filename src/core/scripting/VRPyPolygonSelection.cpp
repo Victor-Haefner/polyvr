@@ -66,7 +66,6 @@ PyObject* VRPyPolygonSelection::setOrigin(VRPyPolygonSelection* self, PyObject* 
 PyObject* VRPyPolygonSelection::getShape(VRPyPolygonSelection* self) {
     if (!self->valid()) return NULL;
     OSG::VRGeometryPtr ptr = self->objPtr->getShape();
-    cout << "VRPyPolygonSelection::getShape " << ptr << endl;
     return VRPyGeometry::fromSharedPtr( ptr );
 }
 

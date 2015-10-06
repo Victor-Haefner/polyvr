@@ -51,11 +51,13 @@ vector<VRGeometryWeakPtr> VRSelection::getSelected() {
 
 vector<int> VRSelection::getSubselection(VRGeometryPtr geo) {
     if ( !selected.count( geo.get() ) ) {
+        Matrix m = geo->getWorldMatrix();
         vector<int> res;
         auto pos = geo->getMesh()->getPositions();
         for (int i=0; i<pos->size(); i++) {
-            Vec3f p = pos->getValue<Vec3f>(i);
-            if (vertSelected(p)) res.push_back(i);
+            Pnt3f p = pos->getValue<Pnt3f>(i);
+            m.mult(p,p);
+            if (vertSelected(Vec3f(p))) res.push_back(i);
         }
         selected[geo.get()].subselection = res;
     }

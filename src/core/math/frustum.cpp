@@ -32,22 +32,12 @@ vector< Vec3f > frustum::getEdges() { return directions; }
 void frustum::computeProfile() {
     profile.clear();
     Matrix m = trans.asMatrix();
-    Matrix m2 = m;
     m.invert();
 
     for (auto d : directions) {
         Vec3f p;
         m.mult(d,p);
-        Vec2f v = Vec2f(p[0], p[1]);
-        //cout << "frustum::computeProfile pose " << trans.pos() << " : " << trans.dir() << " : " << trans.up() << endl;
-        profile.addPoint( v );
-        Vec3f p2;
-        m2.mult(Vec3f(v[0], v[1], -sqrt(1-(v[0]*v[0]+v[1]*v[1]))),p2);
-        cout << "frustum::computeProfile " << endl;
-        cout << " d " << d << endl;
-        cout << " p " << p << endl;
-        cout << " v " << v << endl;
-        cout << " p " << p2 << endl;
+        profile.addPoint( Vec2f(p[0], p[1]) );
     }
 }
 

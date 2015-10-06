@@ -73,19 +73,20 @@ bool VRPolygonSelection::partialSelected(VRGeometryPtr geo) {
 bool VRPolygonSelection::vertSelected(Vec3f p) {
     if (!closed) return false;
 
-    auto planes = convex_hull.getPlanes();
-    //cout << endl;
-    for (int i=0; i<planes.size(); i++) {
-        float d = planes[i].distance(p);
-        //cout << "vertSelected i" << i << " p " << p << " d " << d << " pl " << planes[i] << " pls " << planes.size() << endl;
-        if ( d < 0 ) return false;
-    }
+    auto inFrustum = [&](frustum& f) {
+        auto planes = f.getPlanes();
+        for (int i=0; i<planes.size(); i++) {
+            float d = planes[i].distance(p);
+            if ( d < 0 ) return false;
+        }
+        return true;
+    };
 
-    /*for (auto f : convex_decomposition ) {
-        for (Plane pl : f.getPlanes()) if ( pl.distance(p) < 0) return true;
-    }*/
+    if (!inFrustum(convex_hull)) return false;
 
-    return true;
+    for (auto f : convex_decomposition ) if (inFrustum(f)) return true;
+
+    return false;
 }
 
 void VRPolygonSelection::updateShape(frustum f, bool transform) {
