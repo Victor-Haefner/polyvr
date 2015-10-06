@@ -83,6 +83,7 @@ struct VRPyBaseT : public VRPyBase {
     static bool check(PyObject* o);
 
     static PyObject* fromPtr(T* obj);
+    static PyObject* fromObject(T obj);
     static PyObject* fromSharedPtr(std::shared_ptr<T> obj);
     static bool      parse(PyObject *args, T** obj);
     static bool      parse(PyObject *args, std::shared_ptr<T>* obj);

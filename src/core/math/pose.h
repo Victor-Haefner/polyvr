@@ -22,6 +22,8 @@ class pose {
         Vec3f up();
 
         Matrix asMatrix();
+
+        string toString();
 };
 
 OSG_END_NAMESPACE;

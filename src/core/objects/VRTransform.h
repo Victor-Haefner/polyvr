@@ -4,6 +4,7 @@
 #include "core/objects/VRObjectFwd.h"
 #include "object/VRObject.h"
 #include "core/utils/VRFunctionFwd.h"
+#include "core/math/pose.h"
 #include <OpenSG/OSGMatrix.h>
 #include <OpenSG/OSGLine.h>
 #include <OpenSG/OSGFieldContainerFields.h>
@@ -103,6 +104,7 @@ class VRTransform : public VRObject {
         Vec3f getAt();
         Vec3f getUp();
         Vec3f getScale();
+        pose getPose();
         Vec3f getEuler();
         void getMatrix(Matrix& _m);
         Matrix getMatrix();
@@ -115,6 +117,7 @@ class VRTransform : public VRObject {
         void setScale(Vec3f s);
         void setOrientation(Vec3f at, Vec3f up);
         void setEuler(Vec3f euler);
+        void setPose(pose p);
         void setPose(Vec3f from, Vec3f dir, Vec3f up);
         void setMatrix(Matrix _m);
 

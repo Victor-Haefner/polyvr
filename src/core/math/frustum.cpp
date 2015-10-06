@@ -21,11 +21,13 @@ void frustum::runTest() {
 }
 
 void frustum::setPose(pose trans) { this->trans = trans; }
+pose frustum::getPose() { return trans; }
 void frustum::addEdge(Vec3f dir) { directions.push_back(dir); }
 void frustum::setNearFar(Vec2f nf) { near_far = nf; }
-void frustum::close() { directions.push_back(directions[0]); }
+void frustum::close() { if (directions.size() > 0) directions.push_back(directions[0]); }
 int frustum::size() { return directions.size(); }
 void frustum::clear() { directions.clear(); profile.clear(); }
+vector< Vec3f > frustum::getEdges() { return directions; }
 
 void frustum::computeProfile() {
     profile.clear();
@@ -35,14 +37,17 @@ void frustum::computeProfile() {
     for (auto d : directions) {
         Vec3f p;
         m.mult(d,p);
+        //cout << "frustum::computeProfile pose " << trans.pos() << " : " << trans.dir() << " : " << trans.up() << endl;
+        //cout << "frustum::computeProfile d : p " << d << " : " << p << endl;
         profile.addPoint( Vec2f(p[0], p[1]) );
     }
 }
 
 vector<Plane> frustum::getPlanes() {
     vector<Plane> res;
-    res.push_back( Plane(trans.pos() + trans.dir()*near_far[0], trans.dir()) ); // Near plane
-    res.push_back( Plane(trans.pos() + trans.dir()*near_far[1], -trans.dir()) ); // far planse
+    // TODO
+    //res.push_back( Plane(trans.pos() + trans.dir()*near_far[0], -trans.dir()) ); // Near plane
+    //res.push_back( Plane(trans.pos() + trans.dir()*near_far[1], trans.dir()) ); // far planse
     for (int i=1; i<directions.size(); i++) {
         Vec3f e1 = directions[i-1];
         Vec3f e2 = directions[i];

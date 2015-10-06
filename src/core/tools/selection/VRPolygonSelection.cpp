@@ -1,23 +1,39 @@
 #include "VRPolygonSelection.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include <OpenSG/OSGGeoProperties.h>
 
 using namespace OSG;
 
-VRPolygonSelection::VRPolygonSelection() {}
+VRPolygonSelection::VRPolygonSelection() {
+    shape = VRGeometry::create("PolygonSelection");
+}
 
 shared_ptr<VRPolygonSelection> VRPolygonSelection::create() { return shared_ptr<VRPolygonSelection>( new VRPolygonSelection() ); }
 
 void VRPolygonSelection::setOrigin(pose orig) { selection.setPose(orig); }
-void VRPolygonSelection::addEdge(Vec3f dir) { selection.addEdge(dir); needs_update = true; }
-void VRPolygonSelection::close() { selection.close(); }
+void VRPolygonSelection::addEdge(Vec3f dir) { if (!closed) selection.addEdge(dir); }
+VRGeometryPtr VRPolygonSelection::getShape() { return shape; }
+void VRPolygonSelection::close() {
+    selection.close();
+    convex_hull = selection.getConvexHull();
+    convex_hull.close();
+    convex_decomposition = selection.getConvexDecomposition();
+    closed = true;
+
+    updateShape(convex_hull);
+}
 
 void VRPolygonSelection::clear() {
     VRSelection::clear();
     selection.clear();
     convex_hull.clear();
+    convex_decomposition.clear();
+    closed = false;
 }
 
 bool VRPolygonSelection::objSelected(VRGeometryPtr geo) {
+    if (!closed) return false;
+
     Vec3f v1,v2;
     geo->getBoundingBox(v1,v2);
     vector<Vec3f> corners;
@@ -35,6 +51,8 @@ bool VRPolygonSelection::objSelected(VRGeometryPtr geo) {
 }
 
 bool VRPolygonSelection::partialSelected(VRGeometryPtr geo) {
+    if (!closed) return false;
+
     Vec3f v1,v2;
     geo->getBoundingBox(v1,v2);
     vector<Vec3f> corners;
@@ -52,17 +70,44 @@ bool VRPolygonSelection::partialSelected(VRGeometryPtr geo) {
 }
 
 bool VRPolygonSelection::vertSelected(Vec3f p) {
-    if (needs_update) {
-        needs_update = false;
-        convex_hull = selection.getConvexHull();
-    }
+    if (!closed) return false;
 
     auto planes = convex_hull.getPlanes();
-    for (Plane pl : planes) if ( pl.distance(p) < 0) return false;
-
-    for (auto f : selection.getConvexDecomposition() ) {
-        for (Plane pl : f.getPlanes()) if ( pl.distance(p) < 0) return false;
+    cout << endl;
+    for (int i=0; i<planes.size(); i++) {
+        float d = planes[i].distance(p);
+        cout << "vertSelected i" << i << " p " << p << " d " << d << " pl " << planes[i] << " pls " << planes.size() << endl;
+        if ( d < 0 ) return false;
     }
 
-    return true;
+    for (auto f : convex_decomposition ) {
+        for (Plane pl : f.getPlanes()) if ( pl.distance(p) < 0) return true;
+    }
+
+    return false;
 }
+
+void VRPolygonSelection::updateShape(frustum f) {
+    if (f.getEdges().size() == 0) return;
+
+    GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
+    GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
+
+    Vec3f p0 = f.getPose().pos();
+    pos->addValue(p0);
+    for (auto e : f.getEdges()) {
+        inds->addValue(0);
+        inds->addValue(pos->size());
+        pos->addValue(p0+e*3);
+    }
+
+    //shape->clear();
+    shape->setType(GL_LINES);
+    shape->setPositions(pos);
+    shape->setIndices(inds);
+}
+
+
+
+
+

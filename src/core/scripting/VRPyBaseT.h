@@ -75,6 +75,17 @@ PyObject* VRPyBaseT<T>::fromPtr(T* obj) {
 }
 
 template<class T>
+PyObject* VRPyBaseT<T>::fromObject(T obj) {
+    VRPyBaseT<T> *self = (VRPyBaseT<T> *)typeRef->tp_alloc(typeRef, 0);
+    if (self == NULL) Py_RETURN_NONE;
+    T* optr = new T(obj);
+    //*optr = obj;
+    self->objPtr = std::shared_ptr<T>( optr );
+    self->owner = false;
+    return (PyObject *)self;
+}
+
+template<class T>
 PyObject* VRPyBaseT<T>::fromSharedPtr(std::shared_ptr<T> obj) {
     if (obj == 0) Py_RETURN_NONE;
     VRPyBaseT<T> *self = (VRPyBaseT<T> *)typeRef->tp_alloc(typeRef, 0);

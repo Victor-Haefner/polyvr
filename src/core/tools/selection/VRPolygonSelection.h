@@ -15,11 +15,15 @@ class VRPolygonSelection : public VRSelection {
         pose origin;
         frustum selection;
         frustum convex_hull;
-        bool needs_update = false;
+        vector<frustum> convex_decomposition;
+        bool closed = false;
+        VRGeometryPtr shape;
 
         bool vertSelected(Vec3f p);
         bool objSelected(VRGeometryPtr geo);
         bool partialSelected(VRGeometryPtr geo);
+
+        void updateShape(frustum f);
 
     public:
         VRPolygonSelection();
@@ -30,6 +34,8 @@ class VRPolygonSelection : public VRSelection {
         void setOrigin(pose orig);
         void addEdge(Vec3f dir);
         void close();
+
+        VRGeometryPtr getShape();
 };
 
 OSG_END_NAMESPACE;

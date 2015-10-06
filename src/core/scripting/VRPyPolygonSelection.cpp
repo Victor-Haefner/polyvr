@@ -1,4 +1,5 @@
 #include "VRPyPolygonSelection.h"
+#include "VRPyGeometry.h"
 #include "VRPyPose.h"
 #include "VRPyBaseT.h"
 #include "VRPyTypeCaster.h"
@@ -50,6 +51,7 @@ PyMethodDef VRPyPolygonSelection::methods[] = {
     {"setOrigin", (PyCFunction)VRPyPolygonSelection::setOrigin, METH_VARARGS, "add to the PatchSelection - add(object)" },
     {"addEdge", (PyCFunction)VRPyPolygonSelection::addEdge, METH_VARARGS, "add to the PatchSelection - add(object)" },
     {"close", (PyCFunction)VRPyPolygonSelection::close, METH_NOARGS, "add to the PatchSelection - add(object)" },
+    {"getShape", (PyCFunction)VRPyPolygonSelection::getShape, METH_NOARGS, "add to the PatchSelection - add(object)" },
     {NULL}  /* Sentinel */
 };
 
@@ -59,6 +61,13 @@ PyObject* VRPyPolygonSelection::setOrigin(VRPyPolygonSelection* self, PyObject* 
     if (! PyArg_ParseTuple(args, "O:setOrigin", &p)) return NULL;
     self->objPtr->setOrigin( *p->objPtr );
     Py_RETURN_TRUE;
+}
+
+PyObject* VRPyPolygonSelection::getShape(VRPyPolygonSelection* self) {
+    if (!self->valid()) return NULL;
+    OSG::VRGeometryPtr ptr = self->objPtr->getShape();
+    cout << "VRPyPolygonSelection::getShape " << ptr << endl;
+    return VRPyGeometry::fromSharedPtr( ptr );
 }
 
 PyObject* VRPyPolygonSelection::addEdge(VRPyPolygonSelection* self, PyObject* args) {

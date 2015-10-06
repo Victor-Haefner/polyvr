@@ -3,10 +3,13 @@
 
 using namespace OSG;
 
-pose::pose() {}
+pose::pose() { data.resize(3); }
 pose::pose(Vec3f p, Vec3f d, Vec3f u) { set(p,d,u); }
 
-shared_ptr<pose> pose::create(Vec3f p, Vec3f d, Vec3f u) { return shared_ptr<pose>( new pose(p,d,u) ); }
+shared_ptr<pose> pose::create(Vec3f p, Vec3f d, Vec3f u) {
+    cout << "create pose " << p << " : " << d << " : " << u << endl;
+    return shared_ptr<pose>( new pose(p,d,u) );
+}
 
 void pose::set(Vec3f p, Vec3f d, Vec3f u) {
     data.resize(3);
@@ -23,4 +26,10 @@ Matrix pose::asMatrix() {
     Matrix m;
     MatrixLookAt(m, data[0], data[1], data[2]);
     return m;
+}
+
+string pose::toString() {
+    stringstream ss;
+    ss << "pose " << data[0] << " : " << data[1] << " : " << data[2];
+    return ss.str();
 }

@@ -10,6 +10,7 @@ struct VRPyPolygonSelection : VRPyBaseT<OSG::VRPolygonSelection> {
     static PyObject* clear(VRPyPolygonSelection* self);
     static PyObject* setOrigin(VRPyPolygonSelection* self, PyObject* args);
     static PyObject* addEdge(VRPyPolygonSelection* self, PyObject* args);
+    static PyObject* getShape(VRPyPolygonSelection* self);
     static PyObject* close(VRPyPolygonSelection* self);
 };
 

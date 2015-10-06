@@ -23,6 +23,7 @@ class frustum {
     public:
         frustum();
         void setPose(pose trans);
+        pose getPose();
         void setNearFar(Vec2f near_far);
         void addEdge(Vec3f dir);
         void close();
@@ -32,6 +33,7 @@ class frustum {
         frustum getConvexHull();
         vector< frustum > getConvexDecomposition();
         vector< Plane > getPlanes();
+        vector< Vec3f > getEdges();
 
         string toString();
         static void runTest();

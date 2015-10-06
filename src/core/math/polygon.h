@@ -11,6 +11,9 @@ class polygon {
     private:
         vector<Vec2f> points;
         bool convex = false;
+        bool closed = false;
+
+        float getTurn(Vec2f p0, Vec2f p1, Vec2f p2);
 
     public:
         polygon();
@@ -20,8 +23,12 @@ class polygon {
         int size();
         void clear();
 
+        bool isConvex();
+        bool isCCW();
+        polygon turn(polygon p);
+
         vector<Vec2f> get();
-        vector<Vec2f> sort();
+        polygon sort();
         polygon getConvexHull();
         vector< polygon > getConvexDecomposition();
 

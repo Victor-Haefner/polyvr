@@ -21,6 +21,7 @@ struct VRPyTransform : VRPyBaseT<OSG::VRTransform> {
     static PyObject* getDir(VRPyTransform* self);
     static PyObject* getUp(VRPyTransform* self);
     static PyObject* getScale(VRPyTransform* self);
+    static PyObject* getPose(VRPyTransform* self);
 
     static PyObject* setPose(VRPyTransform* self, PyObject* args);
     static PyObject* setWFrom(VRPyTransform* self, PyObject* args);

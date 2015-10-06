@@ -1,6 +1,7 @@
 #include "VRPyTransform.h"
 #include "VRPyConstraint.h"
 #include "VRPyAnimation.h"
+#include "VRPyPose.h"
 #include "VRPyPath.h"
 #include "VRPyBaseT.h"
 #include "core/objects/geometry/VRPhysics.h"
@@ -63,13 +64,14 @@ PyMethodDef VRPyTransform::methods[] = {
     {"getAt", (PyCFunction)VRPyTransform::getAt, METH_NOARGS, "Return the object's at vector" },
     {"getDir", (PyCFunction)VRPyTransform::getDir, METH_NOARGS, "Return the object's dir vector" },
     {"getUp", (PyCFunction)VRPyTransform::getUp, METH_NOARGS, "Return the object's up vector" },
+    {"getPose", (PyCFunction)VRPyTransform::getPose, METH_NOARGS, "Return the object's pose - pose getPose()" },
     {"getWorldFrom", (PyCFunction)VRPyTransform::getWFrom, METH_NOARGS, "Return the object's world position" },
     {"getWorldDir", (PyCFunction)VRPyTransform::getWorldDir, METH_NOARGS, "Return the object's dir vector" },
     {"getWorldUp", (PyCFunction)VRPyTransform::getWorldUp, METH_NOARGS, "Return the object's up vector" },
     {"getScale", (PyCFunction)VRPyTransform::getScale, METH_NOARGS, "Return the object's scale vector" },
     {"setWorldFrom", (PyCFunction)VRPyTransform::setWFrom, METH_VARARGS, "Set the object's world position" },
     {"setWorldOrientation", (PyCFunction)VRPyTransform::setWOrientation, METH_VARARGS, "Set the object's world direction" },
-    {"setPose", (PyCFunction)VRPyTransform::setPose, METH_VARARGS, "Set the object's from dir && up vector" },
+    {"setPose", (PyCFunction)VRPyTransform::setPose, METH_VARARGS, "Set the object's pose - setPose(pose)\n\tsetPose(pos, dir, up)" },
     {"setPosition", (PyCFunction)VRPyTransform::setFrom, METH_VARARGS, "Set the object's from vector" },
     {"setFrom", (PyCFunction)VRPyTransform::setFrom, METH_VARARGS, "Set the object's from vector" },
     {"setAt", (PyCFunction)VRPyTransform::setAt, METH_VARARGS, "Set the object's at vector" },
@@ -266,8 +268,20 @@ PyObject* VRPyTransform::getScale(VRPyTransform* self) {
     return toPyTuple(self->objPtr->getScale());
 }
 
+PyObject* VRPyTransform::getPose(VRPyTransform* self) {
+    if (!self->valid()) return NULL;
+    return VRPyPose::fromObject( self->objPtr->getPose() );
+}
+
 PyObject* VRPyTransform::setPose(VRPyTransform* self, PyObject* args) {
     if (!self->valid()) return NULL;
+    if (pySize(args) == 1) {
+        VRPyPose* p;
+        if (! PyArg_ParseTuple(args, "O", &p)) return NULL;
+        if (p->objPtr) self->objPtr->setPose( *p->objPtr );
+        Py_RETURN_TRUE;
+    }
+
     PyObject *fl, *dl, *ul;
     if (! PyArg_ParseTuple(args, "OOO", &fl, &dl, &ul)) return NULL;
     self->objPtr->setPose( parseVec3fList(fl), parseVec3fList(dl), parseVec3fList(ul));

@@ -359,6 +359,9 @@ void VRTransform::setPose(Vec3f from, Vec3f dir, Vec3f up) {
     reg_change();
 }
 
+void VRTransform::setPose(pose p) { setPose(p.pos(), p.dir(), p.up()); }
+pose VRTransform::getPose() { return pose(_from, getDir(), _up); }
+
 /** Set the local matrix **/
 void VRTransform::setMatrix(Matrix _m) {
     if (isNan(_m)) return;
