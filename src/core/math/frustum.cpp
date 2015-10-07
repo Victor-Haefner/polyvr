@@ -39,6 +39,8 @@ void frustum::computeProfile() {
         m.mult(d,p);
         profile.addPoint( Vec2f(p[0], p[1]) );
     }
+
+    if (!profile.isCCW()) profile.turn();
 }
 
 frustum frustum::fromProfile(polygon p, pose t) {

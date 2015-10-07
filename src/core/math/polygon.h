@@ -25,7 +25,7 @@ class polygon {
 
         bool isConvex();
         bool isCCW();
-        polygon turn(polygon p);
+        void turn();
 
         vector<Vec2f> get();
         polygon sort();

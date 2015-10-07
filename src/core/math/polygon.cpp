@@ -180,10 +180,10 @@ bool polygon::isConvex() {
     return true;
 }
 
-polygon polygon::turn(polygon p) {
-    polygon res;
-    for (int i=p.size()-1; i>=0; i--) res.addPoint(p.points[i]);
-    return res;
+void polygon::turn() {
+    auto tmp = points;
+    int N = points.size()-1;
+    for (int i=N; i>=0; i--) points[N-i] = tmp[i];
 }
 
 vector< polygon > polygon::getConvexDecomposition() {
@@ -195,8 +195,8 @@ vector< polygon > polygon::getConvexDecomposition() {
     }
 
     CGALPolygon cgalpoly;
-    if (isCCW()) cgalpoly = toCGALPolygon(*this);
-    else cgalpoly = toCGALPolygon( turn(*this) );
+    if (!isCCW()) turn();
+    cgalpoly = toCGALPolygon(*this);
     CGALPolyList partitions;
     CGALTraits traits;
     CGAL::optimal_convex_partition_2(cgalpoly.vertices_begin(), cgalpoly.vertices_end(), std::back_inserter(partitions), traits);
