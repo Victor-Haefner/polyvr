@@ -23,7 +23,7 @@ class VRPolygonSelection : public VRSelection {
         bool objSelected(VRGeometryPtr geo);
         bool partialSelected(VRGeometryPtr geo);
 
-        void updateShape(frustum f, bool transform = false);
+        void updateShape(frustum f);
 
     public:
         VRPolygonSelection();
@@ -33,8 +33,9 @@ class VRPolygonSelection : public VRSelection {
 
         void setOrigin(pose orig);
         void addEdge(Vec3f dir);
-        void close();
+        void close(VRObjectPtr world);
 
+        bool isClosed();
         VRGeometryPtr getShape();
 };
 

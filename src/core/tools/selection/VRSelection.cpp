@@ -5,7 +5,7 @@
 
 using namespace OSG;
 
-VRSelection::VRSelection() {}
+VRSelection::VRSelection() { clear(); }
 
 shared_ptr<VRSelection> VRSelection::create() { return shared_ptr<VRSelection>( new VRSelection() ); }
 
@@ -22,12 +22,16 @@ void VRSelection::add(VRGeometryPtr geo, vector<int> subselection) {
 
 void VRSelection::clear() {
     selected.clear();
+    bbox.clear();
 }
 
 void VRSelection::apply(VRObjectPtr tree) {
+    if (!tree) return;
     auto geos = tree->getChildren(true, "Geometry");
+    if (tree->getType() == "Geometry") geos.push_back(tree);
     for (auto g : geos) {
         VRGeometryPtr geo = static_pointer_cast<VRGeometry>(g);
+
         selection_atom a;
         a.geo = geo;
         if ( objSelected(geo) );
@@ -49,18 +53,34 @@ vector<VRGeometryWeakPtr> VRSelection::getSelected() {
     return res;
 }
 
-vector<int> VRSelection::getSubselection(VRGeometryPtr geo) {
+void VRSelection::updateSubselection() {
+    for (auto s : selected) updateSubselection(s.second.geo.lock());
+}
+
+void VRSelection::updateSubselection(VRGeometryPtr geo) {
+    if (!geo) return;
     if ( !selected.count( geo.get() ) ) {
-        Matrix m = geo->getWorldMatrix();
-        vector<int> res;
-        auto pos = geo->getMesh()->getPositions();
-        for (int i=0; i<pos->size(); i++) {
-            Pnt3f p = pos->getValue<Pnt3f>(i);
-            m.mult(p,p);
-            if (vertSelected(Vec3f(p))) res.push_back(i);
-        }
-        selected[geo.get()].subselection = res;
+        selection_atom s;
+        s.geo = geo;
+        selected[geo.get()] = s;
     }
 
+    auto& sel = selected[geo.get()];
+    Matrix m = geo->getWorldMatrix();
+    sel.subselection.clear();
+    auto pos = geo->getMesh()->getPositions();
+    for (int i=0; i<pos->size(); i++) {
+        Pnt3f p = pos->getValue<Pnt3f>(i);
+        m.mult(p,p);
+        if (vertSelected(Vec3f(p))) {
+            bbox.update(Vec3f(p));
+            sel.subselection.push_back(i);
+        }
+    }
+}
+
+vector<int> VRSelection::getSubselection(VRGeometryPtr geo) {
+    if ( !selected.count( geo.get() ) ) updateSubselection(geo);
+    if ( !selected.count( geo.get() ) ) return vector<int>();
     return selected[geo.get()].subselection;
 }

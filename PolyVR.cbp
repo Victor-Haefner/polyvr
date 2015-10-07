@@ -433,6 +433,8 @@
 		<Unit filename="src/core/gui/VRGuiVectorEntry.h" />
 		<Unit filename="src/core/math/Octree.cpp" />
 		<Unit filename="src/core/math/Octree.h" />
+		<Unit filename="src/core/math/boundingbox.cpp" />
+		<Unit filename="src/core/math/boundingbox.h" />
 		<Unit filename="src/core/math/coordinates.cpp" />
 		<Unit filename="src/core/math/coordinates.h" />
 		<Unit filename="src/core/math/frustum.cpp" />

@@ -33,6 +33,7 @@ class frustum {
         frustum getConvexHull();
         vector< frustum > getConvexDecomposition();
         vector< Plane > getPlanes();
+        vector< Plane > getNearFarPlanes();
         vector< Vec3f > getEdges();
 
         string toString();

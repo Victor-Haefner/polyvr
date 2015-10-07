@@ -53,9 +53,6 @@ frustum frustum::fromProfile(polygon p, pose t) {
 
 vector<Plane> frustum::getPlanes() {
     vector<Plane> res;
-    // TODO
-    //res.push_back( Plane(trans.pos() + trans.dir()*near_far[0], -trans.dir()) ); // Near plane
-    //res.push_back( Plane(trans.pos() + trans.dir()*near_far[1], trans.dir()) ); // far planse
     for (int i=1; i<directions.size(); i++) {
         Vec3f e1 = directions[i-1];
         Vec3f e2 = directions[i];
@@ -64,6 +61,13 @@ vector<Plane> frustum::getPlanes() {
         Plane p = Plane(n, trans.pos() );
         res.push_back(p);
     }
+    return res;
+}
+
+vector<Plane> frustum::getNearFarPlanes() {
+    vector<Plane> res;
+    res.push_back( Plane(trans.pos() + trans.dir()*near_far[0], -trans.dir()) ); // Near plane
+    res.push_back( Plane(trans.pos() + trans.dir()*near_far[1], trans.dir()) ); // far planse
     return res;
 }
 

@@ -50,7 +50,8 @@ PyMethodDef VRPyPolygonSelection::methods[] = {
     {"clear", (PyCFunction)VRPyPolygonSelection::clear, METH_NOARGS, "add to the PatchSelection - add(object)" },
     {"setOrigin", (PyCFunction)VRPyPolygonSelection::setOrigin, METH_VARARGS, "add to the PatchSelection - add(object)" },
     {"addEdge", (PyCFunction)VRPyPolygonSelection::addEdge, METH_VARARGS, "add to the PatchSelection - add(object)" },
-    {"close", (PyCFunction)VRPyPolygonSelection::close, METH_NOARGS, "add to the PatchSelection - add(object)" },
+    {"close", (PyCFunction)VRPyPolygonSelection::close, METH_VARARGS, "add to the PatchSelection - add(object)" },
+    {"isClosed", (PyCFunction)VRPyPolygonSelection::isClosed, METH_NOARGS, "add to the PatchSelection - add(object)" },
     {"getShape", (PyCFunction)VRPyPolygonSelection::getShape, METH_NOARGS, "add to the PatchSelection - add(object)" },
     {NULL}  /* Sentinel */
 };
@@ -61,6 +62,11 @@ PyObject* VRPyPolygonSelection::setOrigin(VRPyPolygonSelection* self, PyObject* 
     if (! PyArg_ParseTuple(args, "O:setOrigin", &p)) return NULL;
     self->objPtr->setOrigin( *p->objPtr );
     Py_RETURN_TRUE;
+}
+
+PyObject* VRPyPolygonSelection::isClosed(VRPyPolygonSelection* self) {
+    if (!self->valid()) return NULL;
+    return PyBool_FromLong( self->objPtr->isClosed() );
 }
 
 PyObject* VRPyPolygonSelection::getShape(VRPyPolygonSelection* self) {
@@ -81,9 +87,11 @@ PyObject* VRPyPolygonSelection::clear(VRPyPolygonSelection* self) {
     Py_RETURN_TRUE;
 }
 
-PyObject* VRPyPolygonSelection::close(VRPyPolygonSelection* self) {
+PyObject* VRPyPolygonSelection::close(VRPyPolygonSelection* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    self->objPtr->close();
+    VRPyObject* p = 0;
+    if (! PyArg_ParseTuple(args, "O:close", &p)) return NULL;
+    self->objPtr->close( p->objPtr );
     Py_RETURN_TRUE;
 }
 

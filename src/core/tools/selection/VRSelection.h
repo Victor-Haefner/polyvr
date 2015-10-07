@@ -5,6 +5,7 @@
 #include <vector>
 #include <map>
 #include "core/objects/VRObjectFwd.h"
+#include "core/math/boundingbox.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -19,10 +20,14 @@ class VRSelection {
 
     protected:
         map<VRGeometry*, selection_atom> selected;
+        boundingbox bbox;
 
         virtual bool vertSelected(Vec3f p);
         virtual bool objSelected(VRGeometryPtr geo);
         virtual bool partialSelected(VRGeometryPtr geo);
+
+        void updateSubselection();
+        void updateSubselection(VRGeometryPtr geo);
 
     public:
         VRSelection();
