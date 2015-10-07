@@ -68,7 +68,9 @@ void VRSelection::updateSubselection(VRGeometryPtr geo) {
     auto& sel = selected[geo.get()];
     Matrix m = geo->getWorldMatrix();
     sel.subselection.clear();
+    if (!geo->getMesh()) return;
     auto pos = geo->getMesh()->getPositions();
+    if (!pos) return;
     for (int i=0; i<pos->size(); i++) {
         Pnt3f p = pos->getValue<Pnt3f>(i);
         m.mult(p,p);
@@ -80,6 +82,15 @@ void VRSelection::updateSubselection(VRGeometryPtr geo) {
 }
 
 vector<int> VRSelection::getSubselection(VRGeometryPtr geo) {
+    if (!geo) {
+        vector<int> res;
+        for (auto s : selected) {
+            auto& v = s.second.subselection;
+            res.insert(res.end(), v.begin(), v.end());
+        }
+        return res;
+    }
+
     if ( !selected.count( geo.get() ) ) updateSubselection(geo);
     if ( !selected.count( geo.get() ) ) return vector<int>();
     return selected[geo.get()].subselection;

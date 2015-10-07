@@ -88,8 +88,11 @@ PyObject* VRPySelection::clear(VRPySelection* self) {
 PyObject* VRPySelection::getSubselection(VRPySelection* self, PyObject* args) {
     if (!self->valid()) return NULL;
     VRPyGeometry* geo = 0;
-    if (!PyArg_ParseTuple(args, "O:getSubselection", &geo)) return NULL;
-    auto sel = self->objPtr->getSubselection(geo->objPtr);
+    if (!PyArg_ParseTuple(args, "|O:getSubselection", &geo)) return NULL;
+    OSG::VRGeometryPtr g = 0;
+    if (geo) g = geo->objPtr;
+
+    auto sel = self->objPtr->getSubselection(g);
     PyObject* res = PyList_New(sel.size());
     for (uint i=0; i<sel.size(); i++) PyList_SetItem(res, i, PyInt_FromLong(sel[i]));
     return res;

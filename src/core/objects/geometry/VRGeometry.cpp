@@ -18,6 +18,7 @@
 #include "core/utils/toString.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/object/VRObjectT.h"
+#include "core/tools/selection/VRSelection.h"
 #include "VRPrimitive.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -288,6 +289,20 @@ void VRGeometry::merge(VRGeometryPtr geo) {
     cout << "pos   idx " << mesh->getIndex(Geometry::PositionsIndex) << " " << geo->mesh->getIndex(Geometry::PositionsIndex) << endl;
     cout << "norms idx " << mesh->getIndex(Geometry::NormalsIndex) << " " << geo->mesh->getIndex(Geometry::NormalsIndex) << endl;
     cout << endl;*/
+}
+
+void VRGeometry::removeSelection(VRSelectionPtr sel) {
+    auto inds = sel->getSubselection(ptr());
+    TriangleIterator it(mesh);
+    for (auto i : inds) {
+        ;
+    }
+}
+
+VRGeometryPtr VRGeometry::copySelection(VRSelectionPtr sel) {
+    auto inds = sel->getSubselection(ptr());
+    auto geo = VRGeometry::create(getName());
+    return geo;
 }
 
 void VRGeometry::decimate(float f) {

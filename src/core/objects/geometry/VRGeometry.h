@@ -2,6 +2,7 @@
 #define VRGEOMETRY_H_INCLUDED
 
 #include "core/objects/VRObjectFwd.h"
+#include "core/tools/selection/VRSelectionFwd.h"
 #include "../VRTransform.h"
 #include <OpenSG/OSGFieldContainerFields.h>
 #include <OpenSG/OSGImage.h> // TODO
@@ -85,6 +86,8 @@ class VRGeometry : public VRTransform {
         void removeDoubles(float minAngle);
         void decimate(float f);
         void merge(VRGeometryPtr geo);
+        void removeSelection(VRSelectionPtr sel);
+        VRGeometryPtr copySelection(VRSelectionPtr sel);
         void fixColorMapping();
         void updateNormals();
 

@@ -40,7 +40,7 @@ class VRSelection {
 
         vector<VRGeometryWeakPtr> getPartials();
         vector<VRGeometryWeakPtr> getSelected();
-        vector<int> getSubselection(VRGeometryPtr geo);
+        vector<int> getSubselection(VRGeometryPtr geo = 0);
 };
 
 OSG_END_NAMESPACE;
