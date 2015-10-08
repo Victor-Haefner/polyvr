@@ -89,13 +89,23 @@ PyObject* VRPySelection::getSubselection(VRPySelection* self, PyObject* args) {
     if (!self->valid()) return NULL;
     VRPyGeometry* geo = 0;
     if (!PyArg_ParseTuple(args, "|O:getSubselection", &geo)) return NULL;
-    OSG::VRGeometryPtr g = 0;
-    if (geo) g = geo->objPtr;
 
-    auto sel = self->objPtr->getSubselection(g);
-    PyObject* res = PyList_New(sel.size());
-    for (uint i=0; i<sel.size(); i++) PyList_SetItem(res, i, PyInt_FromLong(sel[i]));
-    return res;
+    auto toPyArray = [](vector<int>& v) {
+        PyObject* res = PyList_New(v.size());
+        for (uint i=0; i<v.size(); i++) PyList_SetItem(res, i, PyInt_FromLong(v[i]));
+        return res;
+    };
+
+    if (geo) {
+        auto v = self->objPtr->getSubselection( geo->objPtr );
+        return toPyArray( v );
+    } else {
+        PyObject* res = PyDict_New();
+        for (auto m : self->objPtr->getSubselections()) {
+            if (m.first) PyDict_SetItem(res, VRPyGeometry::fromSharedPtr(m.first), toPyArray(m.second) );
+        }
+        return res;
+    }
 }
 
 PyObject* VRPySelection::getSelected(VRPySelection* self) {

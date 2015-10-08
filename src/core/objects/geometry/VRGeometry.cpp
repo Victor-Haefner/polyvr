@@ -292,9 +292,32 @@ void VRGeometry::merge(VRGeometryPtr geo) {
 }
 
 void VRGeometry::removeSelection(VRSelectionPtr sel) {
-    auto inds = sel->getSubselection(ptr());
+    auto sinds = sel->getSubselection(ptr());
+    std::sort(sinds.begin(), sinds.end());
+
+    auto types = mesh->getTypes();
+    auto lengths = mesh->getLengths();
+    auto inds = mesh->getIndices();
+
+    int idx = 0;
+    for (int i = 0; i < lengths->size(); i++) {
+        int length = lengths->getValue(i);
+        int type = types->getValue(i);
+
+        for (int j = 0; j < length; j++, idx++) { // N prim x N primverts, equivalent to length of indices array
+            switch(type) {
+                case GL_TRIANGLES:
+                    break;
+                default:
+                    cout << "VRGeometry::removeSelection WARNING: type " << type << " not handled\n";
+                    break;
+            }
+        }
+    }
+
+
     TriangleIterator it(mesh);
-    for (auto i : inds) {
+    for (auto i : sinds) {
         ;
     }
 }

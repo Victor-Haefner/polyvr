@@ -82,16 +82,19 @@ void VRSelection::updateSubselection(VRGeometryPtr geo) {
 }
 
 vector<int> VRSelection::getSubselection(VRGeometryPtr geo) {
-    if (!geo) {
-        vector<int> res;
-        for (auto s : selected) {
-            auto& v = s.second.subselection;
-            res.insert(res.end(), v.begin(), v.end());
-        }
-        return res;
-    }
-
+    if (!geo) return vector<int>();
     if ( !selected.count( geo.get() ) ) updateSubselection(geo);
     if ( !selected.count( geo.get() ) ) return vector<int>();
     return selected[geo.get()].subselection;
 }
+
+map< VRGeometryPtr, vector<int> > VRSelection::getSubselections() {
+    map< VRGeometryPtr, vector<int> > res;
+    for (auto s : selected) {
+        auto sp = s.second.geo.lock();
+        if (sp) res[sp] = s.second.subselection;
+    }
+    return res;
+}
+
+
