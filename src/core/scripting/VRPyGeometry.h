@@ -36,6 +36,9 @@ struct VRPyGeometry : VRPyBaseT<OSG::VRGeometry> {
     static PyObject* makeUnique(VRPyGeometry* self);
     static PyObject* removeDoubles(VRPyGeometry* self, PyObject *args);
     static PyObject* merge(VRPyGeometry* self, PyObject *args);
+    static PyObject* copy(VRPyGeometry* self, PyObject *args);
+    static PyObject* remove(VRPyGeometry* self, PyObject *args);
+    static PyObject* separate(VRPyGeometry* self, PyObject *args);
     static PyObject* influence(VRPyGeometry* self, PyObject *args);
     static PyObject* showGeometricData(VRPyGeometry* self, PyObject *args);
     static PyObject* calcSurfaceArea(VRPyGeometry* self);

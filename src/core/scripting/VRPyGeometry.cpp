@@ -6,6 +6,7 @@
 #include "core/scene/VRSceneManager.h"
 #include "VRPyBaseT.h"
 #include "VRPyMaterial.h"
+#include "VRPySelection.h"
 #include "VRPyTypeCaster.h"
 
 #define NO_IMPORT_ARRAY
@@ -74,7 +75,10 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"getIndices", (PyCFunction)VRPyGeometry::getIndices, METH_NOARGS, "get geometry indices" },
     {"getTexCoords", (PyCFunction)VRPyGeometry::getTexCoords, METH_NOARGS, "get geometry texture coordinates" },
     {"getMaterial", (PyCFunction)VRPyGeometry::getMaterial, METH_NOARGS, "get material" },
-    {"merge", (PyCFunction)VRPyGeometry::merge, METH_VARARGS, "Merge another geometry into this one" },
+    {"merge", (PyCFunction)VRPyGeometry::merge, METH_VARARGS, "Merge another geometry into this one - merge( geo )" },
+    {"remove", (PyCFunction)VRPyGeometry::remove, METH_VARARGS, "Remove a part of the geometry - remove( Selection s )" },
+    {"copy", (PyCFunction)VRPyGeometry::copy, METH_VARARGS, "Copy a part of the geometry - geo copy( Selection s )" },
+    {"separate", (PyCFunction)VRPyGeometry::separate, METH_VARARGS, "Copy and remove a part of the geometry - geo separate( Selection s )" },
     {"setPrimitive", (PyCFunction)VRPyGeometry::setPrimitive, METH_VARARGS, "Set geometry to primitive" },
     {"setVideo", (PyCFunction)VRPyGeometry::setVideo, METH_VARARGS, "Set video texture - setVideo(path)" },
     {"playVideo", (PyCFunction)VRPyGeometry::playVideo, METH_VARARGS, "Play the video texture from t0 to t1 - playVideo(t0, t1, speed)" },
@@ -206,6 +210,28 @@ void feed1D3(PyObject* o, T& vec) {
         tmp[2] = PyFloat_AsDouble( PyList_GetItem(o, i+2) );
         vec->addValue(tmp);
     }
+}
+
+PyObject* VRPyGeometry::separate(VRPyGeometry* self, PyObject *args) {
+    if (!self->valid()) return NULL;
+    VRPySelection* sel = 0;
+    if (!PyArg_ParseTuple(args, "O", &sel)) return NULL;
+    return VRPyGeometry::fromSharedPtr( self->objPtr->separateSelection( sel->objPtr ) );
+}
+
+PyObject* VRPyGeometry::copy(VRPyGeometry* self, PyObject *args) {
+    if (!self->valid()) return NULL;
+    VRPySelection* sel = 0;
+    if (!PyArg_ParseTuple(args, "O", &sel)) return NULL;
+    return VRPyGeometry::fromSharedPtr( self->objPtr->copySelection( sel->objPtr ) );
+}
+
+PyObject* VRPyGeometry::remove(VRPyGeometry* self, PyObject *args) {
+    if (!self->valid()) return NULL;
+    VRPySelection* sel = 0;
+    if (!PyArg_ParseTuple(args, "O", &sel)) return NULL;
+    self->objPtr->removeSelection( sel->objPtr );
+    Py_RETURN_TRUE;
 }
 
 PyObject* VRPyGeometry::setPositionalTexCoords(VRPyGeometry* self, PyObject *args) {

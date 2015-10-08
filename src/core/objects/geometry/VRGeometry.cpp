@@ -209,18 +209,19 @@ void VRGeometry::setIndices(GeoIntegralProperty* Indices) {
     mesh->setIndices(Indices);
 }
 
-GeoVec4fPropertyRecPtr convertColors(GeoVectorProperty* v) {
-    GeoVec4fPropertyRecPtr res = GeoVec4fProperty::create();
-    if (v == 0) return res;
-    if (v->size() == 0) return res;
-
-    return res;
-
-    int cN = sizeof(v[0]);
-    if (cN == sizeof(Vec4f)) res = (GeoVec4fProperty*)v;
-    if (cN == sizeof(Vec3f)) for (uint i=0; i<v->size(); i++) res->addValue( Vec4f(v->getValue<Vec3f>(i)) );
-    return res;
+int getColorChannels(GeoVectorProperty* v) {
+    if (v == 0) return 0;
+    int type = v->getType().getId();
+    if (type == 1775) return 3;
+    if (type == 1776) return 4;
+    cout << "getColorChannels WARNING: unknown type ID " << type << endl;
+    return 0;
 }
+
+Vec3f morphColor3(const Vec3f& c) { return c; }
+Vec3f morphColor3(const Vec4f& c) { return Vec3f(c[0], c[1], c[2]); }
+Vec4f morphColor4(const Vec3f& c) { return Vec4f(c[0], c[1], c[2], 1); }
+Vec4f morphColor4(const Vec4f& c) { return c; }
 
 void VRGeometry::merge(VRGeometryPtr geo) {
     if (!meshSet) {
@@ -250,10 +251,12 @@ void VRGeometry::merge(VRGeometryPtr geo) {
     v2 = geo->mesh->getNormals();
     for (uint i=0; i<geo->mesh->getPositions()->size(); i++) v1->addValue(v2->getValue<Vec3f>(i));
 
-    if (mesh->getColors()) {
-        GeoVec4fPropertyRecPtr c1 = convertColors(mesh->getColors());
-        GeoVec4fPropertyRecPtr c2 = convertColors(geo->mesh->getColors());
-        for (uint i=0; i<c2->size(); i++) v1->addValue(c2->getValue(i));
+    auto c1 = mesh->getColors();
+    auto c2 = geo->mesh->getColors();
+    if (c1 && c2) {
+        int Nc = getColorChannels( c2 );
+        if (Nc == 3) for (uint i=0; i<c2->size(); i++) c1->addValue<Vec4f>( morphColor4( c2->getValue<Vec3f>(i) ) );
+        if (Nc == 4) for (uint i=0; i<c2->size(); i++) c1->addValue<Vec4f>( morphColor4( c2->getValue<Vec4f>(i) ) );
     }
 
     GeoIntegralProperty *i1, *i2;
@@ -292,39 +295,92 @@ void VRGeometry::merge(VRGeometryPtr geo) {
 }
 
 void VRGeometry::removeSelection(VRSelectionPtr sel) {
+    if (!mesh) return;
+    auto pos = mesh->getPositions();
+    auto norms = mesh->getNormals();
+    auto cols = mesh->getColors();
+    if (!pos || !norms || !cols) return;
+    GeoPnt3fPropertyRecPtr new_pos = GeoPnt3fProperty::create();
+    GeoVec3fPropertyRecPtr new_norms = GeoVec3fProperty::create();
+    GeoUInt32PropertyRecPtr new_inds = GeoUInt32Property::create();
+    GeoUInt32PropertyRecPtr new_lengths = GeoUInt32Property::create();
+    GeoVec4fPropertyRecPtr new_cols = GeoVec4fProperty::create();
+    int Nc = getColorChannels( cols );
+
+    // copy not selected vertices
     auto sinds = sel->getSubselection(ptr());
     std::sort(sinds.begin(), sinds.end());
-
-    auto types = mesh->getTypes();
-    auto lengths = mesh->getLengths();
-    auto inds = mesh->getIndices();
-
-    int idx = 0;
-    for (int i = 0; i < lengths->size(); i++) {
-        int length = lengths->getValue(i);
-        int type = types->getValue(i);
-
-        for (int j = 0; j < length; j++, idx++) { // N prim x N primverts, equivalent to length of indices array
-            switch(type) {
-                case GL_TRIANGLES:
-                    break;
-                default:
-                    cout << "VRGeometry::removeSelection WARNING: type " << type << " not handled\n";
-                    break;
+    map<int, int> mapping;
+    for (int k=0, i=0, j=0; i < pos->size(); i++) {
+        if (i < sinds[k]) {
+            new_pos->addValue( pos->getValue<Pnt3f>(i) );
+            new_norms->addValue( norms->getValue<Vec3f>(i) );
+            if (cols) {
+                if (Nc == 3) new_cols->addValue( cols->getValue<Vec3f>(i) );
+                if (Nc == 4) new_cols->addValue( cols->getValue<Vec4f>(i) );
             }
+            mapping[i] = j; j++;
+        } else k++;
+    }
+
+    // copy not selected triangles
+    TriangleIterator it(mesh);
+    for (int i=0; !it.isAtEnd(); ++it, i++) {
+        Vec3i idx = Vec3i( it.getPositionIndex(0), it.getPositionIndex(1), it.getPositionIndex(2) );
+        if ( mapping.count(idx[0]) && mapping.count(idx[1]) && mapping.count(idx[2])) {
+            for (int j=0; j<3; j++) new_inds->addValue( mapping[ idx[j] ] );
         }
     }
 
+    new_lengths->addValue( new_inds->size() );
 
-    TriangleIterator it(mesh);
-    for (auto i : sinds) {
-        ;
-    }
+    setType(GL_TRIANGLES);
+    setPositions(new_pos);
+    setNormals(new_norms);
+    setIndices(new_inds);
+    setLengths(new_lengths);
+    if (cols) setColors(new_cols);
 }
 
 VRGeometryPtr VRGeometry::copySelection(VRSelectionPtr sel) {
-    auto inds = sel->getSubselection(ptr());
+    auto pos = mesh->getPositions();
+    auto norms = mesh->getNormals();
+    GeoPnt3fPropertyRecPtr sel_pos = GeoPnt3fProperty::create();
+    GeoVec3fPropertyRecPtr sel_norms = GeoVec3fProperty::create();
+    GeoUInt32PropertyRecPtr sel_inds = GeoUInt32Property::create();
+
+    // copy selected vertices
+    auto sinds = sel->getSubselection(ptr());
+    std::sort(sinds.begin(), sinds.end());
+    map<int, int> mapping;
+    int k = 0;
+    for (int i : sinds) {
+        sel_pos->addValue( pos->getValue<Pnt3f>(i) );
+        sel_norms->addValue( norms->getValue<Vec3f>(i) );
+        mapping[i] = k;
+        k++;
+    }
+
+    // copy selected triangles
+    TriangleIterator it(mesh);
+    for (int i=0; !it.isAtEnd(); ++it, i++) {
+        Vec3i idx = Vec3i( it.getPositionIndex(0), it.getPositionIndex(1), it.getPositionIndex(2) );
+        if ( mapping.count(idx[0]) || mapping.count(idx[1]) || mapping.count(idx[2]) ) {
+            for (int j=0; j<3; j++) sel_inds->addValue( mapping[ idx[j] ] );
+        }
+    }
+
     auto geo = VRGeometry::create(getName());
+    geo->setType(GL_TRIANGLES);
+    geo->setPositions(sel_pos);
+    geo->setNormals(sel_norms);
+    geo->setIndices(sel_inds);
+    return geo;
+}
+
+VRGeometryPtr VRGeometry::separateSelection(VRSelectionPtr sel) {
+    auto geo = copySelection(sel);
+    removeSelection(sel);
     return geo;
 }
 

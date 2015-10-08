@@ -88,6 +88,7 @@ class VRGeometry : public VRTransform {
         void merge(VRGeometryPtr geo);
         void removeSelection(VRSelectionPtr sel);
         VRGeometryPtr copySelection(VRSelectionPtr sel);
+        VRGeometryPtr separateSelection(VRSelectionPtr sel);
         void fixColorMapping();
         void updateNormals();
 
