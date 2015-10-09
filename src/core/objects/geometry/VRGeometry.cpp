@@ -310,9 +310,12 @@ void VRGeometry::removeSelection(VRSelectionPtr sel) {
     // copy not selected vertices
     auto sinds = sel->getSubselection(ptr());
     std::sort(sinds.begin(), sinds.end());
+    std::unique(sinds.begin(), sinds.end());
     map<int, int> mapping;
     for (int k=0, i=0, j=0; i < pos->size(); i++) {
-        if (i < sinds[k]) {
+        bool skip = false;
+        if (k < sinds.size()) if (i == sinds[k]) skip = true;
+        if (!skip) {
             new_pos->addValue( pos->getValue<Pnt3f>(i) );
             new_norms->addValue( norms->getValue<Vec3f>(i) );
             if (cols) {
@@ -340,6 +343,9 @@ void VRGeometry::removeSelection(VRSelectionPtr sel) {
     setIndices(new_inds);
     setLengths(new_lengths);
     if (cols) setColors(new_cols);
+
+    mesh->setIndex(mesh->getIndex(Geometry::PositionsIndex), Geometry::ColorsIndex);
+    mesh->setIndex(mesh->getIndex(Geometry::PositionsIndex), Geometry::NormalsIndex);
 }
 
 VRGeometryPtr VRGeometry::copySelection(VRSelectionPtr sel) {
@@ -352,6 +358,7 @@ VRGeometryPtr VRGeometry::copySelection(VRSelectionPtr sel) {
     // copy selected vertices
     auto sinds = sel->getSubselection(ptr());
     std::sort(sinds.begin(), sinds.end());
+    std::unique(sinds.begin(), sinds.end());
     map<int, int> mapping;
     int k = 0;
     for (int i : sinds) {
@@ -365,7 +372,7 @@ VRGeometryPtr VRGeometry::copySelection(VRSelectionPtr sel) {
     TriangleIterator it(mesh);
     for (int i=0; !it.isAtEnd(); ++it, i++) {
         Vec3i idx = Vec3i( it.getPositionIndex(0), it.getPositionIndex(1), it.getPositionIndex(2) );
-        if ( mapping.count(idx[0]) || mapping.count(idx[1]) || mapping.count(idx[2]) ) {
+        if ( mapping.count(idx[0]) && mapping.count(idx[1]) && mapping.count(idx[2]) ) {
             for (int j=0; j<3; j++) sel_inds->addValue( mapping[ idx[j] ] );
         }
     }
