@@ -14,7 +14,6 @@ void VRParticles::resetParticles() {
     if (scene) world = scene->bltWorld();
 
     {
-        // NOTE should fkt be dropped here?
         BLock lock(mtx());
         for (int i=0; i<particles.size(); i++) delete particles[i];
         particles.resize(N, 0);
@@ -47,12 +46,7 @@ void VRParticles::resetParticles() {
     setIndices(inds);
     setMaterial(mat);
 }
-// NOTE compiler needs to know which classes can be used for particles
-// otherwise you can not link successfully.
-// see: http://stackoverflow.com/questions/495021/why-can-templates-only-be-implemented-in-the-header-file
-/*OSG_BEGIN_NAMESPACE;
-template void VRParticles::resetParticles<SphParticle>();
-OSG_END_NAMESPACE;*/
+
 OSG_END_NAMESPACE;
 
 #endif // VRPARTICLEST_H_INCLUDED

@@ -59,8 +59,7 @@ struct Particle {
 };
 
 struct SphParticle : public Particle {
-    float sphArea = 3 * radius;
-
+    float sphArea = 3 * radius; // NOTE only needed for individual areas.
     SphParticle(btDiscreteDynamicsWorld* world = 0) {}
 };
 OSG_END_NAMESPACE;
