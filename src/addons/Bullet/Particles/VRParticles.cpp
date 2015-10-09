@@ -23,9 +23,6 @@ boost::recursive_mutex& VRParticles::mtx() {
     };
 }
 
-Vec3f toVec3f(btVector3 v) { return Vec3f(v[0], v[1], v[2]); }
-btVector3 toBtVector3(Vec3f v) { return btVector3(v[0], v[1], v[2]); }
-
 
 VRParticles::VRParticles() : VRParticles(true) {
     //resetParticles<Particle>();
