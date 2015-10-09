@@ -6,9 +6,9 @@
 OSG_BEGIN_NAMESPACE;
 
 class VRFluids : public VRParticles {
-    public:
-        VRFluids();
-        VRFluids(bool spawnParticles);
+public:
+    VRFluids();
+    VRFluids(bool spawnParticles);
 };
 
 OSG_END_NAMESPACE;
