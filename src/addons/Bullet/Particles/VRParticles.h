@@ -24,6 +24,8 @@ class VRParticles : public VRGeometry {
         VRFunction<int>* fkt = 0;
         VRMaterial* mat = 0;
         GeoPnt3fPropertyRecPtr pos;
+        GeoVec3fPropertyRecPtr normals;
+        GeoVec4fPropertyRecPtr colors;
         btDiscreteDynamicsWorld* world = 0;
 
         float getMaxRadius();

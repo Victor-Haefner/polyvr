@@ -32,10 +32,14 @@ void VRParticles::resetParticles() {
     GeoUInt32PropertyRecPtr Length = GeoUInt32Property::create();
     GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
     pos = GeoPnt3fProperty::create();
+    normals = GeoVec3fProperty::create();
+    colors = GeoVec4fProperty::create();
     Length->addValue(N);
 
     for(int i=0;i<N;i++) pos->addValue(Pnt3f(0,0,0));
     for(int i=0;i<N;i++) inds->addValue(i);
+    normals->resize(N);
+    colors->resize(N);
 
     setType(GL_POINTS);
     setLengths(Length);
