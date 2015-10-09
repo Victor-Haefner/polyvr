@@ -307,31 +307,43 @@ void VRGeometry::removeSelection(VRSelectionPtr sel) {
     GeoVec4fPropertyRecPtr new_cols = GeoVec4fProperty::create();
     int Nc = getColorChannels( cols );
 
+    map<int, int> mapping;
+    auto addVertex = [&](int i, bool mapit = true) {
+        int j = new_pos->size();
+        if (mapit) mapping[i] = j;
+        new_pos->addValue( pos->getValue<Pnt3f>(i) );
+        new_norms->addValue( norms->getValue<Vec3f>(i) );
+        if (cols) {
+            if (Nc == 3) new_cols->addValue( cols->getValue<Vec3f>(i) );
+            if (Nc == 4) new_cols->addValue( cols->getValue<Vec4f>(i) );
+        }
+        return j;
+    };
+
     // copy not selected vertices
     auto sinds = sel->getSubselection(ptr());
     std::sort(sinds.begin(), sinds.end());
     std::unique(sinds.begin(), sinds.end());
-    map<int, int> mapping;
-    for (int k=0, i=0, j=0; i < pos->size(); i++) {
-        bool skip = false;
-        if (k < sinds.size()) if (i == sinds[k]) skip = true;
-        if (!skip) {
-            new_pos->addValue( pos->getValue<Pnt3f>(i) );
-            new_norms->addValue( norms->getValue<Vec3f>(i) );
-            if (cols) {
-                if (Nc == 3) new_cols->addValue( cols->getValue<Vec3f>(i) );
-                if (Nc == 4) new_cols->addValue( cols->getValue<Vec4f>(i) );
-            }
-            mapping[i] = j; j++;
-        } else k++;
+    for (int k=0, i=0; i < pos->size(); i++) {
+        bool selected = false;
+        if (k < sinds.size()) if (i == sinds[k]) selected = true;
+        if (!selected) addVertex(i);
+        else k++;
     }
 
-    // copy not selected triangles
+    // copy not selected and partially selected triangles
     TriangleIterator it(mesh);
     for (int i=0; !it.isAtEnd(); ++it, i++) {
         Vec3i idx = Vec3i( it.getPositionIndex(0), it.getPositionIndex(1), it.getPositionIndex(2) );
-        if ( mapping.count(idx[0]) && mapping.count(idx[1]) && mapping.count(idx[2])) {
-            for (int j=0; j<3; j++) new_inds->addValue( mapping[ idx[j] ] );
+        Vec3b bmap = Vec3b(mapping.count(idx[0]), mapping.count(idx[1]), mapping.count(idx[2]));
+        bool all = bmap[0] && bmap[1] && bmap[2];
+        bool any = bmap[0] || bmap[1] || bmap[2];
+        if (all) for (int j=0; j<3; j++) new_inds->addValue( mapping[ idx[j] ] );
+        else if (any) {
+            for (int j=0; j<3; j++) {
+                if (mapping.count(idx[j]) == 0) new_inds->addValue( addVertex(idx[j], false) );
+                else new_inds->addValue( mapping[ idx[j] ] );
+            }
         }
     }
 
