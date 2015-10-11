@@ -11,6 +11,7 @@
 #include <OpenSG/OSGGeometry.h>
 #include <OpenSG/OSGSimpleGeometry.h>
 #include <OpenSG/OSGSimpleMaterial.h>
+#include <OpenSG/OSGTextureObjChunk.h>
 
 #include <OpenSG/OSGShaderProgramChunk.h>
 #include <OpenSG/OSGShaderProgram.h>
@@ -72,8 +73,6 @@ void VRDefShading::init() {
     dsStage->editMFPixelTypes  ()->push_back(Image::OSG_FLOAT32_IMAGEDATA);
     dsStage->editMFPixelFormats()->push_back(Image::OSG_RGB_PF); // diffuse (RGB) buffer
     dsStage->editMFPixelTypes  ()->push_back(Image::OSG_UINT8_IMAGEDATA);
-    dsStage->editMFPixelFormats()->push_back(Image::OSG_RGB_PF); // ambient buffer
-    dsStage->editMFPixelTypes  ()->push_back(Image::OSG_UINT8_IMAGEDATA);
 
     dsStage->setGBufferProgram(NULL);
 
@@ -97,20 +96,21 @@ void VRDefShading::initDeferredShading(VRObjectPtr o) {
     setDefferedShading(enabled);
 }
 
-//void VRDefShading::initSSAO(VRObjectPtr o, VRMaterialPtr mat) {
 void VRDefShading::initSSAO(VRObjectPtr o) {
-    int kernelSize = 16;
-    int noiseSize = 16;
+    int kernelSize = 4; // smaller than noise size!
+    int noiseSize = 4;
+    int kernelSize2 = kernelSize*kernelSize;
+    int noiseSize2 = noiseSize*noiseSize;
 
     // kernel
-    vector<float> kernel(3*kernelSize);
-    vector<float> noise(3*noiseSize);
+    vector<float> kernel(3*kernelSize2);
+    vector<float> noise(3*noiseSize2);
 
-    for (int i = 0; i < kernelSize; i++) {
+    for (int i = 0; i < kernelSize2; i++) {
         Vec3f k(random(-1,1), random(-1,1), random(0,1));
         k.normalize();
         k *= random(0,1);
-        float scale = float(i) / float(kernelSize);
+        float scale = float(i) / float(kernelSize2);
         k *= lerp(0.1, 1, scale * scale);
 
         kernel[i*3+0] = k[0];
@@ -119,7 +119,7 @@ void VRDefShading::initSSAO(VRObjectPtr o) {
     }
 
     // noise texture
-    for (int i = 0; i < noiseSize; i++) {
+    for (int i = 0; i < noiseSize2; i++) {
         Vec3f n(random(-1,1), random(-1,1), 0);
         n.normalize();
 
@@ -128,24 +128,19 @@ void VRDefShading::initSSAO(VRObjectPtr o) {
         noise[i*3+2] = n[2];
     }
 
-    // put the noise data in a texture 4x4
+    // put kernel and noise in a 3d texture
+    vector<float> data;
+    vector<float> space(noise.size() - kernel.size());
+    data.insert(data.end(), kernel.begin(), kernel.end());
+    data.insert(data.end(), space.begin(), space.end());
+    data.insert(data.end(), noise.begin(), noise.end());
 
+    ImageRecPtr img = Image::create();
+    img->set(OSG::Image::OSG_RGB_PF, noiseSize, noiseSize, 2, 0, 1, 0.0, (const uint8_t*)&data[0], OSG::Image::OSG_FLOAT32_IMAGEDATA);
 
     string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/DeferredShading/";
     ssaoAmbientVPFile = resDir + "SSAOAmbient.vp.glsl";
     ssaoAmbientFPFile = resDir + "SSAOAmbient.fp.glsl";
-
-    /*ShaderProgramRecPtr      vpAmbient = ShaderProgram::createVertexShader  ();
-    ShaderProgramRecPtr      fpAmbient = ShaderProgram::createFragmentShader();
-    ShaderProgramChunkRecPtr shAmbient = ShaderProgramChunk::create();
-    vpAmbient->readProgram(ssaoAmbientVPFile.c_str());
-    fpAmbient->readProgram(ssaoAmbientFPFile.c_str());
-    fpAmbient->addUniformVariable<Int32>("texBufNorm", 1);
-    fpAmbient->addUniformVariable<Int32>("uTexRandom", 4); // noise random texture
-    shAmbient->addShader(vpAmbient);
-    shAmbient->addShader(fpAmbient);*/
-    /*ChunkMaterialRecPtr mat = ChunkMaterial::create();
-    mat->addChunk(shAmbient);*/
 
     auto plane = VRGeometry::create("ssao_layer");
     plane->setPrimitive("Plane", "2 2 1 1");
@@ -154,12 +149,25 @@ void VRDefShading::initSSAO(VRObjectPtr o) {
 
     mat->setLit(false);
     mat->readVertexShader(ssaoAmbientVPFile);
+    mat->setShaderParameter<float>("texScale", 1.0/noiseSize);
+    mat->setShaderParameter<int>("KernelSize", kernelSize);
+    mat->setShaderParameter<int>("NoiseSize", noiseSize);
+    mat->setShaderParameter<float>("uRadius", 2.5);
     mat->setShaderParameter<int>("texBufPos", 0);
     mat->setShaderParameter<int>("texBufNorm", 1);
     mat->setShaderParameter<int>("texBufDiff", 2);
-    mat->setShaderParameter<int>("texBufAmb", 3);
+    mat->setShaderParameter<int>("uTexRandom", 3); // noise random texture
     //mat->setDefaultVertexShader();
     mat->readFragmentShader(ssaoAmbientFPFile);
+    TextureObjChunkRecPtr tex0 = TextureObjChunk::create();
+    TextureObjChunkRecPtr tex1 = TextureObjChunk::create();
+    TextureObjChunkRecPtr tex2 = TextureObjChunk::create();
+    mat->getMaterial(0)->addChunk(tex0);
+    mat->getMaterial(0)->addChunk(tex1);
+    mat->getMaterial(0)->addChunk(tex2);
+    mat->setTexture(img);
+    //mat->getTextureObjChunk()->setFrame(4);
+    //TextureObjChunk->setFrame()
     o->addChild(plane);
 }
 

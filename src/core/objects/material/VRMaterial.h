@@ -142,11 +142,10 @@ class VRMaterial : public VRObject {
 
         /** Returns the texture || 0 **/
         ImageRecPtr getTexture();
+        TextureObjChunkRecPtr getTextureObjChunk();
 
         /** Deprecated  **/
         void printMaterialColors();
-
-        //void setLit(bool b) { getMesh()->getMaterial()->setLit(b); }//setLit only for simplematerials :/
 };
 
 OSG_END_NAMESPACE;

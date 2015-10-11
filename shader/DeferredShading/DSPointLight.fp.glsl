@@ -5,7 +5,7 @@
 
 // compute point light INDEX for fragment at POS with normal NORM
 // and diffuse material color MDIFF
-vec4 computePointLight(int index, vec4 amb, vec3 pos, vec3 norm, vec4 mDiff)
+vec4 computePointLight(int index, float amb, vec3 pos, vec3 norm, vec4 mDiff)
 {
     vec4  color = vec4(0);
     vec3  lightDirUN = gl_LightSource[index].position.xyz - pos;
@@ -31,7 +31,6 @@ vec4 computePointLight(int index, vec4 amb, vec3 pos, vec3 norm, vec4 mDiff)
 uniform sampler2DRect texBufPos;
 uniform sampler2DRect texBufNorm;
 uniform sampler2DRect texBufDiff;
-uniform sampler2DRect texBufAmb;
 uniform vec2          vpOffset;
 
 // DS pass
@@ -44,10 +43,10 @@ void main(void)
     else {
         vec4  posAmb = texture2DRect(texBufPos,  lookup);
         vec3  pos    = posAmb.xyz;
-        vec4  amb    = texture2DRect(texBufAmb,  lookup);
         vec4  mDiff  = texture2DRect(texBufDiff, lookup);
 
-        gl_FragColor = computePointLight(0, amb, pos, norm, mDiff);
-        //gl_FragColor = vec4(pos, 1.0);
+        gl_FragColor = computePointLight(0, posAmb.w, pos, norm, mDiff);
+        //gl_FragColor = vec4(posAmb.w, posAmb.w, posAmb.w, 1.0);
+        //gl_FragColor = vec4(mDiff.xyz, 1.0);
     }
 }

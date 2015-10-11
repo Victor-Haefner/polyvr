@@ -191,7 +191,6 @@ string VRMaterial::constructShaderFP(VRMatData* data) {
     fp += "  gl_FragData[0] = vec4(pos, ambVal);\n";
     fp += "  gl_FragData[1] = vec4(normalize(vertNorm), 0);\n";
     fp += "  gl_FragData[2] = vec4(diffCol, 0);\n";
-    fp += "  gl_FragData[3] = vec4(1.0);\n";
     fp += "}\n";
     return fp;
 }
@@ -643,6 +642,7 @@ float VRMaterial::getTransparency() { return mats[activePass]->colChunk->getDiff
 bool VRMaterial::isLit() { return mats[activePass]->colChunk->getLit(); }
 
 ImageRecPtr VRMaterial::getTexture() { return mats[activePass]->texture; }
+TextureObjChunkRecPtr VRMaterial::getTextureObjChunk() { return mats[activePass]->texChunk; }
 
 void VRMaterial::setTexture(char* data, int format, Vec3i dims, bool isfloat) {
     ImageRecPtr img = Image::create();
