@@ -17,6 +17,7 @@ class Image; OSG_GEN_CONTAINERPTR(Image);
 class ShaderProgram; OSG_GEN_CONTAINERPTR(ShaderProgram);
 class ChunkMaterial; OSG_GEN_CONTAINERPTR(ChunkMaterial);
 class MultiPassMaterial; OSG_GEN_CONTAINERPTR(MultiPassMaterial);
+class TextureObjChunk; OSG_GEN_CONTAINERPTR(TextureObjChunk);
 
 struct VRMatData;
 
@@ -73,6 +74,7 @@ class VRMaterial : public VRObject {
         void resetDefault();
 
         /** Load a texture && apply it to the mesh as new material **/
+        void setTexture(TextureObjChunkRefPtr texChunk);
         void setTexture(string img_path, bool alpha = true);
         void setTexture(ImageRecPtr img, bool alpha = true);
         void setTexture(ImageRecPtr img, int type, bool alpha);

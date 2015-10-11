@@ -20,6 +20,7 @@
 #include "core/utils/VROptions.h"
 #include "core/objects/VRLight.h"
 #include "core/objects/VRCamera.h"
+#include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/scene/VRSceneManager.h"
 
@@ -43,94 +44,6 @@ float random(float f1, float f2) {
 
 float lerp(float f1, float f2, float f3) {
     return (f2-f1)*f3;
-}
-
-void VRDefShading::initSSAO() {
-    int kernelSize = 16;
-    int noiseSize = 16;
-
-    // kernel
-    vector<float> kernel(3*kernelSize);
-    vector<float> noise(3*noiseSize);
-
-    for (int i = 0; i < kernelSize; i++) {
-        Vec3f k(random(-1,1), random(-1,1), random(0,1));
-        k.normalize();
-        k *= random(0,1);
-        float scale = float(i) / float(kernelSize);
-        k *= lerp(0.1, 1, scale * scale);
-
-        kernel[i*3+0] = k[0];
-        kernel[i*3+1] = k[1];
-        kernel[i*3+2] = k[2];
-    }
-
-    // noise texture
-    for (int i = 0; i < noiseSize; i++) {
-        Vec3f n(random(-1,1), random(-1,1), 0);
-        n.normalize();
-
-        noise[i*3+0] = n[0];
-        noise[i*3+1] = n[1];
-        noise[i*3+2] = n[2];
-    }
-
-    // put the noise data in a texture 4x4
-
-
-    string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/DeferredShading/";
-    ssaoAmbientVPFile = resDir + "SSAOAmbient.vp.glsl";
-    ssaoAmbientFPFile = resDir + "SSAOAmbient.fp.glsl";
-
-    /*ShaderProgramRecPtr      vpAmbient = ShaderProgram::createVertexShader  ();
-    ShaderProgramRecPtr      fpAmbient = ShaderProgram::createFragmentShader();
-    ShaderProgramChunkRecPtr shAmbient = ShaderProgramChunk::create();
-    vpAmbient->readProgram(ssaoAmbientVPFile.c_str());
-    fpAmbient->readProgram(ssaoAmbientFPFile.c_str());
-    fpAmbient->addUniformVariable<Int32>("texBufNorm", 1);
-    fpAmbient->addUniformVariable<Int32>("uTexRandom", 4); // noise random texture
-    shAmbient->addShader(vpAmbient);
-    shAmbient->addShader(fpAmbient);*/
-
-    VRMaterialPtr mat = VRMaterial::create("ssao");
-    mat->setDiffuse(Vec3f(0,1,0));
-    mat->readVertexShader(ssaoAmbientVPFile);
-    mat->readFragmentShader(ssaoAmbientFPFile);
-    mat->setLit(false);
-
-    /*ChunkMaterialRecPtr mat = ChunkMaterial::create();
-    mat->addChunk(shAmbient);*/
-
-    /*SimpleMaterialRecPtr mat = SimpleMaterial::create();
-    mat->setDiffuse(Vec3f(0,0,1));
-    mat->setLit(false);*/
-
-    PolygonForegroundRecPtr fg = PolygonForeground::create();
-    fg->setMaterial(mat->getMaterial(0));
-    fg->editMFPositions()->push_back(Pnt2f(0,0));
-    fg->editMFPositions()->push_back(Pnt2f(1,0));
-    fg->editMFPositions()->push_back(Pnt2f(1,1));
-    fg->editMFPositions()->push_back(Pnt2f(0,1));
-    fg->editMFTexCoords()->push_back(Vec3f(0,0,0));
-    fg->editMFTexCoords()->push_back(Vec3f(1,0,0));
-    fg->editMFTexCoords()->push_back(Vec3f(1,1,0));
-    fg->editMFTexCoords()->push_back(Vec3f(0,1,0));
-
-    //ImageForegroundRecPtr fg = ImageForeground::create();
-
-
-    /*FrameBufferObjectRefPtr fbo = FrameBufferObject::create();
-    fbo->setWidth (640);
-    fbo->setHeight(480);
-    fbo->setPostProcessOnDeactivate(true);
-    ssaoStage->setRenderTarget(fbo);*/
-
-    ssaoStage = SimpleStage::create();
-    ssaoStage->setSize(0,0,1,1);
-    ssaoStage->pushToForegrounds(fg);
-
-    // pass ssao stuff to shader
-    //ssaoStage->;
 }
 
 void VRDefShading::init() {
@@ -184,17 +97,70 @@ void VRDefShading::initDeferredShading(VRObjectPtr o) {
     setDefferedShading(enabled);
 }
 
+//void VRDefShading::initSSAO(VRObjectPtr o, VRMaterialPtr mat) {
 void VRDefShading::initSSAO(VRObjectPtr o) {
-    initSSAO();
-    ssaoObject = o;
-    setSSAO(ssao_enabled);
-}
+    int kernelSize = 16;
+    int noiseSize = 16;
 
-void VRDefShading::setSSAO(bool b) {
-    ssao_enabled = b;
-    if (ssaoObject == 0) return;
-    if (b) ssaoObject->setCore(ssaoStage, "ssaoShading", true);
-    else ssaoObject->setCore(Group::create(), "Object", true);
+    // kernel
+    vector<float> kernel(3*kernelSize);
+    vector<float> noise(3*noiseSize);
+
+    for (int i = 0; i < kernelSize; i++) {
+        Vec3f k(random(-1,1), random(-1,1), random(0,1));
+        k.normalize();
+        k *= random(0,1);
+        float scale = float(i) / float(kernelSize);
+        k *= lerp(0.1, 1, scale * scale);
+
+        kernel[i*3+0] = k[0];
+        kernel[i*3+1] = k[1];
+        kernel[i*3+2] = k[2];
+    }
+
+    // noise texture
+    for (int i = 0; i < noiseSize; i++) {
+        Vec3f n(random(-1,1), random(-1,1), 0);
+        n.normalize();
+
+        noise[i*3+0] = n[0];
+        noise[i*3+1] = n[1];
+        noise[i*3+2] = n[2];
+    }
+
+    // put the noise data in a texture 4x4
+
+
+    string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/DeferredShading/";
+    ssaoAmbientVPFile = resDir + "SSAOAmbient.vp.glsl";
+    ssaoAmbientFPFile = resDir + "SSAOAmbient.fp.glsl";
+
+    /*ShaderProgramRecPtr      vpAmbient = ShaderProgram::createVertexShader  ();
+    ShaderProgramRecPtr      fpAmbient = ShaderProgram::createFragmentShader();
+    ShaderProgramChunkRecPtr shAmbient = ShaderProgramChunk::create();
+    vpAmbient->readProgram(ssaoAmbientVPFile.c_str());
+    fpAmbient->readProgram(ssaoAmbientFPFile.c_str());
+    fpAmbient->addUniformVariable<Int32>("texBufNorm", 1);
+    fpAmbient->addUniformVariable<Int32>("uTexRandom", 4); // noise random texture
+    shAmbient->addShader(vpAmbient);
+    shAmbient->addShader(fpAmbient);*/
+    /*ChunkMaterialRecPtr mat = ChunkMaterial::create();
+    mat->addChunk(shAmbient);*/
+
+    auto plane = VRGeometry::create("ssao_layer");
+    plane->setPrimitive("Plane", "2 2 1 1");
+    auto mat = VRMaterial::create("ssao");
+    plane->setMaterial(mat);
+
+    mat->setLit(false);
+    mat->readVertexShader(ssaoAmbientVPFile);
+    mat->setShaderParameter<int>("texBufPos", 0);
+    mat->setShaderParameter<int>("texBufNorm", 1);
+    mat->setShaderParameter<int>("texBufDiff", 2);
+    mat->setShaderParameter<int>("texBufAmb", 3);
+    //mat->setDefaultVertexShader();
+    mat->readFragmentShader(ssaoAmbientFPFile);
+    o->addChild(plane);
 }
 
 void VRDefShading::setDefferedShading(bool b) {
@@ -202,19 +168,12 @@ void VRDefShading::setDefferedShading(bool b) {
     if (stageObject == 0) return;
     if (b) stageObject->setCore(dsStage, "defShading", true);
     else stageObject->setCore(Group::create(), "Object", true);
-    for (auto m : VRMaterial::materials) {
-        auto mat = m.second.lock();
-        if (!mat) continue;
-        mat->setDeffered(b);
-    }
 }
 
-bool VRDefShading::getSSAO() { return ssao_enabled; }
 bool VRDefShading::getDefferedShading() { return enabled; }
 
 void VRDefShading::setDSCamera(VRCameraPtr cam) {
     if (initiated) dsStage->setCamera(cam->getCam());
-    if (initiated) ssaoStage->setCamera(cam->getCam());
 }
 
 void VRDefShading::addDSLight(VRLightPtr light) {

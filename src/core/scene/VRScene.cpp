@@ -66,6 +66,7 @@ VRScene::~VRScene() {
 
 void VRScene::initDevices() { // TODO: remove this after refactoring the navigation stuff
     VRSetup* setup = VRSetupManager::getCurrent();
+    if (!setup) return;
 
     VRMouse* mouse = (VRMouse*)setup->getDevice("mouse");
     VRFlystick* flystick = (VRFlystick*)setup->getDevice("flystick");

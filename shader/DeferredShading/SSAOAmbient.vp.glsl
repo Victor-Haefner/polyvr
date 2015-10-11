@@ -1,6 +1,7 @@
 #version 120
 
-void main(void)
-{
-    gl_Position = ftransform();
+attribute vec4 osg_Vertex;
+
+void main(void) {
+    gl_Position = osg_Vertex;
 }

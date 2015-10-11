@@ -93,7 +93,11 @@ void PolyVR::init(int argc, char **argv) {
     osgInit(argc,argv);
 }
 
-void PolyVR::start() {
+void PolyVR::run() {
+    while(true) VRSceneManager::get()->update();
+}
+
+void PolyVR::start(bool runit) {
     if (VROptions::get()->getOption<bool>("active_stereo"))
         glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STEREO | GLUT_STENCIL);
     else glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL);
@@ -110,15 +114,16 @@ void PolyVR::start() {
     string app = options->getOption<string>("application");
     if (app != "") VRSceneManager::get()->loadScene(app);
 
-    while(true) VRSceneManager::get()->update();
+    if (runit) run();
 }
 
 void PolyVR::startTestScene(Node* n) {
+    start(false);
+    cout << "start test scene " << n << endl;
     VRSceneManager::get()->newScene("test");
     VRSceneManager::getCurrent()->getRoot()->find("Headlight")->addChild(n);
     VRGuiManager::get()->wakeWindow();
-
-    start();
+    run();
 }
 
 

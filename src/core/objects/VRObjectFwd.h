@@ -23,6 +23,7 @@ ptrFwd(VRLight);
 ptrFwd(VRLightBeacon);
 ptrFwd(VRGroup);
 ptrFwd(VRBillboard);
+ptrFwd(VRStage);
 
 // tools
 ptrFwd(VRAnnotationEngine);

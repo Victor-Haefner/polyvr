@@ -191,6 +191,7 @@ string VRMaterial::constructShaderFP(VRMatData* data) {
     fp += "  gl_FragData[0] = vec4(pos, ambVal);\n";
     fp += "  gl_FragData[1] = vec4(normalize(vertNorm), 0);\n";
     fp += "  gl_FragData[2] = vec4(diffCol, 0);\n";
+    fp += "  gl_FragData[3] = vec4(1.0);\n";
     fp += "}\n";
     return fp;
 }
@@ -432,7 +433,15 @@ void VRMaterial::setTextureParams(int min, int mag, int envMode, int wrapS, int 
     md->texChunk->setWrapT (wrapT);
 }
 
-/** Load a texture && apply it to the mesh as new material **/
+void VRMaterial::setTexture(TextureObjChunkRefPtr texChunk) {
+    auto md = mats[activePass];
+    if (md->texChunk) md->mat->subChunk(md->texChunk);
+    md->texChunk = texChunk;
+    md->mat->addChunk(md->texChunk);
+    if (md->envChunk == 0) { md->envChunk = TextureEnvChunk::create(); md->mat->addChunk(md->envChunk); }
+    md->envChunk->setEnvMode(GL_MODULATE);
+}
+
 void VRMaterial::setTexture(string img_path, bool alpha) { // TODO: improve with texture map
     if (boost::filesystem::exists(img_path))
         img_path = boost::filesystem::canonical(img_path).string();

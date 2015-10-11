@@ -482,6 +482,8 @@
 		<Unit filename="src/core/objects/VRLod.cpp" />
 		<Unit filename="src/core/objects/VRLod.h" />
 		<Unit filename="src/core/objects/VRObjectFwd.h" />
+		<Unit filename="src/core/objects/VRStage.cpp" />
+		<Unit filename="src/core/objects/VRStage.h" />
 		<Unit filename="src/core/objects/VRTransform.cpp" />
 		<Unit filename="src/core/objects/VRTransform.h" />
 		<Unit filename="src/core/objects/geometry/VRBillboard.cpp" />
