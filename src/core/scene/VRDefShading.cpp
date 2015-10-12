@@ -97,6 +97,7 @@ void VRDefShading::initDeferredShading(VRObjectPtr o) {
 }
 
 void VRDefShading::initSSAO(VRObjectPtr o) {
+    float radius = 0.02;
     int kernelSize = 4; // smaller than noise size!
     int noiseSize = 4;
     int kernelSize2 = kernelSize*kernelSize;
@@ -152,7 +153,7 @@ void VRDefShading::initSSAO(VRObjectPtr o) {
     mat->setShaderParameter<float>("texScale", 1.0/noiseSize);
     mat->setShaderParameter<int>("KernelSize", kernelSize);
     mat->setShaderParameter<int>("NoiseSize", noiseSize);
-    mat->setShaderParameter<float>("uRadius", 2.5);
+    mat->setShaderParameter<float>("uRadius", radius);
     mat->setShaderParameter<int>("texBufPos", 0);
     mat->setShaderParameter<int>("texBufNorm", 1);
     mat->setShaderParameter<int>("texBufDiff", 2);
