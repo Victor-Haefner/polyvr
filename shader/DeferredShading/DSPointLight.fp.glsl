@@ -21,7 +21,8 @@ vec4 computePointLight(int index, float amb, vec3 pos, vec3 norm, vec4 mDiff)
                               vec3(1., lightDist, lightDist * lightDist));
         distAtt = 1. / distAtt;
 
-        color = amb * distAtt * NdotL * mDiff * gl_LightSource[index].diffuse;
+        color = (amb*0.8+0.2) * distAtt * NdotL * mDiff * gl_LightSource[index].diffuse;
+        //color = amb*gl_LightSource[index].ambient + distAtt * NdotL * mDiff * gl_LightSource[index].diffuse;
     }
 
     return color;

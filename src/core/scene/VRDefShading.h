@@ -55,7 +55,8 @@ class VRDefShading {
         float shadowColor;
         bool initiated = false;
         bool enabled = false;
-        VRObjectPtr stageObject = 0;
+        VRObjectPtr stageObject;
+        VRMaterialPtr ssao_mat;
 
         void init();
 
@@ -65,6 +66,7 @@ class VRDefShading {
 
         void initDeferredShading(VRObjectPtr o);
         void initSSAO(VRObjectPtr o);
+        void setSSAOparams(float radius, int kernel);
         //void initSSAO(VRObjectPtr o, VRMaterialPtr mat);
 
         void setDefferedShading(bool b);

@@ -10,7 +10,7 @@
 using namespace std;
 
 const char* dumpPath = "/tmp";
-const char* dumpFile = "/tmp/pvr_core";
+const char* dumpFile = "/tmp/core";
 
 #ifndef _WIN32
 extern "C" void coreDump(int sig) {

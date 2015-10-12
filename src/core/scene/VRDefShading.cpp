@@ -96,16 +96,24 @@ void VRDefShading::initDeferredShading(VRObjectPtr o) {
     setDefferedShading(enabled);
 }
 
-void VRDefShading::initSSAO(VRObjectPtr o) {
-    float radius = 0.02;
-    int kernelSize = 4; // smaller than noise size!
-    int noiseSize = 4;
+void VRDefShading::setSSAOparams(float radius, int kernelSize) {
+    if (!ssao_mat) return;
+    //int noiseSize = 4;
+    int noiseSize = kernelSize;
     int kernelSize2 = kernelSize*kernelSize;
     int noiseSize2 = noiseSize*noiseSize;
+
+    ssao_mat->setActivePass(0);
+    ssao_mat->setShaderParameter<int>("KernelSize", kernelSize);
+    ssao_mat->setShaderParameter<float>("uRadius", radius);
+    ssao_mat->setShaderParameter<float>("texScale", 1.0/noiseSize);
+    ssao_mat->setShaderParameter<int>("NoiseSize", noiseSize);
+    ssao_mat->setShaderParameter<float>("uRadius", radius);
 
     // kernel
     vector<float> kernel(3*kernelSize2);
     vector<float> noise(3*noiseSize2);
+    srand(0);
 
     for (int i = 0; i < kernelSize2; i++) {
         Vec3f k(random(-1,1), random(-1,1), random(0,1));
@@ -138,38 +146,49 @@ void VRDefShading::initSSAO(VRObjectPtr o) {
 
     ImageRecPtr img = Image::create();
     img->set(OSG::Image::OSG_RGB_PF, noiseSize, noiseSize, 2, 0, 1, 0.0, (const uint8_t*)&data[0], OSG::Image::OSG_FLOAT32_IMAGEDATA);
+    ssao_mat->setTexture(img);
 
+    ssao_mat->setActivePass(1);
+    ssao_mat->setShaderParameter<int>("uBlurSize", noiseSize);
+}
+
+void VRDefShading::initSSAO(VRObjectPtr o) {
     string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/DeferredShading/";
     ssaoAmbientVPFile = resDir + "SSAOAmbient.vp.glsl";
     ssaoAmbientFPFile = resDir + "SSAOAmbient.fp.glsl";
+    string blurvp = resDir + "blur.vp.glsl";
+    string blurfp = resDir + "blur.fp.glsl";
 
     auto plane = VRGeometry::create("ssao_layer");
+    o->addChild(plane);
     plane->setPrimitive("Plane", "2 2 1 1");
     auto mat = VRMaterial::create("ssao");
+    ssao_mat = mat;
     plane->setMaterial(mat);
 
+    // ssao material pass
     mat->setLit(false);
     mat->readVertexShader(ssaoAmbientVPFile);
-    mat->setShaderParameter<float>("texScale", 1.0/noiseSize);
-    mat->setShaderParameter<int>("KernelSize", kernelSize);
-    mat->setShaderParameter<int>("NoiseSize", noiseSize);
-    mat->setShaderParameter<float>("uRadius", radius);
+    mat->readFragmentShader(ssaoAmbientFPFile);
     mat->setShaderParameter<int>("texBufPos", 0);
     mat->setShaderParameter<int>("texBufNorm", 1);
     mat->setShaderParameter<int>("texBufDiff", 2);
     mat->setShaderParameter<int>("uTexRandom", 3); // noise random texture
-    //mat->setDefaultVertexShader();
-    mat->readFragmentShader(ssaoAmbientFPFile);
-    TextureObjChunkRecPtr tex0 = TextureObjChunk::create();
-    TextureObjChunkRecPtr tex1 = TextureObjChunk::create();
-    TextureObjChunkRecPtr tex2 = TextureObjChunk::create();
-    mat->getMaterial(0)->addChunk(tex0);
-    mat->getMaterial(0)->addChunk(tex1);
-    mat->getMaterial(0)->addChunk(tex2);
-    mat->setTexture(img);
-    //mat->getTextureObjChunk()->setFrame(4);
-    //TextureObjChunk->setFrame()
-    o->addChild(plane);
+    for (int i=0; i<3; i++) {
+        TextureObjChunkRecPtr tex = TextureObjChunk::create();
+        ImageRecPtr img = Image::create();
+        tex->setImage(img);
+        mat->getMaterial(0)->addChunk(tex);
+    }
+    setSSAOparams(0.02, 4);
+
+    // ssao blur material pass
+    mat->addPass();
+    mat->readVertexShader(blurvp);
+    mat->readFragmentShader(blurfp);
+    mat->setShaderParameter<int>("texBufPos", 0);
+    mat->setShaderParameter<int>("texBufNorm", 1);
+    mat->setShaderParameter<int>("texBufDiff", 2);
 }
 
 void VRDefShading::setDefferedShading(bool b) {

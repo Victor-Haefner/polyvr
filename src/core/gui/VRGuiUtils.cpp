@@ -23,6 +23,7 @@
 #include <gtkmm/drawingarea.h>
 #include <gtkmm/colorselection.h>
 #include <gtkmm/paned.h>
+#include <gtkmm/scale.h>
 
 using namespace std;
 
@@ -227,6 +228,18 @@ void setButtonText(string b, string txt ) {
     Gtk::Button* bu;
     VRGuiBuilder()->get_widget(b, bu);
     bu->set_label(txt);
+}
+
+void setSliderCallback(string s, sigc::slot< bool,Gtk::ScrollType,double > sig) {
+    Gtk::HScale* hs;
+    VRGuiBuilder()->get_widget(s, hs);
+    hs->signal_change_value().connect(sig);
+}
+
+float getSliderState(string s) {
+    Gtk::HScale* hs;
+    VRGuiBuilder()->get_widget(s, hs);
+    return hs->get_value();
 }
 
 bool keySignalProxy(GdkEventKey* e, string k, sigc::slot<void> sig ) {

@@ -42,6 +42,8 @@ VRRenderManager::VRRenderManager() {
     store("two_sided", &twoSided);
     store("deferred_rendering", &deferredRendering);
     store("ssao", &ssao);
+    store("ssao_kernel", &ssao_kernel);
+    store("ssao_radius", &ssao_radius);
 }
 
 VRRenderManager::~VRRenderManager() {
@@ -60,6 +62,7 @@ void VRRenderManager::update() {
 
     defShading->setDefferedShading(deferredRendering);
     root_ssao->setVisible(ssao);
+    defShading->setSSAOparams(ssao_radius, ssao_kernel);
 
     for (auto m : VRMaterial::materials) {
         auto mat = m.second.lock();
@@ -89,12 +92,12 @@ bool VRRenderManager::getTwoSided() { return twoSided; }
 void VRRenderManager::setDefferedShading(bool b) { deferredRendering = b; update(); }
 bool VRRenderManager::getDefferedShading() { return deferredRendering; }
 
-void VRRenderManager::setDSCamera(VRCameraPtr cam) {
-    defShading->setDSCamera(cam);
-}
+void VRRenderManager::setDSCamera(VRCameraPtr cam) { defShading->setDSCamera(cam); }
 
 void VRRenderManager::setSSAO(bool b) { ssao = b; update(); }
 bool VRRenderManager::getSSAO() { return ssao; }
+void VRRenderManager::setSSAOradius(float r) { ssao_radius = r; update(); }
+void VRRenderManager::setSSAOkernel(int k) { ssao_kernel = k; update(); }
 
 
 OSG_END_NAMESPACE;

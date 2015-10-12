@@ -51,6 +51,10 @@ Gtk::TreeModel::iterator getComboboxIter(string cbn);
 void eraseComboboxActive(string cb);
 void setComboboxSensitivity(string cb, bool b);
 
+// SLIDER
+void setSliderCallback(string s, sigc::slot< bool,Gtk::ScrollType,double > sig);
+float getSliderState(string s);
+
 // LISTVIEWS
 void fillStringListstore(string ls, vector<string> list);
 void setCellRendererCallback(string renderer, void (* fkt)(GtkCellRendererText*, gchar*, gchar*, gpointer));

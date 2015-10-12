@@ -218,11 +218,14 @@ void VRPhysics::clear() {
     auto scene = OSG::VRSceneManager::getCurrent();
     if (scene) scene->unphysicalize(vr_obj);
 
+    if (scene) world = scene->bltWorld();
+    else world = 0;
+
     if (body != 0) {
         for (auto j : joints) {
             if (j.second->btJoint != 0) {
                 VRPhysicsJoint* joint = j.second;
-                world->removeConstraint(joint->btJoint);
+                if (world) world->removeConstraint(joint->btJoint);
                 delete joint->btJoint;
                 joint->btJoint = 0;
             }
@@ -232,25 +235,25 @@ void VRPhysics::clear() {
             if (j.first->joints.count(this) == 0) continue;
             VRPhysicsJoint* joint = j.first->joints[this];
             if (joint->btJoint != 0) {
-                world->removeConstraint(joint->btJoint);
+                if (world) world->removeConstraint(joint->btJoint);
                 delete joint->btJoint;
                 joint->btJoint = 0;
             }
         }
 
-        world->removeRigidBody(body);
+        if (world) world->removeRigidBody(body);
         delete body;
         body = 0;
     }
 
     if (ghost_body != 0) {
-        world->removeCollisionObject(ghost_body);
+        if (world) world->removeCollisionObject(ghost_body);
         delete ghost_body;
         ghost_body = 0;
     }
 
     if (soft_body != 0) {
-        world->removeCollisionObject(soft_body);
+        if (world) world->removeCollisionObject(soft_body);
         delete soft_body;
         soft_body = 0;
     }
