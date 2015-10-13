@@ -6,7 +6,8 @@
 uniform sampler2DRect texBufPos;
 uniform sampler2DRect texBufNorm;
 uniform sampler2DRect texBufDiff;
-uniform sampler3D uTexRandom;
+uniform sampler2D uTexKernel;
+uniform sampler2D uTexNoise;
 uniform float texScale;
 uniform int KernelSize;
 uniform int NoiseSize;
@@ -27,7 +28,7 @@ void main(void) {
     vec4 posAmb = texture2DRect(texBufPos,  lookup);
     vec3 norm   = texture2DRect(texBufNorm, lookup).xyz;
     vec4 mDiff  = texture2DRect(texBufDiff, lookup);
-    vec3 noise  = texture3D(uTexRandom, vec3(lookup*texScale, 1) ).xyz;
+    vec3 noise  = texture2D(uTexNoise, vec2(lookup*texScale) ).xyz;
 
     vec3 pos = posAmb.xyz;
     if (pos.z >= 0) discard;
@@ -47,7 +48,7 @@ void main(void) {
         for (int i = 0; i < KernelSize*KernelSize; ++i) {
             float sx = mod(i,NoiseSize);
             float sy = i/NoiseSize;
-            vec3 sample = tbn * texture3D(uTexRandom, vec3(sx*texScale, sy*texScale, 0) ).xyz;
+            vec3 sample = tbn * texture2D(uTexKernel, vec2(sx*texScale, sy*texScale) ).xyz;
             sample = sample*R + pos;
 
             vec2 screen_sample = toScreen(sample) * view;

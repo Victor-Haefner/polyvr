@@ -21,6 +21,7 @@ class VRRenderManager : public VRStorage {
         bool deferredRendering = false;
         bool ssao = false;
         int ssao_kernel = 4;
+        int ssao_noise = 4;
         float ssao_radius = 0.02;
 
     protected:
@@ -55,6 +56,7 @@ class VRRenderManager : public VRStorage {
         bool getSSAO();
         void setSSAOradius(float r);
         void setSSAOkernel(int k);
+        void setSSAOnoise(int n);
 
         void update();
 };

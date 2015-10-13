@@ -38,7 +38,6 @@ class VRDefShading {
 
         string dsGBufferVPFile, dsGBufferFPFile;
         string dsAmbientVPFile, dsAmbientFPFile;
-        string ssaoAmbientVPFile, ssaoAmbientFPFile;
         string dsDirLightVPFile, dsDirLightFPFile, dsDirLightShadowFPFile;
         string dsPointLightVPFile, dsPointLightFPFile, dsPointLightShadowFPFile;
         string dsSpotLightVPFile, dsSpotLightFPFile, dsSpotLightShadowFPFile;
@@ -66,8 +65,7 @@ class VRDefShading {
 
         void initDeferredShading(VRObjectPtr o);
         void initSSAO(VRObjectPtr o);
-        void setSSAOparams(float radius, int kernel);
-        //void initSSAO(VRObjectPtr o, VRMaterialPtr mat);
+        void setSSAOparams(float radius, int kernel, int noise);
 
         void setDefferedShading(bool b);
         bool getDefferedShading();

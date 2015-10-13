@@ -39,6 +39,7 @@ struct VRMatData {
     BlendChunkRecPtr blendChunk;
     TextureEnvChunkRecPtr envChunk;
     TextureObjChunkRecPtr texChunk;
+    map<int, TextureObjChunkRecPtr> texChunks;
     TexGenChunkRecPtr genChunk;
     LineChunkRecPtr lineChunk;
     PointChunkRecPtr pointChunk;
@@ -481,6 +482,40 @@ void VRMaterial::setTexture(ImageRecPtr img, bool alpha) {
     }
 }
 
+void VRMaterial::setTexture(char* data, int format, Vec3i dims, bool isfloat) {
+    ImageRecPtr img = Image::create();
+
+    int pf = Image::OSG_RGB_PF;
+    if (format == 4) pf = Image::OSG_RGBA_PF;
+
+    int f = Image::OSG_UINT8_IMAGEDATA;
+    if (isfloat) f = Image::OSG_FLOAT32_IMAGEDATA;
+    img->set( pf, dims[0], dims[1], dims[2], 1, 1, 0, (const UInt8*)data, f);
+    if (format == 4) setTexture(img, true);
+    if (format == 3) setTexture(img, false);
+    setShaderParameter<int>("is3DTexture", dims[2] > 1);
+}
+
+TextureObjChunkRefPtr VRMaterial::getTexChunk(int unit) {
+    auto md = mats[activePass];
+    if (md->envChunk == 0) { md->envChunk = TextureEnvChunk::create(); md->mat->addChunk(md->envChunk); }
+    md->envChunk->setEnvMode(GL_MODULATE);
+
+    if (md->texChunks.count(unit) == 0) {
+        md->texChunks[unit] = TextureObjChunk::create();
+        md->mat->addChunk(md->texChunks[unit], unit);
+    }
+    md->texChunk = md->texChunks[unit];
+    return md->texChunks[unit];
+}
+
+void VRMaterial::setTextureAndUnit(ImageRecPtr img, int unit) {
+    if (img == 0) return;
+    auto md = mats[activePass];
+    auto texChunk = getTexChunk(unit);
+    texChunk->setImage(img);
+}
+
 void VRMaterial::setTextureType(string type) {
     auto md = mats[activePass];
     if (type == "Normal") {
@@ -647,20 +682,6 @@ bool VRMaterial::isLit() { return mats[activePass]->colChunk->getLit(); }
 
 ImageRecPtr VRMaterial::getTexture() { return mats[activePass]->texture; }
 TextureObjChunkRecPtr VRMaterial::getTextureObjChunk() { return mats[activePass]->texChunk; }
-
-void VRMaterial::setTexture(char* data, int format, Vec3i dims, bool isfloat) {
-    ImageRecPtr img = Image::create();
-
-    int pf = Image::OSG_RGB_PF;
-    if (format == 4) pf = Image::OSG_RGBA_PF;
-
-    int f = Image::OSG_UINT8_IMAGEDATA;
-    if (isfloat) f = Image::OSG_FLOAT32_IMAGEDATA;
-    img->set( pf, dims[0], dims[1], dims[2], 1, 1, 0, (const UInt8*)data, f);
-    if (format == 4) setTexture(img, true);
-    if (format == 3) setTexture(img, false);
-    setShaderParameter<int>("is3DTexture", dims[2] > 1);
-}
 
 void VRMaterial::initShaderChunk() {
     auto md = mats[activePass];

@@ -62,7 +62,7 @@ void VRRenderManager::update() {
 
     defShading->setDefferedShading(deferredRendering);
     root_ssao->setVisible(ssao);
-    defShading->setSSAOparams(ssao_radius, ssao_kernel);
+    defShading->setSSAOparams(ssao_radius, ssao_kernel, ssao_noise);
 
     for (auto m : VRMaterial::materials) {
         auto mat = m.second.lock();
@@ -98,6 +98,7 @@ void VRRenderManager::setSSAO(bool b) { ssao = b; update(); }
 bool VRRenderManager::getSSAO() { return ssao; }
 void VRRenderManager::setSSAOradius(float r) { ssao_radius = r; update(); }
 void VRRenderManager::setSSAOkernel(int k) { ssao_kernel = k; update(); }
+void VRRenderManager::setSSAOnoise(int k) { ssao_noise = k; update(); }
 
 
 OSG_END_NAMESPACE;

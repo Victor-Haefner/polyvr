@@ -32,6 +32,7 @@ VRGuiGeneral::VRGuiGeneral() {
     setButtonCallback("checkbutton_4", sigc::mem_fun(*this, &VRGuiGeneral::toggleSSAO) );
     setSliderCallback("hscale1", sigc::mem_fun(*this, &VRGuiGeneral::setSSAOradius) );
     setSliderCallback("hscale2", sigc::mem_fun(*this, &VRGuiGeneral::setSSAOkernel) );
+    setSliderCallback("hscale3", sigc::mem_fun(*this, &VRGuiGeneral::setSSAOnoise) );
     setColorChooser("bg_solid", sigc::mem_fun(*this, &VRGuiGeneral::setColor) );
     setEntryCallback("entry42", sigc::mem_fun(*this, &VRGuiGeneral::setPath));
     setEntryCallback("entry14", sigc::mem_fun(*this, &VRGuiGeneral::setExtension));
@@ -48,6 +49,13 @@ bool VRGuiGeneral::setSSAOkernel( Gtk::ScrollType st, double d ) {
     if (updating) return false;
     auto scene = VRSceneManager::getCurrent();
     if (scene) scene->setSSAOkernel( getSliderState("hscale2") );
+    return true;
+}
+
+bool VRGuiGeneral::setSSAOnoise( Gtk::ScrollType st, double d ) {
+    if (updating) return false;
+    auto scene = VRSceneManager::getCurrent();
+    if (scene) scene->setSSAOkernel( getSliderState("hscale3") );
     return true;
 }
 
