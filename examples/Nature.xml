@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scene name_suffix="0" base_name="nature" name_space="Scene">
+  <Objects>
+    <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
+      <Object name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
+        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="-6.04138 4.48114 -2.59916" at="0 1 0" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
+          <Object name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
+        </Object>
+      </Object>
+    </Object>
+  </Objects>
+  <Rendering deferred_rendering="0" frustum_culling="1" occlusion_culling="0" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Scripts>
+    <Script name_suffix="0" base_name="init" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+	
+	r = VR.getRoot().find('Headlight')
+	
+	if not hasattr(VR, 'tree'):
+		VR.tree = VR.Tree()
+		r.addChild(VR.tree)
+	
+	VR.tree.setup(6,5,1, 0.2,0.5,0.78,0.45, 0.2,0.4,0.2,0.2)
+	
+	m = VR.tree.getMaterial()
+	#m.setFragmentProgram('shrd_frag')
+	#m.setGeometryProgram('shrd_geo')
+	
+	tg = VR.TextureGenerator()
+	tg.setSize(50,50,1)
+	
+	tg.add('Perlin', 1, [0.7,0.5,0.3], [1,0.9,0.7])
+	tg.add('Perlin', 1.0/4, [1,0.9,0.7], [0.7,0.5,0.3])
+	m.setTexture(tg.compose(0))
+</core>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="7" base_name="trigger" name_space="__global__"/>
+    </Script>
+    <Script name_suffix="0" base_name="shrd_frag" name_space="__script__" type="GLSL" mobile="">
+      <core>
+vec4 fvAmbient  = vec4(0.36, 0.36, 0.36, 1.0);&#13;
+//vec4 fvSpecular = vec4(0.7,  0.7,  0.7,  1.0);&#13;
+vec4 fvSpecular = vec4(0.3,  0.3,  0.3,  1.0);&#13;
+vec4 fvDiffuse  = vec4(0.5,  0.5,  0.5,  1.0);&#13;
+//float fSpecularPower = 25.0;&#13;
+float fSpecularPower = 10.0;&#13;
+&#13;
+uniform sampler2D texture;&#13;
+&#13;
+varying in vec3 ViewDirection;&#13;
+varying in vec3 fvObjectPosition;&#13;
+varying in vec3 Normal;&#13;
+varying in vec2 texCoord;&#13;
+&#13;
+void main( void )&#13;
+{&#13;
+   //gl_FragColor = gl_Color;&#13;
+   //Normal = vec3(0,0,1.0);&#13;
+&#13;
+&#13;
+   vec3  fvLightDirection = normalize( gl_LightSource[0].position.xyz - fvObjectPosition.xyz);&#13;
+   vec3  fvNormal         = normalize( Normal );&#13;
+   float fNDotL           = dot( fvNormal, fvLightDirection );&#13;
+&#13;
+   vec3  fvReflection     = normalize( ( ( 2.0 * fvNormal ) * fNDotL ) - fvLightDirection );&#13;
+   vec3  fvViewDirection  = normalize( ViewDirection );&#13;
+   float fRDotV           = max( 0.0, dot( fvReflection, fvViewDirection ) );&#13;
+&#13;
+   vec4  fvBaseColor      = texture2D(texture, texCoord);&#13;
+&#13;
+   vec4  fvTotalAmbient   = fvAmbient * fvBaseColor;&#13;
+   vec4  fvTotalDiffuse   = fvDiffuse * fNDotL * fvBaseColor;&#13;
+   vec4  fvTotalSpecular  = fvSpecular * ( pow( fRDotV, fSpecularPower ) );&#13;
+&#13;
+   gl_FragColor = ( fvTotalAmbient + fvTotalDiffuse + fvTotalSpecular );&#13;
+&#13;
+   //gl_FragColor = vec4(fvNormal[0], fvNormal[1], fvNormal[2], 1.0);&#13;
+}
+</core>
+    </Script>
+    <Script name_suffix="0" base_name="shrd_geo" name_space="__script__" type="GLSL" mobile="">
+      <core>
+//----------------------------------------------------------------------------------------------MAIN--GP&#13;
+#version 150&#13;
+#extension GL_EXT_geometry_shader4 : enable&#13;
+layout (lines) in;&#13;
+layout (triangle_strip, max_vertices = 24) out;&#13;
+in mat4 model[];&#13;
+in vec2 tc[];&#13;
+in mat3 n_model[];&#13;
+in vec3 vert_normal[];&#13;
+&#13;
+//Phong&#13;
+out vec3 ViewDirection;&#13;
+out vec3 fvObjectPosition;&#13;
+out vec3 Normal;&#13;
+out vec2 texCoord;&#13;
+&#13;
+//PHONG-----------------&#13;
+void addPhongVars(vec4 p, vec3 n, vec2 tc) {&#13;
+   fvObjectPosition = vec3(model[0] * p);&#13;
+   ViewDirection    = - fvObjectPosition.xyz;&#13;
+   Normal           = n_model[0] * n;&#13;
+   texCoord = tc;&#13;
+}&#13;
+&#13;
+void emitTriangle(vec4 p1, vec4 p2, vec4 p3, vec3 n1, vec3 n2, vec3 n3, vec2 tc1, vec2 tc2, vec2 tc3) {&#13;
+   gl_Position = p1;&#13;
+   addPhongVars(p1, n1, tc1);&#13;
+   EmitVertex();&#13;
+   gl_Position = p2;&#13;
+   addPhongVars(p2, n2, tc2);&#13;
+   EmitVertex();&#13;
+   gl_Position = p3;&#13;
+   addPhongVars(p3, n3, tc3);&#13;
+   EmitVertex();&#13;
+   EndPrimitive();&#13;
+}&#13;
+&#13;
+void emitQuad(vec4 p1, vec4 p2, vec4 p3, vec4 p4, vec3 n1, vec3 n2, vec3 n3, vec3 n4, vec2 tc1, vec2 tc2, vec2 tc3, vec2 tc4) {&#13;
+   emitTriangle(p1, p2, p4, n1, n2, n4, tc1, tc2, tc4);&#13;
+   emitTriangle(p2, p4, p3, n2, n4, n3, tc2, tc4, tc3);&#13;
+}&#13;
+&#13;
+void emitSimpleQuad(vec4 pos[4]) {&#13;
+   vec3 norm = cross(vec3(pos[1]-pos[0]),vec3(pos[1]-pos[2]));&#13;
+   for (int i=0;i&lt;4;i++) pos[i] = model[0]*pos[i];&#13;
+   emitQuad(pos[0], pos[1], pos[2], pos[3], norm, norm, norm, norm, vec2(0,0), vec2(1,0), vec2(1,1), vec2(0,1));&#13;
+}&#13;
+&#13;
+void emitZylinder(vec4 p1, vec4 p2, vec3 n1, vec3 n2, float r1, float r2) {&#13;
+   &#13;
+}&#13;
+&#13;
+void main() {&#13;
+   //vec4 p1 = model[0]*gl_PositionIn[0];&#13;
+   //vec4 p2 = model[0]*gl_PositionIn[1];&#13;
+   vec4 p1 = gl_PositionIn[0];&#13;
+   vec4 p2 = gl_PositionIn[1];&#13;
+   gl_FrontColor = vec4(0.6, 0.6, 0.3, 1.0);&#13;
+&#13;
+   vec4 pos[4];&#13;
+&#13;
+   pos[0] = p1;&#13;
+   pos[1] = p2;&#13;
+   pos[2] = p2+vec4(0.1,0,0,0)*tc[1][0];&#13;
+   pos[3] = p1+vec4(0.1,0,0,0)*tc[0][0];&#13;
+   emitSimpleQuad(pos);&#13;
+&#13;
+   pos[0] = p2;&#13;
+   pos[1] = p1;&#13;
+   pos[2] = p1+vec4(0,0,0.1,0)*tc[0][0];&#13;
+   pos[3] = p2+vec4(0,0,0.1,0)*tc[1][0];&#13;
+   emitSimpleQuad(pos);&#13;
+&#13;
+   pos[0] = p1+vec4(0.1,0,0,0)*tc[0][0];&#13;
+   pos[1] = p2+vec4(0.1,0,0,0)*tc[1][0];&#13;
+   pos[2] = p2+vec4(0.1,0,0.1,0)*tc[1][0];&#13;
+   pos[3] = p1+vec4(0.1,0,0.1,0)*tc[0][0];&#13;
+   emitSimpleQuad(pos);&#13;
+&#13;
+   pos[0] = p2+vec4(0,0,0.1,0)*tc[1][0];&#13;
+   pos[1] = p1+vec4(0,0,0.1,0)*tc[0][0];&#13;
+   pos[2] = p1+vec4(0.1,0,0.1,0)*tc[0][0];&#13;
+   pos[3] = p2+vec4(0.1,0,0.1,0)*tc[1][0];&#13;
+   emitSimpleQuad(pos);&#13;
+}
+</core>
+    </Script>
+  </Scripts>
+  <Sockets/>
+  <Background color="0.6 0.6 0.6" format=".png" path="" type="0"/>
+  <Navigation active="Orbit"/>
+  <Materials/>
+</Scene>
