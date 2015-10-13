@@ -44,6 +44,7 @@ VRRenderManager::VRRenderManager() {
     store("ssao", &ssao);
     store("ssao_kernel", &ssao_kernel);
     store("ssao_radius", &ssao_radius);
+    store("ssao_noise", &ssao_noise);
 }
 
 VRRenderManager::~VRRenderManager() {
