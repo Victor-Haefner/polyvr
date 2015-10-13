@@ -16,20 +16,21 @@ void main(void) {
     vec4 mDiff  = texture2DRect(texBufDiff, lookup);
 
     vec3 pos = posAmb.xyz;
+    if (pos.z >= 0) discard;
     float amb = posAmb.w;
 
+    int S = uBlurSize/2;
+
     float result = 0.0;
-    for (int i = 0; i < uBlurSize; ++i) {
-        for (int j = 0; j < uBlurSize; ++j) {
-            //vec2 offset = (hlim + vec2(float(x), float(y))) * texelSize;
-            //result += texture2DRect(uTexInput, vTexcoord + offset).r;
-            amb = texture2DRect(texBufPos,  lookup + vec2(i,j)).w;
-            result += amb;
+    vec4 sample;
+    for (int i = -S; i < S; ++i) {
+        for (int j = -S; j < S; ++j) {
+            sample = texture2DRect(texBufPos,  lookup + vec2(i,j));
+            result += sample.z < 0 ? sample.w : 0.0;
         }
     }
 
     amb = result / float(uBlurSize * uBlurSize);
-
 
     gl_FragData[0] = vec4(pos, amb);
     gl_FragData[1] = vec4(norm,1);

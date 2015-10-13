@@ -36,6 +36,7 @@ class VRMaterial : public VRObject {
         MultiPassMaterialRecPtr passes;
         vector<VRMatData*> mats;
         int activePass = 0;
+        bool deferred = false;
 
         VRObjectPtr copy(vector<VRObjectPtr> children);
 

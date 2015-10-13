@@ -131,6 +131,8 @@ map<string, VRMaterialWeakPtr> VRMaterial::materials;
 map<MaterialRecPtr, VRMaterialWeakPtr> VRMaterial::materialsByPtr;
 
 VRMaterial::VRMaterial(string name) : VRObject(name) {
+    auto scene = VRSceneManager::getCurrent();
+    if (scene) deferred = scene->getDefferedShading();
     type = "Material";
     addAttachment("material", 0);
     passes = MultiPassMaterial::create();
@@ -196,6 +198,7 @@ string VRMaterial::constructShaderFP(VRMatData* data) {
 }
 
 void VRMaterial::setDeffered(bool b) {
+    deferred = b;
     if (b) {
         for (uint i=0; i<mats.size(); i++) {
             if (mats[i]->shaderChunk != 0) continue;
@@ -238,6 +241,7 @@ int VRMaterial::addPass() {
     md->reset();
     passes->addMaterial(md->mat);
     mats.push_back(md);
+    setDeffered(deferred);
     return activePass;
 }
 

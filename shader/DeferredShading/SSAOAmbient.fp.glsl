@@ -30,6 +30,7 @@ void main(void) {
     vec3 noise  = texture3D(uTexRandom, vec3(lookup*texScale, 1) ).xyz;
 
     vec3 pos = posAmb.xyz;
+    if (pos.z >= 0) discard;
     float amb = posAmb.w;
 
     //if (mod(lookup.x,2.0) <= 0.5 && mod(lookup.y,2.0) <= 0.5) {

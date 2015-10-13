@@ -147,6 +147,7 @@ void VRDefShading::setSSAOparams(float radius, int kernelSize) {
     ImageRecPtr img = Image::create();
     img->set(OSG::Image::OSG_RGB_PF, noiseSize, noiseSize, 2, 0, 1, 0.0, (const uint8_t*)&data[0], OSG::Image::OSG_FLOAT32_IMAGEDATA);
     ssao_mat->setTexture(img);
+    ssao_mat->setMagMinFilter("GL_NEAREST", "GL_NEAREST");
 
     ssao_mat->setActivePass(1);
     ssao_mat->setShaderParameter<int>("uBlurSize", noiseSize);
