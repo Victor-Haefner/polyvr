@@ -18,22 +18,33 @@ VRSprite::VRSprite (string name, bool alpha, float w, float h) : VRGeometry(name
     width = w;
     height = h;
     type = "Sprite";
+    fontColor = Color4f(0,0,0,255);
+    updateGeo();
+}
 
+VRSprite::~VRSprite() {}
+
+VRSpritePtr VRSprite::create(string name, bool alpha, float w, float h) { return shared_ptr<VRSprite>(new VRSprite(name, alpha, w, h) ); }
+VRSpritePtr VRSprite::ptr() { return static_pointer_cast<VRSprite>( shared_from_this() ); }
+
+void VRSprite::updateGeo() {
     //setMesh(makePlaneGeo(width, height, 1, 1));
     GeoPnt3fPropertyRecPtr      pos = GeoPnt3fProperty::create();
     GeoVec3fPropertyRecPtr      norms = GeoVec3fProperty::create();
     GeoVec2fPropertyRefPtr      texs = GeoVec2fProperty::create();
     GeoUInt32PropertyRecPtr     inds = GeoUInt32Property::create();
 
-    pos->addValue(Pnt3f(-0.5,0.5,0));
-    pos->addValue(Pnt3f(0.5,0.5,0));
-    pos->addValue(Pnt3f(0.5,-0.5,0));
-    pos->addValue(Pnt3f(-0.5,-0.5,0));
+    float w2 = width*0.5;
+    float h2 = height*0.5;
+    pos->addValue(Pnt3f(-w2,h2,0));
+    pos->addValue(Pnt3f(w2,h2,0));
+    pos->addValue(Pnt3f(w2,-h2,0));
+    pos->addValue(Pnt3f(-w2,-h2,0));
 
-    texs->addValue(Vec2f(-1,1));
+    texs->addValue(Vec2f(0,1));
     texs->addValue(Vec2f(1,1));
-    texs->addValue(Vec2f(1,-1));
-    texs->addValue(Vec2f(-1,-1));
+    texs->addValue(Vec2f(1,0));
+    texs->addValue(Vec2f(0,0));
 
     for (int i=0; i<4; i++) {
         norms->addValue(Vec3f(0,0,1));
@@ -45,16 +56,7 @@ VRSprite::VRSprite (string name, bool alpha, float w, float h) : VRGeometry(name
     setNormals(norms);
     setTexCoords(texs);
     setIndices(inds);
-
-    font = "SANS 20";
-    fontColor = Color4f(0,0,0,255);
-    label = "";
 }
-
-VRSprite::~VRSprite() {}
-
-VRSpritePtr VRSprite::create(string name, bool alpha, float w, float h) { return shared_ptr<VRSprite>(new VRSprite(name, alpha, w, h) ); }
-VRSpritePtr VRSprite::ptr() { return static_pointer_cast<VRSprite>( shared_from_this() ); }
 
 void VRSprite::setLabel (string l, float res) {
     if (l == label) return;
@@ -96,7 +98,7 @@ Vec2f VRSprite::getSize() { return Vec2f(width, height); }
 void VRSprite::setSize(float w, float h) {
     width = w;
     height = h;
-    setMesh(makePlaneGeo(width, height, 1, 1));
+    updateGeo();
 }
 
 OSG_END_NAMESPACE;
