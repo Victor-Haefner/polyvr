@@ -157,6 +157,15 @@ void VRDefShading::initSSAO(VRObjectPtr o) {
     auto plane = VRGeometry::create("ssao_layer");
     o->addChild(plane);
     plane->setPrimitive("Plane", "2 2 1 1");
+
+    float inf = std::numeric_limits<float>::max();
+    BoxVolume &vol = plane->getNode()->editVolume(false);
+    vol.setEmpty();
+    vol.extendBy(Pnt3f(-inf,-inf,-inf));
+    vol.extendBy(Pnt3f(inf,inf,inf));
+    vol.setValid(true);
+    vol.setStatic(true);
+
     auto mat = VRMaterial::create("ssao");
     ssao_mat = mat;
     plane->setMaterial(mat);
