@@ -41,6 +41,7 @@ void VRImport::fixEmptyNames(NodeRecPtr o, map<string, bool>& m, string parentNa
 }
 
 VRTransformPtr VRImport::prependTransform(VRObjectPtr o, string path) {
+    if (!o) return 0;
     if (o->getChildrenCount() == 1)
         if (o->getChild(0)->getType() == "Transform")
             return static_pointer_cast<VRTransform>(o->getChild(0));
@@ -84,6 +85,7 @@ VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, stri
         loadCollada(path, cache[path].root); // TODO: use cache!
     }
 
+    if (cache.count(path) == 0) return 0;
     cache[path].root = prependTransform(cache[path].root, path);
     if (parent) parent->addChild(cache[path].root);
     return cache[path].retrieve();
