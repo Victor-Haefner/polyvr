@@ -7,6 +7,7 @@
 #include "addons/CEF/CEF.h"
 #include <OpenSG/OSGNameAttachment.h>
 #include <OpenSG/OSGSimpleGeometry.h>
+#include <OpenSG/OSGGeoProperties.h>
 #include <sstream>
 
 
@@ -18,7 +19,32 @@ VRSprite::VRSprite (string name, bool alpha, float w, float h) : VRGeometry(name
     height = h;
     type = "Sprite";
 
-    setMesh(makePlaneGeo(width, height, 1, 1));
+    //setMesh(makePlaneGeo(width, height, 1, 1));
+    GeoPnt3fPropertyRecPtr      pos = GeoPnt3fProperty::create();
+    GeoVec3fPropertyRecPtr      norms = GeoVec3fProperty::create();
+    GeoVec2fPropertyRefPtr      texs = GeoVec2fProperty::create();
+    GeoUInt32PropertyRecPtr     inds = GeoUInt32Property::create();
+
+    pos->addValue(Pnt3f(-0.5,0.5,0));
+    pos->addValue(Pnt3f(0.5,0.5,0));
+    pos->addValue(Pnt3f(0.5,-0.5,0));
+    pos->addValue(Pnt3f(-0.5,-0.5,0));
+
+    texs->addValue(Vec2f(-1,1));
+    texs->addValue(Vec2f(1,1));
+    texs->addValue(Vec2f(1,-1));
+    texs->addValue(Vec2f(-1,-1));
+
+    for (int i=0; i<4; i++) {
+        norms->addValue(Vec3f(0,0,1));
+        inds->addValue(i);
+    }
+
+    setType(GL_QUADS);
+    setPositions(pos);
+    setNormals(norms);
+    setTexCoords(texs);
+    setIndices(inds);
 
     font = "SANS 20";
     fontColor = Color4f(0,0,0,255);
