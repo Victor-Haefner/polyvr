@@ -18,6 +18,7 @@ class VRSelector {
         VRSelectionPtr selection;
         VRGeometryPtr subselection;
 
+        void deselect();
         VRMaterialPtr getMat();
 
     public:

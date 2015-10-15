@@ -16,6 +16,7 @@ VRSelector::VRSelector() {
 
 void VRSelector::update() {
     if (!selection) return;
+    deselect();
 
     // highlight selected objects
     for (auto g : selection->getSelected()) {
@@ -79,7 +80,7 @@ VRMaterialPtr VRSelector::getMat() {
     return mat;
 }
 
-void VRSelector::clear() {
+void VRSelector::deselect() {
     if (!selection) return;
 
     for (auto g : selection->getSelected()) {
@@ -89,11 +90,15 @@ void VRSelector::clear() {
         geo->setMaterial(orig_mats[geo.get()]);
     }
 
-    selection->clear();
     orig_mats.clear();
 
     if (subselection) subselection->destroy();
     subselection.reset();
+}
+
+void VRSelector::clear() {
+    selection->clear();
+    update();
 }
 
 void VRSelector::select(VRObjectPtr obj) {
