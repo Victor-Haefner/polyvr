@@ -14,28 +14,20 @@ using namespace std;
 class VRSelector {
     private:
         Vec3f color;
+        map<VRGeometry*, VRMaterialPtr> orig_mats;
+        VRSelectionPtr selection;
 
-        map<VRGeometryPtr, VRMaterialPtr> orig_mats;
         VRMaterialPtr getMat();
-
-        VRObjectPtr selection = 0;
-        bool hasSubselection = false;
-        map<int, int> subselection;
-
-        void deselect();
 
     public:
         VRSelector();
 
-        void select(VRSelection selection);
         void select(VRObjectPtr obj);
-        VRObjectPtr getSelection();
-
-        void subselect(vector<int> verts, bool add);
-        void clearSubselection();
-        vector<int> getSubselection();
-
+        void select(VRSelectionPtr s);
+        VRSelectionPtr getSelection();
         void setColor(Vec3f c);
+        void update();
+        void clear();
 };
 
 OSG_END_NAMESPACE;

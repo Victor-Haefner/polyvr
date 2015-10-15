@@ -9,6 +9,7 @@ struct VRPySelection : VRPyBaseT<OSG::VRSelection> {
 
     static PyObject* add(VRPySelection* self, PyObject* args, PyObject* kwargs);
     static PyObject* sub(VRPySelection* self, PyObject* args, PyObject* kwargs);
+    static PyObject* append(VRPySelection* self, PyObject* args);
     static PyObject* clear(VRPySelection* self);
 
     static PyObject* getSelected(VRPySelection* self);

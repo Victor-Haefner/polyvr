@@ -23,8 +23,18 @@ VRConstructionKit::VRConstructionKit() {
     snapping->getSignalSnap()->add(fkt);
 }
 
+void VRConstructionKit::clear() {
+    objects.clear();
+}
+
 VRSnappingEngine* VRConstructionKit::getSnappingEngine() { return snapping; }
 VRSelector* VRConstructionKit::getSelector() { return selector; }
+
+vector<VRObjectPtr> VRConstructionKit::getObjects() {
+    vector<VRObjectPtr> res;
+    for (auto m : objects) res.push_back(m.second);
+    return res;
+}
 
 void VRConstructionKit_on_snap(VRConstructionKit* kit, VRSnappingEngine::EventSnap* e) {
     if (e->snap == 0) { kit->breakup(e->o1); return; }
@@ -94,7 +104,7 @@ int VRConstructionKit::addAnchorType(float size, Vec3f color) {
 }
 
 void VRConstructionKit::addObject(VRTransformPtr t) {
-    objects[t] = t;
+    objects[t.get()] = t;
     snapping->addObject(t);
 }
 

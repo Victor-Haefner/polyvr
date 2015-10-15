@@ -9,12 +9,10 @@ struct VRPySelector : VRPyBaseT<OSG::VRSelector> {
 
     static PyObject* setColor(VRPySelector* self, PyObject* args);
     static PyObject* select(VRPySelector* self, PyObject* args);
-    static PyObject* deselect(VRPySelector* self);
+    static PyObject* update(VRPySelector* self);
+    static PyObject* set(VRPySelector* self, PyObject* args);
+    static PyObject* clear(VRPySelector* self);
     static PyObject* getSelection(VRPySelector* self);
-    static PyObject* getSubselection(VRPySelector* self);
-    static PyObject* addSubselection(VRPySelector* self, PyObject* args);
-    static PyObject* remSubselection(VRPySelector* self, PyObject* args);
-    static PyObject* clearSubselection(VRPySelector* self);
 };
 
 #endif // VRPYSELECTOR_H_INCLUDED
