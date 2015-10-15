@@ -25,6 +25,7 @@ VRConstructionKit::VRConstructionKit() {
 
 void VRConstructionKit::clear() {
     objects.clear();
+    selector->clear();
 }
 
 VRSnappingEngine* VRConstructionKit::getSnappingEngine() { return snapping; }

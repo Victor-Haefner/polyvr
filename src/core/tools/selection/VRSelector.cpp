@@ -1,6 +1,8 @@
 #include "VRSelector.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/scene/VRSceneManager.h"
+#include "core/scene/VRScene.h"
 
 //#include <OpenSG/OSGMaterial.h>
 
@@ -32,7 +34,24 @@ void VRSelector::update() {
     }
 
     // visualise subselections
-    // TODO
+    if (subselection) subselection->destroy();
+    subselection = VRGeometry::create("subsel");
+    for (auto m : selection->getSubselections()) {
+        if (!m.first) continue;
+        auto s = m.first->copySelection(selection);
+        s->setWorldMatrix(m.first->getWorldMatrix());
+        subselection->merge(s);
+    }
+
+    auto m = VRMaterial::create("sel");
+    m->setLit(false);
+    m->setDiffuse(color);
+    m->setFrontBackModes(GL_LINE, GL_LINE);
+    subselection->setMaterial(m);
+
+    auto scene = VRSceneManager::getCurrent();
+    if (!scene) return;
+    scene->getRoot()->addChild(subselection);
 }
 
 VRMaterialPtr VRSelector::getMat() {
@@ -72,6 +91,9 @@ void VRSelector::clear() {
 
     selection->clear();
     orig_mats.clear();
+
+    if (subselection) subselection->destroy();
+    subselection.reset();
 }
 
 void VRSelector::select(VRObjectPtr obj) {

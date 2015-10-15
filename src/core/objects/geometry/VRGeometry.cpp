@@ -249,7 +249,7 @@ void VRGeometry::merge(VRGeometryPtr geo) {
 
     v1 = mesh->getNormals();
     v2 = geo->mesh->getNormals();
-    for (uint i=0; i<geo->mesh->getPositions()->size(); i++) v1->addValue(v2->getValue<Vec3f>(i));
+    for (uint i=0; i<v2->size(); i++)  v1->addValue(v2->getValue<Vec3f>(i));
 
     auto c1 = mesh->getColors();
     auto c2 = geo->mesh->getColors();

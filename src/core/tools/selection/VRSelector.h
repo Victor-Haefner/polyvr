@@ -16,6 +16,7 @@ class VRSelector {
         Vec3f color;
         map<VRGeometry*, VRMaterialPtr> orig_mats;
         VRSelectionPtr selection;
+        VRGeometryPtr subselection;
 
         VRMaterialPtr getMat();
 
