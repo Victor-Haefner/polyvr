@@ -49,6 +49,7 @@ PyMethodDef VRPyFluids::methods[] = {
     {"spawnCuboid", (PyCFunction)VRPyFluids::spawnCuboid, METH_VARARGS, "spawnCuboid(x,y,z) \n\tspawnCuboid(x,y,z,'size',a,b,c) \n\tspawnCuboid(x,y,z,'liter',l)"},
 
     {"setRadius", (PyCFunction)VRPyFluids::setRadius, METH_VARARGS, "setRadius(radius, variation) \n\tsetRadius(0.05, 0.02)"},
+    {"setSphRadius", (PyCFunction)VRPyFluids::setSphRadius, METH_VARARGS, "setSphRadius(radius, variation) \n\tsetRadius(0.05, 0.02)"},
     {"setMass", (PyCFunction)VRPyFluids::setMass, METH_VARARGS, "setMass(mass, variation) \n\tsetMass(0.05, 0.02)"},
     {"setMassByRadius", (PyCFunction)VRPyFluids::setMassByRadius, METH_VARARGS, "setMassByRadius(massOfOneMeterRadius) \n\tsetMass(1000.0*100)"},
     {"setMassForOneLiter", (PyCFunction)VRPyFluids::setMassForOneLiter, METH_VARARGS, "setMassForOneLiter(massOfOneLiter) \n\tsetMass(1000.0)"},
@@ -93,6 +94,15 @@ PyObject* VRPyFluids::setRadius(VRPyFluids* self, PyObject* args) {
     radius = variation = 0.0;
     if (! PyArg_ParseTuple(args, "f|f", &radius, &variation)) { Py_RETURN_FALSE; }
     self->objPtr->setRadius(radius, variation);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyFluids::setSphRadius(VRPyFluids* self, PyObject* args) {
+    checkObj(self);
+    float radius, variation;
+    radius = variation = 0.0;
+    if (! PyArg_ParseTuple(args, "f|f", &radius, &variation)) { Py_RETURN_FALSE; }
+    self->objPtr->setSphRadius(radius, variation);
     Py_RETURN_TRUE;
 }
 

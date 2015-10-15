@@ -21,6 +21,8 @@ public:
 
     void update(int from, int to) override;
     void updateXSPH(int from, int to);
+    void setSphRadius(float newRadius, float variation);
+
 };
 
 OSG_END_NAMESPACE;

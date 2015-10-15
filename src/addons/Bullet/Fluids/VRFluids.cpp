@@ -138,3 +138,17 @@ inline float VRFluids::kernel_visc_laplacian(float r, float h) {
     }
     return 0.0;
 }
+
+void VRFluids::setSphRadius(float newRadius, float variation) {
+    int i;
+    float result;
+    {
+        BLock lock(mtx());
+        for (i=0; i<N; i++) {
+            result = newRadius;
+            result += (2 * variation * float(rand()) / RAND_MAX );
+            result -= variation;
+            ((SphParticle*) particles[i])->sphArea = result;
+        }
+    }
+}
