@@ -27,11 +27,11 @@ void VRFluids::update(int from, int to) {
         }
     }
     setPositions(pos);
-    updateForce(from, to);
+    updateXSPH(from, to);
 }
 
 const float CHAINING = 0.4; // NOTE binding strength between particles (XSPH)
-inline void VRFluids::updateForce(int from, int to) {
+inline void VRFluids::updateXSPH(int from, int to) {
     SphParticle* p;
     SphParticle* neighbour;
     btVector3 p_origin(0,0,0);
@@ -77,7 +77,7 @@ inline void VRFluids::updateForce(int from, int to) {
 
 // NOTE abgeleitet von der Grundgleichung für die Eigenschaften von SPH-Partikeln
 inline float VRFluids::calc_density(SphParticle* n, float distance2, float area) {
-    return kernel_poly6(distance2, area) * n->mass;
+    return kernel_visc(distance2, area) * n->mass;
 }
 
 /** XSPH */
@@ -101,30 +101,40 @@ inline btVector3 VRFluids::xsph_calc_movement(SphParticle* p, SphParticle* n) {
  *  organization={Eurographics Association}
  * }
  */
-inline float VRFluids::kernel_poly6(float distance2, float area) {
-    float diff = area*area - distance2;
+inline float VRFluids::kernel_poly6(float r2, float h) {
+    float diff = h*h - r2;
     if (diff > 0) {
-        return (315.0 / (64.0*Pi)) * (1/pow(area,9)) * pow(diff, 3);
+        return (315.0 / (64.0*Pi)) * (1/pow(h,9)) * pow(diff, 3);
     }
     return 0.0;
 }
 
 /** Kernel for pressure */
-inline float VRFluids::kernel_spiky(float distance, float area)
-{
-    float diff = area - distance;
+inline float VRFluids::kernel_spiky(float r, float h) {
+    float diff = h - r;
     if (diff > 0) {
-        return (15 / (Pi * pow(area,6))) * pow(diff,3);
+        return (15 / (Pi * pow(h,6))) * pow(diff,3);
     }
     return 0.0;
 }
 
 /** Kernel for viscosity */
-inline float VRFluids::kernel_visc(float distance, float area)
-{
-    float diff = area - distance;
+inline float VRFluids::kernel_visc(float r, float h) {
+    float diff = h - r;
     if (diff > 0) {
-        return (45 / (Pi * pow(area,6))) * diff;
+        float a = (r*r*r) / (2*h*h*h);
+        float b = (r*r)/(h*h);
+        float c = h / (r+r);
+        return (15 / (2*Pi*h*h*h)) * (-1*a + b + c - 1);
+    }
+    return 0.0;
+}
+
+/** Kernel_visc laplacian function for viscosity */
+inline float VRFluids::kernel_visc_laplacian(float r, float h) {
+    float diff = h - r;
+    if (diff > 0) {
+        return (45 / (Pi * pow(h,6))) * diff;
     }
     return 0.0;
 }

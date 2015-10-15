@@ -12,6 +12,7 @@ protected:
     inline float kernel_poly6(float distance2, float area);
     inline float kernel_spiky(float distance, float area);
     inline float kernel_visc(float distance, float area);
+    inline float kernel_visc_laplacian(float distance, float area);
 
 public:
     VRFluids();
@@ -19,7 +20,7 @@ public:
     static shared_ptr<VRFluids> create();
 
     void update(int from, int to) override;
-    void updateForce(int from, int to);
+    void updateXSPH(int from, int to);
 };
 
 OSG_END_NAMESPACE;
