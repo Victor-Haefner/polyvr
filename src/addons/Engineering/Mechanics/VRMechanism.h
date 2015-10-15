@@ -74,8 +74,8 @@ class MPart {
 
         map<MPart*, MRelation*> neighbors;
         vector<MPart*> group;
-        VRGeometry* geo = 0;
-        VRTransform* trans = 0;
+        VRGeometryPtr geo = 0;
+        VRTransformPtr trans = 0;
         VRPrimitive* prim = 0;
         MChange change;
         Matrix reference;
@@ -103,7 +103,7 @@ class MPart {
         virtual void move();
         virtual void updateNeighbors(vector<MPart*> parts) = 0;
 
-        static MPart* make(VRGeometry* g, VRTransform* t);
+        static MPart* make(VRGeometryPtr g, VRTransformPtr t);
 };
 
 class MGear : public MPart {
@@ -143,7 +143,7 @@ class MChain : public MPart {
         MChain();
         ~MChain();
 
-        VRGeometry* init();
+        VRGeometryPtr init();
         void setDirs(string dirs);
         void addDir(char dir);
         void updateGeo();
@@ -155,17 +155,17 @@ class MChain : public MPart {
 
 class VRMechanism {
     private:
-        map<VRGeometry*, MPart*> cache;
+        map<VRGeometryPtr, MPart*> cache;
         vector<MPart*> parts;
 
     public:
         VRMechanism();
         ~VRMechanism();
 
-        void add(VRGeometry* part, VRTransform* trans = 0);
+        void add(VRGeometryPtr part, VRTransformPtr trans = 0);
         void clear();
         void update();
-        VRGeometry* addChain(float w, vector<VRGeometry*> geos, string dirs);
+        VRGeometryPtr addChain(float w, vector<VRGeometryPtr> geos, string dirs);
 };
 
 OSG_END_NAMESPACE;

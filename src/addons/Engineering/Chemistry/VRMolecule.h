@@ -72,9 +72,9 @@ class VRMolecule : public VRGeometry {
         string definition;
         map<int, VRAtom*> atoms;
 
-        VRGeometry* bonds_geo = 0;
-        VRGeometry* coords_geo = 0;
-        VRNumberingEngine* labels = 0;
+        VRGeometryPtr bonds_geo = 0;
+        VRGeometryPtr coords_geo = 0;
+        VRNumberingEnginePtr labels = 0;
         bool doLabels = false;
         bool doCoords = false;
 
@@ -100,6 +100,9 @@ class VRMolecule : public VRGeometry {
     public:
         VRMolecule(string definition);
 
+        static VRMoleculePtr create(string definition);
+        VRMoleculePtr ptr();
+
         void set(string definition);
         void setRandom(int N);
         string getDefinition();
@@ -108,8 +111,8 @@ class VRMolecule : public VRGeometry {
 
         void setLocalOrigin(int ID);
 
-        void substitute(int a, VRMolecule* m, int b);
-        void attachMolecule(int a, VRMolecule* m, int b);
+        void substitute(int a, VRMoleculePtr m, int b);
+        void attachMolecule(int a, VRMoleculePtr m, int b);
         void rotateBond(int a, int b, float f);
         void changeBond(int a, int b, int t);
 		void remAtom(int ID);

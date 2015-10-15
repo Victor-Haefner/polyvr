@@ -53,9 +53,78 @@ PyMethodDef VRPyPath::methods[] = {
     {"compute", (PyCFunction)VRPyPath::compute, METH_VARARGS, "Compute path" },
     {"update", (PyCFunction)VRPyPath::update, METH_NOARGS, "Update path" },
     {"addPoint", (PyCFunction)VRPyPath::addPoint, METH_VARARGS, "Add a point to the path - int addPoint(vec3 pos, vec3 dir, vec3 col, vec3 up)" },
+    {"getPoints", (PyCFunction)VRPyPath::getPoints, METH_NOARGS, "Return a list of the path points - [pos, dir, col, up] getPoints()" },
     {"close", (PyCFunction)VRPyPath::close, METH_NOARGS, "Close the path - close()" },
+    {"getPositions", (PyCFunction)VRPyPath::getPositions, METH_NOARGS, "Return the positions from the computed path - [[x,y,z]] getPositions()" },
+    {"getDirections", (PyCFunction)VRPyPath::getDirections, METH_NOARGS, "Return the directions from the computed path - [[x,y,z]] getDirections()" },
+    {"getUpVectors", (PyCFunction)VRPyPath::getUpVectors, METH_NOARGS, "Return the up vectors from the computed path - [[x,y,z]] getUpVectors()" },
+    {"getColors", (PyCFunction)VRPyPath::getColors, METH_NOARGS, "Return the colors from the computed path - [[x,y,z]] getColors()" },
+    {"getSize", (PyCFunction)VRPyPath::getSize, METH_NOARGS, "Return the number of path nodes - int getSize()" },
+    {"getLength", (PyCFunction)VRPyPath::getLength, METH_NOARGS, "Return the approximated path length - float getLength()" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyPath::getLength(VRPyPath* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::getLength - Object is invalid"); return NULL; }
+    return PyFloat_FromDouble( self->obj->getLength() );
+}
+
+PyObject* VRPyPath::getSize(VRPyPath* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::getSize - Object is invalid"); return NULL; }
+    return PyInt_FromLong( self->obj->size() );
+}
+
+PyObject* VRPyPath::getPoints(VRPyPath* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::getPoints - Object is invalid"); return NULL; }
+    auto pnts = self->obj->getPoints();
+    if (pnts.size() == 0) return PyList_New(0);
+    PyObject* res = PyList_New(pnts.size());
+    for (uint i=0; i<pnts.size(); i++) {
+        PyObject* pnt = PyList_New(4);
+        PyList_SetItem(pnt, 0, toPyTuple(pnts[i].p));
+        PyList_SetItem(pnt, 1, toPyTuple(pnts[i].n));
+        PyList_SetItem(pnt, 2, toPyTuple(pnts[i].c));
+        PyList_SetItem(pnt, 3, toPyTuple(pnts[i].u));
+        PyList_SetItem(res, i, pnt);
+    }
+    return res;
+}
+
+PyObject* VRPyPath::getPositions(VRPyPath* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::getPositions - Object is invalid"); return NULL; }
+    auto pos = self->obj->getPositions();
+    if (pos.size() == 0) return PyList_New(0);
+    PyObject* res = PyList_New(pos.size());
+    for (uint i=0; i<pos.size(); i++) PyList_SetItem(res, i, toPyTuple(pos[i]));
+    return res;
+}
+
+PyObject* VRPyPath::getDirections(VRPyPath* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::getDirections - Object is invalid"); return NULL; }
+    auto pos = self->obj->getDirections();
+    if (pos.size() == 0) return PyList_New(0);
+    PyObject* res = PyList_New(pos.size());
+    for (uint i=0; i<pos.size(); i++) PyList_SetItem(res, i, toPyTuple(pos[i]));
+    return res;
+}
+
+PyObject* VRPyPath::getUpVectors(VRPyPath* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::close - Object is invalid"); return NULL; }
+    auto pos = self->obj->getUpvectors();
+    if (pos.size() == 0) return PyList_New(0);
+    PyObject* res = PyList_New(pos.size());
+    for (uint i=0; i<pos.size(); i++) PyList_SetItem(res, i, toPyTuple(pos[i]));
+    return res;
+}
+
+PyObject* VRPyPath::getColors(VRPyPath* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::close - Object is invalid"); return NULL; }
+    auto pos = self->obj->getColors();
+    if (pos.size() == 0) return PyList_New(0);
+    PyObject* res = PyList_New(pos.size());
+    for (uint i=0; i<pos.size(); i++) PyList_SetItem(res, i, toPyTuple(pos[i]));
+    return res;
+}
 
 PyObject* VRPyPath::set(VRPyPath* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::set, Object is invalid"); return NULL; }

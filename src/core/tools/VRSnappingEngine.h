@@ -6,15 +6,14 @@
 #include <OpenSG/OSGLine.h>
 #include <OpenSG/OSGPlane.h>
 #include <map>
+#include "core/utils/VRFunctionFwd.h"
+#include "core/objects/VRObjectFwd.h"
 
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 class Octree;
-class VRObject;
-class VRTransform;
-class VRGeometry;
 class VRSignal;
 class VRDevice;
 
@@ -40,21 +39,23 @@ class VRSnappingEngine {
         };
 
         struct EventSnap {
-            VRTransform* o1 = 0;
-            VRTransform* o2 = 0;
+            int snap = 0;
+            VRTransformPtr o1 = 0;
+            VRTransformPtr o2 = 0;
             Matrix m;
             VRDevice* dev = 0;
-            void set(VRTransform* O1, VRTransform* O2, Matrix M, VRDevice* DEV) {
-                o1 = O1; o2 = O2; m = M; dev = DEV;
+            void set(VRTransformPtr O1, VRTransformPtr O2, Matrix M, VRDevice* DEV, int Snap) {
+                o1 = O1; o2 = O2; m = M; dev = DEV; snap = Snap;
             }
         };
 
     private:
         map<int, Rule*> rules; // snapping rules, translation and orientation
-        map<VRTransform*, Matrix> objects; // map objects to reference matrix
-        map<VRTransform*, vector<VRTransform*> > anchors; // object anchors
+        map<VRTransformPtr, Matrix> objects; // map objects to reference matrix
+        map<VRTransformPtr, vector<VRTransformPtr> > anchors; // object anchors
         Octree* positions = 0; // objects by positions
-        VRGeometry* hintGeo = 0;
+        VRGeometryPtr hintGeo = 0;
+        VRUpdatePtr updatePtr;
 
         float influence_radius = 1000;
         float distance_snap = 0.05;
@@ -72,16 +73,16 @@ class VRSnappingEngine {
 
         Type typeFromStr(string t);
 
-        int addRule(Type t, Type o, Line pt, Line po, float d, float w = 1, VRTransform* l = 0);
+        int addRule(Type t, Type o, Line pt, Line po, float d, float w = 1, VRTransformPtr l = 0);
         void remRule(int i);
 
-        void addObjectAnchor(VRTransform* obj, VRTransform* a);
-        void clearObjectAnchors(VRTransform* obj);
-        void remLocalRules(VRTransform* obj);
+        void addObjectAnchor(VRTransformPtr obj, VRTransformPtr a);
+        void clearObjectAnchors(VRTransformPtr obj);
+        void remLocalRules(VRTransformPtr obj);
 
-        void addObject(VRTransform* obj, float weight = 1);
-        void addTree(VRObject* obj, float weight = 1);
-        void remObject(VRTransform* obj);
+        void addObject(VRTransformPtr obj, float weight = 1);
+        void addTree(VRObjectPtr obj, float weight = 1);
+        void remObject(VRTransformPtr obj);
 
         void setVisualHints(bool b = true);
         void setPreset(PRESET preset);

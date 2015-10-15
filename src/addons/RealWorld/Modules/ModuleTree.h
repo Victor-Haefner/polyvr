@@ -57,12 +57,12 @@ namespace realworld {
                             Vec2f pos2D = this->mapCoordinator->realToWorld(Vec2f(node->lat, node->lon));
                             Vec3f pos3D = Vec3f(pos2D.getValues()[0], this->mapCoordinator->getElevation(pos2D), pos2D.getValues()[1]);
 
-                            VRTree* tree = new VRTree();
+                            VRTreePtr tree = VRTree::create();
                             tree->setFrom(pos3D);
                             int treeNum = getRandom(node->id);
 
                             // generate mesh
-                            VRGeometry* geom = makeTreeGeometry(pos3D, treeNum);
+                            VRGeometryPtr geom = makeTreeGeometry(pos3D, treeNum);
                             root->addChild(geom);
 
                             //meshes[wall->id] = geom;
@@ -74,7 +74,7 @@ namespace realworld {
             //for (auto mesh : meshes);
         }
 
-        VRGeometry* makeTreeGeometry(Vec3f position, int treeNum) {
+        VRGeometryPtr makeTreeGeometry(Vec3f position, int treeNum) {
             vector<Vec3f> pos;
             vector<Vec3f> norms;
             vector<int> inds;
@@ -103,7 +103,7 @@ namespace realworld {
 
 
 
-            VRGeometry* geomTree = new VRGeometry("Tree");
+            VRGeometryPtr geomTree = VRGeometry::create("Tree");
             geomTree->create(GL_QUADS, pos, norms, inds, texs);
             geomTree->setMaterial(matTrees[treeNum]);
             return geomTree;

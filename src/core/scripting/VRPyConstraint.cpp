@@ -53,8 +53,10 @@ PyMethodDef VRPyConstraint::methods[] = {
     {"setLocal", (PyCFunction)VRPyConstraint::setLocal, METH_VARARGS, "Set the local flag of the constraints" },
     {"lock", (PyCFunction)VRPyConstraint::lock, METH_VARARGS, "Lock a list of DoFs" },
     {"free", (PyCFunction)VRPyConstraint::free, METH_VARARGS, "Free a list of DoFs" },
-     {"setLocalOffset", (PyCFunction)VRPyConstraint::setLocalOffset, METH_VARARGS, "create an offset (relative to the target transform), e.g. c.setLocalOffset(posOffsetX,posOffsetY,posOffsetZ,yaw,pitch,roll)" },
-      {NULL}  /* Sentinel */
+    {"setLocalOffset", (PyCFunction)VRPyConstraint::setLocalOffsetB, METH_VARARGS, "Set the offset (relative to the target transform), setLocalOffset(offsetX,offsetY,offsetZ,yaw,pitch,roll)" },
+    {"setLocalOffsetA", (PyCFunction)VRPyConstraint::setLocalOffsetA, METH_VARARGS, "Set the offset in A, setLocalOffsetA(offsetX,offsetY,offsetZ,yaw,pitch,roll)" },
+    {"setLocalOffsetB", (PyCFunction)VRPyConstraint::setLocalOffsetB, METH_VARARGS, "Set the offset in B, setLocalOffsetB(offsetX,offsetY,offsetZ,yaw,pitch,roll)" },
+    {NULL}  /* Sentinel */
 };
 
 
@@ -67,7 +69,24 @@ PyObject* VRPyConstraint::setDOFRange(VRPyConstraint* self, PyObject* args) {
     Py_RETURN_TRUE;
 }
 
-PyObject* VRPyConstraint::setLocalOffset(VRPyConstraint* self, PyObject* args) {
+PyObject* VRPyConstraint::setLocalOffsetA(VRPyConstraint* self, PyObject* args) {
+    float x,y,z,roll,pitch,yaw;
+    if (! PyArg_ParseTuple(args, "ffffff", &x,&y,&z,&yaw,&pitch,&roll)) return NULL;
+    //translation
+    OSG::Matrix m ;
+    m.setTranslate(OSG::Vec3f(x,y,z));
+    //rotation
+    btQuaternion q ;
+    q.setEuler(yaw,pitch,roll);
+    OSG::Quaternion qtwo = OSG::Quaternion(q.x(),q.y(),q.z(),q.w());
+    m.setRotate(qtwo);
+
+    if (self->obj == 0) self->obj = new OSG::VRConstraint();
+    self->obj->setReferenceA(m);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyConstraint::setLocalOffsetB(VRPyConstraint* self, PyObject* args) {
     float x,y,z,roll,pitch,yaw;
     if (! PyArg_ParseTuple(args, "ffffff", &x,&y,&z,&yaw,&pitch,&roll)) return NULL;
     //translation
@@ -83,6 +102,7 @@ PyObject* VRPyConstraint::setLocalOffset(VRPyConstraint* self, PyObject* args) {
     self->obj->setReferenceB(m);
     Py_RETURN_TRUE;
 }
+
 PyObject* VRPyConstraint::setLocal(VRPyConstraint* self, PyObject* args) {
     if (self->obj == 0) self->obj = new OSG::VRConstraint();
     bool b = parseBool(args);

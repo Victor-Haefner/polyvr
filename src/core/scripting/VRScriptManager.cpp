@@ -14,21 +14,31 @@
 #include "VRPySprite.h"
 #include "VRPySound.h"
 #include "VRPyDevice.h"
+#include "VRPyPose.h"
 #include "VRPyPath.h"
 #include "VRPyStroke.h"
 #include "VRPyColorChooser.h"
+#include "VRPyTextureRenderer.h"
 #include "VRPyConstraint.h"
 #include "VRPyHaptic.h"
+#include "VRPyMouse.h"
+#include "VRPyMobile.h"
 #include "VRPyBaseT.h"
 #include "VRPyMaterial.h"
 #include "VRPyTextureGenerator.h"
 #include "VRPyLight.h"
+#include "VRPyCamera.h"
 #include "VRPyLod.h"
 #include "VRPyRecorder.h"
 #include "VRPyPathtool.h"
 #include "VRPyConstructionKit.h"
 #include "VRPySnappingEngine.h"
+#include "VRPyAnnotationEngine.h"
+#include "VRPyAnalyticGeometry.h"
 #include "VRPySelector.h"
+#include "VRPySelection.h"
+#include "VRPyPatchSelection.h"
+#include "VRPyPolygonSelection.h"
 #include "VRPyMenu.h"
 #include "VRPyClipPlane.h"
 #include "VRPyListMath.h"
@@ -38,6 +48,7 @@
 #include "VRPyImage.h"
 #include <iostream>
 #include <algorithm>
+#include <memory>
 
 //TODO: refactoring
 #include "core/gui/VRGuiFile.h"
@@ -55,10 +66,12 @@
 #include "addons/Engineering/VRPyNumberingEngine.h"
 #include "addons/CEF/VRPyCEF.h"
 #include "addons/CEF/VRPyWebCam.h"
-#include "addons/Classification/VRPySegmentation.h"
+#include "addons/Semantics/Segmentation/VRPySegmentation.h"
+#include "addons/Semantics/Segmentation/VRPyAdjacencyGraph.h"
 #include "addons/Engineering/Chemistry/VRPyMolecule.h"
 #include "addons/Engineering/Factory/VRPyFactory.h"
 #include "addons/Engineering/Milling/VRPyMillingMachine.h"
+#include "addons/Engineering/VRPyRobotArm.h"
 #include "addons/RealWorld/nature/VRPyTree.h"
 #include "VRPyTypeCaster.h"
 #include "PolyVR.h"
@@ -80,6 +93,8 @@ VRScriptManager::VRScriptManager() {
 }
 
 VRScriptManager::~VRScriptManager() {
+    //cout << "VRScriptManager destroyed\n";
+    blockScriptThreads();
     for (auto s : scripts) delete s.second;
     scripts.clear();
     if (PyErr_Occurred() != NULL) PyErr_Print();
@@ -134,7 +149,9 @@ vector<VRScript*> VRScriptManager::searchScript(string s, VRScript* sc) {
 }
 
 void VRScriptManager::update() {
+    //blockScriptThreads();
     for (auto s : scripts) updateScript(s.first, s.second->getCore());
+    //allowScriptThreads();
 }
 
 VRScript* VRScriptManager::changeScriptName(string name, string new_name) {
@@ -161,6 +178,7 @@ void VRScriptManager::updateScript(string name, string core, bool compile) {
 
     if (!compile) return;
     if (script->getType() == "Python") {
+        //PyGILState_STATE gstate = PyGILState_Ensure();
         //PyObject* pValue = PyRun_String(script->getScript().c_str(), Py_file_input, pGlobal, pLocal);
         PyObject* pValue = PyRun_String(script->getScript().c_str(), Py_file_input, pGlobal, PyModule_GetDict(pModVR));
         if (PyErr_Occurred() != NULL) PyErr_Print();
@@ -170,6 +188,7 @@ void VRScriptManager::updateScript(string name, string core, bool compile) {
 
         //script->setFunction( PyObject_GetAttrString(pModBase, name.c_str()) );
         script->setFunction( PyObject_GetAttrString(pModVR, name.c_str()) );
+        //PyGILState_Release(gstate);
     }
 
     if (script->getType() == "HTML") {
@@ -211,7 +230,7 @@ initVRPyStdOut(void) {
 
 static PyMethodDef VRScriptManager_module_methods[] = {
 	{"exit", (PyCFunction)VRScriptManager::exit, METH_NOARGS, "Terminate application" },
-	{"loadGeometry", (PyCFunction)VRScriptManager::loadGeometry, METH_VARARGS, "Loads a collada file and returns a VR.Object node - obj loadGeometry('myPath', bool ignore_cache)" },
+	{"loadGeometry", (PyCFunction)VRScriptManager::loadGeometry, METH_VARARGS|METH_KEYWORDS, "Loads a file and returns a VR.Object - obj loadGeometry(str path, bool cached, str preset, str parent)" },
 	{"stackCall", (PyCFunction)VRScriptManager::stackCall, METH_VARARGS, "Schedules a call to a python function - stackCall( function, delay, [args] )" },
 	{"openFileDialog", (PyCFunction)VRScriptManager::openFileDialog, METH_VARARGS, "Open a file dialog - openFileDialog( onLoad, mode, title, default_path, filter )\n mode : {Save, Load, New, Create}" },
 	{"updateGui", (PyCFunction)VRScriptManager::updateGui, METH_NOARGS, "Update the gui" },
@@ -222,11 +241,14 @@ static PyMethodDef VRScriptManager_module_methods[] = {
 	{"getNavigator", (PyCFunction)VRScriptManager::getNavigator, METH_NOARGS, "Return a handle to the navigator object" },
 	{"getSetup", (PyCFunction)VRScriptManager::getSetup, METH_NOARGS, "Return a handle to the active hardware setup" },
 	{"loadScene", (PyCFunction)VRScriptManager::loadScene, METH_VARARGS, "Close the current scene and open another - loadScene( str path/to/my/scene.xml )" },
+	{"startThread", (PyCFunction)VRScriptManager::startThread, METH_VARARGS, "Start a thread - int startThread( callback, [params] )" },
+	{"joinThread", (PyCFunction)VRScriptManager::joinThread, METH_VARARGS, "Join a thread - joinThread( int ID )" },
     {NULL}  /* Sentinel */
 };
 
 void VRScriptManager::initPyModules() {
     Py_Initialize();
+    PyEval_InitThreads();
     VRPyBase::err = PyErr_NewException((char *)"VR.Error", NULL, NULL);
 
     pGlobal = PyDict_New();
@@ -250,66 +272,78 @@ void VRScriptManager::initPyModules() {
     //PySys_SetPath(sys_path.c_str());
 
     pModVR = Py_InitModule3("VR", VRScriptManager_module_methods, "VR Module");
-    VRPyObject::registerModule("Object", pModVR);
-    VRPyTransform::registerModule("Transform", pModVR, VRPyObject::typeRef);
-    VRPyGeometry::registerModule("Geometry", pModVR, VRPyTransform::typeRef);
-    VRPyMaterial::registerModule("Material", pModVR, VRPyObject::typeRef);
-    VRPyTextureGenerator::registerModule("TextureGenerator", pModVR);
-    VRPyImage::registerModule("Image", pModVR);
-    VRPyLight::registerModule("Light", pModVR, VRPyObject::typeRef);
-    VRPyLod::registerModule("Lod", pModVR, VRPyObject::typeRef);
-    VRPySprite::registerModule("Sprite", pModVR, VRPyGeometry::typeRef);
-    VRPySound::registerModule("Sound", pModVR);
-    VRPySocket::registerModule("Socket", pModVR);
-    VRPyStroke::registerModule("Stroke", pModVR, VRPyGeometry::typeRef);
-    VRPyConstraint::registerModule("Constraint", pModVR);
-    VRPyDevice::registerModule("Device", pModVR);
-    VRPyHaptic::registerModule("Haptic", pModVR, VRPyDevice::typeRef);
-    VRPyAnimation::registerModule("Animation", pModVR);
-    VRPyPath::registerModule("Path", pModVR);
-    VRPyRecorder::registerModule("Recorder", pModVR);
-    VRPySnappingEngine::registerModule("SnappingEngine", pModVR);
-    VRPyConstructionKit::registerModule("ConstructionKit", pModVR);
-    VRPyPathtool::registerModule("Pathtool", pModVR);
-    VRPySelector::registerModule("Selector", pModVR);
-    VRPySetup::registerModule("Setup", pModVR);
-    VRPyNavigator::registerModule("Navigator", pModVR);
-    VRPyNavPreset::registerModule("NavPreset", pModVR);
+    registerModule<VRPyObject>("Object", pModVR);
+    registerModule<VRPyTransform>("Transform", pModVR, VRPyObject::typeRef);
+    registerModule<VRPyGeometry>("Geometry", pModVR, VRPyTransform::typeRef);
+    registerModule<VRPyMaterial>("Material", pModVR, VRPyObject::typeRef);
+    registerModule<VRPyTextureGenerator>("TextureGenerator", pModVR);
+    registerModule<VRPyImage>("Image", pModVR);
+    registerModule<VRPyLight>("Light", pModVR, VRPyObject::typeRef);
+    registerModule<VRPyCamera>("Camera", pModVR, VRPyTransform::typeRef);
+    registerModule<VRPyLod>("Lod", pModVR, VRPyObject::typeRef);
+    registerModule<VRPySprite>("Sprite", pModVR, VRPyGeometry::typeRef);
+    registerModule<VRPySound>("Sound", pModVR);
+    registerModule<VRPySocket>("Socket", pModVR);
+    registerModule<VRPyStroke>("Stroke", pModVR, VRPyGeometry::typeRef);
+    registerModule<VRPyConstraint>("Constraint", pModVR);
+    registerModule<VRPyDevice>("Device", pModVR);
+    registerModule<VRPyHaptic>("Haptic", pModVR, VRPyDevice::typeRef);
+    registerModule<VRPyMobile>("Mobile", pModVR, VRPyDevice::typeRef);
+    registerModule<VRPyMouse>("Mouse", pModVR, VRPyDevice::typeRef);
+    registerModule<VRPyAnimation>("Animation", pModVR);
+    registerModule<VRPyPose>("Pose", pModVR);
+    registerModule<VRPyPath>("Path", pModVR);
+    registerModule<VRPyRecorder>("Recorder", pModVR);
+    registerModule<VRPySnappingEngine>("SnappingEngine", pModVR);
+    registerModule<VRPyAnnotationEngine>("AnnotationEngine", pModVR, VRPyGeometry::typeRef);
+    registerModule<VRPyAnalyticGeometry>("AnalyticGeometry", pModVR, VRPyObject::typeRef);
+    registerModule<VRPyConstructionKit>("ConstructionKit", pModVR);
+    registerModule<VRPyPathtool>("Pathtool", pModVR);
+    registerModule<VRPySelector>("Selector", pModVR);
+    registerModule<VRPySelection>("Selection", pModVR);
+    registerModule<VRPyPatchSelection>("PatchSelection", pModVR, VRPySelection::typeRef);
+    registerModule<VRPyPolygonSelection>("PolygonSelection", pModVR, VRPySelection::typeRef);
+    registerModule<VRPySetup>("Setup", pModVR);
+    registerModule<VRPyNavigator>("Navigator", pModVR);
+    registerModule<VRPyNavPreset>("NavPreset", pModVR);
 
-    VRPyMenu::registerModule("Menu", pModVR, VRPyGeometry::typeRef);
-    VRPyClipPlane::registerModule("ClipPlane", pModVR, VRPyGeometry::typeRef);
-	VRPyColorChooser::registerModule("ColorChooser", pModVR);
-    VRPyCaveKeeper::registerModule("CaveKeeper", pModVR);
-    VRPyParticles::registerModule("Particles", pModVR, VRPyGeometry::typeRef);
-    VRPyFluids::registerModule("Fluids", pModVR, VRPyParticles::typeRef);
-    VRPyCarDynamics::registerModule("CarDynamics", pModVR);
-    VRPyCEF::registerModule("CEF", pModVR);
-    VRPyWebCam::registerModule("Webcam", pModVR, VRPySprite::typeRef);
-    VRPySegmentation::registerModule("Segmentation", pModVR);
-    VRPyMechanism::registerModule("Mechanism", pModVR);
-    VRPyNumberingEngine::registerModule("NumberingEngine", pModVR, VRPyGeometry::typeRef);
-    VRPyTree::registerModule("Tree", pModVR, VRPyGeometry::typeRef);
-    VRPyMillingMachine::registerModule("MillingMachine", pModVR);
-    VRPyMolecule::registerModule("Molecule", pModVR, VRPyGeometry::typeRef);
+    registerModule<VRPyMenu>("Menu", pModVR, VRPyGeometry::typeRef);
+    registerModule<VRPyClipPlane>("ClipPlane", pModVR, VRPyGeometry::typeRef);
+	registerModule<VRPyColorChooser>("ColorChooser", pModVR);
+	registerModule<VRPyTextureRenderer>("TextureRenderer", pModVR, VRPyObject::typeRef);
+    registerModule<VRPyCaveKeeper>("CaveKeeper", pModVR);
+    registerModule<VRPyParticles>("Particles", pModVR, VRPyGeometry::typeRef);
+    registerModule<VRPyFluids>("Fluids", pModVR, VRPyParticles::typeRef);
+    registerModule<VRPyCarDynamics>("CarDynamics", pModVR);
+    registerModule<VRPyCEF>("CEF", pModVR);
+    registerModule<VRPyWebCam>("Webcam", pModVR, VRPySprite::typeRef);
+    registerModule<VRPySegmentation>("Segmentation", pModVR);
+    registerModule<VRPyAdjacencyGraph>("AdjacencyGraph", pModVR);
+    registerModule<VRPyMechanism>("Mechanism", pModVR);
+    registerModule<VRPyNumberingEngine>("NumberingEngine", pModVR, VRPyGeometry::typeRef);
+    registerModule<VRPyTree>("Tree", pModVR, VRPyGeometry::typeRef);
+    registerModule<VRPyMillingMachine>("MillingMachine", pModVR);
+    registerModule<VRPyMolecule>("Molecule", pModVR, VRPyGeometry::typeRef);
+    registerModule<VRPyRobotArm>("RobotArm", pModVR);
 
 #ifndef _WIN32
-	VRPyCSG::registerModule("CSGGeometry", pModVR, VRPyGeometry::typeRef);
-	VRPyRealWorld::registerModule("RealWorld", pModVR);
-	VRPyTrafficSimulation::registerModule("TrafficSimulation", pModVR);
-	VRPySimViDekont::registerModule("SimViDekont", pModVR);
+	registerModule<VRPyCSG>("CSGGeometry", pModVR, VRPyGeometry::typeRef);
+	registerModule<VRPyRealWorld>("RealWorld", pModVR);
+	registerModule<VRPyTrafficSimulation>("TrafficSimulation", pModVR);
+	registerModule<VRPySimViDekont>("SimViDekont", pModVR);
 #endif
 
     PyObject* pModFactory = Py_InitModule3("Factory", VRScriptManager_module_methods, "VR Module");
-    FPyNode::registerModule("Node", pModFactory);
-    FPyNetwork::registerModule("Network", pModFactory);
-    FPyPath::registerModule("Path", pModFactory);
-    FPyTransporter::registerModule("Transporter", pModFactory);
-    FPyContainer::registerModule("Container", pModFactory);
-    FPyProduct::registerModule("Product", pModFactory);
-    FPyLogistics::registerModule("Logistics", pModFactory);
-    VRPyFactory::registerModule("Factory", pModFactory);
-    VRPyProduction::registerModule("Production", pModFactory);
-    VRPyAMLLoader::registerModule("AMLLoader", pModFactory);
+    registerModule<FPyNode>("Node", pModFactory);
+    registerModule<FPyNetwork>("Network", pModFactory);
+    registerModule<FPyPath>("Path", pModFactory);
+    registerModule<FPyTransporter>("Transporter", pModFactory);
+    registerModule<FPyContainer>("Container", pModFactory);
+    registerModule<FPyProduct>("Product", pModFactory);
+    registerModule<FPyLogistics>("Logistics", pModFactory);
+    registerModule<VRPyFactory>("Factory", pModFactory);
+    registerModule<VRPyProduction>("Production", pModFactory);
+    registerModule<VRPyAMLLoader>("AMLLoader", pModFactory);
     PyModule_AddObject(pModVR, "Factory", pModFactory);
 
 	if (!VROptions::get()->getOption<bool>("standalone")) initVRPyStdOut();
@@ -319,25 +353,28 @@ void VRScriptManager::initPyModules() {
         "import sys\n"
         "sys.path.append('cython/')\n"
     );
+
+    //PyEval_ReleaseLock();
+    //PyEval_SaveThread();
+}
+
+template<class T>
+void VRScriptManager::registerModule(string mod, PyObject* parent, PyTypeObject* base) {
+    T::registerModule(mod, parent, base);
+    modules[mod] = T::typeRef;
 }
 
 vector<string> VRScriptManager::getPyVRTypes() {
     vector<string> res;
     res.push_back("VR globals");
-
-    PyObject* dict = PyModule_GetDict(pModVR);
-    PyObject *key, *value;
-    Py_ssize_t pos = 0;
-
-    while (PyDict_Next(dict, &pos, &key, &value)) {
-        if (!PyType_Check(value)) continue;
-
-        string name = PyString_AsString(key);
-        res.push_back(name);
-    }
-
+    for (auto m : modules) res.push_back(m.first);
     sort (res.begin()+1, res.end());
     return res;
+}
+
+string VRScriptManager::getPyVRDescription(string type) {
+    if (type == "VR globals") return "";
+    return modules[type]->tp_doc;
 }
 
 vector<string> VRScriptManager::getPyVRMethods(string type) {
@@ -357,15 +394,7 @@ vector<string> VRScriptManager::getPyVRMethods(string type) {
         return res;
     }
 
-    while (PyDict_Next(dict, &pos, &key, &value)) {
-        if (!PyType_Check(value)) continue;
-        string name = PyString_AsString(key);
-        if (name != type) continue;
-        PyTypeObject*t = (PyTypeObject*)value;
-        dict = t->tp_dict;
-        break;
-    }
-
+    dict = modules[type]->tp_dict;
     pos = 0;
     while (PyDict_Next(dict, &pos, &key, &value)) {
         string name = PyString_AsString(key);
@@ -423,7 +452,7 @@ string VRScriptManager::getPyVRMethodDoc(string type, string method) {
 // ==============
 
 PyObject* VRScriptManager::loadScene(VRScriptManager* self, PyObject *args) {
-    auto fkt = new VRFunction<int>( "scheduled scene load", boost::bind(&VRSceneManager::loadScene, VRSceneManager::get(), parseString(args), false ) );
+    auto fkt = VRFunction<int>::create( "scheduled scene load", boost::bind(&VRSceneManager::loadScene, VRSceneManager::get(), parseString(args), false ) );
     VRSceneManager::get()->queueJob(fkt);
     Py_RETURN_TRUE;
 }
@@ -433,7 +462,8 @@ PyObject* VRScriptManager::getSetup(VRScriptManager* self) {
 }
 
 PyObject* VRScriptManager::getNavigator(VRScriptManager* self) {
-    return VRPyNavigator::fromPtr((VRNavigator*)VRSceneManager::getCurrent());
+    auto scene = VRSceneManager::getCurrent();
+    return VRPyNavigator::fromPtr((VRNavigator*)scene.get());
 }
 
 PyObject* VRScriptManager::printOSG(VRScriptManager* self) {
@@ -443,7 +473,7 @@ PyObject* VRScriptManager::printOSG(VRScriptManager* self) {
 }
 
 PyObject* VRScriptManager::exit(VRScriptManager* self) {
-    exitPolyVR();
+    PolyVR::shutdown();
     Py_RETURN_TRUE;
 }
 
@@ -451,26 +481,24 @@ PyObject* VRScriptManager::getRoot(VRScriptManager* self) {
     return VRPyTypeCaster::cast( VRSceneManager::getCurrent()->getRoot() );
 }
 
-PyObject* VRScriptManager::loadGeometry(VRScriptManager* self, PyObject *args) {
-    PyObject* path = 0;
-    PyObject *preset = 0;
+PyObject* VRScriptManager::loadGeometry(VRScriptManager* self, PyObject *args, PyObject *kwargs) {
+    const char* path = "";
     int ignoreCache = 0;
+    const char* preset = "OSG";
+    const char* parent = "";
 
-    if (pySize(args) == 1) if (! PyArg_ParseTuple(args, "O", &path)) return NULL;
-    if (pySize(args) == 2) if (! PyArg_ParseTuple(args, "Oi", &path, &ignoreCache)) return NULL;
-    if (pySize(args) == 3) if (! PyArg_ParseTuple(args, "OiO", &path, &ignoreCache, &preset)) return NULL;
-    if (pySize(args) < 1 || pySize(args) > 3) { PyErr_SetString(err, "VRScriptManager::loadGeometry: wrong number of arguments"); return NULL; }
+    const char* kwlist[] = {"path", "cached", "preset", "parent", NULL};
+    string format = "s|iss:loadGeometry";
+    if (! PyArg_ParseTupleAndKeywords(args, kwargs, format.c_str(), (char**)kwlist, &path, &ignoreCache, &preset, &parent)) return NULL;
 
-    string p = PyString_AsString(path);
-    string pre = "OSG";
-    if (preset) pre = PyString_AsString(preset);
+    VRObjectPtr prnt = VRSceneManager::getCurrent()->getRoot()->find( parent );
 
-    VRTransform* obj = VRImport::get()->load( p, 0, ignoreCache, pre);
+    VRTransformPtr obj = VRImport::get()->load( path, prnt, ignoreCache, preset);
     if (obj == 0) {
-        VRGuiManager::get()->printInfo("Warning: " + p + " not found.\n");
+        VRGuiManager::get()->printInfo("Warning: " + string(path) + " not found.\n");
         Py_RETURN_NONE;
     }
-    obj->addAttachment("dynamicaly_generated", 0);
+    obj->setPersistency(0);
     return VRPyTypeCaster::cast(obj);
 }
 
@@ -481,14 +509,51 @@ PyObject* VRScriptManager::pyTriggerScript(VRScriptManager* self, PyObject *args
 
 void execCall(PyObject* pyFkt, PyObject* pArgs, int i) {
     if (pyFkt == 0) return;
+    PyGILState_STATE gstate = PyGILState_Ensure();
     if (PyErr_Occurred() != NULL) PyErr_Print();
-
     if (pArgs == 0) pArgs = PyTuple_New(0);
+
     PyObject_CallObject(pyFkt, pArgs);
+
     Py_XDECREF(pArgs);
     Py_DecRef(pyFkt);
 
     if (PyErr_Occurred() != NULL) PyErr_Print();
+    PyGILState_Release(gstate);
+}
+
+void execThread(PyObject* pyFkt, PyObject* pArgs,  std::weak_ptr<VRThread>  thread) {
+    execCall(pyFkt, pArgs, 0);
+}
+
+void VRScriptManager::allowScriptThreads() {
+    if (pyThreadState == 0) pyThreadState = PyEval_SaveThread();
+}
+
+void VRScriptManager::blockScriptThreads() {
+    if (pyThreadState) { PyEval_RestoreThread(pyThreadState); pyThreadState = 0; }
+}
+
+PyObject* VRScriptManager::startThread(VRScriptManager* self, PyObject *args) {
+    PyObject *pyFkt, *pArgs = 0;
+    if (PyTuple_Size(args) == 1) { if (! PyArg_ParseTuple(args, "O", &pyFkt)) return NULL; }
+    else { if (! PyArg_ParseTuple(args, "OO", &pyFkt, &pArgs)) return NULL; }
+    Py_IncRef(pyFkt);
+
+    if (pArgs != 0) {
+        std::string type = pArgs->ob_type->tp_name;
+        if (type == "list") pArgs = PyList_AsTuple(pArgs);
+    }
+
+    auto fkt = new VRFunction< std::weak_ptr<VRThread> >( "pyExecCall", boost::bind(execThread, pyFkt, pArgs, _1) );
+    int t = VRSceneManager::getCurrent()->initThread(fkt, "python thread");
+    return PyInt_FromLong(t);
+}
+
+PyObject* VRScriptManager::joinThread(VRScriptManager* self, PyObject *args) {
+    int ID = parseInt(args);
+    VRSceneManager::getCurrent()->stopThread(ID);
+    Py_RETURN_TRUE;
 }
 
 PyObject* VRScriptManager::stackCall(VRScriptManager* self, PyObject *args) {
@@ -504,10 +569,12 @@ PyObject* VRScriptManager::stackCall(VRScriptManager* self, PyObject *args) {
         if (type == "list") pArgs = PyList_AsTuple(pArgs);
     }
 
-    VRFunction<int>* fkt = new VRFunction<int>( "pyExecCall", boost::bind(execCall, pyFkt, pArgs, _1) );
+    VRUpdatePtr fkt = VRFunction<int>::create( "pyExecCall", boost::bind(execCall, pyFkt, pArgs, _1) );
+    VRUpdateWeakPtr wkp = fkt;
 
-    VRScene* scene = VRSceneManager::getCurrent();
-    scene->addAnimation(0, delay, fkt, 0, 0, false);
+    auto scene = VRSceneManager::getCurrent();
+    auto a = scene->addAnimation(0, delay, wkp, 0, 0, false);
+    a->setCallbackOwner(true);
     Py_RETURN_TRUE;
 }
 

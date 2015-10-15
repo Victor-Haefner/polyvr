@@ -12,6 +12,8 @@ struct VRPyCSG : VRPyBaseT<OSG::CSGGeometry> {
     static PyObject* setOperation(VRPyCSG* self, PyObject* args);
     static PyObject* getEditMode(VRPyCSG* self);
     static PyObject* setEditMode(VRPyCSG* self, PyObject* args);
+    static PyObject* markEdges(VRPyCSG* self, PyObject* args);
+    static PyObject* setThreshold(VRPyCSG* self, PyObject* args);
 };
 
 #endif // VRPYCSG_H_INCLUDED

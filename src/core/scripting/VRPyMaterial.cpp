@@ -45,7 +45,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRMaterial>::type = {
     0,                         /* tp_dictoffset */
     (initproc)init,        /* tp_init */
     0,                     /* tp_alloc */
-    New_VRObjects,       /* tp_new */
+    New_VRObjects_ptr,       /* tp_new */
 };
 
 PyMethodDef VRPyMaterial::methods[] = {
@@ -76,40 +76,57 @@ PyMethodDef VRPyMaterial::methods[] = {
     {"setTexture", (PyCFunction)VRPyMaterial::setTexture, METH_VARARGS, "Set the texture - setTexture(str path)\n - setTexture([[r,g,b]], [xN, yN, zN], bool isFloat)\n - setTexture([[r,g,b,a]], [xN, yN, zN], bool isFloat)" },
     {"setTextureType", (PyCFunction)VRPyMaterial::setTextureType, METH_VARARGS, "Set the texture type - setTexture(str type)\n types are: 'Normal, 'SphereEnv'" },
     {"setStencilBuffer", (PyCFunction)VRPyMaterial::setStencilBuffer, METH_VARARGS, "Set the setStencilBuffer" },
+    {"setShaderParameter", (PyCFunction)VRPyMaterial::setShaderParameter, METH_VARARGS, "Set shader variable - setShaderParameter(str var, value)" },
+    {"setDefaultVertexShader", (PyCFunction)VRPyMaterial::setDefaultVertexShader, METH_NOARGS, "Set a default vertex shader - setDefaultVertexShader()" },
     {NULL}  /* Sentinel */
 };
 
+PyObject* VRPyMaterial::setDefaultVertexShader(VRPyMaterial* self) {
+	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setDefaultVertexShader, C obj is invalid"); return NULL; }
+	self->objPtr->setDefaultVertexShader();
+	Py_RETURN_TRUE;
+}
+
+PyObject* VRPyMaterial::setShaderParameter(VRPyMaterial* self, PyObject* args) {
+	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setShaderParameter, C obj is invalid"); return NULL; }
+	PyStringObject* var;
+	int i=0;
+    if (! PyArg_ParseTuple(args, "Oi", &var, &i)) return NULL;
+	self->objPtr->setShaderParameter( PyString_AsString((PyObject*)var), i );
+	Py_RETURN_TRUE;
+}
+
 PyObject* VRPyMaterial::setSortKey(VRPyMaterial* self, PyObject* args) {
-	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setSortKey, C obj is invalid"); return NULL; }
-	self->obj->setSortKey( parseInt(args) );
+	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setSortKey, C obj is invalid"); return NULL; }
+	self->objPtr->setSortKey( parseInt(args) );
 	Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMaterial::setStencilBuffer(VRPyMaterial* self, PyObject* args) {
-	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setStencilBuffer, C obj is invalid"); return NULL; }
+	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setStencilBuffer, C obj is invalid"); return NULL; }
 	int c,v,m;
 	PyObject *o,*f1,*f2,*f3;
     if (! PyArg_ParseTuple(args, "iiiOOOO", &c, &v, &m, &o, &f1, &f2, &f3)) return NULL;
-	self->obj->setStencilBuffer(c,v,m, toGLConst(o), toGLConst(f1), toGLConst(f2), toGLConst(f3));
+	self->objPtr->setStencilBuffer(c,v,m, toGLConst(o), toGLConst(f1), toGLConst(f2), toGLConst(f3));
 	Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMaterial::setTextureType(VRPyMaterial* self, PyObject* args) {
-	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setTextureType, C obj is invalid"); return NULL; }
-	self->obj->setTextureType(parseString(args));
+	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setTextureType, C obj is invalid"); return NULL; }
+	self->objPtr->setTextureType(parseString(args));
 	Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMaterial::setTexture(VRPyMaterial* self, PyObject* args) {
-	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setTexture, C obj is invalid"); return NULL; }
+	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setTexture, C obj is invalid"); return NULL; }
 
 	int aN = pySize(args);
 	if (aN == 1) {
         PyObject* o = parseObject(args);
-        if (PyString_Check(o)) self->obj->setTexture( PyString_AsString(o) ); // load a file
-        else {
+        if (PyString_Check(o)) self->objPtr->setTexture( PyString_AsString(o) ); // load a file
+        else if (VRPyImage::check(o)) {
             VRPyImage* img = (VRPyImage*)o;
-            self->obj->setTexture( img->obj );
+            self->objPtr->setTexture( img->obj, img->internal_format, 0 );
         }
 	}
 
@@ -129,14 +146,14 @@ PyObject* VRPyMaterial::setTexture(VRPyMaterial* self, PyObject* args) {
                 vector<PyObject*> vec = pyListToVector(dObj);
                 for (int j=0; j<vN; j++) buf[i*vN+j] = PyFloat_AsDouble(vec[j]);
             }
-            self->obj->setTexture( (char*)&buf[0], vN, parseVec3iList(dims), true );
+            self->objPtr->setTexture( (char*)&buf[0], vN, parseVec3iList(dims), true );
         } else {
             vector<char> buf(vN*dN, 0);
             for (int i=0; i<dN; i++) {
                 vector<PyObject*> vec = pyListToVector(_data[i]);
                 for (int j=0; j<vN; j++) buf[i*vN+j] = PyInt_AsLong(vec[j]);
             }
-            self->obj->setTexture( &buf[0], vN, parseVec3iList(dims), false );
+            self->objPtr->setTexture( &buf[0], vN, parseVec3iList(dims), false );
         }
 	}
 
@@ -144,139 +161,139 @@ PyObject* VRPyMaterial::setTexture(VRPyMaterial* self, PyObject* args) {
 }
 
 PyObject* VRPyMaterial::setZOffset(VRPyMaterial* self, PyObject* args) {
-	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setZOffset, C obj is invalid"); return NULL; }
+	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setZOffset, C obj is invalid"); return NULL; }
 	float f,b;
     if (! PyArg_ParseTuple(args, "ff", &f, &b)) return NULL;
-	self->obj->setZOffset(f,b);
+	self->objPtr->setZOffset(f,b);
 	Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMaterial::setLit(VRPyMaterial* self, PyObject* args) {
-	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setLit, C obj is invalid"); return NULL; }
-	self->obj->setLit(parseBool(args));
+	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setLit, C obj is invalid"); return NULL; }
+	self->objPtr->setLit(parseBool(args));
 	Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMaterial::addPass(VRPyMaterial* self) {
-	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::addPass, C obj is invalid"); return NULL; }
-	return PyInt_FromLong( self->obj->addPass() );
+	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::addPass, C obj is invalid"); return NULL; }
+	return PyInt_FromLong( self->objPtr->addPass() );
 }
 
 PyObject* VRPyMaterial::remPass(VRPyMaterial* self, PyObject* args) {
-	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::remPass, C obj is invalid"); return NULL; }
-	self->obj->remPass(parseInt(args));
+	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::remPass, C obj is invalid"); return NULL; }
+	self->objPtr->remPass(parseInt(args));
 	Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMaterial::setActivePass(VRPyMaterial* self, PyObject* args) {
-	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setActivePass, C obj is invalid"); return NULL; }
-	self->obj->setActivePass(parseInt(args));
+	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setActivePass, C obj is invalid"); return NULL; }
+	self->objPtr->setActivePass(parseInt(args));
 	Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMaterial::setWireFrame(VRPyMaterial* self, PyObject* args) {
-	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setWireFrame, C obj is invalid"); return NULL; }
-	self->obj->setWireFrame(parseBool(args));
+	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setWireFrame, C obj is invalid"); return NULL; }
+	self->objPtr->setWireFrame(parseBool(args));
 	Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMaterial::setMagMinFilter(VRPyMaterial* self, PyObject* args) {
-	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setMagMinFilter, C obj is invalid"); return NULL; }
+	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setMagMinFilter, C obj is invalid"); return NULL; }
 	PyObject *mag, *min;
     if (! PyArg_ParseTuple(args, "OO", &mag, &min)) return NULL;
-	self->obj->setMagMinFilter(PyString_AsString(mag), PyString_AsString(min));
+	self->objPtr->setMagMinFilter(PyString_AsString(mag), PyString_AsString(min));
 	Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMaterial::setVertexProgram(VRPyMaterial* self, PyObject* args) {
-	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setVertexProgram, C obj is invalid"); return NULL; }
-	self->obj->setVertexScript(parseString(args));
+	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setVertexProgram, C obj is invalid"); return NULL; }
+	self->objPtr->setVertexScript(parseString(args));
 	Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMaterial::setFragmentProgram(VRPyMaterial* self, PyObject* args) {
-	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setFragmentProgram, C obj is invalid"); return NULL; }
-	self->obj->setFragmentScript(parseString(args));
+	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setFragmentProgram, C obj is invalid"); return NULL; }
+	self->objPtr->setFragmentScript(parseString(args));
 	Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMaterial::setGeometryProgram(VRPyMaterial* self, PyObject* args) {
-	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setGeometryProgram, C obj is invalid"); return NULL; }
-	self->obj->setGeometryScript(parseString(args));
+	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setGeometryProgram, C obj is invalid"); return NULL; }
+	self->objPtr->setGeometryScript(parseString(args));
 	Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMaterial::getAmbient(VRPyMaterial* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::getAmbient, C obj is invalid"); return NULL; }
-    return toPyTuple(self->obj->getAmbient());
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::getAmbient, C obj is invalid"); return NULL; }
+    return toPyTuple(self->objPtr->getAmbient());
 }
 
 PyObject* VRPyMaterial::setAmbient(VRPyMaterial* self, PyObject* args) {
-	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setAmbient, C obj is invalid"); return NULL; }
-	self->obj->setAmbient(parseVec3f(args));
+	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setAmbient, C obj is invalid"); return NULL; }
+	self->objPtr->setAmbient(parseVec3f(args));
 	Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMaterial::getDiffuse(VRPyMaterial* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::getDiffuse, C obj is invalid"); return NULL; }
-    return toPyTuple(self->obj->getDiffuse());
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::getDiffuse, C obj is invalid"); return NULL; }
+    return toPyTuple(self->objPtr->getDiffuse());
 }
 
 PyObject* VRPyMaterial::setDiffuse(VRPyMaterial* self, PyObject* args) {
-	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setDiffuse, C obj is invalid"); return NULL; }
-	self->obj->setDiffuse(parseVec3f(args));
+	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setDiffuse, C obj is invalid"); return NULL; }
+	self->objPtr->setDiffuse(parseVec3f(args));
 	Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMaterial::getSpecular(VRPyMaterial* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::getSpecular, C obj is invalid"); return NULL; }
-    return toPyTuple(self->obj->getSpecular());
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::getSpecular, C obj is invalid"); return NULL; }
+    return toPyTuple(self->objPtr->getSpecular());
 }
 
 PyObject* VRPyMaterial::setTransparency(VRPyMaterial* self, PyObject* args) {
-	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setTransparency, C obj is invalid"); return NULL; }
-	self->obj->setTransparency(parseFloat(args));
+	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setTransparency, C obj is invalid"); return NULL; }
+	self->objPtr->setTransparency(parseFloat(args));
 	Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMaterial::getTransparency(VRPyMaterial* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::getTransparency, C obj is invalid"); return NULL; }
-    return PyFloat_FromDouble(self->obj->getTransparency());
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::getTransparency, C obj is invalid"); return NULL; }
+    return PyFloat_FromDouble(self->objPtr->getTransparency());
 }
 
 PyObject* VRPyMaterial::setShininess(VRPyMaterial* self, PyObject* args) {
-	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setShininess, C obj is invalid"); return NULL; }
-	self->obj->setShininess(parseFloat(args));
+	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setShininess, C obj is invalid"); return NULL; }
+	self->objPtr->setShininess(parseFloat(args));
 	Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMaterial::getShininess(VRPyMaterial* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::getShininess, C obj is invalid"); return NULL; }
-    return PyFloat_FromDouble(self->obj->getShininess());
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::getShininess, C obj is invalid"); return NULL; }
+    return PyFloat_FromDouble(self->objPtr->getShininess());
 }
 
 PyObject* VRPyMaterial::setSpecular(VRPyMaterial* self, PyObject* args) {
-	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setSpecular, C obj is invalid"); return NULL; }
-	self->obj->setSpecular(parseVec3f(args));
+	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setSpecular, C obj is invalid"); return NULL; }
+	self->objPtr->setSpecular(parseVec3f(args));
 	Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMaterial::setPointSize(VRPyMaterial* self, PyObject* args) {
-	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setPointSize, C obj is invalid"); return NULL; }
-	self->obj->setPointSize(parseInt(args));
+	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setPointSize, C obj is invalid"); return NULL; }
+	self->objPtr->setPointSize(parseInt(args));
 	Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMaterial::setLineWidth(VRPyMaterial* self, PyObject* args) {
-	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setLineWidth, C obj is invalid"); return NULL; }
-	self->obj->setLineWidth(parseInt(args));
+	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setLineWidth, C obj is invalid"); return NULL; }
+	self->objPtr->setLineWidth(parseInt(args));
 	Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMaterial::setQRCode(VRPyMaterial* self, PyObject* args) {
-	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setQRCode, C obj is invalid"); return NULL; }
+	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setQRCode, C obj is invalid"); return NULL; }
 	PyObject *data, *fg, *bg; int i;
     if (! PyArg_ParseTuple(args, "OOOi", &data, &fg, &bg, &i)) return NULL;
-	self->obj->setQRCode(PyString_AsString(data), parseVec3fList(fg), parseVec3fList(bg), i);
+	self->objPtr->setQRCode(PyString_AsString(data), parseVec3fList(fg), parseVec3fList(bg), i);
 	Py_RETURN_TRUE;
 }

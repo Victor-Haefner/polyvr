@@ -24,8 +24,13 @@ class VRScriptManager : public VRStorage, public VRPyBase {
         PyObject* pLocal;
         PyObject* pModBase;
         PyObject* pModVR;
+        map<string, PyTypeObject*> modules;
         map<string, VRScript*> scripts;
         map<string, VRSignal*> triggers;
+        PyThreadState* pyThreadState = 0;
+
+        template<class T>
+        void registerModule(string mod, PyObject* parent, PyTypeObject* base = 0);
 
         void test();
 
@@ -37,6 +42,9 @@ class VRScriptManager : public VRStorage, public VRPyBase {
     public:
         VRScriptManager();
         ~VRScriptManager();
+
+        void allowScriptThreads();
+        void blockScriptThreads();
 
         VRScript* newScript(string name, string function);
         void addScript(VRScript* script);
@@ -56,11 +64,12 @@ class VRScriptManager : public VRStorage, public VRPyBase {
 
         vector<string> getPyVRTypes();
         vector<string> getPyVRMethods(string type);
+        string getPyVRDescription(string type);
         string getPyVRMethodDoc(string type, string method);
 
         // Python Methods
 		static PyObject* exit(VRScriptManager* self);
-		static PyObject* loadGeometry(VRScriptManager* self, PyObject *args);
+		static PyObject* loadGeometry(VRScriptManager* self, PyObject *args, PyObject *kwargs);
 		static PyObject* pyTriggerScript(VRScriptManager* self, PyObject *args);
 		static PyObject* stackCall(VRScriptManager* self, PyObject *args);
 		static PyObject* openFileDialog(VRScriptManager* self, PyObject *args);
@@ -71,6 +80,8 @@ class VRScriptManager : public VRStorage, public VRPyBase {
 		static PyObject* getNavigator(VRScriptManager* self);
 		static PyObject* getSetup(VRScriptManager* self);
 		static PyObject* loadScene(VRScriptManager* self, PyObject *args);
+		static PyObject* startThread(VRScriptManager* self, PyObject *args);
+		static PyObject* joinThread(VRScriptManager* self, PyObject *args);
 };
 
 OSG_END_NAMESPACE

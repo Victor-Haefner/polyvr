@@ -12,8 +12,10 @@
 #include "StreetSegment.h"
 #include "../StreetAlgos.h"
 #include "../MapGeometryGenerator.h"
+#include "core/objects/geometry/VRSprite.h"
 
 #include <boost/exception/to_string.hpp>
+#include <OpenSG/OSGGeometry.h>
 
 using namespace OSG;
 using namespace std;
@@ -24,8 +26,8 @@ ModuleStreets::ModuleStreets(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, Te
     //this->streetHeight = Config::STREET_HEIGHT + Config::GROUND_LVL;
 
     // create material
-    matStreet = new VRMaterial("Street");
-    matStreet->setTexture("textures/street1.png");
+    matStreet = VRMaterial::create("Street");
+    matStreet->setTexture("world/textures/street1.png");
 
     matStreet->setAmbient(Color3f(0.5, 0.5, 0.5)); //light reflection in all directions
     matStreet->setDiffuse(Color3f(1.0, 1.0, 1.0)); //light from ambient (without lightsource)
@@ -33,85 +35,73 @@ ModuleStreets::ModuleStreets(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, Te
     string wdir = VRSceneManager::get()->getOriginalWorkdir();
     matStreet->readVertexShader(wdir+"/shader/TexturePhong/phong.vp");
     matStreet->readFragmentShader(wdir+"/shader/TexturePhong/phong.fp");
-    matStreet->setMagMinFilter("GL_LINEAR", "GL_NEAREST_MIPMAP_NEAREST");
+    matStreet->setMagMinFilter("GL_NEAREST", "GL_NEAREST");
+    matStreet->setZOffset(-1,-1);
     //matStreet->setWireFrame(true);
 }
 
 string ModuleStreets::getName() { return "ModuleStreets"; }
 
+bool isStreet(OSMWay* way) {
+    return (
+    way->tags["highway"] == "motorway" ||
+    way->tags["highway"] == "trunk" ||
+    way->tags["highway"] == "primary" ||
+    way->tags["highway"] == "secondary" ||
+    way->tags["highway"] == "tertiary" ||
+    way->tags["highway"] == "living_street" ||
+    way->tags["highway"] == "residential" ||
+    way->tags["highway"] == "unclassified" ||
+    way->tags["highway"] == "service" ||
+    way->tags["highway"] == "motorway_link" ||
+    way->tags["highway"] == "trunk_link" ||
+    way->tags["highway"] == "primary_link" ||
+    way->tags["highway"] == "raceway" ||
+    way->tags["highway"] == "cycleway" ||
+    way->tags["highway"] == "path" ||
+    way->tags["highway"] == "pedestrian" ||
+    way->tags["highway"] == "road" ||
+    way->tags["highway"] == "bridleway" ||
+    way->tags["highway"] == "track" ||
+    way->tags["highway"] == "footway" ||
+    way->tags["bridge"] == "yes");
+}
+
 void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
     OSMMap* osmMap = mapDB->getMap(bbox->str);
     if (!osmMap) return;
 
-    vector<string> listLoadJoints;
-    vector<string> listLoadSegments;
-    vector<string> listReloadJoints;
+    map<string, StreetJoint*> listLoadJoints;
+    map<string, StreetSegment*> listLoadSegments;
 
-    Timer t;
-
-    t.start("LOAD STREET DATA");
-    // Load StreetJoints
-    BOOST_FOREACH(OSMNode* node, osmMap->osmNodes) {
+    for (OSMNode* node : osmMap->osmNodes) { // Load StreetJoints
         Vec2f pos = this->mapCoordinator->realToWorld(Vec2f(node->lat, node->lon));
         StreetJoint* joint = new StreetJoint(pos, node->id);
-        if (streetJointMap.count(node->id)) {
-            listReloadJoints.push_back(node->id);
-            streetJointMap[node->id]->merge(joint);
-        } else {
-            streetJointMap[node->id] = joint;
-        }
-        listLoadJoints.push_back(node->id);
+        listLoadJoints[node->id] = joint;
     }
 
-    StreetSegment* segPrev = NULL;
-    // Load StreetSegments
-    BOOST_FOREACH(OSMWay* way, osmMap->osmWays) {
-        if (
-                way->tags["highway"] == "motorway" ||
-                way->tags["highway"] == "trunk" ||
-                way->tags["highway"] == "primary" ||
-                way->tags["highway"] == "secondary" ||
-                way->tags["highway"] == "tertiary" ||
-                way->tags["highway"] == "living_street" ||
-                way->tags["highway"] == "residential" ||
-                way->tags["highway"] == "unclassified" ||
-                way->tags["highway"] == "service" ||
-                way->tags["highway"] == "motorway_link" ||
-                way->tags["highway"] == "trunk_link" ||
-                way->tags["highway"] == "primary_link" ||
-                way->tags["highway"] == "raceway" ||
-                way->tags["highway"] == "cycleway" ||
-                way->tags["highway"] == "path" ||
-                way->tags["highway"] == "pedestrian" ||
-                way->tags["highway"] == "road" ||
-                way->tags["highway"] == "bridleway" ||
-                way->tags["highway"] == "track" ||
-                way->tags["highway"] == "footway" ||
-                way->tags["bridge"] == "yes") {
-            // load street segment
+    StreetSegment* segPrev = NULL; // Load StreetSegments
+    for (OSMWay* way : osmMap->osmWays) {
+        if (isStreet(way)) { // load street segment
             for (unsigned int i=0; i < way->nodeRefs.size()-1; i++) {
                 string nodeId1 = way->nodeRefs[i];
                 string nodeId2 = way->nodeRefs[i+1];
                 string segId = way->id + "-" + boost::to_string(i);
 
-                if (streetSegmentMap.count(segId)) continue;
-
                 StreetSegment* seg = new StreetSegment(nodeId1, nodeId2, Config::get()->STREET_WIDTH, segId);
-                if(way->tags["bridge"] == "yes") {
+                if (way->tags["bridge"] == "yes") {
                     seg->bridge = true;
                     //make all segments of bridge small, if one is small
-                    if(seg->getDistance()<Config::get()->BRIDGE_HEIGHT)
-                        seg->smallBridge = true;
-                        if(segPrev->bridge) segPrev->smallBridge = true;
-                    else if(segPrev->smallBridge){
-                        seg->smallBridge = true;
-                    }
-                    if(segPrev != NULL){
+                    if (seg->getDistance() < Config::get()->BRIDGE_HEIGHT) seg->smallBridge = true;
+                    if (segPrev) if (segPrev->bridge && seg->smallBridge) segPrev->smallBridge = true;
+                    if (segPrev) if (segPrev->smallBridge) seg->smallBridge = true;
+
+                    if (segPrev) {
                         segPrev->leftBridge = true;
-                        if(segPrev->bridge) seg->rightBridge = true;
+                        if (segPrev->bridge) seg->rightBridge = true;
                     }
                 }
-                streetSegmentMap[seg->id] = seg;
+                listLoadSegments[segId] = seg;
 
                 if (way->tags.count("lanes")) {
                     seg->lanes = toFloat(way->tags["lanes"].c_str());
@@ -121,149 +111,65 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
                     seg->width = seg->width * seg->lanes;
                 }
 
-                if (way->tags.count("name")) {
-                    seg->name = way->tags["name"];
-                }
+                if (way->tags.count("name")) seg->name = way->tags["name"];
 
-                streetJointMap[nodeId1]->segmentIds.push_back(segId);
-                streetJointMap[nodeId2]->segmentIds.push_back(segId);
-                listLoadSegments.push_back(seg->id);
+                listLoadJoints[nodeId1]->segmentIds.push_back(segId);
+                listLoadJoints[nodeId2]->segmentIds.push_back(segId);
                 segPrev = seg;
             }
         }
     }
-    t.printTime("LOAD STREET DATA");
 
-    // fix up broken segmendIds in joints
-    BOOST_FOREACH(string jointId, listLoadJoints) {
-        StreetJoint* joint = streetJointMap[jointId];
-
-        for (vector<string>::iterator it = joint->segmentIds.begin(); it != joint->segmentIds.end();) {
-            if (!streetSegmentMap.count(*it)) {
-                it = joint->segmentIds.erase(it);
-            } else {
-                it++;
-            }
-        }
-    }
-
-    t.start("TEMP UNLOAD JOINTS");
-    // unload joints
-    BOOST_FOREACH(string jointId, listReloadJoints) {
-        if (meshes.count(jointId)) {
-            // delete mesh from scene && from world.meshes
-            VRObject* obj = meshes[jointId];
-            meshes.erase(jointId);
-            delete obj;
-        }
-
-        // unload segments attached to this joint
-        StreetJoint* joint = streetJointMap[jointId];
-        BOOST_FOREACH(string segId, joint->segmentIds) {
-            if (meshes.count(segId)) {
-                // delete mesh from scene && from world.meshes
-                VRObject* obj = meshes[segId];
-                meshes.erase(segId);
-                delete obj;
-
-                listLoadSegments.push_back(segId);
-            }
-        }
-    }
-    t.printTime("TEMP UNLOAD JOINTS");
-
-    // prepare load lists
-    StreetAlgos::vectorStrRemoveDuplicates(listLoadJoints);
-    StreetAlgos::vectorStrRemoveDuplicates(listLoadSegments);
-
-//            t.start("PREPARE STREET DATA");
     // prepare joints
-    BOOST_FOREACH(string jointId, listLoadJoints) {
-        StreetJoint* joint = streetJointMap[jointId];
+    for (auto jointId : listLoadJoints) {
+        StreetJoint* joint = jointId.second;
         if (joint->segmentIds.size() == 0) continue;
-        StreetAlgos::jointCalculateSegmentPoints(joint, streetSegmentMap, streetJointMap);
+        StreetAlgos::calcSegments(joint, listLoadSegments, listLoadJoints);
     }
-    BOOST_FOREACH(string jointId, listLoadJoints) {
-        StreetJoint* joint = streetJointMap[jointId];
-        if (joint->segmentIds.size() == 0) continue;
-        StreetAlgos::jointCalculateJointPoints(joint, streetSegmentMap, streetJointMap);
-    }
-//            t.printTime("PREPARE STREET DATA");
+
+    GeometryData* sdata = new GeometryData();
+    GeometryData* jdata = new GeometryData();
+
     // load street joints
-    BOOST_FOREACH(string jointId, listLoadJoints) {
-        if (meshes.count(jointId)) {
-            cout << "DOUBLE JOINT LOAD: " << jointId << "\n";
-            continue;
-        }
-        StreetJoint* joint = streetJointMap[jointId];
+    for (auto jointId : listLoadJoints) {
+        StreetJoint* joint = jointId.second;
         if (joint->segmentIds.size() == 0) continue;
-        VRGeometry* geom = makeStreetJointGeometry(joint);
-        geom->setMaterial(matStreet);
-        root->addChild(geom);
-//                this->scene->physicalize(geom, true);
-        meshes[jointId] = geom;
+        makeStreetJointGeometry(joint, listLoadSegments, listLoadJoints, jdata);
     }
 
-    // load street segments
-    BOOST_FOREACH(string segId, listLoadSegments) {
-        if (meshes.count(segId)) {
-            cout << "DOUBLE SEGMENT LOAD: " << segId << "\n";
-            continue;
-        }
-        StreetSegment* seg = streetSegmentMap[segId];
-
-        // TODO
-        /*if (seg->id.find("-0") != string::npos) {
-            SimpleTexturedMaterialRecPtr matSign = VRText::get()->getTexture(seg->name, "SANS 20", seg->name.length()*20, 30, Color4f(255,255,255,255), Color4f(78,93,157,255));
-            VRGeometry* sign = makeSignGeometry(seg);
-            sign->setMaterial(matSign);
-            root->addChild(sign);
-            // TODO: method to unload signs
-        }*/
-
-        VRGeometry* geom = makeStreetSegmentGeometry(seg);
-        geom->setMaterial(matStreet);
-        root->addChild(geom);
-//                this->scene->physicalize(geom, true);
-        meshes[segId] = geom;
+    for (auto seg : listLoadSegments) {
+        makeStreetSegmentGeometry(seg.second, sdata); // load street segments
+        auto sign = makeSignGeometry(seg.second);
+        if (sign == 0) continue;
+        if (signs.count(bbox->str) == 0) signs[bbox->str] = vector<VRGeometryPtr>();
+        signs[bbox->str].push_back(sign);
+        root->addChild(sign);
     }
+
+    VRGeometryPtr streets = VRGeometry::create("streets");
+    VRGeometryPtr joints = VRGeometry::create("joints");
+    streets->create(GL_QUADS, sdata->pos, sdata->norms, sdata->inds, sdata->texs);
+    joints->create(GL_TRIANGLES, jdata->pos, jdata->norms, jdata->inds, jdata->texs);
+    streets->setMaterial(matStreet);
+    joints->setMaterial(matStreet);
+    root->addChild(streets);
+    root->addChild(joints);
+
+    meshes[bbox->str+"_streets"] = streets;
+    meshes[bbox->str+"_joints"] = joints;
+
+    delete sdata;
+    delete jdata;
 }
 
 void ModuleStreets::unloadBbox(AreaBoundingBox* bbox) {
-    OSMMap* osmMap = mapDB->getMap(bbox->str);
-    if (!osmMap) return;
-
-    // TODO: use map->diff() to remove all joints etc in osmMap, which are also available in active bboxes
-
-//            vector<string> listUnloadJoints;
-//            vector<string> listUnloadSegments;
-
-    // Load StreetJoints
-    BOOST_FOREACH(OSMNode* node, osmMap->osmNodes) {
-        string jointId = node->id;
-
-        if (meshes.count(jointId)) {
-            // delete mesh from scene && from world.meshes
-            VRObject* obj = meshes[jointId];
-            meshes.erase(jointId);
-            delete obj;
-        }
-
-        // unload segments attached to this joint
-        if (streetJointMap.count(jointId)) {
-            StreetJoint* joint = streetJointMap[jointId];
-            streetJointMap.erase(jointId);
-
-            BOOST_FOREACH(string segId, joint->segmentIds) {
-                if (meshes.count(segId)) {
-                    // delete mesh from scene && from world.meshes
-                    VRObject* obj = meshes[segId];
-                    meshes.erase(segId);
-                    streetSegmentMap.erase(segId);
-                    delete obj;
-                }
-            }
-        }
+    string sid = bbox->str+"_streets";
+    string jid = bbox->str+"_joints";
+    if (meshes.count(sid)) { meshes[sid]->destroy(); meshes.erase(sid); }
+    if (meshes.count(jid)) { meshes[jid]->destroy(); meshes.erase(jid); }
+    if (signs.count(bbox->str)) {
+        for (auto s : signs[bbox->str]) s->destroy();
+        signs.erase(bbox->str);
     }
 }
 
@@ -275,67 +181,43 @@ void ModuleStreets::physicalize(bool b) {
     }
 }
 
-VRGeometry* ModuleStreets::makeSignGeometry(StreetSegment* seg) {
-    Vec2f dir = (seg->leftA - seg->leftB)*-1;
-    dir.normalize();
-    Vec2f dirOrtho = (seg->leftA - seg->rightA);
-    dirOrtho.normalize();
+VRGeometryPtr ModuleStreets::makeSignGeometry(StreetSegment* seg) {
+    return 0; // TODO
+    if (seg->name == "") return 0;
 
-    Vec2f w2 = seg->leftA + (dirOrtho*1.5f) + (dir * 1.5f);
-    Vec2f w1 = w2 + (dir * 3);
-//            Vec2f w3 = w2 - (dirOrtho*0.6f);
-//            Vec2f w4 = w1 - (dirOrtho*0.6f);
+    float h1 = Config::get()->SIGN_DISTANCE;
+    float h2 = Config::get()->SIGN_WIDTH;
 
-    float low = this->mapCoordinator->getElevation(w1) + Config::get()->SIGN_DISTANCE;
-    float high = low + Config::get()->SIGN_WIDTH;
+    Vec2f dir = (seg->leftA - seg->rightA); dir.normalize();
+    Vec2f pos = (seg->leftA + seg->leftB)*0.5;
 
-    GeometryData* data = new GeometryData();
-    // create the quad1
-    data->inds->addValue(data->inds->size());
-    data->norms->addValue(Vec3f(1, 0, 0));
-    data->pos->addValue(Vec3f(w1.getValues()[0], low, w1.getValues()[1]));
-    data->texs->addValue(Vec2f(0, 0));
+    VRSpritePtr sign = VRSprite::create("sign", false, 3*h2, h2);
+    sign->setMaterial(VRMaterial::create("sign"));
 
-    data->inds->addValue(data->inds->size());
-    data->norms->addValue(Vec3f(1, 0, 0));
-    data->pos->addValue(Vec3f(w2.getValues()[0], low, w2.getValues()[1]));
-    data->texs->addValue(Vec2f(1, 0));
+    sign->setFontColor(Color4f(1,1,1,1));
+    //sign->setLabel(seg->name, 20);
+    sign->setLabel("BLABLABLA", 20);
 
-    data->inds->addValue(data->inds->size());
-    data->norms->addValue(Vec3f(1, 0, 0));
-    data->pos->addValue(Vec3f(w2.getValues()[0], high, w2.getValues()[1]));
-    data->texs->addValue(Vec2f(1, 1));
-
-    data->inds->addValue(data->inds->size());
-    data->norms->addValue(Vec3f(1, 0, 0));
-    data->pos->addValue(Vec3f(w1.getValues()[0], high, w1.getValues()[1]));
-    data->texs->addValue(Vec2f(0, 1));
-
-
-    VRGeometry* geom = new VRGeometry("StreetSign");
-    geom->create(GL_QUADS, data->pos, data->norms, data->inds, data->texs);
-    return geom;
+    sign->setFrom( elevate( pos, h1+0.5*h2) );
+    sign->setDir( Vec3f(dir[0], 0, dir[1]) );
+    sign->getMaterial()->setLit(0);
+    return sign;
 }
 
-VRGeometry* ModuleStreets::makeStreetSegmentGeometry(StreetSegment* s) {
-    vector<Vec3f> pos;
-    vector<Vec3f> norms;
-    vector<int> inds;
-    vector<Vec2f> texs;
-
+void ModuleStreets::makeStreetSegmentGeometry(StreetSegment* s, GeometryData* streets) {
     Vec2f leftA = Vec2f(s->leftA);
     Vec2f rightA = Vec2f(s->rightA);
     Vec2f leftB = Vec2f(s->leftB);
     Vec2f rightB = Vec2f(s->rightB);
 
-    int ind = 0;
+    //int ind = 0;
 
-    if(s->bridge){ //bridge
+    if (s->bridge){ //bridge
         float low = Config::get()->STREET_HEIGHT;
         float high = Config::get()->STREET_HEIGHT + Config::get()->BRIDGE_HEIGHT;
         Vec3f th = Vec3f(0, Config::get()->BRIDGE_SIZE, 0);
         Vec3f a1, a2, b1, b2;
-        int ind = 0;
+        //int ind = 0;
         Vec2f ABPart = (leftB - leftA)/3;
         if(s->smallBridge) high = Config::get()->STREET_HEIGHT + Config::get()->SMALL_BRIDGE_HEIGHT;
 
@@ -343,14 +225,14 @@ VRGeometry* ModuleStreets::makeStreetSegmentGeometry(StreetSegment* s) {
         if(s->leftBridge) low = high;
         leftB = leftA + ABPart;
         rightB = rightA + ABPart;
-        a1 = Vec3f(leftA.getValues()[0], this->mapCoordinator->getElevation(leftA) + low, leftA.getValues()[1]);
-        a2 = Vec3f(rightA.getValues()[0], this->mapCoordinator->getElevation(rightA) + low, rightA.getValues()[1]);
-        b1 = Vec3f(leftB.getValues()[0], this->mapCoordinator->getElevation(leftB) + high, leftB.getValues()[1]);
-        b2 = Vec3f(rightB.getValues()[0], this->mapCoordinator->getElevation(rightB) + high, rightB.getValues()[1]);
-        pushQuad(a1, a2, b2, b1, -getNormal3D(a2-a1, b1-a1), &ind, &pos, &norms, &inds, &texs);
-        pushQuad(a1-th, a2-th, b2-th, b1-th, getNormal3D(a2-a1, b1-a1), &ind, &pos, &norms, &inds, &texs);
-        pushQuad(a1, a1-th, b1-th, b1, Vec3f(-(b1-a1).getValues()[2], 0, (b1-a1).getValues()[0]), &ind, &pos, &norms, &inds, &texs, true); //side1
-        pushQuad(a2, a2-th, b2-th, b2, Vec3f((b2-a2).getValues()[2], 0, -(b2-a2).getValues()[0]), &ind, &pos, &norms, &inds, &texs, true); //side2
+        a1 = elevate(leftA, low);
+        a2 = elevate(rightA, low);
+        b1 = elevate(leftB, high);
+        b2 = elevate(rightB, high);
+        pushQuad(a1, a2, b2, b1, -getNormal3D(a2-a1, b1-a1), streets);
+        pushQuad(a1-th, a2-th, b2-th, b1-th, getNormal3D(a2-a1, b1-a1), streets);
+        pushQuad(a1, a1-th, b1-th, b1, Vec3f(-(b1-a1)[2], 0, (b1-a1)[0]), streets, true); //side1
+        pushQuad(a2, a2-th, b2-th, b2, Vec3f((b2-a2)[2], 0, -(b2-a2)[0]), streets, true); //side2
 
         //middle part of bridge
         low = Config::get()->STREET_HEIGHT;
@@ -359,14 +241,14 @@ VRGeometry* ModuleStreets::makeStreetSegmentGeometry(StreetSegment* s) {
         rightA += ABPart;
         leftB = leftA + ABPart;
         rightB = rightA + ABPart;
-        a1 = Vec3f(leftA.getValues()[0], this->mapCoordinator->getElevation(leftA) + high, leftA.getValues()[1]);
-        a2 = Vec3f(rightA.getValues()[0], this->mapCoordinator->getElevation(rightA) + high, rightA.getValues()[1]);
-        b1 = Vec3f(leftB.getValues()[0], this->mapCoordinator->getElevation(leftB) + high, leftB.getValues()[1]);
-        b2 = Vec3f(rightB.getValues()[0], this->mapCoordinator->getElevation(rightB) + high, rightB.getValues()[1]);
-        pushQuad(a1, a2, b2, b1, Vec3f(0, 1, 0), &ind, &pos, &norms, &inds, &texs); //top
-        pushQuad(a1-th, a2-th, b2-th, b1-th, Vec3f(0, -1, 0), &ind, &pos, &norms, &inds, &texs); //bottom
-        pushQuad(a1, a1-th, b1-th, b1, Vec3f(-(b1-a1).getValues()[2], 0, (b1-a1).getValues()[0]), &ind, &pos, &norms, &inds, &texs, true); //side1
-        pushQuad(a2, a2-th, b2-th, b2, Vec3f((b2-a2).getValues()[2], 0, -(b2-a2).getValues()[0]), &ind, &pos, &norms, &inds, &texs, true); //side2
+        a1 = elevate(leftA, high);
+        a2 = elevate(rightA, high);
+        b1 = elevate(leftB, high);
+        b2 = elevate(rightB, high);
+        pushQuad(a1, a2, b2, b1, Vec3f(0, 1, 0), streets); //top
+        pushQuad(a1-th, a2-th, b2-th, b1-th, Vec3f(0, -1, 0), streets); //bottom
+        pushQuad(a1, a1-th, b1-th, b1, Vec3f(-(b1-a1)[2], 0, (b1-a1)[0]), streets, true); //side1
+        pushQuad(a2, a2-th, b2-th, b2, Vec3f((b2-a2)[2], 0, -(b2-a2)[0]), streets, true); //side2
 
 
         //end part of bridge
@@ -375,278 +257,182 @@ VRGeometry* ModuleStreets::makeStreetSegmentGeometry(StreetSegment* s) {
         rightA += ABPart;
         leftB = leftA + ABPart;
         rightB = rightA + ABPart;
-        a1 = Vec3f(leftA.getValues()[0], this->mapCoordinator->getElevation(leftA) + high, leftA.getValues()[1]);
-        a2 = Vec3f(rightA.getValues()[0], this->mapCoordinator->getElevation(rightA) + high, rightA.getValues()[1]);
-        b1 = Vec3f(s->leftB.getValues()[0], this->mapCoordinator->getElevation(s->leftB) + low, s->leftB.getValues()[1]);
-        b2 = Vec3f(s->rightB.getValues()[0], this->mapCoordinator->getElevation(s->rightB) + low, s->rightB.getValues()[1]);
-        pushQuad(a1, a2, b2, b1, -getNormal3D(a2-a1, b1-a1), &ind, &pos, &norms, &inds, &texs);
-        pushQuad(a1-th, a2-th, b2-th, b1-th, getNormal3D(a2-a1, b1-a1), &ind, &pos, &norms, &inds, &texs);
-        pushQuad(a1, a1-th, b1-th, b1, Vec3f(-(b1-a1).getValues()[2], 0, (b1-a1).getValues()[0]), &ind, &pos, &norms, &inds, &texs, true); //side1
-        pushQuad(a2, a2-th, b2-th, b2, Vec3f((b2-a2).getValues()[2], 0, -(b2-a2).getValues()[0]), &ind, &pos, &norms, &inds, &texs, true); //side2
-    } else{ //normal street
-        pushQuad(Vec3f(leftA.getValues()[0], this->mapCoordinator->getElevation(leftA) + Config::get()->STREET_HEIGHT, leftA.getValues()[1]),
-                 Vec3f(rightA.getValues()[0], this->mapCoordinator->getElevation(rightA) + Config::get()->STREET_HEIGHT, rightA.getValues()[1]),
-                 Vec3f(rightB.getValues()[0], this->mapCoordinator->getElevation(rightB) + Config::get()->STREET_HEIGHT, rightB.getValues()[1]),
-                 Vec3f(leftB.getValues()[0], this->mapCoordinator->getElevation(leftB) + Config::get()->STREET_HEIGHT, leftB.getValues()[1]),
-                 Vec3f(0,1,0), &ind, &pos, &norms, &inds, &texs);
+        a1 = elevate(leftA, high);
+        a2 = elevate(rightA, high);
+        b1 = elevate(s->leftB, low);
+        b2 = elevate(s->rightB, low);
+        pushQuad(a1, a2, b2, b1, -getNormal3D(a2-a1, b1-a1), streets);
+        pushQuad(a1-th, a2-th, b2-th, b1-th, getNormal3D(a2-a1, b1-a1), streets);
+        pushQuad(a1, a1-th, b1-th, b1, Vec3f(-(b1-a1)[2], 0, (b1-a1)[0]), streets, true); //side1
+        pushQuad(a2, a2-th, b2-th, b2, Vec3f((b2-a2)[2], 0, -(b2-a2)[0]), streets, true); //side2
+    } else { //normal street
+        pushQuad(elevate(leftA, Config::get()->STREET_HEIGHT),
+                 elevate(rightA, Config::get()->STREET_HEIGHT),
+                 elevate(rightB, Config::get()->STREET_HEIGHT),
+                 elevate(leftB, Config::get()->STREET_HEIGHT),
+                 Vec3f(0,1,0), streets);
     }
-
-    // generate the actual geometry object
-    VRGeometry* geom = new VRGeometry("StreetSegment");
-    geom->create(GL_QUADS, pos, norms, inds, texs);
-    return geom;
 }
 
-Vec3f ModuleStreets::getNormal3D(Vec3f v1, Vec3f v2){
-    float v1x = v1.getValues()[0];
-    float v1y = v1.getValues()[1];
-    float v1z = v1.getValues()[2];
-    float v2x = v2.getValues()[0];
-    float v2y = v2.getValues()[1];
-    float v2z = v2.getValues()[2];
+Vec3f ModuleStreets::getNormal3D(Vec3f v1, Vec3f v2) { return v1.cross(v2); }
 
-    return Vec3f(v1y*v2z - v1z*v2y,
-        v1z*v2x - v1x*v2z,
-        v1x*v2y - v1y*v2x);
+
+void ModuleStreets::pushQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f normal, GeometryData* geo) {
+    pushQuad(a1, a2, b2, b1, normal, geo, false);
 }
 
-
-void ModuleStreets::pushQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f normal, int* i,
-              vector<Vec3f>* pos, vector<Vec3f>* norms, vector<int>* inds, vector<Vec2f>* texs){
-                pushQuad(a1, a2, b2, b1, normal, i, pos, norms, inds, texs, false);
-}
-
-void ModuleStreets::pushQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f normal, int* i,
-              vector<Vec3f>* pos, vector<Vec3f>* norms, vector<int>* inds, vector<Vec2f>* texs, bool isSide){
+void ModuleStreets::pushQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f normal, GeometryData* geo, bool isSide) {
     // calc road length && divide by texture size
     float width = (a2-a1).length();
-
     float len = (b1 - a1).length()/width;
 
-    pos->push_back(a1);
-    pos->push_back(a2);
-    pos->push_back(b2);
-    pos->push_back(b1);
+    geo->pos->addValue(a1);
+    geo->pos->addValue(a2);
+    geo->pos->addValue(b2);
+    geo->pos->addValue(b1);
 
-    for(int j= 0; j<4; j++) norms->push_back(normal);
-    for(int j= 0; j<4; j++) inds->push_back(j+(*i));
-    *i += 4;
+    int N = geo->inds->size();
+    for(int j= 0; j<4; j++) geo->norms->addValue(normal);
+    for(int j= 0; j<4; j++) geo->inds->addValue(j+N);
 
-    if(isSide) {
-        texs->push_back(Vec2f(0.1, 0.1));
-        texs->push_back(Vec2f(0.1, 0.1));
-        texs->push_back(Vec2f(0.1, 0.1));
-        texs->push_back(Vec2f(0.1, 0.1)); //one color of texture only
+    if (isSide) {
+        geo->texs->addValue(Vec2f(0.1, 0.1));
+        geo->texs->addValue(Vec2f(0.1, 0.1));
+        geo->texs->addValue(Vec2f(0.1, 0.1));
+        geo->texs->addValue(Vec2f(0.1, 0.1)); //one color of texture only
     } else {
-        texs->push_back(Vec2f(0, 0));
-        texs->push_back(Vec2f(1, 0));
-        texs->push_back(Vec2f(1, len));
-        texs->push_back(Vec2f(0, len));
+        geo->texs->addValue(Vec2f(0, 0));
+        geo->texs->addValue(Vec2f(1, 0));
+        geo->texs->addValue(Vec2f(1, len));
+        geo->texs->addValue(Vec2f(0, len));
     }
 }
 
-VRGeometry* ModuleStreets::makeStreetJointGeometry(StreetJoint* sj) {
-    VRGeometry* geom = new VRGeometry("StreetSegment");
-    vector<Vec3f> pos;
-    vector<Vec3f> norms;
-    vector<int> inds;
-    vector<Vec2f> texs;
+void ModuleStreets::pushTriangle(Vec3f a1, Vec3f a2, Vec3f c, Vec3f normal, GeometryData* geo) {
+    geo->pos->addValue(a1);
+    geo->pos->addValue(a2);
+    geo->pos->addValue(c);
+    int N = geo->inds->size();
+    for(int j= 0; j<3; j++) geo->norms->addValue(normal);
+    for(int j= 0; j<3; j++) geo->inds->addValue(j+N);
+    //geo->texs->addValue(Vec2f(0, 0));
+    //geo->texs->addValue(Vec2f(0, 0));
+    //geo->texs->addValue(Vec2f(0, 0));
+}
 
-    vector<JointPoints*> jointPoints = StreetAlgos::jointCalculateJointPoints(sj, streetSegmentMap, streetJointMap);
+Vec3f ModuleStreets::elevate(Vec2f p, float h) {
+    return Vec3f(p[0], mapCoordinator->getElevation(p) + h, p[1]);
+}
+
+void ModuleStreets::makeStreetJointGeometry(StreetJoint* sj, map<string, StreetSegment*>& streets, map<string, StreetJoint*>& joints, GeometryData* geo) {
+    vector<JointPoints*> jointPoints = StreetAlgos::calcJoints(sj, streets, joints);
+
+    int Nsegs = sj->segmentIds.size();
+    if (Nsegs <= 1) return;
 
     /* look up, if street joint is part of a bridge */
     float jointHeight = Config::get()->STREET_HEIGHT;
-    if(sj->segmentIds.size() > 1){
-        StreetSegment* seg1 = streetSegmentMap[sj->segmentIds[0]];
-        StreetSegment* seg2 = streetSegmentMap[sj->segmentIds[1]];
-        if(seg1->bridge && seg2->bridge) {
-            jointHeight += Config::get()->BRIDGE_HEIGHT;
-            sj->bridge = true;
-            if(seg1->smallBridge || seg2->smallBridge)
-                sj->smallBridge = true;
-                jointHeight = Config::get()->STREET_HEIGHT + Config::get()->SMALL_BRIDGE_HEIGHT;
+    StreetSegment* seg1 = streets[sj->segmentIds[0]];
+    StreetSegment* seg2 = streets[sj->segmentIds[1]];
+    if (seg1->bridge && seg2->bridge) {
+        jointHeight += Config::get()->BRIDGE_HEIGHT;
+        sj->bridge = true;
+        if (seg1->smallBridge || seg2->smallBridge) {
+            sj->smallBridge = true;
+            jointHeight = Config::get()->STREET_HEIGHT + Config::get()->SMALL_BRIDGE_HEIGHT;
         }
     }
 
-    Vec3f middle, right, left, leftExt, rightExt, firstRight, firstLeft, prevLeft;
+    Vec3f middle, right, left, leftExt, rightExt, firstRight, firstLeft, prevLeft, prevRight;
     Vec3f _NULL;
+    Vec2f _NULL2;
+    Vec3f norm = Vec3f(0, 1, 0);
 
-    int ind = 0;
-    middle = Vec3f(sj->position.getValues()[0], this->mapCoordinator->getElevation(sj->position) +  jointHeight, sj->position.getValues()[1]);
-    float width = 0;
-    float mx, my;
+    middle = elevate(sj->position, jointHeight);
+    //float width = 0;
 
-    BOOST_FOREACH(JointPoints* jp, jointPoints) {
-        right = Vec3f(jp->right.getValues()[0], this->mapCoordinator->getElevation(jp->right) +jointHeight, jp->right.getValues()[1]);
-        left = Vec3f(jp->left.getValues()[0], this->mapCoordinator->getElevation(jp->left) + jointHeight, jp->left.getValues()[1]);
-        leftExt = Vec3f(jp->leftExt.getValues()[0], this->mapCoordinator->getElevation(jp->leftExt) + jointHeight, jp->leftExt.getValues()[1]);
+    vector<Vec3f> fan;
+    vector<Vec2f> fantex;
 
-        width = (left-right).length();
-        mx = 0.5;
-        my = ((right + (left-right)/2)-middle).length()/width;
-
-        pos.push_back(right); pos.push_back(left); pos.push_back(middle);
-
-        for (int j=0; j<3; j++) {
-            norms.push_back(Vec3f(0, 1, 0));
-            inds.push_back(ind++);
+    int i=0;
+    for (JointPoints* jp : jointPoints) {
+        fan.push_back( elevate(jp->right, jointHeight) );
+        fan.push_back( elevate(jp->left, jointHeight) );
+        fantex.push_back(Vec2f(0+i%2, i%2));
+        fantex.push_back(Vec2f(1-i%2, i%2));
+        if (Nsegs == 2 && jp->leftExt != _NULL2) {
+            fan.push_back( elevate(jp->leftExt, jointHeight) );
+            fantex.push_back(Vec2f(1-i%2, 0.5));
         }
-
-        if(sj->segmentIds.size() <= 2){
-            texs.push_back(Vec2f(0, 0));
-            texs.push_back(Vec2f(1, 0));
-            texs.push_back(Vec2f(mx, my));
-        } else {
-            texs.push_back(Vec2f(0, 1));
-            texs.push_back(Vec2f(1, 1));
-            texs.push_back(Vec2f(0.5, 1));
-        }
-
-
-        if (sj->segmentIds.size() <= 2) { //joint with only 1 || 2 connecting street segments
-            if ((leftExt-middle).length() < 3) {
-                for (int j=0; j<3; j++) {
-                    norms.push_back(Vec3f(0, 1, 0));
-                    inds.push_back(ind++);
-                }
-                pos.push_back(left);
-                pos.push_back(leftExt);
-                pos.push_back(middle);
-                texs.push_back(Vec2f(1, 0));
-                texs.push_back(Vec2f(1, (left-leftExt).length()/width));
-                texs.push_back(Vec2f(mx, my));
-            }
-            if (rightExt != _NULL && (rightExt-middle).length() < 3) {
-                for (int j=0; j<3; j++) {
-                    norms.push_back(Vec3f(0, 1, 0));
-                    inds.push_back(ind++);
-                }
-                pos.push_back(right);
-                pos.push_back(rightExt);
-                pos.push_back(middle);
-                texs.push_back(Vec2f(0, 0));
-                texs.push_back(Vec2f(0, (right-rightExt).length()/width));
-                texs.push_back(Vec2f(mx, my));
-            }
-        } else {   //joint with more than 2 connecting street segments
-            if(prevLeft != _NULL) {
-                for (int j=0; j<3; j++) {
-                    norms.push_back(Vec3f(0, 1, 0));
-                    inds.push_back(ind++);
-                }
-                pos.push_back(right); pos.push_back(prevLeft); pos.push_back(middle);
-                texs.push_back(Vec2f(1, 1)); texs.push_back(Vec2f(1, 1)); texs.push_back(Vec2f(0.5, 0.5));
-            }
-        }
-
-        if(firstRight == _NULL) firstRight = right;
-        if(firstLeft == _NULL) firstLeft = left;
-        rightExt = leftExt;
-        prevLeft = left;
+        i++;
     }
 
-    if(sj->segmentIds.size() <= 2){ //joint with only 1 || 2 connecting street segments
-        for (int j=0; j<3; j++) {
-            norms.push_back(Vec3f(0, 1, 0));
-            inds.push_back(ind++);
-        }
-        pos.push_back(firstRight);
-        pos.push_back(rightExt);
-        pos.push_back(middle);
-        texs.push_back(Vec2f(0, 0));
-        texs.push_back(Vec2f(0, (firstRight-rightExt).length()/width));
-        texs.push_back(Vec2f(mx, my));
-        //texs.push_back(Vec2f(1, 1)); texs.push_back(Vec2f(1, 1)); texs.push_back(Vec2f(0.5, 0.5));
-    } else {   //joint with more than 2 connecting street segments
-        for (int j=0; j<3; j++) {
-            norms.push_back(Vec3f(0, 1, 0));
-            inds.push_back(ind++);
-        }
-        pos.push_back(firstRight);
-        pos.push_back(prevLeft);
-        pos.push_back(middle);
-        texs.push_back(Vec2f(1, 1));
-        texs.push_back(Vec2f(1, 1));
-        texs.push_back(Vec2f(0.5, 0.5));
+    fan.push_back( elevate(jointPoints[0]->right, jointHeight) ); // close fan
+    fantex.push_back(Vec2f(0, 0));
+
+    for (uint i=1; i<fan.size(); i++) {
+        pushTriangle(fan[i], fan[i-1], middle, norm, geo);
+        float my = (Nsegs == 2) ? 0.5 : fantex[i][1];
+        geo->texs->addValue(fantex[i-1]);
+        geo->texs->addValue(fantex[i]);
+        geo->texs->addValue(Vec2f(0.5, my));
     }
 
+    return; // TODO
 
-
+    //float mx,my;
     if (sj->bridge) {
         rightExt = _NULL;
         firstRight = _NULL;
         jointHeight -= Config::get()->BRIDGE_SIZE;
 
-        middle = Vec3f(sj->position.getValues()[0], this->mapCoordinator->getElevation(sj->position) + jointHeight, sj->position.getValues()[1]);
-        BOOST_FOREACH(JointPoints* jp, jointPoints) {
-            right = Vec3f(jp->right.getValues()[0], this->mapCoordinator->getElevation(jp->right) + jointHeight, jp->right.getValues()[1]);
-            left = Vec3f(jp->left.getValues()[0], this->mapCoordinator->getElevation(jp->left) + jointHeight, jp->left.getValues()[1]);
-            leftExt = Vec3f(jp->leftExt.getValues()[0], this->mapCoordinator->getElevation(jp->leftExt) + jointHeight, jp->leftExt.getValues()[1]);
+        middle = elevate(sj->position, jointHeight);
+        for (JointPoints* jp : jointPoints) {
+            right = elevate(jp->right, jointHeight);
+            left = elevate(jp->left, jointHeight);
+            leftExt = elevate(jp->leftExt, jointHeight);
 
-            pos.push_back(right); pos.push_back(left); pos.push_back(middle);
-            inds.push_back(ind++); inds.push_back(ind++); inds.push_back(ind++);
-            norms.push_back(Vec3f(0, -1, 0)); norms.push_back(Vec3f(0, -1, 0)); norms.push_back(Vec3f(0, -1, 0));
-            texs.push_back(Vec2f(0, 1)); texs.push_back(Vec2f(1, 1)); texs.push_back(Vec2f(0.5, 0.5));
+            pushTriangle(right, left, middle, norm, geo);
+            geo->texs->addValue(Vec2f(0, 1)); geo->texs->addValue(Vec2f(1, 1)); geo->texs->addValue(Vec2f(0.5, 0.5));
 
             if ((leftExt-middle).length() < 3) {
-                pos.push_back(left); pos.push_back(leftExt); pos.push_back(middle);
-                inds.push_back(ind++); inds.push_back(ind++); inds.push_back(ind++);
-                norms.push_back(Vec3f(0, -1, 0)); norms.push_back(Vec3f(0, -1, 0)); norms.push_back(Vec3f(0, -1, 0));
-                texs.push_back(Vec2f(1, 1)); texs.push_back(Vec2f(1, 1)); texs.push_back(Vec2f(0.5, 0.5));
+                pushTriangle(left, leftExt, middle, norm, geo);
+                geo->texs->addValue(Vec2f(1, 1)); geo->texs->addValue(Vec2f(1, 1)); geo->texs->addValue(Vec2f(0.5, 0.5));
 
-                Vec3f normal = Vec3f(-(left-leftExt).getValues()[2], 0, (left-leftExt).getValues()[0]);
+                Vec3f normal = Vec3f(-(left-leftExt)[2], 0, (left-leftExt)[0]);
 
-                pos.push_back(left); pos.push_back(leftExt); pos.push_back(leftExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0));
-                inds.push_back(ind++); inds.push_back(ind++); inds.push_back(ind++);
-                norms.push_back(normal); norms.push_back(normal); norms.push_back(normal);
-                texs.push_back(Vec2f(0.5, 0.5)); texs.push_back(Vec2f(0.5, 0.5)); texs.push_back(Vec2f(0.5, 0.5));
+                pushTriangle(left, leftExt, leftExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0), normal, geo);
+                geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5));
 
-                pos.push_back(leftExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0)); pos.push_back(left+Vec3f(0, Config::get()->BRIDGE_SIZE, 0)); pos.push_back(left);
-                inds.push_back(ind++); inds.push_back(ind++); inds.push_back(ind++);
-                norms.push_back(normal); norms.push_back(normal); norms.push_back(normal);
-                texs.push_back(Vec2f(0.5, 0.5)); texs.push_back(Vec2f(0.5, 0.5)); texs.push_back(Vec2f(0.5, 0.5));
+                pushTriangle(leftExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0), left+Vec3f(0, Config::get()->BRIDGE_SIZE, 0), left, normal, geo);
+                geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5));
             }
 
             if (rightExt != _NULL && (rightExt-middle).length() < 3) {
-                pos.push_back(right); pos.push_back(rightExt); pos.push_back(middle);
-                inds.push_back(ind++); inds.push_back(ind++); inds.push_back(ind++);
-                norms.push_back(Vec3f(0, -1, 0)); norms.push_back(Vec3f(0, -1, 0)); norms.push_back(Vec3f(0, -1, 0));
-                texs.push_back(Vec2f(1, 1)); texs.push_back(Vec2f(1, 1)); texs.push_back(Vec2f(0.5, 0.5));
+                pushTriangle(right, rightExt, middle, norm, geo);
+                geo->texs->addValue(Vec2f(1, 1)); geo->texs->addValue(Vec2f(1, 1)); geo->texs->addValue(Vec2f(0.5, 0.5));
 
-                Vec3f normal = Vec3f((right-rightExt).getValues()[2], 0, -(right-rightExt).getValues()[0]);
+                Vec3f normal = Vec3f((right-rightExt)[2], 0, -(right-rightExt)[0]);
 
-                pos.push_back(right); pos.push_back(rightExt); pos.push_back(rightExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0));
-                inds.push_back(ind++); inds.push_back(ind++); inds.push_back(ind++);
-                norms.push_back(normal); norms.push_back(normal); norms.push_back(normal);
-                texs.push_back(Vec2f(0.5, 0.5)); texs.push_back(Vec2f(0.5, 0.5)); texs.push_back(Vec2f(0.5, 0.5));
+                pushTriangle(right, rightExt, rightExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0), normal, geo);
+                geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5));
 
-                pos.push_back(rightExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0)); pos.push_back(right+Vec3f(0, Config::get()->BRIDGE_SIZE, 0)); pos.push_back(right);
-                inds.push_back(ind++); inds.push_back(ind++); inds.push_back(ind++);
-                norms.push_back(normal); norms.push_back(normal); norms.push_back(normal);
-                texs.push_back(Vec2f(0.5, 0.5)); texs.push_back(Vec2f(0.5, 0.5)); texs.push_back(Vec2f(0.5, 0.5));
+                pushTriangle(rightExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0), right+Vec3f(0, Config::get()->BRIDGE_SIZE, 0), right, normal, geo);
+                geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5));
             } else firstRight = right;
 
             rightExt = leftExt;
         }
 
-        pos.push_back(firstRight); pos.push_back(rightExt); pos.push_back(middle);
-        inds.push_back(ind++); inds.push_back(ind++); inds.push_back(ind++);
-        norms.push_back(Vec3f(0, -1, 0)); norms.push_back(Vec3f(0, -1, 0)); norms.push_back(Vec3f(0, -1, 0));
-        texs.push_back(Vec2f(1, 1)); texs.push_back(Vec2f(1, 1)); texs.push_back(Vec2f(0.5, 0.5));
+        pushTriangle(firstRight, rightExt, middle, norm, geo);
+        geo->texs->addValue(Vec2f(1, 1)); geo->texs->addValue(Vec2f(1, 1)); geo->texs->addValue(Vec2f(0.5, 0.5));
 
-        Vec3f normal = Vec3f((firstRight-rightExt).getValues()[2], 0, -(firstRight-rightExt).getValues()[0]);
+        Vec3f normal = Vec3f((firstRight-rightExt)[2], 0, -(firstRight-rightExt)[0]);
 
-        pos.push_back(firstRight); pos.push_back(rightExt); pos.push_back(rightExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0));
-        inds.push_back(ind++); inds.push_back(ind++); inds.push_back(ind++);
-        norms.push_back(normal); norms.push_back(normal); norms.push_back(normal);
-        texs.push_back(Vec2f(0.5, 0.5)); texs.push_back(Vec2f(0.5, 0.5)); texs.push_back(Vec2f(0.5, 0.5));
+        pushTriangle(firstRight, rightExt, rightExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0), normal, geo);
+        geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5));
 
-        pos.push_back(rightExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0)); pos.push_back(firstRight+Vec3f(0, Config::get()->BRIDGE_SIZE, 0)); pos.push_back(firstRight);
-        inds.push_back(ind++); inds.push_back(ind++); inds.push_back(ind++);
-        norms.push_back(normal); norms.push_back(normal); norms.push_back(normal);
-        texs.push_back(Vec2f(0.5, 0.5)); texs.push_back(Vec2f(0.5, 0.5)); texs.push_back(Vec2f(0.5, 0.5));
+        pushTriangle(rightExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0), firstRight+Vec3f(0, Config::get()->BRIDGE_SIZE, 0), firstRight, normal, geo);
+        geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5));
     }
-
-    geom->create(GL_TRIANGLES, pos, norms, inds, texs);
-    return geom;
 }

@@ -7,12 +7,13 @@
 #include <map>
 
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/utils/VRFunctionFwd.h"
 
 
 using namespace std;
 OSG_BEGIN_NAMESPACE
 
-class VRGeometry;
+class VRStroke;
 class VRTransform;
 class VRDevice;
 class VRObject;
@@ -22,19 +23,19 @@ class path;
 
 class VRManipulator {
     private:
-        VRObject* anchor;
-        VRGeometry *gTX, *gTY, *gTZ;
-        VRGeometry *gRX, *gRY, *gRZ;
-        VRTransform* sel = 0;
+        VRObjectPtr anchor;
+        VRGeometryPtr gTX, gTY, gTZ;
+        VRGeometryPtr gRX, gRY, gRZ;
+        VRTransformPtr sel = 0;
 
         void setup() {
-            anchor = new VRObject("manipulator");
-            gTX = new VRGeometry("gTX");
-            gTY = new VRGeometry("gTY");
-            gTZ = new VRGeometry("gTZ");
-            gRX = new VRGeometry("gRX");
-            gRY = new VRGeometry("gRY");
-            gRZ = new VRGeometry("gRZ");
+            anchor = VRObject::create("manipulator");
+            gTX = VRGeometry::create("gTX");
+            gTY = VRGeometry::create("gTY");
+            gTZ = VRGeometry::create("gTZ");
+            gRX = VRGeometry::create("gRX");
+            gRY = VRGeometry::create("gRY");
+            gRZ = VRGeometry::create("gRZ");
             gTX->setPrimitive("Box", "0.1 0.02 0.02 1 1 1");
             gTY->setPrimitive("Box", "0.02 0.1 0.02 1 1 1");
             gTZ->setPrimitive("Box", "0.02 0.02 0.1 1 1 1");
@@ -57,7 +58,7 @@ class VRManipulator {
             setup();
         }
 
-        void handle(VRGeometry* g) {
+        void handle(VRGeometryPtr g) {
             if (sel == 0) return;
             sel->toggleTConstraint(false);
             sel->toggleRConstraint(false);
@@ -79,7 +80,7 @@ class VRManipulator {
             if (g == gRX || g == gRY || g == gRZ) sel->setRConstraint(Vec3i(0,0,0));
         }
 
-        void manipulate(VRTransform* t) {
+        void manipulate(VRTransformPtr t) {
             t->addChild(anchor);
             sel = t;
         }
@@ -106,35 +107,41 @@ class VRPathtool {
     private:
         struct entry {
             path* p = 0;
-            map<VRGeometry*, int> handles;
-            VRGeometry* line = 0;
-            VRObject* anchor = 0;
+            int resolution = 10;
+            map<VRGeometryPtr, int> handles;
+            VRStrokePtr line = 0;
+            VRObjectPtr anchor = 0;
         };
 
         map<path*, entry*> paths;
-        map<VRGeometry*, entry*> handles_dict;
+        map<VRGeometryPtr, entry*> handles_dict;
 
+        VRUpdatePtr updatePtr;
         VRManipulator* manip = 0;
         VRExtruder* ext = 0;
 
-        VRGeometry* newHandle();
-        void updateHandle(VRGeometry* handle);
+        VRGeometryPtr customHandle;
+        VRGeometryPtr newHandle();
+        void updateHandle(VRGeometryPtr handle);
         void updateDevs();
 
     public:
         VRPathtool();
 
-        path* newPath(VRDevice* dev, VRObject* anchor);
-        void extrude(VRDevice* dev, path* p);
+        path* newPath(VRDevice* dev, VRObjectPtr anchor, int resolution = 10);
+        VRGeometryPtr extrude(VRDevice* dev, path* p);
         void remPath(path* p);
 
-        void addPath(path* p, VRObject* anchor);
-        void setVisible(bool b);
+        void addPath(path* p, VRObjectPtr anchor);
+        void setVisible(bool handles, bool lines);
+        void setHandleGeometry(VRGeometryPtr geo);
+        void clear(path* p);
 
         vector<path*> getPaths();
-        vector<VRGeometry*> getHandles(path* p);
+        vector<VRGeometryPtr> getHandles(path* p);
+        VRStrokePtr getStroke(path* p);
 
-        void select(VRGeometry* handle);
+        void select(VRGeometryPtr handle);
         void update();
 };
 

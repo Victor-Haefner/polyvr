@@ -5,8 +5,7 @@
 #include <map>
 
 #include "core/objects/VRAnimation.h"
-
-template<class T> class VRFunction;
+#include "core/utils/VRFunctionFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -16,7 +15,7 @@ class VRAnimationManager {
         map<string, VRAnimation*> anim_map;
 
     protected:
-        VRFunction<int>* updateAnimationsFkt;
+        shared_ptr<VRFunction<int> > updateAnimationsFkt;
         void updateAnimations();
 
     public:
@@ -26,7 +25,7 @@ class VRAnimationManager {
         void remAnimation(VRAnimation* anim);
 
         template<typename T>
-        VRAnimation* addAnimation(float duration, float offset, VRFunction<T>* fkt, T start, T end, bool loop = false);
+        VRAnimation* addAnimation(float duration, float offset, weak_ptr< VRFunction<T> > fkt, T start, T end, bool loop = false);
 };
 
 OSG_END_NAMESPACE;

@@ -18,6 +18,7 @@
 #include <string>
 #include <iostream>
 #include <boost/filesystem.hpp>
+#include <boost/bind.hpp>
 
 #include "core/scene/VRSceneLoader.h"
 #include "core/scene/VRSceneManager.h"
@@ -163,8 +164,8 @@ void VRDemos::on_lock_toggle(demoEntry* e) {
     else e->butLock->add(*e->imgUnlock);
     e->butLock->show_all();
 
-    if (VRSceneManager::getCurrent())
-        VRSceneManager::getCurrent()->setFlag("write_protected", e->write_protected);
+    auto scene = VRSceneManager::getCurrent();
+    if (scene) scene->setFlag("write_protected", e->write_protected);
 }
 
 void VRDemos::updateTable(string t) {
@@ -310,7 +311,8 @@ void VRDemos::on_advanced_start() {
     if (current_demo->running) toggleDemo(current_demo); // close demo if it is running
     toggleDemo(current_demo); // start demo
 
-    if (no_scripts) VRSceneManager::getCurrent()->disableAllScripts();
+    auto scene = VRSceneManager::getCurrent();
+    if (no_scripts && scene) scene->disableAllScripts();
 }
 
 void VRDemos::on_diag_save_clicked() {
@@ -321,7 +323,7 @@ void VRDemos::on_diag_save_clicked() {
 }
 
 void VRDemos::on_saveas_clicked() {
-    VRScene* scene = VRSceneManager::getCurrent();
+    auto scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
     VRGuiFile::gotoPath( scene->getWorkdir() );
     VRGuiFile::setFile( scene->getFile() );
@@ -366,7 +368,7 @@ void VRDemos::on_new_clicked() {
 }
 
 void VRDemos::update() {
-    VRScene* scene = VRSceneManager::getCurrent();
+    auto scene = VRSceneManager::getCurrent();
     if (scene == 0) {
         if (current_demo) {
             current_demo->running = false;
@@ -401,7 +403,8 @@ void VRDemos::update() {
 
 void VRDemos::toggleDemo(demoEntry* e) {
     bool run = !e->running;
-    VRSceneManager::get()->removeScene(VRSceneManager::getCurrent());
+    auto scene = VRSceneManager::getCurrent();
+    VRSceneManager::get()->removeScene(scene);
     if (run) VRSceneManager::get()->loadScene(e->path, e->write_protected);
 }
 

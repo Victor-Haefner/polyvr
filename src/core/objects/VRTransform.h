@@ -1,7 +1,10 @@
 #ifndef VR3DENTITY_H_INCLUDED
 #define VR3DENTITY_H_INCLUDED
 
+#include "core/objects/VRObjectFwd.h"
 #include "object/VRObject.h"
+#include "core/utils/VRFunctionFwd.h"
+#include "core/math/pose.h"
 #include <OpenSG/OSGMatrix.h>
 #include <OpenSG/OSGLine.h>
 #include <OpenSG/OSGFieldContainerFields.h>
@@ -25,42 +28,43 @@ class VRTransform : public VRObject {
         };
 
     protected:
-        doubleBuffer* dm;
+        doubleBuffer* dm = 0;
         TransformRecPtr t;//OSG Transform
-        bool noBlt;
-        VRPhysics* physics;
+        bool noBlt = false;
+        VRPhysics* physics = 0;
+        VRAnimPtr pathAnimPtr;
 
         unsigned int change_time_stamp = 0;
         unsigned int wchange_time_stamp = 0;
         unsigned int apply_time_stamp = 0;
-        bool change;
-        bool fixed;
-        bool cam_invert_z;
+        bool change = false;
+        bool fixed = true;
+        bool cam_invert_z = false;
         int orientation_mode = OM_DIR;
 
-        Vec3f _at;
+        Vec3f _at = Vec3f(0,0,-1);
         Vec3f _from;
-        Vec3f _up;
-        Vec3f _scale;
+        Vec3f _up = Vec3f(0,1,0);
+        Vec3f _scale = Vec3f(1,1,1);
         Vec3f _euler;
         NodeRecPtr coords;
         NodeRecPtr translator;
 
-        int frame;
+        int frame = 0;
         Matrix WorldTransformation;
 
         Matrix constraints_reference;
-        bool doTConstraint;
-        bool doRConstraint;
-        bool tConPlane;
-        Vec3f tConstraint;
+        bool doTConstraint = false;
+        bool doRConstraint = false;
+        bool tConPlane = true;
+        Vec3f tConstraint = Vec3f(0,1,0);
         Vec3i rConstraint;
 
         bool held = false;//drag n drop
-        VRObject* old_parent = 0;
+        VRObjectPtr old_parent = 0;
         int old_child_id = 0;
 
-        VRObject* copy(vector<VRObject*> children);
+        VRObjectPtr copy(vector<VRObjectPtr> children);
 
         void computeMatrix();
 
@@ -84,8 +88,11 @@ class VRTransform : public VRObject {
         VRTransform(string name = "");
         virtual ~VRTransform();
 
-        static list<VRTransform* > changedObjects;
-        static list<VRTransform* > dynamicObjects;
+        static VRTransformPtr create(string name);
+        VRTransformPtr ptr();
+
+        static list< VRTransformWeakPtr > changedObjects;
+        static list< VRTransformWeakPtr > dynamicObjects;
 
         uint getLastChange();
         bool changedNow();
@@ -97,6 +104,7 @@ class VRTransform : public VRObject {
         Vec3f getAt();
         Vec3f getUp();
         Vec3f getScale();
+        pose getPose();
         Vec3f getEuler();
         void getMatrix(Matrix& _m);
         Matrix getMatrix();
@@ -109,6 +117,7 @@ class VRTransform : public VRObject {
         void setScale(Vec3f s);
         void setOrientation(Vec3f at, Vec3f up);
         void setEuler(Vec3f euler);
+        void setPose(pose p);
         void setPose(Vec3f from, Vec3f dir, Vec3f up);
         void setMatrix(Matrix _m);
 
@@ -116,6 +125,7 @@ class VRTransform : public VRObject {
         Matrix getWorldMatrix(bool parentOnly = false);
         Vec3f getWorldPosition(bool parentOnly = false);
         Vec3f getWorldDirection(bool parentOnly = false);
+        Vec3f getWorldUp(bool parentOnly = false);
 
         void setWorldMatrix(Matrix _m);
         void setWorldPosition(Vec3f pos);
@@ -139,18 +149,18 @@ class VRTransform : public VRObject {
         void zoom(float d);
         void move(float d);
 
-        void drag(VRTransform* new_parent);
+        void drag(VRTransformPtr new_parent);
         void drop();
-        void rebaseDrag(VRObject* new_parent);
-        VRObject* getDragParent();
+        void rebaseDrag(VRObjectPtr new_parent);
+        VRObjectPtr getDragParent();
 
         /** Cast a ray in world coordinates from the object in its local coordinates, -z axis defaults **/
-        Line castRay(VRObject* obj = 0, Vec3f dir = Vec3f(0,0,-1));
+        Line castRay(VRObjectPtr obj = 0, Vec3f dir = Vec3f(0,0,-1));
 
         map<string, VRAnimation*> animations;
         void addAnimation(VRAnimation* animation);
         vector<VRAnimation*> getAnimations();
-        void startPathAnimation(path* p, float time, float offset, bool redirect = true, bool loop = false);
+        VRAnimation* startPathAnimation(path* p, float time, float offset, bool redirect = true, bool loop = false);
         void stopAnimation();
 
         /** Print the position of the object in local && world coords **/

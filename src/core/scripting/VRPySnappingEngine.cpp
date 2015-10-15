@@ -61,7 +61,7 @@ PyObject* VRPySnappingEngine::remLocalRules(VRPySnappingEngine* self, PyObject* 
     if (self->obj == 0) { PyErr_SetString(err, "VRPySnappingEngine::remLocalRules - Object is invalid"); return NULL; }
     VRPyTransform *o;
     if (! PyArg_ParseTuple(args, "O", &o)) return NULL;
-    self->obj->remLocalRules( o->obj );
+    self->obj->remLocalRules( o->objPtr );
     Py_RETURN_TRUE;
 }
 
@@ -69,7 +69,7 @@ PyObject* VRPySnappingEngine::addObjectAnchor(VRPySnappingEngine* self, PyObject
     if (self->obj == 0) { PyErr_SetString(err, "VRPySnappingEngine::addObjectAnchor - Object is invalid"); return NULL; }
     VRPyTransform *o, *a;
     if (! PyArg_ParseTuple(args, "OO", &o, &a)) return NULL;
-    self->obj->addObjectAnchor( o->obj, a->obj );
+    self->obj->addObjectAnchor( o->objPtr, a->objPtr );
     Py_RETURN_TRUE;
 }
 
@@ -77,7 +77,7 @@ PyObject* VRPySnappingEngine::clearObjectAnchors(VRPySnappingEngine* self, PyObj
     if (self->obj == 0) { PyErr_SetString(err, "VRPySnappingEngine::clearObjectAnchors - Object is invalid"); return NULL; }
     VRPyTransform *o;
     if (! PyArg_ParseTuple(args, "O", &o )) return NULL;
-    self->obj->clearObjectAnchors( o->obj );
+    self->obj->clearObjectAnchors( o->objPtr );
     Py_RETURN_TRUE;
 }
 
@@ -94,7 +94,7 @@ PyObject* VRPySnappingEngine::addRule(VRPySnappingEngine* self, PyObject* args) 
     float d, w;
     VRPyTransform* l;
     if (! PyArg_ParseTuple(args, "OOOOffO", &t, &o, &pt, &po, &d, &w, &l)) return NULL;
-    OSG::VRTransform* trans = isNone((PyObject*)l) ? 0 : l->obj;
+    OSG::VRTransformPtr trans = isNone((PyObject*)l) ? 0 : l->objPtr;
     auto _t = self->obj->typeFromStr( PyString_AsString(t) );
     auto _o = self->obj->typeFromStr( PyString_AsString(o) );
     int r = self->obj->addRule(_t, _o, PyToLine(pt), PyToLine(po), d, w, trans);
@@ -106,7 +106,7 @@ PyObject* VRPySnappingEngine::remObject(VRPySnappingEngine* self, PyObject* args
     VRPyTransform* obj = 0;
     if (! PyArg_ParseTuple(args, "O", &obj)) return NULL;
 
-    if (obj->obj) self->obj->remObject(obj->obj);
+    if (obj->obj) self->obj->remObject(obj->objPtr);
     Py_RETURN_TRUE;
 }
 
@@ -115,7 +115,7 @@ PyObject* VRPySnappingEngine::addTree(VRPySnappingEngine* self, PyObject* args) 
     VRPyObject* obj = 0;
     if (! PyArg_ParseTuple(args, "O", &obj)) return NULL;
 
-    if (obj->obj) self->obj->addTree(obj->obj);
+    if (obj->obj) self->obj->addTree(obj->objPtr);
     Py_RETURN_TRUE;
 }
 
@@ -124,7 +124,7 @@ PyObject* VRPySnappingEngine::addObject(VRPySnappingEngine* self, PyObject* args
     VRPyTransform* obj = 0;
     if (! PyArg_ParseTuple(args, "O", &obj)) return NULL;
 
-    if (obj->obj) self->obj->addObject(obj->obj);
+    if (obj->obj) self->obj->addObject(obj->objPtr);
     Py_RETURN_TRUE;
 }
 

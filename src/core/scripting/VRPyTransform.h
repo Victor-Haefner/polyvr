@@ -17,9 +17,11 @@ struct VRPyTransform : VRPyBaseT<OSG::VRTransform> {
     static PyObject* getFrom(VRPyTransform* self);
     static PyObject* getAt(VRPyTransform* self);
     static PyObject* getWorldDir(VRPyTransform* self);
+    static PyObject* getWorldUp(VRPyTransform* self);
     static PyObject* getDir(VRPyTransform* self);
     static PyObject* getUp(VRPyTransform* self);
     static PyObject* getScale(VRPyTransform* self);
+    static PyObject* getPose(VRPyTransform* self);
 
     static PyObject* setPose(VRPyTransform* self, PyObject* args);
     static PyObject* setWFrom(VRPyTransform* self, PyObject* args);
@@ -27,13 +29,17 @@ struct VRPyTransform : VRPyBaseT<OSG::VRTransform> {
     static PyObject* setFrom(VRPyTransform* self, PyObject* args);
     static PyObject* setAt(VRPyTransform* self, PyObject* args);
     static PyObject* setDir(VRPyTransform* self, PyObject* args);
+    static PyObject* setEuler(VRPyTransform* self, PyObject* args);
     static PyObject* setUp(VRPyTransform* self, PyObject* args);
     static PyObject* setScale(VRPyTransform* self, PyObject* args);
+
+    static PyObject* drag(VRPyTransform* self, PyObject* args);
+    static PyObject* drop(VRPyTransform* self);
+    static PyObject* castRay(VRPyTransform* self, PyObject* args);
 
     static PyObject* duplicate(VRPyTransform* self);
     static PyObject* physicalize(VRPyTransform* self, PyObject *args);
     static PyObject* setGhost(VRPyTransform* self, PyObject *args);
-    static PyObject* setSoft(VRPyTransform* self, PyObject *args);
     static PyObject* setPhysicsConstraintTo(VRPyTransform* self, PyObject *args);
     static PyObject* setMass(VRPyTransform* self, PyObject *args);
     static PyObject* setGravity(VRPyTransform* self, PyObject *args);
@@ -44,6 +50,7 @@ struct VRPyTransform : VRPyBaseT<OSG::VRTransform> {
     static PyObject* getCollisions(VRPyTransform* self);
     static PyObject* setPhysicsActivationMode(VRPyTransform* self, PyObject *args);
     static PyObject* applyImpulse(VRPyTransform* self, PyObject *args);
+    static PyObject* applyTorqueImpulse(VRPyTransform* self, PyObject *args);
     static PyObject* applyForce(VRPyTransform* self, PyObject *args);
     static PyObject* applyTorque(VRPyTransform* self, PyObject *args);
     static PyObject* applyConstantForce(VRPyTransform* self, PyObject *args);
@@ -54,8 +61,8 @@ struct VRPyTransform : VRPyBaseT<OSG::VRTransform> {
     static PyObject* deletePhysicsConstraints(VRPyTransform* self, PyObject* args);
     static PyObject* setDamping(VRPyTransform* self, PyObject* args);
     static PyObject* applyChange(VRPyTransform* self);
+    static PyObject* setCenterOfMass(VRPyTransform* self, PyObject* args);
 
-    static PyObject* setPickable(VRPyTransform* self, PyObject* args);
     static PyObject* setPlaneConstraints(VRPyTransform* self, PyObject* args);
     static PyObject* setAxisConstraints(VRPyTransform* self, PyObject* args);
     static PyObject* setRotationConstraints(VRPyTransform* self, PyObject* args);

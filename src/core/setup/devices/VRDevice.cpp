@@ -7,6 +7,16 @@
 
 OSG_BEGIN_NAMESPACE;
 
+VRDevice::VRDevice(string _type) : VRAvatar(_type) {
+    type = _type;
+    setName(_type);
+
+    store("type", &type);
+    store("name", &name);
+}
+
+VRDevice::~VRDevice() {}
+
 VRSignal* VRDevice::signalExist(int key, int state) {
     stringstream ss;
     ss << "on_" << name << "_" << key << "_" << state;
@@ -55,18 +65,6 @@ void VRDevice::updateSignals() {
     for(uint i=0; i<activatedSignals.size(); i++) {
         activatedSignals[i]->trigger<VRDevice>();
     }
-}
-
-VRDevice::VRDevice(string _type) : VRAvatar(_type) {
-    type = _type;
-    setName(_type);
-
-    store("type", &type);
-    store("name", &name);
-}
-
-VRDevice::~VRDevice() {
-    //activatedSignals;
 }
 
 void VRDevice::clearSignals() {
@@ -141,8 +139,8 @@ int VRDevice::b_state(int key) { if (BStates.count(key)) return BStates[key]; el
 void VRDevice::s_state(int key, float* s_state) { if (SStates.count(key)) *s_state = SStates[key];}
 float VRDevice::s_state(int key) { if (SStates.count(key)) return SStates[key]; else return 0; }
 
-void VRDevice::setTarget(VRTransform* e) { target = e; }
-VRTransform* VRDevice::getTarget() { return target; }
+void VRDevice::setTarget(VRTransformPtr e) { target = e; }
+VRTransformPtr VRDevice::getTarget() { return target; }
 
 map<string, VRSignal*> VRDevice::getSignals() { return callbacks; }
 VRSignal* VRDevice::getSignal(string name) { if (callbacks.count(name)) return callbacks[name]; else return 0; }

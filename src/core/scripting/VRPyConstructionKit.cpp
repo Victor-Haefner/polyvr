@@ -61,7 +61,7 @@ PyObject* VRPyConstructionKit::getSelector(VRPyConstructionKit* self) { return V
 
 PyObject* VRPyConstructionKit::breakup(VRPyConstructionKit* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyConstructionKit::breakup - Object is invalid"); return NULL; }
-    OSG::VRGeometry* geo = 0;
+    OSG::VRGeometryPtr geo = 0;
     if (!VRPyGeometry::parse(args, &geo)) return NULL;
     self->obj->breakup(geo);
     Py_RETURN_TRUE;
@@ -76,16 +76,16 @@ PyObject* VRPyConstructionKit::addAnchorType(VRPyConstructionKit* self, PyObject
 
 PyObject* VRPyConstructionKit::addObjectAnchor(VRPyConstructionKit* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyConstructionKit::addObjectAnchor - Object is invalid"); return NULL; }
-    PyObject *o, *p; int a; float d;
-    if (! PyArg_ParseTuple(args, "OiOf", &o, &a, &p, &d)) return NULL;
-    VRPyGeometry* g = (VRPyGeometry*)o;
-    self->obj->addObjectAnchor(g->obj, a, parseVec3fList(p), d);
-    Py_RETURN_TRUE;
+    VRPyGeometry* g; PyObject* p;
+    int a; float d;
+    if (! PyArg_ParseTuple(args, "OiOf", &g, &a, &p, &d)) return NULL;
+    auto anc = self->obj->addObjectAnchor(g->objPtr, a, parseVec3fList(p), d);
+    return VRPyGeometry::fromSharedPtr(anc);
 }
 
 PyObject* VRPyConstructionKit::addObject(VRPyConstructionKit* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyConstructionKit::addObject - Object is invalid"); return NULL; }
-    OSG::VRGeometry* geo = 0;
+    OSG::VRGeometryPtr geo = 0;
     if (!VRPyGeometry::parse(args, &geo)) return NULL;
     self->obj->addObject(geo);
     Py_RETURN_TRUE;

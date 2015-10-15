@@ -6,6 +6,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "core/objects/VRObjectFwd.h"
 #include "core/utils/VRStorage.h"
 #include "core/utils/VRName.h"
 
@@ -35,7 +36,7 @@ class VRNavPreset : public VRName {
     private:
         vector<VRNavBinding> bindings;
         VRDevice* dev;
-        VRTransform* target;
+        VRTransformPtr target;
         bool active;
         Vec2f speed;
 
@@ -46,7 +47,7 @@ class VRNavPreset : public VRName {
         void updateBinding(VRNavBinding& b);
 
         void setDevice(VRDevice* _dev);
-        void setTarget(VRTransform* _target);
+        void setTarget(VRTransformPtr _target);
         void setSpeed(float vt, float vr);
 
         void activate();
@@ -84,10 +85,10 @@ class VRNavigator_base : public VRStorage {
 
 class VRNavigator : public VRNavigator_base {
     private:
-        VRTransform* target;
+        VRTransformPtr target;
         VRDevice* device;
 
-        vector<VRTransform* > walk_surfaces;
+        vector<VRTransformPtr > walk_surfaces;
         static float clip_dist_down;
 
         // callbacks
@@ -104,12 +105,12 @@ class VRNavigator : public VRNavigator_base {
         ~VRNavigator();
 
         // init presets
-        void initWalk(VRTransform* target, VRDevice* dev);
-        void initOrbit(VRTransform* target, VRDevice* dev);
-        void initOrbit2D(VRTransform* target, VRDevice* dev);
-        void initFlyOrbit(VRTransform* target, VRDevice* dev);
-        void initFlyWalk(VRTransform* target, VRDevice* dev);
-        void initHydraFly(VRTransform* target, VRDevice* dev);
+        void initWalk(VRTransformPtr target, VRDevice* dev);
+        void initOrbit(VRTransformPtr target, VRDevice* dev);
+        void initOrbit2D(VRTransformPtr target, VRDevice* dev);
+        void initFlyOrbit(VRTransformPtr target, VRDevice* dev);
+        void initFlyWalk(VRTransformPtr target, VRDevice* dev);
+        void initHydraFly(VRTransformPtr target, VRDevice* dev);
 
         void update();
 };

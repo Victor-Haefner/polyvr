@@ -4,6 +4,7 @@
 #include <OpenSG/OSGTextureObjChunk.h>
 #include <OpenSG/OSGGeometry.h>
 #include <OpenSG/OSGGeoProperties.h>
+#include <OpenSG/OSGSimpleMaterial.h>
 
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
@@ -49,13 +50,13 @@ void BlockWorld::createSphere(int r, Vec3i p0) {
 
 // mesh methods
 
-VRMaterial* BlockWorld::initMaterial(string texture) {
+VRMaterialPtr BlockWorld::initMaterial(string texture) {
     if (materials.count(texture) == 1) return materials[texture];
 
     string wdir = VRSceneManager::get()->getOriginalWorkdir();
 
     //simple material
-    VRMaterial* mat = new VRMaterial("cavekeeper_mat");
+    VRMaterialPtr mat = VRMaterial::create("cavekeeper_mat");
     mat->setDiffuse(Color3f(0.8,0.5,0.1));
     mat->readFragmentShader(wdir+"/shader/Blockworld.fp");
     mat->readVertexShader(wdir+"/shader/Blockworld.vp");
@@ -88,7 +89,7 @@ VRMaterial* BlockWorld::initMaterial(string texture) {
     return mat;
 }
 
-VRGeometry* BlockWorld::createChunk(vector<CKOctree::element*>& elements) {
+VRGeometryPtr BlockWorld::createChunk(vector<CKOctree::element*>& elements) {
 
     GeometryRecPtr g = Geometry::create();
     GeoUInt8PropertyRecPtr      Type = GeoUInt8Property::create();
@@ -135,18 +136,18 @@ VRGeometry* BlockWorld::createChunk(vector<CKOctree::element*>& elements) {
 
     g->setMaterial(Mat);
 
-    VRGeometry* geo = new VRGeometry("chunk");
+    VRGeometryPtr geo = VRGeometry::create("chunk");
     geo->setMesh(g);
     return geo;
 }
 
-VRGeometry* BlockWorld::initChunk() {
+VRGeometryPtr BlockWorld::initChunk() {
 	vector<CKOctree::element*>* elements = new vector<CKOctree::element*>();
 	VRFunction<CKOctree::element*>* fkt = new VRFunction<CKOctree::element*>("blockworld_appendtovector", boost::bind(&BlockWorld::appendToVector, this, elements, _1));
     tree->traverse(fkt);
     delete fkt;
 
-    VRGeometry* chunk = createChunk(*elements);
+    VRGeometryPtr chunk = createChunk(*elements);
     delete elements;
 
     chunk->setMaterial(initMaterial("dirt"));
@@ -161,45 +162,40 @@ void BlockWorld::appendToVector(vector<CKOctree::element*>* elements, CKOctree::
 // update methods
 
 void BlockWorld::updateShaderCamPos() {
-    //VRTransform* e = VRSceneManager::get()->getTrackerUser(); // TODO
-    VRTransform* e = 0;
-    if (e == 0) e = VRSceneManager::getCurrent()->getActiveCamera();
+    //VRTransformPtr e = VRSceneManager::get()->getTrackerUser(); // TODO
+    VRTransformPtr e = 0;
+    auto scene = VRSceneManager::getCurrent();
+    if (e == 0 && scene) e = scene->getActiveCamera();
     Vec4f cam_pos = Vec4f(e->getWorldPosition());
 
     for (auto m : materials) m.second->setShaderParameter("cam_pos", cam_pos);
 }
 
 BlockWorld::BlockWorld() {
-    anchor = new VRObject("cavekeeper_anchor");
-    anchor->addAttachment("dynamicaly_generated", 0);
+    anchor = VRObject::create("cavekeeper_anchor");
+    anchor->setPersistency(0);
     anchor->addAttachment("global", 0);
 }
 
-BlockWorld::~BlockWorld() {
-    delete anchor;
-    delete tree;
-}
+BlockWorld::~BlockWorld() {}
 
 void BlockWorld::initWorld() {
 	tree = new CKOctree();
     createSphere(6, Vec3i(0,0,0));
 
     // TODO ?
-    VRScene* scene = VRSceneManager::getCurrent();
-    VRFunction<int>* ufkt = new VRFunction<int>("blockworld_update", boost::bind(&BlockWorld::updateShaderCamPos, this));
-    scene->addUpdateFkt(ufkt, 1);
+    auto scene = VRSceneManager::getCurrent();
+    updatePtr = VRFunction<int>::create("blockworld_update", boost::bind(&BlockWorld::updateShaderCamPos, this));
+    if (scene) scene->addUpdateFkt(updatePtr, 1);
 
     chunks[0] = initChunk();
     anchor->addChild(chunks[0]);
 }
 
-VRObject* BlockWorld::getAnchor() { return anchor; }
+VRObjectPtr BlockWorld::getAnchor() { return anchor; }
 
 void BlockWorld::redraw(int chunk_id) {
-    VRGeometry* chunk = chunks[chunk_id];
-
-    delete chunk;
-
+    if (chunks.count(chunk_id)) chunks[chunk_id]->destroy();
     chunks[chunk_id] = initChunk();
     anchor->addChild(chunks[chunk_id]);
 }
@@ -265,7 +261,7 @@ void CaveKeeper::dig(VRDevice* dev) {
     }
 }
 
-void CaveKeeper::place(VRDevice* dev, string obj, VRTransform* geo) {
+void CaveKeeper::place(VRDevice* dev, string obj, VRTransformPtr geo) {
     if (dev == 0) return;
 
     Line ray = dev->getBeacon()->castRay();
@@ -276,11 +272,11 @@ void CaveKeeper::place(VRDevice* dev, string obj, VRTransform* geo) {
 
         if (obj == "lantern") placeLight(p);
 
-        geo = (VRTransform*)geo->duplicate(true);
+        geo = static_pointer_cast<VRTransform>( geo->duplicate(true) );
         geo->setVisible(true);
         geo->setFrom(p);
         geo->setAt(e->pos);
-        geo->addAttachment("dynamicaly_generated", 0);
+        geo->setPersistency(0);
 
         redraw();
     }

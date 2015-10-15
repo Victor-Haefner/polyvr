@@ -6,43 +6,42 @@ using namespace std;
 
 VRCameraManager::VRCameraManager() {
     cout << "Init VRCameraManager\n";
-    active=-1;
 }
 
-VRCameraManager::~VRCameraManager() {
-    // cameras get destroyed from the tree
-    //for (int i=0; i<cameras.size(); i++) delete cameras[i];
-}
+VRCameraManager::~VRCameraManager() {;}
 
-VRTransform* VRCameraManager::addCamera(string name) {
-    VRCamera* c = new VRCamera(name);
-    cameras.push_back(c);
-    setActiveCamera(cameras.size()-1);
-
+VRTransformPtr VRCameraManager::addCamera(string name) {
+    VRCameraPtr c = VRCamera::create(name);
+    setMActiveCamera(c->getName());
     return c;
 }
 
-void VRCameraManager::addCamera(VRCamera* cam) {
-    cameras.push_back(cam);
+VRCameraPtr VRCameraManager::getCamera(int ID) {
+    int i=0;
+    for (auto c : VRCamera::getAll()) { if (i == ID) return c.lock(); i++; }
+    return 0;
 }
 
-VRCamera* VRCameraManager::getCamera(int ID) {
-    if (ID < 0 || ID > (int)cameras.size()) return 0;
-    return cameras[ID];
+void VRCameraManager::setMActiveCamera(string cam) {
+    for (auto c : VRCamera::getAll()) {
+        if (auto sp = c.lock()) if (sp->getName() == cam) active = sp;
+    }
 }
 
-void VRCameraManager::setActiveCamera(int ID) {
-    if (ID < 0 || ID > (int)cameras.size()) return;
-    active = ID;
+VRCameraPtr VRCameraManager::getActiveCamera() {
+    return active.lock();
 }
 
-VRCamera* VRCameraManager::getActiveCamera() {
-    if (active < 0 || active > (int)cameras.size()) return 0;
-    return cameras[active];
+int VRCameraManager::getActiveCameraIndex() {
+    int i=0;
+    for (auto c : VRCamera::getAll()) { if (c.lock() == active.lock()) return i; i++; }
+    return -1;
 }
 
-int VRCameraManager::getActiveCameraIndex() { return active; }
-vector<VRCamera*> VRCameraManager::getCameras() { return cameras; }
-vector<string> VRCameraManager::getCameraNames() { vector<string> res; for(auto c : cameras) res.push_back(c->getName()); return res; }
+vector<string> VRCameraManager::getCameraNames() {
+    vector<string> res;
+    for(auto c : VRCamera::getAll()) { if (auto sp = c.lock()) res.push_back(sp->getName()); }
+    return res;
+}
 
 OSG_END_NAMESPACE;

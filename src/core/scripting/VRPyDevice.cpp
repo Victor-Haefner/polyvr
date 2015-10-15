@@ -66,19 +66,20 @@ PyMethodDef VRPyDevice::methods[] = {
     {"getMessage", (PyCFunction)VRPyDevice::getMessage, METH_NOARGS, "Get device received message." },
     {"getType", (PyCFunction)VRPyDevice::getType, METH_NOARGS, "Get device type." },
     {"setDnD", (PyCFunction)VRPyDevice::setDnD, METH_VARARGS, "Set drag && drop." },
-    {"intersect", (PyCFunction)VRPyDevice::intersect, METH_NOARGS, "Intersects the scene" },
+    {"intersect", (PyCFunction)VRPyDevice::intersect, METH_NOARGS, "Intersects the scene - bool intersect()\n  Returns True if intersected something, else False." },
     {"getIntersected", (PyCFunction)VRPyDevice::getIntersected, METH_NOARGS, "Get device intersected object." },
     {"getIntersection", (PyCFunction)VRPyDevice::getIntersection, METH_NOARGS, "Get device intersection point." },
     {"getIntersectionNormal", (PyCFunction)VRPyDevice::getIntersectionNormal, METH_NOARGS, "Get normal at intersection point." },
     {"getIntersectionUV", (PyCFunction)VRPyDevice::getIntersectionUV, METH_NOARGS, "Get uv at intersection point." },
+    {"getIntersectionTriangle", (PyCFunction)VRPyDevice::getIntersectionTriangle, METH_NOARGS, "Get triangle at intersection point - i,j,k dev.getIntersectionTriangle()" },
     {"addIntersection", (PyCFunction)VRPyDevice::addIntersection, METH_VARARGS, "Add device intersection node." },
     {"remIntersection", (PyCFunction)VRPyDevice::remIntersection, METH_VARARGS, "Remove device intersection node." },
     {"getDragged", (PyCFunction)VRPyDevice::getDragged, METH_NOARGS, "Get dragged object." },
     {"getDragGhost", (PyCFunction)VRPyDevice::getDragGhost, METH_NOARGS, "Get drag ghost." },
     {"drag", (PyCFunction)VRPyDevice::drag, METH_VARARGS, "Start to drag an object - drag(obj)" },
     {"drop", (PyCFunction)VRPyDevice::drop, METH_NOARGS, "Drop any object - drop()" },
-    {"setSpeed", (PyCFunction)VRPyDevice::setSpeed, METH_VARARGS, "Drop any object - drop()" },
-    {"getSpeed", (PyCFunction)VRPyDevice::getSpeed, METH_NOARGS, "Drop any object - drop()" },
+    {"setSpeed", (PyCFunction)VRPyDevice::setSpeed, METH_VARARGS, "Set the navigation speed of the device - setSpeed(float)" },
+    {"getSpeed", (PyCFunction)VRPyDevice::getSpeed, METH_NOARGS, "Get the navigation speed of the device - float getSpeed()" },
     {NULL}  /* Sentinel */
 };
 
@@ -95,13 +96,14 @@ PyObject* VRPyDevice::getSpeed(VRPyDevice* self) {
 
 PyObject* VRPyDevice::intersect(VRPyDevice* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::intersect, Object is invalid"); return NULL; }
-    self->obj->intersect(0);
-    Py_RETURN_TRUE;
+    OSG::VRIntersection ins = self->obj->intersect();
+    if (ins.hit) Py_RETURN_TRUE;
+    else Py_RETURN_FALSE;
 }
 
 PyObject* VRPyDevice::drag(VRPyDevice* self, PyObject *args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::drag, Object is invalid"); return NULL; }
-    OSG::VRObject* obj = 0;
+    OSG::VRObjectPtr obj = 0;
     if (!VRPyObject::parse(args, &obj)) return NULL;
     string name = obj->getName();
     self->obj->drag(obj, self->obj->getBeacon());
@@ -128,29 +130,27 @@ PyObject* VRPyDevice::destroy(VRPyDevice* self) {
 
 PyObject* VRPyDevice::getBeacon(VRPyDevice* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getBeacon, Object is invalid"); return NULL; }
-    return VRPyTransform::fromPtr(self->obj->getBeacon());
+    return VRPyTransform::fromSharedPtr(self->obj->getBeacon());
 }
 
 PyObject* VRPyDevice::setBeacon(VRPyDevice* self, PyObject *args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::setBeacon, Object is invalid"); return NULL; }
-    PyObject* beacon = NULL;
+    VRPyTransform* beacon = NULL;
     if (! PyArg_ParseTuple(args, "O", &beacon)) return NULL;
-    VRPyTransform* t = (VRPyTransform*)beacon;
-    self->obj->setBeacon(t->obj);
+    self->obj->setBeacon(beacon->objPtr);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyDevice::getTarget(VRPyDevice* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getTarget, Object is invalid"); return NULL; }
-    return VRPyTransform::fromPtr(self->obj->getTarget());
+    return VRPyTransform::fromSharedPtr(self->obj->getTarget());
 }
 
 PyObject* VRPyDevice::setTarget(VRPyDevice* self, PyObject *args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::setTarget, Object is invalid"); return NULL; }
-    PyObject* target = NULL;
+    VRPyTransform* target = NULL;
     if (! PyArg_ParseTuple(args, "O", &target)) return NULL;
-    VRPyTransform* t = (VRPyTransform*)target;
-    self->obj->setTarget(t->obj);
+    self->obj->setTarget(target->objPtr);
     Py_RETURN_TRUE;
 }
 
@@ -198,13 +198,19 @@ PyObject* VRPyDevice::setDnD(VRPyDevice* self, PyObject *args) {
 
 PyObject* VRPyDevice::getIntersected(VRPyDevice* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getIntersected, Object is invalid"); return NULL; }
-    return VRPyTypeCaster::cast(self->obj->getLastIntersection().object);
+    return VRPyTypeCaster::cast(self->obj->getLastIntersection().object.lock());
 }
 
 PyObject* VRPyDevice::getIntersection(VRPyDevice* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getIntersection, Object is invalid"); return NULL; }
     OSG::Pnt3f v = self->obj->getLastIntersection().point;
     return toPyTuple( OSG::Vec3f(v) );
+}
+
+PyObject* VRPyDevice::getIntersectionTriangle(VRPyDevice* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getIntersectionTriangle, Object is invalid"); return NULL; }
+    OSG::Vec3i v = self->obj->getLastIntersection().triangleVertices;
+    return toPyTuple(v);
 }
 
 PyObject* VRPyDevice::getIntersectionNormal(VRPyDevice* self) {
@@ -221,19 +227,17 @@ PyObject* VRPyDevice::getIntersectionUV(VRPyDevice* self) {
 
 PyObject* VRPyDevice::addIntersection(VRPyDevice* self, PyObject *args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::addIntersection, Object is invalid"); return NULL; }
-    PyObject* iobj = NULL;
+    VRPyObject* iobj = NULL;
     if (! PyArg_ParseTuple(args, "O", &iobj)) return NULL;
-    VRPyObject* t = (VRPyObject*)iobj;
-    self->obj->addDynTree(t->obj);
+    self->obj->addDynTree(iobj->objPtr);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyDevice::remIntersection(VRPyDevice* self, PyObject *args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::remIntersection, Object is invalid"); return NULL; }
-    PyObject* iobj = NULL;
+    VRPyObject* iobj = NULL;
     if (! PyArg_ParseTuple(args, "O", &iobj)) return NULL;
-    VRPyObject* t = (VRPyObject*)iobj;
-    self->obj->remDynTree(t->obj);
+    self->obj->remDynTree(iobj->objPtr);
     Py_RETURN_TRUE;
 }
 

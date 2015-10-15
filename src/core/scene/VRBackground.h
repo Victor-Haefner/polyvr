@@ -1,43 +1,29 @@
 #ifndef OSGSKYROOM_H_INCLUDED
 #define OSGSKYROOM_H_INCLUDED
 
-#include <OpenSG/OSGSkyBackground.h>
-#include <OpenSG/OSGSimpleTexturedMaterial.h>
-#include <OpenSG/OSGTextureBackground.h>
-#include <OpenSG/OSGSolidBackground.h>
+#include <OpenSG/OSGConfig.h>
+#include <OpenSG/OSGBackground.h>
+#include <OpenSG/OSGColor.h>
 #include "core/utils/VRStorage.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
+
+class VRBackgroundBase;
 
 class VRBackground : public VRStorage {
     public:
         enum TYPE { SOLID, IMAGE, SKY };
 
     private:
-        BackgroundRecPtr bg;
-        SkyBackgroundRecPtr sky;
-        SolidBackgroundRecPtr sbg;
-        TextureBackgroundRecPtr tbg;
-        vector<ImageRecPtr> skyImgs;
-
-        int type;
-        string path;
-        string format;
-        Color3f color;
-
-        TextureObjChunkRecPtr createSkyTexture();
-        void updateSkyTextures();
-        void initSky();
-
-        void updateImgTexture();
-        void initImg();
+        VRBackgroundBase* base = 0;
 
     protected:
         void update();
 
     public:
         VRBackground();
+        ~VRBackground();
 
         void setBackground(TYPE t);
         BackgroundRecPtr getBackground();
@@ -47,6 +33,9 @@ class VRBackground : public VRStorage {
         void setBackgroundPath(string s);
         Color3f getBackgroundColor();
         string getBackgroundPath();
+
+        void setSkyBGExtension(string f);
+        string getSkyBGExtension();
 
         void updateBackground();
 };

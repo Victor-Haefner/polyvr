@@ -11,10 +11,11 @@ using namespace std;
 
 class VRGuiGeneral {
     private:
-        bool updating;
+        bool updating = false;
 
         // background signals
         bool setColor(GdkEventButton* b);
+        void setExtension();
         void setPath();
         void setMode();
 
@@ -22,6 +23,8 @@ class VRGuiGeneral {
         void toggleFrustumCulling();
         void toggleOcclusionCulling();
         void toggleTwoSided();
+        void toggleDefferedShader();
+        void toggleSSAO();
 
         // other
         void dumpOSG();

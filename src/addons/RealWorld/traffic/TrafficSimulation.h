@@ -105,14 +105,14 @@ namespace realworld {
                 /**
                  * The model used to display this vehicle.
                  */
-                VRGeometry *geometry;
+                VRGeometryPtr geometry;
             };
 
         private:
 
-            VRMaterial* a_red = 0;
-            VRMaterial* a_orange = 0;
-            VRMaterial* a_green = 0;
+            VRMaterialPtr a_red = 0;
+            VRMaterialPtr a_orange = 0;
+            VRMaterialPtr a_green = 0;
 
             /**
              * The collision radius of the user controlled vehicle.
@@ -184,7 +184,7 @@ namespace realworld {
             /**
              * A map to store the meshes for the vehicle types.
              */
-            map<unsigned int, VRGeometry*> meshes;
+            map<unsigned int, VRGeometryPtr> meshes;
 
             /**
              * A map that stores the ids && vehicles that are moved around by the simulator.
@@ -195,7 +195,7 @@ namespace realworld {
              * A vector containing VRGeometry objects used to represent the traffic light phases.
              * @todo Make something prettier.
              */
-            vector<VRGeometry*> lightBulbs;
+            vector<VRGeometryPtr> lightBulbs;
 
             /**
              * A flag to suppress constant error output if there is no connection.
@@ -205,7 +205,7 @@ namespace realworld {
             /**
              Keeps some vehicle geometry on stock since it can not be created in the thread.
              */
-            //map<unsigned int, vector<VRGeometry*> > geometryCache;
+            //map<unsigned int, vector<VRGeometryPtr> > geometryCache;
 
             /**
              * Converts an OSM node to a JSON representation.
@@ -225,7 +225,7 @@ namespace realworld {
              A helper method to fetch the data from the server.
              Will be called repetitive while the simulator is running.
              */
-            void communicationThread(OSG::VRThread* t);
+            void communicationThread(std::weak_ptr<OSG::VRThread> t);
 
             /**
              * A mutex that will be locked if the communication thread is running.
@@ -311,7 +311,7 @@ namespace realworld {
              * @param maxRotation The maximum rotation in degree per second.
              * @param geometry The geometry to use to draw a vehicle of this type.
              */
-            void addVehicleType(const unsigned int id, const double probability, const double collisionRadius, const double maxSpeed, const double maxAcceleration, const double maxRoration, VRGeometry *geometry);
+            void addVehicleType(const unsigned int id, const double probability, const double collisionRadius, const double maxSpeed, const double maxAcceleration, const double maxRoration, VRGeometryPtr geometry);
 
             /**
              * Adds a driver type to the simulation.

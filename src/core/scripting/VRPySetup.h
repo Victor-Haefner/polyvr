@@ -8,6 +8,7 @@ struct VRPySetup : VRPyBaseT<OSG::VRSetup> {
     static PyMethodDef methods[];
 
     static PyObject* toggleStereo(VRPySetup* self, PyObject* args);
+    static PyObject* setViewPose(VRPySetup* self, PyObject* args);
 };
 
 #endif // VRPYSETUP_H_INCLUDED

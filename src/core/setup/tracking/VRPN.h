@@ -7,6 +7,7 @@
 #include <map>
 
 #include "core/setup/devices/VRDevice.h"
+#include "core/utils/VRFunctionFwd.h"
 
 namespace xmlpp{ class Element; }
 class vrpn_Tracker_Remote;
@@ -50,6 +51,11 @@ class VRPN : public VRStorage {
         map<int, VRPN_device*> devices;//pointer map auf die objecte
         int threadID;
         bool active = true;
+        bool verbose = false;
+        int port = 3883;
+
+        VRUpdatePtr updatePtr;
+        VRUpdatePtr testServer = 0;
 
         //update thread
         void update_t(VRThread* thread);
@@ -69,7 +75,15 @@ class VRPN : public VRStorage {
         void setVRPNActive(bool b);
         bool getVRPNActive();
 
+        void setVRPNPort(int p);
+        int getVRPNPort();
+
         void changeVRPNDeviceName(VRPN_device* dev, string name);
+
+        void setVRPNVerbose(bool b);
+
+        void startVRPNTestServer();
+        void stopVRPNTestServer();
 };
 
 OSG_END_NAMESPACE

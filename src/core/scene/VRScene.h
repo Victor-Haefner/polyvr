@@ -2,7 +2,6 @@
 #define VRSCENE_H_INCLUDED
 
 #include "VRObjectManager.h"
-#include "VRLightManager.h"
 #include "VRCameraManager.h"
 #include "VRAnimationManager.h"
 #include "VRPhysicsManager.h"
@@ -24,7 +23,6 @@ class VRObject;
 class VRVisualLayer;
 
 class VRScene : public VRObjectManager,
-                public VRLightManager,
                 public VRCameraManager,
                 public VRAnimationManager,
                 public VRPhysicsManager,
@@ -48,6 +46,10 @@ class VRScene : public VRObjectManager,
         VRVisualLayer* cameras_layer = 0;
         VRVisualLayer* lights_layer = 0;
 
+        VRTogglePtr layer_ref_toggle;
+        VRTogglePtr layer_cam_toggle;
+        VRTogglePtr layer_light_toggle;
+
     public:
         VRScene();
         ~VRScene();
@@ -62,17 +64,18 @@ class VRScene : public VRObjectManager,
 
         void initDevices();
 
-        void add(VRObject* obj, int parentID = -1);
+        void add(VRObjectPtr obj, int parentID = -1);
         void add(NodeRecPtr n);
 
-        VRObject* get(int ID);
-        VRObject* get(string name);
-        VRObject* getRoot();
+        VRObjectPtr get(int ID);
+        VRObjectPtr get(string name);
+        VRObjectPtr getRoot();
+        VRObjectPtr getSystemRoot();
 
-        void setActiveCamera(int i);
+        void setActiveCamera(string name = "");
 
         void printTree();
-        void showReferentials(bool b, VRObject* o);
+        void showReferentials(bool b, VRObjectPtr o);
         void showLights(bool b);
         void showCameras(bool b);
 
@@ -81,6 +84,9 @@ class VRScene : public VRObjectManager,
         void save(xmlpp::Element* e);
         void load(xmlpp::Element* e);
 };
+
+typedef shared_ptr<VRScene> VRScenePtr;
+typedef weak_ptr<VRScene> VRSceneWeakPtr;
 
 OSG_END_NAMESPACE;
 

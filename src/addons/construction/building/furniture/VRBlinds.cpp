@@ -9,8 +9,8 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-VRObject* VRBlinds::copy(vector<VRObject*> children) {
-    VRBlinds* d = new VRBlinds(getBaseName(), window, scene);
+VRObjectPtr VRBlinds::copy(vector<VRObjectPtr> children) {
+    VRBlindsPtr d = VRBlinds::create(getBaseName(), window, scene);
 
     d->state = state;
     d->sound = sound;
@@ -18,7 +18,7 @@ VRObject* VRBlinds::copy(vector<VRObject*> children) {
     return d;
 }
 
-VRBlinds::VRBlinds(string name, VRGeometry* _window, VRScene* _scene): VRTransform(name) {
+VRBlinds::VRBlinds(string name, VRGeometryPtr _window, VRScene* _scene): VRTransform(name) {
     state = OPEN;
     scene = _scene;
 
@@ -30,11 +30,17 @@ VRBlinds::VRBlinds(string name, VRGeometry* _window, VRScene* _scene): VRTransfo
     blend_geo->addAttachment("blind", 0);
 
     // animation callback
-    fkt = new VRFunction<float>("Blinds_interpolate", boost::bind(&VRBlinds::interpolate, this, _1));
+    fkt = VRFunction<float>::create("Blinds_interpolate", boost::bind(&VRBlinds::interpolate, this, _1));
 
     // toggle callback
     toggleCallback = new VRDevCb("Blinds_toggle", boost::bind(&VRBlinds::toggle, this, _1));
 }
+
+VRBlindsPtr VRBlinds::create(string name, VRGeometryPtr _window, VRScene* _scene) {
+    return shared_ptr<VRBlinds>( new VRBlinds(name, _window, _scene) );
+}
+
+VRBlindsPtr VRBlinds::ptr() { return static_pointer_cast<VRBlinds>( shared_from_this() ); }
 
 void VRBlinds::setSound(string s) { sound = s; }
 
@@ -45,7 +51,7 @@ void VRBlinds::open() {
     if (state == OPEN) return;
     state = OPEN;
 
-    scene->addAnimation(3, 0, fkt, float(0.0), float(1.0), false);
+    scene->addAnimation<float>(3, 0, fkt, float(0.0), float(1.0), false);
     VRSoundManager::get().playSound(sound);
 }
 
@@ -53,16 +59,16 @@ void VRBlinds::close() {
     if (state == CLOSE) return;
     state = CLOSE;
 
-    scene->addAnimation(3, 0, fkt, float(1.0), float(0.0), false);
+    scene->addAnimation<float>(3, 0, fkt, float(1.0), float(0.0), false);
     VRSoundManager::get().playSound(sound);
 }
 
 void VRBlinds::toggle(VRDevice* dev) {
     if (dev != 0) { //if triggered by a device, check if this is hit
-        VRIntersection ins = dev->intersect(this);
+        VRIntersection ins = dev->intersect(ptr());
         if (!ins.hit) return;
-        if ( ins.object == 0 ) return;
-        if ( ins.object->hasAncestorWithAttachment("blind") == false) return;
+        if ( ins.object.lock() == 0 ) return;
+        if ( !ins.object.lock()->hasAncestorWithAttachment("blind")) return;
     }
 
     if (state == CLOSE) open();
@@ -110,8 +116,7 @@ void VRBlinds::create() {
         texs.push_back(Vec2f(0,0));
     }
 
-
-    blend_geo = new VRGeometry("blend");
+    blend_geo = VRGeometry::create("blend");
     blend_geo->create(GL_QUADS, bl_pos_open, norms, inds, texs);
 
     Vec3f pos = window->getGeometricCenter();

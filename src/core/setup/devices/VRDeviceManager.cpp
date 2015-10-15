@@ -30,7 +30,7 @@ VRDeviceManager::VRDeviceManager() {
 
 VRDeviceManager::~VRDeviceManager() { for (auto dev : devices) delete dev.second; }
 void VRDeviceManager::clearSignals() { for (auto dev : devices) dev.second->clearSignals(); }
-void VRDeviceManager::setDeviceRoot(VRTransform* root) { device_root = root; }
+void VRDeviceManager::setDeviceRoot(VRTransformPtr root) { device_root = root; }
 
 void VRDeviceManager::updateDevices() {
     for (auto itr : devices) itr.second->updateBeacon();
@@ -73,7 +73,7 @@ void VRDeviceManager::updateActivatedSignals() {
     }
 }
 
-void VRDeviceManager::updateDeviceDynNodes(VRObject* ancestor) {
+void VRDeviceManager::updateDeviceDynNodes(VRObjectPtr ancestor) {
     for (itr =devices.begin(); itr!=devices.end(); itr++) {
         itr->second->updateDynTree(ancestor);
     }

@@ -3,157 +3,79 @@
   <Objects>
     <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
       <Object name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
-        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="0.5532 2.547 1.23669" at="0.356428 2.41185 -1.27831" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
+        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="0.540115 2.53801 1.06944" at="0.356428 2.41185 -1.27831" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
           <Object name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
         </Object>
       </Object>
     </Object>
   </Objects>
-  <Rendering frustum_culling="1" occlusion_culling="0" two_sided="1"/>
+  <Rendering deferred_rendering="0" frustum_culling="1" occlusion_culling="0" ssao="0" two_sided="1"/>
   <Scripts>
-    <Script name_suffix="0" base_name="cmdAxisLock" name_space="__script__" type="Python" mobile="">
+    <Script name_suffix="0" base_name="cmdCsg" name_space="__script__" type="Python" mobile="">
       <core>
 	import VR
+	intersected = None
+	if dev: i = dev.getIntersected()
 	
-	# Key '3'
-	target = dev.getIntersected()
-	if target == None:
-		return
-		
-	print target
-		
-	# Use isPickable to ensure only objects intended for manipulation
-	# are destroyed. We'll see if this is sufficient.
-	if target.isPickable():
-		target.destroy()
-</core>
-      <trig type="on_device" dev="flystick" state="Released" param="" key="3" name_suffix="4" base_name="trigger" name_space="__global__"/>
-    </Script>
-    <Script name_suffix="0" base_name="cmdCsgMenuClose" name_space="__script__" type="Python" mobile="">
-      <core>
-	import VR
+	def isCSG(o): return isinstance(o, VR.CSGGeometry)
+	def toggleCSG(o): o.setEditMode(not o.getEditMode())
 	
-	for obj in VR.selectedObjects:
-		obj.getMaterial().setDiffuse(VR.colorNtl[0],
-			VR.colorNtl[1],
-			VR.colorNtl[2])
-	del VR.selectedObjects[:]
-	VR.selectedObjects = []		
-	#VR.menus['CSG Menu'].hide()
-	print "close"
+	if cmd == 'switch':	
+		if isCSG(i): toggleCSG(i)
+		elif isCSG(i.getParent()): toggleCSG(i.getParent())
 	
-</core>
-    </Script>
-    <Script name_suffix="0" base_name="cmdCsgOp" name_space="__script__" type="Python" mobile="">
-      <core>
-	import VR
+	if cmd == 'select':
+		if len(VR.selectedObjects) &lt; 2:
+			VR.selectedObjects.append(i)
+			mat = i.getMaterial()
+			mat.setDiffuse(VR.colorSel[0],
+				VR.colorSel[1],
+				VR.colorSel[2])
+		if len(VR.selectedObjects) == 2:
+			VR.menus["CSG Menu"].show()
 	
-	print 'csg intersect'
-	if not operation:
-		raise Exception("No operation specified!")
-	if not len(VR.selectedObjects) == 2:
-		raise Exception("Exactly two objects must be selected.")
-	
-	oldParents = []
-	oldParents.append(VR.selectedObjects[0].getParent())
-	oldParents.append(VR.selectedObjects[1].getParent())
-	csg = VR.CSGGeometry(operation)
-	csg.addChild(VR.selectedObjects[0])
-	csg.addChild(VR.selectedObjects[1])
-	#VR.selectedObjects[0].switchParent(csg)
-	#VR.selectedObjects[1].switchParent(csg)
-	csg.setOperation(operation)
-	VR.csgRoot.addChild(csg)
-	#csg = parent.find("intersect.3")
-	csg.setPickable(True)
-	if not csg.setEditMode(False):
-		# There was an error (probably from CGAL)
-		msg = VR.MenuItem("Sorry, CGAL error!", None, True)
-		msg.show()
-		
-		# clean up
-		VR.selectedObjects[0].switchParent(oldParents[0])
-		VR.selectedObjects[1].switchParent(oldParents[1])
-		csg.destroy()
-	
-	VR.cmdCsgMenuClose()
-</core>
-      <arg type="str" value="None" name_suffix="0" base_name="operation" name_space="cmdCsgOp"/>
-    </Script>
-    <Script name_suffix="0" base_name="cmdDelete" name_space="__script__" type="Python" mobile="">
-      <core>
-	import VR
-	
-	# Key '2'
-	intersected = dev.getIntersected()
-	if intersected in VR.selectedObjects:
+	if cmd == 'close':
+		for obj in VR.selectedObjects:
+			obj.getMaterial().setDiffuse(VR.colorNtl[0],
+				VR.colorNtl[1],
+				VR.colorNtl[2])
+		del VR.selectedObjects[:]
 		VR.selectedObjects = []
-	
-	parent = intersected.getParent()
-	intersected.destroy()
-	if isinstance(parent, VR.CSGGeometry) and len(parent.getChildren()) == 0:
-		parent.destroy()
-</core>
-      <trig type="on_device" dev="flystick" state="Released" param="" key="2" name_suffix="3" base_name="trigger" name_space="__global__"/>
-    </Script>
-    <Script name_suffix="0" base_name="cmdSelect" name_space="__script__" type="Python" mobile="">
-      <core>
-	import VR
-	
-	intersected = dev.getIntersected()
-	
-	if len(VR.selectedObjects) &lt; 2:
-		VR.selectedObjects.append(intersected)
-		mat = intersected.getMaterial()
-		mat.setDiffuse(VR.colorSel[0],
-			VR.colorSel[1],
-			VR.colorSel[2])
-		#intersected.setMaterial(mat)
-		print "selected:", intersected.getName()
-	if len(VR.selectedObjects) == 2:
-		print 'show menu'
-		VR.menus["CSG Menu"].show()
-
-</core>
-      <arg type="VRPyDeviceType" value="None" name_suffix="0" base_name="dev" name_space="cmdSelect"/>
-    </Script>
-    <Script name_suffix="0" base_name="cmdSwitchEditMode" name_space="__script__" type="Python" mobile="">
-      <core>
-	import VR
-	
-	# Key '4'
-	print "Button 4: edit mode"
-	
-	intersected = dev.getIntersected()
-	
-	if isinstance(intersected, VR.CSGGeometry):
-		intersected.setEditMode(not intersected.getEditMode())
-	elif isinstance(intersected.getParent(), VR.CSGGeometry):
-		parent = intersected.getParent()
-		parent.setEditMode(not parent.getEditMode())
-</core>
-      <trig type="on_device" dev="flystick" state="Released" param="" key="4" name_suffix="5" base_name="trigger" name_space="__global__"/>
-    </Script>
-    <Script name_suffix="0" base_name="cmdSwitchMoveScale" name_space="__script__" type="Python" mobile="">
-      <core>
-	import VR
-	
-	# Key '1'
 		
-	if not VR.scaleEnabled:
-		print "start scale mode"
-		VR.scaleEnabled = True
-		VR.modeSpr.setText("scale")
-		VR.modeSpr.setSize(0.2 * len("scale"), 1)
-	else:
-		print "end scale mode"
-		VR.scaleEnabled = False
-		VR.modeSpr.setText("select")
-		VR.modeSpr.setSize(0.2 * len("select"), 1)
+	if cmd == 'del':
+		if i in VR.selectedObjects: VR.selectedObjects = []
+		parent = i.getParent()
+		i.destroy()
+		if isCSG(parent) and len(parent.getChildren()) == 0:
+			parent.destroy()
 		
+	if cmd == 'op':
+		if len(VR.selectedObjects) != 2: raise Exception("Select 2 objects!")
+	
+		oldParents = []
+		oldParents.append(VR.selectedObjects[0].getParent())
+		oldParents.append(VR.selectedObjects[1].getParent())
+		csg = VR.CSGGeometry(operation)
+		csg.addChild(VR.selectedObjects[0])
+		csg.addChild(VR.selectedObjects[1])
+		csg.setOperation(operation)
+		VR.csgRoot.addChild(csg)
+		csg.setPickable(True)
+		if not csg.setEditMode(False):
+			# There was an error (probably from CGAL)
+			msg = VR.MenuItem("Sorry, CGAL error!", None, True)
+			msg.show()
+		
+			# clean up
+			VR.selectedObjects[0].switchParent(oldParents[0])
+			VR.selectedObjects[1].switchParent(oldParents[1])
+			csg.destroy()
+		VR.cmdCsg('close', None, '')
+	
 </core>
-      <trig type="on_device" dev="flystick" state="Released" param="" key="1" name_suffix="2" base_name="trigger" name_space="__global__"/>
-      <trig type="on_device" dev="keyboard" state="Released" param="" key="104" name_suffix="9" base_name="trigger" name_space="__global__"/>
+      <arg type="str" value="" name_suffix="0" base_name="cmd" name_space="cmdCsg"/>
+      <arg type="VRPyDeviceType" value="0" name_suffix="0" base_name="dev" name_space="cmdCsg"/>
+      <arg type="str" value="" name_suffix="0" base_name="operation" name_space="cmdCsg"/>
     </Script>
     <Script name_suffix="0" base_name="createSample" name_space="__script__" type="Python" mobile="">
       <core>
@@ -162,25 +84,25 @@
 	sample = None
 	
 	if primitive == "sphere":
-		sample = VR.Geometry("sample sphere")
+		sample = VR.Geometry("sphere")
 		sample.setPrimitive("Sphere")
 		sample.setScale(.2, .2, .2)
 		sample.setFrom(0, 0, 0)
 		sample.setDir(0, 0, 1)
 	elif primitive == "cube":
-		sample = VR.Geometry("sample cube")
+		sample = VR.Geometry("cube")
 		sample.setPrimitive("Box")
 		sample.setScale(.4, .4, .4)
 		sample.setFrom(.5, 0, 0)
 		sample.setDir(0, 0, 1)
 	elif primitive == "cylinder":
-		sample = VR.Geometry("sample cylinder")
+		sample = VR.Geometry("cylinder")
 		sample.setPrimitive("Cylinder")
 		sample.setScale(.2, .2, .2)
 		sample.setFrom(1, 0, 0)
 		sample.setDir(0, 0, 1)
 	elif primitive == "torus":
-		sample = VR.Geometry("sample torus")
+		sample = VR.Geometry("torus")
 		sample.setPrimitive("Torus")
 		sample.setScale(.2, .2, .2)
 		sample.setFrom(-.6, 0, 0)
@@ -192,6 +114,7 @@
 	
 	sample.setPickable(True)
 	sample.setMaterial(VR.Material("sample material"))
+	sample.addTag('sample')
 	VR.sampleRoot.addChild(sample)
 	return sample
 
@@ -264,12 +187,6 @@
       <core>
 	import VR
 
-	print "Hint: remember setting mouse/Flystick mode in trackFlystick!"
-	print "left mouse button actions:"
-	print "\tj: switch move/scale mode"
-	print "\tk: switch edit mode"
-	print "\tl: delete"
-
 	VR.treeRedrawEnabled = True
 	VR.scaleEnabled = False
 	VR.currentlyScaling = False
@@ -316,6 +233,7 @@
 				we're not the menu root.
 			"""
 			self.sprite = VR.Sprite(txt)
+			self.sprite.addTag('menu')
 			self.sprite.setMaterial(VR.Material(txt))
 			self.sprite.setText(txt)
 			self.sprite.setSize(0.1 * len(txt), 0.2)
@@ -413,13 +331,13 @@
 	
 	# Setup CSG op menu
 	mRoot = MenuItem('CSG Menu', None, True)
-	VR.menuFuncs[mRoot] = VR.cmdCsgMenuClose
+	VR.menuFuncs[mRoot] = lambda: VR.cmdCsg('close', None, '')
 	mUnite = MenuItem('Unite', mRoot)
-	VR.menuFuncs[mUnite] = lambda: VR.cmdCsgOp('unite')
+	VR.menuFuncs[mUnite] = lambda: VR.cmdCsg('op', None, 'unite')
 	mSubtract = MenuItem('Subtract', mRoot)
-	VR.menuFuncs[mSubtract] = lambda: VR.cmdCsgOp('subtract')
+	VR.menuFuncs[mSubtract] = lambda: VR.cmdCsg('op', None, 'subtract')
 	mIntersect = MenuItem('Intersect', mRoot)
-	VR.menuFuncs[mIntersect] = lambda: VR.cmdCsgOp('intersect')
+	VR.menuFuncs[mIntersect] = lambda: VR.cmdCsg('op', None, 'intersect')
 	
 	# Setup mode sprite
 	msgSpr = VR.Sprite("Mode")
@@ -483,40 +401,6 @@
 	
 </core>
     </Script>
-    <Script name_suffix="0" base_name="keyDelete" name_space="__script__" type="Python" mobile="">
-      <core>
-	import VR
-	
-	VR.clickAction = "delete"
-	print "click action:", VR.clickAction
-	VR.modeSpr.setText(VR.clickAction)
-	VR.modeSpr.setSize(0.2 * len(VR.clickAction), 1)
-</core>
-      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="108" name_suffix="14" base_name="trigger" name_space="__global__"/>
-    </Script>
-    <Script name_suffix="0" base_name="keySelect" name_space="__script__" type="Python" mobile="">
-      <core>
-	import VR
-	
-	VR.clickAction = "select"
-	print "click action:", VR.clickAction
-	VR.cmdSwitchMoveScale(None, dev)
-
-</core>
-      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="106" name_suffix="13" base_name="trigger" name_space="__global__"/>
-    </Script>
-    <Script name_suffix="0" base_name="keySwitchEditMode" name_space="__script__" type="Python" mobile="">
-      <core>
-	import VR
-	
-	VR.clickAction = "switchEditMode"
-	print "click action:", VR.clickAction
-	VR.modeSpr.setText(VR.clickAction)
-	VR.modeSpr.setSize(0.2 * len(VR.clickAction), 1)
-
-</core>
-      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="107" name_suffix="8" base_name="trigger" name_space="__global__"/>
-    </Script>
     <Script name_suffix="0" base_name="showNotification" name_space="__script__" type="Python" mobile="">
       <core>
 	if not msg:
@@ -564,70 +448,6 @@
 	
 </core>
     </Script>
-    <Script name_suffix="0" base_name="test" name_space="__script__" type="Python" mobile="">
-      <core>
-	import VR
-	
-	# triggers crash!
-	#spr = VR.Sprite("blub")
-	#spr.setText("blub")
-	
-	mat = obj.getMaterial()
-	#mat = VR.Material("selected")
-	print mat.getDiffuse()
-	mat.setDiffuse(1,1,0)
-	print mat.getDiffuse()
-	obj.setMaterial(mat)
-	
-</core>
-      <arg type="VRPyGeometryType" value="cube" name_suffix="0" base_name="obj" name_space="test"/>
-      <trig type="on_device" dev="mouse" state="pressed" param="" key="5" name_suffix="0" base_name="trigger" name_space="__global__"/>
-    </Script>
-    <Script name_suffix="0" base_name="trackFlystick" name_space="__script__" type="Python" mobile="">
-      <core>
-	import VR
-	from math import isnan	
-	
-	def subtract(a, b):
-		"""
-		Subtracts vector b from vector a
-		"""
-		try:
-			return [a[0] - b[0],
-					a[1] - b[1],
-					a[2] - b[2]]
-		except:
-			raise ValueError("subtract expects two 3-dimensional vectors.")
-	
-	# Switch between mouse and Flystick mode. The former tracks the rotational
-	# motion of the mouse beacon, the latter relies on the translational
-	# motion. This is due to the fact that the mouse beacon never translates,
-	# but translation is more convenient when using the Flystick in VR.
-	mouseMode = True
-	
-	if not VR.currentlyScaling:
-		VR.lastBeaconDir = beacon.getDir()
-		return
-	
-	if mouseMode:
-		beaconDir = beacon.getDir()
-		diff = subtract(beacon.getDir(), VR.lastBeaconDir)
-		mouseDeltaMvmt = diff[0]
-		VR.lastBeaconDir = beaconDir
-		
-		# Enough computation, scale something!
-		oldScale = VR.lastDragged.getScale()
-		print oldScale[0] + mouseDeltaMvmt
-		VR.lastDragged.setScale(oldScale[0] + mouseDeltaMvmt,
-								oldScale[0] + mouseDeltaMvmt,
-								oldScale[0] + mouseDeltaMvmt)
-	else:
-		pass # TODO
-
-</core>
-      <arg type="VRPyTransformType" value="mouse_beacon" name_suffix="0" base_name="beacon" name_space="trackFlystick"/>
-      <trig type="on_timeout" dev="" state="Pressed" param="50" key="0" name_suffix="12" base_name="trigger" name_space="__global__"/>
-    </Script>
     <Script name_suffix="0" base_name="triggerDown" name_space="__script__" type="Python" mobile="">
       <core>
 	import VR
@@ -635,26 +455,16 @@
 	VR.startDragTimer()
 	VR.treeRedrawEnabled = False
 	target = dev.getDragged()
-	if target == None:
-		return
+	if target == None: return
 	VR.lastDragged = target
 		
-	targetName = target.getName().split(".")[0]
 	print "down:", target.getName()
 	
-	if VR.scaleEnabled:
-		# keep track of where the flystick moves, we need to scale
-		VR.currentlyScaling = True
-	elif targetName in VR.samplePrims.keys():
-		# Sample primitive was grabbed
-		picked = VR.samplePrims[targetName]
-		primitiveType = targetName.split(" ")[1]
-		target.setName(primitiveType)
-		
-		# create a new instance for the sample row
-		newSample = VR.createSample(primitiveType)
-		if newSample is not None:
-			VR.samplePrims["sample " + primitiveType] = newSample
+	if target.hasTag('sample'):
+		Type = target.getName().split('.')[0]
+		target.remTag('sample')
+		newSample = VR.createSample(Type)
+		if newSample: VR.samplePrims[Type] = newSample
 		
 </core>
       <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" name_suffix="15" base_name="trigger" name_space="__global__"/>
@@ -664,31 +474,19 @@
       <core>
 	import VR
 
-	def finish():
-		""" Cleanup actions that need to be done *always* """
-		VR.treeRedrawEnabled = True
-
+	VR.treeRedrawEnabled = True
 	isDrag = VR.stopDragTimer()
-	#print "CLICK:", clickDevice.getName(), "clicked with", clickDevice.getButton(0)
 	dragged = VR.lastDragged
-	intersected = dev.getIntersected()
-	if not intersected:
-		intersected = dev.getIntersected()
-	if not dragged and not intersected:
-		finish()
-		return
+	i = dev.getIntersected()
+	if not dragged and not intersected: return
 	
 	# Cases:
 	# Nothing dragged/single click -&gt; intr + isDrag (true/false)
 	# Object dragged -&gt; dragged + isDrag (true)
 	
-	if dragged:
-		print "drag up:", dragged.getName(), "drag:", isDrag
-	if intersected:
-		print "intr up:", intersected.getName(), "drag:", isDrag
+	#if dragged: print "drag up:", dragged.getName(), "drag:", isDrag
+	#if i: print "intr up:", i.getName(), "drag:", isDrag
 	
-	if VR.scaleEnabled:
-		VR.currentlyScaling = False
 	if isDrag and dragged:
 		# Actual DnD operation
 		if dragged.getParent().getName() == "sample root":
@@ -702,30 +500,24 @@
 			dragged.switchParent(VR.csgRoot)
 			dragged.setFrom(newPos[0], newPos[1], newPos[2])
 			dragged.setDir(dragDir[0], dragDir[1], dragDir[2])
-		finish()
 		return
 
 	# Ignore drag stuff, this is an ordinary click
-	if intersected:
-		try:
-			if intersected.getText() in VR.menus.keys():
-				# A menu item was clicked
-				#print VR.menus[target.getName()], VR.menus[target.getName()].execute
-				VR.menus[intersected.getText()].execute()
-				#VR.menus['CSG Menu'].hide() # done elsewhere
-				VR.selectedObjects = []
-		except:
-			# something non-menu was clicked
-			if intersected.isPickable():
-				if VR.clickAction == "select":
-					if (not intersected.getName().split(" ")[0] == "sample" and
-					not intersected in VR.selectedObjects):
-						VR.cmdSelect(dev)
-				elif VR.clickAction == "switchEditMode":
-					VR.cmdSwitchEditMode(dev)
-				elif VR.clickAction == "delete":
-					VR.cmdDelete(dev)
-	finish()
+	if not i: return
+	
+	if i.hasTag('menu'):
+		VR.menus[i.getText()].execute()
+		VR.selectedObjects = []
+		return
+		
+	if i.isPickable():
+		if VR.clickAction == "select":
+			if not i.hasTag('sample') and not i in VR.selectedObjects: VR.cmdCsg('select', dev, '')
+		if VR.clickAction == "switchEditMode": VR.cmdCsg('switch', dev, '')
+		if VR.clickAction == "delete": VR.cmdCsg('del', dev, '')
+		
+		
+		
 
 </core>
       <trig type="on_device" dev="mouse" state="Released" param="" key="0" name_suffix="16" base_name="trigger" name_space="__global__"/>
@@ -733,7 +525,7 @@
     </Script>
   </Scripts>
   <Sockets/>
-  <Background color="1 1 1" path="data/common/skybox/sky/Sky" type="0"/>
+  <Background color="1 1 1" format=".png" path="data/common/skybox/sky/Sky" type="0"/>
   <Navigation active="Orbit"/>
   <Materials/>
 </Scene>

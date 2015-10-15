@@ -19,9 +19,11 @@ VRHaptic::VRHaptic() : VRDevice("haptic") {
     v->disconnect();
     setIP("172.22.151.200");
 
-    //auto updateObjFkt = new VRFunction<int>( "Haptic object update", boost::bind(&VRHaptic::applyTransformation, this, getBeacon()) );
-    //VRSceneManager::get()->dropUpdateFkt(updateObjFkt);
-    //VRSceneManager::get()->addUpdateFkt(updateObjFkt);
+    updatePtr = VRFunction<int>::create( "Haptic object update", boost::bind(&VRHaptic::applyTransformation, this, editBeacon()) );
+    VRSceneManager::get()->addUpdateFkt(updatePtr);
+
+    timestepWatchdog = VRFunction<int>::create( "Haptic Timestep Watchdog", boost::bind(&VRHaptic::updateHapticTimestep, this, editBeacon()) );
+    VRSceneManager::getCurrent()->addUpdateFkt(timestepWatchdog);
 
     auto fkt = new VRFunction<VRDevice*>( "Haptic on scene changed", boost::bind(&VRHaptic::on_scene_changed, this, _1) );
     VRSceneManager::get()->getSignal_on_scene_load()->add(fkt);
@@ -31,7 +33,6 @@ VRHaptic::VRHaptic() : VRDevice("haptic") {
 }
 
 VRHaptic::~VRHaptic() {
-    VRSceneManager::getCurrent()->dropUpdateFkt(timestepWatchdog);
     VRSceneManager::getCurrent()->dropPhysicsUpdateFunction(updateFktPre,false);
     VRSceneManager::getCurrent()->dropPhysicsUpdateFunction(updateFktPost,true);
     v->disconnect();
@@ -46,28 +47,22 @@ void VRHaptic::on_scene_changed(VRDevice* dev) {
     v->detachTransform();
     v->disconnect();
 
-    timestepWatchdog = new VRFunction<int>( "Haptic Timestep Watchdog", boost::bind(&VRHaptic::updateHapticTimestep, this, getBeacon()) );
-    updateFktPre = new VRFunction<int>( "Haptic pre update", boost::bind(&VRHaptic::updateHapticPre, this, getBeacon()) );
-    updateFktPost = new VRFunction<int>( "Haptic post update", boost::bind(&VRHaptic::updateHapticPost, this, getBeacon()) );
-
-    VRSceneManager::getCurrent()->dropUpdateFkt(timestepWatchdog);
-
-    VRSceneManager::getCurrent()->addUpdateFkt(timestepWatchdog);
+    updateFktPre = new VRFunction<int>( "Haptic pre update", boost::bind(&VRHaptic::updateHapticPre, this, editBeacon()) );
+    updateFktPost = new VRFunction<int>( "Haptic post update", boost::bind(&VRHaptic::updateHapticPost, this, editBeacon()) );
     VRSceneManager::getCurrent()->addPhysicsUpdateFunction(updateFktPre,false);
     VRSceneManager::getCurrent()->addPhysicsUpdateFunction(updateFktPost,true);
-
 
     //reconnect
     setIP("172.22.151.200");
 
 }
 
-void VRHaptic::applyTransformation(VRTransform* t) { // TODO: rotation
+void VRHaptic::applyTransformation(VRTransformPtr t) { // TODO: rotation
     if (!v->connected()) return;
     t->setMatrix(v->getPose());
 }
 
-void VRHaptic::updateHapticTimestep(VRTransform* t) {
+void VRHaptic::updateHapticTimestep(VRTransformPtr t) {
     list<VRProfiler::Frame> frames = VRProfiler::get()->getFrames();
 
         VRProfiler::Frame tmpOlder;
@@ -114,13 +109,13 @@ void VRHaptic::updateHapticTimestep(VRTransform* t) {
         }
 }
 
-void VRHaptic::updateHapticPre(VRTransform* t) { // TODO: rotation
+void VRHaptic::updateHapticPre(VRTransformPtr t) { // TODO: rotation
      if (!v->connected()) return;
    //COMMAND_MODE_VIRTMECH
     updateVirtMechPre();
 }
 
-void VRHaptic::updateHapticPost(VRTransform* t) { // TODO: rotation
+void VRHaptic::updateHapticPost(VRTransformPtr t) { // TODO: rotation
      if (!v->connected()) return;
    //COMMAND_MODE_VIRTMECH
     updateVirtMechPost();
@@ -129,8 +124,8 @@ void VRHaptic::updateHapticPost(VRTransform* t) { // TODO: rotation
 void VRHaptic::setForce(Vec3f force, Vec3f torque) { v->applyForce(force, torque); }
 Vec3f VRHaptic::getForce() {return v->getForce(); }
 void VRHaptic::setSimulationScales(float scale, float forces) { v->setSimulationScales(scale, forces); }
-void VRHaptic::attachTransform(VRTransform* trans) {v->attachTransform(trans);}
-void VRHaptic::setBase(VRTransform* trans) {v->setBase(trans);}
+void VRHaptic::attachTransform(VRTransformPtr trans) {v->attachTransform(trans);}
+void VRHaptic::setBase(VRTransformPtr trans) {v->setBase(trans);}
 void VRHaptic::detachTransform() {v->detachTransform();}
 void VRHaptic::updateVirtMechPre() {
     v->updateVirtMechPre();

@@ -1,36 +1,21 @@
 #include "PolyVR.h"
 
-#include "core/scene/VRScene.h"
-#include "core/objects/object/VRObject.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/setup/VRSetupManager.h"
-#include "core/setup/VRSetup.h"
-#include "core/scene/VRSceneLoader.h"
-#include "core/gui/VRGuiManager.h"
-#include "core/utils/VROptions.h"
 #include "core/utils/VRInternalMonitor.h"
-#include "core/utils/VRFunction.h"
+#include "core/utils/coreDumpHandler.h"
+#include "core/gui/VRGuiManager.h"
+#include "core/networking/VRMainInterface.h"
+#include "core/utils/VROptions.h"
+#include "core/scene/VRSceneLoader.h"
 #include "core/scene/VRSoundManager.h"
 #include "core/objects/material/VRMaterial.h"
-#include "core/networking/VRMainInterface.h"
+#include "addons/CEF/CEF.h"
+
+#include <OpenSG/OSGNameAttachment.h>
+#include <OpenSG/OSGNode.h>
 #include <GL/glut.h>
 
-#include <OpenSG/OSGSimpleGeometry.h>
-#include <OpenSG/OSGTypedGeoIntegralProperty.h>
-#include <OpenSG/OSGNameAttachment.h>
-
-#include <signal.h>
-extern "C" void coreDump(int sig) {
-    auto mgr = OSG::VRSceneManager::get();
-    string path = mgr->getOriginalWorkdir();
-    cout << "\n dump core to " << path << "/core" << endl;
-    mgr->setWorkdir(path);
-
-    //kill(getpid(), sig);
-    //abort();
-    //raise(SIGABRT);
-    kill(getpid(), SIGABRT);
-}
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -62,23 +47,43 @@ void printFieldContainer() {
     }
 }
 
-void initPolyVR(int argc, char **argv) {
+PolyVR::PolyVR() {}
+PolyVR::~PolyVR() {
+    //CEF::shutdown();
+}
+
+PolyVR* PolyVR::get() {
+    static PolyVR* pvr = new PolyVR();
+    return pvr;
+}
+
+void PolyVR::shutdown() {
+    auto pvr = get();
+    auto scene = VRSceneManager::getCurrent();
+    pvr->scene_mgr->removeScene(scene);
+    pvr->scene_mgr->stopAllThreads();
+    delete pvr;
+    //printFieldContainer();
+    osgExit();
+    std::exit(0);
+}
+
+void PolyVR::setOption(string name, bool val) { options->setOption(name, val); }
+void PolyVR::setOption(string name, string val) { options->setOption(name, val); }
+void PolyVR::setOption(string name, int val) { options->setOption(name, val); }
+void PolyVR::setOption(string name, float val) { options->setOption(name, val); }
+
+void PolyVR::init(int argc, char **argv) {
     cout << "Init PolyVR\n\n";
+    enableCoreDump(true);
     setlocale(LC_ALL, "C");
-
-    signal(SIGSEGV, &coreDump);
-    signal(SIGFPE, &coreDump);
-
-    //Options
-    VROptions::get()->parse(argc,argv);
+    options = shared_ptr<VROptions>(VROptions::get());
+    options->parse(argc,argv);
 
     //GLUT
     glutInit(&argc, argv);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);
-    if (VROptions::get()->getOption<bool>("active_stereo"))
-        glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STEREO | GLUT_STENCIL);
-    else glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL);
 
     //OSG
     ChangeList::setReadWriteDefault();
@@ -86,47 +91,34 @@ void initPolyVR(int argc, char **argv) {
     OSG::preloadSharedObject("OSGImageFileIO");
     cout << "Init OSG\n";
     osgInit(argc,argv);
+}
 
-    cout << "Init SceneManager\n";
-    VRSceneManager::get();
-    VRSetupManager::get();
-    VRInternalMonitor::get();
+void PolyVR::start() {
+    if (VROptions::get()->getOption<bool>("active_stereo"))
+        glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STEREO | GLUT_STENCIL);
+    else glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL);
 
-    VRGuiManager::get();
-    VRMainInterface::get();
+    cout << "Init Modules\n";
+    sound_mgr = shared_ptr<VRSoundManager>(&VRSoundManager::get());
+    setup_mgr = shared_ptr<VRSetupManager>(VRSetupManager::get());
+    interface = shared_ptr<VRMainInterface>(VRMainInterface::get());
+    scene_mgr = shared_ptr<VRSceneManager>(VRSceneManager::get());
+    monitor = shared_ptr<VRInternalMonitor>(VRInternalMonitor::get());
+    gui_mgr = shared_ptr<VRGuiManager>(VRGuiManager::get());
+    loader = shared_ptr<VRSceneLoader>(VRSceneLoader::get());
 
-    string app = VROptions::get()->getOption<string>("application");
+    string app = options->getOption<string>("application");
     if (app != "") VRSceneManager::get()->loadScene(app);
-}
 
-void exitPolyVR() {
-    delete VRGuiManager::get();
-    delete VRSetupManager::get();
-    delete VRSceneManager::get();
-    delete VRSceneLoader::get();
-    delete VROptions::get();
-    delete VRInternalMonitor::get();
-    delete VRMainInterface::get();
-    delete &VRSoundManager::get();
-    VRMaterial::clearAll();
-
-    //printFieldContainer();
-
-    osgExit();
-    exit(0);
-}
-
-
-void startPolyVR() {
     while(true) VRSceneManager::get()->update();
 }
 
-void startPolyVR_testScene(NodeRecPtr n) {
+void PolyVR::startTestScene(Node* n) {
     VRSceneManager::get()->newScene("test");
     VRSceneManager::getCurrent()->getRoot()->find("Headlight")->addChild(n);
     VRGuiManager::get()->wakeWindow();
 
-    startPolyVR();
+    start();
 }
 
 

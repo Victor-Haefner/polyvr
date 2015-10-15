@@ -64,10 +64,9 @@ PyMethodDef VRPyRecorder::methods[] = {
 };
 
 PyObject* VRPyRecorder::setTransform(VRPyRecorder* self, PyObject* args) {
-	VRPyTransform* t;
-	int i;
+	VRPyTransform* t; int i;
     if (!PyArg_ParseTuple(args, "Oi", &t, &i)) return NULL;
-    self->obj->setTransform(t->obj,i);
+    self->obj->setTransform(t->objPtr,i);
     Py_RETURN_TRUE;
 }
 

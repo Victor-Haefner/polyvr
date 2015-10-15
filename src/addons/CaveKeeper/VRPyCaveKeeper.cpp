@@ -54,51 +54,31 @@ PyMethodDef VRPyCaveKeeper::methods[] = {
 };
 
 PyObject* VRPyCaveKeeper::initWorld(VRPyCaveKeeper* self, PyObject* args) {
-    PyObject* child = NULL;
+    VRPyObject* child = NULL;
     if (! PyArg_ParseTuple(args, "O", &child)) return NULL;
-    if (child == NULL) { PyErr_SetString(err, "Missing child parameter"); return NULL; }
-    VRPyObject* _child = (VRPyObject*)child;
-
-    if (_child->obj == 0) { PyErr_SetString(err, "VRPyCaveKeeper::initWorld, root is invalid"); return NULL; }
-
-    _child->obj->addChild(self->obj->getAnchor());
+    child->objPtr->addChild(self->obj->getAnchor());
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyCaveKeeper::update(VRPyCaveKeeper* self, PyObject* args) {
-    PyObject* child = NULL;
+    VRPyTransform* child = NULL;
     if (! PyArg_ParseTuple(args, "O", &child)) return NULL;
-    if (child == NULL) { PyErr_SetString(err, "Missing child parameter"); return NULL; }
-    VRPyTransform* _child = (VRPyTransform*)child;
-
-    if (_child->obj == 0) { PyErr_SetString(err, "VRPyCaveKeeper::update, obj is invalid"); return NULL; }
-
-    //self->obj->update(_child->obj->getWorldPosition());
+    //self->obj->update(child->objPtr->getWorldPosition());
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyCaveKeeper::dig(VRPyCaveKeeper* self, PyObject* args) {
-    PyObject* dev = NULL;
+    VRPyDevice* dev = NULL;
     if (! PyArg_ParseTuple(args, "O", &dev)) return NULL;
-    if (dev == NULL) { PyErr_SetString(err, "Missing device parameter"); return NULL; }
-    VRPyDevice* _dev = (VRPyDevice*)dev;
-
-    self->obj->dig(_dev->obj);
+    self->obj->dig(dev->obj);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyCaveKeeper::place(VRPyCaveKeeper* self, PyObject* args) {
-    PyObject* dev = NULL;
-    PyObject* obj_t = NULL;
-    PyObject* _geo = NULL;
-    if (! PyArg_ParseTuple(args, "OOO", &dev, &obj_t, &_geo)) return NULL;
-    if (dev == NULL) { PyErr_SetString(err, "Missing device parameter"); return NULL; }
-    if (obj_t == NULL) { PyErr_SetString(err, "Missing type parameter"); return NULL; }
-    if (_geo == NULL) { PyErr_SetString(err, "Missing object parameter"); return NULL; }
-    VRPyDevice* _dev = (VRPyDevice*)dev;
-    VRPyTransform* geo = (VRPyTransform*)_geo;
-    string _obj = PyString_AsString(obj_t);
-
-    self->obj->place(_dev->obj, _obj, geo->obj);
+    VRPyDevice* dev = NULL;
+    const char *obj_t;
+    VRPyTransform* geo = NULL;
+    if (! PyArg_ParseTuple(args, "OsO", &dev, &obj_t, &geo)) return NULL;
+    self->obj->place(dev->obj, obj_t, geo->objPtr);
     Py_RETURN_TRUE;
 }

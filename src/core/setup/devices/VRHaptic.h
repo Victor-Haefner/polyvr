@@ -3,6 +3,7 @@
 
 #include "VRDevice.h"
 #include "core/objects/geometry/VRPhysics.h"
+#include "core/utils/VRFunctionFwd.h"
 
 
 OSG_BEGIN_NAMESPACE;
@@ -16,10 +17,11 @@ class VRHaptic : public VRDevice {
         virtuose* v;
         string IP;
         string type;
-        VRFunction<int>* timestepWatchdog;
         VRFunction<int>* updateFktPre;
         VRFunction<int>* updateFktPost;
         Vec3i button_states;
+        VRUpdatePtr timestepWatchdog;
+        VRUpdatePtr updatePtr;
 
         /**gets positive when fps changes, negative w**/
         int fps_change = 0;
@@ -29,11 +31,11 @@ class VRHaptic : public VRDevice {
 
         void on_scene_changed(VRDevice* dev);
 
-        void applyTransformation(VRTransform* t);
-        void updateHapticPre(VRTransform* t);
-        void updateHapticPost(VRTransform* t);
+        void applyTransformation(VRTransformPtr t);
+        void updateHapticPre(VRTransformPtr t);
+        void updateHapticPost(VRTransformPtr t);
         /** restarts Haptic, if necessary (fps drop/gain) **/
-        void updateHapticTimestep(VRTransform* t);
+        void updateHapticTimestep(VRTransformPtr t);
 
     public:
         VRHaptic();
@@ -42,8 +44,8 @@ class VRHaptic : public VRDevice {
         void setForce(Vec3f force, Vec3f torque);
         Vec3f getForce();
         void setSimulationScales(float scale, float forces);
-        void attachTransform(VRTransform* trans);
-        void setBase(VRTransform* trans);
+        void attachTransform(VRTransformPtr trans);
+        void setBase(VRTransformPtr trans);
         void detachTransform();
         void updateVirtMechPre();
         void updateVirtMechPost();

@@ -41,7 +41,7 @@ class VRGuiNet_TypeCols : public Gtk::TreeModelColumnRecord {
 // --------------------------
 
 void VRGuiNet_updateList() {
-    VRScene* scene = VRSceneManager::getCurrent();
+    auto scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
 
     // update script list
@@ -65,7 +65,9 @@ void VRGuiNet_updateList() {
 }
 
 void VRGuiNet_on_new_clicked(GtkButton*, gpointer data) {
-    VRSocket* socket = VRSceneManager::getCurrent()->getSocket(5000);
+    auto scene = VRSceneManager::getCurrent();
+    if (scene == 0) return;
+    VRSocket* socket = scene->getSocket(5000);
     if (socket == 0) return;
 
     socket->setType("tcpip send");
@@ -85,7 +87,8 @@ void VRGuiNet_on_del_clicked(GtkButton*, gpointer data) {
 
     string msg1 = "Delete socket " + name;
     if (!askUser(msg1, "Are you sure you want to delete this socket?")) return;
-    VRSceneManager::getCurrent()->remSocket(name);
+    auto scene = VRSceneManager::getCurrent();
+    if (scene) scene->remSocket(name);
 
     Glib::RefPtr<Gtk::ListStore> list_store  = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("Sockets"));
     list_store->erase(iter);
@@ -114,7 +117,8 @@ void VRGuiNet_on_name_edited(GtkCellRendererText *cell, gchar *path_string, gcha
     row[cols.name] = new_name;
 
     // update key in map
-    VRSceneManager::getCurrent()->changeSocketName(name, new_name);
+    auto scene = VRSceneManager::getCurrent();
+    if (scene) scene->changeSocketName(name, new_name);
 }
 
 void VRGuiNet_on_argtype_edited(GtkCellRendererCombo* crc, gchar *path_string, GtkTreeIter *new_iter, gpointer d) {

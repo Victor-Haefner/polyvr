@@ -5,14 +5,14 @@
 #include <string>
 #include <vector>
 
-#include "core/utils/VRFunction.h"
+#include "core/utils/VRFunctionFwd.h"
+#include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRView;
 class VRFrame;
-class VRTransform;
 class Image;
 
 class VRRecorder {
@@ -22,8 +22,8 @@ class VRRecorder {
         vector<VRFrame*> captures;
         int maxFrames = -1;
 
-        VRFunction<bool>* toggleCallback = 0;
-        VRFunction<int>* updateCallback = 0;
+        VRTogglePtr toggleCallback;
+        VRUpdatePtr updateCallback;
 
         void on_record_toggle(bool b);
 
@@ -38,14 +38,14 @@ class VRRecorder {
         float getRecordingLength();
         void setMaxFrames(int maxf);
         bool frameLimitReached();
-        void setTransform(VRTransform* t, int f);
+        void setTransform(VRTransformPtr t, int f);
         Vec3f getFrom(int f);
         Vec3f getDir(int f);
         Vec3f getAt(int f);
         Vec3f getUp(int f);
         Image* get(int f);
 
-        VRFunction<bool>* getToggleCallback();
+        weak_ptr<VRFunction<bool> > getToggleCallback();
 };
 
 OSG_END_NAMESPACE;

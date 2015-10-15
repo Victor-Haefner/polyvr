@@ -37,8 +37,8 @@ void VRSetup::processOptions() {
 
 VRSetup::VRSetup(string name) {
     setName(name);
-    real_root = new VRTransform("VR Setup");
-    setup_cam = new VRCamera("Setup");
+    real_root = VRTransform::create("VR Setup");
+    setup_cam = VRCamera::create("Setup");
     setViewAnchor(real_root);
     setDeviceRoot(real_root);
     real_root->addAttachment("treeviewNotDragable", 0);
@@ -49,22 +49,23 @@ VRSetup::VRSetup(string name) {
     tracking = "None";
 
     setup_layer = new VRVisualLayer("Setup", "setup.png");
-    setup_layer->setCallback( new VRFunction<bool>("showSetup", boost::bind(&VRSetup::showSetup, this, _1) ) );
-
-    setup_layer = new VRVisualLayer("Statistics", "stats.png");
-    setup_layer->setCallback( new VRFunction<bool>("showStats", boost::bind(&VRViewManager::showViewStats, this, 0, _1) ) );
+    stats_layer = new VRVisualLayer("Statistics", "stats.png");
+    layer_setup_toggle = VRFunction<bool>::create("showSetup", boost::bind(&VRSetup::showSetup, this, _1) );
+    layer_stats_toggle = VRFunction<bool>::create("showStats", boost::bind(&VRViewManager::showViewStats, this, 0, _1) );
+    setup_layer->setCallback( layer_setup_toggle );
+    stats_layer->setCallback( layer_stats_toggle );
 }
 
 VRSetup::~VRSetup() {
-    if (user) delete user;
-    delete real_root;
+    delete setup_layer;
+    delete stats_layer;
 }
 
-void VRSetup::setScene(VRScene* scene) {
+void VRSetup::setScene(VRScenePtr scene) {
     if (scene == 0) return;
-    VRCamera* cam = scene->getActiveCamera();
+    VRCameraPtr cam = scene->getActiveCamera();
     if (cam == 0) return;
-    setViewRoot(scene->getRoot(), -1);
+    setViewRoot(scene->getSystemRoot(), -1);
     setViewCamera(cam, -1);
 
     VRMouse* mouse = (VRMouse*)getDevice("mouse");
@@ -74,21 +75,19 @@ void VRSetup::setScene(VRScene* scene) {
 
     for (auto w : getWindows()) w.second->setContent(true);
 
-    scene->addCamera(setup_cam);
-
     //scene->initDevices();
 }
 
-void VRSetup::addObject(VRObject* o) { real_root->addChild(o); }
+void VRSetup::addObject(VRObjectPtr o) { real_root->addChild(o); }
 
 void VRSetup::showSetup(bool b) { // TODO
     showViewportGeos(b);
 }
 
-VRTransform* VRSetup::getUser() { return user; }
-VRTransform* VRSetup::getRoot() { return real_root; }
+VRTransformPtr VRSetup::getUser() { return user; }
+VRTransformPtr VRSetup::getRoot() { return real_root; }
 
-VRTransform* VRSetup::getTracker(string t) {
+VRTransformPtr VRSetup::getTracker(string t) {
     for (int ID : getARTDevices()) {
         ART_device* dev = getARTDevice(ID);
         if (dev->ent->getName() == t) return dev->ent;

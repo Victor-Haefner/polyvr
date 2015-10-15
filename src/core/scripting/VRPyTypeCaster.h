@@ -5,16 +5,16 @@
 #undef _POSIX_C_SOURCE
 #include <Python.h>
 
-using namespace std;
+#include "core/objects/VRObjectFwd.h"
 
-namespace OSG{ class VRObject; }
+using namespace std;
 
 class VRPyTypeCaster {
     public:
         VRPyTypeCaster();
         static PyObject* err;
 
-        static PyObject* cast(OSG::VRObject* obj);
+        static PyObject* cast(OSG::VRObjectPtr obj);
 };
 
 #endif // VRPYTYPECASTER_H_INCLUDED

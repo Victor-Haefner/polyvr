@@ -7,6 +7,7 @@
 #include <gtkmm/liststore.h>
 #include "core/scene/VRSceneManager.h"
 #include "VRGuiSignals.h"
+#include "core/utils/VRFunctionFwd.h"
 
 struct _GtkSourceLanguage;
 namespace Gtk{ class Table; class TreeView; }
@@ -18,10 +19,16 @@ class VRScript;
 
 class VRGuiScripts {
     private:
+        struct page {
+            int line = 0;
+        };
+
         bool trigger_cbs = true;
         _GtkSourceLanguage* python = 0;
         _GtkSourceLanguage* web = 0;
         _GtkSourceLanguage* glsl = 0;
+        map<VRScript*, page> pages;
+	    shared_ptr<VRFunction<int> > updatePtr;
 
         Gtk::Table* scriptImportWidget = 0;
         Gtk::TreeView* import_treeview1 = 0;

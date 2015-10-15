@@ -3,30 +3,34 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <btBulletDynamicsCommon.h>
+#include <boost/thread/recursive_mutex.hpp>
+#include "core/utils/VRFunctionFwd.h"
+#include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRGeometry;
-
 class CarDynamics {
     private:
-        VRGeometry *w1, *w2, *w3, *w4;
-        VRGeometry* chassis;
+        VRGeometryPtr w1, w2, w3, w4;
+        VRGeometryPtr chassis = 0;
+        VRObjectPtr root = 0;
+        shared_ptr<VRFunction<int> > updatePtr;
 
         btAlignedObjectArray<btCollisionShape*> m_collisionShapes;
 
-        btRigidBody* m_carChassis;
+        btRigidBody* m_carChassis = 0;
         btRaycastVehicle::btVehicleTuning	m_tuning;
-        btVehicleRaycaster*	m_vehicleRayCaster;
-        btRaycastVehicle*	m_vehicle;
-        btDynamicsWorld* m_dynamicsWorld;
+        btVehicleRaycaster*	m_vehicleRayCaster = 0;
+        btRaycastVehicle*	m_vehicle = 0;
+        btDynamicsWorld* m_dynamicsWorld = 0;
 
         btScalar m_defaultContactProcessingThreshold;
 
+        boost::recursive_mutex& mtx();
+
         void initPhysics();
         void initVehicle();
-        void resetVehicle();
 
         btRigidBody* createRigitBody(float mass, const btTransform& startTransform, btCollisionShape* shape);
 
@@ -34,18 +38,21 @@ class CarDynamics {
         CarDynamics();
         ~CarDynamics();
 
+        VRObjectPtr getRoot();
+
         void setThrottle(float t);
         void setBreak(float b);
         void setSteering(float s);
 
-        void setChassisGeo(VRGeometry* geo);
-        void setWheelGeo(VRGeometry* geo);
+        void setChassisGeo(VRGeometryPtr geo);
+        void setWheelGeo(VRGeometryPtr geo);
         void setWheelOffsets(float xOffset, float frontZOffset, float rearZOffset, float height);
         void setWheelParams(float w, float r);
+        void setCarMass(float m);
 
         void updateWheels();
 
-        void reset();
+        void reset(float x, float y, float z);
         float getSpeed();
 };
 

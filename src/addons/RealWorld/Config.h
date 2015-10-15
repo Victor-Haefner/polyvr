@@ -18,11 +18,11 @@ namespace realworld {
         float LAYER_DISTANCE = 0.11f; // distance between 2 layers, so that one layer is hidden completely
 
         //streets
-        float STREET_HEIGHT = 0.35f; //street distance from floor
+        float STREET_HEIGHT = 0.05f; //street distance from floor
         float STREET_WIDTH = 3.0f; //minimum street width
-        float BRIDGE_HEIGHT = 3.0f; //distance between ground && a bridge
-        float SMALL_BRIDGE_HEIGHT = 0.5f; //thickness of smaller bridges
-        float BRIDGE_SIZE = 0.1f; //thickness of the bridge
+        float BRIDGE_HEIGHT = 10.0f; //distance between ground && a bridge
+        float SMALL_BRIDGE_HEIGHT = 5.0f; //thickness of smaller bridges
+        float BRIDGE_SIZE = 0.5f; //thickness of the bridge
 
         //street signs
         float SIGN_DISTANCE = 1.0f; //distance from ground

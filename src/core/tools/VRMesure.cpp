@@ -125,8 +125,8 @@ void VRMesure::processLabel(Vec3f p1, Vec3f p2, Vec3f cpos) {
 void VRMesure::check() {//check spheres for change of position
     Vec3f p1, p2;
 
-    VRCamera* cam = scene->getActiveCamera();
-    VRTransform* user = VRSetupManager::getCurrent()->getUser();
+    VRCameraPtr cam = scene->getActiveCamera();
+    VRTransformPtr user = VRSetupManager::getCurrent()->getUser();
 
     p1 = s1->getWorldPosition();
     p2 = s2->getWorldPosition();
@@ -145,17 +145,17 @@ MaterialRecPtr VRMesure::setTransMat() {
 }
 
 void VRMesure::_kill() {
-    scene->dropUpdateFkt(fkt);
+    scene->dropUpdateFkt(updatePtr);
     s1->hide();
     s2->hide();
     l->hide();
 }
 
 VRMesure::VRMesure() {
-    s1 = new VRGeometry("mesure_s1");//unique names?
-    s2 = new VRGeometry("mesure_s2");
-    l = new VRGeometry("mesure_l");
-    display = new VRBillboard("ecoflex_nametag", false);
+    s1 = VRGeometry::create("mesure_s1");//unique names?
+    s2 = VRGeometry::create("mesure_s2");
+    l = VRGeometry::create("mesure_l");
+    display = VRBillboard::create("ecoflex_nametag", false);
 
     s1->setPickable(true);
     s2->setPickable(true);
@@ -178,7 +178,7 @@ VRMesure::VRMesure() {
     display->setSize(0.2*s.size()*scale, 0.3*scale);
     display->setTexture(texture);
 
-    fkt = new VRFunction<int>("Mesure_check", boost::bind(&VRMesure::check, this));
+    updatePtr = VRFunction<int>::create("Mesure_check", boost::bind(&VRMesure::check, this));
 }
 
 void VRMesure::setKillSignal(VRDevice* dev, VRSignal* sig) {
@@ -191,7 +191,7 @@ void VRMesure::addToScene(VRScene* _scene) {
     scene->add(s1);
     scene->add(s2);
     scene->add(l);
-    scene->addUpdateFkt(fkt);
+    scene->addUpdateFkt(updatePtr);
 }
 
 void VRMesure::setPosition(Vec3f pos) {
@@ -204,8 +204,9 @@ void VRMesure::kill(VRDevice* dev) {
 
     VRIntersection ins = dev->intersect(l);
     if (!ins.hit) return;
-    if (ins.object == 0) return;
-    if (ins.object->hasAncestor(s1) || ins.object->hasAncestor(s2)) _kill();
+    auto obj = ins.object.lock();
+    if (obj == 0) return;
+    if (obj->hasAncestor(s1) || obj->hasAncestor(s2)) _kill();
 }
 
 OSG_END_NAMESPACE

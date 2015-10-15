@@ -6,11 +6,10 @@
 #include <map>
 #include <vector>
 
+#include "core/objects/VRObjectFwd.h"
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
-
-class VRLod;
-class VRObject;
 
 class VRFactory {
     public:
@@ -20,14 +19,14 @@ class VRFactory {
             node* parent;
             map<int, node*> children;
 
-            VRLod* lod;
+            VRLodPtr lod;
         };
 
     public:
         VRFactory();
 
-        VRObject* loadVRML(string path);
-        VRObject* setupLod(vector<string> paths);
+        VRObjectPtr loadVRML(string path);
+        VRObjectPtr setupLod(vector<string> paths);
 };
 
 OSG_END_NAMESPACE;

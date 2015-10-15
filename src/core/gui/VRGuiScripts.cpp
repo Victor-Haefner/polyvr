@@ -30,7 +30,8 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 using namespace Gtk;
 
-GtkSourceBuffer* VRGuiScripts_sourceBuffer;
+GtkSourceBuffer* VRGuiScripts_sourceBuffer = 0;
+VRScript* lastSelectedScript = 0;
 
 class VRGuiScripts_ModelColumns : public Gtk::TreeModelColumnRecord {
     public:
@@ -88,7 +89,10 @@ VRScript* VRGuiScripts::getSelectedScript() {
     VRGuiScripts_ModelColumns cols;
     Gtk::TreeModel::Row row = *iter;
     string name = row.get_value(cols.script);
-    VRScript* script = VRSceneManager::getCurrent()->getScript(name);
+    auto scene = VRSceneManager::getCurrent();
+    if (scene == 0) return 0;
+    VRScript* script = scene->getScript(name);
+    lastSelectedScript = script;
 
     return script;
 }
@@ -106,19 +110,25 @@ void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScript* script, bool on
     int trig_lvl = 0;
     for (auto trig : script->getTriggers()) {
         if (trig.second->trigger == "on_scene_load") trig_lvl |= 1;
-        if (trig.second->trigger == "on_timeout") trig_lvl |= 2;
-        if (trig.second->trigger == "on_device") trig_lvl |= 4;
-        if (trig.second->trigger == "on_socket") trig_lvl |= 8;
-        if (trig.second->trigger == "on_device_drag") trig_lvl |= 16;
-        if (trig.second->trigger == "on_device_drop") trig_lvl |= 32;
+        if (trig.second->trigger == "on_scene_close") trig_lvl |= 2;
+        if (trig.second->trigger == "on_timeout") trig_lvl |= 4;
+        if (trig.second->trigger == "on_device") trig_lvl |= 8;
+        if (trig.second->trigger == "on_socket") trig_lvl |= 16;
+        if (trig.second->trigger == "on_device_drag") trig_lvl |= 32;
+        if (trig.second->trigger == "on_device_drop") trig_lvl |= 64;
     }
 
+    if (script->getType() == "HTML") trig_lvl |= 128;
+    if (script->getType() == "GLSL") trig_lvl |= 256;
+
     if (trig_lvl >= 1) bg = "#AAFF88";
-    if (trig_lvl >= 2) bg = "#FF8866";
-    if (trig_lvl >= 4) bg = "#FFBB33";
-    if (trig_lvl >= 8) bg = "#3388FF";
-    if (trig_lvl >= 16) bg = "#FFCCAA";
-    if (trig_lvl >= 32) bg = "#FFCC88";
+    if (trig_lvl >= 4) bg = "#FF8866";
+    if (trig_lvl >= 8) bg = "#FFBB33";
+    if (trig_lvl >= 16) bg = "#3388FF";
+    if (trig_lvl >= 32) bg = "#FFCCAA";
+    if (trig_lvl >= 64) bg = "#FFCC88";
+    if (trig_lvl >= 128) bg = "#AACCFF";
+    if (trig_lvl >= 256) bg = "#CCAAFF";
 
     string time = " ";
     float exec_time = script->getExecutionTime();
@@ -163,7 +173,9 @@ void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScript* script, bool on
 
 void VRGuiScripts::on_new_clicked() {
     Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("script_list"));
-    VRSceneManager::getCurrent()->newScript("Script", "\tpass");
+    auto scene = VRSceneManager::getCurrent();
+    if (scene == 0) return;
+    scene->newScript("Script", "\tpass");
     updateList();
 }
 
@@ -172,7 +184,9 @@ void VRGuiScripts::on_save_clicked() {
     if (script == 0) return;
 
     string core = VRGuiScripts::get_editor_core(script->getHeadSize());
-    VRSceneManager::getCurrent()->updateScript(script->getName(), core);
+    auto scene = VRSceneManager::getCurrent();
+    if (scene == 0) return;
+    scene->updateScript(script->getName(), core);
 
     setToolButtonSensitivity("toolbutton7", false);
 
@@ -180,7 +194,7 @@ void VRGuiScripts::on_save_clicked() {
 }
 
 void VRGuiScripts::on_import_clicked() {
-    VRScene* scene = VRSceneManager::getCurrent();
+    auto scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
 
     import_liststore1->clear();
@@ -265,7 +279,9 @@ void VRGuiScripts::on_diag_import() {
     VRScript* s = import_scripts[name];
     import_scripts.erase(name);
 
-    VRSceneManager::getCurrent()->addScript(s);
+    auto scene = VRSceneManager::getCurrent();
+    if (scene == 0) return;
+    scene->addScript(s);
     s->enable(true);
     updateList();
 }
@@ -279,7 +295,9 @@ void VRGuiScripts::on_exec_clicked() {
 
     on_save_clicked();
 
-    VRSceneManager::getCurrent()->triggerScript(script->getName());
+    auto scene = VRSceneManager::getCurrent();
+    if (scene == 0) return;
+    scene->triggerScript(script->getName());
 
     VRGuiSignals::get()->getSignal("scene_modified")->trigger<VRDevice>();
 }
@@ -293,13 +311,15 @@ void VRGuiScripts::on_del_clicked() {
     VRGuiScripts_ModelColumns cols;
     Gtk::TreeModel::Row row = *iter;
     string name = row.get_value(cols.script);
-    VRScript* script = VRSceneManager::getCurrent()->getScript(name);
+    auto scene = VRSceneManager::getCurrent();
+    if (scene == 0) return;
+    VRScript* script = scene->getScript(name);
     if (script == 0) return;
 
     string msg1 = "Delete script " + name;
     if (!askUser(msg1, "Are you sure you want to delete this script?")) return;
 
-    VRSceneManager::getCurrent()->remScript(script->getName());
+    scene->remScript(script->getName());
     updateList();
 
     setToolButtonSensitivity("toolbutton9", false);
@@ -307,6 +327,9 @@ void VRGuiScripts::on_del_clicked() {
 }
 
 void VRGuiScripts::on_select_script() { // selected a script
+    auto adjustment = Glib::RefPtr<Gtk::ScrolledWindow>::cast_static(VRGuiBuilder()->get_object("scrolledwindow4"))->get_vadjustment();
+    if (lastSelectedScript) pages[lastSelectedScript].line = adjustment->get_value();
+
     VRScript* script = VRGuiScripts::getSelectedScript();
     if (script == 0) {
         setToolButtonSensitivity("toolbutton8", false);
@@ -320,21 +343,22 @@ void VRGuiScripts::on_select_script() { // selected a script
 
     // update options
     setCombobox("combobox1", getListStorePos("liststore6", script->getType()));
-    fillStringListstore("liststore7", VRSetupManager::getCurrent()->getDevices("mobile"));
+    auto setup = VRSetupManager::getCurrent();
+    if (setup) fillStringListstore("liststore7", setup->getDevices("mobile"));
     setCombobox("combobox24", getListStorePos("liststore7", script->getMobile()));
 
     // update editor content && script head
     string core = script->getHead() + script->getCore();
     gtk_text_buffer_set_text(GTK_TEXT_BUFFER(VRGuiScripts_sourceBuffer), core.c_str(), core.size());
+    adjustment->set_value(pages[script].line);
 
     // update arguments liststore
     Glib::RefPtr<Gtk::ListStore> args = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("liststore2"));
     args->clear();
-    map<string, VRScript::arg*> arg_map = script->getArguments();
-    map<string, VRScript::arg*>::iterator itr;
-    if (PyErr_Occurred() != NULL) PyErr_Print();
-    for (itr = arg_map.begin(); itr != arg_map.end(); itr++) {
-        VRScript::arg* a = itr->second;
+
+    //if (PyErr_Occurred() != NULL) PyErr_Print();
+    for (auto ar : script->getArguments()) {
+        VRScript::arg* a = ar.second;
         Gtk::ListStore::Row row = *args->append();
         gtk_list_store_set(args->gobj(), row.gobj(), 0, a->getName().c_str(), -1);
         gtk_list_store_set(args->gobj(), row.gobj(), 1, a->val.c_str(), -1);
@@ -347,7 +371,7 @@ void VRGuiScripts::on_select_script() { // selected a script
     trigs->clear();
     map<string, VRScript::trig*> trig_map = script->getTriggers();
     map<string, VRScript::trig*>::iterator itr2;
-    if (PyErr_Occurred() != NULL) PyErr_Print();
+    //if (PyErr_Occurred() != NULL) PyErr_Print();
     for (itr2 = trig_map.begin(); itr2 != trig_map.end(); itr2++) {
         VRScript::trig* t = itr2->second;
         string key = toString(t->key);
@@ -444,7 +468,9 @@ void VRGuiScripts::on_name_edited(const Glib::ustring& path, const Glib::ustring
     row[cols.script] = new_name;
 
     // update key in map
-    VRSceneManager::getCurrent()->changeScriptName(name, new_name);
+    auto scene = VRSceneManager::getCurrent();
+    if (scene == 0) return;
+    scene->changeScriptName(name, new_name);
     updateList();
     on_select_script();
 }
@@ -463,7 +489,9 @@ void VRGuiScripts_on_script_changed(GtkTextBuffer* tb, gpointer user_data) {
     // negate change if in line 0
 
     string core = gs->get_editor_core(script->getHeadSize());
-    VRSceneManager::getCurrent()->updateScript(script->getName(), core, false);
+    auto scene = VRSceneManager::getCurrent();
+    if (scene == 0) return;
+    scene->updateScript(script->getName(), core, false);
 }
 
 
@@ -690,8 +718,9 @@ void VRGuiScripts::loadHelp() {
     Gtk::TreeModel::iterator itr2;
     Gtk::TreeStore::Row row;
 
-    VRScriptManager* sm = VRSceneManager::getCurrent();
-    vector<string> types = sm->getPyVRTypes();
+    auto scene = VRSceneManager::getCurrent();
+    if (scene == 0) return;
+    vector<string> types = scene->getPyVRTypes();
     for (uint i=0; i<types.size(); i++) {
         itr = tree_store->append();
         row = *itr;
@@ -699,7 +728,7 @@ void VRGuiScripts::loadHelp() {
         gtk_tree_store_set (tree_store->gobj(), row.gobj(), 1, "module", -1);
         gtk_tree_store_set (tree_store->gobj(), row.gobj(), 2, types[i].c_str(), -1);
 
-        vector<string> methods = sm->getPyVRMethods(types[i]);
+        vector<string> methods = scene->getPyVRMethods(types[i]);
         for (uint j=0; j<methods.size(); j++) {
             itr2 = tree_store->append(itr->children());
             row = *itr2;
@@ -733,21 +762,21 @@ void VRGuiScripts::on_select_help() {
     string type = row.get_value(cols.type);
     string mod = row.get_value(cols.mod);
 
-    VRScriptManager* sm = VRSceneManager::getCurrent();
+    auto scene = VRSceneManager::getCurrent();
+    if (scene == 0) return;
     Glib::RefPtr<Gtk::TextBuffer> tb  = Glib::RefPtr<Gtk::TextBuffer>::cast_static(VRGuiBuilder()->get_object("pydoc"));
 
     if (type == "module") {
-        vector<string> methods = sm->getPyVRMethods(obj);
-        string doc = "\n";
-        for (uint i=0; i<methods.size(); i++) {
-            string d = sm->getPyVRMethodDoc(mod, methods[i]);
-            doc += methods[i] + "\n\t" + d + "\n\n";
+        string doc = scene->getPyVRDescription(obj) + "\n\n";
+        for (auto method : scene->getPyVRMethods(obj)) {
+            string d = scene->getPyVRMethodDoc(mod, method);
+            doc += method + "\n\t" + d + "\n\n";
         }
         tb->set_text(doc);
     }
 
     if (type == "method") {
-        string doc = "\n" + sm->getPyVRMethodDoc(mod, obj);
+        string doc = "\n" + scene->getPyVRMethodDoc(mod, obj);
         tb->set_text(doc);
     }
 }
@@ -788,7 +817,8 @@ void VRGuiScripts::on_find_diag_find_clicked() {
     VRScript* s = getSelectedScript();
     if (!sa && s == 0) return;
 
-    VRScene* scene = VRSceneManager::getCurrent();
+    auto scene = VRSceneManager::getCurrent();
+    if (scene == 0) return;
 
     vector<VRScript*> results;
     if (!sa) results = scene->searchScript(search, s);
@@ -839,7 +869,7 @@ void VRGuiScripts::printViewerLanguages() {
 }
 
 void VRGuiScripts::update() {
-    VRScene* scene = VRSceneManager::getCurrent();
+    auto scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
     Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("script_list"));
 
@@ -851,14 +881,22 @@ void VRGuiScripts::update() {
 }
 
 void VRGuiScripts::updateList() {
-    VRScene* scene = VRSceneManager::getCurrent();
+    auto scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
 
     // update script list
     Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("script_list"));
     store->clear();
 
-    for (auto script : scene->getScripts()) setScriptListRow(store->append(), script.second);
+    auto oldpages = pages;
+    pages.clear();
+
+    for (auto script : scene->getScripts()) {
+        auto s = script.second;
+        setScriptListRow(store->append(), s);
+        if (oldpages.count(s)) pages[s] = oldpages[s];
+        else pages[s] = page();
+    }
     on_select_script();
 }
 
@@ -944,8 +982,8 @@ VRGuiScripts::VRGuiScripts() {
     setCellRendererCombo("treeviewcolumn30", "ScriptTriggerStates", tcols.state, sigc::mem_fun(*this, &VRGuiScripts::on_trigstate_edited) );
 
     // fill combolists
-    const char *arg_types[] = {"int", "float", "str", "VRPyObjectType", "VRPyTransformType", "VRPyGeometryType", "VRPyLightType", "VRPyLodType", "VRPyDeviceType", "VRPyHapticType", "VRPySocketType"};
-    const char *trigger_types[] = {"none", "on_scene_load", "on_timeout", "on_device", "on_socket"};
+    const char *arg_types[] = {"int", "float", "str", "VRPyObjectType", "VRPyTransformType", "VRPyGeometryType", "VRPyLightType", "VRPyLodType", "VRPyDeviceType", "VRPyMouseType", "VRPyHapticType", "VRPySocketType"};
+    const char *trigger_types[] = {"none", "on_scene_load", "on_scene_close", "on_timeout", "on_device", "on_socket"};
     const char *device_types[] = {"mouse", "keyboard", "flystick", "haptic", "mobile", "vrpn_device"}; // TODO: get from a list in devicemanager || something
     const char *trigger_states[] = {"Pressed", "Released", "Drag", "Drop", "To edge", "From edge"};
     const char *script_types[] = {"Python", "GLSL", "HTML"};
@@ -960,8 +998,8 @@ VRGuiScripts::VRGuiScripts() {
     setToolButtonSensitivity("toolbutton9", false);
 
     // update the list each frame to update the execution time
-    VRFunction<int>* fkt = new VRFunction<int>("scripts_gui_update",  boost::bind(&VRGuiScripts::update, this) );
-    VRSceneManager::get()->addUpdateFkt(fkt, 100);
+    updatePtr = VRFunction<int>::create("scripts_gui_update",  boost::bind(&VRGuiScripts::update, this) );
+    VRSceneManager::get()->addUpdateFkt(updatePtr, 100);
 
     // init scriptImportWidget
     scriptImportWidget = manage( new Table() );

@@ -16,6 +16,7 @@ VRPrimitive* VRPrimitive::make(string p) {
     if (p == "Teapot") return new VRTeapot();
     if (p == "Cylinder") return new VRCylinder();
     if (p == "Cone") return new VRCone();
+    if (p == "Arrow") return new VRArrow();
     if (p == "Gear") return new VRGear();
     if (p == "Thread") return new VRThread();
     return 0;
@@ -34,6 +35,7 @@ vector<string> VRPrimitive::getTypes() {
         prims.push_back("Cone");
         prims.push_back("Torus");
         prims.push_back("Teapot");
+        prims.push_back("Arrow");
         prims.push_back("Gear");
         prims.push_back("Thread");
     }
@@ -93,6 +95,11 @@ vector<string> VRPrimitive::getTypeParameter(string type) {
         params["Teapot"].push_back("Iterations");
         params["Teapot"].push_back("Scale");
 
+        params["Arrow"].push_back("Height");
+        params["Arrow"].push_back("Width");
+        params["Arrow"].push_back("Trunc");
+        params["Arrow"].push_back("Hat");
+
         params["Gear"].push_back("Width");
         params["Gear"].push_back("Hole");
         params["Gear"].push_back("Pitch");
@@ -116,6 +123,7 @@ VRTorus::VRTorus() { N = 4; type = "Torus"; }
 VRTeapot::VRTeapot() { N = 2; type = "Teapot"; }
 VRCylinder::VRCylinder() { N = 6; type = "Cylinder"; }
 VRCone::VRCone() { N = 5; type = "Cone"; }
+VRArrow::VRArrow() { N = 4; type = "Arrow"; }
 VRThread::VRThread() { N = 4; type = "Thread"; }
 VRGear::VRGear() { N = 6; type = "Gear"; }
 
@@ -126,6 +134,7 @@ void VRTorus::fromStream(stringstream& ss) { ss >> inner_radius >> outer_radius 
 void VRTeapot::fromStream(stringstream& ss) { ss >> iterations >> scale; }
 void VRCylinder::fromStream(stringstream& ss) { ss >> height >> radius >> Nsides >> doTop >> doBottom >> doSides; }
 void VRCone::fromStream(stringstream& ss) { ss >> height >> radius >> Nsides >> doBottom >> doSides; }
+void VRArrow::fromStream(stringstream& ss) { ss >> height >> width >> trunc >> hat; }
 void VRThread::fromStream(stringstream& ss) { ss >> length >> radius >> pitch >> Nsegments; }
 void VRGear::fromStream(stringstream& ss) { ss >> width >> hole >> pitch >> teeth_number >> teeth_size >> bevel; }
 
@@ -136,6 +145,7 @@ void VRTorus::toStream(stringstream& ss) { ss << inner_radius << " " << outer_ra
 void VRTeapot::toStream(stringstream& ss) { ss << iterations << " " << scale; }
 void VRCylinder::toStream(stringstream& ss) { ss << height << " " << radius << " " << Nsides << " " << doTop << " " << doBottom << " " << doSides; }
 void VRCone::toStream(stringstream& ss) { ss << height << " " << radius << " " << Nsides << " " << doBottom << " " << doSides; }
+void VRArrow::toStream(stringstream& ss) { ss << height << " " << width << " " << trunc << " " << hat; }
 void VRThread::toStream(stringstream& ss) { ss << length << " " << radius << " " << pitch << " " << Nsegments; }
 void VRGear::toStream(stringstream& ss) { ss << width << " " << hole << " " << pitch << " " << teeth_number << " " << teeth_size << " " << bevel; }
 
@@ -146,6 +156,43 @@ OSG::GeometryRecPtr VRTorus::make() { return OSG::makeTorusGeo(inner_radius, out
 OSG::GeometryRecPtr VRTeapot::make() { return OSG::makeTeapotGeo(iterations, scale); }
 OSG::GeometryRecPtr VRCylinder::make() { return OSG::makeCylinderGeo(height, radius, Nsides, doSides, doTop, doBottom); }
 OSG::GeometryRecPtr VRCone::make() { return OSG::makeConeGeo(height, radius, Nsides, doSides, doBottom); }
+OSG::GeometryRecPtr VRArrow::make() {
+    OSG::GeoUInt8PropertyRecPtr      Type = OSG::GeoUInt8Property::create();
+    OSG::GeoUInt32PropertyRecPtr     Length = OSG::GeoUInt32Property::create();
+    OSG::GeoPnt3fPropertyRecPtr      Pos = OSG::GeoPnt3fProperty::create();
+    OSG::GeoVec3fPropertyRecPtr      Norms = OSG::GeoVec3fProperty::create();
+    OSG::GeoUInt32PropertyRecPtr     Indices = OSG::GeoUInt32Property::create();
+    OSG::SimpleMaterialRecPtr        Mat = OSG::SimpleMaterial::create();
+
+    Pos->addValue(OSG::Vec3f(0,0,0));
+    Pos->addValue(OSG::Vec3f(-width*0.5,0,hat));
+    Pos->addValue(OSG::Vec3f(width*0.5,0,hat));
+    Pos->addValue(OSG::Vec3f(-trunc*0.5,0,hat));
+    Pos->addValue(OSG::Vec3f(trunc*0.5,0,hat));
+    Pos->addValue(OSG::Vec3f(-trunc*0.5,0,height));
+    Pos->addValue(OSG::Vec3f(trunc*0.5,0,height));
+    for (int i=0; i<7; i++) Norms->addValue(OSG::Vec3f(0,1,0));
+    Indices->addValue(0); Indices->addValue(1); Indices->addValue(2);
+    Indices->addValue(3); Indices->addValue(5); Indices->addValue(4);
+    Indices->addValue(4); Indices->addValue(5); Indices->addValue(6);
+
+    Type->addValue(GL_TRIANGLES);
+    Length->addValue(Indices->size()); // for each tooth 4 quads
+
+    Mat->setDiffuse(OSG::Color3f(0.8,0.8,0.6));
+    Mat->setAmbient(OSG::Color3f(0.4, 0.4, 0.2));
+    Mat->setSpecular(OSG::Color3f(0.1, 0.1, 0.1));
+
+    OSG::GeometryRecPtr geo = OSG::Geometry::create();
+    geo->setTypes(Type);
+    geo->setLengths(Length);
+    geo->setIndices(Indices);
+    geo->setPositions(Pos);
+    geo->setNormals(Norms);
+    geo->setMaterial(Mat);
+
+    return geo;
+}
 OSG::GeometryRecPtr VRThread::make() {
     OSG::GeoUInt8PropertyRecPtr      Type = OSG::GeoUInt8Property::create();
     OSG::GeoUInt32PropertyRecPtr     Length = OSG::GeoUInt32Property::create();

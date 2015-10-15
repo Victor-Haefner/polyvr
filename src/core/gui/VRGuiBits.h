@@ -6,30 +6,34 @@
 #include <queue>
 #include <gtkmm/combobox.h>
 #include <boost/thread.hpp>
-#include "core/setup/devices/VRSignal.h"
+#include "core/utils/VRFunctionFwd.h"
 
-namespace Gtk { class ToggleToolButton; }
+namespace Gtk { class ToggleToolButton; class ScrolledWindow; }
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRVisualLayer;
 class VRRecorder;
+class VRSignal;
 
 class VRGuiBits {
     private:
         GtkWidget* term_box = 0;
+        Gtk::ScrolledWindow* swin = 0;
 	    std::queue<string> msg_queue;
 	    mutable boost::mutex msg_mutex;
 
-        VRRecorder* recorder = 0;
-        VRVisualLayer* recorder_visual_layer = 0;
+	    shared_ptr<VRFunction<int> > updatePtr;
+
+        shared_ptr<VRRecorder> recorder;
+        shared_ptr<VRVisualLayer> recorder_visual_layer;
 
         void hideAbout(int i);
         void updateVisualLayer();
         void on_view_option_toggle(VRVisualLayer* l, Gtk::ToggleToolButton* tb);
         void toggleVerbose(string s);
-        static void on_terminal_changed();
+        void on_terminal_changed();
 
     public:
         VRGuiBits();
@@ -38,6 +42,7 @@ class VRGuiBits {
 
         void write_to_terminal(string s);
         void update_terminal();
+        void clear_terminal();
 
         void toggleDock();
         bool toggleFullscreen(GdkEventKey* k);

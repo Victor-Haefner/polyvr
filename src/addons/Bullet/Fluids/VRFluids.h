@@ -16,6 +16,7 @@ protected:
 public:
     VRFluids();
     VRFluids(bool spawnParticles);
+    static shared_ptr<VRFluids> create();
 
     void update(int from, int to) override;
     void updateForce(int from, int to);

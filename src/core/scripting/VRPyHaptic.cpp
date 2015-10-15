@@ -34,7 +34,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRHaptic>::type = {
     0,		               /* tp_iter */
     0,		               /* tp_iternext */
     VRPyHaptic::methods,             /* tp_methods */
-    VRPyHaptic::members,             /* tp_members */
+    0,             /* tp_members */
     0,                         /* tp_getset */
     0,                         /* tp_base */
     0,                         /* tp_dict */
@@ -44,10 +44,6 @@ template<> PyTypeObject VRPyBaseT<OSG::VRHaptic>::type = {
     (initproc)init,      /* tp_init */
     0,                         /* tp_alloc */
     0,                 /* tp_new */
-};
-
-PyMemberDef VRPyHaptic::members[] = {
-    {NULL}  /* Sentinel */
 };
 
 PyMethodDef VRPyHaptic::methods[] = {
@@ -95,14 +91,14 @@ PyObject* VRPyHaptic::attachTransform(VRPyHaptic* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyHaptic::attachTransform - Object is invalid"); return NULL; }
     VRPyTransform* tr;
     if (! PyArg_ParseTuple(args, "O", &tr)) return NULL;
-    self->obj->attachTransform(tr->obj);
+    self->obj->attachTransform(tr->objPtr);
     Py_RETURN_TRUE;
 }
 PyObject* VRPyHaptic::setBase(VRPyHaptic* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyHaptic::setBase - Object is invalid"); return NULL; }
     VRPyTransform* tr;
     if (! PyArg_ParseTuple(args, "O", &tr)) return NULL;
-    self->obj->setBase(tr->obj);
+    self->obj->setBase(tr->objPtr);
     Py_RETURN_TRUE;
 }
 

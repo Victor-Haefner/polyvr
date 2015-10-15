@@ -10,8 +10,8 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 
-VRObject* VRAvatar::initRay() {
-    VRGeometry* ray = new VRGeometry("av_ray");
+VRObjectPtr VRAvatar::initRay() {
+    VRGeometryPtr ray = VRGeometry::create("av_ray");
 
     vector<Vec3f> pos, norms;
     vector<Vec2f> texs;
@@ -28,7 +28,7 @@ VRObject* VRAvatar::initRay() {
         texs.push_back(Vec2f(0,0));
     }
 
-    VRMaterial* mat = VRMaterial::get("yellow_ray");
+    VRMaterialPtr mat = VRMaterial::get("yellow_ray");
     mat->setLineWidth(6);
     mat->setDiffuse(Color3f(1,1,0));
     mat->setAmbient(Color3f(1,1,0));
@@ -40,8 +40,8 @@ VRObject* VRAvatar::initRay() {
     return ray;
 }
 
-VRObject* VRAvatar::initCone() {
-    VRGeometry* cone = new VRGeometry("av_cone");
+VRObjectPtr VRAvatar::initCone() {
+    VRGeometryPtr cone = VRGeometry::create("av_cone");
     cone->setMesh(makeConeGeo(0.3, 0.03, 32, true, true));
     cone->setFrom(Vec3f(0,0,-0.1));
     cone->setOrientation(Vec3f(1,0,-0.1), Vec3f(0,0,-1));
@@ -49,31 +49,31 @@ VRObject* VRAvatar::initCone() {
     return cone;
 }
 
-VRObject* VRAvatar::initBroadRay() {//path?
-    VRGeometry* geo = new VRGeometry("av_broadray");
+VRObjectPtr VRAvatar::initBroadRay() {//path?
+    VRGeometryPtr geo = VRGeometry::create("av_broadray");
     //geo->setMesh(VRSceneLoader::get()->loadWRL("mod/flystick/fly2_w_ray.wrl"));
 
     return geo;
 }
 
 void VRAvatar::addAll() {
-    map<string, VRObject*>::iterator itr = avatars.begin();
+    map<string, VRObjectPtr>::iterator itr = avatars.begin();
     for(;itr != avatars.end();itr++) deviceRoot->addChild(itr->second);
 }
 
 void VRAvatar::hideAll() {
-    map<string, VRObject*>::iterator itr = avatars.begin();
+    map<string, VRObjectPtr>::iterator itr = avatars.begin();
     for(;itr != avatars.end();itr++) itr->second->hide();
 }
 
-void VRAvatar::addAvatar(VRObject* geo) {
+void VRAvatar::addAvatar(VRObjectPtr geo) {
     deviceRoot->addChild(geo);
 }
 
 VRAvatar::VRAvatar(string name) {
-    deviceRoot = new VRTransform(name + "_beacon");
+    deviceRoot = VRTransform::create(name + "_beacon");
     deviceRoot->addAttachment("global", 0);
-    tmpContainer = new VRTransform(name + "_tmp_beacon");
+    tmpContainer = VRTransform::create(name + "_tmp_beacon");
     tmpContainer->addAttachment("global", 0);
 
     avatars["ray"] = initRay();
@@ -84,16 +84,14 @@ VRAvatar::VRAvatar(string name) {
     hideAll();
 }
 
-VRAvatar::~VRAvatar() {
-    delete deviceRoot; // also deletes the avatars!
-}
+VRAvatar::~VRAvatar() {}
 
 void VRAvatar::enableAvatar(string avatar) { if (avatars.count(avatar)) avatars[avatar]->show(); }
 void VRAvatar::disableAvatar(string avatar) { if (avatars.count(avatar)) avatars[avatar]->hide(); }
 
-VRTransform* VRAvatar::getBeacon() { return deviceRoot; }
-VRTransform* VRAvatar::editBeacon() { return tmpContainer; }
-void VRAvatar::setBeacon(VRTransform* b) {
+VRTransformPtr VRAvatar::getBeacon() { return deviceRoot; }
+VRTransformPtr VRAvatar::editBeacon() { return tmpContainer; }
+void VRAvatar::setBeacon(VRTransformPtr b) {
     deviceRoot = b;
     for (auto a : avatars) a.second->switchParent(b);
 }

@@ -12,10 +12,9 @@ void nameBaseDictSize(string& s) { s = toString(VRName::getNameNumber()); }
 void dynObjctsSize(string& s) { s = toString((int)VRTransform::dynamicObjects.size()); }
 void chgObjctsSize(string& s) { s = toString((int)VRTransform::changedObjects.size()); }
 
-VRInternalMonitor::VRInternalMonitor() {
-    //VRFunction<int>* fkt = new VRFunction<int>( "Internal_Monitor_update", boost::bind(&VRInternalMonitor::update, this) );
-    //VRSceneManager::get()->addUpdateFkt(fkt);
+VRInternalMonitor::~VRInternalMonitor() {}
 
+VRInternalMonitor::VRInternalMonitor() {
     add("VRName::nameDict size", new varFkt("Set_test_var", nameDictSize));
     add("VRName::nameDict full size", new varFkt("Set_test_var", nameBaseDictSize));
     add("VRTransform::dynamicObjects size", new varFkt("Set_test_var", dynObjctsSize));

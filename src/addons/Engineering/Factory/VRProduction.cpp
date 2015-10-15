@@ -26,17 +26,14 @@ VRProduction::VRProduction() {
     description = new VROntology();
     intraLogistics = new FLogistics();
     network = intraLogistics->addNetwork();
-
-    //auto fkt = new VRFunction<int>("production_update", boost::bind(&VRProduction::update, this));
-    //VRSceneManager::getCurrent()->addUpdateFkt(fkt);
 }
 
 VRProductionMachine::VRProductionMachine() {
     description = new VROntology();
-    geo = new VRGeometry("ProductionMachine");
+    geo = VRGeometry::create("ProductionMachine");
 }
 
-void VRProduction::addMachine(VRProductionMachine* pm, string machine, VRGeometry* m) {
+void VRProduction::addMachine(VRProductionMachine* pm, string machine, VRGeometryPtr m) {
     auto prod = description->getInstance("production");
     prod->add(machine, "machine");
 
@@ -118,7 +115,7 @@ string VRProcess::toString() {
     return data;
 }
 
-VRObject* VRProduction::test() {
+VRObjectPtr VRProduction::test() {
     // ontologies
     auto mathOnto = new VROntology();
     auto featureOnto = new VROntology();
@@ -214,9 +211,11 @@ VRObject* VRProduction::test() {
 
     productionOnto->merge(productOnto);
     productionOnto->merge(prodMachineOnto);
+    productionOnto->merge(processOnto);
     productionOnto->addConcept("Production");
     productionOnto->getConcept("Production")->addProperty("machine", "Machine");
     productionOnto->getConcept("Production")->addProperty("job", "Product");
+    productionOnto->getConcept("Production")->addProperty("process", "Process");
 
     drillOnto->merge(prodMachineOnto);
     drillOnto->merge(processingOnto);
@@ -244,7 +243,7 @@ VRObject* VRProduction::test() {
     robotOnto->addConcept("Robot", "Machine");
     robotOnto->getConcept("Robot")->addProperty("skill", "Manipulation");
 
-    auto machine = new VRGeometry("machine");
+    auto machine = VRGeometry::create("machine");
     machine->setPrimitive("Box", "1 2 1 1 1 1");
 
     // drill ----------
@@ -313,17 +312,16 @@ VRObject* VRProduction::test() {
     // production -----------------------------------------------
     auto production = new VRProduction();
     production->description->merge(productionOnto);
-    production->description->merge(processOnto);
     production->description->addInstance("production", "Production");
-    production->addMachine(robot, "robot", (VRGeometry*)machine->duplicate());
-    production->addMachine(drill, "drill", (VRGeometry*)machine->duplicate());
+    production->addMachine(robot, "robot", static_pointer_cast<VRGeometry>(machine->duplicate()));
+    production->addMachine(drill, "drill", static_pointer_cast<VRGeometry>(machine->duplicate()));
     production->queueJob(product, "testProduct");
     production->start();
 
-    string q = "q(x):Process(x);is(x/state,1);Production(y);has(y,x);has(factory,y);is(y/job,testProduct)";
+    string q = "q(x):Process(x);is(x/state,1);Production(y);has(y,x);is(y/job,testProduct)";
     production->description->answer(q);
 
-    VRObject* anchor = new VRObject("production");
+    VRObjectPtr anchor = VRObject::create("production");
     anchor->addChild(drill->geo);
     anchor->addChild(robot->geo);
     return anchor;

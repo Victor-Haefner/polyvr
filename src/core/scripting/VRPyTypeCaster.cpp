@@ -6,6 +6,7 @@
 #include "VRPyLod.h"
 #include "VRPyClipPlane.h"
 #include "VRPyLight.h"
+#include "VRPyCamera.h"
 #include "VRPyMenu.h"
 #include "VRPyBaseT.h"
 #include "core/objects/object/VRObject.h"
@@ -15,24 +16,26 @@
 
 VRPyTypeCaster::VRPyTypeCaster() {;}
 
-PyObject* VRPyTypeCaster::cast(OSG::VRObject* obj) {
+PyObject* VRPyTypeCaster::cast(OSG::VRObjectPtr obj) {
     if (obj == 0) Py_RETURN_NONE;
 
     string type = obj->getType();
-    if (type == "Geometry") return VRPyGeometry::fromPtr((OSG::VRGeometry*)obj);
-    else if (type == "Transform") return VRPyTransform::fromPtr((OSG::VRTransform*)obj);
-    else if (type == "Object") return VRPyObject::fromPtr(obj);
-    else if (type == "Sprite") return VRPySprite::fromPtr((OSG::VRSprite*)obj);
+    if (type == "Geometry") return VRPyGeometry::fromSharedPtr( static_pointer_cast<OSG::VRGeometry>(obj) );
+    else if (type == "Transform") return VRPyTransform::fromSharedPtr( static_pointer_cast<OSG::VRTransform>(obj) );
+    else if (type == "Object") return VRPyObject::fromSharedPtr( static_pointer_cast<OSG::VRObject>(obj) );
+    else if (type == "Sprite") return VRPySprite::fromSharedPtr( static_pointer_cast<OSG::VRSprite>(obj) );
 #ifndef _WIN32
-    else if (type == "CSGGeometry") return VRPyCSG::fromPtr((OSG::CSGGeometry*)obj);
+    else if (type == "CSGGeometry") return VRPyCSG::fromSharedPtr( static_pointer_cast<OSG::CSGGeometry>(obj) );
 #endif
-    else if (type == "Sprite") return VRPySprite::fromPtr((OSG::VRSprite*)obj);
-    else if (type == "Material") return VRPyMaterial::fromPtr((OSG::VRMaterial*)obj);
-    else if (type == "Lod") return VRPyLod::fromPtr((OSG::VRLod*)obj);
-    else if (type == "ClipPlane") return VRPyClipPlane::fromPtr((OSG::VRClipPlane*)obj);
-    else if (type == "Light") return VRPyLight::fromPtr((OSG::VRLight*)obj);
-    else if (type == "Camera") return VRPyTransform::fromPtr((OSG::VRTransform*)obj); // TODO: add camera py type
-    else if (type == "Menu") return VRPyMenu::fromPtr((OSG::VRMenu*)obj); // TODO: add camera py type
+    else if (type == "Sprite") return VRPySprite::fromSharedPtr( static_pointer_cast<OSG::VRSprite>(obj) );
+    else if (type == "Material") return VRPyMaterial::fromSharedPtr( static_pointer_cast<OSG::VRMaterial>(obj) );
+    else if (type == "Lod") return VRPyLod::fromSharedPtr( static_pointer_cast<OSG::VRLod>(obj) );
+    else if (type == "ClipPlane") return VRPyClipPlane::fromSharedPtr( static_pointer_cast<OSG::VRClipPlane>(obj) );
+    else if (type == "Light") return VRPyLight::fromSharedPtr( static_pointer_cast<OSG::VRLight>(obj) );
+    else if (type == "Camera") return VRPyCamera::fromSharedPtr( static_pointer_cast<OSG::VRCamera>(obj) );
+    else if (type == "Menu") return VRPyMenu::fromSharedPtr( static_pointer_cast<OSG::VRMenu>(obj) );
     cout << "\nERROR in VRPyTypeCaster::cast: " << type << " not handled!\n";
-    Py_RETURN_NONE;
+
+    return VRPyObject::fromSharedPtr(obj);
+    //Py_RETURN_NONE;
 }

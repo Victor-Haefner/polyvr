@@ -50,7 +50,7 @@ struct Particle {
     Particle(btDiscreteDynamicsWorld* world = 0) {}
 
     ~Particle() {
-        VRScene* scene = VRSceneManager::getCurrent();
+        VRScenePtr scene = VRSceneManager::getCurrent();
         if (scene && body) scene->bltWorld()->removeRigidBody(body);
         if (body) delete body;
         if (shape) delete shape;

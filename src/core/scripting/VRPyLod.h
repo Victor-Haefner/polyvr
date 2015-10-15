@@ -5,7 +5,6 @@
 #include "core/objects/VRLod.h"
 
 struct VRPyLod : VRPyBaseT<OSG::VRLod> {
-    static PyMemberDef members[];
     static PyMethodDef methods[];
 
     static PyObject* setCenter(VRPyLod* self, PyObject* args);

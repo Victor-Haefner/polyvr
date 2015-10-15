@@ -18,11 +18,11 @@ namespace realworld {
     class ModuleBuildings: public BaseModule {
         private:
             OSMMapDB* mapDB;
-            map<string,VRGeometry*> b_geos;
-            map<string,VRGeometry*> r_geos;
+            map<string,VRGeometryPtr> b_geos;
+            map<string,VRGeometryPtr> r_geos;
             GeometryData* b_geo_d = 0;
             GeometryData* r_geo_d = 0;
-            VRMaterial* b_mat = 0;
+            VRMaterialPtr b_mat = 0;
             bool physics = false;
 
             int numberFromString(string s);

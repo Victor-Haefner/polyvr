@@ -1,26 +1,28 @@
 #ifndef VRLIGHT_H_INCLUDED
 #define VRLIGHT_H_INCLUDED
 
-#include "OpenSG/OSGPointLight.h"
-#include "OpenSG/OSGDirectionalLight.h"
-#include "OpenSG/OSGSpotLight.h"
-#include "OpenSG/OSGSimpleShadowMapEngine.h"
 #include "core/objects/object/VRObject.h"
-#include "core/utils/VRStorage.h"
+#include <OpenSG/OSGFieldContainerFields.h>
+#include <OpenSG/OSGColor.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+class Light; OSG_GEN_CONTAINERPTR(Light);
+class PointLight; OSG_GEN_CONTAINERPTR(PointLight);
+class DirectionalLight; OSG_GEN_CONTAINERPTR(DirectionalLight);
+class SpotLight; OSG_GEN_CONTAINERPTR(SpotLight);
+class SimpleShadowMapEngine; OSG_GEN_CONTAINERPTR(SimpleShadowMapEngine);
 class VRLightBeacon;
 
-class VRLight : public VRObject, public VRStorage {
+class VRLight : public VRObject {
     protected:
-        DirectionalLightRecPtr d_light = 0;
-        PointLightRecPtr p_light = 0;
-        SpotLightRecPtr s_light = 0;
+        DirectionalLightRecPtr d_light;
+        PointLightRecPtr p_light;
+        SpotLightRecPtr s_light;
         string lightType;
         string shadowType;
-        VRLightBeacon* beacon = 0;
+        VRLightBeaconWeakPtr beacon;
         string beacon_name;
         Color4f lightDiffuse;
         Color4f lightAmbient;
@@ -28,7 +30,7 @@ class VRLight : public VRObject, public VRStorage {
         Color4f shadowColor;
         bool shadows = false;
         bool on = true;
-        SimpleShadowMapEngineRefPtr ssme = 0;
+        SimpleShadowMapEngineRefPtr ssme;
         Vec3f attenuation; // C L Q
 
         void saveContent(xmlpp::Element* e);
@@ -39,6 +41,9 @@ class VRLight : public VRObject, public VRStorage {
     public:
         VRLight(string name = "");
         ~VRLight();
+
+        static VRLightPtr create(string name);
+        VRLightPtr ptr();
 
         void setOn(bool b);
         bool isOn();
@@ -59,8 +64,8 @@ class VRLight : public VRObject, public VRStorage {
         void setShadowType(string t);
         string getShadowType();
 
-        VRLightBeacon* getBeacon();
-        void setBeacon(VRLightBeacon* b);
+        VRLightBeaconWeakPtr getBeacon();
+        void setBeacon(VRLightBeaconPtr b);
 
         void setAttenuation(Vec3f a);
         Vec3f getAttenuation();

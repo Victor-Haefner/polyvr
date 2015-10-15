@@ -18,10 +18,14 @@ typedef VRFunction<void*> VRHTTP_cb;
 typedef VRFunction<string> VRTCP_cb;
 
 struct HTTP_args {
+    HTTPServer* serv = 0;
     VRHTTP_cb* cb = 0;
     map<string, string>* params = 0;
     map<string, string*>* pages = 0;
     string path;
+    bool websocket = false;
+    string ws_data;
+    int ws_id = -1;
 
     HTTP_args();
     ~HTTP_args();
@@ -34,7 +38,7 @@ class VRSocket : public VRName {
         enum CONNECTION_TYPE {UNIX, TCP, HTTP};
 
     private:
-        VRFunction<int>* queued_signal;
+        shared_ptr<VRFunction<int> > queued_signal;
         string tcp_msg;
         HTTP_args* http_args;
         VRSignal* sig;
@@ -54,8 +58,8 @@ class VRSocket : public VRName {
 
         void handle(string s);
 
-        void scanUnix(VRThread* t);
-        void scanTCP(VRThread* t);
+        void scanUnix(weak_ptr<VRThread> t);
+        void scanTCP(weak_ptr<VRThread> t);
         void scanHTTP();
 
         void update();
@@ -80,6 +84,8 @@ class VRSocket : public VRName {
         void setPort(int i);
         void addHTTPPage(string path, string page);
         void remHTTPPage(string path);
+
+        void answerWebSocket(int id, string msg);
 
         string getType();
         string getIP();

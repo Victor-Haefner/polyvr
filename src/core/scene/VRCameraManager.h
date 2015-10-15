@@ -4,34 +4,30 @@
 #include <OpenSG/OSGConfig.h>
 #include <string>
 #include <vector>
+#include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRCamera;
-class VRTransform;
 
 class VRCameraManager {
     private:
-        vector<VRCamera*> cameras;
-
-        int active;
+        VRCameraWeakPtr active;
 
     public:
         VRCameraManager();
         ~VRCameraManager();
 
-        VRTransform* addCamera(string name);
-        void addCamera(VRCamera* cam);
+        VRTransformPtr addCamera(string name);
+        void addCamera(VRCameraPtr cam);
 
-        VRCamera* getCamera(int ID);
+        VRCameraPtr getCamera(int ID);
 
-        void setActiveCamera(int ID);
+        void setMActiveCamera(string cam);
 
-        VRCamera* getActiveCamera();
+        VRCameraPtr getActiveCamera();
         int getActiveCameraIndex();
 
-        vector<VRCamera*> getCameras();
         vector<string> getCameraNames();
 };
 

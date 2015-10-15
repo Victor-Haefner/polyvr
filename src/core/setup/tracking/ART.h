@@ -3,6 +3,8 @@
 
 #include "core/utils/VRName.h"
 #include "core/utils/VRStorage.h"
+#include "core/utils/VRFunctionFwd.h"
+#include "core/objects/VRObjectFwd.h"
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGMatrix.h>
 #include <map>
@@ -16,7 +18,6 @@ using namespace std;
 
 class VRSignal;
 class VRFlystick;
-class VRTransform;
 class VRThread;
 
 struct ART_device : public VRName {
@@ -24,7 +25,7 @@ struct ART_device : public VRName {
     list<vector<int> > buttons;
     list<vector<float> > joysticks;
 
-    VRTransform* ent = 0;
+    VRTransformPtr ent = 0;
     VRFlystick* dev = 0;
     Vec3f offset;
     float scale = 1;
@@ -52,6 +53,7 @@ class ART : public VRStorage {
         DTrack* dtrack = 0;
         map<int, ART_device*> devices;
 
+        VRUpdatePtr updatePtr;
         VRSignal* on_new_device = 0;
 
         template<typename dev>
@@ -61,7 +63,7 @@ class ART : public VRStorage {
         void scan(int type = -1, int N = 0);
 
 
-        void updateT(VRThread* t); //update thread
+        void updateT( weak_ptr<VRThread>  t); //update thread
         void updateL(); //update
         void applyEvents(); //main loop update
         void checkNewDevices(int type = -1, int N = 0); //update thread

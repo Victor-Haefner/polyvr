@@ -1,5 +1,6 @@
 #include "VRPN.h"
 #include "core/utils/VROptions.h"
+#include "core/gui/VRGuiManager.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
@@ -24,7 +25,7 @@ OSG_BEGIN_NAMESPACE
 
 void VRPN_CALLBACK handle_tracker(void* data, const vrpn_TRACKERCB tracker ) {
     VRPN_device* dev = (VRPN_device*)data;
-    VRTransform* obj = dev->editBeacon();
+    VRTransformPtr obj = dev->editBeacon();
     if (obj == 0) return;
 
     Vec3f ra = dev->rotation_axis;
@@ -115,11 +116,14 @@ VRPN::VRPN() {
     //auto update_cb = new VRFunction<VRThread*>("VRPN_update", boost::bind(&VRPN::update_t, this, _1));
     //threadID = VRSceneManager::get()->initThread(update_cb, "VRPN", true);
 
-    auto update_cb = new VRFunction<int>("VRPN_update", boost::bind(&VRPN::update, this));
-    VRSceneManager::get()->addUpdateFkt(update_cb);
+    updatePtr = VRFunction<int>::create("VRPN_update", boost::bind(&VRPN::update, this));
+    VRSceneManager::get()->addUpdateFkt(updatePtr);
+
+    vrpn_System_TextPrinter.set_ostream_to_use(NULL);
 
     storeMap("Tracker", &devices);
     store("active", &active);
+    store("port", &port);
 }
 
 VRPN::~VRPN() {
@@ -129,8 +133,13 @@ VRPN::~VRPN() {
 void VRPN::update_t(VRThread* thread) {}
 void VRPN::update() {
     if (!active) return;
+
+    if (verbose) VRGuiManager::get()->printInfo("vrpn verbooooose\n");
+
     for (auto tr : devices) tr.second->loop();
 }
+
+void VRPN::setVRPNVerbose(bool b) { verbose = b; }
 
 void VRPN::addVRPNTracker(int ID, string addr, Vec3f offset, float scale) {
     while(devices.count(ID)) ID++;
@@ -167,5 +176,211 @@ void VRPN::changeVRPNDeviceName(VRPN_device* dev, string name) {
 
 void VRPN::setVRPNActive(bool b) { active = b; }
 bool VRPN::getVRPNActive() { return active; }
+
+void VRPN::setVRPNPort(int p) { port = p; }
+int VRPN::getVRPNPort() { return port; }
+
+
+// ----------------------------- test server -----------------------------------
+
+// VRPN Server tutorial
+// by Sebastien Kuntz, for the VR Geeks (http://www.vrgeeks.org)
+// August 2011
+
+#include <stdio.h>
+#include <math.h>
+
+#include "vrpn_Text.h"
+#include "vrpn_Tracker.h"
+#include "vrpn_Analog.h"
+#include "vrpn_Button.h"
+#include "vrpn_Connection.h"
+
+#include <iostream>
+using namespace std;
+
+/////////////////////// TRACKER /////////////////////////////
+
+// your tracker class must inherit from the vrpn_Tracker class
+class myTracker : public vrpn_Tracker
+{
+public:
+    myTracker( vrpn_Connection *c = 0 );
+    virtual ~myTracker() {};
+
+    virtual void mainloop();
+
+protected:
+    struct timeval _timestamp;
+};
+
+myTracker::myTracker( vrpn_Connection *c /*= 0 */ ) :
+    vrpn_Tracker( "Tracker0", c )
+{
+}
+
+void
+myTracker::mainloop()
+{
+    vrpn_gettimeofday(&_timestamp, NULL);
+
+    vrpn_Tracker::timestamp = _timestamp;
+
+    // We will just put a fake data in the position of our tracker
+    static float angle = 0; angle += 0.001f;
+
+    // the pos array contains the position value of the tracker
+    // XXX Set your values here
+    pos[0] = sinf( angle );
+    pos[1] = 0.0f;
+    pos[2] = 0.0f;
+
+    // the d_quat array contains the orientation value of the tracker, stored as a quaternion
+    // XXX Set your values here
+    d_quat[0] = 0.0f;
+    d_quat[1] = 0.0f;
+    d_quat[2] = 0.0f;
+    d_quat[3] = 1.0f;
+
+    char msgbuf[1000];
+
+    d_sensor = 0;
+
+    int  len = vrpn_Tracker::encode_to(msgbuf);
+
+    if (d_connection->pack_message(len, _timestamp, position_m_id, d_sender_id, msgbuf,
+        vrpn_CONNECTION_LOW_LATENCY))
+    {
+        fprintf(stderr,"can't write message: tossing\n");
+    }
+
+    server_mainloop();
+}
+
+/////////////////////// ANALOG /////////////////////////////
+
+// your analog class must inherin from the vrpn_Analog class
+class myAnalog : public vrpn_Analog
+{
+public:
+    myAnalog( vrpn_Connection *c = 0 );
+    virtual ~myAnalog() {};
+
+    virtual void mainloop();
+
+protected:
+    struct timeval _timestamp;
+};
+
+
+myAnalog::myAnalog( vrpn_Connection *c /*= 0 */ ) :
+    vrpn_Analog( "Analog0", c )
+{
+    vrpn_Analog::num_channel = 10;
+
+    vrpn_uint32    i;
+
+    for (i = 0; i < (vrpn_uint32)vrpn_Analog::num_channel; i++) {
+        vrpn_Analog::channel[i] = vrpn_Analog::last[i] = 0;
+    }
+}
+
+void myAnalog::mainloop() {
+    vrpn_gettimeofday(&_timestamp, NULL);
+    vrpn_Analog::timestamp = _timestamp;
+
+    // forcing values to change otherwise vrpn doesn't report the changes
+    static float f = 0; f+=0.001;
+
+    for(int i=0; i<vrpn_Analog::num_channel;i++) {
+        channel[i] = i / 10.f + f;
+    }
+
+    // Send any changes out over the connection.
+    vrpn_Analog::report_changes();
+
+    server_mainloop();
+}
+
+/////////////////////// BUTTON /////////////////////////////
+
+// your button class must inherit from the vrpn_Button class
+class myButton : public vrpn_Button {
+    public:
+        myButton( vrpn_Connection *c = 0 );
+        virtual ~myButton() {};
+
+        virtual void mainloop();
+
+    protected:
+        struct timeval _timestamp;
+};
+
+
+myButton::myButton( vrpn_Connection* c ) : vrpn_Button( "Button0", c ) {
+    // Setting the number of buttons to 10
+    vrpn_Button::num_buttons = 10;
+    vrpn_uint32 i;
+
+    // initializing all buttons to false
+    for (i = 0; i < (vrpn_uint32)vrpn_Button::num_buttons; i++) {
+        vrpn_Button::buttons[i] = vrpn_Button::lastbuttons[i] = 0;
+    }
+}
+
+void myButton::mainloop() {
+    vrpn_gettimeofday(&_timestamp, NULL);
+    vrpn_Button::timestamp = _timestamp;
+
+    // forcing values to change otherwise vrpn doesn't report the changes
+    for (int i=0; i<vrpn_Button::num_buttons; i++) buttons[i] = (i+buttons[i])%2;
+
+    // Send any changes out over the connection.
+    vrpn_Button::report_changes();
+    server_mainloop();
+}
+
+////////////// MAIN ///////////////////
+
+
+vrpn_Connection_IP* m_Connection;
+
+// Creating the tracker
+myTracker* serverTracker;
+myAnalog*  serverAnalog;
+myButton*  serverButton;
+
+void vrpn_test_server_main() {
+    serverTracker->mainloop();
+    serverAnalog->mainloop();
+    serverButton->mainloop();
+    m_Connection->mainloop();
+    //vrpn_SleepMsecs(1);
+}
+
+void VRPN::stopVRPNTestServer() {
+    if (testServer == 0) return;
+    testServer = 0;
+    delete serverButton;
+    delete serverAnalog;
+    delete serverTracker;
+    delete m_Connection;
+}
+
+void VRPN::startVRPNTestServer() {
+    if (testServer != 0) return;
+    // Creating the network server
+    m_Connection = new vrpn_Connection_IP();
+
+    // Creating the tracker
+    serverTracker = new myTracker(m_Connection );
+    serverAnalog  = new myAnalog(m_Connection );
+    serverButton  = new myButton(m_Connection );
+
+    cout << "Created VRPN server." << endl;
+
+    testServer = VRFunction<int>::create("VRPN_test_server", boost::bind(vrpn_test_server_main));
+    VRSceneManager::get()->addUpdateFkt(testServer);
+}
 
 OSG_END_NAMESPACE

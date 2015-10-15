@@ -8,7 +8,7 @@
 
 OSG_BEGIN_NAMESPACE;
 
-VRGeometry* loadPly(string filename) {
+VRGeometryPtr loadPly(string filename) {
     ifstream file(filename.c_str());
     string s;
     for(int i=0; i<16; i++) getline(file, s); // jump to data
@@ -58,7 +58,7 @@ VRGeometry* loadPly(string filename) {
     geo->setColors(Cols);
     geo->setMaterial(Mat);
 
-    VRGeometry* res = new VRGeometry(filename);
+    VRGeometryPtr res = VRGeometry::create(filename);
     res->setMesh(geo);
     return res;
 }

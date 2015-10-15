@@ -40,24 +40,24 @@ void VRImport::fixEmptyNames(NodeRecPtr o, map<string, bool>& m, string parentNa
     for (uint i=0; i<o->getNChildren(); i++) fixEmptyNames(o->getChild(i), m, OSG::getName(o), i);
 }
 
-VRTransform* VRImport::prependTransform(VRObject* o, string path) {
+VRTransformPtr VRImport::prependTransform(VRObjectPtr o, string path) {
     if (o->getChildrenCount() == 1)
         if (o->getChild(0)->getType() == "Transform")
-            return (VRTransform*)o->getChild(0);
+            return static_pointer_cast<VRTransform>(o->getChild(0));
 
     boost::filesystem::path p(path);
-    auto trans = new VRTransform( p.filename().string() );
+    auto trans = VRTransform::create( p.filename().string() );
     trans->addChild(o);
     return trans;
 }
 
-VRTransform* VRImport::Cache::retrieve() {
-    if (copy == 0) copy = (VRTransform*)root->duplicate(); // keep a copy, TODO: try to change the namespace of the copy, maybe helpful
-    else root = (VRTransform*)copy->duplicate();
+VRTransformPtr VRImport::Cache::retrieve() {
+    if (copy == 0) copy = static_pointer_cast<VRTransform>(root->duplicate()); // keep a copy, TODO: try to change the namespace of the copy, maybe helpful
+    else root = static_pointer_cast<VRTransform>(copy->duplicate());
     return root;
 }
 
-VRTransform* VRImport::load(string path, VRObject* parent, bool reload, string preset) {           cout << "VRImport::load " << path << endl;
+VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, string preset) {           cout << "VRImport::load " << path << endl;
     reload = reload? true : (cache.count(path) == 0);
     if (!reload) return cache[path].retrieve();
     if (path.size() < 4) return 0;
@@ -65,7 +65,7 @@ VRTransform* VRImport::load(string path, VRObject* parent, bool reload, string p
     setlocale(LC_ALL, "C");
 
     if (preset == "PLY") {
-        VRGeometry* geo = loadPly(path);
+        VRGeometryPtr geo = loadPly(path);
         return geo; // TODO: use cache!
     }
 
@@ -89,13 +89,13 @@ VRTransform* VRImport::load(string path, VRObject* parent, bool reload, string p
     return cache[path].retrieve();
 }
 
-VRObject* VRImport::OSGConstruct(NodeRecPtr n, VRObject* parent, string name, string currentFile, NodeCore* geoTrans, string geoTransName) {
+VRObjectPtr VRImport::OSGConstruct(NodeRecPtr n, VRObjectPtr parent, string name, string currentFile, NodeCore* geoTrans, string geoTransName) {
     if (n == 0) return 0; // TODO add an osg wrap method for each object?
 
-    VRObject* tmp = 0;
-    VRGeometry* tmp_g;
-    VRTransform* tmp_e;
-    VRGroup* tmp_gr;
+    VRObjectPtr tmp = 0;
+    VRGeometryPtr tmp_g;
+    VRTransformPtr tmp_e;
+    VRGroupPtr tmp_gr;
 
     NodeCoreRecPtr core = n->getCore();
     string t_name = core->getTypeName();
@@ -110,13 +110,13 @@ VRObject* VRImport::OSGConstruct(NodeRecPtr n, VRObject* parent, string name, st
         if (g.find('.') != string::npos) g.erase(g.find('.'));
         if (g.find('_') != string::npos) g.erase(g.find('_'));
 
-        tmp_gr = new VRGroup(g);
+        tmp_gr = VRGroup::create(g);
         tmp_gr->setActive(true);
         tmp_gr->setGroup(g);
         tmp = tmp_gr;
 
         if (t_name == "Transform") {
-            tmp_e = new VRTransform(g);
+            tmp_e = VRTransform::create(g);
             tmp_e->setMatrix(dynamic_cast<Transform *>(n->getCore())->getMatrix());
             tmp = tmp_e;
             tmp->addChild(tmp_gr);
@@ -129,14 +129,14 @@ VRObject* VRImport::OSGConstruct(NodeRecPtr n, VRObject* parent, string name, st
     }
 
     else if (t_name == "Group") {//OpenSG Group
-        tmp = new VRObject(name);
+        tmp = VRObject::create(name);
         tmp->setCore(core, "Object");
         tmp->addAttachment("collada_name", name);
     }
 
     else if (t_name == "ComponentTransform") {
         if (tmp == 0) {
-            tmp_e = new VRTransform(name);
+            tmp_e = VRTransform::create(name);
             tmp_e->setMatrix(dynamic_cast<ComponentTransform *>(n->getCore())->getMatrix());
             tmp = tmp_e;
         }
@@ -153,7 +153,7 @@ VRObject* VRImport::OSGConstruct(NodeRecPtr n, VRObject* parent, string name, st
         }
 
         if (tmp == 0) {
-            tmp_e = new VRTransform(name);
+            tmp_e = VRTransform::create(name);
             tmp_e->setMatrix(dynamic_cast<Transform *>(n->getCore())->getMatrix());
             tmp = tmp_e;
             tmp->addAttachment("collada_name", name);
@@ -162,12 +162,12 @@ VRObject* VRImport::OSGConstruct(NodeRecPtr n, VRObject* parent, string name, st
 
     else if (t_name == "MaterialGroup") {
         cout << "Warning: unsupported MaterialGroup\n";
-        tmp = new VRObject(name);
+        tmp = VRObject::create(name);
         tmp->setCore(core, t_name);
     }
 
     else if (t_name == "Geometry") {
-        tmp_g = new VRGeometry(name);
+        tmp_g = VRGeometry::create(name);
         if (geoTrans) {
             tmp_g->addAttachment("collada_name", geoTransName);
             tmp_g->setMatrix(dynamic_cast<Transform *>(geoTrans)->getMatrix());
@@ -183,7 +183,7 @@ VRObject* VRImport::OSGConstruct(NodeRecPtr n, VRObject* parent, string name, st
     }
 
     else {
-        tmp = new VRObject(name);
+        tmp = VRObject::create(name);
         tmp->setCore(core, t_name);
     }
 
@@ -192,12 +192,12 @@ VRObject* VRImport::OSGConstruct(NodeRecPtr n, VRObject* parent, string name, st
 
     if (cache.count(currentFile) == 0) cache[currentFile] = Cache();
     cache[currentFile].objects[name] = tmp;
-    cache[currentFile].root = (VRTransform*)tmp; // TODO
+    cache[currentFile].root = static_pointer_cast<VRTransform>(tmp); // TODO
     cache[currentFile].copy = 0; // TODO
     return tmp;
 }
 
-VRGeometry* VRImport::loadGeometry(string file, string object) {
+VRGeometryPtr VRImport::loadGeometry(string file, string object) {
     if (cache.count(file) == 0) load(file);
 
     if (cache.count(file) == 0) {
@@ -211,17 +211,17 @@ VRGeometry* VRImport::loadGeometry(string file, string object) {
         return 0;
     }
 
-    VRObject* o = cache[file].objects[object];
+    VRObjectPtr o = cache[file].objects[object];
     if (o->getType() != "Geometry") {
         cout << "VRSceneLoader::loadGeometry - Warning: " << file << " is cached but object " << object << " has wrong type: " << o->getType() << endl;
         return 0;
     }
 
-    return (VRGeometry*)o;
+    return static_pointer_cast<VRGeometry>(o);
 }
 
 VRImport::Cache::Cache() {;}
-VRImport::Cache::Cache(VRTransform* root) {
+VRImport::Cache::Cache(VRTransformPtr root) {
     this->root = root;
     for (auto c : root->getChildren(true)) objects[getName(c->getNode())] = c;
 }

@@ -7,16 +7,12 @@
 #include <OpenSG/OSGSimpleStatisticsForeground.h>
 #include <OpenSG/OSGGrabForeground.h>
 #include <OpenSG/OSGImageForeground.h>
+#include "core/objects/VRObjectFwd.h"
 
 namespace xmlpp{ class Element; }
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
-
-class VRMaterial;
-class VRCamera;
-class VRTransform;
-class VRObject;
 
 class VRView {
     private:
@@ -29,7 +25,7 @@ class VRView {
         bool doStats;
 
         NodeRecPtr viewGeo;
-        VRMaterial* viewGeoMat;
+        VRMaterialPtr viewGeoMat;
 
         Vec4f position;
 
@@ -63,12 +59,12 @@ class VRView {
         StereoBufferViewportRecPtr rView_act;
 
         //headtracking user
-        VRObject* view_root;
-        VRTransform* real_root;
-        VRTransform* user;
-        VRTransform* dummy_user;
+        VRObjectPtr view_root;
+        VRTransformPtr real_root;
+        VRTransformPtr user;
+        VRTransformPtr dummy_user;
         string user_name;
-        VRCamera* cam;
+        VRCameraPtr cam;
 
         BackgroundRecPtr background;
         SimpleStatisticsForegroundRecPtr stats;
@@ -92,17 +88,17 @@ class VRView {
         int getID();
         void setID(int i);
 
-        void setRoot(VRObject* root, VRTransform* _real);
-        void setUser(VRTransform* u);
-        void setCamera(VRCamera* c);
+        void setRoot(VRObjectPtr root, VRTransformPtr _real);
+        void setUser(VRTransformPtr u);
+        void setCamera(VRCameraPtr c);
         void setBackground(BackgroundRecPtr bg);
         void setWindow(WindowRecPtr win);
         void setStereo(bool b);
         void setStereoEyeSeparation(float v);
         void setProjection(bool b);
 
-        VRTransform* getUser();
-        VRCamera* getCamera();
+        VRTransformPtr getUser();
+        VRCameraPtr getCamera();
         bool isStereo();
         float getEyeSeparation();
         bool isProjection();

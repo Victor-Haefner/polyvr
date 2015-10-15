@@ -2,6 +2,8 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
 #include "core/setup/VRSetupManager.h"
+#include "core/setup/VRSetup.h"
+#include "core/setup/windows/VRGtkWindow.h"
 #include "core/objects/VRCamera.h"
 #include "VRSignal.h"
 #include <GL/glut.h>
@@ -17,13 +19,22 @@ VRMouse::VRMouse() : VRDevice("mouse") {
     on_from_edge = new VRSignal(this);
 }
 
+void VRMouse::setCursor(string c) {
+    auto s = VRSetupManager::getCurrent();
+    for (auto w : s->getWindows()) {
+        if (!w.second->hasType(2)) continue; // not a gtk window
+        auto win = (VRGtkWindow*)w.second;
+        win->setCursor(c);
+    }
+}
+
 void VRMouse::clearSignals() {
     VRDevice::clearSignals();
     addSlider(5);
     addSlider(6);
 
     addSignal( 0, 0)->add( getDrop() );
-    addSignal( 0, 1)->add( addDrag( getBeacon(), 0) );
+    addSignal( 0, 1)->add( addDrag( getBeacon() ) );
 
     if (on_to_edge) on_to_edge->clear();
     if (on_from_edge) on_from_edge->clear();
@@ -170,7 +181,7 @@ void VRMouse::motion(int x, int y) {
     updatePosition(x,y);
 }
 
-void VRMouse::setCamera(VRCamera* _cam) { cam = _cam; }
+void VRMouse::setCamera(VRCameraPtr _cam) { cam = _cam; }
 
 void VRMouse::setViewport(VRView* _view) { view = _view; }
 

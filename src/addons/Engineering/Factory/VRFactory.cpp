@@ -28,15 +28,15 @@ struct Geo {
     GeoVectorPropertyRecPtr norms = 0;
     GeoIntegralPropertyRefPtr inds_p = 0;
     GeoIntegralPropertyRefPtr inds_n = 0;
-    VRGeometry* geo = 0;
+    VRGeometryPtr geo = 0;
 
     Vec3f vmin, vmax;
     float r = 0;
     bool vmm_changed = false;
 
-    //void init(vector<VRGeometry*>& geos, VRMaterial* mat) {
-    void init(vector<Geo>& geos, VRMaterial* mat) {
-        geo = new VRGeometry("factory_part"); // init new object
+    //void init(vector<VRGeometryPtr>& geos, VRMaterialPtr mat) {
+    void init(vector<Geo>& geos, VRMaterialPtr mat) {
+        geo = VRGeometry::create("factory_part"); // init new object
 
         pos = GeoPnt3fProperty::create();
         norms = GeoVec3fProperty::create();
@@ -83,7 +83,7 @@ struct Geo {
     }
 };
 
-VRObject* VRFactory::loadVRML(string path) { // wrl filepath
+VRObjectPtr VRFactory::loadVRML(string path) { // wrl filepath
     ifstream file(path);
     if (!file.is_open()) { cout << "file " << path << " not found" << endl; return 0; }
 
@@ -112,9 +112,9 @@ VRObject* VRFactory::loadVRML(string path) { // wrl filepath
     Vec3f n;
     int i;
 
-    //vector<VRGeometry*> geos;
+    //vector<VRGeometryPtr> geos;
     vector<Geo> geos;
-    map<Vec3f, VRMaterial*> mats;
+    map<Vec3f, VRMaterialPtr> mats;
     bool new_obj = true;
     bool new_color = true;
     int li = 0;
@@ -134,7 +134,7 @@ VRObject* VRFactory::loadVRML(string path) { // wrl filepath
                         new_obj = true;
                         if (line.size() > 12) color = toVec3f( line.substr(12) );
                         if (mats.count(color) == 0) {
-                            mats[color] = new VRMaterial("fmat");
+                            mats[color] = VRMaterial::create("fmat");
                             mats[color]->setDiffuse(color);
                         }
 
@@ -190,8 +190,8 @@ VRObject* VRFactory::loadVRML(string path) { // wrl filepath
     file.close();
     cout << "\nloaded " << geos.size() << " geometries" << endl;
 
-    VRObject* res = new VRObject("factory");
-    res->addAttachment("dynamicaly_generated", 0);
+    VRObjectPtr res = VRObject::create("factory");
+    res->setPersistency(0);
 
     for (auto g : geos) {
         //Vec3f d = g.vmax - g.vmin;
@@ -221,13 +221,13 @@ VRObject* VRFactory::loadVRML(string path) { // wrl filepath
 
 class VRLODSpace : public VRObject {
     private:
-        map<Vec4i, VRLod*> lod_spaces;
+        map<Vec4i, VRLodPtr> lod_spaces;
         float scale = 3; // smaller means bigger clusters
 
-        VRLod* getSpace(Vec4i p) {
+        VRLodPtr getSpace(Vec4i p) {
             if (lod_spaces.count(p)) return lod_spaces[p];
-            VRLod* l = new VRLod("lod_space");
-            l->addChild(new VRObject("lod_entry"));
+            VRLodPtr l = VRLod::create("lod_space");
+            l->addChild( VRObject::create("lod_entry") );
             l->addDistance(max(15*p[3]/scale, 1.0f));
             l->setCenter( Vec3f(p[0], p[1], p[2])/scale );
             addChild(l);
@@ -237,10 +237,12 @@ class VRLODSpace : public VRObject {
 
     public:
         VRLODSpace() : VRObject("VRLODSpace") {
-            addAttachment("dynamicaly_generated", 0);
+            setPersistency(0);
         }
 
-        void add(VRObject* g) {
+        static VRLODSpacePtr create() { return VRLODSpacePtr(new VRLODSpace()); }
+
+        void add(VRObjectPtr g) {
             Vec3f c = g->getBBCenter()*scale;
             Vec4i p; for(int i=0; i<3; i++) p[i] = round(c[i]);
             p[3] = ceil(g->getBBMax()*scale);
@@ -253,7 +255,7 @@ class VRLODSpace : public VRObject {
                 l.second->addEmpty();
 
                 // testing
-                /*VRGeometry* obj = new VRGeometry("bla");
+                /*VRGeometryPtr obj = VRGeometry::create("bla");
                 Vec4i p = l.first;
                 Vec3f c = Vec3f(p[0], p[1], p[2]);
                 obj->setFrom(c);
@@ -263,8 +265,8 @@ class VRLODSpace : public VRObject {
         }
 };
 
-VRObject* VRFactory::setupLod(vector<string> paths) {
-    vector<VRObject*> objects;
+VRObjectPtr VRFactory::setupLod(vector<string> paths) {
+    vector<VRObjectPtr> objects;
     for (auto p : paths) objects.push_back( loadVRML(p) );
     Vec3f p;
 
@@ -273,16 +275,16 @@ VRObject* VRFactory::setupLod(vector<string> paths) {
     if (objects.size() == 0) return 0;
 
     // use all geometry to create micro lods
-    VRObject* root = new VRObject("factory_lod_root");
-    root->addAttachment("dynamicaly_generated", 0);
-    vector<VRLod*> micro_lods;
+    VRObjectPtr root = VRObject::create("factory_lod_root");
+    root->setPersistency(0);
+    vector<VRLodPtr> micro_lods;
     for (uint i = 0; i<objects.size(); i++) {
-        vector<VRObject*> geos = objects[i]->getChildren(true, "Geometry");
+        vector<VRObjectPtr> geos = objects[i]->getChildren(true, "Geometry");
         VRProgress prog("setup factory LODs ", geos.size());
         for (auto g : geos) {
             prog.update(1);
 
-            VRLod* lod = new VRLod("factory_lod");
+            VRLodPtr lod = VRLod::create("factory_lod");
             lod->addChild(g);
             lod->addEmpty();
             lod->setCenter( g->getBBCenter() );
@@ -293,7 +295,7 @@ VRObject* VRFactory::setupLod(vector<string> paths) {
     commitChanges();
 
     // use the micro lods to create space lods
-    VRLODSpace* lodspace = new VRLODSpace();
+    VRLODSpacePtr lodspace = VRLODSpace::create();
     for (auto l : micro_lods) {
         lodspace->add(l);
     }

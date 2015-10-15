@@ -1,6 +1,9 @@
 #include "VRCamera.h"
 #include "core/utils/toString.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/scene/VRScene.h"
+#include "core/scene/VRSceneManager.h"
+#include "core/gui/VRGuiManager.h"
 #include <OpenSG/OSGTransform.h>
 #include <OpenSG/OSGSimpleMaterial.h>
 #include <OpenSG/OSGSimpleGeometry.h>
@@ -10,8 +13,8 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-VRMaterial* getCamGeoMat() {
-    VRMaterial* mat = VRMaterial::get("cam_geo_mat");
+VRMaterialPtr getCamGeoMat() {
+    VRMaterialPtr mat = VRMaterial::get("cam_geo_mat");
     mat->setDiffuse(Color3f(0.9, 0.9, 0.9));
     mat->setTransparency(0.3);
     mat->setLit(false);
@@ -53,12 +56,25 @@ VRCamera::VRCamera(string name) : VRTransform(name) {
     trans2->editMatrix().setRotate(Quaternion(Vec3f(1,0,0), Pi*0.5));
     camGeo->addChild(t2);
     t2->addChild(camGeo2);
-
-    getAll().push_back(this);
 }
 
 VRCamera::~VRCamera() {
-    cam = 0;
+    VRGuiManager::broadcast("camera_added");
+}
+
+VRCameraPtr VRCamera::ptr() { return static_pointer_cast<VRCamera>( shared_from_this() ); }
+VRCameraPtr VRCamera::create(string name) {
+    auto p = shared_ptr<VRCamera>(new VRCamera(name) );
+    getAll().push_back( p );
+    VRGuiManager::broadcast("camera_added");
+    return p;
+}
+
+void VRCamera::activate() {
+    cout << "VRCamera::activate " << camID << endl;
+    auto scene = VRSceneManager::getCurrent();
+    if (scene) scene->setActiveCamera(getName());
+    VRGuiManager::broadcast("camera_added");
 }
 
 void VRCamera::showCamGeo(bool b) {
@@ -66,8 +82,8 @@ void VRCamera::showCamGeo(bool b) {
     else camGeo->setTravMask(0);
 }
 
-vector<VRCamera*>& VRCamera::getAll() {
-    static vector<VRCamera*> objs;
+list<VRCameraWeakPtr>& VRCamera::getAll() {
+    static list<VRCameraWeakPtr> objs;
     return objs;
 }
 

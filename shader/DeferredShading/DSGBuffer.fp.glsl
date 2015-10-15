@@ -5,13 +5,9 @@ varying vec3      vertNorm;
 
 uniform sampler2D tex0;
 
-float luminance(vec4 color)
-{
-    return dot(color, vec4(0.3, 0.59, 0.11, 0.0));
-}
+float luminance(vec4 color) { return dot(color, vec4(0.3, 0.59, 0.11, 0.0)); }
 
-void main(void)
-{
+void main(void) {
     vec3 pos = vertPos.xyz / vertPos.w;
 //     vec3 pos = vertPos.xyz;
 

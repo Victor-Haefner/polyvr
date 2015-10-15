@@ -46,7 +46,7 @@ class GeoIO
             if (stream) {
                 cout << "Loading osb..." << endl;
                 NodeRecPtr geoNode = SceneFileHandler::the()->read(dataName.c_str());
-                _frame->geo = new VRGeometry("myNewMesh");
+                _frame->geo = VRGeometry::create("myNewMesh");
                 _frame->geo->setMesh( dynamic_cast<Geometry*>(geoNode->getCore()) );
                 fileLoaded = true;
             }

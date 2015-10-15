@@ -18,13 +18,14 @@
 #include "core/utils/toString.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/object/VRObjectT.h"
+#include "core/tools/selection/VRSelection.h"
 #include "VRPrimitive.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-VRObject* VRGeometry::copy(vector<VRObject*> children) {
-    VRGeometry* geo = new VRGeometry(getBaseName());
+VRObjectPtr VRGeometry::copy(vector<VRObjectPtr> children) {
+    VRGeometryPtr geo = VRGeometry::create(getBaseName());
     geo->setMesh(mesh);
     geo->setMaterial(mat);
     geo->source = source;
@@ -47,9 +48,12 @@ VRGeometry::VRGeometry(string name, bool hidden) : VRTransform(name) {
     addAttachment("geometry", 0);
 }
 
-VRGeometry::~VRGeometry() {
-    ;
-}
+VRGeometry::~VRGeometry() {}
+
+VRGeometryPtr VRGeometry::create(string name) { return shared_ptr<VRGeometry>(new VRGeometry(name) ); }
+VRGeometryPtr VRGeometry::create(string name, bool hidden) { return shared_ptr<VRGeometry>(new VRGeometry(name, hidden) ); }
+
+VRGeometryPtr VRGeometry::ptr() { return static_pointer_cast<VRGeometry>( shared_from_this() ); }
 
 /** Set the geometry mesh (OSG geometry core) **/
 void VRGeometry::setMesh(GeometryRecPtr g, Reference ref, bool keep_material) {
@@ -85,13 +89,17 @@ void VRGeometry::setPrimitive(string primitive, string args) {
 
 /** Create a mesh using vectors with positions, normals, indices && optionaly texture coordinates **/
 void VRGeometry::create(int type, vector<Vec3f> pos, vector<Vec3f> norms, vector<int> inds, vector<Vec2f> texs) {
+    bool doTex = (texs.size() == pos.size());
+
     GeoUInt8PropertyRecPtr      Type = GeoUInt8Property::create();
     GeoUInt32PropertyRecPtr     Length = GeoUInt32Property::create();
     GeoPnt3fPropertyRecPtr      Pos = GeoPnt3fProperty::create();
     GeoVec3fPropertyRecPtr      Norms = GeoVec3fProperty::create();
     GeoUInt32PropertyRecPtr     Indices = GeoUInt32Property::create();
     SimpleMaterialRecPtr        Mat = SimpleMaterial::create();
-    GeoVec2fPropertyRecPtr      Tex = GeoVec2fProperty::create();
+    GeoVec2fPropertyRecPtr      Tex = 0;
+    if (doTex) Tex = GeoVec2fProperty::create();
+
 
     Type->addValue(type);
     Length->addValue(inds.size());
@@ -100,7 +108,7 @@ void VRGeometry::create(int type, vector<Vec3f> pos, vector<Vec3f> norms, vector
     for(uint i=0;i<pos.size();i++) {
             Pos->addValue(pos[i]);
             Norms->addValue(norms[i]);
-            if (texs.size() == pos.size()) Tex->addValue(texs[i]);
+            if (doTex) Tex->addValue(texs[i]);
     }
 
     for(uint i=0;i<inds.size();i++) {
@@ -117,7 +125,7 @@ void VRGeometry::create(int type, vector<Vec3f> pos, vector<Vec3f> norms, vector
     geo->setIndices(Indices);
     geo->setPositions(Pos);
     geo->setNormals(Norms);
-    geo->setTexCoords(Tex);
+    if (doTex) geo->setTexCoords(Tex);
     geo->setMaterial(Mat);
 
     setMesh(geo);
@@ -156,11 +164,16 @@ void VRGeometry::fixColorMapping() {
     mesh->setIndex(mesh->getIndex(Geometry::PositionsIndex), Geometry::ColorsIndex);
 }
 
+void VRGeometry::updateNormals() {
+    if (!meshSet) return;
+    calcVertexNormals(mesh);
+}
+
 void VRGeometry::setTypes(GeoIntegralProperty* types) { if (!meshSet) setMesh(Geometry::create()); mesh->setTypes(types); }
 void VRGeometry::setNormals(GeoVectorProperty* Norms) { if (!meshSet) setMesh(Geometry::create()); mesh->setNormals(Norms); }
 void VRGeometry::setColors(GeoVectorProperty* Colors, bool fixMapping) { if (!meshSet) setMesh(Geometry::create()); mesh->setColors(Colors); if (fixMapping) fixColorMapping(); }
 void VRGeometry::setLengths(GeoIntegralProperty* lengths) { if (!meshSet) setMesh(Geometry::create()); mesh->setLengths(lengths); }
-void VRGeometry::setTexCoords(GeoVectorProperty* Tex, int i) {
+void VRGeometry::setTexCoords(GeoVectorProperty* Tex, int i, bool fixMapping) {
     if (!meshSet) setMesh(Geometry::create());
     if (i == 0) mesh->setTexCoords(Tex);
     if (i == 1) mesh->setTexCoords1(Tex);
@@ -170,6 +183,21 @@ void VRGeometry::setTexCoords(GeoVectorProperty* Tex, int i) {
     if (i == 5) mesh->setTexCoords5(Tex);
     if (i == 6) mesh->setTexCoords6(Tex);
     if (i == 7) mesh->setTexCoords7(Tex);
+    if (fixMapping) mesh->setIndex(mesh->getIndex(Geometry::PositionsIndex), Geometry::TexCoordsIndex);
+}
+
+void VRGeometry::setPositionalTexCoords(float scale) {
+    GeoVectorPropertyRefPtr pos = mesh->getPositions();
+    if (scale == 1.0) setTexCoords(pos, 0, 1);
+    else {
+        GeoVec3fPropertyRefPtr tex = GeoVec3fProperty::create();
+        for (int i=0; i<pos->size(); i++) {
+            Pnt3f p = pos->getValue<Pnt3f>(i);
+            p[0] *= scale; p[1] *= scale; p[2] *= scale;
+            tex->addValue(Vec3f(p));
+        }
+        setTexCoords(tex, 0, 1);
+    }
 }
 
 void VRGeometry::setIndices(GeoIntegralProperty* Indices) {
@@ -181,20 +209,21 @@ void VRGeometry::setIndices(GeoIntegralProperty* Indices) {
     mesh->setIndices(Indices);
 }
 
-GeoVec4fPropertyRecPtr convertColors(GeoVectorProperty* v) {
-    GeoVec4fPropertyRecPtr res = GeoVec4fProperty::create();
-    if (v == 0) return res;
-    if (v->size() == 0) return res;
-
-    return res;
-
-    int cN = sizeof(v[0]);
-    if (cN == sizeof(Vec4f)) res = (GeoVec4fProperty*)v;
-    if (cN == sizeof(Vec3f)) for (uint i=0; i<v->size(); i++) res->addValue( Vec4f(v->getValue<Vec3f>(i)) );
-    return res;
+int getColorChannels(GeoVectorProperty* v) {
+    if (v == 0) return 0;
+    int type = v->getType().getId();
+    if (type == 1775) return 3;
+    if (type == 1776) return 4;
+    cout << "getColorChannels WARNING: unknown type ID " << type << endl;
+    return 0;
 }
 
-void VRGeometry::merge(VRGeometry* geo) {
+Vec3f morphColor3(const Vec3f& c) { return c; }
+Vec3f morphColor3(const Vec4f& c) { return Vec3f(c[0], c[1], c[2]); }
+Vec4f morphColor4(const Vec3f& c) { return Vec4f(c[0], c[1], c[2], 1); }
+Vec4f morphColor4(const Vec4f& c) { return c; }
+
+void VRGeometry::merge(VRGeometryPtr geo) {
     if (!meshSet) {
         setIndices(GeoUInt32PropertyRecPtr( GeoUInt32Property::create()) );
         setTypes(GeoUInt8PropertyRecPtr( GeoUInt8Property::create()) );
@@ -222,10 +251,12 @@ void VRGeometry::merge(VRGeometry* geo) {
     v2 = geo->mesh->getNormals();
     for (uint i=0; i<geo->mesh->getPositions()->size(); i++) v1->addValue(v2->getValue<Vec3f>(i));
 
-    if (mesh->getColors()) {
-        GeoVec4fPropertyRecPtr c1 = convertColors(mesh->getColors());
-        GeoVec4fPropertyRecPtr c2 = convertColors(geo->mesh->getColors());
-        for (uint i=0; i<c2->size(); i++) v1->addValue(c2->getValue(i));
+    auto c1 = mesh->getColors();
+    auto c2 = geo->mesh->getColors();
+    if (c1 && c2) {
+        int Nc = getColorChannels( c2 );
+        if (Nc == 3) for (uint i=0; i<c2->size(); i++) c1->addValue<Vec4f>( morphColor4( c2->getValue<Vec3f>(i) ) );
+        if (Nc == 4) for (uint i=0; i<c2->size(); i++) c1->addValue<Vec4f>( morphColor4( c2->getValue<Vec4f>(i) ) );
     }
 
     GeoIntegralProperty *i1, *i2;
@@ -261,6 +292,115 @@ void VRGeometry::merge(VRGeometry* geo) {
     cout << "pos   idx " << mesh->getIndex(Geometry::PositionsIndex) << " " << geo->mesh->getIndex(Geometry::PositionsIndex) << endl;
     cout << "norms idx " << mesh->getIndex(Geometry::NormalsIndex) << " " << geo->mesh->getIndex(Geometry::NormalsIndex) << endl;
     cout << endl;*/
+}
+
+void VRGeometry::removeSelection(VRSelectionPtr sel) {
+    if (!mesh) return;
+    auto pos = mesh->getPositions();
+    auto norms = mesh->getNormals();
+    auto cols = mesh->getColors();
+    if (!pos || !norms || !cols) return;
+    GeoPnt3fPropertyRecPtr new_pos = GeoPnt3fProperty::create();
+    GeoVec3fPropertyRecPtr new_norms = GeoVec3fProperty::create();
+    GeoUInt32PropertyRecPtr new_inds = GeoUInt32Property::create();
+    GeoUInt32PropertyRecPtr new_lengths = GeoUInt32Property::create();
+    GeoVec4fPropertyRecPtr new_cols = GeoVec4fProperty::create();
+    int Nc = getColorChannels( cols );
+
+    map<int, int> mapping;
+    auto addVertex = [&](int i, bool mapit = true) {
+        int j = new_pos->size();
+        if (mapit) mapping[i] = j;
+        new_pos->addValue( pos->getValue<Pnt3f>(i) );
+        new_norms->addValue( norms->getValue<Vec3f>(i) );
+        if (cols) {
+            if (Nc == 3) new_cols->addValue( cols->getValue<Vec3f>(i) );
+            if (Nc == 4) new_cols->addValue( cols->getValue<Vec4f>(i) );
+        }
+        return j;
+    };
+
+    // copy not selected vertices
+    auto sinds = sel->getSubselection(ptr());
+    std::sort(sinds.begin(), sinds.end());
+    std::unique(sinds.begin(), sinds.end());
+    for (int k=0, i=0; i < pos->size(); i++) {
+        bool selected = false;
+        if (k < sinds.size()) if (i == sinds[k]) selected = true;
+        if (!selected) addVertex(i);
+        else k++;
+    }
+
+    // copy not selected and partially selected triangles
+    TriangleIterator it(mesh);
+    for (int i=0; !it.isAtEnd(); ++it, i++) {
+        Vec3i idx = Vec3i( it.getPositionIndex(0), it.getPositionIndex(1), it.getPositionIndex(2) );
+        Vec3b bmap = Vec3b(mapping.count(idx[0]), mapping.count(idx[1]), mapping.count(idx[2]));
+        bool all = bmap[0] && bmap[1] && bmap[2];
+        bool any = bmap[0] || bmap[1] || bmap[2];
+        if (all) for (int j=0; j<3; j++) new_inds->addValue( mapping[ idx[j] ] );
+        else if (any) {
+            for (int j=0; j<3; j++) {
+                if (mapping.count(idx[j]) == 0) new_inds->addValue( addVertex(idx[j], false) );
+                else new_inds->addValue( mapping[ idx[j] ] );
+            }
+        }
+    }
+
+    new_lengths->addValue( new_inds->size() );
+
+    setType(GL_TRIANGLES);
+    setPositions(new_pos);
+    setNormals(new_norms);
+    setIndices(new_inds);
+    setLengths(new_lengths);
+    if (cols) setColors(new_cols);
+
+    mesh->setIndex(mesh->getIndex(Geometry::PositionsIndex), Geometry::ColorsIndex);
+    mesh->setIndex(mesh->getIndex(Geometry::PositionsIndex), Geometry::NormalsIndex);
+}
+
+VRGeometryPtr VRGeometry::copySelection(VRSelectionPtr sel) {
+    auto pos = mesh->getPositions();
+    auto norms = mesh->getNormals();
+    GeoPnt3fPropertyRecPtr sel_pos = GeoPnt3fProperty::create();
+    GeoVec3fPropertyRecPtr sel_norms = GeoVec3fProperty::create();
+    GeoUInt32PropertyRecPtr sel_inds = GeoUInt32Property::create();
+
+    // copy selected vertices
+    auto sinds = sel->getSubselection(ptr());
+    std::sort(sinds.begin(), sinds.end());
+    std::unique(sinds.begin(), sinds.end());
+    map<int, int> mapping;
+    int k = 0;
+    for (int i : sinds) {
+        sel_pos->addValue( pos->getValue<Pnt3f>(i) );
+        sel_norms->addValue( norms->getValue<Vec3f>(i) );
+        mapping[i] = k;
+        k++;
+    }
+
+    // copy selected triangles
+    TriangleIterator it(mesh);
+    for (int i=0; !it.isAtEnd(); ++it, i++) {
+        Vec3i idx = Vec3i( it.getPositionIndex(0), it.getPositionIndex(1), it.getPositionIndex(2) );
+        if ( mapping.count(idx[0]) && mapping.count(idx[1]) && mapping.count(idx[2]) ) {
+            for (int j=0; j<3; j++) sel_inds->addValue( mapping[ idx[j] ] );
+        }
+    }
+
+    auto geo = VRGeometry::create(getName());
+    geo->setType(GL_TRIANGLES);
+    geo->setPositions(sel_pos);
+    geo->setNormals(sel_norms);
+    geo->setIndices(sel_inds);
+    return geo;
+}
+
+VRGeometryPtr VRGeometry::separateSelection(VRSelectionPtr sel) {
+    auto geo = copySelection(sel);
+    removeSelection(sel);
+    return geo;
 }
 
 void VRGeometry::decimate(float f) {
@@ -461,12 +601,12 @@ void VRGeometry::setMeshVisibility(bool b) {
 }
 
 /** Set the material of the mesh **/
-void VRGeometry::setMaterial(VRMaterial* mat) {
-    if (!meshSet) return;
+void VRGeometry::setMaterial(VRMaterialPtr mat) {
     if (mat == 0) mat = this->mat;
     if (mat == 0) return;
 
     this->mat = mat;
+    if (!meshSet) return;
     mesh->setMaterial(mat->getMaterial());
 }
 
@@ -474,15 +614,33 @@ void VRGeometry::setMaterial(MaterialRecPtr mat) {
     if (!meshSet) return;
     if (mat == 0) return;
 
-    if (this->mat == 0) this->mat = new VRMaterial("mat");
+    if (this->mat == 0) this->mat = VRMaterial::create("mat");
     this->mat->setMaterial(mat);
 
     setMaterial(this->mat);
 }
 
-VRMaterial* VRGeometry::getMaterial() {
+VRMaterialPtr VRGeometry::getMaterial() {
     if (!meshSet) return 0;
     return mat;
+}
+
+float VRGeometry::calcSurfaceArea() {
+    if (!meshSet) return 0;
+
+    float A = 0;
+    TriangleIterator it(mesh);
+
+	for(int i=0; !it.isAtEnd(); ++it, i++) {
+        Pnt3f p0 = it.getPosition(0);
+        Pnt3f p1 = it.getPosition(1);
+        Pnt3f p2 = it.getPosition(2);
+        Vec3f d1 = p1-p0;
+        Vec3f d2 = p2-p0;
+        A += d1.cross(d2).length();
+	}
+
+    return 0.5*A;
 }
 
 VRGeometry::Reference VRGeometry::getReference() { return source; }
@@ -490,7 +648,7 @@ VRGeometry::Reference VRGeometry::getReference() { return source; }
 void VRGeometry::showGeometricData(string type, bool b) {
     if (dataLayer.count(type)) dataLayer[type]->destroy();
 
-    VRGeometry* geo = new VRGeometry("DATALAYER_"+getName()+"_"+type, true);
+    VRGeometryPtr geo = VRGeometry::create("DATALAYER_"+getName()+"_"+type, true);
     dataLayer[type] = geo;
     addChild(geo);
 
@@ -521,13 +679,14 @@ void VRGeometry::showGeometricData(string type, bool b) {
         geo->setIndices(inds);
     }
 
-    VRMaterial* m = new VRMaterial("some-mat");
+    VRMaterialPtr m = VRMaterial::create("some-mat");
     geo->setMaterial(m);
     m->setLit(false);
 }
 
 void VRGeometry::saveContent(xmlpp::Element* e) {
     VRTransform::saveContent(e);
+    if (getPersistency() < 3) return;
     stringstream ss; ss << source.type;
     e->set_attribute("sourcetype", ss.str());
     e->set_attribute("sourceparam", source.parameter);
@@ -541,7 +700,7 @@ void VRGeometry::loadContent(xmlpp::Element* e) {
 
     string p1, p2;
     stringstream ss;
-    VRGeometry* g;
+    VRGeometryPtr g;
     // get source info
     // construct data from that
 

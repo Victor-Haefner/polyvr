@@ -14,7 +14,7 @@ bool VRViewManager::checkView(int i) {
     }
 }
 
-void VRViewManager::setViewAnchor(VRTransform* a) { anchor = a; }
+void VRViewManager::setViewAnchor(VRTransformPtr a) { anchor = a; }
 
 void VRViewManager::showViewStats(int i, bool b) {
     if (checkView(i)) views[i]->showStats(b);
@@ -39,17 +39,17 @@ int VRViewManager::addView(string name) {
     return id;
 }
 
-void VRViewManager::setViewCamera(VRCamera* c, int i) {
+void VRViewManager::setViewCamera(VRCameraPtr c, int i) {
     if (checkView(i)) views[i]->setCamera(c);
     else if(i == -1) for (auto v : views) v.second->setCamera(c);
 }
 
-void VRViewManager::setViewRoot(VRObject* root, int i) {
+void VRViewManager::setViewRoot(VRObjectPtr root, int i) {
     if (checkView(i)) views[i]->setRoot(root, anchor);
     else if(i == -1) for (auto v : views) v.second->setRoot(root, anchor);
 }
 
-void VRViewManager::setViewUser(VRTransform* user, int i) { // not used
+void VRViewManager::setViewUser(VRTransformPtr user, int i) { // not used
     anchor->addChild(user);
     if (checkView(i)) views[i]->setUser(user);
     else if(i == -1) for (auto v : views) v.second->setUser(user);
@@ -70,9 +70,9 @@ void VRViewManager::removeView(int i) {
     views.erase(i);
 }
 
-//void VRViewManager::addRWElement(VRTransform* obj) { view_root->addChild(obj); }
+//void VRViewManager::addRWElement(VRTransformPtr obj) { view_root->addChild(obj); }
 
-VRTransform* VRViewManager::getViewUser(int i) { if (checkView(i)) return views[i]->getUser(); else return 0; }
+VRTransformPtr VRViewManager::getViewUser(int i) { if (checkView(i)) return views[i]->getUser(); else return 0; }
 VRView* VRViewManager::getView(int i) { if (checkView(i)) return views[i]; else return 0; }
 
 void VRViewManager::setStereo(bool b) { for (auto v : views) v.second->setStereo(b); }

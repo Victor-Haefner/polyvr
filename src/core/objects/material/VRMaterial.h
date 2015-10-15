@@ -5,6 +5,7 @@
 #include <OpenSG/OSGColor.h>
 
 #include "core/objects/object/VRObject.h"
+#include "core/objects/VRObjectFwd.h"
 
 class VRVideo;
 
@@ -14,25 +15,28 @@ using namespace std;
 class Material; OSG_GEN_CONTAINERPTR(Material);
 class Image; OSG_GEN_CONTAINERPTR(Image);
 class ShaderProgram; OSG_GEN_CONTAINERPTR(ShaderProgram);
+class ChunkMaterial; OSG_GEN_CONTAINERPTR(ChunkMaterial);
 class MultiPassMaterial; OSG_GEN_CONTAINERPTR(MultiPassMaterial);
 
 struct VRMatData;
-class VRTransform;
 
 Color4f toColor4f(Color3f c, float t = 1);
 Color3f toColor3f(Color4f c);
 
 class VRMaterial : public VRObject {
     public:
-        static map<string, VRMaterial*> materials;
-        static map<MaterialRecPtr, VRMaterial*> materialsByPtr;
+        static map<string, VRMaterialWeakPtr> materials;
+        static map<MaterialRecPtr, VRMaterialWeakPtr> materialsByPtr;
+
+        string constructShaderVP(VRMatData* data);
+        string constructShaderFP(VRMatData* data);
 
     protected:
         MultiPassMaterialRecPtr passes;
         vector<VRMatData*> mats;
         int activePass = 0;
 
-        VRObject* copy(vector<VRObject*> children);
+        VRObjectPtr copy(vector<VRObjectPtr> children);
 
         bool isCMat(MaterialUnrecPtr matPtr);
         bool isSMat(MaterialUnrecPtr matPtr);
@@ -45,18 +49,23 @@ class VRMaterial : public VRObject {
         VRMaterial(string name);
         virtual ~VRMaterial();
 
+        static VRMaterialPtr create(string name);
+        VRMaterialPtr ptr();
+
+        void setDeffered(bool b);
+
         void setActivePass(int i);
         int getActivePass();
         int getNPasses();
         int addPass();
         void remPass(int i);
-        void appendPasses(VRMaterial* mat);
-        void prependPasses(VRMaterial* mat);
+        void appendPasses(VRMaterialPtr mat);
+        void prependPasses(VRMaterialPtr mat);
         void clearExtraPasses();
 
-        static VRMaterial* getDefault();
-        static VRMaterial* get(MaterialRecPtr mat);
-        static VRMaterial* get(string s);
+        static VRMaterialPtr getDefault();
+        static VRMaterialPtr get(MaterialRecPtr mat);
+        static VRMaterialPtr get(string s);
         static void clearAll();
 
         //** Set the material of the mesh **/
@@ -66,6 +75,7 @@ class VRMaterial : public VRObject {
         /** Load a texture && apply it to the mesh as new material **/
         void setTexture(string img_path, bool alpha = true);
         void setTexture(ImageRecPtr img, bool alpha = true);
+        void setTexture(ImageRecPtr img, int type, bool alpha);
         void setTexture(char* data, int format, Vec3i dims, bool isfloat);
         void setTextureParams(int min, int mag, int envMode, int wrapS, int wrapT);
         void setTextureType(string type);
@@ -87,7 +97,7 @@ class VRMaterial : public VRObject {
         void setZOffset(float factor, float bias);
         void setSortKey(int key);
         void setFrontBackModes(int front, int back);
-        void setClipPlane(bool active, Vec4f equation, VRTransform* beacon);
+        void setClipPlane(bool active, Vec4f equation, VRTransformPtr beacon);
         void setStencilBuffer(bool clear, float value, float mask, int func, int opFail, int opZFail, int opPass);
 
         Color3f getDiffuse();
@@ -98,6 +108,8 @@ class VRMaterial : public VRObject {
         float getTransparency();
 
         void initShaderChunk();
+        void remShaderChunk();
+        void setDefaultVertexShader();
         void setVertexShader(string s);
         void setFragmentShader(string s);
         void setGeometryShader(string s);
@@ -123,7 +135,8 @@ class VRMaterial : public VRObject {
         bool isLit();
 
         /** Returns the mesh material **/
-        MaterialRecPtr getMaterial();
+        MultiPassMaterialRecPtr getMaterial();
+        ChunkMaterialRecPtr getMaterial(int i);
 
         /** Returns the texture || 0 **/
         ImageRecPtr getTexture();

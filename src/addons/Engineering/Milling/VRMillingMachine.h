@@ -3,17 +3,17 @@
 
 #include <string>
 #include <OpenSG/OSGVector.h>
+#include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRTransform;
 class VRSocket;
 
 class VRMillingMachine {
     private:
         int axis = 3;
-        vector<VRTransform*> geos;
+        vector<VRTransformPtr> geos;
 
         VRSocket* http = 0;
 
@@ -36,7 +36,7 @@ class VRMillingMachine {
 
         void setSpeed(Vec3f v);
         void setSpeed(float s);
-        void setGeometry(vector<VRTransform*> geos);
+        void setGeometry(vector<VRTransformPtr> geos);
 
         void setPosition(Vec3f p);
         Vec3f getPosition();

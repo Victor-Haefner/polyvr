@@ -27,17 +27,22 @@ struct VRPyGeometry : VRPyBaseT<OSG::VRGeometry> {
     static PyObject* getColors(VRPyGeometry* self);
     static PyObject* getIndices(VRPyGeometry* self);
     static PyObject* getTexCoords(VRPyGeometry* self);
-    static PyObject* getTexture(VRPyGeometry* self);
     static PyObject* getMaterial(VRPyGeometry* self);
     static PyObject* duplicate(VRPyGeometry* self);
     static PyObject* setPrimitive(VRPyGeometry* self, PyObject *args);
     static PyObject* decimate(VRPyGeometry* self, PyObject *args);
     static PyObject* setRandomColors(VRPyGeometry* self);
+    static PyObject* updateNormals(VRPyGeometry* self);
     static PyObject* makeUnique(VRPyGeometry* self);
     static PyObject* removeDoubles(VRPyGeometry* self, PyObject *args);
     static PyObject* merge(VRPyGeometry* self, PyObject *args);
+    static PyObject* copy(VRPyGeometry* self, PyObject *args);
+    static PyObject* remove(VRPyGeometry* self, PyObject *args);
+    static PyObject* separate(VRPyGeometry* self, PyObject *args);
     static PyObject* influence(VRPyGeometry* self, PyObject *args);
     static PyObject* showGeometricData(VRPyGeometry* self, PyObject *args);
+    static PyObject* calcSurfaceArea(VRPyGeometry* self);
+    static PyObject* setPositionalTexCoords(VRPyGeometry* self, PyObject *args);
 };
 
 #endif // VRPYGEOMETRY_H_INCLUDED

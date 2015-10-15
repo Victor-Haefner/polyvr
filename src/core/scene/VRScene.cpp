@@ -21,7 +21,6 @@ using namespace std;
 VRScene::VRScene() {
     cout << "Init Scene" << endl;
 
-    root = new VRObject("Root");
     setNameSpace("Scene");
     setName("Scene");
 
@@ -42,9 +41,12 @@ VRScene::VRScene() {
     cameras_layer = new VRVisualLayer("Cameras", "cameras.png");
     lights_layer = new VRVisualLayer("Lights", "lights.png");
 
-    referentials_layer->setCallback( new VRFunction<bool>("showReferentials", boost::bind(&VRScene::showReferentials, this, _1, (VRObject*)0) ) );
-    cameras_layer->setCallback( new VRFunction<bool>("showCameras", boost::bind(&VRScene::showCameras, this, _1) ) );
-    lights_layer->setCallback( new VRFunction<bool>("showLights", boost::bind(&VRScene::showLights, this, _1) ) );
+    layer_ref_toggle = VRFunction<bool>::create("showReferentials", boost::bind(&VRScene::showReferentials, this, _1, (VRObjectPtr)0) );
+    layer_cam_toggle = VRFunction<bool>::create("showCameras", boost::bind(&VRScene::showCameras, this, _1) );
+    layer_light_toggle = VRFunction<bool>::create("showLights", boost::bind(&VRScene::showLights, this, _1) );
+    referentials_layer->setCallback( layer_ref_toggle );
+    cameras_layer->setCallback( layer_cam_toggle );
+    lights_layer->setCallback( layer_light_toggle );
 
     VRVisualLayer::anchorLayers(root);
 
@@ -56,10 +58,10 @@ VRScene::~VRScene() {
     VRThreadManager::stopThread(physicsThreadID);
     updateObjects();
     root->destroy();
+    root_system->destroy();
     VRGroup::clearGroups();
     VRLightBeacon::getAll().clear();
-    VRCamera::getAll().clear();
-
+    VRMaterial::clearAll();
 }
 
 void VRScene::initDevices() { // TODO: remove this after refactoring the navigation stuff
@@ -112,37 +114,39 @@ string VRScene::getWorkdir() {
     return wdir;
 }
 
-void VRScene::add(VRObject* obj, int parentID) {
+void VRScene::add(VRObjectPtr obj, int parentID) {
     if (obj == 0) return;
 
-    VRObject* o = get(parentID);
+    VRObjectPtr o = get(parentID);
     if (o != 0) o->addChild(obj);
     else root->addChild(obj);
 }
 
 void VRScene::add(NodeRecPtr n) { root->addChild(n); }
 
-VRObject* VRScene::get(int ID) {
+VRObjectPtr VRScene::get(int ID) {
     if (ID == -1) return 0;
-    VRObject* o = 0;
+    VRObjectPtr o = 0;
     o = root->find(ID);
     return o;
 }
 
-VRObject* VRScene::get(string name) {
-    VRObject* o = 0;
+VRObjectPtr VRScene::get(string name) {
+    VRObjectPtr o = 0;
     o = root->find(name);
     return o;
 }
 
-void VRScene::setActiveCamera(int i) {
-    VRCameraManager::setActiveCamera(i);
+void VRScene::setActiveCamera(string camname) {
+    setMActiveCamera(camname);
     VRSetup* setup = VRSetupManager::getCurrent();
 
     // TODO: refactor the following workaround
-    VRCamera* cam = getActiveCamera();
+    VRCameraPtr cam = getActiveCamera();
     if (cam == 0) return;
     cout << " set active camera to " << cam->getName() << endl;
+
+    setDSCamera(cam);
 
     VRMouse* mouse = (VRMouse*)setup->getDevice("mouse");
     if (mouse) {
@@ -163,29 +167,23 @@ void VRScene::setActiveCamera(int i) {
     if (cam->getAcceptRoot()) setup->getRoot()->switchParent(cam);
 }
 
-VRObject* VRScene::getRoot() { return root; }
+VRObjectPtr VRScene::getRoot() { return root; }
+VRObjectPtr VRScene::getSystemRoot() { return root_system; }
 
 void VRScene::printTree() { root->printTree(); }
 
-void VRScene::showReferentials(bool b, VRObject* o) {
+void VRScene::showReferentials(bool b, VRObjectPtr o) {
     if (o == 0) o = root;
 
-    VRTransform* t = 0;
-    if (o->hasAttachment("transform")) t = (VRTransform*)o;
+    VRTransformPtr t = 0;
+    if (o->hasAttachment("transform")) t = static_pointer_cast<VRTransform>(o);
     if (t) t->showCoordAxis(b);
 
     for (uint i=0; i<o->getChildrenCount(); i++) showReferentials(b, o->getChild(i));
 }
 
-void VRScene::showLights(bool b) {
-    vector<VRLightBeacon*> beacons = VRLightBeacon::getAll();
-    for (uint i=0; i<beacons.size(); i++) beacons[i]->showLightGeo(b);
-}
-
-void VRScene::showCameras(bool b) {
-    vector<VRCamera*> cams = VRCamera::getAll();
-    for (uint i=0; i<cams.size(); i++) cams[i]->showCamGeo(b);
-}
+void VRScene::showLights(bool b) { for (auto be : VRLightBeacon::getAll()) be->showLightGeo(b); }
+void VRScene::showCameras(bool b) { for (auto c : VRCamera::getAll()) if (auto sp = c.lock()) sp->showCamGeo(b); }
 
 void VRScene::update() {
     //Vec3f min,max;
@@ -195,14 +193,9 @@ void VRScene::update() {
 }
 
 xmlpp::Element* VRSceneLoader_getElementChild(xmlpp::Element* e, string name) {
-    xmlpp::Node::NodeList nl = e->get_children();
-    xmlpp::Node::NodeList::iterator itr;
-    for (itr = nl.begin(); itr != nl.end(); itr++) {
-        xmlpp::Node* n = *itr;
-
+    for (auto n : e->get_children()) {
         xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
         if (!el) continue;
-
         if (el->get_name() == name) return el;
     }
     return 0;

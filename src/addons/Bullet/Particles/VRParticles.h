@@ -4,15 +4,13 @@
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGGeoProperties.h>
 #include "core/objects/geometry/VRGeometry.h"
-#include "core/utils/VRFunction.h"
+#include "core/utils/VRFunctionFwd.h"
 #include "VRParticle.h"
 
 class btDiscreteDynamicsWorld;
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
-
-class VRGeometry;
 
 class VRParticles : public VRGeometry {
     // FIXME: Particles do not collide in ~50% of all polyvr sessions. Restart polyvr until it works.
@@ -21,8 +19,8 @@ class VRParticles : public VRGeometry {
         int N = 200;
         vector<Particle*> particles;
 
-        VRFunction<int>* fkt = 0;
-        VRMaterial* mat = 0;
+        VRUpdatePtr fkt;
+        VRMaterialPtr mat;
         GeoPnt3fPropertyRecPtr pos;
         GeoVec3fPropertyRecPtr normals;
         GeoVec4fPropertyRecPtr colors;
@@ -40,6 +38,8 @@ class VRParticles : public VRGeometry {
         VRParticles();
         VRParticles(bool spawnParticles);
         ~VRParticles();
+
+        static shared_ptr<VRParticles> create();
 
         void setRadius(float newRadius, float variation=0.0);
         void setMass(float newMass, float variation=0.0);

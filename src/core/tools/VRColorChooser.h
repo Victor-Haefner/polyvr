@@ -2,21 +2,20 @@
 #define VRCOLORCHOOSER_H_INCLUDED
 
 #include <OpenSG/OSGColor.h>
+#include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRDevice;
-class VRGeometry;
-class VRMaterial;
 
 class VRColorChooser {
     private:
         float border = 0.05;
         Color3f color;
         Color3f last_color;
-        VRGeometry* geo;
-        VRMaterial* mat;
+        VRGeometryWeakPtr geo;
+        VRMaterialPtr mat;
 
         Color3f colFromUV(Vec2f tc);
         void updateTexture();
@@ -28,7 +27,7 @@ class VRColorChooser {
         Color3f getColor();
         Color3f getLastColor();
 
-        void setGeometry(VRGeometry* geo);
+        void setGeometry(VRGeometryPtr geo);
         void resolve(VRDevice* dev);
 };
 

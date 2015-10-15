@@ -10,7 +10,7 @@ using namespace std;
 namespace realworld {
     class World {
     public:
-        map<string, VRGeometry*> meshes;
+        map<string, VRGeometryPtr> meshes;
         map<string, StreetJoint*> streetJoints;
         map<string, StreetSegment*> streetSegments;
         map<string, Building*> buildings;

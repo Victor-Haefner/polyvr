@@ -6,6 +6,7 @@
 #include <stack>
 
 #include <OpenSG/OSGVector.h>
+#include "core/objects/VRObjectFwd.h"
 
 class FID;
 class FNode;
@@ -34,8 +35,8 @@ class FObject : public FID {
 
     private:
         Type type;
-        OSG::VRTransform* transform = 0;
-        OSG::VRSprite* metaData = 0;
+        OSG::VRTransformPtr transform = 0;
+        OSG::VRSpritePtr metaData = 0;
         float t = 0;
 
     protected:
@@ -47,8 +48,8 @@ class FObject : public FID {
         void setType(Type);
         Type getType();
 
-        void setTransformation(OSG::VRTransform* t);
-        OSG::VRTransform* getTransformation();
+        void setTransformation(OSG::VRTransformPtr t);
+        OSG::VRTransformPtr getTransformation();
         bool move(OSG::path* p, float dx);
 
         void setMetaData(std::string s);
@@ -64,7 +65,7 @@ class FNode : public FID {
         FObject* object;
         FTransporter* transporter;
         State state;
-        OSG::VRTransform* transform = 0;
+        OSG::VRTransformPtr transform = 0;
 
         std::map<int, FNode*> out;
         std::map<int, FNode*> in;
@@ -92,8 +93,8 @@ class FNode : public FID {
         void disconnect(FNode* n);
         void isolate();
 
-        void setTransform(OSG::VRTransform* t);
-        OSG::VRTransform* getTransform();
+        void setTransform(OSG::VRTransformPtr t);
+        OSG::VRTransformPtr getTransform();
 
         friend class FNetwork;
 };
@@ -128,7 +129,7 @@ class FNetwork : public FID {
 
         std::vector<FNode*> getNodes();
 
-        OSG::VRStroke* stroke(OSG::Vec3f c, float k);
+        OSG::VRStrokePtr stroke(OSG::Vec3f c, float k);
 
         friend class FLogistics;
 };
@@ -160,6 +161,7 @@ class FContainer : public FObject {
 
         void add(FProduct* p);
         FProduct* pop();
+        FProduct* peek();
 
         bool isFull();
         bool isEmpty();
@@ -212,12 +214,12 @@ class FLogistics {
         FLogistics();
         ~FLogistics();
 
-        FProduct* addProduct(OSG::VRTransform* t = 0);
+        FProduct* addProduct(OSG::VRTransformPtr t = 0);
         FNetwork* addNetwork();
         FTransporter* addTransporter(FTransporter::FTType type);
         FPath* addPath();
-        FContainer* addContainer(OSG::VRTransform* t);
-        void fillContainer(FContainer* c, int N, OSG::VRTransform* t);
+        FContainer* addContainer(OSG::VRTransformPtr t);
+        void fillContainer(FContainer* c, int N, OSG::VRTransformPtr t);
         std::vector<FContainer*> getContainers();
 
         void update();

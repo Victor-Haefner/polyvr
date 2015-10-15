@@ -30,43 +30,19 @@
 using namespace realworld;
 
 
-RealWorld::RealWorld(VRObject* root) {
+RealWorld::RealWorld(VRObjectPtr root) {
     physicalized = false;
-
-    cout << "\nINIT REALWORLD\n";
-
-    Timer t;
-    t.start("Program loading time");
 
     mapCoordinator = new MapCoordinator(OSG::Vec2f(49.005f, 8.395f), 0.002f); //Kreuzung Kriegsstr. und Karlstr.
     //mapCoordinator = new MapCoordinator(OSG::Vec2f(48.998969, 8.400171), 0.002f); // Tiergarten
     //mapCoordinator = new MapCoordinator(OSG::Vec2f(49.013606f, 8.418295f), 0.002f); // Fasanengarten, funktioniert nicht?
-    //mapCoordinator = new MapCoordinator(Config::getStartPosition(), Config::gridSize);
 
-    //Vec2f camPos = mapCoordinator->realToWorld(Vec2f(49, 8.4f));
-    TextureManager* texManager = new TextureManager(); // load textures (3 images)
+    texManager = new TextureManager();
     mapGeometryGenerator = new MapGeometryGenerator(texManager);
     world = new World();
     mapDB = new OSMMapDB();
     mapLoader = new MapLoader(mapCoordinator);
     mapManager = new MapManager(Vec2f(0,0), mapLoader, mapGeometryGenerator, mapCoordinator, world, root);
-
-    mapManager->addModule(new ModuleFloor(mapCoordinator, texManager)); // ca. 200ms - 2000ms Abhängig von der Tesselierung
-//
-    mapManager->addModule(new ModuleBuildings(mapDB, mapCoordinator, texManager)); //ca 500ms - 3000ms Abhängig von Anzahl der Gebäude
-    //mapManager->addModule(new ModuleStreets(mapDB, mapCoordinator, texManager)); //ca 9.000ms - 20.000ms Abhängig von Anzahl der Straßen
-    mapManager->addModule(new ModuleWalls(mapDB, mapCoordinator, texManager)); //ca. 200ms
-    mapManager->addModule(new ModuleTerrain(mapDB, mapCoordinator, texManager)); // 500ms - 3000ms abhängig von Anzahl der Terrains und maximaler Dreieckseitenlänge
-    mapManager->addModule(new ModuleTree(mapDB, mapCoordinator, texManager));
-    ModuleTraffic *traffic = new ModuleTraffic(mapDB, mapCoordinator, texManager);
-    trafficSimulation = traffic->getTrafficSimulation();
-    mapManager->addModule(traffic);
-
-    // Make Test Movement
-    //new TestMover(scene, scene->getActiveCamera());
-
-    update(Vec3f(0,0,0));
-    t.printTime("Program loading time");
 
     //mapCoordinator->altitude->showHeightArray(49.000070f, 8.401015f);
 }
@@ -85,6 +61,23 @@ RealWorld::~RealWorld() {
 
 void RealWorld::update(OSG::Vec3f pos) { mapManager->updatePosition( OSG::Vec2f(pos[0], pos[2]) ); }
 
+void RealWorld::enableModule(string mod) {
+    if (mod == "Ground") mapManager->addModule(new ModuleFloor(mapCoordinator, texManager));
+    if (mod == "Streets") mapManager->addModule(new ModuleStreets(mapDB, mapCoordinator, texManager));
+    if (mod == "Buildings") mapManager->addModule(new ModuleBuildings(mapDB, mapCoordinator, texManager));
+    if (mod == "Walls") mapManager->addModule(new ModuleWalls(mapDB, mapCoordinator, texManager));
+    if (mod == "Terrain") mapManager->addModule(new ModuleTerrain(mapDB, mapCoordinator, texManager));
+    if (mod == "Trees") mapManager->addModule(new ModuleTree(mapDB, mapCoordinator, texManager));
+    if (mod == "Traffic") {
+        auto tsim = new ModuleTraffic(mapDB, mapCoordinator, texManager);
+        trafficSimulation = tsim->getTrafficSimulation();
+        mapManager->addModule(tsim);
+    }
+}
+
+void RealWorld::disableModule(string mod) {
+    ;
+}
 
 void RealWorld::physicalize(bool b) {
     if (physicalized == b) return;
@@ -93,4 +86,4 @@ void RealWorld::physicalize(bool b) {
     mapManager->physicalize(b);
 }
 
-TrafficSimulation *RealWorld::getTrafficSimulation() { return trafficSimulation; }
+TrafficSimulation* RealWorld::getTrafficSimulation() { return trafficSimulation; }

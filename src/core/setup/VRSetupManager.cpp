@@ -6,13 +6,13 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 
-VRSetupManager::VRSetupManager() {
-    current = 0;
-}
+VRSetupManager::VRSetupManager() {}
 
 VRSetupManager::~VRSetupManager() {
     delete current;
 }
+
+VRSetup* VRSetupManager::getCurrent() { return get()->current; }
 
 VRSetupManager* VRSetupManager::get() {
     static VRSetupManager* mgr = new VRSetupManager();
@@ -37,7 +37,5 @@ VRSetup* VRSetupManager::load(string name, string path) {
     current->setScene( VRSceneManager::getCurrent() );
     return current;
 }
-
-VRSetup* VRSetupManager::getCurrent() { return get()->current; }
 
 OSG_END_NAMESPACE;

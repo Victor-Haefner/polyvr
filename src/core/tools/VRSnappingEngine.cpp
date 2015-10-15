@@ -20,12 +20,12 @@ struct VRSnappingEngine::Rule {
     Line prim_t, prim_o;
     Vec3f snapP;
 
-    VRTransform* csys = 0;
+    VRTransformPtr csys = 0;
     float distance = 1;
     float weight = 1;
     Matrix C;
 
-    Rule(Type t, Type o, Line pt, Line po, float d, float w, VRTransform* l) :
+    Rule(Type t, Type o, Line pt, Line po, float d, float w, VRTransformPtr l) :
         translation(t), orientation(o),
         prim_t(pt), prim_o(po), csys(l),
         distance(d), weight(w) {
@@ -68,13 +68,13 @@ struct VRSnappingEngine::Rule {
 };
 
 VRSnappingEngine::VRSnappingEngine() {
-    hintGeo = new VRGeometry("snapping_engine_hint");
+    hintGeo = VRGeometry::create("snapping_engine_hint");
     positions = new Octree(0.1);
     event = new EventSnap();
     snapSignal = new VRSignal();
 
-    VRFunction<int>* fkt = new VRFunction<int>("snapping engine update", boost::bind(&VRSnappingEngine::update, this) );
-    VRSceneManager::getCurrent()->addUpdateFkt(fkt, 999);
+    updatePtr = VRFunction<int>::create("snapping engine update", boost::bind(&VRSnappingEngine::update, this) );
+    VRSceneManager::getCurrent()->addUpdateFkt(updatePtr, 999);
 }
 
 void VRSnappingEngine::clear() {
@@ -99,7 +99,7 @@ VRSnappingEngine::Type VRSnappingEngine::typeFromStr(string t) {
     return NONE;
 }
 
-int VRSnappingEngine::addRule(Type t, Type o, Line pt, Line po, float d, float w, VRTransform* l) {
+int VRSnappingEngine::addRule(Type t, Type o, Line pt, Line po, float d, float w, VRTransformPtr l) {
     Rule* r = new Rule(t,o,pt,po,d,w,l);
     rules[r->ID] = r;
     return r->ID;
@@ -111,47 +111,50 @@ void VRSnappingEngine::remRule(int i) {
     rules.erase(i);
 }
 
-void VRSnappingEngine::addObjectAnchor(VRTransform* obj, VRTransform* a) {
-    if (anchors.count(obj) == 0) anchors[obj] = vector<VRTransform*>();
+void VRSnappingEngine::addObjectAnchor(VRTransformPtr obj, VRTransformPtr a) {
+    if (anchors.count(obj) == 0) anchors[obj] = vector<VRTransformPtr>();
     anchors[obj].push_back(a);
 }
 
-void VRSnappingEngine::clearObjectAnchors(VRTransform* obj) {
+void VRSnappingEngine::clearObjectAnchors(VRTransformPtr obj) {
     if (anchors.count(obj)) anchors[obj].clear();
 }
 
-void VRSnappingEngine::remLocalRules(VRTransform* obj) {
+void VRSnappingEngine::remLocalRules(VRTransformPtr obj) {
     vector<int> d;
     for (auto r : rules) if (r.second->csys == obj) d.push_back(r.first);
     for (int i : d) remRule(i);
 }
 
-void VRSnappingEngine::addObject(VRTransform* obj, float weight) {
+void VRSnappingEngine::addObject(VRTransformPtr obj, float weight) {
     objects[obj] = obj->getWorldMatrix();
     Vec3f p = obj->getWorldPosition();
-    positions->add(p[0], p[1], p[2], obj);
+    positions->add(p[0], p[1], p[2], obj.get());
 }
 
-void VRSnappingEngine::remObject(VRTransform* obj) {
+void VRSnappingEngine::remObject(VRTransformPtr obj) {
     if (objects.count(obj)) objects.erase(obj);
 }
 
-void VRSnappingEngine::addTree(VRObject* obj, float weight) {
-    vector<VRObject*> objs = obj->getObjectListByType("Geometry");
-    for (auto o : objs) addObject((VRTransform*)o, weight);
+void VRSnappingEngine::addTree(VRObjectPtr obj, float weight) {
+    vector<VRObjectPtr> objs = obj->getObjectListByType("Geometry");
+    for (auto o : objs) addObject(static_pointer_cast<VRTransform>(o), weight);
 }
 
 VRSignal* VRSnappingEngine::getSignalSnap() { return snapSignal; }
 
 void VRSnappingEngine::update() {
     for (auto dev : VRSetupManager::getCurrent()->getDevices()) { // get dragged objects
-        VRTransform* obj = dev.second->getDraggedObject();
-        VRTransform* gobj = dev.second->getDraggedGhost();
+        VRTransformPtr obj = dev.second->getDraggedObject();
+        VRTransformPtr gobj = dev.second->getDraggedGhost();
         if (obj == 0 || gobj == 0) continue;
         if (objects.count(obj) == 0) continue;
 
         Matrix m = gobj->getWorldMatrix();
         Vec3f p = Vec3f(m[3]);
+
+        bool lastEvent = event->snap;
+        event->snap = 0;
 
         for (auto ri : rules) {
             Rule* r = ri.second;
@@ -171,8 +174,7 @@ void VRSnappingEngine::update() {
                     r->snap(m);
                     maL.invert();
                     m.mult(maL);
-                    event->set(obj, r->csys, m, dev.second);
-                    snapSignal->trigger<EventSnap>(event);
+                    event->set(obj, r->csys, m, dev.second, 1);
                     break;
                 }
             } else {
@@ -180,12 +182,15 @@ void VRSnappingEngine::update() {
                 float D = (p2-p).length(); // check distance
                 if (!r->inRange(D)) continue;
                 r->snap(m);
-                event->set(obj, r->csys, m, dev.second);
-                snapSignal->trigger<EventSnap>(event);
+                event->set(obj, r->csys, m, dev.second, 1);
             }
         }
 
         obj->setWorldMatrix(m);
+        if (lastEvent != event->snap) {
+            if (event->snap) snapSignal->trigger<EventSnap>(event);
+            else if (obj == event->o1) snapSignal->trigger<EventSnap>(event);
+        }
     }
 
     // update geo

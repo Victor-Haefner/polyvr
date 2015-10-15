@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Setup>
+  <Displays>
+    <Window active="1" type="0" width="640" height="480" name="Display" mouse="None" keyboard="None" Nx="1" Ny="1">
+      <View stereo="0" active_stereo="0" projection="1" eye_inverted="0" eye_separation="0.06" position="0 0 1 1" center="-0.499433 0 -0.976185" normal="0.0476295 0 0.998865" up="0 1 0" size="0.4 0.3" user=""/>
+      <Server Address="local"/>
+    </Window>
+    <Window active="1" type="2" width="300" height="300" name="screen" mouse="mouse" keyboard="keyboard">
+      <View stereo="0" active_stereo="0" projection="1" eye_inverted="0" eye_separation="0.06" position="0 0 1 1" center="0.2 0 -0.5" normal="0 0 1" up="0 1 0" size="0.4 0.3" user=""/>
+    </Window>
+  </Displays>
+  <Devices>
+    <Device name="keyboard" type="keyboard"/>
+    <Device name="mobile" type="mobile"/>
+    <Device name="mouse" type="mouse"/>
+    <Device ID="0" address="Tracker0@localhost" name="vrpn_device" offset="0 0 0" raxis="0 0 0" scale="1" taxis="0 0 0" type="vrpn_device"/>
+  </Devices>
+  <TrackingART active="0" offset="0 0 0" port="5000" up=""/>
+  <TrackingVRPN active="1" port="3883">
+    <Tracker ID="0" address="Tracker0@localhost" name="vrpn_device" offset="0 0 0" raxis="0 0 0" scale="1" taxis="0 0 0" type="vrpn_device"/>
+  </TrackingVRPN>
+</Setup>

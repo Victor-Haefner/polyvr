@@ -1,7 +1,7 @@
 #include "VRStroke.h"
 #include "core/math/path.h"
+#include "core/objects/material/VRMaterial.h"
 
-#include <OpenSG/OSGSimpleMaterial.h>
 #include <OpenSG/OSGMatrixUtility.h>
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGTriangleIterator.h>
@@ -12,8 +12,10 @@ using namespace std;
 VRStroke::VRStroke(string name) : VRGeometry(name) {
     mode = -1;
     closed = false;
-    lit = false;
 }
+
+VRStrokePtr VRStroke::create(string name) { return shared_ptr<VRStroke>(new VRStroke(name) ); }
+VRStrokePtr VRStroke::ptr() { return static_pointer_cast<VRStroke>( shared_from_this() ); }
 
 void VRStroke::setPath(path* p) {
     paths.clear();
@@ -34,11 +36,14 @@ vector<path*>& VRStroke::getPaths() { return paths; }
     ;
 }*/
 
-void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool lit) {
+void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed) {
     mode = 0;
     this->profile = profile;
     this->closed = closed;
-    this->lit = lit;
+
+    Vec3f pCenter;
+    for (auto p : profile) pCenter += p;
+    pCenter *= 1.0/profile.size();
 
     GeoUInt8PropertyRecPtr      Type = GeoUInt8Property::create();
     GeoUInt32PropertyRecPtr     Length = GeoUInt32Property::create();
@@ -81,7 +86,7 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool lit) {
                 Colors->addValue(c);
             }
 
-            if (j==0 && profile.size() > 1) continue;
+            if (j==0) continue;
 
             // add line
             if (profile.size() == 1) {
@@ -136,13 +141,13 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool lit) {
             Vec3f n = directions[0];
             Vec3f u = up_vectors[0];
             Vec3f c = cols[0];
+            MatrixLookAt(m, Vec3f(0,0,0), n, u);
+            Vec3f tmp; m.mult(pCenter, tmp);
 
             int Ni = Pos->size();
-            Pos->addValue(p);
+            Pos->addValue(p + tmp);
             Norms->addValue(-n);
             Colors->addValue(c);
-
-            MatrixLookAt(m, Vec3f(0,0,0), n, u);
 
             for (uint k=0; k<profile.size(); k++) {
                 Vec3f tmp = profile[k];
@@ -169,12 +174,13 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool lit) {
             n = directions[N];
             u = up_vectors[N];
             c = cols[N];
+            MatrixLookAt(m, Vec3f(0,0,0), n, u);
+            m.mult(pCenter, tmp);
 
-            Pos->addValue(p);
+            Pos->addValue(p + tmp);
             Norms->addValue(n);
             Colors->addValue(c);
 
-            MatrixLookAt(m, Vec3f(0,0,0), n, u);
 
             for (uint k=0; k<profile.size(); k++) {
                 Vec3f tmp = profile[k];
@@ -201,7 +207,6 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool lit) {
         }
     }
 
-    SimpleMaterialRecPtr Mat = SimpleMaterial::create();
     GeometryRecPtr g = Geometry::create();
     g->setTypes(Type);
     g->setLengths(Length);
@@ -211,32 +216,10 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool lit) {
     g->setColors(Colors);
     g->setIndices(Indices);
 
-    g->setMaterial(Mat);
-    Mat->setLit(lit);
-
     setMesh(g);
-
-
-    // test for ccw faces
-    /*TriangleIterator it(getMesh());
-	while (!it.isAtEnd()) {
-        Vec3f p0 = Vec3f(it.getPosition(0));
-        Vec3f p1 = Vec3f(it.getPosition(1));
-        Vec3f p2 = Vec3f(it.getPosition(2));
-
-        Vec3f n0 = it.getNormal(0);
-        Vec3f n1 = it.getNormal(1);
-        Vec3f n2 = it.getNormal(2);
-
-        Vec3f np1 = (p1-p0).cross(p2-p0);
-        Vec3f np2 = n0+n1+n2; np2.normalize();
-        cout << " face orientation " << np1.dot(np2) << endl;
-
-		++it;
-	}*/
 }
 
-void VRStroke::strokeStrew(VRGeometry* geo) {
+void VRStroke::strokeStrew(VRGeometryPtr geo) {
     if (geo == 0) return;
 
     mode = 1;
@@ -247,7 +230,7 @@ void VRStroke::strokeStrew(VRGeometry* geo) {
         vector<Vec3f> pnts = paths[i]->getPositions();
         for (uint j=0; j<pnts.size(); j++) {
             Vec3f p = pnts[j];
-            VRGeometry* g = (VRGeometry*)geo->duplicate();
+            VRGeometryPtr g = static_pointer_cast<VRGeometry>(geo->duplicate());
             addChild(g);
             g->translate(p);
         }
@@ -257,7 +240,7 @@ void VRStroke::strokeStrew(VRGeometry* geo) {
 void VRStroke::update() {
     switch (mode) {
         case 0:
-            strokeProfile(profile, closed, lit);
+            strokeProfile(profile, closed);
             break;
         case 1:
             strokeStrew(strewGeo);

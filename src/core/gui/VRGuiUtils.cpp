@@ -118,7 +118,7 @@ void setExpanderSensitivity(string exp, bool b) {
 void setCombobox(string n, int i) {
     Gtk::ComboBox* cb;
     VRGuiBuilder()->get_widget(n, cb);
-    cb->set_active(i);
+    if (cb) cb->set_active(i);
 }
 
 void setCheckButtonCallback(string cb, void (* fkt)(GtkToggleButton*, gpointer) ) {
@@ -444,7 +444,7 @@ void saveSnapshot(string path) {
 }
 
 void saveScene(string path) {
-    OSG::VRScene* scene = OSG::VRSceneManager::getCurrent();
+    auto scene = OSG::VRSceneManager::getCurrent();
     if (scene == 0) return;
     //if (path == "") path = scene->getPath();
     path = scene->getFile();

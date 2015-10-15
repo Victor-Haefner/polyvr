@@ -28,30 +28,33 @@ class VRMenu : public VRGeometry {
         Vec2f scale = Vec2f(0.3,0.4);
         float param = 0.1;
 
-        VRMenu* active = 0;
-        VRMenu* parent = 0;
-        VRMenu* selected = 0;
+        VRMenuPtr active = 0;
+        VRMenuPtr parent = 0;
+        VRMenuPtr selected = 0;
 
-        VRFunction<VRMenu*>* callback = 0;
+        VRFunction<VRMenuPtr>* callback = 0;
 
         VRSelector* selector = 0;
 
         void setActive();
-        VRMenu* getActive();
-        VRMenu* getTopMenu();
+        VRMenuPtr getActive();
+        VRMenuPtr getTopMenu();
 
         void setLinear();
 
     public:
         VRMenu(string path = "");
 
+        static VRMenuPtr create(string path = "");
+        VRMenuPtr ptr();
+
         void setLeafType(TYPE l, Vec2f scale);
         void setLayout(LAYOUT l, float param);
-        void setCallback(VRFunction<VRMenu*>* cb);
+        void setCallback(VRFunction<VRMenuPtr>* cb);
 
-        VRMenu* append(string path);
-        VRMenu* getParent();
-        VRMenu* getSelected();
+        VRMenuPtr append(string path);
+        VRMenuPtr getParent();
+        VRMenuPtr getSelected();
 
         void trigger();
         void move(int dir);

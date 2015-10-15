@@ -3,6 +3,9 @@
 
 #include "VRGeometry.h"
 #include <OpenSG/OSGSimpleTexturedMaterial.h>
+#include <memory>
+
+class CEF;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -14,10 +17,14 @@ class VRSprite : public VRGeometry {
         float width;
         float height;
         string label;
+        shared_ptr<CEF> web;
 
     public:
         VRSprite (string name, bool alpha = true, float w = 0.5, float h = 0.5);
         ~VRSprite();
+
+        static VRSpritePtr create(string name, bool alpha = true, float w = 0.5, float h = 0.5);
+        VRSpritePtr ptr();
 
         void setSize(float w, float h);
         void setLabel(string l, float res = 1);
@@ -26,6 +33,7 @@ class VRSprite : public VRGeometry {
         void setFont(string f);
         void setFontColor(Color4f c);
 
+        Vec2f getSize();
         string getLabel();
 };
 

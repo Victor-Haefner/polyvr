@@ -29,12 +29,16 @@ vector<string> CSGGeometry::getOperations() {
 }
 
 CSGGeometry::CSGGeometry(string name) : VRGeometry(name) {
-	oct = new Octree(THRESHOLD);
+	oct = new Octree(thresholdL);
 	type = "CSGGeometry";
 	dm->read(oldWorldTrans);
+	polyhedron = new CGAL::Polyhedron();
 }
 
 CSGGeometry::~CSGGeometry() {}
+
+CSGGeometryPtr CSGGeometry::ptr() { return static_pointer_cast<CSGGeometry>( shared_from_this() ); }
+CSGGeometryPtr CSGGeometry::create(string name) { return shared_ptr<CSGGeometry>(new CSGGeometry(name) ); }
 
 void CSGGeometry::setCSGGeometry(CGAL::Polyhedron *p) {
 	if (!p->is_valid()) return;
@@ -45,52 +49,28 @@ void CSGGeometry::setCSGGeometry(CGAL::Polyhedron *p) {
 CGAL::Polyhedron* CSGGeometry::getCSGGeometry() {
     if (polyhedron == 0) {
         Matrix worldTransform = getWorldMatrix();
-        polyhedron = toPolyhedron(getMesh(), worldTransform);
+        bool success;
+        polyhedron = toPolyhedron(getMesh(), worldTransform, success);
     }
 
 	return polyhedron;
 }
 
-CGAL::Polyhedron* CSGGeometry::subtract(CGAL::Polyhedron *minuend, CGAL::Polyhedron *subtrahend) {
-	if (!minuend->is_closed()) return 0;
-	if (!subtrahend->is_closed()) return 0;
+void CSGGeometry::operate(CGAL::Polyhedron *p1, CGAL::Polyhedron *p2) {
+	if (!p1->is_closed() || !p2->is_closed()) return;
 
-	CGAL::Nef_Polyhedron nef_minuend(*minuend);
-	CGAL::Nef_Polyhedron nef_subtrahend(*subtrahend);
-	nef_minuend -= nef_subtrahend;
+	CGAL::Nef_Polyhedron np1(*p1), np2(*p2);
 
-	CGAL::Polyhedron *result = new CGAL::Polyhedron();
-	nef_minuend.convert_to_polyhedron(*result);
-	return result;
-}
+	if (operation == "unite") np1 += np2;
+	else if(operation == "subtract") np1 -= np2;
+	else if(operation == "intersect") np1 = np1.intersection(np2);
+	else cout << "CSGGeometry: Warning: unexpected CSG operation!\n";
 
-CGAL::Polyhedron* CSGGeometry::unite(CGAL::Polyhedron *first, CGAL::Polyhedron *second) {
-	if (!first->is_closed()) return 0;
-	if (!second->is_closed()) return 0;
-
-	CGAL::Nef_Polyhedron nef_first(*first);
-	CGAL::Nef_Polyhedron nef_second(*second);
-	nef_first += nef_second;
-
-	CGAL::Polyhedron* result = new CGAL::Polyhedron();
-	nef_first.convert_to_polyhedron(*result);
-	return result;
-}
-
-CGAL::Polyhedron* CSGGeometry::intersect(CGAL::Polyhedron *first, CGAL::Polyhedron *second) {
-	if (!first->is_closed()) return 0;
-	if (!second->is_closed()) return 0;
-
-	CGAL::Nef_Polyhedron nef_first(*first);
-	CGAL::Nef_Polyhedron nef_second(*second);
-	CGAL::Nef_Polyhedron nef_result = nef_first.intersection(nef_second);
-
-	CGAL::Polyhedron *result = new CGAL::Polyhedron();
-	nef_result.convert_to_polyhedron(*result);
-	return result;
+	np1.convert_to_polyhedron(*polyhedron);
 }
 
 void CSGGeometry::applyTransform(CGAL::Polyhedron* p, Matrix m) {
+    if (p == 0) return;
     CGAL::Transformation t(m[0][0], m[1][0], m[2][0], m[3][0],
                            m[0][1], m[1][1], m[2][1], m[3][1],
                            m[0][2], m[1][2], m[2][2], m[3][2],
@@ -158,85 +138,9 @@ GeometryTransitPtr CSGGeometry::toOsgGeometry(CGAL::Polyhedron *p) {
 }
 
 size_t CSGGeometry::isKnownPoint(OSG::Pnt3f newPoint) {
-	vector<void*> resultData = oct->radiusSearch(newPoint.x(), newPoint.y(), newPoint.z(), THRESHOLD);
+	vector<void*> resultData = oct->radiusSearch(newPoint.x(), newPoint.y(), newPoint.z(), thresholdL);
 	if (resultData.size() > 0) return *(size_t*)resultData.at(0);
 	return numeric_limits<size_t>::max();
-}
-
-// Converts geometry to a polyhedron && applies the geometry node's world transform to the polyhedron.
-// OpenSG geometry data isn't transformed itself but has an associated transform core. Both are unified for CGAL.
-CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryRecPtr geometry, Matrix worldTransform) {
-	vector<CGAL::Point> positions;
-	vector<size_t> indices;
-	size_t curIndex = 0;
-	TriangleIterator it;
-	auto gpos = geometry->getPositions();
-    cout << " toPolyhedron\n";
-
-	// fix flat triangles (all three points aligned)
-	for (it = TriangleIterator(geometry); !it.isAtEnd() ;++it) {
-        vector<Pnt3f> p(3);
-        vector<Vec3f> v(3);
-        Vec3i vi = Vec3i(it.getPositionIndex(0), it.getPositionIndex(1), it.getPositionIndex(2));
-        for (int i=0; i<3; i++) p[i] = it.getPosition(i);
-        v[0] = p[2]-p[1]; v[1] = p[2]-p[0]; v[2] = p[1]-p[0];
-        float A = (v[2].cross(v[1])).length();
-        if (A < 1e-16) { // small area, flat triangle?
-            for (int i=0; i<3; i++) if (v[i].squareLength() < 1e-8) continue; // check if two points close, then ignore
-
-            int im = 0;
-            for (int i=1; i<3; i++) if (v[i].squareLength() > v[im].squareLength()) im = i;
-            gpos->setValue(p[(im+1)%3], vi[im]);
-        }
-	}
-
-	// Convert triangles to cgal indices and vertices
-	for (it = TriangleIterator(geometry); !it.isAtEnd() ;++it) {
-        vector<size_t> IDs(3);
-        for (int i=0; i<3; i++) IDs[i] = isKnownPoint( it.getPosition(i) );
-
-		for (int i=0; i<3; i++) {
-			if (IDs[i] == numeric_limits<size_t>::max()) {
-                Pnt3f osgPos = it.getPosition(i);
-				CGAL::Point cgalPos(osgPos.x(), osgPos.y(), osgPos.z());
-				positions.push_back(cgalPos);
-				IDs[i] = curIndex;
-                //cout << "add point " << curIndex << "   " << osgPos << endl;
-				size_t *curIndexPtr = new size_t;
-				*curIndexPtr = curIndex;
-				oct->add(OcPoint(osgPos.x(), osgPos.y(), osgPos.z()), curIndexPtr);
-				curIndex++;
-			}
-		}
-
-        //cout << "add triangle " << IDs[0] << " " << IDs[1] << " " << IDs[2] << endl;
-		if (IDs[0] == IDs[1] || IDs[0] == IDs[2] || IDs[1] == IDs[2]) continue; // ignore flat triangles
-
-		for (int i=0; i<3; i++) indices.push_back(IDs[i]);
-	}
-
-	// Cleanup
-	for (void* o : oct->getData()) delete (size_t*)o;
-	delete oct;
-
-	oct = new Octree(THRESHOLD);
-
-
-    //cout << "\ntoPolyhedron " << getName() << " transformation : \n" << worldTransform << endl;
-	//cout << "size: " << positions.size() << " " << indices.size() << endl;
-	//for (size_t i = 0; i < positions.size(); i++) cout << positions[i] << endl;
-	//for (size_t i = 0; i < indices.size(); i += 3) cout << indices[i] << indices[i+1] << indices[i+2] << endl;
-
-
-	// Construct the polyhedron from raw data
-	CGAL::Polyhedron *result = new CGAL::Polyhedron();
-	PolyhedronBuilder<CGAL::HalfedgeDS> builder(positions, indices);
-	result->delegate(builder);
-	if (!result->is_closed()) throw std::runtime_error("The polyhedron is not a closed mesh!");
-
-	// Transform the polyhedron with the geometry's world transform matrix
-	applyTransform(result, worldTransform);
-	return result;
 }
 
 void CSGGeometry::enableEditMode() {
@@ -250,45 +154,6 @@ void CSGGeometry::enableEditMode() {
 	}
 }
 
-bool CSGGeometry::disableEditMode() {
-	if (children.size() != 2) { cout << "CSGGeometry: Warning: editMode disabled with less than 2 children. Doing nothing.\n"; return false; }
-
-	vector<CGAL::Polyhedron*> polys(2); // We need two child geometries to work with
-
-	for (int i=0; i<2; i++) { // Prepare the polyhedra
-		VRObject *obj = children[i];
-        obj->setVisible(false);
-
-		if (obj->getType() == string("Geometry")) {
-			VRGeometry *geo = dynamic_cast<VRGeometry*>(obj);
-			try {
-			    polys[i] = toPolyhedron( geo->getMesh(), geo->getWorldMatrix() );
-			} catch (exception e) {
-			    cout << getName() << ": Could not convert mesh data to polyhedron: " << e.what();
-				obj->setVisible(true); // We stay in edit mode, so both children need to be visible
-				return false;
-			}
-		} else if(obj->getType() == "CSGGeometry") {
-			CSGGeometry *geo = dynamic_cast<CSGGeometry*>(obj);
-			polys[i] = geo->getCSGGeometry(); // TODO: where does this come from?? keep the old!
-		}
-	}
-
-    if (polyhedron) delete polyhedron;
-    polyhedron = 0;
-	if (operation == "unite") polyhedron = unite(polys[0], polys[1]);
-	else if(operation == "subtract") polyhedron = subtract(polys[0], polys[1]);
-	else if(operation == "intersect") polyhedron = intersect(polys[0], polys[1]);
-	else cout << "CSGGeometry: Warning: unexpected CSG operation!\n";
-
-	// Clean up
-	for (auto p : polys) delete p;
-
-	if (polyhedron == 0) return false;
-    setCSGGeometry(polyhedron);
-	return true;
-}
-
 bool CSGGeometry::setEditMode(const bool editModeActive) {
 	bool result = false;
 
@@ -300,9 +165,9 @@ bool CSGGeometry::setEditMode(const bool editModeActive) {
 			result = disableEditMode();
 
 			// Promote news to our parents, but only if parents had edit mode disabled before
-			VRObject *obj = getParent();
-			if(obj->getType() == "CSGGeometry" && !((CSGGeometry*)obj)->getEditMode()) {
-				CSGGeometry *geo = (CSGGeometry*)obj;
+			VRObjectPtr obj = getParent();
+            CSGGeometryPtr geo = static_pointer_cast<CSGGeometry>(obj);
+			if (obj->getType() == "CSGGeometry" && !geo->getEditMode()) {
 				if (result) result = geo->setEditMode(true);
 				if (result) result = geo->setEditMode(false);
 			}
@@ -311,7 +176,7 @@ bool CSGGeometry::setEditMode(const bool editModeActive) {
 			// Even if they had Edit Mode enabled till now we need their computed geometry to work on it
 			for (auto c : children) {
 				if (c->getType() != "CSGGeometry") continue;
-                CSGGeometry *geo = (CSGGeometry*)c;
+                geo = static_pointer_cast<CSGGeometry>(c);
                 if (geo->getEditMode() && result) result = geo->setEditMode(false);
 			}
 		}

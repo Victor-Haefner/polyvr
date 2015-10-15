@@ -6,16 +6,14 @@
 #include <map>
 #include <vector>
 
-#include "addons/Classification/VROntology.h"
+#include "core/objects/VRObjectFwd.h"
+#include "addons/Semantics/Reasoning/VROntology.h"
 
 class FLogistics;
 class FNetwork;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
-
-class VRObject;
-class VRGeometry;
 
 struct VRProcessFragment;
 struct VRProcessRequirement;
@@ -57,7 +55,7 @@ struct VRProduct : VRNamedID {
 };
 
 struct VRProductionMachine : VRNamedID {
-    VRGeometry* geo = 0;
+    VRGeometryPtr geo = 0;
     VROntology* description;
     VRProductionMachine();
 };
@@ -82,7 +80,7 @@ class VRProduction {
     public:
         VRProduction();
 
-        void addMachine(VRProductionMachine* pm, string machine, VRGeometry* m);
+        void addMachine(VRProductionMachine* pm, string machine, VRGeometryPtr m);
         VRProductionJob* queueJob(VRProduct* p, string prod);
 
         void setRate(float seconds);
@@ -91,7 +89,7 @@ class VRProduction {
         void stop();
         void update();
 
-        static VRObject* test();
+        static VRObjectPtr test();
 };
 
 OSG_END_NAMESPACE;

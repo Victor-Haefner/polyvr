@@ -93,10 +93,10 @@ PyObject* VRPyMillingMachine::setPosition(VRPyMillingMachine* self, PyObject* ar
 
 PyObject* VRPyMillingMachine::setGeometry(VRPyMillingMachine* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyMillingMachine::setGeometry - Object is invalid"); return NULL; }
-    vector<OSG::VRTransform*> geos;
+    vector<OSG::VRTransformPtr> geos;
     vector<PyObject*> objs = parseList(args);
     for (auto o : objs) {
-        OSG::VRTransform* g = ((VRPyTransform*)o)->obj;
+        OSG::VRTransformPtr g = ((VRPyTransform*)o)->objPtr;
         geos.push_back(g);
     }
     self->obj->setGeometry(geos);

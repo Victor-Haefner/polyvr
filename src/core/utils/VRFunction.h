@@ -6,6 +6,7 @@
 #include <boost/exception/all.hpp>
 #include <boost/exception/diagnostic_information.hpp>
 #include "VRName.h"
+#include <memory>
 
 using namespace std;
 
@@ -23,7 +24,8 @@ template<typename T>
 class VRFunction : public VRFunction_base {
     boost::function<void (T)> fkt;
     public:
-        VRFunction(string _name, boost::function<void (T)> _fkt) : fkt(_fkt) { name = _name; }
+        VRFunction(string name, boost::function<void (T)> fkt) : fkt(fkt) { this->name = name; }
+        ~VRFunction() {}
 
         void operator()(T t) {
             try {
@@ -34,6 +36,10 @@ class VRFunction : public VRFunction_base {
             } catch (boost::exception& e) {
 				cout << "VRFunction::() exception occured: " << boost::diagnostic_information(e) << endl;
             }
+        }
+
+        static shared_ptr<VRFunction<T> > create(string name, boost::function<void (T)> fkt) {
+            return shared_ptr<VRFunction<T> >( new VRFunction<T>(name, fkt) );
         }
 };
 

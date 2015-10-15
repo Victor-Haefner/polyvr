@@ -26,7 +26,7 @@ class VRDevice;
 
 class SimViDekont : public VRabq {
     private:
-        VRObject* root;
+        VRObjectPtr root;
         Player* player;
 
         Color3f getColor(float v);
@@ -69,7 +69,7 @@ class SimViDekont : public VRabq {
     public:
         SimViDekont();
         Player* getPlayer();
-        VRObject* getAnchor();
+        VRObjectPtr getAnchor();
 };
 
 OSG_END_NAMESPACE;

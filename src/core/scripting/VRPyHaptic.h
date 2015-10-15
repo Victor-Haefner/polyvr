@@ -7,7 +7,6 @@
 
 
 struct VRPyHaptic : VRPyBaseT<OSG::VRHaptic> {
-    static PyMemberDef members[];
     static PyMethodDef methods[];
 
     static PyObject* setForce(VRPyHaptic* self, PyObject* args);

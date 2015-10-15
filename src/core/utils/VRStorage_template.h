@@ -19,8 +19,9 @@ void VRStorage::save_cb(T* t, string tag, xmlpp::Element* e) {
 
 template<typename T>
 void VRStorage::save_on_cb(T* t, string tag, xmlpp::Element* e) {
-    if (*t == 0) return;
-    e->set_attribute(tag, (*t)->getName());
+    auto sp = t->lock();
+    if (sp == 0) return;
+    e->set_attribute(tag, sp->getName());
 }
 
 template<typename T>

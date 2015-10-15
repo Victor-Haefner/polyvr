@@ -5,19 +5,18 @@
 #include <string>
 #include <map>
 #include <vector>
-#include "core/utils/VRFunction.h"
+#include "core/utils/VRFunctionFwd.h"
 #include "core/utils/VRName.h"
+#include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRObject;
-
 class VRVisualLayer : public VRName {
     private:
-        VRObject* anchor;
+        VRObjectPtr anchor;
         static map<string, VRVisualLayer*> layers;
-        VRFunction<bool>* callback = 0;
+        VRToggleWeakPtr callback;
         string icon;
 
     public:
@@ -26,15 +25,15 @@ class VRVisualLayer : public VRName {
 
         static vector<string> getLayers();
         static VRVisualLayer* getLayer(string l);
-        static void anchorLayers(VRObject* root);
+        static void anchorLayers(VRObjectPtr root);
         static void clearLayers();
 
         void setVisibility(bool b);
         bool getVisibility();
 
-        void addObject(VRObject* obj);
+        void addObject(VRObjectPtr obj);
 
-        void setCallback(VRFunction<bool>* fkt);
+        void setCallback(VRToggleWeakPtr fkt);
 
         string getIconName();
 };

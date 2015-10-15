@@ -43,7 +43,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRObject>::type = {
     0,                         /* tp_dictoffset */
     (initproc)init,      /* tp_init */
     0,                         /* tp_alloc */
-    New_VRObjects,                 /* tp_new */
+    New_VRObjects_ptr,                 /* tp_new */
 };
 
 PyMemberDef VRPyObject::members[] = {
@@ -66,8 +66,9 @@ PyMethodDef VRPyObject::methods[] = {
     {"getChildren", (PyCFunction)VRPyObject::getChildren, METH_VARARGS, "Return the list of children objects\n\t - getChildren() : return immediate children\n\t - getChildren(bool recursive) : if true returns whole subtree\n\t - getChildren(bool recursive, str type) : filter by type" },
     {"getParent", (PyCFunction)VRPyObject::getParent, METH_NOARGS, "Return parent object" },
     {"find", (PyCFunction)VRPyObject::find, METH_VARARGS, "Find node with given name (str) in scene graph below this node" },
+    {"findAll", (PyCFunction)VRPyObject::findAll, METH_VARARGS, "Find node with given base name (str) in scene graph below this node" },
     {"isPickable", (PyCFunction)VRPyObject::isPickable, METH_NOARGS, "Return if the object is pickable" },
-    {"setPickable", (PyCFunction)VRPyObject::setPickable, METH_VARARGS, "Set if the object is pickable" },
+    {"setPickable", (PyCFunction)VRPyObject::setPickable, METH_VARARGS, "Set if the object is pickable - setPickable(int pickable)\n   pickable can be 0 or 1 to disable or enable picking, as well as -1 to block picking even if an ancestor is pickable" },
     {"printOSG", (PyCFunction)VRPyObject::printOSG, METH_NOARGS, "Print the OSG structure to console" },
     {"flattenHiarchy", (PyCFunction)VRPyObject::flattenHiarchy, METH_NOARGS, "Flatten the scene graph hiarchy" },
     {"addTag", (PyCFunction)VRPyObject::addTag, METH_VARARGS, "Add a tag to the object - addTag( str tag )" },
@@ -76,13 +77,26 @@ PyMethodDef VRPyObject::methods[] = {
     {"hasAncestorWithTag", (PyCFunction)VRPyObject::hasAncestorWithTag, METH_VARARGS, "Check if the object or an ancestor has a tag - obj hasAncestorWithTag( str tag )" },
     {"getChildrenWithTag", (PyCFunction)VRPyObject::getChildrenWithTag, METH_VARARGS, "Get all children which have the tag - [objs] getChildrenWithTag( str tag )" },
     {"setTravMask", (PyCFunction)VRPyObject::setTravMask, METH_VARARGS, "Set the traversal mask of the object - setTravMask( int mask )" },
+    {"setPersistency", (PyCFunction)VRPyObject::setPersistency, METH_VARARGS, "Set the persistency level - setPersistency( int persistency )\n   0: not persistent\n   1: persistent hiarchy\n   2: transformation\n   3: geometry\n   4: fully persistent" },
+    {"getPersistency", (PyCFunction)VRPyObject::getPersistency, METH_NOARGS, "Get the persistency level - getPersistency()" },
     {NULL}  /* Sentinel */
 };
 
-PyObject* VRPyObject::getChildrenWithTag(VRPyObject* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::getChildrenWithTag - C Object is invalid"); return NULL; }
+PyObject* VRPyObject::setPersistency(VRPyObject* self, PyObject* args) {
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::setPersistency - C Object is invalid"); return NULL; }
+    self->objPtr->setPersistency( parseInt(args) );
+    Py_RETURN_TRUE;
+}
 
-    vector<OSG::VRObject*> objs = self->obj->getChildrenWithAttachment( parseString(args) );
+PyObject* VRPyObject::getPersistency(VRPyObject* self) {
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::getPersistency - C Object is invalid"); return NULL; }
+    return PyInt_FromLong( self->objPtr->getPersistency() );
+}
+
+PyObject* VRPyObject::getChildrenWithTag(VRPyObject* self, PyObject* args) {
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::getChildrenWithTag - C Object is invalid"); return NULL; }
+
+    vector<OSG::VRObjectPtr> objs = self->objPtr->getChildrenWithAttachment( parseString(args) );
 
     PyObject* li = PyList_New(objs.size());
     for (uint i=0; i<objs.size(); i++) {
@@ -92,30 +106,30 @@ PyObject* VRPyObject::getChildrenWithTag(VRPyObject* self, PyObject* args) {
 }
 
 PyObject* VRPyObject::setTravMask(VRPyObject* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::setTravMask - C Object is invalid"); return NULL; }
-    self->obj->getNode()->setTravMask( parseInt(args) );
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::setTravMask - C Object is invalid"); return NULL; }
+    self->objPtr->getNode()->setTravMask( parseInt(args) );
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyObject::addTag(VRPyObject* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::addTag - C Object is invalid"); return NULL; }
-    self->obj->addAttachment( parseString(args) , 0);
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::addTag - C Object is invalid"); return NULL; }
+    self->objPtr->addAttachment( parseString(args) , 0);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyObject::hasTag(VRPyObject* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::hasTag - C Object is invalid"); return NULL; }
-    return PyBool_FromLong( self->obj->hasAttachment( parseString(args) ) );
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::hasTag - C Object is invalid"); return NULL; }
+    return PyBool_FromLong( self->objPtr->hasAttachment( parseString(args) ) );
 }
 
 PyObject* VRPyObject::hasAncestorWithTag(VRPyObject* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::hasAncestorWithTag - C Object is invalid"); return NULL; }
-    return VRPyTypeCaster::cast( self->obj->hasAncestorWithAttachment( parseString(args) ) );
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::hasAncestorWithTag - C Object is invalid"); return NULL; }
+    return VRPyTypeCaster::cast( self->objPtr->hasAncestorWithAttachment( parseString(args) ) );
 }
 
 PyObject* VRPyObject::remTag(VRPyObject* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::remTag - C Object is invalid"); return NULL; }
-    self->obj->remAttachment( parseString(args) );
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::remTag - C Object is invalid"); return NULL; }
+    self->objPtr->remAttachment( parseString(args) );
     Py_RETURN_TRUE;
 }
 
@@ -123,82 +137,82 @@ int VRPyObject::compare(PyObject* p1, PyObject* p2) {
     if (Py_TYPE(p1) != Py_TYPE(p2)) return -1;
     VRPyBaseT* o1 = (VRPyBaseT*)p1;
     VRPyBaseT* o2 = (VRPyBaseT*)p2;
-    return (o1->obj == o2->obj) ? 0 : -1;
+    return (o1->objPtr == o2->objPtr) ? 0 : -1;
 }
 
 long VRPyObject::hash(PyObject* p) {
     VRPyBaseT* o = (VRPyBaseT*)p;
-    return (long)o->obj;
+    return (long)o->objPtr.get();
 }
 
 PyObject* VRPyObject::flattenHiarchy(VRPyObject* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::flattenHiarchy - C Object is invalid"); return NULL; }
-    self->obj->flattenHiarchy();
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::flattenHiarchy - C Object is invalid"); return NULL; }
+    self->objPtr->flattenHiarchy();
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyObject::printOSG(VRPyObject* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::printOSG - C Object is invalid"); return NULL; }
-    OSG::NodeRecPtr n = self->obj->getNode();
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::printOSG - C Object is invalid"); return NULL; }
+    OSG::NodeRecPtr n = self->objPtr->getNode();
     OSG::VRObject::printOSGTree(n);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyObject::getName(VRPyObject* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
-    return PyString_FromString(self->obj->getName().c_str());
+    if (self->objPtr == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
+    return PyString_FromString(self->objPtr->getName().c_str());
 }
 
 PyObject* VRPyObject::setName(VRPyObject* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
+    if (self->objPtr == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
     string name = parseString(args);
-    self->obj->setName(name);
+    self->objPtr->setName(name);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyObject::hide(VRPyObject* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
-    self->obj->hide();
+    if (self->objPtr == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
+    self->objPtr->hide();
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyObject::show(VRPyObject* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
-    self->obj->show();
+    if (self->objPtr == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
+    self->objPtr->show();
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyObject::isVisible(VRPyObject* self) {
-	if (self->obj == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
-    if (self->obj->isVisible()) Py_RETURN_TRUE;
+	if (self->objPtr == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
+    if (self->objPtr->isVisible()) Py_RETURN_TRUE;
 	else Py_RETURN_FALSE;
 }
 
 PyObject* VRPyObject::setVisible(VRPyObject* self, PyObject* args) {
-	if (self->obj == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
-    self->obj->setVisible( parseBool(args) );
+	if (self->objPtr == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
+    self->objPtr->setVisible( parseBool(args) );
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyObject::getType(VRPyObject* self) {
-	if (self->obj == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
-    return PyString_FromString(self->obj->getType().c_str());
+	if (self->objPtr == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
+    return PyString_FromString(self->objPtr->getType().c_str());
 }
 
 /*PyObject* VRPyObject::setVisible(VRPyObject* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
-    return PyString_FromString(self->obj->getName().c_str());
+    if (self->objPtr == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
+    return PyString_FromString(self->objPtr->getName().c_str());
 }
 
 PyObject* VRPyObject::isVisible(VRPyObject* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
-    return PyString_FromString(self->obj->getName().c_str());
+    if (self->objPtr == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
+    return PyString_FromString(self->objPtr->getName().c_str());
 }*/
 
 PyObject* VRPyObject::destroy(VRPyObject* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
-    self->obj->destroy();
-    self->obj = 0;
+    if (self->objPtr == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
+    self->objPtr->destroy();
+    self->objPtr = 0;
     Py_RETURN_TRUE;
 }
 
@@ -207,10 +221,10 @@ PyObject* VRPyObject::addChild(VRPyObject* self, PyObject* args, PyObject *kwds)
     if (! PyArg_ParseTuple(args, "O", &child)) return NULL;
     if ( isNone((PyObject*)child) ) Py_RETURN_TRUE;
 
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::addChild, Parent is invalid"); return NULL; }
-    if (child->obj == 0) { PyErr_SetString(err, "VRPyObject::addChild, Child is invalid"); return NULL; }
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::addChild, Parent is invalid"); return NULL; }
+    if (child->objPtr == 0) { PyErr_SetString(err, "VRPyObject::addChild, Child is invalid"); return NULL; }
 
-    self->obj->addChild(child->obj);
+    self->objPtr->addChild(child->objPtr);
     Py_RETURN_TRUE;
 }
 
@@ -222,32 +236,32 @@ PyObject* VRPyObject::switchParent(VRPyObject* self, PyObject* args, PyObject *k
         return NULL;
     }
 
-    if (self->obj == 0) { PyErr_SetString(err, "C Child is invalid"); return NULL; }
-    if (parent->obj == 0) { PyErr_SetString(err, "C Parent is invalid"); return NULL; }
+    if (self->objPtr == 0) { PyErr_SetString(err, "C Child is invalid"); return NULL; }
+    if (parent->objPtr == 0) { PyErr_SetString(err, "C Parent is invalid"); return NULL; }
 
-    self->obj->switchParent(parent->obj);
+    self->objPtr->switchParent(parent->objPtr);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyObject::duplicate(VRPyObject* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "C Child is invalid"); return NULL; }
-    OSG::VRObject* d = (OSG::VRObject*)self->obj->duplicate(true);
-    d->addAttachment("dynamicaly_generated", 0);
+    if (self->objPtr == 0) { PyErr_SetString(err, "C Child is invalid"); return NULL; }
+    OSG::VRObjectPtr d = (OSG::VRObjectPtr)self->objPtr->duplicate(true);
+    d->setPersistency(0);
     return VRPyTypeCaster::cast(d);
 }
 
 PyObject* VRPyObject::getChild(VRPyObject* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::getChild, Child is invalid"); return NULL; }
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::getChild, Child is invalid"); return NULL; }
 
     int i = 0;
     if (! PyArg_ParseTuple(args, "i", &i)) return NULL;
-    OSG::VRObject* c = self->obj->getChild(i);
+    OSG::VRObjectPtr c = self->objPtr->getChild(i);
 
     return VRPyTypeCaster::cast(c);
 }
 
 PyObject* VRPyObject::getChildren(VRPyObject* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::getChild, Child is invalid"); return NULL; }
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::getChild, Child is invalid"); return NULL; }
 
     PyObject* ptype = 0; int doRecursive = 0;
     if (PyTuple_Size(args) == 1) if (! PyArg_ParseTuple(args, "i", &doRecursive)) return NULL;
@@ -256,7 +270,7 @@ PyObject* VRPyObject::getChildren(VRPyObject* self, PyObject* args) {
     string type;
     if (ptype) type = PyString_AsString(ptype);
 
-    vector<OSG::VRObject*> objs = self->obj->getChildren(doRecursive, type);
+    vector<OSG::VRObjectPtr> objs = self->objPtr->getChildren(doRecursive, type);
 
     PyObject* li = PyList_New(objs.size());
     for (uint i=0; i<objs.size(); i++) {
@@ -267,28 +281,41 @@ PyObject* VRPyObject::getChildren(VRPyObject* self, PyObject* args) {
 }
 
 PyObject* VRPyObject::getParent(VRPyObject* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::getParent, C object is invalid"); return NULL; }
-    return VRPyTypeCaster::cast(self->obj->getParent());
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::getParent, C object is invalid"); return NULL; }
+    return VRPyTypeCaster::cast(self->objPtr->getParent());
 }
 
 PyObject* VRPyObject::find(VRPyObject* self, PyObject* args) {
-	if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::find, C object is invalid"); return NULL; }
+	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::find, C object is invalid"); return NULL; }
 
     string name = parseString(args);
-    OSG::VRObject* c = self->obj->find(name);
+    OSG::VRObjectPtr c = self->objPtr->find(name);
     if (c) { return VRPyTypeCaster::cast(c); }
     else { Py_RETURN_NONE; }
 }
 
+PyObject* VRPyObject::findAll(VRPyObject* self, PyObject* args) {
+	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::find, C object is invalid"); return NULL; }
+
+    string name = parseString(args);
+    vector<OSG::VRObjectPtr> objs = self->objPtr->findAll(name);
+
+    PyObject* li = PyList_New(objs.size());
+    for (uint i=0; i<objs.size(); i++) {
+        PyList_SetItem(li, i, VRPyTypeCaster::cast(objs[i]));
+    }
+
+    return li;
+}
+
 PyObject* VRPyObject::isPickable(VRPyObject* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::isPickable, C Object is invalid"); return NULL; }
-    return PyBool_FromLong(self->obj->isPickable());
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::isPickable, C Object is invalid"); return NULL; }
+    return PyBool_FromLong(self->objPtr->isPickable());
 }
 
 PyObject* VRPyObject::setPickable(VRPyObject* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyObject::setPickable, C Object is invalid"); return NULL; }
-    bool pickable = parseBool(args);
-    self->obj->setPickable(pickable);
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::setPickable, C Object is invalid"); return NULL; }
+    self->objPtr->setPickable( parseInt(args) );
     Py_RETURN_TRUE;
 }
 

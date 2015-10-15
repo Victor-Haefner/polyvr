@@ -5,21 +5,20 @@
 #include <string>
 #include <map>
 
+#include "core/objects/VRObjectFwd.h"
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRObject;
-class VRTransform;
-
 class VRAvatar {
     private:
-        VRTransform* deviceRoot = 0;
-        VRTransform* tmpContainer = 0;
-        map<string, VRObject*> avatars;
+        VRTransformPtr deviceRoot = 0;
+        VRTransformPtr tmpContainer = 0;
+        map<string, VRObjectPtr> avatars;
 
-        VRObject* initRay();
-        VRObject* initCone();
-        VRObject* initBroadRay();
+        VRObjectPtr initRay();
+        VRObjectPtr initCone();
+        VRObjectPtr initBroadRay();
 
         void addAll();
         void hideAll();
@@ -28,15 +27,15 @@ class VRAvatar {
         VRAvatar(string name);
         ~VRAvatar();
 
-        void addAvatar(VRObject* geo);
+        void addAvatar(VRObjectPtr geo);
 
     public:
         void enableAvatar(string avatar);
         void disableAvatar(string avatar);
 
-        VRTransform* getBeacon();
-        VRTransform* editBeacon();
-        void setBeacon(VRTransform* b);
+        VRTransformPtr getBeacon();
+        VRTransformPtr editBeacon();
+        void setBeacon(VRTransformPtr b);
         void updateBeacon();
 };
 

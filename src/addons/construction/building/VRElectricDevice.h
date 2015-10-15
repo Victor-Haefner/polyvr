@@ -11,10 +11,10 @@ class VRElectricDevice {
     protected:
         bool active;
         VRFunction<bool>* callback;
-        VRObject* EDev;
+        VRObjectPtr EDev;
 
     public:
-        VRElectricDevice(VRObject* obj, VRFunction<bool>* cb);
+        VRElectricDevice(VRObjectPtr obj, VRFunction<bool>* cb);
 
         bool isActive();
 

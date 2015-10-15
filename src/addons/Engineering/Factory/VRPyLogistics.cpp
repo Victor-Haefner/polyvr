@@ -3,6 +3,7 @@
 #include "core/scripting/VRPyTypeCaster.h"
 #include "core/scripting/VRPyTransform.h"
 #include "core/scripting/VRPyObject.h"
+#include "core/scripting/VRPyStroke.h"
 
 
 // ------------------------------------------------------------------------ NODE
@@ -84,14 +85,14 @@ PyObject* FPyNode::setTransform(FPyNode* self, PyObject* args) {
     VRPyTransform* t;
     if (! PyArg_ParseTuple(args, "O", &t)) return NULL;
 
-    self->obj->setTransform(t->obj);
+    self->obj->setTransform(t->objPtr);
     //self->obj->getTransform()->setWorldMatrix(t->obj->getWorldMatrix());
     Py_RETURN_TRUE;
 }
 
 PyObject* FPyNode::getTransform(FPyNode* self) {
     if (self->obj == 0) { PyErr_SetString(err, "FPyNode::getTransform - Object is invalid"); return NULL; }
-    return VRPyTransform::fromPtr(self->obj->getTransform());
+    return VRPyTransform::fromSharedPtr(self->obj->getTransform());
 }
 
 
@@ -162,7 +163,7 @@ PyObject* FPyNetwork::stroke(FPyNetwork* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "FPyNetwork::stroke - Object is invalid"); return NULL; }
     float r,g,b,k;
     if (! PyArg_ParseTuple(args, "ffff", &r, &g, &b, &k)) return NULL;
-    return VRPyObject::fromPtr( (OSG::VRObject*)self->obj->stroke(OSG::Vec3f(r,g,b), k) );
+    return VRPyStroke::fromSharedPtr( self->obj->stroke(OSG::Vec3f(r,g,b), k) );
 }
 
 
@@ -377,7 +378,8 @@ PyMethodDef FPyContainer::methods[] = {
     {"clear", (PyCFunction)FPyContainer::clear, METH_NOARGS, "Set container capacity" },
     {"getCount", (PyCFunction)FPyContainer::getCount, METH_NOARGS, "Get number of products in the container" },
     {"add", (PyCFunction)FPyContainer::add, METH_VARARGS, "Add a product to the container - add(product)" },
-    {"get", (PyCFunction)FPyContainer::get, METH_NOARGS, "Get the product last put in the container - product get(). Alisa sagt: Achtung! intern wird 'pop' aufgerufen, das Objekt ist danach NICHT mehr im Container." },
+    {"get", (PyCFunction)FPyContainer::get, METH_NOARGS, "Get the product last put in the container and remove it from the container - product get()." },
+    {"peek", (PyCFunction)FPyContainer::peek, METH_NOARGS, "Get the product last put in the container - product peek()." },
     {NULL}  /* Sentinel */
 };
 
@@ -386,6 +388,11 @@ PyObject* FPyContainer::add(FPyContainer* self, PyObject* args) {
     FPyProduct* p = (FPyProduct*)parseObject(args);
     self->obj->add(p->obj);
     Py_RETURN_TRUE;
+}
+
+PyObject* FPyContainer::peek(FPyContainer* self) {
+    if (self->obj == 0) { PyErr_SetString(err, "FPyContainer::get - Object is invalid"); return NULL; }
+    return FPyProduct::fromPtr( self->obj->peek() );
 }
 
 PyObject* FPyContainer::get(FPyContainer* self) {
@@ -540,7 +547,7 @@ PyObject* FPyLogistics::addProduct(FPyLogistics* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "FPyLogistics::addProduct - Object is invalid"); return NULL; }
     VRPyTransform* t;
     if (! PyArg_ParseTuple(args, "O", &t)) return NULL;
-    return FPyProduct::fromPtr( self->obj->addProduct( t->obj ) );
+    return FPyProduct::fromPtr( self->obj->addProduct( t->objPtr ) );
 }
 
 PyObject* FPyLogistics::getContainers(FPyLogistics* self) {
@@ -581,8 +588,8 @@ PyObject* FPyLogistics::addContainer(FPyLogistics* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "FPyLogistics::addContainer - Object is invalid"); return NULL; }
     VRPyTransform* t = 0;
     if (! PyArg_ParseTuple(args, "O", &t)) return NULL;
-    OSG::VRTransform* tr = 0;
-    if (!isNone((PyObject*)t)) tr = t->obj;
+    OSG::VRTransformPtr tr = 0;
+    if ( !isNone((PyObject*)t) ) tr = t->objPtr;
     FContainer* c = self->obj->addContainer(tr);
     return FPyContainer::fromPtr(c);
 }
@@ -595,7 +602,7 @@ PyObject* FPyLogistics::fillContainer(FPyLogistics* self, PyObject* args) {
     int i;
     if (! PyArg_ParseTuple(args, "OiO", &c, &i, &t)) return NULL;
 
-    self->obj->fillContainer(c->obj, i, t->obj);
+    self->obj->fillContainer(c->obj, i, t->objPtr);
     Py_RETURN_TRUE;
 }
 

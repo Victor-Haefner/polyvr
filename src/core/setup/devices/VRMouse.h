@@ -12,7 +12,7 @@ using namespace std;
 class VRMouse : public VRDevice {
     private:
 
-        VRCamera* cam;
+        VRCameraPtr cam;
         VRView* view;
         Line ray;
 
@@ -35,12 +35,14 @@ class VRMouse : public VRDevice {
         void mouse(int button, int state, int x, int y);
         void motion(int x, int y);
 
-        void setCamera(VRCamera* _cam);
+        void setCamera(VRCameraPtr _cam);
         void setViewport(VRView* _view);
 
         Line getRay();
         VRSignal* getToEdgeSignal();
         VRSignal* getFromEdgeSignal();
+
+        void setCursor(string c);
 
         void save(xmlpp::Element* e);
         void load(xmlpp::Element* e);

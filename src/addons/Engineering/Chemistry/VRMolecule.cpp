@@ -245,20 +245,26 @@ void VRAtom::propagateTransformation(Matrix& T, uint flag, bool self) {
 
 
 VRMolecule::VRMolecule(string definition) : VRGeometry(definition) {
-    bonds_geo = new VRGeometry("bonds");
-    addChild(bonds_geo);
+    bonds_geo = VRGeometry::create("bonds");
+    coords_geo = VRGeometry::create("coords");
 
-    coords_geo = new VRGeometry("coords");
-    addChild(coords_geo);
-
-    labels = new VRNumberingEngine();
+    labels = VRNumberingEngine::create();
     labels->setBillboard(true);
     labels->setOnTop(false);
     labels->setSize(0.1);
-    addChild(labels);
 
     set(definition);
 }
+
+VRMoleculePtr VRMolecule::create(string definition) {
+    auto ptr = VRMoleculePtr(new VRMolecule(definition) );
+    ptr->addChild(ptr->bonds_geo);
+    ptr->addChild(ptr->coords_geo);
+    ptr->addChild(ptr->labels);
+    return ptr;
+}
+
+VRMoleculePtr VRMolecule::ptr() { return static_pointer_cast<VRMolecule>( shared_from_this() ); }
 
 void VRMolecule::addAtom(string a, int t) {
     VRAtom* at = new VRAtom(a, getID());
@@ -330,7 +336,7 @@ void VRMolecule::updateGeo() {
     }
 
     // atoms geometry
-    VRMaterial* mat = VRMaterial::get("atoms");
+    VRMaterialPtr mat = VRMaterial::get("atoms");
     mat->setPointSize(40);
     mat->setLit(false);
     mat->setVertexShader(a_vp);
@@ -345,7 +351,7 @@ void VRMolecule::updateGeo() {
     setMaterial(mat);
 
     // bonds geometry
-    VRMaterial* mat2 = VRMaterial::get("molecule_bonds");
+    VRMaterialPtr mat2 = VRMaterial::get("molecule_bonds");
     mat2->setLineWidth(5);
     mat2->setLit(false);
     mat2->setVertexShader(b_vp);
@@ -520,7 +526,7 @@ void VRMolecule::changeBond(int a, int b, int t) {
     updateGeo();
 }
 
-void VRMolecule::substitute(int a, VRMolecule* m, int b) {
+void VRMolecule::substitute(int a, VRMoleculePtr m, int b) {
     if (atoms.count(a) == 0) return;
     if (m->atoms.count(b) == 0) return;
 
@@ -583,7 +589,7 @@ void VRMolecule::setLocalOrigin(int ID) {
     atoms[ID]->propagateTransformation(im, now);
 }
 
-void VRMolecule::attachMolecule(int a, VRMolecule* m, int b) {
+void VRMolecule::attachMolecule(int a, VRMoleculePtr m, int b) {
     if (atoms.count(a) == 0) return;
     if (m->atoms.count(b) == 0) return;
 
@@ -656,7 +662,7 @@ void VRMolecule::updateCoords() {
     }
 
     // atoms geometry
-    VRMaterial* mat = VRMaterial::get("coords");
+    VRMaterialPtr mat = VRMaterial::get("coords");
     mat->setLineWidth(2);
     mat->setLit(false);
 

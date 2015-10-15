@@ -13,6 +13,10 @@ VRFluids::VRFluids(bool spawnParticles) : VRParticles(false) {
     if (spawnParticles) resetParticles<SphParticle>();
 }
 
+shared_ptr<VRFluids> VRFluids::create() {
+    return shared_ptr<VRFluids>( new VRFluids() );
+}
+
 void VRFluids::update(int from, int to) {
     if (to < 0) to = N;
     {

@@ -57,7 +57,7 @@ void VRNavPreset::setDevice(VRDevice* _dev) {
     for (uint i=0; i<bindings.size(); i++) updateBinding(bindings[i]);
 }
 
-void VRNavPreset::setTarget(VRTransform* _target) { target = _target; if (dev) dev->setTarget(target); }
+void VRNavPreset::setTarget(VRTransformPtr _target) { target = _target; if (dev) dev->setTarget(target); }
 
 void VRNavPreset::activate() {
     active = true;
@@ -150,7 +150,7 @@ VRNavigator::~VRNavigator() {}
 float VRNavigator::clip_dist_down = 1.5;
 
 void VRNavigator::zoom(VRDevice* dev, int dir) {
-    VRTransform* target = dev->getTarget();
+    VRTransformPtr target = dev->getTarget();
     if (target == 0) return;
 
     //Vec2f speed = dev->getSpeed(); // 0.05
@@ -159,8 +159,8 @@ void VRNavigator::zoom(VRDevice* dev, int dir) {
 }
 
 void VRNavigator::orbit(VRDevice* dev) {
-    VRTransform* target = dev->getTarget();
-    VRTransform* devBeacon = dev->getBeacon();
+    VRTransformPtr target = dev->getTarget();
+    VRTransformPtr devBeacon = dev->getBeacon();
 
     if (target == 0) return;
     if (devBeacon == 0) return;
@@ -213,8 +213,8 @@ void VRNavigator::orbit(VRDevice* dev) {
 }
 
 void VRNavigator::walk(VRDevice* dev) {
-    VRTransform* target = dev->getTarget();
-    VRTransform* devBeacon = dev->getBeacon();
+    VRTransformPtr target = dev->getTarget();
+    VRTransformPtr devBeacon = dev->getBeacon();
 
     if (target == 0) return;
     if (devBeacon == 0) return;
@@ -241,8 +241,8 @@ void VRNavigator::fly_walk(VRDevice* dev) {
     dev->s_state(key, &d);
     float d_abs = abs(d);
 
-    VRTransform* target = dev->getTarget();
-    VRTransform* flystick = dev->getBeacon();
+    VRTransformPtr target = dev->getTarget();
+    VRTransformPtr flystick = dev->getBeacon();
     if (target == 0 || flystick == 0) return;
 
     Vec3f dir = flystick->getWorldDirection();
@@ -264,8 +264,8 @@ void VRNavigator::fly_walk(VRDevice* dev) {
 }
 
 void VRNavigator::orbit2D(VRDevice* dev) {
-    VRTransform* target = dev->getTarget();
-    VRTransform* devBeacon = dev->getBeacon();
+    VRTransformPtr target = dev->getTarget();
+    VRTransformPtr devBeacon = dev->getBeacon();
 
     if (target == 0) return;
     if (devBeacon == 0) return;
@@ -284,8 +284,8 @@ void VRNavigator::orbit2D(VRDevice* dev) {
 }
 
 void VRNavigator::focus(VRDevice* dev) {
-    VRTransform* target = dev->getTarget();
-    VRTransform* devBeacon = dev->getBeacon();
+    VRTransformPtr target = dev->getTarget();
+    VRTransformPtr devBeacon = dev->getBeacon();
 
     if (target == 0) return;
     if (devBeacon == 0) return;
@@ -298,7 +298,7 @@ void VRNavigator::focus(VRDevice* dev) {
 
 // presets
 
-void VRNavigator::initWalk(VRTransform* target, VRDevice* dev) {
+void VRNavigator::initWalk(VRTransformPtr target, VRDevice* dev) {
     VRNavPreset* preset = new VRNavPreset();
     preset->setDevice(dev);
     preset->setTarget(target);
@@ -312,7 +312,7 @@ void VRNavigator::initWalk(VRTransform* target, VRDevice* dev) {
     addNavigation(preset);
 }
 
-void VRNavigator::initOrbit(VRTransform* target, VRDevice* dev) {
+void VRNavigator::initOrbit(VRTransformPtr target, VRDevice* dev) {
     VRNavPreset* preset = new VRNavPreset();
     preset->setDevice(dev);
     preset->setTarget(target);
@@ -332,7 +332,7 @@ void VRNavigator::initOrbit(VRTransform* target, VRDevice* dev) {
     addNavigation(preset);
 }
 
-void VRNavigator::initOrbit2D(VRTransform* target, VRDevice* dev) {
+void VRNavigator::initOrbit2D(VRTransformPtr target, VRDevice* dev) {
     VRNavPreset* preset = new VRNavPreset();
     preset->setDevice(dev);
     preset->setTarget(target);
@@ -352,7 +352,7 @@ void VRNavigator::initOrbit2D(VRTransform* target, VRDevice* dev) {
     addNavigation(preset);
 }
 
-void VRNavigator::initFlyOrbit(VRTransform* target, VRDevice* dev) { // TODO
+void VRNavigator::initFlyOrbit(VRTransformPtr target, VRDevice* dev) { // TODO
     VRNavPreset* preset = new VRNavPreset();
     preset->setDevice(dev);
     preset->setTarget(target);
@@ -370,7 +370,7 @@ void VRNavigator::initFlyOrbit(VRTransform* target, VRDevice* dev) { // TODO
     addNavigation(preset);
 }
 
-void VRNavigator::initFlyWalk(VRTransform* target, VRDevice* dev) {
+void VRNavigator::initFlyWalk(VRTransformPtr target, VRDevice* dev) {
     VRNavPreset* preset = new VRNavPreset();
     preset->setDevice(dev);
     preset->setTarget(target);
@@ -392,8 +392,8 @@ void VRNavigator::hyd_walk(VRDevice* dev) {
     dev->s_state(key, &d);
     float d_abs = abs(d);
 
-    VRTransform* target = dev->getTarget();
-    VRTransform* flystick = dev->getBeacon();
+    VRTransformPtr target = dev->getTarget();
+    VRTransformPtr flystick = dev->getBeacon();
     if (target == 0 || flystick == 0) return;
 
     Vec3f dir = flystick->getWorldDirection();
@@ -415,7 +415,7 @@ void VRNavigator::hyd_walk(VRDevice* dev) {
     }
 }
 
-void VRNavigator::initHydraFly(VRTransform* target, VRDevice* dev) {
+void VRNavigator::initHydraFly(VRTransformPtr target, VRDevice* dev) {
     VRNavPreset* preset = new VRNavPreset();
     preset->setDevice(dev);
     preset->setTarget(target);

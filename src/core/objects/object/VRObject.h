@@ -7,6 +7,9 @@
 #include <OpenSG/OSGVector.h>
 
 #include "core/utils/VRName.h"
+#include "core/utils/VRStorage.h"
+#include "core/objects/VRObjectFwd.h"
+#include <memory>
 
 namespace xmlpp{ class Element; }
 class VRAttachment;
@@ -36,27 +39,28 @@ class VRGlobals {
         static VRGlobals* get();
 };
 
-class VRObject : public VRName {
+class VRObject : public enable_shared_from_this<VRObject>, public VRName, public VRStorage {
     private:
         bool specialized = false;
-        VRObject* parent = 0;
+        VRObjectWeakPtr parent;
         NodeRecPtr node;
         int ID = 0;
         int childIndex = 0; // index of this object in its parent child vector
-        bool pickable = false;
+        int pickable = 0;
         bool visible = true;
         bool intern = false;
+        int persistency = 666;
         unsigned int graphChanged = 0; //is frame number
 
         map<string, VRAttachment*> attachments;
 
-        int findChild(VRObject* node);
+        int findChild(VRObjectPtr node);
         void updateChildrenIndices(bool recursive = false);
 
         static void unitTest();
 
     protected:
-        vector<VRObject*> children;
+        vector<VRObjectPtr> children;
         string type;
 
         void setIntern(bool b);
@@ -64,17 +68,18 @@ class VRObject : public VRName {
         virtual void printInformation();
         //void printInformation();
 
-        virtual VRObject* copy(vector<VRObject*> children);
-        //VRObject* copy();
+        virtual VRObjectPtr copy(vector<VRObjectPtr> children);
+        //VRObjectPtr copy();
 
         virtual void saveContent(xmlpp::Element* e);
         virtual void loadContent(xmlpp::Element* e);
 
     public:
-
-        /** initialise an object with his name **/
-        VRObject(string _name = "0");
+        VRObject(string name = "0");
         virtual ~VRObject();
+
+        static VRObjectPtr create(string name);
+        VRObjectPtr ptr();
 
         /** Returns the Object ID **/
         int getID();
@@ -83,10 +88,12 @@ class VRObject : public VRName {
         string getType();
 
         bool getIntern();
+        void setPersistency(int p);
+        int getPersistency();
 
-        VRObject* getRoot();
+        VRObjectPtr getRoot();
         string getPath();
-        VRObject* getAtPath(string path);
+        VRObjectPtr getAtPath(string path);
 
         bool hasGraphChanged();
 
@@ -94,11 +101,11 @@ class VRObject : public VRName {
         template<typename T> T getAttachment(string name);
         bool hasAttachment(string name);
         void remAttachment(string name);
-        VRObject* hasAncestorWithAttachment(string name);
-        vector<VRObject*> getChildrenWithAttachment(string name);
+        VRObjectPtr hasAncestorWithAttachment(string name);
+        vector<VRObjectPtr> getChildrenWithAttachment(string name);
 
         /** Set the object OSG core && specify the type**/
-        void setCore(NodeCoreRecPtr c, string _type);
+        void setCore(NodeCoreRecPtr c, string _type, bool force = false);
 
         /** Returns the object OSG core **/
         NodeCoreRecPtr getCore();
@@ -113,30 +120,30 @@ class VRObject : public VRName {
         void setSiblingPosition(int i);
 
         /** Add a child to this object **/
-        void addChild(VRObject* child, bool osg = true, int place = -1);
+        void addChild(VRObjectPtr child, bool osg = true, int place = -1);
 
         /** Add a OSG node as child to this object **/
         void addChild(NodeRecPtr n);
 
         /** Remove a child **/
-        void subChild(VRObject* child, bool osg = true);
+        void subChild(VRObjectPtr child, bool osg = true);
 
         /** Remove a OSG node child **/
         void subChild(NodeRecPtr n);
 
         /** Switch the parent of this object **/
-        void switchParent(VRObject* new_p, int place = -1);
+        void switchParent(VRObjectPtr new_p, int place = -1);
 
         /** Detach object from the parent**/
         void detach();
 
         /** Returns the child by his position **/
         int getChildIndex();
-        VRObject* getChild(int i);
-        vector<VRObject*> getChildren(bool recursive = false, string type = "");
+        VRObjectPtr getChild(int i);
+        vector<VRObjectPtr> getChildren(bool recursive = false, string type = "");
 
         /** Returns the parent of this object **/
-        VRObject* getParent();
+        VRObjectPtr getParent();
 
         /** Returns the number of children **/
         size_t getChildrenCount();
@@ -144,25 +151,26 @@ class VRObject : public VRName {
         void clearChildren();
 
         /** Returns all objects with a certain type wich are below this object in hirarchy **/
-        vector<VRObject*> getObjectListByType( string _type );
-        void getObjectListByType( string _type, vector<VRObject*>& list );
+        vector<VRObjectPtr> getObjectListByType( string _type );
+        void getObjectListByType( string _type, vector<VRObjectPtr>& list );
 
         /**
             To find an object in the scene graph was never easier, just pass an OSG node, object, ID || name to a VRObject.
             This Object will search all the hirachy below him (himself included).
         **/
 
-        VRObject* find(NodeRecPtr n, string indent = " ");
-        VRObject* find(VRObject* obj);
-        VRObject* find(string Name);
-        VRObject* find(int id);
+        VRObjectPtr find(NodeRecPtr n, string indent = " ");
+        VRObjectPtr find(VRObjectPtr obj);
+        VRObjectPtr find(string Name);
+        VRObjectPtr find(int id);
+        vector<VRObjectPtr> findAll(string Name, vector<VRObjectPtr> res = vector<VRObjectPtr>() );
 
-        vector<VRObject*> filterByType(string Type, vector<VRObject*> res = vector<VRObject*>() );
+        vector<VRObjectPtr> filterByType(string Type, vector<VRObjectPtr> res = vector<VRObjectPtr>() );
 
         /** Returns the first ancestor that is pickable, || 0 if none found **/
-        VRObject* findPickableAncestor();
+        VRObjectPtr findPickableAncestor();
 
-        bool hasAncestor(VRObject* a);
+        bool hasAncestor(VRObjectPtr a);
 
         /** Returns the Boundingbox of the OSG Node */
         void getBoundingBox(Vec3f& v1, Vec3f& v2);
@@ -178,15 +186,13 @@ class VRObject : public VRName {
         static void printOSGTree(NodeRecPtr o, string indent = "");
 
         /** duplicate this object **/
-        VRObject* duplicate(bool anchor = false);
+        VRObjectPtr duplicate(bool anchor = false);
 
-        /** Hide this object && all his subgraph **/
+        /** Hide and show this object and all his subgraph **/
         void hide();
-
-        /** Show this object && all his subgraph **/
         void show();
 
-        /** Returns if this object is visible || not **/
+        /** Returns if this object is visible or not **/
         bool isVisible();
 
         /** Set the visibility of this object **/
@@ -195,11 +201,11 @@ class VRObject : public VRName {
         /** toggle visibility **/
         void toggleVisible();
 
-        /** Returns if this object is pickable || not **/
+        /** Returns if this object is pickable or not **/
         bool isPickable();
 
         /** Set the object pickable || not **/
-        void setPickable(bool b);
+        void setPickable(int b);
 
         void destroy();
 

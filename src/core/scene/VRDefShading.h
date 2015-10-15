@@ -2,32 +2,29 @@
 #define VRDEFSHADING_H_INCLUDED
 
 #include <OpenSG/OSGDeferredShadingStage.h>
-#include <OpenSG/OSGShaderProgramChunk.h>
-#include <OpenSG/OSGShaderProgram.h>
-#include <OpenSG/OSGLight.h>
-
 #include <OpenSG/OSGShaderShadowMapEngine.h>
 #include <OpenSG/OSGTrapezoidalShadowMapEngine.h>
+#include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRLight;
-class VRCamera;
-class VRObject;
-
 class VRDefShading {
     private:
-        typedef LightEngine::LightTypeE LightTypeE;
-
         enum ShadowTypeE {
             ST_NONE      = 0,
             ST_STANDARD  = 1,
             ST_TRAPEZOID = 2
         };
 
+        enum LightTypeE {
+            Directional,
+            Point,
+            Spot
+        };
+
         struct LightInfo {
-            LightEngine::LightTypeE    lightType;
+            LightTypeE    lightType;
             ShadowTypeE                shadowType;
             LightRecPtr              light;
             //NodeRecPtr               lightN;
@@ -36,50 +33,58 @@ class VRDefShading {
             ShaderProgramRecPtr      lightVP;
             ShaderProgramRecPtr      lightFP;
             ShaderProgramChunkRecPtr lightSH;
-
-
         };
+
+        string dsGBufferVPFile, dsGBufferFPFile;
+        string dsAmbientVPFile, dsAmbientFPFile;
+        string ssaoAmbientVPFile, ssaoAmbientFPFile;
+        string dsDirLightVPFile, dsDirLightFPFile, dsDirLightShadowFPFile;
+        string dsPointLightVPFile, dsPointLightFPFile, dsPointLightShadowFPFile;
+        string dsSpotLightVPFile, dsSpotLightFPFile, dsSpotLightShadowFPFile;
+        string dsUnknownFile = "unknownFile";
 
         NodeRecPtr                   dsStageN;
         DeferredShadingStageRecPtr   dsStage;
-
         vector<LightInfo>         lightInfos;
-
-
-        Int32                          currentLight;
-
         UInt32                         shadowMapWidth;
         UInt32                         shadowMapHeight;
 
         ShadowTypeE defaultShadowType;
         int shadowRes;
         float shadowColor;
+        bool initiated = false;
+        bool enabled = false;
+        VRObjectPtr stageObject = 0;
+
+        SimpleStageRecPtr ssaoStage;
+        bool ssao_enabled = false;
+        VRObjectPtr ssaoObject = 0;
+
+        void initSSAO();
 
         void init();
 
-    protected:
-        bool dsInit;
-
-        void initDeferredShading(VRObject* o);
-
     public:
         VRDefShading();
+        ~VRDefShading();
 
-        void setDSCamera(VRCamera* cam);
+        void initDeferredShading(VRObjectPtr o);
+        void initSSAO(VRObjectPtr o);
 
-        void addDSLight(VRLight* light);
+        void setDefferedShading(bool b);
+        bool getDefferedShading();
 
+        void setSSAO(bool b);
+        bool getSSAO();
+
+        void setDSCamera(VRCameraPtr cam);
+        void addDSLight(VRLightPtr light);
         void addDSLight(LightRecPtr light, string type, bool shadows = false);
-
+        void subLight(UInt32 lightIdx);
         void setShadow(LightInfo &li);
 
-        // file containing vertex shader code for the light type
-        const std::string &getLightVPFile(LightEngine::LightTypeE lightType);
-
-        // file containing fragment shader code for the light type
-        const std::string &getLightFPFile( LightEngine::LightTypeE lightType, ShadowTypeE shadowType);
-
-        void subLight(UInt32 lightIdx);
+        const std::string &getLightVPFile(LightTypeE lightType);
+        const std::string &getLightFPFile(LightTypeE lightType, ShadowTypeE shadowType);
 };
 
 OSG_END_NAMESPACE;

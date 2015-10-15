@@ -33,15 +33,19 @@ VRParticles::VRParticles(bool spawnParticles) : VRGeometry("particles") {
 }
 
 VRParticles::~VRParticles() {
-    VRScene* scene = VRSceneManager::getCurrent();
+    VRScenePtr scene = VRSceneManager::getCurrent();
     if (scene) scene->dropUpdateFkt(fkt);
-    delete mat;
 
     {
         BLock lock(mtx());
         for (int i=0;i<N;i++) delete particles[i];
     }
 }
+
+shared_ptr<VRParticles> VRParticles::create() {
+    return shared_ptr<VRParticles>( new VRParticles() );
+}
+
 
 void VRParticles::update(int b, int e) {
     if (e < 0) e = N;
@@ -139,7 +143,7 @@ void VRParticles::setLifetime(int newLifetime, int variation) {
 }
 
 int VRParticles::spawnCuboid(Vec3f base, ArgType type, float a, float b, float c) {
-    VRScene* scene = VRSceneManager::getCurrent();
+    VRScenePtr scene = VRSceneManager::getCurrent();
     // if (scene) world = scene->bltWorld();
 
     float radius;
@@ -188,7 +192,7 @@ int VRParticles::spawnCuboid(Vec3f base, ArgType type, float a, float b, float c
         }
         // activate update loop, only update spawned particles! (required)
         scene->dropUpdateFkt(fkt);
-        fkt = new VRFunction<int>("particles_update", boost::bind(&VRParticles::update, this,0,required));
+        fkt = VRFunction<int>::create("particles_update", boost::bind(&VRParticles::update, this,0,required));
         scene->addUpdateFkt(fkt);
     }
     return required;

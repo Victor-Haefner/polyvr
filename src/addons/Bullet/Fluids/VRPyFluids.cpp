@@ -41,7 +41,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRFluids>::type = {
     0,                         /* tp_dictoffset */
     (initproc)init,      /* tp_init */
     0,                         /* tp_alloc */
-    New_VRObjects_unnamed,                 /* tp_new */
+    New_VRObjects_unnamed_ptr,                 /* tp_new */
 };
 
 PyMethodDef VRPyFluids::methods[] = {
@@ -55,12 +55,16 @@ PyMethodDef VRPyFluids::methods[] = {
     {NULL}  /* Sentinel */
 };
 
+void checkObj(VRPyFluids* self) {
+    if (self->objPtr == 0) self->objPtr = OSG::VRFluids::create();
+}
+
 PyObject* VRPyFluids::getGeometry(VRPyFluids* self) {
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyFluids::spawnCuboid(VRPyFluids* self, PyObject* args) {
-    if (self->obj == 0) self->obj = new OSG::VRFluids();
+    checkObj(self);
     OSG::Vec3f position;
     float x,y,z, a=1,b=1,c=1;
     char* mode = NULL; int modeLength=0;
@@ -72,11 +76,11 @@ PyObject* VRPyFluids::spawnCuboid(VRPyFluids* self, PyObject* args) {
     position.setValues(x, y, z);
     int num = 0;
     if (mode != NULL && strncmp(mode, "size", modeLength)==0) {
-        num = self->obj->spawnCuboid(position, OSG::VRFluids::SIZE, a,b,c);
+        num = self->objPtr->spawnCuboid(position, OSG::VRFluids::SIZE, a,b,c);
     } else if (mode != NULL && strncmp(mode, "liter", modeLength)==0) {
-        num = self->obj->spawnCuboid(position, OSG::VRFluids::LITER, a);
+        num = self->objPtr->spawnCuboid(position, OSG::VRFluids::LITER, a);
     } else {
-        num = self->obj->spawnCuboid(position);
+        num = self->objPtr->spawnCuboid(position);
     }
 
     // Py_RETURN_TRUE;
@@ -84,35 +88,35 @@ PyObject* VRPyFluids::spawnCuboid(VRPyFluids* self, PyObject* args) {
 }
 
 PyObject* VRPyFluids::setRadius(VRPyFluids* self, PyObject* args) {
-    if (self->obj == 0) self->obj = new OSG::VRFluids();
+    checkObj(self);
     float radius, variation;
     radius = variation = 0.0;
     if (! PyArg_ParseTuple(args, "f|f", &radius, &variation)) { Py_RETURN_FALSE; }
-    self->obj->setRadius(radius, variation);
+    self->objPtr->setRadius(radius, variation);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyFluids::setMass(VRPyFluids* self, PyObject* args) {
-    if (self->obj == 0) self->obj = new OSG::VRFluids();
+    checkObj(self);
     float mass, variation;
     mass = variation = 0.0;
     if (! PyArg_ParseTuple(args, "f|f", &mass, &variation)) { Py_RETURN_FALSE; }
-    self->obj->setMass(mass, variation);
+    self->objPtr->setMass(mass, variation);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyFluids::setMassByRadius(VRPyFluids* self, PyObject* args) {
-    if (self->obj == 0) self->obj = new OSG::VRFluids();
+    checkObj(self);
     float massFor1mRadius = 0.0;
     if (! PyArg_ParseTuple(args, "f", &massFor1mRadius)) { Py_RETURN_FALSE; }
-    self->obj->setMassByRadius(massFor1mRadius);
+    self->objPtr->setMassByRadius(massFor1mRadius);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyFluids::setMassForOneLiter(VRPyFluids* self, PyObject* args) {
-    if (self->obj == 0) self->obj = new OSG::VRFluids();
+    checkObj(self);
     float massPerLiter = 0.0;
     if (! PyArg_ParseTuple(args, "f", &massPerLiter)) { Py_RETURN_FALSE; }
-    self->obj->setMassForOneLiter(massPerLiter);
+    self->objPtr->setMassForOneLiter(massPerLiter);
     Py_RETURN_TRUE;
 }

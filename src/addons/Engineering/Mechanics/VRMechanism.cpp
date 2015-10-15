@@ -27,7 +27,7 @@ bool MPart::changed() {
 void MPart::setBack() { if (geo) geo->setWorldMatrix(reference); }
 void MPart::apply() { if (geo) reference = geo->getWorldMatrix(); }
 
-MPart* MPart::make(VRGeometry* g, VRTransform* t) {
+MPart* MPart::make(VRGeometryPtr g, VRTransformPtr t) {
     string type = g->getPrimitive()->getType();
     MPart* p = 0;
     if (type == "Gear") p = new MGear();
@@ -396,10 +396,10 @@ void MChain::updateGeo() {
     geo->setLengths(lengths);
 }
 
-VRGeometry* MChain::init() {
-    geo = new VRGeometry("chain");
+VRGeometryPtr MChain::init() {
+    geo = VRGeometry::create("chain");
     updateGeo();
-    VRMaterial* cm = VRMaterial::get("chain_mat");
+    VRMaterialPtr cm = VRMaterial::get("chain_mat");
     cm->setLit(false);
     cm->setLineWidth(3);
     geo->setMaterial(cm);
@@ -417,22 +417,22 @@ void VRMechanism::clear() {
     cache.clear();
 }
 
-void VRMechanism::add(VRGeometry* part, VRTransform* trans) {
+void VRMechanism::add(VRGeometryPtr part, VRTransformPtr trans) {
     MPart* p = MPart::make(part, trans);
     if (p == 0) return;
     cache[part] = p;
     parts.push_back(p);
 }
 
-VRGeometry* VRMechanism::addChain(float w, vector<VRGeometry*> geos, string dirs) {
+VRGeometryPtr VRMechanism::addChain(float w, vector<VRGeometryPtr> geos, string dirs) {
     MChain* c = new MChain();
     for (uint i=0; i<geos.size(); i++) {
         int j = (i+1)%geos.size();
         int k = (i+2)%geos.size();
 
-        VRGeometry* g1 = geos[i];
-        VRGeometry* g2 = geos[j];
-        VRGeometry* g3 = geos[k];
+        VRGeometryPtr g1 = geos[i];
+        VRGeometryPtr g2 = geos[j];
+        VRGeometryPtr g3 = geos[k];
 
         if (cache.count(g1) == 0) continue;
         if (cache.count(g2) == 0) continue;

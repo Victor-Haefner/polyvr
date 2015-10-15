@@ -49,7 +49,7 @@ void VRMillingMachine::setSpeed(Vec3f v) {
     }
 }
 
-void VRMillingMachine::setGeometry(vector<VRTransform*> geos) { this->geos = geos; }
+void VRMillingMachine::setGeometry(vector<VRTransformPtr> geos) { this->geos = geos; }
 
 void VRMillingMachine::update() {
 	if (online) {

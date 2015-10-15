@@ -11,9 +11,9 @@ struct seg_params;
 
 class VRTree : public VRGeometry {
     private:
-        segment* trunc;
-        vector<segment*>* branches;
-        VRGeometry* armatureGeo;
+        segment* trunc = 0;
+        vector<segment*>* branches = 0;
+        VRGeometryPtr armatureGeo;
 
         float random (float min, float max);
         float variation(float val, float var);
@@ -28,6 +28,9 @@ class VRTree : public VRGeometry {
 
     public:
         VRTree();
+
+        static VRTreePtr create();
+        VRTreePtr ptr();
 
         void setup(int branching = 5, int iterations = 5, int seed = 0,
                    float n_angle = 0.2, float p_angle = 0.6, float l_factor = 0.8, float r_factor = 0.5,

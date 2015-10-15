@@ -34,8 +34,8 @@ VRGuiMonitor::VRGuiMonitor() {
 }
 
 bool VRGuiMonitor::on_button(GdkEventButton * event) {
-    int state = 1;
-    if (event->type == GDK_BUTTON_PRESS) state = 0;
+    //int state = 1;
+    //if (event->type == GDK_BUTTON_PRESS) state = 0;
 
     float w = da->get_allocation().get_width();
     float x = 1.0 - event->x/w;

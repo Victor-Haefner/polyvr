@@ -9,7 +9,9 @@
 #include "VRPyLod.h"
 #include "core/setup/devices/VRMobile.h"
 #include "VRPySocket.h"
+#include "VRPyMouse.h"
 #include "VRPyHaptic.h"
+#include "VRPyMobile.h"
 #include "VRPyBaseT.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/utils/VRTimer.h"
@@ -25,18 +27,18 @@ using namespace std;
 
 void updateArgPtr(VRScript::arg* a) {
     string t = a->type;
-    VRScene* scene = VRSceneManager::getCurrent();
+    auto scene = VRSceneManager::getCurrent();
     VRSetup* setup = VRSetupManager::getCurrent();
 
     if (t == "VRPyObjectType" || t == "VRPyGeometryType" || t == "VRPyTransformType" || t == "VRPyLightType" || t == "VRPyLodType") {
-        a->ptr = (void*)scene->get(a->val);
+        a->ptr = (void*)scene->get(a->val).get();
         return;
     }
     if (t == "VRPySocketType") {
         a->ptr = (void*)scene->getSocket(a->val);
         return;
     }
-    if (t == "VRPyDeviceType" || t == "VRPyHapticType") {
+    if (t == "VRPyDeviceType" || t == "VRPyMouseType" || t == "VRPyHapticType" || t == "VRPyMobileType") {
         a->ptr = (void*)setup->getDevice(a->val);
         return;
     }
@@ -57,14 +59,15 @@ void VRScript::clean() {
     VRMobile* mob = (VRMobile*)VRSetupManager::getCurrent()->getDevice(this->mobile);
     if (mob) mob->remWebSite(getName());
 
-    VRScene* scene = VRSceneManager::getCurrent();
+    auto scene = VRSceneManager::getCurrent();
 
-    for (t_itr = trigs.begin(); t_itr != trigs.end(); t_itr++) {
-        trig* t = t_itr->second;
+    for (auto tr : trigs) {
+        trig* t = tr.second;
         if (t->a && args.count("dev")) { args.erase("dev"); delete t->a; }
         if (t->soc) t->soc->unsetCallbacks();
         if (t->sig) t->sig->sub(cbfkt_dev);
         if (t->trigger == "on_timeout") scene->dropTimeoutFkt(cbfkt_sys);
+        if (t->trigger == "on_scene_close") VRSceneManager::get()->getSignal_on_scene_close()->sub(cbfkt_sys);
         t->soc = 0;
         t->sig = 0;
         t->a = 0;
@@ -77,10 +80,15 @@ void VRScript::update() {
         if (mob) mob->addWebSite(getName(), core);
     }
 
-    VRScene* scene = VRSceneManager::getCurrent();
+    auto scene = VRSceneManager::getCurrent();
 
-    for (t_itr = trigs.begin(); t_itr != trigs.end(); t_itr++) {
-        trig* t = t_itr->second;
+    for (auto tr : trigs) {
+        trig* t = tr.second;
+        if (t->trigger == "on_scene_close") {
+            VRSceneManager::get()->getSignal_on_scene_close()->add(cbfkt_sys);
+            continue;
+        }
+
         if (t->trigger == "on_timeout") {
             int i = toInt(t->param.c_str());
             scene->addTimeoutFkt(cbfkt_sys, 0, i);
@@ -161,12 +169,16 @@ VRScript::VRScript(string _name) {
     setSeparator('_');
     setNameSpace("__script__");
     setName(_name);
-    cbfkt_sys = new VRFunction<int>(_name + "_ScriptCallback_sys", boost::bind(&VRScript::execute, this));
+    cbfkt_sys = VRFunction<int>::create(_name + "_ScriptCallback_sys", boost::bind(&VRScript::execute, this));
     cbfkt_dev = new VRFunction<VRDevice*>(_name + "_ScriptCallback_dev", boost::bind(&VRScript::execute_dev, this, _1));
     cbfkt_soc = new VRFunction<string>(_name + "_ScriptCallback_soc", boost::bind(&VRScript::execute_soc, this, _1));
 }
 
 VRScript::~VRScript() {
+    for (auto t : trigs) {
+        if (t.second->trigger == "on_scene_close") VRSceneManager::get()->getSignal_on_scene_close()->sub(cbfkt_sys);
+    }
+
     for (auto a : args) delete a.second;
     for (auto t : trigs) delete t.second;
 }
@@ -185,15 +197,18 @@ PyObject* VRScript::getPyObj(arg* a) {
     else if (a->type == "float") return Py_BuildValue("f", toFloat(a->val.c_str()));
     else if (a->type == "NoneType") return Py_None;
     else if (a->type == "str") return PyString_FromString(a->val.c_str());
-    else if (a->type == "VRPyObjectType") return VRPyObject::fromPtr((VRObject*)a->ptr);
-    else if (a->type == "VRPyTransformType") return VRPyTransform::fromPtr((VRTransform*)a->ptr);
-    else if (a->type == "VRPyGeometryType") return VRPyGeometry::fromPtr((VRGeometry*)a->ptr);
-    else if (a->type == "VRPyLightType") return VRPyLight::fromPtr((VRLight*)a->ptr);
-    else if (a->type == "VRPyLodType") return VRPyLod::fromPtr((VRLod*)a->ptr);
+    else if (a->ptr == 0) { cout << "\ngetPyObj ERROR: " << a->type << " ptr is 0\n"; Py_RETURN_NONE; }
+    else if (a->type == "VRPyObjectType") return VRPyObject::fromSharedPtr(((VRObject*)a->ptr)->ptr());
+    else if (a->type == "VRPyTransformType") return VRPyTransform::fromSharedPtr(((VRTransform*)a->ptr)->ptr());
+    else if (a->type == "VRPyGeometryType") return VRPyGeometry::fromSharedPtr( ((VRGeometry*)a->ptr)->ptr() );
+    else if (a->type == "VRPyLightType") return VRPyLight::fromSharedPtr(((VRLight*)a->ptr)->ptr());
+    else if (a->type == "VRPyLodType") return VRPyLod::fromSharedPtr(((VRLod*)a->ptr)->ptr());
     else if (a->type == "VRPyDeviceType") return VRPyDevice::fromPtr((VRDevice*)a->ptr);
+    else if (a->type == "VRPyMouseType") return VRPyMouse::fromPtr((VRMouse*)a->ptr);
     else if (a->type == "VRPyHapticType") return VRPyHaptic::fromPtr((VRHaptic*)a->ptr);
+    else if (a->type == "VRPyMobileType") return VRPyMobile::fromPtr((VRMobile*)a->ptr);
     else if (a->type == "VRPySocketType") return VRPySocket::fromPtr((VRSocket*)a->ptr);
-    else { cout << "\ngetPyObj ERROR: " << a->type << " unknown!\n"; return NULL; }
+    else { cout << "\ngetPyObj ERROR: " << a->type << " unknown!\n"; Py_RETURN_NONE; }
 }
 
 void VRScript::changeArgName(string name, string _new) {
@@ -271,6 +286,7 @@ void VRScript::execute() {
     if (type == "Python") {
         if (fkt == 0) return;
         if (!active) return;
+        PyGILState_STATE gstate = PyGILState_Ensure();
         if (PyErr_Occurred() != NULL) PyErr_Print();
 
         VRTimer timer; timer.start();
@@ -292,6 +308,7 @@ void VRScript::execute() {
         Py_XDECREF(pArgs);
 
         if (PyErr_Occurred() != NULL) PyErr_Print();
+        PyGILState_Release(gstate);
     }
 
     if (type == "HTML") {
@@ -301,7 +318,8 @@ void VRScript::execute() {
 
     if (type == "GLSL") {
         for (auto m : VRMaterial::materials) {
-            VRMaterial* mat = m.second;
+            auto mat = m.second.lock();
+            if (!mat) continue;
             if (mat->getVertexScript() == getName()) mat->setVertexScript(getName());
             if (mat->getFragmentScript() == getName()) mat->setFragmentScript(getName());
             if (mat->getGeometryScript() == getName()) mat->setGeometryScript(getName());
@@ -315,9 +333,11 @@ void VRScript::execute_dev(VRDevice* dev) {
 
     args["dev"]->type = "VRPyDeviceType";
     if (dev->getType() == "haptic") args["dev"]->type = "VRPyHapticType";
+    if (dev->getType() == "mobile") args["dev"]->type = "VRPyMobileType";
     args["dev"]->val = dev->getName();
     args["dev"]->ptr = dev;
     execute();
+    args["dev"]->val = "";
 }
 
 void VRScript::execute_soc(string s) {
@@ -424,7 +444,7 @@ void VRScript::load(xmlpp::Element* e) {
             trigs[t->getName()] = t;
 
             if (t->trigger == "on_scene_load" && active) {
-                VRScene* scene = VRSceneManager::getCurrent();
+                auto scene = VRSceneManager::getCurrent();
                 scene->queueJob(cbfkt_sys);
             }
         }

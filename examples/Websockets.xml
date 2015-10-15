@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scene name_suffix="0" base_name="log_test" name_space="Scene">
+  <Objects>
+    <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
+      <Object name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
+        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="0.0192216 0.091726 -0.629193" at="0.00412971 0.0128658 5.96046e-08" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
+          <Object name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
+        </Object>
+      </Object>
+    </Object>
+  </Objects>
+  <Rendering frustum_culling="1" occlusion_culling="0" two_sided="1"/>
+  <Scripts>
+    <Script name_suffix="0" base_name="Script" name_space="__script__" type="Python" mobile="">
+      <core>
+	m = dev.getMessage()
+	dev.answer(dev.getKey(), 'pong')
+</core>
+      <trig type="on_device" dev="mobile" state="Released" param="" key="-1" name_suffix="1" base_name="trigger" name_space="__global__"/>
+    </Script>
+    <Script name_suffix="0" base_name="init" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+	
+	r = VR.getRoot().find('Headlight')
+	
+	s = VR.Sprite('site')
+	s.webOpen('http://localhost:5500/site', 800, 1)
+	s.setUp(0,-1,0)
+	r.addChild(s)
+</core>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
+    </Script>
+    <Script name_suffix="0" base_name="site" name_space="__script__" type="HTML" mobile="mobile">
+      <core>
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+
+&lt;head&gt;
+ &lt;style type="text/css"&gt;
+  body {font-size:200%;
+		text-align:center;
+		background:#fff0e0;
+		color:#ff6622}
+  button {font-size:100%;color:#ff6622;}
+ &lt;/style&gt;
+  &lt;script&gt;
+	var websocket = new WebSocket('ws://localhost:5500');
+	websocket.onopen = function() { msg('open'); };
+	websocket.onerror = function(e) { msg('error'); };
+	websocket.onmessage = function(m) { if(m.data) msg('msg: '+m.data); };
+	websocket.onclose = function(e) { msg('closed with code '+e.code); };
+	
+	function send(m){ websocket.send(m); };
+	function msg(m){ document.getElementById("msg").innerHTML += '&lt;br&gt;' + m; };
+ &lt;/script&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+
+
+&lt;body&gt;
+	WebSocket Example:&lt;br&gt;&lt;br&gt;
+	&lt;button onclick="send('ping')"&gt;ping&lt;/button&gt;
+	&lt;div id="msg"&gt;&lt;/div&gt;
+&lt;/body&gt;
+
+&lt;/html&gt;
+</core>
+    </Script>
+  </Scripts>
+  <Sockets/>
+  <Background color="0.6 0.6 0.6" path="" type="0"/>
+  <Navigation active="Orbit"/>
+  <Materials/>
+</Scene>

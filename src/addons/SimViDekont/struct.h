@@ -30,7 +30,7 @@ OSG_BEGIN_NAMESPACE;
             vector<float>* strain;
             vector<Vec2f>* texs;
 
-            VRGeometry* geo;
+            VRGeometryPtr geo;
 
             frame(int N) :
                         pos(new vector<vec>(N)),

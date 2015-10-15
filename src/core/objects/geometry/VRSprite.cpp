@@ -19,16 +19,16 @@ VRSprite::VRSprite (string name, bool alpha, float w, float h) : VRGeometry(name
     type = "Sprite";
 
     setMesh(makePlaneGeo(width, height, 1, 1));
-    setAt(Vec3f(0,0,-1));
 
     font = "SANS 20";
     fontColor = Color4f(0,0,0,255);
     label = "";
 }
 
-VRSprite::~VRSprite() {
-    ;
-}
+VRSprite::~VRSprite() {}
+
+VRSpritePtr VRSprite::create(string name, bool alpha, float w, float h) { return shared_ptr<VRSprite>(new VRSprite(name, alpha, w, h) ); }
+VRSpritePtr VRSprite::ptr() { return static_pointer_cast<VRSprite>( shared_from_this() ); }
 
 void VRSprite::setLabel (string l, float res) {
     if (l == label) return;
@@ -39,20 +39,20 @@ void VRSprite::setLabel (string l, float res) {
 }
 
 void VRSprite::webOpen(string path, int res, float ratio){
-    VRMaterial* mat = VRMaterial::get(getName()+"web");
+    VRMaterialPtr mat = VRMaterial::get(getName()+"web");
     setMaterial(mat);
     mat->setLit(false);
-    CEF* w = new CEF();
+    web = CEF::create();
 
     VRDevice* mouse = VRSetupManager::getCurrent()->getDevice("mouse");
     VRDevice* keyboard = VRSetupManager::getCurrent()->getDevice("keyboard");
 
-    w->setMaterial(mat);
-    w->open(path);
-    w->addMouse(mouse, this, 0, 2, 3, 4);
-    w->addKeyboard(keyboard);
-    w->setResolution(res);
-    w->setAspectRatio(ratio);
+    web->setMaterial(mat);
+    web->open(path);
+    web->addMouse(mouse, ptr(), 0, 2, 3, 4);
+    web->addKeyboard(keyboard);
+    web->setResolution(res);
+    web->setAspectRatio(ratio);
 }
 
 void VRSprite::setTexture(string path){
@@ -65,6 +65,7 @@ void VRSprite::setFont(string f) { font = f; }
 void VRSprite::setFontColor(Color4f c) { fontColor = c; }
 
 string VRSprite::getLabel() { return label; }
+Vec2f VRSprite::getSize() { return Vec2f(width, height); }
 
 void VRSprite::setSize(float w, float h) {
     width = w;

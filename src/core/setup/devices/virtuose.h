@@ -20,9 +20,9 @@ class virtuose {
         void* vc = 0; // virtuose context
         bool isAttached = false;
         /** attached Object*/
-        VRTransform* attached = 0;
+        VRTransformPtr attached = 0;
         /** represents the haptic's center in the virtual scene **/
-        VRTransform* base = 0;
+        VRTransformPtr base = 0;
 
         /** haptic timestep **/
         float timestep;
@@ -67,11 +67,11 @@ class virtuose {
         /** parses given btMatrix3x3 into the given float[9] array**/
         void Matrix3ToArray(btMatrix3x3 m, float *to);
         /** sets the base **/
-        void setBase(VRTransform* tBase);
+        void setBase(VRTransformPtr tBase);
         /**connect a physicalized Object to this virtuose and push it in the same direction the virtuose moves.**/
-        void attachTransform(VRTransform* trans);
+        void attachTransform(VRTransformPtr trans);
         /** detach the previously attached Transform and returns it**/
-        VRTransform* detachTransform();
+        VRTransformPtr detachTransform();
         /** update functions of the Virtuose, have to be called each frame**/
         void updateVirtMechPre();
         void updateVirtMechPost();

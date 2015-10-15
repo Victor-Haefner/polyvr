@@ -1,13 +1,13 @@
 #ifndef VRVIDEO_H_INCLUDED
 #define VRVIDEO_H_INCLUDED
 
+#include "core/objects/VRObjectFwd.h"
 #include "core/utils/VRStorage.h"
 #include <OpenSG/OSGFieldContainerFields.h>
 
 namespace OSG {
     class Image;
     OSG_GEN_CONTAINERPTR(Image);
-    class VRMaterial;
 }
 
 using namespace std;
@@ -23,7 +23,7 @@ class VRVideo : public OSG::VRStorage {
         int height;
         int NStreams;
 
-        OSG::VRMaterial* material;
+        OSG::VRMaterialPtr material;
 
         AVFormatContext* vFile;
         AVCodecContext* vCodec;
@@ -33,7 +33,7 @@ class VRVideo : public OSG::VRStorage {
         int getStream(int j);
 
     public:
-        VRVideo(OSG::VRMaterial* mat);
+        VRVideo(OSG::VRMaterialPtr mat);
         ~VRVideo();
 
         void open(string f);

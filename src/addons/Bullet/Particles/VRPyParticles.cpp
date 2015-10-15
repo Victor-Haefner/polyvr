@@ -41,7 +41,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRParticles>::type = {
     0,                         /* tp_dictoffset */
     (initproc)init,      /* tp_init */
     0,                         /* tp_alloc */
-    New_VRObjects_unnamed,                 /* tp_new */
+    New_VRObjects_unnamed_ptr,                 /* tp_new */
 };
 
 PyMethodDef VRPyParticles::methods[] = {
@@ -55,12 +55,16 @@ PyMethodDef VRPyParticles::methods[] = {
     {NULL}  /* Sentinel */
 };
 
+void checkObj(VRPyParticles* self) {
+    if (self->objPtr == 0) self->objPtr = OSG::VRParticles::create();
+}
+
 PyObject* VRPyParticles::getGeometry(VRPyParticles* self) {
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyParticles::spawnCuboid(VRPyParticles* self, PyObject* args) {
-    if (self->obj == 0) self->obj = new OSG::VRParticles();
+    checkObj(self);
     OSG::Vec3f position;
     float x,y,z, a=1,b=1,c=1;
     char* mode = NULL; int modeLength=0;
@@ -72,11 +76,11 @@ PyObject* VRPyParticles::spawnCuboid(VRPyParticles* self, PyObject* args) {
     position.setValues(x, y, z);
     int num = 0;
     if (mode != NULL && strncmp(mode, "size", modeLength)==0) {
-        num = self->obj->spawnCuboid(position, OSG::VRParticles::SIZE, a,b,c);
+        num = self->objPtr->spawnCuboid(position, OSG::VRParticles::SIZE, a,b,c);
     } else if (mode != NULL && strncmp(mode, "liter", modeLength)==0) {
-        num = self->obj->spawnCuboid(position, OSG::VRParticles::LITER, a);
+        num = self->objPtr->spawnCuboid(position, OSG::VRParticles::LITER, a);
     } else {
-        num = self->obj->spawnCuboid(position);
+        num = self->objPtr->spawnCuboid(position);
     }
 
     // Py_RETURN_TRUE;
@@ -84,35 +88,35 @@ PyObject* VRPyParticles::spawnCuboid(VRPyParticles* self, PyObject* args) {
 }
 
 PyObject* VRPyParticles::setRadius(VRPyParticles* self, PyObject* args) {
-    if (self->obj == 0) self->obj = new OSG::VRParticles();
+    checkObj(self);
     float radius, variation;
     radius = variation = 0.0;
     if (! PyArg_ParseTuple(args, "f|f", &radius, &variation)) { Py_RETURN_FALSE; }
-    self->obj->setRadius(radius, variation);
+    self->objPtr->setRadius(radius, variation);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyParticles::setMass(VRPyParticles* self, PyObject* args) {
-    if (self->obj == 0) self->obj = new OSG::VRParticles();
+    checkObj(self);
     float mass, variation;
     mass = variation = 0.0;
     if (! PyArg_ParseTuple(args, "f|f", &mass, &variation)) { Py_RETURN_FALSE; }
-    self->obj->setMass(mass, variation);
+    self->objPtr->setMass(mass, variation);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyParticles::setMassByRadius(VRPyParticles* self, PyObject* args) {
-    if (self->obj == 0) self->obj = new OSG::VRParticles();
+    checkObj(self);
     float massFor1mRadius = 0.0;
     if (! PyArg_ParseTuple(args, "f", &massFor1mRadius)) { Py_RETURN_FALSE; }
-    self->obj->setMassByRadius(massFor1mRadius);
+    self->objPtr->setMassByRadius(massFor1mRadius);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyParticles::setMassForOneLiter(VRPyParticles* self, PyObject* args) {
-    if (self->obj == 0) self->obj = new OSG::VRParticles();
+    checkObj(self);
     float massPerLiter = 0.0;
     if (! PyArg_ParseTuple(args, "f", &massPerLiter)) { Py_RETURN_FALSE; }
-    self->obj->setMassForOneLiter(massPerLiter);
+    self->objPtr->setMassForOneLiter(massPerLiter);
     Py_RETURN_TRUE;
 }

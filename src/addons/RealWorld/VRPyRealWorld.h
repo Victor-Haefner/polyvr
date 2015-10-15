@@ -11,6 +11,8 @@ struct VRPyRealWorld : VRPyBaseT<realworld::RealWorld> {
     static PyObject* initWorld(VRPyRealWorld* self, PyObject* args);
     static PyObject* update(VRPyRealWorld* self, PyObject* args);
     static PyObject* physicalize(VRPyRealWorld* self, PyObject* args);
+    static PyObject* enableModule(VRPyRealWorld* self, PyObject* args);
+    static PyObject* disableModule(VRPyRealWorld* self, PyObject* args);
 };
 
 #endif // VRPYREALWORLD_H_INCLUDED

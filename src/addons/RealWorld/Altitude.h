@@ -53,7 +53,7 @@ namespace realworld {
         }
 
         void fillHeightArray(){
-            string hgtFile = "altitudes/" + getHGTFileName(cLat, cLng);
+            string hgtFile = "world/altitudes/" + getHGTFileName(cLat, cLng);
             std::ifstream file(hgtFile.c_str(), std::ios::in|std::ios::binary);
             if(!file)
             {

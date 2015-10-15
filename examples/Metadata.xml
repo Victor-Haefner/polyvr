@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scene name_suffix="0" base_name="testNEng" name_space="Scene">
+  <Objects>
+    <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
+      <Object name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
+        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="3.69992 -7.0352 7.67495" at="0 0 2" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
+          <Object name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
+        </Object>
+      </Object>
+    </Object>
+  </Objects>
+  <Rendering deferred_rendering="0" frustum_culling="1" occlusion_culling="0" ssao="0" two_sided="1"/>
+  <Scripts>
+    <Script name_suffix="0" base_name="init" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+	
+	N = 120
+	if not hasattr(VR, 'ne'):
+		VR.ne = VR.NumberingEngine()
+		root.addChild(VR.ne)
+		VR.ne.add(N)
+		
+	if not hasattr(VR, 'ae'): 
+		VR.ae = VR.AnnotationEngine('bla')
+		VR.getRoot().find('Headlight').addChild(VR.ae)
+		VR.ae.setColor([0,1,0,1])
+		VR.ae.setBackground([1,0,0,0.5])
+
+	for i in range(N):
+		VR.ne.set(i, [i*1,0.3*i,0], 0) # ID, position, value
+</core>
+      <arg type="VRPyObjectType" value="Headlight" name_suffix="0" base_name="root" name_space="init"/>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
+    </Script>
+    <Script name_suffix="0" base_name="update" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+	from math import pi, cos, sin
+	from random import shuffle
+	
+	# offset
+	if not hasattr(VR, 'offset'): VR.offset = 0
+	VR.offset += 0.01
+	if VR.offset &gt; 2*pi: VR.offset = 0
+	
+	# numbers
+	N = 120
+	da = 0.5
+	r = 3.5
+	if hasattr(VR, 'ne'):
+		for i in range(N):
+			a = da*i + VR.offset;
+			d = (a*180/pi)%360
+			VR.ne.set(i, [r*cos(a), r*sin(a),2*sin(a*8)], d) # ID, position, value
+	
+	#text	 
+	e = VR.ae
+	txt = 'This is a strange example'.split(' ')
+	shuffle(txt)
+	for i,t in enumerate(txt):
+		e.set(i, [-1,1-i*0.5,i*0.3*cos(VR.offset*10)], t)
+</core>
+      <trig type="on_timeout" dev="" state="Pressed" param="17" key="0" name_suffix="1" base_name="trigger" name_space="__global__"/>
+    </Script>
+  </Scripts>
+  <Sockets/>
+  <Background color="0.6 0.6 0.6" format=".png" path="" type="0"/>
+  <Navigation active="Orbit"/>
+  <Materials/>
+</Scene>

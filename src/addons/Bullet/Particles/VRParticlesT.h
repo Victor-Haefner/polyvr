@@ -1,6 +1,7 @@
 #ifndef VRPARTICLEST_H_INCLUDED
 #define VRPARTICLEST_H_INCLUDED
 
+#include "core/utils/VRFunctionFwd.h"
 #include "core/objects/material/VRMaterial.h"
 
 typedef boost::recursive_mutex::scoped_lock BLock;
@@ -10,7 +11,7 @@ OSG_BEGIN_NAMESPACE;
 template<class P>
 void VRParticles::resetParticles() {
 
-    VRScene* scene = VRSceneManager::getCurrent();
+    VRScenePtr scene = VRSceneManager::getCurrent();
     if (scene) world = scene->bltWorld();
 
     {
@@ -21,8 +22,7 @@ void VRParticles::resetParticles() {
     }
 
     // material
-    if (mat) delete mat;
-    mat = new VRMaterial("particles");
+    mat = VRMaterial::create("particles");
     mat->setDiffuse(Vec3f(0,0,1));
     mat->setPointSize(5);
     mat->setLit(false);

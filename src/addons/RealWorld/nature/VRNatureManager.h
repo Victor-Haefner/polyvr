@@ -8,7 +8,7 @@ using namespace std;
 
 class VRNatureManager {
 
-    map<VRScene*, list<VRTree*> > trees;
+    map<VRScene*, list<VRTreePtr> > trees;
 
     private:
         VRNatureManager() { ; }
@@ -22,7 +22,7 @@ class VRNatureManager {
         }
 
         void addTree(VRScene* scene) {
-            VRTree* t = new VRTree();
+            VRTreePtr t = new VRTree();
             trees[scene].push_back(t);
             scene->add(t);
         }

@@ -24,11 +24,8 @@ namespace realworld {
 
             // check if file exists
             ifstream ifile(filename.c_str());
-            if (ifile) {
-                ifile.close();
-            } else {
-                return NULL;
-            }
+            if (ifile) ifile.close();
+            else return NULL;
 
             MapData* mapData = new MapData();
             OSMMap* osmMap = OSMMap::loadMap(filename);

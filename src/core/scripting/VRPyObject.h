@@ -26,6 +26,7 @@ struct VRPyObject : VRPyBaseT<OSG::VRObject> {
     static PyObject* getChildren(VRPyObject* self, PyObject* args);
     static PyObject* getParent(VRPyObject* self);
     static PyObject* find(VRPyObject* self, PyObject* args);
+    static PyObject* findAll(VRPyObject* self, PyObject* args);
     static PyObject* isPickable(VRPyObject* self);
     static PyObject* setPickable(VRPyObject* self, PyObject* args);
     static PyObject* printOSG(VRPyObject* self);
@@ -36,6 +37,8 @@ struct VRPyObject : VRPyBaseT<OSG::VRObject> {
     static PyObject* hasAncestorWithTag(VRPyObject* self, PyObject* args);
     static PyObject* getChildrenWithTag(VRPyObject* self, PyObject* args);
     static PyObject* setTravMask(VRPyObject* self, PyObject* args);
+    static PyObject* setPersistency(VRPyObject* self, PyObject* args);
+    static PyObject* getPersistency(VRPyObject* self);
 };
 
 #endif // VRPYOBJECT_H_INCLUDED

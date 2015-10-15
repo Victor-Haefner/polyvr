@@ -17,7 +17,8 @@ class CSGGeometry : public VRGeometry {
         string operation = "unite";
         bool editMode = true;
         Matrix oldWorldTrans;
-        float THRESHOLD = 1e-4;
+        float thresholdL = 1e-4;
+        float thresholdA = 1e-8;
         Octree* oct = 0;
 
     protected:
@@ -26,11 +27,9 @@ class CSGGeometry : public VRGeometry {
         CGAL::Polyhedron* getCSGGeometry();
         size_t isKnownPoint(OSG::Pnt3f newPoint);
         GeometryTransitPtr toOsgGeometry(CGAL::Polyhedron* p);
-        CGAL::Polyhedron* toPolyhedron(GeometryRecPtr geometry, Matrix worldTransform);
+        CGAL::Polyhedron* toPolyhedron(GeometryRecPtr geometry, Matrix worldTransform, bool& success);
 
-        CGAL::Polyhedron* subtract(CGAL::Polyhedron* minuend, CGAL::Polyhedron* subtrahend);
-        CGAL::Polyhedron* unite(CGAL::Polyhedron* first, CGAL::Polyhedron* second);
-        CGAL::Polyhedron* intersect(CGAL::Polyhedron* first, CGAL::Polyhedron* second);
+        void operate(CGAL::Polyhedron* minuend, CGAL::Polyhedron* subtrahend);
 
         void enableEditMode();
         bool disableEditMode();
@@ -39,8 +38,14 @@ class CSGGeometry : public VRGeometry {
         void loadContent(xmlpp::Element* e);
 
     public:
-        CSGGeometry(std::string name);
+        CSGGeometry(string name);
         virtual ~CSGGeometry();
+
+        static CSGGeometryPtr create(string name);
+        CSGGeometryPtr ptr();
+
+        void setThreshold(float tL, float tA);
+        Vec2f getThreshold();
 
         bool setEditMode(bool b);
         bool getEditMode();
@@ -48,6 +53,8 @@ class CSGGeometry : public VRGeometry {
         void setOperation(string op);
         string getOperation();
         static vector<string> getOperations();
+
+        void markEdges(vector<Vec2i> edges);
 };
 
 OSG_END_NAMESPACE;

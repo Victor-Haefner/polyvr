@@ -5,7 +5,7 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 
-VRElectricDevice::VRElectricDevice(VRObject* obj, VRFunction<bool>* cb) : active(false), callback(cb), EDev(obj) {}
+VRElectricDevice::VRElectricDevice(VRObjectPtr obj, VRFunction<bool>* cb) : active(false), callback(cb), EDev(obj) {}
 
 bool VRElectricDevice::isActive() { return active; }
 
@@ -23,8 +23,9 @@ void VRElectricDevice::toggle(VRDevice* dev) {
     if (dev != 0 && EDev != 0) {
         VRIntersection ins = dev->intersect(EDev);
         if (!ins.hit) return;
-        if ( ins.object == 0 ) return;
-        if ( EDev->find(ins.object) == 0 ) return;
+        auto obj = ins.object.lock();
+        if ( obj == 0 ) return;
+        if ( EDev->find(obj) == 0 ) return;
     }
 
     if (active) turnOff();

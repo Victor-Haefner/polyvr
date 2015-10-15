@@ -2,18 +2,50 @@
 #define VRFRAMEWORK_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
-#include <OpenSG/OSGNode.h>
+#include <memory>
+
+class VROptions;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-void setMultisampling(bool on);
-void initPolyVR(int argc, char **argv);
+class Node;
+class VRSceneManager;
+class VRSetupManager;
+class VRInternalMonitor;
+class VRGuiManager;
+class VRMainInterface;
+class VRSceneLoader;
+class VRSoundManager;
 
-void startPolyVR();
-void exitPolyVR();
+class PolyVR {
+    private:
+        void setMultisampling(bool on);
 
-void startPolyVR_testScene(NodeRecPtr n);
+        shared_ptr<VRInternalMonitor> monitor;
+        shared_ptr<VRGuiManager> gui_mgr;
+        shared_ptr<VRMainInterface> interface;
+        shared_ptr<VRSceneLoader> loader;
+        shared_ptr<VRSetupManager> setup_mgr;
+        shared_ptr<VRSceneManager> scene_mgr;
+        shared_ptr<VRSoundManager> sound_mgr;
+        shared_ptr<VROptions> options;
+
+    public:
+        PolyVR();
+        ~PolyVR();
+        static PolyVR* get();
+        static void shutdown();
+
+        void init(int argc, char **argv);
+        void start();
+        void startTestScene(Node* n);
+
+        void setOption(string name, bool val);
+        void setOption(string name, string val);
+        void setOption(string name, int val);
+        void setOption(string name, float val);
+};
 
 OSG_END_NAMESPACE;
 

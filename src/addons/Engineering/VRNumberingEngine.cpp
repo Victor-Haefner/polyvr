@@ -48,6 +48,9 @@ void VRNumberingEngine::clear() {
     setMaterial(mat);
 }
 
+VRNumberingEnginePtr VRNumberingEngine::create() { return shared_ptr<VRNumberingEngine>(new VRNumberingEngine() ); }
+VRNumberingEnginePtr VRNumberingEngine::ptr() { return static_pointer_cast<VRNumberingEngine>( shared_from_this() ); }
+
 bool VRNumberingEngine::checkUIn(int grp) {
     if (grp < 0 || grp > (int)groups.size()) return true;
     return false;

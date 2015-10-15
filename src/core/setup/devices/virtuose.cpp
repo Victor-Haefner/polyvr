@@ -129,12 +129,12 @@ Matrix virtuose::getPose()
 }
 
 
-void virtuose::setBase(VRTransform* tBase) {
+void virtuose::setBase(VRTransformPtr tBase) {
     base = tBase;
 }
 
 
-void virtuose::attachTransform(VRTransform* trans)
+void virtuose::attachTransform(VRTransformPtr trans)
 {
     if(vc == 0) return;
 
@@ -199,9 +199,9 @@ void virtuose::Matrix3ToArray(btMatrix3x3 m, float *to)
 
 
 
-VRTransform* virtuose::detachTransform()
+VRTransformPtr virtuose::detachTransform()
 {
-    VRTransform* ret = 0;
+    VRTransformPtr ret = 0;
     if(vc == 0 || !isAttached) return ret;
     isAttached = false;
     CHECK(virtDetachVO(vc));
