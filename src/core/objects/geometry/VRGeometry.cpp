@@ -299,7 +299,7 @@ void VRGeometry::removeSelection(VRSelectionPtr sel) {
     auto pos = mesh->getPositions();
     auto norms = mesh->getNormals();
     auto cols = mesh->getColors();
-    if (!pos || !norms || !cols) return;
+    if (!pos) return;
     GeoPnt3fPropertyRecPtr new_pos = GeoPnt3fProperty::create();
     GeoVec3fPropertyRecPtr new_norms = GeoVec3fProperty::create();
     GeoUInt32PropertyRecPtr new_inds = GeoUInt32Property::create();
@@ -312,7 +312,7 @@ void VRGeometry::removeSelection(VRSelectionPtr sel) {
         int j = new_pos->size();
         if (mapit) mapping[i] = j;
         new_pos->addValue( pos->getValue<Pnt3f>(i) );
-        new_norms->addValue( norms->getValue<Vec3f>(i) );
+        if (norms) new_norms->addValue( norms->getValue<Vec3f>(i) );
         if (cols) {
             if (Nc == 3) new_cols->addValue( cols->getValue<Vec3f>(i) );
             if (Nc == 4) new_cols->addValue( cols->getValue<Vec4f>(i) );
@@ -351,10 +351,10 @@ void VRGeometry::removeSelection(VRSelectionPtr sel) {
 
     setType(GL_TRIANGLES);
     setPositions(new_pos);
-    setNormals(new_norms);
+    if (norms) setNormals(new_norms);
+    if (cols) setColors(new_cols);
     setIndices(new_inds);
     setLengths(new_lengths);
-    if (cols) setColors(new_cols);
 
     mesh->setIndex(mesh->getIndex(Geometry::PositionsIndex), Geometry::ColorsIndex);
     mesh->setIndex(mesh->getIndex(Geometry::PositionsIndex), Geometry::NormalsIndex);
