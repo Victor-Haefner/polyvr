@@ -14,29 +14,31 @@ VRSelector::VRSelector() {
     selection = VRSelection::create();
 }
 
+VRSelector::MatStore::MatStore(VRGeometryPtr geo) {
+    this->geo = geo;
+    mat = geo->getMaterial();
+}
+
 void VRSelector::update() {
-    if (!selection) return;
     deselect();
+    if (!selection) return;
 
     // highlight selected objects
     for (auto g : selection->getSelected()) {
         auto geo = g.lock();
         if (!geo) continue;
-
-        auto omat = geo->getMaterial();
-        orig_mats[geo.get()] = omat;
+        orig_mats.push_back(MatStore(geo));
 
         VRMaterialPtr mat = getMat();
-        //mat->appendPasses(omat);
-        mat->prependPasses(omat);
+        mat->prependPasses(geo->getMaterial());
         mat->setActivePass(0);
         mat->setStencilBuffer(true, 1,-1, GL_ALWAYS, GL_KEEP, GL_KEEP, GL_REPLACE);
         geo->setMaterial(mat);
     }
 
     // visualise subselections
-    if (subselection) subselection->destroy();
     subselection = VRGeometry::create("subsel");
+    subselection->setPersistency(0);
     for (auto m : selection->getSubselections()) {
         if (!m.first) continue;
         auto s = m.first->copySelection(selection);
@@ -44,10 +46,13 @@ void VRSelector::update() {
         subselection->merge(s);
     }
 
+    subselection->setType(GL_POINTS);
+
     auto m = VRMaterial::create("sel");
     m->setLit(false);
     m->setDiffuse(color);
     m->setFrontBackModes(GL_LINE, GL_LINE);
+    m->setPointSize(3);
     subselection->setMaterial(m);
 
     auto scene = VRSceneManager::getCurrent();
@@ -81,25 +86,13 @@ VRMaterialPtr VRSelector::getMat() {
 }
 
 void VRSelector::deselect() {
-    if (!selection) return;
-
-    for (auto g : selection->getSelected()) {
-        auto geo = g.lock();
-        if (!geo) continue;
-        if (orig_mats.count(geo.get()) == 0) continue;
-        geo->setMaterial(orig_mats[geo.get()]);
-    }
-
+    for (auto ms : orig_mats) if ( auto geo = ms.geo.lock() ) geo->setMaterial(ms.mat);
     orig_mats.clear();
-
     if (subselection) subselection->destroy();
     subselection.reset();
 }
 
-void VRSelector::clear() {
-    selection->clear();
-    update();
-}
+void VRSelector::clear() { selection->clear(); update(); }
 
 void VRSelector::select(VRObjectPtr obj) {
     clear();

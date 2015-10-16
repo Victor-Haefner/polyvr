@@ -14,7 +14,12 @@ using namespace std;
 class VRSelector {
     private:
         Vec3f color;
-        map<VRGeometry*, VRMaterialPtr> orig_mats;
+        struct MatStore {
+            VRGeometryWeakPtr geo;
+            VRMaterialPtr mat;
+            MatStore(VRGeometryPtr geo);
+        };
+        vector<MatStore> orig_mats;
         VRSelectionPtr selection;
         VRGeometryPtr subselection;
 

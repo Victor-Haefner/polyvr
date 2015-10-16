@@ -2,6 +2,7 @@
 #include "VRPySnappingEngine.h"
 #include "VRPySelector.h"
 #include "VRPyGeometry.h"
+#include "VRPyTypeCaster.h"
 #include "VRPyBaseT.h"
 
 template<> PyTypeObject VRPyBaseT<OSG::VRConstructionKit>::type = {
@@ -68,7 +69,7 @@ PyObject* VRPyConstructionKit::getObjects(VRPyConstructionKit* self) {
     auto objs = self->obj->getObjects();
     PyObject* res = PyList_New(objs.size());
     for (uint i=0; i<objs.size(); i++) {
-        PyList_SetItem(res, i, VRPyObject::fromSharedPtr(objs[i]));
+        PyList_SetItem(res, i, VRPyTypeCaster::cast(objs[i]));
     }
 
     return res;

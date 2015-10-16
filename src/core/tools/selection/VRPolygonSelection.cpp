@@ -11,6 +11,7 @@ VRPolygonSelection::VRPolygonSelection() {
     mat->setLit(0);
     mat->setLineWidth(3);
     shape = VRGeometry::create("PolygonSelection");
+    shape->setPersistency(0);
     shape->setMaterial(mat);
     selection.setNearFar(Vec2f(0.1,1000));
 }
