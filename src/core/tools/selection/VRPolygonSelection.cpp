@@ -58,7 +58,11 @@ bool VRPolygonSelection::objSelected(VRGeometryPtr geo) {
     bbox.update(v2);
 
     Vec3f p0 = origin.pos();
-    for (auto d : selection.getEdges()) if ( bbox.intersectedBy( Line(p0,d) ) ) return true;
+    for (auto d : selection.getEdges()) {
+        if ( bbox.intersectedBy( Line(p0,d) ) ) {
+            return true;
+        }
+    }
     return false;
 }
 

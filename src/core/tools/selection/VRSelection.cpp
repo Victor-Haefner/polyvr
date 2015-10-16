@@ -54,7 +54,11 @@ vector<VRGeometryWeakPtr> VRSelection::getPartials() {
 
 vector<VRGeometryWeakPtr> VRSelection::getSelected() {
     vector<VRGeometryWeakPtr> res;
-    for (auto g : selected) if (!g.second.partial) res.push_back(g.second.geo);
+    for (auto g : selected) {
+        if (!g.second.partial) {
+            res.push_back(g.second.geo);
+        }
+    }
     return res;
 }
 

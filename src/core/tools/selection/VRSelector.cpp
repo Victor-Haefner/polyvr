@@ -4,7 +4,8 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 
-//#include <OpenSG/OSGMaterial.h>
+#include <OpenSG/OSGGeometry.h>
+#include <OpenSG/OSGGeoProperties.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -46,7 +47,18 @@ void VRSelector::update() {
         subselection->merge(s);
     }
 
+    if (!subselection->getMesh()) return;
+    if (!subselection->getMesh()->getPositions()) return;
+    int N = subselection->getMesh()->getPositions()->size();
+
+    GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
+    GeoUInt32PropertyRecPtr lengths = GeoUInt32Property::create();
+    lengths->addValue(N);
+    for (int i=0; i<N; i++) inds->addValue(i);
+
     subselection->setType(GL_POINTS);
+    subselection->setLengths(lengths);
+    subselection->setIndices(inds);
 
     auto m = VRMaterial::create("sel");
     m->setLit(false);
@@ -101,8 +113,10 @@ void VRSelector::select(VRObjectPtr obj) {
 }
 
 void VRSelector::select(VRSelectionPtr s) {
-    clear();
-    selection = s;
+    if (s != selection) {
+        clear();
+        selection = s;
+    }
     update();
 }
 
