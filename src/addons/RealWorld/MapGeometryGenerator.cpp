@@ -1,5 +1,13 @@
 #include "MapGeometryGenerator.h"
 
+#include "core/scene/VRScene.h"
+#include "core/tools/VRText.h"
+#include "core/objects/geometry/VRGeometry.h"
+#include "core/utils/VRTimer.h"
+#include "World.h"
+#include "StreetAlgos.h"
+#include "TextureManager.h"
+
 using namespace OSG;
 
 GeometryData::GeometryData() { clear(); }
@@ -20,9 +28,7 @@ MapGeometryGenerator::MapGeometryGenerator(TextureManager* texManager) {
 }
 
 void MapGeometryGenerator::updateWorldGeometry(World* world) {
-    Timer t;
-    t.start("mgg-materials");
-    t.printTime("mgg-materials");
+    VRTimer t;
     t.start("mgg-unloading");
 
     // unload joints
@@ -41,9 +47,8 @@ void MapGeometryGenerator::updateWorldGeometry(World* world) {
         if (world->meshes.count(segId)) world->meshes.erase(segId);
     }
 
-    t.printTime("mgg-unloading");
-    t.start("mgg-loading");
-    t.printTime("mgg-loading");
+    t.stop();
+    t.print();
 
     // test physics stuff
     /*VRGeometryPtr sphere;

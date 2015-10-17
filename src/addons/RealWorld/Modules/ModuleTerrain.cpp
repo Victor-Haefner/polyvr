@@ -1,6 +1,7 @@
 #include "ModuleTerrain.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRPhysics.h"
+#include "core/objects/geometry/VRGeometry.h"
 #include "core/scene/VRSceneManager.h"
 #include "triangulate.h"
 

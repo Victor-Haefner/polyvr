@@ -3,11 +3,11 @@
 #include "MapGeometryGenerator.h"
 #include "MapCoordinator.h"
 #include <boost/format.hpp>
-#include "Timer.h"
 #include "Modules/BaseModule.h"
 
 #include "OSM/OSMMap.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRTimer.h"
 
 MapManager::MapManager(Vec2f position, MapGeometryGenerator* mapGeometryGenerator, MapCoordinator* mapCoordinator, World* world, VRObjectPtr root) {
     this->position = position;
@@ -101,7 +101,7 @@ MapData* MapManager::loadMap(string filename) {
             for (unsigned int i=0; i < way->nodeRefs.size()-1; i++) {
                 string nodeId1 = way->nodeRefs[i];
                 string nodeId2 = way->nodeRefs[i+1];
-                string segId = way->id + "-" + boost::to_string(i);
+                string segId = way->id + "-" + toString(i);
 
                 StreetSegment* seg = new StreetSegment(nodeId1, nodeId2, 2.1f, segId);
                 mapData->streetSegments.push_back(seg);

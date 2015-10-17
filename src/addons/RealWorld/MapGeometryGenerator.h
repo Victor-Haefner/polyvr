@@ -1,18 +1,14 @@
 #ifndef MAPGEOMETRYGENERATOR_H
 #define	MAPGEOMETRYGENERATOR_H
 
-#include "core/scene/VRScene.h"
-#include "core/tools/VRText.h"
-#include "core/objects/geometry/VRGeometry.h"
-#include "World.h"
-#include "StreetAlgos.h"
-#include "TextureManager.h"
-#include "Timer.h"
-
 #include <OpenSG/OSGGeoProperties.h>
+
+class TextureManager;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
+
+class World;
 
 struct GeometryData {
     GeoPnt3fPropertyRecPtr      pos;
@@ -26,14 +22,13 @@ struct GeometryData {
 };
 
 class MapGeometryGenerator {
-public:
-    //VRScene* scene;
-    TextureManager* texManager;
+    private:
+        TextureManager* texManager;
 
-    //MapGeometryGenerator(VRScene* scene, TextureManager* texManager) {
-    MapGeometryGenerator(TextureManager* texManager);
+    public:
+        MapGeometryGenerator(TextureManager* texManager);
 
-    void updateWorldGeometry(World* world);
+        void updateWorldGeometry(World* world);
 };
 
 OSG_END_NAMESPACE;

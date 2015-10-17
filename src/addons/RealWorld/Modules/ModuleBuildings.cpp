@@ -4,6 +4,7 @@
 #include "../OSM/OSMMapDB.h"
 #include "core/objects/material/VRShader.h"
 #include "core/objects/geometry/VRPhysics.h"
+#include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 #include "triangulate.h"
 #include "../Config.h"

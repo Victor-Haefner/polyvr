@@ -1,4 +1,5 @@
 #include "ModuleWalls.h"
+#include "core/objects/geometry/VRGeometry.h"
 
 using namespace OSG;
 

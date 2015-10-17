@@ -10,6 +10,7 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRSceneLoader.h"
 #include "OSM/OSMMapDB.h"
+#include "World.h"
 #include "MapCoordinator.h"
 #include "MapManager.h"
 //#include "TestMover.h"
