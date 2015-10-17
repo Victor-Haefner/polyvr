@@ -10,12 +10,12 @@
 #include "../Config.h"
 #include "../World.h"
 #include "core/scene/VRSceneManager.h"
+#include "../RealWorld.h"
+#include "../MapCoordinator.h"
 
 using namespace OSG;
 
-ModuleBuildings::ModuleBuildings(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, World* world) : BaseModule(mapCoordinator, world) {
-    this->mapDB = mapDB;
-
+ModuleBuildings::ModuleBuildings() : BaseModule("ModuleBuildings") {
     b_mat = VRMaterial::create("Buildings");
     b_mat->setTexture("world/textures/Buildings.png", false);
     b_mat->setAmbient(Color3f(0.7, 0.7, 0.7)); //light reflection in all directions
@@ -31,8 +31,6 @@ ModuleBuildings::ModuleBuildings(OSMMapDB* mapDB, MapCoordinator* mapCoordinator
     r_geo_d = new GeometryData();
 }
 
-string ModuleBuildings::getName() { return "ModuleBuildings"; }
-
 int ModuleBuildings::numberFromString(string s) {
     int hash = 0;
     int offset = 'a' - 1;
@@ -44,6 +42,8 @@ int ModuleBuildings::numberFromString(string s) {
 }
 
 void ModuleBuildings::loadBbox(AreaBoundingBox* bbox) {
+    auto mapDB = RealWorld::get()->getDB();
+    auto mc = RealWorld::get()->getCoordinator();
     OSMMap* osmMap = mapDB->getMap(bbox->str);
     if (!osmMap) return;
 
@@ -62,7 +62,7 @@ void ModuleBuildings::loadBbox(AreaBoundingBox* bbox) {
         Building* b = new Building(way->id);
         for(string nodeId : way->nodeRefs) {
             OSMNode* node = osmMap->osmNodeMap[nodeId];
-            Vec2f pos = this->mapCoordinator->realToWorld(Vec2f(node->lat, node->lon));
+            Vec2f pos = mc->realToWorld(Vec2f(node->lat, node->lon));
             b->positions.push_back(pos);
         }
 
@@ -238,12 +238,13 @@ void ModuleBuildings::addBuildingRoof(Building* building, float height, float el
 
 /** create one Building **/
 void ModuleBuildings::makeBuildingGeometry(Building* b) {
+    auto mc = RealWorld::get()->getCoordinator();
     int bNum = numberFromString(b->id);
     int height = bNum % Config::get()->MAX_FLOORS + 2;
     float minElevation = 99999.0f;
 
     for(auto corner : b->getCorners()){
-        float cornerElevation = this->mapCoordinator->getElevation(corner);
+        float cornerElevation = mc->getElevation(corner);
         if(cornerElevation < minElevation) minElevation = cornerElevation;
     }
 

@@ -3,24 +3,19 @@
 
 #include "BaseModule.h"
 #include "core/objects/VRObjectFwd.h"
+#include <map>
 #include <OpenSG/OSGVector.h>
-
-class TextureManager;
-class OSMMapDB;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class GeometryData;
-class MapCoordinator;
 class StreetJoint;
 class StreetSegment;
 
 class ModuleStreets: public BaseModule {
     public:
-        ModuleStreets(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, World* world);
-
-        virtual string getName();
+        ModuleStreets();
 
         virtual void loadBbox(AreaBoundingBox* bbox);
         virtual void unloadBbox(AreaBoundingBox* bbox);
@@ -29,7 +24,6 @@ class ModuleStreets: public BaseModule {
         Vec3f elevate(Vec2f p, float h);
 
     private:
-        OSMMapDB* mapDB;
         map<string, VRGeometryPtr> meshes;
         map<string, vector<VRGeometryPtr> > signs;
         VRMaterialPtr matStreet = 0;

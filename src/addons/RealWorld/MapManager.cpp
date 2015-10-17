@@ -7,6 +7,7 @@
 #include "OSM/OSMMap.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRTimer.h"
+#include "core/objects/object/VRObject.h"
 
 using namespace OSG;
 
@@ -63,12 +64,12 @@ MapData* MapManager::loadMap(string filename) {
     map<string, StreetJoint*> streetJointMap;
 
     // Load Bounds
-    mapData->boundsMin = this->mapCoordinator->realToWorld(Vec2f(osmMap->boundsMinLat, osmMap->boundsMinLon));
-    mapData->boundsMax = this->mapCoordinator->realToWorld(Vec2f(osmMap->boundsMaxLat, osmMap->boundsMaxLon));
+    mapData->boundsMin = mapCoordinator->realToWorld(Vec2f(osmMap->boundsMinLat, osmMap->boundsMinLon));
+    mapData->boundsMax = mapCoordinator->realToWorld(Vec2f(osmMap->boundsMaxLat, osmMap->boundsMaxLon));
 
     // Load StreetJoints
     for(OSMNode* node : osmMap->osmNodes) {
-        Vec2f pos = this->mapCoordinator->realToWorld(Vec2f(node->lat, node->lon));
+        Vec2f pos = mapCoordinator->realToWorld(Vec2f(node->lat, node->lon));
         StreetJoint* joint = new StreetJoint(pos, node->id);
         mapData->streetJoints.push_back(joint);
         joint->info = filename;
@@ -83,7 +84,7 @@ MapData* MapManager::loadMap(string filename) {
             Building* b = new Building(way->id);
             for(string nodeId : way->nodeRefs) {
                 OSMNode* node = osmMap->osmNodeMap[nodeId];
-                Vec2f pos = this->mapCoordinator->realToWorld(Vec2f(node->lat, node->lon));
+                Vec2f pos = mapCoordinator->realToWorld(Vec2f(node->lat, node->lon));
                 b->positions.push_back(pos);
             }
             mapData->buildings.push_back(b);

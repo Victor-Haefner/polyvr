@@ -4,13 +4,23 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/scene/VRSceneManager.h"
 #include "triangulate.h"
+#include "Terrain.h"
 #include "../Config.h"
+#include "../World.h"
+#include "../OSM/OSMMapDB.h"
+#include "../RealWorld.h"
+#include "../MapCoordinator.h"
 
 using namespace OSG;
 
-string ModuleTerrain::getName() { return "ModuleTerrain"; }
+ModuleTerrain::ModuleTerrain() : BaseModule("ModuleTerrain") {
+    // create List with materials
+    ModuleTerrain::fillTerrainList();
+}
 
 void ModuleTerrain::loadBbox(AreaBoundingBox* bbox) {
+    auto mapDB = RealWorld::get()->getDB();
+    auto mc = RealWorld::get()->getCoordinator();
     OSMMap* osmMap = mapDB->getMap(bbox->str);
     if (!osmMap) return;
 
@@ -24,7 +34,7 @@ void ModuleTerrain::loadBbox(AreaBoundingBox* bbox) {
                 Terrain* ter = new Terrain(way->id);
                 for (string nodeId : way->nodeRefs) {
                     OSMNode* node = osmMap->osmNodeMap[nodeId];
-                    Vec2f pos = this->mapCoordinator->realToWorld(Vec2f(node->lat, node->lon));
+                    Vec2f pos = mc->realToWorld(Vec2f(node->lat, node->lon));
                     ter->positions.push_back(pos);
                 }
 
@@ -41,6 +51,7 @@ void ModuleTerrain::loadBbox(AreaBoundingBox* bbox) {
 }
 
 void ModuleTerrain::unloadBbox(AreaBoundingBox* bbox) {
+    auto mapDB = RealWorld::get()->getDB();
     OSMMap* osmMap = mapDB->getMap(bbox->str);
     if (!osmMap) return;
     for (OSMWay* way : osmMap->osmWays) {
@@ -59,13 +70,6 @@ void ModuleTerrain::physicalize(bool b) {
         mesh.second->getPhysics()->setPhysicalized(true);
         mesh.second->getPhysics()->setShape("Concave");
     }
-}
-
-ModuleTerrain::ModuleTerrain(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, World* world) : BaseModule(mapCoordinator, world) {
-    this->mapDB = mapDB;
-
-    // create List with materials
-    ModuleTerrain::fillTerrainList();
 }
 
 void ModuleTerrain::fillTerrainList() {
@@ -160,7 +164,7 @@ void ModuleTerrain::addTerrain(Terrain* ter, GeometryData* gdTerrain, int height
     //float refX = result[0].GetX();
     //float refY = result[0].GetY();
 
-    //float scale = this->mapCoordinator->SCALE_REAL_TO_WORLD;
+    //float scale = mc->SCALE_REAL_TO_WORLD;
 
     for (int i=0; i<tcount; i++) {
         const Vector2d &p1 = result[i*3+0];
@@ -189,7 +193,8 @@ Vec3f ModuleTerrain::tesselateTriangle(float p1X, float p1Y, float p2X, float p2
     return tesselateTriangle(p1X, p1Y, p2X, p2Y, p3X, p3Y, height, gdTerrain, Vec3f(0,0,0));
 }
 
-Vec3f ModuleTerrain::tesselateTriangle(float p1X, float p1Y, float p2X, float p2Y, float p3X, float p3Y, float height, GeometryData* gdTerrain, Vec3f usedCorners){
+Vec3f ModuleTerrain::tesselateTriangle(float p1X, float p1Y, float p2X, float p2Y, float p3X, float p3Y, float height, GeometryData* gdTerrain, Vec3f usedCorners) {
+    auto mc = RealWorld::get()->getCoordinator();
     Vec3f res = Vec3f(0, 0, 0);
     Vec2f p1 = Vec2f(p1X, p1Y);
     Vec2f p2 = Vec2f(p2X, p2Y);
@@ -219,17 +224,17 @@ Vec3f ModuleTerrain::tesselateTriangle(float p1X, float p1Y, float p2X, float p2
     } else { //only if triangle is small enough, create geometry for it
 
         gdTerrain->norms->addValue(Vec3f(0, 1, 0));
-        gdTerrain->pos->addValue(Vec3f(p1X, this->mapCoordinator->getElevation(p1X,p1Y) + height, p1Y)); // + getHight(p1.GetX(), p1.GetY())
+        gdTerrain->pos->addValue(Vec3f(p1X, mc->getElevation(p1X,p1Y) + height, p1Y)); // + getHight(p1.GetX(), p1.GetY())
         gdTerrain->texs->addValue(p1/5);
         gdTerrain->inds->addValue(gdTerrain->inds->size());
 
         gdTerrain->norms->addValue(Vec3f(0, 1, 0));
-        gdTerrain->pos->addValue(Vec3f(p2X, this->mapCoordinator->getElevation(p2X, p2Y) + height, p2Y));
+        gdTerrain->pos->addValue(Vec3f(p2X, mc->getElevation(p2X, p2Y) + height, p2Y));
         gdTerrain->texs->addValue(p2/5);
         gdTerrain->inds->addValue(gdTerrain->inds->size());
 
         gdTerrain->norms->addValue(Vec3f(0, 1, 0));
-        gdTerrain->pos->addValue(Vec3f(p3X, this->mapCoordinator->getElevation(p3X, p3Y) + height, p3Y));
+        gdTerrain->pos->addValue(Vec3f(p3X, mc->getElevation(p3X, p3Y) + height, p3Y));
         gdTerrain->texs->addValue(p3/5);
         gdTerrain->inds->addValue(gdTerrain->inds->size());
 

@@ -29,6 +29,8 @@
 using namespace OSG;
 
 RealWorld::RealWorld(VRObjectPtr root) {
+    singelton = this;
+
     mapCoordinator = new MapCoordinator(Vec2f(49.005f, 8.395f), 0.002f); //Kreuzung Kriegsstr. und Karlstr.
     //mapCoordinator = new MapCoordinator(Vec2f(48.998969, 8.400171), 0.002f); // Tiergarten
     //mapCoordinator = new MapCoordinator(Vec2f(49.013606f, 8.418295f), 0.002f); // Fasanengarten, funktioniert nicht?
@@ -49,19 +51,26 @@ RealWorld::~RealWorld() {
     delete mapManager;
 }
 
+RealWorld* RealWorld::singelton = 0;
+
+RealWorld* RealWorld::get() { return singelton; }
+MapCoordinator* RealWorld::getCoordinator() { return mapCoordinator; }
+MapManager* RealWorld::getManager() { return mapManager; }
+World* RealWorld::getWorld() { return world; }
+OSMMapDB* RealWorld::getDB() { return mapDB; }
 TrafficSimulation* RealWorld::getTrafficSimulation() { return trafficSimulation; }
 void RealWorld::update(Vec3f pos) { mapManager->updatePosition( Vec2f(pos[0], pos[2]) ); }
 
 void RealWorld::enableModule(string mod, bool b) {
     if (b) {
-        if (mod == "Ground") mapManager->addModule(new ModuleFloor(mapCoordinator, world));
-        if (mod == "Streets") mapManager->addModule(new ModuleStreets(mapDB, mapCoordinator, world));
-        if (mod == "Buildings") mapManager->addModule(new ModuleBuildings(mapDB, mapCoordinator, world));
-        if (mod == "Walls") mapManager->addModule(new ModuleWalls(mapDB, mapCoordinator, world));
-        if (mod == "Terrain") mapManager->addModule(new ModuleTerrain(mapDB, mapCoordinator, world));
-        if (mod == "Trees") mapManager->addModule(new ModuleTree(mapDB, mapCoordinator, world));
+        if (mod == "Ground") mapManager->addModule(new ModuleFloor());
+        if (mod == "Streets") mapManager->addModule(new ModuleStreets());
+        if (mod == "Buildings") mapManager->addModule(new ModuleBuildings());
+        if (mod == "Walls") mapManager->addModule(new ModuleWalls());
+        if (mod == "Terrain") mapManager->addModule(new ModuleTerrain());
+        if (mod == "Trees") mapManager->addModule(new ModuleTree());
         if (mod == "Traffic") {
-            auto tsim = new ModuleTraffic(mapDB, mapCoordinator, world);
+            auto tsim = new ModuleTraffic();
             trafficSimulation = tsim->getTrafficSimulation();
             mapManager->addModule(tsim);
         }

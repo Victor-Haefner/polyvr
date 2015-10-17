@@ -2,7 +2,6 @@
 #define MODULETRAFFIC_H
 
 #include "../Modules/BaseModule.h"
-#include "../OSM/OSMMapDB.h"
 #include "TrafficSimulation.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -10,21 +9,15 @@ using namespace std;
 
 class ModuleTraffic: public BaseModule {
     private:
-        OSMMapDB* mapDB;
         TrafficSimulation* simulation;
 
     public:
-        ModuleTraffic(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, World* world);
-
+        ModuleTraffic();
         ~ModuleTraffic();
-
-        virtual string getName();
-
 
         TrafficSimulation *getTrafficSimulation();
 
         virtual void loadBbox(AreaBoundingBox* bbox);
-
         virtual void unloadBbox(AreaBoundingBox* bbox);
 
         void physicalize(bool b);

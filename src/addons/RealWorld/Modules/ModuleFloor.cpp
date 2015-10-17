@@ -3,14 +3,31 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/material/VRMaterial.h"
-
 #include "core/scene/VRSceneManager.h"
-#include "core/scene/VRScene.h"
+#include "../RealWorld.h"
+#include "../MapCoordinator.h"
 
 #include <GL/gl.h>
 #include <GL/glut.h>
 
 using namespace OSG;
+
+ModuleFloor::ModuleFloor() : BaseModule("ModuleFloor") {
+    // create material
+    matSubquad = VRMaterial::create("ground");
+    matSubquad->setTexture("world/textures/asphalt.jpg");
+    matSubquad->setAmbient(Color3f(0.5, 0.5, 0.5));
+    matSubquad->setDiffuse(Color3f(0.5, 0.6, 0.1));
+    matSubquad->setSpecular(Color3f(0.2, 0.2, 0.2));
+    string wdir = VRSceneManager::get()->getOriginalWorkdir();
+    matSubquad->readVertexShader(wdir+"/shader/TexturePhong/phong.vp");
+    matSubquad->readFragmentShader(wdir+"/shader/TexturePhong/phong.fp");
+    matSubquad->setMagMinFilter("GL_LINEAR", "GL_NEAREST_MIPMAP_NEAREST");
+    matSubquad->setZOffset(1,1);
+
+    //Config::createPhongShader(matSubquad);
+    //matSubquad->addChunk(world->texSubQuad);
+}
 
 VRGeometryPtr ModuleFloor::makeSubQuadGeometry(Vec2f pointA, Vec2f pointB) {
     vector<Vec3f> pos;
@@ -18,7 +35,7 @@ VRGeometryPtr ModuleFloor::makeSubQuadGeometry(Vec2f pointA, Vec2f pointB) {
     vector<int> inds;
     vector<Vec2f> texs;
 
-    MapCoordinator* mapC = this->mapCoordinator;
+    MapCoordinator* mapC = RealWorld::get()->getCoordinator();
 
     float x1 = pointA.getValues()[0];
     float y1 = pointA.getValues()[1];
@@ -84,28 +101,10 @@ VRGeometryPtr ModuleFloor::makeSubQuadGeometry(Vec2f pointA, Vec2f pointB) {
     return geom;
 }
 
-ModuleFloor::ModuleFloor(MapCoordinator* mapCoordinator, World* world) : BaseModule(mapCoordinator, world) {
-    // create material
-    matSubquad = VRMaterial::create("ground");
-    matSubquad->setTexture("world/textures/asphalt.jpg");
-    matSubquad->setAmbient(Color3f(0.5, 0.5, 0.5));
-    matSubquad->setDiffuse(Color3f(0.5, 0.6, 0.1));
-    matSubquad->setSpecular(Color3f(0.2, 0.2, 0.2));
-    string wdir = VRSceneManager::get()->getOriginalWorkdir();
-    matSubquad->readVertexShader(wdir+"/shader/TexturePhong/phong.vp");
-    matSubquad->readFragmentShader(wdir+"/shader/TexturePhong/phong.fp");
-    matSubquad->setMagMinFilter("GL_LINEAR", "GL_NEAREST_MIPMAP_NEAREST");
-    matSubquad->setZOffset(1,1);
-
-    //Config::createPhongShader(matSubquad);
-    //matSubquad->addChunk(world->texSubQuad);
-}
-
-string ModuleFloor::getName() { return "ModuleFloor"; }
-
 void ModuleFloor::loadBbox(AreaBoundingBox* bbox) {
-    Vec2f min = this->mapCoordinator->realToWorld(bbox->min);
-    Vec2f max = this->mapCoordinator->realToWorld(bbox->max);
+    auto mc = RealWorld::get()->getCoordinator();
+    Vec2f min = mc->realToWorld(bbox->min);
+    Vec2f max = mc->realToWorld(bbox->max);
 
     VRGeometryPtr geom = makeSubQuadGeometry(min, max);
     geom->setMaterial(matSubquad);

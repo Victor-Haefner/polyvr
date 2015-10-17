@@ -19,7 +19,6 @@ class AreaBoundingBox;
 
 class ModuleBuildings: public BaseModule {
     private:
-        OSMMapDB* mapDB;
         map<string,VRGeometryPtr> b_geos;
         map<string,VRGeometryPtr> r_geos;
         GeometryData* b_geo_d = 0;
@@ -35,11 +34,10 @@ class ModuleBuildings: public BaseModule {
         void makeBuildingGeometry(Building* b); /** create one Building **/
 
     public:
-        virtual string getName();
         virtual void loadBbox(AreaBoundingBox* bbox);
         virtual void unloadBbox(AreaBoundingBox* bbox);
         void physicalize(bool b);
-        ModuleBuildings(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, World* world);
+        ModuleBuildings();
 };
 
 OSG_END_NAMESPACE;

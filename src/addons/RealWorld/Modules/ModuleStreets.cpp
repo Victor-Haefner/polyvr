@@ -14,6 +14,8 @@
 #include "../StreetAlgos.h"
 #include "../World.h"
 #include "../Config.h"
+#include "../RealWorld.h"
+#include "../MapCoordinator.h"
 #include "core/objects/geometry/VRSprite.h"
 
 #include <boost/exception/to_string.hpp>
@@ -21,8 +23,7 @@
 
 using namespace OSG;
 
-ModuleStreets::ModuleStreets(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, World* world) : BaseModule(mapCoordinator, world) {
-    this->mapDB = mapDB;
+ModuleStreets::ModuleStreets() : BaseModule("ModuleStreets") {
     //this->streetHeight = Config::STREET_HEIGHT + Config::GROUND_LVL;
 
     // create material
@@ -39,8 +40,6 @@ ModuleStreets::ModuleStreets(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, Wo
     matStreet->setZOffset(-1,-1);
     //matStreet->setWireFrame(true);
 }
-
-string ModuleStreets::getName() { return "ModuleStreets"; }
 
 bool isStreet(OSMWay* way) {
     return (
@@ -68,6 +67,8 @@ bool isStreet(OSMWay* way) {
 }
 
 void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
+    auto mapDB = RealWorld::get()->getDB();
+    auto mc = RealWorld::get()->getCoordinator();
     OSMMap* osmMap = mapDB->getMap(bbox->str);
     if (!osmMap) return;
 
@@ -75,7 +76,7 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
     map<string, StreetSegment*> listLoadSegments;
 
     for (OSMNode* node : osmMap->osmNodes) { // Load StreetJoints
-        Vec2f pos = this->mapCoordinator->realToWorld(Vec2f(node->lat, node->lon));
+        Vec2f pos = mc->realToWorld(Vec2f(node->lat, node->lon));
         StreetJoint* joint = new StreetJoint(pos, node->id);
         listLoadJoints[node->id] = joint;
     }
@@ -321,7 +322,8 @@ void ModuleStreets::pushTriangle(Vec3f a1, Vec3f a2, Vec3f c, Vec3f normal, Geom
 }
 
 Vec3f ModuleStreets::elevate(Vec2f p, float h) {
-    return Vec3f(p[0], mapCoordinator->getElevation(p) + h, p[1]);
+    auto mc = RealWorld::get()->getCoordinator();
+    return Vec3f(p[0], mc->getElevation(p) + h, p[1]);
 }
 
 void ModuleStreets::makeStreetJointGeometry(StreetJoint* sj, map<string, StreetSegment*>& streets, map<string, StreetJoint*>& joints, GeometryData* geo) {

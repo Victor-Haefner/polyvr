@@ -1,12 +1,14 @@
 #include "ModuleWalls.h"
 #include "../Config.h"
+#include "../RealWorld.h"
+#include "../MapCoordinator.h"
 #include "core/objects/geometry/VRGeometry.h"
 
 using namespace OSG;
 
-string ModuleWalls::getName() { return "ModuleWall"; }
-
 void ModuleWalls::loadBbox(AreaBoundingBox* bbox) {
+    auto mapDB = RealWorld::get()->getDB();
+    auto mc = RealWorld::get()->getCoordinator();
     OSMMap* osmMap = mapDB->getMap(bbox->str);
     if (!osmMap) return;
 
@@ -22,7 +24,7 @@ void ModuleWalls::loadBbox(AreaBoundingBox* bbox) {
                 Wall* wall = new Wall(way->id);
                 for(string nodeId: way->nodeRefs) {
                     OSMNode* node = osmMap->osmNodeMap[nodeId];
-                    Vec2f pos = this->mapCoordinator->realToWorld(Vec2f(node->lat, node->lon));
+                    Vec2f pos = mc->realToWorld(Vec2f(node->lat, node->lon));
                     wall->positions.push_back(pos);
                 }
 
@@ -39,6 +41,7 @@ void ModuleWalls::loadBbox(AreaBoundingBox* bbox) {
 }
 
 void ModuleWalls::unloadBbox(AreaBoundingBox* bbox) {
+    auto mapDB = RealWorld::get()->getDB();
     OSMMap* osmMap = mapDB->getMap(bbox->str);
     if (!osmMap) return;
 
@@ -61,9 +64,7 @@ void ModuleWalls::physicalize(bool b) {
     //for (auto mesh : meshes);
 }
 
-ModuleWalls::ModuleWalls(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, World* world) : BaseModule(mapCoordinator, world) {
-    this->mapDB = mapDB;
-
+ModuleWalls::ModuleWalls() : BaseModule("ModuleWall") {
     // create List with materials
     fillWallList();
 }
@@ -79,7 +80,8 @@ void ModuleWalls::fillWallList() {
     addWall("brick_red.jpg", "barrier", "retaining_wall");
 }
 
-void ModuleWalls::addWall(string texture, string key, string value, float width, float height){
+void ModuleWalls::addWall(string texture, string key, string value, float width, float height) {
+    auto world = RealWorld::get()->getWorld();
     WallMaterial* w = new WallMaterial();
     w->material = SimpleMaterial::create();
     w->material->addChunk(world->getTexture(texture));
@@ -160,7 +162,8 @@ Vec2f ModuleWalls::getIntersection(Vec2f a1, Vec2f b1, Vec2f a2, Vec2f b2){
     return Vec2f(cx + dx*t, cy + dy*t);
 }
 
-void ModuleWalls::createWallSide(Vec2f a, Vec2f b, Vec2f normal2D, GeometryData* gdWall, float height){
+void ModuleWalls::createWallSide(Vec2f a, Vec2f b, Vec2f normal2D, GeometryData* gdWall, float height) {
+    auto mc = RealWorld::get()->getCoordinator();
     Vec3f normal = Vec3f(normal2D.getValues()[0], 0, normal2D.getValues()[1]);
     normal.normalize();
 
@@ -168,46 +171,47 @@ void ModuleWalls::createWallSide(Vec2f a, Vec2f b, Vec2f normal2D, GeometryData*
 
     gdWall->inds->addValue(gdWall->inds->size());
     gdWall->norms->addValue(normal);
-    gdWall->pos->addValue(Vec3f(a.getValues()[0], this->mapCoordinator->getElevation(a), a.getValues()[1]));
+    gdWall->pos->addValue(Vec3f(a.getValues()[0], mc->getElevation(a), a.getValues()[1]));
     gdWall->texs->addValue(Vec2f(0, 0));
 
     gdWall->inds->addValue(gdWall->inds->size());
     gdWall->norms->addValue(normal);
-    gdWall->pos->addValue(Vec3f(b.getValues()[0], this->mapCoordinator->getElevation(b), b.getValues()[1]));
+    gdWall->pos->addValue(Vec3f(b.getValues()[0], mc->getElevation(b), b.getValues()[1]));
     gdWall->texs->addValue(Vec2f(0, length));
 
     gdWall->inds->addValue(gdWall->inds->size());
     gdWall->norms->addValue(normal);
-    gdWall->pos->addValue(Vec3f(b.getValues()[0], this->mapCoordinator->getElevation(b) +  height, b.getValues()[1]));
+    gdWall->pos->addValue(Vec3f(b.getValues()[0], mc->getElevation(b) +  height, b.getValues()[1]));
     gdWall->texs->addValue(Vec2f(height, length));
 
     gdWall->inds->addValue(gdWall->inds->size());
     gdWall->norms->addValue(normal);
-    gdWall->pos->addValue(Vec3f(a.getValues()[0], this->mapCoordinator->getElevation(a) +  height, a.getValues()[1]));
+    gdWall->pos->addValue(Vec3f(a.getValues()[0], mc->getElevation(a) +  height, a.getValues()[1]));
     gdWall->texs->addValue(Vec2f(height, 0));
 }
 
-void ModuleWalls::createWallRoof(Vec2f a1, Vec2f a2, Vec2f b1, Vec2f b2, GeometryData* gdWall, float height){
+void ModuleWalls::createWallRoof(Vec2f a1, Vec2f a2, Vec2f b1, Vec2f b2, GeometryData* gdWall, float height) {
+    auto mc = RealWorld::get()->getCoordinator();
     //float length = (a1 - a2).length();
 
     gdWall->inds->addValue(gdWall->inds->size());
     gdWall->norms->addValue(Vec3f(0, 1, 0));
-    gdWall->pos->addValue(Vec3f(a1.getValues()[0], this->mapCoordinator->getElevation(a1) + height, a1.getValues()[1]));
+    gdWall->pos->addValue(Vec3f(a1.getValues()[0], mc->getElevation(a1) + height, a1.getValues()[1]));
     gdWall->texs->addValue(Vec2f(a1.getValues()[0], a1.getValues()[1]));
 
     gdWall->inds->addValue(gdWall->inds->size());
     gdWall->norms->addValue(Vec3f(0, 1, 0));
-    gdWall->pos->addValue(Vec3f(a2.getValues()[0], this->mapCoordinator->getElevation(a2) + height, a2.getValues()[1]));
+    gdWall->pos->addValue(Vec3f(a2.getValues()[0], mc->getElevation(a2) + height, a2.getValues()[1]));
     gdWall->texs->addValue(Vec2f(a2.getValues()[0], a2.getValues()[1]));
 
     gdWall->inds->addValue(gdWall->inds->size());
     gdWall->norms->addValue(Vec3f(0, 1, 0));
-    gdWall->pos->addValue(Vec3f(b2.getValues()[0], this->mapCoordinator->getElevation(b2) +  height, b2.getValues()[1]));
+    gdWall->pos->addValue(Vec3f(b2.getValues()[0], mc->getElevation(b2) +  height, b2.getValues()[1]));
     gdWall->texs->addValue(Vec2f(b2.getValues()[0], b2.getValues()[1]));
 
     gdWall->inds->addValue(gdWall->inds->size());
     gdWall->norms->addValue(Vec3f(0, 1, 0));
-    gdWall->pos->addValue(Vec3f(b1.getValues()[0], this->mapCoordinator->getElevation(b1) +  height, b1.getValues()[1]));
+    gdWall->pos->addValue(Vec3f(b1.getValues()[0], mc->getElevation(b1) +  height, b1.getValues()[1]));
     gdWall->texs->addValue(Vec2f(b1.getValues()[0], b1.getValues()[1]));
 }
 

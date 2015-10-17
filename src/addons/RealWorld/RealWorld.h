@@ -28,6 +28,7 @@ class RealWorld {
         OSMMapDB* mapDB = 0;
         TrafficSimulation* trafficSimulation = 0; // Needed for script access
         static Altitude altitude; // constructor runs once, single instance
+        static RealWorld* singelton;
 
         bool physicalized = false;
 
@@ -35,12 +36,17 @@ class RealWorld {
         RealWorld(OSG::VRObjectPtr root);
         ~RealWorld();
 
+        static RealWorld* get();
+
+        void enableModule(string mod, bool b);
         void update(OSG::Vec3f pos);
+        void physicalize(bool b);
 
         TrafficSimulation* getTrafficSimulation();
-
-        void physicalize(bool b);
-        void enableModule(string mod, bool b);
+        MapCoordinator* getCoordinator();
+        MapManager* getManager();
+        World* getWorld();
+        OSMMapDB* getDB();
 };
 
 OSG_END_NAMESPACE;

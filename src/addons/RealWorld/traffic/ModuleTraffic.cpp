@@ -2,27 +2,28 @@
 #include "core/scene/VRThreadManager.h"
 #include "core/utils/VRFunction.h"
 #include "core/scene/VRSceneManager.h"
+#include "../OSM/OSMMapDB.h"
+#include "../RealWorld.h"
+#include <boost/bind.hpp>
 
 using namespace OSG;
 
 
-ModuleTraffic::ModuleTraffic(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, World* world) : BaseModule(mapCoordinator, world) {
-    this->mapDB = mapDB;
-    this->simulation = new TrafficSimulation(mapCoordinator);
+ModuleTraffic::ModuleTraffic() : BaseModule("ModuleTraffic") {
+    auto mc = RealWorld::get()->getCoordinator();
+    this->simulation = new TrafficSimulation(mc);
 }
 
 ModuleTraffic::~ModuleTraffic() {
     delete simulation;
 }
 
-string ModuleTraffic::getName() { return "ModuleTraffic"; }
-
-
 TrafficSimulation* ModuleTraffic::getTrafficSimulation() {
     return simulation;
 }
 
 void ModuleTraffic::loadBbox(AreaBoundingBox* bbox) {
+    auto mapDB = RealWorld::get()->getDB();
     OSMMap* osmMap = mapDB->getMap(bbox->str);
     if (!osmMap) return;
 
@@ -31,6 +32,7 @@ void ModuleTraffic::loadBbox(AreaBoundingBox* bbox) {
 }
 
 void ModuleTraffic::unloadBbox(AreaBoundingBox* bbox) {
+    auto mapDB = RealWorld::get()->getDB();
     OSMMap* osmMap = mapDB->getMap(bbox->str);
     if (!osmMap) return;
 

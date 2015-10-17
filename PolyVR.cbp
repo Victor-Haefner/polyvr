@@ -282,7 +282,6 @@
 		<Unit filename="src/addons/RealWorld/MapCoordinator.h" />
 		<Unit filename="src/addons/RealWorld/MapData.cpp" />
 		<Unit filename="src/addons/RealWorld/MapData.h" />
-		<Unit filename="src/addons/RealWorld/MapGeometryGenerator.h" />
 		<Unit filename="src/addons/RealWorld/MapManager.cpp" />
 		<Unit filename="src/addons/RealWorld/MapManager.h" />
 		<Unit filename="src/addons/RealWorld/MeshGenerator.h" />
@@ -325,7 +324,6 @@
 		<Unit filename="src/addons/RealWorld/StreetAlgos.h" />
 		<Unit filename="src/addons/RealWorld/StreetBorder.h" />
 		<Unit filename="src/addons/RealWorld/TestMover.h" />
-		<Unit filename="src/addons/RealWorld/TextureManager.h" />
 		<Unit filename="src/addons/RealWorld/VRPyRealWorld.cpp" />
 		<Unit filename="src/addons/RealWorld/VRPyRealWorld.h" />
 		<Unit filename="src/addons/RealWorld/Vec2Helper.cpp" />

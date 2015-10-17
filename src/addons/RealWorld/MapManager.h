@@ -11,16 +11,14 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class World;
-class MapGeometryGenerator;
 class MapCoordinator;
 class BaseModule;
 class AreaBoundingBox;
 class MapData;
 
 class MapManager {
-    public:
+    private:
         Vec2f position;
-        MapGeometryGenerator* mapGeometryGenerator;
         MapCoordinator* mapCoordinator;
         World* world;
         vector<BaseModule*> modules;
@@ -28,20 +26,16 @@ class MapManager {
 
         map<string, AreaBoundingBox*> loadedBboxes;
 
+        void unloadBbox(AreaBoundingBox* bbox);
+        void loadBboxIfNecessary(AreaBoundingBox* bbox);
+        MapData* loadMap(string filename);
+
+    public:
         MapManager(Vec2f position, MapCoordinator* mapCoordinator, World* world, VRObjectPtr root);
 
         void addModule(BaseModule* mod);
-
         void updatePosition(Vec2f worldPosition);
-
         void physicalize(bool b);
-
-    private:
-        void unloadBbox(AreaBoundingBox* bbox);
-
-        void loadBboxIfNecessary(AreaBoundingBox* bbox);
-
-        MapData* loadMap(string filename);
 };
 
 OSG_END_NAMESPACE;

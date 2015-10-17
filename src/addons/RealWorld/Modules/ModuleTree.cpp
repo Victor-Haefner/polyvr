@@ -2,16 +2,18 @@
 #include "BaseWorldObject.h"
 #include "../OSM/OSMNode.h"
 #include "../Config.h"
+#include "../RealWorld.h"
+#include "../World.h"
+#include "../MapCoordinator.h"
 #include "core/objects/material/VRShader.h"
 #include "addons/RealWorld/nature/VRTree.h"
+#include <OpenSG/OSGTextureObjChunk.h>
 
 using namespace OSG;
 
-string ModuleTree::getName() { return "ModuleTree"; }
-
-ModuleTree::ModuleTree(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, World* world) : BaseModule(mapCoordinator, world) {
-    this->mapDB = mapDB;
+ModuleTree::ModuleTree() : BaseModule("ModuleTree") {
     this->treeCounter = 0;
+    auto world = RealWorld::get()->getWorld();
 
     // Enable blending
     //glEnable(GL_BLEND);
@@ -31,7 +33,8 @@ ModuleTree::ModuleTree(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, World* w
     }
 }
 
-void ModuleTree::loadBbox(AreaBoundingBox* bbox){
+void ModuleTree::loadBbox(AreaBoundingBox* bbox) {
+    auto mc = RealWorld::get()->getCoordinator();
     OSMMap* osmMap = mapDB->getMap(bbox->str);
     if (!osmMap) return;
 
@@ -39,8 +42,8 @@ void ModuleTree::loadBbox(AreaBoundingBox* bbox){
 
     for (OSMNode* node : osmMap->osmNodes) {
             if(node->tags["natural"] == "tree"){
-                Vec2f pos2D = this->mapCoordinator->realToWorld(Vec2f(node->lat, node->lon));
-                Vec3f pos3D = Vec3f(pos2D.getValues()[0], this->mapCoordinator->getElevation(pos2D), pos2D.getValues()[1]);
+                Vec2f pos2D = mc->realToWorld(Vec2f(node->lat, node->lon));
+                Vec3f pos3D = Vec3f(pos2D.getValues()[0], mc->getElevation(pos2D), pos2D.getValues()[1]);
 
                 VRTreePtr tree = VRTree::create();
                 tree->setFrom(pos3D);

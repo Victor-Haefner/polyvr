@@ -22,21 +22,15 @@ struct WallMaterial {
 
 class ModuleWalls: public BaseModule {
     public:
-        virtual string getName();
-
         virtual void loadBbox(AreaBoundingBox* bbox);
-
         virtual void unloadBbox(AreaBoundingBox* bbox);
 
         void physicalize(bool b);
 
-        ModuleWalls(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, World* world);
+        ModuleWalls();
 
     private:
         vector<WallMaterial*> wallList;
-        //TerrainMaterials* matTerrain;
-        OSMMapDB* mapDB;
-        //map<string, VRGeometryPtr> meshes;
 
         void fillWallList();
 
@@ -52,9 +46,7 @@ class ModuleWalls: public BaseModule {
         //to do
         void addWall(Wall* wall, GeometryData* gdWall, float width, float height);
 
-
         VRGeometryPtr makeWallGeometry(Wall* wall, WallMaterial* wallMat);
-
 };
 
 OSG_END_NAMESPACE;
