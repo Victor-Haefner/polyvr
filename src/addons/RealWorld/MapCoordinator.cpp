@@ -1,5 +1,7 @@
 #include "MapCoordinator.h"
 #include "Elevation.h"
+#include "Altitude.h"
+#include "Config.h"
 
 using namespace OSG;
 

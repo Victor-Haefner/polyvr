@@ -1,6 +1,7 @@
 #include "ModuleTree.h"
 #include "BaseWorldObject.h"
 #include "../OSM/OSMNode.h"
+#include "../Config.h"
 #include "core/objects/material/VRShader.h"
 #include "addons/RealWorld/nature/VRTree.h"
 
@@ -8,7 +9,7 @@ using namespace OSG;
 
 string ModuleTree::getName() { return "ModuleTree"; }
 
-ModuleTree::ModuleTree(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, TextureManager* texManager) : BaseModule(mapCoordinator, texManager) {
+ModuleTree::ModuleTree(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, World* world) : BaseModule(mapCoordinator, world) {
     this->mapDB = mapDB;
     this->treeCounter = 0;
 
@@ -19,7 +20,7 @@ ModuleTree::ModuleTree(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, TextureM
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     glEnable (GL_BLEND);
     glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    for(TextureObjChunkRecPtr matTex : texManager->getTreeMap()){
+    for(TextureObjChunkRecPtr matTex : world->getTreeMap()){
         SimpleMaterialRecPtr mat;
         // create material
         mat = SimpleMaterial::create();

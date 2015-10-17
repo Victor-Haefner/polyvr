@@ -6,7 +6,7 @@
 using namespace OSG;
 
 
-ModuleTraffic::ModuleTraffic(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, TextureManager* texManager) : BaseModule(mapCoordinator, texManager) {
+ModuleTraffic::ModuleTraffic(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, World* world) : BaseModule(mapCoordinator, world) {
     this->mapDB = mapDB;
     this->simulation = new TrafficSimulation(mapCoordinator);
 }

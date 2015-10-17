@@ -39,7 +39,7 @@ class ModuleBuildings: public BaseModule {
         virtual void loadBbox(AreaBoundingBox* bbox);
         virtual void unloadBbox(AreaBoundingBox* bbox);
         void physicalize(bool b);
-        ModuleBuildings(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, TextureManager* texManager);
+        ModuleBuildings(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, World* world);
 };
 
 OSG_END_NAMESPACE;

@@ -15,7 +15,7 @@ class pose {
         pose();
         pose(Vec3f p, Vec3f d, Vec3f u);
         void set(Vec3f p, Vec3f d, Vec3f u);
-        static shared_ptr<pose> create(Vec3f p, Vec3f d, Vec3f u);
+        static std::shared_ptr<pose> create(Vec3f p, Vec3f d, Vec3f u);
 
         Vec3f pos();
         Vec3f dir();

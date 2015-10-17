@@ -18,7 +18,7 @@ class StreetSegment;
 
 class ModuleStreets: public BaseModule {
     public:
-        ModuleStreets(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, TextureManager* texManager);
+        ModuleStreets(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, World* world);
 
         virtual string getName();
 

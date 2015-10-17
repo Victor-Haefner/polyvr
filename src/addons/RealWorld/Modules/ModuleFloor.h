@@ -18,7 +18,7 @@ class ModuleFloor : public BaseModule {
         VRGeometryPtr makeSubQuadGeometry(Vec2f pointA, Vec2f pointB);
 
     public:
-        ModuleFloor(MapCoordinator* mapCoordinator, TextureManager* texManager);
+        ModuleFloor(MapCoordinator* mapCoordinator, World* world);
 
         virtual string getName();
 

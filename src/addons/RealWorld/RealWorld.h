@@ -10,25 +10,21 @@
 #include "core/objects/VRObjectFwd.h"
 #include "Altitude.h"
 
-class TrafficSimulation;
-class TextureManager;
 class OSMMapDB;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+class TrafficSimulation;
 class MapCoordinator;
-class MapGeometryGenerator;
 class World;
 class MapManager;
 
 class RealWorld {
     private:
         MapCoordinator* mapCoordinator = 0;
-        MapGeometryGenerator* mapGeometryGenerator = 0;
         World* world = 0;
         MapManager* mapManager = 0;
-        TextureManager* texManager = 0;
         OSMMapDB* mapDB = 0;
         TrafficSimulation* trafficSimulation = 0; // Needed for script access
         static Altitude altitude; // constructor runs once, single instance

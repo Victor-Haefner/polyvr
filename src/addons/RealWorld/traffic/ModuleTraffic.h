@@ -14,7 +14,7 @@ class ModuleTraffic: public BaseModule {
         TrafficSimulation* simulation;
 
     public:
-        ModuleTraffic(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, TextureManager* texManager);
+        ModuleTraffic(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, World* world);
 
         ~ModuleTraffic();
 

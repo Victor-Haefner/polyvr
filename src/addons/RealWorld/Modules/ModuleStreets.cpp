@@ -12,7 +12,8 @@
 #include "StreetJoint.h"
 #include "StreetSegment.h"
 #include "../StreetAlgos.h"
-#include "../MapGeometryGenerator.h"
+#include "../World.h"
+#include "../Config.h"
 #include "core/objects/geometry/VRSprite.h"
 
 #include <boost/exception/to_string.hpp>
@@ -20,7 +21,7 @@
 
 using namespace OSG;
 
-ModuleStreets::ModuleStreets(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, TextureManager* texManager) : BaseModule(mapCoordinator, texManager) {
+ModuleStreets::ModuleStreets(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, World* world) : BaseModule(mapCoordinator, world) {
     this->mapDB = mapDB;
     //this->streetHeight = Config::STREET_HEIGHT + Config::GROUND_LVL;
 

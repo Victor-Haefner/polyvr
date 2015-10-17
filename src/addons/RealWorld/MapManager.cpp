@@ -1,6 +1,5 @@
 #include "MapManager.h"
 #include "World.h"
-#include "MapGeometryGenerator.h"
 #include "MapCoordinator.h"
 #include <boost/format.hpp>
 #include "Modules/BaseModule.h"
@@ -9,9 +8,10 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRTimer.h"
 
-MapManager::MapManager(Vec2f position, MapGeometryGenerator* mapGeometryGenerator, MapCoordinator* mapCoordinator, World* world, VRObjectPtr root) {
+using namespace OSG;
+
+MapManager::MapManager(Vec2f position, MapCoordinator* mapCoordinator, World* world, VRObjectPtr root) {
     this->position = position;
-    this->mapGeometryGenerator = mapGeometryGenerator;
     this->mapCoordinator = mapCoordinator;
     this->world = world;
     this->root = root;

@@ -4,11 +4,33 @@
 #include "MapData.h"
 #include "core/objects/VRObjectFwd.h"
 #include <map>
+#include <OpenSG/OSGGeoProperties.h>
+#include <OpenSG/OSGTextureObjChunk.h>
+
+class TextureManager;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+struct GeometryData {
+    GeoPnt3fPropertyRecPtr      pos;
+    GeoVec3fPropertyRefPtr      norms;
+    GeoUInt32PropertyRefPtr     inds;
+    GeoVec2fPropertyRecPtr      texs;
+    GeoVec2fPropertyRecPtr      texs2;
+
+    GeometryData();
+    void clear();
+};
+
 class World {
+    private:
+        TextureObjChunkRecPtr texStreetSegment;
+        TextureObjChunkRecPtr texStreetJoint;
+        TextureObjChunkRecPtr texSubQuad;
+        vector<TextureObjChunkRecPtr> treeMapList;
+        map<string, TextureObjChunkRecPtr> texMap;
+
     public:
         map<string, VRGeometryPtr> meshes;
         map<string, StreetJoint*> streetJoints;
@@ -26,6 +48,14 @@ class World {
 
         vector<MapData*> listUnloadAreaMeshes;
         vector<MapData*> listLoadAreaMeshes;
+
+        World();
+
+        void updateGeometry();
+
+        TextureObjChunkRecPtr getTexture(string key);
+
+        vector<TextureObjChunkRecPtr> getTreeMap();
 };
 
 OSG_END_NAMESPACE;

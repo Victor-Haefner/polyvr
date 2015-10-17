@@ -84,7 +84,7 @@ VRGeometryPtr ModuleFloor::makeSubQuadGeometry(Vec2f pointA, Vec2f pointB) {
     return geom;
 }
 
-ModuleFloor::ModuleFloor(MapCoordinator* mapCoordinator, TextureManager* texManager) : BaseModule(mapCoordinator, texManager) {
+ModuleFloor::ModuleFloor(MapCoordinator* mapCoordinator, World* world) : BaseModule(mapCoordinator, world) {
     // create material
     matSubquad = VRMaterial::create("ground");
     matSubquad->setTexture("world/textures/asphalt.jpg");
@@ -98,7 +98,7 @@ ModuleFloor::ModuleFloor(MapCoordinator* mapCoordinator, TextureManager* texMana
     matSubquad->setZOffset(1,1);
 
     //Config::createPhongShader(matSubquad);
-    //matSubquad->addChunk(texManager->texSubQuad);
+    //matSubquad->addChunk(world->texSubQuad);
 }
 
 string ModuleFloor::getName() { return "ModuleFloor"; }

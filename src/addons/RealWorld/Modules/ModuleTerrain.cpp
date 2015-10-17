@@ -4,6 +4,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/scene/VRSceneManager.h"
 #include "triangulate.h"
+#include "../Config.h"
 
 using namespace OSG;
 
@@ -60,7 +61,7 @@ void ModuleTerrain::physicalize(bool b) {
     }
 }
 
-ModuleTerrain::ModuleTerrain(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, TextureManager* texManager) : BaseModule(mapCoordinator, texManager) {
+ModuleTerrain::ModuleTerrain(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, World* world) : BaseModule(mapCoordinator, world) {
     this->mapDB = mapDB;
 
     // create List with materials

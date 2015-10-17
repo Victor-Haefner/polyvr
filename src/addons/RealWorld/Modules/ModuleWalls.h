@@ -3,7 +3,7 @@
 
 #include "../OSM/OSMMapDB.h"
 #include "BaseModule.h"
-#include "../MapGeometryGenerator.h"
+#include "../World.h"
 #include "core/objects/material/VRShader.h"
 #include "triangulate.h"
 #include "Wall.h"
@@ -30,7 +30,7 @@ class ModuleWalls: public BaseModule {
 
         void physicalize(bool b);
 
-        ModuleWalls(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, TextureManager* texManager);
+        ModuleWalls(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, World* world);
 
     private:
         vector<WallMaterial*> wallList;

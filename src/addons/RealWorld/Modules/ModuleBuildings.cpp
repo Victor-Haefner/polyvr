@@ -8,12 +8,12 @@
 #include "core/objects/material/VRMaterial.h"
 #include "triangulate.h"
 #include "../Config.h"
-#include "../MapGeometryGenerator.h"
+#include "../World.h"
 #include "core/scene/VRSceneManager.h"
 
 using namespace OSG;
 
-ModuleBuildings::ModuleBuildings(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, TextureManager* texManager) : BaseModule(mapCoordinator, texManager) {
+ModuleBuildings::ModuleBuildings(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, World* world) : BaseModule(mapCoordinator, world) {
     this->mapDB = mapDB;
 
     b_mat = VRMaterial::create("Buildings");

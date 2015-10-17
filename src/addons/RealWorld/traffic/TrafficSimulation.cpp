@@ -1,13 +1,19 @@
-#include <boost/lexical_cast.hpp>
-#include <boost/bind.hpp>
-
 #include "core/scene/VRSceneLoader.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/geometry/VRGeometry.h"
 #include "core/utils/toString.h"
 #include "../Config.h"
 #include "TrafficSimulation.h"
+#include "../MapCoordinator.h"
+#include "../OSM/OSMMap.h"
+#include "../OSM/OSMNode.h"
+
+#include <boost/bind.hpp>
+#include <boost/thread/locks.hpp>
+
+using namespace OSG;
 
 /**
  * Splits a string at the given character.
@@ -812,8 +818,8 @@ void TrafficSimulation::update() {
 
                 // Get the node positions
                 Vec2f atPos, toPos;
-                string atId = lexical_cast<string>(lightpost["at"].asUInt());
-                string toId = lexical_cast<string>(lightpost["to"].asUInt());
+                string atId = toString(lightpost["at"].asUInt());
+                string toId = toString(lightpost["to"].asUInt());
                 bool foundAt = false, foundTo = false;
                 for (auto mapIter : loadedMaps) {
                     for (auto nodeIter : mapIter->osmNodes) {

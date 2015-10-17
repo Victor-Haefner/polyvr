@@ -1,20 +1,24 @@
 #ifndef TRAFFICSIMULATION_H
 #define TRAFFICSIMULATION_H
 
+#include "core/objects/VRObjectFwd.h"
+#include "JsonClient.h"
+
 #include <set>
 #include <map>
 #include <boost/thread/mutex.hpp>
-#include <boost/thread/locks.hpp>
+#include <OpenSG/OSGVector.h>
 
-#include "core/objects/geometry/VRGeometry.h"
-#include "../MapCoordinator.h"
-#include "../OSM/OSMMap.h"
-#include "JsonClient.h"
+class OSMMap;
+class OSMNode;
+class OSMWay;
 
-namespace OSG { class VRThread; }
-
+OSG_BEGIN_NAMESPACE;
 using namespace std;
 using namespace boost;
+
+class VRThread;
+class MapCoordinator;
 
 /// @addtogroup module_traffic
 /// @{
@@ -56,22 +60,22 @@ class TrafficSimulation {
             /**
              * The position of the vehicle.
              */
-            OSG::Vec3f pos;
+            Vec3f pos;
 
             /**
              * The movement which is added to the vehicle every second.
              */
-            OSG::Vec3f deltaPos;
+            Vec3f deltaPos;
 
             /**
              * The orientation of the vehicle.
              */
-            OSG::Vec3f orientation;
+            Vec3f orientation;
 
             /**
              * The rotation which is added to the orientation every second.
              */
-            OSG::Vec3f deltaOrientation;
+            Vec3f deltaOrientation;
 
             /**
              * Possible state-flags for this vehicle.
@@ -223,7 +227,7 @@ class TrafficSimulation {
          A helper method to fetch the data from the server.
          Will be called repetitive while the simulator is running.
          */
-        void communicationThread(std::weak_ptr<OSG::VRThread> t);
+        void communicationThread(std::weak_ptr<VRThread> t);
 
         /**
          * A mutex that will be locked if the communication thread is running.
@@ -397,10 +401,13 @@ class TrafficSimulation {
          * @param pos The position to move to.
          * @param orientation The new orientation of the vehicle.
          */
-        void setVehiclePosition(const unsigned int id, const OSG::Vec3f& pos, const OSG::Vec3f& orientation);
+        void setVehiclePosition(const unsigned int id, const Vec3f& pos, const Vec3f& orientation);
 
         /// @}
 };
 
 /// @}
+
+OSG_END_NAMESPACE;
+
 #endif

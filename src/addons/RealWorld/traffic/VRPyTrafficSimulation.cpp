@@ -4,7 +4,7 @@
 #include "core/scripting/VRPyBaseT.h"
 #include "../RealWorld.h"
 
-template<> PyTypeObject VRPyBaseT<TrafficSimulation>::type = {
+template<> PyTypeObject VRPyBaseT<OSG::TrafficSimulation>::type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
     "VR.TrafficSimulation",             /*tp_name*/

@@ -4,7 +4,7 @@
 #include <OpenSG/OSGVector.h>
 #include "core/objects/object/VRObject.h"
 #include "../MapCoordinator.h"
-#include "../TextureManager.h"
+#include "../World.h"
 #include <boost/format.hpp>
 
 OSG_BEGIN_NAMESPACE;
@@ -31,9 +31,9 @@ class BaseModule {
     protected:
         MapCoordinator* mapCoordinator;
         OSG::VRObjectPtr root;
-        TextureManager* texManager;
+        World* world;
 
-        BaseModule(MapCoordinator* mapCoordinator, TextureManager* texManager);
+        BaseModule(MapCoordinator* mapCoordinator, World* world);
 };
 
 OSG_END_NAMESPACE;

@@ -3,7 +3,7 @@
 
 #include "BaseModule.h"
 #include "Terrain.h"
-#include "../MapGeometryGenerator.h"
+#include "../World.h"
 #include "../OSM/OSMMapDB.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -26,7 +26,7 @@ class ModuleTerrain : public BaseModule {
 
     void physicalize(bool b);
 
-    ModuleTerrain(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, TextureManager* texManager);
+    ModuleTerrain(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, World* world);
 
 private:
     vector<TerrainMaterial*> terrainList;

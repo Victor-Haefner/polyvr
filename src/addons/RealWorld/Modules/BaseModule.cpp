@@ -13,9 +13,9 @@ AreaBoundingBox::AreaBoundingBox(OSG::Vec2f min, float gridSize) {
 
 VRObjectPtr BaseModule::getRoot() { return root; }
 
-BaseModule::BaseModule(MapCoordinator* mapCoordinator, TextureManager* texManager) {
+BaseModule::BaseModule(MapCoordinator* mapCoordinator, World* world) {
     this->mapCoordinator = mapCoordinator;
-    this->texManager = texManager;
+    this->world = world;
     root = VRObject::create("ModuleRoot");
     root->setPersistency(0);
 }

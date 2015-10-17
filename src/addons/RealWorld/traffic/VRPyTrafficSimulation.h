@@ -1,10 +1,10 @@
 #ifndef VRPYTRAFFICSIMULATION_H_INCLUDED
 #define VRPYTRAFFICSIMULATION_H_INCLUDED
 
-#include "core/scripting/VRPyBase.h"
 #include "TrafficSimulation.h"
+#include "core/scripting/VRPyBase.h"
 
-struct VRPyTrafficSimulation : VRPyBaseT<TrafficSimulation> {
+struct VRPyTrafficSimulation : VRPyBaseT<OSG::TrafficSimulation> {
     static PyMemberDef members[];
     static PyMethodDef methods[];
 

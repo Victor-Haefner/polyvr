@@ -28,7 +28,7 @@ class MapManager {
 
         map<string, AreaBoundingBox*> loadedBboxes;
 
-        MapManager(Vec2f position, MapGeometryGenerator* mapGeometryGenerator, MapCoordinator* mapCoordinator, World* world, VRObjectPtr root);
+        MapManager(Vec2f position, MapCoordinator* mapCoordinator, World* world, VRObjectPtr root);
 
         void addModule(BaseModule* mod);
 

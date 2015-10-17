@@ -1,4 +1,5 @@
 #include "ModuleWalls.h"
+#include "../Config.h"
 #include "core/objects/geometry/VRGeometry.h"
 
 using namespace OSG;
@@ -60,7 +61,7 @@ void ModuleWalls::physicalize(bool b) {
     //for (auto mesh : meshes);
 }
 
-ModuleWalls::ModuleWalls(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, TextureManager* texManager) : BaseModule(mapCoordinator, texManager) {
+ModuleWalls::ModuleWalls(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, World* world) : BaseModule(mapCoordinator, world) {
     this->mapDB = mapDB;
 
     // create List with materials
@@ -81,7 +82,7 @@ void ModuleWalls::fillWallList() {
 void ModuleWalls::addWall(string texture, string key, string value, float width, float height){
     WallMaterial* w = new WallMaterial();
     w->material = SimpleMaterial::create();
-    w->material->addChunk(texManager->getTexture(texture));
+    w->material->addChunk(world->getTexture(texture));
     w->k = key;
     w->v = value;
     w->width = width;

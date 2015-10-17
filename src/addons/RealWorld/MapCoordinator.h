@@ -1,9 +1,7 @@
 #ifndef MAPCOORDINATOR_H
 #define	MAPCOORDINATOR_H
 
-#include "Altitude.h"
-#include "Config.h"
-#include "Elevation.h"
+#include <OpenSG/OSGVector.h>
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;

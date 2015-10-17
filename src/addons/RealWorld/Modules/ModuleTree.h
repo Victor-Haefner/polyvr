@@ -23,7 +23,7 @@ class ModuleTree : public BaseModule {
         string id;
         vector<Vec2f> positions;
 
-        ModuleTree(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, TextureManager* texManager);
+        ModuleTree(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, World* world);
 
         virtual void loadBbox(AreaBoundingBox* bbox);
 
