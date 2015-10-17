@@ -2,6 +2,8 @@
 
 #include "OSM/OSMMap.h"
 #include "Modules/StreetJoint.h"
+#include "core/utils/toString.h"
+
 #include <boost/exception/to_string.hpp>
 
 using namespace OSG;

@@ -3,7 +3,6 @@
 
 #include "OSMMap.h"
 
-OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class OSMMapDB {
@@ -12,8 +11,6 @@ class OSMMapDB {
 
         OSMMap* getMap(string posStr);
 };
-
-OSG_END_NAMESPACE;
 
 #endif // OSMMAPDB_H
 

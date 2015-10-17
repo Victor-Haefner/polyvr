@@ -4,6 +4,7 @@
 #include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/utils/toString.h"
 #include "core/scene/VRSceneManager.h"
 #include "../OSM/OSMMap.h"
 #include "../OSM/OSMMapDB.h"

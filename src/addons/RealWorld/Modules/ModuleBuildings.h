@@ -5,14 +5,14 @@
 #include "map"
 #include <OpenSG/OSGVector.h>
 
+class OSMMapDB;
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRGeometry;
 class VRMaterial;
 struct BuildingData;
-
-class OSMMapDB;
 class Building;
 class GeometryData;
 class AreaBoundingBox;

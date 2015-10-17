@@ -12,6 +12,7 @@
 
 class TrafficSimulation;
 class TextureManager;
+class OSMMapDB;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -20,7 +21,6 @@ class MapCoordinator;
 class MapGeometryGenerator;
 class World;
 class MapManager;
-class OSMMapDB;
 class MapLoader;
 
 class RealWorld {

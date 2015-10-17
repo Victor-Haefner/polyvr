@@ -1,4 +1,7 @@
 #include "OSMMap.h"
+#include "core/utils/toString.h"
+
+#include <libxml++/libxml++.h>
 
 using namespace OSG;
 

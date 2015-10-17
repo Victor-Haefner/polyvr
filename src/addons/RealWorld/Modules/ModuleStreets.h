@@ -6,12 +6,12 @@
 #include <OpenSG/OSGVector.h>
 
 class TextureManager;
+class OSMMapDB;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class GeometryData;
-class OSMMapDB;
 class MapCoordinator;
 class StreetJoint;
 class StreetSegment;

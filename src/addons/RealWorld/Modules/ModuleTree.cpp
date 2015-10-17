@@ -1,5 +1,6 @@
 #include "ModuleTree.h"
 #include "BaseWorldObject.h"
+#include "../OSM/OSMNode.h"
 #include "core/objects/material/VRShader.h"
 #include "addons/RealWorld/nature/VRTree.h"
 
@@ -35,7 +36,7 @@ void ModuleTree::loadBbox(AreaBoundingBox* bbox){
 
     cout << "LOADING TREES FOR " << bbox->str << "\n" << flush;
 
-    for(OSMNode* node: osmMap->osmNodes) {
+    for (OSMNode* node : osmMap->osmNodes) {
             if(node->tags["natural"] == "tree"){
                 Vec2f pos2D = this->mapCoordinator->realToWorld(Vec2f(node->lat, node->lon));
                 Vec3f pos3D = Vec3f(pos2D.getValues()[0], this->mapCoordinator->getElevation(pos2D), pos2D.getValues()[1]);

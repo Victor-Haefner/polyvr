@@ -1,6 +1,6 @@
 #include "OSMMapDB.h"
-
-using namespace OSG;
+#include <iostream>
+#include <fstream>
 
 OSMMap* OSMMapDB::getMap(string posStr) {
     if (maps.count(posStr)) return maps[posStr];

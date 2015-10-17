@@ -322,8 +322,6 @@
 		<Unit filename="src/addons/RealWorld/OSM/OSMMapDB.h" />
 		<Unit filename="src/addons/RealWorld/OSM/OSMNode.cpp" />
 		<Unit filename="src/addons/RealWorld/OSM/OSMNode.h" />
-		<Unit filename="src/addons/RealWorld/OSM/OSMWay.cpp" />
-		<Unit filename="src/addons/RealWorld/OSM/OSMWay.h" />
 		<Unit filename="src/addons/RealWorld/RealWorld.cpp" />
 		<Unit filename="src/addons/RealWorld/RealWorld.h" />
 		<Unit filename="src/addons/RealWorld/StreetAlgos.cpp" />
