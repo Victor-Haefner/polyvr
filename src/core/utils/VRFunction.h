@@ -38,8 +38,8 @@ class VRFunction : public VRFunction_base {
             }
         }
 
-        static shared_ptr<VRFunction<T> > create(string name, boost::function<void (T)> fkt) {
-            return shared_ptr<VRFunction<T> >( new VRFunction<T>(name, fkt) );
+        static std::shared_ptr<VRFunction<T> > create(string name, boost::function<void (T)> fkt) {
+            return std::shared_ptr<VRFunction<T> >( new VRFunction<T>(name, fkt) );
         }
 };
 

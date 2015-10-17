@@ -85,8 +85,8 @@ class VRScene : public VRObjectManager,
         void load(xmlpp::Element* e);
 };
 
-typedef shared_ptr<VRScene> VRScenePtr;
-typedef weak_ptr<VRScene> VRSceneWeakPtr;
+typedef std::shared_ptr<VRScene> VRScenePtr;
+typedef std::weak_ptr<VRScene> VRSceneWeakPtr;
 
 OSG_END_NAMESPACE;
 

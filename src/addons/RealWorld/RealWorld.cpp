@@ -27,8 +27,7 @@
 
 #define PI 3.14159265
 
-using namespace realworld;
-
+using namespace OSG;
 
 RealWorld::RealWorld(VRObjectPtr root) {
     physicalized = false;

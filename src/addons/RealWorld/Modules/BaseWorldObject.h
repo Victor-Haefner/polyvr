@@ -1,15 +1,18 @@
 #ifndef BASEWORLDOBJECT_H
 #define BASEWORLDOBJECT_H
 
-namespace OSG { class VRGeometry; }
+#include <OpenSG/OSGConfig.h>
+#include "core/objects/VRObjectFwd.h"
+
+OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-namespace realworld {
-    class BaseWorldObject {
-        public:
-            VRGeometryPtr mesh;
-    };
-}
+class BaseWorldObject {
+    public:
+        VRGeometryPtr mesh;
+};
+
+OSG_END_NAMESPACE;
 
 #endif // BASEWORLDOBJECT_H
 

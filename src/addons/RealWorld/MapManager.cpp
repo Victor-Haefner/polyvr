@@ -1,7 +1,5 @@
 #include "MapManager.h"
 
-using namespace realworld;
-
 MapManager::MapManager(Vec2f position, MapLoader* mapLoader, MapGeometryGenerator* mapGeometryGenerator, MapCoordinator* mapCoordinator, World* world, VRObjectPtr root) {
     this->position = position;
     this->mapLoader = mapLoader;
@@ -20,7 +18,7 @@ void MapManager::updatePosition(Vec2f worldPosition) {
     position = worldPosition;
     Vec2f bboxPosition = mapCoordinator->getRealBboxPosition(worldPosition);
 
-    float gs = mapCoordinator->gridSize;
+    float gs = mapCoordinator->getGridSize();
     vector<AreaBoundingBox*> bboxes;
     bboxes.push_back(new AreaBoundingBox(bboxPosition + Vec2f(-gs, -gs), gs));
     bboxes.push_back(new AreaBoundingBox(bboxPosition + Vec2f(0, -gs), gs));

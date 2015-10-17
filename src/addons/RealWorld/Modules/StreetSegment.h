@@ -3,12 +3,10 @@
 
 #include <OpenSG/OSGVector.h>
 
-using namespace OSG;
+OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-namespace realworld {
-
-    class StreetSegment {
+class StreetSegment {
     public:
         string streetJointA_ID;
         string streetJointB_ID;
@@ -23,35 +21,17 @@ namespace realworld {
 
         Vec2f leftA, leftB, rightA, rightB, leftExtA, leftExtB;
 
-        StreetSegment(string streetJointA_ID, string streetJointB_ID, float width, string id) {
-            this->streetJointA_ID = streetJointA_ID;
-            this->streetJointB_ID = streetJointB_ID;
-            this->width = width;
-            this->id = id;
-        }
+        StreetSegment(string streetJointA_ID, string streetJointB_ID, float width, string id);
 
-        void setLeftPointFor(string jointId, Vec2f posLeft) {
-            if (streetJointA_ID == jointId) rightB = posLeft;
-            else leftA = posLeft;
-        }
+        void setLeftPointFor(string jointId, Vec2f posLeft);
+        void setLeftExtPointFor(string jointId, Vec2f posLeft);
+        void setRightPointFor(string jointId, Vec2f posRight);
 
-        void setLeftExtPointFor(string jointId, Vec2f posLeft) {
-            if (streetJointA_ID == jointId) leftExtB = posLeft;
-            else leftExtA = posLeft;
-        }
+        string getOtherJointId(string jointId);
+        float getDistance();
+};
 
-        void setRightPointFor(string jointId, Vec2f posRight) {
-            if (streetJointA_ID == jointId) leftB = posRight;
-            else rightA = posRight;
-        }
-
-        string getOtherJointId(string jointId) {
-            return streetJointA_ID == jointId ? streetJointB_ID : streetJointA_ID;
-        }
-
-        float getDistance() { return (leftA-leftB).length(); }
-    };
-}
+OSG_END_NAMESPACE;
 
 #endif	/* STREETSEGMENT_H */
 

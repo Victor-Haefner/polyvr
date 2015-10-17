@@ -4,31 +4,26 @@
 #include "BaseWorldObject.h"
 #include "../Vec2Helper.h"
 
-using namespace OSG;
+OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-namespace realworld {
+struct TerrainArea {
+    vector<Vec2f> vertices;
+    vector<int*> faces;
+};
 
-    struct TerrainArea {
-        vector<Vec2f> vertices;
-        vector<int*> faces;
-    };
+class Terrain: public BaseWorldObject{
+    public:
+        string id;
+        vector<Vec2f> positions;
+        vector<Vec3f>positions3D;
 
-    class Terrain: public BaseWorldObject{
-        public:
-            string id;
-            vector<Vec2f> positions;
-            vector<Vec3f>positions3D;
+        Terrain(string id);
 
-            Terrain(string id){
-                this->id = id;
-            }
+        vector<Vec2f> getCorners();
+};
 
-            vector<Vec2f> getCorners(){
-                return positions;
-            }
-    };
-}
+OSG_END_NAMESPACE;
 
 #endif // TERRAIN_H
 

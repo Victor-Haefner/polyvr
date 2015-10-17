@@ -18,8 +18,6 @@
 #include <OpenSG/OSGGeometry.h>
 
 using namespace OSG;
-using namespace std;
-using namespace realworld;
 
 ModuleStreets::ModuleStreets(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, TextureManager* texManager) : BaseModule(mapCoordinator, texManager) {
     this->mapDB = mapDB;

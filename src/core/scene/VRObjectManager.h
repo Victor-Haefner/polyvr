@@ -18,7 +18,7 @@ class VRObject;
 class VRObjectManager {
     protected:
         map<string, list<VRGroupPtr>* > groups;
-        shared_ptr<VRFunction<int> > updateObjectsFkt;
+        VRUpdatePtr updateObjectsFkt;
 
         void addGroup(string group);
 

@@ -2,9 +2,7 @@
 
 #include <boost/format.hpp>
 
-using namespace std;
-using namespace realworld;
-
+using namespace OSG;
 
 AreaBoundingBox::AreaBoundingBox(OSG::Vec2f min, float gridSize) {
     this->min = min;

@@ -38,7 +38,7 @@ class VRSocket : public VRName {
         enum CONNECTION_TYPE {UNIX, TCP, HTTP};
 
     private:
-        shared_ptr<VRFunction<int> > queued_signal;
+        std::shared_ptr<VRFunction<int> > queued_signal;
         string tcp_msg;
         HTTP_args* http_args;
         VRSignal* sig;
@@ -58,8 +58,8 @@ class VRSocket : public VRName {
 
         void handle(string s);
 
-        void scanUnix(weak_ptr<VRThread> t);
-        void scanTCP(weak_ptr<VRThread> t);
+        void scanUnix(std::weak_ptr<VRThread> t);
+        void scanTCP(std::weak_ptr<VRThread> t);
         void scanHTTP();
 
         void update();

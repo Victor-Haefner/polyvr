@@ -5,7 +5,6 @@
 #include <sys/stat.h>
 
 using namespace OSG;
-using namespace realworld;
 using namespace std;
 
 Config::Config() {

@@ -7,9 +7,8 @@
 #include "../TextureManager.h"
 #include <boost/format.hpp>
 
+OSG_BEGIN_NAMESPACE;
 using namespace std;
-
-namespace realworld {
 
 struct AreaBoundingBox {
     OSG::Vec2f min;
@@ -37,6 +36,6 @@ class BaseModule {
         BaseModule(MapCoordinator* mapCoordinator, TextureManager* texManager);
 };
 
-}
+OSG_END_NAMESPACE;
 
 #endif // BASEMODULE_H

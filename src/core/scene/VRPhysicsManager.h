@@ -71,13 +71,13 @@ class VRPhysicsManager {
         int fps = 500;
 
     protected:
-        VRFunction< weak_ptr<VRThread> >* updatePhysicsFkt;
-        shared_ptr<VRFunction<int> > updatePhysObjectsFkt;
+        VRFunction< std::weak_ptr<VRThread> >* updatePhysicsFkt;
+        VRUpdatePtr updatePhysObjectsFkt;
         VRPhysicsManager();
         ~VRPhysicsManager();
 
         void prepareObjects();
-        void updatePhysics( weak_ptr<VRThread>  t);
+        void updatePhysics( std::weak_ptr<VRThread>  t);
         void updatePhysObjects();
 
     public:

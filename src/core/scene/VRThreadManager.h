@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <map>
+#include <memory>
 
 #include <OpenSG/OSGThread.h> // TODO: find out how to forward declare ref ptr
 #include <OpenSG/OSGThreadManager.h>
@@ -29,14 +30,14 @@ class VRThread {
         string name;
         bool control_flag = false;
         int status = 0;
-        VRFunction< weak_ptr<VRThread> >* fkt = 0;
+        VRFunction< std::weak_ptr<VRThread> >* fkt = 0;
         int aspect = 0;
         /** last frame time stamp**/
         long long t_last = 0;
 };
 
-typedef shared_ptr<VRThread> VRThreadPtr;
-typedef weak_ptr<VRThread> VRThreadWeakPtr;
+typedef std::shared_ptr<VRThread> VRThreadPtr;
+typedef std::weak_ptr<VRThread> VRThreadWeakPtr;
 
 class VRThreadManager {
     private:

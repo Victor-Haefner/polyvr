@@ -4,7 +4,7 @@
 using namespace OSG;
 using namespace std;
 
-namespace realworld {
+ {
     class NaturalTree {
     public:
         Vec2f position;

@@ -11,8 +11,6 @@
 #include "core/scene/VRSceneManager.h"
 
 using namespace OSG;
-using namespace std;
-using namespace realworld;
 
 ModuleBuildings::ModuleBuildings(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, TextureManager* texManager) : BaseModule(mapCoordinator, texManager) {
     this->mapDB = mapDB;

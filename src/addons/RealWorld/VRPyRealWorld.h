@@ -4,7 +4,7 @@
 #include "../../core/scripting/VRPyBase.h"
 #include "RealWorld.h"
 
-struct VRPyRealWorld : VRPyBaseT<realworld::RealWorld> {
+struct VRPyRealWorld : VRPyBaseT<RealWorld> {
     static PyMemberDef members[];
     static PyMethodDef methods[];
 

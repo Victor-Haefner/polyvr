@@ -17,7 +17,7 @@ typedef VRFunction<VRDevice*> VRDevCb;
 
 class VRSignal_base : public VRName {
     protected:
-        typedef weak_ptr<VRFunction_base> VRFunctionPtr;
+        typedef std::weak_ptr<VRFunction_base> VRFunctionPtr;
         vector<VRFunction_base*> callbacks;
         vector<VRFunctionPtr> callbacksPtr;
         VRFunction<int>* trig_fkt = 0;

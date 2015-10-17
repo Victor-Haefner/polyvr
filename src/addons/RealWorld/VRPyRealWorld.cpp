@@ -2,7 +2,7 @@
 #include "../../core/scripting/VRPyTransform.h"
 #include "../../core/scripting/VRPyBaseT.h"
 
-template<> PyTypeObject VRPyBaseT<realworld::RealWorld>::type = {
+template<> PyTypeObject VRPyBaseT<RealWorld>::type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
     "VR.RealWorld",             /*tp_name*/
@@ -60,7 +60,7 @@ PyMethodDef VRPyRealWorld::methods[] = {
 PyObject* VRPyRealWorld::initWorld(VRPyRealWorld* self, PyObject* args) {
     VRPyObject* child = NULL;
     if (! PyArg_ParseTuple(args, "O", &child)) return NULL;
-    if (self->obj == 0) self->obj = new realworld::RealWorld( child->objPtr );
+    if (self->obj == 0) self->obj = new RealWorld( child->objPtr );
     Py_RETURN_TRUE;
 }
 

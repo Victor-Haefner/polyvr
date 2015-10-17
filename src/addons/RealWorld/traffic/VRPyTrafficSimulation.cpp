@@ -4,7 +4,7 @@
 #include "core/scripting/VRPyBaseT.h"
 #include "../RealWorld.h"
 
-template<> PyTypeObject VRPyBaseT<realworld::TrafficSimulation>::type = {
+template<> PyTypeObject VRPyBaseT<TrafficSimulation>::type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
     "VR.TrafficSimulation",             /*tp_name*/
@@ -85,7 +85,7 @@ PyObject* VRPyTrafficSimulation::init(VRPyTrafficSimulation* self, PyObject* arg
 
     if (_child->obj == 0) { PyErr_SetString(err, "VRPyTrafficSimulation::init, world is not valid"); return NULL; }
 
-    realworld::RealWorld *world = (realworld::RealWorld*)_child->obj;
+    RealWorld *world = (RealWorld*)_child->obj;
 
     self->obj = world->getTrafficSimulation();
 

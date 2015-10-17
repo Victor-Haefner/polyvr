@@ -9,9 +9,6 @@
 #include "../Config.h"
 #include "TrafficSimulation.h"
 
-
-using namespace realworld;
-
 /**
  * Splits a string at the given character.
  * @param str The string to split.
@@ -525,7 +522,7 @@ void TrafficSimulation::setDrawingDistance(const double distance) {
 
 void TrafficSimulation::setTrafficDensity(const double density) {
 
-    //OSG::VRFunction<VRThread*>* func = new OSG::VRFunction<OSG::VRThread*>("trafficSetTrafficDensity", boost::bind(&realworld::TrafficSimulation::setTrafficDensity, self->obj, b));
+    //OSG::VRFunction<VRThread*>* func = new OSG::VRFunction<OSG::VRThread*>("trafficSetTrafficDensity", boost::bind(&TrafficSimulation::setTrafficDensity, self->obj, b));
     //OSG::VRSceneManager::get()->initThread(func, "trafficSetTrafficDensity", false);
 
     Value value;
@@ -538,7 +535,7 @@ void TrafficSimulation::addVehicleType(const unsigned int id, const double proba
 
 
     //void addVehicleType(const unsigned int id, const double probability, const double collisionRadius, const double maxSpeed, const double maxAcceleration, const double maxRoration);
-    //OSG::VRFunction<VRThread*>* func = new OSG::VRFunction<VRThread*>("trafficAddVehicleType", boost::bind(&realworld::TrafficSimulation::addVehicleType, self->obj, id, prob, radius, speed, acc, rot, static_pointer_cast<VRGeometry>(geo->obj));
+    //OSG::VRFunction<VRThread*>* func = new OSG::VRFunction<VRThread*>("trafficAddVehicleType", boost::bind(&TrafficSimulation::addVehicleType, self->obj, id, prob, radius, speed, acc, rot, static_pointer_cast<VRGeometry>(geo->obj));
     //OSG::VRSceneManager::get()->initThread(func, "trafficAddVehicleType", false);
 
 

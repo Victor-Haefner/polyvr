@@ -4,7 +4,7 @@
 #include "core/scripting/VRPyBase.h"
 #include "TrafficSimulation.h"
 
-struct VRPyTrafficSimulation : VRPyBaseT<realworld::TrafficSimulation> {
+struct VRPyTrafficSimulation : VRPyBaseT<TrafficSimulation> {
     static PyMemberDef members[];
     static PyMethodDef methods[];
 

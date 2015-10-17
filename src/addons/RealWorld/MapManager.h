@@ -9,10 +9,8 @@
 #include "Timer.h"
 #include "Modules/BaseModule.h"
 
-using namespace OSG;
+OSG_BEGIN_NAMESPACE;
 using namespace std;
-
-namespace realworld {
 
 class MapManager {
     public:

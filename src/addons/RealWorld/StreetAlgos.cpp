@@ -4,19 +4,6 @@
 #include "Vec2Helper.h"
 
 using namespace OSG;
-using namespace std;
-using namespace realworld;
-
-namespace realworld {
-    struct StreetBorder {
-        string streetSegmentId;
-        Vec2f start;
-        Vec2f end;
-
-        StreetBorder(string streetSegmentId, Vec2f start, Vec2f end);
-        Vec2f dir();
-    };
-}
 
 StreetBorder::StreetBorder(string streetSegmentId, Vec2f start, Vec2f end) {
     this->streetSegmentId = streetSegmentId;

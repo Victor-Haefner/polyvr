@@ -1,24 +1,19 @@
 #ifndef OSMWAY_H
 #define OSMWAY_H
 
-using namespace OSG;
+#include <string>
+#include <map>
+#include <vector>
+
 using namespace std;
 
-namespace realworld {
+class OSMWay {
+    public:
+        string id;
+        map<string, string> tags;
+        vector<string> nodeRefs;
 
-    class OSMWay
-    {
-        public:
-            string id;
-            map<string, string> tags;
-            vector<string> nodeRefs;
-
-            OSMWay(string id) {
-                this->id = id;
-            }
-        protected:
-        private:
-    };
+        OSMWay(string id);
 };
 
 #endif // OSMWAY_H
