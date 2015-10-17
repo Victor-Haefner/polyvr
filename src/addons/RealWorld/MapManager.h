@@ -1,21 +1,25 @@
 #ifndef MAPMANAGER_H
 #define	MAPMANAGER_H
 
-#include "World.h"
-#include "MapGeometryGenerator.h"
-#include "MapCoordinator.h"
-#include "MapLoader.h"
-#include <boost/format.hpp>
-#include "Timer.h"
-#include "Modules/BaseModule.h"
+#include <string>
+#include <vector>
+#include <map>
+#include <OpenSG/OSGVector.h>
+#include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+class World;
+class MapGeometryGenerator;
+class MapCoordinator;
+class BaseModule;
+class AreaBoundingBox;
+class MapData;
+
 class MapManager {
     public:
         Vec2f position;
-        MapLoader* mapLoader;
         MapGeometryGenerator* mapGeometryGenerator;
         MapCoordinator* mapCoordinator;
         World* world;
@@ -24,7 +28,7 @@ class MapManager {
 
         map<string, AreaBoundingBox*> loadedBboxes;
 
-        MapManager(Vec2f position, MapLoader* mapLoader, MapGeometryGenerator* mapGeometryGenerator, MapCoordinator* mapCoordinator, World* world, VRObjectPtr root);
+        MapManager(Vec2f position, MapGeometryGenerator* mapGeometryGenerator, MapCoordinator* mapCoordinator, World* world, VRObjectPtr root);
 
         void addModule(BaseModule* mod);
 
@@ -37,9 +41,10 @@ class MapManager {
 
         void loadBboxIfNecessary(AreaBoundingBox* bbox);
 
+        MapData* loadMap(string filename);
 };
 
-}
+OSG_END_NAMESPACE;
 
 #endif	/* MAPMANAGER_H */
 

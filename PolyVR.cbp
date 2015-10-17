@@ -284,8 +284,6 @@
 		<Unit filename="src/addons/RealWorld/MapData.h" />
 		<Unit filename="src/addons/RealWorld/MapGeometryGenerator.cpp" />
 		<Unit filename="src/addons/RealWorld/MapGeometryGenerator.h" />
-		<Unit filename="src/addons/RealWorld/MapLoader.cpp" />
-		<Unit filename="src/addons/RealWorld/MapLoader.h" />
 		<Unit filename="src/addons/RealWorld/MapManager.cpp" />
 		<Unit filename="src/addons/RealWorld/MapManager.h" />
 		<Unit filename="src/addons/RealWorld/MeshGenerator.h" />
@@ -339,14 +337,6 @@
 		<Unit filename="src/addons/RealWorld/World.cpp" />
 		<Unit filename="src/addons/RealWorld/World.h" />
 		<Unit filename="src/addons/RealWorld/WorldFeatures/WorldFeatureExtractor.h" />
-		<Unit filename="src/addons/RealWorld/json/autolink.h" />
-		<Unit filename="src/addons/RealWorld/json/config.h" />
-		<Unit filename="src/addons/RealWorld/json/features.h" />
-		<Unit filename="src/addons/RealWorld/json/forwards.h" />
-		<Unit filename="src/addons/RealWorld/json/json.h" />
-		<Unit filename="src/addons/RealWorld/json/reader.h" />
-		<Unit filename="src/addons/RealWorld/json/value.h" />
-		<Unit filename="src/addons/RealWorld/json/writer.h" />
 		<Unit filename="src/addons/RealWorld/nature/VRNatureManager.h" />
 		<Unit filename="src/addons/RealWorld/nature/VRPyTree.cpp" />
 		<Unit filename="src/addons/RealWorld/nature/VRPyTree.h" />

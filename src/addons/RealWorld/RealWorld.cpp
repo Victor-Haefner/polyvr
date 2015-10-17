@@ -11,7 +11,6 @@
 #include "core/scene/VRSceneLoader.h"
 #include "OSM/OSMMapDB.h"
 #include "MapCoordinator.h"
-#include "MapLoader.h"
 #include "MapManager.h"
 //#include "TestMover.h"
 #include "TextureManager.h"
@@ -30,18 +29,15 @@
 using namespace OSG;
 
 RealWorld::RealWorld(VRObjectPtr root) {
-    physicalized = false;
-
-    mapCoordinator = new MapCoordinator(OSG::Vec2f(49.005f, 8.395f), 0.002f); //Kreuzung Kriegsstr. und Karlstr.
-    //mapCoordinator = new MapCoordinator(OSG::Vec2f(48.998969, 8.400171), 0.002f); // Tiergarten
-    //mapCoordinator = new MapCoordinator(OSG::Vec2f(49.013606f, 8.418295f), 0.002f); // Fasanengarten, funktioniert nicht?
+    mapCoordinator = new MapCoordinator(Vec2f(49.005f, 8.395f), 0.002f); //Kreuzung Kriegsstr. und Karlstr.
+    //mapCoordinator = new MapCoordinator(Vec2f(48.998969, 8.400171), 0.002f); // Tiergarten
+    //mapCoordinator = new MapCoordinator(Vec2f(49.013606f, 8.418295f), 0.002f); // Fasanengarten, funktioniert nicht?
 
     texManager = new TextureManager();
     mapGeometryGenerator = new MapGeometryGenerator(texManager);
     world = new World();
     mapDB = new OSMMapDB();
-    mapLoader = new MapLoader(mapCoordinator);
-    mapManager = new MapManager(Vec2f(0,0), mapLoader, mapGeometryGenerator, mapCoordinator, world, root);
+    mapManager = new MapManager(Vec2f(0,0), mapGeometryGenerator, mapCoordinator, world, root);
 
     //mapCoordinator->altitude->showHeightArray(49.000070f, 8.401015f);
 }
@@ -50,7 +46,6 @@ RealWorld::~RealWorld() {
     cout << "\nDESTRUCT REALWORLD\n";
 
     delete texManager;
-    delete mapLoader;
     delete mapDB;
     delete world;
     delete mapGeometryGenerator;
@@ -58,24 +53,25 @@ RealWorld::~RealWorld() {
     delete mapManager;
 }
 
-void RealWorld::update(OSG::Vec3f pos) { mapManager->updatePosition( OSG::Vec2f(pos[0], pos[2]) ); }
+TrafficSimulation* RealWorld::getTrafficSimulation() { return trafficSimulation; }
+void RealWorld::update(Vec3f pos) { mapManager->updatePosition( Vec2f(pos[0], pos[2]) ); }
 
-void RealWorld::enableModule(string mod) {
-    if (mod == "Ground") mapManager->addModule(new ModuleFloor(mapCoordinator, texManager));
-    if (mod == "Streets") mapManager->addModule(new ModuleStreets(mapDB, mapCoordinator, texManager));
-    if (mod == "Buildings") mapManager->addModule(new ModuleBuildings(mapDB, mapCoordinator, texManager));
-    if (mod == "Walls") mapManager->addModule(new ModuleWalls(mapDB, mapCoordinator, texManager));
-    if (mod == "Terrain") mapManager->addModule(new ModuleTerrain(mapDB, mapCoordinator, texManager));
-    if (mod == "Trees") mapManager->addModule(new ModuleTree(mapDB, mapCoordinator, texManager));
-    if (mod == "Traffic") {
-        auto tsim = new ModuleTraffic(mapDB, mapCoordinator, texManager);
-        trafficSimulation = tsim->getTrafficSimulation();
-        mapManager->addModule(tsim);
+void RealWorld::enableModule(string mod, bool b) {
+    if (b) {
+        if (mod == "Ground") mapManager->addModule(new ModuleFloor(mapCoordinator, texManager));
+        if (mod == "Streets") mapManager->addModule(new ModuleStreets(mapDB, mapCoordinator, texManager));
+        if (mod == "Buildings") mapManager->addModule(new ModuleBuildings(mapDB, mapCoordinator, texManager));
+        if (mod == "Walls") mapManager->addModule(new ModuleWalls(mapDB, mapCoordinator, texManager));
+        if (mod == "Terrain") mapManager->addModule(new ModuleTerrain(mapDB, mapCoordinator, texManager));
+        if (mod == "Trees") mapManager->addModule(new ModuleTree(mapDB, mapCoordinator, texManager));
+        if (mod == "Traffic") {
+            auto tsim = new ModuleTraffic(mapDB, mapCoordinator, texManager);
+            trafficSimulation = tsim->getTrafficSimulation();
+            mapManager->addModule(tsim);
+        }
+    } else {
+        // TODO
     }
-}
-
-void RealWorld::disableModule(string mod) {
-    ;
 }
 
 void RealWorld::physicalize(bool b) {
@@ -85,4 +81,5 @@ void RealWorld::physicalize(bool b) {
     mapManager->physicalize(b);
 }
 
-TrafficSimulation* RealWorld::getTrafficSimulation() { return trafficSimulation; }
+
+

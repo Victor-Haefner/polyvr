@@ -21,7 +21,6 @@ class MapCoordinator;
 class MapGeometryGenerator;
 class World;
 class MapManager;
-class MapLoader;
 
 class RealWorld {
     private:
@@ -29,15 +28,12 @@ class RealWorld {
         MapGeometryGenerator* mapGeometryGenerator = 0;
         World* world = 0;
         MapManager* mapManager = 0;
-
         TextureManager* texManager = 0;
         OSMMapDB* mapDB = 0;
-        MapLoader* mapLoader = 0;
+        TrafficSimulation* trafficSimulation = 0; // Needed for script access
         static Altitude altitude; // constructor runs once, single instance
 
-        TrafficSimulation *trafficSimulation = 0; // Needed for script access
-
-        bool physicalized;
+        bool physicalized = false;
 
     public:
         RealWorld(OSG::VRObjectPtr root);
@@ -45,11 +41,10 @@ class RealWorld {
 
         void update(OSG::Vec3f pos);
 
-        TrafficSimulation *getTrafficSimulation();
+        TrafficSimulation* getTrafficSimulation();
 
         void physicalize(bool b);
-        void enableModule(string mod);
-        void disableModule(string mod);
+        void enableModule(string mod, bool b);
 };
 
 OSG_END_NAMESPACE;
