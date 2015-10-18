@@ -32,7 +32,8 @@ class ModuleStreets: public BaseModule {
         void makeStreetSegmentGeometry(StreetSegment* s, GeometryData* geo);
         void makeStreetJointGeometry(StreetJoint* sj, map<string, StreetSegment*>& streets, map<string, StreetJoint*>& joints, GeometryData* geo);
 
-        void pushQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f normal, GeometryData* geo, bool isSide = false);
+        void pushQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f normal, GeometryData* geo, bool isSide = false, Vec2f tc = Vec2f(0,1));
+        void pushTriangle(Vec3f c, Vec3f a1, Vec3f a2, Vec3f normal, GeometryData* geo, Vec2f t1, Vec2f t2, Vec2f t3 );
         void pushTriangle(Vec3f c, Vec3f a1, Vec3f a2, Vec3f normal, GeometryData* geo);
 };
 

@@ -28,7 +28,7 @@ ModuleStreets::ModuleStreets() : BaseModule("ModuleStreets") {
 
     // create material
     matStreet = VRMaterial::create("Street");
-    matStreet->setTexture("world/textures/street1.png");
+    matStreet->setTexture("world/textures/street2.png");
 
     matStreet->setAmbient(Color3f(0.5, 0.5, 0.5)); //light reflection in all directions
     matStreet->setDiffuse(Color3f(1.0, 1.0, 1.0)); //light from ambient (without lightsource)
@@ -215,12 +215,24 @@ void ModuleStreets::makeStreetSegmentGeometry(StreetSegment* s, GeometryData* st
     Vec2f rightA = Vec2f(s->rightA);
     Vec2f leftB = Vec2f(s->leftB);
     Vec2f rightB = Vec2f(s->rightB);
+
+    if (s->lanes <= 0) s->lanes = 1;
+    Vec2f laneW = (rightA-leftA)*1/s->lanes;
     float streetH = Config::get()->STREET_HEIGHT;
 
     if (!s->bridge) {//normal street
-        pushQuad(elevate(leftA, streetH), elevate(rightA, streetH),
-                 elevate(rightB, streetH), elevate(leftB, streetH),
-                 Vec3f(0,1,0), streets);
+        for (int l = 0; l < s->lanes; l++) {
+            auto lA = elevate(leftA+laneW*l, streetH);
+            auto lB = elevate(leftB+laneW*l, streetH);
+            auto rA = elevate(rightA-laneW*(s->lanes-l-1), streetH);
+            auto rB = elevate(rightB-laneW*(s->lanes-l-1), streetH);
+            float k1 = 0.75, k2 = 1;
+            if (s->lanes > 1) {
+                k1 = (l == 0) ? 0 : (l%2) ? 0.25 : 0.5;
+                k2 = (l == s->lanes-1) ? (l%2) ? 0 : 0.75 : (l%2) ? 0.5 : 0.25;
+            }
+            pushQuad( lA, rA, rB, lB, Vec3f(0,1,0), streets, false, Vec2f(k1,k2) );
+        }
         return;
     }
 
@@ -239,8 +251,8 @@ void ModuleStreets::makeStreetSegmentGeometry(StreetSegment* s, GeometryData* st
         Vec3f b2 = elevate(rA + ABPart, height[1]);
 
         Vec3f normal = (a2-a1).cross(b1-a1);
-        pushQuad(a1, a2, b2, b1, -normal, streets);
-        pushQuad(a1-th, a2-th, b2-th, b1-th, normal, streets);
+        pushQuad(a1, a2, b2, b1, -normal, streets, false, Vec2f(0.75,1) );
+        pushQuad(a1-th, a2-th, b2-th, b1-th, normal, streets, false, Vec2f(0.75,1) );
         pushQuad(a1, a1-th, b1-th, b1, Vec3f(-(b1-a1)[2], 0, (b1-a1)[0]), streets, true); //side1
         pushQuad(a2, a2-th, b2-th, b2, Vec3f((b2-a2)[2], 0, -(b2-a2)[0]), streets, true); //side2
     };
@@ -256,7 +268,7 @@ void ModuleStreets::makeStreetSegmentGeometry(StreetSegment* s, GeometryData* st
     // Idee: berechne Steigung und entscheide dementsprechend fuer Treppen
 }
 
-void ModuleStreets::pushQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f normal, GeometryData* geo, bool isSide) {
+void ModuleStreets::pushQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f normal, GeometryData* geo, bool isSide, Vec2f tc) {
     // calc road length && divide by texture size
     float width = (a2-a1).length();
     float len = (b1 - a1).length()/width;
@@ -276,11 +288,18 @@ void ModuleStreets::pushQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f norma
         geo->texs->addValue(Vec2f(0.1, 0.1));
         geo->texs->addValue(Vec2f(0.1, 0.1)); //one color of texture only
     } else {
-        geo->texs->addValue(Vec2f(0, 0));
-        geo->texs->addValue(Vec2f(1, 0));
-        geo->texs->addValue(Vec2f(1, len));
-        geo->texs->addValue(Vec2f(0, len));
+        geo->texs->addValue(Vec2f(tc[0], 0));
+        geo->texs->addValue(Vec2f(tc[1], 0));
+        geo->texs->addValue(Vec2f(tc[1], len));
+        geo->texs->addValue(Vec2f(tc[0], len));
     }
+}
+
+void ModuleStreets::pushTriangle(Vec3f a1, Vec3f a2, Vec3f c, Vec3f normal, GeometryData* geo, Vec2f t1, Vec2f t2, Vec2f t3 ) {
+    pushTriangle(a1,a2,c,normal,geo);
+    geo->texs->addValue(t1);
+    geo->texs->addValue(t2);
+    geo->texs->addValue(t3);
 }
 
 void ModuleStreets::pushTriangle(Vec3f a1, Vec3f a2, Vec3f c, Vec3f normal, GeometryData* geo) {
@@ -305,45 +324,66 @@ void ModuleStreets::makeStreetJointGeometry(StreetJoint* sj, map<string, StreetS
 
     int Nsegs = sj->segmentIds.size();
     if (Nsegs <= 1) return;
+    float jointH = Config::get()->STREET_HEIGHT;
 
-    /* look up, if street joint is part of a bridge */
-    float jointHeight = Config::get()->STREET_HEIGHT;
-    StreetSegment* seg1 = streets[sj->segmentIds[0]];
-    StreetSegment* seg2 = streets[sj->segmentIds[1]];
-    if (seg1->bridge && seg2->bridge) {
-        jointHeight += Config::get()->BRIDGE_HEIGHT;
-        sj->bridge = true;
-        if (seg1->smallBridge || seg2->smallBridge) {
-            sj->smallBridge = true;
-            jointHeight = Config::get()->STREET_HEIGHT + Config::get()->SMALL_BRIDGE_HEIGHT;
-        }
-    }
+    auto checkIsBridge = [&]() { /* look up, if street joint is part of a bridge */
+        StreetSegment* seg1 = streets[sj->segmentIds[0]];
+        StreetSegment* seg2 = streets[sj->segmentIds[1]];
+        sj->bridge = seg1->bridge && seg2->bridge;
+        sj->smallBridge = (seg1->smallBridge || seg2->smallBridge) && sj->bridge;
+        if (sj->smallBridge) jointH += Config::get()->SMALL_BRIDGE_HEIGHT;
+        else if (sj->bridge) jointH += Config::get()->BRIDGE_HEIGHT;
+    };
 
-    Vec3f middle, right, left, leftExt, rightExt, firstRight, firstLeft, prevLeft, prevRight;
+    checkIsBridge();
+
+    Vec3f right, left, leftExt, rightExt, firstRight, firstLeft, prevLeft, prevRight;
     Vec3f _NULL;
     Vec2f _NULL2;
     Vec3f norm = Vec3f(0, 1, 0);
+    Vec3f middle = elevate(sj->position, jointH);
 
-    middle = elevate(sj->position, jointHeight);
-    //float width = 0;
+    if (Nsegs == 2 && jointPoints.size() == 2) { // TODO: replace by extending the segment mesh points, incl. lanes
+        JointPoints* jp1 = jointPoints[0];
+        JointPoints* jp2 = jointPoints[1];
+        if (jp1->leftExt != _NULL2 && jp1->leftExt != _NULL2) {
+            Vec3f r1 = elevate(jp1->right  , jointH);
+            Vec3f l1 = elevate(jp1->left   , jointH);
+            Vec3f r2 = elevate(jp2->right  , jointH);
+            Vec3f l2 = elevate(jp2->left   , jointH);
+            Vec3f e1 = elevate(jp1->leftExt, jointH);
+            Vec3f e2 = elevate(jp2->leftExt, jointH);
+            Vec2f tr1 = Vec2f(0.75, 0);
+            Vec2f tl1 = Vec2f(1, 0);
+            Vec2f tr2 = Vec2f(1, 1);
+            Vec2f tl2 = Vec2f(0.75, 1);
+            Vec2f te1 = Vec2f(1, 0.5);
+            Vec2f te2 = Vec2f(0.75, 0.5);
+            pushTriangle( r1, l1, e1, norm, geo, tr1, tl1, te1 );
+            pushTriangle( r1, e1, e2, norm, geo, tr1, te1, te2 );
+            pushTriangle( r2, l2, e2, norm, geo, tr2, tl2, te2 );
+            pushTriangle( r2, e2, e1, norm, geo, tr2, te2, te1 );
+        }
+        return;
+    }
 
     vector<Vec3f> fan;
     vector<Vec2f> fantex;
 
     int i=0;
     for (JointPoints* jp : jointPoints) {
-        fan.push_back( elevate(jp->right, jointHeight) );
-        fan.push_back( elevate(jp->left, jointHeight) );
-        fantex.push_back(Vec2f(0+i%2, i%2));
+        fan.push_back( elevate(jp->right, jointH) );
+        fan.push_back( elevate(jp->left, jointH) );
+        fantex.push_back(Vec2f(0.75+i%2, i%2));
         fantex.push_back(Vec2f(1-i%2, i%2));
         if (Nsegs == 2 && jp->leftExt != _NULL2) {
-            fan.push_back( elevate(jp->leftExt, jointHeight) );
+            fan.push_back( elevate(jp->leftExt, jointH) );
             fantex.push_back(Vec2f(1-i%2, 0.5));
         }
         i++;
     }
 
-    fan.push_back( elevate(jointPoints[0]->right, jointHeight) ); // close fan
+    fan.push_back( elevate(jointPoints[0]->right, jointH) ); // close fan
     fantex.push_back(Vec2f(0, 0));
 
     for (uint i=1; i<fan.size(); i++) {
@@ -351,64 +391,63 @@ void ModuleStreets::makeStreetJointGeometry(StreetJoint* sj, map<string, StreetS
         float my = (Nsegs == 2) ? 0.5 : fantex[i][1];
         geo->texs->addValue(fantex[i-1]);
         geo->texs->addValue(fantex[i]);
-        geo->texs->addValue(Vec2f(0.5, my));
+        geo->texs->addValue(Vec2f(0.85, my));
     }
 
-    return; // TODO
+    if (!sj->bridge) return;
 
-    //float mx,my;
-    if (sj->bridge) {
-        rightExt = _NULL;
-        firstRight = _NULL;
-        jointHeight -= Config::get()->BRIDGE_SIZE;
 
-        middle = elevate(sj->position, jointHeight);
-        for (JointPoints* jp : jointPoints) {
-            right = elevate(jp->right, jointHeight);
-            left = elevate(jp->left, jointHeight);
-            leftExt = elevate(jp->leftExt, jointHeight);
+    // TODO
+    rightExt = _NULL;
+    firstRight = _NULL;
+    jointH -= Config::get()->BRIDGE_SIZE;
 
-            pushTriangle(right, left, middle, norm, geo);
-            geo->texs->addValue(Vec2f(0, 1)); geo->texs->addValue(Vec2f(1, 1)); geo->texs->addValue(Vec2f(0.5, 0.5));
+    middle = elevate(sj->position, jointH);
+    for (JointPoints* jp : jointPoints) {
+        right = elevate(jp->right, jointH);
+        left = elevate(jp->left, jointH);
+        leftExt = elevate(jp->leftExt, jointH);
 
-            if ((leftExt-middle).length() < 3) {
-                pushTriangle(left, leftExt, middle, norm, geo);
-                geo->texs->addValue(Vec2f(1, 1)); geo->texs->addValue(Vec2f(1, 1)); geo->texs->addValue(Vec2f(0.5, 0.5));
+        pushTriangle(right, left, middle, norm, geo);
+        geo->texs->addValue(Vec2f(0, 1)); geo->texs->addValue(Vec2f(1, 1)); geo->texs->addValue(Vec2f(0.5, 0.5));
 
-                Vec3f normal = Vec3f(-(left-leftExt)[2], 0, (left-leftExt)[0]);
+        if ((leftExt-middle).length() < 3) {
+            pushTriangle(left, leftExt, middle, norm, geo);
+            geo->texs->addValue(Vec2f(1, 1)); geo->texs->addValue(Vec2f(1, 1)); geo->texs->addValue(Vec2f(0.5, 0.5));
 
-                pushTriangle(left, leftExt, leftExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0), normal, geo);
-                geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5));
+            Vec3f normal = Vec3f(-(left-leftExt)[2], 0, (left-leftExt)[0]);
 
-                pushTriangle(leftExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0), left+Vec3f(0, Config::get()->BRIDGE_SIZE, 0), left, normal, geo);
-                geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5));
-            }
+            pushTriangle(left, leftExt, leftExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0), normal, geo);
+            geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5));
 
-            if (rightExt != _NULL && (rightExt-middle).length() < 3) {
-                pushTriangle(right, rightExt, middle, norm, geo);
-                geo->texs->addValue(Vec2f(1, 1)); geo->texs->addValue(Vec2f(1, 1)); geo->texs->addValue(Vec2f(0.5, 0.5));
-
-                Vec3f normal = Vec3f((right-rightExt)[2], 0, -(right-rightExt)[0]);
-
-                pushTriangle(right, rightExt, rightExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0), normal, geo);
-                geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5));
-
-                pushTriangle(rightExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0), right+Vec3f(0, Config::get()->BRIDGE_SIZE, 0), right, normal, geo);
-                geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5));
-            } else firstRight = right;
-
-            rightExt = leftExt;
+            pushTriangle(leftExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0), left+Vec3f(0, Config::get()->BRIDGE_SIZE, 0), left, normal, geo);
+            geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5));
         }
 
-        pushTriangle(firstRight, rightExt, middle, norm, geo);
-        geo->texs->addValue(Vec2f(1, 1)); geo->texs->addValue(Vec2f(1, 1)); geo->texs->addValue(Vec2f(0.5, 0.5));
+        if (rightExt != _NULL && (rightExt-middle).length() < 3) {
+            pushTriangle(right, rightExt, middle, norm, geo);
+            geo->texs->addValue(Vec2f(1, 1)); geo->texs->addValue(Vec2f(1, 1)); geo->texs->addValue(Vec2f(0.5, 0.5));
 
-        Vec3f normal = Vec3f((firstRight-rightExt)[2], 0, -(firstRight-rightExt)[0]);
+            Vec3f normal = Vec3f((right-rightExt)[2], 0, -(right-rightExt)[0]);
 
-        pushTriangle(firstRight, rightExt, rightExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0), normal, geo);
-        geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5));
+            pushTriangle(right, rightExt, rightExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0), normal, geo);
+            geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5));
 
-        pushTriangle(rightExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0), firstRight+Vec3f(0, Config::get()->BRIDGE_SIZE, 0), firstRight, normal, geo);
-        geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5));
+            pushTriangle(rightExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0), right+Vec3f(0, Config::get()->BRIDGE_SIZE, 0), right, normal, geo);
+            geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5));
+        } else firstRight = right;
+
+        rightExt = leftExt;
     }
+
+    pushTriangle(firstRight, rightExt, middle, norm, geo);
+    geo->texs->addValue(Vec2f(1, 1)); geo->texs->addValue(Vec2f(1, 1)); geo->texs->addValue(Vec2f(0.5, 0.5));
+
+    Vec3f normal = Vec3f((firstRight-rightExt)[2], 0, -(firstRight-rightExt)[0]);
+
+    pushTriangle(firstRight, rightExt, rightExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0), normal, geo);
+    geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5));
+
+    pushTriangle(rightExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0), firstRight+Vec3f(0, Config::get()->BRIDGE_SIZE, 0), firstRight, normal, geo);
+    geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5));
 }
