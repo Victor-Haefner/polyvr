@@ -38,11 +38,16 @@ ModuleStreets::ModuleStreets() : BaseModule("ModuleStreets") {
     matStreet->readFragmentShader(wdir+"/shader/TexturePhong/phong.fp");
     matStreet->setMagMinFilter("GL_NEAREST", "GL_NEAREST");
     matStreet->setZOffset(-1,-1);
-    //matStreet->setWireFrame(true);
+
+    matStreet->addPass();
+    matStreet->setWireFrame(true);
+    matStreet->setLit(false);
+    matStreet->setDiffuse(Vec3f(1,0,0));
+    matStreet->setLineWidth(5);
 }
 
 bool isStreet(OSMWay* way) {
-    return (
+    return (// Idee: return the street width, pair<bool, float>
     way->tags["highway"] == "motorway" ||
     way->tags["highway"] == "trunk" ||
     way->tags["highway"] == "primary" ||
@@ -211,66 +216,47 @@ void ModuleStreets::makeStreetSegmentGeometry(StreetSegment* s, GeometryData* st
     Vec2f leftB = Vec2f(s->leftB);
     Vec2f rightB = Vec2f(s->rightB);
 
-    //int ind = 0;
+    float streetH = Config::get()->STREET_HEIGHT;
 
-    if (s->bridge){ //bridge
-        float low = Config::get()->STREET_HEIGHT;
-        float high = Config::get()->STREET_HEIGHT + Config::get()->BRIDGE_HEIGHT;
+    if (s->bridge) { //bridge
+        float high = streetH + Config::get()->BRIDGE_HEIGHT;
         Vec3f th = Vec3f(0, Config::get()->BRIDGE_SIZE, 0);
         Vec3f a1, a2, b1, b2;
-        //int ind = 0;
         Vec2f ABPart = (leftB - leftA)/3;
-        if(s->smallBridge) high = Config::get()->STREET_HEIGHT + Config::get()->SMALL_BRIDGE_HEIGHT;
+        if(s->smallBridge) high = streetH + Config::get()->SMALL_BRIDGE_HEIGHT;
+
+        auto setParams = [&](Vec2f height, Vec2f d) {
+            leftA += d;
+            rightA += d;
+            a1 = elevate(leftA, height[0]);
+            a2 = elevate(rightA, height[0]);
+            b1 = elevate(leftA + ABPart, height[1]);
+            b2 = elevate(rightA + ABPart, height[1]);
+        };
+
+        auto pushBridgePart = [&](Vec3f normal) {
+            pushQuad(a1, a2, b2, b1, normal, streets);
+            pushQuad(a1-th, a2-th, b2-th, b1-th, -normal, streets);
+            pushQuad(a1, a1-th, b1-th, b1, Vec3f(-(b1-a1)[2], 0, (b1-a1)[0]), streets, true); //side1
+            pushQuad(a2, a2-th, b2-th, b2, Vec3f((b2-a2)[2], 0, -(b2-a2)[0]), streets, true); //side2
+        };
 
         //start part of bridge
-        if(s->leftBridge) low = high;
-        leftB = leftA + ABPart;
-        rightB = rightA + ABPart;
-        a1 = elevate(leftA, low);
-        a2 = elevate(rightA, low);
-        b1 = elevate(leftB, high);
-        b2 = elevate(rightB, high);
-        pushQuad(a1, a2, b2, b1, -getNormal3D(a2-a1, b1-a1), streets);
-        pushQuad(a1-th, a2-th, b2-th, b1-th, getNormal3D(a2-a1, b1-a1), streets);
-        pushQuad(a1, a1-th, b1-th, b1, Vec3f(-(b1-a1)[2], 0, (b1-a1)[0]), streets, true); //side1
-        pushQuad(a2, a2-th, b2-th, b2, Vec3f((b2-a2)[2], 0, -(b2-a2)[0]), streets, true); //side2
+        if(s->leftBridge) setParams(Vec2f(high, high), Vec2f(0,0));
+        else setParams(Vec2f(streetH, high), Vec2f(0,0));
+        pushBridgePart(-getNormal3D(a2-a1, b1-a1));
 
         //middle part of bridge
-        low = Config::get()->STREET_HEIGHT;
-
-        leftA += ABPart;
-        rightA += ABPart;
-        leftB = leftA + ABPart;
-        rightB = rightA + ABPart;
-        a1 = elevate(leftA, high);
-        a2 = elevate(rightA, high);
-        b1 = elevate(leftB, high);
-        b2 = elevate(rightB, high);
-        pushQuad(a1, a2, b2, b1, Vec3f(0, 1, 0), streets); //top
-        pushQuad(a1-th, a2-th, b2-th, b1-th, Vec3f(0, -1, 0), streets); //bottom
-        pushQuad(a1, a1-th, b1-th, b1, Vec3f(-(b1-a1)[2], 0, (b1-a1)[0]), streets, true); //side1
-        pushQuad(a2, a2-th, b2-th, b2, Vec3f((b2-a2)[2], 0, -(b2-a2)[0]), streets, true); //side2
-
+        setParams(Vec2f(high, high), ABPart);
+        pushBridgePart(Vec3f(0, 1, 0));
 
         //end part of bridge
-        if(s->rightBridge) low = high; //if bridge goes on
-        leftA += ABPart;
-        rightA += ABPart;
-        leftB = leftA + ABPart;
-        rightB = rightA + ABPart;
-        a1 = elevate(leftA, high);
-        a2 = elevate(rightA, high);
-        b1 = elevate(s->leftB, low);
-        b2 = elevate(s->rightB, low);
-        pushQuad(a1, a2, b2, b1, -getNormal3D(a2-a1, b1-a1), streets);
-        pushQuad(a1-th, a2-th, b2-th, b1-th, getNormal3D(a2-a1, b1-a1), streets);
-        pushQuad(a1, a1-th, b1-th, b1, Vec3f(-(b1-a1)[2], 0, (b1-a1)[0]), streets, true); //side1
-        pushQuad(a2, a2-th, b2-th, b2, Vec3f((b2-a2)[2], 0, -(b2-a2)[0]), streets, true); //side2
+        if(s->rightBridge) setParams(Vec2f(high, high), ABPart);//if bridge goes on
+        else setParams(Vec2f(high, streetH), ABPart);
+        pushBridgePart(-getNormal3D(a2-a1, b1-a1));
     } else { //normal street
-        pushQuad(elevate(leftA, Config::get()->STREET_HEIGHT),
-                 elevate(rightA, Config::get()->STREET_HEIGHT),
-                 elevate(rightB, Config::get()->STREET_HEIGHT),
-                 elevate(leftB, Config::get()->STREET_HEIGHT),
+        pushQuad(elevate(leftA, streetH), elevate(rightA, streetH),
+                 elevate(rightB, streetH), elevate(leftB, streetH),
                  Vec3f(0,1,0), streets);
     }
 }

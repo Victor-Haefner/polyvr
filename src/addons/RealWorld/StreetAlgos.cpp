@@ -88,7 +88,7 @@ void StreetAlgos::calcSegments(StreetJoint* joint, map<string, StreetSegment*> s
         StreetSegment* seg = streetSegments[segId];
         if (seg->width > maxWidth) maxWidth = seg->width;
     }
-    maxWidth = maxWidth * 0.5f;
+    maxWidth *= 0.5;
 
     for (unsigned int i=0; i<joint->segmentIds.size(); i++) {
         StreetSegment* s1 = streetSegments[joint->segmentIds[i]];

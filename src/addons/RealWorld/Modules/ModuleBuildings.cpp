@@ -6,6 +6,7 @@
 #include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/utils/toString.h"
 #include "triangulate.h"
 #include "../Config.h"
 #include "../World.h"
@@ -29,16 +30,6 @@ ModuleBuildings::ModuleBuildings() : BaseModule("ModuleBuildings") {
 
     b_geo_d = new GeometryData();
     r_geo_d = new GeometryData();
-}
-
-int ModuleBuildings::numberFromString(string s) {
-    int hash = 0;
-    int offset = 'a' - 1;
-    for(string::const_iterator it=s.begin(); it!=s.end(); ++it) {
-        hash = hash << 1 | (*it - offset);
-    }
-    if (hash < 0) hash = hash * (-1);
-    return hash;
 }
 
 void ModuleBuildings::loadBbox(AreaBoundingBox* bbox) {
@@ -86,7 +77,7 @@ void ModuleBuildings::loadBbox(AreaBoundingBox* bbox) {
     r_geo_d->clear();
 
     b_geo->getPhysics()->setShape("Concave");
-    b_geo->getPhysics()->setPhysicalized(physics);
+    b_geo->getPhysics()->setPhysicalized(physicalized);
 }
 
 void ModuleBuildings::unloadBbox(AreaBoundingBox* bbox) {
@@ -96,7 +87,7 @@ void ModuleBuildings::unloadBbox(AreaBoundingBox* bbox) {
 }
 
 void ModuleBuildings::physicalize(bool b) {
-    physics = b;
+    physicalized = b;
     for (auto g : b_geos) {
         g.second->getPhysics()->setShape("Concave");
         g.second->getPhysics()->setPhysicalized(b);
@@ -239,7 +230,7 @@ void ModuleBuildings::addBuildingRoof(Building* building, float height, float el
 /** create one Building **/
 void ModuleBuildings::makeBuildingGeometry(Building* b) {
     auto mc = RealWorld::get()->getCoordinator();
-    int bNum = numberFromString(b->id);
+    int bNum = toInt(b->id);
     int height = bNum % Config::get()->MAX_FLOORS + 2;
     float minElevation = 99999.0f;
 
