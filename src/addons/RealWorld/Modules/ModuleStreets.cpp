@@ -215,57 +215,45 @@ void ModuleStreets::makeStreetSegmentGeometry(StreetSegment* s, GeometryData* st
     Vec2f rightA = Vec2f(s->rightA);
     Vec2f leftB = Vec2f(s->leftB);
     Vec2f rightB = Vec2f(s->rightB);
-
     float streetH = Config::get()->STREET_HEIGHT;
 
-    if (s->bridge) { //bridge
-        float high = streetH + Config::get()->BRIDGE_HEIGHT;
-        Vec3f th = Vec3f(0, Config::get()->BRIDGE_SIZE, 0);
-        Vec3f a1, a2, b1, b2;
-        Vec2f ABPart = (leftB - leftA)/3;
-        if(s->smallBridge) high = streetH + Config::get()->SMALL_BRIDGE_HEIGHT;
-
-        auto setParams = [&](Vec2f height, Vec2f d) {
-            leftA += d;
-            rightA += d;
-            a1 = elevate(leftA, height[0]);
-            a2 = elevate(rightA, height[0]);
-            b1 = elevate(leftA + ABPart, height[1]);
-            b2 = elevate(rightA + ABPart, height[1]);
-        };
-
-        auto pushBridgePart = [&](Vec3f normal) {
-            pushQuad(a1, a2, b2, b1, normal, streets);
-            pushQuad(a1-th, a2-th, b2-th, b1-th, -normal, streets);
-            pushQuad(a1, a1-th, b1-th, b1, Vec3f(-(b1-a1)[2], 0, (b1-a1)[0]), streets, true); //side1
-            pushQuad(a2, a2-th, b2-th, b2, Vec3f((b2-a2)[2], 0, -(b2-a2)[0]), streets, true); //side2
-        };
-
-        //start part of bridge
-        if(s->leftBridge) setParams(Vec2f(high, high), Vec2f(0,0));
-        else setParams(Vec2f(streetH, high), Vec2f(0,0));
-        pushBridgePart(-getNormal3D(a2-a1, b1-a1));
-
-        //middle part of bridge
-        setParams(Vec2f(high, high), ABPart);
-        pushBridgePart(Vec3f(0, 1, 0));
-
-        //end part of bridge
-        if(s->rightBridge) setParams(Vec2f(high, high), ABPart);//if bridge goes on
-        else setParams(Vec2f(high, streetH), ABPart);
-        pushBridgePart(-getNormal3D(a2-a1, b1-a1));
-    } else { //normal street
+    if (!s->bridge) {//normal street
         pushQuad(elevate(leftA, streetH), elevate(rightA, streetH),
                  elevate(rightB, streetH), elevate(leftB, streetH),
                  Vec3f(0,1,0), streets);
+        return;
     }
-}
 
-Vec3f ModuleStreets::getNormal3D(Vec3f v1, Vec3f v2) { return v1.cross(v2); }
+    // bridge
+    Vec2f ABPart = (leftB - leftA)/3;
+    float high = streetH + Config::get()->BRIDGE_HEIGHT;
+    if (s->smallBridge) high = streetH + Config::get()->SMALL_BRIDGE_HEIGHT;
+    Vec3f th = Vec3f(0, Config::get()->BRIDGE_SIZE, 0);
 
+    auto pushPart = [&](Vec2f height, int i) {
+        Vec2f lA = leftA + ABPart*i;
+        Vec2f rA = rightA + ABPart*i;
+        Vec3f a1 = elevate(lA, height[0]);
+        Vec3f a2 = elevate(rA, height[0]);
+        Vec3f b1 = elevate(lA + ABPart, height[1]);
+        Vec3f b2 = elevate(rA + ABPart, height[1]);
 
-void ModuleStreets::pushQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f normal, GeometryData* geo) {
-    pushQuad(a1, a2, b2, b1, normal, geo, false);
+        Vec3f normal = (a2-a1).cross(b1-a1);
+        pushQuad(a1, a2, b2, b1, -normal, streets);
+        pushQuad(a1-th, a2-th, b2-th, b1-th, normal, streets);
+        pushQuad(a1, a1-th, b1-th, b1, Vec3f(-(b1-a1)[2], 0, (b1-a1)[0]), streets, true); //side1
+        pushQuad(a2, a2-th, b2-th, b2, Vec3f((b2-a2)[2], 0, -(b2-a2)[0]), streets, true); //side2
+    };
+
+    Vec4f heights = Vec4f(high, high, high, high);
+    if (s->leftBridge && !s->rightBridge) heights = Vec4f(high, high*0.7, high*0.3, streetH);
+    if (!s->leftBridge && s->rightBridge) heights = Vec4f(streetH, high*0.3, high*0.7, high);
+
+    pushPart(Vec2f(heights[0], heights[1]), 0); // start
+    pushPart(Vec2f(heights[1], heights[2]), 1); // middle
+    pushPart(Vec2f(heights[2], heights[3]), 2); // end
+
+    // Idee: berechne Steigung und entscheide dementsprechend fuer Treppen
 }
 
 void ModuleStreets::pushQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f normal, GeometryData* geo, bool isSide) {

@@ -31,10 +31,8 @@ class ModuleStreets: public BaseModule {
         VRGeometryPtr makeSignGeometry(StreetSegment* seg);
         void makeStreetSegmentGeometry(StreetSegment* s, GeometryData* geo);
         void makeStreetJointGeometry(StreetJoint* sj, map<string, StreetSegment*>& streets, map<string, StreetJoint*>& joints, GeometryData* geo);
-        Vec3f getNormal3D(Vec3f v1, Vec3f v2);
 
-        void pushQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f normal, GeometryData* geo);
-        void pushQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f normal, GeometryData* geo, bool isSide);
+        void pushQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f normal, GeometryData* geo, bool isSide = false);
         void pushTriangle(Vec3f c, Vec3f a1, Vec3f a2, Vec3f normal, GeometryData* geo);
 };
 
