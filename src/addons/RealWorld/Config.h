@@ -18,7 +18,7 @@ struct Config {
 
     //streets
     float STREET_HEIGHT = 0.05f; //street distance from floor
-    float STREET_WIDTH = 3.0f; //minimum street width
+    float STREET_WIDTH = 2.5f; //street lane width
     float BRIDGE_HEIGHT = 10.0f; //distance between ground && a bridge
     float SMALL_BRIDGE_HEIGHT = 5.0f; //thickness of smaller bridges
     float BRIDGE_SIZE = 0.5f; //thickness of the bridge

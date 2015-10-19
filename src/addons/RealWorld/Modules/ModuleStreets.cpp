@@ -140,7 +140,8 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
     for (auto jointId : listLoadJoints) {
         StreetJoint* joint = jointId.second;
         if (joint->segmentIds.size() == 0) continue;
-        makeStreetJointGeometry(joint, listLoadSegments, listLoadJoints, jdata);
+        if (joint->segmentIds.size() == 2) makeStreetCurveGeometry(joint, listLoadSegments, listLoadJoints, jdata);
+        else makeStreetJointGeometry(joint, listLoadSegments, listLoadJoints, jdata);
     }
 
     for (auto seg : listLoadSegments) {
@@ -319,80 +320,95 @@ Vec3f ModuleStreets::elevate(Vec2f p, float h) {
     return Vec3f(p[0], mc->getElevation(p) + h, p[1]);
 }
 
+float ModuleStreets::updateJointBridge(StreetJoint* sj, map<string, StreetSegment*>& streets) { /* look up, if street joint is part of a bridge */
+    StreetSegment* seg1 = streets[sj->segmentIds[0]];
+    StreetSegment* seg2 = streets[sj->segmentIds[1]];
+    sj->bridge = seg1->bridge && seg2->bridge;
+    sj->smallBridge = (seg1->smallBridge || seg2->smallBridge) && sj->bridge;
+    if (sj->smallBridge) return Config::get()->SMALL_BRIDGE_HEIGHT;
+    else if (sj->bridge) return Config::get()->BRIDGE_HEIGHT;
+};
+
+void ModuleStreets::makeStreetCurveGeometry(StreetJoint* sj, map<string, StreetSegment*>& streets, map<string, StreetJoint*>& joints, GeometryData* geo) {
+    vector<JointPoints*> jointPoints = StreetAlgos::calcJoints(sj, streets, joints);
+    float jointH = Config::get()->STREET_HEIGHT + updateJointBridge(sj, streets);
+
+    Vec2f _NULL;
+    Vec3f norm = Vec3f(0, 1, 0);
+
+    JointPoints* jp1 = jointPoints[0];
+    JointPoints* jp2 = jointPoints[1];
+    int Nl1 = max(streets[sj->segmentIds[0]]->lanes, 1);
+    int Nl2 = max(streets[sj->segmentIds[1]]->lanes, 1);
+    int Nl = min(Nl1, Nl2);
+    if (jp1->leftExt != _NULL && jp1->leftExt != _NULL) {
+        Vec3f r1,l1,r2,l2,e1,e2,d1,d2,d3;
+        Vec2f tr1,tl1,tr2,tl2,te1,te2;
+        r1 = elevate(jp1->right  , jointH);
+        l1 = elevate(jp1->left   , jointH);
+        r2 = elevate(jp2->right  , jointH);
+        l2 = elevate(jp2->left   , jointH);
+        e1 = elevate(jp1->leftExt, jointH);
+        e2 = elevate(jp2->leftExt, jointH);
+        d1 = (r1-l1)*1.0/Nl; d2 = (l2-r2)*1.0/Nl; d3 = (e2-e1)*1.0/Nl;
+        float width = d1.length();
+        float ta = (e1 - l1).length()/width;
+        float te = (r2 - e1).length()/width;
+        for (int i=0; i<Nl; i++) {
+            float k1 = 0.75, k2 = 1;
+            if (Nl > 1) {
+                k1 = (i == 0) ? 0.75 : (i%2) ? 0.5 : 0.25;
+                k2 = (i == Nl-1) ? (i%2) ? 0.75 : 0 : (i%2) ? 0.25 : 0.5;
+            }
+            tr1 = Vec2f(k2, ta+te);
+            tl1 = Vec2f(k1, ta+te);
+            tr2 = Vec2f(k1, 0);
+            tl2 = Vec2f(k2, 0);
+            te1 = Vec2f(k1, te);
+            te2 = Vec2f(k2, te);
+            int t = -(Nl-i-1);
+            pushTriangle( r1 + d1*t, l1 + d1*i, e1 + d3*i, norm, geo, tr1, tl1, te1 );
+            pushTriangle( r1 + d1*t, e1 + d3*i, e2 + d3*t, norm, geo, tr1, te1, te2 );
+            pushTriangle( r2 + d2*i, l2 + d2*t, e2 + d3*t, norm, geo, tr2, tl2, te2 );
+            pushTriangle( r2 + d2*i, e2 + d3*t, e1 + d3*i, norm, geo, tr2, te2, te1 );
+        }
+    }
+}
+
 void ModuleStreets::makeStreetJointGeometry(StreetJoint* sj, map<string, StreetSegment*>& streets, map<string, StreetJoint*>& joints, GeometryData* geo) {
     vector<JointPoints*> jointPoints = StreetAlgos::calcJoints(sj, streets, joints);
 
     int Nsegs = sj->segmentIds.size();
     if (Nsegs <= 1) return;
-    float jointH = Config::get()->STREET_HEIGHT;
-
-    auto checkIsBridge = [&]() { /* look up, if street joint is part of a bridge */
-        StreetSegment* seg1 = streets[sj->segmentIds[0]];
-        StreetSegment* seg2 = streets[sj->segmentIds[1]];
-        sj->bridge = seg1->bridge && seg2->bridge;
-        sj->smallBridge = (seg1->smallBridge || seg2->smallBridge) && sj->bridge;
-        if (sj->smallBridge) jointH += Config::get()->SMALL_BRIDGE_HEIGHT;
-        else if (sj->bridge) jointH += Config::get()->BRIDGE_HEIGHT;
-    };
-
-    checkIsBridge();
+    float jointH = Config::get()->STREET_HEIGHT + updateJointBridge(sj, streets);
 
     Vec3f right, left, leftExt, rightExt, firstRight, firstLeft, prevLeft, prevRight;
     Vec3f _NULL;
     Vec2f _NULL2;
     Vec3f norm = Vec3f(0, 1, 0);
     Vec3f middle = elevate(sj->position, jointH);
+    Vec2f tm = Vec2f(0.875, 0.5);
 
-    if (Nsegs == 2 && jointPoints.size() == 2) { // TODO: replace by extending the segment mesh points, incl. lanes
-        JointPoints* jp1 = jointPoints[0];
-        JointPoints* jp2 = jointPoints[1];
-        if (jp1->leftExt != _NULL2 && jp1->leftExt != _NULL2) {
-            Vec3f r1 = elevate(jp1->right  , jointH);
-            Vec3f l1 = elevate(jp1->left   , jointH);
-            Vec3f r2 = elevate(jp2->right  , jointH);
-            Vec3f l2 = elevate(jp2->left   , jointH);
-            Vec3f e1 = elevate(jp1->leftExt, jointH);
-            Vec3f e2 = elevate(jp2->leftExt, jointH);
-            Vec2f tr1 = Vec2f(0.75, 0);
-            Vec2f tl1 = Vec2f(1, 0);
-            Vec2f tr2 = Vec2f(1, 1);
-            Vec2f tl2 = Vec2f(0.75, 1);
-            Vec2f te1 = Vec2f(1, 0.5);
-            Vec2f te2 = Vec2f(0.75, 0.5);
-            pushTriangle( r1, l1, e1, norm, geo, tr1, tl1, te1 );
-            pushTriangle( r1, e1, e2, norm, geo, tr1, te1, te2 );
-            pushTriangle( r2, l2, e2, norm, geo, tr2, tl2, te2 );
-            pushTriangle( r2, e2, e1, norm, geo, tr2, te2, te1 );
-        }
-        return;
+    Vec3f p1,p2,p3;
+    Vec2f t1,t2;
+    for (uint i=0; i<jointPoints.size(); i++) {
+        JointPoints* jp1 = jointPoints[i];
+        JointPoints* jp2 = jointPoints[(i+1)%jointPoints.size()];
+        p1 = elevate(jp1->right, jointH);
+        p2 = elevate(jp1->left, jointH);
+        t1 = Vec2f(0.75, 0);
+        t2 = Vec2f(1, 0);
+        pushTriangle(p1, p2, middle, norm, geo, t1, t2, tm);
+        p1 = elevate(jp1->left, jointH);
+        p2 = elevate(jp2->right, jointH);
+        t1 = Vec2f(1, 0);
+        t2 = Vec2f(1, 1);
+        pushTriangle(p1, p2, middle, norm, geo, t1, t2, tm);
     }
 
-    vector<Vec3f> fan;
-    vector<Vec2f> fantex;
+    //fan.push_back( elevate(jointPoints[0]->right, jointH) ); // close fan
+    //fantex.push_back(Vec2f(0.75, 0));
 
-    int i=0;
-    for (JointPoints* jp : jointPoints) {
-        fan.push_back( elevate(jp->right, jointH) );
-        fan.push_back( elevate(jp->left, jointH) );
-        fantex.push_back(Vec2f(0.75+i%2, i%2));
-        fantex.push_back(Vec2f(1-i%2, i%2));
-        if (Nsegs == 2 && jp->leftExt != _NULL2) {
-            fan.push_back( elevate(jp->leftExt, jointH) );
-            fantex.push_back(Vec2f(1-i%2, 0.5));
-        }
-        i++;
-    }
-
-    fan.push_back( elevate(jointPoints[0]->right, jointH) ); // close fan
-    fantex.push_back(Vec2f(0, 0));
-
-    for (uint i=1; i<fan.size(); i++) {
-        pushTriangle(fan[i], fan[i-1], middle, norm, geo);
-        float my = (Nsegs == 2) ? 0.5 : fantex[i][1];
-        geo->texs->addValue(fantex[i-1]);
-        geo->texs->addValue(fantex[i]);
-        geo->texs->addValue(Vec2f(0.85, my));
-    }
 
     if (!sj->bridge) return;
 
