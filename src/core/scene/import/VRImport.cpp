@@ -73,6 +73,7 @@ VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, stri
 
     if (preset == "PLY") {
         VRGeometryPtr geo = loadPly(path);
+        if (parent) parent->addChild(geo);
         return geo; // TODO: use cache!
     }
 

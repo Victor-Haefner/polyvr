@@ -76,13 +76,13 @@ VRMaterialPtr VRSelector::getMat() {
     VRMaterialPtr mat = VRMaterial::create("VRSelector");
 
     // stencil buffer
-    mat->setFrontBackModes(GL_POINT, GL_POINT);
+    /*mat->setFrontBackModes(GL_POINT, GL_POINT);
     mat->setDiffuse(color);
     mat->setPointSize(8);
     mat->setLit(false);
     mat->setStencilBuffer(false, 1,-1, GL_NOTEQUAL, GL_KEEP, GL_KEEP, GL_REPLACE);
 
-    mat->addPass();
+    mat->addPass();*/
 
     mat->setFrontBackModes(GL_LINE, GL_LINE);
     mat->setDiffuse(color);
