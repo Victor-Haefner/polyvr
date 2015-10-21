@@ -327,6 +327,7 @@ float ModuleStreets::updateJointBridge(StreetJoint* sj, map<string, StreetSegmen
     sj->smallBridge = (seg1->smallBridge || seg2->smallBridge) && sj->bridge;
     if (sj->smallBridge) return Config::get()->SMALL_BRIDGE_HEIGHT;
     else if (sj->bridge) return Config::get()->BRIDGE_HEIGHT;
+    else return 0;
 };
 
 void ModuleStreets::makeStreetCurveGeometry(StreetJoint* sj, map<string, StreetSegment*>& streets, map<string, StreetJoint*>& joints, GeometryData* geo) {
