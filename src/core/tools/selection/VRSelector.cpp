@@ -86,7 +86,7 @@ VRMaterialPtr VRSelector::getMat() {
 
     mat->setFrontBackModes(GL_LINE, GL_LINE);
     mat->setDiffuse(color);
-    mat->setLineWidth(8);
+    mat->setLineWidth(width, smooth);
     mat->setLit(false);
     mat->setStencilBuffer(false, 1,-1, GL_NOTEQUAL, GL_KEEP, GL_KEEP, GL_REPLACE);
 
@@ -105,6 +105,12 @@ void VRSelector::deselect() {
 }
 
 void VRSelector::clear() { selection->clear(); update(); }
+
+void VRSelector::setBorder(int width, bool smooth) {
+    this->width = width;
+    this->smooth = smooth;
+    update();
+}
 
 void VRSelector::select(VRObjectPtr obj) {
     clear();

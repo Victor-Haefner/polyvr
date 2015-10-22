@@ -54,8 +54,17 @@ PyMethodDef VRPySelector::methods[] = {
     {"set", (PyCFunction)VRPySelector::set, METH_VARARGS, "Set selection - set( selection )" },
     {"clear", (PyCFunction)VRPySelector::clear, METH_NOARGS, "Clear selection - deselect()" },
     {"getSelection", (PyCFunction)VRPySelector::getSelection, METH_NOARGS, "Return the selected object - object getSelection()" },
+    {"setBorder", (PyCFunction)VRPySelector::setBorder, METH_VARARGS, "Set the border with and toggles smoothness - setBorder(int width, bool smooth)" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPySelector::setBorder(VRPySelector* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    int w; int s = 1;
+    if (! PyArg_ParseTuple(args, "i|i:setBorder", &w, &s)) return NULL;
+    self->obj->setBorder(w,s);
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPySelector::setColor(VRPySelector* self, PyObject* args) {
     if (!self->valid()) return NULL;

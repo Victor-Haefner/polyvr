@@ -334,18 +334,18 @@ VRObjectPtr VRMaterial::copy(vector<VRObjectPtr> children) {
     return mat;
 }
 
-void VRMaterial::setLineWidth(int w) {
+void VRMaterial::setLineWidth(int w, bool smooth) {
     auto md = mats[activePass];
     if (md->lineChunk == 0) { md->lineChunk = LineChunk::create(); md->mat->addChunk(md->lineChunk); }
     md->lineChunk->setWidth(w);
-    md->lineChunk->setSmooth(true);
+    md->lineChunk->setSmooth(smooth);
 }
 
-void VRMaterial::setPointSize(int s) {
+void VRMaterial::setPointSize(int s, bool smooth) {
     auto md = mats[activePass];
     if (md->pointChunk == 0) { md->pointChunk = PointChunk::create(); md->mat->addChunk(md->pointChunk); }
     md->pointChunk->setSize(s);
-    md->pointChunk->setSmooth(true);
+    md->pointChunk->setSmooth(smooth);
 }
 
 void VRMaterial::saveContent(xmlpp::Element* e) {

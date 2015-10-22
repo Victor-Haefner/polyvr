@@ -13,6 +13,7 @@ struct VRPySelector : VRPyBaseT<OSG::VRSelector> {
     static PyObject* set(VRPySelector* self, PyObject* args);
     static PyObject* clear(VRPySelector* self);
     static PyObject* getSelection(VRPySelector* self);
+    static PyObject* setBorder(VRPySelector* self, PyObject* args);
 };
 
 #endif // VRPYSELECTOR_H_INCLUDED

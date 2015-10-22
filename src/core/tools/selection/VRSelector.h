@@ -14,6 +14,8 @@ using namespace std;
 class VRSelector {
     private:
         Vec3f color;
+        int width = 5;
+        bool smooth = true;
         struct MatStore {
             VRGeometryWeakPtr geo;
             VRMaterialPtr mat;
@@ -33,6 +35,7 @@ class VRSelector {
         void select(VRSelectionPtr s);
         VRSelectionPtr getSelection();
         void setColor(Vec3f c);
+        void setBorder(int width, bool smooth = true);
         void update();
         void clear();
 };
