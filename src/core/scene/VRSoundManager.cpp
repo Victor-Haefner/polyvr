@@ -30,7 +30,14 @@ x; \
 ALenum error = alGetError(); \
 if (error != AL_NO_ERROR) { \
         fprintf(stderr, "\nRuntime error: %s got %s at %s:%d", #x, toString(error).c_str(), __FILE__, __LINE__); \
-        /*exit(0);*/ \
+} }
+
+#define ALCHECK_BREAK(x) { \
+x; \
+ALenum error = alGetError(); \
+if (error != AL_NO_ERROR) { \
+        fprintf(stderr, "\nRuntime error: %s got %s at %s:%d", #x, toString(error).c_str(), __FILE__, __LINE__); \
+        break; \
 } }
 
 OSG_BEGIN_NAMESPACE;
@@ -85,6 +92,7 @@ struct VRSound {
     void setPitch(float pitch) { this->pitch = pitch; doUpdate = true; }
     void setGain(float gain) { this->gain = gain; doUpdate = true; }
     void setUser(Vec3f p, Vec3f v) { pos = p; vel = v; doUpdate = true; }
+    bool isRunning() { return state == AL_PLAYING; }
 
     void close() {
         ALCHECK( alDeleteSources(1u, &source));
@@ -94,6 +102,11 @@ struct VRSound {
         context = 0;
         resampler = 0;
         init = 0;
+    }
+
+    void reset() {
+        if (state == AL_INITIAL) return;
+        state = AL_INITIAL;
     }
 
     void updateSource() {
@@ -113,8 +126,8 @@ struct VRSound {
         ALCHECK( alGenSources(1u, &source) );
         updateSource();
 
-        if (avformat_open_input(&context, path.c_str(), NULL, NULL) < 0) return 0;
-        if (avformat_find_stream_info(context, NULL) < 0) return 0;
+        if (avformat_open_input(&context, path.c_str(), NULL, NULL) < 0) { cout << "ERROR! avformat_open_input failed\n"; return 0; }
+        if (avformat_find_stream_info(context, NULL) < 0) { cout << "ERROR! avformat_find_stream_info failed\n"; return 0; }
         av_dump_format(context, 0, path.c_str(), 0);
 
         stream_id = av_find_best_stream(context, AVMEDIA_TYPE_AUDIO, -1, -1, NULL, 0);
@@ -219,6 +232,7 @@ struct VRSound {
     void playFrame() {
         if (state == AL_INITIAL) {
             if (!initiated) initiate();
+            if (!context) return;
             frame = avcodec_alloc_frame();
             av_seek_frame(context, stream_id, 0,  AVSEEK_FLAG_FRAME);
             state = AL_PLAYING;
@@ -260,7 +274,8 @@ struct VRSound {
                     ALuint bufid = 0;
 
                     while (free_buffers.size() == 0) { // recycle buffers
-                        while (val <= 0) ALCHECK( alGetSourcei(source, AL_BUFFERS_PROCESSED, &val));      // wait for openal to release one buffer
+                        while (val <= 0) ALCHECK_BREAK( alGetSourcei(source, AL_BUFFERS_PROCESSED, &val));      // wait for openal to release one buffer
+                        if (val <= 0) { state = AL_STOPPED; return; }
                         for(; val > 0; --val) {
                             ALCHECK( alSourceUnqueueBuffers(source, 1, &bufid));
                             free_buffers.push_back(bufid);
@@ -349,10 +364,13 @@ struct VRSoundChannel {
             boost::mutex::scoped_lock lock(mutex);
             if (current.size() == 0) continue;
 
+            vector<int> toErase;
             for (auto c : current) {
                 c.second->playFrame();
-                if (c.second->state == AL_STOPPED) current.erase(c.first);
+                if (c.second->state == AL_STOPPED) toErase.push_back( c.first );
             }
+
+            for (auto e : toErase) current.erase(e);
         }
 
         if (context) delete context;
@@ -380,15 +398,17 @@ void VRSoundManager::clearSoundMap() {
 
 void VRSoundManager::playSound(string path, bool loop) {
     VRSound* sound = getSound(path);
+    if (sound->isRunning()) return;
     sound->setLoop(loop);
+    sound->reset();
     channel->play(sound);
 }
 
 VRSound* VRSoundManager::getSound(string path) {
-    VRSound* sound = new VRSound();
-    sound->path = path;
-    sounds[sound->path] = sound;
-    return sound;
+    if (sounds.count(path) == 0) {
+        sounds[path] = new VRSound();
+        sounds[path]->path = path;
+    } return sounds[path];
 }
 
 void VRSoundManager::setSoundVolume(float volume) {
@@ -400,11 +420,8 @@ void VRSoundManager::setSoundVolume(float volume) {
 /*void VRSoundManager::updatePlayerPosition(Vec3f position, Vec3f forward) { }*/
 
 void VRSoundManager::stopSound(string path) {
-    for (auto s : sounds) {
-        if (s.second->path != path) continue;
-        s.second->interrupt = true;
-        return;
-    }
+    if (sounds.count(path) == 0) return;
+    sounds[path]->interrupt = true;
 }
 
 void VRSoundManager::stopAllSounds(void) {

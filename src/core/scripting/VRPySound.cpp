@@ -62,7 +62,6 @@ PyObject* VRPySound::play(VRPySound* self, PyObject* args) {
     Py_RETURN_TRUE;
 }
 
-
 PyObject* VRPySound::stop(VRPySound* self, PyObject* args) {
     OSG::VRSoundManager::get().stopSound(parseString(args));
     Py_RETURN_TRUE;
