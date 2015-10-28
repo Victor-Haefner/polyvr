@@ -17,13 +17,14 @@ sigc::slot<void> VRGuiFile::sigApply = sigc::slot<void>();
 sigc::slot<void> VRGuiFile::sigClose = sigc::slot<void>();
 sigc::slot<void> VRGuiFile::sigSelect = sigc::slot<void>();
 
+typedef boost::filesystem::path path;
+
 void VRGuiFile::init() {
     VRGuiBuilder()->get_widget("file_dialog", VRGuiFile::dialog);
     setButtonCallback("button3", sigc::ptr_fun(VRGuiFile::close));
     setButtonCallback("button9", sigc::ptr_fun(VRGuiFile::apply));
     dialog->signal_selection_changed().connect( sigc::ptr_fun( VRGuiFile::select ));
-//<string, sigc::slot<void> >
-    dialog->signal_key_release_event().connect( sigc::bind( sigc::ptr_fun(keySignalProxy), "Return", sigc::ptr_fun(VRGuiFile::apply) ) );
+    dialog->signal_file_activated().connect( sigc::ptr_fun(VRGuiFile::apply) );
     dialog->set_action(Gtk::FILE_CHOOSER_ACTION_OPEN);
 }
 
@@ -120,8 +121,6 @@ void VRGuiFile::setCallbacks(sig sa, sig sc, sig ss) {
 string VRGuiFile::getPath() {
     return string( dialog->get_filename() );
 }
-
-typedef boost::filesystem::path path;
 
 // Return path when appended to a_From will resolve to same as a_To
 path make_relative( path a_From, path a_To ) {

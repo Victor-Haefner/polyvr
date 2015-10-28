@@ -243,10 +243,7 @@ float getSliderState(string s) {
 }
 
 bool keySignalProxy(GdkEventKey* e, string k, sigc::slot<void> sig ) {
-    if (gdk_keyval_name(e->keyval) == k) {
-        sig();
-        return true;
-    }
+    if (gdk_keyval_name(e->keyval) == k) { sig(); return true; }
     return false;
 }
 
