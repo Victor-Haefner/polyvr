@@ -8,9 +8,9 @@ StreetJoint::StreetJoint(Vec2f position, string id) {
 }
 
 void StreetJoint::merge(StreetJoint* streetJoint) {
-    for (string segId : streetJoint->segmentIds) {
-        if (find(segmentIds.begin(), segmentIds.end(), segId) == segmentIds.end()) {
-            segmentIds.push_back(segId);
+    for (auto seg : streetJoint->segments) {
+        if (find(segments.begin(), segments.end(), seg) == segments.end()) {
+            segments.push_back(seg);
         }
     }
 

@@ -6,9 +6,11 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+class StreetSegment;
+
 struct Vec2WithId {
     Vec2f vec;
-    string id;
+    StreetSegment* seg;
 };
 
 class Vec2Helper {

@@ -47,7 +47,7 @@ StreetBorder* StreetAlgos::segmentGetRightBorderTo(StreetSegment* seg, string jo
 /** returns imporant points to a joint for one street segment */
 JointPoints* StreetAlgos::segmentGetPointsFor(StreetSegment* seg, string jointId) {
     JointPoints* result = new JointPoints();
-    if (seg->streetJointA_ID == jointId) {
+    if (seg->jointA->id == jointId) {
         result->left = seg->leftB;
         result->right = seg->rightB;
         result->leftExt = seg->leftExtB;
@@ -59,24 +59,21 @@ JointPoints* StreetAlgos::segmentGetPointsFor(StreetSegment* seg, string jointId
     return result;
 }
 
-/** rémoves duplicate names from a given vector */
-void StreetAlgos::vectorStrRemoveDuplicates(vector<string> vec) {
-    sort(vec.begin(), vec.end());
-    vec.erase(unique(vec.begin(), vec.end()), vec.end());
-}
-
 /** calculates the important points of a given joint */
 void StreetAlgos::calcSegments(StreetJoint* joint, map<string, StreetSegment*> streetSegments, map<string, StreetJoint*> streetJoints) {
     if (joint->calcSegPoints_) return;
     joint->calcSegPoints_ = true;
 
-    vectorStrRemoveDuplicates(joint->segmentIds);
+    auto vec = joint->segments;
+    sort(vec.begin(), vec.end());
+    vec.erase(unique(vec.begin(), vec.end()), vec.end());
+
     jointOrderSegments(joint, streetSegments, streetJoints);
 
     Vec2f jCenter = joint->position;
 
-    if (joint->segmentIds.size() == 1) { // special handling
-        StreetSegment* seg = streetSegments[joint->segmentIds[0]];
+    if (joint->segments.size() == 1) { // special handling
+        auto seg = joint->segments[0];
         seg->setLeftPointFor(joint->id, segmentGetLeftBorderTo(seg, joint->id, streetJoints)->end);
         seg->setRightPointFor(joint->id, segmentGetRightBorderTo(seg, joint->id, streetJoints)->end);
         seg->setLeftExtPointFor(joint->id, joint->position + (segmentGetRightBorderTo(seg, joint->id, streetJoints)->dir() * (seg->width * 0.5f)));
@@ -84,15 +81,14 @@ void StreetAlgos::calcSegments(StreetJoint* joint, map<string, StreetSegment*> s
     }
 
     float maxWidth = 0;
-    for (string segId : joint->segmentIds) { //2-4 IDs
-        StreetSegment* seg = streetSegments[segId];
+    for (auto seg : joint->segments) { //2-4 IDs
         if (seg->width > maxWidth) maxWidth = seg->width;
     }
     maxWidth *= 0.5;
 
-    for (unsigned int i=0; i<joint->segmentIds.size(); i++) {
-        StreetSegment* s1 = streetSegments[joint->segmentIds[i]];
-        StreetSegment* s2 = streetSegments[joint->segmentIds[(i+1) % joint->segmentIds.size()]];
+    for (unsigned int i=0; i<joint->segments.size(); i++) {
+        StreetSegment* s1 = joint->segments[i];
+        StreetSegment* s2 = joint->segments[(i+1) % joint->segments.size()];
 
         StreetBorder* s1BorderLeft = segmentGetLeftBorderTo(s1, joint->id, streetJoints);
         StreetBorder* s2BorderRight = segmentGetRightBorderTo(s2, joint->id, streetJoints);
@@ -143,9 +139,7 @@ vector<JointPoints*> StreetAlgos::calcJoints(StreetJoint* joint, map<string, Str
     if (joint->jointPointCache_.size() > 0) return joint->jointPointCache_;
 
     vector<JointPoints*> jointPoints;
-    for(string segId : joint->segmentIds) {
-        StreetSegment* seg = streetSegments[segId];
-
+    for(auto seg : joint->segments) {
         // make borders the same length (use the smaller border length as reference)
         JointPoints* p = segmentGetPointsFor(seg, joint->id);
 
@@ -183,20 +177,18 @@ void StreetAlgos::jointOrderSegments(StreetJoint* joint, map<string, StreetSegme
     if (joint == 0) return;
     Vec2f center = joint->position;
     vector<Vec2WithId*> points;
-    for (string segId : joint->segmentIds) {
-        if (!streetSegments.count(segId)) { continue; }
-        StreetSegment* seg = streetSegments[segId];
+    for (auto seg : joint->segments) {
         if (seg == 0) continue;
         StreetJoint* oJoint = streetJoints[seg->getOtherJointId(joint->id)];
         if (oJoint == 0) continue;
         Vec2WithId* p = new Vec2WithId();
         p->vec = oJoint->position;
-        p->id = segId;
+        p->seg = seg;
         points.push_back(p);
     }
 
     points = Vec2Helper::orderCW(points, center);
 
-    joint->segmentIds.clear();
-    for (Vec2WithId* point : points) joint->segmentIds.push_back(point->id);
+    joint->segments.clear();
+    for (Vec2WithId* point : points) joint->segments.push_back(point->seg);
 }

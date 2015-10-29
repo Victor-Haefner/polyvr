@@ -13,6 +13,17 @@ class GeometryData;
 class StreetJoint;
 class StreetSegment;
 
+struct StreetType {
+    string type = "road";
+    float width = 1;
+    float bridgeHeight = 0;
+    VRMaterialPtr mat;
+    bool cars = false;
+    StreetType() {}
+    StreetType(string t, float w, float b, VRMaterialPtr m, bool c)
+                : type(t), width(w), bridgeHeight(b), mat(m), cars(c) {}
+};
+
 class ModuleStreets: public BaseModule {
     public:
         ModuleStreets();
@@ -25,15 +36,14 @@ class ModuleStreets: public BaseModule {
 
     private:
         map<string, VRGeometryPtr> meshes;
-        map<string, vector<VRGeometryPtr> > signs;
+        map<string, StreetType> types;
         VRMaterialPtr matStreet = 0;
 
         VRGeometryPtr makeSignGeometry(StreetSegment* seg);
-        void makeStreetSegmentGeometry(StreetSegment* s, GeometryData* geo);
+        void makeStreetSegmentGeometry(StreetSegment* s, map<string, StreetJoint*>& joints, GeometryData* geo);
         void makeStreetCurveGeometry(StreetJoint* sj, map<string, StreetSegment*>& streets, map<string, StreetJoint*>& joints, GeometryData* geo);
         void makeStreetJointGeometry(StreetJoint* sj, map<string, StreetSegment*>& streets, map<string, StreetJoint*>& joints, GeometryData* geo);
 
-        float updateJointBridge(StreetJoint* sj, map<string, StreetSegment*>& streets);
         void pushQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f normal, GeometryData* geo, bool isSide = false, Vec2f tc = Vec2f(0,1));
         void pushTriangle(Vec3f c, Vec3f a1, Vec3f a2, Vec3f normal, GeometryData* geo, Vec2f t1, Vec2f t2, Vec2f t3 );
         void pushTriangle(Vec3f c, Vec3f a1, Vec3f a2, Vec3f normal, GeometryData* geo);

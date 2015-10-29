@@ -6,22 +6,22 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+class StreetJoint;
+
 class StreetSegment {
     public:
-        string streetJointA_ID;
-        string streetJointB_ID;
+        StreetJoint* jointA = 0;
+        StreetJoint* jointB = 0;
         float width;
         int lanes = 0;
         string id;
         string name;
         bool bridge = false;
-        bool smallBridge = false;
-        bool leftBridge = false;
-        bool rightBridge = false;
+        float bridgeHeight = 0;
 
         Vec2f leftA, leftB, rightA, rightB, leftExtA, leftExtB;
 
-        StreetSegment(string streetJointA_ID, string streetJointB_ID, float width, string id);
+        StreetSegment(StreetJoint* jA, StreetJoint* jB, float width, string id);
 
         void setLeftPointFor(string jointId, Vec2f posLeft);
         void setLeftExtPointFor(string jointId, Vec2f posLeft);

@@ -84,8 +84,8 @@ void World::updateGeometry() {
 
         // unload segments attached to this joint
         StreetJoint* joint = streetJoints[jointId];
-        for (string segId : joint->segmentIds) {
-            if (meshes.count(segId)) meshes.erase(segId);
+        for (auto seg : joint->segments) {
+            if (meshes.count(seg->id)) meshes.erase(seg->id);
         }
     }
 

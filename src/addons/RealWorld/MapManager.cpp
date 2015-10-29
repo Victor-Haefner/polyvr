@@ -55,7 +55,7 @@ void MapManager::updatePosition(Vec2f worldPosition) {
 MapData* MapManager::loadMap(string filename) {
 
     // check if file exists
-    ifstream ifile(filename.c_str());
+    /*ifstream ifile(filename.c_str());
     if (ifile) ifile.close();
     else return NULL;
 
@@ -125,7 +125,7 @@ MapData* MapManager::loadMap(string filename) {
         }
     }
 
-    return mapData;
+    return mapData;*/
 }
 
 void MapManager::unloadBbox(AreaBoundingBox* bbox) {

@@ -14,14 +14,16 @@ struct JointPoints {
     Vec2f leftExt;
 };
 
+class StreetSegment;
+
 class StreetJoint {
     public:
         Vec2f position;
         string id;
-        vector<string> segmentIds;
+        vector<StreetSegment*> segments;
         string info;
         bool bridge = false;
-        bool smallBridge = false;
+        float bridgeHeight = 0;
 
         vector<JointPoints*> jointPointCache_;
         bool calcSegPoints_ = false;

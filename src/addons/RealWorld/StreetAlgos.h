@@ -34,9 +34,6 @@ class StreetAlgos {
         /** returns imporant points to a joint for one street segment */
         static JointPoints* segmentGetPointsFor(StreetSegment* seg, string jointId);
 
-        /** rémoves duplicate names from a given vector */
-        static void vectorStrRemoveDuplicates(vector<string> vec);
-
         /** calculates the important points of a given joint */
         static void calcSegments(StreetJoint* joint, map<string, StreetSegment*> streetSegments, map<string, StreetJoint*> streetJoints);
 
