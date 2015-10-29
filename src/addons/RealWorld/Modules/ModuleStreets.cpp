@@ -146,20 +146,26 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
             break;
         }
 
-        /*for (auto seg : joint->segments) {
-            if (!seg->bridge) continue;
-            joint->bridgeHeight = seg->bridgeHeight;
-            joint->bridge = true;
-            break;
-        }*/
+        if (joint->segments.size() == 2) joint->type = J1;
+        if (joint->segments.size() == 4) {
+            vector<int> sLN;
+            for (auto seg : joint->segments) sLN.push_back(seg->lanes);
+            sort(sLN.begin(), sLN.end());
 
-        if (joint->segments.size() == 2) makeStreetCurveGeometry(joint, listLoadSegments, listLoadJoints, jdata);
-        else makeStreetJointGeometry(joint, listLoadSegments, listLoadJoints, jdata);
+            if (sLN[0] == sLN[1] == sLN[2] == 1 && sLN[3] == 3) {
+                joint->type = J1x3L_3x1L;
+            }
+        }
+
+        switch (joint->type) {
+            case J1: makeCurve(joint, listLoadSegments, listLoadJoints, jdata); break;
+            case J1x3L_3x1L: makeJoint31(joint, listLoadSegments, listLoadJoints, jdata); break;
+            default: makeJoint(joint, listLoadSegments, listLoadJoints, jdata); break;
+        }
     }
 
     for (auto seg : listLoadSegments) {
-        //if (seg.second->jointA->bridge || seg.second->jointB->bridge) seg.second->bridge = true;
-        makeStreetSegmentGeometry(seg.second, listLoadJoints, sdata); // load street segments
+        makeSegment(seg.second, listLoadJoints, sdata); // load street segments
         /*auto sign = makeSignGeometry(seg.second);
         if (sign == 0) continue;
         if (signs.count(bbox->str) == 0) signs[bbox->str] = vector<VRGeometryPtr>();
@@ -225,7 +231,7 @@ VRGeometryPtr ModuleStreets::makeSignGeometry(StreetSegment* seg) {
     return sign;
 }
 
-void ModuleStreets::makeStreetSegmentGeometry(StreetSegment* s, map<string, StreetJoint*>& joints, GeometryData* streets) {
+void ModuleStreets::makeSegment(StreetSegment* s, map<string, StreetJoint*>& joints, GeometryData* streets) {
     Vec2f leftA = Vec2f(s->leftA);
     Vec2f rightA = Vec2f(s->rightA);
     Vec2f leftB = Vec2f(s->leftB);
@@ -347,7 +353,7 @@ Vec3f ModuleStreets::elevate(Vec2f p, float h) {
     return Vec3f(p[0], mc->getElevation(p) + h, p[1]);
 }
 
-void ModuleStreets::makeStreetCurveGeometry(StreetJoint* sj, map<string, StreetSegment*>& streets, map<string, StreetJoint*>& joints, GeometryData* geo) {
+void ModuleStreets::makeCurve(StreetJoint* sj, map<string, StreetSegment*>& streets, map<string, StreetJoint*>& joints, GeometryData* geo) {
     vector<JointPoints*> jointPoints = StreetAlgos::calcJoints(sj, streets, joints);
     float jointH = Config::get()->STREET_HEIGHT + sj->bridgeHeight;
 
@@ -393,7 +399,7 @@ void ModuleStreets::makeStreetCurveGeometry(StreetJoint* sj, map<string, StreetS
     }
 }
 
-void ModuleStreets::makeStreetJointGeometry(StreetJoint* sj, map<string, StreetSegment*>& streets, map<string, StreetJoint*>& joints, GeometryData* geo) {
+void ModuleStreets::makeJoint(StreetJoint* sj, map<string, StreetSegment*>& streets, map<string, StreetJoint*>& joints, GeometryData* geo) {
     vector<JointPoints*> jointPoints = StreetAlgos::calcJoints(sj, streets, joints);
 
     int Nsegs = sj->segments.size();
@@ -485,3 +491,54 @@ void ModuleStreets::makeStreetJointGeometry(StreetJoint* sj, map<string, StreetS
     pushTriangle(rightExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0), firstRight+Vec3f(0, Config::get()->BRIDGE_SIZE, 0), firstRight, normal, geo);
     geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5));
 }
+
+void ModuleStreets::makeJoint31(StreetJoint* sj, map<string, StreetSegment*>& streets, map<string, StreetJoint*>& joints, GeometryData* geo) {
+    vector<JointPoints*> jointPoints = StreetAlgos::calcJoints(sj, streets, joints);
+    float jointH = Config::get()->STREET_HEIGHT + sj->bridgeHeight;
+
+    Vec2f _NULL;
+    Vec3f norm = Vec3f(0, 1, 0);
+
+    int sL3 = 0;
+    for (int i=0; i<4; i++) if (sj->segments[i]->lanes == 3) sL3 = i;
+
+    JointPoints* jp3 = jointPoints[sL3];
+    JointPoints* jp0 = jointPoints[(sL3+1)%4];
+    JointPoints* jp1 = jointPoints[(sL3+2)%4];
+    JointPoints* jp2 = jointPoints[(sL3+3)%4];
+
+    Vec3f r3 = elevate(jp3->right, jointH);
+    Vec3f l3 = elevate(jp3->left , jointH);
+    Vec3f s = elevate(sj->position, jointH) - r3+(r3-l3)*0.5;
+    Vec3f s3D = (r3-l3)*1/3.0;
+    float sL = s.length()/s3D.length();
+
+    pushTriangle( r3, l3, l3+s, norm, geo, Vec2f(0, 0), Vec2f(0.75, 0), Vec2f(0.75, sL) );
+    pushTriangle( r3, l3+s, r3+s, norm, geo, Vec2f(0, 0), Vec2f(0.75, sL), Vec2f(0, sL) );
+
+    Vec3f p0l = elevate(jp0->left, jointH);
+    Vec3f p0r = elevate(jp0->right, jointH);
+    Vec3f p1l = elevate(jp1->left, jointH);
+    Vec3f p1r = elevate(jp1->right, jointH);
+    Vec3f p2l = elevate(jp2->left, jointH);
+    Vec3f p2r = elevate(jp2->right, jointH);
+
+    Vec2f t0(0.75, 1);
+    Vec2f t1(1, 1);
+
+    pushTriangle( p0r, p0l, l3+s, norm, geo, t0, t1, t0 );
+    pushTriangle( p0l, l3+s+s3D, l3+s, norm, geo, t1, t1, t0 );
+
+    pushTriangle( p1r, p1l, l3+s+s3D, norm, geo, t0, t1, t0 );
+    pushTriangle( p1l, l3+s+s3D*2, l3+s+s3D, norm, geo, t1, t1, t0 );
+
+    pushTriangle( p2r, p2l, l3+s+s3D*2, norm, geo, t0, t1, t0 );
+    pushTriangle( p2l, r3+s, l3+s+s3D*2, norm, geo, t1, t1, t0 );
+
+    cout << "CREATE JOINT TYPE 31\n";
+}
+
+
+
+
+

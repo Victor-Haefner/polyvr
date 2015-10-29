@@ -40,9 +40,10 @@ class ModuleStreets: public BaseModule {
         VRMaterialPtr matStreet = 0;
 
         VRGeometryPtr makeSignGeometry(StreetSegment* seg);
-        void makeStreetSegmentGeometry(StreetSegment* s, map<string, StreetJoint*>& joints, GeometryData* geo);
-        void makeStreetCurveGeometry(StreetJoint* sj, map<string, StreetSegment*>& streets, map<string, StreetJoint*>& joints, GeometryData* geo);
-        void makeStreetJointGeometry(StreetJoint* sj, map<string, StreetSegment*>& streets, map<string, StreetJoint*>& joints, GeometryData* geo);
+        void makeSegment(StreetSegment* s, map<string, StreetJoint*>& joints, GeometryData* geo);
+        void makeCurve(StreetJoint* sj, map<string, StreetSegment*>& streets, map<string, StreetJoint*>& joints, GeometryData* geo);
+        void makeJoint(StreetJoint* sj, map<string, StreetSegment*>& streets, map<string, StreetJoint*>& joints, GeometryData* geo);
+        void makeJoint31(StreetJoint* sj, map<string, StreetSegment*>& streets, map<string, StreetJoint*>& joints, GeometryData* geo);
 
         void pushQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f normal, GeometryData* geo, bool isSide = false, Vec2f tc = Vec2f(0,1));
         void pushTriangle(Vec3f c, Vec3f a1, Vec3f a2, Vec3f normal, GeometryData* geo, Vec2f t1, Vec2f t2, Vec2f t3 );

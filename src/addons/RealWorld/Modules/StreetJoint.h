@@ -14,10 +14,18 @@ struct JointPoints {
     Vec2f leftExt;
 };
 
+enum JointType {
+    J1,
+    J4_4,
+    J1x3L_3x1L,
+    J1x3L_2L1L
+};
+
 class StreetSegment;
 
 class StreetJoint {
     public:
+        JointType type;
         Vec2f position;
         string id;
         vector<StreetSegment*> segments;
