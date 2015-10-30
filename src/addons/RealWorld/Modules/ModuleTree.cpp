@@ -13,17 +13,7 @@
 
 using namespace OSG;
 
-ImageRecPtr treeTex;
-
-ModuleTree::ModuleTree() : BaseModule("ModuleTree") {
-	mat = VRMaterial::create("tree");
-	VRTextureGenerator tg;
-	tg.setSize(Vec3i(50,50,1));
-	tg.add("Perlin", 1, Vec3f(0.7,0.5,0.3), Vec3f(1,0.9,0.7));
-	tg.add("Perlin", 0.25, Vec3f(1,0.9,0.7), Vec3f(0.7,0.5,0.3));
-	mat->setTexture(tg.compose(0));
-	treeTex = tg.compose(0);
-}
+ModuleTree::ModuleTree() : BaseModule("ModuleTree") {}
 
 void ModuleTree::loadBbox(AreaBoundingBox* bbox) {
     auto mc = RealWorld::get()->getCoordinator();
@@ -45,8 +35,6 @@ void ModuleTree::loadBbox(AreaBoundingBox* bbox) {
         root->addChild(tree);
         if (trees.count(bbox->str) == 0) trees[bbox->str] = vector<VRTreePtr>();
         trees[bbox->str].push_back(tree);
-
-        tree->getMaterial()->setTexture(treeTex);
     }
 }
 

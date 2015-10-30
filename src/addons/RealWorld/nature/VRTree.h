@@ -14,6 +14,7 @@ class VRTree : public VRGeometry {
         segment* trunc = 0;
         vector<segment*>* branches = 0;
         VRGeometryPtr armatureGeo;
+        static VRMaterialPtr treeMat;
 
         float random (float min, float max);
         float variation(float val, float var);
@@ -21,7 +22,7 @@ class VRTree : public VRGeometry {
         Vec3f randomRotate(Vec3f v, float a); //rotate a vector with angle 'a' in a random direction
 
         void grow(const seg_params& sp, segment* p, int iteration = 0);
-        void initMaterial();
+        VRMaterialPtr initMaterial();
 
         void initArmatureGeo();
         void testSetup();

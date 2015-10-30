@@ -4,11 +4,18 @@ varying mat3 n_model;
 varying vec2 tc;
 varying vec3 vert_normal;
 
+//attribute mat4 osg_ModelViewProjectionMatrix;
+//attribute mat3 osg_NormalMatrix;
+attribute vec4 osg_Vertex;
+attribute vec3 osg_Normal;
+attribute vec4 osg_Color;
+attribute vec2 osg_MultiTexCoord0;
+
 //----------------------------------------------------------------------------------------------MAIN--VP
 void main( void ) {
-    tc = gl_MultiTexCoord0.xy;
+    tc = osg_MultiTexCoord0.xy;
     model = gl_ModelViewProjectionMatrix;
     n_model = gl_NormalMatrix;
-    gl_Position = gl_Vertex;
-    vert_normal = gl_Normal;
+    gl_Position = osg_Vertex;
+    vert_normal = osg_Normal;
 }
