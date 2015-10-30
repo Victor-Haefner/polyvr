@@ -159,7 +159,7 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
 
         switch (joint->type) {
             case J1: makeCurve(joint, listLoadSegments, listLoadJoints, jdata); break;
-            case J1x3L_3x1L: makeJoint31(joint, listLoadSegments, listLoadJoints, jdata); break;
+            case J1x3L_3x1L: makeJoint31(joint, listLoadSegments, listLoadJoints, sdata); break;
             default: makeJoint(joint, listLoadSegments, listLoadJoints, jdata); break;
         }
     }
@@ -252,7 +252,7 @@ void ModuleStreets::makeSegment(StreetSegment* s, map<string, StreetJoint*>& joi
                 k1 = (l == 0) ? 0 : (l%2) ? 0.25 : 0.5;
                 k2 = (l == s->lanes-1) ? (l%2) ? 0 : 0.75 : (l%2) ? 0.5 : 0.25;
             }
-            pushQuad( lA, rA, rB, lB, Vec3f(0,1,0), streets, false, Vec2f(k1,k2) );
+            pushQuad( lA, rA, rB, lB, Vec3f(0,1,0), streets, false, Vec3f(k1,k2,1) );
         }
         return;
     }
@@ -282,10 +282,9 @@ void ModuleStreets::makeSegment(StreetSegment* s, map<string, StreetJoint*>& joi
                 k1 = (l == 0) ? 0 : (l%2) ? 0.25 : 0.5;
                 k2 = (l == s->lanes-1) ? (l%2) ? 0 : 0.75 : (l%2) ? 0.5 : 0.25;
             }
-            //pushQuad(a1, a2, b2, b1, -normal, streets, false, Vec2f(0.75,1) );
-            pushQuad( lA, rA, rB, lB, -normal, streets, false, Vec2f(k1,k2) );
+            pushQuad( lA, rA, rB, lB, -normal, streets, false, Vec3f(k1,k2,1) );
         }
-        pushQuad(a1-th, a2-th, b2-th, b1-th, normal, streets, false, Vec2f(0.75,1) );
+        pushQuad(a1-th, a2-th, b2-th, b1-th, normal, streets, false, Vec3f(0.75,1,1) );
         pushQuad(a1, a1-th, b1-th, b1, Vec3f(-(b1-a1)[2], 0, (b1-a1)[0]), streets, true); //side1
         pushQuad(a2, a2-th, b2-th, b2, Vec3f((b2-a2)[2], 0, -(b2-a2)[0]), streets, true); //side2
     };
@@ -302,10 +301,10 @@ void ModuleStreets::makeSegment(StreetSegment* s, map<string, StreetJoint*>& joi
     // Idee: berechne Steigung und entscheide dementsprechend fuer Treppen
 }
 
-void ModuleStreets::pushQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f normal, GeometryData* geo, bool isSide, Vec2f tc) {
+void ModuleStreets::pushQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f normal, GeometryData* geo, bool isSide, Vec3f tc) {
     // calc road length && divide by texture size
     float width = (a2-a1).length();
-    float len = (b1 - a1).length()/width;
+    float len = (b1 - a1).length()/width*tc[2]; // tc2 is the number of lanes
 
     geo->pos->addValue(a1);
     geo->pos->addValue(a2);
@@ -495,45 +494,24 @@ void ModuleStreets::makeJoint(StreetJoint* sj, map<string, StreetSegment*>& stre
 void ModuleStreets::makeJoint31(StreetJoint* sj, map<string, StreetSegment*>& streets, map<string, StreetJoint*>& joints, GeometryData* geo) {
     vector<JointPoints*> jointPoints = StreetAlgos::calcJoints(sj, streets, joints);
     float jointH = Config::get()->STREET_HEIGHT + sj->bridgeHeight;
-
-    Vec2f _NULL;
-    Vec3f norm = Vec3f(0, 1, 0);
+    Vec3f n = Vec3f(0, 1, 0);
 
     int sL3 = 0;
     for (int i=0; i<4; i++) if (sj->segments[i]->lanes == 3) sL3 = i;
 
     JointPoints* jp3 = jointPoints[sL3];
-    JointPoints* jp0 = jointPoints[(sL3+1)%4];
-    JointPoints* jp1 = jointPoints[(sL3+2)%4];
-    JointPoints* jp2 = jointPoints[(sL3+3)%4];
-
     Vec3f r3 = elevate(jp3->right, jointH);
     Vec3f l3 = elevate(jp3->left , jointH);
     Vec3f s = elevate(sj->position, jointH) - r3+(r3-l3)*0.5;
     Vec3f s3D = (r3-l3)*1/3.0;
-    float sL = s.length()/s3D.length();
+    pushQuad(r3, l3, l3+s, r3+s, n, geo, false, Vec3f(0, 0.75, 3));
 
-    pushTriangle( r3, l3, l3+s, norm, geo, Vec2f(0, 0), Vec2f(0.75, 0), Vec2f(0.75, sL) );
-    pushTriangle( r3, l3+s, r3+s, norm, geo, Vec2f(0, 0), Vec2f(0.75, sL), Vec2f(0, sL) );
-
-    Vec3f p0l = elevate(jp0->left, jointH);
-    Vec3f p0r = elevate(jp0->right, jointH);
-    Vec3f p1l = elevate(jp1->left, jointH);
-    Vec3f p1r = elevate(jp1->right, jointH);
-    Vec3f p2l = elevate(jp2->left, jointH);
-    Vec3f p2r = elevate(jp2->right, jointH);
-
-    Vec2f t0(0.75, 1);
-    Vec2f t1(1, 1);
-
-    pushTriangle( p0r, p0l, l3+s, norm, geo, t0, t1, t0 );
-    pushTriangle( p0l, l3+s+s3D, l3+s, norm, geo, t1, t1, t0 );
-
-    pushTriangle( p1r, p1l, l3+s+s3D, norm, geo, t0, t1, t0 );
-    pushTriangle( p1l, l3+s+s3D*2, l3+s+s3D, norm, geo, t1, t1, t0 );
-
-    pushTriangle( p2r, p2l, l3+s+s3D*2, norm, geo, t0, t1, t0 );
-    pushTriangle( p2l, r3+s, l3+s+s3D*2, norm, geo, t1, t1, t0 );
+    for (int i=0; i<3; i++) {
+        JointPoints* jp = jointPoints[(sL3+1+i)%4];
+        Vec3f pr = elevate(jp->right, jointH);
+        Vec3f pl = elevate(jp->left, jointH);
+        pushQuad(pr, pl, l3+s+s3D*(i+1), l3+s+s3D*i, n, geo, false, Vec3f(0.75, 1, 1));
+    }
 
     cout << "CREATE JOINT TYPE 31\n";
 }
