@@ -6,55 +6,54 @@
 #include "../World.h"
 #include "../MapCoordinator.h"
 #include "core/objects/material/VRShader.h"
+#include "core/objects/material/VRMaterial.h"
+#include "core/objects/material/VRTextureGenerator.h"
 #include "addons/RealWorld/nature/VRTree.h"
 #include <OpenSG/OSGTextureObjChunk.h>
 
 using namespace OSG;
 
-ModuleTree::ModuleTree() : BaseModule("ModuleTree") {
-    this->treeCounter = 0;
-    auto world = RealWorld::get()->getWorld();
+ImageRecPtr treeTex;
 
-    // Enable blending
-    //glEnable(GL_BLEND);
-    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable (GL_TEXTURE_2D);
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-    glEnable (GL_BLEND);
-    glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    for(TextureObjChunkRecPtr matTex : world->getTreeMap()){
-        SimpleMaterialRecPtr mat;
-        // create material
-        mat = SimpleMaterial::create();
-        //matSubquad->setDiffuse(Color3f(1, 1, 1));
-        Config::createPhongShader(mat, false);
-        mat->addChunk(matTex);
-        matTrees.push_back(mat);
-    }
+ModuleTree::ModuleTree() : BaseModule("ModuleTree") {
+	mat = VRMaterial::create("tree");
+	VRTextureGenerator tg;
+	tg.setSize(Vec3i(50,50,1));
+	tg.add("Perlin", 1, Vec3f(0.7,0.5,0.3), Vec3f(1,0.9,0.7));
+	tg.add("Perlin", 0.25, Vec3f(1,0.9,0.7), Vec3f(0.7,0.5,0.3));
+	mat->setTexture(tg.compose(0));
+	treeTex = tg.compose(0);
 }
 
 void ModuleTree::loadBbox(AreaBoundingBox* bbox) {
     auto mc = RealWorld::get()->getCoordinator();
+    auto mapDB = RealWorld::get()->getDB();
     OSMMap* osmMap = mapDB->getMap(bbox->str);
     if (!osmMap) return;
 
     cout << "LOADING TREES FOR " << bbox->str << "\n" << flush;
 
     for (OSMNode* node : osmMap->osmNodes) {
-            if(node->tags["natural"] == "tree"){
-                Vec2f pos2D = mc->realToWorld(Vec2f(node->lat, node->lon));
-                Vec3f pos3D = Vec3f(pos2D.getValues()[0], mc->getElevation(pos2D), pos2D.getValues()[1]);
+        if(node->tags["natural"] != "tree") continue;
 
-                VRTreePtr tree = VRTree::create();
-                tree->setFrom(pos3D);
-                int treeNum = getRandom(node->id);
+        Vec2f pos2D = mc->realToWorld(Vec2f(node->lat, node->lon));
+        Vec3f pos3D = Vec3f(pos2D[0], mc->getElevation(pos2D), pos2D[1]);
 
-                // generate mesh
-                VRGeometryPtr geom = makeTreeGeometry(pos3D, treeNum);
-                root->addChild(geom);
+        VRTreePtr tree = VRTree::create();
+        tree->setup(4,4,rand(), 0.2,0.5,0.75,0.55, 0.2,0.5,0.2,0.2);
+        tree->setFrom(pos3D);
+        root->addChild(tree);
+        if (trees.count(bbox->str) == 0) trees[bbox->str] = vector<VRTreePtr>();
+        trees[bbox->str].push_back(tree);
 
-                //meshes[wall->id] = geom;
-            }
+        tree->getMaterial()->setTexture(treeTex);
+    }
+}
+
+void ModuleTree::unloadBbox(AreaBoundingBox* bbox) {
+    if (trees.count(bbox->str)) {
+        for (auto t : trees[bbox->str]) t->destroy();
+        trees.erase(bbox->str);
     }
 }
 
@@ -62,48 +61,4 @@ void ModuleTree::physicalize(bool b) {
     //for (auto mesh : meshes);
 }
 
-VRGeometryPtr ModuleTree::makeTreeGeometry(Vec3f position, int treeNum) {
-    vector<Vec3f> pos;
-    vector<Vec3f> norms;
-    vector<int> inds;
-    vector<Vec2f> texs;
-    float width = Config::get()->TREE_WIDTH/2;
-    float height = Config::get()->TREE_HEIGHT;
 
-    pos.push_back(position + Vec3f(-width, 0.0f, 0.0f));
-    pos.push_back(position + Vec3f(width, 0.0f, 0.0f));
-    pos.push_back(position + Vec3f(width, height, 0.0f));
-    pos.push_back(position + Vec3f(-width, height, 0.0f));
-
-    pos.push_back(position + Vec3f(0.0f, 0.0f, -width));
-    pos.push_back(position + Vec3f(0.0f, 0.0f, width));
-    pos.push_back(position + Vec3f(0.0f, height, width));
-    pos.push_back(position + Vec3f(0.0f, height, -width));
-
-    inds.push_back(inds.size()); inds.push_back(inds.size()); inds.push_back(inds.size()); inds.push_back(inds.size());
-    inds.push_back(inds.size()); inds.push_back(inds.size()); inds.push_back(inds.size()); inds.push_back(inds.size());
-
-    texs.push_back(Vec2f(0.0f, 0.0f)); texs.push_back(Vec2f(1.0f, 0.0f)); texs.push_back(Vec2f(1.0f, 1.0f)); texs.push_back(Vec2f(0.0f, 1.0f));
-    texs.push_back(Vec2f(0.0f, 0.0f)); texs.push_back(Vec2f(1.0f, 0.0f)); texs.push_back(Vec2f(1.0f, 1.0f)); texs.push_back(Vec2f(0.0f, 1.0f));
-
-    norms.push_back(Vec3f(0.0f, 0.0f, 1.0f)); norms.push_back(Vec3f(0.0f, 0.0f, 1.0f)); norms.push_back(Vec3f(0.0f, 0.0f, 1.0f)); norms.push_back(Vec3f(0.0f, 0.0f, 1.0f));
-    norms.push_back(Vec3f(1.0f, 0.0f, 0.0f)); norms.push_back(Vec3f(1.0f, 0.0f, 0.0f)); norms.push_back(Vec3f(1.0f, 0.0f, 0.0f)); norms.push_back(Vec3f(1.0f, 0.0f, 0.0f));
-
-
-
-    VRGeometryPtr geomTree = VRGeometry::create("Tree");
-    geomTree->create(GL_QUADS, pos, norms, inds, texs);
-    geomTree->setMaterial(matTrees[treeNum]);
-    return geomTree;
-}
-
-int ModuleTree::getRandom(string id) {
-    int numb;
-    istringstream ( id ) >> numb;
-    numb %= matTrees.size();
-    return numb;
-}
-
-void ModuleTree::unloadBbox(AreaBoundingBox* bbox) {
-    //to do
-}

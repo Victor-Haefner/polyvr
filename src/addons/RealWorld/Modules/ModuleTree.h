@@ -5,17 +5,15 @@
 #include "../OSM/OSMMapDB.h"
 #include <iostream>
 #include <string>
-#include <OpenSG/OSGSimpleMaterial.h>
+#include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class ModuleTree : public BaseModule {
     private:
-        //BuildingMaterials* matBuildings[3];
-        OSMMapDB* mapDB = 0;
-        vector<SimpleMaterialRecPtr> matTrees;
-        int treeCounter;
+        VRMaterialPtr mat;
+        map<string, vector<VRTreePtr> > trees;
 
     public:
         string id;
@@ -28,7 +26,7 @@ class ModuleTree : public BaseModule {
 
         void physicalize(bool b);
 
-        VRGeometryPtr makeTreeGeometry(Vec3f position, int treeNum);
+        VRGeometryPtr makeTree(Vec3f position, int treeNum);
 
         int getRandom(string id);
 };

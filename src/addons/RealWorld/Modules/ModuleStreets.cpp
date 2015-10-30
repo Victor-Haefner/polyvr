@@ -134,6 +134,7 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
     signs->setSize(Config::get()->SIGN_WIDTH);
     signs->setColor(Vec4f(1,1,1,1));
     signs->setBackground(Vec4f(0.1,0.1,0.8,1));
+    signs->setBillboard(true);
 
 
     // load street joints
