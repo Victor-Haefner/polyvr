@@ -80,6 +80,12 @@ void VRAnnotationEngine::resize(Label& l, Vec3f p, int N) {
     }
 }
 
+int VRAnnotationEngine::add(Vec3f p, string s) {
+    int i = labels.size();
+    set(i,p,s);
+    return i;
+}
+
 void VRAnnotationEngine::set(int i, Vec3f p, string s) {
     if (i < 0) return;
     while (i >= (int)labels.size()) labels.push_back(Label());

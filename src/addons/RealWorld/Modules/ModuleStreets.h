@@ -37,9 +37,10 @@ class ModuleStreets: public BaseModule {
     private:
         map<string, VRGeometryPtr> meshes;
         map<string, StreetType> types;
-        VRMaterialPtr matStreet = 0;
+        map<string, VRAnnotationEnginePtr> annotations;
+        VRMaterialPtr matStreet;
 
-        VRGeometryPtr makeSignGeometry(StreetSegment* seg);
+        void makeSign(StreetSegment* seg, VRAnnotationEnginePtr ae);
         void makeSegment(StreetSegment* s, map<string, StreetJoint*>& joints, GeometryData* geo);
         void makeCurve(StreetJoint* sj, map<string, StreetSegment*>& streets, map<string, StreetJoint*>& joints, GeometryData* geo);
         void makeJoint(StreetJoint* sj, map<string, StreetSegment*>& streets, map<string, StreetJoint*>& joints, GeometryData* geo);

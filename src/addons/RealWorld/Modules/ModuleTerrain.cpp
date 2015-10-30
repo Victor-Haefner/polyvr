@@ -122,7 +122,7 @@ void ModuleTerrain::fillTerrainList() {
     addTerrain("wiki/leisurePlayground.png", "leisure", "playground", 3);
 }
 
-void ModuleTerrain::addTerrain(string t, string k, string v){ addTerrain(t, k, v, 1); }
+void ModuleTerrain::addTerrain(string t, string k, string v){ addTerrain(t, k, v, 0); }
 
 void ModuleTerrain::addTerrain(string texture, string key, string value, int height) {
     texture = "world/textures/"+texture;

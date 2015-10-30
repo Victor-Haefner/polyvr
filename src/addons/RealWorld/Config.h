@@ -14,7 +14,7 @@ struct Config {
     //floor values
     //Terrain && Ground
     //static const float GROUND_LVL = -1.0f; //y value of ground
-    float LAYER_DISTANCE = 0.11f; // distance between 2 layers, so that one layer is hidden completely
+    float LAYER_DISTANCE = 0.04f; // distance between 2 layers, so that one layer is hidden completely
 
     //streets
     float STREET_HEIGHT = 0.05f; //street distance from floor

@@ -9,8 +9,9 @@ using namespace std;
 
 Config::Config() {
     // override defaults:
-    LAYER_DISTANCE = 0.04f;
-    STREET_HEIGHT = 0.05f;
+    LAYER_DISTANCE = 0.04;
+    STREET_HEIGHT = 0;
+    SIGN_DISTANCE = 3;
 }
 
 Config* Config::get() {

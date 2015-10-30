@@ -17,6 +17,7 @@
 #include "../RealWorld.h"
 #include "../MapCoordinator.h"
 #include "core/objects/geometry/VRSprite.h"
+#include "core/tools/VRAnnotationEngine.h"
 
 #include <boost/exception/to_string.hpp>
 #include <OpenSG/OSGGeometry.h>
@@ -129,6 +130,11 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
 
     GeometryData* sdata = new GeometryData();
     GeometryData* jdata = new GeometryData();
+    VRAnnotationEnginePtr signs = VRAnnotationEngine::create();
+    signs->setSize(Config::get()->SIGN_WIDTH);
+    signs->setColor(Vec4f(1,1,1,1));
+    signs->setBackground(Vec4f(0.1,0.1,0.8,1));
+
 
     // load street joints
     for (auto jointId : listLoadJoints) {
@@ -158,7 +164,7 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
         }
 
         switch (joint->type) {
-            case J1: makeCurve(joint, listLoadSegments, listLoadJoints, jdata); break;
+            case J1: makeCurve(joint, listLoadSegments, listLoadJoints, sdata); break;
             case J1x3L_3x1L: makeJoint31(joint, listLoadSegments, listLoadJoints, sdata); break;
             default: makeJoint(joint, listLoadSegments, listLoadJoints, jdata); break;
         }
@@ -166,11 +172,7 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
 
     for (auto seg : listLoadSegments) {
         makeSegment(seg.second, listLoadJoints, sdata); // load street segments
-        /*auto sign = makeSignGeometry(seg.second);
-        if (sign == 0) continue;
-        if (signs.count(bbox->str) == 0) signs[bbox->str] = vector<VRGeometryPtr>();
-        signs[bbox->str].push_back(sign);
-        root->addChild(sign);*/
+        makeSign(seg.second, signs);
     }
 
     VRGeometryPtr streets = VRGeometry::create("streets");
@@ -181,9 +183,11 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
     joints->setMaterial(matStreet);
     root->addChild(streets);
     root->addChild(joints);
+    root->addChild(signs);
 
     meshes[bbox->str+"_streets"] = streets;
     meshes[bbox->str+"_joints"] = joints;
+    annotations[bbox->str+"_signs"] = signs;
 
     delete sdata;
     delete jdata;
@@ -192,43 +196,38 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
 void ModuleStreets::unloadBbox(AreaBoundingBox* bbox) {
     string sid = bbox->str+"_streets";
     string jid = bbox->str+"_joints";
+    string signsid = bbox->str+"_signs";
     if (meshes.count(sid)) { meshes[sid]->destroy(); meshes.erase(sid); }
     if (meshes.count(jid)) { meshes[jid]->destroy(); meshes.erase(jid); }
-    /*if (signs.count(bbox->str)) {
-        for (auto s : signs[bbox->str]) s->destroy();
-        signs.erase(bbox->str);
-    }*/
+    if (annotations.count(signsid)) { annotations[signsid]->destroy(); annotations.erase(signsid); }
 }
 
 void ModuleStreets::physicalize(bool b) {
-    return;
     for (auto mesh : meshes) {
-        mesh.second->getPhysics()->setPhysicalized(true);
         mesh.second->getPhysics()->setShape("Concave");
+        mesh.second->getPhysics()->setPhysicalized(true);
     }
 }
 
-VRGeometryPtr ModuleStreets::makeSignGeometry(StreetSegment* seg) {
-    return 0; // TODO
-    if (seg->name == "") return 0;
+void ModuleStreets::makeSign(StreetSegment* seg, VRAnnotationEnginePtr ae) {
+    if (seg->name == "") return;
+    if (seg->jointA->type == J1 && seg->jointB->type == J1) return;
+
+    string name = seg->name;
+    for (int i=1; i<name.size(); i++) {
+        int n = name[i];
+        if (n == -68) { name[i-1] = 'u'; name[i] = 'e'; }
+        if (n == -74) { name[i-1] = 'o'; name[i] = 'e'; }
+        if (n == -92) { name[i-1] = 'a'; name[i] = 'e'; }
+        if (n == -97) { name[i-1] = 's'; name[i] = 's'; }
+    }
 
     float h1 = Config::get()->SIGN_DISTANCE;
-    float h2 = Config::get()->SIGN_WIDTH;
 
-    Vec2f dir = (seg->leftA - seg->rightA); dir.normalize();
-    Vec2f pos = (seg->leftA + seg->leftB)*0.5;
-
-    VRSpritePtr sign = VRSprite::create("sign", false, 3*h2, h2);
-    sign->setMaterial(VRMaterial::create("sign"));
-
-    sign->setFontColor(Color4f(1,1,1,1));
-    //sign->setLabel(seg->name, 20);
-    sign->setLabel("BLABLABLA", 20);
-
-    sign->setFrom( elevate( pos, h1+0.5*h2) );
-    sign->setDir( Vec3f(dir[0], 0, dir[1]) );
-    sign->getMaterial()->setLit(0);
-    return sign;
+    //Vec2f dir = (seg->leftA - seg->rightA); dir.normalize();
+    Vec2f p2 = (seg->leftA + seg->leftB)*0.5;
+    Vec3f p(p2[0], h1, p2[1]);
+    ae->add(p, name);
 }
 
 void ModuleStreets::makeSegment(StreetSegment* s, map<string, StreetJoint*>& joints, GeometryData* streets) {
@@ -298,6 +297,7 @@ void ModuleStreets::makeSegment(StreetSegment* s, map<string, StreetJoint*>& joi
     pushPart(Vec2f(heights[1], heights[2]), 1); // middle
     pushPart(Vec2f(heights[2], heights[3]), 2); // end
 
+    // Idee: baue eine maximale rampenlänge ein
     // Idee: berechne Steigung und entscheide dementsprechend fuer Treppen
 }
 
@@ -366,7 +366,6 @@ void ModuleStreets::makeCurve(StreetJoint* sj, map<string, StreetSegment*>& stre
     int Nl = min(Nl1, Nl2);
     if (jp1->leftExt != _NULL && jp1->leftExt != _NULL) {
         Vec3f r1,l1,r2,l2,e1,e2,d1,d2,d3;
-        Vec2f tr1,tl1,tr2,tl2,te1,te2;
         r1 = elevate(jp1->right  , jointH);
         l1 = elevate(jp1->left   , jointH);
         r2 = elevate(jp2->right  , jointH);
@@ -375,25 +374,15 @@ void ModuleStreets::makeCurve(StreetJoint* sj, map<string, StreetSegment*>& stre
         e2 = elevate(jp2->leftExt, jointH);
         d1 = (r1-l1)*1.0/Nl; d2 = (l2-r2)*1.0/Nl; d3 = (e2-e1)*1.0/Nl;
         float width = d1.length();
-        float ta = (e1 - l1).length()/width;
-        float te = (r2 - e1).length()/width;
         for (int i=0; i<Nl; i++) {
             float k1 = 0.75, k2 = 1;
             if (Nl > 1) {
                 k1 = (i == 0) ? 0.75 : (i%2) ? 0.5 : 0.25;
                 k2 = (i == Nl-1) ? (i%2) ? 0.75 : 0 : (i%2) ? 0.25 : 0.5;
             }
-            tr1 = Vec2f(k2, ta+te);
-            tl1 = Vec2f(k1, ta+te);
-            tr2 = Vec2f(k1, 0);
-            tl2 = Vec2f(k2, 0);
-            te1 = Vec2f(k1, te);
-            te2 = Vec2f(k2, te);
             int t = -(Nl-i-1);
-            pushTriangle( r1 + d1*t, l1 + d1*i, e1 + d3*i, norm, geo, tr1, tl1, te1 );
-            pushTriangle( r1 + d1*t, e1 + d3*i, e2 + d3*t, norm, geo, tr1, te1, te2 );
-            pushTriangle( r2 + d2*i, l2 + d2*t, e2 + d3*t, norm, geo, tr2, tl2, te2 );
-            pushTriangle( r2 + d2*i, e2 + d3*t, e1 + d3*i, norm, geo, tr2, te2, te1 );
+            pushQuad(r1 + d1*t, l1 + d1*i, e1 + d3*i, e2 + d3*t, norm, geo, false, Vec3f(k2, k1, 1) );
+            pushQuad(r2 + d2*i, l2 + d2*t, e2 + d3*t, e1 + d3*i, norm, geo, false, Vec3f(k1, k2, 1) );
         }
     }
 }
@@ -428,10 +417,6 @@ void ModuleStreets::makeJoint(StreetJoint* sj, map<string, StreetSegment*>& stre
         t2 = Vec2f(1, 1);
         pushTriangle(p1, p2, middle, norm, geo, t1, t2, tm);
     }
-
-    //fan.push_back( elevate(jointPoints[0]->right, jointH) ); // close fan
-    //fantex.push_back(Vec2f(0.75, 0));
-
 
     if (!sj->bridge) return;
 
@@ -479,16 +464,13 @@ void ModuleStreets::makeJoint(StreetJoint* sj, map<string, StreetSegment*>& stre
         rightExt = leftExt;
     }
 
-    pushTriangle(firstRight, rightExt, middle, norm, geo);
-    geo->texs->addValue(Vec2f(1, 1)); geo->texs->addValue(Vec2f(1, 1)); geo->texs->addValue(Vec2f(0.5, 0.5));
+    Vec2f tc05(0.5, 0.5);
+    float bS = Config::get()->BRIDGE_SIZE;
+    pushTriangle(firstRight, rightExt, middle, norm, geo, Vec2f(1, 1), Vec2f(1, 1), tc05);
 
     Vec3f normal = Vec3f((firstRight-rightExt)[2], 0, -(firstRight-rightExt)[0]);
-
-    pushTriangle(firstRight, rightExt, rightExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0), normal, geo);
-    geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5));
-
-    pushTriangle(rightExt+Vec3f(0, Config::get()->BRIDGE_SIZE, 0), firstRight+Vec3f(0, Config::get()->BRIDGE_SIZE, 0), firstRight, normal, geo);
-    geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5)); geo->texs->addValue(Vec2f(0.5, 0.5));
+    pushTriangle(firstRight, rightExt, rightExt+Vec3f(0, bS, 0), normal, geo, tc05, tc05, tc05);
+    pushTriangle(rightExt+Vec3f(0, bS, 0), firstRight+Vec3f(0, bS, 0), firstRight, normal, geo, tc05, tc05, tc05);
 }
 
 void ModuleStreets::makeJoint31(StreetJoint* sj, map<string, StreetSegment*>& streets, map<string, StreetJoint*>& joints, GeometryData* geo) {
