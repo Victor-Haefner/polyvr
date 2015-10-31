@@ -40,11 +40,9 @@ ModuleStreets::ModuleStreets() : BaseModule("ModuleStreets") {
     matStreet->setMagMinFilter("GL_NEAREST", "GL_NEAREST");
     matStreet->setZOffset(-1,-1);
 
-    /*matStreet->addPass();
-    matStreet->setWireFrame(true);
-    matStreet->setLit(false);
-    matStreet->setDiffuse(Vec3f(1,0,0));
-    matStreet->setLineWidth(5);*/
+    matSigns = VRMaterial::create("Signs");
+    matSigns->setTexture("world/streetsigns2.png");
+    matSigns->setLit(0);
 
     // Autobahn
     float W = Config::get()->STREET_WIDTH;
@@ -78,6 +76,9 @@ ModuleStreets::ModuleStreets() : BaseModule("ModuleStreets") {
     types["footway"] = StreetType("footway", W*0.4, BH*0.6, matStreet, false);
 
     types["road"] = StreetType("road", W, BH, matStreet, false); // tmp tag
+
+    // sign texture coordinates
+    signTCs["noentry"] = Vec4f(0.6242,0.6242+0.0385,1.0-0.5766-0.0559,1.0-0.5766);
 }
 
 void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
@@ -130,6 +131,7 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
 
     GeometryData* sdata = new GeometryData();
     GeometryData* jdata = new GeometryData();
+    GeometryData* signs2 = new GeometryData();
     VRAnnotationEnginePtr signs = VRAnnotationEngine::create();
     signs->setSize(Config::get()->SIGN_WIDTH);
     signs->setColor(Vec4f(1,1,1,1));
@@ -172,22 +174,23 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
     }
 
     for (auto seg : listLoadSegments) {
-        makeSegment(seg.second, listLoadJoints, sdata); // load street segments
-        makeSign(seg.second, signs);
+        makeSegment(seg.second, listLoadJoints, sdata, signs2); // load street segments
+        makeStreetNameSign(seg.second, signs);
     }
 
-    VRGeometryPtr streets = VRGeometry::create("streets");
-    VRGeometryPtr joints = VRGeometry::create("joints");
-    streets->create(GL_QUADS, sdata->pos, sdata->norms, sdata->inds, sdata->texs);
-    joints->create(GL_TRIANGLES, jdata->pos, jdata->norms, jdata->inds, jdata->texs);
-    streets->setMaterial(matStreet);
-    joints->setMaterial(matStreet);
-    root->addChild(streets);
-    root->addChild(joints);
-    root->addChild(signs);
+    auto setGeo = [&](string name, int type, GeometryData* data, VRMaterialPtr mat) {
+        VRGeometryPtr geo = VRGeometry::create(name);
+        geo->create(type, data->pos, data->norms, data->inds, data->texs);
+        geo->setMaterial(mat);
+        root->addChild(geo);
+        meshes[bbox->str+name] = geo;
+    };
 
-    meshes[bbox->str+"_streets"] = streets;
-    meshes[bbox->str+"_joints"] = joints;
+    setGeo("streetQuads", GL_QUADS, sdata, matStreet);
+    setGeo("streetTriangles", GL_TRIANGLES, jdata, matStreet);
+    setGeo("streetSigns", GL_QUADS, signs2, matSigns);
+
+    root->addChild(signs);
     annotations[bbox->str+"_signs"] = signs;
 
     delete sdata;
@@ -195,12 +198,13 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
 }
 
 void ModuleStreets::unloadBbox(AreaBoundingBox* bbox) {
-    string sid = bbox->str+"_streets";
-    string jid = bbox->str+"_joints";
-    string signsid = bbox->str+"_signs";
-    if (meshes.count(sid)) { meshes[sid]->destroy(); meshes.erase(sid); }
-    if (meshes.count(jid)) { meshes[jid]->destroy(); meshes.erase(jid); }
-    if (annotations.count(signsid)) { annotations[signsid]->destroy(); annotations.erase(signsid); }
+    auto annDestroy = [&](string key) { if (!annotations.count(key)) return; annotations[key]->destroy(); annotations.erase(key); };
+    auto resDestroy = [&](string key) { if (!meshes.count(key)) return; meshes[key]->destroy(); meshes.erase(key); };
+
+    annDestroy(bbox->str+"_signs");
+    resDestroy(bbox->str+"streetQuads");
+    resDestroy(bbox->str+"streetTriangles");
+    resDestroy(bbox->str+"streetSigns");
 }
 
 void ModuleStreets::physicalize(bool b) {
@@ -210,7 +214,17 @@ void ModuleStreets::physicalize(bool b) {
     }
 }
 
-void ModuleStreets::makeSign(StreetSegment* seg, VRAnnotationEnginePtr ae) {
+void ModuleStreets::makeStreetSign(Vec3f p, string name, GeometryData* geo) {
+    if (!signTCs.count(name)) return;
+    p += Vec3f(0,1.6,0);
+    float s = 0.2;
+    Vec3f u(0,s,0);
+    Vec3f n(0,0,1);
+    Vec3f x = u.cross(n);
+    pushQuad(p-x-u, p+x-u, p+x+u, p-x+u, n, geo, signTCs[name]);
+}
+
+void ModuleStreets::makeStreetNameSign(StreetSegment* seg, VRAnnotationEnginePtr ae) {
     if (seg->name == "") return;
     if (seg->jointA->type == J1 && seg->jointB->type == J1) return;
 
@@ -231,7 +245,7 @@ void ModuleStreets::makeSign(StreetSegment* seg, VRAnnotationEnginePtr ae) {
     ae->add(p, name);
 }
 
-void ModuleStreets::makeSegment(StreetSegment* s, map<string, StreetJoint*>& joints, GeometryData* streets) {
+void ModuleStreets::makeSegment(StreetSegment* s, map<string, StreetJoint*>& joints, GeometryData* streets, GeometryData* signs) {
     Vec2f leftA = Vec2f(s->leftA);
     Vec2f rightA = Vec2f(s->rightA);
     Vec2f leftB = Vec2f(s->leftB);
@@ -252,7 +266,8 @@ void ModuleStreets::makeSegment(StreetSegment* s, map<string, StreetJoint*>& joi
                 k1 = (l == 0) ? 0 : (l%2) ? 0.25 : 0.5;
                 k2 = (l == s->lanes-1) ? (l%2) ? 0 : 0.75 : (l%2) ? 0.5 : 0.25;
             }
-            pushQuad( lA, rA, rB, lB, Vec3f(0,1,0), streets, false, Vec3f(k1,k2,1) );
+            pushStreetQuad( lA, rA, rB, lB, Vec3f(0,1,0), streets, false, Vec3f(k1,k2,1) );
+            makeStreetSign(lA, "noentry", signs);
         }
         return;
     }
@@ -282,11 +297,11 @@ void ModuleStreets::makeSegment(StreetSegment* s, map<string, StreetJoint*>& joi
                 k1 = (l == 0) ? 0 : (l%2) ? 0.25 : 0.5;
                 k2 = (l == s->lanes-1) ? (l%2) ? 0 : 0.75 : (l%2) ? 0.5 : 0.25;
             }
-            pushQuad( lA, rA, rB, lB, -normal, streets, false, Vec3f(k1,k2,1) );
+            pushStreetQuad( lA, rA, rB, lB, -normal, streets, false, Vec3f(k1,k2,1) );
         }
-        pushQuad(a1-th, a2-th, b2-th, b1-th, normal, streets, false, Vec3f(0.75,1,1) );
-        pushQuad(a1, a1-th, b1-th, b1, Vec3f(-(b1-a1)[2], 0, (b1-a1)[0]), streets, true); //side1
-        pushQuad(a2, a2-th, b2-th, b2, Vec3f((b2-a2)[2], 0, -(b2-a2)[0]), streets, true); //side2
+        pushStreetQuad(a1-th, a2-th, b2-th, b1-th, normal, streets, false, Vec3f(0.75,1,1) );
+        pushStreetQuad(a1, a1-th, b1-th, b1, Vec3f(-(b1-a1)[2], 0, (b1-a1)[0]), streets, true); //side1
+        pushStreetQuad(a2, a2-th, b2-th, b2, Vec3f((b2-a2)[2], 0, -(b2-a2)[0]), streets, true); //side2
     };
 
     if (!s->jointA || !s->jointB) return;
@@ -302,31 +317,34 @@ void ModuleStreets::makeSegment(StreetSegment* s, map<string, StreetJoint*>& joi
     // Idee: berechne Steigung und entscheide dementsprechend fuer Treppen
 }
 
-void ModuleStreets::pushQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f normal, GeometryData* geo, bool isSide, Vec3f tc) {
+void ModuleStreets::pushQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f normal, GeometryData* geo, Vec4f tc) {
+    pushQuad(a1,a2,b2,b1,normal,geo,Vec2f(tc[0], tc[2]), Vec2f(tc[1], tc[2]), Vec2f(tc[1], tc[3]), Vec2f(tc[0], tc[3]));
+}
+
+void ModuleStreets::pushStreetQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f normal, GeometryData* geo, bool isSide, Vec3f tc) {
     // calc road length && divide by texture size
     float width = (a2-a1).length();
     float len = (b1 - a1).length()/width*tc[2]; // tc2 is the number of lanes
 
+    Vec2f tc01(0.1, 0.1);
+    if (isSide) pushQuad(a1,a2,b2,b1,normal,geo,tc01,tc01,tc01,tc01);
+    else pushQuad(a1,a2,b2,b1,normal,geo,Vec2f(tc[0], 0), Vec2f(tc[1], 0), Vec2f(tc[1], len), Vec2f(tc[0], len));
+}
+
+void ModuleStreets::pushQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f normal, GeometryData* geo, Vec2f tc1, Vec2f tc2, Vec2f tc3, Vec2f tc4) {
     geo->pos->addValue(a1);
     geo->pos->addValue(a2);
     geo->pos->addValue(b2);
     geo->pos->addValue(b1);
 
+    geo->texs->addValue(tc1);
+    geo->texs->addValue(tc2);
+    geo->texs->addValue(tc3);
+    geo->texs->addValue(tc4);
+
     int N = geo->inds->size();
     for(int j= 0; j<4; j++) geo->norms->addValue(normal);
     for(int j= 0; j<4; j++) geo->inds->addValue(j+N);
-
-    if (isSide) {
-        geo->texs->addValue(Vec2f(0.1, 0.1));
-        geo->texs->addValue(Vec2f(0.1, 0.1));
-        geo->texs->addValue(Vec2f(0.1, 0.1));
-        geo->texs->addValue(Vec2f(0.1, 0.1)); //one color of texture only
-    } else {
-        geo->texs->addValue(Vec2f(tc[0], 0));
-        geo->texs->addValue(Vec2f(tc[1], 0));
-        geo->texs->addValue(Vec2f(tc[1], len));
-        geo->texs->addValue(Vec2f(tc[0], len));
-    }
 }
 
 void ModuleStreets::pushTriangle(Vec3f a1, Vec3f a2, Vec3f c, Vec3f normal, GeometryData* geo, Vec2f t1, Vec2f t2, Vec2f t3 ) {
@@ -382,8 +400,8 @@ void ModuleStreets::makeCurve(StreetJoint* sj, map<string, StreetSegment*>& stre
                 k2 = (i == Nl-1) ? (i%2) ? 0.75 : 0 : (i%2) ? 0.25 : 0.5;
             }
             int t = -(Nl-i-1);
-            pushQuad(r1 + d1*t, l1 + d1*i, e1 + d3*i, e2 + d3*t, norm, geo, false, Vec3f(k2, k1, 1) );
-            pushQuad(r2 + d2*i, l2 + d2*t, e2 + d3*t, e1 + d3*i, norm, geo, false, Vec3f(k1, k2, 1) );
+            pushStreetQuad(r1 + d1*t, l1 + d1*i, e1 + d3*i, e2 + d3*t, norm, geo, false, Vec3f(k2, k1, 1) );
+            pushStreetQuad(r2 + d2*i, l2 + d2*t, e2 + d3*t, e1 + d3*i, norm, geo, false, Vec3f(k1, k2, 1) );
         }
     }
 }
@@ -487,13 +505,13 @@ void ModuleStreets::makeJoint31(StreetJoint* sj, map<string, StreetSegment*>& st
     Vec3f l3 = elevate(jp3->left , jointH);
     Vec3f s = elevate(sj->position, jointH) - r3+(r3-l3)*0.5;
     Vec3f s3D = (r3-l3)*1/3.0;
-    pushQuad(r3, l3, l3+s, r3+s, n, geo, false, Vec3f(0, 0.75, 3));
+    pushStreetQuad(r3, l3, l3+s, r3+s, n, geo, false, Vec3f(0, 0.75, 3));
 
     for (int i=0; i<3; i++) {
         JointPoints* jp = jointPoints[(sL3+1+i)%4];
         Vec3f pr = elevate(jp->right, jointH);
         Vec3f pl = elevate(jp->left, jointH);
-        pushQuad(pr, pl, l3+s+s3D*(i+1), l3+s+s3D*i, n, geo, false, Vec3f(0.75, 1, 1));
+        pushStreetQuad(pr, pl, l3+s+s3D*(i+1), l3+s+s3D*i, n, geo, false, Vec3f(0.75, 1, 1));
     }
 
     cout << "CREATE JOINT TYPE 31\n";

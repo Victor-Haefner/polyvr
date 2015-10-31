@@ -37,16 +37,21 @@ class ModuleStreets: public BaseModule {
     private:
         map<string, VRGeometryPtr> meshes;
         map<string, StreetType> types;
+        map<string, Vec4f> signTCs;
         map<string, VRAnnotationEnginePtr> annotations;
         VRMaterialPtr matStreet;
+        VRMaterialPtr matSigns;
 
-        void makeSign(StreetSegment* seg, VRAnnotationEnginePtr ae);
-        void makeSegment(StreetSegment* s, map<string, StreetJoint*>& joints, GeometryData* geo);
+        void makeStreetSign(Vec3f pos, string name, GeometryData* geo);
+        void makeStreetNameSign(StreetSegment* seg, VRAnnotationEnginePtr ae);
+        void makeSegment(StreetSegment* s, map<string, StreetJoint*>& joints, GeometryData* geo, GeometryData* geo2);
         void makeCurve(StreetJoint* sj, map<string, StreetSegment*>& streets, map<string, StreetJoint*>& joints, GeometryData* geo);
         void makeJoint(StreetJoint* sj, map<string, StreetSegment*>& streets, map<string, StreetJoint*>& joints, GeometryData* geo);
         void makeJoint31(StreetJoint* sj, map<string, StreetSegment*>& streets, map<string, StreetJoint*>& joints, GeometryData* geo);
 
-        void pushQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f normal, GeometryData* geo, bool isSide = false, Vec3f tc = Vec3f(0,1,1));
+        void pushQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f normal, GeometryData* geo, Vec2f tc1, Vec2f tc2, Vec2f tc3, Vec2f tc4);
+        void pushQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f normal, GeometryData* geo, Vec4f tc = Vec4f(0,1,0,1));
+        void pushStreetQuad(Vec3f a1, Vec3f a2, Vec3f b2, Vec3f b1, Vec3f normal, GeometryData* geo, bool isSide = false, Vec3f tc = Vec3f(0,1,1));
         void pushTriangle(Vec3f c, Vec3f a1, Vec3f a2, Vec3f normal, GeometryData* geo, Vec2f t1, Vec2f t2, Vec2f t3 );
         void pushTriangle(Vec3f c, Vec3f a1, Vec3f a2, Vec3f normal, GeometryData* geo);
 };
