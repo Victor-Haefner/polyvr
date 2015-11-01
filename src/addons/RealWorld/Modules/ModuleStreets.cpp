@@ -78,7 +78,8 @@ ModuleStreets::ModuleStreets() : BaseModule("ModuleStreets") {
     types["road"] = StreetType("road", W, BH, matStreet, false); // tmp tag
 
     // sign texture coordinates
-    signTCs["noentry"] = Vec4f(0.6242,0.6242+0.0385,1.0-0.5766-0.0559,1.0-0.5766);
+    signTCs["noEntry"] = Vec4f(0.6242,0.6242+0.0385,1.0-0.5766-0.0559,1.0-0.5766);
+    signTCs["straightOrRight"] = Vec4f(0.7324,0.7324+0.0348,1.0-0.5766-0.0519,1.0-0.5766);
 }
 
 void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
@@ -168,7 +169,8 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
 
         switch (joint->type) {
             case J1: makeCurve(joint, listLoadSegments, listLoadJoints, sdata); break;
-            case J1x3L_3x1L: makeJoint31(joint, listLoadSegments, listLoadJoints, sdata); break;
+            case J1x3L_3x1L:
+                makeJoint31(joint, listLoadSegments, listLoadJoints, sdata, signs2); break;
             default: makeJoint(joint, listLoadSegments, listLoadJoints, jdata); break;
         }
     }
@@ -178,6 +180,7 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
         makeStreetNameSign(seg.second, signs);
     }
 
+    // init geometries
     auto setGeo = [&](string name, int type, GeometryData* data, VRMaterialPtr mat) {
         VRGeometryPtr geo = VRGeometry::create(name);
         geo->create(type, data->pos, data->norms, data->inds, data->texs);
@@ -267,7 +270,6 @@ void ModuleStreets::makeSegment(StreetSegment* s, map<string, StreetJoint*>& joi
                 k2 = (l == s->lanes-1) ? (l%2) ? 0 : 0.75 : (l%2) ? 0.5 : 0.25;
             }
             pushStreetQuad( lA, rA, rB, lB, Vec3f(0,1,0), streets, false, Vec3f(k1,k2,1) );
-            makeStreetSign(lA, "noentry", signs);
         }
         return;
     }
@@ -492,7 +494,7 @@ void ModuleStreets::makeJoint(StreetJoint* sj, map<string, StreetSegment*>& stre
     pushTriangle(rightExt+Vec3f(0, bS, 0), firstRight+Vec3f(0, bS, 0), firstRight, normal, geo, tc05, tc05, tc05);
 }
 
-void ModuleStreets::makeJoint31(StreetJoint* sj, map<string, StreetSegment*>& streets, map<string, StreetJoint*>& joints, GeometryData* geo) {
+void ModuleStreets::makeJoint31(StreetJoint* sj, map<string, StreetSegment*>& streets, map<string, StreetJoint*>& joints, GeometryData* geo, GeometryData* signs2) {
     vector<JointPoints*> jointPoints = StreetAlgos::calcJoints(sj, streets, joints);
     float jointH = Config::get()->STREET_HEIGHT + sj->bridgeHeight;
     Vec3f n = Vec3f(0, 1, 0);
@@ -506,6 +508,8 @@ void ModuleStreets::makeJoint31(StreetJoint* sj, map<string, StreetSegment*>& st
     Vec3f s = elevate(sj->position, jointH) - r3+(r3-l3)*0.5;
     Vec3f s3D = (r3-l3)*1/3.0;
     pushStreetQuad(r3, l3, l3+s, r3+s, n, geo, false, Vec3f(0, 0.75, 3));
+
+    makeStreetSign(elevate(sj->position, jointH), "straightOrRight", signs2);
 
     for (int i=0; i<3; i++) {
         JointPoints* jp = jointPoints[(sL3+1+i)%4];

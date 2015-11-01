@@ -154,7 +154,7 @@ class TrafficSimulation {
         /**
          * The VRTransform that describes the position of the player vehicle.
          */
-        VRTransform *player;
+        VRTransformPtr player;
 
         /**
          * Whether the vehicle of the player && the viewarea around it has
@@ -340,7 +340,7 @@ class TrafficSimulation {
          * The simulated cars are only drawn in an area around this object.
          * @param transform The vehicle of the user. Can be \c NULL to unset it.
          */
-        void setPlayerTransform(VRTransform *transform);
+        void setPlayerTransform(VRTransformPtr transform);
 
         /// @}
         /// @name Run control

@@ -3,6 +3,12 @@
 #include "../RealWorld.h"
 #include "../MapCoordinator.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/material/VRMaterial.h"
+
+#include "../OSM/OSMMapDB.h"
+#include "../World.h"
+#include "triangulate.h"
+#include "Wall.h"
 
 using namespace OSG;
 
@@ -71,26 +77,24 @@ ModuleWalls::ModuleWalls() : BaseModule("ModuleWall") {
 
 void ModuleWalls::fillWallList() {
     //simple Wall Texture
-    //addWall("buildingWall_red.png", "barrier", "wall"); //intesects with streets
-    addWall("brick_red.jpg", "barrier", "ditch");
-    addWall("Walls/Chipped_Bricks.png", "barrier", "fence", 0.1f, 0.5f);
-    addWall("brick_red.jpg", "barrier", "guard_rail");
-    addWall("hedge.jpg", "barrier", "hedge", 0.25f, 0.5f);
-    addWall("brick_red.jpg", "barrier", "kerb");
-    addWall("brick_red.jpg", "barrier", "retaining_wall");
+    //addWall("world/textures/buildingWall_red.png", "barrier", "wall"); //intesects with streets
+    addWall("world/textures/brick_red.jpg", "barrier", "ditch");
+    addWall("world/textures/Walls/Chipped_Bricks.png", "barrier", "fence", 0.1f, 0.5f);
+    addWall("world/textures/brick_red.jpg", "barrier", "guard_rail");
+    addWall("world/textures/hedge.jpg", "barrier", "hedge", 0.25f, 0.5f);
+    addWall("world/textures/brick_red.jpg", "barrier", "kerb");
+    addWall("world/textures/brick_red.jpg", "barrier", "retaining_wall");
 }
 
 void ModuleWalls::addWall(string texture, string key, string value, float width, float height) {
     auto world = RealWorld::get()->getWorld();
     WallMaterial* w = new WallMaterial();
-    w->material = SimpleMaterial::create();
-    w->material->addChunk(world->getTexture(texture));
+    w->material = VRMaterial::create("wall");
+    w->material->setTexture(texture);
     w->k = key;
     w->v = value;
     w->width = width;
     w->height = height;
-
-    Config::createPhongShader(w->material);
 
     wallList.push_back(w);
 }

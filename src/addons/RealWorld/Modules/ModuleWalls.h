@@ -1,19 +1,16 @@
 #ifndef MODULEWALLS_H
 #define MODULEWALLS_H
 
-#include "../OSM/OSMMapDB.h"
 #include "BaseModule.h"
-#include "../World.h"
-#include "core/objects/material/VRShader.h"
-#include "triangulate.h"
-#include "Wall.h"
-#include <OpenSG/OSGSimpleMaterial.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+class Wall;
+class GeometryData;
+
 struct WallMaterial {
-    SimpleMaterialRecPtr material;
+    VRMaterialPtr material;
     string k;
     string v;
     float width;

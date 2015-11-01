@@ -202,9 +202,7 @@ PyObject* VRPyTrafficSimulation::setPlayerTransform(VRPyTrafficSimulation* self,
     VRPyTransform *child  = NULL;
     if (! PyArg_ParseTuple(args, "O", &child)) return NULL;
     if (child == NULL) { PyErr_SetString(err, "Missing child parameter"); return NULL; }
-
-    if (child->obj == 0) { PyErr_SetString(err, "VRPyTrafficSimulation::setPlayerTransform, obj is invalid"); return NULL; }
-    self->obj->setPlayerTransform(child->obj);
+    self->obj->setPlayerTransform(child->objPtr);
     Py_RETURN_TRUE;
 }
 

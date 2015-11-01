@@ -317,17 +317,14 @@ void TrafficSimulation::communicationThread(VRThreadWeakPtr t) {
         networkDataMutex.unlock();
         Value result = client.sendData(dataToSend);
         errorMessage("sending updates to server", result);
-    } else {
-        networkDataMutex.unlock();
-    }
+    } else networkDataMutex.unlock();
 
     // Get view area data
     Value tmp = client.retrieveViewareaData(0);
     networkDataMutex.lock();
     receivedData = tmp;
     networkDataMutex.unlock();
-    if (errorMessage("retrieving viewarea data", tmp))
-        return;
+    if (errorMessage("retrieving viewarea data", tmp)) return;
 }
 
 bool TrafficSimulation::errorMessage(const string& action, const Value& value) {
@@ -394,14 +391,9 @@ TrafficSimulation::~TrafficSimulation() {
 
 void TrafficSimulation::setServer(const string& host) {
     client.setServer(host);
-
-    // Retransmit the already loaded maps
-    set<const OSMMap*> tmp;
+    set<const OSMMap*> tmp; // Retransmit the already loaded maps
     tmp.swap(loadedMaps);
-
-    for (auto m : tmp) {
-        addMap(m);
-    }
+    for (auto m : tmp) addMap(m);
 }
 
 void TrafficSimulation::addMap(const OSMMap* map) {
@@ -915,7 +907,7 @@ void TrafficSimulation::update() {
     //cout << "Update " << vehicles.size() << " vehicles\n";
     for (auto v : vehicles) {
         Vec3f p = v.second.pos;
-        p[1] = -1.2;//TODO: get right street height
+        p[1] = 0;//TODO: get right street height
         v.second.geometry->setFrom(p);
         v.second.geometry->setDir(v.second.pos - v.second.orientation);
         v.second.pos += v.second.deltaPos;
@@ -959,7 +951,7 @@ void TrafficSimulation::setSimulationSpeed(const double speed) {
     errorMessage("setting the simulation speed", value);
 }
 
-void TrafficSimulation::setPlayerTransform(VRTransform *transform) {
+void TrafficSimulation::setPlayerTransform(VRTransformPtr transform) {
     player = transform;
 
     if (player != NULL && !playerCreated) {
