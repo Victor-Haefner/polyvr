@@ -107,7 +107,7 @@ class TrafficSimulation {
             /**
              * The model used to display this vehicle.
              */
-            VRGeometryPtr geometry;
+            VRTransformPtr model;
         };
 
     private:
@@ -186,7 +186,7 @@ class TrafficSimulation {
         /**
          * A map to store the meshes for the vehicle types.
          */
-        map<unsigned int, VRGeometryPtr> meshes;
+        map<unsigned int, VRTransformPtr> meshes;
 
         /**
          * A map that stores the ids && vehicles that are moved around by the simulator.
@@ -313,7 +313,7 @@ class TrafficSimulation {
          * @param maxRotation The maximum rotation in degree per second.
          * @param geometry The geometry to use to draw a vehicle of this type.
          */
-        void addVehicleType(const unsigned int id, const double probability, const double collisionRadius, const double maxSpeed, const double maxAcceleration, const double maxRoration, VRGeometryPtr geometry);
+        void addVehicleType(const unsigned int id, const double probability, const double collisionRadius, const double maxSpeed, const double maxAcceleration, const double maxRoration, VRTransformPtr model);
 
         /**
          * Adds a driver type to the simulation.

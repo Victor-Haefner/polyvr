@@ -529,7 +529,7 @@ void TrafficSimulation::setTrafficDensity(const double density) {
     errorMessage("setting the traffic density", value);
 }
 
-void TrafficSimulation::addVehicleType(const unsigned int id, const double probability, const double collisionRadius, const double maxSpeed, const double maxAcceleration, const double maxRoration, VRGeometryPtr geometry) {
+void TrafficSimulation::addVehicleType(const unsigned int id, const double probability, const double collisionRadius, const double maxSpeed, const double maxAcceleration, const double maxRoration, VRTransformPtr model) {
 
 
     //void addVehicleType(const unsigned int id, const double probability, const double collisionRadius, const double maxSpeed, const double maxAcceleration, const double maxRoration);
@@ -537,13 +537,13 @@ void TrafficSimulation::addVehicleType(const unsigned int id, const double proba
     //OSG::VRSceneManager::get()->initThread(func, "trafficAddVehicleType", false);
 
 
-    if (geometry == NULL) {
+    if (model == NULL) {
         cerr << "Given geometry is invalid!\n";
         return;
     }
 
     // Store the mesh
-    meshes[id] = geometry;
+    meshes[id] = model;
 
     // Send the data about the type to the server
     Value type, value;
@@ -709,8 +709,8 @@ void TrafficSimulation::update() {
                     v.driverTypeId = vehicleIter["driver"].asUInt();
 
                     if (meshes.count(v.vehicleTypeId) == 0) v.vehicleTypeId = 404;
-                    v.geometry = static_pointer_cast<VRGeometry>( meshes[v.vehicleTypeId]->duplicate(true) );
-                    v.geometry->setPersistency(0);
+                    v.model = static_pointer_cast<VRTransform>( meshes[v.vehicleTypeId]->duplicate(true) );
+                    v.model->setPersistency(0);
 
                     // Add it to the map
                     vehicles.insert(make_pair(v.id, v));
@@ -780,7 +780,7 @@ void TrafficSimulation::update() {
 
         // Remove vehicles which are no longer on the map
         for (auto v : vehicleIDs) {
-            vehicles[v].geometry->destroy();
+            vehicles[v].model->destroy();
             vehicles.erase(v);
         }
 
@@ -908,8 +908,8 @@ void TrafficSimulation::update() {
     for (auto v : vehicles) {
         Vec3f p = v.second.pos;
         p[1] = 0;//TODO: get right street height
-        v.second.geometry->setFrom(p);
-        v.second.geometry->setDir(v.second.pos - v.second.orientation);
+        v.second.model->setFrom(p);
+        v.second.model->setDir(v.second.pos - v.second.orientation);
         v.second.pos += v.second.deltaPos;
         v.second.orientation += v.second.deltaOrientation;
     }
