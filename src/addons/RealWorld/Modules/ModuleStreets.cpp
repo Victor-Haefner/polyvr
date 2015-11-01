@@ -217,6 +217,21 @@ void ModuleStreets::physicalize(bool b) {
     }
 }
 
+void ModuleStreets::makeStreetLight(Vec3f pos, GeometryData* geo) {
+    // pole
+    int Nsides = 8;
+    float r = 0.15;
+    Vec3f h(0,6,0);
+    for (int i=0; i<Nsides; i++) {
+        float a = i*3.14*2/Nsides;
+        float b = (i+1)*3.14*2/Nsides;
+        Vec3f p1 = Vec3f(cos(a),0,sin(a))*r + pos;
+        Vec3f p2 = Vec3f(cos(b),0,sin(b))*r + pos;
+        Vec3f n = Vec3f(sin((a+b)*0.5),0,cos((a+b)*0.5));
+        pushQuad(p1, p1+h, p2+h, p2, n, geo);
+    }
+}
+
 void ModuleStreets::makeStreetSign(Vec3f p, string name, GeometryData* geo) {
     if (!signTCs.count(name)) return;
     p += Vec3f(0,1.6,0);
@@ -271,6 +286,7 @@ void ModuleStreets::makeSegment(StreetSegment* s, map<string, StreetJoint*>& joi
             }
             pushStreetQuad( lA, rA, rB, lB, Vec3f(0,1,0), streets, false, Vec3f(k1,k2,1) );
         }
+        makeStreetLight( elevate(leftA-laneW*0.5, streetH), streets );
         return;
     }
 

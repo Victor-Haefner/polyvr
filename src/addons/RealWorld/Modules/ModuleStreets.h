@@ -42,6 +42,7 @@ class ModuleStreets: public BaseModule {
         VRMaterialPtr matStreet;
         VRMaterialPtr matSigns;
 
+        void makeStreetLight(Vec3f pos, GeometryData* geo);
         void makeStreetSign(Vec3f pos, string name, GeometryData* geo);
         void makeStreetNameSign(StreetSegment* seg, VRAnnotationEnginePtr ae);
         void makeSegment(StreetSegment* s, map<string, StreetJoint*>& joints, GeometryData* geo, GeometryData* geo2);

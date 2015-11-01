@@ -32,6 +32,7 @@ void ModuleTree::loadBbox(AreaBoundingBox* bbox) {
         VRTreePtr tree = VRTree::create();
         tree->setup(4,4,rand(), 0.2,0.5,0.75,0.55, 0.2,0.5,0.2,0.2);
         tree->setFrom(pos3D);
+        tree->setScale(Vec3f(2,2,2));
         root->addChild(tree);
         if (trees.count(bbox->str) == 0) trees[bbox->str] = vector<VRTreePtr>();
         trees[bbox->str].push_back(tree);
