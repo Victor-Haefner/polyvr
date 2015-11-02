@@ -264,8 +264,9 @@ void ModuleStreets::makeStreetLight(StreetSegment* seg, GeometryData* geo) {
 
     int N = floor(DL/spread);
     for (int i=0; i<N; i++) {
-        Vec3f pole = pB+D*i/N+X*(i%2*2-1);
-        Vec3f bdir = X+Vec3f(0,0.1*seg->width,0);
+        int k = i%2*2-1;
+        Vec3f pole = pB+D*i/N-X*k;
+        Vec3f bdir = X*k+Vec3f(0,0.1*seg->width,0);
         Vec3f bpos = pole+Vec3f(0,1.4*seg->width,0);
         Vec3f lpos = bpos+bdir*0.45-Vec3f(0,0.1,0);
         pushCylinder(pole, Vec3f(0,1.6*seg->width,0), 0.2, 0.15, 8, Vec2f(0.2,0.3)); // pole
