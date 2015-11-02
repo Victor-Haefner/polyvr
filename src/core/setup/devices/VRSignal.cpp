@@ -34,7 +34,7 @@ VRSignal::~VRSignal() {
 }
 
 void VRSignal::add(VRFunction_base* fkt) { callbacks.push_back(fkt); }
-void VRSignal::add(VRFunctionPtr fkt) { callbacksPtr.push_back(fkt); }
+void VRSignal::add(VRBaseWeakCb fkt) { callbacksPtr.push_back(fkt); }
 
 void VRSignal::sub(VRFunction_base* fkt) {
     if (callbacks.size() == 0) return;
@@ -42,13 +42,17 @@ void VRSignal::sub(VRFunction_base* fkt) {
     if (pos != callbacks.end()) callbacks.erase(pos);
 }
 
-void VRSignal::sub(VRFunctionPtr fkt) {
+void VRSignal::sub(VRBaseWeakCb fkt) {
     if (callbacksPtr.size() == 0) return;
     auto sp = fkt.lock();
+    if (!sp) return;
+    vector<int> toErase;
     for (int i=0; i<callbacksPtr.size(); i++) {
-        auto sp2 = callbacksPtr[i].lock();
-        if (sp && sp2 ? sp == sp2 : false) callbacksPtr.erase(callbacksPtr.begin()+i);
+        auto wp = callbacksPtr[i];
+        auto sp2 = wp.lock();
+        if (!sp2 || sp == sp2) toErase.push_back(i);
     }
+    for (int i = toErase.size()-1; i>=0; i--) callbacksPtr.erase(callbacksPtr.begin()+toErase[i]);
 }
 
 OSG_END_NAMESPACE

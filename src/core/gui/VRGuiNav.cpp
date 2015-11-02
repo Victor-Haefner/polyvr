@@ -95,7 +95,7 @@ void VRGuiNav_on_new_binding_clicked(GtkButton* b, gpointer d) {
     auto scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
     VRNavPreset* preset = scene->getNavigation(getComboboxText("combobox5"));
-    VRDevCb* fkt = 0;
+    VRDeviceCb fkt;
     //cb = new VRDevCb( boost::bind(&VRNavigator::sandBoxNavigation, this, _1) ); //TODO
     VRNavBinding binding(fkt, 0, 0, false);
     preset->addKeyBinding(binding);
@@ -189,7 +189,7 @@ void VRGuiNav_on_cbbinding_changed(GtkCellRendererCombo* crc, gchar *path_string
     // do something
     auto scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
-    VRDevCb* cback = scene->getNavigationCallbacks()[cb];
+    VRDeviceCb cback = scene->getNavigationCallbacks()[cb];
     int i = toInt(path_string);
     VRNavPreset* preset = scene->getNavigation(getComboboxText("combobox5"));
     if (preset->getBindings()[i].sig) preset->getBindings()[i].sig->sub(preset->getBindings()[i].cb);

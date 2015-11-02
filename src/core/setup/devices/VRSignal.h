@@ -2,24 +2,18 @@
 #define VRSIGNAL_H_INCLUDED
 
 #include "core/utils/VRName.h"
+#include "core/utils/VRFunctionFwd.h"
 #include <OpenSG/OSGConfig.h>
 #include <vector>
 #include <memory>
 
-class VRFunction_base;
-template<class T> class VRFunction;
-
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRDevice;
-typedef VRFunction<VRDevice*> VRDevCb;
-
 class VRSignal_base : public VRName {
     protected:
-        typedef std::weak_ptr<VRFunction_base> VRFunctionPtr;
         vector<VRFunction_base*> callbacks;
-        vector<VRFunctionPtr> callbacksPtr;
+        vector<VRBaseWeakCb> callbacksPtr;
         VRFunction<int>* trig_fkt = 0;
         bool _doUpdate = false;
 
@@ -44,9 +38,9 @@ class VRSignal : public VRSignal_base {
         ~VRSignal();
 
         void add(VRFunction_base* fkt);
-        void add(VRFunctionPtr fkt);
+        void add(VRBaseWeakCb fkt);
         void sub(VRFunction_base* fkt);
-        void sub(VRFunctionPtr fkt);
+        void sub(VRBaseWeakCb fkt);
         template<typename Event> void trigger(Event* event = 0) {
             if (event == 0) event = (Event*)this->event;
             for (auto c : callbacks) {

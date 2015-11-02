@@ -6,6 +6,7 @@
 #include <map>
 
 #include <gdkmm/event.h>
+#include "core/utils/VRFunctionFwd.h"
 
 namespace Gtk {
     class Button;
@@ -40,6 +41,7 @@ struct demoEntry {
     bool pixmap = false;
     bool favorite = true;
     bool write_protected = false;
+    VRDeviceCb uPixmap;
 };
 
 class VRDemos {
@@ -51,6 +53,7 @@ class VRDemos {
         demoEntry* current_demo = 0;
         map<string, demoEntry*> demos;
         VRGuiContextMenu* menu;
+        VRDeviceCb updateCb;
 
         bool on_any_event(GdkEvent* event, demoEntry* entry);
         Gtk::Image* loadGTKIcon(Gtk::Image* img, string path, int w, int h);

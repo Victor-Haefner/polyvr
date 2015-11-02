@@ -64,8 +64,8 @@ VRDemos::VRDemos() {
     for (auto f : favorites) addEntry(f, "favorites_tab", false);
     if (favorites.size() == 0) setNotebookPage("notebook2", 1);
 
-    auto fkt = new VRDevCb("GUI_updateDemos", boost::bind(&VRDemos::update, this) );
-    VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
+    updateCb = VRFunction<VRDevice*>::create("GUI_updateDemos", boost::bind(&VRDemos::update, this) );
+    VRGuiSignals::get()->getSignal("scene_changed")->add( updateCb );
 
     setToolButtonCallback("toolbutton1", sigc::mem_fun(*this, &VRDemos::on_new_clicked));
     setToolButtonCallback("toolbutton5", sigc::mem_fun(*this, &VRDemos::on_saveas_clicked));
@@ -140,8 +140,8 @@ void VRDemos::setButton(demoEntry* e) {
     updatePixmap(e, e->imgScene, 100, 75);
 
     // events
-    VRDevCb* fkt = new VRDevCb("GUI_addDemoEntry", boost::bind(&VRDemos::updatePixmap, this, e, e->imgScene, 100, 75) );
-    VRGuiSignals::get()->getSignal("onSaveScene")->add(fkt);
+    e->uPixmap = VRFunction<VRDevice*>::create("GUI_addDemoEntry", boost::bind(&VRDemos::updatePixmap, this, e, e->imgScene, 100, 75) );
+    VRGuiSignals::get()->getSignal("onSaveScene")->add( e->uPixmap );
 
     menu->connectWidget("DemoMenu", ebox);
     ebox->signal_event().connect( sigc::bind<demoEntry*>( sigc::mem_fun(*this, &VRDemos::on_any_event), e) );
