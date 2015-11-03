@@ -7,31 +7,25 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-VRSignal_base::VRSignal_base() {
-    ;
-}
+VRSignal_base::VRSignal_base() {}
 
-VRSignal_base::~VRSignal_base() {
-    delete trig_fkt;
-}
+VRSignal_base::~VRSignal_base() {}
 
 void VRSignal_base::clear() { callbacks.clear(); }
 
 void VRSignal_base::setUpdate(bool b) { _doUpdate = b; }
 bool VRSignal_base::doUpdate() { return _doUpdate; }
 
-VRFunction<int>* VRSignal_base::getTriggerFkt() { return trig_fkt; }
-
-
+VRUpdatePtr VRSignal_base::getTriggerFkt() { return trig_fkt; }
 
 
 VRSignal::VRSignal(VRDevice* _dev) : event(_dev) {
-    trig_fkt = new VRFunction<int>("Signal_trigger", boost::bind(&VRSignal::trigger<VRDevice>, this, (VRDevice*)0));
+    trig_fkt = VRFunction<int>::create("Signal_trigger", boost::bind(&VRSignal::trigger<VRDevice>, this, (VRDevice*)0));
 }
 
-VRSignal::~VRSignal() {
-    ;
-}
+VRSignal::~VRSignal() {}
+
+VRSignalPtr VRSignal::create(VRDevice* dev) { return VRSignalPtr( new VRSignal(dev) ); }
 
 void VRSignal::add(VRFunction_base* fkt) { callbacks.push_back(fkt); }
 void VRSignal::add(VRBaseWeakCb fkt) { callbacksPtr.push_back(fkt); }

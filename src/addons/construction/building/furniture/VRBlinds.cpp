@@ -33,7 +33,7 @@ VRBlinds::VRBlinds(string name, VRGeometryPtr _window, VRScene* _scene): VRTrans
     fkt = VRFunction<float>::create("Blinds_interpolate", boost::bind(&VRBlinds::interpolate, this, _1));
 
     // toggle callback
-    toggleCallback = new VRDevCb("Blinds_toggle", boost::bind(&VRBlinds::toggle, this, _1));
+    toggleCallback = VRFunction<VRDevice*>::create("Blinds_toggle", boost::bind(&VRBlinds::toggle, this, _1));
 }
 
 VRBlindsPtr VRBlinds::create(string name, VRGeometryPtr _window, VRScene* _scene) {
@@ -146,6 +146,6 @@ void VRBlinds::interpolate(float t) {
     blend_geo->setPositions(pos);
 }
 
-VRDevCb* VRBlinds::getCallback() { return toggleCallback; }
+VRDeviceCb VRBlinds::getCallback() { return toggleCallback; }
 
 OSG_END_NAMESPACE;

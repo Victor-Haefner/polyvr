@@ -7,6 +7,7 @@
 
 #include <gdkmm/event.h>
 #include "core/utils/VRFunctionFwd.h"
+#include "core/utils/VRDeviceFwd.h"
 
 namespace Gtk {
     class Button;
@@ -48,8 +49,8 @@ class VRDemos {
     private:
         string active;
         VRScene* demo = 0;
-        VRSignal* on_scene_loaded = 0;
-        VRSignal* on_scene_closing = 0;
+        VRSignalPtr on_scene_loaded = 0;
+        VRSignalPtr on_scene_closing = 0;
         demoEntry* current_demo = 0;
         map<string, demoEntry*> demos;
         VRGuiContextMenu* menu;
@@ -89,7 +90,7 @@ class VRDemos {
     public:
         VRDemos();
 
-        //VRSignal* getSignal();
+        //VRSignalPtr getSignal();
 };
 
 OSG_END_NAMESPACE;

@@ -46,13 +46,13 @@ VRObjectPtr VROpening::copy(vector<VRObjectPtr> children) {
     return d;
 }
 
-VROpening::VROpening(string name, VRObjectPtr obj, VRScene* _scene, VRSignal* _sig, string _param): VRTransform(name) {
+VROpening::VROpening(string name, VRObjectPtr obj, VRScene* _scene, VRSignalPtr _sig, string _param): VRTransform(name) {
     scene = _scene;
     sig = _sig;
     param = _param;
 
     // toggle callback
-    toggleCallback = new VRDevCb("OpeningToggle", boost::bind(&VROpening::toggle, this, _1));
+    toggleCallback = VRFunction<VRDevice*>::create("OpeningToggle", boost::bind(&VROpening::toggle, this, _1));
 
     if (obj) {
         addChild(obj);
@@ -62,7 +62,7 @@ VROpening::VROpening(string name, VRObjectPtr obj, VRScene* _scene, VRSignal* _s
     if (sig) sig->add(toggleCallback);
 }
 
-VROpeningPtr VROpening::create(string name, VRObjectPtr obj, VRScene* _scene, VRSignal* _sig, string _param) {
+VROpeningPtr VROpening::create(string name, VRObjectPtr obj, VRScene* _scene, VRSignalPtr _sig, string _param) {
     return shared_ptr<VROpening>( new VROpening(name, obj, _scene, _sig, _param) );
 }
 

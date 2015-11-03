@@ -5,11 +5,11 @@
 #include <OpenSG/OSGConfig.h>
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRName.h"
+#include "core/utils/VRDeviceFwd.h"
 
 OSG_BEGIN_NAMESPACE
 using namespace std;
 
-class VRSignal;
 class VRThread;
 class HTTPServer;
 //struct HTTP_args;
@@ -41,7 +41,7 @@ class VRSocket : public VRName {
         std::shared_ptr<VRFunction<int> > queued_signal;
         string tcp_msg;
         HTTP_args* http_args;
-        VRSignal* sig;
+        VRSignalPtr sig;
         int port;
         string IP;
         string type;
@@ -90,7 +90,7 @@ class VRSocket : public VRName {
         string getType();
         string getIP();
         string getCallback();
-        VRSignal* getSignal();
+        VRSignalPtr getSignal();
         int getPort();
 
         bool ping(string IP, string port);

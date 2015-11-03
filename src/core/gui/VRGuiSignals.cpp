@@ -1,4 +1,5 @@
 #include "VRGuiSignals.h"
+#include "core/setup/devices/VRSignal.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -10,8 +11,8 @@ VRGuiSignals* VRGuiSignals::get() {
 
 VRGuiSignals::VRGuiSignals() {}
 
-VRSignal* VRGuiSignals::getSignal(string name) {
-    if (signals.count(name) == 0) signals[name] = new VRSignal();
+VRSignalPtr VRGuiSignals::getSignal(string name) {
+    if (signals.count(name) == 0) signals[name] = VRSignal::create();
     return signals[name];
 }
 

@@ -71,7 +71,7 @@ VRSnappingEngine::VRSnappingEngine() {
     hintGeo = VRGeometry::create("snapping_engine_hint");
     positions = new Octree(0.1);
     event = new EventSnap();
-    snapSignal = new VRSignal();
+    snapSignal = VRSignal::create();
 
     updatePtr = VRFunction<int>::create("snapping engine update", boost::bind(&VRSnappingEngine::update, this) );
     VRSceneManager::getCurrent()->addUpdateFkt(updatePtr, 999);
@@ -141,7 +141,7 @@ void VRSnappingEngine::addTree(VRObjectPtr obj, float weight) {
     for (auto o : objs) addObject(static_pointer_cast<VRTransform>(o), weight);
 }
 
-VRSignal* VRSnappingEngine::getSignalSnap() { return snapSignal; }
+VRSignalPtr VRSnappingEngine::getSignalSnap() { return snapSignal; }
 
 void VRSnappingEngine::update() {
     for (auto dev : VRSetupManager::getCurrent()->getDevices()) { // get dragged objects

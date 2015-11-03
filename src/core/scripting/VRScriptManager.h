@@ -9,6 +9,7 @@
 #include <string>
 #include "core/setup/devices/VRSignal.h"
 #include "core/utils/VRStorage.h"
+#include "core/utils/VRDeviceFwd.h"
 #include "VRPyBase.h"
 
 namespace xmlpp{ class Element; }
@@ -26,7 +27,7 @@ class VRScriptManager : public VRStorage, public VRPyBase {
         PyObject* pModVR;
         map<string, PyTypeObject*> modules;
         map<string, VRScript*> scripts;
-        map<string, VRSignal*> triggers;
+        map<string, VRSignalPtr> triggers;
         PyThreadState* pyThreadState = 0;
 
         template<class T>

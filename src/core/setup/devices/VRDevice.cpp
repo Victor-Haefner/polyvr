@@ -17,7 +17,7 @@ VRDevice::VRDevice(string _type) : VRAvatar(_type) {
 
 VRDevice::~VRDevice() {}
 
-VRSignal* VRDevice::signalExist(int key, int state) {
+VRSignalPtr VRDevice::signalExist(int key, int state) {
     stringstream ss;
     ss << "on_" << name << "_" << key << "_" << state;
     string sig_name = ss.str();
@@ -25,33 +25,33 @@ VRSignal* VRDevice::signalExist(int key, int state) {
     return callbacks[sig_name];
 }
 
-VRSignal* VRDevice::createSignal(int key, int state) {
+VRSignalPtr VRDevice::createSignal(int key, int state) {
     stringstream ss;
     ss << "on_" << name << "_" << key << "_" << state;
     string sig_name = ss.str();
 
-    if ( callbacks.count(sig_name) ==  0) callbacks[sig_name] = new VRSignal(this);
-    VRSignal* sig = callbacks[sig_name];
+    if ( callbacks.count(sig_name) ==  0) callbacks[sig_name] = VRSignal::create(this);
+    VRSignalPtr sig = callbacks[sig_name];
     sig->setName(sig_name);
     return sig;
 }
 
 void VRDevice::triggerSignal(int key, int state) {
-    VRSignal* sig = signalExist(key, state);
+    VRSignalPtr sig = signalExist(key, state);
     if (sig) {
         sig->trigger<VRDevice>();
         if (sig->doUpdate()) addUpdateSignal(sig);
     }
 }
 
-VRSignal* VRDevice::getToEdgeSignal() { return 0; }
-VRSignal* VRDevice::getFromEdgeSignal() { return 0; }
+VRSignalPtr VRDevice::getToEdgeSignal() { return 0; }
+VRSignalPtr VRDevice::getFromEdgeSignal() { return 0; }
 
-void VRDevice::addUpdateSignal(VRSignal* sig) {
+void VRDevice::addUpdateSignal(VRSignalPtr sig) {
     activatedSignals.push_back(sig);
 }
 
-void VRDevice::remUpdateSignal(VRSignal* sig, VRDevice* dev) {
+void VRDevice::remUpdateSignal(VRSignalPtr sig, VRDevice* dev) {
     for (auto itr : activatedSignals) {
         if (itr == sig) {
             sig->trigger<VRDevice>();
@@ -68,7 +68,6 @@ void VRDevice::updateSignals() {
 }
 
 void VRDevice::clearSignals() {
-    for (auto itr : callbacks) delete itr.second;
     callbacks.clear();
     activatedSignals.clear();
 }
@@ -76,28 +75,28 @@ void VRDevice::clearSignals() {
 string VRDevice::getType() { return type; }
 
 // signal event setup
-VRSignal* VRDevice::addSignal(int key, int state) {
-    VRSignal* sig = createSignal(key, state);
+VRSignalPtr VRDevice::addSignal(int key, int state) {
+    VRSignalPtr sig = createSignal(key, state);
     BStates[key] = false;
     return sig;
 }
 
 // signal activation setup
-VRSignal* VRDevice::addSignal(int key) {
+VRSignalPtr VRDevice::addSignal(int key) {
     BStates[key] = false;
 
     // activation signal
-    VRSignal* sigA = createSignal(key, 1);
+    VRSignalPtr sigA = createSignal(key, 1);
     sigA->setUpdate(true);
 
     // deactivation signal
-    VRSignal* sigB = createSignal(key, 0);
-    sigB->add( new VRDevCb("Device_remUpdate", boost::bind(&VRDevice::remUpdateSignal, this, sigA, _1)) );
+    VRSignalPtr sigB = createSignal(key, 0);
+    sigB->add( VRFunction<VRDevice*>::create("Device_remUpdate", boost::bind(&VRDevice::remUpdateSignal, this, sigA, _1)) );
 
     return sigA;
 }
 
-void VRDevice::addSignal(VRSignal* sig, int key, int state) {
+void VRDevice::addSignal(VRSignalPtr sig, int key, int state) {
     stringstream ss;
     ss << "on_" << name << "_" << key << "_" << state;
     sig->setName(ss.str());
@@ -105,8 +104,8 @@ void VRDevice::addSignal(VRSignal* sig, int key, int state) {
     BStates[key] = false;
 }
 
-VRSignal* VRDevice::addSlider(int key) {
-    VRSignal* sig = createSignal(key, 0);
+VRSignalPtr VRDevice::addSlider(int key) {
+    VRSignalPtr sig = createSignal(key, 0);
     SStates[key] = 0;
     return sig;
 }
@@ -142,8 +141,8 @@ float VRDevice::s_state(int key) { if (SStates.count(key)) return SStates[key]; 
 void VRDevice::setTarget(VRTransformPtr e) { target = e; }
 VRTransformPtr VRDevice::getTarget() { return target; }
 
-map<string, VRSignal*> VRDevice::getSignals() { return callbacks; }
-VRSignal* VRDevice::getSignal(string name) { if (callbacks.count(name)) return callbacks[name]; else return 0; }
+map<string, VRSignalPtr> VRDevice::getSignals() { return callbacks; }
+VRSignalPtr VRDevice::getSignal(string name) { if (callbacks.count(name)) return callbacks[name]; else return 0; }
 
 void VRDevice::printMap() {
     cout << "\nDevice " << name << " signals:";

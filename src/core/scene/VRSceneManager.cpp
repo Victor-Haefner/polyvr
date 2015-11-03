@@ -27,8 +27,8 @@ VRSceneManager::VRSceneManager() {
 	cout << " PolyVR system directory: " << original_workdir << endl;
     searchExercisesAndFavorites();
 
-    on_scene_load = new VRSignal();
-    on_scene_close = new VRSignal();
+    on_scene_load = VRSignal::create();
+    on_scene_close = VRSignal::create();
 }
 
 VRSceneManager::~VRSceneManager() {}
@@ -116,8 +116,8 @@ void VRSceneManager::newScene(string path) {
     addScene(scene);
 }
 
-VRSignal* VRSceneManager::getSignal_on_scene_load() { return on_scene_load; }
-VRSignal* VRSceneManager::getSignal_on_scene_close() { return on_scene_close; }
+VRSignalPtr VRSceneManager::getSignal_on_scene_load() { return on_scene_load; }
+VRSignalPtr VRSceneManager::getSignal_on_scene_close() { return on_scene_close; }
 
 void VRSceneManager::setActiveScene(VRScenePtr scene) {
     if (scenes.size() == 0) { cout << "\n ERROR: No scenes defined " << flush; return; }

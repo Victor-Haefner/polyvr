@@ -22,8 +22,10 @@ VRNavBinding::VRNavBinding(VRDeviceCb c, int k, int s, bool repeat) {
 }
 
 VRNavBinding::~VRNavBinding() {
-    if (sig) sig->sub(cb);
+    clearSignal();
 }
+
+void VRNavBinding::clearSignal() { if (auto sigp = sig.lock()) sigp->sub(cb); }
 
 VRNavPreset::VRNavPreset() {
     setNameSpace("NavPreset");
@@ -35,10 +37,10 @@ VRNavPreset::~VRNavPreset() {}
 void VRNavPreset::updateBinding(VRNavBinding& b) {
     if (!active) return;
     if (dev == 0) return;
-    if (b.sig) b.sig->sub(b.cb);
-    if (b.doRepeat) b.sig = dev->addSignal(b.key);
-    else b.sig = dev->addSignal( b.key, b.state);
-    b.sig->add(b.cb);
+    b.clearSignal();
+    auto sig = b.doRepeat ? dev->addSignal(b.key) : dev->addSignal( b.key, b.state);
+    sig->add(b.cb);
+    b.sig = sig;
     //cout << "\nUPDATE BINDING " << b.cb->getName() << endl;
 }
 
@@ -59,9 +61,7 @@ void VRNavPreset::activate() {
 
 void VRNavPreset::deactivate() {
     active = false;
-    for (uint i=0; i<bindings.size(); i++) {
-        if (bindings[i].sig) bindings[i].sig->sub(bindings[i].cb);
-    }
+    for (uint i=0; i<bindings.size(); i++) bindings[i].clearSignal();
 }
 
 vector<VRNavBinding>& VRNavPreset::getBindings() { return bindings; }

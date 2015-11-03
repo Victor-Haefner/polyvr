@@ -181,7 +181,7 @@ VRMesure::VRMesure() {
     updatePtr = VRFunction<int>::create("Mesure_check", boost::bind(&VRMesure::check, this));
 }
 
-void VRMesure::setKillSignal(VRDevice* dev, VRSignal* sig) {
+void VRMesure::setKillSignal(VRDevice* dev, VRSignalPtr sig) {
     VRFunction<VRDevice*>* cb = new VRFunction<VRDevice*>("Mesure_kill", boost::bind(&VRMesure::kill, this, _1));
     sig->add( cb );
 }

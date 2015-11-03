@@ -732,6 +732,7 @@
 		<Unit filename="src/core/tools/selection/VRSelectionFwd.h" />
 		<Unit filename="src/core/tools/selection/VRSelector.cpp" />
 		<Unit filename="src/core/tools/selection/VRSelector.h" />
+		<Unit filename="src/core/utils/VRDeviceFwd.h" />
 		<Unit filename="src/core/utils/VRDoublebuffer.cpp" />
 		<Unit filename="src/core/utils/VRDoublebuffer.h" />
 		<Unit filename="src/core/utils/VRFlags.cpp" />

@@ -16,8 +16,8 @@ class VRMouse : public VRDevice {
         VRView* view;
         Line ray;
 
-        VRSignal* on_to_edge = 0;
-        VRSignal* on_from_edge = 0;
+        VRSignalPtr on_to_edge = 0;
+        VRSignalPtr on_from_edge = 0;
         int onEdge = -1;
 
         void multFull(Matrix _matrix, const Pnt3f &pntIn, Pnt3f  &pntOut);
@@ -39,8 +39,8 @@ class VRMouse : public VRDevice {
         void setViewport(VRView* _view);
 
         Line getRay();
-        VRSignal* getToEdgeSignal();
-        VRSignal* getFromEdgeSignal();
+        VRSignalPtr getToEdgeSignal();
+        VRSignalPtr getFromEdgeSignal();
 
         void setCursor(string c);
 

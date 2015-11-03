@@ -7,6 +7,7 @@
 #include <gtkmm/combobox.h>
 #include <boost/thread.hpp>
 #include "core/utils/VRFunctionFwd.h"
+#include "core/utils/VRDeviceFwd.h"
 
 namespace Gtk { class ToggleToolButton; class ScrolledWindow; }
 
@@ -38,7 +39,7 @@ class VRGuiBits {
     public:
         VRGuiBits();
 
-        void setSceneSignal(VRSignal* sig);
+        void setSceneSignal(VRSignalPtr sig);
 
         void write_to_terminal(string s);
         void update_terminal();

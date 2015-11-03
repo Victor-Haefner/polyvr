@@ -850,7 +850,7 @@ VRGuiSetup::VRGuiSetup() {
     updateSetupList();
     updateSetup();
 
-    VRDevCb* fkt = new VRDevCb("update gui setup", boost::bind(&VRGuiSetup::updateSetup, this) );
+    VRDeviceCb fkt = VRFunction<VRDevice*>::create("update gui setup", boost::bind(&VRGuiSetup::updateSetup, this) );
     VRSetupManager::getCurrent()->getSignal_on_new_art_device()->add(fkt);
 }
 

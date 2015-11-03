@@ -15,8 +15,8 @@ VRMouse::VRMouse() : VRDevice("mouse") {
     cam = 0;
     view = 0;
     clearSignals();
-    on_to_edge = new VRSignal(this);
-    on_from_edge = new VRSignal(this);
+    on_to_edge = VRSignal::create(this);
+    on_from_edge = VRSignal::create(this);
 }
 
 void VRMouse::setCursor(string c) {
@@ -118,8 +118,8 @@ bool VRMouse::calcViewRay(PerspectiveCameraRecPtr pcam, Line &line, float x, flo
     return true;
 }
 
-VRSignal* VRMouse::getToEdgeSignal() { return on_to_edge; }
-VRSignal* VRMouse::getFromEdgeSignal() { return on_from_edge; }
+VRSignalPtr VRMouse::getToEdgeSignal() { return on_to_edge; }
+VRSignalPtr VRMouse::getFromEdgeSignal() { return on_from_edge; }
 
 //3d object to emulate a hand in VRSpace
 void VRMouse::updatePosition(int x, int y) {

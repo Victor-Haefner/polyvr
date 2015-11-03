@@ -7,6 +7,7 @@
 #include <OpenSG/OSGPlane.h>
 #include <map>
 #include "core/utils/VRFunctionFwd.h"
+#include "core/utils/VRDeviceFwd.h"
 #include "core/objects/VRObjectFwd.h"
 
 
@@ -62,12 +63,12 @@ class VRSnappingEngine {
         bool showHints = false;
 
         EventSnap* event = 0;
-        VRSignal* snapSignal = 0;
+        VRSignalPtr snapSignal = 0;
 
     public:
         VRSnappingEngine();
 
-        VRSignal* getSignalSnap();
+        VRSignalPtr getSignalSnap();
 
         void clear();
 

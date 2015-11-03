@@ -22,8 +22,8 @@ class VRSceneManager : public VRThreadManager, public VRCallbackManager, public 
         VRScenePtr current;
         string active;
         string original_workdir;
-        VRSignal* on_scene_load = 0;
-        VRSignal* on_scene_close = 0;
+        VRSignalPtr on_scene_load = 0;
+        VRSignalPtr on_scene_close = 0;
 
         VRSceneManager();
         void operator= (VRSceneManager v);
@@ -48,8 +48,8 @@ class VRSceneManager : public VRThreadManager, public VRCallbackManager, public 
         void addFavorite(string path);
         void remFavorite(string path);
 
-        VRSignal* getSignal_on_scene_load();
-        VRSignal* getSignal_on_scene_close();
+        VRSignalPtr getSignal_on_scene_load();
+        VRSignalPtr getSignal_on_scene_close();
 
         vector<string> getFavoritePaths();
         vector<string> getExamplePaths();

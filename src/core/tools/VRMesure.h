@@ -6,14 +6,13 @@
 #include <OpenSG/OSGMaterial.h>
 #include <string>
 #include "core/utils/VRFunctionFwd.h"
+#include "core/utils/VRDeviceFwd.h"
 #include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRScene;
-class VRDevice;
-class VRSignal;
 
 class VRMesure {
     private:
@@ -43,7 +42,7 @@ class VRMesure {
     public:
         VRMesure();
 
-        void setKillSignal(VRDevice* dev, VRSignal* sig);
+        void setKillSignal(VRDevice* dev, VRSignalPtr sig);
 
         void addToScene(VRScene* _scene);
 

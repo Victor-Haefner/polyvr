@@ -29,8 +29,8 @@ class VROpening: public VRTransform, public VROCtoggle {
         VRTransformPtr d1, d2;
         shared_ptr< VRFunction<Vec3f> > fkt1;
         shared_ptr< VRFunction<Vec3f> > fkt2;
-        VRDevCb* toggleCallback;
-        VRSignal* sig;
+        VRDeviceCb toggleCallback;
+        VRSignalPtr sig;
         VRScene* scene;
         string sound;
         string param;
@@ -42,8 +42,8 @@ class VROpening: public VRTransform, public VROCtoggle {
 
     public:
         //VROpening(string name); // TODO -> deprecated??
-        VROpening(string name, VRObjectPtr obj, VRScene* _scene, VRSignal* _sig, string _param);
-        static VROpeningPtr create(string name, VRObjectPtr obj, VRScene* _scene, VRSignal* _sig, string _param);
+        VROpening(string name, VRObjectPtr obj, VRScene* _scene, VRSignalPtr _sig, string _param);
+        static VROpeningPtr create(string name, VRObjectPtr obj, VRScene* _scene, VRSignalPtr _sig, string _param);
         VROpeningPtr ptr();
 
         void setSound(string s);

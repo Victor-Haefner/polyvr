@@ -3,6 +3,7 @@
 
 #include "core/utils/VRName.h"
 #include "core/utils/VRFunctionFwd.h"
+#include "core/utils/VRDeviceFwd.h"
 #include <OpenSG/OSGConfig.h>
 #include <vector>
 #include <memory>
@@ -14,7 +15,7 @@ class VRSignal_base : public VRName {
     protected:
         vector<VRFunction_base*> callbacks;
         vector<VRBaseWeakCb> callbacksPtr;
-        VRFunction<int>* trig_fkt = 0;
+        VRUpdatePtr trig_fkt = 0;
         bool _doUpdate = false;
 
     public:
@@ -24,7 +25,7 @@ class VRSignal_base : public VRName {
         void setUpdate(bool b);
         bool doUpdate();
 
-        VRFunction<int>* getTriggerFkt();
+        VRUpdatePtr getTriggerFkt();
 
         void clear();
 };
@@ -36,6 +37,8 @@ class VRSignal : public VRSignal_base {
     public:
         VRSignal(VRDevice* dev = 0);
         ~VRSignal();
+
+        static VRSignalPtr create(VRDevice* dev = 0);
 
         void add(VRFunction_base* fkt);
         void add(VRBaseWeakCb fkt);

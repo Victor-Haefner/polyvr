@@ -8,27 +8,26 @@
 #include <vector>
 #include "core/objects/VRObjectFwd.h"
 #include "core/utils/VRFunctionFwd.h"
+#include "core/utils/VRDeviceFwd.h"
 #include "core/utils/VRStorage.h"
 #include "core/utils/VRName.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRDevice;
-class VRSignal;
-class VRTransform;
-
 struct VRNavBinding {
     int key = 0;
     int state = 0;
-    VRSignal* sig = 0;
-    VRDeviceCb cb = 0;
+    VRSignalWeakPtr sig;
+    VRDeviceCb cb;
     string sig_name;
     string cb_name;
     bool doRepeat = false;
 
     VRNavBinding(VRDeviceCb c, int k, int s, bool repeat);
     ~VRNavBinding();
+
+    void clearSignal();
 };
 
 class VRNavPreset : public VRName {
