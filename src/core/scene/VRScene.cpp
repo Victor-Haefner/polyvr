@@ -148,7 +148,6 @@ void VRScene::setActiveCamera(string camname) {
     // TODO: refactor the following workaround
     VRCameraPtr cam = getActiveCamera();
     if (cam == 0) return;
-    cout << " set active camera to " << cam->getName() << endl;
 
     setDSCamera(cam);
 

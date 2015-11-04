@@ -335,12 +335,10 @@ void VRGuiBits::update() { // scene changed
     fillStringListstore("cameras", scene->getCameraNames());
     fillStringListstore("nav_presets", scene->getNavigationNames());
 
-    cout << " set active camera: " << scene->getActiveCameraIndex() << endl;
     setCombobox("combobox4", scene->getActiveCameraIndex());
     setCombobox("combobox9", getListStorePos( "nav_presets", scene->getActiveNavigation() ) );
 
     // update setup && project label
-    cout << " now running: " << scene->getName() << endl;
     setLabel("label24", "Project: " + scene->getName());
 
     updateVisualLayer();

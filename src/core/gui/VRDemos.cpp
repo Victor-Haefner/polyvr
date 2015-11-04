@@ -229,17 +229,18 @@ void VRDemos::setGuiState(demoEntry* e) {
 }
 
 void VRDemos::addEntry(string path, string table, bool running) {
-    if (demos.count(path)) return;
-
     clearTable("favorites_tab");
 
-    demoEntry* e = new demoEntry();
-    e->path = path;
-    demos[path] = e;
-    e->running = running;
-    e->table = table;
-    e->pxm_path = path.substr(0,path.size()-4)+".png";
-    setButton(e);
+    demoEntry* e = 0;
+    if (demos.count(path) == 0) {
+        e = new demoEntry();
+        e->path = path;
+        demos[path] = e;
+        e->running = running;
+        e->table = table;
+        e->pxm_path = path.substr(0,path.size()-4)+".png";
+        setButton(e);
+    } else e = demos[path];
 
     updateTable("favorites_tab");
     setGuiState(e);
@@ -337,7 +338,7 @@ void VRDemos::on_diag_load_clicked() {
     if (current_demo) if (current_demo->running) toggleDemo(current_demo); // close demo if it is running
     addEntry(path, "favorites_tab", false);
     VRSceneManager::get()->addFavorite(path);
-    toggleDemo(demos[path]);
+    if (demos.count(path)) toggleDemo(demos[path]);
 }
 
 void VRDemos::on_load_clicked() {
@@ -394,11 +395,6 @@ void VRDemos::update() {
         setGuiState(current_demo);
         return;
     }
-
-    current_demo = new demoEntry();
-    current_demo->running = true;
-    demos[sPath] = current_demo;
-    setGuiState(current_demo);
 }
 
 void VRDemos::toggleDemo(demoEntry* e) {
