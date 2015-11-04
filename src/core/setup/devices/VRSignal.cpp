@@ -8,7 +8,6 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 VRSignal_base::VRSignal_base() {}
-
 VRSignal_base::~VRSignal_base() {}
 
 void VRSignal_base::clear() { callbacks.clear(); }

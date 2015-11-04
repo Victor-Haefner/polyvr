@@ -20,14 +20,13 @@ class VRDevice : public VRIntersect, public VRAvatar, public VRName, public VRSt
         Vec2f speed;
 
         map< string, VRSignalPtr > callbacks; //all callbacks
-        vector<VRSignalPtr> activatedSignals;
+        map<VRSignal*, VRSignalPtr> activatedSignals;
+        map<VRSignal*, VRDeviceCb> deactivationCallbacks;
         map<int, int> BStates;//states of buttons
         map<int, float> SStates;//states of slider
 
         VRSignalPtr signalExist(int key, int state);
-
         VRSignalPtr createSignal(int key, int state);
-
         void triggerSignal(int key, int state);
 
     public:
@@ -35,7 +34,7 @@ class VRDevice : public VRIntersect, public VRAvatar, public VRName, public VRSt
         virtual ~VRDevice();
 
         VRSignalPtr addSignal(int key, int state);
-        VRSignalPtr addSignal(int key);
+        VRSignalPtr addToggleSignal(int key);
         void addSignal(VRSignalPtr sig, int key, int state);
         VRSignalPtr addSlider(int key);
 

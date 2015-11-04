@@ -9,7 +9,7 @@
       </Object>
     </Object>
   </Objects>
-  <Rendering deferred_rendering="0" frustum_culling="1" occlusion_culling="0" ssao="0" two_sided="1"/>
+  <Rendering deferred_rendering="0" frustum_culling="1" occlusion_culling="0" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts>
     <Script name_suffix="0" base_name="cmdCsg" name_space="__script__" type="Python" mobile="">
       <core>
@@ -455,10 +455,10 @@
 	VR.startDragTimer()
 	VR.treeRedrawEnabled = False
 	target = dev.getDragged()
+	print "down:", target.getName()
 	if target == None: return
 	VR.lastDragged = target
-		
-	print "down:", target.getName()
+	print target
 	
 	if target.hasTag('sample'):
 		Type = target.getName().split('.')[0]
@@ -467,7 +467,7 @@
 		if newSample: VR.samplePrims[Type] = newSample
 		
 </core>
-      <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" name_suffix="15" base_name="trigger" name_space="__global__"/>
+      <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
       <trig type="on_device" dev="flystick" state="Pressed" param="" key="0" name_suffix="6" base_name="trigger" name_space="__global__"/>
     </Script>
     <Script name_suffix="0" base_name="triggerUp" name_space="__script__" type="Python" mobile="">
@@ -478,7 +478,7 @@
 	isDrag = VR.stopDragTimer()
 	dragged = VR.lastDragged
 	i = dev.getIntersected()
-	if not dragged and not intersected: return
+	if not dragged: return
 	
 	# Cases:
 	# Nothing dragged/single click -&gt; intr + isDrag (true/false)

@@ -13,7 +13,8 @@ OSG_BEGIN_NAMESPACE;
 VRMainInterface::VRMainInterface() {
     mobile = new VRMobile(5501);
     VRSignalPtr sig = mobile->addSignal(0,1);
-    sig->add( VRFunction<VRDevice*>::create( "VRMainInterface_on_scene_clicked", boost::bind(&VRMainInterface::on_scene_clicked, this, _1) ) );
+    clickCb = VRFunction<VRDevice*>::create( "VRMainInterface_on_scene_clicked", boost::bind(&VRMainInterface::on_scene_clicked, this, _1) );
+    sig->add( clickCb );
     update();
 }
 

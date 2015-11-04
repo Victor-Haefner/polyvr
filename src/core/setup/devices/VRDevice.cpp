@@ -48,28 +48,24 @@ VRSignalPtr VRDevice::getToEdgeSignal() { return 0; }
 VRSignalPtr VRDevice::getFromEdgeSignal() { return 0; }
 
 void VRDevice::addUpdateSignal(VRSignalPtr sig) {
-    activatedSignals.push_back(sig);
+    activatedSignals[sig.get()] = sig;
 }
 
 void VRDevice::remUpdateSignal(VRSignalPtr sig, VRDevice* dev) {
-    for (auto itr : activatedSignals) {
-        if (itr == sig) {
-            sig->trigger<VRDevice>();
-            activatedSignals.erase(remove(activatedSignals.begin(), activatedSignals.end(), sig), activatedSignals.end());
-            return;
-        }
-    }
+    auto k = sig.get();
+    if (activatedSignals.count(k) == 0) return;
+    activatedSignals[k]->trigger<VRDevice>();
+    activatedSignals.erase(k);
 }
 
 void VRDevice::updateSignals() {
-    for(uint i=0; i<activatedSignals.size(); i++) {
-        activatedSignals[i]->trigger<VRDevice>();
-    }
+    for (auto a : activatedSignals) a.second->trigger<VRDevice>();
 }
 
 void VRDevice::clearSignals() {
     callbacks.clear();
     activatedSignals.clear();
+    deactivationCallbacks.clear();
 }
 
 string VRDevice::getType() { return type; }
@@ -82,7 +78,7 @@ VRSignalPtr VRDevice::addSignal(int key, int state) {
 }
 
 // signal activation setup
-VRSignalPtr VRDevice::addSignal(int key) {
+VRSignalPtr VRDevice::addToggleSignal(int key) {
     BStates[key] = false;
 
     // activation signal
@@ -91,7 +87,9 @@ VRSignalPtr VRDevice::addSignal(int key) {
 
     // deactivation signal
     VRSignalPtr sigB = createSignal(key, 0);
-    sigB->add( VRFunction<VRDevice*>::create("Device_remUpdate", boost::bind(&VRDevice::remUpdateSignal, this, sigA, _1)) );
+    auto fkt = VRFunction<VRDevice*>::create("Device_remUpdate", boost::bind(&VRDevice::remUpdateSignal, this, sigA, _1));
+    sigB->add( fkt );
+    deactivationCallbacks[sigA.get()] = fkt;
 
     return sigA;
 }
