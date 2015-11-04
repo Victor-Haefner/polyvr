@@ -99,6 +99,7 @@ VRScriptManager::~VRScriptManager() {
     //Py_XDECREF(pModBase);
     if (PyErr_Occurred() != NULL) PyErr_Print();
     PyErr_Clear();
+    VRPyBase::err = 0;
     Py_Finalize();
 }
 

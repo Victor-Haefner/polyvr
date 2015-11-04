@@ -403,8 +403,7 @@ void VRDemos::update() {
 
 void VRDemos::toggleDemo(demoEntry* e) {
     bool run = !e->running;
-    auto scene = VRSceneManager::getCurrent();
-    VRSceneManager::get()->removeScene(scene);
+    VRSceneManager::get()->closeScene();
     if (run) VRSceneManager::get()->loadScene(e->path, e->write_protected);
 }
 

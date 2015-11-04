@@ -18,9 +18,7 @@ class VRSceneManager : public VRThreadManager, public VRCallbackManager, public 
     private:
         vector<string> favorite_paths;
         vector<string> example_paths;
-        map<string, VRScenePtr> scenes;
         VRScenePtr current;
-        string active;
         string original_workdir;
         VRSignalPtr on_scene_load = 0;
         VRSignalPtr on_scene_close = 0;
@@ -34,13 +32,10 @@ class VRSceneManager : public VRThreadManager, public VRCallbackManager, public 
         static VRSceneManager* get();
         ~VRSceneManager();
 
-        void addScene(VRScenePtr s);
-        void loadScene(string path, bool write_protected = false);
-        void removeScene(VRScenePtr s);
+        void setScene(VRScenePtr s);
         void newScene(string name);
-
-        void setActiveScene(VRScenePtr s);
-        void setActiveSceneByName(string s);
+        void closeScene();
+        void loadScene(string path, bool write_protected = false);
 
         void setWorkdir(string path);
         string getOriginalWorkdir();
@@ -54,10 +49,6 @@ class VRSceneManager : public VRThreadManager, public VRCallbackManager, public 
         vector<string> getFavoritePaths();
         vector<string> getExamplePaths();
 
-        //void printTree() { scenes[active]->printTree();}
-
-        int getSceneNum();
-        VRScenePtr getScene(string s);
         static VRScenePtr getCurrent();
 
         void updateScene();

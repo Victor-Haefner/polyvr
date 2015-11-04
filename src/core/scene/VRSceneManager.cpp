@@ -22,7 +22,6 @@ using namespace std;
 
 VRSceneManager::VRSceneManager() {
     cout << "Init VRSceneManager\n";
-    active = "NO_SCENE_ACTIVE";
 	original_workdir = boost::filesystem::current_path().string();
 	cout << " PolyVR system directory: " << original_workdir << endl;
     searchExercisesAndFavorites();
@@ -40,19 +39,13 @@ VRSceneManager* VRSceneManager::get() {
     return mgr;
 }
 
-void VRSceneManager::addScene(VRScenePtr s) {
-    scenes[s->getName()] = s;
-    setActiveScene(s);
-    VRGuiSignals::get()->getSignal("scene_changed")->trigger<VRDevice>(); // update gui
-}
-
 void VRSceneManager::loadScene(string path, bool write_protected) {
     if (!boost::filesystem::exists(path)) { cout << "loadScene " << path << " not found" << endl; return; }
     path = boost::filesystem::canonical(path).string();
     cout << "loadScene " << path << endl;
     if (current) if (current->getPath() == path) return;
 
-    removeScene(current);
+    closeScene();
     VRSceneLoader::get()->loadScene(path);
     current->setFlag("write_protected", write_protected);
     VRGuiSignals::get()->getSignal("scene_changed")->trigger<VRDevice>(); // update gui
@@ -60,14 +53,11 @@ void VRSceneManager::loadScene(string path, bool write_protected) {
 
 string VRSceneManager::getOriginalWorkdir() { return original_workdir; }
 
-void VRSceneManager::removeScene(VRScenePtr s) {
-    if (s == 0) return;
+void VRSceneManager::closeScene() {
+    if (current == 0) return;
     VRProfiler::get()->setActive(false);
     on_scene_close->trigger<VRDevice>();
-    scenes.erase(s->getName());
-    if (s == current) current = 0;
-    active = "NO_SCENE_ACTIVE";
-    s = 0;
+    current = 0;
 
     VRSetupManager::getCurrent()->resetViewports();
     VRSetupManager::getCurrent()->clearSignals();
@@ -89,9 +79,8 @@ void VRSceneManager::setWorkdir(string path) {
 }
 
 void VRSceneManager::newScene(string path) {
-    if (boost::filesystem::exists(path))
-        path = boost::filesystem::canonical(path).string();
-    removeScene(current);
+    if (boost::filesystem::exists(path)) path = boost::filesystem::canonical(path).string();
+    closeScene();
 
     VRScenePtr scene = VRScenePtr( new VRScene() );
     scene->setPath(path);
@@ -113,27 +102,20 @@ void VRSceneManager::newScene(string path) {
     else cam->addChild(headlight_B);
 
     cam->setFrom(Vec3f(0,0,3));
-    addScene(scene);
+    setScene(scene);
 }
 
 VRSignalPtr VRSceneManager::getSignal_on_scene_load() { return on_scene_load; }
 VRSignalPtr VRSceneManager::getSignal_on_scene_close() { return on_scene_close; }
 
-void VRSceneManager::setActiveScene(VRScenePtr scene) {
-    if (scenes.size() == 0) { cout << "\n ERROR: No scenes defined " << flush; return; }
-
-    if (scenes.count(scene->getName()) == 0) { cout << "\n ERROR: No scene " << scene->getName() << flush; return; }
-    else scene->getSystemRoot()->show(); //activate new scene
-
-    if (active != "NO_SCENE_ACTIVE") scenes[active]->getSystemRoot()->hide(); //hide old scene
-
-    active = scene->getName();
+void VRSceneManager::setScene(VRScenePtr scene) {
     current = scene;
     VRSetupManager::getCurrent()->setScene(scene);
     scene->setActiveCamera();
     VRProfiler::get()->setActive(true);
 
     on_scene_load->trigger<VRDevice>();
+    VRGuiSignals::get()->getSignal("scene_changed")->trigger<VRDevice>(); // update gui
 }
 
 void VRSceneManager::storeFavorites() {
@@ -187,12 +169,6 @@ void VRSceneManager::searchExercisesAndFavorites() {
 vector<string> VRSceneManager::getFavoritePaths() { return favorite_paths; }
 vector<string> VRSceneManager::getExamplePaths() { return example_paths; }
 
-void VRSceneManager::setActiveSceneByName(string s) { if (scenes.count(s) == 1) setActiveScene(scenes[s]); }
-
-int VRSceneManager::getSceneNum() {return scenes.size();}
-
-VRScenePtr VRSceneManager::getScene(string s) { if (scenes.count(s)) return scenes[s]; else return 0; }
-
 VRScenePtr VRSceneManager::getCurrent() {
     return get()->current;
 }
@@ -204,23 +180,19 @@ void sleep_to(int fps) {
 }
 
 void VRSceneManager::updateScene() {
-    if (scenes.count(active) == 0) return;
-    if (scenes[active] == 0) return;
+    if (!current) return;
     VRSetupManager::getCurrent()->updateActivatedSignals();
 
-    //scenes[active]->blockScriptThreads();
-    scenes[active]->update();
-    //scenes[active]->allowScriptThreads();
+    //current->blockScriptThreads();
+    current->update();
+    //current->allowScriptThreads();
 }
 
 void VRSceneManager::update() {
     VRProfiler::get()->swap();
     int fps = VRRate::get()->getRate();
 
-    VRScenePtr scene;
-    if (scenes.count(active)) if (scenes[active]) scene = scenes[active];
-
-if (scene) scene->blockScriptThreads();
+if (current) current->blockScriptThreads();
     VRGuiManager::get()->updateGtk();
     updateCallbacks();
     VRSetupManager::getCurrent()->updateDevices();//device beacon update
@@ -228,7 +200,7 @@ if (scene) scene->blockScriptThreads();
 
     if (VRSetupManager::getCurrent()) VRSetupManager::getCurrent()->updateWindows();//rendering
     VRGuiManager::get()->updateGtk();
-if (scene) scene->allowScriptThreads();
+if (current) current->allowScriptThreads();
 
     VRGlobals::get()->CURRENT_FRAME++;
     VRGlobals::get()->FRAME_RATE = fps;
