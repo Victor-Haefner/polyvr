@@ -12,8 +12,8 @@ using namespace std;
 class VRMouse : public VRDevice {
     private:
 
-        VRCameraPtr cam;
-        VRView* view;
+        VRCameraWeakPtr cam;
+        VRView* view = 0;
         Line ray;
 
         VRSignalPtr on_to_edge = 0;

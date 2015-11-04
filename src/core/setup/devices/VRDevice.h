@@ -16,7 +16,7 @@ class VRDevice : public VRIntersect, public VRAvatar, public VRName, public VRSt
         int sig_state = -1;
         string message;
         string type;
-        VRTransformPtr target = 0;
+        VRTransformWeakPtr target;
         Vec2f speed;
 
         map< string, VRSignalPtr > callbacks; //all callbacks

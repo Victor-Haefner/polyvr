@@ -137,7 +137,7 @@ void VRDevice::s_state(int key, float* s_state) { if (SStates.count(key)) *s_sta
 float VRDevice::s_state(int key) { if (SStates.count(key)) return SStates[key]; else return 0; }
 
 void VRDevice::setTarget(VRTransformPtr e) { target = e; }
-VRTransformPtr VRDevice::getTarget() { return target; }
+VRTransformPtr VRDevice::getTarget() { return target.lock(); }
 
 map<string, VRSignalPtr> VRDevice::getSignals() { return callbacks; }
 VRSignalPtr VRDevice::getSignal(string name) { if (callbacks.count(name)) return callbacks[name]; else return 0; }

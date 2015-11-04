@@ -61,6 +61,9 @@ VRScene::~VRScene() {
     root_system->destroy();
     VRGroup::clearGroups();
     VRLightBeacon::getAll().clear();
+    auto setupCam = *VRCamera::getAll().begin();
+    VRCamera::getAll().clear();
+    VRCamera::getAll().push_back(setupCam);
     VRMaterial::clearAll();
 }
 

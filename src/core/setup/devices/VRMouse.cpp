@@ -12,8 +12,6 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 VRMouse::VRMouse() : VRDevice("mouse") {
-    cam = 0;
-    view = 0;
     clearSignals();
     on_to_edge = VRSignal::create(this);
     on_from_edge = VRSignal::create(this);
@@ -123,7 +121,8 @@ VRSignalPtr VRMouse::getFromEdgeSignal() { return on_from_edge; }
 
 //3d object to emulate a hand in VRSpace
 void VRMouse::updatePosition(int x, int y) {
-    if (cam == 0) return;
+    auto cam = this->cam.lock();
+    if (!cam) return;
     if (view == 0) return;
 
     float rx, ry;

@@ -71,7 +71,6 @@ VRCameraPtr VRCamera::create(string name) {
 }
 
 void VRCamera::activate() {
-    cout << "VRCamera::activate " << camID << endl;
     auto scene = VRSceneManager::getCurrent();
     if (scene) scene->setActiveCamera(getName());
     VRGuiManager::broadcast("camera_added");
