@@ -259,20 +259,12 @@ PyObject* VRPyObject::getChild(VRPyObject* self, PyObject* args) {
 PyObject* VRPyObject::getChildren(VRPyObject* self, PyObject* args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::getChild, Child is invalid"); return NULL; }
 
-    PyObject* ptype = 0; int doRecursive = 0;
-    if (PyTuple_Size(args) == 1) if (! PyArg_ParseTuple(args, "i", &doRecursive)) return NULL;
-    if (PyTuple_Size(args) == 2) if (! PyArg_ParseTuple(args, "iO", &doRecursive, &ptype)) return NULL;
-
-    string type;
-    if (ptype) type = PyString_AsString(ptype);
-
-    vector<OSG::VRObjectPtr> objs = self->objPtr->getChildren(doRecursive, type);
+    const char *ptype = 0; int doRecursive = 0;
+    if (! PyArg_ParseTuple(args, "|is", &doRecursive, (char*)&ptype)) return NULL;
+    vector<OSG::VRObjectPtr> objs = self->objPtr->getChildren(doRecursive, ptype);
 
     PyObject* li = PyList_New(objs.size());
-    for (uint i=0; i<objs.size(); i++) {
-        PyList_SetItem(li, i, VRPyTypeCaster::cast(objs[i]));
-    }
-
+    for (uint i=0; i<objs.size(); i++) PyList_SetItem(li, i, VRPyTypeCaster::cast(objs[i]));
     return li;
 }
 
@@ -282,12 +274,14 @@ PyObject* VRPyObject::getParent(VRPyObject* self) {
 }
 
 PyObject* VRPyObject::find(VRPyObject* self, PyObject* args) {
-	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::find, C object is invalid"); return NULL; }
-
-    string name = parseString(args);
-    OSG::VRObjectPtr c = self->objPtr->find(name);
-    if (c) { return VRPyTypeCaster::cast(c); }
-    else { Py_RETURN_NONE; }
+	if (!self->valid()) return NULL;
+    string name; int ID = -1;
+    PyObject* o = parseObject(args);
+    if (PyString_Check(o)) name = PyString_AsString(o);
+    if (PyInt_Check(o)) ID = PyInt_AsLong(o);
+    if (name != "") return VRPyTypeCaster::cast( self->objPtr->find(name) );
+    if (ID >= 0) return VRPyTypeCaster::cast( self->objPtr->find(ID) );
+    Py_RETURN_NONE;
 }
 
 PyObject* VRPyObject::findAll(VRPyObject* self, PyObject* args) {
