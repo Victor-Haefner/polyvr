@@ -75,7 +75,7 @@ void VRMultiWindow::initialize() {
     ClusterWindow::ConnectionCB cb = boost::bind(&VRMultiWindow::init_win, this, _1, _2, _3);
     win->initAsync(cb);
     if (state == CONNECTED) win->render(ract);
-    cout << " done" << endl;
+    cout << " done " << getStateString() << endl;
 }
 
 void VRMultiWindow::render() {

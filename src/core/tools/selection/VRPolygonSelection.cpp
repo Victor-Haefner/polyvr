@@ -62,12 +62,8 @@ bool VRPolygonSelection::objSelected(VRGeometryPtr geo) {
     bbox.update(v2);
 
     Vec3f p0 = origin.pos();
-    cout << "VRPolygonSelection::objSelected " << p0 << " " << v1 << " " << v2 << endl;
     for (auto d : selection.getEdges()) {
-        cout << " intersect? " << p0 << " " << d << " " << bbox.intersectedBy( Line(p0,d) ) << endl;
-        if ( bbox.intersectedBy( Line(p0,d) ) ) {
-            return true;
-        }
+        if ( bbox.intersectedBy( Line(p0,d) ) ) return true;
     }
     return false;
 }
@@ -99,9 +95,7 @@ bool VRPolygonSelection::vertSelected(Vec3f p) {
     };
 
     if (!inFrustum(convex_hull)) return false;
-
     for (auto f : convex_decomposition ) if (inFrustum(f)) return true;
-
     return false;
 }
 
