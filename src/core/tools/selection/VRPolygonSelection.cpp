@@ -18,7 +18,11 @@ VRPolygonSelection::VRPolygonSelection() {
 
 shared_ptr<VRPolygonSelection> VRPolygonSelection::create() { return shared_ptr<VRPolygonSelection>( new VRPolygonSelection() ); }
 
-void VRPolygonSelection::setOrigin(pose orig) { selection.setPose(orig); }
+void VRPolygonSelection::setOrigin(pose orig) {
+    selection.setPose(orig);
+    origin = orig;
+}
+
 VRGeometryPtr VRPolygonSelection::getShape() { return shape; }
 bool VRPolygonSelection::isClosed() { return closed; }
 
@@ -58,7 +62,9 @@ bool VRPolygonSelection::objSelected(VRGeometryPtr geo) {
     bbox.update(v2);
 
     Vec3f p0 = origin.pos();
+    cout << "VRPolygonSelection::objSelected " << p0 << " " << v1 << " " << v2 << endl;
     for (auto d : selection.getEdges()) {
+        cout << " intersect? " << p0 << " " << d << " " << bbox.intersectedBy( Line(p0,d) ) << endl;
         if ( bbox.intersectedBy( Line(p0,d) ) ) {
             return true;
         }

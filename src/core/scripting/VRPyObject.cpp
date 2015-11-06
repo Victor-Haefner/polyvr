@@ -66,7 +66,7 @@ PyMethodDef VRPyObject::methods[] = {
     {"getChild", (PyCFunction)VRPyObject::getChild, METH_VARARGS, "Return child object with index i" },
     {"getChildren", (PyCFunction)VRPyObject::getChildren, METH_VARARGS, "Return the list of children objects\n\t - getChildren() : return immediate children\n\t - getChildren(bool recursive) : if true returns whole subtree\n\t - getChildren(bool recursive, str type) : filter by type" },
     {"getParent", (PyCFunction)VRPyObject::getParent, METH_NOARGS, "Return parent object" },
-    {"find", (PyCFunction)VRPyObject::find, METH_VARARGS, "Find node with given name (str) in scene graph below this node" },
+    {"find", (PyCFunction)VRPyObject::find, METH_VARARGS, "Find node with given name or ID in scene graph below this node - obj find(str/int)" },
     {"findAll", (PyCFunction)VRPyObject::findAll, METH_VARARGS, "Find node with given base name (str) in scene graph below this node" },
     {"isPickable", (PyCFunction)VRPyObject::isPickable, METH_NOARGS, "Return if the object is pickable" },
     {"setPickable", (PyCFunction)VRPyObject::setPickable, METH_VARARGS, "Set if the object is pickable - setPickable(int pickable)\n   pickable can be 0 or 1 to disable or enable picking, as well as -1 to block picking even if an ancestor is pickable" },
