@@ -61,6 +61,7 @@ PyMethodDef VRPyObject::methods[] = {
     {"isVisible", (PyCFunction)VRPyObject::isVisible, METH_NOARGS, "Return if object is visible" },
     {"setVisible", (PyCFunction)VRPyObject::setVisible, METH_VARARGS, "Set the visibility of the object" },
     {"getType", (PyCFunction)VRPyObject::getType, METH_NOARGS, "Return the object type string (such as \"Geometry\")" },
+    {"getID", (PyCFunction)VRPyObject::getID, METH_NOARGS, "Return the object internal ID" },
     {"duplicate", (PyCFunction)VRPyObject::duplicate, METH_NOARGS, "Duplicate object including subtree" },
     {"getChild", (PyCFunction)VRPyObject::getChild, METH_VARARGS, "Return child object with index i" },
     {"getChildren", (PyCFunction)VRPyObject::getChildren, METH_VARARGS, "Return the list of children objects\n\t - getChildren() : return immediate children\n\t - getChildren(bool recursive) : if true returns whole subtree\n\t - getChildren(bool recursive, str type) : filter by type" },
@@ -81,6 +82,11 @@ PyMethodDef VRPyObject::methods[] = {
     {"getPersistency", (PyCFunction)VRPyObject::getPersistency, METH_NOARGS, "Get the persistency level - getPersistency()" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyObject::getID(VRPyObject* self) {
+    if (!self->valid()) return NULL;
+    return PyInt_FromLong( self->objPtr->getID() );
+}
 
 PyObject* VRPyObject::setPersistency(VRPyObject* self, PyObject* args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::setPersistency - C Object is invalid"); return NULL; }
@@ -198,16 +204,6 @@ PyObject* VRPyObject::getType(VRPyObject* self) {
 	if (self->objPtr == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
     return PyString_FromString(self->objPtr->getType().c_str());
 }
-
-/*PyObject* VRPyObject::setVisible(VRPyObject* self) {
-    if (self->objPtr == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
-    return PyString_FromString(self->objPtr->getName().c_str());
-}
-
-PyObject* VRPyObject::isVisible(VRPyObject* self) {
-    if (self->objPtr == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
-    return PyString_FromString(self->objPtr->getName().c_str());
-}*/
 
 PyObject* VRPyObject::destroy(VRPyObject* self) {
     if (self->objPtr == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }

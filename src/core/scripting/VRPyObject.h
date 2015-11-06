@@ -22,6 +22,7 @@ struct VRPyObject : VRPyBaseT<OSG::VRObject> {
     static PyObject* isVisible(VRPyObject* self);
     static PyObject* setVisible(VRPyObject* self, PyObject* args);
     static PyObject* getType(VRPyObject* self);
+    static PyObject* getID(VRPyObject* self);
     static PyObject* getChild(VRPyObject* self, PyObject* args);
     static PyObject* getChildren(VRPyObject* self, PyObject* args);
     static PyObject* getParent(VRPyObject* self);
