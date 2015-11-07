@@ -400,7 +400,7 @@ void VRView::setCam() {
 
 void VRView::setBackground(BackgroundRecPtr bg) { background = bg; update(); }
 
-void VRView::setWindow(WindowRecPtr win) { window = win; }
+void VRView::setWindow(WindowRecPtr win) { window = win; update(); }
 
 void VRView::setWindow() {
     if (window == 0) return;

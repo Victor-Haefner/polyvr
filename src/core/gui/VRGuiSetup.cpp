@@ -21,6 +21,8 @@
 #include <gtkmm/combobox.h>
 #include <gtkmm/cellrenderercombo.h>
 
+#include "core/objects/VRCamera.h"
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -382,12 +384,13 @@ void VRGuiSetup::on_menu_add_viewport() {
 
     VRWindow* win = (VRWindow*)selected_object;
     int v = current_setup->addView(win->getBaseName());
-    win->addView(current_setup->getView(v));
+    auto view = current_setup->getView(v);
+    win->addView(view);
 
     if (auto scene = current_scene.lock()) {
-        current_setup->setViewCamera(scene->getActiveCamera(), v);
-        current_setup->setViewRoot(scene->getRoot(), v);
-        current_setup->setViewBackground(scene->getBackground(), v);
+        current_setup->setViewRoot(scene->getSystemRoot(), v);
+        view->setCamera( scene->getActiveCamera() );
+        view->setBackground( scene->getBackground() );
     }
 
     updateSetup();

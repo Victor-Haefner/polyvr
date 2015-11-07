@@ -109,6 +109,7 @@ VRSignalPtr VRSceneManager::getSignal_on_scene_load() { return on_scene_load; }
 VRSignalPtr VRSceneManager::getSignal_on_scene_close() { return on_scene_close; }
 
 void VRSceneManager::setScene(VRScenePtr scene) {
+    if (!scene) return;
     current = scene;
     VRSetupManager::getCurrent()->setScene(scene);
     scene->setActiveCamera();
