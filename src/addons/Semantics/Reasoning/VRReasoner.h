@@ -69,6 +69,7 @@ struct Query {
     Statement request;
     vector<Statement> statements;
 
+    Query();
     Query(string q);
     string toString();
 };
@@ -76,6 +77,7 @@ struct Query {
 struct Context {
     map<string, Variable> vars;
     map<string, Result> results;
+    map<string, Query> rules;
     list<Query> queries;
     VROntology* onto = 0;
 
@@ -98,7 +100,7 @@ class VRReasoner {
         VRReasoner();
 
         bool evaluate(Statement& s, Context& c);
-        bool is(Statement& s, Context& c);
+        bool is(Statement& s, Context& c, bool NOT = false);
         bool has(Statement& s, Context& c);
         void pushQuery(Statement& s, Context& c);
 

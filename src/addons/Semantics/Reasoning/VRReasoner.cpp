@@ -105,6 +105,28 @@ Context::Context(VROntology* onto) {
         vars[i.second->name] = Variable( onto, i.second->concept->name, i.second->name );
         cout << " add instance " << i.second->name << " of concept " << i.second->concept->name << endl;
     }
+
+    for ( auto r : onto->getRules()) {
+        Query q(r->rule);
+
+        cout << "Context prep rule " << r->rule << endl;
+        for (Term& t : q.request.terms) {
+            t.var = Variable(onto,t.path.root);
+
+            for (Statement& s : q.statements) {
+                if (s.isSimpleVerb()) continue;
+                s.terms[0].var = Variable(onto, s.terms[0].path.root);
+                Variable& var = s.terms[0].var;
+                if (var.value != t.var.value) continue;
+
+                t.var.concept = s.verb;
+                cout << " Set concept of " << t.var.value << " to " << s.verb << endl;
+                break;
+            }
+        }
+
+        rules[r->rule] = q;
+    }
 }
 
 Statement::Statement() {;}
@@ -147,14 +169,16 @@ bool Statement::match(Statement& s) {
         if (!tS.valid() || !tR.valid()) return false;
         if (tS.path.nodes.size() != tR.path.nodes.size()) return false;
 
-        cout << "match " << tR.var.value << " " << tS.var.value << endl;
-        cout << "match " << tR.var.concept << " " << tS.var.concept << endl;
+        cout << "var1 " << tR.var.value << " type: " << tR.var.concept << endl;
+        cout << "var2 " << tS.var.value << " type: " << tS.var.concept << endl;
         if (tR.var.concept != tS.var.concept) return false;
     }
     return true;
 }
 
 // TODO: parse concept statements here
+Query::Query() {}
+
 Query::Query(string q) {
     vector<string> parts = VRReasoner::split(q, ':');
     request = Statement(parts[0]);
@@ -192,11 +216,12 @@ void VRReasoner::pushQuery(Statement& statement, Context& context) {
 
     cout << pre << "     search rule for " << statement.toString() << endl;
     for ( auto r : context.onto->getRules()) { // no match found -> check rules and initiate new queries
-        Query query(r->rule);
+        if (!context.rules.count(r->rule)) continue;
+        Query query = context.rules[r->rule];
         if (query.request.verb != statement.verb) continue; // rule verb does not match
         cout << pre << "      rule " << query.request.toString() << endl;
 
-        query.request.updateLocalVariables(context.vars, context.onto);
+        //query.request.updateLocalVariables(context.vars, context.onto);
         if (!statement.match(query.request)) continue; // statements are not similar enough
 
 
@@ -207,7 +232,7 @@ void VRReasoner::pushQuery(Statement& statement, Context& context) {
     }
 }
 
-bool VRReasoner::is(Statement& statement, Context& context) {
+bool VRReasoner::is(Statement& statement, Context& context, bool NOT) {
     auto left = statement.terms[0];
     auto right = statement.terms[1];
 
@@ -218,7 +243,7 @@ bool VRReasoner::is(Statement& statement, Context& context) {
 
     cout << pre << "   " << left.str << " is " << (b?"":" not ") << right.var.value << endl;
 
-    if (b) { statement.state = 1; return true; }
+    if ( (b && !NOT) || (!b && NOT) ) { statement.state = 1; return true; }
 
     pushQuery(statement, context);
     return false;
@@ -278,7 +303,7 @@ bool VRReasoner::evaluate(Statement& statement, Context& context) {
     }
 
     if (statement.verb == "is") return is(statement,context);
-    if (statement.verb == "is_not") return !is(statement,context); // TODO, is wrong
+    if (statement.verb == "is_not") return is(statement,context,true); // TODO, is wrong
     if (statement.verb == "has") return has(statement,context);
     if (statement.verb == "has_not") return !has(statement,context); // TODO, is wrong
     return false;
