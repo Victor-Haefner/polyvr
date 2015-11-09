@@ -900,6 +900,25 @@ void VRGuiScripts::updateList() {
     on_select_script();
 }
 
+bool VRGuiScripts::on_shortkey( GdkEventKey* e ) {
+    if ( !(e->state & GDK_CONTROL_MASK) ) return false;
+
+    if (e->keyval == 102) {// f
+        on_find_clicked();
+        return true;
+    }
+
+    if (e->keyval == 100) {// d
+        return true;
+    }
+
+    if (e->keyval == 116) {// t
+        return true;
+    }
+
+    return false;
+}
+
 void VRGuiScripts::initEditor() {
     // init source view editor
     GtkSourceLanguageManager* langMgr = gtk_source_language_manager_get_default();
@@ -917,6 +936,7 @@ void VRGuiScripts::initEditor() {
 
     // buffer changed callback
     g_signal_connect (VRGuiScripts_sourceBuffer, "changed", G_CALLBACK(VRGuiScripts_on_script_changed), this);
+    win->signal_key_release_event().connect( sigc::mem_fun(*this, &VRGuiScripts::on_shortkey) );
 
     // editor options
     gtk_source_view_set_tab_width (GTK_SOURCE_VIEW (editor), 4);

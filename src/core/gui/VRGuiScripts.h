@@ -64,6 +64,8 @@ class VRGuiScripts {
         void on_trigadd_clicked();
         void on_trigrem_clicked();
 
+        bool on_shortkey( GdkEventKey* e );
+
         void loadHelp();
         void on_select_help();
         void on_help_clicked();
