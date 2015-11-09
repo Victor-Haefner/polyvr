@@ -903,12 +903,30 @@ void VRGuiScripts::updateList() {
 bool VRGuiScripts::on_shortkey( GdkEventKey* e ) {
     if ( !(e->state & GDK_CONTROL_MASK) ) return false;
 
+    auto getCurrentLine = [&]() {
+        GtkTextIter itr;
+        auto b = GTK_TEXT_BUFFER(VRGuiScripts_sourceBuffer);
+        auto m = gtk_text_buffer_get_insert(b);
+        gtk_text_buffer_get_iter_at_mark( b, &itr, m);
+        return itr;
+    };
+
     if (e->keyval == 102) {// f
         on_find_clicked();
         return true;
     }
 
     if (e->keyval == 100) {// d
+        auto l = getCurrentLine();
+        int lN = gtk_text_iter_get_line(&l);
+        auto l2 = gtk_text_iter_copy(&l);
+        gtk_text_iter_forward_to_line_end(&l);
+        gtk_text_iter_set_line(l2, lN);
+
+        auto b = GTK_TEXT_BUFFER(VRGuiScripts_sourceBuffer);
+        string data = gtk_text_buffer_get_slice(b, &l, l2, true);
+        data = "\n"+data;
+        gtk_text_buffer_insert(b, &l, data.c_str(), data.length());
         return true;
     }
 
@@ -920,6 +938,8 @@ bool VRGuiScripts::on_shortkey( GdkEventKey* e ) {
 }
 
 void VRGuiScripts::initEditor() {
+    // TODO: https://developer.gnome.org/gtksourceview/stable/GtkSourceCompletion.html
+
     // init source view editor
     GtkSourceLanguageManager* langMgr = gtk_source_language_manager_get_default();
     python = gtk_source_language_manager_get_language(langMgr, "python");
