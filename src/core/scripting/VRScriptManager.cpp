@@ -242,6 +242,7 @@ static PyMethodDef VRScriptManager_module_methods[] = {
 	{"loadScene", (PyCFunction)VRScriptManager::loadScene, METH_VARARGS, "Close the current scene and open another - loadScene( str path/to/my/scene.xml )" },
 	{"startThread", (PyCFunction)VRScriptManager::startThread, METH_VARARGS, "Start a thread - int startThread( callback, [params] )" },
 	{"joinThread", (PyCFunction)VRScriptManager::joinThread, METH_VARARGS, "Join a thread - joinThread( int ID )" },
+	{"getSystemDirectory", (PyCFunction)VRScriptManager::getSystemDirectory, METH_VARARGS, "Return the path to one of the specific PolyVR directories - getSystemDirectory( str dir )\n\tdir can be: ROOT, EXAMPLES, RESSOURCES, TRAFFIC" },
     {NULL}  /* Sentinel */
 };
 
@@ -447,6 +448,16 @@ string VRScriptManager::getPyVRMethodDoc(string type, string method) {
 // ==============
 // Python methods
 // ==============
+
+PyObject* VRScriptManager::getSystemDirectory(VRScriptManager* self, PyObject *args) {
+    string dir = parseString(args);
+    string path = VRSceneManager::get()->getOriginalWorkdir();
+    if (dir == "ROOT") ;
+    if (dir == "EXAMPLES") path += "/examples";
+    if (dir == "RESSOURCES") path += "/ressources";
+    if (dir == "TRAFFIC") path += "/src/addons/RealWorld/traffic/simulation/bin";
+    return PyString_FromString(path.c_str());
+}
 
 PyObject* VRScriptManager::loadScene(VRScriptManager* self, PyObject *args) {
     auto fkt = VRFunction<int>::create( "scheduled scene load", boost::bind(&VRSceneManager::loadScene, VRSceneManager::get(), parseString(args), false ) );
