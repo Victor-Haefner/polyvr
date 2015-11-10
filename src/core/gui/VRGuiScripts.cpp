@@ -908,7 +908,36 @@ bool VRGuiScripts::on_shortkey( GdkEventKey* e ) {
         auto b = GTK_TEXT_BUFFER(VRGuiScripts_sourceBuffer);
         auto m = gtk_text_buffer_get_insert(b);
         gtk_text_buffer_get_iter_at_mark( b, &itr, m);
-        return itr;
+        return gtk_text_iter_get_line(&itr);
+        //return itr;
+    };
+
+    auto getLine = [&](int l) {
+        auto b = GTK_TEXT_BUFFER(VRGuiScripts_sourceBuffer);
+        GtkTextIter itr1;
+        gtk_text_buffer_get_iter_at_line_index(b, &itr1, l, 0);
+        GtkTextIter itr2 = itr1;
+        gtk_text_iter_forward_to_line_end(&itr2);
+        string data = gtk_text_buffer_get_slice(b, &itr1, &itr2, true);
+        return data;
+    };
+
+    auto insertLineAfter = [&](string line, int l) {
+        auto b = GTK_TEXT_BUFFER(VRGuiScripts_sourceBuffer);
+        GtkTextIter itr;
+        gtk_text_buffer_get_iter_at_line_index(b, &itr, l, 0);
+        line = line+"\n";
+        gtk_text_buffer_insert(b, &itr, line.c_str(), line.length());
+    };
+
+    auto eraseLine = [&](int l) {
+        auto b = GTK_TEXT_BUFFER(VRGuiScripts_sourceBuffer);
+        GtkTextIter itr1;
+        gtk_text_buffer_get_iter_at_line_index(b, &itr1, l, 0);
+        GtkTextIter itr2 = itr1;
+        gtk_text_iter_forward_to_line_end(&itr2);
+        gtk_text_iter_forward_char(&itr2);
+        gtk_text_buffer_delete(b, &itr1, &itr2);
     };
 
     if (e->keyval == 102) {// f
@@ -918,19 +947,17 @@ bool VRGuiScripts::on_shortkey( GdkEventKey* e ) {
 
     if (e->keyval == 100) {// d
         auto l = getCurrentLine();
-        int lN = gtk_text_iter_get_line(&l);
-        auto l2 = gtk_text_iter_copy(&l);
-        gtk_text_iter_forward_to_line_end(&l);
-        gtk_text_iter_set_line(l2, lN);
-
-        auto b = GTK_TEXT_BUFFER(VRGuiScripts_sourceBuffer);
-        string data = gtk_text_buffer_get_slice(b, &l, l2, true);
-        data = "\n"+data;
-        gtk_text_buffer_insert(b, &l, data.c_str(), data.length());
+        string line = getLine(l);
+        insertLineAfter(line, l);
         return true;
     }
 
     if (e->keyval == 116) {// t
+        auto l = getCurrentLine();
+        if (l == 0) return true;
+        string line = getLine(l-1);
+        insertLineAfter(line, l+1);
+        eraseLine(l-1);
         return true;
     }
 
