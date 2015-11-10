@@ -23,6 +23,7 @@
 #include <gtkmm/paned.h>
 #include <gtksourceview/gtksourceview.h>
 #include <gtksourceview/gtksourcelanguagemanager.h>
+#include <gtksourceview/completion-providers/words/gtksourcecompletionwords.h>
 #include <libxml++/nodes/element.h>
 #include <libxml++/libxml++.h>
 
@@ -971,8 +972,6 @@ bool VRGuiScripts::on_shortkey( GdkEventKey* e ) {
 }
 
 void VRGuiScripts::initEditor() {
-    // TODO: https://developer.gnome.org/gtksourceview/stable/GtkSourceCompletion.html
-
     // init source view editor
     GtkSourceLanguageManager* langMgr = gtk_source_language_manager_get_default();
     python = gtk_source_language_manager_get_language(langMgr, "python");
@@ -1005,6 +1004,23 @@ void VRGuiScripts::initEditor() {
     pango_font_description_set_family (font_desc, "monospace");
     gtk_widget_modify_font (editor, font_desc);
     gtk_widget_show_all(editor);
+
+    // code completion - https://developer.gnome.org/gtksourceview/stable/GtkSourceCompletion.html
+    string words = "tree\napple\nturtle";
+    auto wordsBuff = gtk_text_buffer_new(NULL);
+    gtk_text_buffer_set_text(wordsBuff, words.c_str(), words.size());
+
+    auto provideWords = gtk_source_completion_words_new("vr-py", NULL);
+    gtk_source_completion_words_register(provideWords, wordsBuff);
+
+    auto completion = gtk_source_view_get_completion(GTK_SOURCE_VIEW(editor));
+    GError* error = NULL;
+    //gtk_source_completion_add_provider(completion, GTK_SOURCE_COMPLETION_PROVIDER(provideWords), &error);
+    if (error != NULL) {
+        cout << "source view completion error: " << error->message << endl;
+        g_clear_error(&error);
+        g_error_free(error);
+    }
 }
 
 VRGuiScripts::VRGuiScripts() {
