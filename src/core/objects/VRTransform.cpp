@@ -361,6 +361,7 @@ void VRTransform::setPose(Vec3f from, Vec3f dir, Vec3f up) {
 
 void VRTransform::setPose(pose p) { setPose(p.pos(), p.dir(), p.up()); }
 pose VRTransform::getPose() { return pose(_from, getDir(), _up); }
+pose VRTransform::getWorldPose() { return pose(getWorldPosition(), getWorldDirection(), getWorldUp()); }
 
 /** Set the local matrix **/
 void VRTransform::setMatrix(Matrix _m) {

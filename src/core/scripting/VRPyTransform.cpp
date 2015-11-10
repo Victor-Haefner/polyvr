@@ -65,6 +65,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"getDir", (PyCFunction)VRPyTransform::getDir, METH_NOARGS, "Return the object's dir vector" },
     {"getUp", (PyCFunction)VRPyTransform::getUp, METH_NOARGS, "Return the object's up vector" },
     {"getPose", (PyCFunction)VRPyTransform::getPose, METH_NOARGS, "Return the object's pose - pose getPose()" },
+    {"getWorldPose", (PyCFunction)VRPyTransform::getWorldPose, METH_NOARGS, "Return the object's world pose - pose getWorldPose()" },
     {"getWorldFrom", (PyCFunction)VRPyTransform::getWFrom, METH_NOARGS, "Return the object's world position" },
     {"getWorldDir", (PyCFunction)VRPyTransform::getWorldDir, METH_NOARGS, "Return the object's dir vector" },
     {"getWorldUp", (PyCFunction)VRPyTransform::getWorldUp, METH_NOARGS, "Return the object's up vector" },
@@ -278,6 +279,11 @@ PyObject* VRPyTransform::getScale(VRPyTransform* self) {
 PyObject* VRPyTransform::getPose(VRPyTransform* self) {
     if (!self->valid()) return NULL;
     return VRPyPose::fromObject( self->objPtr->getPose() );
+}
+
+PyObject* VRPyTransform::getWorldPose(VRPyTransform* self) {
+    if (!self->valid()) return NULL;
+    return VRPyPose::fromObject( self->objPtr->getWorldPose() );
 }
 
 PyObject* VRPyTransform::setPose(VRPyTransform* self, PyObject* args) {

@@ -112,6 +112,7 @@ class VRTransform : public VRObject {
         Vec3f getUp();
         Vec3f getScale();
         pose getPose();
+        pose getWorldPose();
         Vec3f getEuler();
         void getMatrix(Matrix& _m);
         Matrix getMatrix();
