@@ -27,6 +27,13 @@ class VRTransform : public VRObject {
             OM_EULER = 2
         };
 
+        enum TCMode {
+            NONE = 0,
+            POINT = 1,
+            LINE = 2,
+            PLANE = 3
+        };
+
     protected:
         doubleBuffer* dm = 0;
         TransformRecPtr t;//OSG Transform
@@ -56,7 +63,7 @@ class VRTransform : public VRObject {
         Matrix constraints_reference;
         bool doTConstraint = false;
         bool doRConstraint = false;
-        bool tConPlane = true;
+        int tConMode = PLANE;
         Vec3f tConstraint = Vec3f(0,1,0);
         Vec3i rConstraint;
 
@@ -173,7 +180,7 @@ class VRTransform : public VRObject {
         void toggleTConstraint(bool b);
         void toggleRConstraint(bool b);
         void setTConstraint(Vec3f trans);
-        void setTConstraintMode(bool plane);
+        void setTConstraintMode(int mode);
         bool getTConstraintMode();
         void setRConstraint(Vec3i rot);
 

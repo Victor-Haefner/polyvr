@@ -62,7 +62,7 @@ class VRManipulator {
             if (sel == 0) return;
             sel->toggleTConstraint(false);
             sel->toggleRConstraint(false);
-            sel->setTConstraintMode(false);
+            sel->setTConstraintMode(VRTransform::LINE);
 
             if (g == gTX || g == gTY || g == gTZ || g == gRX || g == gRY || g == gRZ) { // lock everything
                 sel->toggleTConstraint(true);

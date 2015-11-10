@@ -62,7 +62,9 @@ struct VRPyTransform : VRPyBaseT<OSG::VRTransform> {
     static PyObject* setDamping(VRPyTransform* self, PyObject* args);
     static PyObject* applyChange(VRPyTransform* self);
     static PyObject* setCenterOfMass(VRPyTransform* self, PyObject* args);
+    static PyObject* lastChanged(VRPyTransform* self);
 
+    static PyObject* setPointConstraints(VRPyTransform* self, PyObject* args);
     static PyObject* setPlaneConstraints(VRPyTransform* self, PyObject* args);
     static PyObject* setAxisConstraints(VRPyTransform* self, PyObject* args);
     static PyObject* setRotationConstraints(VRPyTransform* self, PyObject* args);

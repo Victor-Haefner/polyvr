@@ -79,6 +79,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setEuler", (PyCFunction)VRPyTransform::setEuler, METH_VARARGS, "Set the object's orientation using Euler angles - setEuler(x,y,z)" },
     {"setUp", (PyCFunction)VRPyTransform::setUp, METH_VARARGS, "Set the object's up vector" },
     {"setScale", (PyCFunction)VRPyTransform::setScale, METH_VARARGS, "Set the object's scale vector" },
+    {"setPointConstraints", (PyCFunction)VRPyTransform::setPointConstraints, METH_VARARGS, "Constraint the object on a point - setPointConstraints(x, y, z)" },
     {"setPlaneConstraints", (PyCFunction)VRPyTransform::setPlaneConstraints, METH_VARARGS, "Constraint the object on a plane - setPlaneConstraints(nxf, nyf, nzf)" },
     {"setAxisConstraints", (PyCFunction)VRPyTransform::setAxisConstraints, METH_VARARGS, "Constraint the object on an axis - TODO -> to test, may work" },
     {"setRotationConstraints", (PyCFunction)VRPyTransform::setRotationConstraints, METH_VARARGS, "Constraint the object's rotation - setRotationConstraints(xi, yi, zi)" },
@@ -117,8 +118,14 @@ PyMethodDef VRPyTransform::methods[] = {
     {"drag", (PyCFunction)VRPyTransform::drag, METH_VARARGS, "Drag this object by new parent - drag(new parent)"  },
     {"drop", (PyCFunction)VRPyTransform::drop, METH_NOARGS, "Drop this object, if held, to old parent - drop()"  },
     {"castRay", (PyCFunction)VRPyTransform::castRay, METH_VARARGS, "Cast a ray and return the intersection - castRay(obj, dir)"  },
+    {"lastChanged", (PyCFunction)VRPyTransform::lastChanged, METH_NOARGS, "Return the frame when the last change occured - lastChanged()"  },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyTransform::lastChanged(VRPyTransform* self) {
+    if (!self->valid()) return NULL;
+    return PyInt_FromLong( self->objPtr->getLastChange() );
+}
 
 PyObject* VRPyTransform::castRay(VRPyTransform* self, PyObject* args) {
     if (!self->valid()) return NULL;
@@ -338,11 +345,20 @@ PyObject* VRPyTransform::setScale(VRPyTransform* self, PyObject* args) {
     Py_RETURN_TRUE;
 }
 
+PyObject* VRPyTransform::setPointConstraints(VRPyTransform* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    OSG::Vec3f v = parseVec3f(args);
+    self->objPtr->setTConstraint(v);
+    self->objPtr->setTConstraintMode(OSG::VRTransform::POINT);
+    self->objPtr->toggleTConstraint(true);
+    Py_RETURN_TRUE;
+}
+
 PyObject* VRPyTransform::setPlaneConstraints(VRPyTransform* self, PyObject* args) {
     if (!self->valid()) return NULL;
     OSG::Vec3f v = parseVec3f(args);
     self->objPtr->setTConstraint(v);
-    self->objPtr->setTConstraintMode(true);
+    self->objPtr->setTConstraintMode(OSG::VRTransform::PLANE);
     self->objPtr->toggleTConstraint(true);
     Py_RETURN_TRUE;
 }
@@ -350,11 +366,9 @@ PyObject* VRPyTransform::setPlaneConstraints(VRPyTransform* self, PyObject* args
 PyObject* VRPyTransform::setAxisConstraints(VRPyTransform* self, PyObject* args) {
     if (!self->valid()) return NULL;
     OSG::Vec3f v = parseVec3f(args);
-
-    OSG::VRTransformPtr e = (OSG::VRTransformPtr) self->objPtr;
-    e->setTConstraint(v);
-    e->setTConstraintMode(false);
-    e->toggleTConstraint(true);
+    self->objPtr->setTConstraint(v);
+    self->objPtr->setTConstraintMode(OSG::VRTransform::LINE);
+    self->objPtr->toggleTConstraint(true);
     Py_RETURN_TRUE;
 }
 
