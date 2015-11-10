@@ -349,7 +349,9 @@ void VRGuiScripts::on_select_script() { // selected a script
 
     // update editor content && script head
     string core = script->getHead() + script->getCore();
+    gtk_source_buffer_begin_not_undoable_action(VRGuiScripts_sourceBuffer);
     gtk_text_buffer_set_text(GTK_TEXT_BUFFER(VRGuiScripts_sourceBuffer), core.c_str(), core.size());
+    gtk_source_buffer_end_not_undoable_action(VRGuiScripts_sourceBuffer);
     adjustment->set_value(pages[script].line);
 
     // update arguments liststore
@@ -927,7 +929,9 @@ bool VRGuiScripts::on_shortkey( GdkEventKey* e ) {
         GtkTextIter itr;
         gtk_text_buffer_get_iter_at_line_index(b, &itr, l, 0);
         line = line+"\n";
+        gtk_source_buffer_begin_not_undoable_action(VRGuiScripts_sourceBuffer);
         gtk_text_buffer_insert(b, &itr, line.c_str(), line.length());
+        gtk_source_buffer_end_not_undoable_action(VRGuiScripts_sourceBuffer);
     };
 
     auto eraseLine = [&](int l) {
@@ -937,7 +941,9 @@ bool VRGuiScripts::on_shortkey( GdkEventKey* e ) {
         GtkTextIter itr2 = itr1;
         gtk_text_iter_forward_to_line_end(&itr2);
         gtk_text_iter_forward_char(&itr2);
+        gtk_source_buffer_begin_not_undoable_action(VRGuiScripts_sourceBuffer);
         gtk_text_buffer_delete(b, &itr1, &itr2);
+        gtk_source_buffer_end_not_undoable_action(VRGuiScripts_sourceBuffer);
     };
 
     if (e->keyval == 102) {// f
