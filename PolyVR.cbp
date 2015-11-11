@@ -406,6 +406,8 @@
 		<Unit filename="src/addons/construction/building/VROpening.h" />
 		<Unit filename="src/addons/construction/building/furniture/VRBlinds.cpp" />
 		<Unit filename="src/addons/construction/building/furniture/VRBlinds.h" />
+		<Unit filename="src/core/gui/VRCodeCompletion.cpp" />
+		<Unit filename="src/core/gui/VRCodeCompletion.h" />
 		<Unit filename="src/core/gui/VRDemos.cpp" />
 		<Unit filename="src/core/gui/VRDemos.h" />
 		<Unit filename="src/core/gui/VRGuiBits.cpp" />
