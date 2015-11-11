@@ -29,8 +29,6 @@ struct _VRCodeCompletionClass {
 
 GType vr_code_completion_get_type (void) G_GNUC_CONST;
 VRCodeCompletion* vr_code_completion_new();
-void vr_code_completion_register(VRCodeCompletion* words, GtkTextBuffer* buffer);
-void vr_code_completion_unregister(VRCodeCompletion* words, GtkTextBuffer* buffer);
 
 G_END_DECLS
 
