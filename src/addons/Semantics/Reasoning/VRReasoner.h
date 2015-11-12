@@ -6,6 +6,7 @@
 #include <vector>
 #include <map>
 #include <list>
+#include <memory>
 
 using namespace std;
 
@@ -51,28 +52,36 @@ struct Term {
     bool operator==(Term& other);
 };
 
+struct Statement;
+typedef shared_ptr<Statement> StatementPtr;
+typedef weak_ptr<Statement> StatementWeakPtr;
+
 struct Statement {
     string verb;
     string verb_suffix;
     vector<Term> terms;
     int state = 0;
+    int place = -1;
 
     Statement();
-    Statement(string s);
+    Statement(string s, int i = -1);
+    static StatementPtr New(string s, int i = -1);
 
     string toString();
     void updateLocalVariables(map<string, Variable>& globals, VROntology* onto);
     bool isSimpleVerb();
-    bool match(Statement& s);
+    bool match(StatementPtr s);
 };
 
 struct Query {
-    Statement request;
-    vector<Statement> statements;
+    StatementPtr request;
+    vector<StatementPtr> statements;
 
     Query();
     Query(string q);
     string toString();
+
+    void checkState();
 };
 
 struct Context {
@@ -105,10 +114,11 @@ class VRReasoner {
     private:
         VRReasoner();
 
-        bool evaluate(Statement& s, Context& c);
-        bool is(Statement& s, Context& c);
-        bool has(Statement& s, Context& c);
-        bool findRule(Statement& s, Context& c);
+        bool evaluate(StatementPtr s, Context& c);
+        bool apply(StatementPtr s, Context& c);
+        bool is(StatementPtr s, Context& c);
+        bool has(StatementPtr s, Context& c);
+        bool findRule(StatementPtr s, Context& c);
 
     public:
         static VRReasoner* get();

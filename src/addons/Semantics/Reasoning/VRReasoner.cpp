@@ -110,17 +110,17 @@ Context::Context(VROntology* onto) {
         Query q(r->rule);
 
         cout << "Context prep rule " << r->rule << endl;
-        for (Term& t : q.request.terms) {
+        for (Term& t : q.request->terms) {
             t.var = Variable(onto,t.path.root);
 
-            for (Statement& s : q.statements) {
-                if (s.isSimpleVerb()) continue;
-                s.terms[0].var = Variable(onto, s.terms[0].path.root);
-                Variable& var = s.terms[0].var;
+            for (auto& s : q.statements) {
+                if (s->isSimpleVerb()) continue;
+                s->terms[0].var = Variable(onto, s->terms[0].path.root);
+                Variable& var = s->terms[0].var;
                 if (var.value != t.var.value) continue;
 
-                t.var.concept = s.verb;
-                cout << " Set concept of " << t.var.value << " to " << s.verb << endl;
+                t.var.concept = s->verb;
+                cout << " Set concept of " << t.var.value << " to " << s->verb << endl;
                 break;
             }
         }
@@ -131,7 +131,8 @@ Context::Context(VROntology* onto) {
 
 Statement::Statement() {;}
 
-Statement::Statement(string s) {
+Statement::Statement(string s, int place) {
+    this->place = place;
     auto s1 = VRReasoner::split(s, '(');
     auto v = VRReasoner::split(s1[0], '_');
     verb = v[0];
@@ -141,6 +142,8 @@ Statement::Statement(string s) {
         terms.push_back(Term(s));
     }
 }
+
+StatementPtr Statement::New(string s, int p) { return StatementPtr( new Statement(s,p) ); }
 
 string Statement::toString() {
     string s = verb + "(";
@@ -165,9 +168,9 @@ bool Statement::isSimpleVerb() {
     return false;
 }
 
-bool Statement::match(Statement& s) {
+bool Statement::match(StatementPtr s) {
     for (uint i=0; i<terms.size(); i++) {
-        auto tS = s.terms[i];
+        auto tS = s->terms[i];
         auto tR = terms[i];
         if (!tS.valid() || !tR.valid()) return false;
         if (tS.path.nodes.size() != tR.path.nodes.size()) return false;
@@ -184,13 +187,13 @@ Query::Query() {}
 
 Query::Query(string q) {
     vector<string> parts = VRReasoner::split(q, ':');
-    request = Statement(parts[0]);
+    request = Statement::New(parts[0]);
     parts = VRReasoner::split(parts[1], ';');
-    for (auto p : parts) statements.push_back(Statement(p));
+    for (int i=0; i<parts.size(); i++) statements.push_back(Statement::New(parts[i], i));
 }
 
 string Query::toString() {
-    return request.toString();
+    return request->toString();
 }
 
 Term::Term(string s) : path(s), str(s) {;}
@@ -215,19 +218,18 @@ bool Term::operator==(Term& other) {
     return false;
 }
 
-bool VRReasoner::findRule(Statement& statement, Context& context) {
-    cout << pre << "     search rule for " << statement.toString() << endl;
+bool VRReasoner::findRule(StatementPtr statement, Context& context) {
+    cout << pre << "     search rule for " << statement->toString() << endl;
     for ( auto r : context.onto->getRules()) { // no match found -> check rules and initiate new queries
         if (!context.rules.count(r->rule)) continue;
         Query query = context.rules[r->rule];
-        if (query.request.verb != statement.verb) continue; // rule verb does not match
-        cout << pre << "      rule " << query.request.toString() << endl;
+        if (query.request->verb != statement->verb) continue; // rule verb does not match
+        cout << pre << "      rule " << query.request->toString() << endl;
 
         //query.request.updateLocalVariables(context.vars, context.onto);
-        if (!statement.match(query.request)) continue; // statements are not similar enough
+        if (!statement->match(query.request)) continue; // statements are not similar enough
 
-
-
+        query.request = statement; // TODO: use pointer? new query needs to share ownership of the statement
         context.queries.push_back(query);
         cout << pre << yellowBeg << "      add query " << query.toString() << colEnd << endl;
         return true;
@@ -236,25 +238,17 @@ bool VRReasoner::findRule(Statement& statement, Context& context) {
     return false;
 }
 
-bool VRReasoner::is(Statement& statement, Context& context) {
-    auto& left = statement.terms[0];
-    auto& right = statement.terms[1];
-
+bool VRReasoner::is(StatementPtr statement, Context& context) {
+    auto& left = statement->terms[0];
+    auto& right = statement->terms[1];
     if ( context.vars.count(left.var.value) == 0) return false; // check if context has a variable with the left value
     if (!left.valid() || !right.valid()) return false; // return if one of the sides invalid
 
     bool b = left == right;
-    cout << pre << "   " << left.str << " is " << (b?"":" not ") << right.var.value << endl;
+    bool NOT = statement->verb_suffix == "not";
+    cout << pre << "   " << left.str << " is " << (b?"":" not ") << (NOT?" not ":"") << right.var.value << endl;
 
-    bool NOT = statement.verb_suffix == "not";
-    if ( (b && !NOT) || (!b && NOT) ) { statement.state = 1; return true; }
-
-    if ( findRule(statement, context) ) return false;
-
-    cout << pre << greenBeg << "  set " << left.str << " to " << right.str << colEnd << endl;
-    left.var.value = right.var.value; // TOCHECK
-    statement.state = 1;
-    return true;
+    return ( (b && !NOT) || (!b && NOT) );
 }
 
 bool Variable::has(Variable& other, VROntology* onto) {
@@ -268,13 +262,13 @@ bool Variable::has(Variable& other, VROntology* onto) {
     return false;
 }
 
-bool VRReasoner::has(Statement& statement, Context& context) { // TODO
-    auto& left = statement.terms[0];
-    auto& right = statement.terms[1];
+bool VRReasoner::has(StatementPtr statement, Context& context) { // TODO
+    auto& left = statement->terms[0];
+    auto& right = statement->terms[1];
 
     bool b = left.var.has(right.var, context.onto);
     cout << pre << "  " << left.str << " has " << (b?"":"not") << " " << right.str << endl;
-    if (b) { statement.state = 1; return true; }
+    if (b) { statement->state = 1; return true; }
 
     auto Cconcept = context.onto->getConcept( right.var.concept ); // child concept
     auto Pconcept = context.onto->getConcept( left.var.concept ); // parent concept
@@ -287,37 +281,54 @@ bool VRReasoner::has(Statement& statement, Context& context) { // TODO
         return false;
     }
 
-    if ( findRule(statement, context) )  return false;
-
-    cout << pre << greenBeg << "  give " << right.str << " to " << left.str << colEnd << endl;
-    for (auto i : left.var.instances) {
-        if (i->properties.count(prop->ID) == 0) {
-            i->properties[prop->ID] = vector<string>();
-        }
-
-        i->properties[prop->ID].push_back(right.var.value);
-    }
-
-    statement.state = 1;
-    return true;
-}
-
-bool VRReasoner::evaluate(Statement& statement, Context& context) {
-    statement.updateLocalVariables(context.vars, context.onto);
-
-    if (!statement.isSimpleVerb()) { // resolve anonymous variables
-        string var = statement.terms[0].path.root;
-        context.vars[var] = Variable( context.onto, statement.verb, var );
-        cout << pre << blueBeg << "  added variable " << context.vars[var].toString() << colEnd << endl;
-        statement.state = 1;
-        return true;
-    }
-
-    if (statement.verb == "is") return is(statement, context);
-    if (statement.verb == "has") return has(statement, context);
     return false;
 }
 
+bool VRReasoner::apply(StatementPtr statement, Context& context) {
+    if (statement->verb == "is") {
+        auto& left = statement->terms[0];
+        auto& right = statement->terms[1];
+        left.var.value = right.var.value; // TOCHECK
+        statement->state = 1;
+        cout << pre << greenBeg << "  set " << left.str << " to " << right.str << colEnd << endl;
+    }
+
+    if (statement->verb == "has") {
+        auto& left = statement->terms[0];
+        auto& right = statement->terms[1];
+        auto Cconcept = context.onto->getConcept( right.var.concept ); // child concept
+        auto Pconcept = context.onto->getConcept( left.var.concept ); // parent concept
+        auto prop = Pconcept->getProperty( Cconcept->name );
+        for (auto i : left.var.instances) i->properties[prop->ID].push_back(right.var.value);
+        statement->state = 1;
+        cout << pre << greenBeg << "  give " << right.str << " to " << left.str << colEnd << endl;
+    }
+
+    return true;
+}
+
+bool VRReasoner::evaluate(StatementPtr statement, Context& context) {
+    cout << pre << " " << statement->place << " eval " << statement->toString() << endl;
+    statement->updateLocalVariables(context.vars, context.onto);
+
+    if (!statement->isSimpleVerb()) { // resolve anonymous variables
+        string var = statement->terms[0].path.root;
+        context.vars[var] = Variable( context.onto, statement->verb, var );
+        cout << pre << blueBeg << "  added variable " << context.vars[var].toString() << colEnd << endl;
+        statement->state = 1;
+        return true;
+    }
+
+    if (statement->verb == "is") return is(statement, context);
+    if (statement->verb == "has") return has(statement, context);
+    return false;
+}
+
+void Query::checkState() {
+    int r = 1;
+    for (auto i : statements) if(i->state == 0) r = 0;
+    request->state = r;
+}
     // TODO: introduce requirements rules for the existence of some individuals
 
 vector<Result> VRReasoner::process(string initial_query, VROntology* onto) {
@@ -328,27 +339,36 @@ vector<Result> VRReasoner::process(string initial_query, VROntology* onto) {
 
     while( context.queries.size() ) { // while queries to process
         Query& query = context.queries.back();
+        query.checkState();
         auto request = query.request;
-        if (request.state == 1) { context.queries.pop_back(); continue; }; // query answered, pop and continue
+        if (request->state == 1) {
+            apply(request, context);
+            cout << pre << redBeg << " solved: " << query.toString() << colEnd << endl;
+            context.queries.pop_back(); continue;
+        }; // query answered, pop and continue
 
         cout << pre << redBeg << "QUERY " << query.toString() << colEnd << endl;
 
-        request.updateLocalVariables(context.vars, context.onto);
-
-        if ( evaluate(request, context) ) {
+        request->updateLocalVariables(context.vars, context.onto);
+        /*if ( evaluate(request, context) ) {
             if (request.verb == "q") {
                 string v = request.terms[0].var.value;
                 if (context.results.count(v) == 0) context.results[v] = Result();
                 context.results[v].instances = context.vars[v].instances;
             }
-        }
+            request.state = 1;
+        }*/
 
         int i=0;
         for (auto& statement : query.statements) {
             i++;
-            if (statement.state == 1) continue;
-            cout << pre << " " << i << " eval " << statement.toString() << endl;
-            if (evaluate(statement, context)) statement.state = 1;
+            if (statement->state == 1) continue;
+            if (evaluate(statement, context)) {
+                statement->state = 1;
+            } else {
+                if ( findRule(statement, context) ) continue;
+                apply(statement, context);
+            }
         }
 
         context.itr++;
