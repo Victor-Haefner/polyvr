@@ -24,7 +24,6 @@
 #include <gtksourceview/gtksourceview.h>
 #include <gtksourceview/gtksourcelanguagemanager.h>
 #include <gtksourceview/gtksourcecompletionprovider.h>
-//#include <gtksourceview/completion-providers/words/gtksourcecompletionwords.h>
 #include <libxml++/nodes/element.h>
 #include <libxml++/libxml++.h>
 
@@ -33,66 +32,6 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 using namespace Gtk;
-
-/*
-struct VRCompletionProviderPrivate {
-    ;
-};
-
-struct VRCompletionProvider {
-    using Provider = GtkSourceCompletionProvider;
-    using Context = GtkSourceCompletionContext;
-    using Proposal = GtkSourceCompletionProposal;
-
-    GObject parent;
-	VRCompletionProviderPrivate* priv;
-
-	static gchar* get_name(Provider *provider) { return "VR"; }
-
-	//void populate(Provider* provider, Context* context);
-
-	//gboolean match(Provider* provider, Context* context) { return TRUE; }
-
-	//GtkSourceCompletionActivation get_activation(Provider* provider);
-
-	//GtkWidget* get_info_widget(Provider* provider, Proposal* proposal);
-	//void update_info(Provider* provider, Proposal* proposal, GtkSourceCompletionInfo* info);
-
-	//gboolean get_start_iter(Provider* provider, Context* context, Proposal* proposal, GtkTextIter* iter);
-	//gboolean activate_proposal(Provider* provider, Proposal *proposal, GtkTextIter* iter);
-
-	//gint get_interactive_delay(Provider* provider);
-	//gint get_priority(Provider* provider);
-};
-
-struct VRCompletionProviderClass { GObjectClass parent_class; };
-
-static void vr_completion_provider_iface_init (GtkSourceCompletionProviderIface *iface) {
-	iface->get_name = VRCompletionProvider::get_name;
-	iface->get_icon = gtk_source_completion_words_get_icon;
-	iface->populate = gtk_source_completion_words_populate;
-	iface->get_start_iter = gtk_source_completion_words_get_start_iter;
-	iface->get_interactive_delay = gtk_source_completion_words_get_interactive_delay;
-	iface->get_priority = gtk_source_completion_words_get_priority;
-	iface->get_activation = gtk_source_completion_words_get_activation;
-}
-
-static void gtk_source_completion_words_class_init (GtkSourceCompletionWordsClass *klass) {
-    ;
-}
-
-static void vr_completion_provider_init (VRCompletionProvider *self) {
-	//self->priv = vr_completion_provider_get_instance_private(self);
-}
-
-static void vr_completion_provider_class_init (VRCompletionProviderClass *self) {
-	//self->priv = vr_completion_provider_get_instance_private(self);
-}
-
-G_DEFINE_TYPE_WITH_CODE (VRCompletionProvider, vr_completion_provider,  G_TYPE_OBJECT,
-			 G_ADD_PRIVATE (VRCompletionProvider) G_IMPLEMENT_INTERFACE (GTK_TYPE_SOURCE_COMPLETION_PROVIDER, vr_completion_provider_iface_init))
-
-*/
 
 GtkSourceBuffer* VRGuiScripts_sourceBuffer = 0;
 VRScript* lastSelectedScript = 0;
@@ -1068,15 +1007,7 @@ void VRGuiScripts::initEditor() {
     gtk_widget_modify_font (editor, font_desc);
     gtk_widget_show_all(editor);
 
-    // code completion - https://developer.gnome.org/gtksourceview/stable/GtkSourceCompletion.html
-    /*string words = "tree\napple\nturtle";
-    auto wordsBuff = gtk_text_buffer_new(NULL);
-    gtk_text_buffer_set_text(wordsBuff, words.c_str(), words.size());
-    auto provider = gtk_source_completion_words_new("vr-py", NULL);
-    gtk_source_completion_words_register(provider, wordsBuff);*/
-
     auto provider = vr_code_completion_new();
-
     auto completion = gtk_source_view_get_completion(GTK_SOURCE_VIEW(editor));
     GError* error = NULL;
     gtk_source_completion_add_provider(completion, GTK_SOURCE_COMPLETION_PROVIDER(provider), &error);
