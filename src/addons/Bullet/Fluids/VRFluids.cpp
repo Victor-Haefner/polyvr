@@ -17,6 +17,27 @@ shared_ptr<VRFluids> VRFluids::create() {
     return shared_ptr<VRFluids>( new VRFluids() );
 }
 
+void VRFluids::setFunctions(int from, int to) {
+    this->from = from;
+    this->to = to;
+    VRScenePtr scene = VRSceneManager::getCurrent();
+    {
+        BLock lock(mtx());
+        // enable graphical updates
+        scene->dropUpdateFkt(fkt);
+        fkt = VRFunction<int>::create("particles_update", boost::bind(&VRParticles::update, this,from,to));
+        scene->addUpdateFkt(fkt);
+        // enable physic updates
+        scene->dropPhysicsUpdateFunction(fluidFkt.get(), false);
+        if (this->simulation == SPH) {
+            fluidFkt = VRFunction<int>::create("sph_update", boost::bind(&VRFluids::updateXSPH, this,from,to));
+        } else if (this->simulation == XSPH) {
+            fluidFkt = VRFunction<int>::create("xsph_update", boost::bind(&VRFluids::updateSPH, this,from,to));
+        }
+        scene->addPhysicsUpdateFunction(fluidFkt.get(), false);
+    }
+}
+
 void VRFluids::update(int from, int to) {
     if (to < 0) to = N;
     {
@@ -30,7 +51,11 @@ void VRFluids::update(int from, int to) {
     updateXSPH(from, to);
 }
 
-const float CHAINING = 0.4; // NOTE binding strength between particles (XSPH)
+inline void VRFluids::updateSPH(int from, int to) {
+    // TODO implement
+}
+
+const float CHAINING = 0.8; // NOTE binding strength between particles (XSPH)
 inline void VRFluids::updateXSPH(int from, int to) {
     SphParticle* p;
     SphParticle* neighbour;
@@ -137,6 +162,11 @@ inline float VRFluids::kernel_visc_laplacian(float r, float h) {
         return (45 / (Pi * pow(h,6))) * diff;
     }
     return 0.0;
+}
+
+void VRFluids::setSimulation(SimulationType t, bool forceChange) {
+    this->simulation = t;
+    if (forceChange) this->setFunctions(this->from, this->to);
 }
 
 void VRFluids::setSphRadius(float newRadius, float variation) {

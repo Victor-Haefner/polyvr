@@ -49,6 +49,7 @@ PyMethodDef VRPyFluids::methods[] = {
     {"spawnCuboid", (PyCFunction)VRPyFluids::spawnCuboid, METH_VARARGS, "spawnCuboid(x,y,z) \n\tspawnCuboid(x,y,z,'size',a,b,c) \n\tspawnCuboid(x,y,z,'liter',l)"},
 
     {"setRadius", (PyCFunction)VRPyFluids::setRadius, METH_VARARGS, "setRadius(radius, variation) \n\tsetRadius(0.05, 0.02)"},
+    {"setSimType", (PyCFunction)VRPyFluids::setSimType, METH_VARARGS, "setSimType(type, forceUpdate=False) \n\tsetSimType('SPH', True) #or XSPH"},
     {"setSphRadius", (PyCFunction)VRPyFluids::setSphRadius, METH_VARARGS, "setSphRadius(radius, variation) \n\tsetRadius(0.05, 0.02)"},
     {"setMass", (PyCFunction)VRPyFluids::setMass, METH_VARARGS, "setMass(mass, variation) \n\tsetMass(0.05, 0.02)"},
     {"setMassByRadius", (PyCFunction)VRPyFluids::setMassByRadius, METH_VARARGS, "setMassByRadius(massOfOneMeterRadius) \n\tsetMass(1000.0*100)"},
@@ -69,7 +70,7 @@ PyObject* VRPyFluids::spawnCuboid(VRPyFluids* self, PyObject* args) {
     OSG::Vec3f position;
     float x,y,z, a=1,b=1,c=1;
     char* mode = NULL; int modeLength=0;
-
+    // TODO API ändern?
     if (! PyArg_ParseTuple(args, "fff|s#fff", &x,&y,&z, &mode, &modeLength, &a,&b,&c)) {
         // ERROR!
         Py_RETURN_FALSE;
@@ -94,6 +95,19 @@ PyObject* VRPyFluids::setRadius(VRPyFluids* self, PyObject* args) {
     radius = variation = 0.0;
     if (! PyArg_ParseTuple(args, "f|f", &radius, &variation)) { Py_RETURN_FALSE; }
     self->objPtr->setRadius(radius, variation);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyFluids::setSimType(VRPyFluids* self, PyObject* args) {
+    checkObj(self);
+    OSG::VRFluids::SimulationType simType = OSG::VRFluids::XSPH;
+    char* sim=NULL; int length=0;
+    unsigned char update = 0; bool force = false;
+
+    if (! PyArg_ParseTuple(args, "s#|b", &sim, &length, &update)) { Py_RETURN_FALSE; }
+    if (strncmp(sim, "SPH", length)==0) simType = OSG::VRFluids::SPH;
+    if (update > 0) force = true;
+    self->objPtr->setSimulation(simType, force);
     Py_RETURN_TRUE;
 }
 

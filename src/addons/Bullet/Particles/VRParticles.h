@@ -15,23 +15,6 @@ OSG_BEGIN_NAMESPACE;
 class VRParticles : public VRGeometry {
     // FIXME: Particles do not collide in ~50% of all polyvr sessions. Restart polyvr until it works.
 
-    protected:
-        int N = 200;
-        vector<Particle*> particles;
-
-        VRUpdatePtr fkt;
-        VRMaterialPtr mat;
-        GeoPnt3fPropertyRecPtr pos;
-        GeoVec3fPropertyRecPtr normals;
-        GeoVec4fPropertyRecPtr colors;
-        btDiscreteDynamicsWorld* world = 0;
-
-        float getMaxRadius();
-        boost::recursive_mutex& mtx();
-        inline Vec3f toVec3f(btVector3 v) { return Vec3f(v[0], v[1], v[2]); };
-        inline btVector3 toBtVector3(Vec3f v) { return btVector3(v[0], v[1], v[2]); };
-
-
     public:
         enum ArgType { NOTHING, SIZE, LITER };
 
@@ -51,6 +34,24 @@ class VRParticles : public VRGeometry {
         template<class P> void resetParticles();
         int spawnCuboid(Vec3f v, ArgType t=NOTHING, float a=1, float b=1, float c=1);
         virtual void update(int b = 0, int e = -1);
+
+    protected:
+        int N = 200;
+        vector<Particle*> particles;
+
+        VRUpdatePtr fkt;
+        VRMaterialPtr mat;
+        GeoPnt3fPropertyRecPtr pos;
+        GeoVec3fPropertyRecPtr normals;
+        GeoVec4fPropertyRecPtr colors;
+        btDiscreteDynamicsWorld* world = 0;
+
+        float getMaxRadius();
+        boost::recursive_mutex& mtx();
+        inline Vec3f toVec3f(btVector3 v) { return Vec3f(v[0], v[1], v[2]); };
+        inline btVector3 toBtVector3(Vec3f v) { return btVector3(v[0], v[1], v[2]); };
+
+        virtual void setFunctions(int from, int to);
 };
 
 

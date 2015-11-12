@@ -24,9 +24,7 @@ boost::recursive_mutex& VRParticles::mtx() {
 }
 
 
-VRParticles::VRParticles() : VRParticles(true) {
-    //resetParticles<Particle>();
-}
+VRParticles::VRParticles() : VRParticles(true) {}
 
 VRParticles::VRParticles(bool spawnParticles) : VRGeometry("particles") {
     if (spawnParticles) resetParticles<Particle>();
@@ -143,9 +141,6 @@ void VRParticles::setLifetime(int newLifetime, int variation) {
 }
 
 int VRParticles::spawnCuboid(Vec3f base, ArgType type, float a, float b, float c) {
-    VRScenePtr scene = VRSceneManager::getCurrent();
-    // if (scene) world = scene->bltWorld();
-
     float radius;
     int required;
     radius = getMaxRadius();
@@ -191,9 +186,17 @@ int VRParticles::spawnCuboid(Vec3f base, ArgType type, float a, float b, float c
             particles[i]->spawnAt(v, this->world);
         }
         // activate update loop, only update spawned particles! (required)
+    }
+    setFunctions(0, required);
+    return required;
+}
+
+void VRParticles::setFunctions(int from, int to) {
+    {
+        BLock lock(mtx());
+        VRScenePtr scene = VRSceneManager::getCurrent();
         scene->dropUpdateFkt(fkt);
-        fkt = VRFunction<int>::create("particles_update", boost::bind(&VRParticles::update, this,0,required));
+        fkt = VRFunction<int>::create("particles_update", boost::bind(&VRParticles::update, this,from,to));
         scene->addUpdateFkt(fkt);
     }
-    return required;
 }
