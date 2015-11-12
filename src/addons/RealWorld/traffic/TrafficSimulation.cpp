@@ -1,16 +1,19 @@
-#include <boost/lexical_cast.hpp>
-#include <boost/bind.hpp>
-
 #include "core/scene/VRSceneLoader.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/geometry/VRGeometry.h"
 #include "core/utils/toString.h"
 #include "../Config.h"
 #include "TrafficSimulation.h"
+#include "../MapCoordinator.h"
+#include "../OSM/OSMMap.h"
+#include "../OSM/OSMNode.h"
 
+#include <boost/bind.hpp>
+#include <boost/thread/locks.hpp>
 
-using namespace realworld;
+using namespace OSG;
 
 /**
  * Splits a string at the given character.
@@ -314,17 +317,14 @@ void TrafficSimulation::communicationThread(VRThreadWeakPtr t) {
         networkDataMutex.unlock();
         Value result = client.sendData(dataToSend);
         errorMessage("sending updates to server", result);
-    } else {
-        networkDataMutex.unlock();
-    }
+    } else networkDataMutex.unlock();
 
     // Get view area data
     Value tmp = client.retrieveViewareaData(0);
     networkDataMutex.lock();
     receivedData = tmp;
     networkDataMutex.unlock();
-    if (errorMessage("retrieving viewarea data", tmp))
-        return;
+    if (errorMessage("retrieving viewarea data", tmp)) return;
 }
 
 bool TrafficSimulation::errorMessage(const string& action, const Value& value) {
@@ -391,14 +391,9 @@ TrafficSimulation::~TrafficSimulation() {
 
 void TrafficSimulation::setServer(const string& host) {
     client.setServer(host);
-
-    // Retransmit the already loaded maps
-    set<const OSMMap*> tmp;
+    set<const OSMMap*> tmp; // Retransmit the already loaded maps
     tmp.swap(loadedMaps);
-
-    for (auto m : tmp) {
-        addMap(m);
-    }
+    for (auto m : tmp) addMap(m);
 }
 
 void TrafficSimulation::addMap(const OSMMap* map) {
@@ -525,7 +520,7 @@ void TrafficSimulation::setDrawingDistance(const double distance) {
 
 void TrafficSimulation::setTrafficDensity(const double density) {
 
-    //OSG::VRFunction<VRThread*>* func = new OSG::VRFunction<OSG::VRThread*>("trafficSetTrafficDensity", boost::bind(&realworld::TrafficSimulation::setTrafficDensity, self->obj, b));
+    //OSG::VRFunction<VRThread*>* func = new OSG::VRFunction<OSG::VRThread*>("trafficSetTrafficDensity", boost::bind(&TrafficSimulation::setTrafficDensity, self->obj, b));
     //OSG::VRSceneManager::get()->initThread(func, "trafficSetTrafficDensity", false);
 
     Value value;
@@ -534,21 +529,21 @@ void TrafficSimulation::setTrafficDensity(const double density) {
     errorMessage("setting the traffic density", value);
 }
 
-void TrafficSimulation::addVehicleType(const unsigned int id, const double probability, const double collisionRadius, const double maxSpeed, const double maxAcceleration, const double maxRoration, VRGeometryPtr geometry) {
+void TrafficSimulation::addVehicleType(const unsigned int id, const double probability, const double collisionRadius, const double maxSpeed, const double maxAcceleration, const double maxRoration, VRTransformPtr model) {
 
 
     //void addVehicleType(const unsigned int id, const double probability, const double collisionRadius, const double maxSpeed, const double maxAcceleration, const double maxRoration);
-    //OSG::VRFunction<VRThread*>* func = new OSG::VRFunction<VRThread*>("trafficAddVehicleType", boost::bind(&realworld::TrafficSimulation::addVehicleType, self->obj, id, prob, radius, speed, acc, rot, static_pointer_cast<VRGeometry>(geo->obj));
+    //OSG::VRFunction<VRThread*>* func = new OSG::VRFunction<VRThread*>("trafficAddVehicleType", boost::bind(&TrafficSimulation::addVehicleType, self->obj, id, prob, radius, speed, acc, rot, static_pointer_cast<VRGeometry>(geo->obj));
     //OSG::VRSceneManager::get()->initThread(func, "trafficAddVehicleType", false);
 
 
-    if (geometry == NULL) {
+    if (model == NULL) {
         cerr << "Given geometry is invalid!\n";
         return;
     }
 
     // Store the mesh
-    meshes[id] = geometry;
+    meshes[id] = model;
 
     // Send the data about the type to the server
     Value type, value;
@@ -714,8 +709,8 @@ void TrafficSimulation::update() {
                     v.driverTypeId = vehicleIter["driver"].asUInt();
 
                     if (meshes.count(v.vehicleTypeId) == 0) v.vehicleTypeId = 404;
-                    v.geometry = static_pointer_cast<VRGeometry>( meshes[v.vehicleTypeId]->duplicate(true) );
-                    v.geometry->setPersistency(0);
+                    v.model = static_pointer_cast<VRTransform>( meshes[v.vehicleTypeId]->duplicate(true) );
+                    v.model->setPersistency(0);
 
                     // Add it to the map
                     vehicles.insert(make_pair(v.id, v));
@@ -785,7 +780,7 @@ void TrafficSimulation::update() {
 
         // Remove vehicles which are no longer on the map
         for (auto v : vehicleIDs) {
-            vehicles[v].geometry->destroy();
+            vehicles[v].model->destroy();
             vehicles.erase(v);
         }
 
@@ -815,8 +810,8 @@ void TrafficSimulation::update() {
 
                 // Get the node positions
                 Vec2f atPos, toPos;
-                string atId = lexical_cast<string>(lightpost["at"].asUInt());
-                string toId = lexical_cast<string>(lightpost["to"].asUInt());
+                string atId = toString(lightpost["at"].asUInt());
+                string toId = toString(lightpost["to"].asUInt());
                 bool foundAt = false, foundTo = false;
                 for (auto mapIter : loadedMaps) {
                     for (auto nodeIter : mapIter->osmNodes) {
@@ -912,9 +907,9 @@ void TrafficSimulation::update() {
     //cout << "Update " << vehicles.size() << " vehicles\n";
     for (auto v : vehicles) {
         Vec3f p = v.second.pos;
-        p[1] = -1.2;//TODO: get right street height
-        v.second.geometry->setFrom(p);
-        v.second.geometry->setDir(v.second.pos - v.second.orientation);
+        p[1] = 0;//TODO: get right street height
+        v.second.model->setFrom(p);
+        v.second.model->setDir(v.second.pos - v.second.orientation);
         v.second.pos += v.second.deltaPos;
         v.second.orientation += v.second.deltaOrientation;
     }
@@ -956,7 +951,7 @@ void TrafficSimulation::setSimulationSpeed(const double speed) {
     errorMessage("setting the simulation speed", value);
 }
 
-void TrafficSimulation::setPlayerTransform(VRTransform *transform) {
+void TrafficSimulation::setPlayerTransform(VRTransformPtr transform) {
     player = transform;
 
     if (player != NULL && !playerCreated) {

@@ -15,8 +15,8 @@ class VRBlinds: public VRTransform {
         enum State { OPEN, CLOSE };
 
     private:
-        VRDevCb* toggleCallback;
-        VRSignal* sig;
+        VRDeviceCb toggleCallback;
+        VRSignalPtr sig;
         VRScene* scene;
         State state;
         string sound;
@@ -53,7 +53,7 @@ class VRBlinds: public VRTransform {
 
         void interpolate(float t);
 
-        VRDevCb* getCallback();
+        VRDeviceCb getCallback();
 };
 
 OSG_END_NAMESPACE;

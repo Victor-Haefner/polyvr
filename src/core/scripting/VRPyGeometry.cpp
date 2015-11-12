@@ -61,7 +61,12 @@ template<> PyTypeObject VRPyBaseT<OSG::VRGeometry>::type = {
 
 PyMethodDef VRPyGeometry::methods[] = {
     {"setType", (PyCFunction)VRPyGeometry::setType, METH_VARARGS, "set geometry type - setType(type)" },
-    {"setTypes", (PyCFunction)VRPyGeometry::setTypes, METH_VARARGS, "set geometry type - setTypes([type1, type2, ..])" },
+    {"setTypes", (PyCFunction)VRPyGeometry::setTypes, METH_VARARGS, "set geometry type - setTypes([type1, type2, ..])\n\ttype can be:"
+                                                                                                                    "\n\t GL_POINTS"
+                                                                                                                    "\n\t GL_LINES, GL_LINE_LOOP, GL_LINE_STRIP"
+                                                                                                                    "\n\t GL_TRIANGLES, GL_TRIANGLE_STRIP, GL_TRIANGLE_FAN"
+                                                                                                                    "\n\t GL_QUADS, GL_QUAD_STRIP"
+                                                                                                                    "\n\t GL_POLYGON" },
     {"setPositions", (PyCFunction)VRPyGeometry::setPositions, METH_VARARGS, "set geometry positions - setPositions(list of (list of [x,y,z]))" },
     {"setNormals", (PyCFunction)VRPyGeometry::setNormals, METH_VARARGS, "set geometry normals - setNormals([[x,y,z], ...])" },
     {"setColors", (PyCFunction)VRPyGeometry::setColors, METH_VARARGS, "set geometry colors - setColors([[x,y,z], ...])" },
@@ -69,6 +74,17 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"setTexCoords", (PyCFunction)VRPyGeometry::setTexCoords, METH_VARARGS, "set geometry texture coordinates - setTexCoords( [[x,y]], int channel = 0, bool fixMapping = false)" },
     {"setTexture", (PyCFunction)VRPyGeometry::setTexture, METH_VARARGS, "set texture from file - setTexture(path)" },
     {"setMaterial", (PyCFunction)VRPyGeometry::setMaterial, METH_VARARGS, "set material" },
+    {"getTypes", (PyCFunction)VRPyGeometry::getTypes, METH_NOARGS, "get geometry primitive types - [int t] getTypes()\n\tt = 0 : GL_POINTS"
+                                                                                                                    "\n\tt = 1 : GL_LINES"
+                                                                                                                    "\n\tt = 2 : GL_LINE_LOOP"
+                                                                                                                    "\n\tt = 3 : GL_LINE_STRIP"
+                                                                                                                    "\n\tt = 4 : GL_TRIANGLES"
+                                                                                                                    "\n\tt = 5 : GL_TRIANGLE_STRIP"
+                                                                                                                    "\n\tt = 6 : GL_TRIANGLE_FAN"
+                                                                                                                    "\n\tt = 7 : GL_QUADS"
+                                                                                                                    "\n\tt = 8 : GL_QUAD_STRIP"
+                                                                                                                    "\n\tt = 9 : GL_POLYGON" },
+    {"getLengths", (PyCFunction)VRPyGeometry::getLengths, METH_NOARGS, "get geometry lengths" },
     {"getPositions", (PyCFunction)VRPyGeometry::getPositions, METH_NOARGS, "get geometry positions" },
     {"getNormals", (PyCFunction)VRPyGeometry::getNormals, METH_NOARGS, "get geometry normals" },
     {"getColors", (PyCFunction)VRPyGeometry::getColors, METH_NOARGS, "get geometry colors" },
@@ -529,6 +545,40 @@ PyObject* VRPyGeometry::getPositions(VRPyGeometry* self) {
         PyObject* pv = toPyTuple(v);
         // append to list
         PyList_SetItem(res, i, pv);
+    }
+
+    return res;
+}
+
+PyObject* VRPyGeometry::getTypes(VRPyGeometry* self) {
+    if (!self->valid()) return NULL;
+    if (self->objPtr->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getNormals - Mesh is invalid"); return NULL; }
+
+    OSG::GeoIntegralProperty* types = self->objPtr->getMesh()->getTypes();
+    if (types == 0) return PyList_New(0);
+    PyObject* res = PyList_New(types->size());
+
+    for (uint i=0; i<types->size(); i++) {
+        int v;
+        types->getValue(v,i);
+        PyList_SetItem(res, i, PyInt_FromLong(v));
+    }
+
+    return res;
+}
+
+PyObject* VRPyGeometry::getLengths(VRPyGeometry* self) {
+    if (!self->valid()) return NULL;
+    if (self->objPtr->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getNormals - Mesh is invalid"); return NULL; }
+
+    OSG::GeoIntegralProperty* lengths = self->objPtr->getMesh()->getLengths();
+    if (lengths == 0) return PyList_New(0);
+    PyObject* res = PyList_New(lengths->size());
+
+    for (uint i=0; i<lengths->size(); i++) {
+        int v;
+        lengths->getValue(v,i);
+        PyList_SetItem(res, i, PyInt_FromLong(v));
     }
 
     return res;

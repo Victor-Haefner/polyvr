@@ -69,8 +69,6 @@ void VRAnnotationEngine::resize(Label& l, Vec3f p, int N) {
     l.entries.resize(N, 0);
     int pN = pos->size();
 
-    cout << "VRAnnotationEngine::resize " << eN << " " << N << " " << pN << endl;
-
     mesh->getLengths()->setValue(N-eN+pN, 0);
     for (int i=0; i<N-eN; i++) {
         pos->addValue(p);
@@ -78,6 +76,12 @@ void VRAnnotationEngine::resize(Label& l, Vec3f p, int N) {
         mesh->getIndices()->addValue(pN+i);
         l.entries[eN+i] = pN+i;
     }
+}
+
+int VRAnnotationEngine::add(Vec3f p, string s) {
+    int i = labels.size();
+    set(i,p,s);
+    return i;
 }
 
 void VRAnnotationEngine::set(int i, Vec3f p, string s) {

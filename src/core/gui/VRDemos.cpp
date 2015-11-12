@@ -64,8 +64,8 @@ VRDemos::VRDemos() {
     for (auto f : favorites) addEntry(f, "favorites_tab", false);
     if (favorites.size() == 0) setNotebookPage("notebook2", 1);
 
-    auto fkt = new VRDevCb("GUI_updateDemos", boost::bind(&VRDemos::update, this) );
-    VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
+    updateCb = VRFunction<VRDevice*>::create("GUI_updateDemos", boost::bind(&VRDemos::update, this) );
+    VRGuiSignals::get()->getSignal("scene_changed")->add( updateCb );
 
     setToolButtonCallback("toolbutton1", sigc::mem_fun(*this, &VRDemos::on_new_clicked));
     setToolButtonCallback("toolbutton5", sigc::mem_fun(*this, &VRDemos::on_saveas_clicked));
@@ -140,8 +140,8 @@ void VRDemos::setButton(demoEntry* e) {
     updatePixmap(e, e->imgScene, 100, 75);
 
     // events
-    VRDevCb* fkt = new VRDevCb("GUI_addDemoEntry", boost::bind(&VRDemos::updatePixmap, this, e, e->imgScene, 100, 75) );
-    VRGuiSignals::get()->getSignal("onSaveScene")->add(fkt);
+    e->uPixmap = VRFunction<VRDevice*>::create("GUI_addDemoEntry", boost::bind(&VRDemos::updatePixmap, this, e, e->imgScene, 100, 75) );
+    VRGuiSignals::get()->getSignal("onSaveScene")->add( e->uPixmap );
 
     menu->connectWidget("DemoMenu", ebox);
     ebox->signal_event().connect( sigc::bind<demoEntry*>( sigc::mem_fun(*this, &VRDemos::on_any_event), e) );
@@ -229,17 +229,18 @@ void VRDemos::setGuiState(demoEntry* e) {
 }
 
 void VRDemos::addEntry(string path, string table, bool running) {
-    if (demos.count(path)) return;
-
     clearTable("favorites_tab");
 
-    demoEntry* e = new demoEntry();
-    e->path = path;
-    demos[path] = e;
-    e->running = running;
-    e->table = table;
-    e->pxm_path = path.substr(0,path.size()-4)+".png";
-    setButton(e);
+    demoEntry* e = 0;
+    if (demos.count(path) == 0) {
+        e = new demoEntry();
+        e->path = path;
+        demos[path] = e;
+        e->running = running;
+        e->table = table;
+        e->pxm_path = path.substr(0,path.size()-4)+".png";
+        setButton(e);
+    } else e = demos[path];
 
     updateTable("favorites_tab");
     setGuiState(e);
@@ -337,7 +338,7 @@ void VRDemos::on_diag_load_clicked() {
     if (current_demo) if (current_demo->running) toggleDemo(current_demo); // close demo if it is running
     addEntry(path, "favorites_tab", false);
     VRSceneManager::get()->addFavorite(path);
-    toggleDemo(demos[path]);
+    if (demos.count(path)) toggleDemo(demos[path]);
 }
 
 void VRDemos::on_load_clicked() {
@@ -394,17 +395,11 @@ void VRDemos::update() {
         setGuiState(current_demo);
         return;
     }
-
-    current_demo = new demoEntry();
-    current_demo->running = true;
-    demos[sPath] = current_demo;
-    setGuiState(current_demo);
 }
 
 void VRDemos::toggleDemo(demoEntry* e) {
     bool run = !e->running;
-    auto scene = VRSceneManager::getCurrent();
-    VRSceneManager::get()->removeScene(scene);
+    VRSceneManager::get()->closeScene();
     if (run) VRSceneManager::get()->loadScene(e->path, e->write_protected);
 }
 

@@ -35,7 +35,7 @@ class VRScript : public VRName {
             int key = 0;
             string state = "Pressed";
             string param;
-            VRSignal* sig = 0;
+            VRSignalPtr sig = 0;
             VRSocket* soc = 0;
             arg* a = 0;
 

@@ -4,6 +4,8 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/objects/VRLight.h"
+#include "core/objects/VRStage.h"
+#include "core/objects/material/VRMaterial.h"
 #include "VRDefShading.h"
 
 #include <OpenSG/OSGRenderAction.h>
@@ -14,29 +16,35 @@ using namespace std;
 VRRenderManager::VRRenderManager() {
     defShading = new VRDefShading();
 
-    update();
+    /*
+                                     --- scene
+    root_system --- root_def_shading --- root_ssao
+    */
 
     root = VRObject::create("Root");
     root_def_shading = VRObject::create("Deffered shading root");
     root_ssao = VRObject::create("SSAO root");
     root_system = VRObject::create("System root");
 
-    root_system->addChild(root_ssao);
-    root_ssao->addChild(root_def_shading);
+    root_system->addChild(root_def_shading);
     root_def_shading->addChild(root->getNode());
+    root_def_shading->addChild(root_ssao);
 
     defShading->initDeferredShading(root_def_shading);
     defShading->initSSAO(root_ssao);
     setDefferedShading(false);
     setSSAO(false);
 
-
+    update();
 
     store("frustum_culling", &frustumCulling);
     store("occlusion_culling", &occlusionCulling);
     store("two_sided", &twoSided);
     store("deferred_rendering", &deferredRendering);
     store("ssao", &ssao);
+    store("ssao_kernel", &ssao_kernel);
+    store("ssao_radius", &ssao_radius);
+    store("ssao_noise", &ssao_noise);
 }
 
 VRRenderManager::~VRRenderManager() {
@@ -44,7 +52,9 @@ VRRenderManager::~VRRenderManager() {
 }
 
 void VRRenderManager::update() {
-    RenderActionRefPtr ract = VRSetupManager::getCurrent()->getRenderAction();
+    auto setup = VRSetupManager::getCurrent();
+    if (!setup) return;
+    RenderActionRefPtr ract = setup->getRenderAction();
 
     ract->setFrustumCulling(frustumCulling);
     ract->setOcclusionCulling(occlusionCulling);
@@ -52,7 +62,14 @@ void VRRenderManager::update() {
     ract->setZWriteTrans(true); // enables the zbuffer for transparent objects
 
     defShading->setDefferedShading(deferredRendering);
-    defShading->setSSAO(ssao);
+    root_ssao->setVisible(ssao);
+    defShading->setSSAOparams(ssao_radius, ssao_kernel, ssao_noise);
+
+    for (auto m : VRMaterial::materials) {
+        auto mat = m.second.lock();
+        if (!mat) continue;
+        mat->setDeffered(ssao || deferredRendering);
+    }
 }
 
 VRLightPtr VRRenderManager::addLight(string name) {
@@ -62,9 +79,7 @@ VRLightPtr VRRenderManager::addLight(string name) {
     return l;
 }
 
-VRLightPtr VRRenderManager::getLight(int ID) {
-    return light_map[ID];
-}
+VRLightPtr VRRenderManager::getLight(int ID) { return light_map[ID]; }
 
 void VRRenderManager::setFrustumCulling(bool b) { frustumCulling = b; update(); }
 bool VRRenderManager::getFrustumCulling() { return frustumCulling; }
@@ -75,12 +90,16 @@ bool VRRenderManager::getOcclusionCulling() { return occlusionCulling; }
 void VRRenderManager::setTwoSided(bool b) { twoSided = b; update(); }
 bool VRRenderManager::getTwoSided() { return twoSided; }
 
-void VRRenderManager::setDSCamera(VRCameraPtr cam) { defShading->setDSCamera(cam); }
 void VRRenderManager::setDefferedShading(bool b) { deferredRendering = b; update(); }
 bool VRRenderManager::getDefferedShading() { return deferredRendering; }
 
+void VRRenderManager::setDSCamera(VRCameraPtr cam) { defShading->setDSCamera(cam); }
+
 void VRRenderManager::setSSAO(bool b) { ssao = b; update(); }
 bool VRRenderManager::getSSAO() { return ssao; }
+void VRRenderManager::setSSAOradius(float r) { ssao_radius = r; update(); }
+void VRRenderManager::setSSAOkernel(int k) { ssao_kernel = k; update(); }
+void VRRenderManager::setSSAOnoise(int k) { ssao_noise = k; update(); }
 
 
 OSG_END_NAMESPACE;

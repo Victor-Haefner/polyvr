@@ -4,7 +4,7 @@
 using namespace OSG;
 using namespace std;
 
-namespace realworld {
+ {
     class TestMover;
     TestMover* currentInstanceTestMover;
 

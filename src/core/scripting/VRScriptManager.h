@@ -9,6 +9,7 @@
 #include <string>
 #include "core/setup/devices/VRSignal.h"
 #include "core/utils/VRStorage.h"
+#include "core/utils/VRDeviceFwd.h"
 #include "VRPyBase.h"
 
 namespace xmlpp{ class Element; }
@@ -26,7 +27,7 @@ class VRScriptManager : public VRStorage, public VRPyBase {
         PyObject* pModVR;
         map<string, PyTypeObject*> modules;
         map<string, VRScript*> scripts;
-        map<string, VRSignal*> triggers;
+        map<string, VRSignalPtr> triggers;
         PyThreadState* pyThreadState = 0;
 
         template<class T>
@@ -82,6 +83,7 @@ class VRScriptManager : public VRStorage, public VRPyBase {
 		static PyObject* loadScene(VRScriptManager* self, PyObject *args);
 		static PyObject* startThread(VRScriptManager* self, PyObject *args);
 		static PyObject* joinThread(VRScriptManager* self, PyObject *args);
+		static PyObject* getSystemDirectory(VRScriptManager* self, PyObject *args);
 };
 
 OSG_END_NAMESPACE

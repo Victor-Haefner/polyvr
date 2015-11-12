@@ -15,7 +15,7 @@ class VRAnimationManager {
         map<string, VRAnimation*> anim_map;
 
     protected:
-        shared_ptr<VRFunction<int> > updateAnimationsFkt;
+        VRUpdatePtr updateAnimationsFkt;
         void updateAnimations();
 
     public:
@@ -25,7 +25,7 @@ class VRAnimationManager {
         void remAnimation(VRAnimation* anim);
 
         template<typename T>
-        VRAnimation* addAnimation(float duration, float offset, weak_ptr< VRFunction<T> > fkt, T start, T end, bool loop = false);
+        VRAnimation* addAnimation(float duration, float offset, std::weak_ptr< VRFunction<T> > fkt, T start, T end, bool loop = false);
 };
 
 OSG_END_NAMESPACE;

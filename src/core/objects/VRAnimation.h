@@ -19,8 +19,8 @@ class VRAnimation : public VRName {
 
         template<typename T>
         struct interpolatorT : interpolator {
-            shared_ptr< VRFunction<T> > sp;
-            weak_ptr< VRFunction<T> > fkt;
+            std::shared_ptr< VRFunction<T> > sp;
+            std::weak_ptr< VRFunction<T> > fkt;
             T start_value, end_value;
             void update(float t) {
                 T val = start_value + (end_value - start_value)*t;
@@ -44,7 +44,7 @@ class VRAnimation : public VRName {
         VRAnimation(string name);
 
         template<typename T>
-        VRAnimation(float _duration, float _offset, weak_ptr< VRFunction<T> > _fkt, T _start, T _end, bool _loop);
+        VRAnimation(float _duration, float _offset, std::weak_ptr< VRFunction<T> > _fkt, T _start, T _end, bool _loop);
 
         void setSimpleCallback(VRAnimWeakPtr fkt, float _duration);
 

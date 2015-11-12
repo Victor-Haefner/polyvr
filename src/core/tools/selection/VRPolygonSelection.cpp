@@ -11,13 +11,18 @@ VRPolygonSelection::VRPolygonSelection() {
     mat->setLit(0);
     mat->setLineWidth(3);
     shape = VRGeometry::create("PolygonSelection");
+    shape->setPersistency(0);
     shape->setMaterial(mat);
     selection.setNearFar(Vec2f(0.1,1000));
 }
 
 shared_ptr<VRPolygonSelection> VRPolygonSelection::create() { return shared_ptr<VRPolygonSelection>( new VRPolygonSelection() ); }
 
-void VRPolygonSelection::setOrigin(pose orig) { selection.setPose(orig); }
+void VRPolygonSelection::setOrigin(pose orig) {
+    selection.setPose(orig);
+    origin = orig;
+}
+
 VRGeometryPtr VRPolygonSelection::getShape() { return shape; }
 bool VRPolygonSelection::isClosed() { return closed; }
 
@@ -57,7 +62,9 @@ bool VRPolygonSelection::objSelected(VRGeometryPtr geo) {
     bbox.update(v2);
 
     Vec3f p0 = origin.pos();
-    for (auto d : selection.getEdges()) if ( bbox.intersectedBy( Line(p0,d) ) ) return true;
+    for (auto d : selection.getEdges()) {
+        if ( bbox.intersectedBy( Line(p0,d) ) ) return true;
+    }
     return false;
 }
 
@@ -88,9 +95,7 @@ bool VRPolygonSelection::vertSelected(Vec3f p) {
     };
 
     if (!inFrustum(convex_hull)) return false;
-
     for (auto f : convex_decomposition ) if (inFrustum(f)) return true;
-
     return false;
 }
 

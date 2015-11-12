@@ -16,44 +16,41 @@ class VRDevice : public VRIntersect, public VRAvatar, public VRName, public VRSt
         int sig_state = -1;
         string message;
         string type;
-        VRTransformPtr target = 0;
+        VRTransformWeakPtr target;
         Vec2f speed;
 
-        map< string, VRSignal* > callbacks;//all callbacks
-        map< string, VRSignal* >::iterator itr;
-
-        vector<VRSignal*> activatedSignals;
+        map< string, VRSignalPtr > callbacks; //all callbacks
+        map<VRSignal*, VRSignalPtr> activatedSignals;
+        map<VRSignal*, VRDeviceCb> deactivationCallbacks;
         map<int, int> BStates;//states of buttons
         map<int, float> SStates;//states of slider
 
-        VRSignal* signalExist(int key, int state);
-
-        VRSignal* createSignal(int key, int state);
-
+        VRSignalPtr signalExist(int key, int state);
+        VRSignalPtr createSignal(int key, int state);
         void triggerSignal(int key, int state);
 
     public:
         VRDevice(string _type);
         virtual ~VRDevice();
 
-        VRSignal* addSignal(int key, int state);
-        VRSignal* addSignal(int key);
-        void addSignal(VRSignal* sig, int key, int state);
-        VRSignal* addSlider(int key);
+        VRSignalPtr addSignal(int key, int state);
+        VRSignalPtr addToggleSignal(int key);
+        void addSignal(VRSignalPtr sig, int key, int state);
+        VRSignalPtr addSlider(int key);
 
-        map<string, VRSignal*> getSignals();
-        VRSignal* getSignal(string name);
+        map<string, VRSignalPtr> getSignals();
+        VRSignalPtr getSignal(string name);
 
         virtual void clearSignals();
 
-        virtual VRSignal* getToEdgeSignal();
-        virtual VRSignal* getFromEdgeSignal();
+        virtual VRSignalPtr getToEdgeSignal();
+        virtual VRSignalPtr getFromEdgeSignal();
 
         void change_button(int key, int state);
         void change_slider(int key, float state);
 
-        void addUpdateSignal(VRSignal* sig);
-        void remUpdateSignal(VRSignal* sig, VRDevice* dev);
+        void addUpdateSignal(VRSignalPtr sig);
+        void remUpdateSignal(VRSignalPtr sig, VRDevice* dev);
         void updateSignals();
 
         int key();

@@ -158,7 +158,8 @@ Color3f VRBackground::getBackgroundColor() { return base->color; }
 string VRBackground::getBackgroundPath() { return base->path; }
 
 void VRBackground::updateBackground() {
-    VRSetupManager::getCurrent()->setViewBackground(getBackground());
+    auto setup = VRSetupManager::getCurrent();
+    if (setup) setup->setViewBackground(getBackground());
 }
 
 void VRBackground::update() { setBackground(TYPE(base->type)); }

@@ -10,11 +10,10 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRSceneLoader.h"
 #include "OSM/OSMMapDB.h"
+#include "World.h"
 #include "MapCoordinator.h"
-#include "MapLoader.h"
 #include "MapManager.h"
 //#include "TestMover.h"
-#include "TextureManager.h"
 #include "Modules/ModuleBuildings.h"
 #include "Modules/ModuleStreets.h"
 #include "Modules/ModuleFloor.h"
@@ -27,22 +26,18 @@
 
 #define PI 3.14159265
 
-using namespace realworld;
-
+using namespace OSG;
 
 RealWorld::RealWorld(VRObjectPtr root) {
-    physicalized = false;
+    singelton = this;
 
-    mapCoordinator = new MapCoordinator(OSG::Vec2f(49.005f, 8.395f), 0.002f); //Kreuzung Kriegsstr. und Karlstr.
-    //mapCoordinator = new MapCoordinator(OSG::Vec2f(48.998969, 8.400171), 0.002f); // Tiergarten
-    //mapCoordinator = new MapCoordinator(OSG::Vec2f(49.013606f, 8.418295f), 0.002f); // Fasanengarten, funktioniert nicht?
+    mapCoordinator = new MapCoordinator(Vec2f(49.005f, 8.395f), 0.002f); //Kreuzung Kriegsstr. und Karlstr.
+    //mapCoordinator = new MapCoordinator(Vec2f(48.998969, 8.400171), 0.002f); // Tiergarten
+    //mapCoordinator = new MapCoordinator(Vec2f(49.013606f, 8.418295f), 0.002f); // Fasanengarten, funktioniert nicht?
 
-    texManager = new TextureManager();
-    mapGeometryGenerator = new MapGeometryGenerator(texManager);
     world = new World();
     mapDB = new OSMMapDB();
-    mapLoader = new MapLoader(mapCoordinator);
-    mapManager = new MapManager(Vec2f(0,0), mapLoader, mapGeometryGenerator, mapCoordinator, world, root);
+    mapManager = new MapManager(Vec2f(0,0), mapCoordinator, world, root);
 
     //mapCoordinator->altitude->showHeightArray(49.000070f, 8.401015f);
 }
@@ -50,33 +45,38 @@ RealWorld::RealWorld(VRObjectPtr root) {
 RealWorld::~RealWorld() {
     cout << "\nDESTRUCT REALWORLD\n";
 
-    delete texManager;
-    delete mapLoader;
-    delete mapDB;
     delete world;
-    delete mapGeometryGenerator;
+    delete mapDB;
     delete mapCoordinator;
     delete mapManager;
 }
 
-void RealWorld::update(OSG::Vec3f pos) { mapManager->updatePosition( OSG::Vec2f(pos[0], pos[2]) ); }
+RealWorld* RealWorld::singelton = 0;
 
-void RealWorld::enableModule(string mod) {
-    if (mod == "Ground") mapManager->addModule(new ModuleFloor(mapCoordinator, texManager));
-    if (mod == "Streets") mapManager->addModule(new ModuleStreets(mapDB, mapCoordinator, texManager));
-    if (mod == "Buildings") mapManager->addModule(new ModuleBuildings(mapDB, mapCoordinator, texManager));
-    if (mod == "Walls") mapManager->addModule(new ModuleWalls(mapDB, mapCoordinator, texManager));
-    if (mod == "Terrain") mapManager->addModule(new ModuleTerrain(mapDB, mapCoordinator, texManager));
-    if (mod == "Trees") mapManager->addModule(new ModuleTree(mapDB, mapCoordinator, texManager));
-    if (mod == "Traffic") {
-        auto tsim = new ModuleTraffic(mapDB, mapCoordinator, texManager);
-        trafficSimulation = tsim->getTrafficSimulation();
-        mapManager->addModule(tsim);
+RealWorld* RealWorld::get() { return singelton; }
+MapCoordinator* RealWorld::getCoordinator() { return mapCoordinator; }
+MapManager* RealWorld::getManager() { return mapManager; }
+World* RealWorld::getWorld() { return world; }
+OSMMapDB* RealWorld::getDB() { return mapDB; }
+TrafficSimulation* RealWorld::getTrafficSimulation() { return trafficSimulation; }
+void RealWorld::update(Vec3f pos) { mapManager->updatePosition( Vec2f(pos[0], pos[2]) ); }
+
+void RealWorld::enableModule(string mod, bool b) {
+    if (b) {
+        if (mod == "Ground") mapManager->addModule(new ModuleFloor());
+        if (mod == "Streets") mapManager->addModule(new ModuleStreets());
+        if (mod == "Buildings") mapManager->addModule(new ModuleBuildings());
+        if (mod == "Walls") mapManager->addModule(new ModuleWalls());
+        if (mod == "Terrain") mapManager->addModule(new ModuleTerrain());
+        if (mod == "Trees") mapManager->addModule(new ModuleTree());
+        if (mod == "Traffic") {
+            auto tsim = new ModuleTraffic();
+            trafficSimulation = tsim->getTrafficSimulation();
+            mapManager->addModule(tsim);
+        }
+    } else {
+        // TODO
     }
-}
-
-void RealWorld::disableModule(string mod) {
-    ;
 }
 
 void RealWorld::physicalize(bool b) {
@@ -86,4 +86,5 @@ void RealWorld::physicalize(bool b) {
     mapManager->physicalize(b);
 }
 
-TrafficSimulation* RealWorld::getTrafficSimulation() { return trafficSimulation; }
+
+

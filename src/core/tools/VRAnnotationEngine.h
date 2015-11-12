@@ -35,6 +35,7 @@ class VRAnnotationEngine : public VRGeometry {
 
         void clear();
         void set(int i, Vec3f p, string s);
+        int add(Vec3f p, string s);
 
         void setSize(float f);
         void setColor(Vec4f c);

@@ -22,6 +22,7 @@ struct VRPyTransform : VRPyBaseT<OSG::VRTransform> {
     static PyObject* getUp(VRPyTransform* self);
     static PyObject* getScale(VRPyTransform* self);
     static PyObject* getPose(VRPyTransform* self);
+    static PyObject* getWorldPose(VRPyTransform* self);
 
     static PyObject* setPose(VRPyTransform* self, PyObject* args);
     static PyObject* setWFrom(VRPyTransform* self, PyObject* args);
@@ -62,7 +63,9 @@ struct VRPyTransform : VRPyBaseT<OSG::VRTransform> {
     static PyObject* setDamping(VRPyTransform* self, PyObject* args);
     static PyObject* applyChange(VRPyTransform* self);
     static PyObject* setCenterOfMass(VRPyTransform* self, PyObject* args);
+    static PyObject* lastChanged(VRPyTransform* self);
 
+    static PyObject* setPointConstraints(VRPyTransform* self, PyObject* args);
     static PyObject* setPlaneConstraints(VRPyTransform* self, PyObject* args);
     static PyObject* setAxisConstraints(VRPyTransform* self, PyObject* args);
     static PyObject* setRotationConstraints(VRPyTransform* self, PyObject* args);

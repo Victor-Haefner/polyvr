@@ -61,11 +61,15 @@ VRScene::~VRScene() {
     root_system->destroy();
     VRGroup::clearGroups();
     VRLightBeacon::getAll().clear();
+    auto setupCam = *VRCamera::getAll().begin();
+    VRCamera::getAll().clear();
+    VRCamera::getAll().push_back(setupCam);
     VRMaterial::clearAll();
 }
 
 void VRScene::initDevices() { // TODO: remove this after refactoring the navigation stuff
     VRSetup* setup = VRSetupManager::getCurrent();
+    if (!setup) return;
 
     VRMouse* mouse = (VRMouse*)setup->getDevice("mouse");
     VRFlystick* flystick = (VRFlystick*)setup->getDevice("flystick");
@@ -144,7 +148,6 @@ void VRScene::setActiveCamera(string camname) {
     // TODO: refactor the following workaround
     VRCameraPtr cam = getActiveCamera();
     if (cam == 0) return;
-    cout << " set active camera to " << cam->getName() << endl;
 
     setDSCamera(cam);
 

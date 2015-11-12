@@ -52,7 +52,7 @@ ART::ART() {
     auto fkt2 = new VRFunction< weak_ptr<VRThread> >("ART_fetch", boost::bind(&ART::updateT, this, _1));
     VRSceneManager::get()->initThread(fkt2, "ART_fetch", true);
 
-    on_new_device = new VRSignal();
+    on_new_device = VRSignal::create();
 
     store("active", &active);
     store("port", &port);
@@ -193,6 +193,6 @@ void ART::startTestStream() {
     // TODO: create test data
 }
 
-VRSignal* ART::getSignal_on_new_art_device() { return on_new_device; }
+VRSignalPtr ART::getSignal_on_new_art_device() { return on_new_device; }
 
 OSG_END_NAMESPACE

@@ -39,6 +39,7 @@ struct VRMatData {
     BlendChunkRecPtr blendChunk;
     TextureEnvChunkRecPtr envChunk;
     TextureObjChunkRecPtr texChunk;
+    map<int, TextureObjChunkRecPtr> texChunks;
     TexGenChunkRecPtr genChunk;
     LineChunkRecPtr lineChunk;
     PointChunkRecPtr pointChunk;
@@ -131,6 +132,8 @@ map<string, VRMaterialWeakPtr> VRMaterial::materials;
 map<MaterialRecPtr, VRMaterialWeakPtr> VRMaterial::materialsByPtr;
 
 VRMaterial::VRMaterial(string name) : VRObject(name) {
+    auto scene = VRSceneManager::getCurrent();
+    if (scene) deferred = scene->getDefferedShading();
     type = "Material";
     addAttachment("material", 0);
     passes = MultiPassMaterial::create();
@@ -196,6 +199,7 @@ string VRMaterial::constructShaderFP(VRMatData* data) {
 }
 
 void VRMaterial::setDeffered(bool b) {
+    deferred = b;
     if (b) {
         for (uint i=0; i<mats.size(); i++) {
             if (mats[i]->shaderChunk != 0) continue;
@@ -238,6 +242,7 @@ int VRMaterial::addPass() {
     md->reset();
     passes->addMaterial(md->mat);
     mats.push_back(md);
+    setDeffered(deferred);
     return activePass;
 }
 
@@ -329,18 +334,18 @@ VRObjectPtr VRMaterial::copy(vector<VRObjectPtr> children) {
     return mat;
 }
 
-void VRMaterial::setLineWidth(int w) {
+void VRMaterial::setLineWidth(int w, bool smooth) {
     auto md = mats[activePass];
     if (md->lineChunk == 0) { md->lineChunk = LineChunk::create(); md->mat->addChunk(md->lineChunk); }
     md->lineChunk->setWidth(w);
-    md->lineChunk->setSmooth(true);
+    md->lineChunk->setSmooth(smooth);
 }
 
-void VRMaterial::setPointSize(int s) {
+void VRMaterial::setPointSize(int s, bool smooth) {
     auto md = mats[activePass];
     if (md->pointChunk == 0) { md->pointChunk = PointChunk::create(); md->mat->addChunk(md->pointChunk); }
     md->pointChunk->setSize(s);
-    md->pointChunk->setSmooth(true);
+    md->pointChunk->setSmooth(smooth);
 }
 
 void VRMaterial::saveContent(xmlpp::Element* e) {
@@ -432,7 +437,15 @@ void VRMaterial::setTextureParams(int min, int mag, int envMode, int wrapS, int 
     md->texChunk->setWrapT (wrapT);
 }
 
-/** Load a texture && apply it to the mesh as new material **/
+void VRMaterial::setTexture(TextureObjChunkRefPtr texChunk) {
+    auto md = mats[activePass];
+    if (md->texChunk) md->mat->subChunk(md->texChunk);
+    md->texChunk = texChunk;
+    md->mat->addChunk(md->texChunk);
+    if (md->envChunk == 0) { md->envChunk = TextureEnvChunk::create(); md->mat->addChunk(md->envChunk); }
+    md->envChunk->setEnvMode(GL_MODULATE);
+}
+
 void VRMaterial::setTexture(string img_path, bool alpha) { // TODO: improve with texture map
     if (boost::filesystem::exists(img_path))
         img_path = boost::filesystem::canonical(img_path).string();
@@ -467,6 +480,40 @@ void VRMaterial::setTexture(ImageRecPtr img, bool alpha) {
         md->blendChunk->setSrcFactor  ( GL_SRC_ALPHA           );
         md->blendChunk->setDestFactor ( GL_ONE_MINUS_SRC_ALPHA );
     }
+}
+
+void VRMaterial::setTexture(char* data, int format, Vec3i dims, bool isfloat) {
+    ImageRecPtr img = Image::create();
+
+    int pf = Image::OSG_RGB_PF;
+    if (format == 4) pf = Image::OSG_RGBA_PF;
+
+    int f = Image::OSG_UINT8_IMAGEDATA;
+    if (isfloat) f = Image::OSG_FLOAT32_IMAGEDATA;
+    img->set( pf, dims[0], dims[1], dims[2], 1, 1, 0, (const UInt8*)data, f);
+    if (format == 4) setTexture(img, true);
+    if (format == 3) setTexture(img, false);
+    setShaderParameter<int>("is3DTexture", dims[2] > 1);
+}
+
+TextureObjChunkRefPtr VRMaterial::getTexChunk(int unit) {
+    auto md = mats[activePass];
+    if (md->envChunk == 0) { md->envChunk = TextureEnvChunk::create(); md->mat->addChunk(md->envChunk); }
+    md->envChunk->setEnvMode(GL_MODULATE);
+
+    if (md->texChunks.count(unit) == 0) {
+        md->texChunks[unit] = TextureObjChunk::create();
+        md->mat->addChunk(md->texChunks[unit], unit);
+    }
+    md->texChunk = md->texChunks[unit];
+    return md->texChunks[unit];
+}
+
+void VRMaterial::setTextureAndUnit(ImageRecPtr img, int unit) {
+    if (img == 0) return;
+    auto md = mats[activePass];
+    auto texChunk = getTexChunk(unit);
+    texChunk->setImage(img);
 }
 
 void VRMaterial::setTextureType(string type) {
@@ -634,20 +681,7 @@ float VRMaterial::getTransparency() { return mats[activePass]->colChunk->getDiff
 bool VRMaterial::isLit() { return mats[activePass]->colChunk->getLit(); }
 
 ImageRecPtr VRMaterial::getTexture() { return mats[activePass]->texture; }
-
-void VRMaterial::setTexture(char* data, int format, Vec3i dims, bool isfloat) {
-    ImageRecPtr img = Image::create();
-
-    int pf = Image::OSG_RGB_PF;
-    if (format == 4) pf = Image::OSG_RGBA_PF;
-
-    int f = Image::OSG_UINT8_IMAGEDATA;
-    if (isfloat) f = Image::OSG_FLOAT32_IMAGEDATA;
-    img->set( pf, dims[0], dims[1], dims[2], 1, 1, 0, (const UInt8*)data, f);
-    if (format == 4) setTexture(img, true);
-    if (format == 3) setTexture(img, false);
-    setShaderParameter<int>("is3DTexture", dims[2] > 1);
-}
+TextureObjChunkRecPtr VRMaterial::getTextureObjChunk() { return mats[activePass]->texChunk; }
 
 void VRMaterial::initShaderChunk() {
     auto md = mats[activePass];

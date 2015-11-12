@@ -53,6 +53,7 @@ struct Term {
 
 struct Statement {
     string verb;
+    string verb_suffix;
     vector<Term> terms;
     int state = 0;
 
@@ -69,6 +70,7 @@ struct Query {
     Statement request;
     vector<Statement> statements;
 
+    Query();
     Query(string q);
     string toString();
 };
@@ -76,6 +78,7 @@ struct Query {
 struct Context {
     map<string, Variable> vars;
     map<string, Result> results;
+    map<string, Query> rules;
     list<Query> queries;
     VROntology* onto = 0;
 
@@ -89,6 +92,11 @@ struct Context {
 class VRReasoner {
     public:
         string pre = "  ?!?  ";
+        string redBeg  = "\033[0;38;2;255;150;150m";
+        string greenBeg = "\033[0;38;2;150;255;150m";
+        string blueBeg = "\033[0;38;2;150;150;255m";
+        string yellowBeg = "\033[0;38;2;255;255;150m";
+        string colEnd = "\033[0m";
 
         static vector<string> split(string s, string d);
         static vector<string> split(string s, char d);
@@ -100,7 +108,7 @@ class VRReasoner {
         bool evaluate(Statement& s, Context& c);
         bool is(Statement& s, Context& c);
         bool has(Statement& s, Context& c);
-        void pushQuery(Statement& s, Context& c);
+        bool findRule(Statement& s, Context& c);
 
     public:
         static VRReasoner* get();

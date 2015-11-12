@@ -3,14 +3,49 @@
   <Objects>
     <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
       <Object name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
-        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="0.540115 2.53801 1.06944" at="0.356428 2.41185 -1.27831" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
+        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="-0.795912 0.276627 2.08463" at="-0.0281699 0.0840961 0.170446" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
           <Object name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
         </Object>
       </Object>
     </Object>
   </Objects>
-  <Rendering deferred_rendering="0" frustum_culling="1" occlusion_culling="0" ssao="0" two_sided="1"/>
+  <Rendering deferred_rendering="0" frustum_culling="1" occlusion_culling="0" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts>
+    <Script name_suffix="0" base_name="click" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+
+	# Ignore drag stuff, this is an ordinary click
+	dev.intersect()
+	i = dev.getIntersected()
+	if not i: return
+	
+	if i.hasTag('sample'):
+		d = i.duplicate()
+		d.switchParent(VR.csgRoot)
+		d.setPickable(True)
+		m = VR.Material('obj')
+		d.makeUnique()
+		d.setMaterial(m)
+		d.addTag('object')
+		dev.drag(d)
+		return
+	
+	if i.hasTag('menu'):
+		VR.menus[i.getText()].execute()
+		VR.selectedObjects = []
+		return
+		
+	if i.isPickable():
+		if VR.clickAction == "select":
+			if not i.hasTag('sample') and not i in VR.selectedObjects: VR.cmdCsg('select', dev, '')
+		if VR.clickAction == "switchEditMode": VR.cmdCsg('switch', dev, '')
+		if VR.clickAction == "delete": VR.cmdCsg('del', dev, '')
+		
+</core>
+      <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" name_suffix="5" base_name="trigger" name_space="__global__"/>
+      <trig type="none" dev="flystick" state="Pressed" param="" key="0" name_suffix="6" base_name="trigger" name_space="__global__"/>
+    </Script>
     <Script name_suffix="0" base_name="cmdCsg" name_space="__script__" type="Python" mobile="">
       <core>
 	import VR
@@ -83,36 +118,26 @@
 	
 	sample = None
 	
-	if primitive == "sphere":
-		sample = VR.Geometry("sphere")
-		sample.setPrimitive("Sphere")
-		sample.setScale(.2, .2, .2)
-		sample.setFrom(0, 0, 0)
-		sample.setDir(0, 0, 1)
-	elif primitive == "cube":
-		sample = VR.Geometry("cube")
-		sample.setPrimitive("Box")
-		sample.setScale(.4, .4, .4)
+	if primitive == 'sphere':
+		sample = VR.Geometry('sphere')
+		sample.setPrimitive('Sphere 0.2 1')
+	elif primitive == 'cube':
+		sample = VR.Geometry('cube')
+		sample.setPrimitive('Box 0.4 0.4 0.4 1 1 1')
 		sample.setFrom(.5, 0, 0)
-		sample.setDir(0, 0, 1)
-	elif primitive == "cylinder":
-		sample = VR.Geometry("cylinder")
-		sample.setPrimitive("Cylinder")
-		sample.setScale(.2, .2, .2)
+	elif primitive == 'cylinder':
+		sample = VR.Geometry('cylinder')
+		sample.setPrimitive('Cylinder 0.2 0.2 16 1 1 1')
 		sample.setFrom(1, 0, 0)
-		sample.setDir(0, 0, 1)
-	elif primitive == "torus":
-		sample = VR.Geometry("torus")
-		sample.setPrimitive("Torus")
-		sample.setScale(.2, .2, .2)
+	elif primitive == 'torus':
+		sample = VR.Geometry('torus')
+		sample.setPrimitive('Torus 0.1 0.2 16 16')
 		sample.setFrom(-.6, 0, 0)
-		sample.setUp(0, 0, 1)
-		sample.setDir(0, 1, 0)
 	else:
 		print "Error: unknown primitive type:", primitive
 		return None
 	
-	sample.setPickable(True)
+	#sample.setPickable(True)
 	sample.setMaterial(VR.Material("sample material"))
 	sample.addTag('sample')
 	VR.sampleRoot.addChild(sample)
@@ -357,47 +382,19 @@
 	
 	VR.selectedObjects = []
 	
-	# Check if primitive roots already exist.
-	# This "fails" if there's a node "row root.2",
-	# but that in turn only exists if humans messed
-	# things up :)
-	oldRowRoot = VR.sampleRoot
-	if oldRowRoot:
-		oldRowRoot.destroy()
-		
-	oldCsgRoot = VR.csgRoot
-	if oldCsgRoot:
-		oldCsgRoot.destroy()
+	if hasattr(VR, 'csgRoot') and VR.csgRoot: VR.csgRoot.destroy()
+	VR.csgRoot = VR.Transform("csg root")
+	VR.root.addChild(VR.csgRoot)
 	
-	csgRoot = VR.Transform("csg root")
-	csgRoot.setFrom(.6, 1.8, -.7) # TODO same as rowRoot
-	csgRoot.setFrom(0,0,0)
-	csgRoot.setDir(0, 0, -1)
-	VR.root.addChild(csgRoot)
-	VR.csgRoot = csgRoot
-	
-	# TODO
-	# Couldn't figure out a way to implement
-	# Geometry.setMesh nicely yet.
-	# -&gt; VR.loadCollada from vrpSS14 branch
-	
-	# create primitive row parent
-	sampleRoot = VR.Transform("sample root")
-	sampleRoot.setFrom(.6, 1.8, -.7)
-	sampleRoot.setDir(0, 0, -1)
-	VR.root.addChild(sampleRoot)
-	VR.sampleRoot = sampleRoot
+	if hasattr(VR, 'sampleRoot') and VR.sampleRoot: VR.sampleRoot.destroy()
+	VR.sampleRoot = VR.Transform("sample root")
+	VR.root.addChild(VR.sampleRoot)
 	
 	# place sample primitives
-	VR.samplePrims = {}
 	sphere = VR.createSample("sphere")
-	VR.samplePrims[sphere.getName()] = sphere
 	cube = VR.createSample("cube")
-	VR.samplePrims[cube.getName()] = cube
 	cylinder = VR.createSample("cylinder")
-	VR.samplePrims[cylinder.getName()] = cylinder
 	torus = VR.createSample("torus")
-	VR.samplePrims[torus.getName()] = torus
 	
 </core>
     </Script>
@@ -428,104 +425,9 @@
 </core>
       <arg type="str" value="0" name_suffix="0" base_name="msg" name_space="showNotification"/>
     </Script>
-    <Script name_suffix="0" base_name="startDragTimer" name_space="__script__" type="Python" mobile="">
-      <core>
-	import VR
-	from datetime import datetime
-	
-	VR.dragStart = datetime.now()
-	
-</core>
-    </Script>
-    <Script name_suffix="0" base_name="stopDragTimer" name_space="__script__" type="Python" mobile="">
-      <core>
-	import VR
-	from datetime import datetime, timedelta
-	
-	dragStop = datetime.now()
-	clickTimeout = VR.dragStart + timedelta(microseconds=200000)
-	return dragStop &gt; clickTimeout
-	
-</core>
-    </Script>
-    <Script name_suffix="0" base_name="triggerDown" name_space="__script__" type="Python" mobile="">
-      <core>
-	import VR
-	
-	VR.startDragTimer()
-	VR.treeRedrawEnabled = False
-	target = dev.getDragged()
-	if target == None: return
-	VR.lastDragged = target
-		
-	print "down:", target.getName()
-	
-	if target.hasTag('sample'):
-		Type = target.getName().split('.')[0]
-		target.remTag('sample')
-		newSample = VR.createSample(Type)
-		if newSample: VR.samplePrims[Type] = newSample
-		
-</core>
-      <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" name_suffix="15" base_name="trigger" name_space="__global__"/>
-      <trig type="on_device" dev="flystick" state="Pressed" param="" key="0" name_suffix="6" base_name="trigger" name_space="__global__"/>
-    </Script>
-    <Script name_suffix="0" base_name="triggerUp" name_space="__script__" type="Python" mobile="">
-      <core>
-	import VR
-
-	VR.treeRedrawEnabled = True
-	isDrag = VR.stopDragTimer()
-	dragged = VR.lastDragged
-	i = dev.getIntersected()
-	if not dragged and not intersected: return
-	
-	# Cases:
-	# Nothing dragged/single click -&gt; intr + isDrag (true/false)
-	# Object dragged -&gt; dragged + isDrag (true)
-	
-	#if dragged: print "drag up:", dragged.getName(), "drag:", isDrag
-	#if i: print "intr up:", i.getName(), "drag:", isDrag
-	
-	if isDrag and dragged:
-		# Actual DnD operation
-		if dragged.getParent().getName() == "sample root":
-			print "Reparenting..."
-			worldPos = dragged.getWorldFrom()
-			dragDir = dragged.getDir()
-			rootPos = VR.csgRoot.getFrom()
-			newPos = [worldPos[0] - rootPos[0],
-					worldPos[1] - rootPos[1],
-					worldPos[2] - rootPos[2]]
-			dragged.switchParent(VR.csgRoot)
-			dragged.setFrom(newPos[0], newPos[1], newPos[2])
-			dragged.setDir(dragDir[0], dragDir[1], dragDir[2])
-		return
-
-	# Ignore drag stuff, this is an ordinary click
-	if not i: return
-	
-	if i.hasTag('menu'):
-		VR.menus[i.getText()].execute()
-		VR.selectedObjects = []
-		return
-		
-	if i.isPickable():
-		if VR.clickAction == "select":
-			if not i.hasTag('sample') and not i in VR.selectedObjects: VR.cmdCsg('select', dev, '')
-		if VR.clickAction == "switchEditMode": VR.cmdCsg('switch', dev, '')
-		if VR.clickAction == "delete": VR.cmdCsg('del', dev, '')
-		
-		
-		
-
-</core>
-      <trig type="on_device" dev="mouse" state="Released" param="" key="0" name_suffix="16" base_name="trigger" name_space="__global__"/>
-      <trig type="on_device" dev="flystick" state="Released" param="" key="0" name_suffix="7" base_name="trigger" name_space="__global__"/>
-    </Script>
   </Scripts>
   <Sockets/>
-  <Background color="1 1 1" format=".png" path="data/common/skybox/sky/Sky" type="0"/>
+  <Background color="0.40322 0.40322 0.40322" format=".png" path="data/common/skybox/sky/Sky" type="0"/>
   <Navigation active="Orbit"/>
   <Materials/>
 </Scene>

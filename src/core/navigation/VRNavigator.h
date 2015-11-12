@@ -7,37 +7,35 @@
 #include <string>
 #include <vector>
 #include "core/objects/VRObjectFwd.h"
+#include "core/utils/VRFunctionFwd.h"
+#include "core/utils/VRDeviceFwd.h"
 #include "core/utils/VRStorage.h"
 #include "core/utils/VRName.h"
-
-template<class T> class VRFunction;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRDevice;
-class VRSignal;
-class VRTransform;
-typedef VRFunction<VRDevice*> VRDevCb;
-
 struct VRNavBinding {
-    int key;
-    int state;
-    VRSignal* sig = 0;
-    VRDevCb* cb = 0;
+    int key = 0;
+    int state = 0;
+    VRSignalWeakPtr sig;
+    VRDeviceCb cb;
     string sig_name;
     string cb_name;
     bool doRepeat = false;
 
-    VRNavBinding(VRDevCb* c, int k, int s, bool repeat);
+    VRNavBinding(VRDeviceCb c, int k, int s, bool repeat);
+    ~VRNavBinding();
+
+    void clearSignal();
 };
 
 class VRNavPreset : public VRName {
     private:
         vector<VRNavBinding> bindings;
-        VRDevice* dev;
+        VRDevice* dev = 0;
         VRTransformPtr target;
-        bool active;
+        bool active = false;
         Vec2f speed;
 
     public:
@@ -59,7 +57,7 @@ class VRNavPreset : public VRName {
 
 class VRNavigator_base : public VRStorage {
     private:
-        map<string, VRDevCb*> library;
+        map<string, VRDeviceCb> library;
 
         VRNavPreset* current;
         string current_name;
@@ -78,9 +76,9 @@ class VRNavigator_base : public VRStorage {
         map<string, VRNavPreset*> getNavigations();
         vector<string> getNavigationNames();
 
-        void storeNavigationCallback(VRDevCb* cb);
-        map<string, VRDevCb*>& getNavigationCallbacks();
-        VRDevCb* getNavigationCallback(string s);
+        void storeNavigationCallback(VRDeviceCb cb);
+        map<string, VRDeviceCb>& getNavigationCallbacks();
+        VRDeviceCb getNavigationCallback(string s);
 };
 
 class VRNavigator : public VRNavigator_base {

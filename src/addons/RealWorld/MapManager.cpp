@@ -1,11 +1,18 @@
 #include "MapManager.h"
+#include "World.h"
+#include "MapCoordinator.h"
+#include <boost/format.hpp>
+#include "Modules/BaseModule.h"
 
-using namespace realworld;
+#include "OSM/OSMMap.h"
+#include "core/utils/toString.h"
+#include "core/utils/VRTimer.h"
+#include "core/objects/object/VRObject.h"
 
-MapManager::MapManager(Vec2f position, MapLoader* mapLoader, MapGeometryGenerator* mapGeometryGenerator, MapCoordinator* mapCoordinator, World* world, VRObjectPtr root) {
+using namespace OSG;
+
+MapManager::MapManager(Vec2f position, MapCoordinator* mapCoordinator, World* world, VRObjectPtr root) {
     this->position = position;
-    this->mapLoader = mapLoader;
-    this->mapGeometryGenerator = mapGeometryGenerator;
     this->mapCoordinator = mapCoordinator;
     this->world = world;
     this->root = root;
@@ -20,7 +27,7 @@ void MapManager::updatePosition(Vec2f worldPosition) {
     position = worldPosition;
     Vec2f bboxPosition = mapCoordinator->getRealBboxPosition(worldPosition);
 
-    float gs = mapCoordinator->gridSize;
+    float gs = mapCoordinator->getGridSize();
     vector<AreaBoundingBox*> bboxes;
     bboxes.push_back(new AreaBoundingBox(bboxPosition + Vec2f(-gs, -gs), gs));
     bboxes.push_back(new AreaBoundingBox(bboxPosition + Vec2f(0, -gs), gs));
@@ -43,6 +50,9 @@ void MapManager::updatePosition(Vec2f worldPosition) {
     for (auto b : toUnload) unloadBbox(b);
     for(auto bbox : bboxes) loadBboxIfNecessary(bbox); // load new bounding boxes
 }
+
+
+MapData* MapManager::loadMap(string filename) { return 0; }
 
 void MapManager::unloadBbox(AreaBoundingBox* bbox) {
     cout << "Unloading area: " << bbox->str << "\n" << flush;

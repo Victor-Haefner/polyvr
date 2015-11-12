@@ -23,8 +23,11 @@
 #include <gtkmm/paned.h>
 #include <gtksourceview/gtksourceview.h>
 #include <gtksourceview/gtksourcelanguagemanager.h>
+#include <gtksourceview/gtksourcecompletionprovider.h>
 #include <libxml++/nodes/element.h>
 #include <libxml++/libxml++.h>
+
+#include "VRCodeCompletion.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -349,7 +352,9 @@ void VRGuiScripts::on_select_script() { // selected a script
 
     // update editor content && script head
     string core = script->getHead() + script->getCore();
+    gtk_source_buffer_begin_not_undoable_action(VRGuiScripts_sourceBuffer);
     gtk_text_buffer_set_text(GTK_TEXT_BUFFER(VRGuiScripts_sourceBuffer), core.c_str(), core.size());
+    gtk_source_buffer_end_not_undoable_action(VRGuiScripts_sourceBuffer);
     adjustment->set_value(pages[script].line);
 
     // update arguments liststore
@@ -900,6 +905,74 @@ void VRGuiScripts::updateList() {
     on_select_script();
 }
 
+bool VRGuiScripts::on_shortkey( GdkEventKey* e ) {
+    if ( !(e->state & GDK_CONTROL_MASK) ) return false;
+
+    auto getCurrentLine = [&]() {
+        GtkTextIter itr;
+        auto b = GTK_TEXT_BUFFER(VRGuiScripts_sourceBuffer);
+        auto m = gtk_text_buffer_get_insert(b);
+        gtk_text_buffer_get_iter_at_mark( b, &itr, m);
+        return gtk_text_iter_get_line(&itr);
+        //return itr;
+    };
+
+    auto getLine = [&](int l) {
+        auto b = GTK_TEXT_BUFFER(VRGuiScripts_sourceBuffer);
+        GtkTextIter itr1;
+        gtk_text_buffer_get_iter_at_line_index(b, &itr1, l, 0);
+        GtkTextIter itr2 = itr1;
+        gtk_text_iter_forward_to_line_end(&itr2);
+        string data = gtk_text_buffer_get_slice(b, &itr1, &itr2, true);
+        return data;
+    };
+
+    auto insertLineAfter = [&](string line, int l) {
+        auto b = GTK_TEXT_BUFFER(VRGuiScripts_sourceBuffer);
+        GtkTextIter itr;
+        gtk_text_buffer_get_iter_at_line_index(b, &itr, l, 0);
+        line = line+"\n";
+        gtk_source_buffer_begin_not_undoable_action(VRGuiScripts_sourceBuffer);
+        gtk_text_buffer_insert(b, &itr, line.c_str(), line.length());
+        gtk_source_buffer_end_not_undoable_action(VRGuiScripts_sourceBuffer);
+    };
+
+    auto eraseLine = [&](int l) {
+        auto b = GTK_TEXT_BUFFER(VRGuiScripts_sourceBuffer);
+        GtkTextIter itr1;
+        gtk_text_buffer_get_iter_at_line_index(b, &itr1, l, 0);
+        GtkTextIter itr2 = itr1;
+        gtk_text_iter_forward_to_line_end(&itr2);
+        gtk_text_iter_forward_char(&itr2);
+        gtk_source_buffer_begin_not_undoable_action(VRGuiScripts_sourceBuffer);
+        gtk_text_buffer_delete(b, &itr1, &itr2);
+        gtk_source_buffer_end_not_undoable_action(VRGuiScripts_sourceBuffer);
+    };
+
+    if (e->keyval == 102) {// f
+        on_find_clicked();
+        return true;
+    }
+
+    if (e->keyval == 100) {// d
+        auto l = getCurrentLine();
+        string line = getLine(l);
+        insertLineAfter(line, l);
+        return true;
+    }
+
+    if (e->keyval == 116) {// t
+        auto l = getCurrentLine();
+        if (l == 0) return true;
+        string line = getLine(l-1);
+        insertLineAfter(line, l+1);
+        eraseLine(l-1);
+        return true;
+    }
+
+    return false;
+}
+
 void VRGuiScripts::initEditor() {
     // init source view editor
     GtkSourceLanguageManager* langMgr = gtk_source_language_manager_get_default();
@@ -917,6 +990,7 @@ void VRGuiScripts::initEditor() {
 
     // buffer changed callback
     g_signal_connect (VRGuiScripts_sourceBuffer, "changed", G_CALLBACK(VRGuiScripts_on_script_changed), this);
+    win->signal_key_release_event().connect( sigc::mem_fun(*this, &VRGuiScripts::on_shortkey) );
 
     // editor options
     gtk_source_view_set_tab_width (GTK_SOURCE_VIEW (editor), 4);
@@ -932,6 +1006,16 @@ void VRGuiScripts::initEditor() {
     pango_font_description_set_family (font_desc, "monospace");
     gtk_widget_modify_font (editor, font_desc);
     gtk_widget_show_all(editor);
+
+    auto provider = vr_code_completion_new();
+    auto completion = gtk_source_view_get_completion(GTK_SOURCE_VIEW(editor));
+    GError* error = NULL;
+    gtk_source_completion_add_provider(completion, GTK_SOURCE_COMPLETION_PROVIDER(provider), &error);
+    if (error != NULL) {
+        cout << "source view completion error: " << error->message << endl;
+        g_clear_error(&error);
+        g_error_free(error);
+    }
 }
 
 VRGuiScripts::VRGuiScripts() {

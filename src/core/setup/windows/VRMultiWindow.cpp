@@ -66,8 +66,8 @@ void VRMultiWindow::initialize() {
     win->setSize(width, height);
     win->setHServers(Nx);
     win->setVServers(Ny);
-    for (uint i=0; i< servers.size(); i++) win->editMFServers()->push_back(servers[i]);
-    for (uint i=0; i< views.size(); i++) views[i]->setWindow(win);
+    for (auto s : servers) win->editMFServers()->push_back(s);
+    for (auto v : views) v->setWindow(win);
 
     Thread::getCurrentChangeList()->commitChangesAndClear();
     Thread::getCurrentChangeList()->fillFromCurrentState();
@@ -75,7 +75,7 @@ void VRMultiWindow::initialize() {
     ClusterWindow::ConnectionCB cb = boost::bind(&VRMultiWindow::init_win, this, _1, _2, _3);
     win->initAsync(cb);
     if (state == CONNECTED) win->render(ract);
-    cout << " done" << endl;
+    cout << " done " << getStateString() << endl;
 }
 
 void VRMultiWindow::render() {

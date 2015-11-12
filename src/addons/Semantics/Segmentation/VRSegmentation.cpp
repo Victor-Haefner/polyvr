@@ -462,6 +462,7 @@ bool Edge::isLinked(Edge* E) {
             e = t->getOtherEdge(e,v);
             if (e == E) return true;
             if (e == this) break;
+            if (e == 0) break;
             t = e->other(t);
         }
     }

@@ -2,6 +2,7 @@
 #define VRMAININTERFACE_H_INCLUDED
 
 #include "OpenSG/OSGConfig.h"
+#include "core/utils/VRFunctionFwd.h"
 #include <string>
 
 OSG_BEGIN_NAMESPACE;
@@ -14,6 +15,7 @@ class VRMainInterface {
     private:
         VRMobile* mobile;
         string page;
+        VRDeviceCb clickCb;
 
         VRMainInterface();
         void on_scene_clicked(VRDevice* dev);

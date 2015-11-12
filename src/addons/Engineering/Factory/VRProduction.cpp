@@ -150,7 +150,7 @@ VRObjectPtr VRProduction::test() {
     mathOnto->addConcept("Box", "Volume");
     mathOnto->getConcept("Box")->addProperty("min", "Vector");
     mathOnto->getConcept("Box")->addProperty("max", "Vector");
-    mathOnto->addRule("inside(p,b):Box(b);Position(p);is_ge(p,b/min);is_ge(b/max,p)");
+    mathOnto->addRule("inside(p,b):Box(b);Position(p);isGe(p,b/min);isGe(b/max,p)");
     // TODO: quaternion rotation rule to change direction
 
     objectOnto->merge(mathOnto);

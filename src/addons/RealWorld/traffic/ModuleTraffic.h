@@ -1,59 +1,31 @@
 #ifndef MODULETRAFFIC_H
 #define MODULETRAFFIC_H
 
+#include "../Modules/BaseModule.h"
 #include "TrafficSimulation.h"
 
+OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-namespace realworld {
+class ModuleTraffic: public BaseModule {
+    private:
+        TrafficSimulation* simulation;
 
-    class ModuleTraffic: public BaseModule {
-        private:
-            OSMMapDB* mapDB;
-            TrafficSimulation* simulation;
+    public:
+        ModuleTraffic();
+        ~ModuleTraffic();
 
-        public:
-            ModuleTraffic(OSMMapDB* mapDB, MapCoordinator* mapCoordinator, TextureManager* texManager) : BaseModule(mapCoordinator, texManager) {
-                this->mapDB = mapDB;
-                this->simulation = new TrafficSimulation(mapCoordinator);
-            }
+        TrafficSimulation *getTrafficSimulation();
 
-            ~ModuleTraffic() {
-                delete simulation;
-            }
+        virtual void loadBbox(AreaBoundingBox* bbox);
+        virtual void unloadBbox(AreaBoundingBox* bbox);
 
-            virtual string getName() { return "ModuleTraffic"; }
+        void physicalize(bool b);
 
+        TrafficSimulation *getSimulation();
+};
 
-            TrafficSimulation *getTrafficSimulation() {
-                return simulation;
-            }
-
-            virtual void loadBbox(AreaBoundingBox* bbox) {
-                OSMMap* osmMap = mapDB->getMap(bbox->str);
-                if (!osmMap) return;
-
-                VRFunction<VRThreadWeakPtr>* func = new VRFunction<VRThreadWeakPtr>("trafficAddMap", boost::bind(&realworld::TrafficSimulation::addMap, simulation, osmMap));
-                VRSceneManager::get()->initThread(func, "trafficAddMap", false);
-            }
-
-            virtual void unloadBbox(AreaBoundingBox* bbox) {
-                OSMMap* osmMap = mapDB->getMap(bbox->str);
-                if (!osmMap) return;
-
-                // Not inside a thread since osmMap might no longer be valid after this method returns
-                simulation->removeMap(osmMap);
-            }
-
-            void physicalize(bool b) {
-                return;
-            }
-
-            TrafficSimulation *getSimulation() {
-                return simulation;
-            }
-    };
-}
+OSG_END_NAMESPACE;
 
 #endif // MODULETRAFFIC_H
 

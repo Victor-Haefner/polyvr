@@ -17,6 +17,7 @@ class Image; OSG_GEN_CONTAINERPTR(Image);
 class ShaderProgram; OSG_GEN_CONTAINERPTR(ShaderProgram);
 class ChunkMaterial; OSG_GEN_CONTAINERPTR(ChunkMaterial);
 class MultiPassMaterial; OSG_GEN_CONTAINERPTR(MultiPassMaterial);
+class TextureObjChunk; OSG_GEN_CONTAINERPTR(TextureObjChunk);
 
 struct VRMatData;
 
@@ -35,6 +36,7 @@ class VRMaterial : public VRObject {
         MultiPassMaterialRecPtr passes;
         vector<VRMatData*> mats;
         int activePass = 0;
+        bool deferred = false;
 
         VRObjectPtr copy(vector<VRObjectPtr> children);
 
@@ -73,10 +75,13 @@ class VRMaterial : public VRObject {
         void resetDefault();
 
         /** Load a texture && apply it to the mesh as new material **/
+        TextureObjChunkRefPtr getTexChunk(int unit);
+        void setTexture(TextureObjChunkRefPtr texChunk);
         void setTexture(string img_path, bool alpha = true);
         void setTexture(ImageRecPtr img, bool alpha = true);
         void setTexture(ImageRecPtr img, int type, bool alpha);
         void setTexture(char* data, int format, Vec3i dims, bool isfloat);
+        void setTextureAndUnit(ImageRecPtr img, int unit);
         void setTextureParams(int min, int mag, int envMode, int wrapS, int wrapT);
         void setTextureType(string type);
         void setQRCode(string s, Vec3f fg, Vec3f bg, int offset);
@@ -91,8 +96,8 @@ class VRMaterial : public VRObject {
         void setShininess(float s);
         void setEmission(Color3f c);
         void setTransparency(float t);
-        void setLineWidth(int w);
-        void setPointSize(int s);
+        void setLineWidth(int w, bool smooth = true);
+        void setPointSize(int s, bool smooth = true);
         void setWireFrame(bool b);
         void setZOffset(float factor, float bias);
         void setSortKey(int key);
@@ -140,11 +145,10 @@ class VRMaterial : public VRObject {
 
         /** Returns the texture || 0 **/
         ImageRecPtr getTexture();
+        TextureObjChunkRecPtr getTextureObjChunk();
 
         /** Deprecated  **/
         void printMaterialColors();
-
-        //void setLit(bool b) { getMesh()->getMaterial()->setLit(b); }//setLit only for simplematerials :/
 };
 
 OSG_END_NAMESPACE;

@@ -1,6 +1,7 @@
 #include "VRTree.h"
 
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/material/VRTextureGenerator.h"
 #include "core/scene/VRSceneManager.h"
 
 #include <OpenSG/OSGQuaternion.h>
@@ -79,6 +80,8 @@ float VRTree::variation(float val, float var) { return random(val*(1-var), val*(
 
 Vec3f VRTree::randUVec() { return Vec3f(random(-1,1), random(-1,1), random(-1,1)); }
 
+VRMaterialPtr VRTree::treeMat = 0;
+
 //rotate a vector with angle 'a' in a random direction
 Vec3f VRTree::randomRotate(Vec3f v, float a) {
     if (a == 0) return v;
@@ -122,7 +125,7 @@ void VRTree::grow(const seg_params& sp, segment* p, int iteration) {
     }
 }
 
-void VRTree::initMaterial() {
+VRMaterialPtr VRTree::initMaterial() {
     VRMaterialPtr mat = VRMaterial::create("tree_mat");
 
     mat->setDiffuse(Color3f(0.8,0.8,0.6));
@@ -135,7 +138,13 @@ void VRTree::initMaterial() {
     mat->readGeometryShader(wdir+"/shader/Trees/Shader_tree_base.gp");
     mat->setShaderParameter("texture", 0);
 
-    setMaterial(mat);
+	VRTextureGenerator tg;
+	tg.setSize(Vec3i(50,50,1));
+	tg.add("Perlin", 1, Vec3f(0.7,0.5,0.3), Vec3f(1,0.9,0.7));
+	tg.add("Perlin", 0.25, Vec3f(1,0.9,0.7), Vec3f(0.7,0.5,0.3));
+	mat->setTexture(tg.compose(0));
+
+    return mat;
 }
 
 void VRTree::initArmatureGeo() {
@@ -191,5 +200,10 @@ void VRTree::setup(int branching, int iterations, int seed,
 
     grow(sp, trunc);
     initArmatureGeo();
-    initMaterial();
+    if (!treeMat) treeMat = initMaterial();
+    setMaterial(treeMat);
 }
+
+
+
+

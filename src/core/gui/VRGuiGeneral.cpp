@@ -29,10 +29,34 @@ VRGuiGeneral::VRGuiGeneral() {
     setCheckButtonCallback("checkbutton_2", sigc::mem_fun(*this, &VRGuiGeneral::toggleTwoSided) );
     setCheckButtonCallback("checkbutton_3", sigc::mem_fun(*this, &VRGuiGeneral::toggleDefferedShader) );
     setCheckButtonCallback("checkbutton_4", sigc::mem_fun(*this, &VRGuiGeneral::toggleSSAO) );
-    setButtonCallback("button22", sigc::mem_fun(*this, &VRGuiGeneral::dumpOSG) );
+    setButtonCallback("checkbutton_4", sigc::mem_fun(*this, &VRGuiGeneral::toggleSSAO) );
+    setSliderCallback("hscale1", sigc::mem_fun(*this, &VRGuiGeneral::setSSAOradius) );
+    setSliderCallback("hscale2", sigc::mem_fun(*this, &VRGuiGeneral::setSSAOkernel) );
+    setSliderCallback("hscale3", sigc::mem_fun(*this, &VRGuiGeneral::setSSAOnoise) );
     setColorChooser("bg_solid", sigc::mem_fun(*this, &VRGuiGeneral::setColor) );
     setEntryCallback("entry42", sigc::mem_fun(*this, &VRGuiGeneral::setPath));
     setEntryCallback("entry14", sigc::mem_fun(*this, &VRGuiGeneral::setExtension));
+}
+
+bool VRGuiGeneral::setSSAOradius( Gtk::ScrollType st, double d ) {
+    if (updating) return false;
+    auto scene = VRSceneManager::getCurrent();
+    if (scene) scene->setSSAOradius( getSliderState("hscale1") );
+    return true;
+}
+
+bool VRGuiGeneral::setSSAOkernel( Gtk::ScrollType st, double d ) {
+    if (updating) return false;
+    auto scene = VRSceneManager::getCurrent();
+    if (scene) scene->setSSAOkernel( getSliderState("hscale2") );
+    return true;
+}
+
+bool VRGuiGeneral::setSSAOnoise( Gtk::ScrollType st, double d ) {
+    if (updating) return false;
+    auto scene = VRSceneManager::getCurrent();
+    if (scene) scene->setSSAOkernel( getSliderState("hscale3") );
+    return true;
 }
 
 void VRGuiGeneral::dumpOSG() {
@@ -86,42 +110,31 @@ void VRGuiGeneral::setMode() {
 void VRGuiGeneral::toggleDefferedShader() {
     if (updating) return;
     auto scene = VRSceneManager::getCurrent();
-    if (scene == 0) return;
-    scene->setDefferedShading( getCheckButtonState("checkbutton_3") );
+    if (scene) scene->setDefferedShading( getCheckButtonState("checkbutton_3") );
 }
 
 void VRGuiGeneral::toggleSSAO() {
     if (updating) return;
     auto scene = VRSceneManager::getCurrent();
-    if (scene == 0) return;
-    scene->setSSAO( getCheckButtonState("checkbutton_4") );
+    if (scene) scene->setSSAO( getCheckButtonState("checkbutton_4") );
 }
 
 void VRGuiGeneral::toggleFrustumCulling() {
     if (updating) return;
-
     auto scene = VRSceneManager::getCurrent();
-    if (scene == 0) return;
-
-    scene->setFrustumCulling( getCheckButtonState("checkbutton_01") );
+    if (scene) scene->setFrustumCulling( getCheckButtonState("checkbutton_01") );
 }
 
 void VRGuiGeneral::toggleOcclusionCulling() {
     if (updating) return;
-
     auto scene = VRSceneManager::getCurrent();
-    if (scene == 0) return;
-
-    scene->setOcclusionCulling( getCheckButtonState("checkbutton_02") );
+    if (scene) scene->setOcclusionCulling( getCheckButtonState("checkbutton_02") );
 }
 
 void VRGuiGeneral::toggleTwoSided() {
     if (updating) return;
-
     auto scene = VRSceneManager::getCurrent();
-    if (scene == 0) return;
-
-    scene->setTwoSided( getCheckButtonState("checkbutton_2") );
+    if (scene) scene->setTwoSided( getCheckButtonState("checkbutton_2") );
 }
 
 void VRGuiGeneral::updateScene() {

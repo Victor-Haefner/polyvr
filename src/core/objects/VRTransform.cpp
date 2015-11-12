@@ -361,6 +361,7 @@ void VRTransform::setPose(Vec3f from, Vec3f dir, Vec3f up) {
 
 void VRTransform::setPose(pose p) { setPose(p.pos(), p.dir(), p.up()); }
 pose VRTransform::getPose() { return pose(_from, getDir(), _up); }
+pose VRTransform::getWorldPose() { return pose(getWorldPosition(), getWorldDirection(), getWorldUp()); }
 
 /** Set the local matrix **/
 void VRTransform::setMatrix(Matrix _m) {
@@ -672,13 +673,19 @@ void VRTransform::apply_constraints() {
 
     //translation
     if (doTConstraint) {
-        if (tConPlane) {
+        if (tConMode == PLANE) {
             float d = Vec3f(t[3] - constraints_reference[3]).dot(tConstraint);
             for (int i=0; i<3; i++) t[3][i] -= d*tConstraint[i];
-        } else {
+        }
+
+        if (tConMode == LINE) {
             Vec3f d = Vec3f(t[3] - constraints_reference[3]);
             d = d.dot(tConstraint)*tConstraint;
             for (int i=0; i<3; i++) t[3][i] = constraints_reference[3][i] + d[i];
+        }
+
+        if (tConMode == POINT) {
+            for (int i=0; i<3; i++) t[3][i] = tConstraint[i];
         }
     }
 
@@ -705,10 +712,10 @@ void VRTransform::setRestrictionReference(Matrix m) { constraints_reference = m;
 void VRTransform::toggleTConstraint(bool b) { doTConstraint = b; if (b) getWorldMatrix(constraints_reference); if(!doRConstraint) setFixed(!b); }
 void VRTransform::toggleRConstraint(bool b) { doRConstraint = b; if (b) getWorldMatrix(constraints_reference); if(!doTConstraint) setFixed(!b); }
 void VRTransform::setTConstraint(Vec3f trans) { tConstraint = trans; if (tConstraint.length() > 1e-4) tConstraint.normalize(); }
-void VRTransform::setTConstraintMode(bool plane) { tConPlane = plane; }
+void VRTransform::setTConstraintMode(int mode) { tConMode = mode; }
 void VRTransform::setRConstraint(Vec3i rot) { rConstraint = rot; }
 
-bool VRTransform::getTConstraintMode() { return tConPlane; }
+bool VRTransform::getTConstraintMode() { return tConMode; }
 Vec3f VRTransform::getTConstraint() { return tConstraint; }
 Vec3i VRTransform::getRConstraint() { return rConstraint; }
 
@@ -747,7 +754,7 @@ void VRTransform::saveContent(xmlpp::Element* e) {
     e->set_attribute("cR", toString(rConstraint).c_str());
     e->set_attribute("do_cT", toString(doTConstraint).c_str());
     e->set_attribute("do_cR", toString(doRConstraint).c_str());
-    e->set_attribute("cT_mode", toString(int(tConPlane)).c_str());
+    e->set_attribute("cT_mode", toString(int(tConMode)).c_str());
 
     e->set_attribute("at_dir", toString(orientation_mode).c_str());
 }
@@ -765,7 +772,7 @@ void VRTransform::loadContent(xmlpp::Element* e) {
     setAt(a);
     update();
 
-    if (e->get_attribute("cT_mode")) tConPlane = toBool(e->get_attribute("cT_mode")->get_value());
+    if (e->get_attribute("cT_mode")) tConMode = toBool(e->get_attribute("cT_mode")->get_value());
     if (e->get_attribute("do_cT")) doTConstraint = toBool(e->get_attribute("do_cT")->get_value());
     if (e->get_attribute("do_cR")) doRConstraint = toBool(e->get_attribute("do_cR")->get_value());
     if (e->get_attribute("cT")) tConstraint = toVec3f(e->get_attribute("cT")->get_value());

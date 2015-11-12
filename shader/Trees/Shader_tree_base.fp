@@ -9,16 +9,15 @@ float fSpecularPower = 10.0;
 
 uniform sampler2D texture;
 
-varying in vec3 ViewDirection;
-varying in vec3 fvObjectPosition;
-varying in vec3 Normal;
-varying in vec2 texCoord;
+varying vec3 fvObjectPosition;
+varying vec3 Normal;
+varying vec2 texCoord;
 
 void main( void )
 {
    //gl_FragColor = gl_Color;
    //Normal = vec3(0,0,1.0);
-
+   vec3  ViewDirection = - fvObjectPosition.xyz;
 
    vec3  fvLightDirection = normalize( gl_LightSource[0].position.xyz - fvObjectPosition.xyz);
    vec3  fvNormal         = normalize( Normal );

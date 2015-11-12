@@ -2,6 +2,7 @@
 #define VRTRANSFORM_PHYSICS_EXT_H_INCLUDED
 
 #include "core/utils/VRStorage.h"
+#include "core/objects/VRObjectFwd.h"
 #include <btBulletDynamicsCommon.h>
 #include <OpenSG/OSGMatrix.h>
 #include <boost/thread/recursive_mutex.hpp>

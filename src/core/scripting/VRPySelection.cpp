@@ -48,6 +48,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRSelection>::type = {
 PyMethodDef VRPySelection::methods[] = {
     {"add", (PyCFunction)VRPySelection::add, METH_VARARGS|METH_KEYWORDS, "add to the selection - add(object)" },
     {"sub", (PyCFunction)VRPySelection::sub, METH_VARARGS|METH_KEYWORDS, "substract from the selection - sub(object)" },
+    {"append", (PyCFunction)VRPySelection::append, METH_VARARGS, "Append selection - append( selection)" },
     {"clear", (PyCFunction)VRPySelection::clear, METH_NOARGS, "clear selection - clear()" },
     {"getSelected", (PyCFunction)VRPySelection::getSelected, METH_NOARGS, "Return the selected objects - [object] getSelected()" },
     {"getPartialSelected", (PyCFunction)VRPySelection::getPartialSelected, METH_NOARGS, "Return the partially selected - [object] getPartialSelected()" },
@@ -76,6 +77,14 @@ PyObject* VRPySelection::sub(VRPySelection* self, PyObject* args, PyObject* kwar
     //VRPyGeometry* geo = 0;
     //if (!PyArg_ParseTuple(args, "O:sub", &geo)) return NULL;
     //self->objPtr->sub(geo->objPtr);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPySelection::append(VRPySelection* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    VRPySelection* sel = 0;
+    if (!PyArg_ParseTuple(args, "O:append", &sel)) return NULL;
+    self->objPtr->append(sel->objPtr);
     Py_RETURN_TRUE;
 }
 

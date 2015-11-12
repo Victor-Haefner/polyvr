@@ -31,6 +31,8 @@ class PolyVR {
         shared_ptr<VRSoundManager> sound_mgr;
         shared_ptr<VROptions> options;
 
+        void run();
+
     public:
         PolyVR();
         ~PolyVR();
@@ -38,7 +40,7 @@ class PolyVR {
         static void shutdown();
 
         void init(int argc, char **argv);
-        void start();
+        void start(bool runit = true);
         void startTestScene(Node* n);
 
         void setOption(string name, bool val);

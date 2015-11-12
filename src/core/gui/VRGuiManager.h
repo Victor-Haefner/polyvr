@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <string>
+#include <vector>
 #include "core/utils/VRFunctionFwd.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -11,7 +12,8 @@ using namespace std;
 class VRGuiManager {
     private:
         bool standalone = false;
-	    shared_ptr<VRFunction<int> > updatePtr;
+	    VRUpdatePtr updatePtr;
+	    vector<VRDeviceCb> guiSignalCbs;
 
         VRGuiManager();
 

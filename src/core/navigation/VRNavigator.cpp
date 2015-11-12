@@ -14,47 +14,44 @@ using namespace std;
 
 string VRN_toString(int i) { char buf[100]; sprintf(buf,"%d", i); return string(buf); }
 
-VRNavBinding::VRNavBinding(VRDevCb* c, int k, int s, bool repeat) {
+VRNavBinding::VRNavBinding(VRDeviceCb c, int k, int s, bool repeat) {
     cb = c;
     key = k;
     state = s;
     doRepeat = repeat;
-    sig = 0;
 }
 
+VRNavBinding::~VRNavBinding() {
+    clearSignal();
+}
 
+void VRNavBinding::clearSignal() {
+    if (auto sigp = sig.lock()) {
+        sigp->sub(cb);
+    }
+}
 
 VRNavPreset::VRNavPreset() {
     setNameSpace("NavPreset");
     setName("preset");
-    dev = 0;
-    target = 0;
-    active = false;
 }
 
-VRNavPreset::~VRNavPreset() {
-    for (uint i=0; i<bindings.size(); i++) {
-        VRNavBinding b = bindings[i];
-        if (b.sig) b.sig->sub(b.cb);
-    }
-    bindings.clear();
-}
+VRNavPreset::~VRNavPreset() {}
 
 void VRNavPreset::updateBinding(VRNavBinding& b) {
     if (!active) return;
     if (dev == 0) return;
-    if (b.sig) b.sig->sub(b.cb);
-    if (b.doRepeat) b.sig = dev->addSignal(b.key);
-    else b.sig = dev->addSignal( b.key, b.state);
-    b.sig->add(b.cb);
+    b.clearSignal();
+    auto sig = b.doRepeat ? dev->addToggleSignal(b.key) : dev->addSignal( b.key, b.state);
+    sig->add(b.cb);
+    b.sig = sig;
     //cout << "\nUPDATE BINDING " << b.cb->getName() << endl;
 }
 
 void VRNavPreset::setDevice(VRDevice* _dev) {
     dev = _dev;
     dev->setTarget(target);
-
-    for (uint i=0; i<bindings.size(); i++) updateBinding(bindings[i]);
+    for (auto& b : bindings) updateBinding(b);
 }
 
 void VRNavPreset::setTarget(VRTransformPtr _target) { target = _target; if (dev) dev->setTarget(target); }
@@ -62,14 +59,12 @@ void VRNavPreset::setTarget(VRTransformPtr _target) { target = _target; if (dev)
 void VRNavPreset::activate() {
     active = true;
     if (dev) dev->setSpeed(speed);
-    for (uint i=0; i<bindings.size(); i++) updateBinding(bindings[i]);
+    for (auto& b : bindings) updateBinding(b);
 }
 
 void VRNavPreset::deactivate() {
     active = false;
-    for (uint i=0; i<bindings.size(); i++) {
-        if (bindings[i].sig) bindings[i].sig->sub(bindings[i].cb);
-    }
+    for (auto& b : bindings) b.clearSignal();
 }
 
 vector<VRNavBinding>& VRNavPreset::getBindings() { return bindings; }
@@ -127,20 +122,24 @@ string VRNavigator_base::getActiveNavigation() { return current_name; }
 vector<string> VRNavigator_base::getNavigationNames() { vector<string> res; for(auto p : presets) res.push_back(p.first); return res; }
 map<string, VRNavPreset*> VRNavigator_base::getNavigations() { return presets; }
 
-void VRNavigator_base::storeNavigationCallback(VRDevCb* cb) { library[cb->getName()] = cb; }
-VRDevCb* VRNavigator_base::getNavigationCallback(string s) { if (library.count(s)) return library[s]; return 0; }
-map<string, VRDevCb*>& VRNavigator_base::getNavigationCallbacks() { return library; }
+void VRNavigator_base::storeNavigationCallback(VRDeviceCb cb) { library[cb->getName()] = cb; }
+VRDeviceCb VRNavigator_base::getNavigationCallback(string s) { if (library.count(s)) return library[s]; return 0; }
+map<string, VRDeviceCb>& VRNavigator_base::getNavigationCallbacks() { return library; }
 
 
 VRNavigator::VRNavigator() {
-    storeNavigationCallback( new VRDevCb( "mouse_orbit2d", boost::bind(&VRNavigator::orbit2D, this, _1) ) );
-    storeNavigationCallback( new VRDevCb( "mouse_orbit", boost::bind(&VRNavigator::orbit, this, _1) ) );
-    storeNavigationCallback( new VRDevCb( "mouse_zoom_in", boost::bind(&VRNavigator::zoom, this, _1, 1) ) );
-    storeNavigationCallback( new VRDevCb( "mouse_zoom_out", boost::bind(&VRNavigator::zoom, this, _1, -1) ) );
-    storeNavigationCallback( new VRDevCb( "mouse_focus", boost::bind(&VRNavigator::focus, this, _1) ) );
-    storeNavigationCallback( new VRDevCb( "mouse_walk", boost::bind(&VRNavigator::walk, this, _1) ) );
-    storeNavigationCallback( new VRDevCb( "fly_walk", boost::bind(&VRNavigator::fly_walk, this, _1) ) );
-    storeNavigationCallback( new VRDevCb( "hyd_walk", boost::bind(&VRNavigator::hyd_walk, this, _1) ) );
+    auto addNavCb = [&](string name, boost::function<void(VRDevice*)> fkt) {
+        storeNavigationCallback( VRDeviceCb( new VRFunction<VRDevice*>(name, fkt) ) );
+    };
+
+    addNavCb("mouse_orbit2d", boost::bind(&VRNavigator::orbit2D, this, _1) );
+    addNavCb("mouse_orbit", boost::bind(&VRNavigator::orbit, this, _1) );
+    addNavCb("mouse_zoom_in", boost::bind(&VRNavigator::zoom, this, _1, 1) );
+    addNavCb("mouse_zoom_out", boost::bind(&VRNavigator::zoom, this, _1, -1) );
+    addNavCb("mouse_focus", boost::bind(&VRNavigator::focus, this, _1) );
+    addNavCb("mouse_walk", boost::bind(&VRNavigator::walk, this, _1) );
+    addNavCb("fly_walk", boost::bind(&VRNavigator::fly_walk, this, _1) );
+    addNavCb("hyd_walk", boost::bind(&VRNavigator::hyd_walk, this, _1) );
 }
 
 VRNavigator::~VRNavigator() {}
@@ -191,6 +190,10 @@ void VRNavigator::orbit(VRDevice* dev) {
         camRef[1] = a;
     }
 
+    state = dev->b_state(dev->key());
+    //if (state < 0) return;
+    //cout << "orbit state " << dev->key() << " " << state << endl;
+
     // move cam
     mousePos -= mouseOnMouseDown;
     camDelta = camRef;
@@ -208,8 +211,6 @@ void VRNavigator::orbit(VRDevice* dev) {
 	camPos = Vec3f(cosa*cosb, sinb, sina*cosb)*camDelta[0] + target->getAt();
 	target->set_orientation_mode(false);
 	target->setFrom(camPos);
-
-    state = dev->b_state(dev->key());
 }
 
 void VRNavigator::walk(VRDevice* dev) {

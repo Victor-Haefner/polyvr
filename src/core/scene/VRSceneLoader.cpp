@@ -183,6 +183,7 @@ void VRSceneLoader::loadScene(string path) {
     // load scenegraph
     xmlpp::Element* objectsN = VRSceneLoader_getElementChild_(sceneN, "Objects");
     xmlpp::Element* root = VRSceneLoader_getElementChild_(objectsN, 0);
+    VRSceneManager::get()->closeScene();
     auto scene = VRScenePtr( new VRScene() );
     scene->setPath(path);
     VRSceneManager::get()->setWorkdir(scene->getWorkdir());
@@ -194,7 +195,7 @@ void VRSceneLoader::loadScene(string path) {
     VRSceneLoader_loadObject(scene, scene->getRoot(), root);
     timer.stop("total_time");
 
-    VRSceneManager::get()->addScene(scene);
+    VRSceneManager::get()->setScene(scene);
 
     scene->load(sceneN);
     //timer.print();

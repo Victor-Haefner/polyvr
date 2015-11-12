@@ -12,12 +12,14 @@ using namespace std;
 
 class VRSprite : public VRGeometry {
     protected:
-        string font;
+        string font = "SANS 20";
         Color4f fontColor;
         float width;
         float height;
         string label;
         shared_ptr<CEF> web;
+
+        void updateGeo();
 
     public:
         VRSprite (string name, bool alpha = true, float w = 0.5, float h = 0.5);

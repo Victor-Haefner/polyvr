@@ -48,6 +48,8 @@ PyMethodDef VRPyPose::methods[] = {
     {"dir", (PyCFunction)VRPyPose::dir, METH_VARARGS, "Get the direction - [x,y,z] dir()" },
     {"up", (PyCFunction)VRPyPose::up, METH_VARARGS, "Get the up vector - [x,y,z] up()" },
     {"set", (PyCFunction)VRPyPose::set, METH_VARARGS, "Set the pose - set([pos], [dir], [up])" },
+    {"mult", (PyCFunction)VRPyPose::mult, METH_VARARGS, "Transform a vector - mult([vec])" },
+    {"multInv", (PyCFunction)VRPyPose::multInv, METH_VARARGS, "Transform back a vector - multInv([vec])" },
     {NULL}  /* Sentinel */
 };
 
@@ -79,3 +81,22 @@ PyObject* VRPyPose::up(VRPyPose* self) {
     if (!self->valid()) return NULL;
     return toPyTuple( self->objPtr->up() );
 }
+
+PyObject* VRPyPose::mult(VRPyPose* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    auto v = parseVec3f(args);
+    auto m = self->objPtr->asMatrix();
+    m.mult(v,v);
+    return toPyTuple( v );
+}
+
+PyObject* VRPyPose::multInv(VRPyPose* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    auto v = parseVec3f(args);
+    auto m = self->objPtr->asMatrix();
+    m.invert();
+    m.mult(v,v);
+    return toPyTuple( v );
+}
+
+

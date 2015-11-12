@@ -19,15 +19,18 @@ class VRConstructionKit {
         VRObjectPtr root = 0;
 
         map<int, VRGeometryPtr> anchors;
-        map<VRTransformPtr, VRTransformPtr> objects;
+        map<VRTransform*, VRTransformPtr> objects;
 
         int ID();
 
     public:
         VRConstructionKit();
 
+        void clear();
+
         VRSnappingEngine* getSnappingEngine();
         VRSelector* getSelector();
+        vector<VRObjectPtr> getObjects();
 
         int addAnchorType(float size, Vec3f color);
         void addObject(VRTransformPtr t);

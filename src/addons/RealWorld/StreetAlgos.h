@@ -1,20 +1,27 @@
 #ifndef STREETALGOS_H
 #define	STREETALGOS_H
 
-#include "OpenSG/OSGConfig.h"
+#include <OpenSG/OSGVector.h>
 #include <string>
 #include <vector>
 #include <map>
 
-using namespace OSG;
+OSG_BEGIN_NAMESPACE;
 using namespace std;
-
-namespace realworld {
 
 struct StreetBorder;
 class StreetSegment;
 class StreetJoint;
 class JointPoints;
+
+struct StreetBorder {
+    string streetSegmentId;
+    Vec2f start;
+    Vec2f end;
+
+    StreetBorder(string streetSegmentId, Vec2f start, Vec2f end);
+    Vec2f dir();
+};
 
 class StreetAlgos {
     public:
@@ -27,9 +34,6 @@ class StreetAlgos {
         /** returns imporant points to a joint for one street segment */
         static JointPoints* segmentGetPointsFor(StreetSegment* seg, string jointId);
 
-        /** rémoves duplicate names from a given vector */
-        static void vectorStrRemoveDuplicates(vector<string> vec);
-
         /** calculates the important points of a given joint */
         static void calcSegments(StreetJoint* joint, map<string, StreetSegment*> streetSegments, map<string, StreetJoint*> streetJoints);
 
@@ -40,6 +44,6 @@ class StreetAlgos {
         static void jointOrderSegments(StreetJoint* joint, map<string, StreetSegment*> streetSegments, map<string, StreetJoint*> streetJoints);
 };
 
-}
+OSG_END_NAMESPACE;
 
 #endif	/* STREETALGOS_H */

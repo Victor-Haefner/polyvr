@@ -225,7 +225,7 @@ VRSocket::VRSocket(string _name) {
     http_serv = 0;
 
     queued_signal = VRFunction<int>::create("signal_trigger", boost::bind(&VRSocket::trigger, this));
-    sig = new VRSignal();
+    sig = VRSignal::create();
     setNameSpace("Sockets");
     setName(_name);
     http_serv = new HTTPServer();
@@ -235,7 +235,6 @@ VRSocket::~VRSocket() {
     run = false;
     //shutdown(socketID, SHUT_RDWR);
     VRSceneManager::get()->stopThread(threadID);
-    delete sig;
     if (http_args) delete http_args;
     if (http_serv) delete http_serv;
 }
@@ -491,7 +490,7 @@ void VRSocket::remHTTPPage(string path) { if (http_serv) http_serv->remPage(path
 string VRSocket::getType() { return type; }
 string VRSocket::getIP() { return IP; }
 string VRSocket::getCallback() { return callback; }
-VRSignal* VRSocket::getSignal() { return sig; }
+VRSignalPtr VRSocket::getSignal() { return sig; }
 int VRSocket::getPort() { return port; }
 
 bool VRSocket::ping(string IP, string port) {

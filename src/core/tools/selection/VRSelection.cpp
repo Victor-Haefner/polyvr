@@ -7,7 +7,7 @@ using namespace OSG;
 
 VRSelection::VRSelection() { clear(); }
 
-shared_ptr<VRSelection> VRSelection::create() { return shared_ptr<VRSelection>( new VRSelection() ); }
+VRSelectionPtr VRSelection::create() { return VRSelectionPtr( new VRSelection() ); }
 
 bool VRSelection::vertSelected(Vec3f p) { return false; }
 bool VRSelection::objSelected(VRGeometryPtr geo) { return false; }
@@ -25,20 +25,25 @@ void VRSelection::clear() {
     bbox.clear();
 }
 
-void VRSelection::apply(VRObjectPtr tree) {
+void VRSelection::apply(VRObjectPtr tree, bool force) {
     if (!tree) return;
-    auto geos = tree->getChildren(true, "Geometry");
-    if (tree->getType() == "Geometry") geos.push_back(tree);
-    for (auto g : geos) {
-        VRGeometryPtr geo = static_pointer_cast<VRGeometry>(g);
 
+    vector<VRGeometryPtr> geos;
+    for ( auto c : tree->getChildren(true) ) if (c->hasAttachment("geometry")) geos.push_back( static_pointer_cast<VRGeometry>(c) );
+    if ( tree->hasAttachment("geometry") ) geos.push_back( static_pointer_cast<VRGeometry>(tree) );
+
+    for (auto geo : geos) {
         selection_atom a;
         a.geo = geo;
-        if ( objSelected(geo) );
+        if ( objSelected(geo) || force);
         else if ( partialSelected(geo) ) a.partial = true;
         else continue;
         selected[geo.get()] = a;
     }
+}
+
+void VRSelection::append(VRSelectionPtr sel) {
+    ;
 }
 
 vector<VRGeometryWeakPtr> VRSelection::getPartials() {
@@ -49,7 +54,11 @@ vector<VRGeometryWeakPtr> VRSelection::getPartials() {
 
 vector<VRGeometryWeakPtr> VRSelection::getSelected() {
     vector<VRGeometryWeakPtr> res;
-    for (auto g : selected) if (!g.second.partial) res.push_back(g.second.geo);
+    for (auto g : selected) {
+        if (!g.second.partial) {
+            res.push_back(g.second.geo);
+        }
+    }
     return res;
 }
 

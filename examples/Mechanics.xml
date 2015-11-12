@@ -1,24 +1,81 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scene name_suffix="0" base_name="Mechanics" name_space="Scene">
   <Objects>
-    <Root name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
-      <Headlight name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
-        <Default name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="0.147204 0.0962766 0.307184" at="-0.0848603 -0.00400665 -0.01" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
-          <Headlight_beacon name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
-        </Default>
-      </Headlight>
-    </Root>
+    <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
+      <Object name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
+        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="1.61338 1.87879 3.23118" at="-0.83076 -0.145735 0.3" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
+          <Object name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
+        </Object>
+      </Object>
+    </Object>
   </Objects>
-  <Rendering frustum_culling="1" occlusion_culling="0"/>
+  <Rendering deferred_rendering="1" frustum_culling="1" occlusion_culling="0" ssao="1" ssao_kernel="6" ssao_noise="4" ssao_radius="0.105" two_sided="1"/>
   <Scripts>
-    <init core="&#9;import VR&#10;&#9;import math&#10;&#9;Pi = math.pi&#10;&#9;&#10;&#9;if hasattr(VR, 'mechanism'):&#10;&#9;&#9;VR.mechanism.destroy()&#10;&#9;&#9;&#10;&#9;VR.mechanism = VR.Transform('mechanism')&#10;&#9;root.addChild(VR.mechanism)&#10;&#9;&#10;&#9;VR.gears = [] # for animation&#10;&#9;&#10;&#9;def addGear(params):&#10;&#9;&#9;g = VR.Geometry('gear')&#10;&#9;&#9;g.setPrimitive(' '.join([str(i) for i in params]))&#10;&#9;&#9;VR.mechanism.addChild(g)&#10;&#9;&#9;return g&#10;&#9;&#9;&#10;&#9;# parameters&#10;&#9;gP = 0.02 # gear pitch&#10;&#9;gN = 32 # gear teeth number &#10;&#9;gR = gP*gN*0.5/Pi # gear radius&#10;&#9;gT = 0.02 # gear thickness&#10;&#9;gL = 0.01 # gear teeth length&#10;&#9;aR = 0.01 # axle radius&#10;&#9;&#9;&#10;&#9;g1 = addGear(['Gear', gT, aR, gP, int(1.5*gN), gL, 0])&#10;&#9;g2 = addGear(['Gear', gT, aR, gP, int(0.5*gN), gL, 0])&#10;&#9;g3 = addGear(['Gear', gT, aR, gP, int(0.5*gN), gL, -0.7])&#10;&#9;g4 = addGear(['Gear', gT, aR, gP, int(1.0*gN), gL, -0.7])&#10;&#9;&#10;&#9;g1.translate(-gR, 0, 0)&#10;&#9;g2.translate(gR, 0, 0)&#10;&#9;g3.translate(-gR, 0, gT)&#10;&#9;g4.translate(-gR, -0.5*gR, gR+gT)&#10;&#9;g4.rotate(1,0,0, -Pi*0.5)&#10;&#9;&#10;&#9;VR.gears.append([g1, 1, 1.5*gR])&#10;&#9;VR.gears.append([g2, -1, 0.5*gR])&#10;&#9;VR.gears.append([g3, 1, 1.5*gR])&#10;&#9;VR.gears.append([g4, -1, 3.0*gR])" type="Python" mobile="">
+    <Script name_suffix="0" base_name="init" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+	import math
+	Pi = math.pi
+	
+	if hasattr(VR, 'mechanism'):
+		VR.mechanism.destroy()
+		
+	VR.mechanism = VR.Transform('mechanism')
+	VR.mechanism.setScale(10,10,10)
+	root.addChild(VR.mechanism)
+	
+	VR.gears = [] # for animation
+	
+	def addGear(params):
+		g = VR.Geometry('gear')
+		g.setPrimitive(' '.join([str(i) for i in params]))
+		VR.mechanism.addChild(g)
+		return g
+		
+	# parameters
+	gP = 0.02 # gear pitch
+	gN = 32 # gear teeth number 
+	gR = gP*gN*0.5/Pi # gear radius
+	gT = 0.02 # gear thickness
+	gL = 0.01 # gear teeth length
+	aR = 0.01 # axle radius
+		
+	g1 = addGear(['Gear', gT, aR, gP, int(1.5*gN), gL, 0])
+	g2 = addGear(['Gear', gT, aR, gP, int(0.5*gN), gL, 0])
+	g3 = addGear(['Gear', gT, aR, gP, int(0.5*gN), gL, -0.7])
+	g4 = addGear(['Gear', gT, aR, gP, int(1.0*gN), gL, -0.7])
+	
+	g1.translate(-gR, 0, 0)
+	g2.translate(gR, 0, 0)
+	g3.translate(-gR, 0, gT)
+	g4.translate(-gR, -0.5*gR, gR+gT)
+	g4.rotate(1,0,0, -Pi*0.5)
+	
+	VR.gears.append([g1, 1, 1.5*gR])
+	VR.gears.append([g2, -1, 0.5*gR])
+	VR.gears.append([g3, 1, 1.5*gR])
+	VR.gears.append([g4, -1, 3.0*gR])
+</core>
       <arg type="VRPyObjectType" value="Headlight" name_suffix="0" base_name="root" name_space="init"/>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
-    </init>
-    <rotate core="&#9;import VR&#10;&#9;&#10;&#9;if not hasattr(VR, 'gears'):&#10;&#9;&#9;return&#10;&#9;&#10;&#9;for g in VR.gears:&#10;&#9;&#9;dr = 0.002/g[2]&#10;&#9;&#9;d = g[0].getDir()&#10;&#9;&#9;g[0].rotate(d[0], d[1], d[2], g[1]*dr)" type="Python" mobile="">
+    </Script>
+    <Script name_suffix="0" base_name="rotate" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+	
+	if not hasattr(VR, 'gears'):
+		return
+	
+	for g in VR.gears:
+		dr = 0.002/g[2]
+		d = g[0].getDir()
+		g[0].rotate(d[0], d[1], d[2], g[1]*dr)
+</core>
       <trig type="on_timeout" dev="" state="Pressed" param="50" key="0" name_suffix="1" base_name="trigger" name_space="__global__"/>
-    </rotate>
+    </Script>
   </Scripts>
   <Sockets/>
-  <Background color="0.6 0.6 0.6" path="" type="0"/>
+  <Background color="0.6 0.6 0.6" format=".png" path="" type="0"/>
+  <Navigation active="Orbit"/>
+  <Materials/>
 </Scene>

@@ -138,9 +138,19 @@ PyObject* VRPyBaseT<T>::allocPtr(PyTypeObject* type, std::shared_ptr<T> t) {
 
 template<class T> PyObject* VRPyBaseT<T>::New(PyTypeObject *type, PyObject *args, PyObject *kwds) { return alloc( type, new T() ); }
 template<class T> PyObject* VRPyBaseT<T>::New_ptr(PyTypeObject *type, PyObject *args, PyObject *kwds) { return allocPtr( type, T::create() ); }
-template<class T> PyObject* VRPyBaseT<T>::New_named(PyTypeObject *type, PyObject *args, PyObject *kwds) { return alloc( type, new T( parseString(args) ) ); }
-template<class T> PyObject* VRPyBaseT<T>::New_named_ptr(PyTypeObject *type, PyObject *args, PyObject *kwds) { return allocPtr( type, T::create( parseString(args) ) ); }
 template<class T> PyObject* VRPyBaseT<T>::New_toZero(PyTypeObject *type, PyObject *args, PyObject *kwds) { return alloc( type, 0 ); }
+
+template<class T> PyObject* VRPyBaseT<T>::New_named(PyTypeObject *type, PyObject *args, PyObject *kwds) {
+    const char* n = 0;
+    if (! PyArg_ParseTuple(args, "s", (char*)&n)) return NULL;
+    return alloc( type, new T( string(n) ) );
+}
+
+template<class T> PyObject* VRPyBaseT<T>::New_named_ptr(PyTypeObject *type, PyObject *args, PyObject *kwds) {
+    const char* n = 0;
+    if (! PyArg_ParseTuple(args, "s", (char*)&n)) return NULL;
+    return allocPtr( type, T::create( string(n) ) );
+}
 
 template<class T>
 PyObject* VRPyBaseT<T>::New_VRObjects_ptr(PyTypeObject *type, PyObject *args, PyObject *kwds) {

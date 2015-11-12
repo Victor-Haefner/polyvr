@@ -4,6 +4,7 @@
 #include "core/utils/VRName.h"
 #include "core/utils/VRStorage.h"
 #include "core/utils/VRFunctionFwd.h"
+#include "core/utils/VRDeviceFwd.h"
 #include "core/objects/VRObjectFwd.h"
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGMatrix.h>
@@ -54,7 +55,7 @@ class ART : public VRStorage {
         map<int, ART_device*> devices;
 
         VRUpdatePtr updatePtr;
-        VRSignal* on_new_device = 0;
+        VRSignalPtr on_new_device;
 
         template<typename dev>
         void getMatrix(dev t, ART_device* d);
@@ -86,7 +87,7 @@ class ART : public VRStorage {
 
         void startTestStream();
 
-        VRSignal* getSignal_on_new_art_device();
+        VRSignalPtr getSignal_on_new_art_device();
 };
 
 OSG_END_NAMESPACE

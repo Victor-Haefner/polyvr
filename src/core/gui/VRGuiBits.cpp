@@ -339,7 +339,6 @@ void VRGuiBits::update() { // scene changed
     setCombobox("combobox9", getListStorePos( "nav_presets", scene->getActiveNavigation() ) );
 
     // update setup && project label
-    cout << " now running: " << scene->getName() << endl;
     setLabel("label24", "Project: " + scene->getName());
 
     updateVisualLayer();

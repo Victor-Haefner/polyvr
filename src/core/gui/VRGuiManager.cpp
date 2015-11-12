@@ -67,27 +67,33 @@ VRGuiManager::VRGuiManager() {
     g_mon = new VRGuiMonitor();
     g_scene->updateTreeView();
 
-    VRDevCb* fkt;
-    fkt = new VRDevCb("GUI_updateSceneViewer", boost::bind(&VRGuiScene::updateTreeView, g_scene) );
+    VRDeviceCb fkt;
+    fkt = VRFunction<VRDevice*>::create("GUI_updateSceneViewer", boost::bind(&VRGuiScene::updateTreeView, g_scene) );
     VRGuiSignals::get()->getSignal("scene_modified")->add( fkt );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
     VRGuiSignals::get()->getSignal("camera_changed")->add(fkt);
+    guiSignalCbs.push_back(fkt);
 
-    fkt = new VRDevCb("GUI_updateBits", boost::bind(&VRGuiBits::update, g_bits) );
+    fkt = VRFunction<VRDevice*>::create("GUI_updateBits", boost::bind(&VRGuiBits::update, g_bits) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
     VRGuiSignals::get()->getSignal("camera_added")->add( fkt );
+    guiSignalCbs.push_back(fkt);
 
-    fkt = new VRDevCb("GUI_updateNav", boost::bind(&VRGuiNav::update, g_nav) );
+    fkt = VRFunction<VRDevice*>::create("GUI_updateNav", boost::bind(&VRGuiNav::update, g_nav) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
+    guiSignalCbs.push_back(fkt);
 
-    fkt = new VRDevCb("GUI_updateScripts", boost::bind(&VRGuiScripts::updateList, g_sc) );
+    fkt = VRFunction<VRDevice*>::create("GUI_updateScripts", boost::bind(&VRGuiScripts::updateList, g_sc) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
+    guiSignalCbs.push_back(fkt);
 
-    fkt = new VRDevCb("GUI_updateProtocols", boost::bind(&VRGuiNet::updateList, g_net) );
+    fkt = VRFunction<VRDevice*>::create("GUI_updateProtocols", boost::bind(&VRGuiNet::updateList, g_net) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
+    guiSignalCbs.push_back(fkt);
 
-    fkt = new VRDevCb("GUI_updateBackground", boost::bind(&VRGuiGeneral::updateScene, g_gen) );
+    fkt = VRFunction<VRDevice*>::create("GUI_updateBackground", boost::bind(&VRGuiGeneral::updateScene, g_gen) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
+    guiSignalCbs.push_back(fkt);
 
     updatePtr = VRFunction<int>::create("GUI_updateManager", boost::bind(&VRGuiManager::update, this) );
     VRSceneManager::get()->addUpdateFkt(updatePtr, 1);

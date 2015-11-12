@@ -10,6 +10,9 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+class VRSelection;
+typedef shared_ptr<VRSelection> VRSelectionPtr;
+
 class VRSelection {
     public:
         struct selection_atom {
@@ -32,10 +35,11 @@ class VRSelection {
     public:
         VRSelection();
 
-        static shared_ptr<VRSelection> create();
+        static VRSelectionPtr create();
 
         void add(VRGeometryPtr geo, vector<int> subselection = vector<int>());
-        void apply(VRObjectPtr tree);
+        void apply(VRObjectPtr tree, bool force = false);
+        void append(VRSelectionPtr sel);
         void clear();
 
         vector<VRGeometryWeakPtr> getPartials();

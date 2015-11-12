@@ -8,18 +8,13 @@
 #include <map>
 
 #include "core/objects/VRObjectFwd.h"
+#include "core/utils/VRDeviceFwd.h"
+#include "core/utils/VRFunctionFwd.h"
 
 template<class T> class VRFunction;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
-
-class VRDevice;
-class VRGeometry;
-class VRObject;
-class VRTransform;
-class VRSignal;
-typedef VRFunction<VRDevice*> VRDevCb;
 
 struct VRIntersection {
     bool hit = false;
@@ -42,8 +37,8 @@ class VRIntersect {
         bool dnd = true;//drag n drop
         bool showHit = false;//show where the hitpoint lies
 
-        VRSignal* dragSignal = 0;
-        VRSignal* dropSignal = 0;
+        VRSignalPtr dragSignal = 0;
+        VRSignalPtr dropSignal = 0;
         VRTransformWeakPtr dragged;
         VRTransformPtr dragged_ghost;
         uint drop_time = 0;
@@ -51,9 +46,9 @@ class VRIntersect {
         map<VRObject*, VRObjectWeakPtr> dynTrees;
         VRObjectWeakPtr dynTree;
 
-        map<VRObject*, VRDevCb* > int_fkt_map;
-        map<VRObject*, VRDevCb* > dra_fkt_map;
-        VRDevCb* drop_fkt;
+        map<VRObject*, VRDeviceCb > int_fkt_map;
+        map<VRObject*, VRDeviceCb > dra_fkt_map;
+        VRDeviceCb drop_fkt;
 
         void dragCB(VRTransformWeakPtr caster, VRObjectWeakPtr tree, VRDevice* dev = 0);
 
@@ -68,9 +63,9 @@ class VRIntersect {
         VRIntersection intersect();
         void drag(VRObjectWeakPtr obj, VRTransformWeakPtr caster);
         void drop(VRDevice* dev = 0);
-        VRDevCb* addDrag(VRTransformWeakPtr caster, VRObjectWeakPtr tree);
-        VRDevCb* addDrag(VRTransformWeakPtr caster);
-        VRDevCb* getDrop();
+        VRDeviceCb addDrag(VRTransformWeakPtr caster, VRObjectWeakPtr tree);
+        VRDeviceCb addDrag(VRTransformWeakPtr caster);
+        VRDeviceCb getDrop();
 
         void toggleDragnDrop(bool b);
         void showHitPoint(bool b);
@@ -81,8 +76,8 @@ class VRIntersect {
         void remDynTree(VRObjectWeakPtr o);
         void updateDynTree(VRObjectPtr a);
 
-        VRSignal* getDragSignal();
-        VRSignal* getDropSignal();
+        VRSignalPtr getDragSignal();
+        VRSignalPtr getDropSignal();
         VRTransformPtr getDraggedObject();
         VRTransformPtr getDraggedGhost();
         VRIntersection getLastIntersection();
