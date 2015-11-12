@@ -259,9 +259,10 @@ PyObject* VRPyObject::getChild(VRPyObject* self, PyObject* args) {
 PyObject* VRPyObject::getChildren(VRPyObject* self, PyObject* args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::getChild, Child is invalid"); return NULL; }
 
-    const char *ptype = 0; int doRecursive = 0;
+    const char* ptype = 0; int doRecursive = 0;
     if (! PyArg_ParseTuple(args, "|is", &doRecursive, (char*)&ptype)) return NULL;
-    vector<OSG::VRObjectPtr> objs = self->objPtr->getChildren(doRecursive, ptype);
+    string stype; if(ptype) stype = string(ptype);
+    vector<OSG::VRObjectPtr> objs = self->objPtr->getChildren(doRecursive, stype);
 
     PyObject* li = PyList_New(objs.size());
     for (uint i=0; i<objs.size(); i++) PyList_SetItem(li, i, VRPyTypeCaster::cast(objs[i]));

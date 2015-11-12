@@ -7,12 +7,12 @@
           <Object name_suffix="0" base_name="l2_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0.2 0.2 1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="l2"/>
           <Object name_suffix="0" base_name="strokes" name_space="__global__" type="Object" pickable="0" visible="1"/>
           <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="0 0 1" at="0 0 0" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472"/>
-          <Object name_suffix="0" base_name="Box" name_space="__global__" type="Geometry" pickable="1" visible="1" from="0.360226 -0.486896 0.232858" at="0.650246 -0.78194 -0.677547" up="-0.237546 0.899327 -0.367127" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" sourcetype="3" sourceparam="Box 0.2 0.2 0.2 1 1 1"/>
+          <Object name_suffix="0" base_name="Box" name_space="__global__" type="Geometry" pickable="1" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" sourcetype="3" sourceparam="Box 0.2 0.2 0.2 1 1 1"/>
         </Object>
       </Object>
     </Object>
   </Objects>
-  <Rendering frustum_culling="1" occlusion_culling="0" two_sided="1"/>
+  <Rendering deferred_rendering="0" frustum_culling="1" occlusion_culling="0" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts>
     <Script name_suffix="0" base_name="chooseColor" name_space="__script__" type="Python" mobile="">
       <core>
@@ -118,7 +118,7 @@
     </Script>
   </Scripts>
   <Sockets/>
-  <Background color="1 1 1" path="" type="0"/>
+  <Background color="1 1 1" format=".png" path="" type="0"/>
   <Navigation active="FlyWalk"/>
   <Materials/>
 </Scene>
