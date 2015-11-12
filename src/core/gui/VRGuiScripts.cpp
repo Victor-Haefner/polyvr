@@ -65,9 +65,10 @@ class VRGuiScripts_TrigsModelColumns : public Gtk::TreeModelColumnRecord {
 
 class VRGuiScripts_HelpColumns : public Gtk::TreeModelColumnRecord {
     public:
-        VRGuiScripts_HelpColumns() { add(obj); add(type); add(mod); }
+        VRGuiScripts_HelpColumns() { add(obj); add(type); add(cla); add(mod); }
         Gtk::TreeModelColumn<Glib::ustring> obj;
         Gtk::TreeModelColumn<Glib::ustring> type;
+        Gtk::TreeModelColumn<Glib::ustring> cla;
         Gtk::TreeModelColumn<Glib::ustring> mod;
 };
 
@@ -715,31 +716,34 @@ void VRGuiScripts::on_help_close_clicked() {
 }
 
 void VRGuiScripts::loadHelp() {
-    Glib::RefPtr<Gtk::TreeStore> tree_store = Glib::RefPtr<Gtk::TreeStore>::cast_static(VRGuiBuilder()->get_object("bindings"));
-    Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview6"));
-    tree_store->clear();
-
-    Gtk::TreeModel::iterator itr;
-    Gtk::TreeModel::iterator itr2;
-    Gtk::TreeStore::Row row;
+    Glib::RefPtr<Gtk::TreeStore> store = Glib::RefPtr<Gtk::TreeStore>::cast_static(VRGuiBuilder()->get_object("bindings"));
+    Glib::RefPtr<Gtk::TreeView> view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview6"));
+    store->clear();
 
     auto scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
-    vector<string> types = scene->getPyVRTypes();
-    for (uint i=0; i<types.size(); i++) {
-        itr = tree_store->append();
-        row = *itr;
-        gtk_tree_store_set (tree_store->gobj(), row.gobj(), 0, types[i].c_str(), -1);
-        gtk_tree_store_set (tree_store->gobj(), row.gobj(), 1, "module", -1);
-        gtk_tree_store_set (tree_store->gobj(), row.gobj(), 2, types[i].c_str(), -1);
 
-        vector<string> methods = scene->getPyVRMethods(types[i]);
-        for (uint j=0; j<methods.size(); j++) {
-            itr2 = tree_store->append(itr->children());
-            row = *itr2;
-            gtk_tree_store_set (tree_store->gobj(), row.gobj(), 0, methods[j].c_str(), -1);
-            gtk_tree_store_set (tree_store->gobj(), row.gobj(), 1, "method", -1);
-            gtk_tree_store_set (tree_store->gobj(), row.gobj(), 2, types[i].c_str(), -1);
+    auto setRow = [&](Gtk::TreeModel::iterator itr, string label, string type, string cla, string mod, string col = "#FFFFFF") {
+        Gtk::TreeStore::Row row = *itr;
+        gtk_tree_store_set (store->gobj(), row.gobj(), 0, label.c_str(), -1);
+        gtk_tree_store_set (store->gobj(), row.gobj(), 1, type.c_str(), -1);
+        gtk_tree_store_set (store->gobj(), row.gobj(), 2, cla.c_str(), -1);
+        gtk_tree_store_set (store->gobj(), row.gobj(), 3, mod.c_str(), -1);
+        gtk_tree_store_set (store->gobj(), row.gobj(), 4, col.c_str(), -1);
+    };
+
+    Gtk::TreeModel::iterator itr0, itr1, itr2;
+    for (auto mod : scene->getPyVRModules()) {
+        itr0 = store->append();
+        string modname = (mod == "VR") ? "VR" : "VR."+mod;
+        setRow(itr0, modname, "module", "", "", "#BBDDFF");
+        for (auto t : scene->getPyVRTypes(mod)) {
+            itr1 = store->append(itr0->children());
+            setRow(itr1, t, "class", t, mod);
+            for (auto m : scene->getPyVRMethods(mod, t) ) {
+                itr2 = store->append(itr1->children());
+                setRow(itr2, m, "method", t, mod);
+            }
         }
     }
 }
@@ -765,23 +769,25 @@ void VRGuiScripts::on_select_help() {
     Gtk::TreeModel::Row row = *iter;
     string obj = row.get_value(cols.obj);
     string type = row.get_value(cols.type);
+    string cla = row.get_value(cols.cla);
     string mod = row.get_value(cols.mod);
 
     auto scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
     Glib::RefPtr<Gtk::TextBuffer> tb  = Glib::RefPtr<Gtk::TextBuffer>::cast_static(VRGuiBuilder()->get_object("pydoc"));
 
-    if (type == "module") {
-        string doc = scene->getPyVRDescription(obj) + "\n\n";
-        for (auto method : scene->getPyVRMethods(obj)) {
-            string d = scene->getPyVRMethodDoc(mod, method);
+    tb->set_text(string());
+    if (type == "class") {
+        string doc = scene->getPyVRDescription(mod, obj) + "\n\n";
+        for (auto method : scene->getPyVRMethods(mod, obj)) {
+            string d = scene->getPyVRMethodDoc(mod, cla, method);
             doc += method + "\n\t" + d + "\n\n";
         }
         tb->set_text(doc);
     }
 
     if (type == "method") {
-        string doc = "\n" + scene->getPyVRMethodDoc(mod, obj);
+        string doc = "\n" + scene->getPyVRMethodDoc(mod, cla, obj);
         tb->set_text(doc);
     }
 }
