@@ -703,6 +703,8 @@ void VRTransform::updateFromBullet() {
     if (held) return;
     Matrix m = physics->getTransformation();
     setWorldMatrix(m);
+    auto vs = physics->getVisualShape();
+    if (vs && vs->isVisible()) vs->setWorldMatrix(m);
     setNoBltFlag();
 }
 

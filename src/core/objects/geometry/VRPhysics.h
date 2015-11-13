@@ -12,7 +12,6 @@ class btSoftRigidDynamicsWorld;
 
 using namespace std;
 
-namespace OSG{ class VRTransform; }
 namespace OSG{ class VRConstraint; }
 struct VRPhysicsJoint;
 class btPairCachingGhostObject;
@@ -68,6 +67,7 @@ class VRPhysics : public OSG::VRStorage {
         btVector3 constantTorque;
 
         OSG::VRTransformWeakPtr vr_obj;
+        OSG::VRGeometryPtr visShape;
         OSG::VRConstraint* constraint = 0;
         OSG::Vec3f scale;
 
@@ -83,6 +83,8 @@ class VRPhysics : public OSG::VRStorage {
         void update();
         void clear();
 
+        void updateVisualGeo();
+
     public:
         VRPhysics(OSG::VRTransformWeakPtr t);
         ~VRPhysics();
@@ -96,6 +98,7 @@ class VRPhysics : public OSG::VRStorage {
 
         void setShape(string s, float param = -1);
         string getShape();
+        OSG::VRTransformPtr getVisualShape();
 
         void setPhysicalized(bool b);
         bool isPhysicalized();

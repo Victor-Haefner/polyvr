@@ -1,18 +1,18 @@
+#include "VRPhysics.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
-#include "VRPhysics.h"
+#include "core/objects/material/VRMaterial.h"
+#include "core/objects/geometry/VRPrimitive.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRConstraint.h"
+#include "core/utils/VRVisualLayer.h"
+
 #include <OpenSG/OSGTriangleIterator.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
-
+#include <BulletCollision/CollisionShapes/btShapeHull.h>
 #include <BulletSoftBody/btSoftBodyRigidBodyCollisionConfiguration.h>
 #include <BulletSoftBody/btSoftBodyHelpers.h>
 #include <BulletSoftBody/btSoftRigidDynamicsWorld.h>
-
-
-#include "core/objects/geometry/VRPrimitive.h"
-
 
 
 typedef boost::recursive_mutex::scoped_lock Lock;
@@ -216,7 +216,7 @@ void VRPhysics::setCenterOfMass(OSG::Vec3f com) {
 
 void VRPhysics::clear() {
     auto scene = OSG::VRSceneManager::getCurrent();
-    if (scene) scene->unphysicalize(vr_obj);
+    if (scene) scene->unphysicalize(vr_obj.lock());
 
     if (scene) world = scene->bltWorld();
     else world = 0;
@@ -260,6 +260,9 @@ void VRPhysics::clear() {
 
     if (shape != 0) { delete shape; shape = 0; }
     if (motionState != 0) { delete motionState; motionState = 0; }
+
+    if (visShape) visShape->destroy();
+    visShape.reset();
 }
 
 void VRPhysics::update() {
@@ -287,7 +290,7 @@ void VRPhysics::update() {
         if (soft_body == 0) { return; }
         soft_body->setActivationState(activation_mode);
         world->addSoftBody(soft_body,collisionGroup, collisionMask);
-        scene->physicalize(vr_obj);
+        scene->physicalize(vr_obj.lock());
         updateConstraints();
         return;
     }
@@ -319,8 +322,12 @@ void VRPhysics::update() {
         body->setGravity(gravity);
     }
 
-    scene->physicalize(vr_obj);
+    scene->physicalize(vr_obj.lock());
     updateConstraints();
+
+    visShape = OSG::VRGeometry::create("phys_shape");
+    updateVisualGeo();
+    scene->getVisualLayer()->addObject(visShape);
 }
 
 btSoftBody* VRPhysics::createCloth() {
@@ -533,11 +540,77 @@ btCollisionShape* VRPhysics::getConcaveShape() {
     return shape;
 }
 
+OSG::VRTransformPtr VRPhysics::getVisualShape() { return visShape; }
+
+void VRPhysics::updateVisualGeo() {
+    auto geo = visShape;
+    if (!geo) return;
+    btCollisionShape* shape = getCollisionShape();
+    int stype = shape->getShapeType();
+
+    // 0 : box
+    // 4 : convex
+    // 8 : sphere
+    // 21 : concave
+
+    if (stype == 8) { // sphere
+        btSphereShape* sshape = (btSphereShape*)shape;
+        btScalar radius = sshape->getRadius();
+        stringstream params;
+        params << radius*1.01 << " 2";
+        geo->setPrimitive("Sphere", params.str());
+    }
+
+    if (stype == 0) { // box
+        btBoxShape* bshape = (btBoxShape*)shape;
+        btVector4 plane;
+        OSG::Vec3f dim;
+        bshape->getPlaneEquation(plane, 0); dim[0] = 2*(abs(plane[3]) + shape->getMargin());
+        bshape->getPlaneEquation(plane, 2); dim[1] = 2*(abs(plane[3]) + shape->getMargin());
+        bshape->getPlaneEquation(plane, 4); dim[2] = 2*(abs(plane[3]) + shape->getMargin());
+        stringstream params;
+        params << dim[0]*1.01 << " " << dim[1]*1.01 << " " << dim[2]*1.01 << " 1 1 1";
+        geo->setPrimitive("Box", params.str());
+    }
+
+    if (stype == 4) { // convex
+        btConvexHullShape* cshape = (btConvexHullShape*)shape;
+        btShapeHull hull(cshape);
+        hull.buildHull(cshape->getMargin());
+
+        int Ni = hull.numIndices();
+        int Nv = hull.numVertices();
+        const unsigned int* bt_inds =   hull.getIndexPointer();
+        const btVector3* verts = hull.getVertexPointer();
+
+        OSG::GeoPnt3fPropertyRecPtr pos = OSG::GeoPnt3fProperty::create();
+        OSG::GeoVec3fPropertyRecPtr norms = OSG::GeoVec3fProperty::create();
+        OSG::GeoUInt32PropertyRecPtr inds = OSG::GeoUInt32Property::create();
+
+        for (int i=0; i<Ni; i++) inds->addValue( bt_inds[i] );
+        for (int i=0; i<Nv; i++) {
+            OSG::Vec3f p = VRPhysics::toVec3f(verts[i]);
+            pos->addValue( p );
+            p.normalize();
+            norms->addValue( p );
+        }
+
+        geo->setType(GL_TRIANGLES);
+        geo->setPositions(pos);
+        geo->setNormals(norms);
+        geo->setIndices(inds);
+    }
+
+    auto mat = OSG::VRMaterial::get("phys_mat");
+    geo->setMaterial(mat);
+}
+
 void VRPhysics::updateTransformation(OSG::VRTransformWeakPtr t) {
     Lock lock(mtx());
     auto bt = fromVRTransform(t, scale, CoMOffset);
     if (body) { body->setWorldTransform(bt); body->activate(); }
     if (ghost_body) { ghost_body->setWorldTransform(bt); ghost_body->activate(); }
+    if (visShape && visShape->isVisible()) visShape->setWorldMatrix( getTransformation() );
 }
 
 btTransform VRPhysics::fromVRTransform(OSG::VRTransformWeakPtr t, OSG::Vec3f& scale, OSG::Vec3f mc) {
