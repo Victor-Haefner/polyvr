@@ -99,6 +99,7 @@
 			<Add directory="src" />
 			<Add directory="/usr/include/opensg" />
 			<Add directory="/usr/include/collada" />
+			<Add directory="/usr/include/STEPcode" />
 		</Compiler>
 		<Linker>
 			<Add option="-lcef" />
@@ -166,6 +167,15 @@
 			<Add option="-lfontconfig" />
 			<Add option="-lpangocairo-1.0" />
 			<Add option="-lcairo" />
+			<Add option="-lbase" />
+			<Add option="-lsdai_ap214e3" />
+			<Add option="-lstepdai" />
+			<Add option="-lsteputils" />
+			<Add option="-lexppp" />
+			<Add option="-lexpress" />
+			<Add option="-lstepcore" />
+			<Add option="-lstepeditor" />
+			<Add option="-lsteplazyfile" />
 			<Add option="-lpthread" />
 			<Add option="-ldl" />
 			<Add option="-lm" />
@@ -190,6 +200,7 @@
 			<Add directory="/usr/lib" />
 			<Add directory="/usr/lib/x86_64-linux-gnu" />
 			<Add directory="/usr/local/cuda/lib64" />
+			<Add directory="/usr/lib/STEPcode" />
 		</Linker>
 		<ExtraCommands>
 			<Add after='/bin/bash -c &quot;cp -u -p ressources/cef/icudtl.dat bin/Debug/ 2&gt;/dev/null&quot;' />
@@ -562,6 +573,8 @@
 		<Unit filename="src/core/scene/import/VRImport.h" />
 		<Unit filename="src/core/scene/import/VRPLY.cpp" />
 		<Unit filename="src/core/scene/import/VRPLY.h" />
+		<Unit filename="src/core/scene/import/VRSTEP.cpp" />
+		<Unit filename="src/core/scene/import/VRSTEP.h" />
 		<Unit filename="src/core/scripting/VRPyAnalyticGeometry.cpp" />
 		<Unit filename="src/core/scripting/VRPyAnalyticGeometry.h" />
 		<Unit filename="src/core/scripting/VRPyAnimation.cpp" />
