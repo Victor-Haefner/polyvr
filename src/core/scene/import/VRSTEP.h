@@ -7,7 +7,11 @@ class InstMgr;
 class SDAI_Application_instance;
 class STEPaggregate;
 #include <memory>
+#include <OpenSG/OSGConfig.h>
+#include <string>
+#include "core/objects/VRObjectFwd.h"
 
+OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRSTEP {
@@ -17,31 +21,25 @@ class VRSTEP {
         typedef shared_ptr<STEPfile> STEPfilePtr;
 
     private:
-        RegistryPtr registry = 0;
-        InstMgrPtr instances = 0;
-        STEPfilePtr sfile = 0;
+        RegistryPtr registry;
+        InstMgrPtr instances;
+        STEPfilePtr sfile;
 
         void loadT(string file, STEPfilePtr sfile, bool* done);
+        void open(string file);
+        string offset(int lvl);
+        void printEntity(SDAI_Application_instance *se, int lvl);
+        void printEntityAggregate(STEPaggregate *sa, int lvl);
+        void build2();
+        void build();
 
     public:
         VRSTEP();
 
-        void load(string file);
-
-
-        string offset(int lvl);
-
-        void printEntity(SDAI_Application_instance *se, int lvl);
-
-        void printEntityAggregate(STEPaggregate *sa, int lvl);
-
-        void build2();
-
-
-        void build();
-
-        void import(string file);
+        VRTransformPtr load(string file);
 };
+
+OSG_END_NAMESPACE;
 
 
 #endif // VRSTEP_H_INCLUDED

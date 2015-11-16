@@ -83,7 +83,7 @@ struct Geo {
     }
 };
 
-VRObjectPtr VRFactory::loadVRML(string path) { // wrl filepath
+VRTransformPtr VRFactory::loadVRML(string path) { // wrl filepath
     ifstream file(path);
     if (!file.is_open()) { cout << "file " << path << " not found" << endl; return 0; }
 
@@ -190,7 +190,7 @@ VRObjectPtr VRFactory::loadVRML(string path) { // wrl filepath
     file.close();
     cout << "\nloaded " << geos.size() << " geometries" << endl;
 
-    VRObjectPtr res = VRObject::create("factory");
+    VRTransformPtr res = VRTransform::create("factory");
     res->setPersistency(0);
 
     for (auto g : geos) {

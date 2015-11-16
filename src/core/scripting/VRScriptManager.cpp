@@ -229,7 +229,8 @@ initVRPyStdOut(void) {
 
 static PyMethodDef VRScriptManager_module_methods[] = {
 	{"exit", (PyCFunction)VRScriptManager::exit, METH_NOARGS, "Terminate application" },
-	{"loadGeometry", (PyCFunction)VRScriptManager::loadGeometry, METH_VARARGS|METH_KEYWORDS, "Loads a file and returns a VR.Object - obj loadGeometry(str path, bool cached, str preset, str parent)" },
+	{"loadGeometry", (PyCFunction)VRScriptManager::loadGeometry, METH_VARARGS|METH_KEYWORDS, "Loads a file and returns an object - obj loadGeometry(str path, bool cached = True, str preset = 'OSG', str parent = None)"
+                                                                                             "\n\tpreset can be: 'OSG', 'COLLADA', 'SOLIDWORKS-VRML2', 'PLY', 'STEP'" },
 	{"stackCall", (PyCFunction)VRScriptManager::stackCall, METH_VARARGS, "Schedules a call to a python function - stackCall( function, delay, [args] )" },
 	{"openFileDialog", (PyCFunction)VRScriptManager::openFileDialog, METH_VARARGS, "Open a file dialog - openFileDialog( onLoad, mode, title, default_path, filter )\n mode : {Save, Load, New, Create}" },
 	{"updateGui", (PyCFunction)VRScriptManager::updateGui, METH_NOARGS, "Update the gui" },
@@ -520,7 +521,7 @@ PyObject* VRScriptManager::loadGeometry(VRScriptManager* self, PyObject *args, P
 
     VRTransformPtr obj = VRImport::get()->load( path, prnt, ignoreCache, preset);
     if (obj == 0) {
-        VRGuiManager::get()->printInfo("Warning: " + string(path) + " not found.\n");
+        VRGuiManager::get()->printInfo("Warning: " + string(path) + " not loaded!\n");
         Py_RETURN_NONE;
     }
     obj->setPersistency(0);
