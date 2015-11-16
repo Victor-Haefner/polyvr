@@ -7,6 +7,8 @@ class InstMgr;
 class SDAI_Application_instance;
 typedef SDAI_Application_instance STEPentity;
 class STEPaggregate;
+class SDAI_Select;
+class STEPattribute;
 
 #include <memory>
 #include <string>
@@ -31,9 +33,12 @@ class VRSTEP {
 
         map<string, int> histogram;
 
-        map<void*, float> resScalar;
-        map<void*, Vec3f> resVec3f;
-        map<void*, pose> resPose;
+        string redBeg  = "\033[0;38;2;255;150;150m";
+        string colEnd = "\033[0m";
+
+        map<int, float> resScalar;
+        map<int, Vec3f> resVec3f;
+        map<int, pose> resPose;
         bool parseVec3f(STEPentity* se);
         bool parsePose(STEPentity* se);
 
@@ -41,6 +46,7 @@ class VRSTEP {
         void open(string file);
         string offset(int lvl);
         void traverseEntity(STEPentity* se, int lvl);
+        void traverseSelect(SDAI_Select* s, int lvl, STEPattribute* attr);
         void traverseAggregate(STEPaggregate* sa, int type, int lvl);
         void build();
 
