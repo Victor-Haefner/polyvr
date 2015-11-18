@@ -23,18 +23,19 @@ void VRFluids::setFunctions(int from, int to) {
     VRScenePtr scene = VRSceneManager::getCurrent();
     {
         BLock lock(mtx());
+        const bool after = false;
         // enable graphical updates
         scene->dropUpdateFkt(fkt);
         fkt = VRFunction<int>::create("particles_update", boost::bind(&VRParticles::update, this,from,to));
         scene->addUpdateFkt(fkt);
         // enable physic updates
-        scene->dropPhysicsUpdateFunction(fluidFkt.get(), false);
+        scene->dropPhysicsUpdateFunction(fluidFkt.get(), after);
         if (this->simulation == SPH) {
             fluidFkt = VRFunction<int>::create("sph_update", boost::bind(&VRFluids::updateXSPH, this,from,to));
         } else if (this->simulation == XSPH) {
             fluidFkt = VRFunction<int>::create("xsph_update", boost::bind(&VRFluids::updateSPH, this,from,to));
         }
-        scene->addPhysicsUpdateFunction(fluidFkt.get(), false);
+        scene->addPhysicsUpdateFunction(fluidFkt.get(), after);
     }
 }
 
@@ -87,7 +88,7 @@ inline void VRFluids::updateXSPH(int from, int to) {
                 n_origin = neighbour->body->getWorldTransform().getOrigin();
                 force += xsph_calc_movement(p, neighbour);
             }
-            force = p->body->getLinearVelocity() + CHAINING * force;
+            force = p->body->getLinearVelocity() + XSPH_CHAINING * force;
             p->body->setLinearVelocity(force);
             // use normal and color to hand over force and particle size to shaders
             Vec4f color(0,0,0, (*p).sphArea);
