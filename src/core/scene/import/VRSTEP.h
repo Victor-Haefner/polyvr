@@ -23,32 +23,9 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRSTEP {
-    private: // TODO: use ints (data IDs) instead of data directly
-        struct Circle {
-            pose p;
-            double r;
-        };
-
-        struct Cylinder {
-            pose p;
-            double r1, r2, h;
-        };
-
-        struct Box {
-            pose p;
-            double X, Y, Z;
-        };
-
-        struct EdgeCurve {
-            Vec3f start, end;
-            Circle c;
-            Line l;
-        };
-
-        struct OrientedEdge {
-            EdgeCurve ec;
-            bool dir;
-        };
+    private:
+        struct ClosedShell { vector<int> faces; }; //face
+        struct AdvancedBrepShapeRepresentation { string name; vector<int> items; }; //representation_item
 
     public:
         typedef shared_ptr<Registry> RegistryPtr;
@@ -70,30 +47,19 @@ class VRSTEP {
         string redBeg  = "\033[0;38;2;255;150;150m";
         string colEnd = "\033[0m";
 
-        map<int, Vec3f> resVec3f;
-        map<int, pose> resPose;
-        map<int, Circle> resCircle;
-        map<int, EdgeCurve> resEdgeCurve;
-        map<int, OrientedEdge> resOrientedEdge;
+        map<int, void*> resMap;
         map<int, VRGeometryPtr> resObject;
-        bool parseVector(STEPentity* se);
-        bool parsePose(STEPentity* se);
-        bool parseCircle(STEPentity* se);
-        bool parseEdgeCurve(STEPentity* se);
-        bool parseOrientedEdge(STEPentity* se);
+        bool parseClosedShell(STEPentity* se);
         bool parseAdvancedBrepShapeRepresentation(STEPentity* se);
 
-        template<class T> T query(STEPentity* e, string path);
-        template<class V, class T> V queryVec(STEPentity* se, string paths);
-
         map<string, Type> types;
-        void addType(string type, string path);
-        void parse(STEPentity* e, string path);
+        template<class T> void addType(string type, string path);
+        template<class T> void parse(STEPentity* e, string path);
 
         void loadT(string file, STEPfilePtr sfile, bool* done);
         void open(string file);
         string indent(int lvl);
-        vector<STEPentity*> getAggregateEntities(STEPattribute* attr);
+        vector<int> getAggregateEntities(STEPattribute* attr);
 
         void traverseEntity(STEPentity* se, int lvl);
         void traverseSelect(SDAI_Select* s, int lvl, STEPattribute* attr);

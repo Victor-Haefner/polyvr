@@ -6,6 +6,7 @@
 #include <thread>
 #include <unistd.h>
 #include <memory>
+#include <tuple>
 #include <boost/bind.hpp>
 
 #include "core/objects/geometry/VRGeometry.h"
@@ -38,21 +39,127 @@ VRSTEP::VRSTEP() {
     instances = InstMgrPtr( new InstMgr() ); // instances
     sfile = STEPfilePtr( new STEPfile( *registry, *instances, "", false ) ); // file
 
-    addType("Direction", "a1A0f|a1A1f|a1A2f");
-    addType("Cartesian_Point", "a1A0f|a1A1f|a1A2f");
+    addType< tuple<double, double, double> >("Direction", "a1A0f|a1A1f|a1A2f");
+    addType< tuple<double, double, double> >("Cartesian_Point", "a1A0f|a1A1f|a1A2f");
+    addType< tuple<int, double> >( "Circle", "a1se|a2f" );
+    addType< tuple<int, bool> >( "Oriented_Edge", "a3e|a4b" );
+    addType< tuple<int, int, int> >( "Edge_Curve", "a1ea1e|a2ea1e|a3e" );
+    addType< tuple<int, int, int> >( "Axis2_Placement_3d", "a1e|a2e|a3e" );
+    addType< tuple<int> >( "ManifoldSolidBrep", "a1e" );
 }
 
-void VRSTEP::addType(string type, string path) {
-    Type t;
-    t.path = path;
-    t.cb = VRFunction<STEPentity*>::create("STEPtypeCb", boost::bind( &VRSTEP::parse, this, _1, path ));
-    types[type] = t;
+template<class T> void VRSTEP::addType(string typeName, string path) {
+    Type type;
+    type.path = path;
+    type.cb = VRFunction<STEPentity*>::create("STEPtypeCb", boost::bind( &VRSTEP::parse<T>, this, _1, path ));
+    types[typeName] = type;
 }
 
-void VRSTEP::parse(STEPentity* e, string path) {
-    if (resVec3f.count(e->STEPfile_id)) return;
-    Vec3f v = queryVec<Vec3f, float>(e, path);
-    resVec3f[e->STEPfile_id] = v;
+void getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, string& t, char c) {
+    if (c == 'S') if (a) if (auto r = a->String() ) r->asStr(t);
+}
+
+void getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, int& t, char c) {
+    if (c == 'e') t = e->STEPfile_id;
+    if (c == 'i') if (a) if (auto r = a->Integer() ) t = *r;
+}
+
+void getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, double& t, char c) {
+    if (c == 'f') {
+        if (a) if (auto r = a->Real() ) t = *r;
+        if (an) t = ((RealNode*)an)->value;
+    }
+}
+
+void getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, bool& t, char c) {
+    if (c == 'b') if (a) if (auto r = a->Boolean() ) t = *r;
+}
+
+template<typename T> bool query(STEPentity* e, string path, T& t) {
+    auto toint = [](char c) { return int(c-'0'); };
+
+    int j = 1;
+    STEPattribute* curAttr = 0;
+    STEPaggregate* curAggr = 0;
+    SDAI_Select* curSel = 0;
+    SingleLinkNode* curAggrNode = 0;
+    for (int i=0; i<path.size(); i+=j) {
+        bool isLast = (i == path.size()-1);
+        j = 1;
+        auto c = path[i];
+        if (c == 'a') {
+            j = 2;
+            int ai = toint(path[i+1]);
+            curAttr = &e->attributes[ai];
+            curAggr = 0;
+        }
+        if (c == 'A') {
+            j = 2;
+            if (!curAttr) continue;
+            curAggr = curAttr->Aggregate();
+            if (!curAggr) { cout << "VRSTEP::query " << i << " is not an Aggregate!\n"; return false; }
+            if ('0' <= path[i+1] && path[i+1] <= '9') {
+                int Ai = toint(path[i+1]);
+                curAggrNode = curAggr->GetHead();
+                for (int i=0; i<Ai; i++) curAggrNode = curAggrNode->NextNode();
+            }
+            curAttr = 0;
+        }
+        if (c == 'e') {
+            if (curAttr) e = curAttr->Entity();
+            if (curSel) {
+                if (curSel->ValueType() != ENTITY_TYPE) { cout << "VRSTEP::query " << i << " is not an entity!\n"; return false; }
+                e = *((STEPentity**)curSel);
+            }
+        }
+        if (c == 's') {
+            if (!curAttr) continue;
+            curSel = curAttr->Select();
+            if (!curSel) { cout << "VRSTEP::query " << i << " is not a Select!\n"; return false; }
+            curAttr = 0;
+            curAggrNode = 0;
+        }
+        if (isLast) getValue(e, curAttr, curAggrNode, t, c);
+    }
+    return false;
+}
+
+template<class V, class T> bool queryVec(STEPentity* se, string paths, V& v) {
+    int i=0;
+    for (auto p : splitString(paths, '|')) {
+        if (!query<T>(se, p, v[i])) return false;
+        i++;
+    }
+    return true;
+}
+
+// helper function to set tuple members
+template<class T, size_t N> struct Setup {
+    static void setup(const T& t, STEPentity* e, vector<string>& paths) {
+        Setup<T, N-1>::setup(t, e, paths);
+        auto v = get<N-1>(t);
+        query(e, paths[N-1], v);
+    }
+};
+
+template<class T> struct Setup<T, 1> {
+    static void setup(const T& t, STEPentity* e, vector<string>& paths) {
+        auto v = get<0>(t);
+        query(e, paths[0], v);
+    }
+};
+
+template<class... Args> void setup(const tuple<Args...>& t, STEPentity* e, string paths) {
+    auto vpaths = splitString(paths, '|');
+    Setup<decltype(t), sizeof...(Args)>::setup(t, e, vpaths);
+}
+// end helper function
+
+template<class T> void VRSTEP::parse(STEPentity* e, string path) {
+    if (resMap.count(e->STEPfile_id)) return;
+    T* t = new T();
+    setup(*t, e, path);
+    resMap[e->STEPfile_id] = t;
 }
 
 void VRSTEP::open(string file) {
@@ -68,162 +175,37 @@ void VRSTEP::open(string file) {
     t.join();
 }
 
-
 string VRSTEP::indent(int lvl) {
     string s;
     for ( int i=0; i< lvl; i++) s += "    ";
     return s;
 }
 
-template<class T> T VRSTEP::query(STEPentity* e, string path) {
-    auto toint = [](char c) { return int(c-'0'); };
-
-    int j = 1;
-    STEPattribute* curAttr = 0;
-    STEPaggregate* curAggr = 0;
-    SingleLinkNode* curAggrNode = 0;
-    for (int i=0; i<path.size(); i+=j) {
-        j = 1;
-        auto c = path[i];
-        if (c == 'a') {
-            j = 2;
-            int ai = toint(path[i+1]);
-            curAttr = &e->attributes[ai];
-            curAggr = 0;
-        }
-        if (c == 'A') {
-            j = 2;
-            if (!curAttr) continue;
-            curAggr = curAttr->Aggregate();
-            if (!curAggr) { cout << "VRSTEP::query " << i << " is not an Aggregate!\n"; return 0; }
-            if ('0' <= path[i+1] && path[i+1] <= '9') {
-                int Ai = toint(path[i+1]);
-                curAggrNode = curAggr->GetHead();
-                for (int i=0; i<Ai; i++) curAggrNode = curAggrNode->NextNode();
-            }
-            curAttr = 0;
-        }
-        if (c == 'f') {
-            if (curAttr) if (auto r = curAttr->Real() ) return *r;
-            if (curAggrNode) return ((RealNode*)curAggrNode)->value;
-        }
-    }
-
-    return 0;
-}
-
-template<class V, class T> V VRSTEP::queryVec(STEPentity* se, string paths) {
-    vector<string> pathsv = splitString(paths, '|');
-    V v; int i=0;
-    for (auto p : pathsv) { v[i] = query<T>(se, p); i++; }
-    return v;
-}
-
-bool VRSTEP::parseCircle(STEPentity* se) {
-    if (resCircle.count(se->STEPfile_id)) return true;
-    if (se->AttributeCount() != 3) return false;
-    auto sPos = se->attributes[1].Select(); if (!sPos) return false;
-    auto r = se->attributes[2].Real(); if (!r) return false;
-    if (sPos->ValueType() != ENTITY_TYPE) return false;
-    auto ap = (SdaiAxis2_placement*)sPos;
-    if (!ap->IsAxis2_placement_3d()) return false;
-    SdaiAxis2_placement_3d* ap3 = *ap; // entity
-    if (!parsePose((STEPentity*)ap3)) return false;
-    Circle c;
-    c.p = resPose[ap3->STEPfile_id];
-    c.r = *r;
-    resCircle[se->STEPfile_id] = c;
-    return true;
-}
-
-bool VRSTEP::parseOrientedEdge(STEPentity* se) {
-    if (resOrientedEdge.count(se->STEPfile_id)) return true;
-    if (se->AttributeCount() != 5) return false;
-    auto ec = se->attributes[3].Entity(); if (!ec) return false;
-    auto b  = se->attributes[4].Boolean(); if (!b) return false;
-    if (!resEdgeCurve.count(ec->STEPfile_id)) if (!parseEdgeCurve(ec)) return false;
-    OrientedEdge oe;
-    oe.ec = resEdgeCurve[ec->STEPfile_id];
-    oe.dir = *b;
-    resOrientedEdge[se->STEPfile_id] = oe;
-    return true;
-}
-
-bool VRSTEP::parseEdgeCurve(STEPentity* se) {
-    if (resEdgeCurve.count(se->STEPfile_id)) return true;
-    if (se->AttributeCount() != 5) return false;
-    auto start1 = se->attributes[1].Entity(); if (!start1) return false;
-    auto end1   = se->attributes[2].Entity(); if (!end1)   return false;
-    auto geo    = se->attributes[3].Entity(); if (!geo) return false;
-    if (start1->AttributeCount() != 2) return false;
-    if (end1  ->AttributeCount() != 2) return false;
-    auto start2 = start1->attributes[1].Entity(); if (!start2) return false;
-    auto end2   = end1  ->attributes[1].Entity(); if (!end2)   return false;
-    //if (!parseVec3f(start2)) return false;
-    //if (!parseVec3f(end2)) return false;
-    EdgeCurve ec;
-    ec.start = resVec3f[start2->STEPfile_id];
-    ec.end   = resVec3f[end2->STEPfile_id];
-    if (parseCircle(geo)) ec.c = resCircle[geo->STEPfile_id];
-    //if (parseLine(geo))   ec.l = resLine[geo->STEPfile_id];
-    resEdgeCurve[se->STEPfile_id] = ec;
-    return true;
-}
-
-bool VRSTEP::parseVector(STEPentity* se) {
-    if (resVec3f.count(se->STEPfile_id)) return true;
-    if (se->AttributeCount() != 3) return false;
-    auto dir = se->attributes[1].Entity(); if (!dir) return false;
-    auto L   = se->attributes[2].Real();   if (!L) return false;
-    //if (!parseVec3f(dir)) return false;
-    Vec3f v = resVec3f[dir->STEPfile_id];
-    v *= *L;
-    resVec3f[se->STEPfile_id] = v;
-    return true;
-}
-
-bool VRSTEP::parsePose(STEPentity* se) {
-    if (resPose.count(se->STEPfile_id)) return true;
-    if (se->AttributeCount() != 4) return false;
-    vector<STEPentity*> ents(3);
-    vector<STEPattribute*> attribs(3);
-    for (int i=0; i<3; i++) {
-        attribs[i] = &se->attributes[i+1];
-        if (attribs[i]->BaseType() != 256) return false;
-    }
-    for (int i=0; i<3; i++) {
-        ents[i] = attribs[i]->Entity();
-        //if (!parseVec3f(ents[i])) return false;
-    }
-    resPose[se->STEPfile_id] = pose( resVec3f[ents[0]->STEPfile_id],
-                                     resVec3f[ents[1]->STEPfile_id],
-                                     resVec3f[ents[2]->STEPfile_id] );
-    return true;
+bool VRSTEP::parseClosedShell(STEPentity* se) {
+    auto* s = new ClosedShell();
+    s->faces = getAggregateEntities(&se->attributes[1]);
+    resMap[se->STEPfile_id] = s; return true;
 }
 
 bool VRSTEP::parseAdvancedBrepShapeRepresentation(STEPentity* se) {
-    if (string(se->EntityName()) != "Advanced_Brep_Shape_Representation") return false;
-    if (resObject.count(se->STEPfile_id)) return true;
-    if (se->AttributeCount() != 3) return false;
-    SDAI_String* sname = se->attributes[0].String(); if (!sname) return false;
-    string name; sname->asStr(name);
-
-    auto ents = getAggregateEntities(&se->attributes[1]);
-    for (auto e : ents) {
-        ;
-    }
-
-    auto res = VRGeometry::create(name);
-    resObject[se->STEPfile_id] = res;
-    return true;
+    auto* s = new AdvancedBrepShapeRepresentation();
+    if ( !query(se, "a0S", s->name) ) return false;
+    s->items = getAggregateEntities(&se->attributes[1]);
+    resMap[se->STEPfile_id] = s; return true;
 }
 
-vector<STEPentity*> VRSTEP::getAggregateEntities(STEPattribute* attr) {
-    vector<STEPentity*> res;
+/*{
+    auto res = VRGeometry::create(name);
+    resObject[se->STEPfile_id] = res; return true;
+}*/
+
+vector<int> VRSTEP::getAggregateEntities(STEPattribute* attr) {
+    vector<int> res;
     if (attr->BaseType() != ENTITY_TYPE) return res;
     auto aggr = attr->Aggregate(); if (!aggr) return res;
     for( auto sn = (EntityNode*)aggr->GetHead(); sn != NULL; sn = (EntityNode*)sn->NextNode()) {
-        res.push_back( (STEPentity*)sn->node );
+        auto e = (STEPentity*)sn->node;
+        res.push_back( e->STEPfile_id );
     }
     return res;
 }
@@ -236,14 +218,13 @@ void VRSTEP::traverseEntity(STEPentity *se, int lvl) {
     if (k) cout << indent(lvl) << "Entity: " << redBeg << se->EntityName() << " (id: " << se->STEPfile_id << ")" << colEnd << " Type: " << se->getEDesc()->Type() << endl;
     else cout << indent(lvl) << "Entity: " << se->EntityName() << " (id: " << se->STEPfile_id << " ) Type: " << se->getEDesc()->Type() << endl;
 
-    if (types.count(type)) (*types[type].cb)(se);
+    if (types.count(type)) { (*types[type].cb)(se); return; }
 
-    if ( parseVector(se) ) return;
-    if ( parsePose(se) ) return;
-    if ( parseCircle(se) ) return;
-    if ( parseEdgeCurve(se) ) return;
-    if ( parseOrientedEdge(se) ) return;
-    if ( parseAdvancedBrepShapeRepresentation(se) ) return;
+    if (resMap.count(se->STEPfile_id)) return;
+    if ( type == "ClosedShell" && parseClosedShell(se) ) return;
+    if ( type == "Advanced_Brep_Shape_Representation" && parseAdvancedBrepShapeRepresentation(se) ) return;
+
+//    if (resObject.count(se->STEPfile_id)) return;
 
     STEPattribute* attr;
     se->ResetAttributes();
@@ -334,8 +315,7 @@ void VRSTEP::build() {
     }
 
     cout << "build results:\n";
-    cout << resVec3f.size() << " vectors\n";
-    cout << resPose.size() << " poses\n";
+    cout << resMap.size() << " instances\n";
     cout << resObject.size() << " objects\n";
 
     /*cout << "Type enum:\n";
