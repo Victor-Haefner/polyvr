@@ -6,7 +6,6 @@
 #include <thread>
 #include <unistd.h>
 #include <memory>
-#include <tuple>
 #include <boost/bind.hpp>
 
 #include "core/objects/geometry/VRGeometry.h"
@@ -39,40 +38,115 @@ VRSTEP::VRSTEP() {
     instances = InstMgrPtr( new InstMgr() ); // instances
     sfile = STEPfilePtr( new STEPfile( *registry, *instances, "", false ) ); // file
 
-    addType< tuple<double, double, double> >("Direction", "a1A0f|a1A1f|a1A2f");
-    addType< tuple<double, double, double> >("Cartesian_Point", "a1A0f|a1A1f|a1A2f");
     addType< tuple<int, double> >( "Circle", "a1se|a2f" );
+    /*addType< tuple<double, double, double> >("Direction", "a1A0f|a1A1f|a1A2f");
+    addType< tuple<double, double, double> >("Cartesian_Point", "a1A0f|a1A1f|a1A2f");
     addType< tuple<int, bool> >( "Oriented_Edge", "a3e|a4b" );
-    addType< tuple<int, int, int> >( "Edge_Curve", "a1ea1e|a2ea1e|a3e" );
+    addType< tuple<int, int, int> >( "Edge_Curve", "a1e|a2e|a3e" );
     addType< tuple<int, int, int> >( "Axis2_Placement_3d", "a1e|a2e|a3e" );
-    addType< tuple<int> >( "ManifoldSolidBrep", "a1e" );
+    addType< tuple<int> >( "Manifold_Solid_Brep", "a1e" );
+    addType< tuple<int> >( "Plane", "a1e" );
+    addType< tuple<int, double> >( "Cylindrical_Surface", "a1e|a2f" );
+    addType< tuple<int, int> >( "Line", "a1e|a2e" );
+    addType< tuple<int, double> >( "Vector", "a1e|a2f" );
+    addType< tuple<int> >( "Vertex_Point", "a1e" );
+    addType< tuple<int, bool> >( "Face_Bound", "a1e|a2b" );
+    addType< tuple<int, bool> >( "Face_Outer_Bound", "a1e|a2b" );
+    addType< tuple<vector<int>, int, bool> >( "Advanced_Face", "a1Ve|a2e|a3b" );
+    addType< tuple<string, vector<int> > >( "Advanced_Brep_Shape_Representation", "a0S|a1Ve" );
+    addType< tuple<vector<int> > >( "Closed_Shell", "a1Ve" );
+    addType< tuple<vector<int> > >( "Edge_Loop", "a1Ve" );*/
+
+    blacklist["Application_Context"] = 1;
+    blacklist["Application_Protocol_Definition"] = 1;
+    blacklist["Applied_Person_And_Organization_Assignment"] = 1;
+    blacklist["Context_Dependent_Shape_Representation"] = 1;
+    blacklist["Conversion_Based_Unit"] = 1;
+    blacklist["Dimensional_Exponents"] = 1;
+    blacklist["Draughting_Pre_Defined_Colour"] = 1;
+    blacklist["Fill_Area_Style"] = 1;
+    blacklist["Fill_Area_Style_Colour"] = 1;
+    blacklist["Geometric_Representation_Context"] = 1;
+    blacklist["Item_Defined_Transformation"] = 1;
+    blacklist["Length_Unit"] = 1;
+    blacklist["Mechanical_Design_Geometric_Presentation_Representation"] = 1;
+    blacklist["Named_Unit"] = 1;
+    blacklist["Next_Assembly_Usage_Occurrence"] = 1;
+    blacklist["Organization"] = 1;
+    blacklist["Person"] = 1;
+    blacklist["Person_And_Organization"] = 1;
+    blacklist["Person_And_Organization_Role"] = 1;
+    blacklist["Plane_Angle_Measure_With_Unit"] = 1;
+    blacklist["Presentation_Layer_Assignment"] = 1;
+    blacklist["Presentation_Style_Assignment"] = 1;
+    blacklist["Product"] = 1;
+    blacklist["Product_Category"] = 1;
+    blacklist["Product_Context"] = 1;
+    blacklist["Product_Definition"] = 1;
+    blacklist["Product_Definition_Context"] = 1;
+    blacklist["Product_Definition_Formation_With_Specified_Source"] = 1;
+    blacklist["Product_Definition_Shape"] = 1;
+    blacklist["Product_Related_Product_Category"] = 1;
+    blacklist["Representation_Relationship"] = 1;
+    blacklist["Shape_Definition_Representation"] = 1;
+    blacklist["Shape_Representation"] = 1;
+    blacklist["Shape_Representation_Relationship"] = 1;
+    blacklist["Styled_Item"] = 1;
+    blacklist["Surface_Side_Style"] = 1;
+    blacklist["Surface_Style_Fill_Area"] = 1;
+    blacklist["Surface_Style_Usage"] = 1;
+    blacklist["Uncertainty_Measure_With_Unit"] = 1;
 }
 
 template<class T> void VRSTEP::addType(string typeName, string path) {
     Type type;
     type.path = path;
-    type.cb = VRFunction<STEPentity*>::create("STEPtypeCb", boost::bind( &VRSTEP::parse<T>, this, _1, path ));
+    type.cb = VRFunction<STEPentity*>::create("STEPtypeCb", boost::bind( &VRSTEP::parse<T>, this, _1, path, typeName ));
     types[typeName] = type;
 }
 
-void getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, string& t, char c) {
-    if (c == 'S') if (a) if (auto r = a->String() ) r->asStr(t);
+bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, string& t, char c) {
+    if (c == 'S') if (a) if (auto r = a->String() ) { r->asStr(t); return true; }
+    return false;
 }
 
-void getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, int& t, char c) {
-    if (c == 'e') t = e->STEPfile_id;
-    if (c == 'i') if (a) if (auto r = a->Integer() ) t = *r;
-}
-
-void getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, double& t, char c) {
-    if (c == 'f') {
-        if (a) if (auto r = a->Real() ) t = *r;
-        if (an) t = ((RealNode*)an)->value;
+bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, int& t, char c) {
+    if (c == 'e') {
+        if (e) { t = e->STEPfile_id; return true; }
+        if (an) { t = ((STEPentity*)((EntityNode*)an)->node)->STEPfile_id; return true; }
     }
+    if (c == 'i') if (a) if (auto r = a->Integer() ) { t = *r; return true; }
+    return false;
 }
 
-void getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, bool& t, char c) {
-    if (c == 'b') if (a) if (auto r = a->Boolean() ) t = *r;
+bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, double& t, char c) {
+    if (c == 'f') {
+        if (a) if (auto r = a->Real() ) { t = *r; return true; }
+        if (an) { t = ((RealNode*)an)->value; return true; }
+    }
+    return false;
+}
+
+bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, bool& t, char c) {
+    if (c == 'b') if (a) if (auto r = a->Boolean() ) { t = *r; return true; }
+    return false;
+}
+
+template<typename T> bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, vector<T>& vec, char t) {
+    for( ; an != NULL; an = an->NextNode() ) {
+        T v;
+        if (!getValue(0,0,an,v,t)) return false;
+        vec.push_back(v);
+    }
+    return true;
+}
+
+STEPentity* getSelectEntity(SDAI_Select* s) { // TODO
+    auto ap = (SdaiAxis2_placement*)s;
+    if (!ap->IsAxis2_placement_3d()) { cout << "getSelectEntity, not an placement 3d!\n"; return 0; }
+    SdaiAxis2_placement_3d* ap3 = *ap; // entity
+    auto e = (STEPentity*)ap3;
+    return e;
 }
 
 template<typename T> bool query(STEPentity* e, string path, T& t) {
@@ -87,12 +161,14 @@ template<typename T> bool query(STEPentity* e, string path, T& t) {
         bool isLast = (i == path.size()-1);
         j = 1;
         auto c = path[i];
+
         if (c == 'a') {
             j = 2;
             int ai = toint(path[i+1]);
             curAttr = &e->attributes[ai];
             curAggr = 0;
         }
+
         if (c == 'A') {
             j = 2;
             if (!curAttr) continue;
@@ -105,13 +181,15 @@ template<typename T> bool query(STEPentity* e, string path, T& t) {
             }
             curAttr = 0;
         }
+
         if (c == 'e') {
             if (curAttr) e = curAttr->Entity();
             if (curSel) {
                 if (curSel->ValueType() != ENTITY_TYPE) { cout << "VRSTEP::query " << i << " is not an entity!\n"; return false; }
-                e = *((STEPentity**)curSel);
+                e = getSelectEntity(curSel);
             }
         }
+
         if (c == 's') {
             if (!curAttr) continue;
             curSel = curAttr->Select();
@@ -119,47 +197,59 @@ template<typename T> bool query(STEPentity* e, string path, T& t) {
             curAttr = 0;
             curAggrNode = 0;
         }
-        if (isLast) getValue(e, curAttr, curAggrNode, t, c);
+
+        if (c == 'V') {
+            if (!curAttr) continue;
+            curAggr = curAttr->Aggregate();
+            if (!curAggr) { cout << "VRSTEP::query " << i << " is not an Aggregate!\n"; return false; }
+            return getValue(e, curAttr, curAggr->GetHead(), t, path[i+1]);
+        }
+
+        if (isLast) return getValue(e, curAttr, curAggrNode, t, c);
+        //if (isLast) cout << " t " << t << endl;
     }
     return false;
 }
 
-template<class V, class T> bool queryVec(STEPentity* se, string paths, V& v) {
-    int i=0;
-    for (auto p : splitString(paths, '|')) {
-        if (!query<T>(se, p, v[i])) return false;
-        i++;
-    }
-    return true;
-}
-
 // helper function to set tuple members
 template<class T, size_t N> struct Setup {
-    static void setup(const T& t, STEPentity* e, vector<string>& paths) {
+    static void setup(T& t, STEPentity* e, vector<string>& paths) {
         Setup<T, N-1>::setup(t, e, paths);
-        auto v = get<N-1>(t);
-        query(e, paths[N-1], v);
+        query(e, paths[N-1], get<N-1>(t));
     }
 };
 
 template<class T> struct Setup<T, 1> {
-    static void setup(const T& t, STEPentity* e, vector<string>& paths) {
-        auto v = get<0>(t);
-        query(e, paths[0], v);
+    static void setup(T& t, STEPentity* e, vector<string>& paths) {
+        query(e, paths[0], get<0>(t));
     }
 };
 
-template<class... Args> void setup(const tuple<Args...>& t, STEPentity* e, string paths) {
+template<class... Args> void setup(tuple<Args...>& t, STEPentity* e, string paths) {
     auto vpaths = splitString(paths, '|');
     Setup<decltype(t), sizeof...(Args)>::setup(t, e, vpaths);
 }
 // end helper function
 
-template<class T> void VRSTEP::parse(STEPentity* e, string path) {
-    if (resMap.count(e->STEPfile_id)) return;
-    T* t = new T();
+template<size_t i, class T, class R>
+R getTi(void* d) {
+    T* t = (T*)d;
+    return std::get<i>(*t);
+}
+
+template<class T> void VRSTEP::parse(STEPentity* e, string path, string type) {
+    if (instanceByID.count(e->STEPfile_id)) return;
+    auto t = new T();
     setup(*t, e, path);
-    resMap[e->STEPfile_id] = t;
+    Instance i;
+    i.data = t;
+    i.ID = e->STEPfile_id;
+    i.type = type;
+    instanceByID[e->STEPfile_id] = i;
+    instancesByType[type].push_back(i);
+    cout << i.type << " A1 " << get<0>(*t) << endl;
+    cout << i.type << " A2 " << getTi<0, T, int >(t) << endl;
+    cout << i.type << " A3 " << getTi<0, tuple<int, double>, int >(i.data) << endl;
 }
 
 void VRSTEP::open(string file) {
@@ -181,50 +271,21 @@ string VRSTEP::indent(int lvl) {
     return s;
 }
 
-bool VRSTEP::parseClosedShell(STEPentity* se) {
-    auto* s = new ClosedShell();
-    s->faces = getAggregateEntities(&se->attributes[1]);
-    resMap[se->STEPfile_id] = s; return true;
-}
-
-bool VRSTEP::parseAdvancedBrepShapeRepresentation(STEPentity* se) {
-    auto* s = new AdvancedBrepShapeRepresentation();
-    if ( !query(se, "a0S", s->name) ) return false;
-    s->items = getAggregateEntities(&se->attributes[1]);
-    resMap[se->STEPfile_id] = s; return true;
-}
-
-/*{
-    auto res = VRGeometry::create(name);
-    resObject[se->STEPfile_id] = res; return true;
-}*/
-
-vector<int> VRSTEP::getAggregateEntities(STEPattribute* attr) {
-    vector<int> res;
-    if (attr->BaseType() != ENTITY_TYPE) return res;
-    auto aggr = attr->Aggregate(); if (!aggr) return res;
-    for( auto sn = (EntityNode*)aggr->GetHead(); sn != NULL; sn = (EntityNode*)sn->NextNode()) {
-        auto e = (STEPentity*)sn->node;
-        res.push_back( e->STEPfile_id );
-    }
-    return res;
-}
-
 void VRSTEP::traverseEntity(STEPentity *se, int lvl) {
     string type = se->EntityName();
-
     int ID = se->STEPfile_id;
-    bool k = ID == 1837 || ID == 1836;
-    if (k) cout << indent(lvl) << "Entity: " << redBeg << se->EntityName() << " (id: " << se->STEPfile_id << ")" << colEnd << " Type: " << se->getEDesc()->Type() << endl;
-    else cout << indent(lvl) << "Entity: " << se->EntityName() << " (id: " << se->STEPfile_id << " ) Type: " << se->getEDesc()->Type() << endl;
 
+    /*bool k = ID == 1837 || ID == 1836;
+    if (k) cout << indent(lvl) << "Entity: " << redBeg << se->EntityName() << " (id: " << ID << ")" << colEnd << " Type: " << se->getEDesc()->Type() << endl;
+    else cout << indent(lvl) << "Entity: " << se->EntityName() << " (id: " << ID << " ) Type: " << se->getEDesc()->Type() << endl;
+*/
+    if (instanceByID.count(ID)) return;
     if (types.count(type)) { (*types[type].cb)(se); return; }
+    if (blacklist.count(type) && blacklist[type]) { blacklisted++; return; }
 
-    if (resMap.count(se->STEPfile_id)) return;
-    if ( type == "ClosedShell" && parseClosedShell(se) ) return;
-    if ( type == "Advanced_Brep_Shape_Representation" && parseAdvancedBrepShapeRepresentation(se) ) return;
+    return;
 
-//    if (resObject.count(se->STEPfile_id)) return;
+//    if (resObject.count(ID)) return;
 
     STEPattribute* attr;
     se->ResetAttributes();
@@ -305,37 +366,28 @@ void VRSTEP::traverseAggregate(STEPaggregate *sa, int atype, int lvl) {
 }
 
 void VRSTEP::build() {
+    blacklisted = 0;
+
     for( int i=0; i<instances->InstanceCount(); i++) {
         STEPentity* se = instances->GetSTEPentity(i);
         //if (se->STEPfile_id == 1840) break;
         string name = se->EntityName();
         //if (name != "Advanced_Brep_Shape_Representation") continue;
-        if (name != "Circle") continue;
+        //if (name != "Circle") continue;
         traverseEntity(se,1);
     }
 
-    cout << "build results:\n";
-    cout << resMap.size() << " instances\n";
-    cout << resObject.size() << " objects\n";
+    //for (auto i : instancesByType["Advanced_Brep_Shape_Representation"]) {
+    for (auto i : instancesByType["Circle"]) {
+        cout << " " << i.get<0, int, double>() << endl;
+        //cout << " " << getTi<0, tuple<string, vector<int> >, string >(i.data) << endl;
+        //cout << i.type << " " << getTi<0, tuple<int, double>, int >(i.data) << endl;
+    }
 
-    /*cout << "Type enum:\n";
-    cout << "INTEGER_TYPE: " << INTEGER_TYPE << endl;
-    cout << "REAL_TYPE: " << REAL_TYPE << endl;
-    cout << "BOOLEAN_TYPE: " << BOOLEAN_TYPE << endl;
-    cout << "LOGICAL_TYPE: " << LOGICAL_TYPE << endl;
-    cout << "STRING_TYPE: " << STRING_TYPE << endl;
-    cout << "BINARY_TYPE: " << BINARY_TYPE << endl;
-    cout << "ENUM_TYPE: " << ENUM_TYPE << endl;
-    cout << "SELECT_TYPE: " << SELECT_TYPE << endl;
-    cout << "AGGREGATE_TYPE: " << AGGREGATE_TYPE << endl;
-    cout << "NUMBER_TYPE: " << NUMBER_TYPE << endl;
-    cout << "ARRAY_TYPE: " << ARRAY_TYPE << endl;
-    cout << "BAG_TYPE: " << BAG_TYPE << endl;
-    cout << "SET_TYPE: " << SET_TYPE << endl;
-    cout << "LIST_TYPE: " << LIST_TYPE << endl;
-    cout << "GENERIC_TYPE: " << GENERIC_TYPE << endl;
-    cout << "REFERENCE_TYPE: " << REFERENCE_TYPE << endl;
-    cout << "UNKNOWN_TYPE: " << UNKNOWN_TYPE << endl;*/
+    cout << "build results:\n";
+    cout << instanceByID.size() << " STEP entities parsed\n";
+    cout << blacklisted << " STEP blacklisted entities ignored\n";
+    cout << resObject.size() << " VR objects created\n";
 }
 
 VRTransformPtr VRSTEP::load(string file) {
