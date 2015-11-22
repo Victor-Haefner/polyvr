@@ -25,10 +25,6 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRSTEP {
-    private:
-        struct ClosedShell { vector<int> faces; }; //face
-        struct AdvancedBrepShapeRepresentation { string name; vector<int> items; }; //representation_item
-
     public:
         typedef shared_ptr<Registry> RegistryPtr;
         typedef shared_ptr<InstMgr> InstMgrPtr;
@@ -42,6 +38,7 @@ class VRSTEP {
 
         struct Instance {
             string type;
+            STEPentity* entity = 0;
             int ID = -1;
             void* data = 0;
             template<size_t i, class... Args>
@@ -67,9 +64,9 @@ class VRSTEP {
         string blueBeg  = "\033[0;38;2;150;150;255m";
         string colEnd = "\033[0m";
 
-        map<int, Instance> instanceByID;
+        map<STEPentity*, Instance> instanceByID;
         map<string, vector<Instance> > instancesByType;
-        map<int, VRTransformPtr> resObject;
+        map<STEPentity*, VRTransformPtr> resObject;
 
         map<string, Type> types;
         template<class T> void addType(string type, string path, bool print = false);
@@ -78,7 +75,6 @@ class VRSTEP {
         void loadT(string file, STEPfilePtr sfile, bool* done);
         void open(string file);
         string indent(int lvl);
-        vector<int> getAggregateEntities(STEPattribute* attr);
 
         void traverseEntity(STEPentity* se, int lvl, STEPcomplex* cparent = 0);
         void traverseSelect(SDAI_Select* s, int lvl);

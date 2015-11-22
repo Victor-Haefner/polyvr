@@ -43,39 +43,41 @@ VRSTEP::VRSTEP() {
     instances = InstMgrPtr( new InstMgr() ); // instances
     sfile = STEPfilePtr( new STEPfile( *registry, *instances, "", false ) ); // file
 
-    addType< tuple<int, double> >( "Circle", "a1se|a2f", true );
+    addType< tuple<STEPentity*, double> >( "Circle", "a1se|a2f", true );
     addType< tuple<double, double, double> >("Direction", "a1A0f|a1A1f|a1A2f");
     addType< tuple<double, double, double> >("Cartesian_Point", "a1A0f|a1A1f|a1A2f");
-    addType< tuple<int, bool> >( "Oriented_Edge", "a3e|a4b" );
-    addType< tuple<int, int, int> >( "Edge_Curve", "a1e|a2e|a3e" );
-    addType< tuple<int, int, int> >( "Axis2_Placement_3d", "a1e|a2e|a3e" );
-    addType< tuple<int> >( "Manifold_Solid_Brep", "a1e" );
-    addType< tuple<int> >( "Plane", "a1e" );
-    addType< tuple<int, double> >( "Cylindrical_Surface", "a1e|a2f" );
-    addType< tuple<int, int> >( "Line", "a1e|a2e" );
-    addType< tuple<int, double> >( "Vector", "a1e|a2f" );
-    addType< tuple<int> >( "Vertex_Point", "a1e" );
-    addType< tuple<int, bool> >( "Face_Bound", "a1e|a2b" );
-    addType< tuple<int, bool> >( "Face_Outer_Bound", "a1e|a2b" );
-    addType< tuple<vector<int>, int, bool> >( "Advanced_Face", "a1Ve|a2e|a3b" );
-    addType< tuple<string, vector<int> > >( "Advanced_Brep_Shape_Representation", "a0S|a1Ve" );
-    addType< tuple<vector<int> > >( "Closed_Shell", "a1Ve" );
-    addType< tuple<vector<int> > >( "Edge_Loop", "a1Ve" );
+    addType< tuple<STEPentity*, bool> >( "Oriented_Edge", "a3e|a4b" );
+    addType< tuple<STEPentity*, STEPentity*, STEPentity*> >( "Edge_Curve", "a1e|a2e|a3e" );
+    addType< tuple<STEPentity*, STEPentity*, STEPentity*> >( "Axis2_Placement_3d", "a1e|a2e|a3e" );
+    addType< tuple<STEPentity*> >( "Manifold_Solid_Brep", "a1e" );
+    addType< tuple<STEPentity*> >( "Plane", "a1e" );
+    addType< tuple<STEPentity*, double> >( "Cylindrical_Surface", "a1e|a2f" );
+    addType< tuple<STEPentity*, STEPentity*> >( "Line", "a1e|a2e" );
+    addType< tuple<STEPentity*, double> >( "Vector", "a1e|a2f" );
+    addType< tuple<STEPentity*> >( "Vertex_Point", "a1e" );
+    addType< tuple<STEPentity*, bool> >( "Face_Bound", "a1e|a2b" );
+    addType< tuple<STEPentity*, bool> >( "Face_Outer_Bound", "a1e|a2b" );
+    addType< tuple<vector<STEPentity*>, STEPentity*, bool> >( "Advanced_Face", "a1Ve|a2e|a3b" );
+    addType< tuple<string, vector<STEPentity*> > >( "Advanced_Brep_Shape_Representation", "a0S|a1Ve" );
+    addType< tuple<vector<STEPentity*> > >( "Closed_Shell", "a1Ve" );
+    addType< tuple<vector<STEPentity*> > >( "Edge_Loop", "a1Ve" );
 
     // assembly entities
-    addType< tuple<int, int> >( "Product_Definition_Relationship", "a3e|a4e" );
-    addType< tuple<int, int> >( "Product_Definition_Usage", "a3e|a4e" );
-    addType< tuple<int, int> >( "Assembly_Component_Usage", "a3e|a4e" );
-    addType< tuple<int, int> >( "Next_Assembly_Usage_Occurrence", "a3e|a4e", false );
+    addType< tuple<STEPentity*, STEPentity*> >( "Product_Definition_Relationship", "a3e|a4e" );
+    addType< tuple<STEPentity*, STEPentity*> >( "Product_Definition_Usage", "a3e|a4e" );
+    addType< tuple<STEPentity*, STEPentity*> >( "Assembly_Component_Usage", "a3e|a4e" );
+    addType< tuple<STEPentity*, STEPentity*> >( "Next_Assembly_Usage_Occurrence", "a3e|a4e", false );
 
-    addType< tuple<int, int> >( "Context_Dependent_Shape_Representation", "a0e|a1e", false );
-    addType< tuple<int, int> >( "Representation_Relationship", "a2e|a3e", false );
-    addType< tuple<int, int, int> >( "Representation_Relationship_With_Transformation", "a2e|a3e|a4se", false );
-    addType< tuple<int, int> >( "Item_Defined_Transformation", "a2e|a3e", false );
+    addType< tuple<STEPentity*, STEPentity*, STEPentity*> >( "Context_Dependent_Shape_Representation", "a0ec0e|a0ec1e|a1e", true );
+    addType< tuple<STEPentity*, STEPentity*> >( "Representation_Relationship", "a2e|a3e", false );
+    addType< tuple<STEPentity*> >( "Representation_Relationship_With_Transformation", "a0se", true );
+    addType< tuple<STEPentity*, STEPentity*> >( "Item_Defined_Transformation", "a2e|a3e", false );
 
-    addType< tuple<vector<int>, int> >( "Shape_Representation", "a1Ve|a2e", false );
-    addType< tuple<int, int> >( "Shape_Representation_Relationship", "a2e|a3e", false );
-    //addType< tuple<int, int> >( "Geometric_Representation_Context", "a2e|a3e" );
+    addType< tuple<vector<STEPentity*>, STEPentity*> >( "Shape_Representation", "a1Ve|a2e", false );
+    addType< tuple<STEPentity*, STEPentity*> >( "Shape_Representation_Relationship", "a2e|a3e", false );
+    //addType< tuple<STEPentity*, STEPentity*> >( "Geometric_Representation_Context", "a2e|a3e" );
+
+    //addType< tuple<STEPentity*, STEPentity*> >( "Product_Definition_Shape", "a2se");
 
     {
     blacklist["Application_Context"] = 1;
@@ -105,7 +107,6 @@ VRSTEP::VRSTEP() {
     blacklist["Product_Definition"] = 1;
     blacklist["Product_Definition_Context"] = 1;
     blacklist["Product_Definition_Formation_With_Specified_Source"] = 1; // revision belonging to a product
-    blacklist["Product_Definition_Shape"] = 0;
     blacklist["Product_Related_Product_Category"] = 0;
     blacklist["Representation_Context"] = 1;
     blacklist["Shape_Definition_Representation"] = 0;
@@ -131,11 +132,16 @@ bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, string& t, ch
 }
 
 bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, int& t, char c) {
-    if (c == 'e') {
-        if (e) { t = e->STEPfile_id; return true; }
-        if (an) { t = ((STEPentity*)((EntityNode*)an)->node)->STEPfile_id; return true; }
-    }
     if (c == 'i') if (a) if (auto r = a->Integer() ) { t = *r; return true; }
+    return false;
+}
+
+bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, STEPentity*& t, char c) {
+    if (c == 'e') {
+        if (e) { t = e;
+            cout << " getValue " << e << endl; return true; }
+        if (an) { t = ((STEPentity*)((EntityNode*)an)->node); return true; }
+    }
     return false;
 }
 
@@ -161,16 +167,39 @@ template<typename T> bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNo
     return true;
 }
 
-STEPentity* getSelectEntity(SDAI_Select* s) { // TODO
-    auto ap = (SdaiAxis2_placement*)s;
-    if (!ap->IsAxis2_placement_3d()) { cout << "getSelectEntity, not an placement 3d!\n"; return 0; }
-    SdaiAxis2_placement_3d* ap3 = *ap; // entity
-    auto e = (STEPentity*)ap3;
-    return e;
+STEPentity* getSelectEntity(SDAI_Select* s) {
+    string stype;
+    s->UnderlyingTypeName().asStr(stype);
+
+    switch(s->ValueType()) {
+        case ENTITY_TYPE:
+            if (stype == "Axis2_Placement_3d") {
+                auto v = (SdaiAxis2_placement*)s;
+                if (v->IsAxis2_placement_2d()) { SdaiAxis2_placement_2d* o = *v; return o; }
+                if (v->IsAxis2_placement_3d()) { SdaiAxis2_placement_3d* o = *v; return o; }
+            }
+            if (stype == "Characterized_Product_Definition") {
+                auto v = (SdaiCharacterized_product_definition*)s;
+                if (v->IsProduct_definition()) { SdaiProduct_definition* o = *v; return o; }
+                if (v->IsProduct_definition_relationship()) { SdaiProduct_definition_relationship* o = *v; return o; }
+                //SdaiProduct_definition_relationship* o = *v; return o;
+            }
+            if (stype == "Item_Defined_Transformation") {
+                auto v = (SdaiTransformation*)s;
+                if (v->IsItem_defined_transformation()) { SdaiItem_defined_transformation* o = *v; return o; }
+                if (v->IsFunctionally_defined_transformation()) { SdaiFunctionally_defined_transformation* o = *v; return o; }
+                break;
+            }
+            cout << " Select entity not handled: " << stype << endl;
+            break;
+        default:
+            cout << "Select type not handled: " << s->ValueType() << endl;
+    }
+    return 0;
 }
 
 template<typename T> bool query(STEPentity* e, string path, T& t) {
-    auto toint = [](char c) { return int(c-'0'); };
+    auto toInt = [](char c) { return int(c-'0'); };
 
     int j = 1;
     STEPattribute* curAttr = 0;
@@ -184,7 +213,7 @@ template<typename T> bool query(STEPentity* e, string path, T& t) {
 
         if (c == 'a') {
             j = 2;
-            int ai = toint(path[i+1]);
+            int ai = toInt(path[i+1]);
             if (e->AttributeCount() <= ai) return false;
             curAttr = &e->attributes[ai];
             curAggr = 0;
@@ -196,7 +225,7 @@ template<typename T> bool query(STEPentity* e, string path, T& t) {
             curAggr = curAttr->Aggregate();
             if (!curAggr) { cout << "VRSTEP::query " << i << " is not an Aggregate!\n"; return false; }
             if ('0' <= path[i+1] && path[i+1] <= '9') {
-                int Ai = toint(path[i+1]);
+                int Ai = toInt(path[i+1]);
                 curAggrNode = curAggr->GetHead();
                 for (int i=0; i<Ai; i++) curAggrNode = curAggrNode->NextNode();
             }
@@ -224,6 +253,17 @@ template<typename T> bool query(STEPentity* e, string path, T& t) {
             curAggr = curAttr->Aggregate();
             if (!curAggr) { cout << "VRSTEP::query " << i << " is not an Aggregate!\n"; return false; }
             return getValue(e, curAttr, curAggr->GetHead(), t, path[i+1]);
+        }
+
+        if (c == 'c') {
+            j = 2;
+            if (!e->IsComplex()) continue;
+            auto ce = ( (STEPcomplex*)e )->head;
+            int ci = toInt(path[i+1]);
+            for (int i=0; i<ci; i++) ce = ce->sc;
+            e = ce;
+            curAggrNode = 0;
+            curAttr = 0;
         }
 
         if (isLast) return getValue(e, curAttr, curAggrNode, t, c);
@@ -259,16 +299,16 @@ R getTi(void* d) {
 }
 
 template<class T> void VRSTEP::parse(STEPentity* e, string path, string type) {
-    if (instanceByID.count(e->STEPfile_id)) return;
+    if (instanceByID.count(e)) return;
     auto t = new T();
     setup(*t, e, path);
     Instance i;
     i.data = t;
     i.ID = e->STEPfile_id;
+    i.entity = e;
     i.type = type;
-    if (type == "Representation_Relationship_With_Transformation") cout << "YES\n" << endl;
     instancesByType[type].push_back(i);
-    instanceByID[e->STEPfile_id] = i;
+    instanceByID[e] = i;
 }
 
 void VRSTEP::open(string file) {
@@ -303,7 +343,7 @@ void VRSTEP::traverseEntity(STEPentity* se, int lvl, STEPcomplex* cparent) {
     }
 
     string type = se->EntityName();
-    int ID = se->STEPfile_id;
+    STEPentity* ID = se;
 
     bool red = (type == "Advanced_Brep_Shape_Representation" ||
         type == "Shape_Definition_Representation" ||
@@ -352,33 +392,9 @@ void VRSTEP::traverseEntity(STEPentity* se, int lvl, STEPcomplex* cparent) {
 //template<class S> void
 
 void VRSTEP::traverseSelect(SDAI_Select* s, int lvl) {
-    string stype;
-    s->UnderlyingTypeName().asStr(stype);
-
-    switch(s->ValueType()) {
-        case ENTITY_TYPE:
-            if (stype == "Axis2_Placement_3d") {
-                auto v = (SdaiAxis2_placement*)s;
-                if (v->IsAxis2_placement_2d()) { SdaiAxis2_placement_2d* o = *v; traverseEntity( o, lvl+1); break; }
-                if (v->IsAxis2_placement_3d()) { SdaiAxis2_placement_3d* o = *v; traverseEntity( o, lvl+1); break; }
-            }
-            if (stype == "Characterized_Product_Definition") {
-                auto v = (SdaiCharacterized_product_definition*)s;
-                if (v->IsProduct_definition()) { SdaiProduct_definition* o = *v; traverseEntity( o, lvl+1); break; }
-                if (v->IsProduct_definition_relationship()) { SdaiProduct_definition_relationship* o = *v; traverseEntity( o, lvl+1); break; }
-                //SdaiProduct_definition_relationship* o = *v; traverseEntity( o, lvl+1); break;
-            }
-            if (stype == "Item_Defined_Transformation") {
-                auto v = (SdaiTransformation*)s;
-                if (v->IsItem_defined_transformation()) { SdaiItem_defined_transformation* o = *v; traverseEntity( o, lvl+1); break; }
-                if (v->IsFunctionally_defined_transformation()) { SdaiFunctionally_defined_transformation* o = *v; traverseEntity( o, lvl+1); break; }
-                break;
-            }
-            cout << indent(lvl) << " Select entity not handled: " << stype << endl;
-            break;
-        default:
-            cout << indent(lvl) << "Select type not handled: " << s->ValueType() << endl;
-    }
+    cout << indent(lvl) << "resolve select\n";
+    auto e = getSelectEntity(s);
+    if (e) traverseEntity(e, lvl+1);
 }
 
 void VRSTEP::traverseAggregate(STEPaggregate *sa, int atype, int lvl) {
@@ -423,62 +439,63 @@ void VRSTEP::traverseAggregate(STEPaggregate *sa, int atype, int lvl) {
     }
 }
 
+Vec3f toVec3f(STEPentity* i, map<STEPentity*, VRSTEP::Instance>& instanceByID) {
+    if (!instanceByID.count(i)) { cout << "toVec3f FAILED with instance " << i << endl; return Vec3f(); }
+    auto I = instanceByID[i];
+    double L = 1.0;
+    if (I.type == "Vertex_Point") I = instanceByID[ I.get<0, STEPentity*>() ];
+    if (I.type == "Vector") {
+        I = instanceByID[ I.get<0, STEPentity*, double>() ];
+        L = I.get<1, STEPentity*, double>();
+    }
+    if (I.type == "Cartesian_Point" || I.type == "Direction") {
+        return Vec3f(I.get<0, double, double, double>(),
+                     I.get<1, double, double, double>(),
+                     I.get<2, double, double, double>())*L;
+    }
+    cout << "toVec3f FAILED with instance type " << I.type << endl;
+    return Vec3f();
+}
+
+pose toPose(STEPentity* i, map<STEPentity*, VRSTEP::Instance>& instanceByID) {
+    auto I = instanceByID[i];
+    if (I.type == "Axis2_Placement_3d") {
+        Vec3f p = toVec3f( I.get<0, STEPentity*, STEPentity*, STEPentity*>(), instanceByID);
+        Vec3f d = toVec3f( I.get<1, STEPentity*, STEPentity*, STEPentity*>(), instanceByID);
+        Vec3f u = toVec3f( I.get<2, STEPentity*, STEPentity*, STEPentity*>(), instanceByID);
+        return pose(p,d,u);
+    }
+    cout << "toPose FAILED with instance type " << I.type << endl;
+    return pose();
+}
+
 struct VRSTEP::Bound : VRSTEP::Instance {
     vector<Vec3f> points;
 
     Bound() {}
-    Bound(Instance& i, map<int, Instance>& instanceByID) : Instance(i) {
-        auto toVec3f = [&](int i) {
-            Instance I = instanceByID[i];
-            double L = 1.0;
-            if (I.type == "Vertex_Point") I = instanceByID[ I.get<0, int>() ];
-            if (I.type == "Vector") {
-                I = instanceByID[ I.get<0, int, double>() ];
-                L = I.get<1, int, double>();
-            }
-            if (I.type == "Cartesian_Point" || I.type == "Direction") {
-                return Vec3f(I.get<0, double, double, double>(),
-                             I.get<1, double, double, double>(),
-                             I.get<2, double, double, double>())*L;
-            }
-            cout << "toVec3f FAILED with instance type " << I.type << endl;
-            return Vec3f();
-        };
-
-        auto toPose = [&](int i) {
-            Instance I = instanceByID[i];
-            if (I.type == "Axis2_Placement_3d") {
-                Vec3f p = toVec3f( I.get<0, int, int, int>() );
-                Vec3f d = toVec3f( I.get<1, int, int, int>() );
-                Vec3f u = toVec3f( I.get<2, int, int, int>() );
-                return pose(p,d,u);
-            }
-            cout << "toPose FAILED with instance type " << I.type << endl;
-            return pose();
-        };
-
+    Bound(Instance& i, map<STEPentity*, Instance>& instanceByID) : Instance(i) {
 
         if (type == "Face_Bound" || type == "Face_Outer_Bound") {
-            auto& Loop = instanceByID[ get<0, int, bool>() ];
-            bool dir = get<1, int, bool>();
-            for (auto l : Loop.get<0, vector<int> >() ) {
+            auto& Loop = instanceByID[ get<0, STEPentity*, bool>() ];
+            bool dir = get<1, STEPentity*, bool>();
+            for (auto l : Loop.get<0, vector<STEPentity*> >() ) {
                 auto& Edge = instanceByID[l];
                 if (Edge.type == "Oriented_Edge") {
-                    auto& EdgeElement = instanceByID[ Edge.get<0, int, bool>() ];
-                    bool edir = Edge.get<1, int, bool>();
+                    auto& EdgeElement = instanceByID[ Edge.get<0, STEPentity*, bool>() ];
+                    bool edir = Edge.get<1, STEPentity*, bool>();
                     if (EdgeElement.type == "Edge_Curve") {
-                        Vec3f EBeg = toVec3f( EdgeElement.get<0, int, int, int>() );
-                        Vec3f EEnd = toVec3f( EdgeElement.get<1, int, int, int>() );
-                        auto& EdgeGeo = instanceByID[ EdgeElement.get<2, int, int, int>() ];
+                        Vec3f EBeg = toVec3f( EdgeElement.get<0, STEPentity*, STEPentity*, STEPentity*>(), instanceByID );
+                        Vec3f EEnd = toVec3f( EdgeElement.get<1, STEPentity*, STEPentity*, STEPentity*>(), instanceByID );
+                        auto& EdgeGeo = instanceByID[ EdgeElement.get<2, STEPentity*, STEPentity*, STEPentity*>() ];
                         if (EdgeGeo.type == "Line") {
-                            Vec3f p = toVec3f( EdgeGeo.get<0, int, int>() );
-                            Vec3f d = toVec3f( EdgeGeo.get<1, int, int>() );
+                            Vec3f p = toVec3f( EdgeGeo.get<0, STEPentity*, STEPentity*>(), instanceByID );
+                            Vec3f d = toVec3f( EdgeGeo.get<1, STEPentity*, STEPentity*>(), instanceByID );
                             points.push_back(EBeg); // TODO: check if beg and end are on the line!
                             points.push_back(EEnd);
                         }
                         if (EdgeGeo.type == "Circle") {
-                            pose c = toPose( EdgeGeo.get<0, int, double>() );
-                            float r = EdgeGeo.get<1, int, double>();
+                            pose c = toPose( EdgeGeo.get<0, STEPentity*, double>(), instanceByID );
+                            float r = EdgeGeo.get<1, STEPentity*, double>();
                         }
                     }
                 }
@@ -492,44 +509,14 @@ struct VRSTEP::Surface : VRSTEP::Instance {
     vector<Bound> bounds;
     pose trans;
 
-    Surface(Instance& i, map<int, Instance>& instanceByID) : Instance(i) {
-
-        auto toVec3f = [&](int i) {
-            Instance I = instanceByID[i];
-            double L = 1.0;
-            if (I.type == "Vertex_Point") I = instanceByID[ I.get<0, int>() ];
-            if (I.type == "Vector") {
-                I = instanceByID[ I.get<0, int, double>() ];
-                L = I.get<1, int, double>();
-            }
-            if (I.type == "Cartesian_Point" || I.type == "Direction") {
-                return Vec3f(I.get<0, double, double, double>(),
-                             I.get<1, double, double, double>(),
-                             I.get<2, double, double, double>())*L;
-            }
-            cout << "toVec3f FAILED with instance type " << I.type << endl;
-            return Vec3f();
-        };
-
-        auto toPose = [&](int i) {
-            Instance I = instanceByID[i];
-            if (I.type == "Axis2_Placement_3d") {
-                Vec3f p = toVec3f( I.get<0, int, int, int>() );
-                Vec3f d = toVec3f( I.get<1, int, int, int>() );
-                Vec3f u = toVec3f( I.get<2, int, int, int>() );
-                return pose(p,d,u);
-            }
-            cout << "toPose FAILED with instance type " << I.type << endl;
-            return pose();
-        };
-
+    Surface(Instance& i, map<STEPentity*, Instance>& instanceByID) : Instance(i) {
         if (type == "Plane") {
-            trans = toPose( get<0, int>() );
+            trans = toPose( get<0, STEPentity*>(), instanceByID);
         }
 
         if (type == "Cylindrical_Surface") {
-            trans = toPose( get<0, int, double>() );
-            double R = get<1, int, double>();
+            trans = toPose( get<0, STEPentity*, double>(), instanceByID );
+            double R = get<1, STEPentity*, double>();
         }
     }
 
@@ -540,9 +527,9 @@ struct VRSTEP::Surface : VRSTEP::Instance {
         /*if (type == "Plane") {
             polygon poly;
             for (auto b : bounds) {
-                for(auto p : b.points) {
+                for(auto p : b.poSTEPentity*s) {
                     m.mult(p,p);
-                    poly.addPoint(Vec2f(p[0], p[1]));
+                    poly.addPoSTEPentity*(Vec2f(p[0], p[1]));
                 }
             }
             poly = poly.getConvexHull();
@@ -584,42 +571,13 @@ void VRSTEP::build() {
 
     for( int i=0; i<instances->InstanceCount(); i++) {
         STEPentity* se = instances->GetApplication_instance(i);
-        //if (se->STEPfile_id == 1840) break;
+        //if (se == 1840) break;
         string name = se->EntityName();
         //if (name != "Shape_Representation_Relationship") continue;
         //if (name != "Circle") continue;
-        //if (se->STEPfile_id == 1943) traverseAggregate((STEPaggregate*)se, ENTITY_TYPE, 1);
+        //if (se == 1943) traverseAggregate((STEPaggregate*)se, ENTITY_TYPE, 1);
         traverseEntity(se,1);
     }
-
-    auto toVec3f = [&](int i) {
-        Instance I = instanceByID[i];
-        double L = 1.0;
-        if (I.type == "Vertex_Point") I = instanceByID[ I.get<0, int>() ];
-        if (I.type == "Vector") {
-            I = instanceByID[ I.get<0, int, double>() ];
-            L = I.get<1, int, double>();
-        }
-        if (I.type == "Cartesian_Point" || I.type == "Direction") {
-            return Vec3f(I.get<0, double, double, double>(),
-                         I.get<1, double, double, double>(),
-                         I.get<2, double, double, double>())*L;
-        }
-        cout << "toVec3f FAILED with instance type " << I.type << endl;
-        return Vec3f();
-    };
-
-    auto toPose = [&](int i) {
-        Instance I = instanceByID[i];
-        if (I.type == "Axis2_Placement_3d") {
-            Vec3f p = toVec3f( I.get<0, int, int, int>() );
-            Vec3f d = toVec3f( I.get<1, int, int, int>() );
-            Vec3f u = toVec3f( I.get<2, int, int, int>() );
-            return pose(p,d,u);
-        }
-        cout << "toPose FAILED with instance type " << I.type << endl;
-        return pose();
-    };
 
     /*for (auto p : instancesByType["Axis2_Placement_3d"]) {
         auto pp = toPose(p.ID);
@@ -628,20 +586,20 @@ void VRSTEP::build() {
 
     for (auto BrepShape : instancesByType["Advanced_Brep_Shape_Representation"]) {
 
-        string name = BrepShape.get<0, string, vector<int> >();
+        string name = BrepShape.get<0, string, vector<STEPentity*> >();
         auto geo = VRTransform::create(name);
 
-        for (auto i : BrepShape.get<1, string, vector<int> >() ) {
+        for (auto i : BrepShape.get<1, string, vector<STEPentity*> >() ) {
             auto& Item = instanceByID[i];
             if (Item.type == "Manifold_Solid_Brep") {
-                auto& Outer = instanceByID[ Item.get<0, int>() ];
-                for (auto j : Outer.get<0, vector<int> >() ) {
+                auto& Outer = instanceByID[ Item.get<0, STEPentity*>() ];
+                for (auto j : Outer.get<0, vector<STEPentity*> >() ) {
                     auto& Face = instanceByID[j];
                     if (Face.type == "Advanced_Face") {
-                        auto& s = instanceByID[ Face.get<1, vector<int>, int, bool>() ];
+                        auto& s = instanceByID[ Face.get<1, vector<STEPentity*>, STEPentity*, bool>() ];
                         Surface surface(s, instanceByID);
-                        bool same_sense = Face.get<2, vector<int>, int, bool>();
-                        for (auto k : Face.get<0, vector<int>, int, bool>() ) {
+                        bool same_sense = Face.get<2, vector<STEPentity*>, STEPentity*, bool>();
+                        for (auto k : Face.get<0, vector<STEPentity*>, STEPentity*, bool>() ) {
                             auto& b = instanceByID[k];
                             Bound bound(b, instanceByID);
                             surface.bounds.push_back(bound);
@@ -652,13 +610,13 @@ void VRSTEP::build() {
             }
         }
 
-        resObject[BrepShape.ID] = geo;
+        resObject[BrepShape.entity] = geo;
     }
 
-    map<int, int> ABrepToSRep;
+    map<STEPentity*, STEPentity*> ABrepToSRep;
     for (auto ShapeRepRel : instancesByType["Shape_Representation_Relationship"]) {
-        int obj = ShapeRepRel.get<0, int, int>();
-        int rep = ShapeRepRel.get<1, int, int>();
+        auto obj = ShapeRepRel.get<0, STEPentity*, STEPentity*>();
+        auto rep = ShapeRepRel.get<1, STEPentity*, STEPentity*>();
         ABrepToSRep[rep] = obj;
     }
 
@@ -670,25 +628,54 @@ void VRSTEP::build() {
     for (auto& i : instancesByType["Next_Assembly_Usage_Occurrence"]) assemblies.push_back(i);
 
     for (auto& Assembly : assemblies) {
-        auto& RelatingProduct = instanceByID[ Assembly.get<0, int, int>() ];
-        auto& RelatedProduct = instanceByID[ Assembly.get<1, int, int>() ];
+        auto& RelatingProduct = instanceByID[ Assembly.get<0, STEPentity*, STEPentity*>() ];
+        auto& RelatedProduct = instanceByID[ Assembly.get<1, STEPentity*, STEPentity*>() ];
     }
 
-    map<int, pair<Instance, Instance> > transMap;
-    for (auto Transformation : instancesByType["Representation_Relationship_With_Transformation"]) {
-        cout << "TT2 " << Transformation.type << endl;
-        transMap[Transformation.ID] = pair<Instance, Instance>(Instance(), Transformation);
+    for (auto ShapeRep : instancesByType["Context_Dependent_Shape_Representation"]) {
+        auto& Rep = instanceByID[ ShapeRep.get<0, STEPentity*, STEPentity*, STEPentity*>() ];
+        auto& Shape1 = instanceByID[ Rep.get<0, STEPentity*, STEPentity*>() ];
+        auto& Shape2 = instanceByID[ Rep.get<1, STEPentity*, STEPentity*>() ];
+
+        auto& RepTrans = instanceByID[ ShapeRep.get<1, STEPentity*, STEPentity*, STEPentity*>() ];
+        auto& ItemTrans = instanceByID[ RepTrans.get<0, STEPentity*>() ];
+        auto pose1 = toPose( ItemTrans.get<0, STEPentity*, STEPentity*>(), instanceByID );
+        auto pose2 = toPose( ItemTrans.get<1, STEPentity*, STEPentity*>(), instanceByID );
+
+        if (ABrepToSRep.count(Shape1.entity)) {
+            auto oe = ABrepToSRep[Shape1.entity];
+            if (resObject.count(oe)) {
+                /*Matrix m = pose1.asMatrix();
+                m.invert();
+                m.mult(pose2.asMatrix());
+                resObject[oe]->setMatrix(m);*/
+                resObject[oe]->setPose(pose2);
+            }
+        }
     }
 
-    for (auto Transformation : instancesByType["Representation_Relationship"]) {
-        cout << "TT1 " << Transformation.type << endl;
-        transMap[Transformation.ID].first = Transformation;
-    }
+    /*Entity 0x123150526300: Context_Dependent_Shape_Representation
+        A: representation_relation : #1943
+            Entity 0x12315051cee0 (C) : Representation_Relationship
+            Entity 0x123150527000 (C) : Representation_Relationship_With_Transformation
+                A: transformation_operator : #1939
+                        Entity 0x123150523410: Item_Defined_Transformation
+            Entity 0x1231505270e0 (C) : Shape_Representation_Relationship
+        A: represented_product_relation : #1945
+            Entity 0x1231505228c0: Product_Definition_Shape
+                A: name : 'PDS_NAUO13' String: 'PDS_NAUO13'
+                A: description : '' String: ''
+                A: definition : #1944
+                     Select entity not handled: Characterized_Product_Definition*/
 
-    for (auto m : transMap) {
-        cout << "T map " << m.first << " " << m.second.first.type << " " << m.second.second.type << endl;
-    }
+    /*addType< tuple<STEPentity*, STEPentity*> >( "Context_Dependent_Shape_Representation", "a0e|a1e", false );
+    addType< tuple<STEPentity*, STEPentity*> >( "Representation_Relationship", "a2e|a3e", false );
+    addType< tuple<STEPentity*, STEPentity*, STEPentity*> >( "Representation_Relationship_With_Transformation", "a2e|a3e|a4se", false );
+    addType< tuple<STEPentity*, STEPentity*> >( "Item_Defined_Transformation", "a2e|a3e", false );
 
+    addType< tuple<vector<STEPentity*>, STEPentity*> >( "Shape_Representation", "a1Ve|a2e", false );
+    addType< tuple<STEPentity*, STEPentity*> >( "Shape_Representation_Relationship", "a2e|a3e", false );
+*/
     cout << "build results:\n";
     cout << instanceByID.size() << " STEP entities parsed\n";
     cout << blacklisted << " STEP blacklisted entities ignored\n";
@@ -725,7 +712,7 @@ solids
 
 The geometric entities:
 
-points -> Vec3f
+poSTEPentity*s -> Vec3f
 vectors -> Vec3f
 directions -> Vec3f
 curves
