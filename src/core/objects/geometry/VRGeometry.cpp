@@ -52,6 +52,10 @@ VRGeometry::~VRGeometry() {}
 
 VRGeometryPtr VRGeometry::create(string name) { return shared_ptr<VRGeometry>(new VRGeometry(name) ); }
 VRGeometryPtr VRGeometry::create(string name, bool hidden) { return shared_ptr<VRGeometry>(new VRGeometry(name, hidden) ); }
+VRGeometryPtr VRGeometry::create(string name, string primitive, string params) {
+    auto g = shared_ptr<VRGeometry>(new VRGeometry(name) );
+    g->setPrimitive(primitive, params);
+}
 
 VRGeometryPtr VRGeometry::ptr() { return static_pointer_cast<VRGeometry>( shared_from_this() ); }
 

@@ -55,6 +55,7 @@ class VRGeometry : public VRTransform {
         virtual ~VRGeometry();
 
         static VRGeometryPtr create(string name);
+        static VRGeometryPtr create(string name, string primitive, string params);
         VRGeometryPtr ptr();
 
         /** Set the geometry mesh (OSG geometry core) **/

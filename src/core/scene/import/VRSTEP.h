@@ -9,6 +9,7 @@ typedef SDAI_Application_instance STEPentity;
 class STEPaggregate;
 class SDAI_Select;
 class STEPattribute;
+class STEPcomplex;
 
 #include <memory>
 #include <string>
@@ -34,6 +35,7 @@ class VRSTEP {
         typedef shared_ptr<STEPfile> STEPfilePtr;
 
         struct Type {
+            bool print = false;
             string path; // args
             shared_ptr< VRFunction<STEPentity*> > cb;
         };
@@ -49,6 +51,9 @@ class VRSTEP {
             }
         };
 
+        struct Bound;
+        struct Surface;
+
     private:
         RegistryPtr registry;
         InstMgrPtr instances;
@@ -58,14 +63,16 @@ class VRSTEP {
         int blacklisted = 0;
 
         string redBeg  = "\033[0;38;2;255;150;150m";
+        string greenBeg  = "\033[0;38;2;150;255;150m";
+        string blueBeg  = "\033[0;38;2;150;150;255m";
         string colEnd = "\033[0m";
 
         map<int, Instance> instanceByID;
         map<string, vector<Instance> > instancesByType;
-        map<int, VRGeometryPtr> resObject;
+        map<int, VRTransformPtr> resObject;
 
         map<string, Type> types;
-        template<class T> void addType(string type, string path);
+        template<class T> void addType(string type, string path, bool print = false);
         template<class T> void parse(STEPentity* e, string path, string type);
 
         void loadT(string file, STEPfilePtr sfile, bool* done);
@@ -73,8 +80,8 @@ class VRSTEP {
         string indent(int lvl);
         vector<int> getAggregateEntities(STEPattribute* attr);
 
-        void traverseEntity(STEPentity* se, int lvl);
-        void traverseSelect(SDAI_Select* s, int lvl, STEPattribute* attr);
+        void traverseEntity(STEPentity* se, int lvl, STEPcomplex* cparent = 0);
+        void traverseSelect(SDAI_Select* s, int lvl);
         void traverseAggregate(STEPaggregate* sa, int type, int lvl);
         void build();
 
