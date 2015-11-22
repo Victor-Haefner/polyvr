@@ -37,14 +37,14 @@ void VRSprite::updateGeo() {
     float w2 = width*0.5;
     float h2 = height*0.5;
     pos->addValue(Pnt3f(-w2,h2,0));
-    pos->addValue(Pnt3f(w2,h2,0));
-    pos->addValue(Pnt3f(w2,-h2,0));
     pos->addValue(Pnt3f(-w2,-h2,0));
+    pos->addValue(Pnt3f(w2,-h2,0));
+    pos->addValue(Pnt3f(w2,h2,0));
 
     texs->addValue(Vec2f(0,1));
-    texs->addValue(Vec2f(1,1));
-    texs->addValue(Vec2f(1,0));
     texs->addValue(Vec2f(0,0));
+    texs->addValue(Vec2f(1,0));
+    texs->addValue(Vec2f(1,1));
 
     for (int i=0; i<4; i++) {
         norms->addValue(Vec3f(0,0,1));
