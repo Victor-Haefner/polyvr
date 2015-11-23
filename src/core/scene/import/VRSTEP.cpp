@@ -40,8 +40,8 @@ void VRSTEP::loadT(string file, STEPfilePtr sfile, bool* done) {
 
 VRSTEP::VRSTEP() {
     registry = RegistryPtr( new Registry( SchemaInit ) ); // schema
-    instances = InstMgrPtr( new InstMgr() ); // instances
-    sfile = STEPfilePtr( new STEPfile( *registry, *instances, "", false ) ); // file
+    instMgr = InstMgrPtr( new InstMgr() ); // instances
+    sfile = STEPfilePtr( new STEPfile( *registry, *instMgr, "", false ) ); // file
 
     addType< tuple<STEPentity*, double> >( "Circle", "a1se|a2f", false );
     addType< tuple<double, double, double> >("Direction", "a1A0f|a1A1f|a1A2f", true);
@@ -166,8 +166,14 @@ template<typename T> bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNo
     return true;
 }
 
-STEPentity* getSelectEntity(SDAI_Select* s, STEPentity* se) {
-    string etype = se->EntityName();
+STEPentity* VRSTEP::getSelectEntity(SDAI_Select* s, string ID) {
+    //string etype = se->EntityName();
+
+    if (s->ValueType() == ENTITY_TYPE && ID[0] == '#') {
+        int id = toInt(ID.substr(1));
+        if (instancesById.count(id)) return instancesById[id].entity;
+        else cout << "getSelectEntity ID " << id << " not found\n";
+    }
 
     /*if (etype == "Shape_Definition_Representation") {
         auto v = (SdaiRepresented_definition*)s;
@@ -205,7 +211,7 @@ STEPentity* getSelectEntity(SDAI_Select* s, STEPentity* se) {
     return 0;
 }
 
-template<typename T> bool query(STEPentity* e, string path, T& t) {
+template<typename T> bool VRSTEP::query(STEPentity* e, string path, T& t) {
     auto toInt = [](char c) { return int(c-'0'); };
 
     int j = 1;
@@ -243,7 +249,7 @@ template<typename T> bool query(STEPentity* e, string path, T& t) {
             if (curAttr) e = curAttr->Entity();
             if (curSel) {
                 if (curSel->ValueType() != ENTITY_TYPE) { cout << "VRSTEP::query " << i << " is not an entity!\n"; return false; }
-                e = getSelectEntity(curSel, e);
+                e = getSelectEntity(curSel, "");
             }
         }
 
@@ -281,21 +287,21 @@ template<typename T> bool query(STEPentity* e, string path, T& t) {
 
 // helper function to set tuple members
 template<class T, size_t N> struct Setup {
-    static void setup(T& t, STEPentity* e, vector<string>& paths) {
-        Setup<T, N-1>::setup(t, e, paths);
-        query(e, paths[N-1], get<N-1>(t));
+    static void setup(T& t, STEPentity* e, vector<string>& paths, VRSTEP* step) {
+        Setup<T, N-1>::setup(t, e, paths, step);
+        step->query(e, paths[N-1], get<N-1>(t));
     }
 };
 
 template<class T> struct Setup<T, 1> {
-    static void setup(T& t, STEPentity* e, vector<string>& paths) {
-        query(e, paths[0], get<0>(t));
+    static void setup(T& t, STEPentity* e, vector<string>& paths, VRSTEP* step) {
+        step->query(e, paths[0], get<0>(t));
     }
 };
 
-template<class... Args> void setup(tuple<Args...>& t, STEPentity* e, string paths) {
+template<class... Args> void setup(tuple<Args...>& t, STEPentity* e, string paths, VRSTEP* step) {
     auto vpaths = splitString(paths, '|');
-    Setup<decltype(t), sizeof...(Args)>::setup(t, e, vpaths);
+    Setup<decltype(t), sizeof...(Args)>::setup(t, e, vpaths, step);
 }
 // end helper function
 
@@ -306,16 +312,17 @@ R getTi(void* d) {
 }
 
 template<class T> void VRSTEP::parse(STEPentity* e, string path, string type) {
-    if (instanceByID.count(e)) return;
+    if (instances.count(e)) return;
     auto t = new T();
-    setup(*t, e, path);
+    setup(*t, e, path, this);
     Instance i;
     i.data = t;
     i.ID = e->STEPfile_id;
     i.entity = e;
     i.type = type;
+    instancesById[i.ID] = i;
     instancesByType[type].push_back(i);
-    instanceByID[e] = i;
+    instances[e] = i;
 }
 
 void VRSTEP::open(string file) {
@@ -371,7 +378,7 @@ void VRSTEP::traverseEntity(STEPentity* se, int lvl, STEPcomplex* cparent) {
     //if (red || green || blue) cout << colEnd;
 
     bool printAll = true;
-    if (instanceByID.count(se) && !types[type].print && !printAll) return;
+    if (instances.count(se) && !types[type].print && !printAll) return;
     if (types.count(type) && types[type].cb) { (*types[type].cb)(se); if (!types[type].print && !printAll) return; }
     if (blacklist.count(type) && blacklist[type] && !printAll) { blacklisted++; return; }
     //if (blacklist.count(type)) { blacklisted++; return; }
@@ -382,7 +389,7 @@ void VRSTEP::traverseEntity(STEPentity* se, int lvl, STEPcomplex* cparent) {
         cout << indent(lvl+1) << "A: " << attr->Name() << " : " << attr->asStr();
         if ( attr->Entity() && !attr->IsDerived()) { cout << endl; traverseEntity( attr->Entity(), lvl+2); }
         if ( auto a = attr->Aggregate() ) { cout << endl; traverseAggregate(a, attr->BaseType(), lvl+2); }
-        if ( auto s = attr->Select() ) { cout << endl; traverseSelect(s, se, lvl+2); }
+        if ( auto s = attr->Select() ) { cout << endl; traverseSelect(s, attr->asStr(), lvl+2); }
         if ( auto i = attr->Integer() ) cout << " Integer: " << *i << endl;
         if ( auto r = attr->Real() ) cout << " Real: " << *r << endl;
         if ( auto n = attr->Number() ) cout << " Number: " << *n << endl;
@@ -396,9 +403,9 @@ void VRSTEP::traverseEntity(STEPentity* se, int lvl, STEPcomplex* cparent) {
     }
 }
 
-void VRSTEP::traverseSelect(SDAI_Select* s, STEPentity* se, int lvl) {
+void VRSTEP::traverseSelect(SDAI_Select* s, string ID, int lvl) {
     cout << indent(lvl) << "resolve select\n";
-    auto e = getSelectEntity(s, se);
+    auto e = getSelectEntity(s, ID);
     if (e) traverseEntity(e, lvl+1);
 }
 
@@ -427,7 +434,8 @@ void VRSTEP::traverseAggregate(STEPaggregate *sa, int atype, int lvl) {
             case SELECT_TYPE: // 80
                 sen = (SelectNode*)sn;
                 sdsel = sen->node;
-                traverseSelect(sdsel, 0, lvl+2);
+                sen->asStr(s);
+                traverseSelect(sdsel, s, lvl+2);
                 break;
             case INTEGER_TYPE: // 1
             case REAL_TYPE: // 2
@@ -444,17 +452,17 @@ void VRSTEP::traverseAggregate(STEPaggregate *sa, int atype, int lvl) {
     }
 }
 
-Vec3f toVec3f(STEPentity* i, map<STEPentity*, VRSTEP::Instance>& instanceByID) {
-    if (!instanceByID.count(i)) { cout << "toVec3f FAILED with instance " << i << endl; return Vec3f(); }
-    auto I = instanceByID[i];
+Vec3f toVec3f(STEPentity* i, map<STEPentity*, VRSTEP::Instance>& instances) {
+    if (!instances.count(i)) { cout << "toVec3f FAILED with instance " << i << endl; return Vec3f(); }
+    auto I = instances[i];
     double L = 1.0;
     bool isVec3f = false;
 
-    if (I.type == "Vertex_Point") { I = instanceByID[ I.get<0, STEPentity*>() ]; isVec3f = true; }
+    if (I.type == "Vertex_Point") { I = instances[ I.get<0, STEPentity*>() ]; isVec3f = true; }
 
     if (I.type == "Vector") {
         L = I.get<1, STEPentity*, double>();
-        I = instanceByID[ I.get<0, STEPentity*, double>() ];
+        I = instances[ I.get<0, STEPentity*, double>() ];
         isVec3f = true;
     }
 
@@ -471,12 +479,12 @@ Vec3f toVec3f(STEPentity* i, map<STEPentity*, VRSTEP::Instance>& instanceByID) {
     return Vec3f();
 }
 
-pose toPose(STEPentity* i, map<STEPentity*, VRSTEP::Instance>& instanceByID) {
-    auto I = instanceByID[i];
+pose toPose(STEPentity* i, map<STEPentity*, VRSTEP::Instance>& instances) {
+    auto I = instances[i];
     if (I.type == "Axis2_Placement_3d") {
-        Vec3f p = toVec3f( I.get<0, STEPentity*, STEPentity*, STEPentity*>(), instanceByID);
-        Vec3f d = toVec3f( I.get<1, STEPentity*, STEPentity*, STEPentity*>(), instanceByID);
-        Vec3f u = toVec3f( I.get<2, STEPentity*, STEPentity*, STEPentity*>(), instanceByID);
+        Vec3f p = toVec3f( I.get<0, STEPentity*, STEPentity*, STEPentity*>(), instances);
+        Vec3f d = toVec3f( I.get<1, STEPentity*, STEPentity*, STEPentity*>(), instances);
+        Vec3f u = toVec3f( I.get<2, STEPentity*, STEPentity*, STEPentity*>(), instances);
         //cout << " p " << p << " d " << d << " u " << u << endl;
         return pose(p,d,u);
     }
@@ -488,28 +496,28 @@ struct VRSTEP::Bound : VRSTEP::Instance {
     vector<Vec3f> points;
 
     Bound() {}
-    Bound(Instance& i, map<STEPentity*, Instance>& instanceByID) : Instance(i) {
+    Bound(Instance& i, map<STEPentity*, Instance>& instances) : Instance(i) {
 
         if (type == "Face_Bound" || type == "Face_Outer_Bound") {
-            auto& Loop = instanceByID[ get<0, STEPentity*, bool>() ];
+            auto& Loop = instances[ get<0, STEPentity*, bool>() ];
             bool dir = get<1, STEPentity*, bool>();
             for (auto l : Loop.get<0, vector<STEPentity*> >() ) {
-                auto& Edge = instanceByID[l];
+                auto& Edge = instances[l];
                 if (Edge.type == "Oriented_Edge") {
-                    auto& EdgeElement = instanceByID[ Edge.get<0, STEPentity*, bool>() ];
+                    auto& EdgeElement = instances[ Edge.get<0, STEPentity*, bool>() ];
                     bool edir = Edge.get<1, STEPentity*, bool>();
                     if (EdgeElement.type == "Edge_Curve") {
-                        Vec3f EBeg = toVec3f( EdgeElement.get<0, STEPentity*, STEPentity*, STEPentity*>(), instanceByID );
-                        Vec3f EEnd = toVec3f( EdgeElement.get<1, STEPentity*, STEPentity*, STEPentity*>(), instanceByID );
-                        auto& EdgeGeo = instanceByID[ EdgeElement.get<2, STEPentity*, STEPentity*, STEPentity*>() ];
+                        Vec3f EBeg = toVec3f( EdgeElement.get<0, STEPentity*, STEPentity*, STEPentity*>(), instances );
+                        Vec3f EEnd = toVec3f( EdgeElement.get<1, STEPentity*, STEPentity*, STEPentity*>(), instances );
+                        auto& EdgeGeo = instances[ EdgeElement.get<2, STEPentity*, STEPentity*, STEPentity*>() ];
                         if (EdgeGeo.type == "Line") {
-                            Vec3f p = toVec3f( EdgeGeo.get<0, STEPentity*, STEPentity*>(), instanceByID );
-                            Vec3f d = toVec3f( EdgeGeo.get<1, STEPentity*, STEPentity*>(), instanceByID );
+                            Vec3f p = toVec3f( EdgeGeo.get<0, STEPentity*, STEPentity*>(), instances );
+                            Vec3f d = toVec3f( EdgeGeo.get<1, STEPentity*, STEPentity*>(), instances );
                             points.push_back(EBeg); // TODO: check if beg and end are on the line!
                             points.push_back(EEnd);
                         }
                         if (EdgeGeo.type == "Circle") {
-                            pose c = toPose( EdgeGeo.get<0, STEPentity*, double>(), instanceByID );
+                            pose c = toPose( EdgeGeo.get<0, STEPentity*, double>(), instances );
                             float r = EdgeGeo.get<1, STEPentity*, double>();
                         }
                     }
@@ -524,13 +532,13 @@ struct VRSTEP::Surface : VRSTEP::Instance {
     vector<Bound> bounds;
     pose trans;
 
-    Surface(Instance& i, map<STEPentity*, Instance>& instanceByID) : Instance(i) {
+    Surface(Instance& i, map<STEPentity*, Instance>& instances) : Instance(i) {
         if (type == "Plane") {
-            trans = toPose( get<0, STEPentity*>(), instanceByID);
+            trans = toPose( get<0, STEPentity*>(), instances);
         }
 
         if (type == "Cylindrical_Surface") {
-            trans = toPose( get<0, STEPentity*, double>(), instanceByID );
+            trans = toPose( get<0, STEPentity*, double>(), instances );
             double R = get<1, STEPentity*, double>();
         }
     }
@@ -584,8 +592,8 @@ struct VRSTEP::Surface : VRSTEP::Instance {
 void VRSTEP::build() {
     blacklisted = 0;
 
-    for( int i=0; i<instances->InstanceCount(); i++) {
-        STEPentity* se = instances->GetApplication_instance(i);
+    for( int i=0; i<instMgr->InstanceCount(); i++) {
+        STEPentity* se = instMgr->GetApplication_instance(i);
         //if (se == 1840) break;
         string name = se->EntityName();
         //if (name != "Shape_Representation_Relationship") continue;
@@ -595,7 +603,7 @@ void VRSTEP::build() {
     }
 
     /*for (auto p : instancesByType["Axis2_Placement_3d"]) {
-        auto pp = toPose(p.entity, instanceByID);
+        auto pp = toPose(p.entity, instances);
         cout << p.ID << " " << pp.toString() << endl;
     }*/
 
@@ -605,18 +613,18 @@ void VRSTEP::build() {
         auto geo = VRTransform::create(name);
 
         for (auto i : BrepShape.get<1, string, vector<STEPentity*> >() ) {
-            auto& Item = instanceByID[i];
+            auto& Item = instances[i];
             if (Item.type == "Manifold_Solid_Brep") {
-                auto& Outer = instanceByID[ Item.get<0, STEPentity*>() ];
+                auto& Outer = instances[ Item.get<0, STEPentity*>() ];
                 for (auto j : Outer.get<0, vector<STEPentity*> >() ) {
-                    auto& Face = instanceByID[j];
+                    auto& Face = instances[j];
                     if (Face.type == "Advanced_Face") {
-                        auto& s = instanceByID[ Face.get<1, vector<STEPentity*>, STEPentity*, bool>() ];
-                        Surface surface(s, instanceByID);
+                        auto& s = instances[ Face.get<1, vector<STEPentity*>, STEPentity*, bool>() ];
+                        Surface surface(s, instances);
                         bool same_sense = Face.get<2, vector<STEPentity*>, STEPentity*, bool>();
                         for (auto k : Face.get<0, vector<STEPentity*>, STEPentity*, bool>() ) {
-                            auto& b = instanceByID[k];
-                            Bound bound(b, instanceByID);
+                            auto& b = instances[k];
+                            Bound bound(b, instances);
                             surface.bounds.push_back(bound);
                         }
                         geo->addChild( surface.build() );
@@ -643,19 +651,19 @@ void VRSTEP::build() {
     for (auto& i : instancesByType["Next_Assembly_Usage_Occurrence"]) assemblies.push_back(i);
 
     for (auto& Assembly : assemblies) {
-        auto& RelatingProduct = instanceByID[ Assembly.get<0, STEPentity*, STEPentity*>() ];
-        auto& RelatedProduct = instanceByID[ Assembly.get<1, STEPentity*, STEPentity*>() ];
+        auto& RelatingProduct = instances[ Assembly.get<0, STEPentity*, STEPentity*>() ];
+        auto& RelatedProduct = instances[ Assembly.get<1, STEPentity*, STEPentity*>() ];
     }
 
     for (auto ShapeRep : instancesByType["Context_Dependent_Shape_Representation"]) {
-        auto& Rep = instanceByID[ ShapeRep.get<0, STEPentity*, STEPentity*, STEPentity*>() ];
-        auto& Shape1 = instanceByID[ Rep.get<0, STEPentity*, STEPentity*>() ];
-        auto& Shape2 = instanceByID[ Rep.get<1, STEPentity*, STEPentity*>() ];
+        auto& Rep = instances[ ShapeRep.get<0, STEPentity*, STEPentity*, STEPentity*>() ];
+        auto& Shape1 = instances[ Rep.get<0, STEPentity*, STEPentity*>() ];
+        auto& Shape2 = instances[ Rep.get<1, STEPentity*, STEPentity*>() ];
 
-        auto& RepTrans = instanceByID[ ShapeRep.get<1, STEPentity*, STEPentity*, STEPentity*>() ];
-        auto& ItemTrans = instanceByID[ RepTrans.get<0, STEPentity*>() ];
-        //auto pose1 = toPose( ItemTrans.get<0, STEPentity*, STEPentity*>(), instanceByID );
-        auto pose2 = toPose( ItemTrans.get<1, STEPentity*, STEPentity*>(), instanceByID );
+        auto& RepTrans = instances[ ShapeRep.get<1, STEPentity*, STEPentity*, STEPentity*>() ];
+        auto& ItemTrans = instances[ RepTrans.get<0, STEPentity*>() ];
+        //auto pose1 = toPose( ItemTrans.get<0, STEPentity*, STEPentity*>(), instances );
+        auto pose2 = toPose( ItemTrans.get<1, STEPentity*, STEPentity*>(), instances );
 
         if (ABrepToSRep.count(Shape1.entity)) {
             auto oe = ABrepToSRep[Shape1.entity];
@@ -688,7 +696,7 @@ void VRSTEP::build() {
     addType< tuple<STEPentity*, STEPentity*> >( "Shape_Representation_Relationship", "a2e|a3e", false );
 */
     cout << "build results:\n";
-    cout << instanceByID.size() << " STEP entities parsed\n";
+    cout << instances.size() << " STEP entities parsed\n";
     cout << blacklisted << " STEP blacklisted entities ignored\n";
     cout << resObject.size() << " VR objects created\n";
 }

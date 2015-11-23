@@ -51,9 +51,9 @@ class VRSTEP {
         struct Bound;
         struct Surface;
 
-    private:
+    public:
         RegistryPtr registry;
-        InstMgrPtr instances;
+        InstMgrPtr instMgr;
         STEPfilePtr sfile;
 
         map<string, bool> blacklist;
@@ -64,20 +64,23 @@ class VRSTEP {
         string blueBeg  = "\033[0;38;2;150;150;255m";
         string colEnd = "\033[0m";
 
-        map<STEPentity*, Instance> instanceByID;
+        map<STEPentity*, Instance> instances;
+        map<int, Instance> instancesById;
         map<string, vector<Instance> > instancesByType;
         map<STEPentity*, VRTransformPtr> resObject;
 
         map<string, Type> types;
         template<class T> void addType(string type, string path, bool print = false);
         template<class T> void parse(STEPentity* e, string path, string type);
+        template<typename T> bool query(STEPentity* e, string path, T& t);
+        STEPentity* getSelectEntity(SDAI_Select* s, string ID);
 
         void loadT(string file, STEPfilePtr sfile, bool* done);
         void open(string file);
         string indent(int lvl);
 
         void traverseEntity(STEPentity* se, int lvl, STEPcomplex* cparent = 0);
-        void traverseSelect(SDAI_Select* s, STEPentity* se, int lvl);
+        void traverseSelect(SDAI_Select* s, string ID, int lvl);
         void traverseAggregate(STEPaggregate* sa, int type, int lvl);
         void build();
 
