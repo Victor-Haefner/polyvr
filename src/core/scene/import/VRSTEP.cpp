@@ -43,9 +43,9 @@ VRSTEP::VRSTEP() {
     instances = InstMgrPtr( new InstMgr() ); // instances
     sfile = STEPfilePtr( new STEPfile( *registry, *instances, "", false ) ); // file
 
-    addType< tuple<STEPentity*, double> >( "Circle", "a1se|a2f", true );
-    addType< tuple<double, double, double> >("Direction", "a1A0f|a1A1f|a1A2f");
-    addType< tuple<double, double, double> >("Cartesian_Point", "a1A0f|a1A1f|a1A2f");
+    addType< tuple<STEPentity*, double> >( "Circle", "a1se|a2f", false );
+    addType< tuple<double, double, double> >("Direction", "a1A0f|a1A1f|a1A2f", true);
+    addType< tuple<double, double, double> >("Cartesian_Point", "a1A0f|a1A1f|a1A2f", true);
     addType< tuple<STEPentity*, bool> >( "Oriented_Edge", "a3e|a4b" );
     addType< tuple<STEPentity*, STEPentity*, STEPentity*> >( "Edge_Curve", "a1e|a2e|a3e" );
     addType< tuple<STEPentity*, STEPentity*, STEPentity*> >( "Axis2_Placement_3d", "a1e|a2e|a3e" );
@@ -53,7 +53,7 @@ VRSTEP::VRSTEP() {
     addType< tuple<STEPentity*> >( "Plane", "a1e" );
     addType< tuple<STEPentity*, double> >( "Cylindrical_Surface", "a1e|a2f" );
     addType< tuple<STEPentity*, STEPentity*> >( "Line", "a1e|a2e" );
-    addType< tuple<STEPentity*, double> >( "Vector", "a1e|a2f" );
+    addType< tuple<STEPentity*, double> >( "Vector", "a1e|a2f", true );
     addType< tuple<STEPentity*> >( "Vertex_Point", "a1e" );
     addType< tuple<STEPentity*, bool> >( "Face_Bound", "a1e|a2b" );
     addType< tuple<STEPentity*, bool> >( "Face_Outer_Bound", "a1e|a2b" );
@@ -68,9 +68,9 @@ VRSTEP::VRSTEP() {
     addType< tuple<STEPentity*, STEPentity*> >( "Assembly_Component_Usage", "a3e|a4e" );
     addType< tuple<STEPentity*, STEPentity*> >( "Next_Assembly_Usage_Occurrence", "a3e|a4e", false );
 
-    addType< tuple<STEPentity*, STEPentity*, STEPentity*> >( "Context_Dependent_Shape_Representation", "a0ec0e|a0ec1e|a1e", true );
+    addType< tuple<STEPentity*, STEPentity*, STEPentity*> >( "Context_Dependent_Shape_Representation", "a0ec0e|a0ec1e|a1e", false );
     addType< tuple<STEPentity*, STEPentity*> >( "Representation_Relationship", "a2e|a3e", false );
-    addType< tuple<STEPentity*> >( "Representation_Relationship_With_Transformation", "a0se", true );
+    addType< tuple<STEPentity*> >( "Representation_Relationship_With_Transformation", "a0se", false );
     addType< tuple<STEPentity*, STEPentity*> >( "Item_Defined_Transformation", "a2e|a3e", false );
 
     addType< tuple<vector<STEPentity*>, STEPentity*> >( "Shape_Representation", "a1Ve|a2e", false );
@@ -138,8 +138,7 @@ bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, int& t, char 
 
 bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, STEPentity*& t, char c) {
     if (c == 'e') {
-        if (e) { t = e;
-            cout << " getValue " << e << endl; return true; }
+        if (e) { t = e; return true; }
         if (an) { t = ((STEPentity*)((EntityNode*)an)->node); return true; }
     }
     return false;
@@ -167,7 +166,15 @@ template<typename T> bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNo
     return true;
 }
 
-STEPentity* getSelectEntity(SDAI_Select* s) {
+STEPentity* getSelectEntity(SDAI_Select* s, STEPentity* se) {
+    string etype = se->EntityName();
+
+    /*if (etype == "Shape_Definition_Representation") {
+        auto v = (SdaiRepresented_definition*)s;
+        if (v->Is()) { SdaiAxis2_placement_2d* o = *v; return o; }
+        if (v->IsAxis2_placement_3d()) { SdaiAxis2_placement_3d* o = *v; return o; }
+    }*/
+
     string stype;
     s->UnderlyingTypeName().asStr(stype);
 
@@ -236,7 +243,7 @@ template<typename T> bool query(STEPentity* e, string path, T& t) {
             if (curAttr) e = curAttr->Entity();
             if (curSel) {
                 if (curSel->ValueType() != ENTITY_TYPE) { cout << "VRSTEP::query " << i << " is not an entity!\n"; return false; }
-                e = getSelectEntity(curSel);
+                e = getSelectEntity(curSel, e);
             }
         }
 
@@ -343,7 +350,6 @@ void VRSTEP::traverseEntity(STEPentity* se, int lvl, STEPcomplex* cparent) {
     }
 
     string type = se->EntityName();
-    STEPentity* ID = se;
 
     bool red = (type == "Advanced_Brep_Shape_Representation" ||
         type == "Shape_Definition_Representation" ||
@@ -358,15 +364,16 @@ void VRSTEP::traverseEntity(STEPentity* se, int lvl, STEPcomplex* cparent) {
         type == "Assembly_Component_Usage" ||
         type == "Next_Assembly_Usage_Occurrence");
 
-    if (red) cout << redBeg;
-    if (green) cout << greenBeg;
-    if (blue) cout << blueBeg;
-    cout << indent(lvl) << "Entity " << ID << (se->IsComplex() ? " (C) " : "") << ": " << se->EntityName() << endl;
-    if (red || green || blue) cout << colEnd;
+    //if (red) cout << redBeg;
+    //if (green) cout << greenBeg;
+    //if (blue) cout << blueBeg;
+    cout << indent(lvl) << "Entity " << se->STEPfile_id << (se->IsComplex() ? " (C) " : "") << ": " << se->EntityName() << endl;
+    //if (red || green || blue) cout << colEnd;
 
-    if (instanceByID.count(ID) && !types[type].print) return;
-    if (types.count(type) && types[type].cb) { (*types[type].cb)(se); if (!types[type].print) return; }
-    if (blacklist.count(type) && blacklist[type]) { blacklisted++; return; }
+    bool printAll = true;
+    if (instanceByID.count(se) && !types[type].print && !printAll) return;
+    if (types.count(type) && types[type].cb) { (*types[type].cb)(se); if (!types[type].print && !printAll) return; }
+    if (blacklist.count(type) && blacklist[type] && !printAll) { blacklisted++; return; }
     //if (blacklist.count(type)) { blacklisted++; return; }
 
     STEPattribute* attr;
@@ -375,7 +382,7 @@ void VRSTEP::traverseEntity(STEPentity* se, int lvl, STEPcomplex* cparent) {
         cout << indent(lvl+1) << "A: " << attr->Name() << " : " << attr->asStr();
         if ( attr->Entity() && !attr->IsDerived()) { cout << endl; traverseEntity( attr->Entity(), lvl+2); }
         if ( auto a = attr->Aggregate() ) { cout << endl; traverseAggregate(a, attr->BaseType(), lvl+2); }
-        if ( auto s = attr->Select() ) { cout << endl; traverseSelect(s, lvl+2); }
+        if ( auto s = attr->Select() ) { cout << endl; traverseSelect(s, se, lvl+2); }
         if ( auto i = attr->Integer() ) cout << " Integer: " << *i << endl;
         if ( auto r = attr->Real() ) cout << " Real: " << *r << endl;
         if ( auto n = attr->Number() ) cout << " Number: " << *n << endl;
@@ -389,11 +396,9 @@ void VRSTEP::traverseEntity(STEPentity* se, int lvl, STEPcomplex* cparent) {
     }
 }
 
-//template<class S> void
-
-void VRSTEP::traverseSelect(SDAI_Select* s, int lvl) {
+void VRSTEP::traverseSelect(SDAI_Select* s, STEPentity* se, int lvl) {
     cout << indent(lvl) << "resolve select\n";
-    auto e = getSelectEntity(s);
+    auto e = getSelectEntity(s, se);
     if (e) traverseEntity(e, lvl+1);
 }
 
@@ -422,7 +427,7 @@ void VRSTEP::traverseAggregate(STEPaggregate *sa, int atype, int lvl) {
             case SELECT_TYPE: // 80
                 sen = (SelectNode*)sn;
                 sdsel = sen->node;
-                traverseSelect(sdsel, lvl+2);
+                traverseSelect(sdsel, 0, lvl+2);
                 break;
             case INTEGER_TYPE: // 1
             case REAL_TYPE: // 2
@@ -443,15 +448,24 @@ Vec3f toVec3f(STEPentity* i, map<STEPentity*, VRSTEP::Instance>& instanceByID) {
     if (!instanceByID.count(i)) { cout << "toVec3f FAILED with instance " << i << endl; return Vec3f(); }
     auto I = instanceByID[i];
     double L = 1.0;
-    if (I.type == "Vertex_Point") I = instanceByID[ I.get<0, STEPentity*>() ];
+    bool isVec3f = false;
+
+    if (I.type == "Vertex_Point") { I = instanceByID[ I.get<0, STEPentity*>() ]; isVec3f = true; }
+
     if (I.type == "Vector") {
-        I = instanceByID[ I.get<0, STEPentity*, double>() ];
         L = I.get<1, STEPentity*, double>();
+        I = instanceByID[ I.get<0, STEPentity*, double>() ];
+        isVec3f = true;
     }
-    if (I.type == "Cartesian_Point" || I.type == "Direction") {
-        return Vec3f(I.get<0, double, double, double>(),
-                     I.get<1, double, double, double>(),
-                     I.get<2, double, double, double>())*L;
+
+    if (I.type == "Cartesian_Point" || I.type == "Direction") isVec3f = true;
+
+    if (isVec3f) {
+        auto x = I.get<0, double, double, double>(); if (abs(x) < 1e-14) x = 0;
+        auto y = I.get<1, double, double, double>(); if (abs(y) < 1e-14) y = 0;
+        auto z = I.get<2, double, double, double>(); if (abs(z) < 1e-14) z = 0;
+        //cout << " V " << Vec3f(x,y,z)*L << endl;
+        return Vec3f(x,y,z)*L;
     }
     cout << "toVec3f FAILED with instance type " << I.type << endl;
     return Vec3f();
@@ -463,6 +477,7 @@ pose toPose(STEPentity* i, map<STEPentity*, VRSTEP::Instance>& instanceByID) {
         Vec3f p = toVec3f( I.get<0, STEPentity*, STEPentity*, STEPentity*>(), instanceByID);
         Vec3f d = toVec3f( I.get<1, STEPentity*, STEPentity*, STEPentity*>(), instanceByID);
         Vec3f u = toVec3f( I.get<2, STEPentity*, STEPentity*, STEPentity*>(), instanceByID);
+        //cout << " p " << p << " d " << d << " u " << u << endl;
         return pose(p,d,u);
     }
     cout << "toPose FAILED with instance type " << I.type << endl;
@@ -574,13 +589,13 @@ void VRSTEP::build() {
         //if (se == 1840) break;
         string name = se->EntityName();
         //if (name != "Shape_Representation_Relationship") continue;
-        //if (name != "Circle") continue;
+        //if (name != "Cartesian_Point" && name != "Direction") continue;
         //if (se == 1943) traverseAggregate((STEPaggregate*)se, ENTITY_TYPE, 1);
         traverseEntity(se,1);
     }
 
     /*for (auto p : instancesByType["Axis2_Placement_3d"]) {
-        auto pp = toPose(p.ID);
+        auto pp = toPose(p.entity, instanceByID);
         cout << p.ID << " " << pp.toString() << endl;
     }*/
 
@@ -639,16 +654,12 @@ void VRSTEP::build() {
 
         auto& RepTrans = instanceByID[ ShapeRep.get<1, STEPentity*, STEPentity*, STEPentity*>() ];
         auto& ItemTrans = instanceByID[ RepTrans.get<0, STEPentity*>() ];
-        auto pose1 = toPose( ItemTrans.get<0, STEPentity*, STEPentity*>(), instanceByID );
+        //auto pose1 = toPose( ItemTrans.get<0, STEPentity*, STEPentity*>(), instanceByID );
         auto pose2 = toPose( ItemTrans.get<1, STEPentity*, STEPentity*>(), instanceByID );
 
         if (ABrepToSRep.count(Shape1.entity)) {
             auto oe = ABrepToSRep[Shape1.entity];
             if (resObject.count(oe)) {
-                /*Matrix m = pose1.asMatrix();
-                m.invert();
-                m.mult(pose2.asMatrix());
-                resObject[oe]->setMatrix(m);*/
                 resObject[oe]->setPose(pose2);
             }
         }

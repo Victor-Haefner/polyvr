@@ -77,7 +77,7 @@ class VRSTEP {
         string indent(int lvl);
 
         void traverseEntity(STEPentity* se, int lvl, STEPcomplex* cparent = 0);
-        void traverseSelect(SDAI_Select* s, int lvl);
+        void traverseSelect(SDAI_Select* s, STEPentity* se, int lvl);
         void traverseAggregate(STEPaggregate* sa, int type, int lvl);
         void build();
 
