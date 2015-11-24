@@ -80,6 +80,7 @@
 #include "addons/RealWorld/VRPyRealWorld.h"
 #include "addons/RealWorld/traffic/VRPyTrafficSimulation.h"
 #include "addons/SimViDekont/VRPySimViDekont.h"
+#include "addons/Semantics/Reasoning/VRPyOntology.h"
 #endif
 
 OSG_BEGIN_NAMESPACE;
@@ -324,6 +325,7 @@ void VRScriptManager::initPyModules() {
     registerModule<VRPyMillingMachine>("MillingMachine", pModVR);
     registerModule<VRPyMolecule>("Molecule", pModVR, VRPyGeometry::typeRef);
     registerModule<VRPyRobotArm>("RobotArm", pModVR);
+    registerModule<VRPyOntology>("Ontology", pModVR);
 
 #ifndef _WIN32
 	registerModule<VRPyCSG>("CSGGeometry", pModVR, VRPyGeometry::typeRef);

@@ -8,8 +8,12 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <memory>
 
 using namespace std;
+
+struct VROntology;
+typedef shared_ptr<VROntology> VROntologyPtr;
 
 struct VROntology {
     VRConcept* thing = 0;
@@ -17,6 +21,7 @@ struct VROntology {
     map<int, VROntologyRule*> rules;
 
     VROntology();
+    static VROntologyPtr create();
 
     void merge(VROntology* o);
 
@@ -32,6 +37,8 @@ struct VROntology {
     vector<VROntologyRule*> getRules();
 
     string answer(string question);
+
+    void open(string path);
 };
 
 

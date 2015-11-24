@@ -1,11 +1,20 @@
 #include "VROntology.h"
 #include "VRReasoner.h"
+#include "core/utils/toString.h"
 
+/* no compiling?
+    install the raptor2 ubuntu package for rdfxml parsing
+    sudo apt-get install libraptor2-dev
+*/
+
+#include <raptor2/raptor2.h> // http://librdf.org/raptor/api/
 #include <iostream>
 
 VROntology::VROntology() {
     thing = new VRConcept("Thing");
 }
+
+VROntologyPtr VROntology::create() { return VROntologyPtr( new VROntology() ); }
 
 VRConcept* VROntology::getConcept(string name, VRConcept* p) {
     if (p == 0) p = thing;
@@ -75,4 +84,84 @@ vector<VREntity*> VROntology::getInstances(string concept) {
     return res;
 }
 
+struct RDFStatement {
+    string graph;
+    string object;
+    string predicate;
+    string subject;
 
+    string toString(raptor_term* t) {
+        if (t == 0) return "";
+        switch(t->type) {
+            case RAPTOR_TERM_TYPE_LITERAL:
+                return string( (const char*)t->value.literal.string );
+            case RAPTOR_TERM_TYPE_BLANK:
+                return "BLANK";
+            case RAPTOR_TERM_TYPE_UNKNOWN:
+                return "UNKNOWN";
+            case RAPTOR_TERM_TYPE_URI:
+                auto uri = raptor_uri_as_string( t->value.uri );
+                if (!uri) return "";
+                string s( (const char*)uri );
+                auto ss = splitString(s, '#');
+                //raptor_free_memory(uri);
+                return ss[ss.size()-1];
+        }
+        return "";
+    }
+
+    RDFStatement(raptor_statement* s) {
+        graph = toString(s->graph);
+        object = toString(s->object);
+        predicate = toString(s->predicate);
+        subject = toString(s->subject);
+    }
+
+    string toString() {
+        return "Statement:\n graph: "+graph+"\n object: "+object+"\n predicate: "+predicate+"\n subject: "+subject;
+    }
+};
+
+void print_triple(void* data, raptor_statement* rs) {
+    auto RDFSubjects = (map<string, map<string, string> >*)data;
+    auto s = RDFStatement(rs);
+    cout << s.toString() << endl;
+    (*RDFSubjects)[s.subject][s.object] = s.predicate;
+}
+
+void postProcessRDFSubjects(VROntology* onto, map<string, map<string, string> >& RDFSubjects) {
+    for (auto& s : RDFSubjects) {
+        if (s.second.count("Class")) {
+            ;
+        }
+
+        if (s.second.count("NamedIndividual")) {
+            for (auto obj : s.second) {
+                if (obj.first != "NamedIndividual" && obj.second == "type") {
+                    cout << "Add instance " << s.first << " of type " << obj.first << endl;
+                    onto->addInstance(s.first, obj.first);
+                }
+            }
+        }
+    }
+}
+
+void VROntology::open(string path) {
+    raptor_world* world = raptor_new_world();
+    raptor_parser* rdf_parser = raptor_new_parser(world, "rdfxml");
+    unsigned char* uri_string = raptor_uri_filename_to_uri_string(path.c_str());
+    raptor_uri* uri = raptor_new_uri(world, uri_string);
+    raptor_uri* base_uri = raptor_uri_copy(uri);
+
+    map<string, map<string, string> > RDFSubjects;
+    raptor_parser_set_statement_handler(rdf_parser, &RDFSubjects, print_triple);
+    raptor_parser_parse_file(rdf_parser, uri, base_uri);
+    raptor_free_parser(rdf_parser);
+
+    raptor_free_uri(base_uri);
+    raptor_free_uri(uri);
+    raptor_free_memory(uri_string);
+    raptor_free_world(world);
+
+    postProcessRDFSubjects(this, RDFSubjects);
+}
