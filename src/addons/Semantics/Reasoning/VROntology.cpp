@@ -122,25 +122,73 @@ struct RDFStatement {
     }
 };
 
+struct RDFdata {
+    map<string, map<string, string> > objects;
+};
+
 void print_triple(void* data, raptor_statement* rs) {
-    auto RDFSubjects = (map<string, map<string, string> >*)data;
+    auto RDFSubjects = (RDFdata*)data;
     auto s = RDFStatement(rs);
-    cout << s.toString() << endl;
-    (*RDFSubjects)[s.subject][s.object] = s.predicate;
+    //cout << s.toString() << endl;
+    RDFSubjects->objects[s.subject][s.object] = s.predicate;
 }
 
-void postProcessRDFSubjects(VROntology* onto, map<string, map<string, string> >& RDFSubjects) {
-    for (auto& s : RDFSubjects) {
-        if (s.second.count("Class")) {
-            ;
+void postProcessRDFSubjects(VROntology* onto, RDFdata& data) {
+    map<string, map<string,string> > classes;
+    map<string, map<string,string> > individuals;
+
+    // add all classes
+    for (auto& d : data.objects) {
+        if (d.second.count("Class")) classes[d.first] = d.second;
+        if (d.second.count("NamedIndividual")) individuals[d.first] = d.second;
+    }
+
+    map<string, string> s;
+    for (auto& c : classes) {
+        string subject = c.first;
+        auto& objects = c.second;
+
+        string parent = "";
+        for (auto obj : objects) if (obj.second == "subClassOf") parent = obj.first;
+        if (parent == "") {
+            cout << "Add root concept " << subject << endl;
+            onto->addConcept(subject);
+            continue;
         }
 
-        if (s.second.count("NamedIndividual")) {
-            for (auto obj : s.second) {
-                if (obj.first != "NamedIndividual" && obj.second == "type") {
-                    cout << "Add instance " << s.first << " of type " << obj.first << endl;
-                    onto->addInstance(s.first, obj.first);
-                }
+        if (!onto->getConcept(parent)) {
+            s[subject] = parent;
+            continue;
+        }
+
+        cout << "Add concept " << subject << " as subconcept of " << parent << endl;
+        onto->addConcept( subject, parent );
+    }
+
+    while (s.size()) {
+        map<string, string> tmp;
+        for (auto& c : s) {
+            string subject = c.first;
+            string parent = c.second;
+
+            if (!onto->getConcept(parent)) {
+                tmp[subject] = parent;
+                continue;
+            }
+
+            cout << "Add concept " << subject << " as subconcept of " << parent << endl;
+            onto->addConcept( subject, parent );
+        }
+        s = tmp;
+    }
+
+
+
+    for (auto& i : individuals) {
+        for (auto obj : i.second) {
+            if (obj.first != "NamedIndividual" && obj.second == "type") {
+                cout << "Add instance " << i.first << " of type " << obj.first << endl;
+                onto->addInstance(i.first, obj.first);
             }
         }
     }
@@ -153,7 +201,7 @@ void VROntology::open(string path) {
     raptor_uri* uri = raptor_new_uri(world, uri_string);
     raptor_uri* base_uri = raptor_uri_copy(uri);
 
-    map<string, map<string, string> > RDFSubjects;
+    RDFdata RDFSubjects;
     raptor_parser_set_statement_handler(rdf_parser, &RDFSubjects, print_triple);
     raptor_parser_parse_file(rdf_parser, uri, base_uri);
     raptor_free_parser(rdf_parser);
