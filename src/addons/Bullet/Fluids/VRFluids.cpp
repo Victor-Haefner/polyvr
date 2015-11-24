@@ -20,10 +20,10 @@ shared_ptr<VRFluids> VRFluids::create() {
 void VRFluids::setFunctions(int from, int to) {
     this->from = from;
     this->to = to;
-    VRScenePtr scene = VRSceneManager::getCurrent();
     {
         BLock lock(mtx());
-        const bool after = false;
+        VRScenePtr scene = VRSceneManager::getCurrent();
+        const bool after = false; // TODO true or false?
         // enable graphical updates
         scene->dropUpdateFkt(fkt);
         fkt = VRFunction<int>::create("particles_update", boost::bind(&VRParticles::update, this,from,to));
@@ -31,9 +31,9 @@ void VRFluids::setFunctions(int from, int to) {
         // enable physic updates
         scene->dropPhysicsUpdateFunction(fluidFkt.get(), after);
         if (this->simulation == SPH) {
-            fluidFkt = VRFunction<int>::create("sph_update", boost::bind(&VRFluids::updateXSPH, this,from,to));
+            fluidFkt = VRFunction<int>::create("sph_update", boost::bind(&VRFluids::updateSPH, this,from,to));
         } else if (this->simulation == XSPH) {
-            fluidFkt = VRFunction<int>::create("xsph_update", boost::bind(&VRFluids::updateSPH, this,from,to));
+            fluidFkt = VRFunction<int>::create("xsph_update", boost::bind(&VRFluids::updateXSPH, this,from,to));
         }
         scene->addPhysicsUpdateFunction(fluidFkt.get(), after);
     }
@@ -49,14 +49,13 @@ void VRFluids::update(int from, int to) {
         }
     }
     setPositions(pos);
-    updateXSPH(from, to);
 }
 
 inline void VRFluids::updateSPH(int from, int to) {
     // TODO implement
 }
 
-const float CHAINING = 0.8; // NOTE binding strength between particles (XSPH)
+const float XSPH_CHAINING = 0.3; // NOTE binding strength between particles (XSPH)
 inline void VRFluids::updateXSPH(int from, int to) {
     SphParticle* p;
     SphParticle* neighbour;

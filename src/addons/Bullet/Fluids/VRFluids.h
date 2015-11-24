@@ -26,6 +26,7 @@ class VRFluids : public VRParticles {
         SimulationType simulation = XSPH;
         int from, to;
 
+        // @depricated!
         inline float calc_density(SphParticle* n, float distance2, float area);
         inline btVector3 xsph_calc_movement(SphParticle* p, SphParticle* n);
         inline float kernel_poly6(float distance2, float area);
