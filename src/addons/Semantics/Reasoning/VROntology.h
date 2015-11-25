@@ -16,8 +16,9 @@ struct VROntology;
 typedef shared_ptr<VROntology> VROntologyPtr;
 
 struct VROntology {
-    VRConcept* thing = 0;
-    map<int, VREntity*> instances;
+    VRConceptPtr thing = 0;
+    map<int, VREntityPtr> instances;
+    map<int, VRConceptWeakPtr> concepts;
     map<int, VROntologyRule*> rules;
 
     VROntology();
@@ -25,20 +26,26 @@ struct VROntology {
 
     void merge(VROntology* o);
 
-    VRConcept* addConcept(string concept, string parent = "");
-    VROntologyRule* addRule(string rule);
-    VREntity* addInstance(string name, string concept);
-    VREntity* addVectorInstance(string name, string concept, string x, string y, string z);
+    void addConcept(VRConceptPtr);
+    void addInstance(VREntityPtr);
 
-    VRConcept* getConcept(string name, VRConcept* p = 0);
-    VREntity* getInstance(string instance);
-    vector<VREntity*> getInstances(string concept);
+    VRConceptPtr addConcept(string concept, string parent = "");
+    VROntologyRule* addRule(string rule);
+    VREntityPtr addInstance(string name, string concept);
+    VREntityPtr addVectorInstance(string name, string concept, string x, string y, string z);
+
+    vector<VRConceptPtr> getConcepts();
+    VRConceptPtr getConcept(string name, VRConceptPtr p = 0);
+    VREntityPtr getInstance(string instance);
+    vector<VREntityPtr> getInstances(string concept);
 
     vector<VROntologyRule*> getRules();
 
     string answer(string question);
 
     void open(string path);
+
+    string toString();
 };
 
 

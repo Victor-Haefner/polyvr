@@ -405,6 +405,7 @@
 		<Unit filename="src/addons/Semantics/Segmentation/VRPySegmentation.h" />
 		<Unit filename="src/addons/Semantics/Segmentation/VRSegmentation.cpp" />
 		<Unit filename="src/addons/Semantics/Segmentation/VRSegmentation.h" />
+		<Unit filename="src/addons/Semantics/VRSemanticsFwd.h" />
 		<Unit filename="src/addons/SimViDekont/GeoIO.h" />
 		<Unit filename="src/addons/SimViDekont/Player.h" />
 		<Unit filename="src/addons/SimViDekont/SimViDekont.cpp" />

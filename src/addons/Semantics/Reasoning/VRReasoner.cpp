@@ -1,5 +1,6 @@
 #include "VRReasoner.h"
 #include "VROntology.h"
+#include "VRProperty.h"
 
 #include <iostream>
 #include <sstream>
@@ -255,7 +256,7 @@ bool Variable::has(Variable& other, VROntology* onto) {
     for (auto i1 : instances) {
         for (auto p : i1->properties) { // check if instance properties have
             for (auto v : p.second) { // TODO: compare each v with other.value
-                if (v == other.value) return true;
+                if (v->value == other.value) return true;
             }
         }
     }
@@ -299,7 +300,7 @@ bool VRReasoner::apply(StatementPtr statement, Context& context) {
         auto Cconcept = context.onto->getConcept( right.var.concept ); // child concept
         auto Pconcept = context.onto->getConcept( left.var.concept ); // parent concept
         auto prop = Pconcept->getProperty( Cconcept->name );
-        for (auto i : left.var.instances) i->properties[prop->ID].push_back(right.var.value);
+        for (auto i : left.var.instances) i->add(prop->type, right.var.value);
         statement->state = 1;
         cout << pre << greenBeg << "  give " << right.str << " to " << left.str << colEnd << endl;
     }

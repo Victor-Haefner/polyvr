@@ -3,32 +3,36 @@
 
 #include "VROntologyUtils.h"
 #include "VROntologyRule.h"
-#include "VRProperty.h"
+
+#include "addons/Semantics/VRSemanticsFwd.h"
 
 #include <map>
 #include <vector>
 
 using namespace std;
 
-struct VRConcept : public VRNamedID {
-    VRConcept* parent = 0;
-    map<int, VRConcept*> children;
-    map<int, VRProperty*> properties;
+struct VRConcept : public std::enable_shared_from_this<VRConcept>, public VRNamedID {
+    VRConceptWeakPtr parent;
+    map<int, VRConceptPtr> children;
+    map<int, VRPropertyPtr> properties;
     vector<VROntologyRule*> rules;
 
     VRConcept(string name);
+    static VRConceptPtr create(string name);
 
-    VRConcept* append(string name);
-    void append(VRConcept* c);
+    VRConceptPtr append(string name);
+    void append(VRConceptPtr c);
 
-    VRProperty* addProperty(string name, string type);
-    void addProperty(VRProperty* p);
+    VRPropertyPtr addProperty(string name, string type);
+    void addProperty(VRPropertyPtr p);
 
     int getPropertyID(string name);
-    VRProperty* getProperty(string type);
-    VRProperty* getProperty(int ID);
+    VRPropertyPtr getProperty(string type);
+    VRPropertyPtr getProperty(int ID);
+    vector<VRPropertyPtr> getProperties();
 
     bool is_a(string concept);
+    string toString(string indent = "");
 };
 
 #endif

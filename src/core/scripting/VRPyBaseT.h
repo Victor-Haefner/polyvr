@@ -1,5 +1,23 @@
 #include <boost/bind.hpp>
 
+#define simpleVRPyType( X, NEWfkt ) \
+template<> PyTypeObject VRPyBaseT< VR ## X >::type = { \
+    PyObject_HEAD_INIT(NULL) \
+    0, \
+    "VR. ## X ## ", \
+    sizeof( VRPy ## X ),0, \
+    (destructor)dealloc, \
+    0,0,0,0,0,0,0,0,0,0,0,0,0,0, \
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, \
+    "VR ## X binding", \
+    0,0,0,0,0,0, \
+    VRPy ## X ::methods, \
+    0,0,0,0,0,0,0, \
+    (initproc)init, 0, \
+    NEWfkt, \
+};
+
+
 template<class T> PyTypeObject* VRPyBaseT<T>::typeRef = &VRPyBaseT<T>::type;
 template<class T> VRPyBaseT<T>::VRPyBaseT() {;}
 /*template<class T> VRPyBaseT<T>::~VRPyBaseT() {

@@ -22,7 +22,7 @@ struct Path {
 };
 
 struct Variable {
-    vector<VREntity*> instances;
+    vector<VREntityPtr> instances;
     string value;
     string concept;
     bool isAnonymous = false;
@@ -39,7 +39,7 @@ struct Variable {
 };
 
 struct Result {
-    vector<VREntity*> instances;
+    vector<VREntityPtr> instances;
 };
 
 struct Term {
