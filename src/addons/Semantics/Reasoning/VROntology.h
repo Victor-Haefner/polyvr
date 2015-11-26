@@ -18,7 +18,7 @@ typedef shared_ptr<VROntology> VROntologyPtr;
 struct VROntology {
     VRConceptPtr thing = 0;
     map<int, VREntityPtr> instances;
-    map<int, VRConceptWeakPtr> concepts;
+    map<string, VRConceptWeakPtr> concepts;
     map<int, VROntologyRule*> rules;
 
     VROntology();

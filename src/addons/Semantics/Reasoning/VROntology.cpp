@@ -13,19 +13,22 @@
 
 VROntology::VROntology() {
     thing = VRConcept::create("Thing");
+    concepts["Thing"] = thing;
 }
 
 VROntologyPtr VROntology::create() { return VROntologyPtr( new VROntology() ); }
 
 VRConceptPtr VROntology::getConcept(string name, VRConceptPtr p) {
-    if (p == 0) p = thing;
+    return concepts[name].lock();
+
+    /*if (p == 0) p = thing;
     if (p->name == name) return p;
     VRConceptPtr c = 0;
     for (auto ci : p->children) {
         c = getConcept(name, ci.second);
         if (c) return c;
     }
-    return c;
+    return c;*/
 }
 
 vector<VRConceptPtr> VROntology::getConcepts() {
@@ -35,13 +38,21 @@ vector<VRConceptPtr> VROntology::getConcepts() {
 }
 
 VRConceptPtr VROntology::addConcept(string concept, string parent) {
-    if (parent == "") return thing->append(concept);
-    auto p = getConcept(parent);
-    if (p == 0) { cout << "WARNING in VROntology::addConcept, " << parent << " not found while adding " << concept << "!\n"; return 0;  }
-    return getConcept(parent)->append(concept);
+    auto p = thing;
+    if (parent != "") {
+        auto p = getConcept(parent);
+        if (p == 0) { cout << "WARNING in VROntology::addConcept, " << parent << " not found while adding " << concept << "!\n"; return 0;  }
+    }
+    p = p->append(concept);
+    addConcept(p);
+    return p;
 }
 
-void VROntology::addConcept(VRConceptPtr c) { thing->append(c); }
+void VROntology::addConcept(VRConceptPtr c) {
+    if (c == thing) return;
+    concepts[c->name] = c;
+    if (!c->parent.lock()) thing->append(c);
+}
 
 string VROntology::answer(string question) {
     auto res = VRReasoner::get()->process(question, this);
@@ -96,12 +107,17 @@ vector<VREntityPtr> VROntology::getInstances(string concept) {
 }
 
 string VROntology::toString() {
-    return thing->toString();
+    string res = "Taxonomy:\n";
+    res += thing->toString();
+    res += "Entities:\n";
+    for (auto e : instances) res += e.second->toString() + "\n";
+    return res;
 }
 
 // RDF import
 
 struct RDFStatement {
+    string type;
     string graph;
     string object;
     string predicate;
@@ -135,7 +151,7 @@ struct RDFStatement {
     }
 
     string toString() {
-        return "Statement:\n graph: "+graph+"\n object: "+object+"\n predicate: "+predicate+"\n subject: "+subject;
+        return "Statement:\n type: "+type+"\n object: "+object+"\n predicate: "+predicate+"\n subject: "+subject;
     }
 };
 
@@ -162,6 +178,8 @@ void postProcessRDFSubjects(VROntology* onto, RDFdata& data) {
     map<string, vector<RDFStatement> > tmp;
     map<string, vector<RDFStatement> > stack = data.subjects;
 
+    concepts["Thing"] = onto->getConcept("Thing");
+
     auto postpone = [&](RDFStatement s) {
         tmp[s.subject].push_back(s);
     };
@@ -173,6 +191,7 @@ void postProcessRDFSubjects(VROntology* onto, RDFdata& data) {
             for (auto& statement : d.second) {
                 string object = statement.object;
                 string predicate = statement.predicate;
+                string type = statement.type;
 
                 auto statprint = [&]() {
                     cout << statement.toString() << endl;
@@ -188,62 +207,66 @@ void postProcessRDFSubjects(VROntology* onto, RDFdata& data) {
                     if (object == "DatatypeProperty") { datproperties[subject] = VRProperty::create(subject); continue; }
                     if (object == "ObjectProperty") { objproperties[subject] = VRProperty::create(subject); continue; }
                     if (object == "AnnotationProperty") { annproperties[subject] = VRProperty::create(subject); continue; }
+                }
 
-                    if (!entities.count(subject)) { postpone(statement); continue; }
-                    if (!concepts.count(object)) { postpone(statement); continue; }
+                if (type == "") { // resolve the subject type of the statement
+                    if (concepts.count(subject)) statement.type = "concept";
+                    if (entities.count(subject)) statement.type = "entity";
+                    if (datproperties.count(subject)) statement.type = "dprop";
+                    if (objproperties.count(subject)) statement.type = "oprop";
+                    if (annproperties.count(subject)) statement.type = "aprop";
+                    if (statement.type == "") { postpone(statement); continue; }
+                }
+
+                if (predicate == "type" && type == "entity" && concepts.count(object)) { // Entity(subject) is of type concept(object)
                     entities[subject]->setConcept( concepts[object] );
                     continue;
                 }
 
-                if (predicate == "subClassOf") {
-                    if (!concepts.count(subject)) { postpone(statement); continue; }
-                    if (!concepts.count(object)) { postpone(statement); continue; }
-                    concepts[object]->append(concepts[subject]);
+                if (predicate == "subClassOf" && type == "concept" && concepts.count(object)) { // Concept(subject) is a sub concept of concept(object)
+                    concepts[object]->append( concepts[subject] );
                     continue;
                 }
 
-                if (predicate == "subPropertyOf") {
-                    continue;
-                }
-
-                if (predicate == "inverseOf") {
-                    continue;
-                }
-
-                if (predicate == "range") {
-                    if (!datproperties.count(subject)) { postpone(statement); continue; }
-                    datproperties[subject]->setType(object);
-                    continue;
-                }
-
-                if (predicate == "domain") {
-                    if (!objproperties.count(subject) && !annproperties.count(subject)) { postpone(statement); continue; }
-                    if (annproperties.count(subject)) annproperties[subject]->setType(object);
-                    else objproperties[subject]->setType(object);
-                    continue;
-                }
-
+                if (predicate == "subPropertyOf") { continue; }
+                if (predicate == "inverseOf") { continue; }
                 if (predicate == "comment" || predicate == "seeAlso") { continue; }
 
-                if (annproperties.count(predicate)) {
-                    if (!concepts.count(subject) && !entities.count(subject)) { postpone(statement); continue; }
-                    if (concepts.count(subject)) {
-                        concepts[subject]->addProperty(predicate, object);
-                    } else {
-                        if (!entities[subject]->concept->getProperty(predicate)) { postpone(statement); continue; }
-                        entities[subject]->set(predicate, object);
+                if (predicate == "range") { // property(subject) has type(object)
+                    if (type == "oprop") { objproperties[subject]->setType(object); continue; }
+                    if (type == "dprop") { datproperties[subject]->setType(object); continue; }
+                    if (type == "aprop") { annproperties[subject]->setType(object); continue; }
+                }
+
+                if (predicate == "domain" && concepts.count(object)) { // property(subject) belongs to concept(object)
+                    if (type == "oprop") { concepts[object]->addProperty( objproperties[subject] ); continue; }
+                    if (type == "dprop") { concepts[object]->addProperty( datproperties[subject] ); continue; }
+                    if (type == "aprop") { concepts[object]->addAnnotation( annproperties[subject] ); continue; }
+                }
+
+                if (annproperties.count(predicate)) { // concept(subject) or entity(subject) have an annotation(predicate) with value(object)
+                    if (type == "concept" && annproperties[predicate]->type != "") {
+                        auto p = annproperties[predicate]->copy(); // copy annotations
+                        p->value = object;
+                        concepts[subject]->addAnnotation(p);
+                        continue;
                     }
-                    continue;
+                    if (type == "entity" && entities[subject]->concept->getProperty(predicate)) {
+                        entities[subject]->set(predicate, object); continue;
+                    }
                 }
 
-                if (objproperties.count(predicate)) {
-                    if (!entities.count(subject)) { postpone(statement); continue; }
-                    if (!entities.count(object)) { postpone(statement); continue; }
-                    if (!entities[subject]->concept->getProperty(predicate)) { postpone(statement); continue; }
-                    entities[subject]->set(predicate, object);
-                    continue;
+                if (objproperties.count(predicate)) { // concept(subject) or entity(subject) have a property(predicate) with value(object)
+                    if (type == "concept") { concepts[subject]->addProperty(predicate, object); continue; }
+                    if (type == "entity" && entities.count(object)) {
+                        auto pv = entities[subject]->getProperties(predicate);
+                        if (pv.size()) { pv[0]->value = object; continue; }
+                        auto p = entities[subject]->concept->getProperty(predicate);
+                        if (p && p->type != "") { entities[subject]->set(predicate, object); continue; }
+                    }
                 }
 
+                //statprint();
                 postpone(statement);
             }
         }
@@ -252,11 +275,9 @@ void postProcessRDFSubjects(VROntology* onto, RDFdata& data) {
         cout << "STACK SWAP " << i << " " << stack.size() << endl;
     }
 
-    for (auto c : concepts) if (!c.second->parent.lock()) onto->addConcept(c.second);
+    for (auto c : concepts) onto->addConcept(c.second);
     for (auto e : entities) onto->addInstance(e.second);
-
-    // cout << onto->toString() << endl;
-    // TODO: pack ontology and print!
+    //cout << onto->toString() << endl;
 }
 
 void VROntology::open(string path) {

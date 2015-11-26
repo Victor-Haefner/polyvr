@@ -326,9 +326,9 @@ void VRScriptManager::initPyModules() {
     registerModule<VRPyMolecule>("Molecule", pModVR, VRPyGeometry::typeRef);
     registerModule<VRPyRobotArm>("RobotArm", pModVR);
     registerModule<VRPyOntology>("Ontology", pModVR);
-    registerModule<VRPyOntology>("Property", pModVR);
-    registerModule<VRPyOntology>("Concept", pModVR);
-    registerModule<VRPyOntology>("Entity", pModVR);
+    registerModule<VRPyProperty>("Property", pModVR);
+    registerModule<VRPyConcept>("Concept", pModVR);
+    registerModule<VRPyEntity>("Entity", pModVR);
 
 #ifndef _WIN32
 	registerModule<VRPyCSG>("CSGGeometry", pModVR, VRPyGeometry::typeRef);

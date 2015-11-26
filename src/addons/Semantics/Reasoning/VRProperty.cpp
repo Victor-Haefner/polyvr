@@ -13,7 +13,7 @@ void VRProperty::setType(string type) { this->type = type; }
 
 string VRProperty::toString() {
     string res;
-    res += " prop "+name+" ("+type+")\n";
+    res += " prop "+name+" = "+value+" ("+type+")\n";
     return res;
 }
 
