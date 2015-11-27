@@ -407,6 +407,46 @@ VRGeometryPtr VRGeometry::separateSelection(VRSelectionPtr sel) {
     return geo;
 }
 
+void VRGeometry::genTexCoords(string mapping, float scale, int channel, shared_ptr<pose> uvp) {
+    GeoVec2fPropertyRecPtr tex = GeoVec2fProperty::create();
+    Matrix uvp_inv;
+    if (uvp) uvp_inv = uvp->asMatrix();
+    if (uvp) uvp_inv.invert();
+
+    auto pos = mesh->getPositions();
+    auto norms = mesh->getNormals();
+    int N = pos->size();
+
+    Vec3f p;
+    Vec3f n;
+    Vec2f uv;
+
+    auto cubeMapping = [&](Vec3f& p, Vec3f& n, Vec2f& uv) {
+        if (abs(n[0]) > abs(n[1]) && abs(n[0]) > abs(n[2])) uv = Vec2f(p[1], p[2]);
+        if (abs(n[1]) > abs(n[0]) && abs(n[1]) > abs(n[2])) uv = Vec2f(p[0], p[2]);
+        if (abs(n[2]) > abs(n[0]) && abs(n[2]) > abs(n[1])) uv = Vec2f(p[0], p[1]);
+    };
+
+    auto sphereMapping = [&](Vec3f& p, Vec3f& n, Vec2f& uv) {
+        float r = p.length();
+        float theta = acos(p[1]/r);
+        float phi   = atan(p[2]/p[0]);
+        uv = Vec2f(abs(phi),abs(theta));
+    };
+
+    for (int i=0; i<N; i++) {
+        Vec3f n = norms->getValue<Vec3f>(i);
+        Vec3f p = Vec3f(pos->getValue<Pnt3f>(i));
+        if (uvp) uvp_inv.mult( p,p );
+        if (uvp) uvp_inv.mult( n,n );
+        if (mapping == "CUBE") cubeMapping(p,n,uv);
+        if (mapping == "SPHERE") sphereMapping(p,n,uv);
+        tex->addValue(uv*scale);
+    }
+
+    setTexCoords(tex, channel, true);
+}
+
 void VRGeometry::decimate(float f) {
     /*if (mesh == 0) return;
 

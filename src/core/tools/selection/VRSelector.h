@@ -33,6 +33,7 @@ class VRSelector {
 
         void select(VRObjectPtr obj);
         void select(VRSelectionPtr s);
+        void add(VRSelectionPtr s);
         VRSelectionPtr getSelection();
         void setColor(Vec3f c);
         void setBorder(int width, bool smooth = true);

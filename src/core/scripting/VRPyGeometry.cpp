@@ -8,6 +8,7 @@
 #include "VRPyMaterial.h"
 #include "VRPySelection.h"
 #include "VRPyTypeCaster.h"
+#include "VRPyPose.h"
 
 #define NO_IMPORT_ARRAY
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
@@ -107,6 +108,7 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"showGeometricData", (PyCFunction)VRPyGeometry::showGeometricData, METH_VARARGS, "Enable or disable a data layer - showGeometricData(string type, bool)\n layers are: ['Normals']" },
     {"calcSurfaceArea", (PyCFunction)VRPyGeometry::calcSurfaceArea, METH_NOARGS, "Compute and return the total surface area - flt calcSurfaceArea()" },
     {"setPositionalTexCoords", (PyCFunction)VRPyGeometry::setPositionalTexCoords, METH_VARARGS, "Use the positions as texture coordinates - setPositionalTexCoords(float scale)" },
+    {"genTexCoords", (PyCFunction)VRPyGeometry::genTexCoords, METH_VARARGS, "Generate the texture coordinates - genTexCoords( str mapping, float scale, int channel, Pose )\n\tmapping: ['CUBE', 'SPHERE']" },
     {NULL}  /* Sentinel */
 };
 
@@ -226,6 +228,15 @@ void feed1D3(PyObject* o, T& vec) {
         tmp[2] = PyFloat_AsDouble( PyList_GetItem(o, i+2) );
         vec->addValue(tmp);
     }
+}
+
+PyObject* VRPyGeometry::genTexCoords(VRPyGeometry* self, PyObject *args) {
+    if (!self->valid()) return NULL;
+    const char* c = 0; float scale; int channel; VRPyPose* pose;
+    if (!PyArg_ParseTuple(args, "sfiO", (char*)&c, &scale, &channel, &pose)) return NULL;
+    string mapping = "CUBE"; if (c) mapping = c;
+    self->objPtr->genTexCoords( mapping, scale, channel, pose->objPtr );
+    Py_RETURN_TRUE;
 }
 
 PyObject* VRPyGeometry::separate(VRPyGeometry* self, PyObject *args) {
