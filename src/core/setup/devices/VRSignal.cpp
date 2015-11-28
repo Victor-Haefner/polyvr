@@ -10,12 +10,13 @@ using namespace std;
 VRSignal_base::VRSignal_base() {}
 VRSignal_base::~VRSignal_base() {}
 
-void VRSignal_base::clear() { callbacks.clear(); }
+void VRSignal_base::clear() { callbacks.clear(); callbacksPtr.clear(); }
 
 void VRSignal_base::setUpdate(bool b) { _doUpdate = b; }
 bool VRSignal_base::doUpdate() { return _doUpdate; }
 
 VRUpdatePtr VRSignal_base::getTriggerFkt() { return trig_fkt; }
+vector<VRBaseWeakCb> VRSignal_base::getCallbacks() { return callbacksPtr; }
 
 
 VRSignal::VRSignal(VRDevice* _dev) : event(_dev) {

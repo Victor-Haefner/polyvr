@@ -73,6 +73,7 @@ void VRGuiBits_on_navigation_changed(GtkComboBox* cb, gpointer data) {
     if (c == 0) return;
     string name = string(c);
     scene->setActiveNavigation(name);
+    setCombobox("combobox5", getListStorePos("nav_presets", name));
 }
 
 void VRGuiBits_on_new_cancel_clicked(GtkButton* cb, gpointer data) {

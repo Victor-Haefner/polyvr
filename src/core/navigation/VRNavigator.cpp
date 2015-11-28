@@ -41,6 +41,7 @@ VRNavPreset::~VRNavPreset() {}
 void VRNavPreset::updateBinding(VRNavBinding& b) {
     if (!active) return;
     if (dev == 0) return;
+
     b.clearSignal();
     auto sig = b.doRepeat ? dev->addToggleSignal(b.key) : dev->addSignal( b.key, b.state);
     sig->add(b.cb);
@@ -66,6 +67,9 @@ void VRNavPreset::deactivate() {
     active = false;
     for (auto& b : bindings) b.clearSignal();
 }
+
+vector<VRNavBinding>::iterator VRNavPreset::begin() { return bindings.begin(); }
+vector<VRNavBinding>::iterator VRNavPreset::end() { return bindings.end(); }
 
 vector<VRNavBinding>& VRNavPreset::getBindings() { return bindings; }
 

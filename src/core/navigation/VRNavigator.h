@@ -53,6 +53,9 @@ class VRNavPreset : public VRName {
 
         void addKeyBinding(VRNavBinding b);
         vector<VRNavBinding>& getBindings();
+
+        vector<VRNavBinding>::iterator begin();
+        vector<VRNavBinding>::iterator end();
 };
 
 class VRNavigator_base : public VRStorage {
