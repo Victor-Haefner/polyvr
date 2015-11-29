@@ -4,10 +4,13 @@
 #include <iostream>
 #include <vector>
 #include <GL/glut.h>
+#include <boost/thread/recursive_mutex.hpp>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+typedef boost::recursive_mutex::scoped_lock PLock;
+boost::recursive_mutex mtx;
 
 VRCallbackManager::VRCallbackManager() { updateListsChanged = false; }
 VRCallbackManager::~VRCallbackManager() {
@@ -15,11 +18,13 @@ VRCallbackManager::~VRCallbackManager() {
 }
 
 void VRCallbackManager::queueJob(VRUpdatePtr f, int priority) {
+    PLock lock(mtx);
     updateListsChanged = true;
     jobFktPtrs[f.get()] = job(f,priority);
 }
 
 void VRCallbackManager::addUpdateFkt(VRUpdateWeakPtr f, int priority) {
+    PLock lock(mtx);
     updateListsChanged = true;
     if (updateFktPtrs.count(priority) == 0) {
         updateFktPtrs[priority] = new list<VRUpdateWeakPtr>();
@@ -29,6 +34,7 @@ void VRCallbackManager::addUpdateFkt(VRUpdateWeakPtr f, int priority) {
 }
 
 void VRCallbackManager::addTimeoutFkt(VRUpdateWeakPtr p, int priority, int timeout) {
+    PLock lock(mtx);
     auto f = p.lock().get();
     updateListsChanged = true;
     if (updateFktPtrs_priorities.count(f)) return;
@@ -44,6 +50,7 @@ void VRCallbackManager::addTimeoutFkt(VRUpdateWeakPtr p, int priority, int timeo
 }
 
 void VRCallbackManager::dropUpdateFkt(VRUpdateWeakPtr p) {//replace by list || map || something..
+    PLock lock(mtx);
     auto f = p.lock().get();
     if (updateFktPtrs_priorities.count(f) == 0) return;
     int prio = updateFktPtrs_priorities[f];
@@ -60,6 +67,7 @@ void VRCallbackManager::dropUpdateFkt(VRUpdateWeakPtr p) {//replace by list || m
 }
 
 void VRCallbackManager::dropTimeoutFkt(VRUpdateWeakPtr p) {//replace by list || map || something..
+    PLock lock(mtx);
     auto f = p.lock().get();
     updateListsChanged = true;
     if (updateFktPtrs_priorities.count(f) == 0) return;
@@ -79,6 +87,7 @@ void VRCallbackManager::dropTimeoutFkt(VRUpdateWeakPtr p) {//replace by list || 
 }
 
 void VRCallbackManager::updateCallbacks() {
+    PLock lock(mtx);
     //printCallbacks();
     vector<VRUpdateWeakPtr> cbsPtr;
 
@@ -108,6 +117,7 @@ void VRCallbackManager::updateCallbacks() {
 }
 
 void VRCallbackManager::printCallbacks() {
+    PLock lock(mtx);
     cout << "VRCallbackManager " << this << " t " << VRGlobals::get()->CURRENT_FRAME << endl;
     cout << " update fkts (" << updateFktPtrs.size() << ")\n";
     for (auto fl : updateFktPtrs) {
