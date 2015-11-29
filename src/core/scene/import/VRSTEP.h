@@ -67,7 +67,8 @@ class VRSTEP {
         map<STEPentity*, Instance> instances;
         map<int, Instance> instancesById;
         map<string, vector<Instance> > instancesByType;
-        map<STEPentity*, VRTransformPtr> resObject;
+        map<STEPentity*, VRTransformPtr> resGeos;
+        VRTransformPtr resRoot;
 
         map<string, Type> types;
         template<class T> void addType(string type, string path, bool print = false);
@@ -82,6 +83,9 @@ class VRSTEP {
         void traverseEntity(STEPentity* se, int lvl, STEPcomplex* cparent = 0);
         void traverseSelect(SDAI_Select* s, string ID, int lvl);
         void traverseAggregate(STEPaggregate* sa, int type, int lvl);
+
+        void buildGeometries();
+        void buildScenegraph();
         void build();
 
     public:

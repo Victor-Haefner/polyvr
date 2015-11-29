@@ -61,7 +61,7 @@ VRTransformPtr VRImport::Cache::retrieve() {
 }
 
 VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, string preset) {
-    cout << "VRImport::load " << path << endl;
+    cout << "VRImport::load " << path << " " << preset << endl;
     reload = reload? true : (cache.count(path) == 0);
     if (!reload) {
         auto res = cache[path].retrieve();

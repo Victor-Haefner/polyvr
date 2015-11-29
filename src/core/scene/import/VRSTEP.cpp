@@ -17,6 +17,8 @@
 #include "core/utils/VRFunction.h"
 #include "core/math/polygon.h"
 
+#include <boost/filesystem.hpp>
+
 /*
 
 IMPORTANT: ..not compiling? you need to install the stepcode package!
@@ -32,6 +34,7 @@ using namespace std;
 using namespace OSG;
 
 void VRSTEP::loadT(string file, STEPfilePtr sfile, bool* done) {
+    if (boost::filesystem::exists(file)) file = boost::filesystem::canonical(file).string();
     sfile->ReadExchangeFile(file);
     registry->ResetSchemas();
     registry->ResetEntities();
@@ -49,39 +52,39 @@ VRSTEP::VRSTEP() {
     addType< tuple<STEPentity*, bool> >( "Oriented_Edge", "a3e|a4b", false);
     addType< tuple<STEPentity*, STEPentity*, STEPentity*> >( "Edge_Curve", "a1e|a2e|a3e", false);
     addType< tuple<STEPentity*, STEPentity*, STEPentity*> >( "Axis2_Placement_3d", "a1e|a2e|a3e", false);
-    addType< tuple<STEPentity*> >( "Manifold_Solid_Brep", "a1e", true);
+    addType< tuple<STEPentity*> >( "Manifold_Solid_Brep", "a1e", false);
     addType< tuple<STEPentity*> >( "Plane", "a1e", false);
     addType< tuple<STEPentity*, double> >( "Cylindrical_Surface", "a1e|a2f", false);
     addType< tuple<STEPentity*, STEPentity*> >( "Line", "a1e|a2e", false);
-    addType< tuple<STEPentity*, double> >( "Vector", "a1e|a2f", true);
-    addType< tuple<STEPentity*> >( "Vertex_Point", "a1e", true);
+    addType< tuple<STEPentity*, double> >( "Vector", "a1e|a2f", false);
+    addType< tuple<STEPentity*> >( "Vertex_Point", "a1e", false);
     addType< tuple<STEPentity*, bool> >( "Face_Bound", "a1e|a2b", false);
     addType< tuple<STEPentity*, bool> >( "Face_Outer_Bound", "a1e|a2b", false);
     addType< tuple<vector<STEPentity*>, STEPentity*, bool> >( "Advanced_Face", "a1Ve|a2e|a3b", false);
-    addType< tuple<string, vector<STEPentity*> > >( "Advanced_Brep_Shape_Representation", "a0S|a1Ve", true);
+    addType< tuple<string, vector<STEPentity*> > >( "Advanced_Brep_Shape_Representation", "a0S|a1Ve", false);
     addType< tuple<vector<STEPentity*> > >( "Closed_Shell", "a1Ve", false);
     addType< tuple<vector<STEPentity*> > >( "Edge_Loop", "a1Ve", false);
 
     // assembly entities
-    addType< tuple<string, STEPentity*, STEPentity*> >( "Product_Definition_Relationship", "a3e|a4e", true);
-    addType< tuple<string, STEPentity*, STEPentity*> >( "Product_Definition_Usage", "a3e|a4e", true);
-    addType< tuple<string, STEPentity*, STEPentity*> >( "Assembly_Component_Usage", "a3e|a4e", true);
-    addType< tuple<string, STEPentity*, STEPentity*> >( "Next_Assembly_Usage_Occurrence", "a1S|a3e|a4e", true);
+    addType< tuple<string, STEPentity*, STEPentity*> >( "Product_Definition_Relationship", "a3e|a4e", false);
+    addType< tuple<string, STEPentity*, STEPentity*> >( "Product_Definition_Usage", "a3e|a4e", false);
+    addType< tuple<string, STEPentity*, STEPentity*> >( "Assembly_Component_Usage", "a3e|a4e", false);
+    addType< tuple<string, STEPentity*, STEPentity*> >( "Next_Assembly_Usage_Occurrence", "a1S|a3e|a4e", false);
 
-    addType< tuple<STEPentity*, STEPentity*, STEPentity*> >( "Context_Dependent_Shape_Representation", "a0ec0e|a0ec1e|a1e", true);
-    addType< tuple<STEPentity*, STEPentity*> >( "Representation_Relationship", "a2e|a3e", true);
-    addType< tuple<STEPentity*> >( "Representation_Relationship_With_Transformation", "a0se", true);
-    addType< tuple<STEPentity*, STEPentity*> >( "Item_Defined_Transformation", "a2e|a3e", true);
+    addType< tuple<STEPentity*, STEPentity*, STEPentity*> >( "Context_Dependent_Shape_Representation", "a0ec0e|a0ec1e|a1e", false);
+    addType< tuple<STEPentity*, STEPentity*> >( "Representation_Relationship", "a2e|a3e", false);
+    addType< tuple<STEPentity*> >( "Representation_Relationship_With_Transformation", "a0se", false);
+    addType< tuple<STEPentity*, STEPentity*> >( "Item_Defined_Transformation", "a2e|a3e", false);
 
-    addType< tuple<vector<STEPentity*>, STEPentity*> >( "Shape_Representation", "a1Ve|a2e", true);
-    addType< tuple<STEPentity*, STEPentity*> >( "Shape_Representation_Relationship", "a2e|a3e", true);
+    addType< tuple<vector<STEPentity*>, STEPentity*> >( "Shape_Representation", "a1Ve|a2e", false);
+    addType< tuple<STEPentity*, STEPentity*> >( "Shape_Representation_Relationship", "a2e|a3e", false);
     //addType< tuple<STEPentity*, STEPentity*> >( "Geometric_Representation_Context", "a2e|a3e" );
 
-    addType< tuple<string, string> >( "Product", "a0S|a1S", true);
-    addType< tuple<STEPentity*> >( "Product_Definition", "a2e", true);
-    addType< tuple<STEPentity*> >( "Product_Definition_Shape", "a2se", true);
-    addType< tuple<STEPentity*> >( "Product_Definition_Formation_With_Specified_Source", "a2e", true);
-    addType< tuple<STEPentity*, STEPentity*> >( "Shape_Definition_Representation", "a0se|a1e", true);
+    addType< tuple<string, string> >( "Product", "a0S|a1S", false);
+    addType< tuple<STEPentity*> >( "Product_Definition", "a2e", false);
+    addType< tuple<STEPentity*> >( "Product_Definition_Shape", "a2se", false);
+    addType< tuple<STEPentity*> >( "Product_Definition_Formation_With_Specified_Source", "a2e", false);
+    addType< tuple<STEPentity*, STEPentity*> >( "Shape_Definition_Representation", "a0se|a1e", false);
 
     {
     blacklist["Application_Context"] = 1;
@@ -347,7 +350,7 @@ void VRSTEP::traverseEntity(STEPentity* se, int lvl, STEPcomplex* cparent) {
 
     string type = se->EntityName();
 
-    bool red = (type == "Advanced_Brep_Shape_Representation" ||
+    /*bool red = (type == "Advanced_Brep_Shape_Representation" ||
         type == "Shape_Definition_Representation" ||
         type == "Shape_Representation_Relationship" ||
         type == "Shape_Representation" );
@@ -364,7 +367,7 @@ void VRSTEP::traverseEntity(STEPentity* se, int lvl, STEPcomplex* cparent) {
     //if (green) cout << greenBeg;
     //if (blue) cout << blueBeg;
     cout << indent(lvl) << "Entity " << se->STEPfile_id << (se->IsComplex() ? " (C) " : "") << ": " << string(se->EntityName()) << endl;
-    //if (red || green || blue) cout << colEnd;
+    //if (red || green || blue) cout << colEnd;*/
 
     bool printAll = false;
     if (instances.count(se) && !types[type].print && !printAll) return;
@@ -461,8 +464,7 @@ Vec3f toVec3f(STEPentity* i, map<STEPentity*, VRSTEP::Instance>& instances) {
         auto x = I.get<0, double, double, double>(); if (abs(x) < 1e-14) x = 0;
         auto y = I.get<1, double, double, double>(); if (abs(y) < 1e-14) y = 0;
         auto z = I.get<2, double, double, double>(); if (abs(z) < 1e-14) z = 0;
-        //cout << " V " << Vec3f(x,y,z)*L << endl;
-        return Vec3f(x,y,z)*L;
+        return Vec3f(y,x,-z)*L;
     }
     cout << "toVec3f FAILED with instance type " << I.type << endl;
     return Vec3f();
@@ -474,8 +476,9 @@ pose toPose(STEPentity* i, map<STEPentity*, VRSTEP::Instance>& instances) {
         Vec3f p = toVec3f( I.get<0, STEPentity*, STEPentity*, STEPentity*>(), instances);
         Vec3f d = toVec3f( I.get<1, STEPentity*, STEPentity*, STEPentity*>(), instances);
         Vec3f u = toVec3f( I.get<2, STEPentity*, STEPentity*, STEPentity*>(), instances);
-        //cout << " p " << p << " d " << d << " u " << u << endl;
+        //d[2] *= -1;
         return pose(p,d,u);
+        //return pose(p,d,u);
     }
     cout << "toPose FAILED with instance type " << I.type << endl;
     return pose();
@@ -578,24 +581,7 @@ struct VRSTEP::Surface : VRSTEP::Instance {
     }
 };
 
-void VRSTEP::build() {
-    blacklisted = 0;
-
-    for( int i=0; i<instMgr->InstanceCount(); i++) {
-        STEPentity* se = instMgr->GetApplication_instance(i);
-        //if (se == 1840) break;
-        string name = se->EntityName();
-        //if (name != "Product_Definition_Shape") continue;
-        //if (name != "Cartesian_Point" && name != "Direction") continue;
-        //if (se == 1943) traverseAggregate((STEPaggregate*)se, ENTITY_TYPE, 1);
-        traverseEntity(se,0);
-    }
-
-    /*for (auto p : instancesByType["Axis2_Placement_3d"]) {
-        auto pp = toPose(p.entity, instances);
-        cout << p.ID << " " << pp.toString() << endl;
-    }*/
-
+void VRSTEP::buildGeometries() {
     for (auto BrepShape : instancesByType["Advanced_Brep_Shape_Representation"]) {
 
         string name = BrepShape.get<0, string, vector<STEPentity*> >();
@@ -622,20 +608,34 @@ void VRSTEP::build() {
             }
         }
 
-        resObject[BrepShape.entity] = geo;
+        resGeos[BrepShape.entity] = geo;
     }
+}
 
-    map<STEPentity*, STEPentity*> ABrepToSRep;
+void VRSTEP::buildScenegraph() {
+    // get geometries -------------------------------------
+    map<STEPentity*, STEPentity*> SRepToABrep;
     for (auto ShapeRepRel : instancesByType["Shape_Representation_Relationship"]) {
-        auto obj = ShapeRepRel.get<0, STEPentity*, STEPentity*>();
-        auto rep = ShapeRepRel.get<1, STEPentity*, STEPentity*>();
-        ABrepToSRep[rep] = obj;
+        auto ABrep = ShapeRepRel.get<0, STEPentity*, STEPentity*>();
+        auto SRep = ShapeRepRel.get<1, STEPentity*, STEPentity*>();
+        if (!ABrep || !SRep) continue; // empty one
+        SRepToABrep[SRep] = ABrep;
     }
 
+    map<STEPentity*, STEPentity*> ProductToSRep;
+    for (auto ShapeRepRel : instancesByType["Shape_Definition_Representation"]) {
+        auto& PDS = instances[ ShapeRepRel.get<0, STEPentity*, STEPentity*>() ];
+        auto& PDef = instances[ PDS.get<0, STEPentity*>() ];
+        auto& PDF = instances[ PDef.get<0, STEPentity*>() ];
+        auto& Product = instances[ PDF.get<0, STEPentity*>() ];
+        auto SRep = ShapeRepRel.get<1, STEPentity*, STEPentity*>();
+        ProductToSRep[Product.entity] = SRep;
+    }
 
-    // scene graph
+    // get product definitions -------------------------------------
+    resRoot = VRTransform::create("STEPRoot");
     VRObjectPtr root;
-    map<string, VRObjectPtr> objs;
+    map<string, VRTransformPtr> objs;
 
     for (auto PDefShape : instancesByType["Product_Definition_Shape"]) {
         auto& Def = instances[ PDefShape.get<0, STEPentity*>() ];
@@ -644,45 +644,20 @@ void VRSTEP::build() {
             auto& PDF = instances[ Def.get<0, STEPentity*>() ];
             auto& Product = instances[ PDF.get<0, STEPentity*>() ];
             string name = Product.get<0, string, string>();
-            cout << " define " << name << endl;
-            auto o = VRObject::create(name);
+            STEPentity *srep, *brep; srep = brep = 0;
+            if (ProductToSRep.count(Product.entity)) srep = ProductToSRep[Product.entity];
+            if (SRepToABrep.count(srep)) brep = SRepToABrep[srep];
+            VRTransformPtr o;
+            if (resGeos.count(brep)) o = resGeos[brep];
+            else o = VRTransform::create(name);
             objs[name] = o;
             if (!root) root = o;
         }
-
-        if (Def.type == "Next_Assembly_Usage_Occurrence") {
-            string name  = Def.get<0, string, STEPentity*, STEPentity*>();
-            auto& Relating = instances[ Def.get<1, string, STEPentity*, STEPentity*>() ];
-            auto& Related  = instances[ Def.get<2, string, STEPentity*, STEPentity*>() ];
-
-            auto& PDF1 = instances[ Relating.get<0, STEPentity*>() ];
-            auto& Product1 = instances[ PDF1.get<0, STEPentity*>() ];
-            auto& PDF2 = instances[ Related.get<0, STEPentity*>() ];
-            auto& Product2 = instances[ PDF2.get<0, STEPentity*>() ];
-
-            string parent = Product1.get<0, string, string>();
-            string obj = Product2.get<0, string, string>();
-            cout << " assemble " << name << " with parent " << parent << " from " << obj << endl;
-
-            auto o = objs[obj]->duplicate();
-            objs[parent]->addChild(o);
-            objs[name] = o;
-        }
-    }
-    root->printTree();
-
-    // scene graph
-    vector<Instance> assemblies;
-    for (auto& i : instancesByType["Product_Definition_Relationship"]) assemblies.push_back(i);
-    for (auto& i : instancesByType["Product_Definition_Usage"]) assemblies.push_back(i);
-    for (auto& i : instancesByType["Assembly_Component_Usage"]) assemblies.push_back(i);
-    for (auto& i : instancesByType["Next_Assembly_Usage_Occurrence"]) assemblies.push_back(i);
-
-    for (auto& Assembly : assemblies) {
-        auto& RelatingProduct = instances[ Assembly.get<1, string, STEPentity*, STEPentity*>() ];
-        auto& RelatedProduct = instances[ Assembly.get<2, string, STEPentity*, STEPentity*>() ];
     }
 
+    resRoot->addChild(root);
+
+    // build scene graph and set transforms ----------------------------------------
     for (auto ShapeRep : instancesByType["Context_Dependent_Shape_Representation"]) {
         auto& Rep = instances[ ShapeRep.get<0, STEPentity*, STEPentity*, STEPentity*>() ];
         auto& Shape1 = instances[ Rep.get<0, STEPentity*, STEPentity*>() ];
@@ -690,51 +665,57 @@ void VRSTEP::build() {
 
         auto& RepTrans = instances[ ShapeRep.get<1, STEPentity*, STEPentity*, STEPentity*>() ];
         auto& ItemTrans = instances[ RepTrans.get<0, STEPentity*>() ];
-        //auto pose1 = toPose( ItemTrans.get<0, STEPentity*, STEPentity*>(), instances );
+        auto pose1 = toPose( ItemTrans.get<0, STEPentity*, STEPentity*>(), instances );
         auto pose2 = toPose( ItemTrans.get<1, STEPentity*, STEPentity*>(), instances );
 
-        if (ABrepToSRep.count(Shape1.entity)) {
-            auto oe = ABrepToSRep[Shape1.entity];
-            if (resObject.count(oe)) {
-                resObject[oe]->setPose(pose2);
-            }
-        }
+        auto& PDef = instances[ ShapeRep.get<2, STEPentity*, STEPentity*, STEPentity*>() ];
+        auto& Assembly = instances[ PDef.get<0, STEPentity*>() ];
+        string name  = Assembly.get<0, string, STEPentity*, STEPentity*>();
+
+        auto& Relating = instances[ Assembly.get<1, string, STEPentity*, STEPentity*>() ];
+        auto& Related  = instances[ Assembly.get<2, string, STEPentity*, STEPentity*>() ];
+        auto& PDF1 = instances[ Relating.get<0, STEPentity*>() ];
+        auto& PDF2 = instances[ Related.get<0, STEPentity*>() ];
+        auto& Product1 = instances[ PDF1.get<0, STEPentity*>() ];
+        auto& Product2 = instances[ PDF2.get<0, STEPentity*>() ];
+
+        string parent = Product1.get<0, string, string>();
+        string obj = Product2.get<0, string, string>();
+
+        VRTransformPtr o = dynamic_pointer_cast<VRTransform>( objs[obj]->duplicate() );
+        o->setName(name);
+        objs[parent]->addChild(o);
+        objs[name] = o;
+        objs[name]->setPose(pose2);
+    }
+}
+
+void VRSTEP::build() {
+    blacklisted = 0;
+
+    for( int i=0; i<instMgr->InstanceCount(); i++) {
+        STEPentity* se = instMgr->GetApplication_instance(i);
+        //if (se == 1840) break;
+        string name = se->EntityName();
+        //if (name != "Product_Definition_Shape") continue;
+        //if (name != "Cartesian_Point" && name != "Direction") continue;
+        //if (se == 1943) traverseAggregate((STEPaggregate*)se, ENTITY_TYPE, 1);
+        traverseEntity(se,0);
     }
 
-    /*Entity 0x123150526300: Context_Dependent_Shape_Representation
-        A: representation_relation : #1943
-            Entity 0x12315051cee0 (C) : Representation_Relationship
-            Entity 0x123150527000 (C) : Representation_Relationship_With_Transformation
-                A: transformation_operator : #1939
-                        Entity 0x123150523410: Item_Defined_Transformation
-            Entity 0x1231505270e0 (C) : Shape_Representation_Relationship
-        A: represented_product_relation : #1945
-            Entity 0x1231505228c0: Product_Definition_Shape
-                A: name : 'PDS_NAUO13' String: 'PDS_NAUO13'
-                A: description : '' String: ''
-                A: definition : #1944
-                     Select entity not handled: Characterized_Product_Definition*/
+    buildGeometries();
+    buildScenegraph();
 
-    /*addType< tuple<STEPentity*, STEPentity*> >( "Context_Dependent_Shape_Representation", "a0e|a1e", false );
-    addType< tuple<STEPentity*, STEPentity*> >( "Representation_Relationship", "a2e|a3e", false );
-    addType< tuple<STEPentity*, STEPentity*, STEPentity*> >( "Representation_Relationship_With_Transformation", "a2e|a3e|a4se", false );
-    addType< tuple<STEPentity*, STEPentity*> >( "Item_Defined_Transformation", "a2e|a3e", false );
-
-    addType< tuple<vector<STEPentity*>, STEPentity*> >( "Shape_Representation", "a1Ve|a2e", false );
-    addType< tuple<STEPentity*, STEPentity*> >( "Shape_Representation_Relationship", "a2e|a3e", false );
-*/
     cout << "build results:\n";
     cout << instances.size() << " STEP entities parsed\n";
     cout << blacklisted << " STEP blacklisted entities ignored\n";
-    cout << resObject.size() << " VR objects created\n";
+    cout << resGeos.size() << " VR objects created\n";
 }
 
 VRTransformPtr VRSTEP::load(string file) {
     open(file);
     build();
-    VRTransformPtr root = VRTransform::create(file);
-    for (auto o : resObject) root->addChild(o.second);
-    return root;
+    return resRoot;
 }
 
 /* ------------------------------ DOC -----------------------------------
