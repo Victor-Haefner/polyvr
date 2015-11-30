@@ -128,7 +128,7 @@ void CEF::resize() {
 void CEF::reloadScripts(string path) {
     for (auto i : instances) {
         auto cef = i.lock();
-        if (!cef) return;
+        if (!cef) continue;
         string s = cef->getSite();
         stringstream ss(s); vector<string> res; while (getline(ss, s, '/')) res.push_back(s); // split by ':'
         if (res.size() == 0) continue;
