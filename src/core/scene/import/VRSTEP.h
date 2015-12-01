@@ -42,7 +42,7 @@ class VRSTEP {
             int ID = -1;
             void* data = 0;
             template<size_t i, class... Args>
-            auto get() {
+            typename std::tuple_element<i, tuple<Args...> >::type get() {
                 auto t = (tuple<Args...>*)data;
                 return std::get<i>(*t);
             }

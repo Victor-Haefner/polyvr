@@ -35,6 +35,9 @@
 #include "core/setup/devices/VRSignal.h"
 #include "VRGuiManager.h"
 
+typedef boost::recursive_mutex::scoped_lock PLock;
+boost::recursive_mutex mtx;
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -129,18 +132,18 @@ void VRGuiBits_on_internal_update(int i) {
 Glib::RefPtr<Gtk::TextBuffer> terminal;
 
 void VRGuiBits::write_to_terminal(string s) {
-    boost::mutex::scoped_lock lock(msg_mutex);
+    PLock lock(mtx);
     msg_queue.push(s);
 }
 
 void VRGuiBits::clear_terminal() {
-    boost::mutex::scoped_lock lock(msg_mutex);
+    PLock lock(mtx);
     std::queue<string>().swap(msg_queue);
     terminal->set_text("");
 }
 
 void VRGuiBits::update_terminal() {
-    boost::mutex::scoped_lock lock(msg_mutex);
+    PLock lock(mtx);
     while(!msg_queue.empty()) {
         terminal->insert(terminal->end(), msg_queue.front());
 		msg_queue.pop();

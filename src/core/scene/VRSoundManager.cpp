@@ -23,7 +23,7 @@ extern "C" {
 #endif
 
 #include <boost/thread/thread.hpp>
-#include <boost/thread.hpp>
+//#include <boost/thread.hpp>
 
 #define ALCHECK(x) { \
 x; \

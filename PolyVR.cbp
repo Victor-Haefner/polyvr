@@ -83,6 +83,7 @@
 			<Add option="-DCGAL_CFG_NO_VARIADIC_TEMPLATES" />
 			<Add option="-DNDEBUG" />
 			<Add option="-DCGAL_NDEBUG" />
+			<Add option="-D__STDC_CONSTANT_MACROS" />
 			<Add directory="/usr/include/pango-1.0" />
 			<Add directory="/usr/include/glib-2.0" />
 			<Add directory="/usr/lib64/glib-2.0/include" />
@@ -94,7 +95,6 @@
 			<Add directory="/usr/include/vtk-5.8/" />
 			<Add directory="/usr/include/bullet" />
 			<Add directory="/usr/include/gtkglext-1.0" />
-			<Add directory="/usr/include/vrpn" />
 			<Add directory="/usr/include/CEF" />
 			<Add directory="src" />
 			<Add directory="/usr/include/opensg" />

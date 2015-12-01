@@ -7,11 +7,11 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/utils/toString.h"
 #include <libxml++/nodes/element.h>
-#include <vrpn_Tracker.h>
-#include <vrpn_Button.h>
-#include <vrpn_Analog.h>
-#include <vrpn_Dial.h>
-#include <vrpn_Text.h>
+#include <vrpn/vrpn_Tracker.h>
+#include <vrpn/vrpn_Button.h>
+#include <vrpn/vrpn_Analog.h>
+#include <vrpn/vrpn_Dial.h>
+#include <vrpn/vrpn_Text.h>
 #include <boost/bind.hpp>
 #include "core/utils/VRFunction.h"
 #include "core/setup/devices/VRDevice.h"
@@ -190,11 +190,11 @@ int VRPN::getVRPNPort() { return port; }
 #include <stdio.h>
 #include <math.h>
 
-#include "vrpn_Text.h"
-#include "vrpn_Tracker.h"
-#include "vrpn_Analog.h"
-#include "vrpn_Button.h"
-#include "vrpn_Connection.h"
+#include <vrpn/vrpn_Text.h>
+#include <vrpn/vrpn_Tracker.h>
+#include <vrpn/vrpn_Analog.h>
+#include <vrpn/vrpn_Button.h>
+#include <vrpn/vrpn_Connection.h>
 
 #include <iostream>
 using namespace std;
