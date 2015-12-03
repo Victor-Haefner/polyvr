@@ -38,6 +38,7 @@ ptrFwd(VROpening);
 ptrFwd(VRMolecule);
 ptrFwd(VRTree);
 ptrFwd(CSGGeometry);
+ptrFwd(VRMillingWorkPiece);
 
 }
 

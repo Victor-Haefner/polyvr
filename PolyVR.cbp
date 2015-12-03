@@ -269,8 +269,12 @@
 		<Unit filename="src/addons/Engineering/Mechanics/VRPyMechanism.h" />
 		<Unit filename="src/addons/Engineering/Milling/VRMillingMachine.cpp" />
 		<Unit filename="src/addons/Engineering/Milling/VRMillingMachine.h" />
+		<Unit filename="src/addons/Engineering/Milling/VRMillingWorkPiece.cpp" />
+		<Unit filename="src/addons/Engineering/Milling/VRMillingWorkPiece.h" />
 		<Unit filename="src/addons/Engineering/Milling/VRPyMillingMachine.cpp" />
 		<Unit filename="src/addons/Engineering/Milling/VRPyMillingMachine.h" />
+		<Unit filename="src/addons/Engineering/Milling/VRPyMillingWorkPiece.cpp" />
+		<Unit filename="src/addons/Engineering/Milling/VRPyMillingWorkPiece.h" />
 		<Unit filename="src/addons/Engineering/VRNumberingEngine.cpp" />
 		<Unit filename="src/addons/Engineering/VRNumberingEngine.h" />
 		<Unit filename="src/addons/Engineering/VRProfile.cpp" />
