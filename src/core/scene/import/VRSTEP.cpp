@@ -486,10 +486,11 @@ pose toPose(STEPentity* i, map<STEPentity*, VRSTEP::Instance>& instances) {
 
 struct VRSTEP::Bound : VRSTEP::Instance {
     vector<Vec3f> points;
+    bool outer = true;
 
     Bound() {}
     Bound(Instance& i, map<STEPentity*, Instance>& instances) : Instance(i) {
-
+        if (type != "Face_Outer_Bound") outer = false;
         if (type == "Face_Bound" || type == "Face_Outer_Bound") {
             auto& Loop = instances[ get<0, STEPentity*, bool>() ];
             bool dir = get<1, STEPentity*, bool>();
@@ -511,6 +512,21 @@ struct VRSTEP::Bound : VRSTEP::Instance {
                         if (EdgeGeo.type == "Circle") {
                             pose c = toPose( EdgeGeo.get<0, STEPentity*, double>(), instances );
                             float r = EdgeGeo.get<1, STEPentity*, double>();
+                            Matrix m = c.asMatrix();
+
+                            int N = 16;
+                            Vec3f v,vLast;
+                            for (int i=0; i<(N+1); i++) {
+                                float a = i*(2*Pi/N);
+                                Pnt3f p(r*cos(a),r*sin(a),0);
+                                m.mult(p,p);
+                                v = Vec3f(p);
+                                if (i > 0) {
+                                    points.push_back(v);
+                                    points.push_back(vLast);
+                                }
+                                vLast = v;
+                            }
                         }
                     }
                 }
@@ -527,6 +543,13 @@ struct VRSTEP::Surface : VRSTEP::Instance {
     Surface(Instance& i, map<STEPentity*, Instance>& instances) : Instance(i) {
         if (type == "Plane") {
             trans = toPose( get<0, STEPentity*>(), instances);
+            /*polygon3D poly;
+            for (auto b : bounds) {
+                if (!b.outer) continue;
+                for (auto p : b.points) {
+                    poly.addPoint(p);
+                }
+            }*/
         }
 
         if (type == "Cylindrical_Surface") {
