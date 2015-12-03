@@ -84,6 +84,10 @@
 			<Add option="-DNDEBUG" />
 			<Add option="-DCGAL_NDEBUG" />
 			<Add option="-D__STDC_CONSTANT_MACROS" />
+			<Add option="-D_GLIBCXX_USE_CXX11_ABI=1" />
+			<Add option="-DBOOST_NO_COMPILER_CONFIG" />
+			<Add option="-DBOOST_NO_CXX14_DECLTYPE_AUTO" />
+			<Add option="-DBOOST_NO_CXX11_DECLTYPE_N3276" />
 			<Add directory="/usr/include/pango-1.0" />
 			<Add directory="/usr/include/glib-2.0" />
 			<Add directory="/usr/lib64/glib-2.0/include" />
