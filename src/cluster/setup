@@ -3,6 +3,8 @@ libs="-lOSGBase -lOSGContribTrapezoidalShadowMaps -lOSGCluster -lOSGDrawable -lO
 libpaths="-L/usr/lib/opensg"
 flags="-DLC_ALL=C -DOSG_WITH_GLUT -DOSG_WITH_JPG -DOSG_WITH_PNG -D_OSG_HAVE_CONFIGURED_H_ -DOSG_BUILD_ACTIVE"
 
+sudo apt-get install build-essential libglew-dev freeglut3-dev libboost-dev libxi-dev libxmu-dev libboost-filesystem-dev libgdal1-dev
+
 g++ VRServer.cpp $libs $libpaths $flags -o VRServer
 
 
