@@ -328,6 +328,7 @@ void VRScriptManager::initPyModules() {
     registerModule<VRPyMolecule>("Molecule", pModVR, VRPyGeometry::typeRef);
     registerModule<VRPyRobotArm>("RobotArm", pModVR);
     registerModule<VRPyOntology>("Ontology", pModVR);
+    registerModule<VRPyOntologyRule>("OntologyRule", pModVR);
     registerModule<VRPyProperty>("Property", pModVR);
     registerModule<VRPyConcept>("Concept", pModVR);
     registerModule<VRPyEntity>("Entity", pModVR);

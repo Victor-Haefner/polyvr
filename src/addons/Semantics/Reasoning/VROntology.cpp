@@ -59,21 +59,26 @@ string VROntology::answer(string question) {
     return "";//res.toString();
 }
 
-void VROntology::merge(VROntology* o) {
-    for (auto c : o->thing->children)
-        thing->append(c.second);
-    for (auto c : o->rules)
-        rules[c.first] = c.second;
+void VROntology::merge(VROntologyPtr o) {
+    for (auto c : o->thing->children) thing->append(c.second);
+    for (auto c : o->rules) rules[c.first] = c.second;
+    for (auto c : o->concepts) concepts[c.first] = c.second;
 }
 
-vector<VROntologyRule*> VROntology::getRules() {
-    vector<VROntologyRule*> res;
+VROntologyPtr VROntology::copy() {
+    auto o = create();
+    o->merge(shared_from_this());
+    return o;
+}
+
+vector<VROntologyRulePtr> VROntology::getRules() {
+    vector<VROntologyRulePtr> res;
     for (auto r : rules) res.push_back(r.second);
     return res;
 }
 
-VROntologyRule* VROntology::addRule(string rule) {
-    VROntologyRule* r = new VROntologyRule(rule);
+VROntologyRulePtr VROntology::addRule(string rule) {
+    VROntologyRulePtr r = VROntologyRule::create(rule);
     rules[r->ID] = r;
     return r;
 }

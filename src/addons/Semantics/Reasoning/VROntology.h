@@ -15,22 +15,23 @@ using namespace std;
 struct VROntology;
 typedef shared_ptr<VROntology> VROntologyPtr;
 
-struct VROntology {
+struct VROntology : public std::enable_shared_from_this<VROntology> {
     VRConceptPtr thing = 0;
     map<int, VREntityPtr> instances;
     map<string, VRConceptWeakPtr> concepts;
-    map<int, VROntologyRule*> rules;
+    map<int, VROntologyRulePtr> rules;
 
     VROntology();
     static VROntologyPtr create();
 
-    void merge(VROntology* o);
+    void merge(VROntologyPtr o);
+    VROntologyPtr copy();
 
     void addConcept(VRConceptPtr);
     void addInstance(VREntityPtr);
 
     VRConceptPtr addConcept(string concept, string parent = "");
-    VROntologyRule* addRule(string rule);
+    VROntologyRulePtr addRule(string rule);
     VREntityPtr addInstance(string name, string concept);
     VREntityPtr addVectorInstance(string name, string concept, string x, string y, string z);
 
@@ -39,7 +40,7 @@ struct VROntology {
     VREntityPtr getInstance(string instance);
     vector<VREntityPtr> getInstances(string concept);
 
-    vector<VROntologyRule*> getRules();
+    vector<VROntologyRulePtr> getRules();
 
     string answer(string question);
 

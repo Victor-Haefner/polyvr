@@ -1,5 +1,6 @@
 #include "VRPyOntology.h"
 #include "VRProperty.h"
+#include "VROntologyRule.h"
 #include "core/scripting/VRPyTypeCaster.h"
 #include "core/scripting/VRPyBaseT.h"
 
@@ -7,6 +8,7 @@ simpleVRPyType(Ontology, New_ptr);
 simpleVRPyType(Entity, New_named_ptr);
 simpleVRPyType(Concept, New_named_ptr);
 simpleVRPyType(Property, New_named_ptr);
+simpleVRPyType(OntologyRule, New_named_ptr);
 
 // --------------------- Property --------------------
 
@@ -41,6 +43,7 @@ PyMethodDef VRPyConcept::methods[] = {
     {"toString", (PyCFunction)VRPyConcept::toString, METH_NOARGS, "Return the concept as string - str toString()" },
     {"getProperty", (PyCFunction)VRPyConcept::getProperty, METH_VARARGS, "Return a property by name - property getProperty( str name )" },
     {"getProperties", (PyCFunction)VRPyConcept::getProperties, METH_NOARGS, "Return all properties - [property] getProperties()" },
+    {"addProperty", (PyCFunction)VRPyConcept::addProperty, METH_VARARGS, "Add new property - property addProperty( str name, str value )" },
     {NULL}  /* Sentinel */
 };
 
@@ -67,15 +70,57 @@ PyObject* VRPyConcept::getProperties(VRPyConcept* self) {
     return res;
 }
 
+PyObject* VRPyConcept::addProperty(VRPyConcept* self, PyObject* args) {
+    const char* prop = 0;
+    const char* val = 0;
+    if (! PyArg_ParseTuple(args, "ss:addProperty", (char*)&prop, (char*)&val)) return NULL;
+    string pname; if (prop) pname = prop;
+    string pval; if (val) pval = val;
+    return VRPyProperty::fromSharedPtr( self->objPtr->addProperty(pname, pval) );
+}
+
+// --------------------- OntologyRule --------------------
+
+PyMethodDef VRPyOntologyRule::methods[] = {
+    {"toString", (PyCFunction)VRPyOntologyRule::toString, METH_NOARGS, "Return the rule as string - str toString()" },
+    {NULL}  /* Sentinel */
+};
+
+PyObject* VRPyOntologyRule::toString(VRPyOntologyRule* self) {
+    return PyString_FromString( self->objPtr->toString().c_str() );
+}
+
 // --------------------- Entity --------------------
 
 PyMethodDef VRPyEntity::methods[] = {
     {"getName", (PyCFunction)VRPyEntity::getName, METH_NOARGS, "Return the name - str getName()" },
     {"toString", (PyCFunction)VRPyEntity::toString, METH_NOARGS, "Return the entity as string - str toString()" },
     {"getConcept", (PyCFunction)VRPyEntity::getConcept, METH_NOARGS, "Return the concept - concept getConcept()" },
-    {"getProperties", (PyCFunction)VRPyConcept::getProperties, METH_VARARGS, "Return all properties or the properties of a certain type - [property] getProperties( str )" },
+    {"getProperties", (PyCFunction)VRPyEntity::getProperties, METH_VARARGS, "Return all properties or the properties of a certain type - [property] getProperties( str )" },
+    {"set", (PyCFunction)VRPyEntity::set, METH_VARARGS, "Set a property - set( str prop, str value )" },
+    {"add", (PyCFunction)VRPyEntity::add, METH_VARARGS, "Add a property - add( str prop, str value )" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyEntity::add(VRPyEntity* self, PyObject* args) {
+    const char* prop = 0;
+    const char* val = 0;
+    if (! PyArg_ParseTuple(args, "ss:add", (char*)&prop, (char*)&val)) return NULL;
+    string pname; if (prop) pname = prop;
+    string pval; if (val) pval = val;
+    self->objPtr->add( pname, pval );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyEntity::set(VRPyEntity* self, PyObject* args) {
+    const char* prop = 0;
+    const char* val = 0;
+    if (! PyArg_ParseTuple(args, "ss:set", (char*)&prop, (char*)&val)) return NULL;
+    string pname; if (prop) pname = prop;
+    string pval; if (val) pval = val;
+    self->objPtr->set( pname, pval );
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyEntity::getName(VRPyEntity* self) {
     return PyString_FromString( self->objPtr->name.c_str() );
@@ -108,8 +153,73 @@ PyMethodDef VRPyOntology::methods[] = {
     {"getConcept", (PyCFunction)VRPyOntology::getConcept, METH_VARARGS, "Return a concept by name - concept getConcept( str name )\n\tThe first concept is named 'Thing'" },
     {"getConcepts", (PyCFunction)VRPyOntology::getConcepts, METH_NOARGS, "Return all concepts - [concept] getConcepts()" },
     {"getEntities", (PyCFunction)VRPyOntology::getEntities, METH_VARARGS, "Return all entities by concept name - [entity] getEntities( str concept )" },
+    {"addConcept", (PyCFunction)VRPyOntology::addConcept, METH_VARARGS, "Add a new concept - concept addConcept( str concept, str parent = "", dict properties {str:str} )" },
+    {"addEntity", (PyCFunction)VRPyOntology::addEntity, METH_VARARGS, "Add a new entity - entity addEntity( str name, str concept )" },
+    {"addRule", (PyCFunction)VRPyOntology::addRule, METH_VARARGS, "Add a new rule - addRule( str rule )" },
+    {"merge", (PyCFunction)VRPyOntology::merge, METH_VARARGS, "Merge in another ontology - merge( ontology )" },
+    {"copy", (PyCFunction)VRPyOntology::copy, METH_NOARGS, "Copy the ontology - ontology copy()" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyOntology::copy(VRPyOntology* self) {
+    return VRPyOntology::fromSharedPtr( self->objPtr->copy() );
+}
+
+PyObject* VRPyOntology::merge(VRPyOntology* self, PyObject* args) {
+    VRPyOntology* other;
+    if (! PyArg_ParseTuple(args, "O:merge", &other)) return NULL;
+    if (!isNone((PyObject*)other)) self->objPtr->merge( other->objPtr );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyOntology::addRule(VRPyOntology* self, PyObject* args) {
+    const char *name = 0;
+    if (! PyArg_ParseTuple(args, "s:addRule", (char*)&name)) return NULL;
+    string sname;
+    if (name) sname = name;
+    VROntologyRulePtr r = self->objPtr->addRule(sname);
+    return VRPyOntologyRule::fromSharedPtr( r );
+}
+
+PyObject* VRPyOntology::addEntity(VRPyOntology* self, PyObject* args) {
+    const char* name = 0;
+    const char* concept = 0;
+    PyDictObject* propDict = 0;
+    if (! PyArg_ParseTuple(args, "s|sO:addEntity", (char*)&name, (char*)&concept, &propDict)) return NULL;
+    string sname, sconcept;
+    if (name) sname = name;
+    if (concept) sconcept = concept;
+    auto entity = self->objPtr->addInstance(sname, sconcept);
+    if (propDict) {
+        PyObject* keys = PyDict_Keys((PyObject*)propDict);
+        for (int i=0; i<PyList_Size(keys); i++) {
+            PyObject* key = PyList_GetItem(keys, i);
+            PyObject* item = PyDict_GetItem((PyObject*)propDict, key);
+            entity->set(PyString_AsString(key), PyString_AsString(item));
+        }
+    }
+    return VRPyEntity::fromSharedPtr( entity );
+}
+
+PyObject* VRPyOntology::addConcept(VRPyOntology* self, PyObject* args) {
+    const char* name = 0;
+    const char* parent = 0;
+    PyDictObject* propDict = 0;
+    if (! PyArg_ParseTuple(args, "s|sO:addConcept", (char*)&name, (char*)&parent, &propDict)) return NULL;
+    string sname, sparent;
+    if (name) sname = name;
+    if (parent) sparent = parent;
+    VRConceptPtr concept = self->objPtr->addConcept(sname, sparent);
+    if (propDict) {
+        PyObject* keys = PyDict_Keys((PyObject*)propDict);
+        for (int i=0; i<PyList_Size(keys); i++) {
+            PyObject* key = PyList_GetItem(keys, i);
+            PyObject* item = PyDict_GetItem((PyObject*)propDict, key);
+            concept->addProperty(PyString_AsString(key), PyString_AsString(item));
+        }
+    }
+    return VRPyConcept::fromSharedPtr( concept );
+}
 
 PyObject* VRPyOntology::toString(VRPyOntology* self) {
     return PyString_FromString( self->objPtr->toString().c_str() );

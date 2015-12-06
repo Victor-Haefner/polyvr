@@ -12,5 +12,6 @@ ptrFwd(VRConcept);
 ptrFwd(VRProperty);
 ptrFwd(VROntology);
 ptrFwd(VREntity);
+ptrFwd(VROntologyRule);
 
 #endif // VRSEMANTICSFWD_H_INCLUDED
