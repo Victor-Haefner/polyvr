@@ -14,6 +14,7 @@
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-frounding-math" />
+					<Add option="-fopenmp" />
 				</Compiler>
 			</Target>
 			<Target title="Release">
@@ -23,6 +24,7 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O2" />
+					<Add option="-fopenmp" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -40,6 +42,7 @@
 			<Add option="`pkg-config gtkglext-1.0 --cflags`" />
 			<Add option="`pkg-config python --cflags`" />
 			<Add option="`pkg-config gtksourceview-2.0 --cflags`" />
+			<Add option="-fopenmp" />
 			<Add option="-use_readonly_const" />
 			<Add option="-fPIC" />
 			<Add option="-Wno-deprecated" />
@@ -178,6 +181,7 @@
 			<Add option="-lqrencode" />
 			<Add option="-ludev" />
 			<Add option="-lffmpegsumo" />
+			<Add option="-lgomp" />
 			<Add directory="/usr/X11R6/lib64" />
 			<Add directory="/usr/lib/virtuose" />
 			<Add directory="/usr/lib/i386-linux-gnu" />

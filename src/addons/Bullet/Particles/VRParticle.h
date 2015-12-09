@@ -51,17 +51,23 @@ struct Particle {
 
     ~Particle() {
         VRScenePtr scene = VRSceneManager::getCurrent();
-        if (scene && body) scene->bltWorld()->removeRigidBody(body);
-        if (body) delete body;
-        if (shape) delete shape;
-        if (motionState) delete motionState;
+        if (scene && body) { scene->bltWorld()->removeRigidBody(body); }
+        if (body) { delete body; }
+        if (shape) { delete shape; }
+        if (motionState) { delete motionState; }
     }
 };
 
 struct SphParticle : public Particle {
     float sphArea = 3 * radius; // NOTE only needed for individual areas.
     float sphDensity = 0.1;
-    SphParticle(btDiscreteDynamicsWorld* world = 0) {}
+    btVector3 sphPressureForce;
+    btVector3 sphViscosityForce;
+
+    SphParticle(btDiscreteDynamicsWorld* world = 0) {
+        sphPressureForce.setZero();
+        sphViscosityForce.setZero();
+    }
 };
 OSG_END_NAMESPACE;
 #endif // VRPARTICLE_H_INCLUDED

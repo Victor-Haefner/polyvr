@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scene name_suffix="0" base_name="cylindertest" name_space="Scene">
   <Objects>
-    <Object name_suffix="1" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
+    <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
       <Object name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
-        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="0.317359 2.04892 0.29265" at="0.314322 0.45 0.242494" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
+        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="-0.788042 4.43256 2.60265" at="-0.0328805 0.35 -0.000555307" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
           <Object name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
         </Object>
       </Object>
@@ -88,6 +88,7 @@
 	pathtool.update()
 	cylinder.animate(path, 2, 0,0,1)
 	
+	return cylinder
 </core>
       <arg type="VRPyObjectType" value="0" name_suffix="0" base_name="parent" name_space="doBasin"/>
     </Script>
@@ -100,8 +101,8 @@
 		#m.setVertexProgram('fluid_vp')
 		#m.setFragmentProgram('fluid_fp')
 		m.setPointSize(20)
-		m.setDiffuse([1,0.5,0.5])
-		m.setAmbient([1,0.5,0.5])
+		m.setDiffuse([0.2,0.2,1])
+		m.setAmbient([0.2,0.2,1])
 		return m
 	
 	fluid = VR.Fluids()
@@ -109,6 +110,7 @@
 	fluid.setRadius(radius, 0.0)
 	fluid.setMassForOneLiter(mass)
 	fluid.setSphRadius(sphRadius, 0.0)
+	#VR.fluid.setSimType('SPH')
 	num = fluid.spawnCuboid(0,0.1,0, "size", 0.3,1,0.1)
 	print num
 	parent.addChild(fluid)
@@ -162,17 +164,32 @@
 	#-----------------#
 	
 	#---build scene---#
-	VR.doBasin(VR.test)
+	VR.cylinder = VR.doBasin(VR.test)
 	#-----------------#
 
 	#---do fluids---#
 	(mass, parent, radius, sphRadius) = (10.0, VR.test, 0.025, 0.5)
-	VR.doFluids(mass, parent, radius, sphRadius)
-	#VR.doParticles(mass, parent, radius, sphRadius)
+	VR.fluid = VR.doFluids(mass, parent, radius, sphRadius)
+	#VR.particles = VR.doParticles(mass, parent, radius, sphRadius)
+	VR.play = True;
 	#---------------#
 </core>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
       <trig type="on_device" dev="keyboard" state="Pressed" param="" key="105" name_suffix="1" base_name="trigger" name_space="__global__"/>
+    </Script>
+    <Script name_suffix="0" base_name="playPause" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+	
+	if VR.play == True:
+		VR.cylinder.animationStop()
+		VR.play = False
+	else:
+		print "not implemented yet"
+		
+
+</core>
+      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="112" name_suffix="2" base_name="trigger" name_space="__global__"/>
     </Script>
   </Scripts>
   <Sockets/>
