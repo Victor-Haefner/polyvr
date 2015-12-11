@@ -10,3 +10,4 @@ examples/.cfg
 wblog.log
 dependencies
 PolyVR.cscope_file_list
+src/cluster/VRServer

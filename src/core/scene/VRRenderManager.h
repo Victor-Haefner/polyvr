@@ -20,9 +20,12 @@ class VRRenderManager : public VRStorage {
         bool twoSided = true;
         bool deferredRendering = false;
         bool ssao = false;
+        bool calib = false;
         int ssao_kernel = 4;
         int ssao_noise = 4;
         float ssao_radius = 0.02;
+
+        void initCalib(VRObjectPtr o);
 
     protected:
         VRDefShading* defShading = 0;
@@ -30,6 +33,7 @@ class VRRenderManager : public VRStorage {
         VRObjectPtr root_def_shading = 0;
         VRObjectPtr root_ssao = 0;
         VRObjectPtr root_system = 0;
+        VRObjectPtr root_calib = 0;
         map<int, VRLightPtr> light_map;
 
     public:
@@ -57,6 +61,8 @@ class VRRenderManager : public VRStorage {
         void setSSAOradius(float r);
         void setSSAOkernel(int k);
         void setSSAOnoise(int n);
+
+        void setCalib(bool b);
 
         void update();
 };
