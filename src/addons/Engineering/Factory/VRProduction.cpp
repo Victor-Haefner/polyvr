@@ -1,5 +1,6 @@
 #include "VRProduction.h"
 #include "VRLogistics.h"
+#include "addons/Semantics/Reasoning/VRReasoner.h"
 #include "core/objects/geometry/VRGeometry.h"
 
 #include "core/utils/VRFunction.h"
@@ -318,7 +319,8 @@ VRObjectPtr VRProduction::test() {
     production->start();
 
     string q = "q(x):Process(x);is(x/state,1);Production(y);has(y,x);is(y/job,testProduct)";
-    production->description->answer(q);
+    auto reasoner = VRReasoner::create();
+    reasoner->process(q, production->description);
 
     VRObjectPtr anchor = VRObject::create("production");
     anchor->addChild(drill->geo);

@@ -42,10 +42,7 @@ struct VROntology : public std::enable_shared_from_this<VROntology> {
 
     vector<VROntologyRulePtr> getRules();
 
-    string answer(string question);
-
     void open(string path);
-
     string toString();
 };
 

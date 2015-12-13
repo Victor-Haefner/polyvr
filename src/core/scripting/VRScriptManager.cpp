@@ -332,6 +332,7 @@ void VRScriptManager::initPyModules() {
     registerModule<VRPyProperty>("Property", pModVR);
     registerModule<VRPyConcept>("Concept", pModVR);
     registerModule<VRPyEntity>("Entity", pModVR);
+    registerModule<VRPyReasoner>("Reasoner", pModVR);
 
 #ifndef _WIN32
 	registerModule<VRPyCSG>("CSGGeometry", pModVR, VRPyGeometry::typeRef);

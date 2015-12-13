@@ -2,6 +2,7 @@
 #define VRPYONTOLOGY_H_INCLUDED
 
 #include "VROntology.h"
+#include "VRReasoner.h"
 #include "core/scripting/VRPyBase.h"
 
 struct VRPyProperty : VRPyBaseT<VRProperty> {
@@ -48,6 +49,11 @@ struct VRPyOntology : VRPyBaseT<VROntology> {
     static PyObject* addRule(VRPyOntology* self, PyObject* args);
     static PyObject* merge(VRPyOntology* self, PyObject* args);
     static PyObject* copy(VRPyOntology* self);
+};
+
+struct VRPyReasoner : VRPyBaseT<VRReasoner> {
+    static PyMethodDef methods[];
+    static PyObject* process(VRPyReasoner* self, PyObject* args);
 };
 
 #endif // VRPYONTOLOGY_H_INCLUDED

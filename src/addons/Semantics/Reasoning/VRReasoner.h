@@ -12,12 +12,12 @@ using namespace std;
 
 #include "VROntology.h"
 
-struct Path {
+struct VPath {
     string first;
     string root;
     vector<string> nodes;
 
-    Path(string p);
+    VPath(string p);
     string toString();
 };
 
@@ -31,10 +31,10 @@ struct Variable {
     Variable();
 
     string toString();
-    bool has(Variable& other, VROntology* onto);
+    bool has(Variable& other, VROntologyPtr onto);
 
-    Variable(VROntology* onto, string concept, string var);
-    Variable(VROntology* onto, string val);
+    Variable(VROntologyPtr onto, string concept, string var);
+    Variable(VROntologyPtr onto, string val);
     bool operator==(Variable v);
 };
 
@@ -43,7 +43,7 @@ struct Result {
 };
 
 struct Term {
-    Path path;
+    VPath path;
     Variable var;
     string str;
 
@@ -53,8 +53,8 @@ struct Term {
 };
 
 struct Statement;
-typedef shared_ptr<Statement> StatementPtr;
-typedef weak_ptr<Statement> StatementWeakPtr;
+typedef std::shared_ptr<Statement> StatementPtr;
+typedef std::weak_ptr<Statement> StatementWeakPtr;
 
 struct Statement {
     string verb;
@@ -68,7 +68,7 @@ struct Statement {
     static StatementPtr New(string s, int i = -1);
 
     string toString();
-    void updateLocalVariables(map<string, Variable>& globals, VROntology* onto);
+    void updateLocalVariables(map<string, Variable>& globals, VROntologyPtr onto);
     bool isSimpleVerb();
     bool match(StatementPtr s);
 };
@@ -89,12 +89,12 @@ struct Context {
     map<string, Result> results;
     map<string, Query> rules;
     list<Query> queries;
-    VROntology* onto = 0;
+    VROntologyPtr onto = 0;
 
     int itr=0;
     int itr_max = 5;
 
-    Context(VROntology* onto);
+    Context(VROntologyPtr onto);
     Context();
 };
 
@@ -121,8 +121,8 @@ class VRReasoner {
         bool findRule(StatementPtr s, Context& c);
 
     public:
-        static VRReasoner* get();
-        vector<Result> process(string query, VROntology* onto);
+        static VRReasonerPtr create();
+        vector<Result> process(string query, VROntologyPtr onto);
 };
 
 

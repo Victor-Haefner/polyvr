@@ -54,11 +54,6 @@ void VROntology::addConcept(VRConceptPtr c) {
     if (!c->parent.lock()) thing->append(c);
 }
 
-string VROntology::answer(string question) {
-    auto res = VRReasoner::get()->process(question, this);
-    return "";//res.toString();
-}
-
 void VROntology::merge(VROntologyPtr o) {
     for (auto c : o->thing->children) thing->append(c.second);
     for (auto c : o->rules) rules[c.first] = c.second;
@@ -107,7 +102,11 @@ VREntityPtr VROntology::getInstance(string instance) {
 
 vector<VREntityPtr> VROntology::getInstances(string concept) {
     vector<VREntityPtr> res;
-    for (auto i : instances) if (i.second->concept->is_a(concept)) res.push_back(i.second);
+    for (auto i : instances) {
+        auto c = i.second->concept;
+        if(c) { if(c->is_a(concept)) res.push_back(i.second); }
+        else cout << "VROntology::getInstances " << i.second->name << " has no concept!" << endl;
+    }
     return res;
 }
 

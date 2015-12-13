@@ -9,6 +9,7 @@ simpleVRPyType(Entity, New_named_ptr);
 simpleVRPyType(Concept, New_named_ptr);
 simpleVRPyType(Property, New_named_ptr);
 simpleVRPyType(OntologyRule, New_named_ptr);
+simpleVRPyType(Reasoner, New_ptr);
 
 // --------------------- Property --------------------
 
@@ -256,4 +257,16 @@ PyObject* VRPyOntology::getEntities(VRPyOntology* self, PyObject* args) {
     return res;
 }
 
+PyMethodDef VRPyReasoner::methods[] = {
+    {"process", (PyCFunction)VRPyReasoner::process, METH_VARARGS, "Process query - process( str query, ontology )" },
+    {NULL}  /* Sentinel */
+};
+
+PyObject* VRPyReasoner::process(VRPyReasoner* self, PyObject* args) {
+    const char* query = 0;
+    VRPyOntology* onto = 0;
+    if (! PyArg_ParseTuple(args, "sO:process", (char*)&query, &onto)) return NULL;
+    if (query) self->objPtr->process(string(query), onto->objPtr);
+    Py_RETURN_TRUE;
+}
 

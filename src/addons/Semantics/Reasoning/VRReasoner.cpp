@@ -11,11 +11,6 @@ using namespace std;
 
 VRReasoner::VRReasoner() {;}
 
-VRReasoner* VRReasoner::get() {
-    static VRReasoner* r = new VRReasoner();
-    return r;
-}
-
 vector<string> VRReasoner::split(string s, string d) {
     vector<string> res;
     size_t pos = 0;
@@ -56,7 +51,7 @@ string Variable::toString() {
     return s;
 }
 
-Variable::Variable(VROntology* onto, string concept, string var) {
+Variable::Variable(VROntologyPtr onto, string concept, string var) {
     auto cl = onto->getConcept(concept);
     if (cl == 0) return;
     instances = onto->getInstances(concept);
@@ -69,7 +64,7 @@ Variable::Variable(VROntology* onto, string concept, string var) {
     valid = true;
 }
 
-Variable::Variable(VROntology* onto, string val) {
+Variable::Variable(VROntologyPtr onto, string val) {
     value = val;
     concept = "var";
     valid = true;
@@ -83,13 +78,13 @@ bool Variable::operator==(Variable v) {
     return true;
 }
 
-Path::Path(string p) {
+VPath::VPath(string p) {
     nodes = VRReasoner::split(p, '/');
     root = nodes[0];
     first = nodes[nodes.size()-1];
 }
 
-string Path::toString() {
+string VPath::toString() {
     string s;
     for (auto p : nodes) s += p + "/";
     if (nodes.size() > 0) s.pop_back();
@@ -98,11 +93,12 @@ string Path::toString() {
 
 Context::Context() {}
 
-Context::Context(VROntology* onto) {
+Context::Context(VROntologyPtr onto) {
     this->onto = onto;
 
     cout << "Init context:" << endl;
     for (auto i : onto->instances) {
+        if (!i.second->concept) { cout << "Context::Context instance " << i.second->name << " has no concept!" << endl; continue; }
         vars[i.second->name] = Variable( onto, i.second->concept->name, i.second->name );
         cout << " add instance " << i.second->name << " of concept " << i.second->concept->name << endl;
     }
@@ -154,7 +150,7 @@ string Statement::toString() {
     return s;
 }
 
-void Statement::updateLocalVariables(map<string, Variable>& globals, VROntology* onto) {
+void Statement::updateLocalVariables(map<string, Variable>& globals, VROntologyPtr onto) {
     for (auto& t : terms) {
         if (globals.count(t.path.root)) t.var = globals[t.path.root];
         else t.var = Variable(onto,t.path.root);
@@ -252,7 +248,7 @@ bool VRReasoner::is(StatementPtr statement, Context& context) {
     return ( (b && !NOT) || (!b && NOT) );
 }
 
-bool Variable::has(Variable& other, VROntology* onto) {
+bool Variable::has(Variable& other, VROntologyPtr onto) {
     for (auto i1 : instances) {
         for (auto p : i1->properties) { // check if instance properties have
             for (auto v : p.second) { // TODO: compare each v with other.value
@@ -332,7 +328,7 @@ void Query::checkState() {
 }
     // TODO: introduce requirements rules for the existence of some individuals
 
-vector<Result> VRReasoner::process(string initial_query, VROntology* onto) {
+vector<Result> VRReasoner::process(string initial_query, VROntologyPtr onto) {
     cout << pre << initial_query << endl;
 
     Context context(onto); // create context
@@ -386,3 +382,7 @@ vector<Result> VRReasoner::process(string initial_query, VROntology* onto) {
     for (auto r : context.results) res.push_back(r.second);
     return res;
 }
+
+VRReasonerPtr VRReasoner::create() { return VRReasonerPtr( new VRReasoner() ); }
+
+
