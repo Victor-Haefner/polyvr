@@ -18,23 +18,6 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-
-
-
-//parser callback for the xml scene import
-void VRSetup::parseSetup(xmlpp::Element* setup) {
-    ;
-}
-
-
-void VRSetup::processOptions() {
-    cfgfile = VROptions::get()->getOption<string>("setupCfg");
-
-    static xmlpp::DomParser parser;
-    parser.parse_file(cfgfile);
-    parseSetup(parser.get_document()->get_root_node());
-}
-
 VRSetup::VRSetup(string name) {
     setName(name);
     real_root = VRTransform::create("VR Setup");
@@ -59,6 +42,21 @@ VRSetup::VRSetup(string name) {
 VRSetup::~VRSetup() {
     delete setup_layer;
     delete stats_layer;
+}
+
+VRSetupPtr VRSetup::create(string name) { return VRSetupPtr(new VRSetup(name)); }
+
+//parser callback for the xml scene import
+void VRSetup::parseSetup(xmlpp::Element* setup) {
+    ;
+}
+
+void VRSetup::processOptions() {
+    cfgfile = VROptions::get()->getOption<string>("setupCfg");
+
+    static xmlpp::DomParser parser;
+    parser.parse_file(cfgfile);
+    parseSetup(parser.get_document()->get_root_node());
 }
 
 void VRSetup::setScene(VRScenePtr scene) {

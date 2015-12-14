@@ -306,7 +306,6 @@ void VRScriptManager::initPyModules() {
     registerModule<VRPySelection>("Selection", pModVR);
     registerModule<VRPyPatchSelection>("PatchSelection", pModVR, VRPySelection::typeRef);
     registerModule<VRPyPolygonSelection>("PolygonSelection", pModVR, VRPySelection::typeRef);
-    registerModule<VRPySetup>("Setup", pModVR);
     registerModule<VRPyNavigator>("Navigator", pModVR);
     registerModule<VRPyNavPreset>("NavPreset", pModVR);
 
@@ -340,6 +339,10 @@ void VRScriptManager::initPyModules() {
 	registerModule<VRPyTrafficSimulation>("TrafficSimulation", pModVR);
 	registerModule<VRPySimViDekont>("SimViDekont", pModVR);
 #endif
+
+    PyObject* pModSetup = Py_InitModule3("Setup", VRScriptManager_module_methods, "VR Module");
+    registerModule<VRPySetup>("Setup", pModSetup);
+    registerModule<VRPyView>("View", pModSetup);
 
     PyObject* pModFactory = Py_InitModule3("Factory", VRScriptManager_module_methods, "VR Module");
     registerModule<FPyNode>("Node", pModFactory, 0, "Factory");
@@ -493,7 +496,7 @@ PyObject* VRScriptManager::loadScene(VRScriptManager* self, PyObject *args) {
 }
 
 PyObject* VRScriptManager::getSetup(VRScriptManager* self) {
-    return VRPySetup::fromPtr(VRSetupManager::getCurrent());
+    return VRPySetup::fromSharedPtr(VRSetupManager::getCurrent());
 }
 
 PyObject* VRScriptManager::getNavigator(VRScriptManager* self) {

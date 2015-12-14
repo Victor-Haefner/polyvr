@@ -24,7 +24,7 @@ class VRGuiSetup {
         gpointer selected_object_parent;
         string selected_type;
         string selected_name;
-        VRSetup* current_setup;
+        VRSetupPtr current_setup;
         VRSceneWeakPtr current_scene;
 
         VRGuiVectorEntry centerEntry;

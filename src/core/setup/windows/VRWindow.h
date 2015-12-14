@@ -23,7 +23,7 @@ class VRWindow : public VRName {
         int type = -1;
         WindowRecPtr _win;
         RenderActionRefPtr ract;
-        vector<VRView*> views;
+        vector<VRViewWeakPtr> views;
 
         VRMouse* mouse = 0;
         VRKeyboard* keyboard = 0;
@@ -56,9 +56,9 @@ class VRWindow : public VRName {
         VRKeyboard* getKeyboard();
 
         WindowRecPtr getOSGWindow();
-        void addView(VRView* view);
-        void remView(VRView* view);
-        vector<VRView*> getViews();
+        void addView(VRViewPtr view);
+        void remView(VRViewPtr view);
+        vector<VRViewPtr> getViews();
 
         virtual void render();
         virtual void save(xmlpp::Element* node);

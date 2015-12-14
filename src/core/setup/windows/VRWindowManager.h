@@ -2,6 +2,7 @@
 #define VRWINDOWMANAGER_H_INCLUDED
 
 #include <OpenSG/OSGRenderAction.h>
+#include "core/setup/VRSetupFwd.h"
 
 namespace xmlpp{ class Element; }
 namespace Gtk{ class Window; }
@@ -10,7 +11,6 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRWindow;
-class VRView;
 
 class VRWindowManager {
     private:
@@ -34,7 +34,7 @@ class VRWindowManager {
         VRWindow* addMultiWindow (string name);
         void removeWindow   (string name);
 
-        void setWindowView(string name, VRView* view);
+        void setWindowView(string name, VRViewPtr view);
         void addWindowServer(string name, string server);
         void changeWindowName(string& name, string new_name);
 

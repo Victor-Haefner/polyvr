@@ -676,6 +676,7 @@
 		<Unit filename="src/core/scripting/VRScriptManager.h" />
 		<Unit filename="src/core/setup/VRSetup.cpp" />
 		<Unit filename="src/core/setup/VRSetup.h" />
+		<Unit filename="src/core/setup/VRSetupFwd.h" />
 		<Unit filename="src/core/setup/VRSetupManager.cpp" />
 		<Unit filename="src/core/setup/VRSetupManager.h" />
 		<Unit filename="src/core/setup/devices/VRAvatar.cpp" />

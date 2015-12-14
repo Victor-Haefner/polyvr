@@ -352,7 +352,7 @@ void VRGuiSetup::on_menu_delete() {
         VRView* view = (VRView*)selected_object;
         current_setup->removeView(view->getID());
         VRWindow* win = (VRWindow*)selected_object_parent;
-        win->remView(view);
+        win->remView(view->ptr());
     }
 
     if (selected_type == "vrpn_tracker") {
@@ -925,13 +925,13 @@ void VRGuiSetup::updateSetup() {
         setTreeRow(tree_store, *itr, name.c_str(), "window", (gpointer)w, "#000000", bg);
 
         // add viewports
-        vector<VRView*> views = w->getViews();
+        vector<VRViewPtr> views = w->getViews();
         for (uint i=0; i<views.size(); i++) {
-            VRView* v = views[i];
+            VRViewPtr v = views[i];
             stringstream ss;
             ss << name << i;
             itr2 = tree_store->append(itr->children());
-            setTreeRow(tree_store, *itr2, ss.str().c_str(), "view", (gpointer)v);
+            setTreeRow(tree_store, *itr2, ss.str().c_str(), "view", (gpointer)v.get());
         }
     }
 

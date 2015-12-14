@@ -28,7 +28,7 @@ using namespace std;
 void updateArgPtr(VRScript::arg* a) {
     string t = a->type;
     auto scene = VRSceneManager::getCurrent();
-    VRSetup* setup = VRSetupManager::getCurrent();
+    VRSetupPtr setup = VRSetupManager::getCurrent();
 
     if (t == "VRPyObjectType" || t == "VRPyGeometryType" || t == "VRPyTransformType" || t == "VRPyLightType" || t == "VRPyLodType") {
         a->ptr = (void*)scene->get(a->val).get();

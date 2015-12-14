@@ -197,7 +197,7 @@ bool VRGuiBits::toggleFullscreen(GdkEventKey* k) {
 
 bool VRGuiBits::toggleStereo(GdkEventKey* k) {
     if (k->keyval != 65479) return false;
-    VRView* v = VRSetupManager::getCurrent()->getView(0);
+    VRViewPtr v = VRSetupManager::getCurrent()->getView(0);
     if (v == 0) return false;
 
     bool b = v->isStereo();

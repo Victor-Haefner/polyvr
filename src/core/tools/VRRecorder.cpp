@@ -62,17 +62,21 @@ Vec3f VRRecorder::getAt(int f) { VRFrame* fr = captures[f]; return fr->a; }
 Vec3f VRRecorder::getUp(int f) { VRFrame* fr = captures[f]; return fr->u; }
 
 void VRRecorder::capture() {
-    if (view == 0) view = VRSetupManager::getCurrent()->getView(viewID);
-    if (view == 0) return;
+    auto v = view.lock();
+    if (!v) {
+        v = VRSetupManager::getCurrent()->getView(viewID);
+        view = v;
+    }
+    if (!v) return;
     if (frameLimitReached()) return;
 
     //int ts = VRGlobals::get()->CURRENT_FRAME;
     VRFrame* f = new VRFrame();
     captures.push_back(f);
-    f->capture = view->grab();
+    f->capture = v->grab();
     f->timestamp = glutGet(GLUT_ELAPSED_TIME);
 
-    VRTransformPtr t = view->getCamera();
+    VRTransformPtr t = v->getCamera();
     if (t == 0) return;
     f->f = t->getFrom();
     f->a = t->getAt();

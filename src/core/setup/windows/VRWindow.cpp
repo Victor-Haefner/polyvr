@@ -27,22 +27,30 @@ VRWindow::~VRWindow() {
 
 WindowRecPtr VRWindow::getOSGWindow() { return _win; }
 
-void VRWindow::addView(VRView* view) {
+void VRWindow::addView(VRViewPtr view) {
     views.push_back(view);
     view->setWindow(_win);
 }
 
-void VRWindow::remView(VRView* view) {
+void VRWindow::remView(VRViewPtr view) {
     if (mouse) mouse->setViewport(0);
-    views.erase(std::remove(views.begin(), views.end(), view), views.end());
+    for (uint i=0;i<views.size();i++) {
+        if (views[i].lock() != view) continue;
+        views.erase(views.begin() + i);
+        return;
+    }
 }
 
 void VRWindow::setAction(RenderActionRefPtr ract) { this->ract = ract; }
-vector<VRView*> VRWindow::getViews() { return views; }
 bool VRWindow::hasType(int i) { return (i == type); }
 void VRWindow::resize(int w, int h) { _win->resize(w,h); }
-
 void VRWindow::render() { if(_win) _win->render(ract); }
+
+vector<VRViewPtr> VRWindow::getViews() {
+    vector<VRViewPtr> res;
+    for (auto v : views) if (auto r = v.lock()) res.push_back(r);
+    return res;
+}
 
 void VRWindow::update( weak_ptr<VRThread>  wt) {
     auto t = wt.lock();
@@ -86,9 +94,11 @@ void VRWindow::save(xmlpp::Element* node) {
     else node->set_attribute("keyboard", "None");
 
     xmlpp::Element* vn;
-    for (uint i=0; i<views.size(); i++) {
-        vn = node->add_child("View");
-        views[i]->save(vn);
+    for (auto wv : views) {
+        if (auto v = wv.lock()) {
+            vn = node->add_child("View");
+            v->save(vn);
+        }
     }
 }
 
@@ -99,18 +109,14 @@ void VRWindow::load(xmlpp::Element* node) {
     height = toInt( node->get_attribute("height")->get_value() );
     name = node->get_attribute("name")->get_value();
 
-    xmlpp::Node::NodeList nl = node->get_children();
-    xmlpp::Node::NodeList::iterator itr;
-    for (itr = nl.begin(); itr != nl.end(); itr++) {
-        xmlpp::Node* n = *itr;
-
+    for (xmlpp::Node* n : node->get_children()) {
         xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
         if (!el) continue;
 
         if (el->get_name() != "View") continue;
 
         int i = VRSetupManager::getCurrent()->addView(name);
-        VRView* v = VRSetupManager::getCurrent()->getView(i);
+        VRViewPtr v = VRSetupManager::getCurrent()->getView(i);
         addView(v);
         v->load(el);
     }
@@ -118,7 +124,7 @@ void VRWindow::load(xmlpp::Element* node) {
     string _mouse = node->get_attribute("mouse")->get_value();
     if (_mouse != "None") {
         mouse = (VRMouse*)VRSetupManager::getCurrent()->getDevice(_mouse);
-        if (views.size() > 0 && mouse) mouse->setViewport(views[0]);
+        if (views.size() > 0 && mouse) if (auto v = views[0].lock()) mouse->setViewport(v);
     }
 
     if (node->get_attribute("keyboard") != 0) {

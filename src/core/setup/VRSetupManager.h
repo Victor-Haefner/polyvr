@@ -5,25 +5,25 @@
 #include <map>
 #include <string>
 
+#include "core/setup/VRSetupFwd.h"
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRSetup;
-
 class VRSetupManager {
     private:
-        VRSetup* current = 0;
+        VRSetupPtr current = 0;
         string current_path;
 
         VRSetupManager();
 
     public:
         static VRSetupManager* get();
-        static VRSetup* getCurrent();
+        static VRSetupPtr getCurrent();
         ~VRSetupManager();
 
-        VRSetup* create();
-        VRSetup* load(string name, string path);
+        VRSetupPtr create();
+        VRSetupPtr load(string name, string path);
 };
 
 OSG_END_NAMESPACE;

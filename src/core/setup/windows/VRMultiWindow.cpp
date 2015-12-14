@@ -67,7 +67,7 @@ void VRMultiWindow::initialize() {
     win->setHServers(Nx);
     win->setVServers(Ny);
     for (auto s : servers) win->editMFServers()->push_back(s);
-    for (auto v : views) v->setWindow(win);
+    for (auto wv : views) if (auto v = wv.lock()) v->setWindow(win);
 
     Thread::getCurrentChangeList()->commitChangesAndClear();
     Thread::getCurrentChangeList()->fillFromCurrentState();

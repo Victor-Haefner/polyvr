@@ -8,21 +8,22 @@
 #include <OpenSG/OSGGrabForeground.h>
 #include <OpenSG/OSGImageForeground.h>
 #include "core/objects/VRObjectFwd.h"
+#include "core/setup/VRSetupFwd.h"
 
 namespace xmlpp{ class Element; }
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRView {
+class VRView : public std::enable_shared_from_this<VRView> {
     private:
         int ID;
         string name;
 
-        bool active_stereo;
-        bool stereo;
-        bool projection;
-        bool doStats;
+        bool active_stereo = false;
+        bool stereo = false;
+        bool projection = false;
+        bool doStats = false;
 
         NodeRecPtr viewGeo;
         VRMaterialPtr viewGeoMat;
@@ -30,7 +31,7 @@ class VRView {
         Vec4f position;
 
         float eyeSeparation;
-        bool eyeinverted;
+        bool eyeinverted = false;
 
         //stereo decorator
         ProjectionCameraDecoratorRecPtr PCDecoratorLeft;
@@ -81,9 +82,11 @@ class VRView {
         void setRoot();
 
     public:
-        //VRView(bool _active_stereo = false, bool _stereo = false, bool _projection = false, Pnt3f _screenLowerLeft = Pnt3f(0,0,0), Pnt3f _screenLowerRight = Pnt3f(0,0,0), Pnt3f _screenUpperRight = Pnt3f(0,0,0), Pnt3f _screenUpperLeft = Pnt3f(0,0,0), bool swapeyes = false);
-        VRView(string n);
+        VRView(string name);
         ~VRView();
+
+        static VRViewPtr create(string name);
+        VRViewPtr ptr();
 
         int getID();
         void setID(int i);

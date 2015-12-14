@@ -42,10 +42,8 @@ void VRObject::destroy() {
     if (getParent()) getParent()->subChild( p );
 }
 
-VRObjectPtr VRObject::create(string name) { return shared_ptr<VRObject>(new VRObject(name) ); }
-VRObjectPtr VRObject::ptr() {
-    return shared_from_this();
-}
+VRObjectPtr VRObject::create(string name) { return VRObjectPtr(new VRObject(name) ); }
+VRObjectPtr VRObject::ptr() { return shared_from_this(); }
 
 void VRObject::printInformation() {;}
 

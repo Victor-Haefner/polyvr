@@ -123,15 +123,16 @@ VRSignalPtr VRMouse::getFromEdgeSignal() { return on_from_edge; }
 void VRMouse::updatePosition(int x, int y) {
     auto cam = this->cam.lock();
     if (!cam) return;
-    if (view == 0) return;
+    auto v = view.lock();
+    if (!v) return;
 
     float rx, ry;
     int w, h;
-    w = view->getViewport()->calcPixelWidth();
-    h = view->getViewport()->calcPixelHeight();
-    view->getViewport()->calcNormalizedCoordinates(rx, ry, x, y);
+    w = v->getViewport()->calcPixelWidth();
+    h = v->getViewport()->calcPixelHeight();
+    v->getViewport()->calcNormalizedCoordinates(rx, ry, x, y);
 
-    //cam->getCam()->calcViewRay(ray,x,y,*view->getViewport());
+    //cam->getCam()->calcViewRay(ray,x,y,*v->getViewport());
     calcViewRay(cam->getCam(), ray, rx,ry,w,h);
     editBeacon()->setDir(ray.getDirection());
 
@@ -147,7 +148,7 @@ void VRMouse::updatePosition(int x, int y) {
 
     if (side != onEdge) {
         sig_state = (side == -1) ? 5 : 4;
-        sig_key = (side == -1) ? (1+view->getID())*10+onEdge : (1+view->getID())*10+side;
+        sig_key = (side == -1) ? (1+v->getID())*10+onEdge : (1+v->getID())*10+side;
         if (side == -1) on_from_edge->trigger<VRDevice>();
         else on_to_edge->trigger<VRDevice>();
     }
@@ -156,9 +157,10 @@ void VRMouse::updatePosition(int x, int y) {
 
 void VRMouse::mouse(int button, int state, int x, int y) {
     float _x, _y;
-    if (view == 0) return;
+    auto sv = view.lock();
+    if (!sv) return;
 
-    ViewportRecPtr v = view->getViewport();
+    ViewportRecPtr v = sv->getViewport();
     v->calcNormalizedCoordinates(_x, _y, x, y);
     change_slider(5,_x);
     change_slider(6,_y);
@@ -169,10 +171,11 @@ void VRMouse::mouse(int button, int state, int x, int y) {
 }
 
 void VRMouse::motion(int x, int y) {
-    if (view == 0) return;
+    auto sv = view.lock();
+    if (!sv) return;
 
     float _x, _y;
-    ViewportRecPtr v = view->getViewport();
+    ViewportRecPtr v = sv->getViewport();
     v->calcNormalizedCoordinates(_x, _y, x, y);
     change_slider(5,_x);
     change_slider(6,_y);
@@ -180,9 +183,8 @@ void VRMouse::motion(int x, int y) {
     updatePosition(x,y);
 }
 
-void VRMouse::setCamera(VRCameraPtr _cam) { cam = _cam; }
-
-void VRMouse::setViewport(VRView* _view) { view = _view; }
+void VRMouse::setCamera(VRCameraPtr cam) { this->cam = cam; }
+void VRMouse::setViewport(VRViewPtr view) { this->view = view; }
 
 Line VRMouse::getRay() { return ray; }
 

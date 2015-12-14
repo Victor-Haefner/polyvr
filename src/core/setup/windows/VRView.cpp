@@ -210,29 +210,8 @@ void VRView::setDecorators() {//set decorators, only if projection true
     PCDecoratorRight->editMFSurface()->push_back(screenUpperLeft);
 }
 
-//VRView::VRView(bool _active_stereo, bool _stereo, bool _projection, Pnt3f _screenLowerLeft, Pnt3f _screenLowerRight, Pnt3f _screenUpperRight, Pnt3f _screenUpperLeft, bool swapeyes) {
-VRView::VRView(string n) {
-    // pointer
-    lView = 0;
-    rView = 0;
-    lView_act = 0;
-    rView_act = 0;
-    PCDecoratorLeft = 0;
-    PCDecoratorRight = 0;
-    view_root = 0;
-    cam = 0;
-    real_root = 0;
-    user = 0;
-    viewGeo = 0;
-    name = n;
-    window = 0;
-
-    // flags
-    eyeinverted = false;
-    doStats = false;
-    active_stereo = false;
-    stereo = false;
-    projection = false;
+VRView::VRView(string name) {
+    this->name = name;
 
     // data
     position = Vec4f(0,0,1,1);
@@ -276,6 +255,9 @@ VRView::~VRView() {
     PCDecoratorRight = 0;
     stats = 0;
 }
+
+VRViewPtr VRView::create(string name) { return VRViewPtr(new VRView(name)); }
+VRViewPtr VRView::ptr() { return shared_from_this(); }
 
 int VRView::getID() { return ID; }
 void VRView::setID(int i) { ID = i; }

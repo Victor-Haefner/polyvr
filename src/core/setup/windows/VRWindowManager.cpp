@@ -169,7 +169,7 @@ void VRWindowManager::updateWindows() {
     if (scene) scene->blockScriptThreads();
 }
 
-void VRWindowManager::setWindowView(string name, VRView* view) {
+void VRWindowManager::setWindowView(string name, VRViewPtr view) {
     if (!checkWin(name)) return;
     VRWindow* win = windows[name];
     win->addView(view);
