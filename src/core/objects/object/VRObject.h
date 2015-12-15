@@ -101,6 +101,7 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         template<typename T> T getAttachment(string name);
         bool hasAttachment(string name);
         void remAttachment(string name);
+        vector<string> getAttachmentNames();
         VRObjectPtr hasAncestorWithAttachment(string name);
         vector<VRObjectPtr> getChildrenWithAttachment(string name);
 

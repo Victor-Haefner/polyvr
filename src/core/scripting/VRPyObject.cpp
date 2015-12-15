@@ -34,7 +34,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRObject>::type = {
     0,		               /* tp_iter */
     0,		               /* tp_iternext */
     VRPyObject::methods,             /* tp_methods */
-    VRPyObject::members,             /* tp_members */
+    0,             /* tp_members */
     0,                         /* tp_getset */
     0,                         /* tp_base */
     0,                         /* tp_dict */
@@ -44,10 +44,6 @@ template<> PyTypeObject VRPyBaseT<OSG::VRObject>::type = {
     (initproc)init,      /* tp_init */
     0,                         /* tp_alloc */
     New_VRObjects_ptr,                 /* tp_new */
-};
-
-PyMemberDef VRPyObject::members[] = {
-    {NULL}  /* Sentinel */
 };
 
 PyMethodDef VRPyObject::methods[] = {
@@ -75,6 +71,7 @@ PyMethodDef VRPyObject::methods[] = {
     {"addTag", (PyCFunction)VRPyObject::addTag, METH_VARARGS, "Add a tag to the object - addTag( str tag )" },
     {"hasTag", (PyCFunction)VRPyObject::hasTag, METH_VARARGS, "Check if the object has a tag - bool hasTag( str tag )" },
     {"remTag", (PyCFunction)VRPyObject::remTag, METH_VARARGS, "Remove a tag from the object - remTag( str tag )" },
+    {"getTags", (PyCFunction)VRPyObject::getTags, METH_NOARGS, "Return all tags - [str] getTags()" },
     {"hasAncestorWithTag", (PyCFunction)VRPyObject::hasAncestorWithTag, METH_VARARGS, "Check if the object or an ancestor has a tag - obj hasAncestorWithTag( str tag )" },
     {"getChildrenWithTag", (PyCFunction)VRPyObject::getChildrenWithTag, METH_VARARGS, "Get all children which have the tag - [objs] getChildrenWithTag( str tag )" },
     {"setTravMask", (PyCFunction)VRPyObject::setTravMask, METH_VARARGS, "Set the traversal mask of the object - setTravMask( int mask )" },
@@ -131,6 +128,14 @@ PyObject* VRPyObject::hasTag(VRPyObject* self, PyObject* args) {
 PyObject* VRPyObject::hasAncestorWithTag(VRPyObject* self, PyObject* args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::hasAncestorWithTag - C Object is invalid"); return NULL; }
     return VRPyTypeCaster::cast( self->objPtr->hasAncestorWithAttachment( parseString(args) ) );
+}
+
+PyObject* VRPyObject::getTags(VRPyObject* self) {
+    if (!self->valid()) return NULL;
+    auto tags = self->objPtr->getAttachmentNames();
+    PyObject* li = PyList_New(tags.size());
+    for (uint i=0; i<tags.size(); i++) PyList_SetItem(li, i, PyString_FromString(tags[i].c_str()));
+    return li;
 }
 
 PyObject* VRPyObject::remTag(VRPyObject* self, PyObject* args) {

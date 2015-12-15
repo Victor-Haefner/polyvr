@@ -60,6 +60,12 @@ string VRObject::getType() { return type; }
 bool VRObject::hasAttachment(string name) { return attachments.count(name); }
 void VRObject::remAttachment(string name) { attachments.erase(name); }
 
+vector<string> VRObject::getAttachmentNames() {
+    vector<string> res;
+    for (auto a : attachments) res.push_back(a.first);
+    return res;
+}
+
 vector<VRObjectPtr> VRObject::getChildrenWithAttachment(string name) {
     vector<VRObjectPtr> res;
     for (auto c : getChildren()) {
