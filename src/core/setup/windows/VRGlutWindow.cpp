@@ -42,6 +42,8 @@ VRGlutWindow::~VRGlutWindow() {
     win = NULL;
 }
 
+VRGlutWindowPtr VRGlutWindow::ptr() { return static_pointer_cast<VRGlutWindow>( shared_from_this() ); }
+VRGlutWindowPtr VRGlutWindow::create() { return shared_ptr<VRGlutWindow>(new VRGlutWindow() ); }
 
 void VRGlutWindow::save(xmlpp::Element* node) {
     VRWindow::save(node);

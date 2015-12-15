@@ -31,10 +31,7 @@ VRWindowManager::VRWindowManager() {
 }
 
 VRWindowManager::~VRWindowManager() {
-    map<string, VRWindow*>::iterator itr;
-    for (itr = windows.begin(); itr != windows.end(); itr++) delete itr->second;
     windows.clear();
-
     BarrierRefPtr barrier = Barrier::get("PVR_rendering", true);
     for (uint i=0; i<VRWindow::active_window_count+1; i++) subRef(barrier);
 }
@@ -101,28 +98,28 @@ void VRWindowManager::initGlut() { // deprecated?
     else glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL);
 }
 
-VRWindow* VRWindowManager::addGlutWindow(string name) {
+VRWindowPtr VRWindowManager::addGlutWindow(string name) {
     initGlut();
-    VRGlutWindow* win = new VRGlutWindow();
+    VRGlutWindowPtr win = VRGlutWindow::create();
     win->setName(name);
     win->setAction(ract);
     windows[win->getName()] = win;
     return win;
 }
 
-VRWindow* VRWindowManager::addMultiWindow(string name) {
-    VRMultiWindow* win = new VRMultiWindow();
+VRWindowPtr VRWindowManager::addMultiWindow(string name) {
+    VRMultiWindowPtr win = VRMultiWindow::create();
     win->setName(name);
     win->setAction(ract);
     windows[win->getName()] = win;
     return win;
 }
 
-VRWindow* VRWindowManager::addGtkWindow(string name, string glarea) {
+VRWindowPtr VRWindowManager::addGtkWindow(string name, string glarea) {
     cout << " add Gtk window " << name << endl;
     Gtk::DrawingArea* drawArea = 0;
     VRGuiBuilder()->get_widget(glarea, drawArea);
-    VRGtkWindow* win = new VRGtkWindow(drawArea);
+    VRGtkWindowPtr win = VRGtkWindow::create(drawArea);
     win->setName(name);
     win->setAction(ract);
     windows[win->getName()] = win;
@@ -171,41 +168,38 @@ void VRWindowManager::updateWindows() {
 
 void VRWindowManager::setWindowView(string name, VRViewPtr view) {
     if (!checkWin(name)) return;
-    VRWindow* win = windows[name];
+    VRWindowPtr win = windows[name];
     win->addView(view);
 }
 
 void VRWindowManager::addWindowServer(string name, string server) {
     if (!checkWin(name)) return;
-    VRMultiWindow* win = (VRMultiWindow*)windows[name];
+    VRMultiWindowPtr win = dynamic_pointer_cast<VRMultiWindow>( windows[name] );
     win->addServer(server);
 }
 
-void VRWindowManager::removeWindow(string name) {
-    delete windows[name];
-    windows.erase(name);
-}
+void VRWindowManager::removeWindow(string name) { windows.erase(name); }
 
 void VRWindowManager::changeWindowName(string& name, string new_name) {
-    map<string, VRWindow*>::iterator i = windows.find(name);
+    map<string, VRWindowPtr>::iterator i = windows.find(name);
     if (i == windows.end()) return;
 
-    VRWindow* win = i->second;
+    VRWindowPtr win = i->second;
     windows.erase(i);
     win->setName(new_name);
     windows[win->getName()] = win;
     name = win->getName();
 }
 
-map<string, VRWindow*> VRWindowManager::getWindows() { return windows; }
+map<string, VRWindowPtr> VRWindowManager::getWindows() { return windows; }
 
-VRWindow* VRWindowManager::getWindow(string name) {
+VRWindowPtr VRWindowManager::getWindow(string name) {
     if (windows.count(name) == 0) return 0;
     else return windows[name];
 }
 
 void VRWindowManager::save(xmlpp::Element* node) {
-    map<string, VRWindow*>::iterator itr;
+    map<string, VRWindowPtr>::iterator itr;
     xmlpp::Element* wn;
     for (itr = windows.begin(); itr != windows.end(); itr++) {
         wn = node->add_child("Window");
@@ -227,12 +221,12 @@ void VRWindowManager::load(xmlpp::Element* node) {
         string name = el->get_attribute("name")->get_value();
 
         if (type == "0") {
-            VRWindow* win = addMultiWindow(name);
+            VRWindowPtr win = addMultiWindow(name);
             win->load(el);
         }
 
         if (type == "2") {
-            VRWindow* win = addGtkWindow(name);
+            VRWindowPtr win = addGtkWindow(name);
             win->load(el);
         }
     }

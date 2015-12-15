@@ -21,7 +21,7 @@ void VRMouse::setCursor(string c) {
     auto s = VRSetupManager::getCurrent();
     for (auto w : s->getWindows()) {
         if (!w.second->hasType(2)) continue; // not a gtk window
-        auto win = (VRGtkWindow*)w.second;
+        auto win = dynamic_pointer_cast<VRGtkWindow>(w.second);
         win->setCursor(c);
     }
 }

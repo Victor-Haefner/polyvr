@@ -14,7 +14,7 @@ class VRWindow;
 
 class VRWindowManager {
     private:
-        map<string, VRWindow*> windows;
+        map<string, VRWindowPtr> windows;
         RenderActionRefPtr ract;
         bool rendering_paused = false;
 
@@ -24,14 +24,14 @@ class VRWindowManager {
         VRWindowManager();
         ~VRWindowManager();
 
-        map<string, VRWindow*> getWindows();
-        VRWindow* getWindow(string name);
+        map<string, VRWindowPtr> getWindows();
+        VRWindowPtr getWindow(string name);
 
         void initGlut();
 
-        VRWindow* addGlutWindow  (string name);
-        VRWindow* addGtkWindow   (string name, string glarea = "glarea");
-        VRWindow* addMultiWindow (string name);
+        VRWindowPtr addGlutWindow  (string name);
+        VRWindowPtr addGtkWindow   (string name, string glarea = "glarea");
+        VRWindowPtr addMultiWindow (string name);
         void removeWindow   (string name);
 
         void setWindowView(string name, VRViewPtr view);

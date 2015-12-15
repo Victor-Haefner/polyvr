@@ -24,6 +24,9 @@ class VRMultiWindow : public VRWindow {
         VRMultiWindow();
         ~VRMultiWindow();
 
+        static VRMultiWindowPtr create();
+        VRMultiWindowPtr ptr();
+
         enum STATE {
             NO_CONNECTION = 0,
             CONNECTED = 1,

@@ -53,6 +53,9 @@ VRGtkWindow::~VRGtkWindow() {
     win = NULL;
 }
 
+VRGtkWindowPtr VRGtkWindow::ptr() { return static_pointer_cast<VRGtkWindow>( shared_from_this() ); }
+VRGtkWindowPtr VRGtkWindow::create(Gtk::DrawingArea* da) { return shared_ptr<VRGtkWindow>(new VRGtkWindow(da) ); }
+
 void VRGtkWindow::setCursor(string c) {
     Glib::RefPtr <Gdk::Window> win = drawArea->get_window();
     if (c == "") { win->set_cursor(); return; }

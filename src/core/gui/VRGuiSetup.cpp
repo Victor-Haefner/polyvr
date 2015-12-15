@@ -369,12 +369,12 @@ void VRGuiSetup::on_menu_delete() {
 }
 
 void VRGuiSetup::on_menu_add_window() {
-    VRWindow* win = current_setup->addMultiWindow("Display");
+    VRWindowPtr win = current_setup->addMultiWindow("Display");
     win->setActive(true);
     if ( VRSceneManager::getCurrent() ) win->setContent(true);
 
     updateSetup();
-    selected_object = win;
+    selected_object = win.get();
     selected_type = "window";
     on_menu_add_viewport();
 }
@@ -917,7 +917,7 @@ void VRGuiSetup::updateSetup() {
     }
 
     for (auto win : current_setup->getWindows()) {
-        VRWindow* w = win.second;
+        VRWindow* w = win.second.get();
         string name = win.first;
         itr = tree_store->append(windows_itr->children());
         string bg = "#FFFFFF";

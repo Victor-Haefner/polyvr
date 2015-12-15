@@ -25,6 +25,9 @@ VRWindow::~VRWindow() {
     active_window_count--;
 }
 
+VRWindowPtr VRWindow::create() { return VRWindowPtr(new VRWindow()); }
+VRWindowPtr VRWindow::ptr() { return shared_from_this(); }
+
 WindowRecPtr VRWindow::getOSGWindow() { return _win; }
 
 void VRWindow::addView(VRViewPtr view) {
@@ -43,7 +46,8 @@ void VRWindow::remView(VRViewPtr view) {
 
 void VRWindow::setAction(RenderActionRefPtr ract) { this->ract = ract; }
 bool VRWindow::hasType(int i) { return (i == type); }
-void VRWindow::resize(int w, int h) { _win->resize(w,h); }
+void VRWindow::resize(int w, int h) { width = w; height = h; _win->resize(w,h); }
+Vec2i VRWindow::getSize() { return Vec2i(width, height); }
 void VRWindow::render() { if(_win) _win->render(ract); }
 
 vector<VRViewPtr> VRWindow::getViews() {

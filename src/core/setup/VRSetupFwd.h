@@ -12,7 +12,10 @@ namespace OSG {
 
 ptrFwd(VRSetup);
 ptrFwd(VRView);
-//ptrFwd(VRWindow);
+ptrFwd(VRWindow);
+ptrFwd(VRGtkWindow);
+ptrFwd(VRGlutWindow);
+ptrFwd(VRMultiWindow);
 
 }
 

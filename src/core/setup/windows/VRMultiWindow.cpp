@@ -25,6 +25,9 @@ VRMultiWindow::~VRMultiWindow() {
     win = 0;
 }
 
+VRMultiWindowPtr VRMultiWindow::ptr() { return static_pointer_cast<VRMultiWindow>( shared_from_this() ); }
+VRMultiWindowPtr VRMultiWindow::create() { return shared_ptr<VRMultiWindow>(new VRMultiWindow() ); }
+
 void VRMultiWindow::addServer(string server) { servers.push_back(server); }
 
 string VRMultiWindow::getServer(int x, int y) {

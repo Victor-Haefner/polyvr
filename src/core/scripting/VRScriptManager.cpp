@@ -341,8 +341,9 @@ void VRScriptManager::initPyModules() {
 #endif
 
     PyObject* pModSetup = Py_InitModule3("Setup", VRScriptManager_module_methods, "VR Module");
-    registerModule<VRPySetup>("Setup", pModSetup);
-    registerModule<VRPyView>("View", pModSetup);
+    registerModule<VRPySetup>("Setup", pModSetup, 0, "Setup");
+    registerModule<VRPyView>("View", pModSetup, 0, "Setup");
+    registerModule<VRPyWindow>("Window", pModSetup, 0, "Setup");
 
     PyObject* pModFactory = Py_InitModule3("Factory", VRScriptManager_module_methods, "VR Module");
     registerModule<FPyNode>("Node", pModFactory, 0, "Factory");
