@@ -24,6 +24,7 @@ class VRParticles : public VRGeometry {
 
         static shared_ptr<VRParticles> create();
 
+        void setAmount(int amount);
         void setRadius(float newRadius, float variation=0.0);
         void setMass(float newMass, float variation=0.0);
         void setMassByRadius(float massFor1mRadius=1000.0);
@@ -37,6 +38,7 @@ class VRParticles : public VRGeometry {
 
     protected:
         int N = 200;
+        int from, to;
         vector<Particle*> particles;
 
         VRUpdatePtr fkt;

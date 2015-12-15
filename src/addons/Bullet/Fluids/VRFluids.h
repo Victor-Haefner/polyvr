@@ -25,12 +25,11 @@ class VRFluids : public VRParticles {
     protected:
         VRUpdatePtr fluidFkt;
         SimulationType simulation = SPH;
-        int from, to;
 
         const bool afterBullet = false;
         const float PRESSURE_KAPPA = N* 8.4 /*1.38*/ *296.0; // ideal gas law: N*(gas const)*(temperature)
         const float PRESSURE_REST  = 0.0001;
-        const float VISCOSITY_MU   = 0.4;
+        const float VISCOSITY_MU   = 0.01;
 
         // @depricated!
         inline float calc_density(SphParticle* n, float distance2, float area);

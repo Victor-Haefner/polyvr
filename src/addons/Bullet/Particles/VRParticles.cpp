@@ -70,6 +70,10 @@ float VRParticles::getMaxRadius() {
     return maximum;
 }
 
+void VRParticles::setAmount(int amount) {
+    this->setFunctions(0, amount);
+}
+
 void VRParticles::setMass(float newMass, float variation) {
     int i;
     float result;
@@ -193,6 +197,8 @@ int VRParticles::spawnCuboid(Vec3f base, ArgType type, float a, float b, float c
 
 void VRParticles::setFunctions(int from, int to) {
     {
+        this->from = from;
+        this->to = to;
         BLock lock(mtx());
         VRScenePtr scene = VRSceneManager::getCurrent();
         scene->dropUpdateFkt(fkt);

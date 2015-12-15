@@ -48,6 +48,7 @@ PyMethodDef VRPyParticles::methods[] = {
     {"getGeometry", (PyCFunction)VRPyParticles::getGeometry, METH_VARARGS, "Get geometry - Geometry getGeometry()" },
     {"spawnCuboid", (PyCFunction)VRPyParticles::spawnCuboid, METH_VARARGS, "spawnCuboid(x,y,z) \n\tspawnCuboid(x,y,z,'size',a,b,c) \n\tspawnCuboid(x,y,z,'liter',l)"},
 
+    {"setAmount", (PyCFunction)VRPyParticles::setAmount, METH_VARARGS, "setAmount(int amount) \n\tsetRadius(100)"},
     {"setRadius", (PyCFunction)VRPyParticles::setRadius, METH_VARARGS, "setRadius(radius, variation) \n\tsetRadius(0.05, 0.02)"},
     {"setMass", (PyCFunction)VRPyParticles::setMass, METH_VARARGS, "setMass(mass, variation) \n\tsetMass(0.05, 0.02)"},
     {"setMassByRadius", (PyCFunction)VRPyParticles::setMassByRadius, METH_VARARGS, "setMassByRadius(massOfOneMeterRadius) \n\tsetMass(1000.0*100)"},
@@ -85,6 +86,14 @@ PyObject* VRPyParticles::spawnCuboid(VRPyParticles* self, PyObject* args) {
 
     // Py_RETURN_TRUE;
     return PyInt_FromLong((long) num);
+}
+
+PyObject* VRPyParticles::setAmount(VRPyParticles* self, PyObject* args) {
+    checkObj(self);
+    int amount = 0;
+    if (! PyArg_ParseTuple(args, "i", &amount)) { Py_RETURN_FALSE; }
+    self->objPtr->setAmount(amount);
+    Py_RETURN_TRUE;
 }
 
 PyObject* VRPyParticles::setRadius(VRPyParticles* self, PyObject* args) {
