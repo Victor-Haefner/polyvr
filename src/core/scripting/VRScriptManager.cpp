@@ -14,6 +14,7 @@
 #include "VRPySprite.h"
 #include "VRPySound.h"
 #include "VRPyDevice.h"
+#include "VRPyIntersection.h"
 #include "VRPyPose.h"
 #include "VRPyPath.h"
 #include "VRPyStroke.h"
@@ -290,6 +291,7 @@ void VRScriptManager::initPyModules() {
     registerModule<VRPyStroke>("Stroke", pModVR, VRPyGeometry::typeRef);
     registerModule<VRPyConstraint>("Constraint", pModVR);
     registerModule<VRPyDevice>("Device", pModVR);
+    registerModule<VRPyIntersection>("Intersection", pModVR);
     registerModule<VRPyHaptic>("Haptic", pModVR, VRPyDevice::typeRef);
     registerModule<VRPyMobile>("Mobile", pModVR, VRPyDevice::typeRef);
     registerModule<VRPyMouse>("Mouse", pModVR, VRPyDevice::typeRef);

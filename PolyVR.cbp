@@ -614,6 +614,8 @@
 		<Unit filename="src/core/scripting/VRPyHaptic.h" />
 		<Unit filename="src/core/scripting/VRPyImage.cpp" />
 		<Unit filename="src/core/scripting/VRPyImage.h" />
+		<Unit filename="src/core/scripting/VRPyIntersection.cpp" />
+		<Unit filename="src/core/scripting/VRPyIntersection.h" />
 		<Unit filename="src/core/scripting/VRPyLight.cpp" />
 		<Unit filename="src/core/scripting/VRPyLight.h" />
 		<Unit filename="src/core/scripting/VRPyListMath.cpp" />
