@@ -77,32 +77,25 @@ inline void VRFluids::updateSPH(int from, int to) {
             p = (SphParticle*) particles[i];
             sph_calc_density(p, p->body->getWorldTransform().getOrigin(), from, to);
         }
-        //printf("-->Density[0]: %f\n", ((SphParticle*) particles[0])->sphDensity); // TODO debug
 
         //#pragma omp parallel for private(p) shared(from, to)
         for (int i=from; i < to; i++) {
             p = (SphParticle*) particles[i];
-            //if (p->sphDensity > 0.0001) // TODO how to handle zero density?
-            {
-                sph_calc_pressure(p, p->body->getWorldTransform().getOrigin(), from, to);
-                //sph_calc_viscosity(p, p->body->getWorldTransform().getOrigin(), from, to);
-                // update Particle Acceleration:
-                btVector3 force = (p->sphPressureForce + (p->sphDensity * p->body->getTotalForce()) + p->sphViscosityForce);
-                p->body->setLinearVelocity(btVector3(0,0,0));
-                p->body->applyCentralForce(force / p->sphDensity); // TODO this does not work with Impulse
-                //if (i==0) printf("-->Force[0]: (%f,%f,%f)\n", force[0],force[1],force[2]); // TODO debug
-                btVector3 pos = p->body->getWorldTransform().getOrigin();
-                //if (i==0) printf("-->Pos[0]: (%f,%f,%f)\n", pos[0],pos[1],pos[2]);
-            }
+            sph_calc_pressure(p, p->body->getWorldTransform().getOrigin(), from, to);
+            sph_calc_viscosity(p, p->body->getWorldTransform().getOrigin(), from, to);
+            // update Particle Acceleration:
+            btVector3 force = (p->sphPressureForce + (p->sphDensity * p->body->getLinearVelocity()) + p->sphViscosityForce);
+            //p->body->setLinearVelocity(btVector3(0,0,0));
+            p->body->setLinearVelocity(force / p->sphDensity); // TODO is force applied correctly?
         }
 
         // TODO debug foo here
-        p = (SphParticle*) particles[42];
+        int num = (rand() % this->to);
+        p = (SphParticle*) particles[num];
         btVector3 pf = p->sphPressureForce;
-        btVector3 v = p->body->getTotalForce();
+        btVector3 v = p->body->getLinearVelocity();
         btVector3 vis = p->sphViscosityForce;
-
-        printf("force= (%f,%f,%f) + (%f * (%f,%f,%f)) + (%f,%f,%f)\n",
+        printf("--> (%f,%f,%f) + (%f * (%f,%f,%f)) + (%f,%f,%f)\n",
                 pf[0], pf[1], pf[2], p->sphDensity, v[0], v[1], v[2], vis[0],vis[1],vis[2]);
     }
 }
@@ -153,11 +146,12 @@ inline void VRFluids::updateXSPH(int from, int to) {
 }
 
 inline void VRFluids::sph_calc_density(SphParticle* p, btVector3 p_origin, int from, int to) {
-    p->sphDensity = 0;
+    p->sphDensity = 0.0;
     btVector3 q_origin;
     for (int i=from; i < to; i++) {
             q_origin = particles[i]->body->getWorldTransform().getOrigin();
-            p->sphDensity += particles[i]->mass * kernel_poly6(p_origin.distance2(q_origin), p->sphArea);
+            float kernel = kernel_poly6(p_origin.distance2(q_origin), p->sphArea);
+            p->sphDensity += particles[i]->mass * kernel;
     }
 }
 
@@ -174,11 +168,11 @@ inline void VRFluids::sph_calc_pressure(SphParticle* p, btVector3 p_origin, int 
             q = (SphParticle*) particles[i];
             q_origin = q->body->getWorldTransform().getOrigin();
             q_pressure = PRESSURE_KAPPA * (p->sphDensity - PRESSURE_REST);
-            trick = (p_pressure + q_pressure) / (2 * q->sphDensity); // TODO what if density is 0?
+            trick = (p_pressure + q_pressure) / (2 * q->sphDensity);
             //btVector3 kernel = kernel_spiky_gradient(p_origin - q_origin, p->sphArea);
             //printf("-->Force(%f), Mass(%f), Pressure(%f), Kernel(%f)\n", p->sphPressureForce[1], p->mass, trick, kernel[1]); // TODO debug
             kernel = kernel_spiky_gradient(p_origin - q_origin, p->sphArea);
-            if (kernel.length() > 0) p->sphPressureForce -= q->mass * trick * kernel;
+            p->sphPressureForce -= q->mass * trick * kernel;
             //printf("-->(%f, %f, %f)\n", q->mass, trick, (kernel_spiky_gradient(p_origin - q_origin, p->sphArea))[2]); // TODO debug
             //printf("-->(%f)\n", (q->mass * trick * kernel_spiky_gradient(p_origin - q_origin, p->sphArea))[2]); // TODO debug
     }
