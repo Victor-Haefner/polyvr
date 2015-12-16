@@ -12,6 +12,7 @@ OSG_BEGIN_NAMESPACE;
 
 class VRWorkpieceElement {
 private:
+    VRMillingWorkPiece& workpiece;
     VRGeometryPtr anchor;
     VRWorkpieceElement* children[2];
     VRWorkpieceElement* parent;
@@ -20,12 +21,9 @@ private:
     Vec3f size;
     Vec3f offset;
     Vec3f position;
-    bool deleted;
-
-    const float blockSize;
-    const int geometryCreateLevel;
-    const int maxTreeLevel;
     const int level;
+
+    bool deleted;
     bool updateIssued;
 
     VRGeometryPtr geometry;
@@ -36,11 +34,8 @@ private:
     static Vec3f mulVec3f(Vec3f lhs, Vec3f rhs);
 
 public:
-    VRWorkpieceElement(VRGeometryPtr anchor, VRWorkpieceElement* parent,
-                       Vec3i blocks, Vec3f size,
-                       Vec3f offset, Vec3f position,
-                       const float blockSize, const int geometryCreateLevel, const int maxTreeLevel,
-                       const int level);
+    VRWorkpieceElement(VRMillingWorkPiece& workpiece, VRGeometryPtr anchor, VRWorkpieceElement* parent,
+                       Vec3i blocks, Vec3f size, Vec3f offset, Vec3f position, const int level);
 
     // 6 sides with 4 vertices each
     static const int verticesPerElement = 6 * 4;
@@ -74,19 +69,20 @@ public:
 class VRMillingWorkPiece : public VRGeometry {
     private:
         Vec3i gridSize;
-        float blockSize = 0.01;
         int lastToolChange = 0;
         int updateCount = 0;
         pose toolPose;
         VRTransformWeakPtr tool;
         VRUpdatePtr uFkt;
-
         int levelsPerGeometry = 12; // can be overridden
         int geometryUpdateWait = 1;
-
+        int maxTreeLevel = 0;
         void update();
-
         VRWorkpieceElement* rootElement;
+
+    public:
+        float blockSize = 0.01;
+        int geometryCreateLevel = 0;
 
     public:
         VRMillingWorkPiece(string name);

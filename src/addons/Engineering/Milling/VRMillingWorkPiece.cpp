@@ -41,16 +41,16 @@ void VRMillingWorkPiece::init(Vec3i gSize, float bSize) {
     }
 
     int maxElements = gSize[0] * gSize[1] * gSize[2];
-    int maxLevels = (int) std::log2(maxElements);
-    int geometryCreateLevel = 0;
+    maxTreeLevel = (int) std::log2(maxElements);
+    geometryCreateLevel = 0;
 
-    if (levelsPerGeometry < maxLevels) {
-        geometryCreateLevel = maxLevels - levelsPerGeometry;
+    if (levelsPerGeometry < maxTreeLevel) {
+        geometryCreateLevel = maxTreeLevel - levelsPerGeometry;
     }
 
-    rootElement = new VRWorkpieceElement(this->ptr(), (VRWorkpieceElement*) nullptr,
+    rootElement = new VRWorkpieceElement(*this, this->ptr(), (VRWorkpieceElement*) nullptr,
                                   Vec3i(gridSize), Vec3f(gridSize) * blockSize,
-                                  Vec3f(0, 0, 0), getFrom(), blockSize, geometryCreateLevel, maxLevels, 0);
+                                  Vec3f(0, 0, 0), getFrom(), 0);
 
     rootElement->build();
 }
@@ -95,15 +95,10 @@ void VRMillingWorkPiece::setRefreshWait(int updatesToWait) {
 * workpiece element defitions
 */
 
-VRWorkpieceElement::VRWorkpieceElement(VRGeometryPtr anchor, VRWorkpieceElement* parent,
-                                       Vec3i blocks, Vec3f size,
-                                       Vec3f offset, Vec3f position,
-                                       const float blockSize, const int geometryCreateLevel,
-                                       const int maxTreeLevel, const int level)
-    : anchor(anchor), children(), parent(parent), blocks(blocks), size(size), offset(offset),
-      position(position), deleted(false), blockSize(blockSize), geometryCreateLevel(geometryCreateLevel),
-      maxTreeLevel(maxTreeLevel),
-      level(level), updateIssued(true)
+VRWorkpieceElement::VRWorkpieceElement(VRMillingWorkPiece& workpiece, VRGeometryPtr anchor, VRWorkpieceElement* parent,
+                                       Vec3i blocks, Vec3f size, Vec3f offset, Vec3f position, const int level)
+    : workpiece(workpiece), anchor(anchor), children(), parent(parent), blocks(blocks), size(size), offset(offset),
+      position(position), level(level), deleted(false), updateIssued(true)
 {}
 
 VRWorkpieceElement::~VRWorkpieceElement() {
@@ -124,7 +119,7 @@ void VRWorkpieceElement::deleteGeometry() {
 
 void VRWorkpieceElement::issueGeometryUpdate(int issuelevel) {
     if (parent != nullptr) {
-        if (level > geometryCreateLevel) {
+        if (level > workpiece.geometryCreateLevel) {
             parent->issueGeometryUpdate(issuelevel);
         }
         else {
@@ -153,9 +148,9 @@ void VRWorkpieceElement::split() {
 
     int blocksLeft = blocksDim / 2; // integer division
     int blocksRight = blocksDim - blocksLeft;
-    float lengthLeft = blocksLeft * blockSize;
-    float lengthRight = blocksRight * blockSize;
-    float centerOld = blocksDim * blockSize / 2.0f;
+    float lengthLeft = blocksLeft * workpiece.blockSize;
+    float lengthRight = blocksRight * workpiece.blockSize;
+    float centerOld = blocksDim * workpiece.blockSize / 2.0f;
     float centerLeftOffset = (lengthLeft / 2.0f) - centerOld;
     float centerRightOffset = centerOld - (lengthRight / 2.0f);
 
@@ -172,13 +167,13 @@ void VRWorkpieceElement::split() {
     newOffsetRight[divDim]  += centerRightOffset;
     newPositionLeft[divDim] += centerLeftOffset;
     newPositionRight[divDim] += centerRightOffset;
-    Vec3f newSizeLeft       = Vec3f(newBlocksLeft) * blockSize;
-    Vec3f newSizeRight      = Vec3f(newBlocksRight) * blockSize;
+    Vec3f newSizeLeft       = Vec3f(newBlocksLeft) * workpiece.blockSize;
+    Vec3f newSizeRight      = Vec3f(newBlocksRight) * workpiece.blockSize;
 
-    VRWorkpieceElement* left = new VRWorkpieceElement(anchor, this, newBlocksLeft,
-        newSizeLeft, newOffsetLeft, newPositionLeft, blockSize, geometryCreateLevel, maxTreeLevel, level + 1);
-    VRWorkpieceElement* right = new VRWorkpieceElement(anchor, this, newBlocksRight,
-        newSizeRight, newOffsetRight, newPositionRight, blockSize, geometryCreateLevel, maxTreeLevel, level + 1);
+    VRWorkpieceElement* left = new VRWorkpieceElement(workpiece, anchor, this, newBlocksLeft,
+        newSizeLeft, newOffsetLeft, newPositionLeft, level + 1);
+    VRWorkpieceElement* right = new VRWorkpieceElement(workpiece, anchor, this, newBlocksRight,
+        newSizeRight, newOffsetRight, newPositionRight, level + 1);
 
     children[0] = left;
     children[1] = right;
@@ -237,7 +232,7 @@ bool VRWorkpieceElement::isDeleted() const {
 
 void VRWorkpieceElement::build() {
     if (children[0] != nullptr &&
-            level < geometryCreateLevel) {
+            level < workpiece.geometryCreateLevel) {
         deleteGeometry();
         children[0]->build();
         children[1]->build();
