@@ -3,8 +3,6 @@
 #include "core/scene/VRScene.h"
 
 #include <boost/bind.hpp>
-#include <iostream>
-#include <tgmath.h>
 
 OSG_BEGIN_NAMESPACE
 using namespace std;
