@@ -32,14 +32,19 @@ VRObject::VRObject(string _name) {
 
 VRObject::~VRObject() {
     NodeRecPtr p;
-    if (node !=  0) p = node->getParent();
-    if (p !=  0) p->subChild(node);
+    if (node) p = node->getParent();
+    if (p) p->subChild(node);
 }
 
 void VRObject::destroy() {
     auto p = ptr();
-    for (auto c : children) if(c) c->detach();
     if (getParent()) getParent()->subChild( p );
+}
+
+void VRObject::detach() {
+    if (getParent() == 0) return;
+    getParent()->subChild(ptr(), true);
+    parent.reset();
 }
 
 VRObjectPtr VRObject::create(string name) { return VRObjectPtr(new VRObject(name) ); }
@@ -171,12 +176,6 @@ void VRObject::clearChildren() {
         subChild( c );
         c->destroy();
     }
-}
-
-void VRObject::detach() {
-    if (getParent() == 0) return;
-    getParent()->subChild(ptr(), true);
-    parent.reset();
 }
 
 VRObjectPtr VRObject::getChild(int i) {

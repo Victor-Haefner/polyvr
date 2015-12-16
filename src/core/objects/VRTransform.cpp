@@ -547,7 +547,7 @@ void VRTransform::drop() {
 
     Matrix m;
     getWorldMatrix(m);
-    switchParent(old_parent, old_child_id);
+    if (auto p = old_parent.lock()) switchParent(p, old_child_id);
     setWorldMatrix(m);
 
     if (physics) {
@@ -564,7 +564,7 @@ void VRTransform::rebaseDrag(VRObjectPtr new_parent) {
     old_parent = new_parent;
 }
 
-VRObjectPtr VRTransform::getDragParent() { return old_parent; }
+VRObjectPtr VRTransform::getDragParent() { return old_parent.lock(); }
 
 /** Cast a ray in world coordinates from the object in its local coordinates, -z axis defaults **/
 Line VRTransform::castRay(VRObjectPtr obj, Vec3f dir) {

@@ -94,8 +94,8 @@ btSoftBodyWorldInfo* VRPhysicsManager::getSoftBodyWorldInfo() {return softBodyWo
 
 void VRPhysicsManager::prepareObjects() {
     for (auto o : OSGobjs) {
-        if (o.second) {
-            if (o.second->getPhysics()) o.second->getPhysics()->prepareStep();
+        if (auto so = o.second.lock()) {
+            if (so->getPhysics()) so->getPhysics()->prepareStep();
         }
     }
 }
@@ -150,14 +150,17 @@ void VRPhysicsManager::updatePhysObjects() {
     VRGlobals::get()->PHYSICS_FRAME_RATE = fps;
 
     for (auto o : OSGobjs) {
-        if (o.second->getPhysics()->isGhost()) o.second->updatePhysics();
+        if (auto so = o.second.lock()) {
+            if (so->getPhysics()->isGhost()) so->updatePhysics();
+        }
     }
 
     for (int j=dynamicsWorld->getNumCollisionObjects()-1; j>=0 ;j--) {
         btCollisionObject* obj = dynamicsWorld->getCollisionObjectArray()[j];
         body = btRigidBody::upcast(obj);
         if (body && body->getMotionState() && OSGobjs.count(body) == 1) { // TODO: refactor this!
-            auto o = OSGobjs[body];
+            auto o = OSGobjs[body].lock();
+            if (!o) continue;
             if (o->getPhysics()->isDynamic()) o->updateFromBullet();
             else o->getPhysics()->updateTransformation(o);
         }
@@ -169,8 +172,8 @@ void VRPhysicsManager::updatePhysObjects() {
     VRTransformPtr soft_trans;
     btSoftBody* patch;
     for(int i = 0; i < arr.size() ;i++) { //for all soft bodies
-        soft_trans = OSGobjs[arr[i]]; //get the corresponding transform to this soft body
-        if (soft_trans == 0) continue;
+        soft_trans = OSGobjs[arr[i]].lock(); //get the corresponding transform to this soft body
+        if (!soft_trans) continue;
         patch = arr[i]; //the soft body
         if (soft_trans->getType() == "Sprite") {
             OSG::VRGeometryPtr geo = static_pointer_cast<OSG::VRGeometry>(soft_trans);

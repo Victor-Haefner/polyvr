@@ -56,7 +56,7 @@ class VRPhysicsManager {
         btAlignedObjectArray<btCollisionShape*> collisionShapes;
         btRigidBody* body;
 
-        map<btCollisionObject*, VRTransformPtr> OSGobjs;
+        map<btCollisionObject*, VRTransformWeakPtr> OSGobjs;
         map<btCollisionObject*, VRGeometryPtr> physics_visuals;
         vector<btCollisionObject*> physics_visuals_to_update;
         VRVisualLayer* physics_visual_layer = 0;

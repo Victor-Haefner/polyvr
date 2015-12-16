@@ -68,7 +68,7 @@ class VRTransform : public VRObject {
         Vec3i rConstraint;
 
         bool held = false;//drag n drop
-        VRObjectPtr old_parent = 0;
+        VRObjectWeakPtr old_parent;
         int old_child_id = 0;
 
         VRObjectPtr copy(vector<VRObjectPtr> children);
