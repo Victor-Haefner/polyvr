@@ -46,7 +46,7 @@ void VRMillingWorkPiece::init(Vec3i gSize, float bSize) {
         geometryCreateLevel = maxTreeLevel - levelsPerGeometry;
     }
 
-    rootElement = new VRWorkpieceElement(*this, this->ptr(), (VRWorkpieceElement*) nullptr,
+    rootElement = new VRWorkpieceElement(*this, (VRWorkpieceElement*) nullptr,
                                   Vec3i(gridSize), Vec3f(gridSize) * blockSize,
                                   Vec3f(0, 0, 0), getFrom(), 0);
 
@@ -93,18 +93,15 @@ void VRMillingWorkPiece::setRefreshWait(int updatesToWait) {
 * workpiece element defitions
 */
 
-VRWorkpieceElement::VRWorkpieceElement(VRMillingWorkPiece& workpiece, VRGeometryPtr anchor, VRWorkpieceElement* parent,
+VRWorkpieceElement::VRWorkpieceElement(VRMillingWorkPiece& workpiece, VRWorkpieceElement* parent,
                                        Vec3i blocks, Vec3f size, Vec3f offset, Vec3f position, const int level)
-    : workpiece(workpiece), anchor(anchor), children(), parent(parent), blocks(blocks), size(size), offset(offset),
+    : workpiece(workpiece), children(), parent(parent), blocks(blocks), size(size), offset(offset),
       position(position), level(level), deleted(false), updateIssued(true)
 {}
 
 VRWorkpieceElement::~VRWorkpieceElement() {
     deleteGeometry();
-    if (children[0] != nullptr) {
-        delete children[0];
-        delete children[1];
-    }
+    deleteChildren();
 }
 
 void VRWorkpieceElement::deleteGeometry() {
@@ -115,10 +112,20 @@ void VRWorkpieceElement::deleteGeometry() {
     }
 }
 
-void VRWorkpieceElement::issueGeometryUpdate(int issuelevel) {
+void VRWorkpieceElement::deleteChildren() {
+    if (children[0] != nullptr) {
+        delete children[0];
+        delete children[1];
+        // delete does not reset the pointer
+        children[0] = nullptr;
+        children[1] = nullptr;
+    }
+}
+
+void VRWorkpieceElement::issueGeometryUpdate() {
     if (parent != nullptr) {
         if (level > workpiece.geometryCreateLevel) {
-            parent->issueGeometryUpdate(issuelevel);
+            parent->issueGeometryUpdate();
         }
         else {
             updateIssued = true;
@@ -168,9 +175,9 @@ void VRWorkpieceElement::split() {
     Vec3f newSizeLeft       = Vec3f(newBlocksLeft) * workpiece.blockSize;
     Vec3f newSizeRight      = Vec3f(newBlocksRight) * workpiece.blockSize;
 
-    VRWorkpieceElement* left = new VRWorkpieceElement(workpiece, anchor, this, newBlocksLeft,
+    VRWorkpieceElement* left = new VRWorkpieceElement(workpiece, this, newBlocksLeft,
         newSizeLeft, newOffsetLeft, newPositionLeft, level + 1);
-    VRWorkpieceElement* right = new VRWorkpieceElement(workpiece, anchor, this, newBlocksRight,
+    VRWorkpieceElement* right = new VRWorkpieceElement(workpiece, this, newBlocksRight,
         newSizeRight, newOffsetRight, newPositionRight, level + 1);
 
     children[0] = left;
@@ -207,7 +214,12 @@ bool VRWorkpieceElement::collide(Vec3f position) {
                 result = children[i]->collide(position) | result;
                 childrenDeleted = childrenDeleted & children[i]->deleted;
             }
+
             deleted = childrenDeleted;
+
+            if (deleted) {
+                deleteChildren();
+            }
         }
 
         else {
@@ -221,7 +233,7 @@ bool VRWorkpieceElement::collide(Vec3f position) {
 
 void VRWorkpieceElement::deleteElement() {
     deleted = true;
-    issueGeometryUpdate(this->level);
+    issueGeometryUpdate();
 }
 
 bool VRWorkpieceElement::isDeleted() const {
@@ -243,8 +255,8 @@ void VRWorkpieceElement::build() {
     if (geometry == nullptr) {
         geometry = VRGeometry::create("wpelem");
         geometry->setType(GL_QUADS);
-        geometry->setMaterial(anchor->getMaterial());
-        anchor->addChild(geometry);
+        geometry->setMaterial(workpiece.getMaterial());
+        workpiece.addChild(geometry);
     }
 
     GeoPnt3fPropertyRecPtr positions = GeoPnt3fProperty::create();

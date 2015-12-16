@@ -13,7 +13,6 @@ OSG_BEGIN_NAMESPACE;
 class VRWorkpieceElement {
 private:
     VRMillingWorkPiece& workpiece;
-    VRGeometryPtr anchor;
     VRWorkpieceElement* children[2];
     VRWorkpieceElement* parent;
 
@@ -34,7 +33,7 @@ private:
     static Vec3f mulVec3f(Vec3f lhs, Vec3f rhs);
 
 public:
-    VRWorkpieceElement(VRMillingWorkPiece& workpiece, VRGeometryPtr anchor, VRWorkpieceElement* parent,
+    VRWorkpieceElement(VRMillingWorkPiece& workpiece, VRWorkpieceElement* parent,
                        Vec3i blocks, Vec3f size, Vec3f offset, Vec3f position, const int level);
 
     // 6 sides with 4 vertices each
@@ -48,7 +47,8 @@ public:
      */
     ~VRWorkpieceElement();
     void deleteGeometry();
-    void issueGeometryUpdate(int level);
+    void deleteChildren();
+    void issueGeometryUpdate();
     void split();
     bool collides(Vec3f position);
     bool collide(Vec3f position);
