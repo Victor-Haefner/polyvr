@@ -9,6 +9,7 @@
 
 #include "../devices/VRKeyboard.h"
 #include "core/utils/VRTimer.h"
+#include "core/utils/VROptions.h"
 #include "core/scene/VRSceneManager.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -20,7 +21,10 @@ VRGtkWindow::VRGtkWindow(Gtk::DrawingArea* da) {
     widget = (GtkWidget*)drawArea->gobj();
     if(gtk_widget_get_realized(widget)) cout << "Warning: glarea is realized!\n";
 
-    GdkGLConfig *glConfigMode = gdk_gl_config_new_by_mode((GdkGLConfigMode)(GDK_GL_MODE_RGB | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH | GDK_GL_MODE_STENCIL));
+    auto mode = (GdkGLConfigMode)(GDK_GL_MODE_RGB | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH | GDK_GL_MODE_STENCIL);
+    if (VROptions::get()->getOption<bool>("active_stereo"))
+        mode = (GdkGLConfigMode)(GDK_GL_MODE_RGB | GDK_GL_MODE_DOUBLE | GDK_GL_MODE_DEPTH | GDK_GL_MODE_STENCIL | GDK_GL_MODE_STEREO);
+    GdkGLConfig* glConfigMode = gdk_gl_config_new_by_mode(mode);
     gtk_widget_set_gl_capability(widget,glConfigMode,NULL,true,GDK_GL_RGBA_TYPE);
 
     drawArea->show();

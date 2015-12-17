@@ -125,12 +125,13 @@ class VRView : public std::enable_shared_from_this<VRView> {
 
         void swapEyes(bool b);
         bool eyesInverted();
+        void setActiveStereo(bool b);
+        bool activeStereo();
 
         void update();
         void reset();
 
         void setFotoMode(bool b);
-        void setCallibrationMode(bool b);
         ImageRecPtr grab();
 
         void save(xmlpp::Element* node);

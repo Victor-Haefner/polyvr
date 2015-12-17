@@ -27,9 +27,7 @@ VRViewManager::VRViewManager() {
 
 VRViewManager::~VRViewManager() {}
 
-//int VRViewManager::addView(bool active_stereo, bool stereo, bool projection, Pnt3f screenLowerLeft, Pnt3f screenLowerRight, Pnt3f screenUpperRight, Pnt3f screenUpperLeft, bool swapeyes) {
 int VRViewManager::addView(string name) {
-    //VRViewPtr view = new VRView(active_stereo, stereo, projection, screenLowerLeft, screenLowerRight, screenUpperRight, screenUpperLeft, swapeyes);
     VRViewPtr view = VRView::create(name);
     int id=0;
     while(views.count(id) == 1) id++;
@@ -78,6 +76,5 @@ void VRViewManager::setStereo(bool b) { for (auto v : views) v.second->setStereo
 void VRViewManager::setStereoEyeSeparation(float f) { for (auto v : views) v.second->setStereoEyeSeparation(f); }
 void VRViewManager::resetViewports() { for (auto v : views) v.second->reset(); }
 void VRViewManager::setFotoMode(bool b) { for (auto v : views) v.second->setFotoMode(b); }
-void VRViewManager::setCallibrationMode(bool b) { for (auto v : views) v.second->setCallibrationMode(b); }
 
 OSG_END_NAMESPACE;
