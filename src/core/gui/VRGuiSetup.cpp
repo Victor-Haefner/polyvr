@@ -121,8 +121,9 @@ void VRGuiSetup::updateObjectData() {
         setTextEntry("entry56", toString(p[1]).c_str());
         setTextEntry("entry57", toString(p[3]).c_str());
 
-        setCheckButton("checkbutton9", view->eyesInverted());
         setCheckButton("checkbutton8", view->isStereo());
+        setCheckButton("checkbutton9", view->eyesInverted());
+        setCheckButton("checkbutton10", view->activeStereo());
         setCheckButton("checkbutton11", view->isProjection());
 
         setTextEntry("entry12", toString(view->getEyeSeparation()).c_str());
@@ -230,16 +231,10 @@ void VRGuiSetup::on_new_clicked() {
     ofstream f("setup/.local"); f.write(name.c_str(), name.size()); f.close();
 }
 
-void VRGuiSetup::on_foto_clicked() { //TODO, should create new setup
+void VRGuiSetup::on_foto_clicked() {
     if (current_setup == 0) return;
     bool b = getToggleButtonState("toolbutton19");
     current_setup->setFotoMode(b);
-}
-
-void VRGuiSetup::on_calibration_foreground_clicked() { //TODO, should create new setup
-    if (current_setup == 0) return;
-    bool b = getToggleButtonState("toolbutton20");
-    current_setup->setCallibrationMode(b);
 }
 
 void VRGuiSetup::on_del_clicked() { //TODO, should delete setup
@@ -538,6 +533,17 @@ void VRGuiSetup::on_toggle_view_invert() {
     setToolButtonSensitivity("toolbutton12", true);
 }
 
+void VRGuiSetup::on_toggle_view_active_stereo() {
+    if (guard) return;
+    if (selected_type != "view") return;
+
+    VRView* view = (VRView*)selected_object;
+
+    bool b = getCheckButtonState("checkbutton10");
+    view->setActiveStereo(b);
+    setToolButtonSensitivity("toolbutton12", true);
+}
+
 void VRGuiSetup::on_pos_edit() {
     if (guard) return;
     if (selected_type != "view") return;
@@ -788,7 +794,6 @@ VRGuiSetup::VRGuiSetup() {
     setToolButtonCallback("toolbutton11", sigc::mem_fun(*this, &VRGuiSetup::on_del_clicked) );
     setToolButtonCallback("toolbutton12", sigc::mem_fun(*this, &VRGuiSetup::on_save_clicked) );
     setToolButtonCallback("toolbutton19", sigc::mem_fun(*this, &VRGuiSetup::on_foto_clicked) );
-    setToolButtonCallback("toolbutton20", sigc::mem_fun(*this, &VRGuiSetup::on_calibration_foreground_clicked) );
 
     centerEntry.init("center_entry", "center", sigc::mem_fun(*this, &VRGuiSetup::on_proj_center_edit));
     userEntry.init("user_entry", "user", sigc::mem_fun(*this, &VRGuiSetup::on_proj_user_edit));
@@ -832,6 +837,7 @@ VRGuiSetup::VRGuiSetup() {
     crt->signal_edited().connect( sigc::mem_fun(*this, &VRGuiSetup::on_server_edit) );
 
     setCheckButtonCallback("checkbutton9", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_view_invert));
+    setCheckButtonCallback("checkbutton10", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_view_active_stereo));
     setCheckButtonCallback("checkbutton7", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_display_active));
     setCheckButtonCallback("checkbutton8", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_display_stereo));
     setCheckButtonCallback("checkbutton11", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_display_projection));

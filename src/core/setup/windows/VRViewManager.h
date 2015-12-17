@@ -42,7 +42,6 @@ class VRViewManager {
         void resetViewports();
 
         void setFotoMode(bool b);
-        void setCallibrationMode(bool b);
 };
 
 OSG_END_NAMESPACE;

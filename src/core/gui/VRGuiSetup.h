@@ -50,7 +50,6 @@ class VRGuiSetup {
         void on_del_clicked();
         void on_new_clicked();
         void on_foto_clicked();
-        void on_calibration_foreground_clicked();
         void on_setup_changed();
         bool on_treeview_rightclick(GdkEventButton* event);
 
@@ -75,6 +74,7 @@ class VRGuiSetup {
         void on_toggle_display_stereo();
         void on_toggle_display_projection();
         void on_toggle_view_invert();
+        void on_toggle_view_active_stereo();
         void on_toggle_view_user();
         void on_change_view_user();
         void on_pos_edit();
