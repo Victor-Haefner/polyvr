@@ -12,6 +12,7 @@ using namespace std;
 using namespace OSG;
 
 Triangulator* current_triangulator;
+vector<Vec3d> tmpVertices;
 
 struct Triangulator::GeoData {
     // geo data
@@ -31,6 +32,13 @@ struct Triangulator::GeoData {
         indices = GeoUInt32Property::create();
         pos = GeoPnt3fProperty::create();
         norms = GeoVec3fProperty::create();
+    }
+
+    bool valid() {
+        if (!types->size()) { cout << "Triangulator Error: no types!\n"; return false; }
+        if (!lengths->size()) { cout << "Triangulator Error: no lengths!\n"; return false; }
+        if (!pos->size()) { cout << "Triangulator Error: no pos!\n"; return false; }
+        return true;
     }
 };
 
@@ -60,13 +68,17 @@ void Triangulator::add(polygon p, bool outer) {
 
 VRGeometryPtr Triangulator::compute() {
     tessellate();
-
     auto g = VRGeometry::create("tessellation");
-    g->setTypes(geo->types);
-    g->setLengths(geo->lengths);
-    //g->setIndices(geo->indices);
-    g->setPositions(geo->pos);
-    g->setNormals(geo->norms);
+
+    if (geo) {
+        if (geo->valid()) {
+            g->setTypes(geo->types);
+            g->setLengths(geo->lengths);
+            //g->setIndices(geo->indices);
+            g->setPositions(geo->pos);
+            g->setNormals(geo->norms);
+        }
+    }
 
     return g;
 }
@@ -77,6 +89,7 @@ void tessBeginCB(GLenum which) {
     if (!Self->geo) Self->geo = new Triangulator::GeoData();
     Self->geo->current_primitive = which;
     Self->geo->types->addValue(which);
+    cout << "beg " << which << endl;
 }
 
 void tessEndCB() {
@@ -101,6 +114,7 @@ void tessEndCB() {
 
     Self->geo->lengths->addValue( Nprim );
     Self->geo->current_vertex_count = 0;
+    cout << "end" << endl;
 }
 
 void tessVertexCB(const GLvoid *data) { // draw a vertex
@@ -111,6 +125,16 @@ void tessVertexCB(const GLvoid *data) { // draw a vertex
     Self->geo->pos->addValue( p );
     Self->geo->norms->addValue( Vec3f(0,0,1) );
     Self->geo->current_vertex_count++;
+    cout << "vert " << p << endl;
+}
+
+void tessCombineCB(const GLdouble newVertex[3], const GLdouble *neighborVertex[4], const GLfloat neighborWeight[4], GLdouble **outV) {
+    Vec3d p(newVertex[0], newVertex[1], newVertex[2]);
+    Vec3d c(0,0,0);
+    tmpVertices.push_back(p); // need to be stored locally
+    tmpVertices.push_back(c); // need color
+    *outV = &tmpVertices[tmpVertices.size()-2][0];
+    cout << "combine " << p << "  " << (*outV)[0] << endl;
 }
 
 void tessErrorCB(GLenum errorCode) {
@@ -118,8 +142,6 @@ void tessErrorCB(GLenum errorCode) {
     errorStr = gluErrorString(errorCode);
     cerr << "[ERROR]: " << errorStr << endl;
 }
-
-GLdouble vertices[64][6];               // arrary to store newly created vertices (x,y,z,r,g,b) by combine callback
 
 void Triangulator::tessellate() {
     GLuint id = glGenLists(1);  // create a display list
@@ -133,6 +155,7 @@ void Triangulator::tessellate() {
     gluTessCallback(tess, GLU_TESS_END,     (void (*)()) tessEndCB);
     gluTessCallback(tess, GLU_TESS_ERROR,   (void (*)()) tessErrorCB);
     gluTessCallback(tess, GLU_TESS_VERTEX,  (void (*)()) tessVertexCB);
+    gluTessCallback(tess, GLU_TESS_COMBINE, (void (*)()) tessCombineCB);
 
     auto toSpace = [&](const vector<Vec2f>& poly) {
         vector<Vec3d> res;
@@ -151,5 +174,6 @@ void Triangulator::tessellate() {
         gluTessEndContour(tess);
     }
     gluTessEndPolygon(tess);
+    //tmpVertices.clear();
     gluDeleteTess(tess);
 }

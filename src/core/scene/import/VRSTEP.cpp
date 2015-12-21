@@ -16,6 +16,7 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
 #include "core/math/polygon.h"
+#include "core/math/triangulator.h"
 
 #include <boost/filesystem.hpp>
 
@@ -488,8 +489,18 @@ struct VRSTEP::Bound : VRSTEP::Instance {
     vector<Vec3f> points;
     bool outer = true;
 
+    int Nl = 0;
+    int Nc = 0;
+
+    bool is(Vec3f v1, Vec3f v2) {
+        return ( abs(v2[0]-v1[0]) < 1e-6 && abs(v2[1]-v1[1]) < 1e-6 && abs(v2[2]-v1[2]) < 1e-6 );
+    }
+
     Bound() {}
+
     Bound(Instance& i, map<STEPentity*, Instance>& instances) : Instance(i) {
+        cout << "Bound " << this << endl;
+
         if (type != "Face_Outer_Bound") outer = false;
         if (type == "Face_Bound" || type == "Face_Outer_Bound") {
             auto& Loop = instances[ get<0, STEPentity*, bool>() ];
@@ -504,28 +515,55 @@ struct VRSTEP::Bound : VRSTEP::Instance {
                         Vec3f EEnd = toVec3f( EdgeElement.get<1, STEPentity*, STEPentity*, STEPentity*>(), instances );
                         auto& EdgeGeo = instances[ EdgeElement.get<2, STEPentity*, STEPentity*, STEPentity*>() ];
                         if (EdgeGeo.type == "Line") {
+                            Nl++;
+                            cout << " Line\n";
                             Vec3f p = toVec3f( EdgeGeo.get<0, STEPentity*, STEPentity*>(), instances );
                             Vec3f d = toVec3f( EdgeGeo.get<1, STEPentity*, STEPentity*>(), instances );
-                            points.push_back(EBeg); // TODO: check if beg and end are on the line!
-                            points.push_back(EEnd);
+                            int N = points.size();
+                            if (N == 0) {
+                                points.push_back(EBeg); // TODO: check if beg and end are on the line!
+                                points.push_back(EEnd);
+                            }
+                            if (N == 2) {
+                                if (is(EBeg, points[0]) || is(EEnd, points[0])) {
+                                    swap(points[0], points[1]); // swap
+                                }
+                            }
+                            if (N >= 2) {
+                                if (is(EBeg, points[N-1])) {
+                                    points.push_back(EEnd);
+                                }
+                                else if(is(EEnd, points[N-1])) {
+                                    points.push_back(EBeg);
+                                }
+                            }
                         }
                         if (EdgeGeo.type == "Circle") {
+                            Nc++;
                             pose c = toPose( EdgeGeo.get<0, STEPentity*, double>(), instances );
                             float r = EdgeGeo.get<1, STEPentity*, double>();
+                            float _r = 1/r;
                             Matrix m = c.asMatrix();
+                            Matrix mI = m; mI.invert();
 
-                            int N = 16;
-                            Vec3f v,vLast;
-                            for (int i=0; i<(N+1); i++) {
-                                float a = i*(2*Pi/N);
+                            float a1,a2; // get start and end angles
+                            Vec3f c1,c2;
+                            mI.mult(Pnt3f(EBeg), c1);
+                            mI.mult(Pnt3f(EEnd), c2);
+                            c1 *= _r; c2*= _r;
+                            a1 = atan2(c1[1],c1[0]);
+                            a2 = atan2(c2[1],c2[0]);
+                            cout << " Circle " << a1 << " " << a2 << endl;
+                            if (a1 == a2) cout << "AAA EBeg " << EBeg << " EEnd " << EEnd << " c1 " << c1 << " c2 " << c2 << " " << endl;
+
+                            float Da = abs(a2-a1);
+                            int N = 16 * Da/(2*Pi);
+                            float a = a1;
+                            for (int i=0; i<N; i++) { // N+1 ?
+                                a = a1+i*(Da/N);
                                 Pnt3f p(r*cos(a),r*sin(a),0);
                                 m.mult(p,p);
-                                v = Vec3f(p);
-                                if (i > 0) {
-                                    points.push_back(v);
-                                    points.push_back(vLast);
-                                }
-                                vLast = v;
+                                points.push_back(Vec3f(p));
                             }
                         }
                     }
@@ -560,19 +598,35 @@ struct VRSTEP::Surface : VRSTEP::Instance {
 
     VRGeometryPtr build() {
         Matrix m = trans.asMatrix();
-        //m.invert();
+        Matrix mI = m;
+        mI.invert();
+
         auto geo = VRGeometry::create("face");
-        /*if (type == "Plane") {
-            polygon poly;
-            for (auto b : bounds) {
-                for(auto p : b.poSTEPentity*s) {
-                    m.mult(p,p);
-                    poly.addPoSTEPentity*(Vec2f(p[0], p[1]));
+        if (type == "Plane") {
+            static int I = 0;
+            I++;
+
+            //if (I == 5) {
+                Triangulator t;
+                //for (auto b : bounds) {
+                for (int i=0; i<bounds.size(); i++) {
+                    auto b = bounds[i];
+                    cout << "B " << b.Nl << " " << b.Nc << " " << this << endl;
+                    polygon poly;
+                    for(auto p : b.points) {
+                        mI.mult(Pnt3f(p),p);
+                        poly.addPoint(Vec2f(p[0], p[1]));
+                    }
+                    t.add(poly);
+                    cout << poly.toString() << endl;
+                    //if (i == 2) break;
                 }
-            }
-            poly = poly.getConvexHull();
-            poly;
-        }*/
+
+                auto g = t.compute();
+                g->setMatrix(m);
+                geo->addChild( g );
+            //}
+        }
 
         GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
         GeoVec3fPropertyRecPtr norms = GeoVec3fProperty::create();
