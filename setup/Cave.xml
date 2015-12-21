@@ -1,7 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Setup>
   <Displays>
-    <Window active="1" type="2" width="300" height="300" name="screen" mouse="mouse" keyboard="keyboard">
+    <Window active="1" type="0" width="640" height="480" name="Boden" mouse="None" keyboard="None" Nx="2" Ny="1">
+      <View stereo="1" active_stereo="1" projection="0" eye_inverted="0" eye_separation="0.06" position="0 0 1 1" center="0 0 -1" normal="0 0 1" up="0 1 0" size="2 1" user=""/>
+      <Server Address="imicave31"/>
+      <Server Address="imicave32"/>
+    </Window>
+    <Window active="1" type="0" width="640" height="480" name="Front" mouse="None" keyboard="None" Nx="2" Ny="1">
+      <View stereo="1" active_stereo="1" projection="0" eye_inverted="0" eye_separation="0.06" position="0 0 1 1" center="0 0 -1" normal="0 0 1" up="0 1 0" size="2 1" user=""/>
+      <Server Address="imicave11"/>
+      <Server Address="imicave12"/>
+    </Window>
+    <Window active="1" type="0" width="640" height="480" name="Seite" mouse="None" keyboard="None" Nx="1" Ny="1">
+      <View stereo="1" active_stereo="1" projection="0" eye_inverted="0" eye_separation="0.06" position="0 0 1 1" center="0 0 -1" normal="0 0 1" up="0 1 0" size="2 1" user=""/>
+      <Server Address="imicave2"/>
+    </Window>
+    <Window active="1" type="2" width="1306" height="774" name="screen" mouse="mouse" keyboard="keyboard">
       <View stereo="0" active_stereo="0" projection="0" eye_inverted="0" eye_separation="0.06" position="0 0 1 1" center="0 0 -1" normal="0 0 1" up="0 1 0" size="2 1" user=""/>
     </Window>
   </Displays>
@@ -11,5 +25,5 @@
     <Device name="mouse" type="mouse"/>
   </Devices>
   <TrackingART active="0" offset="0 0 0" port="5000" up=""/>
-  <TrackingVRPN active="1"/>
+  <TrackingVRPN active="1" port="3883"/>
 </Setup>

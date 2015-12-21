@@ -17,6 +17,8 @@ class polygon {
 
     public:
         polygon();
+        static std::shared_ptr<polygon> create();
+
         void addPoint(Vec2f p);
         Vec2f getPoint(int i);
         void close();
@@ -28,6 +30,7 @@ class polygon {
         void turn();
 
         vector<Vec2f> get();
+        void set(vector<Vec2f> vec);
         polygon sort();
         polygon getConvexHull();
         vector< polygon > getConvexDecomposition();

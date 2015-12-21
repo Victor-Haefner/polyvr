@@ -81,6 +81,9 @@ void polygon::runTest() {
 void polygon::addPoint(Vec2f p) { if (!closed) points.push_back(p); }
 Vec2f polygon::getPoint(int i) { return points[i]; }
 int polygon::size() { return points.size(); }
+void polygon::set(vector<Vec2f> vec) { for (auto v : vec) addPoint(v); }
+
+std::shared_ptr<polygon> polygon::create() { return std::shared_ptr<polygon>( new polygon() ); }
 
 void polygon::clear() {
     points.clear();
