@@ -43,6 +43,8 @@ void VRParticles::resetParticles() {
     setType(GL_POINTS);
     setLengths(Length);
     setPositions(pos);
+    setNormals(normals);
+    setColors(colors);
     setIndices(inds);
     setMaterial(mat);
 }

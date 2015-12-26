@@ -55,15 +55,17 @@ void VRFluids::update(int from, int to) {
         for (int i=from; i < to; i++) {
             auto p = particles[i]->body->getWorldTransform().getOrigin();
             pos->setValue(toVec3f(p),i);
-        }
-    }
-    setPositions(pos);
 
-    // TODO DEBUG
-    {
-        //BLock lock(mtx());
-        //btVector3 v = ((SphParticle*) particles[0])->sphPressureForce;
-        //printf("--> P0: %f,%f,%f", v.x(),v.y(),v.z());
+            auto particle = (SphParticle*)particles[i];
+            auto d = particle->sphDensity / 2 * this->PRESSURE_REST_DENS;
+            if (d > 2.0) {
+                colors->setValue(Vec4f(0,0,0,1), i); // way too big -> black
+            } else if (d > 1.0) {
+                colors->setValue(Vec4f(0,0,1,1), i); // too big -> blue
+            } else {
+                colors->setValue(Vec4f(d,1-d,0,1), i); // nice range -> green<->red
+            }
+        }
     }
 }
 
