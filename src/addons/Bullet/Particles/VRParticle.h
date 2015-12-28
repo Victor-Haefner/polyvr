@@ -59,8 +59,9 @@ struct Particle {
 };
 
 struct SphParticle : public Particle {
-    float sphArea = 3 * radius; // NOTE only needed for individual areas.
+    float sphArea = 3 * radius;
     float sphDensity = 0.1;
+    float sphPressure = 1.0;
     btVector3 sphPressureForce;
     btVector3 sphViscosityForce;
 
