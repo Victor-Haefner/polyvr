@@ -27,9 +27,10 @@ class VRFluids : public VRParticles {
         SimulationType simulation = SPH;
 
         const bool afterBullet = false;
-        const float PRESSURE_KAPPA = N* 8.4 /*1.38*/ *296.0; // ideal gas law: N*(gas const)*(temperature)
-        const float PRESSURE_REST  = 0.0001;
-        const float VISCOSITY_MU   = 0.01;
+        const float PRESSURE_KAPPA = /*N*/ /*8.4*/ 1.38 * 296.0 * 0.0000001; // ideal gas law: N*(gas const)*(temperature)
+        // const float PRESSURE_KAPPA = .0000001; // NOTE from some web source
+        const float REST_DENSITY  = 4.0; // density where particles should rest
+        const float VISCOSITY_MU   = 0.1;
         const float Pi = 3.14159;
 
         inline btVector3 xsph_calc_movement(SphParticle* p, int from, int to);
