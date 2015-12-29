@@ -32,7 +32,6 @@
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="-O2" />
 			<Add option="-std=c++11" />
 			<Add option="-Wall" />
 			<Add option="`pkg-config gtk+-2.0 --cflags`" />
