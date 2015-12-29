@@ -57,13 +57,16 @@ void VRFluids::update(int from, int to) {
             pos->setValue(toVec3f(p),i);
 
             auto particle = (SphParticle*)particles[i];
-            auto d = particle->sphDensity / 2 * this->PRESSURE_REST_DENS;
-            if (d > 2.0) {
-                colors->setValue(Vec4f(0,0,0,1), i); // way too big -> black
-            } else if (d > 1.0) {
-                colors->setValue(Vec4f(0,0,1,1), i); // too big -> blue
+            // printf("particle[%i]: ",i);
+            // printf(particle->toString_Position(" | ").c_str());
+            // printf(particle->toString_PressureFoo("\n").c_str());
+            auto d = particle->sphDensity / this->REST_DENSITY;
+            if (d > 1.0) {
+                colors->setValue(Vec4f(d-1,2-d,0,1), i); // high range -> green<->red
+            } else if (d < 0.0) {
+                colors->setValue(Vec4f(1,1,1,1), i); // negative!!! -> black
             } else {
-                colors->setValue(Vec4f(d,1-d,0,1), i); // nice range -> green<->red
+                colors->setValue(Vec4f(0,d,1-d,1), i); // low range -> blue<->green
             }
         }
     }
