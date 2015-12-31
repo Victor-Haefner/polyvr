@@ -9,6 +9,7 @@
 #include <memory>
 #include <boost/bind.hpp>
 
+#include <OpenSG/OSGGeometry.h>
 #include <OpenSG/OSGGeoProperties.h>
 
 #include "core/objects/geometry/VRGeometry.h"
@@ -514,26 +515,25 @@ struct VRSTEP::Bound : VRSTEP::Instance {
                         Vec3f EBeg = toVec3f( EdgeElement.get<0, STEPentity*, STEPentity*, STEPentity*>(), instances );
                         Vec3f EEnd = toVec3f( EdgeElement.get<1, STEPentity*, STEPentity*, STEPentity*>(), instances );
                         auto& EdgeGeo = instances[ EdgeElement.get<2, STEPentity*, STEPentity*, STEPentity*>() ];
+                        int Np = points.size();
                         if (EdgeGeo.type == "Line") {
                             Nl++;
-                            cout << " Line\n";
                             Vec3f p = toVec3f( EdgeGeo.get<0, STEPentity*, STEPentity*>(), instances );
                             Vec3f d = toVec3f( EdgeGeo.get<1, STEPentity*, STEPentity*>(), instances );
-                            int N = points.size();
-                            if (N == 0) {
+                            if (Np == 0) {
                                 points.push_back(EBeg); // TODO: check if beg and end are on the line!
                                 points.push_back(EEnd);
                             }
-                            if (N == 2) {
+                            if (Np == 2) {
                                 if (is(EBeg, points[0]) || is(EEnd, points[0])) {
                                     swap(points[0], points[1]); // swap
                                 }
                             }
-                            if (N >= 2) {
-                                if (is(EBeg, points[N-1])) {
+                            if (Np >= 2) {
+                                if (is(EBeg, points[Np-1])) {
                                     points.push_back(EEnd);
                                 }
-                                else if(is(EEnd, points[N-1])) {
+                                else if(is(EEnd, points[Np-1])) {
                                     points.push_back(EBeg);
                                 }
                             }
@@ -553,16 +553,15 @@ struct VRSTEP::Bound : VRSTEP::Instance {
                             c1 *= _r; c2*= _r;
                             a1 = atan2(c1[1],c1[0]);
                             a2 = atan2(c2[1],c2[0]);
-                            cout << " Circle " << a1 << " " << a2 << endl;
-                            if (a1 == a2) cout << "AAA EBeg " << EBeg << " EEnd " << EEnd << " c1 " << c1 << " c2 " << c2 << " " << endl;
 
                             float Da = abs(a2-a1);
                             int N = 16 * Da/(2*Pi);
                             float a = a1;
-                            for (int i=0; i<N; i++) { // N+1 ?
+                            for (int i=0; i<=N; i++) {
                                 a = a1+i*(Da/N);
                                 Pnt3f p(r*cos(a),r*sin(a),0);
                                 m.mult(p,p);
+                                if (Np >= 1) if(is(Vec3f(p), points[Np-1])) continue;
                                 points.push_back(Vec3f(p));
                             }
                         }
@@ -577,22 +576,13 @@ struct VRSTEP::Bound : VRSTEP::Instance {
 struct VRSTEP::Surface : VRSTEP::Instance {
     vector<Bound> bounds;
     pose trans;
+    double R = 1;
 
     Surface(Instance& i, map<STEPentity*, Instance>& instances) : Instance(i) {
-        if (type == "Plane") {
-            trans = toPose( get<0, STEPentity*>(), instances);
-            /*polygon3D poly;
-            for (auto b : bounds) {
-                if (!b.outer) continue;
-                for (auto p : b.points) {
-                    poly.addPoint(p);
-                }
-            }*/
-        }
-
+        if (type == "Plane") trans = toPose( get<0, STEPentity*>(), instances);
         if (type == "Cylindrical_Surface") {
             trans = toPose( get<0, STEPentity*, double>(), instances );
-            double R = get<1, STEPentity*, double>();
+            R = get<1, STEPentity*, double>();
         }
     }
 
@@ -603,31 +593,65 @@ struct VRSTEP::Surface : VRSTEP::Instance {
 
         auto geo = VRGeometry::create("face");
         if (type == "Plane") {
-            static int I = 0;
-            I++;
-
-            //if (I == 5) {
-                Triangulator t;
-                //for (auto b : bounds) {
-                for (int i=0; i<bounds.size(); i++) {
-                    auto b = bounds[i];
-                    cout << "B " << b.Nl << " " << b.Nc << " " << this << endl;
-                    polygon poly;
-                    for(auto p : b.points) {
-                        mI.mult(Pnt3f(p),p);
-                        poly.addPoint(Vec2f(p[0], p[1]));
-                    }
-                    t.add(poly);
-                    cout << poly.toString() << endl;
-                    //if (i == 2) break;
+            Triangulator t;
+            for (auto b : bounds) {
+                polygon poly;
+                for(auto p : b.points) {
+                    mI.mult(Pnt3f(p),p);
+                    poly.addPoint(Vec2f(p[0], p[1]));
                 }
+                if (!poly.isCCW()) poly.turn();
+                t.add(poly);
+            }
 
-                auto g = t.compute();
-                g->setMatrix(m);
-                geo->addChild( g );
-            //}
+            auto g = t.compute();
+            g->setMatrix(m);
+            return g;
         }
 
+        if (type == "Cylindrical_Surface") {
+            Triangulator t;
+            //cout << "T " << trans.toString() << endl;
+            for (auto b : bounds) {
+                polygon poly;
+                //cout << "Bound " << b.Nl << " " << b.Nc << endl;
+                for(auto p : b.points) {
+                    //cout << "Cp1 " << p << endl;
+                    mI.mult(Pnt3f(p),p);
+                    //cout << "Cp2 " << p << endl;
+                    float h = p[2];
+                    float a = atan2(p[1]/R, p[0]/R);
+                    //cout << h << " " << a << endl;
+                    poly.addPoint(Vec2f(a, h));
+                }
+                if (!poly.isCCW()) poly.turn();
+                t.add(poly);
+            }
+
+            auto g = t.compute();
+            if (g) {
+                auto gg = g->getMesh();
+                if (gg) {
+                    GeoVectorPropertyRecPtr pos = gg->getPositions();
+                    if (pos) {
+                        cout << "pos " << pos << " " << pos->size() << endl;
+                        for (int i=0; i<pos->size(); i++) {
+                            Pnt3f p = pos->getValue<Pnt3f>(i);
+                            p[2] = p[1];
+                            p[1] = sin(p[0])*R;
+                            p[0] = cos(p[0])*R;
+                            pos->setValue(p, i);
+                        }
+                    }
+                }
+                g->setMatrix(m);
+            }
+            return g;
+        }
+
+        cout << "unhandled surface type " << type << endl;
+
+        // wireframe
         GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
         GeoVec3fPropertyRecPtr norms = GeoVec3fProperty::create();
         GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
