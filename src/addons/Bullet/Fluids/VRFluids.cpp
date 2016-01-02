@@ -77,7 +77,7 @@ inline void VRFluids::updateSPH(int from, int to) {
         SphParticle* p;
         BLock lock(mtx());
 
-        //#pragma omp parallel for private(p) shared(from, to)
+        #pragma omp parallel for private(p) shared(from, to)
         for (int i=from; i < to; i++) {
             p = (SphParticle*) particles[i];
             sph_calc_density_pressure(p, from, to);
@@ -86,36 +86,31 @@ inline void VRFluids::updateSPH(int from, int to) {
             // }
         }
 
-        //#pragma omp parallel for private(p) shared(from, to)
+        #pragma omp parallel for private(p) shared(from, to)
         for (int i=from; i < to; i++) {
             p = (SphParticle*) particles[i];
             sph_calc_pressureForce(p, from, to);
             sph_calc_viscosityForce(p, from, to);
             // update Particle Acceleration:
-            btVector3 force = (p->sphPressureForce + (p->sphDensity * p->body->getLinearVelocity()) + p->sphViscosityForce);
-            // btVector3 force = (p->sphPressureForce +  p->body->getLinearVelocity() + p->sphViscosityForce);
-            p->body->setLinearVelocity(force); // NOTE works kind of...
-            //p->body->applyCentralForce(force / p->sphDensity); // NOTE very weird...
-            //p->body->applyCentralImpulse(force / p->sphDensity);
+            btVector3 force = (p->sphPressureForce /* + (p->sphDensity * p->body->getLinearVelocity()) */+ p->sphViscosityForce);
+            //p->body->setLinearVelocity(force);
+            p->body->applyCentralForce(force);
+            //p->body->applyCentralImpulse(force);
 
-            btVector3 pf = p->sphPressureForce; // TODO DEBUG
-            btVector3 v = p->body->getLinearVelocity();
-            btVector3 vis = p->sphViscosityForce;
-            printf("--> (%f,%f,%f) + (%f * (%f,%f,%f)) + (%f,%f,%f)\n",
-                    pf[0], pf[1], pf[2], p->sphDensity, v[0], v[1], v[2], vis[0],vis[1],vis[2]);
+            // btVector3 pf = p->sphPressureForce; // NOTE very ressource heavy debug foo here
+            // btVector3 vis = p->sphViscosityForce;
+            // printf("--> (%f,%f,%f) + (%f,%f,%f) << (%f <dens-press> %f), mass(%f)\n",
+            //         pf[0], pf[1], pf[2], vis[0],vis[1],vis[2], p->sphDensity, p->sphPressure, p->mass);
         }
 
-        // TODO debug foo here
-        //int num = (rand() % this->to); // NOTE nimm immer neue stichprobe
+        // NOTE ressource heavy debug foo here
+        int num = (rand() % this->to); // NOTE nimm immer neue stichprobe
         //int num = 42; // NOTE nimm ein bestimmtes partikel
-        //p = (SphParticle*) particles[num];
-        // btVector3 pf = p->sphPressureForce;
-        // btVector3 v = p->body->getLinearVelocity();
-        // btVector3 vis = p->sphViscosityForce;
-        // if (p->sphDensity > 1.0) {
-        //     printf("--> (%f,%f,%f) + (%f * (%f,%f,%f)) + (%f,%f,%f)\n",
-        //             pf[0], pf[1], pf[2], p->sphDensity, v[0], v[1], v[2], vis[0],vis[1],vis[2]);
-        // }
+        p = (SphParticle*) particles[num];
+        btVector3 pf = p->sphPressureForce;
+        btVector3 vis = p->sphViscosityForce;
+        printf("--> (%f,%f,%f) + (%f,%f,%f) << (%f <dens-press> %f), mass(%f)\n",
+                pf[0], pf[1], pf[2], vis[0],vis[1],vis[2], p->sphDensity, p->sphPressure, p->mass);
     }
 }
 
