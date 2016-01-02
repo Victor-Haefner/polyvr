@@ -33,7 +33,7 @@ class VRFluids : public VRParticles {
         const float VISCOSITY_MU   = 0.1;
         const float Pi = 3.14159;
 
-        inline btVector3 xsph_calc_movement(SphParticle* p, int from, int to);
+        inline void xsph_calc_movement(SphParticle* p, int from, int to);
 
         inline float kernel_poly6(btVector3 distance_vector, float area);
         inline float kernel_spiky(btVector3 distance_vector, float area);
