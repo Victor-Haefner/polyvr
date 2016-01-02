@@ -117,9 +117,6 @@ inline void VRFluids::updateSPH(int from, int to) {
 const float XSPH_CHAINING = 0.3; // NOTE binding strength between particles (XSPH)
 inline void VRFluids::updateXSPH(int from, int to) {
     SphParticle* p;
-    SphParticle* n;
-    btVector3 p_origin(0,0,0);
-    btVector3 n_origin(0,0,0);
     btVector3 force(0,0,0);
 
     {
@@ -191,7 +188,7 @@ inline void VRFluids::sph_calc_viscosityForce(SphParticle* p, int from, int to) 
 }
 
 /** XSPH */
-inline btVector3 VRFluids::xsph_calc_movement(SphParticle* p, int from, int to) {
+inline void VRFluids::xsph_calc_movement(SphParticle* p, int from, int to) {
     p->sphPressureForce.setZero();
     for (int i = from; i < to; i++) {
         SphParticle* n = (SphParticle*) particles[i];
