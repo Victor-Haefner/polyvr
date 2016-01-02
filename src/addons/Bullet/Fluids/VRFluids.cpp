@@ -150,7 +150,7 @@ inline void VRFluids::sph_calc_density_pressure(SphParticle* p, int from, int to
 
     for (int i=from; i < to; i++) {
             btVector3 n_origin = particles[i]->body->getWorldTransform().getOrigin();
-            float kernel = kernel_poly6(n_origin - p_origin, p->sphArea);
+            float kernel = kernel_poly6(p_origin - n_origin, p->sphArea);
             p->sphDensity += particles[i]->mass * kernel;
     }
     p->sphPressure = PRESSURE_KAPPA * (p->sphDensity - REST_DENSITY);
@@ -165,7 +165,7 @@ inline void VRFluids::sph_calc_pressureForce(SphParticle* p, int from, int to) {
             btVector3 n_origin = n->body->getWorldTransform().getOrigin();
             float trick = (p->sphPressure + n->sphPressure) / (2 * n->sphDensity); // makes forces symmetric
             //printf("-->Force(%f), Mass(%f), Pressure(%f), Kernel(%f)\n", p->sphPressureForce[1], p->mass, trick, kernel[1]); // TODO debug
-            btVector3 kernel = kernel_spiky_gradient(n_origin - p_origin, p->sphArea);
+            btVector3 kernel = kernel_spiky_gradient(p_origin - n_origin, p->sphArea);
             p->sphPressureForce -= n->mass * trick * kernel;
             //printf("-->(%f, %f, %f)\n", n->mass, trick, (kernel_spiky_gradient(n_origin - p_origin, p->sphArea))[2]); // TODO debug
             //printf("-->(%f)\n", (n->mass * trick * kernel_spiky_gradient(n_origin - p_origin, p->sphArea))[2]); // TODO debug
@@ -183,8 +183,8 @@ inline void VRFluids::sph_calc_viscosityForce(SphParticle* p, int from, int to) 
             SphParticle* n = (SphParticle*) particles[i];
             btVector3 n_origin = n->body->getWorldTransform().getOrigin();
             btVector3 n_speed = n->body->getLinearVelocity();
-            n_speed = (p_speed - n_speed) / n->sphDensity;
-            p->sphViscosityForce += n->mass * n_speed * kernel_visc_laplacian(n_origin - p_origin, p->sphArea);
+            n_speed = (n_speed - p_speed) / n->sphDensity;
+            p->sphViscosityForce += n->mass * n_speed * kernel_visc_laplacian(p_origin - n_origin, p->sphArea);
         }
     }
     p->sphViscosityForce *= VISCOSITY_MU;
