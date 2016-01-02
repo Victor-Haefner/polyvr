@@ -142,7 +142,7 @@ inline void VRFluids::updateXSPH(int from, int to) {
 }
 
 inline void VRFluids::sph_calc_density_pressure(SphParticle* p, int from, int to) {
-    p->sphDensity = 0.000000001;
+    p->sphDensity = 0.0;
     btVector3 p_origin = p->body->getWorldTransform().getOrigin();
 
     for (int i=from; i < to; i++) {
@@ -161,13 +161,9 @@ inline void VRFluids::sph_calc_pressureForce(SphParticle* p, int from, int to) {
             SphParticle* n = (SphParticle*) particles[i];
             btVector3 n_origin = n->body->getWorldTransform().getOrigin();
             float trick = (p->sphPressure + n->sphPressure) / (2 * n->sphDensity); // makes forces symmetric
-            //printf("-->Force(%f), Mass(%f), Pressure(%f), Kernel(%f)\n", p->sphPressureForce[1], p->mass, trick, kernel[1]); // TODO debug
             btVector3 kernel = kernel_spiky_gradient(p_origin - n_origin, p->sphArea);
             p->sphPressureForce -= n->mass * trick * kernel;
-            //printf("-->(%f, %f, %f)\n", n->mass, trick, (kernel_spiky_gradient(n_origin - p_origin, p->sphArea))[2]); // TODO debug
-            //printf("-->(%f)\n", (n->mass * trick * kernel_spiky_gradient(n_origin - p_origin, p->sphArea))[2]); // TODO debug
     }
-    //printf("--> PressureF: (%f,%f,%f)\n", p->sphPressureForce[0],p->sphPressureForce[1],p->sphPressureForce[2]);
 }
 
 inline void VRFluids::sph_calc_viscosityForce(SphParticle* p, int from, int to) {
@@ -235,7 +231,6 @@ inline float VRFluids::kernel_spiky(btVector3 v, float h) {
 /** Kernel for pressure */
 inline btVector3 VRFluids::kernel_spiky_gradient(btVector3 v, float h) {
     float r = v.length();
-    //if (std::isnan(r) || r <= 0) r = 0.0001;
     float diff = h - r;
     if (diff > 0 && r > 0) {
         return (45.0 / (Pi * pow(h,6))) * (v/r) * diff*diff;
