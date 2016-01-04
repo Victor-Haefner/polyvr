@@ -190,7 +190,9 @@ Query::Query(string q) {
 }
 
 string Query::toString() {
-    return request->toString();
+    string res = request->toString() + " :";
+    for (auto s : statements) res += " " + s->toString();
+    return res;
 }
 
 Term::Term(string s) : path(s), str(s) {;}
@@ -214,6 +216,11 @@ bool Term::operator==(Term& other) {
     }
     return false;
 }
+
+/* TODO
+ - non matching paths may be valid rule!
+
+*/
 
 bool VRReasoner::findRule(StatementPtr statement, Context& context) {
     cout << pre << "     search rule for " << statement->toString() << endl;
@@ -269,18 +276,15 @@ bool VRReasoner::has(StatementPtr statement, Context& context) { // TODO
 
     auto Cconcept = context.onto->getConcept( right.var.concept ); // child concept
     auto Pconcept = context.onto->getConcept( left.var.concept ); // parent concept
-    if (Cconcept == 0) { cout << "       Warning! concept " << right.var.concept << " not found!\n"; return false; }
-    if (Pconcept == 0) { cout << "       Warning! concept " << left.var.concept << " not found!\n"; return false; }
+    if (Cconcept == 0) { cout << "Warning (has): first concept " << right.var.concept << " not found!\n"; return false; }
+    if (Pconcept == 0) { cout << "Warning (has): second concept " << left.var.concept << " not found!\n"; return false; }
 
-    auto prop = Pconcept->getProperty( Cconcept->name );
-    if (prop == 0) { // no property
-        cout << "       Warning! concept " << Pconcept->name << " has no property of type " << Cconcept->name << "!\n";
-        return false;
-    }
-
+    auto prop = Pconcept->getProperties( Cconcept->name );
+    if (prop.size() == 0) cout << "Warning: has evaluation failed, property " << right.var.value << " missing!\n"; return false;
     return false;
 }
 
+// apply the statement changes to world
 bool VRReasoner::apply(StatementPtr statement, Context& context) {
     if (statement->verb == "is") {
         auto& left = statement->terms[0];
@@ -295,8 +299,9 @@ bool VRReasoner::apply(StatementPtr statement, Context& context) {
         auto& right = statement->terms[1];
         auto Cconcept = context.onto->getConcept( right.var.concept ); // child concept
         auto Pconcept = context.onto->getConcept( left.var.concept ); // parent concept
-        auto prop = Pconcept->getProperty( Cconcept->name );
-        for (auto i : left.var.instances) i->add(prop->type, right.var.value);
+        auto prop = Pconcept->getProperties( Cconcept->name );
+        if (prop.size() == 0) { cout << "Warning: failed to apply " << statement->toString() << endl; return false; }
+        for (auto i : left.var.instances) i->add(prop[0]->name, right.var.value); // TODO: the first parameter is wrong
         statement->state = 1;
         cout << pre << greenBeg << "  give " << right.str << " to " << left.str << colEnd << endl;
     }
