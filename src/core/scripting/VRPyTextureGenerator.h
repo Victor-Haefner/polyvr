@@ -10,6 +10,7 @@ struct VRPyTextureGenerator : VRPyBaseT<OSG::VRTextureGenerator> {
     static PyObject* add(VRPyTextureGenerator* self, PyObject* args);
     static PyObject* setSize(VRPyTextureGenerator* self, PyObject* args);
     static PyObject* compose(VRPyTextureGenerator* self, PyObject* args);
+    static PyObject* readSharedMemory(VRPyTextureGenerator* self, PyObject* args);
 };
 
 #endif // VRPYTEXTUREGENERATOR_H_INCLUDED

@@ -37,8 +37,9 @@ class VRTextureGenerator {
         void add(GEN_TYPE type, float amount, Vec3f c1, Vec3f c2);
         void add(string type, float amount, Vec3f c1, Vec3f c2);
         void clearStage();
-
         ImageRecPtr compose(int seed);
+
+        ImageRecPtr readSharedMemory(string segment, string object);
 };
 
 OSG_END_NAMESPACE;

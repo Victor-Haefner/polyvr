@@ -1,6 +1,7 @@
 #include "VRTextureGenerator.h"
 #include "VRPerlin.h"
 #include "VRBricks.h"
+#include "core/networking/VRSharedMemory.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -41,6 +42,27 @@ ImageRecPtr VRTextureGenerator::compose(int seed) {
     img = Image::create();
     img->set(OSG::Image::OSG_RGB_PF, width, height, depth, 0, 1, 0.0, (const uint8_t*)data, OSG::Image::OSG_FLOAT32_IMAGEDATA, true, 1);
     delete[] data;
+    return img;
+}
+
+ImageRecPtr VRTextureGenerator::readSharedMemory(string segment, string object) {
+    VRSharedMemory sm(segment);
+
+    // add texture example
+    /*auto s = sm.addObject<Vec3i>(object+"_size");
+    *s = Vec3i(2,2,1);
+    auto vec = sm.addVector<Vec3f>(object);
+    vec->push_back(Vec3f(1,0,1));
+    vec->push_back(Vec3f(1,1,0));
+    vec->push_back(Vec3f(0,0,1));
+    vec->push_back(Vec3f(1,0,0));*/
+
+    // read texture
+    auto vs = sm.getObject<Vec3i>(object+"_size");
+    auto vdata = sm.getVector<Vec3f>(object);
+
+    img = Image::create();
+    img->set(OSG::Image::OSG_RGB_PF, vs[0], vs[1], vs[2], 0, 1, 0.0, (const uint8_t*)&vdata[0], OSG::Image::OSG_FLOAT32_IMAGEDATA, true, 1);
     return img;
 }
 
