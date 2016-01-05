@@ -18,6 +18,7 @@ struct VRPyFluids : VRPyBaseT<OSG::VRFluids> {
     static PyObject* setMass(VRPyFluids* self, PyObject* args);
     static PyObject* setMassByRadius(VRPyFluids* self, PyObject* args);
     static PyObject* setMassForOneLiter(VRPyFluids* self, PyObject* args);
+    static PyObject* setViscosity(VRPyFluids* self, PyObject* args);
 };
 
 #endif // VRPYFLUIDS_H_INCLUDED

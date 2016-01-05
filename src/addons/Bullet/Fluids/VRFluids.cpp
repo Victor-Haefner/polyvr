@@ -286,3 +286,8 @@ void VRFluids::setSphRadius(float newRadius, float variation) {
         }
     }
 }
+
+void VRFluids::setViscosity(float factor) {
+    this->VISCOSITY_MU = factor;
+}
+

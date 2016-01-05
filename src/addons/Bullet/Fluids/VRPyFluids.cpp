@@ -54,6 +54,7 @@ PyMethodDef VRPyFluids::methods[] = {
     {"setMass", (PyCFunction)VRPyFluids::setMass, METH_VARARGS, "setMass(mass, variation) \n\tsetMass(0.05, 0.02)"},
     {"setMassByRadius", (PyCFunction)VRPyFluids::setMassByRadius, METH_VARARGS, "setMassByRadius(massOfOneMeterRadius) \n\tsetMass(1000.0*100)"},
     {"setMassForOneLiter", (PyCFunction)VRPyFluids::setMassForOneLiter, METH_VARARGS, "setMassForOneLiter(massOfOneLiter) \n\tsetMass(1000.0)"},
+    {"setViscosity", (PyCFunction)VRPyFluids::setViscosity, METH_VARARGS, "setViscosity(float factor) \n\tsetViscosity(0.01)"},
     {NULL}  /* Sentinel */
 };
 
@@ -142,5 +143,14 @@ PyObject* VRPyFluids::setMassForOneLiter(VRPyFluids* self, PyObject* args) {
     float massPerLiter = 0.0;
     if (! PyArg_ParseTuple(args, "f", &massPerLiter)) { Py_RETURN_FALSE; }
     self->objPtr->setMassForOneLiter(massPerLiter);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyFluids::setViscosity(VRPyFluids* self, PyObject* args) {
+    checkObj(self);
+    float factor;
+    factor = 0.01;
+    if (! PyArg_ParseTuple(args, "f", &factor)) { Py_RETURN_FALSE; }
+    self->objPtr->setViscosity(factor);
     Py_RETURN_TRUE;
 }

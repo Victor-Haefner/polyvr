@@ -21,6 +21,7 @@ class VRFluids : public VRParticles {
 
         void setSimulation(SimulationType t, bool forceChange=false);
         void setSphRadius(float newRadius, float variation);
+        void setViscosity(float factor);
 
     protected:
         VRUpdatePtr fluidFkt;
