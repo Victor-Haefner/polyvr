@@ -76,7 +76,7 @@ VRTexturePtr VRTextureGenerator::readSharedMemory(string segment, string object)
 
     img = VRTexture::create();
     img->getImage()->set(tparams.pixel_format, vs[0], vs[1], vs[2], 0, 1, 0.0, (const uint8_t*)&vdata[0], tparams.data_type, true, 1);
-    //internal_format = tparams.internal_pixel_format;
+    img->setInternalFormat( tparams.internal_pixel_format );
     return img;
 }
 
