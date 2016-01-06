@@ -5,7 +5,6 @@
 #include <OpenSG/OSGSimpleTexturedMaterial.h>
 #include "VRGeometry.h"
 
-
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -15,7 +14,7 @@ class VRBillboard : public VRGeometry {
     private:
         float BBsizeH;
         float BBsizeW;
-        ImageRecPtr BBtexture;
+        VRTexturePtr BBtexture;
         GeometryRecPtr BBplane;
         ChunkMaterialRecPtr BBmat;
         TextureObjChunkRecPtr BBtexChunk;
@@ -34,8 +33,7 @@ class VRBillboard : public VRGeometry {
         static VRBillboardPtr create(string name = "", bool alpha = true);
         VRBillboardPtr ptr();
 
-        void setTexture(ImageRecPtr img);
-
+        void setTexture(VRTexturePtr img);
         void setSize(float sizeW, float sizeH);
 
         static void createTestScene();

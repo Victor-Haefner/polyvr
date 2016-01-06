@@ -2,6 +2,7 @@
 #include "VRMaterial.h"
 
 #include <OpenSG/OSGImage.h>
+#include "core/objects/material/VRTexture.h"
 
 extern "C" {
     #include <libavcodec/avcodec.h>
@@ -82,10 +83,10 @@ void VRVideo::open(string f) {
             avcodec_decode_video2(vCodec, vFrame, &valid, &packet); // Decode video frame
             if(valid == 0) continue;
 
-            OSG::ImageRecPtr img = OSG::Image::create();
+            OSG::VRTexturePtr img = OSG::VRTexture::create();
             //img->setData(vFrame->data);
 
-            img->set(OSG::Image::OSG_RGB_PF, width, height, 1, 1, 1, 0.0, (const uint8_t *)vFrame->data, OSG::Image::OSG_UINT8_IMAGEDATA, true, 1); // TODO: try to change true to false
+            img->getImage()->set(OSG::Image::OSG_RGB_PF, width, height, 1, 1, 1, 0.0, (const uint8_t *)vFrame->data, OSG::Image::OSG_UINT8_IMAGEDATA, true, 1); // TODO: try to change true to false
 
             frames[stream][frame] = img;
             frame++;
@@ -108,6 +109,6 @@ void VRVideo::play(int stream, float t0, float t1, float v) {
     material->setTexture(getFrame(stream,0));
 }
 
-OSG::ImageRecPtr VRVideo::getFrame(int stream, int i) { if (frames[stream].count(i) == 0) return 0; return frames[stream][i]; }
-OSG::ImageRecPtr VRVideo::getFrame(int stream, float t) { return frames[stream][(int)t*getNFrames()]; }
+OSG::VRTexturePtr VRVideo::getFrame(int stream, int i) { if (frames[stream].count(i) == 0) return 0; return frames[stream][i]; }
+OSG::VRTexturePtr VRVideo::getFrame(int stream, float t) { return frames[stream][(int)t*getNFrames()]; }
 int VRVideo::getNFrames() { return frames.size(); }

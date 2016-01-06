@@ -132,7 +132,7 @@ class VRView : public std::enable_shared_from_this<VRView> {
         void reset();
 
         void setFotoMode(bool b);
-        ImageRecPtr grab();
+        VRTexturePtr grab();
 
         void save(xmlpp::Element* node);
         void load(xmlpp::Element* node);

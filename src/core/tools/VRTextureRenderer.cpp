@@ -1,6 +1,7 @@
 #include "VRTextureRenderer.h"
 #include "core/objects/VRCamera.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/material/VRTexture.h"
 
 #include <OpenSG/OSGSimpleStage.h>
 #include <OpenSG/OSGFrameBufferObject.h>
@@ -44,7 +45,7 @@ VRTextureRenderer::VRTextureRenderer(string name) : VRObject(name) {
     data->fbo->setPostProcessOnDeactivate(true);
 
     mat = new VRMaterial("VRTextureRenderer");
-    mat->setTexture(data->fboTexImg);
+    mat->setTexture( VRTexture::create(data->fboTexImg) );
 
     // Stage
     data->stage = SimpleStage::create();

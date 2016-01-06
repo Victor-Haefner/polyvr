@@ -55,14 +55,14 @@ PyMethodDef VRPyTextureGenerator::methods[] = {
 };
 
 PyObject* VRPyTextureGenerator::compose(VRPyTextureGenerator* self, PyObject* args) {
-    return VRPyImage::fromPtr( self->obj->compose( parseInt(args) ) );
+    return VRPyImage::fromSharedPtr( self->obj->compose( parseInt(args) ) );
 }
 
 PyObject* VRPyTextureGenerator::readSharedMemory(VRPyTextureGenerator* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyTextureGenerator::add - Object is invalid"); return NULL; }
     const char *segment, *data;
     if (! PyArg_ParseTuple(args, "ss", (char*)&segment, (char*)&data)) return NULL;
-    if (segment && data) return VRPyImage::fromPtr( self->obj->readSharedMemory(segment, data) );
+    if (segment && data) return VRPyImage::fromSharedPtr( self->obj->readSharedMemory(segment, data) );
     Py_RETURN_NONE;
 }
 

@@ -126,7 +126,7 @@ PyObject* VRPyMaterial::setTexture(VRPyMaterial* self, PyObject* args) {
         if (PyString_Check(o)) self->objPtr->setTexture( PyString_AsString(o) ); // load a file
         else if (VRPyImage::check(o)) {
             VRPyImage* img = (VRPyImage*)o;
-            self->objPtr->setTexture( img->obj, img->internal_format, 0 );
+            self->objPtr->setTexture( img->objPtr, 0 );
         }
 	}
 

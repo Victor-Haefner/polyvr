@@ -72,7 +72,7 @@ PyObject* VRPyRecorder::setTransform(VRPyRecorder* self, PyObject* args) {
 
 PyObject* VRPyRecorder::get(VRPyRecorder* self, PyObject* args) {
     int i = parseInt(args);
-    return VRPyImage::fromPtr( self->obj->get(i) );
+    return VRPyImage::fromSharedPtr( self->obj->get(i) );
 }
 
 PyObject* VRPyRecorder::getFrom(VRPyRecorder* self, PyObject* args) { return toPyTuple(self->obj->getFrom( parseInt(args) ) ); }

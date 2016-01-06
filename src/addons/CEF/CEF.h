@@ -2,7 +2,6 @@
 #define CEF_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
-#include <OpenSG/OSGImage.h>
 
 #include "include/cef_app.h"
 #include "include/cef_client.h"
@@ -17,7 +16,7 @@ namespace OSG{ class VRDevice; }
 
 class CEF_handler : public CefRenderHandler {
     private:
-        OSG::ImageRecPtr image = 0;
+        OSG::VRTexturePtr image = 0;
         int width = 1024;
         int height = 1024;
 
@@ -26,7 +25,7 @@ class CEF_handler : public CefRenderHandler {
 
         bool GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect);
         void OnPaint(CefRefPtr<CefBrowser> browser, PaintElementType type, const RectList& dirtyRects, const void* buffer, int width, int height);
-        OSG::ImageRecPtr getImage();
+        OSG::VRTexturePtr getImage();
         void resize(int resolution, float aspect);
 
         IMPLEMENT_REFCOUNTING(CEF_handler);

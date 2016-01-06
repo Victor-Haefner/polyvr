@@ -3,6 +3,7 @@
 #include "core/setup/devices/VRDevice.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/material/VRTexture.h"
 
 #include <OpenSG/OSGSimpleMaterial.h>
 #include <OpenSG/OSGSimpleGeometry.h>
@@ -42,7 +43,7 @@ void VRColorChooser::updateTexture() {
     }
 
     img->set( Image::OSG_RGB_PF, s, s, 1, 0, 1, 0, (const uint8_t*)data, OSG::Image::OSG_FLOAT32_IMAGEDATA, true, 1);
-    mat->setTexture(img);
+    mat->setTexture(VRTexture::create(img));
 }
 
 void VRColorChooser::setColor(Color3f c) { last_color = color; color = c; updateTexture(); }

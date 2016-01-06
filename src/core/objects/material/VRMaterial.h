@@ -78,10 +78,9 @@ class VRMaterial : public VRObject {
         TextureObjChunkRefPtr getTexChunk(int unit);
         void setTexture(TextureObjChunkRefPtr texChunk);
         void setTexture(string img_path, bool alpha = true);
-        void setTexture(ImageRecPtr img, bool alpha = true);
-        void setTexture(ImageRecPtr img, int type, bool alpha);
+        void setTexture(VRTexturePtr img, bool alpha = true);
         void setTexture(char* data, int format, Vec3i dims, bool isfloat);
-        void setTextureAndUnit(ImageRecPtr img, int unit);
+        void setTextureAndUnit(VRTexturePtr img, int unit);
         void setTextureParams(int min, int mag, int envMode, int wrapS, int wrapT);
         void setTextureType(string type);
         void setQRCode(string s, Vec3f fg, Vec3f bg, int offset);
@@ -139,16 +138,10 @@ class VRMaterial : public VRObject {
         void setLit(bool b);
         bool isLit();
 
-        /** Returns the mesh material **/
         MultiPassMaterialRecPtr getMaterial();
         ChunkMaterialRecPtr getMaterial(int i);
-
-        /** Returns the texture || 0 **/
-        ImageRecPtr getTexture();
+        VRTexturePtr getTexture();
         TextureObjChunkRecPtr getTextureObjChunk();
-
-        /** Deprecated  **/
-        void printMaterialColors();
 };
 
 OSG_END_NAMESPACE;

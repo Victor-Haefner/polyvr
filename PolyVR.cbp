@@ -541,6 +541,8 @@
 		<Unit filename="src/core/objects/material/VRPerlin.h" />
 		<Unit filename="src/core/objects/material/VRShader.cpp" />
 		<Unit filename="src/core/objects/material/VRShader.h" />
+		<Unit filename="src/core/objects/material/VRTexture.cpp" />
+		<Unit filename="src/core/objects/material/VRTexture.h" />
 		<Unit filename="src/core/objects/material/VRTextureGenerator.cpp" />
 		<Unit filename="src/core/objects/material/VRTextureGenerator.h" />
 		<Unit filename="src/core/objects/material/VRVideo.cpp" />
