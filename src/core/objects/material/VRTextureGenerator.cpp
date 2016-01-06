@@ -45,8 +45,15 @@ ImageRecPtr VRTextureGenerator::compose(int seed) {
     return img;
 }
 
+struct tex_params {
+    Vec3i dims;
+    int pixel_format = OSG::Image::OSG_RGB_PF;
+    int data_type = OSG::Image::OSG_FLOAT32_IMAGEDATA;
+    int internal_pixel_format = -1;
+};
+
 ImageRecPtr VRTextureGenerator::readSharedMemory(string segment, string object) {
-    VRSharedMemory sm(segment);
+    VRSharedMemory sm(segment, false);
 
     // add texture example
     /*auto s = sm.addObject<Vec3i>(object+"_size");
@@ -58,11 +65,15 @@ ImageRecPtr VRTextureGenerator::readSharedMemory(string segment, string object) 
     vec->push_back(Vec3f(1,0,0));*/
 
     // read texture
-    auto vs = sm.getObject<Vec3i>(object+"_size");
-    auto vdata = sm.getVector<Vec3f>(object);
+    auto tparams = sm.getObject<tex_params>(object+"_size");
+    auto vs = tparams.dims;
+    auto vdata = sm.getVector<float>(object);
+
+    cout << "read shared texture " << object << " " << vs << "   " << tparams.pixel_format << "  " << tparams.data_type << "  " << vdata.size() << endl;
 
     img = Image::create();
-    img->set(OSG::Image::OSG_RGB_PF, vs[0], vs[1], vs[2], 0, 1, 0.0, (const uint8_t*)&vdata[0], OSG::Image::OSG_FLOAT32_IMAGEDATA, true, 1);
+    img->set(tparams.pixel_format, vs[0], vs[1], vs[2], 0, 1, 0.0, (const uint8_t*)&vdata[0], tparams.data_type, true, 1);
+    //internal_format = tparams.internal_pixel_format;
     return img;
 }
 

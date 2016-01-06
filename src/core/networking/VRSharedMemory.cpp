@@ -12,13 +12,16 @@ using namespace boost::interprocess;
 
 VRSharedMemory::VRSharedMemory(string segment, bool init) {
     this->segment = new Segment();
+    this->segment->name = segment;
+    this->init = init;
     if (!init) return;
     shared_memory_object::remove(segment.c_str());
-    this->segment->name = segment;
     this->segment->memory = managed_shared_memory(create_only, segment.c_str(), 65536);
+    unlock();
 }
 
 VRSharedMemory::~VRSharedMemory() {
+    if (!init) return;
     shared_memory_object::remove(segment->name.c_str());
 }
 
