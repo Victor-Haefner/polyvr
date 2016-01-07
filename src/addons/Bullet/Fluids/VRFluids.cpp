@@ -11,7 +11,10 @@ using namespace OSG;
 VRFluids::VRFluids() : VRFluids(true) {}
 
 VRFluids::VRFluids(bool spawnParticles) : VRParticles(false) {
-    if (spawnParticles) resetParticles<SphParticle>();
+    if (spawnParticles) {
+        resetParticles<SphParticle>();
+        this->updateDerivedValues();
+    }
 }
 
 VRFluids::~VRFluids() {
@@ -273,21 +276,35 @@ void VRFluids::setSimulation(SimulationType t, bool forceChange) {
     if (forceChange) this->setFunctions(this->from, this->to);
 }
 
-void VRFluids::setSphRadius(float newRadius, float variation) {
+void VRFluids::setSphRadius(float newRadius) {
+    this->sphRadius = newRadius;
+    this->updateDerivedValues();
+
     int i;
-    float result;
     {
+        // set radius in Particles
         BLock lock(mtx());
         for (i=0; i<N; i++) {
-            result = newRadius;
-            result += (2 * variation * float(rand()) / RAND_MAX );
-            result -= variation;
-            ((SphParticle*) particles[i])->sphArea = result;
+            ((SphParticle*) particles[i])->sphArea = newRadius;
         }
     }
 }
 
+void VRFluids::setMass(float newMass, float variation) {
+    this->particleMass = newMass;
+    this->updateDerivedValues();
+    VRParticles::setMass(newMass, variation); //updates also sph particles
+}
+
 void VRFluids::setViscosity(float factor) {
     this->VISCOSITY_MU = factor;
+}
+
+void VRFluids::updateDerivedValues() {
+    btVector3 avgDistance(this->sphRadius * REST_DIS, 0, 0);
+    // this->REST_DENSITY = REST_N*REST_N * particleMass * kernel_spiky(avgDistance, this->sphRadius);
+    this->REST_DENSITY = REST_N * this->particleMass * kernel_poly6(avgDistance, this->sphRadius);
+    this->particleVolume = 2*this->sphRadius*2*this->sphRadius*2*this->sphRadius;
+    this->PRESSURE_KAPPA = /*8.314*/ 461.401 * 296.0 *0.000001;
 }
 

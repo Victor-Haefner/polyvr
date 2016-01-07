@@ -26,7 +26,7 @@ class VRParticles : public VRGeometry {
 
         void setAmount(int amount);
         void setRadius(float newRadius, float variation=0.0);
-        void setMass(float newMass, float variation=0.0);
+        virtual void setMass(float newMass, float variation=0.0);
         void setMassByRadius(float massFor1mRadius=1000.0);
         void setMassForOneLiter(float massPerLiter=0.1);
         void setAge(int newAge, int variation=0);

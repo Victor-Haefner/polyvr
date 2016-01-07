@@ -20,19 +20,41 @@ class VRFluids : public VRParticles {
         void updateXSPH(int from, int to);
 
         void setSimulation(SimulationType t, bool forceChange=false);
-        void setSphRadius(float newRadius, float variation);
+        void setSphRadius(float newRadius);
         void setViscosity(float factor);
+        void setMass(float newMass, float variation=0.0) override;
 
     protected:
         VRUpdatePtr fluidFkt;
         SimulationType simulation = SPH;
 
+        /* Calculate after bullets physics cycle? */
         const bool afterBullet = false;
-        const float PRESSURE_KAPPA = /*N*/ /*8.4*/ 1.38 * 296.0 * 0.0000001; // ideal gas law: N*(gas const)*(temperature)
-        // const float PRESSURE_KAPPA = .0000001; // NOTE from some web source
-        const float REST_DENSITY  = 4.0; // density where particles should rest
-        const float VISCOSITY_MU   = 0.1;
+        /*
+         * Pressure multiplier, derived from ideal gas law
+         * P = N*(gas const)*(temperature) * (1/V)
+         */
+        float PRESSURE_KAPPA = 0; // just some init value, see updateDerivedValues()
+        /* Number of particles around a resting particle */
+        const int REST_N = 10;
+        /* Average distance of particles around resting particle */
+        const float REST_DIS = 0.4;
+        //const float REST_DENSITY  = 1000.0; // NOTE works for R=0.05, sphR=5*R
+        /*
+         * Density where particles should rest.
+         * NOTE (re-)calculate using updateDerivedValues();
+         */
+        float REST_DENSITY  = 0; // just some init value, see updateDerivedValues()
+        /* Simple viscosity multiplier */
+        float VISCOSITY_MU   = 0.01;
+        /* The number Pi given precisely to five decimal places */
         const float Pi = 3.14159;
+        /* The average sph radius of a particle. */
+        float sphRadius = 1;
+        /* The average mass of a particle. */
+        float particleMass = 1;
+        /* The average volume of a particle */
+        float particleVolume = 1;
 
         inline void xsph_calc_movement(SphParticle* p, int from, int to);
 
@@ -47,6 +69,7 @@ class VRFluids : public VRParticles {
         inline void sph_calc_viscosityForce(SphParticle* p, int from, int to);
 
         void setFunctions(int from, int to) override;
+        void updateDerivedValues();
 };
 
 OSG_END_NAMESPACE;

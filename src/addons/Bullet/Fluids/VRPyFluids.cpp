@@ -114,10 +114,10 @@ PyObject* VRPyFluids::setSimType(VRPyFluids* self, PyObject* args) {
 
 PyObject* VRPyFluids::setSphRadius(VRPyFluids* self, PyObject* args) {
     checkObj(self);
-    float radius, variation;
-    radius = variation = 0.0;
-    if (! PyArg_ParseTuple(args, "f|f", &radius, &variation)) { Py_RETURN_FALSE; }
-    self->objPtr->setSphRadius(radius, variation);
+    float radius;
+    radius = 0.0;
+    if (! PyArg_ParseTuple(args, "f", &radius)) { Py_RETURN_FALSE; }
+    self->objPtr->setSphRadius(radius);
     Py_RETURN_TRUE;
 }
 
