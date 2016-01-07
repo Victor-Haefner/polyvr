@@ -3,7 +3,7 @@
   <Objects>
     <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
       <Object name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
-        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="-0.788042 4.43256 2.60265" at="-0.0328805 0.35 -0.000555307" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
+        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="-1.49101 3.7617 2.36685" at="-1.82662e-05 -0.00021157 -0.005" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
           <Object name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
         </Object>
       </Object>
@@ -32,11 +32,14 @@
 		cube.setPrimitive("Box 0.01 0.01 0.01 1 1 1")
 		parent.addChild(cube)
 		return cube
+		
+	(x,y,z) = ("4","0.2","2")
+	(nx,ny,nz) = (2,0.1,1)
 	
 	#---do ground---#
 	ground = VR.Geometry('Ground')
-	ground.setPrimitive("Box 1 0.1 0.5 1 1 1")
-	ground.setCollisionMargin(0.01)
+	ground.setPrimitive("Box "+x+" "+y+" "+z+" 1 1 1")
+	ground.setCollisionMargin(0.1)
 	ground.physicalize(1,0,0)
 	ground.setMaterial(doColor(0.8,0.8,0.9))
 	parent.addChild(ground)
@@ -48,20 +51,20 @@
 	wallA = VR.Geometry('WallA')
 	wallB = VR.Geometry('WallB')
 	# set form
-	wall1.setPrimitive("Box 0.1 0.5 0.5 1 1 1")
-	wall2.setPrimitive("Box 0.1 0.5 0.5 1 1 1")
-	wallA.setPrimitive("Box 1.0 0.5 0.1 1 1 1")
-	wallB.setPrimitive("Box 1.0 0.5 0.1 1 1 1")
+	wall1.setPrimitive("Box "+y+" "+z+" "+z+" 1 1 1")
+	wall2.setPrimitive("Box "+y+" "+z+" "+z+" 1 1 1")
+	wallA.setPrimitive("Box "+x+" "+z+" "+y+" 1 1 1")
+	wallB.setPrimitive("Box "+x+" "+z+" "+y+" 1 1 1")
 	# move to position
-	wall1.translate(-0.4,0.2,0)	
-	wall2.translate( 0.4,0.2,0)
-	wallA.translate(0,0.2, 0.2)
-	wallB.translate(0,0.2,-0.2)
+	wall1.translate(-nx,nz,0)	
+	wall2.translate( nx,nz,0)
+	wallA.translate(0,nz, nz)
+	wallB.translate(0,nz,-nz)
 	
 	walls = [wall1, wall2, wallA, wallB]
 	for wall in walls:
 		wall.setMaterial(doTransparent())
-		wall.setCollisionMargin(0.01)
+		wall.setCollisionMargin(0.1)
 		wall.physicalize(1,0,0)
 		parent.addChild(wall)
 	#------------------#
@@ -69,7 +72,7 @@
 	
 	#---do cylinder---#
 	cylinder = VR.Geometry('cylinder')
-	cylinder.setPrimitive("Cylinder 0.3 0.05 16")
+	cylinder.setPrimitive("Cylinder "+z+" 0.1 16")
 	cylinder.translate(-0.2,0.2,0)
 	cylinder.setCollisionMargin(0.01)
 	cylinder.physicalize(1,0,0)
@@ -77,14 +80,14 @@
 	parent.addChild(cylinder)
 	# do path
 	path = VR.Path('cyl_path')
-	path.set([-0.2,0.2,0], [1,0,0], [0.2,0.2,0], [1,0,0], 1)
+	path.set([-nz,nz,0], [1,0,0], [nz,nz,0], [1,0,0], 1)
 	# animate cylinder
 	pathtool = VR.Pathtool('pathtool')
 	pathtool.setVisible(False)
 	pathtool.setHandleGeometry(doLittleCube())
 	pathtool.addPath(path, VR.getRoot())
 	n = pathtool.extrude(None, path)
-	n.setPose([-0.2,0.2,0], [1,0,0], [0,1,0])
+	n.setPose([-nz,nz,0], [1,0,0], [0,1,0])
 	pathtool.update()
 	cylinder.animate(path, 2, 0,0,1)
 	
@@ -98,23 +101,24 @@
 	
 	def doMaterial():
 		m = VR.Material('fluid')
+		m.setLit(0)
 		#m.setVertexProgram('fluid_vp')
 		#m.setFragmentProgram('fluid_fp')
-		m.setPointSize(20)
-		m.setDiffuse([0.2,0.2,1])
+		m.setPointSize(10)
 		m.setAmbient([0.2,0.2,1])
 		return m
 	
 	fluid = VR.Fluids()
 	fluid.setMaterial( doMaterial() )
-	fluid.setRadius(radius, 0.0)
-	fluid.setMassForOneLiter(mass)
-	fluid.setSphRadius(sphRadius, 0.0)
+	fluid.setRadius(radius)
+	fluid.setMass(mass)
+	fluid.setSphRadius(sphRadius)
 	#VR.fluid.setSimType('SPH')
-	num = fluid.spawnCuboid(0,0.1,0, "size", 0.3,1,0.1)
+	num = fluid.spawnCuboid(0,0.1,0, "size", 1,100,1)
 	print num
 	parent.addChild(fluid)
 	return fluid
+
 </core>
       <arg type="float" value="0" name_suffix="0" base_name="mass" name_space="doFluids"/>
       <arg type="VRPyObjectType" value="0" name_suffix="0" base_name="parent" name_space="doFluids"/>
@@ -139,7 +143,7 @@
 	fluid.setRadius(radius, 0.0)
 	fluid.setMassForOneLiter(mass)
 	#fluid.setSphRadius(sphRadius, 0.0)
-	num = fluid.spawnCuboid(0,0.1,0, "size", 0.3,1,0.1)
+	num = fluid.spawnCuboid(0,0.1,0, "size", 0.5,20,0.5)
 	print num
 	parent.addChild(fluid)
 	return fluid
@@ -153,6 +157,7 @@
       <core>
 	import VR
 	import time
+	import math
 	
 	#---reset scene---#
 	r = VR.getRoot().find('Headlight')
@@ -168,11 +173,16 @@
 	#-----------------#
 
 	#---do fluids---#
-	(mass, parent, radius, sphRadius) = (10.0, VR.test, 0.025, 0.5)
+	R = 0.05 # meter radius
+	V = 4/3*math.pi*R*R*R # Volumen pro partikel
+	rho = 1000 # kg für einen m^3 fluid
+	m = V*rho
+	
+	(mass, parent, radius, sphRadius) = (m, VR.test, R, 5*R)
 	VR.fluid = VR.doFluids(mass, parent, radius, sphRadius)
 	#VR.particles = VR.doParticles(mass, parent, radius, sphRadius)
 	VR.play = True;
-	#---------------#
+	#---------------#i
 </core>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
       <trig type="on_device" dev="keyboard" state="Pressed" param="" key="105" name_suffix="1" base_name="trigger" name_space="__global__"/>
