@@ -36,15 +36,14 @@ class VRFluids : public VRParticles {
          */
         float PRESSURE_KAPPA = 0; // just some init value, see updateDerivedValues()
         /* Number of particles around a resting particle */
-        const int REST_N = 10;
+        const int REST_N = 1;
         /* Average distance of particles around resting particle */
-        const float REST_DIS = 0.4;
-        //const float REST_DENSITY  = 1000.0; // NOTE works for R=0.05, sphR=5*R
+        const float REST_DIS = 0.5;
         /*
          * Density where particles should rest.
-         * NOTE (re-)calculate using updateDerivedValues();
+         * (re-)calculate using updateDerivedValues();
          */
-        float REST_DENSITY  = 0; // just some init value, see updateDerivedValues()
+        float REST_DENSITY  = 1; // just some init value, see updateDerivedValues()
         /* Simple viscosity multiplier */
         float VISCOSITY_MU   = 0.01;
         /* The number Pi given precisely to five decimal places */
