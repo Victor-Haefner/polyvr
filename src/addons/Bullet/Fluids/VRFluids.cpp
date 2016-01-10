@@ -60,11 +60,8 @@ void VRFluids::update(int from, int to) {
             pos->setValue(toVec3f(p),i);
 
             auto particle = (SphParticle*)particles[i];
-            // printf("particle[%i]: ",i);
-            // printf(particle->toString_Position(" | ").c_str());
-            // printf(particle->toString_PressureFoo("\n").c_str());
-            // auto d = particle->sphDensity / this->REST_DENSITY; // visualize density
-            auto d = particle->sphPressureForce.length() + particle->sphViscosityForce.length() / 15.0;
+            auto d = particle->sphDensity / this->REST_DENSITY; // visualize density
+            // auto d = particle->sphPressureForce.length() + particle->sphViscosityForce.length() / 20.0;
             if (d > 1.0) {
                 colors->setValue(Vec4f(d-1,2-d,0,1), i); // high range -> green<->red
             } else if (d < 0.00001) {
@@ -93,25 +90,23 @@ inline void VRFluids::updateSPH(int from, int to) {
             sph_calc_pressureForce(p, from, to);
             sph_calc_viscosityForce(p, from, to);
             // update Particle Acceleration:
-            btVector3 force = (p->sphPressureForce /* + (p->sphDensity * p->body->getLinearVelocity()) */+ p->sphViscosityForce);
-            //p->body->setLinearVelocity(force);
+            btVector3 force = (p->sphPressureForce + p->sphViscosityForce);
             p->body->applyCentralForce(force);
-            //p->body->applyCentralImpulse(force);
 
             // btVector3 pf = p->sphPressureForce; // NOTE very ressource heavy debug foo here
             // btVector3 vis = p->sphViscosityForce;
             // printf("--> (%f,%f,%f) + (%f,%f,%f) << (%f <dens-press> %f), mass(%f)\n",
-            //         pf[0], pf[1], pf[2], vis[0],vis[1],vis[2], p->sphDensity, p->sphPressure, p->mass);
+            //         pf[0], pf[1], pf[2], vis[0],vis[1],vis[2], p->sphDensity/REST_DENSITY, p->sphPressure, p->mass);
         }
 
         // NOTE ressource heavy debug foo here
-        int num = (rand() % this->to); // NOTE nimm immer neue stichprobe
-        //int num = 42; // NOTE nimm ein bestimmtes partikel
-        p = (SphParticle*) particles[num];
-        btVector3 pf = p->sphPressureForce;
-        btVector3 vis = p->sphViscosityForce;
-        printf("--> (%f,%f,%f) + (%f,%f,%f) << (%f <dens-press> %f), mass(%f)\n",
-                pf[0], pf[1], pf[2], vis[0],vis[1],vis[2], p->sphDensity, p->sphPressure, p->mass);
+        // int num = (rand() % this->to); // NOTE nimm immer neue stichprobe
+        // int num = 42; // NOTE nimm ein bestimmtes partikel
+        // p = (SphParticle*) particles[num];
+        // btVector3 pf = p->sphPressureForce;
+        // btVector3 vis = p->sphViscosityForce;
+        // printf("--> (%f,%f,%f) + (%f,%f,%f) << (%f <dens-press> %f), mass(%f)\n",
+        //         pf[0], pf[1], pf[2], vis[0],vis[1],vis[2], p->sphDensity/REST_DENSITY, p->sphPressure, p->mass);
     }
 }
 
