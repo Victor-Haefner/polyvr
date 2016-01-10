@@ -299,9 +299,8 @@ void VRFluids::setViscosity(float factor) {
 
 void VRFluids::updateDerivedValues() {
     btVector3 avgDistance(this->sphRadius * REST_DIS, 0, 0);
-    // this->REST_DENSITY = REST_N*REST_N * particleMass * kernel_spiky(avgDistance, this->sphRadius);
-    this->REST_DENSITY = REST_N * this->particleMass * kernel_poly6(avgDistance, this->sphRadius);
+    this->REST_DENSITY = (1+REST_N) * this->particleMass * kernel_poly6(avgDistance, this->sphRadius);
     this->particleVolume = 2*this->sphRadius*2*this->sphRadius*2*this->sphRadius;
-    this->PRESSURE_KAPPA = /*8.314*/ 461.401 * 296.0 *0.000001;
+    this->PRESSURE_KAPPA = 8.314 * 296.0 * this->particleMass *0.00001;
+    printf("SPH Radius: %f\n", this->sphRadius);
 }
-
