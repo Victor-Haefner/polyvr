@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scene name_suffix="0" base_name="cylindertest" name_space="Scene">
   <Objects>
-    <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
+    <Object name_suffix="5" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
       <Object name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
-        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="-1.49101 3.7617 2.36685" at="-1.82662e-05 -0.00021157 -0.005" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
+        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="0.343489 16.8721 1.05407" at="-1.82662e-05 -0.00021157 -0.005" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
           <Object name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
         </Object>
       </Object>
@@ -72,7 +72,7 @@
 	
 	#---do cylinder---#
 	cylinder = VR.Geometry('cylinder')
-	cylinder.setPrimitive("Cylinder "+z+" 0.1 16")
+	cylinder.setPrimitive("Cone "+z+" 1 16")
 	cylinder.translate(-0.2,0.2,0)
 	cylinder.setCollisionMargin(0.01)
 	cylinder.physicalize(1,0,0)
@@ -113,8 +113,10 @@
 	fluid.setRadius(radius)
 	fluid.setMass(mass)
 	fluid.setSphRadius(sphRadius)
+	fluid.setViscosity(0.01)
 	#VR.fluid.setSimType('SPH')
-	num = fluid.spawnCuboid(0,0.1,0, "size", 1,100,1)
+	num = fluid.spawnCuboid(0,5,-0.4, 4*sphRadius, 2,200,2)
+	print 2*sphRadius
 	print num
 	parent.addChild(fluid)
 	return fluid
@@ -143,7 +145,7 @@
 	fluid.setRadius(radius, 0.0)
 	fluid.setMassForOneLiter(mass)
 	#fluid.setSphRadius(sphRadius, 0.0)
-	num = fluid.spawnCuboid(0,0.1,0, "size", 0.5,20,0.5)
+	num = fluid.spawnCuboid(0,0.1,0, 2*radius, 0.5,20,0.5)
 	print num
 	parent.addChild(fluid)
 	return fluid
