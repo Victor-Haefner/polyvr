@@ -85,9 +85,6 @@ inline void VRFluids::updateSPH(int from, int to) {
         for (int i=from; i < to; i++) {
             p = (SphParticle*) particles[i];
             sph_calc_density_pressure(p, from, to);
-            // if (p->sphDensity > 1*this->PRESSURE_REST_DENS) {
-            //     p->sphDensity = 1*this->PRESSURE_REST_DENS; // NOTE pressure limiter
-            // }
         }
 
         #pragma omp parallel for private(p) shared(from, to)
@@ -118,7 +115,7 @@ inline void VRFluids::updateSPH(int from, int to) {
     }
 }
 
-const float XSPH_CHAINING = 0.3; // NOTE binding strength between particles (XSPH)
+const float XSPH_CHAINING = 0.3; // binding strength between particles (XSPH)
 inline void VRFluids::updateXSPH(int from, int to) {
     SphParticle* p;
     btVector3 force(0,0,0);
@@ -283,7 +280,6 @@ void VRFluids::setSphRadius(float newRadius) {
 
     int i;
     {
-        // set radius in Particles
         BLock lock(mtx());
         for (i=0; i<N; i++) {
             ((SphParticle*) particles[i])->sphArea = newRadius;
