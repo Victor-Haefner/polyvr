@@ -774,8 +774,8 @@ void VRGeometry::readSharedMemory(string segment, string object) {
     VRSharedMemory sm(segment, false);
 
     // read buffer
-    auto sm_types = sm.getVector<float>(object+"_types");
-    auto sm_lengths = sm.getVector<float>(object+"_lengths");
+    auto sm_types = sm.getVector<int>(object+"_types");
+    auto sm_lengths = sm.getVector<int>(object+"_lengths");
     auto sm_pos = sm.getVector<float>(object+"_pos");
     auto sm_norms = sm.getVector<float>(object+"_norms");
     auto sm_inds = sm.getVector<int>(object+"_inds");
@@ -788,18 +788,25 @@ void VRGeometry::readSharedMemory(string segment, string object) {
     GeoUInt32PropertyRecPtr lengths = GeoUInt32Property::create();
     GeoVec4fPropertyRecPtr cols = GeoVec4fProperty::create();
 
-    for (auto& t : sm_types) types->addValue(t);
-    for (auto& l : sm_lengths) lengths->addValue(l);
+    cout << "SM mesh read: " << sm_types.size() << " " << sm_lengths.size() << " " << sm_pos.size() << " " << sm_norms.size() << " " << sm_inds.size() << " " << sm_cols.size() << endl;
+
+    if (sm_types.size() > 0) for (auto& t : sm_types) types->addValue(t);
+    if (sm_lengths.size() > 0) for (auto& l : sm_lengths) lengths->addValue(l);
     for (auto& i : sm_inds) inds->addValue(i);
-    for (int i=0; i<sm_pos.size()-2; i+=3) pos->addValue(Pnt3f(sm_pos[i], sm_pos[i+1], sm_pos[i+2]));
-    for (int i=0; i<sm_norms.size()-2; i+=3) norms->addValue(Vec3f(sm_norms[i], sm_norms[i+1], sm_norms[i+2]));
-    for (int i=0; i<sm_cols.size()-2; i+=3) cols->addValue(Pnt3f(sm_cols[i], sm_cols[i+1], sm_cols[i+2]));
+    if (sm_pos.size() > 0) for (int i=0; i<sm_pos.size()-2; i+=3) pos->addValue(Pnt3f(sm_pos[i], sm_pos[i+1], sm_pos[i+2]));
+    if (sm_norms.size() > 0) for (int i=0; i<sm_norms.size()-2; i+=3) norms->addValue(Vec3f(sm_norms[i], sm_norms[i+1], sm_norms[i+2]));
+    if (sm_cols.size() > 0) for (int i=0; i<sm_cols.size()-2; i+=3) cols->addValue(Pnt3f(sm_cols[i], sm_cols[i+1], sm_cols[i+2]));
+
+    cout << "osg mesh data: " << types->size() << " " << lengths->size() << " " << pos->size() << " " << norms->size() << " " << inds->size() << " " << cols->size() << endl;
+
+    int N = pos->size();
+    if (N == 0) return;
 
     setTypes(types);
     setLengths(lengths);
     setPositions(pos);
-    setNormals(norms);
-    setColors(cols);
+    if (norms->size() == N) setNormals(norms);
+    if (cols->size() == N) setColors(cols);
     setIndices(inds);
 }
 
