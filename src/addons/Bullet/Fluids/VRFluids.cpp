@@ -211,12 +211,14 @@ inline void VRFluids::xsph_calc_movement(SphParticle* p, int from, int to) {
  * }
  */
 inline float VRFluids::kernel_poly6(btVector3 v, float h) {
-    float r2 = v.length2();
-    float diff = h*h - r2;
-    if (diff >= 0) {
+    float r = v.length();
+    if (r <= h && r >= 0) {
+        float r2 = r*r;
+        float diff = h*h - r2;
         return (315.0 / (64.0*Pi)) * (1/pow(h,9)) * diff*diff*diff;
+    } else {
+        return 0.0;
     }
-    return 0.0;
 }
 
 /** Kernel for pressure */
@@ -225,25 +227,26 @@ inline float VRFluids::kernel_spiky(btVector3 v, float h) {
     float diff = h - r;
     if (diff > 0) {
         return (15.0 / (Pi * pow(h,6))) * diff*diff*diff;
+    } else {
+        return 0.0;
     }
-    return 0.0;
 }
 
 /** Kernel for pressure */
 inline btVector3 VRFluids::kernel_spiky_gradient(btVector3 v, float h) {
     float r = v.length();
     float diff = h - r;
-    if (diff > 0 && r > 0) {
-        return (45.0 / (Pi * pow(h,6))) * (v/r) * diff*diff;
+    if (diff > 0 && r > 0) { // NOTE > should be >= but things won't work then for some reason
+        return (-45.0 / (Pi * pow(h,6))) * (v/r) * diff*diff;
+    } else {
+        return btVector3(0,0,0);
     }
-    return btVector3(0,0,0);
 }
 
 /** Kernel for viscosity */
 inline float VRFluids::kernel_visc(btVector3 v, float h) {
     float r = v.length();
-    float diff = h - r;
-    if (diff > 0) {
+    if (r <= h) {
         float h2 = h*h;
         float h3 = h2*h;
         float r2 = r*r;
@@ -252,8 +255,9 @@ inline float VRFluids::kernel_visc(btVector3 v, float h) {
         float b = r2 / h2;
         float c = h / (r+r);
         return (15.0 / (2*Pi*h3)) * (a + b + c - 1);
+    } else {
+        return 0.0;
     }
-    return 0.0;
 }
 
 /**
@@ -262,11 +266,12 @@ inline float VRFluids::kernel_visc(btVector3 v, float h) {
  */
 inline float VRFluids::kernel_visc_laplacian(btVector3 v, float h) {
     float r = v.length();
-    float diff = h - r;
-    if (diff > 0) {
+    if (r <= h && r >= 0) {
+        float diff = h - r;
         return (45.0 / (Pi * pow(h,6))) * diff;
+    } else {
+        return 0.0;
     }
-    return 0.0;
 }
 
 void VRFluids::setSimulation(SimulationType t, bool forceChange) {
