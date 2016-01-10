@@ -69,21 +69,6 @@ struct SphParticle : public Particle {
         sphPressureForce.setZero();
         sphViscosityForce.setZero();
     }
-
-    string toString_Position(string append) {
-        btVector3 pos = body->getWorldTransform().getOrigin();
-        return "(" + to_string(pos[0]) + ", " + to_string(pos[1]) + ", " + to_string(pos[2]) + ")"
-                + append;
-    }
-
-    string toString_PressureFoo(string append) {
-        btVector3 pF = sphPressureForce;
-        string dens = to_string(sphDensity);
-        string press = to_string(sphPressure);
-        return "d(" + dens + "), p(" + press + "), pForce("
-                + to_string(pF[0]) + ", " + to_string(pF[1]) + ", " + to_string(pF[2]) + ")"
-                + append;
-    }
 };
 OSG_END_NAMESPACE;
 #endif // VRPARTICLE_H_INCLUDED
