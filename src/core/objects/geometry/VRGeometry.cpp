@@ -19,6 +19,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/object/VRObjectT.h"
 #include "core/tools/selection/VRSelection.h"
+#include "core/networking/VRSharedMemory.h"
 #include "VRPrimitive.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -55,6 +56,7 @@ VRGeometryPtr VRGeometry::create(string name, bool hidden) { return shared_ptr<V
 VRGeometryPtr VRGeometry::create(string name, string primitive, string params) {
     auto g = shared_ptr<VRGeometry>(new VRGeometry(name) );
     g->setPrimitive(primitive, params);
+    return g;
 }
 
 VRGeometryPtr VRGeometry::ptr() { return static_pointer_cast<VRGeometry>( shared_from_this() ); }
@@ -767,5 +769,40 @@ void VRGeometry::loadContent(xmlpp::Element* e) {
             break;
     }
 }
+
+void VRGeometry::readSharedMemory(string segment, string object) {
+    VRSharedMemory sm(segment, false);
+
+    // read buffer
+    auto sm_types = sm.getVector<float>(object+"_types");
+    auto sm_lengths = sm.getVector<float>(object+"_lengths");
+    auto sm_pos = sm.getVector<float>(object+"_pos");
+    auto sm_norms = sm.getVector<float>(object+"_norms");
+    auto sm_inds = sm.getVector<int>(object+"_inds");
+    auto sm_cols = sm.getVector<float>(object+"_cols");
+
+    GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
+    GeoVec3fPropertyRecPtr norms = GeoVec3fProperty::create();
+    GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
+    GeoUInt32PropertyRecPtr types = GeoUInt32Property::create();
+    GeoUInt32PropertyRecPtr lengths = GeoUInt32Property::create();
+    GeoVec4fPropertyRecPtr cols = GeoVec4fProperty::create();
+
+    for (auto& t : sm_types) types->addValue(t);
+    for (auto& l : sm_lengths) lengths->addValue(l);
+    for (auto& i : sm_inds) inds->addValue(i);
+    for (int i=0; i<sm_pos.size()-2; i+=3) pos->addValue(Pnt3f(sm_pos[i], sm_pos[i+1], sm_pos[i+2]));
+    for (int i=0; i<sm_norms.size()-2; i+=3) norms->addValue(Vec3f(sm_norms[i], sm_norms[i+1], sm_norms[i+2]));
+    for (int i=0; i<sm_cols.size()-2; i+=3) cols->addValue(Pnt3f(sm_cols[i], sm_cols[i+1], sm_cols[i+2]));
+
+    setTypes(types);
+    setLengths(lengths);
+    setPositions(pos);
+    setNormals(norms);
+    setColors(cols);
+    setIndices(inds);
+}
+
+
 
 OSG_END_NAMESPACE;
