@@ -46,8 +46,8 @@ template<> PyTypeObject VRPyBaseT<OSG::VRFluids>::type = {
 
 PyMethodDef VRPyFluids::methods[] = {
     {"getGeometry", (PyCFunction)VRPyFluids::getGeometry, METH_VARARGS, "Get geometry - Geometry getGeometry()" },
-    {"spawnCuboid", (PyCFunction)VRPyFluids::spawnCuboid, METH_VARARGS, "spawnCuboid(x,y,z) \n\tspawnCuboid(x,y,z,'size',a,b,c) \n\tspawnCuboid(x,y,z,'liter',l)"},
-
+    {"spawnCuboid", (PyCFunction)VRPyFluids::spawnCuboid, METH_VARARGS, "spawnCuboid(x,y,z) \n\tspawnCuboid(x,y,z,distance,a,b,c) //all float \n\tdistance is space between particles"},
+    
     {"setRadius", (PyCFunction)VRPyFluids::setRadius, METH_VARARGS, "setRadius(float radius, float variation) \n\tsetRadius(0.05, 0.02)"},
     {"setSimType", (PyCFunction)VRPyFluids::setSimType, METH_VARARGS, "setSimType(string type, bool forceUpdate=False) \n\tsetSimType('SPH', True) #or XSPH"},
     {"setSphRadius", (PyCFunction)VRPyFluids::setSphRadius, METH_VARARGS, "setSphRadius(float radius)"},
@@ -69,24 +69,17 @@ PyObject* VRPyFluids::getGeometry(VRPyFluids* self) {
 PyObject* VRPyFluids::spawnCuboid(VRPyFluids* self, PyObject* args) {
     checkObj(self);
     OSG::Vec3f position;
-    float x,y,z, a=1,b=1,c=1;
-    char* mode = NULL; int modeLength=0;
-    // TODO API ändern?
-    if (! PyArg_ParseTuple(args, "fff|s#fff", &x,&y,&z, &mode, &modeLength, &a,&b,&c)) {
+    OSG::Vec3f size;
+    float x,y,z, distance=0, a=1,b=1,c=1;
+
+    if (! PyArg_ParseTuple(args, "fff|ffff", &x,&y,&z, &distance, &a,&b,&c)) {
         // ERROR!
         Py_RETURN_FALSE;
     }
     position.setValues(x, y, z);
-    int num = 0;
-    if (mode != NULL && strncmp(mode, "size", modeLength)==0) {
-        num = self->objPtr->spawnCuboid(position, OSG::VRFluids::SIZE, a,b,c);
-    } else if (mode != NULL && strncmp(mode, "liter", modeLength)==0) {
-        num = self->objPtr->spawnCuboid(position, OSG::VRFluids::LITER, a);
-    } else {
-        num = self->objPtr->spawnCuboid(position);
-    }
+    size.setValues(a, b, c);
 
-    // Py_RETURN_TRUE;
+    int num = self->objPtr->spawnCuboid(position, size, distance);
     return PyInt_FromLong((long) num);
 }
 

@@ -57,19 +57,6 @@ void VRParticles::update(int b, int e) {
     }
 }
 
-// NOTE @depricated (probably)
-float VRParticles::getMaxRadius() {
-    int i;
-    float maximum = 0.0;
-    {
-        BLock lock(mtx());
-        for (i=0; i<N; i++) {
-            if (maximum < particles[i]->radius) maximum = particles[i]->radius;
-        }
-    }
-    return maximum;
-}
-
 void VRParticles::setAmount(int amount) {
     this->setFunctions(0, amount);
 }
@@ -144,62 +131,62 @@ void VRParticles::setLifetime(int newLifetime, int variation) {
     }
 }
 
-int VRParticles::spawnCuboid(Vec3f base, ArgType type, float a, float b, float c) {
-    float radius;
-    int required;
-    radius = getMaxRadius();
+int VRParticles::spawnCuboid(Vec3f base, Vec3f size, float distance) {
+    if (distance == 0.0) distance = this->particles[0]->radius;
+    printf("Spawn Particles!\n");
 
-    switch (type) {
-        case SIZE:
-            break;
-        case NOTHING: // default case: spawn 10 Liter!
-            a = 10;
-            type = LITER;
-            // go on with LITER (therefore no break;)
-        case LITER:
-            a = b = c = cbrtf(a);
-            break;
-    }
-    required = (int)  ( 0.5 * (a/radius) * (b/radius) * (c/radius) );
-    if (required > N) required = N;
+    // distance = abs(distance);
+    // float x = abs(size.x());
+    // float y = abs(size.y());
+    // float z = abs(size.z());
+    float x = size.x();
+    float y = size.y();
+    float z = size.z();
 
-    // now, randomly place particles in rectangle.
-    // TODO place more intelligent (grid, not random) to avoid problems
-    btVector3 v;
-    float y,x,z; x=y=z=0;
-    int i;
+    //distance *= 1.1;
+    int numX = x / distance;
+    int numY = y / distance;
+    int numZ = z / distance;
+    int spawned = 0;
+    bool done = false;
+    int i,j,k;
+    int posX, posY, posZ;
+    btVector3 pos;
+
     {
-        BLock lock(mtx());
-        for (i=0; i<required; i++)
-        {
-            // FIXME: for some reason, base is still not the middle point between all particles.
-            v.setZero();
-            x = (a*float(rand())/RAND_MAX);
-            x = x - (x/2);
-            v.setX (x);
+        //BLock lock(mtx()); // NOTE causes buggy physics?!?
+        for (i = 0; i < numY && !done; i++) {
+            posY = i * distance;
 
-            y = (b*float(rand())/RAND_MAX);
-            y = y - (y/2);
-            v.setY (y);
+            for (j = 0; j < numZ && !done; j++) {
+                posZ = j * distance;
 
-            z = (c*float(rand())/RAND_MAX);
-            z = z - (z/2);
-            v.setZ (z);
+                for (k = 0; k < numX && !done; k++) {
+                    posX = k * distance;
 
-            v += toBtVector3(base);
-            particles[i]->spawnAt(v, this->world);
+                    if (spawned >= this->N) {
+                        done = true;
+                    } else {
+                        pos.setX(posX);
+                        pos.setY(posY);
+                        pos.setZ(posZ);
+                        pos += toBtVector3(base);
+                        particles[spawned]->spawnAt(pos, this->world);
+                        spawned++;
+                    }
+                }
+            }
         }
-        // activate update loop, only update spawned particles! (required)
     }
-    setFunctions(0, required);
-    return required;
+    setFunctions(0, spawned);
+    return spawned;
 }
 
 void VRParticles::setFunctions(int from, int to) {
     {
+        BLock lock(mtx());
         this->from = from;
         this->to = to;
-        BLock lock(mtx());
         VRScenePtr scene = VRSceneManager::getCurrent();
         scene->dropUpdateFkt(fkt);
         fkt = VRFunction<int>::create("particles_update", boost::bind(&VRParticles::update, this,from,to));

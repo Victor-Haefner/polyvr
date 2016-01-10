@@ -16,8 +16,6 @@ class VRParticles : public VRGeometry {
     // FIXME: Particles do not collide in ~50% of all polyvr sessions. Restart polyvr until it works.
 
     public:
-        enum ArgType { NOTHING, SIZE, LITER };
-
         VRParticles();
         VRParticles(bool spawnParticles);
         ~VRParticles();
@@ -33,7 +31,7 @@ class VRParticles : public VRGeometry {
         void setLifetime(int newLifetime, int variation=0);
 
         template<class P> void resetParticles();
-        int spawnCuboid(Vec3f v, ArgType t=NOTHING, float a=1, float b=1, float c=1);
+        int spawnCuboid(Vec3f base, Vec3f size, float distance = 0.0);
         virtual void update(int b = 0, int e = -1);
 
     protected:
