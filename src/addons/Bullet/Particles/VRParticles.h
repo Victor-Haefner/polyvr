@@ -46,7 +46,6 @@ class VRParticles : public VRGeometry {
         GeoVec4fPropertyRecPtr colors;
         btDiscreteDynamicsWorld* world = 0;
 
-        float getMaxRadius();
         boost::recursive_mutex& mtx();
         inline Vec3f toVec3f(btVector3 v) { return Vec3f(v[0], v[1], v[2]); };
         inline btVector3 toBtVector3(Vec3f v) { return btVector3(v[0], v[1], v[2]); };

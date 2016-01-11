@@ -49,6 +49,7 @@ void VRFluids::setFunctions(int from, int to) {
         }
         scene->addPhysicsUpdateFunction(fluidFkt.get(), this->afterBullet);
     }
+    printf("VRFluids::setFunctions(from=%i, to=%i)\n", from, to);
 }
 
 void VRFluids::update(int from, int to) {
@@ -142,9 +143,9 @@ inline void VRFluids::sph_calc_density_pressure(SphParticle* p, int from, int to
     btVector3 p_origin = p->body->getWorldTransform().getOrigin();
 
     for (int i=from; i < to; i++) {
-            btVector3 n_origin = particles[i]->body->getWorldTransform().getOrigin();
-            float kernel = kernel_poly6(p_origin - n_origin, p->sphArea);
-            p->sphDensity += particles[i]->mass * kernel;
+        btVector3 n_origin = particles[i]->body->getWorldTransform().getOrigin();
+        float kernel = kernel_poly6(p_origin - n_origin, p->sphArea);
+        p->sphDensity += particles[i]->mass * kernel;
     }
     p->sphPressure = PRESSURE_KAPPA * (p->sphDensity - REST_DENSITY);
 }
@@ -154,11 +155,11 @@ inline void VRFluids::sph_calc_pressureForce(SphParticle* p, int from, int to) {
     btVector3 p_origin = p->body->getWorldTransform().getOrigin();
 
     for (int i=from; i < to; i++) {
-            SphParticle* n = (SphParticle*) particles[i];
-            btVector3 n_origin = n->body->getWorldTransform().getOrigin();
-            float trick = (p->sphPressure + n->sphPressure) / (2 * n->sphDensity); // makes forces symmetric
-            btVector3 kernel = kernel_spiky_gradient(p_origin - n_origin, p->sphArea);
-            p->sphPressureForce -= n->mass * trick * kernel;
+        SphParticle* n = (SphParticle*) particles[i];
+        btVector3 n_origin = n->body->getWorldTransform().getOrigin();
+        float trick = (p->sphPressure + n->sphPressure) / (2 * n->sphDensity); // makes forces symmetric
+        btVector3 kernel = kernel_spiky_gradient(p_origin - n_origin, p->sphArea);
+        p->sphPressureForce -= n->mass * trick * kernel;
     }
 }
 

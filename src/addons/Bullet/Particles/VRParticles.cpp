@@ -133,7 +133,6 @@ void VRParticles::setLifetime(int newLifetime, int variation) {
 
 int VRParticles::spawnCuboid(Vec3f base, Vec3f size, float distance) {
     if (distance == 0.0) distance = this->particles[0]->radius;
-    printf("Spawn Particles!\n");
 
     // distance = abs(distance);
     // float x = abs(size.x());
@@ -178,6 +177,7 @@ int VRParticles::spawnCuboid(Vec3f base, Vec3f size, float distance) {
             }
         }
     }
+    printf("Spawned %i particles!\n", spawned);
     setFunctions(0, spawned);
     return spawned;
 }
@@ -192,4 +192,5 @@ void VRParticles::setFunctions(int from, int to) {
         fkt = VRFunction<int>::create("particles_update", boost::bind(&VRParticles::update, this,from,to));
         scene->addUpdateFkt(fkt);
     }
+    printf("VRParticles::setFunctions(from=%i, to=%i)", from, to);
 }

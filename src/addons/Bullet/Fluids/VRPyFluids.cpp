@@ -47,7 +47,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRFluids>::type = {
 PyMethodDef VRPyFluids::methods[] = {
     {"getGeometry", (PyCFunction)VRPyFluids::getGeometry, METH_VARARGS, "Get geometry - Geometry getGeometry()" },
     {"spawnCuboid", (PyCFunction)VRPyFluids::spawnCuboid, METH_VARARGS, "spawnCuboid(x,y,z) \n\tspawnCuboid(x,y,z,distance,a,b,c) //all float \n\tdistance is space between particles"},
-    
+
     {"setRadius", (PyCFunction)VRPyFluids::setRadius, METH_VARARGS, "setRadius(float radius, float variation) \n\tsetRadius(0.05, 0.02)"},
     {"setSimType", (PyCFunction)VRPyFluids::setSimType, METH_VARARGS, "setSimType(string type, bool forceUpdate=False) \n\tsetSimType('SPH', True) #or XSPH"},
     {"setSphRadius", (PyCFunction)VRPyFluids::setSphRadius, METH_VARARGS, "setSphRadius(float radius)"},
