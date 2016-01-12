@@ -182,6 +182,7 @@ void ART::setARTPort(int port) {
         delete dtrack;
         port = -1;
         dtrack = 0;
+        return;
     }
     dtrack->receive();
 }
