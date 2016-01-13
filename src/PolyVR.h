@@ -31,6 +31,8 @@ class PolyVR {
         shared_ptr<VRSoundManager> sound_mgr;
         shared_ptr<VROptions> options;
 
+        void checkProcessesAndSockets();
+
         void run();
 
     public:

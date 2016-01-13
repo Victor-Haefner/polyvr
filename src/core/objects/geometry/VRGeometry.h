@@ -119,6 +119,8 @@ class VRGeometry : public VRTransform {
         ImageRecPtr getTexture() { return texture; }
 
         void influence(vector<Vec3f> pnts, vector<Vec3f> values, int power, float color_code = -1, float dl_max = 1.0);
+
+        void readSharedMemory(string segment, string object);
 };
 
 OSG_END_NAMESPACE;

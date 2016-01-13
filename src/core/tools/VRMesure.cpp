@@ -117,7 +117,7 @@ void VRMesure::processLabel(Vec3f p1, Vec3f p2, Vec3f cpos) {
 
     string number = convertToString(d.length(), 2);
     float scale = 3;
-    ImageRecPtr texture = VRText::get()->create(number, "SANS 20", 20, fg, bg);
+    auto texture = VRText::get()->create(number, "SANS 20", 20, fg, bg);
     display->setSize(0.2*number.size()*scale, 0.3*scale);
     display->setTexture(texture);
 }
@@ -174,7 +174,7 @@ VRMesure::VRMesure() {
 
     string s = "test";
     float scale = 1;
-    ImageRecPtr texture = VRText::get()->create(s, "SANS 20", 20, fg, bg);
+    auto texture = VRText::get()->create(s, "SANS 20", 20, fg, bg);
     display->setSize(0.2*s.size()*scale, 0.3*scale);
     display->setTexture(texture);
 

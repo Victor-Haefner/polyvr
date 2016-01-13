@@ -13,6 +13,7 @@
 #include "core/gui/VRGuiUtils.h"
 #include "core/gui/VRGuiManager.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/material/VRTexture.h"
 #include "core/objects/geometry/VRSprite.h"
 #include "core/objects/VRTransform.h"
 #include "core/objects/VRCamera.h"
@@ -35,9 +36,9 @@ void VRView::setMaterial() {
     Vec4f cax = Vec4f(0.9, 0.2, 0.2, 1);
     Vec4f cay = Vec4f(0.2, 0.9, 0.2, 1);
 
-    ImageRecPtr label = VRText::get()->create(name, "SANS 20", 20, Color4f(0,0,0,255), Color4f(bg[2]*255.0, bg[1]*255.0, bg[0]*255.0, 0));
-    float lw = label->getWidth();
-    float lh = label->getHeight();
+    auto label = VRText::get()->create(name, "SANS 20", 20, Color4f(0,0,0,255), Color4f(bg[2]*255.0, bg[1]*255.0, bg[0]*255.0, 0));
+    float lw = label->getImage()->getWidth();
+    float lh = label->getImage()->getHeight();
 
     int s=256;
     int b1 = 0.5*s-8;
@@ -66,7 +67,7 @@ void VRView::setMaterial() {
                 int u = x - pl[0] + lw*0.5;
                 int v = y - pl[1] + lh*0.5;
                 int w = 4*(u+v*lw);
-                const UInt8* d = label->getData();
+                const UInt8* d = label->getImage()->getData();
                 data[k] = Vec4f(d[w]/255.0, d[w+1]/255.0, d[w+2]/255.0, d[w+3]/255.0);
                 //data[k] = Vec4f(1,1,1, 1);
             }
@@ -75,7 +76,7 @@ void VRView::setMaterial() {
 
     img->set( Image::OSG_RGBA_PF, s, s, 1, 0, 1, 0, (const uint8_t*)&data[0], OSG::Image::OSG_FLOAT32_IMAGEDATA, true, 1);
 
-    viewGeoMat->setTexture(img);
+    viewGeoMat->setTexture(VRTexture::create(img));
     viewGeoMat->setLit(false);
 }
 
@@ -437,7 +438,7 @@ void VRView::setFotoMode(bool b) {
     } else update();
 }
 
-ImageRecPtr VRView::grab() {
+VRTexturePtr VRView::grab() {
     return takeSnapshot();
 
     /*if (grabfg == 0) {

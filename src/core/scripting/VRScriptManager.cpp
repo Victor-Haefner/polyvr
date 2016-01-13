@@ -17,6 +17,8 @@
 #include "VRPyIntersection.h"
 #include "VRPyPose.h"
 #include "VRPyPath.h"
+#include "VRPyPolygon.h"
+#include "VRPyTriangulator.h"
 #include "VRPyStroke.h"
 #include "VRPyColorChooser.h"
 #include "VRPyTextureRenderer.h"
@@ -298,6 +300,8 @@ void VRScriptManager::initPyModules() {
     registerModule<VRPyAnimation>("Animation", pModVR);
     registerModule<VRPyPose>("Pose", pModVR);
     registerModule<VRPyPath>("Path", pModVR);
+    registerModule<VRPyPolygon>("Polygon", pModVR);
+    registerModule<VRPyTriangulator>("Triangulator", pModVR);
     registerModule<VRPyRecorder>("Recorder", pModVR);
     registerModule<VRPySnappingEngine>("SnappingEngine", pModVR);
     registerModule<VRPyAnnotationEngine>("AnnotationEngine", pModVR, VRPyGeometry::typeRef);

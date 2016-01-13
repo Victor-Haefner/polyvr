@@ -479,6 +479,8 @@
 		<Unit filename="src/core/math/polygon.h" />
 		<Unit filename="src/core/math/pose.cpp" />
 		<Unit filename="src/core/math/pose.h" />
+		<Unit filename="src/core/math/triangulator.cpp" />
+		<Unit filename="src/core/math/triangulator.h" />
 		<Unit filename="src/core/navigation/VRNavigator.cpp" />
 		<Unit filename="src/core/navigation/VRNavigator.h" />
 		<Unit filename="src/core/networking/VRCommunication.h" />
@@ -539,6 +541,8 @@
 		<Unit filename="src/core/objects/material/VRPerlin.h" />
 		<Unit filename="src/core/objects/material/VRShader.cpp" />
 		<Unit filename="src/core/objects/material/VRShader.h" />
+		<Unit filename="src/core/objects/material/VRTexture.cpp" />
+		<Unit filename="src/core/objects/material/VRTexture.h" />
 		<Unit filename="src/core/objects/material/VRTextureGenerator.cpp" />
 		<Unit filename="src/core/objects/material/VRTextureGenerator.h" />
 		<Unit filename="src/core/objects/material/VRVideo.cpp" />
@@ -642,6 +646,8 @@
 		<Unit filename="src/core/scripting/VRPyPath.h" />
 		<Unit filename="src/core/scripting/VRPyPathtool.cpp" />
 		<Unit filename="src/core/scripting/VRPyPathtool.h" />
+		<Unit filename="src/core/scripting/VRPyPolygon.cpp" />
+		<Unit filename="src/core/scripting/VRPyPolygon.h" />
 		<Unit filename="src/core/scripting/VRPyPolygonSelection.cpp" />
 		<Unit filename="src/core/scripting/VRPyPolygonSelection.h" />
 		<Unit filename="src/core/scripting/VRPyPose.cpp" />
@@ -670,6 +676,8 @@
 		<Unit filename="src/core/scripting/VRPyTextureRenderer.h" />
 		<Unit filename="src/core/scripting/VRPyTransform.cpp" />
 		<Unit filename="src/core/scripting/VRPyTransform.h" />
+		<Unit filename="src/core/scripting/VRPyTriangulator.cpp" />
+		<Unit filename="src/core/scripting/VRPyTriangulator.h" />
 		<Unit filename="src/core/scripting/VRPyTypeCaster.cpp" />
 		<Unit filename="src/core/scripting/VRPyTypeCaster.h" />
 		<Unit filename="src/core/scripting/VRScript.cpp" />

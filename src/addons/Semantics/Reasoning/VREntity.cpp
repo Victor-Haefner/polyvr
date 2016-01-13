@@ -15,13 +15,16 @@ void VREntity::setConcept(VRConceptPtr c) { concept = c; }
 void VREntity::set(string name, string value) {
     if (!properties.count(name)) { add(name, value); return; }
     auto prop = concept->getProperty(name);
-    if (!prop) { cout << "Entity " << this->name << " has no property " << name << endl; return; }
+    if (!prop) { cout << "Warning (set): Entity " << this->name << " has no property " << name << endl; return; }
     properties[name][0]->value = value;
+    // TODO: warn if vector size bigger 1
 }
 
 void VREntity::add(string name, string value) {
+    string pconcept; if (auto p = concept->parent.lock()) pconcept = p->name;
+    //cout << "VREntity::add " << name << " " << value << " " << concept->name << " " << pconcept << endl;
     auto prop = concept->getProperty(name);
-    if (!prop) { cout << "Entity " << this->name << " has no property " << name << endl; return; }
+    if (!prop) { cout << "Warning (add): Entity " << this->name << " has no property " << name << endl; return; }
     prop = prop->copy();
     prop->value = value;
     properties[name].push_back( prop );

@@ -5,6 +5,9 @@
 #include "core/scene/VRSceneLoader.h"
 #include "core/scene/VRScene.h"
 #include "core/setup/devices/VRDevice.h"
+#include "core/objects/material/VRTexture.h"
+
+#include <OpenSG/OSGImage.h>
 
 #include <iostream>
 
@@ -424,7 +427,7 @@ class LStore_ModelColumns : public Gtk::TreeModelColumnRecord {
         Gtk::TreeModelColumn<Glib::ustring> content;
 };
 
-OSG::ImageRecPtr takeSnapshot() {
+OSG::VRTexturePtr takeSnapshot() {
     Gtk::DrawingArea* drawArea = 0;
     VRGuiBuilder()->get_widget("glarea", drawArea);
     Glib::RefPtr<Gdk::Drawable> src = drawArea->get_window(); // 24 bits per pixel ( src->get_depth() )
@@ -438,7 +441,7 @@ OSG::ImageRecPtr takeSnapshot() {
     OSG::ImageRecPtr res = OSG::Image::create();
     //Image::set(pixFormat, width, height, depth, mipmapcount, framecount, framedelay, data, type, aloc, sidecount);
     res->set(OSG::Image::OSG_RGB_PF, w, h, 1, 0, 1, 0, (const unsigned char*)pxb->get_pixels(), OSG::Image::OSG_UINT8_IMAGEDATA, true, 1);
-    return res;
+    return OSG::VRTexture::create(res);
 }
 
 void saveSnapshot(string path) {

@@ -50,11 +50,20 @@ PyMethodDef VRPyTextureGenerator::methods[] = {
     {"add", (PyCFunction)VRPyTextureGenerator::add, METH_VARARGS, "Add a layer - add(str type, float amount, [r,g,b], [r,g,b])\n   type can be: 'Perlin', 'Bricks'" },
     {"setSize", (PyCFunction)VRPyTextureGenerator::setSize, METH_VARARGS, "Set the size - setSize([width, height, depth])\n   set depth to 1 for 2D textures" },
     {"compose", (PyCFunction)VRPyTextureGenerator::compose, METH_VARARGS, "Bake the layers into an image - img compose( int seed )" },
+    {"readSharedMemory", (PyCFunction)VRPyTextureGenerator::readSharedMemory, METH_VARARGS, "Read an image from shared memory - img readSharedMemory( string segment, string data )" },
     {NULL}  /* Sentinel */
 };
 
 PyObject* VRPyTextureGenerator::compose(VRPyTextureGenerator* self, PyObject* args) {
-    return VRPyImage::fromPtr( self->obj->compose( parseInt(args) ) );
+    return VRPyImage::fromSharedPtr( self->obj->compose( parseInt(args) ) );
+}
+
+PyObject* VRPyTextureGenerator::readSharedMemory(VRPyTextureGenerator* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyTextureGenerator::add - Object is invalid"); return NULL; }
+    const char *segment, *data;
+    if (! PyArg_ParseTuple(args, "ss", (char*)&segment, (char*)&data)) return NULL;
+    if (segment && data) return VRPyImage::fromSharedPtr( self->obj->readSharedMemory(segment, data) );
+    Py_RETURN_NONE;
 }
 
 PyObject* VRPyTextureGenerator::add(VRPyTextureGenerator* self, PyObject* args) {

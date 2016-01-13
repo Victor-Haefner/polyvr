@@ -6,6 +6,7 @@
 #include "core/utils/coreDumpHandler.h"
 #include "core/gui/VRGuiManager.h"
 #include "core/networking/VRMainInterface.h"
+#include "core/networking/VRSharedMemory.h"
 #include "core/utils/VROptions.h"
 #include "core/scene/VRSceneLoader.h"
 #include "core/scene/VRSoundManager.h"
@@ -58,6 +59,10 @@ PolyVR* PolyVR::get() {
 }
 
 void PolyVR::shutdown() {
+    VRSharedMemory sm("PolyVR_System");
+    int* i = sm.addObject<int>("identifier");
+    *i = 0;
+
     auto pvr = get();
     pvr->scene_mgr->closeScene();
     pvr->scene_mgr->stopAllThreads();
@@ -73,6 +78,7 @@ void PolyVR::setOption(string name, int val) { options->setOption(name, val); }
 void PolyVR::setOption(string name, float val) { options->setOption(name, val); }
 
 void PolyVR::init(int argc, char **argv) {
+    checkProcessesAndSockets();
     cout << "Init PolyVR\n\n";
     enableCoreDump(true);
     setlocale(LC_ALL, "C");
@@ -90,6 +96,10 @@ void PolyVR::init(int argc, char **argv) {
     OSG::preloadSharedObject("OSGImageFileIO");
     cout << "Init OSG\n";
     osgInit(argc,argv);
+
+    VRSharedMemory sm("PolyVR_System");
+    int* i = sm.addObject<int>("identifier");
+    *i = 1;
 }
 
 void PolyVR::run() {
@@ -123,6 +133,14 @@ void PolyVR::startTestScene(Node* n) {
     VRSceneManager::getCurrent()->getRoot()->find("Headlight")->addChild(n);
     VRGuiManager::get()->wakeWindow();
     run();
+}
+
+void PolyVR::checkProcessesAndSockets() { // TODO!!
+    VRSharedMemory sm("PolyVR_System");// check for running PolyVR process
+    int i = sm.getObject<int>("identifier");
+    if (i) {
+        cout << "Error: A PolyVR is allready running!\n";
+    }
 }
 
 

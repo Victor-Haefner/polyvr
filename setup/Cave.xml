@@ -2,17 +2,17 @@
 <Setup>
   <Displays>
     <Window active="1" type="0" width="640" height="480" name="Boden" mouse="None" keyboard="None" Nx="2" Ny="1">
-      <View stereo="1" active_stereo="1" projection="1" eye_inverted="0" eye_separation="0.06" position="0 0 1 1" center="0 0 -1" normal="0 0 1" up="0 1 0" size="2 1" user=""/>
+      <View stereo="1" active_stereo="1" projection="1" eye_inverted="0" eye_separation="0.06" position="0 0 1 1" center="0 0 0" normal="0 1 0" up="0 0 -1" size="4.93 2.4" user="ART_tracker"/>
       <Server Address="imicave32"/>
       <Server Address="imicave31"/>
     </Window>
     <Window active="1" type="0" width="640" height="480" name="Front" mouse="None" keyboard="None" Nx="2" Ny="1">
-      <View stereo="1" active_stereo="1" projection="1" eye_inverted="0" eye_separation="0.06" position="0 0 1 1" center="0 0 -1" normal="0 0 1" up="0 1 0" size="2 1" user=""/>
+      <View stereo="1" active_stereo="1" projection="1" eye_inverted="0" eye_separation="0.06" position="0 0 1 1" center="0 1.3 -1.2" normal="0 0 1" up="0 1 0" size="4.93 2.6" user="ART_tracker"/>
       <Server Address="imicave12"/>
       <Server Address="imicave11"/>
     </Window>
     <Window active="1" type="0" width="640" height="480" name="Seite" mouse="None" keyboard="None" Nx="1" Ny="1">
-      <View stereo="1" active_stereo="1" projection="1" eye_inverted="0" eye_separation="0.06" position="0 0 1 1" center="0 0 -1" normal="0 0 1" up="0 1 0" size="2 1" user=""/>
+      <View stereo="1" active_stereo="1" projection="1" eye_inverted="0" eye_separation="0.06" position="0 0 1 1" center="-2.465 1.3 -0.06" normal="1 0 0" up="0 1 0" size="2.3 2.6" user="ART_tracker"/>
       <Server Address="imicave2"/>
     </Window>
     <Window active="1" type="2" width="1380" height="846" name="screen" mouse="mouse" keyboard="keyboard">
@@ -20,10 +20,11 @@
     </Window>
   </Displays>
   <Devices>
+    <Device name="flystick" type="flystick"/>
     <Device name="keyboard" type="keyboard"/>
     <Device name="mobile" type="mobile"/>
     <Device name="mouse" type="mouse"/>
   </Devices>
-  <TrackingART active="0" offset="0 0 0" port="5000" up=""/>
+  <TrackingART active="1" offset="0 0 0" port="5000" up=""/>
   <TrackingVRPN active="1" port="3883"/>
 </Setup>

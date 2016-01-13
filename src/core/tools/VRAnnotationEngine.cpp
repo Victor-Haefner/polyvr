@@ -112,7 +112,7 @@ void VRAnnotationEngine::setBillboard(bool b) { mat->setShaderParameter("doBillb
 void VRAnnotationEngine::updateTexture() {
     string txt;
     for (int i=32; i<128; i++) txt += char(i);
-    ImageRecPtr img = VRText::get()->create(txt, "MONO 20", 20, fg*255, bg*255 );
+    auto img = VRText::get()->create(txt, "MONO 20", 20, fg*255, bg*255 );
     mat->setTexture(img);
 }
 

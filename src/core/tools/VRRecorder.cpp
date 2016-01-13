@@ -6,6 +6,7 @@
 #include "core/objects/object/VRObject.h"
 #include "core/objects/VRTransform.h"
 #include "core/objects/VRCamera.h"
+#include "core/objects/material/VRTexture.h"
 #include "core/utils/toString.h"
 
 #include <OpenSG/OSGImage.h>
@@ -24,7 +25,7 @@ using namespace std;
 
 class VRFrame {
     public:
-        ImageRecPtr capture = 0;
+        VRTexturePtr capture = 0;
         int timestamp = 0;
 
         Vec3f f,a,u; // from at up
@@ -98,7 +99,7 @@ float VRRecorder::getRecordingLength() {
 
 void VRRecorder::compile(string path) {
     if (captures.size() == 0) return;
-    ImageRecPtr img0 = captures[0]->capture;
+    VRTexturePtr img0 = captures[0]->capture;
 
     /*for (int i=0; i<1; i++) { // test export the first N images
         string pimg = path+"."+toString(i)+".png";
@@ -121,8 +122,8 @@ void VRRecorder::compile(string path) {
     c = avcodec_alloc_context3(codec);
     if (!c) { fprintf(stderr, "Could not allocate video codec context\n"); return; }
 
-    c->width = img0->getWidth();
-    c->height = img0->getHeight();
+    c->width = img0->getImage()->getWidth();
+    c->height = img0->getImage()->getHeight();
     c->bit_rate = c->width*c->height*5; /* put sample parameters */
 	c->time_base.num = 1;
 	c->time_base.den = 25;/* frames per second */
@@ -148,13 +149,13 @@ void VRRecorder::compile(string path) {
     if (ret < 0) { fprintf(stderr, "Could not allocate raw picture buffer\n"); return; }
 
     for (i=0; i<(int)captures.size(); i++) {
-        ImageRecPtr img = captures[i]->capture;
+        auto img = captures[i]->capture;
         if (img == 0) continue;
         av_init_packet(&pkt);
         pkt.data = NULL;    // packet data will be allocated by the encoder
         pkt.size = 0;
 
-        const unsigned char* data = img->getData();
+        const unsigned char* data = img->getImage()->getData();
         for (y=0; y<c->height; y++) { // Y
          for (x=0; x<c->width; x++) {
             int k = y*c->width + x;
@@ -210,7 +211,7 @@ void VRRecorder::compile(string path) {
     avcodec_free_frame(&frame);
 }
 
-Image* VRRecorder::get(int f) {
+VRTexturePtr VRRecorder::get(int f) {
     VRFrame* fr = captures[f];
     return fr->capture;
 }

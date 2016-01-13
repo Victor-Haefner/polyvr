@@ -36,7 +36,7 @@ struct VROntology : public std::enable_shared_from_this<VROntology> {
     VREntityPtr addVectorInstance(string name, string concept, string x, string y, string z);
 
     vector<VRConceptPtr> getConcepts();
-    VRConceptPtr getConcept(string name, VRConceptPtr p = 0);
+    VRConceptPtr getConcept(string name);
     VREntityPtr getInstance(string instance);
     vector<VREntityPtr> getInstances(string concept);
 

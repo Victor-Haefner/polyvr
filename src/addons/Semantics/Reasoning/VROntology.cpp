@@ -18,17 +18,14 @@ VROntology::VROntology() {
 
 VROntologyPtr VROntology::create() { return VROntologyPtr( new VROntology() ); }
 
-VRConceptPtr VROntology::getConcept(string name, VRConceptPtr p) {
-    return concepts[name].lock();
-
-    /*if (p == 0) p = thing;
-    if (p->name == name) return p;
-    VRConceptPtr c = 0;
-    for (auto ci : p->children) {
-        c = getConcept(name, ci.second);
-        if (c) return c;
-    }
-    return c;*/
+VRConceptPtr VROntology::getConcept(string name) {
+    if (concepts.count(name) == 0) { cout << "Warning: concept " << name << " not found!" << endl; return 0; }
+    /*cout << "add concept " << name << "in: ";
+    for (auto c : concepts) if (auto p = c.second.lock()) cout << " " << c.first << " " << p->ID << " ";
+    cout << endl;*/
+    auto p = concepts[name].lock();
+    //cout << "found " << p->name << " " << p->ID << endl;
+    return p;
 }
 
 vector<VRConceptPtr> VROntology::getConcepts() {
@@ -40,9 +37,10 @@ vector<VRConceptPtr> VROntology::getConcepts() {
 VRConceptPtr VROntology::addConcept(string concept, string parent) {
     auto p = thing;
     if (parent != "") {
-        auto p = getConcept(parent);
-        if (p == 0) { cout << "WARNING in VROntology::addConcept, " << parent << " not found while adding " << concept << "!\n"; return 0;  }
+        p = getConcept(parent);
+        if (!p) { cout << "WARNING in VROntology::addConcept, " << parent << " not found while adding " << concept << "!\n"; return 0;  }
     }
+    //cout << "VROntology::addConcept " << concept << " " << parent << " " << p->name << " " << p->ID << endl;
     p = p->append(concept);
     addConcept(p);
     return p;
@@ -50,6 +48,7 @@ VRConceptPtr VROntology::addConcept(string concept, string parent) {
 
 void VROntology::addConcept(VRConceptPtr c) {
     if (c == thing) return;
+    //cout << "add concept " << c->name << " " << c->ID << endl;
     concepts[c->name] = c;
     if (!c->parent.lock()) thing->append(c);
 }

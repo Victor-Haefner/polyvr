@@ -23,6 +23,7 @@
 #include "core/objects/VRCamera.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/material/VRTexture.h"
 #include "core/scene/VRSceneManager.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -136,14 +137,14 @@ void VRDefShading::setSSAOparams(float radius, int kernelSize, int noiseSize) {
     }
 
     // kernel texture
-    ImageRecPtr img = Image::create();
-    img->set(OSG::Image::OSG_RGB_PF, kernelSize, kernelSize, 1, 0, 1, 0.0, (const uint8_t*)&kernel[0], OSG::Image::OSG_FLOAT32_IMAGEDATA);
+    VRTexturePtr img = VRTexture::create();
+    img->getImage()->set(OSG::Image::OSG_RGB_PF, kernelSize, kernelSize, 1, 0, 1, 0.0, (const uint8_t*)&kernel[0], OSG::Image::OSG_FLOAT32_IMAGEDATA);
     ssao_mat->setTextureAndUnit(img, 3);
     ssao_mat->setMagMinFilter("GL_NEAREST", "GL_NEAREST");
 
     // noise texture
-    ImageRecPtr imgN = Image::create();
-    imgN->set(OSG::Image::OSG_RGB_PF, kernelSize, kernelSize, 1, 0, 1, 0.0, (const uint8_t*)&kernel[0], OSG::Image::OSG_FLOAT32_IMAGEDATA);
+    VRTexturePtr imgN = VRTexture::create();
+    imgN->getImage()->set(OSG::Image::OSG_RGB_PF, kernelSize, kernelSize, 1, 0, 1, 0.0, (const uint8_t*)&kernel[0], OSG::Image::OSG_FLOAT32_IMAGEDATA);
     ssao_mat->setTextureAndUnit(imgN, 4);
     ssao_mat->setMagMinFilter("GL_NEAREST", "GL_NEAREST");
 

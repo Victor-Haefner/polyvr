@@ -109,6 +109,7 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"calcSurfaceArea", (PyCFunction)VRPyGeometry::calcSurfaceArea, METH_NOARGS, "Compute and return the total surface area - flt calcSurfaceArea()" },
     {"setPositionalTexCoords", (PyCFunction)VRPyGeometry::setPositionalTexCoords, METH_VARARGS, "Use the positions as texture coordinates - setPositionalTexCoords(float scale)" },
     {"genTexCoords", (PyCFunction)VRPyGeometry::genTexCoords, METH_VARARGS, "Generate the texture coordinates - genTexCoords( str mapping, float scale, int channel, Pose )\n\tmapping: ['CUBE', 'SPHERE']" },
+    {"readSharedMemory", (PyCFunction)VRPyGeometry::readSharedMemory, METH_VARARGS, "Read the geometry from shared memory buffers - readSharedMemory( str segment, str object )" },
     {NULL}  /* Sentinel */
 };
 
@@ -701,5 +702,15 @@ PyObject* VRPyGeometry::setPrimitive(VRPyGeometry* self, PyObject *args) {
     stringstream ss(params);
     ss >> p1; getline(ss, p2);
     self->objPtr->setPrimitive(p1, p2);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyGeometry::readSharedMemory(VRPyGeometry* self, PyObject *args) {
+    if (!self->valid()) return NULL;
+    const char* segment = 0;
+    const char* object = 0;
+    if (! PyArg_ParseTuple(args, "ss", (char*)&segment, (char*)&object)) return NULL;
+    if (!segment || !object) Py_RETURN_FALSE;
+    self->objPtr->readSharedMemory(segment, object);
     Py_RETURN_TRUE;
 }

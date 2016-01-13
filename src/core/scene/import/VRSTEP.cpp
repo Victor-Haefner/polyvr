@@ -9,6 +9,7 @@
 #include <memory>
 #include <boost/bind.hpp>
 
+#include <OpenSG/OSGGeometry.h>
 #include <OpenSG/OSGGeoProperties.h>
 
 #include "core/objects/geometry/VRGeometry.h"
@@ -16,6 +17,7 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
 #include "core/math/polygon.h"
+#include "core/math/triangulator.h"
 
 #include <boost/filesystem.hpp>
 
@@ -488,8 +490,18 @@ struct VRSTEP::Bound : VRSTEP::Instance {
     vector<Vec3f> points;
     bool outer = true;
 
+    int Nl = 0;
+    int Nc = 0;
+
+    bool is(Vec3f v1, Vec3f v2) {
+        return ( abs(v2[0]-v1[0]) < 1e-6 && abs(v2[1]-v1[1]) < 1e-6 && abs(v2[2]-v1[2]) < 1e-6 );
+    }
+
     Bound() {}
+
     Bound(Instance& i, map<STEPentity*, Instance>& instances) : Instance(i) {
+        cout << "Bound " << this << endl;
+
         if (type != "Face_Outer_Bound") outer = false;
         if (type == "Face_Bound" || type == "Face_Outer_Bound") {
             auto& Loop = instances[ get<0, STEPentity*, bool>() ];
@@ -503,29 +515,54 @@ struct VRSTEP::Bound : VRSTEP::Instance {
                         Vec3f EBeg = toVec3f( EdgeElement.get<0, STEPentity*, STEPentity*, STEPentity*>(), instances );
                         Vec3f EEnd = toVec3f( EdgeElement.get<1, STEPentity*, STEPentity*, STEPentity*>(), instances );
                         auto& EdgeGeo = instances[ EdgeElement.get<2, STEPentity*, STEPentity*, STEPentity*>() ];
+                        int Np = points.size();
                         if (EdgeGeo.type == "Line") {
+                            Nl++;
                             Vec3f p = toVec3f( EdgeGeo.get<0, STEPentity*, STEPentity*>(), instances );
                             Vec3f d = toVec3f( EdgeGeo.get<1, STEPentity*, STEPentity*>(), instances );
-                            points.push_back(EBeg); // TODO: check if beg and end are on the line!
-                            points.push_back(EEnd);
+                            if (Np == 0) {
+                                points.push_back(EBeg); // TODO: check if beg and end are on the line!
+                                points.push_back(EEnd);
+                            }
+                            if (Np == 2) {
+                                if (is(EBeg, points[0]) || is(EEnd, points[0])) {
+                                    swap(points[0], points[1]); // swap
+                                }
+                            }
+                            if (Np >= 2) {
+                                if (is(EBeg, points[Np-1])) {
+                                    points.push_back(EEnd);
+                                }
+                                else if(is(EEnd, points[Np-1])) {
+                                    points.push_back(EBeg);
+                                }
+                            }
                         }
                         if (EdgeGeo.type == "Circle") {
+                            Nc++;
                             pose c = toPose( EdgeGeo.get<0, STEPentity*, double>(), instances );
                             float r = EdgeGeo.get<1, STEPentity*, double>();
+                            float _r = 1/r;
                             Matrix m = c.asMatrix();
+                            Matrix mI = m; mI.invert();
 
-                            int N = 16;
-                            Vec3f v,vLast;
-                            for (int i=0; i<(N+1); i++) {
-                                float a = i*(2*Pi/N);
+                            float a1,a2; // get start and end angles
+                            Vec3f c1,c2;
+                            mI.mult(Pnt3f(EBeg), c1);
+                            mI.mult(Pnt3f(EEnd), c2);
+                            c1 *= _r; c2*= _r;
+                            a1 = atan2(c1[1],c1[0]);
+                            a2 = atan2(c2[1],c2[0]);
+
+                            float Da = abs(a2-a1);
+                            int N = 16 * Da/(2*Pi);
+                            float a = a1;
+                            for (int i=0; i<=N; i++) {
+                                a = a1+i*(Da/N);
                                 Pnt3f p(r*cos(a),r*sin(a),0);
                                 m.mult(p,p);
-                                v = Vec3f(p);
-                                if (i > 0) {
-                                    points.push_back(v);
-                                    points.push_back(vLast);
-                                }
-                                vLast = v;
+                                if (Np >= 1) if(is(Vec3f(p), points[Np-1])) continue;
+                                points.push_back(Vec3f(p));
                             }
                         }
                     }
@@ -539,41 +576,82 @@ struct VRSTEP::Bound : VRSTEP::Instance {
 struct VRSTEP::Surface : VRSTEP::Instance {
     vector<Bound> bounds;
     pose trans;
+    double R = 1;
 
     Surface(Instance& i, map<STEPentity*, Instance>& instances) : Instance(i) {
-        if (type == "Plane") {
-            trans = toPose( get<0, STEPentity*>(), instances);
-            /*polygon3D poly;
-            for (auto b : bounds) {
-                if (!b.outer) continue;
-                for (auto p : b.points) {
-                    poly.addPoint(p);
-                }
-            }*/
-        }
-
+        if (type == "Plane") trans = toPose( get<0, STEPentity*>(), instances);
         if (type == "Cylindrical_Surface") {
             trans = toPose( get<0, STEPentity*, double>(), instances );
-            double R = get<1, STEPentity*, double>();
+            R = get<1, STEPentity*, double>();
         }
     }
 
     VRGeometryPtr build() {
         Matrix m = trans.asMatrix();
-        //m.invert();
-        auto geo = VRGeometry::create("face");
-        /*if (type == "Plane") {
-            polygon poly;
-            for (auto b : bounds) {
-                for(auto p : b.poSTEPentity*s) {
-                    m.mult(p,p);
-                    poly.addPoSTEPentity*(Vec2f(p[0], p[1]));
-                }
-            }
-            poly = poly.getConvexHull();
-            poly;
-        }*/
+        Matrix mI = m;
+        mI.invert();
 
+        auto geo = VRGeometry::create("face");
+        if (type == "Plane") {
+            Triangulator t;
+            for (auto b : bounds) {
+                polygon poly;
+                for(auto p : b.points) {
+                    mI.mult(Pnt3f(p),p);
+                    poly.addPoint(Vec2f(p[0], p[1]));
+                }
+                if (!poly.isCCW()) poly.turn();
+                t.add(poly);
+            }
+
+            auto g = t.compute();
+            g->setMatrix(m);
+            return g;
+        }
+
+        if (type == "Cylindrical_Surface") {
+            Triangulator t;
+            //cout << "T " << trans.toString() << endl;
+            for (auto b : bounds) {
+                polygon poly;
+                //cout << "Bound " << b.Nl << " " << b.Nc << endl;
+                for(auto p : b.points) {
+                    //cout << "Cp1 " << p << endl;
+                    mI.mult(Pnt3f(p),p);
+                    //cout << "Cp2 " << p << endl;
+                    float h = p[2];
+                    float a = atan2(p[1]/R, p[0]/R);
+                    //cout << h << " " << a << endl;
+                    poly.addPoint(Vec2f(a, h));
+                }
+                if (!poly.isCCW()) poly.turn();
+                t.add(poly);
+            }
+
+            auto g = t.compute();
+            if (g) {
+                auto gg = g->getMesh();
+                if (gg) {
+                    GeoVectorPropertyRecPtr pos = gg->getPositions();
+                    if (pos) {
+                        cout << "pos " << pos << " " << pos->size() << endl;
+                        for (int i=0; i<pos->size(); i++) {
+                            Pnt3f p = pos->getValue<Pnt3f>(i);
+                            p[2] = p[1];
+                            p[1] = sin(p[0])*R;
+                            p[0] = cos(p[0])*R;
+                            pos->setValue(p, i);
+                        }
+                    }
+                }
+                g->setMatrix(m);
+            }
+            return g;
+        }
+
+        cout << "unhandled surface type " << type << endl;
+
+        // wireframe
         GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
         GeoVec3fPropertyRecPtr norms = GeoVec3fProperty::create();
         GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
