@@ -77,7 +77,7 @@ void VRMillingWorkPiece::update() {
 
     if (profile.size() == 0)
     {
-        printf("Profile empty. Return.\n");
+        // printf("Profile empty. Return.\n");
         return;
     }
 
@@ -85,7 +85,7 @@ void VRMillingWorkPiece::update() {
     //printf("update function: before collide\n");
     if (!rootElement->collide(toolPosition))
     {
-        printf("return\n");
+        // printf("return\n");
         return;
     }
     //printf("update function: after collide\n");
@@ -258,6 +258,10 @@ bool VRWorkpieceElement::collide(Vec3f position) {
     return result;
 }
 
+template <typename T> int sgn(T val) {
+    return (T(0) < val) - (val < T(0));
+}
+
 //Add of Marie
 bool VRWorkpieceElement::doesCollide(Vec3f position) {
     //printf("entered doescollide function\n");
@@ -274,21 +278,24 @@ bool VRWorkpieceElement::doesCollide(Vec3f position) {
     {
         //printf("before maxprofile function\n");
         float maximum = maxProfile(position);
-        printf("maximum: %f\n", maximum);
-        printf("px: %f\n", px);
-        printf("pz: %f\n", pz);
-        printf("sx: %f\n", sx);
-        printf("sz: %f\n", sz);
-        printf("ptoolx: %f\n", ptoolx);
-        printf("ptoolz: %f\n", ptoolz);
         //printf("before second if\n");
         //if ((abs(px - sx/2.0f - ptoolx) < abs(maximum - ptoolx))
         //    && (abs(pz - sz/2.0f - ptoolz) < abs(maximum - ptoolz)))
-        if ((ptoolz - maximum < pz + sz/2.0f) && (ptoolz + maximum > pz - sz/2.0) && (ptoolx - maximum < px + sx/2.0f) && (ptoolx + maximum > px - sx/2.0))
+        if ((ptoolz - maximum < pz + sz/2.0f) && (ptoolz + maximum > pz - sz/2.0) &&
+            (ptoolx - maximum < px + sx/2.0f) && (ptoolx + maximum > px - sx/2.0))
         {
-            //if ()
-            printf("cut\n\n");
-            return true;
+            float diffx = ptoolx - px, diffz = ptoolz - pz;
+            if (std::abs(diffx) <= sx / 2.0f) return true;
+            if (std::abs(diffz) <= sz / 2.0f) return true;
+
+            float sgnx = sgn(diffx), sgnz = sgn(diffz);
+            Vec2f vertex(px + sgnx * sx / 2.0f, pz + sgnz * sz / 2.0f);
+            Vec2f toolMid(ptoolx, ptoolz);
+            Vec2f distanceVertexTool = vertex - toolMid;
+            if (distanceVertexTool.length() < maximum) {
+                // printf("cut\n\n");
+                return true;
+            }
         }
     }
     //printf("after first if\n");
