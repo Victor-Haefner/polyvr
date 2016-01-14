@@ -316,8 +316,10 @@ void VRFluids::setEmitter(Vec3f baseV, Vec3f dirV, int from, int to, int interva
 
 void VRFluids::updateDerivedValues() {
     btVector3 avgDistance(this->sphRadius * REST_DIS, 0, 0);
-    this->REST_DENSITY = (1+REST_N) * this->particleMass * kernel_poly6(avgDistance, this->sphRadius);
+    btVector3 selfDistance(0,0,0);
+    float selfDensity = this->particleMass * kernel_poly6(selfDistance, this->sphRadius);
+    this->REST_DENSITY = selfDensity + REST_N * this->particleMass * kernel_poly6(avgDistance, this->sphRadius);
     this->particleVolume = 2*this->sphRadius*2*this->sphRadius*2*this->sphRadius;
-    this->PRESSURE_KAPPA = 8.314 * 296.0 * this->particleMass *0.00001;
+    this->PRESSURE_KAPPA = 8.314 * 296.0 * this->particleMass *0.00005;
     printf("SPH Radius: %f\n", this->sphRadius);
 }
