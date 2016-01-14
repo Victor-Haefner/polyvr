@@ -23,6 +23,7 @@ class VRFluids : public VRParticles {
         void setSphRadius(float newRadius);
         void setViscosity(float factor);
         void setMass(float newMass, float variation=0.0) override;
+        void setEmitter(Vec3f base, Vec3f dir, int from, int to, int interval, bool loop=false, float offsetFactor=0) override;
 
     protected:
         VRUpdatePtr fluidFkt;
@@ -38,7 +39,7 @@ class VRFluids : public VRParticles {
         /* Number of particles around a resting particle */
         const int REST_N = 1;
         /* Average distance of particles around resting particle */
-        const float REST_DIS = 0.5;
+        const float REST_DIS = 0.7;
         /*
          * Density where particles should rest.
          * (re-)calculate using updateDerivedValues();
@@ -68,6 +69,7 @@ class VRFluids : public VRParticles {
         inline void sph_calc_viscosityForce(SphParticle* p, int from, int to);
 
         void setFunctions(int from, int to) override;
+        void disableFunctions() override;
         void updateDerivedValues();
 };
 

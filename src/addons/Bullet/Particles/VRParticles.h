@@ -19,10 +19,11 @@ class VRParticles : public VRGeometry {
         VRParticles();
         VRParticles(bool spawnParticles);
         ~VRParticles();
-
         static shared_ptr<VRParticles> create();
 
-        void setAmount(int amount);
+        static const int startValue = 400;
+        int N = startValue;
+
         void setRadius(float newRadius, float variation=0.0);
         virtual void setMass(float newMass, float variation=0.0);
         void setMassByRadius(float massFor1mRadius=1000.0);
@@ -30,12 +31,14 @@ class VRParticles : public VRGeometry {
         void setAge(int newAge, int variation=0);
         void setLifetime(int newLifetime, int variation=0);
 
-        template<class P> void resetParticles();
-        int spawnCuboid(Vec3f base, Vec3f size, float distance = 0.0);
+        template<class P> void resetParticles(int amount=startValue);
         virtual void update(int b = 0, int e = -1);
+        void emitterLoop();
+        int spawnCuboid(Vec3f base, Vec3f size, float distance = 0.0);
+        virtual void setEmitter(Vec3f base, Vec3f dir, int from, int to, int interval, bool loop=false, float offsetFactor=0);
+        void disableEmitter();
 
     protected:
-        int N = 200;
         int from, to;
         bool collideWithSelf = true;
         vector<Particle*> particles;
@@ -52,6 +55,20 @@ class VRParticles : public VRGeometry {
         inline btVector3 toBtVector3(Vec3f v) { return btVector3(v[0], v[1], v[2]); };
 
         virtual void setFunctions(int from, int to);
+        virtual void disableFunctions();
+
+        /* Emitter variables */
+        VRUpdatePtr emit_fkt;
+        btVector3 emit_base;
+        btVector3 emit_dir;
+        int emit_from = 0;
+        int emit_to = N;
+        int emit_interval = 60;
+        int emit_counter = 0;
+        int emit_i = 0;
+        bool emit_loop = false;
+
+
 };
 
 

@@ -12,6 +12,7 @@ struct VRPyFluids : VRPyBaseT<OSG::VRFluids> {
     static PyObject* getGeometry(VRPyFluids* self);
     static PyObject* spawnCuboid(VRPyFluids* self, PyObject* args);
 
+    static PyObject* setAmount(VRPyFluids* self, PyObject* args);
     static PyObject* setRadius(VRPyFluids* self, PyObject* args);
     static PyObject* setSimType(VRPyFluids* self, PyObject* args);
     static PyObject* setSphRadius(VRPyFluids* self, PyObject* args);

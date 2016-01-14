@@ -83,6 +83,14 @@ PyObject* VRPyFluids::spawnCuboid(VRPyFluids* self, PyObject* args) {
     return PyInt_FromLong((long) num);
 }
 
+PyObject* VRPyFluids::setAmount(VRPyFluids* self, PyObject* args) {
+    checkObj(self);
+    int amount = 0;
+    if (! PyArg_ParseTuple(args, "i", &amount)) { Py_RETURN_FALSE; }
+    self->objPtr->resetParticles<OSG::SphParticle>(amount);
+    Py_RETURN_TRUE;
+}
+
 PyObject* VRPyFluids::setRadius(VRPyFluids* self, PyObject* args) {
     checkObj(self);
     float radius, variation;

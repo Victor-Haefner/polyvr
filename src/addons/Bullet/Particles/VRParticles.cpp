@@ -57,10 +57,6 @@ void VRParticles::update(int b, int e) {
     }
 }
 
-void VRParticles::setAmount(int amount) {
-    this->setFunctions(0, amount);
-}
-
 void VRParticles::setMass(float newMass, float variation) {
     int i;
     float result;
@@ -182,6 +178,70 @@ int VRParticles::spawnCuboid(Vec3f base, Vec3f size, float distance) {
     return spawned;
 }
 
+void VRParticles::setEmitter(Vec3f baseV, Vec3f dirV, int from, int to, int interval, bool loop, float offsetFactor) {
+    btVector3 base = this->toBtVector3(baseV);
+    btVector3 dir = this->toBtVector3(dirV);
+    {
+        BLock lock(mtx());
+        VRScenePtr scene = VRSceneManager::getCurrent();
+        scene->dropUpdateFkt(emit_fkt);
+
+        this->emit_base = base;
+        this->emit_dir = dir;
+        this->emit_from = from;
+        this->emit_to = to;
+        this->emit_interval = interval;
+        this->emit_counter = 0;
+        this->emit_i = from;
+        this->emit_loop = false;
+
+
+        for(int i=from; i < to; i++) {
+            particles[i]->setup(emit_base + dir.normalized() * offsetFactor, false);
+        }
+
+        emit_fkt = VRFunction<int>::create("emitter", boost::bind(&VRParticles::emitterLoop, this));
+        scene->addUpdateFkt(emit_fkt);
+    }
+        setFunctions(from, to);
+        printf("VRParticles::setEmitter(...from=%i, to=%i, interval=%i)", from, to, interval);
+}
+
+void VRParticles::disableEmitter() {
+    {
+        BLock lock(mtx());
+        VRScenePtr scene = VRSceneManager::getCurrent();
+        scene->dropUpdateFkt(emit_fkt);
+    }
+}
+
+/**
+ * Emits one particle at a time
+ */
+void VRParticles::emitterLoop() {
+    if (emit_counter == 1) {
+        Particle* p = particles[emit_i];
+        p->spawnAt(emit_base, this->world, this->collideWithSelf);
+        printf("Emitter: Particle emitted\n");
+        p->body->applyCentralForce(emit_dir);
+        emit_i++;
+        emit_counter++;
+        if (emit_i == emit_to) {
+            if (emit_loop) {
+                //emit_i = emit_from;
+                // TODO enable looped emitter by extending p->spawnAt()
+                this->disableEmitter();
+            } else {
+                this->disableEmitter();
+            }
+        }
+    } else if (emit_counter >= emit_interval-1) {
+        emit_counter = 0;
+    } else {
+        emit_counter++;
+    }
+}
+
 void VRParticles::setFunctions(int from, int to) {
     {
         BLock lock(mtx());
@@ -193,4 +253,12 @@ void VRParticles::setFunctions(int from, int to) {
         scene->addUpdateFkt(fkt);
     }
     printf("VRParticles::setFunctions(from=%i, to=%i)", from, to);
+}
+
+void VRParticles::disableFunctions() {
+    {
+        BLock lock(mtx());
+        VRScenePtr scene = VRSceneManager::getCurrent();
+        scene->dropUpdateFkt(fkt);
+    }
 }

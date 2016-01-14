@@ -9,13 +9,15 @@ typedef boost::recursive_mutex::scoped_lock BLock;
 OSG_BEGIN_NAMESPACE;
 
 template<class P>
-void VRParticles::resetParticles() {
-
+void VRParticles::resetParticles(int amount) {
     VRScenePtr scene = VRSceneManager::getCurrent();
     if (scene) world = scene->bltWorld();
 
+    disableFunctions();
+
     {
         BLock lock(mtx());
+        this->N = amount;
         for (int i=0; i<particles.size(); i++) delete particles[i];
         particles.resize(N, 0);
         for (int i=0; i<particles.size(); i++) particles[i] = new P(world);
@@ -47,6 +49,8 @@ void VRParticles::resetParticles() {
     setColors(colors);
     setIndices(inds);
     setMaterial(mat);
+
+    printf("VRParticles::resetParticles(amount=%i) -- done", amount);
 }
 
 OSG_END_NAMESPACE;

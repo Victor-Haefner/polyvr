@@ -9,6 +9,8 @@ struct VRPyParticles : VRPyBaseT<OSG::VRParticles> {
 
     static PyObject* getGeometry(VRPyParticles* self);
     static PyObject* spawnCuboid(VRPyParticles* self, PyObject* args);
+    static PyObject* spawnEmitter(VRPyParticles* self, PyObject* args);
+    static PyObject* stopEmitter(VRPyParticles* self, PyObject* args);
 
     static PyObject* setAmount(VRPyParticles* self, PyObject* args);
     static PyObject* setRadius(VRPyParticles* self, PyObject* args);
