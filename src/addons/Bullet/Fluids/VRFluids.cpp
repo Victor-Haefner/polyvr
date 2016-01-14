@@ -11,6 +11,7 @@ using namespace OSG;
 VRFluids::VRFluids() : VRFluids(true) {}
 
 VRFluids::VRFluids(bool spawnParticles) : VRParticles(false) {
+    this->collideWithSelf = false;
     if (spawnParticles) {
         resetParticles<SphParticle>();
         this->updateDerivedValues();

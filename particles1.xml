@@ -3,7 +3,7 @@
   <Objects>
     <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
       <Object name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
-        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="16.4498 16.3865 8.43027" at="4.10326 0.00738716 2.56318" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
+        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="8.24593 2.89422 -0.868989" at="4.10326 0.00738716 2.56318" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
           <Object name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
         </Object>
       </Object>
@@ -96,12 +96,12 @@ void main(void)
 		#m.setVertexProgram('fluid_vp')
 		#m.setFragmentProgram('fluid_fp')
 		m.setPointSize(10)
-		m.setAmbient([1,1-0.5,0])
+		m.setAmbient([0,0,1])
 		return m
 		
 	def initParticleMaterial():
 		m = VR.Material('particle')
-		m.setLit(0)
+		m.setLit(1)
 		#m.setVertexProgram('fluid_vp')
 		#m.setFragmentProgram('particle_fp')
 		m.setPointSize(10)
@@ -111,8 +111,9 @@ void main(void)
 	def doParticles(x,y,z):
 		p = VR.Particles()
 		#VR.setParticle(p)
-		p.setMaterial( initFluidMaterial() )
+		p.setMaterial( initParticleMaterial() )
 		# test setter
+		p.setAmount(400)
 		R = 0.05 # m radius
 		V = 4/3*math.pi*R*R*R # kubikmeter volumen pro partikel
 		rho = 1000 # 1000 kg pro kubikmeter
@@ -120,25 +121,28 @@ void main(void)
 		p.setRadius(R)
 		p.setMass(m)
 		num = p.spawnCuboid(-2,5,-1, 8*R ,x,y,z)
-		print num
+		print "Particles: ", num
+		#p.spawnEmitter([-2,10,-0.1],[0,0,0],0,200,30)
 		VR.test.addChild(p)
 		
 	def doFluids(x,y,z):
 		p = VR.Fluids()
 		#p.setSimType('XSPH')
+		#p.setAmount(500)
 		p.setMaterial( initFluidMaterial() )
 		# test setter
 		R = 0.05 # m radius
 		V = 4/3*math.pi*R*R*R # kubikmeter volumen pro partikel
 		rho = 1000 # 1000 kg pro kubikmeter
 		m = rho*V
-		print 'set fluid particle mass', m, V
+		print 'Fluid Mass and Volume', m, V
 		p.setRadius(R)
 		p.setSphRadius(5*R)
 		p.setMass(m)
 		p.setViscosity(0.0001)
 		num = p.spawnCuboid(-2,5,1.5, 4*5*R ,x,y,z)
-		print num
+		print "Fluid Particles: ", num
+		#p.spawnEmitter([-2,10,2.4],[0,1,0],0,400,30)
 		VR.test.addChild(p)
 		
 	def doFountain(x,y,z):
@@ -172,11 +176,11 @@ void main(void)
 		wallR.setPrimitive('Box 10 10 1 1 1 1')
 		wallF.setPrimitive('Box 1 10 10 1 1 1')
 		
-		#VR.setEnv(hill)
-		#VR.setEnv(wallL)
-		#VR.setEnv(div)
-		#VR.setEnv(wallR)
-		#VR.setEnv(wallF)
+		VR.setEnv(hill)
+		VR.setEnv(wallL)
+		VR.setEnv(div)
+		VR.setEnv(wallR)
+		VR.setEnv(wallF)
 		
 		hill.setPose([1,1,1], [0,0,1],[1,2,0])
 		div.translate(0,0,1)
@@ -204,7 +208,7 @@ void main(void)
 		
 	def doBasicPillar(x,y,z):
 		p = VR.Geometry('pillar')
-		#VR.setEnv(p)
+		VR.setEnv(p)
 		p.setPrimitive('Cylinder 6 0.35 16')
 		p.translate(x,y,z)
 		p.setMaterial(initTransparentMaterial())
@@ -226,7 +230,7 @@ void main(void)
 	doBasicTest()
 	doArcadeTest()
 	x = 2
-	y = 50
+	y = 200
 	z = 2
 	doParticles(x,y,z)
 	doFluids(x,y,z)
@@ -246,17 +250,13 @@ void main( void ) {
     </Script>
     <Script name_suffix="0" base_name="setEnv" name_space="__script__" type="Python" mobile="">
       <core>
-	geo.setCollisionGroup(1)
-	geo.setCollisionMask(2)
+	geo.setCollisionGroup(0)
+	geo.setCollisionMask(1)
+	#for o in VR.basin:
+	#	o.setCollisionGroup(0) # gruppe 1
+	#	o.setCollisionMask(1) # kollidiert mit partikeln, gruppe 2
 </core>
       <arg type="VRPyGeometryType" value="0" name_suffix="0" base_name="geo" name_space="setEnv"/>
-    </Script>
-    <Script name_suffix="0" base_name="setParticle" name_space="__script__" type="Python" mobile="">
-      <core>
-	geo.setCollisionGroup(2)
-	geo.setCollisionMask(1)
-</core>
-      <arg type="VRPyGeometryType" value="0" name_suffix="0" base_name="geo" name_space="setParticle"/>
     </Script>
   </Scripts>
   <Sockets/>

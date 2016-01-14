@@ -37,6 +37,7 @@ class VRParticles : public VRGeometry {
     protected:
         int N = 200;
         int from, to;
+        bool collideWithSelf = true;
         vector<Particle*> particles;
 
         VRUpdatePtr fkt;

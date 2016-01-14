@@ -1,6 +1,8 @@
 #ifndef VRPARTICLE_H_INCLUDED
 #define VRPARTICLE_H_INCLUDED
 
+#define BIT(x) (1<<(x))
+
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 
@@ -19,18 +21,17 @@ struct Particle {
     float radius = 0.01; // unit is meter
     unsigned int age = 0; // current age
     unsigned int lifetime = 0; // max age. 0 means immortal.
+    bool setUp = false;
 
     btRigidBody* body = 0;
     btCollisionShape* shape = 0;
     btDefaultMotionState* motionState = 0;
-    int collisionGroup = 1;
-    int collisionMask = 1;
+    int collisionGroup = 1; // init value -- set up in spawnAt()
+    int collisionMask = 2; // init value -- set up in spawnAt()
 
-    void spawnAt(btVector3 v, btDiscreteDynamicsWorld* world = 0) {
-        if (world == 0) return;
-        // TODO if Particles shall be spawned a second time, handle it.
-        // TODO most of this should be done in constructor. Only the last line should be here if possible.
 
+    void setup(btVector3 v, bool activate) {
+        setUp = true;
         btTransform t;
         t.setOrigin(btVector3(v.x(),v.y(),v.z()));
         motionState = new btDefaultMotionState(t);
@@ -42,8 +43,29 @@ struct Particle {
         btRigidBody::btRigidBodyConstructionInfo rbInfo( mass, motionState, shape, inertiaVector );
 
         body = new btRigidBody(rbInfo);
-        body->setActivationState(ACTIVE_TAG);
+        //body->setActivationState(ACTIVE_TAG);
+        body->activate(activate);
+    }
 
+    void spawnAt(btVector3 v, btDiscreteDynamicsWorld* world = 0, bool collideWithSelf = false) {
+        if (world == 0) return;
+        // TODO if Particles shall be spawned a second time, handle it.
+        // TODO most of this should be done in constructor. Only the last line should be here if possible.
+
+        if (!setUp) {
+            setup(v, true);
+        } else {
+           btTransform t;
+           t.setOrigin(btVector3(v.x(),v.y(),v.z()));
+           body->getMotionState()->setWorldTransform(t);
+           body->activate(true);
+        }
+
+        collisionGroup = BIT(1); // 0010 = 2^1 --> setColissionMask(1)
+        collisionMask = BIT(0); //  0001 = 2^0 --> setCollisionGroup(0)
+        if (collideWithSelf) {
+            collisionMask |= collisionGroup;
+        }
         world->addRigidBody(body, collisionGroup, collisionMask);
     }
 

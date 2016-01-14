@@ -170,7 +170,7 @@ int VRParticles::spawnCuboid(Vec3f base, Vec3f size, float distance) {
                         pos.setY(posY);
                         pos.setZ(posZ);
                         pos += toBtVector3(base);
-                        particles[spawned]->spawnAt(pos, this->world);
+                        particles[spawned]->spawnAt(pos, this->world, this->collideWithSelf);
                         spawned++;
                     }
                 }
