@@ -231,7 +231,6 @@ bool VRWorkpieceElement::collide(Vec3f position) {
     //printf("before doesCollide condition\n");
     //if (collides(position)) {
     if (doesCollide(position)) {
-        printf("in doesCollide condition\n");
         if (children[0] == nullptr) {
             split();
         }
@@ -269,15 +268,24 @@ bool VRWorkpieceElement::doesCollide(Vec3f position) {
     float ptooly = position[1], ptoolx = position[0], ptoolz = position[2];
 
     //printf("%i\n",workpiece.profile.size());
-    float blabla = workpiece.profile.back()[0];
+    float profileLength = workpiece.profile.back()[0];
     //printf("after test variable\n");
-    if ((py + sy/2.0f > ptooly) || (py - sy/2.0f < ptooly + blabla))
+    if ((py + sy/2.0f > ptooly) && (py - sy/2.0f < ptooly + profileLength))
     {
         //printf("before maxprofile function\n");
-        float max = maxProfile(position);
+        float maximum = maxProfile(position);
+        printf("maximum: %f\n", maximum);
+        printf("px: %f\n", px);
+        printf("pz: %f\n", pz);
+        printf("sx: %f\n", sx);
+        printf("sz: %f\n", sz);
+        printf("ptoolx: %f\n", ptoolx);
+        printf("ptoolz: %f\n", ptoolz);
         //printf("before second if\n");
-        if ((abs(px - sx/2.0f - ptoolx) < abs(max - ptoolx)) || (abs(pz - sz/2.0f - ptoolz) < abs(max - ptoolz)))
+        if ((abs(px - sx/2.0f - ptoolx) < abs(maximum - ptoolx))
+            && (abs(pz - sz/2.0f - ptoolz) < abs(maximum - ptoolz)))
         {
+            printf("cut\n\n");
             return true;
         }
     }
@@ -387,17 +395,17 @@ int VRWorkpieceElement::lookForNearestIndex(float newx) {
 
 //Add of Marie
 float VRWorkpieceElement::lookForMaxInList(vector<Vec2f> liste) {
-    float max = 0;
+    float maximum = 0;
 
     for (int i = 0; i < liste.size()-1; i++)
     {
-        if (liste[i][1] > max)
+        if (liste[i][1] > maximum)
         {
-            max = liste[i][1];
+            maximum = liste[i][1];
         }
     }
 
-    return max;
+    return maximum;
 }
 
 void VRWorkpieceElement::deleteElement() {
