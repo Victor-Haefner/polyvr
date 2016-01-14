@@ -58,7 +58,6 @@ void VRFluids::disableFunctions() {
         BLock lock(mtx());
         VRScenePtr scene = VRSceneManager::getCurrent();
         scene->dropUpdateFkt(fkt);
-        scene->dropUpdateFkt(emit_fkt);
         scene->dropPhysicsUpdateFunction(fluidFkt.get(), this->afterBullet);
     }
 }
@@ -307,11 +306,6 @@ void VRFluids::setMass(float newMass, float variation) {
 
 void VRFluids::setViscosity(float factor) {
     this->VISCOSITY_MU = factor;
-}
-
-void VRFluids::setEmitter(Vec3f baseV, Vec3f dirV, int from, int to, int interval, bool loop, float offsetFactor) {
-    offsetFactor = -1*4 * this->sphRadius;
-    VRParticles::setEmitter(baseV, dirV, from, to, interval, loop, offsetFactor);
 }
 
 void VRFluids::updateDerivedValues() {

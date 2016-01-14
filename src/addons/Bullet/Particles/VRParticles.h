@@ -6,6 +6,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/utils/VRFunctionFwd.h"
 #include "VRParticle.h"
+#include "VREmitter.h"
 
 class btDiscreteDynamicsWorld;
 
@@ -33,15 +34,16 @@ class VRParticles : public VRGeometry {
 
         template<class P> void resetParticles(int amount=startValue);
         virtual void update(int b = 0, int e = -1);
-        void emitterLoop();
         int spawnCuboid(Vec3f base, Vec3f size, float distance = 0.0);
-        virtual void setEmitter(Vec3f base, Vec3f dir, int from, int to, int interval, bool loop=false, float offsetFactor=0);
-        void disableEmitter();
+        virtual int setEmitter(Vec3f base, Vec3f dir, int from, int to, int interval, bool loop=false);
+        void disableEmitter(int id);
+        void destroyEmitter(int id);
 
     protected:
         int from, to;
         bool collideWithSelf = true;
         vector<Particle*> particles;
+        map<int, Emitter*> emitters;
 
         VRUpdatePtr fkt;
         VRMaterialPtr mat;
@@ -56,19 +58,6 @@ class VRParticles : public VRGeometry {
 
         virtual void setFunctions(int from, int to);
         virtual void disableFunctions();
-
-        /* Emitter variables */
-        VRUpdatePtr emit_fkt;
-        btVector3 emit_base;
-        btVector3 emit_dir;
-        int emit_from = 0;
-        int emit_to = N;
-        int emit_interval = 60;
-        int emit_counter = 0;
-        int emit_i = 0;
-        bool emit_loop = false;
-
-
 };
 
 

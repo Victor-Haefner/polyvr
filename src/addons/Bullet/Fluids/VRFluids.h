@@ -23,7 +23,6 @@ class VRFluids : public VRParticles {
         void setSphRadius(float newRadius);
         void setViscosity(float factor);
         void setMass(float newMass, float variation=0.0) override;
-        void setEmitter(Vec3f base, Vec3f dir, int from, int to, int interval, bool loop=false, float offsetFactor=0) override;
 
     protected:
         VRUpdatePtr fluidFkt;
