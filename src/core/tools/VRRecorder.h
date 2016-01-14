@@ -7,18 +7,17 @@
 
 #include "core/utils/VRFunctionFwd.h"
 #include "core/objects/VRObjectFwd.h"
+#include "core/setup/VRSetupFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRView;
 class VRFrame;
-class Image;
 
 class VRRecorder {
     private:
         int viewID = 0;
-        VRView* view = 0;
+        VRViewWeakPtr view;
         vector<VRFrame*> captures;
         int maxFrames = -1;
 
@@ -43,7 +42,7 @@ class VRRecorder {
         Vec3f getDir(int f);
         Vec3f getAt(int f);
         Vec3f getUp(int f);
-        Image* get(int f);
+        VRTexturePtr get(int f);
 
         weak_ptr<VRFunction<bool> > getToggleCallback();
 };

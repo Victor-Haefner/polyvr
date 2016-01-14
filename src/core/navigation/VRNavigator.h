@@ -34,7 +34,7 @@ class VRNavPreset : public VRName {
     private:
         vector<VRNavBinding> bindings;
         VRDevice* dev = 0;
-        VRTransformPtr target;
+        VRTransformWeakPtr target;
         bool active = false;
         Vec2f speed;
 
@@ -53,6 +53,9 @@ class VRNavPreset : public VRName {
 
         void addKeyBinding(VRNavBinding b);
         vector<VRNavBinding>& getBindings();
+
+        vector<VRNavBinding>::iterator begin();
+        vector<VRNavBinding>::iterator end();
 };
 
 class VRNavigator_base : public VRStorage {
@@ -83,10 +86,10 @@ class VRNavigator_base : public VRStorage {
 
 class VRNavigator : public VRNavigator_base {
     private:
-        VRTransformPtr target;
+        VRTransformWeakPtr target;
         VRDevice* device;
 
-        vector<VRTransformPtr > walk_surfaces;
+        vector<VRTransformWeakPtr> walk_surfaces;
         static float clip_dist_down;
 
         // callbacks

@@ -25,6 +25,9 @@ ptrFwd(VRGroup);
 ptrFwd(VRBillboard);
 ptrFwd(VRStage);
 
+// other
+ptrFwd(VRTexture);
+
 // tools
 ptrFwd(VRAnnotationEngine);
 ptrFwd(VRAnalyticGeometry);
@@ -38,6 +41,7 @@ ptrFwd(VROpening);
 ptrFwd(VRMolecule);
 ptrFwd(VRTree);
 ptrFwd(CSGGeometry);
+ptrFwd(VRMillingWorkPiece);
 
 }
 

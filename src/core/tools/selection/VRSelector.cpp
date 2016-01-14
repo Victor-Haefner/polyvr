@@ -126,6 +126,12 @@ void VRSelector::select(VRSelectionPtr s) {
     update();
 }
 
+void VRSelector::add(VRSelectionPtr s) {
+    if (!selection) selection = s;
+    else selection->append(s);
+    update();
+}
+
 void VRSelector::setColor(Vec3f c) { color = c; }
 VRSelectionPtr VRSelector::getSelection() { return selection; }
 

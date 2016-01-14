@@ -8,30 +8,25 @@ using namespace std;
 
 VRSetupManager::VRSetupManager() {}
 
-VRSetupManager::~VRSetupManager() {
-    delete current;
-}
+VRSetupManager::~VRSetupManager() {}
 
-VRSetup* VRSetupManager::getCurrent() { return get()->current; }
+VRSetupPtr VRSetupManager::getCurrent() { return get()->current; }
 
 VRSetupManager* VRSetupManager::get() {
     static VRSetupManager* mgr = new VRSetupManager();
     return mgr;
 }
 
-VRSetup* VRSetupManager::create() {
-    if (current) delete current;
-    current = new VRSetup("VRSetup");
+VRSetupPtr VRSetupManager::create() {
+    current = VRSetup::create("VRSetup");
     current_path = "setup/" + current->getName() + ".xml";
     current->setScene( VRSceneManager::getCurrent() );
     return current;
 }
 
-VRSetup* VRSetupManager::load(string name, string path) {
+VRSetupPtr VRSetupManager::load(string name, string path) {
     if (path == current_path) return current;
-    if (current) delete current;
-
-    current = new VRSetup(name);
+    current = VRSetup::create(name);
     current->load(path);
     current_path = path;
     current->setScene( VRSceneManager::getCurrent() );

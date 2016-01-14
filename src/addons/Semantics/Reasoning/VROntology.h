@@ -8,30 +8,42 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <memory>
 
 using namespace std;
 
-struct VROntology {
-    VRConcept* thing = 0;
-    map<int, VREntity*> instances;
-    map<int, VROntologyRule*> rules;
+struct VROntology;
+typedef shared_ptr<VROntology> VROntologyPtr;
+
+struct VROntology : public std::enable_shared_from_this<VROntology> {
+    VRConceptPtr thing = 0;
+    map<int, VREntityPtr> instances;
+    map<string, VRConceptWeakPtr> concepts;
+    map<int, VROntologyRulePtr> rules;
 
     VROntology();
+    static VROntologyPtr create();
 
-    void merge(VROntology* o);
+    void merge(VROntologyPtr o);
+    VROntologyPtr copy();
 
-    VRConcept* addConcept(string concept, string parent = "");
-    VROntologyRule* addRule(string rule);
-    VREntity* addInstance(string name, string concept);
-    VREntity* addVectorInstance(string name, string concept, string x, string y, string z);
+    void addConcept(VRConceptPtr);
+    void addInstance(VREntityPtr);
 
-    VRConcept* getConcept(string name, VRConcept* p = 0);
-    VREntity* getInstance(string instance);
-    vector<VREntity*> getInstances(string concept);
+    VRConceptPtr addConcept(string concept, string parent = "");
+    VROntologyRulePtr addRule(string rule);
+    VREntityPtr addInstance(string name, string concept);
+    VREntityPtr addVectorInstance(string name, string concept, string x, string y, string z);
 
-    vector<VROntologyRule*> getRules();
+    vector<VRConceptPtr> getConcepts();
+    VRConceptPtr getConcept(string name);
+    VREntityPtr getInstance(string instance);
+    vector<VREntityPtr> getInstances(string concept);
 
-    string answer(string question);
+    vector<VROntologyRulePtr> getRules();
+
+    void open(string path);
+    string toString();
 };
 
 

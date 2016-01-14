@@ -17,6 +17,9 @@ class VRGlutWindow : public VRWindow {
         VRGlutWindow();
         ~VRGlutWindow();
 
+        static VRGlutWindowPtr create();
+        VRGlutWindowPtr ptr();
+
         void save(xmlpp::Element* node);
         void load(xmlpp::Element* node);
 };

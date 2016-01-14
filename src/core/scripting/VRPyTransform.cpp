@@ -3,6 +3,7 @@
 #include "VRPyAnimation.h"
 #include "VRPyPose.h"
 #include "VRPyPath.h"
+#include "VRPyIntersection.h"
 #include "VRPyBaseT.h"
 #include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/geometry/VRConstraint.h"
@@ -93,8 +94,8 @@ PyMethodDef VRPyTransform::methods[] = {
     {"detach", (PyCFunction)VRPyTransform::deletePhysicsConstraints, METH_VARARGS, "delete constraint made to this transform with given transform through attach(toTransform). Example call : trans1.detach(trans2)" },
     {"setMass", (PyCFunction)VRPyTransform::setMass, METH_VARARGS, "Set the mass of the physics object" },
     {"setCollisionMargin", (PyCFunction)VRPyTransform::setCollisionMargin, METH_VARARGS, "Set the collision margin of the physics object" },
-    {"setCollisionGroup", (PyCFunction)VRPyTransform::setCollisionGroup, METH_VARARGS, "Set the collision group of the physics object" },
-    {"setCollisionMask", (PyCFunction)VRPyTransform::setCollisionMask, METH_VARARGS, "Set the collision mask of the physics object" },
+    {"setCollisionGroup", (PyCFunction)VRPyTransform::setCollisionGroup, METH_VARARGS, "Set the collision group of the physics object - setCollisionGroup(int g)\n\t g can be from 0 to 8" },
+    {"setCollisionMask", (PyCFunction)VRPyTransform::setCollisionMask, METH_VARARGS, "Set the collision mask of the physics object - setCollisionMask(int g)\n\t g can be from 0 to 8 and it is the group to collide with" },
     {"setCollisionShape", (PyCFunction)VRPyTransform::setCollisionShape, METH_VARARGS, "Set the collision mask of the physics object" },
     {"getCollisions", (PyCFunction)VRPyTransform::getCollisions, METH_NOARGS, "Return the current collisions with other objects" },
     {"applyImpulse", (PyCFunction)VRPyTransform::applyImpulse, METH_VARARGS, "Apply impulse on the physics object" },
@@ -118,7 +119,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setCenterOfMass", (PyCFunction)VRPyTransform::setCenterOfMass, METH_VARARGS, "Set a custom center of mass - setCenterOfMass([x,y,z])"  },
     {"drag", (PyCFunction)VRPyTransform::drag, METH_VARARGS, "Drag this object by new parent - drag(new parent)"  },
     {"drop", (PyCFunction)VRPyTransform::drop, METH_NOARGS, "Drop this object, if held, to old parent - drop()"  },
-    {"castRay", (PyCFunction)VRPyTransform::castRay, METH_VARARGS, "Cast a ray and return the intersection - castRay(obj, dir)"  },
+    {"castRay", (PyCFunction)VRPyTransform::castRay, METH_VARARGS, "Cast a ray and return the intersection - intersection castRay(obj, dir)"  },
     {"lastChanged", (PyCFunction)VRPyTransform::lastChanged, METH_NOARGS, "Return the frame when the last change occured - lastChanged()"  },
     {NULL}  /* Sentinel */
 };
@@ -134,8 +135,7 @@ PyObject* VRPyTransform::castRay(VRPyTransform* self, PyObject* args) {
     if (! PyArg_ParseTuple(args, "OO", &o, &d)) return NULL;
     auto line = self->objPtr->castRay( 0, parseVec3fList(d) );
     OSG::VRIntersect in;
-    auto i = in.intersect(o->objPtr, line);
-    return toPyTuple( OSG::Vec3f(i.point) );
+    return VRPyIntersection::fromObject( in.intersect(o->objPtr, line) );
 }
 
 PyObject* VRPyTransform::drag(VRPyTransform* self, PyObject* args) {

@@ -8,8 +8,6 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRGeometry;
-
 VRGeometryPtr loadPly(string path);
 
 OSG_END_NAMESPACE;

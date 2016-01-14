@@ -25,12 +25,10 @@ VRViewManager::VRViewManager() {
     //this->view_root = view_root;
 }
 
-VRViewManager::~VRViewManager() { for (auto v : views) delete v.second; }
+VRViewManager::~VRViewManager() {}
 
-//int VRViewManager::addView(bool active_stereo, bool stereo, bool projection, Pnt3f screenLowerLeft, Pnt3f screenLowerRight, Pnt3f screenUpperRight, Pnt3f screenUpperLeft, bool swapeyes) {
 int VRViewManager::addView(string name) {
-    //VRView* view = new VRView(active_stereo, stereo, projection, screenLowerLeft, screenLowerRight, screenUpperRight, screenUpperLeft, swapeyes);
-    VRView* view = new VRView(name);
+    VRViewPtr view = VRView::create(name);
     int id=0;
     while(views.count(id) == 1) id++;
     views[id] = view;
@@ -66,19 +64,17 @@ void VRViewManager::showViewportGeos(bool b) {
 
 void VRViewManager::removeView(int i) {
     if (!checkView(i)) return;
-    delete views[i];
     views.erase(i);
 }
 
 //void VRViewManager::addRWElement(VRTransformPtr obj) { view_root->addChild(obj); }
 
 VRTransformPtr VRViewManager::getViewUser(int i) { if (checkView(i)) return views[i]->getUser(); else return 0; }
-VRView* VRViewManager::getView(int i) { if (checkView(i)) return views[i]; else return 0; }
+VRViewPtr VRViewManager::getView(int i) { if (checkView(i)) return views[i]; else return 0; }
 
 void VRViewManager::setStereo(bool b) { for (auto v : views) v.second->setStereo(b); }
 void VRViewManager::setStereoEyeSeparation(float f) { for (auto v : views) v.second->setStereoEyeSeparation(f); }
 void VRViewManager::resetViewports() { for (auto v : views) v.second->reset(); }
 void VRViewManager::setFotoMode(bool b) { for (auto v : views) v.second->setFotoMode(b); }
-void VRViewManager::setCallibrationMode(bool b) { for (auto v : views) v.second->setCallibrationMode(b); }
 
 OSG_END_NAMESPACE;

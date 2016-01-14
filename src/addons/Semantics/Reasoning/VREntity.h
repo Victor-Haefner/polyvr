@@ -7,13 +7,18 @@
 using namespace std;
 
 struct VREntity : public VRNamedID {
-    VRConcept* concept;
-    map<int, vector<string> > properties;
+    VRConceptPtr concept = 0;
+    map<string, vector<VRPropertyPtr> > properties;
 
-    VREntity(string name, VRConcept* c);
+    VREntity(string name, VRConceptPtr c = 0);
+    static VREntityPtr create(string name, VRConceptPtr c = 0);
+    void setConcept(VRConceptPtr c);
+
     void set(string name, string value);
     void add(string name, string value);
     string toString();
+
+    vector<VRPropertyPtr> getProperties(string name = "");
 
     vector<string> getAtPath(vector<string> path);
 };

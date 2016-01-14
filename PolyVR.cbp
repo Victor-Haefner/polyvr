@@ -32,6 +32,7 @@
 			</Target>
 		</Build>
 		<Compiler>
+			<Add option="-O2" />
 			<Add option="-std=c++11" />
 			<Add option="-Wall" />
 			<Add option="`pkg-config gtk+-2.0 --cflags`" />
@@ -85,6 +86,11 @@
 			<Add option="-DCGAL_CFG_NO_VARIADIC_TEMPLATES" />
 			<Add option="-DNDEBUG" />
 			<Add option="-DCGAL_NDEBUG" />
+			<Add option="-D__STDC_CONSTANT_MACROS" />
+			<Add option="-D_GLIBCXX_USE_CXX11_ABI=1" />
+			<Add option="-DBOOST_NO_COMPILER_CONFIG" />
+			<Add option="-DBOOST_NO_CXX14_DECLTYPE_AUTO" />
+			<Add option="-DBOOST_NO_CXX11_DECLTYPE_N3276" />
 			<Add directory="/usr/include/pango-1.0" />
 			<Add directory="/usr/include/glib-2.0" />
 			<Add directory="/usr/lib64/glib-2.0/include" />
@@ -101,6 +107,7 @@
 			<Add directory="src" />
 			<Add directory="/usr/include/opensg" />
 			<Add directory="/usr/include/collada" />
+			<Add directory="/usr/include/STEPcode" />
 		</Compiler>
 		<Linker>
 			<Add option="-lcef" />
@@ -168,6 +175,15 @@
 			<Add option="-lfontconfig" />
 			<Add option="-lpangocairo-1.0" />
 			<Add option="-lcairo" />
+			<Add option="-lbase" />
+			<Add option="-lsdai_ap214e3" />
+			<Add option="-lstepdai" />
+			<Add option="-lsteputils" />
+			<Add option="-lexppp" />
+			<Add option="-lexpress" />
+			<Add option="-lstepcore" />
+			<Add option="-lstepeditor" />
+			<Add option="-lsteplazyfile" />
 			<Add option="-lpthread" />
 			<Add option="-ldl" />
 			<Add option="-lm" />
@@ -180,6 +196,7 @@
 			<Add option="-lqrencode" />
 			<Add option="-ludev" />
 			<Add option="-lffmpegsumo" />
+			<Add option="-lraptor2" />
 			<Add option="-lgomp" />
 			<Add directory="/usr/X11R6/lib64" />
 			<Add directory="/usr/lib/virtuose" />
@@ -193,6 +210,7 @@
 			<Add directory="/usr/lib" />
 			<Add directory="/usr/lib/x86_64-linux-gnu" />
 			<Add directory="/usr/local/cuda/lib64" />
+			<Add directory="/usr/lib/STEPcode" />
 		</Linker>
 		<ExtraCommands>
 			<Add after='/bin/bash -c &quot;cp -u -p ressources/cef/icudtl.dat bin/Debug/ 2&gt;/dev/null&quot;' />
@@ -266,8 +284,12 @@
 		<Unit filename="src/addons/Engineering/Mechanics/VRPyMechanism.h" />
 		<Unit filename="src/addons/Engineering/Milling/VRMillingMachine.cpp" />
 		<Unit filename="src/addons/Engineering/Milling/VRMillingMachine.h" />
+		<Unit filename="src/addons/Engineering/Milling/VRMillingWorkPiece.cpp" />
+		<Unit filename="src/addons/Engineering/Milling/VRMillingWorkPiece.h" />
 		<Unit filename="src/addons/Engineering/Milling/VRPyMillingMachine.cpp" />
 		<Unit filename="src/addons/Engineering/Milling/VRPyMillingMachine.h" />
+		<Unit filename="src/addons/Engineering/Milling/VRPyMillingWorkPiece.cpp" />
+		<Unit filename="src/addons/Engineering/Milling/VRPyMillingWorkPiece.h" />
 		<Unit filename="src/addons/Engineering/VRNumberingEngine.cpp" />
 		<Unit filename="src/addons/Engineering/VRNumberingEngine.h" />
 		<Unit filename="src/addons/Engineering/VRProfile.cpp" />
@@ -394,6 +416,8 @@
 		<Unit filename="src/addons/Semantics/Reasoning/VROntologyUtils.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VRProperty.cpp" />
 		<Unit filename="src/addons/Semantics/Reasoning/VRProperty.h" />
+		<Unit filename="src/addons/Semantics/Reasoning/VRPyOntology.cpp" />
+		<Unit filename="src/addons/Semantics/Reasoning/VRPyOntology.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VRReasoner.cpp" />
 		<Unit filename="src/addons/Semantics/Reasoning/VRReasoner.h" />
 		<Unit filename="src/addons/Semantics/Segmentation/VRAdjacencyGraph.cpp" />
@@ -404,6 +428,7 @@
 		<Unit filename="src/addons/Semantics/Segmentation/VRPySegmentation.h" />
 		<Unit filename="src/addons/Semantics/Segmentation/VRSegmentation.cpp" />
 		<Unit filename="src/addons/Semantics/Segmentation/VRSegmentation.h" />
+		<Unit filename="src/addons/Semantics/VRSemanticsFwd.h" />
 		<Unit filename="src/addons/SimViDekont/GeoIO.h" />
 		<Unit filename="src/addons/SimViDekont/Player.h" />
 		<Unit filename="src/addons/SimViDekont/SimViDekont.cpp" />
@@ -469,6 +494,8 @@
 		<Unit filename="src/core/math/polygon.h" />
 		<Unit filename="src/core/math/pose.cpp" />
 		<Unit filename="src/core/math/pose.h" />
+		<Unit filename="src/core/math/triangulator.cpp" />
+		<Unit filename="src/core/math/triangulator.h" />
 		<Unit filename="src/core/navigation/VRNavigator.cpp" />
 		<Unit filename="src/core/navigation/VRNavigator.h" />
 		<Unit filename="src/core/networking/VRCommunication.h" />
@@ -529,6 +556,8 @@
 		<Unit filename="src/core/objects/material/VRPerlin.h" />
 		<Unit filename="src/core/objects/material/VRShader.cpp" />
 		<Unit filename="src/core/objects/material/VRShader.h" />
+		<Unit filename="src/core/objects/material/VRTexture.cpp" />
+		<Unit filename="src/core/objects/material/VRTexture.h" />
 		<Unit filename="src/core/objects/material/VRTextureGenerator.cpp" />
 		<Unit filename="src/core/objects/material/VRTextureGenerator.h" />
 		<Unit filename="src/core/objects/material/VRVideo.cpp" />
@@ -575,6 +604,8 @@
 		<Unit filename="src/core/scene/import/VRImport.h" />
 		<Unit filename="src/core/scene/import/VRPLY.cpp" />
 		<Unit filename="src/core/scene/import/VRPLY.h" />
+		<Unit filename="src/core/scene/import/VRSTEP.cpp" />
+		<Unit filename="src/core/scene/import/VRSTEP.h" />
 		<Unit filename="src/core/scripting/VRPyAnalyticGeometry.cpp" />
 		<Unit filename="src/core/scripting/VRPyAnalyticGeometry.h" />
 		<Unit filename="src/core/scripting/VRPyAnimation.cpp" />
@@ -602,6 +633,8 @@
 		<Unit filename="src/core/scripting/VRPyHaptic.h" />
 		<Unit filename="src/core/scripting/VRPyImage.cpp" />
 		<Unit filename="src/core/scripting/VRPyImage.h" />
+		<Unit filename="src/core/scripting/VRPyIntersection.cpp" />
+		<Unit filename="src/core/scripting/VRPyIntersection.h" />
 		<Unit filename="src/core/scripting/VRPyLight.cpp" />
 		<Unit filename="src/core/scripting/VRPyLight.h" />
 		<Unit filename="src/core/scripting/VRPyListMath.cpp" />
@@ -628,6 +661,8 @@
 		<Unit filename="src/core/scripting/VRPyPath.h" />
 		<Unit filename="src/core/scripting/VRPyPathtool.cpp" />
 		<Unit filename="src/core/scripting/VRPyPathtool.h" />
+		<Unit filename="src/core/scripting/VRPyPolygon.cpp" />
+		<Unit filename="src/core/scripting/VRPyPolygon.h" />
 		<Unit filename="src/core/scripting/VRPyPolygonSelection.cpp" />
 		<Unit filename="src/core/scripting/VRPyPolygonSelection.h" />
 		<Unit filename="src/core/scripting/VRPyPose.cpp" />
@@ -656,6 +691,8 @@
 		<Unit filename="src/core/scripting/VRPyTextureRenderer.h" />
 		<Unit filename="src/core/scripting/VRPyTransform.cpp" />
 		<Unit filename="src/core/scripting/VRPyTransform.h" />
+		<Unit filename="src/core/scripting/VRPyTriangulator.cpp" />
+		<Unit filename="src/core/scripting/VRPyTriangulator.h" />
 		<Unit filename="src/core/scripting/VRPyTypeCaster.cpp" />
 		<Unit filename="src/core/scripting/VRPyTypeCaster.h" />
 		<Unit filename="src/core/scripting/VRScript.cpp" />
@@ -664,6 +701,7 @@
 		<Unit filename="src/core/scripting/VRScriptManager.h" />
 		<Unit filename="src/core/setup/VRSetup.cpp" />
 		<Unit filename="src/core/setup/VRSetup.h" />
+		<Unit filename="src/core/setup/VRSetupFwd.h" />
 		<Unit filename="src/core/setup/VRSetupManager.cpp" />
 		<Unit filename="src/core/setup/VRSetupManager.h" />
 		<Unit filename="src/core/setup/devices/VRAvatar.cpp" />

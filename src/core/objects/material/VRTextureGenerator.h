@@ -1,9 +1,10 @@
 #ifndef VRTEXTUREGENERATOR_H_INCLUDED
 #define VRTEXTUREGENERATOR_H_INCLUDED
 
-#include <OpenSG/OSGFieldContainerFields.h>
+//#include <OpenSG/OSGFieldContainerFields.h>
 #include <OpenSG/OSGVector.h>
-#include <OpenSG/OSGImage.h>
+
+#include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -26,7 +27,7 @@ class VRTextureGenerator {
         };
 
         vector<Layer> layers;
-        ImageRecPtr img;
+        VRTexturePtr img;
 
     public:
         VRTextureGenerator();
@@ -37,8 +38,9 @@ class VRTextureGenerator {
         void add(GEN_TYPE type, float amount, Vec3f c1, Vec3f c2);
         void add(string type, float amount, Vec3f c1, Vec3f c2);
         void clearStage();
+        VRTexturePtr compose(int seed);
 
-        ImageRecPtr compose(int seed);
+        VRTexturePtr readSharedMemory(string segment, string object);
 };
 
 OSG_END_NAMESPACE;

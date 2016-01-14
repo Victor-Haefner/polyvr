@@ -5,7 +5,6 @@
 #include <string.h>
 #include <queue>
 #include <gtkmm/combobox.h>
-#include <boost/thread.hpp>
 #include "core/utils/VRFunctionFwd.h"
 #include "core/utils/VRDeviceFwd.h"
 
@@ -23,7 +22,6 @@ class VRGuiBits {
         GtkWidget* term_box = 0;
         Gtk::ScrolledWindow* swin = 0;
 	    std::queue<string> msg_queue;
-	    mutable boost::mutex msg_mutex;
 
 	    shared_ptr<VRFunction<int> > updatePtr;
 

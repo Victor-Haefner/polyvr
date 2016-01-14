@@ -121,8 +121,9 @@ void VRGuiSetup::updateObjectData() {
         setTextEntry("entry56", toString(p[1]).c_str());
         setTextEntry("entry57", toString(p[3]).c_str());
 
-        setCheckButton("checkbutton9", view->eyesInverted());
         setCheckButton("checkbutton8", view->isStereo());
+        setCheckButton("checkbutton9", view->eyesInverted());
+        setCheckButton("checkbutton10", view->activeStereo());
         setCheckButton("checkbutton11", view->isProjection());
 
         setTextEntry("entry12", toString(view->getEyeSeparation()).c_str());
@@ -230,16 +231,10 @@ void VRGuiSetup::on_new_clicked() {
     ofstream f("setup/.local"); f.write(name.c_str(), name.size()); f.close();
 }
 
-void VRGuiSetup::on_foto_clicked() { //TODO, should create new setup
+void VRGuiSetup::on_foto_clicked() {
     if (current_setup == 0) return;
     bool b = getToggleButtonState("toolbutton19");
     current_setup->setFotoMode(b);
-}
-
-void VRGuiSetup::on_calibration_foreground_clicked() { //TODO, should create new setup
-    if (current_setup == 0) return;
-    bool b = getToggleButtonState("toolbutton20");
-    current_setup->setCallibrationMode(b);
 }
 
 void VRGuiSetup::on_del_clicked() { //TODO, should delete setup
@@ -352,7 +347,7 @@ void VRGuiSetup::on_menu_delete() {
         VRView* view = (VRView*)selected_object;
         current_setup->removeView(view->getID());
         VRWindow* win = (VRWindow*)selected_object_parent;
-        win->remView(view);
+        win->remView(view->ptr());
     }
 
     if (selected_type == "vrpn_tracker") {
@@ -369,12 +364,12 @@ void VRGuiSetup::on_menu_delete() {
 }
 
 void VRGuiSetup::on_menu_add_window() {
-    VRWindow* win = current_setup->addMultiWindow("Display");
+    VRWindowPtr win = current_setup->addMultiWindow("Display");
     win->setActive(true);
     if ( VRSceneManager::getCurrent() ) win->setContent(true);
 
     updateSetup();
-    selected_object = win;
+    selected_object = win.get();
     selected_type = "window";
     on_menu_add_viewport();
 }
@@ -535,6 +530,17 @@ void VRGuiSetup::on_toggle_view_invert() {
 
     bool b = getCheckButtonState("checkbutton9");
     view->swapEyes(b);
+    setToolButtonSensitivity("toolbutton12", true);
+}
+
+void VRGuiSetup::on_toggle_view_active_stereo() {
+    if (guard) return;
+    if (selected_type != "view") return;
+
+    VRView* view = (VRView*)selected_object;
+
+    bool b = getCheckButtonState("checkbutton10");
+    view->setActiveStereo(b);
     setToolButtonSensitivity("toolbutton12", true);
 }
 
@@ -788,7 +794,6 @@ VRGuiSetup::VRGuiSetup() {
     setToolButtonCallback("toolbutton11", sigc::mem_fun(*this, &VRGuiSetup::on_del_clicked) );
     setToolButtonCallback("toolbutton12", sigc::mem_fun(*this, &VRGuiSetup::on_save_clicked) );
     setToolButtonCallback("toolbutton19", sigc::mem_fun(*this, &VRGuiSetup::on_foto_clicked) );
-    setToolButtonCallback("toolbutton20", sigc::mem_fun(*this, &VRGuiSetup::on_calibration_foreground_clicked) );
 
     centerEntry.init("center_entry", "center", sigc::mem_fun(*this, &VRGuiSetup::on_proj_center_edit));
     userEntry.init("user_entry", "user", sigc::mem_fun(*this, &VRGuiSetup::on_proj_user_edit));
@@ -832,6 +837,7 @@ VRGuiSetup::VRGuiSetup() {
     crt->signal_edited().connect( sigc::mem_fun(*this, &VRGuiSetup::on_server_edit) );
 
     setCheckButtonCallback("checkbutton9", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_view_invert));
+    setCheckButtonCallback("checkbutton10", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_view_active_stereo));
     setCheckButtonCallback("checkbutton7", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_display_active));
     setCheckButtonCallback("checkbutton8", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_display_stereo));
     setCheckButtonCallback("checkbutton11", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_display_projection));
@@ -853,8 +859,8 @@ VRGuiSetup::VRGuiSetup() {
     updateSetupList();
     updateSetup();
 
-    VRDeviceCb fkt = VRFunction<VRDevice*>::create("update gui setup", boost::bind(&VRGuiSetup::updateSetup, this) );
-    VRSetupManager::getCurrent()->getSignal_on_new_art_device()->add(fkt);
+    updateSetupCb = VRFunction<VRDevice*>::create("update gui setup", boost::bind(&VRGuiSetup::updateSetup, this) );
+    VRSetupManager::getCurrent()->getSignal_on_new_art_device()->add(updateSetupCb);
 }
 
 void VRGuiSetup::setTreeRow(Glib::RefPtr<Gtk::TreeStore> tree_store, Gtk::TreeStore::Row row, string name, string type, gpointer ptr, string fg, string bg) {
@@ -917,7 +923,7 @@ void VRGuiSetup::updateSetup() {
     }
 
     for (auto win : current_setup->getWindows()) {
-        VRWindow* w = win.second;
+        VRWindow* w = win.second.get();
         string name = win.first;
         itr = tree_store->append(windows_itr->children());
         string bg = "#FFFFFF";
@@ -925,13 +931,13 @@ void VRGuiSetup::updateSetup() {
         setTreeRow(tree_store, *itr, name.c_str(), "window", (gpointer)w, "#000000", bg);
 
         // add viewports
-        vector<VRView*> views = w->getViews();
+        vector<VRViewPtr> views = w->getViews();
         for (uint i=0; i<views.size(); i++) {
-            VRView* v = views[i];
+            VRViewPtr v = views[i];
             stringstream ss;
             ss << name << i;
             itr2 = tree_store->append(itr->children());
-            setTreeRow(tree_store, *itr2, ss.str().c_str(), "view", (gpointer)v);
+            setTreeRow(tree_store, *itr2, ss.str().c_str(), "view", (gpointer)v.get());
         }
     }
 

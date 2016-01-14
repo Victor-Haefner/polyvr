@@ -6,22 +6,23 @@
 #include <vector>
 #include <map>
 #include <list>
+#include <memory>
 
 using namespace std;
 
 #include "VROntology.h"
 
-struct Path {
+struct VPath {
     string first;
     string root;
     vector<string> nodes;
 
-    Path(string p);
+    VPath(string p);
     string toString();
 };
 
 struct Variable {
-    vector<VREntity*> instances;
+    vector<VREntityPtr> instances;
     string value;
     string concept;
     bool isAnonymous = false;
@@ -30,19 +31,19 @@ struct Variable {
     Variable();
 
     string toString();
-    bool has(Variable& other, VROntology* onto);
+    bool has(Variable& other, VROntologyPtr onto);
 
-    Variable(VROntology* onto, string concept, string var);
-    Variable(VROntology* onto, string val);
+    Variable(VROntologyPtr onto, string concept, string var);
+    Variable(VROntologyPtr onto, string val);
     bool operator==(Variable v);
 };
 
 struct Result {
-    vector<VREntity*> instances;
+    vector<VREntityPtr> instances;
 };
 
 struct Term {
-    Path path;
+    VPath path;
     Variable var;
     string str;
 
@@ -51,28 +52,36 @@ struct Term {
     bool operator==(Term& other);
 };
 
+struct Statement;
+typedef std::shared_ptr<Statement> StatementPtr;
+typedef std::weak_ptr<Statement> StatementWeakPtr;
+
 struct Statement {
     string verb;
     string verb_suffix;
     vector<Term> terms;
     int state = 0;
+    int place = -1;
 
     Statement();
-    Statement(string s);
+    Statement(string s, int i = -1);
+    static StatementPtr New(string s, int i = -1);
 
     string toString();
-    void updateLocalVariables(map<string, Variable>& globals, VROntology* onto);
+    void updateLocalVariables(map<string, Variable>& globals, VROntologyPtr onto);
     bool isSimpleVerb();
-    bool match(Statement& s);
+    bool match(StatementPtr s);
 };
 
 struct Query {
-    Statement request;
-    vector<Statement> statements;
+    StatementPtr request;
+    vector<StatementPtr> statements;
 
     Query();
     Query(string q);
     string toString();
+
+    void checkState();
 };
 
 struct Context {
@@ -80,12 +89,12 @@ struct Context {
     map<string, Result> results;
     map<string, Query> rules;
     list<Query> queries;
-    VROntology* onto = 0;
+    VROntologyPtr onto = 0;
 
     int itr=0;
     int itr_max = 5;
 
-    Context(VROntology* onto);
+    Context(VROntologyPtr onto);
     Context();
 };
 
@@ -105,14 +114,15 @@ class VRReasoner {
     private:
         VRReasoner();
 
-        bool evaluate(Statement& s, Context& c);
-        bool is(Statement& s, Context& c);
-        bool has(Statement& s, Context& c);
-        bool findRule(Statement& s, Context& c);
+        bool evaluate(StatementPtr s, Context& c);
+        bool apply(StatementPtr s, Context& c);
+        bool is(StatementPtr s, Context& c);
+        bool has(StatementPtr s, Context& c);
+        bool findRule(StatementPtr s, Context& c);
 
     public:
-        static VRReasoner* get();
-        vector<Result> process(string query, VROntology* onto);
+        static VRReasonerPtr create();
+        vector<Result> process(string query, VROntologyPtr onto);
 };
 
 

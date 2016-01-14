@@ -7,6 +7,7 @@
 #include "tracking/VRPN.h"
 #include "tracking/ART.h"
 #include "core/utils/VRName.h"
+#include "core/setup/VRSetupFwd.h"
 
 namespace xmlpp{ class Element; }
 
@@ -40,6 +41,7 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
         VRSetup(string name);
         ~VRSetup();
 
+        static VRSetupPtr create(string name);
         VRTransformPtr getUser();
 
         void addObject(VRObjectPtr o);

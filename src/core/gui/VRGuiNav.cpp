@@ -51,8 +51,7 @@ void VRGuiNav_on_preset_changed(GtkComboBox* cb, gpointer data) {
 
     //TODO: get all bindings from preset && update nav_bindings
     navBindings_store->clear();
-    for (uint i=0; i<preset->getBindings().size(); i++) {
-        VRNavBinding b = preset->getBindings()[i];
+    for (auto& b : *preset) {
         string cb_name;
         if (b.cb) cb_name = b.cb->getName();
 
@@ -239,6 +238,7 @@ void VRGuiNav::update() {
     }
 
     setComboboxLastActive("combobox5");
+    setCombobox("combobox5", getListStorePos( "nav_presets", scene->getActiveNavigation() ) );
 }
 
 OSG_END_NAMESPACE;

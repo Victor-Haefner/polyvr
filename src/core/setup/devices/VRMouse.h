@@ -13,7 +13,7 @@ class VRMouse : public VRDevice {
     private:
 
         VRCameraWeakPtr cam;
-        VRView* view = 0;
+        VRViewWeakPtr view;
         Line ray;
 
         VRSignalPtr on_to_edge = 0;
@@ -35,8 +35,8 @@ class VRMouse : public VRDevice {
         void mouse(int button, int state, int x, int y);
         void motion(int x, int y);
 
-        void setCamera(VRCameraPtr _cam);
-        void setViewport(VRView* _view);
+        void setCamera(VRCameraPtr cam);
+        void setViewport(VRViewPtr view);
 
         Line getRay();
         VRSignalPtr getToEdgeSignal();

@@ -55,6 +55,7 @@ class VRGeometry : public VRTransform {
         virtual ~VRGeometry();
 
         static VRGeometryPtr create(string name);
+        static VRGeometryPtr create(string name, string primitive, string params);
         VRGeometryPtr ptr();
 
         /** Set the geometry mesh (OSG geometry core) **/
@@ -92,6 +93,8 @@ class VRGeometry : public VRTransform {
         void fixColorMapping();
         void updateNormals();
 
+        void genTexCoords(string mapping = "CUBE", float scale = 1, int channel = 0, std::shared_ptr<pose> p = 0);
+
         void showGeometricData(string type, bool b);
         float calcSurfaceArea();
 
@@ -116,6 +119,8 @@ class VRGeometry : public VRTransform {
         ImageRecPtr getTexture() { return texture; }
 
         void influence(vector<Vec3f> pnts, vector<Vec3f> values, int power, float color_code = -1, float dl_max = 1.0);
+
+        void readSharedMemory(string segment, string object);
 };
 
 OSG_END_NAMESPACE;

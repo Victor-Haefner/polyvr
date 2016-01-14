@@ -14,16 +14,16 @@ using namespace std;
 
 class VRWindow;
 class VRThread;
-typedef boost::function<void (VRWindow*, int, int, int, int, int)> VRWindowCallback; // params: device, button, state, mouse x, mouse y
+typedef boost::function<void (VRWindowPtr, int, int, int, int, int)> VRWindowCallback; // params: device, button, state, mouse x, mouse y
 
-class VRWindow : public VRName {
+class VRWindow : public std::enable_shared_from_this<VRWindow>, public VRName {
     protected:
         bool active = false;
         bool content = false;
         int type = -1;
         WindowRecPtr _win;
         RenderActionRefPtr ract;
-        vector<VRView*> views;
+        vector<VRViewWeakPtr> views;
 
         VRMouse* mouse = 0;
         VRKeyboard* keyboard = 0;
@@ -36,8 +36,13 @@ class VRWindow : public VRName {
     public:
         VRWindow();
         virtual ~VRWindow();
+
+        static VRWindowPtr create();
+        VRWindowPtr ptr();
+
         bool hasType(int i);
         void resize(int w, int h);
+        Vec2i getSize();
 
         void setAction(RenderActionRefPtr ract);
 
@@ -56,9 +61,9 @@ class VRWindow : public VRName {
         VRKeyboard* getKeyboard();
 
         WindowRecPtr getOSGWindow();
-        void addView(VRView* view);
-        void remView(VRView* view);
-        vector<VRView*> getViews();
+        void addView(VRViewPtr view);
+        void remView(VRViewPtr view);
+        vector<VRViewPtr> getViews();
 
         virtual void render();
         virtual void save(xmlpp::Element* node);

@@ -26,6 +26,7 @@ class VRSignal_base : public VRName {
         bool doUpdate();
 
         VRUpdatePtr getTriggerFkt();
+        vector<VRBaseWeakCb> getCallbacks();
 
         void clear();
 };

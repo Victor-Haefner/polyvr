@@ -56,13 +56,12 @@ class VRPhysicsManager {
         btAlignedObjectArray<btCollisionShape*> collisionShapes;
         btRigidBody* body;
 
-        map<btCollisionObject*, VRTransformPtr> OSGobjs;
+        map<btCollisionObject*, VRTransformWeakPtr> OSGobjs;
         map<btCollisionObject*, VRGeometryPtr> physics_visuals;
         vector<btCollisionObject*> physics_visuals_to_update;
         VRVisualLayer* physics_visual_layer = 0;
         VRMaterialPtr phys_mat = 0;
 
-        vector<Vec3f> collisionPoints;
         boost::recursive_mutex mtx;
         boost::recursive_mutex lpmtx;
         boost::recursive_mutex namtx;
@@ -81,8 +80,8 @@ class VRPhysicsManager {
         void updatePhysObjects();
 
     public:
-        void physicalize(VRTransformWeakPtr obj);
-        void unphysicalize(VRTransformWeakPtr obj);
+        void physicalize(VRTransformPtr obj);
+        void unphysicalize(VRTransformPtr obj);
 
         void addPhysicsUpdateFunction(VRFunction<int>* fkt, bool after);
         void dropPhysicsUpdateFunction(VRFunction<int>* fkt, bool after);
@@ -90,15 +89,9 @@ class VRPhysicsManager {
         void setGravity(Vec3f g);
 
         btSoftRigidDynamicsWorld* bltWorld();
-
         btSoftBodyWorldInfo* getSoftBodyWorldInfo();
 
-
-        void collectCollisionPoints();
-        vector<Vec3f>& getCollisionPoints();
-
-        void setShowPhysics(bool b);
-        bool getShowPhysics();
+        VRVisualLayer* getVisualLayer();
 
         boost::recursive_mutex& physicsMutex();
         boost::recursive_mutex& lowPriorityMutex();

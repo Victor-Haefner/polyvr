@@ -38,6 +38,9 @@ class VRGtkWindow : public VRWindow {
         VRGtkWindow(Gtk::DrawingArea* glarea);
         ~VRGtkWindow();
 
+        static VRGtkWindowPtr create(Gtk::DrawingArea* da);
+        VRGtkWindowPtr ptr();
+
         PassiveWindowRecPtr getOSGWindow();
         void render();
 

@@ -392,7 +392,11 @@ Germany</property>
       <column type="gchararray"/>
       <!-- column-name type -->
       <column type="gchararray"/>
+      <!-- column-name cla -->
+      <column type="gchararray"/>
       <!-- column-name mod -->
+      <column type="gchararray"/>
+      <!-- column-name col -->
       <column type="gchararray"/>
     </columns>
   </object>
@@ -515,6 +519,7 @@ cave allocated</property>
                         <child>
                           <object class="GtkCellRendererText" id="cellrenderertext1"/>
                           <attributes>
+                            <attribute name="cell-background">4</attribute>
                             <attribute name="text">0</attribute>
                           </attributes>
                         </child>
@@ -1405,12 +1410,6 @@ cave allocated</property>
       <column type="gchararray"/>
     </columns>
   </object>
-  <object class="GtkListStore" id="shadow_types">
-    <columns>
-      <!-- column-name types -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
   <object class="GtkListStore" id="script_list">
     <columns>
       <!-- column-name script -->
@@ -1458,6 +1457,12 @@ cave allocated</property>
   <object class="GtkListStore" id="setups">
     <columns>
       <!-- column-name name -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+  <object class="GtkListStore" id="shadow_types">
+    <columns>
+      <!-- column-name types -->
       <column type="gchararray"/>
     </columns>
   </object>
@@ -1782,6 +1787,24 @@ cave allocated</property>
                                 <child>
                                   <placeholder/>
                                 </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
                               </object>
                             </child>
                           </object>
@@ -1813,6 +1836,24 @@ cave allocated</property>
                                 <property name="can_focus">False</property>
                                 <property name="n_columns">2</property>
                                 <property name="homogeneous">True</property>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
                                 <child>
                                   <placeholder/>
                                 </child>
@@ -2002,20 +2043,6 @@ cave allocated</property>
                             <property name="label" translatable="yes">toolbutton19</property>
                             <property name="use_underline">True</property>
                             <property name="stock_id">gtk-orientation-portrait</property>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="homogeneous">True</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkToggleToolButton" id="toolbutton20">
-                            <property name="visible">True</property>
-                            <property name="can_focus">False</property>
-                            <property name="tooltip_text" translatable="yes">Calibration Foreground</property>
-                            <property name="label" translatable="yes">toolbutton20</property>
-                            <property name="use_underline">True</property>
-                            <property name="stock_id">gtk-paste</property>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -4100,8 +4127,11 @@ cave allocated</property>
                       <object class="GtkTable" id="table30">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="n_rows">16</property>
+                        <property name="n_rows">17</property>
                         <property name="n_columns">5</property>
+                        <child>
+                          <placeholder/>
+                        </child>
                         <child>
                           <object class="GtkLabel" id="label87">
                             <property name="visible">True</property>
@@ -4204,7 +4234,7 @@ cave allocated</property>
                           <packing>
                             <property name="left_attach">4</property>
                             <property name="right_attach">5</property>
-                            <property name="bottom_attach">16</property>
+                            <property name="bottom_attach">17</property>
                           </packing>
                         </child>
                         <child>
@@ -4214,8 +4244,8 @@ cave allocated</property>
                           </object>
                           <packing>
                             <property name="right_attach">4</property>
-                            <property name="top_attach">15</property>
-                            <property name="bottom_attach">16</property>
+                            <property name="top_attach">16</property>
+                            <property name="bottom_attach">17</property>
                             <property name="x_options">GTK_FILL</property>
                           </packing>
                         </child>
@@ -4284,8 +4314,8 @@ cave allocated</property>
                             <property name="label" translatable="yes">Export OSG:</property>
                           </object>
                           <packing>
-                            <property name="top_attach">14</property>
-                            <property name="bottom_attach">15</property>
+                            <property name="top_attach">15</property>
+                            <property name="bottom_attach">16</property>
                             <property name="x_options">GTK_FILL</property>
                             <property name="y_options">GTK_FILL</property>
                             <property name="y_padding">10</property>
@@ -4301,8 +4331,8 @@ cave allocated</property>
                           <packing>
                             <property name="left_attach">1</property>
                             <property name="right_attach">2</property>
-                            <property name="top_attach">14</property>
-                            <property name="bottom_attach">15</property>
+                            <property name="top_attach">15</property>
+                            <property name="bottom_attach">16</property>
                             <property name="x_options">GTK_FILL</property>
                             <property name="y_options">GTK_FILL</property>
                           </packing>
@@ -4315,8 +4345,8 @@ cave allocated</property>
                           <packing>
                             <property name="left_attach">3</property>
                             <property name="right_attach">4</property>
-                            <property name="top_attach">14</property>
-                            <property name="bottom_attach">15</property>
+                            <property name="top_attach">15</property>
+                            <property name="bottom_attach">16</property>
                             <property name="x_options">GTK_FILL</property>
                             <property name="y_options">GTK_FILL</property>
                           </packing>
@@ -4631,9 +4661,6 @@ cave allocated</property>
                           </packing>
                         </child>
                         <child>
-                          <placeholder/>
-                        </child>
-                        <child>
                           <object class="GtkLabel" id="label123">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
@@ -4663,6 +4690,23 @@ cave allocated</property>
                             <property name="bottom_attach">14</property>
                             <property name="x_options">GTK_FILL</property>
                             <property name="y_options">GTK_FILL</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkCheckButton" id="checkbutton_5">
+                            <property name="label" translatable="yes">Calibration screen</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="receives_default">False</property>
+                            <property name="draw_indicator">True</property>
+                          </object>
+                          <packing>
+                            <property name="right_attach">4</property>
+                            <property name="top_attach">14</property>
+                            <property name="bottom_attach">15</property>
+                            <property name="x_options">GTK_FILL</property>
+                            <property name="y_options">GTK_FILL</property>
+                            <property name="x_padding">10</property>
                           </packing>
                         </child>
                       </object>

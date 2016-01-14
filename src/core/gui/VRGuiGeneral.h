@@ -25,6 +25,7 @@ class VRGuiGeneral {
         void toggleTwoSided();
         void toggleDefferedShader();
         void toggleSSAO();
+        void toggleCalib();
 
         bool setSSAOradius( Gtk::ScrollType st, double d );
         bool setSSAOkernel( Gtk::ScrollType st, double d );

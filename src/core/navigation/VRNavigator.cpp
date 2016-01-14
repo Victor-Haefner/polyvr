@@ -41,6 +41,7 @@ VRNavPreset::~VRNavPreset() {}
 void VRNavPreset::updateBinding(VRNavBinding& b) {
     if (!active) return;
     if (dev == 0) return;
+
     b.clearSignal();
     auto sig = b.doRepeat ? dev->addToggleSignal(b.key) : dev->addSignal( b.key, b.state);
     sig->add(b.cb);
@@ -50,11 +51,11 @@ void VRNavPreset::updateBinding(VRNavBinding& b) {
 
 void VRNavPreset::setDevice(VRDevice* _dev) {
     dev = _dev;
-    dev->setTarget(target);
+    dev->setTarget(target.lock());
     for (auto& b : bindings) updateBinding(b);
 }
 
-void VRNavPreset::setTarget(VRTransformPtr _target) { target = _target; if (dev) dev->setTarget(target); }
+void VRNavPreset::setTarget(VRTransformPtr _target) { target = _target; if (dev) dev->setTarget(_target); }
 
 void VRNavPreset::activate() {
     active = true;
@@ -66,6 +67,9 @@ void VRNavPreset::deactivate() {
     active = false;
     for (auto& b : bindings) b.clearSignal();
 }
+
+vector<VRNavBinding>::iterator VRNavPreset::begin() { return bindings.begin(); }
+vector<VRNavBinding>::iterator VRNavPreset::end() { return bindings.end(); }
 
 vector<VRNavBinding>& VRNavPreset::getBindings() { return bindings; }
 

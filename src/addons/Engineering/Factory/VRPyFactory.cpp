@@ -1,6 +1,7 @@
 #include "VRPyFactory.h"
 #include "core/scripting/VRPyBaseT.h"
 #include "core/scripting/VRPyTypeCaster.h"
+#include "core/objects/VRTransform.h"
 
 template<> PyTypeObject VRPyBaseT<OSG::VRFactory>::type = {
     PyObject_HEAD_INIT(NULL)

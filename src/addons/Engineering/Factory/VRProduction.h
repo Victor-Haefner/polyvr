@@ -50,13 +50,13 @@ struct VRProcess : VRNamedID {
 };
 
 struct VRProduct : VRNamedID {
-    VROntology* description;
+    VROntologyPtr description;
     VRProduct(string name);
 };
 
 struct VRProductionMachine : VRNamedID {
     VRGeometryPtr geo = 0;
-    VROntology* description;
+    VROntologyPtr description;
     VRProductionMachine();
 };
 
@@ -68,7 +68,7 @@ struct VRProductionJob {
 
 class VRProduction {
     private:
-        VROntology* description;
+        VROntologyPtr description;
         map<int, VRProductionMachine*> machines;
         vector<VRProductionJob*> jobs;
         FLogistics* intraLogistics = 0;

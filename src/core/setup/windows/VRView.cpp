@@ -13,6 +13,7 @@
 #include "core/gui/VRGuiUtils.h"
 #include "core/gui/VRGuiManager.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/material/VRTexture.h"
 #include "core/objects/geometry/VRSprite.h"
 #include "core/objects/VRTransform.h"
 #include "core/objects/VRCamera.h"
@@ -35,9 +36,9 @@ void VRView::setMaterial() {
     Vec4f cax = Vec4f(0.9, 0.2, 0.2, 1);
     Vec4f cay = Vec4f(0.2, 0.9, 0.2, 1);
 
-    ImageRecPtr label = VRText::get()->create(name, "SANS 20", 20, Color4f(0,0,0,255), Color4f(bg[2]*255.0, bg[1]*255.0, bg[0]*255.0, 0));
-    float lw = label->getWidth();
-    float lh = label->getHeight();
+    auto label = VRText::get()->create(name, "SANS 20", 20, Color4f(0,0,0,255), Color4f(bg[2]*255.0, bg[1]*255.0, bg[0]*255.0, 0));
+    float lw = label->getImage()->getWidth();
+    float lh = label->getImage()->getHeight();
 
     int s=256;
     int b1 = 0.5*s-8;
@@ -66,7 +67,7 @@ void VRView::setMaterial() {
                 int u = x - pl[0] + lw*0.5;
                 int v = y - pl[1] + lh*0.5;
                 int w = 4*(u+v*lw);
-                const UInt8* d = label->getData();
+                const UInt8* d = label->getImage()->getData();
                 data[k] = Vec4f(d[w]/255.0, d[w+1]/255.0, d[w+2]/255.0, d[w+3]/255.0);
                 //data[k] = Vec4f(1,1,1, 1);
             }
@@ -75,7 +76,7 @@ void VRView::setMaterial() {
 
     img->set( Image::OSG_RGBA_PF, s, s, 1, 0, 1, 0, (const uint8_t*)&data[0], OSG::Image::OSG_FLOAT32_IMAGEDATA, true, 1);
 
-    viewGeoMat->setTexture(img);
+    viewGeoMat->setTexture(VRTexture::create(img));
     viewGeoMat->setLit(false);
 }
 
@@ -210,29 +211,8 @@ void VRView::setDecorators() {//set decorators, only if projection true
     PCDecoratorRight->editMFSurface()->push_back(screenUpperLeft);
 }
 
-//VRView::VRView(bool _active_stereo, bool _stereo, bool _projection, Pnt3f _screenLowerLeft, Pnt3f _screenLowerRight, Pnt3f _screenUpperRight, Pnt3f _screenUpperLeft, bool swapeyes) {
-VRView::VRView(string n) {
-    // pointer
-    lView = 0;
-    rView = 0;
-    lView_act = 0;
-    rView_act = 0;
-    PCDecoratorLeft = 0;
-    PCDecoratorRight = 0;
-    view_root = 0;
-    cam = 0;
-    real_root = 0;
-    user = 0;
-    viewGeo = 0;
-    name = n;
-    window = 0;
-
-    // flags
-    eyeinverted = false;
-    doStats = false;
-    active_stereo = false;
-    stereo = false;
-    projection = false;
+VRView::VRView(string name) {
+    this->name = name;
 
     // data
     position = Vec4f(0,0,1,1);
@@ -240,9 +220,6 @@ VRView::VRView(string n) {
     proj_up = Vec3f(0,1,0);
     proj_normal = Vec3f(0,0,1);
     proj_size = Vec2f(2,1);
-
-    //if (active_stereo) setActiveViewports();
-    //else setPassiveViewports();
 
     SolidBackgroundRecPtr sbg = SolidBackground::create();
     sbg->setColor(Color3f(0.7, 0.7, 0.7));
@@ -276,6 +253,9 @@ VRView::~VRView() {
     PCDecoratorRight = 0;
     stats = 0;
 }
+
+VRViewPtr VRView::create(string name) { return VRViewPtr(new VRView(name)); }
+VRViewPtr VRView::ptr() { return shared_from_this(); }
 
 int VRView::getID() { return ID; }
 void VRView::setID(int i) { ID = i; }
@@ -409,6 +389,7 @@ void VRView::setWindow() {
 }
 
 void VRView::setStereo(bool b) { stereo = b; update(); }
+void VRView::setActiveStereo(bool b) { active_stereo = b; update(); }
 
 void VRView::setStereoEyeSeparation(float v) {
     eyeSeparation = v;
@@ -423,6 +404,7 @@ void VRView::swapEyes(bool b) {
 }
 
 bool VRView::eyesInverted() { return eyeinverted; }
+bool VRView::activeStereo() { return active_stereo; }
 
 void VRView::update() {
     setViewports();
@@ -456,59 +438,7 @@ void VRView::setFotoMode(bool b) {
     } else update();
 }
 
-void VRView::setCallibrationMode(bool b) {
-    if (b) {
-        typedef OSG::Vector< OSG::UInt8, 4 > Vec4c;
-        int w = window->getWidth(); // TODO: get the right window size from server window
-        int h = window->getHeight();
-
-
-        if (w*h <= 0) return;
-
-        vector<Vec4c> data(w*h);
-        Vec4c c1(0,0,0,255);
-        Vec4c c2(255,255,255,255);
-
-        int w1 = 0.1*w;
-        int h1 = 0.1*h;
-        int w5 = 0.5*w;
-        int h5 = 0.5*h;
-
-        for (int i=0; i<w; i++) {
-            for (int j=0; j<h; j++) {
-                int x = i-w5;
-                int y = j-h5;
-                int l = sqrt(x*x+y*y);
-                int k = i+j*w;
-
-                data[k] = c1;
-                if (i == 0 || j == 0 || i == w-1 || j == h-1) data[k] = c2;
-                else if (i == w1 || j == w1 || i == w-w1 || j == h-h1) data[k] = c2;
-                else if (x == -h5 || y == -w5 || x == h5 || y == w5) data[k] = c2;
-                else if(l == h5 || l == w5 || l == w1) data[k] = c2;
-                else if(x == 0 || y == 0) data[k] = c2;
-            }
-        }
-
-        ImageRecPtr img = Image::create();
-        img->set(Image::OSG_RGBA_PF, w, h, 1, 0, 1, 0, (const uint8_t*)&data[0], Image::OSG_UINT8_IMAGEDATA, true, 1);
-
-        calib_fg = ImageForeground::create();
-        calib_fg->addImage(img, Pnt2f());
-        if (lView) lView->addForeground(calib_fg);
-        if (rView) rView->addForeground(calib_fg);
-    } else {
-        //if (lView) lView->removeObjFromForegrounds(calib_fg); // TODO
-        //if (rView) rView->removeObjFromForegrounds(calib_fg);
-        if (lView) lView = 0; // WORKAROUND
-        if (rView) rView = 0;
-        if (lView_act) lView_act = 0;
-        if (rView_act) rView_act = 0;
-        update();
-    }
-}
-
-ImageRecPtr VRView::grab() {
+VRTexturePtr VRView::grab() {
     return takeSnapshot();
 
     /*if (grabfg == 0) {

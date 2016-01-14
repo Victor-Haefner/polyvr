@@ -43,7 +43,14 @@ void VRSelection::apply(VRObjectPtr tree, bool force) {
 }
 
 void VRSelection::append(VRSelectionPtr sel) {
-    ;
+    for (auto& s : sel->selected) {
+        if (!selected.count(s.first)) selected[s.first] = s.second;
+        else {
+            auto& s1 = selected[s.first].subselection;
+            auto& s2 = s.second.subselection;
+            s1.insert( s1.end(), s2.begin(), s2.end() );
+        }
+    }
 }
 
 vector<VRGeometryWeakPtr> VRSelection::getPartials() {

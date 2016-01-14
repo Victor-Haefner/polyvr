@@ -23,9 +23,11 @@ string toString(OSG::Vec4f v);
 string toString(OSG::Vec3i v);
 
 // deprecated?
-bool toBool(string s);
-int toInt(string s);
-float toFloat(string s);
+bool toBool(string s, int* N = 0);
+int toInt(string s, int* N = 0);
+unsigned int toUInt(string s, int* N = 0);
+float toFloat(string s, int* N = 0);
+double toDouble(string s, int* N = 0);
 OSG::Vec2f toVec2f(string s);
 OSG::Vec3f toVec3f(string s);
 OSG::Vec4f toVec4f(string s);

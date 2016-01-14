@@ -24,7 +24,7 @@ Vec3f pose::up() { return data.size() > 2 ? data[2] : Vec3f(); }
 
 Matrix pose::asMatrix() {
     Matrix m;
-    MatrixLookAt(m, data[0], data[1], data[2]);
+    MatrixLookAt(m, data[0], data[0]+data[1], data[2]);
     return m;
 }
 

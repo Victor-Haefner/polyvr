@@ -1,5 +1,6 @@
 #include "VRProduction.h"
 #include "VRLogistics.h"
+#include "addons/Semantics/Reasoning/VRReasoner.h"
 #include "core/objects/geometry/VRGeometry.h"
 
 #include "core/utils/VRFunction.h"
@@ -23,13 +24,13 @@ VRProductionJob::VRProductionJob(VRProduct* p) {
 }
 
 VRProduction::VRProduction() {
-    description = new VROntology();
+    description = VROntology::create();
     intraLogistics = new FLogistics();
     network = intraLogistics->addNetwork();
 }
 
 VRProductionMachine::VRProductionMachine() {
-    description = new VROntology();
+    description = VROntology::create();
     geo = VRGeometry::create("ProductionMachine");
 }
 
@@ -54,7 +55,7 @@ VRProductionJob* VRProduction::queueJob(VRProduct* p, string job) {
 
 VRProduct::VRProduct(string name) {
     this->name = name;
-    description = new VROntology();
+    description = VROntology::create();
 }
 
 void VRProduction::stop() { running = false; }
@@ -77,11 +78,10 @@ void VRProduction::update() {
     if (dt < takt) return;
     last_takt = t;
 
-    VROntology* production = description;
+    VROntologyPtr production = description;
     for (VRProductionJob* job : jobs) {
-        VROntology* product = job->product->description;
-
-        VROntology* jobOnto = new VROntology();
+        /*VROntologyPtr product = job->product->description;
+        VROntologyPtr jobOnto = VROntology::create();
         jobOnto->merge(production);
         jobOnto->merge(product);
 
@@ -89,7 +89,7 @@ void VRProduction::update() {
         // what process to produce product p
         string q = "r(process) : r.result=p & r.result.state=done";
 
-        cout << jobOnto->answer(q) << endl;
+        cout << jobOnto->answer(q) << endl;*/
 
         /*auto features = product->getInstances("Feature"); // get all features and derived concepts
         cout << " job with " << features.size() << " features" << endl;
@@ -117,21 +117,21 @@ string VRProcess::toString() {
 
 VRObjectPtr VRProduction::test() {
     // ontologies
-    auto mathOnto = new VROntology();
-    auto featureOnto = new VROntology();
-    auto machineOnto = new VROntology();
-    auto prodMachineOnto = new VROntology();
-    auto manipOnto = new VROntology();
-    auto boreholeOnto = new VROntology();
-    auto drillingOnto = new VROntology();
-    auto processingOnto = new VROntology();
-    auto actionOnto = new VROntology();
-    auto processOnto = new VROntology();
-    auto productOnto = new VROntology();
-    auto productionOnto = new VROntology();
-    auto drillOnto = new VROntology();
-    auto robotOnto = new VROntology();
-    auto objectOnto = new VROntology();
+    auto mathOnto = VROntology::create();
+    auto featureOnto = VROntology::create();
+    auto machineOnto = VROntology::create();
+    auto prodMachineOnto = VROntology::create();
+    auto manipOnto = VROntology::create();
+    auto boreholeOnto = VROntology::create();
+    auto drillingOnto = VROntology::create();
+    auto processingOnto = VROntology::create();
+    auto actionOnto = VROntology::create();
+    auto processOnto = VROntology::create();
+    auto productOnto = VROntology::create();
+    auto productionOnto = VROntology::create();
+    auto drillOnto = VROntology::create();
+    auto robotOnto = VROntology::create();
+    auto objectOnto = VROntology::create();
 
     mathOnto->addConcept("Volume");
     mathOnto->addConcept("Vector");
@@ -319,7 +319,8 @@ VRObjectPtr VRProduction::test() {
     production->start();
 
     string q = "q(x):Process(x);is(x/state,1);Production(y);has(y,x);is(y/job,testProduct)";
-    production->description->answer(q);
+    auto reasoner = VRReasoner::create();
+    reasoner->process(q, production->description);
 
     VRObjectPtr anchor = VRObject::create("production");
     anchor->addChild(drill->geo);

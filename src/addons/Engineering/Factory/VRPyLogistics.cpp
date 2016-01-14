@@ -172,7 +172,7 @@ PyObject* FPyNetwork::stroke(FPyNetwork* self, PyObject* args) {
 template<> PyTypeObject VRPyBaseT<FPath>::type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
-    "VR.Factory.Path",             /*tp_name*/
+    "VR.Factory.FPath",             /*tp_name*/
     sizeof(FPyPath),             /*tp_basicsize*/
     0,                         /*tp_itemsize*/
     (destructor)dealloc, /*tp_dealloc*/

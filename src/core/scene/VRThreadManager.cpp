@@ -2,7 +2,7 @@
 #include "core/utils/VRFunction.h"
 
 #include <boost/thread/thread.hpp>
-#include <boost/thread.hpp>
+//#include <boost/thread.hpp>
 
 #include <OpenSG/OSGChangeList.h>
 #include <OpenSG/OSGThread.h>

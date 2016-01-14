@@ -29,14 +29,17 @@ struct VRCodeCompletionPrivate {
 void VRModDictInit(VRCodeCompletion *self) {
     auto scene = OSG::VRSceneManager::getCurrent();
     if (scene == 0) return;
-    for ( auto t : scene->getPyVRTypes() ) {
-        if (t == "VR globals") {
-            for (auto m : scene->getPyVRMethods(t)) self->priv->dict["VRMod"].push_back(m);
-            continue;
-        }
+    for ( auto mod : scene->getPyVRModules() ) {
+        if (mod != "VR") self->priv->dict["VR"].push_back(mod);
+        for ( auto t : scene->getPyVRTypes(mod) ) {
+            if (t == "globals") {
+                for (auto m : scene->getPyVRMethods(mod,t)) self->priv->dict[mod].push_back(m);
+                continue;
+            }
 
-        self->priv->dict["VRMod"].push_back(t);
-        for (auto m : scene->getPyVRMethods(t)) self->priv->dict["VRMeth_"+t].push_back(m);
+            self->priv->dict[mod].push_back(t);
+            //for (auto m : scene->getPyVRMethods(mod,t)) self->priv->dict[mod].push_back(m);
+        }
     }
     self->priv->VRMod_initiated = true;
 }
@@ -83,23 +86,25 @@ void provPopulate(GtkProvider* provider, GtkSourceCompletionContext* context) {
 	auto setProposals = [&](GList* ret = NULL) { gtk_source_completion_context_add_proposals(context, provider, ret, TRUE); };
 	auto startsWith = [](string s, string sw) { return s.substr(0, sw.size()) == sw; };
 
+    string mod = "VR";
 	string word = get_word(context);
-	if (word.size() <= 0) { setProposals(); return; }
+	if (word.size() <= 0 || !startsWith(word, "VR.")) { setProposals(); return; }
+    auto psplit = splitString(word, '.');
+    if (word[word.size()-1] == '.') psplit.push_back("");
+    if (psplit.size() > 1) word = psplit[psplit.size()-1];
+    if (psplit.size() > 2) mod = psplit[psplit.size()-2];
 
     GList* ret = NULL;
 	VRCodeCompletion* data = VRCodeCompletionCast(provider);
 	if (!data->priv->VRMod_initiated) VRModDictInit(data);
 
-	if (startsWith(word, "VR.")) {
-        auto psplit = splitString(word, '.');
-        if (psplit.size() > 1) word = psplit[1];
-        for (auto d : data->priv->dict["VRMod"]) {
-            if (psplit.size() == 1 || startsWith(d, word)) {
-                auto proposal = gtk_source_completion_item_new(d.c_str(), d.c_str(), 0, 0);
-                ret = g_list_prepend (ret, proposal);
-            }
+    if (!data->priv->dict.count(mod)) { setProposals(); return; }
+    for (auto d : data->priv->dict[mod]) {
+        if (startsWith(d, word)) {
+            auto proposal = gtk_source_completion_item_new(d.c_str(), d.c_str(), 0, 0);
+            ret = g_list_prepend (ret, proposal);
         }
-	}
+    }
 
 	setProposals( g_list_reverse(ret) );
 }

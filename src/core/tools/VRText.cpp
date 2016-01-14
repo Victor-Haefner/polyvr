@@ -17,6 +17,8 @@
 #include <pango/pangoft2.h>
 #include <pango/pangocairo.h>
 
+#include "core/objects/material/VRTexture.h"
+
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -40,7 +42,7 @@ void VRText::convertData(UChar8* data, int width, int height) {
     delete buffer;
 }
 
-ImageRecPtr VRText::createBmp (string text, string font, int width, int height, Color4f c, Color4f bg) {
+VRTexturePtr VRText::createBmp (string text, string font, int width, int height, Color4f c, Color4f bg) {
 
     //Cairo
     cairo_t *cr;
@@ -77,8 +79,8 @@ ImageRecPtr VRText::createBmp (string text, string font, int width, int height, 
     UChar8* data = cairo_image_surface_get_data(surface);
     convertData(data, width, height);
 
-    ImageRecPtr img = Image::create();
-    img->set( Image::OSG_BGRA_PF, width, height, 1, 1, 1, 0, data);
+    VRTexturePtr img = VRTexture::create();
+    img->getImage()->set( Image::OSG_BGRA_PF, width, height, 1, 1, 1, 0, data);
 
     cairo_destroy (cr);
     cairo_surface_destroy (surface);
@@ -115,7 +117,7 @@ VRText* VRText::get() {
     return singleton_opt;
 }
 
-ImageRecPtr VRText::create(string text, string font, int scale, Color4f fg, Color4f bg) {
+VRTexturePtr VRText::create(string text, string font, int scale, Color4f fg, Color4f bg) {
     int l = text.size();
     return createBmp(text, font, scale*l, scale*1.5, fg, bg);
 }
@@ -123,7 +125,7 @@ ImageRecPtr VRText::create(string text, string font, int scale, Color4f fg, Colo
 SimpleTexturedMaterialRecPtr VRText::getTexture (string text, string font, int scale, Color4f fg, Color4f bg) {
     SimpleTexturedMaterialRecPtr tex = SimpleTexturedMaterial::create();
     int l = text.size();
-    tex->setImage( createBmp(text, font, scale*l, scale*1.5, fg, bg) );
+    tex->setImage( createBmp(text, font, scale*l, scale*1.5, fg, bg)->getImage() );
     return tex;
 }
 

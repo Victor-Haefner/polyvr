@@ -52,6 +52,7 @@ PyMethodDef VRPySelector::methods[] = {
     {"select", (PyCFunction)VRPySelector::select, METH_VARARGS, "Select object - select( obj )" },
     {"update", (PyCFunction)VRPySelector::update, METH_NOARGS, "Update selection visualisation - update()" },
     {"set", (PyCFunction)VRPySelector::set, METH_VARARGS, "Set selection - set( selection )" },
+    {"add", (PyCFunction)VRPySelector::add, METH_VARARGS, "Add to selection - add( selection )" },
     {"clear", (PyCFunction)VRPySelector::clear, METH_NOARGS, "Clear selection - deselect()" },
     {"getSelection", (PyCFunction)VRPySelector::getSelection, METH_NOARGS, "Return the selected object - object getSelection()" },
     {"setBorder", (PyCFunction)VRPySelector::setBorder, METH_VARARGS, "Set the border with and toggles smoothness - setBorder(int width, bool smooth)" },
@@ -72,21 +73,28 @@ PyObject* VRPySelector::setColor(VRPySelector* self, PyObject* args) {
     Py_RETURN_TRUE;
 }
 
+PyObject* VRPySelector::select(VRPySelector* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    VRPyObject* obj = 0;
+    if (! PyArg_ParseTuple(args, "O", &obj)) return NULL;
+    if (!isNone((PyObject*)obj)) self->obj->select(obj->objPtr);
+    Py_RETURN_TRUE;
+}
+
 PyObject* VRPySelector::set(VRPySelector* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    VRPySelection* obj = 0;
+    if (! PyArg_ParseTuple(args, "O", &obj)) return NULL;
+    if (!isNone((PyObject*)obj)) self->obj->select(obj->objPtr);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPySelector::add(VRPySelector* self, PyObject* args) {
     if (!self->valid()) return NULL;
     VRPySelection* obj;
     parseObject(args, obj);
     if (obj == 0) return NULL;
-    self->obj->select(obj->objPtr);
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPySelector::select(VRPySelector* self, PyObject* args) {
-    if (!self->valid()) return NULL;
-    VRPyObject* obj;
-    parseObject(args, obj);
-    if (obj == 0) return NULL;
-    self->obj->select(obj->objPtr);
+    self->obj->add(obj->objPtr);
     Py_RETURN_TRUE;
 }
 

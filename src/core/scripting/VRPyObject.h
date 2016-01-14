@@ -5,7 +5,6 @@
 #include "VRPyBase.h"
 
 struct VRPyObject : VRPyBaseT<OSG::VRObject> {
-    static PyMemberDef members[];
     static PyMethodDef methods[];
 
     static int compare(PyObject* o1, PyObject* o2);
@@ -35,6 +34,7 @@ struct VRPyObject : VRPyBaseT<OSG::VRObject> {
     static PyObject* addTag(VRPyObject* self, PyObject* args);
     static PyObject* hasTag(VRPyObject* self, PyObject* args);
     static PyObject* remTag(VRPyObject* self, PyObject* args);
+    static PyObject* getTags(VRPyObject* self);
     static PyObject* hasAncestorWithTag(VRPyObject* self, PyObject* args);
     static PyObject* getChildrenWithTag(VRPyObject* self, PyObject* args);
     static PyObject* setTravMask(VRPyObject* self, PyObject* args);

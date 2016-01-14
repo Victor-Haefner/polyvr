@@ -25,6 +25,9 @@ VRMultiWindow::~VRMultiWindow() {
     win = 0;
 }
 
+VRMultiWindowPtr VRMultiWindow::ptr() { return static_pointer_cast<VRMultiWindow>( shared_from_this() ); }
+VRMultiWindowPtr VRMultiWindow::create() { return shared_ptr<VRMultiWindow>(new VRMultiWindow() ); }
+
 void VRMultiWindow::addServer(string server) { servers.push_back(server); }
 
 string VRMultiWindow::getServer(int x, int y) {
@@ -67,7 +70,7 @@ void VRMultiWindow::initialize() {
     win->setHServers(Nx);
     win->setVServers(Ny);
     for (auto s : servers) win->editMFServers()->push_back(s);
-    for (auto v : views) v->setWindow(win);
+    for (auto wv : views) if (auto v = wv.lock()) v->setWindow(win);
 
     Thread::getCurrentChangeList()->commitChangesAndClear();
     Thread::getCurrentChangeList()->fillFromCurrentState();

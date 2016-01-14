@@ -32,20 +32,23 @@ VRObject::VRObject(string _name) {
 
 VRObject::~VRObject() {
     NodeRecPtr p;
-    if (node !=  0) p = node->getParent();
-    if (p !=  0) p->subChild(node);
+    if (node) p = node->getParent();
+    if (p) p->subChild(node);
 }
 
 void VRObject::destroy() {
     auto p = ptr();
-    for (auto c : children) if(c) c->detach();
     if (getParent()) getParent()->subChild( p );
 }
 
-VRObjectPtr VRObject::create(string name) { return shared_ptr<VRObject>(new VRObject(name) ); }
-VRObjectPtr VRObject::ptr() {
-    return shared_from_this();
+void VRObject::detach() {
+    if (getParent() == 0) return;
+    getParent()->subChild(ptr(), true);
+    parent.reset();
 }
+
+VRObjectPtr VRObject::create(string name) { return VRObjectPtr(new VRObject(name) ); }
+VRObjectPtr VRObject::ptr() { return shared_from_this(); }
 
 void VRObject::printInformation() {;}
 
@@ -61,6 +64,12 @@ int VRObject::getID() { return ID; }
 string VRObject::getType() { return type; }
 bool VRObject::hasAttachment(string name) { return attachments.count(name); }
 void VRObject::remAttachment(string name) { attachments.erase(name); }
+
+vector<string> VRObject::getAttachmentNames() {
+    vector<string> res;
+    for (auto a : attachments) res.push_back(a.first);
+    return res;
+}
 
 vector<VRObjectPtr> VRObject::getChildrenWithAttachment(string name) {
     vector<VRObjectPtr> res;
@@ -167,12 +176,6 @@ void VRObject::clearChildren() {
         subChild( c );
         c->destroy();
     }
-}
-
-void VRObject::detach() {
-    if (getParent() == 0) return;
-    getParent()->subChild(ptr(), true);
-    parent.reset();
 }
 
 VRObjectPtr VRObject::getChild(int i) {

@@ -1,6 +1,8 @@
 #include "VRImport.h"
 #include "VRCOLLADA.h"
 #include "VRPLY.h"
+#include "VRSTEP.h"
+#include "addons/Engineering/Factory/VRFactory.h"
 
 #include <OpenSG/OSGSceneFileHandler.h>
 #include <OpenSG/OSGNameAttachment.h>
@@ -58,7 +60,8 @@ VRTransformPtr VRImport::Cache::retrieve() {
     return root;
 }
 
-VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, string preset) {           cout << "VRImport::load " << path << endl;
+VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, string preset) {
+    cout << "VRImport::load " << path << " " << preset << endl;
     reload = reload? true : (cache.count(path) == 0);
     if (!reload) {
         auto res = cache[path].retrieve();
@@ -68,37 +71,29 @@ VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, stri
     }
 
     if (path.size() < 4) return 0;
-
     setlocale(LC_ALL, "C");
 
-    if (preset == "PLY") {
-        VRGeometryPtr geo = loadPly(path);
-        if (parent) parent->addChild(geo);
-        return geo; // TODO: use cache!
-    }
+    VRTransformPtr res;
+    if (preset == "SOLIDWORKS-VRML2") { VRFactory f; res = f.loadVRML(path); }
+    if (preset == "STEP") { VRSTEP step; res = step.load(path); }
+    if (preset == "PLY") res = loadPly(path);
+    if (res) { if (parent) parent->addChild(res); return res; } // TODO: use cache!
 
     if (preset == "OSG" || preset == "COLLADA") { // TODO: using OSG importer for collada geometries
         NodeRecPtr n = 0;
         n = SceneFileHandler::the()->read(path.c_str());
         if (n == 0) return 0;
-
         map<string, bool> m;
         fixEmptyNames(n,m);
         OSGConstruct(n, parent, path, path);
     }
 
-    if (preset == "COLLADA") {
-        cout << "load collada - root " << cache[path].root->getName() << endl;
-        loadCollada(path, cache[path].root); // TODO: use cache!
-    }
+    if (preset == "COLLADA") loadCollada(path, cache[path].root); // TODO: use cache!
 
     if (cache.count(path) == 0) return 0;
     cache[path].root = prependTransform(cache[path].root, path);
     if (parent) parent->addChild(cache[path].root);
-
-    auto res = cache[path].retrieve();
-    cout << "load " << path << " : " << res << endl;
-    return res;
+    return cache[path].retrieve();
 }
 
 VRObjectPtr VRImport::OSGConstruct(NodeRecPtr n, VRObjectPtr parent, string name, string currentFile, NodeCore* geoTrans, string geoTransName) {
