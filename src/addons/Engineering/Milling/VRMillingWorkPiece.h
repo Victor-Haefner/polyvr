@@ -32,6 +32,12 @@ private:
 
     static Vec3f mulVec3f(Vec3f lhs, Vec3f rhs);
 
+    //functions for the new collision calculation (by Marie)
+    float maxProfile(Vec3f position);
+    float newy(float newx, int p);
+    int lookForNearestIndex(float newx);
+    float lookForMaxInList(vector<Vec2f> liste);
+
 public:
     VRWorkpieceElement(VRMillingWorkPiece& workpiece, VRWorkpieceElement* parent,
                        Vec3i blocks, Vec3f size, Vec3f offset, Vec3f position, const int level);
@@ -52,6 +58,7 @@ public:
     void split();
     bool collides(Vec3f position);
     bool collide(Vec3f position);
+    bool doesCollide(Vec3f position); //Add of Marie
     void deleteElement();
     bool isDeleted() const;
     void build();
@@ -84,6 +91,8 @@ class VRMillingWorkPiece : public VRGeometry {
         float blockSize = 0.01;
         int geometryCreateLevel = 0;
 
+        vector<Vec2f> profile; //Add of Marie
+
     public:
         VRMillingWorkPiece(string name);
         VRMillingWorkPiecePtr ptr();
@@ -91,6 +100,7 @@ class VRMillingWorkPiece : public VRGeometry {
         void init(Vec3i gSize, float bSize = 0.01);
         void reset();
         void setCuttingTool(VRTransformPtr geo);
+        void addPointProfile(Vec2f point); //Add of Marie
         void updateGeometry();
         void setLevelsPerGeometry(int levels);  // this will take effect after the next reset
         void setRefreshWait(int updatesToWait); // this will take effect immediately

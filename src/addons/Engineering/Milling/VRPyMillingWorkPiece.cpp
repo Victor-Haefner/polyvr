@@ -65,6 +65,8 @@ PyMethodDef VRPyMillingWorkPiece::methods[] = {
     "workpiece simulation" },
     {"updateGeometry", (PyCFunction)VRPyMillingWorkPiece::updateGeometry, METH_VARARGS,
     "updateGeometry() - updates the geometry of the workpiece immediately." },
+    {"addPointProfile", (PyCFunction)VRPyMillingWorkPiece::addPointProfile, METH_VARARGS,
+    "addPointProfile() - adds a point to the worktool profile."},
     {NULL}  /* Sentinel */
 };
 
@@ -88,6 +90,16 @@ PyObject* VRPyMillingWorkPiece::setCuttingTool(VRPyMillingWorkPiece* self, PyObj
     VRPyTransform* geo;
     if (! PyArg_ParseTuple(args, "O", &geo)) return NULL;
     self->objPtr->setCuttingTool( geo->objPtr );
+    Py_RETURN_TRUE;
+}
+
+//Add of Marie
+PyObject* VRPyMillingWorkPiece::addPointProfile(VRPyMillingWorkPiece* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    PyObject* newPoint;
+    if (!PyArg_ParseTuple(args, "O", &newPoint)) return NULL;
+    auto p = parseVec2fList(newPoint);
+    self->objPtr->addPointProfile(p);
     Py_RETURN_TRUE;
 }
 
