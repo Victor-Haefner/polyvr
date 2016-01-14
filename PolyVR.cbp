@@ -226,6 +226,8 @@
 		<Unit filename="src/addons/Bullet/Fluids/VRFluids.h" />
 		<Unit filename="src/addons/Bullet/Fluids/VRPyFluids.cpp" />
 		<Unit filename="src/addons/Bullet/Fluids/VRPyFluids.h" />
+		<Unit filename="src/addons/Bullet/Particles/VREmitter.cpp" />
+		<Unit filename="src/addons/Bullet/Particles/VREmitter.h" />
 		<Unit filename="src/addons/Bullet/Particles/VRParticle.h" />
 		<Unit filename="src/addons/Bullet/Particles/VRParticles.cpp" />
 		<Unit filename="src/addons/Bullet/Particles/VRParticles.h" />
