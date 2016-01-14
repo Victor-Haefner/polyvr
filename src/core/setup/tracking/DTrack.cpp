@@ -92,6 +92,8 @@
 #define DTRACK_CMD_STOP_DATA            12
 #define DTRACK_CMD_SEND_N_DATA          13
 
+#include "core/utils/toString.h"
+
 // Local prototypes:
 
 static char* string_nextline(char* str, char* start, int len);
@@ -1080,62 +1082,10 @@ static char* string_nextline(char* str, char* start, int len)
 	return NULL;                      // no new line found in buffer
 }
 
-
-// Read next 'int' value from string:
-// str (i): string
-// i (o): read value
-// return value (o): pointer behind read value in str; NULL in case of error
-
-static char* string_get_i(char* str, int* i)
-{
-	char* s;
-
-	*i = (int )strtol(str, &s, 0);
-	return (s == str) ? NULL : s;
-}
-
-
-// Read next 'unsigned int' value from string:
-// str (i): string
-// ui (o): read value
-// return value (o): pointer behind read value in str; NULL in case of error
-
-static char* string_get_ui(char* str, unsigned int* ui)
-{
-	char* s;
-
-	*ui = (unsigned int )strtoul(str, &s, 0);
-	return (s == str) ? NULL : s;
-}
-
-
-// Read next 'double' value from string:
-// str (i): string
-// d (o): read value
-// return value (o): pointer behind read value in str; NULL in case of error
-
-static char* string_get_d(char* str, double* d)
-{
-	char* s;
-
-	*d = strtod(str, &s);
-	return (s == str) ? NULL : s;
-}
-
-
-// Read next 'float' value from string:
-// str (i): string
-// f (o): read value
-// return value (o): pointer behind read value in str; NULL in case of error
-
-static char* string_get_f(char* str, float* f)
-{
-	char* s;
-
-	*f = (float )strtod(str, &s);   // strtof() only available in GNU-C
-	return (s == str) ? NULL : s;
-}
-
+static char* string_get_i(char* str, int* f) { if (!str) return 0; int N = 0; *f = toInt(str, &N); if (N == 0) return 0; return str+N; }
+static char* string_get_ui(char* str, unsigned int* f) { if (!str) return 0; int N = 0; *f = toUInt(str, &N); if (N == 0) return 0; return str+N; }
+static char* string_get_d(char* str, double* f) { if (!str) return 0; int N = 0; *f = toDouble(str, &N); if (N == 0) return 0; return str+N; }
+static char* string_get_f(char* str, float* f) { if (!str) return 0; int N = 0; *f = toFloat(str, &N); if (N == 0) return 0; return str+N; }
 
 // Process next block '[...]' in string:
 // str (i): string

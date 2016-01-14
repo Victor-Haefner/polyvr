@@ -25,6 +25,6 @@
     <Device name="mobile" type="mobile"/>
     <Device name="mouse" type="mouse"/>
   </Devices>
-  <TrackingART active="1" offset="0 0 0" port="5000" up=""/>
+  <TrackingART active="1" offset="0 0 0" port="5001" up=""/>
   <TrackingVRPN active="1" port="3883"/>
 </Setup>
