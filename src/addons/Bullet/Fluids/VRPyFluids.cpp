@@ -47,6 +47,8 @@ template<> PyTypeObject VRPyBaseT<OSG::VRFluids>::type = {
 PyMethodDef VRPyFluids::methods[] = {
     {"getGeometry", (PyCFunction)VRPyFluids::getGeometry, METH_VARARGS, "Get geometry - Geometry getGeometry()" },
     {"spawnCuboid", (PyCFunction)VRPyFluids::spawnCuboid, METH_VARARGS, "spawnCuboid(x,y,z) \n\tspawnCuboid(x,y,z,distance,a,b,c) //all float \n\tdistance is space between particles"},
+    {"spawnEmitter", (PyCFunction)VRPyFluids::spawnEmitter, METH_VARARGS, "int ID spawnEmitter(x,y,z) \n\tint id = spawnEmitter(x,y,z,distance,a,b,c) //all float \n\tdistance is space between particles"},
+    {"stopEmitter", (PyCFunction)VRPyFluids::stopEmitter, METH_VARARGS, "stopEmitter(int id)"},
 
     {"setRadius", (PyCFunction)VRPyFluids::setRadius, METH_VARARGS, "setRadius(float radius, float variation) \n\tsetRadius(0.05, 0.02)"},
     {"setSimType", (PyCFunction)VRPyFluids::setSimType, METH_VARARGS, "setSimType(string type, bool forceUpdate=False) \n\tsetSimType('SPH', True) #or XSPH"},
@@ -81,6 +83,24 @@ PyObject* VRPyFluids::spawnCuboid(VRPyFluids* self, PyObject* args) {
 
     int num = self->objPtr->spawnCuboid(position, size, distance);
     return PyInt_FromLong((long) num);
+}
+
+PyObject* VRPyFluids::spawnEmitter(VRPyFluids* self, PyObject* args) {
+    checkObj(self);
+    PyObject *base, *dir;
+    int from=0, to=0, interval=0;
+    if (! PyArg_ParseTuple(args, "OOiii", &base, &dir, &from, &to, &interval)) { Py_RETURN_FALSE; }
+    // NOTE loop is not implemented yet, so set it to false
+    int id = self->objPtr->setEmitter(parseVec3fList(base), parseVec3fList(dir), from, to, interval, false);
+    return PyInt_FromLong((long) id);
+}
+
+PyObject* VRPyFluids::stopEmitter(VRPyFluids* self, PyObject* args) {
+    checkObj(self);
+    int id = 0;
+    if (! PyArg_ParseTuple(args, "i", &id) ) { Py_RETURN_FALSE; }
+    self->objPtr->disableEmitter(id);
+    Py_RETURN_TRUE;
 }
 
 PyObject* VRPyFluids::setAmount(VRPyFluids* self, PyObject* args) {

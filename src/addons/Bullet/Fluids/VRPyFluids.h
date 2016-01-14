@@ -11,6 +11,8 @@ struct VRPyFluids : VRPyBaseT<OSG::VRFluids> {
 
     static PyObject* getGeometry(VRPyFluids* self);
     static PyObject* spawnCuboid(VRPyFluids* self, PyObject* args);
+    static PyObject* spawnEmitter(VRPyFluids* self, PyObject* args);
+    static PyObject* stopEmitter(VRPyFluids* self, PyObject* args);
 
     static PyObject* setAmount(VRPyFluids* self, PyObject* args);
     static PyObject* setRadius(VRPyFluids* self, PyObject* args);

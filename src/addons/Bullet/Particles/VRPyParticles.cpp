@@ -47,8 +47,8 @@ template<> PyTypeObject VRPyBaseT<OSG::VRParticles>::type = {
 PyMethodDef VRPyParticles::methods[] = {
     {"getGeometry", (PyCFunction)VRPyParticles::getGeometry, METH_VARARGS, "Get geometry - Geometry getGeometry()" },
     {"spawnCuboid", (PyCFunction)VRPyParticles::spawnCuboid, METH_VARARGS, "spawnCuboid(x,y,z) \n\tspawnCuboid(x,y,z,distance,a,b,c) //all float \n\tdistance is space between particles"},
-    {"spawnEmitter", (PyCFunction)VRPyParticles::spawnEmitter, METH_VARARGS, "spawnEmitter(x,y,z) \n\tspawnEmitter(x,y,z,distance,a,b,c) //all float \n\tdistance is space between particles"},
-    {"stopEmitter", (PyCFunction)VRPyParticles::stopEmitter, METH_VARARGS, "stopEmitter()"},
+    {"spawnEmitter", (PyCFunction)VRPyParticles::spawnEmitter, METH_VARARGS, "int ID spawnEmitter(x,y,z) \n\tint id = spawnEmitter(x,y,z,distance,a,b,c) //all float \n\tdistance is space between particles"},
+    {"stopEmitter", (PyCFunction)VRPyParticles::stopEmitter, METH_VARARGS, "stopEmitter(int id)"},
 
     {"setAmount", (PyCFunction)VRPyParticles::setAmount, METH_VARARGS, "setAmount(int amount) \n\tsetRadius(100)"},
     {"setRadius", (PyCFunction)VRPyParticles::setRadius, METH_VARARGS, "setRadius(radius, variation) \n\tsetRadius(0.05, 0.02)"},
@@ -89,13 +89,15 @@ PyObject* VRPyParticles::spawnEmitter(VRPyParticles* self, PyObject* args) {
     int from=0, to=0, interval=0;
     if (! PyArg_ParseTuple(args, "OOiii", &base, &dir, &from, &to, &interval)) { Py_RETURN_FALSE; }
     // NOTE loop is not implemented yet, so set it to false
-    self->objPtr->setEmitter(parseVec3fList(base), parseVec3fList(dir), from, to, interval, false);
-    Py_RETURN_TRUE;
+    int id = self->objPtr->setEmitter(parseVec3fList(base), parseVec3fList(dir), from, to, interval, false);
+    return PyInt_FromLong((long) id);
 }
 
 PyObject* VRPyParticles::stopEmitter(VRPyParticles* self, PyObject* args) {
     checkObj(self);
-    self->objPtr->disableEmitter();
+    int id = 0;
+    if (! PyArg_ParseTuple(args, "i", &id) ) { Py_RETURN_FALSE; }
+    self->objPtr->disableEmitter(id);
     Py_RETURN_TRUE;
 }
 
