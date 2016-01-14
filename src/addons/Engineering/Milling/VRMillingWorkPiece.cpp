@@ -282,9 +282,11 @@ bool VRWorkpieceElement::doesCollide(Vec3f position) {
         printf("ptoolx: %f\n", ptoolx);
         printf("ptoolz: %f\n", ptoolz);
         //printf("before second if\n");
-        if ((abs(px - sx/2.0f - ptoolx) < abs(maximum - ptoolx))
-            && (abs(pz - sz/2.0f - ptoolz) < abs(maximum - ptoolz)))
+        //if ((abs(px - sx/2.0f - ptoolx) < abs(maximum - ptoolx))
+        //    && (abs(pz - sz/2.0f - ptoolz) < abs(maximum - ptoolz)))
+        if ((ptoolz - maximum < pz + sz/2.0f) && (ptoolz + maximum > pz - sz/2.0) && (ptoolx - maximum < px + sx/2.0f) && (ptoolx + maximum > px - sx/2.0))
         {
+            //if ()
             printf("cut\n\n");
             return true;
         }
