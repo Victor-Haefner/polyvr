@@ -859,8 +859,8 @@ VRGuiSetup::VRGuiSetup() {
     updateSetupList();
     updateSetup();
 
-    VRDeviceCb fkt = VRFunction<VRDevice*>::create("update gui setup", boost::bind(&VRGuiSetup::updateSetup, this) );
-    VRSetupManager::getCurrent()->getSignal_on_new_art_device()->add(fkt);
+    updateSetupCb = VRFunction<VRDevice*>::create("update gui setup", boost::bind(&VRGuiSetup::updateSetup, this) );
+    VRSetupManager::getCurrent()->getSignal_on_new_art_device()->add(updateSetupCb);
 }
 
 void VRGuiSetup::setTreeRow(Glib::RefPtr<Gtk::TreeStore> tree_store, Gtk::TreeStore::Row row, string name, string type, gpointer ptr, string fg, string bg) {

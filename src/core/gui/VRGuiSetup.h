@@ -39,6 +39,7 @@ class VRGuiSetup {
         VRGuiContextMenu* menu;
         VRMultiWindow* mwindow;
 	    shared_ptr<VRFunction<int> > updatePtr;
+	    VRDeviceCb updateSetupCb;
 
         bool guard; // update guard
 
