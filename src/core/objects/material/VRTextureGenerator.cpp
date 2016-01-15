@@ -72,7 +72,7 @@ VRTexturePtr VRTextureGenerator::readSharedMemory(string segment, string object)
     auto vs = tparams.dims;
     auto vdata = sm.getVector<float>(object);
 
-    cout << "read shared texture " << object << " " << vs << "   " << tparams.pixel_format << "  " << tparams.data_type << "  " << vdata.size() << endl;
+    //cout << "read shared texture " << object << " " << vs << "   " << tparams.pixel_format << "  " << tparams.data_type << "  " << vdata.size() << endl;
 
     img = VRTexture::create();
     img->getImage()->set(tparams.pixel_format, vs[0], vs[1], vs[2], 0, 1, 0.0, (const uint8_t*)&vdata[0], tparams.data_type, true, 1);
