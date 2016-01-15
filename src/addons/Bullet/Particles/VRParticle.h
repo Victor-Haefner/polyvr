@@ -41,6 +41,11 @@ struct Particle {
 
 
     void setup(btVector3 v, bool activate) {
+        if (setUp) {
+            body->activate(activate);
+            return;
+        }
+
         setUp = true;
         btTransform t;
         t.setOrigin(btVector3(v.x(),v.y(),v.z()));
@@ -105,7 +110,7 @@ struct SphParticle : public Particle {
         sphActive = active;
         body->activate(active);
     }
-    
+
 };
 OSG_END_NAMESPACE;
 #endif // VRPARTICLE_H_INCLUDED
