@@ -98,11 +98,13 @@ inline void VRFluids::updateSPH(int from, int to) {
         #pragma omp parallel for private(p) shared(from, to)
         for (int i=from; i < to; i++) {
             p = (SphParticle*) particles[i];
-            sph_calc_pressureForce(p, from, to);
-            sph_calc_viscosityForce(p, from, to);
-            // update Particle Acceleration:
-            btVector3 force = (p->sphPressureForce + p->sphViscosityForce);
-            p->body->applyCentralForce(force);
+            if (p->sphActive) {
+                sph_calc_pressureForce(p, from, to);
+                sph_calc_viscosityForce(p, from, to);
+                // update Particle Acceleration:
+                btVector3 force = (p->sphPressureForce + p->sphViscosityForce);
+                p->body->applyCentralForce(force);
+            }
 
             // btVector3 pf = p->sphPressureForce; // NOTE very ressource heavy debug foo here
             // btVector3 vis = p->sphViscosityForce;

@@ -29,6 +29,16 @@ struct Particle {
     int collisionGroup = 1; // init value -- set up in spawnAt()
     int collisionMask = 2; // init value -- set up in spawnAt()
 
+    Particle(btDiscreteDynamicsWorld* world = 0) {}
+
+    ~Particle() {
+        VRScenePtr scene = VRSceneManager::getCurrent();
+        if (scene && body) { scene->bltWorld()->removeRigidBody(body); }
+        if (body) { delete body; }
+        if (shape) { delete shape; }
+        if (motionState) { delete motionState; }
+    }
+
 
     void setup(btVector3 v, bool activate) {
         setUp = true;
@@ -69,28 +79,33 @@ struct Particle {
         world->addRigidBody(body, collisionGroup, collisionMask);
     }
 
-    Particle(btDiscreteDynamicsWorld* world = 0) {}
-
-    ~Particle() {
-        VRScenePtr scene = VRSceneManager::getCurrent();
-        if (scene && body) { scene->bltWorld()->removeRigidBody(body); }
-        if (body) { delete body; }
-        if (shape) { delete shape; }
-        if (motionState) { delete motionState; }
+    void setActive(bool active = true) {
+        body->activate(active);
     }
+
 };
 
 struct SphParticle : public Particle {
+    bool sphActive = true;
+    // TODO @depricated
     float sphArea = 5 * radius;
     float sphDensity = 0.0;
     float sphPressure = 0.0;
     btVector3 sphPressureForce;
     btVector3 sphViscosityForce;
 
-    SphParticle(btDiscreteDynamicsWorld* world = 0) {
+
+    SphParticle(btDiscreteDynamicsWorld* world = 0, bool active = true) {
+        sphActive = active;
         sphPressureForce.setZero();
         sphViscosityForce.setZero();
     }
+
+    void setActive(bool active = true) {
+        sphActive = active;
+        body->activate(active);
+    }
+    
 };
 OSG_END_NAMESPACE;
 #endif // VRPARTICLE_H_INCLUDED
