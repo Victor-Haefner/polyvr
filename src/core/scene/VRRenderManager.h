@@ -10,6 +10,7 @@ using namespace std;
 
 class VRLight;
 class VRDefShading;
+class VRSSAO;
 class VRObject;
 class VRCamera;
 
@@ -19,21 +20,23 @@ class VRRenderManager : public VRStorage {
         bool occlusionCulling = false;
         bool twoSided = true;
         bool deferredRendering = false;
-        bool ssao = false;
+        bool do_ssao = false;
         bool calib = false;
         int ssao_kernel = 4;
         int ssao_noise = 4;
         float ssao_radius = 0.02;
 
-        void initCalib(VRObjectPtr o);
+        map<string, VRGeometryPtr> renderLayer;
+        VRMaterialPtr setupRenderLayer(string name);
+
+        void initCalib(VRMaterialPtr mat);
 
     protected:
         VRDefShading* defShading = 0;
+        VRSSAO* ssao = 0;
         VRObjectPtr root = 0;
         VRObjectPtr root_def_shading = 0;
-        VRObjectPtr root_ssao = 0;
         VRObjectPtr root_system = 0;
-        VRObjectPtr root_calib = 0;
         map<int, VRLightPtr> light_map;
 
     public:
