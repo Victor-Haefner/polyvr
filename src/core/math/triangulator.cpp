@@ -72,11 +72,17 @@ VRGeometryPtr Triangulator::compute() {
 
     if (geo) {
         if (geo->valid()) {
+            /*cout << "geo data: " << endl;
+            cout << geo->pos->size() << " " << geo->norms->size() << endl;
+            for (int i=0; i<geo->types->size(); i++) cout << geo->types->getValue(i) << " "; cout << endl;
+            for (int i=0; i<geo->lengths->size(); i++) cout << geo->lengths->getValue(i) << " "; cout << endl;
+            for (int i=0; i<geo->indices->size(); i++) cout << geo->indices->getValue(i) << " "; cout << endl;
+            cout << "geo data end" << endl;*/
             g->setTypes(geo->types);
-            g->setLengths(geo->lengths);
-            //g->setIndices(geo->indices);
             g->setPositions(geo->pos);
             g->setNormals(geo->norms);
+            g->setLengths(geo->lengths);
+            g->setIndices(geo->indices);
         }
     }
 
@@ -89,43 +95,50 @@ void tessBeginCB(GLenum which) {
     if (!Self->geo) Self->geo = new Triangulator::GeoData();
     Self->geo->current_primitive = which;
     Self->geo->types->addValue(which);
-    cout << "beg " << which << endl;
+    //cout << "beg " << which << endl;
 }
 
 void tessEndCB() {
     auto Self = current_triangulator;
     int Nprim = Self->geo->current_vertex_count;
+
+    int Ni0 = Self->geo->indices->size();
+    int Nidx = Nprim;
     /*switch(Self->geo->current_primitive) {
-        case 0x0000: break; // GL_POINTS
-        case 0x0001: Nprim *= 2; break; // GL_LINES
-        case 0x0002: Nprim = 1; break; // GL_LINE_LOOP
-        case 0x0003: Nprim = 1; break; // GL_LINE_STRIP
-        case 0x0004: Nprim *= 3; break; // GL_TRIANGLES
-        case 0x0005: Nprim = 1; break; // GL_TRIANGLE_STRIP
-        case 0x0006: Nprim = 1; break; // GL_TRIANGLE_FAN
-        case 0x0007: Nprim *= 4; break; // GL_QUADS
-        case 0x0008: Nprim = 1; break; // GL_QUAD_STRIP
-        case 0x0009: Nprim = 1; break; // GL_POLYGON
+        case 0x0000: Nidx = Nprim; break; // GL_POINTS
+        case 0x0001: Nidx = Nprim; break; // GL_LINES
+        case 0x0002: Nidx = Nprim; break; // GL_LINE_LOOP
+        case 0x0003: Nidx = Nprim; break; // GL_LINE_STRIP
+        case 0x0004: Nidx = Nprim; break; // GL_TRIANGLES
+        case 0x0005: Nidx = Nprim; break; // GL_TRIANGLE_STRIP
+        case 0x0006: Nidx = Nprim; break; // GL_TRIANGLE_FAN
+        case 0x0007: Nidx = Nprim; break; // GL_QUADS
+        case 0x0008: Nidx = Nprim; break; // GL_QUAD_STRIP
+        case 0x0009: Nidx = Nprim; break; // GL_POLYGON
     }*/
 
-    for (int i=0; i<Nprim; i++) {
-        Self->geo->indices->addValue( i );
-    }
+    //if (Self->geo->current_primitive == 4) return;
+    //if (Self->geo->current_primitive == 5) return;
+
+    //cout << Nprim << " " << Self->geo->current_primitive << " " << Ni0 << endl;
+    for (int i=0; i<Nidx; i++) Self->geo->indices->addValue( Ni0 + i );
 
     Self->geo->lengths->addValue( Nprim );
     Self->geo->current_vertex_count = 0;
-    cout << "end" << endl;
+    //cout << "end" << endl;
 }
 
 void tessVertexCB(const GLvoid *data) { // draw a vertex
     const GLdouble *ptr = (const GLdouble*)data;
     Pnt3f p(*ptr, *(ptr+1), *(ptr+2));
+    //Vec3f n(*(ptr+3), *(ptr+4), *(ptr+5));
 
     auto Self = current_triangulator;
     Self->geo->pos->addValue( p );
     Self->geo->norms->addValue( Vec3f(0,0,1) );
+    //Self->geo->norms->addValue( n );
     Self->geo->current_vertex_count++;
-    cout << "vert " << p << endl;
+    //cout << "vert " << p << endl;
 }
 
 void tessCombineCB(const GLdouble newVertex[3], const GLdouble *neighborVertex[4], const GLfloat neighborWeight[4], GLdouble **outV) {
@@ -134,7 +147,7 @@ void tessCombineCB(const GLdouble newVertex[3], const GLdouble *neighborVertex[4
     tmpVertices.push_back(p); // need to be stored locally
     tmpVertices.push_back(c); // need color
     *outV = &tmpVertices[tmpVertices.size()-2][0];
-    cout << "combine " << p << "  " << (*outV)[0] << endl;
+    //cout << "combine " << p << "  " << (*outV)[0] << endl;
 }
 
 void tessErrorCB(GLenum errorCode) {
@@ -163,9 +176,17 @@ void Triangulator::tessellate() {
         return res;
     };
 
+    auto toSpace3 = [&](const vector<Vec3f>& poly) {
+        vector<Vec3d> res;
+        for (auto& v : poly) res.push_back(Vec3d(v));
+        return res;
+    };
+
     vector<vector<Vec3d> > bounds;
     for (auto b : outer_bounds) bounds.push_back( toSpace(b.get()) );
     for (auto b : inner_bounds) bounds.push_back( toSpace(b.get()) );
+    for (auto b : outer_bounds) bounds.push_back( toSpace3(b.get3()) );
+    for (auto b : inner_bounds) bounds.push_back( toSpace3(b.get3()) );
 
     gluTessBeginPolygon(tess, 0);
     for (auto& b : bounds) {
