@@ -48,8 +48,11 @@ class VRSTEP {
             }
         };
 
+        struct Edge;
         struct Bound;
         struct Surface;
+
+        static const int Ncurv = 16; // N in 2pi
 
     public:
         RegistryPtr registry;

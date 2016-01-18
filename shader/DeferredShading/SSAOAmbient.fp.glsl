@@ -37,7 +37,7 @@ void main(void) {
     //if (mod(lookup.x,2.0) <= 0.5 && mod(lookup.y,2.0) <= 0.5) {
     if (true) {
         vec2 view = lookup.xy/toScreen(pos);
-        vec3 rvec = noise * 2.0 - 1.0;
+        vec3 rvec = noise;
         vec3 tangent = normalize(rvec - norm * dot(rvec, norm));
         vec3 bitangent = cross(norm, tangent);
         mat3 tbn = mat3(tangent, bitangent, norm);

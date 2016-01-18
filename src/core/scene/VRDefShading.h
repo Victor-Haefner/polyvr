@@ -64,9 +64,6 @@ class VRDefShading {
         ~VRDefShading();
 
         void initDeferredShading(VRObjectPtr o);
-        void initSSAO(VRObjectPtr o);
-        void setSSAOparams(float radius, int kernel, int noise);
-
         void setDefferedShading(bool b);
         bool getDefferedShading();
 
