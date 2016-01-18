@@ -89,6 +89,13 @@ inline void VRFluids::updateSPH(int from, int to) {
         SphParticle* p;
         BLock lock(mtx());
 
+        ocparticles.clear();
+        for (int i=from; i < to; i++) {
+            p = (SphParticle*) particles[i];
+            btVector3 p_origin = p->body->getWorldTransform().getOrigin();
+            //ocparticles.add(p_origin[0],p_origin[1],p_origin[2],p);
+        }
+
         #pragma omp parallel for private(p) shared(from, to)
         for (int i=from; i < to; i++) {
             p = (SphParticle*) particles[i];
@@ -154,11 +161,16 @@ inline void VRFluids::sph_calc_density_pressure(SphParticle* p, int from, int to
     p->sphDensity = 0.0;
     btVector3 p_origin = p->body->getWorldTransform().getOrigin();
 
+    //vector<void*> neighbors = ocparticles.radiusSearch(p_origin[0],p_origin[1],p_origin[2],p->sphArea);
+    //for (auto np : neighbors) {
     for (int i=from; i < to; i++) {
+        //btVector3 n_origin = ((SphParticle*)np)->body->getWorldTransform().getOrigin();
         btVector3 n_origin = particles[i]->body->getWorldTransform().getOrigin();
         float kernel = kernel_poly6(p_origin - n_origin, p->sphArea);
+        //p->sphDensity += ((SphParticle*)np)->mass * kernel;
         p->sphDensity += particles[i]->mass * kernel;
     }
+
     p->sphPressure = PRESSURE_KAPPA * (p->sphDensity - REST_DENSITY);
 }
 
