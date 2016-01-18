@@ -46,12 +46,7 @@ bool OcPoint::inBox(OcPoint c, float size) {
 }
 
 
-Octree::Octree(float resolution) {
-    this->resolution = resolution;
-    this->size = 10;
-    for (int i=0; i<8; i++) children[i] = 0;
-    parent = 0;
-}
+Octree::Octree(float res) : resolution(res) {}
 
 int Octree::getOctant(OcPoint p) {
     OcPoint rp = p.sub(center);
@@ -151,9 +146,7 @@ void Octree::add(OcPoint p, void* data, int maxjump) {
     this->data.push_back(data);
 }
 
-void Octree::add(float x, float y, float z, void* data, int maxjump) {
-    add(OcPoint(x,y,z), data, maxjump);
-}
+void Octree::add(float x, float y, float z, void* data, int maxjump) { add(OcPoint(x,y,z), data, maxjump); }
 
 void Octree::set(Octree* node, void* data) { node->data.clear(); node->data.push_back(data); }
 
@@ -181,9 +174,7 @@ void Octree::destroy(Octree* guard) {
     if (guard != this) delete this;
 }
 
-void Octree::clear() {
-    getRoot()->destroy(this);
-}
+void Octree::clear() { getRoot()->destroy(this); }
 
 Octree* Octree::getRoot() {
     Octree* o = this;
@@ -221,15 +212,11 @@ void Octree::findInSphere(OcPoint p, float r, vector<void*>& res) { // TODO: opt
 
 vector<void*> Octree::radiusSearch(OcPoint p, float r) {
     vector<void*> res;
-
     getRoot()->findInSphere(p, r, res);
-
     return res;
 }
 
-vector<void*> Octree::radiusSearch(float x, float y, float z, float r) {
-    return radiusSearch(OcPoint(x,y,z), r);
-}
+vector<void*> Octree::radiusSearch(float x, float y, float z, float r) { return radiusSearch(OcPoint(x,y,z), r); }
 
 void Octree::print(int indent) {
     cout << "\nOc ";
@@ -301,8 +288,6 @@ void Octree::test() {
     cout << "\nOctree test passed with " << radSearchRes_tree.size() << " found OcPoints!\n";
 }
 
-vector<void*> Octree::getData() {
-	return data;
-}
+vector<void*> Octree::getData() { return data; }
 
 OSG_END_NAMESPACE
