@@ -206,10 +206,10 @@ void VRGeometry::setPositionalTexCoords(float scale) {
     }
 }
 
-void VRGeometry::setIndices(GeoIntegralProperty* Indices) {
+void VRGeometry::setIndices(GeoIntegralProperty* Indices, bool doLengths) {
     if (!meshSet) setMesh(Geometry::create());
     if (Indices->size() == 0) setMesh(0);
-    if (!mesh->getLengths()) {
+    if (!mesh->getLengths() || doLengths) {
         GeoUInt32PropertyRecPtr Length = GeoUInt32Property::create();
         Length->addValue(Indices->size());
         mesh->setLengths(Length);

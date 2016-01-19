@@ -78,7 +78,7 @@ class VRGeometry : public VRTransform {
         void setPositions(GeoVectorProperty* Pos);
         void setNormals(GeoVectorProperty* Norms);
         void setColors(GeoVectorProperty* Colors, bool fixMapping = false);
-        void setIndices(GeoIntegralProperty* Indices);
+        void setIndices(GeoIntegralProperty* Indices, bool doLengths = false);
         void setTexCoords(GeoVectorProperty* Tex, int i=0, bool fixMapping = false);
         void setLengths(GeoIntegralProperty* lenghts);
         void setPositionalTexCoords(float scale = 1.0);
