@@ -45,10 +45,18 @@ template<> PyTypeObject VRPyBaseT<OSG::VRCamera>::type = {
 
 PyMethodDef VRPyCamera::methods[] = {
     {"activate", (PyCFunction)VRPyCamera::activate, METH_NOARGS, "Switch to camera - activate()" },
+    {"setFov", (PyCFunction)VRPyCamera::setFov, METH_VARARGS, "Set the camera's field of view" },
     {NULL}  /* Sentinel */
 };
 
 PyObject* VRPyCamera::activate(VRPyCamera* self) {
     self->objPtr->activate();
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyCamera::setFov(VRPyCamera* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    float fov = parseFloat(args);
+    self->objPtr->setFov(fov);
     Py_RETURN_TRUE;
 }
