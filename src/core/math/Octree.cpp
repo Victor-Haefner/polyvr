@@ -172,6 +172,10 @@ void Octree::destroy(Octree* guard) {
     }
 
     if (guard != this) delete this;
+    else {
+        data.clear();
+        parent = 0;
+    }
 }
 
 void Octree::clear() { getRoot()->destroy(this); }
