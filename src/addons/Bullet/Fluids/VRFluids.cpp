@@ -89,26 +89,25 @@ inline void VRFluids::updateSPH(int from, int to) {
         SphParticle* p;
         BLock lock(mtx());
 
+        // clear and fill octree
         ocparticles.clear();
         for (int i=from; i < to; i++) {
             p = (SphParticle*) particles[i];
             btVector3 p_origin = p->body->getWorldTransform().getOrigin();
-            //ocparticles.add(p_origin[0],p_origin[1],p_origin[2],p);
+            ocparticles.add(p_origin[0],p_origin[1],p_origin[2],p);
         }
 
         #pragma omp parallel for private(p) shared(from, to)
         for (int i=from; i < to; i++) {
             p = (SphParticle*) particles[i];
-            sph_calc_density_pressure(p, from, to);
+            sph_calc_properties(p);
         }
 
         #pragma omp parallel for private(p) shared(from, to)
         for (int i=from; i < to; i++) {
             p = (SphParticle*) particles[i];
             if (p->sphActive) {
-                sph_calc_pressureForce(p, from, to);
-                sph_calc_viscosityForce(p, from, to);
-                // update Particle Acceleration:
+                sph_calc_forces(p);
                 btVector3 force = (p->sphPressureForce + p->sphViscosityForce);
                 p->body->applyCentralForce(force);
             }
@@ -140,7 +139,7 @@ inline void VRFluids::updateXSPH(int from, int to) {
         //#pragma omp parallel for private(p) shared(from, to)
         for (int i=from; i < to; i++) {
             p = (SphParticle*) particles[i];
-            sph_calc_density_pressure(p, from, to);
+            sph_calc_properties(p);
         }
 
         //#pragma omp parallel for private(p, n) shared(from, to)
@@ -157,49 +156,40 @@ inline void VRFluids::updateXSPH(int from, int to) {
     }
 }
 
-inline void VRFluids::sph_calc_density_pressure(SphParticle* p, int from, int to) {
+/**
+ * Calculates density, pressure and neighbors and stores them in SphParticle p.
+ */
+inline void VRFluids::sph_calc_properties(SphParticle* p) { // TODO rename + neighbors
     p->sphDensity = 0.0;
     btVector3 p_origin = p->body->getWorldTransform().getOrigin();
 
-    //vector<void*> neighbors = ocparticles.radiusSearch(p_origin[0],p_origin[1],p_origin[2],p->sphArea);
-    //for (auto np : neighbors) {
-    for (int i=from; i < to; i++) {
-        //btVector3 n_origin = ((SphParticle*)np)->body->getWorldTransform().getOrigin();
-        btVector3 n_origin = particles[i]->body->getWorldTransform().getOrigin();
+    p->neighbors = ocparticles.radiusSearch(p_origin[0],p_origin[1],p_origin[2],p->sphArea);
+    for (auto np : p->neighbors) {
+        btVector3 n_origin = ((SphParticle*) np)->body->getWorldTransform().getOrigin();
         float kernel = kernel_poly6(p_origin - n_origin, p->sphArea);
-        //p->sphDensity += ((SphParticle*)np)->mass * kernel;
-        p->sphDensity += particles[i]->mass * kernel;
+        p->sphDensity += ((SphParticle*)np)->mass * kernel;
     }
 
     p->sphPressure = PRESSURE_KAPPA * (p->sphDensity - REST_DENSITY);
 }
 
-inline void VRFluids::sph_calc_pressureForce(SphParticle* p, int from, int to) {
+inline void VRFluids::sph_calc_forces(SphParticle* p) {
     p->sphPressureForce.setZero();
-    btVector3 p_origin = p->body->getWorldTransform().getOrigin();
-
-    for (int i=from; i < to; i++) {
-        SphParticle* n = (SphParticle*) particles[i];
-        btVector3 n_origin = n->body->getWorldTransform().getOrigin();
-        float trick = (p->sphPressure + n->sphPressure) / (2 * n->sphDensity); // makes forces symmetric
-        btVector3 kernel = kernel_spiky_gradient(p_origin - n_origin, p->sphArea);
-        p->sphPressureForce -= n->mass * trick * kernel;
-    }
-}
-
-inline void VRFluids::sph_calc_viscosityForce(SphParticle* p, int from, int to) {
     p->sphViscosityForce.setZero();
     btVector3 p_origin = p->body->getWorldTransform().getOrigin();
     btVector3 p_speed = p->body->getLinearVelocity();
 
-    for (int i=from; i < to; i++) {
-        if (p != particles[i]) {
-            SphParticle* n = (SphParticle*) particles[i];
-            btVector3 n_origin = n->body->getWorldTransform().getOrigin();
-            btVector3 n_speed = n->body->getLinearVelocity();
-            n_speed = (n_speed - p_speed) / n->sphDensity;
-            p->sphViscosityForce += n->mass * n_speed * kernel_visc_laplacian(p_origin - n_origin, p->sphArea);
-        }
+    for (auto np : p->neighbors) {
+        SphParticle* n = (SphParticle*) np;
+        btVector3 n_origin = n->body->getWorldTransform().getOrigin();
+        btVector3 n_speed = n->body->getLinearVelocity();
+        // calc pressure force
+        float ptrick = (p->sphPressure + n->sphPressure) / (2 * n->sphDensity); // makes forces symmetric
+        btVector3 pKernel = kernel_spiky_gradient(p_origin - n_origin, p->sphArea);
+        p->sphPressureForce -= n->mass * ptrick * pKernel;
+        // calc viscosity force
+        btVector3 vtrick = (n_speed - p_speed) / n->sphDensity;
+        p->sphViscosityForce += n->mass * vtrick * kernel_visc_laplacian(p_origin - n_origin, p->sphArea);
     }
     p->sphViscosityForce *= VISCOSITY_MU;
 }

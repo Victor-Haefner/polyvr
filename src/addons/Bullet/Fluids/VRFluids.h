@@ -63,9 +63,8 @@ class VRFluids : public VRParticles {
         inline float kernel_visc(btVector3 distance_vector, float area);
         inline float kernel_visc_laplacian(btVector3 distance_vector, float area);
 
-        inline void sph_calc_density_pressure(SphParticle* p, int from, int to);
-        inline void sph_calc_pressureForce(SphParticle* p, int from, int to);
-        inline void sph_calc_viscosityForce(SphParticle* p, int from, int to);
+        inline void sph_calc_properties(SphParticle* p);
+        inline void sph_calc_forces(SphParticle* p);
 
         void setFunctions(int from, int to) override;
         void disableFunctions() override;

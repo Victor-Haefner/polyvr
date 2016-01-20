@@ -98,6 +98,7 @@ struct SphParticle : public Particle {
     float sphPressure = 0.0;
     btVector3 sphPressureForce;
     btVector3 sphViscosityForce;
+    vector<void*> neighbors;
 
 
     SphParticle(btDiscreteDynamicsWorld* world = 0, bool active = true) {
