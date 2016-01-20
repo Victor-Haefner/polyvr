@@ -13,7 +13,8 @@ using namespace std;
 
 class VRPatchSelection : public VRSelection {
     private:
-        VRAdjacencyGraph agraph;
+        map<VRGeometry*, VRAdjacencyGraph> agraphs;
+        map<VRGeometry*, int> lastMeshChanges;
 
         vector<int> crawl(VRGeometryPtr geo, int vertex, float d);
 
