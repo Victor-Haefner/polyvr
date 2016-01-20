@@ -186,14 +186,13 @@ int VRParticles::setEmitter(Vec3f baseV, Vec3f dirV, int from, int to, int inter
     // create vector with relevant particles
     vector<Particle*> p(to-from);
     for (int i=from; i < to; i++) {
-        particles[i]->setup(base, false);
+        particles[i]->setup(base, false, this->collideWithSelf);
         p.push_back(this->particles[i]);
     }
 
     // set up emitter and insert into emitter map
     Emitter* e = new Emitter(world, p, base, dir, interval);
     e->setLoop(loop);
-    e->setActive(true);
     this->emitters[e->id] = e; //store emitters
 
     setFunctions(from, to);
