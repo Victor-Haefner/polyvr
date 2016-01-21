@@ -785,7 +785,9 @@ void VRTransform::loadContent(xmlpp::Element* e) {
     if(doTConstraint || doRConstraint) setFixed(false);
 }
 
-void setFromPath(VRTransformPtr tr, path* p, bool redirect, float t) {
+void setFromPath(VRTransformWeakPtr trp, path* p, bool redirect, float t) {
+    auto tr = trp.lock();
+    if (!tr) return;
     tr->setFrom( p->getPosition(t) );
     if (!redirect) return;
 
@@ -804,7 +806,7 @@ vector<VRAnimation*> VRTransform::getAnimations() {
 }
 
 VRAnimation* VRTransform::startPathAnimation(path* p, float time, float offset, bool redirect, bool loop) {
-    pathAnimPtr = VRFunction<float>::create("TransAnim", boost::bind(setFromPath, ptr(), p, redirect, _1));
+    pathAnimPtr = VRFunction<float>::create("TransAnim", boost::bind(setFromPath, VRTransformWeakPtr(ptr()), p, redirect, _1));
     auto scene = VRSceneManager::getCurrent();
     VRAnimation* a = scene->addAnimation<float>(time, offset, pathAnimPtr, 0.f, 1.f, loop);
     addAnimation(a);
