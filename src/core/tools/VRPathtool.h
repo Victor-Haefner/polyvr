@@ -108,9 +108,10 @@ class VRPathtool {
         struct entry {
             path* p = 0;
             int resolution = 10;
-            map<VRGeometryPtr, int> handles;
-            VRStrokePtr line = 0;
-            VRObjectPtr anchor = 0;
+            map<VRGeometry*, int> points;
+            vector<VRGeometryWeakPtr> handles;
+            VRStrokeWeakPtr line;
+            VRObjectWeakPtr anchor;
         };
 
         map<path*, entry*> paths;
