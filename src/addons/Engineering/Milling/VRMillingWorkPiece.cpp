@@ -25,7 +25,6 @@ void VRMillingWorkPiece::setCuttingTool(VRTransformPtr geo) {
 }
 
 void VRMillingWorkPiece::init(Vec3i gSize, float bSize) {
-    //printf("entered init function\n");
     gridSize = gSize;
     blockSize = bSize;
 
@@ -52,23 +51,17 @@ void VRMillingWorkPiece::init(Vec3i gSize, float bSize) {
                                   Vec3f(0, 0, 0), getFrom(), 0);
 
     rootElement->build();
-    //printf("ended init function\n");
 }
 
 void VRMillingWorkPiece::reset() {
-    //printf("entered reset function\n");
     init(gridSize, blockSize);
-    //printf("ended reset function\n");
 }
 
 void VRMillingWorkPiece::addPointProfile(Vec2f point) {
-    //printf("entered addpointprofile function\n");
     this->profile.push_back(point);
-    //printf("ended addpointprofile function\n");
 }
 
 void VRMillingWorkPiece::update() {
-    //printf("entered update function\n");
     auto geo = tool.lock();
     if (!geo) return;
     int change = geo->getLastChange();
@@ -82,19 +75,16 @@ void VRMillingWorkPiece::update() {
     }
 
     Vec3f toolPosition = geo->getWorldPosition();
-    //printf("update function: before collide\n");
+
     if (!rootElement->collide(toolPosition))
     {
         // printf("return\n");
         return;
     }
-    //printf("update function: after collide\n");
 
-    //printf("update function: before update geometry\n");
     if (updateCount++ % geometryUpdateWait == 0) {
         rootElement->build();
     }
-    //printf("ended update function\n");
 }
 
 void VRMillingWorkPiece::updateGeometry() {
@@ -223,12 +213,10 @@ bool VRWorkpieceElement::collides(Vec3f position) {
 }
 
 bool VRWorkpieceElement::collide(Vec3f position) {
-    //printf("entered collide function\n");
     if (deleted) return false;
 
     bool result = false;
 
-    //printf("before doesCollide condition\n");
     //if (collides(position)) {
     if (doesCollide(position)) {
         if (children[0] == nullptr) {
@@ -254,7 +242,6 @@ bool VRWorkpieceElement::collide(Vec3f position) {
             result = true;
         }
     }
-    //printf("ended collide function\n");
     return result;
 }
 
@@ -264,23 +251,18 @@ template <typename T> int sgn(T val) {
 
 //Add of Marie
 bool VRWorkpieceElement::doesCollide(Vec3f position) {
-    //printf("entered doescollide function\n");
 
     //position in argument is the lowest part of the worktool and the (0,0) point of the profile
     float py = this->position[1], px = this->position[0], pz = this->position[2];
     float sy = this->size[1], sx = this->size[0], sz = this->size[2];
     float ptooly = position[1], ptoolx = position[0], ptoolz = position[2];
 
-    //printf("%i\n",workpiece.profile.size());
     float profileLength = workpiece.profile.back()[0];
-    //printf("after test variable\n");
+
     if ((py + sy/2.0f > ptooly) && (py - sy/2.0f < ptooly + profileLength))
     {
-        //printf("before maxprofile function\n");
         float maximum = maxProfile(position);
-        //printf("before second if\n");
-        //if ((abs(px - sx/2.0f - ptoolx) < abs(maximum - ptoolx))
-        //    && (abs(pz - sz/2.0f - ptoolz) < abs(maximum - ptoolz)))
+
         if ((ptoolz - maximum < pz + sz/2.0f) && (ptoolz + maximum > pz - sz/2.0) &&
             (ptoolx - maximum < px + sx/2.0f) && (ptoolx + maximum > px - sx/2.0))
         {
@@ -293,12 +275,10 @@ bool VRWorkpieceElement::doesCollide(Vec3f position) {
             Vec2f toolMid(ptoolx, ptoolz);
             Vec2f distanceVertexTool = vertex - toolMid;
             if (distanceVertexTool.length() < maximum) {
-                // printf("cut\n\n");
                 return true;
             }
         }
     }
-    //printf("after first if\n");
     return false;
 }
 
@@ -311,18 +291,12 @@ float VRWorkpieceElement::maxProfile(Vec3f position) {
     float newx1 = py + sy/2.0f - ptooly;
     float newx2 = py - sy/2.0f - ptooly;
 
-    //cout << "newx1: " << newx1 << endl;
-    //cout << "newx2: " << newx2 << endl;
-
     int indexMax = -1;
     int indexMin = -1;
     vector<Vec2f> newList;
 
-
-
     if ((newx1 > 0) && (newx2 < workpiece.profile.back()[0]) && (newx2 > 0) && (newx1 < workpiece.profile.back()[0]))
     {
-        cout << "first config" << endl;
         int p1 = lookForNearestIndex(newx1);
         int p2 = lookForNearestIndex(newx2);
 
@@ -359,9 +333,6 @@ float VRWorkpieceElement::maxProfile(Vec3f position) {
             return lookForMaxInList(newList);
         }
 
-        cout << "newx1: " << newx1 << "\tnewy1: " << newy(newx1, p1) << endl;
-        cout << "newx2: " << newx2 << "\tnewy2: " << newy(newx2, p2) << endl;
-
         Vec2f newPoint1 = {newx1, newy(newx1, p1)};
         Vec2f newPoint2 = {newx2, newy(newx2, p2)};
 
@@ -378,14 +349,9 @@ float VRWorkpieceElement::maxProfile(Vec3f position) {
         for (int i = indexMin; i <= indexMax; i++)
             newList.push_back(workpiece.profile[i]);
         newList.push_back(newPoint1);
-        for (int i=0; i< newList.size(); i++)
-        {
-            cout << newList[i][0] << "\t" << newList[i][1] << endl;
-        }
     }
     else if ((newx1 > 0) && (newx1 < workpiece.profile.back()[0]))
     {
-        cout << "second config" << endl;
         int p = lookForNearestIndex(newx1);
         if (alreadyInProfile(newx1))
         {
@@ -395,7 +361,6 @@ float VRWorkpieceElement::maxProfile(Vec3f position) {
             }
             return lookForMaxInList(newList);
         }
-        cout << "newx: " << newx1 << "\tnewy: " << newy(newx1, p) << endl;
         Vec2f newPoint = {newx1, newy(newx1, p)};
 
         if (newx1 < workpiece.profile[p][0])
@@ -406,25 +371,18 @@ float VRWorkpieceElement::maxProfile(Vec3f position) {
         for (int i = 0; i <= indexMax; i++)
             newList.push_back(workpiece.profile[i]);
         newList.push_back(newPoint);
-        for (int i=0; i< newList.size(); i++)
-        {
-            cout << newList[i][0] << "\t" << newList[i][1] << endl;
-        }
     }
     else if ((newx2 < workpiece.profile.back()[0]) && (newx2 > 0))
     {
-        cout << "third config" << endl;
         int p = lookForNearestIndex(newx2);
         if (alreadyInProfile(newx2))
         {
-            cout << "already in Profile!!!" << endl;
             for (int i=p; i < workpiece.profile.size(); i++)
             {
                 newList.push_back(workpiece.profile[i]);
             }
             return lookForMaxInList(newList);
         }
-        cout << "newx: " << newx2 << "\tnewy: " << newy(newx2, p) << endl;
         Vec2f newPoint = {newx2, newy(newx2, p)};
 
         if (newx2 < workpiece.profile[p][0])
@@ -435,19 +393,10 @@ float VRWorkpieceElement::maxProfile(Vec3f position) {
         newList.push_back(newPoint);
         for (int i = indexMin; i < workpiece.profile.size(); i++)
             newList.push_back(workpiece.profile[i]);
-        for (int i=0; i< newList.size(); i++)
-        {
-            cout << newList[i][0] << "\t" << newList[i][1] << endl;
-        }
     }
     else if ((newx1 >= workpiece.profile.back()[0]) && (newx2 <= 0))
     {
-        cout << "fourth config" << endl;
         return lookForMaxInList(workpiece.profile);
-        for (int i=0; i< workpiece.profile.size(); i++)
-        {
-            cout << workpiece.profile[i][0] << "\t" << workpiece.profile[i][1] << endl;
-        }
     }
 
     return lookForMaxInList(newList);
@@ -457,8 +406,8 @@ float VRWorkpieceElement::maxProfile(Vec3f position) {
 bool VRWorkpieceElement::alreadyInProfile(float newx) {
     for (int i = 0; i < workpiece.profile.size(); i++)
     {
-        cout << "is " << newx << " == " << workpiece.profile[i][0] << " ?" << endl;
-        if (newx == workpiece.profile[i][0])
+        float epsilon = 1e-6;
+        if (abs(newx - workpiece.profile[i][0]) < epsilon)
         {
             return true;
         }
@@ -472,26 +421,14 @@ float VRWorkpieceElement::newy(float newx, int p) {
 
     if (newx < workpiece.profile[p][0])
     {
-        //cout << "y(p-1): " << workpiece.profile[p-1][1] << endl;
-        //cout << "y(p): " << workpiece.profile[p][1] << endl;
-        //cout << "x(p-1): " << workpiece.profile[p-1][0] << endl;
-        //cout << "x(p): " << workpiece.profile[p][0] << endl;
         a = (workpiece.profile[p-1][1] - workpiece.profile[p][1]) / (workpiece.profile[p-1][0] - workpiece.profile[p][0]);
         b = (workpiece.profile[p-1][0] * workpiece.profile[p][1] - workpiece.profile[p][0] * workpiece.profile[p-1][1]) / (workpiece.profile[p-1][0] - workpiece.profile[p][0]);
     }
     else
     {
-        //cout << "y(p): " << workpiece.profile[p][1] << endl;
-        //cout << "y(p+1): " << workpiece.profile[p+1][1] << endl;
-        //cout << "x(p): " << workpiece.profile[p][0] << endl;
-        //cout << "x(p+1): " << workpiece.profile[p+1][0] << endl;
         a = (workpiece.profile[p][1] - workpiece.profile[p+1][1])  / (workpiece.profile[p][0] - workpiece.profile[p+1][0]);
         b = (workpiece.profile[p][0] * workpiece.profile[p+1][1] - workpiece.profile[p+1][0] * workpiece.profile[p][1]) / (workpiece.profile[p][0] - workpiece.profile[p+1][0]);
     }
-    //cout << "a: " << a << endl;
-    //cout << "b: " << b << endl;
-    //cout << "new x: " << newx << endl;
-    //cout << "new y: " << a * newx + b << endl;
     return (a * newx + b);
 }
 
@@ -521,7 +458,6 @@ float VRWorkpieceElement::lookForMaxInList(vector<Vec2f> liste) {
             maximum = liste[i][1];
         }
     }
-    cout << "maximum: " << maximum << endl;
     return maximum;
 }
 
