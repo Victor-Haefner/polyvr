@@ -33,6 +33,7 @@ private:
     static Vec3f mulVec3f(Vec3f lhs, Vec3f rhs);
 
     //functions for the new collision calculation (by Marie)
+    bool alreadyInProfile(float newx);
     float maxProfile(Vec3f position);
     float newy(float newx, int p);
     int lookForNearestIndex(float newx);
