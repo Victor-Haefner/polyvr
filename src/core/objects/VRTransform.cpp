@@ -27,7 +27,7 @@ VRTransform::VRTransform(string name) : VRObject(name) {
 }
 
 VRTransform::~VRTransform() {
-    delete physics;
+    if (physics) { delete physics; }
     delete dm;
 }
 

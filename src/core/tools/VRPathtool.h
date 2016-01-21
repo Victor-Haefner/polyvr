@@ -114,7 +114,8 @@ class VRPathtool {
         };
 
         map<path*, entry*> paths;
-        map<VRGeometryPtr, entry*> handles_dict;
+        map<VRGeometry*, entry*> entries;
+        vector<VRGeometryWeakPtr> handles;
 
         VRUpdatePtr updatePtr;
         VRManipulator* manip = 0;
