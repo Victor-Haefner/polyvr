@@ -21,6 +21,7 @@ void VREntity::set(string name, string value) {
 }
 
 void VREntity::add(string name, string value) {
+    if (!concept) { cout << "Warning (add): Entity " << this->name << " has no valid concept" << endl; return; }
     string pconcept; if (auto p = concept->parent.lock()) pconcept = p->name;
     //cout << "VREntity::add " << name << " " << value << " " << concept->name << " " << pconcept << endl;
     auto prop = concept->getProperty(name);
