@@ -257,6 +257,8 @@ PyObject* VRPyOntology::getEntities(VRPyOntology* self, PyObject* args) {
     return res;
 }
 
+// --------------------- Ontology --------------------
+
 PyMethodDef VRPyReasoner::methods[] = {
     {"process", (PyCFunction)VRPyReasoner::process, METH_VARARGS, "Process query - process( str query, ontology )" },
     {NULL}  /* Sentinel */
@@ -266,7 +268,13 @@ PyObject* VRPyReasoner::process(VRPyReasoner* self, PyObject* args) {
     const char* query = 0;
     VRPyOntology* onto = 0;
     if (! PyArg_ParseTuple(args, "sO:process", (char*)&query, &onto)) return NULL;
-    if (query) self->objPtr->process(string(query), onto->objPtr);
-    Py_RETURN_TRUE;
+
+    auto pyres = PyList_New(0);
+    if (!query) return pyres;
+    auto res = self->objPtr->process(string(query), onto->objPtr);
+    for (auto r : res) {
+        for (auto i : r.instances) PyList_Append(pyres, VRPyEntity::fromSharedPtr(i));
+    }
+    return pyres;
 }
 

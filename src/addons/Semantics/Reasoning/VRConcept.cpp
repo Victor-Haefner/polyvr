@@ -40,24 +40,26 @@ VRPropertyPtr VRConcept::getProperty(string name) {
     return 0;
 }
 
-void VRConcept::getProperties(map<string, VRPropertyPtr>& res) {
-    for (auto p : properties) res[p.second->name] = p.second;
-    if (auto p = parent.lock()) p->getProperties(res);
-}
-
 vector<VRPropertyPtr> VRConcept::getProperties(string type) {
     vector<VRPropertyPtr> res;
-    for (auto p : getProperties()) if (p->type == type) res.push_back(p);
-    if (res.size() == 0) cout << "Warning: no properties of type " << type << " found!" << endl;
-    if (res.size() > 1) cout << "Warning: multiple properties of type " << type << " found!" << endl;
+    for (auto p : getProperties()) {
+        if (p->type == type) res.push_back(p);
+    }
+
+    if (res.size() == 0) cout << "Warning: no properties of type " << type << " found of concept " << this->name <<  "!" << endl;
+    if (res.size() > 1) cout << "Warning: multiple properties of type " << type << " found of concept " << this->name <<  "!" << endl;
     return res;
+}
+
+void VRConcept::getProperties(map<string, VRPropertyPtr>& res) {
+    if (auto p = parent.lock()) p->getProperties(res);
+    for (auto p : properties) res[p.second->name] = p.second;
 }
 
 vector<VRPropertyPtr> VRConcept::getProperties() {
     vector<VRPropertyPtr> res;
     map<string, VRPropertyPtr> tmp;
-    if (auto p = parent.lock()) p->getProperties(tmp);
-    for (auto p : properties) tmp[p.second->name] = p.second;
+    getProperties(tmp);
     for (auto p : tmp) res.push_back(p.second);
     return res;
 }
