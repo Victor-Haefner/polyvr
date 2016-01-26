@@ -47,8 +47,6 @@ float VRMillingCuttingToolProfile::maxProfile(Vec3f toolPosition, Vec3f cubePosi
 
     if (profile.size() == 0) return 0;
 
-    cout << "calculate maximum " << endl;
-
     if ((newx1 > 0) && (newx2 < profile.back()[0])
             && (newx2 > 0) && (newx1 < profile.back()[0]))
     {

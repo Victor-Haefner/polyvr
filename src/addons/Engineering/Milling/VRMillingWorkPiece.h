@@ -71,7 +71,6 @@ public:
 class VRMillingWorkPiece : public VRGeometry {
     private:
         Vec3i gridSize;
-        int lastToolChange = 0;
         int updateCount = 0;
         pose toolPose;
         VRTransformWeakPtr tool;

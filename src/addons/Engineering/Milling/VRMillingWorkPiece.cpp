@@ -19,7 +19,6 @@ VRMillingWorkPiecePtr VRMillingWorkPiece::create(string name) { return shared_pt
 void VRMillingWorkPiece::setCuttingTool(VRTransformPtr geo) {
     tool = geo;
     toolPose = geo->getWorldPose();
-    lastToolChange = geo->getLastChange();
 }
 
 void VRMillingWorkPiece::setCuttingProfile(VRMillingCuttingToolProfile* profile) {
@@ -50,7 +49,7 @@ void VRMillingWorkPiece::init(Vec3i gSize, float bSize) {
 
     rootElement = new VRWorkpieceElement(*this, (VRWorkpieceElement*) nullptr,
                                   Vec3i(gridSize), Vec3f(gridSize) * blockSize,
-                                  Vec3f(0, 0, 0), getFrom(), 0);
+                                  Vec3f(0, 0, 0), getWorldPosition(), 0);
 
     rootElement->build();
 }
@@ -60,17 +59,19 @@ void VRMillingWorkPiece::reset() {
 }
 
 void VRMillingWorkPiece::update() {
-    auto geo = tool.lock();
-    if (!geo) return;
-    int change = geo->getLastChange();
-    if (change == lastToolChange) return; // keine bewegung
-    lastToolChange = change;
+    Vec3f toolPosition;
 
     if (cuttingProfile == nullptr) {
         return;
     }
 
-    Vec3f toolPosition = geo->getWorldPosition();
+    { // locking scope
+        auto geo = tool.lock();
+        if (!geo) return;
+        if (!geo->changedNow()) return; // keine bewegung
+
+        toolPosition = geo->getWorldPosition();
+    }
 
     if (!rootElement->collide(toolPosition)) {
         return;
