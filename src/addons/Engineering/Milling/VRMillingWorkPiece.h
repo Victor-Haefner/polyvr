@@ -7,6 +7,7 @@
 #include <OpenSG/OSGSimpleMaterial.h>
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/math/Octree.h"
+#include "VRMillingCuttingToolProfile.h"
 
 OSG_BEGIN_NAMESPACE;
 
@@ -31,13 +32,6 @@ private:
     GeoUInt32PropertyRecPtr indices;
 
     static Vec3f mulVec3f(Vec3f lhs, Vec3f rhs);
-
-    //functions for the new collision calculation (by Marie)
-    bool alreadyInProfile(float newx);
-    float maxProfile(Vec3f position);
-    float newy(float newx, int p);
-    int lookForNearestIndex(float newx);
-    float lookForMaxInList(vector<Vec2f> liste);
 
 public:
     VRWorkpieceElement(VRMillingWorkPiece& workpiece, VRWorkpieceElement* parent,
@@ -91,8 +85,7 @@ class VRMillingWorkPiece : public VRGeometry {
     public:
         float blockSize = 0.01;
         int geometryCreateLevel = 0;
-
-        vector<Vec2f> profile; //Add of Marie
+        VRMillingCuttingToolProfile* cuttingProfile;
 
     public:
         VRMillingWorkPiece(string name);
@@ -100,11 +93,14 @@ class VRMillingWorkPiece : public VRGeometry {
         static VRMillingWorkPiecePtr create(string name);
         void init(Vec3i gSize, float bSize = 0.01);
         void reset();
+
         void setCuttingTool(VRTransformPtr geo);
-        void addPointProfile(Vec2f point); //Add of Marie
+        void setCuttingProfile(VRMillingCuttingToolProfile* profile);
+
         void updateGeometry();
         void setLevelsPerGeometry(int levels);  // this will take effect after the next reset
         void setRefreshWait(int updatesToWait); // this will take effect immediately
+
 };
 
 OSG_END_NAMESPACE;

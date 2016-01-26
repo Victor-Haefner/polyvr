@@ -71,6 +71,7 @@
 #include "addons/Engineering/Factory/VRPyFactory.h"
 #include "addons/Engineering/Milling/VRPyMillingMachine.h"
 #include "addons/Engineering/Milling/VRPyMillingWorkPiece.h"
+#include "addons/Engineering/Milling/VRPyMillingCuttingToolProfile.h"
 #include "addons/Engineering/VRPyRobotArm.h"
 #include "addons/RealWorld/nature/VRPyTree.h"
 #include "VRPyTypeCaster.h"
@@ -326,6 +327,7 @@ void VRScriptManager::initPyModules() {
     registerModule<VRPyTree>("Tree", pModVR, VRPyGeometry::typeRef);
     registerModule<VRPyMillingMachine>("MillingMachine", pModVR);
     registerModule<VRPyMillingWorkPiece>("MillingWorkPiece", pModVR, VRPyGeometry::typeRef);
+    registerModule<VRPyMillingCuttingToolProfile>("MillingCuttingToolProfile", pModVR);
     registerModule<VRPyMolecule>("Molecule", pModVR, VRPyGeometry::typeRef);
     registerModule<VRPyRobotArm>("RobotArm", pModVR);
     registerModule<VRPyOntology>("Ontology", pModVR);

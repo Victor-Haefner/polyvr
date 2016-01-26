@@ -20,8 +20,10 @@ void VRMillingWorkPiece::setCuttingTool(VRTransformPtr geo) {
     tool = geo;
     toolPose = geo->getWorldPose();
     lastToolChange = geo->getLastChange();
+}
 
-
+void VRMillingWorkPiece::setCuttingProfile(VRMillingCuttingToolProfile* profile) {
+    cuttingProfile = profile;
 }
 
 void VRMillingWorkPiece::init(Vec3i gSize, float bSize) {
@@ -57,10 +59,6 @@ void VRMillingWorkPiece::reset() {
     init(gridSize, blockSize);
 }
 
-void VRMillingWorkPiece::addPointProfile(Vec2f point) {
-    this->profile.push_back(point);
-}
-
 void VRMillingWorkPiece::update() {
     auto geo = tool.lock();
     if (!geo) return;
@@ -68,17 +66,13 @@ void VRMillingWorkPiece::update() {
     if (change == lastToolChange) return; // keine bewegung
     lastToolChange = change;
 
-    if (profile.size() == 0)
-    {
-        // printf("Profile empty. Return.\n");
+    if (cuttingProfile == nullptr) {
         return;
     }
 
     Vec3f toolPosition = geo->getWorldPosition();
 
-    if (!rootElement->collide(toolPosition))
-    {
-        // printf("return\n");
+    if (!rootElement->collide(toolPosition)) {
         return;
     }
 
@@ -217,7 +211,6 @@ bool VRWorkpieceElement::collide(Vec3f position) {
 
     bool result = false;
 
-    //if (collides(position)) {
     if (doesCollide(position)) {
         if (children[0] == nullptr) {
             split();
@@ -251,17 +244,17 @@ template <typename T> int sgn(T val) {
 
 //Add of Marie
 bool VRWorkpieceElement::doesCollide(Vec3f position) {
-
     //position in argument is the lowest part of the worktool and the (0,0) point of the profile
+
     float py = this->position[1], px = this->position[0], pz = this->position[2];
     float sy = this->size[1], sx = this->size[0], sz = this->size[2];
     float ptooly = position[1], ptoolx = position[0], ptoolz = position[2];
 
-    float profileLength = workpiece.profile.back()[0];
+    float profileLength = workpiece.cuttingProfile->getLength();
 
     if ((py + sy/2.0f > ptooly) && (py - sy/2.0f < ptooly + profileLength))
     {
-        float maximum = maxProfile(position);
+        float maximum = workpiece.cuttingProfile->maxProfile(position, this->position, this->size);
 
         if ((ptoolz - maximum < pz + sz/2.0f) && (ptoolz + maximum > pz - sz/2.0) &&
             (ptoolx - maximum < px + sx/2.0f) && (ptoolx + maximum > px - sx/2.0))
@@ -279,186 +272,8 @@ bool VRWorkpieceElement::doesCollide(Vec3f position) {
             }
         }
     }
+
     return false;
-}
-
-//Add of Marie
-float VRWorkpieceElement::maxProfile(Vec3f position) {
-    float py = this->position[1], px = this->position[0], pz = this->position[2];
-    float sy = this->size[1], sx = this->size[0], sz = this->size[2];
-    float ptooly = position[1], ptoolx = position[0], ptoolz = position[2];
-
-    float newx1 = py + sy/2.0f - ptooly;
-    float newx2 = py - sy/2.0f - ptooly;
-
-    int indexMax = -1;
-    int indexMin = -1;
-    vector<Vec2f> newList;
-
-    if ((newx1 > 0) && (newx2 < workpiece.profile.back()[0]) && (newx2 > 0) && (newx1 < workpiece.profile.back()[0]))
-    {
-        int p1 = lookForNearestIndex(newx1);
-        int p2 = lookForNearestIndex(newx2);
-
-        if (alreadyInProfile(newx1) && alreadyInProfile(newx2))
-        {
-            for (int i = p2; i <= p1; i++)
-            {
-                newList.push_back(workpiece.profile[i]);
-            }
-            return lookForMaxInList(newList);
-        }
-        else if (alreadyInProfile(newx1))
-        {
-            Vec2f newPoint2 = {newx2, newy(newx2, p2)};
-            if (newx2 < workpiece.profile[p2][0])
-                indexMin = p2 + 1;
-            else
-                indexMin = p2;
-            newList.push_back(newPoint2);
-            for (int i = indexMin; i <= p1; i++)
-                newList.push_back(workpiece.profile[i]);
-            return lookForMaxInList(newList);
-        }
-        else if (alreadyInProfile(newx2))
-        {
-            Vec2f newPoint1 = {newx1, newy(newx1, p1)};
-            if (newx1 < workpiece.profile[p1][0])
-                indexMax = p1 - 1;
-            else
-                indexMax = p1;
-            for (int i = p2; i <= indexMax; i++)
-                newList.push_back(workpiece.profile[i]);
-            newList.push_back(newPoint1);
-            return lookForMaxInList(newList);
-        }
-
-        Vec2f newPoint1 = {newx1, newy(newx1, p1)};
-        Vec2f newPoint2 = {newx2, newy(newx2, p2)};
-
-        if (newx1 < workpiece.profile[p1][0])
-            indexMax = p1 - 1;
-        else
-            indexMax = p1;
-        if (newx2 < workpiece.profile[p2][0])
-            indexMin = p2 + 1;
-        else
-            indexMin = p2;
-
-        newList.push_back(newPoint2);
-        for (int i = indexMin; i <= indexMax; i++)
-            newList.push_back(workpiece.profile[i]);
-        newList.push_back(newPoint1);
-    }
-    else if ((newx1 > 0) && (newx1 < workpiece.profile.back()[0]))
-    {
-        int p = lookForNearestIndex(newx1);
-        if (alreadyInProfile(newx1))
-        {
-            for (int i=0; i <= p; i++)
-            {
-                newList.push_back(workpiece.profile[i]);
-            }
-            return lookForMaxInList(newList);
-        }
-        Vec2f newPoint = {newx1, newy(newx1, p)};
-
-        if (newx1 < workpiece.profile[p][0])
-            indexMax = p - 1;
-        else
-            indexMax = p;
-
-        for (int i = 0; i <= indexMax; i++)
-            newList.push_back(workpiece.profile[i]);
-        newList.push_back(newPoint);
-    }
-    else if ((newx2 < workpiece.profile.back()[0]) && (newx2 > 0))
-    {
-        int p = lookForNearestIndex(newx2);
-        if (alreadyInProfile(newx2))
-        {
-            for (int i=p; i < workpiece.profile.size(); i++)
-            {
-                newList.push_back(workpiece.profile[i]);
-            }
-            return lookForMaxInList(newList);
-        }
-        Vec2f newPoint = {newx2, newy(newx2, p)};
-
-        if (newx2 < workpiece.profile[p][0])
-            indexMin = p + 1;
-        else
-            indexMin = p;
-
-        newList.push_back(newPoint);
-        for (int i = indexMin; i < workpiece.profile.size(); i++)
-            newList.push_back(workpiece.profile[i]);
-    }
-    else if ((newx1 >= workpiece.profile.back()[0]) && (newx2 <= 0))
-    {
-        return lookForMaxInList(workpiece.profile);
-    }
-
-    return lookForMaxInList(newList);
-}
-
-//Add of Marie
-bool VRWorkpieceElement::alreadyInProfile(float newx) {
-    for (int i = 0; i < workpiece.profile.size(); i++)
-    {
-        float epsilon = 1e-6;
-        if (abs(newx - workpiece.profile[i][0]) < epsilon)
-        {
-            return true;
-        }
-    }
-    return false;
-}
-
-//Add of Marie
-float VRWorkpieceElement::newy(float newx, int p) {
-    float a = 0, b = 0;
-
-    if (newx < workpiece.profile[p][0])
-    {
-        a = (workpiece.profile[p-1][1] - workpiece.profile[p][1]) / (workpiece.profile[p-1][0] - workpiece.profile[p][0]);
-        b = (workpiece.profile[p-1][0] * workpiece.profile[p][1] - workpiece.profile[p][0] * workpiece.profile[p-1][1]) / (workpiece.profile[p-1][0] - workpiece.profile[p][0]);
-    }
-    else
-    {
-        a = (workpiece.profile[p][1] - workpiece.profile[p+1][1])  / (workpiece.profile[p][0] - workpiece.profile[p+1][0]);
-        b = (workpiece.profile[p][0] * workpiece.profile[p+1][1] - workpiece.profile[p+1][0] * workpiece.profile[p][1]) / (workpiece.profile[p][0] - workpiece.profile[p+1][0]);
-    }
-    return (a * newx + b);
-}
-
-//Add of Marie
-int VRWorkpieceElement::lookForNearestIndex(float newx) {
-    int index = 0;
-
-    for(int i = 0; i < workpiece.profile.size(); i++)
-    {
-        if (abs(newx - workpiece.profile[i][0]) < abs(newx - workpiece.profile[index][0]))
-        {
-            index = i;
-        }
-    }
-
-    return index;
-}
-
-//Add of Marie
-float VRWorkpieceElement::lookForMaxInList(vector<Vec2f> liste) {
-    float maximum = 0;
-
-    for (int i = 0; i < liste.size(); i++)
-    {
-        if (liste[i][1] > maximum)
-        {
-            maximum = liste[i][1];
-        }
-    }
-    return maximum;
 }
 
 void VRWorkpieceElement::deleteElement() {
