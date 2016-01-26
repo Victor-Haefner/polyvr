@@ -15,6 +15,9 @@ struct VRPySelection : VRPyBaseT<OSG::VRSelection> {
     static PyObject* getSelected(VRPySelection* self);
     static PyObject* getPartialSelected(VRPySelection* self);
     static PyObject* getSubselection(VRPySelection* self, PyObject* args);
+
+    static PyObject* computePCA(VRPySelection* self);
+    static PyObject* selectPlane(VRPySelection* self, PyObject* args);
 };
 
 #endif // VRPYSELECTION_H_INCLUDED

@@ -393,8 +393,6 @@ VRGeometryPtr VRGeometry::copySelection(VRSelectionPtr sel) {
     GeoUInt32PropertyRecPtr sel_inds = GeoUInt32Property::create();
     int Nc = getColorChannels( cols );
 
-    cout << "VRGeometry::copySelection " << Nc << endl;
-
     // copy selected vertices
     auto sinds = sel->getSubselection(ptr());
     std::sort(sinds.begin(), sinds.end());
