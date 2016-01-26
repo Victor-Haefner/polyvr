@@ -73,9 +73,10 @@ void VRDeviceManager::updateActivatedSignals() {
     }
 }
 
-void VRDeviceManager::updateDeviceDynNodes(VRObjectPtr ancestor) {
-    for (itr =devices.begin(); itr!=devices.end(); itr++) {
-        itr->second->updateDynTree(ancestor);
+void VRDeviceManager::resetDeviceDynNodes(VRObjectPtr root) {
+    for (auto d : devices) {
+        d.second->clearDynTrees();
+        d.second->addDynTree(root);
     }
 }
 
