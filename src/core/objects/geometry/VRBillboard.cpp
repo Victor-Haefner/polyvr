@@ -5,6 +5,7 @@
 #include <OpenSG/OSGSimpleGeometry.h>        // Methods to create simple geos.
 #include "core/tools/VRText.h"
 #include "core/objects/material/VRShader.h"
+#include "core/objects/material/VRTexture.h"
 #include "core/scene/VRSceneManager.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -48,7 +49,7 @@ VRBillboardPtr VRBillboard::create(string name, bool alpha) { return shared_ptr<
 VRBillboardPtr VRBillboard::ptr() { return static_pointer_cast<VRBillboard>( shared_from_this() ); }
 
 void VRBillboard::updateBBTexture() {
-    BBtexChunk->setImage(BBtexture);
+    BBtexChunk->setImage(BBtexture->getImage());
 }
 
 void VRBillboard::updateSize() {
@@ -73,7 +74,7 @@ VRBillboard::~VRBillboard() {
     //cout << "\ndestroy entity " << name << flush;
 }
 
-void VRBillboard::setTexture(ImageRecPtr img) {
+void VRBillboard::setTexture(VRTexturePtr img) {
     BBtexture = img;
     updateBBTexture();
 }

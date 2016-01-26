@@ -37,12 +37,15 @@ class VRGeometry : public VRTransform {
         NodeRecPtr mesh_node;
         ImageRecPtr texture;
         bool meshSet = false;
+        int lastMeshChange = 0;
 
         map<string, VRGeometryPtr> dataLayer;
 
         Reference source;
 
         VRObjectPtr copy(vector<VRObjectPtr> children);
+
+        void meshChanged();
 
         virtual void saveContent(xmlpp::Element* e);
         virtual void loadContent(xmlpp::Element* e);
@@ -78,7 +81,7 @@ class VRGeometry : public VRTransform {
         void setPositions(GeoVectorProperty* Pos);
         void setNormals(GeoVectorProperty* Norms);
         void setColors(GeoVectorProperty* Colors, bool fixMapping = false);
-        void setIndices(GeoIntegralProperty* Indices);
+        void setIndices(GeoIntegralProperty* Indices, bool doLengths = false);
         void setTexCoords(GeoVectorProperty* Tex, int i=0, bool fixMapping = false);
         void setLengths(GeoIntegralProperty* lenghts);
         void setPositionalTexCoords(float scale = 1.0);
@@ -92,6 +95,8 @@ class VRGeometry : public VRTransform {
         VRGeometryPtr separateSelection(VRSelectionPtr sel);
         void fixColorMapping();
         void updateNormals();
+
+        int getLastMeshChange();
 
         void genTexCoords(string mapping = "CUBE", float scale = 1, int channel = 0, std::shared_ptr<pose> p = 0);
 
@@ -119,6 +124,8 @@ class VRGeometry : public VRTransform {
         ImageRecPtr getTexture() { return texture; }
 
         void influence(vector<Vec3f> pnts, vector<Vec3f> values, int power, float color_code = -1, float dl_max = 1.0);
+
+        void readSharedMemory(string segment, string object);
 };
 
 OSG_END_NAMESPACE;

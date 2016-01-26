@@ -41,29 +41,22 @@ string toString(OSG::Vec3i v) {
     return ss.str();
 }
 
-bool toBool(string s) {
+template <class T>
+T ssToVal(const string& s, int* N = 0) {
     stringstream ss;
     ss << s;
-    bool b;
-    ss >> b;
-    return b;
+    if(N) *N = ss.tellg();
+    T v;
+    ss >> v;
+    if(N) *N = ss.tellg() - *N;
+    return v;
 }
 
-int toInt(string s) {
-    stringstream ss;
-    ss << s;
-    int i;
-    ss >> i;
-    return i;
-}
-
-float toFloat(string s) {
-    stringstream ss;
-    ss << s;
-    float i;
-    ss >> i;
-    return i;
-}
+bool toBool(string s, int* N) { return ssToVal<bool>(s,N); }
+int toInt(string s, int* N) { return ssToVal<int>(s,N); }
+unsigned int toUInt(string s, int* N) { return ssToVal<unsigned int>(s,N); }
+float toFloat(string s, int* N) { return ssToVal<float>(s,N); }
+double toDouble(string s, int* N) { return ssToVal<double>(s,N); }
 
 OSG::Vec2f toVec2f(string s) {
     OSG::Vec2f v;

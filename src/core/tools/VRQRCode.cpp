@@ -2,6 +2,7 @@
 #include <qrencode.h>
 #include <OpenSG/OSGImage.h>
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/material/VRTexture.h"
 
 void createQRCode(std::string s, OSG::VRMaterialPtr mat, OSG::Vec3f fg, OSG::Vec3f bg, int offset) {
     OSG::ImageRecPtr img = OSG::Image::create();
@@ -25,6 +26,6 @@ void createQRCode(std::string s, OSG::VRMaterialPtr mat, OSG::Vec3f fg, OSG::Vec
 
     img->set(OSG::Image::OSG_RGB_PF, w, w, 1, 0, 1, 0.0, (const uint8_t*)&data[0], OSG::Image::OSG_FLOAT32_IMAGEDATA, true, 1);
 
-    mat->setTexture(img);
+    mat->setTexture( OSG::VRTexture::create(img) );
 }
 

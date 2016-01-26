@@ -2,15 +2,12 @@
 #define VRPYIMAGE_H_INCLUDED
 
 #include "VRPyBase.h"
-#include <OpenSG/OSGImage.h>
+#include "core/objects/material/VRTexture.h"
 
-struct VRPyImage : VRPyBaseT<OSG::Image> {
+struct VRPyImage : VRPyBaseT<OSG::VRTexture> {
     static PyMethodDef methods[];
 
-    OSG::ImageRecPtr img;
-    int internal_format = -1;
     static PyObject* New(PyTypeObject *type, PyObject *args, PyObject *kwds);
-    static void dealloc(VRPyImage* self);
 };
 
 #endif // VRPYIMAGE_H_INCLUDED

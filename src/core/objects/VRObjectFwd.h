@@ -25,6 +25,9 @@ ptrFwd(VRGroup);
 ptrFwd(VRBillboard);
 ptrFwd(VRStage);
 
+// other
+ptrFwd(VRTexture);
+
 // tools
 ptrFwd(VRAnnotationEngine);
 ptrFwd(VRAnalyticGeometry);

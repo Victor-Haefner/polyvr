@@ -30,13 +30,13 @@ class OcPoint {
 
 class Octree {
     private:
-        float resolution;
-        float size;
+        float resolution = 0.1;
+        float size = 10;
 
         OcPoint center;
 
-        Octree* parent;
-        Octree* children[8];
+        Octree* parent = 0;
+        Octree* children[8] = {0,0,0,0,0,0,0,0};
 
         vector<void*> data;
 

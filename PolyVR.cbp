@@ -14,7 +14,7 @@
 				<Compiler>
 					<Add option="-g" />
 					<Add option="-frounding-math" />
-					<Add directory="src/addons/Engineering/Milling" />
+					<Add option="-fopenmp" />
 				</Compiler>
 			</Target>
 			<Target title="Release">
@@ -24,7 +24,7 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O2" />
-					<Add directory="src/addons/Engineering/Milling" />
+					<Add option="-fopenmp" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -42,6 +42,7 @@
 			<Add option="`pkg-config gtkglext-1.0 --cflags`" />
 			<Add option="`pkg-config python --cflags`" />
 			<Add option="`pkg-config gtksourceview-2.0 --cflags`" />
+			<Add option="-fopenmp" />
 			<Add option="-use_readonly_const" />
 			<Add option="-fPIC" />
 			<Add option="-Wno-deprecated" />
@@ -101,6 +102,7 @@
 			<Add directory="/usr/include/vtk-5.8/" />
 			<Add directory="/usr/include/bullet" />
 			<Add directory="/usr/include/gtkglext-1.0" />
+			<Add directory="/usr/include/vrpn" />
 			<Add directory="/usr/include/CEF" />
 			<Add directory="src" />
 			<Add directory="/usr/include/opensg" />
@@ -195,6 +197,7 @@
 			<Add option="-ludev" />
 			<Add option="-lffmpegsumo" />
 			<Add option="-lraptor2" />
+			<Add option="-lgomp" />
 			<Add directory="/usr/X11R6/lib64" />
 			<Add directory="/usr/lib/virtuose" />
 			<Add directory="/usr/lib/i386-linux-gnu" />
@@ -219,6 +222,18 @@
 		<Unit filename="src/addons/Bullet/CarDynamics/CarDynamics.h" />
 		<Unit filename="src/addons/Bullet/CarDynamics/VRPyCarDynamics.cpp" />
 		<Unit filename="src/addons/Bullet/CarDynamics/VRPyCarDynamics.h" />
+		<Unit filename="src/addons/Bullet/Fluids/VRFluids.cpp" />
+		<Unit filename="src/addons/Bullet/Fluids/VRFluids.h" />
+		<Unit filename="src/addons/Bullet/Fluids/VRPyFluids.cpp" />
+		<Unit filename="src/addons/Bullet/Fluids/VRPyFluids.h" />
+		<Unit filename="src/addons/Bullet/Particles/VREmitter.cpp" />
+		<Unit filename="src/addons/Bullet/Particles/VREmitter.h" />
+		<Unit filename="src/addons/Bullet/Particles/VRParticle.h" />
+		<Unit filename="src/addons/Bullet/Particles/VRParticles.cpp" />
+		<Unit filename="src/addons/Bullet/Particles/VRParticles.h" />
+		<Unit filename="src/addons/Bullet/Particles/VRParticlesT.h" />
+		<Unit filename="src/addons/Bullet/Particles/VRPyParticles.cpp" />
+		<Unit filename="src/addons/Bullet/Particles/VRPyParticles.h" />
 		<Unit filename="src/addons/CEF/CEF.cpp" />
 		<Unit filename="src/addons/CEF/CEF.h" />
 		<Unit filename="src/addons/CEF/CEFWindowsKey.h" />
@@ -485,6 +500,8 @@
 		<Unit filename="src/core/math/polygon.h" />
 		<Unit filename="src/core/math/pose.cpp" />
 		<Unit filename="src/core/math/pose.h" />
+		<Unit filename="src/core/math/triangulator.cpp" />
+		<Unit filename="src/core/math/triangulator.h" />
 		<Unit filename="src/core/navigation/VRNavigator.cpp" />
 		<Unit filename="src/core/navigation/VRNavigator.h" />
 		<Unit filename="src/core/networking/VRCommunication.h" />
@@ -545,6 +562,8 @@
 		<Unit filename="src/core/objects/material/VRPerlin.h" />
 		<Unit filename="src/core/objects/material/VRShader.cpp" />
 		<Unit filename="src/core/objects/material/VRShader.h" />
+		<Unit filename="src/core/objects/material/VRTexture.cpp" />
+		<Unit filename="src/core/objects/material/VRTexture.h" />
 		<Unit filename="src/core/objects/material/VRTextureGenerator.cpp" />
 		<Unit filename="src/core/objects/material/VRTextureGenerator.h" />
 		<Unit filename="src/core/objects/material/VRVideo.cpp" />
@@ -573,6 +592,8 @@
 		<Unit filename="src/core/scene/VRPhysicsManager.h" />
 		<Unit filename="src/core/scene/VRRenderManager.cpp" />
 		<Unit filename="src/core/scene/VRRenderManager.h" />
+		<Unit filename="src/core/scene/VRSSAO.cpp" />
+		<Unit filename="src/core/scene/VRSSAO.h" />
 		<Unit filename="src/core/scene/VRScene.cpp" />
 		<Unit filename="src/core/scene/VRScene.h" />
 		<Unit filename="src/core/scene/VRSceneLoader.cpp" />
@@ -648,6 +669,8 @@
 		<Unit filename="src/core/scripting/VRPyPath.h" />
 		<Unit filename="src/core/scripting/VRPyPathtool.cpp" />
 		<Unit filename="src/core/scripting/VRPyPathtool.h" />
+		<Unit filename="src/core/scripting/VRPyPolygon.cpp" />
+		<Unit filename="src/core/scripting/VRPyPolygon.h" />
 		<Unit filename="src/core/scripting/VRPyPolygonSelection.cpp" />
 		<Unit filename="src/core/scripting/VRPyPolygonSelection.h" />
 		<Unit filename="src/core/scripting/VRPyPose.cpp" />
@@ -676,6 +699,8 @@
 		<Unit filename="src/core/scripting/VRPyTextureRenderer.h" />
 		<Unit filename="src/core/scripting/VRPyTransform.cpp" />
 		<Unit filename="src/core/scripting/VRPyTransform.h" />
+		<Unit filename="src/core/scripting/VRPyTriangulator.cpp" />
+		<Unit filename="src/core/scripting/VRPyTriangulator.h" />
 		<Unit filename="src/core/scripting/VRPyTypeCaster.cpp" />
 		<Unit filename="src/core/scripting/VRPyTypeCaster.h" />
 		<Unit filename="src/core/scripting/VRScript.cpp" />

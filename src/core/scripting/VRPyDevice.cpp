@@ -45,7 +45,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRDevice>::type = {
     0,                         /* tp_dictoffset */
     (initproc)init,      /* tp_init */
     0,                         /* tp_alloc */
-    0,                 /* tp_new */
+    New_named,                 /* tp_new */
 };
 
 PyMemberDef VRPyDevice::members[] = {
@@ -80,8 +80,26 @@ PyMethodDef VRPyDevice::methods[] = {
     {"drop", (PyCFunction)VRPyDevice::drop, METH_NOARGS, "Drop any object - drop()" },
     {"setSpeed", (PyCFunction)VRPyDevice::setSpeed, METH_VARARGS, "Set the navigation speed of the device - setSpeed(float)" },
     {"getSpeed", (PyCFunction)VRPyDevice::getSpeed, METH_NOARGS, "Get the navigation speed of the device - float getSpeed()" },
+    {"addSignal", (PyCFunction)VRPyDevice::addSignal, METH_VARARGS, "Add a new signal - addSignal(int key, int state)" },
+    {"trigger", (PyCFunction)VRPyDevice::trigger, METH_VARARGS, "Trigger signal - trigger(int key, int state)" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyDevice::addSignal(VRPyDevice* self, PyObject *args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::setSpeed, Object is invalid"); return NULL; }
+    int k, s;
+    if (! PyArg_ParseTuple(args, "ii", &k, &s)) return NULL;
+    self->obj->addSignal( k,s );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyDevice::trigger(VRPyDevice* self, PyObject *args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::setSpeed, Object is invalid"); return NULL; }
+    int k, s;
+    if (! PyArg_ParseTuple(args, "ii", &k, &s)) return NULL;
+    self->obj->change_button( k,s );
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyDevice::setSpeed(VRPyDevice* self, PyObject *args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::setSpeed, Object is invalid"); return NULL; }

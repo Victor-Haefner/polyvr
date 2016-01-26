@@ -34,13 +34,21 @@ polygon fromCGALPolygon(CGALPolygon cp) {
 polygon::polygon() {}
 
 bool polygon::isCCW() {
-    float s;
-    for (int i=1; i<size(); i++) {
+    float s = 0;
+    for (int i=1; i<points.size(); i++) {
         auto v1 = points[i-1];
         auto v2 = points[i];
         s += (v2[0]-v1[0])*(v2[1]+v1[1]);
-    }
-    if (s < 0) return true;
+    } if (s < 0) return true;
+
+    s = 0;
+    for (int i=1; i<points3.size(); i++) {
+        auto v1 = points3[i-1];
+        auto v2 = points3[i];
+        //s += (v2[0]-v1[0])*(v2[1]+v1[1]);
+        s += v1.cross(v2).length()/v1.length()/v2.length();
+    } if (s < 0) return true;
+
     return false;
 }
 
@@ -79,11 +87,17 @@ void polygon::runTest() {
 }
 
 void polygon::addPoint(Vec2f p) { if (!closed) points.push_back(p); }
+void polygon::addPoint(Vec3f p) { if (!closed) points3.push_back(p); }
 Vec2f polygon::getPoint(int i) { return points[i]; }
-int polygon::size() { return points.size(); }
+Vec3f polygon::getPoint3(int i) { return points3[i]; }
+int polygon::size() { return max( points.size(), points3.size() ); }
+void polygon::set(vector<Vec2f> vec) { for (auto v : vec) addPoint(v); }
+
+std::shared_ptr<polygon> polygon::create() { return std::shared_ptr<polygon>( new polygon() ); }
 
 void polygon::clear() {
     points.clear();
+    points3.clear();
     closed = false;
     convex = false;
 }
@@ -92,6 +106,7 @@ void polygon::close() {
     if (closed) return;
     closed = true;
     if (points.size() > 0) points.push_back(points[0]);
+    if (points3.size() > 0) points3.push_back(points3[0]);
 }
 
 polygon polygon::sort() {
@@ -119,6 +134,7 @@ polygon polygon::sort() {
 }
 
 vector<Vec2f> polygon::get() { return points; }
+vector<Vec3f> polygon::get3() { return points3; }
 
 polygon polygon::getConvexHull() { // graham scan algorithmus
     auto radial_sort = sort();
@@ -181,9 +197,8 @@ bool polygon::isConvex() {
 }
 
 void polygon::turn() {
-    auto tmp = points;
-    int N = points.size()-1;
-    for (int i=N; i>=0; i--) points[N-i] = tmp[i];
+    reverse(points.begin(), points.end());
+    reverse(points3.begin(), points3.end());
 }
 
 vector< polygon > polygon::getConvexDecomposition() {

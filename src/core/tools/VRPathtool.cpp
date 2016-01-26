@@ -22,7 +22,7 @@ VRPathtool::VRPathtool() {
 }
 
 void VRPathtool::update() {
-    for (auto h : handles_dict) updateHandle(h.first);
+    for (auto h : handles) updateHandle(h.lock());
 }
 
 void VRPathtool::addPath(path* p, VRObjectPtr anchor) {
@@ -33,9 +33,11 @@ void VRPathtool::addPath(path* p, VRObjectPtr anchor) {
 
     for (auto point : p->getPoints()) {
         VRGeometryPtr h = newHandle();
-        handles_dict[h] = e;
-        e->handles[h] = e->handles.size()-1;
-        e->anchor->addChild(h);
+        entries[h.get()] = e;
+        handles.push_back(h);
+        e->points[h.get()] = e->points.size()-1;
+        e->handles.push_back(h);
+        e->anchor.lock()->addChild(h);
         h->setPose(point.p, point.n, point.u);
     }
 }
@@ -78,11 +80,11 @@ vector<path*> VRPathtool::getPaths() {
 
 vector<VRGeometryPtr> VRPathtool::getHandles(path* p) {
     vector<VRGeometryPtr> res;
-    if (p == 0) for (auto h : handles_dict) res.push_back(h.first);
+    if (p == 0) for (auto h : handles) res.push_back(h.lock());
     else {
         map<int, VRGeometryPtr> sor;
         entry* e = paths[p];
-        for (auto h : e->handles) sor[h.second] = h.first;
+        for (auto h : e->handles) if (auto hl = h.lock()) sor[ e->points[hl.get()] ] = hl;
         for (auto h : sor) res.push_back(h.second);
     }
 
@@ -93,7 +95,7 @@ vector<VRGeometryPtr> VRPathtool::getHandles(path* p) {
 
 VRStrokePtr VRPathtool::getStroke(path* p) {
     if (paths.count(p) == 0) return 0;
-    return paths[p]->line;
+    return paths[p]->line.lock();
 }
 
 VRGeometryPtr VRPathtool::extrude(VRDevice* dev, path* p) {
@@ -106,9 +108,11 @@ VRGeometryPtr VRPathtool::extrude(VRDevice* dev, path* p) {
     e->p->addPoint(Vec3f(0,0,-1), Vec3f(1,0,0), Vec3f(1,1,1));
 
     VRGeometryPtr h = newHandle();
-    handles_dict[h] = e;
-    e->handles[h] = e->handles.size()-1;
-    e->anchor->addChild(h);
+    entries[h.get()] = e;
+    handles.push_back(h);
+    e->points[h.get()] = e->points.size()-1;
+    e->handles.push_back(h);
+    e->anchor.lock()->addChild(h);
     if (dev) {
         dev->drag(h, dev->getBeacon());
         h->setPose(Vec3f(0,0,-1), Vec3f(0,0,-1), Vec3f(0,1,0));
@@ -127,12 +131,14 @@ void VRPathtool::clear(path* p) {
     entry* e = paths[p];
 
     for (auto h : e->handles) {
-        handles_dict.erase(h.first);
-        h.first->destroy();
+        if (auto hl = h.lock()) {
+            entries.erase(hl.get());
+            hl->destroy();
+        }
     }
     e->handles.clear();
-    if (e->line) e->line->destroy();
-    e->line = 0;
+    if (e->line.lock()) e->line.lock()->destroy();
+    e->line.reset();
 
     p->clear();
 }
@@ -146,9 +152,10 @@ void VRPathtool::remPath(path* p) {
 }
 
 void VRPathtool::updateHandle(VRGeometryPtr handle) {
+    if (!handle) return;
     Matrix m = handle->getWorldMatrix();
-    entry* e = handles_dict[handle];
-    e->p->setPoint(e->handles[handle], Vec3f(m[3]), Vec3f(m[2]), Vec3f(1,1,1), Vec3f(m[1]));
+    entry* e = entries[handle.get()];
+    e->p->setPoint(e->points[handle.get()], Vec3f(m[3]), Vec3f(m[2]), Vec3f(1,1,1), Vec3f(m[1]));
 
     int hN = e->handles.size();
     if (hN <= 0) return;
@@ -158,42 +165,41 @@ void VRPathtool::updateHandle(VRGeometryPtr handle) {
     if (pN <= 2) return;
 
     // update path line
-    if (e->line == 0) {
-        e->line = VRStroke::create("path");
-        e->line->setPersistency(0);
+    if (!e->line.lock()) {
+        auto line = VRStroke::create("path");
+        e->line = line;
+        line->setPersistency(0);
         VRMaterialPtr matl = VRMaterial::create("pline");
         matl->setLit(false);
         matl->setDiffuse(Vec3f(0.1,0.9,0.2));
         matl->setLineWidth(3);
-        e->line->setMaterial(matl);
-        e->anchor->addChild(e->line);
+        line->setMaterial(matl);
+        e->anchor.lock()->addChild(line);
         vector<Vec3f> profile;
         profile.push_back(Vec3f());
-        e->line->addPath(e->p);
-        e->line->strokeProfile(profile, 0);
+        line->addPath(e->p);
+        line->strokeProfile(profile, 0);
     }
 
-    e->line->update();
+    e->line.lock()->update();
 }
 
 void VRPathtool::updateDevs() {
     for (auto dev : VRSetupManager::getCurrent()->getDevices()) { // get dragged objects
         VRGeometryPtr obj = static_pointer_cast<VRGeometry>(dev.second->getDraggedObject());
         if (obj == 0) continue;
-        if (handles_dict.count(obj) == 0) continue;
+        if (entries.count(obj.get()) == 0) continue;
         updateHandle(obj);
     }
 }
 
-void VRPathtool::setVisible(bool handles, bool lines) {
-    for (auto p : paths) if (p.second->line) p.second->line->setVisible(lines);
-    for (auto h : handles_dict) h.first->setVisible(handles);
+void VRPathtool::setVisible(bool hvis, bool lines) {
+    for (auto p : paths) if (p.second->line.lock()) p.second->line.lock()->setVisible(lines);
+    for (auto h : handles) h.lock()->setVisible(hvis);
 }
 
 void VRPathtool::select(VRGeometryPtr h) {
     manip->handle(h);
-
-    if (handles_dict.count(h) == 0) return;
-
+    if (entries.count(h.get()) == 0) return;
     manip->manipulate(h);
 }

@@ -17,6 +17,8 @@
 #include "VRPyIntersection.h"
 #include "VRPyPose.h"
 #include "VRPyPath.h"
+#include "VRPyPolygon.h"
+#include "VRPyTriangulator.h"
 #include "VRPyStroke.h"
 #include "VRPyColorChooser.h"
 #include "VRPyTextureRenderer.h"
@@ -57,6 +59,8 @@
 #include "core/setup/VRSetup.h"
 #include "core/setup/VRSetupManager.h"
 #include "addons/CaveKeeper/VRPyCaveKeeper.h"
+#include "addons/Bullet/Particles/VRPyParticles.h"
+#include "addons/Bullet/Fluids/VRPyFluids.h"
 #include "addons/Bullet/CarDynamics/VRPyCarDynamics.h"
 #include "addons/Engineering/Factory/VRPyLogistics.h"
 #include "addons/Engineering/Factory/VRPyProduction.h"
@@ -299,6 +303,8 @@ void VRScriptManager::initPyModules() {
     registerModule<VRPyAnimation>("Animation", pModVR);
     registerModule<VRPyPose>("Pose", pModVR);
     registerModule<VRPyPath>("Path", pModVR);
+    registerModule<VRPyPolygon>("Polygon", pModVR);
+    registerModule<VRPyTriangulator>("Triangulator", pModVR);
     registerModule<VRPyRecorder>("Recorder", pModVR);
     registerModule<VRPySnappingEngine>("SnappingEngine", pModVR);
     registerModule<VRPyAnnotationEngine>("AnnotationEngine", pModVR, VRPyGeometry::typeRef);
@@ -317,6 +323,8 @@ void VRScriptManager::initPyModules() {
 	registerModule<VRPyColorChooser>("ColorChooser", pModVR);
 	registerModule<VRPyTextureRenderer>("TextureRenderer", pModVR, VRPyObject::typeRef);
     registerModule<VRPyCaveKeeper>("CaveKeeper", pModVR);
+    registerModule<VRPyParticles>("Particles", pModVR, VRPyGeometry::typeRef);
+    registerModule<VRPyFluids>("Fluids", pModVR, VRPyParticles::typeRef);
     registerModule<VRPyCarDynamics>("CarDynamics", pModVR);
     registerModule<VRPyCEF>("CEF", pModVR);
     registerModule<VRPyWebCam>("Webcam", pModVR, VRPySprite::typeRef);

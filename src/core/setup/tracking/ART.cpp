@@ -146,8 +146,9 @@ void ART::checkNewDevices(int type, int N) {
     for (int i=0; i<N; i++) {
         int k = ART_device::key(i,type);
         if (devices.count(k) == 0) {
+            cout << "ART - New device " << type << " " << k << endl;
             devices[k] = new ART_device(i,type);
-            VRSetupManager::getCurrent()->getSignal_on_new_art_device()->trigger<VRDevice>();
+            on_new_device->trigger<VRDevice>();
         }
     }
 }
@@ -182,6 +183,7 @@ void ART::setARTPort(int port) {
         delete dtrack;
         port = -1;
         dtrack = 0;
+        return;
     }
     dtrack->receive();
 }

@@ -6,13 +6,13 @@
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include "numpy/ndarrayobject.h"
 
-template<> PyTypeObject VRPyBaseT<OSG::Image>::type = {
+template<> PyTypeObject VRPyBaseT<OSG::VRTexture>::type = {
     PyObject_HEAD_INIT(NULL)
     0,
     "VR.Image",
     sizeof(VRPyImage),
     0,
-    (destructor)VRPyImage::dealloc,
+    (destructor)dealloc,
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
 " Constructor:\n\n"
@@ -50,8 +50,6 @@ bool CheckExtension(string extN) {
 }
 
 PyObject* VRPyImage::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
-    OSG::ImageRecPtr img = OSG::Image::create();
-
     import_array1(NULL);
     PyArrayObject* data = 0;
     int W, H;
@@ -70,17 +68,9 @@ PyObject* VRPyImage::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     //bool b = CheckExtension(PyString_AsString((PyObject*)channels));
     //cout << "check ext " << PyString_AsString((PyObject*)channels) << " " << b << endl;
     //if (b)
-    img->set(pf, W, H, 1, 1, 1, 0, cdata, dt, true);
-
-    VRPyImage* pyimg = (VRPyImage*)alloc( type, img );
-    pyimg->img = img;
-    if (channels2) pyimg->internal_format = toOSGConst(PyString_AsString((PyObject*)channels2));
-    else pyimg->internal_format = -1;
-    return (PyObject*)pyimg;
-}
-
-void VRPyImage::dealloc(VRPyImage* self) {
-    if (self->img != 0) self->img = 0;
-    self->ob_type->tp_free((PyObject*)self);
+    OSG::VRTexturePtr img = OSG::VRTexture::create();
+    img->getImage()->set(pf, W, H, 1, 1, 1, 0, cdata, dt, true);
+    if (channels2) img->setInternalFormat( toOSGConst(PyString_AsString((PyObject*)channels2)) );
+    return allocPtr( type, img );
 }
 

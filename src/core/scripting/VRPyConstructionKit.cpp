@@ -55,6 +55,7 @@ PyMethodDef VRPyConstructionKit::methods[] = {
     {"addAnchorType", (PyCFunction)VRPyConstructionKit::addAnchorType, METH_VARARGS, "Add new anchor type - addAnchorType(size, color)" },
     {"addObjectAnchor", (PyCFunction)VRPyConstructionKit::addObjectAnchor, METH_VARARGS, "Add anchor to object - addObjectAnchor(obj, int anchor, position, flt radius)" },
     {"addObject", (PyCFunction)VRPyConstructionKit::addObject, METH_VARARGS, "Get internal selector - addObject(obj)" },
+    {"remObject", (PyCFunction)VRPyConstructionKit::remObject, METH_VARARGS, "Get internal selector - remObject(obj)" },
     {"breakup", (PyCFunction)VRPyConstructionKit::breakup, METH_VARARGS, "Split an object from the system - breakup(obj)" },
     {NULL}  /* Sentinel */
 };
@@ -104,6 +105,14 @@ PyObject* VRPyConstructionKit::addObject(VRPyConstructionKit* self, PyObject* ar
     OSG::VRGeometryPtr geo = 0;
     if (!VRPyGeometry::parse(args, &geo)) return NULL;
     self->obj->addObject(geo);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyConstructionKit::remObject(VRPyConstructionKit* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    OSG::VRGeometryPtr geo = 0;
+    if (!VRPyGeometry::parse(args, &geo)) return NULL;
+    self->obj->remObject(geo);
     Py_RETURN_TRUE;
 }
 

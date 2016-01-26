@@ -2,6 +2,7 @@
 #define TEXT2PNG_H_INCLUDED
 
 #include <OpenSG/OSGSimpleTexturedMaterial.h>
+#include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -12,7 +13,7 @@ class VRText {
 
         void convertData(UChar8* data, int width, int height);
 
-        ImageRecPtr createBmp (string text, string font, int width, int height, Color4f c, Color4f bg);
+        VRTexturePtr createBmp (string text, string font, int width, int height, Color4f c, Color4f bg);
 
         //void setImage(SimpleTexturedMaterialRecPtr tex, ImageRecPtr img);
 
@@ -25,7 +26,7 @@ class VRText {
 
         static VRText* get();
 
-        ImageRecPtr create(string text, string font, int scale, Color4f fg, Color4f bg);
+        VRTexturePtr create(string text, string font, int scale, Color4f fg, Color4f bg);
 
         SimpleTexturedMaterialRecPtr getTexture (string text, string font, int scale, Color4f fg, Color4f bg);
 };

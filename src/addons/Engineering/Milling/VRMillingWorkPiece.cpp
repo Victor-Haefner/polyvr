@@ -313,7 +313,7 @@ void VRWorkpieceElement::build() {
 
     geometry->setPositions(positions);
     geometry->setNormals(normals);
-    geometry->setIndices(indices);
+    geometry->setIndices(indices, true);
     geometry->setPositionalTexCoords();
 
     updateIssued = false;

@@ -3,12 +3,6 @@
 
 #include "core/objects/VRObjectFwd.h"
 #include "core/utils/VRStorage.h"
-#include <OpenSG/OSGFieldContainerFields.h>
-
-namespace OSG {
-    class Image;
-    OSG_GEN_CONTAINERPTR(Image);
-}
 
 using namespace std;
 
@@ -18,7 +12,7 @@ class AVFrame;
 
 class VRVideo : public OSG::VRStorage {
     private:
-        map<int, map<int, OSG::ImageRecPtr> > frames; // frames[stream, frame]
+        map<int, map<int, OSG::VRTexturePtr> > frames; // frames[stream, frame]
         int width;
         int height;
         int NStreams;
@@ -40,8 +34,8 @@ class VRVideo : public OSG::VRStorage {
         void close();
         void play(int stream, float t0, float t1, float v);
 
-        OSG::ImageRecPtr getFrame(int stream, int i);
-        OSG::ImageRecPtr getFrame(int stream, float t);
+        OSG::VRTexturePtr getFrame(int stream, int i);
+        OSG::VRTexturePtr getFrame(int stream, float t);
         int getNFrames();
 };
 

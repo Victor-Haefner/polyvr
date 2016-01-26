@@ -94,8 +94,8 @@ PyMethodDef VRPyTransform::methods[] = {
     {"detach", (PyCFunction)VRPyTransform::deletePhysicsConstraints, METH_VARARGS, "delete constraint made to this transform with given transform through attach(toTransform). Example call : trans1.detach(trans2)" },
     {"setMass", (PyCFunction)VRPyTransform::setMass, METH_VARARGS, "Set the mass of the physics object" },
     {"setCollisionMargin", (PyCFunction)VRPyTransform::setCollisionMargin, METH_VARARGS, "Set the collision margin of the physics object" },
-    {"setCollisionGroup", (PyCFunction)VRPyTransform::setCollisionGroup, METH_VARARGS, "Set the collision group of the physics object" },
-    {"setCollisionMask", (PyCFunction)VRPyTransform::setCollisionMask, METH_VARARGS, "Set the collision mask of the physics object" },
+    {"setCollisionGroup", (PyCFunction)VRPyTransform::setCollisionGroup, METH_VARARGS, "Set the collision group of the physics object - setCollisionGroup(int g)\n\t g can be from 0 to 8" },
+    {"setCollisionMask", (PyCFunction)VRPyTransform::setCollisionMask, METH_VARARGS, "Set the collision mask of the physics object - setCollisionMask(int g)\n\t g can be from 0 to 8 and it is the group to collide with" },
     {"setCollisionShape", (PyCFunction)VRPyTransform::setCollisionShape, METH_VARARGS, "Set the collision mask of the physics object" },
     {"getCollisions", (PyCFunction)VRPyTransform::getCollisions, METH_NOARGS, "Return the current collisions with other objects" },
     {"applyImpulse", (PyCFunction)VRPyTransform::applyImpulse, METH_VARARGS, "Apply impulse on the physics object" },
@@ -538,10 +538,7 @@ PyObject* VRPyTransform::animate(VRPyTransform* self, PyObject *args) {
     if (!self->valid()) return NULL;
     VRPyPath* path = 0; float t; float o; int b;
     int l = 0;
-    if (pySize(args) == 4)
-        if (! PyArg_ParseTuple(args, "Offi", &path, &t, &o, &b)) return NULL;
-    if (pySize(args) == 5)
-        if (! PyArg_ParseTuple(args, "Offii", &path, &t, &o, &b, &l)) return NULL;
+    if (! PyArg_ParseTuple(args, "Offi|i", &path, &t, &o, &b, &l)) return NULL;
 	if (path == 0) { PyErr_SetString(err, "VRPyTransform::animate: path is invalid"); return NULL; }
     auto anim = self->objPtr->startPathAnimation(path->obj, t, o, b, l);
     return VRPyAnimation::fromPtr(anim);

@@ -63,7 +63,8 @@ void reshape( int width, int height ) { window->resize( width, height ); }
 const char     *name           = "ClusterServer";
 const char     *connectionType = "StreamSock";
 bool            fullscreen     = true;
-std::string     address        = "";
+bool            active_stereo  = false;
+string          address        = "";
 
 void initServer(int argc, char **argv) {
 	OSG::osgInit(argc, argv);
@@ -91,6 +92,35 @@ void initServer(int argc, char **argv) {
 	glutMainLoop();
 }
 
+void evalParams(int argc, char **argv) {
+    // evaluate params
+    for(int a=1 ; a<argc ; ++a) {
+        cout << " arg " << a << " : " << argv[a] << endl;
+        if (argv[a][0] != '-') { name=argv[a]; continue; }
+
+        switch(argv[a][1]) {
+            case 'm': connectionType="Multicast"; break;
+            case 'p': connectionType="SockPipeline"; break;
+            case 'w': fullscreen=false; break;
+            case 'A': active_stereo = true; break;
+            case 'a':
+                address = argv[a][2] ? argv[a]+2 : argv[++a];
+                if (address.empty()) { SLOG << "address missing" << OSG::endLog; exit(0); }
+                break;
+            default:
+                cout << argv[0] << " -m -p -w -a address -A " << argv[a][1] << OSG::endLog;
+                exit(0);
+        }
+    }
+
+    cout << "config:\n";
+    cout << " connection type: " << connectionType << endl;
+    cout << " name: " << name << endl;
+    cout << " address: " << address << endl;
+    cout << " fullscreen: " << fullscreen << endl;
+    cout << " active_stereo: " << active_stereo << endl;
+}
+
 // Initialize GLUT & OpenSG and start the cluster server
 int main(int argc, char **argv) {
     if (argc == 1) { // debug vars
@@ -100,7 +130,9 @@ int main(int argc, char **argv) {
 
     // initialize Glut
     glutInit(&argc, argv);
-    glutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
+    evalParams(argc, argv);
+    if (active_stereo) glutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL | GLUT_STEREO);
+    else glutInitDisplayMode( GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE | GLUT_STENCIL);
 
     /*OSG::preloadSharedObject("OSGBase");
     OSG::preloadSharedObject("OSGContribCSMSimplePlugin");
@@ -126,28 +158,6 @@ int main(int argc, char **argv) {
     OSG::preloadSharedObject("OSGContribTrapezoidalShadowMaps");
     OSG::preloadSharedObject("OSGFileIO");
     OSG::preloadSharedObject("OSGText");*/
-
-    // evaluate params
-    for(int a=1 ; a<argc ; ++a) {
-        if(argv[a][0] != '-') name=argv[a];
-        else {
-            char o = argv[a][1];
-            if (o == 'm') connectionType="Multicast";
-            else if (o == 'p') connectionType="SockPipeline";
-            else if (o == 'w') fullscreen=false;
-            else if (o == 'a') {
-                address = argv[a][2] ? argv[a]+2 : argv[++a];
-                if(address.empty()) {
-                    SLOG << "address missing" << OSG::endLog;
-                    return 0;
-                }
-                std::cout << address << OSG::endLog;
-            } else {
-                std::cout << argv[0] << "-m -p -w -a address " << OSG::endLog;
-                return 0;
-            }
-        }
-    }
 
     try { initServer(argc, argv); }
     catch(OSG_STDEXCEPTION_NAMESPACE::exception &e) {

@@ -9,6 +9,8 @@ VRPatchSelection::VRPatchSelection() {}
 shared_ptr<VRPatchSelection> VRPatchSelection::create() { return shared_ptr<VRPatchSelection>( new VRPatchSelection() ); }
 
 vector<int> VRPatchSelection::crawl(VRGeometryPtr geo, int vertex, float d) {
+    auto& agraph = agraphs[geo.get()];
+
     auto compCurv = [&](vector<int>& mask, int p, float d) {
         for (int i : agraph.getNeighbors(p)) {
             if (mask[i] != 1) continue;
@@ -56,10 +58,16 @@ vector<int> VRPatchSelection::crawl(VRGeometryPtr geo, int vertex, float d) {
 }
 
 void VRPatchSelection::select(VRGeometryPtr geo, int vertex, float curvature, int curvNeighbors) {
-    agraph.clear();
-    agraph.setGeometry(geo);
-	agraph.compNeighbors();
-	agraph.compCurvatures(curvNeighbors);
+    auto g = geo.get();
+    int lmc = geo->getLastMeshChange();
+    if (!agraphs.count(g) || lmc != lastMeshChanges[g]) {
+        cout << "setup agraph for " << g << endl;
+        agraphs[g] = VRAdjacencyGraph();
+        agraphs[g].setGeometry(geo);
+        agraphs[g].compNeighbors();
+        agraphs[g].compCurvatures(curvNeighbors);
+        lastMeshChanges[g] = lmc;
+    }
 
     selection_atom patch;
     patch.geo = geo;

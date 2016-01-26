@@ -36,6 +36,8 @@ class VRConstructionKit {
         void addObject(VRTransformPtr t);
         VRGeometryPtr addObjectAnchor(VRTransformPtr t, int a, Vec3f pos, float radius);
 
+        void remObject(VRTransformPtr t);
+
         void breakup(VRTransformPtr obj);
 };
 

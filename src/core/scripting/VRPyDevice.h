@@ -35,6 +35,8 @@ struct VRPyDevice : VRPyBaseT<OSG::VRDevice> {
     static PyObject* drop(VRPyDevice* self);
     static PyObject* setSpeed(VRPyDevice* self, PyObject *args);
     static PyObject* getSpeed(VRPyDevice* self);
+    static PyObject* addSignal(VRPyDevice* self, PyObject *args);
+    static PyObject* trigger(VRPyDevice* self, PyObject *args);
 };
 
 #endif // VRPYDEVICE_H_INCLUDED

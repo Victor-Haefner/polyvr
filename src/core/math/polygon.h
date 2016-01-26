@@ -10,6 +10,8 @@ using namespace std;
 class polygon {
     private:
         vector<Vec2f> points;
+        vector<Vec3f> points3;
+        bool is3D = false;
         bool convex = false;
         bool closed = false;
 
@@ -17,8 +19,12 @@ class polygon {
 
     public:
         polygon();
+        static std::shared_ptr<polygon> create();
+
         void addPoint(Vec2f p);
+        void addPoint(Vec3f p);
         Vec2f getPoint(int i);
+        Vec3f getPoint3(int i);
         void close();
         int size();
         void clear();
@@ -28,6 +34,8 @@ class polygon {
         void turn();
 
         vector<Vec2f> get();
+        vector<Vec3f> get3();
+        void set(vector<Vec2f> vec);
         polygon sort();
         polygon getConvexHull();
         vector< polygon > getConvexDecomposition();
