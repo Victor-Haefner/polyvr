@@ -3,6 +3,11 @@
 
 #include <OpenSG/OSGGeometry.h>
 
+/* not compiling?
+install liblapacke-dev
+sudo apt-get install liblapacke-dev
+*/
+
 #include <lapacke.h>
 #define dgeev LAPACKE_dgeev_work
 
