@@ -1,7 +1,7 @@
 #include "VRPyMillingWorkPiece.h"
+#include "VRPyMillingCuttingToolProfile.h"
 #include "core/scripting/VRPyBaseT.h"
 #include "core/scripting/VRPyGeometry.h"
-
 
 template<> PyTypeObject VRPyBaseT<OSG::VRMillingWorkPiece>::type = {
     PyObject_HEAD_INIT(NULL)
@@ -65,6 +65,8 @@ PyMethodDef VRPyMillingWorkPiece::methods[] = {
     "workpiece simulation" },
     {"updateGeometry", (PyCFunction)VRPyMillingWorkPiece::updateGeometry, METH_VARARGS,
     "updateGeometry() - updates the geometry of the workpiece immediately." },
+    {"setCuttingToolProfile", (PyCFunction)VRPyMillingWorkPiece::setCuttingToolProfile, METH_VARARGS,
+    "setCuttingToolProfile() - sets the profile for the cutting tool."},
     {NULL}  /* Sentinel */
 };
 
@@ -88,6 +90,15 @@ PyObject* VRPyMillingWorkPiece::setCuttingTool(VRPyMillingWorkPiece* self, PyObj
     VRPyTransform* geo;
     if (! PyArg_ParseTuple(args, "O", &geo)) return NULL;
     self->objPtr->setCuttingTool( geo->objPtr );
+    Py_RETURN_TRUE;
+}
+
+//Add of Marie
+PyObject* VRPyMillingWorkPiece::setCuttingToolProfile(VRPyMillingWorkPiece* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    VRPyMillingCuttingToolProfile* pyProfile;
+    if (!PyArg_ParseTuple(args, "O", &pyProfile)) return NULL;
+    self->objPtr->setCuttingProfile(pyProfile->obj);
     Py_RETURN_TRUE;
 }
 

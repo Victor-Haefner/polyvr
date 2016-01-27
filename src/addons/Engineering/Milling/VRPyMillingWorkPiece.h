@@ -10,6 +10,7 @@ struct VRPyMillingWorkPiece : VRPyBaseT<OSG::VRMillingWorkPiece> {
     static PyObject* init(VRPyMillingWorkPiece* self, PyObject* args);
     static PyObject* reset(VRPyMillingWorkPiece* self);
     static PyObject* setCuttingTool(VRPyMillingWorkPiece* self, PyObject* args);
+    static PyObject* setCuttingToolProfile(VRPyMillingWorkPiece* self, PyObject* args);
     static PyObject* setRefreshWait(VRPyMillingWorkPiece* self, PyObject* args);
     static PyObject* setLevelsPerGeometry(VRPyMillingWorkPiece* self, PyObject* args);
     static PyObject* updateGeometry(VRPyMillingWorkPiece* self, PyObject* args);

@@ -7,6 +7,7 @@
 #include <OpenSG/OSGSimpleMaterial.h>
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/math/Octree.h"
+#include "VRMillingCuttingToolProfile.h"
 
 OSG_BEGIN_NAMESPACE;
 
@@ -52,6 +53,7 @@ public:
     void split();
     bool collides(Vec3f position);
     bool collide(Vec3f position);
+    bool doesCollide(Vec3f position); //Add of Marie
     void deleteElement();
     bool isDeleted() const;
     void build();
@@ -69,7 +71,6 @@ public:
 class VRMillingWorkPiece : public VRGeometry {
     private:
         Vec3i gridSize;
-        int lastToolChange = 0;
         int updateCount = 0;
         pose toolPose;
         VRTransformWeakPtr tool;
@@ -83,6 +84,7 @@ class VRMillingWorkPiece : public VRGeometry {
     public:
         float blockSize = 0.01;
         int geometryCreateLevel = 0;
+        VRMillingCuttingToolProfile* cuttingProfile;
 
     public:
         VRMillingWorkPiece(string name);
@@ -90,10 +92,14 @@ class VRMillingWorkPiece : public VRGeometry {
         static VRMillingWorkPiecePtr create(string name);
         void init(Vec3i gSize, float bSize = 0.01);
         void reset();
+
         void setCuttingTool(VRTransformPtr geo);
+        void setCuttingProfile(VRMillingCuttingToolProfile* profile);
+
         void updateGeometry();
         void setLevelsPerGeometry(int levels);  // this will take effect after the next reset
         void setRefreshWait(int updatesToWait); // this will take effect immediately
+
 };
 
 OSG_END_NAMESPACE;
