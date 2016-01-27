@@ -110,18 +110,20 @@ VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree) {
     for (auto swp : dynTrees) if (auto sp = swp.second.lock()) trees.push_back(sp);
 
     VRIntersection ins;
-    for (auto t : trees) {
-        VRDevice* dev = (VRDevice*)this;
-        VRTransformPtr caster = dev->getBeacon();
-        if (caster == 0) { cout << "Warning: VRIntersect::intersect, caster is 0!\n"; return ins; }
+    VRDevice* dev = (VRDevice*)this;
+    VRTransformPtr caster = dev->getBeacon();
+    if (caster == 0) { cout << "Warning: VRIntersect::intersect, caster is 0!\n"; return ins; }
 
+    uint now = VRGlobals::get()->CURRENT_FRAME;
+
+    for (auto t : trees) {
         if (intersections.count(t.get())) ins = intersections[t.get()];
-        uint now = VRGlobals::get()->CURRENT_FRAME;
-        if (ins.hit && ins.time == now) return ins; // allready found it
+        if (ins.hit && ins.time == now) continue;
         ins.time = now;
 
         Line ray = caster->castRay(t);
-        return intersect(t, ray);
+        auto ins_tmp = intersect(t, ray);
+        if (ins_tmp.hit) return ins_tmp;
     }
     return ins;
 }
