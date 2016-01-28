@@ -182,24 +182,29 @@ int VRParticles::spawnCuboid(Vec3f base, Vec3f size, float distance) {
 }
 
 int VRParticles::setEmitter(Vec3f baseV, Vec3f dirV, int from, int to, int interval, bool loop) {
+    if (to > particles.size() || from > particles.size() || from > to) {
+        printf("ERROR: Please check parameters \'from\' and \'to\'\n");
+        printf("ERROR: No Emitter was created.");
+        return -1;
+    }
     btVector3 base = this->toBtVector3(baseV);
     btVector3 dir = this->toBtVector3(dirV);
 
     // create vector with relevant particles
-    vector<Particle*> p(to-from);
+    vector<Particle*> p;
+    p.resize(to-from,0);
     for (int i=from; i < to; i++) {
-        particles[i]->setup(base, false, this->collideWithSelf);
-        p.push_back(this->particles[i]);
+        p[i-from] = particles[i];
     }
 
     // set up emitter and insert into emitter map
-    Emitter* e = new Emitter(world, p, base, dir, interval);
-    e->setLoop(loop);
+    Emitter* e = new Emitter(world, p, base, dir, interval, this->collideWithSelf);
+    // e->setLoop(loop); // TODO implement loop
     this->emitters[e->id] = e; //store emitters
 
     setFunctions(from, to);
     e->setActive(true);
-    printf("VRParticles::setEmitter(...from=%i, to=%i, interval=%i)", from, to, interval);
+    printf("VRParticles::setEmitter(...from=%i, to=%i, interval=%i)\n", from, to, interval);
     return e->id;
 }
 
