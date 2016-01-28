@@ -156,20 +156,28 @@ inline void VRFluids::updateXSPH(int from, int to) {
     }
 }
 
+const float NOTHING2 = 0.01;
 /**
  * Calculates density, pressure and neighbors and stores them in SphParticle p.
  */
-inline void VRFluids::sph_calc_properties(SphParticle* p) { // TODO rename + neighbors
+inline void VRFluids::sph_calc_properties(SphParticle* p) {
     p->sphDensity = 0.0;
     btVector3 p_origin = p->body->getWorldTransform().getOrigin();
+    //float p_speed = p->body->getLinearVelocity().length2();
 
     p->neighbors = ocparticles.radiusSearch(p_origin[0],p_origin[1],p_origin[2],p->sphArea);
-    for (auto np : p->neighbors) {
-        btVector3 n_origin = ((SphParticle*) np)->body->getWorldTransform().getOrigin();
-        float kernel = kernel_poly6(p_origin - n_origin, p->sphArea);
-        p->sphDensity += ((SphParticle*)np)->mass * kernel;
-    }
+    auto it = p->neighbors.begin();
 
+    while (it != p->neighbors.end()) {
+        btVector3 n_origin = ((SphParticle*) *it)->body->getWorldTransform().getOrigin();
+        float kernel = kernel_poly6(p_origin - n_origin, p->sphArea);
+        if (kernel == 0.0) {
+            it = p->neighbors.erase(it);
+        } else {
+            p->sphDensity += ((SphParticle*) *it)->mass * kernel;
+            it++;
+        }
+    }
     p->sphPressure = PRESSURE_KAPPA * (p->sphDensity - REST_DENSITY);
 }
 
