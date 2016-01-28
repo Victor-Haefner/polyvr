@@ -193,11 +193,16 @@ Matrix VRSelection::computeEigenvectors(Matrix m) {
 
     if ( info > 0 ) { cout << "Warning: computeEigenvalues failed!\n"; return Matrix(); } // Check for convergence
 
+    Vec3i o(0,1,2);
+    if (wr[0] > wr[1]) swap(o[0], o[1]);
+    if (wr[1] > wr[2]) swap(o[1], o[2]);
+    if (wr[0] > wr[1]) swap(o[0], o[1]);
+
     Matrix res;
-    res[0] = Vec4f(vl[0], vl[1], vl[2], 0);
-    res[1] = Vec4f(vl[3], vl[4], vl[5], 0);
-    res[2] = Vec4f(vl[6], vl[7], vl[8], 0);
-    res[3] = Vec4f(wr[0], wr[1], wr[2], 0);
+    res[0] = Vec4f(vl[o[2]*3], vl[o[2]*3+1], vl[o[2]*3+2], 0);
+    res[1] = Vec4f(vl[o[1]*3], vl[o[1]*3+1], vl[o[1]*3+2], 0);
+    res[2] = Vec4f(vl[o[0]*3], vl[o[0]*3+1], vl[o[0]*3+2], 0);
+    res[3] = Vec4f(wr[o[2]], wr[o[1]], wr[o[0]], 0);
     return res;
 }
 
@@ -217,16 +222,22 @@ pose VRSelection::computePCA() {
 }
 
 void VRSelection::selectPlane(pose p, float threshold) {
-    Plane plane( p.up(), Pnt3f(p.pos()) );
+    Vec3f N = p.up();
+    Plane plane( N, Pnt3f(p.pos()) );
 
     for (auto& s : selected) {
         auto geo = s.second.geo.lock();
         auto pos = geo->getMesh()->getPositions();
+        auto norms = geo->getMesh()->getNormals();
         s.second.subselection.clear();
         for (int i=0; i<pos->size(); i++) {
             auto p = pos->getValue<Pnt3f>(i);
+            auto n = norms->getValue<Vec3f>(i);
             auto d = plane.distance(p);
-            if (abs(d) < threshold) s.second.subselection.push_back(i);
+            auto a = n.dot(N);
+            if ( abs(d) > threshold) continue;
+            if ( abs(threshold*a/d) < 0.8) continue;
+            s.second.subselection.push_back(i);
         }
     }
 }
