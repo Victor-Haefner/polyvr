@@ -57,14 +57,14 @@ class VRFluids : public VRParticles {
 
         inline void xsph_calc_movement(SphParticle* p, int from, int to);
 
-        inline float kernel_poly6(btVector3 distance_vector, float area);
-        inline float kernel_spiky(btVector3 distance_vector, float area);
-        inline btVector3 kernel_spiky_gradient(btVector3 distance_vector, float h);
-        inline float kernel_visc(btVector3 distance_vector, float area);
-        inline float kernel_visc_laplacian(btVector3 distance_vector, float area);
+        inline float kernel_poly6(btVector3 distance_vector, float area) __attribute__((always_inline));
+        inline float kernel_spiky(btVector3 distance_vector, float area) __attribute__((always_inline));
+        inline btVector3 kernel_spiky_gradient(btVector3 distance_vector, float h) __attribute__((always_inline));
+        inline float kernel_visc(btVector3 distance_vector, float area) __attribute__((always_inline));
+        inline float kernel_visc_laplacian(btVector3 distance_vector, float area) __attribute__((always_inline));
 
-        inline void sph_calc_properties(SphParticle* p);
-        inline void sph_calc_forces(SphParticle* p);
+        inline void sph_calc_properties(SphParticle* p) __attribute__((always_inline));
+        inline void sph_calc_forces(SphParticle* p) __attribute__((always_inline));
 
         void setFunctions(int from, int to) override;
         void disableFunctions() override;
