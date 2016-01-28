@@ -206,6 +206,8 @@ pose VRSelection::computePCA() {
     Matrix cov = computeCovMatrix();
     Matrix ev  = computeEigenvectors(cov);
 
+    cout << "computePCA:\n" << ev << endl;
+
     Vec3f pos = Vec3f(cov[3]);
     //dir =
 

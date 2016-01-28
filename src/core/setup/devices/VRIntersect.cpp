@@ -107,7 +107,7 @@ VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, Line ray) {
 VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree) {
     vector<VRObjectPtr> trees;
     if (auto sp = wtree.lock()) trees.push_back(sp);
-    for (auto swp : dynTrees) if (auto sp = swp.second.lock()) trees.push_back(sp);
+    else for (auto swp : dynTrees) if (auto sp = swp.second.lock()) trees.push_back(sp);
 
     VRIntersection ins;
     VRDevice* dev = (VRDevice*)this;
@@ -116,7 +116,9 @@ VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree) {
 
     uint now = VRGlobals::get()->CURRENT_FRAME;
 
+    //cout << "VRIntersect::intersect" << dev->getName() << endl;
     for (auto t : trees) {
+        //cout << " " << t->getName() << endl;
         if (intersections.count(t.get())) ins = intersections[t.get()];
         if (ins.hit && ins.time == now) continue;
         ins.time = now;
