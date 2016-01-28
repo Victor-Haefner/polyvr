@@ -108,9 +108,9 @@ inline void VRFluids::updateSPH(int from, int to) {
             p = (SphParticle*) particles[i];
             if (p->sphActive) {
                 sph_calc_forces(p);
-                btVector3 force = (p->sphPressureForce + p->sphViscosityForce);
-                p->body->applyCentralForce(force);
             }
+            btVector3 force = (p->sphPressureForce + p->sphViscosityForce);
+            p->body->applyCentralForce(force);
 
             // btVector3 pf = p->sphPressureForce; // NOTE very ressource heavy debug foo here
             // btVector3 vis = p->sphViscosityForce;
