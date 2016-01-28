@@ -44,8 +44,9 @@ VRTextureRenderer::VRTextureRenderer(string name) : VRObject(name) {
     data->fbo->setHeight(data->fboHeight);
     data->fbo->setPostProcessOnDeactivate(true);
 
-    mat = new VRMaterial("VRTextureRenderer");
-    mat->setTexture( VRTexture::create(data->fboTexImg) );
+    mat = VRMaterial::create("VRTextureRenderer");
+    fbotex = VRTexture::create(data->fboTexImg);
+    mat->setTexture( fbotex );
 
     // Stage
     data->stage = SimpleStage::create();
@@ -59,7 +60,9 @@ VRTextureRenderer::~VRTextureRenderer() {
     delete data;
 }
 
-void VRTextureRenderer::setup(VRCamera* cam, int width, int height) {
+VRTextureRendererPtr VRTextureRenderer::create(string name) { return VRTextureRendererPtr( new VRTextureRenderer(name) ); }
+
+void VRTextureRenderer::setup(VRCameraPtr cam, int width, int height) {
     data->fboWidth = width;
     data->fboHeight = height;
     data->fbo->setWidth (data->fboWidth );
@@ -67,6 +70,6 @@ void VRTextureRenderer::setup(VRCamera* cam, int width, int height) {
     data->stage->setCamera(cam->getCam());
 }
 
-VRMaterial* VRTextureRenderer::getMaterial() { return mat; }
+VRMaterialPtr VRTextureRenderer::getMaterial() { return mat; }
 
 OSG_END_NAMESPACE;

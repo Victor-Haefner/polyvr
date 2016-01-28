@@ -34,6 +34,7 @@ ptrFwd(VRAnalyticGeometry);
 ptrFwd(VRClipPlane);
 ptrFwd(VRMenu);
 ptrFwd(VRWaypoint);
+ptrFwd(VRTextureRenderer);
 
 // addons
 ptrFwd(VRBlinds);

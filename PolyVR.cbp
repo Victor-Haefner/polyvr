@@ -644,6 +644,8 @@
 		<Unit filename="src/core/scripting/VRPyIntersection.h" />
 		<Unit filename="src/core/scripting/VRPyLight.cpp" />
 		<Unit filename="src/core/scripting/VRPyLight.h" />
+		<Unit filename="src/core/scripting/VRPyLightBeacon.cpp" />
+		<Unit filename="src/core/scripting/VRPyLightBeacon.h" />
 		<Unit filename="src/core/scripting/VRPyListMath.cpp" />
 		<Unit filename="src/core/scripting/VRPyListMath.h" />
 		<Unit filename="src/core/scripting/VRPyLod.cpp" />

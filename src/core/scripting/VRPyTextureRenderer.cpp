@@ -42,7 +42,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRTextureRenderer>::type = {
     0,                         /* tp_dictoffset */
     (initproc)init,      /* tp_init */
     0,                         /* tp_alloc */
-    New_VRObjects,                 /* tp_new */
+    New_VRObjects_ptr,                 /* tp_new */
 };
 
 PyMethodDef VRPyTextureRenderer::methods[] = {
@@ -52,14 +52,17 @@ PyMethodDef VRPyTextureRenderer::methods[] = {
 };
 
 PyObject* VRPyTextureRenderer::setup(VRPyTextureRenderer* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyTextureRenderer::setup - Object is invalid"); return NULL; }
+    if (!self->valid()) return NULL;
     VRPyCamera* cam; int w, h;
     if (!PyArg_ParseTuple(args, "Oii", &cam, &w, &h)) return NULL;
-    self->obj->setup(cam->obj, w, h);
+    self->objPtr->setup(cam->objPtr, w, h);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTextureRenderer::getMaterial(VRPyTextureRenderer* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyTextureRenderer::getMaterial - Object is invalid"); return NULL; }
-    return VRPyMaterial::fromPtr( self->obj->getMaterial() );
+    if (!self->valid()) return NULL;
+    return VRPyMaterial::fromSharedPtr( self->objPtr->getMaterial() );
 }
+
+
+

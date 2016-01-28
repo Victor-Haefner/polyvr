@@ -8,6 +8,7 @@ struct VRPyLight : VRPyBaseT<OSG::VRLight> {
     static PyMethodDef methods[];
 
     static PyObject* setOn(VRPyLight* self, PyObject *args);
+    static PyObject* setBeacon(VRPyLight* self, PyObject *args);
 };
 
 #endif // VRPYLIGHT_H_INCLUDED

@@ -3,13 +3,13 @@
   <Objects>
     <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
       <Object name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
-        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="0.147204 0.0962766 0.307184" at="-0.0848603 -0.00400665 -0.01" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
+        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="0.745378 0.354769 1.12477" at="-0.0848603 -0.00400665 -0.01" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
           <Object name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
         </Object>
       </Object>
     </Object>
   </Objects>
-  <Rendering deferred_rendering="0" frustum_culling="1" occlusion_culling="0" ssao="0" two_sided="1"/>
+  <Rendering deferred_rendering="0" frustum_culling="1" occlusion_culling="0" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts>
     <Script name_suffix="0" base_name="init" name_space="__script__" type="Python" mobile="">
       <core>
@@ -17,67 +17,73 @@
 	import math
 	Pi = math.pi
 	
-	# texture renderer ----
+	def initRenderer(): # texture renderer ----
+		tr = VR.TextureRenderer('bla')
+		root.addChild(tr)
 	
-	import VR
-	r = VR.getRoot()
-	tr = VR.TextureRenderer('bla')
-	r.addChild(tr)
-	
-	cam = VR.Camera('cam')
-	li = VR.Light('sun')
-	lib = VR.LightBeacon('sun_b')
-	li.setBeacon(lib)
-	tr.setup(cam, 256, 256)
-	tr.addChild(cam)
-	tr.addChild(li)
-	tr.addChild(lib)
-	li.addChild(r.find('mechanism'))
-	
-	cube = VR.Geometry('cube')
-	cube.setPrimitive('Box 0.5 0.5 0.5 1 1 1')
-	cube.setMaterial( tr.getMaterial() )
-	r.find('Headlight').addChild(cube)
-	
-	# gears ------------
-	
-	if hasattr(VR, 'mechanism'):
-		VR.mechanism.destroy()
+		cam = VR.Camera('cam')
+		li = VR.Light('sun')
+		lib = VR.LightBeacon('sun_b')
+		li.setBeacon(lib)
+		tr.setup(cam, 256, 256)
+		tr.addChild(cam)
+		tr.addChild(li)
+		tr.addChild(lib)
+		li.addChild(root.find('mechanism'))
 		
-	VR.mechanism = VR.Transform('mechanism')
-	root.addChild(VR.mechanism)
+		m = tr.getMaterial()
+		m.setDiffuse(1,0,0)
 	
-	VR.gears = [] # for animation
+		cube = VR.Geometry('cube')
+		cube.setPrimitive('Box 0.5 0.5 0.5 1 1 1')
+		cube.setMaterial(m)
+		root.addChild(cube)
 	
-	def addGear(params):
-		g = VR.Geometry('gear')
-		g.setPrimitive(' '.join([str(i) for i in params]))
-		VR.mechanism.addChild(g)
-		return g
+	def initGears(): # gears ------------
+	
+		if hasattr(VR, 'mechanism'): VR.mechanism.destroy()
+		VR.mechanism = VR.Transform('mechanism')
+		root.addChild(VR.mechanism)
+	
+		VR.gears = [] # for animation
+	
+		def addGear(params):
+			g = VR.Geometry('gear')
+			g.setPrimitive(' '.join([str(i) for i in params]))
+			VR.mechanism.addChild(g)
+			return g
 		
-	# parameters
-	gP = 0.02 # gear pitch
-	gN = 32 # gear teeth number 
-	gR = gP*gN*0.5/Pi # gear radius
-	gT = 0.02 # gear thickness
-	gL = 0.01 # gear teeth length
-	aR = 0.01 # axle radius
+		# parameters
+		gP = 0.02 # gear pitch
+		gN = 32 # gear teeth number 
+		gR = gP*gN*0.5/Pi # gear radius
+		gT = 0.02 # gear thickness
+		gL = 0.01 # gear teeth length
+		aR = 0.01 # axle radius
 		
-	g1 = addGear(['Gear', gT, aR, gP, int(1.5*gN), gL, 0])
-	g2 = addGear(['Gear', gT, aR, gP, int(0.5*gN), gL, 0])
-	g3 = addGear(['Gear', gT, aR, gP, int(0.5*gN), gL, -0.7])
-	g4 = addGear(['Gear', gT, aR, gP, int(1.0*gN), gL, -0.7])
+		g1 = addGear(['Gear', gT, aR, gP, int(1.5*gN), gL, 0])
+		g2 = addGear(['Gear', gT, aR, gP, int(0.5*gN), gL, 0])
+		g3 = addGear(['Gear', gT, aR, gP, int(0.5*gN), gL, -0.7])
+		g4 = addGear(['Gear', gT, aR, gP, int(1.0*gN), gL, -0.7])
 	
-	g1.translate(-gR, 0, 0)
-	g2.translate(gR, 0, 0)
-	g3.translate(-gR, 0, gT)
-	g4.translate(-gR, -0.5*gR, gR+gT)
-	g4.rotate(1,0,0, -Pi*0.5)
+		g1.translate(-gR, 0, 0)
+		g2.translate(gR, 0, 0)
+		g3.translate(-gR, 0, gT)
+		g4.translate(-gR, -0.5*gR, gR+gT)
+		g4.rotate(1,0,0, -Pi*0.5)
 	
-	VR.gears.append([g1, 1, 1.5*gR])
-	VR.gears.append([g2, -1, 0.5*gR])
-	VR.gears.append([g3, 1, 1.5*gR])
-	VR.gears.append([g4, -1, 3.0*gR])
+		VR.gears.append([g1, 1, 1.5*gR])
+		VR.gears.append([g2, -1, 0.5*gR])
+		VR.gears.append([g3, 1, 1.5*gR])
+		VR.gears.append([g4, -1, 3.0*gR])
+		
+		g1.getMaterial().setLit(0)
+		
+	initGears()
+	initRenderer()	
+		
+		
+		
 </core>
       <arg type="VRPyObjectType" value="Headlight" name_suffix="0" base_name="root" name_space="init"/>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
