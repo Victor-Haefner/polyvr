@@ -22,6 +22,7 @@ struct Particle {
     unsigned int age = 0; // current age
     unsigned int lifetime = 0; // max age. 0 means immortal.
     bool setUp = false;
+    bool isActive = false;
 
     btRigidBody* body = 0;
     btCollisionShape* shape = 0;
@@ -69,22 +70,34 @@ struct Particle {
     void spawnAt(btVector3 v, btDiscreteDynamicsWorld* world = 0, bool collideWithSelf = false) {
         if (world == 0) return;
         // TODO if Particles shall be spawned a second time, handle it.
-        // TODO most of this should be done in constructor. Only the last line should be here if possible.
 
-        if (setUp == false) {
-            setup(v, true, collideWithSelf);
-        } else {
-           btTransform t;
-           t.setOrigin(btVector3(v.x(),v.y(),v.z()));
-           body->getMotionState()->setWorldTransform(t);
-           body->activate(true);
+        btTransform t;
+        t.setOrigin(btVector3(v.x(),v.y(),v.z()));
+        motionState = new btDefaultMotionState(t);
+
+        shape = new btSphereShape(radius);
+        btVector3 inertiaVector(0,0,0);
+        shape->calculateLocalInertia(mass, inertiaVector);
+
+        btRigidBody::btRigidBodyConstructionInfo rbInfo( mass, motionState, shape, inertiaVector );
+        body = new btRigidBody(rbInfo);
+        //body->setActivationState(ACTIVE_TAG);
+        body->activate(true);
+
+        collisionGroup = BIT(1); // 0010 = 2^1 --> setCollisionMask(1)
+        collisionMask = BIT(0); //  0001 = 2^0 --> setCollisionGroup(0)
+        if (collideWithSelf) {
+            collisionMask |= collisionGroup;
         }
+
+        setActive(true);
 
         world->addRigidBody(body, collisionGroup, collisionMask);
     }
 
     void setActive(bool active = true) {
         body->activate(active);
+        isActive = active;
     }
 
 };
@@ -107,8 +120,8 @@ struct SphParticle : public Particle {
     }
 
     void setActive(bool active = true) {
+        Particle::setActive(active);
         sphActive = active;
-        body->activate(active);
     }
 
 };

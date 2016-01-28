@@ -51,9 +51,11 @@ void VRParticles::update(int b, int e) {
     {
         BLock lock(mtx());
         for (int i=b; i < e; i++) {
-            auto p = particles[i]->body->getWorldTransform().getOrigin();
-            pos->setValue(toVec3f(p),i);
-            colors->setValue(Vec4f(0,0,1,1),i);
+            if (particles[i]->isActive) {
+                auto p = particles[i]->body->getWorldTransform().getOrigin();
+                pos->setValue(toVec3f(p),i);
+                colors->setValue(Vec4f(0,0,1,1),i);
+            }
         }
     }
 }
