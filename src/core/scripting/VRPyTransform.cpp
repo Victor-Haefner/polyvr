@@ -61,6 +61,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"translate", (PyCFunction)VRPyTransform::translate, METH_VARARGS, "Translate the object along a vector - translate(xf,yf,zf)" },
     {"move", (PyCFunction)VRPyTransform::move, METH_VARARGS, "Move the object - move(d)" },
     {"rotate", (PyCFunction)VRPyTransform::rotate, METH_VARARGS, "Rotate the object around an axis - rotate(xf,yf,zf,af)" },
+    {"rotateAround", (PyCFunction)VRPyTransform::rotateAround, METH_VARARGS, "Rotate the object around its at - rotateAround(af)" },
     {"getFrom", (PyCFunction)VRPyTransform::getFrom, METH_NOARGS, "Return the object's from vector" },
     {"getAt", (PyCFunction)VRPyTransform::getAt, METH_NOARGS, "Return the object's at vector" },
     {"getDir", (PyCFunction)VRPyTransform::getDir, METH_NOARGS, "Return the object's dir vector" },
@@ -233,6 +234,12 @@ PyObject* VRPyTransform::rotate(VRPyTransform* self, PyObject* args) {
 
     OSG::VRTransformPtr e = (OSG::VRTransformPtr) self->objPtr;
     e->rotate(angle, axis);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyTransform::rotateAround(VRPyTransform* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    self->objPtr->rotateAround( parseFloat(args) );
     Py_RETURN_TRUE;
 }
 

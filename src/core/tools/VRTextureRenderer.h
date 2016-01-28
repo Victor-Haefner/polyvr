@@ -15,6 +15,8 @@ class VRTextureRenderer : public VRObject {
         VRMaterialPtr mat = 0;
         VRTexturePtr fbotex = 0;
 
+        void test();
+
     public:
         VRTextureRenderer(string name);
         ~VRTextureRenderer();
