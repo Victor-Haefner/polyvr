@@ -60,7 +60,7 @@ struct Particle {
         //body->setActivationState(ACTIVE_TAG);
         body->activate(activate);
 
-        collisionGroup = BIT(1); // 0010 = 2^1 --> setColissionMask(1)
+        collisionGroup = BIT(1); // 0010 = 2^1 --> setCollisionMask(1)
         collisionMask = BIT(0); //  0001 = 2^0 --> setCollisionGroup(0)
         if (collideWithSelf) {
             collisionMask |= collisionGroup;

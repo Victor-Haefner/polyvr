@@ -227,7 +227,6 @@ void VRParticles::setFunctions(int from, int to) {
         fkt = VRFunction<int>::create("particles_update", boost::bind(&VRParticles::update, this,from,to));
         scene->addUpdateFkt(fkt);
     }
-    printf("VRParticles::setFunctions(from=%i, to=%i)", from, to);
 }
 
 void VRParticles::disableFunctions() {

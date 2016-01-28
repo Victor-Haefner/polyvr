@@ -34,7 +34,7 @@ void VRFluids::setFunctions(int from, int to) {
         BLock lock(mtx());
         VRScenePtr scene = VRSceneManager::getCurrent();
         if (!scene) {
-            printf("VRFluids::setFunctions(): No scene found");
+            printf("VRFluids::setFunctions(): No scene found\n");
             return;
         }
         // enable graphical updates
