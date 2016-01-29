@@ -3,9 +3,10 @@
   <Objects>
     <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
       <Object name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
-        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="0.772592 0.366527 1.16196" at="-0.0848603 -0.00400665 -0.01" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
+        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="0.10698 -0.063972 2.34745" at="0.915227 -0.0254144 0" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
           <Object name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
         </Object>
+        <Object name_suffix="0" base_name="info" name_space="__global__" type="Geometry" pickable="0" visible="1" from="1 0 0" at="1 0 1" up="0 -1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="3" at_dir="1" sourcetype="3" sourceparam="Plane 1 1 1 1"/>
       </Object>
     </Object>
   </Objects>
@@ -105,9 +106,19 @@
 </core>
       <trig type="on_timeout" dev="" state="Pressed" param="0" key="0" name_suffix="1" base_name="trigger" name_space="__global__"/>
     </Script>
+    <Script name_suffix="0" base_name="screenshot" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+	
+	sc = VR.getSetup().getView(0).grab()
+	m = VR.getRoot().find('info').getMaterial()
+	m.setTexture(sc)
+</core>
+      <trig type="on_timeout" dev="" state="Pressed" param="0" key="0" name_suffix="2" base_name="trigger" name_space="__global__"/>
+    </Script>
   </Scripts>
   <Sockets/>
-  <Background color="0.6 0.6 0.6" format=".png" path="" type="0"/>
+  <Background color="1 1 1" format=".png" path="" type="0"/>
   <Navigation active="Orbit"/>
   <Materials/>
 </Scene>
