@@ -38,6 +38,7 @@
 #include <OpenSG/OSGTextureTransformChunk.h>
 #include <OpenSG/OSGGradientBackground.h>
 #include <OpenSG/OSGPerspectiveCamera.h>
+#include <OpenSG/OSGVisitSubTree.h>
 
 using namespace std;
 using namespace OSG;
@@ -50,6 +51,7 @@ struct VRTextureRenderer::Data {
     TextureObjChunkRefPtr   fboTex;
     ImageRefPtr             fboTexImg;
     SimpleStageRefPtr stage;
+    map<VRObject*, NodeRecPtr> links;
 };
 OSG_END_NAMESPACE;
 
@@ -120,6 +122,25 @@ void VRTextureRenderer::setup(VRCameraPtr cam, int width, int height) {
     data->stage->setCamera(cam->getCam());
 
     //test();
+}
+
+void VRTextureRenderer::addLink(VRObjectPtr obj) {
+    if (data->links.count(obj.get())) return;
+
+    VisitSubTreeRecPtr visitor = VisitSubTree::create();
+    visitor->setSubTreeRoot(obj->getNode());
+    NodeRecPtr visit_node = makeNodeFor(visitor);
+    addChild(visit_node);
+
+    data->links[obj.get()] = visit_node;
+}
+
+void VRTextureRenderer::remLink(VRObjectPtr obj) {
+    if (!data->links.count(obj.get())) return;
+
+    NodeRecPtr node = data->links[obj.get()];
+    subChild(node);
+    data->links.erase(obj.get());
 }
 
 VRMaterialPtr VRTextureRenderer::getMaterial() { return mat; }

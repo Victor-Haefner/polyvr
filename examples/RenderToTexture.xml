@@ -3,10 +3,11 @@
   <Objects>
     <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
       <Object name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
-        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="0.10698 -0.063972 2.34745" at="0.915227 -0.0254144 0" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
+        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="-0.815401 0.809983 1.52296" at="0.915227 -0.0254144 0" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
           <Object name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
         </Object>
-        <Object name_suffix="0" base_name="info" name_space="__global__" type="Geometry" pickable="0" visible="1" from="1 0 0" at="1 0 1" up="0 -1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="3" at_dir="1" sourcetype="3" sourceparam="Plane 1 1 1 1"/>
+        <Object name_suffix="0" base_name="info" name_space="__global__" type="Geometry" pickable="0" visible="1" from="1 0 0" at="1 0 1" up="0 -1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" sourcetype="3" sourceparam="Box 0.5 0.5 0.5 1 1 1"/>
+        <Object name_suffix="0" base_name="Cone" name_space="__global__" type="Geometry" pickable="0" visible="1" from="0.362906 0.5 -0.381138" at="0.362906 1.5 -0.381138" up="-0.462906 0 0.381138" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="3" at_dir="1" sourcetype="3" sourceparam="Cone 0.1 0.05 16 1 1"/>
       </Object>
     </Object>
   </Objects>
@@ -20,7 +21,7 @@
 	
 	def initRenderer(): # texture renderer ----
 		tr = VR.TextureRenderer('bla')
-		root.addChild(tr)
+		VR.getRoot().addChild(tr)
 	
 		cam = VR.Camera('cam')
 		VR.rcam = cam
@@ -31,9 +32,10 @@
 		li.addChild(cam)
 		tr.addChild(li)
 		cam.addChild(lib)
-		cam.setFrom(0.5,0,0)
-		cam.setAt(-0.1,0,0)
-		li.addChild(root.find('mechanism'))
+		cam.setFrom(0.5,0.5,0)
+		cam.setAt(-0.1,0.5,0)
+		#li.addChild(root.find('mechanism'))
+		tr.addLink(root)
 		
 		m = tr.getMaterial()
 	
@@ -47,6 +49,7 @@
 	
 		if hasattr(VR, 'mechanism'): VR.mechanism.destroy()
 		VR.mechanism = VR.Transform('mechanism')
+		VR.mechanism.translate(0,0.5,0)
 		root.addChild(VR.mechanism)
 	
 		VR.gears = [] # for animation
@@ -102,7 +105,12 @@
 		d = g[0].getDir()
 		g[0].rotate(d[0], d[1], d[2], g[1]*dr)
 		
-	VR.rcam.rotateAround(0.01)
+	VR.rcam.rotateAround(0.02)
+	
+	crep = VR.getRoot().find('Cone')
+	crep.setFrom(VR.rcam.getFrom())
+	crep.setUp(VR.rcam.getDir())
+	crep.setDir(0,1,0)
 </core>
       <trig type="on_timeout" dev="" state="Pressed" param="0" key="0" name_suffix="1" base_name="trigger" name_space="__global__"/>
     </Script>
@@ -114,7 +122,7 @@
 	m = VR.getRoot().find('info').getMaterial()
 	m.setTexture(sc)
 </core>
-      <trig type="on_timeout" dev="" state="Pressed" param="0" key="0" name_suffix="2" base_name="trigger" name_space="__global__"/>
+      <trig type="on_timeout" dev="" state="Pressed" param="1000" key="0" name_suffix="2" base_name="trigger" name_space="__global__"/>
     </Script>
   </Scripts>
   <Sockets/>

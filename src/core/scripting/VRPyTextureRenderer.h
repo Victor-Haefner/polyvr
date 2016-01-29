@@ -9,6 +9,8 @@ struct VRPyTextureRenderer : VRPyBaseT<OSG::VRTextureRenderer> {
 
     static PyObject* setup(VRPyTextureRenderer* self, PyObject* args);
     static PyObject* getMaterial(VRPyTextureRenderer* self);
+    static PyObject* addLink(VRPyTextureRenderer* self, PyObject* args);
+    static PyObject* remLink(VRPyTextureRenderer* self, PyObject* args);
 };
 
 #endif // VRPYTEXTURERENDERER_H_INCLUDED
