@@ -63,7 +63,7 @@ VRPhysicsManager::VRPhysicsManager() {
 
     physics_visual_layer = new VRVisualLayer("Physics", "physics.png");
 
-    phys_mat = VRMaterial::create("phys_mat");
+    phys_mat = VRMaterial::get("phys_mat");
     phys_mat->setLit(false);
     phys_mat->setDiffuse(Vec3f(0.8,0.8,0.4));
     phys_mat->setTransparency(0.4);

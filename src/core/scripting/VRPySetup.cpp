@@ -3,6 +3,7 @@
 
 #include "core/setup/windows/VRView.h"
 #include "core/scripting/VRPyPose.h"
+#include "core/scripting/VRPyImage.h"
 
 using namespace OSG;
 
@@ -34,8 +35,14 @@ PyMethodDef VRPyView::methods[] = {
     {"getPose", (PyCFunction)VRPyView::getPose, METH_NOARGS, "Get the pose - pose getPose()" },
     {"setSize", (PyCFunction)VRPyView::setSize, METH_VARARGS, "Set the size in meter - setSize( [W,H] )" },
     {"getSize", (PyCFunction)VRPyView::getSize, METH_NOARGS, "Get the size in meter - [W,H] getSize()" },
+    {"grab", (PyCFunction)VRPyView::grab, METH_NOARGS, "Get the current visual as texture - tex grab()" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyView::grab(VRPyView* self) {
+    if (!self->valid()) return NULL;
+    return VRPyImage::fromSharedPtr( self->objPtr->grab() );
+}
 
 PyObject* VRPyView::setSize(VRPyView* self, PyObject* args) {
     if (!self->valid()) return NULL;

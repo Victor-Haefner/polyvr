@@ -109,6 +109,11 @@ void VRConstructionKit::addObject(VRTransformPtr t) {
     snapping->addObject(t);
 }
 
+void VRConstructionKit::remObject(VRTransformPtr t) {
+    objects.erase(t.get());
+    snapping->remObject(t);
+}
+
 VRGeometryPtr VRConstructionKit::addObjectAnchor(VRTransformPtr t, int a, Vec3f pos, float radius) {
     VRGeometryPtr anc = static_pointer_cast<VRGeometry>(anchors[a]->duplicate());
     anc->setPose(pos, Vec3f(0,1,0), Vec3f(1,0,0));

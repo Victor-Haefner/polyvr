@@ -19,9 +19,10 @@ VRMillingWorkPiecePtr VRMillingWorkPiece::create(string name) { return shared_pt
 void VRMillingWorkPiece::setCuttingTool(VRTransformPtr geo) {
     tool = geo;
     toolPose = geo->getWorldPose();
-    lastToolChange = geo->getLastChange();
+}
 
-
+void VRMillingWorkPiece::setCuttingProfile(VRMillingCuttingToolProfile* profile) {
+    cuttingProfile = profile;
 }
 
 void VRMillingWorkPiece::init(Vec3i gSize, float bSize) {
@@ -48,7 +49,7 @@ void VRMillingWorkPiece::init(Vec3i gSize, float bSize) {
 
     rootElement = new VRWorkpieceElement(*this, (VRWorkpieceElement*) nullptr,
                                   Vec3i(gridSize), Vec3f(gridSize) * blockSize,
-                                  Vec3f(0, 0, 0), getFrom(), 0);
+                                  Vec3f(0, 0, 0), getWorldPosition(), 0);
 
     rootElement->build();
 }
@@ -58,15 +59,23 @@ void VRMillingWorkPiece::reset() {
 }
 
 void VRMillingWorkPiece::update() {
-    auto geo = tool.lock();
-    if (!geo) return;
-    int change = geo->getLastChange();
-    if (change == lastToolChange) return; // keine bewegung
-    lastToolChange = change;
+    Vec3f toolPosition;
 
-    Vec3f toolPosition = geo->getWorldPosition();
+    if (cuttingProfile == nullptr) {
+        return;
+    }
 
-    if (!rootElement->collide(toolPosition)) return;
+    { // locking scope
+        auto geo = tool.lock();
+        if (!geo) return;
+        if (!geo->changedNow()) return; // keine bewegung
+
+        toolPosition = geo->getWorldPosition();
+    }
+
+    if (!rootElement->collide(toolPosition)) {
+        return;
+    }
 
     if (updateCount++ % geometryUpdateWait == 0) {
         rootElement->build();
@@ -203,7 +212,7 @@ bool VRWorkpieceElement::collide(Vec3f position) {
 
     bool result = false;
 
-    if (collides(position)) {
+    if (doesCollide(position)) {
         if (children[0] == nullptr) {
             split();
         }
@@ -227,8 +236,45 @@ bool VRWorkpieceElement::collide(Vec3f position) {
             result = true;
         }
     }
-
     return result;
+}
+
+template <typename T> int sgn(T val) {
+    return (T(0) < val) - (val < T(0));
+}
+
+//Add of Marie
+bool VRWorkpieceElement::doesCollide(Vec3f position) {
+    //position in argument is the lowest part of the worktool and the (0,0) point of the profile
+
+    float py = this->position[1], px = this->position[0], pz = this->position[2];
+    float sy = this->size[1], sx = this->size[0], sz = this->size[2];
+    float ptooly = position[1], ptoolx = position[0], ptoolz = position[2];
+
+    float profileLength = workpiece.cuttingProfile->getLength();
+
+    if ((py + sy/2.0f > ptooly) && (py - sy/2.0f < ptooly + profileLength))
+    {
+        float maximum = workpiece.cuttingProfile->maxProfile(position, this->position, this->size);
+
+        if ((ptoolz - maximum < pz + sz/2.0f) && (ptoolz + maximum > pz - sz/2.0) &&
+            (ptoolx - maximum < px + sx/2.0f) && (ptoolx + maximum > px - sx/2.0))
+        {
+            float diffx = ptoolx - px, diffz = ptoolz - pz;
+            if (std::abs(diffx) <= sx / 2.0f) return true;
+            if (std::abs(diffz) <= sz / 2.0f) return true;
+
+            float sgnx = sgn(diffx), sgnz = sgn(diffz);
+            Vec2f vertex(px + sgnx * sx / 2.0f, pz + sgnz * sz / 2.0f);
+            Vec2f toolMid(ptoolx, ptoolz);
+            Vec2f distanceVertexTool = vertex - toolMid;
+            if (distanceVertexTool.length() < maximum) {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 void VRWorkpieceElement::deleteElement() {

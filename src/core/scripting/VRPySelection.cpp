@@ -2,6 +2,7 @@
 #include "VRPyGeometry.h"
 #include "VRPyBaseT.h"
 #include "VRPyTypeCaster.h"
+#include "VRPyPose.h"
 
 template<> PyTypeObject VRPyBaseT<OSG::VRSelection>::type = {
     PyObject_HEAD_INIT(NULL)
@@ -53,8 +54,23 @@ PyMethodDef VRPySelection::methods[] = {
     {"getSelected", (PyCFunction)VRPySelection::getSelected, METH_NOARGS, "Return the selected objects - [object] getSelected()" },
     {"getPartialSelected", (PyCFunction)VRPySelection::getPartialSelected, METH_NOARGS, "Return the partially selected - [object] getPartialSelected()" },
     {"getSubselection", (PyCFunction)VRPySelection::getSubselection, METH_VARARGS, "Return the objects selected vertices - [int] getSubselection(object)" },
+    {"computePCA", (PyCFunction)VRPySelection::computePCA, METH_NOARGS, "Return the selection PCA - pose computePCA()" },
+    {"selectPlane", (PyCFunction)VRPySelection::selectPlane, METH_VARARGS, "Select a plane - pose selectPlane( pose, threshold )" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPySelection::computePCA(VRPySelection* self) {
+    if (!self->valid()) return NULL;
+    return VRPyPose::fromObject( self->objPtr->computePCA() );
+}
+
+PyObject* VRPySelection::selectPlane(VRPySelection* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    VRPyPose* plane = 0; float t;
+    if (! PyArg_ParseTuple(args, "Of:selectPlane", &plane, &t)) return NULL;
+    self->objPtr->selectPlane(*plane->objPtr, t);
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPySelection::add(VRPySelection* self, PyObject* args, PyObject* kwargs) {
     if (!self->valid()) return NULL;

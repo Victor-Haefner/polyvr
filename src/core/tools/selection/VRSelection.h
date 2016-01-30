@@ -6,6 +6,7 @@
 #include <map>
 #include "core/objects/VRObjectFwd.h"
 #include "core/math/boundingbox.h"
+#include "core/math/pose.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -46,6 +47,13 @@ class VRSelection {
         vector<VRGeometryWeakPtr> getSelected();
         vector<int> getSubselection(VRGeometryPtr geo);
         map< VRGeometryPtr, vector<int> > getSubselections();
+
+        Vec3f computeCentroid();
+        Matrix computeCovMatrix();
+        Matrix computeEigenvectors(Matrix m);
+        pose computePCA();
+
+        void selectPlane(pose plane, float threshold);
 };
 
 OSG_END_NAMESPACE;

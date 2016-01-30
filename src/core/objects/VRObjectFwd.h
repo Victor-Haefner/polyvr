@@ -34,6 +34,7 @@ ptrFwd(VRAnalyticGeometry);
 ptrFwd(VRClipPlane);
 ptrFwd(VRMenu);
 ptrFwd(VRWaypoint);
+ptrFwd(VRTextureRenderer);
 
 // addons
 ptrFwd(VRBlinds);
@@ -42,6 +43,7 @@ ptrFwd(VRMolecule);
 ptrFwd(VRTree);
 ptrFwd(CSGGeometry);
 ptrFwd(VRMillingWorkPiece);
+ptrFwd(VRMillingCuttingToolProfile);
 
 }
 

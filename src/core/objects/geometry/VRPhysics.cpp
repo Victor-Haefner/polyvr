@@ -10,6 +10,7 @@
 #include <OpenSG/OSGTriangleIterator.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 #include <BulletCollision/CollisionShapes/btShapeHull.h>
+#include <BulletCollision/CollisionShapes/btCompoundShape.h>
 #include <BulletSoftBody/btSoftBodyRigidBodyCollisionConfiguration.h>
 #include <BulletSoftBody/btSoftBodyHelpers.h>
 #include <BulletSoftBody/btSoftRigidDynamicsWorld.h>
@@ -297,6 +298,7 @@ void VRPhysics::update() {
 
     CoMOffset = OSG::Vec3f(0,0,0);
     if (comType == "custom") CoMOffset = CoMOffset_custom;
+    if (physicsShape == "Compound") shape = getCompoundShape();
     if (physicsShape == "Box") shape = getBoxShape();
     if (physicsShape == "Sphere") shape = getSphereShape();
     if (physicsShape == "Convex") shape = getConvexShape(CoMOffset);
@@ -537,6 +539,50 @@ btCollisionShape* VRPhysics::getConcaveShape() {
 
     //cout << "\nConstruct Concave shape for " << vr_obj->getName() << endl;
     btBvhTriangleMeshShape* shape = new btBvhTriangleMeshShape(tri_mesh, true);
+    return shape;
+}
+
+btCollisionShape* VRPhysics::getCompoundShape() {
+    auto obj = vr_obj.lock();
+    if (!obj) return 0;
+
+    btCompoundShape* shape = new btCompoundShape();
+
+    OSG::Matrix m;
+    OSG::Matrix M = obj->getWorldMatrix();
+    M.invert();
+    auto geos = obj->getObjectListByType("Geometry");
+
+	for (auto g : geos) {
+        vector<OSG::Vec3f> points;
+        OSG::VRGeometryPtr geo = static_pointer_cast<OSG::VRGeometry>(g);
+        if (geo == 0) continue;
+        if (geo->getMesh() == 0) continue;
+        OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->getPositions();
+        if (pos == 0) continue;
+
+        if (geo != obj) {
+            m = geo->getWorldMatrix();
+            m.multLeft(M);
+        }
+
+		for (unsigned int i = 0; i<pos->size(); i++) {
+            OSG::Vec3f p;
+            pos->getValue(p,i);
+            if (geo != obj) m.mult(p,p);
+            for (int i=0; i<3; i++) p[i] *= scale[i];
+            points.push_back(p);
+        }
+
+        btConvexHullShape* child = new btConvexHullShape();
+        for (OSG::Vec3f& p : points) child->addPoint(btVector3(p[0], p[1], p[2]));
+
+        child->setMargin(collisionMargin);
+        btTransform T;
+        T.setIdentity();
+        shape->addChildShape(T, child);
+    }
+
     return shape;
 }
 

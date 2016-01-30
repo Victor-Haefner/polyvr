@@ -39,7 +39,7 @@ class VRDeviceManager {
         map<string, VRDevice* > getDevices();
 
         void updateActivatedSignals();
-        void updateDeviceDynNodes(VRObjectPtr ancestor);
+        void resetDeviceDynNodes(VRObjectPtr ancestor);
         void updateDevices();
 
         void save(xmlpp::Element* node);

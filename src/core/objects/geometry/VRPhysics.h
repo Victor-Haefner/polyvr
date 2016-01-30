@@ -75,6 +75,7 @@ class VRPhysics : public OSG::VRStorage {
         btCollisionShape* getSphereShape();
         btCollisionShape* getConvexShape(OSG::Vec3f& mc);
         btCollisionShape* getConcaveShape();
+        btCollisionShape* getCompoundShape();
 
         //btSoftBody*       createConvex();
         btSoftBody* createCloth();

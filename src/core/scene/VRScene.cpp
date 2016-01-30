@@ -93,7 +93,7 @@ void VRScene::initDevices() { // TODO: remove this after refactoring the navigat
         setActiveNavigation("Hydra");
     }
 
-    setup->updateDeviceDynNodes(getRoot());
+    setup->resetDeviceDynNodes(getRoot());
 
     cout << " init devices done\n";
 }

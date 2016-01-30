@@ -12,6 +12,7 @@ struct VRPyTransform : VRPyBaseT<OSG::VRTransform> {
     static PyObject* translate(VRPyTransform* self, PyObject* args);
     static PyObject* move(VRPyTransform* self, PyObject* args);
     static PyObject* rotate(VRPyTransform* self, PyObject* args);
+    static PyObject* rotateAround(VRPyTransform* self, PyObject* args);
 
     static PyObject* getWFrom(VRPyTransform* self);
     static PyObject* getFrom(VRPyTransform* self);

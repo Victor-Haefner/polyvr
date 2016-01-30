@@ -76,6 +76,7 @@ void VRGeometry::setMesh(GeometryRecPtr g, Reference ref, bool keep_material) {
     if (mat == 0) mat = VRMaterial::getDefault();
     if (keep_material) mat = VRMaterial::get(g->getMaterial());
     setMaterial(mat);
+    meshChanged();
 }
 
 void VRGeometry::setMesh(GeometryRecPtr g) {
@@ -83,6 +84,8 @@ void VRGeometry::setMesh(GeometryRecPtr g) {
     ref.type = CODE;
     setMesh(g, ref);
 }
+
+void VRGeometry::meshChanged() { lastMeshChange = VRGlobals::get()->CURRENT_FRAME; }
 
 void VRGeometry::setPrimitive(string primitive, string args) {
     this->primitive = VRPrimitive::make(primitive);
@@ -151,6 +154,7 @@ void VRGeometry::setPositions(GeoVectorProperty* Pos) {
     if (!meshSet) setMesh(Geometry::create());
     if (Pos->size() == 1) Pos->addValue(Pnt3f()); // hack to avoid the single point bug
     mesh->setPositions(Pos);
+    meshChanged();
 }
 
 void VRGeometry::setType(int t) {
@@ -174,6 +178,8 @@ void VRGeometry::updateNormals() {
     if (!meshSet) return;
     calcVertexNormals(mesh);
 }
+
+int VRGeometry::getLastMeshChange() { return lastMeshChange; }
 
 void VRGeometry::setTypes(GeoIntegralProperty* types) { if (!meshSet) setMesh(Geometry::create()); mesh->setTypes(types); }
 void VRGeometry::setNormals(GeoVectorProperty* Norms) { if (!meshSet) setMesh(Geometry::create()); mesh->setNormals(Norms); }
@@ -386,8 +392,6 @@ VRGeometryPtr VRGeometry::copySelection(VRSelectionPtr sel) {
     GeoVec2fPropertyRecPtr sel_tcs = GeoVec2fProperty::create();
     GeoUInt32PropertyRecPtr sel_inds = GeoUInt32Property::create();
     int Nc = getColorChannels( cols );
-
-    cout << "VRGeometry::copySelection " << Nc << endl;
 
     // copy selected vertices
     auto sinds = sel->getSubselection(ptr());

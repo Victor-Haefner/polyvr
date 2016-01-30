@@ -37,12 +37,15 @@ class VRGeometry : public VRTransform {
         NodeRecPtr mesh_node;
         ImageRecPtr texture;
         bool meshSet = false;
+        int lastMeshChange = 0;
 
         map<string, VRGeometryPtr> dataLayer;
 
         Reference source;
 
         VRObjectPtr copy(vector<VRObjectPtr> children);
+
+        void meshChanged();
 
         virtual void saveContent(xmlpp::Element* e);
         virtual void loadContent(xmlpp::Element* e);
@@ -92,6 +95,8 @@ class VRGeometry : public VRTransform {
         VRGeometryPtr separateSelection(VRSelectionPtr sel);
         void fixColorMapping();
         void updateNormals();
+
+        int getLastMeshChange();
 
         void genTexCoords(string mapping = "CUBE", float scale = 1, int channel = 0, std::shared_ptr<pose> p = 0);
 

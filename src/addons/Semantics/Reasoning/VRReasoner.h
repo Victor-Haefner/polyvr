@@ -22,21 +22,30 @@ struct VPath {
 };
 
 struct Variable {
-    vector<VREntityPtr> instances;
+    map<int, VREntityPtr> instances;
     string value;
     string concept;
-    bool isAnonymous = false;
+    bool isAssumption = false;
+    bool isAnonymous = true;
     bool valid = false;
 
     Variable();
 
     string toString();
-    bool has(Variable& other, VROntologyPtr onto);
+    bool has(std::shared_ptr<Variable> other, VROntologyPtr onto);
 
     Variable(VROntologyPtr onto, string concept, string var);
     Variable(VROntologyPtr onto, string val);
+
+    static std::shared_ptr<Variable> create(VROntologyPtr onto, string concept, string var);
+    static std::shared_ptr<Variable> create(VROntologyPtr onto, string val);
+
     bool operator==(Variable v);
+    void discard(VREntityPtr e);
 };
+
+typedef std::shared_ptr<Variable> VariablePtr;
+typedef std::weak_ptr<Variable> VariableWeakPtr;
 
 struct Result {
     vector<VREntityPtr> instances;
@@ -44,7 +53,7 @@ struct Result {
 
 struct Term {
     VPath path;
-    Variable var;
+    VariablePtr var;
     string str;
 
     Term(string s);
@@ -68,7 +77,7 @@ struct Statement {
     static StatementPtr New(string s, int i = -1);
 
     string toString();
-    void updateLocalVariables(map<string, Variable>& globals, VROntologyPtr onto);
+    void updateLocalVariables(map<string, VariablePtr>& globals, VROntologyPtr onto);
     bool isSimpleVerb();
     bool match(StatementPtr s);
 };
@@ -85,7 +94,7 @@ struct Query {
 };
 
 struct Context {
-    map<string, Variable> vars;
+    map<string, VariablePtr> vars;
     map<string, Result> results;
     map<string, Query> rules;
     list<Query> queries;
