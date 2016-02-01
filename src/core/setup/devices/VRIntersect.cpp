@@ -75,6 +75,8 @@ VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, Line ray) {
     auto tree = wtree.lock();
     if (!tree) return ins;
 
+    uint now = VRGlobals::get()->CURRENT_FRAME;
+
     VRIntersectAction iAct;
     //IntersectActionRefPtr iAct = IntersectAction::create();
     iAct.setTravMask(8);
@@ -93,6 +95,7 @@ VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, Line ray) {
         ins.triangleVertices = VRIntersect_computeVertices(ins, iAct.getHitObject());
         ins.texel = VRIntersect_computeTexel(ins, iAct.getHitObject());
         lastIntersection = ins;
+        ins.time = now;
     } else {
         ins.object.reset();
         if (lastIntersection.time < ins.time) lastIntersection = ins;
@@ -116,12 +119,14 @@ VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree) {
 
     uint now = VRGlobals::get()->CURRENT_FRAME;
 
-    //cout << "VRIntersect::intersect" << dev->getName() << endl;
     for (auto t : trees) {
-        //cout << " " << t->getName() << endl;
-        if (intersections.count(t.get())) ins = intersections[t.get()];
-        if (ins.hit && ins.time == now) continue;
-        ins.time = now;
+        if (intersections.count(t.get())) {
+            auto ins_tmp = intersections[t.get()];
+            if (ins_tmp.hit && ins_tmp.time == now) {
+                ins = ins_tmp;
+                break;
+            }
+        }
 
         Line ray = caster->castRay(t);
         auto ins_tmp = intersect(t, ray);
