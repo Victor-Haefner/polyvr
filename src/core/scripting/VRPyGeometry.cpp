@@ -110,6 +110,7 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"setPositionalTexCoords", (PyCFunction)VRPyGeometry::setPositionalTexCoords, METH_VARARGS, "Use the positions as texture coordinates - setPositionalTexCoords(float scale)" },
     {"genTexCoords", (PyCFunction)VRPyGeometry::genTexCoords, METH_VARARGS, "Generate the texture coordinates - genTexCoords( str mapping, float scale, int channel, Pose )\n\tmapping: ['CUBE', 'SPHERE']" },
     {"readSharedMemory", (PyCFunction)VRPyGeometry::readSharedMemory, METH_VARARGS, "Read the geometry from shared memory buffers - readSharedMemory( str segment, str object )" },
+    {"applyTransformation", (PyCFunction)VRPyGeometry::applyTransformation, METH_VARARGS, "Apply a transformation to the mesh - applyTransformation( pose )" },
     {NULL}  /* Sentinel */
 };
 
@@ -229,6 +230,15 @@ void feed1D3(PyObject* o, T& vec) {
         tmp[2] = PyFloat_AsDouble( PyList_GetItem(o, i+2) );
         vec->addValue(tmp);
     }
+}
+
+PyObject* VRPyGeometry::applyTransformation(VRPyGeometry* self, PyObject *args) {
+    if (!self->valid()) return NULL;
+    VRPyPose* pose = 0;
+    if (!PyArg_ParseTuple(args, "|O", &pose)) return NULL;
+    if (pose) self->objPtr->applyTransformation( pose->objPtr );
+    else self->objPtr->applyTransformation();
+    Py_RETURN_TRUE;
 }
 
 PyObject* VRPyGeometry::genTexCoords(VRPyGeometry* self, PyObject *args) {
