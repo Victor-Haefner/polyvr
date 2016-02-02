@@ -36,10 +36,11 @@ vector<path*>& VRStroke::getPaths() { return paths; }
     ;
 }*/
 
-void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed) {
+void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool doColor) {
     mode = 0;
     this->profile = profile;
     this->closed = closed;
+    this->doColor = doColor;
 
     Vec3f pCenter;
     for (auto p : profile) pCenter += p;
@@ -83,7 +84,7 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed) {
                 Pos->addValue(p+tmp);
                 tmp.normalize();
                 Norms->addValue(tmp);
-                Colors->addValue(c);
+                if (doColor) Colors->addValue(c);
             }
 
             if (j==0) continue;
@@ -147,7 +148,7 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed) {
             int Ni = Pos->size();
             Pos->addValue(p + tmp);
             Norms->addValue(-n);
-            Colors->addValue(c);
+            if (doColor) Colors->addValue(c);
 
             for (uint k=0; k<profile.size(); k++) {
                 Vec3f tmp = profile[k];
@@ -155,7 +156,7 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed) {
 
                 Pos->addValue(p+tmp);
                 Norms->addValue(-n);
-                Colors->addValue(c);
+                if (doColor) Colors->addValue(c);
             }
 
             for (uint k=1; k<=profile.size(); k++) {
@@ -179,7 +180,7 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed) {
 
             Pos->addValue(p + tmp);
             Norms->addValue(n);
-            Colors->addValue(c);
+            if (doColor) Colors->addValue(c);
 
 
             for (uint k=0; k<profile.size(); k++) {
@@ -188,7 +189,7 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed) {
 
                 Pos->addValue(p+tmp);
                 Norms->addValue(n);
-                Colors->addValue(c);
+                if (doColor) Colors->addValue(c);
             }
 
             for (uint k=1; k<=profile.size(); k++) {
@@ -213,7 +214,7 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed) {
     g->setPositions(Pos);
 
     g->setNormals(Norms);
-    g->setColors(Colors);
+    if (doColor) g->setColors(Colors);
     g->setIndices(Indices);
 
     setMesh(g);
@@ -240,7 +241,7 @@ void VRStroke::strokeStrew(VRGeometryPtr geo) {
 void VRStroke::update() {
     switch (mode) {
         case 0:
-            strokeProfile(profile, closed);
+            strokeProfile(profile, closed, doColor);
             break;
         case 1:
             strokeStrew(strewGeo);
