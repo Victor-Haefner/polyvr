@@ -519,9 +519,8 @@ void on_scale_changed(Vec3f v) {
 void on_focus_clicked(GtkButton*, gpointer data) {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
-
     auto scene = VRSceneManager::getCurrent();
-    if (scene) scene->getActiveCamera()->setAt( obj->getWorldPosition() );
+    if (scene) scene->getActiveCamera()->focus( obj );
 }
 
 void on_identity_clicked(GtkButton*, gpointer data) {

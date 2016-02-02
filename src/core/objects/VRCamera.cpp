@@ -128,4 +128,12 @@ void VRCamera::loadContent(xmlpp::Element* e) {
     if (e->get_attribute("fov")) setFov( toFloat(e->get_attribute("fov")->get_value()) );
 }
 
+void VRCamera::focus(Vec3f p) {
+    setAt(p);
+}
+
+void VRCamera::focus(VRTransformPtr t) {
+    focus(t->getWorldPosition());
+}
+
 OSG_END_NAMESPACE;

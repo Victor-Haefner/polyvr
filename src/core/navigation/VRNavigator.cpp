@@ -2,10 +2,14 @@
 
 #include <OpenSG/OSGIntersectAction.h>
 #include "core/objects/VRTransform.h"
+#include "core/utils/VRFunctionFwd.h"
 #include "core/utils/VRFunction.h"
 #include "core/setup/devices/VRSignal.h"
 #include "core/setup/devices/VRDevice.h"
 #include "core/setup/devices/VRMouse.h"
+#include "core/scene/VRSceneManager.h"
+#include "core/scene/VRScene.h"
+#include "core/math/path.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -288,9 +292,16 @@ void VRNavigator::orbit2D(VRDevice* dev) {
     target->zoom(x);
 }
 
+void animPathAt(VRTransformWeakPtr trp, path* p, float t) {
+    auto tr = trp.lock();
+    if (!tr) return;
+    tr->setAt( p->getPosition(t) );
+}
+
 void VRNavigator::focus(VRDevice* dev) {
     VRTransformPtr target = dev->getTarget();
     VRTransformPtr devBeacon = dev->getBeacon();
+    auto scene = VRSceneManager::getCurrent();
 
     if (target == 0) return;
     if (devBeacon == 0) return;
@@ -298,7 +309,15 @@ void VRNavigator::focus(VRDevice* dev) {
     VRIntersection ins = dev->intersect(target->getRoot());
 
     if (!ins.hit) return;
-    target->setAt( ins.point.subZero() );
+
+    Vec3f z;
+    path* p = new path();
+    p->addPoint(target->getAt(), z,z);
+    p->addPoint(ins.point.subZero(), z,z);
+    p->compute(20);
+
+    focus_fkt = VRFunction<float>::create("TransAnim", boost::bind(animPathAt, VRTransformWeakPtr(target), p, _1));
+    scene->addAnimation<float>(0.3,0,focus_fkt,0,1);
 }
 
 // presets
