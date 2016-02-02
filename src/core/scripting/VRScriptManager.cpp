@@ -327,6 +327,7 @@ void VRScriptManager::initPyModules() {
     registerModule<VRPyCaveKeeper>("CaveKeeper", pModVR);
     registerModule<VRPyParticles>("Particles", pModVR, VRPyGeometry::typeRef);
     registerModule<VRPyFluids>("Fluids", pModVR, VRPyParticles::typeRef);
+    registerModule<VRPyMetaBalls>("MetaBalls", pModVR, VRPyObject::typeRef);
     registerModule<VRPyCarDynamics>("CarDynamics", pModVR);
     registerModule<VRPyCEF>("CEF", pModVR);
     registerModule<VRPyWebCam>("Webcam", pModVR, VRPySprite::typeRef);

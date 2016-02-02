@@ -56,15 +56,7 @@ VRRenderManager::~VRRenderManager() {
 VRMaterialPtr VRRenderManager::setupRenderLayer(string name) {
     auto plane = VRGeometry::create(name+"_renderlayer");
     plane->setPrimitive("Plane", "2 2 1 1");
-
-    float inf = std::numeric_limits<float>::max();
-    BoxVolume &vol = plane->getNode()->editVolume(false);
-    vol.setEmpty();
-    vol.extendBy(Pnt3f(-inf,-inf,-inf));
-    vol.extendBy(Pnt3f(inf,inf,inf));
-    vol.setValid(true);
-    vol.setStatic(true);
-
+    plane->setVolume(false);
     plane->setMaterial( VRMaterial::create(name+"_mat") );
     root_def_shading->addChild(plane);
     renderLayer[name] = plane;
