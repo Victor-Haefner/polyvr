@@ -40,6 +40,7 @@ VRObjectPtr VRGeometry::copy(vector<VRObjectPtr> children) {
 VRGeometry::VRGeometry(string name) : VRTransform(name) {
     type = "Geometry";
     addAttachment("geometry", 0);
+    if (!meshSet) setMesh(Geometry::create());
 }
 
 VRGeometry::VRGeometry(string name, bool hidden) : VRTransform(name) {
@@ -47,6 +48,7 @@ VRGeometry::VRGeometry(string name, bool hidden) : VRTransform(name) {
     setIntern(hidden);
     type = "Geometry";
     addAttachment("geometry", 0);
+    if (!meshSet) setMesh(Geometry::create());
 }
 
 VRGeometry::~VRGeometry() {}

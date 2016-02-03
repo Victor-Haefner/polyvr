@@ -10,6 +10,8 @@
 #include <btBulletDynamicsCommon.h>
 #include <BulletSoftBody/btSoftRigidDynamicsWorld.h>
 
+#include <OpenSG/OSGGeometry.h>
+
 typedef boost::recursive_mutex::scoped_lock BLock;
 
 using namespace std;
@@ -29,6 +31,8 @@ VRParticles::VRParticles() : VRParticles(true) {}
 
 VRParticles::VRParticles(bool spawnParticles) : VRGeometry("particles") {
     if (spawnParticles) resetParticles<Particle>();
+    setVolume(false);
+    getMesh()->setDlistCache(false);
 }
 
 VRParticles::~VRParticles() {
