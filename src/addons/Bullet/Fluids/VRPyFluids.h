@@ -27,6 +27,8 @@ struct VRPyFluids : VRPyBaseT<OSG::VRFluids> {
 
 struct VRPyMetaBalls : VRPyBaseT<OSG::VRMetaBalls> {
     static PyMethodDef methods[];
+
+    static PyObject* getMaterial(VRPyMetaBalls* self);
 };
 
 #endif // VRPYFLUIDS_H_INCLUDED

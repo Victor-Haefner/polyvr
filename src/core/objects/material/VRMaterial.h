@@ -76,7 +76,7 @@ class VRMaterial : public VRObject {
 
         /** Load a texture && apply it to the mesh as new material **/
         TextureObjChunkRefPtr getTexChunk(int unit);
-        void setTexture(TextureObjChunkRefPtr texChunk);
+        void setTexture(TextureObjChunkRefPtr texChunk, int unit = 0);
         void setTexture(string img_path, bool alpha = true);
         void setTexture(VRTexturePtr img, bool alpha = true);
         void setTexture(char* data, int format, Vec3i dims, bool isfloat);

@@ -67,13 +67,13 @@ void VRStage::initFBO() {
     fbo->setPostProcessOnDeactivate(true);
     stage->setRenderTarget(fbo);
 
-    target->setTexture(fboTex);
+    target->setTexture(fboTex, tex_id);
 }
 
 void VRStage::update() {
     if (target) {
         if (!fboTex) initFBO();
-        fboImg->set(Image::OSG_RGB_PF, size[0], size[1]);
+        fboImg->set(Image::OSG_RGBA_PF, size[0], size[1]);
     }
 
     if (fbo) {
@@ -83,5 +83,5 @@ void VRStage::update() {
 }
 
 void VRStage::setSize( Vec2i s ) { size = s; update(); }
-void VRStage::setTarget(VRMaterialPtr mat) { target = mat; update(); }
+void VRStage::setTarget(VRMaterialPtr mat, int tid) { target = mat; tex_id = tid; update(); }
 void VRStage::setCamera(VRCameraPtr cam) { stage->setCamera( cam->getCam() ); }

@@ -1,5 +1,6 @@
 #include "VRPyFluids.h"
 #include "core/scripting/VRPyGeometry.h"
+#include "core/scripting/VRPyMaterial.h"
 #include "core/scripting/VRPyBaseT.h"
 
 using namespace OSG;
@@ -24,8 +25,14 @@ PyMethodDef VRPyFluids::methods[] = {
 };
 
 PyMethodDef VRPyMetaBalls::methods[] = {
+    {"getMaterial", (PyCFunction)VRPyMetaBalls::getMaterial, METH_NOARGS, "Return the stage material - mat getMaterial()"},
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyMetaBalls::getMaterial(VRPyMetaBalls* self) {
+    if (!self->valid()) return NULL;
+    return VRPyMaterial::fromSharedPtr( self->objPtr->getMaterial() );
+}
 
 void checkObj(VRPyFluids* self) {
     if (self->objPtr == 0) self->objPtr = OSG::VRFluids::create();

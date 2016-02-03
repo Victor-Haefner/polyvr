@@ -20,6 +20,8 @@
 #include <OpenSG/OSGImage.h>
 #include <OpenSG/OSGClipPlaneChunk.h>
 #include <OpenSG/OSGStencilChunk.h>
+#include <OpenSG/OSGDepthChunk.h>
+
 #include "core/objects/VRTransform.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/utils/toString.h"
@@ -38,6 +40,7 @@ struct VRMatData {
     ChunkMaterialRecPtr mat;
     MaterialChunkRecPtr colChunk;
     BlendChunkRecPtr blendChunk;
+    DepthChunkRecPtr depthChunk;
     TextureEnvChunkRecPtr envChunk;
     TextureObjChunkRecPtr texChunk;
     map<int, TextureObjChunkRecPtr> texChunks;
@@ -79,6 +82,7 @@ struct VRMatData {
         twoSidedChunk = TwoSidedLightingChunk::create();
         mat->addChunk(twoSidedChunk);
         blendChunk = 0;
+        depthChunk = 0;
         texChunk = 0;
         genChunk = 0;
         envChunk = 0;
@@ -104,6 +108,7 @@ struct VRMatData {
 
         if (colChunk) { m->colChunk = dynamic_pointer_cast<MaterialChunk>(colChunk->shallowCopy()); m->mat->addChunk(m->colChunk); }
         if (blendChunk) { m->blendChunk = dynamic_pointer_cast<BlendChunk>(blendChunk->shallowCopy()); m->mat->addChunk(m->blendChunk); }
+        if (depthChunk) { m->depthChunk = dynamic_pointer_cast<DepthChunk>(depthChunk->shallowCopy()); m->mat->addChunk(m->depthChunk); }
         if (envChunk) { m->envChunk = dynamic_pointer_cast<TextureEnvChunk>(envChunk->shallowCopy()); m->mat->addChunk(m->envChunk); }
         if (texChunk) { m->texChunk = dynamic_pointer_cast<TextureObjChunk>(texChunk->shallowCopy()); m->mat->addChunk(m->texChunk); }
         if (genChunk) { m->genChunk = dynamic_pointer_cast<TexGenChunk>(genChunk->shallowCopy()); m->mat->addChunk(m->genChunk); }
@@ -397,6 +402,7 @@ void VRMaterial::setMaterial(MaterialRecPtr m) {
         BlendChunkRecPtr bc = 0;
         TextureEnvChunkRecPtr ec = 0;
         TextureObjChunkRecPtr tc = 0;
+        DepthChunkRecPtr dc = 0;
 
         ChunkMaterialRecPtr cmat = dynamic_pointer_cast<ChunkMaterial>(m);
         for (uint i=0; i<cmat->getMFChunks()->size(); i++) {
@@ -405,12 +411,14 @@ void VRMaterial::setMaterial(MaterialRecPtr m) {
             if (bc == 0) bc = dynamic_pointer_cast<BlendChunk>(chunk);
             if (ec == 0) ec = dynamic_pointer_cast<TextureEnvChunk>(chunk);
             if (tc == 0) tc = dynamic_pointer_cast<TextureObjChunk>(chunk);
+            if (dc == 0) dc = dynamic_pointer_cast<DepthChunk>(chunk);
         }
 
         auto md = mats[activePass];
         if (mc) mc->setBackMaterial(false);
         if (mc) { if (md->colChunk) md->mat->subChunk(md->colChunk);   md->colChunk = mc;   md->mat->addChunk(mc); }
         if (bc) { if (md->blendChunk) md->mat->subChunk(md->blendChunk); md->blendChunk = bc; md->mat->addChunk(bc); }
+        if (dc) { if (md->depthChunk) md->mat->subChunk(md->depthChunk); md->depthChunk = dc; md->mat->addChunk(dc); }
         if (ec) { if (md->envChunk) md->mat->subChunk(md->envChunk);   md->envChunk = ec;   md->mat->addChunk(ec); }
         if (tc) { if (md->texChunk) md->mat->subChunk(md->texChunk);   md->texChunk = tc;   md->mat->addChunk(tc); }
         return;
@@ -443,11 +451,11 @@ void VRMaterial::setTextureParams(int min, int mag, int envMode, int wrapS, int 
     md->texChunk->setWrapT (wrapT);
 }
 
-void VRMaterial::setTexture(TextureObjChunkRefPtr texChunk) {
+void VRMaterial::setTexture(TextureObjChunkRefPtr texChunk, int unit) {
     auto md = mats[activePass];
     if (md->texChunk) md->mat->subChunk(md->texChunk);
     md->texChunk = texChunk;
-    md->mat->addChunk(md->texChunk);
+    md->mat->addChunk(md->texChunk, unit);
     if (md->envChunk == 0) { md->envChunk = TextureEnvChunk::create(); md->mat->addChunk(md->envChunk); }
     md->envChunk->setEnvMode(GL_MODULATE);
 }
@@ -661,9 +669,13 @@ void VRMaterial::setTransparency(float c) {
 
     if (md->blendChunk == 0) {
         md->blendChunk = BlendChunk::create();
-        md->mat->addChunk(md->blendChunk);
         md->blendChunk->setSrcFactor  ( GL_SRC_ALPHA           );
         md->blendChunk->setDestFactor ( GL_ONE_MINUS_SRC_ALPHA );
+        md->mat->addChunk(md->blendChunk);
+
+        md->depthChunk = DepthChunk::create();
+        md->depthChunk->setFunc(GL_ALWAYS);
+        md->mat->addChunk(md->depthChunk);
     }
 }
 

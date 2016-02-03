@@ -9,8 +9,9 @@ void OSG::VRMaterial::setShaderParameter(string name, const T &value) {
     //shaderChunk->updateUniformVariable(name.c_str(), value);
     //shaderChunk->subUniformVariable(name.c_str());
     //shaderChunk->addUniformVariable(name.c_str(), value);
-    getShaderProgram()->subUniformVariable(name.c_str());
-    getShaderProgram()->addUniformVariable(name.c_str(), value);
+    auto p = getShaderProgram();
+    if (p) p->subUniformVariable(name.c_str());
+    if (p) p->addUniformVariable(name.c_str(), value);
 }
 
 #endif // VRMATERIALT_H_INCLUDED
