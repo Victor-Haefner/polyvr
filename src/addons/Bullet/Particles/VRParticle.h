@@ -11,8 +11,6 @@
 #include <btBulletDynamicsCommon.h>
 #include <BulletSoftBody/btSoftRigidDynamicsWorld.h>
 
-
-
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
@@ -91,21 +89,20 @@ struct Particle {
         }
 
         setActive(true);
-
         world->addRigidBody(body, collisionGroup, collisionMask);
     }
 
     void setActive(bool active = true) {
-        body->activate(active);
+        // NOTE TAG description at http://www.bulletphysics.org/mediawiki-1.5.8/index.php/Activation_States
+        body->setActivationState(DISABLE_DEACTIVATION);
         isActive = active;
     }
 
 };
 
 struct SphParticle : public Particle {
-    bool sphActive = true;
     // TODO @depricated
-    float sphArea = 5 * radius;
+    float sphArea = 0.05;
     float sphDensity = 0.0;
     float sphPressure = 0.0;
     btVector3 sphPressureForce;
@@ -114,16 +111,9 @@ struct SphParticle : public Particle {
 
 
     SphParticle(btDiscreteDynamicsWorld* world = 0, bool active = true) {
-        sphActive = active;
         sphPressureForce.setZero();
         sphViscosityForce.setZero();
     }
-
-    void setActive(bool active = true) {
-        Particle::setActive(active);
-        sphActive = active;
-    }
-
 };
 OSG_END_NAMESPACE;
 #endif // VRPARTICLE_H_INCLUDED

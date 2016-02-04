@@ -203,7 +203,10 @@ int VRParticles::setEmitter(Vec3f baseV, Vec3f dirV, int from, int to, int inter
     this->emitters[e->id] = e; //store emitters
 
     setFunctions(from, to);
-    e->setActive(true);
+    {
+        BLock lock(mtx());
+        e->setActive(true);
+    }
     printf("VRParticles::setEmitter(...from=%i, to=%i, interval=%i)\n", from, to, interval);
     return e->id;
 }
