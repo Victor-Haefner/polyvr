@@ -95,15 +95,16 @@ inline void VRFluids::updateSPH(int from, int to) {
         // clear and fill octree
         ocparticles.clear();
         for (int i=from; i < to; i++) {
-            if (!particles[i]->isActive) { break; }
-            p = (SphParticle*) particles[i];
-            btVector3 p_origin = p->body->getWorldTransform().getOrigin();
-            ocparticles.add(p_origin[0],p_origin[1],p_origin[2],p);
+            if (particles[i]->isActive == true) {
+                p = (SphParticle*) particles[i];
+                btVector3 p_origin = p->body->getWorldTransform().getOrigin();
+                ocparticles.add(p_origin[0],p_origin[1],p_origin[2],p);
+            }
         }
 
         #pragma omp parallel for private(p) shared(from, to)
         for (int i=from; i < to; i++) {
-            if (particles[i]->isActive) {
+            if (particles[i]->isActive == true) {
                 p = (SphParticle*) particles[i];
                 sph_calc_properties(p);
             }
@@ -111,7 +112,7 @@ inline void VRFluids::updateSPH(int from, int to) {
 
         #pragma omp parallel for private(p) shared(from, to)
         for (int i=from; i < to; i++) {
-            if (particles[i]->isActive) {
+            if (particles[i]->isActive == true) {
                 p = (SphParticle*) particles[i];
                 sph_calc_forces(p);
                 btVector3 force = (p->sphPressureForce + p->sphViscosityForce);
@@ -235,10 +236,10 @@ inline void VRFluids::xsph_calc_movement(SphParticle* p, int from, int to) {
  * }
  */
 inline float VRFluids::kernel_poly6(btVector3 v, float h) {
-    float r = v.length();
-    if (r <= h && r >= 0) {
-        float r2 = r*r;
-        float diff = h*h - r2;
+    float r2 = v.length2();
+    float h2 = h*h;
+    if ( r2 <= h2 ) {
+        float diff = h2 - r2;
         return (315.0 / (64.0*Pi)) * (1/pow(h,9)) * diff*diff*diff;
     } else {
         return 0.0;

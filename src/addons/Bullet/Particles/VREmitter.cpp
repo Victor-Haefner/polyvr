@@ -69,7 +69,7 @@ void Emitter::emitterLoop() {
     timer++;
     if (timer == 1) {
         Particle* p = particles[this->p_num];
-        printf("spawned p(%i)\n", p_num);
+        //printf("spawned p(%i)\n", p_num);
         {
             BLock lock(mtx());
             p->spawnAt(position, this->world, this->collideSelf);
