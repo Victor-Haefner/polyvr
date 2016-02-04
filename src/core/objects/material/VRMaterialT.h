@@ -10,6 +10,7 @@ void OSG::VRMaterial::setShaderParameter(string name, const T &value) {
     //shaderChunk->subUniformVariable(name.c_str());
     //shaderChunk->addUniformVariable(name.c_str(), value);
     auto p = getShaderProgram();
+    if (!p) cout << "Warning! setShaderParameter failed for parameter " << name << endl;
     if (p) p->subUniformVariable(name.c_str());
     if (p) p->addUniformVariable(name.c_str(), value);
 }

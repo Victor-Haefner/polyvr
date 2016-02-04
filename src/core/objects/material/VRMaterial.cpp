@@ -1,5 +1,6 @@
 #include "VRMaterial.h"
 
+#include <OpenSG/OSGMaterialGroup.h>
 #include <OpenSG/OSGSimpleMaterial.h>
 #include <OpenSG/OSGSimpleTexturedMaterial.h>
 #include <OpenSG/OSGVariantMaterial.h>
@@ -44,6 +45,7 @@ struct VRMatData {
     TextureEnvChunkRecPtr envChunk;
     TextureObjChunkRecPtr texChunk;
     map<int, TextureObjChunkRecPtr> texChunks;
+    map<int, TextureObjChunkRecPtr> envChunks;
     TexGenChunkRecPtr genChunk;
     LineChunkRecPtr lineChunk;
     PointChunkRecPtr pointChunk;
@@ -109,8 +111,8 @@ struct VRMatData {
         if (colChunk) { m->colChunk = dynamic_pointer_cast<MaterialChunk>(colChunk->shallowCopy()); m->mat->addChunk(m->colChunk); }
         if (blendChunk) { m->blendChunk = dynamic_pointer_cast<BlendChunk>(blendChunk->shallowCopy()); m->mat->addChunk(m->blendChunk); }
         if (depthChunk) { m->depthChunk = dynamic_pointer_cast<DepthChunk>(depthChunk->shallowCopy()); m->mat->addChunk(m->depthChunk); }
-        if (envChunk) { m->envChunk = dynamic_pointer_cast<TextureEnvChunk>(envChunk->shallowCopy()); m->mat->addChunk(m->envChunk); }
-        if (texChunk) { m->texChunk = dynamic_pointer_cast<TextureObjChunk>(texChunk->shallowCopy()); m->mat->addChunk(m->texChunk); }
+        for (auto t : texChunks) { m->texChunk = dynamic_pointer_cast<TextureObjChunk>(t.second->shallowCopy()); m->mat->addChunk(t.second, t.first); }
+        for (auto t : envChunks) { m->envChunk = dynamic_pointer_cast<TextureEnvChunk>(t.second->shallowCopy()); m->mat->addChunk(t.second, t.first); }
         if (genChunk) { m->genChunk = dynamic_pointer_cast<TexGenChunk>(genChunk->shallowCopy()); m->mat->addChunk(m->genChunk); }
         if (lineChunk) { m->lineChunk = dynamic_pointer_cast<LineChunk>(lineChunk->shallowCopy()); m->mat->addChunk(m->lineChunk); }
         if (pointChunk) { m->pointChunk = dynamic_pointer_cast<PointChunk>(pointChunk->shallowCopy()); m->mat->addChunk(m->pointChunk); }
@@ -145,11 +147,14 @@ map<MaterialRecPtr, VRMaterialWeakPtr> VRMaterial::materialsByPtr;
 VRMaterial::VRMaterial(string name) : VRObject(name) {
     auto scene = VRSceneManager::getCurrent();
     if (scene) deferred = scene->getDefferedShading();
-    type = "Material";
     addAttachment("material", 0);
     passes = MultiPassMaterial::create();
     addPass();
     activePass = 0;
+
+    MaterialGroupRecPtr group = MaterialGroup::create();
+    group->setMaterial(passes);
+    setCore(group, "Material");
 }
 
 VRMaterial::~VRMaterial() { for (auto m : mats) delete m; }
@@ -451,15 +456,6 @@ void VRMaterial::setTextureParams(int min, int mag, int envMode, int wrapS, int 
     md->texChunk->setWrapT (wrapT);
 }
 
-void VRMaterial::setTexture(TextureObjChunkRefPtr texChunk, int unit) {
-    auto md = mats[activePass];
-    if (md->texChunk) md->mat->subChunk(md->texChunk);
-    md->texChunk = texChunk;
-    md->mat->addChunk(md->texChunk, unit);
-    if (md->envChunk == 0) { md->envChunk = TextureEnvChunk::create(); md->mat->addChunk(md->envChunk); }
-    md->envChunk->setEnvMode(GL_MODULATE);
-}
-
 void VRMaterial::setTexture(string img_path, bool alpha) { // TODO: improve with texture map
     if (boost::filesystem::exists(img_path))
         img_path = boost::filesystem::canonical(img_path).string();
@@ -514,14 +510,32 @@ TextureObjChunkRefPtr VRMaterial::getTexChunk(int unit) {
     if (md->texChunks.count(unit) == 0) {
         md->texChunks[unit] = TextureObjChunk::create();
         md->mat->addChunk(md->texChunks[unit], unit);
+        md->mat->addChunk(md->envChunk, unit);
     }
     md->texChunk = md->texChunks[unit];
     return md->texChunks[unit];
 }
 
+void VRMaterial::setTexture(TextureObjChunkRefPtr texChunk, int unit) {
+    auto md = mats[activePass];
+    if (md->envChunk == 0) { md->envChunk = TextureEnvChunk::create(); md->mat->addChunk(md->envChunk); }
+    md->envChunk->setEnvMode(GL_MODULATE);
+
+    cout << "setTexture " << texChunk << " " << unit << endl;
+    if (md->texChunks.count(unit)) {
+        if (md->texChunks[unit]) {
+            md->mat->subChunk(md->texChunks[unit]);
+        }
+    }
+
+    md->texChunks[unit] = texChunk;
+    md->mat->addChunk(md->texChunks[unit], unit);
+    md->mat->addChunk(md->envChunk, unit);
+    md->texChunk = texChunk;
+}
+
 void VRMaterial::setTextureAndUnit(VRTexturePtr img, int unit) {
     if (img == 0) return;
-    auto md = mats[activePass];
     auto texChunk = getTexChunk(unit);
     texChunk->setImage(img->getImage());
 }
