@@ -25,9 +25,6 @@ class VRTextureRenderer : public VRObject {
 
         void setup(VRCameraPtr cam, int width, int height);
 
-        void addLink(VRObjectPtr obj);
-        void remLink(VRObjectPtr obj);
-
         VRMaterialPtr getMaterial();
 };
 
