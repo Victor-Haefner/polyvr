@@ -6,20 +6,14 @@
 #include <vector>
 #include <map>
 
-#include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/VRObjectFwd.h"
 #include "core/utils/VRFunctionFwd.h"
-
 
 using namespace std;
 OSG_BEGIN_NAMESPACE
 
-class VRStroke;
-class VRTransform;
 class VRDevice;
-class VRObject;
 class path;
-
-
 
 class VRManipulator {
     private:
@@ -28,62 +22,13 @@ class VRManipulator {
         VRGeometryPtr gRX, gRY, gRZ;
         VRTransformPtr sel = 0;
 
-        void setup() {
-            anchor = VRObject::create("manipulator");
-            gTX = VRGeometry::create("gTX");
-            gTY = VRGeometry::create("gTY");
-            gTZ = VRGeometry::create("gTZ");
-            gRX = VRGeometry::create("gRX");
-            gRY = VRGeometry::create("gRY");
-            gRZ = VRGeometry::create("gRZ");
-            gTX->setPrimitive("Box", "0.1 0.02 0.02 1 1 1");
-            gTY->setPrimitive("Box", "0.02 0.1 0.02 1 1 1");
-            gTZ->setPrimitive("Box", "0.02 0.02 0.1 1 1 1");
-            gRX->setPrimitive("Torus", "0.01 0.07 4 16");
-            gRY->setPrimitive("Torus", "0.01 0.07 4 16");
-            gRZ->setPrimitive("Torus", "0.01 0.07 4 16");
-            gRX->setDir(Vec3f(1,0,0));
-            gRY->setDir(Vec3f(0,1,0));
-            gRY->setUp(Vec3f(1,0,0));
-            anchor->addChild(gTX);
-            anchor->addChild(gTY);
-            anchor->addChild(gTZ);
-            anchor->addChild(gRX);
-            anchor->addChild(gRY);
-            anchor->addChild(gRZ);
-        }
+        void setup();
 
     public:
-        VRManipulator() {
-            setup();
-        }
+        VRManipulator();
 
-        void handle(VRGeometryPtr g) {
-            if (sel == 0) return;
-            sel->toggleTConstraint(false);
-            sel->toggleRConstraint(false);
-            sel->setTConstraintMode(VRTransform::LINE);
-
-            if (g == gTX || g == gTY || g == gTZ || g == gRX || g == gRY || g == gRZ) { // lock everything
-                sel->toggleTConstraint(true);
-                sel->toggleRConstraint(true);
-                sel->setTConstraint(Vec3f(0,0,0));
-                sel->setRConstraint(Vec3i(1,1,1));
-            }
-
-            if (g == gTX) sel->setTConstraint(Vec3f(1,0,0));
-            if (g == gTY) sel->setTConstraint(Vec3f(0,1,0));
-            if (g == gTZ) sel->setTConstraint(Vec3f(0,0,1));
-            //if (g == gRX) sel->setRConstraint(Vec3i(0,1,1)); // TODO: fix rotation constraints!
-            //if (g == gRY) sel->setRConstraint(Vec3i(1,0,1));
-            //if (g == gRZ) sel->setRConstraint(Vec3i(1,1,0));
-            if (g == gRX || g == gRY || g == gRZ) sel->setRConstraint(Vec3i(0,0,0));
-        }
-
-        void manipulate(VRTransformPtr t) {
-            t->addChild(anchor);
-            sel = t;
-        }
+        void handle(VRGeometryPtr g);
+        void manipulate(VRTransformPtr t);
 };
 
 class VRExtruder {
@@ -118,6 +63,8 @@ class VRPathtool {
         map<VRGeometry*, entry*> entries;
         vector<VRGeometryWeakPtr> handles;
 
+        VRMaterialPtr lmat;
+
         VRUpdatePtr updatePtr;
         VRManipulator* manip = 0;
         VRExtruder* ext = 0;
@@ -142,6 +89,8 @@ class VRPathtool {
         vector<path*> getPaths();
         vector<VRGeometryPtr> getHandles(path* p);
         VRStrokePtr getStroke(path* p);
+
+        VRMaterialPtr getPathMaterial();
 
         void select(VRGeometryPtr handle);
         void update();

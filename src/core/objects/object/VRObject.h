@@ -105,14 +105,11 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         VRObjectPtr hasAncestorWithAttachment(string name);
         vector<VRObjectPtr> getChildrenWithAttachment(string name);
 
-        /** Set the object OSG core && specify the type**/
         void setCore(NodeCoreRecPtr c, string _type, bool force = false);
-
-        /** Returns the object OSG core **/
         NodeCoreRecPtr getCore();
-
-        /** Switch the object core by another **/
         void switchCore(NodeCoreRecPtr c);
+
+        void setVolume(bool b);
 
         /** Returns the object OSG node **/
         NodeRecPtr getNode();
@@ -120,17 +117,10 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         /** set the position in the parents child list **/
         void setSiblingPosition(int i);
 
-        /** Add a child to this object **/
-        void addChild(VRObjectPtr child, bool osg = true, int place = -1);
-
-        /** Add a OSG node as child to this object **/
-        void addChild(NodeRecPtr n);
-
-        /** Remove a child **/
-        void subChild(VRObjectPtr child, bool osg = true);
-
-        /** Remove a OSG node child **/
-        void subChild(NodeRecPtr n);
+        virtual void addChild(VRObjectPtr child, bool osg = true, int place = -1);
+        virtual void addChild(NodeRecPtr n);
+        virtual void subChild(VRObjectPtr child, bool osg = true);
+        virtual void subChild(NodeRecPtr n);
 
         /** Switch the parent of this object **/
         void switchParent(VRObjectPtr new_p, int place = -1);

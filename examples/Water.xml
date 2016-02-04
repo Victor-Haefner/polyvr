@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scene name_suffix="0" base_name="cylindertest" name_space="Scene">
+  <Objects>
+    <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
+      <Object name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
+        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="2.88782 4.58265 -2.64992" at="0.294688 0.787463 -0.0876844" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
+          <Object name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
+        </Object>
+      </Object>
+    </Object>
+  </Objects>
+  <Rendering deferred_rendering="0" frustum_culling="1" occlusion_culling="0" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Scripts>
+    <Script name_suffix="0" base_name="doBasin" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+		
+	def doColor(r,g,b):
+		mat = VR.Material('color')
+		mat.setDiffuse([r,g,b])
+		mat.setAmbient([r,g,b])
+		return mat
+		
+	def doLittleCube():
+		cube = VR.Geometry('lilCube')
+		cube.setPrimitive("Box 0.01 0.01 0.01 1 1 1")
+		parent.addChild(cube)
+		return cube
+		
+	(x,y,z) = ("4.2","0.2","2")
+	(nx,ny,nz) = (2,0.1,1) #as integer, halved
+	VR.basin = []
+	
+	#---do ground---#
+	ground = VR.Geometry('Ground')
+	ground.setPrimitive("Box "+x+" "+y+" "+z+" 1 1 1")
+	ground.setCollisionMargin(0.1)
+	ground.physicalize(1,0,0)
+	ground.setMaterial(doColor(0.8,0.8,0.9))
+	ground.setCollisionGroup(2) # gruppe 1
+	ground.setCollisionMask(1) # kollidiert mit boden, gruppe 2
+	VR.basin.append(ground)
+	parent.addChild(ground)
+	
+	
+	#---do walls----#
+	def newWall(a,b,c, tx, ty, tz):
+		wall = VR.Geometry('Wall')
+		wall.setPrimitive("Box "+a+" "+b+" "+c+" 1 1 1")
+		wall.translate(tx,ty,tz)
+		wall.hide()
+		wall.setCollisionMargin(0.1)
+		wall.physicalize(1,0,0)
+		parent.addChild(wall)
+		VR.basin.append(wall)
+		
+	newWall(y,z,z, -nx,nz,0)
+	newWall(y,z,z,  nx,nz,0)
+	newWall(x,z,y,  0,nz, nz)
+	newWall(x,z,y,  0,nz,-nz)
+	#------------------#
+	
+	
+	#---do cylinder---#
+	cylinder = VR.Geometry('cylinder')
+	cylinder.setPrimitive("Cone "+z+" 1 16")
+	cylinder.translate(-0.2,0.2,0)
+	cylinder.setCollisionMargin(0.01)
+	cylinder.physicalize(1,0,0)
+	cylinder.setMaterial(doColor(0.8,0.8,0.9))
+	parent.addChild(cylinder)
+	VR.basin.append(cylinder)
+	
+	# do path
+	path = VR.Path('cyl_path')
+	path.set([-nz,nz,0], [1,0,0], [nz,nz,0], [1,0,0], 1)
+	# animate cylinder
+	pathtool = VR.Pathtool('pathtool')
+	pathtool.setVisible(False)
+	pathtool.setHandleGeometry(doLittleCube())
+	pathtool.addPath(path, parent)
+	
+	n = pathtool.extrude(None, path)
+	n.setPose([-nz,nz,0], [1,0,0], [0,1,0])
+	pathtool.update()
+	cylinder.animate(path, 2, 0,0,1)
+	
+	# let them collide with water
+	for o in VR.basin:
+		o.setCollisionGroup(0) # 0001 = BIT(0)
+		o.setCollisionMask(1) #  0010 = BIT(1)
+	
+	return cylinder
+</core>
+      <arg type="VRPyObjectType" value="0" name_suffix="0" base_name="parent" name_space="doBasin"/>
+    </Script>
+    <Script name_suffix="0" base_name="doFluids" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+	
+	# TODO resize stage with viewport
+	
+	def doMaterial():
+		m = VR.Material('fluid')
+		m.setLit(0)
+		m.setVertexProgram('particle_vp')
+		m.setFragmentProgram('particle_fp')
+		m.setGeometryProgram('particle_gp')
+		m.setPointSize(10)
+		m.setAmbient([0.2,0.2,1])
+		m.setTransparency(1.0)
+		return m
+		
+	
+	fluid = VR.Fluids()
+	#fluid.setAmount(800)
+	fluid.setMaterial( doMaterial() )
+	fluid.setRadius(radius)
+	fluid.setMass(mass)
+	fluid.setSphRadius(sphRadius)
+	fluid.setViscosity(0.001)
+	#VR.fluid.setSimType('SPH')
+	num = fluid.spawnCuboid(-1,5,-0.4, 4*sphRadius, 3,800,2)
+	print num
+	#fluid.spawnEmitter([0,5,-0.4],[0,-0.001,0],0,400,20)
+	
+	#parent.addChild(fluid)
+	#return fluid
+
+	meta = VR.MetaBalls('water')
+	parent.addChild(meta)
+	meta.addChild(fluid)
+	m = meta.getMaterial()
+	m.setVertexProgram('water_vp')
+	m.setFragmentProgram('water_fp')
+	
+	return fluid
+</core>
+      <arg type="float" value="0" name_suffix="0" base_name="mass" name_space="doFluids"/>
+      <arg type="VRPyObjectType" value="0" name_suffix="0" base_name="parent" name_space="doFluids"/>
+      <arg type="float" value="0" name_suffix="0" base_name="radius" name_space="doFluids"/>
+      <arg type="float" value="0" name_suffix="0" base_name="sphRadius" name_space="doFluids"/>
+    </Script>
+    <Script name_suffix="0" base_name="init" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+	import time
+	import math
+	
+	#---reset scene---#
+	r = VR.getRoot().find('Headlight')
+	if hasattr(VR, 'test'):
+		print 'destroy'
+		if VR.test: VR.test.destroy()
+	VR.test = VR.Object('test')
+	r.addChild(VR.test)
+	#-----------------#
+	
+	#---build scene---#
+	VR.cylinder = VR.doBasin(VR.test)
+		
+	#-----------------#
+
+	#---do fluids---#
+	R = 0.05 # meter radius
+	V = 4/3*math.pi*R*R*R # Volumen pro partikel
+	rho = 1000 # kg für einen m^3 fluid
+	m = V*rho
+	
+	(mass, parent, radius, sphRadius) = (m, VR.test, R, 5*R)
+	VR.fluid = VR.doFluids(mass, parent, radius, sphRadius)
+	VR.play = True;
+	#---------------#i
+</core>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
+      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="105" name_suffix="1" base_name="trigger" name_space="__global__"/>
+    </Script>
+    <Script name_suffix="0" base_name="particle_fp" name_space="__script__" type="GLSL" mobile="">
+      <core>
+#version 120
+
+varying vec4 Color;
+varying vec2 texCoord;
+
+void main( void ) {
+	vec4 c;
+	c.x = gl_FragCoord.z*0.1;
+	
+	float r = sqrt(texCoord[0]*texCoord[0]+texCoord[1]*texCoord[1]);
+	c.a = max(1.0-r,0.0)*0.3;
+	gl_FragColor = c;
+}
+</core>
+    </Script>
+    <Script name_suffix="0" base_name="particle_gp" name_space="__script__" type="GLSL" mobile="">
+      <core>
+#version 150
+#extension GL_EXT_geometry_shader4 : enable
+
+layout (points) in;
+layout (triangle_strip, max_vertices=6) out;
+
+uniform vec2 OSGViewportSize;
+
+in vec4 color[];
+//in vec3 normal[];
+out vec2 texCoord;
+out vec4 Color;
+
+void emitVertex(in vec4 p, in vec2 tc) {
+	gl_Position = p;
+	texCoord = tc;
+	EmitVertex();
+}
+
+void emitQuad(in float s, in vec4 tc) {
+	vec4 p = gl_PositionIn[0];
+
+	float a = OSGViewportSize.y/OSGViewportSize.x;
+
+	vec4 u = vec4(s*a,0,0,0);
+	vec4 v = vec4(0,s,0,0);
+
+	vec4 p1 = p -u -v;
+	vec4 p2 = p -u +v;
+	vec4 p3 = p +u +v;
+	vec4 p4 = p +u -v;
+
+	emitVertex(p1, vec2(tc[0], tc[2]));
+	emitVertex(p2, vec2(tc[0], tc[3]));
+	emitVertex(p3, vec2(tc[1], tc[3]));
+	EndPrimitive();
+	emitVertex(p1, vec2(tc[0], tc[2]));
+	emitVertex(p3, vec2(tc[1], tc[3]));
+	emitVertex(p4, vec2(tc[1], tc[2]));
+	EndPrimitive();
+}
+
+void main() {
+	Color = color[0];
+	emitQuad(0.3, vec4(-1,1,-1,1));
+}
+</core>
+    </Script>
+    <Script name_suffix="0" base_name="particle_vp" name_space="__script__" type="GLSL" mobile="">
+      <core>
+#version 120
+
+attribute vec4 osg_Vertex;
+attribute vec4 osg_Color;
+
+varying vec4 color;
+
+void main(void) {
+    gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;
+    color = osg_Color;
+}
+</core>
+    </Script>
+    <Script name_suffix="0" base_name="playPause" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+	
+	if VR.play == True:
+		VR.cylinder.animationStop()
+		VR.play = False
+	else:
+		print "not implemented yet"
+		
+
+</core>
+      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="112" name_suffix="2" base_name="trigger" name_space="__global__"/>
+    </Script>
+    <Script name_suffix="0" base_name="water_fp" name_space="__script__" type="GLSL" mobile="">
+      <core>
+#version 120
+
+uniform sampler2D texWater;
+
+void main(void) { 
+    vec2 tc = gl_TexCoord[0].xy;
+    vec4 water = texture2D(texWater, tc);
+    float R = water.a;
+    if (R &gt; 0.84) discard;
+    
+    gl_FragColor = vec4(0.1+0.7*R,0.3+0.7*R,1.0,1.0);
+	gl_FragDepth = water.x*0.98;
+}
+</core>
+    </Script>
+    <Script name_suffix="0" base_name="water_fp2" name_space="__script__" type="GLSL" mobile="">
+      <core>
+#version 120
+
+#extension GL_ARB_texture_rectangle : require
+#extension GL_ARB_texture_rectangle : enable
+
+uniform sampler2DRect texBufPos;
+uniform sampler2DRect texBufNorm;
+uniform sampler2DRect texBufDiff;
+uniform sampler2D texWater;
+
+void main(void) {
+    vec2 lookup = gl_FragCoord.xy;
+    vec4 posAmb = texture2DRect(texBufPos,  lookup);
+    vec4 norm   = texture2DRect(texBufNorm, lookup);
+    vec4 mDiff  = texture2DRect(texBufDiff, lookup);
+    
+    vec2 tc = gl_TexCoord[0].xy;
+    vec4 water = texture2D(texWater, tc);
+    float r = water.a;
+    if (r &lt; 0.9) {
+		water.rgb *= r;
+    
+		mDiff.rgb *= water.rgb;
+    }
+
+    gl_FragData[0] = posAmb;
+    gl_FragData[1] = norm;
+    gl_FragData[2] = mDiff;
+}
+</core>
+    </Script>
+    <Script name_suffix="0" base_name="water_vp" name_space="__script__" type="GLSL" mobile="">
+      <core>
+#version 120
+
+attribute vec4 osg_Vertex;
+attribute vec2 osg_MultiTexCoord0;
+
+void main(void) {
+    gl_Position = osg_Vertex;
+    gl_Position.z = -1.0;
+    gl_TexCoord[0] = vec4(osg_MultiTexCoord0,0.0,0.0);
+}
+</core>
+    </Script>
+  </Scripts>
+  <Sockets/>
+  <Background color="0.6 0.6 0.6" format=".png" path="" type="0"/>
+  <Navigation active="Orbit"/>
+  <Materials/>
+</Scene>

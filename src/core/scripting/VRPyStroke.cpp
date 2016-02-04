@@ -124,8 +124,9 @@ PyObject* VRPyStroke::strokeProfile(VRPyStroke* self, PyObject* args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyStroke::strokeProfile - Object is invalid"); return NULL; }
 
     int closed, lit;
+    int color = 1;
     PyObject* vec;
-    if (! PyArg_ParseTuple(args, "Oii", &vec, &closed, &lit)) return NULL;
+    if (! PyArg_ParseTuple(args, "Oii|i", &vec, &closed, &lit, &color)) return NULL;
 
     vector<OSG::Vec3f> profile;
     for (int i=0; i<PyList_Size(vec); i++) {
@@ -139,7 +140,7 @@ PyObject* VRPyStroke::strokeProfile(VRPyStroke* self, PyObject* args) {
     };
 
     OSG::VRStrokePtr e = (OSG::VRStrokePtr) self->objPtr;
-    e->strokeProfile(profile, closed);
+    e->strokeProfile(profile, closed, color);
     e->getMaterial()->setLit(lit);
     Py_RETURN_TRUE;
 }

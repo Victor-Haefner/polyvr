@@ -221,6 +221,8 @@
 		<Unit filename="src/addons/Bullet/CarDynamics/VRPyCarDynamics.h" />
 		<Unit filename="src/addons/Bullet/Fluids/VRFluids.cpp" />
 		<Unit filename="src/addons/Bullet/Fluids/VRFluids.h" />
+		<Unit filename="src/addons/Bullet/Fluids/VRMetaBalls.cpp" />
+		<Unit filename="src/addons/Bullet/Fluids/VRMetaBalls.h" />
 		<Unit filename="src/addons/Bullet/Fluids/VRPyFluids.cpp" />
 		<Unit filename="src/addons/Bullet/Fluids/VRPyFluids.h" />
 		<Unit filename="src/addons/Bullet/Particles/VREmitter.cpp" />

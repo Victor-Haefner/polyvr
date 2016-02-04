@@ -46,6 +46,7 @@ struct VRPyGeometry : VRPyBaseT<OSG::VRGeometry> {
     static PyObject* setPositionalTexCoords(VRPyGeometry* self, PyObject *args);
     static PyObject* genTexCoords(VRPyGeometry* self, PyObject *args);
     static PyObject* readSharedMemory(VRPyGeometry* self, PyObject *args);
+    static PyObject* applyTransformation(VRPyGeometry* self, PyObject *args);
 };
 
 #endif // VRPYGEOMETRY_H_INCLUDED

@@ -20,6 +20,7 @@ class VRStage : public VRObject {
         FrameBufferObjectRefPtr fbo;
         SimpleStageRefPtr stage;
         Vec2i size = Vec2i(512, 512);
+        int tex_id = 0;
         bool active = false;
 
         void initStage();
@@ -42,7 +43,7 @@ class VRStage : public VRObject {
         bool isActive();
 
         void setSize( Vec2i size);
-        void setTarget(VRMaterialPtr mat);
+        void setTarget(VRMaterialPtr mat, int tid = 0);
         void setCamera(VRCameraPtr cam);
         void update();
 };

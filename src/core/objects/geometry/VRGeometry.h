@@ -95,6 +95,8 @@ class VRGeometry : public VRTransform {
         VRGeometryPtr separateSelection(VRSelectionPtr sel);
         void fixColorMapping();
         void updateNormals();
+        void applyTransformation(std::shared_ptr<pose> p);
+        void applyTransformation();
 
         int getLastMeshChange();
 

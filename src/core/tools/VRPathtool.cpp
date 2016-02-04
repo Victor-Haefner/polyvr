@@ -14,11 +14,71 @@
 
 using namespace OSG;
 
+VRManipulator::VRManipulator() { setup(); }
+
+void VRManipulator::handle(VRGeometryPtr g) {
+    if (sel == 0) return;
+    sel->toggleTConstraint(false);
+    sel->toggleRConstraint(false);
+    sel->setTConstraintMode(VRTransform::LINE);
+
+    if (g == gTX || g == gTY || g == gTZ || g == gRX || g == gRY || g == gRZ) { // lock everything
+        sel->toggleTConstraint(true);
+        sel->toggleRConstraint(true);
+        sel->setTConstraint(Vec3f(0,0,0));
+        sel->setRConstraint(Vec3i(1,1,1));
+    }
+
+    if (g == gTX) sel->setTConstraint(Vec3f(1,0,0));
+    if (g == gTY) sel->setTConstraint(Vec3f(0,1,0));
+    if (g == gTZ) sel->setTConstraint(Vec3f(0,0,1));
+    //if (g == gRX) sel->setRConstraint(Vec3i(0,1,1)); // TODO: fix rotation constraints!
+    //if (g == gRY) sel->setRConstraint(Vec3i(1,0,1));
+    //if (g == gRZ) sel->setRConstraint(Vec3i(1,1,0));
+    if (g == gRX || g == gRY || g == gRZ) sel->setRConstraint(Vec3i(0,0,0));
+}
+
+void VRManipulator::manipulate(VRTransformPtr t) {
+    t->addChild(anchor);
+    sel = t;
+}
+
+void VRManipulator::setup() {
+    anchor = VRObject::create("manipulator");
+    gTX = VRGeometry::create("gTX");
+    gTY = VRGeometry::create("gTY");
+    gTZ = VRGeometry::create("gTZ");
+    gRX = VRGeometry::create("gRX");
+    gRY = VRGeometry::create("gRY");
+    gRZ = VRGeometry::create("gRZ");
+    gTX->setPrimitive("Box", "0.1 0.02 0.02 1 1 1");
+    gTY->setPrimitive("Box", "0.02 0.1 0.02 1 1 1");
+    gTZ->setPrimitive("Box", "0.02 0.02 0.1 1 1 1");
+    gRX->setPrimitive("Torus", "0.01 0.07 4 16");
+    gRY->setPrimitive("Torus", "0.01 0.07 4 16");
+    gRZ->setPrimitive("Torus", "0.01 0.07 4 16");
+    gRX->setDir(Vec3f(1,0,0));
+    gRY->setDir(Vec3f(0,1,0));
+    gRY->setUp(Vec3f(1,0,0));
+    anchor->addChild(gTX);
+    anchor->addChild(gTY);
+    anchor->addChild(gTZ);
+    anchor->addChild(gRX);
+    anchor->addChild(gRY);
+    anchor->addChild(gRZ);
+}
+
+
 VRPathtool::VRPathtool() {
     updatePtr = VRFunction<int>::create("path tool update", boost::bind(&VRPathtool::updateDevs, this) );
     VRSceneManager::getCurrent()->addUpdateFkt(updatePtr, 100);
 
     manip = new VRManipulator();
+
+    lmat = VRMaterial::create("pline");
+    lmat->setLit(false);
+    lmat->setDiffuse(Vec3f(0.1,0.9,0.2));
+    lmat->setLineWidth(3);
 }
 
 void VRPathtool::update() {
@@ -146,6 +206,15 @@ void VRPathtool::clear(path* p) {
 void VRPathtool::remPath(path* p) {
     if (paths.count(p) == 0) return;
     entry* e = paths[p];
+
+    for (auto hw : e->handles) {
+        if (auto h = hw.lock()) {
+            entries.erase(h.get());
+            h->destroy();
+        }
+    }
+
+    if (auto l = e->line.lock()) l->destroy();
     delete e->p;
     delete e;
     paths.erase(p);
@@ -153,9 +222,11 @@ void VRPathtool::remPath(path* p) {
 
 void VRPathtool::updateHandle(VRGeometryPtr handle) {
     if (!handle) return;
+    auto key = handle.get();
+    if (!entries.count(key)) return;
+    entry* e = entries[key];
     Matrix m = handle->getWorldMatrix();
-    entry* e = entries[handle.get()];
-    e->p->setPoint(e->points[handle.get()], Vec3f(m[3]), Vec3f(m[2]), Vec3f(1,1,1), Vec3f(m[1]));
+    e->p->setPoint(e->points[key], Vec3f(m[3]), Vec3f(m[2]), Vec3f(1,1,1), Vec3f(m[1]));
 
     int hN = e->handles.size();
     if (hN <= 0) return;
@@ -169,16 +240,12 @@ void VRPathtool::updateHandle(VRGeometryPtr handle) {
         auto line = VRStroke::create("path");
         e->line = line;
         line->setPersistency(0);
-        VRMaterialPtr matl = VRMaterial::create("pline");
-        matl->setLit(false);
-        matl->setDiffuse(Vec3f(0.1,0.9,0.2));
-        matl->setLineWidth(3);
-        line->setMaterial(matl);
+        line->setMaterial(lmat);
         e->anchor.lock()->addChild(line);
         vector<Vec3f> profile;
         profile.push_back(Vec3f());
         line->addPath(e->p);
-        line->strokeProfile(profile, 0);
+        line->strokeProfile(profile, 0, 0);
     }
 
     e->line.lock()->update();
@@ -203,3 +270,5 @@ void VRPathtool::select(VRGeometryPtr h) {
     if (entries.count(h.get()) == 0) return;
     manip->manipulate(h);
 }
+
+VRMaterialPtr VRPathtool::getPathMaterial() { return lmat; }

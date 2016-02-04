@@ -53,6 +53,9 @@ class VRCamera : public VRTransform {
 
         static list<VRCameraWeakPtr>& getAll();
         static vector<string> getProjectionTypes();
+
+        void focus(Vec3f p);
+        void focus(VRTransformPtr t);
 };
 
 OSG_END_NAMESPACE;

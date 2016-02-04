@@ -37,6 +37,7 @@ ptrFwd(VRWaypoint);
 ptrFwd(VRTextureRenderer);
 
 // addons
+ptrFwd(VRMetaBalls);
 ptrFwd(VRBlinds);
 ptrFwd(VROpening);
 ptrFwd(VRMolecule);

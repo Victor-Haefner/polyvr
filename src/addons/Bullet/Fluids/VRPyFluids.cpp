@@ -1,48 +1,12 @@
 #include "VRPyFluids.h"
 #include "core/scripting/VRPyGeometry.h"
+#include "core/scripting/VRPyMaterial.h"
 #include "core/scripting/VRPyBaseT.h"
 
-template<> PyTypeObject VRPyBaseT<OSG::VRFluids>::type = {
-    PyObject_HEAD_INIT(NULL)
-    0,                         /*ob_size*/
-    "VR.Fluids",             /*tp_name*/
-    sizeof(VRPyFluids),             /*tp_basicsize*/
-    0,                         /*tp_itemsize*/
-    (destructor)dealloc, /*tp_dealloc*/
-    0,                         /*tp_print*/
-    0,                         /*tp_getattr*/
-    0,                         /*tp_setattr*/
-    0,                         /*tp_compare*/
-    0,                         /*tp_repr*/
-    0,                         /*tp_as_number*/
-    0,                         /*tp_as_sequence*/
-    0,                         /*tp_as_mapping*/
-    0,                         /*tp_hash */
-    0,                         /*tp_call*/
-    0,                         /*tp_str*/
-    0,                         /*tp_getattro*/
-    0,                         /*tp_setattro*/
-    0,                         /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
-    "VRFluid binding",           /* tp_doc */
-    0,		               /* tp_traverse */
-    0,		               /* tp_clear */
-    0,		               /* tp_richcompare */
-    0,		               /* tp_weaklistoffset */
-    0,		               /* tp_iter */
-    0,		               /* tp_iternext */
-    VRPyFluids::methods,             /* tp_methods */
-    0,             /* tp_members */
-    0,                         /* tp_getset */
-    0,                         /* tp_base */
-    0,                         /* tp_dict */
-    0,                         /* tp_descr_get */
-    0,                         /* tp_descr_set */
-    0,                         /* tp_dictoffset */
-    (initproc)init,      /* tp_init */
-    0,                         /* tp_alloc */
-    New_VRObjects_unnamed_ptr,                 /* tp_new */
-};
+using namespace OSG;
+
+simpleVRPyType(Fluids, New_VRObjects_unnamed_ptr);
+simpleVRPyType(MetaBalls, New_VRObjects_ptr);
 
 PyMethodDef VRPyFluids::methods[] = {
     {"getGeometry", (PyCFunction)VRPyFluids::getGeometry, METH_VARARGS, "Get geometry - Geometry getGeometry()" },
@@ -59,6 +23,16 @@ PyMethodDef VRPyFluids::methods[] = {
     {"setViscosity", (PyCFunction)VRPyFluids::setViscosity, METH_VARARGS, "setViscosity(float factor) \n\tsetViscosity(0.01)"},
     {NULL}  /* Sentinel */
 };
+
+PyMethodDef VRPyMetaBalls::methods[] = {
+    {"getMaterial", (PyCFunction)VRPyMetaBalls::getMaterial, METH_NOARGS, "Return the stage material - mat getMaterial()"},
+    {NULL}  /* Sentinel */
+};
+
+PyObject* VRPyMetaBalls::getMaterial(VRPyMetaBalls* self) {
+    if (!self->valid()) return NULL;
+    return VRPyMaterial::fromSharedPtr( self->objPtr->getMaterial() );
+}
 
 void checkObj(VRPyFluids* self) {
     if (self->objPtr == 0) self->objPtr = OSG::VRFluids::create();

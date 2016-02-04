@@ -40,6 +40,7 @@ VRObjectPtr VRGeometry::copy(vector<VRObjectPtr> children) {
 VRGeometry::VRGeometry(string name) : VRTransform(name) {
     type = "Geometry";
     addAttachment("geometry", 0);
+    if (!meshSet) setMesh(Geometry::create());
 }
 
 VRGeometry::VRGeometry(string name, bool hidden) : VRTransform(name) {
@@ -47,6 +48,7 @@ VRGeometry::VRGeometry(string name, bool hidden) : VRTransform(name) {
     setIntern(hidden);
     type = "Geometry";
     addAttachment("geometry", 0);
+    if (!meshSet) setMesh(Geometry::create());
 }
 
 VRGeometry::~VRGeometry() {}
@@ -714,6 +716,31 @@ float VRGeometry::calcSurfaceArea() {
 	}
 
     return 0.5*A;
+}
+
+void VRGeometry::applyTransformation(shared_ptr<pose> po) {
+    Matrix m = po->asMatrix();
+    auto pos = mesh->getPositions();
+    auto norms = mesh->getNormals();
+    Vec3f n; Pnt3f p;
+
+    for (int i=0; i<pos->size(); i++) {
+        p = pos->getValue<Pnt3f>(i);
+        m.mult(p,p);
+        pos->setValue(p,i);
+    };
+
+    for (int i=0; i<norms->size(); i++) {
+        n = norms->getValue<Vec3f>(i);
+        m.mult(n,n);
+        norms->setValue(n,i);
+    };
+}
+
+void VRGeometry::applyTransformation() {
+    auto po = shared_ptr<pose>( new pose(getPose()) );
+    applyTransformation(po);
+    setMatrix(Matrix());
 }
 
 VRGeometry::Reference VRGeometry::getReference() { return source; }

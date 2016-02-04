@@ -91,6 +91,7 @@ class VRNavigator : public VRNavigator_base {
 
         vector<VRTransformWeakPtr> walk_surfaces;
         static float clip_dist_down;
+        std::shared_ptr<VRFunction<float> > focus_fkt;
 
         // callbacks
         void zoom(VRDevice* dev, int dir);
