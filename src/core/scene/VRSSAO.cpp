@@ -72,7 +72,7 @@ void VRSSAO::setSSAOparams(float radius, int kernelSize, int noiseSize) {
 
     // noise texture
     VRTexturePtr imgN = VRTexture::create();
-    imgN->getImage()->set(OSG::Image::OSG_RGB_PF, kernelSize, kernelSize, 1, 0, 1, 0.0, (const uint8_t*)&kernel[0], OSG::Image::OSG_FLOAT32_IMAGEDATA);
+    imgN->getImage()->set(OSG::Image::OSG_RGB_PF, noiseSize, noiseSize, 1, 0, 1, 0.0, (const uint8_t*)&noise[0], OSG::Image::OSG_FLOAT32_IMAGEDATA);
     ssao_mat->setTextureAndUnit(imgN, 4);
     ssao_mat->setMagMinFilter("GL_NEAREST", "GL_NEAREST");
 
