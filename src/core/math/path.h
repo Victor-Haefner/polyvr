@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGVector.h>
 #include "core/objects/VRObjectFwd.h"
+#include "pose.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -53,6 +54,7 @@ class path {
         Vec3f getPosition(float t);
         void getOrientation(float t, Vec3f& dir, Vec3f& up);
         Vec3f getColor(float t);
+        pose getPose(float t);
 
         float getLength();
         int size();

@@ -3,41 +3,67 @@
   <Objects>
     <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
       <Object name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
-        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="0 0 7.50223" at="0 0 2" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
+        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="5.51655 7.28088 7.2527" at="1.43435 0.775959 0.547542" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
           <Object name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
         </Object>
-        <Object name_suffix="0" base_name="Torus" name_space="__global__" type="Geometry" pickable="0" visible="1" from="-2.5 0 0" at="-1.5 0 0" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" sourcetype="3" sourceparam="Torus 0.5 1 32 32"/>
-        <Object name_suffix="0" base_name="Teapot" name_space="__global__" type="Geometry" pickable="0" visible="1" from="2.5 0 0" at="2.5 -1 0" up="0 0 1" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" sourcetype="3" sourceparam="Teapot 10 0.7"/>
+        <Object name_suffix="0" base_name="Torus" name_space="__global__" type="Geometry" pickable="0" visible="1" from="2.5 0 0" at="2.5 0 1.2" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" sourcetype="3" sourceparam="Torus 0.5 1 32 32"/>
+        <Object name_suffix="0" base_name="Teapot" name_space="__global__" type="Geometry" pickable="0" visible="1" from="-2.5 0 0" at="-2.5 -1 0" up="0 0 1" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" sourcetype="3" sourceparam="Teapot 10 0.7"/>
       </Object>
     </Object>
   </Objects>
-  <Rendering frustum_culling="1" occlusion_culling="0" two_sided="1"/>
+  <Rendering deferred_rendering="0" frustum_culling="1" occlusion_culling="0" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts>
-    <Script name_suffix="0" base_name="animate" name_space="__script__" type="Python" mobile="">
+    <Script name_suffix="0" base_name="callback_animate" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+	
+	if not hasattr(VR, 'p2') or True:	
+		VR.p2 = VR.Path()
+		d = 1.2
+		# position, direction, color, up-vector
+		VR.p2.addPoint([2.5,0,0], [0,0,d], [0,0,0], [0,1,0])
+		VR.p2.addPoint([0,0,2.5], [-d,0,0], [0,0,0], [0,1,0])
+		VR.p2.addPoint([-2.5,0,0], [0,0,-d], [0,0,0], [0,1,0])
+		VR.p2.addPoint([0,0,-2.5], [d,0,0], [0,0,0], [0,1,0])
+		VR.p2.close()
+		VR.p2.compute(80) # do not forget this!
+	
+	def myAnim(t):
+		print t
+		p = VR.p2.getPose(t)
+		torus.setPose(p)
+		
+	a = VR.Animation('myAnim')
+	a.setCallback(myAnim)
+	a.setDuration(5)
+	a.start()
+	
+</core>
+      <arg type="VRPyGeometryType" value="Torus" name_suffix="0" base_name="torus" name_space="callback_animate"/>
+      <trig type="on_device" dev="mouse" state="Pressed" param="" key="2" name_suffix="2" base_name="trigger" name_space="__global__"/>
+    </Script>
+    <Script name_suffix="0" base_name="path_animate" name_space="__script__" type="Python" mobile="">
       <core>
 	import VR
 	
 	if not hasattr(VR, 'p1'):	
 		VR.p1 = VR.Path()
-		VR.p2 = VR.Path()
+		# position, direction, color, up-vector
+		VR.p1.addPoint([-2.5,0,0], [0,1,0], [0,0,0], [0,0,1])
+		VR.p1.addPoint([-2.5,0,0], [0,1,0], [0,0,0], [1,0,0])
+		VR.p1.compute(20) # do not forget this!
 	
-		VR.p1.set([-2.5,0,0], [0,0,-1], [0,1,0], [-2.5,0,0], [1,0,0], [0,1,0], 80)
-		VR.p2.set([2.5,1,0], [0,-1,0], [0,0,1], [2.5,0,0], [0,-1,0], [1,0,0], 80)
-	
-	torus.animate(VR.p1, 2, 0, True)
-	teapot.animate(VR.p2, 2, 0, False)
-	
+	teapot.animate(VR.p1, 2, 0, True)
 	VR.p1.invert()
-	VR.p2.invert()
 </core>
-      <arg type="VRPyGeometryType" value="Teapot" name_suffix="0" base_name="teapot" name_space="animate"/>
-      <arg type="VRPyGeometryType" value="Torus" name_suffix="0" base_name="torus" name_space="animate"/>
-      <trig type="on_device" dev="mouse" state="Pressed" param="" key="-1" name_suffix="0" base_name="trigger" name_space="__global__"/>
+      <arg type="VRPyGeometryType" value="Teapot" name_suffix="0" base_name="teapot" name_space="path_animate"/>
+      <arg type="VRPyGeometryType" value="Torus" name_suffix="0" base_name="torus" name_space="path_animate"/>
+      <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="1" base_name="trigger" name_space="__global__"/>
     </Script>
   </Scripts>
   <Sockets/>
-  <Background color="0.6 0.6 0.6" path="" type="0"/>
+  <Background color="0.6 0.6 0.6" format=".png" path="" type="0"/>
   <Navigation active="Orbit"/>
   <Materials/>
 </Scene>

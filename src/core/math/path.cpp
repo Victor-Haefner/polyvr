@@ -205,6 +205,11 @@ void path::getOrientation(float t, Vec3f& dir, Vec3f& up) {
     up = interp(up_vectors, t);
 }
 
+pose path::getPose(float t) {
+    Vec3f d,u; getOrientation(t,d,u);
+    return pose(getPosition(t), d, u);
+}
+
 void path::clear() {
     points.clear();
     positions.clear();

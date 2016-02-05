@@ -24,6 +24,7 @@ struct VRPyPath : VRPyBaseT<OSG::path> {
     static PyObject* getPoints(VRPyPath* self);
     static PyObject* getSize(VRPyPath* self);
     static PyObject* getLength(VRPyPath* self);
+    static PyObject* getPose(VRPyPath* self, PyObject *args);
 };
 
 #endif // VRPyPath_H_INCLUDED
