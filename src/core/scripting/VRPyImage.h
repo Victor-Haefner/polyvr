@@ -8,6 +8,9 @@ struct VRPyImage : VRPyBaseT<OSG::VRTexture> {
     static PyMethodDef methods[];
 
     static PyObject* New(PyTypeObject *type, PyObject *args, PyObject *kwds);
+
+    static PyObject* read(VRPyImage* self, PyObject *args);
+    static PyObject* write(VRPyImage* self, PyObject *args);
 };
 
 #endif // VRPYIMAGE_H_INCLUDED

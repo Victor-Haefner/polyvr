@@ -17,3 +17,6 @@ void VRTexture::setImage(ImageRecPtr img) { this->img = img; }
 void VRTexture::setInternalFormat(int ipf) { internal_format = ipf; }
 int VRTexture::getInternalFormat() { return internal_format; }
 ImageRecPtr VRTexture::getImage() { return img; }
+
+void VRTexture::read(string path) { img->read(path.c_str()); }
+void VRTexture::write(string path) { img->write(path.c_str()); }

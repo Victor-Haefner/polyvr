@@ -49,7 +49,7 @@ struct VRMatData {
     PointChunkRecPtr pointChunk;
     PolygonChunkRecPtr polygonChunk;
     TwoSidedLightingChunkRecPtr twoSidedChunk;
-    VRTexturePtr texture;
+    //VRTexturePtr texture;
     ShaderProgramChunkRecPtr shaderChunk;
     ClipPlaneChunkRecPtr clipChunk;
     StencilChunkRecPtr stencilChunk;
@@ -87,7 +87,7 @@ struct VRMatData {
         lineChunk = 0;
         pointChunk = 0;
         polygonChunk = 0;
-        texture = 0;
+        //texture = 0;
         video = 0;
         shaderChunk = 0;
         clipChunk = 0;
@@ -118,10 +118,10 @@ struct VRMatData {
         if (stencilChunk) { m->stencilChunk = dynamic_pointer_cast<StencilChunk>(stencilChunk->shallowCopy()); m->mat->addChunk(m->stencilChunk); }
         if (shaderChunk) { m->shaderChunk = ShaderProgramChunk::create(); m->mat->addChunk(m->shaderChunk); }
 
-        if (texture) {
+        /*if (texture) {
                 ImageRecPtr img = dynamic_pointer_cast<Image>(texture->getImage()->shallowCopy());
                 m->texture = VRTexture::create(img);
-        }
+        }*/
 
         if (vProgram) { m->vProgram = dynamic_pointer_cast<ShaderProgram>(vProgram->shallowCopy()); m->shaderChunk->addShader(m->vProgram); }
         if (fProgram) { m->fProgram = dynamic_pointer_cast<ShaderProgram>(fProgram->shallowCopy()); m->shaderChunk->addShader(m->fProgram); }
@@ -456,10 +456,13 @@ void VRMaterial::setTextureParams(int min, int mag, int envMode, int wrapS, int 
 void VRMaterial::setTexture(string img_path, bool alpha, int unit) { // TODO: improve with texture map
     if (boost::filesystem::exists(img_path))
         img_path = boost::filesystem::canonical(img_path).string();
-    auto md = mats[activePass];
+    /*auto md = mats[activePass];
     if (md->texture == 0) md->texture = VRTexture::create();
     md->texture->getImage()->read(img_path.c_str());
-    setTexture(md->texture, alpha, unit);
+    setTexture(md->texture, alpha, unit);*/
+    auto tex = VRTexture::create();
+    tex->getImage()->read(img_path.c_str());
+    setTexture(tex, alpha, unit);
 }
 
 void VRMaterial::setTexture(VRTexturePtr img, bool alpha, int unit) {
@@ -469,7 +472,7 @@ void VRMaterial::setTexture(VRTexturePtr img, bool alpha, int unit) {
     if (md->texChunks.count(unit) == 0) { md->texChunks[unit] = TextureObjChunk::create(); md->mat->addChunk(md->texChunks[unit], unit); }
     if (md->envChunks.count(unit) == 0) { md->envChunks[unit] = TextureEnvChunk::create(); md->mat->addChunk(md->envChunks[unit], unit); }
 
-    md->texture = img;
+    //md->texture = img;
     md->texChunks[unit]->setImage(img->getImage());
     md->envChunks[unit]->setEnvMode(GL_MODULATE);
     if (alpha && img->getImage()->hasAlphaChannel() && md->blendChunk == 0) {
@@ -693,7 +696,12 @@ float VRMaterial::getShininess() { return mats[activePass]->colChunk->getShinine
 float VRMaterial::getTransparency() { return mats[activePass]->colChunk->getDiffuse()[3]; }
 bool VRMaterial::isLit() { return mats[activePass]->colChunk->getLit(); }
 
-VRTexturePtr VRMaterial::getTexture() { return mats[activePass]->texture; }
+VRTexturePtr VRMaterial::getTexture(int unit) {
+    auto md = mats[activePass];
+    if (md->texChunks.count(unit) == 0) return 0;
+    return VRTexture::create( md->texChunks[unit]->getImage() );
+}
+
 TextureObjChunkRecPtr VRMaterial::getTextureObjChunk(int unit) {
     if (mats[activePass]->texChunks.count(unit) == 0) return 0;
     return mats[activePass]->texChunks[unit];

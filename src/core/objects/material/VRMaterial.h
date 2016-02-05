@@ -140,7 +140,7 @@ class VRMaterial : public VRObject {
 
         MultiPassMaterialRecPtr getMaterial();
         ChunkMaterialRecPtr getMaterial(int i);
-        VRTexturePtr getTexture();
+        VRTexturePtr getTexture(int unit = 0);
         TextureObjChunkRecPtr getTextureObjChunk(int unit = 0);
 };
 

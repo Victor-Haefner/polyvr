@@ -61,6 +61,7 @@ PyMethodDef VRPyMaterial::methods[] = {
     {"setShininess", (PyCFunction)VRPyMaterial::setShininess, METH_VARARGS, "Sets the shininess - setShininess(f)" },
     {"setPointSize", (PyCFunction)VRPyMaterial::setPointSize, METH_VARARGS, "Sets the GL point size - setPointSize(i)" },
     {"setLineWidth", (PyCFunction)VRPyMaterial::setLineWidth, METH_VARARGS, "Sets the GL line width - setLineWidth(i)" },
+    {"getTexture", (PyCFunction)VRPyMaterial::getTexture, METH_VARARGS, "Get the texture - texture getTexture( int unit = 0 )" },
     {"setQRCode", (PyCFunction)VRPyMaterial::setQRCode, METH_VARARGS, "Encode a string as QR code texture - setQRCode(string, fg[r,g,b], bg[r,g,b], offset)" },
     {"setMagMinFilter", (PyCFunction)VRPyMaterial::setMagMinFilter, METH_VARARGS, "Set the mag && min filtering mode - setMagMinFilter( mag, min)\n possible values for mag are GL_X && min can be GL_X || GL_X_MIPMAP_Y, where X && Y can be NEAREST || LINEAR" },
     {"setVertexProgram", (PyCFunction)VRPyMaterial::setVertexProgram, METH_VARARGS, "Set vertex program - setVertexProgram( myScript )" },
@@ -85,6 +86,13 @@ PyObject* VRPyMaterial::setDefaultVertexShader(VRPyMaterial* self) {
 	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setDefaultVertexShader, C obj is invalid"); return NULL; }
 	self->objPtr->setDefaultVertexShader();
 	Py_RETURN_TRUE;
+}
+
+PyObject* VRPyMaterial::getTexture(VRPyMaterial* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+	int i=0;
+    if (! PyArg_ParseTuple(args, "|i", &i)) return NULL;
+	return VRPyImage::fromSharedPtr( self->objPtr->getTexture(i) );
 }
 
 PyObject* VRPyMaterial::setShaderParameter(VRPyMaterial* self, PyObject* args) {
