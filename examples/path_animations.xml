@@ -32,10 +32,11 @@
 		print t
 		p = VR.p2.getPose(t)
 		torus.setPose(p)
+		if t == 1: print 'end'
 		
 	a = VR.Animation('myAnim')
 	a.setCallback(myAnim)
-	a.setDuration(5)
+	a.setDuration(1)
 	a.start()
 	
 </core>
