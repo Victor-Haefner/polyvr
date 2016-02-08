@@ -7,7 +7,7 @@
           <Object name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
         </Object>
         <Object name_suffix="0" base_name="info" name_space="__global__" type="Geometry" pickable="0" visible="1" from="1 0 0" at="1 0 1" up="0 -1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" sourcetype="3" sourceparam="Box 0.5 0.5 0.5 1 1 1"/>
-        <Object name_suffix="0" base_name="Cone" name_space="__global__" type="Geometry" pickable="0" visible="1" from="0.362906 0.5 -0.381138" at="0.362906 1.5 -0.381138" up="-0.462906 0 0.381138" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="3" at_dir="1" sourcetype="3" sourceparam="Cone 0.1 0.05 16 1 1"/>
+        <Object name_suffix="0" base_name="Cone" name_space="__global__" type="Geometry" pickable="0" visible="1" from="0.0837461 0.5 0.571027" at="0.0837461 1.5 0.571027" up="-0.183746 0 -0.571027" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" sourcetype="3" sourceparam="Cone 0.1 0.05 16 1 1"/>
       </Object>
     </Object>
   </Objects>
@@ -123,6 +123,20 @@
 	m.setTexture(sc)
 </core>
       <trig type="on_timeout" dev="" state="Pressed" param="1000" key="0" name_suffix="2" base_name="trigger" name_space="__global__"/>
+    </Script>
+    <Script name_suffix="0" base_name="screenshot2" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+	
+	# this screenshot takes the image from the texturerenderer
+	# the advantage is that it is not related to the view, but to the camera
+	# used by the texture renderer
+	
+	tg = VR.getRoot().find('bla')
+	m = tg.getMaterial()
+	t = m.getTexture()
+	t.write('sc.png')
+</core>
     </Script>
   </Scripts>
   <Sockets/>

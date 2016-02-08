@@ -25,6 +25,7 @@ class VRTextureRenderer : public VRObject {
 
         void setup(VRCameraPtr cam, int width, int height);
 
+        void setActive(bool b);
         VRMaterialPtr getMaterial();
 };
 

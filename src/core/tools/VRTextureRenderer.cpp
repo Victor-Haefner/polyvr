@@ -70,6 +70,7 @@ VRTextureRenderer::VRTextureRenderer(string name) : VRObject(name) {
     data->fbo->setWidth (data->fboWidth );
     data->fbo->setHeight(data->fboHeight);
     data->fbo->setPostProcessOnDeactivate(true);
+    texBuf->setReadBack (true);
 
     mat = VRMaterial::create("VRTextureRenderer");
     mat->setTexture(data->fboTex);
@@ -95,8 +96,12 @@ void VRTextureRenderer::setup(VRCameraPtr cam, int width, int height) {
     data->fbo->setHeight(data->fboHeight);
     data->fboTexImg->set(Image::OSG_RGB_PF, data->fboWidth, data->fboHeight);
     data->stage->setCamera(cam->getCam());
-
-    //test();
 }
 
 VRMaterialPtr VRTextureRenderer::getMaterial() { return mat; }
+
+void VRTextureRenderer::setActive(bool b) {
+    if (b) setCore(data->stage, "TextureRenderer", true);
+    else setCore(Group::create(), "TextureRenderer", true);
+}
+
