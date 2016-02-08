@@ -566,6 +566,11 @@ void VRMaterial::setSortKey(int key) {
     md->mat->setSortKey(key);
 }
 
+void VRMaterial::clearTransparency() {
+    auto md = mats[activePass];
+    if (md->blendChunk) md->mat->subChunk(md->blendChunk);
+}
+
 void VRMaterial::setFrontBackModes(int front, int back) {
     auto md = mats[activePass];
     if (md->polygonChunk == 0) { md->polygonChunk = PolygonChunk::create(); md->mat->addChunk(md->polygonChunk); }
@@ -586,7 +591,10 @@ void VRMaterial::setFrontBackModes(int front, int back) {
 void VRMaterial::setClipPlane(bool active, Vec4f equation, VRTransformPtr beacon) {
     for (int i=0; i<getNPasses(); i++) {
         auto md = mats[i];
-        if (md->clipChunk == 0) { md->clipChunk = ClipPlaneChunk::create(); md->mat->addChunk(md->clipChunk); }
+        if (md->clipChunk == 0) md->clipChunk = ClipPlaneChunk::create();
+
+        if (active) md->mat->addChunk(md->clipChunk);
+        else md->mat->subChunk(md->clipChunk);
 
         md->clipChunk->setEquation(equation);
         md->clipChunk->setEnable  (active);

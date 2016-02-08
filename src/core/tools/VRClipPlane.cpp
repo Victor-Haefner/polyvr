@@ -21,6 +21,10 @@ VRClipPlane::VRClipPlane(string name) : VRGeometry(name) {
     m->setLineWidth(3);
 }
 
+VRClipPlane::~VRClipPlane() {
+    deactivate();
+}
+
 VRClipPlanePtr VRClipPlane::create(string name) { return shared_ptr<VRClipPlane>(new VRClipPlane(name) ); }
 VRClipPlanePtr VRClipPlane::ptr() { return static_pointer_cast<VRClipPlane>( shared_from_this() ); }
 

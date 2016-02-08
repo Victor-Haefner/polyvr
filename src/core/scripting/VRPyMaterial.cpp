@@ -57,6 +57,7 @@ PyMethodDef VRPyMaterial::methods[] = {
     {"setSpecular", (PyCFunction)VRPyMaterial::setSpecular, METH_VARARGS, "Sets the specular color - setSpecular([f,f,f])" },
     {"getTransparency", (PyCFunction)VRPyMaterial::getTransparency, METH_NOARGS, "Returns the transparency - f getTransparency()" },
     {"setTransparency", (PyCFunction)VRPyMaterial::setTransparency, METH_VARARGS, "Sets the transparency - setTransparency(f)" },
+    {"clearTransparency", (PyCFunction)VRPyMaterial::clearTransparency, METH_NOARGS, "Clears the transparency channel - clearTransparency()" },
     {"getShininess", (PyCFunction)VRPyMaterial::getShininess, METH_NOARGS, "Returns the shininess - f getShininess()" },
     {"setShininess", (PyCFunction)VRPyMaterial::setShininess, METH_VARARGS, "Sets the shininess - setShininess(f)" },
     {"setPointSize", (PyCFunction)VRPyMaterial::setPointSize, METH_VARARGS, "Sets the GL point size - setPointSize(i)" },
@@ -81,6 +82,12 @@ PyMethodDef VRPyMaterial::methods[] = {
     {"setDefaultVertexShader", (PyCFunction)VRPyMaterial::setDefaultVertexShader, METH_NOARGS, "Set a default vertex shader - setDefaultVertexShader()" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyMaterial::clearTransparency(VRPyMaterial* self) {
+	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::clearTransparency, C obj is invalid"); return NULL; }
+	self->objPtr->clearTransparency();
+	Py_RETURN_TRUE;
+}
 
 PyObject* VRPyMaterial::setDefaultVertexShader(VRPyMaterial* self) {
 	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setDefaultVertexShader, C obj is invalid"); return NULL; }
