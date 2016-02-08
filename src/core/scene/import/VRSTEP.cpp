@@ -16,6 +16,7 @@
 #include <OpenSG/OSGTriangleIterator.h>
 
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
@@ -614,7 +615,7 @@ struct VRSTEP::Surface : VRSTEP::Instance {
         if (type == "Plane") return 0;
         //if (type == "Cylindrical_Surface") return 0;
         static int Count = 0; Count++;
-        cout << Count << endl;
+        //cout << Count << endl;
         if (Count == 3); else return 0;
         //if (Count > 3 && Count < 5); else return 0;
 
@@ -627,7 +628,7 @@ struct VRSTEP::Surface : VRSTEP::Instance {
             polygon poly;
             for(auto p : b.points) {
                 mI.mult(Pnt3f(p),p);
-                cout << "p " << p << endl;
+                //cout << "p " << p << endl;
                 poly.addPoint(p);
             }
             if (!poly.isCCW()) poly.turn();
@@ -643,6 +644,8 @@ struct VRSTEP::Surface : VRSTEP::Instance {
         Matrix m = trans.asMatrix();
         Matrix mI = m;
         mI.invert();
+
+        //if (type == "Plane") return 0; // test
 
         if (type == "Plane") {
             Triangulator t;
@@ -661,6 +664,10 @@ struct VRSTEP::Surface : VRSTEP::Instance {
             return g;
         }
 
+        //static int once = 0; once += 1;
+        //if (once != 1 && once != 6) return 0;
+        //cout << "cylinder surface " << once << endl;
+
         if (type == "Cylindrical_Surface") {
             /*static int Count = 0; Count++;
             cout << Count << endl;
@@ -671,20 +678,26 @@ struct VRSTEP::Surface : VRSTEP::Instance {
             //cout << "T " << trans.toString() << endl;
             for (auto b : bounds) {
                 polygon poly;
-                cout << "Bound " << b.Nl << " " << b.Nc << endl;
+                cout << "Bound" << endl;
+                float la = -1001;
                 for(auto p : b.points) {
-                    //cout << "Cp1 " << p << endl;
+                    //cout << " p1 " << p << endl;
                     mI.mult(Pnt3f(p),p);
-                    cout << "Cp2 " << p << endl;
+                    //cout << " p2 " << p << endl;
                     float h = p[2];
                     float a = atan2(p[1]/R, p[0]/R);
-                    //cout << h << " " << a << endl;
+                    if (la > -1000 && abs(a - la)>0.9*Pi*2) {
+                        a += 2*Pi;
+                    }
+                    la = a;
+                    cout << h << "  " << a << endl;
                     poly.addPoint(Vec2f(a, h));
                 }
                 if (!poly.isCCW()) poly.turn();
                 t.add(poly);
             }
             auto g = t.compute();
+            cout << "surface pos size: " << g->getMesh()->getPositions()->size() << endl;
 
             /* intersecting the cylinder rays with a triangle (2D)
 
@@ -728,6 +741,9 @@ struct VRSTEP::Surface : VRSTEP::Instance {
             // tesselate the result while projecting it back on the surface
             if (g) if (auto gg = g->getMesh()) {
                 TriangleIterator it;
+                VRGeoData nMesh;
+                Vec3f n(0,1,0);
+
                 for (it = TriangleIterator(gg); !it.isAtEnd() ;++it) {
                     vector<Pnt3f> p(3);
                     vector<Vec3f> v(3);
@@ -740,27 +756,37 @@ struct VRSTEP::Surface : VRSTEP::Instance {
                     vector<float> rays;
                     vector<Vec2f> sides;
                     Vec3i pSides;
-                    for (int i = floor(xs[0]/da); i < ceil(xs[1]/da); i++) rays.push_back(i*da); // get all cylinder edges (rays)
+                    for (int i = floor(xs[0]/da); i <= ceil(xs[1]/da); i++) rays.push_back(i*da); // get all cylinder edges (rays)
+                    cout << " triangle size in x " << xs << " " << rays.size() << endl;
+                    cout << " points x " << p[0][0] << " " << p[1][0] << " " << p[2][0] << endl;
                     for (int i=1; i<rays.size(); i++) {
                         sides.push_back( Vec2f(rays[i-1], rays[i]) ); // get all cylinder faces
                         for (int j=0; j<3; j++) { // find out on what cylinder face each vertex lies
-                            if (p[j][0] > rays[i-1] && p[j][0] < rays[i]) pSides[j] = i-1;
+                            if (p[j][0] >= rays[i-1] && p[j][0] <= rays[i]) {
+                                pSides[j] = i-1;
+                            }
                         }
                     }
 
+                    Vec3i pOrder(0,1,2); // get the order of the vertices
+                    if (pSides[0] > pSides[1]) swap(pOrder[0], pOrder[1]);
+                    if (pSides[0] > pSides[2]) swap(pOrder[1], pOrder[2]);
+                    if (pSides[1] > pSides[2]) swap(pOrder[0], pOrder[1]);
+                    cout << " ordered vertices " << pOrder << "  " << pSides[pOrder[0]] << " " << pSides[pOrder[1]] << " " << pSides[pOrder[2]] << endl;
+
                     // test first case: all vertices on the same cylinder face
                     if (pSides[0] == pSides[1] && pSides[0] == pSides[2]) {
-                        // emit triangle p[0], p[1], p[2]
+                        cout << "  case 1" << endl;
+                        int a = nMesh.pushVert(p[0],n);
+                        int b = nMesh.pushVert(p[1],n);
+                        int c = nMesh.pushVert(p[2],n);
+                        nMesh.pushTri(a,b,c);
                         continue;
                     }
 
                     // test second case: all vertices on different cylinder faces
                     if (pSides[0] != pSides[1] && pSides[0] != pSides[2] && pSides[1] != pSides[2]) {
-                        Vec3i pOrder(0,1,2); // get the order of the vertices
-                        if (pSides[0] > pSides[1]) swap(pOrder[0], pOrder[1]);
-                        if (pSides[0] > pSides[2]) swap(pOrder[1], pOrder[2]);
-                        if (pSides[1] > pSides[2]) swap(pOrder[0], pOrder[1]);
-
+                        cout << "  case 2" << endl;
                         for (int i=0; i<sides.size(); i++) {
                             Vec2f s = sides[i];
                             if (i == 0) { // first triangle
@@ -772,7 +798,10 @@ struct VRSTEP::Surface : VRSTEP::Instance {
                                 Vec3f vp2 = v[pOrder[2]]; // vector to last point
                                 pr1[1] = pv[1] + vp1[1]/vp1[0]*(s[1]-pv[0]);
                                 pr2[1] = pv[1] + vp2[1]/vp2[0]*(s[1]-pv[0]);
-                                // emit triangle pV, pr1, pr2
+                                int a = nMesh.pushVert(pv,n);
+                                int b = nMesh.pushVert(pr1,n);
+                                int c = nMesh.pushVert(pr2,n);
+                                nMesh.pushTri(a,b,c);
                                 continue;
                             }
 
@@ -785,31 +814,158 @@ struct VRSTEP::Surface : VRSTEP::Instance {
                                 Vec3f vp2 = v[pOrder[0]]; // vector to last point
                                 pr1[1] = pv[1] + vp1[1]/vp1[0]*(s[0]-pv[0]);
                                 pr2[1] = pv[1] + vp2[1]/vp2[0]*(s[0]-pv[0]);
-                                // emit triangle pV, pr1, pr2
+                                int a = nMesh.pushVert(pv,n);
+                                int b = nMesh.pushVert(pr1,n);
+                                int c = nMesh.pushVert(pr2,n);
+                                nMesh.pushTri(a,b,c);
                                 continue;
                             }
 
                             if (i == pSides[pOrder[1]]) { // pentagon in the middle
                             }
+                            cout << "unhandled side " << i << endl;
                         }
+                        continue;
                     }
+
+                    // case 3
+                    if (pSides[pOrder[0]] == pSides[pOrder[1]]) {
+                        cout << "  case 3" << endl;
+                        for (int i=0; i<sides.size(); i++) {
+                            Vec2f s = sides[i];
+                            if (i == 0) { // first quad
+                                Pnt3f pv1 = p[pOrder[0]]; // vertex on that face
+                                Pnt3f pv2 = p[pOrder[1]]; // vertex on that face
+                                Vec3f pr1(s[1],0,0); // point on cylinder edge
+                                Vec3f pr2(s[1],0,0); // point on cylinder edge
+                                Vec3f vp1 = v[pOrder[1]]; // vector to last point
+                                Vec3f vp2 = v[pOrder[0]]; // vector to last point
+                                pr1[1] = pv1[1] + vp1[1]/vp1[0]*(s[1]-pv1[0]);
+                                pr2[1] = pv2[1] + vp2[1]/vp2[0]*(s[1]-pv2[0]);
+                                int a = nMesh.pushVert(pv1,n);
+                                int b = nMesh.pushVert(pv2,n);
+                                int c = nMesh.pushVert(pr1,n);
+                                int d = nMesh.pushVert(pr2,n);
+                                nMesh.pushTri(a,c,b);
+                                nMesh.pushTri(b,c,d);
+                                continue;
+                            }
+                            if (i == sides.size()-1) { // last triangle
+                                Pnt3f pv = p[pOrder[2]]; // vertex on that face
+                                Vec3f pr1(s[0],0,0); // point on cylinder edge
+                                Vec3f pr2(s[0],0,0); // point on cylinder edge
+                                Vec3f vp1 = v[pOrder[1]]; // vector to middle point
+                                Vec3f vp2 = v[pOrder[0]]; // vector to last point
+                                pr1[1] = pv[1] + vp1[1]/vp1[0]*(s[0]-pv[0]);
+                                pr2[1] = pv[1] + vp2[1]/vp2[0]*(s[0]-pv[0]);
+                                int a = nMesh.pushVert(pv,n);
+                                int b = nMesh.pushVert(pr1,n);
+                                int c = nMesh.pushVert(pr2,n);
+                                nMesh.pushTri(a,b,c);
+                                continue;
+                            }
+
+                            Pnt3f pv1 = p[pOrder[0]]; // vertex on that face
+                            Pnt3f pv2 = p[pOrder[1]]; // vertex on that face
+                            Vec3f pr11(s[0],0,0); // point on cylinder edge
+                            Vec3f pr12(s[0],0,0); // point on cylinder edge
+                            Vec3f pr21(s[1],0,0); // point on cylinder edge
+                            Vec3f pr22(s[1],0,0); // point on cylinder edge
+                            Vec3f vp1 = v[pOrder[1]]; // vector to last point
+                            Vec3f vp2 = v[pOrder[0]]; // vector to last point
+                            pr11[1] = pv1[1] + vp1[1]/vp1[0]*(s[0]-pv1[0]);
+                            pr12[1] = pv2[1] + vp2[1]/vp2[0]*(s[0]-pv2[0]);
+                            pr21[1] = pv1[1] + vp1[1]/vp1[0]*(s[1]-pv1[0]);
+                            pr22[1] = pv2[1] + vp2[1]/vp2[0]*(s[1]-pv2[0]);
+                            int a = nMesh.pushVert(pr11,n);
+                            int b = nMesh.pushVert(pr12,n);
+                            int c = nMesh.pushVert(pr21,n);
+                            int d = nMesh.pushVert(pr22,n);
+                            nMesh.pushTri(a,c,b);
+                            nMesh.pushTri(b,c,d);
+                        }
+                        continue;
+                    }
+
+                    // case 4
+                    if (pSides[pOrder[1]] == pSides[pOrder[2]]) {
+                        cout << "  case 4" << endl;
+                        for (int i=0; i<sides.size(); i++) {
+                            Vec2f s = sides[i];
+                            if (i == 0) { // first triangle
+                                Pnt3f pv = p[pOrder[0]]; // vertex on that face
+                                Vec3f pr1(s[1],0,0); // point on cylinder edge
+                                Vec3f pr2(s[1],0,0); // point on cylinder edge
+                                Vec3f vp1 = v[pOrder[1]]; // vector to middle point
+                                Vec3f vp2 = v[pOrder[2]]; // vector to last point
+                                pr1[1] = pv[1] + vp1[1]/vp1[0]*(s[1]-pv[0]);
+                                pr2[1] = pv[1] + vp2[1]/vp2[0]*(s[1]-pv[0]);
+                                int a = nMesh.pushVert(pv,n);
+                                int b = nMesh.pushVert(pr1,n);
+                                int c = nMesh.pushVert(pr2,n);
+                                nMesh.pushTri(a,c,b);
+                                continue;
+                            }
+                            if (i == sides.size()-1) { // last quad
+                                Pnt3f pv1 = p[pOrder[1]]; // vertex on that face
+                                Pnt3f pv2 = p[pOrder[2]]; // vertex on that face
+                                Vec3f pr1(s[0],0,0); // point on cylinder edge
+                                Vec3f pr2(s[0],0,0); // point on cylinder edge
+                                Vec3f vp1 = v[pOrder[2]]; // vector to last point
+                                Vec3f vp2 = v[pOrder[1]]; // vector to last point
+                                pr1[1] = pv1[1] + vp1[1]/vp1[0]*(s[0]-pv1[0]);
+                                pr2[1] = pv2[1] + vp2[1]/vp2[0]*(s[0]-pv2[0]);
+                                int a = nMesh.pushVert(pv1,n);
+                                int b = nMesh.pushVert(pv2,n);
+                                int c = nMesh.pushVert(pr1,n);
+                                int d = nMesh.pushVert(pr2,n);
+                                nMesh.pushTri(a,c,b);
+                                nMesh.pushTri(b,c,d);
+                                continue;
+                            }
+
+                            Pnt3f pv1 = p[pOrder[1]]; // vertex on that face
+                            Pnt3f pv2 = p[pOrder[2]]; // vertex on that face
+                            Vec3f pr11(s[0],0,0); // point on cylinder edge
+                            Vec3f pr12(s[0],0,0); // point on cylinder edge
+                            Vec3f pr21(s[1],0,0); // point on cylinder edge
+                            Vec3f pr22(s[1],0,0); // point on cylinder edge
+                            Vec3f vp1 = v[pOrder[2]]; // vector to last point
+                            Vec3f vp2 = v[pOrder[1]]; // vector to last point
+                            pr11[1] = pv1[1] + vp1[1]/vp1[0]*(s[0]-pv1[0]);
+                            pr12[1] = pv2[1] + vp2[1]/vp2[0]*(s[0]-pv2[0]);
+                            pr21[1] = pv1[1] + vp1[1]/vp1[0]*(s[1]-pv1[0]);
+                            pr22[1] = pv2[1] + vp2[1]/vp2[0]*(s[1]-pv2[0]);
+                            int a = nMesh.pushVert(pr11,n);
+                            int b = nMesh.pushVert(pr12,n);
+                            int c = nMesh.pushVert(pr21,n);
+                            int d = nMesh.pushVert(pr22,n);
+                            nMesh.pushTri(a,c,b);
+                            nMesh.pushTri(b,c,d);
+                        }
+                        continue;
+                    }
+
+                    cout << " unhandled triangle " << endl;
                 }
+
+                nMesh.apply(g);
             }
 
 
-            // project the points back into 3D space - deprecated?
+            // project the points back into 3D space
             if (g) {
                 auto gg = g->getMesh();
                 if (gg) {
                     GeoVectorPropertyRecPtr pos = gg->getPositions();
                     if (pos) {
-                        cout << "pos " << pos << " " << pos->size() << endl;
+                        //cout << "pos " << pos << " " << pos->size() << endl;
                         for (int i=0; i<pos->size(); i++) {
                             Pnt3f p = pos->getValue<Pnt3f>(i);
-                            cout << " p " << p << endl;
+                            //cout << " p " << p << endl;
                             p[2] = p[1];
-                            p[1] = 0;//sin(p[0])*R;
-                            //p[0] = cos(p[0])*R;
+                            p[1] = sin(p[0])*R;
+                            p[0] = cos(p[0])*R;
                             //p = Pnt3f(0,0,0);
                             pos->setValue(p, i);
                         }

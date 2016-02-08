@@ -544,6 +544,8 @@
 		<Unit filename="src/core/objects/geometry/VRBillboard.h" />
 		<Unit filename="src/core/objects/geometry/VRConstraint.cpp" />
 		<Unit filename="src/core/objects/geometry/VRConstraint.h" />
+		<Unit filename="src/core/objects/geometry/VRGeoData.cpp" />
+		<Unit filename="src/core/objects/geometry/VRGeoData.h" />
 		<Unit filename="src/core/objects/geometry/VRGeometry.cpp" />
 		<Unit filename="src/core/objects/geometry/VRGeometry.h" />
 		<Unit filename="src/core/objects/geometry/VRPhysics.cpp" />
