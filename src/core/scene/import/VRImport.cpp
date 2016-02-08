@@ -13,6 +13,7 @@
 #include "core/objects/object/VRObject.h"
 #include "core/objects/object/VRObjectT.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/material/VRMaterial.h"
 
 OSG_BEGIN_NAMESPACE;
 
@@ -100,6 +101,7 @@ VRObjectPtr VRImport::OSGConstruct(NodeRecPtr n, VRObjectPtr parent, string name
     if (n == 0) return 0; // TODO add an osg wrap method for each object?
 
     VRObjectPtr tmp = 0;
+    VRMaterialPtr tmp_m;
     VRGeometryPtr tmp_g;
     VRTransformPtr tmp_e;
     VRGroupPtr tmp_gr;
@@ -168,9 +170,9 @@ VRObjectPtr VRImport::OSGConstruct(NodeRecPtr n, VRObjectPtr parent, string name
     }
 
     else if (t_name == "MaterialGroup") {
-        cout << "Warning: unsupported MaterialGroup\n";
-        tmp = VRObject::create(name);
-        tmp->setCore(core, t_name);
+        tmp_m = VRMaterial::create(name);
+        tmp = tmp_m;
+        tmp->setCore(core, "Material");
     }
 
     else if (t_name == "Geometry") {

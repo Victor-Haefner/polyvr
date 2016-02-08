@@ -241,6 +241,8 @@ Vec4f morphColor4(const Vec3f& c) { return Vec4f(c[0], c[1], c[2], 1); }
 Vec4f morphColor4(const Vec4f& c) { return c; }
 
 void VRGeometry::merge(VRGeometryPtr geo) {
+    if (!geo) return;
+    if (!geo->mesh) return;
     if (!meshSet) {
         setIndices(GeoUInt32PropertyRecPtr( GeoUInt32Property::create()) );
         setTypes(GeoUInt8PropertyRecPtr( GeoUInt8Property::create()) );
@@ -257,6 +259,7 @@ void VRGeometry::merge(VRGeometryPtr geo) {
     GeoVectorProperty *v1, *v2;
     v1 = mesh->getPositions();
     v2 = geo->mesh->getPositions();
+    if (!v1 || !v2) return;
     int N = v1->size();
     for (uint i=0; i<v2->size(); i++) {
         Pnt3f p = v2->getValue<Pnt3f>(i);
