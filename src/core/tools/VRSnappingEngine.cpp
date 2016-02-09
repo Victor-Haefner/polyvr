@@ -77,13 +77,19 @@ VRSnappingEngine::VRSnappingEngine() {
     VRSceneManager::getCurrent()->addUpdateFkt(updatePtr, 999);
 }
 
+VRSnappingEngine::~VRSnappingEngine() {
+    clear();
+    if (event) delete event;
+}
+
 void VRSnappingEngine::clear() {
     anchors.clear();
     positions->clear();
     objects.clear();
     for (auto r : rules) delete r.second;
     rules.clear();
-    delete event;
+    if (event) delete event;
+    event = new EventSnap();
 }
 
 
@@ -127,6 +133,7 @@ void VRSnappingEngine::remLocalRules(VRTransformPtr obj) {
 }
 
 void VRSnappingEngine::addObject(VRTransformPtr obj, float weight) {
+    if (!obj) return;
     objects[obj] = obj->getWorldMatrix();
     Vec3f p = obj->getWorldPosition();
     positions->add(p[0], p[1], p[2], obj.get());
