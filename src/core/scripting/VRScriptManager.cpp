@@ -49,6 +49,7 @@
 #include "VRPySetup.h"
 #include "VRPyNavigator.h"
 #include "VRPyNavPreset.h"
+#include "VRPyWaypoint.h"
 #include "VRPyImage.h"
 #include <iostream>
 #include <algorithm>
@@ -322,6 +323,7 @@ void VRScriptManager::initPyModules() {
 
     registerModule<VRPyMenu>("Menu", pModVR, VRPyGeometry::typeRef);
     registerModule<VRPyClipPlane>("ClipPlane", pModVR, VRPyGeometry::typeRef);
+    registerModule<VRPyWaypoint>("Waypoint", pModVR, VRPyGeometry::typeRef);
 	registerModule<VRPyColorChooser>("ColorChooser", pModVR);
 	registerModule<VRPyTextureRenderer>("TextureRenderer", pModVR, VRPyObject::typeRef);
     registerModule<VRPyCaveKeeper>("CaveKeeper", pModVR);
