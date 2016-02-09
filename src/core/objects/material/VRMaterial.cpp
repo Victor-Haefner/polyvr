@@ -22,6 +22,7 @@
 #include <OpenSG/OSGClipPlaneChunk.h>
 #include <OpenSG/OSGStencilChunk.h>
 #include <OpenSG/OSGDepthChunk.h>
+#include <OpenSG/OSGMaterialChunk.h>
 
 #include "core/objects/VRTransform.h"
 #include "core/objects/material/VRTexture.h"
@@ -134,6 +135,11 @@ struct VRMatData {
 
         return m;
     }
+
+    template<typename T>
+    void clearChunk(T& c) {
+        if (c) { mat->subChunk(c); c = 0; }
+    }
 };
 
 map<string, VRMaterialWeakPtr> VRMaterial::materials;
@@ -193,7 +199,8 @@ string VRMaterial::constructShaderFP(VRMatData* data) {
     fp += "varying vec4 vertPos;\n";
     fp += "varying vec3 vertNorm;\n";
     fp += "varying vec3 color;\n";
-    fp += "float luminance(vec3 col) { return dot(col, vec3(0.3, 0.59, 0.11)); }\n";
+    //fp += "float luminance(vec3 col) { return dot(col, vec3(0.3, 0.59, 0.11)); }\n";
+    fp += "float luminance(vec3 col) { return 1; }\n";
     if (texD == 2) fp += "uniform sampler2D tex0;\n";
     if (texD == 3) fp += "uniform sampler3D tex0;\n";
     fp += "void main(void) {\n";
@@ -566,11 +573,6 @@ void VRMaterial::setSortKey(int key) {
     md->mat->setSortKey(key);
 }
 
-void VRMaterial::clearTransparency() {
-    auto md = mats[activePass];
-    if (md->blendChunk) md->mat->subChunk(md->blendChunk);
-}
-
 void VRMaterial::setFrontBackModes(int front, int back) {
     auto md = mats[activePass];
     if (md->polygonChunk == 0) { md->polygonChunk = PolygonChunk::create(); md->mat->addChunk(md->polygonChunk); }
@@ -673,6 +675,8 @@ class MAC : private SimpleTexturedMaterial {
 Color4f toColor4f(Color3f c, float t) { return Color4f(c[0], c[1], c[2], t); }
 Color3f toColor3f(Color4f c) { return Color3f(c[0], c[1], c[2]); }
 
+
+
 void VRMaterial::setTransparency(float c) {
     auto md = mats[activePass];
     md->colChunk->setDiffuse( toColor4f(getDiffuse(), c) );
@@ -682,11 +686,23 @@ void VRMaterial::setTransparency(float c) {
         md->blendChunk->setSrcFactor  ( GL_SRC_ALPHA           );
         md->blendChunk->setDestFactor ( GL_ONE_MINUS_SRC_ALPHA );
         md->mat->addChunk(md->blendChunk);
+    }
+}
 
+void VRMaterial::setDepthTest(int d) {
+    auto md = mats[activePass];
+    if (md->depthChunk == 0) {
         md->depthChunk = DepthChunk::create();
-        md->depthChunk->setFunc(GL_ALWAYS);
+        md->depthChunk->setFunc(d); // GL_ALWAYS
         md->mat->addChunk(md->depthChunk);
     }
+}
+
+void VRMaterial::clearTransparency() {
+    setTransparency(1);
+    auto md = mats[activePass];
+    md->clearChunk(md->blendChunk);
+    md->clearChunk(md->depthChunk);
 }
 
 void VRMaterial::setDiffuse(Color3f c) { mats[activePass]->colChunk->setDiffuse( toColor4f(c, getTransparency()) );}

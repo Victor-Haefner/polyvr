@@ -134,6 +134,7 @@
 		m.setFragmentProgram('particle_fp')
 		m.setGeometryProgram('particle_gp')
 		m.setTransparency(1.0)
+		m.setDepthTest('GL_ALWAYS')
 		return m	
 		
 	meta = VR.MetaBalls('water')

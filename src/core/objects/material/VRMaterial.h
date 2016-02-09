@@ -95,6 +95,7 @@ class VRMaterial : public VRObject {
         void setShininess(float s);
         void setEmission(Color3f c);
         void setTransparency(float t);
+        void setDepthTest(int d);
         void clearTransparency();
         void setLineWidth(int w, bool smooth = true);
         void setPointSize(int s, bool smooth = true);
