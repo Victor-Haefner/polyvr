@@ -243,14 +243,13 @@ Vec4f morphColor4(const Vec4f& c) { return c; }
 void VRGeometry::merge(VRGeometryPtr geo) {
     if (!geo) return;
     if (!geo->mesh) return;
-    if (!meshSet) {
-        setIndices(GeoUInt32PropertyRecPtr( GeoUInt32Property::create()) );
-        setTypes(GeoUInt8PropertyRecPtr( GeoUInt8Property::create()) );
-        setNormals(GeoVec3fPropertyRecPtr( GeoVec3fProperty::create()) );
-        if (geo->mesh->getColors()) setColors(GeoVec4fPropertyRecPtr( GeoVec4fProperty::create()) );
-        setLengths(GeoUInt32PropertyRecPtr( GeoUInt32Property::create()) );
-        setPositions(GeoPnt3fPropertyRecPtr( GeoPnt3fProperty::create()) );
-    }
+    if (!meshSet) setMesh(Geometry::create());
+    if (!mesh->getPositions()) setPositions(GeoPnt3fPropertyRecPtr( GeoPnt3fProperty::create()) );
+    if (!mesh->getNormals()) setNormals(GeoVec3fPropertyRecPtr( GeoVec3fProperty::create()) );
+    if (geo->mesh->getColors() && !mesh->getColors()) setColors(GeoVec4fPropertyRecPtr( GeoVec4fProperty::create()) );
+    if (!mesh->getIndices()) setIndices(GeoUInt32PropertyRecPtr( GeoUInt32Property::create()) );
+    if (!mesh->getTypes()) setTypes(GeoUInt8PropertyRecPtr( GeoUInt8Property::create()) );
+    if (!mesh->getLengths()) setLengths(GeoUInt32PropertyRecPtr( GeoUInt32Property::create()) );
 
     Matrix M = getWorldMatrix();
     M.invert();
