@@ -3,6 +3,7 @@
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneLoader.h"
 #include "core/scene/import/VRImport.h"
+#include "core/scene/import/VRExport.h"
 #include "core/scene/VRAnimationManagerT.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/utils/VROptions.h"
@@ -241,6 +242,7 @@ static PyMethodDef VRScriptManager_module_methods[] = {
 	{"exit", (PyCFunction)VRScriptManager::exit, METH_NOARGS, "Terminate application" },
 	{"loadGeometry", (PyCFunction)VRScriptManager::loadGeometry, METH_VARARGS|METH_KEYWORDS, "Loads a file and returns an object - obj loadGeometry(str path, bool cached = True, str preset = 'OSG', str parent = None)"
                                                                                              "\n\tpreset can be: 'OSG', 'COLLADA', 'SOLIDWORKS-VRML2', 'PLY', 'STEP'" },
+	{"exportGeometry", (PyCFunction)VRScriptManager::exportGeometry, METH_VARARGS, "Export a part of the scene - exportGeometry( object, path )" },
 	{"stackCall", (PyCFunction)VRScriptManager::stackCall, METH_VARARGS, "Schedules a call to a python function - stackCall( function, delay, [args] )" },
 	{"openFileDialog", (PyCFunction)VRScriptManager::openFileDialog, METH_VARARGS, "Open a file dialog - openFileDialog( onLoad, mode, title, default_path, filter )\n mode : {Save, Load, New, Create}" },
 	{"updateGui", (PyCFunction)VRScriptManager::updateGui, METH_NOARGS, "Update the gui" },
@@ -556,6 +558,14 @@ PyObject* VRScriptManager::loadGeometry(VRScriptManager* self, PyObject *args, P
     }
     obj->setPersistency(0);
     return VRPyTypeCaster::cast(obj);
+}
+
+PyObject* VRScriptManager::exportGeometry(VRScriptManager* self, PyObject *args) {
+    const char* path = "";
+    VRPyObject* o;
+    if (! PyArg_ParseTuple(args, "Os", &o, &path)) return NULL;
+    VRExport::get()->write( o->objPtr, path );
+    Py_RETURN_TRUE;
 }
 
 PyObject* VRScriptManager::pyTriggerScript(VRScriptManager* self, PyObject *args) {

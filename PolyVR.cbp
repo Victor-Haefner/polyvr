@@ -607,10 +607,13 @@
 		<Unit filename="src/core/scene/VRSoundManager.h" />
 		<Unit filename="src/core/scene/VRThreadManager.cpp" />
 		<Unit filename="src/core/scene/VRThreadManager.h" />
+		<Unit filename="src/core/scene/export/VRExport.h" />
 		<Unit filename="src/core/scene/import/VRCOLLADA.cpp" />
 		<Unit filename="src/core/scene/import/VRCOLLADA.h" />
 		<Unit filename="src/core/scene/import/VRDXF.cpp" />
 		<Unit filename="src/core/scene/import/VRDXF.h" />
+		<Unit filename="src/core/scene/import/VRExport.cpp" />
+		<Unit filename="src/core/scene/import/VRExport.h" />
 		<Unit filename="src/core/scene/import/VRImport.cpp" />
 		<Unit filename="src/core/scene/import/VRImport.h" />
 		<Unit filename="src/core/scene/import/VRPLY.cpp" />
