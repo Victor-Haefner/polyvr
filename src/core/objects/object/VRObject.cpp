@@ -346,6 +346,7 @@ bool VRObject::hasAncestor(VRObjectPtr a) {
 /** Returns the Boundingbox of the OSG Node */
 void VRObject::getBoundingBox(Vec3f& v1, Vec3f& v2) {
     Pnt3f p1, p2;
+    commitChanges();
     node->updateVolume();
     node->getVolume().getBounds(p1, p2);
     v1 = p1.subZero();
