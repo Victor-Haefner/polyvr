@@ -404,32 +404,31 @@ void VRMaterial::setMaterial(MaterialRecPtr m) {
 
         return;
     }
+
     if ( isCMat(m) ) {
-        MaterialChunkRecPtr mc = 0;
-        BlendChunkRecPtr bc = 0;
-        vector<TextureEnvChunkRecPtr> ecs;
-        vector<TextureObjChunkRecPtr> tcs;
-        DepthChunkRecPtr dc = 0;
+        auto md = mats[activePass];
 
         ChunkMaterialRecPtr cmat = dynamic_pointer_cast<ChunkMaterial>(m);
         for (uint i=0; i<cmat->getMFChunks()->size(); i++) {
             StateChunkRecPtr chunk = cmat->getChunk(i);
-            if (mc == 0) mc = dynamic_pointer_cast<MaterialChunk>(chunk);
-            if (bc == 0) bc = dynamic_pointer_cast<BlendChunk>(chunk);
-            if (dc == 0) dc = dynamic_pointer_cast<DepthChunk>(chunk);
+            int unit = -2; cmat->getChunkSlot(chunk, unit);
+
+            MaterialChunkRecPtr mc = dynamic_pointer_cast<MaterialChunk>(chunk);
+            BlendChunkRecPtr bc = dynamic_pointer_cast<BlendChunk>(chunk);
             TextureEnvChunkRecPtr ec = dynamic_pointer_cast<TextureEnvChunk>(chunk);
             TextureObjChunkRecPtr tc = dynamic_pointer_cast<TextureObjChunk>(chunk);
-            if (ec) ecs.push_back(ec);
-            if (tc) tcs.push_back(tc);
-        }
+            DepthChunkRecPtr dc = dynamic_pointer_cast<DepthChunk>(chunk);
+            TwoSidedLightingChunkRecPtr tsc = dynamic_pointer_cast<TwoSidedLightingChunk>(chunk);
 
-        auto md = mats[activePass];
-        if (mc) mc->setBackMaterial(false);
-        if (mc) { if (md->colChunk) md->mat->subChunk(md->colChunk);   md->colChunk = mc;   md->mat->addChunk(mc); }
-        if (bc) { if (md->blendChunk) md->mat->subChunk(md->blendChunk); md->blendChunk = bc; md->mat->addChunk(bc); }
-        if (dc) { if (md->depthChunk) md->mat->subChunk(md->depthChunk); md->depthChunk = dc; md->mat->addChunk(dc); }
-        for (auto e : ecs) { md->mat->addChunk(e); }
-        for (auto t : tcs) { md->mat->addChunk(t); }
+            if (mc) { md->colChunk = mc; mc->setBackMaterial(false); md->mat->addChunk(mc,unit); continue; }
+            if (bc) { md->blendChunk = bc; md->mat->addChunk(bc,unit); continue; }
+            if (ec) { md->envChunks[unit] = ec; md->mat->addChunk(ec,unit); continue; }
+            if (tc) { md->texChunks[unit] = tc; md->mat->addChunk(tc,unit); continue; }
+            if (dc) { md->depthChunk = dc; md->mat->addChunk(dc,unit); continue; }
+            if (tsc) { md->twoSidedChunk = tsc; md->mat->addChunk(tsc,unit); continue; }
+
+            cout << "isCMat unhandled chunk: " << chunk->getClass()->getName() << endl;
+        }
         return;
     }
 
