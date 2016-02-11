@@ -262,7 +262,9 @@ void VRPathtool::updateDevs() {
 
 void VRPathtool::setVisible(bool hvis, bool lines) {
     for (auto p : paths) if (p.second->line.lock()) p.second->line.lock()->setVisible(lines);
-    for (auto h : handles) h.lock()->setVisible(hvis);
+    for (auto h : handles) {
+        if (auto hs = h.lock()) hs->setVisible(hvis);
+    }
 }
 
 void VRPathtool::select(VRGeometryPtr h) {

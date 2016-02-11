@@ -72,6 +72,7 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"setNormals", (PyCFunction)VRPyGeometry::setNormals, METH_VARARGS, "set geometry normals - setNormals([[x,y,z], ...])" },
     {"setColors", (PyCFunction)VRPyGeometry::setColors, METH_VARARGS, "set geometry colors - setColors([[x,y,z], ...])" },
     {"setIndices", (PyCFunction)VRPyGeometry::setIndices, METH_VARARGS, "set geometry indices - setIndices(int[])" },
+    {"setLengths", (PyCFunction)VRPyGeometry::setLengths, METH_VARARGS, "set geometry lengths - setLengths(int[])" },
     {"setTexCoords", (PyCFunction)VRPyGeometry::setTexCoords, METH_VARARGS, "set geometry texture coordinates - setTexCoords( [[x,y]], int channel = 0, bool fixMapping = false)" },
     {"setTexture", (PyCFunction)VRPyGeometry::setTexture, METH_VARARGS, "set texture from file - setTexture(path)" },
     {"setMaterial", (PyCFunction)VRPyGeometry::setMaterial, METH_VARARGS, "set material" },
@@ -490,7 +491,7 @@ PyObject* VRPyGeometry::setIndices(VRPyGeometry* self, PyObject *args) {
         cout << "setIndices ld=1\n";
         if (tname == "numpy.ndarray") feed1Dnp<OSG::GeoUInt32PropertyRecPtr>( vec, inds);
         else feed1D<OSG::GeoUInt32PropertyRecPtr>( vec, inds );
-        self->objPtr->setIndices(inds);
+        self->objPtr->setIndices(inds, true);
     } else if (ld == 2) {
         cout << "setIndices ld=2\n";
         OSG::GeoUInt32PropertyRecPtr lengths = OSG::GeoUInt32Property::create();
