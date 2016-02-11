@@ -492,6 +492,11 @@ struct VRSTEP::Edge : VRSTEP::Instance {
     string type;
     vector<Vec3f> points;
 
+    bool is(const Vec3f& v1, const Vec3f& v2, float d = 1e-5) {
+        Vec3f dv = v2-v1;
+        return ( abs(dv[0]) < d && abs(dv[1]) < d && abs(dv[2]) < d );
+    }
+
     Edge() {}
 
     Edge(Instance& i, map<STEPentity*, Instance>& instances) : Instance(i) {
@@ -546,6 +551,8 @@ struct VRSTEP::Edge : VRSTEP::Instance {
     Vec3f& end() { return points[points.size()-1]; }
 
     void swap() { reverse(points.begin(), points.end()); }
+
+    bool connectsTo(Edge& e) { return ( is(end(), e.beg()) ); }
 };
 
 struct VRSTEP::Bound : VRSTEP::Instance {
@@ -591,10 +598,20 @@ struct VRSTEP::Bound : VRSTEP::Instance {
 
         for (auto& e : edges) {
             for (auto& p : e.points) {
-                if (points.size() > 0) if (is(p, points[points.size()-1])) continue;
+                if (points.size() > 0) {
+                    if (is(p, points[points.size()-1])) continue; // same as last point
+                    if (is(p, points[0])) continue; // same as first point
+                }
                 points.push_back(p);
             }
         }
+    }
+
+    bool isClosed() {
+        for (int i=1; i<edges.size(); i++) {
+            if (!edges[i-1].connectsTo(edges[i])) return false;
+        }
+        return true;
     }
 };
 
@@ -641,11 +658,14 @@ struct VRSTEP::Surface : VRSTEP::Instance {
     }
 
     VRGeometryPtr build() {
+        cout << "VRSTEP::Surface build " << ID << " " << type << endl;
+
         Matrix m = trans.asMatrix();
         Matrix mI = m;
         mI.invert();
 
         //if (type == "Plane") return 0; // test
+        //if (ID != 1276) return 0; // test
 
         if (type == "Plane") {
             Triangulator t;
@@ -745,11 +765,16 @@ struct VRSTEP::Surface : VRSTEP::Instance {
                 Vec3f n(0,1,0);
 
                 for (it = TriangleIterator(gg); !it.isAtEnd() ;++it) {
+                    //if (i != 4) continue;
+
                     vector<Pnt3f> p(3);
                     vector<Vec3f> v(3);
                     Vec3i vi = Vec3i(it.getPositionIndex(0), it.getPositionIndex(1), it.getPositionIndex(2));
                     for (int i=0; i<3; i++) p[i] = it.getPosition(i);
                     v[0] = p[2]-p[1]; v[1] = p[2]-p[0]; v[2] = p[1]-p[0];
+
+                    float A = v[0].cross(v[1]).squareLength();
+                    if (A < 1e-6) continue; // ignore flat triangles
 
                     Vec2f xs = getXsize(p);
                     float da = 2*Pi/Ncurv;
@@ -758,7 +783,7 @@ struct VRSTEP::Surface : VRSTEP::Instance {
                     Vec3i pSides;
                     for (int i = floor(xs[0]/da); i <= ceil(xs[1]/da); i++) rays.push_back(i*da); // get all cylinder edges (rays)
                     cout << " triangle size in x " << xs << " " << rays.size() << endl;
-                    cout << " points x " << p[0][0] << " " << p[1][0] << " " << p[2][0] << endl;
+                    cout << " triangle: " << p[0] << "   " << p[1] << "   " << p[2] << endl;
                     for (int i=1; i<rays.size(); i++) {
                         sides.push_back( Vec2f(rays[i-1], rays[i]) ); // get all cylinder faces
                         for (int j=0; j<3; j++) { // find out on what cylinder face each vertex lies
@@ -769,9 +794,11 @@ struct VRSTEP::Surface : VRSTEP::Instance {
                     }
 
                     Vec3i pOrder(0,1,2); // get the order of the vertices
-                    if (pSides[0] > pSides[1]) swap(pOrder[0], pOrder[1]);
-                    if (pSides[0] > pSides[2]) swap(pOrder[1], pOrder[2]);
-                    if (pSides[1] > pSides[2]) swap(pOrder[0], pOrder[1]);
+                    for (int i=0; i<3; i++) { // max 3 sort steps
+                        if (pSides[pOrder[0]] > pSides[pOrder[1]]) swap(pOrder[0], pOrder[1]);
+                        else if (pSides[pOrder[0]] > pSides[pOrder[2]]) swap(pOrder[0], pOrder[2]);
+                        else if (pSides[pOrder[1]] > pSides[pOrder[2]]) swap(pOrder[1], pOrder[2]);
+                    }
                     cout << " ordered vertices " << pOrder << "  " << pSides[pOrder[0]] << " " << pSides[pOrder[1]] << " " << pSides[pOrder[2]] << endl;
 
                     // test first case: all vertices on the same cylinder face
@@ -787,11 +814,14 @@ struct VRSTEP::Surface : VRSTEP::Instance {
                     // test second case: all vertices on different cylinder faces
                     if (pSides[0] != pSides[1] && pSides[0] != pSides[2] && pSides[1] != pSides[2]) {
                         cout << "  case 2" << endl;
+                        bool passed_middle = false;
                         for (int i=0; i<sides.size(); i++) {
                             Vec2f s = sides[i];
+                            //cout << "   side " << i << "   " << s << endl;
                             if (i == 0) { // first triangle
                                 int pi = pOrder[0]; // vertex index on that face
                                 Pnt3f pv = p[pi];
+                                //cout << "   main vert " << pi << "   " << pv << "   " << pOrder << "   " << pSides << endl;
                                 Vec3f pr1(s[1],0,0); // point on cylinder edge
                                 Vec3f pr2(s[1],0,0); // point on cylinder edge
                                 Vec3f vp1 = v[pOrder[1]]; // vector to middle point
@@ -801,6 +831,7 @@ struct VRSTEP::Surface : VRSTEP::Instance {
                                 int a = nMesh.pushVert(pv,n);
                                 int b = nMesh.pushVert(pr1,n);
                                 int c = nMesh.pushVert(pr2,n);
+                                //cout << "   push tri " << pv << "   " << pr1 << "   " << pr2 << endl;
                                 nMesh.pushTri(a,b,c);
                                 continue;
                             }
@@ -817,13 +848,66 @@ struct VRSTEP::Surface : VRSTEP::Instance {
                                 int a = nMesh.pushVert(pv,n);
                                 int b = nMesh.pushVert(pr1,n);
                                 int c = nMesh.pushVert(pr2,n);
+                                //cout << "   push tri " << endl;
                                 nMesh.pushTri(a,b,c);
                                 continue;
                             }
 
                             if (i == pSides[pOrder[1]]) { // pentagon in the middle
+                                Pnt3f pv = p[pOrder[1]]; // point in the middle
+                                Vec3f pr11(s[0],0,0); // point on cylinder edge
+                                Vec3f pr12(s[0],0,0); // point on cylinder edge
+                                Vec3f pr21(s[1],0,0); // point on cylinder edge
+                                Vec3f pr22(s[1],0,0); // point on cylinder edge
+                                Vec3f vp1 = v[pOrder[0]]; // vector from middle to last
+                                Vec3f vp2 = v[pOrder[1]]; // vector from first to last
+                                Vec3f vp3 = v[pOrder[2]]; // vector from first to middle
+                                Pnt3f pv1 = p[pOrder[0]]; // first vertex
+                                Pnt3f pv2 = p[pOrder[2]]; // last vertex
+                                pr11[1] = pv1[1] + vp2[1]/vp2[0]*(s[0]-pv1[0]);
+                                pr12[1] = pv1[1] + vp3[1]/vp3[0]*(s[0]-pv1[0]);
+                                pr21[1] = pv1[1] + vp2[1]/vp2[0]*(s[1]-pv1[0]);
+                                pr22[1] = pv[1] + vp1[1]/vp1[0]*(s[1]-pv[0]);
+                                int a = nMesh.pushVert(pr11,n);
+                                int b = nMesh.pushVert(pr12,n);
+                                int c = nMesh.pushVert(pr21,n);
+                                int d = nMesh.pushVert(pr22,n);
+                                int e = nMesh.pushVert(pv,n);
+                                nMesh.pushTri(a,c,b);
+                                nMesh.pushTri(b,c,d);
+                                nMesh.pushTri(b,e,d);
+                                passed_middle = true;
+                                continue;
                             }
-                            cout << "unhandled side " << i << endl;
+
+                            // middle quad
+                            Vec3f pr11(s[0],0,0); // point on cylinder edge
+                            Vec3f pr12(s[0],0,0); // point on cylinder edge
+                            Vec3f pr21(s[1],0,0); // point on cylinder edge
+                            Vec3f pr22(s[1],0,0); // point on cylinder edge
+                            Vec3f vp1, vp2;
+                            Pnt3f pv1, pv2;
+                            if (!passed_middle) {
+                                vp1 = v[pOrder[1]]; // vector to middle point
+                                vp2 = v[pOrder[2]]; // vector to last point
+                                pv1 = p[pOrder[2]]; // vertex on that face
+                                pv2 = p[pOrder[1]]; // vertex on that face
+                            } else {
+                                vp1 = v[pOrder[1]]; // vector from first point
+                                vp2 = v[pOrder[0]]; // vector from middle point
+                                pv1 = p[pOrder[0]]; // vertex on that face
+                                pv2 = p[pOrder[1]]; // vertex on that face
+                            }
+                            pr11[1] = pv1[1] + vp1[1]/vp1[0]*(s[0]-pv1[0]);
+                            pr12[1] = pv2[1] + vp2[1]/vp2[0]*(s[0]-pv2[0]);
+                            pr21[1] = pv1[1] + vp1[1]/vp1[0]*(s[1]-pv1[0]);
+                            pr22[1] = pv2[1] + vp2[1]/vp2[0]*(s[1]-pv2[0]);
+                            int a = nMesh.pushVert(pr11,n);
+                            int b = nMesh.pushVert(pr12,n);
+                            int c = nMesh.pushVert(pr21,n);
+                            int d = nMesh.pushVert(pr22,n);
+                            nMesh.pushTri(a,c,b);
+                            nMesh.pushTri(b,c,d);
                         }
                         continue;
                     }
@@ -892,8 +976,12 @@ struct VRSTEP::Surface : VRSTEP::Instance {
                         cout << "  case 4" << endl;
                         for (int i=0; i<sides.size(); i++) {
                             Vec2f s = sides[i];
+
+                            Pnt3f pv = p[pOrder[0]]; // vertex on that face
+                            Pnt3f pv1 = p[pOrder[1]]; // vertex on that face
+                            Pnt3f pv2 = p[pOrder[2]]; // vertex on that face
+
                             if (i == 0) { // first triangle
-                                Pnt3f pv = p[pOrder[0]]; // vertex on that face
                                 Vec3f pr1(s[1],0,0); // point on cylinder edge
                                 Vec3f pr2(s[1],0,0); // point on cylinder edge
                                 Vec3f vp1 = v[pOrder[1]]; // vector to middle point
@@ -907,8 +995,6 @@ struct VRSTEP::Surface : VRSTEP::Instance {
                                 continue;
                             }
                             if (i == sides.size()-1) { // last quad
-                                Pnt3f pv1 = p[pOrder[1]]; // vertex on that face
-                                Pnt3f pv2 = p[pOrder[2]]; // vertex on that face
                                 Vec3f pr1(s[0],0,0); // point on cylinder edge
                                 Vec3f pr2(s[0],0,0); // point on cylinder edge
                                 Vec3f vp1 = v[pOrder[2]]; // vector to last point
@@ -924,8 +1010,6 @@ struct VRSTEP::Surface : VRSTEP::Instance {
                                 continue;
                             }
 
-                            Pnt3f pv1 = p[pOrder[1]]; // vertex on that face
-                            Pnt3f pv2 = p[pOrder[2]]; // vertex on that face
                             Vec3f pr11(s[0],0,0); // point on cylinder edge
                             Vec3f pr12(s[0],0,0); // point on cylinder edge
                             Vec3f pr21(s[1],0,0); // point on cylinder edge
@@ -952,27 +1036,27 @@ struct VRSTEP::Surface : VRSTEP::Instance {
                 nMesh.apply(g);
             }
 
-
             // project the points back into 3D space
             if (g) {
                 auto gg = g->getMesh();
                 if (gg) {
                     GeoVectorPropertyRecPtr pos = gg->getPositions();
                     if (pos) {
-                        //cout << "pos " << pos << " " << pos->size() << endl;
                         for (int i=0; i<pos->size(); i++) {
                             Pnt3f p = pos->getValue<Pnt3f>(i);
-                            //cout << " p " << p << endl;
                             p[2] = p[1];
                             p[1] = sin(p[0])*R;
                             p[0] = cos(p[0])*R;
-                            //p = Pnt3f(0,0,0);
                             pos->setValue(p, i);
                         }
                     }
                 }
                 g->setMatrix(m);
             }
+
+            //auto m = VRMaterial::create("mat");
+            //m->setWireFrame(1); // test
+            //g->setMaterial(m);
             return g;
         }
 
