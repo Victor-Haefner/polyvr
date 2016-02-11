@@ -628,44 +628,12 @@ struct VRSTEP::Surface : VRSTEP::Instance {
         }
     }
 
-    VRGeometryPtr build3D() { // not reliable!
-        if (type == "Plane") return 0;
-        //if (type == "Cylindrical_Surface") return 0;
-        static int Count = 0; Count++;
-        //cout << Count << endl;
-        if (Count == 3); else return 0;
-        //if (Count > 3 && Count < 5); else return 0;
-
-        Matrix m = trans.asMatrix();
-        Matrix mI = m;
-        mI.invert();
-
-        Triangulator t;
-        for (auto b : bounds) {
-            polygon poly;
-            for(auto p : b.points) {
-                mI.mult(Pnt3f(p),p);
-                //cout << "p " << p << endl;
-                poly.addPoint(p);
-            }
-            if (!poly.isCCW()) poly.turn();
-            t.add(poly);
-        }
-        auto g = t.compute();
-        g->setMatrix(m);
-        g->updateNormals();
-        return g;
-    }
-
     VRGeometryPtr build() {
         cout << "VRSTEP::Surface build " << ID << " " << type << endl;
 
         Matrix m = trans.asMatrix();
         Matrix mI = m;
         mI.invert();
-
-        //if (type == "Plane") return 0; // test
-        //if (ID != 1276) return 0; // test
 
         if (type == "Plane") {
             Triangulator t;
@@ -684,18 +652,10 @@ struct VRSTEP::Surface : VRSTEP::Instance {
             return g;
         }
 
-        //static int once = 0; once += 1;
-        //if (once != 1 && once != 6) return 0;
-        //cout << "cylinder surface " << once << endl;
-
         if (type == "Cylindrical_Surface") {
-            /*static int Count = 0; Count++;
-            cout << Count << endl;
-            if (Count != 2) return 0;*/
 
             // feed the triangulator with unprojected points
             Triangulator t;
-            //cout << "T " << trans.toString() << endl;
             for (auto b : bounds) {
                 polygon poly;
                 cout << "Bound" << endl;
@@ -762,11 +722,47 @@ struct VRSTEP::Surface : VRSTEP::Instance {
             if (g) if (auto gg = g->getMesh()) {
                 TriangleIterator it;
                 VRGeoData nMesh;
-                Vec3f n(0,1,0);
+                Vec3f n(0,0,1);
+
+                auto checkOrder = [&](Pnt3f p0, Pnt3f p1, Pnt3f p2) {
+                    float cp = (p1-p0).cross(p2-p0).dot(n);
+                    return (cp >= 0);
+                };
+
+                auto pushTri = [&](Pnt3f p1, Pnt3f p2, Pnt3f p3) {
+                    int a = nMesh.pushVert(p1,n);
+                    int b = nMesh.pushVert(p2,n);
+                    int c = nMesh.pushVert(p3,n);
+                    if (checkOrder(p1,p2,p3)) nMesh.pushTri(a,b,c);
+                    else nMesh.pushTri(a,c,b);
+                };
+
+                auto pushQuad = [&](Pnt3f p1, Pnt3f p2, Pnt3f p3, Pnt3f p4) {
+                    int a = nMesh.pushVert(p1,n);
+                    int b = nMesh.pushVert(p2,n);
+                    int c = nMesh.pushVert(p3,n);
+                    int d = nMesh.pushVert(p4,n);
+                    if (checkOrder(p1,p2,p3)) nMesh.pushTri(a,b,c);
+                    else nMesh.pushTri(a,c,b);
+                    if (checkOrder(p2,p3,p4)) nMesh.pushTri(b,c,d);
+                    else nMesh.pushTri(b,d,c);
+                };
+
+                auto pushPen = [&](Pnt3f p1, Pnt3f p2, Pnt3f p3, Pnt3f p4, Pnt3f p5) {
+                    int a = nMesh.pushVert(p1,n);
+                    int b = nMesh.pushVert(p2,n);
+                    int c = nMesh.pushVert(p3,n);
+                    int d = nMesh.pushVert(p4,n);
+                    int e = nMesh.pushVert(p5,n);
+                    if (checkOrder(p1,p2,p3)) nMesh.pushTri(a,b,c);
+                    else nMesh.pushTri(a,c,b);
+                    if (checkOrder(p2,p3,p4)) nMesh.pushTri(b,c,d);
+                    else nMesh.pushTri(b,d,c);
+                    if (checkOrder(p2,p4,p5)) nMesh.pushTri(b,d,e);
+                    else nMesh.pushTri(b,e,d);
+                };
 
                 for (it = TriangleIterator(gg); !it.isAtEnd() ;++it) {
-                    //if (i != 4) continue;
-
                     vector<Pnt3f> p(3);
                     vector<Vec3f> v(3);
                     Vec3i vi = Vec3i(it.getPositionIndex(0), it.getPositionIndex(1), it.getPositionIndex(2));
@@ -804,10 +800,7 @@ struct VRSTEP::Surface : VRSTEP::Instance {
                     // test first case: all vertices on the same cylinder face
                     if (pSides[0] == pSides[1] && pSides[0] == pSides[2]) {
                         cout << "  case 1" << endl;
-                        int a = nMesh.pushVert(p[0],n);
-                        int b = nMesh.pushVert(p[1],n);
-                        int c = nMesh.pushVert(p[2],n);
-                        nMesh.pushTri(a,b,c);
+                        pushTri(p[0],p[1],p[2]);
                         continue;
                     }
 
@@ -817,22 +810,16 @@ struct VRSTEP::Surface : VRSTEP::Instance {
                         bool passed_middle = false;
                         for (int i=0; i<sides.size(); i++) {
                             Vec2f s = sides[i];
-                            //cout << "   side " << i << "   " << s << endl;
                             if (i == 0) { // first triangle
                                 int pi = pOrder[0]; // vertex index on that face
                                 Pnt3f pv = p[pi];
-                                //cout << "   main vert " << pi << "   " << pv << "   " << pOrder << "   " << pSides << endl;
                                 Vec3f pr1(s[1],0,0); // point on cylinder edge
                                 Vec3f pr2(s[1],0,0); // point on cylinder edge
                                 Vec3f vp1 = v[pOrder[1]]; // vector to middle point
                                 Vec3f vp2 = v[pOrder[2]]; // vector to last point
                                 pr1[1] = pv[1] + vp1[1]/vp1[0]*(s[1]-pv[0]);
                                 pr2[1] = pv[1] + vp2[1]/vp2[0]*(s[1]-pv[0]);
-                                int a = nMesh.pushVert(pv,n);
-                                int b = nMesh.pushVert(pr1,n);
-                                int c = nMesh.pushVert(pr2,n);
-                                //cout << "   push tri " << pv << "   " << pr1 << "   " << pr2 << endl;
-                                nMesh.pushTri(a,b,c);
+                                pushTri(pv,pr1,pr2);
                                 continue;
                             }
 
@@ -845,11 +832,7 @@ struct VRSTEP::Surface : VRSTEP::Instance {
                                 Vec3f vp2 = v[pOrder[0]]; // vector to last point
                                 pr1[1] = pv[1] + vp1[1]/vp1[0]*(s[0]-pv[0]);
                                 pr2[1] = pv[1] + vp2[1]/vp2[0]*(s[0]-pv[0]);
-                                int a = nMesh.pushVert(pv,n);
-                                int b = nMesh.pushVert(pr1,n);
-                                int c = nMesh.pushVert(pr2,n);
-                                //cout << "   push tri " << endl;
-                                nMesh.pushTri(a,b,c);
+                                pushTri(pv,pr1,pr2);
                                 continue;
                             }
 
@@ -868,14 +851,7 @@ struct VRSTEP::Surface : VRSTEP::Instance {
                                 pr12[1] = pv1[1] + vp3[1]/vp3[0]*(s[0]-pv1[0]);
                                 pr21[1] = pv1[1] + vp2[1]/vp2[0]*(s[1]-pv1[0]);
                                 pr22[1] = pv[1] + vp1[1]/vp1[0]*(s[1]-pv[0]);
-                                int a = nMesh.pushVert(pr11,n);
-                                int b = nMesh.pushVert(pr12,n);
-                                int c = nMesh.pushVert(pr21,n);
-                                int d = nMesh.pushVert(pr22,n);
-                                int e = nMesh.pushVert(pv,n);
-                                nMesh.pushTri(a,c,b);
-                                nMesh.pushTri(b,c,d);
-                                nMesh.pushTri(b,e,d);
+                                pushPen(pr11, pr12, pr21, pr22, pv);
                                 passed_middle = true;
                                 continue;
                             }
@@ -902,12 +878,7 @@ struct VRSTEP::Surface : VRSTEP::Instance {
                             pr12[1] = pv2[1] + vp2[1]/vp2[0]*(s[0]-pv2[0]);
                             pr21[1] = pv1[1] + vp1[1]/vp1[0]*(s[1]-pv1[0]);
                             pr22[1] = pv2[1] + vp2[1]/vp2[0]*(s[1]-pv2[0]);
-                            int a = nMesh.pushVert(pr11,n);
-                            int b = nMesh.pushVert(pr12,n);
-                            int c = nMesh.pushVert(pr21,n);
-                            int d = nMesh.pushVert(pr22,n);
-                            nMesh.pushTri(a,c,b);
-                            nMesh.pushTri(b,c,d);
+                            pushQuad(pr11, pr12, pr21, pr22);
                         }
                         continue;
                     }
@@ -926,12 +897,7 @@ struct VRSTEP::Surface : VRSTEP::Instance {
                                 Vec3f vp2 = v[pOrder[0]]; // vector to last point
                                 pr1[1] = pv1[1] + vp1[1]/vp1[0]*(s[1]-pv1[0]);
                                 pr2[1] = pv2[1] + vp2[1]/vp2[0]*(s[1]-pv2[0]);
-                                int a = nMesh.pushVert(pv1,n);
-                                int b = nMesh.pushVert(pv2,n);
-                                int c = nMesh.pushVert(pr1,n);
-                                int d = nMesh.pushVert(pr2,n);
-                                nMesh.pushTri(a,c,b);
-                                nMesh.pushTri(b,c,d);
+                                pushQuad(pv1, pv2, pr1, pr2);
                                 continue;
                             }
                             if (i == sides.size()-1) { // last triangle
@@ -942,10 +908,7 @@ struct VRSTEP::Surface : VRSTEP::Instance {
                                 Vec3f vp2 = v[pOrder[0]]; // vector to last point
                                 pr1[1] = pv[1] + vp1[1]/vp1[0]*(s[0]-pv[0]);
                                 pr2[1] = pv[1] + vp2[1]/vp2[0]*(s[0]-pv[0]);
-                                int a = nMesh.pushVert(pv,n);
-                                int b = nMesh.pushVert(pr1,n);
-                                int c = nMesh.pushVert(pr2,n);
-                                nMesh.pushTri(a,b,c);
+                                pushTri(pv,pr1,pr2);
                                 continue;
                             }
 
@@ -961,12 +924,7 @@ struct VRSTEP::Surface : VRSTEP::Instance {
                             pr12[1] = pv2[1] + vp2[1]/vp2[0]*(s[0]-pv2[0]);
                             pr21[1] = pv1[1] + vp1[1]/vp1[0]*(s[1]-pv1[0]);
                             pr22[1] = pv2[1] + vp2[1]/vp2[0]*(s[1]-pv2[0]);
-                            int a = nMesh.pushVert(pr11,n);
-                            int b = nMesh.pushVert(pr12,n);
-                            int c = nMesh.pushVert(pr21,n);
-                            int d = nMesh.pushVert(pr22,n);
-                            nMesh.pushTri(a,c,b);
-                            nMesh.pushTri(b,c,d);
+                            pushQuad(pr11, pr12, pr21, pr22);
                         }
                         continue;
                     }
@@ -988,10 +946,7 @@ struct VRSTEP::Surface : VRSTEP::Instance {
                                 Vec3f vp2 = v[pOrder[2]]; // vector to last point
                                 pr1[1] = pv[1] + vp1[1]/vp1[0]*(s[1]-pv[0]);
                                 pr2[1] = pv[1] + vp2[1]/vp2[0]*(s[1]-pv[0]);
-                                int a = nMesh.pushVert(pv,n);
-                                int b = nMesh.pushVert(pr1,n);
-                                int c = nMesh.pushVert(pr2,n);
-                                nMesh.pushTri(a,c,b);
+                                pushTri(pv,pr1,pr2);
                                 continue;
                             }
                             if (i == sides.size()-1) { // last quad
@@ -1001,12 +956,7 @@ struct VRSTEP::Surface : VRSTEP::Instance {
                                 Vec3f vp2 = v[pOrder[1]]; // vector to last point
                                 pr1[1] = pv1[1] + vp1[1]/vp1[0]*(s[0]-pv1[0]);
                                 pr2[1] = pv2[1] + vp2[1]/vp2[0]*(s[0]-pv2[0]);
-                                int a = nMesh.pushVert(pv1,n);
-                                int b = nMesh.pushVert(pv2,n);
-                                int c = nMesh.pushVert(pr1,n);
-                                int d = nMesh.pushVert(pr2,n);
-                                nMesh.pushTri(a,c,b);
-                                nMesh.pushTri(b,c,d);
+                                pushQuad(pv1, pv2, pr1, pr2);
                                 continue;
                             }
 
@@ -1020,12 +970,7 @@ struct VRSTEP::Surface : VRSTEP::Instance {
                             pr12[1] = pv2[1] + vp2[1]/vp2[0]*(s[0]-pv2[0]);
                             pr21[1] = pv1[1] + vp1[1]/vp1[0]*(s[1]-pv1[0]);
                             pr22[1] = pv2[1] + vp2[1]/vp2[0]*(s[1]-pv2[0]);
-                            int a = nMesh.pushVert(pr11,n);
-                            int b = nMesh.pushVert(pr12,n);
-                            int c = nMesh.pushVert(pr21,n);
-                            int d = nMesh.pushVert(pr22,n);
-                            nMesh.pushTri(a,c,b);
-                            nMesh.pushTri(b,c,d);
+                            pushQuad(pr11, pr12, pr21, pr22);
                         }
                         continue;
                     }
@@ -1041,13 +986,17 @@ struct VRSTEP::Surface : VRSTEP::Instance {
                 auto gg = g->getMesh();
                 if (gg) {
                     GeoVectorPropertyRecPtr pos = gg->getPositions();
+                    GeoVectorPropertyRecPtr norms = gg->getNormals();
                     if (pos) {
                         for (int i=0; i<pos->size(); i++) {
                             Pnt3f p = pos->getValue<Pnt3f>(i);
+                            Vec3f n = norms->getValue<Vec3f>(i);
+                            n = Vec3f(cos(p[0]), sin(p[0]), 0);
                             p[2] = p[1];
                             p[1] = sin(p[0])*R;
                             p[0] = cos(p[0])*R;
                             pos->setValue(p, i);
+                            norms->setValue(n, i);
                         }
                     }
                 }
