@@ -473,6 +473,7 @@ void VRMaterial::setTexture(string img_path, bool alpha, int unit) { // TODO: im
 
 void VRMaterial::setTexture(VRTexturePtr img, bool alpha, int unit) {
     if (img == 0) return;
+    if (img->getImage() == 0) return;
 
     auto md = mats[activePass];
     if (md->texChunks.count(unit) == 0) { md->texChunks[unit] = TextureObjChunk::create(); md->mat->addChunk(md->texChunks[unit], unit); }
