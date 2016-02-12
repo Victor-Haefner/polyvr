@@ -198,6 +198,7 @@
 			<Add option="-lraptor2" />
 			<Add option="-lgomp" />
 			<Add option="-llapacke" />
+			<Add option="-lxerces-c" />
 			<Add directory="/usr/X11R6/lib64" />
 			<Add directory="/usr/lib/virtuose" />
 			<Add directory="/usr/lib/i386-linux-gnu" />
@@ -609,8 +610,8 @@
 		<Unit filename="src/core/scene/VRThreadManager.cpp" />
 		<Unit filename="src/core/scene/VRThreadManager.h" />
 		<Unit filename="src/core/scene/export/VRExport.h" />
-		<Unit filename="src/core/scene/import/E57/DemoRead01.cpp" />
-		<Unit filename="src/core/scene/import/E57/DemoWrite01.cpp" />
+		<Unit filename="src/core/scene/import/E57/E57.cpp" />
+		<Unit filename="src/core/scene/import/E57/E57.h" />
 		<Unit filename="src/core/scene/import/E57/E57.reg" />
 		<Unit filename="src/core/scene/import/E57/E57Foundation.cpp" />
 		<Unit filename="src/core/scene/import/E57/E57Foundation.h" />
@@ -628,10 +629,6 @@
 		<Unit filename="src/core/scene/import/E57/constants.h" />
 		<Unit filename="src/core/scene/import/E57/e57.ico" />
 		<Unit filename="src/core/scene/import/E57/e57_v0_6.rnc" />
-		<Unit filename="src/core/scene/import/E57/e57fields.cpp" />
-		<Unit filename="src/core/scene/import/E57/e57unpack.cpp" />
-		<Unit filename="src/core/scene/import/E57/e57validate.cpp" />
-		<Unit filename="src/core/scene/import/E57/e57xmldump.cpp" />
 		<Unit filename="src/core/scene/import/E57/gnss_error.h" />
 		<Unit filename="src/core/scene/import/E57/inc/E57Foundation.h" />
 		<Unit filename="src/core/scene/import/E57/inc/E57Simple.h" />
@@ -640,7 +637,6 @@
 		<Unit filename="src/core/scene/import/E57/inc/constants.h" />
 		<Unit filename="src/core/scene/import/E57/inc/gnss_error.h" />
 		<Unit filename="src/core/scene/import/E57/inc/time_conversion.h" />
-		<Unit filename="src/core/scene/import/E57/las2e57.cpp" />
 		<Unit filename="src/core/scene/import/E57/src/E57FoundationImpl.h" />
 		<Unit filename="src/core/scene/import/E57/src/E57RefImplConfig.cmake" />
 		<Unit filename="src/core/scene/import/E57/src/E57SimpleImpl.h" />

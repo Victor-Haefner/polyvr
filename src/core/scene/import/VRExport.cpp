@@ -19,7 +19,7 @@ void VRExport::write(VRObjectPtr obj, string path) {
     auto geo = dynamic_pointer_cast<VRGeometry>(obj);
 
     auto bp = boost::filesystem::path(path);
-    auto ext = bp.extension();
-    if (ext.string() == "ply" && geo) { writePly(geo, path); }
+    string ext = bp.extension().string();
+    if (ext == ".ply" && geo) { writePly(geo, path); }
     SceneFileHandler::the()->write(obj->getNode(), path.c_str());
 }

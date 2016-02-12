@@ -2,11 +2,15 @@
 #include "VRCOLLADA.h"
 #include "VRPLY.h"
 #include "VRSTEP.h"
+#include "E57/E57.h"
 #include "addons/Engineering/Factory/VRFactory.h"
 
 #include <OpenSG/OSGSceneFileHandler.h>
 #include <OpenSG/OSGNameAttachment.h>
 #include <OpenSG/OSGComponentTransform.h>
+
+#include <boost/filesystem/path.hpp>
+#include <boost/filesystem/operations.hpp>
 
 #include "core/objects/VRTransform.h"
 #include "core/objects/VRGroup.h"
@@ -61,8 +65,20 @@ VRTransformPtr VRImport::Cache::retrieve() {
     return root;
 }
 
+void VRImport::osgLoad(string path, VRObjectPtr parent) {
+        NodeRecPtr n = 0;
+        n = SceneFileHandler::the()->read(path.c_str());
+        if (n == 0) return;
+        map<string, bool> m;
+        fixEmptyNames(n,m);
+        OSGConstruct(n, parent, path, path);
+}
+
 VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, string preset) {
     cout << "VRImport::load " << path << " " << preset << endl;
+    setlocale(LC_ALL, "C");
+
+    // check cache
     reload = reload? true : (cache.count(path) == 0);
     if (!reload) {
         auto res = cache[path].retrieve();
@@ -71,24 +87,20 @@ VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, stri
         return res;
     }
 
-    if (path.size() < 4) return 0;
-    setlocale(LC_ALL, "C");
+    // check file path
+    if (!boost::filesystem::exists(path)) return 0;
+    auto bpath = boost::filesystem::path(path);
+    string ext = bpath.extension().string();
+    cout << "load " << path << " ext: " << ext << "\n";
 
     VRTransformPtr res;
-    if (preset == "SOLIDWORKS-VRML2") { VRFactory f; res = f.loadVRML(path); }
-    if (preset == "STEP") { VRSTEP step; res = step.load(path); }
-    if (preset == "PLY") res = loadPly(path);
+    if (ext == ".e57") { res = loadE57(path); }
+    if (ext == ".ply") { res = loadPly(path); }
+    if (ext == ".stp") { VRSTEP step; res = step.load(path); }
+    if (ext == ".wrl" && preset == "SOLIDWORKS-VRML2") { VRFactory f; res = f.loadVRML(path); }
     if (res) { if (parent) parent->addChild(res); return res; } // TODO: use cache!
 
-    if (preset == "OSG" || preset == "COLLADA") { // TODO: using OSG importer for collada geometries
-        NodeRecPtr n = 0;
-        n = SceneFileHandler::the()->read(path.c_str());
-        if (n == 0) return 0;
-        map<string, bool> m;
-        fixEmptyNames(n,m);
-        OSGConstruct(n, parent, path, path);
-    }
-
+    if (preset == "OSG" || preset == "COLLADA") osgLoad(path, parent);
     if (preset == "COLLADA") loadCollada(path, cache[path].root); // TODO: use cache!
 
     if (cache.count(path) == 0) return 0;
