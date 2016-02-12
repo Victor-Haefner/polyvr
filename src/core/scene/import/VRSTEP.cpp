@@ -37,6 +37,9 @@ sudo gdebi -n libstepcode-dev.deb
 using namespace std;
 using namespace OSG;
 
+const float VRSTEP::Dangle = 2*Pi/VRSTEP::Ncurv;
+vector<float> VRSTEP::Adict;
+
 void VRSTEP::loadT(string file, STEPfilePtr sfile, bool* done) {
     if (boost::filesystem::exists(file)) file = boost::filesystem::canonical(file).string();
     sfile->ReadExchangeFile(file);
@@ -46,6 +49,8 @@ void VRSTEP::loadT(string file, STEPfilePtr sfile, bool* done) {
 }
 
 VRSTEP::VRSTEP() {
+    for (int i=0; i<Ncurv; i++) Adict.push_back(Dangle*i);
+
     registry = RegistryPtr( new Registry( SchemaInit ) ); // schema
     instMgr = InstMgrPtr( new InstMgr() ); // instances
     sfile = STEPfilePtr( new STEPfile( *registry, *instMgr, "", false ) ); // file
@@ -488,9 +493,51 @@ pose toPose(STEPentity* i, map<STEPentity*, VRSTEP::Instance>& instances) {
     return pose();
 }
 
+int VRSTEP::getSide(float a) {
+    int i;
+    i = a/Dangle;
+    return i;
+}
+
+vector<float> VRSTEP::angleFrame(float a1, float a2) {
+    if (a1 > a2) a2 += 2*Pi;
+    vector<float> angles;
+
+    float Da = abs(a2-a1);
+    int N = Ncurv * Da/(2*Pi);
+    float a = a1;
+    angles.push_back(a1);
+    for (int i=1; i<N; i++) {
+        a = a1+i*(Da/N);
+        angles.push_back(a);
+    }
+    angles.push_back(a2);
+
+    // print
+    cout << "angles: " << a1 << " " << a2 << " :";
+    for (float a : angles) cout << " " << a;
+    cout << endl;
+
+    /*
+
+    int i1 = getSide(a1);
+    int i2 = getSide(a2);
+
+    angles.push_back(a1);
+
+    for (float a = i1*Dangle; a < i2*Dangle; a += Dangle) {
+        cout << " angle " << a << endl;
+        angles.push_back(a);
+    }
+
+    angles.push_back(a2);*/
+    return angles;
+}
+
 struct VRSTEP::Edge : VRSTEP::Instance {
     string type;
     vector<Vec3f> points;
+    Vec3f n;
 
     bool is(const Vec3f& v1, const Vec3f& v2, float d = 1e-5) {
         Vec3f dv = v2-v1;
@@ -532,14 +579,9 @@ struct VRSTEP::Edge : VRSTEP::Instance {
                     a1 = atan2(c1[1],c1[0]);
                     a2 = atan2(c2[1],c2[0]);
 
-                    float Da = abs(a2-a1);
-                    int N = Ncurv * Da/(2*Pi);
-                    float a = a1;
-                    for (int i=0; i<=N; i++) {
-                        a = a1+i*(Da/N);
+                    for (auto a : angleFrame(a1, a2)) {
                         Pnt3f p(r*cos(a),r*sin(a),0);
                         m.mult(p,p);
-                        //if (Np >= 1) if(is(Vec3f(p), points[Np-1])) continue;
                         points.push_back(Vec3f(p));
                     }
                 }
@@ -547,8 +589,8 @@ struct VRSTEP::Edge : VRSTEP::Instance {
         }
     }
 
-    Vec3f& beg() { return points[0]; }
-    Vec3f& end() { return points[points.size()-1]; }
+    Vec3f& beg() { return points.size() > 0 ? points[0] : n; }
+    Vec3f& end() { return points.size() > 0 ? points[points.size()-1] : n; }
 
     void swap() { reverse(points.begin(), points.end()); }
 
@@ -666,9 +708,7 @@ struct VRSTEP::Surface : VRSTEP::Instance {
                     //cout << " p2 " << p << endl;
                     float h = p[2];
                     float a = atan2(p[1]/R, p[0]/R);
-                    if (la > -1000 && abs(a - la)>0.9*Pi*2) {
-                        a += 2*Pi;
-                    }
+                    if (la > -1000 && abs(a - la)>Pi) a += 2*Pi;
                     la = a;
                     cout << h << "  " << a << endl;
                     poly.addPoint(Vec2f(a, h));
@@ -777,7 +817,10 @@ struct VRSTEP::Surface : VRSTEP::Instance {
                     vector<float> rays;
                     vector<Vec2f> sides;
                     Vec3i pSides;
-                    for (int i = floor(xs[0]/da); i <= ceil(xs[1]/da); i++) rays.push_back(i*da); // get all cylinder edges (rays)
+
+                    //for (int i = floor(xs[0]/da); i <= ceil(xs[1]/da); i++) rays.push_back(i*da); // get all cylinder edges (rays)
+                    rays = angleFrame(xs[0], xs[1]);
+
                     cout << " triangle size in x " << xs << " " << rays.size() << endl;
                     cout << " triangle: " << p[0] << "   " << p[1] << "   " << p[2] << endl;
                     for (int i=1; i<rays.size(); i++) {
@@ -993,8 +1036,8 @@ struct VRSTEP::Surface : VRSTEP::Instance {
                             Vec3f n = norms->getValue<Vec3f>(i);
                             n = Vec3f(cos(p[0]), sin(p[0]), 0);
                             p[2] = p[1];
-                            p[1] = sin(p[0])*R;
-                            p[0] = cos(p[0])*R;
+                            p[1] = n[1]*R;
+                            p[0] = n[0]*R;
                             pos->setValue(p, i);
                             norms->setValue(n, i);
                         }
