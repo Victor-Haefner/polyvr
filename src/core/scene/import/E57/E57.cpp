@@ -3,12 +3,15 @@
 #include <iostream>
 #include "E57Foundation.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/VRGeoData.h"
 
 using namespace e57;
 using namespace std;
 using namespace OSG;
 
-VRGeometryPtr OSG::loadE57(string path) {
+VRTransformPtr OSG::loadE57(string path) {
+    VRTransformPtr res = VRTransform::create(path);
+
     try {
         ImageFile imf(path, "r"); // Read file from disk
 
@@ -28,52 +31,47 @@ VRGeometryPtr OSG::loadE57(string path) {
 
             CompressedVectorNode points( scan.get("points") );
             string pname = points.pathName();
-            auto pCount = points.childCount();
-            cout << "Got " << pCount << " points\n";
+            auto cN = points.childCount();
+            cout << "Got " << cN << " points\n";
 
             /// Call subroutine in this file to print the points
             /// Need to figure out if has Cartesian or spherical coordinate system.
             /// Interrogate the CompressedVector's prototype of its records.
             StructureNode proto(points.prototype());
+            bool hasPos = (proto.isDefined("cartesianX") && proto.isDefined("cartesianY") && proto.isDefined("cartesianZ"));
+            bool hasCol = (proto.isDefined("colorRed") && proto.isDefined("colorGreen") && proto.isDefined("colorBlue"));
+            if (!hasPos) continue;
 
-            /// The prototype should have a field named either "cartesianX" or "sphericalRange".
-            if (proto.isDefined("cartesianX") && proto.isDefined("cartesianY") && proto.isDefined("cartesianZ")) {
-                vector<SourceDestBuffer> destBuffers;
-        #if 1  //??? pick one?
-                /// Make a list of buffers to receive the xyz values.
-                const int N = 4;
-                double x[N];     destBuffers.push_back(SourceDestBuffer(imf, "cartesianX", x, N, true));
-                double y[N];     destBuffers.push_back(SourceDestBuffer(imf, "cartesianY", y, N, true));
-                double z[N];     destBuffers.push_back(SourceDestBuffer(imf, "cartesianZ", z, N, true));
+            VRGeoData data;
+            vector<SourceDestBuffer> destBuffers;
+            const int N = 4;
+            double x[N]; destBuffers.push_back(SourceDestBuffer(imf, "cartesianX", x, N, true));
+            double y[N]; destBuffers.push_back(SourceDestBuffer(imf, "cartesianY", y, N, true));
+            double z[N]; destBuffers.push_back(SourceDestBuffer(imf, "cartesianZ", z, N, true));
+            double r[N];
+            double g[N];
+            double b[N];
+            if (hasCol) {
+                destBuffers.push_back(SourceDestBuffer(imf, "colorRed", r, N, true));
+                destBuffers.push_back(SourceDestBuffer(imf, "colorGreen", g, N, true));
+                destBuffers.push_back(SourceDestBuffer(imf, "colorBlue", b, N, true));
+            }
 
-                /// Create a reader of the points CompressedVector, try to read first block of N points
-                /// Each call to reader.read() will fill the xyz buffers until the points are exhausted.
-                CompressedVectorReader reader = points.reader(destBuffers);
-                unsigned gotCount = reader.read();
-                cout << "  got first " << gotCount << " points" << endl;
+            unsigned int gotCount = 0;
+            CompressedVectorReader reader = points.reader(destBuffers);
+            do {
+                gotCount = reader.read();
+                for (unsigned j=0; j < gotCount; j++) {
+                    int v;
+                    if (hasCol) v = data.pushVert(Pnt3f(x[j], y[j], z[j]), Vec3f(0,1,0), Vec3f(r[j]/255.0, g[j]/255.0, b[j]/255.0));
+                    else v = data.pushVert(Pnt3f(x[j], y[j], z[j]), Vec3f(0,1,0));
+                    data.pushPoint(v);
+                }
+            } while(gotCount);
+            reader.close();
 
-                /// Print the coordinates we got
-                for (unsigned i=0; i < gotCount; i++)
-                    cout << "  " << i << ". x=" << x[i] << " y=" << y[i] << " z=" << z[i] << endl;
-        #else
-                /// Make a list of buffers to receive the xyz values.
-                int64_t columnIndex[10];     destBuffers.push_back(SourceDestBuffer(imf, "columnIndex", columnIndex, 10, true));
-
-                /// Create a reader of the points CompressedVector, try to read first block of 4 columnIndex
-                /// Each call to reader.read() will fill the xyz buffers until the points are exhausted.
-                CompressedVectorReader reader = points.reader(destBuffers);
-                unsigned gotCount = reader.read();
-                cout << "  got first " << gotCount << " points" << endl;
-
-                /// Print the coordinates we got
-                for (unsigned i=0; i < gotCount; i++)
-                    cout << "  " << i << ". columnIndex=" << columnIndex[i] << endl;
-        #endif
-                reader.close();
-            } else if (proto.isDefined("sphericalRange")) {
-                //??? not implemented yet
-            } else
-                cout << "Error: couldn't find either Cartesian or spherical points in scan" << endl;
+            auto geo = data.asGeometry(pname);
+            res->addChild(geo);
         }
 
         imf.close();
@@ -81,7 +79,7 @@ VRGeometryPtr OSG::loadE57(string path) {
     catch (E57Exception& ex) { ex.report(__FILE__, __LINE__, __FUNCTION__); return 0; }
     catch (std::exception& ex) { cerr << "Got an std::exception, what=" << ex.what() << endl; return 0; }
     catch (...) { cerr << "Got an unknown exception" << endl; return 0; }
-    return 0;
+    return res;
 }
 
 //void writeE57(VRGeometryPtr geo, string path);

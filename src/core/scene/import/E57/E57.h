@@ -8,7 +8,7 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-VRGeometryPtr loadE57(string path);
+VRTransformPtr loadE57(string path);
 //void writeE57(VRGeometryPtr geo, string path);
 
 OSG_END_NAMESPACE;

@@ -10,6 +10,7 @@ struct VRGeoData::Data {
     GeoUInt32PropertyRecPtr indices;
     GeoPnt3fPropertyRecPtr pos;
     GeoVec3fPropertyRecPtr norms;
+    GeoVec3fPropertyRecPtr cols;
 
     int lastPrim = -1;
 };
@@ -22,6 +23,7 @@ void VRGeoData::reset() {
     data->indices = GeoUInt32Property::create();
     data->pos = GeoPnt3fProperty::create();
     data->norms = GeoVec3fProperty::create();
+    data->cols = GeoVec3fProperty::create();
 }
 
 bool VRGeoData::valid() {
@@ -35,6 +37,11 @@ int VRGeoData::pushVert(Pnt3f p, Vec3f n) {
     data->pos->addValue(p);
     data->norms->addValue(n);
     return data->pos->size()-1;
+}
+
+int VRGeoData::pushVert(Pnt3f p, Vec3f n, Vec3f c) {
+    data->cols->addValue(c);
+    return pushVert(p,n);
 }
 
 void VRGeoData::updateType(int t, int N) {
@@ -64,6 +71,12 @@ void VRGeoData::pushTri(int i, int j, int k) {
     updateType(GL_TRIANGLES, 3);
 }
 
+void VRGeoData::pushPoint(int i) {
+    if (i >= 0) i = data->pos->size()-1;
+    data->indices->addValue(i);
+    updateType(GL_POINTS, 1);
+}
+
 void VRGeoData::apply(VRGeometryPtr geo) {
     if (!valid()) cout << "VRGeoData::apply failed: data invalid!" << endl;
     geo->setPositions(data->pos);
@@ -71,6 +84,7 @@ void VRGeoData::apply(VRGeometryPtr geo) {
     geo->setIndices(data->indices);
     geo->setLengths(data->lengths);
     geo->setTypes(data->types);
+    if (data->cols->size() > 0) geo->setColors(data->cols);
 }
 
 VRGeometryPtr VRGeoData::asGeometry(string name) {

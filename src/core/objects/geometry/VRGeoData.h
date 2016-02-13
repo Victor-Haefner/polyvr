@@ -22,8 +22,10 @@ class VRGeoData {
         bool valid();
 
         int pushVert(Pnt3f p, Vec3f n);
-        void pushQuad(int i, int j, int k, int l);
+        int pushVert(Pnt3f p, Vec3f n, Vec3f c);
+        void pushPoint(int i = -1);
         void pushTri(int i, int j, int k);
+        void pushQuad(int i, int j, int k, int l);
 
         void apply(VRGeometryPtr geo);
         VRGeometryPtr asGeometry(string name);
