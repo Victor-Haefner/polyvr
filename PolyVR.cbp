@@ -645,6 +645,16 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/scene/import/E57/time_conversion.h" />
+		<Unit filename="src/core/scene/import/STEP/VRBRepBound.cpp" />
+		<Unit filename="src/core/scene/import/STEP/VRBRepBound.h" />
+		<Unit filename="src/core/scene/import/STEP/VRBRepEdge.cpp" />
+		<Unit filename="src/core/scene/import/STEP/VRBRepEdge.h" />
+		<Unit filename="src/core/scene/import/STEP/VRBRepSurface.cpp" />
+		<Unit filename="src/core/scene/import/STEP/VRBRepSurface.h" />
+		<Unit filename="src/core/scene/import/STEP/VRBRepUtils.cpp" />
+		<Unit filename="src/core/scene/import/STEP/VRBRepUtils.h" />
+		<Unit filename="src/core/scene/import/STEP/VRSTEP.cpp" />
+		<Unit filename="src/core/scene/import/STEP/VRSTEP.h" />
 		<Unit filename="src/core/scene/import/VRCOLLADA.cpp" />
 		<Unit filename="src/core/scene/import/VRCOLLADA.h" />
 		<Unit filename="src/core/scene/import/VRDXF.cpp" />
@@ -655,7 +665,6 @@
 		<Unit filename="src/core/scene/import/VRImport.h" />
 		<Unit filename="src/core/scene/import/VRPLY.cpp" />
 		<Unit filename="src/core/scene/import/VRPLY.h" />
-		<Unit filename="src/core/scene/import/VRSTEP.cpp" />
 		<Unit filename="src/core/scene/import/VRSTEP.h" />
 		<Unit filename="src/core/scripting/VRPyAnalyticGeometry.cpp" />
 		<Unit filename="src/core/scripting/VRPyAnalyticGeometry.h" />

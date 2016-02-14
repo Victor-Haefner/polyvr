@@ -52,13 +52,6 @@ class VRSTEP {
         struct Bound;
         struct Surface;
 
-        static const int Ncurv = 17; // N in 2pi - should be multiple of 4 +1
-        static const float Dangle; // angle segment
-        static vector<float> Adict; // all angles
-
-        static vector<float> angleFrame(float a1, float a2);
-        static int getSide(float a);
-
     public:
         RegistryPtr registry;
         InstMgrPtr instMgr;

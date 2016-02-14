@@ -1,7 +1,7 @@
 #include "VRImport.h"
 #include "VRCOLLADA.h"
 #include "VRPLY.h"
-#include "VRSTEP.h"
+#include "STEP/VRSTEP.h"
 #include "E57/E57.h"
 #include "addons/Engineering/Factory/VRFactory.h"
 
