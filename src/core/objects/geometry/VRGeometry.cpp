@@ -1,4 +1,5 @@
 #include "VRGeometry.h"
+#include "VRGeoData.h"
 #include <libxml++/nodes/element.h>
 
 #include <OpenSG/OSGSimpleMaterial.h>
@@ -268,6 +269,7 @@ void VRGeometry::merge(VRGeometryPtr geo) {
 
     v1 = mesh->getNormals();
     v2 = geo->mesh->getNormals();
+    if (!v1 || !v2) return;
     for (uint i=0; i<v2->size(); i++)  v1->addValue(v2->getValue<Vec3f>(i));
 
     auto c1 = mesh->getColors();
@@ -386,16 +388,8 @@ void VRGeometry::removeSelection(VRSelectionPtr sel) {
 }
 
 VRGeometryPtr VRGeometry::copySelection(VRSelectionPtr sel) {
-    auto pos = mesh->getPositions();
-    auto norms = mesh->getNormals();
-    auto cols = mesh->getColors();
-    auto tcs = mesh->getTexCoords();
-    GeoPnt3fPropertyRecPtr sel_pos = GeoPnt3fProperty::create();
-    GeoVec3fPropertyRecPtr sel_norms = GeoVec3fProperty::create();
-    GeoVec4fPropertyRecPtr sel_cols = GeoVec4fProperty::create();
-    GeoVec2fPropertyRecPtr sel_tcs = GeoVec2fProperty::create();
-    GeoUInt32PropertyRecPtr sel_inds = GeoUInt32Property::create();
-    int Nc = getColorChannels( cols );
+    VRGeoData self(ptr());
+    VRGeoData selData;
 
     // copy selected vertices
     auto sinds = sel->getSubselection(ptr());
@@ -404,34 +398,20 @@ VRGeometryPtr VRGeometry::copySelection(VRSelectionPtr sel) {
     map<int, int> mapping;
     int k = 0;
     for (int i : sinds) {
-        sel_pos->addValue( pos->getValue<Pnt3f>(i) );
-        if (norms) sel_norms->addValue( norms->getValue<Vec3f>(i) );
-        if (tcs) sel_tcs->addValue( tcs->getValue<Vec2f>(i) );
-        if (cols) {
-            if (Nc == 3) sel_cols->addValue( Vec4f(cols->getValue<Vec3f>(i)) );
-            if (Nc == 4) sel_cols->addValue( cols->getValue<Vec4f>(i) );
-        }
+        selData.pushVert( self, i );
         mapping[i] = k;
         k++;
     }
 
-    // copy selected triangles
-    TriangleIterator it(mesh);
-    for (int i=0; !it.isAtEnd(); ++it, i++) {
-        Vec3i idx = Vec3i( it.getPositionIndex(0), it.getPositionIndex(1), it.getPositionIndex(2) );
-        if ( mapping.count(idx[0]) && mapping.count(idx[1]) && mapping.count(idx[2]) ) {
-            for (int j=0; j<3; j++) sel_inds->addValue( mapping[ idx[j] ] );
-        }
+    // copy selected primitives
+    for (auto& p : self) {
+        bool mapped = true;
+        for (int i : p.indices) if (!mapping.count(i)) { mapped = false; break; }
+        if (!mapped) continue;
+        selData.pushPrim(p);
     }
 
-    auto geo = VRGeometry::create(getName());
-    geo->setType(GL_TRIANGLES);
-    geo->setPositions(sel_pos);
-    geo->setNormals(sel_norms);
-    if (cols) geo->setColors(sel_cols);
-    if (tcs) geo->setTexCoords(sel_tcs);
-    geo->setIndices(sel_inds);
-    return geo;
+    return selData.asGeometry(getName());
 }
 
 VRGeometryPtr VRGeometry::separateSelection(VRSelectionPtr sel) {
