@@ -88,7 +88,7 @@ VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, stri
     }
 
     // check file path
-    if (!boost::filesystem::exists(path)) return 0;
+    if (!boost::filesystem::exists(path)) { cout << "VRImport::load " << path << " not found!" << endl; return 0; }
     auto bpath = boost::filesystem::path(path);
     string ext = bpath.extension().string();
     cout << "load " << path << " ext: " << ext << "\n";

@@ -153,22 +153,9 @@ int VRGeoData::primN(int type) {
     if (type == GL_LINES) return 2;
     if (type == GL_TRIANGLES) return 3;
     if (type == GL_QUADS) return 4;
+    cout << "VRGeoData::primN WARNING: unknown GL type " << type << endl;
     return 0;
 }
-
-/*{
-
-    for (int ti = 0; ti < data->types->size(); ti++) {
-        int t = data->types->getValue(ti);
-        int l = data->lengths->getValue(ti);
-        int Np = primN(t);
-        for (int i = 0; i<l; i+Np) {
-            vector<int> inds;
-            for (int j=0; j<Np; j++) inds.push_back(j);
-        }
-    }
-
-}*/
 
 void VRGeoData::setIndices(Primitive& p) {
     vector<int> inds;
@@ -183,6 +170,7 @@ void VRGeoData::setIndices(Primitive& p) {
         p.lID = 0;
     }
 
+    p.type = t;
     p.indices = inds;
 }
 

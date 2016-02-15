@@ -403,13 +403,28 @@ VRGeometryPtr VRGeometry::copySelection(VRSelectionPtr sel) {
         k++;
     }
 
+    // copy selected triangles
+    TriangleIterator it(mesh);
+    for (int i=0; !it.isAtEnd(); ++it, i++) {
+        Vec3i idx = Vec3i( it.getPositionIndex(0), it.getPositionIndex(1), it.getPositionIndex(2) );
+        if ( mapping.count(idx[0]) && mapping.count(idx[1]) && mapping.count(idx[2]) ) {
+            selData.pushTri(mapping[idx[0]], mapping[idx[1]], mapping[idx[2]]);
+        }
+    }
+
     // copy selected primitives
-    for (auto& p : self) {
+    /*for (auto& p : self) {
         bool mapped = true;
         for (int i : p.indices) if (!mapping.count(i)) { mapped = false; break; }
         if (!mapped) continue;
+        vector<int> ninds;
+        for (int i : p.indices) {
+            ninds.push_back( mapping[i] );
+        }
+        p.indices = ninds;
+        cout << "prim " << p.type << " " << p.tID << " " << p.lID << " " << p.indices.size() << endl;
         selData.pushPrim(p);
-    }
+    }*/
 
     return selData.asGeometry(getName());
 }

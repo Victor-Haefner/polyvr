@@ -45,7 +45,7 @@ class VRGeoData {
 
         // primitive iterator
         struct Primitive {
-            int type;
+            int type = 0;
             int tID = 0;
             int lID = 0;
             vector<int> indices;
