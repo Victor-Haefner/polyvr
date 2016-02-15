@@ -135,9 +135,12 @@ class VRTransform : public VRObject {
         Vec3f getWorldDirection(bool parentOnly = false);
         Vec3f getWorldUp(bool parentOnly = false);
 
+        void setWorldPose(pose p);
         void setWorldMatrix(Matrix _m);
         void setWorldPosition(Vec3f pos);
         void setWorldOrientation(Vec3f dir, Vec3f up);
+        void setWorldDir(Vec3f dir);
+        void setWorldUp(Vec3f up);
 
         int get_orientation_mode();
         void set_orientation_mode(int b);

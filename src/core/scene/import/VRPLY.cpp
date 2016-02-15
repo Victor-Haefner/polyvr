@@ -75,6 +75,9 @@ VRGeometryPtr loadPly(string filename) {
                     if (prop.name == "r") { iss >> c[0]; doC = 1; }
                     if (prop.name == "g") { iss >> c[1]; doC = 1; }
                     if (prop.name == "b") { iss >> c[2]; doC = 1; }
+                    if (prop.name == "red") { iss >> c[0]; doC = 1; }
+                    if (prop.name == "green") { iss >> c[1]; doC = 1; }
+                    if (prop.name == "blue") { iss >> c[2]; doC = 1; }
                     if (prop.name == "s") { iss >> t[0]; doT = 1; }
                     if (prop.name == "t") { iss >> t[1]; doT = 1; }
                 }
@@ -142,6 +145,136 @@ VRGeometryPtr loadPly(string filename) {
     VRGeometryPtr res = VRGeometry::create(filename);
     res->setMesh(geo);
     return res;
+}
+
+void writePly(VRGeometryPtr geo, string path) {
+	if (!geo) return;
+
+	auto pos = geo->getMesh()->getPositions();
+	auto norms = geo->getMesh()->getNormals();
+	auto cols = geo->getMesh()->getColors();
+	auto texc = geo->getMesh()->getTexCoords();
+	auto inds = geo->getMesh()->getIndices();
+	auto types = geo->getMesh()->getTypes();
+	auto lengths = geo->getMesh()->getLengths();
+
+	int Np = pos->size();
+	int Nn = norms->size();
+	int Nc = cols->size();
+	int Nt = texc->size();
+	int Nl = lengths->size();
+    int Nfaces = 0;
+
+	if (Np == 0) return;
+
+	auto writeVertices = [&]() {
+		string data;
+		Pnt3f p;
+		Vec3f n,c;
+		Vec2f t;
+        for (int i=0; i<Np; i++) {
+            p = pos->getValue<Pnt3f>(i);
+            if (Nn == Np) n = norms->getValue<Vec3f>(i);
+            if (Nc == Np) c = cols->getValue<Vec3f>(i);
+            if (Nt == Np) t = texc->getValue<Vec2f>(i);
+
+            data += toString(p);
+            if (Nn == Np) data += " "+toString(n);
+            if (Nc == Np) data += " "+toString(Vec3i(c*255));
+            if (Nt == Np) data += " "+toString(t);
+            data += "\n";
+        }
+		return data;
+	};
+
+	auto check = [&](Vec3i v) {
+		return (v[0] != v[1] && v[0] != v[2] && v[1] != v[2]);
+	};
+
+	auto writeIndices = [&]() {
+		int j = 0;
+		Nfaces = 0;
+		string data;
+		for (int k=0; k<Nl; k++) {
+            int t = types->getValue<UInt8>(k);
+            int l = lengths->getValue<UInt32>(k);
+			int p = 3;
+
+			if (t == 4) { // triangle
+				for (int i=0; i<l; i++) {
+					if (i%p == 0) data += toString(p);
+					int in = inds->getValue<UInt32>(j);
+					data += " "+toString(in);
+					if (i%p == p-1) {
+						data += "\n";
+						Nfaces += 1;
+					}
+					j += 1;
+				}
+			}
+
+			if (t == 5) { // triangle strip
+				for (int i=0; i<l; i++) {
+					int in = inds->getValue<UInt32>(j);
+					if (i == 0) data += toString(p); // first triangle of strip
+					if (i < 3) data += " "+toString(in);
+					if (i == 2) {
+						data += "\n";
+						Nfaces += 1;
+					}
+					if (i > 2) {
+                        int in1 = inds->getValue<UInt32>(j-2);
+                        int in2 = inds->getValue<UInt32>(j-1);
+                        int in3 = inds->getValue<UInt32>(j);
+						Vec3i veci = Vec3i(in1, in2, in3);
+						if (i%2 == 1) veci = Vec3i(in2, in1, in3);
+						if (check(veci)) {
+							data += toString(p)+' '+toString(veci)+"\n";
+							Nfaces += 1;
+						}
+					}
+					j += 1;
+				}
+			}
+
+			if (t != 4 && t != 5) cout << "PLY write: bad type " << t << endl;
+		}
+
+		return data;
+	};
+
+	string header =
+	"ply\n"
+	"format ascii 1.0\n"
+	"comment Created by PolyVR - https://github.com/Victor-Haefner/polyvr\n"
+	"element vertex "+toString(Np)+"\n"
+	"property float x\n"
+	"property float y\n"
+	"property float z\n";
+    if (Nn == Np) header += "property float nx\n";
+    if (Nn == Np) header += "property float ny\n";
+    if (Nn == Np) header += "property float nz\n";
+    if (Nc == Np) header += "property uchar red\n";
+    if (Nc == Np) header += "property uchar green\n";
+    if (Nc == Np) header += "property uchar blue\n";
+    if (Nt == Np) header += "property float s\n";
+    if (Nt == Np) header += "property float t\n";
+    header += "element face "+toString(Nfaces)+"\n"
+    "property list uchar uint vertex_indices\n"
+    "end_header\n";
+
+	cout << "PLY export " << geo->getName() << endl;
+
+	auto vertsData = writeVertices();
+	auto indsData = writeIndices();
+
+
+    fstream f;
+    f.open (path, fstream::out | fstream::app);
+	f << header;
+	f << vertsData;
+	f << indsData;
+	f.close();
 }
 
 OSG_END_NAMESPACE;

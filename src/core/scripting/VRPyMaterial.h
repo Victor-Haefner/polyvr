@@ -21,11 +21,14 @@ struct VRPyMaterial : VRPyBaseT<OSG::VRMaterial> {
     static PyObject* setSpecular(VRPyMaterial* self, PyObject* args);
     static PyObject* getTransparency(VRPyMaterial* self);
     static PyObject* setTransparency(VRPyMaterial* self, PyObject* args);
+    static PyObject* clearTransparency(VRPyMaterial* self);
     static PyObject* getShininess(VRPyMaterial* self);
     static PyObject* setShininess(VRPyMaterial* self, PyObject* args);
     static PyObject* setTexture(VRPyMaterial* self, PyObject* args);
     static PyObject* setTextureType(VRPyMaterial* self, PyObject* args);
     static PyObject* setStencilBuffer(VRPyMaterial* self, PyObject* args);
+    static PyObject* getTexture(VRPyMaterial* self, PyObject* args);
+    static PyObject* setDepthTest(VRPyMaterial* self, PyObject* args);
 
     static PyObject* setPointSize(VRPyMaterial* self, PyObject* args);
     static PyObject* setLineWidth(VRPyMaterial* self, PyObject* args);

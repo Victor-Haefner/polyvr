@@ -77,11 +77,11 @@ class VRMaterial : public VRObject {
         /** Load a texture && apply it to the mesh as new material **/
         TextureObjChunkRefPtr getTexChunk(int unit);
         void setTexture(TextureObjChunkRefPtr texChunk, int unit = 0);
-        void setTexture(string img_path, bool alpha = true);
-        void setTexture(VRTexturePtr img, bool alpha = true);
+        void setTexture(string img_path, bool alpha = true, int unit = 0);
+        void setTexture(VRTexturePtr img, bool alpha = true, int unit = 0);
         void setTexture(char* data, int format, Vec3i dims, bool isfloat);
         void setTextureAndUnit(VRTexturePtr img, int unit);
-        void setTextureParams(int min, int mag, int envMode, int wrapS, int wrapT);
+        void setTextureParams(int min, int mag, int envMode = GL_MODULATE, int wrapS = GL_REPEAT, int wrapT = GL_REPEAT, int unit = 0);
         void setTextureType(string type);
         void setQRCode(string s, Vec3f fg, Vec3f bg, int offset);
         void setVideo(string vid_path);
@@ -95,6 +95,8 @@ class VRMaterial : public VRObject {
         void setShininess(float s);
         void setEmission(Color3f c);
         void setTransparency(float t);
+        void setDepthTest(int d);
+        void clearTransparency();
         void setLineWidth(int w, bool smooth = true);
         void setPointSize(int s, bool smooth = true);
         void setWireFrame(bool b);
@@ -140,8 +142,8 @@ class VRMaterial : public VRObject {
 
         MultiPassMaterialRecPtr getMaterial();
         ChunkMaterialRecPtr getMaterial(int i);
-        VRTexturePtr getTexture();
-        TextureObjChunkRecPtr getTextureObjChunk();
+        VRTexturePtr getTexture(int unit = 0);
+        TextureObjChunkRecPtr getTextureObjChunk(int unit = 0);
 };
 
 OSG_END_NAMESPACE;

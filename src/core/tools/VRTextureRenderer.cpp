@@ -12,33 +12,9 @@
 #include <OpenSG/OSGTextureObjChunk.h>
 #include <OpenSG/OSGTextureEnvChunk.h>
 #include <OpenSG/OSGTexGenChunk.h>
-
-
-// tmp
-#include <OpenSG/OSGGLUT.h>
-#include <OpenSG/OSGConfig.h>
+#include <OpenSG/OSGGeometry.h>
 #include <OpenSG/OSGSimpleGeometry.h>
-#include <OpenSG/OSGGLUTWindow.h>
-#include <OpenSG/OSGSimpleSceneManager.h>
-#include <OpenSG/OSGBaseFunctions.h>
-#include <OpenSG/OSGTransform.h>
-#include <OpenSG/OSGComponentTransform.h>
-#include <OpenSG/OSGSimpleStage.h>
-#include <OpenSG/OSGPointLight.h>
-#include <OpenSG/OSGFrameBufferObject.h>
-#include <OpenSG/OSGTextureBuffer.h>
-#include <OpenSG/OSGRenderBuffer.h>
-#include <OpenSG/OSGTextureObjChunk.h>
-#include <OpenSG/OSGTextureEnvChunk.h>
-#include <OpenSG/OSGTexGenChunk.h>
-#include <OpenSG/OSGTwoSidedLightingChunk.h>
-#include <OpenSG/OSGSceneFileHandler.h>
-#include <OpenSG/OSGImageFunctions.h>
 #include <OpenSG/OSGSimpleTexturedMaterial.h>
-#include <OpenSG/OSGTextureTransformChunk.h>
-#include <OpenSG/OSGGradientBackground.h>
-#include <OpenSG/OSGPerspectiveCamera.h>
-#include <OpenSG/OSGVisitSubTree.h>
 
 using namespace std;
 using namespace OSG;
@@ -51,7 +27,6 @@ struct VRTextureRenderer::Data {
     TextureObjChunkRefPtr   fboTex;
     ImageRefPtr             fboTexImg;
     SimpleStageRefPtr stage;
-    map<VRObject*, NodeRecPtr> links;
 };
 OSG_END_NAMESPACE;
 
@@ -95,6 +70,7 @@ VRTextureRenderer::VRTextureRenderer(string name) : VRObject(name) {
     data->fbo->setWidth (data->fboWidth );
     data->fbo->setHeight(data->fboHeight);
     data->fbo->setPostProcessOnDeactivate(true);
+    texBuf->setReadBack (true);
 
     mat = VRMaterial::create("VRTextureRenderer");
     mat->setTexture(data->fboTex);
@@ -120,27 +96,12 @@ void VRTextureRenderer::setup(VRCameraPtr cam, int width, int height) {
     data->fbo->setHeight(data->fboHeight);
     data->fboTexImg->set(Image::OSG_RGB_PF, data->fboWidth, data->fboHeight);
     data->stage->setCamera(cam->getCam());
-
-    //test();
-}
-
-void VRTextureRenderer::addLink(VRObjectPtr obj) {
-    if (data->links.count(obj.get())) return;
-
-    VisitSubTreeRecPtr visitor = VisitSubTree::create();
-    visitor->setSubTreeRoot(obj->getNode());
-    NodeRecPtr visit_node = makeNodeFor(visitor);
-    addChild(visit_node);
-
-    data->links[obj.get()] = visit_node;
-}
-
-void VRTextureRenderer::remLink(VRObjectPtr obj) {
-    if (!data->links.count(obj.get())) return;
-
-    NodeRecPtr node = data->links[obj.get()];
-    subChild(node);
-    data->links.erase(obj.get());
 }
 
 VRMaterialPtr VRTextureRenderer::getMaterial() { return mat; }
+
+void VRTextureRenderer::setActive(bool b) {
+    if (b) setCore(data->stage, "TextureRenderer", true);
+    else setCore(Group::create(), "TextureRenderer", true);
+}
+

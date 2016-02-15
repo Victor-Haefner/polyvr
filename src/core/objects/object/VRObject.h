@@ -53,6 +53,7 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         unsigned int graphChanged = 0; //is frame number
 
         map<string, VRAttachment*> attachments;
+        map<VRObject*, NodeRecPtr> links;
 
         int findChild(VRObjectPtr node);
         void updateChildrenIndices(bool recursive = false);
@@ -121,6 +122,8 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         virtual void addChild(NodeRecPtr n);
         virtual void subChild(VRObjectPtr child, bool osg = true);
         virtual void subChild(NodeRecPtr n);
+        void addLink(VRObjectPtr obj);
+        void remLink(VRObjectPtr obj);
 
         /** Switch the parent of this object **/
         void switchParent(VRObjectPtr new_p, int place = -1);

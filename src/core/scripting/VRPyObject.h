@@ -40,6 +40,8 @@ struct VRPyObject : VRPyBaseT<OSG::VRObject> {
     static PyObject* setTravMask(VRPyObject* self, PyObject* args);
     static PyObject* setPersistency(VRPyObject* self, PyObject* args);
     static PyObject* getPersistency(VRPyObject* self);
+    static PyObject* addLink(VRPyObject* self, PyObject* args);
+    static PyObject* remLink(VRPyObject* self, PyObject* args);
 };
 
 #endif // VRPYOBJECT_H_INCLUDED

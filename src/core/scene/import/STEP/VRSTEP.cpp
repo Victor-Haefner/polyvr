@@ -13,14 +13,16 @@
 
 #include <OpenSG/OSGGeometry.h>
 #include <OpenSG/OSGGeoProperties.h>
-#include <OpenSG/OSGTriangleIterator.h>
 
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
 #include "core/math/polygon.h"
-#include "core/math/triangulator.h"
+
+#include "VRBRepEdge.h"
+#include "VRBRepBound.h"
+#include "VRBRepSurface.h"
 
 /*
 
@@ -487,12 +489,7 @@ pose toPose(STEPentity* i, map<STEPentity*, VRSTEP::Instance>& instances) {
     return pose();
 }
 
-struct VRSTEP::Edge : VRSTEP::Instance {
-    string type;
-    vector<Vec3f> points;
-
-    Edge() {}
-
+struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
     Edge(Instance& i, map<STEPentity*, Instance>& instances) : Instance(i) {
         type = i.type;
         if (type == "Oriented_Edge") {
@@ -526,42 +523,18 @@ struct VRSTEP::Edge : VRSTEP::Instance {
                     a1 = atan2(c1[1],c1[0]);
                     a2 = atan2(c2[1],c2[0]);
 
-                    float Da = abs(a2-a1);
-                    int N = Ncurv * Da/(2*Pi);
-                    float a = a1;
-                    for (int i=0; i<=N; i++) {
-                        a = a1+i*(Da/N);
+                    for (auto a : angleFrame(a1, a2)) {
                         Pnt3f p(r*cos(a),r*sin(a),0);
                         m.mult(p,p);
-                        //if (Np >= 1) if(is(Vec3f(p), points[Np-1])) continue;
                         points.push_back(Vec3f(p));
                     }
                 }
             }
         }
     }
-
-    Vec3f& beg() { return points[0]; }
-    Vec3f& end() { return points[points.size()-1]; }
-
-    void swap() { reverse(points.begin(), points.end()); }
 };
 
-struct VRSTEP::Bound : VRSTEP::Instance {
-    vector<Edge> edges;
-    vector<Vec3f> points;
-    bool outer = true;
-
-    int Nl = 0;
-    int Nc = 0;
-
-    bool is(const Vec3f& v1, const Vec3f& v2, float d = 1e-5) {
-        Vec3f dv = v2-v1;
-        return ( abs(dv[0]) < d && abs(dv[1]) < d && abs(dv[2]) < d );
-    }
-
-    Bound() {}
-
+struct VRSTEP::Bound : public VRSTEP::Instance, public VRBRepBound {
     Bound(Instance& i, map<STEPentity*, Instance>& instances) : Instance(i) {
         if (type != "Face_Outer_Bound") outer = false;
         if (type == "Face_Bound" || type == "Face_Outer_Bound") {
@@ -575,282 +548,33 @@ struct VRSTEP::Bound : VRSTEP::Instance {
 
         if (edges.size() <= 1) return; // done
 
-        if ( is(edges[0].beg(), edges[1].beg()) || is(edges[0].beg(), edges[1].end()) ) edges[0].swap(); // swap first edge
+        if ( sameVec(edges[0].beg(), edges[1].beg()) || sameVec(edges[0].beg(), edges[1].end()) ) edges[0].swap(); // swap first edge
 
         for (int i=1; i<edges.size(); i++) {
             auto& e1 = edges[i-1];
             auto& e2 = edges[i];
-            /*cout << "e1 b " << e1.beg() << " e " << e1.end() << "  e2 b " << e2.beg() << " e " << e2.end() << endl;
-            bool isEE = is(e2.end(), e1.end());
-            bool isEB = is(e2.beg(), e1.end());
-            cout << " is " << isEB << " " << isEE << endl;
-            if (!isEE && !isEB) cout << e2.end() - e1.end() << endl;*/
-            if ( is(e2.end(), e1.end()) ) e2.swap();
+            if ( sameVec(e2.end(), e1.end()) ) e2.swap();
         }
 
         for (auto& e : edges) {
             for (auto& p : e.points) {
-                if (points.size() > 0) if (is(p, points[points.size()-1])) continue;
+                if (points.size() > 0) {
+                    if (sameVec(p, points[points.size()-1])) continue; // same as last point
+                    if (sameVec(p, points[0])) continue; // same as first point
+                }
                 points.push_back(p);
             }
         }
     }
 };
 
-struct VRSTEP::Surface : VRSTEP::Instance {
-    vector<Bound> bounds;
-    pose trans;
-    double R = 1;
-
+struct VRSTEP::Surface : public VRSTEP::Instance, public VRBRepSurface {
     Surface(Instance& i, map<STEPentity*, Instance>& instances) : Instance(i) {
         if (type == "Plane") trans = toPose( get<0, STEPentity*>(), instances);
         if (type == "Cylindrical_Surface") {
             trans = toPose( get<0, STEPentity*, double>(), instances );
             R = get<1, STEPentity*, double>();
         }
-    }
-
-    VRGeometryPtr build3D() { // not reliable!
-        if (type == "Plane") return 0;
-        //if (type == "Cylindrical_Surface") return 0;
-        static int Count = 0; Count++;
-        cout << Count << endl;
-        if (Count == 3); else return 0;
-        //if (Count > 3 && Count < 5); else return 0;
-
-        Matrix m = trans.asMatrix();
-        Matrix mI = m;
-        mI.invert();
-
-        Triangulator t;
-        for (auto b : bounds) {
-            polygon poly;
-            for(auto p : b.points) {
-                mI.mult(Pnt3f(p),p);
-                cout << "p " << p << endl;
-                poly.addPoint(p);
-            }
-            if (!poly.isCCW()) poly.turn();
-            t.add(poly);
-        }
-        auto g = t.compute();
-        g->setMatrix(m);
-        g->updateNormals();
-        return g;
-    }
-
-    VRGeometryPtr build() {
-        Matrix m = trans.asMatrix();
-        Matrix mI = m;
-        mI.invert();
-
-        if (type == "Plane") {
-            Triangulator t;
-            for (auto b : bounds) {
-                polygon poly;
-                for(auto p : b.points) {
-                    mI.mult(Pnt3f(p),p);
-                    poly.addPoint(Vec2f(p[0], p[1]));
-                }
-                if (!poly.isCCW()) poly.turn();
-                t.add(poly);
-            }
-
-            auto g = t.compute();
-            g->setMatrix(m);
-            return g;
-        }
-
-        if (type == "Cylindrical_Surface") {
-            /*static int Count = 0; Count++;
-            cout << Count << endl;
-            if (Count != 2) return 0;*/
-
-            // feed the triangulator with unprojected points
-            Triangulator t;
-            //cout << "T " << trans.toString() << endl;
-            for (auto b : bounds) {
-                polygon poly;
-                cout << "Bound " << b.Nl << " " << b.Nc << endl;
-                for(auto p : b.points) {
-                    //cout << "Cp1 " << p << endl;
-                    mI.mult(Pnt3f(p),p);
-                    cout << "Cp2 " << p << endl;
-                    float h = p[2];
-                    float a = atan2(p[1]/R, p[0]/R);
-                    //cout << h << " " << a << endl;
-                    poly.addPoint(Vec2f(a, h));
-                }
-                if (!poly.isCCW()) poly.turn();
-                t.add(poly);
-            }
-            auto g = t.compute();
-
-            /* intersecting the cylinder rays with a triangle (2D)
-
-            - get triangle min/max in x
-            - get the cylinder rays that will intersect the triangle
-            - get for each segment the intersection points and map them to a ray ID
-            - create list of sides
-            - check if all vertices on the same side
-
-            - 3 possible cases for a cylinder side:
-                + triangle
-                + quad -> 2 triangles
-                + pentagon -> 3 triangles
-            - possible cases:
-                + only one cylinder side (no ray intersections)
-                    -> create only one triangle
-                + one ray intersection
-                    -> one triangle and one quad = 3 triangles (strip)
-                + multiple ray intersections
-                    - two triangle vertices on the same side
-                        -> one triangle and then only quads
-                    - all three vertices on different sides
-                        -> two triangles and the side of the middle vertex has a pentagon!!!
-
-            - special cases:
-                + the triangle segment is parallel and on top of a ray
-                + a triangle vertex is on a ray
-                -> test triangle vertex on ray
-
-            */
-
-            auto getXsize = [](vector<Pnt3f>& pnts) {
-                Vec2f res(pnts[0][0], pnts[0][0]);
-                for (auto& p : pnts) {
-                    if (p[0] < res[0]) res[0] = p[0];
-                    if (p[0] > res[1]) res[1] = p[0];
-                }
-                return res;
-            };
-
-            // tesselate the result while projecting it back on the surface
-            if (g) if (auto gg = g->getMesh()) {
-                TriangleIterator it;
-                for (it = TriangleIterator(gg); !it.isAtEnd() ;++it) {
-                    vector<Pnt3f> p(3);
-                    vector<Vec3f> v(3);
-                    Vec3i vi = Vec3i(it.getPositionIndex(0), it.getPositionIndex(1), it.getPositionIndex(2));
-                    for (int i=0; i<3; i++) p[i] = it.getPosition(i);
-                    v[0] = p[2]-p[1]; v[1] = p[2]-p[0]; v[2] = p[1]-p[0];
-
-                    Vec2f xs = getXsize(p);
-                    float da = 2*Pi/Ncurv;
-                    vector<float> rays;
-                    vector<Vec2f> sides;
-                    Vec3i pSides;
-                    for (int i = floor(xs[0]/da); i < ceil(xs[1]/da); i++) rays.push_back(i*da); // get all cylinder edges (rays)
-                    for (int i=1; i<rays.size(); i++) {
-                        sides.push_back( Vec2f(rays[i-1], rays[i]) ); // get all cylinder faces
-                        for (int j=0; j<3; j++) { // find out on what cylinder face each vertex lies
-                            if (p[j][0] > rays[i-1] && p[j][0] < rays[i]) pSides[j] = i-1;
-                        }
-                    }
-
-                    // test first case: all vertices on the same cylinder face
-                    if (pSides[0] == pSides[1] && pSides[0] == pSides[2]) {
-                        // emit triangle p[0], p[1], p[2]
-                        continue;
-                    }
-
-                    // test second case: all vertices on different cylinder faces
-                    if (pSides[0] != pSides[1] && pSides[0] != pSides[2] && pSides[1] != pSides[2]) {
-                        Vec3i pOrder(0,1,2); // get the order of the vertices
-                        if (pSides[0] > pSides[1]) swap(pOrder[0], pOrder[1]);
-                        if (pSides[0] > pSides[2]) swap(pOrder[1], pOrder[2]);
-                        if (pSides[1] > pSides[2]) swap(pOrder[0], pOrder[1]);
-
-                        for (int i=0; i<sides.size(); i++) {
-                            Vec2f s = sides[i];
-                            if (i == 0) { // first triangle
-                                int pi = pOrder[0]; // vertex index on that face
-                                Pnt3f pv = p[pi];
-                                Vec3f pr1(s[1],0,0); // point on cylinder edge
-                                Vec3f pr2(s[1],0,0); // point on cylinder edge
-                                Vec3f vp1 = v[pOrder[1]]; // vector to middle point
-                                Vec3f vp2 = v[pOrder[2]]; // vector to last point
-                                pr1[1] = pv[1] + vp1[1]/vp1[0]*(s[1]-pv[0]);
-                                pr2[1] = pv[1] + vp2[1]/vp2[0]*(s[1]-pv[0]);
-                                // emit triangle pV, pr1, pr2
-                                continue;
-                            }
-
-                            if (i == sides.size()-1) { // last triangle
-                                int pi = pOrder[2]; // vertex index on that face
-                                Pnt3f pv = p[pi];
-                                Vec3f pr1(s[0],0,0); // point on cylinder edge
-                                Vec3f pr2(s[0],0,0); // point on cylinder edge
-                                Vec3f vp1 = v[pOrder[1]]; // vector to middle point
-                                Vec3f vp2 = v[pOrder[0]]; // vector to last point
-                                pr1[1] = pv[1] + vp1[1]/vp1[0]*(s[0]-pv[0]);
-                                pr2[1] = pv[1] + vp2[1]/vp2[0]*(s[0]-pv[0]);
-                                // emit triangle pV, pr1, pr2
-                                continue;
-                            }
-
-                            if (i == pSides[pOrder[1]]) { // pentagon in the middle
-                            }
-                        }
-                    }
-                }
-            }
-
-
-            // project the points back into 3D space - deprecated?
-            if (g) {
-                auto gg = g->getMesh();
-                if (gg) {
-                    GeoVectorPropertyRecPtr pos = gg->getPositions();
-                    if (pos) {
-                        cout << "pos " << pos << " " << pos->size() << endl;
-                        for (int i=0; i<pos->size(); i++) {
-                            Pnt3f p = pos->getValue<Pnt3f>(i);
-                            cout << " p " << p << endl;
-                            p[2] = p[1];
-                            p[1] = 0;//sin(p[0])*R;
-                            //p[0] = cos(p[0])*R;
-                            //p = Pnt3f(0,0,0);
-                            pos->setValue(p, i);
-                        }
-                    }
-                }
-                g->setMatrix(m);
-            }
-            return g;
-        }
-
-        cout << "unhandled surface type " << type << endl;
-
-        // wireframe
-        auto geo = VRGeometry::create("face");
-        GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
-        GeoVec3fPropertyRecPtr norms = GeoVec3fProperty::create();
-        GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
-
-        for (auto b : bounds) {
-            for (int i=0; i<b.points.size(); i+=2) {
-                Pnt3f p1 = b.points[i];
-                Pnt3f p2 = b.points[i+1];
-                pos->addValue(p1);
-                pos->addValue(p2);
-                norms->addValue(Vec3f(0,1,0));
-                norms->addValue(Vec3f(0,1,0));
-                inds->addValue(pos->size()-2);
-                inds->addValue(pos->size()-1);
-            }
-        }
-
-        geo->setType(GL_LINES);
-        geo->setPositions(pos);
-        geo->setNormals(norms);
-        geo->setIndices(inds);
-
-        VRMaterialPtr mat = VRMaterial::create("face");
-        mat->setLit(0);
-        mat->setLineWidth(3);
-        geo->setMaterial(mat);
-        return geo;
     }
 };
 
@@ -875,7 +599,7 @@ void VRSTEP::buildGeometries() {
                             Bound bound(b, instances);
                             surface.bounds.push_back(bound);
                         }
-                        geo->addChild( surface.build() );
+                        geo->addChild( surface.build(surface.type) );
                     }
                 }
             }

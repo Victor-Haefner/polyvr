@@ -3,7 +3,7 @@
   <Objects>
     <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
       <Object name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
-        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="2.88782 4.58265 -2.64992" at="0.294688 0.787463 -0.0876844" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
+        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="3.87688 5.61536 -4.37582" at="0.294688 0.787463 -0.0876844" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
           <Object name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
         </Object>
       </Object>
@@ -11,6 +11,33 @@
   </Objects>
   <Rendering deferred_rendering="0" frustum_culling="1" occlusion_culling="0" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts>
+    <Script name_suffix="0" base_name="Script" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+	
+	if hasattr(VR, 'testmat'): VR.testmat.destroy()
+	VR.testmat = VR.Object('testmat')
+	l = VR.getRoot().find('Headlight')
+	l.addChild(VR.testmat)
+	
+	m = VR.Material('test')
+	m.setDiffuse(1,0,0)
+	VR.testmat.addChild(m)
+	
+	ms = VR.Material('test2')
+	#ms.setVertexProgram('particle_vp')
+	#ms.setFragmentProgram('particle_fp')
+	#ms.setGeometryProgram('particle_gp')
+	
+	g = VR.Sprite('stest')
+	g.setSize(4,4)
+	g.setMaterial(ms)
+	
+	#m.addChild(g)
+	m.addLink(g)
+	VR.testmat.addChild(g)
+</core>
+    </Script>
     <Script name_suffix="0" base_name="doBasin" name_space="__script__" type="Python" mobile="">
       <core>
 	import VR
@@ -106,11 +133,22 @@
 		m.setVertexProgram('particle_vp')
 		m.setFragmentProgram('particle_fp')
 		m.setGeometryProgram('particle_gp')
-		m.setPointSize(10)
-		m.setAmbient([0.2,0.2,1])
 		m.setTransparency(1.0)
-		return m
+		m.setDepthTest('GL_ALWAYS')
+		return m	
 		
+	meta = VR.MetaBalls('water')
+	parent.addChild(meta)
+	m = meta.getMaterial()
+	m.setVertexProgram('water_vp')
+	m.setFragmentProgram('water_fp')
+	m.setShaderParameter('texWater', 0)
+	m.setShaderParameter('texDepth', 1)
+	
+	dmat = meta.getDepthMaterial()
+	dmat.setVertexProgram('particle_vp')
+	dmat.setFragmentProgram('particle_depth_fp')
+	dmat.setGeometryProgram('particle_gp')	
 	
 	fluid = VR.Fluids()
 	#fluid.setAmount(800)
@@ -123,18 +161,13 @@
 	num = fluid.spawnCuboid(-1,5,-0.4, 4*sphRadius, 3,800,2)
 	print num
 	#fluid.spawnEmitter([0,5,-0.4],[0,-0.001,0],0,400,20)
-	
-	#parent.addChild(fluid)
-	#return fluid
-
-	meta = VR.MetaBalls('water')
-	parent.addChild(meta)
 	meta.addChild(fluid)
-	m = meta.getMaterial()
-	m.setVertexProgram('water_vp')
-	m.setFragmentProgram('water_fp')
+
 	
-	return fluid
+	
+	
+	
+	
 </core>
       <arg type="float" value="0" name_suffix="0" base_name="mass" name_space="doFluids"/>
       <arg type="VRPyObjectType" value="0" name_suffix="0" base_name="parent" name_space="doFluids"/>
@@ -168,12 +201,26 @@
 	m = V*rho
 	
 	(mass, parent, radius, sphRadius) = (m, VR.test, R, 5*R)
-	VR.fluid = VR.doFluids(mass, parent, radius, sphRadius)
+	VR.doFluids(mass, parent, radius, sphRadius)
 	VR.play = True;
 	#---------------#i
 </core>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
       <trig type="on_device" dev="keyboard" state="Pressed" param="" key="105" name_suffix="1" base_name="trigger" name_space="__global__"/>
+    </Script>
+    <Script name_suffix="0" base_name="particle_depth_fp" name_space="__script__" type="GLSL" mobile="">
+      <core>
+#version 120
+
+varying vec4 Color;
+varying vec2 texCoord;
+
+void main( void ) {
+	vec4 c = vec4(1);
+	c.x = gl_FragCoord.z;
+	gl_FragColor = c;
+}
+</core>
     </Script>
     <Script name_suffix="0" base_name="particle_fp" name_space="__script__" type="GLSL" mobile="">
       <core>
@@ -183,9 +230,7 @@ varying vec4 Color;
 varying vec2 texCoord;
 
 void main( void ) {
-	vec4 c;
-	c.x = gl_FragCoord.z*0.1;
-	
+	vec4 c = vec4(0.0);	
 	float r = sqrt(texCoord[0]*texCoord[0]+texCoord[1]*texCoord[1]);
 	c.a = max(1.0-r,0.0)*0.3;
 	gl_FragColor = c;
@@ -276,15 +321,21 @@ void main(void) {
 #version 120
 
 uniform sampler2D texWater;
+uniform sampler2D texDepth;
 
 void main(void) { 
     vec2 tc = gl_TexCoord[0].xy;
-    vec4 water = texture2D(texWater, tc);
-    float R = water.a;
-    if (R &gt; 0.84) discard;
     
+    vec4 water = texture2D(texWater, tc);
+    vec4 depth = texture2D(texDepth, tc);
+    
+	float R = water.a;
+	if (R &gt; 0.84) discard;
+	gl_FragDepth = depth.x;
+    
+    //if (tc.x &lt; 0.5) gl_FragColor = depth;
+    //else 
     gl_FragColor = vec4(0.1+0.7*R,0.3+0.7*R,1.0,1.0);
-	gl_FragDepth = water.x*0.98;
 }
 </core>
     </Script>
@@ -337,7 +388,7 @@ void main(void) {
     </Script>
   </Scripts>
   <Sockets/>
-  <Background color="0.6 0.6 0.6" format=".png" path="" type="0"/>
+  <Background color="0.749996 0.749996 0.749996" format=".png" path="" type="0"/>
   <Navigation active="Orbit"/>
   <Materials/>
 </Scene>

@@ -2,16 +2,17 @@
 #define VRWAYPOINT_H_INCLUDED
 
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/math/pose.h"
 
 OSG_BEGIN_NAMESPACE;
 
-class VRPose {
-    Vec3f from, dir, up;
-};
-
 class VRWaypoint : public VRGeometry {
     private:
-        VRPose pose;
+        pose Pose;
+        pose Floor;
+        Vec3f at;
+
+        void updateGeo();
 
     public:
         VRWaypoint(string name);
@@ -19,9 +20,12 @@ class VRWaypoint : public VRGeometry {
         static VRWaypointPtr create(string name);
         VRWaypointPtr ptr();
 
-        void setPose(VRPose p);
+        void set(pose p);
+        void set(VRTransformPtr t);
+        void apply(VRTransformPtr t);
+        pose get();
 
-        Vec3f transform(Vec3f v);
+        void setFloorPlane(pose p);
 };
 
 OSG_END_NAMESPACE;

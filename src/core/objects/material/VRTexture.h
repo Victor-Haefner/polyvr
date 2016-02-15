@@ -29,6 +29,9 @@ class VRTexture : public std::enable_shared_from_this<VRTexture> {
         void setInternalFormat(int ipf);
         int getInternalFormat();
         ImageRecPtr getImage();
+
+        void read(string path);
+        void write(string path);
 };
 
 OSG_END_NAMESPACE;

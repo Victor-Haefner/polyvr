@@ -53,21 +53,24 @@ void VRStage::initStage() {
 }
 
 void VRStage::initFBO() {
-    fboImg = Image::create();
-    fboTex = TextureObjChunk::create();
-    fboTex->setImage(fboImg);
     fbo = FrameBufferObject::create();
-    TextureBufferRefPtr texBuf = TextureBuffer::create();
-    RenderBufferRefPtr depthBuf = RenderBuffer::create();
-    depthBuf->setInternalFormat(GL_DEPTH_COMPONENT24);
-    texBuf->setTexture(fboTex);
-    fbo->setColorAttachment(texBuf, 0);
-    fbo->setDepthAttachment(depthBuf);
     fbo->editMFDrawBuffers()->push_back(GL_COLOR_ATTACHMENT0_EXT);
     fbo->setPostProcessOnDeactivate(true);
     stage->setRenderTarget(fbo);
 
+    // color buffer
+    fboImg = Image::create();
+    fboTex = TextureObjChunk::create();
+    fboTex->setImage(fboImg);
+    TextureBufferRefPtr texBuf = TextureBuffer::create();
+    texBuf->setTexture(fboTex);
+    fbo->setColorAttachment(texBuf, 0);
     target->setTexture(fboTex, tex_id);
+
+    // depth buffer
+    RenderBufferRefPtr depthBuf = RenderBuffer::create();
+    depthBuf->setInternalFormat(GL_DEPTH_COMPONENT32); // 16 24 32
+    fbo->setDepthAttachment(depthBuf);
 }
 
 void VRStage::update() {
@@ -82,6 +85,10 @@ void VRStage::update() {
     }
 }
 
+void VRStage::setTarget(VRMaterialPtr mat, int tid) {
+    target = mat; tex_id = tid;
+    update();
+}
+
 void VRStage::setSize( Vec2i s ) { size = s; update(); }
-void VRStage::setTarget(VRMaterialPtr mat, int tid) { target = mat; tex_id = tid; update(); }
 void VRStage::setCamera(VRCameraPtr cam) { stage->setCamera( cam->getCam() ); }

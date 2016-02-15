@@ -37,6 +37,8 @@ template<> PyTypeObject VRPyBaseT<OSG::VRTexture>::type = {
 };
 
 PyMethodDef VRPyImage::methods[] = {
+    {"read", (PyCFunction)VRPyImage::read, METH_VARARGS, "Read an image from disk - read( str path )" },
+    {"write", (PyCFunction)VRPyImage::write, METH_VARARGS, "Write an image to disk - write( str path )" },
     {NULL}  /* Sentinel */
 };
 
@@ -73,4 +75,21 @@ PyObject* VRPyImage::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     if (channels2) img->setInternalFormat( toOSGConst(PyString_AsString((PyObject*)channels2)) );
     return allocPtr( type, img );
 }
+
+PyObject* VRPyImage::read(VRPyImage* self, PyObject *args) {
+    const char* path = 0;
+    if (! PyArg_ParseTuple(args, "s", (char*)&path)) return NULL;
+    if (path) self->objPtr->read(path);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyImage::write(VRPyImage* self, PyObject *args) {
+    const char* path = 0;
+    if (! PyArg_ParseTuple(args, "s", (char*)&path)) return NULL;
+    if (path) self->objPtr->write(path);
+    Py_RETURN_TRUE;
+}
+
+
+
 

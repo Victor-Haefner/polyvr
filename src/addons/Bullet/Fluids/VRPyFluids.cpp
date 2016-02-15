@@ -26,8 +26,14 @@ PyMethodDef VRPyFluids::methods[] = {
 
 PyMethodDef VRPyMetaBalls::methods[] = {
     {"getMaterial", (PyCFunction)VRPyMetaBalls::getMaterial, METH_NOARGS, "Return the stage material - mat getMaterial()"},
+    {"getDepthMaterial", (PyCFunction)VRPyMetaBalls::getDepthMaterial, METH_NOARGS, "Return the stage material - mat getDepthMaterial()"},
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyMetaBalls::getDepthMaterial(VRPyMetaBalls* self) {
+    if (!self->valid()) return NULL;
+    return VRPyMaterial::fromSharedPtr( self->objPtr->getDepthMaterial() );
+}
 
 PyObject* VRPyMetaBalls::getMaterial(VRPyMetaBalls* self) {
     if (!self->valid()) return NULL;

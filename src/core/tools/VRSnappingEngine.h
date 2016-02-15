@@ -67,6 +67,7 @@ class VRSnappingEngine {
 
     public:
         VRSnappingEngine();
+        ~VRSnappingEngine();
 
         VRSignalPtr getSignalSnap();
 

@@ -35,21 +35,14 @@ polygon::polygon() {}
 
 bool polygon::isCCW() {
     float s = 0;
-    for (int i=1; i<points.size(); i++) {
-        auto v1 = points[i-1];
-        auto v2 = points[i];
+    auto tmp = points;
+    if (!closed && tmp.size() > 0) tmp.push_back(tmp[0]);
+    for (int i=1; i<tmp.size(); i++) {
+        auto v1 = tmp[i-1];
+        auto v2 = tmp[i];
         s += (v2[0]-v1[0])*(v2[1]+v1[1]);
-    } if (s < 0) return true;
-
-    s = 0;
-    for (int i=1; i<points3.size(); i++) {
-        auto v1 = points3[i-1];
-        auto v2 = points3[i];
-        //s += (v2[0]-v1[0])*(v2[1]+v1[1]);
-        s += v1.cross(v2).length()/v1.length()/v2.length();
-    } if (s < 0) return true;
-
-    return false;
+    }
+    return (s <= 0);
 }
 
 void polygon::runTest() {

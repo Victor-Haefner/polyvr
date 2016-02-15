@@ -29,6 +29,8 @@ class VRImport {
         void fixEmptyNames(NodeRecPtr o, map<string, bool>& m, string parentName = "NAN", int iChild = 0);
         VRObjectPtr OSGConstruct(NodeRecPtr n, VRObjectPtr parent = 0, string name = "", string currentFile = "", NodeCore* geoTrans = 0, string geoTransName = "");
 
+        void osgLoad(string path, VRObjectPtr parent);
+
     public:
         static VRImport* get();
 

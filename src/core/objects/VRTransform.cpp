@@ -303,6 +303,17 @@ void VRTransform::setWorldOrientation(Vec3f dir, Vec3f up) {
     reg_change();
 }
 
+void VRTransform::setWorldDir(Vec3f dir) {
+    setWorldOrientation(dir, getUp());
+}
+
+void VRTransform::setWorldUp(Vec3f up) {
+    Matrix wm = getWorldMatrix(true);
+    wm.invert();
+    wm.mult(up,up);
+    setUp(up);
+}
+
 doubleBuffer* VRTransform::getBuffer() { return dm; }
 
 //local pose setter--------------------
@@ -362,6 +373,7 @@ void VRTransform::setPose(Vec3f from, Vec3f dir, Vec3f up) {
 void VRTransform::setPose(pose p) { setPose(p.pos(), p.dir(), p.up()); }
 pose VRTransform::getPose() { return pose(_from, getDir(), _up); }
 pose VRTransform::getWorldPose() { return pose(getWorldPosition(), getWorldDirection(), getWorldUp()); }
+void VRTransform::setWorldPose(pose p) { setWorldMatrix(p.asMatrix()); }
 
 /** Set the local matrix **/
 void VRTransform::setMatrix(Matrix _m) {

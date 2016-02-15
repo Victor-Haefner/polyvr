@@ -8,6 +8,9 @@
 #include "VRPyLight.h"
 #include "VRPyCamera.h"
 #include "VRPyMenu.h"
+#include "VRPyLightBeacon.h"
+#include "VRPyTextureRenderer.h"
+#include "VRPyWaypoint.h"
 #include "VRPyBaseT.h"
 #include "core/objects/object/VRObject.h"
 #ifndef _WIN32
@@ -34,6 +37,9 @@ PyObject* VRPyTypeCaster::cast(OSG::VRObjectPtr obj) {
     else if (type == "Light") return VRPyLight::fromSharedPtr( static_pointer_cast<OSG::VRLight>(obj) );
     else if (type == "Camera") return VRPyCamera::fromSharedPtr( static_pointer_cast<OSG::VRCamera>(obj) );
     else if (type == "Menu") return VRPyMenu::fromSharedPtr( static_pointer_cast<OSG::VRMenu>(obj) );
+    else if (type == "LightBeacon") return VRPyLightBeacon::fromSharedPtr( static_pointer_cast<OSG::VRLightBeacon>(obj) );
+    else if (type == "TextureRenderer") return VRPyTextureRenderer::fromSharedPtr( static_pointer_cast<OSG::VRTextureRenderer>(obj) );
+    else if (type == "Waypoint") return VRPyWaypoint::fromSharedPtr( static_pointer_cast<OSG::VRWaypoint>(obj) );
     cout << "\nERROR in VRPyTypeCaster::cast: " << type << " not handled!\n";
 
     return VRPyObject::fromSharedPtr(obj);

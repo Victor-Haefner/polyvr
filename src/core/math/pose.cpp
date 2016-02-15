@@ -7,7 +7,6 @@ pose::pose() { data.resize(3); }
 pose::pose(Vec3f p, Vec3f d, Vec3f u) { set(p,d,u); }
 
 shared_ptr<pose> pose::create(Vec3f p, Vec3f d, Vec3f u) {
-    cout << "create pose " << p << " : " << d << " : " << u << endl;
     return shared_ptr<pose>( new pose(p,d,u) );
 }
 

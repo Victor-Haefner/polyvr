@@ -10,7 +10,9 @@ OSG_BEGIN_NAMESPACE;
 class VRMetaBalls : public VRObject {
     private:
         VRStagePtr stage;
+        VRStagePtr dstage;
         VRMaterialPtr mat;
+        VRMaterialPtr depth_mat;
 
         void init();
 
@@ -22,6 +24,7 @@ class VRMetaBalls : public VRObject {
         void addChild(VRObjectPtr child, bool osg = true, int place = -1);
 
         VRMaterialPtr getMaterial();
+        VRMaterialPtr getDepthMaterial();
 };
 
 OSG_END_NAMESPACE;

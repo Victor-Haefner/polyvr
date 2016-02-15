@@ -5,6 +5,7 @@
 #include <OpenSG/OSGNameAttachment.h>
 #include <OpenSG/OSGGroup.h>
 #include <OpenSG/OSGTransform.h>
+#include <OpenSG/OSGVisitSubTree.h>
 #include "core/utils/toString.h"
 #include <libxml++/nodes/element.h>
 
@@ -93,6 +94,25 @@ VRObjectPtr VRObject::hasAncestorWithAttachment(string name) {
     if (hasAttachment(name)) return ptr();
     if (getParent() == 0) return 0;
     return getParent()->hasAncestorWithAttachment(name);
+}
+
+void VRObject::addLink(VRObjectPtr obj) {
+    if (links.count(obj.get())) return;
+
+    VisitSubTreeRecPtr visitor = VisitSubTree::create();
+    visitor->setSubTreeRoot(obj->getNode());
+    NodeRecPtr visit_node = makeNodeFor(visitor);
+    addChild(visit_node);
+
+    links[obj.get()] = visit_node;
+}
+
+void VRObject::remLink(VRObjectPtr obj) {
+    if (!links.count(obj.get())) return;
+
+    NodeRecPtr node = links[obj.get()];
+    subChild(node);
+    links.erase(obj.get());
 }
 
 void VRObject::setCore(NodeCoreRecPtr c, string _type, bool force) {
@@ -326,6 +346,7 @@ bool VRObject::hasAncestor(VRObjectPtr a) {
 /** Returns the Boundingbox of the OSG Node */
 void VRObject::getBoundingBox(Vec3f& v1, Vec3f& v2) {
     Pnt3f p1, p2;
+    commitChanges();
     node->updateVolume();
     node->getVolume().getBounds(p1, p2);
     v1 = p1.subZero();

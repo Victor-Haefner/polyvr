@@ -1,47 +1,10 @@
 #include "VRPyPath.h"
 #include "VRPyBaseT.h"
+#include "VRPyPose.h"
 
-template<> PyTypeObject VRPyBaseT<OSG::path>::type = {
-    PyObject_HEAD_INIT(NULL)
-    0,                         /*ob_size*/
-    "VR.Path",             /*tp_name*/
-    sizeof(VRPyPath),             /*tp_basicsize*/
-    0,                         /*tp_itemsize*/
-    (destructor)dealloc, /*tp_dealloc*/
-    0,                         /*tp_print*/
-    0,                         /*tp_getattr*/
-    0,                         /*tp_setattr*/
-    0,                         /*tp_compare*/
-    0,                         /*tp_repr*/
-    0,                         /*tp_as_number*/
-    0,                         /*tp_as_sequence*/
-    0,                         /*tp_as_mapping*/
-    0,                         /*tp_hash */
-    0,                         /*tp_call*/
-    0,                         /*tp_str*/
-    0,                         /*tp_getattro*/
-    0,                         /*tp_setattro*/
-    0,                         /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
-    "Path binding",           /* tp_doc */
-    0,		               /* tp_traverse */
-    0,		               /* tp_clear */
-    0,		               /* tp_richcompare */
-    0,		               /* tp_weaklistoffset */
-    0,		               /* tp_iter */
-    0,		               /* tp_iternext */
-    VRPyPath::methods,             /* tp_methods */
-    0,             /* tp_members */
-    0,                         /* tp_getset */
-    0,                         /* tp_base */
-    0,                         /* tp_dict */
-    0,                         /* tp_descr_get */
-    0,                         /* tp_descr_set */
-    0,                         /* tp_dictoffset */
-    (initproc)init,      /* tp_init */
-    0,                         /* tp_alloc */
-    New,                 /* tp_new */
-};
+using namespace OSG;
+
+newPyType( path, Path, New);
 
 PyMethodDef VRPyPath::methods[] = {
     {"set", (PyCFunction)VRPyPath::set, METH_VARARGS, "Set the path - set(start pos, start dir, end pos, end dir, steps) \n       set(start pos, start dir, start up, end pos, end dir, end up, steps)" },
@@ -53,6 +16,7 @@ PyMethodDef VRPyPath::methods[] = {
     {"compute", (PyCFunction)VRPyPath::compute, METH_VARARGS, "Compute path" },
     {"update", (PyCFunction)VRPyPath::update, METH_NOARGS, "Update path" },
     {"addPoint", (PyCFunction)VRPyPath::addPoint, METH_VARARGS, "Add a point to the path - int addPoint(vec3 pos, vec3 dir, vec3 col, vec3 up)" },
+    {"getPose", (PyCFunction)VRPyPath::getPose, METH_VARARGS, "Return the pose at the path length t {0,1} - pose getPose( float t )" },
     {"getPoints", (PyCFunction)VRPyPath::getPoints, METH_NOARGS, "Return a list of the path points - [pos, dir, col, up] getPoints()" },
     {"close", (PyCFunction)VRPyPath::close, METH_NOARGS, "Close the path - close()" },
     {"getPositions", (PyCFunction)VRPyPath::getPositions, METH_NOARGS, "Return the positions from the computed path - [[x,y,z]] getPositions()" },
@@ -63,6 +27,13 @@ PyMethodDef VRPyPath::methods[] = {
     {"getLength", (PyCFunction)VRPyPath::getLength, METH_NOARGS, "Return the approximated path length - float getLength()" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyPath::getPose(VRPyPath* self, PyObject *args) {
+    if (!self->valid()) return NULL;
+    float t = 0;
+    if (! PyArg_ParseTuple(args, "f", &t)) return NULL;
+    return VRPyPose::fromObject( self->obj->getPose(t) );
+}
 
 PyObject* VRPyPath::getLength(VRPyPath* self) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::getLength - Object is invalid"); return NULL; }

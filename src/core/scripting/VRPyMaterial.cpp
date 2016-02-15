@@ -6,47 +6,9 @@
 #include "VRPyTypeCaster.h"
 #include "VRPyImage.h"
 
-template<> PyTypeObject VRPyBaseT<OSG::VRMaterial>::type = {
-    PyObject_HEAD_INIT(NULL)
-    0,                         /*ob_size*/
-    "VR.Material",             /*tp_name*/
-    sizeof(VRPyMaterial),             /*tp_basicsize*/
-    0,                         /*tp_itemsize*/
-    (destructor)dealloc, /*tp_dealloc*/
-    0,                         /*tp_print*/
-    0,                         /*tp_getattr*/
-    0,                         /*tp_setattr*/
-    0,                         /*tp_compare*/
-    0,                         /*tp_repr*/
-    0,                         /*tp_as_number*/
-    0,                         /*tp_as_sequence*/
-    0,                         /*tp_as_mapping*/
-    0,                         /*tp_hash */
-    0,                         /*tp_call*/
-    0,                         /*tp_str*/
-    0,                         /*tp_getattro*/
-    0,                         /*tp_setattro*/
-    0,                         /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
-    "VRMaterial binding",           /* tp_doc */
-    0,		               /* tp_traverse */
-    0,		               /* tp_clear */
-    0,		               /* tp_richcompare */
-    0,		               /* tp_weaklistoffset */
-    0,		               /* tp_iter */
-    0,		               /* tp_iternext */
-    VRPyMaterial::methods, /* tp_methods */
-    0, /* tp_members */
-    0,                         /* tp_getset */
-    0,                         /* tp_base */
-    0,                         /* tp_dict */
-    0,                         /* tp_descr_get */
-    0,                         /* tp_descr_set */
-    0,                         /* tp_dictoffset */
-    (initproc)init,        /* tp_init */
-    0,                     /* tp_alloc */
-    New_VRObjects_ptr,       /* tp_new */
-};
+using namespace OSG;
+
+simpleVRPyType(Material, New_VRObjects_ptr);
 
 PyMethodDef VRPyMaterial::methods[] = {
     {"getAmbient", (PyCFunction)VRPyMaterial::getAmbient, METH_NOARGS, "Returns the ambient color - [f,f,f] getAmbient()" },
@@ -57,10 +19,13 @@ PyMethodDef VRPyMaterial::methods[] = {
     {"setSpecular", (PyCFunction)VRPyMaterial::setSpecular, METH_VARARGS, "Sets the specular color - setSpecular([f,f,f])" },
     {"getTransparency", (PyCFunction)VRPyMaterial::getTransparency, METH_NOARGS, "Returns the transparency - f getTransparency()" },
     {"setTransparency", (PyCFunction)VRPyMaterial::setTransparency, METH_VARARGS, "Sets the transparency - setTransparency(f)" },
+    {"setDepthTest", (PyCFunction)VRPyMaterial::setDepthTest, METH_VARARGS, "Sets the depth test function - setDepthTest(f)\t\n'GL_ALWAYS'" },
+    {"clearTransparency", (PyCFunction)VRPyMaterial::clearTransparency, METH_NOARGS, "Clears the transparency channel - clearTransparency()" },
     {"getShininess", (PyCFunction)VRPyMaterial::getShininess, METH_NOARGS, "Returns the shininess - f getShininess()" },
     {"setShininess", (PyCFunction)VRPyMaterial::setShininess, METH_VARARGS, "Sets the shininess - setShininess(f)" },
     {"setPointSize", (PyCFunction)VRPyMaterial::setPointSize, METH_VARARGS, "Sets the GL point size - setPointSize(i)" },
     {"setLineWidth", (PyCFunction)VRPyMaterial::setLineWidth, METH_VARARGS, "Sets the GL line width - setLineWidth(i)" },
+    {"getTexture", (PyCFunction)VRPyMaterial::getTexture, METH_VARARGS, "Get the texture - texture getTexture( int unit = 0 )" },
     {"setQRCode", (PyCFunction)VRPyMaterial::setQRCode, METH_VARARGS, "Encode a string as QR code texture - setQRCode(string, fg[r,g,b], bg[r,g,b], offset)" },
     {"setMagMinFilter", (PyCFunction)VRPyMaterial::setMagMinFilter, METH_VARARGS, "Set the mag && min filtering mode - setMagMinFilter( mag, min)\n possible values for mag are GL_X && min can be GL_X || GL_X_MIPMAP_Y, where X && Y can be NEAREST || LINEAR" },
     {"setVertexProgram", (PyCFunction)VRPyMaterial::setVertexProgram, METH_VARARGS, "Set vertex program - setVertexProgram( myScript )" },
@@ -81,10 +46,31 @@ PyMethodDef VRPyMaterial::methods[] = {
     {NULL}  /* Sentinel */
 };
 
+PyObject* VRPyMaterial::clearTransparency(VRPyMaterial* self) {
+	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::clearTransparency, C obj is invalid"); return NULL; }
+	self->objPtr->clearTransparency();
+	Py_RETURN_TRUE;
+}
+
 PyObject* VRPyMaterial::setDefaultVertexShader(VRPyMaterial* self) {
 	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setDefaultVertexShader, C obj is invalid"); return NULL; }
 	self->objPtr->setDefaultVertexShader();
 	Py_RETURN_TRUE;
+}
+
+PyObject* VRPyMaterial::setDepthTest(VRPyMaterial* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+	const char* s=0;
+    if (! PyArg_ParseTuple(args, "s", (char*)&s)) return NULL;
+	if (s) self->objPtr->setDepthTest( toGLConst(s) );
+	Py_RETURN_TRUE;
+}
+
+PyObject* VRPyMaterial::getTexture(VRPyMaterial* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+	int i=0;
+    if (! PyArg_ParseTuple(args, "|i", &i)) return NULL;
+	return VRPyImage::fromSharedPtr( self->objPtr->getTexture(i) );
 }
 
 PyObject* VRPyMaterial::setShaderParameter(VRPyMaterial* self, PyObject* args) {

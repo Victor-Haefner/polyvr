@@ -77,8 +77,26 @@ PyMethodDef VRPyObject::methods[] = {
     {"setTravMask", (PyCFunction)VRPyObject::setTravMask, METH_VARARGS, "Set the traversal mask of the object - setTravMask( int mask )" },
     {"setPersistency", (PyCFunction)VRPyObject::setPersistency, METH_VARARGS, "Set the persistency level - setPersistency( int persistency )\n   0: not persistent\n   1: persistent hiarchy\n   2: transformation\n   3: geometry\n   4: fully persistent" },
     {"getPersistency", (PyCFunction)VRPyObject::getPersistency, METH_NOARGS, "Get the persistency level - getPersistency()" },
+    {"addLink", (PyCFunction)VRPyObject::addLink, METH_VARARGS, "Link subtree - addLink( object )" },
+    {"remLink", (PyCFunction)VRPyObject::remLink, METH_VARARGS, "Unlink subtree - remLink( object )" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyObject::addLink(VRPyObject* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    VRPyObject* o;
+    if (!PyArg_ParseTuple(args, "O", &o)) return NULL;
+    self->objPtr->addLink( o->objPtr );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyObject::remLink(VRPyObject* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    VRPyObject* o;
+    if (!PyArg_ParseTuple(args, "O", &o)) return NULL;
+    self->objPtr->remLink( o->objPtr );
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyObject::getID(VRPyObject* self) {
     if (!self->valid()) return NULL;

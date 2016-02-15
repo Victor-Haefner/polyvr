@@ -1,4 +1,5 @@
 #include "VRGeometry.h"
+#include "VRGeoData.h"
 #include <libxml++/nodes/element.h>
 
 #include <OpenSG/OSGSimpleMaterial.h>
@@ -241,14 +242,15 @@ Vec4f morphColor4(const Vec3f& c) { return Vec4f(c[0], c[1], c[2], 1); }
 Vec4f morphColor4(const Vec4f& c) { return c; }
 
 void VRGeometry::merge(VRGeometryPtr geo) {
-    if (!meshSet) {
-        setIndices(GeoUInt32PropertyRecPtr( GeoUInt32Property::create()) );
-        setTypes(GeoUInt8PropertyRecPtr( GeoUInt8Property::create()) );
-        setNormals(GeoVec3fPropertyRecPtr( GeoVec3fProperty::create()) );
-        if (geo->mesh->getColors()) setColors(GeoVec4fPropertyRecPtr( GeoVec4fProperty::create()) );
-        setLengths(GeoUInt32PropertyRecPtr( GeoUInt32Property::create()) );
-        setPositions(GeoPnt3fPropertyRecPtr( GeoPnt3fProperty::create()) );
-    }
+    if (!geo) return;
+    if (!geo->mesh) return;
+    if (!meshSet) setMesh(Geometry::create());
+    if (!mesh->getPositions()) setPositions(GeoPnt3fPropertyRecPtr( GeoPnt3fProperty::create()) );
+    if (!mesh->getNormals()) setNormals(GeoVec3fPropertyRecPtr( GeoVec3fProperty::create()) );
+    if (geo->mesh->getColors() && !mesh->getColors()) setColors(GeoVec4fPropertyRecPtr( GeoVec4fProperty::create()) );
+    if (!mesh->getIndices()) setIndices(GeoUInt32PropertyRecPtr( GeoUInt32Property::create()) );
+    if (!mesh->getTypes()) setTypes(GeoUInt8PropertyRecPtr( GeoUInt8Property::create()) );
+    if (!mesh->getLengths()) setLengths(GeoUInt32PropertyRecPtr( GeoUInt32Property::create()) );
 
     Matrix M = getWorldMatrix();
     M.invert();
@@ -257,6 +259,7 @@ void VRGeometry::merge(VRGeometryPtr geo) {
     GeoVectorProperty *v1, *v2;
     v1 = mesh->getPositions();
     v2 = geo->mesh->getPositions();
+    if (!v1 || !v2) return;
     int N = v1->size();
     for (uint i=0; i<v2->size(); i++) {
         Pnt3f p = v2->getValue<Pnt3f>(i);
@@ -266,6 +269,7 @@ void VRGeometry::merge(VRGeometryPtr geo) {
 
     v1 = mesh->getNormals();
     v2 = geo->mesh->getNormals();
+    if (!v1 || !v2) return;
     for (uint i=0; i<v2->size(); i++)  v1->addValue(v2->getValue<Vec3f>(i));
 
     auto c1 = mesh->getColors();
@@ -384,16 +388,8 @@ void VRGeometry::removeSelection(VRSelectionPtr sel) {
 }
 
 VRGeometryPtr VRGeometry::copySelection(VRSelectionPtr sel) {
-    auto pos = mesh->getPositions();
-    auto norms = mesh->getNormals();
-    auto cols = mesh->getColors();
-    auto tcs = mesh->getTexCoords();
-    GeoPnt3fPropertyRecPtr sel_pos = GeoPnt3fProperty::create();
-    GeoVec3fPropertyRecPtr sel_norms = GeoVec3fProperty::create();
-    GeoVec4fPropertyRecPtr sel_cols = GeoVec4fProperty::create();
-    GeoVec2fPropertyRecPtr sel_tcs = GeoVec2fProperty::create();
-    GeoUInt32PropertyRecPtr sel_inds = GeoUInt32Property::create();
-    int Nc = getColorChannels( cols );
+    VRGeoData self(ptr());
+    VRGeoData selData;
 
     // copy selected vertices
     auto sinds = sel->getSubselection(ptr());
@@ -402,13 +398,7 @@ VRGeometryPtr VRGeometry::copySelection(VRSelectionPtr sel) {
     map<int, int> mapping;
     int k = 0;
     for (int i : sinds) {
-        sel_pos->addValue( pos->getValue<Pnt3f>(i) );
-        if (norms) sel_norms->addValue( norms->getValue<Vec3f>(i) );
-        if (tcs) sel_tcs->addValue( tcs->getValue<Vec2f>(i) );
-        if (cols) {
-            if (Nc == 3) sel_cols->addValue( Vec4f(cols->getValue<Vec3f>(i)) );
-            if (Nc == 4) sel_cols->addValue( cols->getValue<Vec4f>(i) );
-        }
+        selData.pushVert( self, i );
         mapping[i] = k;
         k++;
     }
@@ -418,18 +408,25 @@ VRGeometryPtr VRGeometry::copySelection(VRSelectionPtr sel) {
     for (int i=0; !it.isAtEnd(); ++it, i++) {
         Vec3i idx = Vec3i( it.getPositionIndex(0), it.getPositionIndex(1), it.getPositionIndex(2) );
         if ( mapping.count(idx[0]) && mapping.count(idx[1]) && mapping.count(idx[2]) ) {
-            for (int j=0; j<3; j++) sel_inds->addValue( mapping[ idx[j] ] );
+            selData.pushTri(mapping[idx[0]], mapping[idx[1]], mapping[idx[2]]);
         }
     }
 
-    auto geo = VRGeometry::create(getName());
-    geo->setType(GL_TRIANGLES);
-    geo->setPositions(sel_pos);
-    geo->setNormals(sel_norms);
-    if (cols) geo->setColors(sel_cols);
-    if (tcs) geo->setTexCoords(sel_tcs);
-    geo->setIndices(sel_inds);
-    return geo;
+    // copy selected primitives
+    /*for (auto& p : self) {
+        bool mapped = true;
+        for (int i : p.indices) if (!mapping.count(i)) { mapped = false; break; }
+        if (!mapped) continue;
+        vector<int> ninds;
+        for (int i : p.indices) {
+            ninds.push_back( mapping[i] );
+        }
+        p.indices = ninds;
+        cout << "prim " << p.type << " " << p.tID << " " << p.lID << " " << p.indices.size() << endl;
+        selData.pushPrim(p);
+    }*/
+
+    return selData.asGeometry(getName());
 }
 
 VRGeometryPtr VRGeometry::separateSelection(VRSelectionPtr sel) {
