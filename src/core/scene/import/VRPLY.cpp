@@ -75,6 +75,9 @@ VRGeometryPtr loadPly(string filename) {
                     if (prop.name == "r") { iss >> c[0]; doC = 1; }
                     if (prop.name == "g") { iss >> c[1]; doC = 1; }
                     if (prop.name == "b") { iss >> c[2]; doC = 1; }
+                    if (prop.name == "red") { iss >> c[0]; doC = 1; }
+                    if (prop.name == "green") { iss >> c[1]; doC = 1; }
+                    if (prop.name == "blue") { iss >> c[2]; doC = 1; }
                     if (prop.name == "s") { iss >> t[0]; doT = 1; }
                     if (prop.name == "t") { iss >> t[1]; doT = 1; }
                 }
