@@ -163,7 +163,11 @@ void VRGeoData::setIndices(Primitive& p) {
     int t = data->types->getValue(p.tID);
     int l = data->lengths->getValue(p.tID);
     int Np = primN(t);
-    for (int j=0; j<Np; j++) inds.push_back(p.lID + j);
+    for (int j=0; j<Np; j++) {
+        int k = p.lID + j;
+        int i = data->indices->getValue(k);
+        inds.push_back(i);
+    }
     p.lID += Np;
     if (p.lID >= l) {
         p.tID++;
