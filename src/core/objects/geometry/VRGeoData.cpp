@@ -1,5 +1,6 @@
 #include "VRGeoData.h"
 #include "VRGeometry.h"
+#include "core/utils/toString.h"
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGGeometry.h>
 
@@ -61,6 +62,8 @@ bool VRGeoData::valid() {
     if (!data->pos->size()) { cout << "Triangulator Error: no pos!\n"; return false; }
     return true;
 }
+
+int VRGeoData::size() { return data->pos->size(); }
 
 int VRGeoData::pushVert(Pnt3f p) { data->pos->addValue(p); return data->pos->size()-1; }
 int VRGeoData::pushVert(Pnt3f p, Vec3f n) { data->norms->addValue(n); return pushVert(p); }
@@ -144,6 +147,24 @@ VRGeometryPtr VRGeoData::asGeometry(string name) {
     auto geo = VRGeometry::create(name);
     apply(geo);
     return geo;
+}
+
+string VRGeoData::status() {
+    string res;
+    res += "VRGeoData stats:\n";
+    res += " " + toString(data->types->size()) + " types: ";
+    for (int i=0; i<data->types->size(); i++) res += " " + toString(data->types->getValue(i));
+    res += "\n";
+    res += " " + toString(data->lengths->size()) + " lengths: ";
+    for (int i=0; i<data->lengths->size(); i++) res += " " + toString(data->lengths->getValue(i));
+    res += "\n";
+    res += " " + toString(data->pos->size()) + " positions\n";
+    res += " " + toString(data->norms->size()) + " normals\n";
+    res += " " + toString(data->indices->size()) + " indices\n";
+    res += " " + toString(data->cols3->size()) + " colors 3\n";
+    res += " " + toString(data->cols4->size()) + " colors 4\n";
+    res += " " + toString(data->texs->size()) + " texture coordinates\n";
+    return res;
 }
 
 VRGeoData::PrimItr::PrimItr(VRGeoData* d, Primitive* p) { data = d; itr = p; }
