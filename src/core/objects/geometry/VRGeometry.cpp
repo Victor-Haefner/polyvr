@@ -245,18 +245,47 @@ void VRGeometry::merge(VRGeometryPtr geo) {
     if (!geo) return;
     if (!geo->mesh) return;
     if (!meshSet) setMesh(Geometry::create());
-    if (!mesh->getPositions()) setPositions(GeoPnt3fPropertyRecPtr( GeoPnt3fProperty::create()) );
+
+    VRGeoData self(ptr());
+    VRGeoData other(geo);
+
+    //for (auto p : other) { if (p.type == 4 || p.type == 6) return; break; }
+
+    //cout << "merge " << self.status() << endl;
+    //cout << " with " << other.status() << endl;
+
+    /*if (!mesh->getPositions()) setPositions(GeoPnt3fPropertyRecPtr( GeoPnt3fProperty::create()) );
     if (!mesh->getNormals()) setNormals(GeoVec3fPropertyRecPtr( GeoVec3fProperty::create()) );
     if (geo->mesh->getColors() && !mesh->getColors()) setColors(GeoVec4fPropertyRecPtr( GeoVec4fProperty::create()) );
     if (!mesh->getIndices()) setIndices(GeoUInt32PropertyRecPtr( GeoUInt32Property::create()) );
     if (!mesh->getTypes()) setTypes(GeoUInt8PropertyRecPtr( GeoUInt8Property::create()) );
-    if (!mesh->getLengths()) setLengths(GeoUInt32PropertyRecPtr( GeoUInt32Property::create()) );
+    if (!mesh->getLengths()) setLengths(GeoUInt32PropertyRecPtr( GeoUInt32Property::create()) );*/
 
     Matrix M = getWorldMatrix();
     M.invert();
     M.mult( geo->getWorldMatrix() );
 
-    GeoVectorProperty *v1, *v2;
+    map<int, int> mapping;
+
+    for (auto p : other) {
+        //cout << "prim " << p.asString() << endl;
+        vector<int> ninds;
+        for (auto i : p.indices) {
+            //if (p.type == 6) cout << geo->getMesh()->getPositions()->getValue<Pnt3f>(i) << endl;
+            if (!mapping.count(i)) mapping[i] = self.pushVert(other, i, M);
+            ninds.push_back(mapping[i]);
+        }
+        //if (p.type == 6) cout << p.asString() << endl;
+        p.indices = ninds;
+        //if (p.type == 6) cout << p.asString() << endl;
+        self.pushPrim(p);
+    }
+    self.apply(ptr());
+
+    //cout << " res  " << self.status() << endl;
+
+
+    /*GeoVectorProperty *v1, *v2;
     v1 = mesh->getPositions();
     v2 = geo->mesh->getPositions();
     if (!v1 || !v2) return;
@@ -291,28 +320,7 @@ void VRGeometry::merge(VRGeometryPtr geo) {
 
     i1 = mesh->getIndices();
     i2 = geo->mesh->getIndices();
-    for (uint i=0; i<i2->size(); i++) i1->addValue(i2->getValue(i) + N);
-
-    /*cout << "merge sizes:\n";
-    if (mesh->getPositions()) cout << " pos: " << mesh->getPositions()->size() << endl;
-    else cout << "no positions\n";
-    if (mesh->getNormals()) cout << " norm: " << mesh->getNormals()->size() << endl;
-    else cout << "no normals\n";
-    if (mesh->getColors()) cout << " cols: " << mesh->getColors()->size() << endl;
-    else cout << "no colors\n";
-    if (mesh->getTypes()) cout << " types: " << mesh->getTypes()->size() << endl;
-    else cout << "no types\n";
-    if (mesh->getLengths()) {
-        cout << " lengths: " << mesh->getLengths()->size() << endl;
-        int lsum = 0;
-        for (int i=0; i<mesh->getLengths()->size(); i++) lsum += mesh->getLengths()->getValue<int>(i);
-        cout << " lengths sum: " << lsum << endl;
-    } else cout << "no lengths\n";
-    if (mesh->getIndices()) cout << " inds: " << mesh->getIndices()->size() << endl;
-    else cout << "no indices\n";
-    cout << "pos   idx " << mesh->getIndex(Geometry::PositionsIndex) << " " << geo->mesh->getIndex(Geometry::PositionsIndex) << endl;
-    cout << "norms idx " << mesh->getIndex(Geometry::NormalsIndex) << " " << geo->mesh->getIndex(Geometry::NormalsIndex) << endl;
-    cout << endl;*/
+    for (uint i=0; i<i2->size(); i++) i1->addValue(i2->getValue(i) + N);*/
 }
 
 void VRGeometry::removeSelection(VRSelectionPtr sel) {

@@ -582,7 +582,7 @@ void VRSTEP::buildGeometries() {
     for (auto BrepShape : instancesByType["Advanced_Brep_Shape_Representation"]) {
 
         string name = BrepShape.get<0, string, vector<STEPentity*> >();
-        auto geo = VRTransform::create(name);
+        auto geo = VRGeometry::create(name);
 
         for (auto i : BrepShape.get<1, string, vector<STEPentity*> >() ) {
             auto& Item = instances[i];
@@ -599,13 +599,18 @@ void VRSTEP::buildGeometries() {
                             Bound bound(b, instances);
                             surface.bounds.push_back(bound);
                         }
-                        geo->addChild( surface.build(surface.type) );
+                        //geo->addChild( surface.build(surface.type) );
+                        geo->merge( surface.build(surface.type) );
+                        static int ii = 0; ii++;
+                        if (ii >= 17) break;
                     }
                 }
+                break;
             }
         }
 
         resGeos[BrepShape.entity] = geo;
+        break;
     }
 }
 
