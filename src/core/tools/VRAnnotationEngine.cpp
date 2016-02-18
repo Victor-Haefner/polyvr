@@ -26,7 +26,7 @@ VRAnnotationEngine::VRAnnotationEngine() : VRGeometry("AnnEng") {
 
     setSize(0.2);
     setBillboard(false);
-    setOnTop(false);
+    setScreensize(false);
 
     clear();
 }
@@ -105,9 +105,9 @@ void VRAnnotationEngine::set(int i, Vec3f p, string s) {
     }
 }
 
-void VRAnnotationEngine::setOnTop(bool b) { mat->setShaderParameter("onTop", Real32(b)); }
 void VRAnnotationEngine::setSize(float f) { mat->setShaderParameter("size", Real32(f)); }
 void VRAnnotationEngine::setBillboard(bool b) { mat->setShaderParameter("doBillboard", Real32(b)); }
+void VRAnnotationEngine::setScreensize(bool b) { mat->setShaderParameter("screen_size", Real32(b)); }
 
 void VRAnnotationEngine::updateTexture() {
     string txt;
@@ -119,7 +119,6 @@ void VRAnnotationEngine::updateTexture() {
 string VRAnnotationEngine::vp =
 "#version 120\n"
 GLSL(
-uniform float onTop;
 varying mat4 model;
 varying vec3 normal;
 
@@ -130,7 +129,6 @@ void main( void ) {
     model = gl_ModelViewProjectionMatrix;
     gl_Position = model*osg_Vertex;
     normal = osg_Normal.xyz;
-    if (onTop > 0.0) gl_Position.z -= 0.5;
 }
 );
 
@@ -155,6 +153,7 @@ layout (points) in;
 layout (triangle_strip, max_vertices=60) out;
 
 uniform float doBillboard;
+uniform float screen_size;
 uniform float size;
 uniform vec2 OSGViewportSize;
 in mat4 model[];
@@ -175,18 +174,24 @@ void emitQuad(in float offset, in vec4 tc) {
  vec4 p2;
  vec4 p3;
  vec4 p4;
+ vec4 p = gl_PositionIn[0];
+
+ if (screen_size > 0.5) {
+    p.xyz = p.xyz/p.w;
+    p.w = 1;
+ }
 
  if (doBillboard < 0.5) {
-  p1 = gl_PositionIn[0]+model[0]*vec4(-sx+ox,-sy,0,0);
-  p2 = gl_PositionIn[0]+model[0]*vec4(-sx+ox, sy,0,0);
-  p3 = gl_PositionIn[0]+model[0]*vec4( sx+ox, sy,0,0);
-  p4 = gl_PositionIn[0]+model[0]*vec4( sx+ox,-sy,0,0);
+  p1 = p+model[0]*vec4(-sx+ox,-sy,0,0);
+  p2 = p+model[0]*vec4(-sx+ox, sy,0,0);
+  p3 = p+model[0]*vec4( sx+ox, sy,0,0);
+  p4 = p+model[0]*vec4( sx+ox,-sy,0,0);
  } else {
   float a = OSGViewportSize.y/OSGViewportSize.x;
-  p1 = gl_PositionIn[0]+vec4(-sx*a+ox*a,-sy,0,0);
-  p2 = gl_PositionIn[0]+vec4(-sx*a+ox*a, sy,0,0);
-  p3 = gl_PositionIn[0]+vec4( sx*a+ox*a, sy,0,0);
-  p4 = gl_PositionIn[0]+vec4( sx*a+ox*a,-sy,0,0);
+  p1 = p+vec4(-sx*a+ox*a,-sy,0,0);
+  p2 = p+vec4(-sx*a+ox*a, sy,0,0);
+  p3 = p+vec4( sx*a+ox*a, sy,0,0);
+  p4 = p+vec4( sx*a+ox*a,-sy,0,0);
  }
 
  emitVertex(p1, vec2(tc[0], tc[2]));

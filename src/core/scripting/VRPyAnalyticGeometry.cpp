@@ -47,14 +47,18 @@ template<> PyTypeObject VRPyBaseT<OSG::VRAnalyticGeometry>::type = {
 
 PyMethodDef VRPyAnalyticGeometry::methods[] = {
     {"setVector", (PyCFunction)VRPyAnalyticGeometry::setVector, METH_VARARGS, "Add/set a an annotated vector - setVector(int i, [pos], [vec], [col], str label)" },
-    {"setLabelSize", (PyCFunction)VRPyAnalyticGeometry::setLabelSize, METH_VARARGS, "Set the size of the labels - setLabelSize( float s )" },
+    {"setLabelParams", (PyCFunction)VRPyAnalyticGeometry::setLabelParams, METH_VARARGS, "Set the size of the labels - setLabelParams( float s, bool screen_size, bool billboard )" },
     {"clear", (PyCFunction)VRPyAnalyticGeometry::clear, METH_NOARGS, "Clear data" },
     {NULL}  /* Sentinel */
 };
 
-PyObject* VRPyAnalyticGeometry::setLabelSize(VRPyAnalyticGeometry* self, PyObject* args) {
+PyObject* VRPyAnalyticGeometry::setLabelParams(VRPyAnalyticGeometry* self, PyObject* args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyAnalyticGeometry::setLabelSize - Object is invalid"); return NULL; }
-    self->objPtr->setLabelSize( parseFloat(args) );
+    float s;
+    bool ss = false;
+    bool bb = false;
+    if (! PyArg_ParseTuple(args, "f|ii", &s, &ss, &bb)) return NULL;
+    self->objPtr->setLabelParams( s, ss, bb );
     Py_RETURN_TRUE;
 }
 

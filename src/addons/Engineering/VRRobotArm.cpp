@@ -14,7 +14,7 @@ VRRobotArm::VRRobotArm() {
     robotPath = new path();
     anim = new VRAnimation("animOnPath");
     ageo = VRAnalyticGeometry::create();
-    ageo->setLabelSize(0.03);
+    ageo->setLabelParams(0.03);
 
     animPtr = VRFunction<float>::create("animOnPath", boost::bind(&VRRobotArm::animOnPath, this, _1 ) );
     anim->setSimpleCallback(animPtr, 1);

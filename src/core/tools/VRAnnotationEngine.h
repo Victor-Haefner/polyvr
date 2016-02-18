@@ -41,7 +41,7 @@ class VRAnnotationEngine : public VRGeometry {
         void setColor(Vec4f c);
         void setBackground(Vec4f c);
         void setBillboard(bool b);
-        void setOnTop(bool b);
+        void setScreensize(bool b);
 };
 
 OSG_END_NAMESPACE;

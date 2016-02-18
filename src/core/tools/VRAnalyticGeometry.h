@@ -30,6 +30,9 @@ class VRAnalyticGeometry : public VRObject {
         VRGeometryPtr vectorEndsGeometry = 0;
         vector<Vector> vectors;
 
+    protected:
+        void init();
+
     public:
         VRAnalyticGeometry();
         ~VRAnalyticGeometry();
@@ -37,7 +40,7 @@ class VRAnalyticGeometry : public VRObject {
         static VRAnalyticGeometryPtr create();
         VRAnalyticGeometryPtr ptr();
 
-        void setLabelSize(float s);
+        void setLabelParams(float size, bool screen_size = false, bool billboard = false);
 
         void setVector(int i, Vec3f pos, Vec3f vec, Vec3f color, string label="");
         void clear();
