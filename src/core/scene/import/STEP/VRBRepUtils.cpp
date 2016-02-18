@@ -35,9 +35,9 @@ vector<float> VRBRepUtils::angleFrame(float a1, float a2) {
     angles.push_back(a2);
 
     // print
-    cout << "angles: " << a1 << " " << a2 << " :";
+    /*cout << "angles: " << a1 << " " << a2 << " :";
     for (float a : angles) cout << " " << a;
-    cout << endl;
+    cout << endl;*/
 
     /*
 

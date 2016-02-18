@@ -245,18 +245,47 @@ void VRGeometry::merge(VRGeometryPtr geo) {
     if (!geo) return;
     if (!geo->mesh) return;
     if (!meshSet) setMesh(Geometry::create());
-    if (!mesh->getPositions()) setPositions(GeoPnt3fPropertyRecPtr( GeoPnt3fProperty::create()) );
+
+    VRGeoData self(ptr());
+    VRGeoData other(geo);
+
+    //for (auto p : other) { if (p.type == 4 || p.type == 6) return; break; }
+
+    //cout << "merge " << self.status() << endl;
+    //cout << " with " << other.status() << endl;
+
+    /*if (!mesh->getPositions()) setPositions(GeoPnt3fPropertyRecPtr( GeoPnt3fProperty::create()) );
     if (!mesh->getNormals()) setNormals(GeoVec3fPropertyRecPtr( GeoVec3fProperty::create()) );
     if (geo->mesh->getColors() && !mesh->getColors()) setColors(GeoVec4fPropertyRecPtr( GeoVec4fProperty::create()) );
     if (!mesh->getIndices()) setIndices(GeoUInt32PropertyRecPtr( GeoUInt32Property::create()) );
     if (!mesh->getTypes()) setTypes(GeoUInt8PropertyRecPtr( GeoUInt8Property::create()) );
-    if (!mesh->getLengths()) setLengths(GeoUInt32PropertyRecPtr( GeoUInt32Property::create()) );
+    if (!mesh->getLengths()) setLengths(GeoUInt32PropertyRecPtr( GeoUInt32Property::create()) );*/
 
     Matrix M = getWorldMatrix();
     M.invert();
     M.mult( geo->getWorldMatrix() );
 
-    GeoVectorProperty *v1, *v2;
+    map<int, int> mapping;
+
+    for (auto p : other) {
+        //cout << "prim " << p.asString() << endl;
+        vector<int> ninds;
+        for (auto i : p.indices) {
+            //if (p.type == 6) cout << geo->getMesh()->getPositions()->getValue<Pnt3f>(i) << endl;
+            if (!mapping.count(i)) mapping[i] = self.pushVert(other, i, M);
+            ninds.push_back(mapping[i]);
+        }
+        //if (p.type == 6) cout << p.asString() << endl;
+        p.indices = ninds;
+        //if (p.type == 6) cout << p.asString() << endl;
+        self.pushPrim(p);
+    }
+    self.apply(ptr());
+
+    //cout << " res  " << self.status() << endl;
+
+
+    /*GeoVectorProperty *v1, *v2;
     v1 = mesh->getPositions();
     v2 = geo->mesh->getPositions();
     if (!v1 || !v2) return;
@@ -291,58 +320,20 @@ void VRGeometry::merge(VRGeometryPtr geo) {
 
     i1 = mesh->getIndices();
     i2 = geo->mesh->getIndices();
-    for (uint i=0; i<i2->size(); i++) i1->addValue(i2->getValue(i) + N);
-
-    /*cout << "merge sizes:\n";
-    if (mesh->getPositions()) cout << " pos: " << mesh->getPositions()->size() << endl;
-    else cout << "no positions\n";
-    if (mesh->getNormals()) cout << " norm: " << mesh->getNormals()->size() << endl;
-    else cout << "no normals\n";
-    if (mesh->getColors()) cout << " cols: " << mesh->getColors()->size() << endl;
-    else cout << "no colors\n";
-    if (mesh->getTypes()) cout << " types: " << mesh->getTypes()->size() << endl;
-    else cout << "no types\n";
-    if (mesh->getLengths()) {
-        cout << " lengths: " << mesh->getLengths()->size() << endl;
-        int lsum = 0;
-        for (int i=0; i<mesh->getLengths()->size(); i++) lsum += mesh->getLengths()->getValue<int>(i);
-        cout << " lengths sum: " << lsum << endl;
-    } else cout << "no lengths\n";
-    if (mesh->getIndices()) cout << " inds: " << mesh->getIndices()->size() << endl;
-    else cout << "no indices\n";
-    cout << "pos   idx " << mesh->getIndex(Geometry::PositionsIndex) << " " << geo->mesh->getIndex(Geometry::PositionsIndex) << endl;
-    cout << "norms idx " << mesh->getIndex(Geometry::NormalsIndex) << " " << geo->mesh->getIndex(Geometry::NormalsIndex) << endl;
-    cout << endl;*/
+    for (uint i=0; i<i2->size(); i++) i1->addValue(i2->getValue(i) + N);*/
 }
 
 void VRGeometry::removeSelection(VRSelectionPtr sel) {
     if (!mesh) return;
-    auto pos = mesh->getPositions();
-    auto norms = mesh->getNormals();
-    auto cols = mesh->getColors();
-    auto tcs = mesh->getTexCoords();
-    if (!pos) return;
-    GeoPnt3fPropertyRecPtr new_pos = GeoPnt3fProperty::create();
-    GeoVec3fPropertyRecPtr new_norms = GeoVec3fProperty::create();
-    GeoUInt32PropertyRecPtr new_inds = GeoUInt32Property::create();
-    GeoUInt32PropertyRecPtr new_lengths = GeoUInt32Property::create();
-    GeoVec4fPropertyRecPtr new_cols = GeoVec4fProperty::create();
-    GeoVec2fPropertyRecPtr new_tcs = GeoVec2fProperty::create();
-    int Nc = getColorChannels( cols );
 
-    cout << "VRGeometry::removeSelection " << Nc << endl;
+    VRGeoData newData;
+    VRGeoData self(ptr());
 
     map<int, int> mapping;
     auto addVertex = [&](int i, bool mapit = true) {
-        int j = new_pos->size();
+        int j = newData.size();
         if (mapit) mapping[i] = j;
-        new_pos->addValue( pos->getValue<Pnt3f>(i) );
-        if (norms) new_norms->addValue( norms->getValue<Vec3f>(i) );
-        if (tcs) new_tcs->addValue( tcs->getValue<Vec2f>(i) );
-        if (cols) {
-            if (Nc == 3) new_cols->addValue( Vec4f(cols->getValue<Vec3f>(i)) );
-            if (Nc == 4) new_cols->addValue( cols->getValue<Vec4f>(i) );
-        }
+        newData.pushVert(self, i);
         return j;
     };
 
@@ -350,7 +341,7 @@ void VRGeometry::removeSelection(VRSelectionPtr sel) {
     auto sinds = sel->getSubselection(ptr());
     std::sort(sinds.begin(), sinds.end());
     std::unique(sinds.begin(), sinds.end());
-    for (int k=0, i=0; i < pos->size(); i++) {
+    for (int k=0, i=0; i < self.size(); i++) {
         bool selected = false;
         if (k < sinds.size()) if (i == sinds[k]) selected = true;
         if (!selected) addVertex(i);
@@ -358,33 +349,24 @@ void VRGeometry::removeSelection(VRSelectionPtr sel) {
     }
 
     // copy not selected and partially selected triangles
-    TriangleIterator it(mesh);
-    for (int i=0; !it.isAtEnd(); ++it, i++) {
-        Vec3i idx = Vec3i( it.getPositionIndex(0), it.getPositionIndex(1), it.getPositionIndex(2) );
-        Vec3b bmap = Vec3b(mapping.count(idx[0]), mapping.count(idx[1]), mapping.count(idx[2]));
-        bool all = bmap[0] && bmap[1] && bmap[2];
-        bool any = bmap[0] || bmap[1] || bmap[2];
-        if (all) for (int j=0; j<3; j++) new_inds->addValue( mapping[ idx[j] ] );
-        else if (any) {
-            for (int j=0; j<3; j++) {
-                if (mapping.count(idx[j]) == 0) new_inds->addValue( addVertex(idx[j], false) );
-                else new_inds->addValue( mapping[ idx[j] ] );
-            }
+    for (auto p : self) {
+        bool all = true;
+        bool any = false;
+        for (int i : p.indices) {
+            if ( mapping.count(i) ) any = true;
+            else all = false;
         }
+
+        vector<int> ninds;
+        for (int i : p.indices) {
+            if ( mapping.count(i) ) ninds.push_back( mapping[i] );
+            else ninds.push_back( addVertex(i, false) );
+        }
+        p.indices = ninds;
+        if (all || any) newData.pushPrim(p);
     }
 
-    new_lengths->addValue( new_inds->size() );
-
-    setType(GL_TRIANGLES);
-    setPositions(new_pos);
-    if (norms) setNormals(new_norms);
-    if (tcs) setTexCoords(new_tcs);
-    if (cols) setColors(new_cols);
-    setIndices(new_inds);
-    setLengths(new_lengths);
-
-    mesh->setIndex(mesh->getIndex(Geometry::PositionsIndex), Geometry::ColorsIndex);
-    mesh->setIndex(mesh->getIndex(Geometry::PositionsIndex), Geometry::NormalsIndex);
+    newData.apply(ptr());
 }
 
 VRGeometryPtr VRGeometry::copySelection(VRSelectionPtr sel) {
@@ -403,28 +385,18 @@ VRGeometryPtr VRGeometry::copySelection(VRSelectionPtr sel) {
         k++;
     }
 
-    // copy selected triangles
-    TriangleIterator it(mesh);
-    for (int i=0; !it.isAtEnd(); ++it, i++) {
-        Vec3i idx = Vec3i( it.getPositionIndex(0), it.getPositionIndex(1), it.getPositionIndex(2) );
-        if ( mapping.count(idx[0]) && mapping.count(idx[1]) && mapping.count(idx[2]) ) {
-            selData.pushTri(mapping[idx[0]], mapping[idx[1]], mapping[idx[2]]);
-        }
-    }
-
     // copy selected primitives
-    /*for (auto& p : self) {
+    for (auto& p : self) {
         bool mapped = true;
         for (int i : p.indices) if (!mapping.count(i)) { mapped = false; break; }
         if (!mapped) continue;
+
         vector<int> ninds;
-        for (int i : p.indices) {
-            ninds.push_back( mapping[i] );
-        }
+        for (int i : p.indices) ninds.push_back( mapping[i] );
         p.indices = ninds;
-        cout << "prim " << p.type << " " << p.tID << " " << p.lID << " " << p.indices.size() << endl;
+
         selData.pushPrim(p);
-    }*/
+    }
 
     return selData.asGeometry(getName());
 }
