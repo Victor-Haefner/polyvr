@@ -28,6 +28,7 @@ VRAnalyticGeometry::VRAnalyticGeometry() : VRObject("AnalyticGeometry") {
     auto mat = VRMaterial::create("AnalyticGeometry");
     mat->setLit(false);
     mat->setLineWidth(3);
+    mat->setDepthTest(GL_ALWAYS);
     vectorLinesGeometry->setMaterial(mat);
 
     // ends
@@ -44,21 +45,32 @@ VRAnalyticGeometry::VRAnalyticGeometry() : VRObject("AnalyticGeometry") {
     mat = VRMaterial::create("AnalyticGeometry2");
     mat->setLit(false);
     mat->setPointSize(11);
+    mat->setDepthTest(GL_ALWAYS);
     vectorEndsGeometry->setMaterial(mat);
 }
 
 VRAnalyticGeometry::~VRAnalyticGeometry() {}
 
 VRAnalyticGeometryPtr VRAnalyticGeometry::ptr() { return static_pointer_cast<VRAnalyticGeometry>( shared_from_this() ); }
-VRAnalyticGeometryPtr VRAnalyticGeometry::create() {
+VRAnalyticGeometryPtr VRAnalyticGeometry::create()  {
     auto ptr = shared_ptr<VRAnalyticGeometry>(new VRAnalyticGeometry() );
-    ptr->addChild(ptr->vectorLinesGeometry);
-    ptr->addChild(ptr->vectorEndsGeometry);
-    ptr->addChild(ptr->ae);
+    ptr->init();
     return ptr;
 }
 
-void VRAnalyticGeometry::setLabelSize(float s) { ae->setSize(s); }
+void VRAnalyticGeometry::init() {
+    addChild(vectorLinesGeometry);
+    addChild(vectorEndsGeometry);
+    addChild(ae);
+
+    ae->getMaterial()->setDepthTest(GL_ALWAYS);
+}
+
+void VRAnalyticGeometry::setLabelParams(float size, bool screen_size, bool billboard) {
+    ae->setSize(size);
+    ae->setBillboard(billboard);
+    ae->setScreensize(screen_size);
+}
 
 void VRAnalyticGeometry::setVector(int i, Vec3f p, Vec3f vec, Vec3f color, string label) {
     ae->set(i, p+vec*0.5, label);

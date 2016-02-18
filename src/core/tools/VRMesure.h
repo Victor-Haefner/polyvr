@@ -3,52 +3,31 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGVector.h>
-#include <OpenSG/OSGMaterial.h>
 #include <string>
 #include "core/utils/VRFunctionFwd.h"
-#include "core/utils/VRDeviceFwd.h"
-#include "core/objects/VRObjectFwd.h"
+#include "VRAnalyticGeometry.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRScene;
 
-class VRMesure {
+class VRMeasure : public VRAnalyticGeometry {
     private:
-        VRGeometryPtr s1;//spheren die mit drag && drop plaziert werden
-        VRGeometryPtr s2;
-        VRGeometryPtr l;
+        Vec3f p1,p2,p3;
+        float d1,d2;
+        float angle;
 
-        VRBillboardPtr display;
-        //VRSpritePtr sprite;
-        VRUpdatePtr updatePtr;
-
-        VRScene* scene;
-
-        //VRTransformPtr dummy;
-
-        string convertToString(float f, int p);
-
-        void processBar(Vec3f p1, Vec3f p2);
-        void processLabel(Vec3f p1, Vec3f p2, Vec3f cpos);
-
-        void check();
-
-        MaterialRecPtr setTransMat();
-
-        void _kill();
+        void update();
 
     public:
-        VRMesure();
+        VRMeasure(string name);
 
-        void setKillSignal(VRDevice* dev, VRSignalPtr sig);
+        static VRMeasurePtr create(string name);
+        VRMeasurePtr ptr();
 
-        void addToScene(VRScene* _scene);
-
-        void setPosition(Vec3f pos);
-
-        void kill(VRDevice* dev = 0);
+        void setPoint(int i, Vec3f p);
+        void rollPoints(Vec3f p);
 };
 
 OSG_END_NAMESPACE;

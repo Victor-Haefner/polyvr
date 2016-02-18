@@ -39,7 +39,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
         Triangulator t;
         for (auto b : bounds) {
             polygon poly;
-            cout << "Bound" << endl;
+            //cout << "Bound" << endl;
             float la = -1001;
             for(auto p : b.points) {
                 //cout << " p1 " << p << endl;
@@ -49,7 +49,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
                 float a = atan2(p[1]/R, p[0]/R);
                 if (la > -1000 && abs(a - la)>Pi) a += 2*Pi;
                 la = a;
-                cout << h << "  " << a << endl;
+                //cout << h << "  " << a << endl;
                 poly.addPoint(Vec2f(a, h));
             }
             if (!poly.isCCW()) poly.turn();
@@ -159,8 +159,8 @@ VRGeometryPtr VRBRepSurface::build(string type) {
                 //for (int i = floor(xs[0]/da); i <= ceil(xs[1]/da); i++) rays.push_back(i*da); // get all cylinder edges (rays)
                 rays = angleFrame(xs[0], xs[1]);
 
-                cout << " triangle size in x " << xs << " " << rays.size() << endl;
-                cout << " triangle: " << p[0] << "   " << p[1] << "   " << p[2] << endl;
+                //cout << " triangle size in x " << xs << " " << rays.size() << endl;
+                //cout << " triangle: " << p[0] << "   " << p[1] << "   " << p[2] << endl;
                 for (int i=1; i<rays.size(); i++) {
                     sides.push_back( Vec2f(rays[i-1], rays[i]) ); // get all cylinder faces
                     for (int j=0; j<3; j++) { // find out on what cylinder face each vertex lies
@@ -176,18 +176,18 @@ VRGeometryPtr VRBRepSurface::build(string type) {
                     else if (pSides[pOrder[0]] > pSides[pOrder[2]]) swap(pOrder[0], pOrder[2]);
                     else if (pSides[pOrder[1]] > pSides[pOrder[2]]) swap(pOrder[1], pOrder[2]);
                 }
-                cout << " ordered vertices " << pOrder << "  " << pSides[pOrder[0]] << " " << pSides[pOrder[1]] << " " << pSides[pOrder[2]] << endl;
+                //cout << " ordered vertices " << pOrder << "  " << pSides[pOrder[0]] << " " << pSides[pOrder[1]] << " " << pSides[pOrder[2]] << endl;
 
                 // test first case: all vertices on the same cylinder face
                 if (pSides[0] == pSides[1] && pSides[0] == pSides[2]) {
-                    cout << "  case 1" << endl;
+                    //cout << "  case 1" << endl;
                     pushTri(p[0],p[1],p[2]);
                     continue;
                 }
 
                 // test second case: all vertices on different cylinder faces
                 if (pSides[0] != pSides[1] && pSides[0] != pSides[2] && pSides[1] != pSides[2]) {
-                    cout << "  case 2" << endl;
+                    //cout << "  case 2" << endl;
                     bool passed_middle = false;
                     for (int i=0; i<sides.size(); i++) {
                         Vec2f s = sides[i];
@@ -266,7 +266,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
 
                 // case 3
                 if (pSides[pOrder[0]] == pSides[pOrder[1]]) {
-                    cout << "  case 3" << endl;
+                    //cout << "  case 3" << endl;
                     for (int i=0; i<sides.size(); i++) {
                         Vec2f s = sides[i];
                         if (i == 0) { // first quad
@@ -312,7 +312,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
 
                 // case 4
                 if (pSides[pOrder[1]] == pSides[pOrder[2]]) {
-                    cout << "  case 4" << endl;
+                    //cout << "  case 4" << endl;
                     for (int i=0; i<sides.size(); i++) {
                         Vec2f s = sides[i];
 

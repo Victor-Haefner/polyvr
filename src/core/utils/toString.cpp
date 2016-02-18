@@ -13,8 +13,18 @@ string toString(bool b) { stringstream ss; ss << b; return ss.str(); }
 string toString(int i) { stringstream ss; ss << i; return ss.str(); }
 string toString(size_t i) { stringstream ss; ss << i; return ss.str(); }
 string toString(unsigned int i) { stringstream ss; ss << i; return ss.str(); }
-string toString(float f) { stringstream ss; ss << f; return ss.str(); }
-string toString(double f) { stringstream ss; ss << f; return ss.str(); }
+string toString(float f, int d) {
+    stringstream ss;
+    if (d >= 0) ss.precision(d);
+    ss << f;
+    return ss.str();
+}
+string toString(double f, int d) {
+    stringstream ss;
+    if (d >= 0) ss.precision(d);
+    ss << f;
+    return ss.str();
+}
 
 string toString(OSG::Vec2f v) {
     stringstream ss;
