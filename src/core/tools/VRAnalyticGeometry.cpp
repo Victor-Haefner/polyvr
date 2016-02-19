@@ -72,14 +72,11 @@ void VRAnalyticGeometry::setLabelParams(float size, bool screen_size, bool billb
     ae->setScreensize(screen_size);
 }
 
-void VRAnalyticGeometry::setAngle(int i, Vec3f pos, Vec3f v1, Vec3f v2, Vec3f color, string label) {
-    /*ae->set(i, p+vec*0.5, label);
-    Vector v;
-    v.p = p; v.v = vec; v.color = color; v.label = label;
-    vectors.push_back(v);
+void VRAnalyticGeometry::setAngle(int i, Vec3f p, Vec3f v1, Vec3f v2, Vec3f color, string label) {
+    ae->set(i, p+v1*0.1+v2*0.1, label);
 
     // lines
-    auto pos = vectorLinesGeometry->getMesh()->getPositions();
+    /*auto pos = vectorLinesGeometry->getMesh()->getPositions();
     auto cols = vectorLinesGeometry->getMesh()->getColors();
     auto lengths = vectorLinesGeometry->getMesh()->getLengths();
     while (2*i+1 >= (int)pos->size()) {
@@ -103,15 +100,12 @@ void VRAnalyticGeometry::setAngle(int i, Vec3f pos, Vec3f v1, Vec3f v2, Vec3f co
         lengths->setValue(pos->size(), 0);
     }
 
-    pos->setValue(p+vec, i);
+    pos->setValue(p+v1, i);
     cols->setValue(color, i);*/
 }
 
 void VRAnalyticGeometry::setVector(int i, Vec3f p, Vec3f vec, Vec3f color, string label) {
     ae->set(i, p+vec*0.5, label);
-    Vector v;
-    v.p = p; v.v = vec; v.color = color; v.label = label;
-    vectors.push_back(v);
 
     // lines
     auto pos = vectorLinesGeometry->getMesh()->getPositions();

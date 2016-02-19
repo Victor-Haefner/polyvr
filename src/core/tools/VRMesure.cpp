@@ -46,7 +46,7 @@ void VRMeasure::update() {
     setVector(2, p3, v2, Vec3f(1,1,0), "c: " + toString( (p1-p3).length(), 4 ) + " m");
     setAngle(3, p1, -v2, v3, Vec3f(1,0,0), "i: " + toString( a1, 4 ) + " deg");
     setAngle(4, p2, v1, -v3, Vec3f(0,1,0), "j: " + toString( a2, 4 ) + " deg");
-    setAngle(5, p3, v1, -v2, Vec3f(1,1,0), "k: " + toString( a3, 4 ) + " deg");
+    setAngle(5, p3, -v1, v2, Vec3f(1,1,0), "k: " + toString( a3, 4 ) + " deg");
 }
 
 OSG_END_NAMESPACE
