@@ -830,6 +830,8 @@
 		<Unit filename="src/core/tools/VRMesure.h" />
 		<Unit filename="src/core/tools/VRPathtool.cpp" />
 		<Unit filename="src/core/tools/VRPathtool.h" />
+		<Unit filename="src/core/tools/VRProjectManager.cpp" />
+		<Unit filename="src/core/tools/VRProjectManager.h" />
 		<Unit filename="src/core/tools/VRQRCode.cpp" />
 		<Unit filename="src/core/tools/VRQRCode.h" />
 		<Unit filename="src/core/tools/VRRecorder.cpp" />
