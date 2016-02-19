@@ -43,6 +43,7 @@ class VRAnalyticGeometry : public VRObject {
         void setLabelParams(float size, bool screen_size = false, bool billboard = false);
 
         void setVector(int i, Vec3f pos, Vec3f vec, Vec3f color, string label="");
+        void setAngle(int i, Vec3f pos, Vec3f v1, Vec3f v2, Vec3f color, string label="");
         void clear();
 };
 
