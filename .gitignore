@@ -4,6 +4,7 @@ examples/*.png
 *.layout
 obj
 bin
+local
 .local
 examples/.cfg
 *.o
