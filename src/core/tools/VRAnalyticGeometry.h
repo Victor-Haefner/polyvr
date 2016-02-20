@@ -12,23 +12,12 @@ using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 class VRAnalyticGeometry : public VRObject {
-    public:
-        struct Element {
-            string type;
-            string label;
-            Vec3f color;
-        };
-
-        struct Vector : Element {
-            Vec3f v;
-            Vec3f p;
-        };
-
     private:
         VRAnnotationEnginePtr ae = 0;
         VRGeometryPtr vectorLinesGeometry = 0;
         VRGeometryPtr vectorEndsGeometry = 0;
-        vector<Vector> vectors;
+
+        void resize(int i, int j = 0);
 
     protected:
         void init();
@@ -43,6 +32,7 @@ class VRAnalyticGeometry : public VRObject {
         void setLabelParams(float size, bool screen_size = false, bool billboard = false);
 
         void setVector(int i, Vec3f pos, Vec3f vec, Vec3f color, string label="");
+        void setAngle(int i, Vec3f pos, Vec3f v1, Vec3f v2, Vec3f c1, Vec3f c2, string label="");
         void clear();
 };
 
