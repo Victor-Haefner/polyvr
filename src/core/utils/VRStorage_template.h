@@ -1,7 +1,9 @@
 #include "VRStorage.h"
 #include "toString.h"
+#include "VRFunction.h"
 #include <libxml++/nodes/element.h>
 #include <boost/bind.hpp>
+#include <boost/function.hpp>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -77,33 +79,41 @@ void VRStorage::load_int_map_cb(map<int, T*>* mt, string tag, xmlpp::Element* e)
 template<typename T>
 void VRStorage::store(string tag, T* t) {
     bin b;
-    b.f1 = boost::bind( &VRStorage::load_cb<T>, this, t, tag, _1 );
-    b.f2 = boost::bind( &VRStorage::save_cb<T>, this, t, tag, _1 );
+    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_cb<T>, this, t, tag, _1 ) );
+    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_cb<T>, this, t, tag, _1 ) );
     storage[tag] = b;
 }
 
 template<typename To, typename T>
 void VRStorage::storeObjName(string tag, To* o, T* t) {
     bin b;
-    b.f1 = boost::bind( &VRStorage::load_cb<T>, this, t, tag, _1 );
-    b.f2 = boost::bind( &VRStorage::save_on_cb<To>, this, o, tag, _1 );
+    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_cb<T>, this, t, tag, _1 ) );
+    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_on_cb<To>, this, o, tag, _1 ) );
     storage[tag] = b;
 }
 
 template<typename T>
 void VRStorage::storeMap(string tag, map<string, T*>* mt) {
     bin b;
-    b.f1 = boost::bind( &VRStorage::load_str_map_cb<T>, this, mt, tag, _1 );
-    b.f2 = boost::bind( &VRStorage::save_str_map_cb<T>, this, mt, tag, _1 );
+    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_str_map_cb<T>, this, mt, tag, _1 ) );
+    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_str_map_cb<T>, this, mt, tag, _1 ) );
     storage[tag] = b;
 }
 
 template<typename T>
 void VRStorage::storeMap(string tag, map<int, T*>* mt) {
     bin b;
-    b.f1 = boost::bind( &VRStorage::load_int_map_cb<T>, this, mt, tag, _1 );
-    b.f2 = boost::bind( &VRStorage::save_int_map_cb<T>, this, mt, tag, _1 );
+    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_int_map_cb<T>, this, mt, tag, _1 ) );
+    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_int_map_cb<T>, this, mt, tag, _1 ) );
     storage[tag] = b;
+}
+
+template<class T>
+void VRStorage::typeFactoryCb(VRStoragePtr& s) { s = T::create(); }
+
+template<class T>
+void VRStorage::regStorageType(string t) {
+    factory[t] = VRStorageFactoryCb::create("factorycb", boost::bind( &VRStorage::typeFactoryCb<T>, this, _1 ) );
 }
 
 OSG_END_NAMESPACE;

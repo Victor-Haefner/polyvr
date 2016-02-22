@@ -17,7 +17,7 @@ class VRProjectManager : public VRSprite {
 
         void addStorage(VRStoragePtr s);
 
-        void store(string path);
+        void save(string path);
         void load(string path);
 };
 
