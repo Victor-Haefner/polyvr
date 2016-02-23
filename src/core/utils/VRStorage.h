@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <map>
+#include "VRName.h"
 #include "VRFunctionFwd.h"
 #include "core/objects/VRObjectFwd.h"
 
@@ -14,15 +15,15 @@ ptrFktFwd(VRStorageFactory, OSG::VRStoragePtr&);
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRStorage {
-    private:
-        struct bin{
-            VRStoreCbPtr f1; // load
-            VRStoreCbPtr f2; // save
-        };
+struct VRStorageBin {
+    VRStoreCbPtr f1; // load
+    VRStoreCbPtr f2; // save
+};
 
+class VRStorage : public std::enable_shared_from_this<VRStorage>, public VRName {
+    private:
         VRUpdatePtr f_update; // update
-        map<string, bin> storage;
+        map<string, VRStorageBin> storage;
         static map<string, VRStorageFactoryCbPtr> factory;
 
         template<class T> void typeFactoryCb(VRStoragePtr& s);

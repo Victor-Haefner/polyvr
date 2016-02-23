@@ -2,6 +2,7 @@
 #define VRPROJECTMANAGER_H_INCLUDED
 
 #include "core/objects/geometry/VRSprite.h"
+#include "core/objects/VRObjectFwd.h"
 #include <vector>
 
 OSG_BEGIN_NAMESPACE;
@@ -15,7 +16,9 @@ class VRProjectManager : public VRSprite {
     public:
         VRProjectManager();
 
-        void addStorage(VRStoragePtr s);
+        static VRProjectManagerPtr create();
+
+        void addItem(VRStoragePtr s);
 
         void save(string path);
         void load(string path);

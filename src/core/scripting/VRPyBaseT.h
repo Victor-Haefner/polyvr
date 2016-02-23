@@ -34,7 +34,9 @@ bool VRPyBaseT<T>::valid() {
 }
 
 template <typename T>
-bool VRPyBaseT<T>::check(PyObject* o) { return typeRef == o->ob_type; }
+bool VRPyBaseT<T>::check(PyObject* o) {
+    return (PyObject_IsInstance(o, (PyObject*)typeRef) == 1);
+}
 
 template <typename T>
 void VRPyBase::execPyCall(PyObject* pyFkt, PyObject* pArgs, T t) {

@@ -14,7 +14,7 @@ class VRSSAO;
 class VRObject;
 class VRCamera;
 
-class VRRenderManager : public VRStorage {
+class VRRenderManager : public virtual VRStorage {
     private:
         bool frustumCulling = true;
         bool occlusionCulling = false;

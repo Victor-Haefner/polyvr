@@ -39,7 +39,7 @@ class VRGlobals {
         static VRGlobals* get();
 };
 
-class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, public VRStorage {
+class VRObject : public VRStorage  {
     private:
         bool specialized = false;
         VRObjectWeakPtr parent;

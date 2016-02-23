@@ -46,7 +46,7 @@ struct VRPN_device : public VRDevice {
     void loop();
 };
 
-class VRPN : public VRStorage {
+class VRPN : public virtual VRStorage {
     private:
         map<int, VRPN_device*> devices;//pointer map auf die objecte
         int threadID;

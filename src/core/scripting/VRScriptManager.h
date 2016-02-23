@@ -19,7 +19,7 @@ using namespace std;
 
 class VRScript;
 
-class VRScriptManager : public VRStorage, public VRPyBase {
+class VRScriptManager : public virtual VRStorage, public VRPyBase {
     private:
         PyObject* pGlobal;
         PyObject* pLocal;

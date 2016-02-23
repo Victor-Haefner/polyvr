@@ -32,7 +32,6 @@ class VRScene : public VRObjectManager,
                 public VRNavigator,
                 public VRNetworkManager,
                 public VRMaterialManager,
-                public VRName,
                 public VRBackground,
                 public VRRenderManager,
                 public VRFlags {

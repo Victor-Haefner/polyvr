@@ -78,7 +78,7 @@ void VRStorage::load_int_map_cb(map<int, T*>* mt, string tag, xmlpp::Element* e)
 
 template<typename T>
 void VRStorage::store(string tag, T* t) {
-    bin b;
+    VRStorageBin b;
     b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_cb<T>, this, t, tag, _1 ) );
     b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_cb<T>, this, t, tag, _1 ) );
     storage[tag] = b;
@@ -86,7 +86,7 @@ void VRStorage::store(string tag, T* t) {
 
 template<typename To, typename T>
 void VRStorage::storeObjName(string tag, To* o, T* t) {
-    bin b;
+    VRStorageBin b;
     b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_cb<T>, this, t, tag, _1 ) );
     b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_on_cb<To>, this, o, tag, _1 ) );
     storage[tag] = b;
@@ -94,7 +94,7 @@ void VRStorage::storeObjName(string tag, To* o, T* t) {
 
 template<typename T>
 void VRStorage::storeMap(string tag, map<string, T*>* mt) {
-    bin b;
+    VRStorageBin b;
     b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_str_map_cb<T>, this, mt, tag, _1 ) );
     b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_str_map_cb<T>, this, mt, tag, _1 ) );
     storage[tag] = b;
@@ -102,7 +102,7 @@ void VRStorage::storeMap(string tag, map<string, T*>* mt) {
 
 template<typename T>
 void VRStorage::storeMap(string tag, map<int, T*>* mt) {
-    bin b;
+    VRStorageBin b;
     b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_int_map_cb<T>, this, mt, tag, _1 ) );
     b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_int_map_cb<T>, this, mt, tag, _1 ) );
     storage[tag] = b;

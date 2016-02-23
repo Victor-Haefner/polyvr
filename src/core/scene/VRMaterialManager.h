@@ -7,7 +7,7 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRMaterialManager : public VRStorage {
+class VRMaterialManager : public virtual VRStorage {
     private:
 
     public:

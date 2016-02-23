@@ -11,7 +11,7 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRNetworkManager : public VRStorage {
+class VRNetworkManager : public virtual VRStorage {
     private:
         map<string, VRSocket*> sockets;
 

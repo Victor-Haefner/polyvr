@@ -10,21 +10,21 @@ namespace fs = boost::filesystem;
 
 VRProjectManager::VRProjectManager() : VRSprite("ProjectManager") { initSite(); }
 
+VRProjectManagerPtr VRProjectManager::create() { return shared_ptr<VRProjectManager>(new VRProjectManager()); }
+
 void VRProjectManager::initSite() {
     ;
 }
 
-void VRProjectManager::addStorage(VRStoragePtr s) { vault.push_back(s); }
+void VRProjectManager::addItem(VRStoragePtr s) {
+    if (s) vault.push_back(s);
+}
 
 void VRProjectManager::save(string path) {
     if (fs::exists(path)) path = fs::canonical(path).string();
-
     xmlpp::Document doc;
-    xmlpp::Element* root = doc.create_root_node("Project", "", "VRP"); //name, ns_uri, ns_prefix
-    for (auto v : vault) {
-        if (auto vs = v.lock()) vs->saveUnder(root);
-    }
-
+    xmlpp::Element* root = doc.create_root_node("Project", "", "VRP"); // name, ns_uri, ns_prefix
+    for (auto v : vault) if (auto vs = v.lock()) vs->saveUnder(root);
     doc.write_to_file_formatted(path);
 }
 
@@ -43,6 +43,6 @@ void VRProjectManager::load(string path) {
 
         auto s = VRStorage::createFromStore(e);
         s->load(e);
-        addStorage(s);
+        addItem(s);
     }
 }

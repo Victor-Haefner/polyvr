@@ -43,7 +43,7 @@ struct ART_device : public VRName {
     void update();
 };
 
-class ART : public VRStorage {
+class ART : public virtual VRStorage {
     private:
         bool active = false;
         int port = 5000;

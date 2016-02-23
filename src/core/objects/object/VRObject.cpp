@@ -59,7 +59,7 @@ void VRObject::setVolume(bool b) {
 }
 
 VRObjectPtr VRObject::create(string name) { return VRObjectPtr(new VRObject(name) ); }
-VRObjectPtr VRObject::ptr() { return shared_from_this(); }
+VRObjectPtr VRObject::ptr() { return static_pointer_cast<VRObject>( shared_from_this() ); }
 
 void VRObject::printInformation() {;}
 
