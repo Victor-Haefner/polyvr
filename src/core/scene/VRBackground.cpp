@@ -1,5 +1,6 @@
 #include "VRBackground.h"
 
+#include <OpenSG/OSGBackground.h>
 #include <OpenSG/OSGSkyBackground.h>
 #include <OpenSG/OSGSimpleTexturedMaterial.h>
 #include <OpenSG/OSGTextureBackground.h>
