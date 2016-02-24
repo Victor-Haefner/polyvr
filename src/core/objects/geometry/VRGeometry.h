@@ -47,7 +47,6 @@ class VRGeometry : public VRTransform {
 
         void meshChanged();
 
-        virtual void saveContent(xmlpp::Element* e);
         virtual void loadContent(xmlpp::Element* e);
         void setup();
 

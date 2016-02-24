@@ -17,14 +17,13 @@ using namespace std;
 class VRGroup : public VRObject {
     private:
         string group;
-        bool active;
+        bool active = true;
         static map<string, vector<VRGroupWeakPtr> > groups;
         static map<string, VRObjectWeakPtr > templates;
 
         VRObjectPtr copy(vector<VRObjectPtr> children);
 
     protected:
-        void saveContent(xmlpp::Element* e);
         void loadContent(xmlpp::Element* e);
 
     public:

@@ -759,14 +759,6 @@ void VRGeometry::showGeometricData(string type, bool b) {
     m->setLit(false);
 }
 
-void VRGeometry::saveContent(xmlpp::Element* e) {
-    VRTransform::saveContent(e);
-    if (getPersistency() < 3) return;
-    stringstream ss; ss << source.type;
-    e->set_attribute("sourcetype", ss.str());
-    e->set_attribute("sourceparam", source.parameter);
-}
-
 void VRGeometry::loadContent(xmlpp::Element* e) {
     VRTransform::loadContent(e);
 

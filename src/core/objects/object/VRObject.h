@@ -195,7 +195,6 @@ class VRObject : public std::enable_shared_from_this<VRStorage>, public VRName {
         void setup();
         void destroy();
 
-        virtual void saveContent(xmlpp::Element* e);
         virtual void loadContent(xmlpp::Element* e);
 };
 

@@ -23,6 +23,9 @@ VRObjectPtr VRLod::copy(vector<VRObjectPtr> childs) {
 VRLod::VRLod(string name) : VRObject(name) {
     lod = DistanceLOD::create();
     setCore(lod, "Lod");
+
+    store("center", &center);
+    store("distances", &distances_string);
 }
 
 VRLod::~VRLod() {}
@@ -60,6 +63,11 @@ void VRLod::decimateGeometries(VRObjectPtr o, float f) {
 }
 
 void VRLod::update() {
+    stringstream ss;
+    ss << distances.size();
+    for (auto d : distances) ss << " " << d.second;
+    distances_string = ss.str();
+
     if (decimate) { // use decimated geometries
         VRObjectPtr o = getChild(0);
         decimateNumber = min(decimateNumber, 7u);// max 7 decimation geometries?
@@ -83,16 +91,6 @@ void VRLod::update() {
     for (auto d : distances) (*dists)[d.first] = d.second;
 
     lod->setCenter(Pnt3f(center));
-}
-
-void VRLod::saveContent(xmlpp::Element* e) {
-    VRObject::saveContent(e);
-    e->set_attribute("center", toString(center));
-
-    stringstream ss;
-    ss << distances.size();
-    for (auto d : distances) ss << " " << d.second;
-    e->set_attribute("distances", ss.str());
 }
 
 void VRLod::loadContent(xmlpp::Element* e) {

@@ -775,24 +775,6 @@ void VRTransform::setup() {
     update();
 }
 
-void VRTransform::saveContent(xmlpp::Element* e) {
-    VRObject::saveContent(e);
-    if (getPersistency() < 2) return;
-
-    e->set_attribute("from", toString(_from).c_str());
-    e->set_attribute("at", toString(_at).c_str());
-    e->set_attribute("up", toString(_up).c_str());
-    e->set_attribute("scale", toString(_scale).c_str());
-
-    e->set_attribute("cT", toString(tConstraint).c_str());
-    e->set_attribute("cR", toString(rConstraint).c_str());
-    e->set_attribute("do_cT", toString(doTConstraint).c_str());
-    e->set_attribute("do_cR", toString(doRConstraint).c_str());
-    e->set_attribute("cT_mode", toString(int(tConMode)).c_str());
-
-    e->set_attribute("at_dir", toString(orientation_mode).c_str());
-}
-
 void VRTransform::loadContent(xmlpp::Element* e) {
     VRObject::loadContent(e);
 

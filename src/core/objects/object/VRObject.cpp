@@ -544,10 +544,6 @@ void VRObject::unitTest() {
     cout << "\nEnd Unit Test\n";
 }
 
-void VRObject::saveContent(xmlpp::Element* e) {
-    save(e);
-}
-
 void VRObject::loadContent(xmlpp::Element* e) {
     load(e);
 }

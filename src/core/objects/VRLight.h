@@ -33,7 +33,6 @@ class VRLight : public VRObject {
         SimpleShadowMapEngineRefPtr ssme;
         Vec3f attenuation; // C L Q
 
-        void saveContent(xmlpp::Element* e);
         void loadContent(xmlpp::Element* e);
 
         void update();

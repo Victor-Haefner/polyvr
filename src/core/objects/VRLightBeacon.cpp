@@ -54,11 +54,6 @@ void VRLightBeacon::showLightGeo(bool b) {
 VRLightWeakPtr VRLightBeacon::getLight() { return light; }
 void VRLightBeacon::setLight(VRLightPtr l) { light = l; }
 
-void VRLightBeacon::saveContent(xmlpp::Element* e) {
-    VRTransform::saveContent(e);
-    if (auto l = light.lock()) e->set_attribute("light", l->getName());
-}
-
 void VRLightBeacon::loadContent(xmlpp::Element* e) {
     VRTransform::loadContent(e);
     string lightName = e->get_attribute("light")->get_value();

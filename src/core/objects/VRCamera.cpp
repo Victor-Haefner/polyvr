@@ -117,15 +117,6 @@ vector<string> VRCamera::getProjectionTypes() {
     return proj;
 }
 
-void VRCamera::saveContent(xmlpp::Element* e) {
-    VRTransform::saveContent(e);
-    e->set_attribute("accept_root", toString(doAcceptRoot));
-    e->set_attribute("near", toString(nearClipPlaneCoeff));
-    e->set_attribute("far", toString(farClipPlaneCoeff));
-    e->set_attribute("aspect", toString(getAspect()));
-    e->set_attribute("fov", toString(getFov()));
-}
-
 void VRCamera::loadContent(xmlpp::Element* e) {
     VRTransform::loadContent(e);
     if (e->get_attribute("accept_root")) doAcceptRoot = toBool(e->get_attribute("accept_root")->get_value());

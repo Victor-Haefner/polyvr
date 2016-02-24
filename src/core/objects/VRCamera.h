@@ -22,7 +22,6 @@ class VRCamera : public VRTransform {
 
     protected:
 
-        void saveContent(xmlpp::Element* e);
         void loadContent(xmlpp::Element* e);
 
     public:

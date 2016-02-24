@@ -44,7 +44,6 @@ class VRMaterial : public VRObject {
         bool isSMat(MaterialUnrecPtr matPtr);
         bool isSTMat(MaterialUnrecPtr matPtr);
 
-        void saveContent(xmlpp::Element* e);
         void loadContent(xmlpp::Element* e);
 
     public:

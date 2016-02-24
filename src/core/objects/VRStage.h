@@ -29,7 +29,6 @@ class VRStage : public VRObject {
     protected:
         VRObjectPtr copy(vector<VRObjectPtr> children);
 
-        void saveContent(xmlpp::Element* e);
         void loadContent(xmlpp::Element* e);
 
     public:

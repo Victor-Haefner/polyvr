@@ -14,7 +14,6 @@ class VRLightBeacon : public VRTransform {
         string light_name;
         NodeRecPtr lightGeo;
 
-        void saveContent(xmlpp::Element* e);
         void loadContent(xmlpp::Element* e);
 
     public:
