@@ -11,7 +11,7 @@
       </Object>
     </Object>
   </Objects>
-  <Rendering deferred_rendering="0" frustum_culling="1" occlusion_culling="0" ssao="0" two_sided="1"/>
+  <Rendering deferred_rendering="0" frustum_culling="1" occlusion_culling="0" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts>
     <Script name_suffix="0" base_name="controls" name_space="__script__" type="Python" mobile="">
       <core>

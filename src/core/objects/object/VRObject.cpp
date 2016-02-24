@@ -35,7 +35,7 @@ VRObject::VRObject(string _name) {
     store("type", &type);
     store("pickable", &pickable);
     store("visible", &visible);
-    store("children", children);
+    //store("children", children); // TODO
 
     regStorageUpdateFkt( VRFunction<int>::create("object_update", boost::bind(&VRObject::setup, this)) );
 }
