@@ -20,7 +20,6 @@ void VRStorage::setStorageType(string t) { type = t; }
 
 void VRStorage::save(xmlpp::Element* e, int p) {
     if (e == 0) return;
-    cout << "persistency " << persistency << endl;
     if (persistency <= p) return;
     for (auto s : storage) (*s.second.f2)(e);
 }

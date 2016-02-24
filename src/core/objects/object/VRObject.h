@@ -3,7 +3,8 @@
 
 #include <string>
 #include <vector>
-#include <OpenSG/OSGFieldContainerFields.h>
+
+#include <OpenSG/OSGSField.h>
 #include <OpenSG/OSGVector.h>
 
 #include "core/utils/VRName.h"

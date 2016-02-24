@@ -7,7 +7,7 @@
 #include "core/math/pose.h"
 #include <OpenSG/OSGMatrix.h>
 #include <OpenSG/OSGLine.h>
-#include <OpenSG/OSGFieldContainerFields.h>
+#include <OpenSG/OSGSField.h>
 
 class VRPhysics;
 

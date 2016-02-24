@@ -1,7 +1,7 @@
 #ifndef VRTEXTURE_H_INCLUDED
 #define VRTEXTURE_H_INCLUDED
 
-#include <OpenSG/OSGFieldContainerFields.h>
+#include <OpenSG/OSGSField.h>
 
 #include "core/objects/object/VRObject.h"
 #include "core/objects/VRObjectFwd.h"

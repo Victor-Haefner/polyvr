@@ -2,7 +2,7 @@
 #define VRLIGHT_H_INCLUDED
 
 #include "core/objects/object/VRObject.h"
-#include <OpenSG/OSGFieldContainerFields.h>
+#include <OpenSG/OSGSField.h>
 #include <OpenSG/OSGColor.h>
 
 OSG_BEGIN_NAMESPACE;

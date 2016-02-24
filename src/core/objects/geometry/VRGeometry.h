@@ -4,7 +4,7 @@
 #include "core/objects/VRObjectFwd.h"
 #include "core/tools/selection/VRSelectionFwd.h"
 #include "../VRTransform.h"
-#include <OpenSG/OSGFieldContainerFields.h>
+#include <OpenSG/OSGSField.h>
 #include <OpenSG/OSGImage.h> // TODO
 
 struct VRPrimitive;
