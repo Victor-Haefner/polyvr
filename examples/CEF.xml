@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scene name_suffix="0" base_name="CEF" name_space="Scene">
   <Objects>
-    <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
-      <Object name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
-        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="-1.63126 6.35925 3.71475" at="0 0 -0.1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
-          <Object name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
+    <Object base_name="Root" name_space="__global__" name_suffix="0" pickable="0" type="Object" visible="1">
+      <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+        <Object accept_root="1" aspect="1" at="0 0 -0.1" at_dir="0" base_name="Default" cR="0 0 0" cT="0 1 0" cT_mode="1" do_cR="0" do_cT="0" far="250" fov="1.0472" from="-1.63126 6.35925 3.71475" name_space="__global__" name_suffix="0" near="0.1" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+          <Object at="0 0 -1" at_dir="1" base_name="Headlight_beacon" cR="0 0 0" cT="0 1 0" cT_mode="1" do_cR="0" do_cT="0" from="0 0 0" name_space="__global__" name_suffix="0" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1" light="Headlight"/>
         </Object>
-        <Object name_suffix="0" base_name="Cylinder" name_space="__global__" type="Geometry" pickable="0" visible="1" from="-2 0 0" at="-2 0 1" up="0 -1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" sourcetype="3" sourceparam="Cylinder 4 2 128 0 0 1"/>
-        <Object name_suffix="0" base_name="Cylinder2" name_space="__global__" type="Geometry" pickable="0" visible="1" from="2.5 0 0" at="2.5 0 1" up="0 -1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" sourcetype="3" sourceparam="Cylinder 4 2 128 0 0 1"/>
+        <Object at="-2 0 1" at_dir="1" base_name="Cylinder" cR="0 0 0" cT="0 1 0" cT_mode="1" do_cR="0" do_cT="0" from="-2 0 0" name_space="__global__" name_suffix="0" pickable="0" scale="1 1 1" sourceparam="Cylinder 4 2 128 0 0 1" sourcetype="3" type="Geometry" up="0 -1 0" visible="1"/>
+        <Object at="2.5 0 1" at_dir="1" base_name="Cylinder2" cR="0 0 0" cT="0 1 0" cT_mode="1" do_cR="0" do_cT="0" from="2.5 0 0" name_space="__global__" name_suffix="0" pickable="0" scale="1 1 1" sourceparam="Cylinder 4 2 128 0 0 1" sourcetype="3" type="Geometry" up="0 -1 0" visible="1"/>
       </Object>
     </Object>
   </Objects>

@@ -72,9 +72,6 @@ class VRObject : public std::enable_shared_from_this<VRStorage>, public VRName {
         virtual VRObjectPtr copy(vector<VRObjectPtr> children);
         //VRObjectPtr copy();
 
-        virtual void saveContent(xmlpp::Element* e);
-        virtual void loadContent(xmlpp::Element* e);
-
     public:
         VRObject(string name = "0");
         virtual ~VRObject();
@@ -204,8 +201,8 @@ class VRObject : public std::enable_shared_from_this<VRStorage>, public VRName {
         void setup();
         void destroy();
 
-        void save(xmlpp::Element* e);
-        void load(xmlpp::Element* e);
+        virtual void saveContent(xmlpp::Element* e);
+        virtual void loadContent(xmlpp::Element* e);
 };
 
 OSG_END_NAMESPACE;

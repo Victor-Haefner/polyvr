@@ -70,7 +70,7 @@ VRTransformPtr VRSceneLoader::load3DContent(string filepath, VRObjectPtr parent,
 
 void VRSceneLoader_saveObject(VRObjectPtr p, xmlpp::Element* e) {
     if (e == 0) return;
-    p->save(e);
+    p->saveContent(e);
     for (uint i=0; i<p->getChildrenCount(); i++) {
         VRObjectPtr c = p->getChild(i);
         if (c->getPersistency() == 0) continue; // generated objects are not be saved
@@ -134,7 +134,7 @@ void VRSceneLoader_loadObject(VRScenePtr scene, VRObjectPtr p, xmlpp::Element* e
         VRObjectPtr c = VRSceneLoader_createFromElement(scene, el);
 
         p->addChild(c);
-        c->load(el);
+        c->loadContent(el);
         VRSceneLoader_loadObject(scene, c, el);
     }
 }

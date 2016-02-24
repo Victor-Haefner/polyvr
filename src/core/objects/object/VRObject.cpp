@@ -522,22 +522,15 @@ void VRObject::unitTest() {
     cout << "\n switchParent" << flush;
     o3->switchParent(o1);
     cout << "  Ok" << flush;
-    cout << "" << flush;
-    cout << "" << flush;
-    cout << "" << flush;
-    cout << "" << flush;
-    cout << "" << flush;
-    cout << "" << flush;
-    cout << "" << flush;
-    cout << "" << flush;
     cout << "\nEnd Unit Test\n";
 }
 
 void VRObject::saveContent(xmlpp::Element* e) {
-    VRName::saveName(e);
+    save(e);
+    /*VRName::saveName(e);
     e->set_attribute("type", type);
     e->set_attribute("pickable", toString(pickable));
-    e->set_attribute("visible", toString(visible));
+    e->set_attribute("visible", toString(visible));*/
 }
 
 void VRObject::loadContent(xmlpp::Element* e) {
@@ -551,14 +544,6 @@ void VRObject::loadContent(xmlpp::Element* e) {
 void VRObject::setup() {
     setVisible(visible);
     setPickable(pickable);
-}
-
-void VRObject::save(xmlpp::Element* e) {
-    saveContent(e);
-}
-
-void VRObject::load(xmlpp::Element* e) {
-    loadContent(e);
 }
 
 OSG_END_NAMESPACE
