@@ -13,17 +13,23 @@ VRStorage::VRStorage() {
     ;
 }
 
+void VRStorage::setPersistency(int p) { persistency = p; }
+int VRStorage::getPersistency() { return persistency; }
 void VRStorage::regStorageUpdateFkt(VRUpdatePtr u) { f_update.push_back(u); }
+void VRStorage::setStorageType(string t) { type = t; }
 
-void VRStorage::save(xmlpp::Element* e) {
+void VRStorage::save(xmlpp::Element* e, int p) {
     if (e == 0) return;
+    cout << "persistency " << persistency << endl;
+    if (persistency <= p) return;
     for (auto s : storage) (*s.second.f2)(e);
 }
 
-void VRStorage::saveUnder(xmlpp::Element* e) {
+void VRStorage::saveUnder(xmlpp::Element* e, int p) {
     if (e == 0) return;
-    e = e->add_child("Node"); // todo: define tag
-    save(e);
+    if (persistency <= p) return;
+    e = e->add_child(type); // todo: define tag
+    save(e, p);
 }
 
 void VRStorage::load(xmlpp::Element* e) {

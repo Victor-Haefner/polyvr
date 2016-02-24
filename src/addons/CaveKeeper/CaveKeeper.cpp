@@ -174,7 +174,6 @@ void BlockWorld::updateShaderCamPos() {
 BlockWorld::BlockWorld() {
     anchor = VRObject::create("cavekeeper_anchor");
     anchor->setPersistency(0);
-    anchor->addAttachment("global", 0);
 }
 
 BlockWorld::~BlockWorld() {}

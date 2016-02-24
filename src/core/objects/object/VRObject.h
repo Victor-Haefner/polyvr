@@ -48,8 +48,6 @@ class VRObject : public std::enable_shared_from_this<VRStorage>, public VRName {
         int childIndex = 0; // index of this object in its parent child vector
         int pickable = 0;
         bool visible = true;
-        bool intern = false;
-        int persistency = 666;
         unsigned int graphChanged = 0; //is frame number
 
         map<string, VRAttachment*> attachments;
@@ -84,10 +82,6 @@ class VRObject : public std::enable_shared_from_this<VRStorage>, public VRName {
 
         /** Returns the object type **/
         string getType();
-
-        bool getIntern();
-        void setPersistency(int p);
-        int getPersistency();
 
         VRObjectPtr getRoot();
         string getPath();

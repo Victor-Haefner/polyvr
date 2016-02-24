@@ -52,10 +52,10 @@ VRGeometry::VRGeometry(string name) : VRTransform(name) {
 
 VRGeometry::VRGeometry(string name, bool hidden) : VRTransform(name) {
     setNameSpace("system");
-    setIntern(hidden);
     type = "Geometry";
     addAttachment("geometry", 0);
     if (!meshSet) setMesh(Geometry::create());
+    if (hidden) setPersistency(0);
 }
 
 VRGeometry::~VRGeometry() {}

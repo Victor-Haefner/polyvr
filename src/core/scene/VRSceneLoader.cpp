@@ -74,7 +74,6 @@ void VRSceneLoader_saveObject(VRObjectPtr p, xmlpp::Element* e) {
     for (uint i=0; i<p->getChildrenCount(); i++) {
         VRObjectPtr c = p->getChild(i);
         if (c->getPersistency() == 0) continue; // generated objects are not be saved
-        if (c->hasAttachment("global")) continue; // global objects are not be saved
         //xmlpp::Element* ce = e->add_child(c->getName());
         xmlpp::Element* ce = e->add_child("Object");
         VRSceneLoader_saveObject(c, ce);
@@ -96,8 +95,9 @@ void VRSceneLoader::saveScene(string file, xmlpp::Element* guiN) {
     // save scenegraph
     scene->setPath(file);
     VRObjectPtr root = scene->getRoot();
-    xmlpp::Element* rootN = objectsN->add_child("Object");
-    VRSceneLoader_saveObject(root, rootN);
+    //xmlpp::Element* rootN = objectsN->add_child("Object");
+    //VRSceneLoader_saveObject(root, rootN);
+    root->saveUnder(objectsN);
     scene->save(sceneN);
     doc.write_to_file_formatted(file);
 }

@@ -8,7 +8,7 @@
 #include <OpenSG/OSGVisitSubTree.h>
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
-#include "core/utils/VRStorage_template.h"
+//#include "core/utils/VRStorage_template.h"
 #include <libxml++/nodes/element.h>
 
 OSG_BEGIN_NAMESPACE;
@@ -19,6 +19,30 @@ VRGlobals::VRGlobals() {}
 VRGlobals* VRGlobals::get() {
     static VRGlobals* s = new VRGlobals();
     return s;
+}
+
+template<typename T>
+void VRStorage::save_vec_cb(vector<std::shared_ptr<T> >* v, xmlpp::Element* e) {
+    for (auto t : *v) t->saveUnder(e);
+}
+
+template<typename T>
+void VRStorage::load_vec_cb(vector<std::shared_ptr<T> >* v, xmlpp::Element* e) {
+    /*for (auto n : e->get_children()) {
+        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
+        if (!el) continue;
+        auto t = T::create();
+        t->load(e);
+        v->push_back( t );
+    }*/
+}
+
+template<typename T>
+void VRStorage::store(string tag, vector<std::shared_ptr<T> >& v) {
+    VRStorageBin b;
+    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_vec_cb<T>, this, &v, _1 ) );
+    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_vec_cb<T>, this, &v, _1 ) );
+    storage[tag] = b;
 }
 
 VRObject::VRObject(string _name) {
@@ -32,10 +56,11 @@ VRObject::VRObject(string _name) {
     OSG::setName(node, name);
     type = "Object";
 
+    setStorageType("Object");
     store("type", &type);
     store("pickable", &pickable);
     store("visible", &visible);
-    //store("children", children); // TODO
+    store("children", children); // TODO
 
     regStorageUpdateFkt( VRFunction<int>::create("object_update", boost::bind(&VRObject::setup, this)) );
 }
@@ -135,9 +160,6 @@ void VRObject::setCore(NodeCoreRecPtr c, string _type, bool force) {
     specialized = true;
 }
 
-void VRObject::setPersistency(int p) { persistency = p; }
-int VRObject::getPersistency() { return persistency; }
-
 /** Returns the object OSG core **/
 NodeCoreRecPtr VRObject::getCore() { return node->getCore(); }
 
@@ -201,9 +223,6 @@ void VRObject::switchParent(VRObjectPtr new_p, int place) {
     getParent()->subChild(ptr(), true);
     new_p->addChild(ptr(), true, place);
 }
-
-void VRObject::setIntern(bool b) { intern = b; }
-bool VRObject::getIntern() { return intern; }
 
 /** Returns the number of children **/
 size_t VRObject::getChildrenCount() { return children.size(); }
@@ -527,18 +546,10 @@ void VRObject::unitTest() {
 
 void VRObject::saveContent(xmlpp::Element* e) {
     save(e);
-    /*VRName::saveName(e);
-    e->set_attribute("type", type);
-    e->set_attribute("pickable", toString(pickable));
-    e->set_attribute("visible", toString(visible));*/
 }
 
 void VRObject::loadContent(xmlpp::Element* e) {
-    VRName::loadName(e);
-    type = e->get_attribute("type")->get_value();
-    if (e->get_attribute("pickable")) toValue(e->get_attribute("pickable")->get_value(), pickable);
-    if (e->get_attribute("visible")) toValue(e->get_attribute("visible")->get_value(), visible);
-    setup();
+    load(e);
 }
 
 void VRObject::setup() {

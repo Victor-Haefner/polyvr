@@ -22,6 +22,8 @@ struct VRStorageBin {
 
 class VRStorage {
     private:
+        string type = "Node";
+        int persistency = 666;
         vector<VRUpdatePtr> f_update; // update
         map<string, VRStorageBin> storage;
         static map<string, VRStorageFactoryCbPtr> factory;
@@ -45,16 +47,21 @@ class VRStorage {
         template<typename T> void storeMap(string tag, map<string, T*>* mt);
         template<typename T> void storeMap(string tag, map<int, T*>* mt);
         template<typename To, typename T> void storeObjName(string tag, To* o, T* t);
-        void regStorageUpdateFkt(VRUpdatePtr u);
         template<class T> void regStorageType(string t);
+
+        void setStorageType(string t);
+        void regStorageUpdateFkt(VRUpdatePtr u);
 
     public:
         VRStorage();
 
-        void save(xmlpp::Element* e);
-        void saveUnder(xmlpp::Element* e);
+        void save(xmlpp::Element* e, int p = 0);
+        void saveUnder(xmlpp::Element* e, int p = 0);
         void load(xmlpp::Element* e);
         static VRStoragePtr createFromStore(xmlpp::Element* e);
+
+        void setPersistency(int p);
+        int getPersistency();
 };
 
 OSG_END_NAMESPACE;
