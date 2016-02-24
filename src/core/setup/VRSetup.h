@@ -17,7 +17,7 @@ using namespace std;
 class VRScene;
 class VRVisualLayer;
 
-class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceManager, public ART, public VRPN {
+class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceManager, public ART, public VRPN, public VRName {
     private:
         string cfgfile;
         string tracking;

@@ -11,7 +11,7 @@ using namespace std;
 
 class VRBackgroundBase;
 
-class VRBackground : public virtual VRStorage {
+class VRBackground : public VRStorage {
     public:
         enum TYPE { SOLID, IMAGE, SKY };
 

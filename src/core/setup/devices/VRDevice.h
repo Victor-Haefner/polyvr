@@ -10,7 +10,7 @@ OSG_BEGIN_NAMESPACE;
 
 class VRSignal;
 
-class VRDevice : public VRIntersect, public VRAvatar, public virtual VRStorage {
+class VRDevice : public VRIntersect, public VRAvatar, public VRStorage, public VRName {
     protected:
         int sig_key = -1;
         int sig_state = -1;

@@ -22,22 +22,23 @@ VRMaterialPtr getCamGeoMat() {
 }
 
 VRCamera::VRCamera(string name) : VRTransform(name) {
-    parallaxD = 2;
-    nearClipPlaneCoeff = 0.1;
-    //farClipPlaneCoeff = 250000;
-    farClipPlaneCoeff = 250;
+    type = "Camera";
     cam_invert_z = true;
 
     cam = PerspectiveCamera::create();
     cam->setBeacon(getNode());
-    cam->setFov(osgDegree2Rad(60));
-    cam->setNear(parallaxD* nearClipPlaneCoeff);
-    cam->setFar(parallaxD* farClipPlaneCoeff);
+    setFov(osgDegree2Rad(60));
+    setAspect(1);
+    setNear(parallaxD * 0.1);
+    setFar(parallaxD * 512);
 
-    type = "Camera";
-    doAcceptRoot = true;
-    camGeo = 0;
+    store("accept_root", &doAcceptRoot);
+    store("near", &nearClipPlaneCoeff);
+    store("far", &farClipPlaneCoeff);
+    store("aspect", &aspect);
+    store("fov", &fov);
 
+    // cam geo
     TransformRecPtr trans = Transform::create();
     NodeRecPtr t = makeNodeFor(trans);
     trans->editMatrix().setTranslate(Vec3f(0,0,0.25));
@@ -90,14 +91,14 @@ PerspectiveCameraRecPtr VRCamera::getCam() { return cam; }
 
 void VRCamera::setAcceptRoot(bool b) { doAcceptRoot = b; }
 bool VRCamera::getAcceptRoot() { return doAcceptRoot; }
-float VRCamera::getAspect() { return cam->getAspect(); }
-float VRCamera::getFov() { return cam->getFov(); }
+float VRCamera::getAspect() { return aspect; }
+float VRCamera::getFov() { return fov; }
 float VRCamera::getNear() { return nearClipPlaneCoeff; }
 float VRCamera::getFar() { return farClipPlaneCoeff; }
-void VRCamera::setAspect(float a) { cam->setAspect(a); }
-void VRCamera::setFov(float f) { cam->setFov(f); }
-void VRCamera::setNear(float a) { nearClipPlaneCoeff = a; cam->setNear(a); }
-void VRCamera::setFar(float f) { farClipPlaneCoeff = f; cam->setFar(f); }
+void VRCamera::setAspect(float a) { cam->setAspect(a); aspect = a; }
+void VRCamera::setFov(float f) { cam->setFov(f); fov = f; }
+void VRCamera::setNear(float a) { nearClipPlaneCoeff = a; cam->setNear(parallaxD * a); }
+void VRCamera::setFar(float f) { farClipPlaneCoeff = f; cam->setFar(parallaxD * f); }
 void VRCamera::setProjection(string p) {
     if (p == "perspective"); // TODO
     if (p == "orthographic"); // TODO

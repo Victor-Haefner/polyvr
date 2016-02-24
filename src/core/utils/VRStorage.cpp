@@ -22,9 +22,7 @@ void VRStorage::save(xmlpp::Element* e) {
 
 void VRStorage::saveUnder(xmlpp::Element* e) {
     if (e == 0) return;
-    e = e->add_child("node");// todo: define tag
-    //cout << "g " << this << endl;
-    //for (auto s : storage) cout << "g " << s.first << endl;
+    e = e->add_child("Node"); // todo: define tag
     save(e);
 }
 

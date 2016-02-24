@@ -24,17 +24,6 @@ PyObject* VRPyProjectManager::addItem(VRPyProjectManager* self, PyObject* args) 
     if (! PyArg_ParseTuple(args, "O", &o)) return NULL;
 
     VRStoragePtr s;
-
-    /*if (VRPyCamera::check(o)) {
-        VRCameraPtr c = ((VRPyCamera*)o)->objPtr;
-        VRObjectPtr O = static_pointer_cast<VRObject>(c);
-        s = dynamic_pointer_cast<VRStorage>(O);
-        cout << "VRPyProjectManager::addItem " << c->getName() << endl
-        << "  " << c << endl
-        << "  " << O << endl
-        << "  " << s << endl;
-    }*/
-
     if (VRPyObject::check(o)) s = dynamic_pointer_cast<VRStorage>(((VRPyObject*)o)->objPtr);
     else if (VRPyStorage::check(o)) s = ((VRPyStorage*)o)->objPtr;
     else { PyErr_SetString(err, "Not a storable item!"); return NULL; }

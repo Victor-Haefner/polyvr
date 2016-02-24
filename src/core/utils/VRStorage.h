@@ -20,7 +20,7 @@ struct VRStorageBin {
     VRStoreCbPtr f2; // save
 };
 
-class VRStorage : public std::enable_shared_from_this<VRStorage>, public VRName {
+class VRStorage {
     private:
         VRUpdatePtr f_update; // update
         map<string, VRStorageBin> storage;

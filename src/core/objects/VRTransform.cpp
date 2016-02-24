@@ -1,6 +1,7 @@
 
 #include "core/utils/isNan.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRStorage_template.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/utils/VRDoublebuffer.h"
@@ -24,6 +25,17 @@ VRTransform::VRTransform(string name) : VRObject(name) {
     t = Transform::create();
     setCore(t, "Transform");
     addAttachment("transform", 0);
+
+    store("from", &_from);
+    store("at", &_at);
+    store("up", &_up);
+    store("scale", &_scale);
+    store("cT", &tConstraint);
+    store("cR", &rConstraint);
+    store("do_cT", &doTConstraint);
+    store("do_cR", &doRConstraint);
+    store("cT_mode", &tConMode);
+    store("at_dir", &orientation_mode);
 }
 
 VRTransform::~VRTransform() {

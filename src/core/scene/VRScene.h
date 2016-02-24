@@ -34,7 +34,8 @@ class VRScene : public VRObjectManager,
                 public VRMaterialManager,
                 public VRBackground,
                 public VRRenderManager,
-                public VRFlags {
+                public VRFlags,
+                public VRName {
     private:
         string path;
         string icon;

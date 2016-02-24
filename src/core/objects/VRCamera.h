@@ -12,11 +12,13 @@ class VRCamera : public VRTransform {
         PerspectiveCameraRecPtr cam;
         NodeRecPtr camGeo;
 
-        float parallaxD;
-        float nearClipPlaneCoeff;
-        float farClipPlaneCoeff;
+        float parallaxD = 1;
+        float nearClipPlaneCoeff = 0;
+        float farClipPlaneCoeff = 0;
+        float aspect = 0;
+        float fov = 0;
 
-        bool doAcceptRoot;
+        bool doAcceptRoot = true;
 
     protected:
 

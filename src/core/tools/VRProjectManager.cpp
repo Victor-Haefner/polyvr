@@ -42,6 +42,7 @@ void VRProjectManager::load(string path) {
         if (!e) continue;
 
         auto s = VRStorage::createFromStore(e);
+        if (!s) continue;
         s->load(e);
         addItem(s);
     }

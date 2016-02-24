@@ -58,7 +58,7 @@ class VRNavPreset : public VRName {
         vector<VRNavBinding>::iterator end();
 };
 
-class VRNavigator_base : public virtual VRStorage {
+class VRNavigator_base : public VRStorage {
     private:
         map<string, VRDeviceCb> library;
 
