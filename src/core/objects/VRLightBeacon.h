@@ -20,7 +20,7 @@ class VRLightBeacon : public VRTransform {
         VRLightBeacon(string name);
         ~VRLightBeacon();
 
-        static VRLightBeaconPtr create(string name);
+        static VRLightBeaconPtr create(string name = "None");
         VRLightBeaconPtr ptr();
 
         VRLightWeakPtr getLight();

@@ -77,6 +77,30 @@ void VRStorage::load_int_map_cb(map<int, T*>* mt, string tag, xmlpp::Element* e)
 }
 
 template<typename T>
+void VRStorage::save_vec_cb(vector<std::shared_ptr<T> >* v, xmlpp::Element* e) {
+    for (auto t : *v) t->saveUnder(e);
+}
+
+template<typename T>
+void VRStorage::load_vec_cb(vector<std::shared_ptr<T> >* v, xmlpp::Element* e) {
+    for (auto n : e->get_children()) {
+        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
+        if (!el) continue;
+        auto t = T::create();
+        t->load(e);
+        v->push_back( t );
+    }
+}
+
+template<typename T>
+void VRStorage::store(string tag, vector<std::shared_ptr<T> >& v) {
+    VRStorageBin b;
+    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_vec_cb<T>, this, &v, _1 ) );
+    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_vec_cb<T>, this, &v, _1 ) );
+    storage[tag] = b;
+}
+
+template<typename T>
 void VRStorage::store(string tag, T* t) {
     VRStorageBin b;
     b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_cb<T>, this, t, tag, _1 ) );

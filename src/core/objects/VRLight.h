@@ -42,7 +42,7 @@ class VRLight : public VRObject {
         VRLight(string name = "");
         ~VRLight();
 
-        static VRLightPtr create(string name);
+        static VRLightPtr create(string name = "None");
         VRLightPtr ptr();
 
         void setOn(bool b);

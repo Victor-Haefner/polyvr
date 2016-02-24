@@ -36,7 +36,7 @@ class VRStage : public VRObject {
         VRStage(string name);
         ~VRStage();
 
-        static VRStagePtr create(string name);
+        static VRStagePtr create(string name = "None");
         VRStagePtr ptr();
 
         void setActive(bool b);

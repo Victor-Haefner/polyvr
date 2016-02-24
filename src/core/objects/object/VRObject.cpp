@@ -7,6 +7,8 @@
 #include <OpenSG/OSGTransform.h>
 #include <OpenSG/OSGVisitSubTree.h>
 #include "core/utils/toString.h"
+#include "core/utils/VRFunction.h"
+#include "core/utils/VRStorage_template.h"
 #include <libxml++/nodes/element.h>
 
 OSG_BEGIN_NAMESPACE;
@@ -29,6 +31,13 @@ VRObject::VRObject(string _name) {
     node = makeNodeFor(Group::create());
     OSG::setName(node, name);
     type = "Object";
+
+    store("type", &type);
+    store("pickable", &pickable);
+    store("visible", &visible);
+    store("children", children);
+
+    regStorageUpdateFkt( VRFunction<int>::create("object_update", boost::bind(&VRObject::setup, this)) );
 }
 
 VRObject::~VRObject() {
@@ -534,9 +543,12 @@ void VRObject::saveContent(xmlpp::Element* e) {
 void VRObject::loadContent(xmlpp::Element* e) {
     VRName::loadName(e);
     type = e->get_attribute("type")->get_value();
-
     if (e->get_attribute("pickable")) toValue(e->get_attribute("pickable")->get_value(), pickable);
     if (e->get_attribute("visible")) toValue(e->get_attribute("visible")->get_value(), visible);
+    setup();
+}
+
+void VRObject::setup() {
     setVisible(visible);
     setPickable(pickable);
 }

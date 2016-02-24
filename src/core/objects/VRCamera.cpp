@@ -28,15 +28,13 @@ VRCamera::VRCamera(string name) : VRTransform(name) {
     cam = PerspectiveCamera::create();
     cam->setBeacon(getNode());
     setFov(osgDegree2Rad(60));
-    setAspect(1);
-    setNear(parallaxD * 0.1);
-    setFar(parallaxD * 512);
 
     store("accept_root", &doAcceptRoot);
     store("near", &nearClipPlaneCoeff);
     store("far", &farClipPlaneCoeff);
     store("aspect", &aspect);
     store("fov", &fov);
+    regStorageUpdateFkt( VRFunction<int>::create("camera_update", boost::bind(&VRCamera::setup, this)) );
 
     // cam geo
     TransformRecPtr trans = Transform::create();
@@ -71,6 +69,14 @@ VRCameraPtr VRCamera::create(string name) {
     return p;
 }
 
+void VRCamera::setup() {
+    cout << "VRCamera::setup\n";
+    cam->setAspect(aspect);
+    cam->setFov(fov);
+    cam->setNear(parallaxD * nearClipPlaneCoeff);
+    cam->setFar(parallaxD * farClipPlaneCoeff);
+}
+
 void VRCamera::activate() {
     auto scene = VRSceneManager::getCurrent();
     if (scene) scene->setActiveCamera(getName());
@@ -95,10 +101,10 @@ float VRCamera::getAspect() { return aspect; }
 float VRCamera::getFov() { return fov; }
 float VRCamera::getNear() { return nearClipPlaneCoeff; }
 float VRCamera::getFar() { return farClipPlaneCoeff; }
-void VRCamera::setAspect(float a) { cam->setAspect(a); aspect = a; }
-void VRCamera::setFov(float f) { cam->setFov(f); fov = f; }
-void VRCamera::setNear(float a) { nearClipPlaneCoeff = a; cam->setNear(parallaxD * a); }
-void VRCamera::setFar(float f) { farClipPlaneCoeff = f; cam->setFar(parallaxD * f); }
+void VRCamera::setAspect(float a) { aspect = a; setup(); }
+void VRCamera::setFov(float f) { fov = f; setup(); }
+void VRCamera::setNear(float a) { nearClipPlaneCoeff = a; setup(); }
+void VRCamera::setFar(float f) { farClipPlaneCoeff = f; setup(); }
 void VRCamera::setProjection(string p) {
     if (p == "perspective"); // TODO
     if (p == "orthographic"); // TODO

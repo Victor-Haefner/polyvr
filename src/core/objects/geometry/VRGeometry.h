@@ -49,6 +49,7 @@ class VRGeometry : public VRTransform {
 
         virtual void saveContent(xmlpp::Element* e);
         virtual void loadContent(xmlpp::Element* e);
+        void setup();
 
         VRGeometry(string name, bool hidden);
         static VRGeometryPtr create(string name, bool hidden);
@@ -57,7 +58,7 @@ class VRGeometry : public VRTransform {
         VRGeometry(string name = "0");
         virtual ~VRGeometry();
 
-        static VRGeometryPtr create(string name);
+        static VRGeometryPtr create(string name = "None");
         static VRGeometryPtr create(string name, string primitive, string params);
         VRGeometryPtr ptr();
 

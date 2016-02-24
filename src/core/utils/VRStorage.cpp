@@ -13,7 +13,7 @@ VRStorage::VRStorage() {
     ;
 }
 
-void VRStorage::regStorageUpdateFkt(VRUpdatePtr u) { f_update = u; }
+void VRStorage::regStorageUpdateFkt(VRUpdatePtr u) { f_update.push_back(u); }
 
 void VRStorage::save(xmlpp::Element* e) {
     if (e == 0) return;
@@ -29,7 +29,7 @@ void VRStorage::saveUnder(xmlpp::Element* e) {
 void VRStorage::load(xmlpp::Element* e) {
     if (e == 0) return;
     for (auto s : storage) (*s.second.f1)(e);
-    if (f_update) (*f_update)(0);
+    for (auto f : f_update) (*f)(0);
 }
 
 VRStoragePtr VRStorage::createFromStore(xmlpp::Element* e) {

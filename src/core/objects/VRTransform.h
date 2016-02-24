@@ -95,7 +95,7 @@ class VRTransform : public VRObject {
         VRTransform(string name = "");
         virtual ~VRTransform();
 
-        static VRTransformPtr create(string name);
+        static VRTransformPtr create(string name = "None");
         VRTransformPtr ptr();
 
         static list< VRTransformWeakPtr > changedObjects;
@@ -206,6 +206,7 @@ class VRTransform : public VRObject {
 
         /** Update the object OSG transformation **/
         virtual void update();
+        void setup();
         void updatePhysics();
 };
 

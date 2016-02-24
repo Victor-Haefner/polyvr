@@ -39,7 +39,7 @@ class VRGlobals {
         static VRGlobals* get();
 };
 
-class VRObject : public std::enable_shared_from_this<VRStorage>, public VRName, public VRStorage {
+class VRObject : public std::enable_shared_from_this<VRStorage>, public VRName {
     private:
         bool specialized = false;
         VRObjectWeakPtr parent;
@@ -79,7 +79,7 @@ class VRObject : public std::enable_shared_from_this<VRStorage>, public VRName, 
         VRObject(string name = "0");
         virtual ~VRObject();
 
-        static VRObjectPtr create(string name);
+        static VRObjectPtr create(string name = "None");
         VRObjectPtr ptr();
 
         /** Returns the Object ID **/
@@ -201,6 +201,7 @@ class VRObject : public std::enable_shared_from_this<VRStorage>, public VRName, 
         /** Set the object pickable || not **/
         void setPickable(int b);
 
+        void setup();
         void destroy();
 
         void save(xmlpp::Element* e);

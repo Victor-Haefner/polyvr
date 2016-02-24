@@ -31,7 +31,7 @@ class VRLod : public VRObject {
         VRLod(string name = "0");
         ~VRLod();
 
-        static VRLodPtr create(string name);
+        static VRLodPtr create(string name = "None");
         VRLodPtr ptr();
 
         void setCenter(Vec3f c);

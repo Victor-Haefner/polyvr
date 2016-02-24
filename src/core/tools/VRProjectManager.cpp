@@ -36,13 +36,16 @@ void VRProjectManager::load(string path) {
     parser.parse_file(path.c_str());
     xmlpp::Element* root = dynamic_cast<xmlpp::Element*>(parser.get_document()->get_root_node());
 
-    vault.clear();
+    int i=0;
     for (auto n : root->get_children()) {
         xmlpp::Element* e = dynamic_cast<xmlpp::Element*>(n);
         if (!e) continue;
 
-        auto s = VRStorage::createFromStore(e);
+        VRStoragePtr s;
+        if (i < vault.size()) s = vault[i].lock(); i++;
+        if (!s) s = VRStorage::createFromStore(e);
         if (!s) continue;
+
         s->load(e);
         addItem(s);
     }

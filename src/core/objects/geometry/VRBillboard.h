@@ -27,10 +27,10 @@ class VRBillboard : public VRGeometry {
         void updateSize();
 
     public:
-        VRBillboard(string name = "", bool alpha = true);
+        VRBillboard(string name = "None", bool alpha = true);
         ~VRBillboard();
 
-        static VRBillboardPtr create(string name = "", bool alpha = true);
+        static VRBillboardPtr create(string name = "None", bool alpha = true);
         VRBillboardPtr ptr();
 
         void setTexture(VRTexturePtr img);

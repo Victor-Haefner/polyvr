@@ -36,6 +36,8 @@ VRTransform::VRTransform(string name) : VRObject(name) {
     store("do_cR", &doRConstraint);
     store("cT_mode", &tConMode);
     store("at_dir", &orientation_mode);
+
+    regStorageUpdateFkt( VRFunction<int>::create("transform_update", boost::bind(&VRTransform::setup, this)) );
 }
 
 VRTransform::~VRTransform() {
@@ -765,6 +767,12 @@ void VRTransform::update() {
     updateTransformation();
     updatePhysics();
     change = false;
+}
+
+void VRTransform::setup() {
+    cout << "VRTransform::setup\n";
+    change = true;
+    update();
 }
 
 void VRTransform::saveContent(xmlpp::Element* e) {

@@ -2,27 +2,26 @@
 #define VRNAME_H_INCLUDED
 
 #include <string>
+#include "VRStorage.h"
 
 // forward declarations
 namespace xmlpp{ class Element; }
 
 using namespace std;
 
-class VRName {
-    private:
-        int name_suffix;
-        void compileName();
-        char separator;
-        string nameSpace;
-
+class VRName_base {
     protected:
         string name;
         string base_name;
+        int name_suffix = 0;
+        char separator = '.';
+        string nameSpace = "__global__";
 
     public:
-        VRName();
-        ~VRName();
+        VRName_base();
+        ~VRName_base();
 
+        void compileName();
         string setName(string name);
         string getName();
         string getBaseName();
@@ -36,6 +35,12 @@ class VRName {
         static int getNameNumber();
         static int getBaseNameNumber();
         static void printNameDict();
+};
+
+class VRName : public OSG::VRStorage, public VRName_base {
+    public:
+        VRName();
+        ~VRName();
 };
 
 #endif // VRNAME_H_INCLUDED
