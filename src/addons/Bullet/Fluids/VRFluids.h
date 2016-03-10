@@ -23,6 +23,9 @@ class VRFluids : public VRParticles {
         void setSphRadius(float newRadius);
         void setViscosity(float factor);
         void setMass(float newMass, float variation=0.0) override;
+        void setRestDensity(float density);
+        void setRestDensity(int rN, float rDIS);
+
 
     protected:
         VRUpdatePtr fluidFkt;
@@ -36,14 +39,14 @@ class VRFluids : public VRParticles {
          */
         float PRESSURE_KAPPA = 0; // just some init value, see updateDerivedValues()
         /* Number of particles around a resting particle */
-        const int REST_N = 1;
+        int REST_N = 1;
         /* Average distance of particles around resting particle */
-        const float REST_DIS = 0.7;
+        float REST_DIS = 0.7;
         /*
          * Density where particles should rest.
          * (re-)calculate using updateDerivedValues();
          */
-        float REST_DENSITY  = 1; // just some init value, see updateDerivedValues()
+        float REST_DENSITY  = 0; // just some init value, see updateDerivedValues()
         /* Simple viscosity multiplier */
         float VISCOSITY_MU   = 0.01;
         /* The number Pi given precisely to five decimal places */
@@ -57,11 +60,11 @@ class VRFluids : public VRParticles {
 
         inline void xsph_calc_movement(SphParticle* p, int from, int to);
 
-        inline float kernel_poly6(btVector3 distance_vector, float area) __attribute__((always_inline));
-        inline float kernel_spiky(btVector3 distance_vector, float area) __attribute__((always_inline));
-        inline btVector3 kernel_spiky_gradient(btVector3 distance_vector, float h) __attribute__((always_inline));
-        inline float kernel_visc(btVector3 distance_vector, float area) __attribute__((always_inline));
-        inline float kernel_visc_laplacian(btVector3 distance_vector, float area) __attribute__((always_inline));
+        inline float kernel_poly6(btVector3 distance_vector, float area) /*__attribute__((always_inline))*/;
+        inline float kernel_spiky(btVector3 distance_vector, float area) /*__attribute__((always_inline))*/;
+        inline btVector3 kernel_spiky_gradient(btVector3 distance_vector, float h) /*__attribute__((always_inline))*/;
+        inline float kernel_visc(btVector3 distance_vector, float area) /*__attribute__((always_inline))*/;
+        inline float kernel_visc_laplacian(btVector3 distance_vector, float area) /*__attribute__((always_inline))*/;
 
         inline void sph_calc_properties(SphParticle* p) __attribute__((always_inline));
         inline void sph_calc_forces(SphParticle* p) __attribute__((always_inline));

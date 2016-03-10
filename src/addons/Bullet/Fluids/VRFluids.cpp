@@ -72,16 +72,19 @@ void VRFluids::update(int from, int to) {
                 pos->setValue(toVec3f(p),i);
 
                 colors->setValue(Vec4f(0,0,1,1), i);
-                // auto particle = (SphParticle*)particles[i];
-                // auto d = particle->sphDensity / this->REST_DENSITY; // visualize density
-                // // auto d = particle->sphPressureForce.length() + particle->sphViscosityForce.length() / 20.0;
-                // if (d > 1.0) {
-                //     colors->setValue(Vec4f(d-1,2-d,0,1), i); // high range -> green<->red
-                // } else if (d < 0.00001) {
-                //     colors->setValue(Vec4f(0,0,0,1), i); // zero or negative -> black
-                // } else {
-                //     colors->setValue(Vec4f(0,d,1-d,1), i); // low range -> blue<->green
-                // }
+                /*
+                auto particle = (SphParticle*)particles[i];
+                //auto d = particle->sphDensity / this->REST_DENSITY; // visualize density
+                auto d = particle->body->getLinearVelocity().length2() / (3*3); // visualize velocity
+                // auto d = particle->sphPressureForce.length() + particle->sphViscosityForce.length() / 20.0;
+                if (d > 1.0) {
+                    colors->setValue(Vec4f(d-1,2-d,0,1), i); // high range -> green<->red
+                } else if (d < 0.00001) {
+                    colors->setValue(Vec4f(0,0,0,1), i); // zero or negative -> black
+                } else {
+                    colors->setValue(Vec4f(0,d,1-d,1), i); // low range -> blue<->green
+                }
+                */
             }
         }
     }
@@ -325,6 +328,16 @@ void VRFluids::setMass(float newMass, float variation) {
 
 void VRFluids::setViscosity(float factor) {
     this->VISCOSITY_MU = factor;
+}
+
+void VRFluids::setRestDensity(float density) {
+    this->REST_DENSITY = density;
+}
+
+void VRFluids::setRestDensity(int rN, float rDIS) {
+    this->REST_N = rN;
+    this->REST_DIS = rDIS;
+    this->updateDerivedValues();
 }
 
 void VRFluids::updateDerivedValues() {
