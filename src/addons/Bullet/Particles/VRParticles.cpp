@@ -156,7 +156,7 @@ int VRParticles::spawnCuboid(Vec3f base, Vec3f size, float distance) {
     btVector3 pos;
 
     {
-        //BLock lock(mtx()); // NOTE causes buggy physics?!?
+        BLock lock(mtx());
         for (i = 0; i < numY && !done; i++) {
             posY = i * distance;
 

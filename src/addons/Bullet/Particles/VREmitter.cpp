@@ -36,6 +36,8 @@ Emitter::Emitter(btDiscreteDynamicsWorld* world, vector<Particle*> particlesV, b
 
 Emitter::~Emitter() {
     setActive(false);
+    VRScenePtr scene = VRSceneManager::getCurrent();
+    scene->dropUpdateFkt(fkt);
 }
 
 void Emitter::setActive(bool activate) {

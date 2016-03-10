@@ -94,7 +94,7 @@ struct Particle {
 
     void setActive(bool active = true) {
         // NOTE TAG description at http://www.bulletphysics.org/mediawiki-1.5.8/index.php/Activation_States
-        body->setActivationState(DISABLE_DEACTIVATION);
+        body->forceActivationState(DISABLE_DEACTIVATION);
         isActive = active;
     }
 
