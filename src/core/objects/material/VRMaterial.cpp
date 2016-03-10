@@ -156,6 +156,10 @@ VRMaterial::VRMaterial(string name) : VRObject(name) {
     MaterialGroupRecPtr group = MaterialGroup::create();
     group->setMaterial(passes);
     setCore(group, "Material");
+
+    //store("diffuse", &diffuse);
+    //store("specular", &specular);
+    //store("ambient", &ambient);
 }
 
 VRMaterial::~VRMaterial() { for (auto m : mats) delete m; }
@@ -364,14 +368,6 @@ void VRMaterial::setPointSize(int s, bool smooth) {
     if (md->pointChunk == 0) { md->pointChunk = PointChunk::create(); md->mat->addChunk(md->pointChunk); }
     md->pointChunk->setSize(s);
     md->pointChunk->setSmooth(smooth);
-}
-
-void VRMaterial::saveContent(xmlpp::Element* e) {
-    VRObject::saveContent(e);
-
-    e->set_attribute("diffuse", toString(getDiffuse()));
-    e->set_attribute("specular", toString(getSpecular()));
-    e->set_attribute("ambient", toString(getAmbient()));
 }
 
 void VRMaterial::loadContent(xmlpp::Element* e) {

@@ -4,7 +4,7 @@
 #include "core/objects/VRObjectFwd.h"
 #include "core/tools/selection/VRSelectionFwd.h"
 #include "../VRTransform.h"
-#include <OpenSG/OSGFieldContainerFields.h>
+#include <OpenSG/OSGSField.h>
 #include <OpenSG/OSGImage.h> // TODO
 
 struct VRPrimitive;
@@ -47,8 +47,8 @@ class VRGeometry : public VRTransform {
 
         void meshChanged();
 
-        virtual void saveContent(xmlpp::Element* e);
         virtual void loadContent(xmlpp::Element* e);
+        void setup();
 
         VRGeometry(string name, bool hidden);
         static VRGeometryPtr create(string name, bool hidden);
@@ -57,7 +57,7 @@ class VRGeometry : public VRTransform {
         VRGeometry(string name = "0");
         virtual ~VRGeometry();
 
-        static VRGeometryPtr create(string name);
+        static VRGeometryPtr create(string name = "None");
         static VRGeometryPtr create(string name, string primitive, string params);
         VRGeometryPtr ptr();
 

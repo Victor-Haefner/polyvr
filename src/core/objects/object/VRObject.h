@@ -3,7 +3,8 @@
 
 #include <string>
 #include <vector>
-#include <OpenSG/OSGFieldContainerFields.h>
+
+#include <OpenSG/OSGSField.h>
 #include <OpenSG/OSGVector.h>
 
 #include "core/utils/VRName.h"
@@ -39,7 +40,7 @@ class VRGlobals {
         static VRGlobals* get();
 };
 
-class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, public VRStorage {
+class VRObject : public std::enable_shared_from_this<VRStorage>, public VRName {
     private:
         bool specialized = false;
         VRObjectWeakPtr parent;
@@ -48,8 +49,6 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         int childIndex = 0; // index of this object in its parent child vector
         int pickable = 0;
         bool visible = true;
-        bool intern = false;
-        int persistency = 666;
         unsigned int graphChanged = 0; //is frame number
 
         map<string, VRAttachment*> attachments;
@@ -72,14 +71,11 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         virtual VRObjectPtr copy(vector<VRObjectPtr> children);
         //VRObjectPtr copy();
 
-        virtual void saveContent(xmlpp::Element* e);
-        virtual void loadContent(xmlpp::Element* e);
-
     public:
         VRObject(string name = "0");
         virtual ~VRObject();
 
-        static VRObjectPtr create(string name);
+        static VRObjectPtr create(string name = "None");
         VRObjectPtr ptr();
 
         /** Returns the Object ID **/
@@ -87,10 +83,6 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
 
         /** Returns the object type **/
         string getType();
-
-        bool getIntern();
-        void setPersistency(int p);
-        int getPersistency();
 
         VRObjectPtr getRoot();
         string getPath();
@@ -201,10 +193,10 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         /** Set the object pickable || not **/
         void setPickable(int b);
 
+        void setup();
         void destroy();
 
-        void save(xmlpp::Element* e);
-        void load(xmlpp::Element* e);
+        virtual void loadContent(xmlpp::Element* e);
 };
 
 OSG_END_NAMESPACE;

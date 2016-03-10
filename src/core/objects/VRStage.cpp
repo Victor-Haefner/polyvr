@@ -13,16 +13,8 @@ VRObjectPtr VRStage::copy(vector<VRObjectPtr> children) {
     return g;
 }
 
-void VRStage::saveContent(xmlpp::Element* e) {
-    VRObject::saveContent(e);
-    //e->set_attribute("group", group);
-    //e->set_attribute("active", toString(active));
-}
-
 void VRStage::loadContent(xmlpp::Element* e) {
     VRObject::loadContent(e);
-    //setGroup( e->get_attribute("group")->get_value().c_str() );
-    //setActive( e->get_attribute("active")->get_value().c_str() );
 }
 
 VRStage::VRStage(string name) : VRObject(name) {

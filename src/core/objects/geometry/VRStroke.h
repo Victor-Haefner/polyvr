@@ -23,7 +23,7 @@ class VRStroke : public VRGeometry {
     public:
         VRStroke(string name);
 
-        static VRStrokePtr create(string name);
+        static VRStrokePtr create(string name = "None");
         VRStrokePtr ptr();
 
         void setPath(path* p);

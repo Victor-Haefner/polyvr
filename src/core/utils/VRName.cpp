@@ -4,6 +4,8 @@
 #include <map>
 #include <iostream>
 #include "toString.h"
+#include "VRStorage_template.h"
+#include "VRFunction.h"
 #include <libxml++/nodes/element.h>
 
 using namespace std;
@@ -12,18 +14,23 @@ using namespace std;
 map<string, map<string, map<int, string> > > nameDicts;
 
 VRName::VRName() {
-    name_suffix = 0;
-    separator = '.';
-    nameSpace = "__global__";
+    store("name_suffix", &name_suffix);
+    store("base_name", &base_name);
+    store("name_space", &nameSpace);
+
+    regStorageUpdateFkt( VRFunction<int>::create("name_update", boost::bind(&VRName_base::compileName, dynamic_cast<VRName_base*>(this))) );
+}
+
+VRName::~VRName() {}
+
+VRName_base::VRName_base() {
     if (nameDicts.count(nameSpace) == 0) nameDicts[nameSpace] = map<string, map<int, string> >();
 }
 
-VRName::~VRName() {
-    setName("");
-}
+VRName_base::~VRName_base() { setName(""); }
 
-void VRName::setSeparator(char   s) { separator = s; }
-void VRName::setNameSpace(string s) {
+void VRName_base::setSeparator(char   s) { separator = s; }
+void VRName_base::setNameSpace(string s) {
     if (nameSpace == s) return;
 
     map<string, map<int, string> >& nameDict = nameDicts[nameSpace];
@@ -38,7 +45,8 @@ void VRName::setNameSpace(string s) {
     }
 }
 
-void VRName::compileName() {
+void VRName_base::compileName() {
+    setNameSpace(nameSpace);
     name = base_name;
     map<string, map<int, string> >& nameDict = nameDicts[nameSpace];
     if (name_suffix>0) name += separator + toString(name_suffix);
@@ -46,7 +54,7 @@ void VRName::compileName() {
     nameDict[base_name][name_suffix] = name;
 }
 
-string VRName::setName(string name) {
+string VRName_base::setName(string name) {
     //if (name == "arg") cout << "\n SET NAME " << name << " " << this->name << " " << nameSpace << flush;
 
     if (base_name == name && name_suffix == 0) {
@@ -94,17 +102,17 @@ string VRName::setName(string name) {
     compileName();
     return this->name;
 }
-string VRName::getName() { return name; }
-string VRName::getBaseName() { return base_name; }
-int VRName::getNameSuffix() { return name_suffix; }
+string VRName_base::getName() { return name; }
+string VRName_base::getBaseName() { return base_name; }
+int VRName_base::getNameSuffix() { return name_suffix; }
 
-void VRName::saveName(xmlpp::Element* e) {
+void VRName_base::saveName(xmlpp::Element* e) {
     e->set_attribute("name_suffix", toString(name_suffix));
     e->set_attribute("base_name", base_name);
     e->set_attribute("name_space", nameSpace);
 }
 
-void VRName::loadName(xmlpp::Element* e) {
+void VRName_base::loadName(xmlpp::Element* e) {
     //cout << "\nLOAD Name " << this;
     map<string, map<int, string> >& nameDict = nameDicts[nameSpace];
     if (nameDict.count(base_name) == 1) nameDict[base_name].erase(name_suffix); // check if allready named, remove old name from dict
@@ -112,13 +120,12 @@ void VRName::loadName(xmlpp::Element* e) {
     if (e->get_attribute("name_suffix")) name_suffix = toInt(e->get_attribute("name_suffix")->get_value());
     if (e->get_attribute("base_name")) base_name = e->get_attribute("base_name")->get_value();
     if (e->get_attribute("name_space")) nameSpace = e->get_attribute("name_space")->get_value();
-    setNameSpace(nameSpace);
     compileName();
 }
 
 
 
-int VRName::getBaseNameNumber() {
+int VRName_base::getBaseNameNumber() {
     int N = 0;
     map<string, map<string, map<int, string> > >::iterator itr1;
     for (itr1 = nameDicts.begin(); itr1 != nameDicts.end(); itr1++) {
@@ -127,7 +134,7 @@ int VRName::getBaseNameNumber() {
     return N;
 }
 
-int VRName::getNameNumber() {
+int VRName_base::getNameNumber() {
     int N = 0;
     map<string, map<string, map<int, string> > >::iterator itr1;
     map<string, map<int, string> >::iterator itr2;
@@ -139,7 +146,7 @@ int VRName::getNameNumber() {
     return N;
 }
 
-void VRName::printNameDict() { // call this to see what is not deleted -> add to hidden button?
+void VRName_base::printNameDict() { // call this to see what is not deleted -> add to hidden button?
     map<string, map<string, map<int, string> > >::iterator itr1;
     map<string, map<int, string> >::iterator itr2;
     map<int, string>::iterator itr3;

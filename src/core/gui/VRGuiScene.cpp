@@ -781,7 +781,7 @@ void VRGuiScene::on_menu_add_primitive(string s) {
 
 void VRGuiScene::on_menu_delete() {
     if(!selected_itr) return;
-    if (getSelected()->hasAttachment("global")) return;
+    if (getSelected()->getPersistency() == 0) return;
     // todo: check for camera!!
 
     string msg1 = "Delete object " + getSelected()->getName();

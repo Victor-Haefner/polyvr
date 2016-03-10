@@ -2,7 +2,7 @@
 #define VRLIGHT_H_INCLUDED
 
 #include "core/objects/object/VRObject.h"
-#include <OpenSG/OSGFieldContainerFields.h>
+#include <OpenSG/OSGSField.h>
 #include <OpenSG/OSGColor.h>
 
 OSG_BEGIN_NAMESPACE;
@@ -33,7 +33,6 @@ class VRLight : public VRObject {
         SimpleShadowMapEngineRefPtr ssme;
         Vec3f attenuation; // C L Q
 
-        void saveContent(xmlpp::Element* e);
         void loadContent(xmlpp::Element* e);
 
         void update();
@@ -42,7 +41,7 @@ class VRLight : public VRObject {
         VRLight(string name = "");
         ~VRLight();
 
-        static VRLightPtr create(string name);
+        static VRLightPtr create(string name = "None");
         VRLightPtr ptr();
 
         void setOn(bool b);

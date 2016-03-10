@@ -1,7 +1,7 @@
 #ifndef VRMATERIAL_H_INCLUDED
 #define VRMATERIAL_H_INCLUDED
 
-#include <OpenSG/OSGFieldContainerFields.h>
+#include <OpenSG/OSGSField.h>
 #include <OpenSG/OSGColor.h>
 
 #include "core/objects/object/VRObject.h"
@@ -44,14 +44,13 @@ class VRMaterial : public VRObject {
         bool isSMat(MaterialUnrecPtr matPtr);
         bool isSTMat(MaterialUnrecPtr matPtr);
 
-        void saveContent(xmlpp::Element* e);
         void loadContent(xmlpp::Element* e);
 
     public:
         VRMaterial(string name);
         virtual ~VRMaterial();
 
-        static VRMaterialPtr create(string name);
+        static VRMaterialPtr create(string name = "None");
         VRMaterialPtr ptr();
 
         void setDeffered(bool b);

@@ -17,6 +17,7 @@
 #include "core/scene/import/VRImport.h"
 #include "core/math/interpolator.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRFunction.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/object/VRObjectT.h"
 #include "core/tools/selection/VRSelection.h"
@@ -42,14 +43,19 @@ VRGeometry::VRGeometry(string name) : VRTransform(name) {
     type = "Geometry";
     addAttachment("geometry", 0);
     if (!meshSet) setMesh(Geometry::create());
+
+    store("sourcetype", &source.type);
+    store("sourceparam", &source.parameter);
+
+    regStorageUpdateFkt( VRFunction<int>::create("geometry_update", boost::bind(&VRGeometry::setup, this)) );
 }
 
 VRGeometry::VRGeometry(string name, bool hidden) : VRTransform(name) {
     setNameSpace("system");
-    setIntern(hidden);
     type = "Geometry";
     addAttachment("geometry", 0);
     if (!meshSet) setMesh(Geometry::create());
+    if (hidden) setPersistency(0);
 }
 
 VRGeometry::~VRGeometry() {}
@@ -753,20 +759,15 @@ void VRGeometry::showGeometricData(string type, bool b) {
     m->setLit(false);
 }
 
-void VRGeometry::saveContent(xmlpp::Element* e) {
-    VRTransform::saveContent(e);
-    if (getPersistency() < 3) return;
-    stringstream ss; ss << source.type;
-    e->set_attribute("sourcetype", ss.str());
-    e->set_attribute("sourceparam", source.parameter);
-}
-
 void VRGeometry::loadContent(xmlpp::Element* e) {
     VRTransform::loadContent(e);
 
     source.type = toInt(e->get_attribute("sourcetype")->get_value().c_str());
     source.parameter = e->get_attribute("sourceparam")->get_value();
+    setup();
+}
 
+void VRGeometry::setup() {
     string p1, p2;
     stringstream ss;
     VRGeometryPtr g;

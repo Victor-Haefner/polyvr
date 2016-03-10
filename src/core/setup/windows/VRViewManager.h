@@ -1,7 +1,7 @@
 #ifndef VRVIEWMANAGER_H_INCLUDED
 #define VRVIEWMANAGER_H_INCLUDED
 
-#include <OpenSG/OSGFieldContainerFields.h>
+#include <OpenSG/OSGSField.h>
 #include "core/objects/VRObjectFwd.h"
 #include "core/setup/VRSetupFwd.h"
 

@@ -2,7 +2,7 @@
 #define VRPRIMITIVE_H_INCLUDED
 
 #include <string>
-#include <OpenSG/OSGFieldContainerFields.h>
+#include <OpenSG/OSGSField.h>
 
 namespace OSG{ class Geometry; OSG_GEN_CONTAINERPTR(Geometry); }
 

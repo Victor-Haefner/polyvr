@@ -1,21 +1,52 @@
 #include "VRProjectManager.h"
 
 #include "core/utils/VRStorage.h"
+#include <boost/filesystem.hpp>
+#include <libxml++/libxml++.h>
+#include <libxml++/nodes/element.h>
 
 using namespace OSG;
+namespace fs = boost::filesystem;
 
 VRProjectManager::VRProjectManager() : VRSprite("ProjectManager") { initSite(); }
+
+VRProjectManagerPtr VRProjectManager::create() { return shared_ptr<VRProjectManager>(new VRProjectManager()); }
 
 void VRProjectManager::initSite() {
     ;
 }
 
-void VRProjectManager::addStorage(VRStoragePtr s) { vault.push_back(s); }
+void VRProjectManager::addItem(VRStoragePtr s) {
+    if (s) vault.push_back(s);
+}
 
-void VRProjectManager::store(string path) {
-    ;
+void VRProjectManager::save(string path) {
+    if (fs::exists(path)) path = fs::canonical(path).string();
+    xmlpp::Document doc;
+    xmlpp::Element* root = doc.create_root_node("Project", "", "VRP"); // name, ns_uri, ns_prefix
+    for (auto v : vault) if (auto vs = v.lock()) vs->saveUnder(root);
+    doc.write_to_file_formatted(path);
 }
 
 void VRProjectManager::load(string path) {
-    ;
+    if (fs::exists(path)) path = fs::canonical(path).string();
+
+    xmlpp::DomParser parser;
+    parser.set_validate(false);
+    parser.parse_file(path.c_str());
+    xmlpp::Element* root = dynamic_cast<xmlpp::Element*>(parser.get_document()->get_root_node());
+
+    int i=0;
+    for (auto n : root->get_children()) {
+        xmlpp::Element* e = dynamic_cast<xmlpp::Element*>(n);
+        if (!e) continue;
+
+        VRStoragePtr s;
+        if (i < vault.size()) s = vault[i].lock(); i++;
+        if (!s) s = VRStorage::createFromStore(e);
+        if (!s) continue;
+
+        s->load(e);
+        addItem(s);
+    }
 }

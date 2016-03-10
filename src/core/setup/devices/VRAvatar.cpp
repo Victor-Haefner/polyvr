@@ -72,9 +72,9 @@ void VRAvatar::addAvatar(VRObjectPtr geo) {
 
 VRAvatar::VRAvatar(string name) {
     deviceRoot = VRTransform::create(name + "_beacon");
-    deviceRoot->addAttachment("global", 0);
+    deviceRoot->setPersistency(0);
     tmpContainer = VRTransform::create(name + "_tmp_beacon");
-    tmpContainer->addAttachment("global", 0);
+    tmpContainer->setPersistency(0);
 
     avatars["ray"] = initRay();
     //avatars["cone"] = initCone();

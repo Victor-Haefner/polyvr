@@ -3,9 +3,6 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <map>
-#undef _XOPEN_SOURCE
-#undef _POSIX_C_SOURCE
-#include <Python.h>
 #include <string>
 #include "core/setup/devices/VRSignal.h"
 #include "core/utils/VRStorage.h"

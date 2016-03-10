@@ -1,6 +1,7 @@
 
 #include "core/utils/isNan.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRStorage_template.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/utils/VRDoublebuffer.h"
@@ -24,6 +25,19 @@ VRTransform::VRTransform(string name) : VRObject(name) {
     t = Transform::create();
     setCore(t, "Transform");
     addAttachment("transform", 0);
+
+    store("from", &_from);
+    store("at", &_at);
+    store("up", &_up);
+    store("scale", &_scale);
+    store("cT", &tConstraint);
+    store("cR", &rConstraint);
+    store("do_cT", &doTConstraint);
+    store("do_cR", &doRConstraint);
+    store("cT_mode", &tConMode);
+    store("at_dir", &orientation_mode);
+
+    regStorageUpdateFkt( VRFunction<int>::create("transform_update", boost::bind(&VRTransform::setup, this)) );
 }
 
 VRTransform::~VRTransform() {
@@ -755,22 +769,10 @@ void VRTransform::update() {
     change = false;
 }
 
-void VRTransform::saveContent(xmlpp::Element* e) {
-    VRObject::saveContent(e);
-    if (getPersistency() < 2) return;
-
-    e->set_attribute("from", toString(_from).c_str());
-    e->set_attribute("at", toString(_at).c_str());
-    e->set_attribute("up", toString(_up).c_str());
-    e->set_attribute("scale", toString(_scale).c_str());
-
-    e->set_attribute("cT", toString(tConstraint).c_str());
-    e->set_attribute("cR", toString(rConstraint).c_str());
-    e->set_attribute("do_cT", toString(doTConstraint).c_str());
-    e->set_attribute("do_cR", toString(doRConstraint).c_str());
-    e->set_attribute("cT_mode", toString(int(tConMode)).c_str());
-
-    e->set_attribute("at_dir", toString(orientation_mode).c_str());
+void VRTransform::setup() {
+    cout << "VRTransform::setup\n";
+    change = true;
+    update();
 }
 
 void VRTransform::loadContent(xmlpp::Element* e) {

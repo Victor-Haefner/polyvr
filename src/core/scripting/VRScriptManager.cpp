@@ -1,4 +1,9 @@
 #include "VRScriptManager.h"
+
+#undef _XOPEN_SOURCE
+#undef _POSIX_C_SOURCE
+#include <Python.h>
+
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneLoader.h"
@@ -53,6 +58,7 @@
 #include "VRPyWaypoint.h"
 #include "VRPyMeasure.h"
 #include "VRPyImage.h"
+#include "VRPyProjectManager.h"
 #include <iostream>
 #include <algorithm>
 #include <memory>
@@ -286,7 +292,7 @@ void VRScriptManager::initPyModules() {
     //PySys_SetPath(sys_path.c_str());
 
     pModVR = Py_InitModule3("VR", VRScriptManager_module_methods, "VR Module");
-    registerModule<VRPyObject>("Object", pModVR);
+    registerModule<VRPyObject>("Object", pModVR, VRPyStorage::typeRef);
     registerModule<VRPyTransform>("Transform", pModVR, VRPyObject::typeRef);
     registerModule<VRPyGeometry>("Geometry", pModVR, VRPyTransform::typeRef);
     registerModule<VRPyMaterial>("Material", pModVR, VRPyObject::typeRef);
@@ -312,6 +318,8 @@ void VRScriptManager::initPyModules() {
     registerModule<VRPyPolygon>("Polygon", pModVR);
     registerModule<VRPyTriangulator>("Triangulator", pModVR);
     registerModule<VRPyRecorder>("Recorder", pModVR);
+    registerModule<VRPyProjectManager>("ProjectManager", pModVR);
+    registerModule<VRPyStorage>("Storage", pModVR);
     registerModule<VRPySnappingEngine>("SnappingEngine", pModVR);
     registerModule<VRPyAnnotationEngine>("AnnotationEngine", pModVR, VRPyGeometry::typeRef);
     registerModule<VRPyAnalyticGeometry>("AnalyticGeometry", pModVR, VRPyObject::typeRef);

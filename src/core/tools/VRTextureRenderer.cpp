@@ -5,6 +5,7 @@
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneManager.h"
 
+#include <OpenSG/OSGBackground.h>
 #include <OpenSG/OSGSimpleStage.h>
 #include <OpenSG/OSGFrameBufferObject.h>
 #include <OpenSG/OSGTextureBuffer.h>

@@ -12,23 +12,26 @@ class VRCamera : public VRTransform {
         PerspectiveCameraRecPtr cam;
         NodeRecPtr camGeo;
 
-        float parallaxD;
-        float nearClipPlaneCoeff;
-        float farClipPlaneCoeff;
+        float parallaxD = 1;
+        float nearClipPlaneCoeff = 0.1;
+        float farClipPlaneCoeff = 512;
+        float aspect = 1;
+        float fov = 0;
 
-        bool doAcceptRoot;
+        bool doAcceptRoot = true;
 
     protected:
 
-        void saveContent(xmlpp::Element* e);
         void loadContent(xmlpp::Element* e);
 
     public:
         VRCamera(string name = "");
         ~VRCamera();
 
-        static VRCameraPtr create(string name);
+        static VRCameraPtr create(string name = "None");
         VRCameraPtr ptr();
+
+        void setup();
 
         int camID = -1;
         void activate();

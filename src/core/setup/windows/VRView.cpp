@@ -230,7 +230,7 @@ VRView::VRView(string name) {
     stats = 0;
     grabfg = 0;
     dummy_user = VRTransform::create("view_user");
-    dummy_user->addAttachment("global", 0);
+    dummy_user->setPersistency(0);
 
     viewGeo = makeNodeFor(makePlaneGeo(1,1,1,1));
     viewGeo->setTravMask(0);

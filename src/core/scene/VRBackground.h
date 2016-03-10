@@ -2,12 +2,14 @@
 #define OSGSKYROOM_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
-#include <OpenSG/OSGBackground.h>
+#include <OpenSG/OSGSField.h>
 #include <OpenSG/OSGColor.h>
 #include "core/utils/VRStorage.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
+
+class Background; OSG_GEN_CONTAINERPTR(Background);
 
 class VRBackgroundBase;
 

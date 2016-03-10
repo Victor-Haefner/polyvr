@@ -25,7 +25,7 @@ VRSetup::VRSetup(string name) {
     setViewAnchor(real_root);
     setDeviceRoot(real_root);
     real_root->addAttachment("treeviewNotDragable", 0);
-    real_root->addAttachment("global", 0);
+    real_root->setPersistency(0);
     real_root->addChild(setup_cam);
     setup_cam->setAcceptRoot(false);
     user = 0;

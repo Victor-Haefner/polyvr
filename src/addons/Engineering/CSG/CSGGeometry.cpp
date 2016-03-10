@@ -33,6 +33,8 @@ CSGGeometry::CSGGeometry(string name) : VRGeometry(name) {
 	type = "CSGGeometry";
 	dm->read(oldWorldTrans);
 	polyhedron = new CGAL::Polyhedron();
+
+	store("op", &operation);
 }
 
 CSGGeometry::~CSGGeometry() {}
@@ -197,11 +199,6 @@ void CSGGeometry::setOperation(string op) {
 
 bool CSGGeometry::getEditMode() { return editMode; }
 string CSGGeometry::getOperation() { return operation; }
-
-void CSGGeometry::saveContent(xmlpp::Element* e) {
-	VRGeometry::saveContent(e);
-	e->set_attribute("op", operation);
-}
 
 void CSGGeometry::loadContent(xmlpp::Element* e) {
 	VRGeometry::loadContent(e);

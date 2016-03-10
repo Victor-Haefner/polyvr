@@ -450,11 +450,11 @@ void VRSocket::save(xmlpp::Element* e) {
 
 void VRSocket::load(xmlpp::Element* e) {
     loadName(e);
-    setType( e->get_attribute("type")->get_value() );
-    setPort( toInt(e->get_attribute("port")->get_value().c_str()) );
-    setIP( e->get_attribute("ip")->get_value() );
+    if (auto t = e->get_attribute("type")) setType( t->get_value() );
+    if (auto t = e->get_attribute("port")) setPort( toInt(t->get_value().c_str()) );
+    if (auto t = e->get_attribute("ip")) setIP( t->get_value() );
     //setCallback( e->get_attribute("callback")->get_value() );
-    setSignal( e->get_attribute("signal")->get_value() );
+    if (auto t = e->get_attribute("signal")) setSignal( t->get_value() );
 }
 
 void VRSocket::update() {

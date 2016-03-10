@@ -144,11 +144,6 @@ void VRLight::setShadowColor(Color4f c) {
 
 Color4f VRLight::getShadowColor() { return shadowColor; }
 
-void VRLight::saveContent(xmlpp::Element* e) {
-    VRObject::saveContent(e);
-    VRStorage::save(e);
-}
-
 void VRLight::loadContent(xmlpp::Element* e) {
     VRObject::loadContent(e);
     VRStorage::load(e);

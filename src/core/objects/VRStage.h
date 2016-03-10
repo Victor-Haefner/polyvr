@@ -29,14 +29,13 @@ class VRStage : public VRObject {
     protected:
         VRObjectPtr copy(vector<VRObjectPtr> children);
 
-        void saveContent(xmlpp::Element* e);
         void loadContent(xmlpp::Element* e);
 
     public:
         VRStage(string name);
         ~VRStage();
 
-        static VRStagePtr create(string name);
+        static VRStagePtr create(string name = "None");
         VRStagePtr ptr();
 
         void setActive(bool b);

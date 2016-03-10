@@ -3,6 +3,11 @@
 
 #include <memory>
 
+#define ptrFktFwd( X, T ) \
+typedef VRFunction<T> X ## Cb; \
+typedef std::shared_ptr<X ## Cb> X ## CbPtr; \
+typedef std::weak_ptr<X ## Cb> X ## CbWeakPtr;
+
 namespace OSG {
     class VRDevice;
 }

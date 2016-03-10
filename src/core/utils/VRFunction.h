@@ -11,7 +11,7 @@
 using namespace std;
 
 
-class VRFunction_base : public VRName {
+class VRFunction_base : public VRName_base {
     private:
         int prof_id = 0;
 

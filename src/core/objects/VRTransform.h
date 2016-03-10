@@ -7,7 +7,7 @@
 #include "core/math/pose.h"
 #include <OpenSG/OSGMatrix.h>
 #include <OpenSG/OSGLine.h>
-#include <OpenSG/OSGFieldContainerFields.h>
+#include <OpenSG/OSGSField.h>
 
 class VRPhysics;
 
@@ -88,14 +88,13 @@ class VRTransform : public VRObject {
         void initCoords();
         void initTranslator();
 
-        virtual void saveContent(xmlpp::Element* e);
         virtual void loadContent(xmlpp::Element* e);
 
     public:
         VRTransform(string name = "");
         virtual ~VRTransform();
 
-        static VRTransformPtr create(string name);
+        static VRTransformPtr create(string name = "None");
         VRTransformPtr ptr();
 
         static list< VRTransformWeakPtr > changedObjects;
@@ -206,6 +205,7 @@ class VRTransform : public VRObject {
 
         /** Update the object OSG transformation **/
         virtual void update();
+        void setup();
         void updatePhysics();
 };
 

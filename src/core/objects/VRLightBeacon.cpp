@@ -1,6 +1,7 @@
 #include "VRLightBeacon.h"
 #include "VRLight.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/utils/VRStorage_template.h"
 #include <OpenSG/OSGMultiPassMaterial.h>
 #include <OpenSG/OSGSimpleMaterial.h>
 #include <OpenSG/OSGSimpleGeometry.h>        // Methods to create simple geos.
@@ -32,6 +33,8 @@ VRLightBeacon::VRLightBeacon(string name) : VRTransform(name) {
     lightGeo->setTravMask(0);
     lightGeo_->setMaterial(getLightGeoMat()->getMaterial());
     addChild(lightGeo);
+
+    storeObjName("light", &light, &light_name);
 }
 
 VRLightBeacon::~VRLightBeacon() {}
@@ -50,11 +53,6 @@ void VRLightBeacon::showLightGeo(bool b) {
 
 VRLightWeakPtr VRLightBeacon::getLight() { return light; }
 void VRLightBeacon::setLight(VRLightPtr l) { light = l; }
-
-void VRLightBeacon::saveContent(xmlpp::Element* e) {
-    VRTransform::saveContent(e);
-    if (auto l = light.lock()) e->set_attribute("light", l->getName());
-}
 
 void VRLightBeacon::loadContent(xmlpp::Element* e) {
     VRTransform::loadContent(e);

@@ -8,12 +8,6 @@ using namespace std;
 map<string, vector<VRGroupWeakPtr> > VRGroup::groups = map<string, vector<VRGroupWeakPtr> >();
 map<string, VRObjectWeakPtr > VRGroup::templates = map<string, VRObjectWeakPtr >();
 
-void VRGroup::saveContent(xmlpp::Element* e) {
-    VRObject::saveContent(e);
-    e->set_attribute("group", group);
-    e->set_attribute("active", toString(active));
-}
-
 void VRGroup::loadContent(xmlpp::Element* e) {
     VRObject::loadContent(e);
     setGroup( e->get_attribute("group")->get_value().c_str() );
@@ -22,8 +16,9 @@ void VRGroup::loadContent(xmlpp::Element* e) {
 
 VRGroup::VRGroup(string name) : VRObject(name) {
     type = "Group";
-    active = true;
-    group = "";
+
+    store("group", &group);
+    store("active", &active);
 }
 
 VRGroup::~VRGroup() {;}

@@ -12,6 +12,7 @@ class VRLod : public VRObject {
         DistanceLODRecPtr lod;
         bool decimate = false;
         Vec3f center;
+        string distances_string;
         uint decimateNumber = 0;
         map<uint, float> distances;
         map<uint, VRObjectPtr> decimated;
@@ -23,7 +24,6 @@ class VRLod : public VRObject {
     protected:
         VRObjectPtr copy(vector<VRObjectPtr> childs);
 
-        void saveContent(xmlpp::Element* e);
         void loadContent(xmlpp::Element* e);
 
     public:
@@ -31,7 +31,7 @@ class VRLod : public VRObject {
         VRLod(string name = "0");
         ~VRLod();
 
-        static VRLodPtr create(string name);
+        static VRLodPtr create(string name = "None");
         VRLodPtr ptr();
 
         void setCenter(Vec3f c);
