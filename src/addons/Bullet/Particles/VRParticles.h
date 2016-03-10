@@ -23,7 +23,7 @@ class VRParticles : public VRGeometry {
         ~VRParticles();
         static shared_ptr<VRParticles> create();
 
-        static const int startValue = 400;
+        static const int startValue = 500;
         int N = startValue;
 
         void setRadius(float newRadius, float variation=0.0);
