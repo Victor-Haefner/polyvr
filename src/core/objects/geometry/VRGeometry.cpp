@@ -273,17 +273,18 @@ void VRGeometry::merge(VRGeometryPtr geo) {
 
     map<int, int> mapping;
 
+    cout << "merge" << endl;
     for (auto p : other) {
-        //cout << "prim " << p.asString() << endl;
+        //cout << p.asString() << endl;
         vector<int> ninds;
         for (auto i : p.indices) {
             //if (p.type == 6) cout << geo->getMesh()->getPositions()->getValue<Pnt3f>(i) << endl;
             if (!mapping.count(i)) mapping[i] = self.pushVert(other, i, M);
             ninds.push_back(mapping[i]);
         }
-        //if (p.type == 6) cout << p.asString() << endl;
+        if (p.type == 6) cout << " " << p.asString() << endl;
         p.indices = ninds;
-        //if (p.type == 6) cout << p.asString() << endl;
+        if (p.type == 6) cout << " " << p.asString() << endl;
         self.pushPrim(p);
     }
     self.apply(ptr());

@@ -8,6 +8,7 @@
 #include <OpenSG/OSGSimpleMaterial.h>
 #include <OpenSG/OSGSimpleGeometry.h>
 #include <OpenSG/OSGGeoProperties.h>
+#include <OpenSG/OSGImage.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

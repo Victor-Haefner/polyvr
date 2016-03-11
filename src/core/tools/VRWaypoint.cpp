@@ -1,6 +1,8 @@
 #include "VRWaypoint.h"
 #include "core/objects/material/VRMaterial.h"
 
+#include <OpenSG/OSGPlane.h>
+
 using namespace OSG;
 
 VRWaypoint::VRWaypoint(string name) : VRGeometry(name) {

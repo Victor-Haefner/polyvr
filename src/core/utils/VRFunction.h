@@ -3,8 +3,7 @@
 
 #include <boost/function.hpp>
 #include <iostream>
-#include <boost/exception/all.hpp>
-#include <boost/exception/diagnostic_information.hpp>
+#include <boost/exception/exception.hpp>
 #include "VRName.h"
 #include <memory>
 
@@ -18,6 +17,8 @@ class VRFunction_base : public VRName_base {
     protected:
         void t0();
         void t1();
+
+        void printExcept(boost::exception& e);
 };
 
 template<typename T>
@@ -33,9 +34,7 @@ class VRFunction : public VRFunction_base {
                 t0();
                 fkt(t);
                 t1();
-            } catch (boost::exception& e) {
-				cout << "VRFunction::() exception occured: " << boost::diagnostic_information(e) << endl;
-            }
+            } catch (boost::exception& e) { printExcept(e); }
         }
 
         static std::shared_ptr<VRFunction<T> > create(string name, boost::function<void (T)> fkt) {

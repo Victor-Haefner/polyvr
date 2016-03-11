@@ -5,7 +5,6 @@
 #include "core/tools/selection/VRSelectionFwd.h"
 #include "../VRTransform.h"
 #include <OpenSG/OSGSField.h>
-#include <OpenSG/OSGImage.h> // TODO
 
 struct VRPrimitive;
 
@@ -14,7 +13,6 @@ using namespace std;
 
 class VRMaterial;
 class Node; OSG_GEN_CONTAINERPTR(Node);
-//class Image; OSG_GEN_CONTAINERPTR(Image);
 class Geometry; OSG_GEN_CONTAINERPTR(Geometry);
 class Material; OSG_GEN_CONTAINERPTR(Material);
 
@@ -35,7 +33,6 @@ class VRGeometry : public VRTransform {
         VRPrimitive* primitive = 0;
         GeometryRecPtr mesh;
         NodeRecPtr mesh_node;
-        ImageRecPtr texture;
         bool meshSet = false;
         int lastMeshChange = 0;
 
@@ -121,9 +118,6 @@ class VRGeometry : public VRTransform {
 
         /** Returns the mesh material **/
         VRMaterialPtr getMaterial();
-
-        /** Returns the texture || 0 **/
-        ImageRecPtr getTexture() { return texture; }
 
         void influence(vector<Vec3f> pnts, vector<Vec3f> values, int power, float color_code = -1, float dl_max = 1.0);
 
