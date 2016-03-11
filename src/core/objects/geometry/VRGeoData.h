@@ -18,6 +18,8 @@ class VRGeoData {
         struct Data;
         shared_ptr<Data> data;
 
+        bool isStripOrFan(int t);
+        void extentType(int N);
         void updateType(int t, int N);
 
     public:
@@ -104,6 +106,7 @@ class VRGeoData {
         PrimItr cend() const;
 
         string status();
+        void test_copy(VRGeoData& g);
 };
 
 OSG_END_NAMESPACE;

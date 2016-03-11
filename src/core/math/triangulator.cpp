@@ -16,7 +16,7 @@ vector<Vec3d> tmpVertices;
 
 struct Triangulator::GeoData {
     // geo data
-    GeoUInt32PropertyRecPtr types;
+    GeoUInt8PropertyRecPtr types;
     GeoUInt32PropertyRecPtr lengths;
     GeoUInt32PropertyRecPtr indices;
     GeoPnt3fPropertyRecPtr pos;
@@ -27,7 +27,7 @@ struct Triangulator::GeoData {
     int current_vertex_count = 0;
 
     GeoData() {
-        types = GeoUInt32Property::create();
+        types = GeoUInt8Property::create();
         lengths = GeoUInt32Property::create();
         indices = GeoUInt32Property::create();
         pos = GeoPnt3fProperty::create();

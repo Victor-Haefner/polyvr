@@ -11,9 +11,6 @@
 #include <boost/bind.hpp>
 #include <boost/filesystem.hpp>
 
-#include <OpenSG/OSGGeometry.h>
-#include <OpenSG/OSGGeoProperties.h>
-
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/utils/toString.h"
@@ -599,18 +596,19 @@ void VRSTEP::buildGeometries() {
                             Bound bound(b, instances);
                             surface.bounds.push_back(bound);
                         }
-                        //geo->addChild( surface.build(surface.type) );
+                        //static int ii = 0; ii++;
+                        //if (ii < 17) continue;
                         geo->merge( surface.build(surface.type) );
-                        static int ii = 0; ii++;
-                        if (ii >= 17) break;
+                        //geo->addChild( surface.build(surface.type) );
+                        //if (ii >= 17) break;
                     }
                 }
-                break;
+                //break;
             }
         }
 
         resGeos[BrepShape.entity] = geo;
-        break;
+        //break;
     }
 }
 

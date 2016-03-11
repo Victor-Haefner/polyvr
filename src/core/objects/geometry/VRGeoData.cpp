@@ -122,13 +122,21 @@ int VRGeoData::pushVert(VRGeoData& other, int i, Matrix m) {
     return pushVert(p);
 }
 
+bool VRGeoData::isStripOrFan(int t) {
+    if (t == GL_LINE_LOOP || t == GL_LINE_STRIP) return true;
+    if (t == GL_TRIANGLE_FAN || t == GL_TRIANGLE_STRIP) return true;
+    if (t == GL_QUAD_STRIP) return true;
+    return false;
+}
+
+void VRGeoData::extentType(int N) {
+    int i = data->lengths->size()-1;
+    int l = data->lengths->getValue(i);
+    data->lengths->setValue(l+N, i);
+}
+
 void VRGeoData::updateType(int t, int N) {
-    if (data->lastPrim == t) {
-        int i = data->lengths->size()-1;
-        int l = data->lengths->getValue(i);
-        data->lengths->setValue(l+N, i);
-        return;
-    }
+    if (data->lastPrim == t) { extentType(N); return; }
     data->types->addValue(t);
     data->lastPrim = t;
     data->lengths->addValue(N);
@@ -164,6 +172,7 @@ void VRGeoData::pushPrim(Primitive p) {
         data->indices->addValue( p.indices[i] );
         //cout << "add index: " << p.indices[i] << endl;
     }
+    if (p.lid == 0 && isStripOrFan(p.type)) data->lastPrim = -1;
     updateType(p.type, N-No);
 }
 
@@ -195,6 +204,8 @@ string VRGeoData::status() {
     for (int i=0; i<data->lengths->size(); i++) res += " " + toString(data->lengths->getValue(i));
     res += "\n";
     res += " " + toString(data->pos->size()) + " positions\n";
+    for (int i=0; i<data->pos->size(); i++) res += " " + toString(data->pos->getValue(i));
+    res += "\n";
     res += " " + toString(data->norms->size()) + " normals\n";
     res += " " + toString(data->cols3->size()) + " colors 3\n";
     res += " " + toString(data->cols4->size()) + " colors 4\n";
@@ -293,9 +304,52 @@ VRGeoData::PrimItr VRGeoData::cend() const { return pend; }
 string VRGeoData::Primitive::asString() {
     string res;
     int N = indices.size();
-    res = "prim " + toString(type) + " " + toString(tID) + " " + toString(lID) + " " + toString(N) + ": ";
+    res = "prim " + toString(type) + " " + toString(tid) + " " + toString(lid) + " " + toString(N) + ": ";
     for (auto i : indices) res += " " + toString(i);
-    res += "\n";
     return res;
 }
+
+void VRGeoData::test_copy(VRGeoData& g) {
+    return;
+    //data->types = g.data->types;
+    //data->lengths = g.data->lengths;
+
+    data->types->clear();
+    data->lengths->clear();
+
+    // GL_TRIANGLE_STRIP 5
+    // GL_TRIANGLE_FAN 6
+
+    for (int i=0; i<g.data->types->size(); i++) {
+        int t = g.data->types->getValue(i);
+        int l = g.data->lengths->getValue(i);
+        data->types->addValue(t);
+        data->lengths->addValue(l);
+        cout << " tl " << t << " " << l << endl;
+    }
+
+    /*data->types->clear();
+    data->types->addValue(0x0005);
+    data->types->addValue(0);
+    data->types->addValue(0);
+    data->types->addValue(0);
+    data->types->addValue(0x0005);
+    data->types->addValue(0);
+    data->types->addValue(0);
+    data->types->addValue(0);
+    data->types->addValue(0x0006);
+    data->types->addValue(0);
+    data->types->addValue(0);*/
+
+
+    //data->indices = g.data->indices;
+    /*data->pos = g.data->pos;
+    data->norms = g.data->norms;
+    data->cols3 = g.data->cols3;
+    data->cols4 = g.data->cols4;
+    data->texs = g.data->texs;*/
+}
+
+
+
 

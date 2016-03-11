@@ -257,6 +257,7 @@ void VRGeometry::merge(VRGeometryPtr geo) {
 
     //for (auto p : other) { if (p.type == 4 || p.type == 6) return; break; }
 
+    //cout << "merge" << endl;
     //cout << "merge " << self.status() << endl;
     //cout << " with " << other.status() << endl;
 
@@ -272,8 +273,6 @@ void VRGeometry::merge(VRGeometryPtr geo) {
     M.mult( geo->getWorldMatrix() );
 
     map<int, int> mapping;
-
-    cout << "merge" << endl;
     for (auto p : other) {
         //cout << p.asString() << endl;
         vector<int> ninds;
@@ -282,11 +281,13 @@ void VRGeometry::merge(VRGeometryPtr geo) {
             if (!mapping.count(i)) mapping[i] = self.pushVert(other, i, M);
             ninds.push_back(mapping[i]);
         }
-        if (p.type == 6) cout << " " << p.asString() << endl;
+        //if (p.type == 5) cout << " " << p.asString() << endl;
+        //if (p.type == 6) cout << " " << p.asString() << endl;
         p.indices = ninds;
-        if (p.type == 6) cout << " " << p.asString() << endl;
+        //if (p.type == 6) cout << " " << p.asString() << endl;
         self.pushPrim(p);
     }
+
     self.apply(ptr());
 
     //cout << " res  " << self.status() << endl;
