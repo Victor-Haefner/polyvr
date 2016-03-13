@@ -46,6 +46,8 @@ class VRSTEP {
                 auto t = (tuple<Args...>*)data;
                 return std::get<i>(*t);
             }
+
+            operator bool() const { return data != 0; }
         };
 
         struct Edge;
@@ -72,6 +74,7 @@ class VRSTEP {
         VRTransformPtr resRoot;
 
         map<string, Type> types;
+        Instance& getInstance(STEPentity* e);
         template<class T> void addType(string type, string path, bool print = false);
         template<class T> void parse(STEPentity* e, string path, string type);
         template<typename T> bool query(STEPentity* e, string path, T& t);
