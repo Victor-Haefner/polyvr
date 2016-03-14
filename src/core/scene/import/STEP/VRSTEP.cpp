@@ -378,7 +378,7 @@ template<typename T> bool VRSTEP::query(STEPentity* e, string path, T& t) {
         if (c == 'V') {
             if (!curAttr) continue;
             curAggr = curAttr->Aggregate();
-            if (!curAggr) { cout << "VRSTEP::query " << i << " is not an Aggregate!\n"; return false; }
+            if (!curAggr) { /*cout << "VRSTEP::query " << i << " is not an Aggregate!\n";*/ return false; } // TODO
             return getValue(e, curAttr, curAggr->GetHead(), t, path[i+1]);
         }
 
@@ -485,10 +485,11 @@ void VRSTEP::traverseEntity(STEPentity* se, int lvl, STEPcomplex* cparent) {
     cout << indent(lvl) << "Entity " << se->STEPfile_id << (se->IsComplex() ? " (C) " : "") << ": " << string(se->EntityName()) << endl;
     //if (red || green || blue) cout << colEnd;*/
 
-    if (!types.count(type) && !blacklist.count(type))
+    bool printAll = false;
+
+    if (!types.count(type) && !blacklist.count(type) || printAll || types[type].print)
         cout << indent(lvl) << "Entity " << se->STEPfile_id << (se->IsComplex() ? " (C) " : "") << ": " << string(se->EntityName()) << endl;
 
-    bool printAll = false;
     if (instances.count(se) && !types[type].print && !printAll) return;
     if (types.count(type) && types[type].cb) { (*types[type].cb)(se); if (!types[type].print && !printAll) return; }
     if (blacklist.count(type) && blacklist[type] && !printAll) { blacklisted++; return; }
@@ -698,11 +699,13 @@ struct VRSTEP::Surface : public VRSTEP::Instance, public VRBRepSurface {
 };
 
 void VRSTEP::buildGeometries() {
+    cout << blueBeg << "VRSTEP::buildGeometries start\n" << colEnd;
     for (auto BrepShape : instancesByType["Advanced_Brep_Shape_Representation"]) {
 
         string name = BrepShape.get<0, string, vector<STEPentity*> >();
         auto geo = VRGeometry::create(name);
 
+        cout << " Advanced_Brep_Shape_Representation " << name << endl;
         for (auto i : BrepShape.get<1, string, vector<STEPentity*> >() ) {
             auto& Item = instances[i];
             if (Item.type == "Manifold_Solid_Brep") {
@@ -726,12 +729,14 @@ void VRSTEP::buildGeometries() {
                     }
                 }
                 //break;
-            }
+            } else cout << "VRSTEP::buildGeometries Error 1 " << Item.type << endl;
         }
 
         resGeos[BrepShape.entity] = geo;
         //break;
     }
+    cout << "VRSTEP::buildGeometries resGeos " << resGeos.size() << endl;
+    cout << blueBeg << "VRSTEP::buildGeometries finished\n" << colEnd;
 }
 
 VRSTEP::Instance& VRSTEP::getInstance(STEPentity* e) {
@@ -742,7 +747,7 @@ VRSTEP::Instance& VRSTEP::getInstance(STEPentity* e) {
 }
 
 void VRSTEP::buildScenegraph() {
-    cout << "VRSTEP::buildScenegraph start\n";
+    cout << blueBeg << "VRSTEP::buildScenegraph start\n" << colEnd;
 
     // get geometries -------------------------------------
     map<STEPentity*, STEPentity*> SRepToABrep;
@@ -792,6 +797,7 @@ void VRSTEP::buildScenegraph() {
             STEPentity *srep, *brep; srep = brep = 0;
             if (ProductToSRep.count(Product.entity)) srep = ProductToSRep[Product.entity];
             if (SRepToABrep.count(srep)) brep = SRepToABrep[srep];
+            else brep = srep;
             VRTransformPtr o;
             if (resGeos.count(brep)) o = resGeos[brep];
             else o = VRTransform::create(name);
@@ -846,7 +852,7 @@ void VRSTEP::buildScenegraph() {
     }
 
     cout << "VRSTEP::buildScenegraph objs " << objs.size() << endl;
-    cout << "VRSTEP::buildScenegraph finished\n";
+    cout << blueBeg << "VRSTEP::buildScenegraph finished\n" << colEnd;
 }
 
 void VRSTEP::build() {
