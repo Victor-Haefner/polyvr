@@ -4,6 +4,7 @@
 #include "core/setup/windows/VRView.h"
 #include "core/scripting/VRPyPose.h"
 #include "core/scripting/VRPyImage.h"
+#include "core/scripting/VRPyCamera.h"
 
 using namespace OSG;
 
@@ -36,6 +37,7 @@ PyMethodDef VRPyView::methods[] = {
     {"setSize", (PyCFunction)VRPyView::setSize, METH_VARARGS, "Set the size in meter - setSize( [W,H] )" },
     {"getSize", (PyCFunction)VRPyView::getSize, METH_NOARGS, "Get the size in meter - [W,H] getSize()" },
     {"grab", (PyCFunction)VRPyView::grab, METH_NOARGS, "Get the current visual as texture - tex grab()" },
+    {"setCamera", (PyCFunction)VRPyView::setCamera, METH_VARARGS, "Set the camera of the view - setCamera( cam )" },
     {NULL}  /* Sentinel */
 };
 
@@ -74,6 +76,14 @@ PyObject* VRPyView::setPose(VRPyView* self, PyObject* args) {
 PyObject* VRPyView::toggleStereo(VRPyView* self) {
     if (!self->valid()) return NULL;
     self->objPtr->setStereo(!self->objPtr->isStereo());
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyView::setCamera(VRPyView* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    VRPyCamera* c = 0;
+    if (! PyArg_ParseTuple(args, "O", &c)) return NULL;
+    self->objPtr->setCamera(c->objPtr);
     Py_RETURN_TRUE;
 }
 
