@@ -549,6 +549,8 @@
 		<Unit filename="src/core/objects/geometry/VRGeoData.h" />
 		<Unit filename="src/core/objects/geometry/VRGeometry.cpp" />
 		<Unit filename="src/core/objects/geometry/VRGeometry.h" />
+		<Unit filename="src/core/objects/geometry/VRHandle.cpp" />
+		<Unit filename="src/core/objects/geometry/VRHandle.h" />
 		<Unit filename="src/core/objects/geometry/VRPhysics.cpp" />
 		<Unit filename="src/core/objects/geometry/VRPhysics.h" />
 		<Unit filename="src/core/objects/geometry/VRPrimitive.cpp" />
@@ -665,6 +667,7 @@
 		<Unit filename="src/core/scene/import/VRPLY.cpp" />
 		<Unit filename="src/core/scene/import/VRPLY.h" />
 		<Unit filename="src/core/scene/import/VRSTEP.h" />
+		<Unit filename="src/core/scripting/VRGeoPrimitive.h" />
 		<Unit filename="src/core/scripting/VRPyAnalyticGeometry.cpp" />
 		<Unit filename="src/core/scripting/VRPyAnalyticGeometry.h" />
 		<Unit filename="src/core/scripting/VRPyAnimation.cpp" />
@@ -686,6 +689,8 @@
 		<Unit filename="src/core/scripting/VRPyConstructionKit.h" />
 		<Unit filename="src/core/scripting/VRPyDevice.cpp" />
 		<Unit filename="src/core/scripting/VRPyDevice.h" />
+		<Unit filename="src/core/scripting/VRPyGeoPrimitive.cpp" />
+		<Unit filename="src/core/scripting/VRPyGeoPrimitive.h" />
 		<Unit filename="src/core/scripting/VRPyGeometry.cpp" />
 		<Unit filename="src/core/scripting/VRPyGeometry.h" />
 		<Unit filename="src/core/scripting/VRPyHaptic.cpp" />
@@ -825,6 +830,8 @@
 		<Unit filename="src/core/tools/VRColorChooser.h" />
 		<Unit filename="src/core/tools/VRConstructionKit.cpp" />
 		<Unit filename="src/core/tools/VRConstructionKit.h" />
+		<Unit filename="src/core/tools/VRGeoPrimitive.cpp" />
+		<Unit filename="src/core/tools/VRGeoPrimitive.h" />
 		<Unit filename="src/core/tools/VRMenu.cpp" />
 		<Unit filename="src/core/tools/VRMenu.h" />
 		<Unit filename="src/core/tools/VRMesure.cpp" />

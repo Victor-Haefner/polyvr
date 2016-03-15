@@ -38,6 +38,8 @@ ptrFwd(VRWaypoint);
 ptrFwd(VRMeasure);
 ptrFwd(VRTextureRenderer);
 ptrFwd(VRProjectManager);
+ptrFwd(VRHandle);
+ptrFwd(VRGeoPrimitive);
 
 // addons
 ptrFwd(VRMetaBalls);

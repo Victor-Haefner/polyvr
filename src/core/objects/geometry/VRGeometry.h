@@ -66,7 +66,7 @@ class VRGeometry : public VRTransform {
         void makeUnique();
         void setMeshVisibility(bool b);
 
-        void setPrimitive(string primitive, string args = "");
+        virtual void setPrimitive(string primitive, string args = "");
 
         /** Create a mesh using vectors with positions, normals, indices && optionaly texture coordinates **/
         void create(int type, vector<Vec3f> pos, vector<Vec3f> norms, vector<int> inds, vector<Vec2f> texs = vector<Vec2f>());

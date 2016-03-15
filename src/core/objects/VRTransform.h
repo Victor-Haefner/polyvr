@@ -159,8 +159,8 @@ class VRTransform : public VRObject {
         void zoom(float d);
         void move(float d);
 
-        void drag(VRTransformPtr new_parent);
-        void drop();
+        virtual void drag(VRTransformPtr new_parent);
+        virtual void drop();
         void rebaseDrag(VRObjectPtr new_parent);
         VRObjectPtr getDragParent();
 
