@@ -390,7 +390,24 @@ VRGeometryPtr VRBRepSurface::build(string type) {
         return g;
     }
 
-    cout << "unhandled surface type " << type << endl;
+    if (type == "B_Spline_Surface") {
+        Triangulator t;
+        for (auto b : bounds) {
+            polygon poly;
+            for(auto p : b.points) {
+                mI.mult(Pnt3f(p),p);
+                poly.addPoint(Vec2f(p[0], p[1]));
+            }
+            if (!poly.isCCW()) poly.turn();
+            t.add(poly);
+        }
+
+        auto g = t.compute();
+        g->setMatrix(m);
+        return g;
+    }
+
+    cout << "VRBRepSurface::build Error: unhandled surface type " << type << endl;
 
     // wireframe
     auto geo = VRGeometry::create("face");

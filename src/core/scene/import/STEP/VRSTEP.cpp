@@ -611,8 +611,7 @@ pose toPose(STEPentity* i, map<STEPentity*, VRSTEP::Instance>& instances) {
 
 struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
     Edge(Instance& i, map<STEPentity*, Instance>& instances) : Instance(i) {
-        type = i.type;
-        if (type == "Oriented_Edge") {
+        if (i.type == "Oriented_Edge") {
             auto& EdgeElement = instances[ i.get<0, STEPentity*, bool>() ];
             bool edir = i.get<1, STEPentity*, bool>();
             if (EdgeElement.type == "Edge_Curve") {
@@ -626,6 +625,7 @@ struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
                     //Vec3f d = toVec3f( EdgeGeo.get<1, STEPentity*, STEPentity*>(), instances );
                     points.push_back(EBeg);
                     points.push_back(EEnd);
+                    return;
                 }
 
                 if (EdgeGeo.type == "Circle") {
@@ -648,9 +648,15 @@ struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
                         m.mult(p,p);
                         points.push_back(Vec3f(p));
                     }
+                    return;
                 }
-            }
-        }
+
+                if (EdgeGeo.type == "Surface_Curve") {
+
+                }
+                cout << "Error: edge geo type not handled " << EdgeGeo.type << endl;
+            } else cout << "Error: edge element type not handled " << EdgeElement.type << endl;
+        } else cout << "Error: edge type not handled " << i.type << endl;
     }
 };
 
@@ -726,7 +732,7 @@ void VRSTEP::buildGeometries() {
                         geo->merge( surface.build(surface.type) );
                         //geo->addChild( surface.build(surface.type) );
                         //if (ii >= 17) break;
-                    }
+                    } else cout << "VRSTEP::buildGeometries Error 2 " << Face.type << endl;
                 }
                 //break;
             } else cout << "VRSTEP::buildGeometries Error 1 " << Item.type << endl;

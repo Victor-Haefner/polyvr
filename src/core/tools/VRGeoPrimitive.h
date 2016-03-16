@@ -9,7 +9,7 @@ using namespace std;
 
 class VRGeoPrimitive : public VRGeometry {
     private:
-        bool selected;
+        bool selected = false;
 
         vector<VRHandlePtr> handles;
 

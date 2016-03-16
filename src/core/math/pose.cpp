@@ -3,7 +3,7 @@
 
 using namespace OSG;
 
-pose::pose() { data.resize(3); }
+pose::pose() { set(Vec3f(), Vec3f(0,0,-1), Vec3f(0,1,0)); }
 pose::pose(Vec3f p, Vec3f d, Vec3f u) { set(p,d,u); }
 
 shared_ptr<pose> pose::create(Vec3f p, Vec3f d, Vec3f u) {

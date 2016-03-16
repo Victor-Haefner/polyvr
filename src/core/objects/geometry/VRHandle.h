@@ -20,12 +20,13 @@ class VRHandle : public VRGeometry {
         VRUpdatePtr updateCb;
         VRAnimPtr paramCb;
 
-        float value;
+        float value = 0;
+        float scale = 1;
         Vec3f axis;
         pose origin;
-        TYPE constraint;
+        TYPE constraint = LINEAR;
 
-        void update();
+        void updateHandle();
 
     public:
         VRHandle(string name);
@@ -33,12 +34,11 @@ class VRHandle : public VRGeometry {
         static VRHandlePtr create(string name);
         VRHandlePtr ptr();
 
-        void configure(VRAnimPtr cb, TYPE t, Vec3f n, bool symmetric);
+        void configure(VRAnimPtr cb, TYPE t, Vec3f n, float scale, bool symmetric);
         void set(pose p, float v);
 
         void drag(VRTransformPtr new_parent);
         void drop();
-
 };
 
 OSG_END_NAMESPACE;

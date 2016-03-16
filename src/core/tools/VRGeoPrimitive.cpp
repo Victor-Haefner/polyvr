@@ -7,12 +7,17 @@
 
 using namespace OSG;
 
-VRGeoPrimitivePtr VRGeoPrimitive::create(string name) { return VRGeoPrimitivePtr( new VRGeoPrimitive(name) ); }
-VRGeoPrimitivePtr VRGeoPrimitive::ptr() { return static_pointer_cast<VRGeoPrimitive>( shared_from_this() ); }
-
 VRGeoPrimitive::VRGeoPrimitive(string name) : VRGeometry(name) {
-    setPrimitive("Box");
+    type = "GeoPrimitive";
 }
+
+VRGeoPrimitivePtr VRGeoPrimitive::create(string name) {
+    auto p = VRGeoPrimitivePtr( new VRGeoPrimitive(name) );
+    p->setPrimitive("Box");
+    return p;
+}
+
+VRGeoPrimitivePtr VRGeoPrimitive::ptr() { return static_pointer_cast<VRGeoPrimitive>( shared_from_this() ); }
 
 void VRGeoPrimitive::select(bool b) {
     if (selected == b) return;
@@ -25,11 +30,11 @@ void VRGeoPrimitive::update(int i, float v) {
     auto params = splitString(primitive->toString(), ' ');
     string args;
     for (int j=0; j<params.size(); j++) {
-        if (i != j) args += params[i];
+        if (i != j) args += params[j];
         else args += toString(v);
         if (j < params.size()-1) args += " ";
     }
-    setPrimitive(primitive->getType(), args);
+    VRGeometry::setPrimitive(primitive->getType(), args);
 }
 
 void VRGeoPrimitive::setupHandles() {
@@ -50,18 +55,16 @@ void VRGeoPrimitive::setupHandles() {
         addChild(h);
 
         auto cb = VRFunction<float>::create( "geo_prim_update", boost::bind(&VRGeoPrimitive::update, this, i, _1) );
-        h->set(pose(), toFloat(param) );
 
-        if (n == "Size x") h->configure(cb, VRHandle::LINEAR, Vec3f(1,0,0), true);
-        if (n == "Size y") h->configure(cb, VRHandle::LINEAR, Vec3f(0,1,0), true);
-        if (n == "Size z") h->configure(cb, VRHandle::LINEAR, Vec3f(0,0,1), true);
-        if (n == "Radius") h->configure(cb, VRHandle::LINEAR, Vec3f(1,0,0), true);
-        if (n == "Height") h->configure(cb, VRHandle::LINEAR, Vec3f(0,1,0), true);
-        if (n == "Inner radius") h->configure(cb, VRHandle::LINEAR, Vec3f(0,1,0), true);
-        if (n == "Outer radius") h->configure(cb, VRHandle::LINEAR, Vec3f(1,0,0), true);
+        if (n == "Size x") h->configure(cb, VRHandle::LINEAR, Vec3f(1,0,0), 0.5, true);
+        if (n == "Size y") h->configure(cb, VRHandle::LINEAR, Vec3f(0,1,0), 0.5, true);
+        if (n == "Size z") h->configure(cb, VRHandle::LINEAR, Vec3f(0,0,1), 0.5, true);
+        if (n == "Radius") h->configure(cb, VRHandle::LINEAR, Vec3f(1,0,0), 1, true);
+        if (n == "Height") h->configure(cb, VRHandle::LINEAR, Vec3f(0,1,0), 0.5, true);
+        if (n == "Inner radius") h->configure(cb, VRHandle::LINEAR, Vec3f(0,1,0), 1, true);
+        if (n == "Outer radius") h->configure(cb, VRHandle::LINEAR, Vec3f(1,0,0), 1, true);
 
-        // add callback for parameter changes
-
+        h->set( pose(), toFloat(param) );
     }
 }
 

@@ -59,6 +59,7 @@
 #include "VRPyMeasure.h"
 #include "VRPyImage.h"
 #include "VRPyProjectManager.h"
+#include "VRPyGeoPrimitive.h"
 #include <iostream>
 #include <algorithm>
 #include <memory>
@@ -319,6 +320,7 @@ void VRScriptManager::initPyModules() {
     registerModule<VRPyTriangulator>("Triangulator", pModVR);
     registerModule<VRPyRecorder>("Recorder", pModVR);
     registerModule<VRPyProjectManager>("ProjectManager", pModVR);
+    registerModule<VRPyGeoPrimitive>("GeoPrimitive", pModVR, VRPyGeometry::typeRef);
     registerModule<VRPyStorage>("Storage", pModVR);
     registerModule<VRPySnappingEngine>("SnappingEngine", pModVR);
     registerModule<VRPyAnnotationEngine>("AnnotationEngine", pModVR, VRPyGeometry::typeRef);
