@@ -35,6 +35,7 @@ VRTransform::VRTransform(string name) : VRObject(name) {
     store("do_cT", &doTConstraint);
     store("do_cR", &doRConstraint);
     store("cT_mode", &tConMode);
+    store("cT_local", &localTC);
     store("at_dir", &orientation_mode);
 
     regStorageUpdateFkt( VRFunction<int>::create("transform_update", boost::bind(&VRTransform::setup, this)) );
@@ -652,16 +653,23 @@ void VRTransform::apply_constraints() {
     if (apply_time_stamp == now) return;
     apply_time_stamp = now;
 
-    Matrix t = getWorldMatrix();
+    VRTransformPtr ref = constraints_referential.lock();
 
-    //Matrix pt = getWorldMatrix(false); // parent world matrix
-    //Matrix t; dm->read(t); t.multLeft(pt); // own world matrix
+    Matrix t, tr, ti, ti1, ti2;
+    Matrix t0 = constraints_reference;
+    if (localTC) t = getMatrix();
+    else t = getWorldMatrix();
+    if (ref) {
+        tr = ref->getWorldMatrix();
+        ti = tr; ti.invert();
+        ti1 = ti; ti2 = ti;
+        //ti1.mult(t0); t0 = ti1; // W = O*L => L = O⁻*W
+        ti2.mult(t); t = ti2; // W = O*L => L = O⁻*W
+    }
 
     //rotation
     if (doRConstraint) {
         int qs = rConstraint[0]+rConstraint[1]+rConstraint[2];
-        Matrix t0 = constraints_reference;
-
         if (qs == 3) for (int i=0;i<3;i++) t[i] = t0[i];
 
         if (qs == 2) {
@@ -700,14 +708,14 @@ void VRTransform::apply_constraints() {
     //translation
     if (doTConstraint) {
         if (tConMode == PLANE) {
-            float d = Vec3f(t[3] - constraints_reference[3]).dot(tConstraint);
+            float d = Vec3f(t[3] - t0[3]).dot(tConstraint);
             for (int i=0; i<3; i++) t[3][i] -= d*tConstraint[i];
         }
 
         if (tConMode == LINE) {
-            Vec3f d = Vec3f(t[3] - constraints_reference[3]);
+            Vec3f d = Vec3f(t[3] - t0[3]);
             d = d.dot(tConstraint)*tConstraint;
-            for (int i=0; i<3; i++) t[3][i] = constraints_reference[3][i] + d[i];
+            for (int i=0; i<3; i++) t[3][i] = t0[3][i] + d[i];
         }
 
         if (tConMode == POINT) {
@@ -715,15 +723,10 @@ void VRTransform::apply_constraints() {
         }
     }
 
-    //pt.invert();
-    //t.multLeft(pt);
-    //setMatrix(t);
-
-    setWorldMatrix(t);
+    if (ref) { tr.mult(t); t = tr; }
+    if (localTC) setMatrix(t);
+    else setWorldMatrix(t);
 }
-
-//void VRTransform::setBulletObject(btRigidBody* b) { physics->setObj(b); }
-//btRigidBody* VRTransform::getBulletObject() { return physics->obj(); }
 
 void VRTransform::updateFromBullet() {
     if (held) return;
@@ -737,10 +740,11 @@ void VRTransform::updateFromBullet() {
 void VRTransform::setNoBltFlag() { noBlt = true; }
 
 void VRTransform::setRestrictionReference(Matrix m) { constraints_reference = m; }
+void VRTransform::setRestrictionReferential(VRTransformPtr t) { constraints_referential = t; }
 void VRTransform::toggleTConstraint(bool b) { doTConstraint = b; if (b) getWorldMatrix(constraints_reference); if(!doRConstraint) setFixed(!b); }
 void VRTransform::toggleRConstraint(bool b) { doRConstraint = b; if (b) getWorldMatrix(constraints_reference); if(!doTConstraint) setFixed(!b); }
 void VRTransform::setTConstraint(Vec3f trans) { tConstraint = trans; if (tConstraint.length() > 1e-4) tConstraint.normalize(); }
-void VRTransform::setTConstraintMode(int mode) { tConMode = mode; }
+void VRTransform::setTConstraintMode(int mode, bool local) { tConMode = mode; localTC = local; }
 void VRTransform::setRConstraint(Vec3i rot) { rConstraint = rot; }
 
 bool VRTransform::getTConstraintMode() { return tConMode; }

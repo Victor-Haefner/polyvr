@@ -61,8 +61,10 @@ class VRTransform : public VRObject {
         Matrix WorldTransformation;
 
         Matrix constraints_reference;
+        VRTransformWeakPtr constraints_referential;
         bool doTConstraint = false;
         bool doRConstraint = false;
+        bool localTC = false;
         int tConMode = PLANE;
         Vec3f tConstraint = Vec3f(0,1,0);
         Vec3i rConstraint;
@@ -180,10 +182,11 @@ class VRTransform : public VRObject {
         void printTransformationTree(int indent = 0);
 
         void setRestrictionReference(Matrix m);
+        void setRestrictionReferential(VRTransformPtr ref);
         void toggleTConstraint(bool b);
         void toggleRConstraint(bool b);
         void setTConstraint(Vec3f trans);
-        void setTConstraintMode(int mode);
+        void setTConstraintMode(int mode, bool local = false);
         bool getTConstraintMode();
         void setRConstraint(Vec3i rot);
 
