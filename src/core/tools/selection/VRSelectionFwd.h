@@ -10,6 +10,7 @@ typedef std::weak_ptr<X> X ## WeakPtr;
 
 namespace OSG {
 
+ptrFwd(VRSelector);
 ptrFwd(VRSelection);
 ptrFwd(VRPatchSelection);
 ptrFwd(VRPolygonSelection);

@@ -15,6 +15,8 @@ VRSelector::VRSelector() {
     selection = VRSelection::create();
 }
 
+VRSelectorPtr VRSelector::create() { return VRSelectorPtr( new VRSelector() ); }
+
 VRSelector::MatStore::MatStore(VRGeometryPtr geo) {
     this->geo = geo;
     mat = geo->getMaterial();

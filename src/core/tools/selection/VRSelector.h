@@ -7,6 +7,7 @@
 #include <map>
 #include "core/objects/VRObjectFwd.h"
 #include "VRSelection.h"
+#include "VRSelectionFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -30,6 +31,8 @@ class VRSelector {
 
     public:
         VRSelector();
+
+        static VRSelectorPtr create();
 
         void select(VRObjectPtr obj);
         void select(VRSelectionPtr s);
