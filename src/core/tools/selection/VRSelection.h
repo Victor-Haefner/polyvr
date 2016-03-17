@@ -39,7 +39,7 @@ class VRSelection {
         static VRSelectionPtr create();
 
         void add(VRGeometryPtr geo, vector<int> subselection = vector<int>());
-        void apply(VRObjectPtr tree, bool force = false);
+        void apply(VRObjectPtr tree, bool force = false, bool recursive = true);
         void append(VRSelectionPtr sel);
         void clear();
 

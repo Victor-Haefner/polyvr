@@ -114,9 +114,9 @@ void VRSelector::setBorder(int width, bool smooth) {
     update();
 }
 
-void VRSelector::select(VRObjectPtr obj) {
+void VRSelector::select(VRObjectPtr obj, bool recursive) {
     clear();
-    selection->apply(obj, true);
+    selection->apply(obj, true, recursive);
     update();
 }
 

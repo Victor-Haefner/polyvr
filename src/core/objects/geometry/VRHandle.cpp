@@ -2,6 +2,7 @@
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/utils/VRFunction.h"
+#include "core/objects/material/VRMaterial.h"
 #include <boost/bind.hpp>
 
 using namespace OSG;
@@ -9,7 +10,10 @@ using namespace OSG;
 VRHandle::VRHandle(string name) : VRGeometry(name) {
     updateCb = VRFunction<int>::create("handle_update", boost::bind(&VRHandle::updateHandle, this) );
     setPickable(true);
-    setPrimitive("Sphere", "0.1 1");
+    setPrimitive("Box", "0.1 0.1 0.1 1 1 1");
+    auto m = VRMaterial::get("VRHandle");
+    m->setDiffuse(Vec3f(0.3,0.6,1.0));
+    setMaterial( m );
 }
 
 VRHandlePtr VRHandle::create(string name) { return VRHandlePtr( new VRHandle(name) ); }
@@ -22,6 +26,7 @@ void VRHandle::configure(VRAnimPtr cb, TYPE t, Vec3f n, float s, bool symmetric)
     scale = s;
     if (t == LINEAR) { // TODO: need local constraints!
         setTConstraint(n);
+        setRConstraint(Vec3i(1,1,1));
         setTConstraintMode(VRTransform::LINE);
         setRestrictionReferential( dynamic_pointer_cast<VRTransform>(getParent()) );
     }
@@ -35,9 +40,13 @@ void VRHandle::set(pose p, float v) {
     toggleTConstraint(0);
     setPose( origin );
 
+
     if (constraint == LINEAR) {
         translate( axis*value*scale );
+        cout << "VRHandle::set " << getFrom() << endl;
         toggleTConstraint(1);
+        toggleRConstraint(1);
+        setRestrictionReference(getMatrix());
     }
 }
 
@@ -47,9 +56,12 @@ void VRHandle::updateHandle() {
     VRGeometryPtr p =  dynamic_pointer_cast<VRGeometry>(getDragParent());
     if (!p) return;
 
-    Vec3f p0 = p->getWorldPosition(); // TODO, use origin offset
-    Vec3f p1 = getWorldPosition();
-    Vec3f d = p1-p0;
+    Matrix p0 = p->getWorldMatrix();
+    p0.invert();
+    Pnt3f p1 = getWorldPosition();
+    p0.mult(p1,p1);
+
+    Vec3f d = Vec3f(p1)-origin.pos();
     float v = axis.dot(d);
     value = abs(v)/scale;
 

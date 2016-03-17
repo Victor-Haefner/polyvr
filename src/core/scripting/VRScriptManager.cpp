@@ -57,6 +57,7 @@
 #include "VRPyNavPreset.h"
 #include "VRPyWaypoint.h"
 #include "VRPyMeasure.h"
+#include "VRPyJointTool.h"
 #include "VRPyImage.h"
 #include "VRPyProjectManager.h"
 #include "VRPyGeoPrimitive.h"
@@ -338,6 +339,7 @@ void VRScriptManager::initPyModules() {
     registerModule<VRPyClipPlane>("ClipPlane", pModVR, VRPyGeometry::typeRef);
     registerModule<VRPyWaypoint>("Waypoint", pModVR, VRPyGeometry::typeRef);
     registerModule<VRPyMeasure>("Measure", pModVR, VRPyObject::typeRef);
+    registerModule<VRPyJointTool>("JointTool", pModVR, VRPyObject::typeRef);
 	registerModule<VRPyColorChooser>("ColorChooser", pModVR);
 	registerModule<VRPyTextureRenderer>("TextureRenderer", pModVR, VRPyObject::typeRef);
     registerModule<VRPyCaveKeeper>("CaveKeeper", pModVR);

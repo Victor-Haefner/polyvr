@@ -40,6 +40,7 @@ ptrFwd(VRTextureRenderer);
 ptrFwd(VRProjectManager);
 ptrFwd(VRHandle);
 ptrFwd(VRGeoPrimitive);
+ptrFwd(VRJointTool);
 
 // addons
 ptrFwd(VRMetaBalls);

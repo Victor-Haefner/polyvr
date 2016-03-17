@@ -110,6 +110,7 @@ vector<string> VRPrimitive::getTypeParameter(string type) {
         params["Thread"].push_back("Length");
         params["Thread"].push_back("Radius");
         params["Thread"].push_back("Pitch");
+        params["Thread"].push_back("Segments");
     }
 
     if (params.count(type)) return params[type];

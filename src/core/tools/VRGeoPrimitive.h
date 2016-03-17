@@ -2,6 +2,7 @@
 #define VRGEOPRIMITIVE_H_INCLUDED
 
 #include "core/objects/VRObjectFwd.h"
+#include "core/tools/selection/VRSelectionFwd.h"
 #include "core/objects/geometry/VRGeometry.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -12,6 +13,7 @@ class VRGeoPrimitive : public VRGeometry {
         bool selected = false;
 
         vector<VRHandlePtr> handles;
+        VRSelectorPtr selector;
 
         void update(int i, float v);
         void setupHandles();

@@ -33,11 +33,11 @@ void VRSelection::clear() {
     bbox.clear();
 }
 
-void VRSelection::apply(VRObjectPtr tree, bool force) {
+void VRSelection::apply(VRObjectPtr tree, bool force, bool recursive) {
     if (!tree) return;
 
     vector<VRGeometryPtr> geos;
-    for ( auto c : tree->getChildren(true) ) if (c->hasAttachment("geometry")) geos.push_back( static_pointer_cast<VRGeometry>(c) );
+    if (recursive) for ( auto c : tree->getChildren(true) ) if (c->hasAttachment("geometry")) geos.push_back( static_pointer_cast<VRGeometry>(c) );
     if ( tree->hasAttachment("geometry") ) geos.push_back( static_pointer_cast<VRGeometry>(tree) );
 
     for (auto geo : geos) {

@@ -715,6 +715,7 @@ void VRTransform::apply_constraints() {
         if (tConMode == LINE) {
             Vec3f d = Vec3f(t[3] - t0[3]);
             d = d.dot(tConstraint)*tConstraint;
+            //cout << "t0 " << t0[3] << " t " << t[3] << " a " << tConstraint << " d " << d << endl;
             for (int i=0; i<3; i++) t[3][i] = t0[3][i] + d[i];
         }
 

@@ -34,7 +34,7 @@ class VRSelector {
 
         static VRSelectorPtr create();
 
-        void select(VRObjectPtr obj);
+        void select(VRObjectPtr obj, bool recursive = true);
         void select(VRSelectionPtr s);
         void add(VRSelectionPtr s);
         VRSelectionPtr getSelection();

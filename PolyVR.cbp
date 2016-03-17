@@ -699,6 +699,8 @@
 		<Unit filename="src/core/scripting/VRPyImage.h" />
 		<Unit filename="src/core/scripting/VRPyIntersection.cpp" />
 		<Unit filename="src/core/scripting/VRPyIntersection.h" />
+		<Unit filename="src/core/scripting/VRPyJointTool.cpp" />
+		<Unit filename="src/core/scripting/VRPyJointTool.h" />
 		<Unit filename="src/core/scripting/VRPyLight.cpp" />
 		<Unit filename="src/core/scripting/VRPyLight.h" />
 		<Unit filename="src/core/scripting/VRPyLightBeacon.cpp" />
@@ -832,6 +834,8 @@
 		<Unit filename="src/core/tools/VRConstructionKit.h" />
 		<Unit filename="src/core/tools/VRGeoPrimitive.cpp" />
 		<Unit filename="src/core/tools/VRGeoPrimitive.h" />
+		<Unit filename="src/core/tools/VRKinematictool.cpp" />
+		<Unit filename="src/core/tools/VRKinematictool.h" />
 		<Unit filename="src/core/tools/VRMenu.cpp" />
 		<Unit filename="src/core/tools/VRMenu.h" />
 		<Unit filename="src/core/tools/VRMesure.cpp" />
