@@ -21,23 +21,27 @@ public:
     int id;
 
     Emitter();
-    Emitter(btDiscreteDynamicsWorld* world, vector<Particle*> particlesV, btVector3 pos, btVector3 dir, int emit_freq);
+    Emitter(btDiscreteDynamicsWorld* world, vector<Particle*> particlesV, btVector3 pos, btVector3 dir, int emit_freq, bool collide=false);
     ~Emitter();
 
     void setActive(bool activate);
     void setLoop(bool activate);
 
-private:
+protected:
+    btDiscreteDynamicsWorld* world = 0;
     vector<Particle*> particles;
     btVector3 position;
     btVector3 direction;
-    int interval = 60;
-    int counter = 0;
-    int i = 0;
+    unsigned int interval = 60;
+    unsigned int timer = 0;
+    unsigned int p_num;
     bool loop = false;
     bool active = false;
+    bool collideSelf = false;
+    VRUpdatePtr fkt;
 
     void emitterLoop();
+    boost::recursive_mutex& mtx();
 };
 OSG_END_NAMESPACE;
 #endif // VREMITTER_H_INCLUDED

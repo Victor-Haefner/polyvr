@@ -5,6 +5,7 @@
 #include <OpenSG/OSGGeoProperties.h>
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/utils/VRFunctionFwd.h"
+#include "core/math/Octree.h"
 #include "VRParticle.h"
 #include "VREmitter.h"
 
@@ -22,7 +23,7 @@ class VRParticles : public VRGeometry {
         ~VRParticles();
         static shared_ptr<VRParticles> create();
 
-        static const int startValue = 400;
+        static const int startValue = 500;
         int N = startValue;
 
         void setRadius(float newRadius, float variation=0.0);
@@ -43,6 +44,7 @@ class VRParticles : public VRGeometry {
         int from, to;
         bool collideWithSelf = true;
         vector<Particle*> particles;
+        Octree ocparticles;
         map<int, Emitter*> emitters;
 
         VRUpdatePtr fkt;

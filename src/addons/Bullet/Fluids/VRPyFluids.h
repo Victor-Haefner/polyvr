@@ -23,6 +23,7 @@ struct VRPyFluids : VRPyBaseT<OSG::VRFluids> {
     static PyObject* setMassByRadius(VRPyFluids* self, PyObject* args);
     static PyObject* setMassForOneLiter(VRPyFluids* self, PyObject* args);
     static PyObject* setViscosity(VRPyFluids* self, PyObject* args);
+    static PyObject* setRestDensity(VRPyFluids* self, PyObject* args);
 };
 
 struct VRPyMetaBalls : VRPyBaseT<OSG::VRMetaBalls> {
