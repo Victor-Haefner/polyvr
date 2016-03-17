@@ -21,6 +21,7 @@ PyMethodDef VRPyFluids::methods[] = {
     {"setMassByRadius", (PyCFunction)VRPyFluids::setMassByRadius, METH_VARARGS, "setMassByRadius(float massOfOneMeterRadius) \n\tsetMass(1000.0*100)"},
     {"setMassForOneLiter", (PyCFunction)VRPyFluids::setMassForOneLiter, METH_VARARGS, "setMassForOneLiter(float massOfOneLiter) \n\tsetMass(1000.0)"},
     {"setViscosity", (PyCFunction)VRPyFluids::setViscosity, METH_VARARGS, "setViscosity(float factor) \n\tsetViscosity(0.01)"},
+    {"setRestDensity", (PyCFunction)VRPyFluids::setRestDensity, METH_VARARGS, "setRestDensity(float density) \n\tsetRestDensity(float restN, float restDistance)"},
     {NULL}  /* Sentinel */
 };
 
@@ -153,5 +154,21 @@ PyObject* VRPyFluids::setViscosity(VRPyFluids* self, PyObject* args) {
     factor = 0.01;
     if (! PyArg_ParseTuple(args, "f", &factor)) { Py_RETURN_FALSE; }
     self->objPtr->setViscosity(factor);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyFluids::setRestDensity(VRPyFluids* self, PyObject* args) {
+    checkObj(self);
+    float density, restDistance;
+    density = 0.0;
+    restDistance = -1;
+    if (! PyArg_ParseTuple(args, "f|f", &density, &restDistance)) { Py_RETURN_FALSE; }
+
+    if (restDistance < 0) {
+        self->objPtr->setRestDensity(density);
+    } else {
+        int restN = (int) density;
+        self->objPtr->setRestDensity(restN, restDistance);
+    }
     Py_RETURN_TRUE;
 }

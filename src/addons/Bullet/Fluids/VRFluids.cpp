@@ -34,7 +34,7 @@ void VRFluids::setFunctions(int from, int to) {
         BLock lock(mtx());
         VRScenePtr scene = VRSceneManager::getCurrent();
         if (!scene) {
-            printf("VRFluids::setFunctions(): No scene found");
+            printf("VRFluids::setFunctions(): No scene found\n");
             return;
         }
         // enable graphical updates
@@ -67,18 +67,24 @@ void VRFluids::update(int from, int to) {
     {
         BLock lock(mtx());
         for (int i=from; i < to; i++) {
-            auto p = particles[i]->body->getWorldTransform().getOrigin();
-            pos->setValue(toVec3f(p),i);
+            if (particles[i]->isActive) {
+                auto p = particles[i]->body->getWorldTransform().getOrigin();
+                pos->setValue(toVec3f(p),i);
 
-            auto particle = (SphParticle*)particles[i];
-            auto d = particle->sphDensity / this->REST_DENSITY; // visualize density
-            // auto d = particle->sphPressureForce.length() + particle->sphViscosityForce.length() / 20.0;
-            if (d > 1.0) {
-                colors->setValue(Vec4f(d-1,2-d,0,1), i); // high range -> green<->red
-            } else if (d < 0.00001) {
-                colors->setValue(Vec4f(0,0,0,1), i); // zero or negative -> black
-            } else {
-                colors->setValue(Vec4f(0,d,1-d,1), i); // low range -> blue<->green
+                colors->setValue(Vec4f(0,0,1,1), i);
+                /*
+                auto particle = (SphParticle*)particles[i];
+                //auto d = particle->sphDensity / this->REST_DENSITY; // visualize density
+                auto d = particle->body->getLinearVelocity().length2() / (3*3); // visualize velocity
+                // auto d = particle->sphPressureForce.length() + particle->sphViscosityForce.length() / 20.0;
+                if (d > 1.0) {
+                    colors->setValue(Vec4f(d-1,2-d,0,1), i); // high range -> green<->red
+                } else if (d < 0.00001) {
+                    colors->setValue(Vec4f(0,0,0,1), i); // zero or negative -> black
+                } else {
+                    colors->setValue(Vec4f(0,d,1-d,1), i); // low range -> blue<->green
+                }
+                */
             }
         }
     }
@@ -89,27 +95,37 @@ inline void VRFluids::updateSPH(int from, int to) {
         SphParticle* p;
         BLock lock(mtx());
 
-        #pragma omp parallel for private(p) shared(from, to)
+        // clear and fill octree
+        ocparticles.clear();
         for (int i=from; i < to; i++) {
-            p = (SphParticle*) particles[i];
-            sph_calc_density_pressure(p, from, to);
+            if (particles[i]->isActive == true) {
+                p = (SphParticle*) particles[i];
+                btVector3 p_origin = p->body->getWorldTransform().getOrigin();
+                ocparticles.add(p_origin[0],p_origin[1],p_origin[2],p);
+            }
         }
 
         #pragma omp parallel for private(p) shared(from, to)
         for (int i=from; i < to; i++) {
-            p = (SphParticle*) particles[i];
-            if (p->sphActive) {
-                sph_calc_pressureForce(p, from, to);
-                sph_calc_viscosityForce(p, from, to);
-                // update Particle Acceleration:
+            if (particles[i]->isActive == true) {
+                p = (SphParticle*) particles[i];
+                sph_calc_properties(p);
+            }
+        }
+
+        #pragma omp parallel for private(p) shared(from, to)
+        for (int i=from; i < to; i++) {
+            if (particles[i]->isActive == true) {
+                p = (SphParticle*) particles[i];
+                sph_calc_forces(p);
                 btVector3 force = (p->sphPressureForce + p->sphViscosityForce);
                 p->body->applyCentralForce(force);
-            }
 
-            // btVector3 pf = p->sphPressureForce; // NOTE very ressource heavy debug foo here
-            // btVector3 vis = p->sphViscosityForce;
-            // printf("--> (%f,%f,%f) + (%f,%f,%f) << (%f <dens-press> %f), mass(%f)\n",
-            //         pf[0], pf[1], pf[2], vis[0],vis[1],vis[2], p->sphDensity/REST_DENSITY, p->sphPressure, p->mass);
+                // btVector3 pf = p->sphPressureForce; // NOTE very ressource heavy debug foo here
+                // btVector3 vis = p->sphViscosityForce;
+                // printf("--> (%f,%f,%f) + (%f,%f,%f) << (%f <dens-press> %f), mass(%f)\n",
+                //         pf[0], pf[1], pf[2], vis[0],vis[1],vis[2], p->sphDensity/REST_DENSITY, p->sphPressure, p->mass);
+            }
         }
 
         // NOTE ressource heavy debug foo here
@@ -133,7 +149,7 @@ inline void VRFluids::updateXSPH(int from, int to) {
         //#pragma omp parallel for private(p) shared(from, to)
         for (int i=from; i < to; i++) {
             p = (SphParticle*) particles[i];
-            sph_calc_density_pressure(p, from, to);
+            sph_calc_properties(p);
         }
 
         //#pragma omp parallel for private(p, n) shared(from, to)
@@ -150,44 +166,48 @@ inline void VRFluids::updateXSPH(int from, int to) {
     }
 }
 
-inline void VRFluids::sph_calc_density_pressure(SphParticle* p, int from, int to) {
+const float NOTHING2 = 0.01;
+/**
+ * Calculates density, pressure and neighbors and stores them in SphParticle p.
+ */
+inline void VRFluids::sph_calc_properties(SphParticle* p) {
     p->sphDensity = 0.0;
     btVector3 p_origin = p->body->getWorldTransform().getOrigin();
+    //float p_speed = p->body->getLinearVelocity().length2();
 
-    for (int i=from; i < to; i++) {
-        btVector3 n_origin = particles[i]->body->getWorldTransform().getOrigin();
+    p->neighbors = ocparticles.radiusSearch(p_origin[0],p_origin[1],p_origin[2],p->sphArea);
+    auto it = p->neighbors.begin();
+
+    while (it != p->neighbors.end()) {
+        btVector3 n_origin = ((SphParticle*) *it)->body->getWorldTransform().getOrigin();
         float kernel = kernel_poly6(p_origin - n_origin, p->sphArea);
-        p->sphDensity += particles[i]->mass * kernel;
+        if (kernel == 0.0) {
+            it = p->neighbors.erase(it);
+        } else {
+            p->sphDensity += ((SphParticle*) *it)->mass * kernel;
+            it++;
+        }
     }
     p->sphPressure = PRESSURE_KAPPA * (p->sphDensity - REST_DENSITY);
 }
 
-inline void VRFluids::sph_calc_pressureForce(SphParticle* p, int from, int to) {
+inline void VRFluids::sph_calc_forces(SphParticle* p) {
     p->sphPressureForce.setZero();
-    btVector3 p_origin = p->body->getWorldTransform().getOrigin();
-
-    for (int i=from; i < to; i++) {
-        SphParticle* n = (SphParticle*) particles[i];
-        btVector3 n_origin = n->body->getWorldTransform().getOrigin();
-        float trick = (p->sphPressure + n->sphPressure) / (2 * n->sphDensity); // makes forces symmetric
-        btVector3 kernel = kernel_spiky_gradient(p_origin - n_origin, p->sphArea);
-        p->sphPressureForce -= n->mass * trick * kernel;
-    }
-}
-
-inline void VRFluids::sph_calc_viscosityForce(SphParticle* p, int from, int to) {
     p->sphViscosityForce.setZero();
     btVector3 p_origin = p->body->getWorldTransform().getOrigin();
     btVector3 p_speed = p->body->getLinearVelocity();
 
-    for (int i=from; i < to; i++) {
-        if (p != particles[i]) {
-            SphParticle* n = (SphParticle*) particles[i];
-            btVector3 n_origin = n->body->getWorldTransform().getOrigin();
-            btVector3 n_speed = n->body->getLinearVelocity();
-            n_speed = (n_speed - p_speed) / n->sphDensity;
-            p->sphViscosityForce += n->mass * n_speed * kernel_visc_laplacian(p_origin - n_origin, p->sphArea);
-        }
+    for (auto np : p->neighbors) {
+        SphParticle* n = (SphParticle*) np;
+        btVector3 n_origin = n->body->getWorldTransform().getOrigin();
+        btVector3 n_speed = n->body->getLinearVelocity();
+        // calc pressure force
+        float ptrick = (p->sphPressure + n->sphPressure) / (2 * n->sphDensity); // makes forces symmetric
+        btVector3 pKernel = kernel_spiky_gradient(p_origin - n_origin, p->sphArea);
+        p->sphPressureForce -= n->mass * ptrick * pKernel;
+        // calc viscosity force
+        btVector3 vtrick = (n_speed - p_speed) / n->sphDensity;
+        p->sphViscosityForce += n->mass * vtrick * kernel_visc_laplacian(p_origin - n_origin, p->sphArea);
     }
     p->sphViscosityForce *= VISCOSITY_MU;
 }
@@ -219,10 +239,10 @@ inline void VRFluids::xsph_calc_movement(SphParticle* p, int from, int to) {
  * }
  */
 inline float VRFluids::kernel_poly6(btVector3 v, float h) {
-    float r = v.length();
-    if (r <= h && r >= 0) {
-        float r2 = r*r;
-        float diff = h*h - r2;
+    float r2 = v.length2();
+    float h2 = h*h;
+    if ( r2 <= h2 ) {
+        float diff = h2 - r2;
         return (315.0 / (64.0*Pi)) * (1/pow(h,9)) * diff*diff*diff;
     } else {
         return 0.0;
@@ -308,6 +328,16 @@ void VRFluids::setMass(float newMass, float variation) {
 
 void VRFluids::setViscosity(float factor) {
     this->VISCOSITY_MU = factor;
+}
+
+void VRFluids::setRestDensity(float density) {
+    this->REST_DENSITY = density;
+}
+
+void VRFluids::setRestDensity(int rN, float rDIS) {
+    this->REST_N = rN;
+    this->REST_DIS = rDIS;
+    this->updateDerivedValues();
 }
 
 void VRFluids::updateDerivedValues() {
