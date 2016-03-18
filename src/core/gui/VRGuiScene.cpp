@@ -98,8 +98,9 @@ void setTransform(VRTransformPtr e) {
     Vec3f d = e->getDir();
     Vec3f s = e->getScale();
 
-    Vec3f tc = e->getTConstraint();
-    Vec3i rc = e->getRConstraint();
+    auto c = e->getConstraint();
+    Vec3f tc = c->getTConstraint();
+    Vec3i rc = c->getRConstraint();
 
     posEntry.set(f);
     atEntry.set(a);
@@ -113,8 +114,8 @@ void setTransform(VRTransformPtr e) {
     if (e->get_orientation_mode())  atEntry.setFontColor(Vec3f(0.6, 0.6, 0.6));
     else                            dirEntry.setFontColor(Vec3f(0.6, 0.6, 0.6));
 
-    bool doTc = e->hasTConstraint();
-    bool doRc = e->hasRConstraint();
+    bool doTc = c->hasTConstraint();
+    bool doRc = c->hasRConstraint();
 
     setCheckButton("checkbutton18", rc[0]);
     setCheckButton("checkbutton19", rc[1]);
@@ -123,8 +124,8 @@ void setTransform(VRTransformPtr e) {
     setCheckButton("checkbutton21", doTc);
     setCheckButton("checkbutton22", doRc);
 
-    setRadioButton("radiobutton1", !e->getTConstraintMode());
-    setRadioButton("radiobutton2", e->getTConstraintMode());
+    setRadioButton("radiobutton1", !c->getTConstraintMode());
+    setRadioButton("radiobutton2", c->getTConstraintMode());
 
     if (e->getPhysics()) {
         setCheckButton("checkbutton13", e->getPhysics()->isPhysicalized());
@@ -534,7 +535,7 @@ void on_identity_clicked(GtkButton*, gpointer data) {
 void on_edit_T_constraint(Vec3f v) {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
-    obj->setTConstraint(v);
+    obj->getConstraint()->setTConstraint(v);
 }
 
 void on_toggle_T_constraint(GtkToggleButton* tb, gpointer data) {
@@ -542,7 +543,7 @@ void on_toggle_T_constraint(GtkToggleButton* tb, gpointer data) {
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
 
     bool b = getCheckButtonState("checkbutton21");
-    obj->toggleTConstraint(b);
+    obj->getConstraint()->toggleTConstraint(b, obj);
 }
 
 void on_toggle_R_constraint(GtkToggleButton* tb, gpointer data) {
@@ -550,7 +551,7 @@ void on_toggle_R_constraint(GtkToggleButton* tb, gpointer data) {
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
 
     bool b = getCheckButtonState("checkbutton22");
-    obj->toggleRConstraint(b);
+    obj->getConstraint()->toggleRConstraint(b, obj);
 }
 
 void on_toggle_rc_x(GtkToggleButton* tb, gpointer data) {
@@ -562,7 +563,7 @@ void on_toggle_rc_x(GtkToggleButton* tb, gpointer data) {
     if (getCheckButtonState("checkbutton19") ) rc[1] = 1;
     if (getCheckButtonState("checkbutton20") ) rc[2] = 1;
 
-    obj->setRConstraint(rc);
+    obj->getConstraint()->setRConstraint(rc);
 }
 
 void on_toggle_rc_y(GtkToggleButton* tb, gpointer data) { on_toggle_rc_x(0,NULL); }
@@ -935,7 +936,7 @@ void VRGuiScene::on_toggle_T_constraint_mode() {
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
 
     bool plane = getRadioButtonState("radiobutton2");
-    obj->setTConstraintMode(plane? OSG::VRConstraint::PLANE : OSG::VRConstraint::LINE);
+    obj->getConstraint()->setTConstraintMode(plane? OSG::VRConstraint::PLANE : OSG::VRConstraint::LINE);
 }
 
 void VRGuiScene::on_toggle_phys() {

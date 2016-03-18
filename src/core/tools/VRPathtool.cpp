@@ -19,24 +19,25 @@ VRManipulator::VRManipulator() { setup(); }
 
 void VRManipulator::handle(VRGeometryPtr g) {
     if (sel == 0) return;
-    sel->toggleTConstraint(false);
-    sel->toggleRConstraint(false);
-    sel->setTConstraintMode(VRConstraint::LINE);
+    auto c = sel->getConstraint();
+    c->toggleTConstraint(false, sel);
+    c->toggleRConstraint(false, sel);
+    c->setTConstraintMode(VRConstraint::LINE);
 
     if (g == gTX || g == gTY || g == gTZ || g == gRX || g == gRY || g == gRZ) { // lock everything
-        sel->toggleTConstraint(true);
-        sel->toggleRConstraint(true);
-        sel->setTConstraint(Vec3f(0,0,0));
-        sel->setRConstraint(Vec3i(1,1,1));
+        c->toggleTConstraint(true, sel);
+        c->toggleRConstraint(true, sel);
+        c->setTConstraint(Vec3f(0,0,0));
+        c->setRConstraint(Vec3i(1,1,1));
     }
 
-    if (g == gTX) sel->setTConstraint(Vec3f(1,0,0));
-    if (g == gTY) sel->setTConstraint(Vec3f(0,1,0));
-    if (g == gTZ) sel->setTConstraint(Vec3f(0,0,1));
+    if (g == gTX) c->setTConstraint(Vec3f(1,0,0));
+    if (g == gTY) c->setTConstraint(Vec3f(0,1,0));
+    if (g == gTZ) c->setTConstraint(Vec3f(0,0,1));
     //if (g == gRX) sel->setRConstraint(Vec3i(0,1,1)); // TODO: fix rotation constraints!
     //if (g == gRY) sel->setRConstraint(Vec3i(1,0,1));
     //if (g == gRZ) sel->setRConstraint(Vec3i(1,1,0));
-    if (g == gRX || g == gRY || g == gRZ) sel->setRConstraint(Vec3i(0,0,0));
+    if (g == gRX || g == gRY || g == gRZ) c->setRConstraint(Vec3i(0,0,0));
 }
 
 void VRManipulator::manipulate(VRTransformPtr t) {

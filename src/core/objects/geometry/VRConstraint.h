@@ -62,6 +62,21 @@ class VRConstraint : public VRStorage {
         Matrix getReferenceB();
 
         void apply(VRTransformPtr t);
+
+
+        // TODO: refactor old VRTransform stuff
+        void setRestrictionReference(Matrix m);
+        void setRestrictionReferential(VRTransformPtr ref);
+        void toggleTConstraint(bool b, VRTransformPtr obj);
+        void toggleRConstraint(bool b, VRTransformPtr obj);
+        void setTConstraint(Vec3f trans);
+        void setTConstraintMode(int mode, bool local = false);
+        bool getTConstraintMode();
+        void setRConstraint(Vec3i rot);
+        Vec3f getTConstraint();
+        Vec3i getRConstraint();
+        bool hasTConstraint();
+        bool hasRConstraint();
 };
 
 OSG_END_NAMESPACE;

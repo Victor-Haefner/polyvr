@@ -168,21 +168,6 @@ class VRTransform : public VRObject {
         void setConstraint(VRConstraintPtr c);
         VRConstraintPtr getConstraint();
 
-        void setRestrictionReference(Matrix m);
-        void setRestrictionReferential(VRTransformPtr ref);
-        void toggleTConstraint(bool b);
-        void toggleRConstraint(bool b);
-        void setTConstraint(Vec3f trans);
-        void setTConstraintMode(int mode, bool local = false);
-        bool getTConstraintMode();
-        void setRConstraint(Vec3i rot);
-
-        Vec3f getTConstraint();
-        Vec3i getRConstraint();
-
-        bool hasTConstraint();
-        bool hasRConstraint();
-
         /** enable constraints on the object when dragged, 0 leaves the dof free, 1 restricts it **/
         void apply_constraints();
 

@@ -25,11 +25,12 @@ void VRHandle::configure(VRAnimPtr cb, TYPE t, Vec3f n, float s, bool symmetric)
     paramCb = cb;
     constraint = t;
     scale = s;
+    auto c = getConstraint();
     if (t == LINEAR) { // TODO: need local constraints!
-        setTConstraint(n);
-        setRConstraint(Vec3i(1,1,1));
-        setTConstraintMode(VRConstraint::LINE);
-        setRestrictionReferential( dynamic_pointer_cast<VRTransform>(getParent()) );
+        c->setTConstraint(n);
+        c->setRConstraint(Vec3i(1,1,1));
+        c->setTConstraintMode(VRConstraint::LINE);
+        c->setRestrictionReferential( dynamic_pointer_cast<VRTransform>(getParent()) );
     }
 }
 
@@ -37,17 +38,18 @@ void VRHandle::set(pose p, float v) {
     value = v;
     origin = p;
 
-    toggleRConstraint(0);
-    toggleTConstraint(0);
+    auto c = getConstraint();
+    c->toggleRConstraint(0, ptr());
+    c->toggleTConstraint(0, ptr());
     setPose( origin );
 
 
     if (constraint == LINEAR) {
         translate( axis*value*scale );
         cout << "VRHandle::set " << getFrom() << endl;
-        toggleTConstraint(1);
-        toggleRConstraint(1);
-        setRestrictionReference(getMatrix());
+        c->toggleTConstraint(1, ptr());
+        c->toggleRConstraint(1, ptr());
+        c->setRestrictionReference(getMatrix());
     }
 }
 

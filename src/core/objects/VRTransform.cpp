@@ -663,21 +663,6 @@ void VRTransform::updateFromBullet() {
 
 void VRTransform::setNoBltFlag() { noBlt = true; }
 
-void VRTransform::setRestrictionReference(Matrix m) { constraint->constraints_reference = m; }
-void VRTransform::setRestrictionReferential(VRTransformPtr t) { constraint->constraints_referential = t; }
-void VRTransform::toggleTConstraint(bool b) { constraint->doTConstraint = b; if (b) getWorldMatrix(constraint->constraints_reference); if(!constraint->doRConstraint) setFixed(!b); }
-void VRTransform::toggleRConstraint(bool b) { constraint->doRConstraint = b; if (b) getWorldMatrix(constraint->constraints_reference); if(!constraint->doTConstraint) setFixed(!b); }
-void VRTransform::setTConstraint(Vec3f trans) { constraint->tConstraint = trans; if (constraint->tConstraint.length() > 1e-4) constraint->tConstraint.normalize(); }
-void VRTransform::setTConstraintMode(int mode, bool local) { constraint->tConMode = mode; constraint->localTC = local; }
-void VRTransform::setRConstraint(Vec3i rot) { constraint->rConstraint = rot; }
-
-bool VRTransform::getTConstraintMode() { return constraint->tConMode; }
-Vec3f VRTransform::getTConstraint() { return constraint->tConstraint; }
-Vec3i VRTransform::getRConstraint() { return constraint->rConstraint; }
-
-bool VRTransform::hasTConstraint() { return constraint->doTConstraint; }
-bool VRTransform::hasRConstraint() { return constraint->doRConstraint; }
-
 VRPhysics* VRTransform::getPhysics() {
     if (physics == 0) physics = new VRPhysics( ptr() );
     return physics;
