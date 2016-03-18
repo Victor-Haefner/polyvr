@@ -320,8 +320,7 @@ PyObject* VRPyTransform::setPointConstraints(VRPyTransform* self, PyObject* args
     if (!self->valid()) return NULL;
     OSG::Vec3f v = parseVec3f(args);
     auto c = self->objPtr->getConstraint();
-    c->setTConstraint(v);
-    c->setTConstraintMode(OSG::VRConstraint::POINT);
+    c->setTConstraint(v, OSG::VRConstraint::POINT);
     c->toggleTConstraint(true, self->objPtr);
     Py_RETURN_TRUE;
 }
@@ -330,8 +329,7 @@ PyObject* VRPyTransform::setPlaneConstraints(VRPyTransform* self, PyObject* args
     if (!self->valid()) return NULL;
     OSG::Vec3f v = parseVec3f(args);
     auto c = self->objPtr->getConstraint();
-    c->setTConstraint(v);
-    c->setTConstraintMode(OSG::VRConstraint::PLANE);
+    c->setTConstraint(v, OSG::VRConstraint::PLANE);
     c->toggleTConstraint(true, self->objPtr);
     Py_RETURN_TRUE;
 }
@@ -340,8 +338,7 @@ PyObject* VRPyTransform::setAxisConstraints(VRPyTransform* self, PyObject* args)
     if (!self->valid()) return NULL;
     OSG::Vec3f v = parseVec3f(args);
     auto c = self->objPtr->getConstraint();
-    c->setTConstraint(v);
-    c->setTConstraintMode(OSG::VRConstraint::LINE);
+    c->setTConstraint(v, OSG::VRConstraint::LINE);
     c->toggleTConstraint(true, self->objPtr);
     Py_RETURN_TRUE;
 }
@@ -354,7 +351,7 @@ PyObject* VRPyTransform::setRotationConstraints(VRPyTransform* self, PyObject* a
 
     OSG::VRTransformPtr e = (OSG::VRTransformPtr) self->objPtr;
     auto c = self->objPtr->getConstraint();
-    c->setRConstraint(vi);
+    //c->setRConstraint(vi); //TODO
     c->toggleRConstraint(true, self->objPtr);
     Py_RETURN_TRUE;
 }

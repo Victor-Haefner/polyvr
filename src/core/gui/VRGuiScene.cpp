@@ -100,7 +100,7 @@ void setTransform(VRTransformPtr e) {
 
     auto c = e->getConstraint();
     Vec3f tc = c->getTConstraint();
-    Vec3i rc = c->getRConstraint();
+    Vec3f rc = c->getRConstraint();
 
     posEntry.set(f);
     atEntry.set(a);
@@ -124,8 +124,8 @@ void setTransform(VRTransformPtr e) {
     setCheckButton("checkbutton21", doTc);
     setCheckButton("checkbutton22", doRc);
 
-    setRadioButton("radiobutton1", !c->getTConstraintMode());
-    setRadioButton("radiobutton2", c->getTConstraintMode());
+    setRadioButton("radiobutton1", !c->getTMode());
+    setRadioButton("radiobutton2", c->getTMode());
 
     if (e->getPhysics()) {
         setCheckButton("checkbutton13", e->getPhysics()->isPhysicalized());
@@ -535,7 +535,7 @@ void on_identity_clicked(GtkButton*, gpointer data) {
 void on_edit_T_constraint(Vec3f v) {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
-    obj->getConstraint()->setTConstraint(v);
+    obj->getConstraint()->setTConstraint(v, obj->getConstraint()->getTMode());
 }
 
 void on_toggle_T_constraint(GtkToggleButton* tb, gpointer data) {
@@ -558,12 +558,12 @@ void on_toggle_rc_x(GtkToggleButton* tb, gpointer data) {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
 
-    Vec3i rc;
+    Vec3f rc;
     if (getCheckButtonState("checkbutton18") ) rc[0] = 1;
     if (getCheckButtonState("checkbutton19") ) rc[1] = 1;
     if (getCheckButtonState("checkbutton20") ) rc[2] = 1;
 
-    obj->getConstraint()->setRConstraint(rc);
+    obj->getConstraint()->setRConstraint(rc, obj->getConstraint()->getRMode());
 }
 
 void on_toggle_rc_y(GtkToggleButton* tb, gpointer data) { on_toggle_rc_x(0,NULL); }
@@ -936,7 +936,7 @@ void VRGuiScene::on_toggle_T_constraint_mode() {
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
 
     bool plane = getRadioButtonState("radiobutton2");
-    obj->getConstraint()->setTConstraintMode(plane? OSG::VRConstraint::PLANE : OSG::VRConstraint::LINE);
+    obj->getConstraint()->setTConstraint( obj->getConstraint()->getTConstraint(), plane? OSG::VRConstraint::PLANE : OSG::VRConstraint::LINE);
 }
 
 void VRGuiScene::on_toggle_phys() {

@@ -2,6 +2,8 @@
 #include "core/objects/VRTransform.h"
 #include "core/utils/VRStorage_template.h"
 
+#include <OpenSG/OSGQuaternion.h>
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -58,14 +60,34 @@ void VRConstraint::apply(VRTransformPtr obj) {
 
     //rotation
     if (doRConstraint) {
-        int qs = rConstraint[0]+rConstraint[1]+rConstraint[2];
-        if (qs == 3) for (int i=0;i<3;i++) t[i] = t0[i];
+        if (rConMode == POINT) { for (int i=0;i<3;i++) t[i] = t0[i]; } // TODO: add RConstraint as offset to referential and reference
 
-        if (qs == 2) {
+        if (rConMode == LINE) {
+            Vec3f a = rConstraint;
+            Vec3f y = Vec3f(0,1,0);
+
+            Quaternion q(Vec3f(-a[2], 0, a[0]), -acos(a[1]));
+            Matrix m; m.setRotate(q);
+            Matrix mi;
+            m.inverse(mi);
+
+            auto rebase = [&](Matrix a) {
+                Matrix k = m;
+                k.mult(a);
+                return k;
+            };
+
+            auto restore = [&](Matrix a) {
+                Matrix k = mi;
+                k.mult(a);
+                return k;
+            };
+
+            t0 = rebase(t0);
+            t = rebase(t);
+
             int u,v,w;
-            if (rConstraint[0] == 0) { u = 0; v = 1; w = 2; }
-            if (rConstraint[1] == 0) { u = 1; v = 0; w = 2; }
-            if (rConstraint[2] == 0) { u = 2; v = 0; w = 1; }
+            u = 1; v = 0; w = 2; // rotate around up axis
 
             for (int i=0;i<3;i++) t[i][u] = t0[i][u]; //copy old transformation
 
@@ -82,16 +104,12 @@ void VRConstraint::apply(VRTransformPtr obj) {
                     t[i][w] *= a;
                 }
             }
+
+            t0 = restore(t0);
+            t = restore(t);
         }
 
-        if (qs == 1) {
-            /*int u,v,w;
-            if (rConstraint[0] == 1) { u = 0; v = 1; w = 2; }
-            if (rConstraint[1] == 1) { u = 1; v = 0; w = 2; }
-            if (rConstraint[2] == 1) { u = 2; v = 0; w = 1; }*/
-
-            // TODO
-        }
+        if (rConMode == PLANE); // TODO
     }
 
     //translation
@@ -119,17 +137,29 @@ void VRConstraint::apply(VRTransformPtr obj) {
 }
 
 
-void VRConstraint::setRestrictionReference(Matrix m) { constraints_reference = m; }
-void VRConstraint::setRestrictionReferential(VRTransformPtr t) { constraints_referential = t; }
+void VRConstraint::setReference(Matrix m) { constraints_reference = m; }
+void VRConstraint::setReferential(VRTransformPtr t) { constraints_referential = t; }
 void VRConstraint::toggleTConstraint(bool b, VRTransformPtr obj) { doTConstraint = b; if (b) obj->getWorldMatrix(constraints_reference); if(!doRConstraint) obj->setFixed(!b); }
 void VRConstraint::toggleRConstraint(bool b, VRTransformPtr obj) { doRConstraint = b; if (b) obj->getWorldMatrix(constraints_reference); if(!doTConstraint) obj->setFixed(!b); }
-void VRConstraint::setTConstraint(Vec3f trans) { tConstraint = trans; if (tConstraint.length() > 1e-4) tConstraint.normalize(); }
-void VRConstraint::setTConstraintMode(int mode, bool local) { tConMode = mode; localTC = local; }
-void VRConstraint::setRConstraint(Vec3i rot) { rConstraint = rot; }
 
-bool VRConstraint::getTConstraintMode() { return tConMode; }
+void VRConstraint::setTConstraint(Vec3f trans, int mode, bool local) {
+    tConstraint = trans;
+    if (tConstraint.length() > 1e-4) tConstraint.normalize();
+    tConMode = mode;
+    localTC = local;
+}
+
+void VRConstraint::setRConstraint(Vec3f rot, int mode, bool local) {
+    rConstraint = rot;
+    if (rConstraint.length() > 1e-4) rConstraint.normalize();
+    rConMode = mode;
+    localRC = local;
+}
+
+bool VRConstraint::getTMode() { return tConMode; }
+bool VRConstraint::getRMode() { return rConMode; }
 Vec3f VRConstraint::getTConstraint() { return tConstraint; }
-Vec3i VRConstraint::getRConstraint() { return rConstraint; }
+Vec3f VRConstraint::getRConstraint() { return rConstraint; }
 
 bool VRConstraint::hasTConstraint() { return doTConstraint; }
 bool VRConstraint::hasRConstraint() { return doRConstraint; }

@@ -19,7 +19,6 @@ class VRJointTool : public VRAnalyticGeometry {
         pose anchor1;
         pose anchor2;
         bool lastAppended = true;
-        VRConstraint constraint;
 
         void update();
 

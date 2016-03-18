@@ -33,9 +33,11 @@ class VRConstraint : public VRStorage {
         bool doTConstraint = false;
         bool doRConstraint = false;
         bool localTC = false;
+        bool localRC = false;
         int tConMode = PLANE;
+        int rConMode = POINT;
         Vec3f tConstraint = Vec3f(0,1,0);
-        Vec3i rConstraint;
+        Vec3f rConstraint = Vec3f(0,1,0);
 
     public:
         VRConstraint();
@@ -65,16 +67,16 @@ class VRConstraint : public VRStorage {
 
 
         // TODO: refactor old VRTransform stuff
-        void setRestrictionReference(Matrix m);
-        void setRestrictionReferential(VRTransformPtr ref);
+        void setReference(Matrix m);
+        void setReferential(VRTransformPtr ref);
         void toggleTConstraint(bool b, VRTransformPtr obj);
         void toggleRConstraint(bool b, VRTransformPtr obj);
-        void setTConstraint(Vec3f trans);
-        void setTConstraintMode(int mode, bool local = false);
-        bool getTConstraintMode();
-        void setRConstraint(Vec3i rot);
+        void setTConstraint(Vec3f trans, int mode, bool local = false);
+        void setRConstraint(Vec3f rot, int mode, bool local = false);
+        bool getRMode();
+        bool getTMode();
         Vec3f getTConstraint();
-        Vec3i getRConstraint();
+        Vec3f getRConstraint();
         bool hasTConstraint();
         bool hasRConstraint();
 };
