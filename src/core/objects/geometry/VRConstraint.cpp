@@ -46,16 +46,15 @@ void VRConstraint::apply(VRTransformPtr obj) {
 
     VRTransformPtr ref = constraints_referential.lock();
 
-    Matrix t, tr, ti, ti1, ti2;
+    Matrix t, tr, ti, rmbi;
     Matrix t0 = constraints_reference;
     if (localTC) t = obj->getMatrix();
     else t = obj->getWorldMatrix();
     if (ref) {
         tr = ref->getWorldMatrix();
-        ti = tr; ti.invert();
-        ti1 = ti; ti2 = ti;
-        //ti1.mult(t0); t0 = ti1; // W = O*L => L = O⁻*W
-        ti2.mult(t); t = ti2; // W = O*L => L = O⁻*W
+        tr.inverse(ti);
+        t.multLeft(ti); // W = O*L => L = O⁻*W
+        //t.multLeft(refMatrixB);
     }
 
     //rotation
@@ -68,23 +67,10 @@ void VRConstraint::apply(VRTransformPtr obj) {
 
             Quaternion q(Vec3f(-a[2], 0, a[0]), -acos(a[1]));
             Matrix m; m.setRotate(q);
-            Matrix mi;
-            m.inverse(mi);
+            Matrix mi; m.inverse(mi);
 
-            auto rebase = [&](Matrix a) {
-                Matrix k = m;
-                k.mult(a);
-                return k;
-            };
-
-            auto restore = [&](Matrix a) {
-                Matrix k = mi;
-                k.mult(a);
-                return k;
-            };
-
-            t0 = rebase(t0);
-            t = rebase(t);
+            t0.multLeft(m);
+            t.multLeft(m);
 
             int u,v,w;
             u = 1; v = 0; w = 2; // rotate around up axis
@@ -105,8 +91,8 @@ void VRConstraint::apply(VRTransformPtr obj) {
                 }
             }
 
-            t0 = restore(t0);
-            t = restore(t);
+            t0.multLeft(mi);
+            t.multLeft(mi);
         }
 
         if (rConMode == PLANE); // TODO
@@ -131,7 +117,11 @@ void VRConstraint::apply(VRTransformPtr obj) {
         }
     }
 
-    if (ref) { tr.mult(t); t = tr; }
+    refMatrixB.inverse(rmbi);
+    t.multLeft(refMatrixB);
+    t.mult(rmbi);
+
+    if (ref) t.multLeft(tr);
     if (localTC) obj->setMatrix(t);
     else obj->setWorldMatrix(t);
 }

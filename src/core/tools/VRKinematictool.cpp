@@ -48,7 +48,6 @@ void VRJointTool::update() {
 
     pose lp;
     lp.set(Vec3f(axis.getPosition()), axis.getDirection(), anchor1.dir());
-    Matrix L = lp.asMatrix();
 
     VRTransformPtr o1 = obj1.lock();
     VRTransformPtr o2 = obj2.lock();
@@ -62,11 +61,18 @@ void VRJointTool::update() {
     setVector(1, anchor2.pos(), anchor2.dir(), g, "p2");
     setVector(2, lp.pos(), lp.dir(), y, "a");
 
+    Matrix L; L.setTranslate(lp.pos());
+    //cout << "lp " << lp.toString() << endl;
+    Matrix A = o1->getWorldMatrix();
+    A.invert();
+    A.mult(L);
+
     auto c = o2->getConstraint();
     c->setReferential(o1);
+    c->setReferenceB(L);
     c->setRConstraint(lp.dir(), VRConstraint::LINE);
-    c->setTConstraint(lp.pos(), VRConstraint::POINT);
-    //c->setTConstraint(Vec3f(0,0,0), VRConstraint::POINT);
+    //c->setTConstraint(lp.pos(), VRConstraint::POINT);
+    c->setTConstraint(Vec3f(0,0,0), VRConstraint::POINT);
     c->toggleRConstraint(true, o2);
     c->toggleTConstraint(true, o2);
 }
