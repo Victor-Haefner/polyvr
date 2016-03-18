@@ -27,13 +27,6 @@ class VRTransform : public VRObject {
             OM_EULER = 2
         };
 
-        enum TCMode {
-            NONE = 0,
-            POINT = 1,
-            LINE = 2,
-            PLANE = 3
-        };
-
     protected:
         doubleBuffer* dm = 0;
         TransformRecPtr t;//OSG Transform
@@ -43,7 +36,6 @@ class VRTransform : public VRObject {
 
         unsigned int change_time_stamp = 0;
         unsigned int wchange_time_stamp = 0;
-        unsigned int apply_time_stamp = 0;
         bool change = false;
         bool fixed = true;
         bool cam_invert_z = false;
@@ -59,15 +51,7 @@ class VRTransform : public VRObject {
 
         int frame = 0;
         Matrix WorldTransformation;
-
-        Matrix constraints_reference;
-        VRTransformWeakPtr constraints_referential;
-        bool doTConstraint = false;
-        bool doRConstraint = false;
-        bool localTC = false;
-        int tConMode = PLANE;
-        Vec3f tConstraint = Vec3f(0,1,0);
-        Vec3i rConstraint;
+        VRConstraintPtr constraint;
 
         bool held = false;//drag n drop
         VRObjectWeakPtr old_parent;
@@ -180,6 +164,9 @@ class VRTransform : public VRObject {
 
         /** Print the positions of all the subtree **/
         void printTransformationTree(int indent = 0);
+
+        void setConstraint(VRConstraintPtr c);
+        VRConstraintPtr getConstraint();
 
         void setRestrictionReference(Matrix m);
         void setRestrictionReferential(VRTransformPtr ref);

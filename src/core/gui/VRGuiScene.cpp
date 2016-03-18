@@ -22,6 +22,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRPrimitive.h"
+#include "core/objects/geometry/VRConstraint.h"
 #include "core/scene/VRScene.h"
 #include "core/utils/toString.h"
 #include "VRGuiUtils.h"
@@ -934,7 +935,7 @@ void VRGuiScene::on_toggle_T_constraint_mode() {
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
 
     bool plane = getRadioButtonState("radiobutton2");
-    obj->setTConstraintMode(plane? OSG::VRTransform::PLANE : OSG::VRTransform::LINE);
+    obj->setTConstraintMode(plane? OSG::VRConstraint::PLANE : OSG::VRConstraint::LINE);
 }
 
 void VRGuiScene::on_toggle_phys() {

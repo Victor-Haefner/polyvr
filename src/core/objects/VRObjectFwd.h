@@ -28,6 +28,7 @@ ptrFwd(VRStage);
 
 // other
 ptrFwd(VRTexture);
+ptrFwd(VRConstraint);
 
 // tools
 ptrFwd(VRAnnotationEngine);

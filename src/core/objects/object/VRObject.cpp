@@ -38,7 +38,7 @@ void VRStorage::load_vec_cb(vector<std::shared_ptr<T> >* v, xmlpp::Element* e) {
 }
 
 template<typename T>
-void VRStorage::store(string tag, vector<std::shared_ptr<T> >& v) {
+void VRStorage::storeObjVec(string tag, vector<std::shared_ptr<T> >& v) {
     VRStorageBin b;
     b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_vec_cb<T>, this, &v, _1 ) );
     b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_vec_cb<T>, this, &v, _1 ) );
@@ -60,7 +60,7 @@ VRObject::VRObject(string _name) {
     store("type", &type);
     store("pickable", &pickable);
     store("visible", &visible);
-    store("children", children); // TODO
+    storeObjVec("children", children);
 
     regStorageUpdateFkt( VRFunction<int>::create("object_update", boost::bind(&VRObject::setup, this)) );
 }

@@ -10,51 +10,9 @@
 #include "core/objects/VRAnimation.h"
 #include "core/setup/devices/VRIntersect.h"
 
-template<> PyTypeObject VRPyBaseT<OSG::VRTransform>::type = {
-    PyObject_HEAD_INIT(NULL)
-    0,                         /*ob_size*/
-    "VR.Transform",             /*tp_name*/
-    sizeof(VRPyTransform),             /*tp_basicsize*/
-    0,                         /*tp_itemsize*/
-    (destructor)dealloc, /*tp_dealloc*/
-    0,                         /*tp_print*/
-    0,                         /*tp_getattr*/
-    0,                         /*tp_setattr*/
-    0,                         /*tp_compare*/
-    0,                         /*tp_repr*/
-    0,                         /*tp_as_number*/
-    0,                         /*tp_as_sequence*/
-    0,                         /*tp_as_mapping*/
-    0,                         /*tp_hash */
-    0,                         /*tp_call*/
-    0,                         /*tp_str*/
-    0,                         /*tp_getattro*/
-    0,                         /*tp_setattro*/
-    0,                         /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
-    "VRTransform binding",           /* tp_doc */
-    0,		               /* tp_traverse */
-    0,		               /* tp_clear */
-    0,		               /* tp_richcompare */
-    0,		               /* tp_weaklistoffset */
-    0,		               /* tp_iter */
-    0,		               /* tp_iternext */
-    VRPyTransform::methods,             /* tp_methods */
-    VRPyTransform::members,             /* tp_members */
-    0,                         /* tp_getset */
-    0,                         /* tp_base */
-    0,                         /* tp_dict */
-    0,                         /* tp_descr_get */
-    0,                         /* tp_descr_set */
-    0,                         /* tp_dictoffset */
-    (initproc)init,      /* tp_init */
-    0,                         /* tp_alloc */
-    New_VRObjects_ptr,                 /* tp_new */
-};
+using namespace OSG;
 
-PyMemberDef VRPyTransform::members[] = {
-    {NULL}  /* Sentinel */
-};
+simpleVRPyType(Transform, New_VRObjects_ptr);
 
 PyMethodDef VRPyTransform::methods[] = {
     {"setIdentity", (PyCFunction)VRPyTransform::setIdentity, METH_NOARGS, "Reset transformation to identity" },
@@ -362,7 +320,7 @@ PyObject* VRPyTransform::setPointConstraints(VRPyTransform* self, PyObject* args
     if (!self->valid()) return NULL;
     OSG::Vec3f v = parseVec3f(args);
     self->objPtr->setTConstraint(v);
-    self->objPtr->setTConstraintMode(OSG::VRTransform::POINT);
+    self->objPtr->setTConstraintMode(OSG::VRConstraint::POINT);
     self->objPtr->toggleTConstraint(true);
     Py_RETURN_TRUE;
 }
@@ -371,7 +329,7 @@ PyObject* VRPyTransform::setPlaneConstraints(VRPyTransform* self, PyObject* args
     if (!self->valid()) return NULL;
     OSG::Vec3f v = parseVec3f(args);
     self->objPtr->setTConstraint(v);
-    self->objPtr->setTConstraintMode(OSG::VRTransform::PLANE);
+    self->objPtr->setTConstraintMode(OSG::VRConstraint::PLANE);
     self->objPtr->toggleTConstraint(true);
     Py_RETURN_TRUE;
 }
@@ -380,7 +338,7 @@ PyObject* VRPyTransform::setAxisConstraints(VRPyTransform* self, PyObject* args)
     if (!self->valid()) return NULL;
     OSG::Vec3f v = parseVec3f(args);
     self->objPtr->setTConstraint(v);
-    self->objPtr->setTConstraintMode(OSG::VRTransform::LINE);
+    self->objPtr->setTConstraintMode(OSG::VRConstraint::LINE);
     self->objPtr->toggleTConstraint(true);
     Py_RETURN_TRUE;
 }

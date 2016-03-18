@@ -1,6 +1,7 @@
 #include "VRPathtool.h"
 #include "core/math/path.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/VRConstraint.h"
 #include "core/objects/geometry/VRStroke.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/scene/VRScene.h"
@@ -20,7 +21,7 @@ void VRManipulator::handle(VRGeometryPtr g) {
     if (sel == 0) return;
     sel->toggleTConstraint(false);
     sel->toggleRConstraint(false);
-    sel->setTConstraintMode(VRTransform::LINE);
+    sel->setTConstraintMode(VRConstraint::LINE);
 
     if (g == gTX || g == gTY || g == gTZ || g == gRX || g == gRY || g == gRZ) { // lock everything
         sel->toggleTConstraint(true);

@@ -3,6 +3,7 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/utils/VRFunction.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/geometry/VRConstraint.h"
 #include <boost/bind.hpp>
 
 using namespace OSG;
@@ -27,7 +28,7 @@ void VRHandle::configure(VRAnimPtr cb, TYPE t, Vec3f n, float s, bool symmetric)
     if (t == LINEAR) { // TODO: need local constraints!
         setTConstraint(n);
         setRConstraint(Vec3i(1,1,1));
-        setTConstraintMode(VRTransform::LINE);
+        setTConstraintMode(VRConstraint::LINE);
         setRestrictionReferential( dynamic_pointer_cast<VRTransform>(getParent()) );
     }
 }

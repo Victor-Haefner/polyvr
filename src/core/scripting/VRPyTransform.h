@@ -5,7 +5,6 @@
 #include "core/objects/VRTransform.h"
 
 struct VRPyTransform : VRPyBaseT<OSG::VRTransform> {
-    static PyMemberDef members[];
     static PyMethodDef methods[];
 
     static PyObject* setIdentity(VRPyTransform* self);
