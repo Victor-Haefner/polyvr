@@ -46,15 +46,14 @@ void VRConstraint::apply(VRTransformPtr obj) {
 
     VRTransformPtr ref = constraints_referential.lock();
 
-    Matrix t, tr, ti, rmbi;
+    Matrix t, tr, ti, rmbi, t0i;
     Matrix t0 = constraints_reference;
     if (localTC) t = obj->getMatrix();
     else t = obj->getWorldMatrix();
     if (ref) {
         tr = ref->getWorldMatrix();
         tr.inverse(ti);
-        t.multLeft(ti); // W = O*L => L = O⁻*W
-        //t.multLeft(refMatrixB);
+        t.multLeft(ti);
     }
 
     //rotation
@@ -71,25 +70,20 @@ void VRConstraint::apply(VRTransformPtr obj) {
 
             t0.multLeft(m);
             t.multLeft(m);
+            t0.inverse(t0i);
+            t.mult(t0i);
 
-            int u,v,w;
-            u = 1; v = 0; w = 2; // rotate around up axis
+            // Euler decomposition R = ZYX
+            float ax = atan2(t[2][1], t[2][2]);
+            float ay = atan2(-t[2][0], sqrt(t[2][1]*t[2][1] + t[2][2]*t[2][2]) );
+            float az = atan2(-t[1][0], t[0][0]);
 
-            for (int i=0;i<3;i++) t[i][u] = t0[i][u]; //copy old transformation
+            Quaternion qx(Vec3f(1,0,0), ax);
+            Quaternion qy(Vec3f(0,1,0), ay);
+            Quaternion qz(Vec3f(0,0,1), az);
 
-            //normiere so das die b komponennte konstant bleibt
-            for (int i=0;i<3;i++) {
-                float a = 1-t[i][u]*t[i][u];
-                if (a < 1e-6) {
-                    t[i][v] = t0[i][v];
-                    t[i][w] = t0[i][w];
-                } else {
-                    a /= (t0[i][v]*t0[i][v] + t0[i][w]*t0[i][w]);
-                    a = sqrt(a);
-                    t[i][v] *= a;
-                    t[i][w] *= a;
-                }
-            }
+            t.setRotate(qy); // TODO: take t0 into account
+            t.mult(t0);
 
             t0.multLeft(mi);
             t.multLeft(mi);
