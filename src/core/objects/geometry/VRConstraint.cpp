@@ -74,15 +74,15 @@ void VRConstraint::apply(VRTransformPtr obj) {
             t.mult(t0i);
 
             // Euler decomposition R = ZYX
-            float ax = atan2(t[2][1], t[2][2]);
+            //float ax = atan2(t[2][1], t[2][2]);
             float ay = atan2(-t[2][0], sqrt(t[2][1]*t[2][1] + t[2][2]*t[2][2]) );
-            float az = atan2(-t[1][0], t[0][0]);
+            //float az = atan2(-t[1][0], t[0][0]);
 
-            Quaternion qx(Vec3f(1,0,0), ax);
+            //Quaternion qx(Vec3f(1,0,0), ax);
             Quaternion qy(Vec3f(0,1,0), ay);
-            Quaternion qz(Vec3f(0,0,1), az);
+            //Quaternion qz(Vec3f(0,0,1), az);
 
-            t.setRotate(qy); // TODO: take t0 into account
+            t.setRotate(qy);
             t.mult(t0);
 
             t0.multLeft(mi);
