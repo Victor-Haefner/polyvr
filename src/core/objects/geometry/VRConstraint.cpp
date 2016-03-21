@@ -34,7 +34,7 @@ float VRConstraint::getMin(int i) { return min[i]; }
 float VRConstraint::getMax(int i) { return max[i]; }
 
 void VRConstraint::setReferenceA(Matrix m) { refMatrixA = m; };
-void VRConstraint::setReferenceB(Matrix m) { refMatrixB = m; };
+void VRConstraint::setReferenceB(Matrix m) { refMatrixB = m; refMatrixB.inverse(refMatrixBI); };
 Matrix VRConstraint::getReferenceA() { return refMatrixA; };
 Matrix VRConstraint::getReferenceB() { return refMatrixB; };
 
@@ -46,14 +46,15 @@ void VRConstraint::apply(VRTransformPtr obj) {
 
     VRTransformPtr ref = constraints_referential.lock();
 
-    Matrix t, tr, ti, rmbi, t0i;
+    Matrix t, tr, tri, t0i;
     Matrix t0 = constraints_reference;
     if (localTC) t = obj->getMatrix();
     else t = obj->getWorldMatrix();
+
     if (ref) {
         tr = ref->getWorldMatrix();
-        tr.inverse(ti);
-        t.multLeft(ti);
+        tr.inverse(tri);
+        t.multLeft(tri);
     }
 
     //rotation
@@ -61,32 +62,17 @@ void VRConstraint::apply(VRTransformPtr obj) {
         if (rConMode == POINT) { for (int i=0;i<3;i++) t[i] = t0[i]; } // TODO: add RConstraint as offset to referential and reference
 
         if (rConMode == LINE) {
-            Vec3f a = rConstraint;
-            Vec3f y = Vec3f(0,1,0);
-
-            Quaternion q(Vec3f(-a[2], 0, a[0]), -acos(a[1]));
-            Matrix m; m.setRotate(q);
-            Matrix mi; m.inverse(mi);
-
-            t0.multLeft(m);
-            t.multLeft(m);
+            t0.multLeft(rotRebase);
+            t.multLeft(rotRebase);
             t0.inverse(t0i);
+
             t.mult(t0i);
-
-            // Euler decomposition R = ZYX
-            //float ax = atan2(t[2][1], t[2][2]);
-            float ay = atan2(-t[2][0], sqrt(t[2][1]*t[2][1] + t[2][2]*t[2][2]) );
-            //float az = atan2(-t[1][0], t[0][0]);
-
-            //Quaternion qx(Vec3f(1,0,0), ax);
-            Quaternion qy(Vec3f(0,1,0), ay);
-            //Quaternion qz(Vec3f(0,0,1), az);
-
-            t.setRotate(qy);
+            float ax = atan2(-t[2][1], t[2][2]);
+            t.setRotate( Quaternion(Vec3f(1,0,0), ax) );
             t.mult(t0);
 
-            t0.multLeft(mi);
-            t.multLeft(mi);
+            t0.multLeft(rotRebaseI);
+            t.multLeft(rotRebaseI);
         }
 
         if (rConMode == PLANE); // TODO
@@ -111,9 +97,8 @@ void VRConstraint::apply(VRTransformPtr obj) {
         }
     }
 
-    refMatrixB.inverse(rmbi);
     t.multLeft(refMatrixB);
-    t.mult(rmbi);
+    t.mult(refMatrixBI);
 
     if (ref) t.multLeft(tr);
     if (localTC) obj->setMatrix(t);
@@ -138,6 +123,11 @@ void VRConstraint::setRConstraint(Vec3f rot, int mode, bool local) {
     if (rConstraint.length() > 1e-4) rConstraint.normalize();
     rConMode = mode;
     localRC = local;
+
+    Quaternion q(Vec3f(0, -rot[2], -rot[1]), -acos(rot[0]));
+    rotRebase.setIdentity();
+    rotRebase.setRotate(q);
+    rotRebase.inverse(rotRebaseI);
 }
 
 bool VRConstraint::getTMode() { return tConMode; }

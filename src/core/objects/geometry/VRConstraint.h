@@ -22,9 +22,14 @@ class VRConstraint : public VRStorage {
         bool local;
         Matrix refMatrixA;
         Matrix refMatrixB;
+        Matrix refMatrixBI;
 
         float min[6];
         float max[6];
+
+        // precomputed ressources
+        Matrix rotRebase;
+        Matrix rotRebaseI;
 
     public:    // TODO: refactor old VRTransform stuff
         unsigned int apply_time_stamp = 0;
