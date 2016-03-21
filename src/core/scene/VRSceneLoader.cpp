@@ -89,6 +89,7 @@ void VRSceneLoader::saveScene(string file, xmlpp::Element* guiN) {
 }
 
 VRObjectPtr VRSceneLoader_createFromElement(VRScenePtr scene, xmlpp::Element* e) {
+    if (e->get_attribute("type") == 0) return 0;
     string type = e->get_attribute("type")->get_value();
     string base_name = e->get_attribute("base_name")->get_value();
     //string name = e->get_name();
@@ -118,6 +119,7 @@ void VRSceneLoader_loadObject(VRScenePtr scene, VRObjectPtr p, xmlpp::Element* e
         if (!el) continue;
 
         VRObjectPtr c = VRSceneLoader_createFromElement(scene, el);
+        if (!c) continue;
 
         p->addChild(c);
         c->loadContent(el);
