@@ -158,7 +158,7 @@ void VRPhysicsManager::updatePhysObjects() {
     for (int j=dynamicsWorld->getNumCollisionObjects()-1; j>=0 ;j--) {
         btCollisionObject* obj = dynamicsWorld->getCollisionObjectArray()[j];
         body = btRigidBody::upcast(obj);
-        if (body && body->getMotionState() && OSGobjs.count(body) == 1) { // TODO: refactor this!
+        if (body && OSGobjs.count(body) == 1) { // TODO: refactor this!
             auto o = OSGobjs[body].lock();
             if (!o) continue;
             if (o->getPhysics()->isDynamic()) o->updateFromBullet();

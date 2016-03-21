@@ -85,7 +85,6 @@ void VRTransform::updatePhysics() {
     Matrix pm;
     getWorldMatrix(pm, true);
     pm.mult(m);*/
-
     physics->updateTransformation( ptr() );
     physics->pause();
     physics->resetForces();

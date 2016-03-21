@@ -636,6 +636,7 @@ void VRPhysics::updateVisualGeo() {
         for (int i=0; i<Ni; i++) inds->addValue( bt_inds[i] );
         for (int i=0; i<Nv; i++) {
             OSG::Vec3f p = VRPhysics::toVec3f(verts[i]);
+            p += CoMOffset;
             pos->addValue( p );
             p.normalize();
             norms->addValue( p );
@@ -780,18 +781,16 @@ btTransform VRPhysics::getTransform() {
     btTransform t;
 
     Lock lock(mtx());
-    body->getMotionState()->getWorldTransform(t);
-    return t;
+    return body->getWorldTransform();
 }
 
 OSG::Matrix VRPhysics::getTransformation() {
     if (body == 0 && soft_body == 0) return OSG::Matrix();
     btTransform t;
     Lock lock(mtx());
-    if(body!=0) {
-        if (body->getMotionState() == 0) return OSG::Matrix();
-        body->getMotionState()->getWorldTransform(t);
-    } else {
+
+    if (body) t = body->getWorldTransform();
+    else {
         btSoftBody::tNodeArray&   nodes(soft_body->m_nodes);
         btVector3 result = btVector3(0.0,0.0,0.0);
         for(int j=0;j<nodes.size();++j) {
@@ -800,8 +799,7 @@ OSG::Matrix VRPhysics::getTransformation() {
         result /= nodes.size();
         t.setOrigin(result);
     }
-    return fromBTTransform(t, scale,CoMOffset);
-
+    return fromBTTransform(t, scale, CoMOffset);
 }
 
 btMatrix3x3 VRPhysics::getInertiaTensor() {
