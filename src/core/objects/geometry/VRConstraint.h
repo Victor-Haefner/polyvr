@@ -30,11 +30,15 @@ class VRConstraint : public VRStorage {
         // precomputed ressources
         Matrix rotRebase;
         Matrix rotRebaseI;
+        Matrix refRebased;
+        Matrix refRebasedI;
+
+        void prepare();
 
     public:    // TODO: refactor old VRTransform stuff
         unsigned int apply_time_stamp = 0;
-        Matrix constraints_reference;
-        VRTransformWeakPtr constraints_referential;
+        Matrix Reference;
+        VRTransformWeakPtr Referential;
         bool doTConstraint = false;
         bool doRConstraint = false;
         bool localTC = false;

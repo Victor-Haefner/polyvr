@@ -44,10 +44,10 @@ void VRConstraint::apply(VRTransformPtr obj) {
     if (apply_time_stamp == now) return;
     apply_time_stamp = now;
 
-    VRTransformPtr ref = constraints_referential.lock();
+    VRTransformPtr ref = Referential.lock();
 
     Matrix t, tr, tri, t0i;
-    Matrix t0 = constraints_reference;
+    Matrix t0 = Reference;
     if (localTC) t = obj->getMatrix();
     else t = obj->getWorldMatrix();
 
@@ -62,16 +62,10 @@ void VRConstraint::apply(VRTransformPtr obj) {
         if (rConMode == POINT) { for (int i=0;i<3;i++) t[i] = t0[i]; } // TODO: add RConstraint as offset to referential and reference
 
         if (rConMode == LINE) {
-            t0.multLeft(rotRebase);
             t.multLeft(rotRebase);
-            t0.inverse(t0i);
-
-            t.mult(t0i);
-            float ax = atan2(-t[2][1], t[2][2]);
-            t.setRotate( Quaternion(Vec3f(1,0,0), ax) );
-            t.mult(t0);
-
-            t0.multLeft(rotRebaseI);
+            t.mult(refRebasedI);
+            t.setRotate( Quaternion(Vec3f(1,0,0), atan2(-t[2][1], t[2][2])) );
+            t.mult(refRebased);
             t.multLeft(rotRebaseI);
         }
 
@@ -106,10 +100,10 @@ void VRConstraint::apply(VRTransformPtr obj) {
 }
 
 
-void VRConstraint::setReference(Matrix m) { constraints_reference = m; }
-void VRConstraint::setReferential(VRTransformPtr t) { constraints_referential = t; }
-void VRConstraint::toggleTConstraint(bool b, VRTransformPtr obj) { doTConstraint = b; if (b) obj->getWorldMatrix(constraints_reference); if(!doRConstraint) obj->setFixed(!b); }
-void VRConstraint::toggleRConstraint(bool b, VRTransformPtr obj) { doRConstraint = b; if (b) obj->getWorldMatrix(constraints_reference); if(!doTConstraint) obj->setFixed(!b); }
+void VRConstraint::setReference(Matrix m) { Reference = m; prepare(); }
+void VRConstraint::setReferential(VRTransformPtr t) { Referential = t; }
+void VRConstraint::toggleTConstraint(bool b, VRTransformPtr obj) { doTConstraint = b; if (b) obj->getWorldMatrix(Reference); if(!doRConstraint) obj->setFixed(!b); prepare(); }
+void VRConstraint::toggleRConstraint(bool b, VRTransformPtr obj) { doRConstraint = b; if (b) obj->getWorldMatrix(Reference); if(!doTConstraint) obj->setFixed(!b); prepare(); }
 
 void VRConstraint::setTConstraint(Vec3f trans, int mode, bool local) {
     tConstraint = trans;
@@ -128,6 +122,13 @@ void VRConstraint::setRConstraint(Vec3f rot, int mode, bool local) {
     rotRebase.setIdentity();
     rotRebase.setRotate(q);
     rotRebase.inverse(rotRebaseI);
+    prepare();
+}
+
+void VRConstraint::prepare() {
+    refRebased = Reference;
+    refRebased.multLeft(rotRebase);
+    refRebased.inverse(refRebasedI);
 }
 
 bool VRConstraint::getTMode() { return tConMode; }

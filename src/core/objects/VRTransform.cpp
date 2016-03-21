@@ -567,7 +567,9 @@ void VRTransform::drag(VRTransformPtr new_parent) {
 void VRTransform::drop() {
     if (!held) return;
     held = false;
-    setFixed(true);
+
+    bool dyn = constraint ? constraint->doTConstraint || constraint->doRConstraint : false;
+    setFixed(!dyn);
 
     Matrix m;
     getWorldMatrix(m);
