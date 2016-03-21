@@ -785,11 +785,12 @@ btTransform VRPhysics::getTransform() {
 }
 
 OSG::Matrix VRPhysics::getTransformation() {
-    if (body == 0 && soft_body == 0) return OSG::Matrix();
+    if (body == 0 && soft_body == 0 && ghost_body == 0) return OSG::Matrix();
     btTransform t;
     Lock lock(mtx());
 
     if (body) t = body->getWorldTransform();
+    else if (ghost_body) t = ghost_body->getWorldTransform();
     else {
         btSoftBody::tNodeArray&   nodes(soft_body->m_nodes);
         btVector3 result = btVector3(0.0,0.0,0.0);
