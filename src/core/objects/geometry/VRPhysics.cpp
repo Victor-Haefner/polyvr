@@ -10,6 +10,7 @@
 #include <OpenSG/OSGTriangleIterator.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 #include <BulletCollision/CollisionShapes/btShapeHull.h>
+//#include <BulletCollision/CollisionShapes/btHACDCompoundSape.h>
 #include <BulletCollision/CollisionShapes/btCompoundShape.h>
 #include <BulletSoftBody/btSoftBodyRigidBodyCollisionConfiguration.h>
 #include <BulletSoftBody/btSoftBodyHelpers.h>
@@ -193,6 +194,7 @@ vector<VRCollision> VRPhysics::getCollisions() {
             }
         }
     }
+
 
     return res;
 }
@@ -583,6 +585,14 @@ btCollisionShape* VRPhysics::getCompoundShape() {
         shape->addChildShape(T, child);
     }
 
+    return shape;
+}
+
+btCollisionShape* VRPhysics::getHACDShape() {
+    auto obj = vr_obj.lock();
+    if (!obj) return 0;
+
+    btCompoundShape* shape = new btCompoundShape();
     return shape;
 }
 
