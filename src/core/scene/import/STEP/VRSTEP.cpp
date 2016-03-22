@@ -760,7 +760,7 @@ void VRSTEP::buildScenegraph() {
     for (auto ShapeRepRel : instancesByType["Shape_Representation_Relationship"]) {
         auto ABrep = ShapeRepRel.get<0, STEPentity*, STEPentity*>();
         auto SRep = ShapeRepRel.get<1, STEPentity*, STEPentity*>();
-        cout << "AA " << ABrep << " " << SRep << endl;
+        //cout << "AA " << ABrep << " " << SRep << endl;
         if (!ABrep || !SRep) { /*cout << "VRSTEP::buildScenegraph Warning 1\n" ;*/ continue; } // empty one
         SRepToABrep[SRep] = ABrep;
     }

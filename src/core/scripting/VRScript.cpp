@@ -197,7 +197,7 @@ PyObject* VRScript::getPyObj(arg* a) {
     else if (a->type == "float") return Py_BuildValue("f", toFloat(a->val.c_str()));
     else if (a->type == "NoneType") return Py_None;
     else if (a->type == "str") return PyString_FromString(a->val.c_str());
-    else if (a->ptr == 0) { cout << "\ngetPyObj ERROR: " << a->type << " ptr is 0\n"; Py_RETURN_NONE; }
+    else if (a->ptr == 0) { /*cout << "\ngetPyObj ERROR: " << a->type << " ptr is 0\n";*/ Py_RETURN_NONE; }
     else if (a->type == "VRPyObjectType") return VRPyObject::fromSharedPtr(((VRObject*)a->ptr)->ptr());
     else if (a->type == "VRPyTransformType") return VRPyTransform::fromSharedPtr(((VRTransform*)a->ptr)->ptr());
     else if (a->type == "VRPyGeometryType") return VRPyGeometry::fromSharedPtr( ((VRGeometry*)a->ptr)->ptr() );
