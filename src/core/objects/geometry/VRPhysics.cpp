@@ -10,12 +10,27 @@
 #include <OpenSG/OSGTriangleIterator.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 #include <BulletCollision/CollisionShapes/btShapeHull.h>
-//#include <BulletCollision/CollisionShapes/btHACDCompoundSape.h>
 #include <BulletCollision/CollisionShapes/btCompoundShape.h>
 #include <BulletSoftBody/btSoftBodyRigidBodyCollisionConfiguration.h>
 #include <BulletSoftBody/btSoftBodyHelpers.h>
 #include <BulletSoftBody/btSoftRigidDynamicsWorld.h>
 
+#include <HACD/hacdCircularList.h>
+#include <HACD/hacdVector.h>
+#include <HACD/hacdICHull.h>
+#include <HACD/hacdGraph.h>
+#include <HACD/hacdHACD.h>
+
+#include <ConvexDecomposition/cd_wavefront.h>
+#include <ConvexDecomposition/ConvexBuilder.h>
+
+/*
+
+IMPORTANT: ..not compiling? you need to install the libbullet-extras-dev package!
+open a terminal
+sudo apt-get install libbullet-extras-dev
+
+*/
 
 typedef boost::recursive_mutex::scoped_lock Lock;
 
@@ -588,11 +603,152 @@ btCollisionShape* VRPhysics::getCompoundShape() {
     return shape;
 }
 
+class MyConvexDecomposition : public ConvexDecomposition::ConvexDecompInterface {
+    public:
+        btAlignedObjectArray<btConvexHullShape*> m_convexShapes;
+        btAlignedObjectArray<btVector3> m_convexCentroids;
+        int mBaseCount = 0;
+        int mHullCount = 0;
+        btVector3 centroid = btVector3(0,0,0);
+
+    public:
+        MyConvexDecomposition() {}
+
+        virtual void ConvexDecompResult(ConvexDecomposition::ConvexResult &result) {
+            btTriangleMesh* trimesh = new btTriangleMesh();
+            btVector3 localScaling(6.f,6.f,6.f);
+
+            //calc centroid, to shift vertices around center of mass
+            centroid.setValue(0,0,0);
+
+            btAlignedObjectArray<btVector3> vertices;
+            //const unsigned int *src = result.mHullIndices;
+            for (unsigned int i=0; i<result.mHullVcount; i++) {
+                btVector3 vertex(result.mHullVertices[i*3],result.mHullVertices[i*3+1],result.mHullVertices[i*3+2]);
+                vertex *= localScaling;
+                centroid += vertex;
+            }
+
+            centroid *= 1.f/(float(result.mHullVcount) );
+
+            //const unsigned int *src = result.mHullIndices;
+            for (unsigned int i=0; i<result.mHullVcount; i++) {
+                btVector3 vertex(result.mHullVertices[i*3],result.mHullVertices[i*3+1],result.mHullVertices[i*3+2]);
+                vertex *= localScaling;
+                vertex -= centroid ;
+                vertices.push_back(vertex);
+            }
+
+            const unsigned int *src = result.mHullIndices;
+            for (unsigned int i=0; i<result.mHullTcount; i++) {
+                unsigned int index0 = *src++;
+                unsigned int index1 = *src++;
+                unsigned int index2 = *src++;
+
+                btVector3 vertex0(result.mHullVertices[index0*3], result.mHullVertices[index0*3+1],result.mHullVertices[index0*3+2]);
+                btVector3 vertex1(result.mHullVertices[index1*3], result.mHullVertices[index1*3+1],result.mHullVertices[index1*3+2]);
+                btVector3 vertex2(result.mHullVertices[index2*3], result.mHullVertices[index2*3+1],result.mHullVertices[index2*3+2]);
+                vertex0 *= localScaling;
+                vertex1 *= localScaling;
+                vertex2 *= localScaling;
+
+                vertex0 -= centroid;
+                vertex1 -= centroid;
+                vertex2 -= centroid;
+
+
+                trimesh->addTriangle(vertex0,vertex1,vertex2);
+
+                index0+=mBaseCount;
+                index1+=mBaseCount;
+                index2+=mBaseCount;
+            }
+
+            btConvexHullShape* convexShape = new btConvexHullShape(&(vertices[0].getX()),vertices.size());
+
+            convexShape->setMargin(0.01f);
+            m_convexShapes.push_back(convexShape);
+            m_convexCentroids.push_back(centroid);
+            mBaseCount += result.mHullVcount; // advance the 'base index' counter.
+        }
+};
+
 btCollisionShape* VRPhysics::getHACDShape() {
-    auto obj = vr_obj.lock();
+    OSG::VRGeometryPtr obj = dynamic_pointer_cast<OSG::VRGeometry>( vr_obj.lock() );
     if (!obj) return 0;
 
+    std::vector< HACD::Vec3<HACD::Real> > points;
+    std::vector< HACD::Vec3<long> > triangles;
+
+    OSG::GeoVectorPropertyRecPtr positions = obj->getMesh()->getPositions();
+    OSG::Pnt3f p;
+    for(uint i = 0; i < positions->size();i++) {
+        positions->getValue(p,i);
+        HACD::Vec3<HACD::Real> vertex(p[0], p[1], p[2]);
+        points.push_back(vertex);
+    }
+
+    for (OSG::TriangleIterator it = OSG::TriangleIterator(obj->getMesh()); !it.isAtEnd() ;++it) {
+        HACD::Vec3<long> triangle(it.getPositionIndex(0), it.getPositionIndex(1), it.getPositionIndex(2));
+        triangles.push_back(triangle);
+    }
+
+    HACD::HACD myHACD;
+    myHACD.SetPoints(&points[0]);
+    myHACD.SetNPoints(points.size());
+    myHACD.SetTriangles(&triangles[0]);
+    myHACD.SetNTriangles(triangles.size());
+    myHACD.SetCompacityWeight(0.1);
+    myHACD.SetVolumeWeight(0.0);
+    myHACD.SetNClusters(2);                       // minimum number of clusters
+    myHACD.SetNVerticesPerCH(100);                // max of 100 vertices per convex-hull
+    myHACD.SetConcavity(100);                     // maximum concavity
+    myHACD.SetAddExtraDistPoints(false);
+    myHACD.SetAddNeighboursDistPoints(false);
+    myHACD.SetAddFacesPoints(false);
+    myHACD.Compute();
+
+    MyConvexDecomposition convexDecomposition;
     btCompoundShape* shape = new btCompoundShape();
+    btTransform trans;
+    trans.setIdentity();
+
+    for (int c=0; c < myHACD.GetNClusters(); c++) {
+        size_t nPoints = myHACD.GetNPointsCH(c);
+        size_t nTriangles = myHACD.GetNTrianglesCH(c);
+
+        float* vertices = new float[nPoints*3];
+        unsigned int* triangles = new unsigned int[nTriangles*3];
+
+        HACD::Vec3<HACD::Real> * pointsCH = new HACD::Vec3<HACD::Real>[nPoints];
+        HACD::Vec3<long> * trianglesCH = new HACD::Vec3<long>[nTriangles];
+        myHACD.GetCH(c, pointsCH, trianglesCH);
+
+
+        for(size_t v = 0; v < nPoints; v++) { // points
+            vertices[3*v] = pointsCH[v].X();
+            vertices[3*v+1] = pointsCH[v].Y();
+            vertices[3*v+2] = pointsCH[v].Z();
+        }
+
+        for(size_t f = 0; f < nTriangles; f++) { // triangles
+            triangles[3*f] = trianglesCH[f].X();
+            triangles[3*f+1] = trianglesCH[f].Y();
+            triangles[3*f+2] = trianglesCH[f].Z();
+        }
+
+        delete [] pointsCH;
+        delete [] trianglesCH;
+
+        ConvexResult r(nPoints, vertices, nTriangles, triangles);
+        convexDecomposition.ConvexDecompResult(r);
+    }
+
+    for (int i=0; i < convexDecomposition.m_convexShapes.size(); i++) {
+        trans.setOrigin( convexDecomposition.m_convexCentroids[i] );
+        shape->addChildShape(trans, convexDecomposition.m_convexShapes[i] );
+    }
+
     return shape;
 }
 
