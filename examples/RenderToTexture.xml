@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scene name_suffix="0" base_name="Mechanics" name_space="Scene">
   <Objects>
-    <Object name_suffix="0" base_name="Root" name_space="__global__" type="Object" pickable="0" visible="1">
-      <Object name_suffix="0" base_name="Headlight" name_space="__global__" type="Light" pickable="0" visible="1" ambient="0.3 0.3 0.3 1" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" on="1" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1">
-        <Object name_suffix="0" base_name="Default" name_space="__global__" type="Camera" pickable="0" visible="1" from="-0.815401 0.809983 1.52296" at="0.915227 -0.0254144 0" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="0" accept_root="1" near="0.1" far="250" aspect="1" fov="1.0472">
-          <Object name_suffix="0" base_name="Headlight_beacon" name_space="__global__" type="LightBeacon" pickable="0" visible="1" from="0 0 0" at="0 0 -1" up="0 1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" light="Headlight"/>
+    <Object base_name="Root" name_space="__global__" name_suffix="0" pickable="0" type="Object" visible="1">
+      <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+        <Object accept_root="1" aspect="1" at="0.915227 -0.0254144 0" at_dir="0" base_name="Default" cR="0 0 0" cT="0 1 0" cT_mode="1" do_cR="0" do_cT="0" far="250" fov="1.0472" from="-0.815401 0.809983 1.52296" name_space="__global__" name_suffix="0" near="0.1" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+          <Object at="0 0 -1" at_dir="1" base_name="Headlight_beacon" cR="0 0 0" cT="0 1 0" cT_mode="1" do_cR="0" do_cT="0" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1"/>
         </Object>
-        <Object name_suffix="0" base_name="info" name_space="__global__" type="Geometry" pickable="0" visible="1" from="1 0 0" at="1 0 1" up="0 -1 0" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" sourcetype="3" sourceparam="Box 0.5 0.5 0.5 1 1 1"/>
-        <Object name_suffix="0" base_name="Cone" name_space="__global__" type="Geometry" pickable="0" visible="1" from="0.0837461 0.5 0.571027" at="0.0837461 1.5 0.571027" up="-0.183746 0 -0.571027" scale="1 1 1" cT="0 1 0" cR="0 0 0" do_cT="0" do_cR="0" cT_mode="1" at_dir="1" sourcetype="3" sourceparam="Cone 0.1 0.05 16 1 1"/>
+        <Object at="1 0 1" at_dir="1" base_name="info" cR="0 0 0" cT="0 1 0" cT_mode="1" do_cR="0" do_cT="0" from="1 0 0" name_space="__global__" name_suffix="0" pickable="0" scale="1 1 1" sourceparam="Box 0.5 0.5 0.5 1 1 1" sourcetype="3" type="Geometry" up="0 -1 0" visible="1"/>
+        <Object at="-0.103078 1.5 -0.599958" at_dir="1" base_name="Cone" cR="0 0 0" cT="0 1 0" cT_mode="1" do_cR="0" do_cT="0" from="-0.103078 0.5 -0.599958" name_space="__global__" name_suffix="0" pickable="0" scale="1 1 1" sourceparam="Cone 0.1 0.05 16 1 1" sourcetype="3" type="Geometry" up="0.00307821 0 0.599958" visible="1"/>
       </Object>
     </Object>
   </Objects>
@@ -92,6 +92,15 @@
 </core>
       <arg type="VRPyObjectType" value="Headlight" name_suffix="0" base_name="root" name_space="init"/>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
+    </Script>
+    <Script name_suffix="0" base_name="init_cam_view" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+	
+	c = VR.getRoot().find('cam')
+	v = VR.getSetup().getView(1)
+	v.setCamera(c)
+</core>
     </Script>
     <Script name_suffix="0" base_name="rotate" name_space="__script__" type="Python" mobile="">
       <core>

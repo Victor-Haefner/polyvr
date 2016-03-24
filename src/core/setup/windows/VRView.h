@@ -91,6 +91,8 @@ class VRView : public std::enable_shared_from_this<VRView> {
         int getID();
         void setID(int i);
 
+        string getName();
+
         void setRoot(VRObjectPtr root, VRTransformPtr _real);
         void setUser(VRTransformPtr u);
         void setCamera(VRCameraPtr c);

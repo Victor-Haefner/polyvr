@@ -21,6 +21,7 @@ struct VRPyView : VRPyBaseT<OSG::VRView> {
     static PyObject* getSize(VRPyView* self);
     static PyObject* grab(VRPyView* self);
     static PyObject* setCamera(VRPyView* self, PyObject* args);
+    static PyObject* getName(VRPyView* self);
 };
 
 struct VRPyWindow : VRPyBaseT<OSG::VRWindow> {

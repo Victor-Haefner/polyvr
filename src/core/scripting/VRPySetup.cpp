@@ -13,16 +13,17 @@ simpleVRPyType(View, 0);
 simpleVRPyType(Window, 0);
 
 PyMethodDef VRPySetup::methods[] = {
-    {"getView", (PyCFunction)VRPySetup::getView, METH_VARARGS, "Get view i - getView(int i)" },
+    {"getView", (PyCFunction)VRPySetup::getView, METH_VARARGS, "Get view i/name - getView(int i / str name)" },
     {"getWindow", (PyCFunction)VRPySetup::getWindow, METH_VARARGS, "Get window i - getWindow(int i)" },
     {NULL}  /* Sentinel */
 };
 
 PyObject* VRPySetup::getView(VRPySetup* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    int i;
-    if (! PyArg_ParseTuple(args, "i", &i)) return NULL;
-    return VRPyView::fromSharedPtr( self->objPtr->getView(i) );
+    PyObject* o;
+    if (! PyArg_ParseTuple(args, "O", &o)) return NULL;
+    if (PyInt_Check(o)) return VRPyView::fromSharedPtr( self->objPtr->getView( PyInt_AsLong(o) ) );
+    else return VRPyView::fromSharedPtr( self->objPtr->getView( PyString_AsString(o) ) );
 }
 
 PyObject* VRPySetup::getWindow(VRPySetup* self, PyObject* args) {
@@ -38,8 +39,14 @@ PyMethodDef VRPyView::methods[] = {
     {"getSize", (PyCFunction)VRPyView::getSize, METH_NOARGS, "Get the size in meter - [W,H] getSize()" },
     {"grab", (PyCFunction)VRPyView::grab, METH_NOARGS, "Get the current visual as texture - tex grab()" },
     {"setCamera", (PyCFunction)VRPyView::setCamera, METH_VARARGS, "Set the camera of the view - setCamera( cam )" },
+    {"getName", (PyCFunction)VRPyView::getName, METH_NOARGS, "Get the name of the view - getName()" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyView::getName(VRPyView* self) {
+    if (!self->valid()) return NULL;
+    return PyString_FromString( self->objPtr->getName().c_str() );
+}
 
 PyObject* VRPyView::grab(VRPyView* self) {
     if (!self->valid()) return NULL;

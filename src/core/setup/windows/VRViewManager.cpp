@@ -71,6 +71,10 @@ void VRViewManager::removeView(int i) {
 
 VRTransformPtr VRViewManager::getViewUser(int i) { if (checkView(i)) return views[i]->getUser(); else return 0; }
 VRViewPtr VRViewManager::getView(int i) { if (checkView(i)) return views[i]; else return 0; }
+VRViewPtr VRViewManager::getView(string name) {
+    for (auto v : views) if (v.second->getName() == name) return v.second;
+    return 0;
+}
 
 void VRViewManager::setStereo(bool b) { for (auto v : views) v.second->setStereo(b); }
 void VRViewManager::setStereoEyeSeparation(float f) { for (auto v : views) v.second->setStereoEyeSeparation(f); }

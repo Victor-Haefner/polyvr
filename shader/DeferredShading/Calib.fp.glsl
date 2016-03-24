@@ -16,10 +16,12 @@ void main(void) {
     vec4 white = vec4(1.0);
 
     vec4 c = vec4(0);
+    int mx = int(s[0]*0.5);
+    int my = int(s[1]*0.5);
     if (p[0]%grid == 0 || p[1]%grid == 0) c = white; // grid
     if (p[0] == 0 || p[1] == 0) c = blue;           // borders
     if (p[0] == s[0]-1 || p[1] == s[1]-1) c = blue; // borders
-    if (p[0] == s[0]*0.5 || p[1] == s[1]*0.5) c = green; // middle
+    if (p[0] == mx || p[1] == my) c = green; // middle
     gl_FragColor = c;
 }
 

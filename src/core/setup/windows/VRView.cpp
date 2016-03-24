@@ -28,6 +28,8 @@ bool onBox(int i, int j, int c) {
     return false;
 }
 
+string VRView::getName() { return name; }
+
 void VRView::setMaterial() {
     ImageRecPtr img = Image::create();
 
