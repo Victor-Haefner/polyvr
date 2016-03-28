@@ -9,6 +9,7 @@
 #include <gtkmm/toolbutton.h>
 #include <gtkmm/textview.h>
 #include <gtkmm/combobox.h>
+#include <gtkmm/builder.h>
 #include <gtkmm/cellrenderercombo.h>
 #include "core/scene/VRScene.h"
 
@@ -64,7 +65,7 @@ void VRGuiNet_updateList() {
     }
 }
 
-void VRGuiNet_on_new_clicked(GtkButton*, gpointer data) {
+void VRGuiNet::on_new_clicked() {
     auto scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
     VRSocket* socket = scene->getSocket(5000);
@@ -76,7 +77,7 @@ void VRGuiNet_on_new_clicked(GtkButton*, gpointer data) {
     VRGuiNet_updateList();
 }
 
-void VRGuiNet_on_del_clicked(GtkButton*, gpointer data) {
+void VRGuiNet::on_del_clicked() {
     Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview9"));
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
     if(!iter) return;
@@ -179,8 +180,8 @@ void VRGuiNet_on_notebook_switched(GtkNotebook* notebook, GtkNotebookPage* page,
 // --------------------------
 
 VRGuiNet::VRGuiNet() {
-    setToolButtonCallback("toolbutton14", VRGuiNet_on_new_clicked);
-    setToolButtonCallback("toolbutton15", VRGuiNet_on_del_clicked);
+    setToolButtonCallback("toolbutton14", sigc::mem_fun(*this, &VRGuiNet::on_new_clicked));
+    setToolButtonCallback("toolbutton15", sigc::mem_fun(*this, &VRGuiNet::on_del_clicked));
 
     Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview9"));
     g_signal_connect (tree_view->gobj(), "cursor-changed", G_CALLBACK (VRGuiNet_on_treeview_select), NULL);

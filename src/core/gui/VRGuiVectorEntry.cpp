@@ -8,6 +8,7 @@
 #include <gtkmm/frame.h>
 #include <gtkmm/separator.h>
 #include <gtkmm/box.h>
+#include <gtkmm/builder.h>
 
 VRGuiVectorEntry::VRGuiVectorEntry() {
     ex = ey = ez = 0;

@@ -27,6 +27,7 @@
 #include <gtkmm/colorselection.h>
 #include <gtkmm/paned.h>
 #include <gtkmm/scale.h>
+#include <gtkmm/builder.h>
 
 using namespace std;
 
@@ -233,7 +234,7 @@ void setButtonText(string b, string txt ) {
     bu->set_label(txt);
 }
 
-void setSliderCallback(string s, sigc::slot< bool,Gtk::ScrollType,double > sig) {
+void setSliderCallback(string s, sigc::slot< bool,int,double > sig) {
     Gtk::HScale* hs;
     VRGuiBuilder()->get_widget(s, hs);
     hs->signal_change_value().connect(sig);

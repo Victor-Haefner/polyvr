@@ -34,6 +34,17 @@ class VRGuiBits {
         void toggleVerbose(string s);
         void on_terminal_changed();
 
+        void on_camera_changed();
+        void on_navigation_changed();
+
+        void on_save_clicked();
+        void on_quit_clicked();
+        void on_about_clicked();
+        void on_internal_clicked();
+
+        void on_new_cancel_clicked();
+        void on_internal_close_clicked();
+
     public:
         VRGuiBits();
 

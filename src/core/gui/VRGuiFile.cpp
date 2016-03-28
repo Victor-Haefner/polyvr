@@ -1,9 +1,11 @@
 #include "VRGuiFile.h"
 #include "VRGuiUtils.h"
+#include <gtkmm/filechooser.h>
 #include <gtkmm/filechooserdialog.h>
 #include <gtkmm/button.h>
 #include <gtkmm/dialog.h>
 #include <gtkmm/table.h>
+#include <gtkmm/builder.h>
 #include <boost/filesystem.hpp>
 
 #include "core/setup/VRSetupManager.h"
@@ -28,7 +30,7 @@ void VRGuiFile::init() {
     dialog->set_action(Gtk::FILE_CHOOSER_ACTION_OPEN);
 }
 
-void VRGuiFile::open(string button, Gtk::FileChooserAction action, string title) {
+void VRGuiFile::open(string button, int action, string title) {
     //OSG::VRSetupManager::getCurrent()->pauseRendering(true);
 
     if (dialog == 0) init();
@@ -42,7 +44,7 @@ void VRGuiFile::open(string button, Gtk::FileChooserAction action, string title)
     bt2->set_label("Cancel");
 
     dialog->set_title(title);
-    dialog->set_action(action);
+    dialog->set_action( Gtk::FileChooserAction(action) );
 }
 
 void VRGuiFile::close() {

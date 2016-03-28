@@ -38,21 +38,21 @@ VRGuiGeneral::VRGuiGeneral() {
     setEntryCallback("entry14", sigc::mem_fun(*this, &VRGuiGeneral::setExtension));
 }
 
-bool VRGuiGeneral::setSSAOradius( Gtk::ScrollType st, double d ) {
+bool VRGuiGeneral::setSSAOradius( int st, double d ) {
     if (updating) return false;
     auto scene = VRSceneManager::getCurrent();
     if (scene) scene->setSSAOradius( getSliderState("hscale1") );
     return true;
 }
 
-bool VRGuiGeneral::setSSAOkernel( Gtk::ScrollType st, double d ) {
+bool VRGuiGeneral::setSSAOkernel( int st, double d ) {
     if (updating) return false;
     auto scene = VRSceneManager::getCurrent();
     if (scene) scene->setSSAOkernel( getSliderState("hscale2") );
     return true;
 }
 
-bool VRGuiGeneral::setSSAOnoise( Gtk::ScrollType st, double d ) {
+bool VRGuiGeneral::setSSAOnoise( int st, double d ) {
     if (updating) return false;
     auto scene = VRSceneManager::getCurrent();
     if (scene) scene->setSSAOkernel( getSliderState("hscale3") );

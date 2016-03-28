@@ -2,14 +2,14 @@
 #define VRGUIDISPLAYS_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
-#include "core/scene/VRSceneManager.h"
-#include "core/setup/VRSetup.h"
 #include "core/utils/VRFunctionFwd.h"
-#include "VRGuiSignals.h"
-#include "VRGuiContextMenu.h"
+#include "core/setup/VRSetupFwd.h"
+#include "core/scene/VRSceneFwd.h"
 #include "VRGuiVectorEntry.h"
 #include <gtkmm/treeview.h>
 #include <gtkmm/treestore.h>
+
+class VRGuiContextMenu;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -57,13 +57,9 @@ class VRGuiSetup {
         void on_menu_add_window();
         void on_menu_add_viewport();
         void on_menu_add_vrpn_tracker();
-        void on_menu_add_mouse();
-
-        void on_menu_add_keyboard();
-        void on_menu_add_haptic();
-        void on_menu_add_mobile();
+        template<class T> void on_menu_add_device();
+        void on_menu_add_network_node();
         void on_menu_delete();
-
 
         void on_toggle_display_active();
         void on_toggle_display_multi();

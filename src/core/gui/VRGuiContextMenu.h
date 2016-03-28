@@ -2,12 +2,14 @@
 #define VRGUICONTEXTMENU_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
-#include "core/scene/VRSceneManager.h"
 #include "VRGuiSignals.h"
-#include <gtkmm/treestore.h>
-#include <gtkmm/menu.h>
+#include <sigc++/functors/slot.h>
+#include <gtk-2.0/gdk/gdkevents.h>
+#include <glibmm-2.4/glibmm/refptr.h>
 
 using namespace std;
+
+namespace Gtk { class Menu; class Widget; };
 
 class VRGuiContextMenu {
     private:

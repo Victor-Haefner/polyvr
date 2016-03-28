@@ -19,6 +19,8 @@
 #include <gtkmm/drawingarea.h>
 #include <gtk/gtkglinit.h>
 
+#include <boost/bind.hpp>
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 

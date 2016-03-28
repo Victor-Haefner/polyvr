@@ -4,6 +4,9 @@
 #undef _POSIX_C_SOURCE
 #include <Python.h>
 
+#include <sigc++/adaptors/bind.h>
+#include <gtkmm/filechooser.h>
+
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneLoader.h"

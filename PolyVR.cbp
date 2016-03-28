@@ -601,6 +601,7 @@
 		<Unit filename="src/core/scene/VRSSAO.h" />
 		<Unit filename="src/core/scene/VRScene.cpp" />
 		<Unit filename="src/core/scene/VRScene.h" />
+		<Unit filename="src/core/scene/VRSceneFwd.h" />
 		<Unit filename="src/core/scene/VRSceneLoader.cpp" />
 		<Unit filename="src/core/scene/VRSceneLoader.h" />
 		<Unit filename="src/core/scene/VRSceneManager.cpp" />

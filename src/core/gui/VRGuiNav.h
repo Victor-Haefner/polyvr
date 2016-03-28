@@ -10,6 +10,11 @@ using namespace std;
 
 class VRGuiNav {
     private:
+        void on_preset_changed();
+        void on_new_preset_clicked();
+        void on_del_preset_clicked();
+        void on_new_binding_clicked();
+        void on_del_binding_clicked();
         void on_typebinding_changed(const Glib::ustring &sPath, const Gtk::TreeModel::iterator &iter);
 
     public:

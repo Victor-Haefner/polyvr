@@ -3,34 +3,31 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGColor.h>
-#include <gtkmm/builder.h>
 #include <gtkmm/treemodelcolumn.h>
-#include <gtkmm/treestore.h>
+#include <gtkmm-2.4/gtkmm/treemodel.h>
+#include <sigc++/functors/slot.h>
 #include "core/objects/VRObjectFwd.h"
 
 //OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+namespace Gtk { class Builder; }
 Glib::RefPtr<Gtk::Builder> VRGuiBuilder(bool standalone = false);
 
 // TEXT
 void setLabel(string l, string txt);
 void setTextEntry(string entry, string text);
 string getTextEntry(string entry);
-void setEntryCallback(string e, void (* fkt)(GtkEntry*, gpointer));
 void setEntryCallback(string e, sigc::slot<void> sig);
 void setEntrySensitivity(string e, bool b);
 
 // BUTTONS
-void setButtonCallback(string b, void (* fkt)(GtkButton*, gpointer), gpointer data = NULL);
 void setButtonCallback(string b, sigc::slot<void> sig );
 void setToggleButtonCallback(string b, sigc::slot<void> sig );
-void setToolButtonCallback(string b, void (* fkt)(GtkButton*, gpointer));
 void setToolButtonCallback(string b, sigc::slot<void> sig );
 void setToolButtonSensitivity(string toolbutton, bool b);
 void setCheckButton(string cb, bool b);
 bool getCheckButtonState(string b);
-void setCheckButtonCallback(string cb, void (* fkt)(GtkToggleButton*, gpointer) );
 void setCheckButtonCallback(string cb, sigc::slot<void> sig );
 bool getRadioButtonState(string b);
 bool getToggleButtonState(string b);
@@ -39,7 +36,6 @@ void setRadioButton(string cb, bool b );
 void setButtonText(string cb, string txt );
 
 // COMBOBOX
-void setComboboxCallback(string b, void (* fkt)(GtkComboBox*, gpointer));
 void setComboboxCallback(string b, sigc::slot<void> sig);
 void setComboboxLastActive(string cb);
 void setCombobox(string cb, int i);
@@ -52,7 +48,7 @@ void eraseComboboxActive(string cb);
 void setComboboxSensitivity(string cb, bool b);
 
 // SLIDER
-void setSliderCallback(string s, sigc::slot< bool,Gtk::ScrollType,double > sig);
+void setSliderCallback(string s, sigc::slot< bool,int,double > sig);
 float getSliderState(string s);
 
 // LISTVIEWS

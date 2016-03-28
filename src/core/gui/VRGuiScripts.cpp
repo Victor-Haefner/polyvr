@@ -21,6 +21,8 @@
 #include <gtkmm/scrolledwindow.h>
 #include <gtkmm/table.h>
 #include <gtkmm/paned.h>
+#include <gtkmm/builder.h>
+#include <gtkmm/filechooser.h>
 #include <gtksourceview/gtksourceview.h>
 #include <gtksourceview/gtksourcelanguagemanager.h>
 #include <gtksourceview/gtksourcecompletionprovider.h>

@@ -2,8 +2,8 @@
 #define VRGUIFILE_H_INCLUDED
 
 #include <string>
+#include <vector>
 #include <sigc++/functors/slot.h>
-#include <gtkmm/filechooser.h>
 
 namespace Gtk { class FileChooserDialog; class Table; }
 using namespace std;
@@ -19,7 +19,7 @@ class VRGuiFile {
         static void init();
 
     public:
-        static void open(string button, Gtk::FileChooserAction action, string title);
+        static void open(string button, int action, string title);
         static void close();
         static void apply();
         static void select();

@@ -1,8 +1,12 @@
 #include "VRGuiSetup.h"
 #include "VRGuiUtils.h"
 #include "VRGuiFile.h"
+#include "VRGuiSignals.h"
+#include "VRGuiContextMenu.h"
 #include "core/scripting/VRScript.h"
 #include "core/setup/VRSetupManager.h"
+#include "core/scene/VRSceneManager.h"
+#include "core/setup/VRSetup.h"
 #include "core/setup/windows/VRWindow.h"
 #include "core/setup/windows/VRMultiWindow.h"
 #include "core/objects/geometry/VRGeometry.h"
@@ -12,6 +16,7 @@
 #include "core/setup/devices/VRMobile.h"
 #include "core/scene/VRScene.h"
 #include "core/utils/toString.h"
+#include <gtkmm/builder.h>
 #include <gtkmm/liststore.h>
 #include <gtkmm/treestore.h>
 #include <gtkmm/textbuffer.h>
@@ -400,30 +405,16 @@ void VRGuiSetup::on_menu_add_vrpn_tracker() {
     setToolButtonSensitivity("toolbutton12", true);
 }
 
-void VRGuiSetup::on_menu_add_mouse() {
-    VRMouse* m = new VRMouse();
+template<class T>
+void VRGuiSetup::on_menu_add_device() {
+    T* m = new T();
     current_setup->addDevice(m);
     updateSetup();
     setToolButtonSensitivity("toolbutton12", true);
 }
 
-void VRGuiSetup::on_menu_add_keyboard() {
-    VRKeyboard* m = new VRKeyboard();
-    current_setup->addDevice(m);
-    updateSetup();
-    setToolButtonSensitivity("toolbutton12", true);
-}
-
-void VRGuiSetup::on_menu_add_haptic() {
-    VRHaptic* h = new VRHaptic();
-    current_setup->addDevice(h);
-    updateSetup();
-    setToolButtonSensitivity("toolbutton12", true);
-}
-
-void VRGuiSetup::on_menu_add_mobile() {
-    VRMobile* m = new VRMobile(5500);
-    current_setup->addDevice(m);
+void VRGuiSetup::on_menu_add_network_node() {
+    //auto m = new VRNetworkNode();
     updateSetup();
     setToolButtonSensitivity("toolbutton12", true);
 }
@@ -770,13 +761,15 @@ VRGuiSetup::VRGuiSetup() {
     menu->appendItem("SetupMenu", "Delete", sigc::mem_fun(*this, &VRGuiSetup::on_menu_delete));
     menu->appendItem("SM_AddMenu", "Window", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_window) );
     menu->appendItem("SM_AddMenu", "Viewport", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_viewport) );
+    menu->appendMenu("SM_AddMenu", "Network", "SM_AddNetworkMenu");
     menu->appendMenu("SM_AddMenu", "Device", "SM_AddDevMenu");
     menu->appendMenu("SM_AddMenu", "VRPN", "SM_AddVRPNMenu");
-    menu->appendItem("SM_AddDevMenu", "Mouse", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_mouse) );
-    menu->appendItem("SM_AddDevMenu", "Keyboard", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_keyboard) );
-    menu->appendItem("SM_AddDevMenu", "Haptic", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_haptic) );
-    menu->appendItem("SM_AddDevMenu", "Mobile", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_mobile) );
+    menu->appendItem("SM_AddDevMenu", "Mouse", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRMouse>) );
+    menu->appendItem("SM_AddDevMenu", "Keyboard", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRKeyboard>) );
+    menu->appendItem("SM_AddDevMenu", "Haptic", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRHaptic>) );
+    menu->appendItem("SM_AddDevMenu", "Mobile", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRMobile>) );
     menu->appendItem("SM_AddVRPNMenu", "VRPN tracker", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_vrpn_tracker) );
+    menu->appendItem("SM_AddNetworkMenu", "Node", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_network_node) );
 
     Glib::RefPtr<Gtk::ToolButton> tbutton;
     Glib::RefPtr<Gtk::CheckButton> cbutton;

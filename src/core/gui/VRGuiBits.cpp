@@ -14,6 +14,7 @@
 #include <gtkmm/textbuffer.h>
 #include <gtkmm/textview.h>
 #include <gtkmm/scrolledwindow.h>
+#include <gtkmm/builder.h>
 //#include <vte-0.0/vte/vte.h>
 #include <iostream>
 //#include <boost/locale.hpp>
@@ -58,48 +59,42 @@ void VRGuiBits::on_view_option_toggle(VRVisualLayer* l, Gtk::ToggleToolButton* t
     l->setVisibility( tb->get_active() );
 }
 
-void VRGuiBits_on_camera_changed(GtkComboBox* cb, gpointer data) {
-    char* cam = gtk_combo_box_get_active_text(cb);
-    if (cam == 0) return;
+void VRGuiBits::on_camera_changed() {
+    string name = getComboboxText("combobox4");
     auto scene = VRSceneManager::getCurrent();
-    string name = string(cam);
     scene->setActiveCamera(name);
-
     VRGuiSignals::get()->getSignal("camera_changed")->trigger<VRDevice>();
 }
 
-void VRGuiBits_on_navigation_changed(GtkComboBox* cb, gpointer data) {
+void VRGuiBits::on_navigation_changed() {
     auto scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
-
-    char* c = gtk_combo_box_get_active_text(cb);
-    if (c == 0) return;
-    string name = string(c);
+    string name = getComboboxText("combobox9");
     scene->setActiveNavigation(name);
     setCombobox("combobox5", getListStorePos("nav_presets", name));
 }
 
-void VRGuiBits_on_new_cancel_clicked(GtkButton* cb, gpointer data) {
+void VRGuiBits::on_new_cancel_clicked() {
     Gtk::Window* dialog;
     VRGuiBuilder()->get_widget("NewProject", dialog);
     dialog->hide();
 }
 
-void VRGuiBits_on_save_clicked(GtkButton* cb, gpointer data) {
+void VRGuiBits::on_save_clicked() {
     saveScene();
 }
 
-void VRGuiBits_on_quit_clicked(GtkButton* cb, gpointer data) {
+void VRGuiBits::on_quit_clicked() {
     PolyVR::shutdown();
 }
 
-void VRGuiBits_on_about_clicked(GtkButton* cb, gpointer data) {
+void VRGuiBits::on_about_clicked() {
     Gtk::AboutDialog* diag;
     VRGuiBuilder()->get_widget("aboutdialog1", diag);
     diag->run();
 }
 
-void VRGuiBits_on_internal_clicked(GtkButton* cb, gpointer data) {
+void VRGuiBits::on_internal_clicked() {
     Gtk::Dialog* diag;
     VRGuiBuilder()->get_widget("dialog2", diag);
     cout << "\nPRINT NAME MAP" << flush;
@@ -107,7 +102,7 @@ void VRGuiBits_on_internal_clicked(GtkButton* cb, gpointer data) {
     diag->run();
 }
 
-void VRGuiBits_on_internal_close_clicked(GtkButton* cb, gpointer data) {
+void VRGuiBits::on_internal_close_clicked() {
     Gtk::Dialog* diag;
     VRGuiBuilder()->get_widget("dialog2", diag);
     diag->hide();
@@ -236,19 +231,19 @@ void VRGuiBits::toggleVerbose(string s) {
 }
 
 VRGuiBits::VRGuiBits() {
-    setComboboxCallback("combobox4", VRGuiBits_on_camera_changed);
-    setComboboxCallback("combobox9", VRGuiBits_on_navigation_changed);
+    setComboboxCallback("combobox4", sigc::mem_fun(*this, &VRGuiBits::on_camera_changed));
+    setComboboxCallback("combobox9", sigc::mem_fun(*this, &VRGuiBits::on_navigation_changed));
 
-    setToolButtonCallback("toolbutton4", VRGuiBits_on_save_clicked);
-    setToolButtonCallback("toolbutton3", VRGuiBits_on_quit_clicked);
-    setToolButtonCallback("toolbutton17", VRGuiBits_on_about_clicked);
-    setToolButtonCallback("toolbutton18", VRGuiBits_on_internal_clicked);
+    setToolButtonCallback("toolbutton4", sigc::mem_fun(*this, &VRGuiBits::on_save_clicked));
+    setToolButtonCallback("toolbutton3", sigc::mem_fun(*this, &VRGuiBits::on_quit_clicked));
+    setToolButtonCallback("toolbutton17", sigc::mem_fun(*this, &VRGuiBits::on_about_clicked));
+    setToolButtonCallback("toolbutton18", sigc::mem_fun(*this, &VRGuiBits::on_internal_clicked));
 
     setToolButtonCallback("toolbutton24", sigc::mem_fun(*this, &VRGuiBits::clear_terminal));
     setToolButtonCallback("toolbutton25", sigc::mem_fun(*this, &VRGuiBits::on_terminal_changed));
 
-    setButtonCallback("button14", VRGuiBits_on_new_cancel_clicked);
-    setButtonCallback("button21", VRGuiBits_on_internal_close_clicked);
+    setButtonCallback("button14", sigc::mem_fun(*this, &VRGuiBits::on_new_cancel_clicked));
+    setButtonCallback("button21", sigc::mem_fun(*this, &VRGuiBits::on_internal_close_clicked));
 
     setToolButtonCallback("togglebutton1", sigc::mem_fun(*this, &VRGuiBits::toggleDock) );
     setToolButtonCallback("network_verbose", sigc::bind<string>( sigc::mem_fun(*this, &VRGuiBits::toggleVerbose), "network" ) );

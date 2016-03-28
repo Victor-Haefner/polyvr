@@ -3,6 +3,7 @@
 #include "core/utils/toString.h"
 #include <gtkmm/window.h>
 #include <gtkmm/liststore.h>
+#include <gtkmm/builder.h>
 #include <cairomm/context.h>
 #include <pangomm/context.h>
 

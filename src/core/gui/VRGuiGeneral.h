@@ -27,9 +27,9 @@ class VRGuiGeneral {
         void toggleSSAO();
         void toggleCalib();
 
-        bool setSSAOradius( Gtk::ScrollType st, double d );
-        bool setSSAOkernel( Gtk::ScrollType st, double d );
-        bool setSSAOnoise( Gtk::ScrollType st, double d );
+        bool setSSAOradius( int st, double d );
+        bool setSSAOkernel( int st, double d );
+        bool setSSAOnoise( int st, double d );
 
         // other
         void dumpOSG();

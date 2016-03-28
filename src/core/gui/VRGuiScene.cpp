@@ -8,6 +8,7 @@
 #include <gtkmm/combobox.h>
 #include <gtkmm/liststore.h>
 #include <gtkmm/drawingarea.h>
+#include <gtkmm/builder.h>
 #include <iostream>
 #include <stdio.h>
 #include <unistd.h>
@@ -276,7 +277,7 @@ void setLod(VRLodPtr lod) {
     setCombobox("combobox19", getListStorePos("csg_operations",op));
 }*/
 
-void on_toggle_liveupdate(GtkToggleButton* tb, gpointer user_data) { liveUpdate = !liveUpdate; }
+void VRGuiScene::on_toggle_liveupdate() { liveUpdate = !liveUpdate; }
 
 void updateObjectForms(bool disable = false) {
     setExpanderSensitivity("expander1", false);
@@ -409,14 +410,14 @@ void syncSGTree(VRObjectPtr o, Gtk::TreeModel::iterator itr) {
 // --------------------------
 
 // VRObjects
-void on_toggle_visible(GtkToggleButton* tb, gpointer data) {
+void VRGuiScene::on_toggle_visible() {
     if(trigger_cbs) getSelected()->toggleVisible();
     setSGRow(selected_itr, getSelected());
 }
-void on_toggle_pickable(GtkToggleButton* tb, gpointer data) { if(trigger_cbs) getSelected()->setPickable(!getSelected()->isPickable()); }
+void VRGuiScene::on_toggle_pickable() { if(trigger_cbs) getSelected()->setPickable(!getSelected()->isPickable()); }
 
 // VRGroup
-void on_groupsync_clicked(GtkButton*, gpointer data) {
+void VRGuiScene::on_groupsync_clicked() {
     if(!trigger_cbs) return;
     if(!selected_itr) return;
 
@@ -425,12 +426,11 @@ void on_groupsync_clicked(GtkButton*, gpointer data) {
     syncSGTree(obj, selected_itr);
 }
 
-void on_scene_update(GtkButton*, gpointer data) {
-    VRGuiScene* mgr = (VRGuiScene*) data;
-    mgr->updateTreeView();
+void VRGuiScene::on_scene_update() {
+    updateTreeView();
 }
 
-void on_groupapply_clicked(GtkButton*, gpointer data) {
+void VRGuiScene::on_groupapply_clicked() {
     if(!trigger_cbs) return;
     if(!selected_itr) return;
 
@@ -446,21 +446,19 @@ void on_groupapply_clicked(GtkButton*, gpointer data) {
     }
 }
 
-void VRGuiScene_on_change_group(GtkComboBox* cb, gpointer data) {
+void VRGuiScene::on_change_group() {
     if(!trigger_cbs) return;
 
     VRGroupPtr obj = static_pointer_cast<VRGroup>( getSelected() );
     obj->setGroup(getComboboxText("combobox14"));
 }
 
-//void VRGuiScene_on_group_edited(GtkCellRendererText *cell, gchar *path_string, gchar *_new_group, gpointer d) { //TODO
-//void VRGuiScene_on_group_edited(Glib::ustring path_string, Glib::ustring _new_group) { //TODO
-void VRGuiScene_on_group_edited(GtkEntry* e, gpointer data) {
+void VRGuiScene::on_group_edited() {
     if(!trigger_cbs) return;
 
     VRGroupPtr obj = static_pointer_cast<VRGroup>( getSelected() );
     string old_group = getComboboxText("combobox14");
-    string new_group = gtk_entry_get_text(e);
+    string new_group = getTextEntry("entry41");
 
     // update group list
     Glib::RefPtr<Gtk::ListStore> list = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("liststore3"));
@@ -518,14 +516,14 @@ void on_scale_changed(Vec3f v) {
     updateObjectForms();
 }
 
-void on_focus_clicked(GtkButton*, gpointer data) {
+void VRGuiScene::on_focus_clicked() {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
     auto scene = VRSceneManager::getCurrent();
     if (scene) scene->getActiveCamera()->focus( obj );
 }
 
-void on_identity_clicked(GtkButton*, gpointer data) {
+void VRGuiScene::on_identity_clicked() {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
     obj->setPose(Vec3f(0,0,0), Vec3f(0,0,-1), Vec3f(0,1,0));
@@ -538,7 +536,7 @@ void on_edit_T_constraint(Vec3f v) {
     obj->getConstraint()->setTConstraint(v, obj->getConstraint()->getTMode());
 }
 
-void on_toggle_T_constraint(GtkToggleButton* tb, gpointer data) {
+void VRGuiScene::on_toggle_T_constraint() {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
 
@@ -546,7 +544,7 @@ void on_toggle_T_constraint(GtkToggleButton* tb, gpointer data) {
     obj->getConstraint()->toggleTConstraint(b, obj);
 }
 
-void on_toggle_R_constraint(GtkToggleButton* tb, gpointer data) {
+void VRGuiScene::on_toggle_R_constraint() {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
 
@@ -554,7 +552,7 @@ void on_toggle_R_constraint(GtkToggleButton* tb, gpointer data) {
     obj->getConstraint()->toggleRConstraint(b, obj);
 }
 
-void on_toggle_rc_x(GtkToggleButton* tb, gpointer data) {
+void VRGuiScene::on_toggle_rc() {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
 
@@ -566,12 +564,8 @@ void on_toggle_rc_x(GtkToggleButton* tb, gpointer data) {
     obj->getConstraint()->setRConstraint(rc, obj->getConstraint()->getRMode());
 }
 
-void on_toggle_rc_y(GtkToggleButton* tb, gpointer data) { on_toggle_rc_x(0,NULL); }
-
-void on_toggle_rc_z(GtkToggleButton* tb, gpointer data) { on_toggle_rc_x(0,NULL); }
-
 // geometry
-void on_change_primitive(GtkComboBox* cb, gpointer data) {
+void VRGuiScene::on_change_primitive() {
     if(!trigger_cbs) return;
     string prim = getComboboxText("combobox21");
 
@@ -666,7 +660,7 @@ void on_change_CSG_operation(GtkComboBox* cb, gpointer data) {
 
 // Camera
 
-void on_toggle_camera_accept_realroot(GtkToggleButton* tb, gpointer data) {
+void VRGuiScene::on_toggle_camera_accept_realroot() {
     if(!trigger_cbs) return;
     VRCameraPtr obj = static_pointer_cast<VRCamera>( getSelected() );
 
@@ -1248,7 +1242,7 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     setCellRendererCallback("cellrenderertext4", on_edit_distance);
     setCellRendererCallback("cellrenderertext33", on_edit_primitive_params);
 
-    setEntryCallback("entry41", VRGuiScene_on_group_edited);
+    setEntryCallback("entry41", sigc::mem_fun(*this, &VRGuiScene::on_group_edited));
 
     //light
     fillStringListstore("light_types", VRLight::getTypes());
@@ -1258,16 +1252,16 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     fillStringListstore("cam_proj", VRCamera::getProjectionTypes());
 
     // object form
-    setCheckButtonCallback("checkbutton16", on_toggle_liveupdate);
-    setCheckButtonCallback("checkbutton6", on_toggle_visible);
-    setCheckButtonCallback("checkbutton15", on_toggle_pickable);
-    setCheckButtonCallback("checkbutton18", on_toggle_rc_x);
-    setCheckButtonCallback("checkbutton19", on_toggle_rc_y);
-    setCheckButtonCallback("checkbutton20", on_toggle_rc_z);
-    setCheckButtonCallback("checkbutton21", on_toggle_T_constraint);
-    setCheckButtonCallback("checkbutton22", on_toggle_R_constraint);
+    setCheckButtonCallback("checkbutton16", sigc::mem_fun(*this, &VRGuiScene::on_toggle_liveupdate));
+    setCheckButtonCallback("checkbutton6", sigc::mem_fun(*this, &VRGuiScene::on_toggle_visible));
+    setCheckButtonCallback("checkbutton15", sigc::mem_fun(*this, &VRGuiScene::on_toggle_pickable));
+    setCheckButtonCallback("checkbutton18", sigc::mem_fun(*this, &VRGuiScene::on_toggle_rc));
+    setCheckButtonCallback("checkbutton19", sigc::mem_fun(*this, &VRGuiScene::on_toggle_rc));
+    setCheckButtonCallback("checkbutton20", sigc::mem_fun(*this, &VRGuiScene::on_toggle_rc));
+    setCheckButtonCallback("checkbutton21", sigc::mem_fun(*this, &VRGuiScene::on_toggle_T_constraint));
+    setCheckButtonCallback("checkbutton22", sigc::mem_fun(*this, &VRGuiScene::on_toggle_R_constraint));
     //setCheckButtonCallback("checkbutton27", on_toggle_CSG_editmode);
-    setCheckButtonCallback("checkbutton17", on_toggle_camera_accept_realroot);
+    setCheckButtonCallback("checkbutton17", sigc::mem_fun(*this, &VRGuiScene::on_toggle_camera_accept_realroot));
     setCheckButtonCallback("radiobutton1", sigc::mem_fun(*this, &VRGuiScene::on_toggle_T_constraint_mode) );
     setCheckButtonCallback("checkbutton31", sigc::mem_fun(*this, &VRGuiScene::on_toggle_light) );
     setCheckButtonCallback("checkbutton32", sigc::mem_fun(*this, &VRGuiScene::on_toggle_light_shadow) );
@@ -1276,9 +1270,9 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     setCheckButtonCallback("cache_override", sigc::mem_fun(*this, &VRGuiScene::on_toggle_cache_override) );
     setCheckButtonCallback("checkbutton35", sigc::mem_fun(*this, &VRGuiScene::on_lod_decimate_changed) );
 
-    setComboboxCallback("combobox14", VRGuiScene_on_change_group);
+    setComboboxCallback("combobox14", sigc::mem_fun(*this, &VRGuiScene::on_change_group));
     //setComboboxCallback("combobox19", on_change_CSG_operation);
-    setComboboxCallback("combobox21", on_change_primitive);
+    setComboboxCallback("combobox21", sigc::mem_fun(*this, &VRGuiScene::on_change_primitive));
     setComboboxCallback("combobox2", sigc::mem_fun(*this, &VRGuiScene::on_change_light_type) );
     setComboboxCallback("combobox22", sigc::mem_fun(*this, &VRGuiScene::on_change_light_shadow) );
     setComboboxCallback("combobox8", sigc::mem_fun(*this, &VRGuiScene::on_change_phys_shape) );
@@ -1302,11 +1296,11 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     setEntryCallback("entry7", sigc::mem_fun(*this, &VRGuiScene::on_cam_far_changed) );
     setEntryCallback("entry9", sigc::mem_fun(*this, &VRGuiScene::on_lod_decimate_changed) );
 
-    setButtonCallback("button4", on_focus_clicked);
-    setButtonCallback("button11", on_identity_clicked);
-    setButtonCallback("button19", on_groupsync_clicked);
-    setButtonCallback("button20", on_groupapply_clicked, this);
-    setButtonCallback("button17", on_scene_update, this);
+    setButtonCallback("button4", sigc::mem_fun(*this, &VRGuiScene::on_focus_clicked));
+    setButtonCallback("button11", sigc::mem_fun(*this, &VRGuiScene::on_identity_clicked));
+    setButtonCallback("button19", sigc::mem_fun(*this, &VRGuiScene::on_groupsync_clicked));
+    setButtonCallback("button20", sigc::mem_fun(*this, &VRGuiScene::on_groupapply_clicked));
+    setButtonCallback("button17", sigc::mem_fun(*this, &VRGuiScene::on_scene_update));
 
     setColorChooser("mat_diffuse", sigc::mem_fun(*this, &VRGuiScene::setMaterial_diffuse));
     setColorChooser("mat_specular", sigc::mem_fun(*this, &VRGuiScene::setMaterial_specular));

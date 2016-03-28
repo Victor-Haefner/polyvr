@@ -10,6 +10,8 @@ using namespace std;
 
 class VRGuiNet {
     private:
+        void on_new_clicked();
+        void on_del_clicked();
 
     public:
         VRGuiNet();

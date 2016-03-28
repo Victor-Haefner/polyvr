@@ -15,6 +15,7 @@
 #include <gtkmm/builder.h>
 #include <gtkmm/frame.h>
 #include <gtkmm/eventbox.h>
+#include <gtkmm/filechooser.h>
 #include <string>
 #include <iostream>
 #include <boost/filesystem.hpp>
