@@ -10,9 +10,6 @@ class VRManager : public VRName {
         map<int, shared_ptr<T> > data;
 
     protected:
-        vector< shared_ptr<T> > getData();
-
-        shared_ptr<T> add(string name = "");
         shared_ptr<T> get(string name);
         shared_ptr<T> get(int ID);
 
@@ -22,6 +19,9 @@ class VRManager : public VRName {
 
     public:
         VRManager(string name);
+
+        vector< shared_ptr<T> > getData();
+        shared_ptr<T> add(string name = "");
 };
 
 #endif // VRMANAGER_H_INCLUDED

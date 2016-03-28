@@ -7,6 +7,7 @@
 #include "core/setup/VRSetupManager.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/setup/VRSetup.h"
+#include "core/setup/VRNetwork.h"
 #include "core/setup/windows/VRWindow.h"
 #include "core/setup/windows/VRMultiWindow.h"
 #include "core/objects/geometry/VRGeometry.h"
@@ -16,6 +17,7 @@
 #include "core/setup/devices/VRMobile.h"
 #include "core/scene/VRScene.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRManager.cpp"
 #include <gtkmm/builder.h>
 #include <gtkmm/liststore.h>
 #include <gtkmm/treestore.h>
@@ -414,7 +416,7 @@ void VRGuiSetup::on_menu_add_device() {
 }
 
 void VRGuiSetup::on_menu_add_network_node() {
-    current_setup->addNetworkNode();
+    current_setup->getNetwork()->add("Node");
     updateSetup();
     setToolButtonSensitivity("toolbutton12", true);
 }
@@ -882,11 +884,13 @@ void VRGuiSetup::updateSetup() {
     Gtk::TreeModel::iterator art_itr;
     Gtk::TreeModel::iterator vrpn_itr;
 
+    auto network_itr = tree_store->append();
     windows_itr = tree_store->append();
     devices_itr = tree_store->append();
     art_itr = tree_store->append();
     vrpn_itr = tree_store->append();
 
+    setTreeRow(tree_store, *network_itr, "Network", "section", 0);
     setTreeRow(tree_store, *windows_itr, "Displays", "section", 0);
     setTreeRow(tree_store, *devices_itr, "Devices", "section", 0);
     setTreeRow(tree_store, *art_itr, "ART", "section", 0);
@@ -915,23 +919,10 @@ void VRGuiSetup::updateSetup() {
         }
     }
 
-    /*for (auto node : current_setup->getNetworkNodes()) {
-        string name = win.first;
-        itr = tree_store->append(windows_itr->children());
-        string bg = "#FFFFFF";
-        if (w->isActive() == false) bg = "#FFDDDD";
-        setTreeRow(tree_store, *itr, name.c_str(), "window", (gpointer)w, "#000000", bg);
-
-        // add viewports
-        vector<VRViewPtr> views = w->getViews();
-        for (uint i=0; i<views.size(); i++) {
-            VRViewPtr v = views[i];
-            stringstream ss;
-            ss << name << i;
-            itr2 = tree_store->append(itr->children());
-            setTreeRow(tree_store, *itr2, ss.str().c_str(), "view", (gpointer)v.get());
-        }
-    }*/
+    for (auto node : current_setup->getNetwork()->getData() ) {
+        itr = tree_store->append(network_itr->children());
+        setTreeRow(tree_store, *itr, node->getName().c_str(), "node", (gpointer)node.get(), "#000000", "#FFFFFF");
+    }
 
     for (auto win : current_setup->getWindows()) {
         VRWindow* w = win.second.get();

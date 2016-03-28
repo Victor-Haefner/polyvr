@@ -13,8 +13,12 @@ vector< shared_ptr<T> > VRManager<T>::getData() {
     return res;
 }
 
-template<class T>
-shared_ptr<T> VRManager<T>::add(string name) { auto t = T::create(name); return t; }
+template<class T> shared_ptr<T> VRManager<T>::add(string name) {
+    auto t = T::create(name);
+    data[t->getID()] = t;
+    return t;
+}
+
 template<class T>
 shared_ptr<T> VRManager<T>::get(string name) { for (auto d : data) if (d.second->getName() == name) return d.second; return 0; }
 template<class T>

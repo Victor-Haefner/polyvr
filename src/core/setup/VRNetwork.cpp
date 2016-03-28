@@ -1,20 +1,25 @@
 #include "VRNetwork.h"
+#include "core/utils/VRManager.cpp"
 
 using namespace OSG;
 
-VRNetwork::VRNetwork() {}
+//template<> class VRManager<VRNetworkNode>;
+//template<> VRNetworkNodePtr VRManager<VRNetworkNode>::add(string name);
+
+VRNetwork::VRNetwork() : VRManager("Network") {}
 VRNetwork::~VRNetwork() {}
 
-VRNetwork::NodePtr VRNetwork::addNetworkNode() {
-    static int ID = 0; ID++;
-    auto n = NodePtr( new Node() );
-    nodes[ID] = n;
-    n->ID = ID;
-    return n;
+
+VRNetworkNode::VRNetworkNode(string name) {
+    setNameSpace("NetworkNode");
+    setName(name);
 }
 
-vector<VRNetwork::NodePtr> VRNetwork::getNetworkNodes() {
-    vector<NodePtr> res;
-    for (auto n : nodes) res.push_back(n.second);
-    return res;
+VRNetworkNode::~VRNetworkNode() {}
+
+VRNetworkNodePtr VRNetworkNode::create(string name) { return VRNetworkNodePtr( new VRNetworkNode(name) ); }
+
+int VRNetworkNode::getID() {
+    static int i = -1; i++;
+    return i;
 }

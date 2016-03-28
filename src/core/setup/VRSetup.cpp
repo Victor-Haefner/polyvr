@@ -1,4 +1,5 @@
 #include "VRSetup.h"
+#include "VRNetwork.h"
 #include "windows/VRWindow.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
@@ -37,6 +38,8 @@ VRSetup::VRSetup(string name) {
     layer_stats_toggle = VRFunction<bool>::create("showStats", boost::bind(&VRViewManager::showViewStats, this, 0, _1) );
     setup_layer->setCallback( layer_setup_toggle );
     stats_layer->setCallback( layer_stats_toggle );
+
+    network = VRNetworkPtr( new VRNetwork() );
 }
 
 VRSetup::~VRSetup() {
@@ -45,6 +48,8 @@ VRSetup::~VRSetup() {
 }
 
 VRSetupPtr VRSetup::create(string name) { return VRSetupPtr(new VRSetup(name)); }
+
+VRNetworkPtr VRSetup::getNetwork() { return network; }
 
 //parser callback for the xml scene import
 void VRSetup::parseSetup(xmlpp::Element* setup) {

@@ -16,6 +16,8 @@ ptrFwd(VRWindow);
 ptrFwd(VRGtkWindow);
 ptrFwd(VRGlutWindow);
 ptrFwd(VRMultiWindow);
+ptrFwd(VRNetwork);
+ptrFwd(VRNetworkNode);
 
 }
 
