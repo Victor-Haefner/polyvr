@@ -8,6 +8,7 @@
 #include "tracking/ART.h"
 #include "core/utils/VRName.h"
 #include "core/setup/VRSetupFwd.h"
+#include "VRNetwork.h"
 
 namespace xmlpp{ class Element; }
 
@@ -17,7 +18,7 @@ using namespace std;
 class VRScene;
 class VRVisualLayer;
 
-class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceManager, public ART, public VRPN, public VRName {
+class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceManager, public VRNetwork, public ART, public VRPN, public VRName {
     private:
         string cfgfile;
         string tracking;
@@ -56,9 +57,6 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
         void save(string file);
         void load(string file);
 };
-
-// TODO: make a setup manager && manage setups like a bit the scene manager!
-
 
 OSG_END_NAMESPACE;
 

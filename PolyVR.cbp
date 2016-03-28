@@ -773,6 +773,8 @@
 		<Unit filename="src/core/scripting/VRScript.h" />
 		<Unit filename="src/core/scripting/VRScriptManager.cpp" />
 		<Unit filename="src/core/scripting/VRScriptManager.h" />
+		<Unit filename="src/core/setup/VRNetwork.cpp" />
+		<Unit filename="src/core/setup/VRNetwork.h" />
 		<Unit filename="src/core/setup/VRSetup.cpp" />
 		<Unit filename="src/core/setup/VRSetup.h" />
 		<Unit filename="src/core/setup/VRSetupFwd.h" />
@@ -877,6 +879,8 @@
 		<Unit filename="src/core/utils/VRInternalMonitor.h" />
 		<Unit filename="src/core/utils/VRLogger.cpp" />
 		<Unit filename="src/core/utils/VRLogger.h" />
+		<Unit filename="src/core/utils/VRManager.cpp" />
+		<Unit filename="src/core/utils/VRManager.h" />
 		<Unit filename="src/core/utils/VRName.cpp" />
 		<Unit filename="src/core/utils/VRName.h" />
 		<Unit filename="src/core/utils/VROptions.cpp" />

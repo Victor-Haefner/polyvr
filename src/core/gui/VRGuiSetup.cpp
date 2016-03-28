@@ -414,7 +414,7 @@ void VRGuiSetup::on_menu_add_device() {
 }
 
 void VRGuiSetup::on_menu_add_network_node() {
-    //auto m = new VRNetworkNode();
+    current_setup->addNetworkNode();
     updateSetup();
     setToolButtonSensitivity("toolbutton12", true);
 }
@@ -914,6 +914,24 @@ void VRGuiSetup::updateSetup() {
             gtk_list_store_set (mouse_list->gobj(), row.gobj(), 0, dev->getName().c_str(), -1);
         }
     }
+
+    /*for (auto node : current_setup->getNetworkNodes()) {
+        string name = win.first;
+        itr = tree_store->append(windows_itr->children());
+        string bg = "#FFFFFF";
+        if (w->isActive() == false) bg = "#FFDDDD";
+        setTreeRow(tree_store, *itr, name.c_str(), "window", (gpointer)w, "#000000", bg);
+
+        // add viewports
+        vector<VRViewPtr> views = w->getViews();
+        for (uint i=0; i<views.size(); i++) {
+            VRViewPtr v = views[i];
+            stringstream ss;
+            ss << name << i;
+            itr2 = tree_store->append(itr->children());
+            setTreeRow(tree_store, *itr2, ss.str().c_str(), "view", (gpointer)v.get());
+        }
+    }*/
 
     for (auto win : current_setup->getWindows()) {
         VRWindow* w = win.second.get();
