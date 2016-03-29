@@ -7,7 +7,7 @@ using namespace OSG;
 //template<> VRNetworkNodePtr VRManager<VRNetworkNode>::add(string name);
 
 VRNetwork::VRNetwork() : VRManager("Network") {}
-VRNetwork::~VRNetwork() {}
+VRNetwork::~VRNetwork() { cout << "~VRNetwork"; }
 
 
 VRNetworkNode::VRNetworkNode(string name) {
@@ -18,8 +18,3 @@ VRNetworkNode::VRNetworkNode(string name) {
 VRNetworkNode::~VRNetworkNode() {}
 
 VRNetworkNodePtr VRNetworkNode::create(string name) { return VRNetworkNodePtr( new VRNetworkNode(name) ); }
-
-int VRNetworkNode::getID() {
-    static int i = -1; i++;
-    return i;
-}

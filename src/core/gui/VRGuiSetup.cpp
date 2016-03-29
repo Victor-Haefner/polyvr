@@ -366,6 +366,11 @@ void VRGuiSetup::on_menu_delete() {
         ;
     }
 
+    if (selected_type == "node") {
+        auto node = (VRNetworkNode*)selected_object;
+        current_setup->getNetwork()->rem( node->getName() );
+    }
+
     updateSetup();
     setToolButtonSensitivity("toolbutton12", true);
 }

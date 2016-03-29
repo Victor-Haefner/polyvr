@@ -19,9 +19,7 @@ class VRNetworkNode : public VRName {
         VRNetworkNode(string name);
         ~VRNetworkNode();
 
-        static VRNetworkNodePtr create(string name);
-
-        int getID();
+        static VRNetworkNodePtr create(string name = "Node");
 };
 
 class VRNetwork : public VRManager<VRNetworkNode> {

@@ -137,11 +137,13 @@ void VRSetup::save(string file) {
     xmlpp::Element* deviceN = setupN->add_child("Devices");
     xmlpp::Element* trackingARTN = setupN->add_child("TrackingART");
     xmlpp::Element* trackingVRPNN = setupN->add_child("TrackingVRPN");
+    xmlpp::Element* networkN = setupN->add_child("Network");
 
     VRWindowManager::save(displayN);
     VRDeviceManager::save(deviceN);
     ART::save(trackingARTN);
     VRPN::save(trackingVRPNN);
+    network->save(networkN);
 
     doc.write_to_file_formatted(file);
 }
@@ -158,11 +160,13 @@ void VRSetup::load(string file) {
     xmlpp::Element* deviceN = getElementChild(setupN, "Devices");
     xmlpp::Element* trackingARTN = getElementChild(setupN, "TrackingART");
     xmlpp::Element* trackingVRPNN = getElementChild(setupN, "TrackingVRPN");
+    xmlpp::Element* networkN = getElementChild(setupN, "Network");
 
     if (trackingARTN) ART::load(trackingARTN);
     if (trackingVRPNN) VRPN::load(trackingVRPNN);
     if (deviceN) VRDeviceManager::load(deviceN);
     if (displayN) VRWindowManager::load(displayN);
+    if (networkN) network->load(networkN);
 }
 
 OSG_END_NAMESPACE;

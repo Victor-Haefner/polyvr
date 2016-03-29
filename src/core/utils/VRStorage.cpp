@@ -24,11 +24,12 @@ void VRStorage::save(xmlpp::Element* e, int p) {
     for (auto s : storage) (*s.second.f2)(e);
 }
 
-void VRStorage::saveUnder(xmlpp::Element* e, int p) {
-    if (e == 0) return;
-    if (persistency <= p) return;
-    e = e->add_child(type); // todo: define tag
+xmlpp::Element* VRStorage::saveUnder(xmlpp::Element* e, int p) {
+    if (e == 0) return 0;
+    if (persistency <= p) return 0;
+    e = e->add_child(type);
     save(e, p);
+    return e;
 }
 
 void VRStorage::load(xmlpp::Element* e) {
