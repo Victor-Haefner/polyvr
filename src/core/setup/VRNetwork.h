@@ -11,7 +11,18 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRNetworkNode : public VRName {
+class VRNetworkSlave : public VRName {
+    private:
+        void update();
+
+    public:
+        VRNetworkSlave(string name);
+        ~VRNetworkSlave();
+
+        static VRNetworkSlavePtr create(string name = "Slave");
+};
+
+class VRNetworkNode : public VRManager<VRNetworkSlave> {
     private:
         string address = "localhost";
         string user = "user";

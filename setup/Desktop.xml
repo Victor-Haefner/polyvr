@@ -13,7 +13,5 @@
   <TrackingART active="0" offset="0 0 0" port="5000" up=""/>
   <TrackingVRPN active="1" port="3883"/>
   <Network base_name="Network" name_space="Manager" name_suffix="0">
-    <Node address="141.3.150.183" base_name="victor" name_space="NetworkNode" name_suffix="0" user="victor" ID="0"/>
-    <Node address="localhost" base_name="local" name_space="NetworkNode" name_suffix="0" user="user" ID="1"/>
   </Network>
 </Setup>

@@ -23,7 +23,7 @@ VRNetwork::VRNetwork() : VRManager("Network") {}
 VRNetwork::~VRNetwork() { cout << "~VRNetwork"; }
 
 
-VRNetworkNode::VRNetworkNode(string name) {
+VRNetworkNode::VRNetworkNode(string name) : VRManager("NetworkNode") {
     setNameSpace("NetworkNode");
     setName(name);
 
@@ -231,3 +231,16 @@ void VRNetworkNode::update() {
     stat_ssh = ssh->getStat();
     stat_ssh_key = ssh->getKeyStat();
 }
+
+VRNetworkSlave::VRNetworkSlave(string name) {
+    setNameSpace("NetworkNode");
+    setName(name);
+
+    regStorageUpdateFkt( VRFunction<int>::create("network_slave_update", boost::bind(&VRNetworkSlave::update, this)) );
+}
+
+VRNetworkSlave::~VRNetworkSlave() {}
+
+VRNetworkSlavePtr VRNetworkSlave::create(string name) { return VRNetworkSlavePtr( new VRNetworkSlave(name) ); }
+
+void VRNetworkSlave::update() {}
