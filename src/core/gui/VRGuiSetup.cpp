@@ -73,6 +73,7 @@ void VRGuiSetup::updateObjectData() {
     setExpanderSensitivity("expander22", false);
     setExpanderSensitivity("expander23", false);
     setExpanderSensitivity("expander24", false);
+    setExpanderSensitivity("expander25", false);
 
     current_scene = VRSceneManager::getCurrent();
 
@@ -216,6 +217,16 @@ void VRGuiSetup::updateObjectData() {
         setCheckButton("checkbutton37", dev->getCross()->isVisible());
     }
 
+    if (selected_type == "node") {
+        setExpanderSensitivity("expander25", true);
+        VRNetworkNode* n = (VRNetworkNode*)selected_object;
+        setTextEntry("entry15", n->getAddress());
+        setTextEntry("entry20", n->getUser());
+        setLabel("label130", n->getStatNode());
+        setLabel("label129", n->getStatSSH());
+        setLabel("label126", n->getStatSSHkey());
+    }
+
     guard = false;
 }
 
@@ -329,6 +340,7 @@ void VRGuiSetup::on_name_edited(const Glib::ustring& path, const Glib::ustring& 
     // update key in map
     if (type == "window") current_setup->changeWindowName(name, new_name);
     if (type == "vrpn_tracker") current_setup->changeVRPNDeviceName((VRPN_device*)obj, new_name);
+    if (type == "node") ((VRNetworkNode*)obj)->setName(new_name);
 
     selected_row[cols.name] = name;
     updateSetup();
@@ -715,6 +727,22 @@ void VRGuiSetup::on_edit_VRPN_tracker_address() {
     setToolButtonSensitivity("toolbutton12", true);
 }
 
+void VRGuiSetup::on_netnode_edited() {
+    if (guard) return;
+    VRNetworkNode* n = (VRNetworkNode*)selected_object;
+    n->set(getTextEntry("entry15"), getTextEntry("entry20"));
+    setToolButtonSensitivity("toolbutton12", true);
+    updateObjectData();
+}
+
+void VRGuiSetup::on_netnode_key_clicked() {
+    if (guard) return;
+    VRNetworkNode* n = (VRNetworkNode*)selected_object;
+    n->distributeKey();
+    setToolButtonSensitivity("toolbutton12", true);
+    updateObjectData();
+}
+
 void VRGuiSetup::on_haptic_ip_edited() {
     if (guard) return;
     VRHaptic* dev = (VRHaptic*)selected_object;
@@ -819,6 +847,10 @@ VRGuiSetup::VRGuiSetup() {
     setEntryCallback("entry62", sigc::mem_fun(*this, &VRGuiSetup::on_art_edit_offset) );
     setEntryCallback("entry63", sigc::mem_fun(*this, &VRGuiSetup::on_art_edit_offset) );
     setEntryCallback("entry8", sigc::mem_fun(*this, &VRGuiSetup::on_haptic_ip_edited) );
+    setEntryCallback("entry15", sigc::mem_fun(*this, &VRGuiSetup::on_netnode_edited) );
+    setEntryCallback("entry20", sigc::mem_fun(*this, &VRGuiSetup::on_netnode_edited) );
+
+    setButtonCallback("button6", sigc::mem_fun(*this, &VRGuiSetup::on_netnode_key_clicked) );
 
     setComboboxCallback("combobox6", sigc::mem_fun(*this, &VRGuiSetup::on_setup_changed) );
     setComboboxCallback("combobox18", sigc::mem_fun(*this, &VRGuiSetup::on_change_view_user) );

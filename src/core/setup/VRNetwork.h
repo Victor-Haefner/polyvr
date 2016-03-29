@@ -13,13 +13,32 @@ using namespace std;
 
 class VRNetworkNode : public VRName {
     private:
-        string IP;
+        string address = "localhost";
+        string user = "user";
+
+        string stat_node = "none";
+        string stat_ssh = "none";
+        string stat_ssh_key = "none";
+
+        void update();
 
     public:
         VRNetworkNode(string name);
         ~VRNetworkNode();
 
         static VRNetworkNodePtr create(string name = "Node");
+
+        string getAddress();
+        string getUser();
+        string getStatNode();
+        string getStatSSH();
+        string getStatSSHkey();
+
+        void setAddress(string);
+        void setUser(string);
+        void set(string a, string u);
+
+        void distributeKey();
 };
 
 class VRNetwork : public VRManager<VRNetworkNode> {

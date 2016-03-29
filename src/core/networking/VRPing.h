@@ -9,6 +9,7 @@ class VRPing {
         VRPing();
 
         bool start(std::string IP, std::string port, int timeout);
+        bool start(std::string IP, int timeout);
 };
 
 #endif // VRPING_H_INCLUDED

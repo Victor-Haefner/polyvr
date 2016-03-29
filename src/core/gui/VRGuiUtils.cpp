@@ -323,6 +323,22 @@ bool askUser(string msg1, string msg2) {
     return false;
 }
 
+string askUserPass(string msg) {
+    Gtk::MessageDialog dialog(msg, false, Gtk::MESSAGE_WARNING, Gtk::BUTTONS_OK_CANCEL);
+    dialog.set_deletable(false);
+
+    Gtk::Entry entry;
+    entry.set_visibility(false);
+    //entry.set_input_purpose(Gtk::INPUT_PURPOSE_PASSWORD);
+
+    auto vb = dialog.get_vbox();
+    vb->pack_end(entry);
+    entry.show();
+
+    if (dialog.run() == Gtk::RESPONSE_OK) return entry.get_text();
+    return "";
+}
+
 OSG::Color4f chooseColor(string drawable, OSG::Color4f current) {
     Glib::RefPtr<Gtk::DrawingArea> darea = Glib::RefPtr<Gtk::DrawingArea>::cast_static(VRGuiBuilder()->get_object(drawable.c_str()));
     Gtk::ColorSelectionDialog cdiag;

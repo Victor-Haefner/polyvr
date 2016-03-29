@@ -14,6 +14,13 @@ bool VRPing::start(string IP, string port, int timeout) {
     boost::asio::ip::tcp::resolver resolver(io);
     boost::asio::ip::tcp::resolver::query query(IP, port);
 
+    // not working?
+    struct timeval tv;
+    tv.tv_sec  = 0;
+    tv.tv_usec = timeout;
+    setsockopt(sock.native(), SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+    setsockopt(sock.native(), SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
+
     bool res = true;
 	try { sock.connect( *resolver.resolve( query ) ); }
 	catch( std::exception& ex ) {
@@ -27,4 +34,8 @@ bool VRPing::start(string IP, string port, int timeout) {
 
 	io.stop();
 	return res;
+}
+
+bool start(std::string IP, int timeout) {
+    ; // TODO
 }

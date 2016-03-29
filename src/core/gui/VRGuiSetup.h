@@ -100,6 +100,9 @@ class VRGuiSetup {
         void on_change_haptic_type();
         void on_toggle_dev_cross();
 
+        void on_netnode_edited();
+        void on_netnode_key_clicked();
+
         void updateObjectData();
 
         void setTreeRow(Glib::RefPtr<Gtk::TreeStore> tree_store, Gtk::TreeStore::Row row, string name, string type, gpointer ptr, string fg = "#000000", string bg = "#FFFFFF");
