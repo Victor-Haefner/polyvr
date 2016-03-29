@@ -221,7 +221,7 @@ void VRNetworkNode::distributeKey() {
 void VRNetworkNode::update() {
     cout << "update network node " << address << endl;
     stat_node = "ok";
-    stat_ssh = "ok";
+    stat_ssh = "";
     stat_ssh_key = "";
 
     VRPing p;
