@@ -514,6 +514,8 @@
 		<Unit filename="src/core/networking/VRPing.h" />
 		<Unit filename="src/core/networking/VRProtocol.cpp" />
 		<Unit filename="src/core/networking/VRProtocol.h" />
+		<Unit filename="src/core/networking/VRSSH.cpp" />
+		<Unit filename="src/core/networking/VRSSH.h" />
 		<Unit filename="src/core/networking/VRSharedMemory.cpp" />
 		<Unit filename="src/core/networking/VRSharedMemory.h" />
 		<Unit filename="src/core/networking/VRSocket.cpp" />
