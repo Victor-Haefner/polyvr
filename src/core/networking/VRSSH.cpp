@@ -7,7 +7,7 @@ VRSSHSession::VRSSHSession(string a, string u) {
     address = a;
     user = u;
 
-    //session = ssh_new();
+    session = ssh_new();
     /*if (session == NULL) { stat = "ssh init failed"; return; }
 
     int verbosity = SSH_LOG_NOLOG; // SSH_LOG_PROTOCOL
@@ -26,7 +26,7 @@ VRSSHSession::VRSSHSession(string a, string u) {
 
 VRSSHSession::~VRSSHSession() {
     //ssh_disconnect(session);
-    //ssh_free(session);
+    ssh_free(session);
 }
 
 shared_ptr<VRSSHSession> VRSSHSession::open(string a, string u) { return shared_ptr<VRSSHSession>( new VRSSHSession(a,u) ); }
