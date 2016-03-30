@@ -21,7 +21,7 @@ class VRManager : public VRName {
         VRManager(string name);
 
         vector< shared_ptr<T> > getData();
-        shared_ptr<T> add(string name = "");
+        virtual shared_ptr<T> add(string name = "");
 
         void rem(shared_ptr<T> t);
         void rem(string name);

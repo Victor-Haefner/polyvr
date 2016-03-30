@@ -59,6 +59,7 @@ class VRGuiSetup {
         void on_menu_add_vrpn_tracker();
         template<class T> void on_menu_add_device();
         void on_menu_add_network_node();
+        void on_menu_add_network_slave();
         void on_menu_delete();
 
         void on_toggle_display_active();
@@ -102,6 +103,8 @@ class VRGuiSetup {
 
         void on_netnode_edited();
         void on_netnode_key_clicked();
+        void on_netslave_edited();
+        void on_netslave_start_clicked();
 
         void updateObjectData();
 

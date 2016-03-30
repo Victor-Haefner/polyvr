@@ -74,6 +74,7 @@ void VRGuiSetup::updateObjectData() {
     setExpanderSensitivity("expander23", false);
     setExpanderSensitivity("expander24", false);
     setExpanderSensitivity("expander25", false);
+    setExpanderSensitivity("expander26", false);
 
     current_scene = VRSceneManager::getCurrent();
 
@@ -227,6 +228,19 @@ void VRGuiSetup::updateObjectData() {
         setLabel("label126", n->getStatSSHkey());
     }
 
+    if (selected_type == "slave") {
+        setExpanderSensitivity("expander26", true);
+        VRNetworkSlave* n = (VRNetworkSlave*)selected_object;
+        setLabel("label138", n->getName());
+        setLabel("label132", n->getStatMulticast());
+        setLabel("label136", n->getStat());
+        setCheckButton("checkbutton30", n->getMulticast());
+        setCheckButton("checkbutton29", n->getFullscreen());
+        setCheckButton("checkbutton41", n->getActiveStereo());
+        setCheckButton("checkbutton42", n->getAutostart());
+        setTextEntry("entry19", n->getDisplay());
+    }
+
     guard = false;
 }
 
@@ -341,6 +355,7 @@ void VRGuiSetup::on_name_edited(const Glib::ustring& path, const Glib::ustring& 
     if (type == "window") current_setup->changeWindowName(name, new_name);
     if (type == "vrpn_tracker") current_setup->changeVRPNDeviceName((VRPN_device*)obj, new_name);
     if (type == "node") ((VRNetworkNode*)obj)->setName(new_name);
+    if (type == "slave") ((VRNetworkSlave*)obj)->setName(new_name);
 
     selected_row[cols.name] = name;
     updateSetup();
@@ -434,6 +449,16 @@ void VRGuiSetup::on_menu_add_device() {
 
 void VRGuiSetup::on_menu_add_network_node() {
     current_setup->getNetwork()->add("Node");
+    updateSetup();
+    setToolButtonSensitivity("toolbutton12", true);
+}
+
+void VRGuiSetup::on_menu_add_network_slave() {
+    if (selected_type != "node") return;
+
+    VRNetworkNode* n = (VRNetworkNode*)selected_object;
+    n->add("Slave");
+
     updateSetup();
     setToolButtonSensitivity("toolbutton12", true);
 }
@@ -743,6 +768,24 @@ void VRGuiSetup::on_netnode_key_clicked() {
     updateObjectData();
 }
 
+void VRGuiSetup::on_netslave_edited() {
+    if (guard) return;
+    VRNetworkSlave* n = (VRNetworkSlave*)selected_object;
+    n->set(getCheckButtonState("checkbutton30"), getCheckButtonState("checkbutton29"),
+           getCheckButtonState("checkbutton41"), getCheckButtonState("checkbutton42"),
+           getTextEntry("entry19"));
+    setToolButtonSensitivity("toolbutton12", true);
+    updateObjectData();
+}
+
+void VRGuiSetup::on_netslave_start_clicked() {
+    if (guard) return;
+    VRNetworkSlave* n = (VRNetworkSlave*)selected_object;
+    n->start();
+    setToolButtonSensitivity("toolbutton12", true);
+    updateObjectData();
+}
+
 void VRGuiSetup::on_haptic_ip_edited() {
     if (guard) return;
     VRHaptic* dev = (VRHaptic*)selected_object;
@@ -805,6 +848,7 @@ VRGuiSetup::VRGuiSetup() {
     menu->appendItem("SM_AddDevMenu", "Mobile", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_device<VRMobile>) );
     menu->appendItem("SM_AddVRPNMenu", "VRPN tracker", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_vrpn_tracker) );
     menu->appendItem("SM_AddNetworkMenu", "Node", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_network_node) );
+    menu->appendItem("SM_AddNetworkMenu", "Slave", sigc::mem_fun(*this, &VRGuiSetup::on_menu_add_network_slave) );
 
     Glib::RefPtr<Gtk::ToolButton> tbutton;
     Glib::RefPtr<Gtk::CheckButton> cbutton;
@@ -849,8 +893,10 @@ VRGuiSetup::VRGuiSetup() {
     setEntryCallback("entry8", sigc::mem_fun(*this, &VRGuiSetup::on_haptic_ip_edited) );
     setEntryCallback("entry15", sigc::mem_fun(*this, &VRGuiSetup::on_netnode_edited) );
     setEntryCallback("entry20", sigc::mem_fun(*this, &VRGuiSetup::on_netnode_edited) );
+    setEntryCallback("entry19", sigc::mem_fun(*this, &VRGuiSetup::on_netslave_edited) );
 
     setButtonCallback("button6", sigc::mem_fun(*this, &VRGuiSetup::on_netnode_key_clicked) );
+    setButtonCallback("button1", sigc::mem_fun(*this, &VRGuiSetup::on_netslave_start_clicked) );
 
     setComboboxCallback("combobox6", sigc::mem_fun(*this, &VRGuiSetup::on_setup_changed) );
     setComboboxCallback("combobox18", sigc::mem_fun(*this, &VRGuiSetup::on_change_view_user) );
@@ -880,6 +926,10 @@ VRGuiSetup::VRGuiSetup() {
     setCheckButtonCallback("checkbutton37", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_dev_cross));
     setCheckButtonCallback("checkbutton39", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_vrpn_test_server));
     setCheckButtonCallback("checkbutton40", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_vrpn_verbose));
+    setCheckButtonCallback("checkbutton29", sigc::mem_fun(*this, &VRGuiSetup::on_netslave_edited));
+    setCheckButtonCallback("checkbutton30", sigc::mem_fun(*this, &VRGuiSetup::on_netslave_edited));
+    setCheckButtonCallback("checkbutton41", sigc::mem_fun(*this, &VRGuiSetup::on_netslave_edited));
+    setCheckButtonCallback("checkbutton42", sigc::mem_fun(*this, &VRGuiSetup::on_netslave_edited));
 
     // primitive list
     fillStringListstore("prim_list", VRPrimitive::getTypes());
@@ -959,6 +1009,10 @@ void VRGuiSetup::updateSetup() {
     for (auto node : current_setup->getNetwork()->getData() ) {
         itr = tree_store->append(network_itr->children());
         setTreeRow(tree_store, *itr, node->getName().c_str(), "node", (gpointer)node.get(), "#000000", "#FFFFFF");
+        for (auto slave : node->getData() ) {
+            itr2 = tree_store->append(itr->children());
+            setTreeRow(tree_store, *itr2, slave->getName().c_str(), "slave", (gpointer)slave.get(), "#000000", "#FFFFFF");
+        }
     }
 
     for (auto win : current_setup->getWindows()) {

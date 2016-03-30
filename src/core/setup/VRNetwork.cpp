@@ -30,11 +30,13 @@ VRNetworkNode::VRNetworkNode(string name) : VRManager("NetworkNode") {
     store("address", &address);
     store("user", &user);
     regStorageUpdateFkt( VRFunction<int>::create("network_node_update", boost::bind(&VRNetworkNode::update, this)) );
+    regStorageUpdateFkt( VRFunction<int>::create("network_node_update2", boost::bind(&VRNetworkNode::initSlaves, this)) );
 }
 
 VRNetworkNode::~VRNetworkNode() {}
 
 VRNetworkNodePtr VRNetworkNode::create(string name) { return VRNetworkNodePtr( new VRNetworkNode(name) ); }
+VRNetworkNodePtr VRNetworkNode::ptr() { return static_pointer_cast<VRNetworkNode>( shared_from_this() ); }
 
 string VRNetworkNode::getAddress() { return address; }
 string VRNetworkNode::getUser() { return user; }
@@ -161,27 +163,37 @@ class VRSSHSession {
             return "ok";
         }
 
-        string exec_cmd(string cmd) {
+        string exec_cmd(string cmd, bool read = true) {
             ssh_channel channel = ssh_channel_new(session);
             if (channel == NULL) return strerror(errno);
 
-            int rc = ssh_channel_open_session(channel);
-            if (rc != SSH_OK) {
-                ssh_channel_free(channel);
+            auto retErr = [&](int step = 2) {
+                if (step > 1) ssh_channel_close(channel);
+                if (step > 0) ssh_channel_free(channel);
                 return strerror(errno);
+            };
+
+            int rc = ssh_channel_open_session(channel);
+            if (rc != SSH_OK) return retErr(1);
+
+            cout << "exec ssh cmd:\n" << cmd << endl;
+            rc = ssh_channel_request_exec(channel, cmd.c_str());
+            if (rc != SSH_OK) return retErr();
+
+            if (read) {
+                char buffer[256]; int nbytes;
+                do {
+                    nbytes = ssh_channel_read(channel, buffer, sizeof(buffer), 0);
+                    if (fwrite(buffer, 1, nbytes, stdout) != nbytes) return retErr();
+                } while (nbytes > 0);
+                if (nbytes < 0) return retErr();
             }
 
-            rc = ssh_channel_request_exec(channel, cmd.c_str());
-            if (rc != SSH_OK) {
-                ssh_channel_close(channel);
-                ssh_channel_free(channel);
-                return strerror(errno);
-            }
+            sleep(3);
 
             ssh_channel_send_eof(channel);
             ssh_channel_close(channel);
             ssh_channel_free(channel);
-
             return "ok";
         }
 
@@ -218,8 +230,20 @@ void VRNetworkNode::distributeKey() {
     update();
 }
 
+VRNetworkSlavePtr VRNetworkNode::add(string name) {
+    auto s = VRManager<VRNetworkSlave>::add(name);
+    s->setNode(ptr());
+    return s;
+}
+
+void VRNetworkNode::initSlaves() {
+    for (auto s : getData()) {
+        s->setNode(ptr());
+        if (s->getAutostart()) s->start();
+    }
+}
+
 void VRNetworkNode::update() {
-    cout << "update network node " << address << endl;
     stat_node = "ok";
     stat_ssh = "";
     stat_ssh_key = "";
@@ -232,9 +256,20 @@ void VRNetworkNode::update() {
     stat_ssh_key = ssh->getKeyStat();
 }
 
+void VRNetworkNode::execCmd(string cmd, bool read) {
+    auto ssh = VRSSHSession::open(address, user);
+    ssh->exec_cmd(cmd, read);
+}
+
 VRNetworkSlave::VRNetworkSlave(string name) {
     setNameSpace("NetworkNode");
     setName(name);
+
+    store("multicast", &multicast);
+    store("fullscreen", &fullscreen);
+    store("active_stereo", &active_stereo);
+    store("display", &display);
+    store("autostart", &autostart);
 
     regStorageUpdateFkt( VRFunction<int>::create("network_slave_update", boost::bind(&VRNetworkSlave::update, this)) );
 }
@@ -243,4 +278,51 @@ VRNetworkSlave::~VRNetworkSlave() {}
 
 VRNetworkSlavePtr VRNetworkSlave::create(string name) { return VRNetworkSlavePtr( new VRNetworkSlave(name) ); }
 
-void VRNetworkSlave::update() {}
+void VRNetworkSlave::update() {} // TODO: compute stats
+
+void VRNetworkSlave::start() {
+    if (!node) return;
+    string path = "~/Projects/polyvr/src/cluster/start";
+    string disp = "export DISPLAY=\"" + display + "\" && ";
+    string pipes = " > /dev/null 2> /dev/null < /dev/null &";
+    string args = multicast ? " -m " + getName() + " " : " -p -a " + node->getAddress();
+    args += fullscreen ? "" : " -w ";
+    args += active_stereo ? " -A " : "";
+    node->execCmd(disp + path + args + pipes, false);
+    update();
+}
+
+void VRNetworkSlave::stop() {
+    if (!node) return;
+    node->execCmd("killall VRServer");
+    update();
+}
+
+void VRNetworkSlave::setNode(VRNetworkNodePtr n) { node = n; }
+
+void VRNetworkSlave::set(bool mc, bool fs, bool as, bool au, string a) {
+    multicast = mc;
+    fullscreen = fs;
+    active_stereo = as;
+    autostart = au;
+    display = a;
+    update();
+}
+
+string VRNetworkSlave::getStatMulticast() { return stat_multicast; }
+string VRNetworkSlave::getStat() { return stat; }
+
+string VRNetworkSlave::getDisplay() { return display; }
+bool VRNetworkSlave::getMulticast() { return multicast; }
+bool VRNetworkSlave::getFullscreen() { return fullscreen; }
+bool VRNetworkSlave::getActiveStereo() { return active_stereo; }
+bool VRNetworkSlave::getAutostart() { return autostart; }
+
+void VRNetworkSlave::setDisplay(string a) { display = a; update(); }
+void VRNetworkSlave::setMulticast(bool b) { multicast = b; update(); }
+void VRNetworkSlave::setFullscreen(bool b) { fullscreen = b; update(); }
+void VRNetworkSlave::setAutostart(bool b) { autostart = b; update(); }
+
+
+
+

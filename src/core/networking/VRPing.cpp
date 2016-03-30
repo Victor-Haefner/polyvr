@@ -70,5 +70,5 @@ bool VRPing::start(string IP, string port, int timeout) {
 }
 
 bool start(std::string IP, int timeout) {
-    ; // TODO
+    return false; // TODO
 }

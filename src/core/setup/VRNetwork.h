@@ -15,14 +15,45 @@ class VRNetworkSlave : public VRName {
     private:
         void update();
 
+        string stat_multicast;
+        string stat;
+        VRNetworkNodePtr node;
+
+        string display;
+        bool multicast = true;
+        bool fullscreen = true;
+        bool active_stereo = true;
+        bool autostart = false;
+
     public:
         VRNetworkSlave(string name);
         ~VRNetworkSlave();
 
         static VRNetworkSlavePtr create(string name = "Slave");
+
+        void setNode(VRNetworkNodePtr n);
+        void set(bool mc, bool fs, bool as, bool au, string a);
+
+        void start();
+        void stop();
+
+        string getStatMulticast();
+        string getStat();
+
+        string getDisplay();
+        bool getMulticast();
+        bool getFullscreen();
+        bool getActiveStereo();
+        bool getAutostart();
+
+        void setMulticast(bool b);
+        void setFullscreen(bool b);
+        void setActiveStereo(bool b);
+        void setAutostart(bool b);
+        void setDisplay(string a);
 };
 
-class VRNetworkNode : public VRManager<VRNetworkSlave> {
+class VRNetworkNode : public VRManager<VRNetworkSlave>, public std::enable_shared_from_this<VRNetworkNode> {
     private:
         string address = "localhost";
         string user = "user";
@@ -31,6 +62,7 @@ class VRNetworkNode : public VRManager<VRNetworkSlave> {
         string stat_ssh = "none";
         string stat_ssh_key = "none";
 
+        void initSlaves();
         void update();
 
     public:
@@ -38,6 +70,9 @@ class VRNetworkNode : public VRManager<VRNetworkSlave> {
         ~VRNetworkNode();
 
         static VRNetworkNodePtr create(string name = "Node");
+        VRNetworkNodePtr ptr();
+
+        virtual VRNetworkSlavePtr add(string name = "");
 
         string getAddress();
         string getUser();
@@ -50,6 +85,7 @@ class VRNetworkNode : public VRManager<VRNetworkSlave> {
         void set(string a, string u);
 
         void distributeKey();
+        void execCmd(string cmd, bool read = true);
 };
 
 class VRNetwork : public VRManager<VRNetworkNode> {
