@@ -7,14 +7,6 @@
 #include <libssh/libssh.h>
 #include <boost/filesystem.hpp>
 
-/*
-
-IMPORTANT: ..not compiling? you need to install the libssh-dev package!
-open a terminal
-sudo apt-get install libssh-dev
-
-*/
-
 using namespace OSG;
 
 //template<> class VRManager<VRNetworkNode>;

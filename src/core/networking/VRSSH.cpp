@@ -7,7 +7,7 @@ VRSSHSession::VRSSHSession(string a, string u) {
     address = a;
     user = u;
 
-    session = ssh_new();
+    session = libssh2_session_init();
     /*if (session == NULL) { stat = "ssh init failed"; return; }
 
     int verbosity = SSH_LOG_NOLOG; // SSH_LOG_PROTOCOL
@@ -25,8 +25,8 @@ VRSSHSession::VRSSHSession(string a, string u) {
 }
 
 VRSSHSession::~VRSSHSession() {
-    //ssh_disconnect(session);
-    ssh_free(session);
+    libssh2_session_disconnect(session, "Client disconnecting normally");
+    libssh2_session_free(session);
 }
 
 shared_ptr<VRSSHSession> VRSSHSession::open(string a, string u) { return shared_ptr<VRSSHSession>( new VRSSHSession(a,u) ); }

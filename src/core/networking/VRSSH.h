@@ -3,13 +3,21 @@
 
 #include <memory>
 #include <string>
-#include <libssh/libssh.h>
+#include <libssh2.h>
 
 using namespace std;
 
+/*
+
+IMPORTANT: ..not compiling? you need to install the libssh2-1-dev package!
+open a terminal
+sudo apt-get install libssh2-1-dev
+
+*/
+
 class VRSSHSession {
     private:
-        ssh_session session;
+        LIBSSH2_SESSION* session;
         string stat;
         string stat_key;
         string address;
