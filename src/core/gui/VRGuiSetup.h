@@ -103,6 +103,7 @@ class VRGuiSetup {
 
         void on_netnode_edited();
         void on_netnode_key_clicked();
+        void on_netnode_stopall_clicked();
         void on_netslave_edited();
         void on_netslave_start_clicked();
 

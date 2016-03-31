@@ -19,10 +19,10 @@ class VRNetworkSlave : public VRName {
         string stat;
         VRNetworkNodePtr node;
 
-        string display;
+        string display = ":0.0";
         bool multicast = true;
         bool fullscreen = true;
-        bool active_stereo = true;
+        bool active_stereo = false;
         bool autostart = false;
 
     public:
@@ -85,7 +85,8 @@ class VRNetworkNode : public VRManager<VRNetworkSlave>, public std::enable_share
         void set(string a, string u);
 
         void distributeKey();
-        void execCmd(string cmd, bool read = true);
+        string execCmd(string cmd, bool read = true);
+        void stopSlaves();
 };
 
 class VRNetwork : public VRManager<VRNetworkNode> {

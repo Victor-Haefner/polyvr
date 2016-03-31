@@ -2,71 +2,114 @@
 #include "core/gui/VRGuiUtils.h"
 
 #include <boost/filesystem.hpp>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
+#include "core/utils/toString.h"
+
+#ifndef INADDR_NONE
+#define INADDR_NONE (in_addr_t)-1
+#endif
 
 VRSSHSession::VRSSHSession(string a, string u) {
     address = a;
     user = u;
 
     session = libssh2_session_init();
-    /*if (session == NULL) { stat = "ssh init failed"; return; }
+    if (session == NULL) { stat = "ssh init failed"; return; }
 
-    int verbosity = SSH_LOG_NOLOG; // SSH_LOG_PROTOCOL
-    int port = 22;
-    ssh_options_set(session, SSH_OPTIONS_HOST, address.c_str());
-    ssh_options_set(session, SSH_OPTIONS_LOG_VERBOSITY, &verbosity);
-    ssh_options_set(session, SSH_OPTIONS_PORT, &port);
-
-    int rc = ssh_connect(session);
-    if (rc != SSH_OK) { stat = ssh_get_error(session); ssh_free(session); return; }
+    stat = connect_session();
+    if (stat != "ok") return;
 
     stat = verify_knownhost();
     if (stat != "ok") return;
-    stat = auth_user();*/
+
+    stat = auth_user();
 }
 
 VRSSHSession::~VRSSHSession() {
     libssh2_session_disconnect(session, "Client disconnecting normally");
     libssh2_session_free(session);
+    //libssh2_exit();
 }
 
 shared_ptr<VRSSHSession> VRSSHSession::open(string a, string u) { return shared_ptr<VRSSHSession>( new VRSSHSession(a,u) ); }
 
-string VRSSHSession::verify_knownhost() {
-    /*int state = ssh_is_server_known(session);
-    unsigned char *hash = NULL;
-    int hlen = ssh_get_pubkey_hash(session, &hash);
-    if (hlen < 0) return "Got no hash from host.";
-    char* hexa = ssh_get_hexa(hash, hlen);
-    string Hash(hexa);
-    free(hexa);
-    free(hash);
+string VRSSHSession::lastError(int pos) {
+    char* msg;
+    libssh2_session_last_error(session, &msg, NULL, 0);
+    return "Error: " + toString(pos) + " " + string(msg);
+}
+
+string VRSSHSession::connect_session() { // close(sock);
+    auto sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (sock == -1) return "Error opening socket";
+
+    struct sockaddr_in server;
+    server.sin_family = AF_INET;
+
+    struct hostent* he;
+    if ( (he = gethostbyname(address.c_str()) ) == NULL ) return "Could not resolve hostname " + address;
+    memcpy(&server.sin_addr, he->h_addr_list[0], he->h_length);
+
+    server.sin_port = htons(22);
+    if (connect(sock, (struct sockaddr*)(&server), sizeof(struct sockaddr_in)) != 0)
+        return "Failed to connect";
+
+    int rc = libssh2_session_handshake(session, sock);
+    if (rc) return lastError(1);
+    return "ok";
+}
+
+string VRSSHSession::verify_knownhost() { // TODO
+    string Hash = libssh2_hostkey_hash(session, LIBSSH2_HOSTKEY_HASH_SHA1);
+    size_t HKlen; int HKtype;
+    auto HKey = libssh2_session_hostkey(session, &HKlen, &HKtype);
+    // LIBSSH2_HOSTKEY_TYPE_UNKNOWN 0
+    // LIBSSH2_HOSTKEY_TYPE_RSA 1
+    // LIBSSH2_HOSTKEY_TYPE_DSS 2
+
+    // #define LIBSSH2_KNOWNHOST_KEY_RSA1     (1<<18)
+    // #define LIBSSH2_KNOWNHOST_KEY_SSHRSA   (2<<18)
+    // #define LIBSSH2_KNOWNHOST_KEY_SSHDSS   (3<<18)
 
     string err;
-    switch (state) {
-        case SSH_SERVER_KNOWN_OK: return "ok";
-        case SSH_SERVER_ERROR: return ssh_get_error(session);
-        case SSH_SERVER_KNOWN_CHANGED:
-            err = "Host key for server changed."; break;
-        case SSH_SERVER_FOUND_OTHER:
-            err = "The host key for this server was not found but an other type of key exists."; break;
-        case SSH_SERVER_FILE_NOT_FOUND:
-            err = "Could not find known host file."; break;
-        case SSH_SERVER_NOT_KNOWN:
-            err = "The server is unknown."; break;
-    }
+    LIBSSH2_KNOWNHOSTS* nh = libssh2_knownhost_init(session);
+    if (!nh) return lastError(2);
+    string kf = getenv("HOME") + keyFolder + "known_hosts";
+    int rc = libssh2_knownhost_readfile(nh, kf.c_str(), LIBSSH2_KNOWNHOST_FILE_OPENSSH);
+    if (rc < 0) return lastError(3);
+
+    int mode = LIBSSH2_KNOWNHOST_TYPE_PLAIN | LIBSSH2_KNOWNHOST_KEYENC_RAW;
+    struct libssh2_knownhost *host;
+    int check = libssh2_knownhost_checkp(nh, address.c_str(), 22, Hash.c_str(), Hash.size(), mode, &host);
+    if (check == LIBSSH2_KNOWNHOST_CHECK_NOTFOUND) err = "Host not found";
+    if (check == LIBSSH2_KNOWNHOST_CHECK_MISMATCH) ; //err = "Host mismatch"; // TODO
+    if (check == LIBSSH2_KNOWNHOST_CHECK_FAILURE) err = "Host check failure";
 
     if (err.size()) {
-        askUser(err, "If you trust the host key (hash):\n" + Hash + "\nthe host will be added to your list of known hosts.");
-        if (ssh_write_knownhost(session) < 0) return strerror(errno);
+        bool ok = askUser(err, "If you trust the host key (hash):\n" + Hash + "\nthe host will be added to your list of known hosts.");
+        if (!ok) return "Host not trusted by user";
+        int mode2 = LIBSSH2_KNOWNHOST_TYPE_PLAIN | LIBSSH2_KNOWNHOST_KEYENC_RAW | ((HKtype+1) << LIBSSH2_KNOWNHOST_KEY_SHIFT); // LIBSSH2_KNOWNHOST_KEY_RSA1, LIBSSH2_KNOWNHOST_KEY_SSHRSA or LIBSSH2_KNOWNHOST_KEY_SSHDSS
+        rc = libssh2_knownhost_addc(nh, address.c_str(), 0, HKey, HKlen, NULL, 0, mode2, NULL );
+        if (rc < 0) return lastError(31);
+        rc = libssh2_knownhost_writefile(nh, kf.c_str(), LIBSSH2_KNOWNHOST_FILE_OPENSSH);
+        if (rc < 0) return lastError(32);
     }
 
-    return "ok";*/
+    libssh2_knownhost_free(nh);
+    return "ok";
 }
 
 string VRSSHSession::auth_user() {
-    /*int rc = ssh_userauth_publickey_auto(session, NULL, NULL);
-    if (rc != SSH_AUTH_SUCCESS) return ssh_get_error(session);
-    return "ok";*/
+    string kf = getenv("HOME") + keyFolder;
+    string pk1 = kf + pubKeyPath;
+    string pk2 = kf + privKeyPath;
+    int rc = libssh2_userauth_publickey_fromfile(session, user.c_str(), pk1.c_str(), pk2.c_str(), NULL);
+    if (rc < 0) return lastError(4);
+    return "ok";
 }
 
 bool VRSSHSession::hasLocalKey() {
@@ -76,12 +119,12 @@ bool VRSSHSession::hasLocalKey() {
     return boost::filesystem::exists(kf+privKeyPath);
 }
 
-string VRSSHSession::checkLocalKeyPair() {
-    /*if (hasLocalKey()) return "ok";
+string VRSSHSession::checkLocalKeyPair() { // TODO
+    if (hasLocalKey()) return "ok";
     cout << "Warning! generate new ssh key pair!" << endl;
     string kf = getenv("HOME") + keyFolder;
 
-    ssh_key priv, pub;
+    /*ssh_key priv, pub;
 
     int rc = ssh_pki_generate(SSH_KEYTYPE_RSA, 2048, &priv);
     if (rc != SSH_OK) return strerror(errno);
@@ -93,49 +136,43 @@ string VRSSHSession::checkLocalKeyPair() {
     if (rc != SSH_OK) return strerror(errno);
 
     ssh_key_free(priv);
-    ssh_key_free(pub);
-    return "ok";*/
+    ssh_key_free(pub);*/
+    return "ok";
 }
 
 string VRSSHSession::exec_cmd(string cmd, bool read) {
-    /*ssh_channel channel = ssh_channel_new(session);
-    if (channel == NULL) return strerror(errno);
-
-    auto retErr = [&](int step = 2) {
-        if (step > 1) ssh_channel_close(channel);
-        if (step > 0) ssh_channel_free(channel);
-        return strerror(errno);
-    };
-
-    int rc = ssh_channel_open_session(channel);
-    if (rc != SSH_OK) return retErr(1);
+    auto channel = libssh2_channel_open_session(session);
+    if (channel == NULL) return lastError(6);
 
     cout << "exec ssh cmd:\n" << cmd << endl;
-    rc = ssh_channel_request_exec(channel, cmd.c_str());
-    if (rc != SSH_OK) return retErr();
+    int rc = libssh2_channel_exec(channel, cmd.c_str());
+    if (rc) return lastError(61);
 
     if (read) {
-        char buffer[256]; int nbytes;
+        char buffer[256];
         do {
-            nbytes = ssh_channel_read(channel, buffer, sizeof(buffer), 0);
-            if (fwrite(buffer, 1, nbytes, stdout) != nbytes) return retErr();
-        } while (nbytes > 0);
-        if (nbytes < 0) return retErr();
+            rc = libssh2_channel_read(channel, buffer, sizeof(buffer) );
+            if( rc > 0 ) {
+                for( int i=0; i < rc; ++i ) fputc( buffer[i], stderr);
+                fprintf(stderr, "\n");
+            } else if( rc != LIBSSH2_ERROR_EAGAIN ) return lastError(62);
+        } while (rc > 0);
+        if (rc < 0) return lastError(63);
     }
 
-    sleep(3);
-
-    ssh_channel_send_eof(channel);
-    ssh_channel_close(channel);
-    ssh_channel_free(channel);
-    return "ok";*/
+    rc = libssh2_channel_send_eof(channel);
+    if (rc < 0) return lastError(64);
+    rc = libssh2_channel_close(channel);
+    if (rc < 0) return lastError(65);
+    libssh2_channel_free(channel);
+    return "ok";
 }
 
 void VRSSHSession::distrib_key() {
-    /*if (stat == "ok") { stat_key = "ok"; return; }
+    if (stat == "ok") { stat_key = "ok"; return; }
     string pw = askUserPass("No pubkey acces, enter password for " + user + "@" + address + " to distribute the key");
-    int rc = ssh_userauth_password(session, NULL, pw.c_str());
-    if (rc != SSH_AUTH_SUCCESS) { stat_key = strerror(errno); return; }
+    int rc = libssh2_userauth_password(session, user.c_str(), pw.c_str());
+    if (rc < 0) { stat_key = lastError(5); return; }
 
     stat_key = checkLocalKeyPair();
     if (stat_key != "ok") return;
@@ -145,7 +182,7 @@ void VRSSHSession::distrib_key() {
     string key_data((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
     file.close();
 
-    stat_key = exec_cmd("echo \"" + key_data + "\" >> ~/.ssh/authorized_keys");*/
+    stat_key = exec_cmd("echo \"" + key_data + "\" >> ~/.ssh/authorized_keys");
 }
 
 VRSSHSession::operator bool() const { return (stat == "ok"); }

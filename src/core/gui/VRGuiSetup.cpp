@@ -764,7 +764,13 @@ void VRGuiSetup::on_netnode_key_clicked() {
     if (guard) return;
     VRNetworkNode* n = (VRNetworkNode*)selected_object;
     n->distributeKey();
-    setToolButtonSensitivity("toolbutton12", true);
+    updateObjectData();
+}
+
+void VRGuiSetup::on_netnode_stopall_clicked() {
+    if (guard) return;
+    VRNetworkNode* n = (VRNetworkNode*)selected_object;
+    n->stopSlaves();
     updateObjectData();
 }
 
@@ -782,7 +788,6 @@ void VRGuiSetup::on_netslave_start_clicked() {
     if (guard) return;
     VRNetworkSlave* n = (VRNetworkSlave*)selected_object;
     n->start();
-    setToolButtonSensitivity("toolbutton12", true);
     updateObjectData();
 }
 
@@ -897,6 +902,7 @@ VRGuiSetup::VRGuiSetup() {
 
     setButtonCallback("button6", sigc::mem_fun(*this, &VRGuiSetup::on_netnode_key_clicked) );
     setButtonCallback("button1", sigc::mem_fun(*this, &VRGuiSetup::on_netslave_start_clicked) );
+    setButtonCallback("button30", sigc::mem_fun(*this, &VRGuiSetup::on_netnode_stopall_clicked) );
 
     setComboboxCallback("combobox6", sigc::mem_fun(*this, &VRGuiSetup::on_setup_changed) );
     setComboboxCallback("combobox18", sigc::mem_fun(*this, &VRGuiSetup::on_change_view_user) );

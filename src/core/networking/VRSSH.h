@@ -29,6 +29,8 @@ class VRSSHSession {
         //string privKeyPath = "~/.ssh/id_rsa";
         //string pubKeyPath = "~/.ssh/id_rsa.pub";
 
+        string lastError(int pos);
+
     public:
         VRSSHSession(string a, string u);
 
@@ -37,16 +39,14 @@ class VRSSHSession {
         static shared_ptr<VRSSHSession> open(string a, string u);
 
         string verify_knownhost();
-
         string auth_user();
+        string connect_session();
 
         bool hasLocalKey();
-
         string checkLocalKeyPair();
 
-        string exec_cmd(string cmd, bool read = true);
-
         void distrib_key();
+        string exec_cmd(string cmd, bool read = true);
 
         operator bool() const;
         string getStat();
