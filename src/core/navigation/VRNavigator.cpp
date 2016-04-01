@@ -4,6 +4,7 @@
 #include "core/objects/VRTransform.h"
 #include "core/utils/VRFunctionFwd.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/toString.h"
 #include "core/setup/devices/VRSignal.h"
 #include "core/setup/devices/VRDevice.h"
 #include "core/setup/devices/VRMouse.h"
@@ -124,6 +125,23 @@ void VRNavigator_base::setActiveNavigation(string s) {
 VRNavPreset* VRNavigator_base::getNavigation(string s) {
     if (presets.count(s) == 0) return 0;
     return presets[s];
+}
+
+string VRNavigator_base::getNavigationTip(string s) {
+    string res;
+    if (presets.count(s) == 0) return res;
+    VRNavPreset* p = presets[s];
+
+    auto& bngs = p->getBindings();
+    for ( int i=0; i<bngs.size(); i++ ) {
+        auto& v = bngs[i];
+        res += v.cb->getName() + " ";
+        res += toString(v.key) + " ";
+        res += toString(v.state);
+        if (i < bngs.size()-1) res += "\n";
+    }
+
+    return res;
 }
 
 string VRNavigator_base::getActiveNavigation() { return current_name; }

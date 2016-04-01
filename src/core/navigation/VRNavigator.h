@@ -78,6 +78,7 @@ class VRNavigator_base : public VRStorage {
         VRNavPreset* getNavigation(string s);
         map<string, VRNavPreset*> getNavigations();
         vector<string> getNavigationNames();
+        string getNavigationTip(string name);
 
         void storeNavigationCallback(VRDeviceCb cb);
         map<string, VRDeviceCb>& getNavigationCallbacks();

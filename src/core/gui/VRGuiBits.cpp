@@ -72,6 +72,7 @@ void VRGuiBits::on_navigation_changed() {
     string name = getComboboxText("combobox9");
     scene->setActiveNavigation(name);
     setCombobox("combobox5", getListStorePos("nav_presets", name));
+    setTooltip("combobox9", scene->getNavigationTip(name) );
 }
 
 void VRGuiBits::on_new_cancel_clicked() {

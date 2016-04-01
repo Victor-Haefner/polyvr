@@ -528,3 +528,9 @@ void hideDialog(string d) {
     dialog->hide();
 }
 
+void setTooltip(string widget, string tp) {
+    Gtk::Widget* w;
+    VRGuiBuilder()->get_widget(widget, w);
+    w->set_tooltip_text(tp);
+}
+

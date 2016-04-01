@@ -68,6 +68,7 @@ void setNotebookSensitivity(string nb, bool b);
 void setVPanedSensitivity(string vp, bool b);
 void setNoteBookCallback(string nb, void (* fkt)(GtkNotebook*, GtkNotebookPage*, guint, gpointer) , gpointer ptr = NULL);
 void setNotebookPage(string nb, int p);
+void setTooltip(string widget, string tp);
 
 bool keySignalProxy(GdkEventKey* e, string k, sigc::slot<void> sig );
 void setExpanderSensitivity(string exp, bool b);
