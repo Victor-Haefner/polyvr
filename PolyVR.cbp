@@ -203,6 +203,7 @@
 			<Add directory="/usr/lib/CEF" />
 			<Add directory="/usr/include/CEF/include" />
 			<Add directory="/usr/lib/STEPcode" />
+			<Add directory="/usr/lib/1.4" />
 		</Linker>
 		<ExtraCommands>
 			<Add after='/bin/bash -c &quot;cp -u -p ressources/cef/icudtl.dat bin/Debug/ 2&gt;/dev/null&quot;' />

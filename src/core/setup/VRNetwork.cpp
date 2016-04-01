@@ -4,7 +4,6 @@
 #include "core/networking/VRSSH.h"
 #include "core/gui/VRGuiUtils.h"
 
-#include <libssh/libssh.h>
 #include <boost/filesystem.hpp>
 
 using namespace OSG;
