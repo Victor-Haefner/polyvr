@@ -44,7 +44,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setPlaneConstraints", (PyCFunction)VRPyTransform::setPlaneConstraints, METH_VARARGS, "Constraint the object on a plane - setPlaneConstraints(nxf, nyf, nzf)" },
     {"setAxisConstraints", (PyCFunction)VRPyTransform::setAxisConstraints, METH_VARARGS, "Constraint the object on an axis - TODO -> to test, may work" },
     {"setRotationConstraints", (PyCFunction)VRPyTransform::setRotationConstraints, METH_VARARGS, "Constraint the object's rotation - setRotationConstraints(xi, yi, zi)" },
-    {"physicalize", (PyCFunction)VRPyTransform::physicalize, METH_VARARGS, "physicalize subtree - physicalize( physicalized , dynamic , concave )" },
+    {"physicalize", (PyCFunction)VRPyTransform::physicalize, METH_VARARGS, "physicalize subtree - physicalize( bool physicalized , bool dynamic , str shape, float shape param )\n\tshape can be: ['Box', 'Sphere', 'Convex', 'Concave', 'ConvexDecomposed']" },
     {"setGhost", (PyCFunction)VRPyTransform::setGhost, METH_VARARGS, "Set the physics object to be a ghost object - setGhost(bool)" },
     {"attach", (PyCFunction)VRPyTransform::setPhysicsConstraintTo, METH_VARARGS,
         "create a constraint between this object and another - \n"
@@ -55,7 +55,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setCollisionMargin", (PyCFunction)VRPyTransform::setCollisionMargin, METH_VARARGS, "Set the collision margin of the physics object" },
     {"setCollisionGroup", (PyCFunction)VRPyTransform::setCollisionGroup, METH_VARARGS, "Set the collision group of the physics object - setCollisionGroup(int g)\n\t g can be from 0 to 8" },
     {"setCollisionMask", (PyCFunction)VRPyTransform::setCollisionMask, METH_VARARGS, "Set the collision mask of the physics object - setCollisionMask(int g)\n\t g can be from 0 to 8 and it is the group to collide with" },
-    {"setCollisionShape", (PyCFunction)VRPyTransform::setCollisionShape, METH_VARARGS, "Set the collision mask of the physics object" },
+    {"setCollisionShape", (PyCFunction)VRPyTransform::setCollisionShape, METH_VARARGS, "Set the collision shape of the physics object, see physicalize" },
     {"getCollisions", (PyCFunction)VRPyTransform::getCollisions, METH_NOARGS, "Return the current collisions with other objects" },
     {"applyImpulse", (PyCFunction)VRPyTransform::applyImpulse, METH_VARARGS, "Apply impulse on the physics object" },
     {"applyTorqueImpulse", (PyCFunction)VRPyTransform::applyTorqueImpulse, METH_VARARGS, "Apply torque impulse on the physics object" },
@@ -358,16 +358,23 @@ PyObject* VRPyTransform::setRotationConstraints(VRPyTransform* self, PyObject* a
 
 PyObject* VRPyTransform::physicalize(VRPyTransform* self, PyObject *args) {
     if (!self->valid()) return NULL;
-    int b1, b2, b3;
-    if (! PyArg_ParseTuple(args, "iii", &b1, &b2, &b3)) return NULL;
+    int doPhys = 1;
+    int isDyn = 1;
+    int deprc_shp = 1;
+    const char* shape = "Convex";
+    float param = 0;
+
+    if ( PyArg_ParseTuple(args, "iii", &doPhys, &isDyn, &deprc_shp)) { // backwards compatibility
+        shape = deprc_shp == 1 ? "Concave" : "Convex";
+    } else if (! PyArg_ParseTuple(args, "|iisf", &doPhys, &isDyn, (char*)&shape, &param)) return NULL;
     OSG::VRTransformPtr geo = (OSG::VRTransformPtr) self->objPtr;
 
-    if (geo->getPhysics()) {
-        geo->getPhysics()->setDynamic(b2);
-        if (b3) geo->getPhysics()->setShape("Concave");
-        else geo->getPhysics()->setShape("Convex");
-        geo->getPhysics()->setPhysicalized(b1);
+    if (auto p = geo->getPhysics()) {
+        p->setDynamic(isDyn);
+        p->setShape(shape, param);
+        p->setPhysicalized(doPhys);
     }
+
     Py_RETURN_TRUE;
 }
 

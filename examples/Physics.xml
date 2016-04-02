@@ -59,11 +59,11 @@
 	z3.setDamping(ld,ad)
 	s.setDamping(ld,ad)
 	
-	a.physicalize(True, False, False)
-	z1.physicalize(True, True, False)
-	z2.physicalize(True, True, False)
-	z3.physicalize(True, True, False)
-	s.physicalize(True, True, False)
+	a.physicalize(True, False)
+	z1.physicalize(True, True)
+	z2.physicalize(True, True)
+	z3.physicalize(True, True)
+	s.physicalize(True, True)
 	
 	def setupJoint(a,b,d1,d2):
 		c = VR.Constraint()
