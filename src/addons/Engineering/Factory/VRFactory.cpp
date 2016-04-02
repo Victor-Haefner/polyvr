@@ -83,15 +83,15 @@ struct Geo {
     }
 };
 
-VRTransformPtr VRFactory::loadVRML(string path) { // wrl filepath
+void VRFactory::loadVRML(string path, VRProgressPtr progress, VRTransformPtr res) { // wrl filepath
     ifstream file(path);
-    if (!file.is_open()) { cout << "file " << path << " not found" << endl; return 0; }
+    if (!file.is_open()) { cout << "file " << path << " not found" << endl; return; }
 
     // get file size
     file.seekg(0, ios_base::end);
     size_t fileSize = file.tellg();
     file.seekg(0, ios_base::beg);
-    VRProgress prog("load VRML " + path, fileSize);
+    progress->setup("load VRML " + path, fileSize);
 
     int state = 0;
     map<int, string> states;
@@ -121,7 +121,7 @@ VRTransformPtr VRFactory::loadVRML(string path) { // wrl filepath
 
     string line;
     while ( getline(file, line) ) {
-        prog.update( line.size() );
+        progress->update( line.size() );
         li++;
 
         for (auto d : states) {
@@ -190,7 +190,7 @@ VRTransformPtr VRFactory::loadVRML(string path) { // wrl filepath
     file.close();
     cout << "\nloaded " << geos.size() << " geometries" << endl;
 
-    VRTransformPtr res = VRTransform::create("factory");
+    res->setName("factory");
     res->setPersistency(0);
 
     for (auto g : geos) {
@@ -215,8 +215,6 @@ VRTransformPtr VRFactory::loadVRML(string path) { // wrl filepath
     }
 
     cout << "\nloaded2 " << res->getChildrenCount() << " geometries" << endl;
-
-    return res;
 }
 
 class VRLODSpace : public VRObject {
@@ -267,7 +265,11 @@ class VRLODSpace : public VRObject {
 
 VRObjectPtr VRFactory::setupLod(vector<string> paths) {
     vector<VRObjectPtr> objects;
-    for (auto p : paths) objects.push_back( loadVRML(p) );
+    for (auto p : paths) {
+        auto res = VRTransform::create("factory");
+        loadVRML(p,0,res);
+        objects.push_back( res );
+    }
     Vec3f p;
 
     commitChanges();

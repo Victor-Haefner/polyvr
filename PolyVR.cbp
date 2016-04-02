@@ -731,6 +731,8 @@
 		<Unit filename="src/core/scripting/VRPyPolygonSelection.h" />
 		<Unit filename="src/core/scripting/VRPyPose.cpp" />
 		<Unit filename="src/core/scripting/VRPyPose.h" />
+		<Unit filename="src/core/scripting/VRPyProgress.cpp" />
+		<Unit filename="src/core/scripting/VRPyProgress.h" />
 		<Unit filename="src/core/scripting/VRPyProjectManager.cpp" />
 		<Unit filename="src/core/scripting/VRPyProjectManager.h" />
 		<Unit filename="src/core/scripting/VRPyRecorder.cpp" />
@@ -890,6 +892,7 @@
 		<Unit filename="src/core/utils/VRStorage_template.h" />
 		<Unit filename="src/core/utils/VRTimer.cpp" />
 		<Unit filename="src/core/utils/VRTimer.h" />
+		<Unit filename="src/core/utils/VRUtilsFwd.h" />
 		<Unit filename="src/core/utils/VRVisualLayer.cpp" />
 		<Unit filename="src/core/utils/VRVisualLayer.h" />
 		<Unit filename="src/core/utils/coreDumpHandler.cpp" />

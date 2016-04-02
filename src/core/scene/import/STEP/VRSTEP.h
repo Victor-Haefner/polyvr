@@ -95,7 +95,7 @@ class VRSTEP {
     public:
         VRSTEP();
 
-        VRTransformPtr load(string file);
+        void load(string file, VRTransformPtr res);
 };
 
 OSG_END_NAMESPACE;

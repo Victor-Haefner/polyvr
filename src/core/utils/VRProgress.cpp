@@ -1,17 +1,16 @@
 #include "VRProgress.h"
 
-VRProgress::VRProgress(string title, int max, Mode m) {
-    this->title = title;
-    N_100 = max/100.0;
-    mode = m;
-    reset();
-}
+#include "VRFunction.h"
+
+VRProgress::VRProgress(string title, int max, Mode m) { setup(title, max, m); }
 
 VRProgress::~VRProgress() {
 	if (mode == CONSOLE_M) cout << endl;
 }
 
-void VRProgress::setCallback(VRFunction<int>* cb) { callback = cb; }
+void VRProgress::setCallback(VRUpdatePtr cb) { callback = cb; }
+
+VRProgressPtr VRProgress::create() { return VRProgressPtr( new VRProgress() ); }
 
 void VRProgress::update(int i) {
     j+=i;
@@ -25,13 +24,17 @@ void VRProgress::update(int i) {
             cout << "\r" << title << " " << k << "%" << flush;
             break;
 		case CALLBACK_M:
-            (*callback)(k);
+            if (auto cl = callback.lock()) (*cl)(k);
             break;
         case WIDGET_M:
             break;
     }
 }
 
-void VRProgress::reset() {
-    k = j = 0;
+void VRProgress::reset() { k = j = 0; }
+void VRProgress::setup(string title, int max, Mode m) {
+    this->title = title;
+    N_100 = max/100.0;
+    mode = m;
+    reset();
 }

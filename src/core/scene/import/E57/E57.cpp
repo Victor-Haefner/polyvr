@@ -9,17 +9,17 @@ using namespace e57;
 using namespace std;
 using namespace OSG;
 
-VRTransformPtr OSG::loadE57(string path) {
-    VRTransformPtr res = VRTransform::create(path);
+void OSG::loadE57(string path, VRTransformPtr res) {
+    res->setName(path);
 
     try {
         ImageFile imf(path, "r"); // Read file from disk
 
         StructureNode root = imf.root();
-        if (!root.isDefined("/data3D")) { cout << "File doesn't contain 3D images" << endl; return 0; }
+        if (!root.isDefined("/data3D")) { cout << "File doesn't contain 3D images" << endl; return; }
 
         e57::Node n = root.get("/data3D");
-        if (n.type() != E57_VECTOR) { cout << "bad file" << endl; return 0; }
+        if (n.type() != E57_VECTOR) { cout << "bad file" << endl; return; }
 
         VectorNode data3D(n);
         int64_t scanCount = data3D.childCount(); // number of scans in file
@@ -76,10 +76,9 @@ VRTransformPtr OSG::loadE57(string path) {
 
         imf.close();
     }
-    catch (E57Exception& ex) { ex.report(__FILE__, __LINE__, __FUNCTION__); return 0; }
-    catch (std::exception& ex) { cerr << "Got an std::exception, what=" << ex.what() << endl; return 0; }
-    catch (...) { cerr << "Got an unknown exception" << endl; return 0; }
-    return res;
+    catch (E57Exception& ex) { ex.report(__FILE__, __LINE__, __FUNCTION__); return; }
+    catch (std::exception& ex) { cerr << "Got an std::exception, what=" << ex.what() << endl; return; }
+    catch (...) { cerr << "Got an unknown exception" << endl; return; }
 }
 
 //void writeE57(VRGeometryPtr geo, string path);

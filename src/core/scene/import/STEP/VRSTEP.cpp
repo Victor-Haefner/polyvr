@@ -785,7 +785,7 @@ void VRSTEP::buildScenegraph() {
     cout << "VRSTEP::buildScenegraph ProductToSRep " << ProductToSRep.size() << endl;
 
     // get product definitions -------------------------------------
-    resRoot = VRTransform::create("STEPRoot");
+    resRoot->setName("STEPRoot");
     VRObjectPtr root;
     map<string, VRTransformPtr> objs;
 
@@ -883,10 +883,10 @@ void VRSTEP::build() {
     cout << resGeos.size() << " VR objects created\n";
 }
 
-VRTransformPtr VRSTEP::load(string file) {
+void VRSTEP::load(string file, VRTransformPtr t) {
+    resRoot = t;
     open(file);
     build();
-    return resRoot;
 }
 
 /* ------------------------------ DOC -----------------------------------

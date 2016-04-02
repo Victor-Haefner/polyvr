@@ -23,7 +23,7 @@ struct element {
     element(string type, int N) : type(type), N(N) {}
 };
 
-VRGeometryPtr loadPly(string filename) {
+void loadPly(string filename, VRTransformPtr res) {
     GeoUInt8PropertyRecPtr      Type = GeoUInt8Property::create();
     GeoUInt32PropertyRecPtr     Length = GeoUInt32Property::create();
     GeoPnt3fPropertyRecPtr      Pos = GeoPnt3fProperty::create();
@@ -142,9 +142,9 @@ VRGeometryPtr loadPly(string filename) {
     if (Tex->size()   == Pos->size()) geo->setTexCoords(Tex);
     geo->setMaterial(Mat);
 
-    VRGeometryPtr res = VRGeometry::create(filename);
-    res->setMesh(geo);
-    return res;
+    VRGeometryPtr vrgeo = VRGeometry::create(filename);
+    vrgeo->setMesh(geo);
+    res->addChild(vrgeo);
 }
 
 void writePly(VRGeometryPtr geo, string path) {

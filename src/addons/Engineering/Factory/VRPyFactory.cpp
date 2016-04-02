@@ -54,7 +54,9 @@ PyMethodDef VRPyFactory::methods[] = {
 
 PyObject* VRPyFactory::loadVRML(VRPyFactory* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyFactory::loadVRML - Object is invalid"); return NULL; }
-    return VRPyTypeCaster::cast( self->obj->loadVRML( parseString(args) ) );
+    auto res = OSG::VRTransform::create("factory");
+    self->obj->loadVRML( parseString(args), 0, res );
+    return VRPyTypeCaster::cast( res );
 }
 
 PyObject* VRPyFactory::setupLod(VRPyFactory* self, PyObject* args) {

@@ -364,8 +364,9 @@ PyObject* VRPyTransform::physicalize(VRPyTransform* self, PyObject *args) {
     const char* shape = "Convex";
     float param = 0;
 
-    if ( PyArg_ParseTuple(args, "iii", &doPhys, &isDyn, &deprc_shp)) { // backwards compatibility
-        shape = deprc_shp == 1 ? "Concave" : "Convex";
+    if ( pySize(args) == 3 && PyInt_Check(PyTuple_GetItem(args, 2)) ) {
+        if ( !PyArg_ParseTuple(args, "iii", &doPhys, &isDyn, &deprc_shp)) return NULL; // backwards compatibility
+        else shape = deprc_shp == 1 ? "Concave" : "Convex";
     } else if (! PyArg_ParseTuple(args, "|iisf", &doPhys, &isDyn, (char*)&shape, &param)) return NULL;
     OSG::VRTransformPtr geo = (OSG::VRTransformPtr) self->objPtr;
 

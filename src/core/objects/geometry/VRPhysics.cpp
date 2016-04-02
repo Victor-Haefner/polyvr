@@ -6,6 +6,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRConstraint.h"
 #include "core/utils/VRVisualLayer.h"
+#include "core/utils/VRTimer.h"
 
 #include <OpenSG/OSGTriangleIterator.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
@@ -662,7 +663,16 @@ btCollisionShape* VRPhysics::getHACDShape() {
     myHACD.SetAddExtraDistPoints(false);
     myHACD.SetAddNeighboursDistPoints(false);
     myHACD.SetAddFacesPoints(false);
+
+    // Idee: split geometries into chunks? -> holes may be a problem!
+    // pack this into thread
+    // startThread( hacd compute )
+    // startJob ( set Shape )
+    VRTimer timer;
+    timer.start("t");
     myHACD.Compute();
+    timer.stop("t");
+    timer.print();
 
     MyConvexDecomposition convexDecomposition;
     btCompoundShape* shape = new btCompoundShape();
