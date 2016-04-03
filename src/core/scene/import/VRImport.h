@@ -5,6 +5,8 @@
 #include <string>
 #include "core/objects/VRObjectFwd.h"
 #include "core/utils/VRUtilsFwd.h"
+#include "core/utils/VRFunctionFwd.h"
+#include "core/scene/VRSceneFwd.h"
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
@@ -18,10 +20,11 @@ class VRImport {
             string preset;
             VRProgressPtr progress;
             VRTransformPtr res;
+            shared_ptr< VRFunction< VRThreadWeakPtr > > loadCb;
 
             LoadJob(string p, string preset, VRTransformPtr r, VRProgressPtr pg);
 
-            void load();
+            void load(VRThreadWeakPtr t);
         };
 
         struct Cache {

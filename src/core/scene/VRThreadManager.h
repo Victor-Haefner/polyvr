@@ -16,6 +16,7 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class ExternalThread;
+class ChangeList;
 
 class VRThread {
     public:
@@ -26,7 +27,9 @@ class VRThread {
         int ID = -1;
         boost::thread* boost_t = 0;
         ExternalThreadRefPtr osg_t = 0;
-        BarrierRefPtr barrier;
+        BarrierRefPtr mainSyncBarrier;
+        BarrierRefPtr selfSyncBarrier;
+        ChangeList* initCl = 0;
         string name;
         bool control_flag = false;
         int status = 0;
@@ -34,6 +37,9 @@ class VRThread {
         int aspect = 0;
         /** last frame time stamp**/
         long long t_last = 0;
+
+        void syncFromMain();
+        void syncToMain();
 };
 
 typedef std::shared_ptr<VRThread> VRThreadPtr;

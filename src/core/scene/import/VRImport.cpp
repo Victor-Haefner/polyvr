@@ -19,6 +19,9 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/utils/VRProgress.h"
+#include "core/utils/VRFunction.h"
+#include "core/scene/VRScene.h"
+#include "core/scene/VRSceneManager.h"
 
 OSG_BEGIN_NAMESPACE;
 
@@ -95,8 +98,12 @@ VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, stri
     if (!boost::filesystem::exists(path)) { cout << "VRImport::load " << path << " not found!" << endl; return 0; }
 
     VRTransformPtr res = VRTransform::create("proxy");
-    LoadJob job(path, preset, res, progress);
-    job.load();
+    LoadJob* job = new LoadJob(path, preset, res, progress);
+    if (!thread) job->load(VRThreadWeakPtr());
+    else {
+        job->loadCb = VRFunction< VRThreadWeakPtr >::create( "geo load", boost::bind(&LoadJob::load, job, _1) );
+        int t = VRSceneManager::getCurrent()->initThread(job->loadCb.get(), "geo load thread", false, 1);
+    }
 
     fillCache(path, res);
     return cache[path].retrieve(parent);
@@ -109,16 +116,25 @@ VRImport::LoadJob::LoadJob(string p, string pr, VRTransformPtr r, VRProgressPtr 
     preset = pr;
 }
 
-void VRImport::LoadJob::load() {
-    auto bpath = boost::filesystem::path(path);
-    string ext = bpath.extension().string();
-    cout << "load " << path << " ext: " << ext << " preset: " << preset << "\n";
-    if (ext == ".e57") { loadE57(path, res); return; }
-    if (ext == ".ply") { loadPly(path, res); return; }
-    if (ext == ".stp") { VRSTEP step; step.load(path, res); return; }
-    if (ext == ".wrl" && preset == "SOLIDWORKS-VRML2") { VRFactory f; f.loadVRML(path, progress, res); return; }
-    if (preset == "OSG" || preset == "COLLADA") osgLoad(path, res);
-    if (preset == "COLLADA") loadCollada(path, res);
+void VRImport::LoadJob::load(VRThreadWeakPtr thread) {
+    VRThreadPtr t = thread.lock();
+
+    if (t) t->syncFromMain();
+
+    auto loadSwitch = [&]() {
+        auto bpath = boost::filesystem::path(path);
+        string ext = bpath.extension().string();
+        cout << "load " << path << " ext: " << ext << " preset: " << preset << "\n";
+        if (ext == ".e57") { loadE57(path, res); return; }
+        if (ext == ".ply") { loadPly(path, res); return; }
+        if (ext == ".stp") { VRSTEP step; step.load(path, res); return; }
+        if (ext == ".wrl" && preset == "SOLIDWORKS-VRML2") { VRFactory f; f.loadVRML(path, progress, res); return; }
+        if (preset == "OSG" || preset == "COLLADA") osgLoad(path, res);
+        if (preset == "COLLADA") loadCollada(path, res);
+    };
+
+    loadSwitch();
+    if (t) t->syncToMain();
 }
 
 VRObjectPtr VRImport::OSGConstruct(NodeRecPtr n, VRObjectPtr parent, string name, string currentFile, NodeCore* geoTrans, string geoTransName) {

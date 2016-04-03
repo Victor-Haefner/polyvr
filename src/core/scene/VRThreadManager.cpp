@@ -52,6 +52,49 @@ VRThread::~VRThread() {
     if (fkt) delete fkt;
 }
 
+void VRThread::syncToMain() {
+    commitChanges();
+    mainSyncBarrier->enter(2);
+    mainSyncBarrier->enter(2);
+}
+
+void VRThread::syncFromMain() {
+    if (aspect != 0) {
+        selfSyncBarrier->enter(2);
+        selfSyncBarrier->enter(2);
+
+        if (initCl) {
+            cout << "Sync starting thread " << initCl->getNumChanged() << " " << initCl->getNumCreated() << endl;
+            initCl->applyAndClear();
+        }
+        appThread->getChangeList()->applyNoClear();
+
+        selfSyncBarrier->enter(2);
+        commitChangesAndClear();
+    }
+}
+
+void VRThreadManager::ThreadManagerUpdate() {
+    for (auto t : threads) {
+        if (t.second->selfSyncBarrier->getNumWaiting() == 1) {
+            t.second->selfSyncBarrier->enter(2);
+            commitChanges();
+            t.second->initCl->fillFromCurrentState();
+            t.second->selfSyncBarrier->enter(2);
+            t.second->selfSyncBarrier->enter(2);
+        }
+
+        if (t.second->mainSyncBarrier->getNumWaiting() == 1) {
+            t.second->mainSyncBarrier->enter(2);
+            auto cl = t.second->osg_t->getChangeList();
+            cout << "Apply thread changes to main thread " << cl->getNumChanged() << " " << cl->getNumCreated() << endl;
+            cl->applyAndClear();
+            commitChanges();
+            t.second->mainSyncBarrier->enter(2);
+        }
+    }
+}
+
 void VRThreadManager::stopAllThreads() {
     cout << "VRThreadManager::stopAllThreads() " << threads.size() << endl;
     for (auto t : threads) t.second->control_flag = false;
@@ -100,6 +143,9 @@ int VRThreadManager::initThread(VRFunction<VRThreadWeakPtr>* f, string name, boo
     t->ID = id;
     t->fkt = f;
     t->t_last = glutGet(GLUT_ELAPSED_TIME);
+    t->selfSyncBarrier = Barrier::create();
+    t->mainSyncBarrier = Barrier::create();
+    t->initCl = ChangeList::create();
     t->boost_t = new boost::thread(boost::bind(&VRThreadManager::runLoop, this, t));
     threads[id] = t;
 
@@ -121,7 +167,5 @@ void VRThreadManager::printThreadsStats() {
     cout << "\nActive threads : " << endl;
     for (auto t : threads) cout << " Thread id : " << t.first << " , name : " << t.second->name << endl;
 }
-
-void VRThreadManager::ThreadManagerUpdate() {}
 
 OSG_END_NAMESPACE;

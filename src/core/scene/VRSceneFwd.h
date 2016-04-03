@@ -12,6 +12,7 @@ namespace OSG {
 
 ptrFwd(VRSceneManager);
 ptrFwd(VRScene);
+ptrFwd(VRThread);
 
 }
 

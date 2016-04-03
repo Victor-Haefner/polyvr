@@ -192,6 +192,7 @@ void VRScene::update() {
     //Vec3f min,max;
     //root->getNode()->updateVolume();
     //root->getNode()->getVolume().getBounds( min, max );
+    ThreadManagerUpdate();
     updateCallbacks();
 }
 
