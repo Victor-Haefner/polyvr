@@ -18,9 +18,10 @@ class VRProgress {
 
     private:
         string title;
-        float N_100 = 0;
+        int max = 0;
 		Mode mode = CONSOLE_M;
-        int j,k;
+        int count = 0;
+        float part = 0;
         VRUpdateWeakPtr callback;
 
     public:
@@ -30,9 +31,11 @@ class VRProgress {
         static VRProgressPtr create();
 
         void setCallback(VRUpdatePtr cb);
+        float get();
 
         void setup(string title, int max, Mode m = CONSOLE_M);
         void update(int i = 1);
+        void finish();
         void reset();
 };
 

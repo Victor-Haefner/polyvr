@@ -9,6 +9,7 @@ struct VRPyProgress : VRPyBaseT<VRProgress> {
 
     static PyObject* setup(VRPyProgress* self, PyObject *args);
     static PyObject* update(VRPyProgress* self, PyObject *args);
+    static PyObject* get(VRPyProgress* self);
     static PyObject* reset(VRPyProgress* self);
 };
 

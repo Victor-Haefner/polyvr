@@ -92,6 +92,7 @@ void VRFactory::loadVRML(string path, VRProgressPtr progress, VRTransformPtr res
     size_t fileSize = file.tellg();
     file.seekg(0, ios_base::beg);
     progress->setup("load VRML " + path, fileSize);
+    progress->reset();
 
     int state = 0;
     map<int, string> states;
@@ -215,6 +216,7 @@ void VRFactory::loadVRML(string path, VRProgressPtr progress, VRTransformPtr res
     }
 
     cout << "\nloaded2 " << res->getChildrenCount() << " geometries" << endl;
+    progress->finish();
 }
 
 class VRLODSpace : public VRObject {
