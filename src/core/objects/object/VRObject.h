@@ -6,6 +6,7 @@
 
 #include <OpenSG/OSGSField.h>
 #include <OpenSG/OSGVector.h>
+#include <OpenSG/OSGNode.h>
 
 #include "core/utils/VRName.h"
 #include "core/utils/VRStorage.h"
@@ -18,7 +19,7 @@ class VRAttachment;
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class Node; OSG_GEN_CONTAINERPTR(Node);
+//class Node; OSG_GEN_CONTAINERPTR(Node);
 
 /**
 
@@ -44,7 +45,7 @@ class VRObject : public std::enable_shared_from_this<VRStorage>, public VRName {
     private:
         bool specialized = false;
         VRObjectWeakPtr parent;
-        NodeRecPtr node;
+        NodeMTRecPtr node;
         int ID = 0;
         int childIndex = 0; // index of this object in its parent child vector
         int pickable = 0;
@@ -52,7 +53,7 @@ class VRObject : public std::enable_shared_from_this<VRStorage>, public VRName {
         unsigned int graphChanged = 0; //is frame number
 
         map<string, VRAttachment*> attachments;
-        map<VRObject*, NodeRecPtr> links;
+        map<VRObject*, NodeMTRecPtr> links;
 
         int findChild(VRObjectPtr node);
         void updateChildrenIndices(bool recursive = false);
@@ -105,15 +106,15 @@ class VRObject : public std::enable_shared_from_this<VRStorage>, public VRName {
         void setVolume(bool b);
 
         /** Returns the object OSG node **/
-        NodeRecPtr getNode();
+        NodeMTRecPtr getNode();
 
         /** set the position in the parents child list **/
         void setSiblingPosition(int i);
 
         virtual void addChild(VRObjectPtr child, bool osg = true, int place = -1);
-        virtual void addChild(NodeRecPtr n);
+        virtual void addChild(NodeMTRecPtr n);
         virtual void subChild(VRObjectPtr child, bool osg = true);
-        virtual void subChild(NodeRecPtr n);
+        virtual void subChild(NodeMTRecPtr n);
         void addLink(VRObjectPtr obj);
         void remLink(VRObjectPtr obj);
 
@@ -145,7 +146,7 @@ class VRObject : public std::enable_shared_from_this<VRStorage>, public VRName {
             This Object will search all the hirachy below him (himself included).
         **/
 
-        VRObjectPtr find(NodeRecPtr n, string indent = " ");
+        VRObjectPtr find(NodeMTRecPtr n, string indent = " ");
         VRObjectPtr find(VRObjectPtr obj);
         VRObjectPtr find(string Name);
         VRObjectPtr find(int id);
@@ -169,7 +170,7 @@ class VRObject : public std::enable_shared_from_this<VRStorage>, public VRName {
         /** Print to console the scene subgraph starting at this object **/
         void printTree(int indent = 0);
 
-        static void printOSGTree(NodeRecPtr o, string indent = "");
+        static void printOSGTree(NodeMTRecPtr o, string indent = "");
 
         /** duplicate this object **/
         VRObjectPtr duplicate(bool anchor = false);

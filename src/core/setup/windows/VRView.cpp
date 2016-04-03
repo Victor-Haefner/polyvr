@@ -341,7 +341,7 @@ void VRView::setRoot() {
     if (user && real_root) user->switchParent(real_root);
     if (dummy_user && real_root) dummy_user->switchParent(real_root);
 
-    NodeRecPtr n = view_root ? view_root->getNode() : 0;
+    NodeMTRecPtr n = view_root ? view_root->getNode() : 0;
     if (lView) lView->setRoot(n);
     if (rView) rView->setRoot(n);
 }
@@ -433,7 +433,7 @@ void VRView::setFotoMode(bool b) {
         /*SolidBackgroundRecPtr sbg = SolidBackground::create();
         sbg->setColor(Color3f(0,0,0));
         if (rView) rView->setBackground(sbg);
-        NodeRecPtr n = Node::create();
+        NodeMTRecPtr n = Node::create();
         if (rView) rView->setRoot(n);*/
         if (PCDecoratorLeft) PCDecoratorLeft->setEyeSeparation(0);
         if (PCDecoratorRight) PCDecoratorRight->setEyeSeparation(0);

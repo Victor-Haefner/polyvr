@@ -182,7 +182,7 @@ PyObject* VRPyObject::flattenHiarchy(VRPyObject* self) {
 
 PyObject* VRPyObject::printOSG(VRPyObject* self) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::printOSG - C Object is invalid"); return NULL; }
-    OSG::NodeRecPtr n = self->objPtr->getNode();
+    OSG::NodeMTRecPtr n = self->objPtr->getNode();
     OSG::VRObject::printOSGTree(n);
     Py_RETURN_TRUE;
 }

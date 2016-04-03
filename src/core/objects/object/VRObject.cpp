@@ -66,7 +66,7 @@ VRObject::VRObject(string _name) {
 }
 
 VRObject::~VRObject() {
-    NodeRecPtr p;
+    NodeMTRecPtr p;
     if (node) p = node->getParent();
     if (p) p->subChild(node);
 }
@@ -135,7 +135,7 @@ void VRObject::addLink(VRObjectPtr obj) {
 
     VisitSubTreeRecPtr visitor = VisitSubTree::create();
     visitor->setSubTreeRoot(obj->getNode());
-    NodeRecPtr visit_node = makeNodeFor(visitor);
+    NodeMTRecPtr visit_node = makeNodeFor(visitor);
     addChild(visit_node);
 
     links[obj.get()] = visit_node;
@@ -144,7 +144,7 @@ void VRObject::addLink(VRObjectPtr obj) {
 void VRObject::remLink(VRObjectPtr obj) {
     if (!links.count(obj.get())) return;
 
-    NodeRecPtr node = links[obj.get()];
+    NodeMTRecPtr node = links[obj.get()];
     subChild(node);
     links.erase(obj.get());
 }
@@ -170,14 +170,14 @@ void VRObject::switchCore(NodeCoreRecPtr c) {
 }
 
 /** Returns the object OSG node **/
-NodeRecPtr VRObject::getNode() { return node; }
+NodeMTRecPtr VRObject::getNode() { return node; }
 
 void VRObject::setSiblingPosition(int i) {
     auto parent = getParent();
     if (parent == 0) return;
     if (i < 0 || i >= (int)parent->children.size()) return;
 
-    NodeRecPtr p = parent->getNode();
+    NodeMTRecPtr p = parent->getNode();
     p->subChild(getNode());
     p->insertChild(i, getNode());
 
@@ -185,13 +185,17 @@ void VRObject::setSiblingPosition(int i) {
     parent->children.insert(parent->children.begin() + i, ptr());
 }
 
-void VRObject::addChild(NodeRecPtr n) { node->addChild(n); }
+void VRObject::addChild(NodeMTRecPtr n) {
+    if (!node) { cout << "Warning! VRObject::addChild: bad osg parent node!\n"; return; }
+    if (!n) { cout << "Warning! VRObject::addChild: bad osg child node!\n"; return; }
+    node->addChild(n);
+}
 
 void VRObject::addChild(VRObjectPtr child, bool osg, int place) {
     if (child == 0) return;
     if (child->getParent() != 0) { child->switchParent(ptr(), place); return; }
 
-    if (osg) node->addChild(child->node);
+    if (osg) addChild(child->node);
     child->graphChanged = VRGlobals::get()->CURRENT_FRAME;
     child->childIndex = children.size();
     children.push_back(child);
@@ -202,7 +206,7 @@ void VRObject::addChild(VRObjectPtr child, bool osg, int place) {
 
 int VRObject::getChildIndex() { return childIndex;}
 
-void VRObject::subChild(NodeRecPtr n) { node->subChild(n); }
+void VRObject::subChild(NodeMTRecPtr n) { node->subChild(n); }
 void VRObject::subChild(VRObjectPtr child, bool osg) {
     if (osg) node->subChild(child->node);
 
@@ -289,7 +293,7 @@ void VRObject::getObjectListByType(string _type, vector<VRObjectPtr>& list) {
     for (auto c : children) c->getObjectListByType(_type, list);
 }
 
-VRObjectPtr VRObject::find(NodeRecPtr n, string indent) {
+VRObjectPtr VRObject::find(NodeMTRecPtr n, string indent) {
     //cout << endl << indent << getName() << " " << node << " " << ptr() << flush;
     if (node == n) return ptr();
     for (auto c : children) {
@@ -434,7 +438,7 @@ void VRObject::printTree(int indent) {
     if(indent == 0) cout << "\n";
 }
 
-void VRObject::printOSGTree(NodeRecPtr o, string indent) {
+void VRObject::printOSGTree(NodeMTRecPtr o, string indent) {
     string type = o->getCore()->getTypeName();
     string name = "Unnamed";
     if (OSG::getName(o)) name = OSG::getName(o);
