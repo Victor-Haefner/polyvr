@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGConfig.h>
 #include "core/objects/VRObjectFwd.h"
+#include "core/tools/VRToolsFwd.h"
 #include "core/objects/object/VRObject.h"
 
 OSG_BEGIN_NAMESPACE;

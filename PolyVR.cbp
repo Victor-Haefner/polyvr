@@ -852,6 +852,9 @@
 		<Unit filename="src/core/tools/VRText.h" />
 		<Unit filename="src/core/tools/VRTextureRenderer.cpp" />
 		<Unit filename="src/core/tools/VRTextureRenderer.h" />
+		<Unit filename="src/core/tools/VRToolsFwd.h" />
+		<Unit filename="src/core/tools/VRUndoManager.cpp" />
+		<Unit filename="src/core/tools/VRUndoManager.h" />
 		<Unit filename="src/core/tools/VRWaypoint.cpp" />
 		<Unit filename="src/core/tools/VRWaypoint.h" />
 		<Unit filename="src/core/tools/selection/VRPatchSelection.cpp" />
@@ -892,6 +895,9 @@
 		<Unit filename="src/core/utils/VRStorage_template.h" />
 		<Unit filename="src/core/utils/VRTimer.cpp" />
 		<Unit filename="src/core/utils/VRTimer.h" />
+		<Unit filename="src/core/utils/VRUndoInterface.cpp" />
+		<Unit filename="src/core/utils/VRUndoInterface.h" />
+		<Unit filename="src/core/utils/VRUndoInterfaceT.h" />
 		<Unit filename="src/core/utils/VRUtilsFwd.h" />
 		<Unit filename="src/core/utils/VRVisualLayer.cpp" />
 		<Unit filename="src/core/utils/VRVisualLayer.h" />

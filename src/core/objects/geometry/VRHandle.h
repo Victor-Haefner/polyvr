@@ -2,6 +2,7 @@
 #define VRHANDLE_H_INCLUDED
 
 #include "core/objects/VRObjectFwd.h"
+#include "core/tools/VRToolsFwd.h"
 #include "core/utils/VRFunctionFwd.h"
 #include "VRGeometry.h"
 #include "core/math/pose.h"

@@ -2,6 +2,7 @@
 #define VRGEOPRIMITIVE_H_INCLUDED
 
 #include "core/objects/VRObjectFwd.h"
+#include "core/tools/VRToolsFwd.h"
 #include "core/tools/selection/VRSelectionFwd.h"
 #include "core/objects/geometry/VRGeometry.h"
 

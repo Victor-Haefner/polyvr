@@ -4,6 +4,7 @@
 #include <OpenSG/OSGVector.h>
 #include "core/utils/VRFunctionFwd.h"
 #include "core/objects/VRObjectFwd.h"
+#include "core/tools/VRToolsFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

@@ -6,6 +6,7 @@
 #include <string>
 
 #include "core/objects/VRObjectFwd.h"
+#include "core/tools/VRToolsFwd.h"
 #include "core/objects/object/VRObject.h"
 
 using namespace std;

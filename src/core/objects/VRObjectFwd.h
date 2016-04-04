@@ -30,19 +30,6 @@ ptrFwd(VRStage);
 ptrFwd(VRTexture);
 ptrFwd(VRConstraint);
 
-// tools
-ptrFwd(VRAnnotationEngine);
-ptrFwd(VRAnalyticGeometry);
-ptrFwd(VRClipPlane);
-ptrFwd(VRMenu);
-ptrFwd(VRWaypoint);
-ptrFwd(VRMeasure);
-ptrFwd(VRTextureRenderer);
-ptrFwd(VRProjectManager);
-ptrFwd(VRHandle);
-ptrFwd(VRGeoPrimitive);
-ptrFwd(VRJointTool);
-
 // addons
 ptrFwd(VRMetaBalls);
 ptrFwd(VRBlinds);

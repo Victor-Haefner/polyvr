@@ -6,9 +6,8 @@
 
 template<class T>
 class VRManager : public VRName {
-    private:
+    protected:
         map<int, shared_ptr<T> > data;
-
         vector<int> getIDs();
 
     protected:
@@ -22,6 +21,7 @@ class VRManager : public VRName {
 
         vector< shared_ptr<T> > getData();
         virtual shared_ptr<T> add(string name = "");
+        virtual shared_ptr<T> add(string name, int key);
 
         void rem(shared_ptr<T> t);
         void rem(string name);

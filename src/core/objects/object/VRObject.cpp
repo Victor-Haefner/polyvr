@@ -8,6 +8,7 @@
 #include <OpenSG/OSGVisitSubTree.h>
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/VRUndoInterfaceT.h"
 //#include "core/utils/VRStorage_template.h"
 #include <libxml++/nodes/element.h>
 
@@ -489,10 +490,10 @@ int VRObject::findChild(VRObjectPtr node) {
 }
 
 /** Hide ptr() object && all his subgraph **/
-void VRObject::hide() { node->setTravMask(0); visible = false; }
+void VRObject::hide() { setVisible(false); }
 
 /** Show ptr() object && all his subgraph **/
-void VRObject::show() { node->setTravMask(0xffffffff); visible = true; }
+void VRObject::show() { setVisible(true); }
 
 /** Returns if ptr() object is visible || not **/
 bool VRObject::isVisible() { return visible; }
@@ -500,8 +501,11 @@ bool VRObject::isVisible() { return visible; }
 
 /** Set the visibility of ptr() object **/
 void VRObject::setVisible(bool b) {
-    if (b) show();
-    else hide();
+    if (visible == b) return;
+    recUndo(&VRObject::setVisible, this, visible, b);
+    visible = b;
+    if (b) node->setTravMask(0xffffffff);
+    else node->setTravMask(0);
 }
 
 /** toggle visibility **/

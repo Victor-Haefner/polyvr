@@ -10,6 +10,7 @@
 
 #include "core/utils/VRName.h"
 #include "core/utils/VRStorage.h"
+#include "core/utils/VRUndoInterface.h"
 #include "core/objects/VRObjectFwd.h"
 #include <memory>
 
@@ -41,7 +42,7 @@ class VRGlobals {
         static VRGlobals* get();
 };
 
-class VRObject : public std::enable_shared_from_this<VRStorage>, public VRName {
+class VRObject : public std::enable_shared_from_this<VRStorage>, public VRName, public VRUndoInterface {
     private:
         bool specialized = false;
         VRObjectWeakPtr parent;

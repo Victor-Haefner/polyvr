@@ -3,6 +3,7 @@
 
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/utils/VRFunction.h"
+#include "core/tools/VRToolsFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

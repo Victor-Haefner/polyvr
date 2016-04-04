@@ -36,6 +36,12 @@ template<class T> shared_ptr<T> VRManager<T>::add(string name) {
     return t;
 }
 
+template<class T> shared_ptr<T> VRManager<T>::add(string name, int key) {
+    auto t = T::create(name);
+    data[key] = t;
+    return t;
+}
+
 template<class T>
 shared_ptr<T> VRManager<T>::get(string name) { for (auto d : data) if (d.second->getName() == name) return d.second; return 0; }
 template<class T>

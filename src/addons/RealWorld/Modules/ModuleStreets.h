@@ -3,6 +3,7 @@
 
 #include "BaseModule.h"
 #include "core/objects/VRObjectFwd.h"
+#include "core/tools/VRToolsFwd.h"
 #include <map>
 #include <OpenSG/OSGVector.h>
 

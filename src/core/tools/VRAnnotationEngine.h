@@ -2,6 +2,7 @@
 #define VRANNOTATIONENGINE_H_INCLUDED
 
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/tools/VRToolsFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 

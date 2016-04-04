@@ -3,6 +3,7 @@
 
 #include "core/objects/geometry/VRSprite.h"
 #include "core/objects/VRObjectFwd.h"
+#include "core/tools/VRToolsFwd.h"
 #include <vector>
 
 OSG_BEGIN_NAMESPACE;
