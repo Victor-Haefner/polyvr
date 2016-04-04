@@ -65,6 +65,7 @@
 #include "VRPyProjectManager.h"
 #include "VRPyGeoPrimitive.h"
 #include "VRPyProgress.h"
+#include "VRPyUndoManager.h"
 #include <iostream>
 #include <algorithm>
 #include <memory>
@@ -341,6 +342,7 @@ void VRScriptManager::initPyModules() {
     registerModule<VRPyNavPreset>("NavPreset", pModVR);
 
     registerModule<VRPyProgress>("Progress", pModVR);
+    registerModule<VRPyUndoManager>("UndoManager", pModVR);
     registerModule<VRPyMenu>("Menu", pModVR, VRPyGeometry::typeRef);
     registerModule<VRPyClipPlane>("ClipPlane", pModVR, VRPyGeometry::typeRef);
     registerModule<VRPyWaypoint>("Waypoint", pModVR, VRPyGeometry::typeRef);

@@ -763,6 +763,8 @@
 		<Unit filename="src/core/scripting/VRPyTriangulator.h" />
 		<Unit filename="src/core/scripting/VRPyTypeCaster.cpp" />
 		<Unit filename="src/core/scripting/VRPyTypeCaster.h" />
+		<Unit filename="src/core/scripting/VRPyUndoManager.cpp" />
+		<Unit filename="src/core/scripting/VRPyUndoManager.h" />
 		<Unit filename="src/core/scripting/VRPyWaypoint.cpp" />
 		<Unit filename="src/core/scripting/VRPyWaypoint.h" />
 		<Unit filename="src/core/scripting/VRScript.cpp" />
