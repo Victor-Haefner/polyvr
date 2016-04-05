@@ -28,7 +28,7 @@ VRLightBeacon::VRLightBeacon(string name) : VRTransform(name) {
     type = "LightBeacon";
     lightGeo = 0;
 
-    GeometryRecPtr lightGeo_ = makeSphereGeo(2,0.1);
+    GeometryMTRecPtr lightGeo_ = makeSphereGeo(2,0.1);
     lightGeo = makeNodeFor(lightGeo_);
     lightGeo->setTravMask(0);
     lightGeo_->setMaterial(getLightGeoMat()->getMaterial());

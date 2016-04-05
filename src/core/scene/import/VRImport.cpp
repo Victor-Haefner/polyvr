@@ -34,7 +34,7 @@ VRImport* VRImport::get() {
     return s;
 }
 
-void VRImport::fixEmptyNames(NodeRecPtr o, map<string, bool>& m, string parentName, int iChild) {
+void VRImport::fixEmptyNames(NodeMTRecPtr o, map<string, bool>& m, string parentName, int iChild) {
     if (!OSG::getName(o)) {
         stringstream ss; ss << parentName << "_" << iChild;
         OSG::setName(o, ss.str());
@@ -75,7 +75,7 @@ VRTransformPtr VRImport::Cache::retrieve(VRObjectPtr parent) {
 void VRImport::osgLoad(string path, VRObjectPtr res) {
     cout << "OSG Load " << path << endl;
     res->setName(path);
-    NodeRecPtr n = SceneFileHandler::the()->read(path.c_str());
+    NodeMTRecPtr n = SceneFileHandler::the()->read(path.c_str());
     if (n == 0) return;
     map<string, bool> m;
     fixEmptyNames(n,m);
@@ -147,7 +147,7 @@ void VRImport::LoadJob::load(VRThreadWeakPtr thread) {
     if (t) t->syncToMain();
 }
 
-VRObjectPtr VRImport::OSGConstruct(NodeRecPtr n, VRObjectPtr parent, string name, string currentFile, NodeCore* geoTrans, string geoTransName) {
+VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string name, string currentFile, NodeCore* geoTrans, string geoTransName) {
     if (n == 0) return 0; // TODO add an osg wrap method for each object?
 
     VRObjectPtr tmp = 0;
@@ -156,7 +156,7 @@ VRObjectPtr VRImport::OSGConstruct(NodeRecPtr n, VRObjectPtr parent, string name
     VRTransformPtr tmp_e;
     VRGroupPtr tmp_gr;
 
-    NodeCoreRecPtr core = n->getCore();
+    NodeCoreMTRecPtr core = n->getCore();
     string t_name = core->getTypeName();
 
 

@@ -103,7 +103,7 @@ void VRDefShading::addDSLight(VRLightPtr light) {
     addDSLight(light->getLightCore(), light->getLightType(), light->getShadows());
 }
 
-void VRDefShading::addDSLight(LightRecPtr light, string type, bool shadows) {
+void VRDefShading::addDSLight(LightMTRecPtr light, string type, bool shadows) {
     if (!initiated) return;
 
     LightInfo li;

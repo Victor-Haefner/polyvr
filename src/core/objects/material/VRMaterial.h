@@ -27,22 +27,22 @@ Color3f toColor3f(Color4f c);
 class VRMaterial : public VRObject {
     public:
         static map<string, VRMaterialWeakPtr> materials;
-        static map<MaterialRecPtr, VRMaterialWeakPtr> materialsByPtr;
+        static map<MaterialMTRecPtr, VRMaterialWeakPtr> materialsByPtr;
 
         string constructShaderVP(VRMatData* data);
         string constructShaderFP(VRMatData* data);
 
     protected:
-        MultiPassMaterialRecPtr passes;
+        MultiPassMaterialMTRecPtr passes;
         vector<VRMatData*> mats;
         int activePass = 0;
         bool deferred = false;
 
         VRObjectPtr copy(vector<VRObjectPtr> children);
 
-        bool isCMat(MaterialUnrecPtr matPtr);
-        bool isSMat(MaterialUnrecPtr matPtr);
-        bool isSTMat(MaterialUnrecPtr matPtr);
+        bool isCMat(MaterialMTUncountedPtr matPtr);
+        bool isSMat(MaterialMTUncountedPtr matPtr);
+        bool isSTMat(MaterialMTUncountedPtr matPtr);
 
         void loadContent(xmlpp::Element* e);
 
@@ -65,17 +65,17 @@ class VRMaterial : public VRObject {
         void clearExtraPasses();
 
         static VRMaterialPtr getDefault();
-        static VRMaterialPtr get(MaterialRecPtr mat);
+        static VRMaterialPtr get(MaterialMTRecPtr mat);
         static VRMaterialPtr get(string s);
         static void clearAll();
 
         //** Set the material of the mesh **/
-        void setMaterial(MaterialRecPtr mat);
+        void setMaterial(MaterialMTRecPtr mat);
         void resetDefault();
 
         /** Load a texture && apply it to the mesh as new material **/
-        TextureObjChunkRefPtr getTexChunk(int unit);
-        void setTexture(TextureObjChunkRefPtr texChunk, int unit = 0);
+        TextureObjChunkMTRefPtr getTexChunk(int unit);
+        void setTexture(TextureObjChunkMTRefPtr texChunk, int unit = 0);
         void setTexture(string img_path, bool alpha = true, int unit = 0);
         void setTexture(VRTexturePtr img, bool alpha = true, int unit = 0);
         void setTexture(char* data, int format, Vec3i dims, bool isfloat);
@@ -130,7 +130,7 @@ class VRMaterial : public VRObject {
         string getVertexScript();
         string getFragmentScript();
         string getGeometryScript();
-        ShaderProgramRecPtr getShaderProgram();
+        ShaderProgramMTRecPtr getShaderProgram();
 
         template<class T> void setShaderParameter(string name, const T &value);
 
@@ -139,10 +139,10 @@ class VRMaterial : public VRObject {
         void setLit(bool b);
         bool isLit();
 
-        MultiPassMaterialRecPtr getMaterial();
-        ChunkMaterialRecPtr getMaterial(int i);
+        MultiPassMaterialMTRecPtr getMaterial();
+        ChunkMaterialMTRecPtr getMaterial(int i);
         VRTexturePtr getTexture(int unit = 0);
-        TextureObjChunkRecPtr getTextureObjChunk(int unit = 0);
+        TextureObjChunkMTRecPtr getTextureObjChunk(int unit = 0);
 };
 
 OSG_END_NAMESPACE;

@@ -91,7 +91,7 @@ VRMaterialPtr BlockWorld::initMaterial(string texture) {
 
 VRGeometryPtr BlockWorld::createChunk(vector<CKOctree::element*>& elements) {
 
-    GeometryRecPtr g = Geometry::create();
+    GeometryMTRecPtr g = Geometry::create();
     GeoUInt8PropertyRecPtr      Type = GeoUInt8Property::create();
     GeoUInt32PropertyRecPtr     Length = GeoUInt32Property::create();
     GeoPnt3fPropertyRecPtr      Pos = GeoPnt3fProperty::create();

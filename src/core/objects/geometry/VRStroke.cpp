@@ -208,7 +208,7 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool doColor) {
         }
     }
 
-    GeometryRecPtr g = Geometry::create();
+    GeometryMTRecPtr g = Geometry::create();
     g->setTypes(Type);
     g->setLengths(Length);
     g->setPositions(Pos);

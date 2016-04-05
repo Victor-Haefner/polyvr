@@ -10,7 +10,7 @@ using namespace std;
 class VRCamera : public VRTransform {
     private:
         PerspectiveCameraRecPtr cam;
-        NodeRecPtr camGeo;
+        NodeMTRecPtr camGeo;
 
         float parallaxD = 1;
         float nearClipPlaneCoeff = 0.1;

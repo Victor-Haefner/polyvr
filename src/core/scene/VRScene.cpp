@@ -126,7 +126,7 @@ void VRScene::add(VRObjectPtr obj, int parentID) {
     else root->addChild(obj);
 }
 
-void VRScene::add(NodeRecPtr n) { root->addChild(n); }
+void VRScene::add(NodeMTRecPtr n) { root->addChild(n); }
 
 VRObjectPtr VRScene::get(int ID) {
     if (ID == -1) return 0;

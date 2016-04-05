@@ -786,7 +786,7 @@ VRGeometryPtr loadDXF(string filename) {
     Type->addValue(GL_POINTS);
     Length->addValue(N);
 
-    GeometryRecPtr geo = Geometry::create();
+    GeometryMTRecPtr geo = Geometry::create();
     geo->setTypes(Type);
     geo->setLengths(Length);
     geo->setIndices(Indices);

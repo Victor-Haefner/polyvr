@@ -31,8 +31,8 @@ class VRGeometry : public VRTransform {
     protected:
         VRMaterialPtr mat = 0;
         VRPrimitive* primitive = 0;
-        GeometryRecPtr mesh;
-        NodeRecPtr mesh_node;
+        GeometryMTRecPtr mesh;
+        NodeMTRecPtr mesh_node;
         bool meshSet = false;
         int lastMeshChange = 0;
 
@@ -59,8 +59,8 @@ class VRGeometry : public VRTransform {
         VRGeometryPtr ptr();
 
         /** Set the geometry mesh (OSG geometry core) **/
-        void setMesh(GeometryRecPtr g);
-        void setMesh(GeometryRecPtr g, Reference ref, bool keep_material = false);
+        void setMesh(GeometryMTRecPtr g);
+        void setMesh(GeometryMTRecPtr g, Reference ref, bool keep_material = false);
 
         Reference getReference();
         void makeUnique();
@@ -109,7 +109,7 @@ class VRGeometry : public VRTransform {
         float getMin(int axis);
 
         /** Returns the mesh as a OSG geometry core **/
-        GeometryRecPtr getMesh();
+        GeometryMTRecPtr getMesh();
         VRPrimitive* getPrimitive();
 
         /** Set the material of the mesh **/

@@ -132,7 +132,7 @@ void loadPly(string filename, VRTransformPtr res) {
     cout << "  colors: " << Cols->size() << endl;
     cout << "  texcoords: " << Tex->size() << endl;
 
-    GeometryRecPtr geo = Geometry::create();
+    GeometryMTRecPtr geo = Geometry::create();
     geo->setTypes(Type);
     geo->setLengths(Length);
     geo->setIndices(Indices);

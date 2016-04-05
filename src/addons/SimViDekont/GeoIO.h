@@ -18,14 +18,14 @@ class GeoIO
         /**
         * Saves a Geometry in an .osb binary file.
         * @param _frameid: the id of the frame (use for path writing)
-        * @param the geometry as GeometryRecPtr
+        * @param the geometry as GeometryMTRecPtr
         * @param the path to save to
         */
-        static void save(uint _frameID, GeometryRecPtr _geo, string _path){
+        static void save(uint _frameID, GeometryMTRecPtr _geo, string _path){
 
             string dataName = getDataName(_frameID, _path, ".osb");
 
-            NodeRecPtr ngeo = makeNodeFor(_geo);
+            NodeMTRecPtr ngeo = makeNodeFor(_geo);
             SceneFileHandler::the()->write( ngeo, dataName.c_str() );
             cout<< "Saved in: " << dataName << endl;
 
@@ -45,7 +45,7 @@ class GeoIO
 
             if (stream) {
                 cout << "Loading osb..." << endl;
-                NodeRecPtr geoNode = SceneFileHandler::the()->read(dataName.c_str());
+                NodeMTRecPtr geoNode = SceneFileHandler::the()->read(dataName.c_str());
                 _frame->geo = VRGeometry::create("myNewMesh");
                 _frame->geo->setMesh( dynamic_cast<Geometry*>(geoNode->getCore()) );
                 fileLoaded = true;

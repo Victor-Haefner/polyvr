@@ -27,9 +27,9 @@ class VRDefShading {
         struct LightInfo {
             LightTypeE    lightType;
             ShadowTypeE                shadowType;
-            LightRecPtr              light;
-            //NodeRecPtr               lightN;
-            //NodeRecPtr               beaconN;
+            LightMTRecPtr              light;
+            //NodeMTRecPtr               lightN;
+            //NodeMTRecPtr               beaconN;
 
             ShaderProgramRecPtr      lightVP;
             ShaderProgramRecPtr      lightFP;
@@ -43,7 +43,7 @@ class VRDefShading {
         string dsSpotLightVPFile, dsSpotLightFPFile, dsSpotLightShadowFPFile;
         string dsUnknownFile = "unknownFile";
 
-        NodeRecPtr                   dsStageN;
+        NodeMTRecPtr                   dsStageN;
         DeferredShadingStageRecPtr   dsStage;
         vector<LightInfo>         lightInfos;
         UInt32                         shadowMapWidth;
@@ -69,7 +69,7 @@ class VRDefShading {
 
         void setDSCamera(VRCameraPtr cam);
         void addDSLight(VRLightPtr light);
-        void addDSLight(LightRecPtr light, string type, bool shadows = false);
+        void addDSLight(LightMTRecPtr light, string type, bool shadows = false);
         void subLight(UInt32 lightIdx);
         void setShadow(LightInfo &li);
 

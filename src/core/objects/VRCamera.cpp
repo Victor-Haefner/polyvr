@@ -37,20 +37,20 @@ VRCamera::VRCamera(string name) : VRTransform(name) {
     regStorageUpdateFkt( VRFunction<int>::create("camera_update", boost::bind(&VRCamera::setup, this)) );
 
     // cam geo
-    TransformRecPtr trans = Transform::create();
-    NodeRecPtr t = makeNodeFor(trans);
+    TransformMTRecPtr trans = Transform::create();
+    NodeMTRecPtr t = makeNodeFor(trans);
     trans->editMatrix().setTranslate(Vec3f(0,0,0.25));
-    GeometryRecPtr camGeo_ = makeBoxGeo(0.2, 0.2, 0.25, 1, 1, 1);
-    GeometryRecPtr camGeo2_ = makeCylinderGeo(0.2, 0.07, 16, 1, 1, 1);
+    GeometryMTRecPtr camGeo_ = makeBoxGeo(0.2, 0.2, 0.25, 1, 1, 1);
+    GeometryMTRecPtr camGeo2_ = makeCylinderGeo(0.2, 0.07, 16, 1, 1, 1);
     camGeo = makeNodeFor(camGeo_);
-    NodeRecPtr camGeo2 = makeNodeFor(camGeo2_);
+    NodeMTRecPtr camGeo2 = makeNodeFor(camGeo2_);
     camGeo->setTravMask(0);
     camGeo_->setMaterial(getCamGeoMat()->getMaterial());
     camGeo2_->setMaterial(getCamGeoMat()->getMaterial());
     addChild(t);
     t->addChild(camGeo);
-    TransformRecPtr trans2 = Transform::create();
-    NodeRecPtr t2 = makeNodeFor(trans2);
+    TransformMTRecPtr trans2 = Transform::create();
+    NodeMTRecPtr t2 = makeNodeFor(trans2);
     trans2->editMatrix().setTranslate(Vec3f(0,0,-0.15));
     trans2->editMatrix().setRotate(Quaternion(Vec3f(1,0,0), Pi*0.5));
     camGeo->addChild(t2);

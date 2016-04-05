@@ -39,24 +39,24 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 struct VRMatData {
-    ChunkMaterialRecPtr mat;
-    MaterialChunkRecPtr colChunk;
-    BlendChunkRecPtr blendChunk;
-    DepthChunkRecPtr depthChunk;
-    map<int, TextureObjChunkRecPtr> texChunks;
-    map<int, TextureEnvChunkRecPtr> envChunks;
-    TexGenChunkRecPtr genChunk;
-    LineChunkRecPtr lineChunk;
-    PointChunkRecPtr pointChunk;
-    PolygonChunkRecPtr polygonChunk;
-    TwoSidedLightingChunkRecPtr twoSidedChunk;
+    ChunkMaterialMTRecPtr mat;
+    MaterialChunkMTRecPtr colChunk;
+    BlendChunkMTRecPtr blendChunk;
+    DepthChunkMTRecPtr depthChunk;
+    map<int, TextureObjChunkMTRecPtr> texChunks;
+    map<int, TextureEnvChunkMTRecPtr> envChunks;
+    TexGenChunkMTRecPtr genChunk;
+    LineChunkMTRecPtr lineChunk;
+    PointChunkMTRecPtr pointChunk;
+    PolygonChunkMTRecPtr polygonChunk;
+    TwoSidedLightingChunkMTRecPtr twoSidedChunk;
     //VRTexturePtr texture;
-    ShaderProgramChunkRecPtr shaderChunk;
-    ClipPlaneChunkRecPtr clipChunk;
-    StencilChunkRecPtr stencilChunk;
-    ShaderProgramRecPtr vProgram;
-    ShaderProgramRecPtr fProgram;
-    ShaderProgramRecPtr gProgram;
+    ShaderProgramChunkMTRecPtr shaderChunk;
+    ClipPlaneChunkMTRecPtr clipChunk;
+    StencilChunkMTRecPtr stencilChunk;
+    ShaderProgramMTRecPtr vProgram;
+    ShaderProgramMTRecPtr fProgram;
+    ShaderProgramMTRecPtr gProgram;
     VRVideo* video = 0;
     bool deffered = false;
 
@@ -70,7 +70,7 @@ struct VRMatData {
 
     int getTextureDimension(int unit = 0) {
         if (texChunks.count(unit) == 0) return 0;
-        ImageRecPtr img = texChunks[unit]->getImage();
+        ImageMTRecPtr img = texChunks[unit]->getImage();
         if (img == 0) return 0;
         return img->getDimension();
     }
@@ -108,8 +108,8 @@ struct VRMatData {
         if (colChunk) { m->colChunk = dynamic_pointer_cast<MaterialChunk>(colChunk->shallowCopy()); m->mat->addChunk(m->colChunk); }
         if (blendChunk) { m->blendChunk = dynamic_pointer_cast<BlendChunk>(blendChunk->shallowCopy()); m->mat->addChunk(m->blendChunk); }
         if (depthChunk) { m->depthChunk = dynamic_pointer_cast<DepthChunk>(depthChunk->shallowCopy()); m->mat->addChunk(m->depthChunk); }
-        for (auto t : texChunks) { TextureObjChunkRecPtr mt = dynamic_pointer_cast<TextureObjChunk>(t.second->shallowCopy()); m->texChunks[t.first] = mt; m->mat->addChunk(mt, t.first); }
-        for (auto t : envChunks) { TextureEnvChunkRecPtr mt = dynamic_pointer_cast<TextureEnvChunk>(t.second->shallowCopy()); m->envChunks[t.first] = mt; m->mat->addChunk(mt, t.first); }
+        for (auto t : texChunks) { TextureObjChunkMTRecPtr mt = dynamic_pointer_cast<TextureObjChunk>(t.second->shallowCopy()); m->texChunks[t.first] = mt; m->mat->addChunk(mt, t.first); }
+        for (auto t : envChunks) { TextureEnvChunkMTRecPtr mt = dynamic_pointer_cast<TextureEnvChunk>(t.second->shallowCopy()); m->envChunks[t.first] = mt; m->mat->addChunk(mt, t.first); }
         if (genChunk) { m->genChunk = dynamic_pointer_cast<TexGenChunk>(genChunk->shallowCopy()); m->mat->addChunk(m->genChunk); }
         if (lineChunk) { m->lineChunk = dynamic_pointer_cast<LineChunk>(lineChunk->shallowCopy()); m->mat->addChunk(m->lineChunk); }
         if (pointChunk) { m->pointChunk = dynamic_pointer_cast<PointChunk>(pointChunk->shallowCopy()); m->mat->addChunk(m->pointChunk); }
@@ -120,7 +120,7 @@ struct VRMatData {
         if (shaderChunk) { m->shaderChunk = ShaderProgramChunk::create(); m->mat->addChunk(m->shaderChunk); }
 
         /*if (texture) {
-                ImageRecPtr img = dynamic_pointer_cast<Image>(texture->getImage()->shallowCopy());
+                ImageMTRecPtr img = dynamic_pointer_cast<Image>(texture->getImage()->shallowCopy());
                 m->texture = VRTexture::create(img);
         }*/
 
@@ -143,7 +143,7 @@ struct VRMatData {
 };
 
 map<string, VRMaterialWeakPtr> VRMaterial::materials;
-map<MaterialRecPtr, VRMaterialWeakPtr> VRMaterial::materialsByPtr;
+map<MaterialMTRecPtr, VRMaterialWeakPtr> VRMaterial::materialsByPtr;
 
 VRMaterial::VRMaterial(string name) : VRObject(name) {
     auto scene = VRSceneManager::getCurrent();
@@ -153,7 +153,7 @@ VRMaterial::VRMaterial(string name) : VRObject(name) {
     addPass();
     activePass = 0;
 
-    MaterialGroupRecPtr group = MaterialGroup::create();
+    MaterialGroupMTRecPtr group = MaterialGroup::create();
     group->setMaterial(passes);
     setCore(group, "Material");
 
@@ -317,7 +317,7 @@ void VRMaterial::prependPasses(VRMaterialPtr mat) {
     }
 }
 
-VRMaterialPtr VRMaterial::get(MaterialRecPtr mat) {
+VRMaterialPtr VRMaterial::get(MaterialMTRecPtr mat) {
     VRMaterialPtr m;
     if (materialsByPtr.count(mat) == 0) {
         m = VRMaterial::create("mat");
@@ -376,9 +376,9 @@ void VRMaterial::loadContent(xmlpp::Element* e) {
     e->get_attribute("sourcetype")->get_value();
 }
 
-void VRMaterial::setMaterial(MaterialRecPtr m) {
+void VRMaterial::setMaterial(MaterialMTRecPtr m) {
     if ( dynamic_pointer_cast<MultiPassMaterial>(m) ) {
-        MultiPassMaterialRecPtr mm = dynamic_pointer_cast<MultiPassMaterial>(m);
+        MultiPassMaterialMTRecPtr mm = dynamic_pointer_cast<MultiPassMaterial>(m);
         for (unsigned int i=0; i<mm->getNPasses(); i++) {
             if (i > 0) addPass();
             setMaterial(mm->getMaterials(i));
@@ -388,13 +388,13 @@ void VRMaterial::setMaterial(MaterialRecPtr m) {
     }
 
     if ( isSMat(m) ) {
-        SimpleMaterialRecPtr sm = dynamic_pointer_cast<SimpleMaterial>(m);
+        SimpleMaterialMTRecPtr sm = dynamic_pointer_cast<SimpleMaterial>(m);
         setDiffuse(sm->getDiffuse());
         setAmbient(sm->getAmbient());
         setSpecular(sm->getSpecular());
 
         if ( isSTMat(m) ) {
-            SimpleTexturedMaterialRecPtr stm = dynamic_pointer_cast<SimpleTexturedMaterial>(m);
+            SimpleTexturedMaterialMTRecPtr stm = dynamic_pointer_cast<SimpleTexturedMaterial>(m);
             setTexture( VRTexture::create(stm->getImage()), true);
         }
 
@@ -404,17 +404,17 @@ void VRMaterial::setMaterial(MaterialRecPtr m) {
     if ( isCMat(m) ) {
         auto md = mats[activePass];
 
-        ChunkMaterialRecPtr cmat = dynamic_pointer_cast<ChunkMaterial>(m);
+        ChunkMaterialMTRecPtr cmat = dynamic_pointer_cast<ChunkMaterial>(m);
         for (uint i=0; i<cmat->getMFChunks()->size(); i++) {
-            StateChunkRecPtr chunk = cmat->getChunk(i);
+            StateChunkMTRecPtr chunk = cmat->getChunk(i);
             int unit = -2; cmat->getChunkSlot(chunk, unit);
 
-            MaterialChunkRecPtr mc = dynamic_pointer_cast<MaterialChunk>(chunk);
-            BlendChunkRecPtr bc = dynamic_pointer_cast<BlendChunk>(chunk);
-            TextureEnvChunkRecPtr ec = dynamic_pointer_cast<TextureEnvChunk>(chunk);
-            TextureObjChunkRecPtr tc = dynamic_pointer_cast<TextureObjChunk>(chunk);
-            DepthChunkRecPtr dc = dynamic_pointer_cast<DepthChunk>(chunk);
-            TwoSidedLightingChunkRecPtr tsc = dynamic_pointer_cast<TwoSidedLightingChunk>(chunk);
+            MaterialChunkMTRecPtr mc = dynamic_pointer_cast<MaterialChunk>(chunk);
+            BlendChunkMTRecPtr bc = dynamic_pointer_cast<BlendChunk>(chunk);
+            TextureEnvChunkMTRecPtr ec = dynamic_pointer_cast<TextureEnvChunk>(chunk);
+            TextureObjChunkMTRecPtr tc = dynamic_pointer_cast<TextureObjChunk>(chunk);
+            DepthChunkMTRecPtr dc = dynamic_pointer_cast<DepthChunk>(chunk);
+            TwoSidedLightingChunkMTRecPtr tsc = dynamic_pointer_cast<TwoSidedLightingChunk>(chunk);
 
             if (mc) { md->colChunk = mc; mc->setBackMaterial(false); md->mat->addChunk(mc,unit); continue; }
             if (bc) { md->blendChunk = bc; md->mat->addChunk(bc,unit); continue; }
@@ -440,8 +440,8 @@ void VRMaterial::setMaterial(MaterialRecPtr m) {
     if (dynamic_pointer_cast<SwitchMaterial>(m)) cout << "   SwitchMaterial" << endl;
 }
 
-MultiPassMaterialRecPtr VRMaterial::getMaterial() { return passes; }
-ChunkMaterialRecPtr VRMaterial::getMaterial(int i) { return mats[i]->mat; }
+MultiPassMaterialMTRecPtr VRMaterial::getMaterial() { return passes; }
+ChunkMaterialMTRecPtr VRMaterial::getMaterial(int i) { return mats[i]->mat; }
 
 void VRMaterial::setTextureParams(int min, int mag, int envMode, int wrapS, int wrapT, int unit) {
     auto md = mats[activePass];
@@ -505,7 +505,7 @@ void VRMaterial::setTexture(char* data, int format, Vec3i dims, bool isfloat) {
     setShaderParameter<int>("is3DTexture", dims[2] > 1);
 }
 
-TextureObjChunkRefPtr VRMaterial::getTexChunk(int unit) {
+TextureObjChunkMTRefPtr VRMaterial::getTexChunk(int unit) {
     auto md = mats[activePass];
 
     if (md->texChunks.count(unit) == 0) {
@@ -519,7 +519,7 @@ TextureObjChunkRefPtr VRMaterial::getTexChunk(int unit) {
     return md->texChunks[unit];
 }
 
-void VRMaterial::setTexture(TextureObjChunkRefPtr texChunk, int unit) {
+void VRMaterial::setTexture(TextureObjChunkMTRefPtr texChunk, int unit) {
     auto md = mats[activePass];
     md->texChunks[unit] = texChunk;
     md->envChunks[unit] = TextureEnvChunk::create();
@@ -618,33 +618,33 @@ void VRMaterial::toggleMaterial(string mat1, string mat2, bool b){
     else setTexture(mat2);
 }
 
-bool VRMaterial::isCMat(MaterialUnrecPtr matPtr) { return (dynamic_pointer_cast<ChunkMaterial>(matPtr)); }
-bool VRMaterial::isSMat(MaterialUnrecPtr matPtr) { return (dynamic_pointer_cast<SimpleMaterial>(matPtr)); }
-bool VRMaterial::isSTMat(MaterialUnrecPtr matPtr) { return (dynamic_pointer_cast<SimpleTexturedMaterial>(matPtr)); }
+bool VRMaterial::isCMat(MaterialMTUncountedPtr matPtr) { return (dynamic_pointer_cast<ChunkMaterial>(matPtr)); }
+bool VRMaterial::isSMat(MaterialMTUncountedPtr matPtr) { return (dynamic_pointer_cast<SimpleMaterial>(matPtr)); }
+bool VRMaterial::isSTMat(MaterialMTUncountedPtr matPtr) { return (dynamic_pointer_cast<SimpleTexturedMaterial>(matPtr)); }
 
 // to access the protected member of materials
 class MAC : private SimpleTexturedMaterial {
     public:
 
-        static MaterialChunkRecPtr getMatChunk(Material* matPtr) {
+        static MaterialChunkMTRecPtr getMatChunk(Material* matPtr) {
             if (matPtr == 0) return 0;
 
-            MaterialChunkRecPtr mchunk = 0;
-            MaterialRecPtr mat = MaterialRecPtr(matPtr);
+            MaterialChunkMTRecPtr mchunk = 0;
+            MaterialMTRecPtr mat = MaterialMTRecPtr(matPtr);
 
-            SimpleMaterialRecPtr smat = dynamic_pointer_cast<SimpleMaterial>(mat);
-            SimpleTexturedMaterialRecPtr stmat = dynamic_pointer_cast<SimpleTexturedMaterial>(mat);
-            ChunkMaterialRecPtr cmat = dynamic_pointer_cast<ChunkMaterial>(mat);
+            SimpleMaterialMTRecPtr smat = dynamic_pointer_cast<SimpleMaterial>(mat);
+            SimpleTexturedMaterialMTRecPtr stmat = dynamic_pointer_cast<SimpleTexturedMaterial>(mat);
+            ChunkMaterialMTRecPtr cmat = dynamic_pointer_cast<ChunkMaterial>(mat);
 
             if (smat || stmat)  {
                 MAC* macc = (MAC*)matPtr;
-                MaterialChunkRecPtr mchunk = macc->_materialChunk;
+                MaterialChunkMTRecPtr mchunk = macc->_materialChunk;
                 if (mchunk) return mchunk;
             }
 
             if (cmat) {
                 for (uint i=0; i<cmat->getMFChunks()->size(); i++) {
-                    StateChunkRecPtr chunk = cmat->getChunk(i);
+                    StateChunkMTRecPtr chunk = cmat->getChunk(i);
                     mchunk = dynamic_pointer_cast<MaterialChunk>(chunk);
                     if (mchunk) return mchunk;
                 }
@@ -653,13 +653,13 @@ class MAC : private SimpleTexturedMaterial {
             return mchunk;
         }
 
-        static BlendChunkRecPtr getBlendChunk(Material* matPtr) {
-            MaterialRecPtr mat = MaterialRecPtr(matPtr);
-            ChunkMaterialRecPtr cmat = dynamic_pointer_cast<ChunkMaterial>(mat);
-            BlendChunkRecPtr bchunk = 0;
+        static BlendChunkMTRecPtr getBlendChunk(Material* matPtr) {
+            MaterialMTRecPtr mat = MaterialMTRecPtr(matPtr);
+            ChunkMaterialMTRecPtr cmat = dynamic_pointer_cast<ChunkMaterial>(mat);
+            BlendChunkMTRecPtr bchunk = 0;
             if (cmat) {
                 for (uint i=0; i<cmat->getMFChunks()->size(); i++) {
-                    StateChunkRecPtr chunk = cmat->getChunk(i);
+                    StateChunkMTRecPtr chunk = cmat->getChunk(i);
                     bchunk = dynamic_pointer_cast<BlendChunk>(chunk);
                     if (bchunk) return bchunk;
                 }
@@ -722,7 +722,7 @@ VRTexturePtr VRMaterial::getTexture(int unit) {
     return VRTexture::create( md->texChunks[unit]->getImage() );
 }
 
-TextureObjChunkRecPtr VRMaterial::getTextureObjChunk(int unit) {
+TextureObjChunkMTRecPtr VRMaterial::getTextureObjChunk(int unit) {
     if (mats[activePass]->texChunks.count(unit) == 0) return 0;
     return mats[activePass]->texChunks[unit];
 }
@@ -754,7 +754,7 @@ void VRMaterial::remShaderChunk() {
     md->shaderChunk = 0;
 }
 
-ShaderProgramRecPtr VRMaterial::getShaderProgram() { return mats[activePass]->vProgram; }
+ShaderProgramMTRecPtr VRMaterial::getShaderProgram() { return mats[activePass]->vProgram; }
 
 void VRMaterial::setDefaultVertexShader() {
     auto md = mats[activePass];

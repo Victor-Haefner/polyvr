@@ -65,7 +65,7 @@ class VRScene : public VRObjectManager,
         void initDevices();
 
         void add(VRObjectPtr obj, int parentID = -1);
-        void add(NodeRecPtr n);
+        void add(NodeMTRecPtr n);
 
         VRObjectPtr get(int ID);
         VRObjectPtr get(string name);

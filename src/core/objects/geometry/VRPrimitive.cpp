@@ -150,14 +150,14 @@ void VRArrow::toStream(stringstream& ss) { ss << height << " " << width << " " <
 void VRThread::toStream(stringstream& ss) { ss << length << " " << radius << " " << pitch << " " << Nsegments; }
 void VRGear::toStream(stringstream& ss) { ss << width << " " << hole << " " << pitch << " " << teeth_number << " " << teeth_size << " " << bevel; }
 
-OSG::GeometryRecPtr VRPlane::make() { return OSG::makePlaneGeo(width, height, Nx, Ny); }
-OSG::GeometryRecPtr VRBox::make() { return OSG::makeBoxGeo(width, height, depth, Nx, Ny, Nz); }
-OSG::GeometryRecPtr VRSphere::make() { return OSG::makeSphereGeo(iterations, radius); }
-OSG::GeometryRecPtr VRTorus::make() { return OSG::makeTorusGeo(inner_radius, outer_radius, Nsegments, Nrings); }
-OSG::GeometryRecPtr VRTeapot::make() { return OSG::makeTeapotGeo(iterations, scale); }
-OSG::GeometryRecPtr VRCylinder::make() { return OSG::makeCylinderGeo(height, radius, Nsides, doSides, doTop, doBottom); }
-OSG::GeometryRecPtr VRCone::make() { return OSG::makeConeGeo(height, radius, Nsides, doSides, doBottom); }
-OSG::GeometryRecPtr VRArrow::make() {
+OSG::GeometryMTRecPtr VRPlane::make() { return OSG::makePlaneGeo(width, height, Nx, Ny); }
+OSG::GeometryMTRecPtr VRBox::make() { return OSG::makeBoxGeo(width, height, depth, Nx, Ny, Nz); }
+OSG::GeometryMTRecPtr VRSphere::make() { return OSG::makeSphereGeo(iterations, radius); }
+OSG::GeometryMTRecPtr VRTorus::make() { return OSG::makeTorusGeo(inner_radius, outer_radius, Nsegments, Nrings); }
+OSG::GeometryMTRecPtr VRTeapot::make() { return OSG::makeTeapotGeo(iterations, scale); }
+OSG::GeometryMTRecPtr VRCylinder::make() { return OSG::makeCylinderGeo(height, radius, Nsides, doSides, doTop, doBottom); }
+OSG::GeometryMTRecPtr VRCone::make() { return OSG::makeConeGeo(height, radius, Nsides, doSides, doBottom); }
+OSG::GeometryMTRecPtr VRArrow::make() {
     OSG::GeoUInt8PropertyRecPtr      Type = OSG::GeoUInt8Property::create();
     OSG::GeoUInt32PropertyRecPtr     Length = OSG::GeoUInt32Property::create();
     OSG::GeoPnt3fPropertyRecPtr      Pos = OSG::GeoPnt3fProperty::create();
@@ -184,7 +184,7 @@ OSG::GeometryRecPtr VRArrow::make() {
     Mat->setAmbient(OSG::Color3f(0.4, 0.4, 0.2));
     Mat->setSpecular(OSG::Color3f(0.1, 0.1, 0.1));
 
-    OSG::GeometryRecPtr geo = OSG::Geometry::create();
+    OSG::GeometryMTRecPtr geo = OSG::Geometry::create();
     geo->setTypes(Type);
     geo->setLengths(Length);
     geo->setIndices(Indices);
@@ -194,7 +194,7 @@ OSG::GeometryRecPtr VRArrow::make() {
 
     return geo;
 }
-OSG::GeometryRecPtr VRThread::make() {
+OSG::GeometryMTRecPtr VRThread::make() {
     OSG::GeoUInt8PropertyRecPtr      Type = OSG::GeoUInt8Property::create();
     OSG::GeoUInt32PropertyRecPtr     Length = OSG::GeoUInt32Property::create();
     OSG::GeoPnt3fPropertyRecPtr      Pos = OSG::GeoPnt3fProperty::create();
@@ -246,7 +246,7 @@ OSG::GeometryRecPtr VRThread::make() {
     Mat->setAmbient(OSG::Color3f(0.4, 0.4, 0.2));
     Mat->setSpecular(OSG::Color3f(0.1, 0.1, 0.1));
 
-    OSG::GeometryRecPtr geo = OSG::Geometry::create();
+    OSG::GeometryMTRecPtr geo = OSG::Geometry::create();
     geo->setTypes(Type);
     geo->setLengths(Length);
     geo->setIndices(Indices);
@@ -256,7 +256,7 @@ OSG::GeometryRecPtr VRThread::make() {
 
     return geo;
 }
-OSG::GeometryRecPtr VRGear::make() {
+OSG::GeometryMTRecPtr VRGear::make() {
     OSG::GeoUInt8PropertyRecPtr      Type = OSG::GeoUInt8Property::create();
     OSG::GeoUInt32PropertyRecPtr     Length = OSG::GeoUInt32Property::create();
     OSG::GeoPnt3fPropertyRecPtr      Pos = OSG::GeoPnt3fProperty::create();
@@ -456,7 +456,7 @@ OSG::GeometryRecPtr VRGear::make() {
     Mat->setAmbient(OSG::Color3f(0.4, 0.4, 0.2));
     Mat->setSpecular(OSG::Color3f(0.1, 0.1, 0.1));
 
-    OSG::GeometryRecPtr geo = OSG::Geometry::create();
+    OSG::GeometryMTRecPtr geo = OSG::Geometry::create();
     geo->setTypes(Type);
     geo->setLengths(Length);
     geo->setIndices(Indices);

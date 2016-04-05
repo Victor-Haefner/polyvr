@@ -25,7 +25,7 @@ class VRView : public std::enable_shared_from_this<VRView> {
         bool projection = false;
         bool doStats = false;
 
-        NodeRecPtr viewGeo;
+        NodeMTRecPtr viewGeo;
         VRMaterialPtr viewGeoMat;
 
         Vec4f position;

@@ -5,7 +5,7 @@
 #include <vector>
 #include <OpenSG/OSGSimpleGeometry.h>        // Methods to create simple geos.
 #include <OpenSG/OSGTransform.h>             // For geometry transform
-#include <OpenSG/OSGNode.h>                  // Using NodeRecPtr
+#include <OpenSG/OSGNode.h>                  // Using NodeMTRecPtr
 
 #include "core/objects/object/VRObject.h"
 

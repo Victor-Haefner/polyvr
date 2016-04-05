@@ -29,7 +29,7 @@ class VRTransform : public VRObject {
 
     protected:
         doubleBuffer* dm = 0;
-        TransformRecPtr t;//OSG Transform
+        TransformMTRecPtr t;//OSG Transform
         bool noBlt = false;
         VRPhysics* physics = 0;
         VRAnimPtr pathAnimPtr;
@@ -46,8 +46,8 @@ class VRTransform : public VRObject {
         Vec3f _up = Vec3f(0,1,0);
         Vec3f _scale = Vec3f(1,1,1);
         Vec3f _euler;
-        NodeRecPtr coords;
-        NodeRecPtr translator;
+        NodeMTRecPtr coords;
+        NodeMTRecPtr translator;
 
         int frame = 0;
         Matrix WorldTransformation;

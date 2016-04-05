@@ -9,7 +9,7 @@ namespace OSG{ class Geometry; OSG_GEN_CONTAINERPTR(Geometry); }
 using namespace std;
 
 struct VRPrimitive {
-    virtual OSG::GeometryRecPtr make() = 0;
+    virtual OSG::GeometryMTRecPtr make() = 0;
 
     int getNParams();
     string getType();
@@ -37,7 +37,7 @@ struct VRPlane : public VRPrimitive {
     VRPlane();
     void fromStream(stringstream& ss);
     void toStream(stringstream& ss);
-    OSG::GeometryRecPtr make();
+    OSG::GeometryMTRecPtr make();
 };
 
 struct VRBox : public VRPrimitive {
@@ -51,7 +51,7 @@ struct VRBox : public VRPrimitive {
     VRBox();
     void fromStream(stringstream& ss);
     void toStream(stringstream& ss);
-    OSG::GeometryRecPtr make();
+    OSG::GeometryMTRecPtr make();
 };
 
 struct VRSphere : public VRPrimitive {
@@ -61,7 +61,7 @@ struct VRSphere : public VRPrimitive {
     VRSphere();
     void fromStream(stringstream& ss);
     void toStream(stringstream& ss);
-    OSG::GeometryRecPtr make();
+    OSG::GeometryMTRecPtr make();
 };
 
 struct VRTorus : public VRPrimitive {
@@ -73,7 +73,7 @@ struct VRTorus : public VRPrimitive {
     VRTorus();
     void fromStream(stringstream& ss);
     void toStream(stringstream& ss);
-    OSG::GeometryRecPtr make();
+    OSG::GeometryMTRecPtr make();
 };
 
 struct VRTeapot : public VRPrimitive {
@@ -83,7 +83,7 @@ struct VRTeapot : public VRPrimitive {
     VRTeapot();
     void fromStream(stringstream& ss);
     void toStream(stringstream& ss);
-    OSG::GeometryRecPtr make();
+    OSG::GeometryMTRecPtr make();
 };
 
 struct VRCone : public VRPrimitive {
@@ -96,7 +96,7 @@ struct VRCone : public VRPrimitive {
     VRCone();
     void fromStream(stringstream& ss);
     void toStream(stringstream& ss);
-    OSG::GeometryRecPtr make();
+    OSG::GeometryMTRecPtr make();
 };
 
 struct VRCylinder : public VRPrimitive {
@@ -110,7 +110,7 @@ struct VRCylinder : public VRPrimitive {
     VRCylinder();
     void fromStream(stringstream& ss);
     void toStream(stringstream& ss);
-    OSG::GeometryRecPtr make();
+    OSG::GeometryMTRecPtr make();
 };
 
 struct VRArrow : public VRPrimitive {
@@ -122,7 +122,7 @@ struct VRArrow : public VRPrimitive {
     VRArrow();
     void fromStream(stringstream& ss);
     void toStream(stringstream& ss);
-    OSG::GeometryRecPtr make();
+    OSG::GeometryMTRecPtr make();
 };
 
 struct VRThread : public VRPrimitive {
@@ -134,7 +134,7 @@ struct VRThread : public VRPrimitive {
     VRThread();
     void fromStream(stringstream& ss);
     void toStream(stringstream& ss);
-    OSG::GeometryRecPtr make();
+    OSG::GeometryMTRecPtr make();
 };
 
 struct VRGear : public VRPrimitive {
@@ -148,7 +148,7 @@ struct VRGear : public VRPrimitive {
     VRGear();
     void fromStream(stringstream& ss);
     void toStream(stringstream& ss);
-    OSG::GeometryRecPtr make();
+    OSG::GeometryMTRecPtr make();
     float radius();
 };
 

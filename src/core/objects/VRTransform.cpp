@@ -116,7 +116,7 @@ void VRTransform::initCoords() {
     coords = makeCoordAxis(0.3, 3, false);
     coords->setTravMask(0);
     addChild(coords);
-    GeometryRecPtr geo = dynamic_cast<Geometry*>(coords->getCore());
+    GeometryMTRecPtr geo = dynamic_cast<Geometry*>(coords->getCore());
 
     string shdr_vp =
     "void main( void ) {"
@@ -140,7 +140,7 @@ void VRTransform::initTranslator() { // TODO
     translator = makeCoordAxis(0.3, 3, false);
     translator->setTravMask(0);
     addChild(translator);
-    GeometryRecPtr geo = dynamic_cast<Geometry*>(translator->getCore());
+    GeometryMTRecPtr geo = dynamic_cast<Geometry*>(translator->getCore());
 
     string shdr_vp =
     "void main( void ) {"

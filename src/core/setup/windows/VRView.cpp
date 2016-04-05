@@ -162,7 +162,7 @@ void VRView::setDecorators() {//set decorators, only if projection true
         screenUpperLeft = Pnt3f(-1,0.6, -1);
     }
 
-    GeometryRecPtr geo = dynamic_cast<Geometry*>(viewGeo->getCore());
+    GeometryMTRecPtr geo = dynamic_cast<Geometry*>(viewGeo->getCore());
     GeoVectorPropertyRecPtr pos = geo->getPositions();
 
     pos->setValue(screenLowerLeft, 0);
@@ -237,7 +237,7 @@ VRView::VRView(string name) {
     viewGeo = makeNodeFor(makePlaneGeo(1,1,1,1));
     viewGeo->setTravMask(0);
     viewGeoMat = VRMaterial::create("setup view mat");
-    GeometryRecPtr geo = dynamic_cast<Geometry*>( viewGeo->getCore() );
+    GeometryMTRecPtr geo = dynamic_cast<Geometry*>( viewGeo->getCore() );
     geo->setMaterial(viewGeoMat->getMaterial());
     update();
 }

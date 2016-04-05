@@ -15,7 +15,7 @@ class patch {
             Vec3f* n;// Normale
             Vec2f* tex;// Normale
 
-            GeometryRecPtr geo;// eigentliche Geometrie
+            GeometryMTRecPtr geo;// eigentliche Geometrie
 
             int N;//auflösung
             bool wired;
@@ -36,9 +36,9 @@ class patch {
 
         Vec3f reflectInPlane(Vec3f v, Vec3f n);
 
-        GeometryRecPtr makeTrianglePlaneGeo(int N, bool wire = false);
+        GeometryMTRecPtr makeTrianglePlaneGeo(int N, bool wire = false);
 
-        NodeRecPtr makeTrianglePlane(int N, bool wire = false);
+        NodeMTRecPtr makeTrianglePlane(int N, bool wire = false);
 
         void calcBezQuadPlane(bezPolygon<4>& q);
 
@@ -48,7 +48,7 @@ class patch {
         patch() {}
 
         //iteriert über die flächen der geometrie und macht bezierflächen hin
-        NodeRecPtr applyBezierOnGeometry(GeometryRecPtr geo, int N);
+        NodeMTRecPtr applyBezierOnGeometry(GeometryMTRecPtr geo, int N);
 };
 
 OSG_END_NAMESPACE;

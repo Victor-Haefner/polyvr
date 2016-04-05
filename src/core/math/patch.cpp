@@ -59,7 +59,7 @@ Vec3f patch::reflectInPlane(Vec3f v, Vec3f n) {
     return v;
 }
 
-/*GeometryRecPtr patch::makeTrianglePlaneGeo(int N, bool wire = false) {
+/*GeometryMTRecPtr patch::makeTrianglePlaneGeo(int N, bool wire = false) {
     GeoPTypesPtr                Type = GeoPTypesUI8::create();
     GeoPLengthsPtr              Length = GeoPLengthsUI32::create();
     GeoPositions3fPtr           Pos = GeoPositions3f::create();
@@ -134,7 +134,7 @@ Vec3f patch::reflectInPlane(Vec3f v, Vec3f n) {
     return geo;
 }*/
 
-/*NodeRecPtr patch::makeTrianglePlane(int N, bool wire = false) {
+/*NodeMTRecPtr patch::makeTrianglePlane(int N, bool wire = false) {
     NodePtr n = Node::create();
     GeometryPtr geo = makeTrianglePlaneGeo(N, wire);
     beginEditCP(n);

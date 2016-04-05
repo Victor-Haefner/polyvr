@@ -13,7 +13,7 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-Vec2f VRIntersect_computeTexel(VRIntersection& ins, NodeRecPtr node) {
+Vec2f VRIntersect_computeTexel(VRIntersection& ins, NodeMTRecPtr node) {
     if (!ins.hit) return Vec2f(0,0);
     if (node == 0) return Vec2f(0,0);
 
@@ -44,7 +44,7 @@ Vec2f VRIntersect_computeTexel(VRIntersection& ins, NodeRecPtr node) {
     return iter.getTexCoords(0) * a + iter.getTexCoords(1) * b + iter.getTexCoords(2) * c;
 }
 
-Vec3i VRIntersect_computeVertices(VRIntersection& ins, NodeRecPtr node) {
+Vec3i VRIntersect_computeVertices(VRIntersection& ins, NodeMTRecPtr node) {
     if (!ins.hit) return Vec3i(0,0,0);
     if (node == 0) return Vec3i(0,0,0);
 

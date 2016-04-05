@@ -185,7 +185,7 @@ void SimViDekont::createGeo(frame* f) {
     pointChunk->setSize(3);
     Mat->addChunk(pointChunk);
 
-    GeometryRecPtr geo = Geometry::create();
+    GeometryMTRecPtr geo = Geometry::create();
     geo->setTypes(Type);
     geo->setLengths(Length);
     geo->setIndices(Indices);
@@ -291,7 +291,7 @@ void SimViDekont::playStepBackward(VRDevice* dev) { player->step(true); }
 
 void SimViDekont::toggleColors(VRDevice* dev) {
     for (auto frame : frames) {
-        GeometryRecPtr geo = frame->geo->getMesh();
+        GeometryMTRecPtr geo = frame->geo->getMesh();
         GeoVec3fPropertyRecPtr colors1 = dynamic_cast<GeoVec3fProperty*>(geo->getColors());
         GeoVec3fPropertyRecPtr colors2 = dynamic_cast<GeoVec3fProperty*>(geo->getSecondaryColors());
         geo->setColors(colors2);

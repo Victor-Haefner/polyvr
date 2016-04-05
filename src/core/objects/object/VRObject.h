@@ -100,9 +100,9 @@ class VRObject : public std::enable_shared_from_this<VRStorage>, public VRName, 
         VRObjectPtr hasAncestorWithAttachment(string name);
         vector<VRObjectPtr> getChildrenWithAttachment(string name);
 
-        void setCore(NodeCoreRecPtr c, string _type, bool force = false);
-        NodeCoreRecPtr getCore();
-        void switchCore(NodeCoreRecPtr c);
+        void setCore(NodeCoreMTRecPtr c, string _type, bool force = false);
+        NodeCoreMTRecPtr getCore();
+        void switchCore(NodeCoreMTRecPtr c);
 
         void setVolume(bool b);
 

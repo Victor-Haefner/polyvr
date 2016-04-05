@@ -150,7 +150,7 @@ void VRObject::remLink(VRObjectPtr obj) {
     links.erase(obj.get());
 }
 
-void VRObject::setCore(NodeCoreRecPtr c, string _type, bool force) {
+void VRObject::setCore(NodeCoreMTRecPtr c, string _type, bool force) {
     if (specialized && !force) {
         cout << "\nError, Object allready specialized, skip setCore()\n";
         return;
@@ -162,10 +162,10 @@ void VRObject::setCore(NodeCoreRecPtr c, string _type, bool force) {
 }
 
 /** Returns the object OSG core **/
-NodeCoreRecPtr VRObject::getCore() { return node->getCore(); }
+NodeCoreMTRecPtr VRObject::getCore() { return node->getCore(); }
 
 /** Switch the object core by another **/
-void VRObject::switchCore(NodeCoreRecPtr c) {
+void VRObject::switchCore(NodeCoreMTRecPtr c) {
     if(!specialized) return;
     node->setCore(c);
 }

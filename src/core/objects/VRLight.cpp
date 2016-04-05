@@ -227,7 +227,7 @@ void VRLight::setPointlight() { switchCore(p_light); }
 void VRLight::setSpotlight() { switchCore(s_light); }
 void VRLight::setDirectionallight() { switchCore(d_light); }
 
-LightRecPtr VRLight::getLightCore() { return dynamic_pointer_cast<Light>(getCore()); }
+LightMTRecPtr VRLight::getLightCore() { return dynamic_pointer_cast<Light>(getCore()); }
 string VRLight::getLightType() { return lightType; };
 
 OSG_END_NAMESPACE;

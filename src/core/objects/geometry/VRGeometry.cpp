@@ -71,7 +71,7 @@ VRGeometryPtr VRGeometry::create(string name, string primitive, string params) {
 VRGeometryPtr VRGeometry::ptr() { return static_pointer_cast<VRGeometry>( shared_from_this() ); }
 
 /** Set the geometry mesh (OSG geometry core) **/
-void VRGeometry::setMesh(GeometryRecPtr g, Reference ref, bool keep_material) {
+void VRGeometry::setMesh(GeometryMTRecPtr g, Reference ref, bool keep_material) {
     if (g == 0) return;
     if (mesh_node) getNode()->subChild(mesh_node);
 
@@ -88,7 +88,7 @@ void VRGeometry::setMesh(GeometryRecPtr g, Reference ref, bool keep_material) {
     meshChanged();
 }
 
-void VRGeometry::setMesh(GeometryRecPtr g) {
+void VRGeometry::setMesh(GeometryMTRecPtr g) {
     Reference ref;
     ref.type = CODE;
     setMesh(g, ref);
@@ -137,7 +137,7 @@ void VRGeometry::create(int type, vector<Vec3f> pos, vector<Vec3f> norms, vector
     Mat->setAmbient(Color3f(0.4, 0.4, 0.2));
     Mat->setSpecular(Color3f(0.1, 0.1, 0.1));
 
-    GeometryRecPtr geo = Geometry::create();
+    GeometryMTRecPtr geo = Geometry::create();
     geo->setTypes(Type);
     geo->setLengths(Length);
     geo->setIndices(Indices);
@@ -175,7 +175,7 @@ void VRGeometry::setType(int t) {
 
 void VRGeometry::makeUnique() {
     if (mesh_node == 0) return;
-    NodeRecPtr clone = deepCloneTree( mesh_node );
+    NodeMTRecPtr clone = deepCloneTree( mesh_node );
     setMesh( dynamic_cast<Geometry*>( clone->getCore() ), source );
 }
 
@@ -639,7 +639,7 @@ float VRGeometry::getMin(int axis) {
 }
 
 /** Returns the mesh as a OSG geometry core **/
-GeometryRecPtr VRGeometry::getMesh() {
+GeometryMTRecPtr VRGeometry::getMesh() {
     if(meshSet) return mesh;
     else return 0;
 }

@@ -45,7 +45,7 @@ CSGGeometryPtr CSGGeometry::create(string name) { return shared_ptr<CSGGeometry>
 void CSGGeometry::setCSGGeometry(CGAL::Polyhedron *p) {
 	if (!p->is_valid()) return;
 	polyhedron = p;
-	VRGeometry::setMesh((GeometryRecPtr)toOsgGeometry(p));
+	VRGeometry::setMesh((GeometryMTRecPtr)toOsgGeometry(p));
 }
 
 CGAL::Polyhedron* CSGGeometry::getCSGGeometry() {
@@ -126,7 +126,7 @@ GeometryTransitPtr CSGGeometry::toOsgGeometry(CGAL::Polyhedron *p) {
 	GeoUInt32PropertyRecPtr lengths = GeoUInt32Property::create();
 	lengths->addValue(indices->size());
 
-	GeometryRecPtr mesh = Geometry::create();
+	GeometryMTRecPtr mesh = Geometry::create();
 	mesh->setPositions(positions);
 	mesh->setNormals(normals);
 	mesh->setIndices(indices);

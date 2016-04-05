@@ -47,8 +47,8 @@ class VRImport {
 
         void fillCache(string path, VRTransformPtr obj);
         VRTransformPtr prependTransform(VRObjectPtr o, string path);
-        static void fixEmptyNames(NodeRecPtr o, map<string, bool>& m, string parentName = "NAN", int iChild = 0);
-        static VRObjectPtr OSGConstruct(NodeRecPtr n, VRObjectPtr parent = 0, string name = "", string currentFile = "", NodeCore* geoTrans = 0, string geoTransName = "");
+        static void fixEmptyNames(NodeMTRecPtr o, map<string, bool>& m, string parentName = "NAN", int iChild = 0);
+        static VRObjectPtr OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent = 0, string name = "", string currentFile = "", NodeCore* geoTrans = 0, string geoTransName = "");
 
         static void osgLoad(string path, VRObjectPtr parent);
 

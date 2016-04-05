@@ -17,9 +17,9 @@ class VRLightBeacon;
 
 class VRLight : public VRObject {
     protected:
-        DirectionalLightRecPtr d_light;
-        PointLightRecPtr p_light;
-        SpotLightRecPtr s_light;
+        DirectionalLightMTRecPtr d_light;
+        PointLightMTRecPtr p_light;
+        SpotLightMTRecPtr s_light;
         string lightType;
         string shadowType;
         VRLightBeaconWeakPtr beacon;
@@ -73,7 +73,7 @@ class VRLight : public VRObject {
         void setSpotlight();
         void setDirectionallight();
 
-        LightRecPtr getLightCore();
+        LightMTRecPtr getLightCore();
         string getLightType();
 
         static vector<string> getTypes();

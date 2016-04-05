@@ -12,7 +12,7 @@ class VRLightBeacon : public VRTransform {
     protected:
         VRLightWeakPtr light;
         string light_name;
-        NodeRecPtr lightGeo;
+        NodeMTRecPtr lightGeo;
 
         void loadContent(xmlpp::Element* e);
 

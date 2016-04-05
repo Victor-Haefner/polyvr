@@ -29,7 +29,7 @@ float calcArea(Vec3f p1, Vec3f p2, Vec3f p3) {
 
  // Converts geometry to a polyhedron && applies the geometry node's world transform to the polyhedron.
 // OpenSG geometry data isn't transformed itself but has an associated transform core. Both are unified for CGAL.
-CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryRecPtr geometry, Matrix worldTransform, bool& success) {
+CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryMTRecPtr geometry, Matrix worldTransform, bool& success) {
 	TriangleIterator it;
 	auto gpos = geometry->getPositions();
 
