@@ -12,12 +12,15 @@
 #include "core/setup/VRSetup.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
+#include "core/utils/toString.h"
 
 Gtk::FileChooserDialog* VRGuiFile::dialog = 0;
 Gtk::Table* VRGuiFile::addon = 0;
 sigc::slot<void> VRGuiFile::sigApply = sigc::slot<void>();
 sigc::slot<void> VRGuiFile::sigClose = sigc::slot<void>();
 sigc::slot<void> VRGuiFile::sigSelect = sigc::slot<void>();
+bool VRGuiFile::cache_override = 0;
+float VRGuiFile::scale = 1;
 
 typedef boost::filesystem::path path;
 
@@ -28,6 +31,9 @@ void VRGuiFile::init() {
     dialog->signal_selection_changed().connect( sigc::ptr_fun( VRGuiFile::select ));
     dialog->signal_file_activated().connect( sigc::ptr_fun(VRGuiFile::apply) );
     dialog->set_action(Gtk::FILE_CHOOSER_ACTION_OPEN);
+
+    setEntryCallback("entry21", sigc::ptr_fun(&VRGuiFile::on_edit_import_scale) );
+    setCheckButtonCallback("cache_override", sigc::ptr_fun(&VRGuiFile::on_toggle_cache_override) );
 }
 
 void VRGuiFile::open(string button, int action, string title) {
@@ -188,3 +194,13 @@ vector<string> VRGuiFile::listDir(string dir) {
 
     return res;
 }
+
+void VRGuiFile::on_toggle_cache_override() {
+    cache_override = getCheckButtonState("cache_override");
+}
+
+void VRGuiFile::on_edit_import_scale() {
+    scale = toFloat( getTextEntry("entry21") );
+}
+
+

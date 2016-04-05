@@ -56,18 +56,6 @@ VRSceneLoader* VRSceneLoader::get() {
     return s;
 }
 
-int VRSceneLoader::fileSize(string path) {
-    ifstream in(path, ios::binary | ios::ate);
-    int L = in.tellg();
-    in.close();
-    return L;
-}
-
-VRTransformPtr VRSceneLoader::load3DContent(string filepath, VRObjectPtr parent, bool reload) {
-    if (ihr_flag) if (fileSize(filepath) > 3e7) return 0;
-    return VRImport::get()->load(filepath, parent, reload);
-}
-
 void VRSceneLoader::saveScene(string file, xmlpp::Element* guiN) {
     if (boost::filesystem::exists(file))
         file = boost::filesystem::canonical(file).string();
@@ -187,11 +175,7 @@ void VRSceneLoader::loadScene(string path) {
 
     scene->load(sceneN);
     //timer.print();
-
-    ihr_flag = false;
 }
-
-void VRSceneLoader::ingoreHeavyRessources() { ihr_flag = true; }
 
 
 OSG_END_NAMESPACE;

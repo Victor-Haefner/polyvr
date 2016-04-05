@@ -16,7 +16,6 @@ class VRGuiScene {
         string dragPath;
         int dragPos = 0;
         VRGuiContextMenu* menu;
-        bool cache_override;
 
         // ------------- transform -----------------------
         void on_toggle_T_constraint_mode();
@@ -98,7 +97,6 @@ class VRGuiScene {
 
         // ------------- other --------------------------
         void initCallbacks();
-        void on_toggle_cache_override();
         void on_collada_import_clicked();
 
         void on_focus_clicked();

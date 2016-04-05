@@ -41,6 +41,7 @@ class VRImport {
         map<string, Cache> cache;
 
         VRProgressPtr progress;
+        bool ihr_flag = false; // ignore heavy ressources
 
         VRImport();
 
@@ -58,6 +59,7 @@ class VRImport {
         VRGeometryPtr loadGeometry(string path, string name);
 
         VRProgressPtr getProgressObject();
+        void ingoreHeavyRessources();
 };
 
 OSG_END_NAMESPACE;

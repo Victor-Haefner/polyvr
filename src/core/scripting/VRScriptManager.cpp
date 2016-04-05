@@ -574,7 +574,7 @@ PyObject* VRScriptManager::loadGeometry(VRScriptManager* self, PyObject *args, P
 
     VRObjectPtr prnt = VRSceneManager::getCurrent()->getRoot()->find( parent );
 
-    VRTransformPtr obj = VRImport::get()->load( path, prnt, ignoreCache, preset, threaded);
+    VRTransformPtr obj = VRImport::get()->load( path, prnt, !ignoreCache, preset, threaded);
     if (obj == 0) {
         VRGuiManager::get()->printInfo("Warning: " + string(path) + " not loaded!\n");
         Py_RETURN_NONE;
@@ -674,8 +674,10 @@ PyObject* VRScriptManager::stackCall(VRScriptManager* self, PyObject *args) {
 
 void on_py_file_diag_cb(PyObject* pyFkt) {
     string res = VRGuiFile::getRelativePath_toWorkdir();
-    PyObject *pArgs = PyTuple_New(1);
+    float scale = VRGuiFile::getScale();
+    PyObject *pArgs = PyTuple_New(2);
     PyTuple_SetItem( pArgs, 0, PyString_FromString(res.c_str()) );
+    PyTuple_SetItem( pArgs, 1, PyFloat_FromDouble(scale) );
     execCall( pyFkt, pArgs, 0 );
 }
 

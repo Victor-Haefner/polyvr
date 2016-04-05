@@ -82,12 +82,22 @@ void VRImport::osgLoad(string path, VRObjectPtr res) {
     res->addChild( OSGConstruct(n, res, path, path) );
 }
 
+int fileSize(string path) {
+    ifstream in(path, ios::binary | ios::ate);
+    int L = in.tellg();
+    in.close();
+    return L;
+}
+
 VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, string preset, bool thread) {
     cout << "VRImport::load " << path << " " << preset << endl;
+    if (ihr_flag) if (fileSize(path) > 3e7) return 0;
     setlocale(LC_ALL, "C");
 
     // check cache
-    reload = reload? true : (cache.count(path) == 0);
+    cout << "RELOAD " << reload << endl;
+    reload = reload ? true : (cache.count(path) == 0);
+    cout << "RELOAD " << reload << endl;
     if (!reload) {
         auto res = cache[path].retrieve(parent);
         cout << "load " << path << " : " << res << " from cache!\n";
@@ -282,4 +292,10 @@ VRImport::Cache::Cache(VRTransformPtr root) {
 
 VRProgressPtr VRImport::getProgressObject() { return progress; }
 
+void VRImport::ingoreHeavyRessources() { ihr_flag = true; }
+
+
 OSG_END_NAMESPACE;
+
+
+

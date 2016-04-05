@@ -25,6 +25,7 @@
 #include "core/objects/geometry/VRPrimitive.h"
 #include "core/objects/geometry/VRConstraint.h"
 #include "core/scene/VRScene.h"
+#include "core/scene/import/VRImport.h"
 #include "core/utils/toString.h"
 #include "VRGuiUtils.h"
 #include "VRGuiSignals.h"
@@ -820,12 +821,8 @@ void VRGuiScene::on_collada_import_clicked() {
     VRGuiFile::close();
 
     // import stuff
-    VRObjectPtr tmp = VRSceneLoader::get()->load3DContent(rel_path, getSelected(), cache_override);
+    VRObjectPtr tmp = VRImport::get()->load(rel_path, getSelected());
     parseSGTree(tmp, selected_itr);
-}
-
-void VRGuiScene::on_toggle_cache_override() {
-    cache_override = getCheckButtonState("cache_override");
 }
 
 class TestDnDcols : public Gtk::TreeModel::ColumnRecord {
@@ -1267,7 +1264,6 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
     setCheckButtonCallback("checkbutton32", sigc::mem_fun(*this, &VRGuiScene::on_toggle_light_shadow) );
     setCheckButtonCallback("checkbutton13", sigc::mem_fun(*this, &VRGuiScene::on_toggle_phys) );
     setCheckButtonCallback("checkbutton33", sigc::mem_fun(*this, &VRGuiScene::on_toggle_dynamic) );
-    setCheckButtonCallback("cache_override", sigc::mem_fun(*this, &VRGuiScene::on_toggle_cache_override) );
     setCheckButtonCallback("checkbutton35", sigc::mem_fun(*this, &VRGuiScene::on_lod_decimate_changed) );
 
     setComboboxCallback("combobox14", sigc::mem_fun(*this, &VRGuiScene::on_change_group));

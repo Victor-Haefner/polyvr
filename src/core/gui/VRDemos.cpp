@@ -24,6 +24,7 @@
 #include "core/scene/VRSceneLoader.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
+#include "core/scene/import/VRImport.h"
 #include "core/setup/devices/VRSignal.h"
 #include "VRGuiUtils.h"
 #include "VRGuiSignals.h"
@@ -308,7 +309,7 @@ void VRDemos::on_advanced_start() {
     hideDialog("advanced_start");
     if (current_demo == 0) return;
 
-    if (lightweight) VRSceneLoader::get()->ingoreHeavyRessources(); // just for the next scene
+    if (lightweight) VRImport::get()->ingoreHeavyRessources(); // just for the next scene
 
     if (current_demo->running) toggleDemo(current_demo); // close demo if it is running
     toggleDemo(current_demo); // start demo

@@ -27,13 +27,10 @@ class VRSceneLoader {
         VRScene* scene;
         map<string, string> attr;
         vector<string> fileFilter;
-        bool ihr_flag = false; // ignore heavy ressources
 
         typedef map<xmlpp::Element*, map<string, string> > children_attribs;
 
         void optimizeGraph(VRObjectPtr obj);
-        int fileSize(string path);
-
         VRSceneLoader();
 
         //parser callback for the xml scene import
@@ -43,13 +40,8 @@ class VRSceneLoader {
         static VRSceneLoader* get();
         ~VRSceneLoader();
 
-        VRTransformPtr load3DContent(string filename, VRObjectPtr parent = 0, bool reload = false);
-
-        void ingoreHeavyRessources();
-
         void saveScene(string file, xmlpp::Element* guiN = 0);
         void loadScene(string file);
-
 };
 
 OSG_END_NAMESPACE;
