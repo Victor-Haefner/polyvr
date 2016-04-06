@@ -42,8 +42,8 @@ void VRUndoManager::recUndo(VRUpdatePtr f_undo, VRUpdatePtr f_redo) {
 void VRUndoManager::redo() {
     if (current == data.rbegin()) return;
     ward = true;
-    current->second->undo();
     current--;
+    current->second->redo();
     ward = false;
 }
 
