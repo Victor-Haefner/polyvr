@@ -12,6 +12,7 @@ class VRThread;
 class VRMultiWindow : public VRWindow {
     private:
         vector<string> servers;
+        string connection_type ="Multicast";
         MultiDisplayWindowRecPtr win;
         int Nx = 1;
         int Ny = 1;
@@ -40,6 +41,8 @@ class VRMultiWindow : public VRWindow {
         void addServer(string server);
         void setServer(int x, int y, string);
         string getServer(int x, int y);
+        void setConnectionType(string ct);
+        string getConnectionType();
 
         void setNTiles(int x, int y);
         int getNXTiles();

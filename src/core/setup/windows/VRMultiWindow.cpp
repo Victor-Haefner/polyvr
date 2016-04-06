@@ -69,6 +69,8 @@ void VRMultiWindow::initialize() {
     win->setSize(width, height);
     win->setHServers(Nx);
     win->setVServers(Ny);
+
+    win->setConnectionType(connection_type); // "Multicast", "SockPipeline"
     for (auto s : servers) win->editMFServers()->push_back(s);
     for (auto wv : views) if (auto v = wv.lock()) v->setWindow(win);
 
@@ -90,8 +92,9 @@ void VRMultiWindow::render() {
 }
 
 void VRMultiWindow::reset() { state = INITIALIZING; }
-
 int VRMultiWindow::getState() { return state; }
+void VRMultiWindow::setConnectionType(string ct) { connection_type = ct; }
+string VRMultiWindow::getConnectionType() { return connection_type; }
 
 string VRMultiWindow::getStateString() {
     if (state == CONNECTED) return "connected";
@@ -105,6 +108,7 @@ void VRMultiWindow::save(xmlpp::Element* node) {
     VRWindow::save(node);
     node->set_attribute("Nx", toString(Nx));
     node->set_attribute("Ny", toString(Ny));
+    node->set_attribute("ConnType", connection_type);
 
     xmlpp::Element* sn;
     for (uint i=0; i<servers.size(); i++) {
@@ -118,6 +122,7 @@ void VRMultiWindow::load(xmlpp::Element* node) {
     VRWindow::load(node);
     Nx = toInt( node->get_attribute("Nx")->get_value() );
     Ny = toInt( node->get_attribute("Ny")->get_value() );
+    if (node->get_attribute("ConnType")) connection_type = node->get_attribute("ConnType")->get_value();
     setNTiles(Nx, Ny);
 
     xmlpp::Node::NodeList nl = node->get_children();

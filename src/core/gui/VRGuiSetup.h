@@ -65,6 +65,7 @@ class VRGuiSetup {
         void on_toggle_display_active();
         void on_toggle_display_multi();
         void on_servern_edit();
+        void on_server_ct_toggled();
         void on_server_edit(const Glib::ustring& path, const Glib::ustring& new_name);
         void on_connect_mw_clicked();
 

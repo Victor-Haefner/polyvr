@@ -96,6 +96,9 @@ void VRGuiSetup::updateObjectData() {
             setTextEntry("entry33", ssx.str());
             setTextEntry("entry34", ssy.str());
             setLabel("win_state", mwin->getStateString());
+            string ct = mwin->getConnectionType();
+            if (ct == "Multicast") setRadioButton("radiobutton6", 1);
+            if (ct == "SockPipeline") setRadioButton("radiobutton7", 1);
 
             //TODO: clear server array && add entry for each nx * ny
             Glib::RefPtr<Gtk::ListStore> servers = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("serverlist"));
@@ -492,6 +495,20 @@ void VRGuiSetup::on_servern_edit() {
 
     VRMultiWindow* mwin = (VRMultiWindow*)selected_object;
     mwin->setNTiles(toInt(nx.c_str()), toInt(ny.c_str()));
+    updateObjectData();
+    setToolButtonSensitivity("toolbutton12", true);
+}
+
+void VRGuiSetup::on_server_ct_toggled() {
+    if (guard) return;
+    if (selected_type != "window") return;
+
+    bool bmc = getRadioButtonState("radiobutton6");
+    bool bsp = getRadioButtonState("radiobutton7");
+
+    VRMultiWindow* mwin = (VRMultiWindow*)selected_object;
+    if (bmc) mwin->setConnectionType("Multicast");
+    if (bsp) mwin->setConnectionType("SockPipeline");
     updateObjectData();
     setToolButtonSensitivity("toolbutton12", true);
 }
@@ -903,6 +920,9 @@ VRGuiSetup::VRGuiSetup() {
     setButtonCallback("button6", sigc::mem_fun(*this, &VRGuiSetup::on_netnode_key_clicked) );
     setButtonCallback("button1", sigc::mem_fun(*this, &VRGuiSetup::on_netslave_start_clicked) );
     setButtonCallback("button30", sigc::mem_fun(*this, &VRGuiSetup::on_netnode_stopall_clicked) );
+
+    setRadioButtonCallback("radiobutton6", sigc::mem_fun(*this, &VRGuiSetup::on_server_ct_toggled) );
+    setRadioButtonCallback("radiobutton7", sigc::mem_fun(*this, &VRGuiSetup::on_server_ct_toggled) );
 
     setComboboxCallback("combobox6", sigc::mem_fun(*this, &VRGuiSetup::on_setup_changed) );
     setComboboxCallback("combobox18", sigc::mem_fun(*this, &VRGuiSetup::on_change_view_user) );
