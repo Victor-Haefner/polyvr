@@ -1,0 +1,9 @@
+#!/bin/bash
+libs="-lOSGBase -lOSGContribTrapezoidalShadowMaps -lOSGCluster -lOSGDrawable -lOSGEffectGroups -lOSGGroup -lOSGImageFileIO -lOSGState -lOSGSystem -lOSGUtil -lOSGText -lOSGWindow -lOSGWindowGLUT -lOSGWindowX -lGLU -lGL -lSM -lICE -lX11 -lXext -lglut -lXmu -lXi -lboost_system"
+libpaths="-L/usr/lib/opensg"
+flags="-DLC_ALL=C -DOSG_WITH_GLUT -DOSG_WITH_JPG -DOSG_WITH_PNG -D_OSG_HAVE_CONFIGURED_H_"
+
+g++ clusterserver.cpp $libs $libpaths $flags -o clusterserver
+g++ clusterclient.cpp $libs $libpaths $flags -o clusterclient
+
+

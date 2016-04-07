@@ -1,0 +1,7 @@
+#!/bin/bash
+
+path="`dirname \"$0\"`"
+libs="OSGBase:OSGGroup:OSGUtil:OSGCluster:OSGDrawable:OSGImageFileIO:OSGWindowGLUT:OSGDynamics:OSGState:OSGWindow:OSGEffectGroups:OSGSystem:OSGWindowX:OSGContribComputeBase:OSGContribTrapezoidalShadowMaps:OSGText"
+
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/opensg && export OSG_LOAD_LIBS=$libs && $path/clusterserver -geometry 512x512+0+0 -w 127.0.0.1:30000 &
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/opensg && export OSG_LOAD_LIBS=$libs && $path/clusterclient 127.0.0.1:30000

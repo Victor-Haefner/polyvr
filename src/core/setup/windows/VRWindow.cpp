@@ -64,6 +64,7 @@ void VRWindow::update( weak_ptr<VRThread>  wt) {
 
         if (t->control_flag) {
             barrier->enter(active_window_count+1);
+
             Thread::getCurrentChangeList()->merge(*t->appThread->getChangeList());
             render();
             Thread::getCurrentChangeList()->clear();
