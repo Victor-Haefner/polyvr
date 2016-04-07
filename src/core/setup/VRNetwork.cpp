@@ -119,8 +119,8 @@ void VRNetworkSlave::start() {
     string pipes = " > /dev/null 2> /dev/null < /dev/null &";
     string args;
     if (connection_type == "Multicast") args = " -m " + getName();
-    if (connection_type == "SockPipeline") args = " -p -a " + node->getAddress() + ":3000";
-    if (connection_type == "StreamSock") args = " -a " + node->getAddress() + ":3000";
+    if (connection_type == "SockPipeline") args = " -p " + node->getAddress() + ":3000";
+    if (connection_type == "StreamSock") args = " " + node->getAddress() + ":3000";
     args += fullscreen ? " " : " -w ";
     args += active_stereo ? " -A " : " ";
 

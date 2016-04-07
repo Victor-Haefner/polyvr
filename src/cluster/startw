@@ -3,4 +3,4 @@
 path="`dirname \"$0\"`"
 libs="OSGBase:OSGGroup:OSGUtil:OSGCluster:OSGDrawable:OSGImageFileIO:OSGWindowGLUT:OSGDynamics:OSGState:OSGWindow:OSGEffectGroups:OSGSystem:OSGWindowX:OSGContribComputeBase:OSGContribTrapezoidalShadowMaps:OSGText"
 
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/opensg && export OSG_LOAD_LIBS=$libs && $path/VRServer -m -w $@ -geometry 512x512+0+0
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/opensg && export OSG_LOAD_LIBS=$libs && $path/VRServer -w $@ -geometry 512x512+0+0

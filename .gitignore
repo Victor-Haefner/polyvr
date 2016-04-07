@@ -12,3 +12,6 @@ wblog.log
 dependencies
 PolyVR.cscope_file_list
 src/cluster/VRServer
+src/cluster/clusterserver
+src/cluster/clusterclient
+
