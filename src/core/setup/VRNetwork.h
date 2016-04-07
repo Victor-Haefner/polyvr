@@ -20,7 +20,7 @@ class VRNetworkSlave : public VRName {
         VRNetworkNodePtr node;
 
         string display = ":0.0";
-        bool multicast = true;
+        string connection_type = "Multicast";
         bool fullscreen = true;
         bool active_stereo = false;
         bool autostart = false;
@@ -32,7 +32,7 @@ class VRNetworkSlave : public VRName {
         static VRNetworkSlavePtr create(string name = "Slave");
 
         void setNode(VRNetworkNodePtr n);
-        void set(bool mc, bool fs, bool as, bool au, string a);
+        void set(string ct, bool fs, bool as, bool au, string a);
 
         void start();
         void stop();
@@ -41,12 +41,12 @@ class VRNetworkSlave : public VRName {
         string getStat();
 
         string getDisplay();
-        bool getMulticast();
+        string getConnectionType();
         bool getFullscreen();
         bool getActiveStereo();
         bool getAutostart();
 
-        void setMulticast(bool b);
+        void setConnectionType(string ct);
         void setFullscreen(bool b);
         void setActiveStereo(bool b);
         void setAutostart(bool b);

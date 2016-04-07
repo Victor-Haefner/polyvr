@@ -97,7 +97,7 @@ VRNetworkSlave::VRNetworkSlave(string name) {
     setNameSpace("NetworkNode");
     setName(name);
 
-    store("multicast", &multicast);
+    store("connection_type", &connection_type);
     store("fullscreen", &fullscreen);
     store("active_stereo", &active_stereo);
     store("display", &display);
@@ -117,9 +117,12 @@ void VRNetworkSlave::start() {
     string path = "~/Projects/polyvr/src/cluster/start";
     string disp = "export DISPLAY=\"" + display + "\" && ";
     string pipes = " > /dev/null 2> /dev/null < /dev/null &";
-    string args = multicast ? " -m " + getName() + " " : " -p -a " + node->getAddress();
-    args += fullscreen ? "" : " -w ";
-    args += active_stereo ? " -A " : "";
+    string args;
+    if (connection_type == "Multicast") args = " -m " + getName();
+    if (connection_type == "SockPipeline") args = " -p -a " + node->getAddress() + ":3000";
+    if (connection_type == "StreamSock") args = " -a " + node->getAddress() + ":3000";
+    args += fullscreen ? " " : " -w ";
+    args += active_stereo ? " -A " : " ";
 
     stat = node->execCmd(disp + path + args + pipes, false);
     update();
@@ -133,8 +136,8 @@ void VRNetworkSlave::stop() {
 
 void VRNetworkSlave::setNode(VRNetworkNodePtr n) { node = n; }
 
-void VRNetworkSlave::set(bool mc, bool fs, bool as, bool au, string a) {
-    multicast = mc;
+void VRNetworkSlave::set(string ct, bool fs, bool as, bool au, string a) {
+    connection_type = ct;
     fullscreen = fs;
     active_stereo = as;
     autostart = au;
@@ -146,13 +149,13 @@ string VRNetworkSlave::getStatMulticast() { return stat_multicast; }
 string VRNetworkSlave::getStat() { return stat; }
 
 string VRNetworkSlave::getDisplay() { return display; }
-bool VRNetworkSlave::getMulticast() { return multicast; }
+string VRNetworkSlave::getConnectionType() { return connection_type; }
 bool VRNetworkSlave::getFullscreen() { return fullscreen; }
 bool VRNetworkSlave::getActiveStereo() { return active_stereo; }
 bool VRNetworkSlave::getAutostart() { return autostart; }
 
 void VRNetworkSlave::setDisplay(string a) { display = a; update(); }
-void VRNetworkSlave::setMulticast(bool b) { multicast = b; update(); }
+void VRNetworkSlave::setConnectionType(string b) { connection_type = b; update(); }
 void VRNetworkSlave::setFullscreen(bool b) { fullscreen = b; update(); }
 void VRNetworkSlave::setAutostart(bool b) { autostart = b; update(); }
 

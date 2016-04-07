@@ -99,6 +99,7 @@ void VRGuiSetup::updateObjectData() {
             string ct = mwin->getConnectionType();
             if (ct == "Multicast") setRadioButton("radiobutton6", 1);
             if (ct == "SockPipeline") setRadioButton("radiobutton7", 1);
+            if (ct == "StreamSock") setRadioButton("radiobutton9", 1);
 
             //TODO: clear server array && add entry for each nx * ny
             Glib::RefPtr<Gtk::ListStore> servers = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("serverlist"));
@@ -237,11 +238,15 @@ void VRGuiSetup::updateObjectData() {
         setLabel("label138", n->getName());
         setLabel("label132", n->getStatMulticast());
         setLabel("label136", n->getStat());
-        setCheckButton("checkbutton30", n->getMulticast());
         setCheckButton("checkbutton29", n->getFullscreen());
         setCheckButton("checkbutton41", n->getActiveStereo());
         setCheckButton("checkbutton42", n->getAutostart());
         setTextEntry("entry19", n->getDisplay());
+
+        string ct = n->getConnectionType();
+        if (ct == "Multicast") setRadioButton("radiobutton10", 1);
+        if (ct == "SockPipeline") setRadioButton("radiobutton11", 1);
+        if (ct == "StreamSock") setRadioButton("radiobutton12", 1);
     }
 
     guard = false;
@@ -503,12 +508,12 @@ void VRGuiSetup::on_server_ct_toggled() {
     if (guard) return;
     if (selected_type != "window") return;
 
-    bool bmc = getRadioButtonState("radiobutton6");
-    bool bsp = getRadioButtonState("radiobutton7");
+    string ct = "StreamSock";
+    if ( getRadioButtonState("radiobutton6") ) ct = "Multicast";
+    if ( getRadioButtonState("radiobutton7") ) ct = "SockPipeline";
 
     VRMultiWindow* mwin = (VRMultiWindow*)selected_object;
-    if (bmc) mwin->setConnectionType("Multicast");
-    if (bsp) mwin->setConnectionType("SockPipeline");
+    mwin->setConnectionType(ct);
     updateObjectData();
     setToolButtonSensitivity("toolbutton12", true);
 }
@@ -794,9 +799,11 @@ void VRGuiSetup::on_netnode_stopall_clicked() {
 void VRGuiSetup::on_netslave_edited() {
     if (guard) return;
     VRNetworkSlave* n = (VRNetworkSlave*)selected_object;
-    n->set(getCheckButtonState("checkbutton30"), getCheckButtonState("checkbutton29"),
-           getCheckButtonState("checkbutton41"), getCheckButtonState("checkbutton42"),
-           getTextEntry("entry19"));
+    string ct = "StreamSock";
+    if ( getRadioButtonState("radiobutton10") ) ct = "Multicast";
+    if ( getRadioButtonState("radiobutton11") ) ct = "SockPipeline";
+    n->set(ct, getCheckButtonState("checkbutton29"), getCheckButtonState("checkbutton41"),
+           getCheckButtonState("checkbutton42"), getTextEntry("entry19"));
     setToolButtonSensitivity("toolbutton12", true);
     updateObjectData();
 }
@@ -923,6 +930,10 @@ VRGuiSetup::VRGuiSetup() {
 
     setRadioButtonCallback("radiobutton6", sigc::mem_fun(*this, &VRGuiSetup::on_server_ct_toggled) );
     setRadioButtonCallback("radiobutton7", sigc::mem_fun(*this, &VRGuiSetup::on_server_ct_toggled) );
+    setRadioButtonCallback("radiobutton9", sigc::mem_fun(*this, &VRGuiSetup::on_server_ct_toggled) );
+    setRadioButtonCallback("radiobutton10", sigc::mem_fun(*this, &VRGuiSetup::on_netslave_edited));
+    setRadioButtonCallback("radiobutton11", sigc::mem_fun(*this, &VRGuiSetup::on_netslave_edited));
+    setRadioButtonCallback("radiobutton12", sigc::mem_fun(*this, &VRGuiSetup::on_netslave_edited));
 
     setComboboxCallback("combobox6", sigc::mem_fun(*this, &VRGuiSetup::on_setup_changed) );
     setComboboxCallback("combobox18", sigc::mem_fun(*this, &VRGuiSetup::on_change_view_user) );
@@ -953,7 +964,6 @@ VRGuiSetup::VRGuiSetup() {
     setCheckButtonCallback("checkbutton39", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_vrpn_test_server));
     setCheckButtonCallback("checkbutton40", sigc::mem_fun(*this, &VRGuiSetup::on_toggle_vrpn_verbose));
     setCheckButtonCallback("checkbutton29", sigc::mem_fun(*this, &VRGuiSetup::on_netslave_edited));
-    setCheckButtonCallback("checkbutton30", sigc::mem_fun(*this, &VRGuiSetup::on_netslave_edited));
     setCheckButtonCallback("checkbutton41", sigc::mem_fun(*this, &VRGuiSetup::on_netslave_edited));
     setCheckButtonCallback("checkbutton42", sigc::mem_fun(*this, &VRGuiSetup::on_netslave_edited));
 
