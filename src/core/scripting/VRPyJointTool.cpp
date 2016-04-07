@@ -17,8 +17,8 @@ PyObject* VRPyJointTool::append(VRPyJointTool* self, PyObject* args) {
     if (!self->valid()) return NULL;
     VRPyTransform* o; VRPyPose* p;
     if (! PyArg_ParseTuple(args, "OO", &o, &p)) return NULL;
-    self->objPtr->append( o->objPtr, *p->objPtr );
-    Py_RETURN_TRUE;
+    int i = self->objPtr->append( o->objPtr, *p->objPtr );
+    return PyInt_FromLong(i);
 }
 
 PyObject* VRPyJointTool::clear(VRPyJointTool* self) {

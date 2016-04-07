@@ -28,7 +28,7 @@ class VRJointTool : public VRAnalyticGeometry {
         static VRJointToolPtr create(string name);
         VRJointToolPtr ptr();
 
-        void append(VRTransformPtr t, pose p);
+        int append(VRTransformPtr t, pose p);
         void clear();
 };
 
