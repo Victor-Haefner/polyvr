@@ -95,6 +95,8 @@ class VRNetwork : public VRManager<VRNetworkNode> {
     public:
         VRNetwork();
         ~VRNetwork();
+
+        void stopSlaves();
 };
 
 OSG_END_NAMESPACE;

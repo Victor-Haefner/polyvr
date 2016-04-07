@@ -12,7 +12,10 @@ using namespace OSG;
 //template<> VRNetworkNodePtr VRManager<VRNetworkNode>::add(string name);
 
 VRNetwork::VRNetwork() : VRManager("Network") {}
-VRNetwork::~VRNetwork() { cout << "~VRNetwork"; }
+VRNetwork::~VRNetwork() {
+    stopSlaves();
+    cout << "~VRNetwork";
+}
 
 
 VRNetworkNode::VRNetworkNode(string name) : VRManager("NetworkNode") {
@@ -68,6 +71,10 @@ void VRNetworkNode::initSlaves() {
         s->setNode(ptr());
         if (s->getAutostart()) s->start();
     }
+}
+
+void VRNetwork::stopSlaves() {
+    for (auto n : getData()) n->stopSlaves();
 }
 
 void VRNetworkNode::stopSlaves() {
