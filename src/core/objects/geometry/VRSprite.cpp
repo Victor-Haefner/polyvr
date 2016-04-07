@@ -74,11 +74,13 @@ void VRSprite::webOpen(string path, int res, float ratio){
 
     VRDevice* mouse = VRSetupManager::getCurrent()->getDevice("mouse");
     VRDevice* keyboard = VRSetupManager::getCurrent()->getDevice("keyboard");
+    VRDevice* flystick = VRSetupManager::getCurrent()->getDevice("flystick");
 
     web->setMaterial(mat);
     web->open(path);
-    web->addMouse(mouse, ptr(), 0, 2, 3, 4);
-    web->addKeyboard(keyboard);
+    if (mouse) web->addMouse(mouse, ptr(), 0, 2, 3, 4);
+    if (flystick) web->addMouse(flystick, ptr(), 0, -1, -1, -1);
+    if (keyboard) web->addKeyboard(keyboard);
     web->setResolution(res);
     web->setAspectRatio(ratio);
 }
