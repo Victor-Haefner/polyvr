@@ -91,6 +91,7 @@ void VRFactory::loadVRML(string path, VRProgressPtr progress, VRTransformPtr res
     file.seekg(0, ios_base::end);
     size_t fileSize = file.tellg();
     file.seekg(0, ios_base::beg);
+    if (progress == 0) progress = VRProgress::create();
     progress->setup("load VRML " + path, fileSize);
     progress->reset();
 
