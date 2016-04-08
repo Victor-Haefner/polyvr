@@ -1372,14 +1372,6 @@ cave allocated</property>
     </columns>
   </object>
   <object class="GtkListStore" id="liststore9"/>
-  <object class="GtkListStore" id="primitive_opts">
-    <columns>
-      <!-- column-name param -->
-      <column type="gchararray"/>
-      <!-- column-name value -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
   <object class="GtkListStore" id="mouse_list">
     <columns>
       <!-- column-name mouse -->
@@ -1408,16 +1400,6 @@ cave allocated</property>
       <column type="gchararray"/>
     </columns>
   </object>
-  <object class="GtkListStore" id="prof_fkts">
-    <columns>
-      <!-- column-name fkt -->
-      <column type="gchararray"/>
-      <!-- column-name time -->
-      <column type="gchararray"/>
-      <!-- column-name color -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
   <object class="GtkListStore" id="phys_shapes">
     <columns>
       <!-- column-name shapes -->
@@ -1427,6 +1409,24 @@ cave allocated</property>
   <object class="GtkListStore" id="prim_list">
     <columns>
       <!-- column-name prims -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+  <object class="GtkListStore" id="primitive_opts">
+    <columns>
+      <!-- column-name param -->
+      <column type="gchararray"/>
+      <!-- column-name value -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+  <object class="GtkListStore" id="prof_fkts">
+    <columns>
+      <!-- column-name fkt -->
+      <column type="gchararray"/>
+      <!-- column-name time -->
+      <column type="gchararray"/>
+      <!-- column-name color -->
       <column type="gchararray"/>
     </columns>
   </object>
@@ -1860,6 +1860,12 @@ cave allocated</property>
                                 <child>
                                   <placeholder/>
                                 </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
                               </object>
                             </child>
                           </object>
@@ -1891,6 +1897,12 @@ cave allocated</property>
                                 <property name="can_focus">False</property>
                                 <property name="n_columns">2</property>
                                 <property name="homogeneous">True</property>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
                                 <child>
                                   <placeholder/>
                                 </child>
@@ -4437,7 +4449,7 @@ cave allocated</property>
                                           <object class="GtkLabel" id="label131">
                                             <property name="visible">True</property>
                                             <property name="can_focus">False</property>
-                                            <property name="label" translatable="yes">multicast (name):</property>
+                                            <property name="label" translatable="yes">connection identifier:</property>
                                           </object>
                                           <packing>
                                             <property name="x_options">GTK_FILL</property>
@@ -4667,15 +4679,44 @@ cave allocated</property>
                                           </packing>
                                         </child>
                                         <child>
-                                          <object class="GtkFixed" id="fixed60">
+                                          <object class="GtkHBox" id="hbox19">
                                             <property name="visible">True</property>
                                             <property name="can_focus">False</property>
+                                            <child>
+                                              <object class="GtkLabel" id="label140">
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">False</property>
+                                                <property name="label" translatable="yes">port: </property>
+                                              </object>
+                                              <packing>
+                                                <property name="expand">False</property>
+                                                <property name="fill">True</property>
+                                                <property name="position">0</property>
+                                              </packing>
+                                            </child>
+                                            <child>
+                                              <object class="GtkEntry" id="entry22">
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">True</property>
+                                                <property name="invisible_char">•</property>
+                                                <property name="primary_icon_activatable">False</property>
+                                                <property name="secondary_icon_activatable">False</property>
+                                                <property name="primary_icon_sensitive">True</property>
+                                                <property name="secondary_icon_sensitive">True</property>
+                                              </object>
+                                              <packing>
+                                                <property name="expand">False</property>
+                                                <property name="fill">True</property>
+                                                <property name="position">1</property>
+                                              </packing>
+                                            </child>
                                           </object>
                                           <packing>
                                             <property name="left_attach">2</property>
                                             <property name="right_attach">3</property>
                                             <property name="top_attach">2</property>
                                             <property name="bottom_attach">3</property>
+                                            <property name="x_options">GTK_FILL</property>
                                             <property name="y_options">GTK_FILL</property>
                                           </packing>
                                         </child>

@@ -109,6 +109,7 @@ VRNetworkSlave::VRNetworkSlave(string name) {
     store("active_stereo", &active_stereo);
     store("display", &display);
     store("autostart", &autostart);
+    store("port", &port);
 
     regStorageUpdateFkt( VRFunction<int>::create("network_slave_update", boost::bind(&VRNetworkSlave::update, this)) );
 }
@@ -126,8 +127,8 @@ void VRNetworkSlave::start() {
     string pipes = " > /dev/null 2> /dev/null < /dev/null &";
     string args;
     if (connection_type == "Multicast") args = " -m " + getName();
-    if (connection_type == "SockPipeline") args = " -p " + node->getAddress() + ":3000";
-    if (connection_type == "StreamSock") args = " " + node->getAddress() + ":3000";
+    if (connection_type == "SockPipeline") args = " -p " + node->getAddress() + ":" + toString(port);
+    if (connection_type == "StreamSock") args = " " + node->getAddress() + ":" + toString(port);
     args += fullscreen ? " " : " -w ";
     args += active_stereo ? " -A " : " ";
 
@@ -143,12 +144,13 @@ void VRNetworkSlave::stop() {
 
 void VRNetworkSlave::setNode(VRNetworkNodePtr n) { node = n; }
 
-void VRNetworkSlave::set(string ct, bool fs, bool as, bool au, string a) {
+void VRNetworkSlave::set(string ct, bool fs, bool as, bool au, string a, int p) {
     connection_type = ct;
     fullscreen = fs;
     active_stereo = as;
     autostart = au;
     display = a;
+    port = p;
     update();
 }
 
@@ -160,12 +162,17 @@ string VRNetworkSlave::getConnectionType() { return connection_type; }
 bool VRNetworkSlave::getFullscreen() { return fullscreen; }
 bool VRNetworkSlave::getActiveStereo() { return active_stereo; }
 bool VRNetworkSlave::getAutostart() { return autostart; }
+int VRNetworkSlave::getPort() { return port; }
 
 void VRNetworkSlave::setDisplay(string a) { display = a; update(); }
 void VRNetworkSlave::setConnectionType(string b) { connection_type = b; update(); }
 void VRNetworkSlave::setFullscreen(bool b) { fullscreen = b; update(); }
 void VRNetworkSlave::setAutostart(bool b) { autostart = b; update(); }
 
+string VRNetworkSlave::getConnectionIdentifier() {
+    if (connection_type == "Multicast") return getName();
+    else return node->getAddress() + ":" + toString(port);
+}
 
 
 
