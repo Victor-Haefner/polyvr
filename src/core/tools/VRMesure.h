@@ -5,6 +5,7 @@
 #include <OpenSG/OSGVector.h>
 #include <string>
 #include "core/utils/VRFunctionFwd.h"
+#include "core/math/pose.h"
 #include "VRAnalyticGeometry.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -14,9 +15,7 @@ class VRScene;
 
 class VRMeasure : public VRAnalyticGeometry {
     private:
-        Vec3f p1,p2,p3;
-        float d1,d2;
-        float angle;
+        pose P1,P2,P3;
 
         void update();
 
@@ -26,8 +25,8 @@ class VRMeasure : public VRAnalyticGeometry {
         static VRMeasurePtr create(string name);
         VRMeasurePtr ptr();
 
-        void setPoint(int i, Vec3f p);
-        void rollPoints(Vec3f p);
+        void setPoint(int i, pose p);
+        void rollPoints(pose p);
 };
 
 OSG_END_NAMESPACE;

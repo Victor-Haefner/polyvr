@@ -1,5 +1,6 @@
 #include "VRPyMeasure.h"
 #include "VRPyGeometry.h"
+#include "VRPyPose.h"
 #include "VRPyBaseT.h"
 
 using namespace OSG;
@@ -14,16 +15,19 @@ PyMethodDef VRPyMeasure::methods[] = {
 
 PyObject* VRPyMeasure::setPoint(VRPyMeasure* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    int i; PyObject* p;
+    int i; VRPyPose* p = 0;
     if (! PyArg_ParseTuple(args, "iO", &i, &p)) return NULL;
-    Vec3f v = parseVec3fList(p);
-    self->objPtr->setPoint( i, v );
+    if (!p || !p->objPtr) return NULL;
+    self->objPtr->setPoint( i, *p->objPtr );
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMeasure::rollPoints(VRPyMeasure* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    self->objPtr->rollPoints( parseVec3f(args) );
+    VRPyPose* p = 0;
+    if (! PyArg_ParseTuple(args, "O", &p)) return NULL;
+    if (!p || !p->objPtr) return NULL;
+    self->objPtr->rollPoints( *p->objPtr );
     Py_RETURN_TRUE;
 }
 
