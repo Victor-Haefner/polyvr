@@ -110,7 +110,9 @@ VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, Line ray) {
 VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree) {
     vector<VRObjectPtr> trees;
     if (auto sp = wtree.lock()) trees.push_back(sp);
-    else for (auto swp : dynTrees) if (auto sp = swp.second.lock()) trees.push_back(sp);
+    else for (auto grp : dynTrees) {
+        for (auto swp : grp.second) if (auto sp = swp.second.lock()) trees.push_back(sp);
+    }
 
     VRIntersection ins;
     VRDevice* dev = (VRDevice*)this;
@@ -118,7 +120,6 @@ VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree) {
     if (caster == 0) { cout << "Warning: VRIntersect::intersect, caster is 0!\n"; return ins; }
 
     uint now = VRGlobals::get()->CURRENT_FRAME;
-
     for (auto t : trees) {
         if (intersections.count(t.get())) {
             auto ins_tmp = intersections[t.get()];
@@ -248,12 +249,20 @@ void VRIntersect::showHitPoint(bool b) {//needs to be optimized for multiple sce
     else cross->hide();
 }
 
-void VRIntersect::addDynTree(VRObjectWeakPtr o) {
-    if (auto sp = o.lock()) dynTrees[ sp.get() ] = o;
+void VRIntersect::addDynTree(VRObjectPtr o, int prio) {
+    if (!o) return;
+    if (!dynTrees.count(prio)) dynTrees[prio] = map<VRObject*, VRObjectWeakPtr>();
+    dynTrees[prio][ o.get() ] = o;
 }
 
-void VRIntersect::remDynTree(VRObjectWeakPtr o) {
-    if (auto sp = o.lock()) dynTrees.erase( sp.get() );
+void VRIntersect::remDynTree(VRObjectPtr o) {
+    if (!o) return;
+    for (auto grp : dynTrees) {
+        if (grp.second.count( o.get())) {
+            grp.second.erase( o.get() );
+            return;
+        }
+    }
 }
 
 VRObjectPtr VRIntersect::getCross() { return cross; }//needs to be optimized for multiple scenes

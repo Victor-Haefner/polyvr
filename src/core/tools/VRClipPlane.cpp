@@ -1,5 +1,7 @@
 #include "VRClipPlane.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/setup/VRSetupManager.h"
+#include "core/setup/VRSetup.h"
 
 #include <OpenSG/OSGMatrix.h>
 
@@ -25,8 +27,16 @@ VRClipPlane::~VRClipPlane() {
     deactivate();
 }
 
-VRClipPlanePtr VRClipPlane::create(string name) { return shared_ptr<VRClipPlane>(new VRClipPlane(name) ); }
 VRClipPlanePtr VRClipPlane::ptr() { return static_pointer_cast<VRClipPlane>( shared_from_this() ); }
+VRClipPlanePtr VRClipPlane::create(string name) {
+    auto p = shared_ptr<VRClipPlane>(new VRClipPlane(name) );
+    // make it dragable first
+    for (auto d : VRSetupManager::getCurrent()->getDevices()) {
+        VRDevice* dev = d.second;
+        dev->addDynTree(p, -1);
+    }
+    return p;
+}
 
 void VRClipPlane::setTree(VRObjectPtr obj) {
     if (tree == obj) return;
