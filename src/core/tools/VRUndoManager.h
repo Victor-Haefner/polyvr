@@ -28,6 +28,7 @@ class VRUndoManager : public VRManager<VRUndoAtom>, public std::enable_shared_fr
     private:
         std::map<int, VRUndoAtomPtr>::reverse_iterator current = data.rend();
         bool ward = false;
+        int key = 0;
 
     public:
         VRUndoManager();

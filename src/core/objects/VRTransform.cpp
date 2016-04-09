@@ -5,6 +5,7 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/objects/geometry/VRConstraint.h"
+#include "core/utils/VRUndoInterfaceT.h"
 #include "core/utils/VRDoublebuffer.h"
 #include "core/scene/VRAnimationManagerT.h"
 #include "VRTransform.h"
@@ -387,18 +388,18 @@ pose VRTransform::getWorldPose() { return pose(getWorldPosition(), getWorldDirec
 void VRTransform::setWorldPose(pose p) { setWorldMatrix(p.asMatrix()); }
 
 /** Set the local matrix **/
-void VRTransform::setMatrix(Matrix _m) {
-    if (isNan(_m)) return;
+void VRTransform::setMatrix(Matrix m) {
+    if (isNan(m)) return;
 
     /*float s1 = Vec3f(_m[0][0], _m[1][0], _m[2][0]).length();
     float s2 = Vec3f(_m[0][1], _m[1][1], _m[2][1]).length();
     float s3 = Vec3f(_m[0][2], _m[1][2], _m[2][2]).length();*/
 
-    float s1 = _m[0].length(); //TODO: check if this is fine
-    float s2 = _m[1].length();
-    float s3 = _m[2].length();
+    float s1 = m[0].length(); //TODO: check if this is fine
+    float s2 = m[1].length();
+    float s3 = m[2].length();
 
-    setPose(Vec3f(_m[3]), Vec3f(-_m[2])*1.0/s3, Vec3f(_m[1])*1.0/s2);
+    setPose(Vec3f(m[3]), Vec3f(-m[2])*1.0/s3, Vec3f(m[1])*1.0/s2);
     setScale(Vec3f(s1,s2,s3));
 }
 //-------------------------------------
@@ -549,6 +550,7 @@ void VRTransform::drag(VRTransformPtr new_parent) {
     //showTranslator(true); //TODO
 
     Matrix m;
+    old_transformation = getMatrix();
     getWorldMatrix(m);
     switchParent(new_parent);
     setWorldMatrix(m);
@@ -570,10 +572,12 @@ void VRTransform::drop() {
     bool dyn = constraint ? constraint->doTConstraint || constraint->doRConstraint : false;
     setFixed(!dyn);
 
-    Matrix m;
-    getWorldMatrix(m);
+    Matrix wm, m1, m2;
+    getWorldMatrix(wm);
+    m1 = getMatrix();
     if (auto p = old_parent.lock()) switchParent(p, old_child_id);
-    setWorldMatrix(m);
+    setWorldMatrix(wm);
+    recUndo(&VRTransform::setMatrix, this, old_transformation, getMatrix());
 
     if (physics) {
         physics->updateTransformation( ptr() );

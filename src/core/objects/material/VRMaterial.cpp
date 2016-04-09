@@ -27,6 +27,7 @@
 #include "core/objects/VRTransform.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRUndoInterfaceT.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/scripting/VRScript.h"
@@ -674,6 +675,7 @@ Color3f toColor3f(Color4f c) { return Color3f(c[0], c[1], c[2]); }
 
 
 void VRMaterial::setTransparency(float c) {
+    recUndo(&VRMaterial::setTransparency, this, getTransparency(), c);
     auto md = mats[activePass];
     md->colChunk->setDiffuse( toColor4f(getDiffuse(), c) );
 

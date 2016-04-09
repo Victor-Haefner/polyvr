@@ -29,14 +29,11 @@ void VRUndoManager::addObject(VRObjectPtr o) { o->setUndoManager(ptr()); }
 
 void VRUndoManager::recUndo(VRUpdatePtr f_undo, VRUpdatePtr f_redo) {
     if (ward) return;
-    /*if (current) {
-        // TODO: delete history from here!
-    }*/
-
-    int now = VRGlobals::get()->CURRENT_FRAME;
-    auto a = VRManager<VRUndoAtom>::add("", now);
+    data.erase(current.base(), data.end()); // delete history from here
+    auto a = VRManager<VRUndoAtom>::add("", key);
     a->set(f_undo, f_redo);
     current = data.rbegin();
+    key++;
 }
 
 void VRUndoManager::redo() {

@@ -55,6 +55,7 @@ class VRTransform : public VRObject {
 
         bool held = false;//drag n drop
         VRObjectWeakPtr old_parent;
+        Matrix old_transformation;
         int old_child_id = 0;
 
         VRObjectPtr copy(vector<VRObjectPtr> children);

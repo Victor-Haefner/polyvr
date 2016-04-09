@@ -500,7 +500,6 @@ bool VRObject::isVisible() { return visible; }
 
 /** Set the visibility of ptr() object **/
 void VRObject::setVisible(bool b) {
-    //if (visible == b) return;
     recUndo(&VRObject::setVisible, this, visible, b);
     visible = b;
     if (b) node->setTravMask(0xffffffff);
