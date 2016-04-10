@@ -102,3 +102,5 @@ void VRGeoPrimitive::setPrimitive(string prim, string args) {
     setupHandles(); // change primitive type
     select(true);
 }
+
+vector<VRHandlePtr> VRGeoPrimitive::getHandles() { return handles; }

@@ -8,6 +8,7 @@ struct VRPyGeoPrimitive : VRPyBaseT<OSG::VRGeoPrimitive> {
     static PyMethodDef methods[];
 
     static PyObject* select(VRPyGeoPrimitive* self, PyObject* args);
+    static PyObject* getHandles(VRPyGeoPrimitive* self);
 };
 
 #endif // VRPYGEOPRIMITIVE_H_INCLUDED

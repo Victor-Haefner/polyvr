@@ -40,6 +40,8 @@ class VRHandle : public VRGeometry {
 
         void drag(VRTransformPtr new_parent);
         void drop();
+
+        void setMatrix(Matrix m);
 };
 
 OSG_END_NAMESPACE;

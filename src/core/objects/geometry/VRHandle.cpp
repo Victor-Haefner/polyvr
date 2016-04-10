@@ -45,7 +45,6 @@ void VRHandle::set(pose p, float v) {
 
     if (constraint == LINEAR) {
         translate( axis*value*scale );
-        cout << "VRHandle::set " << getFrom() << endl;
         c->toggleTConstraint(1, ptr());
         c->toggleRConstraint(1, ptr());
         c->setReference(getMatrix());
@@ -66,7 +65,6 @@ void VRHandle::updateHandle() {
     Vec3f d = Vec3f(p1)-origin.pos();
     float v = axis.dot(d);
     value = abs(v)/scale;
-
     (*paramCb)(value);
 }
 
@@ -82,3 +80,7 @@ void VRHandle::drop() {
     scene->dropUpdateFkt( updateCb );
 }
 
+void VRHandle::setMatrix(Matrix m) {
+    VRTransform::setMatrix(m);
+    (*updateCb)(0);
+}

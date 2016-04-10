@@ -113,7 +113,7 @@ class VRTransform : public VRObject {
         void setEuler(Vec3f euler);
         void setPose(pose p);
         void setPose(Vec3f from, Vec3f dir, Vec3f up);
-        void setMatrix(Matrix _m);
+        virtual void setMatrix(Matrix m);
 
         void getWorldMatrix(Matrix& _m, bool parentOnly = false);
         Matrix getWorldMatrix(bool parentOnly = false);
