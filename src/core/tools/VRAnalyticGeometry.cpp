@@ -11,7 +11,7 @@
 
 using namespace OSG;
 
-VRAnalyticGeometry::VRAnalyticGeometry() : VRObject("AnalyticGeometry") {
+VRAnalyticGeometry::VRAnalyticGeometry() : VRTransform("AnalyticGeometry") {
     ae = VRAnnotationEngine::create();
     vectorLinesGeometry = VRGeometry::create("AGLines");
     vectorEndsGeometry = VRGeometry::create("AGPoints");

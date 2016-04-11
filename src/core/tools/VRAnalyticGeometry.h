@@ -7,12 +7,12 @@
 
 #include "core/objects/VRObjectFwd.h"
 #include "core/tools/VRToolsFwd.h"
-#include "core/objects/object/VRObject.h"
+#include "core/objects/VRTransform.h"
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
-class VRAnalyticGeometry : public VRObject {
+class VRAnalyticGeometry : public VRTransform {
     private:
         VRAnnotationEnginePtr ae = 0;
         VRGeometryPtr vectorLinesGeometry = 0;
@@ -28,15 +28,13 @@ class VRAnalyticGeometry : public VRObject {
         static string circle_vp;
         static string circle_fp;
 
-    protected:
-        void init();
-
     public:
         VRAnalyticGeometry();
         ~VRAnalyticGeometry();
 
         static VRAnalyticGeometryPtr create();
         VRAnalyticGeometryPtr ptr();
+        void init();
 
         void setLabelParams(float size, bool screen_size = false, bool billboard = false);
 

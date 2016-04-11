@@ -8,6 +8,7 @@ struct VRPyJointTool : VRPyBaseT<OSG::VRJointTool> {
     static PyMethodDef methods[];
 
     static PyObject* append(VRPyJointTool* self, PyObject* args);
+    static PyObject* select(VRPyJointTool* self, PyObject* args);
     static PyObject* clear(VRPyJointTool* self);
 };
 

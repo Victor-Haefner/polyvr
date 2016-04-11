@@ -6,29 +6,35 @@
 #include <string>
 #include "core/math/pose.h"
 #include "core/objects/VRObjectFwd.h"
+#include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRConstraint.h"
-#include "VRAnalyticGeometry.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRJointTool : public VRAnalyticGeometry {
+class VRJointTool : public VRGeometry {
     private:
         VRTransformWeakPtr obj1;
         VRTransformWeakPtr obj2;
         pose anchor1;
         pose anchor2;
+        bool selected = true;
+        bool active = true;
         bool lastAppended = true;
+        VRAnalyticGeometryPtr ageo;
 
-        void update();
+        void updateVis();
 
     public:
         VRJointTool(string name);
+        ~VRJointTool();
 
         static VRJointToolPtr create(string name);
         VRJointToolPtr ptr();
 
         int append(VRTransformPtr t, pose p);
+        void setActive(bool b = true);
+        void select(bool b = true);
         void clear();
 };
 
