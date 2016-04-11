@@ -83,9 +83,9 @@ struct Geo {
     }
 };
 
-void VRFactory::loadVRML(string path, VRProgressPtr progress, VRTransformPtr res) { // wrl filepath
+bool VRFactory::loadVRML(string path, VRProgressPtr progress, VRTransformPtr res) { // wrl filepath
     ifstream file(path);
-    if (!file.is_open()) { cout << "file " << path << " not found" << endl; return; }
+    if (!file.is_open()) { cout << "file " << path << " not found" << endl; return true; }
 
     // get file size
     file.seekg(0, ios_base::end);
@@ -191,6 +191,7 @@ void VRFactory::loadVRML(string path, VRProgressPtr progress, VRTransformPtr res
 
     file.close();
     cout << "\nloaded " << geos.size() << " geometries" << endl;
+    if (geos.size() == 0) { progress->reset(); return false; }
 
     res->setName("factory");
     res->setPersistency(0);
@@ -218,6 +219,7 @@ void VRFactory::loadVRML(string path, VRProgressPtr progress, VRTransformPtr res
 
     cout << "\nloaded2 " << res->getChildrenCount() << " geometries" << endl;
     progress->finish();
+    return true;
 }
 
 class VRLODSpace : public VRObject {

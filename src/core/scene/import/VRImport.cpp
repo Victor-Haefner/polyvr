@@ -138,7 +138,7 @@ void VRImport::LoadJob::load(VRThreadWeakPtr thread) {
         if (ext == ".e57") { loadE57(path, res); return; }
         if (ext == ".ply") { loadPly(path, res); return; }
         if (ext == ".stp") { VRSTEP step; step.load(path, res); return; }
-        if (ext == ".wrl" && preset == "SOLIDWORKS-VRML2") { VRFactory f; f.loadVRML(path, progress, res); return; }
+        if (ext == ".wrl" && preset == "SOLIDWORKS-VRML2") { VRFactory f; if (f.loadVRML(path, progress, res)) return; else preset = "OSG"; }
         if (preset == "OSG" || preset == "COLLADA") osgLoad(path, res);
         if (preset == "COLLADA") loadCollada(path, res);
     };
