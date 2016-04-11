@@ -142,7 +142,7 @@ void VRGuiSetup::updateObjectData() {
         setTextEntry("entry12", toString(view->getEyeSeparation()).c_str());
         setCombobox("combobox18", getListStorePos("user_list", view->getUser()->getName()));
 
-        Vec3f p3;
+        Vec3f p3 = view->getProjectionUser();
         if (view->getUser()) p3 = view->getUser()->getFrom();
         userEntry.set(p3);
         centerEntry.set(view->getProjectionCenter());
@@ -656,6 +656,7 @@ void VRGuiSetup::on_proj_user_edit(Vec3f v) {
     if (selected_type != "view") return;
 
     VRView* view = (VRView*)selected_object;
+    view->setProjectionUser(v);
     if (view->getUser()) view->getUser()->setFrom(v);
     setToolButtonSensitivity("toolbutton12", true);
 }

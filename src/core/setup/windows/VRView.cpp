@@ -477,6 +477,7 @@ void VRView::save(xmlpp::Element* node) {
     node->set_attribute("position", toString(position).c_str());
     node->set_attribute("center", toString(proj_center).c_str());
     node->set_attribute("normal", toString(proj_normal).c_str());
+    node->set_attribute("user_pos", toString(proj_user).c_str());
     node->set_attribute("up", toString(proj_up).c_str());
     node->set_attribute("size", toString(proj_size).c_str());
     if (user) node->set_attribute("user", user->getName());
@@ -492,6 +493,7 @@ void VRView::load(xmlpp::Element* node) {
     position = toVec4f(node->get_attribute("position")->get_value());
     proj_center = toVec3f(node->get_attribute("center")->get_value());
     proj_normal = toVec3f(node->get_attribute("normal")->get_value());
+    if (node->get_attribute("user_pos")) proj_user = toVec3f(node->get_attribute("user_pos")->get_value());
     proj_up = toVec3f(node->get_attribute("up")->get_value());
     proj_size = toVec2f(node->get_attribute("size")->get_value());
     if (node->get_attribute("user")) {
@@ -499,6 +501,7 @@ void VRView::load(xmlpp::Element* node) {
         user = VRSetupManager::getCurrent()->getTracker(user_name);
     }
 
+    dummy_user->setFrom(proj_user);
     showStats(doStats);
     update();
 }
@@ -520,5 +523,7 @@ void VRView::setProjectionCenter(Vec3f v) { proj_center = v; update(); }
 Vec3f VRView::getProjectionCenter() { return proj_center; }
 void VRView::setProjectionSize(Vec2f v) { proj_size = v; update(); }
 Vec2f VRView::getProjectionSize() { return proj_size; }
+void VRView::setProjectionUser(Vec3f v) { proj_user = v; update(); }
+Vec3f VRView::getProjectionUser() { return proj_user; }
 
 OSG_END_NAMESPACE;

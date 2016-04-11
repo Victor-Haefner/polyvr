@@ -2,10 +2,10 @@
 <Setup>
   <Displays>
     <Window active="1" type="2" width="1398" height="878" name="local" mouse="mouse" keyboard="keyboard">
-      <View stereo="0" active_stereo="0" projection="0" eye_inverted="0" eye_separation="0.06" position="0 0 1 1" center="0 0 0" normal="0 0 1" up="0 1 0" size="2 1" user=""/>
+      <View stereo="0" active_stereo="0" projection="0" eye_inverted="0" eye_separation="0.06" position="0 0 1 1" center="0 0 0" normal="0 0 1" user_pos="0 0 0" up="0 1 0" size="2 1" user=""/>
     </Window>
     <Window active="1" type="0" width="300" height="300" name="remote" mouse="None" keyboard="None" Nx="1" Ny="1" ConnType="StreamSock">
-      <View stereo="0" active_stereo="0" projection="0" eye_inverted="0" eye_separation="0.06" position="0 0 1 1" center="0 0 0" normal="0 0 1" up="0 1 0" size="2 1" user=""/>
+      <View stereo="0" active_stereo="0" projection="1" eye_inverted="0" eye_separation="0.06" position="0 0 1 1" center="0 1 0" normal="0 1 0" user_pos="0 2 0" up="1 0 0" size="2 1" user=""/>
       <Server Address="127.0.0.1:3000"/>
     </Window>
   </Displays>
@@ -18,7 +18,7 @@
   <TrackingVRPN active="1" port="3883"/>
   <Network base_name="Network" name_space="Manager" name_suffix="0">
     <Node address="127.0.0.1" base_name="Node" name_space="NetworkNode" name_suffix="0" user="victor" ID="0">
-      <Node active_stereo="0" autostart="1" base_name="l1" connection_type="StreamSock" display=":0.0" fullscreen="0" name_space="NetworkNode" name_suffix="0" ID="0"/>
+      <Node active_stereo="0" autostart="1" base_name="l1" connection_type="StreamSock" display=":0.0" fullscreen="0" name_space="NetworkNode" name_suffix="0" port="3000" ID="0"/>
     </Node>
   </Network>
 </Setup>

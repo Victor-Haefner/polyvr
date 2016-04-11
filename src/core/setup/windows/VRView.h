@@ -42,6 +42,7 @@ class VRView : public std::enable_shared_from_this<VRView> {
         //ShearedStereoCameraDecoratorPtr SSCDecoratorLeft;
         //ShearedStereoCameraDecoratorPtr SSCDecoratorRight;
 
+        Vec3f proj_user;
         Vec3f proj_center;
         Vec3f proj_up;
         Vec3f proj_normal;
@@ -114,6 +115,8 @@ class VRView : public std::enable_shared_from_this<VRView> {
         Vec3f getProjectionNormal();
         void setProjectionCenter(Vec3f v);
         Vec3f getProjectionCenter();
+        void setProjectionUser(Vec3f v);
+        Vec3f getProjectionUser();
         void setProjectionSize(Vec2f v);
         Vec2f getProjectionSize();
 
