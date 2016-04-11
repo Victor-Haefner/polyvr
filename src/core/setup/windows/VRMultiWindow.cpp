@@ -70,7 +70,7 @@ void VRMultiWindow::initialize() {
     win->setHServers(Nx);
     win->setVServers(Ny);
 
-    win->setConnectionType(connection_type); // "Multicast", "SockPipeline"
+    //win->setConnectionType(connection_type); // "Multicast", "SockPipeline" // not needed apparently!
     for (auto s : servers) win->editMFServers()->push_back(s);
     for (auto wv : views) if (auto v = wv.lock()) v->setWindow(win);
 

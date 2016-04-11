@@ -66,7 +66,10 @@ VRNetworkSlavePtr VRNetworkNode::add(string name) {
 }
 
 void VRNetworkNode::initSlaves() {
-    stopSlaves();
+    bool hasAutostart = false;
+    for (auto s : getData()) if (s->getAutostart()) hasAutostart = true;
+    if (hasAutostart) stopSlaves();
+
     for (auto s : getData()) {
         s->setNode(ptr());
         if (s->getAutostart()) s->start();
@@ -126,11 +129,11 @@ void VRNetworkSlave::start() {
     string disp = "export DISPLAY=\"" + display + "\" && ";
     string pipes = " > /dev/null 2> /dev/null < /dev/null &";
     string args;
-    if (connection_type == "Multicast") args = " -m " + getName();
-    if (connection_type == "SockPipeline") args = " -p " + node->getAddress() + ":" + toString(port);
-    if (connection_type == "StreamSock") args = " " + node->getAddress() + ":" + toString(port);
-    args += fullscreen ? " " : " -w ";
-    args += active_stereo ? " -A " : " ";
+    if (!fullscreen) args += " -w";
+    if (active_stereo) args += " -A";
+    if (connection_type == "Multicast") args += " -m " + getName();
+    if (connection_type == "SockPipeline") args += " -p " + node->getAddress() + ":" + toString(port);
+    if (connection_type == "StreamSock") args += " " + node->getAddress() + ":" + toString(port);
 
     stat = node->execCmd(disp + path + args + pipes, false);
     update();
