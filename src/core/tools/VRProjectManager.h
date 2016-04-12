@@ -10,18 +10,16 @@ OSG_BEGIN_NAMESPACE;
 
 class VRProjectManager : public VRObject {
     private:
-        vector<VRStorageWeakPtr> vault;
-
-        int reload_persistency = 1;
-        int rebuild_persistency = 2;
+        vector<VRStoragePtr> vault_reload;
+        vector<VRStoragePtr> vault_rebuild;
 
     public:
         VRProjectManager();
 
         static VRProjectManagerPtr create();
 
-        void setPersistencies(int reload, int rebuild);
-        void addItem(VRStoragePtr s);
+        void addItem(VRStoragePtr s, string mode);
+        vector<VRStoragePtr> getItems();
 
         void save(string path);
         void load(string path);

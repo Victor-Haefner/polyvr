@@ -12,18 +12,33 @@ VRProjectManager::VRProjectManager() : VRObject("ProjectManager") {}
 
 VRProjectManagerPtr VRProjectManager::create() { return shared_ptr<VRProjectManager>(new VRProjectManager()); }
 
-void VRProjectManager::setPersistencies(int reload, int rebuild) { reload_persistency = reload; rebuild_persistency = rebuild; }
-void VRProjectManager::addItem(VRStoragePtr s) { if (s) vault.push_back(s); }
+void VRProjectManager::addItem(VRStoragePtr s, string mode) {
+    if (!s) return;
+    if (mode == "RELOAD") vault_reload.push_back(s);
+    if (mode == "REBUILD") vault_rebuild.push_back(s);
+}
+
+vector<VRStoragePtr> VRProjectManager::getItems() { return vault_rebuild; }
 
 void VRProjectManager::save(string path) {
     if (fs::exists(path)) path = fs::canonical(path).string();
     xmlpp::Document doc;
     xmlpp::Element* root = doc.create_root_node("Project", "", "VRP"); // name, ns_uri, ns_prefix
-    for (auto v : vault) {
-        if (auto vs = v.lock()) {
-            vs->saveUnder(root); // objects with a persistency above this value will be saved
-        }
+
+    for (auto v : vault_reload) {
+        int p = v->getPersistency();
+        v->setPersistency(1);
+        v->saveUnder(root);
+        v->setPersistency(p);
     }
+
+    for (auto v : vault_rebuild) {
+        int p = v->getPersistency();
+        v->setPersistency(2);
+        v->saveUnder(root);
+        v->setPersistency(p);
+    }
+
     doc.write_to_file_formatted(path);
 }
 
@@ -36,8 +51,7 @@ void VRProjectManager::load(string path) {
     parser.parse_file(path.c_str());
     xmlpp::Element* root = dynamic_cast<xmlpp::Element*>(parser.get_document()->get_root_node());
 
-    vector<VRStorageWeakPtr> new_vault;
-
+    vault_rebuild.clear();
     int i=0;
     for (auto n : root->get_children()) {
         xmlpp::Element* e = dynamic_cast<xmlpp::Element*>(n);
@@ -45,24 +59,10 @@ void VRProjectManager::load(string path) {
 
         VRStoragePtr s;
         int p = VRStorage::getPersistency(e);
-        cout << "VRProjectManager::load element persistency " << p << endl;
-
-        if (p == rebuild_persistency) {
-            cout << "VRProjectManager::load rebuild" << endl;
-            s = VRStorage::createFromStore(e);
-        }
-
-        if (p == reload_persistency) {
-            cout << "VRProjectManager::load reload" << endl;
-            if (i < vault.size()) s = vault[i].lock();
-        }
-
-
+        if (p == 1) { if (i < vault_reload.size()) s = vault_reload[i]; i++; }
+        if (p == 2) { s = VRStorage::createFromStore(e); vault_rebuild.push_back(s); }
         if (!s) { cout << "VRProjectManager::load Warning! element unhandled"; continue; }
-        s->load(e);
-        new_vault.push_back(s);
-        i++;
-    }
 
-    vault = new_vault;
+        s->load(e);
+    }
 }
