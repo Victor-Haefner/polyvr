@@ -62,10 +62,11 @@ VRCamera::~VRCamera() {
 }
 
 VRCameraPtr VRCamera::ptr() { return static_pointer_cast<VRCamera>( shared_from_this() ); }
-VRCameraPtr VRCamera::create(string name) {
+VRCameraPtr VRCamera::create(string name, bool reg) {
     auto p = shared_ptr<VRCamera>(new VRCamera(name) );
     getAll().push_back( p );
     VRGuiManager::broadcast("camera_added");
+    if (reg) VRSceneManager::getCurrent()->setMActiveCamera(p->getName());
     return p;
 }
 

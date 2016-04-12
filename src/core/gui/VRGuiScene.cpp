@@ -760,7 +760,7 @@ void VRGuiScene::on_menu_add_camera() {
     if(!selected_itr) return;
     auto scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
-    VRTransformPtr cam = scene->addCamera("camera");
+    VRTransformPtr cam = VRCamera::create("camera");
     getSelected()->addChild(cam);
     parseSGTree(cam, selected_itr);
     VRGuiSignals::get()->getSignal("camera_added")->trigger<VRDevice>();

@@ -6,6 +6,7 @@
 #include "core/utils/VRRate.h"
 #include "core/utils/VRProfiler.h"
 #include "VRScene.h"
+#include "core/objects/VRCamera.h"
 #include "core/objects/VRLight.h"
 #include "core/objects/VRLightBeacon.h"
 #include "core/gui/VRGuiManager.h"
@@ -92,13 +93,12 @@ void VRSceneManager::newScene(string path) {
     newEmptyScene(path);
 
     VRLightPtr headlight = VRLight::create("light");
-    //scene->addLight(headlight);
     headlight->setType("point");
     VRLightBeaconPtr headlight_B = VRLightBeacon::create("Headlight_beacon");
     headlight->setBeacon(headlight_B);
     current->add(headlight);
 
-    VRTransformPtr cam = current->addCamera("Default");
+    VRTransformPtr cam = VRCamera::create("Default");
     headlight->addChild(cam);
 
     VRTransformPtr user;

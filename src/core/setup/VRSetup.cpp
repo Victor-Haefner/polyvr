@@ -22,7 +22,7 @@ using namespace std;
 VRSetup::VRSetup(string name) {
     setName(name);
     real_root = VRTransform::create("VR Setup");
-    setup_cam = VRCamera::create("Setup");
+    setup_cam = VRCamera::create("Setup", false);
     setViewAnchor(real_root);
     setDeviceRoot(real_root);
     real_root->addAttachment("treeviewNotDragable", 0);

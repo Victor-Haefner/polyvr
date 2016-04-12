@@ -1,6 +1,7 @@
 #include "VRSceneLoader.h"
 #include "VRSceneManager.h"
 #include "core/objects/VRGroup.h"
+#include "core/objects/VRCamera.h"
 #include "core/objects/VRLight.h"
 #include "core/objects/VRLightBeacon.h"
 #include "core/objects/geometry/VRGeometry.h"
@@ -76,17 +77,15 @@ void VRSceneLoader::saveScene(string file, xmlpp::Element* guiN) {
     doc.write_to_file_formatted(file);
 }
 
-VRObjectPtr VRSceneLoader_createFromElement(VRScenePtr scene, xmlpp::Element* e) {
+VRObjectPtr VRSceneLoader_createFromElement(xmlpp::Element* e) {
     if (e->get_attribute("type") == 0) return 0;
     string type = e->get_attribute("type")->get_value();
     string base_name = e->get_attribute("base_name")->get_value();
-    //string name = e->get_name();
-
 
     if (type == "Transform") return VRTransform::create(base_name);
     if (type == "Geometry") return VRGeometry::create(base_name);
     //if (type == "CSGGeometry") return new CSGGeometry(base_name);
-    if (type == "Camera") return scene->addCamera(base_name);
+    if (type == "Camera") return VRCamera::create(base_name);
     if (type == "LightBeacon") return VRLightBeacon::create(base_name);
     if (type == "Light") return VRLight::create(base_name);
     if (type == "Group") return VRGroup::create(base_name);
@@ -98,15 +97,12 @@ VRObjectPtr VRSceneLoader_createFromElement(VRScenePtr scene, xmlpp::Element* e)
 
 void VRSceneLoader_loadObject(VRScenePtr scene, VRObjectPtr p, xmlpp::Element* e) {
     if (e == 0) return;
-    xmlpp::Node::NodeList nl = e->get_children();
-    xmlpp::Node::NodeList::iterator itr;
-    for (itr = nl.begin(); itr != nl.end(); itr++) {
-        xmlpp::Node* n = *itr;
-
+    for (auto n : e->get_children()) {
         xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
         if (!el) continue;
 
-        VRObjectPtr c = VRSceneLoader_createFromElement(scene, el);
+        //VRObjectPtr c = VRStorage::createFromStore(el);
+        VRObjectPtr c = VRSceneLoader_createFromElement(el);
         if (!c) continue;
 
         p->addChild(c);
