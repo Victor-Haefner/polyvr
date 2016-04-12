@@ -30,7 +30,7 @@ class VRGroup : public VRObject {
         VRGroup(string name);
         ~VRGroup();
 
-        static VRGroupPtr create(string name);
+        static VRGroupPtr create(string name = "None");
         VRGroupPtr ptr();
 
         /** Returns the group **/

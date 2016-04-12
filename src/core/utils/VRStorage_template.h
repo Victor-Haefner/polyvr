@@ -195,7 +195,7 @@ void VRStorage::typeFactoryCb(VRStoragePtr& s) { s = T::create(); }
 
 template<class T>
 void VRStorage::regStorageType(string t) {
-    factory[t] = VRStorageFactoryCb::create("factorycb", boost::bind( &VRStorage::typeFactoryCb<T>, this, _1 ) );
+    factory[t] = VRStorageFactoryCb::create("factorycb", boost::bind( &VRStorage::typeFactoryCb<T>, _1 ) );
 }
 
 OSG_END_NAMESPACE;

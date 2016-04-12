@@ -28,7 +28,7 @@ class VRStorage {
         map<string, VRStorageBin> storage;
         static map<string, VRStorageFactoryCbPtr> factory;
 
-        template<class T> void typeFactoryCb(VRStoragePtr& s);
+        template<class T> static void typeFactoryCb(VRStoragePtr& s);
 
         template<typename T> void save_cb(T* t, string tag, xmlpp::Element* e);
         template<typename T> void save_on_cb(T* t, string tag, xmlpp::Element* e);
@@ -53,7 +53,6 @@ class VRStorage {
         template<typename T> void storeMap(string tag, map<int, T*>* mt);
         template<typename T> void storeMap(string tag, map<int, std::shared_ptr<T> >* mt);
         template<typename To, typename T> void storeObjName(string tag, To* o, T* t);
-        template<class T> void regStorageType(string t);
 
         void setStorageType(string t);
         void regStorageUpdateFkt(VRUpdatePtr u);
@@ -67,6 +66,7 @@ class VRStorage {
 
         static int getPersistency(xmlpp::Element* e);
         static VRStoragePtr createFromStore(xmlpp::Element* e);
+        template<class T> static void regStorageType(string t);
 
         void setPersistency(int p);
         int getPersistency();
