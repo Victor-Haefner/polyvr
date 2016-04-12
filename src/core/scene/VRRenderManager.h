@@ -43,7 +43,7 @@ class VRRenderManager : public VRStorage {
         VRRenderManager();
         ~VRRenderManager();
 
-        VRLightPtr addLight(string name);
+        void addLight(VRLightPtr l);
         VRLightPtr getLight(int ID);
 
         void setFrustumCulling(bool b);

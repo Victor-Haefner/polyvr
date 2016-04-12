@@ -94,11 +94,9 @@ void VRRenderManager::update() {
     renderLayer["calibration"]->setVisible(calib);
 }
 
-VRLightPtr VRRenderManager::addLight(string name) {
-    VRLightPtr l = VRLight::create(name);
+void VRRenderManager::addLight(VRLightPtr l) {
     light_map[l->getID()] = l;
     defShading->addDSLight(l);
-    return l;
 }
 
 VRLightPtr VRRenderManager::getLight(int ID) { return light_map[ID]; }

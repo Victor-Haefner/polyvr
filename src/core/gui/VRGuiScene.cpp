@@ -748,7 +748,7 @@ void VRGuiScene::on_menu_add_light() {
     if(!selected_itr) return;
     auto scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
-    VRLightPtr light = scene->addLight("light");
+    VRLightPtr light = VRLight::create("light");
     VRLightBeaconPtr lb = VRLightBeacon::create("light_beacon");
     light->addChild(lb);
     light->setBeacon(lb);

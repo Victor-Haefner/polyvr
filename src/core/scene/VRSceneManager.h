@@ -33,6 +33,7 @@ class VRSceneManager : public VRThreadManager, public VRCallbackManager, public 
         ~VRSceneManager();
 
         void setScene(VRScenePtr s);
+        void newEmptyScene(string name);
         void newScene(string name);
         void closeScene();
         void loadScene(string path, bool write_protected = false);

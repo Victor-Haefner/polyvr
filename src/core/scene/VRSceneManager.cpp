@@ -42,10 +42,10 @@ VRSceneManager* VRSceneManager::get() {
 void VRSceneManager::loadScene(string path, bool write_protected) {
     if (!boost::filesystem::exists(path)) { cout << "loadScene " << path << " not found" << endl; return; }
     path = boost::filesystem::canonical(path).string();
-    cout << "loadScene " << path << endl;
     if (current) if (current->getPath() == path) return;
+    cout << "loadScene " << path << endl;
 
-    closeScene();
+    newEmptyScene(path);
     VRSceneLoader::get()->loadScene(path);
     current->setFlag("write_protected", write_protected);
     VRGuiSignals::get()->getSignal("scene_changed")->trigger<VRDevice>(); // update gui
@@ -78,21 +78,27 @@ void VRSceneManager::setWorkdir(string path) {
 	boost::filesystem::current_path(path);
 }
 
-void VRSceneManager::newScene(string path) {
-    if (boost::filesystem::exists(path)) path = boost::filesystem::canonical(path).string();
+void VRSceneManager::newEmptyScene(string path) {
     closeScene();
-
     VRScenePtr scene = VRScenePtr( new VRScene() );
     scene->setPath(path);
     setWorkdir(scene->getWorkdir());
     scene->setName(scene->getFileName());
-    VRTransformPtr cam = scene->addCamera("Default");
+    current = scene;
+}
 
-    VRLightPtr headlight = scene->addLight("Headlight");
+void VRSceneManager::newScene(string path) {
+    if (boost::filesystem::exists(path)) path = boost::filesystem::canonical(path).string();
+    newEmptyScene(path);
+
+    VRLightPtr headlight = VRLight::create("light");
+    //scene->addLight(headlight);
     headlight->setType("point");
     VRLightBeaconPtr headlight_B = VRLightBeacon::create("Headlight_beacon");
     headlight->setBeacon(headlight_B);
-    scene->add(headlight);
+    current->add(headlight);
+
+    VRTransformPtr cam = current->addCamera("Default");
     headlight->addChild(cam);
 
     VRTransformPtr user;
@@ -102,7 +108,7 @@ void VRSceneManager::newScene(string path) {
     else cam->addChild(headlight_B);
 
     cam->setFrom(Vec3f(0,0,3));
-    setScene(scene);
+    setScene(current);
 }
 
 VRSignalPtr VRSceneManager::getSignal_on_scene_load() { return on_scene_load; }
