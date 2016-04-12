@@ -37,6 +37,7 @@ VRTransform::VRTransform(string name) : VRObject(name) {
     storeObj("constraint", constraint);
 
     regStorageUpdateFkt( VRFunction<int>::create("transform_update", boost::bind(&VRTransform::setup, this)) );
+    regStorageType<VRTransform>(type);
 }
 
 VRTransform::~VRTransform() {

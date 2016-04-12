@@ -326,7 +326,7 @@ void VRScriptManager::initPyModules() {
     registerModule<VRPyPolygon>("Polygon", pModVR);
     registerModule<VRPyTriangulator>("Triangulator", pModVR);
     registerModule<VRPyRecorder>("Recorder", pModVR);
-    registerModule<VRPyProjectManager>("ProjectManager", pModVR);
+    registerModule<VRPyProjectManager>("ProjectManager", pModVR, VRPyObject::typeRef);
     registerModule<VRPyGeoPrimitive>("GeoPrimitive", pModVR, VRPyGeometry::typeRef);
     registerModule<VRPyStorage>("Storage", pModVR);
     registerModule<VRPySnappingEngine>("SnappingEngine", pModVR);

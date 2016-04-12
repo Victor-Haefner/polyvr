@@ -10,7 +10,7 @@ using namespace std;
 map<string, VRStorageFactoryCbPtr> VRStorage::factory = map<string, VRStorageFactoryCbPtr>();
 
 VRStorage::VRStorage() {
-    ;
+    store("persistency", &persistency);
 }
 
 void VRStorage::setPersistency(int p) { persistency = p; }
@@ -38,9 +38,15 @@ void VRStorage::load(xmlpp::Element* e) {
     for (auto f : f_update) (*f)(0);
 }
 
+int VRStorage::getPersistency(xmlpp::Element* e) {
+    if (!e->get_attribute("persistency")) return 0;
+    return toInt( e->get_attribute("persistency")->get_value() );
+}
+
 VRStoragePtr VRStorage::createFromStore(xmlpp::Element* e) {
     if (!e->get_attribute("type")) return 0;
     string type = e->get_attribute("type")->get_value();
+    cout << "VRStorage::createFromStore " << type << " " << factory.count(type) << endl;
     if (!factory.count(type)) return 0;
 
     VRStoragePtr res;
