@@ -371,12 +371,6 @@ void VRMaterial::setPointSize(int s, bool smooth) {
     md->pointChunk->setSmooth(smooth);
 }
 
-void VRMaterial::loadContent(xmlpp::Element* e) {
-    VRObject::loadContent(e);
-
-    e->get_attribute("sourcetype")->get_value();
-}
-
 void VRMaterial::setMaterial(MaterialMTRecPtr m) {
     if ( dynamic_pointer_cast<MultiPassMaterial>(m) ) {
         MultiPassMaterialMTRecPtr mm = dynamic_pointer_cast<MultiPassMaterial>(m);

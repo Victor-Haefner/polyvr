@@ -688,33 +688,8 @@ void VRTransform::update() {
 }
 
 void VRTransform::setup() {
-    cout << "VRTransform::setup\n";
     change = true;
     update();
-}
-
-void VRTransform::loadContent(xmlpp::Element* e) {
-    VRObject::loadContent(e);
-
-    Vec3f f, a, u;
-    f = toVec3f(e->get_attribute("from")->get_value());
-    a = toVec3f(e->get_attribute("at")->get_value());
-    u = toVec3f(e->get_attribute("up")->get_value());
-    if (e->get_attribute("scale")) _scale = toVec3f(e->get_attribute("scale")->get_value());
-
-    setPose(f, a, u);
-    setAt(a);
-    update();
-
-    /*if (e->get_attribute("cT_mode")) tConMode = toBool(e->get_attribute("cT_mode")->get_value());
-    if (e->get_attribute("do_cT")) doTConstraint = toBool(e->get_attribute("do_cT")->get_value());
-    if (e->get_attribute("do_cR")) doRConstraint = toBool(e->get_attribute("do_cR")->get_value());
-    if (e->get_attribute("cT")) tConstraint = toVec3f(e->get_attribute("cT")->get_value());
-    if (e->get_attribute("cR")) rConstraint = toVec3i(e->get_attribute("cR")->get_value());*/
-
-    if (e->get_attribute("at_dir")) orientation_mode = toInt(e->get_attribute("at_dir")->get_value());
-
-    //if(doTConstraint || doRConstraint) setFixed(false);
 }
 
 void setFromPath(VRTransformWeakPtr trp, path* p, bool redirect, float t) {

@@ -35,7 +35,7 @@ struct Geo {
     bool vmm_changed = false;
 
     //void init(vector<VRGeometryPtr>& geos, VRMaterialPtr mat) {
-    void init(vector<Geo>& geos, VRMaterialPtr mat) {
+    void init(vector<Geo>& geos, VRMaterialPtr mat, string path, bool thread) {
         geo = VRGeometry::create("factory_part"); // init new object
 
         pos = GeoPnt3fProperty::create();
@@ -49,6 +49,9 @@ struct Geo {
         geo->setIndices( inds_p );
         geo->getMesh()->setIndex(inds_n, Geometry::NormalsIndex);
         geo->setMaterial(mat);
+
+        VRGeometry::Reference ref(VRGeometry::FILE, path + " " + geo->getName() + " SOLIDWORKS-VRML2 " + toString(thread));
+        geo->setReference( ref );
 
         geos.push_back(*this);
 
@@ -83,7 +86,7 @@ struct Geo {
     }
 };
 
-bool VRFactory::loadVRML(string path, VRProgressPtr progress, VRTransformPtr res) { // wrl filepath
+bool VRFactory::loadVRML(string path, VRProgressPtr progress, VRTransformPtr res, bool thread) { // wrl filepath
     ifstream file(path);
     if (!file.is_open()) { cout << "file " << path << " not found" << endl; return true; }
 
@@ -171,7 +174,7 @@ bool VRFactory::loadVRML(string path, VRProgressPtr progress, VRTransformPtr res
                     if (new_obj) {
                         new_obj = false;
                         new_color = false;
-                        geo.init(geos, mats[color]);
+                        geo.init(geos, mats[color], path, thread);
                     }
 
                     geo.pos->addValue(v);

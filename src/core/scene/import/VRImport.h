@@ -56,7 +56,7 @@ class VRImport {
         static VRImport* get();
 
         VRTransformPtr load(string path, VRObjectPtr parent = 0, bool reload = false, string preset = "OSG", bool thread = false);
-        VRGeometryPtr loadGeometry(string path, string name);
+        VRGeometryPtr loadGeometry(string path, string name, string preset = "OSG", bool thread = false);
 
         VRProgressPtr getProgressObject();
         void ingoreHeavyRessources();

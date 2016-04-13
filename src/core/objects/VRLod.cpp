@@ -33,9 +33,9 @@ VRLod::~VRLod() {}
 VRLodPtr VRLod::create(string name) { return shared_ptr<VRLod>(new VRLod(name) ); }
 VRLodPtr VRLod::ptr() { return static_pointer_cast<VRLod>( shared_from_this() ); }
 
-void VRLod::setCenter(Vec3f c) { center = c; update(); }
-void VRLod::setDecimate(bool b, int N) { decimate = b; decimateNumber = N; update(); }
-void VRLod::setDistance(uint i, float dist) { distances[i] = dist; update(); }
+void VRLod::setCenter(Vec3f c) { center = c; setup(); }
+void VRLod::setDecimate(bool b, int N) { decimate = b; decimateNumber = N; setup(); }
+void VRLod::setDistance(uint i, float dist) { distances[i] = dist; setup(); }
 void VRLod::addDistance(float dist) { setDistance(distances.size(), dist); }
 Vec3f VRLod::getCenter() { return center; }
 bool VRLod::getDecimate() { return decimate; }
@@ -62,7 +62,7 @@ void VRLod::decimateGeometries(VRObjectPtr o, float f) {
     }
 }
 
-void VRLod::update() {
+void VRLod::setup() {
     stringstream ss;
     ss << distances.size();
     for (auto d : distances) ss << " " << d.second;
@@ -91,27 +91,6 @@ void VRLod::update() {
     for (auto d : distances) (*dists)[d.first] = d.second;
 
     lod->setCenter(Pnt3f(center));
-}
-
-void VRLod::loadContent(xmlpp::Element* e) {
-    VRObject::loadContent(e);
-
-    if (e->get_attribute("center")) center = toVec3f( e->get_attribute("center")->get_value() );
-
-    distances.clear();
-    if (e->get_attribute("distances")) {
-        stringstream ss( e->get_attribute("distances")->get_value() );
-        uint N;
-        float d;
-
-        ss >> N;
-        for (uint i=0; i<N; i++) {
-            ss >> d;
-            distances[i] = d;
-        }
-    }
-
-    update();
 }
 
 void VRLod::addEmpty() {

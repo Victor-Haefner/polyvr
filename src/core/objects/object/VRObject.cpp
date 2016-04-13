@@ -9,7 +9,6 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRUndoInterfaceT.h"
-//#include "core/utils/VRStorage_template.h"
 #include <libxml++/nodes/element.h>
 
 OSG_BEGIN_NAMESPACE;
@@ -29,13 +28,18 @@ void VRStorage::save_vec_cb(vector<std::shared_ptr<T> >* v, xmlpp::Element* e) {
 
 template<typename T>
 void VRStorage::load_vec_cb(vector<std::shared_ptr<T> >* v, xmlpp::Element* e) {
-    /*for (auto n : e->get_children()) {
+    if (e == 0) return;
+    for (auto n : e->get_children()) {
         xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
         if (!el) continue;
-        auto t = T::create();
-        t->load(e);
-        v->push_back( t );
-    }*/
+
+        VRStoragePtr s = VRStorage::createFromStore(el);
+        auto c = static_pointer_cast<T>(s);
+        if (!c) continue;
+
+        c->load(el);
+        v->push_back( c );
+    }
 }
 
 template<typename T>
@@ -63,13 +67,22 @@ VRObject::VRObject(string _name) {
     store("visible", &visible);
     storeObjVec("children", children);
 
-    regStorageUpdateFkt( VRFunction<int>::create("object_update", boost::bind(&VRObject::setup, this)) );
+    regStorageUpdateFkt( VRFunction<int>::create("object setup", boost::bind(&VRObject::setup, this)) );
 }
 
 VRObject::~VRObject() {
     NodeMTRecPtr p;
     if (node) p = node->getParent();
     if (p) p->subChild(node);
+}
+
+void VRObject::setup() {
+    setVisible(visible);
+    setPickable(pickable);
+
+    auto tmp = children;
+    children.clear();
+    for (auto c : tmp) addChild(c);
 }
 
 void VRObject::destroy() {
@@ -548,15 +561,6 @@ void VRObject::unitTest() {
     o3->switchParent(o1);
     cout << "  Ok" << flush;
     cout << "\nEnd Unit Test\n";
-}
-
-void VRObject::loadContent(xmlpp::Element* e) {
-    load(e);
-}
-
-void VRObject::setup() {
-    setVisible(visible);
-    setPickable(pickable);
 }
 
 OSG_END_NAMESPACE

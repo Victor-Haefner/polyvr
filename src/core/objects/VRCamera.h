@@ -20,10 +20,6 @@ class VRCamera : public VRTransform {
 
         bool doAcceptRoot = true;
 
-    protected:
-
-        void loadContent(xmlpp::Element* e);
-
     public:
         VRCamera(string name = "");
         ~VRCamera();

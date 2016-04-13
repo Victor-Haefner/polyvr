@@ -34,8 +34,6 @@ class CSGGeometry : public VRGeometry {
         void enableEditMode();
         bool disableEditMode();
 
-        void loadContent(xmlpp::Element* e);
-
     public:
         CSGGeometry(string name);
         virtual ~CSGGeometry();

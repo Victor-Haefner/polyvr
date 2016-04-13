@@ -75,8 +75,6 @@ class VRTransform : public VRObject {
         void initCoords();
         void initTranslator();
 
-        virtual void loadContent(xmlpp::Element* e);
-
     public:
         VRTransform(string name = "");
         virtual ~VRTransform();

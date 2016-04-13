@@ -25,11 +25,10 @@ class VRStage : public VRObject {
 
         void initStage();
         void initFBO();
+        void setup();
 
     protected:
         VRObjectPtr copy(vector<VRObjectPtr> children);
-
-        void loadContent(xmlpp::Element* e);
 
     public:
         VRStage(string name);

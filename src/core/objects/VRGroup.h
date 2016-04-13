@@ -22,9 +22,7 @@ class VRGroup : public VRObject {
         static map<string, VRObjectWeakPtr > templates;
 
         VRObjectPtr copy(vector<VRObjectPtr> children);
-
-    protected:
-        void loadContent(xmlpp::Element* e);
+        void setup();
 
     public:
         VRGroup(string name);

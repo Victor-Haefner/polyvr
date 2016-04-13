@@ -200,9 +200,4 @@ void CSGGeometry::setOperation(string op) {
 bool CSGGeometry::getEditMode() { return editMode; }
 string CSGGeometry::getOperation() { return operation; }
 
-void CSGGeometry::loadContent(xmlpp::Element* e) {
-	VRGeometry::loadContent(e);
-	if (e->get_attribute("op")) operation = e->get_attribute("op")->get_value();
-}
-
 OSG_END_NAMESPACE

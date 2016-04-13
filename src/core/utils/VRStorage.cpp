@@ -46,7 +46,7 @@ int VRStorage::getPersistency(xmlpp::Element* e) {
 VRStoragePtr VRStorage::createFromStore(xmlpp::Element* e) {
     if (!e->get_attribute("type")) return 0;
     string type = e->get_attribute("type")->get_value();
-    cout << "VRStorage::createFromStore " << type << " " << factory.count(type) << endl;
+    //cout << "VRStorage::createFromStore " << type << " " << factory.count(type) << endl;
     if (!factory.count(type)) return 0;
 
     VRStoragePtr res;

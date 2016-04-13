@@ -50,6 +50,7 @@ VRLight::VRLight(string name) : VRObject(name) {
     store("specular", &lightSpecular);
     store("shadowColor", &shadowColor);
     storeObjName("beacon", &beacon, &beacon_name);
+    regStorageUpdateFkt( VRFunction<int>::create("light setup", boost::bind(&VRLight::setup, this)) );
 
     // test scene
     //shadow_test_scene* sts = new shadow_test_scene();
@@ -65,7 +66,7 @@ VRLightPtr VRLight::create(string name) {
     return l;
 }
 
-void VRLight::update() {
+void VRLight::setup() {
     ssme = SimpleShadowMapEngine::create();
     setType(lightType);
     setShadows(shadows);
@@ -150,12 +151,6 @@ void VRLight::setShadowColor(Color4f c) {
 
 Color4f VRLight::getShadowColor() { return shadowColor; }
 
-void VRLight::loadContent(xmlpp::Element* e) {
-    VRObject::loadContent(e);
-    VRStorage::load(e);
-    update();
-}
-
 void VRLight::setOn(bool b) {
     on = b;
     d_light->setOn(b);
@@ -178,7 +173,7 @@ Vec3f VRLight::getAttenuation() { return attenuation; }
 
 void VRLight::setShadowType(string t) {
     shadowType = t;
-    update();
+    setup();
 }
 
 string VRLight::getShadowType() { return shadowType; }

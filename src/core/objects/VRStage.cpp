@@ -13,10 +13,6 @@ VRObjectPtr VRStage::copy(vector<VRObjectPtr> children) {
     return g;
 }
 
-void VRStage::loadContent(xmlpp::Element* e) {
-    VRObject::loadContent(e);
-}
-
 VRStage::VRStage(string name) : VRObject(name) {
     initStage();
 }

@@ -18,13 +18,11 @@ class VRLod : public VRObject {
         map<uint, VRObjectPtr> decimated;
         map<uint, float> decimation;
 
-        void update();
+        void setup();
         void decimateGeometries(VRObjectPtr o, float f);
 
     protected:
         VRObjectPtr copy(vector<VRObjectPtr> childs);
-
-        void loadContent(xmlpp::Element* e);
 
     public:
         /** initialise **/

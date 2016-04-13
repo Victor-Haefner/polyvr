@@ -89,22 +89,6 @@ void VRSceneLoader::saveScene(string file, xmlpp::Element* guiN) {
     doc.write_to_file_formatted(file);
 }
 
-void VRSceneLoader_loadObject(VRObjectPtr parent, xmlpp::Element* e) {
-    if (e == 0) return;
-    for (auto n : e->get_children()) {
-        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
-        if (!el) continue;
-
-        VRStoragePtr s = VRStorage::createFromStore(el);
-        VRObjectPtr c = static_pointer_cast<VRObject>(s);
-        if (!c) continue;
-
-        parent->addChild(c);
-        c->loadContent(el);
-        VRSceneLoader_loadObject(c, el);
-    }
-}
-
 xmlpp::Element* VRSceneLoader_getElementChild_(xmlpp::Element* e, string name) {
     if (e == 0) return 0;
     xmlpp::Node::NodeList nl = e->get_children();
@@ -151,7 +135,7 @@ void VRSceneLoader::loadScene(string path) {
     auto scene = VRSceneManager::getCurrent();
     VRSceneLoader_current_scene = scene;
 
-    VRSceneLoader_loadObject(scene->getRoot(), root);
+    scene->getRoot()->load(root);
     VRSceneManager::get()->setScene(scene);
     scene->load(sceneN);
 }

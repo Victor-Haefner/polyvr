@@ -27,6 +27,11 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+VRGeometry::Reference::Reference(int t, string p) {
+    type = t;
+    parameter = p;
+}
+
 VRObjectPtr VRGeometry::copy(vector<VRObjectPtr> children) {
     VRGeometryPtr geo = VRGeometry::create(getBaseName());
     geo->setMesh(mesh);
@@ -720,6 +725,7 @@ void VRGeometry::applyTransformation() {
     setMatrix(Matrix());
 }
 
+void VRGeometry::setReference(Reference ref) { source = ref; }
 VRGeometry::Reference VRGeometry::getReference() { return source; }
 
 void VRGeometry::showGeometricData(string type, bool b) {
@@ -761,20 +767,14 @@ void VRGeometry::showGeometricData(string type, bool b) {
     m->setLit(false);
 }
 
-void VRGeometry::loadContent(xmlpp::Element* e) {
-    VRTransform::loadContent(e);
-
-    source.type = toInt(e->get_attribute("sourcetype")->get_value().c_str());
-    source.parameter = e->get_attribute("sourceparam")->get_value();
-    setup();
-}
-
 void VRGeometry::setup() {
-    string p1, p2;
+    string p1, p2, p3, p4;
     stringstream ss;
     VRGeometryPtr g;
     // get source info
     // construct data from that
+
+    cout << "VRGeometry::setup " << source.type << " " << FILE << " " << source.parameter << endl;
 
     switch(source.type) {
         case CODE:
@@ -784,7 +784,10 @@ void VRGeometry::setup() {
         case FILE:
             ss << source.parameter;
             ss >> p1; ss >> p2;
-            g = VRImport::get()->loadGeometry(p1, p2);
+            if (!(ss >> p3)) p3 = "OSG";
+            if (!(ss >> p4)) p4 = "0";
+            //g = VRImport::get()->loadGeometry(p1, p2, p3, toBool(p4)); // TODO: set callback for thread load
+            g = VRImport::get()->loadGeometry(p1, p2, p3, false); // TODO: set callback for thread load
             if (g) setMesh( g->getMesh(), source, true );
             else cout << "failed to load " << p2 << " from file " << p1 << endl;
             break;

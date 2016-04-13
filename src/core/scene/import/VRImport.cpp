@@ -126,10 +126,11 @@ VRImport::LoadJob::LoadJob(string p, string pr, VRTransformPtr r, VRProgressPtr 
     preset = pr;
 }
 
-void VRImport::LoadJob::load(VRThreadWeakPtr thread) {
-    VRThreadPtr t = thread.lock();
+void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
+    VRThreadPtr t = tw.lock();
 
-    if (t) t->syncFromMain();
+    bool thread = false;
+    if (t) { t->syncFromMain(); thread = true; }
 
     auto loadSwitch = [&]() {
         auto bpath = boost::filesystem::path(path);
@@ -138,7 +139,7 @@ void VRImport::LoadJob::load(VRThreadWeakPtr thread) {
         if (ext == ".e57") { loadE57(path, res); return; }
         if (ext == ".ply") { loadPly(path, res); return; }
         if (ext == ".stp") { VRSTEP step; step.load(path, res); return; }
-        if (ext == ".wrl" && preset == "SOLIDWORKS-VRML2") { VRFactory f; if (f.loadVRML(path, progress, res)) return; else preset = "OSG"; }
+        if (ext == ".wrl" && preset == "SOLIDWORKS-VRML2") { VRFactory f; if (f.loadVRML(path, progress, res, thread)) return; else preset = "OSG"; }
         if (preset == "OSG" || preset == "COLLADA") osgLoad(path, res);
         if (preset == "COLLADA") loadCollada(path, res);
     };
@@ -259,8 +260,8 @@ void VRImport::fillCache(string path, VRTransformPtr obj) {
     cache[path].copy = 0; // TODO
 }
 
-VRGeometryPtr VRImport::loadGeometry(string file, string object) {
-    if (cache.count(file) == 0) load(file);
+VRGeometryPtr VRImport::loadGeometry(string file, string object, string preset, bool thread) {
+    if (cache.count(file) == 0) load(file, 0, false, preset, thread);
 
     if (cache.count(file) == 0) {
         cout << "VRImport::loadGeometry - Warning: " << file << " not in cache" << endl;

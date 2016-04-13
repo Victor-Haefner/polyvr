@@ -26,7 +26,7 @@ class VRFactory {
     public:
         VRFactory();
 
-        bool loadVRML(string path, VRProgressPtr p, VRTransformPtr t);
+        bool loadVRML(string path, VRProgressPtr p, VRTransformPtr t, bool thread = 0);
         VRObjectPtr setupLod(vector<string> paths);
 };
 

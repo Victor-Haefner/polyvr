@@ -197,8 +197,6 @@ class VRObject : public std::enable_shared_from_this<VRStorage>, public VRName, 
 
         void setup();
         void destroy();
-
-        virtual void loadContent(xmlpp::Element* e);
 };
 
 OSG_END_NAMESPACE;

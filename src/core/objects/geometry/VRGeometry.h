@@ -26,6 +26,7 @@ class VRGeometry : public VRTransform {
         struct Reference {
             int type;
             string parameter;
+            Reference(int type = CODE, string params = "");
         };
 
     protected:
@@ -43,8 +44,6 @@ class VRGeometry : public VRTransform {
         VRObjectPtr copy(vector<VRObjectPtr> children);
 
         void meshChanged();
-
-        virtual void loadContent(xmlpp::Element* e);
         void setup();
 
         VRGeometry(string name, bool hidden);
@@ -62,6 +61,7 @@ class VRGeometry : public VRTransform {
         void setMesh(GeometryMTRecPtr g);
         void setMesh(GeometryMTRecPtr g, Reference ref, bool keep_material = false);
 
+        void setReference(Reference ref);
         Reference getReference();
         void makeUnique();
         void setMeshVisibility(bool b);

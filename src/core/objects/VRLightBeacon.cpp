@@ -35,6 +35,7 @@ VRLightBeacon::VRLightBeacon(string name) : VRTransform(name) {
     addChild(lightGeo);
 
     storeObjName("light", &light, &light_name);
+    regStorageUpdateFkt( VRFunction<int>::create("lightbeacon setup", boost::bind(&VRLightBeacon::setup, this)) );
 }
 
 VRLightBeacon::~VRLightBeacon() {}
@@ -54,16 +55,13 @@ void VRLightBeacon::showLightGeo(bool b) {
 VRLightWeakPtr VRLightBeacon::getLight() { return light; }
 void VRLightBeacon::setLight(VRLightPtr l) { light = l; }
 
-void VRLightBeacon::loadContent(xmlpp::Element* e) {
-    VRTransform::loadContent(e);
-    string lightName = e->get_attribute("light")->get_value();
-
+void VRLightBeacon::setup() {
     // try to find light!
     VRLightBeaconPtr lbp = ptr();
     VRObjectPtr tmp = lbp;
     while(tmp->getParent()) tmp = tmp->getParent();
     if (tmp) {
-        auto l = static_pointer_cast<VRLight>( tmp->find(lightName) );
+        auto l = static_pointer_cast<VRLight>( tmp->find(light_name) );
         if (l) {
             l->setBeacon(ptr());
             light = l;

@@ -32,6 +32,8 @@ class VRMaterial : public VRObject {
         string constructShaderVP(VRMatData* data);
         string constructShaderFP(VRMatData* data);
 
+        void setup();
+
     protected:
         MultiPassMaterialMTRecPtr passes;
         vector<VRMatData*> mats;
@@ -43,8 +45,6 @@ class VRMaterial : public VRObject {
         bool isCMat(MaterialMTUncountedPtr matPtr);
         bool isSMat(MaterialMTUncountedPtr matPtr);
         bool isSTMat(MaterialMTUncountedPtr matPtr);
-
-        void loadContent(xmlpp::Element* e);
 
     public:
         VRMaterial(string name);

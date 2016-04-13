@@ -118,15 +118,6 @@ vector<string> VRCamera::getProjectionTypes() {
     return proj;
 }
 
-void VRCamera::loadContent(xmlpp::Element* e) {
-    VRTransform::loadContent(e);
-    if (e->get_attribute("accept_root")) doAcceptRoot = toBool(e->get_attribute("accept_root")->get_value());
-    if (e->get_attribute("near")) setNear( toFloat(e->get_attribute("near")->get_value()) );
-    if (e->get_attribute("far")) setFar( toFloat(e->get_attribute("far")->get_value()) );
-    if (e->get_attribute("aspect")) setAspect( toFloat(e->get_attribute("aspect")->get_value()) );
-    if (e->get_attribute("fov")) setFov( toFloat(e->get_attribute("fov")->get_value()) );
-}
-
 void VRCamera::focus(Vec3f p) {
     setAt(p);
 }
