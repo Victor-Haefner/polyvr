@@ -748,7 +748,7 @@ void VRGuiScene::on_menu_add_light() {
     if(!selected_itr) return;
     auto scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
-    VRLightPtr light = scene->addLight("light");
+    VRLightPtr light = VRLight::create("light");
     VRLightBeaconPtr lb = VRLightBeacon::create("light_beacon");
     light->addChild(lb);
     light->setBeacon(lb);
@@ -760,7 +760,7 @@ void VRGuiScene::on_menu_add_camera() {
     if(!selected_itr) return;
     auto scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
-    VRTransformPtr cam = scene->addCamera("camera");
+    VRTransformPtr cam = VRCamera::create("camera");
     getSelected()->addChild(cam);
     parseSGTree(cam, selected_itr);
     VRGuiSignals::get()->getSignal("camera_added")->trigger<VRDevice>();

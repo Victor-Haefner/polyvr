@@ -1,6 +1,7 @@
 #include "VRSceneLoader.h"
 #include "VRSceneManager.h"
 #include "core/objects/VRGroup.h"
+#include "core/objects/VRCamera.h"
 #include "core/objects/VRLight.h"
 #include "core/objects/VRLightBeacon.h"
 #include "core/objects/geometry/VRGeometry.h"
@@ -8,6 +9,7 @@
 
 #include "VRScene.h"
 #include "core/utils/VRTimer.h"
+#include "core/utils/VRStorage_template.h"
 #include "core/navigation/VRNavigator.h"
 #include "core/objects/VRLod.h"
 #include "addons/construction/building/VROpening.h"
@@ -48,7 +50,18 @@ void VRSceneLoader::optimizeGraph(VRObjectPtr obj) { //TODO
         optimizeGraph(obj->getChild(i));
 }
 
-VRSceneLoader::VRSceneLoader() { cout << "\nInit VRSceneLoader\n"; }
+void regObjectStorageTypes() {
+    VRStorage::regStorageType<VRObject>("Object");
+    VRStorage::regStorageType<VRTransform>("Transform");
+    VRStorage::regStorageType<VRGeometry>("Geometry");
+    VRStorage::regStorageType<VRCamera>("Camera");
+    VRStorage::regStorageType<VRLight>("Light");
+    VRStorage::regStorageType<VRLightBeacon>("LightBeacon");
+    VRStorage::regStorageType<VRGroup>("Group");
+    VRStorage::regStorageType<VRLod>("Lod");
+}
+
+VRSceneLoader::VRSceneLoader() { cout << "\nInit VRSceneLoader\n"; regObjectStorageTypes(); }
 VRSceneLoader::~VRSceneLoader() { ; }
 
 VRSceneLoader* VRSceneLoader::get() {
@@ -76,42 +89,19 @@ void VRSceneLoader::saveScene(string file, xmlpp::Element* guiN) {
     doc.write_to_file_formatted(file);
 }
 
-VRObjectPtr VRSceneLoader_createFromElement(VRScenePtr scene, xmlpp::Element* e) {
-    if (e->get_attribute("type") == 0) return 0;
-    string type = e->get_attribute("type")->get_value();
-    string base_name = e->get_attribute("base_name")->get_value();
-    //string name = e->get_name();
-
-
-    if (type == "Transform") return VRTransform::create(base_name);
-    if (type == "Geometry") return VRGeometry::create(base_name);
-    //if (type == "CSGGeometry") return new CSGGeometry(base_name);
-    if (type == "Camera") return scene->addCamera(base_name);
-    if (type == "LightBeacon") return VRLightBeacon::create(base_name);
-    if (type == "Light") return scene->addLight(base_name);
-    if (type == "Group") return VRGroup::create(base_name);
-    if (type == "Lod") return VRLod::create(base_name);
-
-    if (type != "Object") cout << "\nERROR in VRSceneLoader_createFromElement: " << type << " is not handled!\n";
-    return VRObject::create(base_name);
-}
-
-void VRSceneLoader_loadObject(VRScenePtr scene, VRObjectPtr p, xmlpp::Element* e) {
+void VRSceneLoader_loadObject(VRObjectPtr parent, xmlpp::Element* e) {
     if (e == 0) return;
-    xmlpp::Node::NodeList nl = e->get_children();
-    xmlpp::Node::NodeList::iterator itr;
-    for (itr = nl.begin(); itr != nl.end(); itr++) {
-        xmlpp::Node* n = *itr;
-
+    for (auto n : e->get_children()) {
         xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
         if (!el) continue;
 
-        VRObjectPtr c = VRSceneLoader_createFromElement(scene, el);
+        VRStoragePtr s = VRStorage::createFromStore(el);
+        VRObjectPtr c = static_pointer_cast<VRObject>(s);
         if (!c) continue;
 
-        p->addChild(c);
+        parent->addChild(c);
         c->loadContent(el);
-        VRSceneLoader_loadObject(scene, c, el);
+        VRSceneLoader_loadObject(c, el);
     }
 }
 
@@ -150,31 +140,20 @@ xmlpp::Element* VRSceneLoader_getElementChild_(xmlpp::Element* e, int i) {
 void VRSceneLoader::loadScene(string path) {
     xmlpp::DomParser parser;
     parser.set_validate(false);
-
     parser.parse_file(path.c_str());
-
     xmlpp::Node* n = parser.get_document()->get_root_node();
     xmlpp::Element* sceneN = dynamic_cast<xmlpp::Element*>(n);
 
     // load scenegraph
     xmlpp::Element* objectsN = VRSceneLoader_getElementChild_(sceneN, "Objects");
     xmlpp::Element* root = VRSceneLoader_getElementChild_(objectsN, 0);
-    VRSceneManager::get()->closeScene();
-    auto scene = VRScenePtr( new VRScene() );
-    scene->setPath(path);
-    VRSceneManager::get()->setWorkdir(scene->getWorkdir());
-    scene->setName(scene->getFileName());
+
+    auto scene = VRSceneManager::getCurrent();
     VRSceneLoader_current_scene = scene;
 
-    VRTimer timer;
-    timer.start("total_time");
-    VRSceneLoader_loadObject(scene, scene->getRoot(), root);
-    timer.stop("total_time");
-
+    VRSceneLoader_loadObject(scene->getRoot(), root);
     VRSceneManager::get()->setScene(scene);
-
     scene->load(sceneN);
-    //timer.print();
 }
 
 

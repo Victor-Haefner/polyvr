@@ -1,6 +1,8 @@
 #include "VRLight.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRStorage_template.h"
+#include "core/scene/VRScene.h"
+#include "core/scene/VRSceneManager.h"
 #include "VRLightBeacon.h"
 
 #include <OpenSG/OSGShadowStage.h>
@@ -56,8 +58,12 @@ VRLight::VRLight(string name) : VRObject(name) {
 
 VRLight::~VRLight() {}
 
-VRLightPtr VRLight::create(string name) { return shared_ptr<VRLight>(new VRLight(name) ); }
 VRLightPtr VRLight::ptr() { return static_pointer_cast<VRLight>( shared_from_this() ); }
+VRLightPtr VRLight::create(string name) {
+    auto l = shared_ptr<VRLight>(new VRLight(name) );
+    VRSceneManager::getCurrent()->addLight(l);
+    return l;
+}
 
 void VRLight::update() {
     ssme = SimpleShadowMapEngine::create();

@@ -18,13 +18,9 @@ class VRCameraManager {
         VRCameraManager();
         ~VRCameraManager();
 
-        VRTransformPtr addCamera(string name);
         void addCamera(VRCameraPtr cam);
-
-        VRCameraPtr getCamera(int ID);
-
         void setMActiveCamera(string cam);
-
+        VRCameraPtr getCamera(int ID);
         VRCameraPtr getActiveCamera();
         int getActiveCameraIndex();
 
