@@ -1,11 +1,16 @@
 #include "VRKinematictool.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRFunction.h"
+#include "core/utils/VRStorage_template.h"
 #include "core/objects/VRTransform.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/scene/VRScene.h"
+#include "core/scene/VRSceneManager.h"
 #include "VRAnalyticGeometry.h"
 
 #include <OpenSG/OSGPlane.h>
 #include <OpenSG/OSGLine.h>
+#include <boost/bind.hpp>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -22,6 +27,16 @@ VRJointTool::VRJointTool(string name) : VRGeometry(name) {
 
     ageo = VRAnalyticGeometry::create();
     ageo->setLabelParams(0.05, true, true);
+    ageo->setPersistency(0);
+
+    store("jt_anchor1", &anchor1);
+    store("jt_anchor2", &anchor2);
+    storeObjName("jt_obj1_name", &obj1, &obj1_name);
+    storeObjName("jt_obj2_name", &obj2, &obj2_name);
+    //store("jt_active", &active);
+    //store("jt_lastAppended", &lastAppended);
+
+    regStorageUpdateFkt( VRFunction<int>::create("jointtool setup", boost::bind(&VRJointTool::setup, this)) );
 }
 
 VRJointTool::~VRJointTool() { clear(); }
@@ -34,6 +49,17 @@ VRJointToolPtr VRJointTool::create(string name) {
     return ptr;
 }
 
+void VRJointTool::setup() {
+    auto fkt = VRFunction<int>::create("jointtool delayed setup", boost::bind(&VRJointTool::delayed_setup, this));
+    VRSceneManager::getCurrent()->queueJob( fkt );
+}
+
+void VRJointTool::delayed_setup() {
+    obj1 = dynamic_pointer_cast<VRTransform>( getRoot()->find(obj1_name) );
+    obj2 = dynamic_pointer_cast<VRTransform>( getRoot()->find(obj2_name) );
+    updateVis();
+}
+
 void VRJointTool::clear() {
     setActive(0);
     obj1.reset();
@@ -44,9 +70,11 @@ void VRJointTool::clear() {
 int VRJointTool::append(VRTransformPtr t, pose p) {
     if (lastAppended) {
         obj1 = t;
+        obj1_name = t->getName();
         anchor1 = p;
     } else {
         obj2 = t;
+        obj2_name = t->getName();
         anchor2 = p;
     }
 

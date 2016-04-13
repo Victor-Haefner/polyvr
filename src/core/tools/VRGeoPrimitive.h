@@ -22,7 +22,7 @@ class VRGeoPrimitive : public VRGeometry {
     public:
         VRGeoPrimitive(string name);
 
-        static VRGeoPrimitivePtr create(string name);
+        static VRGeoPrimitivePtr create(string name = "None");
         VRGeoPrimitivePtr ptr();
 
         vector<VRHandlePtr> getHandles();

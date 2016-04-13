@@ -774,7 +774,8 @@ void VRGeometry::setup() {
     // get source info
     // construct data from that
 
-    cout << "VRGeometry::setup " << source.type << " " << FILE << " " << source.parameter << endl;
+    string bname = getBaseName();
+    setName( "TMP_GEO_SETUP_NAME" );
 
     switch(source.type) {
         case CODE:
@@ -797,6 +798,8 @@ void VRGeometry::setup() {
             setPrimitive(p1, p2);
             break;
     }
+
+    setName( bname );
 }
 
 void VRGeometry::readSharedMemory(string segment, string object) {

@@ -5,6 +5,10 @@
 #include "core/objects/VRLight.h"
 #include "core/objects/VRLightBeacon.h"
 #include "core/objects/geometry/VRGeometry.h"
+
+#include "core/tools/VRWaypoint.h"
+#include "core/tools/VRGeoPrimitive.h"
+#include "core/tools/VRKinematictool.h"
 //#include "addons/Engineering/CSG/CSGGeometry.h"
 
 #include "VRScene.h"
@@ -59,6 +63,9 @@ void regObjectStorageTypes() {
     VRStorage::regStorageType<VRLightBeacon>("LightBeacon");
     VRStorage::regStorageType<VRGroup>("Group");
     VRStorage::regStorageType<VRLod>("Lod");
+    VRStorage::regStorageType<VRWaypoint>("Waypoint");
+    VRStorage::regStorageType<VRGeoPrimitive>("GeoPrimitive");
+    VRStorage::regStorageType<VRJointTool>("JointTool");
 }
 
 VRSceneLoader::VRSceneLoader() { cout << "\nInit VRSceneLoader\n"; regObjectStorageTypes(); }

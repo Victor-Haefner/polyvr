@@ -109,14 +109,15 @@ VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, stri
 
     VRTransformPtr res = VRTransform::create("proxy");
     LoadJob* job = new LoadJob(path, preset, res, progress);
-    if (!thread) job->load(VRThreadWeakPtr());
-    else {
+    if (!thread) {
+        job->load(VRThreadWeakPtr());
+        return cache[path].retrieve(parent);
+    } else {
         job->loadCb = VRFunction< VRThreadWeakPtr >::create( "geo load", boost::bind(&LoadJob::load, job, _1) );
         int t = VRSceneManager::getCurrent()->initThread(job->loadCb.get(), "geo load thread", false, 1);
+        fillCache(path, res);
+        return cache[path].retrieve(parent);
     }
-
-    fillCache(path, res);
-    return cache[path].retrieve(parent);
 }
 
 VRImport::LoadJob::LoadJob(string p, string pr, VRTransformPtr r, VRProgressPtr pg) {
@@ -145,6 +146,7 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
     };
 
     loadSwitch();
+    VRImport::get()->fillCache(path, res);
     if (t) t->syncToMain();
 }
 
@@ -258,6 +260,7 @@ void VRImport::fillCache(string path, VRTransformPtr obj) {
     cache[path].root = static_pointer_cast<VRTransform>(obj);
     for (auto o : cache[path].root->getChildren(true)) cache[path].objects[o->getName()] = o;
     cache[path].copy = 0; // TODO
+    cout << "VRImport::fillCache " << path << ", cache size: " << cache[path].objects.size() << endl;
 }
 
 VRGeometryPtr VRImport::loadGeometry(string file, string object, string preset, bool thread) {
@@ -270,9 +273,9 @@ VRGeometryPtr VRImport::loadGeometry(string file, string object, string preset, 
 
     if (cache[file].objects.count(object) == 0) {
         cout << "VRImport::loadGeometry - Warning: " << file << " in cache but has no object " << object << endl;
-        cout << cache[file].root->getName() << endl;
+        cout << " cache root: " << cache[file].root->getName() << " cache size: " << cache[file].objects.size() << endl;
         //for (auto o : cache[file].root->getChildren(true)) cout << " cache " << o->getName() << endl;
-        for (auto o : cache[file].objects) cout << " cache " << o.first << endl;
+        for (auto o : cache[file].objects) cout << ", cache " << o.first << endl;
         return 0;
     }
 

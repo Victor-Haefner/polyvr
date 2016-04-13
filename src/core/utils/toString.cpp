@@ -160,3 +160,22 @@ void toValue(string s, OSG::Vec3i& v) {
     ss >> v[1];
     ss >> v[2];
 }
+
+string toString(OSG::pose po) {
+    return toString(po.pos()) + " " + toString(po.dir()) + " " + toString(po.up());
+}
+
+void toValue(string s, OSG::pose& po) {
+    OSG::Vec3f p,d,u;
+    stringstream ss(s);
+    ss >> p[0];
+    ss >> p[1];
+    ss >> p[2];
+    ss >> d[0];
+    ss >> d[1];
+    ss >> d[2];
+    ss >> u[0];
+    ss >> u[1];
+    ss >> u[2];
+    po.set(p,d,u);
+}

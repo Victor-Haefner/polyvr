@@ -13,12 +13,13 @@ class VRWaypoint : public VRGeometry {
         pose Floor;
         Vec3f at;
 
+        void setup();
         void updateGeo();
 
     public:
         VRWaypoint(string name);
 
-        static VRWaypointPtr create(string name);
+        static VRWaypointPtr create(string name = "None");
         VRWaypointPtr ptr();
 
         void set(pose p);

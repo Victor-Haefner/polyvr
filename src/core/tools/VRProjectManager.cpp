@@ -18,7 +18,11 @@ void VRProjectManager::addItem(VRStoragePtr s, string mode) {
     if (mode == "REBUILD") vault_rebuild.push_back(s);
 }
 
-vector<VRStoragePtr> VRProjectManager::getItems() { return vault_rebuild; }
+vector<VRStoragePtr> VRProjectManager::getItems() {
+    vector<VRStoragePtr> res;
+    for (auto v : vault_rebuild) if(v) res.push_back(v);
+    return res;
+}
 
 void VRProjectManager::save(string path) {
     if (fs::exists(path)) path = fs::canonical(path).string();

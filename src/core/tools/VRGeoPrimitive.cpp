@@ -67,6 +67,7 @@ void VRGeoPrimitive::setupHandles() {
         if (n == "Number of teeth") continue;
 
         auto h = VRHandle::create(n);
+        h->setPersistency(0);
         handles.push_back(h);
         addChild(h);
 
