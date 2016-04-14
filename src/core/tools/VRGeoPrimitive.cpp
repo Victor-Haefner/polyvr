@@ -4,6 +4,8 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
 #include "core/tools/selection/VRSelector.h"
+#include "VRAnalyticGeometry.h"
+
 #include <boost/bind.hpp>
 
 using namespace OSG;
@@ -11,34 +13,46 @@ using namespace OSG;
 VRGeoPrimitive::VRGeoPrimitive(string name) : VRGeometry(name) {
     type = "GeoPrimitive";
     selector = VRSelector::create();
+
+    params_geo = VRAnalyticGeometry::create();
+    params_geo->setLabelParams(0.05, true, true);
+    params_geo->setPersistency(0);
 }
 
 VRGeoPrimitivePtr VRGeoPrimitive::create(string name) {
     auto p = VRGeoPrimitivePtr( new VRGeoPrimitive(name) );
+    p->addChild(p->params_geo);
+    p->params_geo->init();
     p->setPrimitive("Box");
     return p;
 }
 
 VRGeoPrimitivePtr VRGeoPrimitive::ptr() { return static_pointer_cast<VRGeoPrimitive>( shared_from_this() ); }
 
+VRAnalyticGeometryPtr VRGeoPrimitive::getLabels() { return params_geo; }
+
 void VRGeoPrimitive::select(bool b) {
     if (selected == b) return;
     selected = b;
+    params_geo->setVisible(b);
     for (auto h : handles) h->setVisible(b);
-    if (b) selector->select(ptr(), false);
+
+    if (b) selector->select(ptr(), false); // TODO: does not play nice with params_geo!!
     else selector->clear();
 }
 
 void VRGeoPrimitive::update(int i, float v) {
     if (!primitive) return;
     auto params = splitString(primitive->toString(), ' ');
+    string vs = toString(v);
     string args;
     for (int j=0; j<params.size(); j++) {
         if (i != j) args += params[j];
-        else args += toString(v);
+        else args += vs;
         if (j < params.size()-1) args += " ";
     }
     VRGeometry::setPrimitive(primitive->getType(), args);
+    //if (params_geo) params_geo->setVector(i, Vec3f(0,0,0), Vec3f(1,0,0), Vec3f(0.5,0.6,1), vs + " mm"); // TODO: cave crash??
 }
 
 void VRGeoPrimitive::setupHandles() {

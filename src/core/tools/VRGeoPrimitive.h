@@ -15,6 +15,7 @@ class VRGeoPrimitive : public VRGeometry {
 
         vector<VRHandlePtr> handles;
         VRSelectorPtr selector;
+        VRAnalyticGeometryPtr params_geo;
 
         void update(int i, float v);
         void setupHandles();
@@ -30,6 +31,7 @@ class VRGeoPrimitive : public VRGeometry {
         void select(bool b); // activates editing handles
 
         void setPrimitive(string primitive, string args = ""); // hook on virtual function VRGeometry::setPrimitive
+        VRAnalyticGeometryPtr getLabels();
 };
 
 OSG_END_NAMESPACE;

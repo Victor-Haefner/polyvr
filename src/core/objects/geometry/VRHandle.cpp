@@ -9,6 +9,7 @@
 using namespace OSG;
 
 VRHandle::VRHandle(string name) : VRGeometry(name) {
+    type = "Handle";
     updateCb = VRFunction<int>::create("handle_update", boost::bind(&VRHandle::updateHandle, this) );
     setPickable(true);
     setPrimitive("Box", "0.1 0.1 0.1 1 1 1");
@@ -41,7 +42,6 @@ void VRHandle::set(pose p, float v) {
     c->toggleRConstraint(0, ptr());
     c->toggleTConstraint(0, ptr());
     setPose( origin );
-
 
     if (constraint == LINEAR) {
         translate( axis*value*scale );
@@ -80,7 +80,7 @@ void VRHandle::drop() {
     scene->dropUpdateFkt( updateCb );
 }
 
-void VRHandle::setMatrix(Matrix m) {
+void VRHandle::setMatrix(Matrix m) { // for undo/redo
     VRTransform::setMatrix(m);
-    (*updateCb)(0);
+    (*updateCb)(0); // problem: called non stop :(
 }

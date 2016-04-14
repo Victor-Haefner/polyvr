@@ -43,6 +43,7 @@ PyObject* VRPyTypeCaster::cast(OSG::VRObjectPtr obj) {
     else if (type == "TextureRenderer") return VRPyTextureRenderer::fromSharedPtr( static_pointer_cast<OSG::VRTextureRenderer>(obj) );
     else if (type == "Waypoint") return VRPyWaypoint::fromSharedPtr( static_pointer_cast<OSG::VRWaypoint>(obj) );
     else if (type == "JointTool") return VRPyJointTool::fromSharedPtr( static_pointer_cast<OSG::VRJointTool>(obj) );
+    //else if (type == "Handle") return VRPyHandle::fromSharedPtr( static_pointer_cast<OSG::VRHandle>(obj) );
     else if (type == "GeoPrimitive") return VRPyGeoPrimitive::fromSharedPtr( static_pointer_cast<OSG::VRGeoPrimitive>(obj) );
     cout << "\nERROR in VRPyTypeCaster::cast: " << type << " not handled!\n";
 
