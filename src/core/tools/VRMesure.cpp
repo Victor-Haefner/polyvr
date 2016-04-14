@@ -43,9 +43,9 @@ void VRMeasure::update() {
     n2 *= n2.dot(v1);
     n3 *= n3.dot(v2);
 
-    float a1 = acos(n2.dot(-n3))*180/Pi;
-    float a2 = acos(n1.dot(-n3))*180/Pi;
-    float a3 = acos(n1.dot(-n2))*180/Pi;
+    float a1 = acos(vn2.dot(-vn3))*180/Pi;
+    float a2 = acos(vn1.dot(-vn3))*180/Pi;
+    float a3 = acos(vn1.dot(-vn2))*180/Pi;
 
     Vec3f r(1,0,0);
     Vec3f g(0,1,0);
