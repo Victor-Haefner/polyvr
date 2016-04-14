@@ -52,6 +52,7 @@ void VRAnalyticGeometry::init() {
     addChild(ae);
 
     ae->getMaterial()->setDepthTest(GL_ALWAYS);
+    ae->getMaterial()->setLit(0);
 
     // lines
     GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
@@ -91,10 +92,12 @@ void VRAnalyticGeometry::init() {
     circlesGeometry->setLengths(lengths);
 }
 
-void VRAnalyticGeometry::setLabelParams(float size, bool screen_size, bool billboard) {
+void VRAnalyticGeometry::setLabelParams(float size, bool screen_size, bool billboard, Vec4f fg, Vec4f bg) {
     ae->setSize(size);
     ae->setBillboard(billboard);
     ae->setScreensize(screen_size);
+    ae->setColor(fg);
+    ae->setBackground(bg);
 }
 
 void VRAnalyticGeometry::resize(int i, int j, int k) {

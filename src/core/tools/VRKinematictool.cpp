@@ -22,6 +22,7 @@ VRJointTool::VRJointTool(string name) : VRGeometry(name) {
     auto mat = VRMaterial::create("VRJointTool");
     mat->setDiffuse(Vec3f(0,0,0));
     mat->setWireFrame(1);
+    mat->setLineWidth(4);
     mat->setLit(0);
     setMaterial(mat);
 

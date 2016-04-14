@@ -9,7 +9,7 @@ simpleVRPyType(AnalyticGeometry, New_VRObjects_unnamed_ptr);
 PyMethodDef VRPyAnalyticGeometry::methods[] = {
     {"setVector", (PyCFunction)VRPyAnalyticGeometry::setVector, METH_VARARGS, "Add/set an annotated vector - setVector(int i, [pos], [vec], [col], str label)" },
     {"setCircle", (PyCFunction)VRPyAnalyticGeometry::setCircle, METH_VARARGS, "Add/set an annotated circle - setCircle(int i, [pos], [norm], radius, [col], str label)" },
-    {"setLabelParams", (PyCFunction)VRPyAnalyticGeometry::setLabelParams, METH_VARARGS, "Set the size of the labels - setLabelParams( float s, bool screen_size, bool billboard )" },
+    {"setLabelParams", (PyCFunction)VRPyAnalyticGeometry::setLabelParams, METH_VARARGS, "Set the size of the labels - setLabelParams( float s, bool screen_size, bool billboard, fg[r,g,b,a], bg[r,g,b,a] )" },
     {"clear", (PyCFunction)VRPyAnalyticGeometry::clear, METH_NOARGS, "Clear data" },
     {NULL}  /* Sentinel */
 };
@@ -19,8 +19,12 @@ PyObject* VRPyAnalyticGeometry::setLabelParams(VRPyAnalyticGeometry* self, PyObj
     float s;
     bool ss = false;
     bool bb = false;
-    if (! PyArg_ParseTuple(args, "f|ii", &s, &ss, &bb)) return NULL;
-    self->objPtr->setLabelParams( s, ss, bb );
+    PyObject* fgO = 0;
+    PyObject* bgO = 0;
+    if (! PyArg_ParseTuple(args, "f|iiOO", &s, &ss, &bb, &fgO, &bgO)) return NULL;
+    Vec4f fg(0,0,0,1); if (fgO) fg = parseVec4fList(fgO);
+    Vec4f bg(0,0,0,0); if (bgO) bg = parseVec4fList(bgO);
+    self->objPtr->setLabelParams( s, ss, bb, fg, bg );
     Py_RETURN_TRUE;
 }
 

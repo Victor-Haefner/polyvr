@@ -346,7 +346,7 @@ void VRScriptManager::initPyModules() {
     registerModule<VRPyMenu>("Menu", pModVR, VRPyGeometry::typeRef);
     registerModule<VRPyClipPlane>("ClipPlane", pModVR, VRPyGeometry::typeRef);
     registerModule<VRPyWaypoint>("Waypoint", pModVR, VRPyGeometry::typeRef);
-    registerModule<VRPyMeasure>("Measure", pModVR, VRPyObject::typeRef);
+    registerModule<VRPyMeasure>("Measure", pModVR, VRPyAnalyticGeometry::typeRef);
     registerModule<VRPyJointTool>("JointTool", pModVR, VRPyGeometry::typeRef);
 	registerModule<VRPyColorChooser>("ColorChooser", pModVR);
 	registerModule<VRPyTextureRenderer>("TextureRenderer", pModVR, VRPyObject::typeRef);

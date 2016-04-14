@@ -23,10 +23,13 @@ class VRAnalyticGeometry : public VRTransform {
         VRMaterialPtr pntMat = 0;
         VRMaterialPtr cirMat = 0;
 
-        void resize(int i, int j = 0, int k = 0);
+        Vec4f foreground;
+        Vec4f background;
 
         static string circle_vp;
         static string circle_fp;
+
+        void resize(int i, int j = 0, int k = 0);
 
     public:
         VRAnalyticGeometry();
@@ -36,7 +39,7 @@ class VRAnalyticGeometry : public VRTransform {
         VRAnalyticGeometryPtr ptr();
         void init();
 
-        void setLabelParams(float size, bool screen_size = false, bool billboard = false);
+        void setLabelParams(float size, bool screen_size = false, bool billboard = false, Vec4f fg = Vec4f(0,0,0,1), Vec4f bg = Vec4f(0,0,0,0));
 
         void setVector(int i, Vec3f pos, Vec3f vec, Vec3f color, string label="");
         void setAngle(int i, Vec3f pos, Vec3f v1, Vec3f v2, Vec3f c1, Vec3f c2, string label="");
