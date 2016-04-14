@@ -27,6 +27,10 @@ VRViewManager::VRViewManager() {
 
 VRViewManager::~VRViewManager() {}
 
+void VRViewManager::updateViews() {
+    for (auto v : views) v.second->update();
+}
+
 int VRViewManager::addView(string name) {
     VRViewPtr view = VRView::create(name);
     int id=0;

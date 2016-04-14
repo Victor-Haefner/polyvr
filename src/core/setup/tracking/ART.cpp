@@ -149,6 +149,7 @@ void ART::checkNewDevices(int type, int N) {
             cout << "ART - New device " << type << " " << k << endl;
             devices[k] = new ART_device(i,type);
             on_new_device->trigger<VRDevice>();
+            VRSetupManager::getCurrent()->updateViews();
         }
     }
 }

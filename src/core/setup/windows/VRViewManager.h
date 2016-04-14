@@ -30,6 +30,7 @@ class VRViewManager {
         void setViewUser(VRTransformPtr user, int i);
         void setViewBackground(BackgroundRecPtr bg, int i = -1);
 
+        void updateViews();
         void showViewStats(int i, bool b);
         void showViewportGeos(bool b);
 

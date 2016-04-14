@@ -523,7 +523,21 @@ void VRView::setProjectionCenter(Vec3f v) { proj_center = v; update(); }
 Vec3f VRView::getProjectionCenter() { return proj_center; }
 void VRView::setProjectionSize(Vec2f v) { proj_size = v; update(); }
 Vec2f VRView::getProjectionSize() { return proj_size; }
-void VRView::setProjectionUser(Vec3f v) { proj_user = v; update(); }
+void VRView::setProjectionUser(Vec3f v) {
+    proj_user = v; update();
+
+    cout << "VRView::setProjectionUser\n";
+    /*setViewports();
+    setDecorators();
+    setCam();
+    setRoot();*/
+    //setUser();
+    /*setWindow();
+    setBG();
+    swapEyes(eyeinverted);
+    setStereoEyeSeparation(eyeSeparation);
+    setMaterial();*/
+}
 Vec3f VRView::getProjectionUser() { return proj_user; }
 
 OSG_END_NAMESPACE;
