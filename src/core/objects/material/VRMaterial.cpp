@@ -673,12 +673,25 @@ void VRMaterial::setTransparency(float c) {
     auto md = mats[activePass];
     md->colChunk->setDiffuse( toColor4f(getDiffuse(), c) );
 
+    if (c == 1) clearTransparency();
+    else enableTransparency();
+    //enableTransparency();
+}
+
+void VRMaterial::enableTransparency() {
+    auto md = mats[activePass];
     if (md->blendChunk == 0) {
         md->blendChunk = BlendChunk::create();
         md->blendChunk->setSrcFactor  ( GL_SRC_ALPHA           );
         md->blendChunk->setDestFactor ( GL_ONE_MINUS_SRC_ALPHA );
         md->mat->addChunk(md->blendChunk);
     }
+}
+
+void VRMaterial::clearTransparency() {
+    auto md = mats[activePass];
+    md->clearChunk(md->blendChunk);
+    md->clearChunk(md->depthChunk);
 }
 
 void VRMaterial::setDepthTest(int d) {
@@ -688,13 +701,6 @@ void VRMaterial::setDepthTest(int d) {
         md->depthChunk->setFunc(d); // GL_ALWAYS
         md->mat->addChunk(md->depthChunk);
     }
-}
-
-void VRMaterial::clearTransparency() {
-    setTransparency(1);
-    auto md = mats[activePass];
-    md->clearChunk(md->blendChunk);
-    md->clearChunk(md->depthChunk);
 }
 
 void VRMaterial::setDiffuse(Color3f c) { mats[activePass]->colChunk->setDiffuse( toColor4f(c, getTransparency()) );}

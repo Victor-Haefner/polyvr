@@ -22,6 +22,7 @@ struct VRPyMaterial : VRPyBaseT<OSG::VRMaterial> {
     static PyObject* getTransparency(VRPyMaterial* self);
     static PyObject* setTransparency(VRPyMaterial* self, PyObject* args);
     static PyObject* clearTransparency(VRPyMaterial* self);
+    static PyObject* enableTransparency(VRPyMaterial* self);
     static PyObject* getShininess(VRPyMaterial* self);
     static PyObject* setShininess(VRPyMaterial* self, PyObject* args);
     static PyObject* setTexture(VRPyMaterial* self, PyObject* args);

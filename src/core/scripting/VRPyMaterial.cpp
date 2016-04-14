@@ -21,6 +21,7 @@ PyMethodDef VRPyMaterial::methods[] = {
     {"setTransparency", (PyCFunction)VRPyMaterial::setTransparency, METH_VARARGS, "Sets the transparency - setTransparency(f)" },
     {"setDepthTest", (PyCFunction)VRPyMaterial::setDepthTest, METH_VARARGS, "Sets the depth test function - setDepthTest(f)\t\n'GL_ALWAYS'" },
     {"clearTransparency", (PyCFunction)VRPyMaterial::clearTransparency, METH_NOARGS, "Clears the transparency channel - clearTransparency()" },
+    {"enableTransparency", (PyCFunction)VRPyMaterial::enableTransparency, METH_NOARGS, "Enables the transparency channel - enableTransparency()" },
     {"getShininess", (PyCFunction)VRPyMaterial::getShininess, METH_NOARGS, "Returns the shininess - f getShininess()" },
     {"setShininess", (PyCFunction)VRPyMaterial::setShininess, METH_VARARGS, "Sets the shininess - setShininess(f)" },
     {"setPointSize", (PyCFunction)VRPyMaterial::setPointSize, METH_VARARGS, "Sets the GL point size - setPointSize(i)" },
@@ -45,6 +46,12 @@ PyMethodDef VRPyMaterial::methods[] = {
     {"setDefaultVertexShader", (PyCFunction)VRPyMaterial::setDefaultVertexShader, METH_NOARGS, "Set a default vertex shader - setDefaultVertexShader()" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyMaterial::enableTransparency(VRPyMaterial* self) {
+	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::enableTransparency, C obj is invalid"); return NULL; }
+	self->objPtr->enableTransparency();
+	Py_RETURN_TRUE;
+}
 
 PyObject* VRPyMaterial::clearTransparency(VRPyMaterial* self) {
 	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::clearTransparency, C obj is invalid"); return NULL; }
