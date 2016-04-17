@@ -49,13 +49,13 @@ PyMethodDef VRPyMaterial::methods[] = {
 
 PyObject* VRPyMaterial::enableTransparency(VRPyMaterial* self) {
 	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::enableTransparency, C obj is invalid"); return NULL; }
-	self->objPtr->enableTransparency();
+	self->objPtr->enableTransparency(true);
 	Py_RETURN_TRUE;
 }
 
 PyObject* VRPyMaterial::clearTransparency(VRPyMaterial* self) {
 	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::clearTransparency, C obj is invalid"); return NULL; }
-	self->objPtr->clearTransparency();
+	self->objPtr->clearTransparency(true);
 	Py_RETURN_TRUE;
 }
 

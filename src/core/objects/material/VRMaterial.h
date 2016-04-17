@@ -38,6 +38,7 @@ class VRMaterial : public VRObject {
         MultiPassMaterialMTRecPtr passes;
         vector<VRMatData*> mats;
         int activePass = 0;
+        bool force_transparency = false;
         bool deferred = false;
 
         VRObjectPtr copy(vector<VRObjectPtr> children);
@@ -95,8 +96,8 @@ class VRMaterial : public VRObject {
         void setEmission(Color3f c);
         void setTransparency(float t);
         void setDepthTest(int d);
-        void enableTransparency();
-        void clearTransparency();
+        void enableTransparency(bool user_override = false);
+        void clearTransparency(bool user_override = false);
         void setLineWidth(int w, bool smooth = true);
         void setPointSize(int s, bool smooth = true);
         void setWireFrame(bool b);
