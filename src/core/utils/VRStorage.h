@@ -24,7 +24,8 @@ class VRStorage {
     private:
         string type = "Node";
         int persistency = 666;
-        vector<VRUpdatePtr> f_update; // update
+        vector<VRUpdatePtr> f_setup; // setup
+        vector<VRUpdatePtr> f_setup_after; // setup after tree loaded
         map<string, VRStorageBin> storage;
         static map<string, VRStorageFactoryCbPtr> factory;
 
@@ -55,7 +56,8 @@ class VRStorage {
         template<typename To, typename T> void storeObjName(string tag, To* o, T* t);
 
         void setStorageType(string t);
-        void regStorageUpdateFkt(VRUpdatePtr u);
+        void regStorageSetupFkt(VRUpdatePtr u);
+        void regStorageSetupAfterFkt(VRUpdatePtr u);
 
     public:
         VRStorage();

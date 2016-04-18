@@ -26,7 +26,6 @@ class VRJointTool : public VRGeometry {
         VRAnalyticGeometryPtr ageo;
 
         void delayed_setup();
-        void setup();
         void updateVis();
 
     public:

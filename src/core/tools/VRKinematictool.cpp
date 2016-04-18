@@ -4,7 +4,6 @@
 #include "core/utils/VRStorage_template.h"
 #include "core/objects/VRTransform.h"
 #include "core/objects/material/VRMaterial.h"
-#include "core/scene/VRScene.h"
 #include "core/scene/VRSceneManager.h"
 #include "VRAnalyticGeometry.h"
 
@@ -37,7 +36,7 @@ VRJointTool::VRJointTool(string name) : VRGeometry(name) {
     //store("jt_active", &active);
     //store("jt_lastAppended", &lastAppended);
 
-    regStorageUpdateFkt( VRFunction<int>::create("jointtool setup", boost::bind(&VRJointTool::setup, this)) );
+    regStorageSetupAfterFkt( VRFunction<int>::create("jointtool setup", boost::bind(&VRJointTool::delayed_setup, this)) );
 }
 
 VRJointTool::~VRJointTool() { clear(); }
@@ -48,11 +47,6 @@ VRJointToolPtr VRJointTool::create(string name) {
     ptr->addChild(ptr->ageo);
     ptr->ageo->init();
     return ptr;
-}
-
-void VRJointTool::setup() {
-    auto fkt = VRFunction<int>::create("jointtool delayed setup", boost::bind(&VRJointTool::delayed_setup, this));
-    VRSceneManager::getCurrent()->queueJob( fkt );
 }
 
 void VRJointTool::delayed_setup() {

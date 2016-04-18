@@ -14,8 +14,6 @@ class VRLightBeacon : public VRTransform {
         string light_name;
         NodeMTRecPtr lightGeo;
 
-        void setup();
-
     public:
         VRLightBeacon(string name);
         ~VRLightBeacon();

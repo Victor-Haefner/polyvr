@@ -27,6 +27,7 @@ VRAnnotationEngine::VRAnnotationEngine() : VRGeometry("AnnEng") {
     setSize(0.2);
     setBillboard(false);
     setScreensize(false);
+    setVolume(false);
 
     clear();
 }

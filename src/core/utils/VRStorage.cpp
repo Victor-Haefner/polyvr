@@ -1,6 +1,7 @@
 #include "VRStorage.h"
 #include "toString.h"
 #include "VRFunction.h"
+#include "core/scene/VRSceneManager.h"
 #include <libxml++/nodes/element.h>
 #include <boost/bind.hpp>
 
@@ -15,7 +16,8 @@ VRStorage::VRStorage() {
 
 void VRStorage::setPersistency(int p) { persistency = p; }
 int VRStorage::getPersistency() { return persistency; }
-void VRStorage::regStorageUpdateFkt(VRUpdatePtr u) { f_update.push_back(u); }
+void VRStorage::regStorageSetupFkt(VRUpdatePtr u) { f_setup.push_back(u); }
+void VRStorage::regStorageSetupAfterFkt(VRUpdatePtr u) { f_setup_after.push_back(u); }
 void VRStorage::setStorageType(string t) { type = t; }
 
 void VRStorage::save(xmlpp::Element* e, int p) {
@@ -35,7 +37,9 @@ xmlpp::Element* VRStorage::saveUnder(xmlpp::Element* e, int p) {
 void VRStorage::load(xmlpp::Element* e) {
     if (e == 0) return;
     for (auto s : storage) (*s.second.f1)(e);
-    for (auto f : f_update) (*f)(0);
+    for (auto f : f_setup) (*f)(0);
+    for (auto f : f_setup_after) VRSceneManager::get()->queueJob(f);
+    f_setup_after.clear();
 }
 
 int VRStorage::getPersistency(xmlpp::Element* e) {

@@ -52,7 +52,7 @@ VRGeometry::VRGeometry(string name) : VRTransform(name) {
     store("sourcetype", &source.type);
     store("sourceparam", &source.parameter);
 
-    regStorageUpdateFkt( VRFunction<int>::create("geometry_update", boost::bind(&VRGeometry::setup, this)) );
+    regStorageSetupFkt( VRFunction<int>::create("geometry_update", boost::bind(&VRGeometry::setup, this)) );
 }
 
 VRGeometry::VRGeometry(string name, bool hidden) : VRTransform(name) {

@@ -34,6 +34,7 @@ class VRLight : public VRObject {
         Vec3f attenuation; // C L Q
 
         void setup();
+        void setup_after();
 
     public:
         VRLight(string name = "");

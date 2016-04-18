@@ -67,7 +67,7 @@ VRObject::VRObject(string _name) {
     store("visible", &visible);
     storeObjVec("children", children);
 
-    regStorageUpdateFkt( VRFunction<int>::create("object setup", boost::bind(&VRObject::setup, this)) );
+    regStorageSetupFkt( VRFunction<int>::create("object setup", boost::bind(&VRObject::setup, this)) );
 }
 
 VRObject::~VRObject() {

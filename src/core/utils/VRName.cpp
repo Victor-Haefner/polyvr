@@ -18,7 +18,7 @@ VRName::VRName() {
     store("base_name", &base_name);
     store("name_space", &nameSpace);
 
-    regStorageUpdateFkt( VRFunction<int>::create("name_update", boost::bind(&VRName_base::compileName, dynamic_cast<VRName_base*>(this))) );
+    regStorageSetupFkt( VRFunction<int>::create("name_update", boost::bind(&VRName_base::compileName, dynamic_cast<VRName_base*>(this))) );
 }
 
 VRName::~VRName() {}

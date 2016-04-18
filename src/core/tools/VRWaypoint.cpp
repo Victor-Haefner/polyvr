@@ -15,7 +15,7 @@ VRWaypoint::VRWaypoint(string name) : VRGeometry(name) {
     store("wp_floor", &Floor);
     store("wp_at", &at);
 
-    regStorageUpdateFkt( VRFunction<int>::create("waypoint setup", boost::bind(&VRWaypoint::setup, this)) );
+    regStorageSetupFkt( VRFunction<int>::create("waypoint setup", boost::bind(&VRWaypoint::setup, this)) );
 }
 
 VRWaypointPtr VRWaypoint::create(string name) { return shared_ptr<VRWaypoint>(new VRWaypoint(name) ); }

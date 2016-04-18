@@ -24,8 +24,8 @@ VRNetworkNode::VRNetworkNode(string name) : VRManager("NetworkNode") {
 
     store("address", &address);
     store("user", &user);
-    regStorageUpdateFkt( VRFunction<int>::create("network_node_update", boost::bind(&VRNetworkNode::update, this)) );
-    regStorageUpdateFkt( VRFunction<int>::create("network_node_update2", boost::bind(&VRNetworkNode::initSlaves, this)) );
+    regStorageSetupFkt( VRFunction<int>::create("network_node_update", boost::bind(&VRNetworkNode::update, this)) );
+    regStorageSetupFkt( VRFunction<int>::create("network_node_update2", boost::bind(&VRNetworkNode::initSlaves, this)) );
 }
 
 VRNetworkNode::~VRNetworkNode() { stopSlaves(); }
@@ -114,7 +114,7 @@ VRNetworkSlave::VRNetworkSlave(string name) {
     store("autostart", &autostart);
     store("port", &port);
 
-    regStorageUpdateFkt( VRFunction<int>::create("network_slave_update", boost::bind(&VRNetworkSlave::update, this)) );
+    regStorageSetupFkt( VRFunction<int>::create("network_slave_update", boost::bind(&VRNetworkSlave::update, this)) );
 }
 
 VRNetworkSlave::~VRNetworkSlave() {}
