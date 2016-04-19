@@ -150,13 +150,13 @@ void CEF::addMouse(VRDevice* dev, VRObjectWeakPtr obj, int lb, int rb, int wu, i
     if (dev == 0 || obj.lock() == 0) return;
     this->obj = obj;
 
-    if (!mouse_dev_callback) mouse_dev_callback = VRFunction<VRDevice*>::create( "CEF::MOUSE", boost::bind(&CEF::mouse, this, lb,rb,wu,wd,_1 ) );
-    dev->addSignal(-1,0)->add(mouse_dev_callback);
-    dev->addSignal(-1,1)->add(mouse_dev_callback);
+    if (!mouse_dev_callback.count(dev)) mouse_dev_callback[dev] = VRFunction<VRDevice*>::create( "CEF::MOUSE", boost::bind(&CEF::mouse, this, lb,rb,wu,wd,_1 ) );
+    dev->addSignal(-1,0)->add(mouse_dev_callback[dev]);
+    dev->addSignal(-1,1)->add(mouse_dev_callback[dev]);
 
-    if (!mouse_move_callback) mouse_move_callback = VRFunction<int>::create( "CEF::MM", boost::bind(&CEF::mouse_move, this, dev, _1) );
+    if (!mouse_move_callback.count(dev)) mouse_move_callback[dev] = VRFunction<int>::create( "CEF::MM", boost::bind(&CEF::mouse_move, this, dev, _1) );
     auto scene = VRSceneManager::getCurrent();
-    if (scene) scene->addUpdateFkt(mouse_move_callback);
+    if (scene) scene->addUpdateFkt(mouse_move_callback[dev]);
 }
 
 void CEF::addKeyboard(VRDevice* dev) {
@@ -167,10 +167,13 @@ void CEF::addKeyboard(VRDevice* dev) {
 }
 
 void CEF::mouse_move(VRDevice* dev, int i) {
-    if (dev == 0) return;
+    cout << "mouse_move " << dev << endl;
+    if (!dev) return;
     auto geo = obj.lock();
+    cout << "mouse_move " << dev->getType() << " " << geo << endl;
     if (!geo) return;
     VRIntersection ins = dev->intersect(geo);
+    cout << "mouse_move " << dev->getType() << " hit: " << ins.hit << endl;
 
     if (!ins.hit) return;
     if (ins.object.lock() != geo) return;

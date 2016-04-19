@@ -56,8 +56,9 @@ class CEF {
         bool focus = false;
 
         VRUpdatePtr update_callback;
-        VRUpdatePtr mouse_move_callback;
-        shared_ptr<VRFunction<OSG::VRDevice*> > mouse_dev_callback;
+        map<OSG::VRDevice*, shared_ptr<VRFunction<OSG::VRDevice*> >> mouse_dev_callback;
+        map<OSG::VRDevice*, VRUpdatePtr> mouse_move_callback;
+        //shared_ptr<VRFunction<OSG::VRDevice*> > mouse_dev_callback;
         shared_ptr<VRFunction<OSG::VRDevice*> > keyboard_dev_callback;
 
         CefRefPtr<CefBrowser> browser;
