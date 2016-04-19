@@ -26,6 +26,7 @@ class VRGeoPrimitive : public VRGeometry {
         static VRGeoPrimitivePtr create(string name = "None");
         VRGeoPrimitivePtr ptr();
 
+        VRHandlePtr getHandle(int i);
         vector<VRHandlePtr> getHandles();
 
         void select(bool b); // activates editing handles

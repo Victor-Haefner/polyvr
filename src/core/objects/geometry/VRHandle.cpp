@@ -51,6 +51,9 @@ void VRHandle::set(pose p, float v) {
     }
 }
 
+Vec3f VRHandle::getAxis() { return axis; }
+pose VRHandle::getOrigin() { return origin; }
+
 void VRHandle::updateHandle() {
     if (!paramCb) return;
 

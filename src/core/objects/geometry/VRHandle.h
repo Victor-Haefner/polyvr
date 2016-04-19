@@ -38,6 +38,9 @@ class VRHandle : public VRGeometry {
         void configure(VRAnimPtr cb, TYPE t, Vec3f n, float scale, bool symmetric);
         void set(pose p, float v);
 
+        Vec3f getAxis();
+        pose getOrigin();
+
         void drag(VRTransformPtr new_parent);
         void drop();
 

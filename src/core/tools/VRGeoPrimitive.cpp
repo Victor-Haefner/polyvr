@@ -15,7 +15,7 @@ VRGeoPrimitive::VRGeoPrimitive(string name) : VRGeometry(name) {
     selector = VRSelector::create();
 
     params_geo = VRAnalyticGeometry::create();
-    params_geo->setLabelParams(0.05, false, false);
+    params_geo->setLabelParams(0.05, true, true);
     params_geo->setPersistency(0);
 }
 
@@ -30,12 +30,18 @@ VRGeoPrimitivePtr VRGeoPrimitive::ptr() { return static_pointer_cast<VRGeoPrimit
 
 VRAnalyticGeometryPtr VRGeoPrimitive::getLabels() { return params_geo; }
 
+VRHandlePtr VRGeoPrimitive::getHandle(int i) {
+    if (i < 0 || i >= handles.size()) return 0;
+    return handles[i];
+}
+
 void VRGeoPrimitive::select(bool b) {
     if (selected == b) return;
     selected = b;
     params_geo->setVisible(b);
     for (auto h : handles) h->setVisible(b);
 
+    if (!selector) return;
     if (b) selector->select(ptr(), false); // TODO: does not play nice with params_geo!!
     else selector->clear();
 }
@@ -43,15 +49,19 @@ void VRGeoPrimitive::select(bool b) {
 void VRGeoPrimitive::update(int i, float v) {
     if (!primitive) return;
     auto params = splitString(primitive->toString(), ' ');
-    string vs = toString(v);
     string args;
     for (int j=0; j<params.size(); j++) {
         if (i != j) args += params[j];
-        else args += vs;
+        else args += toString(v);
         if (j < params.size()-1) args += " ";
     }
     VRGeometry::setPrimitive(primitive->getType(), args);
-    //if (params_geo) params_geo->setVector(i, Vec3f(0,0,0), Vec3f(1,0,0), Vec3f(0.5,0.6,1), vs + " mm"); // TODO: cave crash??
+
+    auto h = getHandle(i);
+    if (!params_geo || !h) return;
+    auto a = h->getAxis();
+    auto o = h->getOrigin().pos();
+    params_geo->setVector(i, Vec3f(0,0,0), a*v*0.5 + o, Vec3f(0.5,0.6,1), toString( v*1000, 4 ) + " mm"); // TODO: cave crash??
 }
 
 void VRGeoPrimitive::setupHandles() {

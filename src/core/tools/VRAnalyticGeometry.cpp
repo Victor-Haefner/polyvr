@@ -15,7 +15,7 @@ VRAnalyticGeometry::VRAnalyticGeometry() : VRTransform("AnalyticGeometry") {
     ae = VRAnnotationEngine::create();
     vectorLinesGeometry = VRGeometry::create("AGLines");
     vectorEndsGeometry = VRGeometry::create("AGPoints");
-    circlesGeometry = VRGeometry::create("AGCircles");
+    //circlesGeometry = VRGeometry::create("AGCircles"); // TODO: segfault prone :(
 
     vecMat = VRMaterial::create("AnalyticGeometry");
     vecMat->setLit(false);
