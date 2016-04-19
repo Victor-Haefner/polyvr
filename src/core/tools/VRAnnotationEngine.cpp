@@ -27,7 +27,7 @@ VRAnnotationEngine::VRAnnotationEngine() : VRGeometry("AnnEng") {
     setSize(0.2);
     setBillboard(false);
     setScreensize(false);
-    setVolume(false);
+    //setVolume(false); // problems when drag and drop the volume
 
     clear();
 }

@@ -21,19 +21,19 @@ VRAnalyticGeometry::VRAnalyticGeometry() : VRTransform("AnalyticGeometry") {
     vecMat->setLit(false);
     vecMat->setLineWidth(3);
     vecMat->setDepthTest(GL_ALWAYS);
-    vectorLinesGeometry->setMaterial(vecMat);
+    if (vectorLinesGeometry) vectorLinesGeometry->setMaterial(vecMat);
 
     pntMat = VRMaterial::create("AnalyticGeometry2");
     pntMat->setLit(false);
     pntMat->setPointSize(11);
     pntMat->setDepthTest(GL_ALWAYS);
-    vectorEndsGeometry->setMaterial(pntMat);
+    if (vectorEndsGeometry) vectorEndsGeometry->setMaterial(pntMat);
 
     cirMat = VRMaterial::create("AnalyticGeometry3");
     cirMat->setLit(false);
     cirMat->setVertexShader(circle_vp);
     cirMat->setFragmentShader(circle_fp);
-    circlesGeometry->setMaterial(cirMat);
+    if (circlesGeometry) circlesGeometry->setMaterial(cirMat);
 }
 
 VRAnalyticGeometry::~VRAnalyticGeometry() {}
@@ -51,90 +51,107 @@ void VRAnalyticGeometry::init() {
     addChild(circlesGeometry);
     addChild(ae);
 
-    ae->getMaterial()->setDepthTest(GL_ALWAYS);
-    ae->getMaterial()->setLit(0);
+    if (ae) {
+        ae->getMaterial()->setDepthTest(GL_ALWAYS);
+        ae->getMaterial()->setLit(0);
+    }
 
     // lines
-    GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
-    GeoVec3fPropertyRecPtr cols = GeoVec3fProperty::create();
-    GeoUInt32PropertyRecPtr lengths = GeoUInt32Property::create();
-    lengths->addValue(0);
+    if (vectorLinesGeometry) {
+        GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
+        GeoVec3fPropertyRecPtr cols = GeoVec3fProperty::create();
+        GeoUInt32PropertyRecPtr lengths = GeoUInt32Property::create();
+        lengths->addValue(0);
 
-    vectorLinesGeometry->setType(GL_LINES);
-    vectorLinesGeometry->setPositions(pos);
-    vectorLinesGeometry->setColors(cols);
-    vectorLinesGeometry->setLengths(lengths);
+        vectorLinesGeometry->setType(GL_LINES);
+        vectorLinesGeometry->setPositions(pos);
+        vectorLinesGeometry->setColors(cols);
+        vectorLinesGeometry->setLengths(lengths);
+    }
 
     // ends
-    pos = GeoPnt3fProperty::create();
-    cols = GeoVec3fProperty::create();
-    lengths = GeoUInt32Property::create();
-    lengths->addValue(0);
+    if (vectorEndsGeometry) {
+        GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
+        GeoVec3fPropertyRecPtr cols = GeoVec3fProperty::create();
+        GeoUInt32PropertyRecPtr lengths = GeoUInt32Property::create();
+        lengths->addValue(0);
 
-    vectorEndsGeometry->setType(GL_POINTS);
-    vectorEndsGeometry->setPositions(pos);
-    vectorEndsGeometry->setColors(cols);
-    vectorEndsGeometry->setLengths(lengths);
+        vectorEndsGeometry->setType(GL_POINTS);
+        vectorEndsGeometry->setPositions(pos);
+        vectorEndsGeometry->setColors(cols);
+        vectorEndsGeometry->setLengths(lengths);
+    }
 
     // circles
-    pos = GeoPnt3fProperty::create();
-    cols = GeoVec3fProperty::create();
-    lengths = GeoUInt32Property::create();
-    lengths->addValue(0);
-    GeoVec2fPropertyRecPtr tcs = GeoVec2fProperty::create();
-    GeoVec3fPropertyRecPtr norms = GeoVec3fProperty::create();
+    if (circlesGeometry) {
+        GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
+        GeoVec3fPropertyRecPtr cols = GeoVec3fProperty::create();
+        GeoUInt32PropertyRecPtr lengths = GeoUInt32Property::create();
+        lengths->addValue(0);
+        GeoVec2fPropertyRecPtr tcs = GeoVec2fProperty::create();
+        GeoVec3fPropertyRecPtr norms = GeoVec3fProperty::create();
 
-    circlesGeometry->setType(GL_QUADS);
-    circlesGeometry->setPositions(pos);
-    circlesGeometry->setColors(cols);
-    circlesGeometry->setNormals(norms);
-    circlesGeometry->setTexCoords(tcs);
-    circlesGeometry->setLengths(lengths);
+        circlesGeometry->setType(GL_QUADS);
+        circlesGeometry->setPositions(pos);
+        circlesGeometry->setColors(cols);
+        circlesGeometry->setNormals(norms);
+        circlesGeometry->setTexCoords(tcs);
+        circlesGeometry->setLengths(lengths);
+    }
 }
 
 void VRAnalyticGeometry::setLabelParams(float size, bool screen_size, bool billboard, Vec4f fg, Vec4f bg) {
-    ae->setSize(size);
-    ae->setBillboard(billboard);
-    ae->setScreensize(screen_size);
-    ae->setColor(fg);
-    ae->setBackground(bg);
+    if (ae) {
+        ae->setSize(size);
+        ae->setBillboard(billboard);
+        ae->setScreensize(screen_size);
+        ae->setColor(fg);
+        ae->setBackground(bg);
+    }
 }
 
 void VRAnalyticGeometry::resize(int i, int j, int k) {
-    auto pos = vectorLinesGeometry->getMesh()->getPositions();
-    auto cols = vectorLinesGeometry->getMesh()->getColors();
-    auto lengths = vectorLinesGeometry->getMesh()->getLengths();
-    while (i >= (int)pos->size()) {
-        pos->addValue(Pnt3f());
-        cols->addValue(Vec3f());
-        lengths->setValue(pos->size(), 0);
+    if (vectorLinesGeometry) {
+        auto pos = vectorLinesGeometry->getMesh()->getPositions();
+        auto cols = vectorLinesGeometry->getMesh()->getColors();
+        auto lengths = vectorLinesGeometry->getMesh()->getLengths();
+        while (i >= (int)pos->size()) {
+            pos->addValue(Pnt3f());
+            cols->addValue(Vec3f());
+            lengths->setValue(pos->size(), 0);
+        }
     }
 
-    pos = vectorEndsGeometry->getMesh()->getPositions();
-    cols = vectorEndsGeometry->getMesh()->getColors();
-    lengths = vectorEndsGeometry->getMesh()->getLengths();
-    while (j >= (int)pos->size()) {
-        pos->addValue(Pnt3f());
-        cols->addValue(Vec3f());
-        lengths->setValue(pos->size(), 0);
+    if (vectorEndsGeometry) {
+        auto pos = vectorEndsGeometry->getMesh()->getPositions();
+        auto cols = vectorEndsGeometry->getMesh()->getColors();
+        auto lengths = vectorEndsGeometry->getMesh()->getLengths();
+        while (j >= (int)pos->size()) {
+            pos->addValue(Pnt3f());
+            cols->addValue(Vec3f());
+            lengths->setValue(pos->size(), 0);
+        }
     }
 
-    pos = circlesGeometry->getMesh()->getPositions();
-    cols = circlesGeometry->getMesh()->getColors();
-    lengths = circlesGeometry->getMesh()->getLengths();
-    auto norms = circlesGeometry->getMesh()->getNormals();
-    auto tcs = circlesGeometry->getMesh()->getTexCoords();
-    while (k >= (int)pos->size()) {
-        pos->addValue(Pnt3f());
-        cols->addValue(Vec3f());
-        norms->addValue(Vec3f());
-        tcs->addValue(Vec2f());
-        lengths->setValue(pos->size(), 0);
+    if (circlesGeometry) {
+        auto pos = circlesGeometry->getMesh()->getPositions();
+        auto cols = circlesGeometry->getMesh()->getColors();
+        auto lengths = circlesGeometry->getMesh()->getLengths();
+        auto norms = circlesGeometry->getMesh()->getNormals();
+        auto tcs = circlesGeometry->getMesh()->getTexCoords();
+        while (k >= (int)pos->size()) {
+            pos->addValue(Pnt3f());
+            cols->addValue(Vec3f());
+            norms->addValue(Vec3f());
+            tcs->addValue(Vec2f());
+            lengths->setValue(pos->size(), 0);
+        }
     }
 }
 
 void VRAnalyticGeometry::setAngle(int i, Vec3f p, Vec3f v1, Vec3f v2, Vec3f c1, Vec3f c2, string label) {
-    ae->set(i, p+v1*0.1+v2*0.1, label);
+    if (!vectorLinesGeometry) return;
+    if (ae) ae->set(i, p+v1*0.1+v2*0.1, label);
     resize(2*i+1);
 
     // line
@@ -147,7 +164,8 @@ void VRAnalyticGeometry::setAngle(int i, Vec3f p, Vec3f v1, Vec3f v2, Vec3f c1, 
 }
 
 void VRAnalyticGeometry::setCircle(int i, Vec3f p, Vec3f n, float r, Vec3f color, string label) {
-    ae->set(i, p, label);
+    if (!circlesGeometry) return;
+    if (ae) ae->set(i, p, label);
     resize(0, 0, 4*i+3);
 
     Vec3f v1 = Vec3f(0, -n[2], n[1]);
@@ -184,7 +202,8 @@ void VRAnalyticGeometry::setCircle(int i, Vec3f p, Vec3f n, float r, Vec3f color
 }
 
 void VRAnalyticGeometry::setVector(int i, Vec3f p, Vec3f vec, Vec3f color, string label) {
-    ae->set(i, p+vec*0.5, label);
+    if (!vectorLinesGeometry) return;
+    if (ae) ae->set(i, p+vec*0.5, label);
     resize(2*i+1, i);
 
     // line
@@ -196,6 +215,7 @@ void VRAnalyticGeometry::setVector(int i, Vec3f p, Vec3f vec, Vec3f color, strin
     cols->setValue(color, 2*i+1);
 
     // end
+    if (!vectorEndsGeometry) return;
     pos = vectorEndsGeometry->getMesh()->getPositions();
     cols = vectorEndsGeometry->getMesh()->getColors();
     pos->setValue(p+vec, i);
@@ -203,7 +223,7 @@ void VRAnalyticGeometry::setVector(int i, Vec3f p, Vec3f vec, Vec3f color, strin
 }
 
 void VRAnalyticGeometry::clear() {
-    ae->clear();
+    if (ae) ae->clear();
     init();
 }
 

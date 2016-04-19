@@ -14,15 +14,14 @@ VRGeoPrimitive::VRGeoPrimitive(string name) : VRGeometry(name) {
     type = "GeoPrimitive";
     selector = VRSelector::create();
 
-    /*params_geo = VRAnalyticGeometry::create();
-    params_geo->setLabelParams(0.05, true, true);
-    params_geo->setPersistency(0);*/
+    params_geo = VRAnalyticGeometry::create();
+    params_geo->setLabelParams(0.05, false, false);
+    params_geo->setPersistency(0);
 }
 
 VRGeoPrimitivePtr VRGeoPrimitive::create(string name) {
     auto p = VRGeoPrimitivePtr( new VRGeoPrimitive(name) );
-    /*p->addChild(p->params_geo);
-    p->params_geo->init();*/
+    p->addChild(p->params_geo);
     p->setPrimitive("Box");
     return p;
 }
@@ -34,7 +33,7 @@ VRAnalyticGeometryPtr VRGeoPrimitive::getLabels() { return params_geo; }
 void VRGeoPrimitive::select(bool b) {
     if (selected == b) return;
     selected = b;
-    //params_geo->setVisible(b);
+    params_geo->setVisible(b);
     for (auto h : handles) h->setVisible(b);
 
     if (b) selector->select(ptr(), false); // TODO: does not play nice with params_geo!!
