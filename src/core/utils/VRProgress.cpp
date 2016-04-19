@@ -15,14 +15,14 @@ VRProgressPtr VRProgress::create() { return VRProgressPtr( new VRProgress() ); }
 void VRProgress::update(int i) {
     if (count < max) {
         count += i;
-        float k = float(count)/max;
+        double k = double(count)/max;
         if (k-part < 0.01) return;
         part = k;
     }
 
     switch(mode) {
         case CONSOLE_M:
-            cout << "\r" << title << " " << this << " " << int(part*100) << "%" << flush;
+            cout << "\r" << title << " " << this << " " << long(part*100) << "%" << flush;
             break;
 		case CALLBACK_M:
             if (auto cl = callback.lock()) (*cl)(part*100);

@@ -37,7 +37,6 @@ struct Geo {
     //void init(vector<VRGeometryPtr>& geos, VRMaterialPtr mat) {
     void init(vector<Geo>& geos, VRMaterialPtr mat, string path, bool thread) {
         geo = VRGeometry::create("factory_part"); // init new object
-        cout << "Load VRML " << geo->getName() << endl;
 
         pos = GeoPnt3fProperty::create();
         norms = GeoVec3fProperty::create();

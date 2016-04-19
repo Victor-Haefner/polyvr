@@ -21,7 +21,7 @@ class VRProgress {
         int max = 0;
 		Mode mode = CONSOLE_M;
         int count = 0;
-        float part = 0;
+        double part = 0;
         VRUpdateWeakPtr callback;
 
     public:

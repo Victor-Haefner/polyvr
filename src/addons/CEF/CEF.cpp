@@ -167,13 +167,10 @@ void CEF::addKeyboard(VRDevice* dev) {
 }
 
 void CEF::mouse_move(VRDevice* dev, int i) {
-    cout << "mouse_move " << dev << endl;
     if (!dev) return;
     auto geo = obj.lock();
-    cout << "mouse_move " << dev->getType() << " " << geo << endl;
     if (!geo) return;
     VRIntersection ins = dev->intersect(geo);
-    cout << "mouse_move " << dev->getType() << " hit: " << ins.hit << endl;
 
     if (!ins.hit) return;
     if (ins.object.lock() != geo) return;

@@ -74,6 +74,7 @@ PyMethodDef VRPyObject::methods[] = {
     {"getTags", (PyCFunction)VRPyObject::getTags, METH_NOARGS, "Return all tags - [str] getTags()" },
     {"hasAncestorWithTag", (PyCFunction)VRPyObject::hasAncestorWithTag, METH_VARARGS, "Check if the object or an ancestor has a tag - obj hasAncestorWithTag( str tag )" },
     {"getChildrenWithTag", (PyCFunction)VRPyObject::getChildrenWithTag, METH_VARARGS, "Get all children which have the tag - [objs] getChildrenWithTag( str tag )" },
+    {"setVolumeCheck", (PyCFunction)VRPyObject::setVolumeCheck, METH_VARARGS, "Enables or disabled the dynamic volume computation of that node - setVolumeCheck( bool )" },
     {"setTravMask", (PyCFunction)VRPyObject::setTravMask, METH_VARARGS, "Set the traversal mask of the object - setTravMask( int mask )" },
     {"setPersistency", (PyCFunction)VRPyObject::setPersistency, METH_VARARGS, "Set the persistency level - setPersistency( int persistency )\n   0: not persistent\n   1: persistent hiarchy\n   2: transformation\n   3: geometry\n   4: fully persistent" },
     {"getPersistency", (PyCFunction)VRPyObject::getPersistency, METH_NOARGS, "Get the persistency level - getPersistency()" },
@@ -81,6 +82,12 @@ PyMethodDef VRPyObject::methods[] = {
     {"remLink", (PyCFunction)VRPyObject::remLink, METH_VARARGS, "Unlink subtree - remLink( object )" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyObject::setVolumeCheck(VRPyObject* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    self->objPtr->setVolume( parseBool(args) );
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyObject::addLink(VRPyObject* self, PyObject* args) {
     if (!self->valid()) return NULL;

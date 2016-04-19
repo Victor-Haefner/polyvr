@@ -97,11 +97,14 @@ void VRObject::detach() {
 }
 
 void VRObject::setVolume(bool b) {
+    if (!getNode()) return;
     float inf = std::numeric_limits<float>::max();
-    BoxVolume &vol = getNode()->editVolume(false);
-    vol.setEmpty();
-    vol.extendBy(Pnt3f(-inf,-inf,-inf));
-    vol.extendBy(Pnt3f(inf,inf,inf));
+    BoxVolume &vol = getNode()->editVolume(b);
+    if (!b) {
+        vol.setEmpty();
+        vol.extendBy(Pnt3f(-inf,-inf,-inf));
+        vol.extendBy(Pnt3f(inf,inf,inf));
+    }
     vol.setValid(!b);
     vol.setStatic(!b);
 }
