@@ -17,12 +17,14 @@ OSG_BEGIN_NAMESPACE;
 class Emitter {
 
 public:
-    static int newId;
     int id;
 
     Emitter();
-    Emitter(btDiscreteDynamicsWorld* world, vector<Particle*> particlesV, btVector3 pos, btVector3 dir, int emit_freq, bool collide=false);
     ~Emitter();
+
+    static shared_ptr<Emitter> create();
+
+    void set(btDiscreteDynamicsWorld* world, vector<Particle*> particlesV, btVector3 pos, btVector3 dir, int emit_freq, bool collide=false);
 
     void setActive(bool activate);
     void setLoop(bool activate);
@@ -34,7 +36,7 @@ protected:
     btVector3 direction;
     unsigned int interval = 60;
     unsigned int timer = 0;
-    unsigned int p_num;
+    unsigned int p_num = 0;
     bool loop = false;
     bool active = false;
     bool collideSelf = false;

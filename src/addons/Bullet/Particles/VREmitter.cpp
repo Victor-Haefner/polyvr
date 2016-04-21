@@ -7,19 +7,15 @@ using namespace OSG;
 typedef boost::recursive_mutex::scoped_lock BLock;
 
 boost::recursive_mutex& Emitter::mtx() {
+    static boost::recursive_mutex m;
     auto scene = OSG::VRSceneManager::getCurrent();
     if (scene) return scene->physicsMutex();
-    else {
-        static boost::recursive_mutex m;
-        return m;
-    };
+    else return m;
 }
 
+Emitter::Emitter() {}
 
-// initialize static variable
-int Emitter::newId = 0;
-
-Emitter::Emitter(btDiscreteDynamicsWorld* world, vector<Particle*> particlesV, btVector3 pos, btVector3 dir, int emit_freq, bool collide) {
+void Emitter::set(btDiscreteDynamicsWorld* world, vector<Particle*> particlesV, btVector3 pos, btVector3 dir, int emit_freq, bool collide) {
     this->particles = particlesV;
     this->position = pos;
     this->direction = dir;
@@ -27,10 +23,8 @@ Emitter::Emitter(btDiscreteDynamicsWorld* world, vector<Particle*> particlesV, b
     this->world = world;
     this->collideSelf = collide;
 
-    id = newId;
-    newId++;
-
-    p_num = 0;
+    static int ID = 0;
+    id = ID; ID++;
     fkt = VRFunction<int>::create("particles_update", boost::bind(&Emitter::emitterLoop, this));
 }
 
@@ -40,50 +34,41 @@ Emitter::~Emitter() {
     scene->dropUpdateFkt(fkt);
 }
 
+shared_ptr<Emitter> Emitter::create() { return shared_ptr<Emitter>( new Emitter() ); }
+
 void Emitter::setActive(bool activate) {
     VRScenePtr scene = VRSceneManager::getCurrent();
-    if (activate && !active) {
-        scene->addUpdateFkt(fkt);
-        active = true;
-    } else if (!activate) {
-        scene->dropUpdateFkt(fkt);
-        active = false;
-    }
+    if (!scene) return;
+    if (activate && !active) scene->addUpdateFkt(fkt);
+    if (!activate) scene->dropUpdateFkt(fkt);
+    active = activate;
 }
 
 void Emitter::setLoop(bool activate) {
-    this->loop = activate;
-    if (activate) {
-        //BLock lock(mtx());
-        VRScenePtr scene = VRSceneManager::getCurrent();
-        scene->addUpdateFkt(fkt);
-    } else {
-        //BLock lock(mtx());
-        VRScenePtr scene = VRSceneManager::getCurrent();
-        scene->dropUpdateFkt(fkt);
-    }
+    loop = activate;
+    auto scene = VRSceneManager::getCurrent();
+    if (!scene) return;
+    if (activate) scene->addUpdateFkt(fkt);
+    else scene->dropUpdateFkt(fkt);
 }
 
-/**
- * Emits one particle at a time
- */
 void Emitter::emitterLoop() {
-    timer++;
-    if (timer == 1) {
-        Particle* p = particles[this->p_num];
+    if (timer == 0) {
+        Particle* p = particles[p_num];
         {
             BLock lock(mtx());
-            p->spawnAt(position, this->world, this->collideSelf);
+            p->spawnAt(position, world, collideSelf);
             p->setActive(true);
             p->body->setLinearVelocity(direction);
         }
-        this->p_num++;
+        p_num++;
         if (p_num >= particles.size()) {
-            if (loop) {
-                //emit_i = emit_from;
-                // TODO enable looped emitter by extending p->spawnAt()
-                this->setActive(false);
-            } else this->setActive(false);
+            cout << "Emitter::emitterLoop " << loop << endl;
+            if (loop) p_num = 0;
+            else setActive(false);
         }
-    } else if (timer >= interval-1) timer = 0;
+    }
+
+    timer++;
+    if (timer >= interval-1) timer = 0;
 }

@@ -177,8 +177,9 @@ int VRParticles::setEmitter(Vec3f baseV, Vec3f dirV, int from, int to, int inter
     }
 
     // set up emitter and insert into emitter map
-    Emitter* e = new Emitter(world, p, base, dir, interval, this->collideWithSelf);
-    // e->setLoop(loop); // TODO implement loop
+    auto e = Emitter::create();
+    e->set(world, p, base, dir, interval, this->collideWithSelf);
+    e->setLoop(loop);
     this->emitters[e->id] = e; //store emitters
 
     setFunctions(from, to);

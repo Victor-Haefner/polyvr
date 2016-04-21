@@ -44,7 +44,7 @@ class VRParticles : public VRGeometry {
         bool collideWithSelf = true;
         vector<Particle*> particles;
         Octree ocparticles;
-        map<int, Emitter*> emitters;
+        map<int, shared_ptr<Emitter> > emitters;
 
         VRUpdatePtr fkt;
         VRMaterialPtr mat;

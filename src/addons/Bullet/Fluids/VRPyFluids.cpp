@@ -9,11 +9,6 @@ simpleVRPyType(Fluids, New_VRObjects_unnamed_ptr);
 simpleVRPyType(MetaBalls, New_VRObjects_ptr);
 
 PyMethodDef VRPyFluids::methods[] = {
-    {"getGeometry", (PyCFunction)VRPyFluids::getGeometry, METH_VARARGS, "Get geometry - Geometry getGeometry()" },
-    {"spawnCuboid", (PyCFunction)VRPyFluids::spawnCuboid, METH_VARARGS, "spawnCuboid(x,y,z) \n\tspawnCuboid(x,y,z,distance,a,b,c) //all float \n\tdistance is space between particles"},
-    {"spawnEmitter", (PyCFunction)VRPyFluids::spawnEmitter, METH_VARARGS, "int ID spawnEmitter(x,y,z) \n\tint id = spawnEmitter(x,y,z,distance,a,b,c) //all float \n\tdistance is space between particles"},
-    {"stopEmitter", (PyCFunction)VRPyFluids::stopEmitter, METH_VARARGS, "stopEmitter(int id)"},
-
     {"setRadius", (PyCFunction)VRPyFluids::setRadius, METH_VARARGS, "setRadius(float radius, float variation) \n\tsetRadius(0.05, 0.02)"},
     {"setSimType", (PyCFunction)VRPyFluids::setSimType, METH_VARARGS, "setSimType(string type, bool forceUpdate=False) \n\tsetSimType('SPH', True) #or XSPH"},
     {"setSphRadius", (PyCFunction)VRPyFluids::setSphRadius, METH_VARARGS, "setSphRadius(float radius)"},
@@ -43,45 +38,6 @@ PyObject* VRPyMetaBalls::getMaterial(VRPyMetaBalls* self) {
 
 void checkObj(VRPyFluids* self) {
     if (self->objPtr == 0) self->objPtr = OSG::VRFluids::create();
-}
-
-PyObject* VRPyFluids::getGeometry(VRPyFluids* self) {
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyFluids::spawnCuboid(VRPyFluids* self, PyObject* args) {
-    checkObj(self);
-    OSG::Vec3f position;
-    OSG::Vec3f size;
-    float x,y,z, distance=0, a=1,b=1,c=1;
-
-    if (! PyArg_ParseTuple(args, "fff|ffff", &x,&y,&z, &distance, &a,&b,&c)) {
-        // ERROR!
-        Py_RETURN_FALSE;
-    }
-    position.setValues(x, y, z);
-    size.setValues(a, b, c);
-
-    int num = self->objPtr->spawnCuboid(position, size, distance);
-    return PyInt_FromLong((long) num);
-}
-
-PyObject* VRPyFluids::spawnEmitter(VRPyFluids* self, PyObject* args) {
-    checkObj(self);
-    PyObject *base, *dir;
-    int from=0, to=0, interval=0;
-    if (! PyArg_ParseTuple(args, "OOiii", &base, &dir, &from, &to, &interval)) { Py_RETURN_FALSE; }
-    // NOTE loop is not implemented yet, so set it to false
-    int id = self->objPtr->setEmitter(parseVec3fList(base), parseVec3fList(dir), from, to, interval, false);
-    return PyInt_FromLong((long) id);
-}
-
-PyObject* VRPyFluids::stopEmitter(VRPyFluids* self, PyObject* args) {
-    checkObj(self);
-    int id = 0;
-    if (! PyArg_ParseTuple(args, "i", &id) ) { Py_RETURN_FALSE; }
-    self->objPtr->disableEmitter(id);
-    Py_RETURN_TRUE;
 }
 
 PyObject* VRPyFluids::setAmount(VRPyFluids* self, PyObject* args) {
