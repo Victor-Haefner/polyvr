@@ -66,6 +66,7 @@ PyMethodDef VRPyTransform::methods[] = {
     {"getForce", (PyCFunction)VRPyTransform::getForce, METH_NOARGS, "get the total force put on this transform during this frame. returns 3-Tuple" },
     {"getTorque", (PyCFunction)VRPyTransform::getTorque, METH_NOARGS, "get the total torque put on this transform during this frame. returns 3-Tuple" },
     {"setPhysicsActivationMode", (PyCFunction)VRPyTransform::setPhysicsActivationMode, METH_VARARGS, "Set the physics activation mode of the physics object (normal:1 , no deactivation:4, stay deactivated: 5)" },
+    {"setPhysicalizeTree", (PyCFunction)VRPyTransform::setPhysicalizeTree, METH_VARARGS, "Set to physicalize whole tree or just current node - setPhysicalizeTree( bool b )" },
     {"animate", (PyCFunction)VRPyTransform::animate, METH_VARARGS, "Animate object along a path:\n "
                                                                     "animate(path, float duration [s], float offset [s], bool redirect) )\n"
                                                                     "animate(path, float duration [s], float offset [s], bool redirect, bool loop) )" },
@@ -86,6 +87,12 @@ PyMethodDef VRPyTransform::methods[] = {
 PyObject* VRPyTransform::lastChanged(VRPyTransform* self) {
     if (!self->valid()) return NULL;
     return PyInt_FromLong( self->objPtr->getLastChange() );
+}
+
+PyObject* VRPyTransform::setPhysicalizeTree(VRPyTransform* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    self->objPtr->getPhysics()->physicalizeTree( parseBool(args) );
+    Py_RETURN_TRUE;
 }
 
 PyObject* VRPyTransform::castRay(VRPyTransform* self, PyObject* args) {
@@ -417,9 +424,15 @@ PyObject* VRPyTransform::setCollisionMargin(VRPyTransform* self, PyObject *args)
 
 PyObject* VRPyTransform::setCollisionGroup(VRPyTransform* self, PyObject *args) {
     if (!self->valid()) return NULL;
-    int i = parseInt(args);
-    if (i > 15 || i < 0) { PyErr_SetString(err, "VRPyTransform::setCollisionGroup: only 15 groups/masks available, group 0 means no collisions at all"); return NULL; }
-    self->objPtr->getPhysics()->setCollisionGroup(pow(2,i));
+    int m = 0;
+    PyObject* p = 0;
+    if (! PyArg_ParseTuple(args, "O", &p)) return NULL;
+    if (!isList(p)) m = pow(2, PyInt_AsLong(p) );
+    else for(int i=0; i<pySize(p); i++) {
+        PyObject* pi = PyList_GetItem(p, i);
+        m = m | int( pow(2,PyInt_AsLong(pi)) );
+    }
+    self->objPtr->getPhysics()->setCollisionGroup( m );
     Py_RETURN_TRUE;
 }
 
@@ -433,9 +446,15 @@ PyObject* VRPyTransform::setCollisionShape(VRPyTransform* self, PyObject *args) 
 
 PyObject* VRPyTransform::setCollisionMask(VRPyTransform* self, PyObject *args) {
     if (!self->valid()) return NULL;
-    int i = parseInt(args);
-    if (i > 15 || i < 0) { PyErr_SetString(err, "VRPyTransform::setCollisionMask: only 15 groups/masks available, group 0 means no collisions at all"); return NULL; }
-    self->objPtr->getPhysics()->setCollisionMask(pow(2,i));
+    int m = 0;
+    PyObject* p = 0;
+    if (! PyArg_ParseTuple(args, "O", &p)) return NULL;
+    if (!isList(p)) m = pow(2, PyInt_AsLong(p) );
+    else for(int i=0; i<pySize(p); i++) {
+        PyObject* pi = PyList_GetItem(p, i);
+        m = m | int( pow(2,PyInt_AsLong(pi)) );
+    }
+    self->objPtr->getPhysics()->setCollisionMask( m );
     Py_RETURN_TRUE;
 }
 

@@ -39,7 +39,7 @@ void VRFluids::setFunctions(int from, int to) {
         }
         // enable graphical updates
         scene->dropUpdateFkt(fkt);
-        fkt = VRFunction<int>::create("particles_update", boost::bind(&VRFluids::update, this,from,to));
+        fkt = VRFunction<int>::create("particles_update", boost::bind(&VRFluids::updateParticles, this,from,to));
         scene->addUpdateFkt(fkt);
         // enable physic updates
         scene->dropPhysicsUpdateFunction(fluidFkt.get(), this->afterBullet);
@@ -62,7 +62,7 @@ void VRFluids::disableFunctions() {
     }
 }
 
-void VRFluids::update(int from, int to) {
+void VRFluids::updateParticles(int from, int to) {
     if (to < 0) to = N;
     {
         BLock lock(mtx());

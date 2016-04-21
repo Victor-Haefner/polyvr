@@ -42,8 +42,8 @@ class VRPhysics : public OSG::VRStorage {
         bool physicalized = false;
         bool dynamic = false;
         bool ghost = false;
-        /** soft flag **/
         bool soft = false;
+        bool physTree = true;
         float mass = 1.0;
         float collisionMargin = 0.3;
         float linDamping = 0;
@@ -70,6 +70,8 @@ class VRPhysics : public OSG::VRStorage {
         OSG::VRGeometryPtr visShape;
         OSG::VRConstraint* constraint = 0;
         OSG::Vec3f scale;
+
+        vector<OSG::VRGeometryPtr> getGeometries();
 
         btCollisionShape* getBoxShape();
         btCollisionShape* getSphereShape();
@@ -104,6 +106,7 @@ class VRPhysics : public OSG::VRStorage {
 
         void setPhysicalized(bool b);
         bool isPhysicalized();
+        void physicalizeTree(bool b);
 
         void setDynamic(bool b);
         bool isDynamic();

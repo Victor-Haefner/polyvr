@@ -26,9 +26,6 @@ boost::recursive_mutex& VRParticles::mtx() {
     };
 }
 
-
-VRParticles::VRParticles() : VRParticles(true) {}
-
 VRParticles::VRParticles(bool spawnParticles) : VRGeometry("particles"), ocparticles(0.1) {
     if (spawnParticles) resetParticles<Particle>();
     setVolume(false);
@@ -36,30 +33,22 @@ VRParticles::VRParticles(bool spawnParticles) : VRGeometry("particles"), ocparti
 }
 
 VRParticles::~VRParticles() {
-    VRScenePtr scene = VRSceneManager::getCurrent();
-    if (scene) scene->dropUpdateFkt(fkt);
-
-    {
-        BLock lock(mtx());
-        for (int i=0;i<N;i++) delete particles[i];
-    }
+    disableFunctions();
+    BLock lock(mtx());
+    for (int i=0;i<N;i++) delete particles[i];
 }
 
-shared_ptr<VRParticles> VRParticles::create() {
-    return shared_ptr<VRParticles>( new VRParticles() );
-}
+shared_ptr<VRParticles> VRParticles::create() { return shared_ptr<VRParticles>( new VRParticles() ); }
 
-
-void VRParticles::update(int b, int e) {
+void VRParticles::updateParticles(int b, int e) {
     if (e < 0) e = N;
-    {
-        BLock lock(mtx());
-        for (int i=b; i < e; i++) {
-            if (particles[i]->isActive) {
-                auto p = particles[i]->body->getWorldTransform().getOrigin();
-                pos->setValue(toVec3f(p),i);
-                colors->setValue(Vec4f(0,0,1,1),i);
-            }
+
+    BLock lock(mtx());
+    for (int i=b; i < e; i++) {
+        if (particles[i]->isActive) {
+            auto p = particles[i]->body->getWorldTransform().getOrigin();
+            pos->setValue(toVec3f(p),i);
+            colors->setValue(Vec4f(0,0,1,1),i);
         }
     }
 }
@@ -67,94 +56,80 @@ void VRParticles::update(int b, int e) {
 void VRParticles::setMass(float newMass, float variation) {
     int i;
     float result;
-    {
-        BLock lock(mtx());
-        for (i=0; i<N; i++) {
-            result = newMass;
-            result += (2*variation) * ( ((float) rand()) / RAND_MAX );
-            result -= variation;
-            particles[i]->mass = result;
-        }
+
+    BLock lock(mtx());
+    for (i=0; i<N; i++) {
+        result = newMass;
+        result += (2*variation) * ( ((float) rand()) / RAND_MAX );
+        result -= variation;
+        particles[i]->mass = result;
     }
 }
 
 void VRParticles::setMassByRadius(float massFor1mRadius) {
     int i;
     float result;
-    {
-        BLock lock(mtx());
-        for (i=0; i<N; i++) {
-            result = this->particles[i]->radius;
-            this->particles[i]->mass = massFor1mRadius * pow(result, 3);
-        }
+
+    BLock lock(mtx());
+    for (i=0; i<N; i++) {
+        result = this->particles[i]->radius;
+        this->particles[i]->mass = massFor1mRadius * pow(result, 3);
     }
 }
 
-void VRParticles::setMassForOneLiter(float massPerLiter) {
-    this->setMassByRadius(10*massPerLiter);
-}
+void VRParticles::setMassForOneLiter(float massPerLiter) { this->setMassByRadius(10*massPerLiter); }
 
 void VRParticles::setRadius(float newRadius, float variation) {
     int i;
     float result;
-    {
-        BLock lock(mtx());
-        for (i=0; i<N; i++) {
-            result = newRadius;
-            result += (2 * variation * float(rand()) / RAND_MAX );
-            result -= variation;
-            particles[i]->radius = result;
-        }
+
+    BLock lock(mtx());
+    for (i=0; i<N; i++) {
+        result = newRadius;
+        result += (2 * variation * float(rand()) / RAND_MAX );
+        result -= variation;
+        particles[i]->radius = result;
     }
 }
 
 void VRParticles::setAge(int newAge, int variation) {
     int i, result;
-    {
-        BLock lock(mtx());
-        for (i=0; i<N; i++) {
-            result = newAge;
-            result += (2*variation) * (rand() / RAND_MAX);
-            result -= variation;
-            particles[i]->age = result;
-        }
+
+    BLock lock(mtx());
+    for (i=0; i<N; i++) {
+        result = newAge;
+        result += (2*variation) * (rand() / RAND_MAX);
+        result -= variation;
+        particles[i]->age = result;
     }
 }
 
 void VRParticles::setLifetime(int newLifetime, int variation) {
     int i, result;
-    {
-        BLock lock(mtx());
-        for (i=0; i<N; i++) {
-            result = newLifetime;
-            result += (2*variation) * (rand() / RAND_MAX);
-            result -= variation;
-            particles[i]->lifetime = result;
-        }
+
+    BLock lock(mtx());
+    for (i=0; i<N; i++) {
+        result = newLifetime;
+        result += (2*variation) * (rand() / RAND_MAX);
+        result -= variation;
+        particles[i]->lifetime = result;
     }
 }
 
-int VRParticles::spawnCuboid(Vec3f base, Vec3f size, float distance) {
+int VRParticles::spawnCuboid(Vec3f center, Vec3f size, float distance) {
     if (distance == 0.0) distance = this->particles[0]->radius;
 
-    // distance = abs(distance);
-    // float x = abs(size.x());
-    // float y = abs(size.y());
-    // float z = abs(size.z());
-    float x = size.x();
-    float y = size.y();
-    float z = size.z();
-
-    //distance *= 1.1;
-    int numX = x / distance;
-    int numY = y / distance;
-    int numZ = z / distance;
+    int numX = size[0] / distance;
+    int numY = size[1] / distance;
+    int numZ = size[2] / distance;
     int spawned = 0;
     bool done = false;
     int i,j,k;
     int posX, posY, posZ;
     btVector3 pos;
 
+    //auto btcenter = toBtVector3(center - size*0.5); // TODO -> refactor and test the whole function
+    auto btcenter = toBtVector3(center);
     {
         BLock lock(mtx());
         for (i = 0; i < numY && !done; i++) {
@@ -172,7 +147,7 @@ int VRParticles::spawnCuboid(Vec3f base, Vec3f size, float distance) {
                         pos.setX(posX);
                         pos.setY(posY);
                         pos.setZ(posZ);
-                        pos += toBtVector3(base);
+                        pos += btcenter;
                         particles[spawned]->spawnAt(pos, this->world, this->collideWithSelf);
                         spawned++;
                     }
@@ -225,21 +200,15 @@ void VRParticles::destroyEmitter(int id) {
 }
 
 void VRParticles::setFunctions(int from, int to) {
-    {
-        BLock lock(mtx());
-        this->from = from;
-        this->to = to;
-        VRScenePtr scene = VRSceneManager::getCurrent();
-        scene->dropUpdateFkt(fkt);
-        fkt = VRFunction<int>::create("particles_update", boost::bind(&VRParticles::update, this,from,to));
-        scene->addUpdateFkt(fkt);
-    }
+    this->from = from;
+    this->to = to;
+    VRScenePtr scene = VRSceneManager::getCurrent();
+    scene->dropUpdateFkt(fkt);
+    fkt = VRFunction<int>::create("particles_update", boost::bind(&VRParticles::updateParticles, this,from,to));
+    scene->addUpdateFkt(fkt);
 }
 
 void VRParticles::disableFunctions() {
-    {
-        BLock lock(mtx());
-        VRScenePtr scene = VRSceneManager::getCurrent();
-        scene->dropUpdateFkt(fkt);
-    }
+    VRScenePtr scene = VRSceneManager::getCurrent();
+    if (scene) scene->dropUpdateFkt(fkt);
 }

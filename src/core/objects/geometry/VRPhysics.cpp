@@ -422,6 +422,25 @@ btSoftBody* VRPhysics::createRope() {
    return 0;
 }
 
+void VRPhysics::physicalizeTree(bool b) { physTree = b; cout << "VRPhysics::physicalizeTree " << physTree << endl; update(); }
+
+vector<OSG::VRGeometryPtr> VRPhysics::getGeometries() {
+    vector<OSG::VRGeometryPtr> res;
+    auto obj = vr_obj.lock();
+    if (!obj) return res;
+
+    if (physTree) {
+        for (auto o : obj->getObjectListByType("Geometry")) {
+            OSG::VRGeometryPtr geo = static_pointer_cast<OSG::VRGeometry>( o );
+            if (geo) res.push_back( geo );
+        }
+    } else {
+        OSG::VRGeometryPtr geo = static_pointer_cast<OSG::VRGeometry>( obj );
+        if (geo) res.push_back(geo);
+    }
+
+    return res;
+}
 
 btCollisionShape* VRPhysics::getBoxShape() {
     auto obj = vr_obj.lock();
@@ -431,10 +450,8 @@ btCollisionShape* VRPhysics::getBoxShape() {
     float x,y,z;
     x=y=z=0;
 
-    auto geos = obj->getObjectListByType("Geometry");
-    for (unsigned int j=0; j<geos.size(); j++) {
-        OSG::VRGeometryPtr geo = static_pointer_cast<OSG::VRGeometry>( geos[j] );
-        if (geo == 0) continue;
+    for (auto geo : getGeometries()) {
+        if (!geo) continue;
         OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->getPositions();
 		for (unsigned int i = 0; i<pos->size(); i++) {
             OSG::Vec3f p;
@@ -460,8 +477,6 @@ btCollisionShape* VRPhysics::getSphereShape() {
     OSG::Vec3f p;
     OSG::Vec3f center;
 
-    auto geos = obj->getObjectListByType("Geometry");
-
     /*for (auto _g : geos ) { // get geometric center // makes no sense as you would have to change the center of the shape..
         OSG::VRGeometryPtr geo = (OSG::VRGeometryPtr)_g;
         OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->getPositions();
@@ -474,8 +489,8 @@ btCollisionShape* VRPhysics::getSphereShape() {
 
     center *= 1.0/N;*/
 
-    for (auto _g : geos ) {
-        OSG::VRGeometryPtr geo = static_pointer_cast<OSG::VRGeometry>(_g);
+    for (auto geo : getGeometries()) {
+        if (!geo) continue;
         OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->getPositions();
 		for (unsigned int i = 0; i<pos->size(); i++) {
             pos->getValue(p,i);
@@ -496,12 +511,10 @@ btCollisionShape* VRPhysics::getConvexShape(OSG::Vec3f& mc) {
     OSG::Matrix M = obj->getWorldMatrix();
     M.invert();
     vector<OSG::Vec3f> points;
-    auto geos = obj->getObjectListByType("Geometry");
 
     if (comType == "geometric") mc = OSG::Vec3f(); // center of mass
-	for (auto g : geos) {
-        OSG::VRGeometryPtr geo = static_pointer_cast<OSG::VRGeometry>(g);
-        if (geo == 0) continue;
+    for (auto geo : getGeometries()) {
+        if (!geo) continue;
         if (geo->getMesh() == 0) continue;
         OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->getPositions();
         if (pos == 0) continue;
@@ -535,11 +548,9 @@ btCollisionShape* VRPhysics::getConcaveShape() {
 
     btTriangleMesh* tri_mesh = new btTriangleMesh();
 
-    auto geos = obj->getObjectListByType("Geometry");
     int N = 0;
-	for (unsigned int j = 0; j<geos.size(); j++) {
-        OSG::VRGeometryPtr geo = static_pointer_cast<OSG::VRGeometry>(geos[j]);
-        if (geo == 0) continue;
+    for (auto geo : getGeometries()) {
+        if (!geo) continue;
         if (geo->getMesh() == 0) continue;
         OSG::TriangleIterator ti(geo->getMesh());
 
@@ -572,12 +583,9 @@ btCollisionShape* VRPhysics::getCompoundShape() {
     OSG::Matrix m;
     OSG::Matrix M = obj->getWorldMatrix();
     M.invert();
-    auto geos = obj->getObjectListByType("Geometry");
 
-	for (auto g : geos) {
-        vector<OSG::Vec3f> points;
-        OSG::VRGeometryPtr geo = static_pointer_cast<OSG::VRGeometry>(g);
-        if (geo == 0) continue;
+    for (auto geo : getGeometries()) {
+        if (!geo) continue;
         if (geo->getMesh() == 0) continue;
         OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->getPositions();
         if (pos == 0) continue;
@@ -587,6 +595,7 @@ btCollisionShape* VRPhysics::getCompoundShape() {
             m.multLeft(M);
         }
 
+        vector<OSG::Vec3f> points;
 		for (unsigned int i = 0; i<pos->size(); i++) {
             OSG::Vec3f p;
             pos->getValue(p,i);

@@ -15,7 +15,7 @@ class VRFluids : public VRParticles {
         ~VRFluids();
         static shared_ptr<VRFluids> create();
 
-        void update(int from, int to) override;
+        void updateParticles(int from, int to) override;
         void updateSPH(int from, int to);
         void updateXSPH(int from, int to);
 
