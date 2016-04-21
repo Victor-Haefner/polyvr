@@ -71,12 +71,11 @@ void Emitter::emitterLoop() {
     timer++;
     if (timer == 1) {
         Particle* p = particles[this->p_num];
-        //printf("spawned p(%i)\n", p_num);
         {
             BLock lock(mtx());
             p->spawnAt(position, this->world, this->collideSelf);
             p->setActive(true);
-            p->body->applyCentralForce(direction);
+            p->body->setLinearVelocity(direction);
         }
         this->p_num++;
         if (p_num >= particles.size()) {
@@ -84,11 +83,7 @@ void Emitter::emitterLoop() {
                 //emit_i = emit_from;
                 // TODO enable looped emitter by extending p->spawnAt()
                 this->setActive(false);
-            } else {
-                this->setActive(false);
-            }
+            } else this->setActive(false);
         }
-    } else if (timer >= interval-1) {
-        timer = 0;
-    }
+    } else if (timer >= interval-1) timer = 0;
 }

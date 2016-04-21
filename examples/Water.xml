@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="0.294688 0.787463 -0.0876844" at_dir="0" base_name="Default" far="250" fov="1.0472" from="2.91362 2.59475 2.54884" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0.294688 0.787463 -0.0876844" at_dir="0" base_name="Default" far="250" fov="1.0472" from="4.04477 3.37534 3.68759" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
             <Node cR="0 1 0" cT="0 1 0" cT_local="0" cT_mode="3" do_cR="0" do_cT="0" persistency="666"/>
           </Object>
@@ -161,9 +161,9 @@
 	fluid.setSphRadius(sphRadius)
 	fluid.setViscosity(0.001)
 	#VR.fluid.setSimType('SPH')
-	num = fluid.spawnCuboid(-1,5,-0.4, 4*sphRadius, 3,800,2)
-	print num
-	#fluid.spawnEmitter([0,5,-0.4],[0,-0.001,0],0,400,20)
+	#num = fluid.spawnCuboid(-1,5,-0.4, 4*sphRadius, 3,800,2)
+	#print num
+	fluid.spawnEmitter([0,5,-0.4],[0.2,0.1,0],0,400,20)
 	meta.addChild(fluid)
 
 	
