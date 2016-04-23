@@ -1,10 +1,11 @@
 #include "VRGeoPrimitive.h"
 #include "core/objects/geometry/VRPrimitive.h"
 #include "core/objects/geometry/VRHandle.h"
+#include "core/objects/material/VRMaterial.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
 #include "core/tools/selection/VRSelector.h"
-#include "VRAnalyticGeometry.h"
+#include "VRAnnotationEngine.h"
 
 #include <boost/bind.hpp>
 
@@ -14,8 +15,14 @@ VRGeoPrimitive::VRGeoPrimitive(string name) : VRGeometry(name) {
     type = "GeoPrimitive";
     selector = VRSelector::create();
 
-    params_geo = VRAnalyticGeometry::create();
-    params_geo->setLabelParams(0.05, true, true);
+    params_geo = VRAnnotationEngine::create();
+    params_geo->getMaterial()->setDepthTest(GL_ALWAYS);
+    params_geo->getMaterial()->setLit(0);
+    params_geo->setSize(0.015);
+    params_geo->setBillboard(1);
+    params_geo->setScreensize(1);
+    params_geo->setColor(Vec4f(0,0,0,1));
+    params_geo->setBackground(Vec4f(1,1,1,1));
     params_geo->setPersistency(0);
 }
 
@@ -28,7 +35,7 @@ VRGeoPrimitivePtr VRGeoPrimitive::create(string name) {
 
 VRGeoPrimitivePtr VRGeoPrimitive::ptr() { return static_pointer_cast<VRGeoPrimitive>( shared_from_this() ); }
 
-VRAnalyticGeometryPtr VRGeoPrimitive::getLabels() { return params_geo; }
+VRAnnotationEnginePtr VRGeoPrimitive::getLabels() { return params_geo; }
 
 VRHandlePtr VRGeoPrimitive::getHandle(int i) {
     if (i < 0 || i >= handles.size()) return 0;
@@ -61,7 +68,8 @@ void VRGeoPrimitive::update(int i, float v) {
     if (!params_geo || !h) return;
     auto a = h->getAxis();
     auto o = h->getOrigin().pos();
-    params_geo->setVector(i, Vec3f(0,0,0), a*v*0.5 + o, Vec3f(0.5,0.6,1), toString( v*1000, 4 ) + " mm"); // TODO: cave crash??
+    string lbl = h->getBaseName() + " " + toString( v*1000, 4 ) + " mm";
+    params_geo->set(i, (a*v*0.5 + o)*0.5, lbl);
 }
 
 void VRGeoPrimitive::setupHandles() {
@@ -117,7 +125,12 @@ void VRGeoPrimitive::setupHandles() {
         if (n == "Bevel") h->configure(cb, VRHandle::LINEAR, Vec3f(1,1,0), 1, true);
         if (n == "Length") h->configure(cb, VRHandle::LINEAR, Vec3f(0,0,1), 1, true);
 
-        h->set( pose(), toFloat(param) );
+        float v = toFloat(param);
+        h->set( pose(), v );
+        string lbl = h->getBaseName() + " " + toString( v*1000, 4 ) + " mm";
+        auto a = h->getAxis();
+        auto o = h->getOrigin().pos();
+        params_geo->set(i, (a*v*0.5 + o)*0.5, lbl);
     }
 }
 

@@ -27,14 +27,13 @@ class VRHandle : public VRGeometry {
         pose origin;
         TYPE constraint = LINEAR;
 
-        void updateHandle();
-
     public:
         VRHandle(string name);
 
         static VRHandlePtr create(string name);
         VRHandlePtr ptr();
 
+        void updateHandle();
         void configure(VRAnimPtr cb, TYPE t, Vec3f n, float scale, bool symmetric);
         void set(pose p, float v);
 
