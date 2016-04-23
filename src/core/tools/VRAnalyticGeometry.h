@@ -29,7 +29,7 @@ class VRAnalyticGeometry : public VRTransform {
         static string circle_vp;
         static string circle_fp;
 
-        void resize(int i, int j = 0, int k = 0);
+        void resize(int i, int j = -1, int k = -1);
 
     public:
         VRAnalyticGeometry();

@@ -16,9 +16,9 @@ PyMethodDef VRPyAnalyticGeometry::methods[] = {
 
 PyObject* VRPyAnalyticGeometry::setLabelParams(VRPyAnalyticGeometry* self, PyObject* args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyAnalyticGeometry::setLabelSize - Object is invalid"); return NULL; }
-    float s;
-    bool ss = false;
-    bool bb = false;
+    float s = 0;
+    int ss = false;
+    int bb = false;
     PyObject* fgO = 0;
     PyObject* bgO = 0;
     if (! PyArg_ParseTuple(args, "f|iiOO", &s, &ss, &bb, &fgO, &bgO)) return NULL;

@@ -166,7 +166,7 @@ void VRAnalyticGeometry::setAngle(int i, Vec3f p, Vec3f v1, Vec3f v2, Vec3f c1, 
 void VRAnalyticGeometry::setCircle(int i, Vec3f p, Vec3f n, float r, Vec3f color, string label) {
     if (!circlesGeometry) return;
     if (ae) ae->set(i, p, label);
-    resize(0, 0, 4*i+3);
+    resize(-1, -1, 4*i+3);
 
     Vec3f v1 = Vec3f(0, -n[2], n[1]);
     if (abs(n[1]) <= abs(n[0]) && abs(n[1]) <= abs(n[2])) v1 = Vec3f(-n[2], 0, n[0]);

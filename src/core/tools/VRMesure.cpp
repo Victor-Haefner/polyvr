@@ -55,13 +55,13 @@ void VRMeasure::update() {
     setVector(1, p2, v1, g, "b: " + toString( v1.length()*1000, 4 ) + " mm");
     setVector(2, p3, v2, y, "c: " + toString( v2.length()*1000, 4 ) + " mm");
 
-    setVector(6, p1, n1, r, "na: " + toString( n1.length()*1000, 4 ) + " mm");
-    setVector(7, p2, n2, g, "nb: " + toString( n2.length()*1000, 4 ) + " mm");
-    setVector(8, p3, n3, y, "nc: " + toString( n3.length()*1000, 4 ) + " mm");
+    setVector(3, p1, n1, r, "na: " + toString( n1.length()*1000, 4 ) + " mm");
+    setVector(4, p2, n2, g, "nb: " + toString( n2.length()*1000, 4 ) + " mm");
+    setVector(5, p3, n3, y, "nc: " + toString( n3.length()*1000, 4 ) + " mm");
 
-    setAngle (3, p1, -v2, v3, y,r, "i: " + toString( a1, 4 ) + " deg");
-    setAngle (4, p2, v1, -v3, g,r, "j: " + toString( a2, 4 ) + " deg");
-    setAngle (5, p3, -v1, v2, g,y, "k: " + toString( a3, 4 ) + " deg");
+    setAngle (6, p1, -v2, v3, y,r, "i: " + toString( a1, 4 ) + " deg");
+    setAngle (7, p2, v1, -v3, g,r, "j: " + toString( a2, 4 ) + " deg");
+    setAngle (8, p3, -v1, v2, g,y, "k: " + toString( a3, 4 ) + " deg");
 }
 
 OSG_END_NAMESPACE
