@@ -36,8 +36,8 @@ sudo apt-get install libbullet-extras-dev
 typedef boost::recursive_mutex::scoped_lock Lock;
 
 struct VRPhysicsJoint {
-    OSG::VRConstraint* constraint = 0;
-    OSG::VRConstraint* spring = 0;
+    OSG::VRConstraintPtr constraint = 0;
+    OSG::VRConstraintPtr spring = 0;
     VRPhysics* partner = 0;
     btGeneric6DofSpringConstraint* btJoint = 0;
 
@@ -47,7 +47,7 @@ struct VRPhysicsJoint {
         if (btJoint) delete btJoint;
     }
 
-    VRPhysicsJoint(VRPhysics* p, OSG::VRConstraint* c, OSG::VRConstraint* cs) {
+    VRPhysicsJoint(VRPhysics* p, OSG::VRConstraintPtr c, OSG::VRConstraintPtr cs) {
         constraint = c;
         spring = cs;
         partner = p;
@@ -1022,7 +1022,7 @@ void VRPhysics::setConstraint(VRPhysics* p,int nodeIndex,OSG::Vec3f localPivot,b
     soft_body->appendAnchor(nodeIndex,p->body,toBtVector3(localPivot),!ignoreCollision,influence);
 }
 
-void VRPhysics::setConstraint(VRPhysics* p, OSG::VRConstraint* c, OSG::VRConstraint* cs) {
+void VRPhysics::setConstraint(VRPhysics* p, OSG::VRConstraintPtr c, OSG::VRConstraintPtr cs) {
     if (body == 0) return;
     if (p->body == 0) return;
     Lock lock(mtx());
@@ -1042,7 +1042,7 @@ void VRPhysics::updateConstraint(VRPhysics* p) {
     if (joints.count(p) == 0) return;
 
     VRPhysicsJoint* joint = joints[p];
-    OSG::VRConstraint* c = joint->constraint;
+    OSG::VRConstraintPtr c = joint->constraint;
     if (c == 0) return;
 
     Lock lock(mtx());
@@ -1084,7 +1084,7 @@ void VRPhysics::updateConstraint(VRPhysics* p) {
 
     // SPRING PARAMETERS
 
-    OSG::VRConstraint* cs = joint->spring;
+    OSG::VRConstraintPtr cs = joint->spring;
     if (cs == 0) return;
     for (int i=0; i<6; i++) {
         bool b = (cs->getMin(i) > 0);

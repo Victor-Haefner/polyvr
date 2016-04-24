@@ -44,6 +44,8 @@ PyMethodDef VRPyTransform::methods[] = {
     {"setPlaneConstraints", (PyCFunction)VRPyTransform::setPlaneConstraints, METH_VARARGS, "Constraint the object on a plane - setPlaneConstraints(nxf, nyf, nzf)" },
     {"setAxisConstraints", (PyCFunction)VRPyTransform::setAxisConstraints, METH_VARARGS, "Constraint the object on an axis - TODO -> to test, may work" },
     {"setRotationConstraints", (PyCFunction)VRPyTransform::setRotationConstraints, METH_VARARGS, "Constraint the object's rotation - setRotationConstraints(xi, yi, zi)" },
+    {"setConstraint", (PyCFunction)VRPyTransform::setConstraint, METH_VARARGS, "Set the constraints object - setConstraint( constraint )" },
+    {"getConstraint", (PyCFunction)VRPyTransform::getConstraint, METH_NOARGS, "Get the constraints object - constraint getConstraint()" },
     {"physicalize", (PyCFunction)VRPyTransform::physicalize, METH_VARARGS, "physicalize subtree - physicalize( bool physicalized , bool dynamic , str shape, float shape param )\n\tshape can be: ['Box', 'Sphere', 'Convex', 'Concave', 'ConvexDecomposed']" },
     {"setGhost", (PyCFunction)VRPyTransform::setGhost, METH_VARARGS, "Set the physics object to be a ghost object - setGhost(bool)" },
     {"attach", (PyCFunction)VRPyTransform::setPhysicsConstraintTo, METH_VARARGS,
@@ -83,6 +85,19 @@ PyMethodDef VRPyTransform::methods[] = {
     {"lastChanged", (PyCFunction)VRPyTransform::lastChanged, METH_NOARGS, "Return the frame when the last change occured - lastChanged()"  },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyTransform::setConstraint(VRPyTransform* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    VRPyConstraint* c = 0;
+    if (! PyArg_ParseTuple(args, "O", &c)) return NULL;
+    self->objPtr->setConstraint(c->objPtr);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyTransform::getConstraint(VRPyTransform* self) {
+    if (!self->valid()) return NULL;
+    return VRPyConstraint::fromSharedPtr( self->objPtr->getConstraint() );
+}
 
 PyObject* VRPyTransform::lastChanged(VRPyTransform* self) {
     if (!self->valid()) return NULL;
@@ -328,7 +343,7 @@ PyObject* VRPyTransform::setPointConstraints(VRPyTransform* self, PyObject* args
     OSG::Vec3f v = parseVec3f(args);
     auto c = self->objPtr->getConstraint();
     c->setTConstraint(v, OSG::VRConstraint::POINT);
-    c->toggleTConstraint(true, self->objPtr);
+    c->setActive(true, self->objPtr);
     Py_RETURN_TRUE;
 }
 
@@ -337,7 +352,7 @@ PyObject* VRPyTransform::setPlaneConstraints(VRPyTransform* self, PyObject* args
     OSG::Vec3f v = parseVec3f(args);
     auto c = self->objPtr->getConstraint();
     c->setTConstraint(v, OSG::VRConstraint::PLANE);
-    c->toggleTConstraint(true, self->objPtr);
+    c->setActive(true, self->objPtr);
     Py_RETURN_TRUE;
 }
 
@@ -346,7 +361,7 @@ PyObject* VRPyTransform::setAxisConstraints(VRPyTransform* self, PyObject* args)
     OSG::Vec3f v = parseVec3f(args);
     auto c = self->objPtr->getConstraint();
     c->setTConstraint(v, OSG::VRConstraint::LINE);
-    c->toggleTConstraint(true, self->objPtr);
+    c->setActive(true, self->objPtr);
     Py_RETURN_TRUE;
 }
 
@@ -359,7 +374,7 @@ PyObject* VRPyTransform::setRotationConstraints(VRPyTransform* self, PyObject* a
     OSG::VRTransformPtr e = (OSG::VRTransformPtr) self->objPtr;
     auto c = self->objPtr->getConstraint();
     //c->setRConstraint(vi); //TODO
-    c->toggleRConstraint(true, self->objPtr);
+    c->setActive(true, self->objPtr);
     Py_RETURN_TRUE;
 }
 
@@ -403,7 +418,7 @@ PyObject* VRPyTransform::setPhysicsConstraintTo(VRPyTransform* self, PyObject *a
     else {
         VRPyTransform *t; VRPyConstraint *c; VRPyConstraint *cs;
         if (! PyArg_ParseTuple(args, "OOO", &t, &c, &cs)) return NULL;
-        self->objPtr->getPhysics()->setConstraint( t->objPtr->getPhysics(), c->obj, cs->obj );
+        self->objPtr->getPhysics()->setConstraint( t->objPtr->getPhysics(), c->objPtr, cs->objPtr );
     }
     Py_RETURN_TRUE;
 }

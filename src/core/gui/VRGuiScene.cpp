@@ -541,16 +541,18 @@ void VRGuiScene::on_toggle_T_constraint() {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
 
-    bool b = getCheckButtonState("checkbutton21");
-    obj->getConstraint()->toggleTConstraint(b, obj);
+    bool bT = getCheckButtonState("checkbutton21");
+    bool bR = getCheckButtonState("checkbutton22");
+    obj->getConstraint()->setActive(bT || bR, obj);
 }
 
 void VRGuiScene::on_toggle_R_constraint() {
     if(!trigger_cbs) return;
     VRTransformPtr obj = static_pointer_cast<VRTransform>( getSelected() );
 
-    bool b = getCheckButtonState("checkbutton22");
-    obj->getConstraint()->toggleRConstraint(b, obj);
+    bool bT = getCheckButtonState("checkbutton21");
+    bool bR = getCheckButtonState("checkbutton22");
+    obj->getConstraint()->setActive(bT || bR, obj);
 }
 
 void VRGuiScene::on_toggle_rc() {

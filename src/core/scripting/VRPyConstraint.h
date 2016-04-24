@@ -14,6 +14,8 @@ struct VRPyConstraint : VRPyBaseT<OSG::VRConstraint> {
     static PyObject* lock(VRPyConstraint* self, PyObject* args);
     static PyObject* setLocalOffsetB(VRPyConstraint* self, PyObject* args);
     static PyObject* setLocalOffsetA(VRPyConstraint* self, PyObject* args);
+    static PyObject* setRotationConstraint(VRPyConstraint* self, PyObject* args);
+    static PyObject* setTranslationConstraint(VRPyConstraint* self, PyObject* args);
 };
 
 #endif // VRPYCONSTRAINT_H_INCLUDED

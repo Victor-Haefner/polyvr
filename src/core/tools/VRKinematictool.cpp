@@ -142,8 +142,7 @@ void VRJointTool::updateVis() {
     c->setRConstraint(ad3, VRConstraint::LINE);
     //c->setTConstraint(lp.pos(), VRConstraint::POINT);
     c->setTConstraint(Vec3f(0,0,0), VRConstraint::POINT);
-    c->toggleRConstraint(active, o2);
-    c->toggleTConstraint(active, o2);
+    c->setActive(true, o2);
 }
 
 /**

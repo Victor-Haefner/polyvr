@@ -13,10 +13,11 @@ VRConstraint::VRConstraint() {
 
     store("cT", &tConstraint);
     store("cR", &rConstraint);
-    store("do_cT", &doTConstraint);
-    store("do_cR", &doRConstraint);
     store("cT_mode", &tConMode);
+    store("cR_mode", &rConMode);
     store("cT_local", &localTC);
+    store("cR_local", &localRC);
+    store("active", &active);
 }
 
 VRConstraint::~VRConstraint() {;}
@@ -39,7 +40,7 @@ Matrix VRConstraint::getReferenceA() { return refMatrixA; };
 Matrix VRConstraint::getReferenceB() { return refMatrixB; };
 
 void VRConstraint::apply(VRTransformPtr obj) {
-    if (!doTConstraint && !doRConstraint) return;
+    if (!hasConstraint() || !active) return;
     auto now = VRGlobals::get()->CURRENT_FRAME;
     if (apply_time_stamp == now) return;
     apply_time_stamp = now;
@@ -58,12 +59,13 @@ void VRConstraint::apply(VRTransformPtr obj) {
     }
 
     //rotation
-    if (doRConstraint) {
+    if (rConMode != NONE) {
         if (rConMode == POINT) { for (int i=0;i<3;i++) t[i] = t0[i]; } // TODO: add RConstraint as offset to referential and reference
 
         if (rConMode == LINE) {
             t.multLeft(rotRebase);
             t.mult(refRebasedI);
+            float a = atan2(-t[2][1], t[2][2]);
             t.setRotate( Quaternion(Vec3f(1,0,0), atan2(-t[2][1], t[2][2])) );
             t.mult(refRebased);
             t.multLeft(rotRebaseI);
@@ -73,7 +75,7 @@ void VRConstraint::apply(VRTransformPtr obj) {
     }
 
     //translation
-    if (doTConstraint) {
+    if (tConMode != NONE) {
         if (tConMode == PLANE) {
             float d = Vec3f(t[3] - t0[3]).dot(tConstraint);
             for (int i=0; i<3; i++) t[3][i] -= d*tConstraint[i];
@@ -102,8 +104,6 @@ void VRConstraint::apply(VRTransformPtr obj) {
 
 void VRConstraint::setReference(Matrix m) { Reference = m; prepare(); }
 void VRConstraint::setReferential(VRTransformPtr t) { Referential = t; }
-void VRConstraint::toggleTConstraint(bool b, VRTransformPtr obj) { doTConstraint = b; if (b) obj->getWorldMatrix(Reference); if(!doRConstraint) obj->setFixed(!b); prepare(); }
-void VRConstraint::toggleRConstraint(bool b, VRTransformPtr obj) { doRConstraint = b; if (b) obj->getWorldMatrix(Reference); if(!doTConstraint) obj->setFixed(!b); prepare(); }
 
 void VRConstraint::setTConstraint(Vec3f trans, int mode, bool local) {
     tConstraint = trans;
@@ -136,7 +136,11 @@ bool VRConstraint::getRMode() { return rConMode; }
 Vec3f VRConstraint::getTConstraint() { return tConstraint; }
 Vec3f VRConstraint::getRConstraint() { return rConstraint; }
 
-bool VRConstraint::hasTConstraint() { return doTConstraint; }
-bool VRConstraint::hasRConstraint() { return doRConstraint; }
+bool VRConstraint::hasTConstraint() { return tConMode != NONE; }
+bool VRConstraint::hasRConstraint() { return rConMode != NONE; }
+bool VRConstraint::hasConstraint() { return rConMode != NONE || tConMode != NONE; }
+
+void VRConstraint::setActive(bool b, VRTransformPtr obj) { active = b; if (b) obj->getWorldMatrix(Reference); obj->setFixed(!b); prepare(); }
+bool VRConstraint::isActive() { return active; }
 
 OSG_END_NAMESPACE;

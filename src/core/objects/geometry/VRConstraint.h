@@ -18,8 +18,8 @@ class VRConstraint : public VRStorage {
         };
 
     private:
-        bool active;
-        bool local;
+        bool active = 1;
+        bool local = 0;
         Matrix refMatrixA;
         Matrix refMatrixB;
         Matrix refMatrixBI;
@@ -39,12 +39,10 @@ class VRConstraint : public VRStorage {
         unsigned int apply_time_stamp = 0;
         Matrix Reference;
         VRTransformWeakPtr Referential;
-        bool doTConstraint = false;
-        bool doRConstraint = false;
         bool localTC = false;
         bool localRC = false;
-        int tConMode = PLANE;
-        int rConMode = POINT;
+        int tConMode = NONE;
+        int rConMode = NONE;
         Vec3f tConstraint = Vec3f(0,1,0);
         Vec3f rConstraint = Vec3f(0,1,0);
 
@@ -54,7 +52,7 @@ class VRConstraint : public VRStorage {
 
         static VRConstraintPtr create();
 
-        void setActive(bool b);
+        void setActive(bool b, VRTransformPtr obj);
         bool isActive();
 
         void setLocal(bool b);
@@ -78,8 +76,6 @@ class VRConstraint : public VRStorage {
         // TODO: refactor old VRTransform stuff
         void setReference(Matrix m);
         void setReferential(VRTransformPtr ref);
-        void toggleTConstraint(bool b, VRTransformPtr obj);
-        void toggleRConstraint(bool b, VRTransformPtr obj);
         void setTConstraint(Vec3f trans, int mode, bool local = false);
         void setRConstraint(Vec3f rot, int mode, bool local = false);
         bool getRMode();
@@ -88,6 +84,7 @@ class VRConstraint : public VRStorage {
         Vec3f getRConstraint();
         bool hasTConstraint();
         bool hasRConstraint();
+        bool hasConstraint();
 };
 
 OSG_END_NAMESPACE;

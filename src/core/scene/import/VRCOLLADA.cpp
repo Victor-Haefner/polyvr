@@ -518,7 +518,7 @@ void printAllKinematics(const kin_scene& scene) {
     }
 }
 
-VRTransformPtr buildLinks(klink l, VRObjectPtr objects, map<string, VRConstraint*>& constraints) {
+VRTransformPtr buildLinks(klink l, VRObjectPtr objects, map<string, VRConstraintPtr>& constraints) {
     VRTransformPtr t1 = 0;
     auto o1 = findTarget(objects, l.parent);
     if (o1 == 0) { cout << "did not find " << l.parent << endl; return 0; }
@@ -535,7 +535,7 @@ VRTransformPtr buildLinks(klink l, VRObjectPtr objects, map<string, VRConstraint
     t1->getPhysics()->setPhysicalized(true);
 
     for (auto a : l.attachments) {
-        VRConstraint* c = constraints[a.second.joint];
+        VRConstraintPtr c = constraints[a.second.joint];
         Matrix ref;
         ref.setTranslate(a.second.translate);
         c->setReferenceA(ref);
@@ -544,7 +544,7 @@ VRTransformPtr buildLinks(klink l, VRObjectPtr objects, map<string, VRConstraint
         for (auto cl : a.second.links) {
             auto t2 = buildLinks(cl.second, objects, constraints);
 
-            t1->getPhysics()->setConstraint( t2->getPhysics(), c, 0);
+            t1->getPhysics()->setConstraint( t2->getPhysics(), c, VRConstraintPtr());
         }
     }
 
@@ -553,9 +553,9 @@ VRTransformPtr buildLinks(klink l, VRObjectPtr objects, map<string, VRConstraint
 
 void buildKinematics(const kin_scene& scene, VRObjectPtr objects) {
     for (auto m : scene.models) {
-        map<string, VRConstraint*> constraints;
+        map<string, VRConstraintPtr> constraints;
         for (auto j : m.second.joints) {
-            auto c = new VRConstraint();
+            auto c = VRConstraint::create();
             constraints[j.first] = c;
             if (abs(j.second.axis[0]) > 0) c->setMinMax(3, j.second.bounds[0], j.second.bounds[1]);
             if (abs(j.second.axis[1]) > 0) c->setMinMax(4, j.second.bounds[0], j.second.bounds[1]);

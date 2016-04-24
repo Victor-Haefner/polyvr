@@ -20,12 +20,9 @@ VRManipulator::VRManipulator() { setup(); }
 void VRManipulator::handle(VRGeometryPtr g) {
     if (sel == 0) return;
     auto c = sel->getConstraint();
-    c->toggleTConstraint(false, sel);
-    c->toggleRConstraint(false, sel);
+    c->setActive(true, sel);
 
     if (g == gTX || g == gTY || g == gTZ || g == gRX || g == gRY || g == gRZ) { // lock everything
-        c->toggleTConstraint(true, sel);
-        c->toggleRConstraint(true, sel);
         c->setTConstraint(Vec3f(0,0,0), VRConstraint::LINE);
         c->setRConstraint(Vec3f(0,0,0), VRConstraint::POINT);
     }

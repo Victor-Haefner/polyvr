@@ -41,7 +41,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRConstraint>::type = {
     0,                         /* tp_dictoffset */
     (initproc)init,      /* tp_init */
     0,                         /* tp_alloc */
-    New,                 /* tp_new */
+    New_ptr,                 /* tp_new */
 };
 
 PyMemberDef VRPyConstraint::members[] = {
@@ -56,16 +56,45 @@ PyMethodDef VRPyConstraint::methods[] = {
     {"setLocalOffset", (PyCFunction)VRPyConstraint::setLocalOffsetB, METH_VARARGS, "Set the offset (relative to the target transform), setLocalOffset(offsetX,offsetY,offsetZ,yaw,pitch,roll)" },
     {"setLocalOffsetA", (PyCFunction)VRPyConstraint::setLocalOffsetA, METH_VARARGS, "Set the offset in A, setLocalOffsetA(offsetX,offsetY,offsetZ,yaw,pitch,roll)" },
     {"setLocalOffsetB", (PyCFunction)VRPyConstraint::setLocalOffsetB, METH_VARARGS, "Set the offset in B, setLocalOffsetB(offsetX,offsetY,offsetZ,yaw,pitch,roll)" },
+    {"setRotationConstraint", (PyCFunction)VRPyConstraint::setRotationConstraint, METH_VARARGS, "Set a rotation constraint, setRotationConstraint([axis/normal], mode, bool globale)\n\tmode can be 'POINT', 'LINE', 'PLANE'" },
+    {"setTranslationConstraint", (PyCFunction)VRPyConstraint::setTranslationConstraint, METH_VARARGS, "Set a translation constraint, setTranslationConstraint([axis/normal], mode, bool global)\n\tmode can be 'POINT', 'LINE', 'PLANE'" },
     {NULL}  /* Sentinel */
 };
 
+
+int getConstraintEnum(string s) {
+    if (s == "POINT") return OSG::VRConstraint::POINT;
+    if (s == "LINE") return OSG::VRConstraint::LINE;
+    if (s == "PLANE") return OSG::VRConstraint::PLANE;
+    return OSG::VRConstraint::NONE;
+}
+
+PyObject* VRPyConstraint::setRotationConstraint(VRPyConstraint* self, PyObject* args) {
+    PyObject *v;
+    const char* m;
+    int g = 1;
+    if (! PyArg_ParseTuple(args, "Osi", &v, &m, &g)) return NULL;
+    if (!self->objPtr) self->objPtr = OSG::VRConstraint::create();
+    self->objPtr->setRConstraint(parseVec3fList(v), getConstraintEnum(m), g);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyConstraint::setTranslationConstraint(VRPyConstraint* self, PyObject* args) {
+    PyObject *v;
+    const char* m;
+    int g = 1;
+    if (! PyArg_ParseTuple(args, "Osi", &v, &m, &g)) return NULL;
+    if (!self->objPtr) self->objPtr = OSG::VRConstraint::create();
+    self->objPtr->setTConstraint(parseVec3fList(v), getConstraintEnum(m), g);
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyConstraint::setDOFRange(VRPyConstraint* self, PyObject* args) {
     int i;
     float f1, f2;
     if (! PyArg_ParseTuple(args, "iff", &i, &f1, &f2)) return NULL;
-    if (self->obj == 0) self->obj = new OSG::VRConstraint();
-    self->obj->setMinMax(i,f1,f2);
+    if (!self->objPtr) self->objPtr = OSG::VRConstraint::create();
+    self->objPtr->setMinMax(i,f1,f2);
     Py_RETURN_TRUE;
 }
 
@@ -81,8 +110,8 @@ PyObject* VRPyConstraint::setLocalOffsetA(VRPyConstraint* self, PyObject* args) 
     OSG::Quaternion qtwo = OSG::Quaternion(q.x(),q.y(),q.z(),q.w());
     m.setRotate(qtwo);
 
-    if (self->obj == 0) self->obj = new OSG::VRConstraint();
-    self->obj->setReferenceA(m);
+    if (!self->objPtr) self->objPtr = OSG::VRConstraint::create();
+    self->objPtr->setReferenceA(m);
     Py_RETURN_TRUE;
 }
 
@@ -98,34 +127,34 @@ PyObject* VRPyConstraint::setLocalOffsetB(VRPyConstraint* self, PyObject* args) 
     OSG::Quaternion qtwo = OSG::Quaternion(q.x(),q.y(),q.z(),q.w());
     m.setRotate(qtwo);
 
-    if (self->obj == 0) self->obj = new OSG::VRConstraint();
-    self->obj->setReferenceB(m);
+    if (!self->objPtr) self->objPtr = OSG::VRConstraint::create();
+    self->objPtr->setReferenceB(m);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyConstraint::setLocal(VRPyConstraint* self, PyObject* args) {
-    if (self->obj == 0) self->obj = new OSG::VRConstraint();
+    if (!self->objPtr) self->objPtr = OSG::VRConstraint::create();
     bool b = parseBool(args);
-    self->obj->setLocal(b);
+    self->objPtr->setLocal(b);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyConstraint::lock(VRPyConstraint* self, PyObject* args) {
-    if (self->obj == 0) self->obj = new OSG::VRConstraint();
+    if (!self->objPtr) self->objPtr = OSG::VRConstraint::create();
     vector<PyObject*> o = parseList(args);
     for (unsigned int i=0; i<o.size(); i++) {
         int j=PyLong_AsLong(o[i]);
-        self->obj->setMinMax(j,0,0);
+        self->objPtr->setMinMax(j,0,0);
     }
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyConstraint::free(VRPyConstraint* self, PyObject* args) {
-    if (self->obj == 0) self->obj = new OSG::VRConstraint();
+    if (!self->objPtr) self->objPtr = OSG::VRConstraint::create();
     vector<PyObject*> o = parseList(args);
 	for (unsigned int i = 0; i<o.size(); i++) {
         int j=PyLong_AsLong(o[i]);
-        self->obj->setMinMax(j,1,-1);
+        self->objPtr->setMinMax(j,1,-1);
     }
     Py_RETURN_TRUE;
 }

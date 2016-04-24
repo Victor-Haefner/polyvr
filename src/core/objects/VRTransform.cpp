@@ -569,7 +569,7 @@ void VRTransform::drop() {
     if (!held) return;
     held = false;
 
-    bool dyn = constraint ? constraint->doTConstraint || constraint->doRConstraint : false;
+    bool dyn = constraint ? constraint->hasConstraint() : false;
     setFixed(!dyn);
 
     Matrix wm, m1, m2;
