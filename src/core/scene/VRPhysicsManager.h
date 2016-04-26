@@ -8,6 +8,7 @@
 #include <vector>
 #include <boost/thread/recursive_mutex.hpp>
 #include "core/utils/VRFunctionFwd.h"
+#include "core/utils/VRUtilsFwd.h"
 #include "core/objects/VRObjectFwd.h"
 
 
@@ -59,7 +60,7 @@ class VRPhysicsManager {
         map<btCollisionObject*, VRTransformWeakPtr> OSGobjs;
         map<btCollisionObject*, VRGeometryPtr> physics_visuals;
         vector<btCollisionObject*> physics_visuals_to_update;
-        VRVisualLayer* physics_visual_layer = 0;
+        VRVisualLayerPtr physics_visual_layer;
         VRMaterialPtr phys_mat = 0;
 
         boost::recursive_mutex mtx;
@@ -91,7 +92,7 @@ class VRPhysicsManager {
         btSoftRigidDynamicsWorld* bltWorld();
         btSoftBodyWorldInfo* getSoftBodyWorldInfo();
 
-        VRVisualLayer* getVisualLayer();
+        VRVisualLayerPtr getVisualLayer();
 
         boost::recursive_mutex& physicsMutex();
         boost::recursive_mutex& lowPriorityMutex();

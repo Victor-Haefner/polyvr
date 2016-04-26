@@ -7,6 +7,7 @@
 #include "tracking/VRPN.h"
 #include "tracking/ART.h"
 #include "core/utils/VRName.h"
+#include "core/utils/VRUtilsFwd.h"
 #include "core/setup/VRSetupFwd.h"
 
 namespace xmlpp{ class Element; }
@@ -26,8 +27,8 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
         VRTransformPtr user = 0;
         VRCameraPtr setup_cam = 0;
 
-        VRVisualLayer* setup_layer = 0;
-        VRVisualLayer* stats_layer = 0;
+        VRVisualLayerPtr setup_layer;
+        VRVisualLayerPtr stats_layer;
         VRTogglePtr layer_setup_toggle;
         VRTogglePtr layer_stats_toggle;
 

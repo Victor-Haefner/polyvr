@@ -32,8 +32,8 @@ VRSetup::VRSetup(string name) {
     user = 0;
     tracking = "None";
 
-    setup_layer = new VRVisualLayer("Setup", "setup.png");
-    stats_layer = new VRVisualLayer("Statistics", "stats.png");
+    setup_layer = VRVisualLayer::getLayer("Setup", "setup.png",1);
+    stats_layer = VRVisualLayer::getLayer("Statistics", "stats.png",1);
     layer_setup_toggle = VRFunction<bool>::create("showSetup", boost::bind(&VRSetup::showSetup, this, _1) );
     layer_stats_toggle = VRFunction<bool>::create("showStats", boost::bind(&VRViewManager::showViewStats, this, 0, _1) );
     setup_layer->setCallback( layer_setup_toggle );
@@ -44,8 +44,6 @@ VRSetup::VRSetup(string name) {
 
 VRSetup::~VRSetup() {
     cout << "~VRSetup " << name << endl;
-    delete setup_layer;
-    delete stats_layer;
 }
 
 VRSetupPtr VRSetup::create(string name) { return VRSetupPtr(new VRSetup(name)); }

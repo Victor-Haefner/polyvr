@@ -6,6 +6,7 @@
 #include <map>
 #include <vector>
 #include "core/utils/VRFunctionFwd.h"
+#include "core/utils/VRUtilsFwd.h"
 #include "core/utils/VRName.h"
 #include "core/objects/VRObjectFwd.h"
 
@@ -15,16 +16,17 @@ using namespace std;
 class VRVisualLayer : public VRName {
     private:
         VRObjectPtr anchor;
-        static map<string, VRVisualLayer*> layers;
+        static map<string, VRVisualLayerWeakPtr> layers;
         VRToggleWeakPtr callback;
         string icon;
 
-    public:
         VRVisualLayer(string name, string icon);
+
+    public:
         ~VRVisualLayer();
 
+        static VRVisualLayerPtr getLayer(string l, string icon = "", bool create = false);
         static vector<string> getLayers();
-        static VRVisualLayer* getLayer(string l);
         static void anchorLayers(VRObjectPtr root);
         static void clearLayers();
 

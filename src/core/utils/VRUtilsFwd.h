@@ -10,4 +10,8 @@ typedef std::weak_ptr<X> X ## WeakPtr;
 
 ptrFwd(VRProgress);
 
+namespace OSG {
+ptrFwd(VRVisualLayer);
+}
+
 #endif // VRUTILSFWD_H_INCLUDED

@@ -61,7 +61,7 @@ VRPhysicsManager::VRPhysicsManager() {
     updatePhysObjectsFkt = VRFunction<int>::create("Physics object update", boost::bind(&VRPhysicsManager::updatePhysObjects, this));
     updatePhysicsFkt = new VRFunction< weak_ptr<VRThread> >("Physics update", boost::bind(&VRPhysicsManager::updatePhysics, this, _1));
 
-    physics_visual_layer = new VRVisualLayer("Physics", "physics.png");
+    physics_visual_layer = VRVisualLayer::getLayer("Physics", "physics.png", 1);
 
     phys_mat = VRMaterial::get("phys_mat");
     phys_mat->setLit(false);
@@ -83,7 +83,7 @@ VRPhysicsManager::~VRPhysicsManager() {
 
 boost::recursive_mutex& VRPhysicsManager::physicsMutex() { return mtx; }
 
-VRVisualLayer* VRPhysicsManager::getVisualLayer() { return physics_visual_layer; }
+VRVisualLayerPtr VRPhysicsManager::getVisualLayer() { return physics_visual_layer; }
 
 long long VRPhysicsManager::getTime() { // time in seconds
     return 1000*glutGet(GLUT_ELAPSED_TIME);

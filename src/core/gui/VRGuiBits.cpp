@@ -23,6 +23,7 @@
 #include "core/setup/windows/VRView.h"
 #include "core/utils/VRInternalMonitor.h"
 #include "core/utils/VRVisualLayer.h"
+#include "core/utils/VRUtilsFwd.h"
 #include "core/scene/VRSceneLoader.h"
 #include "VRGuiUtils.h"
 #include "VRGuiSignals.h"
@@ -254,7 +255,7 @@ VRGuiBits::VRGuiBits() {
     // recorder
     recorder = shared_ptr<VRRecorder>( new VRRecorder() );
     recorder->setView(0);
-    recorder_visual_layer = shared_ptr<VRVisualLayer>( new VRVisualLayer("Recorder", "recorder.png") );
+    recorder_visual_layer = VRVisualLayer::getLayer("Recorder", "recorder.png", 1);
     recorder_visual_layer->setCallback( recorder->getToggleCallback() );
 
     // About Dialog
@@ -305,7 +306,7 @@ void VRGuiBits::updateVisualLayer() {
     for (auto c : bar->get_children()) bar->remove(*c);
 
     for (auto l : VRVisualLayer::getLayers()) {
-        VRVisualLayer* ly = VRVisualLayer::getLayer(l);
+        auto ly = VRVisualLayer::getLayer(l).get();
         Gtk::ToggleToolButton* tb = Gtk::manage( new Gtk::ToggleToolButton() );
         Gtk::Image* icon = Gtk::manage( new Gtk::Image() );
 

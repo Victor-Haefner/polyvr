@@ -8,21 +8,27 @@ OSG_BEGIN_NAMESPACE;
 
 VRVisualLayer::VRVisualLayer(string name, string ic) {
     setNameSpace("VRVisualLayer");
-    if (layers.count(name)) delete layers[name];
+    if (layers.count(name)) layers.erase(name);
     setName(name);
+    icon = ic;
 
-    layers[name] = this;
     anchor = VRObject::create("layer_anchor_"+name);
     anchor->hide();
-
-    icon = ic;
 }
 
 VRVisualLayer::~VRVisualLayer() {}
 
+VRVisualLayerPtr VRVisualLayer::getLayer(string l, string icon, bool create) {
+    if (layers.count(l)) return layers[l].lock();
+    if (!create) return 0;
+    auto ly = VRVisualLayerPtr(new VRVisualLayer(l, icon) );
+    layers[l] = ly;
+    return ly;
+}
+
 string VRVisualLayer::getIconName() { return icon; }
 
-map<string, VRVisualLayer*> VRVisualLayer::layers;
+map<string, VRVisualLayerWeakPtr> VRVisualLayer::layers;
 vector<string> VRVisualLayer::getLayers() {
     vector<string> ls;
     for (auto l : layers) ls.push_back(l.first);
@@ -30,11 +36,13 @@ vector<string> VRVisualLayer::getLayers() {
 }
 
 void VRVisualLayer::anchorLayers(VRObjectPtr root) {
-    //for (auto l : layers) l.second->anchor->switchParent(root);
-    for (auto l : layers) root->addChild( l.second->anchor->getNode() );
+    for (auto l : layers) {
+        if (auto ly = l.second.lock()) {
+            root->addChild( ly->anchor->getNode() );
+        }
+    }
 }
 
-VRVisualLayer* VRVisualLayer::getLayer(string l) { return layers.count(l) ? layers[l] : 0; }
 void VRVisualLayer::clearLayers() { layers.clear(); }
 
 void VRVisualLayer::setVisibility(bool b) { anchor->setVisible(b); if (auto sp = callback.lock()) (*sp)(b); }

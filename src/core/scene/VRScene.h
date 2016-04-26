@@ -14,6 +14,7 @@
 #include "core/networking/VRNetworkManager.h"
 #include "core/utils/VRName.h"
 #include "core/utils/VRFlags.h"
+#include "core/utils/VRUtilsFwd.h"
 #include "VRBackground.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -42,9 +43,9 @@ class VRScene : public VRObjectManager,
         //physics run in own thread
         int physicsThreadID;
 
-        VRVisualLayer* referentials_layer = 0;
-        VRVisualLayer* cameras_layer = 0;
-        VRVisualLayer* lights_layer = 0;
+        VRVisualLayerPtr referentials_layer;
+        VRVisualLayerPtr cameras_layer;
+        VRVisualLayerPtr lights_layer;
 
         VRTogglePtr layer_ref_toggle;
         VRTogglePtr layer_cam_toggle;
