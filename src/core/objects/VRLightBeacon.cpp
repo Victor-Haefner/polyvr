@@ -11,16 +11,12 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 VRMaterialPtr getLightGeoMat() {
-    static VRMaterialPtr mat = 0;
-    if (mat == 0) {
-        mat = VRMaterial::create("light_geo_mat");
-        mat->setAmbient(Color3f(0.7, 0.7, 0.7));
-        mat->setDiffuse(Color3f(0.9, 0.9, 0.9));
-        mat->setSpecular(Color3f(0.4, 0.4, 0.4));
-        mat->setTransparency(0.3);
-        mat->setLit(false);
-        //mat->setDiffuse(Color4f(0,0,1,1));
-    }
+    VRMaterialPtr mat = VRMaterial::create("light_geo_mat");
+    mat->setAmbient(Color3f(0.7, 0.7, 0.7));
+    mat->setDiffuse(Color3f(0.9, 0.9, 0.9));
+    mat->setSpecular(Color3f(0.4, 0.4, 0.4));
+    mat->setTransparency(0.3);
+    mat->setLit(false);
     return mat;
 }
 
