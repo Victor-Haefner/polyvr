@@ -19,7 +19,7 @@ VRVisualLayer::VRVisualLayer(string name, string ic) {
 VRVisualLayer::~VRVisualLayer() {}
 
 VRVisualLayerPtr VRVisualLayer::getLayer(string l, string icon, bool create) {
-    if (layers.count(l)) return layers[l].lock();
+    if (layers.count(l)) if (auto ly = layers[l].lock()) return ly;
     if (!create) return 0;
     auto ly = VRVisualLayerPtr(new VRVisualLayer(l, icon) );
     layers[l] = ly;

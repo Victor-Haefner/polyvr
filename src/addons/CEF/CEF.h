@@ -37,6 +37,7 @@ class CEF_client : public CefClient {
 
     public:
         CEF_client();
+        ~CEF_client();
 
         CefRefPtr<CEF_handler> getHandler();
         CefRefPtr<CefRenderHandler> GetRenderHandler();
@@ -46,10 +47,12 @@ class CEF_client : public CefClient {
 
 class CEF {
     private:
+        CefRefPtr<CefBrowser> browser;
+        CefRefPtr<CEF_client> client;
+
         string site;
         OSG::VRMaterialWeakPtr mat;
         OSG::VRObjectWeakPtr obj;
-        CefRefPtr<CEF_client> client;
         int resolution = 1024;
         float aspect = 1;
         bool init = false;
@@ -60,8 +63,6 @@ class CEF {
         map<OSG::VRDevice*, VRUpdatePtr> mouse_move_callback;
         //shared_ptr<VRFunction<OSG::VRDevice*> > mouse_dev_callback;
         shared_ptr<VRFunction<OSG::VRDevice*> > keyboard_dev_callback;
-
-        CefRefPtr<CefBrowser> browser;
 
         void initiate();
         void update();

@@ -45,6 +45,10 @@ CEF_client::CEF_client() {
     handler = new CEF_handler();
 }
 
+CEF_client::~CEF_client() {
+    cout << "~CEF_client\n";
+}
+
 CefRefPtr<CefRenderHandler> CEF_client::GetRenderHandler() { return handler; }
 CefRefPtr<CEF_handler> CEF_client::getHandler() { return handler; }
 
@@ -56,8 +60,9 @@ CEF::CEF() {
 }
 
 CEF::~CEF() {
+    cout << "CEF destroyed " << client->HasOneRef() << " " << browser->HasOneRef() << endl;
     browser = 0;
-    cout << "CEF destroyed " << this << endl;
+    //client->Release(); // TODO!!!
 }
 
 void CEF::shutdown() { if (!cef_gl_init) return; cout << "CEF shutdown\n"; CefShutdown(); }
@@ -109,7 +114,7 @@ void CEF::setMaterial(VRMaterialPtr mat) {
 }
 
 string CEF::getSite() { return site; }
-void CEF::reload() { browser->Reload(); }
+void CEF::reload() { if (browser) browser->Reload(); }
 
 void CEF::update() {
     if (init) CefDoMessageLoopWork();
@@ -118,12 +123,12 @@ void CEF::update() {
 void CEF::open(string site) {
     if (!init) initiate();
     this->site = site;
-    browser->GetMainFrame()->LoadURL(site);
+    if (browser) browser->GetMainFrame()->LoadURL(site);
 }
 
 void CEF::resize() {
     client->getHandler()->resize(resolution, aspect);
-    if (init) browser->GetHost()->WasResized();
+    if (init && browser) browser->GetHost()->WasResized();
     if (init) reload();
 }
 
@@ -178,7 +183,7 @@ void CEF::mouse_move(VRDevice* dev, int i) {
     CefMouseEvent me;
     me.x = ins.texel[0]*resolution;
     me.y = ins.texel[1]*(resolution/aspect);
-    browser->GetHost()->SendMouseMoveEvent(me, dev->b_state(dev->key()));
+    if (browser) browser->GetHost()->SendMouseMoveEvent(me, dev->b_state(dev->key()));
 }
 
 void CEF::mouse(int lb, int rb, int wu, int wd, VRDevice* dev) {
@@ -209,6 +214,7 @@ void CEF::mouse(int lb, int rb, int wu, int wd, VRDevice* dev) {
         VRLog::log("net", ss.str());
     }
 
+    if (!browser) return;
     auto host = browser->GetHost();
     if (!host) return;
     if (!ins.hit) { host->SendFocusEvent(false); focus = false; return; }
@@ -242,6 +248,7 @@ void CEF::keyboard(VRDevice* dev) {
     //bool down = dev->getState();
     VRKeyboard* kb = (VRKeyboard*)dev;
     auto event = kb->getGtkEvent();
+    if (!browser) return;
     auto host = browser->GetHost();
     if (!host) return;
 
