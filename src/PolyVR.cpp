@@ -68,7 +68,7 @@ void PolyVR::shutdown() {
     pvr->scene_mgr->closeScene();
     pvr->scene_mgr->stopAllThreads();
     delete pvr;
-    //printFieldContainer();
+    printFieldContainer();
     osgExit();
     std::exit(0);
 }

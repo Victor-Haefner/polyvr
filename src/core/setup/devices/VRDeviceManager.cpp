@@ -28,7 +28,13 @@ VRDeviceManager::VRDeviceManager() {
     cout << "Init VRDeviceManager\n";
 }
 
-VRDeviceManager::~VRDeviceManager() { for (auto dev : devices) delete dev.second; }
+VRDeviceManager::~VRDeviceManager() {
+    cout << "~VRDeviceManager\n";
+    for (auto dev : devices) {
+        delete dev.second;
+    }
+}
+
 void VRDeviceManager::clearSignals() { for (auto dev : devices) dev.second->clearSignals(); }
 void VRDeviceManager::setDeviceRoot(VRTransformPtr root) { device_root = root; }
 

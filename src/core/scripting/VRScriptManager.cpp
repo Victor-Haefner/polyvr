@@ -214,10 +214,6 @@ void VRScriptManager::updateScript(string name, string core, bool compile) {
         script->setFunction( PyObject_GetAttrString(pModVR, name.c_str()) );
         //PyGILState_Release(gstate);
     }
-
-    if (script->getType() == "HTML") {
-        ;
-    }
 }
 
 

@@ -25,6 +25,10 @@ CEF_handler::CEF_handler() {
     image = VRTexture::create();
 }
 
+CEF_handler::~CEF_handler() {
+    cout << "~CEF_handler\n";
+}
+
 bool CEF_handler::GetViewRect(CefRefPtr<CefBrowser> browser, CefRect& rect) {
     rect = CefRect(0, 0, width, height);
     return true;
@@ -49,10 +53,19 @@ CEF_client::~CEF_client() {
     cout << "~CEF_client\n";
 }
 
+void CEF_handler::close() {
+    image = 0;
+}
+
+void CEF_client::close() {
+    handler->close();
+}
+
 CefRefPtr<CefRenderHandler> CEF_client::GetRenderHandler() { return handler; }
 CefRefPtr<CEF_handler> CEF_client::getHandler() { return handler; }
 
 CEF::CEF() {
+    global_initiate();
     client = new CEF_client();
     update_callback = VRFunction<int>::create("webkit_update", boost::bind(&CEF::update, this));
     auto scene = VRSceneManager::getCurrent();
@@ -61,8 +74,7 @@ CEF::CEF() {
 
 CEF::~CEF() {
     cout << "CEF destroyed " << client->HasOneRef() << " " << browser->HasOneRef() << endl;
-    browser = 0;
-    //client->Release(); // TODO!!!
+    client->close();
 }
 
 void CEF::shutdown() { if (!cef_gl_init) return; cout << "CEF shutdown\n"; CefShutdown(); }
@@ -73,32 +85,34 @@ CEFPtr CEF::create() {
     return cef;
 }
 
+void CEF::global_initiate() {
+    static bool global_init = false;
+    if (global_init) return;
+    global_init = true;
+
+    cout << "Global CEF init\n";
+    cef_gl_init = true;
+    CefSettings settings;
+#ifndef _WIN32
+    string bsp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/CefSubProcess";
+#else
+    string bsp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/CefSubProcessWin.exe";
+#endif
+    string ldp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/locales";
+    string rdp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef";
+    string lfp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/wblog.log";
+    CefString(&settings.browser_subprocess_path).FromASCII(bsp.c_str());
+    CefString(&settings.locales_dir_path).FromASCII(ldp.c_str());
+    CefString(&settings.resources_dir_path).FromASCII(rdp.c_str());
+    CefString(&settings.log_file).FromASCII(lfp.c_str());
+    settings.no_sandbox = true;
+
+    CefMainArgs args;
+    CefInitialize(args, settings, 0, 0);
+}
+
 void CEF::initiate() {
     init = true;
-
-    static bool global_init = false;
-    if (!global_init) {
-        cout << "Global CEF init\n";
-        cef_gl_init = true;
-        CefSettings settings;
-#ifndef _WIN32
-        string bsp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/CefSubProcess";
-#else
-        string bsp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/CefSubProcessWin.exe";
-#endif
-        string ldp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/locales";
-        string rdp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef";
-        string lfp = VRSceneManager::get()->getOriginalWorkdir() + "/ressources/cef/wblog.log";
-        CefString(&settings.browser_subprocess_path).FromASCII(bsp.c_str());
-        CefString(&settings.locales_dir_path).FromASCII(ldp.c_str());
-        CefString(&settings.resources_dir_path).FromASCII(rdp.c_str());
-        CefString(&settings.log_file).FromASCII(lfp.c_str());
-        settings.no_sandbox = true;
-
-        CefMainArgs args;
-        CefInitialize(args, settings, 0, 0);
-        global_init = true;
-    }
 
     CefWindowInfo win;
     CefBrowserSettings browser_settings;
@@ -109,6 +123,7 @@ void CEF::initiate() {
 
 void CEF::setMaterial(VRMaterialPtr mat) {
     if (!mat) return;
+    if (!client->getHandler()) return;
     this->mat = mat;
     mat->setTexture(client->getHandler()->getImage());
 }
@@ -127,6 +142,7 @@ void CEF::open(string site) {
 }
 
 void CEF::resize() {
+    if (!client->getHandler()) return;
     client->getHandler()->resize(resolution, aspect);
     if (init && browser) browser->GetHost()->WasResized();
     if (init) reload();

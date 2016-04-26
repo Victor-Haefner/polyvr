@@ -26,7 +26,9 @@ VRMobile::VRMobile(int port) : VRDevice("mobile") {
     soc->setType("http receive");
 }
 
-VRMobile::~VRMobile() {}
+VRMobile::~VRMobile() {
+    //cout << "~VRMobile " << getName() << endl;
+}
 
 void VRMobile::callback(void* _args) { // TODO: implement generic button trigger of device etc..
     //args->print();
@@ -68,10 +70,12 @@ void VRMobile::setPort(int port) { this->port = port; soc->setPort(port); }
 int VRMobile::getPort() { return port; }
 
 void VRMobile::updateMobilePage() {
+    return; //TODO: this induces a segfault when closing PolyVR
     string page = "<html><body>";
     for (auto w : websites) page += "<a href=\"" + w.first + "\">" + w.first + "</a>";
     page += "</body></html>";
-    soc->addHTTPPage(getName(), page);
+    if (websites.size()) soc->addHTTPPage(getName(), page);
+    else soc->remHTTPPage(getName());
 }
 
 void VRMobile::addWebSite(string uri, string website) {
