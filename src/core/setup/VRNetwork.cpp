@@ -13,8 +13,8 @@ using namespace OSG;
 
 VRNetwork::VRNetwork() : VRManager("Network") {}
 VRNetwork::~VRNetwork() {
+    cout << "~VRNetwork\n";
     stopSlaves();
-    cout << "~VRNetwork";
 }
 
 

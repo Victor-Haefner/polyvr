@@ -1,5 +1,7 @@
 #include "VRMaterial.h"
 
+#include <OpenSG/OSGNameAttachment.h>
+
 #include <OpenSG/OSGMaterialGroup.h>
 #include <OpenSG/OSGSimpleMaterial.h>
 #include <OpenSG/OSGSimpleTexturedMaterial.h>

@@ -3,6 +3,7 @@
 #include <OpenSG/OSGSimpleGeometry.h>
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGSimpleMaterial.h>
+#include <OpenSG/OSGNameAttachment.h>
 
 int VRPrimitive::getNParams() { return N; }
 string VRPrimitive::getType() { return type; }

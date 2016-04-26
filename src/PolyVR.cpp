@@ -26,6 +26,7 @@ void printFieldContainer() {
     for (int i=0;i<N;++i) {
         FieldContainer* fc = FieldContainerFactory::the()->getContainer(i);
         if(fc == 0) continue;
+        if(fc->getId() < 343) continue; // stuff created in osgInit()
 
         // skip prototypes
         if(fc->getType().getPrototype() == 0 || fc->getType().getPrototype() == fc  ) continue;
@@ -44,7 +45,7 @@ void printFieldContainer() {
 
         const Char8* name = getName(ac);
         if (name != 0) printf("Detected living FC %s (%s) %p refcount %d ID %d\n", fc->getTypeName(), name, fc, fc->getRefCount(), fc->getId());
-        else printf( "Detected living FC %s %p refcount %d ID %d\n", fc->getTypeName(), fc, fc->getRefCount(), fc->getId() );
+        else printf( "Detected living FC %s (no name) %p refcount %d ID %d\n", fc->getTypeName(), fc, fc->getRefCount(), fc->getId() );
     }
 }
 
@@ -70,6 +71,11 @@ void PolyVR::shutdown() {
     //printFieldContainer();
     osgExit();
     std::exit(0);
+}
+
+void printNextOSGID(int i) {
+    NodeRefPtr n = Node::create();
+    cout << "next OSG ID: " << n->getId() << " at maker " << i << endl;
 }
 
 void PolyVR::setOption(string name, bool val) { options->setOption(name, val); }

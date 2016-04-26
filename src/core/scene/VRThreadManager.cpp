@@ -40,7 +40,9 @@ VRThreadManager::VRThreadManager() {
     appThread = dynamic_cast<Thread *>(ThreadManager::getAppThread());
 }
 
-VRThreadManager::~VRThreadManager() {}
+VRThreadManager::~VRThreadManager() {
+    cout << "~VRThreadManager " << threads.size() << endl;
+}
 
 VRThread::VRThread() {}
 VRThread::~VRThread() {
@@ -108,7 +110,10 @@ void VRThreadManager::stopAllThreads() {
         if (count == 100) break;
         for (auto t : threads) {
             //cout << "wait for " << t.second->name << " ID " << t.second->ID << " c " << count << endl;
-            if (t.second->status == 2) { threads.erase(t.first); break; }
+            if (t.second->status == 2) {
+                if (t.second->boost_t) { t.second->boost_t->interrupt(); delete t.second->boost_t; t.second->boost_t = 0; }
+                threads.erase(t.first); break;
+            }
         }
         count++;
         osgSleep(10);
@@ -129,6 +134,7 @@ void VRThreadManager::stopThread(int id, int tries) {
         osgSleep(10);
     }
 
+    if (t->boost_t) { t->boost_t->interrupt(); delete t->boost_t; t->boost_t = 0; }
     threads.erase(id);
 }
 
@@ -156,6 +162,7 @@ int VRThreadManager::initThread(VRFunction<VRThreadWeakPtr>* f, string name, boo
 void VRThreadManager::killThread(int id) {
     if (threads.count(id) == 0) return;
     cout << "\nKILL THREAD " << id << endl;
+    if (threads[id]->boost_t) { threads[id]->boost_t->interrupt(); delete threads[id]->boost_t; threads[id]->boost_t = 0; }
     threads.erase(id);
 }
 

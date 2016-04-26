@@ -43,6 +43,7 @@ VRSetup::VRSetup(string name) {
 }
 
 VRSetup::~VRSetup() {
+    cout << "~VRSetup " << name << endl;
     delete setup_layer;
     delete stats_layer;
 }

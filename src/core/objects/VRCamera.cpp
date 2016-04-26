@@ -40,7 +40,7 @@ VRCamera::VRCamera(string name) : VRTransform(name) {
     TransformMTRecPtr trans = Transform::create();
     NodeMTRecPtr t = makeNodeFor(trans);
     trans->editMatrix().setTranslate(Vec3f(0,0,0.25));
-    GeometryMTRecPtr camGeo_ = makeBoxGeo(0.2, 0.2, 0.25, 1, 1, 1);
+    GeometryMTRecPtr camGeo_ = makeBoxGeo(0.2, 0.2, 0.25, 1, 1, 1); //
     GeometryMTRecPtr camGeo2_ = makeCylinderGeo(0.2, 0.07, 16, 1, 1, 1);
     camGeo = makeNodeFor(camGeo_);
     NodeMTRecPtr camGeo2 = makeNodeFor(camGeo2_);

@@ -30,12 +30,15 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 VRDefShading::VRDefShading() {
+    cout << "VRDefShading\n";
     defaultShadowType = ST_TRAPEZOID;
     shadowRes = 1024;
     shadowColor = 0.3;
 }
 
-VRDefShading::~VRDefShading() {}
+VRDefShading::~VRDefShading() {
+    cout << "~VRDefShading\n";
+}
 
 void VRDefShading::init() {
     shadowMapWidth  = shadowRes;
