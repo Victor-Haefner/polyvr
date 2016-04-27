@@ -6,6 +6,7 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 VRFlystick::VRFlystick() : VRDevice("flystick") {
+    setSpeed(Vec2f(0.1, 0.1));
     enableAvatar("cone");
     enableAvatar("ray");
     clearSignals();
