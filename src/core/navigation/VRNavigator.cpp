@@ -83,7 +83,7 @@ void VRNavPreset::addKeyBinding(VRNavBinding b) {
     updateBinding(b);
 }
 
-void VRNavPreset::setSpeed(float vt, float vr) { speed = Vec2f(vt, vr); }
+void VRNavPreset::setSpeed(float vt, float vr) { speed = Vec2f(vt, vr); activate(); }
 
 // preset management
 
@@ -416,7 +416,7 @@ void VRNavigator::initFlyWalk(VRTransformPtr target, VRDevice* dev) {
     VRNavPreset* preset = new VRNavPreset();
     preset->setDevice(dev);
     preset->setTarget(target);
-    preset->setSpeed(1.5, 0.7);
+    preset->setSpeed(0.4, 0.4);
 
     VRNavBinding b1( getNavigationCallback("fly_walk"), 10, 0, false);
     VRNavBinding b2( getNavigationCallback("fly_walk"), 11, 0, false);
