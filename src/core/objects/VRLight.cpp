@@ -78,6 +78,8 @@ void VRLight::setup() {
     setLightAmbColor(lightAmbient);
     setLightSpecColor(lightSpecular);
     setOn(on);
+
+    setup_after(); // TODO: deffered shading needs to have the light beacon before adding the node!?!
 }
 
 void VRLight::setup_after() {
