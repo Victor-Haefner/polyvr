@@ -39,7 +39,10 @@ VRJointTool::VRJointTool(string name) : VRGeometry(name) {
     regStorageSetupAfterFkt( VRFunction<int>::create("jointtool setup", boost::bind(&VRJointTool::delayed_setup, this)) );
 }
 
-VRJointTool::~VRJointTool() { clear(); }
+VRJointTool::~VRJointTool() {
+    cout << "~VRJointTool\n";
+    clear();
+}
 
 VRJointToolPtr VRJointTool::ptr() { return static_pointer_cast<VRJointTool>( shared_from_this() ); }
 VRJointToolPtr VRJointTool::create(string name) {
@@ -142,7 +145,7 @@ void VRJointTool::updateVis() {
     c->setRConstraint(ad3, VRConstraint::LINE);
     //c->setTConstraint(lp.pos(), VRConstraint::POINT);
     c->setTConstraint(Vec3f(0,0,0), VRConstraint::POINT);
-    c->setActive(true, o2);
+    c->setActive(active, o2);
 }
 
 /**
