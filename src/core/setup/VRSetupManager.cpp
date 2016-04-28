@@ -11,6 +11,7 @@ VRSetupManager::VRSetupManager() {}
 VRSetupManager::~VRSetupManager() {}
 
 VRSetupPtr VRSetupManager::getCurrent() { return get()->current; }
+void VRSetupManager::closeSetup() { current = 0; }
 
 VRSetupManager* VRSetupManager::get() {
     static VRSetupManager* mgr = new VRSetupManager();

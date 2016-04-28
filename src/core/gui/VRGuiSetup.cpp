@@ -188,13 +188,14 @@ void VRGuiSetup::updateObjectData() {
     if (selected_type == "mobile") { device = true; }
     if (selected_type == "flystick") { device = true; }
 
-    if (selected_type == "section") {
+    auto setup = current_setup.lock();
+    if (selected_type == "section" && setup) {
         if (selected_name == "ART") {
             setExpanderSensitivity("expander6", true);
-            setTextEntry("entry39", toString(current_setup->getARTPort()));
-            setCheckButton("checkbutton24", current_setup->getARTActive());
+            setTextEntry("entry39", toString(setup->getARTPort()));
+            setCheckButton("checkbutton24", setup->getARTActive());
 
-            Vec3f o = current_setup->getARTOffset();
+            Vec3f o = setup->getARTOffset();
             setTextEntry("entry48", toString(o[0]));
             setTextEntry("entry62", toString(o[1]));
             setTextEntry("entry63", toString(o[2]));
@@ -202,8 +203,8 @@ void VRGuiSetup::updateObjectData() {
 
         if (selected_name == "VRPN") {
             setExpanderSensitivity("expander7", true);
-            setTextEntry("entry13", toString(current_setup->getVRPNPort()));
-            setCheckButton("checkbutton25", current_setup->getVRPNActive());
+            setTextEntry("entry13", toString(setup->getVRPNPort()));
+            setCheckButton("checkbutton25", setup->getVRPNActive());
         }
     }
 
@@ -213,7 +214,7 @@ void VRGuiSetup::updateObjectData() {
 
         setExpanderSensitivity("expander21", true);
         setLabel("label93", dev->getName());
-        fillStringListstore("dev_types_list", current_setup->getDeviceTypes());
+        if (setup) fillStringListstore("dev_types_list", setup->getDeviceTypes());
         setCombobox("combobox26", getListStorePos("dev_types_list", dev->getType()) );
         string hobj = ins.hit ? ins.name : "NONE";
         setLabel("label110", hobj);
@@ -268,14 +269,17 @@ void VRGuiSetup::on_new_clicked() {
     current_setup = VRSetupManager::get()->create();
     updateSetup();
     // remember setup
-    string name = current_setup->getName();
-    ofstream f("setup/.local"); f.write(name.c_str(), name.size()); f.close();
+    if (auto s = current_setup.lock()) {
+        string name = s->getName();
+        ofstream f("setup/.local"); f.write(name.c_str(), name.size()); f.close();
+    }
 }
 
 void VRGuiSetup::on_foto_clicked() {
-    if (current_setup == 0) return;
-    bool b = getToggleButtonState("toolbutton19");
-    current_setup->setFotoMode(b);
+    if (auto s = current_setup.lock()) {
+        bool b = getToggleButtonState("toolbutton19");
+        s->setFotoMode(b);
+    }
 }
 
 void VRGuiSetup::on_del_clicked() { //TODO, should delete setup
@@ -294,8 +298,7 @@ void VRGuiSetup::on_del_clicked() { //TODO, should delete setup
     Glib::RefPtr<Gtk::ListStore> list_store  = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("displays"));
     list_store->erase(iter);
 
-    if (current_setup == 0) return;
-    current_setup->removeWindow(name);
+    if (auto s = current_setup.lock()) s->removeWindow(name);
 
     /*Gtk::ToolButton* b;
     VRGuiBuilder()->get_widget("toolbutton9", b);
@@ -306,9 +309,10 @@ void VRGuiSetup::on_del_clicked() { //TODO, should delete setup
 
 
 void VRGuiSetup::on_save_clicked() {
-    if (current_setup == 0) return;
-    current_setup->save(setupDir() + current_setup->getName() + ".xml");
-    setToolButtonSensitivity("toolbutton12", false);
+    if (auto s = current_setup.lock()) {
+        s->save(setupDir() + s->getName() + ".xml");
+        setToolButtonSensitivity("toolbutton12", false);
+    }
 }
 
 // setup list
@@ -361,10 +365,12 @@ void VRGuiSetup::on_name_edited(const Glib::ustring& path, const Glib::ustring& 
     gpointer obj = selected_row.get_value(cols.obj);
 
     // update key in map
-    if (type == "window") current_setup->changeWindowName(name, new_name);
-    if (type == "vrpn_tracker") current_setup->changeVRPNDeviceName((VRPN_device*)obj, new_name);
-    if (type == "node") ((VRNetworkNode*)obj)->setName(new_name);
-    if (type == "slave") ((VRNetworkSlave*)obj)->setName(new_name);
+    if (auto s = current_setup.lock()) {
+        if (type == "window") s->changeWindowName(name, new_name);
+        if (type == "vrpn_tracker") s->changeVRPNDeviceName((VRPN_device*)obj, new_name);
+        if (type == "node") ((VRNetworkNode*)obj)->setName(new_name);
+        if (type == "slave") ((VRNetworkSlave*)obj)->setName(new_name);
+    }
 
     selected_row[cols.name] = name;
     updateSetup();
@@ -381,21 +387,24 @@ bool VRGuiSetup::on_treeview_rightclick(GdkEventButton* event) {
 
 
 void VRGuiSetup::on_menu_delete() {
+    auto setup = current_setup.lock();
+    if (!setup) return;
+
     if (selected_type == "window") {
         VRWindow* win = (VRWindow*)selected_object;
-        current_setup->removeWindow(win->getName());
+        setup->removeWindow(win->getName());
     }
 
     if (selected_type == "view") {
         VRView* view = (VRView*)selected_object;
-        current_setup->removeView(view->getID());
+        setup->removeView(view->getID());
         VRWindow* win = (VRWindow*)selected_object_parent;
         win->remView(view->ptr());
     }
 
     if (selected_type == "vrpn_tracker") {
         VRPN_device* t = (VRPN_device*)selected_object;
-        current_setup->delVRPNTracker(t);
+        setup->delVRPNTracker(t);
     }
 
     if (selected_type == "art_device") {
@@ -404,7 +413,7 @@ void VRGuiSetup::on_menu_delete() {
 
     if (selected_type == "node") {
         auto node = (VRNetworkNode*)selected_object;
-        current_setup->getNetwork()->rem( node->getName() );
+        setup->getNetwork()->rem( node->getName() );
     }
 
     updateSetup();
@@ -412,7 +421,9 @@ void VRGuiSetup::on_menu_delete() {
 }
 
 void VRGuiSetup::on_menu_add_window() {
-    VRWindowPtr win = current_setup->addMultiWindow("Display");
+    auto setup = current_setup.lock();
+    if (!setup) return;
+    VRWindowPtr win = setup->addMultiWindow("Display");
     win->setActive(true);
     if ( VRSceneManager::getCurrent() ) win->setContent(true);
 
@@ -423,15 +434,17 @@ void VRGuiSetup::on_menu_add_window() {
 }
 
 void VRGuiSetup::on_menu_add_viewport() {
+    auto setup = current_setup.lock();
+    if (!setup) return;
     if (selected_type != "window") return;
 
     VRWindow* win = (VRWindow*)selected_object;
-    int v = current_setup->addView(win->getBaseName());
-    auto view = current_setup->getView(v);
+    int v = setup->addView(win->getBaseName());
+    auto view = setup->getView(v);
     win->addView(view);
 
     if (auto scene = current_scene.lock()) {
-        current_setup->setViewRoot(scene->getSystemRoot(), v);
+        setup->setViewRoot(scene->getSystemRoot(), v);
         view->setCamera( scene->getActiveCamera() );
         view->setBackground( scene->getBackground() );
     }
@@ -441,8 +454,10 @@ void VRGuiSetup::on_menu_add_viewport() {
 }
 
 void VRGuiSetup::on_menu_add_vrpn_tracker() {
-    current_setup->addVRPNTracker(0, "Tracker0@localhost", Vec3f(0,0,0), 1);
-    //current_setup->addVRPNTracker(0, "LeapTracker@tcp://141.3.151.136", Vec3f(0,0,0), 1);
+    auto setup = current_setup.lock();
+    if (!setup) return;
+    setup->addVRPNTracker(0, "Tracker0@localhost", Vec3f(0,0,0), 1);
+    //setup->addVRPNTracker(0, "LeapTracker@tcp://141.3.151.136", Vec3f(0,0,0), 1);
 
     updateSetup();
     setToolButtonSensitivity("toolbutton12", true);
@@ -450,14 +465,18 @@ void VRGuiSetup::on_menu_add_vrpn_tracker() {
 
 template<class T>
 void VRGuiSetup::on_menu_add_device() {
+    auto setup = current_setup.lock();
+    if (!setup) return;
     T* m = new T();
-    current_setup->addDevice(m);
+    setup->addDevice(m);
     updateSetup();
     setToolButtonSensitivity("toolbutton12", true);
 }
 
 void VRGuiSetup::on_menu_add_network_node() {
-    current_setup->getNetwork()->add("Node");
+    auto setup = current_setup.lock();
+    if (!setup) return;
+    setup->getNetwork()->add("Node");
     updateSetup();
     setToolButtonSensitivity("toolbutton12", true);
 }
@@ -721,31 +740,39 @@ void VRGuiSetup::on_vrpn_rot_axis_edit(Vec3f v) {
 
 void VRGuiSetup::on_toggle_art() {
     if (guard) return;
+    auto setup = current_setup.lock();
+    if (!setup) return;
     bool b = getCheckButtonState("checkbutton24");
-    current_setup->setARTActive(b);
+    setup->setARTActive(b);
     setToolButtonSensitivity("toolbutton12", true);
 }
 
 void VRGuiSetup::on_toggle_vrpn() {
     if (guard) return;
+    auto setup = current_setup.lock();
+    if (!setup) return;
     bool b = getCheckButtonState("checkbutton25");
-    current_setup->setVRPNActive(b);
+    setup->setVRPNActive(b);
     setToolButtonSensitivity("toolbutton12", true);
 }
 
 void VRGuiSetup::on_art_edit_port() {
     if (guard) return;
+    auto setup = current_setup.lock();
+    if (!setup) return;
     int p = toInt(getTextEntry("entry39"));
-    current_setup->setARTPort(p);
+    setup->setARTPort(p);
     setToolButtonSensitivity("toolbutton12", true);
 }
 
 void VRGuiSetup::on_art_edit_offset() {
     if (guard) return;
+    auto setup = current_setup.lock();
+    if (!setup) return;
     float ox = toFloat(getTextEntry("entry48"));
     float oy = toFloat(getTextEntry("entry62"));
     float oz = toFloat(getTextEntry("entry63"));
-    current_setup->setARTOffset(Vec3f(ox,oy,oz));
+    setup->setARTOffset(Vec3f(ox,oy,oz));
     setToolButtonSensitivity("toolbutton12", true);
 }
 
@@ -759,14 +786,15 @@ void VRGuiSetup::on_art_edit_id() {
 
 void VRGuiSetup::on_vrpn_edit_port() {
     if (guard) return;
+    auto setup = current_setup.lock();
+    if (!setup) return;
     int p = toInt(getTextEntry("entry13"));
-    current_setup->setVRPNPort(p);
+    setup->setVRPNPort(p);
     setToolButtonSensitivity("toolbutton12", true);
 }
 
 void VRGuiSetup::on_edit_VRPN_tracker_address() {
     if (guard) return;
-
     if (selected_type != "vrpn_tracker") return;
     VRPN_device* t = (VRPN_device*)selected_object;
 
@@ -841,15 +869,19 @@ void VRGuiSetup::on_toggle_dev_cross() {
 
 void VRGuiSetup::on_toggle_vrpn_test_server() {
     if (guard) return;
+    auto setup = current_setup.lock();
+    if (!setup) return;
     bool b = getCheckButtonState("checkbutton39");
-    if (b) current_setup->startVRPNTestServer();
-    else current_setup->stopVRPNTestServer();
+    if (b) setup->startVRPNTestServer();
+    else setup->stopVRPNTestServer();
 }
 
 void VRGuiSetup::on_toggle_vrpn_verbose() {
     if (guard) return;
+    auto setup = current_setup.lock();
+    if (!setup) return;
     bool b = getCheckButtonState("checkbutton40");
-    current_setup->setVRPNVerbose(b);
+    setup->setVRPNVerbose(b);
 }
 
 // --------------------------
@@ -858,7 +890,6 @@ void VRGuiSetup::on_toggle_vrpn_verbose() {
 
 VRGuiSetup::VRGuiSetup() {
     selected_object = 0;
-    current_setup = 0;
     mwindow = 0;
     guard = false;
 
@@ -1034,7 +1065,9 @@ void VRGuiSetup::updateSetup() {
     row = *mouse_list->append();
     gtk_list_store_set (mouse_list->gobj(), row.gobj(), 0, "None", -1);
 
-    for (auto ditr : current_setup->getDevices()) {
+    auto setup = current_setup.lock();
+    if (!setup) return;
+    for (auto ditr : setup->getDevices()) {
         VRDevice* dev = ditr.second;
         itr = tree_store->append(devices_itr->children());
         setTreeRow(tree_store, *itr, ditr.first.c_str(), dev->getType().c_str(), (gpointer)dev);
@@ -1045,7 +1078,7 @@ void VRGuiSetup::updateSetup() {
         }
     }
 
-    for (auto node : current_setup->getNetwork()->getData() ) {
+    for (auto node : setup->getNetwork()->getData() ) {
         itr = tree_store->append(network_itr->children());
         setTreeRow(tree_store, *itr, node->getName().c_str(), "node", (gpointer)node.get(), "#000000", "#FFFFFF");
         for (auto slave : node->getData() ) {
@@ -1054,7 +1087,7 @@ void VRGuiSetup::updateSetup() {
         }
     }
 
-    for (auto win : current_setup->getWindows()) {
+    for (auto win : setup->getWindows()) {
         VRWindow* w = win.second.get();
         string name = win.first;
         itr = tree_store->append(windows_itr->children());
@@ -1074,17 +1107,17 @@ void VRGuiSetup::updateSetup() {
     }
 
     // VRPN
-    vector<int> vrpnIDs = current_setup->getVRPNTrackerIDs();
+    vector<int> vrpnIDs = setup->getVRPNTrackerIDs();
     for (uint i=0; i<vrpnIDs.size(); i++) {
-        VRPN_device* t = current_setup->getVRPNTracker(vrpnIDs[i]);
+        VRPN_device* t = setup->getVRPNTracker(vrpnIDs[i]);
         itr = tree_store->append(vrpn_itr->children());
         cout << "vrpn liststore: " << t->getName() << endl;
         setTreeRow(tree_store, *itr, t->getName().c_str(), "vrpn_tracker", (gpointer)t);
     }
 
     // ART
-    for (int ID : current_setup->getARTDevices() ) {
-        ART_device* dev = current_setup->getARTDevice(ID);
+    for (int ID : setup->getARTDevices() ) {
+        ART_device* dev = setup->getARTDevice(ID);
 
         itr = tree_store->append(art_itr->children());
         string name = dev->getName();

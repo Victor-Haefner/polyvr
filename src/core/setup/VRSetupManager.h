@@ -22,6 +22,7 @@ class VRSetupManager {
         static VRSetupPtr getCurrent();
         ~VRSetupManager();
 
+        void closeSetup();
         VRSetupPtr create();
         VRSetupPtr load(string name, string path);
 };
