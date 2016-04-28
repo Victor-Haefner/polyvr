@@ -14,6 +14,7 @@ VRWaypoint::VRWaypoint(string name) : VRGeometry(name) {
     store("wp_pose", &Pose);
     store("wp_floor", &Floor);
     store("wp_at", &at);
+    store("wp_size", &size);
 
     regStorageSetupFkt( VRFunction<int>::create("waypoint setup", boost::bind(&VRWaypoint::setup, this)) );
 }
@@ -38,12 +39,15 @@ void VRWaypoint::apply(VRTransformPtr t) {
 }
 
 void VRWaypoint::setFloorPlane(pose p) { Floor = p; updateGeo(); }
+void VRWaypoint::setSize(float s) { size = s; updateGeo(); }
 
 void VRWaypoint::updateGeo() {
     auto m = VRMaterial::get("waypoint");
     m->setDiffuse(Vec3f(1,0,0));
     setMaterial(m);
-    setPrimitive("Arrow", "1 1 0.5 0.4");
+    float s = size;
+    string params = toString(s) + " " + toString(s) + " " + toString(s*0.5) + " " + toString(s*0.4);
+    setPrimitive("Arrow", params);
 
     // compute pos
     Vec3f pos = Pose.pos();

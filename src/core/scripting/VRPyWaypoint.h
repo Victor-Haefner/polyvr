@@ -11,6 +11,7 @@ struct VRPyWaypoint : VRPyBaseT<OSG::VRWaypoint> {
     static PyObject* get(VRPyWaypoint* self);
     static PyObject* apply(VRPyWaypoint* self, PyObject* args);
     static PyObject* setFloorPlane(VRPyWaypoint* self, PyObject* args);
+    static PyObject* setSize(VRPyWaypoint* self, PyObject* args);
 };
 
 #endif // VRPYWAYPOINT_H_INCLUDED

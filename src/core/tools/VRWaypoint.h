@@ -12,6 +12,7 @@ class VRWaypoint : public VRGeometry {
         pose Pose;
         pose Floor;
         Vec3f at;
+        float size;
 
         void setup();
         void updateGeo();
@@ -27,6 +28,7 @@ class VRWaypoint : public VRGeometry {
         void apply(VRTransformPtr t);
         pose get();
 
+        void setSize(float s);
         void setFloorPlane(pose p);
 };
 
