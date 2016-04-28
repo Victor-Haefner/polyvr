@@ -20,7 +20,7 @@ struct VRPyDevice : VRPyBaseT<OSG::VRDevice> {
     static PyObject* getMessage(VRPyDevice* self);
     static PyObject* getType(VRPyDevice* self);
     static PyObject* setDnD(VRPyDevice* self, PyObject *args);
-    static PyObject* intersect(VRPyDevice* self);
+    static PyObject* intersect(VRPyDevice* self, PyObject *args);
     static PyObject* getIntersected(VRPyDevice* self);
     static PyObject* getIntersection(VRPyDevice* self);
     static PyObject* getIntersectionNormal(VRPyDevice* self);

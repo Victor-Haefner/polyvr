@@ -10,6 +10,7 @@
 #include "core/setup/devices/VRFlystick.h"
 #include "core/utils/VRFunction.h"
 #include "core/objects/VRTransform.h"
+#include "core/objects/VRCamera.h"
 #include "core/math/coordinates.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/setup/devices/VRSignal.h"
@@ -30,7 +31,17 @@ void ART_device::init() {
     if (type == 1) {
         dev = VRFlystick::create();
         ent = dev->editBeacon();
-        VRSetupManager::getCurrent()->addDevice(dev);
+
+        auto setup = VRSetupManager::getCurrent();
+        if (setup) setup->addDevice(dev);
+
+        auto scene = VRSceneManager::getCurrent();
+        if (scene) {
+            scene->initFlyWalk(scene->getActiveCamera(), dev);
+            scene->setActiveNavigation("FlyWalk");
+            dev->clearDynTrees();
+            dev->addDynTree(scene->getRoot());
+        }
     }
 }
 
@@ -152,7 +163,7 @@ void ART::checkNewDevices(int type, int N) {
             cout << "ART - New device " << type << " " << k << endl;
             devices[k] = ART_device::create(i,type);
             on_new_device->triggerPtr<VRDevice>();
-            VRSetupManager::getCurrent()->updateViews();
+            VRSetupManager::getCurrent()->updateViews(); // TODO: fuer headtracking, solte vlt wo anders hin
         }
     }
 }

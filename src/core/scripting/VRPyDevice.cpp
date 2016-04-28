@@ -23,7 +23,7 @@ PyMethodDef VRPyDevice::methods[] = {
     {"getMessage", (PyCFunction)VRPyDevice::getMessage, METH_NOARGS, "Get device received message." },
     {"getType", (PyCFunction)VRPyDevice::getType, METH_NOARGS, "Get device type." },
     {"setDnD", (PyCFunction)VRPyDevice::setDnD, METH_VARARGS, "Set drag && drop." },
-    {"intersect", (PyCFunction)VRPyDevice::intersect, METH_NOARGS, "Intersects the scene - bool intersect()\n  Returns True if intersected something, else False." },
+    {"intersect", (PyCFunction)VRPyDevice::intersect, METH_VARARGS, "Intersects the scene - bool intersect( scene )\n  Returns True if intersected something, else False.\n\t scene is optional" },
     {"getIntersected", (PyCFunction)VRPyDevice::getIntersected, METH_NOARGS, "Get device intersected object." },
     {"getIntersection", (PyCFunction)VRPyDevice::getIntersection, METH_NOARGS, "Get device intersection point." },
     {"getIntersectionNormal", (PyCFunction)VRPyDevice::getIntersectionNormal, METH_NOARGS, "Get normal at intersection point." },
@@ -69,9 +69,13 @@ PyObject* VRPyDevice::getSpeed(VRPyDevice* self) {
     return toPyTuple( self->objPtr->getSpeed() );
 }
 
-PyObject* VRPyDevice::intersect(VRPyDevice* self) {
+PyObject* VRPyDevice::intersect(VRPyDevice* self, PyObject *args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::intersect, Object is invalid"); return NULL; }
-    OSG::VRIntersection ins = self->objPtr->intersect();
+    VRPyObject* o = NULL;
+    if (! PyArg_ParseTuple(args, "|O", &o)) return NULL;
+    OSG::VRObjectPtr op = 0;
+    if (o) op = o->objPtr;
+    OSG::VRIntersection ins = self->objPtr->intersect(op);
     if (ins.hit) Py_RETURN_TRUE;
     else Py_RETURN_FALSE;
 }

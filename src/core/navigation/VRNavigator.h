@@ -107,6 +107,9 @@ class VRNavigator : public VRNavigator_base {
         VRNavigator();
         ~VRNavigator();
 
+        void update();
+
+    public:
         // init presets
         void initWalk(VRTransformPtr target, VRDevicePtr dev);
         void initOrbit(VRTransformPtr target, VRDevicePtr dev);
@@ -114,8 +117,6 @@ class VRNavigator : public VRNavigator_base {
         void initFlyOrbit(VRTransformPtr target, VRDevicePtr dev);
         void initFlyWalk(VRTransformPtr target, VRDevicePtr dev);
         void initHydraFly(VRTransformPtr target, VRDevicePtr dev);
-
-        void update();
 };
 
 OSG_END_NAMESPACE;
