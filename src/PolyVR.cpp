@@ -118,7 +118,14 @@ void PolyVR::init(int argc, char **argv) {
 }
 
 void PolyVR::run() {
-    while(true) VRSceneManager::get()->update();
+    while(true) {
+        VRSceneManager::get()->update();
+
+        /*if (VRGlobals::get()->CURRENT_FRAME == 300) {
+            string app = options->getOption<string>("application");
+            if (app != "") VRSceneManager::get()->loadScene(app);
+        }*/
+    }
 }
 
 void PolyVR::start(bool runit) {
