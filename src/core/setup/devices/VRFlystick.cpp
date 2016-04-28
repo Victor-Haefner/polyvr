@@ -8,8 +8,16 @@ using namespace std;
 VRFlystick::VRFlystick() : VRDevice("flystick") {
     enableAvatar("cone");
     enableAvatar("ray");
-    clearSignals();
 }
+
+VRFlystickPtr VRFlystick::create() {
+    auto d = VRFlystickPtr(new VRFlystick());
+    d->initIntersect(d);
+    d->clearSignals();
+    return d;
+}
+
+VRFlystickPtr VRFlystick::ptr() { return static_pointer_cast<VRFlystick>( shared_from_this() ); }
 
 void VRFlystick::clearSignals() {
     VRDevice::clearSignals();

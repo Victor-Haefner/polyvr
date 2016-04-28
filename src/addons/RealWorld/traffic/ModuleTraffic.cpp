@@ -1,5 +1,4 @@
 #include "ModuleTraffic.h"
-#include "core/scene/VRThreadManager.h"
 #include "core/utils/VRFunction.h"
 #include "core/scene/VRSceneManager.h"
 #include "../OSM/OSMMapDB.h"
@@ -27,8 +26,8 @@ void ModuleTraffic::loadBbox(AreaBoundingBox* bbox) {
     OSMMap* osmMap = mapDB->getMap(bbox->str);
     if (!osmMap) return;
 
-    VRFunction<VRThreadWeakPtr>* func = new VRFunction<VRThreadWeakPtr>("trafficAddMap", boost::bind(&TrafficSimulation::addMap, simulation, osmMap));
-    VRSceneManager::get()->initThread(func, "trafficAddMap", false);
+    threadFkt = VRFunction<VRThreadWeakPtr>::create("trafficAddMap", boost::bind(&TrafficSimulation::addMap, simulation, osmMap));
+    VRSceneManager::get()->initThread(threadFkt, "trafficAddMap", false);
 }
 
 void ModuleTraffic::unloadBbox(AreaBoundingBox* bbox) {

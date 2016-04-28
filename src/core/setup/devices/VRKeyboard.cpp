@@ -14,6 +14,14 @@ void VRKeyboard::keyboard_special(int k, bool pressed, int x, int y) { change_bu
 VRKeyboard::VRKeyboard() : VRDevice("keyboard") {;}
 VRKeyboard::~VRKeyboard() {;}
 
+VRKeyboardPtr VRKeyboard::create() {
+    auto d = VRKeyboardPtr(new VRKeyboard());
+    d->initIntersect(d);
+    return d;
+}
+
+VRKeyboardPtr VRKeyboard::ptr() { return static_pointer_cast<VRKeyboard>( shared_from_this() ); }
+
 void VRKeyboard::setGtkEvent(_GdkEventKey* event) { gdk_event = event; }
 _GdkEventKey* VRKeyboard::getGtkEvent() { return gdk_event; }
 

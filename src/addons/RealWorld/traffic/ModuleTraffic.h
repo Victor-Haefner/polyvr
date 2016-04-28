@@ -3,6 +3,7 @@
 
 #include "../Modules/BaseModule.h"
 #include "TrafficSimulation.h"
+#include "core/utils/VRFunctionFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -10,6 +11,7 @@ using namespace std;
 class ModuleTraffic: public BaseModule {
     private:
         TrafficSimulation* simulation;
+        VRThreadCb threadFkt;
 
     public:
         ModuleTraffic();

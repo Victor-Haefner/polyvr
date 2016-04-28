@@ -11,24 +11,24 @@
 OSG_BEGIN_NAMESPACE;
 
 VRMainInterface::VRMainInterface() {
-    mobile = new VRMobile(5501);
+    mobile = VRMobile::create(5501);
     mobile->setName("MainInterface");
     VRSignalPtr sig = mobile->addSignal(0,1);
-    clickCb = VRFunction<VRDevice*>::create( "VRMainInterface_on_scene_clicked", boost::bind(&VRMainInterface::on_scene_clicked, this, _1) );
+    clickCb = VRFunction<VRDeviceWeakPtr>::create( "VRMainInterface_on_scene_clicked", boost::bind(&VRMainInterface::on_scene_clicked, this, _1) );
     sig->add( clickCb );
     update();
 }
 
-VRMainInterface::~VRMainInterface() {
-    delete mobile;
-}
+VRMainInterface::~VRMainInterface() {}
 
 VRMainInterface* VRMainInterface::get() {
     static VRMainInterface* instance = new VRMainInterface();
     return instance;
 }
 
-void VRMainInterface::on_scene_clicked(VRDevice* dev) {
+void VRMainInterface::on_scene_clicked(VRDeviceWeakPtr d) {
+    auto dev = d.lock();
+    if (!dev) return;
     string path = dev->getMessage();
     cout << "switch to scene " << path << endl;
     VRSceneManager::get()->loadScene(path);

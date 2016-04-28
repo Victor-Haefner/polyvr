@@ -1,11 +1,14 @@
 #include "VRPN.h"
-#include "core/utils/VROptions.h"
 #include "core/gui/VRGuiManager.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
-#include "core/scene/VRSceneManager.h"
+#include "core/objects/VRTransform.h"
 #include "core/utils/toString.h"
+#include "core/utils/VROptions.h"
+#include "core/utils/VRFunction.h"
+#include "core/utils/VRStorage_template.h"
+
 #include <libxml++/nodes/element.h>
 #include <vrpn/vrpn_Tracker.h>
 #include <vrpn/vrpn_Button.h>
@@ -13,11 +16,6 @@
 #include <vrpn/vrpn_Dial.h>
 #include <vrpn/vrpn_Text.h>
 #include <boost/bind.hpp>
-#include "core/utils/VRFunction.h"
-#include "core/setup/devices/VRDevice.h"
-#include "core/objects/VRTransform.h"
-#include "core/utils/VRStorage_template.h"
-
 #include <OpenSG/OSGQuaternion.h>
 
 OSG_BEGIN_NAMESPACE
@@ -72,9 +70,18 @@ VRPN_device::VRPN_device() : VRDevice("vrpn_device") {
 
     enableAvatar("cone");
     enableAvatar("ray");
-
-    VRSetupManager::getCurrent()->addDevice(this);
 }
+
+VRPN_device::~VRPN_device() {}
+
+VRPN_devicePtr VRPN_device::create() {
+    auto d = VRPN_devicePtr( new VRPN_device() );
+    VRSetupManager::getCurrent()->addDevice(d);
+    d->initIntersect(d);
+    return d;
+}
+
+VRPN_devicePtr VRPN_device::ptr() { return static_pointer_cast<VRPN_device>( shared_from_this() ); }
 
 void VRPN_device::setAddress(string addr) {
     address = addr;
@@ -127,7 +134,7 @@ VRPN::VRPN() {
 }
 
 VRPN::~VRPN() {
-    VRSceneManager::get()->stopThread(threadID);
+    //VRSceneManager::get()->stopThread(threadID);
 }
 
 void VRPN::update_t(VRThread* thread) {}
@@ -144,7 +151,7 @@ void VRPN::setVRPNVerbose(bool b) { verbose = b; }
 void VRPN::addVRPNTracker(int ID, string addr, Vec3f offset, float scale) {
     while(devices.count(ID)) ID++;
 
-    VRPN_device* t = new VRPN_device();
+    VRPN_devicePtr t = VRPN_device::create();
     t->ID = ID;
     t->offset = offset;
     t->scale = scale;
@@ -153,9 +160,8 @@ void VRPN::addVRPNTracker(int ID, string addr, Vec3f offset, float scale) {
     devices[ID] = t;
 }
 
-void VRPN::delVRPNTracker(VRPN_device* t) {
+void VRPN::delVRPNTracker(VRPN_devicePtr t) {
     devices.erase(t->ID);
-    delete t;
 }
 
 vector<int> VRPN::getVRPNTrackerIDs() {
@@ -164,12 +170,12 @@ vector<int> VRPN::getVRPNTrackerIDs() {
     return IDs;
 }
 
-VRPN_device* VRPN::getVRPNTracker(int ID) {
+VRPN_devicePtr VRPN::getVRPNTracker(int ID) {
     if (devices.count(ID)) return devices[ID];
     else return 0;
 }
 
-void VRPN::changeVRPNDeviceName(VRPN_device* dev, string name) {
+void VRPN::changeVRPNDeviceName(VRPN_devicePtr dev, string name) {
     dev->setName(name);
     cout << "set name " << name << endl;
 }

@@ -22,6 +22,7 @@ class VRScriptManager : public VRStorage, public VRPyBase {
         PyObject* pLocal;
         PyObject* pModBase;
         PyObject* pModVR;
+        vector<VRThreadCb> pyThreads;
         map<string, map<string, PyTypeObject*> > modules;
         map<string, VRScript*> scripts;
         map<string, VRSignalPtr> triggers;

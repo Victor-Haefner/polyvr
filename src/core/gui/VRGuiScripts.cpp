@@ -305,7 +305,7 @@ void VRGuiScripts::on_exec_clicked() {
     if (scene == 0) return;
     scene->triggerScript(script->getName());
 
-    VRGuiSignals::get()->getSignal("scene_modified")->trigger<VRDevice>();
+    VRGuiSignals::get()->getSignal("scene_modified")->triggerPtr<VRDevice>();
 }
 
 void VRGuiScripts::on_del_clicked() {

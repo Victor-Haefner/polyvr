@@ -77,8 +77,8 @@ class VRPathtool {
     public:
         VRPathtool();
 
-        path* newPath(VRDevice* dev, VRObjectPtr anchor, int resolution = 10);
-        VRGeometryPtr extrude(VRDevice* dev, path* p);
+        path* newPath(VRDevicePtr dev, VRObjectPtr anchor, int resolution = 10);
+        VRGeometryPtr extrude(VRDevicePtr dev, path* p);
         void remPath(path* p);
 
         void addPath(path* p, VRObjectPtr anchor);

@@ -108,13 +108,13 @@ VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, stri
     if (!boost::filesystem::exists(path)) { cout << "VRImport::load " << path << " not found!" << endl; return 0; }
 
     VRTransformPtr res = VRTransform::create("proxy");
-    LoadJob* job = new LoadJob(path, preset, res, progress);
+    LoadJob* job = new LoadJob(path, preset, res, progress); // TODO: memory leak??
     if (!thread) {
         job->load(VRThreadWeakPtr());
         return cache[path].retrieve(parent);
     } else {
         job->loadCb = VRFunction< VRThreadWeakPtr >::create( "geo load", boost::bind(&LoadJob::load, job, _1) );
-        int t = VRSceneManager::getCurrent()->initThread(job->loadCb.get(), "geo load thread", false, 1);
+        int t = VRSceneManager::getCurrent()->initThread(job->loadCb, "geo load thread", false, 1);
         fillCache(path, res);
         return cache[path].retrieve(parent);
     }

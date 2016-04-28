@@ -2,15 +2,14 @@
 #define VRDEVICE_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
+#include "../VRSetupFwd.h"
 #include "VRIntersect.h"
 #include "VRAvatar.h"
 #include "core/utils/VRName.h"
 #include "core/utils/VRStorage.h"
 OSG_BEGIN_NAMESPACE;
 
-class VRSignal;
-
-class VRDevice : public VRName, public VRIntersect, public VRAvatar {
+class VRDevice : public std::enable_shared_from_this<VRDevice>, public VRName, public VRIntersect, public VRAvatar {
     protected:
         int sig_key = -1;
         int sig_state = -1;
@@ -30,8 +29,11 @@ class VRDevice : public VRName, public VRIntersect, public VRAvatar {
         void triggerSignal(int key, int state);
 
     public:
-        VRDevice(string _type);
+        VRDevice(string type);
         virtual ~VRDevice();
+
+        static VRDevicePtr create(string type);
+        VRDevicePtr ptr();
 
         VRSignalPtr addSignal(int key, int state);
         VRSignalPtr addToggleSignal(int key);
@@ -50,7 +52,7 @@ class VRDevice : public VRName, public VRIntersect, public VRAvatar {
         void change_slider(int key, float state);
 
         void addUpdateSignal(VRSignalPtr sig);
-        void remUpdateSignal(VRSignalPtr sig, VRDevice* dev);
+        void remUpdateSignal(VRSignalPtr sig, VRDeviceWeakPtr dev);
         void updateSignals();
 
         int key();

@@ -66,7 +66,7 @@ class VRScript : public VRName {
         PyObject* getPyObj(arg* a);
 
         shared_ptr<VRFunction<int> > cbfkt_sys;
-        VRFunction<VRDevice*>* cbfkt_dev;
+        VRFunction<VRDeviceWeakPtr>* cbfkt_dev;
         VRFunction<string>* cbfkt_soc;
 
         void update();
@@ -117,7 +117,7 @@ class VRScript : public VRName {
         void changeTrigState(string name, string state);
 
         void execute();
-        void execute_dev(VRDevice* dev);
+        void execute_dev(VRDeviceWeakPtr dev);
         void execute_soc(string);
 
         string getTriggerParams();

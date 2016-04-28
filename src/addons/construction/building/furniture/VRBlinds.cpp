@@ -33,7 +33,7 @@ VRBlinds::VRBlinds(string name, VRGeometryPtr _window, VRScene* _scene): VRTrans
     fkt = VRFunction<float>::create("Blinds_interpolate", boost::bind(&VRBlinds::interpolate, this, _1));
 
     // toggle callback
-    toggleCallback = VRFunction<VRDevice*>::create("Blinds_toggle", boost::bind(&VRBlinds::toggle, this, _1));
+    toggleCallback = VRFunction<VRDeviceWeakPtr>::create("Blinds_toggle", boost::bind(&VRBlinds::toggle, this, _1));
 }
 
 VRBlindsPtr VRBlinds::create(string name, VRGeometryPtr _window, VRScene* _scene) {
@@ -63,8 +63,8 @@ void VRBlinds::close() {
     VRSoundManager::get().playSound(sound);
 }
 
-void VRBlinds::toggle(VRDevice* dev) {
-    if (dev != 0) { //if triggered by a device, check if this is hit
+void VRBlinds::toggle(VRDeviceWeakPtr d) {
+    if (auto dev = d.lock()) { //if triggered by a device, check if this is hit
         VRIntersection ins = dev->intersect(ptr());
         if (!ins.hit) return;
         if ( ins.object.lock() == 0 ) return;

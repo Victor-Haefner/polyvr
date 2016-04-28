@@ -49,7 +49,7 @@ void VRSceneManager::loadScene(string path, bool write_protected) {
     newEmptyScene(path);
     VRSceneLoader::get()->loadScene(path);
     current->setFlag("write_protected", write_protected);
-    VRGuiSignals::get()->getSignal("scene_changed")->trigger<VRDevice>(); // update gui
+    VRGuiSignals::get()->getSignal("scene_changed")->triggerPtr<VRDevice>(); // update gui
 }
 
 string VRSceneManager::getOriginalWorkdir() { return original_workdir; }
@@ -57,7 +57,7 @@ string VRSceneManager::getOriginalWorkdir() { return original_workdir; }
 void VRSceneManager::closeScene() {
     if (current == 0) return;
     VRProfiler::get()->setActive(false);
-    on_scene_close->trigger<VRDevice>();
+    on_scene_close->triggerPtr<VRDevice>();
     current = 0;
 
     VRSetupManager::getCurrent()->resetViewports();
@@ -69,7 +69,7 @@ void VRSceneManager::closeScene() {
     for (auto w : windows) w.second->setContent(false);
 
     setWorkdir(original_workdir);
-    VRGuiSignals::get()->getSignal("scene_changed")->trigger<VRDevice>(); // update gui
+    VRGuiSignals::get()->getSignal("scene_changed")->triggerPtr<VRDevice>(); // update gui
 }
 
 void VRSceneManager::setWorkdir(string path) {
@@ -121,8 +121,8 @@ void VRSceneManager::setScene(VRScenePtr scene) {
     scene->setActiveCamera();
     VRProfiler::get()->setActive(true);
 
-    on_scene_load->trigger<VRDevice>();
-    VRGuiSignals::get()->getSignal("scene_changed")->trigger<VRDevice>(); // update gui
+    on_scene_load->triggerPtr<VRDevice>();
+    VRGuiSignals::get()->getSignal("scene_changed")->triggerPtr<VRDevice>(); // update gui
 }
 
 void VRSceneManager::storeFavorites() {

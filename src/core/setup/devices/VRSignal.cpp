@@ -1,5 +1,8 @@
 #include "VRSignal.h"
 
+#include "VRDevice.h"
+#include "VRSignalT.h"
+
 #include <boost/bind.hpp>
 #include <OpenSG/OSGNode.h>
 #include "core/utils/VRFunction.h"
@@ -19,13 +22,14 @@ VRUpdatePtr VRSignal_base::getTriggerFkt() { return trig_fkt; }
 vector<VRBaseWeakCb> VRSignal_base::getCallbacks() { return callbacksPtr; }
 
 
-VRSignal::VRSignal(VRDevice* _dev) : event(_dev) {
-    trig_fkt = VRFunction<int>::create("Signal_trigger", boost::bind(&VRSignal::trigger<VRDevice>, this, (VRDevice*)0));
+VRSignal::VRSignal(VRDevicePtr _dev) : event(_dev.get()) {
+    VRDevicePtr data;
+    trig_fkt = VRFunction<int>::create("Signal_trigger", boost::bind(&VRSignal::triggerPtr<VRDevice>, this, data));
 }
 
 VRSignal::~VRSignal() {}
 
-VRSignalPtr VRSignal::create(VRDevice* dev) { return VRSignalPtr( new VRSignal(dev) ); }
+VRSignalPtr VRSignal::create(VRDevicePtr dev) { return VRSignalPtr( new VRSignal(dev) ); }
 
 void VRSignal::add(VRFunction_base* fkt) { callbacks.push_back(fkt); }
 void VRSignal::add(VRBaseWeakCb fkt) { callbacksPtr.push_back(fkt); }

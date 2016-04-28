@@ -70,7 +70,7 @@ PyObject* VRPyCaveKeeper::update(VRPyCaveKeeper* self, PyObject* args) {
 PyObject* VRPyCaveKeeper::dig(VRPyCaveKeeper* self, PyObject* args) {
     VRPyDevice* dev = NULL;
     if (! PyArg_ParseTuple(args, "O", &dev)) return NULL;
-    self->obj->dig(dev->obj);
+    self->obj->dig(dev->objPtr);
     Py_RETURN_TRUE;
 }
 
@@ -79,6 +79,6 @@ PyObject* VRPyCaveKeeper::place(VRPyCaveKeeper* self, PyObject* args) {
     const char *obj_t;
     VRPyTransform* geo = NULL;
     if (! PyArg_ParseTuple(args, "OsO", &dev, &obj_t, &geo)) return NULL;
-    self->obj->place(dev->obj, obj_t, geo->objPtr);
+    self->obj->place(dev->objPtr, obj_t, geo->objPtr);
     Py_RETURN_TRUE;
 }

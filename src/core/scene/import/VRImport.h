@@ -20,7 +20,7 @@ class VRImport {
             string preset;
             VRProgressPtr progress;
             VRTransformPtr res;
-            shared_ptr< VRFunction< VRThreadWeakPtr > > loadCb;
+            VRThreadCb loadCb;
 
             LoadJob(string p, string preset, VRTransformPtr r, VRProgressPtr pg);
 

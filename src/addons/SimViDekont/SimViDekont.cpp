@@ -283,13 +283,13 @@ void SimViDekont::initFrameGeometries() {
 
 //--- BEGIN Player callbacks
 
-void SimViDekont::playForward(VRDevice* dev) { player->play(); }
-void SimViDekont::playBackward(VRDevice* dev) { player->play(true); }
-void SimViDekont::playStop(VRDevice* dev) { player->stop(); }
-void SimViDekont::playStepForward(VRDevice* dev) { player->step(); }
-void SimViDekont::playStepBackward(VRDevice* dev) { player->step(true); }
+void SimViDekont::playForward(VRDevicePtr dev) { player->play(); }
+void SimViDekont::playBackward(VRDevicePtr dev) { player->play(true); }
+void SimViDekont::playStop(VRDevicePtr dev) { player->stop(); }
+void SimViDekont::playStepForward(VRDevicePtr dev) { player->step(); }
+void SimViDekont::playStepBackward(VRDevicePtr dev) { player->step(true); }
 
-void SimViDekont::toggleColors(VRDevice* dev) {
+void SimViDekont::toggleColors(VRDevicePtr dev) {
     for (auto frame : frames) {
         GeometryMTRecPtr geo = frame->geo->getMesh();
         GeoVec3fPropertyRecPtr colors1 = dynamic_cast<GeoVec3fProperty*>(geo->getColors());

@@ -52,7 +52,7 @@ class VROpening: public VRTransform, public VROCtoggle {
 
         void close();
 
-        void toggle(VRDevice* dev);
+        void toggle(VRDeviceWeakPtr dev);
 };
 
 OSG_END_NAMESPACE;

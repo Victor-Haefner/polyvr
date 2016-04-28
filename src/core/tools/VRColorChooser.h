@@ -2,6 +2,7 @@
 #define VRCOLORCHOOSER_H_INCLUDED
 
 #include <OpenSG/OSGColor.h>
+#include "core/utils/VRDeviceFwd.h"
 #include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -28,7 +29,7 @@ class VRColorChooser {
         Color3f getLastColor();
 
         void setGeometry(VRGeometryPtr geo);
-        void resolve(VRDevice* dev);
+        void resolve(VRDevicePtr dev);
 };
 
 OSG_END_NAMESPACE;

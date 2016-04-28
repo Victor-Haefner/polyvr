@@ -486,7 +486,7 @@ void saveScene(string path) {
     string ipath = scene->getIcon();
     saveSnapshot(ipath);
 
-    OSG::VRGuiSignals::get()->getSignal("onSaveScene")->trigger<OSG::VRDevice>();
+    OSG::VRGuiSignals::get()->getSignal("onSaveScene")->triggerPtr<OSG::VRDevice>();
 }
 
 int getListStorePos(string ls, string s) {

@@ -71,15 +71,14 @@ void VRScene::initDevices() { // TODO: remove this after refactoring the navigat
     VRSetupPtr setup = VRSetupManager::getCurrent();
     if (!setup) return;
 
-    VRMouse* mouse = (VRMouse*)setup->getDevice("mouse");
-    VRFlystick* flystick = (VRFlystick*)setup->getDevice("flystick");
-    VRDevice* razer = setup->getDevice("vrpn_device");
-
+    VRMousePtr mouse = dynamic_pointer_cast<VRMouse>( setup->getDevice("mouse") );
+    VRFlystickPtr flystick = dynamic_pointer_cast<VRFlystick>( setup->getDevice("flystick") );
+    VRDevicePtr razer = setup->getDevice("vrpn_device");
 
     if (mouse) {
         initOrbit(getActiveCamera(), mouse); //TODO, load from xml
-        initWalk(getActiveCamera(), mouse);
-        initOrbit2D(getActiveCamera(), mouse);
+        //initWalk(getActiveCamera(), mouse);
+        //initOrbit2D(getActiveCamera(), mouse);
         setActiveNavigation("Orbit");
     }
 
@@ -151,19 +150,18 @@ void VRScene::setActiveCamera(string camname) {
 
     setDSCamera(cam);
 
-    VRMouse* mouse = (VRMouse*)setup->getDevice("mouse");
+    VRMousePtr mouse = dynamic_pointer_cast<VRMouse>( setup->getDevice("mouse") );
+    VRFlystickPtr flystick = dynamic_pointer_cast<VRFlystick>( setup->getDevice("flystick") );
+    VRDevicePtr razer = setup->getDevice("vrpn_device");
+    VRMobilePtr mobile = dynamic_pointer_cast<VRMobile>( setup->getDevice("mobile") );
+
     if (mouse) {
         mouse->setTarget(cam);
         mouse->setCamera(cam);
     }
 
-    VRFlystick* flystick = (VRFlystick*)setup->getDevice("flystick");
     if (flystick) flystick->setTarget(cam);
-
-    VRDevice* razer = (VRFlystick*)setup->getDevice("vrpn_device");
     if (razer) razer->setTarget(cam);
-
-    VRMobile* mobile = (VRMobile*)VRSetupManager::getCurrent()->getDevice("mobile");
     if (mobile) mobile->setTarget(cam);
 
     setup->setViewCamera(cam, -1);

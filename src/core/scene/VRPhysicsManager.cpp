@@ -59,7 +59,7 @@ VRPhysicsManager::VRPhysicsManager() {
 
 
     updatePhysObjectsFkt = VRFunction<int>::create("Physics object update", boost::bind(&VRPhysicsManager::updatePhysObjects, this));
-    updatePhysicsFkt = new VRFunction< weak_ptr<VRThread> >("Physics update", boost::bind(&VRPhysicsManager::updatePhysics, this, _1));
+    updatePhysicsFkt = VRFunction< VRThreadWeakPtr >::create("Physics update", boost::bind(&VRPhysicsManager::updatePhysics, this, _1));
 
     physics_visual_layer = VRVisualLayer::getLayer("Physics", "physics.png", 1);
 
@@ -100,7 +100,7 @@ void VRPhysicsManager::prepareObjects() {
     }
 }
 
-void VRPhysicsManager::updatePhysics( weak_ptr<VRThread>  wthread) {
+void VRPhysicsManager::updatePhysics( VRThreadWeakPtr wthread) {
     if (dynamicsWorld == 0) return;
     long long dt,t0,t1,t2,t3;
     auto thread = wthread.lock();

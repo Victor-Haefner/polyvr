@@ -11,11 +11,19 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-VRMouse::VRMouse() : VRDevice("mouse") {
-    clearSignals();
-    on_to_edge = VRSignal::create(this);
-    on_from_edge = VRSignal::create(this);
+VRMouse::VRMouse() : VRDevice("mouse") {}
+VRMouse::~VRMouse() {}
+
+VRMousePtr VRMouse::create() {
+    auto m = VRMousePtr(new VRMouse());
+    m->on_to_edge = VRSignal::create(m);
+    m->on_from_edge = VRSignal::create(m);
+    m->initIntersect(m);
+    m->clearSignals();
+    return m;
 }
+
+VRMousePtr VRMouse::ptr() { return static_pointer_cast<VRMouse>( shared_from_this() ); }
 
 void VRMouse::setCursor(string c) {
     auto s = VRSetupManager::getCurrent();
@@ -149,8 +157,8 @@ void VRMouse::updatePosition(int x, int y) {
     if (side != onEdge) {
         sig_state = (side == -1) ? 5 : 4;
         sig_key = (side == -1) ? (1+v->getID())*10+onEdge : (1+v->getID())*10+side;
-        if (side == -1) on_from_edge->trigger<VRDevice>();
-        else on_to_edge->trigger<VRDevice>();
+        if (side == -1) on_from_edge->triggerPtr<VRDevice>();
+        else on_to_edge->triggerPtr<VRDevice>();
     }
     onEdge = side;
 }

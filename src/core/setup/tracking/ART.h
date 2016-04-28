@@ -27,7 +27,7 @@ struct ART_device : public VRName {
     list<vector<float> > joysticks;
 
     VRTransformPtr ent = 0;
-    VRFlystick* dev = 0;
+    VRFlystickPtr dev = 0;
     Vec3f offset;
     float scale = 1;
     int ID = 0;
@@ -35,6 +35,8 @@ struct ART_device : public VRName {
 
     ART_device();
     ART_device(int ID, int type);
+
+    static ART_devicePtr create(int ID, int type);
 
     int key();
     static int key(int ID, int type);
@@ -52,13 +54,14 @@ class ART : public VRStorage {
         string up;
 
         DTrack* dtrack = 0;
-        map<int, ART_device*> devices;
+        map<int, ART_devicePtr> devices;
 
         VRUpdatePtr updatePtr;
+        shared_ptr< VRFunction< weak_ptr<VRThread> > > threadFkt;
         VRSignalPtr on_new_device;
 
         template<typename dev>
-        void getMatrix(dev t, ART_device* d);
+        void getMatrix(dev t, ART_devicePtr d);
 
         boost::mutex mutex;
         void scan(int type = -1, int N = 0);
@@ -74,7 +77,7 @@ class ART : public VRStorage {
         ~ART();
 
         vector<int> getARTDevices();
-        ART_device* getARTDevice(int dev);
+        ART_devicePtr getARTDevice(int dev);
 
         void setARTActive(bool b);
         bool getARTActive();

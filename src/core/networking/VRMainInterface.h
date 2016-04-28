@@ -3,6 +3,7 @@
 
 #include "OpenSG/OSGConfig.h"
 #include "core/utils/VRFunctionFwd.h"
+#include "core/utils/VRDeviceFwd.h"
 #include <string>
 
 OSG_BEGIN_NAMESPACE;
@@ -13,12 +14,12 @@ class VRDevice;
 
 class VRMainInterface {
     private:
-        VRMobile* mobile;
+        VRMobilePtr mobile;
         string page;
         VRDeviceCb clickCb;
 
         VRMainInterface();
-        void on_scene_clicked(VRDevice* dev);
+        void on_scene_clicked(VRDeviceWeakPtr dev);
         void update();
 
     public:

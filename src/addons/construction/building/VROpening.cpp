@@ -52,7 +52,7 @@ VROpening::VROpening(string name, VRObjectPtr obj, VRScene* _scene, VRSignalPtr 
     param = _param;
 
     // toggle callback
-    toggleCallback = VRFunction<VRDevice*>::create("OpeningToggle", boost::bind(&VROpening::toggle, this, _1));
+    toggleCallback = VRFunction<VRDeviceWeakPtr>::create("OpeningToggle", boost::bind(&VROpening::toggle, this, _1));
 
     if (obj) {
         addChild(obj);
@@ -86,10 +86,10 @@ void VROpening::close() {
     VRSoundManager::get().playSound(sound);
 }
 
-void VROpening::toggle(VRDevice* dev) {
+void VROpening::toggle(VRDeviceWeakPtr d) {
     if (d1 == 0 && d2 == 0) return;
 
-    if (dev != 0) { //if triggered by a device, check if this is hit
+    if (auto dev = d.lock()) { //if triggered by a device, check if this is hit
         VRIntersection ins = dev->intersect( VRObject::ptr() );
         if (!ins.hit) return;
         auto obj = ins.object.lock();

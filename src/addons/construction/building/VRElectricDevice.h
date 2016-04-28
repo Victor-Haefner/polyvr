@@ -22,7 +22,7 @@ class VRElectricDevice {
 
         void turnOff();
 
-        void toggle(VRDevice* dev);
+        void toggle(VRDevicePtr dev);
 };
 
 OSG_END_NAMESPACE;

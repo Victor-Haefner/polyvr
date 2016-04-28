@@ -713,7 +713,7 @@ void VRGuiScene::on_edit_object_name(string path, string new_text) {
     getSelected()->setName(new_text);
     row[cols.name] = getSelected()->getName();
     updateObjectForms();
-    if (getSelected()->getType() == "Camera") VRGuiSignals::get()->getSignal("camera_added")->trigger<VRDevice>();
+    if (getSelected()->getType() == "Camera") VRGuiSignals::get()->getSignal("camera_added")->triggerPtr<VRDevice>();
 }
 
 template <class T>
@@ -765,7 +765,7 @@ void VRGuiScene::on_menu_add_camera() {
     VRTransformPtr cam = VRCamera::create("camera");
     getSelected()->addChild(cam);
     parseSGTree(cam, selected_itr);
-    VRGuiSignals::get()->getSignal("camera_added")->trigger<VRDevice>();
+    VRGuiSignals::get()->getSignal("camera_added")->triggerPtr<VRDevice>();
 }
 
 void VRGuiScene::on_menu_add_primitive(string s) {

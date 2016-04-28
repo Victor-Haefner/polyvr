@@ -95,7 +95,7 @@ void VRGuiNav::on_new_binding_clicked() {
     if (scene == 0) return;
     VRNavPreset* preset = scene->getNavigation(getComboboxText("combobox5"));
     VRDeviceCb fkt;
-    //cb = VRFunction<VRDevice*>::create( boost::bind(&VRNavigator::sandBoxNavigation, this, _1) ); //TODO
+    //cb = VRFunction<VRDeviceWeakPtr>::create( boost::bind(&VRNavigator::sandBoxNavigation, this, _1) ); //TODO
     VRNavBinding binding(fkt, 0, 0, false);
     preset->addKeyBinding(binding);
 

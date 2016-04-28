@@ -48,9 +48,12 @@ class VRIntersect {
         map<VRObject*, VRDeviceCb > dra_fkt_map;
         VRDeviceCb drop_fkt;
 
-        void dragCB(VRTransformWeakPtr caster, VRObjectWeakPtr tree, VRDevice* dev = 0);
+        void dragCB(VRTransformWeakPtr caster, VRObjectWeakPtr tree, VRDeviceWeakPtr dev = VRDevicePtr(0));
 
         void initCross();
+
+    protected:
+        void initIntersect(VRDevicePtr dev);
 
     public:
         VRIntersect();
@@ -60,7 +63,7 @@ class VRIntersect {
         VRIntersection intersect(VRObjectWeakPtr tree);
         VRIntersection intersect();
         void drag(VRObjectWeakPtr obj, VRTransformWeakPtr caster);
-        void drop(VRDevice* dev = 0);
+        void drop(VRDeviceWeakPtr dev = VRDevicePtr(0));
         VRDeviceCb addDrag(VRTransformWeakPtr caster, VRObjectWeakPtr tree);
         VRDeviceCb addDrag(VRTransformWeakPtr caster);
         VRDeviceCb getDrop();

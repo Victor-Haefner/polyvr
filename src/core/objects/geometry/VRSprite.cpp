@@ -72,9 +72,9 @@ void VRSprite::webOpen(string path, int res, float ratio){
     mat->setLit(false);
     web = CEF::create();
 
-    VRDevice* mouse = VRSetupManager::getCurrent()->getDevice("mouse");
-    VRDevice* keyboard = VRSetupManager::getCurrent()->getDevice("keyboard");
-    VRDevice* flystick = VRSetupManager::getCurrent()->getDevice("flystick");
+    VRDevicePtr mouse = VRSetupManager::getCurrent()->getDevice("mouse");
+    VRDevicePtr keyboard = VRSetupManager::getCurrent()->getDevice("keyboard");
+    VRDevicePtr flystick = VRSetupManager::getCurrent()->getDevice("flystick");
 
     web->setMaterial(mat);
     web->open(path);

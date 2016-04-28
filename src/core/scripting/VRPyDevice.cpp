@@ -6,51 +6,8 @@
 #include "VRPyBaseT.h"
 #include "VRPyTypeCaster.h"
 
-template<> PyTypeObject VRPyBaseT<OSG::VRDevice>::type = {
-    PyObject_HEAD_INIT(NULL)
-    0,                         /*ob_size*/
-    "VR.Device",             /*tp_name*/
-    sizeof(VRPyDevice),             /*tp_basicsize*/
-    0,                         /*tp_itemsize*/
-    (destructor)dealloc, /*tp_dealloc*/
-    0,                         /*tp_print*/
-    0,                         /*tp_getattr*/
-    0,                         /*tp_setattr*/
-    0,                         /*tp_compare*/
-    0,                         /*tp_repr*/
-    0,                         /*tp_as_number*/
-    0,                         /*tp_as_sequence*/
-    0,                         /*tp_as_mapping*/
-    0,                         /*tp_hash */
-    0,                         /*tp_call*/
-    0,                         /*tp_str*/
-    0,                         /*tp_getattro*/
-    0,                         /*tp_setattro*/
-    0,                         /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
-    "VRDevice binding",           /* tp_doc */
-    0,		               /* tp_traverse */
-    0,		               /* tp_clear */
-    0,		               /* tp_richcompare */
-    0,		               /* tp_weaklistoffset */
-    0,		               /* tp_iter */
-    0,		               /* tp_iternext */
-    VRPyDevice::methods,             /* tp_methods */
-    VRPyDevice::members,             /* tp_members */
-    0,                         /* tp_getset */
-    0,                         /* tp_base */
-    0,                         /* tp_dict */
-    0,                         /* tp_descr_get */
-    0,                         /* tp_descr_set */
-    0,                         /* tp_dictoffset */
-    (initproc)init,      /* tp_init */
-    0,                         /* tp_alloc */
-    New_named,                 /* tp_new */
-};
-
-PyMemberDef VRPyDevice::members[] = {
-    {NULL}  /* Sentinel */
-};
+using namespace OSG;
+simpleVRPyType(Device, New_named_ptr)
 
 PyMethodDef VRPyDevice::methods[] = {
     {"getName", (PyCFunction)VRPyDevice::getName, METH_NOARGS, "Return device name." },
@@ -86,186 +43,185 @@ PyMethodDef VRPyDevice::methods[] = {
 };
 
 PyObject* VRPyDevice::addSignal(VRPyDevice* self, PyObject *args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::setSpeed, Object is invalid"); return NULL; }
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::setSpeed, Object is invalid"); return NULL; }
     int k, s;
     if (! PyArg_ParseTuple(args, "ii", &k, &s)) return NULL;
-    self->obj->addSignal( k,s );
+    self->objPtr->addSignal( k,s );
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyDevice::trigger(VRPyDevice* self, PyObject *args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::setSpeed, Object is invalid"); return NULL; }
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::setSpeed, Object is invalid"); return NULL; }
     int k, s;
     if (! PyArg_ParseTuple(args, "ii", &k, &s)) return NULL;
-    self->obj->change_button( k,s );
+    self->objPtr->change_button( k,s );
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyDevice::setSpeed(VRPyDevice* self, PyObject *args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::setSpeed, Object is invalid"); return NULL; }
-    self->obj->setSpeed( parseVec2f(args) );
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::setSpeed, Object is invalid"); return NULL; }
+    self->objPtr->setSpeed( parseVec2f(args) );
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyDevice::getSpeed(VRPyDevice* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getSpeed, Object is invalid"); return NULL; }
-    return toPyTuple( self->obj->getSpeed() );
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::getSpeed, Object is invalid"); return NULL; }
+    return toPyTuple( self->objPtr->getSpeed() );
 }
 
 PyObject* VRPyDevice::intersect(VRPyDevice* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::intersect, Object is invalid"); return NULL; }
-    OSG::VRIntersection ins = self->obj->intersect();
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::intersect, Object is invalid"); return NULL; }
+    OSG::VRIntersection ins = self->objPtr->intersect();
     if (ins.hit) Py_RETURN_TRUE;
     else Py_RETURN_FALSE;
 }
 
 PyObject* VRPyDevice::drag(VRPyDevice* self, PyObject *args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::drag, Object is invalid"); return NULL; }
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::drag, Object is invalid"); return NULL; }
     OSG::VRObjectPtr obj = 0;
     if (!VRPyObject::parse(args, &obj)) return NULL;
     string name = obj->getName();
-    self->obj->drag(obj, self->obj->getBeacon());
+    self->objPtr->drag(obj, self->objPtr->getBeacon());
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyDevice::drop(VRPyDevice* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::drop, Object is invalid"); return NULL; }
-    self->obj->drop();
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::drop, Object is invalid"); return NULL; }
+    self->objPtr->drop();
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyDevice::getName(VRPyDevice* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getName, Object is invalid"); return NULL; }
-    return PyString_FromString(self->obj->getName().c_str());
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::getName, Object is invalid"); return NULL; }
+    return PyString_FromString(self->objPtr->getName().c_str());
 }
 
 PyObject* VRPyDevice::destroy(VRPyDevice* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::destroy, Object is invalid"); return NULL; }
-    delete self->obj;
-    self->obj = 0;
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::destroy, Object is invalid"); return NULL; }
+    self->objPtr = 0;
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyDevice::getBeacon(VRPyDevice* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getBeacon, Object is invalid"); return NULL; }
-    return VRPyTransform::fromSharedPtr(self->obj->getBeacon());
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::getBeacon, Object is invalid"); return NULL; }
+    return VRPyTransform::fromSharedPtr(self->objPtr->getBeacon());
 }
 
 PyObject* VRPyDevice::setBeacon(VRPyDevice* self, PyObject *args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::setBeacon, Object is invalid"); return NULL; }
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::setBeacon, Object is invalid"); return NULL; }
     VRPyTransform* beacon = NULL;
     if (! PyArg_ParseTuple(args, "O", &beacon)) return NULL;
-    self->obj->setBeacon(beacon->objPtr);
+    self->objPtr->setBeacon(beacon->objPtr);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyDevice::getTarget(VRPyDevice* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getTarget, Object is invalid"); return NULL; }
-    return VRPyTransform::fromSharedPtr(self->obj->getTarget());
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::getTarget, Object is invalid"); return NULL; }
+    return VRPyTransform::fromSharedPtr(self->objPtr->getTarget());
 }
 
 PyObject* VRPyDevice::setTarget(VRPyDevice* self, PyObject *args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::setTarget, Object is invalid"); return NULL; }
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::setTarget, Object is invalid"); return NULL; }
     VRPyTransform* target = NULL;
     if (! PyArg_ParseTuple(args, "O", &target)) return NULL;
-    self->obj->setTarget(target->objPtr);
+    self->objPtr->setTarget(target->objPtr);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyDevice::getState(VRPyDevice* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getState, Object is invalid"); return NULL; }
-    return PyInt_FromLong(self->obj->getState());
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::getState, Object is invalid"); return NULL; }
+    return PyInt_FromLong(self->objPtr->getState());
 }
 
 PyObject* VRPyDevice::getKeyState(VRPyDevice* self, PyObject *args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getKeyState, Object is invalid"); return NULL; }
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::getKeyState, Object is invalid"); return NULL; }
     int i=0;
     if (! PyArg_ParseTuple(args, "i", &i)) return NULL;
-    return PyInt_FromLong(self->obj->b_state(i));
+    return PyInt_FromLong(self->objPtr->b_state(i));
 }
 
 PyObject* VRPyDevice::getKey(VRPyDevice* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getKey, Object is invalid"); return NULL; }
-    return PyInt_FromLong(self->obj->key());
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::getKey, Object is invalid"); return NULL; }
+    return PyInt_FromLong(self->objPtr->key());
 }
 
 PyObject* VRPyDevice::getMessage(VRPyDevice* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getKey, Object is invalid"); return NULL; }
-    return PyString_FromString(self->obj->getMessage().c_str());
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::getKey, Object is invalid"); return NULL; }
+    return PyString_FromString(self->objPtr->getMessage().c_str());
 }
 
 PyObject* VRPyDevice::getSlider(VRPyDevice* self, PyObject *args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getSlider, Object is invalid"); return NULL; }
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::getSlider, Object is invalid"); return NULL; }
     int i=0;
     if (! PyArg_ParseTuple(args, "i", &i)) return NULL;
-    return PyFloat_FromDouble(self->obj->s_state(i));
+    return PyFloat_FromDouble(self->objPtr->s_state(i));
 }
 
 PyObject* VRPyDevice::getType(VRPyDevice* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getType, Object is invalid"); return NULL; }
-    return PyString_FromString(self->obj->getType().c_str());
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::getType, Object is invalid"); return NULL; }
+    return PyString_FromString(self->objPtr->getType().c_str());
 }
 
 PyObject* VRPyDevice::setDnD(VRPyDevice* self, PyObject *args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::setDnD, Object is invalid"); return NULL; }
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::setDnD, Object is invalid"); return NULL; }
     int i=0;
     if (! PyArg_ParseTuple(args, "i", &i)) return NULL;
-    self->obj->toggleDragnDrop(i);
+    self->objPtr->toggleDragnDrop(i);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyDevice::getIntersected(VRPyDevice* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getIntersected, Object is invalid"); return NULL; }
-    return VRPyTypeCaster::cast(self->obj->getLastIntersection().object.lock());
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::getIntersected, Object is invalid"); return NULL; }
+    return VRPyTypeCaster::cast(self->objPtr->getLastIntersection().object.lock());
 }
 
 PyObject* VRPyDevice::getIntersection(VRPyDevice* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getIntersection, Object is invalid"); return NULL; }
-    OSG::Pnt3f v = self->obj->getLastIntersection().point;
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::getIntersection, Object is invalid"); return NULL; }
+    OSG::Pnt3f v = self->objPtr->getLastIntersection().point;
     return toPyTuple( OSG::Vec3f(v) );
 }
 
 PyObject* VRPyDevice::getIntersectionTriangle(VRPyDevice* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getIntersectionTriangle, Object is invalid"); return NULL; }
-    OSG::Vec3i v = self->obj->getLastIntersection().triangleVertices;
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::getIntersectionTriangle, Object is invalid"); return NULL; }
+    OSG::Vec3i v = self->objPtr->getLastIntersection().triangleVertices;
     return toPyTuple(v);
 }
 
 PyObject* VRPyDevice::getIntersectionNormal(VRPyDevice* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getIntersectionNormal, Object is invalid"); return NULL; }
-    OSG::Vec3f v = self->obj->getLastIntersection().normal;
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::getIntersectionNormal, Object is invalid"); return NULL; }
+    OSG::Vec3f v = self->objPtr->getLastIntersection().normal;
     return toPyTuple(v);
 }
 
 PyObject* VRPyDevice::getIntersectionUV(VRPyDevice* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getIntersectionUV, Object is invalid"); return NULL; }
-    OSG::Vec2f v = self->obj->getLastIntersection().texel;
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::getIntersectionUV, Object is invalid"); return NULL; }
+    OSG::Vec2f v = self->objPtr->getLastIntersection().texel;
     return toPyTuple(v);
 }
 
 PyObject* VRPyDevice::addIntersection(VRPyDevice* self, PyObject *args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::addIntersection, Object is invalid"); return NULL; }
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::addIntersection, Object is invalid"); return NULL; }
     VRPyObject* iobj = NULL;
     if (! PyArg_ParseTuple(args, "O", &iobj)) return NULL;
-    self->obj->addDynTree(iobj->objPtr);
+    self->objPtr->addDynTree(iobj->objPtr);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyDevice::remIntersection(VRPyDevice* self, PyObject *args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::remIntersection, Object is invalid"); return NULL; }
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::remIntersection, Object is invalid"); return NULL; }
     VRPyObject* iobj = NULL;
     if (! PyArg_ParseTuple(args, "O", &iobj)) return NULL;
-    self->obj->remDynTree(iobj->objPtr);
+    self->objPtr->remDynTree(iobj->objPtr);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyDevice::getDragGhost(VRPyDevice* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getDragGhost, Object is invalid"); return NULL; }
-    return VRPyTypeCaster::cast(self->obj->getDraggedGhost());
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::getDragGhost, Object is invalid"); return NULL; }
+    return VRPyTypeCaster::cast(self->objPtr->getDraggedGhost());
 }
 
 PyObject* VRPyDevice::getDragged(VRPyDevice* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyDevice::getDragged, Object is invalid"); return NULL; }
-    return VRPyTypeCaster::cast(self->obj->getDraggedObject());
+    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyDevice::getDragged, Object is invalid"); return NULL; }
+    return VRPyTypeCaster::cast(self->objPtr->getDraggedObject());
 }
 

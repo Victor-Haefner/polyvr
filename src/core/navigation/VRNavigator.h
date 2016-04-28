@@ -33,7 +33,7 @@ struct VRNavBinding {
 class VRNavPreset : public VRName {
     private:
         vector<VRNavBinding> bindings;
-        VRDevice* dev = 0;
+        VRDevicePtr dev = 0;
         VRTransformWeakPtr target;
         bool active = false;
         Vec2f speed;
@@ -44,7 +44,7 @@ class VRNavPreset : public VRName {
 
         void updateBinding(VRNavBinding& b);
 
-        void setDevice(VRDevice* _dev);
+        void setDevice(VRDevicePtr _dev);
         void setTarget(VRTransformPtr _target);
         void setSpeed(float vt, float vr);
 
@@ -88,32 +88,32 @@ class VRNavigator_base : public VRStorage {
 class VRNavigator : public VRNavigator_base {
     private:
         VRTransformWeakPtr target;
-        VRDevice* device;
+        VRDeviceWeakPtr device;
 
         vector<VRTransformWeakPtr> walk_surfaces;
         static float clip_dist_down;
         std::shared_ptr<VRFunction<float> > focus_fkt;
 
         // callbacks
-        void zoom(VRDevice* dev, int dir);
-        void walk(VRDevice* dev);
-        void fly_walk(VRDevice* dev);
-        void hyd_walk(VRDevice* dev);
-        void orbit(VRDevice* dev);
-        void orbit2D(VRDevice* dev);
-        void focus(VRDevice* dev);
+        void zoom(VRDeviceWeakPtr dev, int dir);
+        void walk(VRDeviceWeakPtr dev);
+        void fly_walk(VRDeviceWeakPtr dev);
+        void hyd_walk(VRDeviceWeakPtr dev);
+        void orbit(VRDeviceWeakPtr dev);
+        void orbit2D(VRDeviceWeakPtr dev);
+        void focus(VRDeviceWeakPtr dev);
 
     protected:
         VRNavigator();
         ~VRNavigator();
 
         // init presets
-        void initWalk(VRTransformPtr target, VRDevice* dev);
-        void initOrbit(VRTransformPtr target, VRDevice* dev);
-        void initOrbit2D(VRTransformPtr target, VRDevice* dev);
-        void initFlyOrbit(VRTransformPtr target, VRDevice* dev);
-        void initFlyWalk(VRTransformPtr target, VRDevice* dev);
-        void initHydraFly(VRTransformPtr target, VRDevice* dev);
+        void initWalk(VRTransformPtr target, VRDevicePtr dev);
+        void initOrbit(VRTransformPtr target, VRDevicePtr dev);
+        void initOrbit2D(VRTransformPtr target, VRDevicePtr dev);
+        void initFlyOrbit(VRTransformPtr target, VRDevicePtr dev);
+        void initFlyWalk(VRTransformPtr target, VRDevicePtr dev);
+        void initHydraFly(VRTransformPtr target, VRDevicePtr dev);
 
         void update();
 };

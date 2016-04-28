@@ -123,8 +123,8 @@ PyObject* VRPyPathtool::newPath(VRPyPathtool* self, PyObject* args) {
     if (!self->valid()) return NULL;
     VRPyDevice* dev; VRPyObject* obj; int res = 10;
     if (! PyArg_ParseTuple(args, "OO|i:newPath", &dev, &obj, &res)) return NULL;
-    VRDevice* d = 0;
-    if (!isNone((PyObject*)dev)) d = dev->obj;
+    VRDevicePtr d = 0;
+    if (!isNone((PyObject*)dev)) d = dev->objPtr;
     path* p = self->obj->newPath( d, obj->objPtr, res );
     return VRPyPath::fromPtr(p);
 }
@@ -140,8 +140,8 @@ PyObject* VRPyPathtool::extrude(VRPyPathtool* self, PyObject* args) {
     if (!self->valid()) return NULL;
     VRPyDevice* dev; VRPyPath* p;
     if (! PyArg_ParseTuple(args, "OO:extrude", &dev, &p)) return NULL;
-    VRDevice* d = 0;
-    if (!isNone((PyObject*)dev)) d = dev->obj;
+    VRDevicePtr d = 0;
+    if (!isNone((PyObject*)dev)) d = dev->objPtr;
     return VRPyGeometry::fromSharedPtr( self->obj->extrude( d, p->obj) );
 }
 

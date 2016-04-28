@@ -44,8 +44,8 @@ class VRSnappingEngine {
             VRTransformPtr o1 = 0;
             VRTransformPtr o2 = 0;
             Matrix m;
-            VRDevice* dev = 0;
-            void set(VRTransformPtr O1, VRTransformPtr O2, Matrix M, VRDevice* DEV, int Snap) {
+            VRDevicePtr dev = 0;
+            void set(VRTransformPtr O1, VRTransformPtr O2, Matrix M, VRDevicePtr DEV, int Snap) {
                 o1 = O1; o2 = O2; m = M; dev = DEV; snap = Snap;
             }
         };

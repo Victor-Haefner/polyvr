@@ -19,13 +19,16 @@ using namespace std;
 
 ART_device::ART_device() { setName("ARTDevice"); }
 ART_device::ART_device(int ID, int type) : ID(ID), type(type) { setName("ARTDevice"); init(); }
+
+ART_devicePtr ART_device::create(int ID, int type) { return ART_devicePtr( new ART_device(ID, type) ); }
+
 int ART_device::key() { return key(ID, type); }
 int ART_device::key(int ID, int type) { return ID*1000 + type; }
 
 void ART_device::init() {
     if (type != 1) ent = VRTransform::create("ART_tracker");
     if (type == 1) {
-        dev = new VRFlystick();
+        dev = VRFlystick::create();
         ent = dev->editBeacon();
         VRSetupManager::getCurrent()->addDevice(dev);
     }
@@ -49,8 +52,8 @@ ART::ART() {
     updatePtr  = VRFunction<int>::create("ART_apply", boost::bind(&ART::applyEvents, this));
     VRSceneManager::get()->addUpdateFkt(updatePtr);
 
-    auto fkt2 = new VRFunction< weak_ptr<VRThread> >("ART_fetch", boost::bind(&ART::updateT, this, _1));
-    VRSceneManager::get()->initThread(fkt2, "ART_fetch", true);
+    threadFkt = VRFunction< weak_ptr<VRThread> >::create("ART_fetch", boost::bind(&ART::updateT, this, _1));
+    VRSceneManager::get()->initThread(threadFkt, "ART_fetch", true);
 
     on_new_device = VRSignal::create();
 
@@ -65,7 +68,7 @@ ART::~ART() {
 }
 
 template<typename dev>
-void ART::getMatrix(dev t, ART_device* d) {
+void ART::getMatrix(dev t, ART_devicePtr d) {
     if (t.quality <= 0) return;
 
     Matrix& m = d->m;
@@ -147,8 +150,8 @@ void ART::checkNewDevices(int type, int N) {
         int k = ART_device::key(i,type);
         if (devices.count(k) == 0) {
             cout << "ART - New device " << type << " " << k << endl;
-            devices[k] = new ART_device(i,type);
-            on_new_device->trigger<VRDevice>();
+            devices[k] = ART_device::create(i,type);
+            on_new_device->triggerPtr<VRDevice>();
             VRSetupManager::getCurrent()->updateViews();
         }
     }
@@ -166,7 +169,7 @@ vector<int> ART::getARTDevices() {
     return devs;
 }
 
-ART_device* ART::getARTDevice(int dev) { return devices[dev]; }
+ART_devicePtr ART::getARTDevice(int dev) { return devices[dev]; }
 
 void ART::setARTActive(bool b) { active = b; }
 bool ART::getARTActive() { return active; }

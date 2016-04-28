@@ -28,7 +28,7 @@ PyObject* VRPyColorChooser::resolve(VRPyColorChooser* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyColorChooser::activate - Object is invalid"); return NULL; }
     VRPyDevice* dev = 0;
     parseObject(args, dev);
-    if (dev) self->obj->resolve(dev->obj);
+    if (dev) self->obj->resolve(dev->objPtr);
     Py_RETURN_TRUE;
 }
 

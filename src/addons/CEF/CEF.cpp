@@ -167,27 +167,29 @@ void CEF::setAspectRatio(float a) { aspect = a; resize(); }
 
 // dev callbacks:
 
-void CEF::addMouse(VRDevice* dev, VRObjectWeakPtr obj, int lb, int rb, int wu, int wd) {
+void CEF::addMouse(VRDevicePtr dev, VRObjectWeakPtr obj, int lb, int rb, int wu, int wd) {
     if (dev == 0 || obj.lock() == 0) return;
     this->obj = obj;
 
-    if (!mouse_dev_callback.count(dev)) mouse_dev_callback[dev] = VRFunction<VRDevice*>::create( "CEF::MOUSE", boost::bind(&CEF::mouse, this, lb,rb,wu,wd,_1 ) );
-    dev->addSignal(-1,0)->add(mouse_dev_callback[dev]);
-    dev->addSignal(-1,1)->add(mouse_dev_callback[dev]);
+    auto k = dev.get();
+    if (!mouse_dev_callback.count(k)) mouse_dev_callback[k] = VRFunction<VRDeviceWeakPtr>::create( "CEF::MOUSE", boost::bind(&CEF::mouse, this, lb,rb,wu,wd,_1 ) );
+    dev->addSignal(-1,0)->add(mouse_dev_callback[k]);
+    dev->addSignal(-1,1)->add(mouse_dev_callback[k]);
 
-    if (!mouse_move_callback.count(dev)) mouse_move_callback[dev] = VRFunction<int>::create( "CEF::MM", boost::bind(&CEF::mouse_move, this, dev, _1) );
+    if (!mouse_move_callback.count(k)) mouse_move_callback[k] = VRFunction<int>::create( "CEF::MM", boost::bind(&CEF::mouse_move, this, dev, _1) );
     auto scene = VRSceneManager::getCurrent();
-    if (scene) scene->addUpdateFkt(mouse_move_callback[dev]);
+    if (scene) scene->addUpdateFkt(mouse_move_callback[k]);
 }
 
-void CEF::addKeyboard(VRDevice* dev) {
+void CEF::addKeyboard(VRDevicePtr dev) {
     if (dev == 0) return;
-    if (!keyboard_dev_callback) keyboard_dev_callback = VRFunction<VRDevice*>::create( "CEF::KR", boost::bind(&CEF::keyboard, this, _1 ) );
+    if (!keyboard_dev_callback) keyboard_dev_callback = VRFunction<VRDeviceWeakPtr>::create( "CEF::KR", boost::bind(&CEF::keyboard, this, _1 ) );
     dev->addSignal(-1, 0)->add( keyboard_dev_callback );
     dev->addSignal(-1, 1)->add( keyboard_dev_callback );
 }
 
-void CEF::mouse_move(VRDevice* dev, int i) {
+void CEF::mouse_move(VRDeviceWeakPtr d, int i) {
+    auto dev = d.lock();
     if (!dev) return;
     auto geo = obj.lock();
     if (!geo) return;
@@ -202,7 +204,9 @@ void CEF::mouse_move(VRDevice* dev, int i) {
     if (browser) browser->GetHost()->SendMouseMoveEvent(me, dev->b_state(dev->key()));
 }
 
-void CEF::mouse(int lb, int rb, int wu, int wd, VRDevice* dev) {
+void CEF::mouse(int lb, int rb, int wu, int wd, VRDeviceWeakPtr d) {
+    auto dev = d.lock();
+    if (!dev) return;
     int b = dev->key();
     bool down = dev->getState();
 
@@ -258,11 +262,14 @@ void CEF::mouse(int lb, int rb, int wu, int wd, VRDevice* dev) {
     }
 }
 
-void CEF::keyboard(VRDevice* dev) {
+void CEF::keyboard(VRDeviceWeakPtr d) {
+    auto dev = d.lock();
+    if (!dev) return;
     if (!focus) return;
     if (dev->getType() != "keyboard") return;
     //bool down = dev->getState();
-    VRKeyboard* kb = (VRKeyboard*)dev;
+    VRKeyboardPtr kb = dynamic_pointer_cast<VRKeyboard>(dev);
+    if (!kb) return;
     auto event = kb->getGtkEvent();
     if (!browser) return;
     auto host = browser->GetHost();

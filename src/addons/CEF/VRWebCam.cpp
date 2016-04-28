@@ -13,8 +13,8 @@ void VRWebCam::connect(string uri, int res, float ratio) {
     site += "<img src=\"" + uri + "\" alt=\"" + uri + "\"></img>";
     site += "</body></html>";
 
-    VRMobile* mob = (VRMobile*)VRSetupManager::getCurrent()->getDevice("mobile");
-    if (mob == 0) return;
+    VRMobilePtr mob = dynamic_pointer_cast<VRMobile>( VRSetupManager::getCurrent()->getDevice("mobile") );
+    if (!mob) return;
 
     mob->addWebSite("internal_webcam_1234", site);
 

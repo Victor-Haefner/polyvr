@@ -15,6 +15,9 @@ class VRKeyboard : public VRDevice {
         VRKeyboard();
         ~VRKeyboard();
 
+        static VRKeyboardPtr create();
+        VRKeyboardPtr ptr();
+
         void keyboard(unsigned int k, bool pressed, int x, int y);
         void keyboard_special(int k, bool pressed, int x, int y);
         void setGtkEvent(_GdkEventKey* event);

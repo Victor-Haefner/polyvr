@@ -64,7 +64,7 @@ void VRGuiBits::on_camera_changed() {
     string name = getComboboxText("combobox4");
     auto scene = VRSceneManager::getCurrent();
     scene->setActiveCamera(name);
-    VRGuiSignals::get()->getSignal("camera_changed")->trigger<VRDevice>();
+    VRGuiSignals::get()->getSignal("camera_changed")->triggerPtr<VRDevice>();
 }
 
 void VRGuiBits::on_navigation_changed() {

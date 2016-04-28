@@ -100,7 +100,7 @@ void VRPathtool::addPath(path* p, VRObjectPtr anchor) {
     }
 }
 
-path* VRPathtool::newPath(VRDevice* dev, VRObjectPtr anchor, int resolution) {
+path* VRPathtool::newPath(VRDevicePtr dev, VRObjectPtr anchor, int resolution) {
     entry* e = new entry();
     e->anchor = anchor;
     e->p = new path();
@@ -156,7 +156,7 @@ VRStrokePtr VRPathtool::getStroke(path* p) {
     return paths[p]->line.lock();
 }
 
-VRGeometryPtr VRPathtool::extrude(VRDevice* dev, path* p) {
+VRGeometryPtr VRPathtool::extrude(VRDevicePtr dev, path* p) {
     if (paths.count(p) == 0) {
         cout << "Warning: VRPathtool::extrude, path " << p << " unknown\n";
         return 0;

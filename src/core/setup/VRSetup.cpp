@@ -70,7 +70,7 @@ void VRSetup::setScene(VRScenePtr scene) {
     setViewRoot(scene->getSystemRoot(), -1);
     setViewCamera(cam, -1);
 
-    VRMouse* mouse = (VRMouse*)getDevice("mouse");
+    VRMousePtr mouse = dynamic_pointer_cast<VRMouse>( getDevice("mouse") );
     if (mouse && cam) mouse->setCamera(cam);
 
     setViewBackground(scene->getBackground());
@@ -91,12 +91,12 @@ VRTransformPtr VRSetup::getRoot() { return real_root; }
 
 VRTransformPtr VRSetup::getTracker(string t) {
     for (int ID : getARTDevices()) {
-        ART_device* dev = getARTDevice(ID);
+        ART_devicePtr dev = getARTDevice(ID);
         if (dev->ent->getName() == t) return dev->ent;
     }
 
     for (int ID : getVRPNTrackerIDs()) {
-        VRPN_device* dev = getVRPNTracker(ID);
+        VRPN_devicePtr dev = getVRPNTracker(ID);
         if (dev->getName() == t) return dev->getBeacon();
     }
 

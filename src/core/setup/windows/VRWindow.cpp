@@ -15,8 +15,8 @@ unsigned int VRWindow::active_window_count = 0;
 VRWindow::VRWindow() {
     active_window_count++;
     string n = getName();
-    auto f = new VRFunction< weak_ptr<VRThread> >("VRWindow", boost::bind(&VRWindow::update, this, _1) );
-    thread_id = VRSceneManager::get()->initThread(f,"window_"+n,true,0);
+    winThread = VRFunction< VRThreadWeakPtr >::create("VRWindow", boost::bind(&VRWindow::update, this, _1) );
+    thread_id = VRSceneManager::get()->initThread(winThread,"window_"+n,true,0);
 }
 
 VRWindow::~VRWindow() {
@@ -81,11 +81,11 @@ void VRWindow::setActive(bool b) { active = b; }
 bool VRWindow::hasContent() { return content; }
 void VRWindow::setContent(bool b) { content = b; }
 
-void VRWindow::setMouse(VRMouse* m) { mouse = m; }
-VRMouse* VRWindow::getMouse() { return mouse; }
+void VRWindow::setMouse(VRMousePtr m) { mouse = m; }
+VRMousePtr VRWindow::getMouse() { return mouse; }
 
-void VRWindow::setKeyboard(VRKeyboard* k) { keyboard = k; }
-VRKeyboard* VRWindow::getKeyboard() { return keyboard; }
+void VRWindow::setKeyboard(VRKeyboardPtr k) { keyboard = k; }
+VRKeyboardPtr VRWindow::getKeyboard() { return keyboard; }
 
 void VRWindow::save(xmlpp::Element* node) {
     node->set_attribute("active", toString(active).c_str());
@@ -128,14 +128,14 @@ void VRWindow::load(xmlpp::Element* node) {
 
     string _mouse = node->get_attribute("mouse")->get_value();
     if (_mouse != "None") {
-        mouse = (VRMouse*)VRSetupManager::getCurrent()->getDevice(_mouse);
+        mouse = dynamic_pointer_cast<VRMouse>( VRSetupManager::getCurrent()->getDevice(_mouse) );
         if (views.size() > 0 && mouse) if (auto v = views[0].lock()) mouse->setViewport(v);
     }
 
     if (node->get_attribute("keyboard") != 0) {
         string _keyboard = node->get_attribute("keyboard")->get_value();
         if (_keyboard != "None") {
-            keyboard = (VRKeyboard*)VRSetupManager::getCurrent()->getDevice(_keyboard);
+            keyboard = dynamic_pointer_cast<VRKeyboard>( VRSetupManager::getCurrent()->getDevice(_keyboard) );
         }
     }
 }

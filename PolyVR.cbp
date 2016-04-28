@@ -799,6 +799,7 @@
 		<Unit filename="src/core/setup/devices/VRMouse.h" />
 		<Unit filename="src/core/setup/devices/VRSignal.cpp" />
 		<Unit filename="src/core/setup/devices/VRSignal.h" />
+		<Unit filename="src/core/setup/devices/VRSignalT.h" />
 		<Unit filename="src/core/setup/devices/virtuose.cpp" />
 		<Unit filename="src/core/setup/devices/virtuose.h" />
 		<Unit filename="src/core/setup/tracking/ART.cpp" />

@@ -25,6 +25,9 @@ class VRMobile : public VRDevice {
         VRMobile(int port = 5500);
         ~VRMobile();
 
+        static VRMobilePtr create(int port = 5500);
+        VRMobilePtr ptr();
+
         void clearSignals();
 
         void setPort(int port);

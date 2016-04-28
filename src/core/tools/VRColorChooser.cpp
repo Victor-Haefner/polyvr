@@ -53,7 +53,7 @@ Color3f VRColorChooser::getLastColor() { return last_color; }
 
 void VRColorChooser::setGeometry(VRGeometryPtr g) { geo = g; g->setMaterial(mat); }
 
-void VRColorChooser::resolve(VRDevice* dev) {
+void VRColorChooser::resolve(VRDevicePtr dev) {
     if (dev == 0) return;
 
     //VRIntersection ins = dev->getLastIntersection();

@@ -15,10 +15,6 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 VRMobile::VRMobile(int port) : VRDevice("mobile") {
-    //enableAvatar("cone");
-    //enableAvatar("ray");
-    clearSignals();
-
     soc = VRSceneManager::get()->getSocket(port);
     this->port = port;
     cb = new VRHTTP_cb( "Mobile_server_callback", boost::bind(&VRMobile::callback, this, _1) );
@@ -29,6 +25,15 @@ VRMobile::VRMobile(int port) : VRDevice("mobile") {
 VRMobile::~VRMobile() {
     //cout << "~VRMobile " << getName() << endl;
 }
+
+VRMobilePtr VRMobile::create(int p) {
+    auto d = VRMobilePtr(new VRMobile(p));
+    d->initIntersect(d);
+    d->clearSignals();
+    return d;
+}
+
+VRMobilePtr VRMobile::ptr() { return static_pointer_cast<VRMobile>( shared_from_this() ); }
 
 void VRMobile::callback(void* _args) { // TODO: implement generic button trigger of device etc..
     //args->print();

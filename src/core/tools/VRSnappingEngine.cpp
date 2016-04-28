@@ -8,6 +8,7 @@
 #include "core/scene/VRSceneManager.h"
 #include "core/math/Octree.h"
 #include "core/utils/VRDoublebuffer.h"
+#include "core/setup/devices/VRSignalT.h"
 
 #include <OpenSG/OSGMatrixUtility.h>
 

@@ -29,7 +29,7 @@ class VRHaptic : public VRDevice {
         int fps_stable = 1;
 
 
-        void on_scene_changed(VRDevice* dev);
+        void on_scene_changed(VRDeviceWeakPtr dev);
 
         void applyTransformation(VRTransformPtr t);
         void updateHapticPre(VRTransformPtr t);
@@ -40,6 +40,9 @@ class VRHaptic : public VRDevice {
     public:
         VRHaptic();
         ~VRHaptic();
+
+        static VRHapticPtr create();
+        VRHapticPtr ptr();
 
         void setForce(Vec3f force, Vec3f torque);
         Vec3f getForce();

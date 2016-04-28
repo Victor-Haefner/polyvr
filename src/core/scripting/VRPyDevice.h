@@ -5,7 +5,6 @@
 #include "core/setup/devices/VRDevice.h"
 
 struct VRPyDevice : VRPyBaseT<OSG::VRDevice> {
-    static PyMemberDef members[];
     static PyMethodDef methods[];
 
     static PyObject* getName(VRPyDevice* self);

@@ -575,8 +575,8 @@ void TrafficSimulation::addDriverType(const unsigned int id, const double probab
 
 void TrafficSimulation::start() {
     if (communicationThreadId < 0) {
-        VRFunction<VRThreadWeakPtr>* func = new VRFunction<VRThreadWeakPtr>("trafficCommunicationThread", boost::bind(&TrafficSimulation::communicationThread, this, _1));
-        communicationThreadId = VRSceneManager::get()->initThread(func, "trafficCommunicationThread", true);
+        threadFkt = VRFunction<VRThreadWeakPtr>::create("trafficCommunicationThread", boost::bind(&TrafficSimulation::communicationThread, this, _1));
+        communicationThreadId = VRSceneManager::get()->initThread(threadFkt, "trafficCommunicationThread", true);
     }
 
 

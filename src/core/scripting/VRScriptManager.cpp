@@ -635,8 +635,9 @@ PyObject* VRScriptManager::startThread(VRScriptManager* self, PyObject *args) {
         if (type == "list") pArgs = PyList_AsTuple(pArgs);
     }
 
-    auto fkt = new VRFunction< std::weak_ptr<VRThread> >( "pyExecCall", boost::bind(execThread, pyFkt, pArgs, _1) );
-    int t = VRSceneManager::getCurrent()->initThread(fkt, "python thread");
+    auto pyThread = VRFunction< VRThreadWeakPtr >::create( "pyExecCall", boost::bind(execThread, pyFkt, pArgs, _1) );
+    self->pyThreads.push_back(pyThread);
+    int t = VRSceneManager::getCurrent()->initThread(pyThread, "python thread");
     return PyInt_FromLong(t);
 }
 

@@ -3,9 +3,9 @@
 
 #include <string.h>
 #include <OpenSG/OSGConfig.h>
-#include "core/utils/VRFunction.h"
 #include "core/utils/VRName.h"
 #include "core/utils/VRDeviceFwd.h"
+#include "core/utils/VRFunctionFwd.h"
 
 OSG_BEGIN_NAMESPACE
 using namespace std;
@@ -38,7 +38,8 @@ class VRSocket : public VRName {
         enum CONNECTION_TYPE {UNIX, TCP, HTTP};
 
     private:
-        std::shared_ptr<VRFunction<int> > queued_signal;
+        VRUpdatePtr queued_signal;
+        VRThreadCb socketThread;
         string tcp_msg;
         HTTP_args* http_args;
         VRSignalPtr sig;

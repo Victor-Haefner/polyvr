@@ -140,15 +140,18 @@ VRIntersection VRIntersect::intersect() { return intersect( VRObjectWeakPtr() );
 
 VRIntersect::VRIntersect() {
     initCross();
-    drop_fkt = VRFunction<VRDevice*>::create("Intersect_drop", boost::bind(&VRIntersect::drop, this, _1));
+    drop_fkt = VRFunction<VRDeviceWeakPtr>::create("Intersect_drop", boost::bind(&VRIntersect::drop, this, _1));
     dragged_ghost = VRTransform::create("dev_ghost");
-    dragSignal = VRSignal::create((VRDevice*)this);
-    dropSignal = VRSignal::create((VRDevice*)this);
 }
 
 VRIntersect::~VRIntersect() {}
 
-void VRIntersect::dragCB(VRTransformWeakPtr caster, VRObjectWeakPtr tree, VRDevice* dev) {
+void VRIntersect::initIntersect(VRDevicePtr dev) {
+    dragSignal = VRSignal::create(dev);
+    dropSignal = VRSignal::create(dev);
+}
+
+void VRIntersect::dragCB(VRTransformWeakPtr caster, VRObjectWeakPtr tree, VRDeviceWeakPtr dev) {
     VRIntersection ins = intersect(tree);
     drag(ins.object, caster);
 }
@@ -156,6 +159,7 @@ void VRIntersect::dragCB(VRTransformWeakPtr caster, VRObjectWeakPtr tree, VRDevi
 void VRIntersect::clearDynTrees() { dynTrees.clear(); }
 
 void VRIntersect::drag(VRObjectWeakPtr wobj, VRTransformWeakPtr wcaster) {
+    cout << "drag\n";
     auto obj = wobj.lock();
     auto caster = wcaster.lock();
     if (!obj || !caster) return;
@@ -174,14 +178,15 @@ void VRIntersect::drag(VRObjectWeakPtr wobj, VRTransformWeakPtr wcaster) {
     dragged_ghost->setMatrix(dobj->getMatrix());
     dragged_ghost->switchParent(caster);
 
-    dragSignal->trigger<VRDevice>();
+    dragSignal->triggerPtr<VRDevice>();
 }
 
-void VRIntersect::drop(VRDevice* dev) {
+void VRIntersect::drop(VRDeviceWeakPtr dev) {
+    cout << "drop\n";
     auto d = getDraggedObject();
     if (d != 0) {
         d->drop();
-        dropSignal->trigger<VRDevice>();
+        dropSignal->triggerPtr<VRDevice>();
         drop_time = VRGlobals::get()->CURRENT_FRAME;
         dragged.reset();
     }
@@ -231,13 +236,13 @@ VRDeviceCb VRIntersect::addDrag(VRTransformWeakPtr caster) {
 
 VRDeviceCb VRIntersect::addDrag(VRTransformWeakPtr caster, VRObjectWeakPtr tree) {
     auto sc = caster.lock();
-    auto st = caster.lock();
-    if (!sc || !st) return 0;
+    auto st = tree.lock();
+    if (!sc) return 0;
 
-    auto key = st.get();
+    auto key = sc.get();
     if (int_fkt_map.count(key)) return int_fkt_map[key];
 
-    VRDeviceCb fkt = VRFunction<VRDevice*>::create("Intersect_drag", boost::bind(&VRIntersect::dragCB, this, caster, tree, _1));
+    VRDeviceCb fkt = VRFunction<VRDeviceWeakPtr>::create("Intersect_drag", boost::bind(&VRIntersect::dragCB, this, caster, tree, _1));
     dra_fkt_map[key] = fkt;
     return fkt;
 }

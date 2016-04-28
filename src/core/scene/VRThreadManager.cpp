@@ -28,10 +28,8 @@ void VRThreadManager::runLoop(VRThreadWeakPtr wt) {
     t->osg_t = tr;
     t->status = 1;
 
-    do {
-        t = wt.lock();
-        if (t) (*t->fkt)(t);
-    } while(t->control_flag);
+    do if (t = wt.lock()) if (auto f = t->fkt.lock()) (*f)(t);
+    while(t->control_flag);
 
     t->status = 2;
 }
@@ -51,7 +49,6 @@ VRThread::~VRThread() {
         boost_t->interrupt();
         delete boost_t;
     }
-    if (fkt) delete fkt;
 }
 
 void VRThread::syncToMain() {
@@ -138,7 +135,7 @@ void VRThreadManager::stopThread(int id, int tries) {
     threads.erase(id);
 }
 
-int VRThreadManager::initThread(VRFunction<VRThreadWeakPtr>* f, string name, bool loop, int aspect) { //start thread
+int VRThreadManager::initThread(VRThreadCb f, string name, bool loop, int aspect) { //start thread
     static int id = 1;
 
     VRThreadPtr t = VRThreadPtr( new VRThread() );

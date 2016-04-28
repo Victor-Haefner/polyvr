@@ -63,18 +63,18 @@ class CEF {
         bool focus = false;
 
         VRUpdatePtr update_callback;
-        map<OSG::VRDevice*, shared_ptr<VRFunction<OSG::VRDevice*> >> mouse_dev_callback;
+        map<OSG::VRDevice*, VRDeviceCb> mouse_dev_callback;
         map<OSG::VRDevice*, VRUpdatePtr> mouse_move_callback;
-        //shared_ptr<VRFunction<OSG::VRDevice*> > mouse_dev_callback;
-        shared_ptr<VRFunction<OSG::VRDevice*> > keyboard_dev_callback;
+        //VRDeviceCb mouse_dev_callback;
+        VRDeviceCb keyboard_dev_callback;
 
         void global_initiate();
         void initiate();
         void update();
 
-        void mouse(int lb, int rb, int wu, int wd, OSG::VRDevice* dev);
-        void mouse_move(OSG::VRDevice* dev, int i);
-        void keyboard(OSG::VRDevice* dev);
+        void mouse(int lb, int rb, int wu, int wd, OSG::VRDeviceWeakPtr dev);
+        void mouse_move(OSG::VRDeviceWeakPtr dev, int i);
+        void keyboard(OSG::VRDeviceWeakPtr dev);
 
         CEF();
     public:
@@ -85,8 +85,8 @@ class CEF {
         void setAspectRatio(float a);
 
         void setMaterial(OSG::VRMaterialPtr mat);
-        void addMouse(OSG::VRDevice* dev, OSG::VRObjectWeakPtr obj, int lb, int rb, int wu, int wd);
-        void addKeyboard(OSG::VRDevice* dev);
+        void addMouse(OSG::VRDevicePtr dev, OSG::VRObjectWeakPtr obj, int lb, int rb, int wu, int wd);
+        void addKeyboard(OSG::VRDevicePtr dev);
 
         void open(string site);
         void reload();

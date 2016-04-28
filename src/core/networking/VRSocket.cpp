@@ -68,6 +68,9 @@ void server_answer_job(HTTP_args* args, int i) {
 static int server_answer_to_connection_m(struct mg_connection *conn, enum mg_event ev);
 
 class HTTPServer {
+    private:
+        VRThreadCb serverThread;
+
     public:
         //server----------------------------------------------------------------
         //struct MHD_Daemon* server = 0;
@@ -101,8 +104,8 @@ class HTTPServer {
             server = mg_create_server(data, server_answer_to_connection_m);
             mg_set_option(server, "listening_port", toString(port).c_str());
 
-            VRFunction<VRThreadWeakPtr>* lfkt = new VRFunction<VRThreadWeakPtr>("mongoose loop", boost::bind(&HTTPServer::loop, this, _1));
-            threadID = VRSceneManager::get()->initThread(lfkt, "mongoose", true);
+            serverThread = VRFunction<VRThreadWeakPtr>::create("mongoose loop", boost::bind(&HTTPServer::loop, this, _1));
+            threadID = VRSceneManager::get()->initThread(serverThread, "mongoose", true);
 
             //server = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, port, NULL, NULL, &server_answer_to_connection, data, MHD_OPTION_END);
         }
@@ -429,12 +432,11 @@ void VRSocket::scanTCP(VRThreadWeakPtr thread) {
 }
 
 void VRSocket::initServer(CONNECTION_TYPE t, int _port) {
-    VRFunction<VRThreadWeakPtr>* socket = 0;
     port = _port;
-    if (t == UNIX) socket = new VRFunction<VRThreadWeakPtr>("UNIXSocket", boost::bind(&VRSocket::scanUnix, this, _1));
-    if (t == TCP) socket = new VRFunction<VRThreadWeakPtr>("TCPSocket", boost::bind(&VRSocket::scanTCP, this, _1));
+    if (t == UNIX) socketThread = VRFunction<VRThreadWeakPtr>::create("UNIXSocket", boost::bind(&VRSocket::scanUnix, this, _1));
+    if (t == TCP) socketThread = VRFunction<VRThreadWeakPtr>::create("TCPSocket", boost::bind(&VRSocket::scanTCP, this, _1));
     run = true;
-    threadID = VRSceneManager::get()->initThread(socket, "socket", true);
+    threadID = VRSceneManager::get()->initThread(socketThread, "socket", true);
 }
 
 

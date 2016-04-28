@@ -3,14 +3,25 @@
 
 #include <memory>
 
-namespace OSG {
-    class VRDevice;
-    class VRSignal;
-}
+#define ptrFwd( X ) \
+class X; \
+typedef std::shared_ptr<X> X ## Ptr; \
+typedef std::weak_ptr<X> X ## WeakPtr;
 
-typedef std::shared_ptr<OSG::VRSignal> VRDevicePtr;
-typedef std::weak_ptr<OSG::VRSignal> VRDeviceWeakPtr;
-typedef std::shared_ptr<OSG::VRSignal> VRSignalPtr;
-typedef std::weak_ptr<OSG::VRSignal> VRSignalWeakPtr;
+namespace OSG {
+
+ptrFwd(VRSignal);
+ptrFwd(VRDevice);
+ptrFwd(VRFlystick);
+ptrFwd(VRMouse);
+ptrFwd(VRKeyboard);
+ptrFwd(VRMobile);
+ptrFwd(VRHaptic);
+ptrFwd(ART);
+ptrFwd(ART_device);
+ptrFwd(VRPN);
+ptrFwd(VRPN_device);
+
+}
 
 #endif // VRDEVICEFWD_H_INCLUDED

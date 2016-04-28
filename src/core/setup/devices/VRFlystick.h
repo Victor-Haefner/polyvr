@@ -10,6 +10,9 @@ class VRFlystick : public VRDevice {
     public:
         VRFlystick();
 
+        static VRFlystickPtr create();
+        VRFlystickPtr ptr();
+
         void clearSignals();
 
         void update(vector<int> buttons, vector<float> sliders);

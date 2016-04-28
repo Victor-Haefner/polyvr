@@ -33,7 +33,7 @@ class VRThread {
         string name;
         bool control_flag = false;
         int status = 0;
-        VRFunction< std::weak_ptr<VRThread> >* fkt = 0;
+        VRThreadWeakCb fkt;
         int aspect = 0;
         /** last frame time stamp**/
         long long t_last = 0;
@@ -41,9 +41,6 @@ class VRThread {
         void syncFromMain();
         void syncToMain();
 };
-
-typedef std::shared_ptr<VRThread> VRThreadPtr;
-typedef std::weak_ptr<VRThread> VRThreadWeakPtr;
 
 class VRThreadManager {
     private:
@@ -56,7 +53,7 @@ class VRThreadManager {
         VRThreadManager();
         ~VRThreadManager();
 
-        int initThread(VRFunction<VRThreadWeakPtr>* f, string name, bool loop = false, int aspect = 0);
+        int initThread(VRThreadCb f, string name, bool loop = false, int aspect = 0);
 
         void stopThread(int id, int tries = 100);
         void stopAllThreads();

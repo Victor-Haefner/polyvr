@@ -54,7 +54,7 @@ void VRNavPreset::updateBinding(VRNavBinding& b) {
     //cout << "\nUPDATE BINDING " << b.cb->getName() << endl;
 }
 
-void VRNavPreset::setDevice(VRDevice* _dev) {
+void VRNavPreset::setDevice(VRDevicePtr _dev) {
     dev = _dev;
     dev->setTarget(target.lock());
     for (auto& b : bindings) updateBinding(b);
@@ -154,8 +154,8 @@ map<string, VRDeviceCb>& VRNavigator_base::getNavigationCallbacks() { return lib
 
 
 VRNavigator::VRNavigator() {
-    auto addNavCb = [&](string name, boost::function<void(VRDevice*)> fkt) {
-        storeNavigationCallback( VRDeviceCb( new VRFunction<VRDevice*>(name, fkt) ) );
+    auto addNavCb = [&](string name, boost::function<void(VRDeviceWeakPtr)> fkt) {
+        storeNavigationCallback( VRFunction<VRDeviceWeakPtr>::create(name, fkt) );
     };
 
     addNavCb("mouse_orbit2d", boost::bind(&VRNavigator::orbit2D, this, _1) );
@@ -174,7 +174,9 @@ VRNavigator::~VRNavigator() {}
 
 float VRNavigator::clip_dist_down = 1.5;
 
-void VRNavigator::zoom(VRDevice* dev, int dir) {
+void VRNavigator::zoom(VRDeviceWeakPtr _dev, int dir) {
+    auto dev = _dev.lock();
+    if (!dev) return;
     VRTransformPtr target = dev->getTarget();
     if (target == 0) return;
 
@@ -183,7 +185,9 @@ void VRNavigator::zoom(VRDevice* dev, int dir) {
     target->zoom(speed*dir);
 }
 
-void VRNavigator::orbit(VRDevice* dev) {
+void VRNavigator::orbit(VRDeviceWeakPtr _dev) {
+    auto dev = _dev.lock();
+    if (!dev) return;
     VRTransformPtr target = dev->getTarget();
     VRTransformPtr devBeacon = dev->getBeacon();
 
@@ -239,7 +243,9 @@ void VRNavigator::orbit(VRDevice* dev) {
 	target->setFrom(camPos);
 }
 
-void VRNavigator::walk(VRDevice* dev) {
+void VRNavigator::walk(VRDeviceWeakPtr _dev) {
+    auto dev = _dev.lock();
+    if (!dev) return;
     VRTransformPtr target = dev->getTarget();
     VRTransformPtr devBeacon = dev->getBeacon();
 
@@ -262,7 +268,9 @@ void VRNavigator::walk(VRDevice* dev) {
     target->translate(x);
 }
 
-void VRNavigator::fly_walk(VRDevice* dev) {
+void VRNavigator::fly_walk(VRDeviceWeakPtr _dev) {
+    auto dev = _dev.lock();
+    if (!dev) return;
     int key = dev->key();
     float d = 0;
     dev->s_state(key, &d);
@@ -290,7 +298,9 @@ void VRNavigator::fly_walk(VRDevice* dev) {
     }
 }
 
-void VRNavigator::orbit2D(VRDevice* dev) {
+void VRNavigator::orbit2D(VRDeviceWeakPtr _dev) {
+    auto dev = _dev.lock();
+    if (!dev) return;
     VRTransformPtr target = dev->getTarget();
     VRTransformPtr devBeacon = dev->getBeacon();
 
@@ -316,7 +326,9 @@ void animPathAt(VRTransformWeakPtr trp, path* p, float t) {
     tr->setAt( p->getPosition(t) );
 }
 
-void VRNavigator::focus(VRDevice* dev) {
+void VRNavigator::focus(VRDeviceWeakPtr _dev) {
+    auto dev = _dev.lock();
+    if (!dev) return;
     VRTransformPtr target = dev->getTarget();
     VRTransformPtr devBeacon = dev->getBeacon();
     auto scene = VRSceneManager::getCurrent();
@@ -340,7 +352,7 @@ void VRNavigator::focus(VRDevice* dev) {
 
 // presets
 
-void VRNavigator::initWalk(VRTransformPtr target, VRDevice* dev) {
+void VRNavigator::initWalk(VRTransformPtr target, VRDevicePtr dev) {
     VRNavPreset* preset = new VRNavPreset();
     preset->setDevice(dev);
     preset->setTarget(target);
@@ -354,7 +366,7 @@ void VRNavigator::initWalk(VRTransformPtr target, VRDevice* dev) {
     addNavigation(preset);
 }
 
-void VRNavigator::initOrbit(VRTransformPtr target, VRDevice* dev) {
+void VRNavigator::initOrbit(VRTransformPtr target, VRDevicePtr dev) {
     VRNavPreset* preset = new VRNavPreset();
     preset->setDevice(dev);
     preset->setTarget(target);
@@ -374,7 +386,7 @@ void VRNavigator::initOrbit(VRTransformPtr target, VRDevice* dev) {
     addNavigation(preset);
 }
 
-void VRNavigator::initOrbit2D(VRTransformPtr target, VRDevice* dev) {
+void VRNavigator::initOrbit2D(VRTransformPtr target, VRDevicePtr dev) {
     VRNavPreset* preset = new VRNavPreset();
     preset->setDevice(dev);
     preset->setTarget(target);
@@ -394,7 +406,7 @@ void VRNavigator::initOrbit2D(VRTransformPtr target, VRDevice* dev) {
     addNavigation(preset);
 }
 
-void VRNavigator::initFlyOrbit(VRTransformPtr target, VRDevice* dev) { // TODO
+void VRNavigator::initFlyOrbit(VRTransformPtr target, VRDevicePtr dev) { // TODO
     VRNavPreset* preset = new VRNavPreset();
     preset->setDevice(dev);
     preset->setTarget(target);
@@ -412,7 +424,7 @@ void VRNavigator::initFlyOrbit(VRTransformPtr target, VRDevice* dev) { // TODO
     addNavigation(preset);
 }
 
-void VRNavigator::initFlyWalk(VRTransformPtr target, VRDevice* dev) {
+void VRNavigator::initFlyWalk(VRTransformPtr target, VRDevicePtr dev) {
     VRNavPreset* preset = new VRNavPreset();
     preset->setDevice(dev);
     preset->setTarget(target);
@@ -428,7 +440,9 @@ void VRNavigator::initFlyWalk(VRTransformPtr target, VRDevice* dev) {
     addNavigation(preset);
 }
 
-void VRNavigator::hyd_walk(VRDevice* dev) {
+void VRNavigator::hyd_walk(VRDeviceWeakPtr _dev) {
+    auto dev = _dev.lock();
+    if (!dev) return;
     int key = dev->key();
     float d = 0;
     dev->s_state(key, &d);
@@ -457,7 +471,7 @@ void VRNavigator::hyd_walk(VRDevice* dev) {
     }
 }
 
-void VRNavigator::initHydraFly(VRTransformPtr target, VRDevice* dev) {
+void VRNavigator::initHydraFly(VRTransformPtr target, VRDevicePtr dev) {
     VRNavPreset* preset = new VRNavPreset();
     preset->setDevice(dev);
     preset->setTarget(target);

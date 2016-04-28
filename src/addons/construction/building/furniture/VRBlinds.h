@@ -47,7 +47,7 @@ class VRBlinds: public VRTransform {
 
         void close();
 
-        void toggle(VRDevice* dev);
+        void toggle(VRDeviceWeakPtr dev);
 
         void create();
 

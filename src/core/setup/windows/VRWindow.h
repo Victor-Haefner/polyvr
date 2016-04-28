@@ -25,13 +25,14 @@ class VRWindow : public std::enable_shared_from_this<VRWindow>, public VRName {
         RenderActionRefPtr ract;
         vector<VRViewWeakPtr> views;
 
-        VRMouse* mouse = 0;
-        VRKeyboard* keyboard = 0;
+        VRMousePtr mouse = 0;
+        VRKeyboardPtr keyboard = 0;
         int width = 640;
         int height = 480;
 
+        VRThreadCb winThread;
         int thread_id = -1;
-        void update( weak_ptr<VRThread>  t);
+        void update( VRThreadWeakPtr t );
 
     public:
         VRWindow();
@@ -54,11 +55,11 @@ class VRWindow : public std::enable_shared_from_this<VRWindow>, public VRName {
         bool hasContent();
         void setContent(bool b);
 
-        void setMouse(VRMouse* m);
-        VRMouse* getMouse();
+        void setMouse(VRMousePtr m);
+        VRMousePtr getMouse();
 
-        void setKeyboard(VRKeyboard* m);
-        VRKeyboard* getKeyboard();
+        void setKeyboard(VRKeyboardPtr m);
+        VRKeyboardPtr getKeyboard();
 
         WindowRecPtr getOSGWindow();
         void addView(VRViewPtr view);

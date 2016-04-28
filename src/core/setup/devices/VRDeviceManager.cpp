@@ -15,7 +15,7 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-void VRDeviceManager::dev_test(VRDevice* dev) {
+void VRDeviceManager::dev_test(VRDevicePtr dev) {
     int tmp = -1;
     float tmp2 = 0;
     int key = dev->key();
@@ -30,9 +30,6 @@ VRDeviceManager::VRDeviceManager() {
 
 VRDeviceManager::~VRDeviceManager() {
     cout << "~VRDeviceManager\n";
-    for (auto dev : devices) {
-        delete dev.second;
-    }
 }
 
 void VRDeviceManager::clearSignals() { for (auto dev : devices) dev.second->clearSignals(); }
@@ -42,13 +39,13 @@ void VRDeviceManager::updateDevices() {
     for (auto itr : devices) itr.second->updateBeacon();
 }
 
-void VRDeviceManager::addDevice(VRDevice* dev) {
+void VRDeviceManager::addDevice(VRDevicePtr dev) {
     devices[dev->getName()] = dev;
     dev->getBeacon()->switchParent(device_root);
     //dev->getCross()->switchParent(device_root); //TODO: add crosses as marker with a marker engine!
 }
 
-map<string, VRDevice* > VRDeviceManager::getDevices() { return devices; }
+map<string, VRDevicePtr > VRDeviceManager::getDevices() { return devices; }
 
 vector<string> VRDeviceManager::getDevices(string type) {
     vector<string> devs;
@@ -64,19 +61,17 @@ vector<string> VRDeviceManager::getDeviceTypes() {
     return res;
 }
 
-/*VRDevice* VRDeviceManager::getDevice(string type, int i) { // deprecated?
+/*VRDevicePtr VRDeviceManager::getDevice(string type, int i) { // deprecated?
     return 0;
 }*/
 
-VRDevice* VRDeviceManager::getDevice(string name) {
+VRDevicePtr VRDeviceManager::getDevice(string name) {
     if (devices.count(name) == 0) return 0;
     return devices[name];
 }
 
 void VRDeviceManager::updateActivatedSignals() {
-    for (itr =devices.begin(); itr!=devices.end(); itr++) {
-        itr->second->updateSignals();
-    }
+    for (auto d : devices) d.second->updateSignals();
 }
 
 void VRDeviceManager::resetDeviceDynNodes(VRObjectPtr root) {
@@ -88,9 +83,9 @@ void VRDeviceManager::resetDeviceDynNodes(VRObjectPtr root) {
 
 void VRDeviceManager::save(xmlpp::Element* node) {
     xmlpp::Element* dn;
-    for (itr = devices.begin(); itr != devices.end(); itr++) {
+    for (auto d : devices) {
         dn = node->add_child("Device");
-        itr->second->save(dn);
+        d.second->save(dn);
     }
 }
 
@@ -105,29 +100,29 @@ void VRDeviceManager::load(xmlpp::Element* node) {
         if (!el) continue;
 
         string type = el->get_attribute("type")->get_value();
-        VRDevice* dev = 0;
+        VRDevicePtr dev = 0;
         cout << " " << type;
 
         if (type == "mouse") {
-            VRMouse* m = new VRMouse();
+            VRMousePtr m = VRMouse::create();
             m->load(el);
             dev = m;
         }
 
         if (type == "keyboard") {
-            VRKeyboard* k = new VRKeyboard();
+            VRKeyboardPtr k = VRKeyboard::create();
             k->load(el);
             dev = k;
         }
 
         if (type == "haptic") {
-            VRHaptic* h = new VRHaptic();
+            VRHapticPtr h = VRHaptic::create();
             h->load(el);
             dev = h;
         }
 
         if (type == "mobile") {
-            VRMobile* m = new VRMobile(5500);
+            VRMobilePtr m = VRMobile::create(5500);
             m->load(el);
             dev = m;
         }

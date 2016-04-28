@@ -367,7 +367,7 @@ void VRGuiSetup::on_name_edited(const Glib::ustring& path, const Glib::ustring& 
     // update key in map
     if (auto s = current_setup.lock()) {
         if (type == "window") s->changeWindowName(name, new_name);
-        if (type == "vrpn_tracker") s->changeVRPNDeviceName((VRPN_device*)obj, new_name);
+        if (type == "vrpn_tracker") s->changeVRPNDeviceName(((VRPN_device*)obj)->ptr(), new_name);
         if (type == "node") ((VRNetworkNode*)obj)->setName(new_name);
         if (type == "slave") ((VRNetworkSlave*)obj)->setName(new_name);
     }
@@ -404,7 +404,7 @@ void VRGuiSetup::on_menu_delete() {
 
     if (selected_type == "vrpn_tracker") {
         VRPN_device* t = (VRPN_device*)selected_object;
-        setup->delVRPNTracker(t);
+        setup->delVRPNTracker(t->ptr());
     }
 
     if (selected_type == "art_device") {
@@ -467,8 +467,7 @@ template<class T>
 void VRGuiSetup::on_menu_add_device() {
     auto setup = current_setup.lock();
     if (!setup) return;
-    T* m = new T();
-    setup->addDevice(m);
+    setup->addDevice(T::create());
     updateSetup();
     setToolButtonSensitivity("toolbutton12", true);
 }
@@ -1011,7 +1010,7 @@ VRGuiSetup::VRGuiSetup() {
     updateSetupList();
     updateSetup();
 
-    updateSetupCb = VRFunction<VRDevice*>::create("update gui setup", boost::bind(&VRGuiSetup::updateSetup, this) );
+    updateSetupCb = VRFunction<VRDeviceWeakPtr>::create("update gui setup", boost::bind(&VRGuiSetup::updateSetup, this) );
     VRSetupManager::getCurrent()->getSignal_on_new_art_device()->add(updateSetupCb);
 }
 
@@ -1068,9 +1067,9 @@ void VRGuiSetup::updateSetup() {
     auto setup = current_setup.lock();
     if (!setup) return;
     for (auto ditr : setup->getDevices()) {
-        VRDevice* dev = ditr.second;
+        VRDevicePtr dev = ditr.second;
         itr = tree_store->append(devices_itr->children());
-        setTreeRow(tree_store, *itr, ditr.first.c_str(), dev->getType().c_str(), (gpointer)dev);
+        setTreeRow(tree_store, *itr, ditr.first.c_str(), dev->getType().c_str(), (gpointer)dev.get());
 
         if (dev->getType() == "mouse") {
             row = *mouse_list->append();
@@ -1109,7 +1108,7 @@ void VRGuiSetup::updateSetup() {
     // VRPN
     vector<int> vrpnIDs = setup->getVRPNTrackerIDs();
     for (uint i=0; i<vrpnIDs.size(); i++) {
-        VRPN_device* t = setup->getVRPNTracker(vrpnIDs[i]);
+        VRPN_device* t = setup->getVRPNTracker(vrpnIDs[i]).get();
         itr = tree_store->append(vrpn_itr->children());
         cout << "vrpn liststore: " << t->getName() << endl;
         setTreeRow(tree_store, *itr, t->getName().c_str(), "vrpn_tracker", (gpointer)t);
@@ -1117,13 +1116,13 @@ void VRGuiSetup::updateSetup() {
 
     // ART
     for (int ID : setup->getARTDevices() ) {
-        ART_device* dev = setup->getARTDevice(ID);
+        ART_devicePtr dev = setup->getARTDevice(ID);
 
         itr = tree_store->append(art_itr->children());
         string name = dev->getName();
         if (dev->dev) name = dev->dev->getName();
         else if (dev->ent) name = dev->ent->getName();
-        setTreeRow(tree_store, *itr, name.c_str(), "art_device", (gpointer)dev);
+        setTreeRow(tree_store, *itr, name.c_str(), "art_device", (gpointer)dev.get());
 
         if (dev->ent) {
             row = *user_list->append();

@@ -90,7 +90,7 @@ PyObject* VRPyCEF::addMouse(VRPyCEF* self, PyObject* args) {
     if (! PyArg_ParseTuple(args, "OOiiii", &dev, &surf, &b1, &b2, &b3, &b4)) return NULL;
     if ((PyObject*)dev == Py_None) { Py_RETURN_TRUE; }
     if ((PyObject*)surf == Py_None) { PyErr_SetString(err, "VRPyCEF::addMouse, surface is invalid"); return NULL; }
-    self->objPtr->addMouse(dev->obj, surf->objPtr, b1, b2, b3, b4);
+    self->objPtr->addMouse(dev->objPtr, surf->objPtr, b1, b2, b3, b4);
     Py_RETURN_TRUE;
 }
 
@@ -99,6 +99,6 @@ PyObject* VRPyCEF::addKeyboard(VRPyCEF* self, PyObject* args) {
     VRPyDevice* dev;
     if (! PyArg_ParseTuple(args, "O", &dev)) return NULL;
     if ((PyObject*)dev == Py_None) { PyErr_SetString(err, "VRPyCEF::addKeyboard, keyboard is invalid"); return NULL; }
-    self->objPtr->addKeyboard(dev->obj);
+    self->objPtr->addKeyboard(dev->objPtr);
     Py_RETURN_TRUE;
 }

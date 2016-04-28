@@ -17,6 +17,14 @@ VRDevice::VRDevice(string _type) : VRAvatar(_type) {
 
 VRDevice::~VRDevice() {}
 
+VRDevicePtr VRDevice::create(string type) {
+    auto d = VRDevicePtr(new VRDevice(type));
+    d->initIntersect(d);
+    return d;
+}
+
+VRDevicePtr VRDevice::ptr() { return static_pointer_cast<VRDevice>( shared_from_this() ); }
+
 VRSignalPtr VRDevice::signalExist(int key, int state) {
     stringstream ss;
     ss << "on_" << name << "_" << key << "_" << state;
@@ -30,7 +38,7 @@ VRSignalPtr VRDevice::createSignal(int key, int state) {
     ss << "on_" << name << "_" << key << "_" << state;
     string sig_name = ss.str();
 
-    if ( callbacks.count(sig_name) ==  0) callbacks[sig_name] = VRSignal::create(this);
+    if ( callbacks.count(sig_name) ==  0) callbacks[sig_name] = VRSignal::create(ptr());
     VRSignalPtr sig = callbacks[sig_name];
     sig->setName(sig_name);
     return sig;
@@ -39,7 +47,7 @@ VRSignalPtr VRDevice::createSignal(int key, int state) {
 void VRDevice::triggerSignal(int key, int state) {
     VRSignalPtr sig = signalExist(key, state);
     if (sig) {
-        sig->trigger<VRDevice>();
+        sig->triggerPtr<VRDevice>();
         if (sig->doUpdate()) addUpdateSignal(sig);
     }
 }
@@ -51,15 +59,15 @@ void VRDevice::addUpdateSignal(VRSignalPtr sig) {
     activatedSignals[sig.get()] = sig;
 }
 
-void VRDevice::remUpdateSignal(VRSignalPtr sig, VRDevice* dev) {
+void VRDevice::remUpdateSignal(VRSignalPtr sig, VRDeviceWeakPtr dev) {
     auto k = sig.get();
     if (activatedSignals.count(k) == 0) return;
-    activatedSignals[k]->trigger<VRDevice>();
+    activatedSignals[k]->triggerPtr<VRDevice>();
     activatedSignals.erase(k);
 }
 
 void VRDevice::updateSignals() {
-    for (auto a : activatedSignals) a.second->trigger<VRDevice>();
+    for (auto a : activatedSignals) a.second->triggerPtr<VRDevice>();
 }
 
 void VRDevice::clearSignals() {
@@ -78,7 +86,7 @@ VRSignalPtr VRDevice::addSignal(int key, int state) {
 }
 
 // signal activation setup
-VRSignalPtr VRDevice::addToggleSignal(int key) {
+VRSignalPtr VRDevice::addToggleSignal(int key) { // TODO: this is not ok, an active signal may also be used by someone who does not want it to be active!!
     BStates[key] = false;
 
     // activation signal
@@ -87,7 +95,7 @@ VRSignalPtr VRDevice::addToggleSignal(int key) {
 
     // deactivation signal
     VRSignalPtr sigB = createSignal(key, 0);
-    auto fkt = VRFunction<VRDevice*>::create("Device_remUpdate", boost::bind(&VRDevice::remUpdateSignal, this, sigA, _1));
+    auto fkt = VRFunction<VRDeviceWeakPtr>::create("Device_remUpdate", boost::bind(&VRDevice::remUpdateSignal, ptr(), sigA, _1)); // TODO: check if passing ptr() induces a ptr cycle!!
     sigB->add( fkt );
     deactivationCallbacks[sigA.get()] = fkt;
 

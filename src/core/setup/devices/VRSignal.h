@@ -36,29 +36,17 @@ class VRSignal : public VRSignal_base {
         void* event = 0;
 
     public:
-        VRSignal(VRDevice* dev = 0);
+        VRSignal(VRDevicePtr dev = 0);
         ~VRSignal();
 
-        static VRSignalPtr create(VRDevice* dev = 0);
+        static VRSignalPtr create(VRDevicePtr dev = 0);
 
         void add(VRFunction_base* fkt);
         void add(VRBaseWeakCb fkt);
         void sub(VRFunction_base* fkt);
         void sub(VRBaseWeakCb fkt);
-        template<typename Event> void trigger(Event* event = 0) {
-            if (event == 0) event = (Event*)this->event;
-            for (auto c : callbacks) {
-                auto cb = (VRFunction<Event*>*)c;
-                (*cb)(event);
-            }
-            for (auto c : callbacksPtr) {
-                if (auto spc = c.lock()) {
-                    //( (VRFunction<Event*>*)spc.get() )(event);
-                    auto cb = (VRFunction<Event*>*)spc.get();
-                    (*cb)(event);
-                }
-            }
-        }
+        template<typename Event> void trigger(Event* event = 0);
+        template<typename Event> void triggerPtr(std::shared_ptr<Event> event = 0);
 };
 
 OSG_END_NAMESPACE

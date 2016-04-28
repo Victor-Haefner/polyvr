@@ -19,7 +19,7 @@ void VRElectricDevice::turnOff() {
     this->active = false;
 }
 
-void VRElectricDevice::toggle(VRDevice* dev) {
+void VRElectricDevice::toggle(VRDevicePtr dev) {
     if (dev != 0 && EDev != 0) {
         VRIntersection ins = dev->intersect(EDev);
         if (!ins.hit) return;

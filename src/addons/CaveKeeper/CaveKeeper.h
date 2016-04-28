@@ -66,9 +66,9 @@ class CaveKeeper : public BlockWorld {
         CaveKeeper();
         ~CaveKeeper();
 
-        void dig(VRDevice* dev);
+        void dig(VRDevicePtr dev);
 
-        void place(VRDevice* dev, string s, VRTransformPtr geo);
+        void place(VRDevicePtr dev, string s, VRTransformPtr geo);
 };
 
 OSG_END_NAMESPACE

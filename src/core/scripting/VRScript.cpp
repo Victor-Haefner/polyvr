@@ -39,7 +39,7 @@ void updateArgPtr(VRScript::arg* a) {
         return;
     }
     if (t == "VRPyDeviceType" || t == "VRPyMouseType" || t == "VRPyHapticType" || t == "VRPyMobileType") {
-        a->ptr = (void*)setup->getDevice(a->val);
+        a->ptr = (void*)setup->getDevice(a->val).get();
         return;
     }
 
@@ -56,7 +56,7 @@ VRScript::arg::arg(string nspace, string name) {
 }
 
 void VRScript::clean() {
-    VRMobile* mob = (VRMobile*)VRSetupManager::getCurrent()->getDevice(this->mobile);
+    VRMobilePtr mob = dynamic_pointer_cast<VRMobile>( VRSetupManager::getCurrent()->getDevice(this->mobile) );
     if (mob) mob->remWebSite(getName());
 
     auto scene = VRSceneManager::getCurrent();
@@ -76,7 +76,7 @@ void VRScript::clean() {
 
 void VRScript::update() {
     if (type == "HTML") {
-        VRMobile* mob = (VRMobile*)VRSetupManager::getCurrent()->getDevice(mobile);
+        VRMobilePtr mob = dynamic_pointer_cast<VRMobile>( VRSetupManager::getCurrent()->getDevice(mobile) );
         if (mob) mob->addWebSite(getName(), core);
     }
 
@@ -96,7 +96,7 @@ void VRScript::update() {
         }
 
         if (t->trigger == "on_device") {
-            VRDevice* dev = VRSetupManager::getCurrent()->getDevice(t->dev);
+            VRDevicePtr dev = VRSetupManager::getCurrent()->getDevice(t->dev);
             int state = -1;
             if (t->state == "Released") state = 0;
             if (t->state == "Pressed") state = 1;
@@ -170,7 +170,7 @@ VRScript::VRScript(string _name) {
     setNameSpace("__script__");
     setName(_name);
     cbfkt_sys = VRFunction<int>::create(_name + "_ScriptCallback_sys", boost::bind(&VRScript::execute, this));
-    cbfkt_dev = new VRFunction<VRDevice*>(_name + "_ScriptCallback_dev", boost::bind(&VRScript::execute_dev, this, _1));
+    cbfkt_dev = new VRFunction<VRDeviceWeakPtr>(_name + "_ScriptCallback_dev", boost::bind(&VRScript::execute_dev, this, _1));
     cbfkt_soc = new VRFunction<string>(_name + "_ScriptCallback_soc", boost::bind(&VRScript::execute_soc, this, _1));
 }
 
@@ -203,10 +203,10 @@ PyObject* VRScript::getPyObj(arg* a) {
     else if (a->type == "VRPyGeometryType") return VRPyGeometry::fromSharedPtr( ((VRGeometry*)a->ptr)->ptr() );
     else if (a->type == "VRPyLightType") return VRPyLight::fromSharedPtr(((VRLight*)a->ptr)->ptr());
     else if (a->type == "VRPyLodType") return VRPyLod::fromSharedPtr(((VRLod*)a->ptr)->ptr());
-    else if (a->type == "VRPyDeviceType") return VRPyDevice::fromPtr((VRDevice*)a->ptr);
-    else if (a->type == "VRPyMouseType") return VRPyMouse::fromPtr((VRMouse*)a->ptr);
-    else if (a->type == "VRPyHapticType") return VRPyHaptic::fromPtr((VRHaptic*)a->ptr);
-    else if (a->type == "VRPyMobileType") return VRPyMobile::fromPtr((VRMobile*)a->ptr);
+    else if (a->type == "VRPyDeviceType") return VRPyDevice::fromSharedPtr(((VRDevice*)a->ptr)->ptr());
+    else if (a->type == "VRPyMouseType") return VRPyMouse::fromSharedPtr(((VRMouse*)a->ptr)->ptr());
+    else if (a->type == "VRPyHapticType") return VRPyHaptic::fromSharedPtr(((VRHaptic*)a->ptr)->ptr());
+    else if (a->type == "VRPyMobileType") return VRPyMobile::fromSharedPtr(((VRMobile*)a->ptr)->ptr());
     else if (a->type == "VRPySocketType") return VRPySocket::fromPtr((VRSocket*)a->ptr);
     else { cout << "\ngetPyObj ERROR: " << a->type << " unknown!\n"; Py_RETURN_NONE; }
 }
@@ -312,7 +312,7 @@ void VRScript::execute() {
     }
 
     if (type == "HTML") {
-        VRMobile* mob = (VRMobile*)VRSetupManager::getCurrent()->getDevice(this->mobile);
+        VRMobilePtr mob = dynamic_pointer_cast<VRMobile>( VRSetupManager::getCurrent()->getDevice(this->mobile) );
         if (mob) mob->updateClients(getName());
     }
 
@@ -327,15 +327,16 @@ void VRScript::execute() {
     }
 }
 
-void VRScript::execute_dev(VRDevice* dev) {
-    if (dev == 0) return;
+void VRScript::execute_dev(VRDeviceWeakPtr _dev) {
+    auto dev = _dev.lock();
+    if (!dev) return;
     if (type != "Python") return;
 
     args["dev"]->type = "VRPyDeviceType";
     if (dev->getType() == "haptic") args["dev"]->type = "VRPyHapticType";
     if (dev->getType() == "mobile") args["dev"]->type = "VRPyMobileType";
     args["dev"]->val = dev->getName();
-    args["dev"]->ptr = dev;
+    args["dev"]->ptr = dev.get();
     execute();
     args["dev"]->val = "";
 }

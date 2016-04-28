@@ -57,13 +57,13 @@ class SimViDekont : public VRabq {
         void showFrame(int i);
         void initFrameGeometries();
 
-        void playForward(VRDevice* dev);
-        void playBackward(VRDevice* dev);
-        void playStop(VRDevice* dev);
-        void playStepForward(VRDevice* dev);
-        void playStepBackward(VRDevice* dev);
+        void playForward(VRDevicePtr dev);
+        void playBackward(VRDevicePtr dev);
+        void playStop(VRDevicePtr dev);
+        void playStepForward(VRDevicePtr dev);
+        void playStepBackward(VRDevicePtr dev);
 
-        void toggleColors(VRDevice* dev);
+        void toggleColors(VRDevicePtr dev);
         void initPlayer();
 
     public:

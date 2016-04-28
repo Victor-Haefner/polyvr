@@ -51,6 +51,14 @@ void printFieldContainer() {
 
 PolyVR::PolyVR() {}
 PolyVR::~PolyVR() {
+    /*monitor.reset();
+    gui_mgr.reset();
+    interface.reset();
+    loader.reset();
+    setup_mgr.reset();
+    scene_mgr.reset();
+    sound_mgr.reset();
+    options.reset();*/
     //CEF::shutdown();
 }
 
@@ -67,6 +75,7 @@ void PolyVR::shutdown() {
     auto pvr = get();
     pvr->scene_mgr->closeScene();
     pvr->scene_mgr->stopAllThreads();
+    //pvr->setup_mgr->closeSetup();
     delete pvr;
     printFieldContainer();
     osgExit();

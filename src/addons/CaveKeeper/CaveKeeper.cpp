@@ -250,7 +250,7 @@ void CaveKeeper::placeLight(Vec3f p) {
     }
 }
 
-void CaveKeeper::dig(VRDevice* dev) {
+void CaveKeeper::dig(VRDevicePtr dev) {
     Line ray = dev->getBeacon()->castRay();
 	CKOctree::element* e = tree->get(ray);
     if (e) {
@@ -260,7 +260,7 @@ void CaveKeeper::dig(VRDevice* dev) {
     }
 }
 
-void CaveKeeper::place(VRDevice* dev, string obj, VRTransformPtr geo) {
+void CaveKeeper::place(VRDevicePtr dev, string obj, VRTransformPtr geo) {
     if (dev == 0) return;
 
     Line ray = dev->getBeacon()->castRay();

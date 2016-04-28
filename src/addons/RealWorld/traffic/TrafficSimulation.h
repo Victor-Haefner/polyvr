@@ -2,6 +2,7 @@
 #define TRAFFICSIMULATION_H
 
 #include "core/objects/VRObjectFwd.h"
+#include "core/utils/VRFunctionFwd.h"
 #include "JsonClient.h"
 
 #include <set>
@@ -30,6 +31,8 @@ class MapCoordinator;
  * @todo The drawing code is missing completely.
  */
 class TrafficSimulation {
+    private:
+        VRThreadCb threadFkt;
 
     public:
 

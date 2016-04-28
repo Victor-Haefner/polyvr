@@ -32,7 +32,7 @@ VRClipPlanePtr VRClipPlane::create(string name) {
     auto p = shared_ptr<VRClipPlane>(new VRClipPlane(name) );
     // make it dragable first
     for (auto d : VRSetupManager::getCurrent()->getDevices()) {
-        VRDevice* dev = d.second;
+        VRDevicePtr dev = d.second;
         dev->addDynTree(p, -1);
     }
     return p;

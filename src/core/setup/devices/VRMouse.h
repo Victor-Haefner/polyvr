@@ -26,6 +26,10 @@ class VRMouse : public VRDevice {
 
     public:
         VRMouse();
+        ~VRMouse();
+
+        static VRMousePtr create();
+        VRMousePtr ptr();
 
         void clearSignals();
 

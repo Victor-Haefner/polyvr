@@ -6,20 +6,18 @@
 #include <vector>
 #include <string>
 #include "core/objects/VRObjectFwd.h"
+#include "core/utils/VRDeviceFwd.h"
 
 namespace xmlpp{ class Element; }
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRDevice;
-
 class VRDeviceManager {
     private:
-        map<string, VRDevice* > devices;
-        map<string, VRDevice* >::iterator itr; // key is dev type
+        map<string, VRDevicePtr > devices;// key is dev type
 
-        void dev_test(VRDevice* dev);
+        void dev_test(VRDevicePtr dev);
 
         VRTransformPtr device_root;
 
@@ -30,13 +28,13 @@ class VRDeviceManager {
         void clearSignals();
 
         void setDeviceRoot(VRTransformPtr root);
-        void addDevice(VRDevice* dev);
+        void addDevice(VRDevicePtr dev);
 
-        //VRDevice* getDevice(string type, int i);
-        VRDevice* getDevice(string name);
+        //VRDevicePtr getDevice(string type, int i);
+        VRDevicePtr getDevice(string name);
         vector<string> getDevices(string type);
         vector<string> getDeviceTypes();
-        map<string, VRDevice* > getDevices();
+        map<string, VRDevicePtr > getDevices();
 
         void updateActivatedSignals();
         void resetDeviceDynNodes(VRObjectPtr ancestor);

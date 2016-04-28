@@ -89,7 +89,7 @@ using namespace std;
             }
 
             static void glutKeyUp(unsigned char key, int x, int y) { currentInstanceTestMover->onKeyUp(key); }
-            void onKeyUp(unsigned char key) { //VRDevice* dev) {
+            void onKeyUp(unsigned char key) { //VRDevicePtr dev) {
                 if (key == 'e') {
                     shouldMoveUp = false;
                 }
