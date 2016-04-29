@@ -150,6 +150,20 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
     if (t) t->syncToMain();
 }
 
+string repSpaces(string s) {
+    for(auto it = s.begin(); it != s.end(); ++it) {
+        if(*it == ' ') *it = '|';
+    }
+    return s;
+}
+
+string unrepSpaces(string s) {
+    for(auto it = s.begin(); it != s.end(); ++it) {
+        if(*it == '|') *it = ' ';
+    }
+    return s;
+}
+
 VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string name, string currentFile, NodeCore* geoTrans, string geoTransName) {
     if (n == 0) return 0; // TODO add an osg wrap method for each object?
 
@@ -239,7 +253,7 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
 
         VRGeometry::Reference ref;
         ref.type = VRGeometry::FILE;
-        ref.parameter = currentFile + " " + name;
+        ref.parameter = repSpaces(currentFile) + " " + repSpaces(name);
         tmp_g->setMesh(dynamic_cast<Geometry *>(n->getCore()), ref, true);
         tmp = tmp_g;
     }
@@ -264,6 +278,9 @@ void VRImport::fillCache(string path, VRTransformPtr obj) {
 }
 
 VRGeometryPtr VRImport::loadGeometry(string file, string object, string preset, bool thread) {
+    file = unrepSpaces(file);
+    object = unrepSpaces(object);
+
     if (cache.count(file) == 0) load(file, 0, false, preset, thread);
 
     if (cache.count(file) == 0) {

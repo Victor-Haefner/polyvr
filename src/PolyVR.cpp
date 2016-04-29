@@ -121,10 +121,10 @@ void PolyVR::run() {
     while(true) {
         VRSceneManager::get()->update();
 
-        /*if (VRGlobals::get()->CURRENT_FRAME == 300) {
+        if (VRGlobals::get()->CURRENT_FRAME == 300) {
             string app = options->getOption<string>("application");
             if (app != "") VRSceneManager::get()->loadScene(app);
-        }*/
+        }
     }
 }
 
@@ -142,8 +142,8 @@ void PolyVR::start(bool runit) {
     gui_mgr = shared_ptr<VRGuiManager>(VRGuiManager::get());
     loader = shared_ptr<VRSceneLoader>(VRSceneLoader::get());
 
-    string app = options->getOption<string>("application");
-    if (app != "") VRSceneManager::get()->loadScene(app);
+    //string app = options->getOption<string>("application");
+    //if (app != "") VRSceneManager::get()->loadScene(app);
 
     if (runit) run();
 }

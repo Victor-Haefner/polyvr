@@ -104,12 +104,10 @@ struct VRSound {
         init = 0;
     }
 
-    void reset() {
-        if (state == AL_INITIAL) return;
-        state = AL_INITIAL;
-    }
+    void reset() { state = AL_INITIAL; }
 
     void updateSource() {
+        cout << "update source" << endl;
         ALCHECK( alSourcef(source, AL_PITCH, pitch));
         ALCHECK( alSourcef(source, AL_GAIN, gain));
         ALCHECK( alSource3f(source, AL_POSITION, pos[0], pos[1], pos[2]));
@@ -118,6 +116,7 @@ struct VRSound {
     }
 
     bool initiate() {
+        cout << "init sound\n";
         initiated = true;
 
         ALCHECK( alGenBuffers(Nbuffers, buffers) );
@@ -230,7 +229,9 @@ struct VRSound {
     }
 
     void playFrame() {
+        cout << "play frame " << endl;
         if (state == AL_INITIAL) {
+            cout << "reset sound " << endl;
             if (!initiated) initiate();
             if (!context) return;
             frame = avcodec_alloc_frame();
@@ -241,8 +242,13 @@ struct VRSound {
         int len;
         if (state == AL_PLAYING) {
             if (doUpdate) updateSource();
-            if (interrupt || (av_read_frame(context, &packet) < 0)) {
-                if (packet.data) av_free_packet(&packet);
+            auto avrf = av_read_frame(context, &packet);
+            if (interrupt || avrf < 0) {
+                if (packet.data) {
+                    cout << "  free packet" << endl;
+                    av_free_packet(&packet);
+                }
+                cout << "  free frame" << endl;
                 av_free(frame);
                 state = loop ? AL_INITIAL : AL_STOPPED;
                 return;
@@ -275,7 +281,10 @@ struct VRSound {
 
                     while (free_buffers.size() == 0) { // recycle buffers
                         while (val <= 0) ALCHECK_BREAK( alGetSourcei(source, AL_BUFFERS_PROCESSED, &val));      // wait for openal to release one buffer
-                        if (val <= 0) { state = AL_STOPPED; return; }
+                        if (val <= 0) {
+                            cout << "  no buffer stop " << endl;
+                            state = AL_STOPPED; return;
+                        }
                         for(; val > 0; --val) {
                             ALCHECK( alSourceUnqueueBuffers(source, 1, &bufid));
                             free_buffers.push_back(bufid);
@@ -285,6 +294,7 @@ struct VRSound {
                     bufid = free_buffers.front();
                     free_buffers.pop_front();
 
+                    cout << " buffer frame " << endl;
                     ALCHECK( alBufferData(bufid, format, frameData, data_size, frequency));
                     ALCHECK( alSourceQueueBuffers(source, 1, &bufid));
                     ALCHECK( alGetSourcei(source, AL_SOURCE_STATE, &val));
@@ -296,6 +306,10 @@ struct VRSound {
                 packet.data += len;
             } // while packet.size > 0
         } // while more packets exist inside container.
+
+        /*if (packet.data) av_free_packet(&packet);
+        av_free(frame);
+        state = AL_STOPPED;*/
     }
 };
 
@@ -367,7 +381,10 @@ struct VRSoundChannel {
             vector<int> toErase;
             for (auto c : current) {
                 c.second->playFrame();
-                if (c.second->state == AL_STOPPED) toErase.push_back( c.first );
+                if (c.second->state == AL_STOPPED) {
+                    cout << "soundThread " << current.size() << endl;
+                    toErase.push_back( c.first );
+                }
             }
 
             for (auto e : toErase) current.erase(e);
@@ -397,6 +414,7 @@ void VRSoundManager::clearSoundMap() {
 }
 
 void VRSoundManager::playSound(string path, bool loop) {
+    cout << "VRSoundManager::playSound " << path << " " << loop << endl;
     VRSound* sound = getSound(path);
     if (sound->isRunning()) return;
     sound->setLoop(loop);
@@ -405,7 +423,7 @@ void VRSoundManager::playSound(string path, bool loop) {
 }
 
 VRSound* VRSoundManager::getSound(string path) {
-    if (sounds.count(path) == 0) {
+    if (sounds.count(path) == 0 or true) { // TODO: WORKAROUND
         sounds[path] = new VRSound();
         sounds[path]->path = path;
     } return sounds[path];

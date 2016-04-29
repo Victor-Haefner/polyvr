@@ -21,6 +21,13 @@ using namespace boost::filesystem;
 
 VRFactory::VRFactory() {}
 
+string repSpaces(string s) {
+    for(auto it = s.begin(); it != s.end(); ++it) {
+        if(*it == ' ') *it = '|';
+    }
+    return s;
+}
+
 struct Geo {
     int Np = 0;
     int Nn = 0;
@@ -50,7 +57,7 @@ struct Geo {
         geo->getMesh()->setIndex(inds_n, Geometry::NormalsIndex);
         geo->setMaterial(mat);
 
-        VRGeometry::Reference ref(VRGeometry::FILE, path + " " + geo->getName() + " SOLIDWORKS-VRML2 " + toString(thread));
+        VRGeometry::Reference ref(VRGeometry::FILE, repSpaces(path) + " " + repSpaces(geo->getName()) + " SOLIDWORKS-VRML2 " + toString(thread));
         geo->setReference( ref );
 
         geos.push_back(*this);

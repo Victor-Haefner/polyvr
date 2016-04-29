@@ -33,6 +33,7 @@ VRObjectPtr VRAvatar::initRay() {
     mat->setDiffuse(Color3f(1,1,0));
     mat->setAmbient(Color3f(1,1,0));
     mat->setSpecular(Color3f(1,1,0));
+    mat->setLit(0);
 
     ray->create(GL_LINES, pos, norms, inds, texs);
     ray->setMaterial(mat);
