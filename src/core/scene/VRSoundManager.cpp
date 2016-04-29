@@ -279,22 +279,17 @@ struct VRSound {
                     ALint val = -1;
                     ALuint bufid = 0;
 
-                    while (free_buffers.size() == 0) { // recycle buffers
-                        while (val <= 0) ALCHECK_BREAK( alGetSourcei(source, AL_BUFFERS_PROCESSED, &val));      // wait for openal to release one buffer
-                        if (val <= 0) {
-                            cout << "  no buffer stop " << endl;
-                            state = AL_STOPPED; return;
-                        }
-                        for(; val > 0; --val) {
-                            ALCHECK( alSourceUnqueueBuffers(source, 1, &bufid));
-                            free_buffers.push_back(bufid);
-                        }
+                    do { ALCHECK_BREAK( alGetSourcei(source, AL_BUFFERS_PROCESSED, &val) ); } // recycle buffers
+                    while (val <= 0 && free_buffers.size() == 0);
+                    if (val <= 0 && free_buffers.size() == 0) { state = AL_STOPPED; return; } // no available buffer, stop!
+                    for(; val > 0; --val) {
+                        ALCHECK( alSourceUnqueueBuffers(source, 1, &bufid));
+                        free_buffers.push_back(bufid);
                     }
 
                     bufid = free_buffers.front();
                     free_buffers.pop_front();
 
-                    cout << " buffer frame " << endl;
                     ALCHECK( alBufferData(bufid, format, frameData, data_size, frequency));
                     ALCHECK( alSourceQueueBuffers(source, 1, &bufid));
                     ALCHECK( alGetSourcei(source, AL_SOURCE_STATE, &val));
@@ -306,10 +301,67 @@ struct VRSound {
                 packet.data += len;
             } // while packet.size > 0
         } // while more packets exist inside container.
+    }
 
-        /*if (packet.data) av_free_packet(&packet);
+    void play() {
+        if (!initiated) initiate();
+        if (!context) return;
+        if (doUpdate) updateSource();
+
+        frame = avcodec_alloc_frame();
+        av_seek_frame(context, stream_id, 0,  AVSEEK_FLAG_FRAME);
+
+        while (av_read_frame(context, &packet) >= 0) {
+            if (packet.stream_index != stream_id) { cout << "skip non audio\n"; return; } // Skip non audio packets
+
+            while (packet.size > 0) { // Decodes audio data from `packet` into the frame
+                if (interrupt) { cout << "interrupt sound\n"; break; }
+
+                int finishedFrame = 0;
+                int len = avcodec_decode_audio4(codec, frame, &finishedFrame, &packet);
+                if (len < 0) { cout << "decoding error\n"; break; }
+
+                if (finishedFrame) {
+                    if (interrupt) { cout << "interrupt sound\n"; break; }
+
+                    // Decoded data is now available in frame->data[0]
+                    int linesize;
+                    int data_size = av_samples_get_buffer_size(&linesize, codec->channels, frame->nb_samples, codec->sample_fmt, 0);
+
+                    ALbyte* frameData;
+                    if (resampler != 0) {
+                        frameData = (ALbyte *)av_malloc(data_size*sizeof(uint8_t));
+                        avresample_convert( resampler, (uint8_t **)&frameData, linesize, frame->nb_samples, (uint8_t **)frame->data, frame->linesize[0], frame->nb_samples);
+                    } else frameData = (ALbyte*)frame->data[0];
+
+                    ALint val = -1;
+                    ALuint bufid = 0;
+
+                    do { ALCHECK_BREAK( alGetSourcei(source, AL_BUFFERS_PROCESSED, &val) ); } // recycle buffers
+                    while (val <= 0 && free_buffers.size() == 0);
+                    if (val <= 0 && free_buffers.size() == 0) { state = AL_STOPPED; return; } // no available buffer, stop!
+                    for(; val > 0; --val) {
+                        ALCHECK( alSourceUnqueueBuffers(source, 1, &bufid));
+                        free_buffers.push_back(bufid);
+                    }
+
+                    bufid = free_buffers.front();
+                    free_buffers.pop_front();
+
+                    ALCHECK( alBufferData(bufid, format, frameData, data_size, frequency));
+                    ALCHECK( alSourceQueueBuffers(source, 1, &bufid));
+                    ALCHECK( alGetSourcei(source, AL_SOURCE_STATE, &val));
+                    if (val != AL_PLAYING) ALCHECK( alSourcePlay(source));
+                }
+
+                //There may be more than one frame of audio data inside the packet.
+                packet.size -= len;
+                packet.data += len;
+            } // while packet.size > 0
+        }
+
+        if (packet.data) av_free_packet(&packet);
         av_free(frame);
-        state = AL_STOPPED;*/
     }
 };
 
@@ -417,13 +469,16 @@ void VRSoundManager::playSound(string path, bool loop) {
     cout << "VRSoundManager::playSound " << path << " " << loop << endl;
     VRSound* sound = getSound(path);
     if (sound->isRunning()) return;
+
     sound->setLoop(loop);
     sound->reset();
     channel->play(sound);
 }
 
+void VRSoundManager::play(VRSound* sound) { sound->play(); }
+
 VRSound* VRSoundManager::getSound(string path) {
-    if (sounds.count(path) == 0 or true) { // TODO: WORKAROUND
+    if (sounds.count(path) == 0) { // TODO: WORKAROUND
         sounds[path] = new VRSound();
         sounds[path]->path = path;
     } return sounds[path];
