@@ -67,6 +67,7 @@ class VRSTEP {
         string blueBeg  = "\033[0;38;2;150;150;255m";
         string colEnd = "\033[0m";
 
+        map<STEPentity*, int> explRowIds;
         map<STEPentity*, Instance> instances;
         map<int, Instance> instancesById;
         map<string, vector<Instance> > instancesByType;
@@ -82,7 +83,6 @@ class VRSTEP {
 
         void loadT(string file, STEPfilePtr sfile, bool* done);
         void open(string file);
-        string indent(int lvl);
 
         void traverseEntity(STEPentity* se, int lvl, STEPcomplex* cparent = 0);
         void traverseSelect(SDAI_Select* s, string ID, int lvl);

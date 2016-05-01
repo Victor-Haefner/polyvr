@@ -151,4 +151,25 @@ void VRGuiManager::update() {
     if (!standalone) g_bits->update_terminal();
 }
 
+Gtk::WindowPtr VRGuiManager::newWindow() {
+    auto w = Gtk::WindowPtr( new Gtk::Window() );
+    w->set_default_size(200, 200);
+    w->show_all();
+    windows[w.get()] = w;
+    return w;
+}
+
+void VRGuiManager::remWindow(Gtk::WindowPtr w) {
+    if (!windows.count(w.get())) return;
+    windows.erase(w.get());
+}
+
 OSG_END_NAMESPACE;
+
+
+
+
+
+
+
+

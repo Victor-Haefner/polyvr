@@ -473,6 +473,8 @@
 		<Unit filename="src/core/gui/VRGuiSetup.h" />
 		<Unit filename="src/core/gui/VRGuiSignals.cpp" />
 		<Unit filename="src/core/gui/VRGuiSignals.h" />
+		<Unit filename="src/core/gui/VRGuiTreeExplorer.cpp" />
+		<Unit filename="src/core/gui/VRGuiTreeExplorer.h" />
 		<Unit filename="src/core/gui/VRGuiUtils.cpp" />
 		<Unit filename="src/core/gui/VRGuiUtils.h" />
 		<Unit filename="src/core/gui/VRGuiVectorEntry.cpp" />

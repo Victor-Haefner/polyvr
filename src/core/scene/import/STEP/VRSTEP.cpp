@@ -16,6 +16,7 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
 #include "core/math/polygon.h"
+#include "core/gui/VRGuiTreeExplorer.h"
 
 #include "VRBRepEdge.h"
 #include "VRBRepBound.h"
@@ -35,6 +36,8 @@ sudo gdebi -n libstepcode-dev.deb
 using namespace std;
 using namespace OSG;
 
+VRGuiTreeExplorerPtr explorer;
+
 void VRSTEP::loadT(string file, STEPfilePtr sfile, bool* done) {
     if (boost::filesystem::exists(file)) file = boost::filesystem::canonical(file).string();
     sfile->ReadExchangeFile(file);
@@ -44,6 +47,8 @@ void VRSTEP::loadT(string file, STEPfilePtr sfile, bool* done) {
 }
 
 VRSTEP::VRSTEP() {
+    explorer = VRGuiTreeExplorer::create("iss");
+
     registry = RegistryPtr( new Registry( SchemaInit ) ); // schema
     instMgr = InstMgrPtr( new InstMgr() ); // instances
     sfile = STEPfilePtr( new STEPfile( *registry, *instMgr, "", false ) ); // file
@@ -446,16 +451,14 @@ void VRSTEP::open(string file) {
     t.join();
 }
 
-string VRSTEP::indent(int lvl) {
-    string s;
-    for ( int i=0; i< lvl; i++) s += "    ";
-    return s;
-}
-
 void VRSTEP::traverseEntity(STEPentity* se, int lvl, STEPcomplex* cparent) {
     if (se->IsComplex()) {
         auto sc = ( (STEPcomplex*)se )->head;
         if (sc != cparent) {
+            if (explorer) {
+                lvl = explorer->add( lvl, se->STEPfile_id, "Complex", "" );
+                explRowIds[se] = lvl;
+            }
             while(sc) {
                 traverseEntity(sc, lvl, ( (STEPcomplex*)se )->head);
                 sc = sc->sc;
@@ -465,65 +468,41 @@ void VRSTEP::traverseEntity(STEPentity* se, int lvl, STEPcomplex* cparent) {
     }
 
     string type = se->EntityName();
+    if (types.count(type) && types[type].cb) (*types[type].cb)(se); // actual parsing!
 
-    /*bool red = (type == "Advanced_Brep_Shape_Representation" ||
-        type == "Shape_Definition_Representation" ||
-        type == "Shape_Representation_Relationship" ||
-        type == "Shape_Representation" );
+    if (explorer) {
+        if (explRowIds.count(se)) { // allready visited
+            //explorer->move(explRowIds[se], lvl);
+            //explorer->remove(explRowIds[se]);
+            //return;
+        }
 
-    bool green = (type == "Axis2_Placement_3d" ||
-                  type == "Item_Defined_Transformation");
-
-    bool blue = (type == "Product_Definition_Relationship" ||
-        type == "Product_Definition_Usage" ||
-        type == "Assembly_Component_Usage" ||
-        type == "Next_Assembly_Usage_Occurrence");
-
-    //if (red) cout << redBeg;
-    //if (green) cout << greenBeg;
-    //if (blue) cout << blueBeg;
-    cout << indent(lvl) << "Entity " << se->STEPfile_id << (se->IsComplex() ? " (C) " : "") << ": " << string(se->EntityName()) << endl;
-    //if (red || green || blue) cout << colEnd;*/
-
-    bool printAll = false;
-
-    if (!types.count(type) && !blacklist.count(type) || printAll || types[type].print)
-        cout << indent(lvl) << "Entity " << se->STEPfile_id << (se->IsComplex() ? " (C) " : "") << ": " << string(se->EntityName()) << endl;
-
-    if (instances.count(se) && !types[type].print && !printAll) return;
-    if (types.count(type) && types[type].cb) { (*types[type].cb)(se); if (!types[type].print && !printAll) return; }
-    if (blacklist.count(type) && blacklist[type] && !printAll) { blacklisted++; return; }
-    //if (blacklist.count(type)) { blacklisted++; return; }
+        string name = string(se->EntityName()) + (se->IsComplex() ? " (C)" : "");
+        lvl = explorer->add( lvl, se->STEPfile_id, name.c_str(), "" );
+        explRowIds[se] = lvl;
+    }
 
     STEPattribute* attr;
     se->ResetAttributes();
     while ( (attr = se->NextAttribute()) != NULL ) {
-        cout << indent(lvl+1) << "A: " << string(attr->Name()) << " : " << string(attr->asStr());
-        if ( attr->Entity() && !attr->IsDerived()) { cout << endl; traverseEntity( attr->Entity(), lvl+2); }
-        if ( auto a = attr->Aggregate() ) { cout << endl; traverseAggregate(a, attr->BaseType(), lvl+2); }
-        if ( auto s = attr->Select() ) { cout << endl; traverseSelect(s, attr->asStr(), lvl+2); }
-        if ( auto i = attr->Integer() ) cout << " Integer: " << *i << endl;
-        if ( auto r = attr->Real() ) cout << " Real: " << *r << endl;
-        if ( auto n = attr->Number() ) cout << " Number: " << *n << endl;
-        if ( auto s = attr->String() ) { string ss; s->asStr(ss); cout << " String: " << ss << endl; }
-        if ( auto b = attr->Binary() ) cout << " Binary: " << b << endl;
-        if ( auto e = attr->Enum() ) cout << " Enum: " << *e << endl;
-        if ( auto l = attr->Logical() ) cout << " Logical: " << *l << endl;
-        if ( auto b = attr->Boolean() ) cout << " Boolean: " << *b << endl;
-        //if ( auto u = attr->Undefined() ) cout << "Undefined: " << u << endl;
-        //if ( attr->Type() == REFERENCE_TYPE ) cout << indent(lvl+1) << " ref: " << attr << " " << endl;
+        int lvl2 = lvl;
+        if (explorer) lvl2 = explorer->add( lvl, 0, attr->Name(), attr->asStr().c_str() );
+        if ( attr->Entity() && !attr->IsDerived()) { traverseEntity( attr->Entity(), lvl2); }
+        if ( auto a = attr->Aggregate() ) { traverseAggregate(a, attr->BaseType(), lvl2); }
+        if ( auto s = attr->Select() ) { traverseSelect(s, attr->asStr(), lvl2); }
     }
 }
 
 void VRSTEP::traverseSelect(SDAI_Select* s, string ID, int lvl) {
-    cout << indent(lvl) << "resolve select\n";
     auto e = getSelectEntity(s, ID);
-    if (e) traverseEntity(e, lvl+1);
+    if (e) {
+        if (explorer) lvl = explorer->add( lvl, 0, "Select", "" );
+        traverseEntity(e, lvl);
+    }
 }
 
 void VRSTEP::traverseAggregate(STEPaggregate *sa, int atype, int lvl) {
     string s; sa->asStr(s);
-    cout << indent(lvl) << "Aggregate: " << s << endl;
 
     STEPentity* sse;
     SelectNode* sen;
@@ -542,9 +521,11 @@ void VRSTEP::traverseAggregate(STEPaggregate *sa, int atype, int lvl) {
                         case SET_TYPE:
                         case LIST_TYPE:
                             ebtype = ssedesc->BaseType();
-                            traverseAggregate((STEPaggregate *)sse, ebtype, lvl+2); break;
-                        case ENTITY_TYPE: traverseEntity(sse, lvl+2); break;
-                        default: cout << indent(lvl+1) << "entity Type not handled:" << etype << endl;
+                            traverseAggregate((STEPaggregate *)sse, ebtype, lvl); break;
+                        case ENTITY_TYPE: traverseEntity(sse, lvl); break;
+                        default:
+                            //cout << "entity Type not handled:" << etype << endl;
+                            break;
                     }
                 }
                 break;
@@ -552,7 +533,7 @@ void VRSTEP::traverseAggregate(STEPaggregate *sa, int atype, int lvl) {
                 sen = (SelectNode*)sn;
                 sdsel = sen->node;
                 sen->asStr(s);
-                traverseSelect(sdsel, s, lvl+2);
+                traverseSelect(sdsel, s, lvl);
                 break;
             case INTEGER_TYPE: // 1
             case REAL_TYPE: // 2
@@ -563,7 +544,8 @@ void VRSTEP::traverseAggregate(STEPaggregate *sa, int atype, int lvl) {
             case ENUM_TYPE: // 40
             case AGGREGATE_TYPE: // 200
             case NUMBER_TYPE: // 400
-            default: cout << indent(lvl+1) << "aggregate Type not handled:" << atype << endl;
+                break;
+            default: cout << "aggregate Type not handled:" << atype << endl;
             ;
         }
     }
