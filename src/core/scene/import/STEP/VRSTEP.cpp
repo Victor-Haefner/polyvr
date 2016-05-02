@@ -231,7 +231,7 @@ STEPentity* VRSTEP::getSelectEntity(SDAI_Select* s, string ID) {
     if (s->ValueType() == ENTITY_TYPE && ID[0] == '#') {
         int id = toInt(ID.substr(1));
         if (instancesById.count(id)) return instancesById[id].entity;
-        else cout << "getSelectEntity ID " << id << " not found\n";
+        //else cout << "getSelectEntity ID " << id << " not found\n"; // TODO!
     }
 
     string stype;
@@ -290,7 +290,25 @@ STEPentity* VRSTEP::getSelectEntity(SDAI_Select* s, string ID) {
                 if (v->IsPcurve()) { SdaiPcurve* o = *v; return o; }
                 if (v->IsSurface()) { SdaiSurface* o = *v; return o; }
             }
-            cout << " Select entity not handled: " << stype << endl;
+            if (stype == "Named_Unit") {
+                auto v = (SdaiUnit*)s;
+                if (v->IsDerived_unit()) { SdaiDerived_unit* o = *v; return o; }
+                if (v->IsNamed_unit()) { SdaiNamed_unit* o = *v; return o; }
+            }
+            if (stype == "Surface_Style_Usage") {
+                auto v = (SdaiPresentation_style_select*)s;
+                if (v->IsApproximation_tolerance()) { SdaiApproximation_tolerance* o = *v; return o; }
+                if (v->IsCurve_style()) { SdaiCurve_style* o = *v; return o; }
+                if (v->IsExternally_defined_style()) { SdaiExternally_defined_style* o = *v; return o; }
+                if (v->IsFill_area_style()) { SdaiFill_area_style* o = *v; return o; }
+                //if (v->IsNull_style()) { * o = *v; return o; } // TODO?
+                if (v->IsPoint_style()) { SdaiPoint_style* o = *v; return o; }
+                if (v->IsPre_defined_presentation_style()) { SdaiPre_defined_presentation_style* o = *v; return o; }
+                if (v->IsSurface_style_usage()) { SdaiSurface_style_usage* o = *v; return o; }
+                if (v->IsSymbol_style()) { SdaiSymbol_style* o = *v; return o; }
+                if (v->IsText_style()) { SdaiText_style* o = *v; return o; }
+            }
+            cout << " Select entity not handled: " << stype << endl; // TODO
             break;
         case AGGREGATE_TYPE:
             cout << " Select aggregate not handled: " << stype << endl;
@@ -451,16 +469,21 @@ void VRSTEP::open(string file) {
     t.join();
 }
 
-void VRSTEP::traverseEntity(STEPentity* se, int lvl, STEPcomplex* cparent) {
+void VRSTEP::explore(VRSTEP::Node* node, int parent) {
+    if (node->entity) {
+        string name = string(node->entity->EntityName()) + (node->entity->IsComplex() ? " (C)" : "");
+        parent = explorer->add( parent, node->entity->STEPfile_id, name.c_str(), "" );
+    } else if (parent) explorer->add( parent, 0, node->a_name.c_str(), node->a_val.c_str() );
+
+    for (auto n : node->childrenV) explore(n, parent);
+}
+
+void VRSTEP::registerEntity(STEPentity* se, STEPcomplex* cparent) {
     if (se->IsComplex()) {
         auto sc = ( (STEPcomplex*)se )->head;
         if (sc != cparent) {
-            if (explorer) {
-                lvl = explorer->add( lvl, se->STEPfile_id, "Complex", "" );
-                explRowIds[se] = lvl;
-            }
             while(sc) {
-                traverseEntity(sc, lvl, ( (STEPcomplex*)se )->head);
+                registerEntity(sc, ( (STEPcomplex*)se )->head);
                 sc = sc->sc;
             }
             return;
@@ -469,39 +492,89 @@ void VRSTEP::traverseEntity(STEPentity* se, int lvl, STEPcomplex* cparent) {
 
     string type = se->EntityName();
     if (types.count(type) && types[type].cb) (*types[type].cb)(se); // actual parsing!
-
-    if (explorer) {
-        if (explRowIds.count(se)) { // allready visited
-            //explorer->move(explRowIds[se], lvl);
-            //explorer->remove(explRowIds[se]);
-            //return;
+    else {
+        if (!instancesById.count(se->STEPfile_id)) {
+            Instance i;
+            i.ID = se->STEPfile_id;
+            i.entity = se;
+            i.type = type;
+            instancesById[i.ID] = i;
         }
-
-        string name = string(se->EntityName()) + (se->IsComplex() ? " (C)" : "");
-        lvl = explorer->add( lvl, se->STEPfile_id, name.c_str(), "" );
-        explRowIds[se] = lvl;
-    }
-
-    STEPattribute* attr;
-    se->ResetAttributes();
-    while ( (attr = se->NextAttribute()) != NULL ) {
-        int lvl2 = lvl;
-        if (explorer) lvl2 = explorer->add( lvl, 0, attr->Name(), attr->asStr().c_str() );
-        if ( attr->Entity() && !attr->IsDerived()) { traverseEntity( attr->Entity(), lvl2); }
-        if ( auto a = attr->Aggregate() ) { traverseAggregate(a, attr->BaseType(), lvl2); }
-        if ( auto s = attr->Select() ) { traverseSelect(s, attr->asStr(), lvl2); }
     }
 }
 
-void VRSTEP::traverseSelect(SDAI_Select* s, string ID, int lvl) {
+void VRSTEP::traverseEntity(STEPentity* se, int lvl, VRSTEP::Node* parent, STEPcomplex* cparent) {
+    if (se->IsComplex()) {
+        auto sc = ( (STEPcomplex*)se )->head;
+        if (sc != cparent) {
+            while(sc) {
+                traverseEntity(sc, lvl, parent, ( (STEPcomplex*)se )->head);
+                sc = sc->sc;
+            }
+            return;
+        }
+    }
+
+    Node* n = 0;
+    if (!nodes.count(se)) {
+        n = new Node();
+        n->entity = se;
+        nodes[se] = n;
+    } else n = nodes[se];
+
+    if (n->parents.size() == 0 && parent->entity == 0) { // not attached, attach it to root
+        if (parent->children.count(se) == 0) {
+            parent->childrenV.push_back(n);
+            parent->children[se] = n;
+            n->parents[parent->entity] = parent;
+        }
+    } else if (parent->entity != 0) { // not root, just attach it
+        for (auto p : n->parents) {
+            if (p.first == 0) { // root is one of the parents, remove it
+                p.second->children.erase(se);
+                n->parents.erase(0);
+                p.second->childrenV.erase(remove(p.second->childrenV.begin(), p.second->childrenV.end(), n), p.second->childrenV.end());
+                break;
+            }
+        }
+        if (parent->children.count(se) == 0) {
+            parent->children[se] = n;
+            parent->childrenV.push_back(n);
+            n->parents[parent->entity] = parent;
+        }
+    }
+
+    /*if (se->STEPfile_id == 685 || se->STEPfile_id == 686) {
+        cout << se->STEPfile_id << " parent " << parent << endl;
+        if (parent->entity) cout << " parent entity " << parent->entity->STEPfile_id << endl;
+    }*/
+
+    if (!n->traversed) {
+        STEPattribute* attr = 0;
+        se->ResetAttributes();
+        while ( (attr = se->NextAttribute()) != NULL ) {
+            //if (se->STEPfile_id == 686) cout << "  a " << ( attr->Entity() && !attr->IsDerived()) << " " << attr->Aggregate() << " " << attr->Select() << endl;
+            if ( attr->Entity() && !attr->IsDerived()) { traverseEntity( attr->Entity(), lvl, n); }
+            else if ( auto a = attr->Aggregate() ) { traverseAggregate(a, attr->BaseType(), lvl, n); }
+            else if ( auto s = attr->Select() ) { traverseSelect(s, attr->asStr(), lvl, n); }
+            if (attr->BaseType() != ENTITY_TYPE && attr->BaseType() != SELECT_TYPE) {
+                auto a = new Node();
+                a->a_name = attr->Name();
+                a->a_val = attr->asStr();
+                n->childrenV.push_back(a);
+            }
+        }
+    }
+
+    n->traversed = 1;
+}
+
+void VRSTEP::traverseSelect(SDAI_Select* s, string ID, int lvl, VRSTEP::Node* parent) {
     auto e = getSelectEntity(s, ID);
-    if (e) {
-        if (explorer) lvl = explorer->add( lvl, 0, "Select", "" );
-        traverseEntity(e, lvl);
-    }
+    if (e) traverseEntity(e, lvl, parent);
 }
 
-void VRSTEP::traverseAggregate(STEPaggregate *sa, int atype, int lvl) {
+void VRSTEP::traverseAggregate(STEPaggregate *sa, int atype, int lvl, VRSTEP::Node* parent) {
     string s; sa->asStr(s);
 
     STEPentity* sse;
@@ -511,42 +584,44 @@ void VRSTEP::traverseAggregate(STEPaggregate *sa, int atype, int lvl) {
     const EntityDescriptor* ssedesc = 0;
 
     for( EntityNode* sn = (EntityNode*)sa->GetHead(); sn != NULL; sn = (EntityNode*)sn->NextNode()) {
+        //if (parent->entity->STEPfile_id == 678) cout << "  u " << atype << endl;
         switch (atype) {
-            case ENTITY_TYPE: // 100
+            case ENTITY_TYPE: // 256
                 sse = (STEPentity*)sn->node;
                 ssedesc = sse->getEDesc();
                 if (ssedesc) {
                     etype = ssedesc->Type();
+                    //if (parent->entity->STEPfile_id == 678) cout << "   k " << etype << endl;
                     switch (etype) {
                         case SET_TYPE:
                         case LIST_TYPE:
                             ebtype = ssedesc->BaseType();
-                            traverseAggregate((STEPaggregate *)sse, ebtype, lvl); break;
-                        case ENTITY_TYPE: traverseEntity(sse, lvl); break;
+                            traverseAggregate((STEPaggregate *)sse, ebtype, lvl, parent); break;
+                        case ENTITY_TYPE: traverseEntity(sse, lvl, parent); break;
                         default:
-                            //cout << "entity Type not handled:" << etype << endl;
+                            cout << "traverseAggregate: entity Type not handled:" << etype << endl;
                             break;
                     }
                 }
                 break;
-            case SELECT_TYPE: // 80
+            case SELECT_TYPE: // 128
                 sen = (SelectNode*)sn;
                 sdsel = sen->node;
                 sen->asStr(s);
-                traverseSelect(sdsel, s, lvl);
+                traverseSelect(sdsel, s, lvl, parent);
                 break;
             case INTEGER_TYPE: // 1
             case REAL_TYPE: // 2
             case BOOLEAN_TYPE: // 4
             case LOGICAL_TYPE: // 8
-            case STRING_TYPE: // 10
-            case BINARY_TYPE: // 20
-            case ENUM_TYPE: // 40
-            case AGGREGATE_TYPE: // 200
-            case NUMBER_TYPE: // 400
+            case STRING_TYPE: // 16
+            case BINARY_TYPE: // 32
+            case NUMBER_TYPE: // 1024
                 break;
-            default: cout << "aggregate Type not handled:" << atype << endl;
-            ;
+            case ENUM_TYPE: // 64
+            case AGGREGATE_TYPE: // 512
+            default:
+                cout << "aggregate Type not handled:" << atype << endl;
         }
     }
 }
@@ -846,15 +921,19 @@ void VRSTEP::buildScenegraph() {
 void VRSTEP::build() {
     blacklisted = 0;
 
-    for( int i=0; i<instMgr->InstanceCount(); i++) {
+    int N = instMgr->InstanceCount();
+    for( int i=0; i<N; i++ ) { // add all instances to
         STEPentity* se = instMgr->GetApplication_instance(i);
-        //if (se == 1840) break;
-        string name = se->EntityName();
-        //if (name != "Product_Definition_Shape") continue;
-        //if (name != "Cartesian_Point" && name != "Direction") continue;
-        //if (se == 1943) traverseAggregate((STEPaggregate*)se, ENTITY_TYPE, 1);
-        traverseEntity(se,0);
+        registerEntity(se);
     }
+
+    auto root = new VRSTEP::Node();
+    for( int i=0; i<N; i++ ) {
+        STEPentity* se = instMgr->GetApplication_instance(i);
+        string name = se->EntityName();
+        traverseEntity(se,0,root);
+    }
+    explore(root);
 
     buildGeometries();
     buildScenegraph();

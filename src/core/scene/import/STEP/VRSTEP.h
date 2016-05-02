@@ -36,6 +36,18 @@ class VRSTEP {
             shared_ptr< VRFunction<STEPentity*> > cb;
         };
 
+        struct Node {
+            bool traversed = 0;
+            string a_val = "NONE";
+            string a_name = "NONE";
+            STEPentity* entity = 0;
+            map<STEPentity*, Node*> parents;
+            vector<Node*> childrenV;
+            map<STEPentity*, Node*> children;
+        };
+
+        map<STEPentity*, Node*> nodes;
+
         struct Instance {
             string type;
             STEPentity* entity = 0;
@@ -84,9 +96,11 @@ class VRSTEP {
         void loadT(string file, STEPfilePtr sfile, bool* done);
         void open(string file);
 
-        void traverseEntity(STEPentity* se, int lvl, STEPcomplex* cparent = 0);
-        void traverseSelect(SDAI_Select* s, string ID, int lvl);
-        void traverseAggregate(STEPaggregate* sa, int type, int lvl);
+        void registerEntity(STEPentity* se, STEPcomplex* cparent = 0);
+        void traverseEntity(STEPentity* se, int lvl, VRSTEP::Node* parent, STEPcomplex* cparent = 0);
+        void traverseSelect(SDAI_Select* s, string ID, int lvl, VRSTEP::Node* parent);
+        void traverseAggregate(STEPaggregate* sa, int type, int lvl, VRSTEP::Node* parent);
+        void explore(VRSTEP::Node* node, int parent = 0);
 
         void buildGeometries();
         void buildScenegraph();
