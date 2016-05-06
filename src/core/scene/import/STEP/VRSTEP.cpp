@@ -242,7 +242,7 @@ STEPentity* VRSTEP::getSelectEntity(SDAI_Select* s, string ID) {
     if (s->ValueType() == ENTITY_TYPE && ID[0] == '#') {
         int id = toInt(ID.substr(1));
         if (instancesById.count(id)) return instancesById[id].entity;
-        //else cout << "getSelectEntity ID " << id << " not found\n"; // TODO!
+        else cout << "getSelectEntity ID " << id << " not found\n";
     }
 
     string stype;
@@ -454,6 +454,12 @@ template<class... Args> void setup(tuple<Args...>& t, STEPentity* e, string path
 // end helper function
 
 template<class T> void VRSTEP::parse(STEPentity* e, string path, string type) {
+    /*if (!instances.count(e)) { cout << "AAARGH" << endl; return; }
+    if (instances[e].data) return; // allready parsed
+    auto t = new T();
+    setup(*t, e, path, this);
+    instances[e].data = t;*/
+
     if (instances.count(e)) return;
     auto t = new T();
     setup(*t, e, path, this);
@@ -481,10 +487,28 @@ void VRSTEP::open(string file) {
 }
 
 void VRSTEP::explore(VRSTEP::Node* node, int parent) {
+    int ID = -1;
+    string name, type;
+
     if (node->entity) {
-        string name = string(node->entity->EntityName()) + (node->entity->IsComplex() ? " (C)" : "");
-        parent = explorer->add( parent, node->entity->STEPfile_id, name.c_str(), "" );
-    } else if (parent) explorer->add( parent, 0, node->a_name.c_str(), node->a_val.c_str() );
+        name = string(node->entity->EntityName()) + (node->entity->IsComplex() ? " (C)" : "");
+        ID = node->entity->STEPfile_id;
+        type = node->type;
+    }
+
+    else if (node->select) {
+        name = node->a_name;
+        ID = 0;//node->select->STEPfile_id;
+        type = node->type;
+    }
+
+    else if(parent) {
+        name = node->a_name;
+        type = node->a_val;
+        ID = 0;
+    }
+
+    if (ID >= 0) parent = explorer->add( parent, ID, name.c_str(), type.c_str() );
 
     for (auto n : node->childrenV) explore(n, parent);
 }
@@ -507,6 +531,26 @@ void VRSTEP::registerEntity(STEPentity* se, bool complexPass) {
         return;
     }
 
+    /*string type = se->EntityName();
+    if (!instances.count(se)) {
+        Instance i;
+        i.ID = se->STEPfile_id;
+        i.entity = se;
+        i.type = type;
+        instancesById[i.ID] = i;
+        instancesByType[i.type].push_back(i);
+        instances[se] = i;
+
+        parseEntity(se, 1);
+    }
+}
+
+void VRSTEP::parseEntity(STEPentity* se, bool complexPass) {
+    if (se->IsComplex() && !complexPass) {
+        for (auto e : unfoldComplex(se)) registerEntity(e, 1);
+        return;
+    }*/
+
     string type = se->EntityName();
     if (types.count(type) && types[type].cb) (*types[type].cb)(se); // actual parsing!
     else {
@@ -517,6 +561,14 @@ void VRSTEP::registerEntity(STEPentity* se, bool complexPass) {
             i.type = type;
             instancesById[i.ID] = i;
         }
+    }
+}
+
+void VRSTEP::Node::addChild(Node* c) {
+    if (children.count(c->entity) == 0) {
+        childrenV.push_back(c);
+        children[c->entity] = c;
+        c->parents[entity] = this;
     }
 }
 
@@ -534,11 +586,7 @@ void VRSTEP::traverseEntity(STEPentity* se, int lvl, VRSTEP::Node* parent, bool 
     } else n = nodes[se];
 
     if (n->parents.size() == 0 && parent->entity == 0) { // not attached, attach it to root
-        if (parent->children.count(se) == 0) {
-            parent->childrenV.push_back(n);
-            parent->children[se] = n;
-            n->parents[parent->entity] = parent;
-        }
+        parent->addChild(n);
     } else if (parent->entity != 0) { // not root, just attach it
         for (auto p : n->parents) {
             if (p.first == 0) { // root is one of the parents, remove it
@@ -548,11 +596,7 @@ void VRSTEP::traverseEntity(STEPentity* se, int lvl, VRSTEP::Node* parent, bool 
                 break;
             }
         }
-        if (parent->children.count(se) == 0) {
-            parent->children[se] = n;
-            parent->childrenV.push_back(n);
-            n->parents[parent->entity] = parent;
-        }
+        parent->addChild(n);
     }
 
     if (se->STEPfile_id == 5066 || se->STEPfile_id == 5070) {
@@ -582,7 +626,19 @@ void VRSTEP::traverseEntity(STEPentity* se, int lvl, VRSTEP::Node* parent, bool 
 
 void VRSTEP::traverseSelect(SDAI_Select* s, string ID, int lvl, VRSTEP::Node* parent) {
     auto e = getSelectEntity(s, ID);
-    if (e) traverseEntity(e, lvl, parent);
+    if (e) {
+        Node* n = 0;
+        if (!nodes.count((STEPentity*)s)) {
+            n = new Node();
+            n->select = s;
+            n->type = "SELECT";
+            n->a_name = ID;
+            nodes[(STEPentity*)s] = n;
+        } else n = nodes[(STEPentity*)s];
+
+        parent->addChild(n);
+        traverseEntity(e, lvl, n);
+    }
 }
 
 string primTypeAsString(int t) {
@@ -903,15 +959,15 @@ void VRSTEP::buildScenegraph() {
 
     map<STEPentity*, STEPentity*> ProductToSRep;
     for (auto ShapeRepRel : instancesByType["Shape_Definition_Representation"]) {
-        if (!ShapeRepRel) { cout << "VRSTEP::buildScenegraph Error 2\n" ; continue; }
+        if (!ShapeRepRel) { cout << "VRSTEP::buildScenegraph Error 2 " << ShapeRepRel.ID << endl; continue; }
         auto& PDS = getInstance( ShapeRepRel.get<0, STEPentity*, STEPentity*>() );
-        if (!PDS) { cout << "VRSTEP::buildScenegraph Error 3\n" ; continue; }
+        if (!PDS) { cout << "VRSTEP::buildScenegraph Error 3 " << ShapeRepRel.ID << endl; continue; }
         auto& PDef = getInstance( PDS.get<0, STEPentity*>() );
-        if (!PDef) { cout << "VRSTEP::buildScenegraph Error 4\n" ; continue; }
+        if (!PDef) { cout << "VRSTEP::buildScenegraph Error 4 " << ShapeRepRel.ID << endl; continue; }
         auto& PDF = getInstance( PDef.get<0, STEPentity*>() );
-        if (!PDF) { cout << "VRSTEP::buildScenegraph Error 5\n" ; continue; }
+        if (!PDF) { cout << "VRSTEP::buildScenegraph Error 5 " << ShapeRepRel.ID << endl; continue; }
         auto& Product = getInstance( PDF.get<0, STEPentity*>() );
-        if (!Product) { cout << "VRSTEP::buildScenegraph Error 6\n" ; continue; }
+        if (!Product) { cout << "VRSTEP::buildScenegraph Error 6 " << ShapeRepRel.ID << endl; continue; }
         auto SRep = ShapeRepRel.get<1, STEPentity*, STEPentity*>();
         ProductToSRep[Product.entity] = SRep;
     }
@@ -999,10 +1055,15 @@ void VRSTEP::build() {
     blacklisted = 0;
 
     int N = instMgr->InstanceCount();
-    for( int i=0; i<N; i++ ) { // add all instances to
+    for( int i=0; i<N; i++ ) { // add all instances to dict
         STEPentity* se = instMgr->GetApplication_instance(i);
         registerEntity(se);
     }
+
+    /*for( int i=0; i<N; i++ ) { // parse all instances
+        STEPentity* se = instMgr->GetApplication_instance(i);
+        parseEntity(se);
+    }*/
 
     auto root = new VRSTEP::Node();
     for( int i=0; i<N; i++ ) {

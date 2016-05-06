@@ -40,12 +40,16 @@ class VRSTEP {
 
         struct Node {
             bool traversed = 0;
+            string type = "ENTITY";
             string a_val = "NONE";
             string a_name = "NONE";
             STEPentity* entity = 0;
+            SDAI_Select* select = 0;
             map<STEPentity*, Node*> parents;
             vector<Node*> childrenV;
             map<STEPentity*, Node*> children;
+
+            void addChild(Node*);
         };
 
         map<STEPentity*, Node*> nodes;
@@ -102,6 +106,7 @@ class VRSTEP {
         void open(string file);
 
         void registerEntity(STEPentity* se, bool complexPass = 0);
+        void parseEntity(STEPentity* se, bool complexPass = 0);
         void traverseEntity(STEPentity* se, int lvl, VRSTEP::Node* parent, bool complexPass = 0);
         void traverseSelect(SDAI_Select* s, string ID, int lvl, VRSTEP::Node* parent);
         void traverseAggregate(STEPaggregate* sa, int atype, STEPattribute* attr, int lvl, VRSTEP::Node* parent);
