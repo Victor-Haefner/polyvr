@@ -2,6 +2,7 @@
 
 #include <STEPfile.h>
 #include <STEPcomplex.h>
+#include <STEPaggregate.h>
 #include <schema.h>
 
 #include <thread>
@@ -48,6 +49,7 @@ void VRSTEP::loadT(string file, STEPfilePtr sfile, bool* done) {
 
 VRSTEP::VRSTEP() {
     explorer = VRGuiTreeExplorer::create("iss");
+    explorer->setSelectCallback( VRFunction<VRGuiTreeExplorer*>::create( "step_explorer", boost::bind(&VRSTEP::on_explorer_select, this, _1) ) );
 
     registry = RegistryPtr( new Registry( SchemaInit ) ); // schema
     instMgr = InstMgrPtr( new InstMgr() ); // instances
@@ -177,6 +179,15 @@ VRSTEP::VRSTEP() {
     blacklist["Surface_Style_Usage"] = 1;
     blacklist["Uncertainty_Measure_With_Unit"] = 1;
     }
+}
+
+void VRSTEP::on_explorer_select(VRGuiTreeExplorer* e) {
+    auto row = e->getSelected();
+    auto id = e->get<int>(row, 0);
+    auto type = e->get<string>(row, 1);
+    auto val = e->get<string>(row, 2);
+    string info = toString(id) + "\n" + type + "\n" + val;
+    e->setInfo(info);
 }
 
 template<class T> void VRSTEP::addType(string typeName, string path, bool print) {
@@ -478,16 +489,22 @@ void VRSTEP::explore(VRSTEP::Node* node, int parent) {
     for (auto n : node->childrenV) explore(n, parent);
 }
 
-void VRSTEP::registerEntity(STEPentity* se, STEPcomplex* cparent) {
-    if (se->IsComplex()) {
-        auto sc = ( (STEPcomplex*)se )->head;
-        if (sc != cparent) {
-            while(sc) {
-                registerEntity(sc, ( (STEPcomplex*)se )->head);
-                sc = sc->sc;
-            }
-            return;
+vector<STEPentity*> VRSTEP::unfoldComplex(STEPentity* e) {
+    vector<STEPentity*> res;
+    if (e->IsComplex()) {
+        auto c = ( (STEPcomplex*)e )->head;
+        while(c) {
+            res.push_back(c);
+            c = c->sc;
         }
+    }
+    return res;
+}
+
+void VRSTEP::registerEntity(STEPentity* se, bool complexPass) {
+    if (se->IsComplex() && !complexPass) {
+        for (auto e : unfoldComplex(se)) registerEntity(e, 1);
+        return;
     }
 
     string type = se->EntityName();
@@ -503,16 +520,10 @@ void VRSTEP::registerEntity(STEPentity* se, STEPcomplex* cparent) {
     }
 }
 
-void VRSTEP::traverseEntity(STEPentity* se, int lvl, VRSTEP::Node* parent, STEPcomplex* cparent) {
-    if (se->IsComplex()) {
-        auto sc = ( (STEPcomplex*)se )->head;
-        if (sc != cparent) {
-            while(sc) {
-                traverseEntity(sc, lvl, parent, ( (STEPcomplex*)se )->head);
-                sc = sc->sc;
-            }
-            return;
-        }
+void VRSTEP::traverseEntity(STEPentity* se, int lvl, VRSTEP::Node* parent, bool complexPass) {
+    if (se->IsComplex() && !complexPass) {
+        for (auto e : unfoldComplex(se)) traverseEntity(e, lvl, parent, 1);
+        return;
     }
 
     Node* n = 0;
@@ -544,20 +555,20 @@ void VRSTEP::traverseEntity(STEPentity* se, int lvl, VRSTEP::Node* parent, STEPc
         }
     }
 
-    /*if (se->STEPfile_id == 685 || se->STEPfile_id == 686) {
+    if (se->STEPfile_id == 5066 || se->STEPfile_id == 5070) {
         cout << se->STEPfile_id << " parent " << parent << endl;
         if (parent->entity) cout << " parent entity " << parent->entity->STEPfile_id << endl;
-    }*/
+    }
 
     if (!n->traversed) {
         STEPattribute* attr = 0;
         se->ResetAttributes();
         while ( (attr = se->NextAttribute()) != NULL ) {
-            //if (se->STEPfile_id == 686) cout << "  a " << ( attr->Entity() && !attr->IsDerived()) << " " << attr->Aggregate() << " " << attr->Select() << endl;
+            if (se->STEPfile_id == 5066) cout << "  a " << ( attr->Entity() && !attr->IsDerived()) << " " << bool(attr->Aggregate()) << " " << bool(attr->Select()) << " " << attr->Name() << " " << attr->asStr() << endl;
             if ( attr->Entity() && !attr->IsDerived()) { traverseEntity( attr->Entity(), lvl, n); }
-            else if ( auto a = attr->Aggregate() ) { traverseAggregate(a, attr->BaseType(), lvl, n); }
+            else if ( auto a = attr->Aggregate() ) { traverseAggregate(a, attr->BaseType(), attr, lvl, n); }
             else if ( auto s = attr->Select() ) { traverseSelect(s, attr->asStr(), lvl, n); }
-            if (attr->BaseType() != ENTITY_TYPE && attr->BaseType() != SELECT_TYPE) {
+            if (attr->BaseType() != ENTITY_TYPE && attr->BaseType() != SELECT_TYPE) { // numeric value
                 auto a = new Node();
                 a->a_name = attr->Name();
                 a->a_val = attr->asStr();
@@ -574,41 +585,107 @@ void VRSTEP::traverseSelect(SDAI_Select* s, string ID, int lvl, VRSTEP::Node* pa
     if (e) traverseEntity(e, lvl, parent);
 }
 
-void VRSTEP::traverseAggregate(STEPaggregate *sa, int atype, int lvl, VRSTEP::Node* parent) {
-    string s; sa->asStr(s);
+string primTypeAsString(int t) {
+    switch(t) {
+        case sdaiINTEGER: return "sdaiINTEGER 0x0001";
+        case sdaiREAL: return "sdaiREAL 0x0002";
+        case sdaiBOOLEAN: return "sdaiBOOLEAN 0x0004";
+        case sdaiLOGICAL: return "sdaiLOGICAL 0x0008";
+        case sdaiSTRING : return "sdaiSTRING 0x0010";
+        case sdaiBINARY: return "sdaiBINARY 0x0020";
+        case sdaiENUMERATION: return "sdaiENUMERATION 0x0040";
+        case sdaiSELECT : return "sdaiSELECT 0x0080";
+        case sdaiINSTANCE: return "sdaiINSTANCE 0x0100";
+        case sdaiAGGR    : return "sdaiAGGR 0x0200";
+        case sdaiNUMBER  : return "sdaiNUMBER 0x0400";
+        case ARRAY_TYPE: return "ARRAY_TYPE";
+        case BAG_TYPE: return "BAG_TYPE";
+        case SET_TYPE: return "SET_TYPE";
+        case LIST_TYPE: return "LIST_TYPE";
+        case GENERIC_TYPE: return "GENERIC_TYPE";
+        case REFERENCE_TYPE: return "REFERENCE_TYPE ";
+        case UNKNOWN_TYPE: return "UNKNOWN_TYPE";
+    }
+    return "???";
+}
+
+void VRSTEP::traverseAggregate(STEPaggregate *sa, int atype, STEPattribute* attr, int lvl, VRSTEP::Node* parent) {
+    string s;
 
     STEPentity* sse;
+    STEPaggregate* ssa;
     SelectNode* sen;
     SDAI_Select* sdsel;
-    PrimitiveType etype, ebtype;
+    PrimitiveType etype, ebtype, nrtype, type;
     const EntityDescriptor* ssedesc = 0;
+    auto btype = atype;
+    int ID;
 
-    for( EntityNode* sn = (EntityNode*)sa->GetHead(); sn != NULL; sn = (EntityNode*)sn->NextNode()) {
-        //if (parent->entity->STEPfile_id == 678) cout << "  u " << atype << endl;
+    if (attr) {
+        const AttrDescriptor* adesc = attr->getADesc();
+        atype = adesc->AggrElemType();
+        nrtype = attr->NonRefType();
+        type = attr->Type();
+    }
+
+    auto switchEType = [&](STEPentity* e) {
+        ssedesc = e->getEDesc();
+        if (ssedesc) {
+            switch (ssedesc->Type()) {
+                case SET_TYPE:
+                case LIST_TYPE:
+                    ebtype = ssedesc->BaseType();
+                    traverseAggregate((STEPaggregate *)e, ebtype, 0, lvl, parent); break;
+                case ENTITY_TYPE: traverseEntity(e, lvl, parent); break;
+                case ARRAY_TYPE: cout << " handle ARRAY_TYPE\n"; break;
+                case BAG_TYPE: cout << " handle BAG_TYPE\n"; break;
+                case GENERIC_TYPE: cout << " handle GENERIC_TYPE\n"; break;
+                case REFERENCE_TYPE: cout << " handle REFERENCE_TYPE\n"; break;
+                case UNKNOWN_TYPE: cout << " handle UNKNOWN_TYPE\n"; break;
+
+                default:
+                    cout << "traverseAggregate: entity Type not handled:" << etype << endl;
+                    //ebtype = ssedesc->BaseType();
+                    //traverseAggregate((STEPaggregate *)sse, etype, lvl, parent); break;
+                    break;
+            }
+        }
+    };
+
+    for( STEPnode* sn = (STEPnode*)sa->GetHead(); sn != NULL; sn = (STEPnode*)sn->NextNode()) {
         switch (atype) {
             case ENTITY_TYPE: // 256
-                sse = (STEPentity*)sn->node;
-                ssedesc = sse->getEDesc();
-                if (ssedesc) {
-                    etype = ssedesc->Type();
-                    //if (parent->entity->STEPfile_id == 678) cout << "   k " << etype << endl;
-                    switch (etype) {
-                        case SET_TYPE:
-                        case LIST_TYPE:
-                            ebtype = ssedesc->BaseType();
-                            traverseAggregate((STEPaggregate *)sse, ebtype, lvl, parent); break;
-                        case ENTITY_TYPE: traverseEntity(sse, lvl, parent); break;
-                        default:
-                            cout << "traverseAggregate: entity Type not handled:" << etype << endl;
-                            break;
-                    }
-                }
+                sse = (STEPentity*)((EntityNode*)sn)->node;
+                if (sse->IsComplex()) {
+                    for (auto e : unfoldComplex(sse)) switchEType(e);
+                } else switchEType(sse);
+
                 break;
             case SELECT_TYPE: // 128
                 sen = (SelectNode*)sn;
                 sdsel = sen->node;
                 sen->asStr(s);
                 traverseSelect(sdsel, s, lvl, parent);
+                break;
+
+            case SET_TYPE:
+            case LIST_TYPE: // 1028  // TODOOOO
+                sn->asStr(s); // Idea (workaround): parse the string..
+                cout << "   b " << s << endl;
+                s = splitString(s, '(')[1];
+                s = splitString(s, ')')[0];
+                for (auto v : splitString(s, ',')) {
+                    switch(btype) {
+                        case ENTITY_TYPE:
+                            ID = toInt(splitString(v, '#')[1]);
+                            cout << "    c " << ID << " " << instancesById.count(ID) << endl;
+                            traverseEntity(instancesById[ID].entity, lvl, parent);
+                            break;
+                        case REAL_TYPE: // TODO
+                        default:
+                            cout << "Warning: unhandled LIST_TYPE base type " << btype << endl;
+                    }
+                }
                 break;
             case INTEGER_TYPE: // 1
             case REAL_TYPE: // 2

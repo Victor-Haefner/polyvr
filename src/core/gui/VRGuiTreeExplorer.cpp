@@ -4,6 +4,7 @@
 #include <gtkmm/window.h>
 #include <cstdarg>
 #include "core/utils/toString.h"
+#include "core/utils/VRFunction.h"
 
 using namespace OSG;
 
@@ -60,17 +61,27 @@ VRGuiTreeExplorer::VRGuiTreeExplorer(string cols) {
     win->set_default_size(400, 200);
 
     auto m_VBox = Gtk::manage(new Gtk::VBox());
+    auto m_HBox = Gtk::manage(new Gtk::HBox());
+    m_TextView = Gtk::manage(new Gtk::TextView());
     auto m_ScrolledWindow = Gtk::manage(new Gtk::ScrolledWindow());
-    auto m_TreeView = Gtk::manage(new Gtk::TreeView());
+    m_TreeView = Gtk::manage(new Gtk::TreeView());
     auto m_ButtonBox = Gtk::manage(new Gtk::VButtonBox());
     auto m_Button_Quit = Gtk::manage(new Gtk::Button("Close"));
+
+    m_TreeView->signal_cursor_changed().connect( sigc::mem_fun(*this, &VRGuiTreeExplorer::on_row_select) );
+
+    infoBuffer = Gtk::TextBuffer::create();
+    m_TextView->set_editable(0);
+    m_TextView->set_buffer(infoBuffer);
 
     win->add(*m_VBox);
 
     m_ScrolledWindow->add(*m_TreeView);
     m_ScrolledWindow->set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
 
-    m_VBox->pack_start(*m_ScrolledWindow);
+    m_HBox->pack_start(*m_ScrolledWindow);
+    m_HBox->pack_start(*m_TextView);
+    m_VBox->pack_start(*m_HBox);
     m_VBox->pack_start(*m_ButtonBox, Gtk::PACK_SHRINK);
 
     m_ButtonBox->pack_start(*m_Button_Quit, Gtk::PACK_SHRINK);
@@ -138,6 +149,32 @@ void VRGuiTreeExplorer::remove(int i) {
     }
 }
 
+void VRGuiTreeExplorer::setInfo(string s) {
+    info = s;
+    infoBuffer->set_text(s);
+}
 
+void VRGuiTreeExplorer::setSelectCallback( shared_ptr< VRFunction<VRGuiTreeExplorer*> > cb ) {
+    this->cb = cb;
+}
+
+void VRGuiTreeExplorer::on_row_select() {
+    selected = m_TreeView->get_selection()->get_selected();
+    if(!selected) { setInfo("No data"); return; }
+
+    if (cb) (*cb)(this);
+}
+
+Gtk::TreeModel::iterator VRGuiTreeExplorer::getSelected() { return selected; }
+
+template<class T>
+T VRGuiTreeExplorer::get(Gtk::TreeModel::iterator itr, int i) {
+    ModelColumns m_Columns(cols);
+    Gtk::TreeModel::Row row = *itr;
+    return row[m_Columns.col<T>(i)];
+}
+
+template int VRGuiTreeExplorer::get<int>(Gtk::TreeModel::iterator itr, int i);
+template string VRGuiTreeExplorer::get<string>(Gtk::TreeModel::iterator itr, int i);
 
 

@@ -24,6 +24,8 @@ class STEPcomplex;
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+class VRGuiTreeExplorer;
+
 class VRSTEP {
     public:
         typedef shared_ptr<Registry> RegistryPtr;
@@ -66,6 +68,9 @@ class VRSTEP {
         struct Bound;
         struct Surface;
 
+        vector<STEPentity*> unfoldComplex(STEPentity* e);
+        void on_explorer_select(VRGuiTreeExplorer* e);
+
     public:
         RegistryPtr registry;
         InstMgrPtr instMgr;
@@ -96,10 +101,10 @@ class VRSTEP {
         void loadT(string file, STEPfilePtr sfile, bool* done);
         void open(string file);
 
-        void registerEntity(STEPentity* se, STEPcomplex* cparent = 0);
-        void traverseEntity(STEPentity* se, int lvl, VRSTEP::Node* parent, STEPcomplex* cparent = 0);
+        void registerEntity(STEPentity* se, bool complexPass = 0);
+        void traverseEntity(STEPentity* se, int lvl, VRSTEP::Node* parent, bool complexPass = 0);
         void traverseSelect(SDAI_Select* s, string ID, int lvl, VRSTEP::Node* parent);
-        void traverseAggregate(STEPaggregate* sa, int type, int lvl, VRSTEP::Node* parent);
+        void traverseAggregate(STEPaggregate* sa, int atype, STEPattribute* attr, int lvl, VRSTEP::Node* parent);
         void explore(VRSTEP::Node* node, int parent = 0);
 
         void buildGeometries();
