@@ -454,23 +454,12 @@ template<class... Args> void setup(tuple<Args...>& t, STEPentity* e, string path
 // end helper function
 
 template<class T> void VRSTEP::parse(STEPentity* e, string path, string type) {
-    /*if (!instances.count(e)) { cout << "AAARGH" << endl; return; }
+    if (!instances.count(e)) { cout << "AAARGH" << endl; return; }
     if (instances[e].data) return; // allready parsed
     auto t = new T();
     setup(*t, e, path, this);
-    instances[e].data = t;*/
-
-    if (instances.count(e)) return;
-    auto t = new T();
-    setup(*t, e, path, this);
-    Instance i;
-    i.data = t;
-    i.ID = e->STEPfile_id;
-    i.entity = e;
-    i.type = type;
-    instancesById[i.ID] = i;
-    instancesByType[type].push_back(i);
-    instances[e] = i;
+    instances[e].data = t;
+    instancesByType[type].push_back(instances[e]);
 }
 
 void VRSTEP::open(string file) {
@@ -532,14 +521,14 @@ void VRSTEP::registerEntity(STEPentity* se, bool complexPass) {
     }
 
     string type = se->EntityName();
-    if (!instancesById.count(se->STEPfile_id)) {
+    if (!instances.count(se)) {
         Instance i;
         i.ID = se->STEPfile_id;
         i.entity = se;
         i.type = type;
         instancesById[i.ID] = i;
         //instancesByType[i.type].push_back(i);
-        //instances[se] = i;
+        instances[se] = i;
     }
 }
 
