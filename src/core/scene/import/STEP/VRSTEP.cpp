@@ -539,15 +539,21 @@ void VRSTEP::parseEntity(STEPentity* se, bool complexPass) {
     }
 
     string type = se->EntityName();
-    if (types.count(type) && types[type].cb) (*types[type].cb)(se); // actual parsing!
+    if (types.count(type) && types[type].cb) (*types[type].cb)(se);
 }
 
 void VRSTEP::Node::addChild(Node* c) {
-    if (children.count(c->entity) == 0) {
+    if (children.count(c->key()) == 0) {
         childrenV.push_back(c);
-        children[c->entity] = c;
-        c->parents[entity] = this;
+        children[c->key()] = c;
+        c->parents[key()] = this;
     }
+}
+
+STEPentity* VRSTEP::Node::key() {
+    if (entity) return entity;
+    if (select) return (STEPentity*)select;
+    return 0;
 }
 
 void VRSTEP::traverseEntity(STEPentity* se, int lvl, VRSTEP::Node* parent, bool complexPass) {
@@ -563,9 +569,9 @@ void VRSTEP::traverseEntity(STEPentity* se, int lvl, VRSTEP::Node* parent, bool 
         nodes[se] = n;
     } else n = nodes[se];
 
-    if (n->parents.size() == 0 && parent->entity == 0) { // not attached, attach it to root
+    if (n->parents.size() == 0 && parent->key() == 0) { // not attached, attach it to root
         parent->addChild(n);
-    } else if (parent->entity != 0) { // not root, just attach it
+    } else if (parent->key() != 0 ) { // not root, just attach it
         for (auto p : n->parents) {
             if (p.first == 0) { // root is one of the parents, remove it
                 p.second->children.erase(se);
@@ -577,8 +583,8 @@ void VRSTEP::traverseEntity(STEPentity* se, int lvl, VRSTEP::Node* parent, bool 
         parent->addChild(n);
     }
 
-    if (se->STEPfile_id == 5066 || se->STEPfile_id == 5070) {
-        cout << se->STEPfile_id << " parent " << parent << endl;
+    if (se->STEPfile_id == 465 || se->STEPfile_id == 466) {
+        cout << se->STEPfile_id << " parent " << parent << " " << parent->entity << " " << parent->select << endl;
         if (parent->entity) cout << " parent entity " << parent->entity->STEPfile_id << endl;
     }
 
@@ -586,7 +592,7 @@ void VRSTEP::traverseEntity(STEPentity* se, int lvl, VRSTEP::Node* parent, bool 
         STEPattribute* attr = 0;
         se->ResetAttributes();
         while ( (attr = se->NextAttribute()) != NULL ) {
-            if (se->STEPfile_id == 5066) cout << "  a " << ( attr->Entity() && !attr->IsDerived()) << " " << bool(attr->Aggregate()) << " " << bool(attr->Select()) << " " << attr->Name() << " " << attr->asStr() << endl;
+            if (se->STEPfile_id == 465) cout << "  a " << ( attr->Entity() && !attr->IsDerived()) << " " << bool(attr->Aggregate()) << " " << bool(attr->Select()) << " " << attr->Name() << " " << attr->asStr() << endl;
             if ( attr->Entity() && !attr->IsDerived()) { traverseEntity( attr->Entity(), lvl, n); }
             else if ( auto a = attr->Aggregate() ) { traverseAggregate(a, attr->BaseType(), attr, lvl, n); }
             else if ( auto s = attr->Select() ) { traverseSelect(s, attr->asStr(), lvl, n); }
@@ -705,14 +711,12 @@ void VRSTEP::traverseAggregate(STEPaggregate *sa, int atype, STEPattribute* attr
             case SET_TYPE:
             case LIST_TYPE: // 1028  // TODOOOO
                 sn->asStr(s); // Idea (workaround): parse the string..
-                cout << "   b " << s << endl;
                 s = splitString(s, '(')[1];
                 s = splitString(s, ')')[0];
                 for (auto v : splitString(s, ',')) {
                     switch(btype) {
                         case ENTITY_TYPE:
                             ID = toInt(splitString(v, '#')[1]);
-                            cout << "    c " << ID << " " << instancesById.count(ID) << endl;
                             traverseEntity(instancesById[ID].entity, lvl, parent);
                             break;
                         case REAL_TYPE: // TODO

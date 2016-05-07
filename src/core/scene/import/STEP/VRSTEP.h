@@ -50,6 +50,7 @@ class VRSTEP {
             map<STEPentity*, Node*> children;
 
             void addChild(Node*);
+            STEPentity* key();
         };
 
         map<STEPentity*, Node*> nodes;
