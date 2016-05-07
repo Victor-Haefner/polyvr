@@ -531,37 +531,26 @@ void VRSTEP::registerEntity(STEPentity* se, bool complexPass) {
         return;
     }
 
-    /*string type = se->EntityName();
-    if (!instances.count(se)) {
+    string type = se->EntityName();
+    if (!instancesById.count(se->STEPfile_id)) {
         Instance i;
         i.ID = se->STEPfile_id;
         i.entity = se;
         i.type = type;
         instancesById[i.ID] = i;
-        instancesByType[i.type].push_back(i);
-        instances[se] = i;
-
-        parseEntity(se, 1);
+        //instancesByType[i.type].push_back(i);
+        //instances[se] = i;
     }
 }
 
 void VRSTEP::parseEntity(STEPentity* se, bool complexPass) {
     if (se->IsComplex() && !complexPass) {
-        for (auto e : unfoldComplex(se)) registerEntity(e, 1);
+        for (auto e : unfoldComplex(se)) parseEntity(e, 1);
         return;
-    }*/
+    }
 
     string type = se->EntityName();
     if (types.count(type) && types[type].cb) (*types[type].cb)(se); // actual parsing!
-    else {
-        if (!instancesById.count(se->STEPfile_id)) {
-            Instance i;
-            i.ID = se->STEPfile_id;
-            i.entity = se;
-            i.type = type;
-            instancesById[i.ID] = i;
-        }
-    }
 }
 
 void VRSTEP::Node::addChild(Node* c) {
@@ -1060,10 +1049,10 @@ void VRSTEP::build() {
         registerEntity(se);
     }
 
-    /*for( int i=0; i<N; i++ ) { // parse all instances
+    for( int i=0; i<N; i++ ) { // parse all instances
         STEPentity* se = instMgr->GetApplication_instance(i);
         parseEntity(se);
-    }*/
+    }
 
     auto root = new VRSTEP::Node();
     for( int i=0; i<N; i++ ) {
