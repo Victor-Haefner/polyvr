@@ -79,6 +79,10 @@ VRSTEP::VRSTEP() {
     addType< tuple<vector<STEPentity*> > >( "Definitional_Representation", "a1Ve", false);
     addType< tuple<STEPentity*, vector<STEPentity*> > >( "Surface_Curve", "a1e|a2Ve", false);
 
+    addType< tuple<STEPentity*, STEPentity*, STEPentity*, string> >( "Surface_Curve", "a1e|a2se|a3se|a4S", false);
+    addType< tuple<STEPentity*, STEPentity*> >( "PCurve", "a1e|a2e", false);
+    addType< tuple<STEPentity*> >( "Definitional_Representation", "a1e", false);
+
     addType< tuple<int, int, vector<STEPentity*>, bool, bool, bool > >( "B_Spline_Surface", "a0i|a1i|a2Ve|a4b|a5b|a6b", false);
     addType< tuple< vector<int>, vector<int>, vector<double>, vector<double> > >( "B_Spline_Surface_With_Knots", "a0Vi|a1Vi|a2Vf|a2Vf", false);
     addType< tuple< vector<double> > >( "Rational_B_Spline_Surface", "a0Vf", false);
@@ -357,7 +361,7 @@ STEPentity* VRSTEP::getSelectEntity(SDAI_Select* s, string ID) {
     return 0;
 }
 
-template<typename T> bool VRSTEP::query(STEPentity* e, string path, T& t) {
+template<typename T> bool VRSTEP::query(STEPentity* e, string path, T& t, string type) {
     auto toInt = [](char c) { return int(c-'0'); };
 
     int j = 1;
@@ -371,16 +375,16 @@ template<typename T> bool VRSTEP::query(STEPentity* e, string path, T& t) {
         j = 1;
         auto c = path[i];
 
-        if (c == 'a') {
+        if (c == 'a') { // attribute
             j = 2;
             int ai = toInt(path[i+1]);
-            if (e->AttributeCount() <= ai) { cout << "VRSTEP::query " << ai << " is out of range!\n"; return false; }
+            if (e->AttributeCount() <= ai) { cout << "VRSTEP::query " << path << ":" << i << " of type " << type << " attrib " << ai << " is out of range!\n"; return false; }
             curAttr = &e->attributes[ai];
             attrStr = curAttr->asStr();
             curAggr = 0;
         }
 
-        if (c == 'A') {
+        if (c == 'A') { // aggregate
             j = 2;
             if (!curAttr) continue;
             curAggr = curAttr->Aggregate();
@@ -435,21 +439,21 @@ template<typename T> bool VRSTEP::query(STEPentity* e, string path, T& t) {
 
 // helper function to set tuple members
 template<class T, size_t N> struct Setup {
-    static void setup(T& t, STEPentity* e, vector<string>& paths, VRSTEP* step) {
-        Setup<T, N-1>::setup(t, e, paths, step);
-        step->query(e, paths[N-1], get<N-1>(t));
+    static void setup(T& t, STEPentity* e, vector<string>& paths, VRSTEP* step, string type) {
+        Setup<T, N-1>::setup(t, e, paths, step, type);
+        step->query(e, paths[N-1], get<N-1>(t), type);
     }
 };
 
 template<class T> struct Setup<T, 1> {
-    static void setup(T& t, STEPentity* e, vector<string>& paths, VRSTEP* step) {
-        step->query(e, paths[0], get<0>(t));
+    static void setup(T& t, STEPentity* e, vector<string>& paths, VRSTEP* step, string type) {
+        step->query(e, paths[0], get<0>(t), type);
     }
 };
 
-template<class... Args> void setup(tuple<Args...>& t, STEPentity* e, string paths, VRSTEP* step) {
+template<class... Args> void setup(tuple<Args...>& t, STEPentity* e, string paths, VRSTEP* step, string type) {
     auto vpaths = splitString(paths, '|');
-    Setup<decltype(t), sizeof...(Args)>::setup(t, e, vpaths, step);
+    Setup<decltype(t), sizeof...(Args)>::setup(t, e, vpaths, step, type);
 }
 // end helper function
 
@@ -457,7 +461,7 @@ template<class T> void VRSTEP::parse(STEPentity* e, string path, string type) {
     if (!instances.count(e)) { cout << "AAARGH" << endl; return; }
     if (instances[e].data) return; // allready parsed
     auto t = new T();
-    setup(*t, e, path, this);
+    setup(*t, e, path, this, type);
     instances[e].data = t;
     instancesByType[type].push_back(instances[e]);
 }
@@ -583,16 +587,16 @@ void VRSTEP::traverseEntity(STEPentity* se, int lvl, VRSTEP::Node* parent, bool 
         parent->addChild(n);
     }
 
-    if (se->STEPfile_id == 465 || se->STEPfile_id == 466) {
+    /*if (se->STEPfile_id == 465 || se->STEPfile_id == 466) {
         cout << se->STEPfile_id << " parent " << parent << " " << parent->entity << " " << parent->select << endl;
         if (parent->entity) cout << " parent entity " << parent->entity->STEPfile_id << endl;
-    }
+    }*/
 
     if (!n->traversed) {
         STEPattribute* attr = 0;
         se->ResetAttributes();
         while ( (attr = se->NextAttribute()) != NULL ) {
-            if (se->STEPfile_id == 465) cout << "  a " << ( attr->Entity() && !attr->IsDerived()) << " " << bool(attr->Aggregate()) << " " << bool(attr->Select()) << " " << attr->Name() << " " << attr->asStr() << endl;
+            //if (se->STEPfile_id == 465) cout << "  a " << ( attr->Entity() && !attr->IsDerived()) << " " << bool(attr->Aggregate()) << " " << bool(attr->Select()) << " " << attr->Name() << " " << attr->asStr() << endl;
             if ( attr->Entity() && !attr->IsDerived()) { traverseEntity( attr->Entity(), lvl, n); }
             else if ( auto a = attr->Aggregate() ) { traverseAggregate(a, attr->BaseType(), attr, lvl, n); }
             else if ( auto s = attr->Select() ) { traverseSelect(s, attr->asStr(), lvl, n); }
@@ -789,8 +793,12 @@ struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
             if (EdgeElement.type == "Edge_Curve") {
                 Vec3f EBeg = toVec3f( EdgeElement.get<0, STEPentity*, STEPentity*, STEPentity*>(), instances );
                 Vec3f EEnd = toVec3f( EdgeElement.get<1, STEPentity*, STEPentity*, STEPentity*>(), instances );
-                auto& EdgeGeo = instances[ EdgeElement.get<2, STEPentity*, STEPentity*, STEPentity*>() ];
+                auto EdgeGeo = instances[ EdgeElement.get<2, STEPentity*, STEPentity*, STEPentity*>() ];
                 int Np = points.size();
+
+                if (EdgeGeo.type == "Surface_Curve") {
+                    EdgeGeo = instances[ EdgeGeo.get<0, STEPentity*, STEPentity*, STEPentity*, string>() ];
+                }
 
                 if (EdgeGeo.type == "Line") {
                     //Vec3f p = toVec3f( EdgeGeo.get<0, STEPentity*, STEPentity*>(), instances );
@@ -823,9 +831,6 @@ struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
                     return;
                 }
 
-                if (EdgeGeo.type == "Surface_Curve") {
-
-                }
                 cout << "Error: edge geo type not handled " << EdgeGeo.type << endl;
             } else cout << "Error: edge element type not handled " << EdgeElement.type << endl;
         } else cout << "Error: edge type not handled " << i.type << endl;

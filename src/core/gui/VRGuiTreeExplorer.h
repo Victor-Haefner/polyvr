@@ -15,6 +15,7 @@ class VRGuiTreeExplorer {
         Gtk::WindowPtr win;
         Gtk::TextView* m_TextView;
         Gtk::TreeView* m_TreeView;
+        Gtk::Entry* searchEntry;
         string cols;
 
         shared_ptr< VRFunction<VRGuiTreeExplorer*> > cb;
@@ -25,6 +26,7 @@ class VRGuiTreeExplorer {
         map<int, Gtk::TreeModel::iterator> rows;
         Gtk::TreeModel::iterator selected;
 
+        void on_search_edited();
         void on_row_select();
 
     public:

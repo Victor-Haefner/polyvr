@@ -61,6 +61,7 @@ VRGuiTreeExplorer::VRGuiTreeExplorer(string cols) {
     win->set_default_size(400, 200);
 
     auto m_VBox = Gtk::manage(new Gtk::VBox());
+    searchEntry = Gtk::manage(new Gtk::Entry());
     auto m_HBox = Gtk::manage(new Gtk::HBox());
     m_TextView = Gtk::manage(new Gtk::TextView());
     auto m_ScrolledWindow = Gtk::manage(new Gtk::ScrolledWindow());
@@ -68,6 +69,7 @@ VRGuiTreeExplorer::VRGuiTreeExplorer(string cols) {
     auto m_ButtonBox = Gtk::manage(new Gtk::VButtonBox());
     auto m_Button_Quit = Gtk::manage(new Gtk::Button("Close"));
 
+    searchEntry->signal_changed().connect( sigc::mem_fun(*this, &VRGuiTreeExplorer::on_search_edited) );
     m_TreeView->signal_cursor_changed().connect( sigc::mem_fun(*this, &VRGuiTreeExplorer::on_row_select) );
 
     infoBuffer = Gtk::TextBuffer::create();
@@ -81,6 +83,7 @@ VRGuiTreeExplorer::VRGuiTreeExplorer(string cols) {
 
     m_HBox->pack_start(*m_ScrolledWindow);
     m_HBox->pack_start(*m_TextView);
+    m_VBox->pack_start(*searchEntry, 0,1);
     m_VBox->pack_start(*m_HBox);
     m_VBox->pack_start(*m_ButtonBox, Gtk::PACK_SHRINK);
 
@@ -110,6 +113,11 @@ VRGuiTreeExplorer::VRGuiTreeExplorer(string cols) {
 VRGuiTreeExplorer::~VRGuiTreeExplorer() {}
 
 VRGuiTreeExplorerPtr VRGuiTreeExplorer::create(string cols) { return VRGuiTreeExplorerPtr( new VRGuiTreeExplorer(cols) ); }
+
+void VRGuiTreeExplorer::on_search_edited() {
+    string txt = searchEntry->get_text();
+    // TODO;
+}
 
 int VRGuiTreeExplorer::add(int parent, ...) {
     if (parent > 0 && rows.count(parent) == 0) cout << "VRGuiTreeExplorer::add unknown parent " << parent << endl;
