@@ -82,8 +82,8 @@ VRGuiTreeExplorer::VRGuiTreeExplorer(string cols) {
     m_ScrolledWindow->set_policy(Gtk::POLICY_AUTOMATIC, Gtk::POLICY_AUTOMATIC);
 
     m_HBox->pack_start(*m_ScrolledWindow);
-    m_HBox->pack_start(*m_TextView);
-    m_VBox->pack_start(*searchEntry, 0,1);
+    m_HBox->pack_start(*m_TextView, 0, 1);
+    m_VBox->pack_start(*searchEntry, 0, 1);
     m_VBox->pack_start(*m_HBox);
     m_VBox->pack_start(*m_ButtonBox, Gtk::PACK_SHRINK);
 
@@ -116,7 +116,45 @@ VRGuiTreeExplorerPtr VRGuiTreeExplorer::create(string cols) { return VRGuiTreeEx
 
 void VRGuiTreeExplorer::on_search_edited() {
     string txt = searchEntry->get_text();
-    // TODO;
+    if (txt.size() < 3) return;
+
+    auto match = [&](string s) {
+        vector<int> res;
+        uint pos = s.find(txt, 0);
+        while(pos != string::npos && pos <= s.size()) {
+            res.push_back(pos);
+            pos = s.find(txt, pos+1);
+        }
+        return res;
+    };
+
+    auto expand = [&](Gtk::TreeModel::iterator i) {
+        Gtk::TreePath p(i);
+        m_TreeView->expand_to_path( p );
+    };
+
+    m_TreeView->collapse_all();
+    ModelColumns m_Columns(cols);
+    int N = 0;
+    for (auto r : rows) {
+        string row_string;
+
+        Gtk::TreeModel::Row row = *r.second;
+        int i=0;
+        for (auto c : cols) {
+            if ( c == 'i' ) row_string += toString(row[m_Columns.col<int>(i)]);
+            if ( c == 's' ) row_string += row[m_Columns.col<string>(i)];
+            i++;
+        }
+
+        auto res = match(row_string);
+        if (res.size() > 0) {
+            N += res.size();
+            expand(r.second);
+        }
+    }
+
+    cout << "search for txt resulted in " << N << " finds\n";
 }
 
 int VRGuiTreeExplorer::add(int parent, ...) {

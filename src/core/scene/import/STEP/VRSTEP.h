@@ -44,6 +44,7 @@ class VRSTEP {
             string a_val = "NONE";
             string a_name = "NONE";
             STEPentity* entity = 0;
+            STEPaggregate* aggregate = 0;
             SDAI_Select* select = 0;
             map<STEPentity*, Node*> parents;
             vector<Node*> childrenV;

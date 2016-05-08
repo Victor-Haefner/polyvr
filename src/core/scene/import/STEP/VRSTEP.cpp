@@ -82,6 +82,8 @@ VRSTEP::VRSTEP() {
     addType< tuple<STEPentity*, STEPentity*, STEPentity*, string> >( "Surface_Curve", "a1e|a2se|a3se|a4S", false);
     addType< tuple<STEPentity*, STEPentity*> >( "PCurve", "a1e|a2e", false);
     addType< tuple<STEPentity*> >( "Definitional_Representation", "a1e", false);
+    //addType< tuple<int, STEPentity*> >( "B_Spline_Curve", "a1i, a1e", false); // TODO
+    addType< tuple<int, vector<STEPentity*>, bool, vector<int>, vector<double>, vector<double> > >( "B_Spline_Curve_With_Knots", "a1i|a2Ve|a4b|a6Vi|a8Vf|a9Vf", false); //TODO
 
     addType< tuple<int, int, vector<STEPentity*>, bool, bool, bool > >( "B_Spline_Surface", "a0i|a1i|a2Ve|a4b|a5b|a6b", false);
     addType< tuple< vector<int>, vector<int>, vector<double>, vector<double> > >( "B_Spline_Surface_With_Knots", "a0Vi|a1Vi|a2Vf|a2Vf", false);
@@ -489,6 +491,12 @@ void VRSTEP::explore(VRSTEP::Node* node, int parent) {
         type = node->type;
     }
 
+    else if (node->aggregate) {
+        name = node->a_name;
+        ID = 0;//node->select->STEPfile_id;
+        type = node->type;
+    }
+
     else if (node->select) {
         name = node->a_name;
         ID = 0;//node->select->STEPfile_id;
@@ -557,6 +565,7 @@ void VRSTEP::Node::addChild(Node* c) {
 STEPentity* VRSTEP::Node::key() {
     if (entity) return entity;
     if (select) return (STEPentity*)select;
+    if (aggregate) return (STEPentity*)aggregate;
     return 0;
 }
 
@@ -660,7 +669,7 @@ void VRSTEP::traverseAggregate(STEPaggregate *sa, int atype, STEPattribute* attr
     STEPaggregate* ssa;
     SelectNode* sen;
     SDAI_Select* sdsel;
-    PrimitiveType etype, ebtype, nrtype, type;
+    PrimitiveType etype, ebtype;
     const EntityDescriptor* ssedesc = 0;
     auto btype = atype;
     int ID;
@@ -668,9 +677,18 @@ void VRSTEP::traverseAggregate(STEPaggregate *sa, int atype, STEPattribute* attr
     if (attr) {
         const AttrDescriptor* adesc = attr->getADesc();
         atype = adesc->AggrElemType();
-        nrtype = attr->NonRefType();
-        type = attr->Type();
     }
+
+    Node* n = 0;
+    if (!nodes.count((STEPentity*)sa)) {
+        n = new Node();
+        n->aggregate = sa;
+        n->type = "AGGREGATE";
+        sa->asStr(n->a_name);
+        nodes[(STEPentity*)sa] = n;
+    } else n = nodes[(STEPentity*)sa];
+
+    parent->addChild(n);
 
     auto switchEType = [&](STEPentity* e) {
         ssedesc = e->getEDesc();
@@ -679,8 +697,8 @@ void VRSTEP::traverseAggregate(STEPaggregate *sa, int atype, STEPattribute* attr
                 case SET_TYPE:
                 case LIST_TYPE:
                     ebtype = ssedesc->BaseType();
-                    traverseAggregate((STEPaggregate *)e, ebtype, 0, lvl, parent); break;
-                case ENTITY_TYPE: traverseEntity(e, lvl, parent); break;
+                    traverseAggregate((STEPaggregate *)e, ebtype, 0, lvl, n); break;
+                case ENTITY_TYPE: traverseEntity(e, lvl, n); break;
                 case ARRAY_TYPE: cout << " handle ARRAY_TYPE\n"; break;
                 case BAG_TYPE: cout << " handle BAG_TYPE\n"; break;
                 case GENERIC_TYPE: cout << " handle GENERIC_TYPE\n"; break;
@@ -690,7 +708,7 @@ void VRSTEP::traverseAggregate(STEPaggregate *sa, int atype, STEPattribute* attr
                 default:
                     cout << "traverseAggregate: entity Type not handled:" << etype << endl;
                     //ebtype = ssedesc->BaseType();
-                    //traverseAggregate((STEPaggregate *)sse, etype, lvl, parent); break;
+                    //traverseAggregate((STEPaggregate *)sse, etype, lvl, n); break;
                     break;
             }
         }
@@ -709,7 +727,7 @@ void VRSTEP::traverseAggregate(STEPaggregate *sa, int atype, STEPattribute* attr
                 sen = (SelectNode*)sn;
                 sdsel = sen->node;
                 sen->asStr(s);
-                traverseSelect(sdsel, s, lvl, parent);
+                traverseSelect(sdsel, s, lvl, n);
                 break;
 
             case SET_TYPE:
@@ -721,7 +739,7 @@ void VRSTEP::traverseAggregate(STEPaggregate *sa, int atype, STEPattribute* attr
                     switch(btype) {
                         case ENTITY_TYPE:
                             ID = toInt(splitString(v, '#')[1]);
-                            traverseEntity(instancesById[ID].entity, lvl, parent);
+                            traverseEntity(instancesById[ID].entity, lvl, n);
                             break;
                         case REAL_TYPE: // TODO
                         default:
@@ -829,6 +847,13 @@ struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
                         points.push_back(Vec3f(p));
                     }
                     return;
+                }
+
+                // int, vector<STEPentity*>, bool, vector<int>, vector<double>, vector<double>
+                if (EdgeGeo.type == "B_Spline_Curve_With_Knots") { // TODO
+                    int deg = EdgeGeo.get<0, int, vector<STEPentity*>, bool, vector<int>, vector<double>, vector<double> >();
+                    vector<STEPentity*> control_points = EdgeGeo.get<1, int, vector<STEPentity*>, bool, vector<int>, vector<double>, vector<double> >();
+                    cout << "B_Spline_Curve_With_Knots: " << deg << " " << control_points.size() << endl;
                 }
 
                 cout << "Error: edge geo type not handled " << EdgeGeo.type << endl;
