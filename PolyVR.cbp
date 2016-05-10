@@ -663,6 +663,8 @@
 		<Unit filename="src/core/scene/import/VRPLY.cpp" />
 		<Unit filename="src/core/scene/import/VRPLY.h" />
 		<Unit filename="src/core/scene/import/VRSTEP.h" />
+		<Unit filename="src/core/scene/import/VRVTK.cpp" />
+		<Unit filename="src/core/scene/import/VRVTK.h" />
 		<Unit filename="src/core/scripting/VRGeoPrimitive.h" />
 		<Unit filename="src/core/scripting/VRPyAnalyticGeometry.cpp" />
 		<Unit filename="src/core/scripting/VRPyAnalyticGeometry.h" />

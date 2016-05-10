@@ -1,6 +1,7 @@
 #include "VRImport.h"
 #include "VRCOLLADA.h"
 #include "VRPLY.h"
+#include "VRVTK.h"
 #include "STEP/VRSTEP.h"
 #include "E57/E57.h"
 #include "addons/Engineering/Factory/VRFactory.h"
@@ -126,79 +127,6 @@ VRImport::LoadJob::LoadJob(string p, string pr, VRTransformPtr r, VRProgressPtr 
     res = r;
     progress = pg;
     preset = pr;
-}
-
-void loadVtk(string path, VRTransformPtr res) {
-    ifstream file(path.c_str());
-    string line;
-
-    string version;
-    string title;
-    string format;
-    string dataset; // STRUCTURED_POINTS STRUCTURED_GRID UNSTRUCTURED_GRID POLYDATA RECTILINEAR_GRID FIELD
-
-    int Npoints = 0;
-    int Nverts = 0;
-    int Nlines = 0;
-    int Npolys = 0;
-    int NtriStrips = 0;
-    int Ncells = 0;
-    int Nscalars = 0;
-    int vertSize = 0;
-    int lineSize = 0;
-    int polySize = 0;
-    int cellSize = 0;
-    int triStripSize = 0;
-    int Xcoords = 0;
-    int Ycoords = 0;
-    int Zcoords = 0;
-    string scalarsName;
-    string pointType;
-    string cellType;
-    string scalarsType;
-    string XcoordsType;
-    string YcoordsType;
-    string ZcoordsType;
-    Vec3i dimensions;
-    Vec3f origin, spacing;
-
-    string lastTag;
-    int i=0;
-    while (getline(file, line)) {
-        if (line.size() == 0) continue;
-        vector<string> data = splitString(line, ' ');
-        if (data.size() == 0) continue;
-
-        if (i == 0) version = data[4];
-        if (i == 1) title = line;
-        if (i == 2) format = line;
-        if (data[0] == "DATASET") dataset = data[1];
-        if (data[0] == "SCALARS") { scalarsName = data[1]; scalarsType = data[1]; Nscalars = toInt(data[2]); }
-
-        if (data[0] == "DIMENSIONS") { dimensions = toVec3i( data[1] + " " + data[2] + " " + data[3] ); }
-        if (data[0] == "ORIGIN") { origin = toVec3f( data[1] + " " + data[2] + " " + data[3] ); }
-        if (data[0] == "SPACING") { spacing = toVec3f( data[1] + " " + data[2] + " " + data[3] ); }
-        if (data[0] == "POINTS") { Npoints = toInt(data[1]); pointType = data[2]; }
-        if (data[0] == "X_COORDINATES") { Xcoords = toInt(data[1]); XcoordsType = data[2]; }
-        if (data[0] == "Y_COORDINATES") { Ycoords = toInt(data[1]); YcoordsType = data[2]; }
-        if (data[0] == "Z_COORDINATES") { Zcoords = toInt(data[1]); ZcoordsType = data[2]; }
-        if (data[0] == "VERTICES") { Nverts = toInt(data[1]); vertSize = toInt(data[2]); }
-        if (data[0] == "LINES") { Nlines = toInt(data[1]); lineSize = toInt(data[2]); }
-        if (data[0] == "POLYGONS") { Npolys = toInt(data[1]); polySize = toInt(data[2]); }
-        if (data[0] == "TRIANGLE_STRIPS") { NtriStrips = toInt(data[1]); triStripSize = toInt(data[2]); }
-        if (data[0] == "CELLS") { Ncells = toInt(data[1]); cellSize = toInt(data[2]); }
-        if (data[0] == "CELL_TYPES") { cellType = data[1]; }
-        lastTag = data[0];
-        i++;
-    }
-
-    cout << "load VTK file " << path << endl;
-    cout << " version " << version << endl;
-    cout << " title " << title << endl;
-    cout << " format " << format << endl;
-    if (dataset.size()) cout << " dataset " << dataset << endl;
-
-    file.close();
 }
 
 void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
