@@ -62,46 +62,77 @@ void loadVtk(string path, VRTransformPtr res) {
     ifstream file(path.c_str());
     string line;
 
-    /*int Npoints = 0;
-    int Nverts = 0;
-    int Nlines = 0;
-    int Npolys = 0;
-    int NtriStrips = 0;
-    int Ncells = 0;
-    int Nscalars = 0;
-    int Ncscalars = 0;
-    int NlookupTable = 1;
-    int Nfield = 1;
-    int vertSize = 0;
-    int lineSize = 0;
-    int polySize = 0;
-    int cellSize = 0;
-    int triStripSize = 0;
-    int Xcoords = 0;
-    int Ycoords = 0;
-    int Zcoords = 0;
-    string scalarsName;
-    string cscalarsName;
-    string vectorsName;
-    string normalsName;
-    string tcName;
-    string tensorsName;
-    string fieldName;
-    string pointType;
-    string cellType;
-    string scalarsType;
-    string vectorsType;
-    string normalsType;
-    string tcType;
-    string tensorsType;
-    string XcoordsType;
-    string YcoordsType;
-    string ZcoordsType;
-    string lookupTable;
-    Vec3i dimensions;
-    Vec3f origin, spacing;*/
+    auto next = [&]() -> string& {
+        getline(file, line);
+        return line;
+    };
 
     VTKProject project;
+    project.version = splitString( next() )[4];
+    project.title = next();
+    project.format = next();
+    project.dataset = next();
+
+    VRGeoData geo; // build geometry
+
+    if (project.dataset == "STRUCTURED_POINTS") {
+        auto r = splitString( next() ); Vec3i dims = toVec3i( r[1] + " " + r[2] + " " + r[3] );
+             r = splitString( next() ); Vec3f p0 = toVec3f( r[1] + " " + r[2] + " " + r[3] );
+             r = splitString( next() ); Vec3f d = toVec3f( r[1] + " " + r[2] + " " + r[3] );
+
+        for (int k=0; k<dims[2]; k++) {
+            for (int j=0; j<dims[1]; j++) {
+                for (int i=0; i<dims[0]; i++) {
+                    geo.pushVert(p0 + Vec3f(d[0]*i, d[1]*j, d[2]*k) );
+                    geo.pushPoint();
+                }
+            }
+        }
+    }
+
+    if (project.dataset == "STRUCTURED_GRID") {
+        auto r = splitString( next() ); Vec3i dims = toVec3i( r[1] + " " + r[2] + " " + r[3] );
+             r = splitString( next() ); int N = toInt(r[1]); string type = r[2]; // points
+
+        vector<Vec3f> points;
+        for (int i=0; i<N; i++) {
+            Vec3f p = toVec3f( next() );
+            points.push_back(p);
+            geo.pushVert(p);
+            geo.pushPoint();
+        }
+    }
+
+    if (project.dataset == "RECTILINEAR_GRID") {
+        ;
+    }
+
+    if (project.dataset == "UNSTRUCTURED_GRID") {
+        ;
+    }
+
+    if (project.dataset == "POLYDATA") {
+        auto r = splitString( next() ); int N = toInt(r[1]); string type = r[2]; // points
+        for (int i=0; i<N; i++) geo.pushVert( toVec3f( next() ) );
+
+        while (next() != "\n") {
+            r = splitString( line );
+            string type = r[0];
+            N = toInt(r[1]);
+            int size = toInt(r[2]);
+            for (int i=0; i<N; i++) { // for each primitive
+                r = splitString( next() );
+                int Ni = toInt(r[0]); // length of primitive
+                //if (Ni == 2) geo.pushLine(toInt(r[1]), toInt(r[2]));
+                if (Ni == 3) geo.pushTri(toInt(r[1]), toInt(r[2]), toInt(r[3]));
+                if (Ni == 4) geo.pushQuad(toInt(r[1]), toInt(r[2]), toInt(r[3]), toInt(r[4]));
+            }
+        }
+    }
+
+    if (project.dataset == "FIELD") {
+        ;
+    }
 
     for (int i=0; getline(file, line); i++) {
         if (line.size() == 0) continue;
@@ -109,10 +140,6 @@ void loadVtk(string path, VRTransformPtr res) {
         if (data.size() == 0) continue;
 
         if (data[0][0] >= 'A' && data[0][0] <= 'Z' || data[0][0] >= 'a' && data[0][0] <= 'z') {
-            // main header
-            if (i == 0) project.version = data[4];
-            if (i == 1) project.title = line;
-            if (i == 2) project.format = line;
             if (data[0] == "DATASET") project.dataset = data[1];
 
             // data set parameter
@@ -154,60 +181,6 @@ void loadVtk(string path, VRTransformPtr res) {
     // parsing finished
     cout << project.toString() << endl;
     file.close();
-
-    // build geometry
-    VRGeoData geo;
-
-    if (project.dataset == "STRUCTURED_POINTS") {
-        auto& d = project.data[0];
-        for (int k=0; k<d.dimensions[2]; k++) {
-            for (int j=0; j<d.dimensions[1]; j++) {
-                for (int i=0; i<d.dimensions[0]; i++) {
-                    geo.pushVert(d.origin + Vec3f(d.spacing[0]*i, d.spacing[1]*j, d.spacing[2]*k) );
-                    geo.pushPoint();
-                }
-            }
-        }
-    }
-
-    if (project.dataset == "STRUCTURED_GRID") {
-        auto& d = project.data[0];
-        for (int k=0; k<d.dimensions[2]; k++) {
-            for (int j=0; j<d.dimensions[1]; j++) {
-                for (int i=0; i<d.dimensions[0]; i++) {
-                    int pi = k*d.dimensions[0]*d.dimensions[1] + j*d.dimensions[0] + i;
-                    geo.pushVert( d.vec3fs[pi] );
-                    geo.pushPoint();
-                }
-            }
-        }
-    }
-
-    if (project.dataset == "RECTILINEAR_GRID") {
-        auto& d = project.data[0];
-        for (int k=0; k<d.dimensions[2]; k++) {
-            for (int j=0; j<d.dimensions[1]; j++) {
-                for (int i=0; i<d.dimensions[0]; i++) {
-                    Vec3f p = Vec3f( project.data[0].floats[i], project.data[1].floats[j], project.data[2].floats[k] );
-                    geo.pushVert( p );
-                    geo.pushPoint();
-                }
-            }
-        }
-    }
-
-    if (project.dataset == "UNSTRUCTURED_GRID") {
-        ;
-    }
-
-    if (project.dataset == "POLYDATA") {
-
-    }
-
-    if (project.dataset == "FIELD") {
-
-    }
-
     res->addChild( geo.asGeometry(project.title) );
 }
 
