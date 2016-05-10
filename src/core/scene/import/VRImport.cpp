@@ -20,7 +20,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/utils/VRProgress.h"
 #include "core/utils/VRFunction.h"
-#include "core/utils/toString .h"
+#include "core/utils/toString.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneManager.h"
 
@@ -196,7 +196,7 @@ void loadVtk(string path, VRTransformPtr res) {
     cout << " version " << version << endl;
     cout << " title " << title << endl;
     cout << " format " << format << endl;
-    if (dataset) cout << " dataset " << dataset << endl;
+    if (dataset.size()) cout << " dataset " << dataset << endl;
 
     file.close();
 }
