@@ -10,6 +10,10 @@
 #include <vtkQuad.h>
 #include <vtkLine.h>
 
+/* NOT COMPILING?
+sudo apt-get install libvtk5-dev
+*/
+
 #include <fstream>
 #include "core/utils/toString.h"
 #include "core/utils/VRProgress.h"
