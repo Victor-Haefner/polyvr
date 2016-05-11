@@ -72,9 +72,6 @@ VRSTEP::VRSTEP() {
     addType< tuple<vector<STEPentity*>, STEPentity*, bool> >( "Advanced_Face", "a1Ve|a2e|a3b", false);
     addType< tuple<vector<STEPentity*> > >( "Closed_Shell", "a1Ve", false);
     addType< tuple<vector<STEPentity*> > >( "Edge_Loop", "a1Ve", false);
-    addType< tuple<int, vector<STEPentity*>, bool, bool > >( "B_Spline_Curve", "a0i|a1Ve|a3b|a4b", false);
-    addType< tuple<vector<int>, vector<double> > >( "B_Spline_Curve_With_Knots", "a0Vi|a1Vf", false);
-    addType< tuple<vector<double> > >( "Rational_B_Spline_Curve", "a0Vf", false);
     addType< tuple<STEPentity*, STEPentity*> >( "Pcurve", "a1e|a2e", false);
     addType< tuple<vector<STEPentity*> > >( "Definitional_Representation", "a1Ve", false);
     addType< tuple<STEPentity*, vector<STEPentity*> > >( "Surface_Curve", "a1e|a2Ve", false);
@@ -82,8 +79,13 @@ VRSTEP::VRSTEP() {
     addType< tuple<STEPentity*, STEPentity*, STEPentity*, string> >( "Surface_Curve", "a1e|a2se|a3se|a4S", false);
     addType< tuple<STEPentity*, STEPentity*> >( "PCurve", "a1e|a2e", false);
     addType< tuple<STEPentity*> >( "Definitional_Representation", "a1e", false);
-    //addType< tuple<int, STEPentity*> >( "B_Spline_Curve", "a1i, a1e", false); // TODO
+    addType< tuple<int, vector<STEPentity*>, bool> >( "B_Spline_Curve", "a1i|a2Ve|a4b", false); // TODO
+    addType< tuple<int, vector<STEPentity*>, bool> >( "Rational_B_Spline_Curve", "a1i|a2Ve|a4b", false); // TODO
     addType< tuple<int, vector<STEPentity*>, bool, vector<int>, vector<double>, vector<double> > >( "B_Spline_Curve_With_Knots", "a1i|a2Ve|a4b|a6Vi|a8Vf|a9Vf", false); //TODO
+
+    /*addType< tuple<int, vector<STEPentity*>, bool, bool > >( "B_Spline_Curve", "a0i|a1Ve|a3b|a4b", false);
+    addType< tuple<vector<int>, vector<double> > >( "B_Spline_Curve_With_Knots", "a0Vi|a1Vf", false);
+    addType< tuple<vector<double> > >( "Rational_B_Spline_Curve", "a0Vf", false);*/
 
     addType< tuple<int, int, vector<STEPentity*>, bool, bool, bool > >( "B_Spline_Surface", "a0i|a1i|a2Ve|a4b|a5b|a6b", false);
     addType< tuple< vector<int>, vector<int>, vector<double>, vector<double> > >( "B_Spline_Surface_With_Knots", "a0Vi|a1Vi|a2Vf|a2Vf", false);
@@ -849,11 +851,36 @@ struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
                     return;
                 }
 
+                if (EdgeGeo.entity->IsComplex()) { // TODO
+                    return;
+                }
+
+                // int, vector<STEPentity*>, bool
+                if (EdgeGeo.type == "B_Spline_Curve" || EdgeGeo.type == "Rational_B_Spline_Curve") { // TODO
+                    int deg = EdgeGeo.get<0, int, vector<STEPentity*>, bool>();
+                    vector<STEPentity*> control_points = EdgeGeo.get<1, int, vector<STEPentity*>, bool>();
+                    for (auto e : control_points) points.push_back(toVec3f(e, instances)); // TODO: correct??
+                    return;
+                }
+
                 // int, vector<STEPentity*>, bool, vector<int>, vector<double>, vector<double>
                 if (EdgeGeo.type == "B_Spline_Curve_With_Knots") { // TODO
                     int deg = EdgeGeo.get<0, int, vector<STEPentity*>, bool, vector<int>, vector<double>, vector<double> >();
                     vector<STEPentity*> control_points = EdgeGeo.get<1, int, vector<STEPentity*>, bool, vector<int>, vector<double>, vector<double> >();
-                    cout << "B_Spline_Curve_With_Knots: " << deg << " " << control_points.size() << endl;
+                    //cout << "B_Spline_Curve_With_Knots: " << EdgeGeo.ID << " deg: " << deg << " Np: " << control_points.size() << endl;
+                    //for (auto e : control_points) cout << " pnt " << toVec3f(e, instances) << endl;
+
+                    for (auto e : control_points) points.push_back(toVec3f(e, instances)); // TODO: correct??
+                    /*if (deg == 1) { // line
+                        points.push_back(EBeg);
+                        points.push_back(EEnd);
+                    }
+
+                    if (deg == 5) {
+                        ;
+                    }*/
+
+                    return;
                 }
 
                 cout << "Error: edge geo type not handled " << EdgeGeo.type << endl;
