@@ -1,63 +1,175 @@
-#include "VRPLY.h"
-#include "core/objects/geometry/VRGeometry.h"
+#include "VRVTK.h"
+
+#include <vtkXMLParser.h>
+#include <vtkDataSetReader.h>
+#include <vtkDataSet.h>
+#include <vtkDataArray.h>
+#include <vtkCellData.h>
+#include <vtkPointData.h>
+#include <vtkCell.h>
+#include <vtkQuad.h>
+#include <vtkLine.h>
 
 #include <fstream>
-#include <OpenSG/OSGGeoProperties.h>
-#include <OpenSG/OSGGeometry.h>
-#include <OpenSG/OSGSimpleMaterial.h>
 #include "core/utils/toString.h"
 #include "core/utils/VRProgress.h"
 #include "core/objects/geometry/VRGeoData.h"
+#include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/material/VRMaterial.h"
 
 OSG_BEGIN_NAMESPACE;
 
-struct VTKData {
-    string name;
-    string type; // bit, unsigned_char, char, unsigned_short, short, unsigned_int, int, unsigned_long, long, float, or double
-    int N = 0;
-    int size = 0;
-    Vec3i dimensions;
-    Vec3f origin;
-    Vec3f spacing;
+void loadVtk(string path, VRTransformPtr res) {
+    cout << "load VTK file " << path << endl;
+    VRGeoData geo;
 
-    vector<Vec3f> vec3fs;
-    vector<float> floats;
+    /*auto parser = vtkXMLParser::New();
+    parser->SetFileName(path.c_str());
+    parser->Parse();*/
 
-    void append(vector<string>& data) {
-        if (data.size() != size && size != 0) cout << "VTK-WARNING 1\n";
-        size = data.size();
-        if (size == 3 && type == "float") vec3fs.push_back(toVec3f(data[0] + " " + data[1] + " " + data[2]));
-        if (size > 4 && type == "float") {
-            for (auto& d : data) floats.push_back( toFloat(d) );
+    vtkDataSetReader* reader = vtkDataSetReader::New();
+    reader->SetFileName(path.c_str());
+    reader->ReadAllScalarsOn();
+    reader->ReadAllVectorsOn();
+    reader->ReadAllNormalsOn();
+    reader->ReadAllTensorsOn();
+    reader->ReadAllTCoordsOn();
+    reader->ReadAllFieldsOn();
+    reader->ReadAllColorScalarsOn();
+    reader->Update();
+
+    vtkDataSet* dataset = reader->GetOutput();
+
+    int npoints = dataset->GetNumberOfPoints();
+    int ncells = dataset->GetNumberOfCells();
+    int nscalars = reader->GetNumberOfScalarsInFile();
+    int nvectors = reader->GetNumberOfVectorsInFile();
+    int ntensors = reader->GetNumberOfTensorsInFile();
+    cout << "dataset sizes: " << npoints << " " << ncells << " " << nscalars << " " << nvectors << " " << ntensors << endl;
+
+    for (int i=0; i<npoints; i++) {
+        auto p = dataset->GetPoint(i);
+        Vec3f v(p[0], p[1], p[2]);
+        geo.pushVert(v);
+        cout << "point " << v << endl;
+    }
+
+    auto getCellPIDs = [](vtkCell* c) {
+        vector<int> res;
+        auto ids = c->GetPointIds();
+        for (int k=0; k<ids->GetNumberOfIds(); k++) {
+            res.push_back( ids->GetId(k) );
+        }
+        return res;
+    };
+
+    for (int i=0; i<ncells; i++) {
+        vtkCell* c = dataset->GetCell(i);
+        int d = c->GetCellDimension();
+        int t = c->GetCellType();
+
+        string type = c->GetClassName();
+        cout << "cell type " << type << endl;
+        if (type == "vtkQuad") {
+            auto j = getCellPIDs(c);
+            geo.pushQuad(j[0], j[1], j[2], j[3]);
         }
     }
-};
+
+    vtkCellData* cells = dataset->GetCellData();
+    vtkPointData* points = dataset->GetPointData();
+
+    cout << "POINT_DATA:\n";
+    if (points) {
+        std::cout << " contains point data with " << points->GetNumberOfArrays() << " arrays." << std::endl;
+        for (int i = 0; i < points->GetNumberOfArrays(); i++) {
+            std::cout << "\tArray " << i << " is named " << (points->GetArrayName(i) ? points->GetArrayName(i) : "NULL") << std::endl;
+        }
+
+        for(int i=0; vtkDataArray* a = points->GetArray(i); i++ ) {
+            int size = a->GetNumberOfTuples();
+            int comp = a->GetNumberOfComponents();
+            cout << " data array " << size << " " << comp << endl;
+
+            for (int j=0; j<size; j++) {
+                cout << "pnt:";
+                for (int k=0; k<comp; k++) cout << " " << a->GetComponent(j, k);
+                cout << endl;
+            }
+        }
+    }
+
+
+    cout << "FIELD_DATA:\n";
+     if (dataset->GetFieldData()) {
+       std::cout << " contains field data with "
+            << dataset->GetFieldData()->GetNumberOfArrays()
+             << " arrays." << std::endl;
+        for (int i = 0; i < dataset->GetFieldData()->GetNumberOfArrays(); i++)
+          {
+          std::cout << "\tArray " << i
+               << " is named " << dataset->GetFieldData()->GetArray(i)->GetName()
+               << std::endl;
+          }
+        }
+
+
+    cout << "CELL_DATA:\n";
+
+     vtkCellData *cd = dataset->GetCellData();
+      if (cd)
+        {
+        std::cout << " contains cell data with "
+             << cd->GetNumberOfArrays()
+             << " arrays." << std::endl;
+        for (int i = 0; i < cd->GetNumberOfArrays(); i++)
+          {
+          std::cout << "\tArray " << i
+               << " is named "
+               << (cd->GetArrayName(i) ? cd->GetArrayName(i) : "NULL")
+               << std::endl;
+          }
+        }
+
+    /*if (cells) {
+        for(int i=0; vtkDataArray* a = points->GetArray(i); i++ ) {
+            int size = a->GetNumberOfTuples();
+            int comp = a->GetNumberOfComponents();
+            for (int j=0; j<size; j++) {
+                cout << "cell:";
+                for (int k=0; k<comp; k++) cout << " " << a->GetComponent(j, k);
+                cout << endl;
+            }
+        }
+    }*/
+
+    string name = "vtk";
+
+    auto m = VRMaterial::create(name + "_mat");
+    m->setLit(0);
+    m->setDiffuse(Vec3f(0.3,0.7,1.0));
+
+    VRGeometryPtr g = geo.asGeometry(name);
+    g->setMaterial(m);
+    //g->updateNormals();
+    res->addChild( g );
+}
+
 
 struct VTKProject {
     string version;
     string title;
     string format;
     string dataset; // STRUCTURED_POINTS STRUCTURED_GRID UNSTRUCTURED_GRID POLYDATA RECTILINEAR_GRID FIELD
-    vector<VTKData> data;
 
     string toString() {
         string res = " VTK project " + title + ", version " + version + ", format " + format;
         if (dataset.size()) res += ", dataset " + dataset;
         return res;
     }
-
-    VTKData& newData() {
-        data.push_back(VTKData());
-        return current();
-    }
-
-    VTKData& current() {
-        if (data.size() == 0) return newData();
-        return *data.rbegin();
-    }
 };
 
-void loadVtk(string path, VRTransformPtr res) {
+void loadVtk_old(string path, VRTransformPtr res) {
     cout << "load VTK file " << path << endl;
     ifstream file(path.c_str());
     string line;
@@ -71,7 +183,7 @@ void loadVtk(string path, VRTransformPtr res) {
     project.version = splitString( next() )[4];
     project.title = next();
     project.format = next();
-    project.dataset = next();
+    project.dataset = splitString( next() )[1];
 
     VRGeoData geo; // build geometry
 
@@ -115,7 +227,7 @@ void loadVtk(string path, VRTransformPtr res) {
         auto r = splitString( next() ); int N = toInt(r[1]); string type = r[2]; // points
         for (int i=0; i<N; i++) geo.pushVert( toVec3f( next() ) );
 
-        while (next() != "\n") {
+        while (next() != "") {
             r = splitString( line );
             string type = r[0];
             N = toInt(r[1]);
@@ -123,6 +235,7 @@ void loadVtk(string path, VRTransformPtr res) {
             for (int i=0; i<N; i++) { // for each primitive
                 r = splitString( next() );
                 int Ni = toInt(r[0]); // length of primitive
+                cout << line << "  " << Ni << endl;
                 //if (Ni == 2) geo.pushLine(toInt(r[1]), toInt(r[2]));
                 if (Ni == 3) geo.pushTri(toInt(r[1]), toInt(r[2]), toInt(r[3]));
                 if (Ni == 4) geo.pushQuad(toInt(r[1]), toInt(r[2]), toInt(r[3]), toInt(r[4]));
@@ -134,54 +247,18 @@ void loadVtk(string path, VRTransformPtr res) {
         ;
     }
 
-    for (int i=0; getline(file, line); i++) {
-        if (line.size() == 0) continue;
-        vector<string> data = splitString(line, ' ');
-        if (data.size() == 0) continue;
-
-        if (data[0][0] >= 'A' && data[0][0] <= 'Z' || data[0][0] >= 'a' && data[0][0] <= 'z') {
-            if (data[0] == "DATASET") project.dataset = data[1];
-
-            // data set parameter
-            if (data[0] == "DIMENSIONS") { project.current().dimensions = toVec3i( data[1] + " " + data[2] + " " + data[3] ); }
-            if (data[0] == "ORIGIN") { project.current().origin = toVec3f( data[1] + " " + data[2] + " " + data[3] ); }
-            if (data[0] == "SPACING" || data[0] == "ASPECT_RATIO") { project.current().spacing = toVec3f( data[1] + " " + data[2] + " " + data[3] ); }
-            if (data[0] == "POINTS") { project.current().N = toInt(data[1]); project.current().type = data[2]; }
-            if (data[0] == "X_COORDINATES") { project.current().N = toInt(data[1]); project.current().type = data[2]; }
-            if (data[0] == "Y_COORDINATES") { project.current().N = toInt(data[1]); project.current().type = data[2]; }
-            if (data[0] == "Z_COORDINATES") { project.current().N = toInt(data[1]); project.current().type = data[2]; }
-            if (data[0] == "VERTICES") { project.current().N = toInt(data[1]); project.current().size = toInt(data[2]); }
-            if (data[0] == "LINES") { project.current().N = toInt(data[1]); project.current().size = toInt(data[2]); }
-            if (data[0] == "POLYGONS") { project.current().N = toInt(data[1]); project.current().size = toInt(data[2]); }
-            if (data[0] == "TRIANGLE_STRIPS") { project.current().N = toInt(data[1]); project.current().size = toInt(data[2]); }
-            if (data[0] == "CELLS") { project.current().N = toInt(data[1]); project.current().size = toInt(data[2]); }
-            if (data[0] == "CELL_TYPES") { project.current().N = toInt(data[1]); }
-
-            // POINT and CELL data
-            if (data[0] == "POINT_DATA") { project.newData().N = toInt(data[1]); }
-            if (data[0] == "CELL_DATA") { project.newData().N = toInt(data[1]); }
-
-            // POINT and CELL data attributes
-            /*if (data[0] == "SCALARS") { scalarsName = data[1]; scalarsType = data[2]; Nscalars = toInt(data[3]); }
-            if (data[0] == "VECTORS") { vectorsName = data[1]; vectorsType = data[2]; }
-            if (data[0] == "NORMALS") { normalsName = data[1]; normalsType = data[2]; }
-            if (data[0] == "TEXTURE_COORDINATES") { tcName = data[1]; tcType = data[2]; }
-            if (data[0] == "TENSORS") { tensorsName = data[1]; tensorsType = data[2]; }
-            if (data[0] == "FIELD") { fieldName = data[1]; Nfield = toInt( data[2] ); }
-            if (data[0] == "LOOKUP_TABLE") { lookupTable = data[1]; if (data.size() >= 2) NlookupTable = toInt(data[2]); }
-            if (data[0] == "COLOR_SCALARS") { cscalarsName = data[1]; Ncscalars = toInt(data[2]); }
-            */
-
-        } else { // parse actual data rows
-            auto& d = project.current();
-            d.append(data);
-        }
-    }
-
     // parsing finished
     cout << project.toString() << endl;
     file.close();
-    res->addChild( geo.asGeometry(project.title) );
+
+    auto m = VRMaterial::create(project.title + "_mat");
+    m->setLit(0);
+    m->setDiffuse(Vec3f(0.3,0.7,1.0));
+
+    VRGeometryPtr g = geo.asGeometry(project.title);
+    g->setMaterial(m);
+    //g->updateNormals();
+    res->addChild( g );
 }
 
 OSG_END_NAMESPACE;
