@@ -35,6 +35,7 @@ class VRSTEP {
         struct Type {
             bool print = false;
             string path; // args
+            string cpath; // complex entity args
             shared_ptr< VRFunction<STEPentity*> > cb;
         };
 
@@ -99,8 +100,8 @@ class VRSTEP {
 
         map<string, Type> types;
         Instance& getInstance(STEPentity* e);
-        template<class T> void addType(string type, string path, bool print = false);
-        template<class T> void parse(STEPentity* e, string path, string type);
+        template<class T> void addType(string type, string path, string cpath, bool print = false);
+        template<class T> void parse(STEPentity* e, string path, string cpath, string type);
         template<typename T> bool query(STEPentity* e, string path, T& t, string type);
         STEPentity* getSelectEntity(SDAI_Select* s, string ID);
 
