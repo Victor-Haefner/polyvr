@@ -990,17 +990,28 @@ VRSTEP::Instance& VRSTEP::getInstance(STEPentity* e) {
     return instances[e];
 }
 
-struct node {
-    string obj;
+struct nLink {
     string name;
+    string parent;
+    string child;
     pose p;
-    vector<shared_ptr<node> > parents;
-    vector<shared_ptr<node> > children;
 
     string toString() {
-        string s = "n: " + name + " o: " + obj;
-        for (auto p : parents) s += " p: " + p->name;
-        for (auto c : children) s += " c: " + c->name;
+        string s = "link n: " + name + " p: " + parent + " c: " + child;
+        return s;
+    }
+};
+
+struct node {
+    string obj;
+    VRTransformPtr trans;
+    vector<shared_ptr<nLink> > parents;
+    vector<shared_ptr<nLink> > children;
+
+    string toString() {
+        string s = "o: " + obj;
+        for (auto p : parents) s += "\n pi: " + p->toString();
+        for (auto c : children) s += "\n ci: " + c->toString();
         return s;
     }
 };
@@ -1016,7 +1027,7 @@ void VRSTEP::buildScenegraph() {
         cout << "AA " << ShapeRepRel.ID << " " << ABrep->StepFileId() << " " << SRep->StepFileId() << endl;
         if (!ABrep || !SRep) { /*cout << "VRSTEP::buildScenegraph Warning 1\n" ;*/ continue; } // empty one
         SRepToGEO[SRep] = ABrep;
-        SRepToGEO[ABrep] = ABrep;
+        //SRepToGEO[ABrep] = ABrep;
     }
 
     cout << "VRSTEP::buildScenegraph SRepToGEO " << SRepToGEO.size() << endl;
@@ -1046,7 +1057,6 @@ void VRSTEP::buildScenegraph() {
 
     // get product definitions -------------------------------------
     resRoot->setName("STEPRoot");
-    //VRObjectPtr root;
     map<string, VRTransformPtr> objs;
 
     for (auto PDefShape : instancesByType["Product_Definition_Shape"]) {
@@ -1072,16 +1082,14 @@ void VRSTEP::buildScenegraph() {
             if (resGeos.count(brep)) o = resGeos[brep];
             else o = VRTransform::create(name);
             objs[name] = o;
-            //if (!root) root = o;
         }
     }
 
     cout << "VRSTEP::buildScenegraph objs " << objs.size() << endl;
-    for (auto o : objs) cout << " object: " << o.first << " of type: " << o.second->getType() << endl;
-    //resRoot->addChild(root);
+    //for (auto o : objs) cout << " object: " << o.first << " of type: " << o.second->getType() << endl;
 
     // test
-    for (auto ShapeRep : instancesByType["Context_Dependent_Shape_Representation"]) {
+    /*for (auto ShapeRep : instancesByType["Context_Dependent_Shape_Representation"]) {
         SdaiContext_dependent_shape_representation* srep = (SdaiContext_dependent_shape_representation*)ShapeRep.entity;
         //SdaiShape_representation_relationship_ptr representation_relation = srep->representation_relation_();
         SdaiProduct_definition_shape*  represented_product_relation = srep->represented_product_relation_();
@@ -1105,7 +1113,7 @@ void VRSTEP::buildScenegraph() {
         cout << "Assembly name: " << name << endl;
 
 
-    }
+    }*/
 
     // search for geometries under Context_Dependent_Shape_Representation
     // TODO: wrong aproach! dows not fully solve the problems..
@@ -1157,8 +1165,6 @@ void VRSTEP::buildScenegraph() {
         auto& Shape2 = getInstance( Rep.get<1, STEPentity*, STEPentity*>() );
         if (!Shape1 || !Shape2) { cout << "VRSTEP::buildScenegraph Error 13\n" ; continue; }
 
-        if ( resGeos.count(Shape1.entity) ) continue;
-
         auto& RepTrans = getInstance( ShapeRep.get<1, STEPentity*, STEPentity*, STEPentity*>() );
         if (!RepTrans) { cout << "VRSTEP::buildScenegraph Error 14\n" ; continue; }
         auto& ItemTrans = getInstance( RepTrans.get<0, STEPentity*>() );
@@ -1186,48 +1192,53 @@ void VRSTEP::buildScenegraph() {
         string parent = Product1.get<0, string, string>();
         string obj = Product2.get<0, string, string>();
         if (!objs.count(parent)) { cout << "VRSTEP::buildScenegraph Error 21 parent not found " << parent << endl ; continue; }
-        //if (!objs.count(obj)) { cout << "VRSTEP::buildScenegraph Error 22 object not found " << obj << endl ; continue; }
-        cout << "VRSTEP::buildScenegraph parent: " << parent << " child: " << obj << endl;
+        if (!objs.count(obj)) { cout << "VRSTEP::buildScenegraph Error 22 object not found " << obj << endl ; continue; }
+        //cout << "VRSTEP::buildScenegraph parent: " << parent << " child: " << obj << endl;
 
-        if (!nodes.count(obj)) nodes[obj] = shared_ptr<node>( new node() );
-        if (!nodes.count(parent)) nodes[parent] = shared_ptr<node>( new node() );
-        nodes[obj]->obj = obj;
-        nodes[obj]->name = name;
-        nodes[obj]->p = pose2;
-        nodes[obj]->parents.push_back( nodes[parent] );
-        nodes[parent]->children.push_back( nodes[obj] );
+        if (!nodes.count(parent)) {
+            nodes[parent] = shared_ptr<node>( new node() );
+            nodes[parent]->obj = parent;
+            nodes[parent]->trans = objs[parent];
+        }
+        if (!nodes.count(obj)) {
+            nodes[obj] = shared_ptr<node>( new node() );
+            nodes[obj]->obj = obj;
+
+            if (resGeos.count(Shape1.entity)) nodes[obj]->trans = resGeos[Shape1.entity];
+            else nodes[obj]->trans = objs[obj];
+        }
+        auto l = shared_ptr<nLink>(new nLink() );
+        l->name = name;
+        l->parent = parent;
+        l->child = obj;
+        l->p = pose2;
+        nodes[obj]->parents.push_back( l );
+        nodes[parent]->children.push_back( l );
     }
 
+    //cout << "graph nodes: " << endl;
+    //for (auto ni : nodes) cout << "\nnode " << ni.second->toString() << endl;
+
     shared_ptr<node> root;
-    for (auto ni : nodes) if (!ni.second->parents.size() == 0) { root = ni.second; break; }
-    cout << "graph root: " << root->name << endl;
-    cout << "graph nodes: " << endl;
-    for (auto ni : nodes) cout << " node " << ni.second->toString() << endl;
+    for (auto ni : nodes) if (ni.second->parents.size() == 0) { root = ni.second; break; }
+    //cout << "graph root: " << root->obj << endl;
 
     std::function<VRTransformPtr (shared_ptr<node>)> construct = [&](shared_ptr<node> n) {
-        cout << " construct " << n->name << endl;
+        //cout << " construct " << n->obj << endl;
         vector<VRTransformPtr> childrenT;
-        for (shared_ptr<node> c : n->children) childrenT.push_back( construct(c) );
-        VRTransformPtr t = dynamic_pointer_cast<VRTransform>( objs[n->obj]->duplicate() );
+        for (shared_ptr<nLink> l : n->children) {
+            auto c = construct( nodes[l->child] );
+            c->setPose(l->p);
+            c->setName(l->name);
+            childrenT.push_back( c );
+        }
+        VRTransformPtr t = dynamic_pointer_cast<VRTransform>( n->trans->duplicate() );
+        //cout << " append--c " << n->obj << endl;
         for (VRTransformPtr c : childrenT) t->addChild(c);
-        t->setPose(n->p);
-        t->setName(n->name);
         return t;
     };
 
     resRoot->addChild(construct(root));
-
-    /*shared_ptr<node> e = root;
-    while (e) {
-
-        shared_ptr<node>& n = ni.second;
-        auto o = dynamic_pointer_cast<VRTransform>( objs[n]->duplicate() );
-        o->setName(n.name);
-        o->setPose(n.p);
-        objs[parent]->addChild(o);
-        objs[name] = o;
-    }
-    resRoot->addChild(root);*/
 
     cout << "VRSTEP::buildScenegraph objs " << objs.size() << endl;
     cout << blueBeg << "VRSTEP::buildScenegraph finished\n" << colEnd;
