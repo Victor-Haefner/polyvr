@@ -9,9 +9,10 @@ struct VRPyCaveKeeper : VRPyBaseT<OSG::CaveKeeper> {
     static PyMethodDef methods[];
 
     static PyObject* initWorld(VRPyCaveKeeper* self, PyObject* args);
-    static PyObject* update(VRPyCaveKeeper* self, PyObject* args);
-    static PyObject* dig(VRPyCaveKeeper* self, PyObject* args);
-    static PyObject* place(VRPyCaveKeeper* self, PyObject* args);
+    static PyObject* intersect(VRPyCaveKeeper* self, PyObject* args);
+    static PyObject* addBlock(VRPyCaveKeeper* self, PyObject* args);
+    static PyObject* remBlock(VRPyCaveKeeper* self, PyObject* args);
+    static PyObject* addObject(VRPyCaveKeeper* self, PyObject* args);
 };
 
 #endif // VRPYCAVEKEEPER_H_INCLUDED

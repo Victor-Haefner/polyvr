@@ -5,20 +5,24 @@ OSG_BEGIN_NAMESPACE
 using namespace std;
 
 
-CKOctree::element::element(Vec3f p, Vec3i otp, int s) : pos(p), otpos(otp), size(s), _size(s / 2), octant(0) {
+CKOctree::element::element(CKOctree* tree, Vec3f p, Vec3i otp, int s) : pos(p), otpos(otp), size(s), _size(s / 2) {
     for (int i=0;i<8;i++) {
         children[i] = 0;
         octIsEmpty[i] = 0;
         float k = 0.2;
         if (i<6) vertexLight[i] = Vec4f(k,k,k,k);
     }
-    parent = 0;
-    leaf = false;
-    childN = 0;
 
     static int count = 0;
     count++;
     ID = count;
+
+    this->tree = tree;
+    tree->elements[ID] = this;
+}
+
+CKOctree::element::~element() {
+    tree->elements.erase(ID);
 }
 
 void CKOctree::element::add(element* e) {
@@ -33,7 +37,7 @@ void CKOctree::element::add(element* e) {
         if (c == 0) {
             Vec3i otp = otpos + getOctantVec(o);
             Vec3f p = (Vec3f(otp) - Vec3f(1,1,1))*0.5 ;
-            c = new element(p, otp, size/2);
+            c = new element(tree, p, otp, size/2);
         }
     }
 
@@ -145,7 +149,7 @@ int CKOctree::signof(float f) {
 
 CKOctree::CKOctree() : root(0), N(0), hitElement(0) {}
 
-void CKOctree::add(Vec3i _p) {
+CKOctree::element* CKOctree::add(Vec3i _p) {
     Vec3i p = _p*2 + Vec3i(1,1,1); // avoid half positions
 
     int s = getMax(p);
@@ -153,22 +157,23 @@ void CKOctree::add(Vec3i _p) {
     while(s+1 > i) i *= 2;
     s = i;
 
-    if (root == 0) root = new element(Vec3f(-0.5, -0.5, -0.5), Vec3i(), s);
+    if (root == 0) root = new element(this, Vec3f(-0.5, -0.5, -0.5), Vec3i(), s);
 
     if (root->size < s) {
         element* tmp = root;
-        root = new element(Vec3f(-0.5, -0.5, -0.5), Vec3i(), s);
-        for (int i=0;i<8;i++)
-            root->add(tmp->children[i]);
+        root = new element(this, Vec3f(-0.5, -0.5, -0.5), Vec3i(), s);
+        for (int i=0;i<8;i++) root->add(tmp->children[i]);
         delete tmp;
     }
 
-    element* cube = new element(Vec3f(_p), p, 1);
+    element* cube = new element(this, Vec3f(_p), p, 1);
     cube->leaf = true;
     root->add(cube);
     N++;
 
-    //check lightning
+    return cube;
+
+    // TODO: check lightning
 }
 
 void CKOctree::rem(element* e) {
@@ -374,6 +379,7 @@ void CKOctree::traverse(element* e, VRFunction<element*>* cb) {
 }
 
 CKOctree::element* CKOctree::getRoot() { return root; }
+CKOctree::element* CKOctree::getElement(int i) { return elements[i]; }
 
 Vec3f CKOctree::getHitPoint() { return hitPoint; }
 Vec3f CKOctree::getHitNormal() { return hitNormal; }

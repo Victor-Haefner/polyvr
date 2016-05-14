@@ -14,25 +14,27 @@ using namespace std;
 class CKOctree {
     public:
         struct element {
-            int ID;
-            element* parent;
+            int ID = 0;
+            element* parent = 0;
             element* children[8];
-            int childN;
+            int childN = 0;
+            CKOctree* tree = 0;
             bool octIsEmpty[8]; //flag to see if octant is empty || solid earth
 
             Vec3f pos;
             Vec3i otpos;
             int size;
             int _size;
-            int octant;
-            bool leaf;
+            int octant = 0;
+            bool leaf = 0;
 
             int type;
             int chunk;
 
             Vec4f vertexLight[6];
 
-            element(Vec3f p, Vec3i otp, int s);
+            element(CKOctree* tree, Vec3f p, Vec3i otp, int s);
+            ~element();
 
             void add(element* e);
 
@@ -48,6 +50,7 @@ class CKOctree {
         };
 
     private:
+        map<int,element*> elements;
         element* root;
         int N;
         Vec3f hitPoint;
@@ -63,7 +66,7 @@ class CKOctree {
     public:
         CKOctree();
 
-        void add(Vec3i _p);
+        element* add(Vec3i _p);
         void rem(element* e);
         void addAround(element* e);
 
@@ -86,6 +89,7 @@ class CKOctree {
         void traverse(element* e, VRFunction<element*>* cb);
 
         element* getRoot();
+        element* getElement(int i);
 
         Vec3f getHitPoint();
         Vec3f getHitNormal();

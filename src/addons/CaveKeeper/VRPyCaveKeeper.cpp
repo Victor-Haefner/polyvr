@@ -3,82 +3,46 @@
 #include "core/scripting/VRPyDevice.h"
 #include "core/scripting/VRPyBaseT.h"
 
-template<> PyTypeObject VRPyBaseT<OSG::CaveKeeper>::type = {
-    PyObject_HEAD_INIT(NULL)
-    0,                         /*ob_size*/
-    "VR.CaveKeeper",             /*tp_name*/
-    sizeof(VRPyCaveKeeper),             /*tp_basicsize*/
-    0,                         /*tp_itemsize*/
-    (destructor)dealloc, /*tp_dealloc*/
-    0,                         /*tp_print*/
-    0,                         /*tp_getattr*/
-    0,                         /*tp_setattr*/
-    0,                         /*tp_compare*/
-    0,                         /*tp_repr*/
-    0,                         /*tp_as_number*/
-    0,                         /*tp_as_sequence*/
-    0,                         /*tp_as_mapping*/
-    0,                         /*tp_hash */
-    0,                         /*tp_call*/
-    0,                         /*tp_str*/
-    0,                         /*tp_getattro*/
-    0,                         /*tp_setattro*/
-    0,                         /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
-    "VRCaveKeeper binding",           /* tp_doc */
-    0,		               /* tp_traverse */
-    0,		               /* tp_clear */
-    0,		               /* tp_richcompare */
-    0,		               /* tp_weaklistoffset */
-    0,		               /* tp_iter */
-    0,		               /* tp_iternext */
-    VRPyCaveKeeper::methods,             /* tp_methods */
-    0,             /* tp_members */
-    0,                         /* tp_getset */
-    0,                         /* tp_base */
-    0,                         /* tp_dict */
-    0,                         /* tp_descr_get */
-    0,                         /* tp_descr_set */
-    0,                         /* tp_dictoffset */
-    (initproc)init,      /* tp_init */
-    0,                         /* tp_alloc */
-    New,                 /* tp_new */
-};
+using namespace OSG;
+
+simplePyType(CaveKeeper, New_ptr);
 
 PyMethodDef VRPyCaveKeeper::methods[] = {
     {"init", (PyCFunction)VRPyCaveKeeper::initWorld, METH_VARARGS, "Init real world" },
-    {"update", (PyCFunction)VRPyCaveKeeper::update, METH_VARARGS, "Update real world" },
-    {"dig", (PyCFunction)VRPyCaveKeeper::dig, METH_VARARGS, "Dig a cube, pass the device as argument" },
-    {"place", (PyCFunction)VRPyCaveKeeper::place, METH_VARARGS, "Place an object, pass the device && the type of object as string" },
+    {"intersect", (PyCFunction)VRPyCaveKeeper::intersect, METH_VARARGS, "Intersect a cube - int intersect(dev)" },
+    {"remBlock", (PyCFunction)VRPyCaveKeeper::remBlock, METH_VARARGS, "Remove a cube - remBlock(i)" },
+    {"addBlock", (PyCFunction)VRPyCaveKeeper::addBlock, METH_VARARGS, "Add a cube - addBlock([x,y,z])" },
+    {"addObject", (PyCFunction)VRPyCaveKeeper::addObject, METH_VARARGS, "Place an object - addObject([x,y,z])" },
     {NULL}  /* Sentinel */
 };
 
 PyObject* VRPyCaveKeeper::initWorld(VRPyCaveKeeper* self, PyObject* args) {
     VRPyObject* child = NULL;
     if (! PyArg_ParseTuple(args, "O", &child)) return NULL;
-    child->objPtr->addChild(self->obj->getAnchor());
+    child->objPtr->addChild(self->objPtr->getAnchor());
     Py_RETURN_TRUE;
 }
 
-PyObject* VRPyCaveKeeper::update(VRPyCaveKeeper* self, PyObject* args) {
-    VRPyTransform* child = NULL;
-    if (! PyArg_ParseTuple(args, "O", &child)) return NULL;
-    //self->obj->update(child->objPtr->getWorldPosition());
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyCaveKeeper::dig(VRPyCaveKeeper* self, PyObject* args) {
+PyObject* VRPyCaveKeeper::intersect(VRPyCaveKeeper* self, PyObject* args) {
     VRPyDevice* dev = NULL;
     if (! PyArg_ParseTuple(args, "O", &dev)) return NULL;
-    self->obj->dig(dev->objPtr);
+    return PyInt_FromLong( self->objPtr->intersect(dev->objPtr) );
+}
+
+PyObject* VRPyCaveKeeper::addBlock(VRPyCaveKeeper* self, PyObject* args) {
+    return PyInt_FromLong( self->objPtr->addBlock( parseVec3i(args)) );
+}
+
+PyObject* VRPyCaveKeeper::remBlock(VRPyCaveKeeper* self, PyObject* args) {
+    self->objPtr->remBlock( parseInt(args));
     Py_RETURN_TRUE;
 }
 
-PyObject* VRPyCaveKeeper::place(VRPyCaveKeeper* self, PyObject* args) {
+PyObject* VRPyCaveKeeper::addObject(VRPyCaveKeeper* self, PyObject* args) {
     VRPyDevice* dev = NULL;
     const char *obj_t;
     VRPyTransform* geo = NULL;
     if (! PyArg_ParseTuple(args, "OsO", &dev, &obj_t, &geo)) return NULL;
-    self->obj->place(dev->objPtr, obj_t, geo->objPtr);
+    self->objPtr->place(dev->objPtr, obj_t, geo->objPtr);
     Py_RETURN_TRUE;
 }

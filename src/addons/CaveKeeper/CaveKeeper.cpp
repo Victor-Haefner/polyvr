@@ -250,9 +250,18 @@ void CaveKeeper::placeLight(Vec3f p) {
     }
 }
 
-void CaveKeeper::dig(VRDevicePtr dev) {
+int CaveKeeper::intersect(VRDevicePtr dev) {
     Line ray = dev->getBeacon()->castRay();
 	CKOctree::element* e = tree->get(ray);
+	return e->ID;
+}
+
+int CaveKeeper::addBlock(Vec3i p) {
+    return tree->add(p)->ID;
+}
+
+void CaveKeeper::remBlock(int i) {
+    auto e = tree->getElement(i);
     if (e) {
         tree->addAround(e);
         tree->rem(e);
@@ -284,5 +293,6 @@ void CaveKeeper::place(VRDevicePtr dev, string obj, VRTransformPtr geo) {
 CaveKeeper::CaveKeeper() { initWorld(); }
 CaveKeeper::~CaveKeeper() { ; }
 
+shared_ptr<CaveKeeper> CaveKeeper::create() { return shared_ptr<CaveKeeper>(new CaveKeeper()); }
 
 OSG_END_NAMESPACE
