@@ -11,8 +11,15 @@
 OSG_BEGIN_NAMESPACE
 using namespace std;
 
+class Octree;
+
 class CKOctree {
     public:
+        struct light {
+            Vec3f pos;
+            light(Vec3f p) : pos(p) {}
+        };
+
         struct element {
             int ID = 0;
             element* parent = 0;
@@ -47,15 +54,19 @@ class CKOctree {
             bool inside(Vec3i f);
 
             void print(string indent = "");
+
+            void updateLightning(light* l);
+            void updateLightning(vector<void*> lights);
         };
 
     private:
+		Octree* lightTree = 0;
         map<int,element*> elements;
-        element* root;
-        int N;
+        element* root = 0;
+        int N = 0;
         Vec3f hitPoint;
         Vec3f hitNormal;
-        element* hitElement;
+        element* hitElement = 0;
 
         int getMax(Vec3i i);
 
@@ -69,7 +80,7 @@ class CKOctree {
         element* add(Vec3i _p);
         void rem(element* e);
         void addAround(element* e);
-
+        light* addLight(Vec3f p);
 
         //check if there is a cube at pos
         bool isLeaf(Vec3f p);

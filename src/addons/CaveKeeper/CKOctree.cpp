@@ -1,9 +1,8 @@
 #include "CKOctree.h"
-
+#include "core/math/Octree.h"
 
 OSG_BEGIN_NAMESPACE
 using namespace std;
-
 
 CKOctree::element::element(CKOctree* tree, Vec3f p, Vec3i otp, int s) : pos(p), otpos(otp), size(s), _size(s / 2) {
     for (int i=0;i<8;i++) {
@@ -147,7 +146,9 @@ int CKOctree::signof(float f) {
     return -1;
 }
 
-CKOctree::CKOctree() : root(0), N(0), hitElement(0) {}
+CKOctree::CKOctree() {
+	lightTree = new Octree(1);
+}
 
 CKOctree::element* CKOctree::add(Vec3i _p) {
     Vec3i p = _p*2 + Vec3i(1,1,1); // avoid half positions
@@ -169,11 +170,65 @@ CKOctree::element* CKOctree::add(Vec3i _p) {
     element* cube = new element(this, Vec3f(_p), p, 1);
     cube->leaf = true;
     root->add(cube);
+    cube->updateLightning(lightTree->radiusSearch(_p[0], _p[1], _p[2], 10));
     N++;
 
     return cube;
+}
 
-    // TODO: check lightning
+CKOctree::light* CKOctree::addLight(Vec3f p) {
+    auto l = new light(p);
+    lightTree->add(p[0], p[1], p[2], l);
+    return l;
+}
+
+void CKOctree::element::updateLightning(CKOctree::light* l) {
+    Vec3f normals[6];
+    normals[0]= Vec3f(1,0,0);
+    normals[1]= Vec3f(0,1,0);
+    normals[2]= Vec3f(0,0,1);
+    normals[3]= Vec3f(-1,0,0);
+    normals[4]= Vec3f(0,-1,0);
+    normals[5]= Vec3f(0,0,-1);
+
+    Vec3f tangents[6];
+    tangents[0] = Vec3f( 0, 1, 0);
+    tangents[1] = Vec3f( 0, 0, 1);
+    tangents[2] = Vec3f( 1, 0, 0);
+    tangents[3] = Vec3f( 0, 1, 0);
+    tangents[4] = Vec3f( 0, 0, 1);
+    tangents[5] = Vec3f( 1, 0, 0);
+
+    Vec2f ric[4];
+    ric[0] = Vec2f(1,1);
+    ric[1] = Vec2f(-1,1);
+    ric[2] = Vec2f(1,-1);
+    ric[3] = Vec2f(-1,-1);
+
+    Vec3f lp = l->pos;
+    Vec3f dp = lp - pos;
+    Vec3f n, p, t, x;
+    for (int j=0;j<6;j++) {
+        n = normals[j];
+        t = tangents[j];
+        x = t.cross(n);
+        for (int k=0;k<4;k++) {
+            p = dp + (n + ric[k][0]*t + ric[k][1]*x)*0.5;
+
+            double a = 0.5 + 0.0*p.squareLength() + 1.0*p.length();
+            p.normalize();
+
+            float cos = -p*n;
+            if (cos < 0) continue;
+
+            float li = min(0.1+2.0*cos/a, 2.0);
+            vertexLight[j][k] = max(li, vertexLight[j][k]);
+        }
+    }
+}
+
+void CKOctree::element::updateLightning(vector<void*> lights) {
+    for (auto vl : lights) updateLightning((light*)vl);
 }
 
 void CKOctree::rem(element* e) {
@@ -379,7 +434,7 @@ void CKOctree::traverse(element* e, VRFunction<element*>* cb) {
 }
 
 CKOctree::element* CKOctree::getRoot() { return root; }
-CKOctree::element* CKOctree::getElement(int i) { return elements[i]; }
+CKOctree::element* CKOctree::getElement(int i) { if (elements.count(i)) return elements[i]; else return 0; }
 
 Vec3f CKOctree::getHitPoint() { return hitPoint; }
 Vec3f CKOctree::getHitNormal() { return hitNormal; }

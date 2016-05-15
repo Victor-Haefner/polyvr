@@ -12,9 +12,6 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRDevice;
-class VRMaterial;
-
 // -------------- TODO --------
 // check if element exists when adding to octree
 // when changing the world, only change the minimum data, do not rebuild the full mesh!
@@ -22,7 +19,7 @@ class VRMaterial;
 
 class BlockWorld {
     public:
-		CKOctree* tree;
+		CKOctree* tree = 0;
 
         VRObjectPtr getAnchor();
 
