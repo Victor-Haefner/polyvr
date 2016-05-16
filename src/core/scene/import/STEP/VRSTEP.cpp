@@ -375,7 +375,7 @@ template<typename T> bool VRSTEP::query(STEPentity* e, string path, T& t, string
     SDAI_Select* curSel = 0;
     SingleLinkNode* curAggrNode = 0;
     string attrStr;
-    for (int i=0; i<path.size(); i+=j) {
+    for (unsigned int i=0; i<path.size(); i+=j) {
         bool isLast = (i == path.size()-1);
         j = 1;
         auto c = path[i];

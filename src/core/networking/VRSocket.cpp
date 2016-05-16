@@ -14,7 +14,6 @@
 #endif
 #include <stdint.h>
 #include <libxml++/nodes/element.h>
-#include <jsoncpp/json/json.h>
 #include <boost/filesystem.hpp>
 #include <boost/bind.hpp>
 
