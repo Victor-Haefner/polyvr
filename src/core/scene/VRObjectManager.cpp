@@ -12,6 +12,8 @@ void VRObjectManager::addGroup(string group) {
 }
 
 void VRObjectManager::updateObjects() {
+    //cout << "VRObjectManager updateObjects " << VRTransform::changedObjects.size() << " " << VRTransform::dynamicObjects.size() << endl;
+
     //update the Transform changelists
     for ( auto t : VRTransform::changedObjects ) {
         if (auto sp = t.lock()) sp->update();

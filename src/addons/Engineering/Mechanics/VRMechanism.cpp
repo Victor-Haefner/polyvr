@@ -101,9 +101,12 @@ void MPart::printChange() {
     cout.precision(2);
     cout.setf( ios::fixed, ios::floatfield );
     cout << geo->getName();
-    cout << " trans: " << change.l;
-    cout << " (vec: " << change.t << ") ";
-    cout << "and rot " << change.a << " around " << change.n;
+    if (change.isNull()) cout << " no change";
+    else {
+        cout << " trans: " << change.l;
+        cout << " (vec: " << change.t << ") ";
+        cout << "and rot " << change.a << " around " << change.n;
+    }
     cout << endl;
 }
 
@@ -142,10 +145,10 @@ MRelation* checkGearThread(MPart* p1, MPart* p2) {
 }
 
 MChainGearRelation* checkChainPart(MChain* c, MPart* p) {
-    Vec3f pp = p->geo->getFrom();
+    Vec3f pp = p->geo->getWorldPosition();
     if (p->prim->getType() != "Gear") return 0;
     float r = ((VRGear*)p->prim)->radius();
-    Vec3f dir = p->geo->getDir();
+    Vec3f dir = p->geo->getWorldDirection();
 
     float eps = 0.0001;
 
@@ -329,8 +332,8 @@ void MChain::updateGeo() {
         int d2 = dirs[j] == 'r' ? -1 : 1;
         int z1 = -1*d1*d2;
 
-        Vec3f c1 = nbrs[i]->geo->getFrom();
-        Vec3f c2 = nbrs[j]->geo->getFrom();
+        Vec3f c1 = nbrs[i]->geo->getWorldPosition();
+        Vec3f c2 = nbrs[j]->geo->getWorldPosition();
         Vec3f D = c2-c1;
         float d = D.length();
 
@@ -359,8 +362,8 @@ void MChain::updateGeo() {
         }
 
         Vec3f dn = D/d;
-        Vec3f t1 = dn.cross(nbrs[i]->geo->getDir());
-        Vec3f t2 = dn.cross(nbrs[j]->geo->getDir());
+        Vec3f t1 = dn.cross(nbrs[i]->geo->getWorldDirection());
+        Vec3f t2 = dn.cross(nbrs[j]->geo->getWorldDirection());
         t1 = c1 + t1*y1 + dn*x1;
         t2 = c2 + t2*y2 - dn*x2;
         polygon.push_back(t1);
@@ -452,6 +455,13 @@ VRGeometryPtr VRMechanism::addChain(float w, vector<VRGeometryPtr> geos, string 
     return c->init();
 }
 
+bool MChange::isNull() {
+    auto eps = 1e-6;
+    return (abs(a) < eps && abs(a) < eps);
+}
+
+MChange MPart::getChange() { return change; }
+
 void VRMechanism::update() {
     vector<MPart*> changed_parts;
     for (auto& part : parts) if (part->changed()) changed_parts.push_back(part);
@@ -464,6 +474,7 @@ void VRMechanism::update() {
     }
 
     for (auto& part : changed_parts) {
+        if (part->getChange().isNull()) continue;
         bool block = !part->propagateMovement();
         if (block) { // mechanism is blocked
             for (auto part : changed_parts) {
@@ -474,6 +485,7 @@ void VRMechanism::update() {
     }
 
     for (auto part : parts) part->apply();
+    for (auto part : changed_parts) part->changed();
 }
 
 

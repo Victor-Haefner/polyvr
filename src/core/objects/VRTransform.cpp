@@ -187,13 +187,10 @@ Matrix VRTransform::getMatrix() {
 }
 
 bool VRTransform::checkWorldChange() {
-    if (frame == 0) {
-        frame = 1;
-        return true;
-    }
-
+    if (frame == 0) { frame = 1; return true; }
+    if (change) return true;
+    if (VRGlobals::get()->CURRENT_FRAME == wchange_time_stamp) return true;
     if (hasGraphChanged()) return true;
-
 
     VRObjectPtr obj = ptr();
     VRTransformPtr ent;
@@ -201,7 +198,7 @@ bool VRTransform::checkWorldChange() {
         if (obj->hasAttachment("transform")) {
             ent = static_pointer_cast<VRTransform>(obj);
             if (ent->change_time_stamp > wchange_time_stamp) {
-                wchange_time_stamp = ent->change_time_stamp;
+                wchange_time_stamp = VRGlobals::get()->CURRENT_FRAME;
                 return true;
             }
         }
@@ -675,8 +672,7 @@ VRPhysics* VRTransform::getPhysics() {
 
 /** Update the object OSG transformation **/
 void VRTransform::update() {
-    apply_constraints();
-
+    if (checkWorldChange()) apply_constraints();
     if (held) updatePhysics();
     //if (checkWorldChange()) updatePhysics();
 

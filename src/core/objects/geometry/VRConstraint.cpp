@@ -107,14 +107,14 @@ void VRConstraint::setReferential(VRTransformPtr t) { Referential = t; }
 
 void VRConstraint::setTConstraint(Vec3f trans, int mode, bool local) {
     tConstraint = trans;
-    if (tConstraint.length() > 1e-4) tConstraint.normalize();
+    if (tConstraint.length() > 1e-4 && mode != POINT) tConstraint.normalize();
     tConMode = mode;
     localTC = local;
 }
 
 void VRConstraint::setRConstraint(Vec3f rot, int mode, bool local) {
     rConstraint = rot;
-    if (rConstraint.length() > 1e-4) rConstraint.normalize();
+    if (rConstraint.length() > 1e-4 && mode != POINT) rConstraint.normalize();
     rConMode = mode;
     localRC = local;
 

@@ -33,6 +33,7 @@ struct MChange {
 
     void flip();
     bool same(MChange c);
+    bool isNull();
 };
 
 class MPart;
@@ -88,6 +89,7 @@ class MPart {
 
         void apply();
         void setBack();
+        MChange getChange();
         bool propagateMovement();
         bool propagateMovement(MChange c, MRelation* r);
 
