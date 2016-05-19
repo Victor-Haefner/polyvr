@@ -31,8 +31,8 @@
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="-Wall" />
 			<Add option="-std=c++11" />
+			<Add option="-Wall" />
 			<Add option="`pkg-config gtk+-2.0 --cflags`" />
 			<Add option="`pkg-config gmodule-2.0 --cflags`" />
 			<Add option="`pkg-config --cflags libxml++-2.6`" />
@@ -118,7 +118,7 @@
 			<Add option="`pkg-config python --libs`" />
 			<Add option="`pkg-config gtksourceview-2.0 --libs`" />
 			<Add option="`pkg-config vte --libs`" />
-			<Add option="`pkg-config jsoncpp --libs`" />
+			<Add option="-ljsoncpp" />
 			<Add option="-lvrpn" />
 			<Add option="-lvtkalglib" />
 			<Add option="-lvtkGeovis" />
