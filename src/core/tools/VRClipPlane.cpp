@@ -14,7 +14,6 @@ VRClipPlane::VRClipPlane(string name) : VRGeometry(name) {
     setPrimitive("Plane", "0.2 0.2 1 1");
     VRMaterialPtr m = VRMaterial::create("clipPlane");
     setMaterial(m);
-    setVisible(false);
 
     //m->setWireFrame(true);
     m->setFrontBackModes(GL_LINE, GL_FILL);
@@ -30,6 +29,7 @@ VRClipPlane::~VRClipPlane() {
 VRClipPlanePtr VRClipPlane::ptr() { return static_pointer_cast<VRClipPlane>( shared_from_this() ); }
 VRClipPlanePtr VRClipPlane::create(string name) {
     auto p = shared_ptr<VRClipPlane>(new VRClipPlane(name) );
+    p->setVisible(false);
     // make it dragable first
     for (auto d : VRSetupManager::getCurrent()->getDevices()) {
         VRDevicePtr dev = d.second;
