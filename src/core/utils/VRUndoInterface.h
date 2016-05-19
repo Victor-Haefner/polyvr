@@ -13,11 +13,12 @@ class VRUndoInterface {
 
     public:
         VRUndoInterface();
+        ~VRUndoInterface();
 
         void setUndoManager(VRUndoManagerPtr mgr);
 
         template<class F, class O, class V>
-        void recUndo(F f, O* o, V v1, V v2);
+        void recUndo(F f, std::shared_ptr<O> o, V v1, V v2);
 };
 
 OSG_END_NAMESPACE;

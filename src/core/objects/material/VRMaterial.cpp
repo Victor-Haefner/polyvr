@@ -671,7 +671,7 @@ Color3f toColor3f(Color4f c) { return Color3f(c[0], c[1], c[2]); }
 
 
 void VRMaterial::setTransparency(float c) {
-    recUndo(&VRMaterial::setTransparency, this, getTransparency(), c);
+    recUndo(&VRMaterial::setTransparency, ptr(), getTransparency(), c);
     auto md = mats[activePass];
     md->colChunk->setDiffuse( toColor4f(getDiffuse(), c) );
 

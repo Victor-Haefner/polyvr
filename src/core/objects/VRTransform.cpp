@@ -574,7 +574,7 @@ void VRTransform::drop() {
     m1 = getMatrix();
     if (auto p = old_parent.lock()) switchParent(p, old_child_id);
     setWorldMatrix(wm);
-    recUndo(&VRTransform::setMatrix, this, old_transformation, getMatrix());
+    recUndo(&VRTransform::setMatrix, ptr(), old_transformation, getMatrix());
 
     if (physics) {
         physics->updateTransformation( ptr() );

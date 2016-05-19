@@ -505,18 +505,16 @@ int VRObject::findChild(VRObjectPtr node) {
     return -1;
 }
 
-/** Hide ptr() object && all his subgraph **/
+/** Hide/show the object and all his subgraph **/
 void VRObject::hide() { setVisible(false); }
-
-/** Show ptr() object && all his subgraph **/
 void VRObject::show() { setVisible(true); }
 
-/** Returns if ptr() object is visible || not **/
+/** Returns if object is visible or not **/
 bool VRObject::isVisible() { return visible; }
 
-/** Set the visibility of ptr() object **/
+/** Set the visibility **/
 void VRObject::setVisible(bool b) {
-    recUndo(&VRObject::setVisible, this, visible, b);
+    recUndo(&VRObject::setVisible, ptr(), visible, b);
     visible = b;
     if (b) node->setTravMask(0xffffffff);
     else node->setTravMask(0);

@@ -29,6 +29,8 @@ typedef std::shared_ptr<VRFunction<int> > VRUpdatePtr;
 typedef std::weak_ptr<VRFunction<int> > VRUpdateWeakPtr;
 typedef std::shared_ptr<VRFunction<bool> > VRTogglePtr;
 typedef std::weak_ptr<VRFunction<bool> > VRToggleWeakPtr;
+typedef std::shared_ptr<VRFunction<bool&> > VREvalCbPtr;
+typedef std::weak_ptr<VRFunction<bool&> > VREvalCbWeakPtr;
 typedef std::shared_ptr<VRFunction<float> > VRAnimPtr;
 typedef std::weak_ptr<VRFunction<float> > VRAnimWeakPtr;
 typedef std::shared_ptr<VRFunction<OSG::VRDeviceWeakPtr> > VRDeviceCb;

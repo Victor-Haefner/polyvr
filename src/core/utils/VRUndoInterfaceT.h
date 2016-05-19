@@ -5,16 +5,24 @@
 #include "VRFunction.h"
 #include "core/tools/VRUndoManager.h"
 
+template<class O>
+void OSG_VRUndoInterface_valid(std::weak_ptr<O> o, bool& b) {
+    b = o.lock() ? 1 : 0;
+}
+
 template<class F, class O, class V>
-void OSG::VRUndoInterface::recUndo(F f, O* o, V v1, V v2) {
+void OSG::VRUndoInterface::recUndo(F f, std::shared_ptr<O> o, V v1, V v2) {
     auto u = undo.lock();
     if (!u) return;
     if (v1 == v2) return;
 
-    auto f_undo = VRFunction<int>::create( "undo", boost::bind(f, o, v1) );
-    auto f_redo = VRFunction<int>::create( "redo", boost::bind(f, o, v2) );
+    auto f_undo = VRFunction<int>::create( "undo", boost::bind(f, o.get(), v1) );
+    auto f_redo = VRFunction<int>::create( "redo", boost::bind(f, o.get(), v2) );
 
-    u->recUndo(f_undo, f_redo);
+    std::weak_ptr<O> ow = o;
+    auto f_valid = VRFunction<bool&>::create( "undo_valid", boost::bind(OSG_VRUndoInterface_valid<O>, ow, _1) );
+
+    u->recUndo(f_undo, f_redo, f_valid);
 }
 
 #endif // VRUNDOINTERFACET_H_INCLUDED
