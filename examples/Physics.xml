@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scene name_suffix="0" base_name="Physics" name_space="Scene">
   <Objects>
-    <Object base_name="Root" name_space="__global__" name_suffix="0" pickable="0" type="Object" visible="1">
-      <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="-0.166039 0.149824 0.0120522" at_dir="0" base_name="Default" far="250" fov="1.0472" from="2.29227 1.40568 -2.03781" name_space="__global__" name_suffix="0" near="0.1" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
-          <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
-            <Node cR="0 1 0" cT="0 1 0" cT_local="0" cT_mode="3" do_cR="0" do_cT="0"/>
+    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
+      <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+        <Object accept_root="1" aspect="1" at="-0.166039 0.149824 0.0120522" at_dir="0" base_name="Default" far="250" fov="1.0472" from="2.29227 1.40568 -2.03781" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+          <Object at="0 0 -1" at_dir="0" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
+            <Node active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
           </Object>
-          <Node cR="0 1 0" cT="0 1 0" cT_local="0" cT_mode="3" do_cR="0" do_cT="0"/>
+          <Node active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
       </Object>
     </Object>
   </Objects>
-  <Rendering deferred_rendering="0" frustum_culling="1" occlusion_culling="0" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
-  <Scripts>
+  <Rendering deferred_rendering="0" frustum_culling="1" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Scripts persistency="666">
     <Script name_suffix="0" base_name="Init" name_space="__script__" type="Python" mobile="">
       <core>
 	import VR
@@ -59,6 +59,8 @@
 	z3.setDamping(ld,ad)
 	s.setDamping(ld,ad)
 	
+	VR.setPhysicsActive(0)
+	
 	a.physicalize(True, False)
 	z1.physicalize(True, True)
 	z2.physicalize(True, True)
@@ -78,6 +80,7 @@
 	setupJoint(z2, z3, 0.2, 0.2)
 	setupJoint(z3, s, 0.2, 0)
 	
+	VR.setPhysicsActive(1)
 	
 	
 	
@@ -88,8 +91,8 @@
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
     </Script>
   </Scripts>
-  <Sockets/>
-  <Background color="0.6 0.6 0.6" format=".png" path="" type="0"/>
-  <Navigation active="Orbit"/>
-  <Materials/>
+  <Sockets persistency="666"/>
+  <Background color="0.6 0.6 0.6" format=".png" path="" persistency="666" type="0"/>
+  <Navigation active="Orbit" persistency="666"/>
+  <Materials persistency="666"/>
 </Scene>

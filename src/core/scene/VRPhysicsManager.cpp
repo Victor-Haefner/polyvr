@@ -92,6 +92,8 @@ long long VRPhysicsManager::getTime() { // time in seconds
 
 btSoftBodyWorldInfo* VRPhysicsManager::getSoftBodyWorldInfo() {return softBodyWorldInfo;}
 
+void VRPhysicsManager::setPhysicsActive(bool a) { active = a; }
+
 void VRPhysicsManager::prepareObjects() {
     for (auto o : OSGobjs) {
         if (auto so = o.second.lock()) {
@@ -101,21 +103,22 @@ void VRPhysicsManager::prepareObjects() {
 }
 
 void VRPhysicsManager::updatePhysics( VRThreadWeakPtr wthread) {
-    if (dynamicsWorld == 0) return;
     long long dt,t0,t1,t2,t3;
-    auto thread = wthread.lock();
-    if (thread == 0) return;
-    t0 = thread->t_last;
     t1 = getTime();
-    thread->t_last = t1;
-    dt = t1-t0;
+    auto thread = wthread.lock();
 
-    {
-        MLock lock(mtx);
-        prepareObjects();
-        for (auto f : updateFktsPre) (*f)(0);
-        dynamicsWorld->stepSimulation(1e-6*dt, 30);
-        for (auto f : updateFktsPost) (*f)(0);
+    if (active && thread && dynamicsWorld) {
+        t0 = thread->t_last;
+        thread->t_last = t1;
+        dt = t1-t0;
+
+        {
+            MLock lock(mtx);
+            prepareObjects();
+            for (auto f : updateFktsPre) (*f)(0);
+            dynamicsWorld->stepSimulation(1e-6*dt, 30);
+            for (auto f : updateFktsPost) (*f)(0);
+        }
     }
 
     t2 = getTime();
@@ -127,7 +130,6 @@ void VRPhysicsManager::updatePhysics( VRThreadWeakPtr wthread) {
 
     MLock lock(mtx);
     fps = 1e6/(t3-t1);
-
 }
 
 void VRPhysicsManager::addPhysicsUpdateFunction(VRFunction<int>* fkt, bool after) {

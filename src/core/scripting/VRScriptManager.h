@@ -85,6 +85,7 @@ class VRScriptManager : public VRStorage, public VRPyBase {
 		static PyObject* startThread(VRScriptManager* self, PyObject *args);
 		static PyObject* joinThread(VRScriptManager* self, PyObject *args);
 		static PyObject* getSystemDirectory(VRScriptManager* self, PyObject *args);
+		static PyObject* setPhysicsActive(VRScriptManager* self, PyObject *args);
 };
 
 OSG_END_NAMESPACE

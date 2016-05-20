@@ -45,6 +45,7 @@ class VRPhysicsManager {
      private:
         vector<VRFunction<int>* > updateFktsPre;
         vector<VRFunction<int>* > updateFktsPost;
+        bool active = 1;
 
         btBroadphaseInterface* broadphase;
         btSoftBodyRigidBodyCollisionConfiguration* collisionConfiguration;
@@ -87,6 +88,7 @@ class VRPhysicsManager {
         void addPhysicsUpdateFunction(VRFunction<int>* fkt, bool after);
         void dropPhysicsUpdateFunction(VRFunction<int>* fkt, bool after);
 
+        void setPhysicsActive(bool a);
         void setGravity(Vec3f g);
 
         btSoftRigidDynamicsWorld* bltWorld();

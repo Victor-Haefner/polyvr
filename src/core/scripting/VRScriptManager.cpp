@@ -267,6 +267,7 @@ static PyMethodDef VRScriptManager_module_methods[] = {
 	{"startThread", (PyCFunction)VRScriptManager::startThread, METH_VARARGS, "Start a thread - int startThread( callback, [params] )" },
 	{"joinThread", (PyCFunction)VRScriptManager::joinThread, METH_VARARGS, "Join a thread - joinThread( int ID )" },
 	{"getSystemDirectory", (PyCFunction)VRScriptManager::getSystemDirectory, METH_VARARGS, "Return the path to one of the specific PolyVR directories - getSystemDirectory( str dir )\n\tdir can be: ROOT, EXAMPLES, RESSOURCES, TRAFFIC" },
+	{"setPhysicsActive", (PyCFunction)VRScriptManager::setPhysicsActive, METH_VARARGS, "Pause and unpause physics - setPhysicsActive( bool b )" },
     {NULL}  /* Sentinel */
 };
 
@@ -516,6 +517,12 @@ string VRScriptManager::getPyVRMethodDoc(string mod, string type, string method)
 // ==============
 // Python methods
 // ==============
+
+PyObject* VRScriptManager::setPhysicsActive(VRScriptManager* self, PyObject *args) {
+    auto scene = VRSceneManager::getCurrent();
+    if (scene) (dynamic_pointer_cast<VRPhysicsManager>(scene))->setPhysicsActive( parseBool(args) );
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRScriptManager::getSystemDirectory(VRScriptManager* self, PyObject *args) {
     string dir = parseString(args);
