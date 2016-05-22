@@ -266,13 +266,19 @@ string VRGuiSetup::setupDir() { return VRSceneManager::get()->getOriginalWorkdir
 // toolbuttons
 
 void VRGuiSetup::on_new_clicked() {
+    guard = true;
     current_setup = VRSetupManager::get()->create();
-    updateSetup();
+
+    on_save_clicked();
     // remember setup
     if (auto s = current_setup.lock()) {
         string name = s->getName();
         ofstream f("setup/.local"); f.write(name.c_str(), name.size()); f.close();
     }
+
+    updateSetupList();
+    updateSetup();
+    guard = false;
 }
 
 void VRGuiSetup::on_foto_clicked() {
@@ -316,17 +322,6 @@ void VRGuiSetup::on_save_clicked() {
 }
 
 // setup list
-
-void VRGuiSetup::on_setup_changed() {
-    cout << "on_setup_changed\n";
-    string name = getComboboxText("combobox6");
-    ofstream f(setupDir()+".local"); f.write(name.c_str(), name.size()); f.close(); // remember setup
-    string d = setupDir() + name + ".xml";
-    auto mgr = VRSetupManager::get();
-    current_setup = mgr->load(name, d);
-    updateSetup();
-}
-
 void VRGuiSetup::on_treeview_select() {
     Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview2"));
     Glib::RefPtr<Gtk::TreeStore> tree_store  = Glib::RefPtr<Gtk::TreeStore>::cast_static(VRGuiBuilder()->get_object("setupTree"));
@@ -890,7 +885,7 @@ void VRGuiSetup::on_toggle_vrpn_verbose() {
 VRGuiSetup::VRGuiSetup() {
     selected_object = 0;
     mwindow = 0;
-    guard = false;
+    guard = true;
 
     updatePtr = VRFunction<int>::create("Setup_gui", boost::bind(&VRGuiSetup::updateStatus, this));
     VRSceneManager::get()->addUpdateFkt(updatePtr);
@@ -1007,11 +1002,22 @@ VRGuiSetup::VRGuiSetup() {
     setTableSensitivity("table7", false);
     setTableSensitivity("table8", false);
 
+    updateSetupCb = VRFunction<VRDeviceWeakPtr>::create("update gui setup", boost::bind(&VRGuiSetup::updateSetup, this) );
+
+    guard = false;
     updateSetupList();
     updateSetup();
+}
 
-    updateSetupCb = VRFunction<VRDeviceWeakPtr>::create("update gui setup", boost::bind(&VRGuiSetup::updateSetup, this) );
-    VRSetupManager::getCurrent()->getSignal_on_new_art_device()->add(updateSetupCb);
+void VRGuiSetup::on_setup_changed() {
+    if (guard) return;
+    cout << "on_setup_changed\n";
+    string name = getComboboxText("combobox6");
+    ofstream f(setupDir()+".local"); f.write(name.c_str(), name.size()); f.close(); // remember setup
+    string d = setupDir() + name + ".xml";
+    auto mgr = VRSetupManager::get();
+    current_setup = mgr->load(name, d);
+    updateSetup();
 }
 
 void VRGuiSetup::setTreeRow(Glib::RefPtr<Gtk::TreeStore> tree_store, Gtk::TreeStore::Row row, string name, string type, gpointer ptr, string fg, string bg) {
@@ -1065,7 +1071,10 @@ void VRGuiSetup::updateSetup() {
     gtk_list_store_set (mouse_list->gobj(), row.gobj(), 0, "None", -1);
 
     auto setup = current_setup.lock();
+    setLabel("label13", "VR Setup: NONE");
     if (!setup) return;
+    setLabel("label13", "VR Setup: " + setup->getName());
+
     for (auto ditr : setup->getDevices()) {
         VRDevicePtr dev = ditr.second;
         itr = tree_store->append(devices_itr->children());
@@ -1133,8 +1142,21 @@ void VRGuiSetup::updateSetup() {
 
     on_treeview_select();
     tree_view->expand_all();
+    setup->getSignal_on_new_art_device()->add(updateSetupCb);
+}
 
-    setLabel("label13", "VR Setup: " + VRSetupManager::getCurrent()->getName());
+bool getSetupEntries(string dir, string& local, string& def) {
+    ifstream f1(dir+".local");
+    ifstream f2(dir+".default");
+    if (!f1.good() && !f2.good()) return 0;
+
+    if (f1.good()) getline(f1, local);
+    else           getline(f2, local);
+    if (f2.good()) getline(f2, def);
+
+    if (f1.good()) f1.close();
+    if (f2.good()) f2.close();
+    return 1;
 }
 
 void VRGuiSetup::updateSetupList() {
@@ -1145,31 +1167,41 @@ void VRGuiSetup::updateSetupList() {
     string dir = setupDir();
     if (!VRGuiFile::exists(dir)) { cerr << "Error: no local directory setup\n"; return; }
 
-    string last;
-    ifstream f(dir+".local");
-    if (!f.good()) f.open(dir+".default");
-    if (!f.good()) { cerr << "Error: no setup file found\n"; return; }
-    getline(f, last);
-    f.close();
+    string local, def;
+    if (!getSetupEntries(dir, local, def)) { cerr << "Error: no setup file found\n"; return; }
 
-    int active = 0;
-    int i = 0;
-    for(string name : VRGuiFile::listDir(dir)) {
+    auto splitFileName = [&](string& name, string& ending) {
         int N = name.size();
-        if (N < 6) continue;
+        if (N < 6) return false;
 
-        string ending = name.substr(N-4, N-1);
+        ending = name.substr(N-4, N-1);
         name = name.substr(0,N-4);
+        if (ending != ".xml") return false;
+        return true;
+    };
 
-        if (ending != ".xml") continue;
-
+    string ending;
+    for(string name : VRGuiFile::listDir(dir)) { // update list
+        if (!splitFileName(name, ending)) continue;
         Gtk::ListStore::Row row = *store->append();
         gtk_list_store_set (store->gobj(), row.gobj(), 0, name.c_str(), -1);
-
-        if (last == name) active = i;
-        i++;
     }
 
+    int active = -1;
+    auto setActive = [&](string n) {
+        int i = 0;
+        for(string name : VRGuiFile::listDir(dir)) {
+            if (!splitFileName(name, ending)) continue;
+            if (n == name) { active = i; break; }
+            i++;
+        }
+    };
+
+    setActive(local);
+    if (active < 0) {
+        cout << "Setup " << local << " not found. Load default: " << def << endl;
+        setActive(def);
+    }
     setCombobox("combobox6", active);
 }
 
