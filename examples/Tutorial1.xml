@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="-0.301556 0.484128 -0.449781" at_dir="0" base_name="Default" far="512" fov="1.0472" from="7.27141 1.97156 0.00926088" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="5.1367 1.89277 0.0149231" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-2.77799 13.3082 10.279" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
             <Node active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
           </Object>
@@ -18,15 +18,26 @@
       <core>
 	import VR, math
 	
+	VR.setPhysicsActive(0)
+	
 	if hasattr(VR, 'factory') and VR.factory: VR.factory.destroy()
 	VR.factory = VR.Object('factory')
 	VR.getRoot().find('light').addChild(VR.factory)
 	
 	# ground
-	ground = VR.Geometry('ground')
-	ground.setPrimitive('Box 10 2 10 1 1 1')
+	ground = VR.CSGGeometry('ground')
+	g1 = VR.Geometry('g1')
+	g2 = VR.Geometry('g2')
+	g1.setPrimitive('Box 50 2 50 1 1 1')
+	g2.setPrimitive('Box 2 1.5 2 1 1 1')
+	g2.setFrom([0,1,0])
+	ground.addChild(g1)
+	ground.addChild(g2)
+	ground.setOperation('subtract')
+	ground.setEditMode(0)
 	ground.setFrom([0,-1,0])
-	ground.physicalize(1,0,0)
+	ground.setPhysicalizeTree(0)
+	ground.physicalize(1,0,1)
 	VR.factory.addChild(ground)
 	
 	# truck wheel
@@ -48,7 +59,7 @@
 	truck.setChassis(chassis)
 	
 	VR.factory.addChild( truck )
-	truck.reset([1,2,0])
+	truck.reset([5,1,0])
 	
 	# truck dish
 	dish = VR.CSGGeometry('dish')
@@ -65,10 +76,76 @@
 	chassis.addChild(dish)
 	dish.setMass(0.01)
 	dish.physicalize(1,0,'ConvexDecomposed', 0)
+	VR.dish = dish
 	
-	# conveyor belt
+	# pit blocks
+	block = VR.Geometry('block')
+	block.setPrimitive('Box 0.2 0.2 0.2 1 1 1')
+	block.setRandomColors()
+	W = 0.4
+	for i in range(5):
+		for j in range(5):
+			for k in range(5):
+				b = block.duplicate()
+				VR.factory.addChild(b)
+				b.setFrom(i*W-0.7, k*0.3 + 0, j*W-0.7)
+				b.setPhysicsActivationMode(4)
+				b.setPickable(1)
+				b.physicalize(1,1,0)
+			
+	# crane support
+	support1 = VR.Geometry('support')
+	support1.setPrimitive('Box 0.3 5 0.3 1 1 1')
+	support1.setFrom([-8,2.5,-2])
+	VR.factory.addChild(support1)
+	support2 = support1.duplicate()
+	support2.setFrom([8,2.5,-2])
+	support3 = support1.duplicate()
+	support3.setFrom([-8,2.5,2])
+	support4 = support1.duplicate()
+	support4.setFrom([8,2.5,2])
+	support5 = support1.duplicate()
+	support5.setPrimitive('Box 16.3 0.3 0.3 1 1 1')
+	support5.setFrom([0,5,2])
+	support6 = support5.duplicate()
+	support6.setFrom([0,5,-2])
 	
+	# crane kinematics
+	axisX = VR.Geometry('axisX')
+	axisY = VR.Geometry('axisY')
+	axisX.setPrimitive('Box 0.2 0.2 4 1 1 1')
+	axisY.setPrimitive('Box 0.5 0.5 0.5 1 1 1')
+	axisX.setFrom([0,5,0])
+	VR.axisX = axisX
+	VR.axisY = axisY
 	
+	# crane
+	def craneSide(s):
+		side = VR.CSGGeometry('crane')
+		c1 = VR.Geometry('c1')
+		c2 = VR.Geometry('c2')
+		c1.setPrimitive('Box 1 1 0.5 1 1 1')
+		c2.setPrimitive('Box 0.9 1 0.9 1 1 1')
+		c1.translate(0,-0.1,-0.25*s)	
+		side.addChild(c1)
+		side.addChild(c2)
+		side.setOperation('subtract')
+		side.setEditMode(0)
+		side.setPhysicalizeTree(0)
+		#side.physicalize(1,0,1)
+		side.physicalize(1,0,'ConvexDecomposed', 0)
+		return side
+	
+	VR.crane = VR.Transform('crane')
+	VR.crane.addChild( craneSide(1) )	
+	VR.crane.addChild( craneSide(-1) )
+	VR.crane.setFrom(0,-1,0)
+	
+	axisY.addChild(VR.crane)
+	axisX.addChild(axisY)
+	VR.factory.addChild(axisX)
+	
+	VR.setPhysicsActive(1)
 	
 	
 	
@@ -79,21 +156,73 @@
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
       <trig type="on_device" dev="keyboard" state="Pressed" param="" key="105" name_suffix="1" base_name="trigger" name_space="__global__"/>
     </Script>
-    <Script name_suffix="0" base_name="Answer_truck_keyboard" name_space="__script__" type="Python" mobile="">
+    <Script name_suffix="0" base_name="Answer_keyboard" name_space="__script__" type="Python" mobile="">
       <core>
 	import VR
 	
-	k = chr( dev.getKey() )
-	s = dev.getState()
-	print k, s
+	k = dev.getKey()
+	print k
 	
-	if k == 'w': VR.truck.update(100, 0, 0) # vorwärts
-	if k == 'a': VR.truck.update(0, 0, 1)
-	if k == 'x': VR.truck.update(-100, 0, 0) # zurück
-	if k == 'd': VR.truck.update(0, 0, -1)
-	if k == 's': VR.truck.update(0, 100, 0) # bremsen
+	# truck
+	if not hasattr(VR, 'throttle'): VR.throttle = 0
+	if not hasattr(VR, 'tbreak'): VR.tbreak = 0
+	if not hasattr(VR, 'steering'): VR.steering = 0
+	
+	if k == 119: 
+		VR.throttle = 200
+		VR.tbreak = 0
+	if k == 120: 
+		VR.throttle = -200
+		VR.tbreak = 0
+	if k == 97: VR.steering = 1
+	if k == 100: VR.steering = -1
+	if k == 115: 
+		VR.tbreak = 100
+		VR.throttle = 0
+	
+	VR.truck.update(VR.throttle, VR.tbreak, VR.steering)
+	
+	# truck dish
+	def anim(t):
+		print t
+		t = t*2
+		if t &gt; 1: t = 2-t
+		VR.dish.setDir([0,t,-1+t])
+		VR.dish.setUp([0,1-t,t])
+		VR.dish.setFrom([0,1+t,0])
+	
+	if k == 103:
+		a = VR.Animation('a')
+		a.setCallback(anim)
+		a.setDuration(6)
+		a.start()
+	
+	# crane
+	st = 0.05
+	sr = 0.05
+	if k == 65361: VR.axisX.translate(st,0,0)
+	if k == 65363: VR.axisX.translate(-st,0,0)
+	if k == 65362: VR.axisY.translate(0,0,st)
+	if k == 65364: VR.axisY.translate(0,0,-st)
+	if k == 109: VR.crane.translate(0,st,0)
+	if k == 110: VR.crane.translate(0,-st,0)
+	if k == 118: 
+		VR.crane.getChild(0).rotate(1,0,0, sr)
+		VR.crane.getChild(1).rotate(1,0,0, -sr)
+	if k == 98:
+		VR.crane.getChild(0).rotate(1,0,0, -sr)
+		VR.crane.getChild(1).rotate(1,0,0, sr)
 </core>
       <trig type="on_device" dev="keyboard" state="Pressed" param="" key="-1" name_suffix="2" base_name="trigger" name_space="__global__"/>
+    </Script>
+    <Script name_suffix="0" base_name="Answer_update" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+	return
+	for r in VR.rolls:
+		r.rotate(0,0,1, 0.1)
+</core>
+      <trig type="on_timeout" dev="" state="Pressed" param="0" key="0" name_suffix="3" base_name="trigger" name_space="__global__"/>
     </Script>
     <Script name_suffix="0" base_name="Hints" name_space="__script__" type="Python" mobile="">
       <core>

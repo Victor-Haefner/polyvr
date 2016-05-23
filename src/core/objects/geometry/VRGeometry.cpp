@@ -559,7 +559,9 @@ void VRGeometry::removeDoubles(float minAngle) {// TODO: use angle
 }
 
 void VRGeometry::setRandomColors() {
+    if (!mesh) return;
     GeoPnt3fPropertyRecPtr pos = dynamic_cast<GeoPnt3fProperty*>(mesh->getPositions());
+    if (!pos) return;
 	int N = pos->size();
 
 	GeoVec4fPropertyRecPtr cols = GeoVec4fProperty::create();
