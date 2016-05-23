@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scene name_suffix="0" base_name="Tutorial1" name_space="Scene">
+  <Objects>
+    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
+      <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1" type="Light" visible="1">
+        <Object accept_root="1" aspect="1" at="0 0 2" at_dir="1" base_name="Default" far="512" fov="1.0472" from="0 0 3" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+          <Object at="0 0 -1" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
+            <Node active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
+          </Object>
+          <Node active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
+        </Object>
+      </Object>
+    </Object>
+  </Objects>
+  <Rendering deferred_rendering="0" frustum_culling="1" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Scripts persistency="666">
+    <Script name_suffix="0" base_name="Answer_init" name_space="__script__" type="Python" mobile="">
+      <core>
+	pass
+</core>
+    </Script>
+    <Script name_suffix="0" base_name="Hints" name_space="__script__" type="Python" mobile="">
+      <core>
+	pass
+</core>
+    </Script>
+    <Script name_suffix="0" base_name="Start_init" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+	
+	if hasattr(VR, 'factory') and VR.factory: VR.factory.destroy()
+	VR.factory = VR.Object('factory')
+	VR.getRoot().find('light').addChild(VR.factory)
+</core>
+    </Script>
+    <Script name_suffix="0" base_name="Task" name_space="__script__" type="HTML" mobile="">
+      <core>
+The aim of this tutorial is to build the following scene:
+	1) A dump truck
+	2) A crane excavator
+	3) A conveyor belt
+	4) Automated transport
+	
+Bonus points for:
+	1) Use different materials
+		- Set diffuse colors
+		- Use the module VR.TextureGenerator to generate 3D Noise textures
+	2) Use CSG geometries for concave geometries
+	
+Roadmap:
+	0.1) Create a world ground geometry
+	0.2) Add a big pit in the ground
+
+	1.1) Create a wheel geometry
+	1.2) Create a truck cockpit geometry
+	1.3) Create a dish geometry
+	1.4) Use the module VR.CarDynamics to setup the truck
+	1.5) Add keyboard controls script for the truck
+	
+	2.1) Create a simple/small geometry to be transported over the belt
+	2.2) Fill the hole in 0.1) with the geometry from 2.3)
+	2.3) Create a support geometry for the crane
+	2.4) Script crane movement with 3 DoF and keyboard controls
+	
+	3.1) Create a support geometry for the conveyor belt
+	3.2) Use the module VR.Mechanism to simulate the belt kinematics
+	
+	4.1) Automate truck transport
+	4.1.1) Use the module VR.Factory.Logistics to add a path from the end of the conveyor belt to the pit
+	4.1.2) Add a driver to automate the truck on the path
+	4.2) Conveyor belt
+	4.2.1) Link the conveyor belt to the logistics simulation
+	4.x) Configure the logistics
+	4.2) 
+</core>
+    </Script>
+  </Scripts>
+  <Sockets persistency="666"/>
+  <Background color="0.6 0.6 0.6" format=".png" path="" persistency="666" type="0"/>
+  <Navigation active="Orbit" persistency="666"/>
+  <Materials persistency="666"/>
+</Scene>
