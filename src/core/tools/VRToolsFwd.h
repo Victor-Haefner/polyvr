@@ -25,6 +25,7 @@ ptrFwd(VRJointTool);
 ptrFwd(VRUndoManager);
 ptrFwd(VRUndoAtom);
 ptrFwd(VRUndo);
+ptrFwd(CarDynamics);
 
 }
 

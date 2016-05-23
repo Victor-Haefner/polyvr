@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="0 0 2" at_dir="1" base_name="Default" far="512" fov="1.0472" from="0 0 3" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="-0.301556 0.484128 -0.449781" at_dir="0" base_name="Default" far="512" fov="1.0472" from="7.27141 1.97156 0.00926088" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
             <Node active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
           </Object>
@@ -16,8 +16,84 @@
   <Scripts persistency="666">
     <Script name_suffix="0" base_name="Answer_init" name_space="__script__" type="Python" mobile="">
       <core>
-	pass
+	import VR, math
+	
+	if hasattr(VR, 'factory') and VR.factory: VR.factory.destroy()
+	VR.factory = VR.Object('factory')
+	VR.getRoot().find('light').addChild(VR.factory)
+	
+	# ground
+	ground = VR.Geometry('ground')
+	ground.setPrimitive('Box 10 2 10 1 1 1')
+	ground.setFrom([0,-1,0])
+	ground.physicalize(1,0,0)
+	VR.factory.addChild(ground)
+	
+	# truck wheel
+	wheel = VR.Geometry('wheel')
+	wheel.setPrimitive('Cylinder 0.1 0.3 16 1 1 1')
+	wheel.rotate(0,0,1, math.pi*0.5)
+	wheel.applyTransformation()
+	
+	# truck chassis
+	chassis = VR.Geometry('chassis')
+	chassis.setPrimitive('Box 1.5 0.2 2 1 1 1')
+	
+	# truck
+	truck = VR.CarDynamics('truck')
+	VR.truck = truck
+	truck.setWheelOffsets(.7, 1.0, -1.0, -0.1)
+	truck.setWheelParams(0.1, 0.3)
+	truck.setWheel(wheel)
+	truck.setChassis(chassis)
+	
+	VR.factory.addChild( truck )
+	truck.reset([1,2,0])
+	
+	# truck dish
+	dish = VR.CSGGeometry('dish')
+	d1 = VR.Geometry('d1')
+	d2 = VR.Geometry('d2')
+	d1.setPrimitive('Box 1.5 1.5 2 1 1 1')
+	d2.setPrimitive('Cylinder 1.4 1 32 1 1 1')
+	d2.setPose([0,1,0.2],[0,1,0],[1,0,0])
+	dish.addChild(d1)
+	dish.addChild(d2)
+	dish.setOperation('subtract')
+	dish.setEditMode(0)	
+	dish.setFrom(0,1,0)
+	chassis.addChild(dish)
+	dish.setMass(0.01)
+	dish.physicalize(1,0,'ConvexDecomposed', 0)
+	
+	# conveyor belt
+	
+	
+	
+	
+	
+	
+	
+	
 </core>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
+      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="105" name_suffix="1" base_name="trigger" name_space="__global__"/>
+    </Script>
+    <Script name_suffix="0" base_name="Answer_truck_keyboard" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+	
+	k = chr( dev.getKey() )
+	s = dev.getState()
+	print k, s
+	
+	if k == 'w': VR.truck.update(100, 0, 0) # vorwärts
+	if k == 'a': VR.truck.update(0, 0, 1)
+	if k == 'x': VR.truck.update(-100, 0, 0) # zurück
+	if k == 'd': VR.truck.update(0, 0, -1)
+	if k == 's': VR.truck.update(0, 100, 0) # bremsen
+</core>
+      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="-1" name_suffix="2" base_name="trigger" name_space="__global__"/>
     </Script>
     <Script name_suffix="0" base_name="Hints" name_space="__script__" type="Python" mobile="">
       <core>

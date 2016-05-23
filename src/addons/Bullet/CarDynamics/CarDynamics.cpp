@@ -14,56 +14,12 @@
 
 typedef boost::recursive_mutex::scoped_lock PLock;
 
-OSG_BEGIN_NAMESPACE;
+using namespace OSG;
 using namespace std;
 
-int rightIndex = 0;
-int upIndex = 1;
-int forwardIndex = 2;
-btVector3 wheelDirectionCS0(0, -1, 0);
-btVector3 wheelAxleCS(-1, 0, 0);
-btScalar suspensionRestLength(0.6);
-
-//
-//
-//const int maxProxies = 32766;
-//const int maxOverlap = 65535;
-//
-//float	gEngineForce = 0.f;
-//float	gBreakingForce = 0.f;
-//
-float	maxEngineForce = 10000.f;//this should be engine/velocity dependent
-float	maxBreakingForce = 100.f;
-//
-float	gVehicleSteering = 0.f;
-//float	steeringIncrement = 0.04f;
-//float	steeringClamp = 0.3f;
-
-//for vehicle tuning
-float	wheelFriction = 1000;//BT_LARGE_FLOAT;
-float	suspensionStiffness = 20.f;
-float	suspensionDamping = 2.3f;
-float	suspensionCompression = 4.4f;
-float	rollInfluence = 0.1f;//1.0f;
-float m_mass = 850.0f;
-
-//params for the setting the wheels && axis
-float xOffset = 1.78f;
-float frontZOffset = 2.9f;
-float rearZOffset = -2.7f;
-float height = .4f;
-float	wheelRadius = .4f;
-float	wheelWidth = 0.4f;
-//
-//
-//bool printedWheelTrans = false;
-bool initialBuilt = false;
-//
-
 #define CUBE_HALF_EXTENTS 1
-CarDynamics::CarDynamics() {
-    root = VRObject::create("car");
-    root->setPersistency(0);
+CarDynamics::CarDynamics(string name) : VRObject(name) {
+    setPersistency(0);
     m_defaultContactProcessingThreshold = BT_LARGE_FLOAT;
 	w1 = 0;
 	w2 = 0;
@@ -72,6 +28,35 @@ CarDynamics::CarDynamics() {
 
 	initPhysics();
 }
+
+CarDynamics::~CarDynamics() {
+    return;
+
+	//cleanup in the reverse order of creation/initialization
+	//remove the rigidbodies from the dynamics world && delete them
+	int i;
+	for (i = m_dynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--) {
+		btCollisionObject* obj = m_dynamicsWorld->getCollisionObjectArray()[i];
+		btRigidBody* body = btRigidBody::upcast(obj);
+		if (body && body->getMotionState()) {
+			delete body->getMotionState();
+		}
+		m_dynamicsWorld->removeCollisionObject(obj);
+		delete obj;
+	}
+
+	//delete collision shapes
+	for (int j = 0; j<m_collisionShapes.size(); j++) {
+		btCollisionShape* shape = m_collisionShapes[j];
+		delete shape;
+	}
+
+	//delete dynamics world
+	delete m_vehicleRayCaster;
+	delete m_vehicle;
+}
+
+CarDynamicsPtr CarDynamics::create(string name) { return CarDynamicsPtr( new CarDynamics(name) ); }
 
 //only to be done once
 void CarDynamics::initPhysics() {
@@ -193,7 +178,7 @@ void CarDynamics::setChassisGeo(VRGeometryPtr geo) {
     cout << "\nset chassis geo " << geo->getName() << endl;
 
     initVehicle();
-    root->addChild(geo);
+    addChild(geo);
 }
 
 void CarDynamics::setWheelGeo(VRGeometryPtr geo) { // TODO
@@ -206,26 +191,26 @@ void CarDynamics::setWheelGeo(VRGeometryPtr geo) { // TODO
     w3->setPersistency(0);
     w4->setPersistency(0);
 
-    root->addChild(w1);
-    root->addChild(w2);
-    root->addChild(w3);
-    root->addChild(w4);
+    addChild(w1);
+    addChild(w2);
+    addChild(w3);
+    addChild(w4);
 
     cout << "\nset wheel geo " << geo->getName() << endl;
 }
 
-VRObjectPtr CarDynamics::getRoot() { return root; }
+VRObjectPtr CarDynamics::getRoot() { return ptr(); }
 
-void CarDynamics::setWheelOffsets(float x, float fZ, float rZ, float h){
-    if(x!=-1) xOffset = x;
-    if(fZ!=-1) frontZOffset = fZ;
-    if(rZ!=-1) rearZOffset = rZ;
-    if(h!=-1) height = h;
+void CarDynamics::setWheelOffsets(float x, float fZ, float rZ, float h) {
+    xOffset = x;
+    frontZOffset = fZ;
+    rearZOffset = rZ;
+    height = h;
 }
 
-void CarDynamics::setWheelParams(float w, float r){
-    if(w!=-1) wheelWidth = w;
-    if(r!=-1) wheelRadius = r;
+void CarDynamics::setWheelParams(float w, float r) {
+    wheelWidth = w;
+    wheelRadius = r;
 }
 
 void CarDynamics::setThrottle(float t) {
@@ -331,31 +316,3 @@ btRigidBody* CarDynamics::createRigitBody(float mass, const btTransform& startTr
 	return body;
 }
 
-CarDynamics::~CarDynamics() {
-    return;
-
-	//cleanup in the reverse order of creation/initialization
-	//remove the rigidbodies from the dynamics world && delete them
-	int i;
-	for (i = m_dynamicsWorld->getNumCollisionObjects() - 1; i >= 0; i--) {
-		btCollisionObject* obj = m_dynamicsWorld->getCollisionObjectArray()[i];
-		btRigidBody* body = btRigidBody::upcast(obj);
-		if (body && body->getMotionState()) {
-			delete body->getMotionState();
-		}
-		m_dynamicsWorld->removeCollisionObject(obj);
-		delete obj;
-	}
-
-	//delete collision shapes
-	for (int j = 0; j<m_collisionShapes.size(); j++) {
-		btCollisionShape* shape = m_collisionShapes[j];
-		delete shape;
-	}
-
-	//delete dynamics world
-	delete m_vehicleRayCaster;
-	delete m_vehicle;
-}
-
-OSG_END_NAMESPACE
