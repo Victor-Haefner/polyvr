@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="5.1367 1.89277 0.0149231" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-2.77799 13.3082 10.279" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="2.60943 0.000185867 0.253081" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-11.9085 3.09494 8.57161" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
             <Node active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
           </Object>
@@ -132,8 +132,7 @@
 		side.setOperation('subtract')
 		side.setEditMode(0)
 		side.setPhysicalizeTree(0)
-		#side.physicalize(1,0,1)
-		side.physicalize(1,0,'ConvexDecomposed', 0)
+		side.physicalize(1,0,1)
 		return side
 	
 	VR.crane = VR.Transform('crane')
@@ -153,7 +152,6 @@
 	
 	
 </core>
-      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
       <trig type="on_device" dev="keyboard" state="Pressed" param="" key="105" name_suffix="1" base_name="trigger" name_space="__global__"/>
     </Script>
     <Script name_suffix="0" base_name="Answer_keyboard" name_space="__script__" type="Python" mobile="">
@@ -169,10 +167,10 @@
 	if not hasattr(VR, 'steering'): VR.steering = 0
 	
 	if k == 119: 
-		VR.throttle = 200
+		VR.throttle = 500
 		VR.tbreak = 0
 	if k == 120: 
-		VR.throttle = -200
+		VR.throttle = -500
 		VR.tbreak = 0
 	if k == 97: VR.steering = 1
 	if k == 100: VR.steering = -1
@@ -184,7 +182,6 @@
 	
 	# truck dish
 	def anim(t):
-		print t
 		t = t*2
 		if t &gt; 1: t = 2-t
 		VR.dish.setDir([0,t,-1+t])
@@ -198,7 +195,7 @@
 		a.start()
 	
 	# crane
-	st = 0.05
+	st = 0.02
 	sr = 0.05
 	if k == 65361: VR.axisX.translate(st,0,0)
 	if k == 65363: VR.axisX.translate(-st,0,0)
@@ -215,27 +212,101 @@
 </core>
       <trig type="on_device" dev="keyboard" state="Pressed" param="" key="-1" name_suffix="2" base_name="trigger" name_space="__global__"/>
     </Script>
-    <Script name_suffix="0" base_name="Answer_update" name_space="__script__" type="Python" mobile="">
+    <Script name_suffix="0" base_name="Answer_mouse" name_space="__script__" type="Python" mobile="">
       <core>
-	import VR
-	return
-	for r in VR.rolls:
-		r.rotate(0,0,1, 0.1)
-</core>
-      <trig type="on_timeout" dev="" state="Pressed" param="0" key="0" name_suffix="3" base_name="trigger" name_space="__global__"/>
-    </Script>
-    <Script name_suffix="0" base_name="Hints" name_space="__script__" type="Python" mobile="">
-      <core>
-	pass
-</core>
-    </Script>
-    <Script name_suffix="0" base_name="Start_init" name_space="__script__" type="Python" mobile="">
-      <core>
-	import VR
+	import VR, math
 	
-	if hasattr(VR, 'factory') and VR.factory: VR.factory.destroy()
-	VR.factory = VR.Object('factory')
-	VR.getRoot().find('light').addChild(VR.factory)
+	# crane
+	if dev.intersect():
+		i = dev.getIntersected()
+		p = dev.getIntersection()
+		if i:
+			n = i.getName()
+			print n
+			if n in ['support.4', 'support.5']:
+				p0 = VR.axisX.getFrom()[0]
+				dif = p[0]-p0
+				s = math.copysign(1,dif)
+				path = VR.Path()
+				path.addPoint([p0,5,0],[s,0,0],[0,0,0],[0,1,0])
+				path.addPoint([p[0],5,0],[s,0,0],[0,0,0],[0,1,0])
+				path.compute(80)
+				VR.axisX.animate(path, abs(dif), 0, 0)
+				
+				
+			if n in ['support', 'support.1', 'support.2', 'support.3']:
+				p0 = VR.crane.getFrom()[1]
+				p1 = p[1]-5
+				dif = p1-p0
+				s = math.copysign(1,dif)
+				path = VR.Path()
+				path.addPoint([0,p0,0],[0,s,0],[0,0,0],[0,0,1])
+				path.addPoint([0,p1,0],[0,s,0],[0,0,0],[0,0,1])
+				path.compute(80)
+				VR.crane.animate(path, abs(dif), 0, 0)
+				
+			if n == 'axisX':
+				p0 = VR.axisY.getFrom()[2]
+				p1 = p[2]
+				dif = p1-p0
+				s = math.copysign(1,dif)
+				path = VR.Path()
+				path.addPoint([0,0,p0],[0,0,s],[0,0,0],[0,1,0])
+				path.addPoint([0,0,p1],[0,0,s],[0,0,0],[0,1,0])
+				path.compute(80)
+				VR.axisY.animate(path, abs(dif), 0, 0)
+</core>
+      <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
+    </Script>
+    <Script name_suffix="0" base_name="Hints" name_space="__script__" type="HTML" mobile="">
+      <core>
+
+Simple primitives:
+	
+	box = VR.Geometry('box')
+	box.setPrimitive('Box 3 4 5 1 1 1')
+	# parameter: width, length, depth
+	
+	cylinder = VR.Geometry('cylinder')
+	cylinder.setPrimitive('Cylinder 0.1 0.3 16 1 1 1')
+	# parameter: height, radius, N sides
+	
+
+CSG Geometries:
+
+	obj = VR.CSGGeometry('myObj')
+
+	g1 = VR.Geometry('g1')
+	g2 = VR.Geometry('g2')
+	g1.setPrimitive('Box 50 2 50 1 1 1')
+	g2.setPrimitive('Box 2 1.5 2 1 1 1')
+
+	obj.addChild(g1)
+	obj.addChild(g2)
+	obj.setOperation('subtract')
+	obj.setEditMode(0)
+	
+	
+Animation with callback:
+
+	def anim(t):
+		print t
+	
+	a = VR.Animation('a')
+	a.setCallback(anim)
+	a.setDuration(6)
+	a.start()
+	
+	
+CarDynamics:
+	car = VR.CarDynamics('car')
+	car.setWheelOffsets(.7, 1.0, -1.0, -0.1)
+	car.setWheelParams(0.1, 0.3)
+	car.setWheel(wheel)
+	car.setChassis(chassis)
+	
+	VR.getRoot().addChild( car )
+	car.reset([5,1,0])
 </core>
     </Script>
     <Script name_suffix="0" base_name="Task" name_space="__script__" type="HTML" mobile="">
@@ -243,8 +314,7 @@
 The aim of this tutorial is to build the following scene:
 	1) A dump truck
 	2) A crane excavator
-	3) A conveyor belt
-	4) Automated transport
+	3) Interaction
 	
 Bonus points for:
 	1) Use different materials
@@ -263,20 +333,32 @@ Roadmap:
 	1.5) Add keyboard controls script for the truck
 	
 	2.1) Create a simple/small geometry to be transported over the belt
-	2.2) Fill the hole in 0.1) with the geometry from 2.3)
+	2.2) Fill the pit in 0.1) with the geometry from 2.3)
 	2.3) Create a support geometry for the crane
+	2.3) Create a shovel tool geometry for the crane
 	2.4) Script crane movement with 3 DoF and keyboard controls
 	
-	3.1) Create a support geometry for the conveyor belt
-	3.2) Use the module VR.Mechanism to simulate the belt kinematics
+	3.1) Add mouse interaction for crane
+	3.2) Add mouse interaction for truck dish animation
+</core>
+    </Script>
+    <Script name_suffix="0" base_name="Tutorial_init" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
 	
-	4.1) Automate truck transport
-	4.1.1) Use the module VR.Factory.Logistics to add a path from the end of the conveyor belt to the pit
-	4.1.2) Add a driver to automate the truck on the path
-	4.2) Conveyor belt
-	4.2.1) Link the conveyor belt to the logistics simulation
-	4.x) Configure the logistics
-	4.2) 
+	if hasattr(VR, 'factory') and VR.factory: VR.factory.destroy()
+	VR.factory = VR.Object('factory')
+	VR.getRoot().find('light').addChild(VR.factory)
+</core>
+    </Script>
+    <Script name_suffix="0" base_name="Tutorial_keyboard" name_space="__script__" type="Python" mobile="">
+      <core>
+	pass
+</core>
+    </Script>
+    <Script name_suffix="0" base_name="Tutorial_mouse" name_space="__script__" type="Python" mobile="">
+      <core>
+	pass
 </core>
     </Script>
   </Scripts>
