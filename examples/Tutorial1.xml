@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="2.60943 0.000185867 0.253081" at_dir="0" base_name="Default" far="512" fov="1.0472" from="-11.9085 3.09494 8.57161" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="4.33788 3.8722 0.128584" at_dir="0" base_name="Default" far="512" fov="1.0472" from="7.12164 6.12143 0.130249" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
             <Node active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
           </Object>
@@ -216,6 +216,8 @@
       <core>
 	import VR, math
 	
+	if not hasattr(VR, 'crane_open'): VR.crane_open = 0
+	
 	# crane
 	if dev.intersect():
 		i = dev.getIntersected()
@@ -255,6 +257,37 @@
 				path.addPoint([0,0,p1],[0,0,s],[0,0,0],[0,1,0])
 				path.compute(80)
 				VR.axisY.animate(path, abs(dif), 0, 0)
+				
+				
+			if n in ['crane.1', 'crane.2']:
+				path1 = VR.Path()
+				path2 = VR.Path()
+				if VR.crane_open:
+					path1.addPoint([0,0,0],[0,0,-1],[0,0,0],[0,1,0])
+					path1.addPoint([0,0,0],[0,1,-1],[0,0,0],[0,1,0])
+					path1.compute(80)
+					path2.addPoint([0,0,0],[0,0,-1],[0,0,0],[0,1,0])
+					path2.addPoint([0,0,0],[0,-1,-1],[0,0,0],[0,1,0])
+					path2.compute(80)
+					VR.crane.getChild(0).animate(path1, 2, 0, 1)
+					VR.crane.getChild(1).animate(path2, 2, 0, 1)
+				else:
+					path1.addPoint([0,0,0],[0,1,-1],[0,0,0],[0,1,0])
+					path1.addPoint([0,0,0],[0,0,-1],[0,0,0],[0,1,0])
+					path1.compute(80)
+					path2.addPoint([0,0,0],[0,-1,-1],[0,0,0],[0,1,0])
+					path2.addPoint([0,0,0],[0,0,-1],[0,0,0],[0,1,0])
+					path2.compute(80)
+					VR.crane.getChild(0).animate(path1, 2, 0, 1)
+					VR.crane.getChild(1).animate(path2, 2, 0, 1)
+				VR.crane_open = not VR.crane_open
+					
+					
+					
+					
+					
+					
+					
 </core>
       <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
     </Script>
