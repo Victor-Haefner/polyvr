@@ -368,12 +368,8 @@ PyObject* VRPyTransform::setAxisConstraints(VRPyTransform* self, PyObject* args)
 PyObject* VRPyTransform::setRotationConstraints(VRPyTransform* self, PyObject* args) {
     if (!self->valid()) return NULL;
     OSG::Vec3f v = parseVec3f(args);
-    OSG::Vec3i vi;
-    for (int i=0; i<3; i++) vi[i] = v[i];
-
-    OSG::VRTransformPtr e = (OSG::VRTransformPtr) self->objPtr;
     auto c = self->objPtr->getConstraint();
-    //c->setRConstraint(vi); //TODO
+    c->setRConstraint(self->objPtr->getWorldPosition(), OSG::VRConstraint::POINT);
     c->setActive(true, self->objPtr);
     Py_RETURN_TRUE;
 }
