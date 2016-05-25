@@ -1018,6 +1018,8 @@ void VRGuiSetup::on_setup_changed() {
     auto mgr = VRSetupManager::get();
     current_setup = mgr->load(name, d);
     updateSetup();
+
+    current_setup.lock()->getSignal_on_new_art_device()->add(updateSetupCb); // TODO: where to put this? NOT in updateSetup() !!!
 }
 
 void VRGuiSetup::setTreeRow(Glib::RefPtr<Gtk::TreeStore> tree_store, Gtk::TreeStore::Row row, string name, string type, gpointer ptr, string fg, string bg) {
@@ -1142,7 +1144,6 @@ void VRGuiSetup::updateSetup() {
 
     on_treeview_select();
     tree_view->expand_all();
-    setup->getSignal_on_new_art_device()->add(updateSetupCb);
 }
 
 bool getSetupEntries(string dir, string& local, string& def) {
