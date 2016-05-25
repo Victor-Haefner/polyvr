@@ -14,6 +14,7 @@ PyMethodDef VRPySnappingEngine::methods[] = {
     {"addRule", (PyCFunction)VRPySnappingEngine::addRule, METH_VARARGS, "Add snapping rule - int addRule(str translation, str orientation, "
                                                                         "prim_t[x,y,z,x0,y0,z0], prim_o[x,y,z,x0,y0,z0], float dist, float weight, obj local)"
                                                                         "\n\ttranslation/oriantation: 'NONE', 'POINT', 'LINE', 'PLANE', 'POINT_LOCAL', 'LINE_LOCAL', 'PLANE_LOCAL'"
+                                                                        "\n\texample: addRule('POINT', 'POINT', [0,0,0,0,0,0], [0,1,0,0,0,-1], R, 1, None)"
                                                                          },
     {"remRule", (PyCFunction)VRPySnappingEngine::remRule, METH_VARARGS, "Remove a rule - remRule(int ID)" },
     {"addObjectAnchor", (PyCFunction)VRPySnappingEngine::addObjectAnchor, METH_VARARGS, "Remove a rule - addObjectAnchor(obj transform, obj anchor)" },
