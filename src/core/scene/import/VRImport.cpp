@@ -91,7 +91,7 @@ int fileSize(string path) {
     return L;
 }
 
-VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, string preset, bool thread) {
+VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, string preset, bool thread, string options) {
     cout << "VRImport::load " << path << " " << preset << endl;
     if (ihr_flag) if (fileSize(path) > 3e7) return 0;
     setlocale(LC_ALL, "C");
@@ -110,7 +110,7 @@ VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, stri
     if (!boost::filesystem::exists(path)) { cout << "VRImport::load " << path << " not found!" << endl; return 0; }
 
     VRTransformPtr res = VRTransform::create("proxy");
-    LoadJob* job = new LoadJob(path, preset, res, progress); // TODO: memory leak??
+    LoadJob* job = new LoadJob(path, preset, res, progress, options); // TODO: memory leak??
     if (!thread) {
         job->load(VRThreadWeakPtr());
         return cache[path].retrieve(parent);
@@ -122,11 +122,12 @@ VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, stri
     }
 }
 
-VRImport::LoadJob::LoadJob(string p, string pr, VRTransformPtr r, VRProgressPtr pg) {
+VRImport::LoadJob::LoadJob(string p, string pr, VRTransformPtr r, VRProgressPtr pg, string opt) {
     path = p;
     res = r;
     progress = pg;
     preset = pr;
+    options = opt;
 }
 
 void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
@@ -141,7 +142,7 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         cout << "load " << path << " ext: " << ext << " preset: " << preset << "\n";
         if (ext == ".e57") { loadE57(path, res); return; }
         if (ext == ".ply") { loadPly(path, res); return; }
-        if (ext == ".stp") { VRSTEP step; step.load(path, res); return; }
+        if (ext == ".stp") { VRSTEP step; step.load(path, res, options); return; }
         if (ext == ".wrl" && preset == "SOLIDWORKS-VRML2") { VRFactory f; if (f.loadVRML(path, progress, res, thread)) return; else preset = "OSG"; }
         if (ext == ".vtk") { loadVtk(path, res); return; }
         if (preset == "OSG" || preset == "COLLADA") osgLoad(path, res);

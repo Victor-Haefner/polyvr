@@ -48,9 +48,6 @@ void VRSTEP::loadT(string file, STEPfilePtr sfile, bool* done) {
 }
 
 VRSTEP::VRSTEP() {
-    explorer = VRGuiTreeExplorer::create("iss");
-    explorer->setSelectCallback( VRFunction<VRGuiTreeExplorer*>::create( "step_explorer", boost::bind(&VRSTEP::on_explorer_select, this, _1) ) );
-
     registry = RegistryPtr( new Registry( SchemaInit ) ); // schema
     instMgr = InstMgrPtr( new InstMgr() ); // instances
     sfile = STEPfilePtr( new STEPfile( *registry, *instMgr, "", false ) ); // file
@@ -1207,7 +1204,12 @@ void VRSTEP::build() {
         string name = se->EntityName();
         traverseEntity(se,0,root);
     }
-    explore(root);
+
+    if (options == "explorer") {
+        explorer = VRGuiTreeExplorer::create("iss");
+        explorer->setSelectCallback( VRFunction<VRGuiTreeExplorer*>::create( "step_explorer", boost::bind(&VRSTEP::on_explorer_select, this, _1) ) );
+        explore(root);
+    }
 
     buildGeometries();
     buildScenegraph();
@@ -1218,7 +1220,8 @@ void VRSTEP::build() {
     cout << resGeos.size() << " VR objects created\n";
 }
 
-void VRSTEP::load(string file, VRTransformPtr t) {
+void VRSTEP::load(string file, VRTransformPtr t, string opt) {
+    options = opt;
     resRoot = t;
     open(file);
     build();

@@ -85,6 +85,7 @@ class VRSTEP {
 
         map<string, bool> blacklist;
         int blacklisted = 0;
+        string options;
 
         string redBeg  = "\033[0;38;2;255;150;150m";
         string greenBeg  = "\033[0;38;2;150;255;150m";
@@ -122,7 +123,7 @@ class VRSTEP {
     public:
         VRSTEP();
 
-        void load(string file, VRTransformPtr res);
+        void load(string file, VRTransformPtr res, string options);
 };
 
 OSG_END_NAMESPACE;

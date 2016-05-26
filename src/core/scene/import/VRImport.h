@@ -18,11 +18,12 @@ class VRImport {
         struct LoadJob {
             string path;
             string preset;
+            string options;
             VRProgressPtr progress;
             VRTransformPtr res;
             VRThreadCb loadCb;
 
-            LoadJob(string p, string preset, VRTransformPtr r, VRProgressPtr pg);
+            LoadJob(string p, string preset, VRTransformPtr r, VRProgressPtr pg, string opt);
 
             void load(VRThreadWeakPtr t);
         };
@@ -55,7 +56,7 @@ class VRImport {
     public:
         static VRImport* get();
 
-        VRTransformPtr load(string path, VRObjectPtr parent = 0, bool reload = false, string preset = "OSG", bool thread = false);
+        VRTransformPtr load(string path, VRObjectPtr parent = 0, bool reload = false, string preset = "OSG", bool thread = false, string options = "");
         VRGeometryPtr loadGeometry(string path, string name, string preset = "OSG", bool thread = false);
 
         VRProgressPtr getProgressObject();

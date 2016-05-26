@@ -250,8 +250,9 @@ initVRPyStdOut(void) {
 
 static PyMethodDef VRScriptManager_module_methods[] = {
 	{"exit", (PyCFunction)VRScriptManager::exit, METH_NOARGS, "Terminate application" },
-	{"loadGeometry", (PyCFunction)VRScriptManager::loadGeometry, METH_VARARGS|METH_KEYWORDS, "Loads a file and returns an object - obj loadGeometry(str path, bool cached = True, str preset = 'OSG', bool threaded = 0, str parent = None)"
-                                                                                             "\n\tpreset can be: 'OSG', 'COLLADA', 'SOLIDWORKS-VRML2', 'PLY', 'STEP'" },
+	{"loadGeometry", (PyCFunction)VRScriptManager::loadGeometry, METH_VARARGS|METH_KEYWORDS, "Loads a file and returns an object - obj loadGeometry(str path, bool cached = True, str preset = 'OSG', bool threaded = 0, str parent = None, str options = None)"
+                                                                                             "\n\tpreset can be: 'OSG', 'COLLADA', 'SOLIDWORKS-VRML2'"
+                                                                                             "\n\toptions can be: 'explorer' (currently only for STEP files)" },
 	{"exportGeometry", (PyCFunction)VRScriptManager::exportGeometry, METH_VARARGS, "Export a part of the scene - exportGeometry( object, path )" },
 	{"getLoadGeometryProgress", (PyCFunction)VRScriptManager::getLoadGeometryProgress, METH_VARARGS, "Return the progress object for geometry loading - getLoadGeometryProgress()" },
 	{"stackCall", (PyCFunction)VRScriptManager::stackCall, METH_VARARGS, "Schedules a call to a python function - stackCall( function, delay, [args] )" },
@@ -570,14 +571,15 @@ PyObject* VRScriptManager::loadGeometry(VRScriptManager* self, PyObject *args, P
     int threaded = 0;
     const char* preset = "OSG";
     const char* parent = "";
+    const char* options = "";
 
-    const char* kwlist[] = {"path", "cached", "preset", "threaded", "parent", NULL};
-    string format = "s|isis:loadGeometry";
-    if (! PyArg_ParseTupleAndKeywords(args, kwargs, format.c_str(), (char**)kwlist, &path, &ignoreCache, &preset, &threaded, &parent)) return NULL;
+    const char* kwlist[] = {"path", "cached", "preset", "threaded", "parent", "options", NULL};
+    string format = "s|isiss:loadGeometry";
+    if (! PyArg_ParseTupleAndKeywords(args, kwargs, format.c_str(), (char**)kwlist, &path, &ignoreCache, &preset, &threaded, &parent, &options)) return NULL;
 
     VRObjectPtr prnt = VRSceneManager::getCurrent()->getRoot()->find( parent );
 
-    VRTransformPtr obj = VRImport::get()->load( path, prnt, !ignoreCache, preset, threaded);
+    VRTransformPtr obj = VRImport::get()->load( path, prnt, !ignoreCache, preset, threaded, options);
     if (obj == 0) {
         VRGuiManager::get()->printInfo("Warning: " + string(path) + " not loaded!\n");
         Py_RETURN_NONE;
