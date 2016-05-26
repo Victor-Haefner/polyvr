@@ -10,7 +10,7 @@ using namespace OSG;
 VRBRepSurface::VRBRepSurface() {}
 
 VRGeometryPtr VRBRepSurface::build(string type) {
-    //cout << "VRSTEP::Surface build " << ID << " " << type << endl;
+    //cout << "VRSTEP::Surface build " << type << endl;
 
     Matrix m = trans.asMatrix();
     Matrix mI = m;
@@ -18,7 +18,9 @@ VRGeometryPtr VRBRepSurface::build(string type) {
 
     if (type == "Plane") {
         Triangulator t;
+        if (bounds.size() == 0) cout << "Warning: No bounds!\n";
         for (auto b : bounds) {
+            //if (b.points.size() == 0) cout << "Warning: No bound points for bound " << b.BRepType << endl;
             polygon poly;
             for(auto p : b.points) {
                 mI.mult(Pnt3f(p),p);
@@ -28,7 +30,8 @@ VRGeometryPtr VRBRepSurface::build(string type) {
             t.add(poly);
         }
 
-        auto g = t.compute();
+        auto g = t.compute(); // TODO: check about g??
+        if (!g->getMesh()->getPositions()) cout << "NO MESH!\n";
         g->setMatrix(m);
         return g;
     }

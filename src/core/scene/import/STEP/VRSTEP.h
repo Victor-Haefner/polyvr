@@ -75,7 +75,7 @@ class VRSTEP {
         struct Bound;
         struct Surface;
 
-        vector<STEPentity*> unfoldComplex(STEPentity* e);
+        static vector<STEPentity*> unfoldComplex(STEPentity* e);
         void on_explorer_select(VRGuiTreeExplorer* e);
 
     public:

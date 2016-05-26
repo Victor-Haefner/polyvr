@@ -812,6 +812,78 @@ pose toPose(STEPentity* i, map<STEPentity*, VRSTEP::Instance>& instances) {
 }
 
 struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
+    void handleEdgeSurface(STEPentity* e, map<STEPentity*, Instance>& instances, Vec3f EBeg, Vec3f EEnd, bool cplx = 0) {
+        auto EdgeGeo = instances[ e ];
+        int Np = points.size();
+
+        if (EdgeGeo.type == "Line") {
+            //Vec3f p = toVec3f( EdgeGeo.get<0, STEPentity*, STEPentity*>(), instances );
+            //Vec3f d = toVec3f( EdgeGeo.get<1, STEPentity*, STEPentity*>(), instances );
+            points.push_back(EBeg);
+            points.push_back(EEnd);
+            if (points.size() <= 1) cout << "Warning: No edge points of Line" << endl;
+            return;
+        }
+
+        if (EdgeGeo.type == "Circle") {
+            pose c = toPose( EdgeGeo.get<0, STEPentity*, double>(), instances );
+            float r = EdgeGeo.get<1, STEPentity*, double>();
+            float _r = 1/r;
+            Matrix m = c.asMatrix();
+            Matrix mI = m; mI.invert();
+
+            float a1,a2; // get start and end angles
+            Vec3f c1,c2;
+            mI.mult(Pnt3f(EBeg), c1);
+            mI.mult(Pnt3f(EEnd), c2);
+            c1 *= _r; c2*= _r;
+            a1 = atan2(c1[1],c1[0]);
+            a2 = atan2(c2[1],c2[0]);
+
+            for (auto a : angleFrame(a1, a2)) {
+                Pnt3f p(r*cos(a),r*sin(a),0);
+                m.mult(p,p);
+                points.push_back(Vec3f(p));
+            }
+            if (points.size() <= 1) cout << "Warning: No edge points of Circle" << endl;
+            return;
+        }
+
+        // int, vector<STEPentity*>, bool
+        if (EdgeGeo.type == "B_Spline_Curve" || EdgeGeo.type == "Rational_B_Spline_Curve") { // TODO
+            if (cplx) return;
+            int deg = EdgeGeo.get<0, int, vector<STEPentity*>, bool>();
+            vector<STEPentity*> control_points = EdgeGeo.get<1, int, vector<STEPentity*>, bool>();
+            for (auto e : control_points) points.push_back(toVec3f(e, instances)); // TODO: correct??
+            if (points.size() <= 1) cout << "Warning: No edge points of B_Spline_Curve" << endl;
+            return;
+        }
+
+        // int, vector<STEPentity*>, bool, vector<int>, vector<double>, vector<double>
+        if (EdgeGeo.type == "B_Spline_Curve_With_Knots") { // TODO
+            return;
+            int deg = EdgeGeo.get<0, int, vector<STEPentity*>, bool, vector<int>, vector<double> >();
+            vector<STEPentity*> control_points = EdgeGeo.get<1, int, vector<STEPentity*>, bool, vector<int>, vector<double> >();
+            //cout << "B_Spline_Curve_With_Knots: " << EdgeGeo.ID << " deg: " << deg << " Np: " << control_points.size() << endl;
+            //for (auto e : control_points) cout << " pnt " << toVec3f(e, instances) << endl;
+
+            for (auto e : control_points) points.push_back(toVec3f(e, instances)); // TODO: correct??
+            /*if (deg == 1) { // line
+                points.push_back(EBeg);
+                points.push_back(EEnd);
+            }
+
+            if (deg == 5) {
+                ;
+            }*/
+
+            if (points.size() <= 1) cout << "Warning: No edge points of B_Spline_Curve_With_Knots" << endl;
+            return;
+        }
+
+        cout << "Error: edge geo type not handled " << EdgeGeo.type << endl;
+    }
+
     Edge(Instance& i, map<STEPentity*, Instance>& instances) : Instance(i) {
         if (i.type == "Oriented_Edge") {
             auto& EdgeElement = instances[ i.get<0, STEPentity*, bool>() ];
@@ -819,77 +891,20 @@ struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
             if (EdgeElement.type == "Edge_Curve") {
                 Vec3f EBeg = toVec3f( EdgeElement.get<0, STEPentity*, STEPentity*, STEPentity*>(), instances );
                 Vec3f EEnd = toVec3f( EdgeElement.get<1, STEPentity*, STEPentity*, STEPentity*>(), instances );
-                auto EdgeGeo = instances[ EdgeElement.get<2, STEPentity*, STEPentity*, STEPentity*>() ];
-                int Np = points.size();
+                auto EdgeGeoI = EdgeElement.get<2, STEPentity*, STEPentity*, STEPentity*>();
 
-                if (EdgeGeo.type == "Surface_Curve") {
-                    EdgeGeo = instances[ EdgeGeo.get<0, STEPentity*, vector<STEPentity*> >() ];
+                if (instances[EdgeGeoI].type == "Surface_Curve") {
+                    EdgeGeoI = instances[EdgeGeoI].get<0, STEPentity*, vector<STEPentity*> >();
                 }
 
-                if (EdgeGeo.type == "Line") {
-                    //Vec3f p = toVec3f( EdgeGeo.get<0, STEPentity*, STEPentity*>(), instances );
-                    //Vec3f d = toVec3f( EdgeGeo.get<1, STEPentity*, STEPentity*>(), instances );
-                    points.push_back(EBeg);
-                    points.push_back(EEnd);
+                if (EdgeGeoI->IsComplex()) {
+                    for (auto e : unfoldComplex(EdgeGeoI)) handleEdgeSurface(e, instances, EBeg, EEnd, 1);
                     return;
-                }
+                } else handleEdgeSurface(EdgeGeoI, instances, EBeg, EEnd);
 
-                if (EdgeGeo.type == "Circle") {
-                    pose c = toPose( EdgeGeo.get<0, STEPentity*, double>(), instances );
-                    float r = EdgeGeo.get<1, STEPentity*, double>();
-                    float _r = 1/r;
-                    Matrix m = c.asMatrix();
-                    Matrix mI = m; mI.invert();
+                if (points.size() <= 1) cout << "Warning: No edge points!" << endl;
+                return;
 
-                    float a1,a2; // get start and end angles
-                    Vec3f c1,c2;
-                    mI.mult(Pnt3f(EBeg), c1);
-                    mI.mult(Pnt3f(EEnd), c2);
-                    c1 *= _r; c2*= _r;
-                    a1 = atan2(c1[1],c1[0]);
-                    a2 = atan2(c2[1],c2[0]);
-
-                    for (auto a : angleFrame(a1, a2)) {
-                        Pnt3f p(r*cos(a),r*sin(a),0);
-                        m.mult(p,p);
-                        points.push_back(Vec3f(p));
-                    }
-                    return;
-                }
-
-                if (EdgeGeo.entity->IsComplex()) { // TODO
-                    return;
-                }
-
-                // int, vector<STEPentity*>, bool
-                if (EdgeGeo.type == "B_Spline_Curve" || EdgeGeo.type == "Rational_B_Spline_Curve") { // TODO
-                    int deg = EdgeGeo.get<0, int, vector<STEPentity*>, bool>();
-                    vector<STEPentity*> control_points = EdgeGeo.get<1, int, vector<STEPentity*>, bool>();
-                    for (auto e : control_points) points.push_back(toVec3f(e, instances)); // TODO: correct??
-                    return;
-                }
-
-                // int, vector<STEPentity*>, bool, vector<int>, vector<double>, vector<double>
-                if (EdgeGeo.type == "B_Spline_Curve_With_Knots") { // TODO
-                    int deg = EdgeGeo.get<0, int, vector<STEPentity*>, bool, vector<int>, vector<double> >();
-                    vector<STEPentity*> control_points = EdgeGeo.get<1, int, vector<STEPentity*>, bool, vector<int>, vector<double> >();
-                    //cout << "B_Spline_Curve_With_Knots: " << EdgeGeo.ID << " deg: " << deg << " Np: " << control_points.size() << endl;
-                    //for (auto e : control_points) cout << " pnt " << toVec3f(e, instances) << endl;
-
-                    for (auto e : control_points) points.push_back(toVec3f(e, instances)); // TODO: correct??
-                    /*if (deg == 1) { // line
-                        points.push_back(EBeg);
-                        points.push_back(EEnd);
-                    }
-
-                    if (deg == 5) {
-                        ;
-                    }*/
-
-                    return;
-                }
-
-                cout << "Error: edge geo type not handled " << EdgeGeo.type << endl;
             } else cout << "Error: edge element type not handled " << EdgeElement.type << endl;
         } else cout << "Error: edge type not handled " << i.type << endl;
     }
@@ -897,16 +912,22 @@ struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
 
 struct VRSTEP::Bound : public VRSTEP::Instance, public VRBRepBound {
     Bound(Instance& i, map<STEPentity*, Instance>& instances) : Instance(i) {
+        BRepType = type;
         if (type != "Face_Outer_Bound") outer = false;
         if (type == "Face_Bound" || type == "Face_Outer_Bound") {
             auto& Loop = instances[ get<0, STEPentity*, bool>() ];
             bool dir = get<1, STEPentity*, bool>();
             for (auto l : Loop.get<0, vector<STEPentity*> >() ) {
                 Edge edge(instances[l], instances);
+                if (edge.points.size() <= 1) {
+                    //cout << "Warning2: No edge points " << &edge << endl;
+                    continue;
+                }
                 edges.push_back(edge);
             }
         }
 
+        //if (edges.size() <= 1) cout << "Warning: No bound edges" << endl;
         if (edges.size() <= 1) return; // done
 
         if ( sameVec(edges[0].beg(), edges[1].beg()) || sameVec(edges[0].beg(), edges[1].end()) ) edges[0].swap(); // swap first edge
@@ -926,6 +947,7 @@ struct VRSTEP::Bound : public VRSTEP::Instance, public VRBRepBound {
                 points.push_back(p);
             }
         }
+        //if (points.size() == 0) cout << "Warning1: No bound points" << endl;
     }
 };
 
@@ -946,7 +968,6 @@ void VRSTEP::buildGeometries() {
         string name = BrepShape.get<0, string, vector<STEPentity*> >();
         auto geo = VRGeometry::create(name);
 
-        cout << " Advanced_Brep_Shape_Representation " << name << endl;
         for (auto i : BrepShape.get<1, string, vector<STEPentity*> >() ) {
             auto& Item = instances[i];
             if (Item.type == "Manifold_Solid_Brep") {
@@ -962,21 +983,17 @@ void VRSTEP::buildGeometries() {
                             Bound bound(b, instances);
                             surface.bounds.push_back(bound);
                         }
-                        //static int ii = 0; ii++;
-                        //if (ii < 17) continue;
                         geo->merge( surface.build(surface.type) );
                         //geo->addChild( surface.build(surface.type) );
-                        //if (ii >= 17) break;
-                    } else cout << "VRSTEP::buildGeometries Error 2 " << Face.type << endl;
+                    } else cout << "VRSTEP::buildGeometries Error 2 " << Face.type << " " << Face.ID << endl;
                 }
-                //break;
-            } else cout << "VRSTEP::buildGeometries Error 1 " << Item.type << endl;
+            } else if (Item.type == "Axis2_Placement_3d") { // ignore?
+            } else cout << "VRSTEP::buildGeometries Error 1 " << Item.type << " " << Item.ID << endl;
         }
 
         resGeos[BrepShape.entity] = geo;
-        //break;
     }
-    cout << "VRSTEP::buildGeometries resGeos " << resGeos.size() << endl;
+    cout << "VRSTEP::buildGeometries  got " << resGeos.size() << " geometries" << endl;
     cout << blueBeg << "VRSTEP::buildGeometries finished\n" << colEnd;
 }
 
@@ -1067,8 +1084,8 @@ void VRSTEP::buildScenegraph() {
         //SRepToGEO[ABrep] = ABrep;
     }
 
-    cout << "VRSTEP::buildScenegraph SRepToGEO " << SRepToGEO.size() << endl;
-    for (auto o : SRepToGEO) cout << " SRep: " << o.first->StepFileId() << " ABrep: " << o.second->StepFileId() << endl;
+    //cout << "VRSTEP::buildScenegraph SRepToGEO " << SRepToGEO.size() << endl;
+    //for (auto o : SRepToGEO) cout << " SRep: " << o.first->StepFileId() << " ABrep: " << o.second->StepFileId() << endl;
 
     map<STEPentity*, STEPentity*> ProductToSRep;
     for (auto ShapeRepRel : instancesByType["Shape_Definition_Representation"]) {
@@ -1090,7 +1107,7 @@ void VRSTEP::buildScenegraph() {
         ProductToSRep[Product.entity] = SRep;
     }
 
-    cout << "VRSTEP::buildScenegraph ProductToSRep " << ProductToSRep.size() << endl;
+    //cout << "VRSTEP::buildScenegraph ProductToSRep " << ProductToSRep.size() << endl;
 
     // get product definitions -------------------------------------
     resRoot->setName("STEPRoot");
@@ -1113,7 +1130,7 @@ void VRSTEP::buildScenegraph() {
             if (SRepToGEO.count(srep)) brep = SRepToGEO[srep];
             else brep = srep;
 
-            cout << "VRSTEP::buildScenegraph geo " << name << " " << brep->StepFileId() << " " << ProductToSRep.count(Product.entity) << " " << SRepToGEO.count(srep) << endl;
+            //cout << "VRSTEP::buildScenegraph geo " << name << " " << brep->StepFileId() << " " << ProductToSRep.count(Product.entity) << " " << SRepToGEO.count(srep) << endl;
 
             VRTransformPtr o;
             if (resGeos.count(brep)) o = resGeos[brep];
@@ -1122,7 +1139,7 @@ void VRSTEP::buildScenegraph() {
         }
     }
 
-    cout << "VRSTEP::buildScenegraph objs " << objs.size() << endl;
+    //cout << "VRSTEP::buildScenegraph objs " << objs.size() << endl;
 
     // build scene graph and set transforms ----------------------------------------
     VRSTEPProductStructure product_structure;
@@ -1150,7 +1167,7 @@ void VRSTEP::buildScenegraph() {
         auto& Relating = getInstance( Assembly.get<1, string, STEPentity*, STEPentity*>() );
         auto& Related  = getInstance( Assembly.get<2, string, STEPentity*, STEPentity*>() );
         if (!Relating || !Related) { cout << "VRSTEP::buildScenegraph Error 18\n" ; continue; }
-        cout << Relating.type << " " << Related.type << endl;
+        //cout << Relating.type << " " << Related.type << endl;
         auto& PDF1 = getInstance( Relating.get<0, STEPentity*>() );
         auto& PDF2 = getInstance( Related.get<0, STEPentity*>() );
         if (!PDF1 || !PDF2) { cout << "VRSTEP::buildScenegraph Error 19\n" ; continue; }
@@ -1180,7 +1197,7 @@ void VRSTEP::buildScenegraph() {
 
     resRoot->addChild( product_structure.construct() );
 
-    cout << "VRSTEP::buildScenegraph objs " << objs.size() << endl;
+    //cout << "VRSTEP::buildScenegraph objs " << objs.size() << endl;
     cout << blueBeg << "VRSTEP::buildScenegraph finished\n" << colEnd;
 }
 
