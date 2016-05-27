@@ -849,35 +849,50 @@ struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
             return;
         }
 
+        // int, vector<STEPentity*>, bool, vector<int>, vector<double>, vector<double>
+        if (EdgeGeo.type == "B_Spline_Curve_With_Knots") { // TODO
+            int deg = EdgeGeo.get<0, int, vector<STEPentity*>, bool, vector<int>, vector<double> >();
+            vector<STEPentity*> control_points = EdgeGeo.get<1, int, vector<STEPentity*>, bool, vector<int>, vector<double> >();
+            if (control_points.size() <= 1) cout << "Warning: No control points of B_Spline_Curve_With_Knots" << endl;
+            cout << "B_Spline_Curve_With_Knots: " << EdgeGeo.ID << " deg: " << deg << " Np: " << control_points.size() << endl;
+            for (auto e : control_points) cout << "  pnt " << toVec3f(e, instances) << endl;
+
+            /*if (deg == 1) { // line
+                points.push_back(EBeg);
+                points.push_back(EEnd);
+                return;
+            }*/
+
+            vector<Vec3f> cpoints;
+            for (auto e : control_points) cpoints.push_back(toVec3f(e, instances));
+
+            auto BSpline = [&](float t) {
+                Vec3f p;
+                for (auto point : cpoints) {
+                    ;
+                }
+                return p;
+            };
+
+            int res = 16;
+            for (int i=0; i<res; i++) {
+                float t = i*1.0/res;
+                Vec3f p = BSpline(t);
+                points.push_back(p);
+            }
+
+            if (points.size() <= 1) cout << "Warning: No edge points of B_Spline_Curve_With_Knots" << endl;
+            return;
+        }
+
+        if (cplx) return; // TODO: is this right?
+
         // int, vector<STEPentity*>, bool
         if (EdgeGeo.type == "B_Spline_Curve" || EdgeGeo.type == "Rational_B_Spline_Curve") { // TODO
-            if (cplx) return;
             int deg = EdgeGeo.get<0, int, vector<STEPentity*>, bool>();
             vector<STEPentity*> control_points = EdgeGeo.get<1, int, vector<STEPentity*>, bool>();
             for (auto e : control_points) points.push_back(toVec3f(e, instances)); // TODO: correct??
             if (points.size() <= 1) cout << "Warning: No edge points of B_Spline_Curve" << endl;
-            return;
-        }
-
-        // int, vector<STEPentity*>, bool, vector<int>, vector<double>, vector<double>
-        if (EdgeGeo.type == "B_Spline_Curve_With_Knots") { // TODO
-            return;
-            int deg = EdgeGeo.get<0, int, vector<STEPentity*>, bool, vector<int>, vector<double> >();
-            vector<STEPentity*> control_points = EdgeGeo.get<1, int, vector<STEPentity*>, bool, vector<int>, vector<double> >();
-            //cout << "B_Spline_Curve_With_Knots: " << EdgeGeo.ID << " deg: " << deg << " Np: " << control_points.size() << endl;
-            //for (auto e : control_points) cout << " pnt " << toVec3f(e, instances) << endl;
-
-            for (auto e : control_points) points.push_back(toVec3f(e, instances)); // TODO: correct??
-            /*if (deg == 1) { // line
-                points.push_back(EBeg);
-                points.push_back(EEnd);
-            }
-
-            if (deg == 5) {
-                ;
-            }*/
-
-            if (points.size() <= 1) cout << "Warning: No edge points of B_Spline_Curve_With_Knots" << endl;
             return;
         }
 
