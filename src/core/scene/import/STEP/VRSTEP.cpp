@@ -200,17 +200,23 @@ template<class T> void VRSTEP::addType(string typeName, string path, string cpat
     types[typeName] = type;
 }
 
-bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, string& t, char c) {
-    if (c == 'S') if (a) if (auto r = a->String() ) { r->asStr(t); return true; }
+bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, string& t, char c, string& type) {
+    if (c == 'S') {
+        if (a) if (auto r = a->String() ) { r->asStr(t); return true; }
+        if (an) { t = ((StringNode*)an)->value.c_str(); return true; }
+    }
     return false;
 }
 
-bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, int& t, char c) {
-    if (c == 'i') if (a) if (auto r = a->Integer() ) { t = *r; return true; }
+bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, int& t, char c, string& type) {
+    if (c == 'i') {
+        if (a) if (auto r = a->Integer() ) { t = *r; return true; }
+        if (an) { t = ((IntNode*)an)->value; return true; }
+    }
     return false;
 }
 
-bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, STEPentity*& t, char c) {
+bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, STEPentity*& t, char c, string& type) {
     if (c == 'e') {
         if (e) { t = e; return true; }
         if (an) { t = ((STEPentity*)((EntityNode*)an)->node); return true; }
@@ -218,7 +224,7 @@ bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, STEPentity*& 
     return false;
 }
 
-bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, double& t, char c) {
+bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, double& t, char c, string& type) {
     if (c == 'f') {
         if (a) if (auto r = a->Real() ) { t = *r; return true; }
         if (an) { t = ((RealNode*)an)->value; return true; }
@@ -226,17 +232,23 @@ bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, double& t, ch
     return false;
 }
 
-bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, bool& t, char c) {
-    if (c == 'b') if (a) if (auto r = a->Boolean() ) { t = *r; return true; }
+bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, bool& t, char c, string& type) {
+    if (c == 'b') {
+        if (a) if (auto r = a->Boolean() ) { t = *r; return true; }
+        if (an) { t = ((IntNode*)an)->value; return true; } // TODO, check this!
+    }
     return false;
 }
 
-template<typename T> bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, vector<T>& vec, char t) {
+template<typename T> bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, vector<T>& vec, char t, string& type) {
+    //cout << type << " " << e->StepFileId() << ": get V" << t << " values: ";
     for( ; an != NULL; an = an->NextNode() ) {
         T v;
-        if (!getValue(0,0,an,v,t)) return false;
+        if (!getValue(0,0,an,v,t,type)) { /*cout << endl;*/ return false; }
+        //cout << " " << v;
         vec.push_back(v);
     }
+    //cout << endl;
     return true;
 }
 
@@ -421,7 +433,7 @@ template<typename T> bool VRSTEP::query(STEPentity* e, string path, T& t, string
             if (!curAttr) continue;
             curAggr = curAttr->Aggregate();
             if (!curAggr) { warn(i, " is not an Aggregate!"); return false; } // TODO
-            return getValue(e, curAttr, curAggr->GetHead(), t, path[i+1]);
+            return getValue(e, curAttr, curAggr->GetHead(), t, path[i+1], type);
         }
 
         if (c == 'c') {
@@ -435,7 +447,7 @@ template<typename T> bool VRSTEP::query(STEPentity* e, string path, T& t, string
             curAttr = 0;
         }
 
-        if (isLast) return getValue(e, curAttr, curAggrNode, t, c);
+        if (isLast) return getValue(e, curAttr, curAggrNode, t, c, type);
         //if (isLast) cout << " t " << t << endl;
     }
     return false;
@@ -853,33 +865,59 @@ struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
         if (EdgeGeo.type == "B_Spline_Curve_With_Knots") { // TODO
             int deg = EdgeGeo.get<0, int, vector<STEPentity*>, bool, vector<int>, vector<double> >();
             vector<STEPentity*> control_points = EdgeGeo.get<1, int, vector<STEPentity*>, bool, vector<int>, vector<double> >();
+            vector<int> multiplicities = EdgeGeo.get<3, int, vector<STEPentity*>, bool, vector<int>, vector<double> >();
+            vector<double> knots = EdgeGeo.get<4, int, vector<STEPentity*>, bool, vector<int>, vector<double> >();
             if (control_points.size() <= 1) cout << "Warning: No control points of B_Spline_Curve_With_Knots" << endl;
-            cout << "B_Spline_Curve_With_Knots: " << EdgeGeo.ID << " deg: " << deg << " Np: " << control_points.size() << endl;
+            cout << "B_Spline_Curve_With_Knots: " << EdgeGeo.ID << " deg: " << deg << " Np: " << control_points.size() << " " << knots.size() << endl;
             for (auto e : control_points) cout << "  pnt " << toVec3f(e, instances) << endl;
-
-            /*if (deg == 1) { // line
-                points.push_back(EBeg);
-                points.push_back(EEnd);
-                return;
-            }*/
+            for (auto k : knots) cout << "  knot " << k << endl;
 
             vector<Vec3f> cpoints;
             for (auto e : control_points) cpoints.push_back(toVec3f(e, instances));
 
+            if (multiplicities.size() != knots.size()) { cout << "B_Spline_Curve_With_Knots, multiplicities and knots do not match: " << knots.size() << " " << multiplicities.size() << endl; return; }
+
+            // apply knot multiplicities
+            vector<double> tmp;
+            for (int i=0; i<knots.size(); i++) {
+                for (int j=0; j<multiplicities[i]; j++) tmp.push_back(knots[i]);
+            }
+            knots = tmp;
+            if (knots.size() < cpoints.size() + deg + 1) { cout << "B_Spline_Curve_With_Knots, not enough knots: " << knots.size() << endl; return; }
+
+            std::function<float (float,int,int)> Bik = [&](float t, int i, int k) -> float {
+                float ti = knots[i];
+                float ti1 = knots[i+1];
+                float tik_1 = knots[i+k-1];
+                float tik = knots[i+k];
+                //cout << "   bik " << Vec4f(ti, ti1, tik_1, tik) << endl;
+                if (k == 1) {
+                    if (t >= ti && t <= ti1) return 1;
+                    else return 0;
+                }
+                float A = tik_1 == ti ? 0 : Bik(t, i, k-1)*(t-ti)/(tik_1-ti);
+                float B = tik == ti1 ? 0 : Bik(t, i+1, k-1)*(tik - t)/(tik - ti1);
+                return A + B;
+            };
+
             auto BSpline = [&](float t) {
                 Vec3f p;
-                for (auto point : cpoints) {
-                    ;
+                for (int i=0; i<cpoints.size(); i++) {
+                    //cout << "  BSpline " << cpoints[i] << ", " << Bik(t, i, deg) << endl;
+                    p += cpoints[i]*Bik(t, i, deg);
                 }
                 return p;
             };
 
-            int res = 16;
+            int res = 8;
+            //cout << "BSpline: " << endl;
             for (int i=0; i<res; i++) {
                 float t = i*1.0/res;
                 Vec3f p = BSpline(t);
                 points.push_back(p);
+                cout << "  BSpline t=" << t << " : " << p << endl;
             }
+            //cout << endl;
 
             if (points.size() <= 1) cout << "Warning: No edge points of B_Spline_Curve_With_Knots" << endl;
             return;
