@@ -16,6 +16,8 @@ VRGeometryPtr VRBRepSurface::build(string type) {
     Matrix mI = m;
     mI.invert();
 
+    //type = "bla";
+
     if (type == "Plane") {
         Triangulator t;
         if (bounds.size() == 0) cout << "Warning: No bounds!\n";
@@ -100,7 +102,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
         };
 
         // tesselate the result while projecting it back on the surface
-        if (g) if (auto gg = g->getMesh()) {
+        if (g and true) if (auto gg = g->getMesh()) {
             TriangleIterator it;
             VRGeoData nMesh;
             Vec3f n(0,0,1);
@@ -366,7 +368,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
         }
 
         // project the points back into 3D space
-        if (g) {
+        if (g and true) {
             auto gg = g->getMesh();
             if (gg) {
                 GeoVectorPropertyRecPtr pos = gg->getPositions();

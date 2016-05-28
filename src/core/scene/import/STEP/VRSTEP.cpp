@@ -829,6 +829,7 @@ struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
         int Np = points.size();
 
         if (EdgeGeo.type == "Line") {
+            cout << "  edge type " << EdgeGeo.type << endl;
             //Vec3f p = toVec3f( EdgeGeo.get<0, STEPentity*, STEPentity*>(), instances );
             //Vec3f d = toVec3f( EdgeGeo.get<1, STEPentity*, STEPentity*>(), instances );
             points.push_back(EBeg);
@@ -838,6 +839,7 @@ struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
         }
 
         if (EdgeGeo.type == "Circle") {
+            cout << "  edge type " << EdgeGeo.type << endl;
             pose c = toPose( EdgeGeo.get<0, STEPentity*, double>(), instances );
             float r = EdgeGeo.get<1, STEPentity*, double>();
             float _r = 1/r;
@@ -861,19 +863,29 @@ struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
             return;
         }
 
-        // int, vector<STEPentity*>, bool, vector<int>, vector<double>, vector<double>
-        if (EdgeGeo.type == "B_Spline_Curve_With_Knots") { // TODO
+        // int, vector<STEPentity*>, bool, vector<int>, vector<double>
+        if (EdgeGeo.type == "B_Spline_Curve_With_Knots") { // TODO -> strange artifacts on cylinder!!
+            cout << "  edge type " << EdgeGeo.type << endl;
             int deg = EdgeGeo.get<0, int, vector<STEPentity*>, bool, vector<int>, vector<double> >();
             vector<STEPentity*> control_points = EdgeGeo.get<1, int, vector<STEPentity*>, bool, vector<int>, vector<double> >();
             vector<int> multiplicities = EdgeGeo.get<3, int, vector<STEPentity*>, bool, vector<int>, vector<double> >();
             vector<double> knots = EdgeGeo.get<4, int, vector<STEPentity*>, bool, vector<int>, vector<double> >();
             if (control_points.size() <= 1) cout << "Warning: No control points of B_Spline_Curve_With_Knots" << endl;
-            cout << "B_Spline_Curve_With_Knots: " << EdgeGeo.ID << " deg: " << deg << " Np: " << control_points.size() << " " << knots.size() << endl;
-            for (auto e : control_points) cout << "  pnt " << toVec3f(e, instances) << endl;
-            for (auto k : knots) cout << "  knot " << k << endl;
+            //cout << "B_Spline_Curve_With_Knots: " << EdgeGeo.ID << " deg: " << deg << " Np: " << control_points.size() << " " << knots.size() << endl;
+            //for (auto e : control_points) cout << "  pnt " << toVec3f(e, instances) << endl;
+            //for (auto k : knots) cout << "  knot " << k << endl;
 
             vector<Vec3f> cpoints;
             for (auto e : control_points) cpoints.push_back(toVec3f(e, instances));
+
+            // test hard coded weights
+            vector<double> weights;
+            if (cplx && cpoints.size() == 4) {
+                weights.push_back(1);
+                weights.push_back(0.333);
+                weights.push_back(0.333);
+                weights.push_back(1);
+            } else for (auto p : cpoints) weights.push_back(1);
 
             if (multiplicities.size() != knots.size()) { cout << "B_Spline_Curve_With_Knots, multiplicities and knots do not match: " << knots.size() << " " << multiplicities.size() << endl; return; }
 
@@ -888,36 +900,35 @@ struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
             std::function<float (float,int,int)> Bik = [&](float t, int i, int k) -> float {
                 float ti = knots[i];
                 float ti1 = knots[i+1];
-                float tik_1 = knots[i+k-1];
                 float tik = knots[i+k];
+                float tik1 = knots[i+k+1];
+                float tL = knots[knots.size()-1];
                 //cout << "   bik " << Vec4f(ti, ti1, tik_1, tik) << endl;
-                if (k == 1) {
+                if (k == 0) {
                     if (t >= ti && t <= ti1) return 1;
+                    if (t == ti1 && t == tL) return 1;
                     else return 0;
                 }
-                float A = tik_1 == ti ? 0 : Bik(t, i, k-1)*(t-ti)/(tik_1-ti);
-                float B = tik == ti1 ? 0 : Bik(t, i+1, k-1)*(tik - t)/(tik - ti1);
+                float A = tik == ti ? 0 : Bik(t, i, k-1)*(t-ti)/(tik-ti);
+                float B = tik1 == ti1 ? 0 : Bik(t, i+1, k-1)*(tik1 - t)/(tik1 - ti1);
                 return A + B;
             };
 
             auto BSpline = [&](float t) {
                 Vec3f p;
-                for (int i=0; i<cpoints.size(); i++) {
-                    //cout << "  BSpline " << cpoints[i] << ", " << Bik(t, i, deg) << endl;
-                    p += cpoints[i]*Bik(t, i, deg);
-                }
+                float W = 0;
+                for (int i=0; i<cpoints.size(); i++) W += Bik(t, i, deg)*weights[i];
+                for (int i=0; i<cpoints.size(); i++) p += cpoints[i]*Bik(t, i, deg)*weights[i]/W;
                 return p;
             };
 
-            int res = 8;
-            //cout << "BSpline: " << endl;
-            for (int i=0; i<res; i++) {
-                float t = i*1.0/res;
+            int res = (Ncurv - 1)*0.5 +1;
+            float T = knots[knots.size()-1] - knots[0];
+            for (int i=0; i<=res; i++) {
+                float t = i*T/res;
                 Vec3f p = BSpline(t);
-                points.push_back(p);
-                cout << "  BSpline t=" << t << " : " << p << endl;
+                points.push_back(p); // TODO: this line induces the strange artifacts!!
             }
-            //cout << endl;
 
             if (points.size() <= 1) cout << "Warning: No edge points of B_Spline_Curve_With_Knots" << endl;
             return;
@@ -927,6 +938,7 @@ struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
 
         // int, vector<STEPentity*>, bool
         if (EdgeGeo.type == "B_Spline_Curve" || EdgeGeo.type == "Rational_B_Spline_Curve") { // TODO
+            cout << "  edge type " << EdgeGeo.type << endl;
             int deg = EdgeGeo.get<0, int, vector<STEPentity*>, bool>();
             vector<STEPentity*> control_points = EdgeGeo.get<1, int, vector<STEPentity*>, bool>();
             for (auto e : control_points) points.push_back(toVec3f(e, instances)); // TODO: correct??
@@ -938,6 +950,7 @@ struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
     }
 
     Edge(Instance& i, map<STEPentity*, Instance>& instances) : Instance(i) {
+        cout << " NEW EDGE " << i.ID << endl;
         if (i.type == "Oriented_Edge") {
             auto& EdgeElement = instances[ i.get<0, STEPentity*, bool>() ];
             bool edir = i.get<1, STEPentity*, bool>();
@@ -965,6 +978,7 @@ struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
 
 struct VRSTEP::Bound : public VRSTEP::Instance, public VRBRepBound {
     Bound(Instance& i, map<STEPentity*, Instance>& instances) : Instance(i) {
+        cout << "BOUND " << i.ID << endl;
         BRepType = type;
         if (type != "Face_Outer_Bound") outer = false;
         if (type == "Face_Bound" || type == "Face_Outer_Bound") {
@@ -1017,6 +1031,8 @@ struct VRSTEP::Surface : public VRSTEP::Instance, public VRBRepSurface {
 void VRSTEP::buildGeometries() {
     cout << blueBeg << "VRSTEP::buildGeometries start\n" << colEnd;
     for (auto BrepShape : instancesByType["Advanced_Brep_Shape_Representation"]) {
+        static int i=0; i++;
+        //if (i != 5) continue;
 
         string name = BrepShape.get<0, string, vector<STEPentity*> >();
         auto geo = VRGeometry::create(name);
