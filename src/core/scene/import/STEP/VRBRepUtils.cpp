@@ -2,7 +2,7 @@
 
 using namespace OSG;
 
-const float VRBRepUtils::Dangle = 2*Pi/VRBRepUtils::Ncurv;
+const float VRBRepUtils::Dangle = 2*Pi/(VRBRepUtils::Ncurv-1);
 vector<float> VRBRepUtils::Adict;
 
 VRBRepUtils::VRBRepUtils() {
@@ -14,10 +14,17 @@ bool VRBRepUtils::sameVec(const Vec3f& v1, const Vec3f& v2, float d) {
     return ( abs(dv[0]) < d && abs(dv[1]) < d && abs(dv[2]) < d );
 }
 
-int VRBRepUtils::getSide(float a) {
-    int i;
-    i = a/Dangle;
-    return i;
+int VRBRepUtils::getSideN(float a) {
+    return round( a/Dangle - 0.5 );
+}
+
+Vec2f VRBRepUtils::getSide(float a) {
+    int i = getSideN(a);
+    return getSide(i);
+}
+
+Vec2f VRBRepUtils::getSide(int i) {
+    return Vec2f(i*Dangle, (i+1)*Dangle);
 }
 
 vector<float> VRBRepUtils::angleFrame(float a1, float a2) {

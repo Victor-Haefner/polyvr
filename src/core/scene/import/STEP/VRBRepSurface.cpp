@@ -19,6 +19,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
     //type = "bla";
 
     if (type == "Plane") {
+        //return 0;
         Triangulator t;
         if (bounds.size() == 0) cout << "Warning: No bounds!\n";
         for (auto b : bounds) {
@@ -102,7 +103,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
         };
 
         // tesselate the result while projecting it back on the surface
-        if (g and true) if (auto gg = g->getMesh()) {
+        if (g) if (auto gg = g->getMesh()) {
             TriangleIterator it;
             VRGeoData nMesh;
             Vec3f n(0,0,1);
@@ -145,6 +146,8 @@ VRGeometryPtr VRBRepSurface::build(string type) {
                 else nMesh.pushTri(b,e,d);
             };
 
+            //map<int, Vec2f> vertSides;
+
             for (it = TriangleIterator(gg); !it.isAtEnd() ;++it) {
                 vector<Pnt3f> p(3);
                 vector<Vec3f> v(3);
@@ -169,8 +172,10 @@ VRGeometryPtr VRBRepSurface::build(string type) {
                 for (int i=1; i<rays.size(); i++) {
                     sides.push_back( Vec2f(rays[i-1], rays[i]) ); // get all cylinder faces
                     for (int j=0; j<3; j++) { // find out on what cylinder face each vertex lies
+                        int vID = it.getIndex(j);
                         if (p[j][0] >= rays[i-1] && p[j][0] <= rays[i]) {
                             pSides[j] = i-1;
+                            //vertSides[vID] = *sides.rbegin();
                         }
                     }
                 }
@@ -184,7 +189,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
                 //cout << " ordered vertices " << pOrder << "  " << pSides[pOrder[0]] << " " << pSides[pOrder[1]] << " " << pSides[pOrder[2]] << endl;
 
                 // test first case: all vertices on the same cylinder face
-                if (pSides[0] == pSides[1] && pSides[0] == pSides[2]) {
+                if (pSides[0] == pSides[1] && pSides[0] == pSides[2]) { // DEBUGGING
                     //cout << "  case 1" << endl;
                     pushTri(p[0],p[1],p[2]);
                     continue;
@@ -365,34 +370,40 @@ VRGeometryPtr VRBRepSurface::build(string type) {
             }
 
             nMesh.apply(g);
-        }
 
-        // project the points back into 3D space
-        if (g and true) {
-            auto gg = g->getMesh();
-            if (gg) {
-                GeoVectorPropertyRecPtr pos = gg->getPositions();
-                GeoVectorPropertyRecPtr norms = gg->getNormals();
-                if (pos) {
-                    for (int i=0; i<pos->size(); i++) {
-                        Pnt3f p = pos->getValue<Pnt3f>(i);
-                        Vec3f n = norms->getValue<Vec3f>(i);
-                        n = Vec3f(cos(p[0]), sin(p[0]), 0);
-                        p[2] = p[1];
-                        p[1] = n[1]*R;
-                        p[0] = n[0]*R;
-                        pos->setValue(p, i);
-                        norms->setValue(n, i);
-                    }
+            // project the points back into 3D space
+            GeoVectorPropertyRecPtr pos = gg->getPositions();
+            GeoVectorPropertyRecPtr norms = gg->getNormals();
+            if (pos) {
+                for (int i=0; i<pos->size(); i++) {
+                    Pnt3f p = pos->getValue<Pnt3f>(i);
+                    Vec3f n = norms->getValue<Vec3f>(i);
+                    n = Vec3f(cos(p[0]), sin(p[0]), 0);
+
+                    Vec2f side = getSide(p[0]);
+                    Vec3f A = Vec3f(R*cos(side[0]), R*sin(side[0]), 0);
+                    Vec3f B = Vec3f(R*cos(side[1]), R*sin(side[1]), 0);
+                    Vec3f D = B-A;
+                    D.normalize();
+
+                    float t = (A[0]*D[1] - A[1]*D[0]) / (n[0]*D[1] - n[1]*D[0]);
+
+                    cout << "p: " << p[0]/Pi*180 << " AB: " << side*(180/Pi) << " s: " << getSideN(p[0]) << endl;
+                    if (p[0] < side[0] || p[0] > side[1]) cout << "   AAAH\n";
+
+                    p[2] = p[1];
+                    p[1] = n[1]*t;
+                    p[0] = n[0]*t;
+
+                    pos->setValue(p, i);
+                    norms->setValue(n, i);
                 }
             }
-            g->setMatrix(m);
         }
 
-        //auto m = VRMaterial::create("mat");
-        //m->setWireFrame(1); // test
-        //g->setMaterial(m);
-        return g;
+        if (g) g->setMatrix(m);
+        if (g && g->getMesh() && g->getMesh()->getPositions() && g->getMesh()->getPositions()->size() > 0) return g;
+        return 0;
     }
 
     if (type == "B_Spline_Surface") {

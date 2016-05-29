@@ -1052,8 +1052,8 @@ void VRSTEP::buildGeometries() {
                             Bound bound(b, instances);
                             surface.bounds.push_back(bound);
                         }
-                        geo->merge( surface.build(surface.type) );
-                        //geo->addChild( surface.build(surface.type) );
+                        //geo->merge( surface.build(surface.type) );
+                        geo->addChild( surface.build(surface.type) );
                     } else cout << "VRSTEP::buildGeometries Error 2 " << Face.type << " " << Face.ID << endl;
                 }
             } else if (Item.type == "Axis2_Placement_3d") { // ignore?
