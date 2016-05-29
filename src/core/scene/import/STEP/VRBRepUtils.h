@@ -9,7 +9,7 @@ OSG_BEGIN_NAMESPACE;
 class VRBRepUtils {
     protected:
 
-        static const int Ncurv = 5;//17; // N in 2pi - should be multiple of 4 +1
+        static const int Ncurv = 17;//17; // N in 2pi - should be multiple of 4 +1
         static const float Dangle; // angle segment
         static vector<float> Adict; // all angles
 
@@ -18,6 +18,12 @@ class VRBRepUtils {
         int getSideN(float a);
         Vec2f getSide(float a);
         Vec2f getSide(int i);
+
+        // B Splines
+        float Bik(float t, int i, int k, const vector<double>& knots);
+        Vec3f BSpline(float t, int deg, const vector<Vec3f>& cpoints, const vector<double>& knots);
+        Vec3f BSplineW(float t, int deg, const vector<Vec3f>& cpoints, const vector<double>& knots, const vector<double>& weights);
+        Vec3f BSpline(float u, float v, int degu, int degv, const vector<Vec3f>& cpoints);
 
     public:
         VRBRepUtils();

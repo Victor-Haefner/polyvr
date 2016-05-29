@@ -30,34 +30,47 @@ Vec2f VRBRepUtils::getSide(int i) {
 vector<float> VRBRepUtils::angleFrame(float a1, float a2) {
     if (a1 > a2) a2 += 2*Pi;
     vector<float> angles;
-
-    float Da = abs(a2-a1);
-    int N = Ncurv * Da/(2*Pi);
-    float a = a1;
     angles.push_back(a1);
-    for (int i=1; i<N; i++) {
-        a = a1+i*(Da/N);
-        angles.push_back(a);
-    }
+    int s1 = getSideN(a1);
+    float a = s1*Dangle;
+    while (a <= a1) a += Dangle;
+    for(; a < a2; a += Dangle) angles.push_back(a);
     angles.push_back(a2);
-
-    // print
-    /*cout << "angles: " << a1 << " " << a2 << " :";
-    for (float a : angles) cout << " " << a;
-    cout << endl;*/
-
-    /*
-
-    int i1 = getSide(a1);
-    int i2 = getSide(a2);
-
-    angles.push_back(a1);
-
-    for (float a = i1*Dangle; a < i2*Dangle; a += Dangle) {
-        cout << " angle " << a << endl;
-        angles.push_back(a);
-    }
-
-    angles.push_back(a2);*/
     return angles;
 }
+
+float VRBRepUtils::Bik(float t, int i, int k, const vector<double>& knots) {
+    float ti = knots[i];
+    float ti1 = knots[i+1];
+    float tik = knots[i+k];
+    float tik1 = knots[i+k+1];
+    float tL = knots[knots.size()-1];
+    if (k == 0) {
+        if (t >= ti && t <= ti1) return 1;
+        if (t == ti1 && t == tL) return 1;
+        else return 0;
+    }
+    float A = tik == ti ? 0 : Bik(t, i, k-1, knots)*(t-ti)/(tik-ti);
+    float B = tik1 == ti1 ? 0 : Bik(t, i+1, k-1, knots)*(tik1 - t)/(tik1 - ti1);
+    return A + B;
+}
+
+Vec3f VRBRepUtils::BSpline(float t, int deg, const vector<Vec3f>& cpoints, const vector<double>& knots) {
+    Vec3f p;
+    for (int i=0; i<cpoints.size(); i++) p += cpoints[i]*Bik(t, i, deg, knots);
+    return p;
+}
+
+Vec3f VRBRepUtils::BSplineW(float t, int deg, const vector<Vec3f>& cpoints, const vector<double>& knots, const vector<double>& weights) {
+    Vec3f p;
+    float W = 0;
+    for (int i=0; i<cpoints.size(); i++) W += Bik(t, i, deg, knots)*weights[i];
+    for (int i=0; i<cpoints.size(); i++) p += cpoints[i]*Bik(t, i, deg, knots)*weights[i]/W;
+    return p;
+}
+
+Vec3f VRBRepUtils::BSpline(float u, float v, int degu, int degv, const vector<Vec3f>& cpoints) {
+    return Vec3f();
+}
+
+
