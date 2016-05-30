@@ -30,6 +30,7 @@ struct VRPyMaterial : VRPyBaseT<OSG::VRMaterial> {
     static PyObject* setStencilBuffer(VRPyMaterial* self, PyObject* args);
     static PyObject* getTexture(VRPyMaterial* self, PyObject* args);
     static PyObject* setDepthTest(VRPyMaterial* self, PyObject* args);
+    static PyObject* setFrontBackModes(VRPyMaterial* self, PyObject* args);
 
     static PyObject* setPointSize(VRPyMaterial* self, PyObject* args);
     static PyObject* setLineWidth(VRPyMaterial* self, PyObject* args);

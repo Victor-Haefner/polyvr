@@ -37,6 +37,7 @@ PyMethodDef VRPyMaterial::methods[] = {
     {"addPass", (PyCFunction)VRPyMaterial::addPass, METH_NOARGS, "Add a new pass - i addPass()" },
     {"remPass", (PyCFunction)VRPyMaterial::remPass, METH_VARARGS, "Remove a pass - remPass(i)" },
     {"setActivePass", (PyCFunction)VRPyMaterial::setActivePass, METH_VARARGS, "Activate a pass - setActivePass(i)" },
+    {"setFrontBackModes", (PyCFunction)VRPyMaterial::setFrontBackModes, METH_VARARGS, "Set the draw mode of front and back faces - setFrontBackModes(front, back)\n\tmode can be: GL_NONE, GL_FILL, GL_BACK" },
     {"setZOffset", (PyCFunction)VRPyMaterial::setZOffset, METH_VARARGS, "Set the z offset factor and bias - setZOffset(factor, bias)" },
     {"setSortKey", (PyCFunction)VRPyMaterial::setSortKey, METH_VARARGS, "Set the sort key" },
     {"setTexture", (PyCFunction)VRPyMaterial::setTexture, METH_VARARGS, "Set the texture - setTexture(str path)\n - setTexture([[r,g,b]], [xN, yN, zN], bool isFloat)\n - setTexture([[r,g,b,a]], [xN, yN, zN], bool isFloat)" },
@@ -46,6 +47,19 @@ PyMethodDef VRPyMaterial::methods[] = {
     {"setDefaultVertexShader", (PyCFunction)VRPyMaterial::setDefaultVertexShader, METH_NOARGS, "Set a default vertex shader - setDefaultVertexShader()" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyMaterial::setFrontBackModes(VRPyMaterial* self, PyObject* args) {
+	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::enableTransparency, C obj is invalid"); return NULL; }
+	const char* s1 = "GL_FILL";
+	const char* s2 = "GL_FILL";
+    if (! PyArg_ParseTuple(args, "s|s", &s1, &s2)) return NULL;
+    cout << "setFrontBackModes " << s1 << " " << s2 << endl;
+    int m1 = toGLConst(string(s1));
+    int m2 = toGLConst(string(s2));
+    cout << "setFrontBackModes " << m1 << " " << m2 << endl;
+	self->objPtr->setFrontBackModes(m1, m2);
+	Py_RETURN_TRUE;
+}
 
 PyObject* VRPyMaterial::enableTransparency(VRPyMaterial* self) {
 	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::enableTransparency, C obj is invalid"); return NULL; }
