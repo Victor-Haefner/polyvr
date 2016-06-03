@@ -521,13 +521,13 @@ PyObject* VRPyTransform::applyConstantTorque(VRPyTransform* self, PyObject *args
 
 PyObject* VRPyTransform::getForce(VRPyTransform* self) {
     if (!self->valid()) return NULL;
-    OSG::Vec3f i = self->objPtr->getPhysics()->getTorque();
+    OSG::Vec3f i = self->objPtr->getPhysics()->getForce();
      return toPyTuple(i);
 }
 
 PyObject* VRPyTransform::getTorque(VRPyTransform* self) {
     if (!self->valid()) return NULL;
-    OSG::Vec3f i = self->objPtr->getPhysics()->getForce();
+    OSG::Vec3f i = self->objPtr->getPhysics()->getTorque();
     return toPyTuple(i);
 }
 
