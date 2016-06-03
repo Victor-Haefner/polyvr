@@ -318,7 +318,13 @@ void VRDemos::on_advanced_start() {
     if (no_scripts && scene) scene->disableAllScripts();
 }
 
-void VRDemos::on_diag_save_clicked() {
+void VRDemos::normFileName(string& path) {
+    string e = path.substr(path.size()-4, path.size());
+    if (e == ".xml" || e == ".pvr") return;
+    path += ".pvr";
+}
+
+void VRDemos::on_diag_save_clicked() { // TODO: check if ending is .pvr
     string path = VRGuiFile::getRelativePath_toWorkdir();
     addEntry(path, "favorites_tab", false);
     VRSceneManager::get()->addFavorite(path);
@@ -356,6 +362,7 @@ void VRDemos::on_diag_new_clicked() {
     //string path = VRGuiFile::getRelativePath_toOrigin();
     string path = VRGuiFile::getPath();
     if (path == "") return;
+    normFileName(path);
     VRSceneManager::get()->newScene(path);
     addEntry(path, "favorites_tab", true);
     VRSceneManager::get()->addFavorite(path);

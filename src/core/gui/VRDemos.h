@@ -70,6 +70,8 @@ class VRDemos {
         void updatePixmap(demoEntry* e, Gtk::Image* img_pxb, int w, int h);
         void update();
 
+        void normFileName(string& f);
+
         void initMenu();
         void on_menu_delete();
         void on_menu_advanced(demoEntry* e = 0);
