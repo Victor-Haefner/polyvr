@@ -81,12 +81,19 @@ void VRGuiFile::setWidget(Gtk::Table* table) {
     vbox->show_all();
 }
 
-void VRGuiFile::addFilter(string name, string pattern) {
+void VRGuiFile::addFilter(string name, int N, ...) {
     if (dialog == 0) init();
 
     Gtk::FileFilter* filter = new Gtk::FileFilter();
     filter->set_name(name);
-    filter->add_pattern(pattern);
+
+    va_list ap;
+    va_start(ap, N);
+    for (int i=0; i<N; i++) {
+        string pattern = string( va_arg(ap, const char*) );
+        filter->add_pattern(pattern);
+    }
+    va_end(ap);
 
     dialog->add_filter(*filter);
 }

@@ -738,11 +738,11 @@ void VRGuiScene::on_menu_add_file() {
     VRGuiFile::gotoPath( scene->getWorkdir() );
     VRGuiFile::setCallbacks( sigc::mem_fun(*this, &VRGuiScene::on_collada_import_clicked) );
     VRGuiFile::clearFilter();
-    VRGuiFile::addFilter("All", "*");
-    VRGuiFile::addFilter("COLLADA", "*.dae");
-    VRGuiFile::addFilter("VRML", "*.wrl");
-    VRGuiFile::addFilter("3DS", "*.3ds");
-    VRGuiFile::addFilter("OBJ", "*.obj");
+    VRGuiFile::addFilter("All", 1, "*");
+    VRGuiFile::addFilter("COLLADA", 1, "*.dae");
+    VRGuiFile::addFilter("VRML", 1, "*.wrl");
+    VRGuiFile::addFilter("3DS", 1, "*.3ds");
+    VRGuiFile::addFilter("OBJ", 1, "*.obj");
     VRGuiFile::open( "Load", Gtk::FILE_CHOOSER_ACTION_OPEN, "Load geometric data" );
 }
 

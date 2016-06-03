@@ -347,8 +347,8 @@ void VRDemos::on_load_clicked() {
     VRGuiFile::setCallbacks( sigc::mem_fun(*this, &VRDemos::on_diag_load_clicked) );
     VRGuiFile::gotoPath( g_get_home_dir() );
     VRGuiFile::clearFilter();
-    VRGuiFile::addFilter("Project", "*.xml");
-    VRGuiFile::addFilter("All", "*");
+    VRGuiFile::addFilter("Project", 2, "*.xml", "*.pvr");
+    VRGuiFile::addFilter("All", 1, "*");
     VRGuiFile::open( "Load", Gtk::FILE_CHOOSER_ACTION_OPEN, "Load project" );
 }
 

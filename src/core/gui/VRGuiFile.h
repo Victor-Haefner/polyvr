@@ -34,7 +34,7 @@ class VRGuiFile {
 
         static void gotoPath(string path);
         static void setFile(string file);
-        static void addFilter(string name, string pattern);
+        static void addFilter(string name, int N, ...);
         static void clearFilter();
 
         static void setCallbacks(sig sa = sig(), sig sc = sig(), sig ss = sig());

@@ -212,8 +212,8 @@ void VRGuiScripts::on_import_clicked() {
     }
 
     VRGuiFile::clearFilter();
-    VRGuiFile::addFilter("Project", "*.xml");
-    VRGuiFile::addFilter("All", "*");
+    VRGuiFile::addFilter("Project", 2, "*.xml", "*.pvr");
+    VRGuiFile::addFilter("All", 1, "*");
     VRGuiFile::setWidget(scriptImportWidget);
     VRGuiFile::setCallbacks( sigc::mem_fun(*this, &VRGuiScripts::on_diag_import), sigc::slot<void>(), sigc::mem_fun(*this, &VRGuiScripts::on_diag_import_select));
     VRGuiFile::open("Import", Gtk::FILE_CHOOSER_ACTION_OPEN, "Import script");
