@@ -59,8 +59,9 @@ vector<string> VREntity::getAtPath(vector<string> path) {
 }
 
 string VREntity::toString() {
-    string data = "Instance " + name;
+    string data = "Entity " + name;
     if (concept) data += " of type " + concept->name;
+    else data += " unknown type";
     data += " with properties:";
     for (auto p : properties) {
         for (auto sp : p.second) {

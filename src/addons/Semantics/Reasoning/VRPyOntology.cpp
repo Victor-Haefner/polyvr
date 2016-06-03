@@ -156,6 +156,7 @@ PyMethodDef VRPyOntology::methods[] = {
     {"getEntities", (PyCFunction)VRPyOntology::getEntities, METH_VARARGS, "Return all entities by concept name - [entity] getEntities( str concept )" },
     {"addConcept", (PyCFunction)VRPyOntology::addConcept, METH_VARARGS, "Add a new concept - concept addConcept( str concept, str parent = "", dict properties {str:str} )" },
     {"addEntity", (PyCFunction)VRPyOntology::addEntity, METH_VARARGS, "Add a new entity - entity addEntity( str name, str concept )" },
+    {"getEntity", (PyCFunction)VRPyOntology::getEntity, METH_VARARGS, "Get a entity by name - entity getEntity( str name )" },
     {"addRule", (PyCFunction)VRPyOntology::addRule, METH_VARARGS, "Add a new rule - addRule( str rule )" },
     {"merge", (PyCFunction)VRPyOntology::merge, METH_VARARGS, "Merge in another ontology - merge( ontology )" },
     {"copy", (PyCFunction)VRPyOntology::copy, METH_NOARGS, "Copy the ontology - ontology copy()" },
@@ -199,6 +200,15 @@ PyObject* VRPyOntology::addEntity(VRPyOntology* self, PyObject* args) {
             entity->set(PyString_AsString(key), PyString_AsString(item));
         }
     }
+    return VRPyEntity::fromSharedPtr( entity );
+}
+
+PyObject* VRPyOntology::getEntity(VRPyOntology* self, PyObject* args) {
+    const char* name = 0;
+    if (! PyArg_ParseTuple(args, "s:addEntity", (char*)&name) ) return NULL;
+    string sname;
+    if (name) sname = name;
+    auto entity = self->objPtr->getInstance(sname);
     return VRPyEntity::fromSharedPtr( entity );
 }
 
