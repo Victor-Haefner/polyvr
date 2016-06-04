@@ -2,6 +2,7 @@
 #define VRBREPUTILS_H_INCLUDED
 
 #include <OpenSG/OSGVector.h>
+#include "core/math/field.h"
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
@@ -23,7 +24,7 @@ class VRBRepUtils {
         float Bik(float t, int i, int k, const vector<double>& knots);
         Vec3f BSpline(float t, int deg, const vector<Vec3f>& cpoints, const vector<double>& knots);
         Vec3f BSplineW(float t, int deg, const vector<Vec3f>& cpoints, const vector<double>& knots, const vector<double>& weights);
-        Vec3f BSpline(float u, float v, int degu, int degv, const vector<Vec3f>& cpoints);
+        Vec3f BSpline(float u, float v, int degu, int degv, const field<Vec3f>& cpoints);
 
     public:
         VRBRepUtils();

@@ -406,37 +406,146 @@ VRGeometryPtr VRBRepSurface::build(string type) {
         return 0;
     }
 
-    // int, int, vector<STEPentity*>, bool, bool, bool
-    // degree_u, degree_v, control_points, u_closed, v_closed, self_intersect
     if (type == "B_Spline_Surface") {
         cout << " BUILD B_Spline_Surface" << endl;
 
+        // ROADMAP
+        //  first idea:
+        //   - tesselate whole BSpline surface (lots of quads)
+        //   - keep uv map of the resulting mesh
+        //   - for each edge point:
+        //      - get nearest quad to point
+        //      - get UV koords of the point on that quad
+        //      - add point UV to polyline
+        //   - triangulate in UV space
+        //   - reuse first tesselation
+        //      - cut quads traversed by edges
+        //      - ignore quads outside of the triangulation
 
-        /*int res = (Ncurv - 1)*0.5;
+
+        Vec3f n(0,0,1);
+        VRGeoData nMesh;
+
+        map<int, map<int, int> > ids;
+
+        cout << "B_Spline_Surface du " << degu << " dv " << degv << "  pw " << cpoints.width << " ph " << cpoints.height << endl;
+
+        int res = (Ncurv - 1)*0.5;
         float T = 1; //knots[knots.size()-1] - knots[0];
         for (int i=0; i<=res; i++) {
+            float u = i*T/res;
             for (int j=0; j<=res; j++) {
-                float t = i*T/res;
-                Vec3f p = BSplineW(u,v, degu, degv, cpoints);
-                points.push_back(p);
+                float v = j*T/res;
+                Vec3f p = BSpline(u,v, degu, degv, cpoints);
+                ids[i][j] = nMesh.pushVert(p,n);
+
+                if (i > 0 && j%2 == 0) nMesh.pushTri(ids[i][j], ids[i-1][j], ids[i-1][j+1]);
+                if (i > 0 && j%2 == 1) nMesh.pushTri(ids[i][j], ids[i][j-1], ids[i-1][j]);
             }
-        }*/
+        }
+
+        auto g = nMesh.asGeometry("BSpline");
 
 
-        Triangulator t;
+        // feed the triangulator with unprojected points
+        /*Triangulator t;
         for (auto b : bounds) {
             polygon poly;
             for(auto p : b.points) {
                 mI.mult(Pnt3f(p),p);
-                poly.addPoint(Vec2f(p[0], p[1]));
+                float u = p[0];
+                float v = p[1];
+                poly.addPoint(Vec2f(u, v));
             }
             if (!poly.isCCW()) poly.turn();
             t.add(poly);
         }
+        auto g = t.compute();*/
 
-        auto g = t.compute();
-        g->setMatrix(m);
-        return g;
+        // tesselate the result while projecting it back on the surface
+        /*if (g) if (auto gg = g->getMesh()) {
+            TriangleIterator it;
+            VRGeoData nMesh;
+            Vec3f n(0,0,1);
+
+            auto checkOrder = [&](Pnt3f p0, Pnt3f p1, Pnt3f p2) {
+                float cp = (p1-p0).cross(p2-p0).dot(n);
+                return (cp >= 0);
+            };
+
+            auto pushTri = [&](Pnt3f p1, Pnt3f p2, Pnt3f p3) {
+                int a = nMesh.pushVert(p1,n);
+                int b = nMesh.pushVert(p2,n);
+                int c = nMesh.pushVert(p3,n);
+                if (checkOrder(p1,p2,p3)) nMesh.pushTri(a,b,c);
+                else nMesh.pushTri(a,c,b);
+            };
+
+            auto pushQuad = [&](Pnt3f p1, Pnt3f p2, Pnt3f p3, Pnt3f p4) {
+                int a = nMesh.pushVert(p1,n);
+                int b = nMesh.pushVert(p2,n);
+                int c = nMesh.pushVert(p3,n);
+                int d = nMesh.pushVert(p4,n);
+                if (checkOrder(p1,p2,p3)) nMesh.pushTri(a,b,c);
+                else nMesh.pushTri(a,c,b);
+                if (checkOrder(p2,p3,p4)) nMesh.pushTri(b,c,d);
+                else nMesh.pushTri(b,d,c);
+            };
+
+            for (it = TriangleIterator(gg); !it.isAtEnd() ;++it) {
+                triangle t(it);
+                if (t.A < 1e-6) continue; // ignore flat triangles
+
+                Vec3i pOrder(0,1,2); // get the order of the vertices
+                for (int i=0; i<3; i++) { // max 3 sort steps
+                    if (pSides[pOrder[0]] > pSides[pOrder[1]]) swap(pOrder[0], pOrder[1]);
+                    else if (pSides[pOrder[0]] > pSides[pOrder[2]]) swap(pOrder[0], pOrder[2]);
+                    else if (pSides[pOrder[1]] > pSides[pOrder[2]]) swap(pOrder[1], pOrder[2]);
+                }
+
+                if (pSides[0] == pSides[1] && pSides[0] == pSides[2]) {
+                    pushTri(t.p[0],t.p[1],t.p[2]);
+                    continue;
+                }
+
+                //cout << " unhandled triangle " << endl;
+            }
+
+            nMesh.apply(g);
+
+            // project the points back into 3D space
+            GeoVectorPropertyRecPtr pos = gg->getPositions();
+            GeoVectorPropertyRecPtr norms = gg->getNormals();
+            if (pos) {
+                for (int i=0; i<pos->size(); i++) {
+                    Pnt3f p = pos->getValue<Pnt3f>(i);
+                    Vec3f n = norms->getValue<Vec3f>(i);
+                    n = Vec3f(cos(p[0]), sin(p[0]), 0);
+
+                    Vec2f side = getSide(p[0]);
+                    Vec3f A = Vec3f(R*cos(side[0]), R*sin(side[0]), 0);
+                    Vec3f B = Vec3f(R*cos(side[1]), R*sin(side[1]), 0);
+                    Vec3f D = B-A;
+                    D.normalize();
+
+                    float t = (A[0]*D[1] - A[1]*D[0]) / (n[0]*D[1] - n[1]*D[0]);
+
+                    //cout << "p: " << p[0]/Pi*180 << " AB: " << side*(180/Pi) << " s: " << getSideN(p[0]) << endl;
+                    //if (p[0] < side[0] || p[0] > side[1]) cout << "   AAAH\n"; // TODO: check this out!
+
+                    p[2] = p[1];
+                    p[1] = n[1]*t;
+                    p[0] = n[0]*t;
+
+                    pos->setValue(p, i);
+                    norms->setValue(n, i);
+                }
+            }
+        }*/
+
+        if (g) g->setMatrix(m);
+        if (g && g->getMesh() && g->getMesh()->getPositions() && g->getMesh()->getPositions()->size() > 0) return g;
+        return 0;
     }
 
     cout << "VRBRepSurface::build Error: unhandled surface type " << type << endl;

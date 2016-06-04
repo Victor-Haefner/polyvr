@@ -69,7 +69,7 @@ Vec3f VRBRepUtils::BSplineW(float t, int deg, const vector<Vec3f>& cpoints, cons
     return p;
 }
 
-Vec3f VRBRepUtils::BSpline(float u, float v, int degu, int degv, const vector<Vec3f>& cpoints) {
+Vec3f VRBRepUtils::BSpline(float u, float v, int degu, int degv, const field<Vec3f>& cpoints) {
     return Vec3f();
 }
 

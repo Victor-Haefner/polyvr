@@ -5,6 +5,7 @@
 #include "VRBRepBound.h"
 
 #include "core/math/pose.h"
+#include "core/math/field.h"
 #include "core/objects/VRObjectFwd.h"
 
 using namespace std;
@@ -15,6 +16,10 @@ class VRBRepSurface : public VRBRepUtils {
         vector<VRBRepBound> bounds;
         pose trans;
         double R = 1;
+
+        field<Vec3f> cpoints;
+        int degu = 0;
+        int degv = 0;
 
     public:
         VRBRepSurface();

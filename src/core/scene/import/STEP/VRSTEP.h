@@ -10,6 +10,7 @@ class STEPaggregate;
 class SDAI_Select;
 class STEPattribute;
 class STEPcomplex;
+class SingleLinkNode;
 
 #include <memory>
 #include <string>
@@ -20,6 +21,7 @@ class STEPcomplex;
 #include "core/objects/VRObjectFwd.h"
 #include "core/utils/VRFunctionFwd.h"
 #include "core/math/pose.h"
+#include "core/math/field.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -103,6 +105,17 @@ class VRSTEP {
         Instance& getInstance(STEPentity* e);
         template<class T> void addType(string type, string path, string cpath, bool print = false);
         template<class T> void parse(STEPentity* e, string path, string cpath, string type);
+
+        bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, string& t, char c, string& type);
+        bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, int& t, char c, string& type);
+        bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, STEPentity*& t, char c, string& type);
+        bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, double& t, char c, string& type);
+        bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, bool& t, char c, string& type);
+        template<typename T> bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, vector<T>& vec, char t, string& type);
+        template<typename T> bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, field<T>& f, char t, string& type);
+        void fieldPush(field<float>& f, string v);
+        void fieldPush(field<STEPentity*>& f, string v);
+
         template<typename T> bool query(STEPentity* e, string path, T& t, string type);
         STEPentity* getSelectEntity(SDAI_Select* s, string ID);
 

@@ -116,7 +116,7 @@ VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, stri
         return cache[path].retrieve(parent);
     } else {
         job->loadCb = VRFunction< VRThreadWeakPtr >::create( "geo load", boost::bind(&LoadJob::load, job, _1) );
-        int t = VRSceneManager::getCurrent()->initThread(job->loadCb, "geo load thread", false, 1);
+        VRSceneManager::getCurrent()->initThread(job->loadCb, "geo load thread", false, 1);
         fillCache(path, res);
         return cache[path].retrieve(parent);
     }
