@@ -153,7 +153,7 @@ void VRSceneManager::searchExercisesAndFavorites() {
 		int N = file.size(); if (N < 6) continue;
 
 		string ending = file.substr(N - 4, N - 1);
-		if (ending != ".xml") continue;
+		if (ending != ".xml" && ending != ".pvr") continue;
 
 		string path = boost::filesystem::canonical("examples/" + file).string();
 		example_paths.push_back(path);
