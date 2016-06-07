@@ -633,10 +633,10 @@ void VRScriptManager::blockScriptThreads() {
     if (pyThreadState) { PyEval_RestoreThread(pyThreadState); pyThreadState = 0; }
 }
 
+map<int, VRThreadCb> pyThreadsTmp;
 PyObject* VRScriptManager::startThread(VRScriptManager* self, PyObject *args) {
     PyObject *pyFkt, *pArgs = 0;
-    if (PyTuple_Size(args) == 1) { if (! PyArg_ParseTuple(args, "O", &pyFkt)) return NULL; }
-    else { if (! PyArg_ParseTuple(args, "OO", &pyFkt, &pArgs)) return NULL; }
+    if (! PyArg_ParseTuple(args, "O|O", &pyFkt, &pArgs)) return NULL;
     Py_IncRef(pyFkt);
 
     if (pArgs != 0) {
@@ -645,14 +645,16 @@ PyObject* VRScriptManager::startThread(VRScriptManager* self, PyObject *args) {
     }
 
     auto pyThread = VRFunction< VRThreadWeakPtr >::create( "pyExecCall", boost::bind(execThread, pyFkt, pArgs, _1) );
-    self->pyThreads.push_back(pyThread);
     int t = VRSceneManager::getCurrent()->initThread(pyThread, "python thread");
+    pyThreadsTmp[t] = pyThread; // need to keep a reference!
+    //self->pyThreads[t] = pyThread; // TODO: self is 0 ???
     return PyInt_FromLong(t);
 }
 
 PyObject* VRScriptManager::joinThread(VRScriptManager* self, PyObject *args) {
     int ID = parseInt(args);
     VRSceneManager::getCurrent()->stopThread(ID);
+    pyThreadsTmp.erase(ID);
     Py_RETURN_TRUE;
 }
 

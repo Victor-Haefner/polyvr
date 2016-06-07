@@ -14,4 +14,5 @@ PolyVR.cscope_file_list
 src/cluster/VRServer
 src/cluster/clusterserver
 src/cluster/clusterclient
-
+examples/tmp_pics/
+extras/python/Leap/*.pyc

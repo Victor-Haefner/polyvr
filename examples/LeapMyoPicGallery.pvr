@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="-0.32989 0.0378165 -0.886817" at_dir="0" base_name="Default" far="512" fov="1.0472" from="0.577086 0.0384568 4.1669" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="-0.32989 0.0378165 -0.886817" at_dir="0" base_name="Default" far="512" fov="1.0472" from="0.622435 0.0384888 4.41959" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
             <Node active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
           </Object>
@@ -14,6 +14,736 @@
   </Objects>
   <Rendering deferred_rendering="0" frustum_culling="1" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
+    <Script name_suffix="0" base_name="devInitLeap" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR, sys
+	
+	# install leapd from 
+	#  https://www.leapmotion.com/setup/linux
+	
+	if not hasattr(VR, 'leapd_init'):
+		from subprocess import call
+		call(["leapd"]) # does nothing if allready running
+		VR.leapd_init = True
+	
+	leapDir = VR.getSystemDirectory('ROOT') + '/extras/python/Leap'
+	sys.path.append(leapDir)
+	
+	import Leap, thread, time
+	from Leap import CircleGesture, KeyTapGesture, ScreenTapGesture, SwipeGesture
+	
+	def zoomIn(t):
+		VR.moveGallery(VR.R0 + t*0.5, VR.GalAngle)
+		
+	def zoomOut(t):
+		VR.moveGallery(VR.R0 - t*0.5, VR.GalAngle)
+		
+	def rotateL(t):
+		VR.moveGallery(VR.GalRadius, VR.A0 - t*0.5)
+		
+	def rotateR(t):
+		VR.moveGallery(VR.GalRadius, VR.A0 + t*0.5)
+	
+	class SampleListener(Leap.Listener):
+		finger_names = ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky']
+		bone_names = ['Metacarpal', 'Proximal', 'Intermediate', 'Distal']
+		state_names = ['STATE_INVALID', 'STATE_START', 'STATE_UPDATE', 'STATE_END']
+
+		def on_init(self, controller): print "Initialized"
+		def on_disconnect(self, controller): print "Disconnected"
+		def on_exit(self, controller): print "Exited"
+
+		def on_connect(self, controller): # Enable gestures
+			print "Connected"
+			controller.enable_gesture(Leap.Gesture.TYPE_CIRCLE);
+			controller.enable_gesture(Leap.Gesture.TYPE_KEY_TAP);
+			controller.enable_gesture(Leap.Gesture.TYPE_SCREEN_TAP);
+			controller.enable_gesture(Leap.Gesture.TYPE_SWIPE);
+
+		def state_string(self, state):
+			if state == Leap.Gesture.STATE_START: return "STATE_START"
+			if state == Leap.Gesture.STATE_UPDATE: return "STATE_UPDATE"
+			if state == Leap.Gesture.STATE_STOP: return "STATE_STOP"
+			if state == Leap.Gesture.STATE_INVALID: return "STATE_INVALID"
+		        
+		def on_frame(self, controller):
+		    frame = controller.frame()
+		    #self.print_frame(frame)
+		    
+		    for gesture in frame.gestures():
+		        if gesture.type == Leap.Gesture.TYPE_CIRCLE:
+		            circle = CircleGesture(gesture)
+
+		            # Determine clock direction using the angle between the pointable and the circle normal
+		            if circle.pointable.direction.angle_to(circle.normal) &lt;= Leap.PI/2: clockwiseness = "clockwise"
+		            else: clockwiseness = "counterclockwise"
+
+		            # Calculate the angle swept since the last frame
+		            swept_angle = 0
+		            if circle.state != Leap.Gesture.STATE_START:
+		                previous_update = CircleGesture(controller.frame(1).gesture(circle.id))
+		                swept_angle =  (circle.progress - previous_update.progress) * 2 * Leap.PI
+		            #print 'circle', circle.progress, circle.radius, swept_angle * Leap.RAD_TO_DEG, clockwiseness
+
+		        if gesture.type == Leap.Gesture.TYPE_SWIPE:
+		            swipe = SwipeGesture(gesture)
+		            #print 'swipe', swipe.position, swipe.direction, swipe.speed
+						    
+		            a = VR.Animation('gallery')
+		            a.setDuration(2)
+		            
+		            if swipe.direction[0] &gt; 0.5: 
+						VR.A0 = VR.GalAngle
+						a.setCallback(rotateL)
+						a.start()
+		            elif swipe.direction[0] &lt; -0.5: 
+						VR.A0 = VR.GalAngle
+						a.setCallback(rotateR)
+						a.start()
+		            elif swipe.direction[2] &gt; 0.5:
+						VR.R0 = VR.GalRadius
+						a.setCallback(zoomIn)
+						a.start()
+		            elif swipe.direction[2] &lt; -0.5:
+						VR.R0 = VR.GalRadius
+						a.setCallback(zoomOut)
+						a.start()
+
+		        if gesture.type == Leap.Gesture.TYPE_KEY_TAP:
+		            keytap = KeyTapGesture(gesture)
+		            #print 'keytap', keytap.position, keytap.direction
+
+		        if gesture.type == Leap.Gesture.TYPE_SCREEN_TAP:
+		            screentap = ScreenTapGesture(gesture)
+		            #print 'screentap', screentap.position, screentap.direction
+		    
+
+		def print_frame(self, frame):
+		    print "Frame id: %d, timestamp: %d, hands: %d, fingers: %d, tools: %d, gestures: %d" % (
+		          frame.id, frame.timestamp, len(frame.hands), len(frame.fingers), len(frame.tools), len(frame.gestures()))
+
+		    # Get hands
+		    for hand in frame.hands:
+		        handType = "Left hand" if hand.is_left else "Right hand"
+		        print "  %s, id %d, position: %s" % (handType, hand.id, hand.palm_position)
+
+		        # Get the hand's normal vector and direction
+		        normal = hand.palm_normal
+		        direction = hand.direction
+
+		        # Calculate the hand's pitch, roll, and yaw angles
+		        print "  pitch: %f degrees, roll: %f degrees, yaw: %f degrees" % (
+		            direction.pitch * Leap.RAD_TO_DEG,
+		            normal.roll * Leap.RAD_TO_DEG,
+		            direction.yaw * Leap.RAD_TO_DEG)
+
+		        # Get arm bone
+		        arm = hand.arm
+		        print "  Arm direction: %s, wrist position: %s, elbow position: %s" % (
+		            arm.direction,
+		            arm.wrist_position,
+		            arm.elbow_position)
+
+		        # Get fingers
+		        for finger in hand.fingers:
+		            print "    %s finger, id: %d, length: %fmm, width: %fmm" % (
+		                self.finger_names[finger.type],
+		                finger.id,
+		                finger.length,
+		                finger.width)
+
+		            # Get bones
+		            for b in range(0, 4):
+		                bone = finger.bone(b)
+		                print "      Bone: %s, start: %s, end: %s, direction: %s" % (
+		                    self.bone_names[bone.type],
+		                    bone.prev_joint,
+		                    bone.next_joint,
+		                    bone.direction)
+
+		    # Get tools
+		    for tool in frame.tools:
+		        print "  Tool id: %d, position: %s, direction: %s" % (
+		            tool.id, tool.tip_position, tool.direction)
+
+		    # Get gestures
+		    for gesture in frame.gestures():
+		        if gesture.type == Leap.Gesture.TYPE_CIRCLE:
+		            circle = CircleGesture(gesture)
+
+		            # Determine clock direction using the angle between the pointable and the circle normal
+		            if circle.pointable.direction.angle_to(circle.normal) &lt;= Leap.PI/2:
+		                clockwiseness = "clockwise"
+		            else:
+		                clockwiseness = "counterclockwise"
+
+		            # Calculate the angle swept since the last frame
+		            swept_angle = 0
+		            if circle.state != Leap.Gesture.STATE_START:
+		                previous_update = CircleGesture(controller.frame(1).gesture(circle.id))
+		                swept_angle =  (circle.progress - previous_update.progress) * 2 * Leap.PI
+
+		            print "  Circle id: %d, %s, progress: %f, radius: %f, angle: %f degrees, %s" % (
+		                    gesture.id, self.state_names[gesture.state],
+		                    circle.progress, circle.radius, swept_angle * Leap.RAD_TO_DEG, clockwiseness)
+
+		        if gesture.type == Leap.Gesture.TYPE_SWIPE:
+		            swipe = SwipeGesture(gesture)
+		            print "  Swipe id: %d, state: %s, position: %s, direction: %s, speed: %f" % (
+		                    gesture.id, self.state_names[gesture.state],
+		                    swipe.position, swipe.direction, swipe.speed)
+
+		        if gesture.type == Leap.Gesture.TYPE_KEY_TAP:
+		            keytap = KeyTapGesture(gesture)
+		            print "  Key Tap id: %d, %s, position: %s, direction: %s" % (
+		                    gesture.id, self.state_names[gesture.state],
+		                    keytap.position, keytap.direction )
+
+		        if gesture.type == Leap.Gesture.TYPE_SCREEN_TAP:
+		            screentap = ScreenTapGesture(gesture)
+		            print "  Screen Tap id: %d, %s, position: %s, direction: %s" % (
+		                    gesture.id, self.state_names[gesture.state],
+		                    screentap.position, screentap.direction )
+
+		    if not (frame.hands.is_empty and frame.gestures().is_empty):
+		        print ""
+	
+	VR.leapThreadControl = True
+	def listen():
+	    # Create a sample listener and controller
+		listener = SampleListener()
+		controller = Leap.Controller()
+
+		# Have the sample listener receive events from the controller
+		controller.add_listener(listener)
+	
+		while VR.leapThreadControl:
+			time.sleep(1)
+		controller.remove_listener(listener)
+		
+	VR.leapThread = VR.startThread(listen)
+</core>
+    </Script>
+    <Script name_suffix="0" base_name="devInitMyo" name_space="__script__" type="Python" mobile="">
+      <core>
+	import sys, time, re, math
+	from subprocess import Popen, PIPE
+	
+	myoDir = VR.getSystemDirectory('ROOT') + '/extras/python/Myo'
+	sys.path.append(myoDir)
+	
+	import common
+	from myo_raw import MyoRaw, Pose, Arm, XDirection
+	
+	class Myo(MyoRaw):
+		def __init__(self, cls, tty = None):
+		    self.locked = True
+		    self.use_lock = True
+		    self.timed = True
+		    self.lock_time = 5.0
+		    self.time_to_lock = self.lock_time
+		    self.last_pose = -1
+		    self.last_tick = 0
+		    self.current_box = 0
+		    self.last_box = 0
+		    self.box_factor = 0.25
+		    self.current_arm = 0
+		    self.current_xdir = 0
+		    self.current_gyro = None
+		    self.current_accel = None
+		    self.current_roll = 0
+		    self.current_pitch = 0
+		    self.current_yaw = 0
+		    self.center_roll = 0
+		    self.center_pitch = 0
+		    self.center_yaw = 0
+		    self.first_rot = 0
+		    self.current_rot_roll = 0
+		    self.current_rot_pitch = 0
+		    self.current_rot_yaw = 0
+		    self.mov_history = ''
+		    self.gest_history = ''
+		    self.act_history = ''
+		    if pmouse != None:
+		        self.x_dim, self.y_dim = pmouse.screen_size()
+		        self.mx = self.x_dim / 2
+		        self.my = self.y_dim / 2
+		    self.centered = 0
+		    MyoRaw.__init__(self, tty)
+		    self.add_emg_handler(self.emg_handler)
+		    self.add_arm_handler(self.arm_handler)
+		    self.add_imu_handler(self.imu_handler)
+		    self.add_pose_handler(self.pose_handler)
+		    self.onEMG = None
+		    self.onPoseEdge = None
+		    self.onLock = None
+		    self.onUnlock = None
+		    self.onPeriodic = None
+		    self.onWear = None
+		    self.onUnwear = None
+		    self.onBoxChange = None
+
+		def tick(self):
+		    now = time.time()
+		    if now - self.last_tick &gt;= 0.01:
+		        if self.onPeriodic != None:
+		            self.onPeriodic()
+		        if self.use_lock and self.locked == False and self.timed:
+		            if self.time_to_lock &lt;= 0:
+		                print('Locked')
+		                self.locked = True
+		                self.vibrate(1)
+		                self.time_to_lock = self.lock_time
+		                if self.onLock != None:
+		                    self.onLock()
+		            else:
+		                self.time_to_lock -= 0.01
+		        self.last_tick = now
+
+		def emg_handler(self, emg, moving):
+		    if self.onEMG != None:
+		        self.onEMG(emg, moving)
+
+		def arm_handler(self, arm, xdir):
+		    if arm == Arm(0):
+		        self.current_arm = 'unknown'
+		    elif arm == Arm(1):
+		        self.current_arm = 'right'
+		    elif arm == Arm(2):
+		        self.current_arm = 'left'
+		    if xdir == XDirection(0):
+		        self.current_xdir = 'unknown'
+		    elif xdir == XDirection(1):
+		        self.current_xdir = 'towardWrist'
+		    elif xdir == XDirection(2):
+		        self.current_xdir = 'towardElbow'
+		    if Arm(arm) == 0:
+		        if self.onUnwear != None:
+		            self.onUnwear()
+		    elif self.onWear != None:
+		        self.onWear(self.current_arm, self.current_xdir)
+
+		def imu_handler(self, quat, acc, gyro):
+		    q0, q1, q2, q3 = quat
+		    q0 = q0 / 16384.0
+		    q1 = q1 / 16384.0
+		    q2 = q2 / 16384.0
+		    q3 = q3 / 16384.0
+		    self.current_gyro = gyro
+		    self.current_accel = acc
+		    self.current_roll = math.atan2(2.0 * (q0 * q1 + q2 * q3), 1.0 - 2.0 * (q1 * q1 + q2 * q2))
+		    self.current_pitch = -math.asin(max(-1.0, min(1.0, 2.0 * (q0 * q2 - q3 * q1))))
+		    self.current_yaw = -math.atan2(2.0 * (q0 * q3 + q1 * q2), 1.0 - 2.0 * (q2 * q2 + q3 * q3))
+		    self.current_rot_roll = self.angle_dif(self.current_roll, self.center_roll)
+		    self.current_rot_yaw = self.angle_dif(self.current_yaw, self.center_yaw)
+		    self.current_rot_pitch = self.angle_dif(self.current_pitch, self.center_pitch)
+		    if self.first_rot == 0:
+		        self.rotSetCenter()
+		        self.first_rot = 1
+		    self.current_box = self.getBox()
+		    if self.current_box != self.last_box:
+		        self.mov_history = str(self.mov_history[-100:]) + str(self.current_box)
+		        self.act_history = str(self.act_history[-100:]) + str(self.current_box)
+		        if self.onBoxChange != None:
+		            self.onBoxChange(self.last_box, 'off')
+		            self.onBoxChange(self.current_box, 'on')
+		        self.last_box = self.current_box
+
+		def pose_handler(self, p):
+		    if p == Pose(0):
+		        pn = 0
+		    elif p == Pose(1):
+		        pn = 1
+		    elif p == Pose(2):
+		        pn = 2
+		    elif p == Pose(3):
+		        pn = 3
+		    elif p == Pose(4):
+		        pn = 4
+		    elif p == Pose(5):
+		        pn = 5
+		    else:
+		        pn = 6
+		    if pn != self.last_pose:
+		        self.gest_history = str(self.gest_history[-100:]) + str(self.PoseToChar(pn))
+		        self.act_history = str(self.act_history[-100:]) + str(self.PoseToChar(pn))
+		        if self.locked == False:
+		            self.time_to_lock = self.lock_time
+		            if self.onPoseEdge != None:
+		                if self.last_pose &gt; -1:
+		                    self.onPoseEdge(self.PoseToStr(self.last_pose), 'off')
+		                self.onPoseEdge(self.PoseToStr(pn), 'on')
+		        self.last_pose = pn
+		    if pn == 5 and self.locked and self.use_lock:
+		        self.locked = False
+		        self.vibrate(1)
+		        print('unlock')
+		        if self.onUnlock != None:
+		            self.onUnlock()
+
+		def getArm(self):
+		    return self.current_arm
+
+		def getXDirection(self):
+		    return self.current_xdir
+
+		def getGyro(self):
+		    return self.current_gyro
+
+		def getAccel(self):
+		    return self.current_accel
+
+		def getTimeMilliseconds(self):
+		    return round(time.time() * 1000)
+
+		def getRoll(self):
+		    return self.current_roll
+
+		def getPitch(self):
+		    return self.current_pitch
+
+		def getYaw(self):
+		    return self.current_yaw
+
+		def setLockingPolicy(self, policy):
+		    if policy == 'none':
+		        self.use_lock = False
+		    elif policy == 'standard':
+		        self.use_lock = True
+
+		def lock(self):
+		    self.locked = True
+		    self.vibrate(1)
+		    if self.onLock != None:
+		        self.onLock()
+
+		def unlock(self, unlock_type):
+		    if unlock_type == 'timed':
+		        self.vibrate(1)
+		        self.locked = False
+		        self.timed = True
+		    if unlock_type == 'hold':
+		        self.vibrate(1)
+		        self.locked = False
+		        self.timed = False
+
+		def isUnlocked(self):
+		    if self.locked:
+		        return False
+		    else:
+		        return True
+
+		def notifyUserAction(self):
+		    self.vibrate(1)
+
+		def keyboard(self, kkey, kedge, kmod):
+		    if pkeyboard != None:
+		        tkey = kkey
+		        if tkey == 'left_arrow':
+		            tkey = pkeyboard.left_key
+		        if tkey == 'right_arrow':
+		            tkey = pkeyboard.right_key
+		        if tkey == 'up_arrow':
+		            tkey = pkeyboard.up_key
+		        if tkey == 'down_arrow':
+		            tkey = pkeyboard.down_key
+		        if tkey == 'space':
+		            pass
+		        if tkey == 'return':
+		            tkey = pkeyboard.return_key
+		        if tkey == 'escape':
+		            tkey = pkeyboard.escape_key
+		        if kmod == 'left_shift':
+		            pkeyboard.press_key(pkeyboard.shift_l_key)
+		        if kmod == 'right_shift':
+		            pkeyboard.press_key(pkeyboard.shift_r_key)
+		        if kmod == 'left_control':
+		            pkeyboard.press_key(pkeyboard.control_l_key)
+		        if kmod == 'right_control':
+		            pkeyboard.press_key(pkeyboard.control_r_key)
+		        if kmod == 'left_alt':
+		            pkeyboard.press_key(pkeyboard.alt_l_key)
+		        if kmod == 'right_alt':
+		            pkeyboard.press_key(pkeyboard.alt_r_key)
+		        if kmod == 'left_win':
+		            pkeyboard.press_key(pkeyboard.super_l_key)
+		        if kmod == 'right_win':
+		            pkeyboard.press_key(pkeyboard.super_r_key)
+		        if kedge == 'down':
+		            pkeyboard.press_key(tkey)
+		        elif kedge == 'up':
+		            pkeyboard.release_key(tkey)
+		        elif kedge == 'press':
+		            pkeyboard.tap_key(tkey)
+		        if kmod == 'left_shift':
+		            pkeyboard.release_key(pkeyboard.shift_l_key)
+		        if kmod == 'right_shift':
+		            pkeyboard.release_key(pkeyboard.shift_r_key)
+		        if kmod == 'left_control':
+		            pkeyboard.release_key(pkeyboard.control_l_key)
+		        if kmod == 'right_control':
+		            pkeyboard.release_key(pkeyboard.control_r_key)
+		        if kmod == 'left_alt':
+		            pkeyboard.release_key(pkeyboard.alt_l_key)
+		        if kmod == 'right_alt':
+		            pkeyboard.release_key(pkeyboard.alt_r_key)
+		        if kmod == 'left_win':
+		            pkeyboard.release_key(pkeyboard.super_l_key)
+		        if kmod == 'right_win':
+		            pkeyboard.release_key(pkeyboard.super_r_key)
+
+		def centerMousePosition(self):
+		    if pmouse != None:
+		        x_dim, y_dim = pmouse.screen_size()
+		        pmouse.move(x_dim / 2, y_dim / 2)
+
+		def mouse(self, button, edge, mod):
+		    if pmouse != None:
+		        mpos = pmouse.position()
+		        if button == 'left':
+		            mbut = 1
+		        elif button == 'right':
+		            mbut = 2
+		        elif button == 'center':
+		            mbut = 3
+		        else:
+		            mbut = 1
+		        if edge == 'down':
+		            pmouse.press(mpos[0], mpos[1], mbut)
+		        elif edge == 'up':
+		            pmouse.release(mpos[0], mpos[1], mbut)
+		        elif edge == 'click':
+		            pmouse.click(mpos[0], mpos[1], mbut)
+
+		def getPose(self):
+		    return self.PoseToStr(self.last_pose)
+
+		def getPoseSide(self):
+		    if self.last_pose == 2 and self.current_arm == 'right' or self.last_pose == 3 and self.current_arm == 'left':
+		        return 'waveLeft'
+		    elif self.last_pose == 3 and self.current_arm == 'right' or self.last_pose == 2 and self.current_arm == 'left':
+		        return 'waveRight'
+		    else:
+		        return self.PoseToStr(self.last_pose)
+
+		def isLocked(self):
+		    return self.locked
+
+		def mouseMove(self, x, y):
+		    if pmouse != None:
+		        pmouse.move(x, y)
+
+		def title_contains(self, text):
+		    window_str = self.get_active_window_title()
+		    if window_str.find(text) &gt; -1:
+		        return True
+		    else:
+		        return False
+
+		def class_contains(self, text):
+		    window_str = self.get_active_window_class()
+		    if window_str.find(text) &gt; -1:
+		        return True
+		    else:
+		        return False
+
+		def rotSetCenter(self):
+		    self.center_roll = self.current_roll
+		    self.center_pitch = self.current_pitch
+		    self.center_yaw = self.current_yaw
+
+		def rotRoll(self):
+		    return self.current_rot_roll
+
+		def rotPitch(self):
+		    return self.current_rot_pitch
+
+		def rotYaw(self):
+		    return self.angle_dif(self.current_yaw, self.center_yaw)
+
+		def getBox(self):
+		    if self.current_rot_pitch &gt; self.box_factor:
+		        if self.current_rot_yaw &gt; self.box_factor:
+		            return 2
+		        elif self.current_rot_yaw &lt; -self.box_factor:
+		            return 8
+		        else:
+		            return 1
+		    elif self.current_rot_pitch &lt; -self.box_factor:
+		        if self.current_rot_yaw &gt; self.box_factor:
+		            return 4
+		        elif self.current_rot_yaw &lt; -self.box_factor:
+		            return 6
+		        else:
+		            return 5
+		    else:
+		        if self.current_rot_yaw &gt; self.box_factor:
+		            return 3
+		        if self.current_rot_yaw &lt; -self.box_factor:
+		            return 7
+		        return 0
+
+		def getHBox(self):
+		    if self.current_rot_yaw &gt; self.box_factor:
+		        return 1
+		    elif self.current_rot_yaw &lt; -self.box_factor:
+		        return -1
+		    else:
+		        return 0
+
+		def getVBox(self):
+		    if self.current_rot_pitch &gt; self.box_factor:
+		        return 1
+		    elif self.current_rot_pitch &lt; -self.box_factor:
+		        return -1
+		    else:
+		        return 0
+
+		def clearHistory(self):
+		    self.mov_history = ''
+		    self.gest_history = ''
+		    self.act_history = ''
+
+		def getLastMovements(self, num):
+		    if num &gt;= 0:
+		        return self.mov_history[-num:]
+		    else:
+		        return self.mov_history
+
+		def getLastGestures(self, num):
+		    if num &gt;= 0:
+		        return self.gest_history[-num:]
+		    else:
+		        return self.gest_history
+
+		def getLastActions(self, num):
+		    if num &gt;= 0:
+		        return self.act_history[-num:]
+		    else:
+		        return self.act_history
+
+		def PoseToStr(self, posenum):
+		    if posenum == 0:
+		        return 'rest'
+		    elif posenum == 1:
+		        return 'fist'
+		    elif posenum == 2:
+		        return 'waveIn'
+		    elif posenum == 3:
+		        return 'waveOut'
+		    elif posenum == 4:
+		        return 'fingersSpread'
+		    elif posenum == 5:
+		        return 'doubleTap'
+		    else:
+		        return 'unknown'
+
+		def PoseToChar(self, posenum):
+		    if posenum == 0:
+		        return 'R'
+		    elif posenum == 1:
+		        return 'F'
+		    elif posenum == 2:
+		        return 'I'
+		    elif posenum == 3:
+		        return 'O'
+		    elif posenum == 4:
+		        return 'S'
+		    elif posenum == 5:
+		        return 'D'
+		    else:
+		        return 'U'
+
+		def limit_angle(self, angle):
+		    if angle &gt; math.pi:
+		        return angle - 2.0 * math.pi
+		    if angle &lt; -2.0 * math.pi:
+		        return angle + 2.0 * math.pi
+		    return angle
+
+		def angle_dif(self, angle, ref):
+		    if ref &gt;= 0:
+		        if angle &gt;= 0:
+		            return self.limit_angle(angle - ref)
+		        elif angle &gt;= ref - math.pi:
+		            return self.limit_angle(angle - ref)
+		        else:
+		            return self.limit_angle(angle + 2.0 * math.pi - ref)
+		    else:
+		        if angle &lt;= 0:
+		            return self.limit_angle(angle - ref)
+		        if angle &lt;= ref + math.pi:
+		            return self.limit_angle(angle - ref)
+		        return self.limit_angle(angle - 2.0 * math.pi - ref)
+
+		def get_active_window_title(self):
+		    try:
+		        root = Popen(['xprop', '-root', '_NET_ACTIVE_WINDOW'], stdout=PIPE)
+		        for line in root.stdout:
+		            mw = re.search('^_NET_ACTIVE_WINDOW.* ([\\w]+)$', line)
+		            if mw != None:
+		                id_ = mw.group(1)
+		                id_w = Popen(['xprop',
+		                 '-id',
+		                 id_,
+		                 'WM_NAME'], stdout=PIPE)
+		                break
+
+		        if id_w != None:
+		            for line in id_w.stdout:
+		                match = re.match('WM_NAME\\(\\w+\\) = (?P&lt;name&gt;.+)$', line)
+		                if match != None:
+		                    return match.group('name')
+
+		        return ''
+		    except:
+		        return ''
+
+		def get_active_window_class(self):
+		    try:
+		        root = Popen(['xprop', '-root', '_NET_ACTIVE_WINDOW'], stdout=PIPE)
+		        for line in root.stdout:
+		            mw = re.search('^_NET_ACTIVE_WINDOW.* ([\\w]+)$', line)
+		            if mw != None:
+		                id_ = mw.group(1)
+		                id_w = Popen(['xprop',
+		                 '-id',
+		                 id_,
+		                 'WM_CLASS'], stdout=PIPE)
+		                break
+
+		        if id_w != None:
+		            for line in id_w.stdout:
+		                match = re.match('WM_CLASS\\(\\w+\\) = (?P&lt;name&gt;.+)$', line)
+		                if match != None:
+		                    return match.group('name')
+
+		        return ''
+		    except:
+		        return ''
+
+
+	m = Myo(None)
+	m.connect()
+	while True:
+		m.run()
+		
+		
+		
+		
+		
+</core>
+    </Script>
+    <Script name_suffix="0" base_name="devStopThreads" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+	
+	if hasattr(VR, 'leapThread'):
+		VR.leapThreadControl = False
+		VR.joinThread(VR.leapThread)
+</core>
+      <trig type="on_scene_close" dev="" state="Pressed" param="" key="0" name_suffix="2" base_name="trigger" name_space="__global__"/>
+    </Script>
     <Script name_suffix="0" base_name="init" name_space="__script__" type="Python" mobile="">
       <core>
 	import VR
@@ -26,6 +756,7 @@
 	VR.updateGallery(paths)
 	VR.moveGallery(2,0)
 </core>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="1" base_name="trigger" name_space="__global__"/>
     </Script>
     <Script name_suffix="0" base_name="keyboardNav" name_space="__script__" type="Python" mobile="">
       <core>
@@ -84,566 +815,6 @@
 </core>
       <arg type="float" value="2" name_suffix="0" base_name="R" name_space="moveGallery"/>
       <arg type="float" value="0.1" name_suffix="0" base_name="a0" name_space="moveGallery"/>
-    </Script>
-    <Script name_suffix="0" base_name="myoInit" name_space="__script__" type="Python" mobile="">
-      <core>
-#Embedded file name: PyoConnect.py
-"""
-        PyoConnect v0.1
-        
-        Author:
-          Fernando Cosentino - fbcosentino@yahoo.com.br
-          
-        Official source:
-          http://www.fernandocosentino.net/pyoconnect
-          
-        Based on the work of dzhu: https://github.com/dzhu/myo-raw
-        
-        License:
-                Use at will, modify at will. Always keep my name in this file as original author. And that's it.
-        
-        Steps required (in a clean debian installation) to use this library:
-                // permission to ttyACM0 - must restart linux user after this
-                sudo usermod -a -G dialout $USER
-                // dependencies
-                apt-get install python-pip
-                pip install pySerial --upgrade
-                pip install enum34
-                pip install PyUserInput
-                apt-get install python-Xlib
-                // now reboot   
-"""
-
-def myoInit():
-
-from __future__ import print_function
-import sys
-import time
-from subprocess import Popen, PIPE
-import re
-import math
-try:
-    from pymouse import PyMouse
-    pmouse = PyMouse()
-except:
-    print('PyMouse error: No mouse support')
-    pmouse = None
-
-try:
-    from pykeyboard import PyKeyboard
-    pkeyboard = PyKeyboard()
-except:
-    print('PyKeyboard error: No keyboard support')
-    pkeyboard = None
-
-from common import *
-from myo_raw import MyoRaw, Pose, Arm, XDirection
-
-class Myo(MyoRaw):
-
-    def __init__(self, cls, tty = None):
-        self.locked = True
-        self.use_lock = True
-        self.timed = True
-        self.lock_time = 5.0
-        self.time_to_lock = self.lock_time
-        self.last_pose = -1
-        self.last_tick = 0
-        self.current_box = 0
-        self.last_box = 0
-        self.box_factor = 0.25
-        self.current_arm = 0
-        self.current_xdir = 0
-        self.current_gyro = None
-        self.current_accel = None
-        self.current_roll = 0
-        self.current_pitch = 0
-        self.current_yaw = 0
-        self.center_roll = 0
-        self.center_pitch = 0
-        self.center_yaw = 0
-        self.first_rot = 0
-        self.current_rot_roll = 0
-        self.current_rot_pitch = 0
-        self.current_rot_yaw = 0
-        self.mov_history = ''
-        self.gest_history = ''
-        self.act_history = ''
-        if pmouse != None:
-            self.x_dim, self.y_dim = pmouse.screen_size()
-            self.mx = self.x_dim / 2
-            self.my = self.y_dim / 2
-        self.centered = 0
-        MyoRaw.__init__(self, tty)
-        self.add_emg_handler(self.emg_handler)
-        self.add_arm_handler(self.arm_handler)
-        self.add_imu_handler(self.imu_handler)
-        self.add_pose_handler(self.pose_handler)
-        self.onEMG = None
-        self.onPoseEdge = None
-        self.onLock = None
-        self.onUnlock = None
-        self.onPeriodic = None
-        self.onWear = None
-        self.onUnwear = None
-        self.onBoxChange = None
-
-    def tick(self):
-        now = time.time()
-        if now - self.last_tick &gt;= 0.01:
-            if self.onPeriodic != None:
-                self.onPeriodic()
-            if self.use_lock and self.locked == False and self.timed:
-                if self.time_to_lock &lt;= 0:
-                    print('Locked')
-                    self.locked = True
-                    self.vibrate(1)
-                    self.time_to_lock = self.lock_time
-                    if self.onLock != None:
-                        self.onLock()
-                else:
-                    self.time_to_lock -= 0.01
-            self.last_tick = now
-
-    def emg_handler(self, emg, moving):
-        if self.onEMG != None:
-            self.onEMG(emg, moving)
-
-    def arm_handler(self, arm, xdir):
-        if arm == Arm(0):
-            self.current_arm = 'unknown'
-        elif arm == Arm(1):
-            self.current_arm = 'right'
-        elif arm == Arm(2):
-            self.current_arm = 'left'
-        if xdir == XDirection(0):
-            self.current_xdir = 'unknown'
-        elif xdir == XDirection(1):
-            self.current_xdir = 'towardWrist'
-        elif xdir == XDirection(2):
-            self.current_xdir = 'towardElbow'
-        if Arm(arm) == 0:
-            if self.onUnwear != None:
-                self.onUnwear()
-        elif self.onWear != None:
-            self.onWear(self.current_arm, self.current_xdir)
-
-    def imu_handler(self, quat, acc, gyro):
-        q0, q1, q2, q3 = quat
-        q0 = q0 / 16384.0
-        q1 = q1 / 16384.0
-        q2 = q2 / 16384.0
-        q3 = q3 / 16384.0
-        self.current_gyro = gyro
-        self.current_accel = acc
-        self.current_roll = math.atan2(2.0 * (q0 * q1 + q2 * q3), 1.0 - 2.0 * (q1 * q1 + q2 * q2))
-        self.current_pitch = -math.asin(max(-1.0, min(1.0, 2.0 * (q0 * q2 - q3 * q1))))
-        self.current_yaw = -math.atan2(2.0 * (q0 * q3 + q1 * q2), 1.0 - 2.0 * (q2 * q2 + q3 * q3))
-        self.current_rot_roll = self.angle_dif(self.current_roll, self.center_roll)
-        self.current_rot_yaw = self.angle_dif(self.current_yaw, self.center_yaw)
-        self.current_rot_pitch = self.angle_dif(self.current_pitch, self.center_pitch)
-        if self.first_rot == 0:
-            self.rotSetCenter()
-            self.first_rot = 1
-        self.current_box = self.getBox()
-        if self.current_box != self.last_box:
-            self.mov_history = str(self.mov_history[-100:]) + str(self.current_box)
-            self.act_history = str(self.act_history[-100:]) + str(self.current_box)
-            if self.onBoxChange != None:
-                self.onBoxChange(self.last_box, 'off')
-                self.onBoxChange(self.current_box, 'on')
-            self.last_box = self.current_box
-
-    def pose_handler(self, p):
-        if p == Pose(0):
-            pn = 0
-        elif p == Pose(1):
-            pn = 1
-        elif p == Pose(2):
-            pn = 2
-        elif p == Pose(3):
-            pn = 3
-        elif p == Pose(4):
-            pn = 4
-        elif p == Pose(5):
-            pn = 5
-        else:
-            pn = 6
-        if pn != self.last_pose:
-            self.gest_history = str(self.gest_history[-100:]) + str(self.PoseToChar(pn))
-            self.act_history = str(self.act_history[-100:]) + str(self.PoseToChar(pn))
-            if self.locked == False:
-                self.time_to_lock = self.lock_time
-                if self.onPoseEdge != None:
-                    if self.last_pose &gt; -1:
-                        self.onPoseEdge(self.PoseToStr(self.last_pose), 'off')
-                    self.onPoseEdge(self.PoseToStr(pn), 'on')
-            self.last_pose = pn
-        if pn == 5 and self.locked and self.use_lock:
-            self.locked = False
-            self.vibrate(1)
-            print('unlock')
-            if self.onUnlock != None:
-                self.onUnlock()
-
-    def getArm(self):
-        return self.current_arm
-
-    def getXDirection(self):
-        return self.current_xdir
-
-    def getGyro(self):
-        return self.current_gyro
-
-    def getAccel(self):
-        return self.current_accel
-
-    def getTimeMilliseconds(self):
-        return round(time.time() * 1000)
-
-    def getRoll(self):
-        return self.current_roll
-
-    def getPitch(self):
-        return self.current_pitch
-
-    def getYaw(self):
-        return self.current_yaw
-
-    def setLockingPolicy(self, policy):
-        if policy == 'none':
-            self.use_lock = False
-        elif policy == 'standard':
-            self.use_lock = True
-
-    def lock(self):
-        self.locked = True
-        self.vibrate(1)
-        if self.onLock != None:
-            self.onLock()
-
-    def unlock(self, unlock_type):
-        if unlock_type == 'timed':
-            self.vibrate(1)
-            self.locked = False
-            self.timed = True
-        if unlock_type == 'hold':
-            self.vibrate(1)
-            self.locked = False
-            self.timed = False
-
-    def isUnlocked(self):
-        if self.locked:
-            return False
-        else:
-            return True
-
-    def notifyUserAction(self):
-        self.vibrate(1)
-
-    def keyboard(self, kkey, kedge, kmod):
-        if pkeyboard != None:
-            tkey = kkey
-            if tkey == 'left_arrow':
-                tkey = pkeyboard.left_key
-            if tkey == 'right_arrow':
-                tkey = pkeyboard.right_key
-            if tkey == 'up_arrow':
-                tkey = pkeyboard.up_key
-            if tkey == 'down_arrow':
-                tkey = pkeyboard.down_key
-            if tkey == 'space':
-                pass
-            if tkey == 'return':
-                tkey = pkeyboard.return_key
-            if tkey == 'escape':
-                tkey = pkeyboard.escape_key
-            if kmod == 'left_shift':
-                pkeyboard.press_key(pkeyboard.shift_l_key)
-            if kmod == 'right_shift':
-                pkeyboard.press_key(pkeyboard.shift_r_key)
-            if kmod == 'left_control':
-                pkeyboard.press_key(pkeyboard.control_l_key)
-            if kmod == 'right_control':
-                pkeyboard.press_key(pkeyboard.control_r_key)
-            if kmod == 'left_alt':
-                pkeyboard.press_key(pkeyboard.alt_l_key)
-            if kmod == 'right_alt':
-                pkeyboard.press_key(pkeyboard.alt_r_key)
-            if kmod == 'left_win':
-                pkeyboard.press_key(pkeyboard.super_l_key)
-            if kmod == 'right_win':
-                pkeyboard.press_key(pkeyboard.super_r_key)
-            if kedge == 'down':
-                pkeyboard.press_key(tkey)
-            elif kedge == 'up':
-                pkeyboard.release_key(tkey)
-            elif kedge == 'press':
-                pkeyboard.tap_key(tkey)
-            if kmod == 'left_shift':
-                pkeyboard.release_key(pkeyboard.shift_l_key)
-            if kmod == 'right_shift':
-                pkeyboard.release_key(pkeyboard.shift_r_key)
-            if kmod == 'left_control':
-                pkeyboard.release_key(pkeyboard.control_l_key)
-            if kmod == 'right_control':
-                pkeyboard.release_key(pkeyboard.control_r_key)
-            if kmod == 'left_alt':
-                pkeyboard.release_key(pkeyboard.alt_l_key)
-            if kmod == 'right_alt':
-                pkeyboard.release_key(pkeyboard.alt_r_key)
-            if kmod == 'left_win':
-                pkeyboard.release_key(pkeyboard.super_l_key)
-            if kmod == 'right_win':
-                pkeyboard.release_key(pkeyboard.super_r_key)
-
-    def centerMousePosition(self):
-        if pmouse != None:
-            x_dim, y_dim = pmouse.screen_size()
-            pmouse.move(x_dim / 2, y_dim / 2)
-
-    def mouse(self, button, edge, mod):
-        if pmouse != None:
-            mpos = pmouse.position()
-            if button == 'left':
-                mbut = 1
-            elif button == 'right':
-                mbut = 2
-            elif button == 'center':
-                mbut = 3
-            else:
-                mbut = 1
-            if edge == 'down':
-                pmouse.press(mpos[0], mpos[1], mbut)
-            elif edge == 'up':
-                pmouse.release(mpos[0], mpos[1], mbut)
-            elif edge == 'click':
-                pmouse.click(mpos[0], mpos[1], mbut)
-
-    def getPose(self):
-        return self.PoseToStr(self.last_pose)
-
-    def getPoseSide(self):
-        if self.last_pose == 2 and self.current_arm == 'right' or self.last_pose == 3 and self.current_arm == 'left':
-            return 'waveLeft'
-        elif self.last_pose == 3 and self.current_arm == 'right' or self.last_pose == 2 and self.current_arm == 'left':
-            return 'waveRight'
-        else:
-            return self.PoseToStr(self.last_pose)
-
-    def isLocked(self):
-        return self.locked
-
-    def mouseMove(self, x, y):
-        if pmouse != None:
-            pmouse.move(x, y)
-
-    def title_contains(self, text):
-        window_str = self.get_active_window_title()
-        if window_str.find(text) &gt; -1:
-            return True
-        else:
-            return False
-
-    def class_contains(self, text):
-        window_str = self.get_active_window_class()
-        if window_str.find(text) &gt; -1:
-            return True
-        else:
-            return False
-
-    def rotSetCenter(self):
-        self.center_roll = self.current_roll
-        self.center_pitch = self.current_pitch
-        self.center_yaw = self.current_yaw
-
-    def rotRoll(self):
-        return self.current_rot_roll
-
-    def rotPitch(self):
-        return self.current_rot_pitch
-
-    def rotYaw(self):
-        return self.angle_dif(self.current_yaw, self.center_yaw)
-
-    def getBox(self):
-        if self.current_rot_pitch &gt; self.box_factor:
-            if self.current_rot_yaw &gt; self.box_factor:
-                return 2
-            elif self.current_rot_yaw &lt; -self.box_factor:
-                return 8
-            else:
-                return 1
-        elif self.current_rot_pitch &lt; -self.box_factor:
-            if self.current_rot_yaw &gt; self.box_factor:
-                return 4
-            elif self.current_rot_yaw &lt; -self.box_factor:
-                return 6
-            else:
-                return 5
-        else:
-            if self.current_rot_yaw &gt; self.box_factor:
-                return 3
-            if self.current_rot_yaw &lt; -self.box_factor:
-                return 7
-            return 0
-
-    def getHBox(self):
-        if self.current_rot_yaw &gt; self.box_factor:
-            return 1
-        elif self.current_rot_yaw &lt; -self.box_factor:
-            return -1
-        else:
-            return 0
-
-    def getVBox(self):
-        if self.current_rot_pitch &gt; self.box_factor:
-            return 1
-        elif self.current_rot_pitch &lt; -self.box_factor:
-            return -1
-        else:
-            return 0
-
-    def clearHistory(self):
-        self.mov_history = ''
-        self.gest_history = ''
-        self.act_history = ''
-
-    def getLastMovements(self, num):
-        if num &gt;= 0:
-            return self.mov_history[-num:]
-        else:
-            return self.mov_history
-
-    def getLastGestures(self, num):
-        if num &gt;= 0:
-            return self.gest_history[-num:]
-        else:
-            return self.gest_history
-
-    def getLastActions(self, num):
-        if num &gt;= 0:
-            return self.act_history[-num:]
-        else:
-            return self.act_history
-
-    def PoseToStr(self, posenum):
-        if posenum == 0:
-            return 'rest'
-        elif posenum == 1:
-            return 'fist'
-        elif posenum == 2:
-            return 'waveIn'
-        elif posenum == 3:
-            return 'waveOut'
-        elif posenum == 4:
-            return 'fingersSpread'
-        elif posenum == 5:
-            return 'doubleTap'
-        else:
-            return 'unknown'
-
-    def PoseToChar(self, posenum):
-        if posenum == 0:
-            return 'R'
-        elif posenum == 1:
-            return 'F'
-        elif posenum == 2:
-            return 'I'
-        elif posenum == 3:
-            return 'O'
-        elif posenum == 4:
-            return 'S'
-        elif posenum == 5:
-            return 'D'
-        else:
-            return 'U'
-
-    def limit_angle(self, angle):
-        if angle &gt; math.pi:
-            return angle - 2.0 * math.pi
-        if angle &lt; -2.0 * math.pi:
-            return angle + 2.0 * math.pi
-        return angle
-
-    def angle_dif(self, angle, ref):
-        if ref &gt;= 0:
-            if angle &gt;= 0:
-                return self.limit_angle(angle - ref)
-            elif angle &gt;= ref - math.pi:
-                return self.limit_angle(angle - ref)
-            else:
-                return self.limit_angle(angle + 2.0 * math.pi - ref)
-        else:
-            if angle &lt;= 0:
-                return self.limit_angle(angle - ref)
-            if angle &lt;= ref + math.pi:
-                return self.limit_angle(angle - ref)
-            return self.limit_angle(angle - 2.0 * math.pi - ref)
-
-    def get_active_window_title(self):
-        try:
-            root = Popen(['xprop', '-root', '_NET_ACTIVE_WINDOW'], stdout=PIPE)
-            for line in root.stdout:
-                mw = re.search('^_NET_ACTIVE_WINDOW.* ([\\w]+)$', line)
-                if mw != None:
-                    id_ = mw.group(1)
-                    id_w = Popen(['xprop',
-                     '-id',
-                     id_,
-                     'WM_NAME'], stdout=PIPE)
-                    break
-
-            if id_w != None:
-                for line in id_w.stdout:
-                    match = re.match('WM_NAME\\(\\w+\\) = (?P&lt;name&gt;.+)$', line)
-                    if match != None:
-                        return match.group('name')
-
-            return ''
-        except:
-            return ''
-
-    def get_active_window_class(self):
-        try:
-            root = Popen(['xprop', '-root', '_NET_ACTIVE_WINDOW'], stdout=PIPE)
-            for line in root.stdout:
-                mw = re.search('^_NET_ACTIVE_WINDOW.* ([\\w]+)$', line)
-                if mw != None:
-                    id_ = mw.group(1)
-                    id_w = Popen(['xprop',
-                     '-id',
-                     id_,
-                     'WM_CLASS'], stdout=PIPE)
-                    break
-
-            if id_w != None:
-                for line in id_w.stdout:
-                    match = re.match('WM_CLASS\\(\\w+\\) = (?P&lt;name&gt;.+)$', line)
-                    if match != None:
-                        return match.group('name')
-
-            return ''
-        except:
-            return ''
-
-
-if __name__ == '__main__':
-    m = Myo(sys.argv[1] if len(sys.argv) &gt;= 2 else None)
-    m.connect()
-    while True:
-        m.run()
-#+++ okay decompyling PyoConnect.pyc 
-# decompiled 1 files: 1 okay, 0 failed, 0 verify failed
-# 2015.08.13 17:21:34 UTC
-</core>
-    </Script>
-    <Script name_suffix="0" base_name="myoNav" name_space="__script__" type="Python" mobile="">
-      <core>
-	import VR
-	
-	
-</core>
     </Script>
     <Script name_suffix="0" base_name="queryImages" name_space="__script__" type="Python" mobile="">
       <core>
