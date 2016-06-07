@@ -28,7 +28,11 @@ template<> PyTypeObject VRPyBaseT<OSG::VRTexture>::type = {
 "   A_FLT, L_FLT, LA_FLT, RGB_FLT, RGBA_FLT\n"
 "   A_INT, L_INT, LA_INT, RGB_INT, RGBA_INT, BGR_INT, BGRA_INT\n\n"
 "  data types:\n"
-"   UINT8, UINT16, UINT32, FLOAT16, FLOAT32, INT16, INT32, UINT24_8\n",
+"   UINT8, UINT16, UINT32, FLOAT16, FLOAT32, INT16, INT32, UINT24_8\n"
+"  example:\n"
+"\tdata = np.array([[0,0,0], [1,0,0], [0,0,1], [0,1,0]], np.float32)\n"
+"\timg = VR.Image(data, 2,2,'RGB','FLOAT32')\n"
+"\tmat.setTexture(img)\n",
     0,0,0,0,0,0,
     VRPyImage::methods,
     0,0,0,0,0,0,0,
@@ -71,6 +75,8 @@ PyObject* VRPyImage::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     //bool b = CheckExtension(PyString_AsString((PyObject*)channels));
     //cout << "check ext " << PyString_AsString((PyObject*)channels) << " " << b << endl;
     //if (b)
+    //for (int i=0; i<W*H; i++) cout << "cdata " <<
+
     OSG::VRTexturePtr img = OSG::VRTexture::create();
     img->getImage()->set(pf, W, H, 1, 1, 1, 0, cdata, dt, true);
     if (channels2) img->setInternalFormat( toOSGConst(PyString_AsString((PyObject*)channels2)) );
