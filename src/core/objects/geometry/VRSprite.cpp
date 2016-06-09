@@ -85,9 +85,10 @@ void VRSprite::webOpen(string path, int res, float ratio){
     web->setAspectRatio(ratio);
 }
 
-void VRSprite::setTexture(string path){
-    getMaterial()->setTexture(path);
-    setMaterial(getMaterial());
+void VRSprite::setTexture(string path) {
+    auto m = VRMaterial::create(path);
+    m->setTexture(path);
+    setMaterial(m);
 }
 
 void VRSprite::setFont(string f) { font = f; }

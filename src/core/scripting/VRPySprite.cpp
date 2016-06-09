@@ -54,10 +54,19 @@ PyMethodDef VRPySprite::methods[] = {
     {"getSize", (PyCFunction)VRPySprite::getSize, METH_NOARGS, "Get size of sprite." },
     {"setText", (PyCFunction)VRPySprite::setText, METH_VARARGS, "Set label text from sprite." },
     {"setSize", (PyCFunction)VRPySprite::setSize, METH_VARARGS, "Set sprite size." },
+    {"setTexture", (PyCFunction)VRPySprite::setTexture, METH_VARARGS, "Set sprite texture" },
     {"webOpen", (PyCFunction)VRPySprite::webOpen, METH_VARARGS, "Open and display a website - webOpen(str uri, int width, flt ratio)" },
     {"convertToCloth", (PyCFunction)VRPySprite::convertToCloth, METH_VARARGS, "convert this Sprite to cloth (softbody)" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPySprite::setTexture(VRPySprite* self, PyObject* args) {
+	if (self->objPtr == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
+	PyObject* path;
+    if (! PyArg_ParseTuple(args, "O", &path)) return NULL;
+	self->objPtr->setTexture( PyString_AsString(path) );
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPySprite::webOpen(VRPySprite* self, PyObject* args) {
 	if (self->objPtr == 0) { PyErr_SetString(err, "C Object is invalid"); return NULL; }
