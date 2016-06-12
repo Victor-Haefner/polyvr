@@ -21,6 +21,7 @@ public:
     VRSound* getSound(string path);
     void clearSoundMap(void);
 
+    void playSinus(float f = 440, float T = 1);
     void play(VRSound* sound);
 
 public:

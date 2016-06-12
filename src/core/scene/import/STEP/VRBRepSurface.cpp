@@ -436,7 +436,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
             float u = i*T/res;
             for (int j=0; j<=res; j++) {
                 float v = j*T/res;
-                Vec3f p = BSpline(u,v, degu, degv, cpoints);
+                Vec3f p = BSpline(u,v, degu, degv, cpoints, knotsu, knotsv);
                 ids[i][j] = nMesh.pushVert(p,n);
 
                 if (i > 0 && j%2 == 0) nMesh.pushTri(ids[i][j], ids[i-1][j], ids[i-1][j+1]);
@@ -543,6 +543,52 @@ VRGeometryPtr VRBRepSurface::build(string type) {
             }
         }*/
 
+        if (g) g->setMatrix(m);
+        if (g && g->getMesh() && g->getMesh()->getPositions() && g->getMesh()->getPositions()->size() > 0) return g;
+        return 0;
+    }
+
+    if (type == "B_Spline_Surface_With_Knots") {
+
+        cout << " BUILD B_Spline_Surface_With_Knots" << endl;
+
+        // ROADMAP
+        //  first idea:
+        //   - tesselate whole BSpline surface (lots of quads)
+        //   - keep uv map of the resulting mesh
+        //   - for each edge point:
+        //      - get nearest quad to point
+        //      - get UV koords of the point on that quad
+        //      - add point UV to polyline
+        //   - triangulate in UV space
+        //   - reuse first tesselation
+        //      - cut quads traversed by edges
+        //      - ignore quads outside of the triangulation
+
+
+        Vec3f n(0,0,1);
+        VRGeoData nMesh;
+
+        map<int, map<int, int> > ids;
+
+        cout << "B_Spline_Surface_with_knots du " << degu << " dv " << degv << "  pw " << cpoints.width << " ph " << cpoints.height << endl;
+
+        int res = (Ncurv - 1)*0.5;
+        float Tu = knotsu[knotsu.size()-1] - knotsu[0];
+        float Tv = knotsv[knotsv.size()-1] - knotsv[0];
+        for (int i=0; i<=res; i++) {
+            float u = i*Tu/res;
+            for (int j=0; j<=res; j++) {
+                float v = j*Tv/res;
+                Vec3f p = BSpline(u,v, degu, degv, cpoints, knotsu, knotsv);
+                ids[i][j] = nMesh.pushVert(p,n);
+
+                if (i > 0 && j%2 == 0) nMesh.pushTri(ids[i][j], ids[i-1][j], ids[i-1][j+1]);
+                if (i > 0 && j%2 == 1) nMesh.pushTri(ids[i][j], ids[i][j-1], ids[i-1][j]);
+            }
+        }
+
+        auto g = nMesh.asGeometry("BSpline");
         if (g) g->setMatrix(m);
         if (g && g->getMesh() && g->getMesh()->getPositions() && g->getMesh()->getPositions()->size() > 0) return g;
         return 0;

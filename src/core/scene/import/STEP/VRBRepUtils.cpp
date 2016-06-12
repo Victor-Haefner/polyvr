@@ -69,8 +69,22 @@ Vec3f VRBRepUtils::BSplineW(float t, int deg, const vector<Vec3f>& cpoints, cons
     return p;
 }
 
-Vec3f VRBRepUtils::BSpline(float u, float v, int degu, int degv, const field<Vec3f>& cpoints) {
-    return Vec3f();
+Vec3f VRBRepUtils::BSpline(float u, float v, int degu, int degv, const field<Vec3f>& cpoints, const vector<double>& knotsu, const vector<double>& knotsv) {
+    Vec3f p;
+    for (int i=0; i<cpoints.width; i++) {
+        for (int j=0; j<cpoints.height; j++) {
+            Vec3f cp = cpoints.get(i,j);
+            p += cp*Bik(u, j, degu, knotsu)*Bik(v, i, degv, knotsv);
+        }
+    }
+    cout << "VRBRepUtils::BSpline " << cpoints.width << " " << cpoints.height << " " << Vec2i(degu, degv) << " p " << p << endl;
+    cout << "VRBRepUtils::BSpline knotsu ";
+    for (auto ku : knotsu) cout << " " << ku;
+    cout << endl;
+    cout << "VRBRepUtils::BSpline knotsv ";
+    for (auto kv : knotsv) cout << " " << kv;
+    cout << endl;
+    return p;
 }
 
 

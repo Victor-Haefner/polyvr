@@ -47,7 +47,8 @@ PyMethodDef VRPySound::methods[] = {
     {"play", (PyCFunction)VRPySound::play, METH_VARARGS, "Play the sound with the filename given as first parameter. \n The second paramater to 1 for loop, to 0 for no loop." },
     {"stop", (PyCFunction)VRPySound::stop, METH_VARARGS, "Stops a sound - stop(myPath.mp3)" },
     {"stopAllSounds", (PyCFunction)VRPySound::stopAllSounds, METH_NOARGS, "Stops all currently playing sounds." },
-    {"setVolume", (PyCFunction)VRPySound::setVolume, METH_VARARGS, " Set music volume to the specified value ranging from 0.0 to 1.0 (= 100%)" },
+    {"setVolume", (PyCFunction)VRPySound::setVolume, METH_VARARGS, "Set sound volume - setVolume( float ) \n\tfrom 0.0 to 1.0 (= 100%)" },
+    {"playSinus", (PyCFunction)VRPySound::playSinus, METH_VARARGS, "playSinus()" },
     {NULL}  /* Sentinel */
 };
 
@@ -64,6 +65,13 @@ PyObject* VRPySound::play(VRPySound* self, PyObject* args) {
 
 PyObject* VRPySound::stop(VRPySound* self, PyObject* args) {
     OSG::VRSoundManager::get().stopSound(parseString(args));
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPySound::playSinus(VRPySound* self, PyObject* args) {
+    float freq, time;
+    if (! PyArg_ParseTuple(args, "ff", &freq, &time)) return NULL;
+    OSG::VRSoundManager::get().playSinus(freq, time);
     Py_RETURN_TRUE;
 }
 

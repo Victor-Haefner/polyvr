@@ -18,6 +18,9 @@ class VRBRepSurface : public VRBRepUtils {
         double R = 1;
 
         field<Vec3f> cpoints;
+        field<Vec3f> weights;
+        vector<double> knotsu;
+        vector<double> knotsv;
         int degu = 0;
         int degv = 0;
 

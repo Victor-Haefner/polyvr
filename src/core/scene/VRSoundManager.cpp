@@ -501,4 +501,26 @@ void VRSoundManager::stopAllSounds(void) {
     for (auto s : sounds) s.second->interrupt = true;
 }
 
+void VRSoundManager::playSinus(float f, float T) {
+    ALuint buf;
+    alGenBuffers(1, &buf);
+
+    unsigned sample_rate = 22050;
+    size_t buf_size = T * sample_rate;
+
+    short* samples = new short[buf_size];
+    for(int i=0; i<buf_size; ++i) {
+        samples[i] = 32760 * sin( (2.f*float(M_PI)*f)/sample_rate * i );
+    }
+
+    alBufferData(buf, AL_FORMAT_MONO16, samples, buf_size, sample_rate);
+    ALuint src = 0;
+    alGenSources(1, &src);
+    alSourcei(src, AL_BUFFER, buf);
+    alSourcePlay(src);
+
+    delete samples;
+}
+
+
 OSG_END_NAMESPACE;

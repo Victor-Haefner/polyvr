@@ -113,7 +113,7 @@ class VRSTEP {
         bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, bool& t, char c, string& type);
         template<typename T> bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, vector<T>& vec, char t, string& type);
         template<typename T> bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, field<T>& f, char t, string& type);
-        void fieldPush(field<float>& f, string v);
+        void fieldPush(field<double>& f, string v);
         void fieldPush(field<STEPentity*>& f, string v);
 
         template<typename T> bool query(STEPentity* e, string path, T& t, string type);

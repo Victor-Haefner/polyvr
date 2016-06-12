@@ -80,8 +80,13 @@ VRSTEP::VRSTEP() {
     addType< tuple<int, vector<STEPentity*>, bool, vector<int>, vector<double> > >( "B_Spline_Curve_With_Knots", "a1i|a2Ve|a4b|a6Vi|a7Vf", "c0a0i|c0a1Ve|c0a3b|c1a0Vi|c1a1Vf", false); //TODO
 
     addType< tuple<int, int, field<STEPentity*>, bool, bool, bool > >( "B_Spline_Surface", "a0i|a1i|a2Fe|a4b|a5b|a6b", "a0i|a1i|a2Fe|a4b|a5b|a6b", false);
-    addType< tuple< vector<int>, vector<int>, vector<double>, vector<double> > >( "B_Spline_Surface_With_Knots", "a0Vi|a1Vi|a2Vf|a2Vf", "", false);
-    addType< tuple< vector<double> > >( "Rational_B_Spline_Surface", "a0Vf", "", false);
+
+    addType< tuple<int, int, field<STEPentity*>, bool, bool, bool, vector<int>, vector<int>, vector<double>, vector<double> > >( "B_Spline_Surface_With_Knots",
+        "a0i|a1i|a2Fe|a4b|a5b|a6b|a7Vi|a8Vi|a9Vf|a10Vf",
+        "c0a0i|c0a1i|c0a2Fe|c0a4b|c0a5b|c0a6b|c1a0Vi|c1a1Vi|c1a2Vf|c1a3Vf", false);
+    //addType< tuple<int, int, field<STEPentity*>, bool, bool, bool, vector<int>, vector<int>, vector<double>, vector<double> > >( "B_Spline_Surface_With_Knots", "a0i|a1i|a2Fe|a4b|a5b|a6b|a7Vi|a8Vi|a9Vf|a10Vf", "c1a0i|c1a1i|c1a2Fe|c1a4b|c1a5b|c1a6b|c2a0Vi|c2a1Vi|c2a2Vf|c2a3Vf", false);
+
+    addType< tuple< field<double> > >( "Rational_B_Spline_Surface", "a0Ff", "n", false);
 
     // geometry types
     addType< tuple<string, vector<STEPentity*> > >( "Advanced_Brep_Shape_Representation", "a0S|a1Ve", "", false);
@@ -258,7 +263,7 @@ void VRSTEP::fieldPush(field<STEPentity*>& f, string v) {
     f.data.push_back(e);
 }
 
-void VRSTEP::fieldPush(field<float>& f, string v) {
+void VRSTEP::fieldPush(field<double>& f, string v) {
     f.data.push_back( toFloat(v) );
 }
 
@@ -398,12 +403,32 @@ STEPentity* VRSTEP::getSelectEntity(SDAI_Select* s, string ID) {
     return 0;
 }
 
+string toString(STEPentity* e) {
+    return toString(e->StepFileId());
+}
+
+template<typename T>
+string toString(vector<T>& v) {
+    string s = string("vector of size ") + toString( v.size() ) + " data:";
+    for (auto t : v) s += " " + toString(t);
+    return s;
+}
+
+template<typename T>
+string toString(field<T>& f) {
+    string s = string("field of size ") + toString( f.width ) + " x " + toString( f.height ) + " data:";
+    for (auto t : f.data) s += " " + toString(t);
+    return s;
+}
+
 template<typename T> bool VRSTEP::query(STEPentity* e, string path, T& t, string type) {
     auto toInt = [](char c) { return int(c-'0'); };
 
     auto warn = [&](int i, string w) {
         cout << "VRSTEP::query " << path << ":" << i << " of type " << type << " entity " << e->EntityName() << " " << e->StepFileId() << " warning: " << w << endl;
     };
+
+    bool verbose = 0;//(e->StepFileId() == 248);
 
     int j = 1;
     STEPattribute* curAttr = 0;
@@ -425,6 +450,7 @@ template<typename T> bool VRSTEP::query(STEPentity* e, string path, T& t, string
             curAttr = &e->attributes[ai];
             attrStr = curAttr->asStr();
             curAggr = 0;
+            if (verbose) cout << "ATTR of " << e->EntityName() << " ai: " << ai << " data: " << attrStr << endl;
         }
 
         if (c == 'A') { // aggregate
@@ -460,14 +486,18 @@ template<typename T> bool VRSTEP::query(STEPentity* e, string path, T& t, string
             if (!curAttr) continue;
             curAggr = curAttr->Aggregate();
             if (!curAggr) { warn(i, " is not an Aggregate Vector!"); return false; } // TODO
-            return getValue(e, curAttr, curAggr->GetHead(), t, path[i+1], type);
+            bool b = getValue(e, curAttr, curAggr->GetHead(), t, path[i+1], type);
+            if (verbose) cout << "VAL vect " << e->EntityName() << " v " << toString(t) << " t " << path[i+1] << endl;
+            return b;
         }
 
         if (c == 'F') { // field
             if (!curAttr) continue;
             curAggr = curAttr->Aggregate();
             if (!curAggr) { warn(i, " is not an Aggregate Field!"); return false; } // TODO
-            return getValue(e, curAttr, curAggr->GetHead(), t, path[i+1], type);
+            bool b = getValue(e, curAttr, curAggr->GetHead(), t, path[i+1], type);
+            if (verbose) cout << "VAL field " << e->EntityName() << " v " << toString(t) << " t " << path[i+1] << endl;
+            return b;
         }
 
         if (c == 'c') {
@@ -477,11 +507,16 @@ template<typename T> bool VRSTEP::query(STEPentity* e, string path, T& t, string
             int ci = toInt(path[i+1]);
             for (int i=0; i<ci; i++) ce = ce->sc;
             e = ce;
+            if (verbose) cout << "CPLX " << e->EntityName() << endl;
             curAggrNode = 0;
             curAttr = 0;
         }
 
-        if (isLast) return getValue(e, curAttr, curAggrNode, t, c, type);
+        if (isLast) {
+            auto b = getValue(e, curAttr, curAggrNode, t, c, type);
+            if (verbose) cout << "VAL " << e->EntityName() << " v " << toString(t) << endl;
+            return b;
+        }
         //if (isLast) cout << " t " << t << endl;
     }
     return false;
@@ -1026,25 +1061,68 @@ struct VRSTEP::Bound : public VRSTEP::Instance, public VRBRepBound {
 };
 
 struct VRSTEP::Surface : public VRSTEP::Instance, public VRBRepSurface {
-    Surface(Instance& i, map<STEPentity*, Instance>& instances) : Instance(i) {
-        if (type == "Plane") trans = toPose( get<0, STEPentity*>(), instances);
-        if (type == "Cylindrical_Surface") {
-            trans = toPose( get<0, STEPentity*, double>(), instances );
-            R = get<1, STEPentity*, double>();
+    void handleSurface(STEPentity* e, map<STEPentity*, Instance>& instances) {
+        bool cplx = e->IsComplex();
+        string etype = e->EntityName();
+        auto& inst = instances[e];
+
+        if (etype == "Plane") trans = toPose( inst.get<0, STEPentity*>(), instances);
+        if (etype == "Cylindrical_Surface") {
+            trans = toPose( inst.get<0, STEPentity*, double>(), instances );
+            R = inst.get<1, STEPentity*, double>();
         }
 
-        // int, int, vector<STEPentity*>, bool, bool, bool
-        // degree_u, degree_v, control_points, u_closed, v_closed, self_intersect
-        if (type == "B_Spline_Surface") {
-            degu = get<0, int, int, field<STEPentity*>, bool, bool, bool>();
-            degv = get<1, int, int, field<STEPentity*>, bool, bool, bool>();
-            auto fcp = get<2, int, int, field<STEPentity*>, bool, bool, bool>();
+        // int, int, field<STEPentity*>, bool, bool, bool, vector<int>, vector<int>, vector<double>, vector<double>
+        // degree_u, degree_v, control_points, u_closed, v_closed, self_intersect, u multiplicities, v multiplicities, u knots, v knots
+        if (etype == "B_Spline_Surface_With_Knots") {
+            type = etype;
+            degu = inst.get<0, int, int, field<STEPentity*>, bool, bool, bool, vector<int>, vector<int>, vector<double>, vector<double> >();
+            degv = inst.get<1, int, int, field<STEPentity*>, bool, bool, bool, vector<int>, vector<int>, vector<double>, vector<double> >();
+            auto fcp = inst.get<2, int, int, field<STEPentity*>, bool, bool, bool, vector<int>, vector<int>, vector<double>, vector<double> >();
+            auto uclosed = inst.get<3, int, int, field<STEPentity*>, bool, bool, bool, vector<int>, vector<int>, vector<double>, vector<double> >();
+            auto vclosed = inst.get<4, int, int, field<STEPentity*>, bool, bool, bool, vector<int>, vector<int>, vector<double>, vector<double> >();
+            auto intersect = inst.get<5, int, int, field<STEPentity*>, bool, bool, bool, vector<int>, vector<int>, vector<double>, vector<double> >();
+            auto u_multiplicities = inst.get<6, int, int, field<STEPentity*>, bool, bool, bool, vector<int>, vector<int>, vector<double>, vector<double> >(); // segfault
+            auto v_multiplicities = inst.get<7, int, int, field<STEPentity*>, bool, bool, bool, vector<int>, vector<int>, vector<double>, vector<double> >();
+            auto u_knots = inst.get<8, int, int, field<STEPentity*>, bool, bool, bool, vector<int>, vector<int>, vector<double>, vector<double> >();
+            auto v_knots = inst.get<9, int, int, field<STEPentity*>, bool, bool, bool, vector<int>, vector<int>, vector<double>, vector<double> >();
+
+            // apply knot multiplicities
+            for (unsigned int i=0; i<u_knots.size(); i++) {
+                for (int j=0; j<u_multiplicities[i]; j++) knotsu.push_back(u_knots[i]);
+            }
+            for (unsigned int i=0; i<v_knots.size(); i++) {
+                for (int j=0; j<v_multiplicities[i]; j++) knotsv.push_back(v_knots[i]);
+            }
+
             cpoints.width = fcp.width;
             cpoints.height = fcp.height;
             for (auto e : fcp.data) {
                 cpoints.data.push_back( toVec3f(e, instances) );
             }
         }
+
+        if (cplx) return;
+
+        // int, int, vector<STEPentity*>, bool, bool, bool
+        // degree_u, degree_v, control_points, u_closed, v_closed, self_intersect
+        if (etype == "B_Spline_Surface") {
+            degu = inst.get<0, int, int, field<STEPentity*>, bool, bool, bool>();
+            degv = inst.get<1, int, int, field<STEPentity*>, bool, bool, bool>();
+            auto fcp = inst.get<2, int, int, field<STEPentity*>, bool, bool, bool>();
+            cpoints.width = fcp.width;
+            cpoints.height = fcp.height;
+            for (auto e : fcp.data) {
+                cpoints.data.push_back( toVec3f(e, instances) );
+            }
+        }
+    }
+
+    Surface(Instance& i, map<STEPentity*, Instance>& instances) : Instance(i) {
+        if (i.entity->IsComplex()) {
+            for (auto e : unfoldComplex(i.entity)) handleSurface(e, instances);
+            return;
+        } else handleSurface(i.entity, instances);
     }
 };
 
