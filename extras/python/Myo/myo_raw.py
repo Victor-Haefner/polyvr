@@ -255,8 +255,9 @@ class MyoRaw(object):
             self.write_attr(0x19, pack('BBBBHBBBBB', 2, 9, 2, 1, C, emg_smooth, C // emg_hz, imu_hz, 0, 0))
 
         else:
-            name = self.read_attr(0x03)
-            print('device name: %s' % name.payload)
+            self.read_attr(0x03)
+            #name = self.read_attr(0x03)
+            #print('device name: ', name.payload)
 
             ## enable IMU data
             self.write_attr(0x1d, b'\x01\x00')
