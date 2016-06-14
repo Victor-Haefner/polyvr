@@ -22,6 +22,21 @@
     </Script>
     <Script name_suffix="0" base_name="init" name_space="__script__" type="Python" mobile="">
       <core>
+
+	"""
+	
+	install packages:
+		python-freenect
+		python-pyx
+		cython
+	
+	add user to group
+		sudo adduser $USER plugdev
+		sudo adduser $USER video
+		restart computer or logout/login
+	
+	"""
+
 	import VR, sys, os
 	
 	kinectDir = VR.getSystemDirectory('ROOT') + '/extras/cython/Kinect'
@@ -200,7 +215,7 @@
 	import numpy as np
 	
 	#print ' kinect update'	
-	VR.theKinect.update()
+	if hasattr(VR, 'theKinect'): VR.theKinect.update()
 </core>
       <trig type="on_timeout" dev="" state="Pressed" param="0" key="0" name_suffix="1" base_name="trigger" name_space="__global__"/>
     </Script>
