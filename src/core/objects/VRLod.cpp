@@ -1,6 +1,7 @@
 #include "VRLod.h"
 #include "geometry/VRGeometry.h"
 #include "core/utils/toString.h"
+#include "core/objects/object/OSGCore.h"
 #include <libxml++/nodes/element.h>
 
 OSG_BEGIN_NAMESPACE;
@@ -22,7 +23,7 @@ VRObjectPtr VRLod::copy(vector<VRObjectPtr> childs) {
 /** initialise **/
 VRLod::VRLod(string name) : VRObject(name) {
     lod = DistanceLOD::create();
-    setCore(lod, "Lod");
+    setCore(OSGCore::create(lod), "Lod");
 
     store("center", &center);
     store("distances", &distances_string);

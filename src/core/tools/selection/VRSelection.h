@@ -5,7 +5,7 @@
 #include <vector>
 #include <map>
 #include "core/objects/VRObjectFwd.h"
-#include "core/math/boundingbox.h"
+#include "core/math/VRMathFwd.h"
 #include "core/math/pose.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -24,7 +24,7 @@ class VRSelection {
 
     protected:
         map<VRGeometry*, selection_atom> selected;
-        boundingbox bbox;
+        boundingboxPtr bbox = 0;
 
         virtual bool vertSelected(Vec3f p);
         virtual bool objSelected(VRGeometryPtr geo);

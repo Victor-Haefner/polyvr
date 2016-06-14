@@ -148,7 +148,7 @@ void PolyVR::start(bool runit) {
     if (runit) run();
 }
 
-void PolyVR::startTestScene(Node* n) {
+void PolyVR::startTestScene(OSGObjectPtr n) {
     start(false);
     cout << "start test scene " << n << endl;
     VRSceneManager::get()->newScene("test");

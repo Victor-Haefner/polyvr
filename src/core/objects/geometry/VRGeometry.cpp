@@ -20,6 +20,7 @@
 #include "core/utils/VRFunction.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/object/VRObjectT.h"
+#include "core/objects/OSGObject.h"
 #include "core/tools/selection/VRSelection.h"
 #include "core/networking/VRSharedMemory.h"
 #include "VRPrimitive.h"
@@ -78,12 +79,12 @@ VRGeometryPtr VRGeometry::ptr() { return static_pointer_cast<VRGeometry>( shared
 /** Set the geometry mesh (OSG geometry core) **/
 void VRGeometry::setMesh(GeometryMTRecPtr g, Reference ref, bool keep_material) {
     if (g == 0) return;
-    if (mesh_node) getNode()->subChild(mesh_node);
+    if (mesh_node) getNode()->node->subChild(mesh_node);
 
     mesh = g;
     mesh_node = makeNodeFor(g);
     OSG::setName(mesh_node, getName());
-    getNode()->addChild(mesh_node);
+    getNode()->node->addChild(mesh_node);
     meshSet = true;
     source = ref;
 

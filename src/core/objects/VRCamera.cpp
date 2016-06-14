@@ -1,6 +1,8 @@
 #include "VRCamera.h"
 #include "core/utils/toString.h"
+#include "core/math/boundingbox.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/OSGObject.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/gui/VRGuiManager.h"
@@ -26,7 +28,7 @@ VRCamera::VRCamera(string name) : VRTransform(name) {
     cam_invert_z = true;
 
     cam = PerspectiveCamera::create();
-    cam->setBeacon(getNode());
+    cam->setBeacon(getNode()->node);
     setFov(osgDegree2Rad(60));
 
     store("accept_root", &doAcceptRoot);
@@ -47,7 +49,7 @@ VRCamera::VRCamera(string name) : VRTransform(name) {
     camGeo->setTravMask(0);
     camGeo_->setMaterial(getCamGeoMat()->getMaterial());
     camGeo2_->setMaterial(getCamGeoMat()->getMaterial());
-    addChild(t);
+    addChild(OSGObject::create(t));
     t->addChild(camGeo);
     TransformMTRecPtr trans2 = Transform::create();
     NodeMTRecPtr t2 = makeNodeFor(trans2);
@@ -124,7 +126,7 @@ void VRCamera::focus(Vec3f p) {
 
 void VRCamera::focus(VRTransformPtr t) {
     auto bb = t->getBoundingBox();
-    Vec3f c = bb.center();
+    Vec3f c = bb->center();
 
     Vec3f d = getDir();
     //c = t->getWorldPosition();
@@ -135,7 +137,7 @@ void VRCamera::focus(VRTransformPtr t) {
     d.normalize();
 
     // go back or forth to see whole node
-    setFrom(c - d*max(bb.radius(), 0.1f));
+    setFrom(c - d*max(bb->radius(), 0.1f));
 }
 
 OSG_END_NAMESPACE;

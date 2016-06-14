@@ -19,6 +19,7 @@
 #include <OpenSG/OSGTrapezoidalShadowMapEngine.h>
 
 #include "core/utils/VROptions.h"
+#include "core/objects/object/OSGCore.h"
 #include "core/objects/VRLight.h"
 #include "core/objects/VRCamera.h"
 #include "core/objects/geometry/VRGeometry.h"
@@ -92,8 +93,8 @@ void VRDefShading::initDeferredShading(VRObjectPtr o) {
 void VRDefShading::setDefferedShading(bool b) {
     enabled = b;
     if (stageObject == 0) return;
-    if (b) stageObject->setCore(dsStage, "defShading", true);
-    else stageObject->setCore(Group::create(), "Object", true);
+    if (b) stageObject->setCore(OSGCore::create(dsStage), "defShading", true);
+    else stageObject->setCore(OSGCore::create(Group::create()), "Object", true);
 }
 
 bool VRDefShading::getDefferedShading() { return enabled; }

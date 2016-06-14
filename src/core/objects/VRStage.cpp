@@ -5,6 +5,7 @@
 
 #include "core/objects/VRCamera.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/object/OSGCore.h"
 
 using namespace OSG;
 
@@ -24,15 +25,15 @@ VRStagePtr VRStage::ptr() { return static_pointer_cast<VRStage>( shared_from_thi
 
 void VRStage::setActive(bool b) {
     active = b;
-    if (b) setCore(stage, "Stage", true);
-    else setCore(Group::create(), "Object", true);
+    if (b) setCore(OSGCore::create(stage), "Stage", true);
+    else setCore(OSGCore::create(Group::create()), "Object", true);
 }
 
 bool VRStage::isActive() { return active; }
 
 void VRStage::initStage() {
     stage = SimpleStage::create();
-    setCore(stage, "Stage");
+    setCore(OSGCore::create(stage), "Stage");
     stage->setSize(0.0f, 0.0f, 1.0f, 1.0f);
 
     SolidBackgroundRefPtr gb = SolidBackground::create();

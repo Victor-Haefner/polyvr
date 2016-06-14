@@ -1,6 +1,9 @@
 #ifndef VR3DENTITY_H_INCLUDED
 #define VR3DENTITY_H_INCLUDED
 
+#include <OpenSG/OSGSField.h>
+#include <OpenSG/OSGNode.h>
+
 #include "core/objects/VRObjectFwd.h"
 #include "object/VRObject.h"
 #include "core/utils/VRFunctionFwd.h"

@@ -12,6 +12,7 @@
 #include "core/setup/VRSetup.h"
 #include "core/gui/VRGuiUtils.h"
 #include "core/gui/VRGuiManager.h"
+#include "core/objects/OSGObject.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/objects/geometry/VRSprite.h"
@@ -336,12 +337,12 @@ void VRView::setPosition(Vec4f pos) { position = pos; update(); }
 void VRView::setRoot(VRObjectPtr root, VRTransformPtr real) { view_root = root; real_root = real; update(); }
 
 void VRView::setRoot() {
-    if (real_root && viewGeo) real_root->addChild(viewGeo);
+    if (real_root && viewGeo) real_root->addChild(OSGObject::create(viewGeo));
 
     if (user && real_root) user->switchParent(real_root);
     if (dummy_user && real_root) dummy_user->switchParent(real_root);
 
-    NodeMTRecPtr n = view_root ? view_root->getNode() : 0;
+    NodeMTRecPtr n = view_root ? view_root->getNode()->node : 0;
     if (lView) lView->setRoot(n);
     if (rView) rView->setRoot(n);
 }
@@ -356,12 +357,12 @@ void VRView::setUser() {
     if (user == 0 && user_name != "") user = VRSetupManager::getCurrent()->getTracker(user_name);
 
     if (user == 0) {
-        if (PCDecoratorLeft) PCDecoratorLeft->setUser(dummy_user->getNode());
-        if (PCDecoratorRight) PCDecoratorRight->setUser(dummy_user->getNode());
+        if (PCDecoratorLeft) PCDecoratorLeft->setUser(dummy_user->getNode()->node);
+        if (PCDecoratorRight) PCDecoratorRight->setUser(dummy_user->getNode()->node);
     } else {
         user_name = user->getName();
-        if (PCDecoratorLeft) PCDecoratorLeft->setUser(user->getNode());
-        if (PCDecoratorRight) PCDecoratorRight->setUser(user->getNode());
+        if (PCDecoratorLeft) PCDecoratorLeft->setUser(user->getNode()->node);
+        if (PCDecoratorRight) PCDecoratorRight->setUser(user->getNode()->node);
     }
 }
 

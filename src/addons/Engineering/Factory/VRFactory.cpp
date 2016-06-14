@@ -5,6 +5,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/VRLod.h"
 #include "core/math/Octree.h"
+#include "core/math/boundingbox.h"
 
 #include <iostream>
 #include <fstream>
@@ -257,9 +258,9 @@ class VRLODSpace : public VRObject {
 
         void add(VRObjectPtr g) {
             auto bb = g->getBoundingBox();
-            Vec3f c = bb.center()*scale;
+            Vec3f c = bb->center()*scale;
             Vec4i p; for(int i=0; i<3; i++) p[i] = round(c[i]);
-            p[3] = ceil(bb.radius()*scale);
+            p[3] = ceil(bb->radius()*scale);
             getSpace(p)->getChild(0)->addChild(g);
         }
 
@@ -306,8 +307,8 @@ VRObjectPtr VRFactory::setupLod(vector<string> paths) {
             VRLodPtr lod = VRLod::create("factory_lod");
             lod->addChild(g);
             lod->addEmpty();
-            lod->setCenter( bb.center() );
-            lod->setDistance(0, max(bb.radius()*15, 1.0f));
+            lod->setCenter( bb->center() );
+            lod->setDistance(0, max(bb->radius()*15, 1.0f));
             micro_lods.push_back(lod);
         }
     }

@@ -2,6 +2,7 @@
 #define VRMATERIAL_H_INCLUDED
 
 #include <OpenSG/OSGSField.h>
+#include <OpenSG/OSGNode.h>
 #include <OpenSG/OSGColor.h>
 
 #include "core/objects/object/VRObject.h"

@@ -505,6 +505,7 @@
 		<Unit filename="src/core/gui/VRGuiVectorEntry.h" />
 		<Unit filename="src/core/math/Octree.cpp" />
 		<Unit filename="src/core/math/Octree.h" />
+		<Unit filename="src/core/math/VRMathFwd.h" />
 		<Unit filename="src/core/math/boundingbox.cpp" />
 		<Unit filename="src/core/math/boundingbox.h" />
 		<Unit filename="src/core/math/coordinates.cpp" />
@@ -544,6 +545,8 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/networking/mongoose/mongoose.h" />
+		<Unit filename="src/core/objects/OSGObject.cpp" />
+		<Unit filename="src/core/objects/OSGObject.h" />
 		<Unit filename="src/core/objects/VRAnimation.cpp" />
 		<Unit filename="src/core/objects/VRAnimation.h" />
 		<Unit filename="src/core/objects/VRCamera.cpp" />
@@ -594,6 +597,8 @@
 		<Unit filename="src/core/objects/material/VRTextureGenerator.h" />
 		<Unit filename="src/core/objects/material/VRVideo.cpp" />
 		<Unit filename="src/core/objects/material/VRVideo.h" />
+		<Unit filename="src/core/objects/object/OSGCore.cpp" />
+		<Unit filename="src/core/objects/object/OSGCore.h" />
 		<Unit filename="src/core/objects/object/VRAttachment.cpp" />
 		<Unit filename="src/core/objects/object/VRAttachment.h" />
 		<Unit filename="src/core/objects/object/VRObject.cpp" />
@@ -906,6 +911,7 @@
 		<Unit filename="src/core/utils/VRFunction.cpp" />
 		<Unit filename="src/core/utils/VRFunction.h" />
 		<Unit filename="src/core/utils/VRFunctionFwd.h" />
+		<Unit filename="src/core/utils/VRFwdDeclTemplate.h" />
 		<Unit filename="src/core/utils/VRInternalMonitor.cpp" />
 		<Unit filename="src/core/utils/VRInternalMonitor.h" />
 		<Unit filename="src/core/utils/VRLogger.cpp" />

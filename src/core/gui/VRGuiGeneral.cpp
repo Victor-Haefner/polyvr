@@ -9,8 +9,9 @@
 #include <gtkmm/combobox.h>
 #include <gtkmm/cellrenderercombo.h>
 
-#include<OpenSG/OSGSceneFileHandler.h>
+#include <OpenSG/OSGSceneFileHandler.h>
 #include "core/scene/VRScene.h"
+#include "core/objects/OSGObject.h"
 #include "core/objects/material/VRMaterial.h"
 
 
@@ -66,8 +67,8 @@ void VRGuiGeneral::dumpOSG() {
     string pg = scene->getName() + "_osg_dump.osg";
     string pb = scene->getName() + "_osg_dump.osb";
 
-    SceneFileHandler::the()->write( scene->getRoot()->getNode(), pg.c_str() );
-    SceneFileHandler::the()->write( scene->getRoot()->getNode(), pb.c_str() );
+    SceneFileHandler::the()->write( scene->getRoot()->getNode()->node, pg.c_str() );
+    SceneFileHandler::the()->write( scene->getRoot()->getNode()->node, pb.c_str() );
 }
 
 bool VRGuiGeneral::setColor(GdkEventButton* b) {

@@ -1,4 +1,5 @@
 #include "VRPolygonSelection.h"
+#include "core/math/boundingbox.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 #include <OpenSG/OSGGeoProperties.h>
@@ -54,19 +55,19 @@ void VRPolygonSelection::clear() {
 
 bool VRPolygonSelection::objSelected(VRGeometryPtr geo) {
     if (!closed) return false;
-    boundingbox bbox = geo->getBoundingBox();
+    auto bbox = geo->getBoundingBox();
     Vec3f p0 = origin.pos();
     for (auto d : selection.getEdges()) {
-        if ( bbox.intersectedBy( Line(p0,d) ) ) return true;
+        if ( bbox->intersectedBy( Line(p0,d) ) ) return true;
     }
     return false;
 }
 
 bool VRPolygonSelection::partialSelected(VRGeometryPtr geo) {
     if (!closed) return false;
-    boundingbox bbox = geo->getBoundingBox();
+    auto bbox = geo->getBoundingBox();
     Vec3f p0 = origin.pos();
-    for (auto d : selection.getEdges()) if ( bbox.intersectedBy( Line(p0,d) ) ) return true;
+    for (auto d : selection.getEdges()) if ( bbox->intersectedBy( Line(p0,d) ) ) return true;
     return false;
 }
 
@@ -96,8 +97,8 @@ void VRPolygonSelection::updateShape(frustum f) {
     Vec3f p0 = trans.pos();
     float near = 1;
     float far = 1;
-    if (!bbox.empty()) near = dir.dot( bbox.center() - p0 ) - bbox.radius();
-    if (!bbox.empty()) far = dir.dot( bbox.center() - p0 ) + bbox.radius();
+    if (bbox && !bbox->empty()) near = dir.dot( bbox->center() - p0 ) - bbox->radius();
+    if (bbox && !bbox->empty()) far = dir.dot( bbox->center() - p0 ) + bbox->radius();
 
     GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
     GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();

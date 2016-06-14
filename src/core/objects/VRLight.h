@@ -1,6 +1,8 @@
 #ifndef VRLIGHT_H_INCLUDED
 #define VRLIGHT_H_INCLUDED
 
+#include <OpenSG/OSGNode.h>
+
 #include "core/objects/object/VRObject.h"
 #include <OpenSG/OSGSField.h>
 #include <OpenSG/OSGColor.h>
@@ -9,17 +11,14 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class Light; OSG_GEN_CONTAINERPTR(Light);
-class PointLight; OSG_GEN_CONTAINERPTR(PointLight);
-class DirectionalLight; OSG_GEN_CONTAINERPTR(DirectionalLight);
-class SpotLight; OSG_GEN_CONTAINERPTR(SpotLight);
 class SimpleShadowMapEngine; OSG_GEN_CONTAINERPTR(SimpleShadowMapEngine);
 class VRLightBeacon;
 
 class VRLight : public VRObject {
     protected:
-        DirectionalLightMTRecPtr d_light;
-        PointLightMTRecPtr p_light;
-        SpotLightMTRecPtr s_light;
+        OSGCorePtr d_light;
+        OSGCorePtr p_light;
+        OSGCorePtr s_light;
         string lightType;
         string shadowType;
         VRLightBeaconWeakPtr beacon;

@@ -4,8 +4,10 @@
 #include <boost/filesystem.hpp>
 #include <libxml++/libxml++.h>
 #include <libxml++/nodes/element.h>
+#include <iostream>
 
 using namespace OSG;
+using namespace std;
 namespace fs = boost::filesystem;
 
 VRProjectManager::VRProjectManager() : VRObject("ProjectManager") {}

@@ -1,7 +1,10 @@
 #include "VRObject.h"
 #include "../VRTransform.h"
+#include "../OSGObject.h"
+#include "OSGCore.h"
 #include "VRObjectT.h"
 #include "VRAttachment.h"
+#include "core/math/boundingbox.h"
 #include <OpenSG/OSGNameAttachment.h>
 #include <OpenSG/OSGGroup.h>
 #include <OpenSG/OSGTransform.h>
@@ -57,8 +60,10 @@ VRObject::VRObject(string _name) {
 
     setName(_name);
 
-    node = makeNodeFor(Group::create());
-    OSG::setName(node, name);
+    osg = shared_ptr<OSGObject>( new OSGObject() );
+
+    osg->node = makeNodeFor(Group::create());
+    OSG::setName(osg->node, name);
     type = "Object";
 
     setStorageType("Object");
@@ -72,8 +77,8 @@ VRObject::VRObject(string _name) {
 
 VRObject::~VRObject() {
     NodeMTRecPtr p;
-    if (node) p = node->getParent();
-    if (p) p->subChild(node);
+    if (osg->node) p = osg->node->getParent();
+    if (p) p->subChild(osg->node);
 }
 
 void VRObject::setup() {
@@ -99,7 +104,7 @@ void VRObject::detach() {
 void VRObject::setVolume(bool b) {
     if (!getNode()) return;
     float inf = std::numeric_limits<float>::max();
-    BoxVolume &vol = getNode()->editVolume(b);
+    BoxVolume &vol = getNode()->node->editVolume(b);
     if (!b) {
         vol.setEmpty();
         vol.extendBy(Pnt3f(-inf,-inf,-inf));
@@ -148,71 +153,71 @@ VRObjectPtr VRObject::hasAncestorWithAttachment(string name) {
 }
 
 void VRObject::addLink(VRObjectPtr obj) {
-    if (links.count(obj.get())) return;
+    if (osg->links.count(obj.get())) return;
 
     VisitSubTreeRecPtr visitor = VisitSubTree::create();
-    visitor->setSubTreeRoot(obj->getNode());
+    visitor->setSubTreeRoot(obj->getNode()->node);
     NodeMTRecPtr visit_node = makeNodeFor(visitor);
-    addChild(visit_node);
+    addChild(OSGObject::create(visit_node));
 
-    links[obj.get()] = visit_node;
+    osg->links[obj.get()] = visit_node;
 }
 
 void VRObject::remLink(VRObjectPtr obj) {
-    if (!links.count(obj.get())) return;
+    if (!osg->links.count(obj.get())) return;
 
-    NodeMTRecPtr node = links[obj.get()];
-    subChild(node);
-    links.erase(obj.get());
+    NodeMTRecPtr node = osg->links[obj.get()];
+    subChild(OSGObject::create(node));
+    osg->links.erase(obj.get());
 }
 
-void VRObject::setCore(NodeCoreMTRecPtr c, string _type, bool force) {
+void VRObject::setCore(OSGCorePtr c, string _type, bool force) {
     if (specialized && !force) {
         cout << "\nError, Object allready specialized, skip setCore()\n";
         return;
     }
 
     type = _type;
-    node->setCore(c);
+    osg->node->setCore(c->core);
     specialized = true;
 }
 
 /** Returns the object OSG core **/
-NodeCoreMTRecPtr VRObject::getCore() { return node->getCore(); }
+OSGCorePtr VRObject::getCore() { return OSGCore::create( osg->node->getCore() ); }
 
 /** Switch the object core by another **/
-void VRObject::switchCore(NodeCoreMTRecPtr c) {
+void VRObject::switchCore(OSGCorePtr c) {
     if(!specialized) return;
-    node->setCore(c);
+    osg->node->setCore(c->core);
 }
 
 /** Returns the object OSG node **/
-NodeMTRecPtr VRObject::getNode() { return node; }
+OSGObjectPtr VRObject::getNode() { return osg; }
 
 void VRObject::setSiblingPosition(int i) {
     auto parent = getParent();
     if (parent == 0) return;
     if (i < 0 || i >= (int)parent->children.size()) return;
 
-    NodeMTRecPtr p = parent->getNode();
-    p->subChild(getNode());
-    p->insertChild(i, getNode());
+    NodeMTRecPtr p = parent->getNode()->node;
+    p->subChild(getNode()->node);
+    p->insertChild(i, getNode()->node);
 
     parent->children.erase(std::find(parent->children.begin(), parent->children.end(), ptr()));
     parent->children.insert(parent->children.begin() + i, ptr());
 }
 
-void VRObject::addChild(NodeMTRecPtr n) {
-    if (!node) { cout << "Warning! VRObject::addChild: bad osg parent node!\n"; return; }
-    if (!n) { cout << "Warning! VRObject::addChild: bad osg child node!\n"; return; }
-    node->addChild(n);
+void VRObject::addChild(OSGObjectPtr n) {
+    if (!osg || !osg->node) { cout << "Warning! VRObject::addChild: bad osg parent node!\n"; return; }
+    if (!n || !n->node) { cout << "Warning! VRObject::addChild: bad osg child node!\n"; return; }
+    osg->node->addChild(n->node);
 }
 
 void VRObject::addChild(VRObjectPtr child, bool osg, int place) {
     if (child == 0) return;
     if (child->getParent() != 0) { child->switchParent(ptr(), place); return; }
 
-    if (osg) addChild(child->node);
+    if (osg) addChild(child->osg);
     child->graphChanged = VRGlobals::get()->CURRENT_FRAME;
     child->childIndex = children.size();
     children.push_back(child);
@@ -223,9 +228,9 @@ void VRObject::addChild(VRObjectPtr child, bool osg, int place) {
 
 int VRObject::getChildIndex() { return childIndex;}
 
-void VRObject::subChild(NodeMTRecPtr n) { node->subChild(n); }
-void VRObject::subChild(VRObjectPtr child, bool osg) {
-    if (osg) node->subChild(child->node);
+void VRObject::subChild(OSGObjectPtr n) { osg->node->subChild(n->node); }
+void VRObject::subChild(VRObjectPtr child, bool doOsg) {
+    if (doOsg) osg->node->subChild(child->osg->node);
 
     int target = findChild(child);
 
@@ -310,9 +315,9 @@ void VRObject::getObjectListByType(string _type, vector<VRObjectPtr>& list) {
     for (auto c : children) c->getObjectListByType(_type, list);
 }
 
-VRObjectPtr VRObject::find(NodeMTRecPtr n, string indent) {
+VRObjectPtr VRObject::find(OSGObjectPtr n, string indent) {
     //cout << endl << indent << getName() << " " << node << " " << ptr() << flush;
-    if (node == n) return ptr();
+    if (osg->node == n->node) return ptr();
     for (auto c : children) {
         VRObjectPtr tmp = c->find(n, indent+" ");
         if (tmp != 0) return tmp;
@@ -393,14 +398,14 @@ bool VRObject::hasAncestor(VRObjectPtr a) {
 }
 
 /** Returns the Boundingbox of the OSG Node */
-boundingbox VRObject::getBoundingBox() {
+boundingboxPtr VRObject::getBoundingBox() {
     Pnt3f p1, p2;
     commitChanges();
-    node->updateVolume();
-    node->getVolume().getBounds(p1, p2);
-    boundingbox b;
-    b.update(p1.subZero());
-    b.update(p2.subZero());
+    osg->node->updateVolume();
+    osg->node->getVolume().getBounds(p1, p2);
+    boundingboxPtr b = shared_ptr<boundingbox>( new boundingbox );
+    b->update(p1.subZero());
+    b->update(p2.subZero());
     return b;
 }
 
@@ -433,23 +438,23 @@ void VRObject::printTree(int indent) {
     if(indent == 0) cout << "\n";
 }
 
-void VRObject::printOSGTree(NodeMTRecPtr o, string indent) {
-    string type = o->getCore()->getTypeName();
+void VRObject::printOSGTree(OSGObjectPtr o, string indent) {
+    string type = o->node->getCore()->getTypeName();
     string name = "Unnamed";
-    if (OSG::getName(o)) name = OSG::getName(o);
+    if (OSG::getName(o->node)) name = OSG::getName(o->node);
 
     // get attachments
     // print them
 
     cout << "\n" << indent << name << " " << type << "  ";
     if (type == "Transform") {
-        Transform* t = dynamic_cast<Transform*>(o->getCore());
+        Transform* t = dynamic_cast<Transform*>(o->node->getCore());
         cout << t->getMatrix()[0] << "  " << t->getMatrix()[1] << "  " << t->getMatrix()[2];
     }
     cout << flush;
 
-    for (uint i=0; i<o->getNChildren(); i++) {
-        printOSGTree(o->getChild(i), indent + " ");
+    for (uint i=0; i<o->node->getNChildren(); i++) {
+        printOSGTree(OSGObject::create(o->node->getChild(i)), indent + " ");
     }
 }
 
@@ -494,8 +499,8 @@ bool VRObject::isVisible() { return visible; }
 void VRObject::setVisible(bool b) {
     recUndo(&VRObject::setVisible, ptr(), visible, b);
     visible = b;
-    if (b) node->setTravMask(0xffffffff);
-    else node->setTravMask(0);
+    if (b) osg->node->setTravMask(0xffffffff);
+    else osg->node->setTravMask(0);
 }
 
 /** toggle visibility **/

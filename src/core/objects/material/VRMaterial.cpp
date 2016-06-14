@@ -27,6 +27,8 @@
 #include <OpenSG/OSGMaterialChunk.h>
 
 #include "core/objects/VRTransform.h"
+#include "core/objects/object/OSGCore.h"
+#include "core/objects/OSGObject.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRUndoInterfaceT.h"
@@ -158,7 +160,7 @@ VRMaterial::VRMaterial(string name) : VRObject(name) {
 
     MaterialGroupMTRecPtr group = MaterialGroup::create();
     group->setMaterial(passes);
-    setCore(group, "Material");
+    setCore(OSGCore::create(group), "Material");
 
     //store("diffuse", &diffuse);
     //store("specular", &specular);
@@ -593,7 +595,7 @@ void VRMaterial::setClipPlane(bool active, Vec4f equation, VRTransformPtr beacon
 
         md->clipChunk->setEquation(equation);
         md->clipChunk->setEnable  (active);
-        if (beacon) md->clipChunk->setBeacon(beacon->getNode());
+        if (beacon) md->clipChunk->setBeacon(beacon->getNode()->node);
     }
 }
 

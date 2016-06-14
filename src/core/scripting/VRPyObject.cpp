@@ -1,6 +1,7 @@
 #include "VRPyObject.h"
 #include "VRPyBaseT.h"
 #include "VRPyTypeCaster.h"
+#include "core/objects/OSGObject.h"
 
 #include <OpenSG/OSGNode.h>
 
@@ -135,7 +136,7 @@ PyObject* VRPyObject::getChildrenWithTag(VRPyObject* self, PyObject* args) {
 
 PyObject* VRPyObject::setTravMask(VRPyObject* self, PyObject* args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::setTravMask - C Object is invalid"); return NULL; }
-    self->objPtr->getNode()->setTravMask( parseInt(args) );
+    self->objPtr->getNode()->node->setTravMask( parseInt(args) );
     Py_RETURN_TRUE;
 }
 
@@ -189,7 +190,7 @@ PyObject* VRPyObject::flattenHiarchy(VRPyObject* self) {
 
 PyObject* VRPyObject::printOSG(VRPyObject* self) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyObject::printOSG - C Object is invalid"); return NULL; }
-    OSG::NodeMTRecPtr n = self->objPtr->getNode();
+    auto n = self->objPtr->getNode();
     OSG::VRObject::printOSGTree(n);
     Py_RETURN_TRUE;
 }

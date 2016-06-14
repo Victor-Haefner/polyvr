@@ -13,6 +13,8 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
 
+#include "core/objects/OSGObject.h"
+#include "core/objects/object/OSGCore.h"
 #include "core/objects/VRTransform.h"
 #include "core/objects/VRGroup.h"
 #include "core/objects/object/VRObject.h"
@@ -210,7 +212,7 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
 
     else if (t_name == "Group") {//OpenSG Group
         tmp = VRObject::create(name);
-        tmp->setCore(core, "Object");
+        tmp->setCore(OSGCore::create(core), "Object");
         tmp->addAttachment("collada_name", name);
     }
 
@@ -243,7 +245,7 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
     else if (t_name == "MaterialGroup") {
         tmp_m = VRMaterial::create(name);
         tmp = tmp_m;
-        tmp->setCore(core, "Material");
+        tmp->setCore(OSGCore::create(core), "Material");
     }
 
     else if (t_name == "Geometry") {
@@ -264,7 +266,7 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
 
     else {
         tmp = VRObject::create(name);
-        tmp->setCore(core, t_name);
+        tmp->setCore(OSGCore::create(core), t_name);
     }
 
     for (uint i=0;i<n->getNChildren();i++)
@@ -312,7 +314,7 @@ VRGeometryPtr VRImport::loadGeometry(string file, string object, string preset, 
 VRImport::Cache::Cache() {;}
 VRImport::Cache::Cache(VRTransformPtr root) {
     this->root = root;
-    for (auto c : root->getChildren(true)) objects[getName(c->getNode())] = c;
+    for (auto c : root->getChildren(true)) objects[getName(c->getNode()->node)] = c;
 }
 
 VRProgressPtr VRImport::getProgressObject() { return progress; }

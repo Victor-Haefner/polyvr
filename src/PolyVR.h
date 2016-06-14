@@ -2,14 +2,13 @@
 #define VRFRAMEWORK_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
-#include <memory>
+#include "core/objects/VRObjectFwd.h"
 
 class VROptions;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class Node;
 class VRSceneManager;
 class VRSetupManager;
 class VRInternalMonitor;
@@ -43,7 +42,7 @@ class PolyVR {
 
         void init(int argc, char **argv);
         void start(bool runit = true);
-        void startTestScene(Node* n);
+        void startTestScene(OSGObjectPtr n);
 
         void setOption(string name, bool val);
         void setOption(string name, string val);

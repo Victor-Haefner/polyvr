@@ -1,4 +1,6 @@
 #include "VRTextureRenderer.h"
+#include "core/objects/OSGObject.h"
+#include "core/objects/object/OSGCore.h"
 #include "core/objects/VRCamera.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTexture.h"
@@ -47,7 +49,7 @@ void VRTextureRenderer::test() {
 
     auto scene = VRSceneManager::getCurrent();
     auto hlight = scene->getRoot()->find("Headlight");
-    hlight->addChild( flagScene );
+    hlight->addChild( OSGObject::create(flagScene) );
 }
 
 VRTextureRenderer::VRTextureRenderer(string name) : VRObject(name) {
@@ -84,7 +86,7 @@ VRTextureRenderer::VRTextureRenderer(string name) : VRObject(name) {
     data->stage->setSize(0.0f, 0.0f, 1.0f, 1.0f);
     data->stage->setBackground( scene->getBackground() );
 
-    setCore(data->stage, "TextureRenderer");
+    setCore(OSGCore::create(data->stage), "TextureRenderer");
 }
 
 VRTextureRenderer::~VRTextureRenderer() { delete data; }
@@ -102,7 +104,7 @@ void VRTextureRenderer::setup(VRCameraPtr cam, int width, int height) {
 VRMaterialPtr VRTextureRenderer::getMaterial() { return mat; }
 
 void VRTextureRenderer::setActive(bool b) {
-    if (b) setCore(data->stage, "TextureRenderer", true);
-    else setCore(Group::create(), "TextureRenderer", true);
+    if (b) setCore(OSGCore::create(data->stage), "TextureRenderer", true);
+    else setCore(OSGCore::create(Group::create()), "TextureRenderer", true);
 }
 

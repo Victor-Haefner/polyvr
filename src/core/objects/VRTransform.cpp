@@ -4,6 +4,7 @@
 #include "core/utils/VRStorage_template.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
+#include "core/objects/object/OSGCore.h"
 #include "core/objects/geometry/VRConstraint.h"
 #include "core/utils/VRUndoInterfaceT.h"
 #include "core/utils/VRDoublebuffer.h"
@@ -11,6 +12,7 @@
 #include "VRTransform.h"
 #include "geometry/VRPhysics.h"
 #include "core/math/path.h"
+#include "core/objects/OSGObject.h"
 #include <OpenSG/OSGTransform.h>
 #include <OpenSG/OSGSimpleSHLChunk.h>
 #include <OpenSG/OSGChunkMaterial.h>
@@ -26,7 +28,7 @@ VRTransform::VRTransform(string name) : VRObject(name) {
     dm = new doubleBuffer;
     t = Transform::create();
     constraint = VRConstraint::create();
-    setCore(t, "Transform");
+    setCore(OSGCore::create(t), "Transform");
     addAttachment("transform", 0);
 
     store("from", &_from);
@@ -116,7 +118,7 @@ void VRTransform::initCoords() {
 
     coords = makeCoordAxis(0.3, 3, false);
     coords->setTravMask(0);
-    addChild(coords);
+    addChild(OSGObject::create(coords));
     GeometryMTRecPtr geo = dynamic_cast<Geometry*>(coords->getCore());
 
     string shdr_vp =
@@ -140,7 +142,7 @@ void VRTransform::initTranslator() { // TODO
 
     translator = makeCoordAxis(0.3, 3, false);
     translator->setTravMask(0);
-    addChild(translator);
+    addChild(OSGObject::create(translator));
     GeometryMTRecPtr geo = dynamic_cast<Geometry*>(translator->getCore());
 
     string shdr_vp =
@@ -620,7 +622,7 @@ Line VRTransform::castRay(VRObjectPtr obj, Vec3f dir) {
 void VRTransform::printPos() {
     Matrix wm, wm_osg, lm;
     getWorldMatrix(wm);
-    wm_osg = getNode()->getToWorld();
+    wm_osg = getNode()->node->getToWorld();
     getMatrix(lm);
     cout << "Position of " << getName() << ", local: " << Vec3f(lm[3]) << ", world: " << Vec3f(wm[3]) << "  " << Vec3f(wm_osg[3]);
 }

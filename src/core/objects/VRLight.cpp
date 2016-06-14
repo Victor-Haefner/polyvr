@@ -3,6 +3,8 @@
 #include "core/utils/VRStorage_template.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneManager.h"
+#include "core/objects/OSGObject.h"
+#include "core/objects/object/OSGCore.h"
 #include "VRLightBeacon.h"
 
 #include <OpenSG/OSGShadowStage.h>
@@ -19,9 +21,13 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 VRLight::VRLight(string name) : VRObject(name) {
-    d_light = DirectionalLight::create();
-    p_light = PointLight::create();
-    s_light = SpotLight::create();
+    DirectionalLightMTRecPtr d_light = DirectionalLight::create();
+    PointLightMTRecPtr p_light = PointLight::create();
+    SpotLightMTRecPtr s_light = SpotLight::create();
+
+    this->d_light = OSGCore::create(d_light);
+    this->p_light = OSGCore::create(p_light);
+    this->s_light = OSGCore::create(s_light);
 
     d_light->setDirection(Vec3f(0,0,1));
 
@@ -33,7 +39,7 @@ VRLight::VRLight(string name) : VRObject(name) {
     setShadowColor(Color4f(0.1f, 0.1f, 0.1f, 1.0f));
     shadowType = "4096";
 
-    setCore(p_light, "Light");
+    setCore(OSGCore::create(p_light), "Light");
     lightType = "point";
     attenuation = Vec3f(p_light->getConstantAttenuation(), p_light->getLinearAttenuation(), p_light->getQuadraticAttenuation());
 
@@ -99,34 +105,34 @@ void VRLight::setType(string type) {
 void VRLight::setBeacon(VRLightBeaconPtr b) {
     beacon = b;
     b->setLight( ptr() );
-    d_light->setBeacon(b->getNode());
-    p_light->setBeacon(b->getNode());
-    s_light->setBeacon(b->getNode());
+    dynamic_pointer_cast<Light>(d_light->core)->setBeacon(b->getNode()->node);
+    dynamic_pointer_cast<Light>(p_light->core)->setBeacon(b->getNode()->node);
+    dynamic_pointer_cast<Light>(s_light->core)->setBeacon(b->getNode()->node);
 }
 
 void VRLight::setLightDiffColor(Color4f c) {
     lightDiffuse = c;
-    d_light->setDiffuse(c);
-    p_light->setDiffuse(c);
-    s_light->setDiffuse(c);
+    dynamic_pointer_cast<Light>(d_light->core)->setDiffuse(c);
+    dynamic_pointer_cast<Light>(p_light->core)->setDiffuse(c);
+    dynamic_pointer_cast<Light>(s_light->core)->setDiffuse(c);
 }
 
 Color4f VRLight::getLightDiffColor() { return lightDiffuse; }
 
 void VRLight::setLightAmbColor(Color4f c) {
     lightAmbient = c;
-    d_light->setAmbient(c);
-    p_light->setAmbient(c);
-    s_light->setAmbient(c);
+    dynamic_pointer_cast<Light>(d_light->core)->setAmbient(c);
+    dynamic_pointer_cast<Light>(p_light->core)->setAmbient(c);
+    dynamic_pointer_cast<Light>(s_light->core)->setAmbient(c);
 }
 
 Color4f VRLight::getLightAmbColor() { return lightAmbient; }
 
 void VRLight::setLightSpecColor(Color4f c) {
     lightSpecular = c;
-    d_light->setSpecular(c);
-    p_light->setSpecular(c);
-    s_light->setSpecular(c);
+    dynamic_pointer_cast<Light>(d_light->core)->setSpecular(c);
+    dynamic_pointer_cast<Light>(p_light->core)->setSpecular(c);
+    dynamic_pointer_cast<Light>(s_light->core)->setSpecular(c);
 }
 
 Color4f VRLight::getLightSpecColor() { return lightSpecular; }
@@ -134,17 +140,14 @@ Color4f VRLight::getLightSpecColor() { return lightSpecular; }
 void VRLight::setShadows(bool b) {
     shadows = b;
     if (b) {
-        p_light->setLightEngine(ssme);
-        d_light->setLightEngine(ssme);
-        s_light->setLightEngine(ssme);
-
-        OSG::Vec3f mi,ma; // update osg volume
-        getNode()->updateVolume();
-        getNode()->getVolume   ().getBounds( mi, ma );
+        dynamic_pointer_cast<Light>(d_light->core)->setLightEngine(ssme);
+        dynamic_pointer_cast<Light>(p_light->core)->setLightEngine(ssme);
+        dynamic_pointer_cast<Light>(s_light->core)->setLightEngine(ssme);
+        auto bb = getBoundingBox(); // update osg volume
     } else {
-        p_light->setLightEngine(0);
-        d_light->setLightEngine(0);
-        s_light->setLightEngine(0);
+        dynamic_pointer_cast<Light>(d_light->core)->setLightEngine(0);
+        dynamic_pointer_cast<Light>(p_light->core)->setLightEngine(0);
+        dynamic_pointer_cast<Light>(s_light->core)->setLightEngine(0);
     }
 }
 
@@ -159,20 +162,20 @@ Color4f VRLight::getShadowColor() { return shadowColor; }
 
 void VRLight::setOn(bool b) {
     on = b;
-    d_light->setOn(b);
-    p_light->setOn(b);
-    s_light->setOn(b);
+    dynamic_pointer_cast<Light>(d_light->core)->setOn(b);
+    dynamic_pointer_cast<Light>(p_light->core)->setOn(b);
+    dynamic_pointer_cast<Light>(s_light->core)->setOn(b);
 }
 
 bool VRLight::isOn() { return on; }
 
 void VRLight::setAttenuation(Vec3f a) {
     attenuation = a;
-    d_light->setConstantAttenuation(a[0]);
-    d_light->setLinearAttenuation(a[1]);
-    d_light->setQuadraticAttenuation(a[2]);
-    p_light->setAttenuation(a[0], a[1], a[2]);
-    s_light->setAttenuation(a[0], a[1], a[2]);
+    dynamic_pointer_cast<Light>(d_light->core)->setConstantAttenuation(a[0]);
+    dynamic_pointer_cast<Light>(d_light->core)->setLinearAttenuation(a[1]);
+    dynamic_pointer_cast<Light>(d_light->core)->setQuadraticAttenuation(a[2]);
+    dynamic_pointer_cast<PointLight>(p_light->core)->setAttenuation(a[0], a[1], a[2]);
+    dynamic_pointer_cast<SpotLight>(s_light->core)->setAttenuation(a[0], a[1], a[2]);
 }
 
 Vec3f VRLight::getAttenuation() { return attenuation; }
@@ -234,7 +237,7 @@ void VRLight::setPointlight() { switchCore(p_light); }
 void VRLight::setSpotlight() { switchCore(s_light); }
 void VRLight::setDirectionallight() { switchCore(d_light); }
 
-LightMTRecPtr VRLight::getLightCore() { return dynamic_pointer_cast<Light>(getCore()); }
+LightMTRecPtr VRLight::getLightCore() { return dynamic_pointer_cast<Light>(getCore()->core); }
 string VRLight::getLightType() { return lightType; };
 
 OSG_END_NAMESPACE;

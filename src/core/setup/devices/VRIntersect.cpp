@@ -6,6 +6,7 @@
 
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/OSGObject.h"
 #include "core/utils/VRFunction.h"
 #include "VRSignal.h"
 #include "VRDevice.h"
@@ -81,16 +82,16 @@ VRIntersection VRIntersect::intersect(VRObjectWeakPtr wtree, Line ray) {
     //IntersectActionRefPtr iAct = IntersectAction::create();
     iAct.setTravMask(8);
     iAct.setLine(ray);
-    iAct.apply(tree->getNode());
+    iAct.apply(tree->getNode()->node);
 
     ins.hit = iAct.didHit();
     if (ins.hit) {
-        ins.object = tree->find(iAct.getHitObject()->getParent());
+        ins.object = tree->find(OSGObject::create(iAct.getHitObject()->getParent()));
         if (auto sp = ins.object.lock()) ins.name = sp->getName();
         ins.point = iAct.getHitPoint();
         ins.normal = iAct.getHitNormal();
-        if (tree->getParent()) tree->getParent()->getNode()->getToWorld().mult( ins.point, ins.point );
-        if (tree->getParent()) tree->getParent()->getNode()->getToWorld().mult( ins.normal, ins.normal );
+        if (tree->getParent()) tree->getParent()->getNode()->node->getToWorld().mult( ins.point, ins.point );
+        if (tree->getParent()) tree->getParent()->getNode()->node->getToWorld().mult( ins.normal, ins.normal );
         ins.triangle = iAct.getHitTriangle();
         ins.triangleVertices = VRIntersect_computeVertices(ins, iAct.getHitObject());
         ins.texel = VRIntersect_computeTexel(ins, iAct.getHitObject());

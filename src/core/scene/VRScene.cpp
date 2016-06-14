@@ -7,6 +7,7 @@
 #include "VRSceneManager.h"
 #include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
+#include "core/objects/OSGObject.h"
 #include "core/objects/VRLightBeacon.h"
 #include "core/objects/object/VRObject.h"
 #include "core/objects/VRGroup.h"
@@ -125,7 +126,7 @@ void VRScene::add(VRObjectPtr obj, int parentID) {
     else root->addChild(obj);
 }
 
-void VRScene::add(NodeMTRecPtr n) { root->addChild(n); }
+void VRScene::add(NodeMTRecPtr n) { root->addChild(OSGObject::create(n)); }
 
 VRObjectPtr VRScene::get(int ID) {
     if (ID == -1) return 0;

@@ -1,5 +1,6 @@
 #include "VRSelection.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/math/boundingbox.h"
 
 #include <OpenSG/OSGGeometry.h>
 
@@ -30,7 +31,7 @@ void VRSelection::add(VRGeometryPtr geo, vector<int> subselection) {
 
 void VRSelection::clear() {
     selected.clear();
-    bbox.clear();
+    if (bbox) bbox->clear();
 }
 
 void VRSelection::apply(VRObjectPtr tree, bool force, bool recursive) {
@@ -99,7 +100,7 @@ void VRSelection::updateSubselection(VRGeometryPtr geo) {
         Pnt3f p = pos->getValue<Pnt3f>(i);
         m.mult(p,p);
         if (vertSelected(Vec3f(p))) {
-            bbox.update(Vec3f(p));
+            bbox->update(Vec3f(p));
             sel.subselection.push_back(i);
         }
     }

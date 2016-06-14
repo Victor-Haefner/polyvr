@@ -6,6 +6,7 @@
 #include <OpenSG/OSGSceneFileHandler.h>
 #include <boost/filesystem.hpp>
 #include "core/objects/object/VRObject.h"
+#include "core/objects/OSGObject.h"
 #include "core/objects/geometry/VRGeometry.h"
 
 using namespace OSG;
@@ -21,5 +22,5 @@ void VRExport::write(VRObjectPtr obj, string path) {
     auto bp = boost::filesystem::path(path);
     string ext = bp.extension().string();
     if (ext == ".ply" && geo) { writePly(geo, path); }
-    SceneFileHandler::the()->write(obj->getNode(), path.c_str());
+    SceneFileHandler::the()->write(obj->getNode()->node, path.c_str());
 }
