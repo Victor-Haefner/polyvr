@@ -5,9 +5,9 @@
 #include <vector>
 
 #include <OpenSG/OSGSField.h>
-#include <OpenSG/OSGVector.h>
 #include <OpenSG/OSGNode.h>
 
+#include "core/math/boundingbox.h"
 #include "core/utils/VRName.h"
 #include "core/utils/VRStorage.h"
 #include "core/utils/VRUndoInterface.h"
@@ -161,10 +161,7 @@ class VRObject : public std::enable_shared_from_this<VRStorage>, public VRName, 
         bool hasAncestor(VRObjectPtr a);
 
         /** Returns the Boundingbox of the OSG Node */
-        void getBoundingBox(Vec3f& v1, Vec3f& v2);
-        Vec3f getBBCenter();
-        Vec3f getBBExtent();
-        float getBBMax();
+        boundingbox getBoundingBox();
 
         void flattenHiarchy();
 

@@ -123,9 +123,8 @@ void VRCamera::focus(Vec3f p) {
 }
 
 void VRCamera::focus(VRTransformPtr t) {
-    Vec3f v1,v2,c;
-    t->getBoundingBox(v1,v2);
-    c = (v1+v2)*0.5;
+    auto bb = t->getBoundingBox();
+    Vec3f c = bb.center();
 
     Vec3f d = getDir();
     //c = t->getWorldPosition();
@@ -136,8 +135,7 @@ void VRCamera::focus(VRTransformPtr t) {
     d.normalize();
 
     // go back or forth to see whole node
-    float R = (v2 - v1).length();
-    setFrom(c - d*max(R, 0.1f));
+    setFrom(c - d*max(bb.radius(), 0.1f));
 }
 
 OSG_END_NAMESPACE;

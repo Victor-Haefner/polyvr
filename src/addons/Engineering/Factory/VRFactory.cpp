@@ -256,9 +256,10 @@ class VRLODSpace : public VRObject {
         static VRLODSpacePtr create() { return VRLODSpacePtr(new VRLODSpace()); }
 
         void add(VRObjectPtr g) {
-            Vec3f c = g->getBBCenter()*scale;
+            auto bb = g->getBoundingBox();
+            Vec3f c = bb.center()*scale;
             Vec4i p; for(int i=0; i<3; i++) p[i] = round(c[i]);
-            p[3] = ceil(g->getBBMax()*scale);
+            p[3] = ceil(bb.radius()*scale);
             getSpace(p)->getChild(0)->addChild(g);
         }
 
@@ -301,11 +302,12 @@ VRObjectPtr VRFactory::setupLod(vector<string> paths) {
         for (auto g : geos) {
             prog.update(1);
 
+            auto bb = g->getBoundingBox();
             VRLodPtr lod = VRLod::create("factory_lod");
             lod->addChild(g);
             lod->addEmpty();
-            lod->setCenter( g->getBBCenter() );
-            lod->setDistance(0, max(g->getBBMax()*15, 1.0f));
+            lod->setCenter( bb.center() );
+            lod->setDistance(0, max(bb.radius()*15, 1.0f));
             micro_lods.push_back(lod);
         }
     }

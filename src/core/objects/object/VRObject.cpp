@@ -393,37 +393,15 @@ bool VRObject::hasAncestor(VRObjectPtr a) {
 }
 
 /** Returns the Boundingbox of the OSG Node */
-void VRObject::getBoundingBox(Vec3f& v1, Vec3f& v2) {
+boundingbox VRObject::getBoundingBox() {
     Pnt3f p1, p2;
     commitChanges();
     node->updateVolume();
     node->getVolume().getBounds(p1, p2);
-    v1 = p1.subZero();
-    v2 = p2.subZero();
-}
-
-Vec3f VRObject::getBBCenter() {
-    Vec3f v1, v2;
-    getBoundingBox(v1, v2);
-
-    return (v1+v2)*0.5;
-}
-
-Vec3f VRObject::getBBExtent() {
-    Vec3f v1, v2;
-    getBoundingBox(v1, v2);
-
-    return v2-v1;
-}
-
-float VRObject::getBBMax() {
-    Vec3f v1, v2;
-    getBoundingBox(v1, v2);
-    v1 = v2-v1;
-    float r = 0;
-    for (int i=0; i<3; i++) r = max(r,v1[i]);
-
-    return r;
+    boundingbox b;
+    b.update(p1.subZero());
+    b.update(p2.subZero());
+    return b;
 }
 
 void VRObject::flattenHiarchy() {

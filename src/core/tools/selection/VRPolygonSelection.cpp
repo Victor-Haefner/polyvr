@@ -54,13 +54,7 @@ void VRPolygonSelection::clear() {
 
 bool VRPolygonSelection::objSelected(VRGeometryPtr geo) {
     if (!closed) return false;
-
-    Vec3f v1,v2;
-    geo->getBoundingBox(v1,v2);
-    boundingbox bbox;
-    bbox.update(v1);
-    bbox.update(v2);
-
+    boundingbox bbox = geo->getBoundingBox();
     Vec3f p0 = origin.pos();
     for (auto d : selection.getEdges()) {
         if ( bbox.intersectedBy( Line(p0,d) ) ) return true;
@@ -70,13 +64,7 @@ bool VRPolygonSelection::objSelected(VRGeometryPtr geo) {
 
 bool VRPolygonSelection::partialSelected(VRGeometryPtr geo) {
     if (!closed) return false;
-
-    Vec3f v1,v2;
-    geo->getBoundingBox(v1,v2);
-    boundingbox bbox;
-    bbox.update(v1);
-    bbox.update(v2);
-
+    boundingbox bbox = geo->getBoundingBox();
     Vec3f p0 = origin.pos();
     for (auto d : selection.getEdges()) if ( bbox.intersectedBy( Line(p0,d) ) ) return true;
     return false;
