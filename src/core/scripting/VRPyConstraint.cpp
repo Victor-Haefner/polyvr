@@ -1,4 +1,5 @@
 #include "VRPyConstraint.h"
+#include "VRPyTransform.h"
 #include "VRPyBaseT.h"
 #include "core/objects/geometry/VRPhysics.h"
 
@@ -53,6 +54,8 @@ PyMethodDef VRPyConstraint::methods[] = {
     {"setLocal", (PyCFunction)VRPyConstraint::setLocal, METH_VARARGS, "Set the local flag of the constraints" },
     {"lock", (PyCFunction)VRPyConstraint::lock, METH_VARARGS, "Lock a list of DoFs" },
     {"free", (PyCFunction)VRPyConstraint::free, METH_VARARGS, "Free a list of DoFs" },
+    {"setReference", (PyCFunction)VRPyConstraint::setReference, METH_VARARGS, "Set the reference matrix, setReference( transform )" },
+    {"setReferential", (PyCFunction)VRPyConstraint::setReferential, METH_VARARGS, "Set the local referential, setReferential( transform )" },
     {"setLocalOffset", (PyCFunction)VRPyConstraint::setLocalOffsetB, METH_VARARGS, "Set the offset (relative to the target transform), setLocalOffset(offsetX,offsetY,offsetZ,yaw,pitch,roll)" },
     {"setLocalOffsetA", (PyCFunction)VRPyConstraint::setLocalOffsetA, METH_VARARGS, "Set the offset in A, setLocalOffsetA(offsetX,offsetY,offsetZ,yaw,pitch,roll)" },
     {"setLocalOffsetB", (PyCFunction)VRPyConstraint::setLocalOffsetB, METH_VARARGS, "Set the offset in B, setLocalOffsetB(offsetX,offsetY,offsetZ,yaw,pitch,roll)" },
@@ -129,6 +132,22 @@ PyObject* VRPyConstraint::setLocalOffsetB(VRPyConstraint* self, PyObject* args) 
 
     if (!self->objPtr) self->objPtr = OSG::VRConstraint::create();
     self->objPtr->setReferenceB(m);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyConstraint::setReference(VRPyConstraint* self, PyObject* args) {
+    VRPyTransform* t;
+    if (! PyArg_ParseTuple(args, "O", &t)) return NULL;
+    if (!self->objPtr) self->objPtr = OSG::VRConstraint::create();
+    self->objPtr->setReference(t->objPtr->getWorldMatrix());
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyConstraint::setReferential(VRPyConstraint* self, PyObject* args) {
+    VRPyTransform* t;
+    if (! PyArg_ParseTuple(args, "O", &t)) return NULL;
+    if (!self->objPtr) self->objPtr = OSG::VRConstraint::create();
+    self->objPtr->setReferential(t->objPtr);
     Py_RETURN_TRUE;
 }
 
