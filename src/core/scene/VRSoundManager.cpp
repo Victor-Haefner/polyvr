@@ -501,21 +501,34 @@ void VRSoundManager::stopAllSounds(void) {
     for (auto s : sounds) s.second->interrupt = true;
 }
 
-void VRSoundManager::playSinus(float f, float T) {
+
+// carrier amplitude, carrier frequency, carrier phase, modulation amplitude, modulation frequency, modulation phase, packet duration
+void VRSoundManager::synthesize(float Ac, float wc, float pc, float Am, float wm, float pm, float T) {
     ALuint buf;
     alGenBuffers(1, &buf);
 
-    unsigned sample_rate = 22050;
+    int sample_rate = 22050;
     size_t buf_size = T * sample_rate;
-
     short* samples = new short[buf_size];
-    for(int i=0; i<buf_size; ++i) {
-        samples[i] = 32760 * sin( (2.f*float(M_PI)*f)/sample_rate * i );
+
+    for(int i=0; i<buf_size; i++) {
+        float t = i*2*Pi/sample_rate;
+        //samples[i] = 32760 * sin( wc*t );
+        samples[i] = Ac * sin( wc*t + pc + Am*sin(wm*t + pm) );
     }
 
     alBufferData(buf, AL_FORMAT_MONO16, samples, buf_size, sample_rate);
     ALuint src = 0;
     alGenSources(1, &src);
+
+    ALint val = -1;
+    ALuint bufid = 0; // TODO: not working properly!!
+    do { ALCHECK_BREAK( alGetSourcei(src, AL_BUFFERS_PROCESSED, &val) ); // recycle buffers
+        for(; val > 0; --val) {
+            ALCHECK( alSourceUnqueueBuffers(src, 1, &bufid));
+        }
+    } while (val > 0);
+
     alSourcei(src, AL_BUFFER, buf);
     alSourcePlay(src);
 

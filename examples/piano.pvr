@@ -20,8 +20,19 @@
 	
 	k = dev.getKey()
 	
+	Ac = 32760
+	wc = 440
+	pc = 0
+	
+	Am = 1
+	wm = 880
+	pm = 0
+	
+	T = 1
+	
 	for i,j in enumerate('qawsedrftgzhujikol'):
-		if k == ord(j): VR.piano.playSinus(300+i*20, 1)
+		wc = (i+10)*20
+		if k == ord(j): VR.piano.synthesize(Ac, wc, pc, Am, wm, pm, T)
 </core>
       <trig type="on_device" dev="keyboard" state="Pressed" param="" key="-1" name_suffix="0" base_name="trigger" name_space="__global__"/>
     </Script>

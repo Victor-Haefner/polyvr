@@ -48,7 +48,7 @@ PyMethodDef VRPySound::methods[] = {
     {"stop", (PyCFunction)VRPySound::stop, METH_VARARGS, "Stops a sound - stop(myPath.mp3)" },
     {"stopAllSounds", (PyCFunction)VRPySound::stopAllSounds, METH_NOARGS, "Stops all currently playing sounds." },
     {"setVolume", (PyCFunction)VRPySound::setVolume, METH_VARARGS, "Set sound volume - setVolume( float ) \n\tfrom 0.0 to 1.0 (= 100%)" },
-    {"playSinus", (PyCFunction)VRPySound::playSinus, METH_VARARGS, "playSinus()" },
+    {"synthesize", (PyCFunction)VRPySound::synthesize, METH_VARARGS, "synthesize( Ac, wc, pc, Am, wm, pm, T)\t\n A,w,p are the amplitude, frequency and phase, c and m are the carrier sinusoid and modulator sinusoid, T is the packet duration in seconds" },
     {NULL}  /* Sentinel */
 };
 
@@ -68,10 +68,10 @@ PyObject* VRPySound::stop(VRPySound* self, PyObject* args) {
     Py_RETURN_TRUE;
 }
 
-PyObject* VRPySound::playSinus(VRPySound* self, PyObject* args) {
-    float freq, time;
-    if (! PyArg_ParseTuple(args, "ff", &freq, &time)) return NULL;
-    OSG::VRSoundManager::get().playSinus(freq, time);
+PyObject* VRPySound::synthesize(VRPySound* self, PyObject* args) {
+    float Ac, wc, pc, Am, wm, pm, T;
+    if (! PyArg_ParseTuple(args, "fffffff", &Ac, &wc, &pc, &Am, &wm, &pm, &T)) return NULL;
+    OSG::VRSoundManager::get().synthesize(Ac, wc, pc, Am, wm, pm, T);
     Py_RETURN_TRUE;
 }
 
