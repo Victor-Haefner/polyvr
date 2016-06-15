@@ -1,8 +1,6 @@
 #ifndef VR3DENTITY_H_INCLUDED
 #define VR3DENTITY_H_INCLUDED
 
-#include <OpenSG/OSGSField.h>
-#include <OpenSG/OSGNode.h>
 #include <OpenSG/OSGMatrix.h>
 #include <OpenSG/OSGLine.h>
 
@@ -18,7 +16,6 @@ using namespace std;
 
 class doubleBuffer;
 class path;
-class Transform; OSG_GEN_CONTAINERPTR(Transform);
 class VRAnimation;
 
 class VRTransform : public VRObject {
@@ -31,7 +28,7 @@ class VRTransform : public VRObject {
 
     protected:
         doubleBuffer* dm = 0;
-        TransformMTRecPtr t;//OSG Transform
+        OSGTransformPtr t;
         bool noBlt = false;
         VRPhysics* physics = 0;
         VRAnimPtr pathAnimPtr;
@@ -48,8 +45,8 @@ class VRTransform : public VRObject {
         Vec3f _up = Vec3f(0,1,0);
         Vec3f _scale = Vec3f(1,1,1);
         Vec3f _euler;
-        NodeMTRecPtr coords;
-        NodeMTRecPtr translator;
+        OSGObjectPtr coords;
+        OSGObjectPtr translator;
 
         int frame = 0;
         Matrix WorldTransformation;

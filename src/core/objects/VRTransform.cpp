@@ -13,6 +13,7 @@
 #include "geometry/VRPhysics.h"
 #include "core/math/path.h"
 #include "core/objects/OSGObject.h"
+#include "core/objects/OSGTransform.h"
 
 #include <OpenSG/OSGTransform.h>
 #include <OpenSG/OSGSimpleSHLChunk.h>
@@ -26,9 +27,9 @@ using namespace std;
 
 VRTransform::VRTransform(string name) : VRObject(name) {
     dm = new doubleBuffer;
-    t = Transform::create();
+    t = OSGTransform::create( Transform::create() );
     constraint = VRConstraint::create();
-    setCore(OSGCore::create(t), "Transform");
+    setCore(OSGCore::create(t->trans), "Transform");
     addAttachment("transform", 0);
 
     store("from", &_from);
@@ -96,7 +97,7 @@ void VRTransform::updatePhysics() {
 void VRTransform::updateTransformation() {
     Matrix m;
     dm->read(m);
-    t->setMatrix(m);
+    t->trans->setMatrix(m);
 }
 
 void VRTransform::reg_change() {
@@ -116,10 +117,10 @@ bool VRTransform::changedNow() { return checkWorldChange(); }
 void VRTransform::initCoords() {
     if (coords != 0) return;
 
-    coords = makeCoordAxis(0.3, 3, false);
-    coords->setTravMask(0);
-    addChild(OSGObject::create(coords));
-    GeometryMTRecPtr geo = dynamic_cast<Geometry*>(coords->getCore());
+    coords = OSGObject::create( makeCoordAxis(0.3, 3, false) );
+    coords->node->setTravMask(0);
+    addChild(coords);
+    GeometryMTRecPtr geo = dynamic_cast<Geometry*>(coords->node->getCore());
 
     string shdr_vp =
     "void main( void ) {"
@@ -140,10 +141,10 @@ void VRTransform::initCoords() {
 void VRTransform::initTranslator() { // TODO
     if (translator != 0) return;
 
-    translator = makeCoordAxis(0.3, 3, false);
-    translator->setTravMask(0);
-    addChild(OSGObject::create(translator));
-    GeometryMTRecPtr geo = dynamic_cast<Geometry*>(translator->getCore());
+    translator = OSGObject::create( makeCoordAxis(0.3, 3, false) );
+    translator->node->setTravMask(0);
+    addChild(translator);
+    GeometryMTRecPtr geo = dynamic_cast<Geometry*>(translator->node->getCore());
 
     string shdr_vp =
     "void main( void ) {"
@@ -405,8 +406,8 @@ void VRTransform::setMatrix(Matrix m) {
 
 void VRTransform::showCoordAxis(bool b) {
     initCoords();
-    if (b) coords->setTravMask(0xffffffff);
-    else coords->setTravMask(0);
+    if (b) coords->node->setTravMask(0xffffffff);
+    else coords->node->setTravMask(0);
 }
 
 /** Set the scale of the object, not implemented **/

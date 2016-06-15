@@ -12,7 +12,7 @@ class VRLightBeacon : public VRTransform {
     protected:
         VRLightWeakPtr light;
         string light_name;
-        NodeMTRecPtr lightGeo;
+        OSGObjectPtr lightGeo;
 
     public:
         VRLightBeacon(string name);

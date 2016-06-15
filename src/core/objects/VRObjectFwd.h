@@ -8,6 +8,8 @@ namespace OSG {
 // objects
 ptrFwd(OSGCore);
 ptrFwd(OSGObject);
+ptrFwd(OSGTransform);
+
 ptrFwd(VRStorage);
 ptrFwd(VRObject);
 ptrFwd(VRTransform);

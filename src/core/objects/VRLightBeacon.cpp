@@ -26,10 +26,11 @@ VRLightBeacon::VRLightBeacon(string name) : VRTransform(name) {
     lightGeo = 0;
 
     GeometryMTRecPtr lightGeo_ = makeSphereGeo(2,0.1);
-    lightGeo = makeNodeFor(lightGeo_);
-    lightGeo->setTravMask(0);
     lightGeo_->setMaterial(getLightGeoMat()->getMaterial());
-    addChild(OSGObject::create(lightGeo));
+
+    lightGeo = OSGObject::create( makeNodeFor(lightGeo_) );
+    lightGeo->node->setTravMask(0);
+    addChild(lightGeo);
 
     storeObjName("light", &light, &light_name);
 }
@@ -44,8 +45,8 @@ VRLightBeaconPtr VRLightBeacon::create(string name) {
 }
 
 void VRLightBeacon::showLightGeo(bool b) {
-    if (b) lightGeo->setTravMask(0xffffffff);
-    else lightGeo->setTravMask(0);
+    if (b) lightGeo->node->setTravMask(0xffffffff);
+    else lightGeo->node->setTravMask(0);
 }
 
 VRLightWeakPtr VRLightBeacon::getLight() { return light; }

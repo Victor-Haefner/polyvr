@@ -1,9 +1,13 @@
 #ifndef VRGEOMETRY_H_INCLUDED
 #define VRGEOMETRY_H_INCLUDED
 
+
+
 #include "core/objects/VRObjectFwd.h"
 #include "core/tools/selection/VRSelectionFwd.h"
 #include "../VRTransform.h"
+
+#include <OpenSG/OSGNode.h>
 #include <OpenSG/OSGSField.h>
 
 struct VRPrimitive;
