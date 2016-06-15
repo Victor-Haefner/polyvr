@@ -67,7 +67,7 @@ void VRGeoPrimitive::update(int i, float v) {
     auto h = getHandle(i);
     if (!params_geo || !h) return;
     auto a = h->getAxis();
-    auto o = h->getOrigin().pos();
+    auto o = h->getOrigin()->pos();
     string lbl = h->getBaseName() + " " + toString( v*1000, 4 ) + " mm";
     params_geo->set(i, (a*v*0.5 + o)*0.5, lbl);
 }
@@ -126,10 +126,10 @@ void VRGeoPrimitive::setupHandles() {
         if (n == "Length") h->configure(cb, VRHandle::LINEAR, Vec3f(0,0,1), 1, true);
 
         float v = toFloat(param);
-        h->set( pose(), v );
+        h->set( pose::create(), v );
         string lbl = h->getBaseName() + " " + toString( v*1000, 4 ) + " mm";
         auto a = h->getAxis();
-        auto o = h->getOrigin().pos();
+        auto o = h->getOrigin()->pos();
         params_geo->set(i, (a*v*0.5 + o)*0.5, lbl);
     }
 }

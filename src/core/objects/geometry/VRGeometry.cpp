@@ -723,8 +723,7 @@ void VRGeometry::applyTransformation(shared_ptr<pose> po) {
 }
 
 void VRGeometry::applyTransformation() {
-    auto po = shared_ptr<pose>( new pose(getPose()) );
-    applyTransformation(po);
+    applyTransformation(getPose());
     setMatrix(Matrix());
 }
 

@@ -17,6 +17,7 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
 #include "core/math/polygon.h"
+#include "core/math/pose.h"
 #include "core/gui/VRGuiTreeExplorer.h"
 
 #include "VRBRepEdge.h"
@@ -878,18 +879,18 @@ Vec3f toVec3f(STEPentity* i, map<STEPentity*, VRSTEP::Instance>& instances) {
     return Vec3f();
 }
 
-pose toPose(STEPentity* i, map<STEPentity*, VRSTEP::Instance>& instances) {
+posePtr toPose(STEPentity* i, map<STEPentity*, VRSTEP::Instance>& instances) {
     auto I = instances[i];
     if (I.type == "Axis2_Placement_3d") {
         Vec3f p = toVec3f( I.get<0, STEPentity*, STEPentity*, STEPentity*>(), instances);
         Vec3f d = toVec3f( I.get<1, STEPentity*, STEPentity*, STEPentity*>(), instances);
         Vec3f u = toVec3f( I.get<2, STEPentity*, STEPentity*, STEPentity*>(), instances);
         //d[2] *= -1;
-        return pose(p,d,u);
+        return pose::create(p,d,u);
         //return pose(p,d,u);
     }
     cout << "toPose FAILED with instance type " << I.type << endl;
-    return pose();
+    return pose::create();
 }
 
 struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
@@ -909,10 +910,10 @@ struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
 
         if (EdgeGeo.type == "Circle") {
             //cout << "  edge type " << EdgeGeo.type << endl;
-            pose c = toPose( EdgeGeo.get<0, STEPentity*, double>(), instances );
+            auto c = toPose( EdgeGeo.get<0, STEPentity*, double>(), instances );
             float r = EdgeGeo.get<1, STEPentity*, double>();
             float _r = 1/r;
-            Matrix m = c.asMatrix();
+            Matrix m = c->asMatrix();
             Matrix mI = m; mI.invert();
 
             float a1,a2; // get start and end angles
@@ -1178,7 +1179,7 @@ class VRSTEPProductStructure {
             string name;
             string parent;
             string child;
-            pose p;
+            posePtr p;
 
             string toString() {
                 string s = "link n: " + name + " p: " + parent + " c: " + child;

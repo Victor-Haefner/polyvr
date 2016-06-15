@@ -1,5 +1,6 @@
 #include "VRBRepSurface.h"
 #include "core/math/triangulator.h"
+#include "core/math/pose.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
@@ -26,7 +27,7 @@ struct triangle {
 VRGeometryPtr VRBRepSurface::build(string type) {
     //cout << "VRSTEP::Surface build " << type << endl;
 
-    Matrix m = trans.asMatrix();
+    Matrix m = trans->asMatrix();
     Matrix mI = m;
     mI.invert();
 

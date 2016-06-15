@@ -265,12 +265,12 @@ PyObject* VRPyTransform::getScale(VRPyTransform* self) {
 
 PyObject* VRPyTransform::getPose(VRPyTransform* self) {
     if (!self->valid()) return NULL;
-    return VRPyPose::fromObject( self->objPtr->getPose() );
+    return VRPyPose::fromSharedPtr( self->objPtr->getPose() );
 }
 
 PyObject* VRPyTransform::getWorldPose(VRPyTransform* self) {
     if (!self->valid()) return NULL;
-    return VRPyPose::fromObject( self->objPtr->getWorldPose() );
+    return VRPyPose::fromSharedPtr( self->objPtr->getWorldPose() );
 }
 
 PyObject* VRPyTransform::setPose(VRPyTransform* self, PyObject* args) {
@@ -278,7 +278,7 @@ PyObject* VRPyTransform::setPose(VRPyTransform* self, PyObject* args) {
     if (pySize(args) == 1) {
         VRPyPose* p;
         if (! PyArg_ParseTuple(args, "O", &p)) return NULL;
-        if (p->objPtr) self->objPtr->setPose( *p->objPtr );
+        if (p->objPtr) self->objPtr->setPose( p->objPtr );
         Py_RETURN_TRUE;
     }
 

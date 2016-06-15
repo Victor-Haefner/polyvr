@@ -7,6 +7,8 @@
 namespace OSG {
 
 ptrFwd(boundingbox);
+ptrFwd(path);
+ptrFwd(pose);
 
 }
 

@@ -3,14 +3,14 @@
 
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/tools/VRToolsFwd.h"
-#include "core/math/pose.h"
+#include "core/math/VRMathFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 
 class VRWaypoint : public VRGeometry {
     private:
-        pose Pose;
-        pose Floor;
+        posePtr Pose;
+        posePtr Floor;
         Vec3f at;
         float size;
 
@@ -23,13 +23,13 @@ class VRWaypoint : public VRGeometry {
         static VRWaypointPtr create(string name = "None");
         VRWaypointPtr ptr();
 
-        void set(pose p);
+        void set(posePtr p);
         void set(VRTransformPtr t);
         void apply(VRTransformPtr t);
-        pose get();
+        posePtr get();
 
         void setSize(float s);
-        void setFloorPlane(pose p);
+        void setFloorPlane(posePtr p);
 };
 
 OSG_END_NAMESPACE;

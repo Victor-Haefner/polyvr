@@ -4,7 +4,7 @@
 #include "VRBRepUtils.h"
 #include "VRBRepBound.h"
 
-#include "core/math/pose.h"
+#include "core/math/VRMathFwd.h"
 #include "core/math/field.h"
 #include "core/objects/VRObjectFwd.h"
 
@@ -14,7 +14,7 @@ OSG_BEGIN_NAMESPACE;
 class VRBRepSurface : public VRBRepUtils {
     public:
         vector<VRBRepBound> bounds;
-        pose trans;
+        posePtr trans;
         double R = 1;
 
         field<Vec3f> cpoints;

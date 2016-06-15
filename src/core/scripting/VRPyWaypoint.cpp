@@ -18,7 +18,7 @@ PyMethodDef VRPyWaypoint::methods[] = {
 
 PyObject* VRPyWaypoint::get(VRPyWaypoint* self) {
     if (!self->valid()) return NULL;
-    return VRPyPose::fromObject( self->objPtr->get() );
+    return VRPyPose::fromSharedPtr( self->objPtr->get() );
 }
 
 PyObject* VRPyWaypoint::setSize(VRPyWaypoint* self, PyObject* args) {
@@ -33,7 +33,7 @@ PyObject* VRPyWaypoint::setFloorPlane(VRPyWaypoint* self, PyObject* args) {
     if (!self->valid()) return NULL;
     VRPyPose* o;
     if (!PyArg_ParseTuple(args, "O", &o)) return NULL;
-    self->objPtr->setFloorPlane( *o->objPtr );
+    self->objPtr->setFloorPlane( o->objPtr );
     Py_RETURN_TRUE;
 }
 
@@ -43,7 +43,7 @@ PyObject* VRPyWaypoint::set(VRPyWaypoint* self, PyObject* args) {
     if (!PyArg_ParseTuple(args, "O", &o)) return NULL;
     if (VRPyPose::check(o)) {
         auto p = (VRPyPose*)o;
-        self->objPtr->set( *p->objPtr );
+        self->objPtr->set( p->objPtr );
     } else {
         auto t = (VRPyTransform*)o;
         self->objPtr->set( t->objPtr );

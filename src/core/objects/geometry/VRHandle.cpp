@@ -4,6 +4,7 @@
 #include "core/utils/VRFunction.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRConstraint.h"
+#include "core/math/pose.h"
 #include <boost/bind.hpp>
 
 using namespace OSG;
@@ -34,7 +35,7 @@ void VRHandle::configure(VRAnimPtr cb, TYPE t, Vec3f n, float s, bool symmetric)
     }
 }
 
-void VRHandle::set(pose p, float v) {
+void VRHandle::set(posePtr p, float v) {
     value = v;
     origin = p;
 
@@ -50,7 +51,7 @@ void VRHandle::set(pose p, float v) {
 }
 
 Vec3f VRHandle::getAxis() { return axis; }
-pose VRHandle::getOrigin() { return origin; }
+posePtr VRHandle::getOrigin() { return origin; }
 
 void VRHandle::updateHandle() {
     if (!paramCb) return;
@@ -63,7 +64,7 @@ void VRHandle::updateHandle() {
     Pnt3f p1 = getWorldPosition();
     p0.mult(p1,p1);
 
-    Vec3f d = Vec3f(p1)-origin.pos();
+    Vec3f d = Vec3f(p1)-origin->pos();
     float v = axis.dot(d);
     value = abs(v)/scale;
     (*paramCb)(value);

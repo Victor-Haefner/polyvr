@@ -1,4 +1,5 @@
 #include "toString.h"
+#include "core/math/pose.h"
 
 vector<string> splitString(string s, char c) {
     stringstream ss(s);
@@ -161,11 +162,11 @@ void toValue(string s, OSG::Vec3i& v) {
     ss >> v[2];
 }
 
-string toString(OSG::pose po) {
-    return toString(po.pos()) + " " + toString(po.dir()) + " " + toString(po.up());
+string toString(OSG::posePtr po) {
+    return toString(po->pos()) + " " + toString(po->dir()) + " " + toString(po->up());
 }
 
-void toValue(string s, OSG::pose& po) {
+void toValue(string s, OSG::posePtr& po) {
     OSG::Vec3f p,d,u;
     stringstream ss(s);
     ss >> p[0];
@@ -177,5 +178,6 @@ void toValue(string s, OSG::pose& po) {
     ss >> u[0];
     ss >> u[1];
     ss >> u[2];
-    po.set(p,d,u);
+    if (po) po->set(p,d,u);
+    else po = OSG::pose::create(p,d,u);
 }

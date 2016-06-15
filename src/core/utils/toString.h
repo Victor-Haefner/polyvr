@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include <OpenSG/OSGVector.h>
-#include "core/math/pose.h"
+#include "core/math/VRMathFwd.h"
 
 using namespace std;
 
@@ -22,7 +22,7 @@ string toString(OSG::Vec3f v);
 string toString(OSG::Pnt3f v);
 string toString(OSG::Vec4f v);
 string toString(OSG::Vec3i v);
-string toString(OSG::pose p);
+string toString(OSG::posePtr p);
 
 // deprecated?
 bool toBool(string s, int* N = 0);
@@ -44,6 +44,6 @@ void toValue(string s, OSG::Vec2f& v);
 void toValue(string s, OSG::Vec3f& v);
 void toValue(string s, OSG::Vec4f& v);
 void toValue(string s, OSG::Vec3i& v);
-void toValue(string s, OSG::pose& p);
+void toValue(string s, OSG::posePtr& p);
 
 #endif // TOSTRING_H_INCLUDED

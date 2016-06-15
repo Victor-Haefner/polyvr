@@ -20,8 +20,8 @@ class SingleLinkNode;
 #include <OpenSG/OSGLine.h>
 #include "core/objects/VRObjectFwd.h"
 #include "core/utils/VRFunctionFwd.h"
-#include "core/math/pose.h"
 #include "core/math/field.h"
+#include "core/math/VRMathFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

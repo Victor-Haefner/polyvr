@@ -65,7 +65,7 @@ void VRJointTool::clear() {
     ageo->hide();
 }
 
-int VRJointTool::append(VRTransformPtr t, pose p) {
+int VRJointTool::append(VRTransformPtr t, posePtr p) {
     if (lastAppended) {
         obj1 = t;
         obj1_name = t->getName();
@@ -89,10 +89,10 @@ void VRJointTool::updateVis() {
     Vec3f g(0,1,0);
     Vec3f y(1,1,0);
 
-    Vec3f ad1 = anchor1.dir();
-    Vec3f ad2 = anchor2.dir();
-    Vec3f ap1 = anchor1.pos();
-    Vec3f ap2 = anchor2.pos();
+    Vec3f ad1 = anchor1->dir();
+    Vec3f ad2 = anchor2->dir();
+    Vec3f ap1 = anchor1->pos();
+    Vec3f ap2 = anchor2->pos();
 
     // plane plane intersection axis
     /*Plane pl1(ad1, ap1);

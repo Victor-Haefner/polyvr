@@ -1,4 +1,4 @@
-
+#include "VRTransform.h"
 #include "core/utils/isNan.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRStorage_template.h"
@@ -9,16 +9,16 @@
 #include "core/utils/VRUndoInterfaceT.h"
 #include "core/utils/VRDoublebuffer.h"
 #include "core/scene/VRAnimationManagerT.h"
-#include "VRTransform.h"
+#include "core/math/pose.h"
 #include "geometry/VRPhysics.h"
 #include "core/math/path.h"
 #include "core/objects/OSGObject.h"
+
 #include <OpenSG/OSGTransform.h>
 #include <OpenSG/OSGSimpleSHLChunk.h>
 #include <OpenSG/OSGChunkMaterial.h>
 #include <OpenSG/OSGMatrixUtility.h>
 #include <OpenSG/OSGSimpleGeometry.h>        // Methods to create simple geos.
-#include <libxml++/nodes/element.h>
 
 
 OSG_BEGIN_NAMESPACE;
@@ -381,10 +381,10 @@ void VRTransform::setPose(Vec3f from, Vec3f dir, Vec3f up) {
     reg_change();
 }
 
-void VRTransform::setPose(pose p) { setPose(p.pos(), p.dir(), p.up()); }
-pose VRTransform::getPose() { return pose(_from, getDir(), _up); }
-pose VRTransform::getWorldPose() { return pose(getWorldPosition(), getWorldDirection(), getWorldUp()); }
-void VRTransform::setWorldPose(pose p) { setWorldMatrix(p.asMatrix()); }
+void VRTransform::setPose(posePtr p) { setPose(p->pos(), p->dir(), p->up()); }
+posePtr VRTransform::getPose() { return pose::create(_from, getDir(), _up); }
+posePtr VRTransform::getWorldPose() { return pose::create(getWorldPosition(), getWorldDirection(), getWorldUp()); }
+void VRTransform::setWorldPose(posePtr p) { setWorldMatrix(p->asMatrix()); }
 
 /** Set the local matrix **/
 void VRTransform::setMatrix(Matrix m) {

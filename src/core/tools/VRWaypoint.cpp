@@ -1,4 +1,5 @@
 #include "VRWaypoint.h"
+#include "core/math/pose.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRStorage_template.h"
@@ -28,17 +29,17 @@ void VRWaypoint::setup() {
     setMaterial(m);
 }
 
-void VRWaypoint::set(pose p) { Pose = p; updateGeo(); }
+void VRWaypoint::set(posePtr p) { Pose = p; updateGeo(); }
 void VRWaypoint::set(VRTransformPtr t) { Pose = t->getWorldPose(); at = t->getAt(); updateGeo(); }
-pose VRWaypoint::get() { return Pose; }
+posePtr VRWaypoint::get() { return Pose; }
 
 void VRWaypoint::apply(VRTransformPtr t) {
-    t->setWorldPosition(Pose.pos());
-    t->setWorldUp(Floor.up());
+    t->setWorldPosition(Pose->pos());
+    t->setWorldUp(Floor->up());
     t->setAt(at);
 }
 
-void VRWaypoint::setFloorPlane(pose p) { Floor = p; updateGeo(); }
+void VRWaypoint::setFloorPlane(posePtr p) { Floor = p; updateGeo(); }
 void VRWaypoint::setSize(float s) { size = s; updateGeo(); }
 
 void VRWaypoint::updateGeo() {
@@ -50,17 +51,16 @@ void VRWaypoint::updateGeo() {
     setPrimitive("Arrow", params);
 
     // compute pos
-    Vec3f pos = Pose.pos();
-    Plane fPlane(Floor.up(), Floor.pos());
+    Vec3f pos = Pose->pos();
+    Plane fPlane(Floor->up(), Floor->pos());
     float d = fPlane.distance(pos);
-    pos -= d*Floor.up();
+    pos -= d*Floor->up();
 
     // compute dir
-    Vec3f dir = -Pose.dir();
-    dir -= dir.dot(Floor.up())*Floor.up();
+    Vec3f dir = -Pose->dir();
+    dir -= dir.dot(Floor->up())*Floor->up();
 
     // apply pose
-    pose p;
-    p.set(pos, dir, Floor.up());
+    auto p = pose::create(pos, dir, Floor->up());
     setWorldPose(p);
 }

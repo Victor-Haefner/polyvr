@@ -5,7 +5,7 @@
 #include "core/tools/VRToolsFwd.h"
 #include "core/utils/VRFunctionFwd.h"
 #include "VRGeometry.h"
-#include "core/math/pose.h"
+#include "core/math/VRMathFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -24,7 +24,7 @@ class VRHandle : public VRGeometry {
         float value = 0;
         float scale = 1;
         Vec3f axis;
-        pose origin;
+        posePtr origin;
         TYPE constraint = LINEAR;
 
     public:
@@ -35,10 +35,10 @@ class VRHandle : public VRGeometry {
 
         void updateHandle();
         void configure(VRAnimPtr cb, TYPE t, Vec3f n, float scale, bool symmetric);
-        void set(pose p, float v);
+        void set(posePtr p, float v);
 
         Vec3f getAxis();
-        pose getOrigin();
+        posePtr getOrigin();
 
         void drag(VRTransformPtr new_parent);
         void drop();

@@ -3,14 +3,13 @@
 
 #include <OpenSG/OSGSField.h>
 #include <OpenSG/OSGNode.h>
-
-#include "core/objects/VRObjectFwd.h"
-#include "object/VRObject.h"
-#include "core/utils/VRFunctionFwd.h"
-#include "core/math/pose.h"
 #include <OpenSG/OSGMatrix.h>
 #include <OpenSG/OSGLine.h>
-#include <OpenSG/OSGSField.h>
+
+#include "object/VRObject.h"
+#include "core/objects/VRObjectFwd.h"
+#include "core/utils/VRFunctionFwd.h"
+#include "core/math/VRMathFwd.h"
 
 class VRPhysics;
 
@@ -98,8 +97,8 @@ class VRTransform : public VRObject {
         Vec3f getAt();
         Vec3f getUp();
         Vec3f getScale();
-        pose getPose();
-        pose getWorldPose();
+        posePtr getPose();
+        posePtr getWorldPose();
         Vec3f getEuler();
         void getMatrix(Matrix& _m);
         Matrix getMatrix();
@@ -112,7 +111,7 @@ class VRTransform : public VRObject {
         void setScale(Vec3f s);
         void setOrientation(Vec3f at, Vec3f up);
         void setEuler(Vec3f euler);
-        void setPose(pose p);
+        void setPose(posePtr p);
         void setPose(Vec3f from, Vec3f dir, Vec3f up);
         virtual void setMatrix(Matrix m);
 
@@ -122,7 +121,7 @@ class VRTransform : public VRObject {
         Vec3f getWorldDirection(bool parentOnly = false);
         Vec3f getWorldUp(bool parentOnly = false);
 
-        void setWorldPose(pose p);
+        void setWorldPose(posePtr p);
         void setWorldMatrix(Matrix _m);
         void setWorldPosition(Vec3f pos);
         void setWorldOrientation(Vec3f dir, Vec3f up);
