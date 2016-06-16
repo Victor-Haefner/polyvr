@@ -1,5 +1,5 @@
 #include "VROpening.h"
-#include "core/scene/VRSoundManager.h"
+#include "core/scene/sound/VRSoundManager.h"
 #include "core/scene/VRAnimationManagerT.h"
 
 OSG_BEGIN_NAMESPACE;

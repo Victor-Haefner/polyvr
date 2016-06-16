@@ -1,6 +1,6 @@
 #include "VRBlinds.h"
 
-#include "core/scene/VRSoundManager.h"
+#include "core/scene/sound/VRSoundManager.h"
 #include "core/scene/VRAnimationManagerT.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include <OpenSG/OSGSimpleMaterial.h>

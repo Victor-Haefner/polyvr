@@ -25,12 +25,12 @@
 	pc = 0
 	
 	Am = 1
-	wm = 880
+	wm = 12
 	pm = 0
 	
-	T = 1
+	T = 0.2
 	
-	for i,j in enumerate('qawsedrftgzhujikol'):
+	for i,j in enumerate('qawsedrftgzhujikolpyxcvbnm'):
 		wc = (i+10)*20
 		if k == ord(j): VR.piano.synthesize(Ac, wc, pc, Am, wm, pm, T)
 </core>

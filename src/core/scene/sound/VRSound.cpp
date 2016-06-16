@@ -330,16 +330,19 @@ void VRSound::play() {
 
 
 // carrier amplitude, carrier frequency, carrier phase, modulation amplitude, modulation frequency, modulation phase, packet duration
-void VRSound::synthesize(float Ac, float wc, float pc, float Am, float wm, float pm, float T) {
+void VRSound::synthesize(float Ac, float wc, float pc, float Am, float wm, float pm, float duration) {
     if (!initiated) initiate();
 
     ALuint buf;
     alGenBuffers(1, &buf);
 
+
     int sample_rate = 22050;
-    size_t buf_size = T * sample_rate;
+    size_t buf_size = duration * sample_rate;
+    buf_size += buf_size%2;
     short* samples = new short[buf_size];
 
+    cout << "duration " << duration << " " << buf_size << endl;
     for(int i=0; i<buf_size; i++) {
         float t = i*2*Pi/sample_rate;
         samples[i] = Ac * sin( wc*t + pc + Am*sin(wm*t + pm) );
@@ -355,8 +358,9 @@ void VRSound::synthesize(float Ac, float wc, float pc, float Am, float wm, float
         }
     } while (val > 0);
 
-    alSourcei(source, AL_BUFFER, buf);
-    alSourcePlay(source);
+    ALCHECK( alSourceQueueBuffers(source, 1, &buf));
+    ALCHECK( alGetSourcei(source, AL_SOURCE_STATE, &val));
+    if (val != AL_PLAYING) ALCHECK( alSourcePlay(source));
 
     delete samples;
 }

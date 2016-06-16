@@ -9,7 +9,7 @@
 #include "core/networking/VRSharedMemory.h"
 #include "core/utils/VROptions.h"
 #include "core/scene/VRSceneLoader.h"
-#include "core/scene/VRSoundManager.h"
+#include "core/scene/sound/VRSoundManager.h"
 #include "core/objects/material/VRMaterial.h"
 #include "addons/CEF/CEF.h"
 
