@@ -634,8 +634,6 @@
 		<Unit filename="src/core/scene/VRSceneLoader.h" />
 		<Unit filename="src/core/scene/VRSceneManager.cpp" />
 		<Unit filename="src/core/scene/VRSceneManager.h" />
-		<Unit filename="src/core/scene/VRSoundManager.cpp" />
-		<Unit filename="src/core/scene/VRSoundManager.h" />
 		<Unit filename="src/core/scene/VRThreadManager.cpp" />
 		<Unit filename="src/core/scene/VRThreadManager.h" />
 		<Unit filename="src/core/scene/export/VRExport.h" />
@@ -697,6 +695,12 @@
 		<Unit filename="src/core/scene/import/VRSTEP.h" />
 		<Unit filename="src/core/scene/import/VRVTK.cpp" />
 		<Unit filename="src/core/scene/import/VRVTK.h" />
+		<Unit filename="src/core/scene/sound/VRSound.cpp" />
+		<Unit filename="src/core/scene/sound/VRSound.h" />
+		<Unit filename="src/core/scene/sound/VRSoundFwd.h" />
+		<Unit filename="src/core/scene/sound/VRSoundManager.cpp" />
+		<Unit filename="src/core/scene/sound/VRSoundManager.h" />
+		<Unit filename="src/core/scene/sound/VRSoundUtils.h" />
 		<Unit filename="src/core/scripting/VRGeoPrimitive.h" />
 		<Unit filename="src/core/scripting/VRPyAnalyticGeometry.cpp" />
 		<Unit filename="src/core/scripting/VRPyAnalyticGeometry.h" />

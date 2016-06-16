@@ -4,25 +4,25 @@
 #include <OpenSG/OSGVector.h>
 #include <map>
 
+#include "VRSoundFwd.h"
+
 namespace boost { class thread; }
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
-struct VRSound;
 struct VRSoundChannel;
 
 class VRSoundManager {
 public:
-    map<string, VRSound*> sounds;
+    map<string, VRSoundPtr> sounds;
     VRSoundChannel* channel;
 
     VRSoundManager();
-    VRSound* getSound(string path);
+    VRSoundPtr getSound(string path);
     void clearSoundMap(void);
 
-    void synthesize(float Ac = 32760, float wc = 440, float pc = 0, float Am = 0, float wm = 0, float pm = 0, float T = 1);
-    void play(VRSound* sound);
+    void play(VRSoundPtr sound);
 
 public:
     static VRSoundManager& get();

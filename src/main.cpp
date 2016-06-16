@@ -1,4 +1,3 @@
-#include "core/objects/VRTransform.h"
 #include "PolyVR.h"
 
 int main(int argc, char **argv) {

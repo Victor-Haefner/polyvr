@@ -2,9 +2,9 @@
 #define VRPYSOUND_H_INCLUDED
 
 #include "VRPyObject.h"
-#include "core/scene/VRSoundManager.h"
+#include "core/scene/sound/VRSound.h"
 
-struct VRPySound : VRPyBaseT<OSG::VRSoundManager> {
+struct VRPySound : VRPyBaseT<OSG::VRSound> {
     static PyMethodDef methods[];
 
     static PyObject* play(VRPySound* self, PyObject* args);
