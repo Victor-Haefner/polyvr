@@ -39,19 +39,22 @@ vector<float> VRBRepUtils::angleFrame(float a1, float a2) {
     return angles;
 }
 
-float VRBRepUtils::Bik(float t, int i, int k, const vector<double>& knots) {
+float VRBRepUtils::Bik(float t, int i, int k, const vector<double>& knots, bool verbose) {
+    if (verbose) cout << "Bik t: " << t << " i: " << i << " k: " << k << endl;
     float ti = knots[i];
     float ti1 = knots[i+1];
     float tik = knots[i+k];
     float tik1 = knots[i+k+1];
     float tL = knots[knots.size()-1];
+    if (verbose) cout << " Bik ti: " << ti << " ti1: " << ti1 << " tik: " << tik << " tik1: " << tik1 << endl;
     if (k == 0) {
-        if (t >= ti && t <= ti1) return 1;
-        if (t == ti1 && t == tL) return 1;
-        else return 0;
+        if (t >= ti && t <= ti1) { if (verbose) cout << " Bik exit first 1" << endl; return 1; }
+        if (t == ti1 && t == tL) { if (verbose) cout << " Bik exit second 1" << endl; return 1; }
+        else { if (verbose) cout << " Bik exit 0" << endl; return 0; }
     }
-    float A = tik == ti ? 0 : Bik(t, i, k-1, knots)*(t-ti)/(tik-ti);
-    float B = tik1 == ti1 ? 0 : Bik(t, i+1, k-1, knots)*(tik1 - t)/(tik1 - ti1);
+    float A = tik == ti ? 0 : Bik(t, i, k-1, knots, verbose)*(t-ti)/(tik-ti);
+    float B = tik1 == ti1 ? 0 : Bik(t, i+1, k-1, knots, verbose)*(tik1 - t)/(tik1 - ti1);
+    if (verbose) cout << " Bik return A " << A << "(" << (tik == ti) << ")" << " B " << B << "(" << (tik1 == ti1) << ")" << endl;
     return A + B;
 }
 
@@ -75,15 +78,10 @@ Vec3f VRBRepUtils::BSpline(float u, float v, int degu, int degv, const field<Vec
         for (int j=0; j<cpoints.height; j++) {
             Vec3f cp = cpoints.get(i,j);
             p += cp*Bik(u, j, degu, knotsu)*Bik(v, i, degv, knotsv);
+            //cout << " VRBRepUtils::BSpline Bik(u) " << Bik(u, j, degu, knotsu,1) << endl;
         }
     }
-    cout << "VRBRepUtils::BSpline " << cpoints.width << " " << cpoints.height << " " << Vec2i(degu, degv) << " p " << p << endl;
-    cout << "VRBRepUtils::BSpline knotsu ";
-    for (auto ku : knotsu) cout << " " << ku;
-    cout << endl;
-    cout << "VRBRepUtils::BSpline knotsv ";
-    for (auto kv : knotsv) cout << " " << kv;
-    cout << endl;
+    //cout << "VRBRepUtils::BSpline u,v " << Vec2f(u, v) << "\t p " << p << endl;
     return p;
 }
 

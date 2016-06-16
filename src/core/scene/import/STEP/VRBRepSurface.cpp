@@ -27,7 +27,8 @@ struct triangle {
 VRGeometryPtr VRBRepSurface::build(string type) {
     //cout << "VRSTEP::Surface build " << type << endl;
 
-    Matrix m = trans->asMatrix();
+    Matrix m;
+    if (trans) m = trans->asMatrix();
     Matrix mI = m;
     mI.invert();
 
@@ -570,22 +571,33 @@ VRGeometryPtr VRBRepSurface::build(string type) {
         Vec3f n(0,0,1);
         VRGeoData nMesh;
 
-        map<int, map<int, int> > ids;
-
         cout << "B_Spline_Surface_with_knots du " << degu << " dv " << degv << "  pw " << cpoints.width << " ph " << cpoints.height << endl;
+        cout << " knotsu ";
+        for (auto ku : knotsu) cout << " " << ku;
+        cout << endl;
+        cout << " knotsv ";
+        for (auto kv : knotsv) cout << " " << kv;
+        cout << endl;
+        cout << " points\n";
+        for (int i = 0; i < cpoints.height; i++) {
+            for (int j = 0; j < cpoints.width; j++) {
+                cout << " p" << j << i << ": " << cpoints.get(j,i);
+            }
+            cout << endl;
+        }
 
+        map<int, map<int, int> > ids;
         int res = (Ncurv - 1)*0.5;
         float Tu = knotsu[knotsu.size()-1] - knotsu[0];
         float Tv = knotsv[knotsv.size()-1] - knotsv[0];
         for (int i=0; i<=res; i++) {
-            float u = i*Tu/res;
+            float u = knotsu[0]+i*Tu/res;
             for (int j=0; j<=res; j++) {
-                float v = j*Tv/res;
+                float v = knotsv[0]+j*Tv/res;
                 Vec3f p = BSpline(u,v, degu, degv, cpoints, knotsu, knotsv);
                 ids[i][j] = nMesh.pushVert(p,n);
 
-                if (i > 0 && j%2 == 0) nMesh.pushTri(ids[i][j], ids[i-1][j], ids[i-1][j+1]);
-                if (i > 0 && j%2 == 1) nMesh.pushTri(ids[i][j], ids[i][j-1], ids[i-1][j]);
+                if (i > 0 && j > 0) nMesh.pushQuad(ids[i][j], ids[i][j-1], ids[i-1][j-1], ids[i-1][j]);
             }
         }
 

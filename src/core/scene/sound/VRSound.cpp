@@ -342,7 +342,6 @@ void VRSound::synthesize(float Ac, float wc, float pc, float Am, float wm, float
     buf_size += buf_size%2;
     short* samples = new short[buf_size];
 
-    cout << "duration " << duration << " " << buf_size << endl;
     for(int i=0; i<buf_size; i++) {
         float t = i*2*Pi/sample_rate;
         samples[i] = Ac * sin( wc*t + pc + Am*sin(wm*t + pm) );
