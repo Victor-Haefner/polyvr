@@ -77,7 +77,7 @@ VRSTEP::VRSTEP() {
     addType< tuple<STEPentity*, STEPentity*> >( "PCurve", "a1e|a2e", "", false);
     addType< tuple<STEPentity*> >( "Definitional_Representation", "a1e", "", false);
     addType< tuple<int, vector<STEPentity*>, bool> >( "B_Spline_Curve", "a1i|a2Ve|a4b", "n", false); // TODO
-    addType< tuple<int, vector<STEPentity*>, bool, vector<double> > >( "Rational_B_Spline_Curve", "a1i|a2Ve|a4b|a6Vf", "c0a0i|c0a1Ve|c0a3b|c5a0Vf", false); // TODO
+    addType< tuple<int, vector<STEPentity*>, bool, vector<double> > >( "Rational_B_Spline_Curve", "a1i|a2Ve|a4b|a6Vf", "c0a0i|c0a1Ve|c0a3b|a0Vf", false); // TODO
     addType< tuple<int, vector<STEPentity*>, bool, vector<int>, vector<double> > >( "B_Spline_Curve_With_Knots", "a1i|a2Ve|a4b|a6Vi|a7Vf", "c0a0i|c0a1Ve|c0a3b|c1a0Vi|c1a1Vf", false); //TODO
 
     addType< tuple<int, int, field<STEPentity*>, bool, bool, bool > >( "B_Spline_Surface", "a0i|a1i|a2Fe|a4b|a5b|a6b", "a0i|a1i|a2Fe|a4b|a5b|a6b", false);
@@ -894,89 +894,40 @@ posePtr toPose(STEPentity* i, map<STEPentity*, VRSTEP::Instance>& instances) {
 }
 
 struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
-    void handleEdgeSurface(STEPentity* e, map<STEPentity*, Instance>& instances, Vec3f EBeg, Vec3f EEnd, bool cplx = 0) {
+    void handleEdge(STEPentity* e, map<STEPentity*, Instance>& instances, bool cplx = 0) {
         auto EdgeGeo = instances[ e ];
-        //int Np = points.size();
 
-        if (EdgeGeo.type == "Line") {
-            //cout << "  edge type " << EdgeGeo.type << endl;
-            //Vec3f p = toVec3f( EdgeGeo.get<0, STEPentity*, STEPentity*>(), instances );
-            //Vec3f d = toVec3f( EdgeGeo.get<1, STEPentity*, STEPentity*>(), instances );
-            points.push_back(EBeg);
-            points.push_back(EEnd);
-            if (points.size() <= 1) cout << "Warning: No edge points of Line" << endl;
-            return;
-        }
+        if (EdgeGeo.type == "Line") { type = EdgeGeo.type; return; }
 
         if (EdgeGeo.type == "Circle") {
-            //cout << "  edge type " << EdgeGeo.type << endl;
-            auto c = toPose( EdgeGeo.get<0, STEPentity*, double>(), instances );
-            float r = EdgeGeo.get<1, STEPentity*, double>();
-            float _r = 1/r;
-            Matrix m = c->asMatrix();
-            Matrix mI = m; mI.invert();
-
-            float a1,a2; // get start and end angles
-            Vec3f c1,c2;
-            mI.mult(Pnt3f(EBeg), c1);
-            mI.mult(Pnt3f(EEnd), c2);
-            c1 *= _r; c2*= _r;
-            a1 = atan2(c1[1],c1[0]);
-            a2 = atan2(c2[1],c2[0]);
-
-            for (auto a : angleFrame(a1, a2)) {
-                Pnt3f p(r*cos(a),r*sin(a),0);
-                m.mult(p,p);
-                points.push_back(Vec3f(p));
-            }
-            if (points.size() <= 1) cout << "Warning: No edge points of Circle" << endl;
+            type = EdgeGeo.type;
+            center = toPose( EdgeGeo.get<0, STEPentity*, double>(), instances );
+            radius = EdgeGeo.get<1, STEPentity*, double>();
             return;
         }
 
-        // int, vector<STEPentity*>, bool, vector<int>, vector<double>
         if (EdgeGeo.type == "B_Spline_Curve_With_Knots") {
-            //cout << "  edge type " << EdgeGeo.type << endl;
-            int deg = EdgeGeo.get<0, int, vector<STEPentity*>, bool, vector<int>, vector<double> >();
+            type = EdgeGeo.type;
+            deg = EdgeGeo.get<0, int, vector<STEPentity*>, bool, vector<int>, vector<double> >();
             vector<STEPentity*> control_points = EdgeGeo.get<1, int, vector<STEPentity*>, bool, vector<int>, vector<double> >();
             vector<int> multiplicities = EdgeGeo.get<3, int, vector<STEPentity*>, bool, vector<int>, vector<double> >();
-            vector<double> knots = EdgeGeo.get<4, int, vector<STEPentity*>, bool, vector<int>, vector<double> >();
+            vector<double> Knots = EdgeGeo.get<4, int, vector<STEPentity*>, bool, vector<int>, vector<double> >();
             if (control_points.size() <= 1) cout << "Warning: No control points of B_Spline_Curve_With_Knots" << endl;
-            //cout << "B_Spline_Curve_With_Knots: " << EdgeGeo.ID << " deg: " << deg << " Np: " << control_points.size() << " " << knots.size() << endl;
-            //for (auto e : control_points) cout << "  pnt " << toVec3f(e, instances) << endl;
-            //for (auto k : knots) cout << "  knot " << k << endl;
 
-            vector<Vec3f> cpoints;
             for (auto e : control_points) cpoints.push_back(toVec3f(e, instances));
 
-            // test hard coded weights
-            vector<double> weights;
-            if (cplx && cpoints.size() == 4) {
-                weights.push_back(1);
-                weights.push_back(0.333);
-                weights.push_back(0.333);
-                weights.push_back(1);
-            } else for (auto p : cpoints) weights.push_back(1);
-
-            if (multiplicities.size() != knots.size()) { cout << "B_Spline_Curve_With_Knots, multiplicities and knots do not match: " << knots.size() << " " << multiplicities.size() << endl; return; }
+            if (multiplicities.size() != Knots.size()) { cout << "B_Spline_Curve_With_Knots, multiplicities and knots do not match: " << multiplicities.size() << " " << Knots.size() << " id " << EdgeGeo.ID << endl; return; }
 
             // apply knot multiplicities
-            vector<double> tmp;
-            for (unsigned int i=0; i<knots.size(); i++) {
-                for (int j=0; j<multiplicities[i]; j++) tmp.push_back(knots[i]);
+            for (unsigned int i=0; i<Knots.size(); i++) {
+                for (int j=0; j<multiplicities[i]; j++) knots.push_back(Knots[i]);
             }
-            knots = tmp;
             if (knots.size() < cpoints.size() + deg + 1) { cout << "B_Spline_Curve_With_Knots, not enough knots: " << knots.size() << endl; return; }
-
-            int res = (Ncurv - 1)*0.5;
-            float T = knots[knots.size()-1] - knots[0];
-            for (int i=0; i<=res; i++) {
-                float t = i*T/res;
-                Vec3f p = BSplineW(t, deg, cpoints, knots, weights);
-                points.push_back(p);
-            }
-
-            if (points.size() <= 1) cout << "Warning: No edge points of B_Spline_Curve_With_Knots" << endl;
             return;
+        }
+
+        if (EdgeGeo.type == "Rational_B_Spline_Curve") {
+            weights = EdgeGeo.get<3, int, vector<STEPentity*>, bool, vector<double> >();
         }
 
         if (cplx) return; // TODO: is this right?
@@ -999,8 +950,8 @@ struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
             auto& EdgeElement = instances[ i.get<0, STEPentity*, bool>() ];
             //bool edir = i.get<1, STEPentity*, bool>();
             if (EdgeElement.type == "Edge_Curve") {
-                Vec3f EBeg = toVec3f( EdgeElement.get<0, STEPentity*, STEPentity*, STEPentity*>(), instances );
-                Vec3f EEnd = toVec3f( EdgeElement.get<1, STEPentity*, STEPentity*, STEPentity*>(), instances );
+                EBeg = toVec3f( EdgeElement.get<0, STEPentity*, STEPentity*, STEPentity*>(), instances );
+                EEnd = toVec3f( EdgeElement.get<1, STEPentity*, STEPentity*, STEPentity*>(), instances );
                 auto EdgeGeoI = EdgeElement.get<2, STEPentity*, STEPentity*, STEPentity*>();
 
                 if (instances[EdgeGeoI].type == "Surface_Curve") {
@@ -1008,11 +959,13 @@ struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
                 }
 
                 if (EdgeGeoI->IsComplex()) {
-                    for (auto e : unfoldComplex(EdgeGeoI)) handleEdgeSurface(e, instances, EBeg, EEnd, 1);
+                    for (auto e : unfoldComplex(EdgeGeoI)) handleEdge(e, instances, 1);
+                    build(type);
                     return;
-                } else handleEdgeSurface(EdgeGeoI, instances, EBeg, EEnd);
+                } else handleEdge(EdgeGeoI, instances);
 
                 if (points.size() <= 1) cout << "Warning: No edge points!" << endl;
+                build(type);
                 return;
 
             } else cout << "Error: edge element type not handled " << EdgeElement.type << endl;

@@ -5,6 +5,7 @@
 #include <vector>
 #include <OpenSG/OSGVector.h>
 #include "VRBRepUtils.h"
+#include "core/math/VRMathFwd.h"
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
@@ -12,7 +13,13 @@ OSG_BEGIN_NAMESPACE;
 class VRBRepEdge : public VRBRepUtils {
     public:
         vector<Vec3f> points;
-        Vec3f n;
+        vector<Vec3f> cpoints;
+        vector<double> weights;
+        vector<double> knots;
+        Vec3f n, EBeg, EEnd;
+        double radius;
+        posePtr center;
+        int deg;
 
         VRBRepEdge();
 
@@ -20,6 +27,8 @@ class VRBRepEdge : public VRBRepUtils {
         Vec3f& end();
         void swap();
         bool connectsTo(VRBRepEdge& e);
+
+        void build(string type);
 };
 
 OSG_END_NAMESPACE;
