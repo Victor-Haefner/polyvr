@@ -567,6 +567,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
         //      - cut quads traversed by edges
         //      - ignore quads outside of the triangulation
 
+        bool isWeighted = (weights.height == cpoints.height && weights.width == cpoints.width);
 
         Vec3f n(0,0,1);
         VRGeoData nMesh;
@@ -595,8 +596,8 @@ VRGeometryPtr VRBRepSurface::build(string type) {
             float u = knotsu[0]+i*Tu/res;
             for (int j=0; j<=res; j++) {
                 float v = knotsv[0]+j*Tv/res;
-                Vec3f p = BSpline(u,v, degu, degv, cpoints, knotsu, knotsv);
-                Vec3f n = BSplineNorm(u,v, degu, degv, cpoints, knotsu, knotsv);
+                Vec3f p = isWeighted ? BSpline(u,v, degu, degv, cpoints, knotsu, knotsv, weights) : BSpline(u,v, degu, degv, cpoints, knotsu, knotsv);
+                Vec3f n = isWeighted ? BSplineNorm(u,v, degu, degv, cpoints, knotsu, knotsv, weights) : BSplineNorm(u,v, degu, degv, cpoints, knotsu, knotsv);
                 ids[i][j] = nMesh.pushVert(p,n);
 
                 if (i > 0 && j > 0) nMesh.pushQuad(ids[i][j], ids[i][j-1], ids[i-1][j-1], ids[i-1][j]);

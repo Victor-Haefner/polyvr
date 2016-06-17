@@ -87,7 +87,7 @@ VRSTEP::VRSTEP() {
         "c0a0i|c0a1i|c0a2Fe|c0a4b|c0a5b|c0a6b|c1a0Vi|c1a1Vi|c1a2Vf|c1a3Vf", false);
     //addType< tuple<int, int, field<STEPentity*>, bool, bool, bool, vector<int>, vector<int>, vector<double>, vector<double> > >( "B_Spline_Surface_With_Knots", "a0i|a1i|a2Fe|a4b|a5b|a6b|a7Vi|a8Vi|a9Vf|a10Vf", "c1a0i|c1a1i|c1a2Fe|c1a4b|c1a5b|c1a6b|c2a0Vi|c2a1Vi|c2a2Vf|c2a3Vf", false);
 
-    addType< tuple< field<double> > >( "Rational_B_Spline_Surface", "a0Ff", "n", false);
+    addType< tuple< field<double> > >( "Rational_B_Spline_Surface", "a0Ff", "a0Ff", false);
 
     // geometry types
     addType< tuple<string, vector<STEPentity*> > >( "Advanced_Brep_Shape_Representation", "a0S|a1Ve", "", false);
@@ -1101,6 +1101,10 @@ struct VRSTEP::Surface : public VRSTEP::Instance, public VRBRepSurface {
             for (auto e : fcp.data) {
                 cpoints.data.push_back( toVec3f(e, instances) );
             }
+        }
+
+        if (etype == "Rational_B_Spline_Surface") {
+            weights = inst.get<0, field<double> >();
         }
 
         if (cplx) return;
