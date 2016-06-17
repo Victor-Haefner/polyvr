@@ -586,6 +586,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
             cout << endl;
         }
 
+        // BSpline mesh
         map<int, map<int, int> > ids;
         int res = (Ncurv - 1)*0.5;
         float Tu = knotsu[knotsu.size()-1] - knotsu[0];
@@ -595,6 +596,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
             for (int j=0; j<=res; j++) {
                 float v = knotsv[0]+j*Tv/res;
                 Vec3f p = BSpline(u,v, degu, degv, cpoints, knotsu, knotsv);
+                Vec3f n = BSplineNorm(u,v, degu, degv, cpoints, knotsu, knotsv);
                 ids[i][j] = nMesh.pushVert(p,n);
 
                 if (i > 0 && j > 0) nMesh.pushQuad(ids[i][j], ids[i][j-1], ids[i-1][j-1], ids[i-1][j]);

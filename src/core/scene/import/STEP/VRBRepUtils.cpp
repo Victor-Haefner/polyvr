@@ -85,4 +85,30 @@ Vec3f VRBRepUtils::BSpline(float u, float v, int degu, int degv, const field<Vec
     return p;
 }
 
+Vec3f VRBRepUtils::BSplineNorm(float u, float v, int degu, int degv, const field<Vec3f>& cpoints, const vector<double>& knotsu, const vector<double>& knotsv) {
+    Vec3f du, dv;
+
+    // derivative in u
+    for (int i=0; i<cpoints.width; i++) {
+        for (int j=0; j<cpoints.height-1; j++) {
+            float ti1 = knotsu[j+1];
+            float tik1 = knotsu[j+degu+1];
+            Vec3f cp = (cpoints.get(i,j+1) - cpoints.get(i,j))*degu/(tik1-ti1);
+            du += cp*Bik(u, j+1, degu-1, knotsu)*Bik(v, i, degv, knotsv);
+        }
+    }
+
+    // derivative in v
+    for (int i=0; i<cpoints.width-1; i++) {
+        for (int j=0; j<cpoints.height; j++) {
+            float ti1 = knotsv[i+1];
+            float tik1 = knotsv[i+degv+1];
+            Vec3f cp = (cpoints.get(i+1,j) - cpoints.get(i,j))*degu/(tik1-ti1);
+            dv += cp*Bik(u, j, degu, knotsu)*Bik(v, i+1, degv-1, knotsv);
+        }
+    }
+
+    return dv.cross(du);
+}
+
 
