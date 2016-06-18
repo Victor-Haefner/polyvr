@@ -960,12 +960,10 @@ struct VRSTEP::Edge : public VRSTEP::Instance, public VRBRepEdge {
 
                 if (EdgeGeoI->IsComplex()) {
                     for (auto e : unfoldComplex(EdgeGeoI)) handleEdge(e, instances, 1);
-                    build(type);
-                    return;
                 } else handleEdge(EdgeGeoI, instances);
 
-                if (points.size() <= 1) cout << "Warning: No edge points!" << endl;
                 build(type);
+                if (points.size() <= 1) cout << "Warning: No edge points!" << endl;
                 return;
 
             } else cout << "Error: edge element type not handled " << EdgeElement.type << endl;
@@ -1202,15 +1200,16 @@ void VRSTEP::buildScenegraph() {
     // get geometries -------------------------------------
     map<STEPentity*, STEPentity*> SRepToGEO;
     for (auto ShapeRepRel : instancesByType["Shape_Representation_Relationship"]) {
+        if (ShapeRepRel.entity->IsComplex()) continue;
         auto ABrep = ShapeRepRel.get<0, STEPentity*, STEPentity*>();
         auto SRep = ShapeRepRel.get<1, STEPentity*, STEPentity*>();
-        if (!ABrep || !SRep) { /*cout << "VRSTEP::buildScenegraph Warning 1\n" ;*/ continue; } // empty one
+        if (!ABrep || !SRep) { cout << "VRSTEP::buildScenegraph Warning 1\n" ; continue; } // empty one
         SRepToGEO[SRep] = ABrep;
-        //SRepToGEO[ABrep] = ABrep;
+        cout << "Shape_Representation_Relationship: " << ShapeRepRel.ID << " " << ShapeRepRel.entity->IsComplex() << " srep " << SRep->EntityName() << " " << SRep->StepFileId() << " " << ABrep->EntityName() << " " << ABrep->StepFileId() << endl;
     }
 
-    //cout << "VRSTEP::buildScenegraph SRepToGEO " << SRepToGEO.size() << endl;
-    //for (auto o : SRepToGEO) cout << " SRep: " << o.first->StepFileId() << " ABrep: " << o.second->StepFileId() << endl;
+    cout << "VRSTEP::buildScenegraph SRepToGEO " << SRepToGEO.size() << endl;
+    for (auto o : SRepToGEO) cout << " SRep: " << o.first->StepFileId() << " ABrep: " << o.second->StepFileId() << endl;
 
     map<STEPentity*, STEPentity*> ProductToSRep;
     for (auto ShapeRepRel : instancesByType["Shape_Definition_Representation"]) {
@@ -1232,7 +1231,7 @@ void VRSTEP::buildScenegraph() {
         ProductToSRep[Product.entity] = SRep;
     }
 
-    //cout << "VRSTEP::buildScenegraph ProductToSRep " << ProductToSRep.size() << endl;
+    cout << "VRSTEP::buildScenegraph ProductToSRep " << ProductToSRep.size() << endl;
 
     // get product definitions -------------------------------------
     resRoot->setName("STEPRoot");
@@ -1250,21 +1249,25 @@ void VRSTEP::buildScenegraph() {
             if (!Product) { cout << "VRSTEP::buildScenegraph Error 10\n" ; continue; }
             string name = Product.get<0, string, string>();
 
-            STEPentity *srep, *brep; srep = brep = 0;
-            if (ProductToSRep.count(Product.entity)) srep = ProductToSRep[Product.entity];
-            if (SRepToGEO.count(srep)) brep = SRepToGEO[srep];
-            else brep = srep;
+            STEPentity* brep = 0;
+            if (ProductToSRep.count(Product.entity)) brep = ProductToSRep[Product.entity];
+            else { cout << "VRSTEP::buildScenegraph Error: Product not found!"; continue; }
 
-            //cout << "VRSTEP::buildScenegraph geo " << name << " " << brep->StepFileId() << " " << ProductToSRep.count(Product.entity) << " " << SRepToGEO.count(srep) << endl;
+            string type = brep->EntityName();
+            if (type == "Shape_Representation") {
+                if (SRepToGEO.count(brep)) brep = SRepToGEO[brep];
+            }
+
+            cout << "VRSTEP::buildScenegraph geo " << name << " " << Product.ID << " " << PDF.ID << " brep " << brep->StepFileId() << " " << brep->EntityName() << " " << SRepToGEO.count(brep) << endl;
 
             VRTransformPtr o;
-            if (resGeos.count(brep)) o = resGeos[brep];
+            if (resGeos.count(brep)/* && !SRepToGEO.count(brep)*/) o = resGeos[brep];
             else o = VRTransform::create(name);
             objs[name] = o;
         }
     }
 
-    //cout << "VRSTEP::buildScenegraph objs " << objs.size() << endl;
+    cout << "VRSTEP::buildScenegraph objs " << objs.size() << endl;
 
     // build scene graph and set transforms ----------------------------------------
     VRSTEPProductStructure product_structure;

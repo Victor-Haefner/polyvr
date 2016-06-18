@@ -551,9 +551,6 @@ VRGeometryPtr VRBRepSurface::build(string type) {
     }
 
     if (type == "B_Spline_Surface_With_Knots") {
-
-        cout << " BUILD B_Spline_Surface_With_Knots" << endl;
-
         // ROADMAP
         //  first idea:
         //   - tesselate whole BSpline surface (lots of quads)
@@ -572,7 +569,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
         Vec3f n(0,0,1);
         VRGeoData nMesh;
 
-        cout << "B_Spline_Surface_with_knots du " << degu << " dv " << degv << "  pw " << cpoints.width << " ph " << cpoints.height << endl;
+        /*cout << "B_Spline_Surface_with_knots du " << degu << " dv " << degv << "  pw " << cpoints.width << " ph " << cpoints.height << endl;
         cout << " knotsu ";
         for (auto ku : knotsu) cout << " " << ku;
         cout << endl;
@@ -585,7 +582,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
                 cout << " p" << j << i << ": " << cpoints.get(j,i);
             }
             cout << endl;
-        }
+        }*/
 
         // BSpline mesh
         map<int, map<int, int> > ids;
