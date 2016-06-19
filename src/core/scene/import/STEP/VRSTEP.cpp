@@ -1366,7 +1366,6 @@ void VRSTEP::build() {
     }
 
     if (options == "explorer") {
-        explorer = VRGuiTreeExplorer::create("iss");
         explorer->setSelectCallback( VRFunction<VRGuiTreeExplorer*>::create( "step_explorer", boost::bind(&VRSTEP::on_explorer_select, this, _1) ) );
         explore(root);
     }
@@ -1382,6 +1381,7 @@ void VRSTEP::build() {
 
 void VRSTEP::load(string file, VRTransformPtr t, string opt) {
     options = opt;
+    if (options == "explorer") explorer = VRGuiTreeExplorer::create("iss", "STEP file explorer (" + file + ")");
     resRoot = t;
     open(file);
     build();

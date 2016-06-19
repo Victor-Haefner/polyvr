@@ -30,10 +30,10 @@ class VRGuiTreeExplorer {
         void on_row_select();
 
     public:
-        VRGuiTreeExplorer(string cols);
+        VRGuiTreeExplorer(string cols, string title);
         ~VRGuiTreeExplorer();
 
-        static VRGuiTreeExplorerPtr create(string cols);
+        static VRGuiTreeExplorerPtr create(string cols, string title);
 
         int add(int parent, ...);
 

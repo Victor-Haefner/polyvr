@@ -51,12 +51,12 @@ class ModelColumns : public Gtk::TreeModel::ColumnRecord {
     }
 };
 
-VRGuiTreeExplorer::VRGuiTreeExplorer(string cols) {
+VRGuiTreeExplorer::VRGuiTreeExplorer(string cols, string title) {
     auto mgr = VRGuiManager::get();
     win = mgr->newWindow();
     this->cols = cols;
 
-    win->set_title("Gtk::TreeView (ListStore) example");
+    win->set_title(title);
     win->set_border_width(5);
     win->set_default_size(400, 200);
 
@@ -112,7 +112,7 @@ VRGuiTreeExplorer::VRGuiTreeExplorer(string cols) {
 
 VRGuiTreeExplorer::~VRGuiTreeExplorer() {}
 
-VRGuiTreeExplorerPtr VRGuiTreeExplorer::create(string cols) { return VRGuiTreeExplorerPtr( new VRGuiTreeExplorer(cols) ); }
+VRGuiTreeExplorerPtr VRGuiTreeExplorer::create(string cols, string title) { return VRGuiTreeExplorerPtr( new VRGuiTreeExplorer(cols, title) ); }
 
 void VRGuiTreeExplorer::on_search_edited() {
     string txt = searchEntry->get_text();
