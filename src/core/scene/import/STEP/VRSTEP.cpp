@@ -286,6 +286,8 @@ template<typename T> bool VRSTEP::getValue(STEPentity* e, STEPattribute* a, Sing
 }
 
 STEPentity* VRSTEP::getSelectEntity(SDAI_Select* s, string ID) {
+    if (ID == "") return 0;
+
     if (s->ValueType() == ENTITY_TYPE && ID[0] == '#') {
         int id = toInt(ID.substr(1));
         if (instancesById.count(id)) return instancesById[id].entity;
@@ -988,19 +990,24 @@ struct VRSTEP::Bound : public VRSTEP::Instance, public VRBRepBound {
             }
         }
 
-        //if (edges.size() <= 1) cout << "Warning: No bound edges" << endl;
-        if (edges.size() <= 1) return; // done
+        if (edges.size() > 1) {
+            if ( sameVec(edges[0].beg(), edges[1].beg()) || sameVec(edges[0].beg(), edges[1].end()) ) edges[0].swap(); // swap first edge
 
-        if ( sameVec(edges[0].beg(), edges[1].beg()) || sameVec(edges[0].beg(), edges[1].end()) ) edges[0].swap(); // swap first edge
-
-        for (unsigned int i=1; i<edges.size(); i++) {
-            auto& e1 = edges[i-1];
-            auto& e2 = edges[i];
-            if ( sameVec(e2.end(), e1.end()) ) e2.swap();
+            for (unsigned int i=1; i<edges.size(); i++) {
+                auto& e1 = edges[i-1];
+                auto& e2 = edges[i];
+                if ( sameVec(e2.end(), e1.end()) ) e2.swap();
+            }
+        } else {
+            if (edges.size() == 0) { cout << "Warning: No bound edges" << endl; return; }
+            if ( !sameVec(edges[0].beg(), edges[0].end()) ) { cout << "Warning: Single NOT closed edge!" << endl; return; }
         }
 
         for (auto& e : edges) {
             for (auto& p : e.points) {
+                /*cout << " " << p;
+                if (points.size() > 0) cout << " " << sameVec(p, points[points.size()-1]) << " " << sameVec(p, points[0]);
+                cout << endl;*/
                 if (points.size() > 0) {
                     if (sameVec(p, points[points.size()-1])) continue; // same as last point
                     if (sameVec(p, points[0])) continue; // same as first point
@@ -1008,6 +1015,7 @@ struct VRSTEP::Bound : public VRSTEP::Instance, public VRBRepBound {
                 points.push_back(p);
             }
         }
+        cout << "Bound " << points.size() << endl;
         //if (points.size() == 0) cout << "Warning1: No bound points" << endl;
     }
 };
@@ -1040,12 +1048,16 @@ struct VRSTEP::Surface : public VRSTEP::Instance, public VRBRepSurface {
             auto v_knots = inst.get<9, int, int, field<STEPentity*>, bool, bool, bool, vector<int>, vector<int>, vector<double>, vector<double> >();
 
             // apply knot multiplicities
-            for (unsigned int i=0; i<u_knots.size(); i++) {
-                for (int j=0; j<u_multiplicities[i]; j++) knotsu.push_back(u_knots[i]);
-            }
-            for (unsigned int i=0; i<v_knots.size(); i++) {
-                for (int j=0; j<v_multiplicities[i]; j++) knotsv.push_back(v_knots[i]);
-            }
+            if (u_knots.size() == u_multiplicities.size()) {
+                for (unsigned int i=0; i<u_knots.size(); i++) {
+                    for (int j=0; j<u_multiplicities[i]; j++) knotsu.push_back(u_knots[i]);
+                }
+            } else knotsu = u_knots;
+            if (v_knots.size() == v_multiplicities.size()) {
+                for (unsigned int i=0; i<v_knots.size(); i++) {
+                    for (int j=0; j<v_multiplicities[i]; j++) knotsv.push_back(v_knots[i]);
+                }
+            } else knotsv = v_knots;
 
             cpoints.width = fcp.width;
             cpoints.height = fcp.height;
@@ -1090,6 +1102,8 @@ void VRSTEP::buildGeometries() {
 
         string name = BrepShape.get<0, string, vector<STEPentity*> >();
         auto geo = VRGeometry::create(name);
+
+        cout << "VRSTEP::buildGeometries " << name << " ID: " << BrepShape.ID << endl;
 
         for (auto i : BrepShape.get<1, string, vector<STEPentity*> >() ) {
             auto& Item = instances[i];
@@ -1181,6 +1195,7 @@ class VRSTEPProductStructure {
 
         VRTransformPtr construct() { return construct(getRoot()); }
         VRTransformPtr construct( shared_ptr<node> n ) {
+            if (!n) return 0;
             vector<VRTransformPtr> childrenT;
             for (auto l : n->children) {
                 auto c = construct( nodes[l->child] );

@@ -42,6 +42,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
             for(auto p : b.points) {
                 mI.mult(Pnt3f(p),p);
                 poly.addPoint(Vec2f(p[0], p[1]));
+                //cout << Vec2f(p[0], p[1]) << endl;
             }
             if (!poly.isCCW()) poly.turn();
             t.add(poly);
@@ -54,7 +55,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
     }
 
     if (type == "Cylindrical_Surface") {
-
+        cout << "Cylindrical_Surface\n";
         // feed the triangulator with unprojected points
         Triangulator t;
         for (auto b : bounds) {
@@ -583,6 +584,8 @@ VRGeometryPtr VRBRepSurface::build(string type) {
             }
             cout << endl;
         }*/
+
+        if (knotsu.size() == 0 || knotsv.size() == 0) return 0;
 
         // BSpline mesh
         map<int, map<int, int> > ids;
