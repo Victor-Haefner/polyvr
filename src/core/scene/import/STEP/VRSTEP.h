@@ -96,6 +96,7 @@ class VRSTEP {
 
         map<STEPentity*, int> explRowIds;
         map<STEPentity*, Instance> instances;
+        map<STEPentity*, VRMaterialPtr> materials;
         map<int, Instance> instancesById;
         map<string, vector<Instance> > instancesByType;
         map<STEPentity*, VRTransformPtr> resGeos;
@@ -109,6 +110,7 @@ class VRSTEP {
         bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, string& t, char c, string& type);
         bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, int& t, char c, string& type);
         bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, STEPentity*& t, char c, string& type);
+        bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, SDAI_Select*& t, char c, string& type);
         bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, double& t, char c, string& type);
         bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, bool& t, char c, string& type);
         template<typename T> bool getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, vector<T>& vec, char t, string& type);
@@ -117,7 +119,7 @@ class VRSTEP {
         void fieldPush(field<STEPentity*>& f, string v);
 
         template<typename T> bool query(STEPentity* e, string path, T& t, string type);
-        STEPentity* getSelectEntity(SDAI_Select* s, string ID);
+        STEPentity* getSelectEntity(SDAI_Select* s);
 
         void loadT(string file, STEPfilePtr sfile, bool* done);
         void open(string file);
@@ -125,12 +127,13 @@ class VRSTEP {
         void registerEntity(STEPentity* se, bool complexPass = 0);
         void parseEntity(STEPentity* se, bool complexPass = 0);
         void traverseEntity(STEPentity* se, int lvl, VRSTEP::Node* parent, bool complexPass = 0);
-        void traverseSelect(SDAI_Select* s, string ID, int lvl, VRSTEP::Node* parent);
+        void traverseSelect(SDAI_Select* s, int lvl, VRSTEP::Node* parent);
         void traverseAggregate(STEPaggregate* sa, int atype, STEPattribute* attr, int lvl, VRSTEP::Node* parent);
         void explore(VRSTEP::Node* node, int parent = 0);
 
         void buildGeometries();
         void buildScenegraph();
+        void buildMaterials();
         void build();
 
     public:

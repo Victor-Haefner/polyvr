@@ -853,4 +853,21 @@ string VRMaterial::getVertexScript() { return mats[activePass]->vertexScript; }
 string VRMaterial::getFragmentScript() { return mats[activePass]->fragmentScript; }
 string VRMaterial::getGeometryScript() { return mats[activePass]->geometryScript; }
 
+Color3f VRMaterial::toColor(string c) {
+    static map<string, Color3f> colorMap;
+
+    if (colorMap.size() == 0) {
+        colorMap["red"] = Color3f(1,0,0);
+        colorMap["green"] = Color3f(0,1,0);
+        colorMap["blue"] = Color3f(0,0,1);
+        colorMap["yellow"] = Color3f(1,1,0);
+        colorMap["magenta"] = Color3f(1,0,1);
+        colorMap["cyan"] = Color3f(0,1,1);
+        colorMap["black"] = Color3f(0,0,0);
+        colorMap["white"] = Color3f(1,1,1);
+    }
+
+    return colorMap.count(c) ? colorMap[c] : Color3f();
+}
+
 OSG_END_NAMESPACE;

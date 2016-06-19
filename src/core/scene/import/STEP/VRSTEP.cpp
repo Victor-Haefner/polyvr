@@ -135,6 +135,16 @@ VRSTEP::VRSTEP() {
     addType< tuple<STEPentity*> >( "Product_Definition_Formation_With_Specified_Source", "a2e", "", false);
     addType< tuple<STEPentity*, STEPentity*> >( "Shape_Definition_Representation", "a0se|a1e", "", false);
 
+    // materials stuff
+    addType< tuple<string, vector<STEPentity*>, STEPentity*> >( "Styled_Item", "a0S|a1Ve|a2e", "", false);
+    addType< tuple<vector<SDAI_Select*> > >( "Presentation_Style_Assignment", "a0Vs", "", false);
+    addType< tuple<STEPentity*> >( "Surface_Style_Usage", "a1se", "", false);
+    addType< tuple<vector<SDAI_Select*> > >( "Surface_Side_Style", "a1Vs", "", false);
+    addType< tuple<STEPentity*> >( "Surface_Style_Fill_Area", "a0e", "", false);
+    addType< tuple<vector<SDAI_Select*> > >( "Fill_Area_Style", "a1Vs", "", false);
+    addType< tuple<STEPentity*> >( "Fill_Area_Style_Colour", "a1e", "", false);
+    addType< tuple<string> >( "Draughting_Pre_Defined_Colour", "a0S", "", false);
+
     {
     blacklist["Colour_Rgb"] = 1;
     blacklist["Bounded_Curve"] = 1;
@@ -153,9 +163,6 @@ VRSTEP::VRSTEP() {
     blacklist["Derived_Unit"] = 1;
     blacklist["Derived_Unit_Element"] = 1;
     blacklist["Dimensional_Exponents"] = 1;
-    blacklist["Draughting_Pre_Defined_Colour"] = 1;
-    blacklist["Fill_Area_Style"] = 1;
-    blacklist["Fill_Area_Style_Colour"] = 1;
     blacklist["Geometric_Representation_Context"] = 1;
     blacklist["Global_Uncertainty_Assigned_Context"] = 1;
     blacklist["Global_Unit_Assigned_Context"] = 1;
@@ -169,7 +176,6 @@ VRSTEP::VRSTEP() {
     blacklist["Person_And_Organization_Role"] = 1;
     blacklist["Plane_Angle_Measure_With_Unit"] = 1;
     blacklist["Presentation_Layer_Assignment"] = 1;
-    blacklist["Presentation_Style_Assignment"] = 1;
     blacklist["Product_Category"] = 1;
     blacklist["Product_Context"] = 1;
     //blacklist["Product_Definition_Formation"] = 1;
@@ -180,10 +186,6 @@ VRSTEP::VRSTEP() {
     blacklist["Representation_Context"] = 1;
     blacklist["Representation_Item"] = 1;
     blacklist["Si_Unit"] = 1;
-    blacklist["Styled_Item"] = 1;
-    blacklist["Surface_Side_Style"] = 1;
-    blacklist["Surface_Style_Fill_Area"] = 1;
-    blacklist["Surface_Style_Usage"] = 1;
     blacklist["Uncertainty_Measure_With_Unit"] = 1;
     }
 }
@@ -226,6 +228,13 @@ bool VRSTEP::getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, STEPe
     if (c == 'e') {
         if (e) { t = e; return true; }
         if (an) { t = ((STEPentity*)((EntityNode*)an)->node); return true; }
+    }
+    return false;
+}
+
+bool VRSTEP::getValue(STEPentity* e, STEPattribute* a, SingleLinkNode* an, SDAI_Select*& t, char c, string& type) {
+    if (c == 's') {
+        if (an) { t = ((SDAI_Select*)((SelectNode*)an)->node); return true; }
     }
     return false;
 }
@@ -285,7 +294,10 @@ template<typename T> bool VRSTEP::getValue(STEPentity* e, STEPattribute* a, Sing
     return true;
 }
 
-STEPentity* VRSTEP::getSelectEntity(SDAI_Select* s, string ID) {
+STEPentity* VRSTEP::getSelectEntity(SDAI_Select* s) {
+    string ID;
+    s->STEPwrite(ID);
+
     if (ID == "") return 0;
 
     if (s->ValueType() == ENTITY_TYPE && ID[0] == '#') {
@@ -473,7 +485,7 @@ template<typename T> bool VRSTEP::query(STEPentity* e, string path, T& t, string
             if (curAttr) e = curAttr->Entity();
             if (curSel) {
                 if (curSel->ValueType() != ENTITY_TYPE) { warn(i, " is not an entity!"); return false; }
-                e = getSelectEntity(curSel, attrStr);
+                e = getSelectEntity(curSel);
             }
         }
 
@@ -489,8 +501,10 @@ template<typename T> bool VRSTEP::query(STEPentity* e, string path, T& t, string
             if (!curAttr) continue;
             curAggr = curAttr->Aggregate();
             if (!curAggr) { warn(i, " is not an Aggregate Vector!"); return false; } // TODO
-            bool b = getValue(e, curAttr, curAggr->GetHead(), t, path[i+1], type);
-            if (verbose) cout << "VAL vect " << e->EntityName() << " v " << toString(t) << " t " << path[i+1] << endl;
+            char tc = path[i+1];
+            //if (tc == 's') tc = path[i+2];
+            bool b = getValue(e, curAttr, curAggr->GetHead(), t, tc, type);
+            if (verbose) cout << "VAL vect " << e->EntityName() << " v " << toString(t) << " t " << tc << endl;
             return b;
         }
 
@@ -700,7 +714,7 @@ void VRSTEP::traverseEntity(STEPentity* se, int lvl, VRSTEP::Node* parent, bool 
             //if (se->STEPfile_id == 465) cout << "  a " << ( attr->Entity() && !attr->IsDerived()) << " " << bool(attr->Aggregate()) << " " << bool(attr->Select()) << " " << attr->Name() << " " << attr->asStr() << endl;
             if ( attr->Entity() && !attr->IsDerived()) { traverseEntity( attr->Entity(), lvl, n); }
             else if ( auto a = attr->Aggregate() ) { traverseAggregate(a, attr->BaseType(), attr, lvl, n); }
-            else if ( auto s = attr->Select() ) { traverseSelect(s, attr->asStr(), lvl, n); }
+            else if ( auto s = attr->Select() ) { traverseSelect(s, lvl, n); }
             if (attr->BaseType() != ENTITY_TYPE && attr->BaseType() != SELECT_TYPE) { // numeric value
                 auto a = new Node();
                 a->a_name = attr->Name();
@@ -713,15 +727,15 @@ void VRSTEP::traverseEntity(STEPentity* se, int lvl, VRSTEP::Node* parent, bool 
     n->traversed = 1;
 }
 
-void VRSTEP::traverseSelect(SDAI_Select* s, string ID, int lvl, VRSTEP::Node* parent) {
-    auto e = getSelectEntity(s, ID);
+void VRSTEP::traverseSelect(SDAI_Select* s, int lvl, VRSTEP::Node* parent) {
+    auto e = getSelectEntity(s);
     if (e) {
         Node* n = 0;
         if (!nodes.count((STEPentity*)s)) {
             n = new Node();
             n->select = s;
             n->type = "SELECT";
-            n->a_name = ID;
+            //n->a_name = ID;
             nodes[(STEPentity*)s] = n;
         } else n = nodes[(STEPentity*)s];
 
@@ -818,8 +832,7 @@ void VRSTEP::traverseAggregate(STEPaggregate *sa, int atype, STEPattribute* attr
             case SELECT_TYPE: // 128
                 sen = (SelectNode*)sn;
                 sdsel = sen->node;
-                sen->asStr(s);
-                traverseSelect(sdsel, s, lvl, n);
+                traverseSelect(sdsel, lvl, n);
                 break;
 
             case SET_TYPE:
@@ -1124,6 +1137,7 @@ void VRSTEP::buildGeometries() {
                         //geo->addChild( surface.build(surface.type) );
                     } else cout << "VRSTEP::buildGeometries Error 2 " << Face.type << " " << Face.ID << endl;
                 }
+                if (materials.count(Item.entity)) geo->setMaterial(materials[Item.entity]);
             } else if (Item.type == "Axis2_Placement_3d") { // ignore?
             } else cout << "VRSTEP::buildGeometries Error 1 " << Item.type << " " << Item.ID << endl;
         }
@@ -1344,6 +1358,46 @@ void VRSTEP::buildScenegraph() {
     cout << blueBeg << "VRSTEP::buildScenegraph finished\n" << colEnd;
 }
 
+void VRSTEP::buildMaterials() {
+    for (auto& Styled_Item : instancesByType["Styled_Item"]) {
+        string name = Styled_Item.get<0, string, vector<STEPentity*>, STEPentity*>();
+        auto geo = Styled_Item.get<2, string, vector<STEPentity*>, STEPentity*>();
+        auto m = VRMaterial::create(name);
+        materials[geo] = m;
+
+        auto style_assigments = Styled_Item.get<1, string, vector<STEPentity*>, STEPentity*>();
+        for (auto sa : style_assigments) {
+            auto& style_assignment = getInstance(sa);
+            vector<SDAI_Select*> styles = style_assignment.get<0, vector<SDAI_Select*> >();
+            for (auto ss : styles) {
+                auto& style = getInstance( getSelectEntity(ss) );
+                if (style.type == "Surface_Style_Usage") {
+                    auto& surface_side_style = getInstance( style.get<0, STEPentity*>() );
+                    vector<SDAI_Select*> side_styles = surface_side_style.get<0, vector<SDAI_Select*> >();
+                    for (auto ss : side_styles) {
+                        auto& side_style = getInstance( getSelectEntity(ss) );
+                        if (side_style.type == "Surface_Style_Fill_Area") {
+                            auto& fill_area_style = getInstance( side_style.get<0, STEPentity*>() );
+                            vector<SDAI_Select*> fill_styles = fill_area_style.get<0, vector<SDAI_Select*> >();
+                            for (auto ss : fill_styles) {
+                                auto& fill_style = getInstance( getSelectEntity(ss) );
+                                if (fill_style.type == "Fill_Area_Style_Colour") {
+                                    auto& color = getInstance( fill_style.get<0, STEPentity*>() );
+                                    if (color.type == "Draughting_Pre_Defined_Colour") {
+                                        string c = color.get<0, string>();
+                                        c = splitString(c,'\'')[1];
+                                        m->setDiffuse( VRMaterial::toColor(c) );
+                                    } else cout << "Warning, buildMaterials: color type unknown - " << color.type << endl;
+                                } else cout << "Warning, buildMaterials: fill_style type unknown - " << fill_style.type << endl;
+                            }
+                        } else cout << "Warning, buildMaterials: side_style type unknown - " << side_style.type << endl;
+                    }
+                } else cout << "Warning, buildMaterials: style type unknown - " << style.type << endl;
+            }
+        }
+    }
+}
+
 void VRSTEP::build() {
     blacklisted = 0;
 
@@ -1370,6 +1424,7 @@ void VRSTEP::build() {
         explore(root);
     }
 
+    buildMaterials();
     buildGeometries();
     buildScenegraph();
 
