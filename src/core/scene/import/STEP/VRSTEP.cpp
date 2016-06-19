@@ -144,9 +144,9 @@ VRSTEP::VRSTEP() {
     addType< tuple<vector<SDAI_Select*> > >( "Fill_Area_Style", "a1Vs", "", false);
     addType< tuple<STEPentity*> >( "Fill_Area_Style_Colour", "a1e", "", false);
     addType< tuple<string> >( "Draughting_Pre_Defined_Colour", "a0S", "", false);
+    addType< tuple<double, double, double> >( "Colour_Rgb", "a1f|a2f|a3f", "", false);
 
     {
-    blacklist["Colour_Rgb"] = 1;
     blacklist["Bounded_Curve"] = 1;
     blacklist["Curve"] = 1;
     blacklist["Geometric_Representation_Item"] = 1;
@@ -1387,7 +1387,16 @@ void VRSTEP::buildMaterials() {
                                         string c = color.get<0, string>();
                                         c = splitString(c,'\'')[1];
                                         m->setDiffuse( VRMaterial::toColor(c) );
-                                    } else cout << "Warning, buildMaterials: color type unknown - " << color.type << endl;
+                                        continue;
+                                    }
+                                    if (color.type == "Colour_Rgb") {
+                                        double r = color.get<0, double, double, double>();
+                                        double g = color.get<1, double, double, double>();
+                                        double b = color.get<2, double, double, double>();
+                                        m->setDiffuse( Color3f(r,g,b) );
+                                        continue;
+                                    }
+                                    cout << "Warning, buildMaterials: color type unknown - " << color.type << endl;
                                 } else cout << "Warning, buildMaterials: fill_style type unknown - " << fill_style.type << endl;
                             }
                         } else cout << "Warning, buildMaterials: side_style type unknown - " << side_style.type << endl;
