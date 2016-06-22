@@ -69,13 +69,6 @@ VRTransformPtr VRImport::prependTransform(VRObjectPtr o, string path) {
     return trans;
 }
 
-VRTransformPtr VRImport::Cache::retrieve(VRObjectPtr parent) {
-    if (copy == 0) copy = static_pointer_cast<VRTransform>(root->duplicate()); // keep a copy, TODO: try to change the namespace of the copy, maybe helpful
-    else root = static_pointer_cast<VRTransform>(copy->duplicate());
-    if (parent) parent->addChild(root);
-    return root;
-}
-
 void VRImport::osgLoad(string path, VRObjectPtr res) {
     cout << "OSG Load " << path << endl;
     res->setName(path);
@@ -99,12 +92,10 @@ VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, stri
     setlocale(LC_ALL, "C");
 
     // check cache
-    cout << "RELOAD " << reload << endl;
     reload = reload ? true : (cache.count(path) == 0);
-    cout << "RELOAD " << reload << endl;
     if (!reload) {
         auto res = cache[path].retrieve(parent);
-        cout << "load " << path << " : " << res << " from cache!\n";
+        cout << "load " << path << " : " << res << " from cache\n";
         return res;
     }
 
@@ -112,11 +103,12 @@ VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, stri
     if (!boost::filesystem::exists(path)) { cout << "VRImport::load " << path << " not found!" << endl; return 0; }
 
     VRTransformPtr res = VRTransform::create("proxy");
-    LoadJob* job = new LoadJob(path, preset, res, progress, options); // TODO: memory leak??
     if (!thread) {
-        job->load(VRThreadWeakPtr());
+        LoadJob job(path, preset, res, progress, options);
+        job.load(VRThreadWeakPtr());
         return cache[path].retrieve(parent);
     } else {
+        auto job = new LoadJob(path, preset, res, progress, options); // TODO: fix memory leak!
         job->loadCb = VRFunction< VRThreadWeakPtr >::create( "geo load", boost::bind(&LoadJob::load, job, _1) );
         VRSceneManager::getCurrent()->initThread(job->loadCb, "geo load thread", false, 1);
         fillCache(path, res);
@@ -275,14 +267,6 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
     return tmp;
 }
 
-void VRImport::fillCache(string path, VRTransformPtr obj) {
-    if (cache.count(path) == 0) cache[path] = Cache();
-    cache[path].root = static_pointer_cast<VRTransform>(obj);
-    for (auto o : cache[path].root->getChildren(true)) cache[path].objects[o->getName()] = o;
-    cache[path].copy = 0; // TODO
-    cout << "VRImport::fillCache " << path << ", cache size: " << cache[path].objects.size() << endl;
-}
-
 VRGeometryPtr VRImport::loadGeometry(string file, string object, string preset, bool thread) {
     file = unrepSpaces(file);
     object = unrepSpaces(object);
@@ -311,15 +295,39 @@ VRGeometryPtr VRImport::loadGeometry(string file, string object, string preset, 
     return static_pointer_cast<VRGeometry>(o);
 }
 
-VRImport::Cache::Cache() {;}
-VRImport::Cache::Cache(VRTransformPtr root) {
-    this->root = root;
-    for (auto c : root->getChildren(true)) objects[getName(c->getNode()->node)] = c;
-}
-
 VRProgressPtr VRImport::getProgressObject() { return progress; }
 
 void VRImport::ingoreHeavyRessources() { ihr_flag = true; }
+
+VRImport::Cache::Cache() {;}
+VRImport::Cache::Cache(VRTransformPtr root) { setup(root); }
+
+void VRImport::Cache::setup(VRTransformPtr root) {
+    objects.clear();
+    this->root = root;
+    for (auto c : root->getChildren(true)) objects[getName(c->getNode()->node)] = c;
+    //for (auto c : root->getChildren(true)) objects[c->getName()] = c;
+
+    root->setNameSpace("VRImportCache");
+    for (auto o : root->getChildren(true) ) o->setNameSpace("VRImportCache");
+}
+
+VRTransformPtr VRImport::Cache::retrieve(VRObjectPtr parent) {
+    auto res = static_pointer_cast<VRTransform>(root->duplicate());
+    res->setNameSpace("__global__");
+    for (auto o : res->getChildren(true) ) o->setNameSpace("__global__");
+
+    if (parent) parent->addChild(res);
+    return res;
+}
+
+
+void VRImport::fillCache(string path, VRTransformPtr obj) {
+    if (cache.count(path) == 0) cache[path] = Cache();
+    cache[path].setup(obj);
+    cout << "VRImport::fillCache " << path << ", cache size: " << cache[path].objects.size() << endl;
+}
+
 
 
 OSG_END_NAMESPACE;

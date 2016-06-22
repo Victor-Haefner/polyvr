@@ -29,12 +29,12 @@ class VRImport {
         };
 
         struct Cache {
-            VRTransformPtr copy = 0;
             VRTransformPtr root = 0;
             map<string,VRObjectPtr> objects;
             Cache();
             Cache(VRTransformPtr root);
 
+            void setup(VRTransformPtr root);
             VRTransformPtr retrieve(VRObjectPtr parent);
         };
 
