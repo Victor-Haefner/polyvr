@@ -143,6 +143,16 @@ void ART::updateT( weak_ptr<VRThread>  t) {
     }
 }
 
+void ART::update_setup() {
+    auto setup = VRSetupManager::getCurrent();
+    setup->updateViews(); // TODO: fuer headtracking, solte vlt wo anders hin
+    auto r = setup->getRoot();
+    for (auto d : devices) {
+        auto b = d.second->ent;
+        if (b->getParent() != r) r->addChild(b);
+    }
+}
+
 void ART::checkNewDevices(int type, int N) {
     setARTPort(port);
     if (!active || dtrack == 0) return;
@@ -163,7 +173,7 @@ void ART::checkNewDevices(int type, int N) {
             cout << "ART - New device " << type << " " << k << endl;
             devices[k] = ART_device::create(i,type);
             on_new_device->triggerPtr<VRDevice>();
-            VRSetupManager::getCurrent()->updateViews(); // TODO: fuer headtracking, solte vlt wo anders hin
+            update_setup();
         }
     }
 }

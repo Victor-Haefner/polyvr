@@ -66,6 +66,7 @@ class ART : public VRStorage {
         boost::mutex mutex;
         void scan(int type = -1, int N = 0);
 
+        void update_setup();
 
         void updateT( weak_ptr<VRThread>  t); //update thread
         void updateL(); //update
