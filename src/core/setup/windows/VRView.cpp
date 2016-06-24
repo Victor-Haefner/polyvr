@@ -152,16 +152,19 @@ void VRView::setDecorators() {//set decorators, only if projection true
         float h = proj_size[1];
         Vec3f x = proj_normal.cross(proj_up);
 
-        screenLowerLeft = Pnt3f(proj_center - proj_up*h*0.5 + x*w*0.5);
-        screenLowerRight = Pnt3f(proj_center - proj_up*h*0.5 - x*w*0.5);
-        screenUpperRight = Pnt3f(proj_center + proj_up*h*0.5 - x*w*0.5);
-        screenUpperLeft = Pnt3f(proj_center + proj_up*h*0.5 + x*w*0.5);
+        screenLowerLeft = Pnt3f(proj_center - proj_up*h*(0.5+proj_warp[1]+proj_shear[1]) + x*w*(0.5-proj_warp[0]+proj_shear[0]));
+        screenLowerRight = Pnt3f(proj_center - proj_up*h*(0.5-proj_warp[1]-proj_shear[1]) - x*w*(0.5-proj_warp[0]-proj_shear[0]));
+        screenUpperRight = Pnt3f(proj_center + proj_up*h*(0.5-proj_warp[1]+proj_shear[1]) - x*w*(0.5+proj_warp[0]+proj_shear[0]));
+        screenUpperLeft = Pnt3f(proj_center + proj_up*h*(0.5+proj_warp[1]-proj_shear[1]) + x*w*(0.5+proj_warp[0]-proj_shear[0]));
     } else {
-        screenLowerLeft = Pnt3f(-1, -0.6, -1);
+        screenLowerLeft = Pnt3f(-1,-0.6, -1);
         screenLowerRight = Pnt3f(1,-0.6, -1);
         screenUpperRight = Pnt3f(1,0.6, -1);
         screenUpperLeft = Pnt3f(-1,0.6, -1);
     }
+
+    cout << "setDecorator screen: shear " << proj_shear << " warp " << proj_warp << endl;
+    cout << "setDecorator screen: LL " << screenLowerLeft << " LR " << screenLowerRight << " UR " << screenUpperRight << " UL " << screenUpperLeft << " " << endl;
 
     GeometryMTRecPtr geo = dynamic_cast<Geometry*>(viewGeo->getCore());
     GeoVectorPropertyRecPtr pos = geo->getPositions();
@@ -217,21 +220,10 @@ void VRView::setDecorators() {//set decorators, only if projection true
 VRView::VRView(string name) {
     this->name = name;
 
-    // data
-    position = Vec4f(0,0,1,1);
-    proj_center = Vec3f(0,0,-1);
-    proj_up = Vec3f(0,1,0);
-    proj_normal = Vec3f(0,0,1);
-    proj_size = Vec2f(2,1);
-
     SolidBackgroundRecPtr sbg = SolidBackground::create();
     sbg->setColor(Color3f(0.7, 0.7, 0.7));
     background = sbg;
 
-    eyeSeparation = 0.06;
-
-    stats = 0;
-    grabfg = 0;
     dummy_user = VRTransform::create("view_user");
     dummy_user->setPersistency(0);
 
@@ -481,6 +473,8 @@ void VRView::save(xmlpp::Element* node) {
     node->set_attribute("user_pos", toString(proj_user).c_str());
     node->set_attribute("up", toString(proj_up).c_str());
     node->set_attribute("size", toString(proj_size).c_str());
+    node->set_attribute("shear", toString(proj_shear).c_str());
+    node->set_attribute("warp", toString(proj_warp).c_str());
     if (user) node->set_attribute("user", user->getName());
     else node->set_attribute("user", user_name);
 }
@@ -497,6 +491,8 @@ void VRView::load(xmlpp::Element* node) {
     if (node->get_attribute("user_pos")) proj_user = toVec3f(node->get_attribute("user_pos")->get_value());
     proj_up = toVec3f(node->get_attribute("up")->get_value());
     proj_size = toVec2f(node->get_attribute("size")->get_value());
+    if (node->get_attribute("shear")) proj_shear = toVec2f(node->get_attribute("shear")->get_value());
+    if (node->get_attribute("warp")) proj_warp = toVec2f(node->get_attribute("warp")->get_value());
     if (node->get_attribute("user")) {
         user_name = node->get_attribute("user")->get_value();
         user = VRSetupManager::getCurrent()->getTracker(user_name);
@@ -524,6 +520,11 @@ void VRView::setProjectionCenter(Vec3f v) { proj_center = v; update(); }
 Vec3f VRView::getProjectionCenter() { return proj_center; }
 void VRView::setProjectionSize(Vec2f v) { proj_size = v; update(); }
 Vec2f VRView::getProjectionSize() { return proj_size; }
+void VRView::setProjectionShear(Vec2f v) { proj_shear = v; update(); }
+Vec2f VRView::getProjectionShear() { return proj_shear; }
+void VRView::setProjectionWarp(Vec2f v) { proj_warp = v; update(); }
+Vec2f VRView::getProjectionWarp() { return proj_warp; }
+
 void VRView::setProjectionUser(Vec3f v) {
     proj_user = v; update();
 

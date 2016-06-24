@@ -28,9 +28,9 @@ class VRView : public std::enable_shared_from_this<VRView> {
         NodeMTRecPtr viewGeo;
         VRMaterialPtr viewGeoMat;
 
-        Vec4f position;
+        Vec4f position = Vec4f(0,0,1,1);
 
-        float eyeSeparation;
+        float eyeSeparation = 0.06;
         bool eyeinverted = false;
 
         //stereo decorator
@@ -42,11 +42,13 @@ class VRView : public std::enable_shared_from_this<VRView> {
         //ShearedStereoCameraDecoratorPtr SSCDecoratorLeft;
         //ShearedStereoCameraDecoratorPtr SSCDecoratorRight;
 
-        Vec3f proj_user;
-        Vec3f proj_center;
-        Vec3f proj_up;
-        Vec3f proj_normal;
-        Vec2f proj_size;
+        Vec3f proj_user = Vec3f(0,0,0);
+        Vec3f proj_center = Vec3f(0,0,-1);
+        Vec3f proj_up = Vec3f(0,1,0);
+        Vec3f proj_normal = Vec3f(0,0,1);
+        Vec2f proj_size = Vec2f(2,1);
+        Vec2f proj_shear = Vec2f(0,0);
+        Vec2f proj_warp = Vec2f(0,0);
 
         Pnt3f screenLowerLeft;
         Pnt3f screenLowerRight;
@@ -69,8 +71,8 @@ class VRView : public std::enable_shared_from_this<VRView> {
         VRCameraPtr cam;
 
         BackgroundRecPtr background;
-        SimpleStatisticsForegroundRecPtr stats;
-        GrabForegroundRecPtr grabfg;
+        SimpleStatisticsForegroundRecPtr stats = 0;
+        GrabForegroundRecPtr grabfg = 0;
         ImageForegroundRecPtr calib_fg;
 
         void setMaterial();
@@ -119,6 +121,10 @@ class VRView : public std::enable_shared_from_this<VRView> {
         Vec3f getProjectionUser();
         void setProjectionSize(Vec2f v);
         Vec2f getProjectionSize();
+        void setProjectionShear(Vec2f v);
+        Vec2f getProjectionShear();
+        void setProjectionWarp(Vec2f v);
+        Vec2f getProjectionWarp();
 
         void showStats(bool b);
         void showViewGeo(bool b);
