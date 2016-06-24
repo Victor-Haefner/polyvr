@@ -17,6 +17,8 @@ class VRAnnotationEngine : public VRGeometry {
         static string fp;
         static string gp;
 
+        float size;
+
         struct Label {
             Vec3f pos;
             vector<int> entries;

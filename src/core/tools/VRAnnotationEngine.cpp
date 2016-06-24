@@ -91,7 +91,7 @@ void VRAnnotationEngine::set(int i, Vec3f p, string s) {
 
     int N = ceil(s.size()/3.0); // number of points, 3 chars per point
     auto& l = labels[i];
-    resize(l,p,N);
+    resize(l,p,N + 4); // plus four bounding points
 
     for (int j=0; j<N; j++) {
         char c[] = {0,0,0};
@@ -104,9 +104,20 @@ void VRAnnotationEngine::set(int i, Vec3f p, string s) {
         pos->setValue(p, k);
         norms->setValue(Vec3f(f,0,j), k);
     }
+
+    // bounding points to avoid word clipping
+    for (int j=0; j<4; j++) {
+        int k = l.entries[N+j];
+        norms->setValue(Vec3f(0,0,-1), k);
+    }
+
+    pos->setValue(p+Vec3f(-0.25*size, -0.5*size, 0), l.entries[N]);
+    pos->setValue(p+Vec3f(-0.25*size,  0.5*size, 0), l.entries[N+1]);
+    pos->setValue(p+Vec3f((s.size()-0.25)*size, -0.5*size, 0), l.entries[N+2]);
+    pos->setValue(p+Vec3f((s.size()-0.25)*size,  0.5*size, 0), l.entries[N+3]);
 }
 
-void VRAnnotationEngine::setSize(float f) { mat->setShaderParameter("size", Real32(f)); }
+void VRAnnotationEngine::setSize(float f) { mat->setShaderParameter("size", Real32(f)); size = f; }
 void VRAnnotationEngine::setBillboard(bool b) { mat->setShaderParameter("doBillboard", Real32(b)); }
 void VRAnnotationEngine::setScreensize(bool b) { mat->setShaderParameter("screen_size", Real32(b)); }
 
@@ -227,7 +238,7 @@ void emitString(in float str, in float offset) {
 void main() {
     float str = normal[0][0];
     float offset = normal[0][2];
-    emitString(str, offset);
+    if (offset >= 0) emitString(str, offset);
 }
 );
 
