@@ -1016,11 +1016,18 @@ struct VRSTEP::Bound : public VRSTEP::Instance, public VRBRepBound {
             if ( !sameVec(edges[0].beg(), edges[0].end()) ) { cout << "Warning: Single NOT closed edge!" << endl; return; }
         }
 
+        /*if (edges.size() == 1 && edges[0].type == "Circle") {
+            if (e.angles.size()) {
+                for (auto& a : e.angles) angles.push_back(a);
+            }
+            return;
+        }*/
+
         for (auto& e : edges) {
             for (auto& p : e.points) {
-                /*cout << " " << p;
+                cout << " " << p;
                 if (points.size() > 0) cout << " " << sameVec(p, points[points.size()-1]) << " " << sameVec(p, points[0]);
-                cout << endl;*/
+                cout << endl;
                 if (points.size() > 0) {
                     if (sameVec(p, points[points.size()-1])) continue; // same as last point
                     if (sameVec(p, points[0])) continue; // same as first point
@@ -1028,8 +1035,7 @@ struct VRSTEP::Bound : public VRSTEP::Instance, public VRBRepBound {
                 points.push_back(p);
             }
         }
-        cout << "Bound " << points.size() << endl;
-        //if (points.size() == 0) cout << "Warning1: No bound points" << endl;
+        if (points.size() == 0) cout << "Warning1: No bound points" << endl;
     }
 };
 

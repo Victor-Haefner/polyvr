@@ -28,7 +28,14 @@ Vec2f VRBRepUtils::getSide(int i) {
 }
 
 vector<float> VRBRepUtils::angleFrame(float a1, float a2) {
-    if (a1 >= a2) a2 += 2*Pi;
+    if (a1 == a2) { // full circle
+        cout << "Full circle detected! " << a1;
+        a1 = -Pi;
+        a2 = Pi;
+        cout << " change to " << a1 << " " << a2 << endl;
+    }
+
+    if (a1 > a2) a2 += 2*Pi;
     vector<float> angles;
     angles.push_back(a1);
     int s1 = getSideN(a1);

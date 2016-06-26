@@ -11,6 +11,7 @@ class VRBRepBound : public VRBRepUtils {
     public:
         vector<VRBRepEdge> edges;
         vector<Vec3f> points;
+        vector<float> angles;
         bool outer = true;
         string BRepType;
 

@@ -60,23 +60,34 @@ VRGeometryPtr VRBRepSurface::build(string type) {
         Triangulator t;
         for (auto b : bounds) {
             polygon poly;
-            //cout << "Bound" << endl;
             float la = -1001;
+            cout << "Bound\n";
+
+            // TODO: this fails for any closed bounds around the cylinder!
+            // idea:
+            //  dont use the bound points but go through the edges
+            //  use edge angle values insteas of cartesian points
+            //  if closed bound around cylinder detected, clip bound with lines at +/- PI, generating new bound on cylinder!
+
             for(auto p : b.points) {
-                //cout << " p1 " << p << endl;
                 mI.mult(Pnt3f(p),p);
-                //cout << " p2 " << p << endl;
                 float h = p[2];
-                float a = atan2(p[1]/R, p[0]/R);
-                if (la > -1000 && abs(a - la)>Pi) a += 2*Pi;
+                p[0] /= R; p[1] /= R;
+                float a = atan2(p[1], p[0]);
+                if (la > -1000 && abs(a - la)>Pi) {
+                    if (a - la > Pi) a -= 2*Pi;
+                    else a += 2*Pi;
+                }
+                cout << " h " << h << " a " << a << " p " << p << " +2pi " << (la > -1000 && abs(a - la)>Pi) << endl;
                 la = a;
-                //cout << h << "  " << a << endl;
                 poly.addPoint(Vec2f(a, h));
             }
             if (!poly.isCCW()) poly.turn();
             t.add(poly);
         }
         auto g = t.compute();
+        if (auto gg = g->getMesh()) { if (!gg->getPositions()) cout << "VRBRepSurface::build: Triangulation failed, no mesh positions!\n";
+        } else cout << "VRBRepSurface::build: Triangulation failed, no mesh generated!\n";
 
         /* intersecting the cylinder rays with a triangle (2D)
 

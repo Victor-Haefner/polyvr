@@ -14,12 +14,14 @@ class VRBRepEdge : public VRBRepUtils {
     public:
         vector<Vec3f> points;
         vector<Vec3f> cpoints;
+        vector<float> angles;
         vector<double> weights;
         vector<double> knots;
         Vec3f n, EBeg, EEnd;
         double radius;
         posePtr center;
         int deg;
+        bool fullCircle = false;
 
         VRBRepEdge();
 

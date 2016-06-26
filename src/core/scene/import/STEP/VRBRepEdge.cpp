@@ -9,7 +9,10 @@ VRBRepEdge::VRBRepEdge() {}
 Vec3f& VRBRepEdge::beg() { return points.size() > 0 ? points[0] : n; }
 Vec3f& VRBRepEdge::end() { return points.size() > 0 ? points[points.size()-1] : n; }
 
-void VRBRepEdge::swap() { reverse(points.begin(), points.end()); }
+void VRBRepEdge::swap() {
+    cout << "VRBRepEdge::swap\n";
+    reverse(points.begin(), points.end());
+}
 
 bool VRBRepEdge::connectsTo(VRBRepEdge& e) { return ( sameVec(end(), e.beg()) ); }
 
@@ -33,6 +36,7 @@ void VRBRepEdge::build(string type) {
         c1 *= _r; c2*= _r;
         a1 = atan2(c1[1],c1[0]);
         a2 = atan2(c2[1],c2[0]);
+        if (a1 == a2) fullCircle = true;
 
         /*cout << "VRBRepEdge Circle ";
         //cout << radius << " " << center->toString();
@@ -41,7 +45,8 @@ void VRBRepEdge::build(string type) {
         //cout << " a1: " << a1 << " a2: " << a2;
         cout << endl;*/
 
-        for (auto a : angleFrame(a1, a2)) {
+        angles = angleFrame(a1, a2);
+        for (auto a : angles) {
             Pnt3f p(radius*cos(a),radius*sin(a),0);
             m.mult(p,p);
             points.push_back(Vec3f(p));
