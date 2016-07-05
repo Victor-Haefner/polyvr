@@ -453,6 +453,7 @@ btCollisionShape* VRPhysics::getBoxShape() {
     for (auto geo : getGeometries()) {
         if (!geo) continue;
         OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->getPositions();
+        if (!pos) continue;
 		for (unsigned int i = 0; i<pos->size(); i++) {
             OSG::Vec3f p;
             pos->getValue(p,i);

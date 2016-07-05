@@ -90,7 +90,7 @@ class CarDynamics : public VRObject {
         void setBreak(float b);
         void setSteering(float s);
 
-        void setChassisGeo(VRGeometryPtr geo);
+        void setChassisGeo(VRGeometryPtr geo, bool doPhys = 1);
         void setWheelGeo(VRGeometryPtr geo);
         void setWheelOffsets(float xOffset, float frontZOffset, float rearZOffset, float height);
         void setWheelParams(float w, float r);

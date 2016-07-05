@@ -43,9 +43,9 @@ PyObject* VRPyCarDynamics::update(VRPyCarDynamics* self, PyObject* args) {
 }
 
 PyObject* VRPyCarDynamics::setChassis(VRPyCarDynamics* self, PyObject* args) {
-    VRPyGeometry* dev = NULL;
-    if (! PyArg_ParseTuple(args, "O", &dev)) return NULL;
-    self->objPtr->setChassisGeo(dev->objPtr);
+    VRPyGeometry* dev = NULL; int doPhys = 1;
+    if (! PyArg_ParseTuple(args, "O|i", &dev, &doPhys)) return NULL;
+    self->objPtr->setChassisGeo(dev->objPtr, doPhys);
     Py_RETURN_TRUE;
 }
 
@@ -57,7 +57,6 @@ PyObject* VRPyCarDynamics::setWheel(VRPyCarDynamics* self, PyObject* args) {
 }
 
 PyObject* VRPyCarDynamics::setCarMass(VRPyCarDynamics* self, PyObject* args) {
-	if (self->obj == 0) { PyErr_SetString(err, "VRPyMaterial::setCarMass, C obj is invalid"); return NULL; }
     cout << "setting car mass" << endl;
 	self->objPtr->setCarMass(parseFloat(args));
 	cout << "setting car mass" << endl;

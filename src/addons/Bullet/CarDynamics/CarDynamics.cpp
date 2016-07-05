@@ -156,13 +156,15 @@ void CarDynamics::updateWheels() {
     if (w4) { w4->setWorldMatrix( VRPhysics::fromBTTransform(m_vehicle->getWheelInfo(3).m_worldTransform) ); w4->setNoBltFlag(); }
 }
 
-void CarDynamics::setChassisGeo(VRGeometryPtr geo) {
+void CarDynamics::setChassisGeo(VRGeometryPtr geo, bool doPhys) {
     geo->setMatrix(Matrix());
-    geo->getPhysics()->setShape("Convex");
-    geo->getPhysics()->setMass(m_mass);
-    geo->getPhysics()->setDynamic(true);
-    geo->getPhysics()->setPhysicalized(true);
-    geo->getPhysics()->updateTransformation(geo);
+    if (doPhys) {
+        geo->getPhysics()->setShape("Convex");
+        geo->getPhysics()->setMass(m_mass);
+        geo->getPhysics()->setDynamic(true);
+        geo->getPhysics()->setPhysicalized(true);
+        geo->getPhysics()->updateTransformation(geo);
+    }
 
     if (geo->getPhysics()->getRigidBody() == 0) {
         cout<<"!!!!!!!!chassis is 0!!!!!!!!\ncreating vehicle with standard parameters && shapes"<<endl;
@@ -182,6 +184,7 @@ void CarDynamics::setChassisGeo(VRGeometryPtr geo) {
 }
 
 void CarDynamics::setWheelGeo(VRGeometryPtr geo) { // TODO
+    if (!geo) return;
     w1 = static_pointer_cast<VRGeometry>( geo->duplicate() );
     w2 = static_pointer_cast<VRGeometry>( geo->duplicate() );
     w3 = static_pointer_cast<VRGeometry>( geo->duplicate() );
