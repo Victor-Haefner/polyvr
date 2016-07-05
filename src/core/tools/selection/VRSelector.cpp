@@ -30,6 +30,7 @@ void VRSelector::update() {
     for (auto g : selection->getSelected()) {
         auto geo = g.lock();
         if (!geo) continue;
+        if (!geo->getMaterial()) continue;
         orig_mats.push_back(MatStore(geo));
 
         VRMaterialPtr mat = getMat();
