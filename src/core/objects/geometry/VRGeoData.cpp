@@ -20,10 +20,21 @@ struct VRGeoData::Data {
 
     int getColorChannels(GeoVectorProperty* v) {
         if (v == 0) return 0;
+
+        static map<int, int> channels;
+        if (channels.size() == 0) {
+            channels[ GeoVec2fProperty::create()->getType().getId() ] = 2;
+            channels[ GeoVec3fProperty::create()->getType().getId() ] = 3;
+            channels[ GeoVec4fProperty::create()->getType().getId() ] = 4;
+            channels[ GeoColor3fProperty::create()->getType().getId() ] = 3;
+            channels[ GeoColor4fProperty::create()->getType().getId() ] = 4;
+            channels[ GeoVec2dProperty::create()->getType().getId() ] = 2;
+            channels[ GeoVec3dProperty::create()->getType().getId() ] = 3;
+            channels[ GeoVec4dProperty::create()->getType().getId() ] = 4;
+        }
+
         int type = v->getType().getId();
-        if (type == 1749) return 3;
-        if (type == 1775) return 3;
-        if (type == 1776) return 4;
+        if (channels.count(type)) return channels[type];
         cout << "getColorChannels WARNING: unknown type ID " << type << endl;
         return 0;
     }
