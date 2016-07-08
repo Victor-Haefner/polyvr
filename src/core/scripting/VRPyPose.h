@@ -14,6 +14,7 @@ struct VRPyPose : VRPyBaseT<OSG::pose> {
     static PyObject* set(VRPyPose* self, PyObject *args);
     static PyObject* mult(VRPyPose* self, PyObject *args);
     static PyObject* multInv(VRPyPose* self, PyObject *args);
+    static PyObject* invert(VRPyPose* self);
 };
 
 #endif // VRPYPOSE_H_INCLUDED

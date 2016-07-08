@@ -24,6 +24,7 @@ class pose {
         Vec3f up();
 
         Matrix asMatrix();
+        void invert();
 
         string toString();
 };

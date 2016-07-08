@@ -50,8 +50,14 @@ PyMethodDef VRPyPose::methods[] = {
     {"set", (PyCFunction)VRPyPose::set, METH_VARARGS, "Set the pose - set([pos], [dir], [up])" },
     {"mult", (PyCFunction)VRPyPose::mult, METH_VARARGS, "Transform a vector - mult([vec])" },
     {"multInv", (PyCFunction)VRPyPose::multInv, METH_VARARGS, "Transform back a vector - multInv([vec])" },
+    {"invert", (PyCFunction)VRPyPose::invert, METH_NOARGS, "Invert pose - invert()" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyPose::invert(VRPyPose *self) {
+    self->objPtr->invert();
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyPose::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     PyObject *p, *d, *u;

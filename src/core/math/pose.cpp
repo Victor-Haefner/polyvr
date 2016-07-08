@@ -36,3 +36,15 @@ string pose::toString() {
     ss << "pose " << data[0] << " : " << data[1] << " : " << data[2];
     return ss.str();
 }
+
+void pose::invert() {
+    Matrix m;
+    MatrixLookAt(m, data[0], data[0]+data[1], data[2]);
+    m.invert();
+    set(Vec3f(m[3]), Vec3f(-m[2]), Vec3f(m[1]));
+}
+
+
+
+
+
