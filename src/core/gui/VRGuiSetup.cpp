@@ -59,9 +59,7 @@ class VRGuiSetup_UserColumns : public Gtk::TreeModelColumnRecord {
         Gtk::TreeModelColumn<gpointer> user;
 };
 
-void VRGuiSetup::updateObjectData() {
-    guard = true;
-    bool device = false;
+void VRGuiSetup::closeAllExpander() {
     setExpanderSensitivity("expander3", false);
     setExpanderSensitivity("expander4", false);
     setExpanderSensitivity("expander5", false);
@@ -75,6 +73,11 @@ void VRGuiSetup::updateObjectData() {
     setExpanderSensitivity("expander24", false);
     setExpanderSensitivity("expander25", false);
     setExpanderSensitivity("expander26", false);
+}
+
+void VRGuiSetup::updateObjectData() {
+    bool device = false;
+    guard = true;
 
     current_scene = VRSceneManager::getCurrent();
 
@@ -328,6 +331,8 @@ void VRGuiSetup::on_treeview_select() {
     Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview2"));
     Glib::RefPtr<Gtk::TreeStore> tree_store  = Glib::RefPtr<Gtk::TreeStore>::cast_static(VRGuiBuilder()->get_object("setupTree"));
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
+
+    closeAllExpander();
     if(!iter) {
         selected_type = "";
         updateObjectData();
@@ -659,7 +664,9 @@ void VRGuiSetup::on_change_view_user() {
     VRGuiSetup_UserColumns cols;
     Gtk::TreeModel::Row row = *getComboboxIter("combobox18");
     //VRTransformPtr u = static_pointer_cast<VRTransform>(row.get_value(cols.user));
-    VRTransformPtr u = ( (VRTransform*)row.get_value(cols.user) )->ptr();
+    auto U = row.get_value(cols.user);
+    if (!U) return;
+    VRTransformPtr u = ( (VRTransform*)U )->ptr();
 
     VRView* view = (VRView*)selected_object;
     view->setUser(u);

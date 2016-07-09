@@ -198,10 +198,16 @@ void setEntryCallback(string e, void (* fkt)(GtkEntry*, gpointer)) {
     g_signal_connect (en->gobj(), "focus-out-event", G_CALLBACK(fkt), NULL);
 }
 
+bool entryFocusProxy(GdkEventFocus* e, sigc::slot<void> sig) {
+    sig();
+    return true;
+}
+
 void setEntryCallback(string e, sigc::slot<void> sig) {
     Gtk::Entry* en;
     VRGuiBuilder()->get_widget(e, en);
     en->signal_activate().connect(sig);
+    en->signal_focus_out_event().connect( sigc::bind(&entryFocusProxy, sig) );
 }
 
 void setEntryCallback(string e, sigc::slot<bool,GdkEventFocus*> sig) {

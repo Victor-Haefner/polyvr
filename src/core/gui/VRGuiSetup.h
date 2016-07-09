@@ -112,6 +112,7 @@ class VRGuiSetup {
         void on_netslave_edited();
         void on_netslave_start_clicked();
 
+        void closeAllExpander();
         void updateObjectData();
 
         void setTreeRow(Glib::RefPtr<Gtk::TreeStore> tree_store, Gtk::TreeStore::Row row, string name, string type, gpointer ptr, string fg = "#000000", string bg = "#FFFFFF");

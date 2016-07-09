@@ -163,8 +163,8 @@ void VRView::setDecorators() {//set decorators, only if projection true
         screenUpperLeft = Pnt3f(-1,0.6, -1);
     }
 
-    cout << "setDecorator screen: shear " << proj_shear << " warp " << proj_warp << endl;
-    cout << "setDecorator screen: LL " << screenLowerLeft << " LR " << screenLowerRight << " UR " << screenUpperRight << " UL " << screenUpperLeft << " " << endl;
+    //cout << "setDecorator screen: shear " << proj_shear << " warp " << proj_warp << endl;
+    //cout << "setDecorator screen: LL " << screenLowerLeft << " LR " << screenLowerRight << " UR " << screenUpperRight << " UL " << screenUpperLeft << " " << endl;
 
     GeometryMTRecPtr geo = dynamic_cast<Geometry*>(viewGeo->getCore());
     GeoVectorPropertyRecPtr pos = geo->getPositions();
