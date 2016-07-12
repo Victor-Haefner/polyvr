@@ -489,6 +489,8 @@
 		<Unit filename="src/core/gui/VRGuiNav.h" />
 		<Unit filename="src/core/gui/VRGuiNet.cpp" />
 		<Unit filename="src/core/gui/VRGuiNet.h" />
+		<Unit filename="src/core/gui/VRGuiRecWidget.cpp" />
+		<Unit filename="src/core/gui/VRGuiRecWidget.h" />
 		<Unit filename="src/core/gui/VRGuiScene.cpp" />
 		<Unit filename="src/core/gui/VRGuiScene.h" />
 		<Unit filename="src/core/gui/VRGuiScripts.cpp" />

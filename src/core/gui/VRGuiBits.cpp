@@ -253,10 +253,9 @@ VRGuiBits::VRGuiBits() {
     setLabel("label24", "Project: None");
 
     // recorder
-    recorder = shared_ptr<VRRecorder>( new VRRecorder() );
-    recorder->setView(0);
     recorder_visual_layer = VRVisualLayer::getLayer("Recorder", "recorder.png", 1);
-    recorder_visual_layer->setCallback( recorder->getToggleCallback() );
+    recToggleCb = VRFunction<bool>::create("recorder toggle", boost::bind(&VRGuiRecWidget::setVisible, &recorder, _1));
+    recorder_visual_layer->setCallback( recToggleCb );
 
     // About Dialog
     Gtk::AboutDialog* diag;

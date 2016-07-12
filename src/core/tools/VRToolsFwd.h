@@ -10,7 +10,6 @@ typedef std::weak_ptr<X> X ## WeakPtr;
 
 namespace OSG {
 
-// tools
 ptrFwd(VRAnnotationEngine);
 ptrFwd(VRAnalyticGeometry);
 ptrFwd(VRClipPlane);
@@ -26,6 +25,7 @@ ptrFwd(VRUndoManager);
 ptrFwd(VRUndoAtom);
 ptrFwd(VRUndo);
 ptrFwd(CarDynamics);
+ptrFwd(VRRecorder);
 
 }
 

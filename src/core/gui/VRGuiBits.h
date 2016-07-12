@@ -7,6 +7,7 @@
 #include <gtkmm/combobox.h>
 #include "core/utils/VRFunctionFwd.h"
 #include "core/utils/VRDeviceFwd.h"
+#include "VRGuiRecWidget.h"
 
 namespace Gtk { class ToggleToolButton; class ScrolledWindow; }
 
@@ -14,7 +15,6 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRVisualLayer;
-class VRRecorder;
 class VRSignal;
 
 class VRGuiBits {
@@ -24,8 +24,9 @@ class VRGuiBits {
 	    std::queue<string> msg_queue;
 
 	    shared_ptr<VRFunction<int> > updatePtr;
+	    shared_ptr<VRFunction<bool> > recToggleCb;
 
-        shared_ptr<VRRecorder> recorder;
+        VRGuiRecWidget recorder;
         shared_ptr<VRVisualLayer> recorder_visual_layer;
 
         void hideAbout(int i);
