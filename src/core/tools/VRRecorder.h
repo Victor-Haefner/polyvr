@@ -9,6 +9,9 @@
 #include "core/objects/VRObjectFwd.h"
 #include "core/setup/VRSetupFwd.h"
 
+class AVCodec;
+class AVCodecContext;
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -20,11 +23,16 @@ class VRRecorder {
         VRViewWeakPtr view;
         vector<VRFrame*> captures;
         int maxFrames = -1;
+        bool running = 0;
+
+        AVCodec* codec = 0;
+        AVCodecContext* codec_context = 0;
 
         VRTogglePtr toggleCallback;
         VRUpdatePtr updateCallback;
 
-        void on_record_toggle(bool b);
+        void initCodec();
+        void closeCodec();
 
     public:
         VRRecorder();
@@ -33,6 +41,7 @@ class VRRecorder {
         void capture();
         void compile(string path);
         void clear();
+        bool isRunning();
         int getRecordingSize();
         float getRecordingLength();
         void setMaxFrames(int maxf);
@@ -43,6 +52,9 @@ class VRRecorder {
         Vec3f getAt(int f);
         Vec3f getUp(int f);
         VRTexturePtr get(int f);
+
+        void setRecording(bool b);
+        string getPath();
 
         weak_ptr<VRFunction<bool> > getToggleCallback();
 };

@@ -16,13 +16,13 @@ string toString(size_t i) { stringstream ss; ss << i; return ss.str(); }
 string toString(unsigned int i) { stringstream ss; ss << i; return ss.str(); }
 string toString(float f, int d) {
     stringstream ss;
-    if (d >= 0) ss.precision(d);
+    if (d >= 0) ss << fixed << setprecision(d);//ss.precision(d);
     ss << f;
     return ss.str();
 }
 string toString(double f, int d) {
     stringstream ss;
-    if (d >= 0) ss.precision(d);
+    if (d >= 0) ss << fixed << setprecision(d);//ss.precision(d);
     ss << f;
     return ss.str();
 }

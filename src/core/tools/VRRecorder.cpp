@@ -35,8 +35,10 @@ VRRecorder::VRRecorder() {
     av_register_all();
     avcodec_register_all();
 
-    toggleCallback = VRFunction<bool>::create("recorder toggle", boost::bind(&VRRecorder::on_record_toggle, this, _1));
+    toggleCallback = VRFunction<bool>::create("recorder toggle", boost::bind(&VRRecorder::setRecording, this, _1));
     updateCallback = VRFunction<int>::create("recorder update", boost::bind(&VRRecorder::capture, this));
+
+    //initCodec();
 }
 
 void VRRecorder::setView(int i) {
@@ -84,6 +86,8 @@ void VRRecorder::capture() {
     f->u = t->getUp();
 }
 
+bool VRRecorder::isRunning() { return running; }
+
 void VRRecorder::clear() {
     for (auto f : captures) delete f;
     captures.clear();
@@ -97,55 +101,64 @@ float VRRecorder::getRecordingLength() {
     return (t1-t0)*0.001; //seconds
 }
 
+void VRRecorder::initCodec() {
+    VRTexturePtr img0 = captures[0]->capture;
+    AVCodecID codec_id = AV_CODEC_ID_MPEG2VIDEO;
+    //AVCodecID codec_id = AV_CODEC_ID_H264; // only works with m player??
+    codec = avcodec_find_encoder(codec_id);
+    if (!codec) { fprintf(stderr, "Codec not found\n"); return; }
+
+    codec_context = avcodec_alloc_context3(codec);
+    if (!codec_context) { fprintf(stderr, "Could not allocate video codec context\n"); return; }
+
+    codec_context->width = img0->getImage()->getWidth();
+    codec_context->height = img0->getImage()->getHeight();
+    codec_context->bit_rate = codec_context->width*codec_context->height*5; /* put sample parameters */
+	codec_context->time_base.num = 1;
+	codec_context->time_base.den = 25;/* frames per second */
+    codec_context->gop_size = 10; /* emit one intra frame every ten frames */
+    codec_context->max_b_frames = 1;
+    codec_context->pix_fmt = AV_PIX_FMT_YUV420P;
+    av_opt_set(codec_context->priv_data, "preset", "ultrafast", 0);
+
+    AVDictionary *param = 0;
+    av_dict_set(&param, "crf", "0", 0);
+    if (avcodec_open2(codec_context, codec, &param) < 0) { fprintf(stderr, "Could not open codec\n"); return; } /* open codec */
+}
+
+void VRRecorder::closeCodec() {
+    avcodec_close(codec_context);
+    av_free(codec_context);
+}
+
 void VRRecorder::compile(string path) {
     if (captures.size() == 0) return;
-    VRTexturePtr img0 = captures[0]->capture;
 
-    /*for (int i=0; i<1; i++) { // test export the first N images
-        string pimg = path+"."+toString(i)+".png";
-        captures[i]->capture->write(pimg.c_str());
-    }*/
+    initCodec();
 
-    AVCodec* codec;
-    AVCodecContext* c= NULL;
     int i, ret, x, y, got_output;
     FILE *f;
     AVFrame *frame;
     AVPacket pkt;
     uint8_t endcode[] = { 0, 0, 1, 0xb7 };
 
-    AVCodecID codec_id = AV_CODEC_ID_MPEG1VIDEO;
-    //AVCodecID codec_id = AV_CODEC_ID_H264; // only works with m player??
-    codec = avcodec_find_encoder(codec_id);
-    if (!codec) { fprintf(stderr, "Codec not found\n"); return; }
-
-    c = avcodec_alloc_context3(codec);
-    if (!c) { fprintf(stderr, "Could not allocate video codec context\n"); return; }
-
-    c->width = img0->getImage()->getWidth();
-    c->height = img0->getImage()->getHeight();
-    c->bit_rate = c->width*c->height*5; /* put sample parameters */
-	c->time_base.num = 1;
-	c->time_base.den = 25;/* frames per second */
-    c->gop_size = 10; /* emit one intra frame every ten frames */
-    c->max_b_frames = 1;
-    c->pix_fmt = AV_PIX_FMT_YUV420P;
-
-    if (codec_id == AV_CODEC_ID_H264) av_opt_set(c->priv_data, "preset", "slow", 0);
-    if (avcodec_open2(c, codec, NULL) < 0) { fprintf(stderr, "Could not open codec\n"); return; } /* open codec */
+    /*for (int i=0; i<1; i++) { // test export the first N images
+        string pimg = path+"."+toString(i)+".png";
+        captures[i]->capture->write(pimg.c_str());
+    }*/
 
     f = fopen(path.c_str(), "wb");
     if (!f) { fprintf(stderr, "Could not open %s\n", path.c_str()); return; }
 
     frame = avcodec_alloc_frame();
     if (!frame) { fprintf(stderr, "Could not allocate video frame\n"); return; }
-    frame->format = c->pix_fmt;
-    frame->width  = c->width;
-    frame->height = c->height;
+    frame->format = codec_context->pix_fmt;
+    frame->width  = codec_context->width;
+    frame->height = codec_context->height;
 
     /* the image can be allocated by any means && av_image_alloc() is
     * just the most convenient way if av_malloc() is to be used */
-    ret = av_image_alloc(frame->data, frame->linesize, c->width, c->height, c->pix_fmt, 32);
+    ret = av_image_alloc(frame->data, frame->linesize, codec_context->width, codec_context->height, codec_context->pix_fmt, 32);
     if (ret < 0) { fprintf(stderr, "Could not allocate raw picture buffer\n"); return; }
 
     for (i=0; i<(int)captures.size(); i++) {
@@ -156,16 +169,16 @@ void VRRecorder::compile(string path) {
         pkt.size = 0;
 
         const unsigned char* data = img->getImage()->getData();
-        for (y=0; y<c->height; y++) { // Y
-         for (x=0; x<c->width; x++) {
-            int k = y*c->width + x;
+        for (y=0; y<codec_context->height; y++) { // Y
+         for (x=0; x<codec_context->width; x++) {
+            int k = y*codec_context->width + x;
             int r = data[k*3+0];
             int g = data[k*3+1];
             int b = data[k*3+2];
             int Y = 16 + 0.256789063*r + 0.504128906*g + 0.09790625*b;
             frame->data[0][y * frame->linesize[0] + x] = Y;
 
-            if (y%2 == 0 && y%2 == 0) {
+            if (y%2 == 0) {
              int u = y/2;
              int v = x/2;
              int U = 128 + -0.148222656*r + -0.290992188*g + 0.439214844*b;
@@ -179,7 +192,7 @@ void VRRecorder::compile(string path) {
         frame->pts = i;
 
         /* encode the image */
-        ret = avcodec_encode_video2(c, &pkt, frame, &got_output);
+        ret = avcodec_encode_video2(codec_context, &pkt, frame, &got_output);
         if (ret < 0) { fprintf(stderr, "Error encoding frame\n"); return; }
 
         if (got_output) {
@@ -192,7 +205,7 @@ void VRRecorder::compile(string path) {
     for (got_output = 1; got_output; i++) {
         fflush(stdout);
 
-        ret = avcodec_encode_video2(c, &pkt, NULL, &got_output);
+        ret = avcodec_encode_video2(codec_context, &pkt, NULL, &got_output);
         if (ret < 0) { fprintf(stderr, "Error encoding frame\n"); return; }
 
         if (got_output) {
@@ -205,8 +218,7 @@ void VRRecorder::compile(string path) {
     fwrite(endcode, 1, sizeof(endcode), f);
     fclose(f);
 
-    avcodec_close(c);
-    av_free(c);
+    closeCodec();
     av_freep(&frame->data[0]);
     avcodec_free_frame(&frame);
 }
@@ -216,14 +228,14 @@ VRTexturePtr VRRecorder::get(int f) {
     return fr->capture;
 }
 
-void VRRecorder::on_record_toggle(bool b) {
+void VRRecorder::setRecording(bool b) {
+    if (running == b) return;
+    running = b;
     if (b) VRSceneManager::get()->addUpdateFkt(updateCallback);
-    else {
-        VRSceneManager::get()->dropUpdateFkt(updateCallback);
-        compile("recording_"+toString(VRGlobals::get()->CURRENT_FRAME)+".avi");
-        clear();
-    }
+    else VRSceneManager::get()->dropUpdateFkt(updateCallback);
 }
+
+string VRRecorder::getPath() { return "recording_"+toString(VRGlobals::get()->CURRENT_FRAME)+".avi"; }
 
 weak_ptr<VRFunction<bool> > VRRecorder::getToggleCallback() { return toggleCallback; }
 
