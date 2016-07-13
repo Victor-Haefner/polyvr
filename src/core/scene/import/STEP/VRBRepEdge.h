@@ -20,8 +20,10 @@ class VRBRepEdge : public VRBRepUtils {
         Vec3f n, EBeg, EEnd;
         double radius;
         posePtr center;
+        float a1,a2;
         int deg;
         bool fullCircle = false;
+        string etype;
 
         VRBRepEdge();
 

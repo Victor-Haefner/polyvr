@@ -1025,9 +1025,9 @@ struct VRSTEP::Bound : public VRSTEP::Instance, public VRBRepBound {
 
         for (auto& e : edges) {
             for (auto& p : e.points) {
-                cout << " " << p;
+                /*cout << " " << p;
                 if (points.size() > 0) cout << " " << sameVec(p, points[points.size()-1]) << " " << sameVec(p, points[0]);
-                cout << endl;
+                cout << endl;*/
                 if (points.size() > 0) {
                     if (sameVec(p, points[points.size()-1])) continue; // same as last point
                     if (sameVec(p, points[0])) continue; // same as first point

@@ -11,12 +11,16 @@ Vec3f& VRBRepEdge::end() { return points.size() > 0 ? points[points.size()-1] : 
 
 void VRBRepEdge::swap() {
     cout << "VRBRepEdge::swap\n";
+    std::swap(EBeg, EEnd);
+    std::swap(a1, a2);
     reverse(points.begin(), points.end());
 }
 
 bool VRBRepEdge::connectsTo(VRBRepEdge& e) { return ( sameVec(end(), e.beg()) ); }
 
 void VRBRepEdge::build(string type) {
+    etype = type;
+
     if (type == "Line") {
         points.push_back(EBeg);
         points.push_back(EEnd);
@@ -29,14 +33,16 @@ void VRBRepEdge::build(string type) {
         Matrix m = center->asMatrix();
         Matrix mI = m; mI.invert();
 
-        float a1,a2; // get start and end angles
+        // get start and end angles
         Vec3f c1,c2;
         mI.mult(Pnt3f(EBeg), c1);
         mI.mult(Pnt3f(EEnd), c2);
+        cout << " circle ends: " << EBeg << " -> " << c1 << " , " << EEnd << " -> " << c2 << endl;
         c1 *= _r; c2*= _r;
         a1 = atan2(c1[1],c1[0]);
         a2 = atan2(c2[1],c2[0]);
         if (a1 == a2) fullCircle = true;
+        //if (a1 > a2) a2 += 2*Pi;
 
         /*cout << "VRBRepEdge Circle ";
         //cout << radius << " " << center->toString();

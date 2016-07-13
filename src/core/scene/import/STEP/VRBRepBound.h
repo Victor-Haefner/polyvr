@@ -19,6 +19,7 @@ class VRBRepBound : public VRBRepUtils {
         VRBRepBound();
 
         bool isClosed();
+        string edgeEndsToString();
 };
 
 OSG_END_NAMESPACE;

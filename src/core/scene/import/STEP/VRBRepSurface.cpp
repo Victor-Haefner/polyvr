@@ -28,9 +28,29 @@ VRGeometryPtr VRBRepSurface::build(string type) {
     //cout << "VRSTEP::Surface build " << type << endl;
 
     Matrix m;
-    if (trans) m = trans->asMatrix();
+    Vec3f d, u;
+    if (trans) {
+        m = trans->asMatrix();
+        d = trans->dir();
+        u = trans->up();
+    }
     Matrix mI = m;
     mI.invert();
+
+    auto cylindricUnproject = [&](Vec3f& p) {
+        mI.mult(Pnt3f(p),p);
+        float h = p[2];
+        p[0] /= R; p[1] /= R;
+        float a = atan2(p[1], p[0]);
+        return Vec2f(a,h);
+    };
+
+    auto rebaseAngle = [&](float& a, float& la) {
+        if (la > -1000 && abs(a - la) > Pi) {
+            if (a - la > Pi) a -= 2*Pi;
+            else a += 2*Pi;
+        }
+    };
 
     if (type == "Plane") {
         //return 0;
@@ -55,13 +75,19 @@ VRGeometryPtr VRBRepSurface::build(string type) {
     }
 
     if (type == "Cylindrical_Surface") {
+
+        static int i=0; i++;
+        if (i != 22 && i != 23) return 0; // 22,23
+
         cout << "Cylindrical_Surface\n";
         // feed the triangulator with unprojected points
         Triangulator t;
+
         for (auto b : bounds) {
             polygon poly;
             float la = -1001;
             cout << "Bound\n";
+            cout << b.edgeEndsToString() << endl;
 
             // TODO: this fails for any closed bounds around the cylinder!
             // idea:
@@ -69,22 +95,80 @@ VRGeometryPtr VRBRepSurface::build(string type) {
             //  use edge angle values insteas of cartesian points
             //  if closed bound around cylinder detected, clip bound with lines at +/- PI, generating new bound on cylinder!
 
-            for(auto p : b.points) {
-                mI.mult(Pnt3f(p),p);
-                float h = p[2];
-                p[0] /= R; p[1] /= R;
-                float a = atan2(p[1], p[0]);
-                if (la > -1000 && abs(a - la)>Pi) {
-                    if (a - la > Pi) a -= 2*Pi;
-                    else a += 2*Pi;
+            cout << " poly\n";
+            for (auto& e : b.edges) {
+                if (e.etype == "Circle") {
+                    float h = cylindricUnproject(e.EBeg)[1];
+                    float a1, a2;
+                    a1 = e.a1; a2 = e.a2;
+                    Vec3f cd = e.center->dir();
+                    Vec3f cu = e.center->up();
+                    if (a2 < a1 && cd.dot(d) < 0) a2 += 2*Pi;
+
+
+                    //a1 = cylindricUnproject(e.EBeg)[0];
+                    //a2 = cylindricUnproject(e.EEnd)[0];
+                    //if (a2 < a1) a2 += 2*Pi;
+
+                    cout << " circle " << Vec3f(a1,a2,la) << endl;
+                    rebaseAngle(a1, la);
+                    rebaseAngle(a2, la);
+                    cout << " circle " << cd.dot(d) << " " << cu.dot(u) << endl;
+
+                    if (poly.size() == 0) poly.addPoint(Vec2f(a1,h));
+                    poly.addPoint(Vec2f(a2,h));
+                    cout << "cp1 " << Vec2f(a1,h) << endl;
+                    cout << "cp2 " << Vec2f(a2,h) << endl;
+                    la = a2;
+                    continue;
                 }
-                cout << " h " << h << " a " << a << " p " << p << " +2pi " << (la > -1000 && abs(a - la)>Pi) << endl;
-                la = a;
-                poly.addPoint(Vec2f(a, h));
+
+                if (e.etype == "Line") {
+                    Vec2f p1 = cylindricUnproject(e.EBeg);
+                    Vec2f p2 = cylindricUnproject(e.EEnd);
+
+                    cout << " line " << Vec3f(p1[0],p2[0],la) << endl;
+                    rebaseAngle(p1[0], la);
+                    rebaseAngle(p2[0], la);
+                    cout << " line " << Vec3f(p1[0],p2[0],la) << endl;
+
+                    if (poly.size() == 0) poly.addPoint(p1);
+                    poly.addPoint(p2);
+                    cout << "lp1 " << p1 << endl;
+                    cout << "lp2 " << p2 << endl;
+                    la = p2[0];
+                    continue;
+                }
+
+                if (e.etype == "B_Spline_Curve_With_Knots") {
+                    for (auto& p : e.points) {
+                        Vec2f pc = cylindricUnproject(p);
+                        rebaseAngle(pc[0], la);
+
+                        poly.addPoint(pc);
+                        cout << "bsp " << pc << endl;
+                        la = pc[0];
+                    }
+                    continue;
+                }
+
+                cout << "Unhandled edge of type " << e.etype << endl;
             }
+            cout << endl;
+            cout << poly.toString() << endl;
+
+            /*for(auto p : b.points) {
+                Vec2f pc = cylindricUnproject(p);
+                rebaseAngle(pc[0], la);
+                //cout << " h " << h << " a " << a << " p " << p << " +2pi " << (la > -1000 && abs(a - la)>Pi) << endl;
+                la = pc[0];
+                poly.addPoint(pc);
+            }*/
+
             if (!poly.isCCW()) poly.turn();
             t.add(poly);
         }
+
         auto g = t.compute();
         if (auto gg = g->getMesh()) { if (!gg->getPositions()) cout << "VRBRepSurface::build: Triangulation failed, no mesh positions!\n";
         } else cout << "VRBRepSurface::build: Triangulation failed, no mesh generated!\n";
@@ -129,7 +213,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
         };
 
         // tesselate the result while projecting it back on the surface
-        if (g) if (auto gg = g->getMesh()) {
+        if (g and 1) if (auto gg = g->getMesh()) {
             TriangleIterator it;
             VRGeoData nMesh;
             Vec3f n(0,0,1);

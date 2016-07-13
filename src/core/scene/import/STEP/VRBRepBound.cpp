@@ -1,4 +1,5 @@
 #include "VRBRepBound.h"
+#include "core/utils/toString.h"
 
 using namespace OSG;
 
@@ -9,4 +10,12 @@ bool VRBRepBound::isClosed() {
         if (!edges[i-1].connectsTo(edges[i])) return false;
     }
     return true;
+}
+
+string VRBRepBound::edgeEndsToString() {
+    string r;
+    for (auto& e : edges) {
+        r += " [" + toString(e.EBeg) + " - " + toString(e.EEnd) + "] ";
+    }
+    return r;
 }
