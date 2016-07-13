@@ -11,6 +11,7 @@
 
 class AVCodec;
 class AVCodecContext;
+class AVFrame;
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -27,15 +28,19 @@ class VRRecorder {
 
         AVCodec* codec = 0;
         AVCodecContext* codec_context = 0;
+        AVFrame* frame = 0;
 
         VRTogglePtr toggleCallback;
         VRUpdatePtr updateCallback;
 
         void initCodec();
         void closeCodec();
+        void initFrame();
+        void closeFrame();
 
     public:
         VRRecorder();
+        ~VRRecorder();
 
         void setView(int i);
         void capture();

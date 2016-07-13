@@ -28,8 +28,67 @@ class VRFrame {
         VRTexturePtr capture = 0;
         int timestamp = 0;
 
+        int valid = 0;
+        int pktSize = 0;
+        char* pktData = 0;
+
         Vec3f f,a,u; // from at up
+
+        VRFrame() {}
+        ~VRFrame() { if (pktData) delete pktData; }
+
+        void transcode(AVFrame *frame, AVCodecContext* codec_context, int i) {
+            valid = 0;
+            if (capture == 0) return;
+
+            AVPacket pkt;
+            av_init_packet(&pkt);
+            pkt.data = NULL;    // packet data will be allocated by the encoder
+            pkt.size = 0;
+
+            const unsigned char* data = capture->getImage()->getData();
+            int x,y,got_output,ret;
+
+            for (y=0; y<codec_context->height; y++) { // Y
+             for (x=0; x<codec_context->width; x++) {
+                int k = y*codec_context->width + x;
+                int r = data[k*3+0];
+                int g = data[k*3+1];
+                int b = data[k*3+2];
+                int Y = 16 + 0.256789063*r + 0.504128906*g + 0.09790625*b;
+                frame->data[0][y * frame->linesize[0] + x] = Y;
+
+                if (y%2 == 0) {
+                 int u = y/2;
+                 int v = x/2;
+                 int U = 128 + -0.148222656*r + -0.290992188*g + 0.439214844*b;
+                 int V = 128 + 0.439214844*r + -0.367789063*g + -0.071425781*b;
+                 frame->data[1][u * frame->linesize[1] + v] = U;
+                 frame->data[2][u * frame->linesize[2] + v] = V;
+                }
+             }
+            }
+
+            frame->pts = i;
+
+            /* encode the image */
+            ret = avcodec_encode_video2(codec_context, &pkt, frame, &valid);
+            if (ret < 0) { fprintf(stderr, "Error encoding frame\n"); return; }
+
+            pktSize = pkt.size;
+            pktData = new char[pktSize];
+            memcpy(pktData, pkt.data, pktSize);
+
+            av_free_packet(&pkt);
+            capture = 0;
+        }
+
+        void write(FILE* f) {
+            if (valid) fwrite(pktData, 1, pktSize, f);
+        }
 };
+
+VRRecorder::~VRRecorder() { ; }
 
 VRRecorder::VRRecorder() {
     av_register_all();
@@ -84,6 +143,10 @@ void VRRecorder::capture() {
     f->f = t->getFrom();
     f->a = t->getAt();
     f->u = t->getUp();
+
+    if (!frame) initFrame();
+
+    f->transcode(frame, codec_context, captures.size()-1);
 }
 
 bool VRRecorder::isRunning() { return running; }
@@ -102,6 +165,7 @@ float VRRecorder::getRecordingLength() {
 }
 
 void VRRecorder::initCodec() {
+    if (captures.size() == 0) { fprintf(stderr, "No initial capture for CODEC init!\n"); return; }
     VRTexturePtr img0 = captures[0]->capture;
     AVCodecID codec_id = AV_CODEC_ID_MPEG2VIDEO;
     //AVCodecID codec_id = AV_CODEC_ID_H264; // only works with m player??
@@ -131,16 +195,31 @@ void VRRecorder::closeCodec() {
     av_free(codec_context);
 }
 
+void VRRecorder::initFrame() {
+    initCodec();
+    frame = avcodec_alloc_frame();
+    if (!frame) { fprintf(stderr, "Could not allocate video frame\n"); return; }
+    frame->format = codec_context->pix_fmt;
+    frame->width  = codec_context->width;
+    frame->height = codec_context->height;
+
+    /* the image can be allocated by any means && av_image_alloc() is
+    * just the most convenient way if av_malloc() is to be used */
+    int ret = av_image_alloc(frame->data, frame->linesize, codec_context->width, codec_context->height, codec_context->pix_fmt, 32);
+    if (ret < 0) { fprintf(stderr, "Could not allocate raw picture buffer\n"); return; }
+}
+
+void VRRecorder::closeFrame() {
+    av_freep(&frame->data[0]);
+    avcodec_free_frame(&frame);
+    frame = 0;
+}
+
 void VRRecorder::compile(string path) {
     if (captures.size() == 0) return;
 
-    initCodec();
-
-    int i, ret, x, y, got_output;
-    FILE *f;
-    AVFrame *frame;
-    AVPacket pkt;
-    uint8_t endcode[] = { 0, 0, 1, 0xb7 };
+    int i, ret, got_output;
+    FILE* f;
 
     /*for (int i=0; i<1; i++) { // test export the first N images
         string pimg = path+"."+toString(i)+".png";
@@ -150,77 +229,32 @@ void VRRecorder::compile(string path) {
     f = fopen(path.c_str(), "wb");
     if (!f) { fprintf(stderr, "Could not open %s\n", path.c_str()); return; }
 
-    frame = avcodec_alloc_frame();
-    if (!frame) { fprintf(stderr, "Could not allocate video frame\n"); return; }
-    frame->format = codec_context->pix_fmt;
-    frame->width  = codec_context->width;
-    frame->height = codec_context->height;
-
-    /* the image can be allocated by any means && av_image_alloc() is
-    * just the most convenient way if av_malloc() is to be used */
-    ret = av_image_alloc(frame->data, frame->linesize, codec_context->width, codec_context->height, codec_context->pix_fmt, 32);
-    if (ret < 0) { fprintf(stderr, "Could not allocate raw picture buffer\n"); return; }
-
     for (i=0; i<(int)captures.size(); i++) {
-        auto img = captures[i]->capture;
-        if (img == 0) continue;
-        av_init_packet(&pkt);
-        pkt.data = NULL;    // packet data will be allocated by the encoder
-        pkt.size = 0;
-
-        const unsigned char* data = img->getImage()->getData();
-        for (y=0; y<codec_context->height; y++) { // Y
-         for (x=0; x<codec_context->width; x++) {
-            int k = y*codec_context->width + x;
-            int r = data[k*3+0];
-            int g = data[k*3+1];
-            int b = data[k*3+2];
-            int Y = 16 + 0.256789063*r + 0.504128906*g + 0.09790625*b;
-            frame->data[0][y * frame->linesize[0] + x] = Y;
-
-            if (y%2 == 0) {
-             int u = y/2;
-             int v = x/2;
-             int U = 128 + -0.148222656*r + -0.290992188*g + 0.439214844*b;
-             int V = 128 + 0.439214844*r + -0.367789063*g + -0.071425781*b;
-             frame->data[1][u * frame->linesize[1] + v] = U;
-             frame->data[2][u * frame->linesize[2] + v] = V;
-            }
-         }
-        }
-
-        frame->pts = i;
-
-        /* encode the image */
-        ret = avcodec_encode_video2(codec_context, &pkt, frame, &got_output);
-        if (ret < 0) { fprintf(stderr, "Error encoding frame\n"); return; }
-
-        if (got_output) {
-         fwrite(pkt.data, 1, pkt.size, f);
-         av_free_packet(&pkt);
-        }
+        //captures[i]->transcode(frame, codec_context, i);
+        captures[i]->write(f);
     }
 
     /* get the delayed frames */
     for (got_output = 1; got_output; i++) {
         fflush(stdout);
 
+        AVPacket pkt;
         ret = avcodec_encode_video2(codec_context, &pkt, NULL, &got_output);
         if (ret < 0) { fprintf(stderr, "Error encoding frame\n"); return; }
 
         if (got_output) {
-         fwrite(pkt.data, 1, pkt.size, f);
-         av_free_packet(&pkt);
+            fwrite(pkt.data, 1, pkt.size, f);
+            av_free_packet(&pkt);
         }
     }
 
     /* add sequence end code to have a real mpeg file */
+    uint8_t endcode[] = { 0, 0, 1, 0xb7 };
     fwrite(endcode, 1, sizeof(endcode), f);
     fclose(f);
 
     closeCodec();
-    av_freep(&frame->data[0]);
-    avcodec_free_frame(&frame);
+    closeFrame();
 }
 
 VRTexturePtr VRRecorder::get(int f) {
