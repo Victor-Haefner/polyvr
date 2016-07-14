@@ -11,6 +11,7 @@ using namespace std;
 class VRLight;
 class VRDefShading;
 class VRSSAO;
+class VRHMDDistortion;
 class VRObject;
 class VRCamera;
 
@@ -22,6 +23,7 @@ class VRRenderManager : public VRStorage {
         bool deferredRendering = false;
         bool do_ssao = false;
         bool calib = false;
+        bool do_hmdd = false;
         int ssao_kernel = 4;
         int ssao_noise = 4;
         float ssao_radius = 0.02;
@@ -34,6 +36,7 @@ class VRRenderManager : public VRStorage {
     protected:
         VRDefShading* defShading = 0;
         VRSSAO* ssao = 0;
+        VRHMDDistortion* hmdd = 0;
         VRObjectPtr root = 0;
         VRObjectPtr root_def_shading = 0;
         VRObjectPtr root_system = 0;
@@ -64,8 +67,9 @@ class VRRenderManager : public VRStorage {
         void setSSAOradius(float r);
         void setSSAOkernel(int k);
         void setSSAOnoise(int n);
-
         void setCalib(bool b);
+        void setHMDD(bool b);
+        bool getHMDD();
 
         void update();
 };

@@ -26,6 +26,7 @@ class VRGuiGeneral {
         void toggleDefferedShader();
         void toggleSSAO();
         void toggleCalib();
+        void toggleHMDD();
 
         bool setSSAOradius( int st, double d );
         bool setSSAOkernel( int st, double d );

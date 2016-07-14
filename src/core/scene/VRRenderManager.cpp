@@ -10,6 +10,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include "VRDefShading.h"
 #include "VRSSAO.h"
+#include "VRHMDDistortion.h"
 
 #include <OpenSG/OSGRenderAction.h>
 
@@ -25,16 +26,20 @@ VRRenderManager::VRRenderManager() {
 
     auto ssao_mat = setupRenderLayer("ssao");
     auto calib_mat = setupRenderLayer("calibration");
+    auto hmdd_mat = setupRenderLayer("hmdd");
     //auto metaball_mat = setupRenderLayer("metaball");
 
     defShading = new VRDefShading();
     ssao = new VRSSAO();
+    hmdd = new VRHMDDistortion();
 
     defShading->initDeferredShading(root_def_shading);
     ssao->initSSAO(ssao_mat);
+    hmdd->initHMDD(hmdd_mat);
     initCalib(calib_mat);
     setDefferedShading(false);
     setSSAO(false);
+    setHMDD(false);
 
     update();
 
@@ -43,6 +48,7 @@ VRRenderManager::VRRenderManager() {
     store("two_sided", &twoSided);
     store("deferred_rendering", &deferredRendering);
     store("ssao", &do_ssao);
+    store("hmdd", &do_hmdd);
     store("ssao_kernel", &ssao_kernel);
     store("ssao_radius", &ssao_radius);
     store("ssao_noise", &ssao_noise);
@@ -92,6 +98,7 @@ void VRRenderManager::update() {
 
     renderLayer["ssao"]->setVisible(do_ssao);
     renderLayer["calibration"]->setVisible(calib);
+    renderLayer["hmdd"]->setVisible(do_hmdd);
 }
 
 void VRRenderManager::addLight(VRLightPtr l) {
@@ -120,7 +127,8 @@ bool VRRenderManager::getSSAO() { return do_ssao; }
 void VRRenderManager::setSSAOradius(float r) { ssao_radius = r; update(); }
 void VRRenderManager::setSSAOkernel(int k) { ssao_kernel = k; update(); }
 void VRRenderManager::setSSAOnoise(int k) { ssao_noise = k; update(); }
-
 void VRRenderManager::setCalib(bool b) { calib = b; update(); }
+void VRRenderManager::setHMDD(bool b) { do_hmdd = b; update(); }
+bool VRRenderManager::getHMDD() { return do_hmdd; }
 
 OSG_END_NAMESPACE;

@@ -1371,6 +1371,7 @@ cave allocated</property>
       <column type="gchararray"/>
     </columns>
   </object>
+  <object class="GtkListStore" id="liststore9"/>
   <object class="GtkListStore" id="mouse_list">
     <columns>
       <!-- column-name mouse -->
@@ -1399,7 +1400,6 @@ cave allocated</property>
       <column type="gchararray"/>
     </columns>
   </object>
-  <object class="GtkListStore" id="liststore9"/>
   <object class="GtkListStore" id="phys_shapes">
     <columns>
       <!-- column-name shapes -->
@@ -1872,6 +1872,12 @@ cave allocated</property>
                                 <child>
                                   <placeholder/>
                                 </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
                               </object>
                             </child>
                           </object>
@@ -1903,6 +1909,12 @@ cave allocated</property>
                                 <property name="can_focus">False</property>
                                 <property name="n_columns">2</property>
                                 <property name="homogeneous">True</property>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
                                 <child>
                                   <placeholder/>
                                 </child>
@@ -4852,11 +4864,8 @@ cave allocated</property>
                       <object class="GtkTable" id="table30">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="n_rows">17</property>
+                        <property name="n_rows">18</property>
                         <property name="n_columns">5</property>
-                        <child>
-                          <placeholder/>
-                        </child>
                         <child>
                           <object class="GtkLabel" id="label87">
                             <property name="visible">True</property>
@@ -4959,7 +4968,7 @@ cave allocated</property>
                           <packing>
                             <property name="left_attach">4</property>
                             <property name="right_attach">5</property>
-                            <property name="bottom_attach">17</property>
+                            <property name="bottom_attach">18</property>
                           </packing>
                         </child>
                         <child>
@@ -4969,8 +4978,8 @@ cave allocated</property>
                           </object>
                           <packing>
                             <property name="right_attach">4</property>
-                            <property name="top_attach">16</property>
-                            <property name="bottom_attach">17</property>
+                            <property name="top_attach">17</property>
+                            <property name="bottom_attach">18</property>
                             <property name="x_options">GTK_FILL</property>
                           </packing>
                         </child>
@@ -5039,8 +5048,8 @@ cave allocated</property>
                             <property name="label" translatable="yes">Export OSG:</property>
                           </object>
                           <packing>
-                            <property name="top_attach">15</property>
-                            <property name="bottom_attach">16</property>
+                            <property name="top_attach">16</property>
+                            <property name="bottom_attach">17</property>
                             <property name="x_options">GTK_FILL</property>
                             <property name="y_options">GTK_FILL</property>
                             <property name="y_padding">10</property>
@@ -5056,8 +5065,8 @@ cave allocated</property>
                           <packing>
                             <property name="left_attach">1</property>
                             <property name="right_attach">2</property>
-                            <property name="top_attach">15</property>
-                            <property name="bottom_attach">16</property>
+                            <property name="top_attach">16</property>
+                            <property name="bottom_attach">17</property>
                             <property name="x_options">GTK_FILL</property>
                             <property name="y_options">GTK_FILL</property>
                           </packing>
@@ -5070,8 +5079,8 @@ cave allocated</property>
                           <packing>
                             <property name="left_attach">3</property>
                             <property name="right_attach">4</property>
-                            <property name="top_attach">15</property>
-                            <property name="bottom_attach">16</property>
+                            <property name="top_attach">16</property>
+                            <property name="bottom_attach">17</property>
                             <property name="x_options">GTK_FILL</property>
                             <property name="y_options">GTK_FILL</property>
                           </packing>
@@ -5429,6 +5438,26 @@ cave allocated</property>
                             <property name="right_attach">4</property>
                             <property name="top_attach">14</property>
                             <property name="bottom_attach">15</property>
+                            <property name="x_options">GTK_FILL</property>
+                            <property name="y_options">GTK_FILL</property>
+                            <property name="x_padding">10</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <placeholder/>
+                        </child>
+                        <child>
+                          <object class="GtkCheckButton" id="checkbutton_6">
+                            <property name="label" translatable="yes">HMD distortion</property>
+                            <property name="visible">True</property>
+                            <property name="can_focus">True</property>
+                            <property name="receives_default">False</property>
+                            <property name="draw_indicator">True</property>
+                          </object>
+                          <packing>
+                            <property name="right_attach">4</property>
+                            <property name="top_attach">15</property>
+                            <property name="bottom_attach">16</property>
                             <property name="x_options">GTK_FILL</property>
                             <property name="y_options">GTK_FILL</property>
                             <property name="x_padding">10</property>

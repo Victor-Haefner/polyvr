@@ -31,6 +31,7 @@ VRGuiGeneral::VRGuiGeneral() {
     setCheckButtonCallback("checkbutton_3", sigc::mem_fun(*this, &VRGuiGeneral::toggleDefferedShader) );
     setCheckButtonCallback("checkbutton_4", sigc::mem_fun(*this, &VRGuiGeneral::toggleSSAO) );
     setCheckButtonCallback("checkbutton_5", sigc::mem_fun(*this, &VRGuiGeneral::toggleCalib) );
+    setCheckButtonCallback("checkbutton_6", sigc::mem_fun(*this, &VRGuiGeneral::toggleHMDD) );
     setSliderCallback("hscale1", sigc::mem_fun(*this, &VRGuiGeneral::setSSAOradius) );
     setSliderCallback("hscale2", sigc::mem_fun(*this, &VRGuiGeneral::setSSAOkernel) );
     setSliderCallback("hscale3", sigc::mem_fun(*this, &VRGuiGeneral::setSSAOnoise) );
@@ -120,6 +121,12 @@ void VRGuiGeneral::toggleSSAO() {
     if (scene) scene->setSSAO( getCheckButtonState("checkbutton_4") );
 }
 
+void VRGuiGeneral::toggleHMDD() {
+    if (updating) return;
+    auto scene = VRSceneManager::getCurrent();
+    if (scene) scene->setHMDD( getCheckButtonState("checkbutton_6") );
+}
+
 void VRGuiGeneral::toggleCalib() {
     if (updating) return;
     auto scene = VRSceneManager::getCurrent();
@@ -168,6 +175,7 @@ void VRGuiGeneral::updateScene() {
     setCheckButton("checkbutton_2", scene->getTwoSided() );
     setCheckButton("checkbutton_3", scene->getDefferedShading() );
     setCheckButton("checkbutton_4", scene->getSSAO() );
+    setCheckButton("checkbutton_6", scene->getHMDD() );
 
     updating = false;
 }
