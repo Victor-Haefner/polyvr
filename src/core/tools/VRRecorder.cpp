@@ -40,7 +40,7 @@ class VRFrame {
         VRFrame() {}
         ~VRFrame() { if (pktData) delete pktData; }
 
-        void transcode(AVFrame *frame, AVCodecContext* codec_context, int i) {
+        void transcode(AVFrame *frame, AVCodecContext* codec_context, SwsContext* sws_context, int i) {
             valid = 0;
             if (!capture) return;
 
@@ -50,32 +50,14 @@ class VRFrame {
             pkt.size = 0;
 
             const unsigned char* data = capture->getImage()->getData();
-            int x,y,got_output,ret;
-
-            for (y=0; y<height; y++) { // Y
-             for (x=0; x<width; x++) {
-                int k = y*width + x;
-                int r = data[k*3+0];
-                int g = data[k*3+1];
-                int b = data[k*3+2];
-                int Y = 16 + 0.256789063*r + 0.504128906*g + 0.09790625*b;
-                frame->data[0][y * frame->linesize[0] + x] = Y;
-
-                if (y%2 == 0) {
-                 int u = y/2;
-                 int v = x/2;
-                 int U = 128 + -0.148222656*r + -0.290992188*g + 0.439214844*b;
-                 int V = 128 + 0.439214844*r + -0.367789063*g + -0.071425781*b;
-                 frame->data[1][u * frame->linesize[1] + v] = U;
-                 frame->data[2][u * frame->linesize[2] + v] = V;
-                }
-             }
+            if (codec_context->pix_fmt == AV_PIX_FMT_YUV420P) {
+                const int in_linesize[1] = { 3 * codec_context->width };
+                sws_scale(sws_context, (const uint8_t * const *)&data, in_linesize, 0, codec_context->height, frame->data, frame->linesize);
             }
 
-            frame->pts = i;
-
             /* encode the image */
-            ret = avcodec_encode_video2(codec_context, &pkt, frame, &valid);
+            frame->pts = i;
+            int ret = avcodec_encode_video2(codec_context, &pkt, frame, &valid);
             if (ret < 0) { fprintf(stderr, "Error encoding frame\n"); return; }
 
             pktSize = pkt.size;
@@ -152,7 +134,7 @@ void VRRecorder::capture() {
 
     if (!frame) initFrame();
 
-    f->transcode(frame, codec_context, captures.size()-1);
+    f->transcode(frame, codec_context, sws_context, captures.size()-1);
 }
 
 bool VRRecorder::isRunning() { return running; }
@@ -188,11 +170,18 @@ void VRRecorder::initCodec() {
     codec_context->gop_size = 10; /* emit one intra frame every ten frames */
     codec_context->max_b_frames = 1;
     codec_context->pix_fmt = AV_PIX_FMT_YUV420P;
+    //codec_context->pix_fmt = AV_PIX_FMT_RGB24;
     av_opt_set(codec_context->priv_data, "preset", "ultrafast", 0);
 
     AVDictionary *param = 0;
     av_dict_set(&param, "crf", "0", 0);
     if (avcodec_open2(codec_context, codec, &param) < 0) { fprintf(stderr, "Could not open codec\n"); return; } /* open codec */
+
+    sws_context = sws_getContext(
+        codec_context->width, codec_context->height, AV_PIX_FMT_RGB24,
+        codec_context->width, codec_context->height, AV_PIX_FMT_YUV420P,
+        SWS_FAST_BILINEAR, 0, 0, 0);
+    if (!sws_context) fprintf(stderr, "Could not initialize the conversion context\n");
 }
 
 void VRRecorder::closeCodec() {
@@ -234,10 +223,7 @@ void VRRecorder::compile(string path) {
     f = fopen(path.c_str(), "wb");
     if (!f) { fprintf(stderr, "Could not open %s\n", path.c_str()); return; }
 
-    for (i=0; i<(int)captures.size(); i++) {
-        //captures[i]->transcode(frame, codec_context, i);
-        captures[i]->write(f);
-    }
+    for (i=0; i<(int)captures.size(); i++) captures[i]->write(f);
 
     /* get the delayed frames */
     for (got_output = 1; got_output; i++) {
