@@ -32,6 +32,9 @@ class VRFrame {
         int pktSize = 0;
         char* pktData = 0;
 
+        int width = 0;
+        int height = 0;
+
         Vec3f f,a,u; // from at up
 
         VRFrame() {}
@@ -39,7 +42,7 @@ class VRFrame {
 
         void transcode(AVFrame *frame, AVCodecContext* codec_context, int i) {
             valid = 0;
-            if (capture == 0) return;
+            if (!capture) return;
 
             AVPacket pkt;
             av_init_packet(&pkt);
@@ -49,9 +52,9 @@ class VRFrame {
             const unsigned char* data = capture->getImage()->getData();
             int x,y,got_output,ret;
 
-            for (y=0; y<codec_context->height; y++) { // Y
-             for (x=0; x<codec_context->width; x++) {
-                int k = y*codec_context->width + x;
+            for (y=0; y<height; y++) { // Y
+             for (x=0; x<width; x++) {
+                int k = y*width + x;
                 int r = data[k*3+0];
                 int g = data[k*3+1];
                 int b = data[k*3+2];
@@ -144,6 +147,9 @@ void VRRecorder::capture() {
     f->a = t->getAt();
     f->u = t->getUp();
 
+    f->width = f->capture->getImage()->getWidth();
+    f->height = f->capture->getImage()->getHeight();
+
     if (!frame) initFrame();
 
     f->transcode(frame, codec_context, captures.size()-1);
@@ -166,7 +172,6 @@ float VRRecorder::getRecordingLength() {
 
 void VRRecorder::initCodec() {
     if (captures.size() == 0) { fprintf(stderr, "No initial capture for CODEC init!\n"); return; }
-    VRTexturePtr img0 = captures[0]->capture;
     AVCodecID codec_id = AV_CODEC_ID_MPEG2VIDEO;
     //AVCodecID codec_id = AV_CODEC_ID_H264; // only works with m player??
     codec = avcodec_find_encoder(codec_id);
@@ -175,8 +180,8 @@ void VRRecorder::initCodec() {
     codec_context = avcodec_alloc_context3(codec);
     if (!codec_context) { fprintf(stderr, "Could not allocate video codec context\n"); return; }
 
-    codec_context->width = img0->getImage()->getWidth();
-    codec_context->height = img0->getImage()->getHeight();
+    codec_context->width = captures[0]->width;
+    codec_context->height = captures[0]->height;
     codec_context->bit_rate = codec_context->width*codec_context->height*5; /* put sample parameters */
 	codec_context->time_base.num = 1;
 	codec_context->time_base.den = 25;/* frames per second */
