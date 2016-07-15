@@ -3,11 +3,12 @@
 
 #include <OpenSG/OSGConfig.h>
 #include "core/objects/VRObjectFwd.h"
+#include "core/objects/VRStage.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRHMDDistortion {
+class VRHMDDistortion : public VRStage {
     private:
         VRMaterialPtr hmdd_mat;
 
@@ -17,6 +18,7 @@ class VRHMDDistortion {
 
         void initHMDD(VRMaterialPtr mat);
         void setHMDDparams(float radius);
+        void reload();
 };
 
 OSG_END_NAMESPACE;

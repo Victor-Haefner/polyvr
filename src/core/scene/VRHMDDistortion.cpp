@@ -11,7 +11,7 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-VRHMDDistortion::VRHMDDistortion() {}
+VRHMDDistortion::VRHMDDistortion() : VRStage("hmdd") {}
 VRHMDDistortion::~VRHMDDistortion() {}
 
 void VRHMDDistortion::setHMDDparams(float radius) {
@@ -29,7 +29,16 @@ void VRHMDDistortion::initHMDD(VRMaterialPtr mat) {
     hmdd_mat->setShaderParameter<int>("texBufPos", 0);
     hmdd_mat->setShaderParameter<int>("texBufNorm", 1);
     hmdd_mat->setShaderParameter<int>("texBufDiff", 2);
+    hmdd_mat->setShaderParameter<int>("texBufDiff2", 0);
     setHMDDparams(0.8);
+
+    setTarget(hmdd_mat, 0);
+}
+
+void VRHMDDistortion::reload() {
+    string shdrDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/DeferredShading/";
+    hmdd_mat->readVertexShader(shdrDir + "HMDD.vp.glsl");
+    hmdd_mat->readFragmentShader(shdrDir + "HMDD.fp.glsl");
 }
 
 OSG_END_NAMESPACE;

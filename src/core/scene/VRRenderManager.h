@@ -29,7 +29,7 @@ class VRRenderManager : public VRStorage {
         float ssao_radius = 0.02;
 
         map<string, VRGeometryPtr> renderLayer;
-        VRMaterialPtr setupRenderLayer(string name);
+        VRMaterialPtr setupRenderLayer(string name, VRObjectPtr parent);
 
         void initCalib(VRMaterialPtr mat);
 
@@ -38,6 +38,7 @@ class VRRenderManager : public VRStorage {
         VRSSAO* ssao = 0;
         VRHMDDistortion* hmdd = 0;
         VRObjectPtr root = 0;
+        VRObjectPtr root_post_processing = 0;
         VRObjectPtr root_def_shading = 0;
         VRObjectPtr root_system = 0;
         map<int, VRLightPtr> light_map;

@@ -43,6 +43,8 @@ class VRDefShading {
         string dsSpotLightVPFile, dsSpotLightFPFile, dsSpotLightShadowFPFile;
         string dsUnknownFile = "unknownFile";
 
+        TextureObjChunkRefPtr fboTex;
+
         NodeMTRecPtr                   dsStageN;
         DeferredShadingStageRecPtr   dsStage;
         vector<LightInfo>         lightInfos;
@@ -66,6 +68,9 @@ class VRDefShading {
         void initDeferredShading(VRObjectPtr o);
         void setDefferedShading(bool b);
         bool getDefferedShading();
+        void reload();
+
+        TextureObjChunkRefPtr getTarget();
 
         void setDSCamera(VRCameraPtr cam);
         void addDSLight(VRLightPtr light);

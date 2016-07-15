@@ -18,6 +18,10 @@
 #include <OpenSG/OSGShaderShadowMapEngine.h>
 #include <OpenSG/OSGTrapezoidalShadowMapEngine.h>
 
+#include <OpenSG/OSGFrameBufferObject.h>
+#include <OpenSG/OSGTextureBuffer.h>
+#include <OpenSG/OSGRenderBuffer.h>
+
 #include "core/utils/VROptions.h"
 #include "core/objects/object/OSGCore.h"
 #include "core/objects/VRLight.h"
@@ -68,6 +72,9 @@ void VRDefShading::init() {
     dsStage->editMFPixelFormats()->push_back(Image::OSG_RGB_PF); // diffuse (RGB) buffer
     dsStage->editMFPixelTypes  ()->push_back(Image::OSG_UINT8_IMAGEDATA);
 
+    //dsStage->editMFPixelFormats()->push_back(Image::OSG_RGB_PF); // diffuse2 (RGB) buffer
+    //dsStage->editMFPixelTypes  ()->push_back(Image::OSG_UINT8_IMAGEDATA);
+
     dsStage->setGBufferProgram(NULL);
 
     // ambient shader
@@ -81,7 +88,46 @@ void VRDefShading::init() {
     shAmbient->addShader(fpAmbient);
     dsStage->setAmbientProgram(shAmbient);
 
+    // fbo -> TODO
+    /*FrameBufferObjectRefPtr fbo = FrameBufferObject::create();
+    ImageRecPtr img = Image::create();
+    tex = TextureObjChunk::create();
+    TextureBufferRefPtr texBuf = TextureBuffer::create();
+    RenderBufferRefPtr depthBuf = RenderBuffer::create();
+
+    fbo->editMFDrawBuffers()->push_back(GL_COLOR_ATTACHMENT0_EXT);
+    fbo->setPostProcessOnDeactivate(true);
+    dsStage->setRenderTarget(fbo);
+    tex->setImage(img);
+    texBuf->setTexture(tex);
+    depthBuf->setInternalFormat(GL_DEPTH_COMPONENT24); // 16 24 32
+    fbo->setColorAttachment(texBuf, 0);
+    fbo->setDepthAttachment(depthBuf);
+
+    img->set(Image::OSG_RGBA_PF, 1200, 800);
+    fbo->setWidth (1200);
+    fbo->setHeight(800);*/
+
     initiated = true;
+}
+
+void VRDefShading::reload() {
+    ShaderProgramRecPtr      vpAmbient = ShaderProgram::createVertexShader  ();
+    ShaderProgramRecPtr      fpAmbient = ShaderProgram::createFragmentShader();
+    ShaderProgramChunkRecPtr shAmbient = ShaderProgramChunk::create();
+    vpAmbient->readProgram(dsAmbientVPFile.c_str());
+    fpAmbient->readProgram(dsAmbientFPFile.c_str());
+    fpAmbient->addUniformVariable<Int32>("texBufNorm", 1);
+    shAmbient->addShader(vpAmbient);
+    shAmbient->addShader(fpAmbient);
+    dsStage->setAmbientProgram(shAmbient);
+
+    for (auto li : lightInfos) {
+        string vpFile = getLightVPFile(li.lightType);
+        string fpFile = getLightFPFile(li.lightType, li.shadowType);
+        li.lightVP->readProgram(vpFile.c_str());
+        li.lightFP->readProgram(fpFile.c_str());
+    }
 }
 
 void VRDefShading::initDeferredShading(VRObjectPtr o) {
@@ -142,13 +188,14 @@ void VRDefShading::addDSLight(LightMTRecPtr light, string type, bool shadows) {
     setShadow(li);
 }
 
+TextureObjChunkRefPtr VRDefShading::getTarget() { return fboTex; }
 
 void VRDefShading::setShadow(LightInfo &li) {
     dsStage->editMFLights       ();
     dsStage->editMFLightPrograms();
 
-    std::string vpFile = getLightVPFile(li.lightType);
-    std::string fpFile = getLightFPFile(li.lightType, li.shadowType);
+    string vpFile = getLightVPFile(li.lightType);
+    string fpFile = getLightFPFile(li.lightType, li.shadowType);
 
     li.lightVP->readProgram(vpFile.c_str());
     li.lightFP->readProgram(fpFile.c_str());
