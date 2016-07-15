@@ -49,7 +49,6 @@ VRScene::VRScene() {
     cameras_layer->setCallback( layer_cam_toggle );
     lights_layer->setCallback( layer_light_toggle );
 
-    root = VRObject::create("root");
     VRVisualLayer::anchorLayers(root);
 
     cout << " init scene done\n";

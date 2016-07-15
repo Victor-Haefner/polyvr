@@ -57,7 +57,7 @@ bool VRGuiGeneral::setSSAOkernel( int st, double d ) {
 bool VRGuiGeneral::setSSAOnoise( int st, double d ) {
     if (updating) return false;
     auto scene = VRSceneManager::getCurrent();
-    if (scene) scene->setSSAOkernel( getSliderState("hscale3") );
+    if (scene) scene->setSSAOnoise( getSliderState("hscale3") );
     return true;
 }
 
