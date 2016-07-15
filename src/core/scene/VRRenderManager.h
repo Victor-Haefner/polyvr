@@ -8,18 +8,12 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRLight;
-class VRDefShading;
-class VRSSAO;
-class VRHMDDistortion;
-class VRObject;
-class VRCamera;
-
 class VRRenderManager : public VRStorage {
     private:
         bool frustumCulling = true;
         bool occlusionCulling = false;
         bool twoSided = true;
+
         bool deferredRendering = false;
         bool do_ssao = false;
         bool calib = false;
@@ -28,27 +22,26 @@ class VRRenderManager : public VRStorage {
         int ssao_noise = 4;
         float ssao_radius = 0.02;
 
-        map<string, VRGeometryPtr> renderLayer;
-        VRMaterialPtr setupRenderLayer(string name, VRObjectPtr parent);
-
-        void initCalib(VRMaterialPtr mat);
-
     protected:
-        VRDefShading* defShading = 0;
-        VRSSAO* ssao = 0;
-        VRHMDDistortion* hmdd = 0;
         VRObjectPtr root = 0;
-        VRObjectPtr root_post_processing = 0;
-        VRObjectPtr root_def_shading = 0;
-        VRObjectPtr root_system = 0;
-        map<int, VRLightPtr> light_map;
 
     public:
         VRRenderManager();
         ~VRRenderManager();
 
+        void setDefferedShading(bool b);
+        bool getDefferedShading();
+        void setSSAO(bool b);
+        bool getSSAO();
+        void setSSAOradius(float r);
+        void setSSAOkernel(int k);
+        void setSSAOnoise(int n);
+        void setCalib(bool b);
+        void setHMDD(bool b);
+        bool getHMDD();
+        void setCamera(VRCameraPtr cam);
         void addLight(VRLightPtr l);
-        VRLightPtr getLight(int ID);
+        //VRLightPtr getLight(int ID);
 
         void setFrustumCulling(bool b);
         bool getFrustumCulling();
@@ -58,19 +51,6 @@ class VRRenderManager : public VRStorage {
 
         void setTwoSided(bool b);
         bool getTwoSided();
-
-        void setDSCamera(VRCameraPtr cam);
-        void setDefferedShading(bool b);
-        bool getDefferedShading();
-
-        void setSSAO(bool b);
-        bool getSSAO();
-        void setSSAOradius(float r);
-        void setSSAOkernel(int k);
-        void setSSAOnoise(int n);
-        void setCalib(bool b);
-        void setHMDD(bool b);
-        bool getHMDD();
 
         void update();
 };

@@ -37,6 +37,7 @@ class VRViewManager {
         VRTransformPtr getViewUser(int i);
         VRViewPtr getView(int i);
         VRViewPtr getView(string name);
+        vector<VRViewPtr> getViews();
 
         void setStereo(bool b);
         void setStereoEyeSeparation(float v);

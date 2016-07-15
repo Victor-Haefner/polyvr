@@ -2,15 +2,13 @@
 #include "core/setup/VRSetupManager.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/setup/VRSetup.h"
+#include "core/setup/windows/VRView.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/objects/VRLight.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/VRStage.h"
 #include "core/objects/material/VRMaterial.h"
-#include "VRDefShading.h"
-#include "VRSSAO.h"
-#include "VRHMDDistortion.h"
 
 #include <OpenSG/OSGRenderAction.h>
 
@@ -34,37 +32,7 @@ scene
 */
 
 VRRenderManager::VRRenderManager() {
-    root_system = VRObject::create("System root");
-    root_post_processing = VRObject::create("Post processing root");
-    root_def_shading = VRObject::create("Deffered shading root");
     root = VRObject::create("Root");
-
-    root_system->addChild(root_post_processing);
-    root_post_processing->addChild(root_def_shading);
-    root_def_shading->addChild(root->getNode());
-
-    auto ssao_mat = setupRenderLayer("ssao", root_def_shading);
-    auto calib_mat = setupRenderLayer("calibration", root_post_processing);
-    auto hmdd_mat = setupRenderLayer("hmdd", root_post_processing);
-    //auto metaball_mat = setupRenderLayer("metaball");
-
-    defShading = new VRDefShading();
-    ssao = new VRSSAO();
-    hmdd = new VRHMDDistortion();
-    auto hmddPtr = shared_ptr<VRHMDDistortion>(hmdd);
-
-    root_post_processing->addChild( hmddPtr );
-    root_def_shading->switchParent( hmddPtr );
-
-    defShading->initDeferredShading(root_def_shading);
-    ssao->initSSAO(ssao_mat);
-    hmdd->initHMDD(hmdd_mat);
-    hmdd_mat->setTexture(defShading->getTarget(), 0);
-    //hmdd_mat->setTexture("examples/KA300.png", 0);
-    initCalib(calib_mat);
-    setDefferedShading(false);
-    setSSAO(false);
-    setHMDD(false);
 
     update();
 
@@ -79,28 +47,7 @@ VRRenderManager::VRRenderManager() {
     store("ssao_noise", &ssao_noise);
 }
 
-VRRenderManager::~VRRenderManager() {
-    delete defShading;
-    delete ssao;
-}
-
-VRMaterialPtr VRRenderManager::setupRenderLayer(string name, VRObjectPtr parent) {
-    auto plane = VRGeometry::create(name+"_renderlayer");
-    plane->setPrimitive("Plane", "2 2 1 1");
-    plane->setVolume(false);
-    plane->setMaterial( VRMaterial::create(name+"_mat") );
-    parent->addChild(plane);
-    renderLayer[name] = plane;
-    return plane->getMaterial();
-}
-
-void VRRenderManager::initCalib(VRMaterialPtr mat) {
-    string shdrDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/DeferredShading/";
-    mat->setLit(false);
-    mat->readVertexShader(shdrDir + "Calib.vp.glsl");
-    mat->readFragmentShader(shdrDir + "Calib.fp.glsl");
-    mat->setShaderParameter<int>("grid", 64);
-}
+VRRenderManager::~VRRenderManager() {}
 
 void VRRenderManager::update() {
     auto setup = VRSetupManager::getCurrent();
@@ -112,32 +59,25 @@ void VRRenderManager::update() {
     ract->setCorrectTwoSidedLighting(twoSided);
     ract->setZWriteTrans(true); // enables the zbuffer for transparent objects
 
-    defShading->setDefferedShading(deferredRendering);
-    ssao->setSSAOparams(ssao_radius, ssao_kernel, ssao_noise);
-
-    for (auto m : VRMaterial::materials) {
-        auto mat = m.second.lock();
-        if (!mat) continue;
-        mat->setDeffered(do_ssao || deferredRendering);
+    for (auto v : setup->getViews()) {
+        v->setDefferedShading(deferredRendering);
+        v->setSSAO(do_ssao);
+        v->setSSAOradius(ssao_radius);
+        v->setSSAOkernel(ssao_kernel);
+        v->setSSAOnoise(ssao_noise);
+        v->setCalib(calib);
+        v->setHMDD(do_hmdd);
+        v->update();
     }
-
-    // update shader code
-    defShading->reload();
-    if (do_hmdd) hmdd->reload();
-    hmdd->setActive(do_hmdd);
-
-    // update render layer visibility
-    renderLayer["ssao"]->setVisible(do_ssao);
-    renderLayer["calibration"]->setVisible(calib);
-    renderLayer["hmdd"]->setVisible(do_hmdd);
 }
 
 void VRRenderManager::addLight(VRLightPtr l) {
-    light_map[l->getID()] = l;
-    defShading->addDSLight(l);
+    auto setup = VRSetupManager::getCurrent();
+    if (!setup) return;
+    for (auto v : setup->getViews()) v->addLight(l);
 }
 
-VRLightPtr VRRenderManager::getLight(int ID) { return light_map[ID]; }
+//VRLightPtr VRRenderManager::getLight(int ID) { return light_map[ID]; }
 
 void VRRenderManager::setFrustumCulling(bool b) { frustumCulling = b; update(); }
 bool VRRenderManager::getFrustumCulling() { return frustumCulling; }
@@ -151,9 +91,10 @@ bool VRRenderManager::getTwoSided() { return twoSided; }
 void VRRenderManager::setDefferedShading(bool b) { deferredRendering = b; update(); }
 bool VRRenderManager::getDefferedShading() { return deferredRendering; }
 
-void VRRenderManager::setDSCamera(VRCameraPtr cam) {
-    defShading->setDSCamera(cam);
-    hmdd->setCamera(cam);
+void VRRenderManager::setCamera(VRCameraPtr cam) {
+    auto setup = VRSetupManager::getCurrent();
+    if (!setup) return;
+    for (auto v : setup->getViews()) v->setCamera(cam);
 }
 
 void VRRenderManager::setSSAO(bool b) { do_ssao = b; update(); }

@@ -49,6 +49,7 @@ VRScene::VRScene() {
     cameras_layer->setCallback( layer_cam_toggle );
     lights_layer->setCallback( layer_light_toggle );
 
+    root = VRObject::create("root");
     VRVisualLayer::anchorLayers(root);
 
     cout << " init scene done\n";
@@ -59,7 +60,6 @@ VRScene::~VRScene() {
     VRThreadManager::stopThread(physicsThreadID);
     updateObjects();
     root->destroy();
-    root_system->destroy();
     VRGroup::clearGroups();
     VRLightBeacon::getAll().clear();
     auto setupCam = *VRCamera::getAll().begin();
@@ -149,8 +149,6 @@ void VRScene::setActiveCamera(string camname) {
     VRCameraPtr cam = getActiveCamera();
     if (cam == 0) return;
 
-    setDSCamera(cam);
-
     VRMousePtr mouse = dynamic_pointer_cast<VRMouse>( setup->getDevice("mouse") );
     VRFlystickPtr flystick = dynamic_pointer_cast<VRFlystick>( setup->getDevice("flystick") );
     VRDevicePtr razer = setup->getDevice("vrpn_device");
@@ -170,7 +168,7 @@ void VRScene::setActiveCamera(string camname) {
 }
 
 VRObjectPtr VRScene::getRoot() { return root; }
-VRObjectPtr VRScene::getSystemRoot() { return root_system; }
+//VRObjectPtr VRScene::getSystemRoot() { return root_system; }
 
 void VRScene::printTree() { root->printTree(); }
 

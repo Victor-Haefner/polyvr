@@ -6,7 +6,6 @@
 #include "VRAnimationManager.h"
 #include "VRPhysicsManager.h"
 #include "VRCallbackManager.h"
-#include "VRRenderManager.h"
 #include "VRMaterialManager.h"
 #include "VRThreadManager.h"
 #include "core/scripting/VRScriptManager.h"
@@ -16,6 +15,7 @@
 #include "core/utils/VRFlags.h"
 #include "core/utils/VRUtilsFwd.h"
 #include "VRBackground.h"
+#include "VRRenderManager.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -71,7 +71,7 @@ class VRScene : public VRObjectManager,
         VRObjectPtr get(int ID);
         VRObjectPtr get(string name);
         VRObjectPtr getRoot();
-        VRObjectPtr getSystemRoot();
+        //VRObjectPtr getSystemRoot();
 
         void setActiveCamera(string name = "");
 

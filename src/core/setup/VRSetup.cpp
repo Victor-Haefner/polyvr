@@ -67,7 +67,7 @@ void VRSetup::setScene(VRScenePtr scene) {
     if (scene == 0) return;
     VRCameraPtr cam = scene->getActiveCamera();
     if (cam == 0) return;
-    setViewRoot(scene->getSystemRoot(), -1);
+    setViewRoot(scene->getRoot(), -1);
     setViewCamera(cam, -1);
 
     VRMousePtr mouse = dynamic_pointer_cast<VRMouse>( getDevice("mouse") );

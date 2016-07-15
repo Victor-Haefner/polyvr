@@ -80,6 +80,12 @@ VRViewPtr VRViewManager::getView(string name) {
     return 0;
 }
 
+vector<VRViewPtr> VRViewManager::getViews() {
+    vector<VRViewPtr> res;
+    for (auto v : views) res.push_back(v.second);
+    return res;
+}
+
 void VRViewManager::setStereo(bool b) { for (auto v : views) v.second->setStereo(b); }
 void VRViewManager::setStereoEyeSeparation(float f) { for (auto v : views) v.second->setStereoEyeSeparation(f); }
 void VRViewManager::resetViewports() { for (auto v : views) v.second->reset(); }
