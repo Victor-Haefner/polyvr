@@ -44,6 +44,8 @@ class VRViewManager {
         void resetViewports();
 
         void setFotoMode(bool b);
+
+        vector<VRViewPtr> getViews();
 };
 
 OSG_END_NAMESPACE;

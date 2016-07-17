@@ -2,6 +2,7 @@
 #include "core/setup/VRSetupManager.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/setup/VRSetup.h"
+#include "core/setup/windows/VRView.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/objects/VRLight.h"
@@ -34,10 +35,10 @@ scene
 */
 
 VRRenderManager::VRRenderManager() {
+    root = VRObject::create("Root");
     root_system = VRObject::create("System root");
     root_post_processing = VRObject::create("Post processing root");
     root_def_shading = VRObject::create("Deffered shading root");
-    root = VRObject::create("Root");
 
     root_system->addChild(root_post_processing);
     root_post_processing->addChild(root_def_shading);
@@ -60,7 +61,6 @@ VRRenderManager::VRRenderManager() {
     ssao->initSSAO(ssao_mat);
     hmdd->initHMDD(hmdd_mat);
     hmdd_mat->setTexture(defShading->getTarget(), 0);
-    //hmdd_mat->setTexture("examples/KA300.png", 0);
     initCalib(calib_mat);
     setDefferedShading(false);
     setSSAO(false);
@@ -112,29 +112,45 @@ void VRRenderManager::update() {
     ract->setCorrectTwoSidedLighting(twoSided);
     ract->setZWriteTrans(true); // enables the zbuffer for transparent objects
 
-    defShading->setDefferedShading(deferredRendering);
-    ssao->setSSAOparams(ssao_radius, ssao_kernel, ssao_noise);
+    if (defShading) defShading->setDefferedShading(deferredRendering);
+    if (ssao) ssao->setSSAOparams(ssao_radius, ssao_kernel, ssao_noise);
 
     for (auto m : VRMaterial::materials) {
         auto mat = m.second.lock();
         if (!mat) continue;
-        mat->setDeffered(do_ssao || deferredRendering);
+        bool b = ( (ssao && do_ssao) || (defShading && deferredRendering) );
+        mat->setDeffered(b);
     }
 
     // update shader code
-    defShading->reload();
-    if (do_hmdd) hmdd->reload();
-    hmdd->setActive(do_hmdd);
+    if (defShading) defShading->reload();
+    if (do_hmdd && hmdd) hmdd->reload();
+    if (hmdd) hmdd->setActive(do_hmdd);
 
     // update render layer visibility
-    renderLayer["ssao"]->setVisible(do_ssao);
-    renderLayer["calibration"]->setVisible(calib);
-    renderLayer["hmdd"]->setVisible(do_hmdd);
+    if (renderLayer.count("ssao")) renderLayer["ssao"]->setVisible(do_ssao);
+    if (renderLayer.count("calibration")) renderLayer["calibration"]->setVisible(calib);
+    if (renderLayer.count("hmdd")) renderLayer["hmdd"]->setVisible(do_hmdd);
+
+    for (auto v : setup->getViews()) {
+        v->setDefferedShading(deferredRendering);
+        v->setSSAO(do_ssao);
+        v->setSSAOradius(ssao_radius);
+        v->setSSAOkernel(ssao_kernel);
+        v->setSSAOnoise(ssao_noise);
+        v->setCalib(calib);
+        v->setHMDD(do_hmdd);
+        v->update();
+    }
 }
 
 void VRRenderManager::addLight(VRLightPtr l) {
     light_map[l->getID()] = l;
-    defShading->addDSLight(l);
+    if (defShading) defShading->addDSLight(l);
+
+    auto setup = VRSetupManager::getCurrent();
+    if (!setup) return;
+    for (auto v : setup->getViews()) v->addLight(l);
 }
 
 VRLightPtr VRRenderManager::getLight(int ID) { return light_map[ID]; }
@@ -149,14 +165,20 @@ void VRRenderManager::setTwoSided(bool b) { twoSided = b; update(); }
 bool VRRenderManager::getTwoSided() { return twoSided; }
 
 void VRRenderManager::setDefferedShading(bool b) { deferredRendering = b; update(); }
+//bool VRRenderManager::getDefferedShading() { return (deferredRendering && defShading); }
 bool VRRenderManager::getDefferedShading() { return deferredRendering; }
 
 void VRRenderManager::setDSCamera(VRCameraPtr cam) {
-    defShading->setDSCamera(cam);
-    hmdd->setCamera(cam);
+    if (defShading) defShading->setDSCamera(cam);
+    if (hmdd) hmdd->setCamera(cam);
+
+    auto setup = VRSetupManager::getCurrent();
+    if (!setup) return;
+    for (auto v : setup->getViews()) v->setCamera(cam);
 }
 
 void VRRenderManager::setSSAO(bool b) { do_ssao = b; update(); }
+//bool VRRenderManager::getSSAO() { return (do_ssao && ssao); }
 bool VRRenderManager::getSSAO() { return do_ssao; }
 void VRRenderManager::setSSAOradius(float r) { ssao_radius = r; update(); }
 void VRRenderManager::setSSAOkernel(int k) { ssao_kernel = k; update(); }

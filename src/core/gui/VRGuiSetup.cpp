@@ -446,7 +446,7 @@ void VRGuiSetup::on_menu_add_viewport() {
     win->addView(view);
 
     if (auto scene = current_scene.lock()) {
-        setup->setViewRoot(scene->getSystemRoot(), v);
+        setup->setViewRoot(scene->getRoot(), v);
         view->setCamera( scene->getActiveCamera() );
         view->setBackground( scene->getBackground() );
     }

@@ -38,6 +38,7 @@ VRGuiGeneral::VRGuiGeneral() {
     setColorChooser("bg_solid", sigc::mem_fun(*this, &VRGuiGeneral::setColor) );
     setEntryCallback("entry42", sigc::mem_fun(*this, &VRGuiGeneral::setPath));
     setEntryCallback("entry14", sigc::mem_fun(*this, &VRGuiGeneral::setExtension));
+    setButtonCallback("button22", sigc::mem_fun(*this, &VRGuiGeneral::dumpOSG));
 }
 
 bool VRGuiGeneral::setSSAOradius( int st, double d ) {
@@ -67,6 +68,7 @@ void VRGuiGeneral::dumpOSG() {
 
     string pg = scene->getName() + "_osg_dump.osg";
     string pb = scene->getName() + "_osg_dump.osb";
+    cout << "dump OSG " << pg << endl;
 
     SceneFileHandler::the()->write( scene->getRoot()->getNode()->node, pg.c_str() );
     SceneFileHandler::the()->write( scene->getRoot()->getNode()->node, pb.c_str() );

@@ -85,4 +85,10 @@ void VRViewManager::setStereoEyeSeparation(float f) { for (auto v : views) v.sec
 void VRViewManager::resetViewports() { for (auto v : views) v.second->reset(); }
 void VRViewManager::setFotoMode(bool b) { for (auto v : views) v.second->setFotoMode(b); }
 
+vector<VRViewPtr> VRViewManager::getViews() {
+    vector<VRViewPtr> res;
+    for (auto v : views) res.push_back(v.second);
+    return res;
+}
+
 OSG_END_NAMESPACE;

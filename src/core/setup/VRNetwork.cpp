@@ -4,6 +4,8 @@
 #include "core/networking/VRSSH.h"
 #include "core/gui/VRGuiUtils.h"
 
+#include "core/scene/VRSceneManager.h"
+
 #include <boost/filesystem.hpp>
 
 using namespace OSG;
@@ -125,7 +127,7 @@ void VRNetworkSlave::update() {} // TODO: compute stats
 
 void VRNetworkSlave::start() {
     if (!node) return;
-    string path = "~/Projects/polyvr/src/cluster/start";
+    string path = VRSceneManager::get()->getOriginalWorkdir() + "/src/cluster/start";
     string disp = "export DISPLAY=\"" + display + "\" && ";
     string pipes = " > /dev/null 2> /dev/null < /dev/null &";
     string args;
