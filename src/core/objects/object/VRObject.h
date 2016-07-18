@@ -97,6 +97,7 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         virtual void subChild(VRObjectPtr child, bool osg = true);
         void addLink(VRObjectPtr obj);
         void remLink(VRObjectPtr obj);
+        void clearLinks();
 
         void switchParent(VRObjectPtr new_p, int place = -1);
         void detach();

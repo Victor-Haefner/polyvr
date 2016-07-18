@@ -171,6 +171,16 @@ void VRObject::remLink(VRObjectPtr obj) {
     osg->links.erase(obj.get());
 }
 
+void VRObject::clearLinks() {
+    vector<VRObject*> links;
+    for (auto o : osg->links) links.push_back(o.first);
+    for (auto o : links) {
+        NodeMTRecPtr node = osg->links[o];
+        subChild(OSGObject::create(node));
+        osg->links.erase(o);
+    }
+}
+
 void VRObject::setCore(OSGCorePtr c, string _type, bool force) {
     if (specialized && !force) {
         cout << "\nError, Object allready specialized, skip setCore()\n";

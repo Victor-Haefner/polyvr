@@ -393,11 +393,7 @@ void VRView::setRoot() {
     if (user && real_root) user->switchParent(real_root);
     if (dummy_user && real_root) dummy_user->switchParent(real_root);
 
-    if (view_root) {
-        root_def_shading->addLink( view_root );
-    }
-
-    NodeMTRecPtr n = root_system ? root_system->getNode()->node : 0;
+    NodeMTRecPtr n = view_root ? view_root->getNode()->node : 0;
     if (lView) lView->setRoot(n);
     if (rView) rView->setRoot(n);
 }
@@ -481,7 +477,8 @@ void VRView::update() {
 }
 
 void VRView::update2() {
-    if (defShading) defShading->setDefferedShading(deferredRendering);
+    if (!defShading) return;
+    defShading->setDefferedShading(deferredRendering);
     if (ssao) ssao->setSSAOparams(ssao_radius, ssao_kernel, ssao_noise);
 
     for (auto m : VRMaterial::materials) {
@@ -492,7 +489,7 @@ void VRView::update2() {
     }
 
     // update shader code
-    if (defShading) defShading->reload();
+    defShading->reload();
     if (do_hmdd && hmdd) hmdd->reload();
     if (hmdd) hmdd->setActive(do_hmdd);
 
