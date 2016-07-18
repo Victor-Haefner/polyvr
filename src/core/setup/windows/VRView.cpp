@@ -20,11 +20,8 @@
 #include "core/objects/VRCamera.h"
 #include "core/objects/object/VRObjectT.h"
 #include "core/objects/VRLight.h"
-
 #include "core/scene/VRSceneManager.h"
-#include "core/scene/VRDefShading.h"
-#include "core/scene/VRSSAO.h"
-#include "core/scene/VRHMDDistortion.h"
+#include "core/scene/VRRenderStudio.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -145,6 +142,7 @@ void VRView::setBG() {
     if (background) {
         if (lView) lView->setBackground(background);
         if (rView) rView->setBackground(background);
+        if (rendering) rendering->setBackground(background);
     }
 }
 
@@ -239,34 +237,8 @@ VRView::VRView(string name) {
     GeometryMTRecPtr geo = dynamic_cast<Geometry*>( viewGeo->getCore() );
     geo->setMaterial(viewGeoMat->getMaterial());
 
-
-    root_system = VRObject::create("System root");
-    root_post_processing = VRObject::create("Post processing root");
-    root_def_shading = VRObject::create("Deffered shading root");
-
-    root_system->addChild(root_post_processing);
-    root_post_processing->addChild(root_def_shading);
-
-    auto ssao_mat = setupRenderLayer("ssao", root_def_shading);
-    auto calib_mat = setupRenderLayer("calibration", root_post_processing);
-    auto hmdd_mat = setupRenderLayer("hmdd", root_post_processing);
-    //auto metaball_mat = setupRenderLayer("metaball");
-
-    defShading = new VRDefShading();
-    ssao = new VRSSAO();
-    hmdd = new VRHMDDistortion();
-    auto hmddPtr = shared_ptr<VRHMDDistortion>(hmdd);
-
-    root_post_processing->addChild( hmddPtr );
-    root_def_shading->switchParent( hmddPtr );
-
-    defShading->initDeferredShading(root_def_shading);
-    ssao->initSSAO(ssao_mat);
-    hmdd->initHMDD(hmdd_mat);
-    initCalib(calib_mat);
-    setDefferedShading(false);
-    setSSAO(false);
-    setHMDD(false);
+    rendering = shared_ptr<VRRenderStudio>( new VRRenderStudio() );
+    rendering->init();
 
     update();
 }
@@ -283,14 +255,12 @@ VRView::~VRView() {
     PCDecoratorLeft = 0;
     PCDecoratorRight = 0;
     stats = 0;
-
-    delete defShading;
-    delete ssao;
-    //delete hmdd; // check up on that!
 }
 
 VRViewPtr VRView::create(string name) { return VRViewPtr(new VRView(name)); }
 VRViewPtr VRView::ptr() { return shared_from_this(); }
+
+VRRenderStudioPtr VRView::getRendering() { return rendering; }
 
 int VRView::getID() { return ID; }
 void VRView::setID(int i) { ID = i; }
@@ -392,10 +362,14 @@ void VRView::setRoot() {
     if (user && real_root) user->switchParent(real_root);
     if (dummy_user && real_root) dummy_user->switchParent(real_root);
 
-    if (view_root) root_def_shading->addChild( view_root->getNode() );
+    NodeMTRecPtr n = view_root ? view_root->getNode()->node : 0;
 
-    NodeMTRecPtr n = root_system ? root_system->getNode()->node : 0;
-    if (lView) lView->setRoot(n);
+    if (rendering) {
+        rendering->setScene(view_root);
+        n = rendering->getRoot()->getNode()->node;
+    }
+
+    if (lView) lView->setRoot(n); // TODO: split into two rendering for left and right
     if (rView) rView->setRoot(n);
 }
 
@@ -435,12 +409,10 @@ void VRView::setCam() {
     if (lView && PCDecoratorLeft) lView->setCamera(PCDecoratorLeft);
     if (rView && PCDecoratorRight) rView->setCamera(PCDecoratorRight);
 
-    defShading->setDSCamera(cam);
-    hmdd->setCamera(cam);
+    if (rendering) rendering->setCamera(cam); // TODO: split in two and pass decorators!
 }
 
 void VRView::setBackground(BackgroundRecPtr bg) { background = bg; update(); }
-
 void VRView::setWindow(WindowRecPtr win) { window = win; update(); }
 
 void VRView::setWindow() {
@@ -478,39 +450,7 @@ void VRView::update() {
     swapEyes(eyeinverted);
     setStereoEyeSeparation(eyeSeparation);
     setMaterial();
-
-    defShading->setDefferedShading(deferredRendering);
-    ssao->setSSAOparams(ssao_radius, ssao_kernel, ssao_noise);
-
-    for (auto m : VRMaterial::materials) {
-        auto mat = m.second.lock();
-        if (!mat) continue;
-        mat->setDeffered(do_ssao || deferredRendering);
-    }
-
-    // update shader code
-    defShading->reload();
-    if (do_hmdd) hmdd->reload();
-    hmdd->setActive(do_hmdd);
-
-    // update render layer visibility
-    renderLayer["ssao"]->setVisible(do_ssao);
-    renderLayer["calibration"]->setVisible(calib);
-    renderLayer["hmdd"]->setVisible(do_hmdd);
 }
-
-void VRView::addLight(VRLightPtr l) {
-    light_map[l->getID()] = l;
-    defShading->addDSLight(l);
-}
-
-void VRView::setDefferedShading(bool b) { deferredRendering = b; update(); }
-void VRView::setSSAO(bool b) { do_ssao = b; }
-void VRView::setSSAOradius(float r) { ssao_radius = r; }
-void VRView::setSSAOkernel(int k) { ssao_kernel = k; }
-void VRView::setSSAOnoise(int k) { ssao_noise = k; }
-void VRView::setCalib(bool b) { calib = b; }
-void VRView::setHMDD(bool b) { do_hmdd = b; }
 
 void VRView::reset() {
     cam = 0;

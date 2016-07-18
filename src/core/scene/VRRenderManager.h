@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGConfig.h>
 #include "core/objects/VRObjectFwd.h"
+#include "core/setup/VRSetupFwd.h"
 #include "core/utils/VRStorage.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -23,34 +24,35 @@ class VRRenderManager : public VRStorage {
         float ssao_radius = 0.02;
 
     protected:
+        VRRenderStudioPtr rendering = 0;
         VRObjectPtr root = 0;
+        VRObjectPtr root_system = 0;
 
     public:
         VRRenderManager();
         ~VRRenderManager();
 
-        void setDefferedShading(bool b);
+        void addLight(VRLightPtr l);
+        void setDSCamera(VRCameraPtr cam);
+
+        void setFrustumCulling(bool b);
+        void setOcclusionCulling(bool b);
+        void setTwoSided(bool b);
+        bool getFrustumCulling();
+        bool getOcclusionCulling();
+        bool getTwoSided();
+
         bool getDefferedShading();
-        void setSSAO(bool b);
         bool getSSAO();
+        bool getHMDD();
+
+        void setDefferedShading(bool b);
+        void setSSAO(bool b);
         void setSSAOradius(float r);
         void setSSAOkernel(int k);
         void setSSAOnoise(int n);
         void setCalib(bool b);
         void setHMDD(bool b);
-        bool getHMDD();
-        void setCamera(VRCameraPtr cam);
-        void addLight(VRLightPtr l);
-        //VRLightPtr getLight(int ID);
-
-        void setFrustumCulling(bool b);
-        bool getFrustumCulling();
-
-        void setOcclusionCulling(bool b);
-        bool getOcclusionCulling();
-
-        void setTwoSided(bool b);
-        bool getTwoSided();
 
         void update();
 };

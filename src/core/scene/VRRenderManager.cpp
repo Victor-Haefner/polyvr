@@ -9,6 +9,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/VRStage.h"
 #include "core/objects/material/VRMaterial.h"
+#include "VRRenderStudio.h"
 
 #include <OpenSG/OSGRenderAction.h>
 
@@ -33,6 +34,11 @@ scene
 
 VRRenderManager::VRRenderManager() {
     root = VRObject::create("Root");
+    root_system = root;
+
+    /*rendering = shared_ptr<VRRenderStudio>( new VRRenderStudio() );
+    rendering->init(root);
+    root_system = rendering->getRoot();*/
 
     update();
 
@@ -59,51 +65,66 @@ void VRRenderManager::update() {
     ract->setCorrectTwoSidedLighting(twoSided);
     ract->setZWriteTrans(true); // enables the zbuffer for transparent objects
 
+    if (rendering) {
+        rendering->setDefferedShading(deferredRendering);
+        rendering->setSSAO(do_ssao);
+        rendering->setSSAOradius(ssao_radius);
+        rendering->setSSAOkernel(ssao_kernel);
+        rendering->setSSAOnoise(ssao_noise);
+        rendering->setCalib(calib);
+        rendering->setHMDD(do_hmdd);
+    }
+
     for (auto v : setup->getViews()) {
-        v->setDefferedShading(deferredRendering);
-        v->setSSAO(do_ssao);
-        v->setSSAOradius(ssao_radius);
-        v->setSSAOkernel(ssao_kernel);
-        v->setSSAOnoise(ssao_noise);
-        v->setCalib(calib);
-        v->setHMDD(do_hmdd);
-        v->update();
+        auto rendering = v->getRendering();
+        if (!rendering) continue;
+        rendering->setDefferedShading(deferredRendering);
+        rendering->setSSAO(do_ssao);
+        rendering->setSSAOradius(ssao_radius);
+        rendering->setSSAOkernel(ssao_kernel);
+        rendering->setSSAOnoise(ssao_noise);
+        rendering->setCalib(calib);
+        rendering->setHMDD(do_hmdd);
     }
 }
 
 void VRRenderManager::addLight(VRLightPtr l) {
     auto setup = VRSetupManager::getCurrent();
     if (!setup) return;
-    for (auto v : setup->getViews()) v->addLight(l);
+    if (rendering) rendering->addLight(l);
+    for (auto v : setup->getViews()) {
+        auto rendering = v->getRendering();
+        if (rendering) rendering->addLight(l);
+    }
 }
 
-//VRLightPtr VRRenderManager::getLight(int ID) { return light_map[ID]; }
-
-void VRRenderManager::setFrustumCulling(bool b) { frustumCulling = b; update(); }
-bool VRRenderManager::getFrustumCulling() { return frustumCulling; }
-
-void VRRenderManager::setOcclusionCulling(bool b) { occlusionCulling = b; update(); }
-bool VRRenderManager::getOcclusionCulling() { return occlusionCulling; }
-
-void VRRenderManager::setTwoSided(bool b) { twoSided = b; update(); }
-bool VRRenderManager::getTwoSided() { return twoSided; }
-
-void VRRenderManager::setDefferedShading(bool b) { deferredRendering = b; update(); }
-bool VRRenderManager::getDefferedShading() { return deferredRendering; }
-
-void VRRenderManager::setCamera(VRCameraPtr cam) {
+void VRRenderManager::setDSCamera(VRCameraPtr cam) {
     auto setup = VRSetupManager::getCurrent();
     if (!setup) return;
-    for (auto v : setup->getViews()) v->setCamera(cam);
+    if (rendering) rendering->setCamera(cam);
+    for (auto v : setup->getViews()) {
+        auto rendering = v->getRendering();
+        if (rendering) rendering->setCamera(cam);
+    }
 }
 
-void VRRenderManager::setSSAO(bool b) { do_ssao = b; update(); }
+void VRRenderManager::setFrustumCulling(bool b) { frustumCulling = b; update(); }
+void VRRenderManager::setOcclusionCulling(bool b) { occlusionCulling = b; update(); }
+void VRRenderManager::setTwoSided(bool b) { twoSided = b; update(); }
+bool VRRenderManager::getFrustumCulling() { return frustumCulling; }
+bool VRRenderManager::getOcclusionCulling() { return occlusionCulling; }
+bool VRRenderManager::getTwoSided() { return twoSided; }
+
+bool VRRenderManager::getDefferedShading() { return deferredRendering; }
 bool VRRenderManager::getSSAO() { return do_ssao; }
+bool VRRenderManager::getHMDD() { return do_hmdd; }
+
+void VRRenderManager::setDefferedShading(bool b) { deferredRendering = b; update(); }
+void VRRenderManager::setSSAO(bool b) { do_ssao = b; update(); }
 void VRRenderManager::setSSAOradius(float r) { ssao_radius = r; update(); }
 void VRRenderManager::setSSAOkernel(int k) { ssao_kernel = k; update(); }
 void VRRenderManager::setSSAOnoise(int k) { ssao_noise = k; update(); }
 void VRRenderManager::setCalib(bool b) { calib = b; update(); }
 void VRRenderManager::setHMDD(bool b) { do_hmdd = b; update(); }
-bool VRRenderManager::getHMDD() { return do_hmdd; }
 
 OSG_END_NAMESPACE;

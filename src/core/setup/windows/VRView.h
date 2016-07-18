@@ -45,6 +45,7 @@ class VRView : public std::enable_shared_from_this<VRView> {
         ProjectionCameraDecoratorRecPtr PCDecoratorRight;
 
         WindowRecPtr window;
+        VRRenderStudioPtr rendering;
 
         //ShearedStereoCameraDecoratorPtr SSCDecoratorLeft;
         //ShearedStereoCameraDecoratorPtr SSCDecoratorRight;
@@ -82,22 +83,6 @@ class VRView : public std::enable_shared_from_this<VRView> {
         GrabForegroundRecPtr grabfg = 0;
         ImageForegroundRecPtr calib_fg;
 
-        VRDefShading* defShading = 0;
-        VRSSAO* ssao = 0;
-        VRHMDDistortion* hmdd = 0;
-        VRObjectPtr root_post_processing = 0;
-        VRObjectPtr root_def_shading = 0;
-        VRObjectPtr root_system = 0;
-        map<int, VRLightPtr> light_map;
-
-        bool deferredRendering = false;
-        bool do_ssao = false;
-        bool calib = false;
-        bool do_hmdd = false;
-        int ssao_kernel = 4;
-        int ssao_noise = 4;
-        float ssao_radius = 0.02;
-
         map<string, VRGeometryPtr> renderLayer;
         VRMaterialPtr setupRenderLayer(string name, VRObjectPtr parent);
         void initCalib(VRMaterialPtr mat);
@@ -132,15 +117,6 @@ class VRView : public std::enable_shared_from_this<VRView> {
         void setStereoEyeSeparation(float v);
         void setProjection(bool b);
 
-        void setDefferedShading(bool b);
-        void setSSAO(bool b);
-        void setSSAOradius(float r);
-        void setSSAOkernel(int k);
-        void setSSAOnoise(int n);
-        void setCalib(bool b);
-        void setHMDD(bool b);
-        void addLight(VRLightPtr l);
-
         VRTransformPtr getUser();
         VRCameraPtr getCamera();
         bool isStereo();
@@ -169,6 +145,7 @@ class VRView : public std::enable_shared_from_this<VRView> {
         void setPosition(Vec4f pos);
 
         ViewportRecPtr getViewport();
+        VRRenderStudioPtr getRendering();
 
         void swapEyes(bool b);
         bool eyesInverted();

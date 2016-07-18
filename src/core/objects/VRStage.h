@@ -43,6 +43,7 @@ class VRStage : public VRObject {
         void setSize( Vec2i size);
         void setTarget(VRMaterialPtr mat, int tid = 0);
         void setCamera(VRCameraPtr cam);
+        void setBackground(BackgroundRecPtr bg);
         void update();
 };
 

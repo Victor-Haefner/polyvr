@@ -629,6 +629,8 @@
 		<Unit filename="src/core/scene/VRPhysicsManager.h" />
 		<Unit filename="src/core/scene/VRRenderManager.cpp" />
 		<Unit filename="src/core/scene/VRRenderManager.h" />
+		<Unit filename="src/core/scene/VRRenderStudio.cpp" />
+		<Unit filename="src/core/scene/VRRenderStudio.h" />
 		<Unit filename="src/core/scene/VRSSAO.cpp" />
 		<Unit filename="src/core/scene/VRSSAO.h" />
 		<Unit filename="src/core/scene/VRScene.cpp" />
