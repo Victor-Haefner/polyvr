@@ -36,10 +36,12 @@ void VRStage::initStage() {
     setCore(OSGCore::create(stage), "Stage");
     stage->setSize(0.0f, 0.0f, 1.0f, 1.0f);
 
-    SolidBackgroundRefPtr gb = SolidBackground::create();
-    gb->setColor( Color3f(1,1,1) );
-    stage->setBackground(gb);
+    SolidBackgroundRefPtr bg = SolidBackground::create();
+    bg->setColor( Color3f(1,1,1) );
+    stage->setBackground(bg);
 }
+
+void VRStage::setBackground(BackgroundRecPtr bg) { stage->setBackground(bg); }
 
 void VRStage::initFBO() {
     fbo = FrameBufferObject::create();

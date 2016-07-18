@@ -145,6 +145,8 @@ void VRView::setBG() {
     if (background) {
         if (lView) lView->setBackground(background);
         if (rView) rView->setBackground(background);
+        //if (defShading) defShading->setBackground(background);
+        if (hmdd) hmdd->setBackground(background);
     }
 }
 
