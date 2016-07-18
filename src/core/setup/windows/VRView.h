@@ -45,6 +45,7 @@ class VRView : public std::enable_shared_from_this<VRView> {
         ProjectionCameraDecoratorRecPtr PCDecoratorRight;
 
         WindowRecPtr window;
+        VRRenderStudioPtr rendering;
 
         //ShearedStereoCameraDecoratorPtr SSCDecoratorLeft;
         //ShearedStereoCameraDecoratorPtr SSCDecoratorRight;
@@ -169,6 +170,7 @@ class VRView : public std::enable_shared_from_this<VRView> {
         void setPosition(Vec4f pos);
 
         ViewportRecPtr getViewport();
+        VRRenderStudioPtr getRendering();
 
         void swapEyes(bool b);
         bool eyesInverted();

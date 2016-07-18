@@ -44,6 +44,10 @@ class VRRenderStudio : public VRStorage {
         VRRenderStudio();
         ~VRRenderStudio();
 
+        void init();
+
+        VRObjectPtr getRoot();
+
         void addLight(VRLightPtr l);
         VRLightPtr getLight(int ID);
 

@@ -40,7 +40,14 @@ VRRenderStudio::VRRenderStudio() {
     root_def_shading = VRObject::create("Deffered shading root");
     root_system->addChild(root_post_processing);
     root_post_processing->addChild(root_def_shading);
+}
 
+VRRenderStudio::~VRRenderStudio() {
+    delete defShading;
+    delete ssao;
+}
+
+void VRRenderStudio::init() {
     auto ssao_mat = setupRenderLayer("ssao", root_def_shading);
     auto calib_mat = setupRenderLayer("calibration", root_post_processing);
     auto hmdd_mat = setupRenderLayer("hmdd", root_post_processing);
@@ -64,11 +71,6 @@ VRRenderStudio::VRRenderStudio() {
     setHMDD(false);
 
     update();
-}
-
-VRRenderStudio::~VRRenderStudio() {
-    delete defShading;
-    delete ssao;
 }
 
 VRMaterialPtr VRRenderStudio::setupRenderLayer(string name, VRObjectPtr parent) {
@@ -119,9 +121,6 @@ void VRRenderStudio::addLight(VRLightPtr l) {
 
 VRLightPtr VRRenderStudio::getLight(int ID) { return light_map[ID]; }
 
-void VRRenderStudio::setDefferedShading(bool b) { deferredRendering = b; update(); }
-bool VRRenderStudio::getDefferedShading() { return deferredRendering; }
-
 void VRRenderStudio::setCamera(VRCameraPtr cam) {
     if (defShading) defShading->setDSCamera(cam);
     if (hmdd) hmdd->setCamera(cam);
@@ -132,17 +131,22 @@ void VRRenderStudio::setBackground(BackgroundRecPtr bg) {
 }
 
 void VRRenderStudio::setScene(VRObjectPtr root) {
-    root_def_shading->clearLinks();
-    root_def_shading->addLink( root );
+    //root_def_shading->clearLinks();
+    //root_def_shading->addLink( root );
+    root_def_shading->addChild(root->getNode());
 }
 
-void VRRenderStudio::setSSAO(bool b) { do_ssao = b; update(); }
+VRObjectPtr VRRenderStudio::getRoot() { return root_system; }
 bool VRRenderStudio::getSSAO() { return do_ssao; }
+bool VRRenderStudio::getHMDD() { return do_hmdd; }
+bool VRRenderStudio::getDefferedShading() { return deferredRendering; }
+
+void VRRenderStudio::setDefferedShading(bool b) { deferredRendering = b; update(); }
+void VRRenderStudio::setSSAO(bool b) { do_ssao = b; update(); }
 void VRRenderStudio::setSSAOradius(float r) { ssao_radius = r; update(); }
 void VRRenderStudio::setSSAOkernel(int k) { ssao_kernel = k; update(); }
 void VRRenderStudio::setSSAOnoise(int k) { ssao_noise = k; update(); }
 void VRRenderStudio::setCalib(bool b) { calib = b; update(); }
 void VRRenderStudio::setHMDD(bool b) { do_hmdd = b; update(); }
-bool VRRenderStudio::getHMDD() { return do_hmdd; }
 
 OSG_END_NAMESPACE;

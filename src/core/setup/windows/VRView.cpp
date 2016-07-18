@@ -241,36 +241,7 @@ VRView::VRView(string name) {
     GeometryMTRecPtr geo = dynamic_cast<Geometry*>( viewGeo->getCore() );
     geo->setMaterial(viewGeoMat->getMaterial());
 
-
-    root_system = VRObject::create("System root");
-    root_post_processing = VRObject::create("Post processing root");
-    root_def_shading = VRObject::create("Deffered shading root");
-
-    root_system->addChild(root_post_processing);
-    root_post_processing->addChild(root_def_shading);
-
-    /*auto ssao_mat = setupRenderLayer("ssao", root_def_shading);
-    auto calib_mat = setupRenderLayer("calibration", root_post_processing);
-    auto hmdd_mat = setupRenderLayer("hmdd", root_post_processing);
-    //auto metaball_mat = setupRenderLayer("metaball");
-
-    defShading = new VRDefShading();
-    ssao = new VRSSAO();
-    hmdd = new VRHMDDistortion();
-    auto hmddPtr = shared_ptr<VRHMDDistortion>(hmdd);
-
-    root_post_processing->addChild( hmddPtr );
-    root_def_shading->switchParent( hmddPtr );
-
-    defShading->initDeferredShading(root_def_shading);
-    ssao->initSSAO(ssao_mat);
-    hmdd->initHMDD(hmdd_mat);
-    hmdd_mat->setTexture(defShading->getTarget(), 0);
-    initCalib(calib_mat);
-    setDefferedShading(false);
-    setSSAO(false);
-    setHMDD(false);*/
-
+    //rendering = shared_ptr<VRRenderStudio>( new VRRenderStudio() );
 
     update();
     update2();
@@ -292,6 +263,8 @@ VRView::~VRView() {
 
 VRViewPtr VRView::create(string name) { return VRViewPtr(new VRView(name)); }
 VRViewPtr VRView::ptr() { return shared_from_this(); }
+
+VRRenderStudioPtr VRView::getRendering() { return rendering; }
 
 int VRView::getID() { return ID; }
 void VRView::setID(int i) { ID = i; }

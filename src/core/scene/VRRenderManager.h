@@ -14,6 +14,7 @@ class VRSSAO;
 class VRHMDDistortion;
 class VRObject;
 class VRCamera;
+class VRRenderStudio;
 
 class VRRenderManager : public VRStorage {
     private:
@@ -34,6 +35,8 @@ class VRRenderManager : public VRStorage {
         void initCalib(VRMaterialPtr mat);
 
     protected:
+        VRRenderStudio* rendering = 0;
+
         VRDefShading* defShading = 0;
         VRSSAO* ssao = 0;
         VRHMDDistortion* hmdd = 0;
