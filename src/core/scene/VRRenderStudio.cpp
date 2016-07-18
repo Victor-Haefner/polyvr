@@ -35,11 +35,13 @@ scene
 */
 
 VRRenderStudio::VRRenderStudio() {
+    root = VRObject::create("Root");
     root_system = VRObject::create("System root");
     root_post_processing = VRObject::create("Post processing root");
     root_def_shading = VRObject::create("Deffered shading root");
     root_system->addChild(root_post_processing);
     root_post_processing->addChild(root_def_shading);
+    root_def_shading->addChild(root);
 }
 
 VRRenderStudio::~VRRenderStudio() {
@@ -47,7 +49,7 @@ VRRenderStudio::~VRRenderStudio() {
     delete ssao;
 }
 
-void VRRenderStudio::init() {
+void VRRenderStudio::init(VRObjectPtr root) {
     auto ssao_mat = setupRenderLayer("ssao", root_def_shading);
     auto calib_mat = setupRenderLayer("calibration", root_post_processing);
     auto hmdd_mat = setupRenderLayer("hmdd", root_post_processing);
@@ -66,10 +68,8 @@ void VRRenderStudio::init() {
     hmdd->initHMDD(hmdd_mat);
     hmdd_mat->setTexture(defShading->getTarget(), 0);
     initCalib(calib_mat);
-    setDefferedShading(false);
-    setSSAO(false);
-    setHMDD(false);
 
+    if (root) setScene(root);
     update();
 }
 
@@ -78,6 +78,7 @@ VRMaterialPtr VRRenderStudio::setupRenderLayer(string name, VRObjectPtr parent) 
     plane->setPrimitive("Plane", "2 2 1 1");
     plane->setVolume(false);
     plane->setMaterial( VRMaterial::create(name+"_mat") );
+    plane->setVisible(false);
     parent->addChild(plane);
     renderLayer[name] = plane;
     return plane->getMaterial();
@@ -130,10 +131,14 @@ void VRRenderStudio::setBackground(BackgroundRecPtr bg) {
     if (hmdd) hmdd->setBackground(bg);
 }
 
-void VRRenderStudio::setScene(VRObjectPtr root) {
-    //root_def_shading->clearLinks();
-    //root_def_shading->addLink( root );
-    root_def_shading->addChild(root->getNode());
+void VRRenderStudio::setScene(VRObjectPtr r) {
+    if (!root || !r) return;
+    root->clearLinks();
+    root->addLink( r );
+}
+
+void VRRenderStudio::resize(int w, int h) {
+    if (hmdd) hmdd->setSize(Vec2i(w,h));
 }
 
 VRObjectPtr VRRenderStudio::getRoot() { return root_system; }

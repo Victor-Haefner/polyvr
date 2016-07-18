@@ -22,9 +22,7 @@
 
 #include "core/objects/VRLight.h"
 #include "core/scene/VRSceneManager.h"
-#include "core/scene/VRDefShading.h"
-#include "core/scene/VRSSAO.h"
-#include "core/scene/VRHMDDistortion.h"
+#include "core/scene/VRRenderStudio.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -145,8 +143,7 @@ void VRView::setBG() {
     if (background) {
         if (lView) lView->setBackground(background);
         if (rView) rView->setBackground(background);
-        //if (defShading) defShading->setBackground(background);
-        if (hmdd) hmdd->setBackground(background);
+        if (rendering) rendering->setBackground(background);
     }
 }
 
@@ -241,10 +238,10 @@ VRView::VRView(string name) {
     GeometryMTRecPtr geo = dynamic_cast<Geometry*>( viewGeo->getCore() );
     geo->setMaterial(viewGeoMat->getMaterial());
 
-    //rendering = shared_ptr<VRRenderStudio>( new VRRenderStudio() );
+    rendering = shared_ptr<VRRenderStudio>( new VRRenderStudio() );
+    rendering->init();
 
     update();
-    update2();
 }
 
 VRView::~VRView() {
@@ -268,24 +265,6 @@ VRRenderStudioPtr VRView::getRendering() { return rendering; }
 
 int VRView::getID() { return ID; }
 void VRView::setID(int i) { ID = i; }
-
-VRMaterialPtr VRView::setupRenderLayer(string name, VRObjectPtr parent) {
-    auto plane = VRGeometry::create(name+"_renderlayer");
-    plane->setPrimitive("Plane", "2 2 1 1");
-    plane->setVolume(false);
-    plane->setMaterial( VRMaterial::create(name+"_mat") );
-    parent->addChild(plane);
-    renderLayer[name] = plane;
-    return plane->getMaterial();
-}
-
-void VRView::initCalib(VRMaterialPtr mat) {
-    string shdrDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/DeferredShading/";
-    mat->setLit(false);
-    mat->readVertexShader(shdrDir + "Calib.vp.glsl");
-    mat->readFragmentShader(shdrDir + "Calib.fp.glsl");
-    mat->setShaderParameter<int>("grid", 64);
-}
 
 void VRView::showStats(bool b) {
     if (stats == 0) {
@@ -367,6 +346,12 @@ void VRView::setRoot() {
     if (dummy_user && real_root) dummy_user->switchParent(real_root);
 
     NodeMTRecPtr n = view_root ? view_root->getNode()->node : 0;
+
+    if (rendering) {
+        rendering->setScene(view_root);
+        n = rendering->getRoot()->getNode()->node;
+    }
+
     if (lView) lView->setRoot(n);
     if (rView) rView->setRoot(n);
 }
@@ -404,12 +389,10 @@ void VRView::setCam() {
     if (lView && PCDecoratorLeft) lView->setCamera(PCDecoratorLeft);
     if (rView && PCDecoratorRight) rView->setCamera(PCDecoratorRight);
 
-    if (defShading) defShading->setDSCamera(cam); // TODO: pass decorators!
-    if (hmdd) hmdd->setCamera(cam);
+    if (rendering) rendering->setCamera(cam); // TODO: pass decorators!
 }
 
 void VRView::setBackground(BackgroundRecPtr bg) { background = bg; update(); }
-
 void VRView::setWindow(WindowRecPtr win) { window = win; update(); }
 
 void VRView::setWindow() {
@@ -448,42 +431,6 @@ void VRView::update() {
     setStereoEyeSeparation(eyeSeparation);
     setMaterial();
 }
-
-void VRView::update2() {
-    if (!defShading) return;
-    defShading->setDefferedShading(deferredRendering);
-    if (ssao) ssao->setSSAOparams(ssao_radius, ssao_kernel, ssao_noise);
-
-    for (auto m : VRMaterial::materials) {
-        auto mat = m.second.lock();
-        if (!mat) continue;
-        bool b = ( (ssao && do_ssao) || (defShading && deferredRendering) );
-        mat->setDeffered(b);
-    }
-
-    // update shader code
-    defShading->reload();
-    if (do_hmdd && hmdd) hmdd->reload();
-    if (hmdd) hmdd->setActive(do_hmdd);
-
-    // update render layer visibility
-    if (renderLayer.count("ssao")) renderLayer["ssao"]->setVisible(do_ssao);
-    if (renderLayer.count("calibration")) renderLayer["calibration"]->setVisible(calib);
-    if (renderLayer.count("hmdd")) renderLayer["hmdd"]->setVisible(do_hmdd);
-}
-
-void VRView::addLight(VRLightPtr l) {
-    light_map[l->getID()] = l;
-    if (defShading) defShading->addDSLight(l);
-}
-
-void VRView::setDefferedShading(bool b) { deferredRendering = b; update2(); }
-void VRView::setSSAO(bool b) { do_ssao = b; update2(); }
-void VRView::setSSAOradius(float r) { ssao_radius = r; update2(); }
-void VRView::setSSAOkernel(int k) { ssao_kernel = k; update2(); }
-void VRView::setSSAOnoise(int k) { ssao_noise = k; update2(); }
-void VRView::setCalib(bool b) { calib = b; update2(); }
-void VRView::setHMDD(bool b) { do_hmdd = b; update2(); }
 
 void VRView::reset() {
     cam = 0;

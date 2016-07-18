@@ -37,10 +37,11 @@ scene
 
 VRRenderManager::VRRenderManager() {
     root = VRObject::create("Root");
-    rendering = new VRRenderStudio();
-    root_system = rendering->getRoot();
-    rendering->setScene(root);
-    rendering->init();
+    root_system = root;
+
+    /*rendering = shared_ptr<VRRenderStudio>( new VRRenderStudio() );
+    rendering->init(root);
+    root_system = rendering->getRoot();*/
 
     update();
 
@@ -55,9 +56,7 @@ VRRenderManager::VRRenderManager() {
     store("ssao_noise", &ssao_noise);
 }
 
-VRRenderManager::~VRRenderManager() {
-    delete rendering;
-}
+VRRenderManager::~VRRenderManager() {}
 
 void VRRenderManager::update() {
     auto setup = VRSetupManager::getCurrent();
@@ -102,19 +101,6 @@ void VRRenderManager::addLight(VRLightPtr l) {
     }
 }
 
-void VRRenderManager::setFrustumCulling(bool b) { frustumCulling = b; update(); }
-bool VRRenderManager::getFrustumCulling() { return frustumCulling; }
-
-void VRRenderManager::setOcclusionCulling(bool b) { occlusionCulling = b; update(); }
-bool VRRenderManager::getOcclusionCulling() { return occlusionCulling; }
-
-void VRRenderManager::setTwoSided(bool b) { twoSided = b; update(); }
-bool VRRenderManager::getTwoSided() { return twoSided; }
-
-void VRRenderManager::setDefferedShading(bool b) { deferredRendering = b; update(); }
-//bool VRRenderManager::getDefferedShading() { return (deferredRendering && defShading); }
-bool VRRenderManager::getDefferedShading() { return deferredRendering; }
-
 void VRRenderManager::setDSCamera(VRCameraPtr cam) {
     auto setup = VRSetupManager::getCurrent();
     if (!setup) return;
@@ -125,14 +111,23 @@ void VRRenderManager::setDSCamera(VRCameraPtr cam) {
     }
 }
 
-void VRRenderManager::setSSAO(bool b) { do_ssao = b; update(); }
-//bool VRRenderManager::getSSAO() { return (do_ssao && ssao); }
+void VRRenderManager::setFrustumCulling(bool b) { frustumCulling = b; update(); }
+void VRRenderManager::setOcclusionCulling(bool b) { occlusionCulling = b; update(); }
+void VRRenderManager::setTwoSided(bool b) { twoSided = b; update(); }
+bool VRRenderManager::getFrustumCulling() { return frustumCulling; }
+bool VRRenderManager::getOcclusionCulling() { return occlusionCulling; }
+bool VRRenderManager::getTwoSided() { return twoSided; }
+
+bool VRRenderManager::getDefferedShading() { return deferredRendering; }
 bool VRRenderManager::getSSAO() { return do_ssao; }
+bool VRRenderManager::getHMDD() { return do_hmdd; }
+
+void VRRenderManager::setDefferedShading(bool b) { deferredRendering = b; update(); }
+void VRRenderManager::setSSAO(bool b) { do_ssao = b; update(); }
 void VRRenderManager::setSSAOradius(float r) { ssao_radius = r; update(); }
 void VRRenderManager::setSSAOkernel(int k) { ssao_kernel = k; update(); }
 void VRRenderManager::setSSAOnoise(int k) { ssao_noise = k; update(); }
 void VRRenderManager::setCalib(bool b) { calib = b; update(); }
 void VRRenderManager::setHMDD(bool b) { do_hmdd = b; update(); }
-bool VRRenderManager::getHMDD() { return do_hmdd; }
 
 OSG_END_NAMESPACE;

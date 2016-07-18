@@ -1,5 +1,6 @@
 #include "VRWindow.h"
 #include "core/scene/VRSceneManager.h"
+#include "core/scene/VRRenderStudio.h"
 #include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
 #include "core/scene/VRThreadManager.h"
@@ -46,9 +47,19 @@ void VRWindow::remView(VRViewPtr view) {
 
 void VRWindow::setAction(RenderActionRefPtr ract) { this->ract = ract; }
 bool VRWindow::hasType(int i) { return (i == type); }
-void VRWindow::resize(int w, int h) { width = w; height = h; _win->resize(w,h); }
 Vec2i VRWindow::getSize() { return Vec2i(width, height); }
 void VRWindow::render() { if(_win) _win->render(ract); }
+void VRWindow::resize(int w, int h) {
+    width = w;
+    height = h;
+    _win->resize(w,h);
+    for (auto vw : views) {
+        if (auto v = vw.lock()) {
+            auto rendering = v->getRendering();
+            if (rendering) rendering->resize(w,h);
+        }
+    }
+}
 
 vector<VRViewPtr> VRWindow::getViews() {
     vector<VRViewPtr> res;

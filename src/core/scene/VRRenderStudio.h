@@ -38,25 +38,27 @@ class VRRenderStudio : public VRStorage {
         VRObjectPtr root_post_processing = 0;
         VRObjectPtr root_def_shading = 0;
         VRObjectPtr root_system = 0;
+        VRObjectPtr root = 0;
         map<int, VRLightPtr> light_map;
 
     public:
         VRRenderStudio();
         ~VRRenderStudio();
 
-        void init();
+        void init(VRObjectPtr root = 0);
 
         VRObjectPtr getRoot();
 
         void addLight(VRLightPtr l);
         VRLightPtr getLight(int ID);
 
+        void setScene(VRObjectPtr root);
         void setCamera(VRCameraPtr cam);
         void setBackground(BackgroundRecPtr bg);
-        void setScene(VRObjectPtr root);
+        void resize(int w, int h);
+
         void setDefferedShading(bool b);
         bool getDefferedShading();
-
         void setSSAO(bool b);
         bool getSSAO();
         void setSSAOradius(float r);
