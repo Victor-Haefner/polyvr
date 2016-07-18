@@ -127,6 +127,11 @@ void VRRenderStudio::setCamera(VRCameraPtr cam) {
     if (hmdd) hmdd->setCamera(cam);
 }
 
+void VRRenderStudio::setCamera(ProjectionCameraDecoratorRecPtr cam) {
+    if (defShading) defShading->setDSCamera(cam);
+    if (hmdd) hmdd->setCamera(cam);
+}
+
 void VRRenderStudio::setBackground(BackgroundRecPtr bg) {
     if (hmdd) hmdd->setBackground(bg);
 }
@@ -137,8 +142,8 @@ void VRRenderStudio::setScene(VRObjectPtr r) {
     root->addLink( r );
 }
 
-void VRRenderStudio::resize(int w, int h) {
-    if (hmdd) hmdd->setSize(Vec2i(w,h));
+void VRRenderStudio::resize(Vec2i s) {
+    if (hmdd) hmdd->setSize(s);
 }
 
 VRObjectPtr VRRenderStudio::getRoot() { return root_system; }

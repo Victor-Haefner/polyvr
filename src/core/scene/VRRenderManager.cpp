@@ -34,11 +34,6 @@ scene
 
 VRRenderManager::VRRenderManager() {
     root = VRObject::create("Root");
-    root_system = root;
-
-    /*rendering = shared_ptr<VRRenderStudio>( new VRRenderStudio() );
-    rendering->init(root);
-    root_system = rendering->getRoot();*/
 
     update();
 
@@ -65,35 +60,38 @@ void VRRenderManager::update() {
     ract->setCorrectTwoSidedLighting(twoSided);
     ract->setZWriteTrans(true); // enables the zbuffer for transparent objects
 
-    if (rendering) {
-        rendering->setDefferedShading(deferredRendering);
-        rendering->setSSAO(do_ssao);
-        rendering->setSSAOradius(ssao_radius);
-        rendering->setSSAOkernel(ssao_kernel);
-        rendering->setSSAOnoise(ssao_noise);
-        rendering->setCalib(calib);
-        rendering->setHMDD(do_hmdd);
-    }
-
     for (auto v : setup->getViews()) {
-        auto rendering = v->getRendering();
-        if (!rendering) continue;
-        rendering->setDefferedShading(deferredRendering);
-        rendering->setSSAO(do_ssao);
-        rendering->setSSAOradius(ssao_radius);
-        rendering->setSSAOkernel(ssao_kernel);
-        rendering->setSSAOnoise(ssao_noise);
-        rendering->setCalib(calib);
-        rendering->setHMDD(do_hmdd);
+        auto rendering = v->getRenderingL();
+        if (rendering) {
+            rendering->setDefferedShading(deferredRendering);
+            rendering->setSSAO(do_ssao);
+            rendering->setSSAOradius(ssao_radius);
+            rendering->setSSAOkernel(ssao_kernel);
+            rendering->setSSAOnoise(ssao_noise);
+            rendering->setCalib(calib);
+            rendering->setHMDD(do_hmdd);
+        }
+
+        rendering = v->getRenderingR();
+        if (rendering) {
+            rendering->setDefferedShading(deferredRendering);
+            rendering->setSSAO(do_ssao);
+            rendering->setSSAOradius(ssao_radius);
+            rendering->setSSAOkernel(ssao_kernel);
+            rendering->setSSAOnoise(ssao_noise);
+            rendering->setCalib(calib);
+            rendering->setHMDD(do_hmdd);
+        }
     }
 }
 
 void VRRenderManager::addLight(VRLightPtr l) {
     auto setup = VRSetupManager::getCurrent();
     if (!setup) return;
-    if (rendering) rendering->addLight(l);
     for (auto v : setup->getViews()) {
-        auto rendering = v->getRendering();
+        auto rendering = v->getRenderingL();
+        if (rendering) rendering->addLight(l);
+        rendering = v->getRenderingR();
         if (rendering) rendering->addLight(l);
     }
 }
@@ -101,9 +99,10 @@ void VRRenderManager::addLight(VRLightPtr l) {
 void VRRenderManager::setDSCamera(VRCameraPtr cam) {
     auto setup = VRSetupManager::getCurrent();
     if (!setup) return;
-    if (rendering) rendering->setCamera(cam);
     for (auto v : setup->getViews()) {
-        auto rendering = v->getRendering();
+        auto rendering = v->getRenderingL();
+        if (rendering) rendering->setCamera(cam);
+        rendering = v->getRenderingR();
         if (rendering) rendering->setCamera(cam);
     }
 }

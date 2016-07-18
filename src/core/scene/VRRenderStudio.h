@@ -3,18 +3,17 @@
 
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGBackground.h>
+#include <OpenSG/OSGVector.h>
+#include <OpenSG/OSGProjectionCameraDecorator.h>
 #include "core/objects/VRObjectFwd.h"
 #include "core/utils/VRStorage.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRLight;
 class VRDefShading;
 class VRSSAO;
 class VRHMDDistortion;
-class VRObject;
-class VRCamera;
 
 class VRRenderStudio : public VRStorage {
     private:
@@ -54,8 +53,9 @@ class VRRenderStudio : public VRStorage {
 
         void setScene(VRObjectPtr root);
         void setCamera(VRCameraPtr cam);
+        void setCamera(ProjectionCameraDecoratorRecPtr cam);
         void setBackground(BackgroundRecPtr bg);
-        void resize(int w, int h);
+        void resize(Vec2i s);
 
         void setDefferedShading(bool b);
         bool getDefferedShading();

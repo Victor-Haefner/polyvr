@@ -114,7 +114,6 @@ void VRView::setViewports() {//create && set size of viewports
         lView = Viewport::create();
         lView->setSize(p[0], p[1], p[2], p[3]);
         rView = 0;
-        return;
     }
 
     if (stereo && !active_stereo) {
@@ -122,27 +121,44 @@ void VRView::setViewports() {//create && set size of viewports
         rView = Viewport::create();
         lView->setSize(p[0], p[1], (p[0]+p[2])*0.5, p[3]);
         rView->setSize((p[0]+p[2])*0.5, p[1], p[2], p[3]);
-        return;
     }
 
+    if (active_stereo) {
+        lView_act->setLeftBuffer(true);
+        lView_act->setRightBuffer(false);
+        rView_act->setLeftBuffer(false);
+        rView_act->setRightBuffer(true);
 
-    lView_act->setLeftBuffer(true);
-    lView_act->setRightBuffer(false);
-    rView_act->setLeftBuffer(false);
-    rView_act->setRightBuffer(true);
+        lView = lView_act;
+        rView = rView_act;
 
-    lView = lView_act;
-    rView = rView_act;
+        lView->setSize(p[0], p[1], p[2], p[3]);
+        rView->setSize(p[0], p[1], p[2], p[3]);
+    }
 
-    lView->setSize(p[0], p[1], p[2], p[3]);
-    rView->setSize(p[0], p[1], p[2], p[3]);
+    // renderingL stages
+    if (renderingL) {
+        Vec2i s = window_size;
+        float w = abs(p[3]-p[1]);
+        float h = abs(p[2]-p[0]);
+        s = Vec2i(s[0]*w, s[1]*h);
+        cout << "resize " << s << endl;
+        if (!stereo && !active_stereo) renderingL->resize(s);
+        else {
+            s[0] *= 0.5;
+            s = Vec2i(1200,800);
+            renderingL->resize(s);
+            renderingR->resize(s);
+        }
+    }
 }
 
 void VRView::setBG() {
     if (background) {
         if (lView) lView->setBackground(background);
         if (rView) rView->setBackground(background);
-        if (rendering) rendering->setBackground(background);
+        if (renderingL) renderingL->setBackground(background);
+        if (renderingR) renderingR->setBackground(background);
     }
 }
 
@@ -237,8 +253,10 @@ VRView::VRView(string name) {
     GeometryMTRecPtr geo = dynamic_cast<Geometry*>( viewGeo->getCore() );
     geo->setMaterial(viewGeoMat->getMaterial());
 
-    rendering = shared_ptr<VRRenderStudio>( new VRRenderStudio() );
-    rendering->init();
+    renderingL = shared_ptr<VRRenderStudio>( new VRRenderStudio() );
+    renderingL->init();
+    renderingR = shared_ptr<VRRenderStudio>( new VRRenderStudio() );
+    renderingR->init();
 
     update();
 }
@@ -260,7 +278,10 @@ VRView::~VRView() {
 VRViewPtr VRView::create(string name) { return VRViewPtr(new VRView(name)); }
 VRViewPtr VRView::ptr() { return shared_from_this(); }
 
-VRRenderStudioPtr VRView::getRendering() { return rendering; }
+VRRenderStudioPtr VRView::getRenderingL() { return renderingL; }
+VRRenderStudioPtr VRView::getRenderingR() { return renderingR; }
+
+void VRView::resize(Vec2i s) { window_size = s; update(); }
 
 int VRView::getID() { return ID; }
 void VRView::setID(int i) { ID = i; }
@@ -362,15 +383,21 @@ void VRView::setRoot() {
     if (user && real_root) user->switchParent(real_root);
     if (dummy_user && real_root) dummy_user->switchParent(real_root);
 
-    NodeMTRecPtr n = view_root ? view_root->getNode()->node : 0;
+    NodeMTRecPtr nl = view_root ? view_root->getNode()->node : 0;
+    NodeMTRecPtr nr = nl;
 
-    if (rendering) {
-        rendering->setScene(view_root);
-        n = rendering->getRoot()->getNode()->node;
+    if (renderingL) {
+        renderingL->setScene(view_root);
+        nl = renderingL->getRoot()->getNode()->node;
     }
 
-    if (lView) lView->setRoot(n); // TODO: split into two rendering for left and right
-    if (rView) rView->setRoot(n);
+    if (renderingR) {
+        renderingR->setScene(view_root);
+        nr = renderingR->getRoot()->getNode()->node;
+    }
+
+    if (lView) lView->setRoot(nl);
+    if (rView) rView->setRoot(nr);
 }
 
 void VRView::setUser(VRTransformPtr u) {
@@ -409,7 +436,10 @@ void VRView::setCam() {
     if (lView && PCDecoratorLeft) lView->setCamera(PCDecoratorLeft);
     if (rView && PCDecoratorRight) rView->setCamera(PCDecoratorRight);
 
-    if (rendering) rendering->setCamera(cam); // TODO: split in two and pass decorators!
+    if (renderingL) renderingL->setCamera(cam);
+    if (renderingR) renderingR->setCamera(cam);
+    if (renderingL && PCDecoratorLeft) renderingL->setCamera(PCDecoratorLeft);
+    if (renderingR && PCDecoratorRight) renderingR->setCamera(PCDecoratorRight);
 }
 
 void VRView::setBackground(BackgroundRecPtr bg) { background = bg; update(); }
@@ -489,7 +519,7 @@ VRTexturePtr VRView::grab() {
 
         //window->render( VRSetupManager::getCurrent()->getRenderAction() );
         VRSetupManager::getCurrent()->updateWindows();
-        VRGuiManager::get()->updateGtk(); // TODO: Rendering produces just opengl error 500
+        VRGuiManager::get()->updateGtk(); // TODO: rendering produces just opengl error 500
 
         img = grabfg->getImage();
         if (img->getData()) img->write("bla.png");

@@ -149,6 +149,10 @@ void VRDefShading::setDSCamera(VRCameraPtr cam) {
     if (initiated) dsStage->setCamera(cam->getCam());
 }
 
+void VRDefShading::setDSCamera(ProjectionCameraDecoratorRecPtr cam) {
+    if (initiated) dsStage->setCamera(cam);
+}
+
 void VRDefShading::addDSLight(VRLightPtr light) {
     addDSLight(light->getLightCore(), light->getLightType(), light->getShadows());
 }

@@ -3,7 +3,6 @@
 
 #include <OpenSG/OSGConfig.h>
 #include "core/objects/VRObjectFwd.h"
-#include "core/setup/VRSetupFwd.h"
 #include "core/utils/VRStorage.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -24,9 +23,7 @@ class VRRenderManager : public VRStorage {
         float ssao_radius = 0.02;
 
     protected:
-        VRRenderStudioPtr rendering = 0;
         VRObjectPtr root = 0;
-        VRObjectPtr root_system = 0;
 
     public:
         VRRenderManager();

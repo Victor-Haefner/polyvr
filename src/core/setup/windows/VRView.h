@@ -36,6 +36,7 @@ class VRView : public std::enable_shared_from_this<VRView> {
         VRMaterialPtr viewGeoMat;
 
         Vec4f position = Vec4f(0,0,1,1);
+        Vec2i window_size = Vec2i(300,300);
 
         float eyeSeparation = 0.06;
         bool eyeinverted = false;
@@ -45,7 +46,8 @@ class VRView : public std::enable_shared_from_this<VRView> {
         ProjectionCameraDecoratorRecPtr PCDecoratorRight;
 
         WindowRecPtr window;
-        VRRenderStudioPtr rendering;
+        VRRenderStudioPtr renderingL;
+        VRRenderStudioPtr renderingR;
 
         //ShearedStereoCameraDecoratorPtr SSCDecoratorLeft;
         //ShearedStereoCameraDecoratorPtr SSCDecoratorRight;
@@ -107,6 +109,7 @@ class VRView : public std::enable_shared_from_this<VRView> {
         void setID(int i);
 
         string getName();
+        void resize(Vec2i s);
 
         void setRoot(VRObjectPtr root, VRTransformPtr _real);
         void setUser(VRTransformPtr u);
@@ -145,7 +148,8 @@ class VRView : public std::enable_shared_from_this<VRView> {
         void setPosition(Vec4f pos);
 
         ViewportRecPtr getViewport();
-        VRRenderStudioPtr getRendering();
+        VRRenderStudioPtr getRenderingL();
+        VRRenderStudioPtr getRenderingR();
 
         void swapEyes(bool b);
         bool eyesInverted();

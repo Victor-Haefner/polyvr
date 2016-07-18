@@ -49,15 +49,13 @@ void VRWindow::setAction(RenderActionRefPtr ract) { this->ract = ract; }
 bool VRWindow::hasType(int i) { return (i == type); }
 Vec2i VRWindow::getSize() { return Vec2i(width, height); }
 void VRWindow::render() { if(_win) _win->render(ract); }
+
 void VRWindow::resize(int w, int h) {
     width = w;
     height = h;
     _win->resize(w,h);
     for (auto vw : views) {
-        if (auto v = vw.lock()) {
-            auto rendering = v->getRendering();
-            if (rendering) rendering->resize(w,h);
-        }
+        if (auto v = vw.lock()) v->resize(Vec2i(w,h));
     }
 }
 
