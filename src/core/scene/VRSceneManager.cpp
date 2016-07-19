@@ -203,6 +203,7 @@ void VRSceneManager::update() {
 if (current) current->blockScriptThreads();
     VRGuiManager::get()->updateGtk();
     updateCallbacks();
+    if (setup) setup->updateTracking();//tracking
     if (setup) setup->updateDevices();//device beacon update
     updateScene();
 

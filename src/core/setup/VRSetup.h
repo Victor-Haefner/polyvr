@@ -27,6 +27,8 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
         VRTransformPtr user = 0;
         VRCameraPtr setup_cam = 0;
 
+        VivePtr vive = 0;
+
         VRVisualLayerPtr setup_layer;
         VRVisualLayerPtr stats_layer;
         VRTogglePtr layer_setup_toggle;
@@ -58,6 +60,8 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
         void showSetup(bool b);
 
         void printOSG();
+
+        void updateTracking();
 
         void save(string file);
         void load(string file);

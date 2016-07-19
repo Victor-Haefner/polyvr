@@ -14,9 +14,9 @@ using namespace std;
 VRHMDDistortion::VRHMDDistortion() : VRStage("hmdd") {}
 VRHMDDistortion::~VRHMDDistortion() {}
 
-void VRHMDDistortion::setHMDDparams(float radius) {
+void VRHMDDistortion::setHMDDparams(float eye) {
     if (!hmdd_mat) return;
-    hmdd_mat->setShaderParameter<float>("uRadius", radius);
+    hmdd_mat->setShaderParameter<float>("eye", eye);
 }
 
 void VRHMDDistortion::initHMDD(VRMaterialPtr mat) {

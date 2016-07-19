@@ -107,6 +107,7 @@ void ART::scan(int type, int N) {
     }
 
     for (int i=0; i<N; i++) {
+        cout << "ART " << type << " " << N << endl;
         int k = ART_device::key(i,type);
         if (devices.count(k) == 0) continue;
 

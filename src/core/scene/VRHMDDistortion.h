@@ -17,7 +17,7 @@ class VRHMDDistortion : public VRStage {
         ~VRHMDDistortion();
 
         void initHMDD(VRMaterialPtr mat);
-        void setHMDDparams(float radius);
+        void setHMDDparams(float eye);
         void reload();
 };
 

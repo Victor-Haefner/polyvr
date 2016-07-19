@@ -159,4 +159,6 @@ void VRRenderStudio::setSSAOnoise(int k) { ssao_noise = k; update(); }
 void VRRenderStudio::setCalib(bool b) { calib = b; update(); }
 void VRRenderStudio::setHMDD(bool b) { do_hmdd = b; update(); }
 
+void VRRenderStudio::setHMDDeye(float e) { hmdd->setHMDDparams(e); }
+
 OSG_END_NAMESPACE;

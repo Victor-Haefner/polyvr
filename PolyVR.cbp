@@ -31,8 +31,8 @@
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="-std=c++11" />
 			<Add option="-Wall" />
+			<Add option="-std=c++11" />
 			<Add option="`pkg-config gtk+-2.0 --cflags`" />
 			<Add option="`pkg-config gmodule-2.0 --cflags`" />
 			<Add option="`pkg-config --cflags libxml++-2.6`" />
@@ -105,6 +105,7 @@
 			<Add directory="/usr/include/collada" />
 			<Add directory="/usr/include/STEPcode" />
 			<Add directory="/usr/include/vtk-5.10" />
+			<Add directory="/usr/local/lib/openvr" />
 		</Compiler>
 		<Linker>
 			<Add option="-lcef" />
@@ -222,12 +223,14 @@
 			<Add option="-lxerces-c" />
 			<Add option="-lHACD" />
 			<Add option="-lssh2" />
+			<Add option="-lopenvr_api" />
 			<Add directory="/usr/lib/virtuose" />
 			<Add directory="/usr/lib/opensg" />
 			<Add directory="/usr/lib/CEF" />
 			<Add directory="/usr/include/CEF/include" />
 			<Add directory="/usr/lib/STEPcode" />
 			<Add directory="/usr/lib/1.4" />
+			<Add directory="/usr/local/lib/openvr" />
 		</Linker>
 		<ExtraCommands>
 			<Add after='/bin/bash -c &quot;cp -u -p ressources/cef/icudtl.dat bin/Debug/ 2&gt;/dev/null&quot;' />
@@ -855,6 +858,8 @@
 		<Unit filename="src/core/setup/tracking/Kinect.h" />
 		<Unit filename="src/core/setup/tracking/VRPN.cpp" />
 		<Unit filename="src/core/setup/tracking/VRPN.h" />
+		<Unit filename="src/core/setup/tracking/Vive.cpp" />
+		<Unit filename="src/core/setup/tracking/Vive.h" />
 		<Unit filename="src/core/setup/windows/VRGlutWindow.cpp" />
 		<Unit filename="src/core/setup/windows/VRGlutWindow.h" />
 		<Unit filename="src/core/setup/windows/VRGtkWindow.cpp" />

@@ -6,6 +6,7 @@
 #include "core/utils/VROptions.h"
 #include "core/utils/VRVisualLayer.h"
 #include "core/setup/devices/VRMouse.h"
+#include "core/setup/tracking/Vive.h"
 #include "core/objects/VRTransform.h"
 #include "core/objects/VRCamera.h"
 #include "core/objects/object/VRObjectT.h"
@@ -32,6 +33,8 @@ VRSetup::VRSetup(string name) {
     user = 0;
     tracking = "None";
 
+    vive = shared_ptr<Vive>( new Vive() );
+
     setup_layer = VRVisualLayer::getLayer("Setup", "setup.png",1);
     stats_layer = VRVisualLayer::getLayer("Statistics", "stats.png",1);
     layer_setup_toggle = VRFunction<bool>::create("showSetup", boost::bind(&VRSetup::showSetup, this, _1) );
@@ -47,6 +50,10 @@ VRSetup::~VRSetup() {
 }
 
 VRSetupPtr VRSetup::create(string name) { return VRSetupPtr(new VRSetup(name)); }
+
+void VRSetup::updateTracking() {
+    vive->update();
+}
 
 VRNetworkPtr VRSetup::getNetwork() { return network; }
 

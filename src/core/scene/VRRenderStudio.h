@@ -68,6 +68,8 @@ class VRRenderStudio : public VRStorage {
         void setHMDD(bool b);
         bool getHMDD();
 
+        void setHMDDeye(float e);
+
         void update();
 };
 

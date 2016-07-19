@@ -138,15 +138,15 @@ void VRView::setViewports() {//create && set size of viewports
 
     // renderingL stages
     if (renderingL) {
+        renderingL->setHMDDeye(-1);
+        renderingR->setHMDDeye(1);
         Vec2i s = window_size;
         float w = abs(p[3]-p[1]);
         float h = abs(p[2]-p[0]);
         s = Vec2i(s[0]*w, s[1]*h);
-        cout << "resize " << s << endl;
         if (!stereo && !active_stereo) renderingL->resize(s);
         else {
             s[0] *= 0.5;
-            s = Vec2i(1200,800);
             renderingL->resize(s);
             renderingR->resize(s);
         }
