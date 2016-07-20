@@ -1,17 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Setup>
   <Displays>
-    <Window active="1" type="2" width="1183" height="780" name="screen" mouse="mouse" keyboard="keyboard">
-      <View stereo="1" active_stereo="0" projection="0" eye_inverted="1" eye_separation="0.06" position="0 0 1 1" center="0 0 -1" normal="0 0 1" user_pos="0 0 0" up="0 1 0" size="2 1" shear="0 0" warp="0 0" user=""/>
+    <Window active="1" type="2" width="1333" height="780" name="screen" mouse="mouse" keyboard="keyboard">
+      <View stereo="0" active_stereo="0" projection="0" eye_inverted="1" eye_separation="0.06" position="0 0 1 1" center="0 0 -1" normal="0 0 1" user_pos="0 0 0" up="0 1 0" size="2 1" shear="0 0" warp="0 0" user=""/>
     </Window>
   </Displays>
   <Devices>
-    <Device base_name="flystick" name="flystick" name_space="__global__" name_suffix="0" persistency="666" type="flystick"/>
     <Device base_name="keyboard" name="keyboard" name_space="__global__" name_suffix="0" persistency="666" type="keyboard"/>
     <Device base_name="mobile" name="mobile" name_space="__global__" name_suffix="0" persistency="666" type="mobile"/>
     <Device base_name="mouse" name="mouse" name_space="__global__" name_suffix="0" persistency="666" type="mouse"/>
   </Devices>
-  <TrackingART active="1" offset="0 0 0" persistency="666" port="5000" up=""/>
+  <TrackingART active="0" offset="0 0 0" persistency="666" port="5000" up=""/>
   <TrackingVRPN active="1" persistency="666" port="3883"/>
   <Network base_name="Network" name_space="Manager" name_suffix="0" persistency="666"/>
 </Setup>

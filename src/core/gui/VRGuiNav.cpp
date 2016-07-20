@@ -122,7 +122,10 @@ void VRGuiNav_on_keybinding_edited(GtkCellRendererText *cell, gchar *path_string
     int i = toInt(path_string);
     auto scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
-    VRNavPreset* preset = scene->getNavigation(getComboboxText("combobox5"));
+
+    string pname = getComboboxText("combobox5");
+    VRNavPreset* preset = scene->getNavigation(pname);
+    if (!preset) { cout << "VRGuiNav_on_keybinding_edited preset not found: " << pname << endl; return; }
     preset->getBindings()[i].key = key;
     preset->updateBinding(preset->getBindings()[i]);
 }
