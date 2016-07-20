@@ -6,7 +6,7 @@
 #include <string>
 #include <cstdlib>
 
-#include <openvr.h>
+//#include <openvr.h>
 #include <OpenSG/OSGMatrix.h>
 
 /*
@@ -24,10 +24,10 @@ OSG_BEGIN_NAMESPACE;
 class Vive {
     private:
         bool ready = false;
-        vr::IVRSystem* HMD = 0;
+        /*vr::IVRSystem* HMD = 0;
         vr::TrackedDevicePose_t poses[ vr::k_unMaxTrackedDeviceCount ];
 
-        Matrix convMat( const vr::HmdMatrix34_t &m );
+        Matrix convMat( const vr::HmdMatrix34_t &m );*/
         void processEvent();
         void processController();
         void updatePoses();

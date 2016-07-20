@@ -5,7 +5,7 @@
 #include <string>
 #include <cstdlib>
 
-#include <openvr.h>
+//#include <openvr.h>
 
 using namespace OSG;
 using namespace std;
@@ -34,7 +34,7 @@ using namespace std;
 
 
 Vive::Vive() {
-	if (!vr::VR_IsHmdPresent()) return;
+	/*if (!vr::VR_IsHmdPresent()) return;
 
 	try {
         vr::EVRInitError err = vr::VRInitError_None;
@@ -44,7 +44,7 @@ Vive::Vive() {
 	} catch (exception e) {
         ready = false;
         cout << "Vive exception: " << e.what() << endl;
-    }
+    }*/
 }
 
 Vive::~Vive() {}
@@ -57,7 +57,7 @@ void Vive::update() {
 }
 
 void Vive::processEvent(){
-	vr::VREvent_t event;
+	/*vr::VREvent_t event;
 	while( HMD->PollNextEvent( &event, sizeof( event ) ) ) {
 		switch(event.eventType) {
 		case vr::VREvent_TrackedDeviceActivated:
@@ -74,38 +74,32 @@ void Vive::processEvent(){
             std::cout << "VREvent_TrackedDeviceUpdated for device" << event.trackedDeviceIndex << std::endl;
 			break;
 		}
-	}
+	}*/
 }
 
-Matrix Vive::convMat( const vr::HmdMatrix34_t &m ) {
-	/*return Matrix(
-		m.m[0][0], m.m[1][0], m.m[2][0], 0.0,
-		m.m[0][1], m.m[1][1], m.m[2][1], 0.0,
-		m.m[0][2], m.m[1][2], m.m[2][2], 0.0,
-		m.m[0][3], m.m[1][3], m.m[2][3], 1.0f
-		);*/
+/*Matrix Vive::convMat( const vr::HmdMatrix34_t &m ) {
     return Matrix(
 		m.m[0][0], m.m[0][1], m.m[0][2], m.m[0][3],
 		m.m[1][0], m.m[1][1], m.m[1][2], m.m[1][3],
 		m.m[2][0], m.m[2][1], m.m[2][2], m.m[2][3],
 		0, 0, 0, 1 );
-}
+}*/
 
 void Vive::processController(){
 		// Process SteamVR controller state
-	for( vr::TrackedDeviceIndex_t i = 0; i < vr::k_unMaxTrackedDeviceCount; i++ ) {
+	/*for( vr::TrackedDeviceIndex_t i = 0; i < vr::k_unMaxTrackedDeviceCount; i++ ) {
 		if(HMD->GetTrackedDeviceClass( i ) == vr::TrackedDeviceClass_Controller){
 			vr::VRControllerState_t state;
 			if( HMD->GetControllerState( i, &state ) )
 			{
 				//state.unPacketNum - save and compare in next call...if same, no changes to kontroller state, so ignore this...
 				//state.ulButtonPressed | state.ulButtonTouched - returns sum of button masks pressed
-				/*
-				 * 2 - Menu, both are set
-				 * 4 - side (squeeze), both state's set
-				 * 429... - Touchpad
-				 * 8589... - trigger
-				 */
+
+				// 2 - Menu, both are set
+				// 4 - side (squeeze), both state's set
+				// 429... - Touchpad
+				// 8589... - trigger
+
 				std::cout << "[" << state.rAxis[0].x << " | " << state.rAxis[0].y << "]  "; // joystick x/y axen
 				std::cout << "[" << state.rAxis[1].x << " | " << state.rAxis[1].y << "]  "; //trigger...bis ca .8 druck empfindlich, bei 1 trigger richtig gepresst
 				std::cout << "[" << state.rAxis[2].x << " | " << state.rAxis[2].y << "]  ";
@@ -115,12 +109,12 @@ void Vive::processController(){
 			}
 		}
 
-	}
+	}*/
 
 }
 
 void Vive::updatePoses() {
-	vr::VRCompositor()->WaitGetPoses(poses, vr::k_unMaxTrackedDeviceCount, NULL, 0 );
+	/*vr::VRCompositor()->WaitGetPoses(poses, vr::k_unMaxTrackedDeviceCount, NULL, 0 );
 
 	for ( int i = 0; i < vr::k_unMaxTrackedDeviceCount; ++i ) {
 		if ( poses[i].bPoseIsValid ) {
@@ -145,7 +139,7 @@ void Vive::updatePoses() {
 			}
 
 		}
-	}
+	}*/
 
 }
 
