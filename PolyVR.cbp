@@ -31,8 +31,8 @@
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="-Wall" />
 			<Add option="-std=c++11" />
+			<Add option="-Wall" />
 			<Add option="`pkg-config gtk+-2.0 --cflags`" />
 			<Add option="`pkg-config gmodule-2.0 --cflags`" />
 			<Add option="`pkg-config --cflags libxml++-2.6`" />
@@ -105,7 +105,7 @@
 			<Add directory="/usr/include/collada" />
 			<Add directory="/usr/include/STEPcode" />
 			<Add directory="/usr/include/vtk-5.10" />
-			<Add directory="/usr/local/lib/openvr" />
+			<Add directory="/usr/include/Vive" />
 		</Compiler>
 		<Linker>
 			<Add option="-lcef" />
@@ -230,7 +230,8 @@
 			<Add directory="/usr/include/CEF/include" />
 			<Add directory="/usr/lib/STEPcode" />
 			<Add directory="/usr/lib/1.4" />
-			<Add directory="/usr/local/lib/openvr" />
+			<Add directory="/usr/lib/Vive" />
+			<Add directory="/usr/lib/Steam" />
 		</Linker>
 		<ExtraCommands>
 			<Add after='/bin/bash -c &quot;cp -u -p ressources/cef/icudtl.dat bin/Debug/ 2&gt;/dev/null&quot;' />

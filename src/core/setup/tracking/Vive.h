@@ -9,6 +9,16 @@
 #include <openvr.h>
 #include <OpenSG/OSGMatrix.h>
 
+/*
+
+IMPORTANT: ..not compiling? you need to install the vive package!
+open a terminal
+cd ~/Project/polyvr/dependencies
+sudo git pull
+sudo gdebi -n ubuntu_16.04/libvive-dev.deb
+
+*/
+
 OSG_BEGIN_NAMESPACE;
 
 class Vive {
