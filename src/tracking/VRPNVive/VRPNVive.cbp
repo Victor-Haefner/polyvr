@@ -30,13 +30,18 @@
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
+			<Add option="-std=c++11" />
 			<Add directory="/usr/include/VRPN" />
+			<Add directory="/usr/include/Vive" />
 		</Compiler>
 		<Linker>
 			<Add option="-lvrpnserver" />
+			<Add option="-lopenvr_api" />
 			<Add option="-lpthread" />
 			<Add option="-lusb-1.0" />
 			<Add directory="/usr/lib/VRPN" />
+			<Add directory="/usr/lib/Vive" />
+			<Add directory="/usr/lib/Steam" />
 		</Linker>
 		<Unit filename="main.cc" />
 		<Extensions>
