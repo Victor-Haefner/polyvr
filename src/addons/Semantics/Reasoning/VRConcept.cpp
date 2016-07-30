@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+using namespace OSG;
+
 VRConcept::VRConcept(string name) {
     this->name = name;
 }

@@ -3,6 +3,9 @@
 #include "VROntologyRule.h"
 #include "core/scripting/VRPyTypeCaster.h"
 #include "core/scripting/VRPyBaseT.h"
+#include "core/scripting/VRPyBaseFactory.h"
+
+using namespace OSG;
 
 simpleVRPyType(Ontology, New_ptr);
 simpleVRPyType(Entity, New_named_ptr);
@@ -160,6 +163,8 @@ PyMethodDef VRPyOntology::methods[] = {
     {"addRule", (PyCFunction)VRPyOntology::addRule, METH_VARARGS, "Add a new rule - addRule( str rule )" },
     {"merge", (PyCFunction)VRPyOntology::merge, METH_VARARGS, "Merge in another ontology - merge( ontology )" },
     {"copy", (PyCFunction)VRPyOntology::copy, METH_NOARGS, "Copy the ontology - ontology copy()" },
+    //{"addModule", (PyCFunction)proxy<string, VRPyOntology, void (VROntology::*)(string), &VROntology::addModule>::set, METH_VARARGS, "Add module from library - addModule( str name )" },
+    {"addModule", PySetter(Ontology, addModule, string), "Add module from library - addModule( str name )" },
     {NULL}  /* Sentinel */
 };
 
@@ -221,6 +226,8 @@ PyObject* VRPyOntology::addConcept(VRPyOntology* self, PyObject* args) {
     if (name) sname = name;
     if (parent) sparent = parent;
     VRConceptPtr concept = self->objPtr->addConcept(sname, sparent);
+    if (!concept) return setErr("Failed to add concept " + sname + " to parent " + sparent);
+
     if (propDict) {
         PyObject* keys = PyDict_Keys((PyObject*)propDict);
         for (int i=0; i<PyList_Size(keys); i++) {

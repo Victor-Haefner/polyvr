@@ -5,6 +5,7 @@
 #include "addons/Semantics/VRSemanticsFwd.h"
 
 using namespace std;
+namespace OSG {
 
 struct VROntologyRule : public VRNamedID {
     string rule;
@@ -13,5 +14,7 @@ struct VROntologyRule : public VRNamedID {
     static VROntologyRulePtr create(string rule);
     string toString();
 };
+
+}
 
 #endif

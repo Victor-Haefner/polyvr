@@ -3,10 +3,13 @@
 #include "VRPyTypeCaster.h"
 #include "core/objects/object/VRObject.h"
 #include "core/objects/OSGObject.h"
-#include "addons/Semantics/Reasoning/VRPyOntology.h"
 #include "addons/Semantics/VRSemanticsFwd.h"
 
+#include "VRPyBaseFactory.h"
+
 #include <OpenSG/OSGNode.h>
+
+using namespace OSG;
 
 template<> PyTypeObject VRPyBaseT<OSG::VRObject>::type = {
     PyObject_HEAD_INIT(NULL)
@@ -50,50 +53,6 @@ template<> PyTypeObject VRPyBaseT<OSG::VRObject>::type = {
     New_VRObjects_ptr,                 /* tp_new */
 };
 
-template<typename T>
-bool parseValue(PyObject* args, T* t);
-
-template<> bool parseValue<float*>(PyObject* args, float** t) {
-    if (!PyArg_ParseTuple(args, "f", *t)) return false;
-    return true;
-}
-
-template<> bool parseValue<PyObject*>(PyObject* args, PyObject** t) {
-    if (!PyArg_ParseTuple(args, "O", *t)) return false;
-    return true;
-}
-
-template<> bool parseValue<VRPyEntity*>(PyObject* args, VRPyEntity** t) {
-    if (!PyArg_ParseTuple(args, "O", *t)) return false;
-    return true;
-}
-
-template<typename T>
-PyObject* toPyObject(T t);
-
-PyObject* toPyObject(VREntityPtr e) {
-    return VRPyEntity::fromSharedPtr(e);
-}
-
-template<typename pyT, typename T, T> struct proxy;
-template<typename pyT, typename T, typename R, typename ...Args, R (T::*mf)(Args...)>
-struct proxy<pyT, R (T::*)(Args...), mf> {
-    static PyObject* set(VRPyObject* self, PyObject* args) {
-        if (!self->valid()) return NULL;
-        pyT val;
-        if( !parseValue<pyT>(args, &val) ) return NULL;
-        OSG::VRObject* o = self->objPtr.get();
-        (o->*mf)(val->objPtr);
-        Py_RETURN_TRUE;
-    }
-
-    static PyObject* get(VRPyObject* self) {
-        if (!self->valid()) return NULL;
-        OSG::VRObject* o = self->objPtr.get();
-        return toPyObject( (o->*mf)() );
-    }
-};
-
 PyMethodDef VRPyObject::methods[] = {
     {"getName", (PyCFunction)VRPyObject::getName, METH_NOARGS, "Return the object name" },
     {"setName", (PyCFunction)VRPyObject::setName, METH_VARARGS, "Set the object name" },
@@ -128,8 +87,8 @@ PyMethodDef VRPyObject::methods[] = {
     {"getPersistency", (PyCFunction)VRPyObject::getPersistency, METH_NOARGS, "Get the persistency level - getPersistency()" },
     {"addLink", (PyCFunction)VRPyObject::addLink, METH_VARARGS, "Link subtree - addLink( object )" },
     {"remLink", (PyCFunction)VRPyObject::remLink, METH_VARARGS, "Unlink subtree - remLink( object )" },
-    {"setEntity", (PyCFunction)proxy<VRPyEntity*, void (OSG::VRObject::*)(VREntityPtr), &OSG::VRObject::setEntity>::set, METH_VARARGS, "Set entity - setEntity( Entity )" },
-    {"getEntity", (PyCFunction)proxy<void, VREntityPtr (OSG::VRObject::*)(), &OSG::VRObject::getEntity>::get, METH_NOARGS, "Get entity - Entity getEntity()" },
+    {"setEntity", PySetter(Object, setEntity, VREntityPtr), "Set entity - setEntity( Entity )" },
+    {"setEntity", PyGetter(Object, getEntity, VREntityPtr), "Get entity - Entity getEntity()" },
     {NULL}  /* Sentinel */
 };
 

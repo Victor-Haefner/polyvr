@@ -8,8 +8,10 @@
 
 #include <map>
 #include <vector>
+#include <OpenSG/OSGConfig.h>
 
 using namespace std;
+OSG_BEGIN_NAMESPACE;
 
 struct VRConcept : public std::enable_shared_from_this<VRConcept>, public VRNamedID {
     VRConceptWeakPtr parent;
@@ -38,5 +40,7 @@ struct VRConcept : public std::enable_shared_from_this<VRConcept>, public VRName
     bool is_a(string concept);
     string toString(string indent = "");
 };
+
+OSG_END_NAMESPACE;
 
 #endif

@@ -18,6 +18,8 @@ struct VRPyBase {
     PyObject_HEAD;
     static PyObject* err;
 
+    static PyObject* setErr(string e);
+
     static PyObject* parseObject(PyObject *args);
     template <typename T>
     static void parseObject(PyObject *args, T& t) {

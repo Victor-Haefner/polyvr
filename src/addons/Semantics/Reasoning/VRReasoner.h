@@ -12,6 +12,8 @@ using namespace std;
 
 #include "VROntology.h"
 
+OSG_BEGIN_NAMESPACE;
+
 struct VPath {
     string first;
     string root;
@@ -134,5 +136,6 @@ class VRReasoner {
         vector<Result> process(string query, VROntologyPtr onto);
 };
 
+OSG_END_NAMESPACE;
 
 #endif // VRREASONER_H_INCLUDED

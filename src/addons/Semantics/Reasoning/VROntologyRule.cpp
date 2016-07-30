@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+using namespace OSG;
+
 VROntologyRule::VROntologyRule(string rule) {
     this->name = "rule";
     this->rule = rule;

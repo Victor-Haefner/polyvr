@@ -11,6 +11,11 @@ PyObject* VRPyBase::parseObject(PyObject *args) {
     return o;
 }
 
+PyObject* VRPyBase::setErr(string e) {
+    PyErr_SetString(err, e.c_str());
+    return NULL;
+}
+
 vector<PyObject*> VRPyBase::pyListToVector(PyObject *v) {
     vector<PyObject*> res;
     if(isList(v))  for (int i=0; i<pySize(v); i++) res.push_back(PyList_GetItem(v, i));

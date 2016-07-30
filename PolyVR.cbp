@@ -717,6 +717,7 @@
 		<Unit filename="src/core/scripting/VRPyAnnotationEngine.h" />
 		<Unit filename="src/core/scripting/VRPyBase.cpp" />
 		<Unit filename="src/core/scripting/VRPyBase.h" />
+		<Unit filename="src/core/scripting/VRPyBaseFactory.h" />
 		<Unit filename="src/core/scripting/VRPyBaseT.h" />
 		<Unit filename="src/core/scripting/VRPyCamera.cpp" />
 		<Unit filename="src/core/scripting/VRPyCamera.h" />

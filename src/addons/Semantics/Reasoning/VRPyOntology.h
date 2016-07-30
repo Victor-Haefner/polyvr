@@ -5,7 +5,7 @@
 #include "VRReasoner.h"
 #include "core/scripting/VRPyBase.h"
 
-struct VRPyProperty : VRPyBaseT<VRProperty> {
+struct VRPyProperty : VRPyBaseT<OSG::VRProperty> {
     static PyMethodDef methods[];
     static PyObject* toString(VRPyProperty* self);
     static PyObject* getName(VRPyProperty* self);
@@ -13,7 +13,7 @@ struct VRPyProperty : VRPyBaseT<VRProperty> {
     static PyObject* getValue(VRPyProperty* self);
 };
 
-struct VRPyConcept : VRPyBaseT<VRConcept> {
+struct VRPyConcept : VRPyBaseT<OSG::VRConcept> {
     static PyMethodDef methods[];
     static PyObject* toString(VRPyConcept* self);
     static PyObject* getName(VRPyConcept* self);
@@ -22,12 +22,12 @@ struct VRPyConcept : VRPyBaseT<VRConcept> {
     static PyObject* addProperty(VRPyConcept* self, PyObject* args);
 };
 
-struct VRPyOntologyRule : VRPyBaseT<VROntologyRule> {
+struct VRPyOntologyRule : VRPyBaseT<OSG::VROntologyRule> {
     static PyMethodDef methods[];
     static PyObject* toString(VRPyOntologyRule* self);
 };
 
-struct VRPyEntity : VRPyBaseT<VREntity> {
+struct VRPyEntity : VRPyBaseT<OSG::VREntity> {
     static PyMethodDef methods[];
     static PyObject* toString(VRPyEntity* self);
     static PyObject* getName(VRPyEntity* self);
@@ -37,7 +37,7 @@ struct VRPyEntity : VRPyBaseT<VREntity> {
     static PyObject* add(VRPyEntity* self, PyObject* args);
 };
 
-struct VRPyOntology : VRPyBaseT<VROntology> {
+struct VRPyOntology : VRPyBaseT<OSG::VROntology> {
     static PyMethodDef methods[];
     static PyObject* open(VRPyOntology* self, PyObject* args);
     static PyObject* toString(VRPyOntology* self);
@@ -52,7 +52,7 @@ struct VRPyOntology : VRPyBaseT<VROntology> {
     static PyObject* copy(VRPyOntology* self);
 };
 
-struct VRPyReasoner : VRPyBaseT<VRReasoner> {
+struct VRPyReasoner : VRPyBaseT<OSG::VRReasoner> {
     static PyMethodDef methods[];
     static PyObject* process(VRPyReasoner* self, PyObject* args);
 };

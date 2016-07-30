@@ -3,8 +3,10 @@
 
 #include "VROntologyUtils.h"
 #include "addons/Semantics/VRSemanticsFwd.h"
+#include <OpenSG/OSGConfig.h>
 
 using namespace std;
+OSG_BEGIN_NAMESPACE;
 
 struct VRProperty : public VRNamedID {
     string type;
@@ -18,5 +20,7 @@ struct VRProperty : public VRNamedID {
 
     string toString();
 };
+
+OSG_END_NAMESPACE;
 
 #endif

@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+using namespace OSG;
+
 VRProperty::VRProperty(string name, string type) {
     this->name = name;
     this->type = type;

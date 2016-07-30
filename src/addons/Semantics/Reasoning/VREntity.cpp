@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+using namespace OSG;
+
 VREntity::VREntity(string name, VRConceptPtr c) {
     this->name = name;
     concept = c;

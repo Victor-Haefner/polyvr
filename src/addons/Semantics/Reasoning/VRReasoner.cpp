@@ -8,6 +8,7 @@
 #include "core/utils/toString.h"
 
 using namespace std;
+using namespace OSG;
 
 VRReasoner::VRReasoner() {;}
 

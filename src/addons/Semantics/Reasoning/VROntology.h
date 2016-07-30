@@ -11,6 +11,7 @@
 #include <memory>
 
 using namespace std;
+OSG_BEGIN_NAMESPACE;
 
 struct VROntology;
 typedef shared_ptr<VROntology> VROntologyPtr;
@@ -43,9 +44,10 @@ struct VROntology : public std::enable_shared_from_this<VROntology> {
     vector<VROntologyRulePtr> getRules();
 
     void open(string path);
+    void addModule(string mod);
     string toString();
 };
 
-
+OSG_END_NAMESPACE;
 
 #endif // VRONTOLOGY_H_INCLUDED

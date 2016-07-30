@@ -11,6 +11,8 @@
 #include <raptor2/raptor2.h> // http://librdf.org/raptor/api/
 #include <iostream>
 
+using namespace OSG;
+
 VROntology::VROntology() {
     thing = VRConcept::create("Thing");
     concepts["Thing"] = thing;
@@ -302,3 +304,9 @@ void VROntology::open(string path) {
 
     postProcessRDFSubjects(this, RDFSubjects);
 }
+
+void VROntology::addModule(string mod) {
+    cout << "add module " << mod << endl;
+}
+
+

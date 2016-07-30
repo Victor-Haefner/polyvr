@@ -5,6 +5,7 @@
 #include "VRConcept.h"
 
 using namespace std;
+OSG_BEGIN_NAMESPACE;
 
 struct VREntity : public VRNamedID {
     VRConceptPtr concept = 0;
@@ -22,5 +23,7 @@ struct VREntity : public VRNamedID {
 
     vector<string> getAtPath(vector<string> path);
 };
+
+OSG_END_NAMESPACE;
 
 #endif
