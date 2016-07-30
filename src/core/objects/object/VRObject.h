@@ -5,6 +5,7 @@
 #include "core/utils/VRUndoInterface.h"
 #include "core/objects/VRObjectFwd.h"
 #include "core/math/VRMathFwd.h"
+#include "addons/Semantics/VRSemanticsFwd.h"
 
 class VRAttachment;
 
@@ -42,6 +43,7 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         bool visible = true;
         unsigned int graphChanged = 0; //is frame number
         map<string, VRAttachment*> attachments;
+        VREntityPtr entity;
 
         int findChild(VRObjectPtr node);
         void updateChildrenIndices(bool recursive = false);
@@ -120,6 +122,9 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
 
         VRObjectPtr findPickableAncestor();
         bool hasAncestor(VRObjectPtr a);
+
+        void setEntity(VREntityPtr e);
+        VREntityPtr getEntity();
 
         boundingboxPtr getBoundingBox();
 

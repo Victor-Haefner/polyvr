@@ -12,6 +12,7 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRUndoInterfaceT.h"
+#include "addons/Semantics/Reasoning/VREntity.h"
 #include <libxml++/nodes/element.h>
 
 OSG_BEGIN_NAMESPACE;
@@ -556,5 +557,9 @@ void VRObject::unitTest() {
     cout << "  Ok" << flush;
     cout << "\nEnd Unit Test\n";
 }
+
+
+void VRObject::setEntity(VREntityPtr e) { entity = e; }
+VREntityPtr VRObject::getEntity() { return entity; }
 
 OSG_END_NAMESPACE
