@@ -55,10 +55,15 @@ void VROntology::addConcept(VRConceptPtr c) {
     if (!c->parent.lock()) thing->append(c);
 }
 
-void VROntology::merge(VROntologyPtr o) {
-    for (auto c : o->thing->children) thing->append(c.second);
+void VROntology::merge(VROntologyPtr o) { // Todo: check it well!
     for (auto c : o->rules) rules[c.first] = c.second;
-    for (auto c : o->concepts) concepts[c.first] = c.second;
+    for (auto c : o->thing->children) {
+        auto cn = c.second->copy();
+        thing->append(cn);
+        vector<VRConceptPtr> cpts;
+        cn->getDescendance(cpts);
+        for (auto c : cpts) concepts[c->name] = c;
+    }
 }
 
 VROntologyPtr VROntology::copy() {
@@ -306,7 +311,8 @@ void VROntology::open(string path) {
 }
 
 void VROntology::addModule(string mod) {
-    cout << "add module " << mod << endl;
+    if (!library.count(mod)) { cout << "Ontology " << mod << " not found in library " << endl; return; }
+    merge(library[mod]);
 }
 
 

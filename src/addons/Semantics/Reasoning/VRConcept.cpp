@@ -13,6 +13,14 @@ VRConceptPtr VRConcept::create(string name) {
     return VRConceptPtr(new VRConcept(name));
 }
 
+VRConceptPtr VRConcept::copy() {
+    auto c = VRConcept::create(name);
+    for (auto p : properties) c->addProperty(p.second);
+    for (auto a : annotations) c->addAnnotation(a.second);
+    for (auto i : children) c->append(i.second->copy());
+    return c;
+}
+
 void VRConcept::append(VRConceptPtr c) { children[c->ID] = c; c->parent = shared_from_this(); }
 void VRConcept::addProperty(VRPropertyPtr p) { properties[p->ID] = p; }
 void VRConcept::addAnnotation(VRPropertyPtr p) { annotations[p->ID] = p; }
@@ -69,6 +77,11 @@ vector<VRPropertyPtr> VRConcept::getProperties() {
 int VRConcept::getPropertyID(string name) {
     for (auto p : getProperties()) if (p->name == name) return p->ID;
     return -1;
+}
+
+void VRConcept::getDescendance(vector<VRConceptPtr>& concepts) {
+    concepts.push_back( shared_from_this() );
+    for (auto c : children) c.second->getDescendance(concepts);
 }
 
 bool VRConcept::is_a(string concept) {

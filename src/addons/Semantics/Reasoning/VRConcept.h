@@ -23,6 +23,7 @@ struct VRConcept : public std::enable_shared_from_this<VRConcept>, public VRName
     VRConcept(string name);
     static VRConceptPtr create(string name);
 
+    VRConceptPtr copy();
     VRConceptPtr append(string name);
     void append(VRConceptPtr c);
 
@@ -36,6 +37,8 @@ struct VRConcept : public std::enable_shared_from_this<VRConcept>, public VRName
     VRPropertyPtr getProperty(int ID);
     vector<VRPropertyPtr> getProperties();
     void getProperties(map<string, VRPropertyPtr>& res);
+
+    void getDescendance(vector<VRConceptPtr>& concepts);
 
     bool is_a(string concept);
     string toString(string indent = "");

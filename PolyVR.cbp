@@ -436,6 +436,8 @@
 		<Unit filename="src/addons/Semantics/Reasoning/VREntity.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROntology.cpp" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROntology.h" />
+		<Unit filename="src/addons/Semantics/Reasoning/VROntologyLibrary.cpp" />
+		<Unit filename="src/addons/Semantics/Reasoning/VROntologyLibrary.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROntologyRule.cpp" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROntologyRule.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROntologyUtils.cpp" />
@@ -717,6 +719,7 @@
 		<Unit filename="src/core/scripting/VRPyAnnotationEngine.h" />
 		<Unit filename="src/core/scripting/VRPyBase.cpp" />
 		<Unit filename="src/core/scripting/VRPyBase.h" />
+		<Unit filename="src/core/scripting/VRPyBaseFactory.cpp" />
 		<Unit filename="src/core/scripting/VRPyBaseFactory.h" />
 		<Unit filename="src/core/scripting/VRPyBaseT.h" />
 		<Unit filename="src/core/scripting/VRPyCamera.cpp" />

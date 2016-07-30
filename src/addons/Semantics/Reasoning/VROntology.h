@@ -4,6 +4,7 @@
 #include "VRConcept.h"
 #include "VROntologyRule.h"
 #include "VREntity.h"
+#include "../VRSemanticsFwd.h"
 
 #include <string>
 #include <map>
@@ -13,10 +14,10 @@
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
-struct VROntology;
-typedef shared_ptr<VROntology> VROntologyPtr;
-
 struct VROntology : public std::enable_shared_from_this<VROntology> {
+    static map<string, VROntologyPtr> library;
+    static void setupLibrary();
+
     VRConceptPtr thing = 0;
     map<int, VREntityPtr> instances;
     map<string, VRConceptWeakPtr> concepts;

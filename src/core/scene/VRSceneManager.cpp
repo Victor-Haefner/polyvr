@@ -13,6 +13,7 @@
 #include "core/utils/VRTimer.h"
 #include "core/gui/VRGuiSignals.h"
 #include "core/gui/VRGuiFile.h"
+#include "addons/Semantics/Reasoning/VROntology.h"
 #include <OpenSG/OSGSceneFileHandler.h>
 #include <gtkmm/main.h>
 #include <GL/glut.h>
@@ -29,6 +30,8 @@ VRSceneManager::VRSceneManager() {
 
     on_scene_load = VRSignal::create();
     on_scene_close = VRSignal::create();
+
+    VROntology::setupLibrary();
 }
 
 VRSceneManager::~VRSceneManager() {}

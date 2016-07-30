@@ -24,7 +24,10 @@
 	VR.knowledge.addConcept('Furniture', 'Object', {'':''})
 	VR.knowledge.addConcept('Chair', 'Furniture')
 	VR.knowledge.addConcept('Table', 'Furniture')
+	
+	print VR.knowledge.toString()
 </core>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
     </Script>
   </Scripts>
   <Sockets persistency="666"/>
