@@ -15,13 +15,14 @@ OSG_BEGIN_NAMESPACE;
 
 struct VRConcept : public std::enable_shared_from_this<VRConcept>, public VRNamedID {
     VRConceptWeakPtr parent;
+    VROntologyWeakPtr ontology;
     map<int, VRConceptPtr> children;
     map<int, VRPropertyPtr> properties;
     map<int, VRPropertyPtr> annotations;
     vector<VROntologyRule*> rules;
 
-    VRConcept(string name);
-    static VRConceptPtr create(string name);
+    VRConcept(string name, VROntologyPtr o);
+    static VRConceptPtr create(string name, VROntologyPtr o);
 
     VRConceptPtr copy();
     VRConceptPtr append(string name);

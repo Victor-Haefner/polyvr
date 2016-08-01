@@ -1430,6 +1430,16 @@ cave allocated</property>
       <column type="gchararray"/>
     </columns>
   </object>
+  <object class="GtkListStore" id="properties">
+    <columns>
+      <!-- column-name name -->
+      <column type="gchararray"/>
+      <!-- column-name value -->
+      <column type="gchararray"/>
+      <!-- column-name type -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
   <object class="GtkTextBuffer" id="pydoc"/>
   <object class="GtkRadioButton" id="radiobutton8">
     <property name="label" translatable="yes">radiobutton</property>
@@ -1451,6 +1461,8 @@ cave allocated</property>
       <column type="gchararray"/>
       <!-- column-name background -->
       <column type="gchararray"/>
+      <!-- column-name doFrame -->
+      <column type="gint"/>
     </columns>
   </object>
   <object class="GtkListStore" id="script_list">
@@ -1878,6 +1890,12 @@ cave allocated</property>
                                 <child>
                                   <placeholder/>
                                 </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
                               </object>
                             </child>
                           </object>
@@ -1909,6 +1927,12 @@ cave allocated</property>
                                 <property name="can_focus">False</property>
                                 <property name="n_columns">2</property>
                                 <property name="homogeneous">True</property>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
                                 <child>
                                   <placeholder/>
                                 </child>
@@ -4867,6 +4891,9 @@ cave allocated</property>
                         <property name="n_rows">18</property>
                         <property name="n_columns">5</property>
                         <child>
+                          <placeholder/>
+                        </child>
+                        <child>
                           <object class="GtkLabel" id="label87">
                             <property name="visible">True</property>
                             <property name="can_focus">False</property>
@@ -5444,9 +5471,6 @@ cave allocated</property>
                           </packing>
                         </child>
                         <child>
-                          <placeholder/>
-                        </child>
-                        <child>
                           <object class="GtkCheckButton" id="checkbutton_6">
                             <property name="label" translatable="yes">HMD distortion</property>
                             <property name="visible">True</property>
@@ -5522,7 +5546,8 @@ cave allocated</property>
                                           <attributes>
                                             <attribute name="background">4</attribute>
                                             <attribute name="foreground">3</attribute>
-                                            <attribute name="text">0</attribute>
+                                            <attribute name="markup">0</attribute>
+                                            <attribute name="underline">5</attribute>
                                           </attributes>
                                         </child>
                                       </object>
@@ -5550,7 +5575,7 @@ cave allocated</property>
                                       <object class="GtkTable" id="table11">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
-                                        <property name="n_rows">21</property>
+                                        <property name="n_rows">23</property>
                                         <child>
                                           <object class="GtkHBox" id="hbox5">
                                             <property name="visible">True</property>
@@ -7978,6 +8003,124 @@ to add distances</property>
                                           <packing>
                                             <property name="top_attach">14</property>
                                             <property name="bottom_attach">15</property>
+                                            <property name="y_options">GTK_FILL</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkExpander" id="expander27">
+                                            <property name="visible">True</property>
+                                            <property name="can_focus">True</property>
+                                            <child>
+                                              <object class="GtkTable" id="table38">
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">False</property>
+                                                <property name="n_rows">2</property>
+                                                <property name="n_columns">3</property>
+                                                <child>
+                                                  <object class="GtkLabel" id="label141">
+                                                    <property name="visible">True</property>
+                                                    <property name="can_focus">False</property>
+                                                    <property name="label" translatable="yes">Concept:</property>
+                                                  </object>
+                                                  <packing>
+                                                    <property name="x_options">GTK_FILL</property>
+                                                  </packing>
+                                                </child>
+                                                <child>
+                                                  <object class="GtkFixed" id="fixed62">
+                                                    <property name="visible">True</property>
+                                                    <property name="can_focus">False</property>
+                                                  </object>
+                                                  <packing>
+                                                    <property name="left_attach">2</property>
+                                                    <property name="right_attach">3</property>
+                                                    <property name="bottom_attach">2</property>
+                                                  </packing>
+                                                </child>
+                                                <child>
+                                                  <object class="GtkLabel" id="label145">
+                                                    <property name="visible">True</property>
+                                                    <property name="can_focus">False</property>
+                                                    <property name="label" translatable="yes">NONE</property>
+                                                  </object>
+                                                  <packing>
+                                                    <property name="left_attach">1</property>
+                                                    <property name="right_attach">2</property>
+                                                  </packing>
+                                                </child>
+                                                <child>
+                                                  <object class="GtkTreeView" id="treeview11">
+                                                    <property name="visible">True</property>
+                                                    <property name="can_focus">True</property>
+                                                    <property name="model">properties</property>
+                                                    <property name="headers_clickable">False</property>
+                                                    <property name="search_column">0</property>
+                                                    <child>
+                                                      <object class="GtkTreeViewColumn" id="treeviewcolumn34">
+                                                        <property name="title" translatable="yes">property</property>
+                                                        <child>
+                                                          <object class="GtkCellRendererText" id="cellrenderertoggle2"/>
+                                                          <attributes>
+                                                            <attribute name="text">0</attribute>
+                                                          </attributes>
+                                                        </child>
+                                                      </object>
+                                                    </child>
+                                                    <child>
+                                                      <object class="GtkTreeViewColumn" id="treeviewcolumn35">
+                                                        <property name="title" translatable="yes">value</property>
+                                                        <child>
+                                                          <object class="GtkCellRendererText" id="cellrenderertext49"/>
+                                                          <attributes>
+                                                            <attribute name="text">1</attribute>
+                                                          </attributes>
+                                                        </child>
+                                                      </object>
+                                                    </child>
+                                                    <child>
+                                                      <object class="GtkTreeViewColumn" id="treeviewcolumn36">
+                                                        <property name="title" translatable="yes">type</property>
+                                                        <child>
+                                                          <object class="GtkCellRendererText" id="cellrenderertext50">
+                                                            <property name="editable">True</property>
+                                                          </object>
+                                                          <attributes>
+                                                            <attribute name="text">2</attribute>
+                                                          </attributes>
+                                                        </child>
+                                                      </object>
+                                                    </child>
+                                                  </object>
+                                                  <packing>
+                                                    <property name="right_attach">2</property>
+                                                    <property name="top_attach">1</property>
+                                                    <property name="bottom_attach">2</property>
+                                                  </packing>
+                                                </child>
+                                              </object>
+                                            </child>
+                                            <child type="label">
+                                              <object class="GtkLabel" id="label142">
+                                                <property name="visible">True</property>
+                                                <property name="can_focus">False</property>
+                                                <property name="label" translatable="yes">Entity</property>
+                                              </object>
+                                            </child>
+                                          </object>
+                                          <packing>
+                                            <property name="top_attach">22</property>
+                                            <property name="bottom_attach">23</property>
+                                            <property name="y_options">GTK_FILL</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkHSeparator" id="hseparator17">
+                                            <property name="visible">True</property>
+                                            <property name="can_focus">False</property>
+                                          </object>
+                                          <packing>
+                                            <property name="top_attach">21</property>
+                                            <property name="bottom_attach">22</property>
                                             <property name="y_options">GTK_FILL</property>
                                           </packing>
                                         </child>

@@ -27,6 +27,9 @@
 #include "core/scene/VRScene.h"
 #include "core/scene/import/VRImport.h"
 #include "core/utils/toString.h"
+#include "addons/Semantics/Reasoning/VREntity.h"
+#include "addons/Semantics/Reasoning/VRConcept.h"
+#include "addons/Semantics/Reasoning/VRProperty.h"
 #include "VRGuiUtils.h"
 #include "VRGuiSignals.h"
 #include "VRGuiFile.h"
@@ -261,11 +264,28 @@ void setLod(VRLodPtr lod) {
 
     vector<float> dists = lod->getDistances();
     for(uint i=0; i< dists.size(); i++) {
-        cout << "   " << i << dists[i] << endl;
         Gtk::ListStore::Row row = *store->append();
         gtk_list_store_set (store->gobj(), row.gobj(), 0, i, -1);
         gtk_list_store_set (store->gobj(), row.gobj(), 1, dists[i], -1);
         gtk_list_store_set (store->gobj(), row.gobj(), 2, true, -1);
+    }
+}
+
+void setEntity(VREntityPtr e) {
+    setExpanderSensitivity("expander27", true);
+
+    setLabel("label145", e->concept->name);
+
+    Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("properties"));
+    store->clear();
+
+    for(auto pvec : e->properties) {
+        for (auto p : pvec.second) {
+            Gtk::ListStore::Row row = *store->append();
+            gtk_list_store_set (store->gobj(), row.gobj(), 0, pvec.first.c_str(), -1);
+            gtk_list_store_set (store->gobj(), row.gobj(), 1, p->value.c_str(), -1);
+            gtk_list_store_set (store->gobj(), row.gobj(), 2, p->type.c_str(), -1);
+        }
     }
 }
 
@@ -291,6 +311,7 @@ void updateObjectForms(bool disable = false) {
     setExpanderSensitivity("expander14", false);
     setExpanderSensitivity("expander15", false);
     setExpanderSensitivity("expander16", false);
+    setExpanderSensitivity("expander27", false);
     if (disable) return;
 
     VRObjectPtr obj = getSelected();
@@ -310,6 +331,9 @@ void updateObjectForms(bool disable = false) {
     if (type == "Camera") setCamera(static_pointer_cast<VRCamera>(obj));
     if (type == "Group") setGroup(static_pointer_cast<VRGroup>(obj));
     if (type == "Lod") setLod(static_pointer_cast<VRLod>(obj));
+
+    auto entity = obj->getEntity();
+    if (entity) setEntity(entity);
 
     //if (type == "CSGGeometry") setCSG((CSGGeometryPtr)obj);
 
@@ -362,12 +386,18 @@ void setSGRow(Gtk::TreeModel::iterator itr, VRObjectPtr o) {
     string fg, bg;
     getTypeColors(o, fg, bg);
 
+    auto e = o->getEntity();
+
+    string name = o->getName();
+    if (e) name += "<sub><u><span foreground=\"blue\">" + e->concept->name + "</span></u></sub>";
+
     Gtk::TreeStore::Row row = *itr;
-    gtk_tree_store_set (tree_store->gobj(), row.gobj(), 0, o->getName().c_str(), -1);
+    gtk_tree_store_set (tree_store->gobj(), row.gobj(), 0, name.c_str(), -1);
     gtk_tree_store_set (tree_store->gobj(), row.gobj(), 1, o->getType().c_str(), -1);
     gtk_tree_store_set (tree_store->gobj(), row.gobj(), 2, o->getPath().c_str(), -1);
     gtk_tree_store_set (tree_store->gobj(), row.gobj(), 3, fg.c_str(), -1);
     gtk_tree_store_set (tree_store->gobj(), row.gobj(), 4, bg.c_str(), -1);
+    gtk_tree_store_set (tree_store->gobj(), row.gobj(), 5, e?0:0, -1);
 }
 
 void parseSGTree(VRObjectPtr o, Gtk::TreeModel::iterator itr) {

@@ -35,6 +35,7 @@ struct VRPyEntity : VRPyBaseT<OSG::VREntity> {
     static PyObject* getProperties(VRPyEntity* self, PyObject* args);
     static PyObject* set(VRPyEntity* self, PyObject* args);
     static PyObject* add(VRPyEntity* self, PyObject* args);
+    static PyObject* setVector(VRPyEntity* self, PyObject* args);
 };
 
 struct VRPyOntology : VRPyBaseT<OSG::VROntology> {

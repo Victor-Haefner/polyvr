@@ -1,5 +1,6 @@
 #include "VREntity.h"
 #include "VRProperty.h"
+#include "VROntology.h"
 
 #include <iostream>
 
@@ -31,6 +32,12 @@ void VREntity::add(string name, string value) {
     prop = prop->copy();
     prop->value = value;
     properties[name].push_back( prop );
+}
+
+void VREntity::setVector(string name, vector<string> v, string type) {
+    string v_name = this->name+"_"+name;
+    set(name, v_name);
+    concept->ontology.lock()->addVectorInstance(v_name, type, v);
 }
 
 vector<VRPropertyPtr> VREntity::getProperties(string name) {

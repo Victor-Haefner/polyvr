@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="2" persistency="666" pickable="0" type="Object" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1" type="Light" visible="1">
-        <Object accept_root="1" aspect="1" at="0 0 2" at_dir="1" base_name="Default" far="512" fov="1.0472" from="0 0 3" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0 0 2" at_dir="1" base_name="Default" far="512" fov="1.0472" from="0 0 4.14496" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" up="0 1 0" visible="1">
             <Node active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
           </Object>
@@ -14,10 +14,32 @@
   </Objects>
   <Rendering deferred_rendering="0" frustum_culling="1" hmdd="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
+    <Script name_suffix="0" base_name="classify" name_space="__script__" type="Python" mobile="">
+      <core>
+	import VR
+	
+	for o in scene.getChildren(True):
+		n = o.getName()
+		if ':' in n:
+			[concept, name] = n.split(':')
+			print concept, name
+			e = onto.addEntity(name, concept)
+			o.setEntity(e)
+			
+			e.setVector('orientation', [1,0,0,0], 'Orientation')
+			e.setVector('position', o.getFrom(), 'Position')
+			
+			
+	print onto.toString()
+</core>
+      <arg type="NoneType" value="None" name_suffix="0" base_name="onto" name_space="classify"/>
+      <arg type="NoneType" value="None" name_suffix="0" base_name="scene" name_space="classify"/>
+    </Script>
     <Script name_suffix="0" base_name="init" name_space="__script__" type="Python" mobile="">
       <core>
 	import VR
 	
+	# build simple knowledge base
 	VR.knowledge = VR.Ontology() # create a new ontology for the furniture domain
 	VR.knowledge.addModule('Object') # add the Object module, will automatically add modules like transform, geometry and math
 	
@@ -25,9 +47,31 @@
 	VR.knowledge.addConcept('Chair', 'Furniture')
 	VR.knowledge.addConcept('Table', 'Furniture')
 	
-	print VR.knowledge.toString()
+	#print VR.knowledge.toString()
+	
+	# build simple scene
+	if hasattr(VR, 'scene'): VR.scene.destroy()
+	VR.scene = VR.Object('scene')
+	VR.getRoot().find('light').addChild(VR.scene)
+	
+	table = VR.Geometry('Table:t1')
+	chair = VR.Geometry('Chair:c1')
+	table.setPrimitive('Box 1 1 1 1 1 1')
+	chair.setPrimitive('Box 0.5 0.5 0.5 1 1 1')
+	table.translate(0,0.5,0)
+	chair.translate(-1,0.25,0)
+	VR.scene.addChild(table)
+	VR.scene.addChild(chair)
+	
+	# classify scene objects as semantic entities
+	#  currently the data used for the classification 
+	#  is only the object name when matching the convention:
+	#  'Concept:name' as seen above.
+	#VR.scene.classify(VR.knowledge, True)
+	VR.classify(VR.knowledge, VR.scene)
 </core>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
+      <trig type="on_device" dev="keyboard" state="Pressed" param="" key="105" name_suffix="1" base_name="trigger" name_space="__global__"/>
     </Script>
   </Scripts>
   <Sockets persistency="666"/>

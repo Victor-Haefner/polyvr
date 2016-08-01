@@ -4,14 +4,15 @@
 #include "core/scripting/VRPyTypeCaster.h"
 #include "core/scripting/VRPyBaseT.h"
 #include "core/scripting/VRPyBaseFactory.h"
+#include "core/utils/toString.h"
 
 using namespace OSG;
 
 simpleVRPyType(Ontology, New_ptr);
-simpleVRPyType(Entity, New_named_ptr);
-simpleVRPyType(Concept, New_named_ptr);
-simpleVRPyType(Property, New_named_ptr);
-simpleVRPyType(OntologyRule, New_named_ptr);
+simpleVRPyType(Entity, 0);
+simpleVRPyType(Concept, 0);
+simpleVRPyType(Property, 0);
+simpleVRPyType(OntologyRule, 0);
 simpleVRPyType(Reasoner, New_ptr);
 
 // --------------------- Property --------------------
@@ -103,6 +104,7 @@ PyMethodDef VRPyEntity::methods[] = {
     {"getProperties", (PyCFunction)VRPyEntity::getProperties, METH_VARARGS, "Return all properties or the properties of a certain type - [property] getProperties( str )" },
     {"set", (PyCFunction)VRPyEntity::set, METH_VARARGS, "Set a property - set( str prop, str value )" },
     {"add", (PyCFunction)VRPyEntity::add, METH_VARARGS, "Add a property - add( str prop, str value )" },
+    {"setVector", (PyCFunction)VRPyEntity::setVector, METH_VARARGS, "Set a vector property - set( str prop, str value [x,y,z], str vector concept )" },
     {NULL}  /* Sentinel */
 };
 
@@ -123,6 +125,25 @@ PyObject* VRPyEntity::set(VRPyEntity* self, PyObject* args) {
     string pname; if (prop) pname = prop;
     string pval; if (val) pval = val;
     self->objPtr->set( pname, pval );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyEntity::setVector(VRPyEntity* self, PyObject* args) {
+    const char* prop = 0;
+    const char* vectype = "Vector";
+    PyObject* val = 0;
+    if (! PyArg_ParseTuple(args, "sO|s:setVector", (char*)&prop, (char*)&val, (char*)&vectype)) return NULL;
+
+    auto o_vals = pyListToVector(val);
+    vector<string> vals;
+    for (auto v : o_vals) {
+        string s = ::toString( PyFloat_AsDouble(v) );
+        vals.push_back(s);
+    }
+
+    string pname; if (prop) pname = prop;
+    string pvt; if (vectype) pvt = vectype;
+    self->objPtr->setVector( pname, vals, pvt );
     Py_RETURN_TRUE;
 }
 

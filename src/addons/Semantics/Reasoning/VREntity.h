@@ -16,6 +16,7 @@ struct VREntity : public VRNamedID {
     void setConcept(VRConceptPtr c);
 
     void set(string name, string value);
+    void setVector(string name, vector<string> value, string type);
     void add(string name, string value);
     string toString();
 

@@ -13,12 +13,14 @@
 
 using namespace OSG;
 
-VROntology::VROntology() {
-    thing = VRConcept::create("Thing");
-    concepts["Thing"] = thing;
-}
+VROntology::VROntology() {}
 
-VROntologyPtr VROntology::create() { return VROntologyPtr( new VROntology() ); }
+VROntologyPtr VROntology::create() {
+    auto o = VROntologyPtr( new VROntology() );
+    o->thing = VRConcept::create("Thing", o);
+    o->concepts["Thing"] = o->thing;
+    return o;
+}
 
 VRConceptPtr VROntology::getConcept(string name) {
     if (concepts.count(name) == 0) { cout << "Warning: concept " << name << " not found!" << endl; return 0; }
@@ -62,7 +64,10 @@ void VROntology::merge(VROntologyPtr o) { // Todo: check it well!
         thing->append(cn);
         vector<VRConceptPtr> cpts;
         cn->getDescendance(cpts);
-        for (auto c : cpts) concepts[c->name] = c;
+        for (auto c : cpts) {
+            concepts[c->name] = c;
+            c->ontology = shared_from_this();
+        }
     }
 }
 
@@ -85,10 +90,19 @@ VROntologyRulePtr VROntology::addRule(string rule) {
 }
 
 VREntityPtr VROntology::addVectorInstance(string name, string concept, string x, string y, string z) {
+    vector<string> v;
+    v.push_back(x); v.push_back(y); v.push_back(z);
+    return addVectorInstance(name, concept, v);
+}
+
+VREntityPtr VROntology::addVectorInstance(string name, string concept, vector<string> val) {
     auto i = addInstance(name, concept);
-    i->set("x", x);
-    i->set("y", y);
-    i->set("z", z);
+    int N = val.size();
+    if (0 < N) i->set("x", val[0]);
+    if (1 < N) i->set("y", val[1]);
+    if (2 < N) i->set("z", val[2]);
+    if (3 < N) i->set("w", val[3]);
+    cout << "addVectorInstance " << name << " " << concept << endl;
     return i;
 }
 
@@ -178,7 +192,7 @@ void print_triple(void* data, raptor_statement* rs) {
     RDFSubjects->objects[s.subject][s.object] = s.predicate;
 }
 
-void postProcessRDFSubjects(VROntology* onto, RDFdata& data) {
+void postProcessRDFSubjects(VROntologyPtr onto, RDFdata& data) {
     map<string, VRConceptPtr> concepts;
     map<string, VREntityPtr> entities;
     map<string, VRPropertyPtr> datproperties;
@@ -212,7 +226,7 @@ void postProcessRDFSubjects(VROntology* onto, RDFdata& data) {
 
                 if (predicate == "type") {
                     if (object == "Ontology") continue;
-                    if (object == "Class") { concepts[subject] = VRConcept::create(subject); continue; }
+                    if (object == "Class") { concepts[subject] = VRConcept::create(subject, onto); continue; }
                     if (object == "NamedIndividual") { entities[subject] = VREntity::create(subject); continue; }
                     if (object == "DatatypeProperty") { datproperties[subject] = VRProperty::create(subject); continue; }
                     if (object == "ObjectProperty") { objproperties[subject] = VRProperty::create(subject); continue; }
@@ -307,7 +321,7 @@ void VROntology::open(string path) {
     raptor_free_memory(uri_string);
     raptor_free_world(world);
 
-    postProcessRDFSubjects(this, RDFSubjects);
+    postProcessRDFSubjects(shared_from_this(), RDFSubjects);
 }
 
 void VROntology::addModule(string mod) {

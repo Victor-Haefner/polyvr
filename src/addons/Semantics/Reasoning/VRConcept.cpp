@@ -5,16 +5,17 @@
 
 using namespace OSG;
 
-VRConcept::VRConcept(string name) {
+VRConcept::VRConcept(string name, VROntologyPtr o) {
     this->name = name;
+    this->ontology = o;
 }
 
-VRConceptPtr VRConcept::create(string name) {
-    return VRConceptPtr(new VRConcept(name));
+VRConceptPtr VRConcept::create(string name, VROntologyPtr o) {
+    return VRConceptPtr(new VRConcept(name, o));
 }
 
 VRConceptPtr VRConcept::copy() {
-    auto c = VRConcept::create(name);
+    auto c = VRConcept::create(name, ontology.lock());
     for (auto p : properties) c->addProperty(p.second);
     for (auto a : annotations) c->addAnnotation(a.second);
     for (auto i : children) c->append(i.second->copy());
@@ -26,7 +27,7 @@ void VRConcept::addProperty(VRPropertyPtr p) { properties[p->ID] = p; }
 void VRConcept::addAnnotation(VRPropertyPtr p) { annotations[p->ID] = p; }
 
 VRConceptPtr VRConcept::append(string name) {
-    auto c = VRConcept::create(name);
+    auto c = VRConcept::create(name, ontology.lock());
     append(c);
     return c;
 }
