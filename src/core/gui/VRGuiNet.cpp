@@ -13,6 +13,8 @@
 #include <gtkmm/cellrenderercombo.h>
 #include "core/scene/VRScene.h"
 
+//* DEPRECATED!! *//
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 

@@ -498,6 +498,8 @@
 		<Unit filename="src/core/gui/VRGuiScene.h" />
 		<Unit filename="src/core/gui/VRGuiScripts.cpp" />
 		<Unit filename="src/core/gui/VRGuiScripts.h" />
+		<Unit filename="src/core/gui/VRGuiSemantics.cpp" />
+		<Unit filename="src/core/gui/VRGuiSemantics.h" />
 		<Unit filename="src/core/gui/VRGuiSetup.cpp" />
 		<Unit filename="src/core/gui/VRGuiSetup.h" />
 		<Unit filename="src/core/gui/VRGuiSignals.cpp" />

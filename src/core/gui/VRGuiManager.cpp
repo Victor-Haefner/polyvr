@@ -9,9 +9,9 @@
 #include "VRGuiSignals.h"
 #include "VRGuiScripts.h"
 #include "VRGuiSetup.h"
-#include "VRGuiNet.h"
 #include "VRGuiGeneral.h"
 #include "VRGuiMonitor.h"
+#include "VRGuiSemantics.h"
 #include "core/utils/VROptions.h"
 #include "core/setup/devices/VRDevice.h"
 #include "core/setup/devices/VRSignalT.h"
@@ -32,7 +32,7 @@ VRDemos* g_demos;
 VRGuiNav* g_nav;
 VRGuiScripts* g_sc;
 VRGuiSetup* g_di;
-VRGuiNet* g_net;
+VRGuiSemantics* g_sem;
 VRGuiGeneral* g_gen;
 VRGuiMonitor* g_mon;
 Gtk::Main* GtkMain;
@@ -40,7 +40,7 @@ Gtk::Main* GtkMain;
 VRGuiManager::VRGuiManager() {
     standalone = VROptions::get()->getOption<bool>("standalone");
 
-    int argc   = 0;
+    int argc = 0;
     GtkMain = new Gtk::Main(&argc, NULL, false);
     gtk_gl_init(&argc, NULL);
     VRGuiBuilder(standalone);
@@ -65,8 +65,8 @@ VRGuiManager::VRGuiManager() {
     g_bits = new VRGuiBits();
     g_nav = new VRGuiNav();
     g_sc = new VRGuiScripts();
+    g_sem = new VRGuiSemantics();
     g_di = new VRGuiSetup();
-    g_net = new VRGuiNet();
     g_gen = new VRGuiGeneral();
     g_mon = new VRGuiMonitor();
     g_scene->updateTreeView();
@@ -87,11 +87,11 @@ VRGuiManager::VRGuiManager() {
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
     guiSignalCbs.push_back(fkt);
 
-    fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateScripts", boost::bind(&VRGuiScripts::updateList, g_sc) );
+    fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateSem", boost::bind(&VRGuiSemantics::update, g_sem) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
     guiSignalCbs.push_back(fkt);
 
-    fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateProtocols", boost::bind(&VRGuiNet::updateList, g_net) );
+    fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateScripts", boost::bind(&VRGuiScripts::updateList, g_sc) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
     guiSignalCbs.push_back(fkt);
 
@@ -113,9 +113,9 @@ VRGuiManager::~VRGuiManager() {
     delete g_bits;
     delete g_demos;
     delete g_nav;
+    delete g_sem;
     delete g_sc;
     delete g_di;
-    delete g_net;
 }
 
 VRGuiManager* VRGuiManager::get() {
