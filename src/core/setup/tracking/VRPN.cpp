@@ -57,7 +57,10 @@ void VRPN_CALLBACK handle_button(void* data, const vrpn_BUTTONCB button ) {
 
 void VRPN_CALLBACK handle_analog(void* data, const vrpn_ANALOGCB analog ) {
     VRPN_device* dev = (VRPN_device*)data;
-    for (int i=0; i<analog.num_channel; i++) dev->change_slider(i+20, analog.channel[i]);
+    for (int i=0; i<analog.num_channel; i++) {
+        dev->change_slider(i+100, analog.channel[i]);
+        cout << "handle_analog " << i << " " << analog.channel[i] << endl;
+    }
 }
 
 VRPN_device::VRPN_device() : VRDevice("vrpn_device") {
@@ -208,26 +211,20 @@ using namespace std;
 /////////////////////// TRACKER /////////////////////////////
 
 // your tracker class must inherit from the vrpn_Tracker class
-class myTracker : public vrpn_Tracker
-{
-public:
-    myTracker( vrpn_Connection *c = 0 );
-    virtual ~myTracker() {};
+class myTracker : public vrpn_Tracker {
+    public:
+        myTracker( vrpn_Connection *c = 0 );
+        virtual ~myTracker() {};
 
-    virtual void mainloop();
+        virtual void mainloop();
 
-protected:
-    struct timeval _timestamp;
+    protected:
+        struct timeval _timestamp;
 };
 
-myTracker::myTracker( vrpn_Connection *c /*= 0 */ ) :
-    vrpn_Tracker( "Tracker0", c )
-{
-}
+myTracker::myTracker( vrpn_Connection *c /*= 0 */ ) : vrpn_Tracker( "Tracker0", c ) {}
 
-void
-myTracker::mainloop()
-{
+void myTracker::mainloop() {
     vrpn_gettimeofday(&_timestamp, NULL);
 
     vrpn_Tracker::timestamp = _timestamp;
@@ -266,22 +263,19 @@ myTracker::mainloop()
 /////////////////////// ANALOG /////////////////////////////
 
 // your analog class must inherin from the vrpn_Analog class
-class myAnalog : public vrpn_Analog
-{
-public:
-    myAnalog( vrpn_Connection *c = 0 );
-    virtual ~myAnalog() {};
+class myAnalog : public vrpn_Analog {
+    public:
+        myAnalog( vrpn_Connection *c = 0 );
+        virtual ~myAnalog() {};
 
-    virtual void mainloop();
+        virtual void mainloop();
 
-protected:
-    struct timeval _timestamp;
+    protected:
+        struct timeval _timestamp;
 };
 
 
-myAnalog::myAnalog( vrpn_Connection *c /*= 0 */ ) :
-    vrpn_Analog( "Analog0", c )
-{
+myAnalog::myAnalog( vrpn_Connection *c /*= 0 */ ) : vrpn_Analog( "Analog0", c ) {
     vrpn_Analog::num_channel = 10;
 
     vrpn_uint32    i;
