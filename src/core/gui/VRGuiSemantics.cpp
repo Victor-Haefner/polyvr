@@ -14,6 +14,7 @@
 #include <gtkmm/builder.h>
 #include <gtkmm/fixed.h>
 #include <gtkmm/expander.h>
+#include <gtkmm/targetentry.h>
 #include "core/scene/VRScene.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -65,6 +66,10 @@ void VRGuiSemantics::clearCanvas() {
     canvas->show_all();
 }
 
+void VRGuiSemantics_on_drag_data_get(const Glib::RefPtr<Gdk::DragContext>& context, Gtk::SelectionData& data, unsigned int info, unsigned int time, Gtk::Expander* e) {
+    data.set("concept", 0, (const guint8*)&e, sizeof(void*));
+}
+
 void VRGuiSemantics::drawConcept(VRConceptPtr concept, int x, int y) {
     VRGuiSemantics_PropsColumns cols;
     auto liststore = Gtk::ListStore::create(cols);
@@ -80,6 +85,12 @@ void VRGuiSemantics::drawConcept(VRConceptPtr concept, int x, int y) {
     auto e = Gtk::manage( new Gtk::Expander( concept->name ) );
     e->add(*treeview);
     canvas->put(*e, x, y);
+
+    // dnd
+    vector<Gtk::TargetEntry> entries;
+    entries.push_back(Gtk::TargetEntry("concept", Gtk::TARGET_SAME_APP));
+    e->drag_source_set(entries, Gdk::BUTTON1_MASK, Gdk::ACTION_MOVE);
+    e->signal_drag_data_get().connect( sigc::bind<Gtk::Expander*>( sigc::ptr_fun(VRGuiSemantics_on_drag_data_get), e ) );
 }
 
 void VRGuiSemantics::drawCanvas(string name) {
@@ -134,6 +145,11 @@ void VRGuiSemantics_on_notebook_switched(GtkNotebook* notebook, GtkNotebookPage*
     //if (pageN == 4) update();
 }
 
+void VRGuiSemantics_on_drag_data_received(const Glib::RefPtr<Gdk::DragContext>& context, int x, int y, const Gtk::SelectionData& data, guint info, guint time, Gtk::Fixed* canvas) {
+    Gtk::Expander* e = *(Gtk::Expander**)data.get_data();
+    if (data.get_target() != "concept") { cout << "VRGuiSemantics_on_drag_data_received, wrong dnd: " << data.get_target() << endl; return; }
+    canvas->move(*e, x, y);
+}
 
 VRGuiSemantics::VRGuiSemantics() {
     VRGuiBuilder()->get_widget("onto_visu", canvas);
@@ -143,6 +159,12 @@ VRGuiSemantics::VRGuiSemantics() {
     setCellRendererCallback("cellrenderertext51", VRGuiSemantics_on_name_edited);
     setNoteBookCallback("notebook3", VRGuiSemantics_on_notebook_switched);
     setToolButtonSensitivity("toolbutton15", false);
+
+    // dnd
+    vector<Gtk::TargetEntry> entries;
+    entries.push_back(Gtk::TargetEntry("concept", Gtk::TARGET_SAME_APP));
+    canvas->drag_dest_set(entries, Gtk::DEST_DEFAULT_ALL, Gdk::ACTION_MOVE);
+    canvas->signal_drag_data_received().connect( sigc::bind<Gtk::Fixed*>( sigc::ptr_fun(VRGuiSemantics_on_drag_data_received), canvas ) );
 }
 
 void VRGuiSemantics::update() {
