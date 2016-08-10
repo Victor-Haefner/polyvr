@@ -236,6 +236,8 @@
 		</ExtraCommands>
 		<Unit filename="src/PolyVR.cpp" />
 		<Unit filename="src/PolyVR.h" />
+		<Unit filename="src/addons/Algorithms/VRGraphLayout.cpp" />
+		<Unit filename="src/addons/Algorithms/VRGraphLayout.h" />
 		<Unit filename="src/addons/Bullet/CarDynamics/CarDynamics.cpp" />
 		<Unit filename="src/addons/Bullet/CarDynamics/CarDynamics.h" />
 		<Unit filename="src/addons/Bullet/CarDynamics/VRPyCarDynamics.cpp" />
