@@ -18,6 +18,7 @@
 #include <gtkmm/frame.h>
 #include <gtkmm/expander.h>
 #include <gtkmm/targetentry.h>
+#include <gtkmm/separator.h>
 #include "core/scene/VRScene.h"
 
 /** TODO:
@@ -60,9 +61,12 @@ class VRGuiSemantics_ModelColumns : public Gtk::TreeModelColumnRecord {
 
 class VRGuiSemantics_PropsColumns : public Gtk::TreeModelColumnRecord {
     public:
-        VRGuiSemantics_PropsColumns() { add(name); add(type); }
+        VRGuiSemantics_PropsColumns() { add(name); add(type); add(prop); add(ptype); add(flag); }
         Gtk::TreeModelColumn<Glib::ustring> name;
         Gtk::TreeModelColumn<Glib::ustring> type;
+        Gtk::TreeModelColumn<Glib::ustring> prop;
+        Gtk::TreeModelColumn<Glib::ustring> ptype;
+        Gtk::TreeModelColumn<int> flag;
 };
 
 void VRGuiSemantics_on_drag_data_get(const Glib::RefPtr<Gdk::DragContext>& context, Gtk::SelectionData& data, unsigned int info, unsigned int time, Gtk::Widget* e) {
@@ -77,13 +81,19 @@ VRGuiSemantics::ConceptWidget::ConceptWidget(VRConceptPtr concept) {
     auto liststore = Gtk::ListStore::create(cols);
     treeview = Gtk::manage( new Gtk::TreeView() );
     treeview->set_model(liststore);
-    treeview->append_column(" Properties:", cols.name);
-    treeview->append_column("", cols.type);
+
+    auto addMarkupColumn = [&](string title, Gtk::TreeModelColumn<Glib::ustring>& col) {
+        Gtk::CellRendererText* renderer = Gtk::manage(new Gtk::CellRendererText());
+        Gtk::TreeViewColumn* column = Gtk::manage(new Gtk::TreeViewColumn(title, *renderer));
+        column->add_attribute(renderer->property_markup(), col);
+        treeview->append_column(*column);
+    };
+
+    addMarkupColumn(" Properties:", cols.name);
+    addMarkupColumn("", cols.type);
 
     for (auto p : concept->properties) {
-        Gtk::ListStore::Row row = *liststore->append();
-        gtk_list_store_set (liststore->gobj(), row.gobj(), 0, p.second->name.c_str(), -1);
-        gtk_list_store_set (liststore->gobj(), row.gobj(), 1, p.second->type.c_str(), -1);
+        setPropRow(liststore->append(), p.second->name, p.second->type, "black", 0);
     }
 
     auto e = Gtk::manage( new Gtk::Expander( concept->name ) );
@@ -103,6 +113,20 @@ VRGuiSemantics::ConceptWidget::ConceptWidget(VRConceptPtr concept) {
     e->signal_drag_data_get().connect( sigc::bind<Gtk::Widget*>( sigc::ptr_fun(VRGuiSemantics_on_drag_data_get), f ) );
 }
 
+void VRGuiSemantics::ConceptWidget::setPropRow(Gtk::TreeModel::iterator iter, string name, string type, string color, int flag) {
+    string cname = "<span color=\""+color+"\">" + name + "</span>";
+    string ctype = "<span color=\""+color+"\">" + type + "</span>";
+
+    Gtk::ListStore::Row row = *iter;
+    Glib::RefPtr<Gtk::ListStore> liststore = Glib::RefPtr<Gtk::ListStore>::cast_dynamic( treeview->get_model() );
+
+    gtk_list_store_set(liststore->gobj(), row.gobj(), 0, cname.c_str(), -1);
+    gtk_list_store_set(liststore->gobj(), row.gobj(), 1, ctype.c_str(), -1);
+    gtk_list_store_set(liststore->gobj(), row.gobj(), 2, name.c_str(), -1);
+    gtk_list_store_set(liststore->gobj(), row.gobj(), 3, type.c_str(), -1);
+    gtk_list_store_set(liststore->gobj(), row.gobj(), 4, flag, -1);
+}
+
 void VRGuiSemantics::ConceptWidget::on_select() {
 
 }
@@ -116,23 +140,50 @@ void VRGuiSemantics::ConceptWidget::on_select_property() {
     // get selection
     VRGuiSemantics_PropsColumns cols;
     Gtk::TreeModel::Row row = *iter;
-    string name = row.get_value(cols.name);
-    string type = row.get_value(cols.type);
+    string name = row.get_value(cols.prop);
+    string type = row.get_value(cols.ptype);
+    int flag = row.get_value(cols.flag);
 
-    // reset all rows to black
-    liststore->clear();
-    for (auto p : concept->properties) {
-        Gtk::ListStore::Row row = *liststore->append();
-        gtk_list_store_set (liststore->gobj(), row.gobj(), 0, p.second->name.c_str(), -1);
-        gtk_list_store_set (liststore->gobj(), row.gobj(), 1, p.second->type.c_str(), -1);
+    // clear selection
+    treeview->get_selection()->unselect_all();
+
+    if (flag != 0) {
+        setPropRow(iter, name, type, "black", 0);
+        return;
     }
 
-    // highlight row in green
-    name = "<span color=green>" + name + "</span>";
-    type = "<span color=green>" + type + "</span>";
+    // reset all rows to black
+    Gtk::TreeModel::iterator selected;
+    liststore->clear();
+    for (auto p : concept->properties) {
+        Gtk::TreeModel::iterator i = liststore->append();
+        setPropRow(i, p.second->name, p.second->type, "black", 0);
+        if (p.second->name == name) selected = i;
+    }
+    if (!selected) return;
 
-    gtk_list_store_set (liststore->gobj(), row.gobj(), 0, name.c_str(), -1);
-    gtk_list_store_set (liststore->gobj(), row.gobj(), 1, type.c_str(), -1);
+    // highlight row in green
+    setPropRow(selected, name, type, "green", 1);
+}
+
+VRGuiSemantics::ConnectorWidget::ConnectorWidget(Gtk::Fixed* canvas) {
+    s1 = Gtk::manage( new Gtk::HSeparator() );
+    s2 = Gtk::manage( new Gtk::VSeparator() );
+    s3 = Gtk::manage( new Gtk::HSeparator() );
+    this->canvas = canvas;
+    canvas->put(*s1, 0, 0);
+    canvas->put(*s2, 0, 0);
+    canvas->put(*s3, 0, 0);
+}
+
+void VRGuiSemantics::ConnectorWidget::set(int x1, int y1, int x2, int y2) {
+    int w = abs(x2-x1); int h = abs(y2-y1);
+    s1->set_size_request(w*0.5, 2);
+    s2->set_size_request(2, h);
+    s3->set_size_request(w*0.5, 2);
+    canvas->move(*s1, x1, y1);
+    canvas->move(*s2, x1+w*0.5, y1);
+    canvas->move(*s3, x1+w*0.5, y2);
 }
 
 void VRGuiSemantics::on_new_clicked() {
@@ -172,15 +223,27 @@ void VRGuiSemantics::drawCanvas(string name) {
     auto onto = VROntology::library[name];
 
     int i = 0;
-    function<void(VRConceptPtr,int)> travConcepts = [&](VRConceptPtr c, int lvl) {
-        auto cw = ConceptWidget(c);
+    concepts.clear();
+    function<void(VRConceptPtr,int,int,int)> travConcepts = [&](VRConceptPtr c, int lvl, int xp, int yp) {
+        auto cw = ConceptWidgetPtr( new ConceptWidget(c) );
         concepts[c->name] = cw;
-        canvas->put(*cw.widget, 10+lvl*30, 10+25*i);
+
+        int x = 10+lvl*30;
+        int y = 10+25*i;
+
+        canvas->put(*cw->widget, x, y);
+
+        if (lvl > 0) {
+            auto co = ConnectorWidgetPtr( new ConnectorWidget(canvas) );
+            co->set(xp, yp, x, y);
+            connectors[c->name] = co;
+        }
+
         i++;
-        for (auto ci : c->children) travConcepts(ci.second, lvl+1);
+        for (auto ci : c->children) travConcepts(ci.second, lvl+1, x, y);
     };
 
-    travConcepts(onto->thing, 0);
+    travConcepts(onto->thing, 0, 0, 0);
     canvas->show_all();
 }
 
