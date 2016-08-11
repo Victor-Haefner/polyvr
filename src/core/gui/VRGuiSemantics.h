@@ -23,7 +23,7 @@ using namespace std;
 class VRGuiSemantics {
     public:
         struct ConceptWidget {
-            int x, y;
+            float x, y;
 
             Gtk::Widget* widget;
             Gtk::Label* label;
@@ -36,7 +36,7 @@ class VRGuiSemantics {
             void on_select();
             void on_select_property();
 
-            void move(int x, int y);
+            void move(float x, float y);
             void setPropRow(Gtk::TreeModel::iterator iter, string name, string type, string color, int flag);
         };
 
@@ -48,7 +48,7 @@ class VRGuiSemantics {
 
             ConnectorWidget(Gtk::Fixed* canvas = 0);
 
-            void set(int x1, int y1, int x2, int y2);
+            void set(float x1, float y1, float x2, float y2);
         };
 
         typedef shared_ptr<ConceptWidget> ConceptWidgetPtr;

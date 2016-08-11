@@ -134,7 +134,7 @@ void VRGuiSemantics::ConceptWidget::on_select() {
 
 }
 
-void VRGuiSemantics::ConceptWidget::move(int x, int y) {
+void VRGuiSemantics::ConceptWidget::move(float x, float y) {
     this->x = x; this->y = y;
     canvas->move(*widget, x, y);
 }
@@ -184,8 +184,8 @@ VRGuiSemantics::ConnectorWidget::ConnectorWidget(Gtk::Fixed* canvas) {
     canvas->put(*s3, 0, 0);
 }
 
-void VRGuiSemantics::ConnectorWidget::set(int x1, int y1, int x2, int y2) {
-    int w = abs(x2-x1); int h = abs(y2-y1);
+void VRGuiSemantics::ConnectorWidget::set(float x1, float y1, float x2, float y2) {
+    float w = abs(x2-x1); float h = abs(y2-y1);
     s1->set_size_request(w*0.5, 2);
     s2->set_size_request(2, h);
     s3->set_size_request(w*0.5, 2);
