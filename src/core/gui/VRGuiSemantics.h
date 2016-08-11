@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGConfig.h>
 #include "core/scene/VRSceneManager.h"
+#include "core/utils/VRFunctionFwd.h"
 #include "addons/Semantics/VRSemanticsFwd.h"
 #include "VRGuiSignals.h"
 
@@ -20,18 +21,22 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRGuiSemantics {
-    private:
+    public:
         struct ConceptWidget {
+            int x, y;
+
             Gtk::Widget* widget;
             Gtk::Label* label;
             Gtk::TreeView* treeview;
             VRConceptPtr concept;
+            Gtk::Fixed* canvas = 0;
 
-            ConceptWidget(VRConceptPtr concept = 0);
+            ConceptWidget(Gtk::Fixed* canvas = 0, VRConceptPtr concept = 0);
 
             void on_select();
             void on_select_property();
 
+            void move(int x, int y);
             void setPropRow(Gtk::TreeModel::iterator iter, string name, string type, string color, int flag);
         };
 
@@ -49,9 +54,12 @@ class VRGuiSemantics {
         typedef shared_ptr<ConceptWidget> ConceptWidgetPtr;
         typedef shared_ptr<ConnectorWidget> ConnectorWidgetPtr;
 
+    private:
         Gtk::Fixed* canvas = 0;
         map<string, ConceptWidgetPtr> concepts;
         map<string, ConnectorWidgetPtr> connectors;
+
+        VRUpdatePtr updateLayoutCb;
 
         void on_new_clicked();
         void on_del_clicked();
@@ -61,6 +69,7 @@ class VRGuiSemantics {
 
         void clearCanvas();
         void drawCanvas(string name);
+        void updateLayout();
 
     public:
         VRGuiSemantics();

@@ -5,21 +5,31 @@
 
 using namespace std;
 
+template<class T>
 class graph {
     public:
-        class node;
-        class edge;
+        struct edge {
+            int from;
+            int to;
+
+            edge(int i, int j);
+        };
 
     private:
-        vector<node> nodes;
-        vector<edge> edges;
+        vector<T> nodes;
+        vector<vector<edge>> edges;
 
     public:
         graph();
         ~graph();
 
         int addNode();
-        int connect(int i, int j);
+        int addNode(T t);
+        void connect(int i, int j);
+
+        vector<T>& getNodes();
+        vector<vector<edge>>& getEdges();
+        T& getNode(int i);
 };
 
 #endif // GRAPH_H_INCLUDED

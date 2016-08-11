@@ -19,15 +19,16 @@
 #include <gtkmm/expander.h>
 #include <gtkmm/targetentry.h>
 #include <gtkmm/separator.h>
+#include <boost/bind.hpp>
 #include "core/scene/VRScene.h"
+#include "addons/Algorithms/VRGraphLayout.h"
 
 /** TODO:
 
-- add core/utils/VRGraphLayout
+- VRGraphLayout
     - 3D bounding boxes and connectors
     - 3D layout algorithms
 
-- add an auto layout button for the concept visualisation
 - add new concept button, extrude from existing concepts
 - add concept renaming
 - add new property button
@@ -69,12 +70,13 @@ class VRGuiSemantics_PropsColumns : public Gtk::TreeModelColumnRecord {
         Gtk::TreeModelColumn<int> flag;
 };
 
-void VRGuiSemantics_on_drag_data_get(const Glib::RefPtr<Gdk::DragContext>& context, Gtk::SelectionData& data, unsigned int info, unsigned int time, Gtk::Widget* e) {
+void VRGuiSemantics_on_drag_data_get(const Glib::RefPtr<Gdk::DragContext>& context, Gtk::SelectionData& data, unsigned int info, unsigned int time, VRGuiSemantics::ConceptWidget* e) {
     data.set("concept", 0, (const guint8*)&e, sizeof(void*));
 }
 
-VRGuiSemantics::ConceptWidget::ConceptWidget(VRConceptPtr concept) {
+VRGuiSemantics::ConceptWidget::ConceptWidget(Gtk::Fixed* canvas, VRConceptPtr concept) {
     this->concept = concept;
+    this->canvas = canvas;
 
     // widget elements
     VRGuiSemantics_PropsColumns cols;
@@ -102,6 +104,7 @@ VRGuiSemantics::ConceptWidget::ConceptWidget(VRConceptPtr concept) {
     auto f = Gtk::manage( new Gtk::Frame() );
     f->add(*e);
     widget = f;
+    canvas->put(*f, 0, 0);
 
     // signals
     treeview->signal_cursor_changed().connect( sigc::mem_fun(*this, &VRGuiSemantics::ConceptWidget::on_select_property) );
@@ -110,7 +113,7 @@ VRGuiSemantics::ConceptWidget::ConceptWidget(VRConceptPtr concept) {
     vector<Gtk::TargetEntry> entries;
     entries.push_back(Gtk::TargetEntry("concept", Gtk::TARGET_SAME_APP));
     e->drag_source_set(entries, Gdk::BUTTON1_MASK, Gdk::ACTION_MOVE);
-    e->signal_drag_data_get().connect( sigc::bind<Gtk::Widget*>( sigc::ptr_fun(VRGuiSemantics_on_drag_data_get), f ) );
+    e->signal_drag_data_get().connect( sigc::bind<ConceptWidget*>( sigc::ptr_fun(VRGuiSemantics_on_drag_data_get), this ) );
 }
 
 void VRGuiSemantics::ConceptWidget::setPropRow(Gtk::TreeModel::iterator iter, string name, string type, string color, int flag) {
@@ -129,6 +132,11 @@ void VRGuiSemantics::ConceptWidget::setPropRow(Gtk::TreeModel::iterator iter, st
 
 void VRGuiSemantics::ConceptWidget::on_select() {
 
+}
+
+void VRGuiSemantics::ConceptWidget::move(int x, int y) {
+    this->x = x; this->y = y;
+    canvas->move(*widget, x, y);
 }
 
 void VRGuiSemantics::ConceptWidget::on_select_property() {
@@ -187,6 +195,9 @@ void VRGuiSemantics::ConnectorWidget::set(int x1, int y1, int x2, int y2) {
 }
 
 void VRGuiSemantics::on_new_clicked() {
+    updateLayout();
+    return;
+
     auto scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
     update();
@@ -219,31 +230,63 @@ void VRGuiSemantics::clearCanvas() {
     canvas->show_all();
 }
 
+void VRGuiSemantics::updateLayout() {
+    VRGraphLayout layout;
+    graph<Vec3f>& g = layout.getGraph();
+    layout.setGravity(Vec3f(0,1,0));
+    layout.setRadius(100);
+
+    map<string, int> conceptIDs;
+
+    for (auto c : concepts) {
+        Vec3f p = Vec3f(c.second->x, c.second->y, 0);
+        conceptIDs[c.first] = g.addNode(p);
+        if (c.first == "Thing") layout.fixNode(conceptIDs[c.first]);
+    }
+
+    for (auto c : concepts) {
+        for (auto c2 : c.second->concept->children) {
+            g.connect(conceptIDs[c.first],conceptIDs[c2.second->name]);
+        }
+    }
+
+    layout.compute(1, 0.002);
+
+    int i = 0;
+    for (auto c : concepts) {
+        Vec3f& p = g.getNodes()[i];
+        c.second->move(p[0], p[1]);
+        i++;
+    }
+
+    canvas->show_all();
+}
+
 void VRGuiSemantics::drawCanvas(string name) {
     auto onto = VROntology::library[name];
 
     int i = 0;
     concepts.clear();
-    function<void(VRConceptPtr,int,int,int)> travConcepts = [&](VRConceptPtr c, int lvl, int xp, int yp) {
-        auto cw = ConceptWidgetPtr( new ConceptWidget(c) );
+    function<void(VRConceptPtr,int,int,int,int)> travConcepts = [&](VRConceptPtr c, int cID, int lvl, int xp, int yp) {
+        auto cw = ConceptWidgetPtr( new ConceptWidget(canvas, c) );
         concepts[c->name] = cw;
 
-        int x = 10+lvl*30;
-        int y = 10+25*i;
-
-        canvas->put(*cw->widget, x, y);
+        int x = 10+cID*60;
+        int y = 10+40*lvl;
+        cw->move(x,y);
 
         if (lvl > 0) {
             auto co = ConnectorWidgetPtr( new ConnectorWidget(canvas) );
-            co->set(xp, yp, x, y);
             connectors[c->name] = co;
+            co->set(xp, yp, x, y);
         }
 
         i++;
-        for (auto ci : c->children) travConcepts(ci.second, lvl+1, x, y);
+        int child_i = 0;
+        for (auto ci : c->children) { travConcepts(ci.second, child_i, lvl+1, x, y); child_i++; }
     };
+    travConcepts(onto->thing, 0, 0, 0, 0);
 
-    travConcepts(onto->thing, 0, 0, 0);
     canvas->show_all();
 }
 
@@ -285,10 +328,10 @@ void VRGuiSemantics_on_notebook_switched(GtkNotebook* notebook, GtkNotebookPage*
     //if (pageN == 4) update();
 }
 
-void VRGuiSemantics_on_drag_data_received(const Glib::RefPtr<Gdk::DragContext>& context, int x, int y, const Gtk::SelectionData& data, guint info, guint time, Gtk::Fixed* canvas) {
-    Gtk::Widget* e = *(Gtk::Widget**)data.get_data();
+void VRGuiSemantics_on_drag_data_received(const Glib::RefPtr<Gdk::DragContext>& context, int x, int y, const Gtk::SelectionData& data, guint info, guint time, VRGuiSemantics* self) {
     if (data.get_target() != "concept") { cout << "VRGuiSemantics_on_drag_data_received, wrong dnd: " << data.get_target() << endl; return; }
-    canvas->move(*e, x, y);
+    VRGuiSemantics::ConceptWidget* e = *(VRGuiSemantics::ConceptWidget**)data.get_data();
+    e->move(x,y);
 }
 
 VRGuiSemantics::VRGuiSemantics() {
@@ -304,7 +347,12 @@ VRGuiSemantics::VRGuiSemantics() {
     vector<Gtk::TargetEntry> entries;
     entries.push_back(Gtk::TargetEntry("concept", Gtk::TARGET_SAME_APP));
     canvas->drag_dest_set(entries, Gtk::DEST_DEFAULT_ALL, Gdk::ACTION_MOVE);
-    canvas->signal_drag_data_received().connect( sigc::bind<Gtk::Fixed*>( sigc::ptr_fun(VRGuiSemantics_on_drag_data_received), canvas ) );
+    canvas->signal_drag_data_received().connect( sigc::bind<VRGuiSemantics*>( sigc::ptr_fun(VRGuiSemantics_on_drag_data_received), this ) );
+
+    // layout update cb
+    auto sm = VRSceneManager::get();
+    updateLayoutCb = VRFunction<int>::create("layout_update", boost::bind(&VRGuiSemantics::updateLayout, this));
+    sm->addUpdateFkt(updateLayoutCb);
 }
 
 void VRGuiSemantics::update() {
