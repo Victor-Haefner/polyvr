@@ -35,6 +35,9 @@ class VRGuiSemantics {
 
             void on_select();
             void on_select_property();
+            void on_rem_clicked();
+            void on_new_clicked();
+            bool on_expander_clicked(GdkEventButton* e);
 
             void move(float x, float y);
             void setPropRow(Gtk::TreeModel::iterator iter, string name, string type, string color, int flag);

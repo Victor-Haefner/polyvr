@@ -10,6 +10,7 @@
 #include <gtkmm/treeview.h>
 #include <gtkmm/treestore.h>
 #include <gtkmm/textbuffer.h>
+#include <gtkmm/toolbar.h>
 #include <gtkmm/toolbutton.h>
 #include <gtkmm/textview.h>
 #include <gtkmm/combobox.h>
@@ -19,6 +20,8 @@
 #include <gtkmm/expander.h>
 #include <gtkmm/targetentry.h>
 #include <gtkmm/separator.h>
+#include <gtkmm/stock.h>
+#include <gtkmm/box.h>
 #include <boost/bind.hpp>
 #include "core/scene/VRScene.h"
 #include "addons/Algorithms/VRGraphLayout.h"
@@ -53,6 +56,44 @@ IDEAS:
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+class ExpanderWithButtons : public Gtk::Expander {
+    private:
+        Gtk::Toolbar* toolbar = 0;
+        Gtk::Label* label = 0;
+
+    public:
+        ExpanderWithButtons(string name) {
+            label = Gtk::manage( new Gtk::Label( name ) );
+            toolbar = Gtk::manage( new Gtk::Toolbar() );
+            auto header = Gtk::manage( new Gtk::HBox() );
+
+            header->pack_start(*label, 1, 1, 0);
+            header->pack_start(*toolbar, 0, 0, 0);
+            set_label_widget(*header);
+            set_label_fill(true);
+            toolbar->set_icon_size(Gtk::ICON_SIZE_MENU);
+            toolbar->set_show_arrow(0);
+        }
+
+        void add_button(Gtk::ToolButton* b) { toolbar->add(*b); }
+        Gtk::Label* get_label() { return label; }
+
+        bool on_motion_notify_event(GdkEventMotion* e) {
+            cout << e->type << " " << e->window << endl;
+            return Gtk::Expander::on_motion_notify_event(e);
+        }
+
+        bool on_button_press_event(GdkEventButton* e) {
+            //cout << "EXPAND2 " << toolbar->on_button_press_event(e) << endl;
+            return Gtk::Expander::on_button_press_event(e);
+        }
+
+        bool on_button_release_event(GdkEventButton* e) {
+            //cout << "EXPAND3 " << toolbar->on_button_release_event(e);
+            return Gtk::Expander::on_button_release_event(e);
+        }
+};
+
 class VRGuiSemantics_ModelColumns : public Gtk::TreeModelColumnRecord {
     public:
         VRGuiSemantics_ModelColumns() { add(name); add(type); }
@@ -78,11 +119,12 @@ VRGuiSemantics::ConceptWidget::ConceptWidget(Gtk::Fixed* canvas, VRConceptPtr co
     this->concept = concept;
     this->canvas = canvas;
 
-    // widget elements
+    // properties treeview
     VRGuiSemantics_PropsColumns cols;
     auto liststore = Gtk::ListStore::create(cols);
     treeview = Gtk::manage( new Gtk::TreeView() );
     treeview->set_model(liststore);
+    treeview->set_headers_visible(false);
 
     auto addMarkupColumn = [&](string title, Gtk::TreeModelColumn<Glib::ustring>& col) {
         Gtk::CellRendererText* renderer = Gtk::manage(new Gtk::CellRendererText());
@@ -98,22 +140,31 @@ VRGuiSemantics::ConceptWidget::ConceptWidget(Gtk::Fixed* canvas, VRConceptPtr co
         setPropRow(liststore->append(), p.second->name, p.second->type, "black", 0);
     }
 
-    auto e = Gtk::manage( new Gtk::Expander( concept->name ) );
-    label = (Gtk::Label*)e->get_label_widget();
-    e->add(*treeview);
-    auto f = Gtk::manage( new Gtk::Frame() );
-    f->add(*e);
-    widget = f;
-    canvas->put(*f, 0, 0);
+    // buttons
+    auto rConcept = Gtk::manage( new Gtk::ToolButton(Gtk::Stock::DELETE) ); // Gtk::Stock::MEDIA_RECORD
+    auto nConcept = Gtk::manage( new Gtk::ToolButton(Gtk::Stock::NEW) );
+
+    // expander and frame
+    auto expander = Gtk::manage( new ExpanderWithButtons( concept->name ) );
+    label = expander->get_label();
+    expander->add(*treeview);
+    auto frame = Gtk::manage( new Gtk::Frame() );
+    frame->add(*expander);
+    widget = frame;
+    canvas->put(*frame, 0, 0);
 
     // signals
     treeview->signal_cursor_changed().connect( sigc::mem_fun(*this, &VRGuiSemantics::ConceptWidget::on_select_property) );
+    rConcept->signal_clicked().connect( sigc::mem_fun(*this, &VRGuiSemantics::ConceptWidget::on_rem_clicked) );
+    nConcept->signal_clicked().connect( sigc::mem_fun(*this, &VRGuiSemantics::ConceptWidget::on_new_clicked) );
+    expander->add_button(rConcept);
+    expander->add_button(nConcept);
 
     // dnd
     vector<Gtk::TargetEntry> entries;
     entries.push_back(Gtk::TargetEntry("concept", Gtk::TARGET_SAME_APP));
-    e->drag_source_set(entries, Gdk::BUTTON1_MASK, Gdk::ACTION_MOVE);
-    e->signal_drag_data_get().connect( sigc::bind<ConceptWidget*>( sigc::ptr_fun(VRGuiSemantics_on_drag_data_get), this ) );
+    expander->drag_source_set(entries, Gdk::BUTTON1_MASK, Gdk::ACTION_MOVE);
+    expander->signal_drag_data_get().connect( sigc::bind<ConceptWidget*>( sigc::ptr_fun(VRGuiSemantics_on_drag_data_get), this ) );
 }
 
 void VRGuiSemantics::ConceptWidget::setPropRow(Gtk::TreeModel::iterator iter, string name, string type, string color, int flag) {
@@ -128,6 +179,19 @@ void VRGuiSemantics::ConceptWidget::setPropRow(Gtk::TreeModel::iterator iter, st
     gtk_list_store_set(liststore->gobj(), row.gobj(), 2, name.c_str(), -1);
     gtk_list_store_set(liststore->gobj(), row.gobj(), 3, type.c_str(), -1);
     gtk_list_store_set(liststore->gobj(), row.gobj(), 4, flag, -1);
+}
+
+void VRGuiSemantics::ConceptWidget::on_rem_clicked() {
+    cout << "REMOVE\n";
+}
+
+void VRGuiSemantics::ConceptWidget::on_new_clicked() {
+    cout << "CREATE\n";
+}
+
+bool VRGuiSemantics::ConceptWidget::on_expander_clicked(GdkEventButton* e) {
+    cout << "EXPAND\n";
+    return true;
 }
 
 void VRGuiSemantics::ConceptWidget::on_select() {

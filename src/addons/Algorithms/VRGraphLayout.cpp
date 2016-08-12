@@ -19,13 +19,12 @@ void VRGraphLayout::applySprings(int N, float eps) {
                 Vec3f& n1 = g.getNodes()[e.from];
                 Vec3f& n2 = g.getNodes()[e.to];
                 Vec3f d = n2-n1;
-                float x = d.length() - radius; // displacement
-                //cout << "x " << d << " " << x << endl;
-                float D = x*eps;
-                Vec3f g;
-                g = gravity*D*0.1;
-                if (f2 != FIXED) n2 += -d*D + g;
-                else if (f1 != FIXED) n1 += d*D + g;
+                float x = (d.length() - radius)*eps; // displacement
+                if (abs(x) < eps) continue;
+                Vec3f g; // TODO: not yet working!
+                g = gravity*x*0.1;
+                if (f2 != FIXED) n2 += -d*x + g;
+                else if (f1 != FIXED) n1 += d*x + g;
             }
         }
     }
