@@ -87,7 +87,7 @@ VRGuiManager::VRGuiManager() {
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
     guiSignalCbs.push_back(fkt);
 
-    fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateSem", boost::bind(&VRGuiSemantics::update, g_sem) );
+    fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateSem", boost::bind(&VRGuiSemantics::updateOntoList, g_sem) );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );
     guiSignalCbs.push_back(fkt);
 

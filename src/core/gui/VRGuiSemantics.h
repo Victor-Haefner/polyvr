@@ -25,18 +25,24 @@ class VRGuiSemantics {
         struct ConceptWidget {
             float x, y;
 
-            Gtk::Widget* widget;
-            Gtk::Label* label;
-            Gtk::TreeView* treeview;
-            VRConceptPtr concept;
+            VRGuiSemantics* manager = 0;
             Gtk::Fixed* canvas = 0;
+            Gtk::Widget* widget = 0;
+            Gtk::Label* label = 0;
+            Gtk::TreeView* treeview = 0;
+            VRConceptPtr concept;
+            VRPropertyPtr selected_property;
 
-            ConceptWidget(Gtk::Fixed* canvas = 0, VRConceptPtr concept = 0);
+            ConceptWidget(VRGuiSemantics* m, Gtk::Fixed* canvas = 0, VRConceptPtr concept = 0);
+            void update();
 
             void on_select();
             void on_select_property();
             void on_rem_clicked();
+            void on_rem_prop_clicked();
             void on_new_clicked();
+            void on_edit_clicked();
+            void on_newp_clicked();
             bool on_expander_clicked(GdkEventButton* e);
 
             void move(float x, float y);
@@ -62,6 +68,7 @@ class VRGuiSemantics {
         map<string, ConceptWidgetPtr> concepts;
         map<string, ConnectorWidgetPtr> connectors;
 
+        VROntologyPtr current;
         VRUpdatePtr updateLayoutCb;
 
         void on_new_clicked();
@@ -71,13 +78,16 @@ class VRGuiSemantics {
         void on_property_treeview_select();
 
         void clearCanvas();
-        void drawCanvas(string name);
+        void setOntology(string name);
         void updateLayout();
+
+        void copyConcept(ConceptWidget* w);
 
     public:
         VRGuiSemantics();
 
-        void update();
+        void updateOntoList();
+        void updateCanvas();
 };
 
 OSG_END_NAMESPACE

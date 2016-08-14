@@ -73,6 +73,7 @@ void setTooltip(string widget, string tp);
 bool keySignalProxy(GdkEventKey* e, string k, sigc::slot<void> sig );
 void setExpanderSensitivity(string exp, bool b);
 bool askUser(string msg1, string msg2);
+string askUserInput(string msg);
 string askUserPass(string msg);
 OSG::Color4f chooseColor(string drawable, OSG::Color4f current);
 void setColorChooser(string drawable, sigc::slot<bool, GdkEventButton*> sig);

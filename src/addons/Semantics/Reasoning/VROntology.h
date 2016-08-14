@@ -29,8 +29,10 @@ struct VROntology : public std::enable_shared_from_this<VROntology> {
     void merge(VROntologyPtr o);
     VROntologyPtr copy();
 
-    void addConcept(VRConceptPtr);
-    void addInstance(VREntityPtr);
+    void addConcept(VRConceptPtr c);
+    void remConcept(VRConceptPtr c);
+    void renameConcept(VRConceptPtr c, string newName);
+    void addInstance(VREntityPtr e);
 
     VRConceptPtr addConcept(string concept, string parent = "");
     VROntologyRulePtr addRule(string rule);

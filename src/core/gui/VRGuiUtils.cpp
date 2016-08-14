@@ -329,6 +329,19 @@ bool askUser(string msg1, string msg2) {
     return false;
 }
 
+string askUserInput(string msg) {
+    Gtk::MessageDialog dialog(msg, false, Gtk::MESSAGE_WARNING, Gtk::BUTTONS_OK_CANCEL);
+    dialog.set_deletable(false);
+
+    Gtk::Entry entry;
+    auto vb = dialog.get_vbox();
+    vb->pack_end(entry);
+    entry.show();
+
+    if (dialog.run() == Gtk::RESPONSE_OK) return entry.get_text();
+    return "";
+}
+
 string askUserPass(string msg) {
     Gtk::MessageDialog dialog(msg, false, Gtk::MESSAGE_WARNING, Gtk::BUTTONS_OK_CANCEL);
     dialog.set_deletable(false);

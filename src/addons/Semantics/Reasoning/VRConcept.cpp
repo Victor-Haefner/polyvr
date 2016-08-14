@@ -23,7 +23,9 @@ VRConceptPtr VRConcept::copy() {
 }
 
 void VRConcept::append(VRConceptPtr c) { children[c->ID] = c; c->parent = shared_from_this(); }
+void VRConcept::remove(VRConceptPtr c) { if (children.count(c->ID)) children.erase(c->ID); c->parent.reset(); }
 void VRConcept::addProperty(VRPropertyPtr p) { properties[p->ID] = p; }
+void VRConcept::remProperty(VRPropertyPtr p) { if (properties.count(p->ID)) properties.erase(p->ID); }
 void VRConcept::addAnnotation(VRPropertyPtr p) { annotations[p->ID] = p; }
 
 VRConceptPtr VRConcept::append(string name) {

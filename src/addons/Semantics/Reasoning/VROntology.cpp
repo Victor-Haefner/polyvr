@@ -39,6 +39,8 @@ vector<VRConceptPtr> VROntology::getConcepts() {
 }
 
 VRConceptPtr VROntology::addConcept(string concept, string parent) {
+    if (concepts.count(concept)) { cout << "WARNING in VROntology::addConcept, " << concept << " known, skipping!\n"; return 0;  }
+
     auto p = thing;
     if (parent != "") {
         p = getConcept(parent);
@@ -51,10 +53,25 @@ VRConceptPtr VROntology::addConcept(string concept, string parent) {
 }
 
 void VROntology::addConcept(VRConceptPtr c) {
+    if (concepts.count(c->name)) { cout << "WARNING in VROntology::addConcept, " << c->name << " known, skipping!\n"; return;  }
     if (c == thing) return;
-    //cout << "add concept " << c->name << " " << c->ID << endl;
     concepts[c->name] = c;
     if (!c->parent.lock()) thing->append(c);
+}
+
+void VROntology::remConcept(VRConceptPtr c) {
+    if (c == thing) return;
+    if (!concepts.count(c->name)) return;
+    if (auto p = c->parent.lock()) p->remove(c);
+    concepts.erase(c->name);
+}
+
+void VROntology::renameConcept(VRConceptPtr c, string newName) {
+    if (c == thing) return;
+    if (!concepts.count(c->name)) return;
+    concepts.erase(c->name);
+    c->name = newName;
+    addConcept(c);
 }
 
 void VROntology::merge(VROntologyPtr o) { // Todo: check it well!
