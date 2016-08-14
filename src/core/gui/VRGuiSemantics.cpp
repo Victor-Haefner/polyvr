@@ -89,14 +89,15 @@ VRGuiSemantics::ConceptWidget::ConceptWidget(VRGuiSemantics* m, Gtk::Fixed* canv
     treeview->set_model(liststore);
     treeview->set_headers_visible(false);
 
-    auto addMarkupColumn = [&](string title, Gtk::TreeModelColumn<Glib::ustring>& col) {
+    auto addMarkupColumn = [&](string title, Gtk::TreeModelColumn<Glib::ustring>& col, bool editable = false) {
         Gtk::CellRendererText* renderer = Gtk::manage(new Gtk::CellRendererText());
+        renderer->property_editable() = editable;
         Gtk::TreeViewColumn* column = Gtk::manage(new Gtk::TreeViewColumn(title, *renderer));
         column->add_attribute(renderer->property_markup(), col);
         treeview->append_column(*column);
     };
 
-    addMarkupColumn(" Properties:", cols.name);
+    addMarkupColumn(" Properties:", cols.name, true);
     addMarkupColumn("", cols.type);
 
     for (auto p : concept->properties) {
