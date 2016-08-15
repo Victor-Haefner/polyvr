@@ -713,17 +713,66 @@ void VRGuiScripts::on_trigstate_edited(const Glib::ustring& new_name, const Gtk:
 
 void VRGuiScripts::on_help_close_clicked() {
     Gtk::Dialog* diag;
-    VRGuiBuilder()->get_widget("dialog1", diag);
+    VRGuiBuilder()->get_widget("pybindings-docs", diag);
     diag->hide();
 }
 
-void VRGuiScripts::loadHelp() {
+void VRGuiScripts::on_help_clicked() {
+    VRGuiScripts::updateDocumentation();
+
+    Glib::RefPtr<Gtk::TextBuffer> tb  = Glib::RefPtr<Gtk::TextBuffer>::cast_static(VRGuiBuilder()->get_object("pydoc"));
+    tb->set_text("");
+
+    Gtk::Dialog* diag;
+    VRGuiBuilder()->get_widget("pybindings-docs", diag);
+    diag->show();
+}
+
+void VRGuiScripts::updateDocumentation() {
     Glib::RefPtr<Gtk::TreeStore> store = Glib::RefPtr<Gtk::TreeStore>::cast_static(VRGuiBuilder()->get_object("bindings"));
-    Glib::RefPtr<Gtk::TreeView> view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview6"));
+    Glib::RefPtr<Gtk::TreeView> view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview3"));
     store->clear();
 
     auto scene = VRSceneManager::getCurrent();
     if (scene == 0) return;
+
+    // apply filter
+    map<string, map<string, map<string, bool> > > data;
+    map<string, map<string, map<string, bool> > > filtered;
+
+    auto contain = [&](const string& s, const string& i) {
+        return bool( s.find(i) != string::npos );
+    };
+
+    for (auto mod : scene->getPyVRModules()) {
+        data[mod] = map<string, map<string, bool> >();
+        for (auto typ : scene->getPyVRTypes(mod)) {
+            data[mod][typ] = map<string, bool>();
+            for (auto fkt : scene->getPyVRMethods(mod, typ) ) data[mod][typ][fkt] = 1;
+        }
+    }
+
+    filtered = data;
+    if (docs_filter != "") {
+        for (auto mod : data) {
+            bool showMod = contain(mod.first, docs_filter);
+            if (!showMod) {
+                for (auto typ : mod.second) {
+                    bool showTyp = contain(typ.first, docs_filter);
+                    if (!showTyp) {
+                        for (auto fkt : typ.second) {
+                            bool showFkt = contain(fkt.first, docs_filter);
+                            if (showFkt) showTyp = true;
+                            else filtered[mod.first][typ.first].erase(fkt.first);
+                        }
+                    }
+                    if (showTyp) showMod = true;
+                    else filtered[mod.first].erase(typ.first);
+                }
+            }
+            if (!showMod) filtered.erase(mod.first);
+        }
+    }
 
     auto setRow = [&](Gtk::TreeModel::iterator itr, string label, string type, string cla, string mod, string col = "#FFFFFF") {
         Gtk::TreeStore::Row row = *itr;
@@ -735,30 +784,21 @@ void VRGuiScripts::loadHelp() {
     };
 
     Gtk::TreeModel::iterator itr0, itr1, itr2;
-    for (auto mod : scene->getPyVRModules()) {
+    for (auto mod : filtered) {
         itr0 = store->append();
-        string modname = (mod == "VR") ? "VR" : "VR."+mod;
+        string modname = (mod.first == "VR") ? "VR" : "VR."+mod.first;
         setRow(itr0, modname, "module", "", "", "#BBDDFF");
-        for (auto t : scene->getPyVRTypes(mod)) {
+        for (auto typ : mod.second) {
             itr1 = store->append(itr0->children());
-            setRow(itr1, t, "class", t, mod);
-            for (auto m : scene->getPyVRMethods(mod, t) ) {
+            setRow(itr1, typ.first, "class", typ.first, mod.first);
+            for (auto fkt : typ.second) {
                 itr2 = store->append(itr1->children());
-                setRow(itr2, m, "method", t, mod);
+                setRow(itr2, fkt.first, "method", typ.first, mod.first);
             }
         }
     }
-}
 
-void VRGuiScripts::on_help_clicked() {
-    VRGuiScripts::loadHelp();
-
-    Glib::RefPtr<Gtk::TextBuffer> tb  = Glib::RefPtr<Gtk::TextBuffer>::cast_static(VRGuiBuilder()->get_object("pydoc"));
-    tb->set_text("");
-
-    Gtk::Dialog* diag;
-    VRGuiBuilder()->get_widget("dialog1", diag);
-    diag->show();
+    if (docs_filter != "") view->expand_all();
 }
 
 void VRGuiScripts::on_select_help() {
@@ -794,22 +834,12 @@ void VRGuiScripts::on_select_help() {
     }
 }
 
-void VRGuiScripts::on_change_script_type() {
-    if(!trigger_cbs) return;
-    VRScript* script = getSelectedScript();
-    string t = getComboboxText("combobox1");
-    script->setType(t);
-    on_select_script();
-    on_save_clicked();
+void VRGuiScripts::on_doc_filter_edited() {
+    docs_filter = getTextEntry("entry25");
+    updateDocumentation();
 }
 
-void VRGuiScripts::on_change_mobile() {
-    if(!trigger_cbs) return;
-    VRScript* script = getSelectedScript();
-    script->setHTMLHost( getComboboxText("combobox24") );
-    on_select_script();
-    on_save_clicked();
-}
+// script search dialog
 
 void VRGuiScripts::on_find_clicked() {
     setCheckButton("checkbutton12", false);
@@ -867,6 +897,25 @@ void VRGuiScripts::on_toggle_find_replace() {
     //setEntrySensitivity("entry11", getCheckButtonState("checkbutton12") );
     setEntrySensitivity("entry11", false);
     setTextEntry("entry11", "Coming soon!");
+}
+
+// config stuff
+
+void VRGuiScripts::on_change_script_type() {
+    if(!trigger_cbs) return;
+    VRScript* script = getSelectedScript();
+    string t = getComboboxText("combobox1");
+    script->setType(t);
+    on_select_script();
+    on_save_clicked();
+}
+
+void VRGuiScripts::on_change_mobile() {
+    if(!trigger_cbs) return;
+    VRScript* script = getSelectedScript();
+    script->setHTMLHost( getComboboxText("combobox24") );
+    on_select_script();
+    on_save_clicked();
 }
 
 
@@ -1115,6 +1164,8 @@ VRGuiScripts::VRGuiScripts() {
     import_treeview1->signal_cursor_changed().connect( sigc::mem_fun(*this, &VRGuiScripts::on_diag_import_select_1) );
     import_treeview2->signal_cursor_changed().connect( sigc::mem_fun(*this, &VRGuiScripts::on_diag_import_select_2) );
 
+    // documentation widget
+    setEntryCallback("entry25", sigc::mem_fun(*this, &VRGuiScripts::on_doc_filter_edited), true);
 }
 
 OSG_END_NAMESPACE;

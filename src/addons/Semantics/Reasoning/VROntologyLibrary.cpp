@@ -6,21 +6,21 @@ map<string, VROntologyPtr> VROntology::library;
 
 void VROntology::setupLibrary() {
     // ontologies
-    auto mathOnto = VROntology::create();
-    auto featureOnto = VROntology::create();
-    auto machineOnto = VROntology::create();
-    auto prodMachineOnto = VROntology::create();
-    auto manipOnto = VROntology::create();
-    auto boreholeOnto = VROntology::create();
-    auto drillingOnto = VROntology::create();
-    auto processingOnto = VROntology::create();
-    auto actionOnto = VROntology::create();
-    auto processOnto = VROntology::create();
-    auto productOnto = VROntology::create();
-    auto productionOnto = VROntology::create();
-    auto drillOnto = VROntology::create();
-    auto robotOnto = VROntology::create();
-    auto objectOnto = VROntology::create();
+    auto mathOnto = VROntology::create("Math");
+    auto featureOnto = VROntology::create("Feature");
+    auto machineOnto = VROntology::create("Machine");
+    auto prodMachineOnto = VROntology::create("ProductionMachine");
+    auto manipOnto = VROntology::create("Manipulation");
+    auto boreholeOnto = VROntology::create("Borehole");
+    auto drillingOnto = VROntology::create("Drilling");
+    auto processingOnto = VROntology::create("Processing");
+    auto actionOnto = VROntology::create("Action");
+    auto processOnto = VROntology::create("Process");
+    auto productOnto = VROntology::create("Product");
+    auto productionOnto = VROntology::create("Production");
+    auto drillOnto = VROntology::create("Drill");
+    auto robotOnto = VROntology::create("Robot");
+    auto objectOnto = VROntology::create("Object");
 
     mathOnto->addConcept("Volume");
     mathOnto->addConcept("Vector");

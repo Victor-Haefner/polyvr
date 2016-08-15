@@ -13,10 +13,13 @@
 
 using namespace OSG;
 
-VROntology::VROntology() {}
+VROntology::VROntology(string name) {
+    setNameSpace("Ontology");
+    setName(name);
+}
 
-VROntologyPtr VROntology::create() {
-    auto o = VROntologyPtr( new VROntology() );
+VROntologyPtr VROntology::create(string name) {
+    auto o = VROntologyPtr( new VROntology(name) );
     o->thing = VRConcept::create("Thing", o);
     o->concepts["Thing"] = o->thing;
     return o;
@@ -89,7 +92,7 @@ void VROntology::merge(VROntologyPtr o) { // Todo: check it well!
 }
 
 VROntologyPtr VROntology::copy() {
-    auto o = create();
+    auto o = create(name);
     o->merge(shared_from_this());
     return o;
 }
@@ -346,4 +349,6 @@ void VROntology::addModule(string mod) {
     merge(library[mod]);
 }
 
+void VROntology::setFlag(string f) { flag = f; }
+string VROntology::getFlag() { return flag; }
 

@@ -18,7 +18,7 @@ Glib::RefPtr<Gtk::Builder> VRGuiBuilder(bool standalone = false);
 void setLabel(string l, string txt);
 void setTextEntry(string entry, string text);
 string getTextEntry(string entry);
-void setEntryCallback(string e, sigc::slot<void> sig);
+void setEntryCallback(string e, sigc::slot<void> sig, bool onEveryChange = false);
 void setEntrySensitivity(string e, bool b);
 
 // BUTTONS

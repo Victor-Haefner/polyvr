@@ -649,6 +649,8 @@
 		<Unit filename="src/core/scene/VRSceneLoader.h" />
 		<Unit filename="src/core/scene/VRSceneManager.cpp" />
 		<Unit filename="src/core/scene/VRSceneManager.h" />
+		<Unit filename="src/core/scene/VRSemanticManager.cpp" />
+		<Unit filename="src/core/scene/VRSemanticManager.h" />
 		<Unit filename="src/core/scene/VRThreadManager.cpp" />
 		<Unit filename="src/core/scene/VRThreadManager.h" />
 		<Unit filename="src/core/scene/export/VRExport.h" />

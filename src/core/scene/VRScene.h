@@ -1,6 +1,7 @@
 #ifndef VRSCENE_H_INCLUDED
 #define VRSCENE_H_INCLUDED
 
+#include "VRSceneFwd.h"
 #include "VRObjectManager.h"
 #include "VRCameraManager.h"
 #include "VRAnimationManager.h"
@@ -51,6 +52,8 @@ class VRScene : public VRObjectManager,
         VRTogglePtr layer_cam_toggle;
         VRTogglePtr layer_light_toggle;
 
+        VRSemanticManagerPtr semanticManager;
+
     public:
         VRScene();
         ~VRScene();
@@ -79,6 +82,8 @@ class VRScene : public VRObjectManager,
         void showReferentials(bool b, VRObjectPtr o);
         void showLights(bool b);
         void showCameras(bool b);
+
+        VRSemanticManagerPtr getSemanticManager();
 
         void update();
 

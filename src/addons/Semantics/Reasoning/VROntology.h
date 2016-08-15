@@ -5,6 +5,7 @@
 #include "VROntologyRule.h"
 #include "VREntity.h"
 #include "../VRSemanticsFwd.h"
+#include "core/utils/VRName.h"
 
 #include <string>
 #include <map>
@@ -14,17 +15,19 @@
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
-struct VROntology : public std::enable_shared_from_this<VROntology> {
+struct VROntology : public std::enable_shared_from_this<VROntology>, public VRName {
     static map<string, VROntologyPtr> library;
     static void setupLibrary();
+
+    string flag = "built-in";
 
     VRConceptPtr thing = 0;
     map<int, VREntityPtr> instances;
     map<string, VRConceptWeakPtr> concepts;
     map<int, VROntologyRulePtr> rules;
 
-    VROntology();
-    static VROntologyPtr create();
+    VROntology(string name);
+    static VROntologyPtr create(string name);
 
     void merge(VROntologyPtr o);
     VROntologyPtr copy();
@@ -50,6 +53,9 @@ struct VROntology : public std::enable_shared_from_this<VROntology> {
     void open(string path);
     void addModule(string mod);
     string toString();
+
+    void setFlag(string f);
+    string getFlag();
 };
 
 OSG_END_NAMESPACE;

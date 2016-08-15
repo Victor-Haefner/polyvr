@@ -34,6 +34,7 @@ class VRGuiSemantics {
             VRPropertyPtr selected_property;
 
             ConceptWidget(VRGuiSemantics* m, Gtk::Fixed* canvas = 0, VRConceptPtr concept = 0);
+            ~ConceptWidget();
             void update();
 
             void on_select();
@@ -43,6 +44,7 @@ class VRGuiSemantics {
             void on_new_clicked();
             void on_edit_clicked();
             void on_newp_clicked();
+            void on_edit_prop_clicked();
             bool on_expander_clicked(GdkEventButton* e);
 
             void move(float x, float y);
@@ -82,6 +84,9 @@ class VRGuiSemantics {
         void updateLayout();
 
         void copyConcept(ConceptWidget* w);
+        void remConcept(ConceptWidget* w);
+
+        VRSemanticManagerPtr getManager();
 
     public:
         VRGuiSemantics();

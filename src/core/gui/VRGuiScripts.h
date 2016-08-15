@@ -37,6 +37,8 @@ class VRGuiScripts {
         Glib::RefPtr<Gtk::ListStore> import_liststore2;
         map<string, VRScript*> import_scripts;
 
+        string docs_filter;
+
         void initEditor();
         void printViewerLanguages();
         void setScriptListRow(Gtk::TreeIter itr, VRScript* script, bool onlyTime = false);
@@ -66,10 +68,11 @@ class VRGuiScripts {
 
         bool on_shortkey( GdkEventKey* e );
 
-        void loadHelp();
+        void updateDocumentation();
         void on_select_help();
         void on_help_clicked();
         void on_help_close_clicked();
+        void on_doc_filter_edited();
 
         void on_argadd_clicked();
         void on_argrem_clicked();

@@ -191,29 +191,19 @@ void focusTreeView(string treeview) {
     tree_view->grab_focus();
 }
 
-void setEntryCallback(string e, void (* fkt)(GtkEntry*, gpointer)) {
-    Gtk::Entry* en;
-    VRGuiBuilder()->get_widget(e, en);
-    g_signal_connect (en->gobj(), "activate", G_CALLBACK(fkt), NULL);
-    g_signal_connect (en->gobj(), "focus-out-event", G_CALLBACK(fkt), NULL);
-}
-
 bool entryFocusProxy(GdkEventFocus* e, sigc::slot<void> sig) {
     sig();
     return true;
 }
 
-void setEntryCallback(string e, sigc::slot<void> sig) {
+void setEntryCallback(string e, sigc::slot<void> sig, bool onEveryChange) {
     Gtk::Entry* en;
     VRGuiBuilder()->get_widget(e, en);
-    en->signal_activate().connect(sig);
-    en->signal_focus_out_event().connect( sigc::bind(&entryFocusProxy, sig) );
-}
-
-void setEntryCallback(string e, sigc::slot<bool,GdkEventFocus*> sig) {
-    Gtk::Entry* en;
-    VRGuiBuilder()->get_widget(e, en);
-    en->signal_focus_out_event().connect(sig);
+    if (onEveryChange) en->signal_changed().connect(sig);
+    else {
+        en->signal_activate().connect(sig);
+        en->signal_focus_out_event().connect( sigc::bind(&entryFocusProxy, sig) );
+    }
 }
 
 void setEntrySensitivity(string e, bool b) {

@@ -5,6 +5,7 @@
 #include "core/setup/devices/VRHaptic.h"
 #include "core/setup/devices/VRMobile.h"
 #include "VRSceneManager.h"
+#include "VRSemanticManager.h"
 #include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
 #include "core/objects/OSGObject.h"
@@ -50,6 +51,8 @@ VRScene::VRScene() {
     lights_layer->setCallback( layer_light_toggle );
 
     VRVisualLayer::anchorLayers(root);
+
+    semanticManager = VRSemanticManager::create();
 
     cout << " init scene done\n";
 }
@@ -262,5 +265,7 @@ void VRScene::load(xmlpp::Element* e) {
     VRNavigator::update();
     VRMaterialManager::update();
 }
+
+VRSemanticManagerPtr VRScene::getSemanticManager() { return semanticManager; }
 
 OSG_END_NAMESPACE;

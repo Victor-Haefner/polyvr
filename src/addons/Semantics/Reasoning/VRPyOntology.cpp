@@ -8,7 +8,7 @@
 
 using namespace OSG;
 
-simpleVRPyType(Ontology, New_ptr);
+simpleVRPyType(Ontology, New_named_ptr);
 simpleVRPyType(Entity, 0);
 simpleVRPyType(Concept, 0);
 simpleVRPyType(Property, 0);

@@ -11,6 +11,7 @@ typedef std::weak_ptr<X> X ## WeakPtr;
 namespace OSG {
 
 ptrFwd(VRSceneManager);
+ptrFwd(VRSemanticManager);
 ptrFwd(VRScene);
 ptrFwd(VRThread);
 
