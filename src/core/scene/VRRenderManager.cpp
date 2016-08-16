@@ -16,27 +16,12 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-/**
-
-Rendering tree
-
-root_system - Group
-|
-root_def_shading - Group / DSStage
-|___________________________________________________________
-|                   |                   |                   |
-root - Group        Layer1              Layer2              ...
-|
-scene
-
-
-*/
-
 VRRenderManager::VRRenderManager() {
     root = VRObject::create("Root");
 
     update();
 
+    setStorageType("Rendering");
     store("frustum_culling", &frustumCulling);
     store("occlusion_culling", &occlusionCulling);
     store("two_sided", &twoSided);

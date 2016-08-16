@@ -108,6 +108,7 @@ VRBackground::VRBackground () {
 
     base->format = ".png";
 
+    setStorageType("Background");
     store("type", &base->type);
     store("color", &base->color);
     store("path", &base->path);

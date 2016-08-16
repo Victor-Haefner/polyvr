@@ -154,6 +154,7 @@ map<string, VRDeviceCb>& VRNavigator_base::getNavigationCallbacks() { return lib
 
 
 VRNavigator::VRNavigator() {
+    setStorageType("Navigation");
     auto addNavCb = [&](string name, boost::function<void(VRDeviceWeakPtr)> fkt) {
         storeNavigationCallback( VRFunction<VRDeviceWeakPtr>::create(name, fkt) );
     };

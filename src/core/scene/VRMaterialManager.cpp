@@ -3,7 +3,10 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-VRMaterialManager::VRMaterialManager() {}
+VRMaterialManager::VRMaterialManager() {
+    setStorageType("Materials");
+}
+
 VRMaterialManager::~VRMaterialManager() {}
 
 void VRMaterialManager::update() {}

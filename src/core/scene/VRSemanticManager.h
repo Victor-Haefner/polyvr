@@ -7,11 +7,12 @@
 #include <vector>
 #include "addons/Semantics/VRSemanticsFwd.h"
 #include "VRSceneFwd.h"
+#include "core/utils/VRStorage.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRSemanticManager {
+class VRSemanticManager : public VRStorage {
     private:
         map<string, VROntologyPtr> ontologies;
 
@@ -24,9 +25,8 @@ class VRSemanticManager {
         VROntologyPtr addOntology(string name);
         VROntologyPtr loadOntology(string path);
         VROntologyPtr getOntology(string name);
-
+        void remOntology(VROntologyPtr o);
         void renameOntology(string name, string new_name);
-
         vector<VROntologyPtr> getOntologies();
 };
 

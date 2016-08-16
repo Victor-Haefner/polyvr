@@ -195,68 +195,28 @@ void VRScene::update() {
     updateCallbacks();
 }
 
-xmlpp::Element* VRSceneLoader_getElementChild(xmlpp::Element* e, string name) {
-    for (auto n : e->get_children()) {
-        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
-        if (!el) continue;
-        if (el->get_name() == name) return el;
-    }
-    return 0;
-}
-
-xmlpp::Element* VRSceneLoader_getElementChild(xmlpp::Element* e, int i) {
-    xmlpp::Node::NodeList nl = e->get_children();
-    xmlpp::Node::NodeList::iterator itr;
-    int j = 0;
-    for (itr = nl.begin(); itr != nl.end(); itr++) {
-        xmlpp::Node* n = *itr;
-        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
-        if (!el) continue;
-
-        if (i == j) return el;
-        j++;
-    }
-
-    return 0;
-}
-
-
 void VRScene::save(xmlpp::Element* e) {
     if (e == 0) return;
     VRName::saveName(e);
-
-    xmlpp::Element* renderN = e->add_child("Rendering");
-    xmlpp::Element* scriptsN = e->add_child("Scripts");
-    xmlpp::Element* protocolsN = e->add_child("Sockets");
-    xmlpp::Element* backgroundN = e->add_child("Background");
-    xmlpp::Element* naviN = e->add_child("Navigation");
-    xmlpp::Element* matN = e->add_child("Materials");
-
-    VRRenderManager::save(renderN);
-    VRScriptManager::save(scriptsN);
-    VRNetworkManager::save(protocolsN);
-    VRBackground::save(backgroundN);
-    VRNavigator::save(naviN);
-    VRMaterialManager::save(matN);
+    VRRenderManager::saveUnder(e);
+    VRScriptManager::saveUnder(e);
+    VRNetworkManager::saveUnder(e);
+    VRBackground::saveUnder(e);
+    VRNavigator::saveUnder(e);
+    VRMaterialManager::saveUnder(e);
+    semanticManager->saveUnder(e);
 }
 
 void VRScene::load(xmlpp::Element* e) {
     if (e == 0) return;
     VRName::loadName(e);
-
-    xmlpp::Element* scriptsN = VRSceneLoader_getElementChild(e, "Scripts");
-    xmlpp::Element* protocolsN = VRSceneLoader_getElementChild(e, "Sockets");
-    xmlpp::Element* backgroundN = VRSceneLoader_getElementChild(e, "Background");
-    xmlpp::Element* renderN = VRSceneLoader_getElementChild(e, "Rendering");
-    xmlpp::Element* naviN = VRSceneLoader_getElementChild(e, "Navigation");
-    xmlpp::Element* matN = VRSceneLoader_getElementChild(e, "Materials");
-
-    VRRenderManager::load(renderN);
-    VRScriptManager::load(scriptsN);
-    VRNetworkManager::load(protocolsN);
-    VRBackground::load(backgroundN);
-    VRNavigator::load(naviN);
-    VRMaterialManager::load(matN);
+    VRRenderManager::loadChildFrom(e);
+    VRScriptManager::loadChildFrom(e);
+    VRNetworkManager::loadChildFrom(e);
+    VRBackground::loadChildFrom(e);
+    VRNavigator::loadChildFrom(e);
+    VRMaterialManager::loadChildFrom(e);
+    semanticManager->loadChildFrom(e);
 
     VRRenderManager::update();
     VRScriptManager::update();
@@ -264,6 +224,7 @@ void VRScene::load(xmlpp::Element* e) {
     VRBackground::update();
     VRNavigator::update();
     VRMaterialManager::update();
+    //semanticManager->update();
 }
 
 VRSemanticManagerPtr VRScene::getSemanticManager() { return semanticManager; }

@@ -10,6 +10,8 @@ using namespace std;
 VRSemanticManager::VRSemanticManager() {
     cout << "Init VRSemanticManager\n";
 
+    setStorageType("Semantics");
+
     for (auto o : VROntology::library) ontologies[o.first] = o.second;
 }
 
@@ -20,6 +22,7 @@ VRSemanticManagerPtr VRSemanticManager::create() { return VRSemanticManagerPtr(n
 VROntologyPtr VRSemanticManager::addOntology(string name) { ontologies[name] = VROntology::create(name); return ontologies[name];}
 VROntologyPtr VRSemanticManager::loadOntology(string path) { auto o = addOntology(path); o->open(path); return o; }
 VROntologyPtr VRSemanticManager::getOntology(string name) { return ontologies.count(name) ? ontologies[name] : 0; }
+void VRSemanticManager::remOntology(VROntologyPtr o) { if (ontologies.count(o->getName())) ontologies.erase(o->getName()); }
 
 vector<VROntologyPtr> VRSemanticManager::getOntologies() {
     vector<VROntologyPtr> res;

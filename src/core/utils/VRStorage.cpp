@@ -42,6 +42,8 @@ void VRStorage::load(xmlpp::Element* e) {
     f_setup_after.clear();
 }
 
+void VRStorage::loadChildFrom(xmlpp::Element* e) { load( getChild(e, type) ); }
+
 int VRStorage::getPersistency(xmlpp::Element* e) {
     if (!e->get_attribute("persistency")) return 0;
     return toInt( e->get_attribute("persistency")->get_value() );
@@ -56,6 +58,16 @@ VRStoragePtr VRStorage::createFromStore(xmlpp::Element* e) {
     VRStoragePtr res;
     (*factory[type])(res);
     return res;
+}
+
+xmlpp::Element* VRStorage::getChild(xmlpp::Element* e, string c) {
+    if (e == 0) return 0;
+    for (auto n : e->get_children()) {
+        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
+        if (!el) continue;
+        if (el->get_name() == c) return el;
+    }
+    return 0;
 }
 
 OSG_END_NAMESPACE;

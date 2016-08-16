@@ -300,31 +300,13 @@ void VRGuiSemantics::on_new_clicked() {
 
     auto o = mgr->addOntology(name);
     o->setFlag("custom");
-
     updateOntoList();
-    return;
 }
 
 void VRGuiSemantics::on_del_clicked() {
-    /*Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview9"));
-    Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
-    if(!iter) return;
-
-    VRGuiSemantics_SocketCols cols;
-    Gtk::TreeModel::Row row = *iter;
-    string name = row.get_value(cols.name);
-
-    string msg1 = "Delete socket " + name;
-    if (!askUser(msg1, "Are you sure you want to delete this socket?")) return;
-    auto scene = VRSceneManager::getCurrent();
-    if (scene) scene->remSocket(name);
-
-    Glib::RefPtr<Gtk::ListStore> list_store  = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("Sockets"));
-    list_store->erase(iter);
-
-    Gtk::ToolButton* b;
-    VRGuiBuilder()->get_widget("toolbutton15", b);
-    b->set_sensitive(false);*/
+    auto mgr = getManager();
+    if (!mgr) return;
+    mgr->remOntology(current);
 }
 
 void VRGuiSemantics::clearCanvas() {

@@ -112,6 +112,8 @@ using namespace std;
 
 VRScriptManager::VRScriptManager() {
     initPyModules();
+
+    setStorageType("Scripts");
     storeMap("Script", &scripts);
 }
 
