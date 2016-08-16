@@ -46,6 +46,8 @@ struct VRConcept : public std::enable_shared_from_this<VRConcept>, public VROnto
 
     bool is_a(string concept);
     string toString(string indent = "");
+
+    void setup();
 };
 
 OSG_END_NAMESPACE;

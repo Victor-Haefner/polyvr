@@ -28,6 +28,7 @@ void VRStorage::save_on_cb(T* t, string tag, xmlpp::Element* e) {
 
 template<typename T>
 void VRStorage::save_str_map_cb(map<string, T*>* mt, string tag, bool under, xmlpp::Element* e) {
+    if (mt->size() == 0) return;
     if (under) e = e->add_child(tag);
     for (auto t : *mt) {
         auto ei = t.second->saveUnder(e);
@@ -37,6 +38,7 @@ void VRStorage::save_str_map_cb(map<string, T*>* mt, string tag, bool under, xml
 
 template<typename T>
 void VRStorage::save_str_objmap_cb(map<string, std::shared_ptr<T> >* mt, string tag, bool under, xmlpp::Element* e) {
+    if (mt->size() == 0) return;
     if (under) e = e->add_child(tag);
     for (auto t : *mt) {
         auto ei = t.second->saveUnder(e);
@@ -45,6 +47,7 @@ void VRStorage::save_str_objmap_cb(map<string, std::shared_ptr<T> >* mt, string 
 
 template<typename T>
 void VRStorage::save_int_map_cb(map<int, T*>* mt, string tag, bool under, xmlpp::Element* e) {
+    if (mt->size() == 0) return;
     if (under) e = e->add_child(tag);
     for (auto t : *mt) {
         auto ei = t.second->saveUnder(e);
@@ -54,6 +57,7 @@ void VRStorage::save_int_map_cb(map<int, T*>* mt, string tag, bool under, xmlpp:
 
 template<typename T>
 void VRStorage::save_int_objmap_cb(map<int, std::shared_ptr<T> >* mt, string tag, bool under, xmlpp::Element* e) {
+    if (mt->size() == 0) return;
     if (under) e = e->add_child(tag);
     for (auto t : *mt) {
         auto ei = t.second->saveUnder(e);
@@ -154,20 +158,15 @@ void VRStorage::load_vec_cb(vector<std::shared_ptr<T> >* v, xmlpp::Element* e) {
 
 template<typename T>
 void VRStorage::save_obj_cb(std::shared_ptr<T>* v, string tag, xmlpp::Element* e) {
-    (*v)->saveUnder(e);
+    (*v)->saveUnder(e, 0, tag);
 }
 
 template<typename T>
 void VRStorage::load_obj_cb(std::shared_ptr<T>* v, string tag, xmlpp::Element* e) {
-    for (auto n : e->get_children()) {
-        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
-        if (!el) continue;
-        if (el->get_name() != tag) continue;
-
-        *v = T::create();
-        (*v)->load(el);
-        return;
-    }
+    e = getChild(e, tag);
+    if (!e) return;
+    *v = T::create();
+    (*v)->load(e);
 }
 
 template<typename T>

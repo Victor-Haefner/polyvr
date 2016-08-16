@@ -69,9 +69,9 @@ class VRStorage {
         VRStorage();
 
         void save(xmlpp::Element* e, int p = 0);
-        xmlpp::Element* saveUnder(xmlpp::Element* e, int p = 0);
+        xmlpp::Element* saveUnder(xmlpp::Element* e, int p = 0, string t = "");
         void load(xmlpp::Element* e);
-        void loadChildFrom(xmlpp::Element* e);
+        void loadChildFrom(xmlpp::Element* e, string t = "");
 
         static int getPersistency(xmlpp::Element* e);
         static VRStoragePtr createFromStore(xmlpp::Element* e);

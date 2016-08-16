@@ -21,30 +21,35 @@ void VRStorage::regStorageSetupAfterFkt(VRUpdatePtr u) { f_setup_after.push_back
 void VRStorage::setStorageType(string t) { type = t; }
 
 void VRStorage::save(xmlpp::Element* e, int p) {
-    if (type == "Script") cout << "VRStorage::save " << e << endl;
     if (e == 0) return;
     if (persistency <= p) return;
     for (auto s : storage) (*s.second.f2)(e);
 }
 
-xmlpp::Element* VRStorage::saveUnder(xmlpp::Element* e, int p) {
-    if (type == "Script") cout << "VRStorage::saveUnder " << e << endl;
+xmlpp::Element* VRStorage::saveUnder(xmlpp::Element* e, int p, string t) {
+    string tag = type;
+    if (t != "") tag = t;
     if (e == 0) return 0;
     if (persistency <= p) return 0;
-    e = e->add_child(type);
+    e = e->add_child(tag);
     save(e, p);
     return e;
 }
 
 void VRStorage::load(xmlpp::Element* e) {
     if (e == 0) return;
+    cout << "VRStorage::load " << type << " " << storage.size() << " " << f_setup.size() << endl;
     for (auto s : storage) (*s.second.f1)(e);
     for (auto f : f_setup) (*f)(0);
     for (auto f : f_setup_after) VRSceneManager::get()->queueJob(f);
     f_setup_after.clear();
 }
 
-void VRStorage::loadChildFrom(xmlpp::Element* e) { load( getChild(e, type) ); }
+void VRStorage::loadChildFrom(xmlpp::Element* e, string t) {
+    string tag = type;
+    if (t != "") tag = t;
+    load( getChild(e, tag) );
+}
 
 int VRStorage::getPersistency(xmlpp::Element* e) {
     if (!e->get_attribute("persistency")) return 0;

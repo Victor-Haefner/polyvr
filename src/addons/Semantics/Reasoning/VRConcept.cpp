@@ -13,9 +13,10 @@ VRConcept::VRConcept(string name, VROntologyPtr o) {
     setName(name);
     this->ontology = o;
 
-    storeMap("children", &children);
-    storeMap("children", &properties);
-    storeMap("children", &annotations);
+    storeMap("Children", &children, true);
+    storeMap("Properties", &properties, true);
+    storeMap("Annotations", &annotations, true);
+    regStorageSetupFkt( VRFunction<int>::create("concept setup", boost::bind(&VRConcept::setup, this)) );
 }
 
 VRConceptPtr VRConcept::create(string name, VROntologyPtr o) {
@@ -30,14 +31,18 @@ VRConceptPtr VRConcept::copy() {
     return c;
 }
 
+void VRConcept::setup() {
+    cout << "VRConcept::setup " << name << " " << children.size() << endl;
+    auto tmp = children;
+    children.clear();
+    for (auto c : tmp) append(c.second);
+}
+
 void VRConcept::append(VRConceptPtr c) { children[c->ID] = c; c->parent = shared_from_this(); }
 void VRConcept::remove(VRConceptPtr c) { if (children.count(c->ID)) children.erase(c->ID); c->parent.reset(); }
 void VRConcept::remProperty(VRPropertyPtr p) { if (properties.count(p->ID)) properties.erase(p->ID); }
 void VRConcept::addAnnotation(VRPropertyPtr p) { annotations[p->ID] = p; }
-
-void VRConcept::addProperty(VRPropertyPtr p) {
-    properties[p->ID] = p;
-}
+void VRConcept::addProperty(VRPropertyPtr p) { properties[p->ID] = p; }
 
 VRConceptPtr VRConcept::append(string name) {
     auto c = VRConcept::create(name, ontology.lock());

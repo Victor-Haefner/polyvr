@@ -22,13 +22,14 @@ VROntology::VROntology(string name) {
 
     storeMap("Instances", &instances, true);
     storeMap("Rules", &rules, true);
+    store("flag", &flag);
 }
 
 VROntologyPtr VROntology::create(string name) {
     auto o = VROntologyPtr( new VROntology(name) );
     o->thing = VRConcept::create("Thing", o);
     o->concepts["Thing"] = o->thing;
-    o->storeObj("thing", o->thing);
+    o->storeObj("Thing", o->thing);
     return o;
 }
 
