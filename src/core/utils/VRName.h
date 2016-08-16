@@ -14,6 +14,7 @@ class VRName_base {
         string name;
         string base_name;
         int name_suffix = 0;
+        bool unique = true;
         char separator = '.';
         string nameSpace = "__global__";
 
@@ -28,6 +29,7 @@ class VRName_base {
         int getNameSuffix();
         void setSeparator(char s);
         void setNameSpace(string s);
+        void setUniqueName(bool b);
 
         void saveName(xmlpp::Element* e);
         void loadName(xmlpp::Element* e);

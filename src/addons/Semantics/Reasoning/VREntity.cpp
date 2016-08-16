@@ -7,7 +7,9 @@
 using namespace OSG;
 
 VREntity::VREntity(string name, VRConceptPtr c) {
-    this->name = name;
+    setStorageType("Entity");
+    setNameSpace("entity");
+    setName(name);
     concept = c;
 }
 
@@ -25,7 +27,7 @@ void VREntity::set(string name, string value) {
 
 void VREntity::add(string name, string value) {
     if (!concept) { cout << "Warning (add): Entity " << this->name << " has no valid concept" << endl; return; }
-    string pconcept; if (auto p = concept->parent.lock()) pconcept = p->name;
+    string pconcept; if (auto p = concept->parent.lock()) pconcept = p->getName();
     //cout << "VREntity::add " << name << " " << value << " " << concept->name << " " << pconcept << endl;
     auto prop = concept->getProperty(name);
     if (!prop) { cout << "Warning (add): Entity " << this->name << " has no property " << name << endl; return; }
@@ -59,8 +61,8 @@ vector<string> VREntity::getAtPath(vector<string> path) {
         auto prop = concept->getProperty(m);
         //cout << "  get value of member " << m << " with id " << id << endl;
         if (!prop) return res;
-        if (!properties.count(prop->name)) return res;
-        for (auto p : properties[prop->name]) res.push_back(p->value);
+        if (!properties.count(prop->getName())) return res;
+        for (auto p : properties[prop->getName()]) res.push_back(p->value);
         return res;
     }
 
@@ -69,12 +71,12 @@ vector<string> VREntity::getAtPath(vector<string> path) {
 
 string VREntity::toString() {
     string data = "Entity " + name;
-    if (concept) data += " of type " + concept->name;
+    if (concept) data += " of type " + concept->getName();
     else data += " unknown type";
     data += " with properties:";
     for (auto p : properties) {
         for (auto sp : p.second) {
-            data += " "+sp->name+"("+sp->type+")="+sp->value;
+            data += " "+sp->getName()+"("+sp->type+")="+sp->value;
         }
     }
     return data;

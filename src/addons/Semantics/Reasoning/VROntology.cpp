@@ -2,6 +2,7 @@
 #include "VRReasoner.h"
 #include "VRProperty.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRStorage_template.h"
 
 /* no compiling?
     install the raptor2 ubuntu package for rdfxml parsing
@@ -14,14 +15,20 @@
 using namespace OSG;
 
 VROntology::VROntology(string name) {
+    setStorageType("Ontology");
+    setPersistency(0);
     setNameSpace("Ontology");
     setName(name);
+
+    storeMap("Instances", &instances, true);
+    storeMap("Rules", &rules, true);
 }
 
 VROntologyPtr VROntology::create(string name) {
     auto o = VROntologyPtr( new VROntology(name) );
     o->thing = VRConcept::create("Thing", o);
     o->concepts["Thing"] = o->thing;
+    o->storeObj("thing", o->thing);
     return o;
 }
 
@@ -56,24 +63,24 @@ VRConceptPtr VROntology::addConcept(string concept, string parent) {
 }
 
 void VROntology::addConcept(VRConceptPtr c) {
-    if (concepts.count(c->name)) { cout << "WARNING in VROntology::addConcept, " << c->name << " known, skipping!\n"; return;  }
+    if (concepts.count(c->getName())) { cout << "WARNING in VROntology::addConcept, " << c->getName() << " known, skipping!\n"; return;  }
     if (c == thing) return;
-    concepts[c->name] = c;
+    concepts[c->getName()] = c;
     if (!c->parent.lock()) thing->append(c);
 }
 
 void VROntology::remConcept(VRConceptPtr c) {
     if (c == thing) return;
-    if (!concepts.count(c->name)) return;
+    if (!concepts.count(c->getName())) return;
     if (auto p = c->parent.lock()) p->remove(c);
-    concepts.erase(c->name);
+    concepts.erase(c->getName());
 }
 
 void VROntology::renameConcept(VRConceptPtr c, string newName) {
     if (c == thing) return;
-    if (!concepts.count(c->name)) return;
-    concepts.erase(c->name);
-    c->name = newName;
+    if (!concepts.count(c->getName())) return;
+    concepts.erase(c->getName());
+    c->setName(newName);
     addConcept(c);
 }
 
@@ -85,7 +92,7 @@ void VROntology::merge(VROntologyPtr o) { // Todo: check it well!
         vector<VRConceptPtr> cpts;
         cn->getDescendance(cpts);
         for (auto c : cpts) {
-            concepts[c->name] = c;
+            concepts[c->getName()] = c;
             c->ontology = shared_from_this();
         }
     }
@@ -136,7 +143,7 @@ VREntityPtr VROntology::addInstance(string name, string concept) {
 }
 
 VREntityPtr VROntology::getInstance(string instance) {
-    for (auto i : instances) if (i.second->name == instance) return i.second;
+    for (auto i : instances) if (i.second->getName() == instance) return i.second;
     return 0;
 }
 
@@ -145,7 +152,7 @@ vector<VREntityPtr> VROntology::getInstances(string concept) {
     for (auto i : instances) {
         auto c = i.second->concept;
         if(c) { if(c->is_a(concept)) res.push_back(i.second); }
-        else cout << "VROntology::getInstances " << i.second->name << " has no concept!" << endl;
+        else cout << "VROntology::getInstances " << i.second->getName() << " has no concept!" << endl;
     }
     return res;
 }

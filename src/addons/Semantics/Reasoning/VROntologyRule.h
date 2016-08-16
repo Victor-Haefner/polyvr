@@ -3,15 +3,16 @@
 
 #include "VROntologyUtils.h"
 #include "addons/Semantics/VRSemanticsFwd.h"
+#include "core/utils/VRName.h"
 
 using namespace std;
 namespace OSG {
 
-struct VROntologyRule : public VRNamedID {
+struct VROntologyRule : public VROntoID, public VRName {
     string rule;
     VROntologyRule(string rule);
 
-    static VROntologyRulePtr create(string rule);
+    static VROntologyRulePtr create(string rule = "");
     string toString();
 };
 

@@ -1,13 +1,21 @@
 #include "VRConcept.h"
 #include "VRProperty.h"
+#include "core/utils/VRStorage_template.h"
 
 #include <iostream>
 
 using namespace OSG;
 
 VRConcept::VRConcept(string name, VROntologyPtr o) {
-    this->name = name;
+    setStorageType("Concept");
+    setNameSpace("concept");
+    setUniqueName(false);
+    setName(name);
     this->ontology = o;
+
+    storeMap("children", &children);
+    storeMap("children", &properties);
+    storeMap("children", &annotations);
 }
 
 VRConceptPtr VRConcept::create(string name, VROntologyPtr o) {
@@ -24,9 +32,12 @@ VRConceptPtr VRConcept::copy() {
 
 void VRConcept::append(VRConceptPtr c) { children[c->ID] = c; c->parent = shared_from_this(); }
 void VRConcept::remove(VRConceptPtr c) { if (children.count(c->ID)) children.erase(c->ID); c->parent.reset(); }
-void VRConcept::addProperty(VRPropertyPtr p) { properties[p->ID] = p; }
 void VRConcept::remProperty(VRPropertyPtr p) { if (properties.count(p->ID)) properties.erase(p->ID); }
 void VRConcept::addAnnotation(VRPropertyPtr p) { annotations[p->ID] = p; }
+
+void VRConcept::addProperty(VRPropertyPtr p) {
+    properties[p->ID] = p;
+}
 
 VRConceptPtr VRConcept::append(string name) {
     auto c = VRConcept::create(name, ontology.lock());
@@ -47,8 +58,8 @@ VRPropertyPtr VRConcept::getProperty(int ID) {
 }
 
 VRPropertyPtr VRConcept::getProperty(string name) {
-    for (auto p : getProperties()) if (p->name == name) return p;
-    for (auto p : annotations) if (p.second->name == name) return p.second;
+    for (auto p : getProperties()) if (p->getName() == name) return p;
+    for (auto p : annotations) if (p.second->getName() == name) return p.second;
     cout << "Warning: property " << name << " of concept " << this->name << " not found!" << endl;
     return 0;
 }
@@ -66,7 +77,7 @@ vector<VRPropertyPtr> VRConcept::getProperties(string type) {
 
 void VRConcept::getProperties(map<string, VRPropertyPtr>& res) {
     if (auto p = parent.lock()) p->getProperties(res);
-    for (auto p : properties) res[p.second->name] = p.second;
+    for (auto p : properties) res[p.second->getName()] = p.second;
 }
 
 vector<VRPropertyPtr> VRConcept::getProperties() {
@@ -78,7 +89,7 @@ vector<VRPropertyPtr> VRConcept::getProperties() {
 }
 
 int VRConcept::getPropertyID(string name) {
-    for (auto p : getProperties()) if (p->name == name) return p->ID;
+    for (auto p : getProperties()) if (p->getName() == name) return p->ID;
     return -1;
 }
 
@@ -90,7 +101,7 @@ void VRConcept::getDescendance(vector<VRConceptPtr>& concepts) {
 bool VRConcept::is_a(string concept) {
     VRConceptPtr c = shared_from_this();
     while (c) {
-        if (c->name == concept) return true;
+        if (c->getName() == concept) return true;
         c = c->parent.lock();
     }
     return false;

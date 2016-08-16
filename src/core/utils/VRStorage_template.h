@@ -27,24 +27,25 @@ void VRStorage::save_on_cb(T* t, string tag, xmlpp::Element* e) {
 }
 
 template<typename T>
-void VRStorage::save_str_map_cb(map<string, T*>* mt, string tag, xmlpp::Element* e) {
+void VRStorage::save_str_map_cb(map<string, T*>* mt, string tag, bool under, xmlpp::Element* e) {
+    if (under) e = e->add_child(tag);
     for (auto t : *mt) {
-        xmlpp::Element* ei = e->add_child(tag);
-        t.second->save(ei);
+        auto ei = t.second->saveUnder(e);
+        t.second->save(ei); // TODO: some classes like VRScript have a custom save method
     }
 }
 
 template<typename T>
-void VRStorage::save_int_map_cb(map<int, T*>* mt, string tag, xmlpp::Element* e) {
+void VRStorage::save_str_objmap_cb(map<string, std::shared_ptr<T> >* mt, string tag, bool under, xmlpp::Element* e) {
+    if (under) e = e->add_child(tag);
     for (auto t : *mt) {
-        xmlpp::Element* ei = e->add_child(tag);
-        t.second->save(ei);
-        ei->set_attribute("ID", toString(t.first));
+        auto ei = t.second->saveUnder(e);
     }
 }
 
 template<typename T>
-void VRStorage::save_int_objmap_cb(map<int, std::shared_ptr<T> >* mt, string tag, xmlpp::Element* e) {
+void VRStorage::save_int_map_cb(map<int, T*>* mt, string tag, bool under, xmlpp::Element* e) {
+    if (under) e = e->add_child(tag);
     for (auto t : *mt) {
         auto ei = t.second->saveUnder(e);
         ei->set_attribute("ID", toString(t.first));
@@ -52,12 +53,25 @@ void VRStorage::save_int_objmap_cb(map<int, std::shared_ptr<T> >* mt, string tag
 }
 
 template<typename T>
-void VRStorage::load_int_objmap_cb(map<int, std::shared_ptr<T> >* mt, string tag, xmlpp::Element* e) {
+void VRStorage::save_int_objmap_cb(map<int, std::shared_ptr<T> >* mt, string tag, bool under, xmlpp::Element* e) {
+    if (under) e = e->add_child(tag);
+    for (auto t : *mt) {
+        auto ei = t.second->saveUnder(e);
+        ei->set_attribute("ID", toString(t.first));
+    }
+}
+
+template<typename T>
+void VRStorage::load_int_objmap_cb(map<int, std::shared_ptr<T> >* mt, string tag, bool under, xmlpp::Element* e) {
+    if (under) e = getChild(e, tag);
+    if (!e) return;
     for (auto n : e->get_children()) {
         xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
         if (!el) continue;
 
-        string _ID = el->get_attribute("ID")->get_value();
+        string _ID;
+        if (el->get_attribute("ID")) _ID = el->get_attribute("ID")->get_value();
+        else { cout << "VRStorage::load_int_objmap_cb Error: object " << el->get_name() << " in map '" << tag << "' has no attribute ID!\n"; return; }
         int ID = toInt( _ID );
         if (mt->count(ID) == 0) {
             auto t = T::create();
@@ -68,7 +82,27 @@ void VRStorage::load_int_objmap_cb(map<int, std::shared_ptr<T> >* mt, string tag
 }
 
 template<typename T>
-void VRStorage::load_str_map_cb(map<string, T*>* mt, string tag, xmlpp::Element* e) {
+void VRStorage::load_str_objmap_cb(map<string, std::shared_ptr<T> >* mt, string tag, bool under, xmlpp::Element* e) {
+    if (under) e = getChild(e, tag);
+    if (!e) return;
+    for (auto n : e->get_children()) {
+        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
+        if (!el) continue;
+
+        string name = el->get_name();
+        if (el->get_attribute("base_name")) name = el->get_attribute("base_name")->get_value();
+        auto t = T::create(name);
+        t->load(el);
+
+        name = t->getName();
+        if (!mt->count(name)) (*mt)[name] = t;
+    }
+}
+
+template<typename T>
+void VRStorage::load_str_map_cb(map<string, T*>* mt, string tag, bool under, xmlpp::Element* e) {
+    if (under) e = getChild(e, tag);
+    if (!e) return;
     for (auto n : e->get_children()) {
         xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
         if (!el) continue;
@@ -85,7 +119,9 @@ void VRStorage::load_str_map_cb(map<string, T*>* mt, string tag, xmlpp::Element*
 }
 
 template<typename T>
-void VRStorage::load_int_map_cb(map<int, T*>* mt, string tag, xmlpp::Element* e) {
+void VRStorage::load_int_map_cb(map<int, T*>* mt, string tag, bool under, xmlpp::Element* e) {
+    if (under) e = getChild(e, tag);
+    if (!e) return;
     for (auto n : e->get_children()) {
         xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
         if (!el) continue;
@@ -167,26 +203,34 @@ void VRStorage::storeObjName(string tag, To* o, T* t) {
 }
 
 template<typename T>
-void VRStorage::storeMap(string tag, map<int, std::shared_ptr<T> >* mt) {
+void VRStorage::storeMap(string tag, map<string, std::shared_ptr<T> >* mt, bool under) {
     VRStorageBin b;
-    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_int_objmap_cb<T>, this, mt, tag, _1 ) );
-    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_int_objmap_cb<T>, this, mt, tag, _1 ) );
+    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_str_objmap_cb<T>, this, mt, tag, under, _1 ) );
+    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_str_objmap_cb<T>, this, mt, tag, under, _1 ) );
     storage[tag] = b;
 }
 
 template<typename T>
-void VRStorage::storeMap(string tag, map<string, T*>* mt) {
+void VRStorage::storeMap(string tag, map<int, std::shared_ptr<T> >* mt, bool under) {
     VRStorageBin b;
-    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_str_map_cb<T>, this, mt, tag, _1 ) );
-    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_str_map_cb<T>, this, mt, tag, _1 ) );
+    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_int_objmap_cb<T>, this, mt, tag, under, _1 ) );
+    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_int_objmap_cb<T>, this, mt, tag, under, _1 ) );
     storage[tag] = b;
 }
 
 template<typename T>
-void VRStorage::storeMap(string tag, map<int, T*>* mt) {
+void VRStorage::storeMap(string tag, map<string, T*>* mt, bool under) {
     VRStorageBin b;
-    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_int_map_cb<T>, this, mt, tag, _1 ) );
-    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_int_map_cb<T>, this, mt, tag, _1 ) );
+    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_str_map_cb<T>, this, mt, tag, under, _1 ) );
+    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_str_map_cb<T>, this, mt, tag, under, _1 ) );
+    storage[tag] = b;
+}
+
+template<typename T>
+void VRStorage::storeMap(string tag, map<int, T*>* mt, bool under) {
+    VRStorageBin b;
+    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_int_map_cb<T>, this, mt, tag, under, _1 ) );
+    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_int_map_cb<T>, this, mt, tag, under, _1 ) );
     storage[tag] = b;
 }
 

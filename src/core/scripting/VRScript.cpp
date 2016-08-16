@@ -166,6 +166,7 @@ void VRScript::update() {
 }
 
 VRScript::VRScript(string _name) {
+    setStorageType("Script");
     setSeparator('_');
     setNameSpace("__script__");
     setName(_name);

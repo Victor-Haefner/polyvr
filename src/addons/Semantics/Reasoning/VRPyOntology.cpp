@@ -26,7 +26,7 @@ PyMethodDef VRPyProperty::methods[] = {
 };
 
 PyObject* VRPyProperty::getName(VRPyProperty* self) {
-    return PyString_FromString( self->objPtr->name.c_str() );
+    return PyString_FromString( self->objPtr->getName().c_str() );
 }
 
 PyObject* VRPyProperty::toString(VRPyProperty* self) {
@@ -53,7 +53,7 @@ PyMethodDef VRPyConcept::methods[] = {
 };
 
 PyObject* VRPyConcept::getName(VRPyConcept* self) {
-    return PyString_FromString( self->objPtr->name.c_str() );
+    return PyString_FromString( self->objPtr->getName().c_str() );
 }
 
 PyObject* VRPyConcept::toString(VRPyConcept* self) {
@@ -148,7 +148,7 @@ PyObject* VRPyEntity::setVector(VRPyEntity* self, PyObject* args) {
 }
 
 PyObject* VRPyEntity::getName(VRPyEntity* self) {
-    return PyString_FromString( self->objPtr->name.c_str() );
+    return PyString_FromString( self->objPtr->getName().c_str() );
 }
 
 PyObject* VRPyEntity::toString(VRPyEntity* self) {

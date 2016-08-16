@@ -28,6 +28,8 @@ class VRSemanticManager : public VRStorage {
         void remOntology(VROntologyPtr o);
         void renameOntology(string name, string new_name);
         vector<VROntologyPtr> getOntologies();
+
+        void update();
 };
 
 OSG_END_NAMESPACE;

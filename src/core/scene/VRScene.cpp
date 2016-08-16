@@ -224,7 +224,7 @@ void VRScene::load(xmlpp::Element* e) {
     VRBackground::update();
     VRNavigator::update();
     VRMaterialManager::update();
-    //semanticManager->update();
+    semanticManager->update();
 }
 
 VRSemanticManagerPtr VRScene::getSemanticManager() { return semanticManager; }

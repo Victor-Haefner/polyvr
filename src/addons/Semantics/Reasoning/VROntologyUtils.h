@@ -7,10 +7,9 @@ using namespace std;
 
 int guid();
 
-struct VRNamedID {
-    string name;
+struct VROntoID {
     int ID;
-    VRNamedID();
+    VROntoID();
 };
 
 #endif

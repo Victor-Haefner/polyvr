@@ -43,7 +43,7 @@ Variable::Variable() {;}
 
 string Variable::toString() {
     string s = value+"("+concept+"){";
-    for (auto i : instances) s += i.second->name+",";
+    for (auto i : instances) s += i.second->getName()+",";
     if (instances.size() > 0) s.pop_back();
     s +="}[";
     if (isAnonymous) s += "anonymous, ";
@@ -65,7 +65,7 @@ Variable::Variable(VROntologyPtr onto, string concept, string var) {
 
     if ( auto i = onto->getInstance(var) ) {
         instances[i->ID] = i; // found an instance with the right name
-        this->concept = i->concept->name;
+        this->concept = i->concept->getName();
         isAnonymous = false;
     } else { // get all instances of the required type
             for (auto i : onto->getInstances(concept)) instances[i->ID] = i;
@@ -123,9 +123,9 @@ Context::Context(VROntologyPtr onto) {
 
     cout << "Init context:" << endl;
     for (auto i : onto->instances) {
-        if (!i.second->concept) { cout << "Context::Context instance " << i.second->name << " has no concept!" << endl; continue; }
-        vars[i.second->name] = Variable::create( onto, i.second->concept->name, i.second->name );
-        cout << " add instance " << i.second->name << " of concept " << i.second->concept->name << endl;
+        if (!i.second->concept) { cout << "Context::Context instance " << i.second->getName() << " has no concept!" << endl; continue; }
+        vars[i.second->getName()] = Variable::create( onto, i.second->concept->getName(), i.second->getName() );
+        cout << " add instance " << i.second->getName() << " of concept " << i.second->concept->getName() << endl;
     }
 
     for ( auto r : onto->getRules()) {
@@ -290,7 +290,7 @@ bool Variable::has(VariablePtr other, VROntologyPtr onto) {
             for (auto p : i1.second->properties) { // all properties of each instance
                 for (auto v : p.second) {
                     if (v->value == other->value) return true; // TODO: direct match with other variable value
-                    if (v->value == i2.second->name) { res = true; matches.push_back(i2.second); }
+                    if (v->value == i2.second->getName()) { res = true; matches.push_back(i2.second); }
                     if (res) break;
                 }
                 if (res) break;
@@ -320,7 +320,7 @@ bool VRReasoner::has(StatementPtr statement, Context& context) { // TODO
     auto Pconcept = context.onto->getConcept( left.var->concept ); // parent concept
     if (Cconcept == 0) { cout << "Warning (has): first concept " << right.var->concept << " not found!\n"; return false; }
     if (Pconcept == 0) { cout << "Warning (has): second concept " << left.var->concept << " not found!\n"; return false; }
-    auto prop = Pconcept->getProperties( Cconcept->name );
+    auto prop = Pconcept->getProperties( Cconcept->getName() );
     if (prop.size() == 0) cout << "Warning: has evaluation failed, property " << right.var->value << " missing!\n"; return false;
     return false;
 }
@@ -341,9 +341,9 @@ bool VRReasoner::apply(StatementPtr statement, Context& context) {
         auto Cconcept = context.onto->getConcept( right.var->concept ); // child concept
         auto Pconcept = context.onto->getConcept( left.var->concept ); // parent concept
         if (!Pconcept || !Cconcept) { cout << "Warning: failed to apply " << statement->toString() << endl; return false; }
-        auto prop = Pconcept->getProperties( Cconcept->name );
+        auto prop = Pconcept->getProperties( Cconcept->getName() );
         if (prop.size() == 0) { cout << "Warning: failed to apply " << statement->toString() << endl; return false; }
-        for (auto i : left.var->instances) i.second->add(prop[0]->name, right.var->value); // TODO: the first parameter is wrong
+        for (auto i : left.var->instances) i.second->add(prop[0]->getName(), right.var->value); // TODO: the first parameter is wrong
         statement->state = 1;
         cout << pre << greenBeg << "  give " << right.str << " to " << left.str << colEnd << endl;
     }

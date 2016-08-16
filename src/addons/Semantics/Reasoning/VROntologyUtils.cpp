@@ -6,6 +6,6 @@ int guid() {
     return id;
 }
 
-VRNamedID::VRNamedID() {
+VROntoID::VROntoID() {
     ID = guid();
 }

@@ -5,6 +5,7 @@
 #include "VROntologyRule.h"
 
 #include "addons/Semantics/VRSemanticsFwd.h"
+#include "core/utils/VRName.h"
 
 #include <map>
 #include <vector>
@@ -13,7 +14,7 @@
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
-struct VRConcept : public std::enable_shared_from_this<VRConcept>, public VRNamedID {
+struct VRConcept : public std::enable_shared_from_this<VRConcept>, public VROntoID, public VRName {
     VRConceptWeakPtr parent;
     VROntologyWeakPtr ontology;
     map<int, VRConceptPtr> children;
@@ -22,7 +23,7 @@ struct VRConcept : public std::enable_shared_from_this<VRConcept>, public VRName
     vector<VROntologyRule*> rules;
 
     VRConcept(string name, VROntologyPtr o);
-    static VRConceptPtr create(string name, VROntologyPtr o);
+    static VRConceptPtr create(string name = "none", VROntologyPtr o = 0);
 
     VRConceptPtr copy();
     VRConceptPtr append(string name);

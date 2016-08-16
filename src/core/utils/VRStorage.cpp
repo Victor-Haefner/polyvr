@@ -21,12 +21,14 @@ void VRStorage::regStorageSetupAfterFkt(VRUpdatePtr u) { f_setup_after.push_back
 void VRStorage::setStorageType(string t) { type = t; }
 
 void VRStorage::save(xmlpp::Element* e, int p) {
+    if (type == "Script") cout << "VRStorage::save " << e << endl;
     if (e == 0) return;
     if (persistency <= p) return;
     for (auto s : storage) (*s.second.f2)(e);
 }
 
 xmlpp::Element* VRStorage::saveUnder(xmlpp::Element* e, int p) {
+    if (type == "Script") cout << "VRStorage::saveUnder " << e << endl;
     if (e == 0) return 0;
     if (persistency <= p) return 0;
     e = e->add_child(type);

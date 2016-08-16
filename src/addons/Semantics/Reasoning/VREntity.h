@@ -3,16 +3,17 @@
 
 #include "VROntologyUtils.h"
 #include "VRConcept.h"
+#include "core/utils/VRName.h"
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
-struct VREntity : public VRNamedID {
+struct VREntity : public VROntoID, public VRName {
     VRConceptPtr concept = 0;
     map<string, vector<VRPropertyPtr> > properties;
 
     VREntity(string name, VRConceptPtr c = 0);
-    static VREntityPtr create(string name, VRConceptPtr c = 0);
+    static VREntityPtr create(string name = "none", VRConceptPtr c = 0);
     void setConcept(VRConceptPtr c);
 
     void set(string name, string value);

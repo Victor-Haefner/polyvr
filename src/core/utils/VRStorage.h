@@ -33,26 +33,30 @@ class VRStorage {
 
         template<typename T> void save_cb(T* t, string tag, xmlpp::Element* e);
         template<typename T> void save_on_cb(T* t, string tag, xmlpp::Element* e);
-        template<typename T> void save_str_map_cb(map<string, T*>* mt, string tag, xmlpp::Element* e);
-        template<typename T> void save_int_map_cb(map<int, T*>* mt, string tag, xmlpp::Element* e);
-        template<typename T> void save_int_objmap_cb(map<int, std::shared_ptr<T> >* mt, string tag, xmlpp::Element* e);
         template<typename T> void load_cb(T* t, string tag, xmlpp::Element* e);
-        template<typename T> void load_str_map_cb(map<string, T*>* mt, string tag, xmlpp::Element* e);
-        template<typename T> void load_int_map_cb(map<int, T*>* mt, string tag, xmlpp::Element* e);
-        template<typename T> void load_int_objmap_cb(map<int, std::shared_ptr<T> >* mt, string tag, xmlpp::Element* e);
         template<typename T> void save_vec_cb(vector<std::shared_ptr<T> >* v, xmlpp::Element* e);
         template<typename T> void load_vec_cb(vector<std::shared_ptr<T> >* v, xmlpp::Element* e);
         template<typename T> void save_obj_cb(std::shared_ptr<T>* v, string tag, xmlpp::Element* e);
         template<typename T> void load_obj_cb(std::shared_ptr<T>* v, string tag, xmlpp::Element* e);
+
+        template<typename T> void save_str_map_cb(map<string, T*>* mt, string tag, bool under, xmlpp::Element* e);
+        template<typename T> void save_int_map_cb(map<int, T*>* mt, string tag, bool under, xmlpp::Element* e);
+        template<typename T> void save_str_objmap_cb(map<string, std::shared_ptr<T> >* mt, string tag, bool under, xmlpp::Element* e);
+        template<typename T> void save_int_objmap_cb(map<int, std::shared_ptr<T> >* mt, string tag, bool under, xmlpp::Element* e);
+        template<typename T> void load_str_map_cb(map<string, T*>* mt, string tag, bool under, xmlpp::Element* e);
+        template<typename T> void load_int_map_cb(map<int, T*>* mt, string tag, bool under, xmlpp::Element* e);
+        template<typename T> void load_str_objmap_cb(map<string, std::shared_ptr<T> >* mt, string tag, bool under, xmlpp::Element* e);
+        template<typename T> void load_int_objmap_cb(map<int, std::shared_ptr<T> >* mt, string tag, bool under, xmlpp::Element* e);
 
     protected:
 
         template<typename T> void store(string tag, T* t);
         template<typename T> void storeObj(string tag, std::shared_ptr<T>& o);
         template<typename T> void storeObjVec(string tag, vector<std::shared_ptr<T> >& v);
-        template<typename T> void storeMap(string tag, map<string, T*>* mt);
-        template<typename T> void storeMap(string tag, map<int, T*>* mt);
-        template<typename T> void storeMap(string tag, map<int, std::shared_ptr<T> >* mt);
+        template<typename T> void storeMap(string tag, map<string, T*>* mt, bool under = false);
+        template<typename T> void storeMap(string tag, map<string, std::shared_ptr<T> >* mt, bool under = false);
+        template<typename T> void storeMap(string tag, map<int, T*>* mt, bool under = false);
+        template<typename T> void storeMap(string tag, map<int, std::shared_ptr<T> >* mt, bool under = false);
         template<typename To, typename T> void storeObjName(string tag, To* o, T* t);
 
         void setStorageType(string t);

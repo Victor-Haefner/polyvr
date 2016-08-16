@@ -6,7 +6,10 @@
 using namespace OSG;
 
 VROntologyRule::VROntologyRule(string rule) {
-    this->name = "rule";
+    setStorageType("Rule");
+    setNameSpace("rule");
+    setUniqueName(false);
+    setName("rule");
     this->rule = rule;
 }
 

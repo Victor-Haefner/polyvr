@@ -20,7 +20,7 @@ void VRProcess::addFragment(VRProcessFragment* f) {
 
 VRProductionJob::VRProductionJob(VRProduct* p) {
     product = p;
-    process = new VRProcess("production_of_"+p->name);
+    process = new VRProcess("production_of_"+p->getName());
 }
 
 VRProduction::VRProduction() {
@@ -111,7 +111,7 @@ VRProcess::VRProcess(string name) { this->name = name; }
 
 string VRProcess::toString() {
     string data = "process " + name + "\n";
-    for (auto f : fragments) data += " fragment " + f.second->name + "\n";
+    for (auto f : fragments) data += " fragment " + f.second->getName() + "\n";
     return data;
 }
 

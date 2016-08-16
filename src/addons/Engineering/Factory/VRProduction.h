@@ -8,6 +8,7 @@
 
 #include "core/objects/VRObjectFwd.h"
 #include "addons/Semantics/Reasoning/VROntology.h"
+#include "core/utils/VRName.h"
 
 class FLogistics;
 class FNetwork;
@@ -19,7 +20,7 @@ struct VRProcessFragment;
 struct VRProcessRequirement;
 struct VRProcessDependency;
 
-struct VRProcessResult : VRNamedID {
+struct VRProcessResult : VROntoID, VRName {
     string state;
     VRProcessResult(string name);
 };
@@ -28,11 +29,11 @@ struct VRProcessDependency {
     vector<VRProcessFragment*> subprocess;
 };
 
-struct VRProcessAction : VRNamedID {
+struct VRProcessAction : VROntoID, VRName {
     vector<VRProcessFragment*> subprocess;
 };
 
-struct VRProcessFragment : VRNamedID {
+struct VRProcessFragment : VROntoID, VRName {
     VRProcessAction* action = 0;
     vector<VRProcessDependency*> dependencies;
     vector<VRProcessResult*> results;
@@ -41,7 +42,7 @@ struct VRProcessFragment : VRNamedID {
     VRProcessResult* addResult(string name);
 };
 
-struct VRProcess : VRNamedID {
+struct VRProcess : VROntoID, VRName {
     map<int, VRProcessFragment*> fragments;
 
     VRProcess(string name);
@@ -49,12 +50,12 @@ struct VRProcess : VRNamedID {
     string toString();
 };
 
-struct VRProduct : VRNamedID {
+struct VRProduct : VROntoID, VRName {
     VROntologyPtr description;
     VRProduct(string name);
 };
 
-struct VRProductionMachine : VRNamedID {
+struct VRProductionMachine : VROntoID, VRName {
     VRGeometryPtr geo = 0;
     VROntologyPtr description;
     VRProductionMachine();

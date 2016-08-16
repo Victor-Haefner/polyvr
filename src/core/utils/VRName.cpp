@@ -17,6 +17,7 @@ VRName::VRName() {
     store("name_suffix", &name_suffix);
     store("base_name", &base_name);
     store("name_space", &nameSpace);
+    store("unique", &unique);
 
     regStorageSetupFkt( VRFunction<int>::create("name_update", boost::bind(&VRName_base::compileName, dynamic_cast<VRName_base*>(this))) );
 }
@@ -49,9 +50,9 @@ void VRName_base::compileName() {
     setNameSpace(nameSpace);
     name = base_name;
     map<string, map<int, string> >& nameDict = nameDicts[nameSpace];
-    if (name_suffix>0) name += separator + toString(name_suffix);
-    if (nameDict.count(base_name) == 0) nameDict[base_name] = map<int, string>();
-    nameDict[base_name][name_suffix] = name;
+    if (name_suffix>0 && unique) name += separator + toString(name_suffix);
+    if (nameDict.count(base_name) == 0 && unique) nameDict[base_name] = map<int, string>();
+    if (unique) nameDict[base_name][name_suffix] = name;
 }
 
 string VRName_base::setName(string name) {
@@ -88,13 +89,14 @@ string VRName_base::setName(string name) {
     base_name = name; // set new base name
 
     // get suffix
-    if (nameDict.count(base_name) == 0) name_suffix = 0;
-    else {
-        for(unsigned int i=0; i<=nameDict[base_name].size(); i++) {
-            if (nameDict[base_name].count(i) == 1) continue;
-
-            name_suffix = i;
-            break;
+    if (unique) {
+        if (nameDict.count(base_name) == 0) name_suffix = 0;
+        else {
+            for(unsigned int i=0; i<=nameDict[base_name].size(); i++) {
+                if (nameDict[base_name].count(i) == 1) continue;
+                name_suffix = i;
+                break;
+            }
         }
     }
 
@@ -105,6 +107,7 @@ string VRName_base::setName(string name) {
 string VRName_base::getName() { return name; }
 string VRName_base::getBaseName() { return base_name; }
 int VRName_base::getNameSuffix() { return name_suffix; }
+void VRName_base::setUniqueName(bool b) { unique = b; }
 
 void VRName_base::saveName(xmlpp::Element* e) {
     e->set_attribute("name_suffix", toString(name_suffix));
@@ -127,36 +130,24 @@ void VRName_base::loadName(xmlpp::Element* e) {
 
 int VRName_base::getBaseNameNumber() {
     int N = 0;
-    map<string, map<string, map<int, string> > >::iterator itr1;
-    for (itr1 = nameDicts.begin(); itr1 != nameDicts.end(); itr1++) {
-        N += itr1->second.size();
-    }
+    for (auto n : nameDicts) N += n.second.size();
     return N;
 }
 
 int VRName_base::getNameNumber() {
     int N = 0;
-    map<string, map<string, map<int, string> > >::iterator itr1;
-    map<string, map<int, string> >::iterator itr2;
-    for (itr1 = nameDicts.begin(); itr1 != nameDicts.end(); itr1++) {
-        for (itr2 = itr1->second.begin(); itr2 != itr1->second.end(); itr2++) {
-            N += itr2->second.size();
-        }
+    for (auto n : nameDicts) {
+        for (auto n2 : n.second) N += n2.second.size();
     }
     return N;
 }
 
 void VRName_base::printNameDict() { // call this to see what is not deleted -> add to hidden button?
-    map<string, map<string, map<int, string> > >::iterator itr1;
-    map<string, map<int, string> >::iterator itr2;
-    map<int, string>::iterator itr3;
-    for (itr1 = nameDicts.begin(); itr1 != nameDicts.end(); itr1++) {
-        cout << "\n" << itr1->first << flush;
-        for (itr2 = itr1->second.begin(); itr2 != itr1->second.end(); itr2++) {
-            cout << "\n " << itr2->first << flush;
-            for (itr3 = itr2->second.begin(); itr3 != itr2->second.end(); itr3++) {
-                cout << "\n  " << itr3->second << flush;
-            }
+    for (auto n : nameDicts) {
+        cout << "\n" << n.first << flush;
+        for (auto n2 : n.second) {
+            cout << "\n " << n2.first << flush;
+            for (auto n3 : n2.second) cout << "\n  " << n3.second << flush;
         }
     }
 }

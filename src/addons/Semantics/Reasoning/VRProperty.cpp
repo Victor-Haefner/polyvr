@@ -5,7 +5,10 @@
 using namespace OSG;
 
 VRProperty::VRProperty(string name, string type) {
-    this->name = name;
+    setStorageType("Property");
+    setNameSpace("property");
+    setUniqueName(false);
+    setName(name);
     this->type = type;
 }
 
