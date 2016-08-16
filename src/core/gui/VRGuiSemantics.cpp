@@ -36,16 +36,13 @@
     - 3D layout algorithms
 
 - add entities
+- add rules
 
-
-- visualise entities
-- link concepts to parent concepts
-- link entities to concepts
-- link object properties of entites to property entity
-- link object properties of concept to property concept
-
-- store user changes to build in SBBs
-- store user SBBs
+- fix connectors
+    - link concepts to parent concepts
+    - link entities to concepts
+    - link object properties of entites to property entity
+    - link object properties of concept to property concept
 
 IDEAS:
 - instead of connectors use color highlights:
@@ -197,6 +194,7 @@ void VRGuiSemantics::ConceptWidget::on_rem_clicked() {
 }
 
 void VRGuiSemantics::ConceptWidget::on_edit_prop_clicked() {
+    if (!selected_property) return;
     Gtk::Dialog* dialog;
     VRGuiBuilder()->get_widget("PropertyEdit", dialog);
     setTextEntry("entry23", selected_property->getName());
@@ -330,8 +328,12 @@ void VRGuiSemantics::updateLayout() {
     }
 
     for (auto c : concepts) {
-        for (auto c2 : c.second->concept->children) {
-            g.connect(conceptIDs[c.first],conceptIDs[c2.second->getName()]);
+        for (auto c2 : c.second->concept->children) { // parent child connection
+            g.connect(conceptIDs[c.first], conceptIDs[c2.second->getName()], graph<Vec3f>::HIERARCHY);
+            for (auto c3 : c.second->concept->children) { // sibling connection
+                if (c2 != c3)
+                    g.connect(conceptIDs[c2.second->getName()], conceptIDs[c3.second->getName()], graph<Vec3f>::SIBLING);
+            }
         }
     }
 
@@ -476,6 +478,8 @@ void VRGuiSemantics::updateOntoList() {
         if (o->getFlag() == "custom") itr = store->append(itr_own->children());
         setRow( itr, o->getName(), o->getFlag());
     }
+
+    clearCanvas();
 }
 
 void VRGuiSemantics::copyConcept(ConceptWidget* w) {

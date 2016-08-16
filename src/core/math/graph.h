@@ -8,11 +8,18 @@ using namespace std;
 template<class T>
 class graph {
     public:
+        enum CONNECTION {
+            SIMPLE,
+            HIERARCHY,
+            SIBLING
+        };
+
         struct edge {
             int from;
             int to;
+            CONNECTION connection;
 
-            edge(int i, int j);
+            edge(int i, int j, CONNECTION c);
         };
 
     private:
@@ -25,7 +32,7 @@ class graph {
 
         int addNode();
         int addNode(T t);
-        void connect(int i, int j);
+        void connect(int i, int j, CONNECTION c = SIMPLE);
 
         vector<T>& getNodes();
         vector<vector<edge>>& getEdges();

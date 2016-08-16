@@ -18,13 +18,29 @@ void VRGraphLayout::applySprings(int N, float eps) {
                 auto f2 = getFlag(e.to);
                 Vec3f& n1 = g.getNodes()[e.from];
                 Vec3f& n2 = g.getNodes()[e.to];
+
                 Vec3f d = n2-n1;
                 float x = (d.length() - radius)*eps; // displacement
                 if (abs(x) < eps) continue;
+
                 Vec3f g; // TODO: not yet working!
                 g = gravity*x*0.1;
-                if (f2 != FIXED) n2 += -d*x + g;
-                else if (f1 != FIXED) n1 += d*x + g;
+                switch (e.connection) {
+                    case graph<Vec3f>::SIMPLE:
+                        if (f1 != FIXED) n1 += d*x + g;
+                        if (f2 != FIXED) n2 += -d*x + g;
+                        break;
+                    case graph<Vec3f>::HIERARCHY:
+                        if (f2 != FIXED) n2 += -d*x + g;
+                        else if (f1 != FIXED) n1 += d*x + g;
+                        break;
+                    case graph<Vec3f>::SIBLING:
+                        if (x < 0) { // push away siblings
+                            if (f1 != FIXED) n1 += d*x + g;
+                            if (f2 != FIXED) n2 += -d*x + g;
+                        }
+                        break;
+                }
             }
         }
     }

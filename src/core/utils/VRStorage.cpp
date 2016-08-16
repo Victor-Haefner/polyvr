@@ -38,7 +38,6 @@ xmlpp::Element* VRStorage::saveUnder(xmlpp::Element* e, int p, string t) {
 
 void VRStorage::load(xmlpp::Element* e) {
     if (e == 0) return;
-    cout << "VRStorage::load " << type << " " << storage.size() << " " << f_setup.size() << endl;
     for (auto s : storage) (*s.second.f1)(e);
     for (auto f : f_setup) (*f)(0);
     for (auto f : f_setup_after) VRSceneManager::get()->queueJob(f);

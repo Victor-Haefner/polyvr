@@ -5,9 +5,9 @@
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1" type="Light" unique="1" visible="1">
         <Object accept_root="1" aspect="1" at="0 0 2" at_dir="1" base_name="Default" far="512" fov="1.0472" from="0 0 4.14496" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
-            <Node active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
+            <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
           </Object>
-          <Node active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
+          <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
       </Object>
     </Object>
@@ -82,7 +82,13 @@
     <Ontology base_name="new_concept_1" flag="custom" name_space="Ontology" name_suffix="0" persistency="666" unique="1">
       <Thing base_name="Thing" name_space="concept" name_suffix="0" persistency="666" unique="0">
         <Children>
-          <Concept base_name="Thing_derived" name_space="concept" name_suffix="0" persistency="666" unique="0" ID="235"/>
+          <Concept base_name="Thing_derived" name_space="concept" name_suffix="0" persistency="666" unique="0" ID="235">
+            <Properties>
+              <Property base_name="new_property_1" name_space="property" name_suffix="0" persistency="666" type="aaa" unique="0" value="" ID="243"/>
+              <Property base_name="new_property_2" name_space="property" name_suffix="0" persistency="666" type="bb" unique="0" value="" ID="244"/>
+              <Property base_name="new_property_3" name_space="property" name_suffix="0" persistency="666" type="akls" unique="0" value="" ID="245"/>
+            </Properties>
+          </Concept>
         </Children>
       </Thing>
     </Ontology>

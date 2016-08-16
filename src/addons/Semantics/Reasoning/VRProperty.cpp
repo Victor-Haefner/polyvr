@@ -4,12 +4,15 @@
 
 using namespace OSG;
 
-VRProperty::VRProperty(string name, string type) {
+VRProperty::VRProperty(string name, string t) {
     setStorageType("Property");
     setNameSpace("property");
     setUniqueName(false);
     setName(name);
-    this->type = type;
+    type = t;
+
+    store("type", &type);
+    store("value", &value);
 }
 
 VRPropertyPtr VRProperty::create(string name, string type) { return VRPropertyPtr(new VRProperty(name, type)); }
@@ -23,7 +26,7 @@ string VRProperty::toString() {
 }
 
 VRPropertyPtr VRProperty::copy() {
-    auto p = create(name, type);
+    auto p = create(base_name, type);
     p->value = value;
     return p;
 }
