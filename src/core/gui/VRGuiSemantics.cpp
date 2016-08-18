@@ -32,20 +32,21 @@
 /** TODO:
 
 - VRGraphLayout
-    - 3D bounding boxes and connectors
+    - 3D bounding boxes
     - 3D layout algorithms
 
 - add entities
 - add rules
 
 - fix connectors
-    - link concepts to parent concepts
+    - add connector anchor class
+        - fix connector type depending on anchor normal
     - link entities to concepts
     - link object properties of entites to property entity
     - link object properties of concept to property concept
 
 IDEAS:
-- instead of connectors use color highlights:
+- use color highlights:
     - click on a concept -> all parent concept names go red
                          -> all child concepts go blue
     - click on a obj property -> concept name goes green
@@ -250,9 +251,21 @@ void VRGuiSemantics::ConceptWidget::on_select() {
 
 }
 
-void VRGuiSemantics::ConceptWidget::move(float x, float y) {
-    this->x = x; this->y = y;
-    canvas->move(*widget, x, y);
+void VRGuiSemantics::ConceptWidget::move(Vec2f p) {
+    pos = p;
+    float w = widget->get_width();
+    float h = widget->get_height();
+    canvas->move(*widget, p[0]-w*0.5, p[1]-h*0.5);
+}
+
+Vec2f VRGuiSemantics::ConceptWidget::getAnchorPoint(Vec2f p) {
+    float w = abs(p[0]-pos[0]);
+    float h = abs(p[1]-pos[1]);
+    if (w >= h && p[0] < pos[0]) return pos - Vec2f(widget->get_width()*0.5, 0);
+    if (w >= h && p[0] > pos[0]) return pos + Vec2f(widget->get_width()*0.5, 0);
+    if (w < h && p[1] < pos[1]) return pos - Vec2f(0, widget->get_height()*0.5);
+    if (w < h && p[1] > pos[1]) return pos + Vec2f(0, widget->get_height()*0.5);
+    return pos;
 }
 
 void VRGuiSemantics::ConceptWidget::on_select_property() {
@@ -289,10 +302,12 @@ void VRGuiSemantics::ConnectorWidget::update() {
     auto ws1 = w1.lock();
     auto ws2 = w2.lock();
     if (ws1 && ws2) {
-        float x1 = ws1->x;
-        float x2 = ws2->x;
-        float y1 = ws1->y;
-        float y2 = ws2->y;
+        Vec2f a1 = ws1->getAnchorPoint(ws2->pos);
+        Vec2f a2 = ws2->getAnchorPoint(ws1->pos);
+        float x1 = a1[0];
+        float x2 = a2[0];
+        float y1 = a1[1];
+        float y2 = a2[1];
 
         float w = abs(x2-x1);
         float h = abs(y2-y1);
@@ -437,7 +452,7 @@ void VRGuiSemantics::updateLayout() {
     map<string, int> conceptIDs;
 
     for (auto c : concepts) {
-        Vec3f p = Vec3f(c.second->x, c.second->y, 0);
+        Vec3f p = Vec3f(c.second->pos[0], c.second->pos[1], 0);
         conceptIDs[c.first] = g.addNode(p);
         if (c.first == "Thing") layout.fixNode(conceptIDs[c.first]);
     }
@@ -457,7 +472,7 @@ void VRGuiSemantics::updateLayout() {
     int i = 0;
     for (auto c : concepts) {
         Vec3f& p = g.getNodes()[i];
-        c.second->move(p[0], p[1]);
+        c.second->move(Vec2f(p[0], p[1]));
         i++;
     }
 
@@ -485,7 +500,7 @@ void VRGuiSemantics::updateCanvas() {
 
         int x = 10+cID*60;
         int y = 10+40*lvl;
-        cw->move(x,y);
+        cw->move(Vec2f(x,y));
 
         if (lvl > 0) {
             auto co = ConnectorWidgetPtr( new ConnectorWidget(canvas) );
@@ -548,7 +563,7 @@ void VRGuiSemantics_on_notebook_switched(GtkNotebook* notebook, GtkNotebookPage*
 void VRGuiSemantics_on_drag_data_received(const Glib::RefPtr<Gdk::DragContext>& context, int x, int y, const Gtk::SelectionData& data, guint info, guint time, VRGuiSemantics* self) {
     if (data.get_target() != "concept") { cout << "VRGuiSemantics_on_drag_data_received, wrong dnd: " << data.get_target() << endl; return; }
     VRGuiSemantics::ConceptWidget* e = *(VRGuiSemantics::ConceptWidget**)data.get_data();
-    e->move(x,y);
+    e->move(Vec2f(x,y));
 }
 
 VRGuiSemantics::VRGuiSemantics() {
@@ -605,7 +620,7 @@ void VRGuiSemantics::copyConcept(ConceptWidget* w) {
     auto c = current->addConcept(w->concept->getName() + "_derived", w->concept->getName());
     auto cw = ConceptWidgetPtr( new ConceptWidget(this, canvas, c) );
     concepts[c->getName()] = cw;
-    cw->move(w->x+100,w->y);
+    cw->move(w->pos + Vec2f(90,0));
     canvas->show_all();
 }
 

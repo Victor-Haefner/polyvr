@@ -140,7 +140,7 @@ GeometryTransitPtr CSGGeometry::toOsgGeometry(CGAL::Polyhedron *p) {
 }
 
 size_t CSGGeometry::isKnownPoint(OSG::Pnt3f newPoint) {
-	vector<void*> resultData = oct->radiusSearch(newPoint.x(), newPoint.y(), newPoint.z(), thresholdL);
+	vector<void*> resultData = oct->radiusSearch(newPoint.subZero(), thresholdL);
 	if (resultData.size() > 0) return *(size_t*)resultData.at(0);
 	return numeric_limits<size_t>::max();
 }

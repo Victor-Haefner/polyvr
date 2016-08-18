@@ -137,7 +137,7 @@ void VRSnappingEngine::addObject(VRTransformPtr obj, float weight) {
     if (!obj) return;
     objects[obj] = obj->getWorldMatrix();
     Vec3f p = obj->getWorldPosition();
-    positions->add(p[0], p[1], p[2], obj.get());
+    positions->add(p, obj.get());
 }
 
 void VRSnappingEngine::remObject(VRTransformPtr obj) {

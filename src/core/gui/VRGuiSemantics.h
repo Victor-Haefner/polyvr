@@ -2,6 +2,7 @@
 #define VRGUISEMANTICS_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
+#include <OpenSG/OSGVector.h>
 #include "core/scene/VRSceneManager.h"
 #include "core/utils/VRFunctionFwd.h"
 #include "addons/Semantics/VRSemanticsFwd.h"
@@ -11,6 +12,7 @@
 
 namespace Gtk {
     class Fixed;
+    class Frame;
     class Widget;
     class Label;
     class TreeView;
@@ -23,11 +25,11 @@ using namespace std;
 class VRGuiSemantics {
     public:
         struct ConceptWidget {
-            float x, y;
+            Vec2f pos;
 
             VRGuiSemantics* manager = 0;
             Gtk::Fixed* canvas = 0;
-            Gtk::Widget* widget = 0;
+            Gtk::Frame* widget = 0;
             Gtk::Label* label = 0;
             Gtk::TreeView* treeview = 0;
             VRConceptPtr concept;
@@ -47,7 +49,8 @@ class VRGuiSemantics {
             void on_edit_prop_clicked();
             bool on_expander_clicked(GdkEventButton* e);
 
-            void move(float x, float y);
+            void move(Vec2f p);
+            Vec2f getAnchorPoint(Vec2f p);
             void setPropRow(Gtk::TreeModel::iterator iter, string name, string type, string color, int flag);
         };
 

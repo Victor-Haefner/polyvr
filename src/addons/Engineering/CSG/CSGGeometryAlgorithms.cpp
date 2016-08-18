@@ -93,7 +93,7 @@ CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryMTRecPtr geometry, Matrix wo
                 //cout << "add point " << curIndex << "   " << osgPos << endl;
 				size_t *curIndexPtr = new size_t;
 				*curIndexPtr = curIndex;
-				oct->add(OcPoint(p[0], p[1], p[2]), curIndexPtr);
+				oct->add(p, curIndexPtr);
 				curIndex++;
 			}
 		}

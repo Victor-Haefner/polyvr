@@ -32,7 +32,7 @@ void VRSegmentation::removeDuplicates(VRGeometryPtr geo) {
         vector<size_t> IDs(3);
         for (int i=0; i<3; i++) {
             Pnt3f p = it.getPosition(i);
-            vector<void*> resultData = oct.radiusSearch(p.x(), p.y(), p.z(), threshold);
+            vector<void*> resultData = oct.radiusSearch(p.subZero(), threshold);
             if (resultData.size() > 0) IDs[i] = *(size_t*)resultData.at(0);
             else IDs[i] = NLM;
         }
@@ -46,7 +46,7 @@ void VRSegmentation::removeDuplicates(VRGeometryPtr geo) {
 				IDs[i] = curIndex;
 				size_t *curIndexPtr = new size_t;
 				*curIndexPtr = curIndex;
-				oct.add(p.x(), p.y(), p.z(), curIndexPtr);
+				oct.add(p.subZero(), curIndexPtr);
 				curIndex++;
 			}
 		}
@@ -103,6 +103,7 @@ vector<int> VRSegmentation::growPatch(VRGeometryPtr geo, int i) {
 
 		return plane
 	}*/
+	return vector<int>();
 }
 
 
@@ -259,7 +260,7 @@ struct Accumulator_octree : public Accumulator {
     }
 
     float getWeight(Vec3f p) {
-        Octree* t = octree->get(p[0], p[1], p[2]);
+        Octree* t = octree->get(p);
         vector<void*> data = t->getData();
         if (data.size() == 0) return 0;
         Bin* bin = (Bin*)data[0];
@@ -268,7 +269,7 @@ struct Accumulator_octree : public Accumulator {
 
     void pushPoint(Pnt3f p, Vec3f n) {
         float w = 0;
-        Octree* t = octree->get(p[0], p[1], p[2]);
+        Octree* t = octree->get(p.subZero());
         vector<void*> data = t->getData();
         if (data.size() > 0) {
             Bin* bin = (Bin*)data[0];
@@ -276,7 +277,7 @@ struct Accumulator_octree : public Accumulator {
             bin->weight += 0.1;
         }
 
-        t->add(p[0], p[1], p[2], new Bin(), w);
+        t->add(p.subZero(), new Bin(), w);
     }
 
     vector<VRPlane> eval() {

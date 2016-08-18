@@ -4,28 +4,17 @@
 #include <stdlib.h>
 #include <vector>
 #include <OpenSG/OSGConfig.h>
+#include <OpenSG/OSGVector.h>
 
 using namespace std;
 
 OSG_BEGIN_NAMESPACE
 
-class OcPoint {
-    private:
+struct OcPoint {
+    Vec3f pos;
+    void* data;
 
-    public:
-        OcPoint(float x = 0, float y = 0, float z = 0);
-
-        float x,y,z;
-        void* data;
-
-        float length();
-        float dist(OcPoint p);
-        OcPoint mult(float a);
-        OcPoint add(OcPoint p);
-        OcPoint sub(OcPoint p);
-        bool inBox(OcPoint c, float size);
-
-        void print();
+    OcPoint(Vec3f p, void* d = 0);
 };
 
 class Octree {
@@ -33,7 +22,7 @@ class Octree {
         float resolution = 0.1;
         float size = 10;
 
-        OcPoint center;
+        Vec3f center;
 
         Octree* parent = 0;
         Octree* children[8] = {0,0,0,0,0,0,0,0};
@@ -41,23 +30,22 @@ class Octree {
         vector<void*> data;
 
         void destroy(Octree* guard);
-        void findInSphere(OcPoint p, float r, vector<void*>& res);
-        int getOctant(OcPoint p);
+        void findInSphere(Vec3f p, float r, vector<void*>& res);
+        int getOctant(Vec3f p);
+        bool inBox(Vec3f p, Vec3f c, float size);
 
     public:
         Octree(float resolution);
         Octree* getRoot();
 
-        void add(OcPoint p, void* data, int maxjump = -1);
-        void add(float x, float y, float z, void* data, int maxjump = -1);
-
+        void add(OcPoint p, int maxjump = -1);
+        void add(Vec3f p, void* data, int maxjump = -1);
         void set(Octree* node, void* data);
-        Octree* get(float x, float y, float z);
+        Octree* get(Vec3f p);
 
         void clear();
 
-        vector<void*> radiusSearch(OcPoint p, float r);
-        vector<void*> radiusSearch(float x, float y, float z, float r);
+        vector<void*> radiusSearch(Vec3f p, float r);
 
         void test();
         void print(int indent = 0);

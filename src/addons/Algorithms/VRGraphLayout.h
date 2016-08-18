@@ -27,7 +27,8 @@ class VRGraphLayout {
         Vec3f gravity;
         float radius = 1;
 
-        void applySprings(int N, float eps);
+        void applySprings(float eps);
+        void applyOccupancy(float eps);
 
         FLAG getFlag(int i);
 

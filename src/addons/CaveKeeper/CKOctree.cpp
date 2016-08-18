@@ -170,7 +170,7 @@ CKOctree::element* CKOctree::add(Vec3i _p) {
     element* cube = new element(this, Vec3f(_p), p, 1);
     cube->leaf = true;
     root->add(cube);
-    cube->updateLightning(lightTree->radiusSearch(_p[0], _p[1], _p[2], 10));
+    cube->updateLightning(lightTree->radiusSearch(Vec3f(_p), 10));
     N++;
 
     return cube;
@@ -178,7 +178,7 @@ CKOctree::element* CKOctree::add(Vec3i _p) {
 
 CKOctree::light* CKOctree::addLight(Vec3f p) {
     auto l = new light(p);
-    lightTree->add(p[0], p[1], p[2], l);
+    lightTree->add(p, l);
     return l;
 }
 
