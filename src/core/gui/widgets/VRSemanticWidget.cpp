@@ -43,13 +43,13 @@ VRSemanticWidget::VRSemanticWidget(VRGuiSemantics* m, Gtk::Fixed* canvas) {
 
     // buttons
     auto toolbar = Gtk::manage( new Gtk::Toolbar() );
+    toolbar->set_icon_size(Gtk::ICON_SIZE_MENU);
+    toolbar->set_show_arrow(0);
     auto bConceptRem = Gtk::manage( new Gtk::ToolButton(Gtk::Stock::CLOSE) ); // Gtk::Stock::MEDIA_RECORD
-    auto bConceptNew = Gtk::manage( new Gtk::ToolButton(Gtk::Stock::MEDIA_PLAY) );
     auto bConceptName = Gtk::manage( new Gtk::ToolButton(Gtk::Stock::EDIT) );
     auto bPropRem = Gtk::manage( new Gtk::ToolButton(Gtk::Stock::DELETE) ); // Gtk::Stock::MEDIA_RECORD
     auto bPropNew = Gtk::manage( new Gtk::ToolButton(Gtk::Stock::NEW) );
     auto bPropEdit = Gtk::manage( new Gtk::ToolButton(Gtk::Stock::EDIT) );
-    toolbar->add(*bConceptNew);
     toolbar->add(*bConceptName);
     toolbar->add(*bConceptRem);
     auto sep = Gtk::manage( new Gtk::SeparatorToolItem() );
@@ -57,21 +57,38 @@ VRSemanticWidget::VRSemanticWidget(VRGuiSemantics* m, Gtk::Fixed* canvas) {
     toolbar->add(*bPropNew);
     toolbar->add(*bPropEdit);
     toolbar->add(*bPropRem);
-    toolbar->set_icon_size(Gtk::ICON_SIZE_MENU);
-    toolbar->set_show_arrow(0);
 
-    bConceptNew->set_tooltip_text("new concept");
+    auto toolbar2 = Gtk::manage( new Gtk::Toolbar() );
+    toolbar2->set_icon_size(Gtk::ICON_SIZE_MENU);
+    toolbar2->set_show_arrow(0);
+    toolbar2->set_toolbar_style(Gtk::TOOLBAR_TEXT);
+    auto bConceptNew = Gtk::manage( new Gtk::ToolButton("C") );
+    auto bEntityNew = Gtk::manage( new Gtk::ToolButton("E") );
+    auto bRuleNew = Gtk::manage( new Gtk::ToolButton("R") );
+    sep = Gtk::manage( new Gtk::SeparatorToolItem() );
+    toolbar2->add(*sep);
+    toolbar2->add(*bConceptNew);
+    toolbar2->add(*bEntityNew);
+    toolbar2->add(*bRuleNew);
+
     bConceptName->set_tooltip_text("edit concept name");
     bConceptRem->set_tooltip_text("remove concept");
     bPropNew->set_tooltip_text("new property");
     bPropRem->set_tooltip_text("remove selected property");
 
+    bConceptNew->set_tooltip_text("new concept");
+    bEntityNew->set_tooltip_text("new entity");
+    bRuleNew->set_tooltip_text("new rule");
+
     // expander and frame
     auto vbox = Gtk::manage( new Gtk::VBox() );
+    auto hbox = Gtk::manage( new Gtk::HBox() );
     auto expander = Gtk::manage( new Gtk::Expander("") );
     label = (Gtk::Label*)expander->get_label_widget();
     expander->add(*vbox);
-    vbox->pack_start(*toolbar);
+    hbox->pack_start(*toolbar);
+    hbox->pack_start(*toolbar2);
+    vbox->pack_start(*hbox);
     vbox->pack_start(*treeview);
     auto frame = Gtk::manage( new Gtk::Frame() );
     frame->add(*expander);
