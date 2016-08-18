@@ -512,6 +512,10 @@
 		<Unit filename="src/core/gui/VRGuiUtils.h" />
 		<Unit filename="src/core/gui/VRGuiVectorEntry.cpp" />
 		<Unit filename="src/core/gui/VRGuiVectorEntry.h" />
+		<Unit filename="src/core/gui/widgets/VRConceptWidget.cpp" />
+		<Unit filename="src/core/gui/widgets/VRConceptWidget.h" />
+		<Unit filename="src/core/gui/widgets/VRSemanticWidget.cpp" />
+		<Unit filename="src/core/gui/widgets/VRSemanticWidget.h" />
 		<Unit filename="src/core/math/Octree.cpp" />
 		<Unit filename="src/core/math/Octree.h" />
 		<Unit filename="src/core/math/VRMathFwd.h" />
