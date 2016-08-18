@@ -20,6 +20,7 @@ void VRGraphLayout::applySprings(float eps) {
 
             Vec3f d = n2-n1;
             float x = (d.length() - radius)*eps; // displacement
+            d.normalize();
             if (abs(x) < eps) continue;
 
             if (x > radius*eps) x = radius*eps; // numerical safety ;)
@@ -29,17 +30,17 @@ void VRGraphLayout::applySprings(float eps) {
             g = gravity*x*0.1;
             switch (e.connection) {
                 case graph<Vec3f>::SIMPLE:
-                    if (f1 != FIXED) n1 += d*x + g;
-                    if (f2 != FIXED) n2 += -d*x + g;
+                    if (f1 != FIXED) n1 += d*x*radius + g;
+                    if (f2 != FIXED) n2 += -d*x*radius + g;
                     break;
                 case graph<Vec3f>::HIERARCHY:
-                    if (f2 != FIXED) n2 += -d*x + g;
-                    else if (f1 != FIXED) n1 += d*x + g;
+                    if (f2 != FIXED) n2 += -d*x*radius + g;
+                    else if (f1 != FIXED) n1 += d*x*radius + g;
                     break;
                 case graph<Vec3f>::SIBLING:
                     if (x < 0) { // push away siblings
-                        if (f1 != FIXED) n1 += d*x + g;
-                        if (f2 != FIXED) n2 += -d*x + g;
+                        if (f1 != FIXED) n1 += d*x*radius + g;
+                        if (f2 != FIXED) n2 += -d*x*radius + g;
                     }
                     break;
             }
@@ -48,23 +49,28 @@ void VRGraphLayout::applySprings(float eps) {
 }
 
 void VRGraphLayout::applyOccupancy(float eps) {
-    /**
-
-    - go through all nodes
-        - put all positions in an octree
-
-    - go through all nodes again
-        - do a range search around node position
-        - push all found neighbors away
-
-
-    */
-
+    auto& nodes = g.getNodes();
     Octree o(10*eps);
-    int i=0;
-    for (auto& n : g.getNodes()) {
+
+    long i=0;
+    for (auto& n : nodes) {
         o.add( OcPoint(n, (void*)i) );
         i++;
+    }
+
+    for (auto& n : nodes) {
+        for (auto& on2 : o.radiusSearch(n, radius) ) {
+            int i = (long)on2;
+            auto& n2 = nodes[i];
+            auto f = getFlag(i);
+
+            Vec3f d = n2 - n;
+            float x = (radius - d.length())*eps; // displacement
+            d.normalize();
+            if (abs(x) < eps) continue;
+
+            if (f != FIXED) n2 += d*x*radius*0.5; // push away neighbors
+        }
     }
 }
 

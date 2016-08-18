@@ -32,8 +32,7 @@
 /** TODO:
 
 - VRGraphLayout
-    - 3D bounding boxes
-    - 3D layout algorithms
+    - 3D bounding boxes, especially when opening a concept widget
 
 - add entities
 - add rules
@@ -44,6 +43,9 @@
     - link entities to concepts
     - link object properties of entites to property entity
     - link object properties of concept to property concept
+
+- ontology bugs
+    - inherited properties not shown??
 
 IDEAS:
 - use color highlights:
@@ -73,12 +75,11 @@ class VRGuiSemantics_PropsColumns : public Gtk::TreeModelColumnRecord {
         Gtk::TreeModelColumn<int> flag;
 };
 
-void VRGuiSemantics_on_drag_data_get(const Glib::RefPtr<Gdk::DragContext>& context, Gtk::SelectionData& data, unsigned int info, unsigned int time, VRGuiSemantics::ConceptWidget* e) {
+void VRGuiSemantics_on_drag_data_get(const Glib::RefPtr<Gdk::DragContext>& context, Gtk::SelectionData& data, unsigned int info, unsigned int time, VRGuiSemantics::BaseWidget* e) {
     data.set("concept", 0, (const guint8*)&e, sizeof(void*));
 }
 
-VRGuiSemantics::ConceptWidget::ConceptWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, VRConceptPtr concept) {
-    this->concept = concept;
+VRGuiSemantics::BaseWidget::BaseWidget(VRGuiSemantics* m, Gtk::Fixed* canvas) {
     this->canvas = canvas;
     manager = m;
 
@@ -99,10 +100,6 @@ VRGuiSemantics::ConceptWidget::ConceptWidget(VRGuiSemantics* m, Gtk::Fixed* canv
 
     addMarkupColumn(" Properties:", cols.name, true);
     addMarkupColumn("", cols.type);
-
-    for (auto p : concept->properties) {
-        setPropRow(liststore->append(), p.second->getName(), p.second->type, "black", 0);
-    }
 
     // buttons
     auto toolbar = Gtk::manage( new Gtk::Toolbar() );
@@ -131,7 +128,7 @@ VRGuiSemantics::ConceptWidget::ConceptWidget(VRGuiSemantics* m, Gtk::Fixed* canv
 
     // expander and frame
     auto vbox = Gtk::manage( new Gtk::VBox() );
-    auto expander = Gtk::manage( new Gtk::Expander( concept->getName() ) );
+    auto expander = Gtk::manage( new Gtk::Expander("") );
     label = (Gtk::Label*)expander->get_label_widget();
     expander->add(*vbox);
     vbox->pack_start(*toolbar);
@@ -142,29 +139,29 @@ VRGuiSemantics::ConceptWidget::ConceptWidget(VRGuiSemantics* m, Gtk::Fixed* canv
     canvas->put(*frame, 0, 0);
 
     // signals
-    treeview->signal_cursor_changed().connect( sigc::mem_fun(*this, &VRGuiSemantics::ConceptWidget::on_select_property) );
-    bConceptNew->signal_clicked().connect( sigc::mem_fun(*this, &VRGuiSemantics::ConceptWidget::on_new_clicked) );
-    bConceptName->signal_clicked().connect( sigc::mem_fun(*this, &VRGuiSemantics::ConceptWidget::on_edit_clicked) );
-    bConceptRem->signal_clicked().connect( sigc::mem_fun(*this, &VRGuiSemantics::ConceptWidget::on_rem_clicked) );
-    bPropNew->signal_clicked().connect( sigc::mem_fun(*this, &VRGuiSemantics::ConceptWidget::on_newp_clicked) );
-    bPropEdit->signal_clicked().connect( sigc::mem_fun(*this, &VRGuiSemantics::ConceptWidget::on_edit_prop_clicked) );
-    bPropRem->signal_clicked().connect( sigc::mem_fun(*this, &VRGuiSemantics::ConceptWidget::on_rem_prop_clicked) );
+    treeview->signal_cursor_changed().connect( sigc::mem_fun(*this, &VRGuiSemantics::BaseWidget::on_select_property) );
+    bConceptNew->signal_clicked().connect( sigc::mem_fun(*this, &VRGuiSemantics::BaseWidget::on_new_clicked) );
+    bConceptName->signal_clicked().connect( sigc::mem_fun(*this, &VRGuiSemantics::BaseWidget::on_edit_clicked) );
+    bConceptRem->signal_clicked().connect( sigc::mem_fun(*this, &VRGuiSemantics::BaseWidget::on_rem_clicked) );
+    bPropNew->signal_clicked().connect( sigc::mem_fun(*this, &VRGuiSemantics::BaseWidget::on_newp_clicked) );
+    bPropEdit->signal_clicked().connect( sigc::mem_fun(*this, &VRGuiSemantics::BaseWidget::on_edit_prop_clicked) );
+    bPropRem->signal_clicked().connect( sigc::mem_fun(*this, &VRGuiSemantics::BaseWidget::on_rem_prop_clicked) );
 
     // dnd
     vector<Gtk::TargetEntry> entries;
     entries.push_back(Gtk::TargetEntry("concept", Gtk::TARGET_SAME_APP));
     expander->drag_source_set(entries, Gdk::BUTTON1_MASK, Gdk::ACTION_MOVE);
-    expander->signal_drag_data_get().connect( sigc::bind<ConceptWidget*>( sigc::ptr_fun(VRGuiSemantics_on_drag_data_get), this ) );
+    expander->signal_drag_data_get().connect( sigc::bind<BaseWidget*>( sigc::ptr_fun(VRGuiSemantics_on_drag_data_get), this ) );
 }
 
-VRGuiSemantics::ConceptWidget::~ConceptWidget() {
+VRGuiSemantics::BaseWidget::~BaseWidget() {
     if (widget->get_parent() == canvas) {
         canvas->remove(*widget);
         canvas->show_all();
     }
 }
 
-void VRGuiSemantics::ConceptWidget::setPropRow(Gtk::TreeModel::iterator iter, string name, string type, string color, int flag) {
+void VRGuiSemantics::BaseWidget::setPropRow(Gtk::TreeModel::iterator iter, string name, string type, string color, int flag) {
     string cname = "<span color=\""+color+"\">" + name + "</span>";
     string ctype = "<span color=\""+color+"\">" + type + "</span>";
 
@@ -178,87 +175,23 @@ void VRGuiSemantics::ConceptWidget::setPropRow(Gtk::TreeModel::iterator iter, st
     gtk_list_store_set(liststore->gobj(), row.gobj(), 4, flag, -1);
 }
 
-void VRGuiSemantics::ConceptWidget::update() {
-    Glib::RefPtr<Gtk::ListStore> liststore = Glib::RefPtr<Gtk::ListStore>::cast_dynamic( treeview->get_model() );
-
-    liststore->clear();
-    for (auto p : concept->properties) {
-        Gtk::TreeModel::iterator i = liststore->append();
-        if (selected_property && p.second->getName() == selected_property->getName())
-            setPropRow(i, p.second->getName(), p.second->type, "green", 1);
-        else setPropRow(i, p.second->getName(), p.second->type, "black", 0);
-    }
-}
-
-void VRGuiSemantics::ConceptWidget::on_rem_clicked() {
-    bool b = askUser("Delete concept " + concept->getName() + "?", "Are you sure you want to delete this concept?");
-    if (!b) return;
-    manager->remConcept(this);
-}
-
-void VRGuiSemantics::ConceptWidget::on_edit_prop_clicked() {
-    if (!selected_property) return;
-    Gtk::Dialog* dialog;
-    VRGuiBuilder()->get_widget("PropertyEdit", dialog);
-    setTextEntry("entry23", selected_property->getName());
-    setTextEntry("entry24", selected_property->type);
-    dialog->show();
-    if (dialog->run() == Gtk::RESPONSE_OK) {
-        selected_property->setName( getTextEntry("entry23") );
-        selected_property->type = getTextEntry("entry24");
-    }
-    dialog->hide();
-    update();
-}
-
-void VRGuiSemantics::ConceptWidget::on_rem_prop_clicked() {
-    if (!selected_property) return;
-    bool b = askUser("Delete property " + selected_property->getName() + "?", "Are you sure you want to delete this property?");
-    if (!b) return;
-    concept->remProperty(selected_property);
-    selected_property = 0;
-    update();
-}
-
-void VRGuiSemantics::ConceptWidget::on_new_clicked() {
-    manager->copyConcept(this);
-}
-
-void VRGuiSemantics::ConceptWidget::on_edit_clicked() {
-    string s = askUserInput("Rename concept " + concept->getName() + ":");
-    manager->current->renameConcept(concept, s);
-    label->set_text(concept->getName());
-}
-
-void VRGuiSemantics::ConceptWidget::on_newp_clicked() {
-    Glib::RefPtr<Gtk::ListStore> liststore = Glib::RefPtr<Gtk::ListStore>::cast_dynamic( treeview->get_model() );
-    string name = "new_property";
-    int i=0;
-    do {
-        i++;
-        name = "new_property_" + toString(i);
-    } while(concept->getProperty(name));
-    setPropRow(liststore->append(), name, "none", "orange", 0);
-    concept->addProperty(name, "none");
-}
-
-bool VRGuiSemantics::ConceptWidget::on_expander_clicked(GdkEventButton* e) {
+bool VRGuiSemantics::BaseWidget::on_expander_clicked(GdkEventButton* e) {
     cout << "EXPAND\n";
     return true;
 }
 
-void VRGuiSemantics::ConceptWidget::on_select() {
+void VRGuiSemantics::BaseWidget::on_select() {
 
 }
 
-void VRGuiSemantics::ConceptWidget::move(Vec2f p) {
+void VRGuiSemantics::BaseWidget::move(Vec2f p) {
     pos = p;
     float w = widget->get_width();
     float h = widget->get_height();
     canvas->move(*widget, p[0]-w*0.5, p[1]-h*0.5);
 }
 
-Vec2f VRGuiSemantics::ConceptWidget::getAnchorPoint(Vec2f p) {
+Vec2f VRGuiSemantics::BaseWidget::getAnchorPoint(Vec2f p) {
     float w = abs(p[0]-pos[0]);
     float h = abs(p[1]-pos[1]);
     if (w >= h && p[0] < pos[0]) return pos - Vec2f(widget->get_width()*0.5, 0);
@@ -266,18 +199,6 @@ Vec2f VRGuiSemantics::ConceptWidget::getAnchorPoint(Vec2f p) {
     if (w < h && p[1] < pos[1]) return pos - Vec2f(0, widget->get_height()*0.5);
     if (w < h && p[1] > pos[1]) return pos + Vec2f(0, widget->get_height()*0.5);
     return pos;
-}
-
-void VRGuiSemantics::ConceptWidget::on_select_property() {
-    Gtk::TreeModel::iterator iter = treeview->get_selection()->get_selected();
-    if (!iter) return;
-
-    VRGuiSemantics_PropsColumns cols;
-    Gtk::TreeModel::Row row = *iter;
-    int flag = row.get_value(cols.flag);
-    selected_property = flag ? 0 : concept->getProperty( row.get_value(cols.prop) );
-    treeview->get_selection()->unselect_all(); // clear selection
-    update();
 }
 
 VRGuiSemantics::ConnectorWidget::ConnectorWidget(Gtk::Fixed* canvas) {
@@ -413,6 +334,90 @@ void VRGuiSemantics::ConnectorWidget::update() {
     }
 }
 
+VRGuiSemantics::ConceptWidget::ConceptWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, VRConceptPtr concept) : BaseWidget(m, canvas) {
+    this->concept = concept;
+    label->set_text(concept->getName());
+
+    Glib::RefPtr<Gtk::ListStore> liststore = Glib::RefPtr<Gtk::ListStore>::cast_dynamic( treeview->get_model() );
+    for (auto p : concept->properties) {
+        setPropRow(liststore->append(), p.second->getName(), p.second->type, "black", 0);
+    }
+}
+
+void VRGuiSemantics::ConceptWidget::on_edit_prop_clicked() {
+    if (!selected_property) return;
+    Gtk::Dialog* dialog;
+    VRGuiBuilder()->get_widget("PropertyEdit", dialog);
+    setTextEntry("entry23", selected_property->getName());
+    setTextEntry("entry24", selected_property->type);
+    dialog->show();
+    if (dialog->run() == Gtk::RESPONSE_OK) {
+        selected_property->setName( getTextEntry("entry23") );
+        selected_property->type = getTextEntry("entry24");
+    }
+    dialog->hide();
+    update();
+}
+
+void VRGuiSemantics::ConceptWidget::on_rem_prop_clicked() {
+    if (!selected_property) return;
+    bool b = askUser("Delete property " + selected_property->getName() + "?", "Are you sure you want to delete this property?");
+    if (!b) return;
+    concept->remProperty(selected_property);
+    selected_property = 0;
+    update();
+}
+
+void VRGuiSemantics::ConceptWidget::on_rem_clicked() {
+    bool b = askUser("Delete concept " + label->get_text() + "?", "Are you sure you want to delete this concept?");
+    if (b) manager->remConcept(this);
+}
+
+void VRGuiSemantics::ConceptWidget::on_edit_clicked() {
+    string s = askUserInput("Rename concept " + label->get_text() + ":");
+    if (s == "") return;
+    manager->current->renameConcept(concept, s);
+    label->set_text(concept->getName());
+}
+
+void VRGuiSemantics::ConceptWidget::on_newp_clicked() {
+    Glib::RefPtr<Gtk::ListStore> liststore = Glib::RefPtr<Gtk::ListStore>::cast_dynamic( treeview->get_model() );
+    string name = "new_property";
+    int i=0;
+    do {
+        i++;
+        name = "new_property_" + toString(i);
+    } while(concept->getProperty(name));
+    setPropRow(liststore->append(), name, "none", "orange", 0);
+    concept->addProperty(name, "none");
+}
+
+void VRGuiSemantics::ConceptWidget::on_select_property() {
+    Gtk::TreeModel::iterator iter = treeview->get_selection()->get_selected();
+    if (!iter) return;
+
+    VRGuiSemantics_PropsColumns cols;
+    Gtk::TreeModel::Row row = *iter;
+    int flag = row.get_value(cols.flag);
+    selected_property = flag ? 0 : concept->getProperty( row.get_value(cols.prop) );
+    treeview->get_selection()->unselect_all(); // clear selection
+    update();
+}
+
+void VRGuiSemantics::ConceptWidget::update() {
+    Glib::RefPtr<Gtk::ListStore> liststore = Glib::RefPtr<Gtk::ListStore>::cast_dynamic( treeview->get_model() );
+
+    liststore->clear();
+    for (auto p : concept->properties) {
+        Gtk::TreeModel::iterator i = liststore->append();
+        if (selected_property && p.second->getName() == selected_property->getName())
+            setPropRow(i, p.second->getName(), p.second->type, "green", 1);
+        else setPropRow(i, p.second->getName(), p.second->type, "black", 0);
+    }
+}
+
+void VRGuiSemantics::ConceptWidget::on_new_clicked() { manager->copyConcept(this); }
+
 void VRGuiSemantics::on_new_clicked() {
     auto mgr = getManager();
     if (!mgr) return;
@@ -451,16 +456,17 @@ void VRGuiSemantics::updateLayout() {
 
     map<string, int> conceptIDs;
 
-    for (auto c : concepts) {
+    for (auto c : widgets) {
         Vec3f p = Vec3f(c.second->pos[0], c.second->pos[1], 0);
         conceptIDs[c.first] = g.addNode(p);
         if (c.first == "Thing") layout.fixNode(conceptIDs[c.first]);
     }
 
-    for (auto c : concepts) {
-        for (auto c2 : c.second->concept->children) { // parent child connection
-            g.connect(conceptIDs[c.first], conceptIDs[c2.second->getName()], graph<Vec3f>::HIERARCHY);
-            for (auto c3 : c.second->concept->children) { // sibling connection, TODO: use occupancy map!!
+    for (auto _c : widgets) {
+        ConceptWidgetPtr c = dynamic_pointer_cast<ConceptWidget>(_c.second);
+        for (auto c2 : c->concept->children) { // parent child connection
+            g.connect(conceptIDs[_c.first], conceptIDs[c2.second->getName()], graph<Vec3f>::HIERARCHY);
+            for (auto c3 : c->concept->children) { // sibling connection, TODO: use occupancy map!!
                 if (c2 != c3)
                     g.connect(conceptIDs[c2.second->getName()], conceptIDs[c3.second->getName()], graph<Vec3f>::SIBLING);
             }
@@ -470,7 +476,7 @@ void VRGuiSemantics::updateLayout() {
     layout.compute(1, 0.002);
 
     int i = 0;
-    for (auto c : concepts) {
+    for (auto c : widgets) {
         Vec3f& p = g.getNodes()[i];
         c.second->move(Vec2f(p[0], p[1]));
         i++;
@@ -492,11 +498,11 @@ void VRGuiSemantics::setOntology(string name) {
 
 void VRGuiSemantics::updateCanvas() {
     int i = 0;
-    concepts.clear();
+    widgets.clear();
 
     function<void(VRConceptPtr,int,int,ConceptWidgetPtr)> travConcepts = [&](VRConceptPtr c, int cID, int lvl, ConceptWidgetPtr cp) {
         auto cw = ConceptWidgetPtr( new ConceptWidget(this, canvas, c) );
-        concepts[c->getName()] = cw;
+        widgets[c->getName()] = cw;
 
         int x = 10+cID*60;
         int y = 10+40*lvl;
@@ -619,13 +625,13 @@ void VRGuiSemantics::updateOntoList() {
 void VRGuiSemantics::copyConcept(ConceptWidget* w) {
     auto c = current->addConcept(w->concept->getName() + "_derived", w->concept->getName());
     auto cw = ConceptWidgetPtr( new ConceptWidget(this, canvas, c) );
-    concepts[c->getName()] = cw;
+    widgets[c->getName()] = cw;
     cw->move(w->pos + Vec2f(90,0));
     canvas->show_all();
 }
 
 void VRGuiSemantics::remConcept(ConceptWidget* w) {
-    concepts.erase(w->concept->getName());
+    widgets.erase(w->concept->getName());
     current->remConcept(w->concept);
 }
 

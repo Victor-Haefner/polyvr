@@ -24,7 +24,7 @@ using namespace std;
 
 class VRGuiSemantics {
     public:
-        struct ConceptWidget {
+        struct BaseWidget {
             Vec2f pos;
 
             VRGuiSemantics* manager = 0;
@@ -32,30 +32,65 @@ class VRGuiSemantics {
             Gtk::Frame* widget = 0;
             Gtk::Label* label = 0;
             Gtk::TreeView* treeview = 0;
-            VRConceptPtr concept;
-            VRPropertyPtr selected_property;
 
-            ConceptWidget(VRGuiSemantics* m, Gtk::Fixed* canvas = 0, VRConceptPtr concept = 0);
-            ~ConceptWidget();
-            void update();
+            BaseWidget(VRGuiSemantics* m, Gtk::Fixed* canvas = 0);
+            ~BaseWidget();
 
             void on_select();
-            void on_select_property();
-            void on_rem_clicked();
-            void on_rem_prop_clicked();
-            void on_new_clicked();
-            void on_edit_clicked();
-            void on_newp_clicked();
-            void on_edit_prop_clicked();
             bool on_expander_clicked(GdkEventButton* e);
 
             void move(Vec2f p);
             Vec2f getAnchorPoint(Vec2f p);
             void setPropRow(Gtk::TreeModel::iterator iter, string name, string type, string color, int flag);
+
+            virtual void on_new_clicked() = 0;
+            virtual void on_select_property() = 0;
+            virtual void on_rem_clicked() = 0;
+            virtual void on_edit_clicked() = 0;
+            virtual void on_newp_clicked() = 0;
+            virtual void on_edit_prop_clicked() = 0;
+            virtual void on_rem_prop_clicked() = 0;
+            virtual void update() = 0;
         };
 
+        struct ConceptWidget : public BaseWidget {
+            VRConceptPtr concept;
+            VRPropertyPtr selected_property;
+
+            ConceptWidget(VRGuiSemantics* m, Gtk::Fixed* canvas = 0, VRConceptPtr concept = 0);
+
+            void on_new_clicked();
+            void on_select_property();
+            void on_rem_clicked();
+            void on_edit_clicked();
+            void on_newp_clicked();
+            void on_edit_prop_clicked();
+            void on_rem_prop_clicked();
+            void update();
+        };
+
+        struct EntityWidget : public BaseWidget {
+            VREntityPtr entity;
+
+            EntityWidget(VRGuiSemantics* m, Gtk::Fixed* canvas = 0, VREntityPtr concept = 0);
+            void update();
+        };
+
+        struct RuleWidget : public BaseWidget{
+            VROntologyRulePtr rule;
+
+            RuleWidget(VRGuiSemantics* m, Gtk::Fixed* canvas = 0, VROntologyRulePtr concept = 0);
+            void update();
+        };
+
+        typedef shared_ptr<BaseWidget> BaseWidgetPtr;
+        typedef weak_ptr<BaseWidget> BaseWidgetWeakPtr;
         typedef shared_ptr<ConceptWidget> ConceptWidgetPtr;
         typedef weak_ptr<ConceptWidget> ConceptWidgetWeakPtr;
+        typedef shared_ptr<EntityWidget> EntityWidgetPtr;
+        typedef weak_ptr<EntityWidget> EntityWidgetWeakPtr;
+        typedef shared_ptr<RuleWidget> RuleWidgetPtr;
+        typedef weak_ptr<RuleWidget> RuleWidgetWeakPtr;
 
         struct ConnectorWidget {
             Gtk::Separator* sh1 = 0;
@@ -78,7 +113,7 @@ class VRGuiSemantics {
 
     private:
         Gtk::Fixed* canvas = 0;
-        map<string, ConceptWidgetPtr> concepts;
+        map<string, BaseWidgetPtr> widgets;
         map<string, ConnectorWidgetPtr> connectors;
 
         VROntologyPtr current;
