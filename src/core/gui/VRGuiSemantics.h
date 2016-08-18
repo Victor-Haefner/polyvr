@@ -51,19 +51,27 @@ class VRGuiSemantics {
             void setPropRow(Gtk::TreeModel::iterator iter, string name, string type, string color, int flag);
         };
 
+        typedef shared_ptr<ConceptWidget> ConceptWidgetPtr;
+        typedef weak_ptr<ConceptWidget> ConceptWidgetWeakPtr;
+
         struct ConnectorWidget {
-            Gtk::Separator* s1 = 0;
-            Gtk::Separator* s2 = 0;
-            Gtk::Separator* s3 = 0;
+            Gtk::Separator* sh1 = 0;
+            Gtk::Separator* sh2 = 0;
+            Gtk::Separator* sv1 = 0;
+            Gtk::Separator* sv2 = 0;
             Gtk::Fixed* canvas = 0;
+            ConceptWidgetWeakPtr w1;
+            ConceptWidgetWeakPtr w2;
 
             ConnectorWidget(Gtk::Fixed* canvas = 0);
 
-            void set(float x1, float y1, float x2, float y2);
+            void set(ConceptWidgetPtr w1, ConceptWidgetPtr w2);
+
+            void update();
         };
 
-        typedef shared_ptr<ConceptWidget> ConceptWidgetPtr;
         typedef shared_ptr<ConnectorWidget> ConnectorWidgetPtr;
+        typedef weak_ptr<ConnectorWidget> ConnectorWidgetWeakPtr;
 
     private:
         Gtk::Fixed* canvas = 0;

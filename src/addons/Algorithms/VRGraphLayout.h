@@ -11,7 +11,8 @@ using namespace std;
 class VRGraphLayout {
     public:
         enum ALGORITHM {
-            SPRINGS
+            SPRINGS,
+            OCCUPANCYMAP
         };
 
         enum FLAG {
@@ -21,7 +22,7 @@ class VRGraphLayout {
 
     private:
         graph<Vec3f> g;
-        ALGORITHM algorithm = SPRINGS;
+        map<int, ALGORITHM> algorithms;
         map<int, FLAG> flags;
         Vec3f gravity;
         float radius = 1;
@@ -36,7 +37,8 @@ class VRGraphLayout {
         void setGraph(graph<Vec3f>& g);
         graph<Vec3f>& getGraph();
 
-        void setAlgorithm(ALGORITHM a);
+        void setAlgorithm(ALGORITHM a, int position = 0);
+        void clearAlgorithms();
         void compute(int N = 10, float eps = 0.1);
 
         void setGravity(Vec3f v);

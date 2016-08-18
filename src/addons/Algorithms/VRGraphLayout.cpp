@@ -6,7 +6,8 @@ VRGraphLayout::VRGraphLayout() {}
 
 void VRGraphLayout::setGraph(graph<Vec3f>& g) { this->g = g; }
 graph<Vec3f>& VRGraphLayout::getGraph() { return g; }
-void VRGraphLayout::setAlgorithm(ALGORITHM a) { algorithm = a; }
+void VRGraphLayout::setAlgorithm(ALGORITHM a, int position) { algorithms[position] = a; }
+void VRGraphLayout::clearAlgorithms() { algorithms.clear(); }
 
 void VRGraphLayout::applySprings(int N, float eps) {
     //float eps = 1.0/N;
@@ -22,6 +23,9 @@ void VRGraphLayout::applySprings(int N, float eps) {
                 Vec3f d = n2-n1;
                 float x = (d.length() - radius)*eps; // displacement
                 if (abs(x) < eps) continue;
+
+                if (x > radius*eps) x = radius*eps; // numerical safety ;)
+                if (x < -radius*eps) x = -radius*eps;
 
                 Vec3f g; // TODO: not yet working!
                 g = gravity*x*0.1;
@@ -47,10 +51,12 @@ void VRGraphLayout::applySprings(int N, float eps) {
 }
 
 void VRGraphLayout::compute(int N, float eps) {
-    switch(algorithm) {
-        case SPRINGS:
-            applySprings(N, eps);
-            break;
+    for (auto a : algorithms) {
+        switch(a.second) {
+            case SPRINGS:
+                applySprings(N, eps);
+                break;
+        }
     }
 }
 

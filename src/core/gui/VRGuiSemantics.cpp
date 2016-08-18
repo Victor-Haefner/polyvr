@@ -157,8 +157,10 @@ VRGuiSemantics::ConceptWidget::ConceptWidget(VRGuiSemantics* m, Gtk::Fixed* canv
 }
 
 VRGuiSemantics::ConceptWidget::~ConceptWidget() {
-    canvas->remove(*widget);
-    canvas->show_all();
+    if (widget->get_parent() == canvas) {
+        canvas->remove(*widget);
+        canvas->show_all();
+    }
 }
 
 void VRGuiSemantics::ConceptWidget::setPropRow(Gtk::TreeModel::iterator iter, string name, string type, string color, int flag) {
@@ -266,23 +268,118 @@ void VRGuiSemantics::ConceptWidget::on_select_property() {
 }
 
 VRGuiSemantics::ConnectorWidget::ConnectorWidget(Gtk::Fixed* canvas) {
-    s1 = Gtk::manage( new Gtk::HSeparator() );
-    s2 = Gtk::manage( new Gtk::VSeparator() );
-    s3 = Gtk::manage( new Gtk::HSeparator() );
+    sh1 = Gtk::manage( new Gtk::HSeparator() );
+    sh2 = Gtk::manage( new Gtk::HSeparator() );
+    sv1 = Gtk::manage( new Gtk::VSeparator() );
+    sv2 = Gtk::manage( new Gtk::VSeparator() );
     this->canvas = canvas;
-    canvas->put(*s1, 0, 0);
-    canvas->put(*s2, 0, 0);
-    canvas->put(*s3, 0, 0);
+    canvas->put(*sh1, 0, 0);
+    canvas->put(*sh2, 0, 0);
+    canvas->put(*sv1, 0, 0);
+    canvas->put(*sv2, 0, 0);
 }
 
-void VRGuiSemantics::ConnectorWidget::set(float x1, float y1, float x2, float y2) {
-    float w = abs(x2-x1); float h = abs(y2-y1);
-    s1->set_size_request(w*0.5, 2);
-    s2->set_size_request(2, h);
-    s3->set_size_request(w*0.5, 2);
-    canvas->move(*s1, x1, y1);
-    canvas->move(*s2, x1+w*0.5, y1);
-    canvas->move(*s3, x1+w*0.5, y2);
+void VRGuiSemantics::ConnectorWidget::set(ConceptWidgetPtr w1, ConceptWidgetPtr w2) {
+    this->w1 = w1;
+    this->w2 = w2;
+    update();
+}
+
+void VRGuiSemantics::ConnectorWidget::update() {
+    auto ws1 = w1.lock();
+    auto ws2 = w2.lock();
+    if (ws1 && ws2) {
+        float x1 = ws1->x;
+        float x2 = ws2->x;
+        float y1 = ws1->y;
+        float y2 = ws2->y;
+
+        float w = abs(x2-x1);
+        float h = abs(y2-y1);
+
+        sh1->set_size_request(0, 0);
+        sh2->set_size_request(0, 0);
+        sv1->set_size_request(0, 0);
+        sv2->set_size_request(0, 0);
+
+        if (w <= 2 && h <= 2) return;
+
+        if (h <= 2) {
+            sh1->show();
+            sh1->set_size_request(w, 2);
+            if (x2 < x1) swap(x2,x1);
+            canvas->move(*sh1, x1, y1);
+            return;
+        }
+
+        if (w <= 2) {
+            sv1->show();
+            sv1->set_size_request(2, h);
+            if (y2 < y1) swap(y2,y1);
+            canvas->move(*sv1, x1, y1);
+            return;
+        }
+
+        if (w < h) {
+            sh1->show();
+            sh2->show();
+            sv1->show();
+            sh1->set_size_request(w*0.5, 2);
+            sh2->set_size_request(w*0.5, 2);
+            sv1->set_size_request(2, h);
+
+            if (y2 < y1 && x2 > x1) {
+                canvas->move(*sh1, x1, y1);
+                canvas->move(*sh2, x1+w*0.5, y2);
+                canvas->move(*sv1, x1+w*0.5, y2);
+            }
+            if (y2 > y1 && x2 < x1) {
+                canvas->move(*sh1, x2, y2);
+                canvas->move(*sh2, x2+w*0.5, y1);
+                canvas->move(*sv1, x2+w*0.5, y1);
+            }
+            if (y2 > y1 && x2 > x1) {
+                canvas->move(*sh1, x1, y1);
+                canvas->move(*sh2, x1+w*0.5, y2);
+                canvas->move(*sv1, x1+w*0.5, y1);
+            }
+            if (y2 < y1 && x2 < x1) {
+                canvas->move(*sh1, x2, y2);
+                canvas->move(*sh2, x2+w*0.5, y1);
+                canvas->move(*sv1, x2+w*0.5, y2);
+            }
+            return;
+        } else {
+            sv1->show();
+            sv2->show();
+            sh1->show();
+            sv1->set_size_request(2, h*0.5);
+            sv2->set_size_request(2, h*0.5);
+            sh1->set_size_request(w, 2);
+
+            if (y2 < y1 && x2 > x1) {
+                canvas->move(*sv1, x2, y2);
+                canvas->move(*sv2, x1, y2+h*0.5);
+                canvas->move(*sh1, x1, y2+h*0.5);
+            }
+            if (y2 > y1 && x2 < x1) {
+                canvas->move(*sv1, x1, y1);
+                canvas->move(*sv2, x2, y1+h*0.5);
+                canvas->move(*sh1, x2, y1+h*0.5);
+            }
+            if (y2 > y1 && x2 > x1) {
+                canvas->move(*sv1, x1, y1);
+                canvas->move(*sv2, x2, y1+h*0.5);
+                canvas->move(*sh1, x1, y1+h*0.5);
+            }
+            if (y2 < y1 && x2 < x1) {
+                canvas->move(*sv1, x2, y2);
+                canvas->move(*sv2, x1, y2+h*0.5);
+                canvas->move(*sh1, x2, y2+h*0.5);
+            }
+            return;
+        }
+    }
 }
 
 void VRGuiSemantics::on_new_clicked() {
@@ -315,6 +412,8 @@ void VRGuiSemantics::clearCanvas() {
 
 void VRGuiSemantics::updateLayout() {
     VRGraphLayout layout;
+    layout.setAlgorithm(VRGraphLayout::SPRINGS, 0);
+    layout.setAlgorithm(VRGraphLayout::OCCUPANCYMAP, 1);
     graph<Vec3f>& g = layout.getGraph();
     layout.setGravity(Vec3f(0,1,0));
     layout.setRadius(100);
@@ -330,7 +429,7 @@ void VRGuiSemantics::updateLayout() {
     for (auto c : concepts) {
         for (auto c2 : c.second->concept->children) { // parent child connection
             g.connect(conceptIDs[c.first], conceptIDs[c2.second->getName()], graph<Vec3f>::HIERARCHY);
-            for (auto c3 : c.second->concept->children) { // sibling connection
+            for (auto c3 : c.second->concept->children) { // sibling connection, TODO: use occupancy map!!
                 if (c2 != c3)
                     g.connect(conceptIDs[c2.second->getName()], conceptIDs[c3.second->getName()], graph<Vec3f>::SIBLING);
             }
@@ -344,6 +443,10 @@ void VRGuiSemantics::updateLayout() {
         Vec3f& p = g.getNodes()[i];
         c.second->move(p[0], p[1]);
         i++;
+    }
+
+    for (auto c : connectors) {
+        c.second->update();
     }
 
     canvas->show_all();
@@ -360,7 +463,7 @@ void VRGuiSemantics::updateCanvas() {
     int i = 0;
     concepts.clear();
 
-    function<void(VRConceptPtr,int,int,int,int)> travConcepts = [&](VRConceptPtr c, int cID, int lvl, int xp, int yp) {
+    function<void(VRConceptPtr,int,int,ConceptWidgetPtr)> travConcepts = [&](VRConceptPtr c, int cID, int lvl, ConceptWidgetPtr cp) {
         auto cw = ConceptWidgetPtr( new ConceptWidget(this, canvas, c) );
         concepts[c->getName()] = cw;
 
@@ -371,15 +474,15 @@ void VRGuiSemantics::updateCanvas() {
         if (lvl > 0) {
             auto co = ConnectorWidgetPtr( new ConnectorWidget(canvas) );
             connectors[c->getName()] = co;
-            co->set(xp, yp, x, y);
+            co->set(cp, cw);
         }
 
         i++;
         int child_i = 0;
-        for (auto ci : c->children) { travConcepts(ci.second, child_i, lvl+1, x, y); child_i++; }
+        for (auto ci : c->children) { travConcepts(ci.second, child_i, lvl+1, cw); child_i++; }
     };
 
-    if (current) travConcepts(current->thing, 0, 0, 0, 0);
+    if (current) travConcepts(current->thing, 0, 0, 0);
     canvas->show_all();
 }
 
