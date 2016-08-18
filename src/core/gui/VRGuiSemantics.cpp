@@ -329,24 +329,32 @@ void VRGuiSemantics::ConnectorWidget::update() {
             sv1->set_size_request(2, h);
 
             if (y2 < y1 && x2 > x1) {
-                canvas->move(*sh1, x1, y1);
-                canvas->move(*sh2, x1+w*0.5, y2);
-                canvas->move(*sv1, x1+w*0.5, y2);
+                swap(y1,y2);
+                canvas->move(*sh1, x1, y2);
+                canvas->move(*sh2, x1+w*0.5, y1);
+                canvas->move(*sv1, x1+w*0.5, y1);
+                return;
             }
             if (y2 > y1 && x2 < x1) {
-                canvas->move(*sh1, x2, y2);
-                canvas->move(*sh2, x2+w*0.5, y1);
-                canvas->move(*sv1, x2+w*0.5, y1);
+                swap(x1,x2);
+                canvas->move(*sh1, x1, y2);
+                canvas->move(*sh2, x1+w*0.5, y1);
+                canvas->move(*sv1, x1+w*0.5, y1);
+                return;
             }
             if (y2 > y1 && x2 > x1) {
                 canvas->move(*sh1, x1, y1);
                 canvas->move(*sh2, x1+w*0.5, y2);
                 canvas->move(*sv1, x1+w*0.5, y1);
+                return;
             }
             if (y2 < y1 && x2 < x1) {
-                canvas->move(*sh1, x2, y2);
-                canvas->move(*sh2, x2+w*0.5, y1);
-                canvas->move(*sv1, x2+w*0.5, y2);
+                swap(y1,y2);
+                swap(x1,x2);
+                canvas->move(*sh1, x1, y1);
+                canvas->move(*sh2, x1+w*0.5, y2);
+                canvas->move(*sv1, x1+w*0.5, y1);
+                return;
             }
             return;
         } else {
@@ -358,24 +366,32 @@ void VRGuiSemantics::ConnectorWidget::update() {
             sh1->set_size_request(w, 2);
 
             if (y2 < y1 && x2 > x1) {
-                canvas->move(*sv1, x2, y2);
-                canvas->move(*sv2, x1, y2+h*0.5);
-                canvas->move(*sh1, x1, y2+h*0.5);
+                swap(y1,y2);
+                canvas->move(*sv1, x2, y1);
+                canvas->move(*sv2, x1, y1+h*0.5);
+                canvas->move(*sh1, x1, y1+h*0.5);
+                return;
             }
-            if (y2 > y1 && x2 < x1) {
+            if (y2 < y1 && x2 < x1) {
+                swap(x1,x2);
+                swap(y1,y2);
                 canvas->move(*sv1, x1, y1);
                 canvas->move(*sv2, x2, y1+h*0.5);
-                canvas->move(*sh1, x2, y1+h*0.5);
+                canvas->move(*sh1, x1, y1+h*0.5);
+                return;
+            }
+            if (y2 > y1 && x2 < x1) {
+                swap(x1,x2);
+                canvas->move(*sv1, x2, y1);
+                canvas->move(*sv2, x1, y1+h*0.5);
+                canvas->move(*sh1, x1, y1+h*0.5);
+                return;
             }
             if (y2 > y1 && x2 > x1) {
                 canvas->move(*sv1, x1, y1);
                 canvas->move(*sv2, x2, y1+h*0.5);
                 canvas->move(*sh1, x1, y1+h*0.5);
-            }
-            if (y2 < y1 && x2 < x1) {
-                canvas->move(*sv1, x2, y2);
-                canvas->move(*sv2, x1, y2+h*0.5);
-                canvas->move(*sh1, x2, y2+h*0.5);
+                return;
             }
             return;
         }
