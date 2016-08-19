@@ -13,6 +13,10 @@
 #include <gtkmm/liststore.h>
 #include <gtkmm/treeview.h>
 #include <gtkmm/dialog.h>
+#include <gtkmm/box.h>
+#include <gtkmm/toolbar.h>
+#include <gtkmm/toolbutton.h>
+#include <gtkmm/separatortoolitem.h>
 #include <gtkmm/builder.h>
 
 using namespace OSG;
@@ -20,6 +24,28 @@ using namespace OSG;
 VRConceptWidget::VRConceptWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, VRConceptPtr concept) : VRSemanticWidget(m, canvas) {
     this->concept = concept;
     label->set_text(concept->getName());
+
+    auto toolbar2 = Gtk::manage( new Gtk::Toolbar() );
+    toolbar2->set_icon_size(Gtk::ICON_SIZE_MENU);
+    toolbar2->set_show_arrow(0);
+    toolbar2->set_toolbar_style(Gtk::TOOLBAR_TEXT);
+    auto bConceptNew = Gtk::manage( new Gtk::ToolButton("C") );
+    auto bEntityNew = Gtk::manage( new Gtk::ToolButton("E") );
+    auto bRuleNew = Gtk::manage( new Gtk::ToolButton("R") );
+    auto sep = Gtk::manage( new Gtk::SeparatorToolItem() );
+    toolbar2->add(*sep);
+    toolbar2->add(*bConceptNew);
+    toolbar2->add(*bEntityNew);
+    toolbar2->add(*bRuleNew);
+    toolbars->pack_start(*toolbar2);
+
+    bConceptNew->set_tooltip_text("new concept");
+    bEntityNew->set_tooltip_text("new entity");
+    bRuleNew->set_tooltip_text("new rule");
+
+    bConceptNew->signal_clicked().connect( sigc::mem_fun(*this, &VRConceptWidget::on_new_concept_clicked) );
+    bEntityNew->signal_clicked().connect( sigc::mem_fun(*this, &VRConceptWidget::on_new_entity_clicked) );
+    bRuleNew->signal_clicked().connect( sigc::mem_fun(*this, &VRConceptWidget::on_new_rule_clicked) );
 
     Glib::RefPtr<Gtk::ListStore> liststore = Glib::RefPtr<Gtk::ListStore>::cast_dynamic( treeview->get_model() );
     for (auto p : concept->properties) {
@@ -99,4 +125,7 @@ void VRConceptWidget::update() {
     }
 }
 
-void VRConceptWidget::on_new_clicked() { manager->copyConcept(this); }
+void VRConceptWidget::on_new_concept_clicked() { manager->copyConcept(this); }
+void VRConceptWidget::on_new_entity_clicked() { manager->addEntity(this); }
+void VRConceptWidget::on_new_rule_clicked() { manager->addRule(this); }
+

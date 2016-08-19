@@ -28,6 +28,12 @@
 #include "core/scene/VRSemanticManager.h"
 #include "addons/Algorithms/VRGraphLayout.h"
 
+#include "widgets/VRSemanticWidget.h"
+#include "widgets/VRConceptWidget.h"
+#include "widgets/VREntityWidget.h"
+#include "widgets/VRRuleWidget.h"
+#include "widgets/VRConnectorWidget.h"
+
 /** TODO:
 
 - VRGraphLayout
@@ -63,140 +69,6 @@ class VRGuiSemantics_ModelColumns : public Gtk::TreeModelColumnRecord {
         Gtk::TreeModelColumn<Glib::ustring> name;
         Gtk::TreeModelColumn<Glib::ustring> type;
 };
-
-VRGuiSemantics::ConnectorWidget::ConnectorWidget(Gtk::Fixed* canvas) {
-    sh1 = Gtk::manage( new Gtk::HSeparator() );
-    sh2 = Gtk::manage( new Gtk::HSeparator() );
-    sv1 = Gtk::manage( new Gtk::VSeparator() );
-    sv2 = Gtk::manage( new Gtk::VSeparator() );
-    this->canvas = canvas;
-    canvas->put(*sh1, 0, 0);
-    canvas->put(*sh2, 0, 0);
-    canvas->put(*sv1, 0, 0);
-    canvas->put(*sv2, 0, 0);
-}
-
-void VRGuiSemantics::ConnectorWidget::set(VRConceptWidgetPtr w1, VRConceptWidgetPtr w2) {
-    this->w1 = w1;
-    this->w2 = w2;
-    update();
-}
-
-void VRGuiSemantics::ConnectorWidget::update() {
-    auto ws1 = w1.lock();
-    auto ws2 = w2.lock();
-    if (ws1 && ws2) {
-        Vec2f a1 = ws1->getAnchorPoint(ws2->pos);
-        Vec2f a2 = ws2->getAnchorPoint(ws1->pos);
-        float x1 = a1[0];
-        float x2 = a2[0];
-        float y1 = a1[1];
-        float y2 = a2[1];
-
-        float w = abs(x2-x1);
-        float h = abs(y2-y1);
-
-        sh1->set_size_request(0, 0);
-        sh2->set_size_request(0, 0);
-        sv1->set_size_request(0, 0);
-        sv2->set_size_request(0, 0);
-
-        if (w <= 2 && h <= 2) return;
-
-        if (h <= 2) {
-            sh1->show();
-            sh1->set_size_request(w, 2);
-            if (x2 < x1) swap(x2,x1);
-            canvas->move(*sh1, x1, y1);
-            return;
-        }
-
-        if (w <= 2) {
-            sv1->show();
-            sv1->set_size_request(2, h);
-            if (y2 < y1) swap(y2,y1);
-            canvas->move(*sv1, x1, y1);
-            return;
-        }
-
-        if (w < h) {
-            sh1->show();
-            sh2->show();
-            sv1->show();
-            sh1->set_size_request(w*0.5, 2);
-            sh2->set_size_request(w*0.5, 2);
-            sv1->set_size_request(2, h);
-
-            if (y2 < y1 && x2 > x1) {
-                swap(y1,y2);
-                canvas->move(*sh1, x1, y2);
-                canvas->move(*sh2, x1+w*0.5, y1);
-                canvas->move(*sv1, x1+w*0.5, y1);
-                return;
-            }
-            if (y2 > y1 && x2 < x1) {
-                swap(x1,x2);
-                canvas->move(*sh1, x1, y2);
-                canvas->move(*sh2, x1+w*0.5, y1);
-                canvas->move(*sv1, x1+w*0.5, y1);
-                return;
-            }
-            if (y2 > y1 && x2 > x1) {
-                canvas->move(*sh1, x1, y1);
-                canvas->move(*sh2, x1+w*0.5, y2);
-                canvas->move(*sv1, x1+w*0.5, y1);
-                return;
-            }
-            if (y2 < y1 && x2 < x1) {
-                swap(y1,y2);
-                swap(x1,x2);
-                canvas->move(*sh1, x1, y1);
-                canvas->move(*sh2, x1+w*0.5, y2);
-                canvas->move(*sv1, x1+w*0.5, y1);
-                return;
-            }
-            return;
-        } else {
-            sv1->show();
-            sv2->show();
-            sh1->show();
-            sv1->set_size_request(2, h*0.5);
-            sv2->set_size_request(2, h*0.5);
-            sh1->set_size_request(w, 2);
-
-            if (y2 < y1 && x2 > x1) {
-                swap(y1,y2);
-                canvas->move(*sv1, x2, y1);
-                canvas->move(*sv2, x1, y1+h*0.5);
-                canvas->move(*sh1, x1, y1+h*0.5);
-                return;
-            }
-            if (y2 < y1 && x2 < x1) {
-                swap(x1,x2);
-                swap(y1,y2);
-                canvas->move(*sv1, x1, y1);
-                canvas->move(*sv2, x2, y1+h*0.5);
-                canvas->move(*sh1, x1, y1+h*0.5);
-                return;
-            }
-            if (y2 > y1 && x2 < x1) {
-                swap(x1,x2);
-                canvas->move(*sv1, x2, y1);
-                canvas->move(*sv2, x1, y1+h*0.5);
-                canvas->move(*sh1, x1, y1+h*0.5);
-                return;
-            }
-            if (y2 > y1 && x2 > x1) {
-                canvas->move(*sv1, x1, y1);
-                canvas->move(*sv2, x2, y1+h*0.5);
-                canvas->move(*sh1, x1, y1+h*0.5);
-                return;
-            }
-            return;
-        }
-    }
-}
-
 
 void VRGuiSemantics::on_new_clicked() {
     auto mgr = getManager();
@@ -234,22 +106,31 @@ void VRGuiSemantics::updateLayout() {
     layout.setGravity(Vec3f(0,1,0));
     layout.setRadius(100);
 
-    map<string, int> conceptIDs;
+    map<string, int> widgetIDs;
 
     for (auto c : widgets) {
         Vec3f p = Vec3f(c.second->pos[0], c.second->pos[1], 0);
-        conceptIDs[c.first] = g.addNode(p);
-        if (c.first == "Thing") layout.fixNode(conceptIDs[c.first]);
+        widgetIDs[c.first] = g.addNode(p);
+        if (c.first == "Thing") layout.fixNode(widgetIDs[c.first]);
     }
 
-    for (auto _c : widgets) {
-        VRConceptWidgetPtr c = dynamic_pointer_cast<VRConceptWidget>(_c.second);
-        for (auto c2 : c->concept->children) { // parent child connection
-            g.connect(conceptIDs[_c.first], conceptIDs[c2.second->getName()], graph<Vec3f>::HIERARCHY);
-            for (auto c3 : c->concept->children) { // sibling connection, TODO: use occupancy map!!
-                if (c2 != c3)
-                    g.connect(conceptIDs[c2.second->getName()], conceptIDs[c3.second->getName()], graph<Vec3f>::SIBLING);
+    for (auto w : widgets) {
+        VRConceptWidgetPtr c = dynamic_pointer_cast<VRConceptWidget>(w.second);
+        VREntityWidgetPtr e = dynamic_pointer_cast<VREntityWidget>(w.second);
+        VRRuleWidgetPtr r = dynamic_pointer_cast<VRRuleWidget>(w.second);
+
+        if (c) {
+            for (auto c2 : c->concept->children) { // parent child connection
+                g.connect(widgetIDs[w.first], widgetIDs[c2.second->getName()], graph<Vec3f>::HIERARCHY);
+                for (auto c3 : c->concept->children) { // sibling connection, TODO: use occupancy map!!
+                    if (c2 != c3)
+                        g.connect(widgetIDs[c2.second->getName()], widgetIDs[c3.second->getName()], graph<Vec3f>::SIBLING);
+                }
             }
+        }
+
+        if (e) {
+            g.connect(widgetIDs[e->entity->concept->getName()], widgetIDs[w.first], graph<Vec3f>::HIERARCHY);
         }
     }
 
@@ -289,7 +170,7 @@ void VRGuiSemantics::updateCanvas() {
         cw->move(Vec2f(x,y));
 
         if (lvl > 0) {
-            auto co = ConnectorWidgetPtr( new ConnectorWidget(canvas) );
+            auto co = VRConnectorWidgetPtr( new VRConnectorWidget(canvas) );
             connectors[c->getName()] = co;
             co->set(cp, cw);
         }
@@ -299,7 +180,20 @@ void VRGuiSemantics::updateCanvas() {
         for (auto ci : c->children) { travConcepts(ci.second, child_i, lvl+1, cw); child_i++; }
     };
 
-    if (current) travConcepts(current->thing, 0, 0, 0);
+    if (current) {
+        travConcepts(current->thing, 0, 0, 0);
+
+        for (auto e : current->instances) {
+            auto ew = VREntityWidgetPtr( new VREntityWidget(this, canvas, e.second) );
+            widgets[e.second->getName()] = ew;
+            ew->move(Vec2f(150,150));
+
+            auto co = VRConnectorWidgetPtr( new VRConnectorWidget(canvas) );
+            connectors[e.second->getName()] = co;
+            co->set(widgets[e.second->concept->getName()], ew);
+        }
+    }
+
     canvas->show_all();
 }
 
@@ -414,6 +308,33 @@ void VRGuiSemantics::remConcept(VRConceptWidget* w) {
     widgets.erase(w->concept->getName());
     current->remConcept(w->concept);
 }
+
+void VRGuiSemantics::remRule(VRRuleWidget* w) {
+    widgets.erase(w->rule->getName());
+    current->remRule(w->rule);
+}
+
+void VRGuiSemantics::remEntity(VREntityWidget* w) {
+    widgets.erase(w->entity->getName());
+    current->remEntity(w->entity);
+}
+
+void VRGuiSemantics::addEntity(VRConceptWidget* w) {
+    auto c = current->addInstance(w->concept->getName() + "_entity", w->concept->getName());
+    auto cw = VREntityWidgetPtr( new VREntityWidget(this, canvas, c) );
+    widgets[c->getName()] = cw;
+    cw->move(w->pos + Vec2f(90,0));
+    canvas->show_all();
+}
+
+void VRGuiSemantics::addRule(VRConceptWidget* w) {
+    auto c = current->addRule("is(a,b)");
+    auto cw = VRRuleWidgetPtr( new VRRuleWidget(this, canvas, c) );
+    widgets[c->getName()] = cw;
+    cw->move(w->pos + Vec2f(90,0));
+    canvas->show_all();
+}
+
 
 VROntologyPtr VRGuiSemantics::getSelectedOntology() { return current; }
 

@@ -58,37 +58,19 @@ VRSemanticWidget::VRSemanticWidget(VRGuiSemantics* m, Gtk::Fixed* canvas) {
     toolbar->add(*bPropEdit);
     toolbar->add(*bPropRem);
 
-    auto toolbar2 = Gtk::manage( new Gtk::Toolbar() );
-    toolbar2->set_icon_size(Gtk::ICON_SIZE_MENU);
-    toolbar2->set_show_arrow(0);
-    toolbar2->set_toolbar_style(Gtk::TOOLBAR_TEXT);
-    auto bConceptNew = Gtk::manage( new Gtk::ToolButton("C") );
-    auto bEntityNew = Gtk::manage( new Gtk::ToolButton("E") );
-    auto bRuleNew = Gtk::manage( new Gtk::ToolButton("R") );
-    sep = Gtk::manage( new Gtk::SeparatorToolItem() );
-    toolbar2->add(*sep);
-    toolbar2->add(*bConceptNew);
-    toolbar2->add(*bEntityNew);
-    toolbar2->add(*bRuleNew);
-
     bConceptName->set_tooltip_text("edit concept name");
     bConceptRem->set_tooltip_text("remove concept");
     bPropNew->set_tooltip_text("new property");
     bPropRem->set_tooltip_text("remove selected property");
 
-    bConceptNew->set_tooltip_text("new concept");
-    bEntityNew->set_tooltip_text("new entity");
-    bRuleNew->set_tooltip_text("new rule");
-
     // expander and frame
     auto vbox = Gtk::manage( new Gtk::VBox() );
-    auto hbox = Gtk::manage( new Gtk::HBox() );
+    toolbars = Gtk::manage( new Gtk::HBox() );
     auto expander = Gtk::manage( new Gtk::Expander("") );
     label = (Gtk::Label*)expander->get_label_widget();
     expander->add(*vbox);
-    hbox->pack_start(*toolbar);
-    hbox->pack_start(*toolbar2);
-    vbox->pack_start(*hbox);
+    toolbars->pack_start(*toolbar);
+    vbox->pack_start(*toolbars);
     vbox->pack_start(*treeview);
     auto frame = Gtk::manage( new Gtk::Frame() );
     frame->add(*expander);
@@ -97,7 +79,6 @@ VRSemanticWidget::VRSemanticWidget(VRGuiSemantics* m, Gtk::Fixed* canvas) {
 
     // signals
     treeview->signal_cursor_changed().connect( sigc::mem_fun(*this, &VRSemanticWidget::on_select_property) );
-    bConceptNew->signal_clicked().connect( sigc::mem_fun(*this, &VRSemanticWidget::on_new_clicked) );
     bConceptName->signal_clicked().connect( sigc::mem_fun(*this, &VRSemanticWidget::on_edit_clicked) );
     bConceptRem->signal_clicked().connect( sigc::mem_fun(*this, &VRSemanticWidget::on_rem_clicked) );
     bPropNew->signal_clicked().connect( sigc::mem_fun(*this, &VRSemanticWidget::on_newp_clicked) );

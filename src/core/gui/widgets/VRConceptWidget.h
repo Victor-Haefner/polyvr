@@ -12,7 +12,10 @@ struct VRConceptWidget : public VRSemanticWidget {
 
     VRConceptWidget(VRGuiSemantics* m, Gtk::Fixed* canvas = 0, VRConceptPtr concept = 0);
 
-    void on_new_clicked();
+    void on_new_concept_clicked();
+    void on_new_entity_clicked();
+    void on_new_rule_clicked();
+
     void on_select_property();
     void on_rem_clicked();
     void on_edit_clicked();

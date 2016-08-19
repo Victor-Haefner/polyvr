@@ -85,6 +85,26 @@ void VROntology::renameConcept(VRConceptPtr c, string newName) {
     addConcept(c);
 }
 
+void VROntology::remEntity(VREntityPtr e) {
+    if (!instances.count(e->ID)) return;
+    instances.erase(e->ID);
+}
+
+void VROntology::remRule(VROntologyRulePtr r) {
+    if (!rules.count(r->ID)) return;
+    rules.erase(r->ID);
+}
+
+void VROntology::renameEntity(VREntityPtr e, string s) {
+    if (!instances.count(e->ID)) return;
+    e->setName(s);
+}
+
+void VROntology::renameRule(VROntologyRulePtr r, string s) {
+    if (!rules.count(r->ID)) return;
+    r->setName(s);
+}
+
 void VROntology::merge(VROntologyPtr o) { // Todo: check it well!
     for (auto c : o->rules) rules[c.first] = c.second;
     for (auto c : o->thing->children) {

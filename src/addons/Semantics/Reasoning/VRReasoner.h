@@ -11,103 +11,11 @@
 using namespace std;
 
 #include "VROntology.h"
+#include "../VRSemanticsFwd.h"
+#include "VRStatement.h"
+#include "VRSemanticUtils.h"
 
 OSG_BEGIN_NAMESPACE;
-
-struct VPath {
-    string first;
-    string root;
-    vector<string> nodes;
-
-    VPath(string p);
-    string toString();
-};
-
-struct Variable {
-    map<int, VREntityPtr> instances;
-    string value;
-    string concept;
-    bool isAssumption = false;
-    bool isAnonymous = true;
-    bool valid = false;
-
-    Variable();
-
-    string toString();
-    bool has(std::shared_ptr<Variable> other, VROntologyPtr onto);
-
-    Variable(VROntologyPtr onto, string concept, string var);
-    Variable(VROntologyPtr onto, string val);
-
-    static std::shared_ptr<Variable> create(VROntologyPtr onto, string concept, string var);
-    static std::shared_ptr<Variable> create(VROntologyPtr onto, string val);
-
-    bool operator==(Variable v);
-    void discard(VREntityPtr e);
-};
-
-typedef std::shared_ptr<Variable> VariablePtr;
-typedef std::weak_ptr<Variable> VariableWeakPtr;
-
-struct Result {
-    vector<VREntityPtr> instances;
-};
-
-struct Term {
-    VPath path;
-    VariablePtr var;
-    string str;
-
-    Term(string s);
-    bool valid();
-    bool operator==(Term& other);
-};
-
-struct Statement;
-typedef std::shared_ptr<Statement> StatementPtr;
-typedef std::weak_ptr<Statement> StatementWeakPtr;
-
-struct Statement {
-    string verb;
-    string verb_suffix;
-    vector<Term> terms;
-    int state = 0;
-    int place = -1;
-
-    Statement();
-    Statement(string s, int i = -1);
-    static StatementPtr New(string s, int i = -1);
-
-    string toString();
-    void updateLocalVariables(map<string, VariablePtr>& globals, VROntologyPtr onto);
-    bool isSimpleVerb();
-    bool match(StatementPtr s);
-};
-
-struct Query {
-    StatementPtr request;
-    vector<StatementPtr> statements;
-
-    Query();
-    Query(string q);
-    string toString();
-
-    void checkState();
-};
-
-struct Context {
-    map<string, VariablePtr> vars;
-    map<string, Result> results;
-    map<string, Query> rules;
-    list<Query> queries;
-    VROntologyPtr onto = 0;
-
-    int itr=0;
-    int itr_max = 5;
-
-    Context(VROntologyPtr onto);
-    Context();
-};
 
 class VRReasoner {
     public:
@@ -125,11 +33,11 @@ class VRReasoner {
     private:
         VRReasoner();
 
-        bool evaluate(StatementPtr s, Context& c);
-        bool apply(StatementPtr s, Context& c);
-        bool is(StatementPtr s, Context& c);
-        bool has(StatementPtr s, Context& c);
-        bool findRule(StatementPtr s, Context& c);
+        bool evaluate(VRStatementPtr s, Context& c);
+        bool apply(VRStatementPtr s, Context& c);
+        bool is(VRStatementPtr s, Context& c);
+        bool has(VRStatementPtr s, Context& c);
+        bool findRule(VRStatementPtr s, Context& c);
 
     public:
         static VRReasonerPtr create();

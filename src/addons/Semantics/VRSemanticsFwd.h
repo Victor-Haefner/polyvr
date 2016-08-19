@@ -16,6 +16,7 @@ ptrFwd(VROntology);
 ptrFwd(VREntity);
 ptrFwd(VROntologyRule);
 ptrFwd(VRReasoner);
+ptrFwd(VRStatement);
 
 }
 

@@ -5,6 +5,8 @@
 #include <OpenSG/OSGVector.h>
 #include <gtkmm/treemodel.h>
 
+#include "core/gui/VRGuiFwd.h"
+
 using namespace std;
 
 namespace Gtk {
@@ -12,6 +14,7 @@ namespace Gtk {
     class Frame;
     class Label;
     class TreeView;
+    class HBox;
 }
 
 class VRGuiSemantics_PropsColumns : public Gtk::TreeModelColumnRecord {
@@ -36,6 +39,7 @@ struct VRSemanticWidget {
     Gtk::Frame* widget = 0;
     Gtk::Label* label = 0;
     Gtk::TreeView* treeview = 0;
+    Gtk::HBox* toolbars = 0;
 
     VRSemanticWidget(VRGuiSemantics* m, Gtk::Fixed* canvas = 0);
     ~VRSemanticWidget();
@@ -47,7 +51,6 @@ struct VRSemanticWidget {
     Vec2f getAnchorPoint(Vec2f p);
     void setPropRow(Gtk::TreeModel::iterator iter, string name, string type, string color, int flag);
 
-    virtual void on_new_clicked() = 0;
     virtual void on_select_property() = 0;
     virtual void on_rem_clicked() = 0;
     virtual void on_edit_clicked() = 0;

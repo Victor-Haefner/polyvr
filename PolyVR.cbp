@@ -450,6 +450,11 @@
 		<Unit filename="src/addons/Semantics/Reasoning/VRPyOntology.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VRReasoner.cpp" />
 		<Unit filename="src/addons/Semantics/Reasoning/VRReasoner.h" />
+		<Unit filename="src/addons/Semantics/Reasoning/VRSemanticUtils.cpp" />
+		<Unit filename="src/addons/Semantics/Reasoning/VRSemanticUtils.h" />
+		<Unit filename="src/addons/Semantics/Reasoning/VRStatement.cpp" />
+		<Unit filename="src/addons/Semantics/Reasoning/VRStatement.h" />
+		<Unit filename="src/addons/Semantics/Reasoning/VRUtils.h" />
 		<Unit filename="src/addons/Semantics/Segmentation/VRAdjacencyGraph.cpp" />
 		<Unit filename="src/addons/Semantics/Segmentation/VRAdjacencyGraph.h" />
 		<Unit filename="src/addons/Semantics/Segmentation/VRPyAdjacencyGraph.cpp" />
@@ -484,6 +489,7 @@
 		<Unit filename="src/core/gui/VRGuiContextMenu.h" />
 		<Unit filename="src/core/gui/VRGuiFile.cpp" />
 		<Unit filename="src/core/gui/VRGuiFile.h" />
+		<Unit filename="src/core/gui/VRGuiFwd.h" />
 		<Unit filename="src/core/gui/VRGuiGeneral.cpp" />
 		<Unit filename="src/core/gui/VRGuiGeneral.h" />
 		<Unit filename="src/core/gui/VRGuiManager.cpp" />
@@ -514,6 +520,12 @@
 		<Unit filename="src/core/gui/VRGuiVectorEntry.h" />
 		<Unit filename="src/core/gui/widgets/VRConceptWidget.cpp" />
 		<Unit filename="src/core/gui/widgets/VRConceptWidget.h" />
+		<Unit filename="src/core/gui/widgets/VRConnectorWidget.cpp" />
+		<Unit filename="src/core/gui/widgets/VRConnectorWidget.h" />
+		<Unit filename="src/core/gui/widgets/VREntityWidget.cpp" />
+		<Unit filename="src/core/gui/widgets/VREntityWidget.h" />
+		<Unit filename="src/core/gui/widgets/VRRuleWidget.cpp" />
+		<Unit filename="src/core/gui/widgets/VRRuleWidget.h" />
 		<Unit filename="src/core/gui/widgets/VRSemanticWidget.cpp" />
 		<Unit filename="src/core/gui/widgets/VRSemanticWidget.h" />
 		<Unit filename="src/core/math/Octree.cpp" />
