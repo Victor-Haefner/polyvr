@@ -4,6 +4,7 @@
 #include "core/gui/VRGuiFwd.h"
 #include "addons/Semantics/VRSemanticsFwd.h"
 
+#include <string>
 #include <OpenSG/OSGConfig.h>
 
 namespace Gtk {
@@ -11,6 +12,7 @@ namespace Gtk {
     class Separator;
 }
 
+using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 struct VRConnectorWidget {
@@ -22,7 +24,7 @@ struct VRConnectorWidget {
     VRSemanticWidgetWeakPtr w1;
     VRSemanticWidgetWeakPtr w2;
 
-    VRConnectorWidget(Gtk::Fixed* canvas = 0);
+    VRConnectorWidget(Gtk::Fixed* canvas, string color);
 
     void set(VRSemanticWidgetPtr w1, VRSemanticWidgetPtr w2);
 

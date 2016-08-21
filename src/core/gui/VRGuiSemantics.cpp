@@ -170,7 +170,7 @@ void VRGuiSemantics::updateCanvas() {
         cw->move(Vec2f(x,y));
 
         if (lvl > 0) {
-            auto co = VRConnectorWidgetPtr( new VRConnectorWidget(canvas) );
+            auto co = VRConnectorWidgetPtr( new VRConnectorWidget(canvas, "#00CCFF") );
             connectors[c->getName()] = co;
             co->set(cp, cw);
         }
@@ -188,7 +188,7 @@ void VRGuiSemantics::updateCanvas() {
             widgets[e.second->getName()] = ew;
             ew->move(Vec2f(150,150));
 
-            auto co = VRConnectorWidgetPtr( new VRConnectorWidget(canvas) );
+            auto co = VRConnectorWidgetPtr( new VRConnectorWidget(canvas, "#FFEE00") );
             connectors[e.second->getName()] = co;
             co->set(widgets[e.second->concept->getName()], ew);
         }

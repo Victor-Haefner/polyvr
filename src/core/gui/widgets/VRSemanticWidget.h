@@ -41,7 +41,7 @@ struct VRSemanticWidget {
     Gtk::TreeView* treeview = 0;
     Gtk::HBox* toolbars = 0;
 
-    VRSemanticWidget(VRGuiSemantics* m, Gtk::Fixed* canvas = 0);
+    VRSemanticWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, string color);
     ~VRSemanticWidget();
 
     void on_select();

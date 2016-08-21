@@ -17,7 +17,7 @@
 
 using namespace OSG;
 
-VRRuleWidget::VRRuleWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, VROntologyRulePtr rule) : VRSemanticWidget(m, canvas) {
+VRRuleWidget::VRRuleWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, VROntologyRulePtr rule) : VRSemanticWidget(m, canvas, "#00DD00") {
     this->rule = rule;
     label->set_text(rule->getName());
 

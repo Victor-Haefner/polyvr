@@ -17,7 +17,7 @@
 
 using namespace OSG;
 
-VREntityWidget::VREntityWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, VREntityPtr entity) : VRSemanticWidget(m, canvas) {
+VREntityWidget::VREntityWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, VREntityPtr entity) : VRSemanticWidget(m, canvas, "#FFEE00") {
     this->entity = entity;
     label->set_text(entity->getName());
 

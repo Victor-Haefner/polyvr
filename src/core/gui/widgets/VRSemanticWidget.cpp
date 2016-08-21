@@ -19,7 +19,7 @@ void VRGuiSemantics_on_drag_data_get(const Glib::RefPtr<Gdk::DragContext>& conte
     data.set("concept", 0, (const guint8*)&e, sizeof(void*));
 }
 
-VRSemanticWidget::VRSemanticWidget(VRGuiSemantics* m, Gtk::Fixed* canvas) {
+VRSemanticWidget::VRSemanticWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, string color) {
     this->canvas = canvas;
     manager = m;
 
@@ -76,6 +76,7 @@ VRSemanticWidget::VRSemanticWidget(VRGuiSemantics* m, Gtk::Fixed* canvas) {
     frame->add(*expander);
     widget = frame;
     canvas->put(*frame, 0, 0);
+    frame->modify_bg( Gtk::STATE_NORMAL, Gdk::Color(color));
 
     // signals
     treeview->signal_cursor_changed().connect( sigc::mem_fun(*this, &VRSemanticWidget::on_select_property) );

@@ -21,7 +21,7 @@
 
 using namespace OSG;
 
-VRConceptWidget::VRConceptWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, VRConceptPtr concept) : VRSemanticWidget(m, canvas) {
+VRConceptWidget::VRConceptWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, VRConceptPtr concept) : VRSemanticWidget(m, canvas, "#00CCFF") {
     this->concept = concept;
     label->set_text(concept->getName());
 

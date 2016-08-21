@@ -10,7 +10,7 @@
 using namespace OSG;
 
 
-VRConnectorWidget::VRConnectorWidget(Gtk::Fixed* canvas) {
+VRConnectorWidget::VRConnectorWidget(Gtk::Fixed* canvas, string color) {
     sh1 = Gtk::manage( new Gtk::HSeparator() );
     sh2 = Gtk::manage( new Gtk::HSeparator() );
     sv1 = Gtk::manage( new Gtk::VSeparator() );
@@ -20,6 +20,11 @@ VRConnectorWidget::VRConnectorWidget(Gtk::Fixed* canvas) {
     canvas->put(*sh2, 0, 0);
     canvas->put(*sv1, 0, 0);
     canvas->put(*sv2, 0, 0);
+
+    sh1->modify_bg( Gtk::STATE_NORMAL, Gdk::Color(color));
+    sh2->modify_bg( Gtk::STATE_NORMAL, Gdk::Color(color));
+    sv1->modify_bg( Gtk::STATE_NORMAL, Gdk::Color(color));
+    sv2->modify_bg( Gtk::STATE_NORMAL, Gdk::Color(color));
 }
 
 void VRConnectorWidget::set(VRSemanticWidgetPtr w1, VRSemanticWidgetPtr w2) {
