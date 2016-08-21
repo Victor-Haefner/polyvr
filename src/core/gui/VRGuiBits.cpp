@@ -126,8 +126,6 @@ void VRGuiBits_on_internal_update(int i) {
 // ---------Main-------------
 // --------------------------
 
-Glib::RefPtr<Gtk::TextBuffer> terminal;
-
 void VRGuiBits::write_to_terminal(string s) {
     PLock lock(mtx);
     msg_queue.push(s);
@@ -136,13 +134,13 @@ void VRGuiBits::write_to_terminal(string s) {
 void VRGuiBits::clear_terminal() {
     PLock lock(mtx);
     std::queue<string>().swap(msg_queue);
-    terminal->set_text("");
+    term_buffer[open_term]->set_text("");
 }
 
 void VRGuiBits::update_terminal() {
     PLock lock(mtx);
     while(!msg_queue.empty()) {
-        terminal->insert(terminal->end(), msg_queue.front());
+        term_buffer[open_term]->insert(term_buffer[open_term]->end(), msg_queue.front());
 		msg_queue.pop();
     }
 }
@@ -275,20 +273,29 @@ VRGuiBits::VRGuiBits() {
     win->signal_key_press_event().connect( sigc::mem_fun(*this, &VRGuiBits::toggleWidgets) );
 
     // TERMINAL
-    terminal = Gtk::TextBuffer::create();
-    Gtk::TextView* term_view = Gtk::manage(new Gtk::TextView(terminal));
-    Pango::FontDescription fdesc;
-    fdesc.set_family("monospace");
-    fdesc.set_size(10 * PANGO_SCALE);
-    term_view->modify_font(fdesc);
-    swin = Gtk::manage(new Gtk::ScrolledWindow());
-    swin->add(*term_view);
-    swin->set_size_request(-1,70);
-    term_box = (GtkWidget*)swin->gobj();
+    auto notebook = Gtk::manage( new Gtk::Notebook() );
+    auto addTermTab = [&](string name) {
+        auto buffer = Gtk::TextBuffer::create();
+        Gtk::TextView* term_view = Gtk::manage(new Gtk::TextView(buffer));
+        Pango::FontDescription fdesc;
+        fdesc.set_family("monospace");
+        fdesc.set_size(10 * PANGO_SCALE);
+        term_view->modify_font(fdesc);
+        swin = Gtk::manage(new Gtk::ScrolledWindow());
+        swin->add(*term_view);
+        swin->set_size_request(-1,70);
+        notebook->append_page(*swin, name);
+        term_buffer[name] = buffer;
+    };
+
+    addTermTab("Console");
+    addTermTab("Errors");
+    addTermTab("Reasoning");
+    open_term = "Console";
 
     Gtk::HBox* box;
     VRGuiBuilder()->get_widget("hbox15", box);
-    box->pack_start(*swin, true, true);
+    box->pack_start(*notebook, true, true);
     box->show_all();
 
     swin->get_vadjustment()->signal_changed().connect( sigc::mem_fun(*this, &VRGuiBits::on_terminal_changed) );

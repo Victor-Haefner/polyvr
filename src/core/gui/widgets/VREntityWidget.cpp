@@ -27,6 +27,8 @@ VREntityWidget::VREntityWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, VREntityPt
     }*/
 }
 
+int VREntityWidget::ID() { return entity->ID; }
+
 void VREntityWidget::on_edit_prop_clicked() {
     if (!selected_property) return;
     Gtk::Dialog* dialog;

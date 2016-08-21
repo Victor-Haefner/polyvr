@@ -29,6 +29,8 @@ struct VROntology : public std::enable_shared_from_this<VROntology>, public VRNa
     VROntology(string name);
     static VROntologyPtr create(string name);
 
+    void setup();
+
     void merge(VROntologyPtr o);
     VROntologyPtr copy();
 

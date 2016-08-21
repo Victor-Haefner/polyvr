@@ -5,6 +5,7 @@
 #include <string.h>
 #include <queue>
 #include <gtkmm/combobox.h>
+#include <gtkmm/textbuffer.h>
 #include "core/utils/VRFunctionFwd.h"
 #include "core/utils/VRDeviceFwd.h"
 #include "VRGuiRecWidget.h"
@@ -19,7 +20,9 @@ class VRSignal;
 
 class VRGuiBits {
     private:
-        GtkWidget* term_box = 0;
+        string open_term;
+        map< string, Glib::RefPtr<Gtk::TextBuffer> > term_buffer;
+
         Gtk::ScrolledWindow* swin = 0;
 	    std::queue<string> msg_queue;
 

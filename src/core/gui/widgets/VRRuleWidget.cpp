@@ -27,6 +27,8 @@ VRRuleWidget::VRRuleWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, VROntologyRule
     }*/
 }
 
+int VRRuleWidget::ID() { return rule->ID; }
+
 void VRRuleWidget::on_edit_prop_clicked() {
     if (!selected_statement) return;
     Gtk::Dialog* dialog;

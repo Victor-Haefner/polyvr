@@ -23,6 +23,7 @@ VROntology::VROntology(string name) {
     storeMap("Instances", &instances, true);
     storeMap("Rules", &rules, true);
     store("flag", &flag);
+    regStorageSetupFkt( VRFunction<int>::create("ontology setup", boost::bind(&VROntology::setup, this)) );
 }
 
 VROntologyPtr VROntology::create(string name) {
@@ -31,6 +32,12 @@ VROntologyPtr VROntology::create(string name) {
     o->concepts["Thing"] = o->thing;
     o->storeObj("Thing", o->thing);
     return o;
+}
+
+void VROntology::setup() {
+    vector<VRConceptPtr> cpts;
+    thing->getDescendance(cpts);
+    for (auto& c : cpts) concepts[c->getName()] = c;
 }
 
 VRConceptPtr VROntology::getConcept(string name) {

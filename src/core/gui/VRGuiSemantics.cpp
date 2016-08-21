@@ -3,6 +3,7 @@
 #include "VRGuiUtils.h"
 #include "addons/Semantics/Reasoning/VROntology.h"
 #include "addons/Semantics/Reasoning/VRProperty.h"
+#include "addons/Semantics/Reasoning/VRReasoner.h"
 #include "core/utils/toString.h"
 #include "core/math/graph.h"
 
@@ -48,6 +49,8 @@
     - link entities to concepts
     - link object properties of entites to property entity
     - link object properties of concept to property concept
+
+- dnd concept onto other concept for reparenting concept!
 
 - ontology bugs
     - inherited properties not shown??
@@ -106,12 +109,12 @@ void VRGuiSemantics::updateLayout() {
     layout.setGravity(Vec3f(0,1,0));
     layout.setRadius(100);
 
-    map<string, int> widgetIDs;
+    map<int, int> widgetIDs;
 
     for (auto c : widgets) {
         Vec3f p = Vec3f(c.second->pos[0], c.second->pos[1], 0);
         widgetIDs[c.first] = g.addNode(p);
-        if (c.first == "Thing") layout.fixNode(widgetIDs[c.first]);
+        if (c.first == current->thing->ID) layout.fixNode(widgetIDs[c.first]);
     }
 
     for (auto w : widgets) {
@@ -121,16 +124,16 @@ void VRGuiSemantics::updateLayout() {
 
         if (c) {
             for (auto c2 : c->concept->children) { // parent child connection
-                g.connect(widgetIDs[w.first], widgetIDs[c2.second->getName()], graph<Vec3f>::HIERARCHY);
+                g.connect(widgetIDs[c->concept->ID], widgetIDs[c2.second->ID], graph<Vec3f>::HIERARCHY);
                 for (auto c3 : c->concept->children) { // sibling connection, TODO: use occupancy map!!
                     if (c2 != c3)
-                        g.connect(widgetIDs[c2.second->getName()], widgetIDs[c3.second->getName()], graph<Vec3f>::SIBLING);
+                        g.connect(widgetIDs[c2.second->ID], widgetIDs[c3.second->ID], graph<Vec3f>::SIBLING);
                 }
             }
         }
 
         if (e) {
-            g.connect(widgetIDs[e->entity->concept->getName()], widgetIDs[w.first], graph<Vec3f>::HIERARCHY);
+            g.connect(widgetIDs[e->entity->concept->ID], widgetIDs[w.first], graph<Vec3f>::HIERARCHY);
         }
     }
 
@@ -160,20 +163,16 @@ void VRGuiSemantics::setOntology(string name) {
 void VRGuiSemantics::updateCanvas() {
     int i = 0;
     widgets.clear();
+    connectors.clear();
 
     function<void(VRConceptPtr,int,int,VRConceptWidgetPtr)> travConcepts = [&](VRConceptPtr c, int cID, int lvl, VRConceptWidgetPtr cp) {
         auto cw = VRConceptWidgetPtr( new VRConceptWidget(this, canvas, c) );
-        widgets[c->getName()] = cw;
+        widgets[c->ID] = cw;
 
-        int x = 10+cID*60;
-        int y = 10+40*lvl;
+        int x = 150+cID*60;
+        int y = 150+40*lvl;
         cw->move(Vec2f(x,y));
-
-        if (lvl > 0) {
-            auto co = VRConnectorWidgetPtr( new VRConnectorWidget(canvas, "#00CCFF") );
-            connectors[c->getName()] = co;
-            co->set(cp, cw);
-        }
+        if (lvl > 0) connect(cp, cw, "#00CCFF");
 
         i++;
         int child_i = 0;
@@ -185,16 +184,25 @@ void VRGuiSemantics::updateCanvas() {
 
         for (auto e : current->instances) {
             auto ew = VREntityWidgetPtr( new VREntityWidget(this, canvas, e.second) );
-            widgets[e.second->getName()] = ew;
+            widgets[ew->ID()] = ew;
             ew->move(Vec2f(150,150));
-
-            auto co = VRConnectorWidgetPtr( new VRConnectorWidget(canvas, "#FFEE00") );
-            connectors[e.second->getName()] = co;
-            co->set(widgets[e.second->concept->getName()], ew);
+            connect(widgets[e.second->concept->ID], ew, "#FFEE00");
         }
     }
 
     canvas->show_all();
+}
+
+void VRGuiSemantics::connect(VRSemanticWidgetPtr w1, VRSemanticWidgetPtr w2, string color) {
+    auto co = VRConnectorWidgetPtr( new VRConnectorWidget(canvas, color) );
+    connectors[w2->ID()] = co;
+    co->set(w1, w2);
+}
+
+void VRGuiSemantics::disconnect(VRSemanticWidgetPtr w1, VRSemanticWidgetPtr w2) {
+    if (!connectors.count(w2->ID())) return;
+    auto co = connectors[w2->ID()];
+    if (co->w1.lock() == w1 && co->w2.lock() == w2) connectors.erase(w2->ID());
 }
 
 void VRGuiSemantics::on_treeview_select() {
@@ -254,6 +262,7 @@ VRGuiSemantics::VRGuiSemantics() {
     setCellRendererCallback("cellrenderertext51", VRGuiSemantics_on_name_edited);
     setNoteBookCallback("notebook3", VRGuiSemantics_on_notebook_switched);
     setToolButtonSensitivity("toolbutton15", false);
+    setButtonCallback("button33", sigc::mem_fun(*this, &VRGuiSemantics::on_query_clicked));
 
     // dnd
     vector<Gtk::TargetEntry> entries;
@@ -265,6 +274,16 @@ VRGuiSemantics::VRGuiSemantics() {
     auto sm = VRSceneManager::get();
     updateLayoutCb = VRFunction<int>::create("layout_update", boost::bind(&VRGuiSemantics::updateLayout, this));
     sm->addUpdateFkt(updateLayoutCb);
+}
+
+void VRGuiSemantics::on_query_clicked() {
+    auto query = getTextEntry("entry26");
+    if (!current) return;
+
+    auto r = VRReasoner::create();
+    auto res = r->process(query, current);
+    cout << "res " << res.size() << endl;
+
 }
 
 void VRGuiSemantics::updateOntoList() {
@@ -298,41 +317,50 @@ void VRGuiSemantics::updateOntoList() {
 
 void VRGuiSemantics::copyConcept(VRConceptWidget* w) {
     auto c = current->addConcept(w->concept->getName() + "_derived", w->concept->getName());
+    if (!c || !w) {
+        cout << current->toString() << endl;
+        return;
+    }
+    if (!c || !w) return;
     auto cw = VRConceptWidgetPtr( new VRConceptWidget(this, canvas, c) );
-    widgets[c->getName()] = cw;
+    widgets[c->ID] = cw;
     cw->move(w->pos + Vec2f(90,0));
+    //connect(w,cw); // TODO
     canvas->show_all();
-}
-
-void VRGuiSemantics::remConcept(VRConceptWidget* w) {
-    widgets.erase(w->concept->getName());
-    current->remConcept(w->concept);
-}
-
-void VRGuiSemantics::remRule(VRRuleWidget* w) {
-    widgets.erase(w->rule->getName());
-    current->remRule(w->rule);
-}
-
-void VRGuiSemantics::remEntity(VREntityWidget* w) {
-    widgets.erase(w->entity->getName());
-    current->remEntity(w->entity);
 }
 
 void VRGuiSemantics::addEntity(VRConceptWidget* w) {
     auto c = current->addInstance(w->concept->getName() + "_entity", w->concept->getName());
     auto cw = VREntityWidgetPtr( new VREntityWidget(this, canvas, c) );
-    widgets[c->getName()] = cw;
+    widgets[c->ID] = cw;
     cw->move(w->pos + Vec2f(90,0));
+    //connect(w,cw); // TODO
     canvas->show_all();
 }
 
 void VRGuiSemantics::addRule(VRConceptWidget* w) {
     auto c = current->addRule("is(a,b)");
     auto cw = VRRuleWidgetPtr( new VRRuleWidget(this, canvas, c) );
-    widgets[c->getName()] = cw;
+    widgets[c->ID] = cw;
     cw->move(w->pos + Vec2f(90,0));
     canvas->show_all();
+}
+
+void VRGuiSemantics::remConcept(VRConceptWidget* w) {
+    widgets.erase(w->concept->ID);
+    current->remConcept(w->concept);
+    //disconnectAny(); // TODO
+}
+
+void VRGuiSemantics::remEntity(VREntityWidget* w) {
+    widgets.erase(w->entity->ID);
+    current->remEntity(w->entity);
+    //disconnectAny(); // TODO
+}
+
+void VRGuiSemantics::remRule(VRRuleWidget* w) {
+    widgets.erase(w->rule->ID);
+    current->remRule(w->rule);
 }
 
 

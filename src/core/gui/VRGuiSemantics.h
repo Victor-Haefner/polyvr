@@ -19,8 +19,8 @@ using namespace std;
 class VRGuiSemantics {
     private:
         Gtk::Fixed* canvas = 0;
-        map<string, VRSemanticWidgetPtr> widgets;
-        map<string, VRConnectorWidgetPtr> connectors;
+        map<int, VRSemanticWidgetPtr> widgets;
+        map<int, VRConnectorWidgetPtr> connectors;
 
         VROntologyPtr current;
         VRUpdatePtr updateLayoutCb;
@@ -30,10 +30,15 @@ class VRGuiSemantics {
 
         void on_treeview_select();
         void on_property_treeview_select();
+        void on_query_clicked();
 
         void clearCanvas();
         void setOntology(string name);
         void updateLayout();
+
+        void connect(VRSemanticWidgetPtr p1, VRSemanticWidgetPtr p2, string color);
+        void disconnect(VRSemanticWidgetPtr p1, VRSemanticWidgetPtr p2);
+        void disconnectAny(VRSemanticWidgetPtr p1);
 
         VRSemanticManagerPtr getManager();
 

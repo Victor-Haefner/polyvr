@@ -32,7 +32,6 @@ VRConceptPtr VRConcept::copy() {
 }
 
 void VRConcept::setup() {
-    cout << "VRConcept::setup " << name << " " << children.size() << endl;
     auto tmp = children;
     children.clear();
     for (auto c : tmp) append(c.second);

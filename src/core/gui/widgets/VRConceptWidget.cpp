@@ -53,6 +53,8 @@ VRConceptWidget::VRConceptWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, VRConcep
     }
 }
 
+int VRConceptWidget::ID() { return concept->ID; }
+
 void VRConceptWidget::on_edit_prop_clicked() {
     if (!selected_property) return;
     Gtk::Dialog* dialog;

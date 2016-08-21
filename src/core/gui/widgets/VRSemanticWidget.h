@@ -57,6 +57,7 @@ struct VRSemanticWidget {
     virtual void on_newp_clicked() = 0;
     virtual void on_edit_prop_clicked() = 0;
     virtual void on_rem_prop_clicked() = 0;
+    virtual int ID() = 0;
     virtual void update() = 0;
 };
 

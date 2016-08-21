@@ -22,6 +22,7 @@ struct VRConceptWidget : public VRSemanticWidget {
     void on_newp_clicked();
     void on_edit_prop_clicked();
     void on_rem_prop_clicked();
+    int ID();
     void update();
 };
 
