@@ -6,6 +6,7 @@
 #include <sstream>
 #include <list>
 #include "core/utils/toString.h"
+#include "core/gui/VRGuiManager.h"
 
 using namespace std;
 using namespace OSG;
@@ -44,23 +45,40 @@ bool VRReasoner::startswith(string s, string subs) {
 
 */
 
+void VRReasoner::print(const string& s) {
+    cout << pre << s << endl;
+    VRGuiManager::get()->printToConsole( "Reasoning", s+"\n" );
+}
+
+void VRReasoner::print(const string& s, COLOR c) {
+    switch(c) {
+        case BLUE: cout << blueBeg; break;
+        case RED: cout << redBeg; break;
+        case GREEN: cout << greenBeg; break;
+        case YELLOW: cout << yellowBeg; break;
+    }
+    cout << pre << s << colEnd << endl;
+
+    VRGuiManager::get()->printToConsole( "Reasoning", s+"\n" ); // TODO
+}
+
 bool VRReasoner::findRule(VRStatementPtr statement, Context& context) {
-    cout << pre << "     search rule for " << statement->toString() << endl;
+    print("     search rule for " + statement->toString());
     for ( auto r : context.onto->getRules()) { // no match found -> check rules and initiate new queries
         if (!context.rules.count(r->rule)) continue;
         Query query = context.rules[r->rule];
         if (query.request->verb != statement->verb) continue; // rule verb does not match
-        cout << pre << "      rule " << query.request->toString() << endl;
+        print("      rule " + query.request->toString());
 
         //query.request.updateLocalVariables(context.vars, context.onto);
         if (!statement->match(query.request)) continue; // statements are not similar enough
 
         query.request = statement; // TODO: use pointer? new query needs to share ownership of the statement
         context.queries.push_back(query);
-        cout << pre << yellowBeg << "      add query " << query.toString() << colEnd << endl;
+        print("      add query " + query.toString(), YELLOW);
         return true;
     }
-    cout << pre << "      no rule found " << endl;
+    print("      no rule found ");
     return false;
 }
 
@@ -72,7 +90,7 @@ bool VRReasoner::is(VRStatementPtr statement, Context& context) {
 
     bool b = left == right;
     bool NOT = statement->verb_suffix == "not";
-    cout << pre << "   " << left.str << " is " << (b?"":" not ") << (NOT?" not ":"") << right.var->value << endl;
+    print("   " + left.str + " is " + (b?"":" not ") + (NOT?" not ":"") + right.var->value);
 
     return ( (b && !NOT) || (!b && NOT) );
 }
@@ -82,8 +100,8 @@ bool VRReasoner::has(VRStatementPtr statement, Context& context) { // TODO
     auto& right = statement->terms[1];
 
     bool b = left.var->has(right.var, context.onto);
-    cout << pre << "  " << left.str << " has " << (b?"":"not") << " " << right.str << endl;
-    cout << "RES " << &right.var << "   " << right.var->toString() << endl;
+    print("  " + left.str + " has " + (b?"":"not") + " " + right.str);
+    print("RES " + toString(&right.var) + "   " + right.var->toString());
     if (b) { statement->state = 1; return true; }
 
     // DEBUG -> TODO
@@ -104,7 +122,7 @@ bool VRReasoner::apply(VRStatementPtr statement, Context& context) {
         auto& right = statement->terms[1];
         left.var->value = right.var->value; // TOCHECK
         statement->state = 1;
-        cout << pre << greenBeg << "  set " << left.str << " to " << right.str << colEnd << endl;
+        print("  set " + left.str + " to " + right.str, GREEN);
     }
 
     if (statement->verb == "has") {
@@ -112,34 +130,34 @@ bool VRReasoner::apply(VRStatementPtr statement, Context& context) {
         auto& right = statement->terms[1];
         auto Cconcept = context.onto->getConcept( right.var->concept ); // child concept
         auto Pconcept = context.onto->getConcept( left.var->concept ); // parent concept
-        if (!Pconcept || !Cconcept) { cout << "Warning: failed to apply " << statement->toString() << endl; return false; }
+        if (!Pconcept || !Cconcept) { print("Warning: failed to apply " + statement->toString()); return false; }
         auto prop = Pconcept->getProperties( Cconcept->getName() );
-        if (prop.size() == 0) { cout << "Warning: failed to apply " << statement->toString() << endl; return false; }
+        if (prop.size() == 0) { print("Warning: failed to apply " + statement->toString()); return false; }
         for (auto i : left.var->instances) i.second->add(prop[0]->getName(), right.var->value); // TODO: the first parameter is wrong
         statement->state = 1;
-        cout << pre << greenBeg << "  give " << right.str << " to " << left.str << colEnd << endl;
+        print("  give " + right.str + " to " + left.str, GREEN);
     }
 
     if (statement->verb == "q") {
         string v = statement->terms[0].var->value;
-        cout << "RES2 " << &context.vars[v] << "   " << context.vars[v]->toString();
+        print("RES2 " + toString(&context.vars[v]) + "   " + context.vars[v]->toString());
         if (context.results.count(v) == 0) context.results[v] = Result();
         for (auto i : context.vars[v]->instances) context.results[v].instances.push_back(i.second);
         statement->state = 1;
-        cout << pre << greenBeg << "  add result " << v << colEnd << endl;
+        print("  add result " + v, GREEN);
     }
 
     return true;
 }
 
 bool VRReasoner::evaluate(VRStatementPtr statement, Context& context) {
-    cout << pre << " " << statement->place << " eval " << statement->toString() << endl;
+    print(" " + toString(statement->place) + " eval " + statement->toString());
     statement->updateLocalVariables(context.vars, context.onto);
 
     if (!statement->isSimpleVerb()) { // resolve (anonymous?) variables
         string var = statement->terms[0].path.root;
         context.vars[var] = Variable::create( context.onto, statement->verb, var );
-        cout << pre << blueBeg << "  added variable " << context.vars[var]->toString() << colEnd << endl;
+        print("  added variable " + context.vars[var]->toString(), BLUE);
         statement->state = 1;
         return true;
     }
@@ -151,7 +169,7 @@ bool VRReasoner::evaluate(VRStatementPtr statement, Context& context) {
     // TODO: introduce requirements rules for the existence of some individuals
 
 vector<Result> VRReasoner::process(string initial_query, VROntologyPtr onto) {
-    cout << pre << initial_query << endl;
+    print(initial_query);
 
     Context context(onto); // create context
     context.queries.push_back(Query(initial_query));
@@ -162,11 +180,11 @@ vector<Result> VRReasoner::process(string initial_query, VROntologyPtr onto) {
         auto request = query.request;
         if (request->state == 1) {
             apply(request, context);
-            cout << pre << redBeg << " solved: " << query.toString() << colEnd << endl;
+            print(" solved: " + query.toString(), RED);
             context.queries.pop_back(); continue;
         }; // query answered, pop and continue
 
-        cout << pre << redBeg << "QUERY " << query.toString() << colEnd << endl;
+        print("QUERY " + query.toString(), RED);
 
         request->updateLocalVariables(context.vars, context.onto);
 
@@ -184,10 +202,10 @@ vector<Result> VRReasoner::process(string initial_query, VROntologyPtr onto) {
         if (context.itr >= context.itr_max) break;
     }
 
-    cout << pre << " break after " << context.itr << " iterations\n";
+    print(" break after " + toString(context.itr) + " iterations\n");
     for (auto r : context.results) {
-        cout << pre << "  result " << r.first << endl;
-        for (auto i : r.second.instances) cout << pre << "   instance " << i->toString() << endl;
+        print("  result " + r.first);
+        for (auto i : r.second.instances) print("   instance " + i->toString());
     }
 
     vector<Result> res;

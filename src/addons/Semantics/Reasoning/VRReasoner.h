@@ -26,6 +26,13 @@ class VRReasoner {
         string yellowBeg = "\033[0;38;2;255;255;150m";
         string colEnd = "\033[0m";
 
+        enum COLOR {
+            BLUE,
+            RED,
+            GREEN,
+            YELLOW
+        };
+
         static vector<string> split(string s, string d);
         static vector<string> split(string s, char d);
         static bool startswith(string s, string subs);
@@ -38,6 +45,8 @@ class VRReasoner {
         bool is(VRStatementPtr s, Context& c);
         bool has(VRStatementPtr s, Context& c);
         bool findRule(VRStatementPtr s, Context& c);
+        void print(const string& s);
+        void print(const string& s, COLOR c);
 
     public:
         static VRReasonerPtr create();
