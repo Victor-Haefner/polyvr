@@ -19,12 +19,13 @@ using namespace OSG;
 
 VRRuleWidget::VRRuleWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, VROntologyRulePtr rule) : VRSemanticWidget(m, canvas, "#00DD00") {
     this->rule = rule;
-    label->set_text(rule->getName());
+    label->set_text("rule");
+    if (rule->query) label->set_text(rule->query->toString());
 
     Glib::RefPtr<Gtk::ListStore> liststore = Glib::RefPtr<Gtk::ListStore>::cast_dynamic( treeview->get_model() );
-    /*for (auto p : concept->properties) {
-        setPropRow(liststore->append(), p.second->getName(), p.second->type, "black", 0);
-    }*/
+    for (auto s : rule->statements) {
+        setPropRow(liststore->append(), s->toString(), "", "black", 0);
+    }
 }
 
 int VRRuleWidget::ID() { return rule->ID; }

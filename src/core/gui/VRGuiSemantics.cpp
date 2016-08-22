@@ -348,7 +348,8 @@ void VRGuiSemantics::addEntity(VRConceptWidget* w) {
 }
 
 void VRGuiSemantics::addRule(VRConceptWidget* w) {
-    auto c = current->addRule("is(a,b)", w->concept->getName());
+    string n = w->concept->getName();
+    auto c = current->addRule("q(x):"+n+"(x)", n);
     auto cw = VRRuleWidgetPtr( new VRRuleWidget(this, canvas, c) );
     widgets[c->ID] = cw;
     cw->move(w->pos + Vec2f(90,0));

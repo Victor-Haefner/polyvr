@@ -22,9 +22,11 @@ VREntityWidget::VREntityWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, VREntityPt
     label->set_text(entity->getName());
 
     Glib::RefPtr<Gtk::ListStore> liststore = Glib::RefPtr<Gtk::ListStore>::cast_dynamic( treeview->get_model() );
-    /*for (auto p : entity->properties) {
-        setPropRow(liststore->append(), p.second->getName(), p.second->type, "black", 0);
-    }*/
+    for (auto pv : entity->properties) {
+        for (auto p : pv.second) {
+            setPropRow(liststore->append(), p->getName(), p->type, "black", 0);
+        }
+    }
 }
 
 int VREntityWidget::ID() { return entity->ID; }
