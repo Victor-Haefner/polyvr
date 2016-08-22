@@ -144,7 +144,7 @@ void VRPN::update_t(VRThread* thread) {}
 void VRPN::update() {
     if (!active) return;
 
-    if (verbose) VRGuiManager::get()->printInfo("vrpn verbooooose\n");
+    if (verbose) VRGuiManager::get()->printToConsole("Console", "vrpn verbooooose\n");
 
     for (auto tr : devices) tr.second->loop();
 }

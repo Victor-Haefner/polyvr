@@ -126,29 +126,73 @@ void VRGuiBits_on_internal_update(int i) {
 // ---------Main-------------
 // --------------------------
 
-void VRGuiBits::write_to_terminal(string s) {
+VRConsoleWidget::VRConsoleWidget() {
+    buffer = Gtk::TextBuffer::create();
+    Gtk::TextView* term_view = Gtk::manage(new Gtk::TextView(buffer));
+    Pango::FontDescription fdesc;
+    fdesc.set_family("monospace");
+    fdesc.set_size(10 * PANGO_SCALE);
+    term_view->modify_font(fdesc);
+    swin = Gtk::manage(new Gtk::ScrolledWindow());
+    swin->add(*term_view);
+    swin->set_size_request(-1,70);
+
+    swin->get_vadjustment()->signal_changed().connect( sigc::mem_fun(*this, &VRConsoleWidget::forward) );
+    setToolButtonCallback("toolbutton24", sigc::mem_fun(*this, &VRConsoleWidget::clear));
+    setToolButtonCallback("toolbutton25", sigc::mem_fun(*this, &VRConsoleWidget::forward));
+    setToolButtonCallback("pause_terminal", sigc::mem_fun(*this, &VRConsoleWidget::pause));
+}
+
+void VRConsoleWidget::write(string s) {
     PLock lock(mtx);
     msg_queue.push(s);
 }
 
-void VRGuiBits::clear_terminal() {
+void VRConsoleWidget::clear() {
     PLock lock(mtx);
     std::queue<string>().swap(msg_queue);
-    term_buffer[open_term]->set_text("");
+    buffer->set_text("");
 }
 
-void VRGuiBits::update_terminal() {
+void VRConsoleWidget::pause() { paused = getToggleButtonState("pause_terminal"); }
+void VRConsoleWidget::setLabel(Gtk::Label* lbl) { label = lbl; }
+void VRConsoleWidget::setOpen(bool b) {
+    isOpen = b;
+    if (!b) resetColor();
+}
+
+void VRConsoleWidget::setColor(string color) {
+    label->modify_fg( Gtk::STATE_ACTIVE , Gdk::Color(color));
+    label->modify_fg( Gtk::STATE_NORMAL , Gdk::Color(color));
+}
+
+void VRConsoleWidget::resetColor() {
+    label->unset_fg( Gtk::STATE_ACTIVE );
+    label->unset_fg( Gtk::STATE_NORMAL );
+}
+
+void VRConsoleWidget::update() {
     PLock lock(mtx);
     while(!msg_queue.empty()) {
-        term_buffer[open_term]->insert(term_buffer[open_term]->end(), msg_queue.front());
+        if (!isOpen) setColor("#006fe0");
+        buffer->insert(buffer->end(), msg_queue.front());
 		msg_queue.pop();
     }
 }
 
-void VRGuiBits::on_terminal_changed() {
+void VRConsoleWidget::forward() {
     if (swin == 0) return;
+    if (paused) return;
     auto a = swin->get_vadjustment();
     a->set_value(a->get_upper() - a->get_page_size());
+}
+
+void VRGuiBits::update_terminals() {
+    for (auto c : consoles) c.second->update();
+}
+
+void VRGuiBits::write_to_terminal(string t, string s) {
+    consoles[t]->write(s);
 }
 
 void VRGuiBits::hideAbout(int i) {
@@ -239,9 +283,6 @@ VRGuiBits::VRGuiBits() {
     setToolButtonCallback("toolbutton17", sigc::mem_fun(*this, &VRGuiBits::on_about_clicked));
     setToolButtonCallback("toolbutton18", sigc::mem_fun(*this, &VRGuiBits::on_internal_clicked));
 
-    setToolButtonCallback("toolbutton24", sigc::mem_fun(*this, &VRGuiBits::clear_terminal));
-    setToolButtonCallback("toolbutton25", sigc::mem_fun(*this, &VRGuiBits::on_terminal_changed));
-
     setButtonCallback("button14", sigc::mem_fun(*this, &VRGuiBits::on_new_cancel_clicked));
     setButtonCallback("button21", sigc::mem_fun(*this, &VRGuiBits::on_internal_close_clicked));
 
@@ -273,37 +314,39 @@ VRGuiBits::VRGuiBits() {
     win->signal_key_press_event().connect( sigc::mem_fun(*this, &VRGuiBits::toggleWidgets) );
 
     // TERMINAL
-    auto notebook = Gtk::manage( new Gtk::Notebook() );
+    terminal = Gtk::manage( new Gtk::Notebook() );
     auto addTermTab = [&](string name) {
-        auto buffer = Gtk::TextBuffer::create();
-        Gtk::TextView* term_view = Gtk::manage(new Gtk::TextView(buffer));
-        Pango::FontDescription fdesc;
-        fdesc.set_family("monospace");
-        fdesc.set_size(10 * PANGO_SCALE);
-        term_view->modify_font(fdesc);
-        swin = Gtk::manage(new Gtk::ScrolledWindow());
-        swin->add(*term_view);
-        swin->set_size_request(-1,70);
-        notebook->append_page(*swin, name);
-        term_buffer[name] = buffer;
+        auto c = VRConsoleWidgetPtr( new VRConsoleWidget() );
+        terminal->append_page(*c->swin, name);
+        c->setLabel( (Gtk::Label*)terminal->get_tab_label(*c->swin) );
+        consoles[name] = c;
     };
 
     addTermTab("Console");
     addTermTab("Errors");
+    addTermTab("Search results");
     addTermTab("Reasoning");
-    open_term = "Console";
+    openConsole = consoles["Console"];
+    openConsole->setOpen(true);
 
     Gtk::HBox* box;
     VRGuiBuilder()->get_widget("hbox15", box);
-    box->pack_start(*notebook, true, true);
+    box->pack_start(*terminal, true, true);
     box->show_all();
-
-    swin->get_vadjustment()->signal_changed().connect( sigc::mem_fun(*this, &VRGuiBits::on_terminal_changed) );
+    terminal->signal_switch_page().connect( sigc::mem_fun(*this, &VRGuiBits::on_console_switch) );
 
     updatePtr = VRFunction<int>::create( "IntMonitor_guiUpdate", VRGuiBits_on_internal_update );
     VRSceneManager::get()->addUpdateFkt(updatePtr);
 
     updateVisualLayer();
+}
+
+void VRGuiBits::on_console_switch(GtkNotebookPage* page, guint page_num) {
+    auto p = terminal->get_nth_page(page_num);
+    string name = terminal->get_tab_label_text(*p);
+    openConsole->setOpen(false);
+    openConsole = consoles[name];
+    openConsole->setOpen(true);
 }
 
 void VRGuiBits::updateVisualLayer() {

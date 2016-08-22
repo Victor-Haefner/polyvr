@@ -889,7 +889,7 @@ void VRGuiScripts::on_find_diag_find_clicked() {
     }
     out << endl;
 
-    VRGuiManager::get()->printInfo( out.str() );
+    VRGuiManager::get()->printToConsole( "Search results", out.str() );
     updateList();
 }
 

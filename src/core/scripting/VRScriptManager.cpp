@@ -222,25 +222,36 @@ void VRScriptManager::updateScript(string name, string core, bool compile) {
 // ---------------------------------- Python stuff -----------------------------------------
 
 // intersept python stdout
-static PyObject* vte_write(PyObject *self, PyObject *args) {
+static PyObject* writeOut(PyObject *self, PyObject *args) {
     const char *what;
     if (!PyArg_ParseTuple(args, "s", &what)) return NULL;
-    VRGuiManager::get()->printInfo(what);
-    //printf("==%s==", what);
+    VRGuiManager::get()->printToConsole("Console", what);
     return Py_BuildValue("");
 }
 
-static PyMethodDef so_methods[] = {
-    {"write", vte_write, METH_VARARGS, "Write something."},
+static PyObject* writeErr(PyObject *self, PyObject *args) {
+    const char *what;
+    if (!PyArg_ParseTuple(args, "s", &what)) return NULL;
+    VRGuiManager::get()->printToConsole("Errors", what);
+    return Py_BuildValue("");
+}
+
+static PyMethodDef methOut[] = {
+    {"write", writeOut, METH_VARARGS, "Write something."},
+    {NULL, NULL, 0, NULL}
+};
+
+static PyMethodDef methErr[] = {
+    {"write", writeErr, METH_VARARGS, "Write something."},
     {NULL, NULL, 0, NULL}
 };
 
 PyMODINIT_FUNC
 initVRPyStdOut(void) {
-    PyObject *m = Py_InitModule("aview", so_methods);
-    if (m == NULL) return;
-    PySys_SetObject((char *)"stdout", m);
-    PySys_SetObject((char *)"stderr", m);
+    PyObject *mOut = Py_InitModule("pyOut", methOut);
+    PyObject *mErr = Py_InitModule("pyErr", methErr);
+    if (mOut) PySys_SetObject((char *)"stdout", mOut);
+    if (mErr) PySys_SetObject((char *)"stderr", mErr);
 }
 
 // ----------------------------
@@ -583,7 +594,7 @@ PyObject* VRScriptManager::loadGeometry(VRScriptManager* self, PyObject *args, P
 
     VRTransformPtr obj = VRImport::get()->load( path, prnt, !ignoreCache, preset, threaded, options);
     if (obj == 0) {
-        VRGuiManager::get()->printInfo("Warning: " + string(path) + " not loaded!\n");
+        VRGuiManager::get()->printToConsole("Errors", "Warning: " + string(path) + " not loaded!\n");
         Py_RETURN_NONE;
     }
     obj->setPersistency(0);

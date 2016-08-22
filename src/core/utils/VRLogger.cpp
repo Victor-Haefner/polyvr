@@ -6,7 +6,7 @@ map<string, bool> VRLog::tags;
 void VRLog::print(string tag, string s) {
     if (!tags[tag]) return;
 
-    OSG::VRGuiManager::get()->printInfo(s);
+    OSG::VRGuiManager::get()->printToConsole("Console", s);
 }
 
 void VRLog::setTag(string tag, bool b) { tags[tag] = b; }
