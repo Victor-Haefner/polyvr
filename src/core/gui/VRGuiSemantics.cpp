@@ -125,15 +125,16 @@ void VRGuiSemantics::updateLayout() {
         if (c) {
             for (auto c2 : c->concept->children) { // parent child connection
                 g.connect(widgetIDs[c->concept->ID], widgetIDs[c2.second->ID], graph<Vec3f>::HIERARCHY);
-                for (auto c3 : c->concept->children) { // sibling connection, TODO: use occupancy map!!
-                    if (c2 != c3)
-                        g.connect(widgetIDs[c2.second->ID], widgetIDs[c3.second->ID], graph<Vec3f>::SIBLING);
-                }
             }
         }
 
         if (e) {
             g.connect(widgetIDs[e->entity->concept->ID], widgetIDs[w.first], graph<Vec3f>::HIERARCHY);
+        }
+
+        if (r) {
+            if (auto c = current->getConcept( r->rule->associatedConcept) )
+                g.connect(widgetIDs[c->ID], widgetIDs[w.first], graph<Vec3f>::HIERARCHY);
         }
     }
 
@@ -187,6 +188,14 @@ void VRGuiSemantics::updateCanvas() {
             widgets[ew->ID()] = ew;
             ew->move(Vec2f(150,150));
             connect(widgets[e.second->concept->ID], ew, "#FFEE00");
+        }
+
+        for (auto r : current->rules) {
+            auto rw = VRRuleWidgetPtr( new VRRuleWidget(this, canvas, r.second) );
+            widgets[rw->ID()] = rw;
+            rw->move(Vec2f(150,150));
+            if (auto c = current->getConcept( r.second->associatedConcept) )
+                connect(widgets[c->ID], rw, "#00DD00");
         }
     }
 
@@ -339,7 +348,7 @@ void VRGuiSemantics::addEntity(VRConceptWidget* w) {
 }
 
 void VRGuiSemantics::addRule(VRConceptWidget* w) {
-    auto c = current->addRule("is(a,b)");
+    auto c = current->addRule("is(a,b)", w->concept->getName());
     auto cw = VRRuleWidgetPtr( new VRRuleWidget(this, canvas, c) );
     widgets[c->ID] = cw;
     cw->move(w->pos + Vec2f(90,0));

@@ -205,7 +205,7 @@ PyObject* VRPyOntology::addRule(VRPyOntology* self, PyObject* args) {
     if (! PyArg_ParseTuple(args, "s:addRule", (char*)&name)) return NULL;
     string sname;
     if (name) sname = name;
-    VROntologyRulePtr r = self->objPtr->addRule(sname);
+    VROntologyRulePtr r = self->objPtr->addRule(sname, ""); // TODO, optionally pass associated concept name
     return VRPyOntologyRule::fromSharedPtr( r );
 }
 

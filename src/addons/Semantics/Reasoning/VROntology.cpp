@@ -138,8 +138,8 @@ vector<VROntologyRulePtr> VROntology::getRules() {
     return res;
 }
 
-VROntologyRulePtr VROntology::addRule(string rule) {
-    VROntologyRulePtr r = VROntologyRule::create(rule);
+VROntologyRulePtr VROntology::addRule(string rule, string ac) {
+    VROntologyRulePtr r = VROntologyRule::create(rule, ac);
     rules[r->ID] = r;
     return r;
 }

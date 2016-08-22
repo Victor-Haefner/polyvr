@@ -6,15 +6,19 @@
 
 using namespace OSG;
 
-VROntologyRule::VROntologyRule(string rule) {
+VROntologyRule::VROntologyRule(string r, string ac) {
+    associatedConcept = ac;
+    rule = r;
+
     setStorageType("Rule");
     setNameSpace("rule");
     setUniqueName(false);
     setName("rule");
-    this->rule = rule;
+
+    store("associatedConcept", &associatedConcept);
 }
 
-VROntologyRulePtr VROntologyRule::create(string rule) { return VROntologyRulePtr( new VROntologyRule(rule) ); }
+VROntologyRulePtr VROntologyRule::create(string rule, string ac) { return VROntologyRulePtr( new VROntologyRule(rule, ac) ); }
 
 string VROntologyRule::toString() { return rule; }
 

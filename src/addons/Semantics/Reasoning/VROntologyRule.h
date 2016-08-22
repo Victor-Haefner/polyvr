@@ -10,9 +10,11 @@ namespace OSG {
 
 struct VROntologyRule : public VROntoID, public VRName {
     string rule;
-    VROntologyRule(string rule);
+    string associatedConcept;
 
-    static VROntologyRulePtr create(string rule = "");
+    VROntologyRule(string rule, string associatedConcept);
+
+    static VROntologyRulePtr create(string rule = "", string associatedConcept = "");
     string toString();
 
     vector<VRStatementPtr> statements;

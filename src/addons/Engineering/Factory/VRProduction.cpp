@@ -150,7 +150,7 @@ VRObjectPtr VRProduction::test() {
     mathOnto->addConcept("Box", "Volume");
     mathOnto->getConcept("Box")->addProperty("min", "Vector");
     mathOnto->getConcept("Box")->addProperty("max", "Vector");
-    mathOnto->addRule("inside(p,b):Box(b);Position(p);isGe(p,b/min);isGe(b/max,p)");
+    mathOnto->addRule("inside(p,b):Box(b);Position(p);isGe(p,b/min);isGe(b/max,p)", "Box");
     // TODO: quaternion rotation rule to change direction
 
     objectOnto->merge(mathOnto);
@@ -161,7 +161,7 @@ VRObjectPtr VRProduction::test() {
     processOnto->addConcept("Process");
     processOnto->getConcept("Process")->addProperty("fragment", "Process");
     processOnto->getConcept("Process")->addProperty("state", "int");
-    processOnto->addRule("is(p/state,1):Process(p);is_not(p/state,1);is_all(p/fragment/state,1)");
+    processOnto->addRule("is(p/state,1):Process(p);is_not(p/state,1);is_all(p/fragment/state,1)", "Process");
 
     featureOnto->addConcept("Feature");
     featureOnto->getConcept("Feature")->addProperty("state", "int");
@@ -179,7 +179,7 @@ VRObjectPtr VRProduction::test() {
     // if processing unset and feature unset and feature and processing result have same concept, result is set to feature
     //processingOnto->addRule("s(Processing).state=unset & f(Feature).state=unset & s.result.CONCEPT=f.CONCEPT ? f.state=set & s.state=set & s.result=f");
     // if processing done, then result is done and skill is unset
-    processingOnto->addRule("is(s/result/state,1):Processing(s);is(s/state,1)");
+    processingOnto->addRule("is(s/result/state,1):Processing(s);is(s/state,1)", "Processing");
 
     prodMachineOnto->merge(machineOnto);
     prodMachineOnto->merge(processingOnto);
