@@ -34,7 +34,7 @@ Variable::Variable(VROntologyPtr onto, string concept, string var) {
 
     if ( auto i = onto->getInstance(var) ) {
         instances[i->ID] = i; // found an instance with the right name
-        this->concept = i->concept->getName();
+        this->concept = i->getConcept()->getName();
         isAnonymous = false;
     } else { // get all instances of the required type
             for (auto i : onto->getInstances(concept)) instances[i->ID] = i;
@@ -92,15 +92,16 @@ Context::Context(VROntologyPtr onto) {
 
     cout << "Init context:" << endl;
     for (auto i : onto->instances) {
-        if (!i.second->concept) { cout << "Context::Context instance " << i.second->getName() << " has no concept!" << endl; continue; }
-        vars[i.second->getName()] = Variable::create( onto, i.second->concept->getName(), i.second->getName() );
-        cout << " add instance " << i.second->getName() << " of concept " << i.second->concept->getName() << endl;
+        if (!i.second->getConcept()) { cout << "Context::Context instance " << i.second->getName() << " has no concept!" << endl; continue; }
+        vars[i.second->getName()] = Variable::create( onto, i.second->getConcept()->getName(), i.second->getName() );
+        cout << " add instance " << i.second->getName() << " of concept " << i.second->getConcept()->getName() << endl;
     }
 
     for ( auto r : onto->getRules()) {
-        Query q(r->rule);
+        cout << "Context prep rule " << r->toString() << endl;
+        Query q(r->toString());
+        if (!q.request) continue;
 
-        cout << "Context prep rule " << r->rule << endl;
         for (Term& t : q.request->terms) {
             t.var = Variable::create(onto,t.path.root);
 
@@ -116,7 +117,7 @@ Context::Context(VROntologyPtr onto) {
             }
         }
 
-        rules[r->rule] = q;
+        rules[r->toString()] = q;
     }
 }
 
@@ -125,9 +126,11 @@ Query::Query() {}
 
 Query::Query(string q) {
     vector<string> parts = VRReasoner::split(q, ':');
-    request = VRStatement::New(parts[0]);
-    parts = VRReasoner::split(parts[1], ';');
-    for (int i=0; i<parts.size(); i++) statements.push_back(VRStatement::New(parts[i], i));
+    if (parts.size() > 0) request = VRStatement::create(parts[0]);
+    if (parts.size() > 1) {
+        parts = VRReasoner::split(parts[1], ';');
+        for (int i=0; i<parts.size(); i++) statements.push_back(VRStatement::create(parts[i], i));
+    }
 }
 
 string Query::toString() {

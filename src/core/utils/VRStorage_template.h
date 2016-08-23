@@ -141,18 +141,27 @@ void VRStorage::load_int_map_cb(map<int, T*>* mt, string tag, bool under, xmlpp:
 }
 
 template<typename T>
-void VRStorage::save_vec_cb(vector<std::shared_ptr<T> >* v, xmlpp::Element* e) {
+void VRStorage::save_vec_cb(vector<std::shared_ptr<T> >* v, string tag, bool under, xmlpp::Element* e) {
+    if (under) e = e->add_child(tag);
     for (auto t : *v) t->saveUnder(e);
 }
 
 template<typename T>
-void VRStorage::load_vec_cb(vector<std::shared_ptr<T> >* v, xmlpp::Element* e) {
+void VRStorage::load_vec_cb(vector<std::shared_ptr<T> >* v, string tag, bool under, xmlpp::Element* e) {
+    if (e == 0) return;
+    if (under) e = getChild(e, tag);
+    if (e == 0) return;
     for (auto n : e->get_children()) {
         xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
         if (!el) continue;
-        auto t = T::create();
-        t->load(el);
-        v->push_back( t );
+
+        VRStoragePtr s = VRStorage::createFromStore(el);
+        if (!s) s = T::create();
+        auto c = static_pointer_cast<T>(s);
+        if (!c) continue;
+
+        c->load(el);
+        v->push_back( c );
     }
 }
 
@@ -178,10 +187,10 @@ void VRStorage::storeObj(string tag, std::shared_ptr<T>& o) {
 }
 
 template<typename T>
-void VRStorage::storeObjVec(string tag, vector<std::shared_ptr<T> >& v) {
+void VRStorage::storeObjVec(string tag, vector<std::shared_ptr<T> >& v, bool under) {
     VRStorageBin b;
-    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_vec_cb<T>, this, &v, _1 ) );
-    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_vec_cb<T>, this, &v, _1 ) );
+    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_vec_cb<T>, this, &v, tag, under, _1 ) );
+    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_vec_cb<T>, this, &v, tag, under, _1 ) );
     storage[tag] = b;
 }
 

@@ -6,12 +6,14 @@
 #include <map>
 
 #include "VRSemanticUtils.h"
+#include "core/utils/VRStorage.h"
 
 using namespace std;
 
 OSG_BEGIN_NAMESPACE;
 
-struct VRStatement {
+struct VRStatement : VRStorage {
+    string statement;
     string verb;
     string verb_suffix;
     vector<Term> terms;
@@ -20,7 +22,8 @@ struct VRStatement {
 
     VRStatement();
     VRStatement(string s, int i = -1);
-    static VRStatementPtr New(string s, int i = -1);
+    static VRStatementPtr create(string s = "", int i = -1);
+    void setup();
 
     string toString();
     void updateLocalVariables(map<string, VariablePtr>& globals, VROntologyPtr onto);

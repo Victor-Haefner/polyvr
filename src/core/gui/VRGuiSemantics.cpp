@@ -128,8 +128,8 @@ void VRGuiSemantics::updateLayout() {
             }
         }
 
-        if (e) {
-            g.connect(widgetIDs[e->entity->concept->ID], widgetIDs[w.first], graph<Vec3f>::HIERARCHY);
+        if (e && e->entity->getConcept()) {
+            g.connect(widgetIDs[e->entity->getConcept()->ID], widgetIDs[w.first], graph<Vec3f>::HIERARCHY);
         }
 
         if (r) {
@@ -187,7 +187,7 @@ void VRGuiSemantics::updateCanvas() {
             auto ew = VREntityWidgetPtr( new VREntityWidget(this, canvas, e.second) );
             widgets[ew->ID()] = ew;
             ew->move(Vec2f(150,150));
-            connect(widgets[e.second->concept->ID], ew, "#FFEE00");
+            if (auto c = e.second->getConcept()) connect(widgets[c->ID], ew, "#FFEE00");
         }
 
         for (auto r : current->rules) {

@@ -1,5 +1,6 @@
 #include "VROntology.h"
 #include "VRReasoner.h"
+#include "core/utils/VRStorage_template.h"
 
 #include <iostream>
 #include <algorithm>
@@ -9,16 +10,12 @@ using namespace OSG;
 VROntologyRule::VROntologyRule(string r, string ac) {
     associatedConcept = ac;
     rule = r;
-
-    vector<string> parts = VRReasoner::split(r, ':');
-    if (parts.size() > 1) {
-        query = VRStatement::New(parts[0]);
-        parts = VRReasoner::split(parts[1], ';');
-        for (int i=0; i<parts.size(); i++) statements.push_back(VRStatement::New(parts[i], i));
-    }
+    setRule(r);
 
     setStorageType("Rule");
     store("associatedConcept", &associatedConcept);
+    storeObj("query", query);
+    storeObjVec("statements", statements, true);
 
     setNameSpace("rule");
     setUniqueName(false);
@@ -27,10 +24,30 @@ VROntologyRule::VROntologyRule(string r, string ac) {
 
 VROntologyRulePtr VROntologyRule::create(string rule, string ac) { return VROntologyRulePtr( new VROntologyRule(rule, ac) ); }
 
-string VROntologyRule::toString() { return rule; }
+void VROntologyRule::setRule(string r) {
+    statements.clear();
+    vector<string> parts = VRReasoner::split(r, ':');
+    if (parts.size() > 0) setQuery(parts[0]);
+    if (parts.size() > 1) {
+        parts = VRReasoner::split(parts[1], ';');
+        for (int i=0; i<parts.size(); i++) statements.push_back(VRStatement::create(parts[i], i));
+    }
+}
+
+void VROntologyRule::setQuery(string s) { query = VRStatement::create(s); }
+//void VROntologyRule::setStatement(string s, int i) { statements[i]; }
+
+string VROntologyRule::toString() {
+    string res;
+    if (query) res = query->toString();
+    res += ":";
+    for (auto s : statements) res += s->toString() + ";";
+    res.pop_back();
+    return res;
+}
 
 VRStatementPtr VROntologyRule::addStatement(string name) {
-    auto s = VRStatement::New(name, statements.size());
+    auto s = VRStatement::create(name, statements.size());
     statements.push_back(s);
     return s;
 }

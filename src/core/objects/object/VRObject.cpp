@@ -12,6 +12,7 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRUndoInterfaceT.h"
+#include "core/utils/VRStorage_template.h"
 #include "addons/Semantics/Reasoning/VREntity.h"
 #include <libxml++/nodes/element.h>
 
@@ -23,35 +24,6 @@ VRGlobals::VRGlobals() {}
 VRGlobals* VRGlobals::get() {
     static VRGlobals* s = new VRGlobals();
     return s;
-}
-
-template<typename T>
-void VRStorage::save_vec_cb(vector<std::shared_ptr<T> >* v, xmlpp::Element* e) {
-    for (auto t : *v) t->saveUnder(e);
-}
-
-template<typename T>
-void VRStorage::load_vec_cb(vector<std::shared_ptr<T> >* v, xmlpp::Element* e) {
-    if (e == 0) return;
-    for (auto n : e->get_children()) {
-        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
-        if (!el) continue;
-
-        VRStoragePtr s = VRStorage::createFromStore(el);
-        auto c = static_pointer_cast<T>(s);
-        if (!c) continue;
-
-        c->load(el);
-        v->push_back( c );
-    }
-}
-
-template<typename T>
-void VRStorage::storeObjVec(string tag, vector<std::shared_ptr<T> >& v) {
-    VRStorageBin b;
-    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_vec_cb<T>, this, &v, _1 ) );
-    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_vec_cb<T>, this, &v, _1 ) );
-    storage[tag] = b;
 }
 
 VRObject::VRObject(string _name) {

@@ -38,6 +38,19 @@ void VROntology::setup() {
     vector<VRConceptPtr> cpts;
     thing->getDescendance(cpts);
     for (auto& c : cpts) concepts[c->getName()] = c;
+
+    auto insts = instances;
+    instances.clear();
+    for (auto& i : insts) {
+        i.second->concept = concepts[i.second->conceptName].lock(); // update concept
+        instances[i.second->ID] = i.second; // update ID mapping
+    }
+
+    auto rls = rules;
+    rules.clear();
+    for (auto& r : rls) {
+        rules[r.second->ID] = r.second; // update ID mapping
+    }
 }
 
 VRConceptPtr VROntology::getConcept(string name) {
@@ -93,7 +106,9 @@ void VROntology::renameConcept(VRConceptPtr c, string newName) {
 }
 
 void VROntology::remEntity(VREntityPtr e) {
+    for (auto i : instances) cout << "i " << i.first << " " << i.second->getName() << " " << i.second->ID << endl;
     if (!instances.count(e->ID)) return;
+    cout << "VROntology::remEntity " << e->getName() << " " << e->ID << endl;
     instances.erase(e->ID);
 }
 
@@ -105,11 +120,6 @@ void VROntology::remRule(VROntologyRulePtr r) {
 void VROntology::renameEntity(VREntityPtr e, string s) {
     if (!instances.count(e->ID)) return;
     e->setName(s);
-}
-
-void VROntology::renameRule(VROntologyRulePtr r, string s) {
-    if (!rules.count(r->ID)) return;
-    r->setName(s);
 }
 
 void VROntology::merge(VROntologyPtr o) { // Todo: check it well!
@@ -178,7 +188,7 @@ VREntityPtr VROntology::getInstance(string instance) {
 vector<VREntityPtr> VROntology::getInstances(string concept) {
     vector<VREntityPtr> res;
     for (auto i : instances) {
-        auto c = i.second->concept;
+        auto c = i.second->getConcept();
         if(c) { if(c->is_a(concept)) res.push_back(i.second); }
         else cout << "VROntology::getInstances " << i.second->getName() << " has no concept!" << endl;
     }
@@ -330,7 +340,7 @@ void postProcessRDFSubjects(VROntologyPtr onto, RDFdata& data) {
                         concepts[subject]->addAnnotation(p);
                         continue;
                     }
-                    if (type == "entity" && entities[subject]->concept->getProperty(predicate)) {
+                    if (type == "entity" && entities[subject]->getConcept()->getProperty(predicate)) {
                         entities[subject]->set(predicate, object); continue;
                     }
                 }
@@ -340,7 +350,7 @@ void postProcessRDFSubjects(VROntologyPtr onto, RDFdata& data) {
                     if (type == "entity" && entities.count(object)) {
                         auto pv = entities[subject]->getProperties(predicate);
                         if (pv.size()) { pv[0]->value = object; continue; }
-                        auto p = entities[subject]->concept->getProperty(predicate);
+                        auto p = entities[subject]->getConcept()->getProperty(predicate);
                         if (p && p->type != "") { entities[subject]->set(predicate, object); continue; }
                     }
                 }

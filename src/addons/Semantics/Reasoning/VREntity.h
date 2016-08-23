@@ -9,12 +9,14 @@ using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 struct VREntity : public VROntoID, public VRName {
-    VRConceptPtr concept = 0;
+    VRConceptWeakPtr concept;
+    string conceptName;
     map<string, vector<VRPropertyPtr> > properties;
 
     VREntity(string name, VRConceptPtr c = 0);
     static VREntityPtr create(string name = "none", VRConceptPtr c = 0);
     void setConcept(VRConceptPtr c);
+    VRConceptPtr getConcept();
 
     void set(string name, string value);
     void setVector(string name, vector<string> value, string type);

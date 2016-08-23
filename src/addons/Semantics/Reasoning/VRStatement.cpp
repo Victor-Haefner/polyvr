@@ -1,23 +1,33 @@
 #include "VRStatement.h"
 #include "VRReasoner.h"
+#include "core/utils/VRFunction.h"
+
+#include <boost/bind.hpp>
 
 using namespace OSG;
 
 VRStatement::VRStatement() {;}
 
-VRStatement::VRStatement(string s, int place) {
-    this->place = place;
-    auto s1 = VRReasoner::split(s, '(');
+VRStatement::VRStatement(string s, int p) {
+    statement = s;
+    place = p;
+    setup();
+
+    store("data", &statement);
+    regStorageSetupFkt( VRFunction<int>::create("statement setup", boost::bind(&VRStatement::setup, this)) );
+}
+
+void VRStatement::setup() {
+    if (statement == "") return;
+    auto s1 = VRReasoner::split(statement, '(');
     auto v = VRReasoner::split(s1[0], '_');
     verb = v[0];
     verb_suffix = v.size() > 1 ? v[1] : "";
     auto s2 = VRReasoner::split( VRReasoner::split(s1[1], ')')[0] , ',');
-    for (string s : s2) {
-        terms.push_back(Term(s));
-    }
+    for (string s : s2) terms.push_back(Term(s));
 }
 
-VRStatementPtr VRStatement::New(string s, int p) { return VRStatementPtr( new VRStatement(s,p) ); }
+VRStatementPtr VRStatement::create(string s, int p) { return VRStatementPtr( new VRStatement(s,p) ); }
 
 string VRStatement::toString() {
     string s = verb + "(";

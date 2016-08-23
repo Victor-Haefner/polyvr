@@ -86,7 +86,7 @@ void VREntityWidget::on_select_property() {
     VRGuiSemantics_PropsColumns cols;
     Gtk::TreeModel::Row row = *iter;
     int flag = row.get_value(cols.flag);
-    selected_property = flag ? 0 : entity->concept->getProperty( row.get_value(cols.prop) );
+    selected_property = flag ? 0 : entity->getConcept()->getProperty( row.get_value(cols.prop) );
     treeview->get_selection()->unselect_all(); // clear selection
     update();
 }

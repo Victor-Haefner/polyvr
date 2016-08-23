@@ -60,10 +60,10 @@ void VRRuleWidget::on_rem_clicked() {
 }
 
 void VRRuleWidget::on_edit_clicked() {
-    string s = askUserInput("Rename rule " + label->get_text() + ":");
+    string s = askUserInput("Change rule " + label->get_text() + ":");
     if (s == "") return;
-    manager->getSelectedOntology()->renameRule(rule, s);
-    label->set_text(rule->getName());
+    rule->setQuery(s);
+    if (rule->query) label->set_text(rule->query->toString());
 }
 
 void VRRuleWidget::on_newp_clicked() {

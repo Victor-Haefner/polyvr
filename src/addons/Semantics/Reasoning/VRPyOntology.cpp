@@ -156,7 +156,7 @@ PyObject* VRPyEntity::toString(VRPyEntity* self) {
 }
 
 PyObject* VRPyEntity::getConcept(VRPyEntity* self) {
-    return VRPyConcept::fromSharedPtr( self->objPtr->concept );
+    return VRPyConcept::fromSharedPtr( self->objPtr->getConcept() );
 }
 
 PyObject* VRPyEntity::getProperties(VRPyEntity* self, PyObject* args) {
