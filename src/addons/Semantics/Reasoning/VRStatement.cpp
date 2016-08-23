@@ -20,10 +20,12 @@ VRStatement::VRStatement(string s, int p) {
 void VRStatement::setup() {
     if (statement == "") return;
     auto s1 = VRReasoner::split(statement, '(');
-    auto v = VRReasoner::split(s1[0], '_');
-    verb = v[0];
-    verb_suffix = v.size() > 1 ? v[1] : "";
+    verb = s1[0];
+    //auto v = VRReasoner::split(s1[0], '_');
+    //verb = v[0];
+    //verb_suffix = v.size() > 1 ? v[1] : "";
     auto s2 = VRReasoner::split( VRReasoner::split(s1[1], ')')[0] , ',');
+    terms.clear();
     for (string s : s2) terms.push_back(Term(s));
 }
 
