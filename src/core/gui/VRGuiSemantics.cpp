@@ -1,6 +1,7 @@
 
 #include "VRGuiSemantics.h"
 #include "VRGuiUtils.h"
+#include "VRGuiFile.h"
 #include "addons/Semantics/Reasoning/VROntology.h"
 #include "addons/Semantics/Reasoning/VRProperty.h"
 #include "addons/Semantics/Reasoning/VRReasoner.h"
@@ -24,6 +25,7 @@
 #include <gtkmm/separatortoolitem.h>
 #include <gtkmm/box.h>
 #include <gtkmm/dialog.h>
+#include <gtkmm/filechooser.h>
 #include <boost/bind.hpp>
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSemanticManager.h"
@@ -94,6 +96,25 @@ void VRGuiSemantics::on_del_clicked() {
     auto mgr = getManager();
     if (!mgr) return;
     mgr->remOntology(current);
+}
+
+void VRGuiSemantics::on_diag_load_clicked() {
+    auto mgr = getManager();
+    if (!mgr) return;
+    string path = VRGuiFile::getPath();
+    auto o = mgr->loadOntology(path);
+    o->setPersistency(666);
+    o->setFlag("custom");
+    updateOntoList();
+}
+
+void VRGuiSemantics::on_open_clicked() {
+    VRGuiFile::setCallbacks( sigc::mem_fun(*this, &VRGuiSemantics::on_diag_load_clicked) );
+    VRGuiFile::gotoPath( g_get_home_dir() );
+    VRGuiFile::clearFilter();
+    VRGuiFile::addFilter("Ontology", 2, "*.owl");
+    VRGuiFile::addFilter("All", 1, "*");
+    VRGuiFile::open( "Load", Gtk::FILE_CHOOSER_ACTION_OPEN, "Load ontology" );
 }
 
 void VRGuiSemantics::clearCanvas() {
@@ -267,6 +288,7 @@ VRGuiSemantics::VRGuiSemantics() {
     VRGuiBuilder()->get_widget("onto_visu", canvas);
     setToolButtonCallback("toolbutton14", sigc::mem_fun(*this, &VRGuiSemantics::on_new_clicked));
     setToolButtonCallback("toolbutton15", sigc::mem_fun(*this, &VRGuiSemantics::on_del_clicked));
+    setToolButtonCallback("toolbutton2", sigc::mem_fun(*this, &VRGuiSemantics::on_open_clicked));
     setTreeviewSelectCallback("treeview16", sigc::mem_fun(*this, &VRGuiSemantics::on_treeview_select) );
     setCellRendererCallback("cellrenderertext51", VRGuiSemantics_on_name_edited);
     setNoteBookCallback("notebook3", VRGuiSemantics_on_notebook_switched);

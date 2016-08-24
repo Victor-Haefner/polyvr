@@ -2,7 +2,7 @@
 #include "../VRGuiSemantics.h"
 
 #include <gtkmm/object.h>
-#include <gtkmm/liststore.h>
+#include <gtkmm/treestore.h>
 #include <gtkmm/treeview.h>
 #include <gtkmm/toolbar.h>
 #include <gtkmm/toolbutton.h>
@@ -25,9 +25,9 @@ VRSemanticWidget::VRSemanticWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, string
 
     // properties treeview
     VRGuiSemantics_PropsColumns cols;
-    auto liststore = Gtk::ListStore::create(cols);
+    auto treestore = Gtk::TreeStore::create(cols);
     treeview = Gtk::manage( new Gtk::TreeView() );
-    treeview->set_model(liststore);
+    treeview->set_model(treestore);
     treeview->set_headers_visible(false);
 
     auto addMarkupColumn = [&](string title, Gtk::TreeModelColumn<Glib::ustring>& col, bool editable = false) {
@@ -100,18 +100,20 @@ VRSemanticWidget::~VRSemanticWidget() {
     }
 }
 
-void VRSemanticWidget::setPropRow(Gtk::TreeModel::iterator iter, string name, string type, string color, int flag) {
+void VRSemanticWidget::setPropRow(Gtk::TreeModel::iterator iter, string name, string type, string color, int flag, int ID, int rtype) {
     string cname = "<span color=\""+color+"\">" + name + "</span>";
     string ctype = "<span color=\""+color+"\">" + type + "</span>";
 
-    Gtk::ListStore::Row row = *iter;
-    Glib::RefPtr<Gtk::ListStore> liststore = Glib::RefPtr<Gtk::ListStore>::cast_dynamic( treeview->get_model() );
+    Gtk::TreeStore::Row row = *iter;
+    Glib::RefPtr<Gtk::TreeStore> treestore = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic( treeview->get_model() );
 
-    gtk_list_store_set(liststore->gobj(), row.gobj(), 0, cname.c_str(), -1);
-    gtk_list_store_set(liststore->gobj(), row.gobj(), 1, ctype.c_str(), -1);
-    gtk_list_store_set(liststore->gobj(), row.gobj(), 2, name.c_str(), -1);
-    gtk_list_store_set(liststore->gobj(), row.gobj(), 3, type.c_str(), -1);
-    gtk_list_store_set(liststore->gobj(), row.gobj(), 4, flag, -1);
+    gtk_tree_store_set(treestore->gobj(), row.gobj(), 0, cname.c_str(), -1);
+    gtk_tree_store_set(treestore->gobj(), row.gobj(), 1, ctype.c_str(), -1);
+    gtk_tree_store_set(treestore->gobj(), row.gobj(), 2, name.c_str(), -1);
+    gtk_tree_store_set(treestore->gobj(), row.gobj(), 3, type.c_str(), -1);
+    gtk_tree_store_set(treestore->gobj(), row.gobj(), 4, flag, -1);
+    gtk_tree_store_set(treestore->gobj(), row.gobj(), 5, rtype, -1);
+    gtk_tree_store_set(treestore->gobj(), row.gobj(), 6, ID, -1);
 }
 
 bool VRSemanticWidget::on_expander_clicked(GdkEventButton* e) {

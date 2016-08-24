@@ -21,11 +21,15 @@ struct VREntity : public VROntoID, public VRName {
     void set(string name, string value);
     void setVector(string name, vector<string> value, string type);
     void add(string name, string value);
+    void rem(VRPropertyPtr);
     string toString();
 
     vector<VRPropertyPtr> getProperties(string name = "");
 
     vector<string> getAtPath(vector<string> path);
+
+    void save(xmlpp::Element* e, int p);
+    void load(xmlpp::Element* e);
 };
 
 OSG_END_NAMESPACE;

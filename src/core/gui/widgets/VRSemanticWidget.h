@@ -19,12 +19,14 @@ namespace Gtk {
 
 class VRGuiSemantics_PropsColumns : public Gtk::TreeModelColumnRecord {
     public:
-        VRGuiSemantics_PropsColumns() { add(name); add(type); add(prop); add(ptype); add(flag); }
+        VRGuiSemantics_PropsColumns() { add(name); add(type); add(prop); add(ptype); add(flag); add(rtype); add(ID); }
         Gtk::TreeModelColumn<Glib::ustring> name;
         Gtk::TreeModelColumn<Glib::ustring> type;
         Gtk::TreeModelColumn<Glib::ustring> prop;
         Gtk::TreeModelColumn<Glib::ustring> ptype;
         Gtk::TreeModelColumn<int> flag;
+        Gtk::TreeModelColumn<int> rtype;
+        Gtk::TreeModelColumn<int> ID;
 };
 
 OSG_BEGIN_NAMESPACE;
@@ -49,7 +51,7 @@ struct VRSemanticWidget {
 
     void move(Vec2f p);
     Vec2f getAnchorPoint(Vec2f p);
-    void setPropRow(Gtk::TreeModel::iterator iter, string name, string type, string color, int flag);
+    void setPropRow(Gtk::TreeModel::iterator iter, string name, string type, string color, int flag, int ID = 0, int rtype = 0);
 
     virtual void on_select_property() = 0;
     virtual void on_rem_clicked() = 0;

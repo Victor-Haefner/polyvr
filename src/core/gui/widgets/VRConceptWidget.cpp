@@ -10,7 +10,7 @@
 #include "core/utils/toString.h"
 
 #include <gtkmm/label.h>
-#include <gtkmm/liststore.h>
+#include <gtkmm/treestore.h>
 #include <gtkmm/treeview.h>
 #include <gtkmm/dialog.h>
 #include <gtkmm/box.h>
@@ -47,9 +47,9 @@ VRConceptWidget::VRConceptWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, VRConcep
     bEntityNew->signal_clicked().connect( sigc::mem_fun(*this, &VRConceptWidget::on_new_entity_clicked) );
     bRuleNew->signal_clicked().connect( sigc::mem_fun(*this, &VRConceptWidget::on_new_rule_clicked) );
 
-    Glib::RefPtr<Gtk::ListStore> liststore = Glib::RefPtr<Gtk::ListStore>::cast_dynamic( treeview->get_model() );
+    Glib::RefPtr<Gtk::TreeStore> treestore = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic( treeview->get_model() );
     for (auto p : concept->properties) {
-        setPropRow(liststore->append(), p.second->getName(), p.second->type, "black", 0);
+        setPropRow(treestore->append(), p.second->getName(), p.second->type, "black", 0);
     }
 }
 
@@ -92,14 +92,14 @@ void VRConceptWidget::on_edit_clicked() {
 }
 
 void VRConceptWidget::on_newp_clicked() {
-    Glib::RefPtr<Gtk::ListStore> liststore = Glib::RefPtr<Gtk::ListStore>::cast_dynamic( treeview->get_model() );
+    Glib::RefPtr<Gtk::TreeStore> treestore = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic( treeview->get_model() );
     string name = "new_property";
     int i=0;
     do {
         i++;
         name = "new_property_" + toString(i);
     } while(concept->getProperty(name));
-    setPropRow(liststore->append(), name, "none", "orange", 0);
+    setPropRow(treestore->append(), name, "none", "orange", 0);
     concept->addProperty(name, "none");
 }
 
@@ -116,11 +116,11 @@ void VRConceptWidget::on_select_property() {
 }
 
 void VRConceptWidget::update() {
-    Glib::RefPtr<Gtk::ListStore> liststore = Glib::RefPtr<Gtk::ListStore>::cast_dynamic( treeview->get_model() );
+    Glib::RefPtr<Gtk::TreeStore> treestore = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic( treeview->get_model() );
 
-    liststore->clear();
+    treestore->clear();
     for (auto p : concept->properties) {
-        Gtk::TreeModel::iterator i = liststore->append();
+        Gtk::TreeModel::iterator i = treestore->append();
         if (selected_property && p.second->getName() == selected_property->getName())
             setPropRow(i, p.second->getName(), p.second->type, "green", 1);
         else setPropRow(i, p.second->getName(), p.second->type, "black", 0);

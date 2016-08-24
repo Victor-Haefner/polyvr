@@ -69,10 +69,7 @@ template<typename T>
 void VRStorage::load_int_objmap_cb(map<int, std::shared_ptr<T> >* mt, string tag, bool under, xmlpp::Element* e) {
     if (under) e = getChild(e, tag);
     if (!e) return;
-    for (auto n : e->get_children()) {
-        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
-        if (!el) continue;
-
+    for (auto el : getChildren(e)) {
         string _ID;
         if (el->get_attribute("ID")) _ID = el->get_attribute("ID")->get_value();
         else { cout << "VRStorage::load_int_objmap_cb Error: object " << el->get_name() << " in map '" << tag << "' has no attribute ID!\n"; return; }
@@ -89,10 +86,7 @@ template<typename T>
 void VRStorage::load_str_objmap_cb(map<string, std::shared_ptr<T> >* mt, string tag, bool under, xmlpp::Element* e) {
     if (under) e = getChild(e, tag);
     if (!e) return;
-    for (auto n : e->get_children()) {
-        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
-        if (!el) continue;
-
+    for (auto el : getChildren(e)) {
         string name = el->get_name();
         if (el->get_attribute("base_name")) name = el->get_attribute("base_name")->get_value();
         auto t = T::create(name);
@@ -107,10 +101,7 @@ template<typename T>
 void VRStorage::load_str_map_cb(map<string, T*>* mt, string tag, bool under, xmlpp::Element* e) {
     if (under) e = getChild(e, tag);
     if (!e) return;
-    for (auto n : e->get_children()) {
-        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
-        if (!el) continue;
-
+    for (auto el : getChildren(e)) {
         string name = el->get_name();
         if (el->get_attribute("base_name")) name = el->get_attribute("base_name")->get_value();
         T* o = new T(name);
@@ -126,10 +117,7 @@ template<typename T>
 void VRStorage::load_int_map_cb(map<int, T*>* mt, string tag, bool under, xmlpp::Element* e) {
     if (under) e = getChild(e, tag);
     if (!e) return;
-    for (auto n : e->get_children()) {
-        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
-        if (!el) continue;
-
+    for (auto el : getChildren(e)) {
         string _ID = el->get_attribute("ID")->get_value();
         int ID = toInt( _ID );
         if (mt->count(ID) == 0) {
@@ -151,10 +139,7 @@ void VRStorage::load_vec_cb(vector<std::shared_ptr<T> >* v, string tag, bool und
     if (e == 0) return;
     if (under) e = getChild(e, tag);
     if (e == 0) return;
-    for (auto n : e->get_children()) {
-        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
-        if (!el) continue;
-
+    for (auto el : getChildren(e)) {
         VRStoragePtr s = VRStorage::createFromStore(el);
         if (!s) s = T::create();
         auto c = static_pointer_cast<T>(s);

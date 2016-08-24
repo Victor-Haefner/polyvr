@@ -10,7 +10,7 @@
 #include "core/utils/toString.h"
 
 #include <gtkmm/label.h>
-#include <gtkmm/liststore.h>
+#include <gtkmm/treestore.h>
 #include <gtkmm/treeview.h>
 #include <gtkmm/dialog.h>
 #include <gtkmm/builder.h>
@@ -22,9 +22,9 @@ VRRuleWidget::VRRuleWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, VROntologyRule
     label->set_text("rule");
     if (rule->query) label->set_text(rule->query->toString());
 
-    Glib::RefPtr<Gtk::ListStore> liststore = Glib::RefPtr<Gtk::ListStore>::cast_dynamic( treeview->get_model() );
+    Glib::RefPtr<Gtk::TreeStore> treestore = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic( treeview->get_model() );
     for (auto s : rule->statements) {
-        setPropRow(liststore->append(), s->toString(), "", "black", 0);
+        setPropRow(treestore->append(), s->toString(), "", "black", 0);
     }
 }
 
@@ -67,15 +67,15 @@ void VRRuleWidget::on_edit_clicked() {
 }
 
 void VRRuleWidget::on_newp_clicked() {
-    Glib::RefPtr<Gtk::ListStore> liststore = Glib::RefPtr<Gtk::ListStore>::cast_dynamic( treeview->get_model() );
+    Glib::RefPtr<Gtk::TreeStore> treestore = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic( treeview->get_model() );
     string name = "is(a,b)";
-    setPropRow(liststore->append(), name, "none", "orange", 0);
+    setPropRow(treestore->append(), name, "none", "orange", 0);
     rule->addStatement(name);
 }
 
 void VRRuleWidget::on_select_property() {
     Gtk::TreeModel::iterator iter = treeview->get_selection()->get_selected();
-    Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_dynamic( treeview->get_model() );
+    Glib::RefPtr<Gtk::TreeStore> store = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic( treeview->get_model() );
     if (!iter) return;
 
     auto getStorePos = [&]() {
@@ -97,11 +97,11 @@ void VRRuleWidget::on_select_property() {
 }
 
 void VRRuleWidget::update() {
-    Glib::RefPtr<Gtk::ListStore> liststore = Glib::RefPtr<Gtk::ListStore>::cast_dynamic( treeview->get_model() );
+    Glib::RefPtr<Gtk::TreeStore> treestore = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic( treeview->get_model() );
 
-    liststore->clear();
+    treestore->clear();
     for (auto p : rule->statements) {
-        Gtk::TreeModel::iterator i = liststore->append();
+        Gtk::TreeModel::iterator i = treestore->append();
         if (selected_statement && p->toString() == selected_statement->toString())
             setPropRow(i, p->toString(), "", "green", 1);
         else setPropRow(i, p->toString(), "", "black", 0);

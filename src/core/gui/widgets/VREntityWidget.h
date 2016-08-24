@@ -8,7 +8,8 @@ OSG_BEGIN_NAMESPACE;
 
 struct VREntityWidget : public VRSemanticWidget {
     VREntityPtr entity;
-    VRPropertyPtr selected_property;
+    VRPropertyPtr selected_entity_property;
+    VRPropertyPtr selected_concept_property;
 
     VREntityWidget(VRGuiSemantics* m, Gtk::Fixed* canvas = 0, VREntityPtr entity = 0);
 

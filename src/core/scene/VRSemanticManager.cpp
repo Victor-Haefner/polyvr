@@ -39,7 +39,6 @@ void VRSemanticManager::renameOntology(string name, string new_name) {
     ontologies[new_name] = o;
 }
 
-        void update();
 void VRSemanticManager::update() {
     ;
 }

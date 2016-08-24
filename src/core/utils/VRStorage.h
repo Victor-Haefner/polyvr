@@ -64,13 +64,14 @@ class VRStorage {
         void regStorageSetupAfterFkt(VRUpdatePtr u);
 
         xmlpp::Element* getChild(xmlpp::Element* e, string c);
+        vector<xmlpp::Element*> getChildren(xmlpp::Element* e);
 
     public:
         VRStorage();
 
-        void save(xmlpp::Element* e, int p = 0);
+        virtual void save(xmlpp::Element* e, int p = 0);
+        virtual void load(xmlpp::Element* e);
         xmlpp::Element* saveUnder(xmlpp::Element* e, int p = 0, string t = "");
-        void load(xmlpp::Element* e);
         void loadChildFrom(xmlpp::Element* e, string t = "");
 
         static int getPersistency(xmlpp::Element* e);

@@ -27,6 +27,8 @@ class VRGuiSemantics {
 
         void on_new_clicked();
         void on_del_clicked();
+        void on_open_clicked();
+        void on_diag_load_clicked();
 
         void on_treeview_select();
         void on_property_treeview_select();

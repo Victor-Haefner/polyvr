@@ -83,4 +83,15 @@ xmlpp::Element* VRStorage::getChild(xmlpp::Element* e, string c) {
     return 0;
 }
 
+vector<xmlpp::Element*> VRStorage::getChildren(xmlpp::Element* e) {
+    vector<xmlpp::Element*> res;
+    if (!e) return res;
+    for (auto n : e->get_children()) {
+        xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
+        if (!el) continue;
+        res.push_back(el);
+    }
+    return res;
+}
+
 OSG_END_NAMESPACE;

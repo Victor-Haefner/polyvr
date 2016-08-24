@@ -37,9 +37,6 @@ class VRGroup : public VRObject {
 
         void destroy();
 
-        void save(xmlpp::Element* e);
-        void load(xmlpp::Element* e);
-
         bool getActive();
         void setActive(bool b);
 
