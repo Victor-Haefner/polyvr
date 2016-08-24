@@ -356,7 +356,7 @@ void VRGuiSemantics::copyConcept(VRConceptWidget* w) {
     auto cw = VRConceptWidgetPtr( new VRConceptWidget(this, canvas, c) );
     widgets[c->ID] = cw;
     cw->move(w->pos + Vec2f(90,0));
-    //connect(w,cw); // TODO
+    connect(widgets[w->ID()], cw, "#00CCFF");
     canvas->show_all();
 }
 
@@ -365,7 +365,7 @@ void VRGuiSemantics::addEntity(VRConceptWidget* w) {
     auto cw = VREntityWidgetPtr( new VREntityWidget(this, canvas, c) );
     widgets[c->ID] = cw;
     cw->move(w->pos + Vec2f(90,0));
-    //connect(w,cw); // TODO
+    connect(widgets[w->ID()], cw, "#FFEE00");
     canvas->show_all();
 }
 
@@ -375,6 +375,7 @@ void VRGuiSemantics::addRule(VRConceptWidget* w) {
     auto cw = VRRuleWidgetPtr( new VRRuleWidget(this, canvas, c) );
     widgets[c->ID] = cw;
     cw->move(w->pos + Vec2f(90,0));
+    connect(widgets[w->ID()], cw, "#00DD00");
     canvas->show_all();
 }
 

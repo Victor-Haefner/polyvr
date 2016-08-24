@@ -34,11 +34,12 @@ void VRRuleWidget::on_edit_prop_clicked() {
     if (!selected_statement) return;
     Gtk::Dialog* dialog;
     VRGuiBuilder()->get_widget("PropertyEdit", dialog);
-    setTextEntry("entry23", selected_statement->verb);
-    setTextEntry("entry24", selected_statement->toString());
+    setTextEntry("entry23", selected_statement->toString());
+    //setTextEntry("entry24", selected_statement->toString());
     dialog->show();
     if (dialog->run() == Gtk::RESPONSE_OK) {
-        selected_statement->verb = getTextEntry("entry23");
+        selected_statement->statement = getTextEntry("entry23");
+        selected_statement->setup();
         //selected_statement->type = getTextEntry("entry24");
     }
     dialog->hide();
@@ -68,8 +69,8 @@ void VRRuleWidget::on_edit_clicked() {
 
 void VRRuleWidget::on_newp_clicked() {
     Glib::RefPtr<Gtk::TreeStore> treestore = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic( treeview->get_model() );
-    string name = "is(a,b)";
-    setPropRow(treestore->append(), name, "none", "orange", 0);
+    string name = rule->associatedConcept + "(x)";
+    setPropRow(treestore->append(), name, "", "orange", 0);
     rule->addStatement(name);
 }
 
