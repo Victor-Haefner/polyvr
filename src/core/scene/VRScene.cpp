@@ -195,7 +195,7 @@ void VRScene::update() {
     updateCallbacks();
 }
 
-void VRScene::save(xmlpp::Element* e) {
+void VRScene::saveScene(xmlpp::Element* e) {
     if (e == 0) return;
     VRName::saveName(e);
     VRRenderManager::saveUnder(e);
@@ -207,7 +207,7 @@ void VRScene::save(xmlpp::Element* e) {
     semanticManager->saveUnder(e);
 }
 
-void VRScene::load(xmlpp::Element* e) {
+void VRScene::loadScene(xmlpp::Element* e) {
     if (e == 0) return;
     VRName::loadName(e);
     VRRenderManager::loadChildFrom(e);

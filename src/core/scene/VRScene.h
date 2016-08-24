@@ -87,8 +87,8 @@ class VRScene : public VRObjectManager,
 
         void update();
 
-        void save(xmlpp::Element* e);
-        void load(xmlpp::Element* e);
+        void saveScene(xmlpp::Element* e);
+        void loadScene(xmlpp::Element* e);
 };
 
 typedef std::shared_ptr<VRScene> VRScenePtr;

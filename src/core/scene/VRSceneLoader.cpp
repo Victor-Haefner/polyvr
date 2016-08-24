@@ -92,7 +92,7 @@ void VRSceneLoader::saveScene(string file, xmlpp::Element* guiN) {
     scene->setPath(file);
     VRObjectPtr root = scene->getRoot();
     root->saveUnder(objectsN);
-    scene->save(sceneN);
+    scene->saveScene(sceneN);
     doc.write_to_file_formatted(file);
 }
 
@@ -144,7 +144,7 @@ void VRSceneLoader::loadScene(string path) {
 
     scene->getRoot()->load(root);
     VRSceneManager::get()->setScene(scene);
-    scene->load(sceneN);
+    scene->loadScene(sceneN);
 }
 
 
