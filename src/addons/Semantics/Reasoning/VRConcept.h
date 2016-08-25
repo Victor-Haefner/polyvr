@@ -25,7 +25,7 @@ struct VRConcept : public std::enable_shared_from_this<VRConcept>, public VROnto
     VRConcept(string name, VROntologyPtr o);
     static VRConceptPtr create(string name = "none", VROntologyPtr o = 0);
 
-    VRConceptPtr copy();
+    VRConceptPtr copy(bool link = false);
     VRConceptPtr append(string name);
     void append(VRConceptPtr c);
     void remove(VRConceptPtr c);

@@ -23,7 +23,7 @@ VRConceptPtr VRConcept::create(string name, VROntologyPtr o) {
     return VRConceptPtr(new VRConcept(name, o));
 }
 
-VRConceptPtr VRConcept::copy() {
+VRConceptPtr VRConcept::copy(bool link) { // TODO: implement the reference to original concept and ontology
     auto c = VRConcept::create(name, ontology.lock());
     for (auto p : properties) c->addProperty(p.second);
     for (auto a : annotations) c->addAnnotation(a.second);

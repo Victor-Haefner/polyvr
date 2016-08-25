@@ -42,7 +42,7 @@ void VROntology::setupLibrary() {
     mathOnto->addRule("inside(p,b):Box(b);Position(p);isGe(p,b/min);isGe(b/max,p)", "Box");
     // TODO: quaternion rotation rule to change direction
 
-    objectOnto->merge(mathOnto);
+    objectOnto->import(mathOnto);
     objectOnto->addConcept("Object");
     objectOnto->getConcept("Object")->addProperty("position", "Position");
     objectOnto->getConcept("Object")->addProperty("orientation", "Orientation");
@@ -57,11 +57,11 @@ void VROntology::setupLibrary() {
 
     actionOnto->addConcept("Action");
 
-    machineOnto->merge(objectOnto);
+    machineOnto->import(objectOnto);
     machineOnto->addConcept("Machine", "Object");
 
-    processingOnto->merge(featureOnto);
-    processingOnto->merge(actionOnto);
+    processingOnto->import(featureOnto);
+    processingOnto->import(actionOnto);
     processingOnto->addConcept("Processing", "Action");
     processingOnto->getConcept("Processing")->addProperty("result", "Feature");
     processingOnto->getConcept("Processing")->addProperty("state", "int");
@@ -70,21 +70,21 @@ void VROntology::setupLibrary() {
     // if processing done, then result is done and skill is unset
     processingOnto->addRule("is(s/result/state,1):Processing(s);is(s/state,1)", "Processing");
 
-    prodMachineOnto->merge(machineOnto);
-    prodMachineOnto->merge(processingOnto);
+    prodMachineOnto->import(machineOnto);
+    prodMachineOnto->import(processingOnto);
     prodMachineOnto->addConcept("Productionmachine","Machine");
     prodMachineOnto->getConcept("Productionmachine")->addProperty("processing", "Processing");
 
-    boreholeOnto->merge(mathOnto);
-    boreholeOnto->merge(featureOnto);
+    boreholeOnto->import(mathOnto);
+    boreholeOnto->import(featureOnto);
     boreholeOnto->addConcept("Borehole", "Feature");
     boreholeOnto->getConcept("Borehole")->addProperty("radius", "float");
     boreholeOnto->getConcept("Borehole")->addProperty("direction", "Direction");
     boreholeOnto->getConcept("Borehole")->addProperty("position", "Position");
     boreholeOnto->getConcept("Borehole")->addProperty("depth", "float");
 
-    drillingOnto->merge(boreholeOnto);
-    drillingOnto->merge(processingOnto);
+    drillingOnto->import(boreholeOnto);
+    drillingOnto->import(processingOnto);
     drillingOnto->addConcept("Drilling", "Processing");
     drillingOnto->getConcept("Drilling")->addProperty("volume", "Box");
     drillingOnto->getConcept("Drilling")->addProperty("position", "Position");
@@ -92,27 +92,27 @@ void VROntology::setupLibrary() {
     drillingOnto->getConcept("Drilling")->addProperty("speed", "float");
     //drillingOnto->addRule("b(Drilling).state=set & inside(b.result.position,b.volume) & b.result.direction=b.direction ? b.state=done");
 
-    productOnto->merge(featureOnto);
-    productOnto->merge(objectOnto);
+    productOnto->import(featureOnto);
+    productOnto->import(objectOnto);
     productOnto->addConcept("Product", "Object");
     productOnto->getConcept("Product")->addProperty("feature", "Feature");
     productOnto->getConcept("Product")->addProperty("body", "Volume");
 
-    productionOnto->merge(productOnto);
-    productionOnto->merge(prodMachineOnto);
-    productionOnto->merge(processOnto);
+    productionOnto->import(productOnto);
+    productionOnto->import(prodMachineOnto);
+    productionOnto->import(processOnto);
     productionOnto->addConcept("Production");
     productionOnto->getConcept("Production")->addProperty("machine", "Machine");
     productionOnto->getConcept("Production")->addProperty("job", "Product");
     productionOnto->getConcept("Production")->addProperty("process", "Process");
 
-    drillOnto->merge(prodMachineOnto);
-    drillOnto->merge(processingOnto);
-    drillOnto->merge(drillingOnto);
+    drillOnto->import(prodMachineOnto);
+    drillOnto->import(processingOnto);
+    drillOnto->import(drillingOnto);
     drillOnto->addConcept("Drill", "Productionmachine");
 
-    manipOnto->merge(objectOnto);
-    manipOnto->merge(actionOnto);
+    manipOnto->import(objectOnto);
+    manipOnto->import(actionOnto);
     manipOnto->addConcept("Manipulation", "Action");
     manipOnto->addConcept("Grab", "Manipulation");
     manipOnto->addConcept("Translation", "Manipulation");
@@ -127,8 +127,8 @@ void VROntology::setupLibrary() {
     //manipOnto->addRule("g(Grab).state=set ? g.state=done");
     //manipOnto->addRule("r(Rotation).state=set ? r.state=done");
 
-    robotOnto->merge(manipOnto);
-    robotOnto->merge(machineOnto);
+    robotOnto->import(manipOnto);
+    robotOnto->import(machineOnto);
     robotOnto->addConcept("Robot", "Machine");
     robotOnto->getConcept("Robot")->addProperty("skill", "Manipulation");
 

@@ -54,12 +54,25 @@ void VROntology::setup() {
 }
 
 VRConceptPtr VROntology::getConcept(string name) {
-    if (concepts.count(name) == 0) { cout << "Warning: concept " << name << " not found!" << endl; return 0; }
     /*cout << "add concept " << name << "in: ";
     for (auto c : concepts) if (auto p = c.second.lock()) cout << " " << c.first << " " << p->ID << " ";
     cout << endl;*/
-    auto p = concepts[name].lock();
+    VRConceptPtr p;
+    if (concepts.count(name)) p = concepts[name].lock();
+    else {
+        for (auto ow : dependencies) {
+            if (auto o = ow.second.lock()) {
+                p = o->getConcept(name);
+                if (p) {
+                    p = p->copy(true);
+                    addConcept(p);
+                    break;
+                }
+            }
+        }
+    }
     //cout << "found " << p->name << " " << p->ID << endl;
+    //if (!p) cout << "Warning: concept " << name << " not found in ontology " << getName() << endl;
     return p;
 }
 
@@ -121,6 +134,8 @@ void VROntology::renameEntity(VREntityPtr e, string s) {
     if (!instances.count(e->ID)) return;
     e->setName(s);
 }
+
+void VROntology::import(VROntologyPtr o) { dependencies[o->getName()] = o; }
 
 void VROntology::merge(VROntologyPtr o) { // Todo: check it well!
     for (auto c : o->rules) rules[c.first] = c.second;

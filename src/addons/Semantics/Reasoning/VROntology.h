@@ -25,12 +25,14 @@ struct VROntology : public std::enable_shared_from_this<VROntology>, public VRNa
     map<int, VREntityPtr> instances;
     map<string, VRConceptWeakPtr> concepts;
     map<int, VROntologyRulePtr> rules;
+    map<string, VROntologyWeakPtr> dependencies;
 
     VROntology(string name);
     static VROntologyPtr create(string name);
 
     void setup();
 
+    void import(VROntologyPtr o);
     void merge(VROntologyPtr o);
     VROntologyPtr copy();
 
