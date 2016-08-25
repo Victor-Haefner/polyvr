@@ -23,6 +23,8 @@ class boundingbox {
         Vec3f center();
         float radius();
 
+        void move(const Vec3f& t);
+
         bool intersectedBy(Line l);
 };
 

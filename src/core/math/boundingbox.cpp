@@ -25,6 +25,11 @@ Vec3f boundingbox::max() { return bb2; }
 Vec3f boundingbox::center() { return (bb2+bb1)*0.5; }
 float boundingbox::radius() { return (min()-center()).length(); }
 
+void boundingbox::move(const Vec3f& t) {
+    bb1 += t;
+    bb2 += t;
+}
+
 bool boundingbox::intersectedBy(Line l) {
     Vec3f p0 = Vec3f(l.getPosition());
     Vec3f dir = l.getDirection();

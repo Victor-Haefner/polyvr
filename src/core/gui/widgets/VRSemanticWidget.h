@@ -6,6 +6,7 @@
 #include <gtkmm/treemodel.h>
 
 #include "core/gui/VRGuiFwd.h"
+#include "addons/Algorithms/VRGraphLayout.h"
 
 using namespace std;
 
@@ -52,6 +53,8 @@ struct VRSemanticWidget {
     void move(Vec2f p);
     Vec2f getAnchorPoint(Vec2f p);
     void setPropRow(Gtk::TreeModel::iterator iter, string name, string type, string color, int flag, int ID = 0, int rtype = 0);
+
+    VRGraphLayout::Node toGraphLayoutNode();
 
     virtual void on_select_property() = 0;
     virtual void on_rem_clicked() = 0;

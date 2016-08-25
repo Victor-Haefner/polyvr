@@ -126,52 +126,48 @@ void VRGuiSemantics::updateLayout() {
     VRGraphLayout layout;
     layout.setAlgorithm(VRGraphLayout::SPRINGS, 0);
     layout.setAlgorithm(VRGraphLayout::OCCUPANCYMAP, 1);
-    graph<Vec3f>& g = layout.getGraph();
+    VRGraphLayout::layout& g = layout.getGraph();
     layout.setGravity(Vec3f(0,1,0));
-    layout.setRadius(100);
+    layout.setRadius(20);
 
     map<int, int> widgetIDs;
 
-    for (auto c : widgets) {
-        Vec3f p = Vec3f(c.second->pos[0], c.second->pos[1], 0);
-        widgetIDs[c.first] = g.addNode(p);
+    for (auto c : widgets) { // build up graph nodes
+        widgetIDs[c.first] = g.addNode( c.second->toGraphLayoutNode() );
         if (c.first == current->thing->ID) layout.fixNode(widgetIDs[c.first]);
     }
 
-    for (auto w : widgets) {
+    for (auto w : widgets) { // add graph edges
         VRConceptWidgetPtr c = dynamic_pointer_cast<VRConceptWidget>(w.second);
         VREntityWidgetPtr e = dynamic_pointer_cast<VREntityWidget>(w.second);
         VRRuleWidgetPtr r = dynamic_pointer_cast<VRRuleWidget>(w.second);
 
         if (c) {
             for (auto c2 : c->concept->children) { // parent child connection
-                g.connect(widgetIDs[c->concept->ID], widgetIDs[c2.second->ID], graph<Vec3f>::HIERARCHY);
+                g.connect(widgetIDs[c->concept->ID], widgetIDs[c2.second->ID], VRGraphLayout::layout::HIERARCHY);
             }
         }
 
         if (e && e->entity->getConcept()) {
-            g.connect(widgetIDs[e->entity->getConcept()->ID], widgetIDs[w.first], graph<Vec3f>::HIERARCHY);
+            g.connect(widgetIDs[e->entity->getConcept()->ID], widgetIDs[w.first], VRGraphLayout::layout::HIERARCHY);
         }
 
         if (r) {
             if (auto c = current->getConcept( r->rule->associatedConcept) )
-                g.connect(widgetIDs[c->ID], widgetIDs[w.first], graph<Vec3f>::HIERARCHY);
+                g.connect(widgetIDs[c->ID], widgetIDs[w.first], VRGraphLayout::layout::HIERARCHY);
         }
     }
 
     layout.compute(1, 0.002);
 
     int i = 0;
-    for (auto c : widgets) {
-        Vec3f& p = g.getNodes()[i];
+    for (auto c : widgets) { // update widget positions
+        Vec3f p = g.getNodes()[i].bb.center();
         c.second->move(Vec2f(p[0], p[1]));
         i++;
     }
 
-    for (auto c : connectors) {
-        c.second->update();
-    }
-
+    for (auto c : connectors) c.second->update(); // update connectors
     canvas->show_all();
 }
 

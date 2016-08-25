@@ -2,6 +2,8 @@
 #define VRGRAPHLAYOUT_H_INCLUDED
 
 #import "core/math/graph.h"
+#import "core/math/boundingbox.h"
+
 #import <OpenSG/OSGVector.h>
 #import <map>
 
@@ -20,8 +22,14 @@ class VRGraphLayout {
             FIXED
         };
 
+        struct Node {
+            boundingbox bb;
+        };
+
+        typedef graph<Node> layout;
+
     private:
-        graph<Vec3f> g;
+        layout g;
         map<int, ALGORITHM> algorithms;
         map<int, FLAG> flags;
         Vec3f gravity;
@@ -35,8 +43,8 @@ class VRGraphLayout {
     public:
         VRGraphLayout();
 
-        void setGraph(graph<Vec3f>& g);
-        graph<Vec3f>& getGraph();
+        void setGraph(layout& g);
+        layout& getGraph();
 
         void setAlgorithm(ALGORITHM a, int position = 0);
         void clearAlgorithms();

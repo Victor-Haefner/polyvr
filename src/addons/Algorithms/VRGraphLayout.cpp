@@ -1,12 +1,14 @@
 #include "VRGraphLayout.h"
 #include "core/math/Octree.h"
+#include "core/math/graph.cpp"
 
 using namespace OSG;
 
+template class graph<VRGraphLayout::Node>;
 VRGraphLayout::VRGraphLayout() {}
 
-void VRGraphLayout::setGraph(graph<Vec3f>& g) { this->g = g; }
-graph<Vec3f>& VRGraphLayout::getGraph() { return g; }
+void VRGraphLayout::setGraph(layout& g) { this->g = g; }
+VRGraphLayout::layout& VRGraphLayout::getGraph() { return g; }
 void VRGraphLayout::setAlgorithm(ALGORITHM a, int position) { algorithms[position] = a; }
 void VRGraphLayout::clearAlgorithms() { algorithms.clear(); }
 
@@ -15,32 +17,33 @@ void VRGraphLayout::applySprings(float eps) {
         for (auto& e : n) {
             auto f1 = getFlag(e.from);
             auto f2 = getFlag(e.to);
-            Vec3f& n1 = g.getNodes()[e.from];
-            Vec3f& n2 = g.getNodes()[e.to];
+            Node& n1 = g.getNodes()[e.from];
+            Node& n2 = g.getNodes()[e.to];
 
-            Vec3f d = n2-n1;
-            float x = (d.length() - radius)*eps; // displacement
+            float r = radius + n1.bb.radius() + n2.bb.radius();
+            Vec3f d = n2.bb.center()-n1.bb.center();
+            float x = (d.length() - r)*eps; // displacement
             d.normalize();
             if (abs(x) < eps) continue;
 
-            if (x > radius*eps) x = radius*eps; // numerical safety ;)
-            if (x < -radius*eps) x = -radius*eps;
+            if (x > r*eps) x = r*eps; // numerical safety ;)
+            if (x < -r*eps) x = -r*eps;
 
             Vec3f g; // TODO: not yet working!
             g = gravity*x*0.1;
             switch (e.connection) {
-                case graph<Vec3f>::SIMPLE:
-                    if (f1 != FIXED) n1 += d*x*radius + g;
-                    if (f2 != FIXED) n2 += -d*x*radius + g;
+                case layout::SIMPLE:
+                    if (f1 != FIXED) n1.bb.move( d*x*r + g );
+                    if (f2 != FIXED) n2.bb.move( -d*x*r + g );
                     break;
-                case graph<Vec3f>::HIERARCHY:
-                    if (f2 != FIXED) n2 += -d*x*radius + g;
-                    else if (f1 != FIXED) n1 += d*x*radius + g;
+                case layout::HIERARCHY:
+                    if (f2 != FIXED) n2.bb.move( -d*x*r + g );
+                    else if (f1 != FIXED) n1.bb.move( d*x*r + g );
                     break;
-                case graph<Vec3f>::SIBLING:
+                case layout::SIBLING:
                     if (x < 0) { // push away siblings
-                        if (f1 != FIXED) n1 += d*x*radius + g;
-                        if (f2 != FIXED) n2 += -d*x*radius + g;
+                        if (f1 != FIXED) n1.bb.move( d*x*r + g );
+                        if (f2 != FIXED) n2.bb.move( -d*x*r + g );
                     }
                     break;
             }
@@ -54,23 +57,30 @@ void VRGraphLayout::applyOccupancy(float eps) {
 
     long i=0;
     for (auto& n : nodes) {
-        o.add( OcPoint(n, (void*)i) );
+        o.add( OcPoint(n.bb.center(), (void*)i) );
         i++;
     }
 
-    for (auto& n : nodes) {
-        for (auto& on2 : o.radiusSearch(n, radius) ) {
+    for (int i=0; i<nodes.size(); i++) {
+        auto& n = nodes[i];
+        Vec3f pn = n.bb.center();
+        float rs = radius + 2*n.bb.radius();
+        if ( getFlag(i) == FIXED ) continue;
+
+        Vec3f D;
+        for (auto& on2 : o.radiusSearch(pn, rs) ) {
             int i = (long)on2;
             auto& n2 = nodes[i];
-            auto f = getFlag(i);
-
-            Vec3f d = n2 - n;
-            float x = (radius - d.length())*eps; // displacement
-            d.normalize();
-            if (abs(x) < eps) continue;
-
-            if (f != FIXED) n2 += d*x*radius*0.5; // push away neighbors
+            Vec3f d = n2.bb.center() - pn;
+            float r = radius + n.bb.radius() + n2.bb.radius();
+            float x = (r - d.length())*eps; // displacement
+            if (x > 0) {
+                d.normalize();
+                D -= d*x*r*0.5;
+            }
         }
+
+        n.bb.move(D); // move node away from neighbors
     }
 }
 

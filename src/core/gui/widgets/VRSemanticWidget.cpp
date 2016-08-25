@@ -132,6 +132,15 @@ void VRSemanticWidget::move(Vec2f p) {
     canvas->move(*widget, p[0]-w*0.5, p[1]-h*0.5);
 }
 
+VRGraphLayout::Node VRSemanticWidget::toGraphLayoutNode() {
+    Vec3f p = Vec3f(pos[0], pos[1], 0);
+    Vec3f s = Vec3f(widget->get_width()*0.5, widget->get_height()*0.5, 0);
+    VRGraphLayout::Node n;
+    n.bb.update(p-s);
+    n.bb.update(p+s);
+    return n;
+}
+
 Vec2f VRSemanticWidget::getAnchorPoint(Vec2f p) {
     float w = abs(p[0]-pos[0]);
     float h = abs(p[1]-pos[1]);
