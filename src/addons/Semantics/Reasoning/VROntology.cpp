@@ -66,7 +66,7 @@ VRConceptPtr VROntology::getConcept(string name) {
             if (auto o = ow.second.lock()) {
                 p = o->getConcept(name);
                 if (p) {
-                    p = p->copy(true);
+                    p = p->copy();
                     addConcept(p);
                     break;
                 }

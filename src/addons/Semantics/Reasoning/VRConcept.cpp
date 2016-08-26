@@ -23,7 +23,7 @@ VRConceptPtr VRConcept::create(string name, VROntologyPtr o) {
     return VRConceptPtr(new VRConcept(name, o));
 }
 
-VRConceptPtr VRConcept::copy(bool link) { // TODO: implement the reference to original concept and ontology
+VRConceptPtr VRConcept::copy() {
     auto c = VRConcept::create(name, ontology.lock());
     for (auto p : properties) c->addProperty(p.second);
     for (auto a : annotations) c->addAnnotation(a.second);
@@ -37,16 +37,23 @@ void VRConcept::setup() {
     for (auto c : tmp) append(c.second);
 }
 
-void VRConcept::append(VRConceptPtr c) { children[c->ID] = c; c->parent = shared_from_this(); }
 void VRConcept::remove(VRConceptPtr c) { if (children.count(c->ID)) children.erase(c->ID); c->parent.reset(); }
 void VRConcept::remProperty(VRPropertyPtr p) { if (properties.count(p->ID)) properties.erase(p->ID); }
 void VRConcept::addAnnotation(VRPropertyPtr p) { annotations[p->ID] = p; }
 void VRConcept::addProperty(VRPropertyPtr p) { properties[p->ID] = p; }
 
-VRConceptPtr VRConcept::append(string name) {
+VRConceptPtr VRConcept::append(string name, bool link) {
     auto c = VRConcept::create(name, ontology.lock());
-    append(c);
+    append(c, link);
     return c;
+}
+
+void VRConcept::append(VRConceptPtr c, bool link) {
+    children[c->ID] = c;
+    c->parent = shared_from_this();
+    if (!link) return;
+
+    //link[c->ID] = ; // TODO
 }
 
 VRPropertyPtr VRConcept::addProperty(string name, string type) {
