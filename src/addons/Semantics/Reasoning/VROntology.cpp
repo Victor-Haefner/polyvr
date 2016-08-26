@@ -3,6 +3,8 @@
 #include "VRProperty.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRStorage_template.h"
+#include "core/scene/VRSceneManager.h"
+#include "core/scene/VRSemanticManager.h"
 
 /* no compiling?
     install the raptor2 ubuntu package for rdfxml parsing
@@ -405,8 +407,10 @@ void VROntology::open(string path) {
 }
 
 void VROntology::addModule(string mod) {
-    if (!library.count(mod)) { cout << "Ontology " << mod << " not found in library " << endl; return; }
-    merge(library[mod]);
+    auto mgr = VRSceneManager::getCurrent()->getSemanticManager();
+    auto onto = mgr->getOntology(mod);
+    if (!onto) { cout << "VROntology::addModule Error: Ontology " << mod << " not found" << endl; return; }
+    merge(onto);
 }
 
 void VROntology::setFlag(string f) { flag = f; }
