@@ -101,22 +101,22 @@ VRGeometryPtr ModuleFloor::makeSubQuadGeometry(Vec2f pointA, Vec2f pointB) {
     return geom;
 }
 
-void ModuleFloor::loadBbox(AreaBoundingBox* bbox) {
+void ModuleFloor::loadBbox(MapGrid::Box bbox) {
     auto mc = RealWorld::get()->getCoordinator();
-    Vec2f min = mc->realToWorld(bbox->min);
-    Vec2f max = mc->realToWorld(bbox->max);
+    Vec2f min = mc->realToWorld(bbox.min);
+    Vec2f max = mc->realToWorld(bbox.max);
 
     VRGeometryPtr geom = makeSubQuadGeometry(min, max);
     geom->setMaterial(matSubquad);
     root->addChild(geom);
     //this->scene->physicalize(geom, true);
 
-    meshes[bbox->str] = geom;
+    meshes[bbox.str] = geom;
     physicalize(physicalized);
 }
 
-void ModuleFloor::unloadBbox(AreaBoundingBox* bbox) {
-    meshes.erase(bbox->str);
+void ModuleFloor::unloadBbox(MapGrid::Box bbox) {
+    meshes.erase(bbox.str);
 }
 
 void ModuleFloor::physicalize(bool b) {

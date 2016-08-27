@@ -88,10 +88,10 @@ ModuleStreets::ModuleStreets() : BaseModule("ModuleStreets") {
     signTCs["straightOrRight"] = Vec4f(0.7324,0.7324+0.0348,1.0-0.5766-0.0519,1.0-0.5766);
 }
 
-void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
+void ModuleStreets::loadBbox(MapGrid::Box bbox) {
     auto mapDB = RealWorld::get()->getDB();
     auto mc = RealWorld::get()->getCoordinator();
-    OSMMap* osmMap = mapDB->getMap(bbox->str);
+    OSMMap* osmMap = mapDB->getMap(bbox.str);
     if (!osmMap) return;
 
     map<string, StreetJoint*> listLoadJoints;
@@ -194,7 +194,7 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
         geo->create(type, data->pos, data->norms, data->inds, data->texs);
         geo->setMaterial(mat);
         root->addChild(geo);
-        meshes[bbox->str+name] = geo;
+        meshes[bbox.str+name] = geo;
     };
 
     setGeo("streetQuads", GL_QUADS, sdata, matStreet);
@@ -203,20 +203,20 @@ void ModuleStreets::loadBbox(AreaBoundingBox* bbox) {
     setGeo("streetLights", GL_QUADS, ldata, matLights);
 
     root->addChild(signs);
-    annotations[bbox->str+"_signs"] = signs;
+    annotations[bbox.str+"_signs"] = signs;
 
     delete sdata;
     delete jdata;
 }
 
-void ModuleStreets::unloadBbox(AreaBoundingBox* bbox) {
+void ModuleStreets::unloadBbox(MapGrid::Box bbox) {
     auto annDestroy = [&](string key) { if (!annotations.count(key)) return; annotations[key]->destroy(); annotations.erase(key); };
     auto resDestroy = [&](string key) { if (!meshes.count(key)) return; meshes[key]->destroy(); meshes.erase(key); };
 
-    annDestroy(bbox->str+"_signs");
-    resDestroy(bbox->str+"streetQuads");
-    resDestroy(bbox->str+"streetTriangles");
-    resDestroy(bbox->str+"streetSigns");
+    annDestroy(bbox.str+"_signs");
+    resDestroy(bbox.str+"streetQuads");
+    resDestroy(bbox.str+"streetTriangles");
+    resDestroy(bbox.str+"streetSigns");
 }
 
 void ModuleStreets::physicalize(bool b) {

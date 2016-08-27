@@ -5,6 +5,7 @@
 #include <vector>
 #include <map>
 #include <OpenSG/OSGVector.h>
+#include "MapGrid.h"
 #include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -19,16 +20,13 @@ class MapData;
 class MapManager {
     private:
         Vec2f position;
-        MapCoordinator* mapCoordinator;
-        World* world;
+        MapGrid* grid = 0;
+        MapCoordinator* mapCoordinator = 0;
+        World* world = 0;
         vector<BaseModule*> modules;
         VRObjectPtr root;
 
-        map<string, AreaBoundingBox*> loadedBboxes;
-
-        void unloadBbox(AreaBoundingBox* bbox);
-        void loadBboxIfNecessary(AreaBoundingBox* bbox);
-        MapData* loadMap(string filename);
+        map<string, MapGrid::Box> loadedBoxes;
 
     public:
         MapManager(Vec2f position, MapCoordinator* mapCoordinator, World* world, VRObjectPtr root);

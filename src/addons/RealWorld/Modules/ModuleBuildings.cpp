@@ -32,10 +32,10 @@ ModuleBuildings::ModuleBuildings() : BaseModule("ModuleBuildings") {
     r_geo_d = new GeometryData();
 }
 
-void ModuleBuildings::loadBbox(AreaBoundingBox* bbox) {
+void ModuleBuildings::loadBbox(MapGrid::Box bbox) {
     auto mapDB = RealWorld::get()->getDB();
     auto mc = RealWorld::get()->getCoordinator();
-    OSMMap* osmMap = mapDB->getMap(bbox->str);
+    OSMMap* osmMap = mapDB->getMap(bbox.str);
     if (!osmMap) return;
 
     VRGeometryPtr b_geo = VRGeometry::create("Buildings");
@@ -43,7 +43,7 @@ void ModuleBuildings::loadBbox(AreaBoundingBox* bbox) {
     root->addChild(b_geo);
     root->addChild(r_geo);
 
-    cout << "LOADING BUILDINGS FOR " << bbox->str << "\n" << flush;
+    cout << "LOADING BUILDINGS FOR " << bbox.str << "\n" << flush;
 
     for(OSMWay* way : osmMap->osmWays) {
         if (way->tags["building"] != "yes") continue;
@@ -67,21 +67,21 @@ void ModuleBuildings::loadBbox(AreaBoundingBox* bbox) {
     b_geo->create(GL_QUADS, b_geo_d->pos, b_geo_d->norms, b_geo_d->inds, b_geo_d->texs);
     b_geo->setTexCoords(b_geo_d->texs2, 1);
     b_geo->setMaterial(b_mat);
-    b_geos[bbox->str] = b_geo;
+    b_geos[bbox.str] = b_geo;
     b_geo_d->clear();
 
     r_geo->create(GL_TRIANGLES, r_geo_d->pos, r_geo_d->norms, r_geo_d->inds, r_geo_d->texs);
     //r_geo->setTexCoords(r_geo_d->texs2, 1);
     r_geo->setMaterial(b_mat);
-    r_geos[bbox->str] = r_geo;
+    r_geos[bbox.str] = r_geo;
     r_geo_d->clear();
 
     b_geo->getPhysics()->setShape("Concave");
     b_geo->getPhysics()->setPhysicalized(physicalized);
 }
 
-void ModuleBuildings::unloadBbox(AreaBoundingBox* bbox) {
-    string id = bbox->str;
+void ModuleBuildings::unloadBbox(MapGrid::Box bbox) {
+    string id = bbox.str;
     if (b_geos.count(id)) { b_geos[id]->destroy(); b_geos.erase(id); }
     if (r_geos.count(id)) { r_geos[id]->destroy(); r_geos.erase(id); }
 }

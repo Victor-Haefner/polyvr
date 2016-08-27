@@ -15,13 +15,13 @@ using namespace OSG;
 
 ModuleTree::ModuleTree() : BaseModule("ModuleTree") {}
 
-void ModuleTree::loadBbox(AreaBoundingBox* bbox) {
+void ModuleTree::loadBbox(MapGrid::Box bbox) {
     auto mc = RealWorld::get()->getCoordinator();
     auto mapDB = RealWorld::get()->getDB();
-    OSMMap* osmMap = mapDB->getMap(bbox->str);
+    OSMMap* osmMap = mapDB->getMap(bbox.str);
     if (!osmMap) return;
 
-    cout << "LOADING TREES FOR " << bbox->str << "\n" << flush;
+    cout << "LOADING TREES FOR " << bbox.str << "\n" << flush;
 
     for (OSMNode* node : osmMap->osmNodes) {
         if(node->tags["natural"] != "tree") continue;
@@ -34,15 +34,15 @@ void ModuleTree::loadBbox(AreaBoundingBox* bbox) {
         tree->setFrom(pos3D);
         tree->setScale(Vec3f(2,2,2));
         root->addChild(tree);
-        if (trees.count(bbox->str) == 0) trees[bbox->str] = vector<VRTreePtr>();
-        trees[bbox->str].push_back(tree);
+        if (trees.count(bbox.str) == 0) trees[bbox.str] = vector<VRTreePtr>();
+        trees[bbox.str].push_back(tree);
     }
 }
 
-void ModuleTree::unloadBbox(AreaBoundingBox* bbox) {
-    if (trees.count(bbox->str)) {
-        for (auto t : trees[bbox->str]) t->destroy();
-        trees.erase(bbox->str);
+void ModuleTree::unloadBbox(MapGrid::Box bbox) {
+    if (trees.count(bbox.str)) {
+        for (auto t : trees[bbox.str]) t->destroy();
+        trees.erase(bbox.str);
     }
 }
 

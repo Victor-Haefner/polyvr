@@ -18,13 +18,13 @@ ModuleTerrain::ModuleTerrain() : BaseModule("ModuleTerrain") {
     ModuleTerrain::fillTerrainList();
 }
 
-void ModuleTerrain::loadBbox(AreaBoundingBox* bbox) {
+void ModuleTerrain::loadBbox(MapGrid::Box bbox) {
     auto mapDB = RealWorld::get()->getDB();
     auto mc = RealWorld::get()->getCoordinator();
-    OSMMap* osmMap = mapDB->getMap(bbox->str);
+    OSMMap* osmMap = mapDB->getMap(bbox.str);
     if (!osmMap) return;
 
-    cout << "LOADING TERRAINS FOR " << bbox->str << "\n" << flush;
+    cout << "LOADING TERRAINS FOR " << bbox.str << "\n" << flush;
 
     for (OSMWay* way : osmMap->osmWays) {
         for (auto mat : terrainList) {
@@ -50,9 +50,9 @@ void ModuleTerrain::loadBbox(AreaBoundingBox* bbox) {
     }
 }
 
-void ModuleTerrain::unloadBbox(AreaBoundingBox* bbox) {
+void ModuleTerrain::unloadBbox(MapGrid::Box bbox) {
     auto mapDB = RealWorld::get()->getDB();
-    OSMMap* osmMap = mapDB->getMap(bbox->str);
+    OSMMap* osmMap = mapDB->getMap(bbox.str);
     if (!osmMap) return;
     for (OSMWay* way : osmMap->osmWays) {
         for (TerrainMaterial* mat : terrainList) {

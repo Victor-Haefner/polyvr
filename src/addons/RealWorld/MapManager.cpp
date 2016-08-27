@@ -1,5 +1,6 @@
 #include "MapManager.h"
 #include "World.h"
+#include "MapGrid.h"
 #include "MapCoordinator.h"
 #include <boost/format.hpp>
 #include "Modules/BaseModule.h"
@@ -16,6 +17,8 @@ MapManager::MapManager(Vec2f position, MapCoordinator* mapCoordinator, World* wo
     this->mapCoordinator = mapCoordinator;
     this->world = world;
     this->root = root;
+
+    grid = new MapGrid(3, mapCoordinator->getGridSize() );
 }
 
 void MapManager::addModule(BaseModule* mod) {
@@ -23,47 +26,31 @@ void MapManager::addModule(BaseModule* mod) {
     root->addChild(mod->getRoot());
 }
 
-void MapManager::updatePosition(Vec2f worldPosition) {
-    position = worldPosition;
-    Vec2f bboxPosition = mapCoordinator->getRealBboxPosition(worldPosition);
+void MapManager::updatePosition(Vec2f pos) {
+    position = pos;
+    Vec2f bboxPosition = mapCoordinator->getRealBboxPosition(pos);
+    grid->set(bboxPosition);
 
-    float gs = mapCoordinator->getGridSize();
-    vector<AreaBoundingBox*> bboxes;
-    bboxes.push_back(new AreaBoundingBox(bboxPosition + Vec2f(-gs, -gs), gs));
-    bboxes.push_back(new AreaBoundingBox(bboxPosition + Vec2f(0, -gs), gs));
-    bboxes.push_back(new AreaBoundingBox(bboxPosition + Vec2f(+gs, -gs), gs));
-    bboxes.push_back(new AreaBoundingBox(bboxPosition + Vec2f(-gs, 0), gs));
-    bboxes.push_back(new AreaBoundingBox(bboxPosition + Vec2f(0, 0), gs));
-    bboxes.push_back(new AreaBoundingBox(bboxPosition + Vec2f(+gs, 0), gs));
-    bboxes.push_back(new AreaBoundingBox(bboxPosition + Vec2f(-gs, +gs), gs));
-    bboxes.push_back(new AreaBoundingBox(bboxPosition + Vec2f(0, +gs), gs));
-    bboxes.push_back(new AreaBoundingBox(bboxPosition + Vec2f(+gs, +gs), gs));
-
-    // unload all bounding boxes which are not in bboxes
-    vector<AreaBoundingBox*> toUnload;
-    for(auto itr : loadedBboxes) {
-        bool isInBboxes = false;
-        for(auto bbox2 : bboxes) if (bbox2->str == itr.first) isInBboxes = true;
-        if (!isInBboxes) toUnload.push_back(itr.second);
+    // unload/load boxes as needed
+    vector<MapGrid::Box> toUnload;
+    for (auto b : loadedBoxes) {
+        if (!grid->has(b.second)) toUnload.push_back(b.second);
     }
 
-    for (auto b : toUnload) unloadBbox(b);
-    for(auto bbox : bboxes) loadBboxIfNecessary(bbox); // load new bounding boxes
-}
+    vector<MapGrid::Box> toLoad;
+    for (auto b : grid->getBoxes()) {
+        if (!loadedBoxes.count( b.str )) toLoad.push_back(b);
+    }
 
+    for (auto b : toUnload) {
+        for(auto mod : modules) mod->unloadBbox(b);
+        loadedBoxes.erase(b.str);
+    }
 
-MapData* MapManager::loadMap(string filename) { return 0; }
-
-void MapManager::unloadBbox(AreaBoundingBox* bbox) {
-    cout << "Unloading area: " << bbox->str << "\n" << flush;
-    for(auto mod : modules) mod->unloadBbox(bbox);
-    loadedBboxes.erase(bbox->str);
-}
-
-void MapManager::loadBboxIfNecessary(AreaBoundingBox* bbox) {
-    if (loadedBboxes.count(bbox->str)) return; // stop if bbox is already loaded
-    for(auto mod : modules) mod->loadBbox(bbox);
-    loadedBboxes[bbox->str] = bbox;
+    for(auto b : toLoad) {
+        for(auto mod : modules) mod->loadBbox(b);
+        loadedBoxes[b.str] = b;
+    }
 }
 
 void MapManager::physicalize(bool b) {

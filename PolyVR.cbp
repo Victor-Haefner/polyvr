@@ -345,6 +345,8 @@
 		<Unit filename="src/addons/RealWorld/MapCoordinator.h" />
 		<Unit filename="src/addons/RealWorld/MapData.cpp" />
 		<Unit filename="src/addons/RealWorld/MapData.h" />
+		<Unit filename="src/addons/RealWorld/MapGrid.cpp" />
+		<Unit filename="src/addons/RealWorld/MapGrid.h" />
 		<Unit filename="src/addons/RealWorld/MapManager.cpp" />
 		<Unit filename="src/addons/RealWorld/MapManager.h" />
 		<Unit filename="src/addons/RealWorld/MeshGenerator.h" />

@@ -2,18 +2,11 @@
 #define BASEMODULE_H
 
 #include <OpenSG/OSGVector.h>
+#include "../MapGrid.h"
 #include "core/objects/VRObjectFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
-
-struct AreaBoundingBox {
-    Vec2f min;
-    Vec2f max;
-    string str;
-
-    AreaBoundingBox(Vec2f min, float gridSize);
-};
 
 class BaseModule {
     protected:
@@ -27,8 +20,8 @@ class BaseModule {
         string getName();
         VRObjectPtr getRoot();
 
-        virtual void loadBbox(AreaBoundingBox* bbox) = 0;
-        virtual void unloadBbox(AreaBoundingBox* bbox) = 0;
+        virtual void loadBbox(MapGrid::Box bbox) = 0;
+        virtual void unloadBbox(MapGrid::Box bbox) = 0;
         virtual void physicalize(bool b) = 0;
 };
 

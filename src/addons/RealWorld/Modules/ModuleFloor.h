@@ -19,8 +19,8 @@ class ModuleFloor : public BaseModule {
     public:
         ModuleFloor();
 
-        virtual void loadBbox(AreaBoundingBox* bbox);
-        virtual void unloadBbox(AreaBoundingBox* bbox);
+        virtual void loadBbox(MapGrid::Box bbox);
+        virtual void unloadBbox(MapGrid::Box bbox);
 
         void physicalize(bool b);
 };

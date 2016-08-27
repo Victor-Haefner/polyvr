@@ -12,13 +12,13 @@
 
 using namespace OSG;
 
-void ModuleWalls::loadBbox(AreaBoundingBox* bbox) {
+void ModuleWalls::loadBbox(MapGrid::Box bbox) {
     auto mapDB = RealWorld::get()->getDB();
     auto mc = RealWorld::get()->getCoordinator();
-    OSMMap* osmMap = mapDB->getMap(bbox->str);
+    OSMMap* osmMap = mapDB->getMap(bbox.str);
     if (!osmMap) return;
 
-    cout << "LOADING WALLS FOR " << bbox->str << "\n" << flush;
+    cout << "LOADING WALLS FOR " << bbox.str << "\n" << flush;
 
     for(OSMWay* way: osmMap->osmWays) {
 
@@ -46,9 +46,9 @@ void ModuleWalls::loadBbox(AreaBoundingBox* bbox) {
     }
 }
 
-void ModuleWalls::unloadBbox(AreaBoundingBox* bbox) {
+void ModuleWalls::unloadBbox(MapGrid::Box bbox) {
     auto mapDB = RealWorld::get()->getDB();
-    OSMMap* osmMap = mapDB->getMap(bbox->str);
+    OSMMap* osmMap = mapDB->getMap(bbox.str);
     if (!osmMap) return;
 
 //            BOOST_FOREACH(OSMWay* way, osmMap->osmWays) {
