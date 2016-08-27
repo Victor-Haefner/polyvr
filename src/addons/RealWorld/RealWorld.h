@@ -38,7 +38,7 @@ class RealWorld {
 
         static RealWorld* get();
 
-        void enableModule(string mod, bool b);
+        void enableModule(string mod, bool b, bool t, bool p);
         void update(OSG::Vec3f pos);
         void physicalize(bool b);
 

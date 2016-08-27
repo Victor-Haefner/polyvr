@@ -24,7 +24,7 @@ class ModuleTerrain : public BaseModule {
 
         void physicalize(bool b);
 
-        ModuleTerrain();
+        ModuleTerrain(bool t, bool p);
 
     private:
         vector<TerrainMaterial*> terrainList;

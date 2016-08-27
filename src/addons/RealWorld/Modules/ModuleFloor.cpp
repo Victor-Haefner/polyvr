@@ -12,21 +12,8 @@
 
 using namespace OSG;
 
-ModuleFloor::ModuleFloor() : BaseModule("ModuleFloor") {
-    // create material
-    matSubquad = VRMaterial::create("ground");
-    matSubquad->setTexture("world/textures/asphalt.jpg");
-    matSubquad->setAmbient(Color3f(0.5, 0.5, 0.5));
-    matSubquad->setDiffuse(Color3f(0.5, 0.6, 0.1));
-    matSubquad->setSpecular(Color3f(0.2, 0.2, 0.2));
-    string wdir = VRSceneManager::get()->getOriginalWorkdir();
-    matSubquad->readVertexShader(wdir+"/shader/TexturePhong/phong.vp");
-    matSubquad->readFragmentShader(wdir+"/shader/TexturePhong/phong.fp");
-    matSubquad->setMagMinFilter("GL_LINEAR", "GL_NEAREST_MIPMAP_NEAREST");
-    matSubquad->setZOffset(1,1);
-
-    //Config::createPhongShader(matSubquad);
-    //matSubquad->addChunk(world->texSubQuad);
+ModuleFloor::ModuleFloor(bool t, bool p) : BaseModule("ModuleFloor", t,p) {
+    initMaterial();
 }
 
 VRGeometryPtr ModuleFloor::makeSubQuadGeometry(Vec2f pointA, Vec2f pointB) {
@@ -37,10 +24,10 @@ VRGeometryPtr ModuleFloor::makeSubQuadGeometry(Vec2f pointA, Vec2f pointB) {
 
     MapCoordinator* mapC = RealWorld::get()->getCoordinator();
 
-    float x1 = pointA.getValues()[0];
-    float y1 = pointA.getValues()[1];
-    float x2 = pointB.getValues()[0];
-    float y2 = pointB.getValues()[1];
+    float x1 = pointA[0];
+    float y1 = pointA[1];
+    float x2 = pointB[0];
+    float y2 = pointB[1];
     float tempX1, tempX2, tempY1, tempY2;
 
     int tesNum = 20;
@@ -101,6 +88,20 @@ VRGeometryPtr ModuleFloor::makeSubQuadGeometry(Vec2f pointA, Vec2f pointB) {
     return geom;
 }
 
+void ModuleFloor::initMaterial() {
+    // create material
+    matSubquad = VRMaterial::create("ground");
+    matSubquad->setTexture("world/textures/asphalt.jpg");
+    matSubquad->setAmbient(Color3f(0.5, 0.5, 0.5));
+    matSubquad->setDiffuse(Color3f(0.5, 0.6, 0.1));
+    matSubquad->setSpecular(Color3f(0.2, 0.2, 0.2));
+    string wdir = VRSceneManager::get()->getOriginalWorkdir();
+    matSubquad->readVertexShader(wdir+"/shader/TexturePhong/phong.vp");
+    matSubquad->readFragmentShader(wdir+"/shader/TexturePhong/phong.fp");
+    matSubquad->setMagMinFilter("GL_LINEAR", "GL_NEAREST_MIPMAP_NEAREST");
+    matSubquad->setZOffset(1,1);
+}
+
 void ModuleFloor::loadBbox(MapGrid::Box bbox) {
     auto mc = RealWorld::get()->getCoordinator();
     Vec2f min = mc->realToWorld(bbox.min);
@@ -109,10 +110,9 @@ void ModuleFloor::loadBbox(MapGrid::Box bbox) {
     VRGeometryPtr geom = makeSubQuadGeometry(min, max);
     geom->setMaterial(matSubquad);
     root->addChild(geom);
-    //this->scene->physicalize(geom, true);
 
     meshes[bbox.str] = geom;
-    physicalize(physicalized);
+    physicalize(doPhysicalize); // TODO: not thread safe yet!
 }
 
 void ModuleFloor::unloadBbox(MapGrid::Box bbox) {
@@ -120,9 +120,8 @@ void ModuleFloor::unloadBbox(MapGrid::Box bbox) {
 }
 
 void ModuleFloor::physicalize(bool b) {
-    physicalized = b;
     for (auto mesh : meshes) {
-        mesh.second->getPhysics()->setPhysicalized(b);
         mesh.second->getPhysics()->setShape("Concave");
+        mesh.second->getPhysics()->setPhysicalized(b);
     }
 }

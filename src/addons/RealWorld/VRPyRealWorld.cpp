@@ -78,12 +78,15 @@ PyObject* VRPyRealWorld::physicalize(VRPyRealWorld* self, PyObject* args) {
 
 PyObject* VRPyRealWorld::enableModule(VRPyRealWorld* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyRealWorld::enableModule, obj is invalid"); return NULL; }
-    self->obj->enableModule( parseString(args), true );
+    const char* name;
+    int t, p;
+    if (! PyArg_ParseTuple(args, "sii", (char*)&name, &t, &p)) return NULL;
+    self->obj->enableModule( name, true, t, p );
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyRealWorld::disableModule(VRPyRealWorld* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyRealWorld::disableModule, obj is invalid"); return NULL; }
-    self->obj->enableModule( parseString(args), false );
+    self->obj->enableModule( parseString(args), false, false, false );
     Py_RETURN_TRUE;
 }

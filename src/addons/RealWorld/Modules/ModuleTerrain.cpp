@@ -13,7 +13,7 @@
 
 using namespace OSG;
 
-ModuleTerrain::ModuleTerrain() : BaseModule("ModuleTerrain") {
+ModuleTerrain::ModuleTerrain(bool t, bool p) : BaseModule("ModuleTerrain", t,p) {
     // create List with materials
     ModuleTerrain::fillTerrainList();
 }

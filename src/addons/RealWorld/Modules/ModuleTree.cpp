@@ -13,7 +13,7 @@
 
 using namespace OSG;
 
-ModuleTree::ModuleTree() : BaseModule("ModuleTree") {}
+ModuleTree::ModuleTree(bool t, bool p) : BaseModule("ModuleTree", t,p) {}
 
 void ModuleTree::loadBbox(MapGrid::Box bbox) {
     auto mc = RealWorld::get()->getCoordinator();

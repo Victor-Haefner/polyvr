@@ -1,14 +1,15 @@
 #include "MapManager.h"
-#include "World.h"
 #include "MapGrid.h"
 #include "MapCoordinator.h"
-#include <boost/format.hpp>
 #include "Modules/BaseModule.h"
 
-#include "OSM/OSMMap.h"
-#include "core/utils/toString.h"
-#include "core/utils/VRTimer.h"
 #include "core/objects/object/VRObject.h"
+#include "core/scene/VRSceneManager.h"
+#include "core/scene/VRScene.h"
+#include "core/scene/VRThreadManager.h"
+#include "core/utils/VRFunction.h"
+
+#include <boost/bind.hpp>
 
 using namespace OSG;
 
@@ -19,11 +20,31 @@ MapManager::MapManager(Vec2f position, MapCoordinator* mapCoordinator, World* wo
     this->root = root;
 
     grid = new MapGrid(3, mapCoordinator->getGridSize() );
+
+    worker = VRFunction< VRThreadWeakPtr >::create( "mapmanager work", boost::bind(&MapManager::work, this, _1) );
+    VRSceneManager::getCurrent()->initThread(worker, "mapmanager worker", true, 1);
+        void work();
+}
+
+void MapManager::work(VRThreadWeakPtr tw) {
+    if (jobs.size() == 0) { sleep(1); return; }
+
+    MapManager::job j = jobs.front(); jobs.pop_front();
+    VRThreadPtr t = tw.lock();
+    t->syncFromMain();
+    j.mod->loadBbox(j.b);
+    t->syncToMain();
 }
 
 void MapManager::addModule(BaseModule* mod) {
     modules.push_back(mod);
     root->addChild(mod->getRoot());
+}
+
+//void MapManager::load(BaseModule* mod, MapGrid::Box b, VRThreadWeakPtr tw) {
+vector<VRThreadCb> threads;
+void load(BaseModule* mod, MapGrid::Box b, VRThreadWeakPtr tw) {
+
 }
 
 void MapManager::updatePosition(Vec2f pos) {
@@ -42,17 +63,25 @@ void MapManager::updatePosition(Vec2f pos) {
         if (!loadedBoxes.count( b.str )) toLoad.push_back(b);
     }
 
-    for (auto b : toUnload) {
-        for(auto mod : modules) mod->unloadBbox(b);
-        loadedBoxes.erase(b.str);
+    for(auto b : toLoad) {
+        loadedBoxes[b.str] = b;
+        for(auto mod : modules) {
+            if (!mod->useThreads) {
+                mod->loadBbox(b);
+                mod->physicalize(mod->doPhysicalize);
+            } else {
+                jobs.push_back(job(b, mod));
+            }
+        }
     }
 
-    for(auto b : toLoad) {
-        for(auto mod : modules) mod->loadBbox(b);
-        loadedBoxes[b.str] = b;
+    for (auto b : toUnload) {
+        loadedBoxes.erase(b.str);
+        for(auto mod : modules) mod->unloadBbox(b);
     }
 }
 
 void MapManager::physicalize(bool b) {
-    for(auto mod : modules) mod->physicalize(b);
+    return;
+    for(auto mod : modules) mod->physicalize(b); // not thread safe!
 }

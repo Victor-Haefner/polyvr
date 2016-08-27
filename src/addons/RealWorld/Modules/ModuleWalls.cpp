@@ -70,7 +70,7 @@ void ModuleWalls::physicalize(bool b) {
     //for (auto mesh : meshes);
 }
 
-ModuleWalls::ModuleWalls() : BaseModule("ModuleWall") {
+ModuleWalls::ModuleWalls(bool t, bool p) : BaseModule("ModuleWall", t,p) {
     // create List with materials
     fillWallList();
 }

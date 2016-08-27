@@ -16,7 +16,7 @@
 
 using namespace OSG;
 
-ModuleBuildings::ModuleBuildings() : BaseModule("ModuleBuildings") {
+ModuleBuildings::ModuleBuildings(bool t, bool p) : BaseModule("ModuleBuildings", t,p) {
     b_mat = VRMaterial::create("Buildings");
     b_mat->setTexture("world/textures/Buildings.png", false);
     b_mat->setAmbient(Color3f(0.7, 0.7, 0.7)); //light reflection in all directions

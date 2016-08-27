@@ -24,7 +24,7 @@ class ModuleWalls: public BaseModule {
 
         void physicalize(bool b);
 
-        ModuleWalls();
+        ModuleWalls(bool t, bool p);
 
     private:
         vector<WallMaterial*> wallList;

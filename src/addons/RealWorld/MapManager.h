@@ -7,6 +7,7 @@
 #include <OpenSG/OSGVector.h>
 #include "MapGrid.h"
 #include "core/objects/VRObjectFwd.h"
+#include "core/utils/VRFunctionFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -25,8 +26,19 @@ class MapManager {
         World* world = 0;
         vector<BaseModule*> modules;
         VRObjectPtr root;
+        VRThreadCb worker;
 
         map<string, MapGrid::Box> loadedBoxes;
+
+        struct job {
+            MapGrid::Box b;
+            BaseModule* mod = 0;
+            job(MapGrid::Box& b, BaseModule* m) : b(b), mod(m) {}
+        };
+
+        list<job> jobs;
+
+        void work(VRThreadWeakPtr tw);
 
     public:
         MapManager(Vec2f position, MapCoordinator* mapCoordinator, World* world, VRObjectPtr root);

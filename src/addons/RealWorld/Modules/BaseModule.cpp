@@ -3,8 +3,10 @@
 
 using namespace OSG;
 
-BaseModule::BaseModule(string name) {
+BaseModule::BaseModule(string name, bool t, bool p) {
     this->name = name;
+    doPhysicalize = p;
+    useThreads = t;
     root = VRObject::create(name+"Root");
     root->setPersistency(0);
 }

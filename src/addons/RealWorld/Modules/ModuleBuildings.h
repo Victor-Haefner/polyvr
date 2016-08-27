@@ -27,7 +27,7 @@ class ModuleBuildings: public BaseModule {
         void makeBuildingGeometry(Building* b); /** create one Building **/
 
     public:
-        ModuleBuildings();
+        ModuleBuildings(bool t, bool p);
 
         virtual void loadBbox(MapGrid::Box bbox);
         virtual void unloadBbox(MapGrid::Box bbox);

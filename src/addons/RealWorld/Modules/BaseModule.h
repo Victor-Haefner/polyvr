@@ -9,13 +9,17 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class BaseModule {
+    public:
+        bool useThreads = false;
+        bool doPhysicalize = false;
+
     protected:
         string name;
         VRObjectPtr root;
         bool physicalized = false;
 
     public:
-        BaseModule(string name);
+        BaseModule(string name, bool t, bool p);
 
         string getName();
         VRObjectPtr getRoot();

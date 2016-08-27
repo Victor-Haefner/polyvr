@@ -62,14 +62,14 @@ TrafficSimulation* RealWorld::getTrafficSimulation() { return trafficSimulation;
 
 void RealWorld::update(Vec3f pos) { mapManager->updatePosition( Vec2f(pos[0], pos[2]) ); }
 
-void RealWorld::enableModule(string mod, bool b) {
+void RealWorld::enableModule(string mod, bool b, bool t, bool p) {
     if (b) {
-        if (mod == "Ground") mapManager->addModule(new ModuleFloor());
-        if (mod == "Streets") mapManager->addModule(new ModuleStreets());
-        if (mod == "Buildings") mapManager->addModule(new ModuleBuildings());
-        if (mod == "Walls") mapManager->addModule(new ModuleWalls());
-        if (mod == "Terrain") mapManager->addModule(new ModuleTerrain());
-        if (mod == "Trees") mapManager->addModule(new ModuleTree());
+        if (mod == "Ground") mapManager->addModule(new ModuleFloor(t,p));
+        if (mod == "Streets") mapManager->addModule(new ModuleStreets(t,p));
+        if (mod == "Buildings") mapManager->addModule(new ModuleBuildings(t,p));
+        if (mod == "Walls") mapManager->addModule(new ModuleWalls(t,p));
+        if (mod == "Terrain") mapManager->addModule(new ModuleTerrain(t,p));
+        if (mod == "Trees") mapManager->addModule(new ModuleTree(t,p));
         if (mod == "Traffic") {
             auto tsim = new ModuleTraffic();
             trafficSimulation = tsim->getTrafficSimulation();

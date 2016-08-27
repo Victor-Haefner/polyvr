@@ -27,7 +27,7 @@ struct StreetType {
 
 class ModuleStreets: public BaseModule {
     public:
-        ModuleStreets();
+        ModuleStreets(bool t, bool p);
 
         virtual void loadBbox(MapGrid::Box bbox);
         virtual void unloadBbox(MapGrid::Box bbox);

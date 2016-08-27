@@ -143,7 +143,7 @@ void VRGeometry::create(int type, vector<Vec3f> pos, vector<Vec3f> norms, vector
     Mat->setAmbient(Color3f(0.4, 0.4, 0.2));
     Mat->setSpecular(Color3f(0.1, 0.1, 0.1));
 
-    GeometryMTRecPtr geo = Geometry::create();
+    GeometryRecPtr geo = Geometry::create();
     geo->setTypes(Type);
     geo->setLengths(Length);
     geo->setIndices(Indices);

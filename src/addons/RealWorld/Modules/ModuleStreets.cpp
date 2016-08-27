@@ -25,7 +25,7 @@
 
 using namespace OSG;
 
-ModuleStreets::ModuleStreets() : BaseModule("ModuleStreets") {
+ModuleStreets::ModuleStreets(bool t, bool p) : BaseModule("ModuleStreets", t,p) {
     //this->streetHeight = Config::STREET_HEIGHT + Config::GROUND_LVL;
 
     // create material

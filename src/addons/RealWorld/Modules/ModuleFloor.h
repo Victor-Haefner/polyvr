@@ -16,8 +16,10 @@ class ModuleFloor : public BaseModule {
 
         VRGeometryPtr makeSubQuadGeometry(Vec2f pointA, Vec2f pointB);
 
+        void initMaterial();
+
     public:
-        ModuleFloor();
+        ModuleFloor(bool t, bool p);
 
         virtual void loadBbox(MapGrid::Box bbox);
         virtual void unloadBbox(MapGrid::Box bbox);

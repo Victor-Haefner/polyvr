@@ -18,7 +18,7 @@ using namespace std;
             this->calcSegPoints_ = false;
         }
 
-        void generateRandomTree(){
+        void generateRandomTree() {
             //to do
         }
     };

@@ -8,7 +8,7 @@
 using namespace OSG;
 
 
-ModuleTraffic::ModuleTraffic() : BaseModule("ModuleTraffic") {
+ModuleTraffic::ModuleTraffic() : BaseModule("ModuleTraffic", false, false) {
     auto mc = RealWorld::get()->getCoordinator();
     this->simulation = new TrafficSimulation(mc);
 }
