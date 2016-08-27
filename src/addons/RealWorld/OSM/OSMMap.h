@@ -8,7 +8,7 @@
 
 #include "OSMNode.h"
 
-namespace xmlpp { class Node; }
+namespace xmlpp { class Element; }
 using namespace std;
 
 class OSMMap {
@@ -30,11 +30,9 @@ class OSMMap {
         static OSMMap* loadMap(string filepath);
 
     private:
-        void readNode(xmlpp::Node* node);
-        void readWay(xmlpp::Node* node);
-        void readBounds(xmlpp::Node* node);
-        void readTag(xmlpp::Node* node, map<string, string>& tags);
-        void readNodeRef(xmlpp::Node* node, vector<string>& nodeRefs);
+        void readNode(xmlpp::Element* element);
+        void readWay(xmlpp::Element* element);
+        void readBounds(xmlpp::Element* element);
 };
 
 #endif // SIMPLEMAP_H

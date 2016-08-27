@@ -58,7 +58,7 @@ VRGeometryPtr ModuleFloor::makeSubQuadGeometry(Vec2f pointA, Vec2f pointB) {
             Vec3f v3 = Vec3f(tempX2, mapC->getElevation(Vec2f(tempX2, tempY2)), tempY2);
             Vec3f v4 = Vec3f(tempX2, mapC->getElevation(Vec2f(tempX2, tempY1)), tempY1);
 
-            Vec3f normal = MapCoordinator::getPositioveNormal3D(v2-v1, v3-v1);
+            Vec3f normal = MapCoordinator::getSurfaceNormal(v2-v1, v3-v1);
 
             inds.push_back(inds.size());
             norms.push_back(normal);
@@ -75,7 +75,7 @@ VRGeometryPtr ModuleFloor::makeSubQuadGeometry(Vec2f pointA, Vec2f pointB) {
             pos.push_back(v3);
             texs.push_back(Vec2f((x1-tempX2), (y1-tempY2)));
 
-            normal = MapCoordinator::getPositioveNormal3D(v3-v4, v4-v1);
+            normal = MapCoordinator::getSurfaceNormal(v3-v4, v4-v1);
 
             inds.push_back(inds.size());
             norms.push_back(normal);

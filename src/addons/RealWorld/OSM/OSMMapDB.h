@@ -5,11 +5,10 @@
 
 using namespace std;
 
-class OSMMapDB {
-    public:
-        map<string, OSMMap*> maps;
+struct OSMMapDB {
+    map<string, OSMMap*> maps;
 
-        OSMMap* getMap(string posStr);
+    OSMMap* getMap(string posStr);
 };
 
 #endif // OSMMAPDB_H

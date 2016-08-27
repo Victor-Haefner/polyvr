@@ -59,6 +59,7 @@ MapManager* RealWorld::getManager() { return mapManager; }
 World* RealWorld::getWorld() { return world; }
 OSMMapDB* RealWorld::getDB() { return mapDB; }
 TrafficSimulation* RealWorld::getTrafficSimulation() { return trafficSimulation; }
+
 void RealWorld::update(Vec3f pos) { mapManager->updatePosition( Vec2f(pos[0], pos[2]) ); }
 
 void RealWorld::enableModule(string mod, bool b) {
@@ -82,7 +83,6 @@ void RealWorld::enableModule(string mod, bool b) {
 void RealWorld::physicalize(bool b) {
     if (physicalized == b) return;
     physicalized = b;
-
     mapManager->physicalize(b);
 }
 

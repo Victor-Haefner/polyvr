@@ -25,11 +25,8 @@ class MapCoordinator {
         float getGridSize();
         float getElevation(float x, float y);
         float getElevation(Vec2f v);
-
         Vec2f getRealBboxPosition(Vec2f worldPosition);
-
-        static Vec3f getNormal3D(Vec3f v1, Vec3f v2);
-        static Vec3f getPositioveNormal3D(Vec3f v1, Vec3f v2);
+        static Vec3f getSurfaceNormal(Vec3f v1, Vec3f v2);
 };
 
 OSG_END_NAMESPACE;

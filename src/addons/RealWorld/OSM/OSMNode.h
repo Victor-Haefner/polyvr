@@ -6,25 +6,29 @@
 #include <map>
 
 using namespace std;
+namespace xmlpp { class Element; }
 
-class OSMNode {
-    public:
-        string id;
-        double lat;
-        double lon;
+struct OSMBase {
+    string id;
+    map<string, string> tags;
 
-        map<string, string> tags;
-
-        OSMNode(string id, double lat, double lon);
+    OSMBase(string id);
+    OSMBase(xmlpp::Element* e);
 };
 
-class OSMWay {
-    public:
-        string id;
-        map<string, string> tags;
-        vector<string> nodeRefs;
+struct OSMNode : OSMBase {
+    double lat = 0;
+    double lon = 0;
 
-        OSMWay(string id);
+    OSMNode(string id, double lat, double lon);
+    OSMNode(xmlpp::Element* e);
+};
+
+struct OSMWay : OSMBase {
+    vector<string> nodeRefs;
+
+    OSMWay(string id);
+    OSMWay(xmlpp::Element* e);
 };
 
 #endif // OSMNODE_H
