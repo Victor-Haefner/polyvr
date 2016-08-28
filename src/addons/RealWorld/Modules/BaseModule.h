@@ -11,12 +11,11 @@ using namespace std;
 class BaseModule {
     public:
         bool useThreads = false;
-        bool doPhysicalize = false;
 
     protected:
         string name;
         VRObjectPtr root;
-        bool physicalized = false;
+        bool doPhysicalize = false;
 
     public:
         BaseModule(string name, bool t, bool p);
@@ -26,7 +25,6 @@ class BaseModule {
 
         virtual void loadBbox(MapGrid::Box bbox) = 0;
         virtual void unloadBbox(MapGrid::Box bbox) = 0;
-        virtual void physicalize(bool b) = 0;
 };
 
 OSG_END_NAMESPACE;

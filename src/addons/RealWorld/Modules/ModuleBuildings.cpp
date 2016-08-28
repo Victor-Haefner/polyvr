@@ -27,9 +27,6 @@ ModuleBuildings::ModuleBuildings(bool t, bool p) : BaseModule("ModuleBuildings",
     b_mat->readVertexShader(wdir+"/shader/TexturePhong/phong.vp");
     b_mat->readFragmentShader(wdir+"/shader/TexturePhong/phong_building.fp"); //Fragment Shader
     b_mat->setMagMinFilter("GL_LINEAR", "GL_NEAREST_MIPMAP_NEAREST");
-
-    b_geo_d = new GeometryData();
-    r_geo_d = new GeometryData();
 }
 
 void ModuleBuildings::loadBbox(MapGrid::Box bbox) {
@@ -37,6 +34,9 @@ void ModuleBuildings::loadBbox(MapGrid::Box bbox) {
     auto mc = RealWorld::get()->getCoordinator();
     OSMMap* osmMap = mapDB->getMap(bbox.str);
     if (!osmMap) return;
+
+    GeometryData b_geo_d;
+    GeometryData r_geo_d;
 
     VRGeometryPtr b_geo = VRGeometry::create("Buildings");
     VRGeometryPtr r_geo = VRGeometry::create("Roofs");
@@ -61,23 +61,23 @@ void ModuleBuildings::loadBbox(MapGrid::Box bbox) {
 
         // generate mesh
         b->makeClockwise();
-        makeBuildingGeometry(b);
+        makeBuildingGeometry(&b_geo_d, &r_geo_d, b);
     }
 
-    b_geo->create(GL_QUADS, b_geo_d->pos, b_geo_d->norms, b_geo_d->inds, b_geo_d->texs);
-    b_geo->setTexCoords(b_geo_d->texs2, 1);
+    b_geo->create(GL_QUADS, b_geo_d.pos, b_geo_d.norms, b_geo_d.inds, b_geo_d.texs);
+    b_geo->setTexCoords(b_geo_d.texs2, 1);
     b_geo->setMaterial(b_mat);
     b_geos[bbox.str] = b_geo;
-    b_geo_d->clear();
 
-    r_geo->create(GL_TRIANGLES, r_geo_d->pos, r_geo_d->norms, r_geo_d->inds, r_geo_d->texs);
+    r_geo->create(GL_TRIANGLES, r_geo_d.pos, r_geo_d.norms, r_geo_d.inds, r_geo_d.texs);
     //r_geo->setTexCoords(r_geo_d->texs2, 1);
     r_geo->setMaterial(b_mat);
     r_geos[bbox.str] = r_geo;
-    r_geo_d->clear();
 
-    b_geo->getPhysics()->setShape("Concave");
-    b_geo->getPhysics()->setPhysicalized(physicalized);
+    if (doPhysicalize) { // TODO: crash in threaded mode!!
+        b_geo->getPhysics()->setShape("Concave");
+        b_geo->getPhysics()->setPhysicalized(true);
+    }
 }
 
 void ModuleBuildings::unloadBbox(MapGrid::Box bbox) {
@@ -86,15 +86,7 @@ void ModuleBuildings::unloadBbox(MapGrid::Box bbox) {
     if (r_geos.count(id)) { r_geos[id]->destroy(); r_geos.erase(id); }
 }
 
-void ModuleBuildings::physicalize(bool b) {
-    physicalized = b;
-    for (auto g : b_geos) {
-        g.second->getPhysics()->setShape("Concave");
-        g.second->getPhysics()->setPhysicalized(b);
-    }
-}
-
-void ModuleBuildings::addBuildingWallLevel(Vec2f pos1, Vec2f pos2, int level, int bNum, float elevation) {
+void ModuleBuildings::addBuildingWallLevel(GeometryData* b_geo_d, Vec2f pos1, Vec2f pos2, int level, int bNum, float elevation) {
     srand(bNum); //seed for random windows
     float len = (pos2 - pos1).length();
     Vec2f wallDir = (pos2 - pos1);
@@ -180,7 +172,7 @@ Vec2f convRTC(float u, float v, Vec2f m) {
     return tc;
 }
 
-void ModuleBuildings::addBuildingRoof(Building* building, float height, float elevation){
+void ModuleBuildings::addBuildingRoof(GeometryData* r_geo_d, Building* building, float height, float elevation){
     //create && fill vector a with polygon corners
     Vector2dVector a;
     bool first = true;
@@ -228,7 +220,7 @@ void ModuleBuildings::addBuildingRoof(Building* building, float height, float el
 }
 
 /** create one Building **/
-void ModuleBuildings::makeBuildingGeometry(Building* b) {
+void ModuleBuildings::makeBuildingGeometry(GeometryData* b_geo_d, GeometryData* r_geo_d, Building* b) {
     auto mc = RealWorld::get()->getCoordinator();
     int bNum = toInt(b->id);
     int height = bNum % Config::get()->MAX_FLOORS + 2;
@@ -241,9 +233,9 @@ void ModuleBuildings::makeBuildingGeometry(Building* b) {
 
     for(auto side : b->getSides()) {
         for (int i=0; i<height; i++) {
-            addBuildingWallLevel(side[0], side[1], i, bNum, minElevation);
+            addBuildingWallLevel(b_geo_d, side[0], side[1], i, bNum, minElevation);
         }
     }
 
-    addBuildingRoof(b, height, minElevation);
+    addBuildingRoof(r_geo_d, b, height, minElevation);
 }

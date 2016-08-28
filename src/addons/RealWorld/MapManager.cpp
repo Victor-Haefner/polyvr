@@ -63,15 +63,13 @@ void MapManager::updatePosition(Vec2f pos) {
         if (!loadedBoxes.count( b.str )) toLoad.push_back(b);
     }
 
+    //cout << "MapManager::updatePosition " << pos << " load " << toLoad.size() << " unload " << toUnload.size() << endl;
+
     for(auto b : toLoad) {
         loadedBoxes[b.str] = b;
         for(auto mod : modules) {
-            if (!mod->useThreads) {
-                mod->loadBbox(b);
-                mod->physicalize(mod->doPhysicalize);
-            } else {
-                jobs.push_back(job(b, mod));
-            }
+            if (!mod->useThreads) mod->loadBbox(b);
+            else jobs.push_back(job(b, mod));
         }
     }
 
@@ -79,9 +77,4 @@ void MapManager::updatePosition(Vec2f pos) {
         loadedBoxes.erase(b.str);
         for(auto mod : modules) mod->unloadBbox(b);
     }
-}
-
-void MapManager::physicalize(bool b) {
-    return;
-    for(auto mod : modules) mod->physicalize(b); // not thread safe!
 }

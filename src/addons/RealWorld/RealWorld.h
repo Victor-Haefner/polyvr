@@ -30,8 +30,6 @@ class RealWorld {
         static Altitude altitude; // constructor runs once, single instance
         static RealWorld* singelton;
 
-        bool physicalized = false;
-
     public:
         RealWorld(OSG::VRObjectPtr root);
         ~RealWorld();
@@ -40,7 +38,6 @@ class RealWorld {
 
         void enableModule(string mod, bool b, bool t, bool p);
         void update(OSG::Vec3f pos);
-        void physicalize(bool b);
 
         TrafficSimulation* getTrafficSimulation();
         MapCoordinator* getCoordinator();

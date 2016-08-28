@@ -51,8 +51,7 @@ PyMemberDef VRPyRealWorld::members[] = {
 PyMethodDef VRPyRealWorld::methods[] = {
     {"init", (PyCFunction)VRPyRealWorld::initWorld, METH_VARARGS, "Init real obj - init(root)" },
     {"update", (PyCFunction)VRPyRealWorld::update, METH_VARARGS, "Update real obj - update([x,y,z])" },
-    {"physicalize", (PyCFunction)VRPyRealWorld::physicalize, METH_VARARGS, "Physicalize real obj - physicalize(bool)" },
-    {"enableModule", (PyCFunction)VRPyRealWorld::enableModule, METH_VARARGS, "Enable a module - enableModule(str)" },
+    {"enableModule", (PyCFunction)VRPyRealWorld::enableModule, METH_VARARGS, "Enable a module - enableModule(str, bool threaded, bool physicalized)" },
     {"disableModule", (PyCFunction)VRPyRealWorld::disableModule, METH_VARARGS, "Disable a module - disableModule(str)" },
     {NULL}  /* Sentinel */
 };
@@ -67,12 +66,6 @@ PyObject* VRPyRealWorld::initWorld(VRPyRealWorld* self, PyObject* args) {
 PyObject* VRPyRealWorld::update(VRPyRealWorld* self, PyObject* args) {
     if (self->obj == 0) { PyErr_SetString(err, "VRPyRealWorld::physicalize, obj is invalid"); return NULL; }
     self->obj->update( parseVec3f(args) );
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRPyRealWorld::physicalize(VRPyRealWorld* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyRealWorld::physicalize, obj is invalid"); return NULL; }
-    self->obj->physicalize( parseBool(args) );
     Py_RETURN_TRUE;
 }
 

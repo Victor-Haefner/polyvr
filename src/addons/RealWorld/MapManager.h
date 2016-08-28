@@ -45,7 +45,6 @@ class MapManager {
 
         void addModule(BaseModule* mod);
         void updatePosition(Vec2f worldPosition);
-        void physicalize(bool b);
 };
 
 OSG_END_NAMESPACE;

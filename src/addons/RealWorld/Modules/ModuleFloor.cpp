@@ -112,16 +112,12 @@ void ModuleFloor::loadBbox(MapGrid::Box bbox) {
     root->addChild(geom);
 
     meshes[bbox.str] = geom;
-    physicalize(doPhysicalize); // TODO: not thread safe yet!
+    if (doPhysicalize) {
+        geom->getPhysics()->setShape("Concave");
+        geom->getPhysics()->setPhysicalized(true);
+    }
 }
 
 void ModuleFloor::unloadBbox(MapGrid::Box bbox) {
     meshes.erase(bbox.str);
-}
-
-void ModuleFloor::physicalize(bool b) {
-    for (auto mesh : meshes) {
-        mesh.second->getPhysics()->setShape("Concave");
-        mesh.second->getPhysics()->setPhysicalized(b);
-    }
 }

@@ -17,21 +17,18 @@ class ModuleBuildings: public BaseModule {
     private:
         map<string, VRGeometryPtr> b_geos;
         map<string, VRGeometryPtr> r_geos;
-        GeometryData* b_geo_d = 0;
-        GeometryData* r_geo_d = 0;
         VRMaterialPtr b_mat = 0;
 
         void createBuildingPart(BuildingData* bData, string part, string filePath);
-        void addBuildingWallLevel(Vec2f pos1, Vec2f pos2, int level, int bNum, float elevation);
-        void addBuildingRoof(Building* building, float height, float elevation);
-        void makeBuildingGeometry(Building* b); /** create one Building **/
+        void addBuildingWallLevel(GeometryData* b_geo_d, Vec2f pos1, Vec2f pos2, int level, int bNum, float elevation);
+        void addBuildingRoof(GeometryData* r_geo_d, Building* building, float height, float elevation);
+        void makeBuildingGeometry(GeometryData* b_geo_d, GeometryData* r_geo_d, Building* b); /** create one Building **/
 
     public:
         ModuleBuildings(bool t, bool p);
 
         virtual void loadBbox(MapGrid::Box bbox);
         virtual void unloadBbox(MapGrid::Box bbox);
-        void physicalize(bool b);
 };
 
 OSG_END_NAMESPACE;

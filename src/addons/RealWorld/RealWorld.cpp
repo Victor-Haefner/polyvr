@@ -80,11 +80,5 @@ void RealWorld::enableModule(string mod, bool b, bool t, bool p) {
     }
 }
 
-void RealWorld::physicalize(bool b) {
-    if (physicalized == b) return;
-    physicalized = b;
-    mapManager->physicalize(b);
-}
-
 
 
