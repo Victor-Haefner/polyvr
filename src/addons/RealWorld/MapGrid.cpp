@@ -30,11 +30,12 @@ bool MapGrid::has(Box& box) {
 }
 
 void MapGrid::update() {
+    int d2 = dim*0.5;
     for (int i=0; i<dim; i++) {
         for (int j=0; j<dim; j++) {
             int k = i*dim+j;
-            int x = i-dim*0.5;
-            int y = j-dim*0.5;
+            int x = i-d2;
+            int y = j-d2;
             grid[k] = Box(position + Vec2f(size*x, size*y), size);
         }
     }

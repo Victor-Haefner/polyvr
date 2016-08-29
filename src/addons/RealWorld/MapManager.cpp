@@ -67,8 +67,8 @@ void MapManager::updatePosition(Vec2f pos) {
         }
     }
 
-    for (auto b : toUnload) {
+    /*for (auto b : toUnload) { // segfaulting when threaded
         loadedBoxes.erase(b.str);
         for(auto mod : modules) mod->unloadBbox(b);
-    }
+    }*/
 }
