@@ -97,7 +97,7 @@ void VRTransform::updatePhysics() {
 void VRTransform::updateTransformation() {
     Matrix m;
     dm->read(m);
-    t->trans->setMatrix(m);
+    if (t->trans) t->trans->setMatrix(m);
 }
 
 void VRTransform::reg_change() {

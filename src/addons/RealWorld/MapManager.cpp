@@ -41,12 +41,6 @@ void MapManager::addModule(BaseModule* mod) {
     root->addChild(mod->getRoot());
 }
 
-//void MapManager::load(BaseModule* mod, MapGrid::Box b, VRThreadWeakPtr tw) {
-vector<VRThreadCb> threads;
-void load(BaseModule* mod, MapGrid::Box b, VRThreadWeakPtr tw) {
-
-}
-
 void MapManager::updatePosition(Vec2f pos) {
     position = pos;
     Vec2f bboxPosition = mapCoordinator->getRealBboxPosition(pos);
