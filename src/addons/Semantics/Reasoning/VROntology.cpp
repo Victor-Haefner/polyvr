@@ -1,17 +1,11 @@
 #include "VROntology.h"
 #include "VRReasoner.h"
 #include "VRProperty.h"
+#include "VROWLImport.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRSemanticManager.h"
-
-/* no compiling?
-    install the raptor2 ubuntu package for rdfxml parsing
-    sudo apt-get install libraptor2-dev
-*/
-
-#include <raptor2/raptor2.h> // http://librdf.org/raptor/api/
 #include <iostream>
 
 using namespace OSG;
@@ -220,190 +214,9 @@ string VROntology::toString() {
     return res;
 }
 
-// RDF import
-
-struct RDFStatement {
-    string type;
-    string graph;
-    string object;
-    string predicate;
-    string subject;
-
-    string toString(raptor_term* t) {
-        if (t == 0) return "";
-        switch(t->type) {
-            case RAPTOR_TERM_TYPE_LITERAL:
-                return string( (const char*)t->value.literal.string );
-            case RAPTOR_TERM_TYPE_BLANK:
-                return "BLANK";
-            case RAPTOR_TERM_TYPE_UNKNOWN:
-                return "UNKNOWN";
-            case RAPTOR_TERM_TYPE_URI:
-                auto uri = raptor_uri_as_string( t->value.uri );
-                if (!uri) return "";
-                string s( (const char*)uri );
-                auto ss = splitString(s, '#');
-                //raptor_free_memory(uri);
-                return ss[ss.size()-1];
-        }
-        return "";
-    }
-
-    RDFStatement(raptor_statement* s) {
-        graph = toString(s->graph);
-        object = toString(s->object);
-        predicate = toString(s->predicate);
-        subject = toString(s->subject);
-    }
-
-    string toString() {
-        return "Statement:\n type: "+type+"\n object: "+object+"\n predicate: "+predicate+"\n subject: "+subject;
-    }
-};
-
-struct RDFdata {
-    map<string, vector<RDFStatement> > subjects;
-    map<string, map<string, string> > objects;
-};
-
-void print_triple(void* data, raptor_statement* rs) {
-    auto RDFSubjects = (RDFdata*)data;
-    auto s = RDFStatement(rs);
-    RDFSubjects->subjects[s.subject].push_back(s);
-    //cout << s.toString() << endl;
-    RDFSubjects->objects[s.subject][s.object] = s.predicate;
-}
-
-void postProcessRDFSubjects(VROntologyPtr onto, RDFdata& data) {
-    map<string, VRConceptPtr> concepts;
-    map<string, VREntityPtr> entities;
-    map<string, VRPropertyPtr> datproperties;
-    map<string, VRPropertyPtr> objproperties;
-    map<string, VRPropertyPtr> annproperties;
-
-    map<string, vector<RDFStatement> > tmp;
-    map<string, vector<RDFStatement> > stack = data.subjects;
-
-    concepts["Thing"] = onto->getConcept("Thing");
-
-    auto postpone = [&](RDFStatement s) {
-        tmp[s.subject].push_back(s);
-    };
-
-    int maxItr = 5;
-    for( int i=0; i<maxItr && stack.size(); i++) {
-        for (auto& d : stack) {
-            string subject = d.first;
-            for (auto& statement : d.second) {
-                string object = statement.object;
-                string predicate = statement.predicate;
-                string type = statement.type;
-
-                auto statprint = [&]() {
-                    cout << statement.toString() << endl;
-                    cout << concepts.count(subject) << entities.count(subject) << datproperties.count(subject) << objproperties.count(subject) << annproperties.count(subject) << endl;
-                    cout << concepts.count(predicate) << entities.count(predicate) << datproperties.count(predicate) << objproperties.count(predicate) << annproperties.count(predicate) << endl;
-                    cout << concepts.count(object) << entities.count(object) << datproperties.count(object) << objproperties.count(object) << annproperties.count(object) << endl;
-                };
-
-                if (predicate == "type") {
-                    if (object == "Ontology") continue;
-                    if (object == "Class") { concepts[subject] = VRConcept::create(subject, onto); continue; }
-                    if (object == "NamedIndividual") { entities[subject] = VREntity::create(subject); continue; }
-                    if (object == "DatatypeProperty") { datproperties[subject] = VRProperty::create(subject); continue; }
-                    if (object == "ObjectProperty") { objproperties[subject] = VRProperty::create(subject); continue; }
-                    if (object == "AnnotationProperty") { annproperties[subject] = VRProperty::create(subject); continue; }
-                }
-
-                if (type == "") { // resolve the subject type of the statement
-                    if (concepts.count(subject)) statement.type = "concept";
-                    if (entities.count(subject)) statement.type = "entity";
-                    if (datproperties.count(subject)) statement.type = "dprop";
-                    if (objproperties.count(subject)) statement.type = "oprop";
-                    if (annproperties.count(subject)) statement.type = "aprop";
-                    if (statement.type == "") { postpone(statement); continue; }
-                }
-
-                if (predicate == "type" && type == "entity" && concepts.count(object)) { // Entity(subject) is of type concept(object)
-                    entities[subject]->setConcept( concepts[object] );
-                    continue;
-                }
-
-                if (predicate == "subClassOf" && type == "concept" && concepts.count(object)) { // Concept(subject) is a sub concept of concept(object)
-                    concepts[object]->append( concepts[subject] );
-                    continue;
-                }
-
-                if (predicate == "subPropertyOf") { continue; }
-                if (predicate == "inverseOf") { continue; }
-                if (predicate == "comment" || predicate == "seeAlso") { continue; }
-
-                if (predicate == "range") { // property(subject) has type(object)
-                    if (type == "oprop") { objproperties[subject]->setType(object); continue; }
-                    if (type == "dprop") { datproperties[subject]->setType(object); continue; }
-                    if (type == "aprop") { annproperties[subject]->setType(object); continue; }
-                }
-
-                if (predicate == "domain" && concepts.count(object)) { // property(subject) belongs to concept(object)
-                    if (type == "oprop") { concepts[object]->addProperty( objproperties[subject] ); continue; }
-                    if (type == "dprop") { concepts[object]->addProperty( datproperties[subject] ); continue; }
-                    if (type == "aprop") { concepts[object]->addAnnotation( annproperties[subject] ); continue; }
-                }
-
-                if (annproperties.count(predicate)) { // concept(subject) or entity(subject) have an annotation(predicate) with value(object)
-                    if (type == "concept" && annproperties[predicate]->type != "") {
-                        auto p = annproperties[predicate]->copy(); // copy annotations
-                        p->value = object;
-                        concepts[subject]->addAnnotation(p);
-                        continue;
-                    }
-                    if (type == "entity" && entities[subject]->getConcept()->getProperty(predicate)) {
-                        entities[subject]->set(predicate, object); continue;
-                    }
-                }
-
-                if (objproperties.count(predicate)) { // concept(subject) or entity(subject) have a property(predicate) with value(object)
-                    if (type == "concept") { concepts[subject]->addProperty(predicate, object); continue; }
-                    if (type == "entity" && entities.count(object)) {
-                        auto pv = entities[subject]->getProperties(predicate);
-                        if (pv.size()) { pv[0]->value = object; continue; }
-                        auto p = entities[subject]->getConcept()->getProperty(predicate);
-                        if (p && p->type != "") { entities[subject]->set(predicate, object); continue; }
-                    }
-                }
-
-                //statprint();
-                postpone(statement);
-            }
-        }
-        stack = tmp;
-        tmp.clear();
-        cout << "STACK SWAP " << i << " " << stack.size() << endl;
-    }
-
-    for (auto c : concepts) onto->addConcept(c.second);
-    for (auto e : entities) onto->addInstance(e.second);
-    //cout << onto->toString() << endl;
-}
-
 void VROntology::open(string path) {
-    raptor_world* world = raptor_new_world();
-    raptor_parser* rdf_parser = raptor_new_parser(world, "rdfxml");
-    unsigned char* uri_string = raptor_uri_filename_to_uri_string(path.c_str());
-    raptor_uri* uri = raptor_new_uri(world, uri_string);
-    raptor_uri* base_uri = raptor_uri_copy(uri);
-
-    RDFdata RDFSubjects;
-    raptor_parser_set_statement_handler(rdf_parser, &RDFSubjects, print_triple);
-    raptor_parser_parse_file(rdf_parser, uri, base_uri);
-    raptor_free_parser(rdf_parser);
-
-    raptor_free_uri(base_uri);
-    raptor_free_uri(uri);
-    raptor_free_memory(uri_string);
-    raptor_free_world(world);
-
-    postProcessRDFSubjects(shared_from_this(), RDFSubjects);
+    VROWLImport importer;
+    importer.load(shared_from_this(), path);
 }
 
 void VROntology::addModule(string mod) {

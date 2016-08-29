@@ -97,6 +97,8 @@ void VREntityWidget::on_select_property() {
 void VREntityWidget::update() {
     Glib::RefPtr<Gtk::TreeStore> treestore = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic( treeview->get_model() );
     treestore->clear();
+    if (!entity) return;
+    if (!entity->getConcept()) return;
 
     for (auto cp : entity->getConcept()->getProperties()) {
         Gtk::TreeModel::iterator i = treestore->append();

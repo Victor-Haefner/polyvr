@@ -438,6 +438,8 @@
 		<Unit filename="src/addons/Semantics/Reasoning/VRConcept.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VREntity.cpp" />
 		<Unit filename="src/addons/Semantics/Reasoning/VREntity.h" />
+		<Unit filename="src/addons/Semantics/Reasoning/VROWLImport.cpp" />
+		<Unit filename="src/addons/Semantics/Reasoning/VROWLImport.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROntology.cpp" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROntology.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROntologyLibrary.cpp" />
