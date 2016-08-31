@@ -96,6 +96,8 @@ void VRGuiSemantics::on_del_clicked() {
     auto mgr = getManager();
     if (!mgr) return;
     mgr->remOntology(current);
+    clearCanvas();
+    updateOntoList();
 }
 
 void VRGuiSemantics::on_diag_load_clicked() {
@@ -148,8 +150,10 @@ void VRGuiSemantics::updateLayout() {
             }
         }
 
-        if (e && e->entity->getConcept()) {
-            g.connect(widgetIDs[e->entity->getConcept()->ID], widgetIDs[w.first], VRGraphLayout::layout::HIERARCHY);
+        if (e) {
+            for (auto c : e->entity->getConcepts()) {
+                g.connect(widgetIDs[c->ID], widgetIDs[w.first], VRGraphLayout::layout::HIERARCHY);
+            }
         }
 
         if (r) {
@@ -204,7 +208,7 @@ void VRGuiSemantics::updateCanvas() {
             auto ew = VREntityWidgetPtr( new VREntityWidget(this, canvas, e.second) );
             widgets[ew->ID()] = ew;
             ew->move(Vec2f(150,150));
-            if (auto c = e.second->getConcept()) connect(widgets[c->ID], ew, "#FFEE00");
+            for ( auto c : e.second->getConcepts() ) connect(widgets[c->ID], ew, "#FFEE00");
         }
 
         for (auto r : current->rules) {

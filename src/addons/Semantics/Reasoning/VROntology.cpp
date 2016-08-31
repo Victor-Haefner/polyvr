@@ -30,6 +30,8 @@ VROntologyPtr VROntology::create(string name) {
     return o;
 }
 
+VROntologyPtr VROntology::ptr() { return shared_from_this(); }
+
 void VROntology::setup() {
     vector<VRConceptPtr> cpts;
     thing->getDescendance(cpts);
@@ -38,7 +40,12 @@ void VROntology::setup() {
     auto insts = instances;
     instances.clear();
     for (auto& i : insts) {
-        i.second->concept = concepts[i.second->conceptName].lock(); // update concept
+        cout << "load entity " << i.second->getName() << " : ";
+        for (auto c : i.second->conceptNames) {
+            cout << c << " ";
+            i.second->addConcept( concepts[c].lock() ); // update concept
+        }
+        cout << endl;
         instances[i.second->ID] = i.second; // update ID mapping
     }
 
@@ -186,7 +193,7 @@ void VROntology::addInstance(VREntityPtr e) { instances[e->ID] = e; }
 
 VREntityPtr VROntology::addInstance(string name, string concept) {
     auto c = getConcept(concept);
-    auto e = VREntity::create(name, c);
+    auto e = VREntity::create(name, ptr(), c);
     addInstance(e);
     return e;
 }
@@ -199,9 +206,9 @@ VREntityPtr VROntology::getInstance(string instance) {
 vector<VREntityPtr> VROntology::getInstances(string concept) {
     vector<VREntityPtr> res;
     for (auto i : instances) {
-        auto c = i.second->getConcept();
-        if(c) { if(c->is_a(concept)) res.push_back(i.second); }
-        else cout << "VROntology::getInstances " << i.second->getName() << " has no concept!" << endl;
+        for (auto c : i.second->getConcepts()) {
+            if(c && c->is_a(concept)) { res.push_back(i.second); break; }
+        }
     }
     return res;
 }

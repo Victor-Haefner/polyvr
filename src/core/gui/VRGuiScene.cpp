@@ -274,7 +274,7 @@ void setLod(VRLodPtr lod) {
 void setEntity(VREntityPtr e) {
     setExpanderSensitivity("expander27", true);
 
-    setLabel("label145", e->getConcept()->getName());
+    setLabel("label145", e->getConceptList());
 
     Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("properties"));
     store->clear();
@@ -389,7 +389,7 @@ void setSGRow(Gtk::TreeModel::iterator itr, VRObjectPtr o) {
     auto e = o->getEntity();
 
     string name = o->getName();
-    if (e) name += "<sub><u><span foreground=\"blue\">" + e->getConcept()->getName() + "</span></u></sub>";
+    if (e) name += "<sub><u><span foreground=\"blue\">" + e->getConceptList() + "</span></u></sub>";
 
     Gtk::TreeStore::Row row = *itr;
     gtk_tree_store_set (tree_store->gobj(), row.gobj(), 0, name.c_str(), -1);

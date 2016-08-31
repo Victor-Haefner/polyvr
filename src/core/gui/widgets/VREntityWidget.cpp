@@ -81,9 +81,9 @@ void VREntityWidget::on_select_property() {
     int ID = row.get_value(cols.ID);
 
     VRPropertyPtr p = 0;
-    if (type == 0) p = entity->getConcept()->getProperty( row.get_value(cols.prop) );
+    if (type == 0) p = entity->getProperty( row.get_value(cols.prop) );
     if (type == 1) {
-        auto pv = entity->getProperties( row.get_value(cols.prop) );
+        auto pv = entity->getValues( row.get_value(cols.prop) );
         for (auto pi : pv) if (pi->ID == ID) { p = pi; break; }
     }
 
@@ -98,15 +98,14 @@ void VREntityWidget::update() {
     Glib::RefPtr<Gtk::TreeStore> treestore = Glib::RefPtr<Gtk::TreeStore>::cast_dynamic( treeview->get_model() );
     treestore->clear();
     if (!entity) return;
-    if (!entity->getConcept()) return;
 
-    for (auto cp : entity->getConcept()->getProperties()) {
+    for (auto cp : entity->getProperties()) {
         Gtk::TreeModel::iterator i = treestore->append();
         bool selected = selected_concept_property == cp;
         string color = selected ? "green" : "black";
         setPropRow(i, cp->getName(), cp->type, color, selected, cp->ID, 0);
 
-        for (auto ep : entity->getProperties(cp->getName())) {
+        for (auto ep : entity->getValues(cp->getName())) {
             selected = selected_entity_property == ep;
             color = selected ? "green" : "black";
             Gtk::TreeModel::iterator j = treestore->append(i->children());

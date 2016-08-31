@@ -11,7 +11,7 @@ using namespace OSG;
 Variable::Variable() {;}
 
 string Variable::toString() {
-    string s = value+"("+concept+"){";
+    string s = value+"(" + concept + "){";
     for (auto i : instances) s += i.second->getName()+",";
     if (instances.size() > 0) s.pop_back();
     s +="}[";
@@ -34,10 +34,10 @@ Variable::Variable(VROntologyPtr onto, string concept, string var) {
 
     if ( auto i = onto->getInstance(var) ) {
         instances[i->ID] = i; // found an instance with the right name
-        this->concept = i->getConcept()->getName();
+        this->concept = concept; // TODO: maybe the entity has a concept that inherits from the concept passed above?
         isAnonymous = false;
     } else { // get all instances of the required type
-            for (auto i : onto->getInstances(concept)) instances[i->ID] = i;
+        for (auto i : onto->getInstances(concept)) instances[i->ID] = i;
         if (instances.size() == 0) {
             auto i = onto->addInstance(var, concept);
             instances[i->ID] = i;
@@ -52,8 +52,6 @@ Variable::Variable(VROntologyPtr onto, string concept, string var) {
 
 Variable::Variable(VROntologyPtr onto, string val) {
     value = val;
-    concept = "var";
-    valid = true;
 }
 
 shared_ptr<Variable> Variable::create(VROntologyPtr onto, string concept, string var) { return shared_ptr<Variable>( new Variable(onto, concept, var) ); }
@@ -92,9 +90,9 @@ Context::Context(VROntologyPtr onto) {
 
     cout << "Init context:" << endl;
     for (auto i : onto->instances) {
-        if (!i.second->getConcept()) { cout << "Context::Context instance " << i.second->getName() << " has no concept!" << endl; continue; }
-        vars[i.second->getName()] = Variable::create( onto, i.second->getConcept()->getName(), i.second->getName() );
-        cout << " add instance " << i.second->getName() << " of concept " << i.second->getConcept()->getName() << endl;
+        if (i.second->getConcepts().size() == 0) { cout << "Context::Context instance " << i.second->getName() << " has no concepts!" << endl; continue; }
+        vars[i.second->getName()] = Variable::create( onto, i.second->getConcepts()[0]->getName(), i.second->getName() );
+        cout << " add instance " << i.second->toString() << endl;
     }
 
     for ( auto r : onto->getRules()) {

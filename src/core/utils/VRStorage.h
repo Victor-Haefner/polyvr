@@ -34,8 +34,11 @@ class VRStorage {
         template<typename T> void save_cb(T* t, string tag, xmlpp::Element* e);
         template<typename T> void save_on_cb(T* t, string tag, xmlpp::Element* e);
         template<typename T> void load_cb(T* t, string tag, xmlpp::Element* e);
-        template<typename T> void save_vec_cb(vector<std::shared_ptr<T> >* v, string tag, bool under, xmlpp::Element* e);
-        template<typename T> void load_vec_cb(vector<std::shared_ptr<T> >* v, string tag, bool under, xmlpp::Element* e);
+        template<typename T> void save_vec_cb(vector<T>* v, string tag, xmlpp::Element* e);
+        template<typename T> void load_vec_cb(vector<T>* v, string tag, xmlpp::Element* e);
+        template<typename T> void save_vec_on_cb(vector<T>* v, string tag, xmlpp::Element* e);
+        template<typename T> void save_obj_vec_cb(vector<std::shared_ptr<T> >* v, string tag, bool under, xmlpp::Element* e);
+        template<typename T> void load_obj_vec_cb(vector<std::shared_ptr<T> >* v, string tag, bool under, xmlpp::Element* e);
         template<typename T> void save_obj_cb(std::shared_ptr<T>* v, string tag, xmlpp::Element* e);
         template<typename T> void load_obj_cb(std::shared_ptr<T>* v, string tag, xmlpp::Element* e);
 
@@ -57,7 +60,8 @@ class VRStorage {
         template<typename T> void storeMap(string tag, map<string, std::shared_ptr<T> >* mt, bool under = false);
         template<typename T> void storeMap(string tag, map<int, T*>* mt, bool under = false);
         template<typename T> void storeMap(string tag, map<int, std::shared_ptr<T> >* mt, bool under = false);
-        template<typename To, typename T> void storeObjName(string tag, To* o, T* t);
+        template<typename T> void storeObjName(string tag, T* o, string* t);
+        template<typename T> void storeObjNames(string tag, vector<T>* o, vector<string>* t);
 
         void setStorageType(string t);
         void regStorageSetupFkt(VRUpdatePtr u);

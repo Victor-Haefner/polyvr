@@ -24,10 +24,10 @@ struct VPath {
 struct Variable {
     map<int, VREntityPtr> instances;
     string value;
-    string concept;
+    string concept = "var";
     bool isAssumption = false;
     bool isAnonymous = true;
-    bool valid = false;
+    bool valid = true;
 
     Variable();
 

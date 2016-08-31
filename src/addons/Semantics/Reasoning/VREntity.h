@@ -9,14 +9,20 @@ using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 struct VREntity : public VROntoID, public VRName {
-    VRConceptWeakPtr concept;
-    string conceptName;
+    vector<VRConceptWeakPtr> concepts;
+    vector<string> conceptNames;
     map<string, vector<VRPropertyPtr> > properties;
+    VROntologyWeakPtr ontology;
 
-    VREntity(string name, VRConceptPtr c = 0);
-    static VREntityPtr create(string name = "none", VRConceptPtr c = 0);
-    void setConcept(VRConceptPtr c);
-    VRConceptPtr getConcept();
+    VREntity(string name, VROntologyPtr o, VRConceptPtr c = 0);
+
+    static VREntityPtr create(string name = "none", VROntologyPtr o = 0, VRConceptPtr c = 0);
+    void addConcept(VRConceptPtr c);
+    vector<VRConceptPtr> getConcepts();
+    vector<string> getConceptNames();
+    VRPropertyPtr getProperty(string p);
+    vector<VRPropertyPtr> getProperties();
+    string getConceptList();
 
     void set(string name, string value);
     void setVector(string name, vector<string> value, string type);
@@ -24,7 +30,7 @@ struct VREntity : public VROntoID, public VRName {
     void rem(VRPropertyPtr);
     string toString();
 
-    vector<VRPropertyPtr> getProperties(string name = "");
+    vector<VRPropertyPtr> getValues(string name = "");
 
     vector<string> getAtPath(vector<string> path);
 

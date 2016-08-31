@@ -156,14 +156,14 @@ PyObject* VRPyEntity::toString(VRPyEntity* self) {
 }
 
 PyObject* VRPyEntity::getConcept(VRPyEntity* self) {
-    return VRPyConcept::fromSharedPtr( self->objPtr->getConcept() );
+    return VRPyConcept::fromSharedPtr( self->objPtr->getConcepts()[0] );
 }
 
 PyObject* VRPyEntity::getProperties(VRPyEntity* self, PyObject* args) {
     const char* prop = 0;
     if (! PyArg_ParseTuple(args, "|s:open", (char*)&prop)) return NULL;
     string pname; if (prop) pname = prop;
-    auto props = self->objPtr->getProperties(pname);
+    auto props = self->objPtr->getValues(pname);
     auto res = PyList_New(props.size());
     for (int i=0; i<props.size(); i++)
         PyList_SetItem(res, i, VRPyProperty::fromSharedPtr( props[i] ) );
