@@ -40,12 +40,7 @@ void VROntology::setup() {
     auto insts = instances;
     instances.clear();
     for (auto& i : insts) {
-        cout << "load entity " << i.second->getName() << " : ";
-        for (auto c : i.second->conceptNames) {
-            cout << c << " ";
-            i.second->addConcept( concepts[c].lock() ); // update concept
-        }
-        cout << endl;
+        for (auto c : i.second->conceptNames) i.second->addConcept( concepts[c].lock() ); // update concept
         instances[i.second->ID] = i.second; // update ID mapping
     }
 

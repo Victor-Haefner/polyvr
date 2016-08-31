@@ -68,10 +68,12 @@ VRPropertyPtr VRConcept::getProperty(int ID) {
     return 0;
 }
 
-VRPropertyPtr VRConcept::getProperty(string name) {
+VRPropertyPtr VRConcept::getProperty(string name, bool warn) {
     for (auto p : getProperties()) if (p->getName() == name) return p;
     for (auto p : annotations) if (p.second->getName() == name) return p.second;
-    cout << "Warning: property " << name << " of concept " << this->name << " not found!" << endl;
+    //cout << "recursive try " << name << " " << getName() << endl;
+    if (auto pr = parent.lock()) if (auto p = pr->getProperty(name, warn)) return p;
+    if (warn) cout << "Warning: property " << name << " of concept " << this->name << " not found!" << endl;
     return 0;
 }
 

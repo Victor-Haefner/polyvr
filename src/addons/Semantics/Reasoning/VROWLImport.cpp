@@ -51,10 +51,13 @@ void VROWLImport::clear() {
 
     annproperties["label"] = VRProperty::create("label");
     annproperties["comment"] = VRProperty::create("comment");
+    annproperties["label"]->type = "aprop";
+    annproperties["comment"]->type = "aprop";
 
     blacklist["subPropertyOf"] = 1;
     blacklist["inverseOf"] = 1;
     blacklist["disjointWith"] = 1;
+    blacklist["propertyDisjointWith"] = 1;
     blacklist["equivalentClass"] = 1;
     blacklist["versionInfo"] = 1;
     blacklist["imports"] = 1;
@@ -132,6 +135,7 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement) {
     }
 
     if (predicate == "range") { // property(subject) has type(object)
+        printState(statement);
         if (type == "oprop") { objproperties[subject]->setType(object); return 0; }
         if (type == "dprop") { datproperties[subject]->setType(object); return 0; }
         if (type == "aprop") { annproperties[subject]->setType(object); return 0; }
@@ -139,21 +143,27 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement) {
 
     if (predicate == "domain") { // property(subject) belongs to concept(object)
         if (auto c = getConcept(object)) {
-            if (type == "oprop") { c->addProperty( objproperties[subject] ); return 0; }
-            if (type == "dprop") { c->addProperty( datproperties[subject] ); return 0; }
-            if (type == "aprop") { c->addAnnotation( annproperties[subject] ); return 0; }
+            if (type == "dprop" && datproperties.count(subject)) { c->addProperty( datproperties[subject] ); return 0; }
+            if (type == "oprop" && objproperties.count(subject)) { c->addProperty( objproperties[subject] ); return 0; }
+            if (type == "aprop" && annproperties.count(subject)) { c->addAnnotation( annproperties[subject] ); return 0; }
         }
     }
 
-    if (annproperties.count(predicate)) { // concept(subject) or entity(subject) have an annotation(predicate) with value(object)
-        if (type == "concept" && annproperties[predicate]->type != "") {
+    if (annproperties.count(predicate) && annproperties[predicate]->type == "aprop") { // concept(subject) or entity(subject) or property(subject) have an annotation(predicate) with value(object)
+        if (type == "concept") {
             auto p = annproperties[predicate]->copy(); // copy annotations
             p->value = object;
             getConcept(subject)->addAnnotation(p);
             return 0;
         }
+
         if (type == "entity" && entities[subject]->getProperty(predicate)) {
             entities[subject]->set(predicate, object); return 0;
+        }
+
+        // must be property
+        if (auto p = getProperty(subject)) {
+            return 0; // TODO
         }
     }
 
@@ -173,7 +183,10 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement) {
             auto pv = entities[subject]->getValues(predicate);
             if (pv.size()) { pv[0]->value = object; return 0; }
             auto p = entities[subject]->getProperty(predicate);
-            if (p && p->type != "") { entities[subject]->set(predicate, object); return 0; }
+            if (p) {
+                if (p->type == "") cout << "Warning: data property " << predicate << " has no data type!\n";
+                entities[subject]->set(predicate, object); return 0;
+            }
         }
     }
 
@@ -204,7 +217,14 @@ void VROWLImport::AgglomerateData() {
         tmp[s.subject].push_back(s);
     };
 
+    auto jobSize = [&]() {
+        int i=0;
+        for (auto s : stack) i += s.second.size();
+        return i;
+    };
+
     int lastStack = 0;
+    int lastJobSize = 0;
     for( int i=0; stack.size(); i++) {
         for (auto& d : stack) {
             string subject = d.first;
@@ -214,13 +234,17 @@ void VROWLImport::AgglomerateData() {
         }
         stack = tmp;
         tmp.clear();
-        cout << "RDF parser: iteration: " << i << " with " << stack.size() << " triplets remaining" << endl;
+        int jobs = jobSize();
+        cout << "RDF parser: iteration: " << i << " with " << jobs << " triplets remaining" << endl;
 
-        if (stack.size() == lastStack) {
-            cout << "RDF parser warning: stack not shrinking, aborting with " << stack.size() << " triplets remaining!" << endl;
+        if (stack.size() == lastStack && jobs == lastJobSize) {
+            cout << "RDF parser warning: stack not shrinking, aborting with " << jobs << " triplets remaining!" << endl;
             for (auto& sv : stack) for (auto& s : sv.second) cout << " " << s.toString() << endl;
             break;
-        } else lastStack = stack.size();
+        } else {
+            lastStack = stack.size();
+            lastJobSize = jobs;
+        }
     }
 
     for (auto c : concepts) onto->addConcept(c.second);

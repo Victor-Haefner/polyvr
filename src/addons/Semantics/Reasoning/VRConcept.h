@@ -48,7 +48,7 @@ struct VRConcept : public std::enable_shared_from_this<VRConcept>, public VROnto
     void addAnnotation(VRPropertyPtr p);
 
     int getPropertyID(string name);
-    VRPropertyPtr getProperty(string name);
+    VRPropertyPtr getProperty(string name, bool warn = true);
     vector<VRPropertyPtr> getProperties(string type);
     VRPropertyPtr getProperty(int ID);
     vector<VRPropertyPtr> getProperties();
