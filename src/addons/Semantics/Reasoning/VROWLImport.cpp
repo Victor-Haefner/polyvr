@@ -10,6 +10,16 @@ VROWLImport::RDFStatement::RDFStatement(raptor_statement* s) {
     object = toString(s->object);
     predicate = toString(s->predicate);
     subject = toString(s->subject);
+    if (s->subject) RDFsubject = (s->subject->type == RAPTOR_TERM_TYPE_BLANK);
+    if (s->object) RDFobject = (s->object->type == RAPTOR_TERM_TYPE_BLANK);
+}
+
+VROWLImport::RDFStatement::RDFStatement(string g, string o, string p, string s, string t) {
+    graph = g;
+    object = o;
+    predicate = p;
+    subject = s;
+    type = t;
 }
 
 string VROWLImport::RDFStatement::toString(raptor_term* t) {
@@ -18,7 +28,7 @@ string VROWLImport::RDFStatement::toString(raptor_term* t) {
         case RAPTOR_TERM_TYPE_LITERAL:
             return string( (const char*)t->value.literal.string );
         case RAPTOR_TERM_TYPE_BLANK:
-            return "BLANK";
+            return string( (const char*)t->value.blank.string );
         case RAPTOR_TERM_TYPE_UNKNOWN:
             return "UNKNOWN";
         case RAPTOR_TERM_TYPE_URI:
@@ -37,7 +47,20 @@ string VROWLImport::RDFStatement::toString() {
     return "Statement: type "+type+"  predicate "+predicate+"  subject "+subject+"  object "+object;
 }
 
-VROWLImport::VROWLImport() {}
+VROWLImport::VROWLImport() {
+    predicate_blacklist["imports"] = 1;
+    predicate_blacklist["subPropertyOf"] = 1;
+    predicate_blacklist["versionInfo"] = 1;
+    predicate_blacklist["inverseOf"] = 1;
+    predicate_blacklist["disjointWith"] = 1;
+    predicate_blacklist["propertyDisjointWith"] = 1;
+    predicate_blacklist["equivalentClass"] = 1;
+
+    //type_blacklist["Restriction"] = 1;
+    list_types["unionOf"] = 1;
+    list_types["intersectionOf"] = 1;
+    list_types["members"] = 1;
+}
 
 void VROWLImport::clear() {
     subjects.clear();
@@ -53,14 +76,6 @@ void VROWLImport::clear() {
     annproperties["comment"] = VRProperty::create("comment");
     annproperties["label"]->type = "aprop";
     annproperties["comment"]->type = "aprop";
-
-    blacklist["subPropertyOf"] = 1;
-    blacklist["inverseOf"] = 1;
-    blacklist["disjointWith"] = 1;
-    blacklist["propertyDisjointWith"] = 1;
-    blacklist["equivalentClass"] = 1;
-    blacklist["versionInfo"] = 1;
-    blacklist["imports"] = 1;
 }
 
 void VROWLImport::printState(RDFStatement& s) {
@@ -85,34 +100,105 @@ void VROWLImport::printTripleStore() {
     }
 }
 
-bool VROWLImport::blacklisted(string s) {
-    if (!blacklist.count(s)) return 0;
-    else return blacklist[s];
+bool VROWLImport::blacklisted(string& s, map<string, bool>& data) {
+    if (!data.count(s)) return 0;
+    else return data[s];
 }
 
-bool VROWLImport::ProcessSubject(RDFStatement& statement) {
+bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& statements, map<string, vector<RDFStatement> >& stack) {
     string& type = statement.type;
     string& subject = statement.subject;
     string& predicate = statement.predicate;
     string& object = statement.object;
 
-    //if (subject == "hasModelComponentLable") statprint();
-    //if (subject == "DefaultValue_DefaultAction") printState(statement);
+    //if (subject == "AbstractActor" || predicate == "AbstractActor" || object == "AbstractActor") printState(statement);
+    //if (subject == "genid49" || predicate == "genid49" || object == "genid49") printState(statement);
 
-    if (subject == "references") printState(statement);
-    if (predicate == "references") printState(statement);
-    if (object == "references") printState(statement);
+    if (blacklisted(predicate, predicate_blacklist)) return 0;
 
-    if (predicate == "BLANK" || object == "BLANK" || subject == "BLANK") return 0; // TODO?
-    if (blacklisted(predicate)) return 0;
+    if (statement.RDFsubject) {
+        if (list_types.count(predicate)) { // RDF list (subject) starting with (object)
+            lists[subject] = vector<string>();
+            list_ends[object] = subject;
+            return 0;
+        }
+
+        if (predicate == "first" && list_ends.count(subject)) {
+            lists[list_ends[subject]].push_back(object);
+            return 0;
+        }
+
+        if (predicate == "rest" && list_ends.count(subject)) {
+            if (object == "nil") {
+                list_ends[ list_ends[subject] ] = "nil";
+                return 0;
+            }
+            list_ends[object] = list_ends[subject];
+            return 0;
+        }
+
+        if (predicate == "type") {
+            if (object == "Restriction") {
+                restrictions[subject] = OWLRestriction();
+                return 0;
+            }
+            if (object == "Class") { return 0; } // TODO
+            if (object == "AllDisjointClasses") { return 0; } // TODO
+        }
+
+        if (predicate == "complementOf") { return 0; } // TODO
+
+        if (restrictions.count(subject)) {
+            if (predicate == "onProperty") { restrictions[subject].property = object; return 0; }
+            if (predicate == "cardinality") { restrictions[subject].min = restrictions[subject].max = toInt(object); return 0; }
+            if (predicate == "qualifiedCardinality") { restrictions[subject].min = restrictions[subject].max = toInt(object); return 0; }
+            if (predicate == "minQualifiedCardinality") { restrictions[subject].min = toInt(object); return 0; }
+            if (predicate == "maxQualifiedCardinality") { restrictions[subject].max = toInt(object); return 0; }
+            if (predicate == "onClass") { restrictions[subject].concept = object; return 0; }
+            if (predicate == "onDataRange") { restrictions[subject].dataRange = object; return 0; }
+            if (predicate == "someValuesFrom") { restrictions[subject].someValuesFrom = object; return 0; }
+            if (predicate == "allValuesFrom") { restrictions[subject].allValuesFrom = object; return 0; }
+        }
+        return 1;
+    }
+
+    if (statement.RDFobject) {
+        if (lists.count(object) && list_ends[object] == "nil") { // RDF list fully parsed
+            for (auto i : lists[object]) {
+                auto s = statement;
+                s.object = i; s.RDFobject = 0;
+                stack[subject].push_back(s);
+            }
+            return 0;
+        }
+
+        if (predicate == "subClassOf") { // the class(subject) has some specifications on object properties
+            if (restrictions.count(object)) { // the class(subject) has a restriction(object) on an object property
+                return 0; // TODO
+            }
+            return 0; // TODO
+        }
+        return 1;
+    }
 
     if (predicate == "type") {
+        if (blacklisted(object, type_blacklist)) return 0;
+
         if (object == "Ontology") return 0;
         if (object == "Class") { concepts[subject] = VRConcept::create(subject, onto); return 0; }
         if (object == "NamedIndividual") { entities[subject] = VREntity::create(subject); return 0; }
+
+        // properties
         if (object == "DatatypeProperty") { datproperties[subject] = VRProperty::create(subject); return 0; }
-        if (object == "ObjectProperty") { objproperties[subject] = VRProperty::create(subject); return 0; }
         if (object == "AnnotationProperty") { annproperties[subject] = VRProperty::create(subject); return 0; }
+        if (object == "ObjectProperty") {
+            objproperties[subject] = VRProperty::create(subject);
+             // fix missing domain of properties
+            bool hasDomain = 0;
+            for (auto s : statements) if (s.predicate == "domain") hasDomain = 1;
+            if (!hasDomain) { statement = RDFStatement(statement.graph, "Thing", "domain", subject, type); return 1; }
+            return 0;
+        }
 
         // other object properties
         if (object == "FunctionalProperty") { objproperties[subject] = VRProperty::create(subject); return 0; }
@@ -129,67 +215,65 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement) {
         if (statement.type == "") return 1;
     }
 
-    if (predicate == "type" && type == "entity") { // Entity(subject) is of type concept(object)
-        if (auto c = getConcept(object)) { entities[subject]->addConcept( c ); return 0; }
-    }
-
-    if (predicate == "subClassOf" && type == "concept") { // Concept(subject) is a sub concept of concept(object)
-        if (auto co = getConcept(object))
-            if (auto cs = getConcept(subject)) { co->append(cs); return 0; }
-    }
-
-    if (predicate == "range") { // property(subject) has type(object)
-        if (type == "oprop") { objproperties[subject]->setType(object); return 0; }
-        if (type == "dprop") { datproperties[subject]->setType(object); return 0; }
-        if (type == "aprop") { annproperties[subject]->setType(object); return 0; }
-    }
-
-    if (predicate == "domain") { // property(subject) belongs to concept(object)
-        if (auto c = getConcept(object)) {
-            if (type == "dprop" && datproperties.count(subject)) { c->addProperty( datproperties[subject] ); return 0; }
-            if (type == "oprop" && objproperties.count(subject)) { c->addProperty( objproperties[subject] ); return 0; }
-            if (type == "aprop" && annproperties.count(subject)) { c->addAnnotation( annproperties[subject] ); return 0; }
+    if (type == "concept") {
+        if (predicate == "subClassOf") { // Concept(subject) is a sub concept of concept(object)
+            if (auto co = getConcept(object))
+                if (auto cs = getConcept(subject)) { co->append(cs); return 0; }
         }
-    }
 
-    // local properties
-    if (annproperties.count(predicate) && annproperties[predicate]->type == "aprop") { // concept(subject) or entity(subject) or property(subject) have an annotation(predicate) with value(object)
-        if (type == "concept") {
+        if (annproperties.count(predicate) && annproperties[predicate]->type == "aprop") { // concept(subject) has an annotation(predicate) with value(object)
             auto p = annproperties[predicate]->copy(); // copy annotations
             p->value = object;
             getConcept(subject)->addAnnotation(p);
             return 0;
         }
 
-        if (type == "entity" && entities[subject]->getProperty(predicate)) {
-            entities[subject]->set(predicate, object); return 0;
-        }
-
-        // must be property
-        if (auto p = getProperty(subject)) {
-            return 0; // TODO
+        if (datproperties.count(predicate) || objproperties.count(predicate)) { // concept(subject) has a property(predicate) with value(object)
+            getConcept(subject)->addProperty(predicate, object); return 0;
         }
     }
 
-    if (datproperties.count(predicate) || objproperties.count(predicate)) { // concept(subject) or entity(subject) have a property(predicate) with value(object)
-        if (type == "concept") { getConcept(subject)->addProperty(predicate, object); return 0; }
-        if (type == "entity" && entities.count(subject)) {
-            auto pv = entities[subject]->getValues(predicate);
-            if (pv.size()) { pv[0]->value = object; return 0; }
-            auto p = entities[subject]->getProperty(predicate);
-            if (p) {
-                //if (p->type == "") cout << "Warning: data property " << predicate << " has no data type!\n";
+    if (type == "entity" && entities.count(subject)) {
+        if (predicate == "type") // Entity(subject) is of type concept(object)
+            if (auto c = getConcept(object)) { entities[subject]->addConcept( c ); return 0; }
+
+        if (annproperties.count(predicate) && annproperties[predicate]->type == "aprop") { // entity(subject) has an annotation(predicate) with value(object)
+            if (entities[subject]->getProperty(predicate)) {
                 entities[subject]->set(predicate, object); return 0;
             }
         }
-    }
 
-    // entity properties
-    if (type == "entity" && entities.count(subject)) { // entity(subject) has a property(predicate) with value(object)
+        // entity(subject) has a property(predicate) with value(object)
+        auto pv = entities[subject]->getValues(predicate);
+        if (pv.size()) { pv[0]->value = object; return 0; }
+
         auto p = entities[subject]->getProperty(predicate);
         if (p) {
             //if (p->type == "") cout << "Warning: data property " << predicate << " has no data type!\n";
             entities[subject]->set(predicate, object); return 0;
+        }
+    }
+
+    if (type == "oprop" && objproperties.count(subject)) {
+        if (predicate == "range") { objproperties[subject]->setType(object); return 0; }
+        if (predicate == "domain") if (auto c = getConcept(object)) { c->addProperty( objproperties[subject] ); return 0; }
+    }
+
+    if (type == "dprop" && datproperties.count(subject)) {
+        if (predicate == "range") { datproperties[subject]->setType(object); return 0; }
+        if (predicate == "domain") if (auto c = getConcept(object)) { c->addProperty( datproperties[subject] ); return 0; }
+    }
+
+    if (type == "aprop" && annproperties.count(subject)) {
+        if (predicate == "range") { annproperties[subject]->setType(object); return 0; }
+        if (predicate == "domain") if (auto c = getConcept(object)) { c->addAnnotation( annproperties[subject] ); return 0; }
+    }
+
+    // local properties
+    if (annproperties.count(predicate) && annproperties[predicate]->type == "aprop") { // concept(subject) or entity(subject) or property(subject) have an annotation(predicate) with value(object)
+        // must be property
+        if (auto p = getProperty(subject)) {
+            return 0; // TODO
         }
     }
 
@@ -216,10 +300,6 @@ void VROWLImport::AgglomerateData() {
 
     concepts["Thing"] = onto->getConcept("Thing");
 
-    auto postpone = [&](RDFStatement s) {
-        tmp[s.subject].push_back(s);
-    };
-
     auto jobSize = [&]() {
         int i=0;
         for (auto s : stack) i += s.second.size();
@@ -232,7 +312,8 @@ void VROWLImport::AgglomerateData() {
         for (auto& d : stack) {
             string subject = d.first;
             for (auto& statement : d.second) {
-                if (ProcessSubject(statement)) postpone(statement);
+                if (ProcessSubject(statement, d.second, tmp))
+                    tmp[statement.subject].push_back(statement);
             }
         }
         stack = tmp;
