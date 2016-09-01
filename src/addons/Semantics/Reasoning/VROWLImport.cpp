@@ -99,6 +99,10 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement) {
     //if (subject == "hasModelComponentLable") statprint();
     //if (subject == "DefaultValue_DefaultAction") printState(statement);
 
+    if (subject == "references") printState(statement);
+    if (predicate == "references") printState(statement);
+    if (object == "references") printState(statement);
+
     if (predicate == "BLANK" || object == "BLANK" || subject == "BLANK") return 0; // TODO?
     if (blacklisted(predicate)) return 0;
 
@@ -135,7 +139,6 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement) {
     }
 
     if (predicate == "range") { // property(subject) has type(object)
-        printState(statement);
         if (type == "oprop") { objproperties[subject]->setType(object); return 0; }
         if (type == "dprop") { datproperties[subject]->setType(object); return 0; }
         if (type == "aprop") { annproperties[subject]->setType(object); return 0; }
@@ -149,6 +152,7 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement) {
         }
     }
 
+    // local properties
     if (annproperties.count(predicate) && annproperties[predicate]->type == "aprop") { // concept(subject) or entity(subject) or property(subject) have an annotation(predicate) with value(object)
         if (type == "concept") {
             auto p = annproperties[predicate]->copy(); // copy annotations
@@ -167,26 +171,25 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement) {
         }
     }
 
-    if (objproperties.count(predicate)) { // concept(subject) or entity(subject) have a property(predicate) with value(object)
-        if (type == "concept") { getConcept(subject)->addProperty(predicate, object); return 0; }
-        if (type == "entity" && entities.count(subject)) {
-            auto pv = entities[subject]->getValues(predicate);
-            if (pv.size()) { pv[0]->value = object; return 0; }
-            auto p = entities[subject]->getProperty(predicate);
-            if (p && p->type != "") { entities[subject]->set(predicate, object); return 0; }
-        }
-    }
-
-    if (datproperties.count(predicate)) { // concept(subject) or entity(subject) have a property(predicate) with value(object)
+    if (datproperties.count(predicate) || objproperties.count(predicate)) { // concept(subject) or entity(subject) have a property(predicate) with value(object)
         if (type == "concept") { getConcept(subject)->addProperty(predicate, object); return 0; }
         if (type == "entity" && entities.count(subject)) {
             auto pv = entities[subject]->getValues(predicate);
             if (pv.size()) { pv[0]->value = object; return 0; }
             auto p = entities[subject]->getProperty(predicate);
             if (p) {
-                if (p->type == "") cout << "Warning: data property " << predicate << " has no data type!\n";
+                //if (p->type == "") cout << "Warning: data property " << predicate << " has no data type!\n";
                 entities[subject]->set(predicate, object); return 0;
             }
+        }
+    }
+
+    // entity properties
+    if (type == "entity" && entities.count(subject)) { // entity(subject) has a property(predicate) with value(object)
+        auto p = entities[subject]->getProperty(predicate);
+        if (p) {
+            //if (p->type == "") cout << "Warning: data property " << predicate << " has no data type!\n";
+            entities[subject]->set(predicate, object); return 0;
         }
     }
 
