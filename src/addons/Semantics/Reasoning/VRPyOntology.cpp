@@ -286,8 +286,10 @@ PyObject* VRPyOntology::getConcepts(VRPyOntology* self) {
 }
 
 PyObject* VRPyOntology::getEntities(VRPyOntology* self, PyObject* args) {
-    const char* concept = 0;
-    if (! PyArg_ParseTuple(args, "s:getEntities", (char*)&concept)) return NULL;
+    const char* c = 0;
+    if (! PyArg_ParseTuple(args, "|s:getEntities", (char*)&c)) return NULL;
+    string concept = "";
+    if (c) concept = c;
     auto entities = self->objPtr->getInstances(concept);
     auto res = PyList_New(entities.size());
     for (int i=0; i<entities.size(); i++)

@@ -200,11 +200,13 @@ VREntityPtr VROntology::getInstance(string instance) {
 
 vector<VREntityPtr> VROntology::getInstances(string concept) {
     vector<VREntityPtr> res;
-    for (auto i : instances) {
-        for (auto c : i.second->getConcepts()) {
-            if(c && c->is_a(concept)) { res.push_back(i.second); break; }
+    if (concept != "") {
+        for (auto i : instances) {
+            for (auto c : i.second->getConcepts()) {
+                if(c && c->is_a(concept)) { res.push_back(i.second); break; }
+            }
         }
-    }
+    } else for (auto i : instances) res.push_back(i.second);
     return res;
 }
 
