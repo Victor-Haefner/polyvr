@@ -20,6 +20,7 @@ struct VRPyPathtool : VRPyBaseT<OSG::VRPathtool> {
     static PyObject* clear(VRPyPathtool* self, PyObject* args);
     static PyObject* setHandleGeometry(VRPyPathtool* self, PyObject* args);
     static PyObject* getPathMaterial(VRPyPathtool* self);
+    static PyObject* setGraph(VRPyPathtool* self, PyObject* args);
 };
 
 #endif // VRPYPATHTOOL_H_INCLUDED

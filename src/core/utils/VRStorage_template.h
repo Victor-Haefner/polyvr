@@ -144,6 +144,7 @@ void VRStorage::load_obj_vec_cb(vector<std::shared_ptr<T> >* v, string tag, bool
         if (!s) s = T::create();
         auto c = static_pointer_cast<T>(s);
         if (!c) continue;
+        if (el->get_name() != s->type) continue;
 
         c->load(el);
         v->push_back( c );
