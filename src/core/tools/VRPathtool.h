@@ -8,6 +8,8 @@
 
 #include "core/objects/VRObjectFwd.h"
 #include "core/utils/VRFunctionFwd.h"
+#include "core/tools/VRToolsFwd.h"
+#include "core/objects/object/VRObject.h"
 
 using namespace std;
 OSG_BEGIN_NAMESPACE
@@ -48,7 +50,7 @@ class VRExtruder {
         //   trigger events -> start drag/ update drag/ stop drag
 };
 
-class VRPathtool {
+class VRPathtool : public VRObject {
     private:
         struct entry {
             path* p = 0;
@@ -76,6 +78,7 @@ class VRPathtool {
 
     public:
         VRPathtool();
+        static VRPathtoolPtr create();
 
         path* newPath(VRDevicePtr dev, VRObjectPtr anchor, int resolution = 10);
         VRGeometryPtr extrude(VRDevicePtr dev, path* p);

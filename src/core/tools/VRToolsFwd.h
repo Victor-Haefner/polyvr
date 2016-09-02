@@ -26,6 +26,7 @@ ptrFwd(VRUndoAtom);
 ptrFwd(VRUndo);
 ptrFwd(CarDynamics);
 ptrFwd(VRRecorder);
+ptrFwd(VRPathtool);
 
 }
 

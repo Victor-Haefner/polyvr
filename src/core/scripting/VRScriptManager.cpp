@@ -344,7 +344,7 @@ void VRScriptManager::initPyModules() {
     registerModule<VRPyAnnotationEngine>("AnnotationEngine", pModVR, VRPyGeometry::typeRef);
     registerModule<VRPyAnalyticGeometry>("AnalyticGeometry", pModVR, VRPyObject::typeRef);
     registerModule<VRPyConstructionKit>("ConstructionKit", pModVR);
-    registerModule<VRPyPathtool>("Pathtool", pModVR);
+    registerModule<VRPyPathtool>("Pathtool", pModVR, VRPyObject::typeRef);
     registerModule<VRPySelector>("Selector", pModVR);
     registerModule<VRPySelection>("Selection", pModVR);
     registerModule<VRPyPatchSelection>("PatchSelection", pModVR, VRPySelection::typeRef);

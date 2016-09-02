@@ -67,7 +67,7 @@ void VRManipulator::setup() {
 }
 
 
-VRPathtool::VRPathtool() {
+VRPathtool::VRPathtool() : VRObject("Pathtool") {
     updatePtr = VRFunction<int>::create("path tool update", boost::bind(&VRPathtool::updateDevs, this) );
     VRSceneManager::getCurrent()->addUpdateFkt(updatePtr, 100);
 
@@ -78,6 +78,8 @@ VRPathtool::VRPathtool() {
     lmat->setDiffuse(Vec3f(0.1,0.9,0.2));
     lmat->setLineWidth(3);
 }
+
+VRPathtoolPtr VRPathtool::create() { return VRPathtoolPtr( new VRPathtool() ); }
 
 void VRPathtool::update() {
     for (auto h : handles) updateHandle(h.lock());
