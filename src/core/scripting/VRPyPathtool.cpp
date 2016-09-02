@@ -31,9 +31,9 @@ PyMethodDef VRPyPathtool::methods[] = {
 
 PyObject* VRPyPathtool::setGraph(VRPyPathtool* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    VRPyGraph* g = 0;
-    if (! PyArg_ParseTuple(args, "O:setGraph", &g)) return NULL;
-    self->objPtr->setGraph(g);
+    //VRPyGraph* g = 0;
+    //if (! PyArg_ParseTuple(args, "O:setGraph", &g)) return NULL;
+    //self->objPtr->setGraph(g);
     Py_RETURN_TRUE;
 }
 

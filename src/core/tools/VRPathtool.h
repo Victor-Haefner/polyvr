@@ -10,6 +10,7 @@
 #include "core/utils/VRFunctionFwd.h"
 #include "core/tools/VRToolsFwd.h"
 #include "core/objects/object/VRObject.h"
+#include "core/math/graph.h"
 
 using namespace std;
 OSG_BEGIN_NAMESPACE
@@ -79,6 +80,8 @@ class VRPathtool : public VRObject {
     public:
         VRPathtool();
         static VRPathtoolPtr create();
+
+        //void setGraph(graph g);
 
         path* newPath(VRDevicePtr dev, VRObjectPtr anchor, int resolution = 10);
         VRGeometryPtr extrude(VRDevicePtr dev, path* p);

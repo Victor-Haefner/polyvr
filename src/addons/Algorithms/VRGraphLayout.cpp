@@ -1,6 +1,6 @@
 #include "VRGraphLayout.h"
 #include "core/math/Octree.h"
-#include "core/math/graph.cpp"
+#include "core/math/graphT.h"
 
 using namespace OSG;
 

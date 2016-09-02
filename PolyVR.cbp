@@ -544,6 +544,7 @@
 		<Unit filename="src/core/math/frustum.h" />
 		<Unit filename="src/core/math/graph.cpp" />
 		<Unit filename="src/core/math/graph.h" />
+		<Unit filename="src/core/math/graphT.h" />
 		<Unit filename="src/core/math/interpolator.cpp" />
 		<Unit filename="src/core/math/interpolator.h" />
 		<Unit filename="src/core/math/patch.cpp" />
