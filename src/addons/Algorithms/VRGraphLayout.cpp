@@ -5,6 +5,12 @@
 using namespace OSG;
 
 template class graph<VRGraphLayout::Node>;
+
+void VRGraphLayout::Node::update(graph_base::node& n) {
+    Vec3f d = n.pos - bb.center();
+    bb.move( d );
+}
+
 VRGraphLayout::VRGraphLayout() {}
 
 void VRGraphLayout::setGraph(layout& g) { this->g = g; }
@@ -17,11 +23,13 @@ void VRGraphLayout::applySprings(float eps) {
         for (auto& e : n) {
             auto f1 = getFlag(e.from);
             auto f2 = getFlag(e.to);
-            Node& n1 = g.getNodes()[e.from];
-            Node& n2 = g.getNodes()[e.to];
+            Node& n1 = g.getElement(e.from);
+            Node& n2 = g.getElement(e.to);
+            Vec3f p1 = n1.bb.center();
+            Vec3f p2 = n2.bb.center();
 
             float r = radius + n1.bb.radius() + n2.bb.radius();
-            Vec3f d = n2.bb.center()-n1.bb.center();
+            Vec3f d = p2 - p1;
             float x = (d.length() - r)*eps; // displacement
             d.normalize();
             if (abs(x) < eps) continue;
@@ -29,21 +37,20 @@ void VRGraphLayout::applySprings(float eps) {
             if (x > r*eps) x = r*eps; // numerical safety ;)
             if (x < -r*eps) x = -r*eps;
 
-            Vec3f g; // TODO: not yet working!
-            g = gravity*x*0.1;
+            Vec3f grav = gravity*x*0.1; // TODO: not yet working!
             switch (e.connection) {
                 case layout::SIMPLE:
-                    if (f1 != FIXED) n1.bb.move( d*x*r + g );
-                    if (f2 != FIXED) n2.bb.move( -d*x*r + g );
+                    if (f1 != FIXED) g.setPosition( e.from, p1 + d*x*r + grav );
+                    if (f2 != FIXED) g.setPosition( e.to, p2 - d*x*r + grav );
                     break;
                 case layout::HIERARCHY:
-                    if (f2 != FIXED) n2.bb.move( -d*x*r + g );
-                    else if (f1 != FIXED) n1.bb.move( d*x*r + g );
+                    if (f2 != FIXED) g.setPosition( e.to, p2 - d*x*r + grav );
+                    else if (f1 != FIXED) g.setPosition( e.from, p1 + d*x*r + grav );
                     break;
                 case layout::SIBLING:
                     if (x < 0) { // push away siblings
-                        if (f1 != FIXED) n1.bb.move( d*x*r + g );
-                        if (f2 != FIXED) n2.bb.move( -d*x*r + g );
+                        if (f1 != FIXED) g.setPosition( e.from, p1 + d*x*r + grav );
+                        if (f2 != FIXED) g.setPosition( e.to, p2 - d*x*r + grav );
                     }
                     break;
             }
@@ -52,7 +59,7 @@ void VRGraphLayout::applySprings(float eps) {
 }
 
 void VRGraphLayout::applyOccupancy(float eps) {
-    auto& nodes = g.getNodes();
+    auto& nodes = g.getElements();
     Octree o(10*eps);
 
     long i=0;
@@ -80,7 +87,7 @@ void VRGraphLayout::applyOccupancy(float eps) {
             }
         }
 
-        n.bb.move(D); // move node away from neighbors
+        g.setPosition(i, pn+D); // move node away from neighbors
     }
 }
 

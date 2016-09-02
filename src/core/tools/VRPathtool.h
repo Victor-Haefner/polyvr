@@ -81,16 +81,16 @@ class VRPathtool : public VRObject {
         VRPathtool();
         static VRPathtoolPtr create();
 
-        //void setGraph(graph g);
+        void setGraph(graph_basePtr g);
 
         path* newPath(VRDevicePtr dev, VRObjectPtr anchor, int resolution = 10);
         VRGeometryPtr extrude(VRDevicePtr dev, path* p);
         void remPath(path* p);
 
-        void addPath(path* p, VRObjectPtr anchor);
+        void addPath(path* p, VRObjectPtr anchor = 0);
         void setVisible(bool handles, bool lines);
         void setHandleGeometry(VRGeometryPtr geo);
-        void clear(path* p);
+        void clear(path* p = 0);
 
         vector<path*> getPaths();
         vector<VRGeometryPtr> getHandles(path* p);

@@ -24,6 +24,7 @@ class VRGraphLayout {
 
         struct Node {
             boundingbox bb;
+            void update(graph_base::node& n);
         };
 
         typedef graph<Node> layout;

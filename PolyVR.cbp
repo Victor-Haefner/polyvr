@@ -767,6 +767,8 @@
 		<Unit filename="src/core/scripting/VRPyGeoPrimitive.h" />
 		<Unit filename="src/core/scripting/VRPyGeometry.cpp" />
 		<Unit filename="src/core/scripting/VRPyGeometry.h" />
+		<Unit filename="src/core/scripting/VRPyGraph.cpp" />
+		<Unit filename="src/core/scripting/VRPyGraph.h" />
 		<Unit filename="src/core/scripting/VRPyHaptic.cpp" />
 		<Unit filename="src/core/scripting/VRPyHaptic.h" />
 		<Unit filename="src/core/scripting/VRPyImage.cpp" />

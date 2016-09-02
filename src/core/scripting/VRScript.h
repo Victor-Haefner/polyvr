@@ -73,7 +73,7 @@ class VRScript : public VRName {
 
     public:
         VRScript(string name);
-        ~VRScript();
+        virtual ~VRScript();
 
         void clean();
 
@@ -125,7 +125,6 @@ class VRScript : public VRName {
 
         void save(xmlpp::Element* e);
         void load(xmlpp::Element* e);
-
 };
 
 OSG_END_NAMESPACE;

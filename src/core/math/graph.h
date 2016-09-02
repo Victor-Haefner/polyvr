@@ -16,6 +16,10 @@ class graph_base {
             SIBLING
         };
 
+        struct node {
+            Vec3f pos;
+        };
+
         struct edge {
             int from;
             int to;
@@ -26,31 +30,40 @@ class graph_base {
 
     protected:
         vector< vector<edge> > edges;
+        vector< node > nodes;
+
+        virtual void update(int i);
 
     public:
         graph_base();
         ~graph_base();
 
-        static graph_basePtr create();
-
         void connect(int i, int j, CONNECTION c = SIMPLE);
+        node& getNode(int i);
+        vector< node >& getNodes();
         vector< vector<edge> >& getEdges();
+
+        void setPosition(int i, Vec3f v);
 };
 
 template<class T>
 class graph : public graph_base {
     private:
-        vector<T> nodes;
+        vector<T> elements;
+
+        void update(int i);
 
     public:
         graph();
         ~graph();
 
+        static shared_ptr< graph<T> > create();
+
         int addNode();
         int addNode(T t);
 
-        vector<T>& getNodes();
-        T& getNode(int i);
+        vector<T>& getElements();
+        T& getElement(int i);
 };
 
 OSG_END_NAMESPACE;

@@ -37,7 +37,7 @@ class path {
     public:
         path();
 
-        int addPoint(Vec3f p, Vec3f n, Vec3f c, Vec3f u = Vec3f(0,1,0));
+        int addPoint(Vec3f p = Vec3f(0,0,0), Vec3f n = Vec3f(0,0,-1), Vec3f c = Vec3f(0,0,0), Vec3f u = Vec3f(0,1,0));
         int addPoint(VRTransformPtr t);
         void setPoint(int i, Vec3f p, Vec3f n, Vec3f c, Vec3f u = Vec3f(0,1,0));
         pnt getPoint(int i);

@@ -166,7 +166,7 @@ void VRGuiSemantics::updateLayout() {
 
     int i = 0;
     for (auto c : widgets) { // update widget positions
-        Vec3f p = g.getNodes()[i].bb.center();
+        Vec3f p = g.getElement(i).bb.center();
         c.second->move(Vec2f(p[0], p[1]));
         i++;
     }

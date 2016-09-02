@@ -8,6 +8,7 @@ struct VRPyPathtool : VRPyBaseT<OSG::VRPathtool> {
     static PyMethodDef methods[];
 
     static PyObject* newPath(VRPyPathtool* self, PyObject* args);
+    static PyObject* setGraph(VRPyPathtool* self, PyObject* args);
     static PyObject* addPath(VRPyPathtool* self, PyObject* args);
     static PyObject* remPath(VRPyPathtool* self, PyObject* args);
     static PyObject* extrude(VRPyPathtool* self, PyObject* args);
@@ -20,7 +21,6 @@ struct VRPyPathtool : VRPyBaseT<OSG::VRPathtool> {
     static PyObject* clear(VRPyPathtool* self, PyObject* args);
     static PyObject* setHandleGeometry(VRPyPathtool* self, PyObject* args);
     static PyObject* getPathMaterial(VRPyPathtool* self);
-    static PyObject* setGraph(VRPyPathtool* self, PyObject* args);
 };
 
 #endif // VRPYPATHTOOL_H_INCLUDED

@@ -81,13 +81,28 @@ VRPathtool::VRPathtool() : VRObject("Pathtool") {
 
 VRPathtoolPtr VRPathtool::create() { return VRPathtoolPtr( new VRPathtool() ); }
 
+void VRPathtool::setGraph(graph_basePtr g) {
+    clear();
+    auto& nodes = g->getNodes();
+    auto& edges = g->getEdges();
+
+    for (auto& n : edges) {
+        for (auto& e : n) {
+            path* p = new path();
+            p->addPoint(nodes[e.from].pos);
+            p->addPoint(nodes[e.to].pos);
+            addPath(p);
+        }
+    }
+}
+
 void VRPathtool::update() {
     for (auto h : handles) updateHandle(h.lock());
 }
 
 void VRPathtool::addPath(path* p, VRObjectPtr anchor) {
     entry* e = new entry();
-    e->anchor = anchor;
+    e->anchor = anchor ? anchor : ptr();
     e->p = p;
     paths[e->p] = e;
 
@@ -187,6 +202,12 @@ void VRPathtool::setHandleGeometry(VRGeometryPtr geo) {
 }
 
 void VRPathtool::clear(path* p) {
+    if (p == 0) {
+        auto tmp = paths;
+        for (auto path : tmp) clear(path.first);
+        return;
+    }
+
     if (paths.count(p) == 0) return;
     entry* e = paths[p];
 
