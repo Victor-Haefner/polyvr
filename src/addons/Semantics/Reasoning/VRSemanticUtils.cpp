@@ -71,14 +71,14 @@ void Variable::discard(VREntityPtr e) {
 }
 
 VPath::VPath(string p) {
-    nodes = VRReasoner::split(p, '/');
+    nodes = VRReasoner::split(p, '.');
     root = nodes[0];
     first = nodes[nodes.size()-1];
 }
 
 string VPath::toString() {
     string s;
-    for (auto p : nodes) s += p + "/";
+    for (auto p : nodes) s += p + '.';
     if (nodes.size() > 0) s.pop_back();
     return s;
 }
