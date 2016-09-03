@@ -26,7 +26,7 @@ class VRSemanticManager : public VRStorage {
         VROntologyPtr loadOntology(string path);
         VROntologyPtr getOntology(string name);
         void remOntology(VROntologyPtr o);
-        void renameOntology(string name, string new_name);
+        VROntologyPtr renameOntology(string name, string new_name);
         vector<VROntologyPtr> getOntologies();
 
         void update();

@@ -32,11 +32,13 @@ vector<VROntologyPtr> VRSemanticManager::getOntologies() {
     return res;
 }
 
-void VRSemanticManager::renameOntology(string name, string new_name) {
+VROntologyPtr VRSemanticManager::renameOntology(string name, string new_name) {
+    if (ontologies.count(name) == 0) return 0;
     auto o = ontologies[name];
     o->setName(new_name);
     ontologies.erase(name);
     ontologies[new_name] = o;
+    return o;
 }
 
 void VRSemanticManager::update() {

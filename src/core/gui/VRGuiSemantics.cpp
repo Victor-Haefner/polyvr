@@ -259,13 +259,15 @@ void VRGuiSemantics_on_name_edited(GtkCellRendererText *cell, gchar *path_string
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
     if(!iter) return;
 
+    auto scene = VRSceneManager::getCurrent();
+    if (!scene) return;
+
     // get selected socket
     VRGuiSemantics_ModelColumns cols;
     Gtk::TreeModel::Row row = *iter;
     string name = row.get_value(cols.name);
-    row[cols.name] = new_name;
-    auto scene = VRSceneManager::getCurrent();
-    if (scene) return scene->getSemanticManager()->renameOntology(name, new_name);
+    auto o = scene->getSemanticManager()->renameOntology(name, new_name);
+    if (o) row[cols.name] = new_name;
 }
 
 VRSemanticManagerPtr VRGuiSemantics::getManager() {

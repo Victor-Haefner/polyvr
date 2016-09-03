@@ -41,7 +41,7 @@ void VRStorage::save_str_objmap_cb(map<string, std::shared_ptr<T> >* mt, string 
     if (mt->size() == 0) return;
     if (under) e = e->add_child(tag);
     for (auto t : *mt) {
-        auto ei = t.second->saveUnder(e);
+        t.second->saveUnder(e);
     }
 }
 

@@ -20,13 +20,17 @@ VRStatement::VRStatement(string s, int p) {
 void VRStatement::setup() {
     if (statement == "") return;
     auto s1 = VRReasoner::split(statement, '(');
+    if (s1.size() == 0) return;
     verb = s1[0];
     //auto v = VRReasoner::split(s1[0], '_');
     //verb = v[0];
     //verb_suffix = v.size() > 1 ? v[1] : "";
-    auto s2 = VRReasoner::split( VRReasoner::split(s1[1], ')')[0] , ',');
+    if (s1.size() < 2) return;
+    auto s2 = VRReasoner::split(s1[1], ')');
+    if (s2.size() == 0) return;
+    auto s3 = VRReasoner::split( s2[0] , ',');
     terms.clear();
-    for (string s : s2) terms.push_back(Term(s));
+    for (string s : s3) terms.push_back(Term(s));
 }
 
 VRStatementPtr VRStatement::create(string s, int p) { return VRStatementPtr( new VRStatement(s,p) ); }
