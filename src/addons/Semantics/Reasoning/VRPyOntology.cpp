@@ -312,9 +312,7 @@ PyObject* VRPyReasoner::process(VRPyReasoner* self, PyObject* args) {
     auto pyres = PyList_New(0);
     if (!query) return pyres;
     auto res = self->objPtr->process(string(query), onto->objPtr);
-    for (auto r : res) {
-        for (auto i : r.instances) PyList_Append(pyres, VRPyEntity::fromSharedPtr(i));
-    }
+    for (auto e : res) PyList_Append(pyres, VRPyEntity::fromSharedPtr(e));
     return pyres;
 }
 

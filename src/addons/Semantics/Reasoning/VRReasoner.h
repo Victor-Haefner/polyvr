@@ -50,7 +50,7 @@ class VRReasoner {
 
     public:
         static VRReasonerPtr create();
-        vector<Result> process(string query, VROntologyPtr onto);
+        vector<VREntityPtr> process(string query, VROntologyPtr onto);
 };
 
 OSG_END_NAMESPACE;

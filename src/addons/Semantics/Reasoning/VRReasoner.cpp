@@ -88,7 +88,7 @@ bool VRReasoner::is(VRStatementPtr statement, Context& context) {
     if ( context.vars.count(left.var->value) == 0) return false; // check if context has a variable with the left value
     if (!left.valid() || !right.valid()) return false; // return if one of the sides invalid
 
-    bool b = left == right;
+    bool b = left.var->is(right.var, left.path, right.path);
     bool NOT = statement->verb_suffix == "not";
     print("   " + left.str + " is " + (b?"":" not ") + (NOT?" not ":"") + right.var->value);
 
@@ -133,18 +133,20 @@ bool VRReasoner::apply(VRStatementPtr statement, Context& context) {
         if (!Pconcept || !Cconcept) { print("Warning: failed to apply " + statement->toString()); return false; }
         auto prop = Pconcept->getProperties( Cconcept->getName() );
         if (prop.size() == 0) { print("Warning: failed to apply " + statement->toString()); return false; }
-        for (auto i : left.var->instances) i.second->add(prop[0]->getName(), right.var->value); // TODO: the first parameter is wrong
+        for (auto i : left.var->entities) i.second->add(prop[0]->getName(), right.var->value); // TODO: the first parameter is wrong
         statement->state = 1;
         print("  give " + right.str + " to " + left.str, GREEN);
     }
 
     if (statement->verb == "q") {
-        string v = statement->terms[0].var->value;
-        print("RES2 " + toString(&context.vars[v]) + "   " + context.vars[v]->toString());
-        if (context.results.count(v) == 0) context.results[v] = Result();
-        for (auto i : context.vars[v]->instances) context.results[v].instances.push_back(i.second);
+        string x = statement->terms[0].var->value;
+        VariablePtr v = context.vars[x];
+        for (auto e : v->entities) {
+            auto& eval = v->evaluations[e.first];
+            if (eval.state == Evaluation::VALID) context.results.push_back(e.second);
+        }
         statement->state = 1;
-        print("  add result " + v, GREEN);
+        print("  process results of queried variable " + x, GREEN);
     }
 
     return true;
@@ -168,7 +170,7 @@ bool VRReasoner::evaluate(VRStatementPtr statement, Context& context) {
 }
     // TODO: introduce requirements rules for the existence of some individuals
 
-vector<Result> VRReasoner::process(string initial_query, VROntologyPtr onto) {
+vector<VREntityPtr> VRReasoner::process(string initial_query, VROntologyPtr onto) {
     print(initial_query);
 
     Context context(onto); // create context
@@ -203,14 +205,8 @@ vector<Result> VRReasoner::process(string initial_query, VROntologyPtr onto) {
     }
 
     print(" break after " + toString(context.itr) + " iterations\n");
-    for (auto r : context.results) {
-        print("  result " + r.first);
-        for (auto i : r.second.instances) print("   instance " + i->toString());
-    }
-
-    vector<Result> res;
-    for (auto r : context.results) res.push_back(r.second);
-    return res;
+    for (auto e : context.results) print(" instance " + e->toString());
+    return context.results;
 }
 
 VRReasonerPtr VRReasoner::create() { return VRReasonerPtr( new VRReasoner() ); }

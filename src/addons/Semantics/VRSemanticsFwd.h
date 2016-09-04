@@ -18,6 +18,7 @@ ptrFwd(VROntologyRule);
 ptrFwd(VROntologyLink);
 ptrFwd(VRReasoner);
 ptrFwd(VRStatement);
+ptrFwd(Variable);
 
 }
 

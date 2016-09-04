@@ -21,34 +21,34 @@ struct VPath {
     string toString();
 };
 
+struct Evaluation {
+    enum STATE {VALID, INVALID};
+    STATE state = VALID; // valid, assumption, anonymous, ruled_out, ...
+};
+
 struct Variable {
-    map<int, VREntityPtr> instances;
+    map<int, VREntityPtr> entities;
+    map<int, Evaluation> evaluations; // summarize the evaluation state of each instance!
     string value;
     string concept = "var";
     bool isAssumption = false;
     bool isAnonymous = true;
     bool valid = true;
 
-    Variable();
-
     string toString();
-    bool has(std::shared_ptr<Variable> other, VROntologyPtr onto);
+    bool has(VariablePtr other, VROntologyPtr onto);
+    bool is(VariablePtr other, VPath& p1, VPath& p2);
 
     Variable(VROntologyPtr onto, string concept, string var);
     Variable(VROntologyPtr onto, string val);
+    Variable();
 
-    static std::shared_ptr<Variable> create(VROntologyPtr onto, string concept, string var);
-    static std::shared_ptr<Variable> create(VROntologyPtr onto, string val);
+    static VariablePtr create(VROntologyPtr onto, string concept, string var);
+    static VariablePtr create(VROntologyPtr onto, string val);
 
+    void addEntity(VREntityPtr e);
     bool operator==(Variable v);
     void discard(VREntityPtr e);
-};
-
-typedef std::shared_ptr<Variable> VariablePtr;
-typedef std::weak_ptr<Variable> VariableWeakPtr;
-
-struct Result {
-    vector<VREntityPtr> instances;
 };
 
 struct Term {
@@ -58,7 +58,7 @@ struct Term {
 
     Term(string s);
     bool valid();
-    bool operator==(Term& other);
+    //bool operator==(Term& other);
 };
 
 struct Query {
@@ -74,9 +74,9 @@ struct Query {
 
 struct Context {
     map<string, VariablePtr> vars;
-    map<string, Result> results;
     map<string, Query> rules;
     list<Query> queries;
+    vector<VREntityPtr> results;
     VROntologyPtr onto = 0;
 
     int itr=0;
