@@ -82,6 +82,7 @@ VRPathtool::VRPathtool() : VRObject("Pathtool") {
 VRPathtoolPtr VRPathtool::create() { return VRPathtoolPtr( new VRPathtool() ); }
 
 void VRPathtool::setGraph(graph_basePtr g) {
+    if (!g) return;
     clear();
     auto& nodes = g->getNodes();
     auto& edges = g->getEdges();

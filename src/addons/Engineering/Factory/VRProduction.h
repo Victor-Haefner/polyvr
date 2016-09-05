@@ -42,10 +42,10 @@ struct VRProcessFragment : VROntoID, VRName {
     VRProcessResult* addResult(string name);
 };
 
-struct VRProcess : VROntoID, VRName {
+struct VRProductionProcess : VROntoID, VRName {
     map<int, VRProcessFragment*> fragments;
 
-    VRProcess(string name);
+    VRProductionProcess(string name);
     void addFragment(VRProcessFragment* f);
     string toString();
 };
@@ -63,7 +63,7 @@ struct VRProductionMachine : VROntoID, VRName {
 
 struct VRProductionJob {
     VRProduct* product = 0;
-    VRProcess* process = 0;
+    VRProductionProcess* process = 0;
     VRProductionJob(VRProduct* p);
 };
 

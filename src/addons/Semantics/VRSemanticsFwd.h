@@ -19,6 +19,8 @@ ptrFwd(VROntologyLink);
 ptrFwd(VRReasoner);
 ptrFwd(VRStatement);
 ptrFwd(Variable);
+ptrFwd(VRProcess);
+ptrFwd(VRProcessLayout);
 
 }
 

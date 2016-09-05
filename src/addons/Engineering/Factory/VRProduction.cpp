@@ -14,13 +14,13 @@ using namespace OSG;
 
 // Production --------------------------------------------------
 
-void VRProcess::addFragment(VRProcessFragment* f) {
+void VRProductionProcess::addFragment(VRProcessFragment* f) {
     fragments[f->ID] = f;
 }
 
 VRProductionJob::VRProductionJob(VRProduct* p) {
     product = p;
-    process = new VRProcess("production_of_"+p->getName());
+    process = new VRProductionProcess("production_of_"+p->getName());
 }
 
 VRProduction::VRProduction() {
@@ -107,9 +107,9 @@ void VRProduction::update() {
     }
 }
 
-VRProcess::VRProcess(string name) { this->name = name; }
+VRProductionProcess::VRProductionProcess(string name) { this->name = name; }
 
-string VRProcess::toString() {
+string VRProductionProcess::toString() {
     string data = "process " + name + "\n";
     for (auto f : fragments) data += " fragment " + f.second->getName() + "\n";
     return data;

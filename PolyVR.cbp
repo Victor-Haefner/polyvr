@@ -434,6 +434,12 @@
 		<Unit filename="src/addons/RealWorld/traffic/simulation/src/types.h" />
 		<Unit filename="src/addons/RealWorld/triangulate.cpp" />
 		<Unit filename="src/addons/Sandbox.h" />
+		<Unit filename="src/addons/Semantics/Processes/VRProcess.cpp" />
+		<Unit filename="src/addons/Semantics/Processes/VRProcess.h" />
+		<Unit filename="src/addons/Semantics/Processes/VRProcessLayout.cpp" />
+		<Unit filename="src/addons/Semantics/Processes/VRProcessLayout.h" />
+		<Unit filename="src/addons/Semantics/Processes/VRPyProcess.cpp" />
+		<Unit filename="src/addons/Semantics/Processes/VRPyProcess.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VRConcept.cpp" />
 		<Unit filename="src/addons/Semantics/Reasoning/VRConcept.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VREntity.cpp" />

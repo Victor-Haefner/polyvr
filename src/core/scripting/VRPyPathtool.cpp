@@ -26,7 +26,7 @@ PyMethodDef VRPyPathtool::methods[] = {
     {"clear", (PyCFunction)VRPyPathtool::clear, METH_VARARGS, "Clear all path nodes - clear(path)" },
     {"setHandleGeometry", (PyCFunction)VRPyPathtool::setHandleGeometry, METH_VARARGS, "Replace the default handle geometry - setHandleGeometry( geo )" },
     {"getPathMaterial", (PyCFunction)VRPyPathtool::getPathMaterial, METH_NOARGS, "Get the material used for paths geometry - getPathMaterial()" },
-    {"setGraph", (PyCFunction)VRPyPathtool::setGraph, METH_NOARGS, "Setup from graph - setGraph( graph )" },
+    {"setGraph", (PyCFunction)VRPyPathtool::setGraph, METH_VARARGS, "Setup from graph - setGraph( graph )" },
     {NULL}  /* Sentinel */
 };
 
@@ -34,7 +34,7 @@ PyObject* VRPyPathtool::setGraph(VRPyPathtool* self, PyObject* args) {
     if (!self->valid()) return NULL;
     VRPyGraph* g = 0;
     if (! PyArg_ParseTuple(args, "O:setGraph", &g)) return NULL;
-    self->objPtr->setGraph( g->objPtr );
+    if (g) self->objPtr->setGraph( g->objPtr );
     Py_RETURN_TRUE;
 }
 
@@ -81,7 +81,7 @@ PyObject* VRPyPathtool::getPaths(VRPyPathtool* self) {
 PyObject* VRPyPathtool::getStroke(VRPyPathtool* self, PyObject* args) {
     if (!self->valid()) return NULL;
     VRPyPath* p = 0;
-    if (! PyArg_ParseTuple(args, "O:getStroke", &p)) return NULL;
+    if (!PyArg_ParseTuple(args, "O:getStroke", &p)) return NULL;
     return VRPyStroke::fromSharedPtr( self->objPtr->getStroke(p->obj) );
 }
 

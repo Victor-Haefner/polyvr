@@ -89,6 +89,7 @@
 #include "addons/CEF/VRPyWebCam.h"
 #include "addons/Semantics/Segmentation/VRPySegmentation.h"
 #include "addons/Semantics/Segmentation/VRPyAdjacencyGraph.h"
+#include "addons/Semantics/Processes/VRPyProcess.h"
 #include "addons/Engineering/Chemistry/VRPyMolecule.h"
 #include "addons/Engineering/Factory/VRPyFactory.h"
 #include "addons/Engineering/Milling/VRPyMillingMachine.h"
@@ -381,6 +382,7 @@ void VRScriptManager::initPyModules() {
     registerModule<VRPyMolecule>("Molecule", pModVR, VRPyGeometry::typeRef);
     registerModule<VRPyRobotArm>("RobotArm", pModVR);
     registerModule<VRPyOntology>("Ontology", pModVR);
+    registerModule<VRPyProcess>("Process", pModVR);
     registerModule<VRPyOntologyRule>("OntologyRule", pModVR);
     registerModule<VRPyProperty>("Property", pModVR);
     registerModule<VRPyConcept>("Concept", pModVR);

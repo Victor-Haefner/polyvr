@@ -244,13 +244,12 @@ bool VROWLImport::ProcessSubject(RDFStatement& statement, vector<RDFStatement>& 
         }
 
         // entity(subject) has a property(predicate) with value(object)
-        auto pv = entities[subject]->getValues(predicate);
-        if (pv.size()) { pv[0]->value = object; return 0; }
-
+        //auto pv = entities[subject]->getValues(predicate);
+        //if (pv.size()) { pv[0]->value = object; return 0; }
         auto p = entities[subject]->getProperty(predicate);
         if (p) {
             //if (p->type == "") cout << "Warning: data property " << predicate << " has no data type!\n";
-            entities[subject]->set(predicate, object); return 0;
+            entities[subject]->add(predicate, object); return 0;
         }
     }
 
