@@ -6,6 +6,7 @@
 using namespace OSG;
 
 simpleVRPyType(Process, New_named_ptr);
+simpleVRPyType(ProcessLayout, New_VRObjects_ptr);
 
 PyMethodDef VRPyProcess::methods[] = {
     {"open", (PyCFunction)VRPyProcess::open, METH_VARARGS, "Open file - open(path)" },
@@ -37,4 +38,17 @@ PyObject* VRPyProcess::getInteractionDiagram(VRPyProcess* self) {
 PyObject* VRPyProcess::getBehaviorDiagram(VRPyProcess* self, PyObject* args) {
     if (!self->valid()) return NULL;
     return VRPyGraph::fromSharedPtr( self->objPtr->getBehaviorDiagram( parseString(args) ) );
+}
+
+PyMethodDef VRPyProcessLayout::methods[] = {
+    {"setProcess", (PyCFunction)VRPyProcessLayout::setProcess, METH_VARARGS, "Set process - setProcess(process)" },
+    {NULL}  /* Sentinel */
+};
+
+PyObject* VRPyProcessLayout::setProcess(VRPyProcessLayout* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    VRPyProcess* p = 0;
+    if (!PyArg_ParseTuple(args, "O", &p)) return NULL;
+    self->objPtr->setProcess( p->objPtr );
+    Py_RETURN_TRUE;
 }

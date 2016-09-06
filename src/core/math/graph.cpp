@@ -18,3 +18,6 @@ void graph_base::setPosition(int i, Vec3f v) { nodes[i].pos = v; update(i); }
 void graph_base::update(int i) {}
 
 graph_base::edge::edge(int i, int j, CONNECTION c) : from(i), to(j), connection(c) {}
+
+//vector<graph_base::node>::iterator graph_base::begin() { return nodes.begin(); }
+//vector<graph_base::node>::iterator graph_base::end() { return nodes.end(); }

@@ -2,17 +2,20 @@
 
 #include "addons/Semantics/Reasoning/VROntology.h"
 #include "addons/Semantics/Reasoning/VRReasoner.h"
+#include "addons/Semantics/Reasoning/VRProperty.h"
 #include "core/utils/VRStorage_template.h"
+#include "core/objects/VRTransform.h"
 #include <iostream>
 
 using namespace OSG;
 
-VRProcess::Subject::Subject(VREntityPtr e) {
+VRProcess::Node::Node(VREntityPtr e) {
     ;
 }
 
-void VRProcess::Subject::update(graph_base::node& n) {}
-void VRProcess::Fragment::update(graph_base::node& n) {}
+void VRProcess::Node::update(graph_base::node& n) {
+    if (widget) widget->setFrom(n.pos);
+}
 
 VRProcess::VRProcess(string name) {
     setStorageType("Process");
@@ -34,8 +37,8 @@ void VRProcess::open(string path) {
 
 void VRProcess::setOntology(VROntologyPtr o) { ontology = o; update(); }
 
-graph_basePtr VRProcess::getInteractionDiagram() { return dynamic_pointer_cast<graph_base>(interactionDiagram); }
-graph_basePtr VRProcess::getBehaviorDiagram(string subject) { return dynamic_pointer_cast<graph_base>(behaviorDiagrams[subject]); }
+VRProcess::DiagramPtr VRProcess::getInteractionDiagram() { return interactionDiagram; }
+VRProcess::DiagramPtr VRProcess::getBehaviorDiagram(string subject) { return behaviorDiagrams[subject]; }
 
 void VRProcess::update() {
     if (!ontology) return;
@@ -45,13 +48,14 @@ void VRProcess::update() {
 
     auto layers = query("q(x):Layer(x)");
     if (layers.size() == 0) return;
-
     auto layer = layers[0]; // only use first layer
-    interactionDiagram = InteractionDiagramPtr( new InteractionDiagram() );
+    interactionDiagram = DiagramPtr( new Diagram() );
 
-    string subjects = "q(x):Actor(x);Layer("+layer->getName()+");has("+layer->getName()+",x)";
-    for ( auto subject : query(subjects) ) {
-        interactionDiagram->addNode( Subject(subject) );
+    string q_subjects = "q(x):ActiveProcessComponent(x);Layer("+layer->getName()+");has("+layer->getName()+",x)";
+    for ( auto subject : query(q_subjects) ) {
+        auto n = Node(subject);
+        if (auto label = subject->getValue("hasModelComponentLable") ) n.label = label->value;
+        interactionDiagram->addNode( n );
         cout << " " << subject->toString() << endl;
     }
 }

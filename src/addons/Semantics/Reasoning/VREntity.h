@@ -31,6 +31,7 @@ struct VREntity : public VROntoID, public VRName {
     string toString();
 
     vector<VRPropertyPtr> getValues(string name = "");
+    VRPropertyPtr getValue(string name);
 
     vector<string> getAtPath(vector<string> path);
 

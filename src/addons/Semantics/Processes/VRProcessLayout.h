@@ -17,6 +17,8 @@ class VRProcessLayout : public VRTransform {
 
         static VRProcessLayoutPtr create(string name = "");
         VRProcessLayoutPtr ptr();
+
+        void setProcess(VRProcessPtr p);
 };
 
 OSG_END_NAMESPACE;

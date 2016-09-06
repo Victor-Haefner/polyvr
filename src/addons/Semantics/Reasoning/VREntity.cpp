@@ -128,6 +128,12 @@ vector<VRPropertyPtr> VREntity::getValues(string name) {
     return res;
 }
 
+VRPropertyPtr VREntity::getValue(string name) {
+    auto props = getValues(name);
+    if (props.size() == 0) return 0;
+    return props[0];
+}
+
 vector<VRPropertyPtr> getProperties();
 
 vector<string> VREntity::getAtPath(vector<string> path) {

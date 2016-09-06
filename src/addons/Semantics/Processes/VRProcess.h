@@ -14,24 +14,23 @@ OSG_BEGIN_NAMESPACE;
 
 class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName {
     public:
-        struct Subject : VRName {
-            Subject(VREntityPtr e);
+        struct Node : VRName {
+            VREntityPtr entity;
+            VRTransformPtr widget;
+
+            string label;
+
+            Node(VREntityPtr e);
             void update(graph_base::node& n);
         };
 
-        struct Fragment : VRName {
-            void update(graph_base::node& n);
-        };
-
-        typedef graph<Subject> InteractionDiagram;
-        typedef graph<Fragment> BehaviorDiagram;
-        typedef shared_ptr< InteractionDiagram > InteractionDiagramPtr;
-        typedef shared_ptr< BehaviorDiagram > BehaviorDiagramPtr;
+        typedef graph<Node> Diagram;
+        typedef shared_ptr< Diagram > DiagramPtr;
 
     private:
         VROntologyPtr ontology;
-        InteractionDiagramPtr interactionDiagram;
-        map<string, BehaviorDiagramPtr> behaviorDiagrams;
+        DiagramPtr interactionDiagram;
+        map<string, DiagramPtr> behaviorDiagrams;
 
         void update();
 
@@ -42,8 +41,10 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
 
         void open(string path);
         void setOntology(VROntologyPtr o);
-        graph_basePtr getInteractionDiagram();
-        graph_basePtr getBehaviorDiagram(string subject);
+        DiagramPtr getInteractionDiagram();
+        DiagramPtr getBehaviorDiagram(string subject);
+
+
 };
 
 OSG_END_NAMESPACE;

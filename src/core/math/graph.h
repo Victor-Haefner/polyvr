@@ -43,6 +43,9 @@ class graph_base {
         vector< node >& getNodes();
         vector< vector<edge> >& getEdges();
 
+        //vector<node>::iterator begin();
+        //vector<node>::iterator end();
+
         void setPosition(int i, Vec3f v);
 };
 
