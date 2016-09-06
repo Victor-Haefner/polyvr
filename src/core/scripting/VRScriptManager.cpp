@@ -76,6 +76,7 @@
 #include "core/gui/VRGuiManager.h"
 #include "core/setup/VRSetup.h"
 #include "core/setup/VRSetupManager.h"
+#include "addons/Algorithms/VRPyGraphLayout.h"
 #include "addons/CaveKeeper/VRPyCaveKeeper.h"
 #include "addons/Bullet/Particles/VRPyParticles.h"
 #include "addons/Bullet/Fluids/VRPyFluids.h"
@@ -337,6 +338,7 @@ void VRScriptManager::initPyModules() {
     registerModule<VRPyPose>("Pose", pModVR);
     registerModule<VRPyPath>("Path", pModVR);
     registerModule<VRPyGraph>("Graph", pModVR);
+    registerModule<VRPyGraphLayout>("GraphLayout", pModVR);
     registerModule<VRPyPolygon>("Polygon", pModVR);
     registerModule<VRPyTriangulator>("Triangulator", pModVR);
     registerModule<VRPyRecorder>("Recorder", pModVR);

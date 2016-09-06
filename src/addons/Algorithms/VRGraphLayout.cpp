@@ -1,30 +1,25 @@
 #include "VRGraphLayout.h"
 #include "core/math/Octree.h"
-#include "core/math/graphT.h"
 
 using namespace OSG;
 
-template class graph<VRGraphLayout::Node>;
-
-void VRGraphLayout::Node::update(graph_base::node& n) {
-    Vec3f d = n.pos - bb.center();
-    bb.move( d );
-}
-
 VRGraphLayout::VRGraphLayout() {}
 
-void VRGraphLayout::setGraph(layout& g) { this->g = g; }
-VRGraphLayout::layout& VRGraphLayout::getGraph() { return g; }
+VRGraphLayoutPtr VRGraphLayout::create() { return VRGraphLayoutPtr( new VRGraphLayout() ); }
+
+void VRGraphLayout::setGraph(graph_basePtr g) { graph = g; }
+graph_basePtr VRGraphLayout::getGraph() { return graph; }
 void VRGraphLayout::setAlgorithm(ALGORITHM a, int position) { algorithms[position] = a; }
 void VRGraphLayout::clearAlgorithms() { algorithms.clear(); }
 
 void VRGraphLayout::applySprings(float eps) {
-    for (auto& n : g.getEdges()) {
+    if (!graph) return;
+    for (auto& n : graph->getEdges()) {
         for (auto& e : n) {
             auto f1 = getFlag(e.from);
             auto f2 = getFlag(e.to);
-            Node& n1 = g.getElement(e.from);
-            Node& n2 = g.getElement(e.to);
+            auto& n1 = graph->getNode(e.from);
+            auto& n2 = graph->getNode(e.to);
             Vec3f p1 = n1.bb.center();
             Vec3f p2 = n2.bb.center();
 
@@ -39,18 +34,18 @@ void VRGraphLayout::applySprings(float eps) {
 
             Vec3f grav = gravity*x*0.1; // TODO: not yet working!
             switch (e.connection) {
-                case layout::SIMPLE:
-                    if (f1 != FIXED) g.setPosition( e.from, p1 + d*x*r + grav );
-                    if (f2 != FIXED) g.setPosition( e.to, p2 - d*x*r + grav );
+                case graph_base::SIMPLE:
+                    if (f1 != FIXED) graph->setPosition( e.from, p1 + d*x*r + grav );
+                    if (f2 != FIXED) graph->setPosition( e.to, p2 - d*x*r + grav );
                     break;
-                case layout::HIERARCHY:
-                    if (f2 != FIXED) g.setPosition( e.to, p2 - d*x*r + grav );
-                    else if (f1 != FIXED) g.setPosition( e.from, p1 + d*x*r + grav );
+                case graph_base::HIERARCHY:
+                    if (f2 != FIXED) graph->setPosition( e.to, p2 - d*x*r + grav );
+                    else if (f1 != FIXED) graph->setPosition( e.from, p1 + d*x*r + grav );
                     break;
-                case layout::SIBLING:
+                case graph_base::SIBLING:
                     if (x < 0) { // push away siblings
-                        if (f1 != FIXED) g.setPosition( e.from, p1 + d*x*r + grav );
-                        if (f2 != FIXED) g.setPosition( e.to, p2 - d*x*r + grav );
+                        if (f1 != FIXED) graph->setPosition( e.from, p1 + d*x*r + grav );
+                        if (f2 != FIXED) graph->setPosition( e.to, p2 - d*x*r + grav );
                     }
                     break;
             }
@@ -59,7 +54,8 @@ void VRGraphLayout::applySprings(float eps) {
 }
 
 void VRGraphLayout::applyOccupancy(float eps) {
-    auto& nodes = g.getElements();
+    if (!graph) return;
+    auto& nodes = graph->getNodes();
     Octree o(10*eps);
 
     long i=0;
@@ -87,11 +83,12 @@ void VRGraphLayout::applyOccupancy(float eps) {
             }
         }
 
-        g.setPosition(i, pn+D); // move node away from neighbors
+        graph->setPosition(i, pn+D); // move node away from neighbors
     }
 }
 
 void VRGraphLayout::compute(int N, float eps) {
+    if (!graph) return;
     for (int i=0; i<N; i++) { // steps
         for (auto a : algorithms) {
             switch(a.second) {

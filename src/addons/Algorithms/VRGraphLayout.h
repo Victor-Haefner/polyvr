@@ -1,14 +1,16 @@
 #ifndef VRGRAPHLAYOUT_H_INCLUDED
 #define VRGRAPHLAYOUT_H_INCLUDED
 
-#import "core/math/graph.h"
-#import "core/math/boundingbox.h"
+#include "core/math/graph.h"
+#include "core/utils/VRFwdDeclTemplate.h"
 
-#import <OpenSG/OSGVector.h>
-#import <map>
+#include <OpenSG/OSGVector.h>
+#include <map>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
+
+ptrFwd(VRGraphLayout);
 
 class VRGraphLayout {
     public:
@@ -22,15 +24,8 @@ class VRGraphLayout {
             FIXED
         };
 
-        struct Node {
-            boundingbox bb;
-            void update(graph_base::node& n);
-        };
-
-        typedef graph<Node> layout;
-
     private:
-        layout g;
+        graph_basePtr graph;
         map<int, ALGORITHM> algorithms;
         map<int, FLAG> flags;
         Vec3f gravity;
@@ -43,9 +38,10 @@ class VRGraphLayout {
 
     public:
         VRGraphLayout();
+        static VRGraphLayoutPtr create();
 
-        void setGraph(layout& g);
-        layout& getGraph();
+        void setGraph(graph_basePtr g);
+        graph_basePtr getGraph();
 
         void setAlgorithm(ALGORITHM a, int position = 0);
         void clearAlgorithms();

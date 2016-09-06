@@ -4,6 +4,7 @@
 #include <vector>
 #include <OpenSG/OSGVector.h>
 #include "core/math/VRMathFwd.h"
+#include "core/math/boundingbox.h"
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
@@ -18,6 +19,7 @@ class graph_base {
 
         struct node {
             Vec3f pos;
+            boundingbox bb;
         };
 
         struct edge {
@@ -26,6 +28,10 @@ class graph_base {
             CONNECTION connection;
 
             edge(int i, int j, CONNECTION c);
+        };
+
+        struct emptyNode {
+            void update(node& n) {}
         };
 
     protected:

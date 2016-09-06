@@ -54,7 +54,8 @@ struct VRSemanticWidget {
     Vec2f getAnchorPoint(Vec2f p);
     void setPropRow(Gtk::TreeModel::iterator iter, string name, string type, string color, int flag, int ID = 0, int rtype = 0);
 
-    VRGraphLayout::Node toGraphLayoutNode();
+    Vec3f getPosition();
+    Vec3f getSize();
 
     virtual void on_select_property() = 0;
     virtual void on_rem_clicked() = 0;

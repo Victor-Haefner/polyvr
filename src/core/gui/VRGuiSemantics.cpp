@@ -36,6 +36,7 @@
 #include "widgets/VREntityWidget.h"
 #include "widgets/VRRuleWidget.h"
 #include "widgets/VRConnectorWidget.h"
+#include "core/math/graphT.h"
 
 /** TODO:
 
@@ -128,14 +129,22 @@ void VRGuiSemantics::updateLayout() {
     VRGraphLayout layout;
     layout.setAlgorithm(VRGraphLayout::SPRINGS, 0);
     layout.setAlgorithm(VRGraphLayout::OCCUPANCYMAP, 1);
-    VRGraphLayout::layout& g = layout.getGraph();
     layout.setGravity(Vec3f(0,1,0));
     layout.setRadius(20);
 
+    auto gra = shared_ptr< graph<graph_base::emptyNode> >( new graph<graph_base::emptyNode>() );
+    layout.setGraph(gra);
     map<int, int> widgetIDs;
 
     for (auto c : widgets) { // build up graph nodes
-        widgetIDs[c.first] = g.addNode( c.second->toGraphLayoutNode() );
+        Vec3f p = c.second->getPosition();
+        Vec3f s = c.second->getSize();
+
+        int ID = gra->addNode();
+        gra->getNode(ID).bb.update(p-s);
+        gra->getNode(ID).bb.update(p+s);
+
+        widgetIDs[c.first] = ID;
         if (c.first == current->thing->ID) layout.fixNode(widgetIDs[c.first]);
     }
 
@@ -146,19 +155,19 @@ void VRGuiSemantics::updateLayout() {
 
         if (c) {
             for (auto c2 : c->concept->children) { // parent child connection
-                g.connect(widgetIDs[c->concept->ID], widgetIDs[c2.second->ID], VRGraphLayout::layout::HIERARCHY);
+                gra->connect(widgetIDs[c->concept->ID], widgetIDs[c2.second->ID], graph_base::HIERARCHY);
             }
         }
 
         if (e) {
             for (auto c : e->entity->getConcepts()) {
-                g.connect(widgetIDs[c->ID], widgetIDs[w.first], VRGraphLayout::layout::HIERARCHY);
+                gra->connect(widgetIDs[c->ID], widgetIDs[w.first], graph_base::HIERARCHY);
             }
         }
 
         if (r) {
             if (auto c = current->getConcept( r->rule->associatedConcept) )
-                g.connect(widgetIDs[c->ID], widgetIDs[w.first], VRGraphLayout::layout::HIERARCHY);
+                gra->connect(widgetIDs[c->ID], widgetIDs[w.first], graph_base::HIERARCHY);
         }
     }
 
@@ -166,7 +175,7 @@ void VRGuiSemantics::updateLayout() {
 
     int i = 0;
     for (auto c : widgets) { // update widget positions
-        Vec3f p = g.getElement(i).bb.center();
+        Vec3f p = gra->getNode(i).bb.center();
         c.second->move(Vec2f(p[0], p[1]));
         i++;
     }
