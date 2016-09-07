@@ -23,7 +23,7 @@ bool boundingbox::empty() { return cleared; }
 Vec3f boundingbox::min() { return bb1; }
 Vec3f boundingbox::max() { return bb2; }
 Vec3f boundingbox::center() { return (bb2+bb1)*0.5; }
-float boundingbox::radius() { return (min()-center()).length(); }
+float boundingbox::radius() { return cleared ? 0 : (min()-center()).length(); }
 
 void boundingbox::move(const Vec3f& t) {
     bb1 += t;

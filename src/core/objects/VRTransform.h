@@ -99,6 +99,7 @@ class VRTransform : public VRObject {
         Vec3f getEuler();
         void getMatrix(Matrix& _m);
         Matrix getMatrix();
+        Matrix getMatrixTo(VRObjectPtr o);
 
         void setFrom(Vec3f pos);
         void setAt(Vec3f at);
@@ -147,6 +148,7 @@ class VRTransform : public VRObject {
         virtual void drop();
         void rebaseDrag(VRObjectPtr new_parent);
         VRObjectPtr getDragParent();
+        bool isDragged();
 
         /** Cast a ray in world coordinates from the object in its local coordinates, -z axis defaults **/
         Line castRay(VRObjectPtr obj = 0, Vec3f dir = Vec3f(0,0,-1));
@@ -157,11 +159,8 @@ class VRTransform : public VRObject {
         VRAnimation* startPathAnimation(path* p, float time, float offset, bool redirect = true, bool loop = false);
         void stopAnimation();
 
-        /** Print the position of the object in local && world coords **/
-        void printPos();
-
-        /** Print the positions of all the subtree **/
-        void printTransformationTree(int indent = 0);
+        void printPos(); // Print the position of the object in local && world coords
+        void printTransformationTree(int indent = 0); // Print the positions of all the subtree
 
         void setConstraint(VRConstraintPtr c);
         VRConstraintPtr getConstraint();

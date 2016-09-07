@@ -7,6 +7,10 @@
 struct VRPyGraphLayout : VRPyBaseT<OSG::VRGraphLayout> {
     static PyMethodDef methods[];
     static PyObject* setGraph(VRPyGraphLayout* self, PyObject* args);
+    static PyObject* setAlgorithm(VRPyGraphLayout* self, PyObject* args);
+    static PyObject* setParameters(VRPyGraphLayout* self, PyObject* args);
+    static PyObject* fixNode(VRPyGraphLayout* self, PyObject* args);
+    static PyObject* compute(VRPyGraphLayout* self, PyObject* args);
 };
 
 #endif // VRPYGRAPHLAYOUT_H_INCLUDED

@@ -137,12 +137,12 @@ void VRGuiSemantics::updateLayout() {
     map<int, int> widgetIDs;
 
     for (auto c : widgets) { // build up graph nodes
-        Vec3f p = c.second->getPosition();
         Vec3f s = c.second->getSize();
 
         int ID = gra->addNode();
-        gra->getNode(ID).bb.update(p-s);
-        gra->getNode(ID).bb.update(p+s);
+        gra->getNode(ID).pos = c.second->getPosition();
+        gra->getNode(ID).box.update(-s);
+        gra->getNode(ID).box.update(s);
 
         widgetIDs[c.first] = ID;
         if (c.first == current->thing->ID) layout.fixNode(widgetIDs[c.first]);
@@ -175,7 +175,7 @@ void VRGuiSemantics::updateLayout() {
 
     int i = 0;
     for (auto c : widgets) { // update widget positions
-        Vec3f p = gra->getNode(i).bb.center();
+        Vec3f p = gra->getNode(i).pos;
         c.second->move(Vec2f(p[0], p[1]));
         i++;
     }

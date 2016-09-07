@@ -11,6 +11,8 @@ class VRProcessLayout : public VRTransform {
     private:
         VRProcessPtr process;
 
+        VRTransformPtr newWidget(string label, float height);
+
     public:
         VRProcessLayout(string name = "");
         ~VRProcessLayout();

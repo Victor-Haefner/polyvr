@@ -9,8 +9,13 @@ VRGraphLayoutPtr VRGraphLayout::create() { return VRGraphLayoutPtr( new VRGraphL
 
 void VRGraphLayout::setGraph(graph_basePtr g) { graph = g; }
 graph_basePtr VRGraphLayout::getGraph() { return graph; }
-void VRGraphLayout::setAlgorithm(ALGORITHM a, int position) { algorithms[position] = a; }
+void VRGraphLayout::setAlgorithm(ALGORITHM a, int p) { algorithms[p] = a; }
 void VRGraphLayout::clearAlgorithms() { algorithms.clear(); }
+void VRGraphLayout::setAlgorithm(string a, int p) {
+    ALGORITHM A = SPRINGS;
+    if (a == "OCCUPANCYMAP") A = OCCUPANCYMAP;
+    setAlgorithm(A, p);
+}
 
 void VRGraphLayout::applySprings(float eps) {
     if (!graph) return;
@@ -20,10 +25,10 @@ void VRGraphLayout::applySprings(float eps) {
             auto f2 = getFlag(e.to);
             auto& n1 = graph->getNode(e.from);
             auto& n2 = graph->getNode(e.to);
-            Vec3f p1 = n1.bb.center();
-            Vec3f p2 = n2.bb.center();
+            Vec3f p1 = n1.pos;
+            Vec3f p2 = n2.pos;
 
-            float r = radius + n1.bb.radius() + n2.bb.radius();
+            float r = radius + n1.box.radius() + n2.box.radius();
             Vec3f d = p2 - p1;
             float x = (d.length() - r)*eps; // displacement
             d.normalize();
@@ -60,22 +65,22 @@ void VRGraphLayout::applyOccupancy(float eps) {
 
     long i=0;
     for (auto& n : nodes) {
-        o.add( OcPoint(n.bb.center(), (void*)i) );
+        o.add( OcPoint(n.pos, (void*)i) );
         i++;
     }
 
     for (int i=0; i<nodes.size(); i++) {
         auto& n = nodes[i];
-        Vec3f pn = n.bb.center();
-        float rs = radius + 2*n.bb.radius();
+        Vec3f pn = n.pos;
+        float rs = radius + 2*n.box.radius();
         if ( getFlag(i) == FIXED ) continue;
 
         Vec3f D;
         for (auto& on2 : o.radiusSearch(pn, rs) ) {
             int i = (long)on2;
             auto& n2 = nodes[i];
-            Vec3f d = n2.bb.center() - pn;
-            float r = radius + n.bb.radius() + n2.bb.radius();
+            Vec3f d = n2.pos - pn;
+            float r = radius + n.box.radius() + n2.box.radius();
             float x = (r - d.length())*eps; // displacement
             if (x > 0) {
                 d.normalize();

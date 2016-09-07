@@ -58,7 +58,7 @@ bool Octree::inBox(Vec3f p, Vec3f c, float size) {
 
 void Octree::add(Vec3f p, void* d, int maxjump) { add(OcPoint(p, d), maxjump); }
 
-void Octree::add(OcPoint p, int maxjump) {
+void Octree::add(OcPoint p, int maxjump, bool checkPosition) {
     bool rOk = checkRecursion(this, p.pos);
     if (!rOk) {
         cout << "\n Center " << center;
@@ -77,8 +77,8 @@ void Octree::add(OcPoint p, int maxjump) {
     //cout << "\nAdd "; p.print();
     Vec3f rp = p.pos - center;
 
-    if ( !inBox(p.pos, center, size) ) {
-        if (parent == 0) {
+    if ( !inBox(p.pos, center, size) && checkPosition ) { // not in node
+        if (parent == 0) { // no parent, create it
             float s2 = size*0.5;
             parent = new Octree(resolution);
             //Vec3f c = center.add( Vec3f(copysign(s2,rp[0]), copysign(s2,rp[1]), copysign(s2,rp[2])) );
@@ -90,7 +90,7 @@ void Octree::add(OcPoint p, int maxjump) {
             int o = parent->getOctant(center);
             parent->children[o] = this;
         }
-        parent->add(p);
+        parent->add(p, maxjump+1, checkPosition); // go a level up
         return;
     }
 
@@ -108,7 +108,7 @@ void Octree::add(OcPoint p, int maxjump) {
             children[o]->parent = this;
         }
         //Vec3f c = children[o]->center;
-        children[o]->add(p, maxjump-1);
+        children[o]->add(p, maxjump-1, false);
         return;
     }
 

@@ -8,27 +8,13 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRText {
-
     private:
-
         void convertData(UChar8* data, int width, int height);
-
         VRTexturePtr createBmp (string text, string font, int width, int height, Color4f c, Color4f bg);
 
-        //void setImage(SimpleTexturedMaterialRecPtr tex, ImageRecPtr img);
-
-        //void write_png();
-
-        VRText () { ; }
-        void operator= (VRText v) {;}
-
     public:
-
         static VRText* get();
-
         VRTexturePtr create(string text, string font, int scale, Color4f fg, Color4f bg);
-
-        SimpleTexturedMaterialRecPtr getTexture (string text, string font, int scale, Color4f fg, Color4f bg);
 };
 
 

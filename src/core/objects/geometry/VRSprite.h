@@ -14,6 +14,7 @@ class VRSprite : public VRGeometry {
     protected:
         string font = "SANS 20";
         Color4f fontColor;
+        Color4f backColor;
         float width;
         float height;
         string label;
@@ -34,6 +35,7 @@ class VRSprite : public VRGeometry {
         void webOpen(string path, int res, float ratio);
         void setFont(string f);
         void setFontColor(Color4f c);
+        void setBackColor(Color4f c);
 
         Vec2f getSize();
         string getLabel();

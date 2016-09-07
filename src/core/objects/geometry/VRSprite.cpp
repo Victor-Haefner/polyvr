@@ -19,6 +19,7 @@ VRSprite::VRSprite (string name, bool alpha, float w, float h) : VRGeometry(name
     height = h;
     type = "Sprite";
     fontColor = Color4f(0,0,0,255);
+    backColor = Color4f(0,0,0,0);
     updateGeo();
 }
 
@@ -61,9 +62,9 @@ void VRSprite::updateGeo() {
 void VRSprite::setLabel (string l, float res) {
     if (l == label) return;
     label = l;
-    auto labelMat = VRText::get()->getTexture(l, font, 20*res, fontColor, Color4f(0,0,0,0) );
-    labelMat->setSortKey(1);
-    setMaterial(labelMat);
+    auto tex = VRText::get()->create(l, font, 20*res, fontColor, backColor );
+    //labelMat->setSortKey(1);
+    getMaterial()->setTexture(tex);
 }
 
 void VRSprite::webOpen(string path, int res, float ratio){
@@ -94,6 +95,7 @@ void VRSprite::setTexture(string path) {
 void VRSprite::setFont(string f) { font = f; }
 
 void VRSprite::setFontColor(Color4f c) { fontColor = c; }
+void VRSprite::setBackColor(Color4f c) { backColor = c; }
 
 string VRSprite::getLabel() { return label; }
 Vec2f VRSprite::getSize() { return Vec2f(width, height); }

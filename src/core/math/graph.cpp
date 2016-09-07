@@ -21,8 +21,6 @@ void graph_base::update(int i) {}
 void graph_base::setPosition(int i, Vec3f v) {
     auto& n = nodes[i];
     n.pos = v;
-    Vec3f d = v - n.bb.center();
-    n.bb.move( d );
     update(i);
 }
 

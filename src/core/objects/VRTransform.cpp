@@ -189,6 +189,26 @@ Matrix VRTransform::getMatrix() {
     return m;
 }
 
+Matrix VRTransform::getMatrixTo(VRObjectPtr obj) {
+    VRTransformPtr ent; // get first transform object
+    while(obj) {
+        if (obj->hasAttachment("transform")) {
+            ent = static_pointer_cast<VRTransform>(obj);
+            break;
+        }
+        obj = obj->getParent();
+    }
+
+    Matrix m1, m2;
+    if (ent) m1 = ent->getWorldMatrix();
+    m2 = getWorldMatrix();
+    if (!ent) return m2;
+
+    m1.invert();
+    m1.mult(m2);
+    return m1;
+}
+
 bool VRTransform::checkWorldChange() {
     if (frame == 0) { frame = 1; return true; }
     if (change) return true;
@@ -593,6 +613,7 @@ void VRTransform::rebaseDrag(VRObjectPtr new_parent) {
     old_parent = new_parent;
 }
 
+bool VRTransform::isDragged() { return held; }
 VRObjectPtr VRTransform::getDragParent() { return old_parent.lock(); }
 
 /** Cast a ray in world coordinates from the object in its local coordinates, -z axis defaults **/

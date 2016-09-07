@@ -14,7 +14,12 @@ VRProcess::Node::Node(VREntityPtr e) {
 }
 
 void VRProcess::Node::update(graph_base::node& n) {
-    if (widget) widget->setFrom(n.pos);
+    if (widget) {
+        if (widget->isDragged()) {
+            auto m = widget->getMatrixTo( widget->getDragParent() );
+            n.pos = Vec3f(m[3]);
+        } else widget->setFrom(n.pos);
+    }
 }
 
 VRProcess::VRProcess(string name) {
@@ -58,4 +63,17 @@ void VRProcess::update() {
         interactionDiagram->addNode( n );
         cout << " " << subject->toString() << endl;
     }
+
+    string q_messages = "q(x):StandardMessageExchange(x);Layer("+layer->getName()+");has("+layer->getName()+",x)";
+    for ( auto message : query(q_messages) ) {
+        string q_message = "q(x):MessageSpec(x);StandardMessageExchange("+message->getName()+");is("+message->getName()+".hasMessageType,x)";
+        auto n = Node(message);
+        auto msgs = query(q_message);
+        if (msgs.size())
+            if (auto label = msgs[0]->getValue("hasModelComponentLable") ) n.label = label->value;
+        interactionDiagram->addNode(n);
+        cout << " " << message->toString() << endl;
+    }
+
+    //interactionDiagram->connect( n );
 }

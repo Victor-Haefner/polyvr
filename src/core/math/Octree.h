@@ -38,7 +38,7 @@ class Octree {
         Octree(float resolution);
         Octree* getRoot();
 
-        void add(OcPoint p, int maxjump = -1);
+        void add(OcPoint p, int maxjump = -1, bool checkPosition = true);
         void add(Vec3f p, void* data, int maxjump = -1);
         void set(Octree* node, void* data);
         Octree* get(Vec3f p);

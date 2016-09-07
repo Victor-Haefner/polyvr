@@ -44,6 +44,7 @@ class VRGraphLayout {
         graph_basePtr getGraph();
 
         void setAlgorithm(ALGORITHM a, int position = 0);
+        void setAlgorithm(string a, int position = 0);
         void clearAlgorithms();
         void compute(int N = 10, float eps = 0.1);
 
