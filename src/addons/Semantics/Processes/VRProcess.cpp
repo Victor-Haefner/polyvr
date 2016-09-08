@@ -13,12 +13,12 @@ VRProcess::Node::Node(VREntityPtr e) {
     ;
 }
 
-void VRProcess::Node::update(graph_base::node& n) {
-    if (widget) {
-        if (widget->isDragged()) {
-            auto m = widget->getMatrixTo( widget->getDragParent() );
-            n.pos = Vec3f(m[3]);
-        } else widget->setFrom(n.pos);
+void VRProcess::Node::update(graph_base::node& n, bool changed) { // callede when graph node changes
+    if (widget && !widget->isDragged() && changed) widget->setFrom(n.pos);
+
+    if (widget && widget->isDragged()) {
+        auto m = widget->getMatrixTo( widget->getDragParent() );
+        n.pos = Vec3f(m[3]);
     }
 }
 
@@ -48,32 +48,62 @@ VRProcess::DiagramPtr VRProcess::getBehaviorDiagram(string subject) { return beh
 void VRProcess::update() {
     if (!ontology) return;
 
-    VRReasonerPtr r = VRReasoner::create();
-    auto query = [&](string q) { return r->process(q, ontology); };
+    VRReasonerPtr reasoner = VRReasoner::create();
+    reasoner->setVerbose(true, false);
+    auto query = [&](string q) { return reasoner->process(q, ontology); };
 
     auto layers = query("q(x):Layer(x)");
     if (layers.size() == 0) return;
     auto layer = layers[0]; // only use first layer
     interactionDiagram = DiagramPtr( new Diagram() );
 
+    map<string, int> nodes;
+    auto addDiagNode = [&](VREntityPtr e, string label) {
+        auto n = Node(e);
+        n.label = label;
+        int i = interactionDiagram->addNode(n);
+        if (auto ID = e->getValue("hasModelComponentID") ) {
+            nodes[ID->value] = i;
+            cout << "addDiagNode " << ID->value << " " << i << endl;
+        }
+        return i;
+    };
+
+    auto connect = [&](int i, string parent) {
+        if (nodes.count(parent)) {
+            cout << "connect nodes " << i << " parent: " << parent << " parent ID " << nodes[parent] << endl;
+            interactionDiagram->connect(nodes[parent], i, graph_base::HIERARCHY);
+        }
+    };
+
     string q_subjects = "q(x):ActiveProcessComponent(x);Layer("+layer->getName()+");has("+layer->getName()+",x)";
     for ( auto subject : query(q_subjects) ) {
         auto n = Node(subject);
-        if (auto label = subject->getValue("hasModelComponentLable") ) n.label = label->value;
-        interactionDiagram->addNode( n );
-        cout << " " << subject->toString() << endl;
+        string label;
+        if (auto l = subject->getValue("hasModelComponentLable") ) label = l->value;
+        addDiagNode(subject, label);
     }
 
     string q_messages = "q(x):StandardMessageExchange(x);Layer("+layer->getName()+");has("+layer->getName()+",x)";
     for ( auto message : query(q_messages) ) {
         string q_message = "q(x):MessageSpec(x);StandardMessageExchange("+message->getName()+");is("+message->getName()+".hasMessageType,x)";
-        auto n = Node(message);
         auto msgs = query(q_message);
+        string label = "Msg: ";
         if (msgs.size())
-            if (auto label = msgs[0]->getValue("hasModelComponentLable") ) n.label = label->value;
-        interactionDiagram->addNode(n);
-        cout << " " << message->toString() << endl;
+            if (auto l = msgs[0]->getValue("hasModelComponentLable") ) label += l->value;
+        int i = addDiagNode(message, label);
+
+        string sender;
+        string receiver;
+        if (auto s = message->getValue("sender") ) sender = s->value;
+        if (auto r = message->getValue("receiver") ) receiver = r->value;
+        connect(i, sender);
+        connect(i, receiver);
     }
 
     //interactionDiagram->connect( n );
 }
+
+
+
+

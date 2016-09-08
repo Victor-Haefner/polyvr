@@ -151,15 +151,15 @@ Context::Context() {}
 Context::Context(VROntologyPtr onto) {
     this->onto = onto;
 
-    cout << "Init context:" << endl;
+    //cout << "Init context:" << endl;
     for (auto i : onto->instances) {
         if (i.second->getConcepts().size() == 0) { cout << "Context::Context instance " << i.second->getName() << " has no concepts!" << endl; continue; }
         vars[i.second->getName()] = Variable::create( onto, i.second->getConcepts()[0]->getName(), i.second->getName() );
-        cout << " add instance " << i.second->toString() << endl;
+        //cout << " add instance " << i.second->toString() << endl;
     }
 
     for ( auto r : onto->getRules()) {
-        cout << "Context prep rule " << r->toString() << endl;
+        //cout << "Context prep rule " << r->toString() << endl;
         Query q(r->toString());
         if (!q.request) continue;
 
@@ -173,7 +173,7 @@ Context::Context(VROntologyPtr onto) {
                 if (var->value != t.var->value) continue;
 
                 t.var->concept = s->verb;
-                cout << " Set concept of " << t.var->value << " to " << s->verb << endl;
+                //cout << " Set concept of " << t.var->value << " to " << s->verb << endl;
                 break;
             }
         }

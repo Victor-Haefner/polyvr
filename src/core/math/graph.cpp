@@ -16,12 +16,12 @@ void graph_base::connect(int i, int j, CONNECTION c) {
 vector< vector< graph_base::edge > >& graph_base::getEdges() { return edges; }
 vector< graph_base::node >& graph_base::getNodes() { return nodes; }
 graph_base::node& graph_base::getNode(int i) { return nodes[i]; }
-void graph_base::update(int i) {}
+void graph_base::update(int i, bool changed) {}
 
 void graph_base::setPosition(int i, Vec3f v) {
     auto& n = nodes[i];
     n.pos = v;
-    update(i);
+    update(i, true);
 }
 
 graph_base::edge::edge(int i, int j, CONNECTION c) : from(i), to(j), connection(c) {}

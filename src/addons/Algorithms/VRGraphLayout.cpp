@@ -106,6 +106,9 @@ void VRGraphLayout::compute(int N, float eps) {
             }
         }
     }
+
+    // update graph nodes a second time
+    for (int i=0; i<graph->getNodes().size(); i++) graph->update(i, false);
 }
 
 VRGraphLayout::FLAG VRGraphLayout::getFlag(int i) { return flags.count(i) ? flags[i] : NONE; }

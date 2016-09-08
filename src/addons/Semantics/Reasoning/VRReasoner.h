@@ -26,6 +26,9 @@ class VRReasoner {
         string yellowBeg = "\033[0;38;2;255;255;150m";
         string colEnd = "\033[0m";
 
+        bool verbGui = true;
+        bool verbConsole = true;
+
         enum COLOR {
             BLUE,
             RED,
@@ -51,6 +54,7 @@ class VRReasoner {
     public:
         static VRReasonerPtr create();
         vector<VREntityPtr> process(string query, VROntologyPtr onto);
+        void setVerbose(bool gui, bool console);
 };
 
 OSG_END_NAMESPACE;

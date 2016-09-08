@@ -21,7 +21,7 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
             string label;
 
             Node(VREntityPtr e);
-            void update(graph_base::node& n);
+            void update(graph_base::node& n, bool changed);
         };
 
         typedef graph<Node> Diagram;

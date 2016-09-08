@@ -46,20 +46,22 @@ bool VRReasoner::startswith(string s, string subs) {
 */
 
 void VRReasoner::print(const string& s) {
-    cout << pre << s << endl;
-    VRGuiManager::get()->printToConsole( "Reasoning", s+"\n" );
+    if (verbConsole) cout << pre << s << endl;
+    if (verbGui) VRGuiManager::get()->printToConsole( "Reasoning", s+"\n" );
 }
 
 void VRReasoner::print(const string& s, COLOR c) {
-    switch(c) {
-        case BLUE: cout << blueBeg; break;
-        case RED: cout << redBeg; break;
-        case GREEN: cout << greenBeg; break;
-        case YELLOW: cout << yellowBeg; break;
+    if (verbConsole) {
+        switch(c) {
+            case BLUE: cout << blueBeg; break;
+            case RED: cout << redBeg; break;
+            case GREEN: cout << greenBeg; break;
+            case YELLOW: cout << yellowBeg; break;
+        }
+        cout << pre << s << colEnd << endl;
     }
-    cout << pre << s << colEnd << endl;
 
-    VRGuiManager::get()->printToConsole( "Reasoning", s+"\n" ); // TODO
+    if (verbGui) VRGuiManager::get()->printToConsole( "Reasoning", s+"\n" ); // TODO
 }
 
 bool VRReasoner::findRule(VRStatementPtr statement, Context& context) {
@@ -210,5 +212,10 @@ vector<VREntityPtr> VRReasoner::process(string initial_query, VROntologyPtr onto
 }
 
 VRReasonerPtr VRReasoner::create() { return VRReasonerPtr( new VRReasoner() ); }
+
+void VRReasoner::setVerbose(bool gui, bool console) { verbGui = gui; verbConsole = console; }
+
+
+
 
 

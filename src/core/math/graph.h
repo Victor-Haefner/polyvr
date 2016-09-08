@@ -31,14 +31,12 @@ class graph_base {
         };
 
         struct emptyNode {
-            void update(node& n) {}
+            void update(node& n, bool changed) {}
         };
 
     protected:
         vector< vector<edge> > edges;
         vector< node > nodes;
-
-        virtual void update(int i);
 
     public:
         graph_base();
@@ -52,6 +50,7 @@ class graph_base {
         //vector<node>::iterator begin();
         //vector<node>::iterator end();
 
+        virtual void update(int i, bool changed);
         void setPosition(int i, Vec3f v);
 };
 
@@ -60,7 +59,7 @@ class graph : public graph_base {
     private:
         vector<T> elements;
 
-        void update(int i);
+        void update(int i, bool changed);
 
     public:
         graph();
