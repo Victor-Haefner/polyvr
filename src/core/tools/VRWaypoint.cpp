@@ -49,6 +49,7 @@ void VRWaypoint::updateGeo() {
     float s = size;
     string params = toString(s) + " " + toString(s) + " " + toString(s*0.5) + " " + toString(s*0.4);
     setPrimitive("Arrow", params);
+    if (!Pose) return;
 
     // compute pos
     Vec3f pos = Pose->pos();
