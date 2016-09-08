@@ -90,30 +90,35 @@ bool Variable::has(VariablePtr other, VROntologyPtr onto) {
 bool Variable::is(VariablePtr other, VPath& p1, VPath& p2) {
     if (!valid || !other->valid) return false;
 
-    auto hasSameVal = [&](vector<string>& val1, vector<string>& val2){
-        for (string s2 : val1) {
-            for (string s3 : val2) {
-                if (s2 == s3) return true;
+    auto hasSameVal = [&](vector<string>& val1, vector<string>& val2) {
+        for (string s1 : val1) {
+            for (string s2 : val2) {
+                cout << " " << s1 << " " << s2 << endl;
+                if (s1 == s2) return true;
             }
         }
         return false;
     };
 
-    auto hasSameVal2 = [&](vector<string>& val1){
-        for (auto i2 : other->entities) {
-            vector<string> val2 = i2.second->getAtPath(p2.nodes);
-            if (hasSameVal(val1, val2)) return true;
+    auto hasSameVal2 = [&](vector<string>& val1) {
+        bool res = false;
+        for (auto e : other->entities) {
+            vector<string> val2 = e.second->getAtPath(p2.nodes);
+            auto r = hasSameVal(val1, val2);
+            if (!r) evaluations[e.first].state = Evaluation::INVALID;
+            if (r) res = true;
         }
+        if (res) return true;
 
         for (string s : val1) if (s == other->value) return true;
         return false;
     };
 
     bool res = false;
-    for (auto i1 : entities) {
-        vector<string> val1 = i1.second->getAtPath(p1.nodes);
+    for (auto e : entities) {
+        vector<string> val1 = e.second->getAtPath(p1.nodes);
         auto r = hasSameVal2(val1);
-        if (!r) evaluations[i1.first].state = Evaluation::INVALID;
+        if (!r) evaluations[e.first].state = Evaluation::INVALID;
         if (r) res = true;
     }
     return res;

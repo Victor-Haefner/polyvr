@@ -49,7 +49,7 @@ void VRProcess::update() {
     if (!ontology) return;
 
     VRReasonerPtr reasoner = VRReasoner::create();
-    reasoner->setVerbose(true, false);
+    reasoner->setVerbose(true, true);
     auto query = [&](string q) { return reasoner->process(q, ontology); };
 
     auto layers = query("q(x):Layer(x)");
@@ -86,7 +86,7 @@ void VRProcess::update() {
 
     string q_messages = "q(x):StandardMessageExchange(x);Layer("+layer->getName()+");has("+layer->getName()+",x)";
     for ( auto message : query(q_messages) ) {
-        string q_message = "q(x):MessageSpec(x);StandardMessageExchange("+message->getName()+");is("+message->getName()+".hasMessageType,x)";
+        string q_message = "q(x):MessageSpec(x);StandardMessageExchange("+message->getName()+");is(x,"+message->getName()+".hasMessageType)";
         auto msgs = query(q_message);
         string label = "Msg: ";
         if (msgs.size())

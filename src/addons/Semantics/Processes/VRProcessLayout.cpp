@@ -39,9 +39,10 @@ void VRProcessLayout::setProcess(VRProcessPtr p) {
         auto& e = diag->getElement(i);
         e.widget = newWidget(e.label, height);
 
-        Vec3f p = Vec3f(f+2,0,0);
-        f += e.label.size();
+        Vec3f p = Vec3f(f, 0.01*(rand()%100), 0);
+        f += e.label.size()+2;
         e.widget->setFrom(p);
+
         auto& n = diag->getNode(i);
         n.pos = p;
         Vec3f size(e.label.size(), height, height);

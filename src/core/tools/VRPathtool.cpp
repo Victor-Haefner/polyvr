@@ -120,7 +120,7 @@ void VRPathtool::addPath(path* p, VRObjectPtr anchor) {
 
 path* VRPathtool::newPath(VRDevicePtr dev, VRObjectPtr anchor, int resolution) {
     entry* e = new entry();
-    e->anchor = anchor;
+    e->anchor = anchor ? anchor : ptr();
     e->p = new path();
     e->resolution = resolution;
     paths[e->p] = e;
@@ -164,8 +164,8 @@ vector<VRGeometryPtr> VRPathtool::getHandles(path* p) {
         for (auto h : sor) res.push_back(h.second);
     }
 
-    cout << "get handles " << p << endl;
-    for (auto h : res) cout << " " << h->getName() << endl;
+    //cout << "get handles " << p << endl;
+    //for (auto h : res) cout << " " << h->getName() << endl;
     return res;
 }
 

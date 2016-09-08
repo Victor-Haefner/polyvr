@@ -171,7 +171,7 @@ void VRGuiSemantics::updateLayout() {
         }
     }
 
-    layout.compute(1, 0.002);
+    layout.compute(2, 0.002);
 
     int i = 0;
     for (auto c : widgets) { // update widget positions

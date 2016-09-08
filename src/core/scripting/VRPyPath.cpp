@@ -15,7 +15,7 @@ PyMethodDef VRPyPath::methods[] = {
     {"invert", (PyCFunction)VRPyPath::invert, METH_NOARGS, "Invert start && end point of path" },
     {"compute", (PyCFunction)VRPyPath::compute, METH_VARARGS, "Compute path" },
     {"update", (PyCFunction)VRPyPath::update, METH_NOARGS, "Update path" },
-    {"addPoint", (PyCFunction)VRPyPath::addPoint, METH_VARARGS, "Add a point to the path - int addPoint(vec3 pos, vec3 dir, vec3 col, vec3 up)" },
+    {"addPoint", (PyCFunction)VRPyPath::addPoint, METH_VARARGS, "Add a point to the path - int addPoint( | vec3 pos, vec3 dir, vec3 col, vec3 up)" },
     {"getPose", (PyCFunction)VRPyPath::getPose, METH_VARARGS, "Return the pose at the path length t {0,1} - pose getPose( float t )" },
     {"getPoints", (PyCFunction)VRPyPath::getPoints, METH_NOARGS, "Return a list of the path points - [pos, dir, col, up] getPoints()" },
     {"close", (PyCFunction)VRPyPath::close, METH_NOARGS, "Close the path - close()" },
@@ -129,13 +129,13 @@ PyObject* VRPyPath::invert(VRPyPath* self) {
 
 PyObject* VRPyPath::addPoint(VRPyPath* self, PyObject* args) {
     PyObject *_p, *_n, *_c, *_u; _p=_n=_c=_u=0;
-    if (! PyArg_ParseTuple(args, "OOOO", &_p, &_n, &_c, &_u)) return NULL;
+    if (! PyArg_ParseTuple(args, "|OOOO", &_p, &_n, &_c, &_u)) return NULL;
 
     OSG::Vec3f p, n, c, u;
-    p = parseVec3fList(_p);
-    n = parseVec3fList(_n);
-    c = parseVec3fList(_c);
-    u = parseVec3fList(_u);
+    p = _p ? parseVec3fList(_p) : OSG::Vec3f(0,0,0);
+    n = _n ? parseVec3fList(_n) : OSG::Vec3f(0,0,-1);
+    c = _c ? parseVec3fList(_c) : OSG::Vec3f(0,0,0);
+    u = _u ? parseVec3fList(_u) : OSG::Vec3f(0,1,0);
 
     if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::setStartPoint, Object is invalid"); return NULL; }
     self->obj->addPoint(p,n,c,u);

@@ -33,24 +33,25 @@ void VRGraphLayout::applySprings(float eps) {
             float x = (d.length() - r)*eps; // displacement
             d.normalize();
             if (abs(x) < eps) continue;
-
-            if (x > r*eps) x = r*eps; // numerical safety ;)
-            if (x < -r*eps) x = -r*eps;
+            if (x < -r*eps) x = -r*eps; // numerical safety ;)
 
             Vec3f grav = gravity*x*0.1; // TODO: not yet working!
+            p1 += d*x*r*0.2 + grav;
+            p2 += -d*x*r*0.2 + grav;
+
             switch (e.connection) {
                 case graph_base::SIMPLE:
-                    if (f1 != FIXED) graph->setPosition( e.from, p1 + d*x*r + grav );
-                    if (f2 != FIXED) graph->setPosition( e.to, p2 - d*x*r + grav );
+                    if (f1 != FIXED) graph->setPosition(e.from, p1);
+                    if (f2 != FIXED) graph->setPosition(e.to, p2);
                     break;
                 case graph_base::HIERARCHY:
-                    if (f2 != FIXED) graph->setPosition( e.to, p2 - d*x*r + grav );
-                    else if (f1 != FIXED) graph->setPosition( e.from, p1 + d*x*r + grav );
+                    if (f2 != FIXED) graph->setPosition(e.to, p2);
+                    else if (f1 != FIXED) graph->setPosition(e.from, p1);
                     break;
                 case graph_base::SIBLING:
                     if (x < 0) { // push away siblings
-                        if (f1 != FIXED) graph->setPosition( e.from, p1 + d*x*r + grav );
-                        if (f2 != FIXED) graph->setPosition( e.to, p2 - d*x*r + grav );
+                        if (f1 != FIXED) graph->setPosition(e.from, p1);
+                        if (f2 != FIXED) graph->setPosition(e.to, p2);
                     }
                     break;
             }
@@ -84,7 +85,7 @@ void VRGraphLayout::applyOccupancy(float eps) {
             float x = (r - d.length())*eps; // displacement
             if (x > 0) {
                 d.normalize();
-                D -= d*x*r*0.5;
+                D -= d*x*r*0.15;
             }
         }
 

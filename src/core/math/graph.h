@@ -46,6 +46,7 @@ class graph_base {
         node& getNode(int i);
         vector< node >& getNodes();
         vector< vector<edge> >& getEdges();
+        int getNEdges();
 
         //vector<node>::iterator begin();
         //vector<node>::iterator end();

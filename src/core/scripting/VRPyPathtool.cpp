@@ -13,7 +13,7 @@ using namespace OSG;
 simpleVRPyType(Pathtool, New_ptr);
 
 PyMethodDef VRPyPathtool::methods[] = {
-    {"newPath", (PyCFunction)VRPyPathtool::newPath, METH_VARARGS, "Add a new path - path newPath(device, anchor)" },
+    {"newPath", (PyCFunction)VRPyPathtool::newPath, METH_VARARGS, "Add a new path - path newPath(device, anchor | int resolution)" },
     {"remPath", (PyCFunction)VRPyPathtool::remPath, METH_VARARGS, "Remove a path - remPath(path)" },
     {"extrude", (PyCFunction)VRPyPathtool::extrude, METH_VARARGS, "Extrude a path - handle extrude(device, path)" },
     {"addPath", (PyCFunction)VRPyPathtool::addPath, METH_VARARGS, "Add a path - addPath(path, object)" },

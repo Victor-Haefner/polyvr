@@ -136,21 +136,26 @@ VRPropertyPtr VREntity::getValue(string name) {
 
 vector<VRPropertyPtr> getProperties();
 
-vector<string> VREntity::getAtPath(vector<string> path) {
+vector<string> VREntity::getAtPath(vector<string> path) { // TODO: move that to the reasoner, this is bullshit!
     /*cout << "  get value at path ";
-    for (auto p : path) cout << "/" << p;
+    for (auto p : path) cout << "." << p;
     cout << endl;*/
 
     vector<string> res;
     if (path.size() == 2) {
         string m = path[1];
         auto prop = getProperty(m);
-        //cout << "  get value of member " << m << " with id " << id << endl;
         if (!prop) return res;
         if (!properties.count(prop->getName())) return res;
         for (auto p : properties[prop->getName()]) res.push_back(p->value);
+
+        /*cout << "  value of member " << m << " could be";
+        for (auto p : properties[prop->getName()]) cout << " " << p->value;
+        cout << endl;*/
+
         return res;
     }
+    res.push_back( getName() );
 
     return res;
 }

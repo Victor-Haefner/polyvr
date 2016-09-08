@@ -18,6 +18,12 @@ vector< graph_base::node >& graph_base::getNodes() { return nodes; }
 graph_base::node& graph_base::getNode(int i) { return nodes[i]; }
 void graph_base::update(int i, bool changed) {}
 
+int graph_base::getNEdges() {
+    int N = 0;
+    for (auto& n : edges) N += n.size();
+    return N;
+}
+
 void graph_base::setPosition(int i, Vec3f v) {
     auto& n = nodes[i];
     n.pos = v;

@@ -6,8 +6,7 @@
 
 struct VRPyGraph : VRPyBaseT<OSG::graph_base> {
     static PyMethodDef methods[];
-    //static PyObject* activate(VRPyGraph* self);
-    //static PyObject* setFov(VRPyGraph* self, PyObject* args);
+    static PyObject* getEdges(VRPyGraph* self);
 };
 
 #endif // VRPYGRAPH_H_INCLUDED
