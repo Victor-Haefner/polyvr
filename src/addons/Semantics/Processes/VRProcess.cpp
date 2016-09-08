@@ -49,7 +49,7 @@ void VRProcess::update() {
     if (!ontology) return;
 
     VRReasonerPtr reasoner = VRReasoner::create();
-    reasoner->setVerbose(true, true);
+    reasoner->setVerbose(true, false);
     auto query = [&](string q) { return reasoner->process(q, ontology); };
 
     auto layers = query("q(x):Layer(x)");
@@ -62,17 +62,16 @@ void VRProcess::update() {
         auto n = Node(e);
         n.label = label;
         int i = interactionDiagram->addNode(n);
-        if (auto ID = e->getValue("hasModelComponentID") ) {
-            nodes[ID->value] = i;
-            cout << "addDiagNode " << ID->value << " " << i << endl;
-        }
+        if (auto ID = e->getValue("hasModelComponentID") ) nodes[ID->value] = i;
         return i;
     };
 
-    auto connect = [&](int i, string parent) {
+    auto connect = [&](int i, string parent, graph_base::CONNECTION mode) {
         if (nodes.count(parent)) {
-            cout << "connect nodes " << i << " parent: " << parent << " parent ID " << nodes[parent] << endl;
-            interactionDiagram->connect(nodes[parent], i, graph_base::HIERARCHY);
+            switch (mode) {
+                case graph_base::HIERARCHY: interactionDiagram->connect(nodes[parent], i, mode); break;
+                case graph_base::DEPENDENCY: interactionDiagram->connect(i, nodes[parent], mode); break;
+            }
         }
     };
 
@@ -97,8 +96,8 @@ void VRProcess::update() {
         string receiver;
         if (auto s = message->getValue("sender") ) sender = s->value;
         if (auto r = message->getValue("receiver") ) receiver = r->value;
-        connect(i, sender);
-        connect(i, receiver);
+        connect(i, sender, graph_base::HIERARCHY);
+        connect(i, receiver, graph_base::DEPENDENCY);
     }
 
     //interactionDiagram->connect( n );

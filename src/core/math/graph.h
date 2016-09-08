@@ -14,6 +14,7 @@ class graph_base {
         enum CONNECTION {
             SIMPLE,
             HIERARCHY,
+            DEPENDENCY,
             SIBLING
         };
 

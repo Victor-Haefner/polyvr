@@ -48,6 +48,10 @@ void VRGraphLayout::applySprings(float eps) {
                     if (f2 != FIXED) graph->setPosition(e.to, p2);
                     else if (f1 != FIXED) graph->setPosition(e.from, p1);
                     break;
+                case graph_base::DEPENDENCY:
+                    if (f1 != FIXED) graph->setPosition(e.from, p1);
+                    else if (f2 != FIXED) graph->setPosition(e.to, p2);
+                    break;
                 case graph_base::SIBLING:
                     if (x < 0) { // push away siblings
                         if (f1 != FIXED) graph->setPosition(e.from, p1);
