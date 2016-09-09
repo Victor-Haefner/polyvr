@@ -113,31 +113,20 @@ void VRPathtool::update() {
         auto& nodes = graph->getNodes();
         auto& edges = graph->getEdges();
 
-        for (int i=0; i<nodes.size(); i++) {
+        // get handle positions
+        map<int, Vec3f> hPositions;
+        for (int i=0; i<knots.size(); i++)
+            if (auto h = knots[i].handle.lock()) hPositions[i] = h->getWorldPosition();
+
+        for (int i=0; i<knots.size(); i++) {
             auto& knot = knots[i];
             auto h = knot.handle.lock();
             if (!h) continue;
 
             Vec3f pos = h->getWorldPosition();
             Vec3f dir;
-            for (auto k : knot.out) {
-                auto& knot2 = knots[k];
-                auto h2 = knot2.handle.lock();
-                if (!h2) continue;
-
-                Vec3f d = pos - h2->getWorldPosition();
-                dir += d;
-            }
-
-            for (auto k : knot.in) {
-                auto& knot2 = knots[k];
-                auto h2 = knot2.handle.lock();
-                if (!h2) continue;
-
-                Vec3f d = h2->getWorldPosition() - pos;
-                dir += d;
-            }
-
+            for (auto k : knot.out) if (hPositions.count(k)) dir += pos - hPositions[k];
+            for (auto k : knot.in) if (hPositions.count(k)) dir += hPositions[k] - pos;
             dir.normalize();
             h->setDir(dir);
         }

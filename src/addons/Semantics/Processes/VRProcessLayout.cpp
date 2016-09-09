@@ -3,6 +3,8 @@
 #include "core/objects/geometry/VRSprite.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRConstraint.h"
+#include "core/utils/toString.h"
+#include "core/tools/VRText.h"
 
 using namespace OSG;
 
@@ -13,14 +15,14 @@ VRProcessLayoutPtr VRProcessLayout::ptr() { return static_pointer_cast<VRProcess
 VRProcessLayoutPtr VRProcessLayout::create(string name) { return VRProcessLayoutPtr(new VRProcessLayout(name) ); }
 
 VRTransformPtr VRProcessLayout::newWidget(string label, float height) {
-    auto w = VRSprite::create("Subject");
-    w->setMaterial(VRMaterial::create("Subject"));
-    w->setFontColor(Color4f(0,0,0.5,1));
-    w->setBackColor(Color4f(1,1,1,1));
-    w->setLabel(label);
-    w->setSize(label.size(), height);
+    auto w = VRGeometry::create("ProcessElement");
+    w->setPrimitive("Box", toString(label.size())+" "+toString(height)+" 1 1 1 1");
+    auto txt = VRText::get()->create(label, "SANS 20", 20, Color4f(0,0,0.5,1), Color4f(1,1,1,1));
+    auto mat = VRMaterial::create("ProcessElement");
+    mat->setTexture(txt);
+    mat->setLit(0);
+    w->setMaterial(mat);
     w->setPickable(1);
-    w->getMaterial()->setLit(0);
     w->getConstraint()->setTConstraint(Vec3f(0,0,1), VRConstraint::PLANE);
     w->getConstraint()->setRConstraint(Vec3f(0,1,0), VRConstraint::POINT);
     addChild(w);
