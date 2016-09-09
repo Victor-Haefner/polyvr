@@ -305,17 +305,17 @@
     <property name="deletable">False</property>
     <property name="program_name">PolyVR</property>
     <property name="version">1.0</property>
-    <property name="copyright" translatable="yes">Copyright © 2009-2014 IMI, KIT
-Copyright © 2009-2014 Prof. Dr. Dr.-Ing. Dr. h. c. Jivka Ovtcharova
-Copyright © 2009-2014 Dipl. Phys. Victor Häfner</property>
+    <property name="copyright" translatable="yes">Copyright © 2009-2020 IMI, KIT
+Copyright © 2009-2020 Prof. Dr. Dr.-Ing. Dr. h. c. Jivka Ovtcharova
+Copyright © 2009-2020 Dipl. Phys. Victor Häfner</property>
     <property name="comments" translatable="yes">A shortcut to virtual reality
 
-Virtual reality engine developed at the Institute for
-Information Management in Engineering (IMI)
+Virtual reality authoring system developed at 
+the Institute for Information Management in Engineering (IMI)
 at the Karlsruhe Institute of Technology (KIT)
 Germany</property>
-    <property name="website">http://www.lesc.kit.edu/english/494.php</property>
-    <property name="website_label" translatable="yes">http://www.lesc.kit.edu</property>
+    <property name="website">http://www.imi.kit.edu/46_2274.php</property>
+    <property name="website_label" translatable="yes">http://www.imi.kit.edu</property>
     <property name="authors">Victor Häfner
 </property>
     <property name="logo">logo_icon.png</property>
@@ -1118,6 +1118,11 @@ cave allocated</property>
     <property name="can_focus">False</property>
     <property name="stock">gtk-remove</property>
   </object>
+  <object class="GtkImage" id="image2">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-add</property>
+  </object>
   <object class="GtkImage" id="image20">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -1376,11 +1381,6 @@ cave allocated</property>
       <!-- column-name haptic_devices -->
       <column type="gchararray"/>
     </columns>
-  </object>
-  <object class="GtkImage" id="image2">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-add</property>
   </object>
   <object class="GtkListStore" id="liststore9"/>
   <object class="GtkListStore" id="mouse_list">
@@ -2097,6 +2097,12 @@ cave allocated</property>
                                 <child>
                                   <placeholder/>
                                 </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
                               </object>
                             </child>
                           </object>
@@ -2128,6 +2134,12 @@ cave allocated</property>
                                 <property name="can_focus">False</property>
                                 <property name="n_columns">2</property>
                                 <property name="homogeneous">True</property>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
                                 <child>
                                   <placeholder/>
                                 </child>
