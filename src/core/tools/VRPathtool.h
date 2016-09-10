@@ -60,11 +60,21 @@ class VRPathtool : public VRObject {
             vector<VRGeometryWeakPtr> handles;
             VRStrokeWeakPtr line;
             VRObjectWeakPtr anchor;
+
+            void addHandle(VRGeometryPtr h);
+        };
+
+        struct knot {
+            vector<int> in;
+            vector<int> out;
+            VRGeometryWeakPtr handle;
         };
 
         map<path*, entry*> paths;
-        map<VRGeometry*, entry*> entries;
+        map<VRGeometry*, vector<entry*> > entries; // map handle geometries to the entries
         vector<VRGeometryWeakPtr> handles;
+        graph_basePtr graph;
+        map<int, knot> knots; // maps graph node ids to pathtool knots
 
         VRMaterialPtr lmat;
 
@@ -75,6 +85,7 @@ class VRPathtool : public VRObject {
         VRGeometryPtr customHandle;
         VRGeometryPtr newHandle();
         void updateHandle(VRGeometryPtr handle);
+        void updateEntry(entry* e);
         void updateDevs();
 
     public:
@@ -87,7 +98,7 @@ class VRPathtool : public VRObject {
         VRGeometryPtr extrude(VRDevicePtr dev, path* p);
         void remPath(path* p);
 
-        void addPath(path* p, VRObjectPtr anchor = 0);
+        void addPath(path* p, VRObjectPtr anchor = 0, VRGeometryPtr ha = 0, VRGeometryPtr he = 0);
         void setVisible(bool handles, bool lines);
         void setHandleGeometry(VRGeometryPtr geo);
         void clear(path* p = 0);
