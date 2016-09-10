@@ -68,10 +68,9 @@ void VRGraphLayout::applyOccupancy(float eps) {
     auto& nodes = graph->getNodes();
     Octree o(10*eps);
 
-    long i=0;
-    for (auto& n : nodes) {
-        o.add( OcPoint(n.pos, (void*)i) );
-        i++;
+    for (unsigned long i=0; i<nodes.size(); i++) {
+        auto& n = nodes[i];
+        o.add( n.pos, (void*)i );
     }
 
     for (int i=0; i<nodes.size(); i++) {

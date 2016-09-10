@@ -10,13 +10,6 @@ using namespace std;
 
 OSG_BEGIN_NAMESPACE
 
-struct OcPoint {
-    Vec3f pos;
-    void* data;
-
-    OcPoint(Vec3f p, void* d = 0);
-};
-
 class Octree {
     private:
         float resolution = 0.1;
@@ -28,6 +21,7 @@ class Octree {
         Octree* children[8] = {0,0,0,0,0,0,0,0};
 
         vector<void*> data;
+        vector<Vec3f> points;
 
         void destroy(Octree* guard);
         void findInSphere(Vec3f p, float r, vector<void*>& res);
@@ -38,9 +32,8 @@ class Octree {
         Octree(float resolution);
         Octree* getRoot();
 
-        void add(OcPoint p, int maxjump = -1, bool checkPosition = true);
-        void add(Vec3f p, void* data, int maxjump = -1);
-        void set(Octree* node, void* data);
+        void add(Vec3f p, void* data, int maxjump = -1, bool checkPosition = true);
+        void set(Octree* node, Vec3f p, void* data);
         Octree* get(Vec3f p);
 
         void clear();

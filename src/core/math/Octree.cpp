@@ -6,8 +6,6 @@
 
 OSG_BEGIN_NAMESPACE
 
-OcPoint::OcPoint(Vec3f p, void* d) : pos(p), data(d) {}
-
 Octree::Octree(float res) : resolution(res) {}
 
 int Octree::getOctant(Vec3f p) {
@@ -56,28 +54,26 @@ bool Octree::inBox(Vec3f p, Vec3f c, float size) {
     return true;
 }
 
-void Octree::add(Vec3f p, void* d, int maxjump) { add(OcPoint(p, d), maxjump); }
-
-void Octree::add(OcPoint p, int maxjump, bool checkPosition) {
-    bool rOk = checkRecursion(this, p.pos);
+void Octree::add(Vec3f p, void* d, int maxjump, bool checkPosition) {
+    bool rOk = checkRecursion(this, p);
     if (!rOk) {
         cout << "\n Center " << center;
         cout << "\n Size " << size;
         cout << "\n Data size " << data.size();
-        cout << "\n In Box: " << inBox(p.pos, center, size) << endl;
+        cout << "\n In Box: " << inBox(p, center, size) << endl;
         cout << "\n P Center " << parent->center;
         cout << "\n P Size " << parent->size;
-        cout << "\n In Box: " << inBox(p.pos, parent->center, parent->size) << endl;
-        cout << "\n P Vec3f Octant " <<  parent->getOctant(p.pos);
-        cout << "\n P child at Vec3f Octant " <<  parent->children[ parent->getOctant(p.pos) ];
+        cout << "\n In Box: " << inBox(p, parent->center, parent->size) << endl;
+        cout << "\n P Vec3f Octant " <<  parent->getOctant(p);
+        cout << "\n P child at Vec3f Octant " <<  parent->children[ parent->getOctant(p) ];
         cout << "\n this " << this;
         return;
     }
 
     //cout << "\nAdd "; p.print();
-    Vec3f rp = p.pos - center;
+    Vec3f rp = p - center;
 
-    if ( !inBox(p.pos, center, size) && checkPosition ) { // not in node
+    if ( !inBox(p, center, size) && checkPosition ) { // not in node
         if (parent == 0) { // no parent, create it
             float s2 = size*0.5;
             parent = new Octree(resolution);
@@ -90,12 +86,12 @@ void Octree::add(OcPoint p, int maxjump, bool checkPosition) {
             int o = parent->getOctant(center);
             parent->children[o] = this;
         }
-        parent->add(p, maxjump+1, checkPosition); // go a level up
+        parent->add(p, d, maxjump+1, checkPosition); // go a level up
         return;
     }
 
     if (size > resolution && maxjump != 0) {
-        int o = getOctant(p.pos);
+        int o = getOctant(p);
         if (children[o] == 0) {
             float s2 = size*0.25;
             children[o] = new Octree(resolution);
@@ -108,15 +104,16 @@ void Octree::add(OcPoint p, int maxjump, bool checkPosition) {
             children[o]->parent = this;
         }
         //Vec3f c = children[o]->center;
-        children[o]->add(p, maxjump-1, false);
+        children[o]->add(p, d, maxjump-1, false);
         return;
     }
 
-    checkRecursion(0,p.pos);
-    data.push_back(p.data);
+    checkRecursion(0,p);
+    data.push_back(d);
+    points.push_back(p);
 }
 
-void Octree::set(Octree* node, void* data) { node->data.clear(); node->data.push_back(data); }
+void Octree::set(Octree* node, Vec3f p, void* d) { node->data.clear(); node->points.clear(); node->data.push_back(d); node->points.push_back(p); }
 
 Octree* Octree::get(Vec3f p) {
     if ( !inBox(p, center, size) ) {
@@ -172,8 +169,10 @@ bool sphere_box_intersect(Vec3f Ps, Vec3f Pb, float Rs, float Sb)  {
 void Octree::findInSphere(Vec3f p, float r, vector<void*>& res) { // TODO: optimize!!
     if (!sphere_box_intersect(p, center, r, size)) return;
 
+    float r2 = r*r;
     for (unsigned int i=0; i<data.size(); i++) {
-        res.push_back(data[i]);
+        if ((points[i]-p).squareLength() <= r2)
+            res.push_back(data[i]);
     }
 
     for (int i=0; i<8; i++) {
@@ -210,14 +209,17 @@ void Octree::test() {
     clear();
     srand(time(0));
 
-    vector<OcPoint> Vec3fs;
+    vector<Vec3f> Vec3fs;
+    vector<void*> data;
     for (int i=0; i<Nv; i++) { // create random Vec3fs
         float x = rand()*sMax/RAND_MAX;
         float y = rand()*sMax/RAND_MAX;
         float z = rand()*sMax/RAND_MAX;
-        OcPoint p(Vec3f(x,y,z), (void*)new int(i));
+        auto d = (void*)new int(i);
+        auto p = Vec3f(x,y,z);
         Vec3fs.push_back(p);
-        add(p);
+        data.push_back(d);
+        add(p,d);
     }
 
     //getRoot()->print();
@@ -230,7 +232,7 @@ void Octree::test() {
     t1=clock();
     for (int i=0; i<Nv; i++) { // radius search brute forced
         auto p2 = Vec3fs[i];
-        if (p2.pos.dist(p) < r) radSearchRes_brute.push_back( p2.data );
+        if (p2.dist(p) <= r) radSearchRes_brute.push_back( data[i] );
     }
     t2=clock();
 
