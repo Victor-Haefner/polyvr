@@ -21,6 +21,10 @@ struct VRRuleWidget : public VRSemanticWidget {
     void on_rem_prop_clicked();
     int ID();
     void update();
+
+    void reparent(VRConceptWidgetPtr w);
+    void reparent(VREntityWidgetPtr w);
+    void reparent(VRRuleWidgetPtr w);
 };
 
 OSG_END_NAMESPACE;

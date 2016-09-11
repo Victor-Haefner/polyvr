@@ -116,4 +116,7 @@ void VREntityWidget::update() {
     treeview->expand_all();
 }
 
+void VREntityWidget::reparent(VRConceptWidgetPtr w) {}
+void VREntityWidget::reparent(VREntityWidgetPtr w) {}
+void VREntityWidget::reparent(VRRuleWidgetPtr w) {}
 

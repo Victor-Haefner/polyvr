@@ -1,4 +1,7 @@
 #include "VRSemanticWidget.h"
+#include "VRConceptWidget.h"
+#include "VREntityWidget.h"
+#include "VRRuleWidget.h"
 #include "../VRGuiSemantics.h"
 
 #include <gtkmm/object.h>
@@ -15,8 +18,14 @@
 
 using namespace OSG;
 
-void VRGuiSemantics_on_drag_data_get(const Glib::RefPtr<Gdk::DragContext>& context, Gtk::SelectionData& data, unsigned int info, unsigned int time, VRSemanticWidget* e) {
+void VRSemanticWidget_on_drag_data_get(const Glib::RefPtr<Gdk::DragContext>& context, Gtk::SelectionData& data, unsigned int info, unsigned int time, VRSemanticWidget* e) {
     data.set("concept", 0, (const guint8*)&e, sizeof(void*));
+}
+
+void VRSemanticWidget_on_drag_data_received(const Glib::RefPtr<Gdk::DragContext>& context, int x, int y, const Gtk::SelectionData& data, guint info, guint time, VRSemanticWidget* self) {
+    if (data.get_target() != "concept") { cout << "VRGuiSemantics_on_drag_data_received, wrong dnd: " << data.get_target() << endl; return; }
+    VRSemanticWidget* e = *(VRSemanticWidget**)data.get_data();
+    self->reparent(e->ptr());
 }
 
 VRSemanticWidget::VRSemanticWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, string color) {
@@ -86,11 +95,15 @@ VRSemanticWidget::VRSemanticWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, string
     bPropEdit->signal_clicked().connect( sigc::mem_fun(*this, &VRSemanticWidget::on_edit_prop_clicked) );
     bPropRem->signal_clicked().connect( sigc::mem_fun(*this, &VRSemanticWidget::on_rem_prop_clicked) );
 
-    // dnd
+    // dnd drag widget
     vector<Gtk::TargetEntry> entries;
     entries.push_back(Gtk::TargetEntry("concept", Gtk::TARGET_SAME_APP));
     expander->drag_source_set(entries, Gdk::BUTTON1_MASK, Gdk::ACTION_MOVE);
-    expander->signal_drag_data_get().connect( sigc::bind<VRSemanticWidget*>( sigc::ptr_fun(VRGuiSemantics_on_drag_data_get), this ) );
+    expander->signal_drag_data_get().connect( sigc::bind<VRSemanticWidget*>( sigc::ptr_fun(VRSemanticWidget_on_drag_data_get), this ) );
+
+    // dnd drop on widget
+    expander->drag_dest_set(entries, Gtk::DEST_DEFAULT_ALL, Gdk::ACTION_MOVE);
+    expander->signal_drag_data_received().connect( sigc::bind<VRSemanticWidget*>( sigc::ptr_fun(VRSemanticWidget_on_drag_data_received), this ) );
 }
 
 VRSemanticWidget::~VRSemanticWidget() {
@@ -98,6 +111,17 @@ VRSemanticWidget::~VRSemanticWidget() {
         canvas->remove(*widget);
         canvas->show_all();
     }
+}
+
+VRSemanticWidgetPtr VRSemanticWidget::ptr() { return shared_from_this(); }
+
+void VRSemanticWidget::reparent(VRSemanticWidgetPtr w) {
+    auto c = dynamic_pointer_cast<VRConceptWidget>(w);
+    auto e = dynamic_pointer_cast<VREntityWidget>(w);
+    auto r = dynamic_pointer_cast<VRRuleWidget>(w);
+    if (c) reparent(c);
+    if (e) reparent(e);
+    if (r) reparent(r);
 }
 
 void VRSemanticWidget::setPropRow(Gtk::TreeModel::iterator iter, string name, string type, string color, int flag, int ID, int rtype) {

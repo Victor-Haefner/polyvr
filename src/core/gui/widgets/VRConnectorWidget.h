@@ -25,6 +25,7 @@ struct VRConnectorWidget {
     VRSemanticWidgetWeakPtr w2;
 
     VRConnectorWidget(Gtk::Fixed* canvas, string color);
+    ~VRConnectorWidget();
 
     void set(VRSemanticWidgetPtr w1, VRSemanticWidgetPtr w2);
 

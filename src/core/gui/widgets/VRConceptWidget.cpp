@@ -1,4 +1,6 @@
 #include "VRConceptWidget.h"
+#include "VREntityWidget.h"
+#include "VRRuleWidget.h"
 
 #include "addons/Semantics/Reasoning/VRConcept.h"
 #include "addons/Semantics/Reasoning/VRProperty.h"
@@ -130,4 +132,23 @@ void VRConceptWidget::update() {
 void VRConceptWidget::on_new_concept_clicked() { manager->copyConcept(this); }
 void VRConceptWidget::on_new_entity_clicked() { manager->addEntity(this); }
 void VRConceptWidget::on_new_rule_clicked() { manager->addRule(this); }
+
+void VRConceptWidget::reparent(VREntityWidgetPtr w) {}
+
+void VRConceptWidget::reparent(VRConceptWidgetPtr w) {
+    VRConceptPtr c = w->concept;
+    if (auto p = c->parent.lock()) p->remove(c);
+    concept->append(c);
+    manager->disconnectAny(w);
+    manager->connect(ptr(), w, "#00CCFF");
+}
+
+void VRConceptWidget::reparent(VRRuleWidgetPtr w) {
+    w->rule->associatedConcept = concept->getName();
+    manager->disconnectAny(w);
+    manager->connect(ptr(), w, "#00DD00");
+}
+
+
+
 

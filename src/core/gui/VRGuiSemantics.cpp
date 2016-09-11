@@ -244,6 +244,11 @@ void VRGuiSemantics::disconnect(VRSemanticWidgetPtr w1, VRSemanticWidgetPtr w2) 
     if (co->w1.lock() == w1 && co->w2.lock() == w2) connectors.erase(w2->ID());
 }
 
+void VRGuiSemantics::disconnectAny(VRSemanticWidgetPtr w) {
+    if (!connectors.count(w->ID())) return;
+    connectors.erase(w->ID());
+}
+
 void VRGuiSemantics::on_treeview_select() {
     setToolButtonSensitivity("toolbutton15", true);
 
@@ -285,13 +290,9 @@ VRSemanticManagerPtr VRGuiSemantics::getManager() {
     return 0;
 }
 
-void VRGuiSemantics_on_notebook_switched(GtkNotebook* notebook, GtkNotebookPage* page, guint pageN, gpointer data) {
-    //if (pageN == 4) update();
-}
-
 void VRGuiSemantics_on_drag_data_received(const Glib::RefPtr<Gdk::DragContext>& context, int x, int y, const Gtk::SelectionData& data, guint info, guint time, VRGuiSemantics* self) {
     if (data.get_target() != "concept") { cout << "VRGuiSemantics_on_drag_data_received, wrong dnd: " << data.get_target() << endl; return; }
-    VRConceptWidget* e = *(VRConceptWidget**)data.get_data();
+    VRSemanticWidget* e = *(VRSemanticWidget**)data.get_data();
     e->move(Vec2f(x,y));
 }
 
@@ -302,11 +303,10 @@ VRGuiSemantics::VRGuiSemantics() {
     setToolButtonCallback("toolbutton2", sigc::mem_fun(*this, &VRGuiSemantics::on_open_clicked));
     setTreeviewSelectCallback("treeview16", sigc::mem_fun(*this, &VRGuiSemantics::on_treeview_select) );
     setCellRendererCallback("cellrenderertext51", VRGuiSemantics_on_name_edited);
-    setNoteBookCallback("notebook3", VRGuiSemantics_on_notebook_switched);
     setToolButtonSensitivity("toolbutton15", false);
     setButtonCallback("button33", sigc::mem_fun(*this, &VRGuiSemantics::on_query_clicked));
 
-    // dnd
+    // dnd canvas
     vector<Gtk::TargetEntry> entries;
     entries.push_back(Gtk::TargetEntry("concept", Gtk::TARGET_SAME_APP));
     canvas->drag_dest_set(entries, Gtk::DEST_DEFAULT_ALL, Gdk::ACTION_MOVE);

@@ -38,10 +38,6 @@ class VRGuiSemantics {
         void setOntology(string name);
         void updateLayout();
 
-        void connect(VRSemanticWidgetPtr p1, VRSemanticWidgetPtr p2, string color);
-        void disconnect(VRSemanticWidgetPtr p1, VRSemanticWidgetPtr p2);
-        void disconnectAny(VRSemanticWidgetPtr p1);
-
         VRSemanticManagerPtr getManager();
 
     public:
@@ -51,6 +47,10 @@ class VRGuiSemantics {
 
         void updateOntoList();
         void updateCanvas();
+
+        void connect(VRSemanticWidgetPtr p1, VRSemanticWidgetPtr p2, string color);
+        void disconnect(VRSemanticWidgetPtr p1, VRSemanticWidgetPtr p2);
+        void disconnectAny(VRSemanticWidgetPtr p1);
 
         void copyConcept(VRConceptWidget* w);
         void addEntity(VRConceptWidget* w);

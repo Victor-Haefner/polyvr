@@ -34,7 +34,7 @@ OSG_BEGIN_NAMESPACE;
 
 class VRGuiSemantics;
 
-struct VRSemanticWidget {
+struct VRSemanticWidget : public std::enable_shared_from_this<VRSemanticWidget> {
     Vec2f pos;
 
     VRGuiSemantics* manager = 0;
@@ -46,6 +46,8 @@ struct VRSemanticWidget {
 
     VRSemanticWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, string color);
     ~VRSemanticWidget();
+
+    VRSemanticWidgetPtr ptr();
 
     void on_select();
     bool on_expander_clicked(GdkEventButton* e);
@@ -65,6 +67,11 @@ struct VRSemanticWidget {
     virtual void on_rem_prop_clicked() = 0;
     virtual int ID() = 0;
     virtual void update() = 0;
+
+    void reparent(VRSemanticWidgetPtr w);
+    virtual void reparent(VRConceptWidgetPtr w) = 0;
+    virtual void reparent(VREntityWidgetPtr w) = 0;
+    virtual void reparent(VRRuleWidgetPtr w) = 0;
 };
 
 OSG_END_NAMESPACE;

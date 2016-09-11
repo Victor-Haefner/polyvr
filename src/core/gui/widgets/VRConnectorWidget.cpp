@@ -27,6 +27,13 @@ VRConnectorWidget::VRConnectorWidget(Gtk::Fixed* canvas, string color) {
     sv2->modify_bg( Gtk::STATE_NORMAL, Gdk::Color(color));
 }
 
+VRConnectorWidget::~VRConnectorWidget() {
+    canvas->remove(*sh1);
+    canvas->remove(*sh2);
+    canvas->remove(*sv1);
+    canvas->remove(*sv2);
+}
+
 void VRConnectorWidget::set(VRSemanticWidgetPtr w1, VRSemanticWidgetPtr w2) {
     this->w1 = w1;
     this->w2 = w2;

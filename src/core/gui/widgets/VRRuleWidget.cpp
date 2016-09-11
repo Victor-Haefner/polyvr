@@ -109,3 +109,6 @@ void VRRuleWidget::update() {
     }
 }
 
+void VRRuleWidget::reparent(VRConceptWidgetPtr w) {}
+void VRRuleWidget::reparent(VREntityWidgetPtr w) {}
+void VRRuleWidget::reparent(VRRuleWidgetPtr w) {}
