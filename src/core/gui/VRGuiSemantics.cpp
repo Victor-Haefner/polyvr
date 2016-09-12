@@ -137,6 +137,7 @@ void VRGuiSemantics::updateLayout() {
     map<int, int> widgetIDs;
 
     for (auto c : widgets) { // build up graph nodes
+        if (!c.second->visible) continue;
         Vec3f s = c.second->getSize();
 
         int ID = gra->addNode();
@@ -149,6 +150,7 @@ void VRGuiSemantics::updateLayout() {
     }
 
     for (auto w : widgets) { // add graph edges
+        if (!w.second->visible) continue;
         VRConceptWidgetPtr c = dynamic_pointer_cast<VRConceptWidget>(w.second);
         VREntityWidgetPtr e = dynamic_pointer_cast<VREntityWidget>(w.second);
         VRRuleWidgetPtr r = dynamic_pointer_cast<VRRuleWidget>(w.second);
@@ -175,6 +177,7 @@ void VRGuiSemantics::updateLayout() {
 
     int i = 0;
     for (auto c : widgets) { // update widget positions
+        if (!c.second->visible) continue;
         Vec3f p = gra->getNode(i).pos;
         c.second->move(Vec2f(p[0], p[1]));
         i++;
@@ -236,12 +239,14 @@ void VRGuiSemantics::connect(VRSemanticWidgetPtr w1, VRSemanticWidgetPtr w2, str
     auto co = VRConnectorWidgetPtr( new VRConnectorWidget(canvas, color) );
     connectors[w2->ID()] = co;
     co->set(w1, w2);
+    w1->children[w2.get()] = w2;
 }
 
 void VRGuiSemantics::disconnect(VRSemanticWidgetPtr w1, VRSemanticWidgetPtr w2) {
     if (!connectors.count(w2->ID())) return;
     auto co = connectors[w2->ID()];
     if (co->w1.lock() == w1 && co->w2.lock() == w2) connectors.erase(w2->ID());
+    if (w1->children.count(w2.get())) w1->children.erase(w2.get());
 }
 
 void VRGuiSemantics::disconnectAny(VRSemanticWidgetPtr w) {

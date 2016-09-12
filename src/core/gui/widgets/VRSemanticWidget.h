@@ -36,6 +36,8 @@ class VRGuiSemantics;
 
 struct VRSemanticWidget : public std::enable_shared_from_this<VRSemanticWidget> {
     Vec2f pos;
+    bool visible = true;
+    bool subTreeFolded = false;
 
     VRGuiSemantics* manager = 0;
     Gtk::Fixed* canvas = 0;
@@ -43,6 +45,8 @@ struct VRSemanticWidget : public std::enable_shared_from_this<VRSemanticWidget> 
     Gtk::Label* label = 0;
     Gtk::TreeView* treeview = 0;
     Gtk::HBox* toolbars = 0;
+
+    map<VRSemanticWidget*, VRSemanticWidgetWeakPtr> children;
 
     VRSemanticWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, string color);
     ~VRSemanticWidget();
@@ -58,6 +62,10 @@ struct VRSemanticWidget : public std::enable_shared_from_this<VRSemanticWidget> 
 
     Vec3f getPosition();
     Vec3f getSize();
+
+    void on_fold_clicked();
+    void setVisible(bool visible = true);
+    void setFolding(bool folded = true);
 
     virtual void on_select_property() = 0;
     virtual void on_rem_clicked() = 0;
