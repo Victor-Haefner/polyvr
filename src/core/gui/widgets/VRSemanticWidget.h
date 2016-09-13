@@ -16,6 +16,8 @@ namespace Gtk {
     class Label;
     class TreeView;
     class HBox;
+    class Toolbar;
+    class ToolButton;
 }
 
 class VRGuiSemantics_PropsColumns : public Gtk::TreeModelColumnRecord {
@@ -37,6 +39,7 @@ class VRGuiSemantics;
 struct VRSemanticWidget : public std::enable_shared_from_this<VRSemanticWidget> {
     Vec2f pos;
     bool visible = true;
+    bool expanded = false;
     bool subTreeFolded = false;
 
     VRGuiSemantics* manager = 0;
@@ -45,8 +48,11 @@ struct VRSemanticWidget : public std::enable_shared_from_this<VRSemanticWidget> 
     Gtk::Label* label = 0;
     Gtk::TreeView* treeview = 0;
     Gtk::HBox* toolbars = 0;
+    Gtk::Toolbar* toolbar1 = 0;
+    Gtk::ToolButton* bFold = 0;
 
     map<VRSemanticWidget*, VRSemanticWidgetWeakPtr> children;
+    map<VRConnectorWidget*, VRConnectorWidgetWeakPtr> connectors;
 
     VRSemanticWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, string color);
     ~VRSemanticWidget();
@@ -54,7 +60,7 @@ struct VRSemanticWidget : public std::enable_shared_from_this<VRSemanticWidget> 
     VRSemanticWidgetPtr ptr();
 
     void on_select();
-    bool on_expander_clicked(GdkEventButton* e);
+    void on_expander_toggled();
 
     void move(Vec2f p);
     Vec2f getAnchorPoint(Vec2f p);

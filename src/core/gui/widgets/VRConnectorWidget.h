@@ -23,12 +23,13 @@ struct VRConnectorWidget {
     Gtk::Fixed* canvas = 0;
     VRSemanticWidgetWeakPtr w1;
     VRSemanticWidgetWeakPtr w2;
+    bool visible = true;
 
     VRConnectorWidget(Gtk::Fixed* canvas, string color);
     ~VRConnectorWidget();
 
     void set(VRSemanticWidgetPtr w1, VRSemanticWidgetPtr w2);
-
+    void setVisible(bool visible = true);
     void update();
 };
 

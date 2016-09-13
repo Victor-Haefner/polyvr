@@ -40,6 +40,21 @@ void VRConnectorWidget::set(VRSemanticWidgetPtr w1, VRSemanticWidgetPtr w2) {
     update();
 }
 
+void VRConnectorWidget::setVisible(bool v) {
+    visible = v;
+    if (v) {
+        sh1->map();
+        sh2->map();
+        sv1->map();
+        sv2->map();
+    } else {
+        sh1->unmap();
+        sh2->unmap();
+        sv1->unmap();
+        sv2->unmap();
+    }
+}
+
 void VRConnectorWidget::update() {
     auto ws1 = w1.lock();
     auto ws2 = w2.lock();

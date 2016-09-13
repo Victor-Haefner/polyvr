@@ -183,8 +183,10 @@ void VRGuiSemantics::updateLayout() {
         i++;
     }
 
-    for (auto c : connectors) c.second->update(); // update connectors
-    canvas->show_all();
+    for (auto c : connectors) {
+        if (!c.second->visible) continue;
+        c.second->update(); // update connectors
+    }
 }
 
 void VRGuiSemantics::setOntology(string name) {
@@ -233,6 +235,8 @@ void VRGuiSemantics::updateCanvas() {
     }
 
     canvas->show_all();
+
+    for (auto w : widgets) w.second->setFolding(true);
 }
 
 void VRGuiSemantics::connect(VRSemanticWidgetPtr w1, VRSemanticWidgetPtr w2, string color) {
@@ -240,6 +244,7 @@ void VRGuiSemantics::connect(VRSemanticWidgetPtr w1, VRSemanticWidgetPtr w2, str
     connectors[w2->ID()] = co;
     co->set(w1, w2);
     w1->children[w2.get()] = w2;
+    w2->connectors[co.get()] = co;
 }
 
 void VRGuiSemantics::disconnect(VRSemanticWidgetPtr w1, VRSemanticWidgetPtr w2) {

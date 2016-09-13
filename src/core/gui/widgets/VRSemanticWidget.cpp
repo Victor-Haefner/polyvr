@@ -2,6 +2,7 @@
 #include "VRConceptWidget.h"
 #include "VREntityWidget.h"
 #include "VRRuleWidget.h"
+#include "VRConnectorWidget.h"
 #include "../VRGuiSemantics.h"
 
 #include <gtkmm/object.h>
@@ -51,37 +52,56 @@ VRSemanticWidget::VRSemanticWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, string
     addMarkupColumn(" Properties:", cols.name, true);
     addMarkupColumn("", cols.type);
 
-    // buttons
-    auto toolbar = Gtk::manage( new Gtk::Toolbar() );
-    toolbar->set_icon_size(Gtk::ICON_SIZE_MENU);
-    toolbar->set_show_arrow(0);
+    // toolbars
+    toolbar1 = Gtk::manage( new Gtk::Toolbar() ); // first toolbar is inside the expand widget
+    toolbar1->set_icon_size(Gtk::ICON_SIZE_MENU);
+    toolbar1->set_show_arrow(0);
+    auto toolbar2 = Gtk::manage( new Gtk::Toolbar() ); // second toolbar is smaller and next to the widget name
+    toolbar2->set_icon_size(Gtk::ICON_SIZE_MENU);
+    toolbar2->set_show_arrow(0);
 
-    auto addButton = [&](Gtk::BuiltinStockID icon, string tooltip, void (VRSemanticWidget::* cb)()) {
+    auto addButton = [&](Gtk::BuiltinStockID icon, string tooltip, void (VRSemanticWidget::* cb)(), bool redundant) {
         auto b = Gtk::manage( new Gtk::ToolButton(icon) );
-        toolbar->add(*b);
+        toolbar2->add(*b);
         b->set_tooltip_text(tooltip);
         b->signal_clicked().connect( sigc::mem_fun(*this, cb) );
+        if (redundant) {
+            b = Gtk::manage( new Gtk::ToolButton(icon) );
+            toolbar1->add(*b);
+            b->set_tooltip_text(tooltip);
+            b->signal_clicked().connect( sigc::mem_fun(*this, cb) );
+        }
+        return b;
     };
 
-    addButton(Gtk::Stock::ADD, "Fold/unfold subtree", &VRSemanticWidget::on_fold_clicked); // Gtk::Stock::REMOVE
-    addButton(Gtk::Stock::EDIT, "edit concept name", &VRSemanticWidget::on_edit_clicked);
-    addButton(Gtk::Stock::CLOSE, "remove concept", &VRSemanticWidget::on_rem_clicked);
-    auto sep = Gtk::manage( new Gtk::SeparatorToolItem() ); toolbar->add(*sep); // separator
-    addButton(Gtk::Stock::NEW, "new property", &VRSemanticWidget::on_newp_clicked);
-    addButton(Gtk::Stock::EDIT, "edit selected property", &VRSemanticWidget::on_edit_prop_clicked);
-    addButton(Gtk::Stock::DELETE, "remove selected property", &VRSemanticWidget::on_rem_prop_clicked);
+    bFold = addButton(Gtk::Stock::ADD, "Fold/unfold subtree", &VRSemanticWidget::on_fold_clicked, true); // Gtk::Stock::REMOVE
+    addButton(Gtk::Stock::EDIT, "edit concept name", &VRSemanticWidget::on_edit_clicked, true);
+    addButton(Gtk::Stock::CLOSE, "remove concept", &VRSemanticWidget::on_rem_clicked, true);
+    auto sep = Gtk::manage( new Gtk::SeparatorToolItem() ); toolbar2->add(*sep); // separator
+    addButton(Gtk::Stock::NEW, "new property", &VRSemanticWidget::on_newp_clicked, false);
+    addButton(Gtk::Stock::EDIT, "edit selected property", &VRSemanticWidget::on_edit_prop_clicked, false);
+    addButton(Gtk::Stock::DELETE, "remove selected property", &VRSemanticWidget::on_rem_prop_clicked, false);
 
-    // expander and frame
+    // expander
     auto vbox = Gtk::manage( new Gtk::VBox() );
-    toolbars = Gtk::manage( new Gtk::HBox() );
     auto expander = Gtk::manage( new Gtk::Expander("") );
     label = (Gtk::Label*)expander->get_label_widget();
     expander->add(*vbox);
-    toolbars->pack_start(*toolbar);
+    toolbars = Gtk::manage( new Gtk::HBox() );
+    toolbars->pack_start(*toolbar2);
     vbox->pack_start(*toolbars);
     vbox->pack_start(*treeview);
+    auto framed = Gtk::manage( new Gtk::HBox() );
+    framed->pack_start(*expander);
+    framed->pack_start(*toolbar1);
+
+    expander->property_expanded().signal_changed().connect(
+        sigc::mem_fun(*this, &VRSemanticWidget::on_expander_toggled)
+    );
+
+    // frame
     auto frame = Gtk::manage( new Gtk::Frame() );
-    frame->add(*expander);
+    frame->add(*framed);
     widget = frame;
     canvas->put(*frame, 0, 0);
     frame->modify_bg( Gtk::STATE_NORMAL, Gdk::Color(color));
@@ -131,35 +151,38 @@ void VRSemanticWidget::setPropRow(Gtk::TreeModel::iterator iter, string name, st
     gtk_tree_store_set(treestore->gobj(), row.gobj(), 6, ID, -1);
 }
 
-bool VRSemanticWidget::on_expander_clicked(GdkEventButton* e) {
-    cout << "EXPAND\n";
-    return true;
+void VRSemanticWidget::on_expander_toggled() {
+    if (expanded) toolbar1->show_all();
+    else toolbar1->hide_all();
+    expanded = !expanded;
 }
 
 void VRSemanticWidget::on_select() {}
 
 void VRSemanticWidget::on_fold_clicked() {
     subTreeFolded = !subTreeFolded;
-    if (subTreeFolded) {
-        // TODO: change button icon
-    }
+    if (subTreeFolded) bFold->set_stock_id(Gtk::Stock::ADD); // TODO: change button icon
+    else bFold->set_stock_id(Gtk::Stock::REMOVE); // TODO: change button icon
     setFolding(subTreeFolded);
 }
 
-void VRSemanticWidget::setFolding(bool folded) { // map, unmap
+void VRSemanticWidget::setFolding(bool folded) {
     subTreeFolded = folded;
     for (auto ww : children) {
-        if (auto w = ww.second.lock()) {
-            w->setVisible(!subTreeFolded);
-            w->setFolding(subTreeFolded);
-        }
+        if (auto w = ww.second.lock()) w->setVisible(!folded);
     }
 }
 
-void VRSemanticWidget::setVisible(bool v) { // map, unmap
+void VRSemanticWidget::setVisible(bool v) {
     visible = v;
-    if (v) widget->map();
-    else widget->unmap();
+    if (v) widget->show_all();
+    else widget->hide_all();
+    for (auto wc : connectors) if (auto c = wc.second.lock()) c->setVisible(v);
+
+    if (subTreeFolded && visible) return;
+    for (auto ww : children) {
+        if (auto w = ww.second.lock()) w->setVisible(v);
+    }
 }
 
 void VRSemanticWidget::move(Vec2f p) {
