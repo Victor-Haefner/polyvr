@@ -178,10 +178,23 @@ void VRGuiSemantics::updateLayout() {
 
     layout.compute(2, 0.002);
 
+    auto clamp = [&](Vec3f& p, boundingbox& bb) {
+        float W = canvas->get_width();
+        float H = canvas->get_height();
+        float x0 = bb.max()[0];
+        float y0 = bb.max()[1];
+        if (p[0] < x0) p[0] = x0;
+        if (p[1] < y0) p[1] = y0;
+        if (p[0] > W) p[0] = W;
+        if (p[1] > H) p[1] = H;
+    };
+
     int i = 0;
     for (auto c : widgets) { // update widget positions
         if (!c.second->visible) continue;
         Vec3f p = gra->getNode(i).pos;
+        auto bb = gra->getNode(i).box;
+        clamp(p,bb);
         c.second->move(Vec2f(p[0], p[1]));
         i++;
     }
