@@ -38,6 +38,7 @@ void VREntityWidget::on_edit_prop_clicked() {
     }
     dialog->hide();
     update();
+    saveScene();
 }
 
 void VREntityWidget::on_rem_prop_clicked() {
@@ -47,6 +48,7 @@ void VREntityWidget::on_rem_prop_clicked() {
     entity->rem(selected_entity_property); // TODO
     selected_entity_property = 0;
     update();
+    saveScene();
 }
 
 void VREntityWidget::on_newp_clicked() {
@@ -56,6 +58,7 @@ void VREntityWidget::on_newp_clicked() {
     //setPropRow(selected_concept_property->append(), name, "", "orange", 0);
     entity->add(name, "");
     update();
+    saveScene();
 }
 
 void VREntityWidget::on_rem_clicked() {
@@ -68,6 +71,7 @@ void VREntityWidget::on_edit_clicked() {
     if (s == "") return;
     manager->getSelectedOntology()->renameEntity(entity, s);
     label->set_text(entity->getName());
+    saveScene();
 }
 
 void VREntityWidget::on_select_property() {

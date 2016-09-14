@@ -40,6 +40,7 @@ VRConceptWidget::VRConceptWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, VRConcep
     toolbar2->add(*bEntityNew);
     toolbar2->add(*bRuleNew);
     toolbars->pack_start(*toolbar2);
+    toolbars->show_all();
 
     bConceptNew->set_tooltip_text("new concept");
     bEntityNew->set_tooltip_text("new entity");
@@ -67,6 +68,7 @@ void VRConceptWidget::on_edit_prop_clicked() {
     if (dialog->run() == Gtk::RESPONSE_OK) {
         selected_property->setName( getTextEntry("entry23") );
         selected_property->type = getTextEntry("entry24");
+        saveScene();
     }
     dialog->hide();
     update();
@@ -79,6 +81,7 @@ void VRConceptWidget::on_rem_prop_clicked() {
     concept->remProperty(selected_property);
     selected_property = 0;
     update();
+    saveScene();
 }
 
 void VRConceptWidget::on_rem_clicked() {
@@ -91,6 +94,7 @@ void VRConceptWidget::on_edit_clicked() {
     if (s == "") return;
     manager->getSelectedOntology()->renameConcept(concept, s);
     label->set_text(concept->getName());
+    saveScene();
 }
 
 void VRConceptWidget::on_newp_clicked() {
@@ -103,6 +107,7 @@ void VRConceptWidget::on_newp_clicked() {
     } while(concept->getProperty(name));
     setPropRow(treestore->append(), name, "none", "orange", 0);
     concept->addProperty(name, "none");
+    saveScene();
 }
 
 void VRConceptWidget::on_select_property() {
@@ -141,12 +146,14 @@ void VRConceptWidget::reparent(VRConceptWidgetPtr w) {
     concept->append(c);
     manager->disconnectAny(w);
     manager->connect(ptr(), w, "#00CCFF");
+    saveScene();
 }
 
 void VRConceptWidget::reparent(VRRuleWidgetPtr w) {
     w->rule->associatedConcept = concept->getName();
     manager->disconnectAny(w);
     manager->connect(ptr(), w, "#00DD00");
+    saveScene();
 }
 
 

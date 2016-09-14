@@ -41,6 +41,7 @@ void VRRuleWidget::on_edit_prop_clicked() {
         selected_statement->statement = getTextEntry("entry23");
         selected_statement->setup();
         //selected_statement->type = getTextEntry("entry24");
+        saveScene();
     }
     dialog->hide();
     update();
@@ -53,6 +54,7 @@ void VRRuleWidget::on_rem_prop_clicked() {
     rule->remStatement(selected_statement);
     selected_statement = 0;
     update();
+    saveScene();
 }
 
 void VRRuleWidget::on_rem_clicked() {
@@ -65,6 +67,7 @@ void VRRuleWidget::on_edit_clicked() {
     if (s == "") return;
     rule->setQuery(s);
     if (rule->query) label->set_text(rule->query->toString());
+    saveScene();
 }
 
 void VRRuleWidget::on_newp_clicked() {
@@ -72,6 +75,7 @@ void VRRuleWidget::on_newp_clicked() {
     string name = rule->associatedConcept + "(x)";
     setPropRow(treestore->append(), name, "", "orange", 0);
     rule->addStatement(name);
+    saveScene();
 }
 
 void VRRuleWidget::on_select_property() {

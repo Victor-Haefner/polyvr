@@ -105,6 +105,7 @@ VRSemanticWidget::VRSemanticWidget(VRGuiSemantics* m, Gtk::Fixed* canvas, string
     widget = frame;
     canvas->put(*frame, 0, 0);
     frame->modify_bg( Gtk::STATE_NORMAL, Gdk::Color(color));
+    frame->show_all();
 
     // dnd drag widget
     vector<Gtk::TargetEntry> entries;

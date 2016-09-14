@@ -91,6 +91,7 @@ void VRGuiSemantics::on_new_clicked() {
     o->setPersistency(666);
     o->setFlag("custom");
     updateOntoList();
+    saveScene();
 }
 
 void VRGuiSemantics::on_del_clicked() {
@@ -99,6 +100,7 @@ void VRGuiSemantics::on_del_clicked() {
     mgr->remOntology(current);
     clearCanvas();
     updateOntoList();
+    saveScene();
 }
 
 void VRGuiSemantics::on_diag_load_clicked() {
@@ -109,6 +111,7 @@ void VRGuiSemantics::on_diag_load_clicked() {
     o->setPersistency(666);
     o->setFlag("custom");
     updateOntoList();
+    saveScene();
 }
 
 void VRGuiSemantics::on_open_clicked() {
@@ -292,6 +295,7 @@ void VRGuiSemantics_on_name_edited(GtkCellRendererText *cell, gchar *path_string
     string name = row.get_value(cols.name);
     auto o = scene->getSemanticManager()->renameOntology(name, new_name);
     if (o) row[cols.name] = new_name;
+    saveScene();
 }
 
 VRSemanticManagerPtr VRGuiSemantics::getManager() {
@@ -378,7 +382,7 @@ void VRGuiSemantics::copyConcept(VRConceptWidget* w) {
     widgets[c->ID] = cw;
     cw->move(w->pos + Vec2f(90,0));
     connect(widgets[w->ID()], cw, "#00CCFF");
-    canvas->show_all();
+    saveScene();
 }
 
 void VRGuiSemantics::addEntity(VRConceptWidget* w) {
@@ -387,7 +391,7 @@ void VRGuiSemantics::addEntity(VRConceptWidget* w) {
     widgets[c->ID] = cw;
     cw->move(w->pos + Vec2f(90,0));
     connect(widgets[w->ID()], cw, "#FFEE00");
-    canvas->show_all();
+    saveScene();
 }
 
 void VRGuiSemantics::addRule(VRConceptWidget* w) {
@@ -397,26 +401,28 @@ void VRGuiSemantics::addRule(VRConceptWidget* w) {
     widgets[c->ID] = cw;
     cw->move(w->pos + Vec2f(90,0));
     connect(widgets[w->ID()], cw, "#00DD00");
-    canvas->show_all();
+    saveScene();
 }
 
 void VRGuiSemantics::remConcept(VRConceptWidget* w) {
     widgets.erase(w->concept->ID);
     current->remConcept(w->concept);
     //disconnectAny(); // TODO
+    saveScene();
 }
 
 void VRGuiSemantics::remEntity(VREntityWidget* w) {
     widgets.erase(w->entity->ID);
     current->remEntity(w->entity);
     //disconnectAny(); // TODO
+    saveScene();
 }
 
 void VRGuiSemantics::remRule(VRRuleWidget* w) {
     widgets.erase(w->rule->ID);
     current->remRule(w->rule);
+    saveScene();
 }
-
 
 VROntologyPtr VRGuiSemantics::getSelectedOntology() { return current; }
 
