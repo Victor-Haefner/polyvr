@@ -58,9 +58,10 @@ void VRProcess::update() {
     interactionDiagram = DiagramPtr( new Diagram() );
 
     map<string, int> nodes;
-    auto addDiagNode = [&](VREntityPtr e, string label) {
+    auto addDiagNode = [&](VREntityPtr e, string label, WIDGET type) {
         auto n = Node(e);
         n.label = label;
+        n.type = type;
         int i = interactionDiagram->addNode(n);
         if (auto ID = e->getValue("hasModelComponentID") ) nodes[ID->value] = i;
         return i;
@@ -80,7 +81,7 @@ void VRProcess::update() {
         auto n = Node(subject);
         string label;
         if (auto l = subject->getValue("hasModelComponentLable") ) label = l->value;
-        addDiagNode(subject, label);
+        addDiagNode(subject, label, SUBJECT);
     }
 
     string q_messages = "q(x):StandardMessageExchange(x);Layer("+layer->getName()+");has("+layer->getName()+",x)";
@@ -90,7 +91,7 @@ void VRProcess::update() {
         string label = "Msg: ";
         if (msgs.size())
             if (auto l = msgs[0]->getValue("hasModelComponentLable") ) label += l->value;
-        int i = addDiagNode(message, label);
+        int i = addDiagNode(message, label, MESSAGE);
 
         string sender;
         string receiver;

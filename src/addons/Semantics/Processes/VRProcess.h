@@ -14,9 +14,15 @@ OSG_BEGIN_NAMESPACE;
 
 class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName {
     public:
+        enum WIDGET {
+            SUBJECT,
+            MESSAGE
+        };
+
         struct Node : VRName {
             VREntityPtr entity;
             VRTransformPtr widget;
+            WIDGET type;
 
             string label;
 

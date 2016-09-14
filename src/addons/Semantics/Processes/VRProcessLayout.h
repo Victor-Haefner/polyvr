@@ -3,6 +3,7 @@
 
 #include "../VRSemanticsFwd.h"
 #include "core/objects/VRTransform.h"
+#include "VRProcess.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -11,7 +12,7 @@ class VRProcessLayout : public VRTransform {
     private:
         VRProcessPtr process;
 
-        VRTransformPtr newWidget(string label, float height);
+        VRTransformPtr newWidget(VRProcess::Node& n, float height);
 
     public:
         VRProcessLayout(string name = "");
