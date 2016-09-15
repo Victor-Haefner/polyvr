@@ -1,5 +1,6 @@
 #include "VRPLY.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/VRGeoData.h"
 
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGGeometry.h>
@@ -198,7 +199,7 @@ struct base_parser {
 	}
 };
 
-void get_dxf_layer(data) {
+/*void get_dxf_layer(data) {
 	value = None
 	for i, item in enumerate(data) {
 		if item[0] == 8:
@@ -208,7 +209,7 @@ void get_dxf_layer(data) {
 	}
 
 	return item, value, i
-};
+};*/
 
 struct Primitive {
     string name;
@@ -222,9 +223,9 @@ struct Primitive {
 
     Primitive(Object* obj) {
         if (obj == 0) return;
-		name = obj.get_type(2)[0]
-        space = obj->get_type(67);
-        color_index = obj->get_type(62);
+		name = obj->get_type("2")[0]->name;
+        space = obj->get_type("67")[0]->name;
+        color_index = obj->get_type("62")[0]->name;
         data = obj->data;
         type = obj->type;
         obj->visited_flag = true;

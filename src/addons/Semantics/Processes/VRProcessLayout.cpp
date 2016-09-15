@@ -50,7 +50,7 @@ void pushLabelFace(VRGeoData& geo, int N, float s, float h1, float h2, Vec3f n, 
     geo.pushQuad(q1[1],q2[1],q2[2],q1[2]);
     geo.pushQuad(q1[2],q2[2],q2[3],q1[3]);
     geo.pushQuad(q1[3],q2[3],q2[0],q1[0]);
-    geo.pushQuad(q2[0],q2[1],q2[2],q2[3]); // inner quad for label
+    geo.pushQuad(q2[0],q2[3],q2[2],q2[1]); // inner quad for label
 }
 
 void pushSubjectBox(VRGeoData& geo, string& label, float h) {
@@ -71,23 +71,27 @@ void pushMsgBox(VRGeoData& geo, string& label, float h) {
     Vec4i q2 = pushRectVerts(geo, -s, s, -h, h, Vec3f(0,1,0), Vec3f(0,0,1), h);
     Vec4i q3 = pushRectVerts(geo, -s, s, -h, h, Vec3f(0,0,-1), Vec3f(0,1,0), h);
     Vec4i q4 = pushRectVerts(geo, -s, s, -h, h, Vec3f(0,0,1), Vec3f(0,1,0), h);
-    geo.pushQuad(q1[0],q1[1],q1[2],q1[3]);
-    geo.pushQuad(q2[0],q2[1],q2[2],q2[3]);
-    geo.pushQuad(q3[0],q3[1],q3[2],q3[3]);
-    geo.pushQuad(q4[0],q4[1],q4[2],q4[3]);
+    geo.pushQuad(q1[0],q1[3],q1[2],q1[1]);
+    geo.pushQuad(q2[0],q2[3],q2[2],q2[1]);
+    geo.pushQuad(q3[0],q3[3],q3[2],q3[1]);
+    geo.pushQuad(q4[0],q4[3],q4[2],q4[1]);
 }
 
 VRTransformPtr VRProcessLayout::newWidget(VRProcess::Node& n, float height) {
-    auto txt = VRText::get()->create(n.label, "MONO 20", 20, Color4f(0,0,0.5,1), Color4f(1,1,1,1));
+    Color4f fg, bg;
+    if (n.type == VRProcess::SUBJECT) { fg = Color4f(0,0,0,1); bg = Color4f(1,1,1,1); }
+    if (n.type == VRProcess::MESSAGE) { fg = Color4f(0,0,0,1); bg = Color4f(1,1,0,1); }
+
+    auto txt = VRText::get()->create(n.label, "MONO 20", 20, fg, bg);
     auto mat = VRMaterial::create("ProcessElement");
     mat->setTexture(txt);
+    mat->setTextureParams(GL_LINEAR, GL_LINEAR);
     VRGeoData geo;
 
     if (n.type == VRProcess::SUBJECT) pushSubjectBox(geo, n.label, height*0.5);
     if (n.type == VRProcess::MESSAGE) pushMsgBox(geo, n.label, height*0.5);
 
     auto w = geo.asGeometry("ProcessElement");
-    mat->setLit(0);
     w->setMaterial(mat);
     w->setPickable(1);
     w->getConstraint()->setTConstraint(Vec3f(0,1,0), VRConstraint::PLANE);
