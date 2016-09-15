@@ -10,13 +10,22 @@ using namespace std;
 class path;
 
 class VRStroke : public VRGeometry {
+    public:
+        enum CAP {
+            NONE,
+            ARROW
+        };
+
     private:
         vector<path*> paths;
 
-        int mode = 0;
+        int mode = -1;
         vector<Vec3f> profile;
-        bool closed = true;
+        bool closed = false;
         bool doColor = true;
+
+        CAP cap_beg = NONE;
+        CAP cap_end = NONE;
 
         VRGeometryPtr strewGeo = 0;
 
@@ -32,7 +41,7 @@ class VRStroke : public VRGeometry {
 
         vector<path*>& getPaths();
 
-        void strokeProfile(vector<Vec3f> profile, bool closed, bool doColor = true);
+        void strokeProfile(vector<Vec3f> profile, bool closed, bool doColor = true, CAP l = NONE, CAP r = NONE);
         void strokeStrew(VRGeometryPtr geo);
 
         void update();

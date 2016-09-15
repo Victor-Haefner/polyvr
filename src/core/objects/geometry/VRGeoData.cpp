@@ -168,11 +168,21 @@ void VRGeoData::pushTri(int i, int j, int k) {
     updateType(GL_TRIANGLES, 3);
 }
 
+void VRGeoData::pushLine(int i, int j) {
+    data->indices->addValue(i);
+    data->indices->addValue(j);
+    updateType(GL_LINES, 2);
+}
+
 void VRGeoData::pushPoint(int i) {
     if (i < 0) i = data->pos->size()-1;
     data->indices->addValue(i);
     updateType(GL_POINTS, 1);
 }
+
+void VRGeoData::pushLine() { int N = size(); pushLine(N-2, N-1); }
+void VRGeoData::pushTri() { int N = size(); pushTri(N-3, N-2, N-1); }
+void VRGeoData::pushQuad() { int N = size(); pushQuad(N-4, N-3, N-2, N-1); }
 
 void VRGeoData::pushPrim(Primitive p) {
     int No = primNOffset(p.lid, p.type);

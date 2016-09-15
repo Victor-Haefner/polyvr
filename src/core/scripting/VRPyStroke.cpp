@@ -56,7 +56,9 @@ PyMethodDef VRPyStroke::methods[] = {
     {"addPath", (PyCFunction)VRPyStroke::addPath, METH_VARARGS, "Add a path" },
     {"setPaths", (PyCFunction)VRPyStroke::setPaths, METH_VARARGS, "Set a list of paths" },
     {"getPaths", (PyCFunction)VRPyStroke::getPaths, METH_NOARGS, "Get the list of paths" },
-    {"strokeProfile", (PyCFunction)VRPyStroke::strokeProfile, METH_VARARGS, "Stroke along path using a profile" },
+    {"strokeProfile", (PyCFunction)VRPyStroke::strokeProfile, METH_VARARGS, "Stroke along path using a profile"
+            " - strokeProfile([[x,y,z], ...], bool caps, bool lit | bool colored, str beg_cap, str end_cap)"
+            "\n\t beg_cap and end_cap can be: 'NONE', 'ARROW'" },
     {"strokeStrew", (PyCFunction)VRPyStroke::strokeStrew, METH_VARARGS, "Stew objects along path" },
     {"update", (PyCFunction)VRPyStroke::update, METH_NOARGS, "Update stroke" },
     {"convertToRope", (PyCFunction)VRPyStroke::convertToRope, METH_NOARGS, "converts this Stroke  to a rope (softbody)" },
@@ -126,7 +128,9 @@ PyObject* VRPyStroke::strokeProfile(VRPyStroke* self, PyObject* args) {
     int closed, lit;
     int color = 1;
     PyObject* vec;
-    if (! PyArg_ParseTuple(args, "Oii|i", &vec, &closed, &lit, &color)) return NULL;
+    const char* beg = 0;
+    const char* end = 0;
+    if (! PyArg_ParseTuple(args, "Oii|iss", &vec, &closed, &lit, &color, &beg, &end)) return NULL;
 
     vector<OSG::Vec3f> profile;
     for (int i=0; i<PyList_Size(vec); i++) {
@@ -139,9 +143,13 @@ PyObject* VRPyStroke::strokeProfile(VRPyStroke* self, PyObject* args) {
         profile.push_back(r);
     };
 
-    OSG::VRStrokePtr e = (OSG::VRStrokePtr) self->objPtr;
-    e->strokeProfile(profile, closed, color);
-    e->getMaterial()->setLit(lit);
+    OSG::VRStroke::CAP cbeg = OSG::VRStroke::NONE;
+    OSG::VRStroke::CAP cend = OSG::VRStroke::NONE;
+    if (beg && beg == "ARROW") cbeg = OSG::VRStroke::ARROW;
+    if (end && end == "ARROW") cend = OSG::VRStroke::ARROW;
+
+    self->objPtr->strokeProfile(profile, closed, color, cbeg, cend);
+    self->objPtr->getMaterial()->setLit(lit);
     Py_RETURN_TRUE;
 }
 

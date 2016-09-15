@@ -7,6 +7,8 @@
 #include "core/utils/toString.h"
 #include "core/tools/VRText.h"
 
+#include <OpenSG/OSGMatrixUtility.h>
+
 using namespace OSG;
 
 VRProcessLayout::VRProcessLayout(string name) : VRTransform(name) {}
@@ -24,50 +26,71 @@ VRProcessLayoutPtr VRProcessLayout::create(string name) { return VRProcessLayout
 
 */
 
+Vec4i pushRectVerts(VRGeoData& geo, float x0, float x1, float y0, float y1, Vec3f n, Vec3f u, float d) {
+    Matrix m;
+    MatrixLookAt(m, Pnt3f(0,0,0), n, u);
+
+    Pnt3f p1(x0,y0,0); m.mult(p1,p1);
+    Pnt3f p2(x1,y0,0); m.mult(p2,p2);
+    Pnt3f p3(x1,y1,0); m.mult(p3,p3);
+    Pnt3f p4(x0,y1,0); m.mult(p4,p4);
+
+    int A = geo.pushVert(p1 - n*d, n, Vec2f(0,0));
+    int B = geo.pushVert(p2 - n*d, n, Vec2f(1,0));
+    int C = geo.pushVert(p3 - n*d, n, Vec2f(1,1));
+    int D = geo.pushVert(p4 - n*d, n, Vec2f(0,1));
+    return Vec4i(A,B,C,D);
+}
+
+void pushLabelFace(VRGeoData& geo, int N, float s, float h1, float h2, Vec3f n, Vec3f u) {
+    auto q1 = pushRectVerts(geo, -s, s, -h1, h1, n, u, s);
+    auto q2 = pushRectVerts(geo, -s + 0.5, -s + 0.5 + N, -h2, h2, n, u, s);
+
+    geo.pushQuad(q1[0],q2[0],q2[1],q1[1]);
+    geo.pushQuad(q1[1],q2[1],q2[2],q1[2]);
+    geo.pushQuad(q1[2],q2[2],q2[3],q1[3]);
+    geo.pushQuad(q1[3],q2[3],q2[0],q1[0]);
+    geo.pushQuad(q2[0],q2[1],q2[2],q2[3]); // inner quad for label
+}
+
+void pushSubjectBox(VRGeoData& geo, string& label, float h) {
+    int N = label.size();
+    float s = 0.5 * N + 0.5;
+    pushLabelFace(geo, N,s,s,h, Vec3f(0,-1,0), Vec3f(0,0,1));
+    pushLabelFace(geo, N,s,s,h, Vec3f(0,1,0), Vec3f(0,0,1));
+    pushLabelFace(geo, N,s,s,h, Vec3f(1,0,0), Vec3f(0,1,0));
+    pushLabelFace(geo, N,s,s,h, Vec3f(-1,0,0), Vec3f(0,1,0));
+    pushLabelFace(geo, N,s,s,h, Vec3f(0,0,1), Vec3f(0,1,0));
+    pushLabelFace(geo, N,s,s,h, Vec3f(0,0,-1), Vec3f(0,1,0));
+}
+
+void pushMsgBox(VRGeoData& geo, string& label, float h) {
+    int N = label.size();
+    float s = 0.5 * N + 0.5;
+    Vec4i q1 = pushRectVerts(geo, -s, s, -h, h, Vec3f(0,-1,0), Vec3f(0,0,1), h);
+    Vec4i q2 = pushRectVerts(geo, -s, s, -h, h, Vec3f(0,1,0), Vec3f(0,0,1), h);
+    Vec4i q3 = pushRectVerts(geo, -s, s, -h, h, Vec3f(0,0,-1), Vec3f(0,1,0), h);
+    Vec4i q4 = pushRectVerts(geo, -s, s, -h, h, Vec3f(0,0,1), Vec3f(0,1,0), h);
+    geo.pushQuad(q1[0],q1[1],q1[2],q1[3]);
+    geo.pushQuad(q2[0],q2[1],q2[2],q2[3]);
+    geo.pushQuad(q3[0],q3[1],q3[2],q3[3]);
+    geo.pushQuad(q4[0],q4[1],q4[2],q4[3]);
+}
 
 VRTransformPtr VRProcessLayout::newWidget(VRProcess::Node& n, float height) {
-    auto txt = VRText::get()->create(n.label, "SANS 16", 20, Color4f(0,0,0.5,1), Color4f(1,1,1,1));
+    auto txt = VRText::get()->create(n.label, "MONO 20", 20, Color4f(0,0,0.5,1), Color4f(1,1,1,1));
     auto mat = VRMaterial::create("ProcessElement");
     mat->setTexture(txt);
     VRGeoData geo;
 
-    if (n.type == VRProcess::SUBJECT) {
-        float s = 0.5 * n.label.size() + 0.5;
-        float h = height*0.5;
-        float w1 = -s + 0.5;
-        float w2 = w1 + n.label.size();
-
-        int q1 = geo.pushVert(Pnt3f(-s,-s,1), Vec3f(0,0,1), Vec2f(0,0));
-        int q2 = geo.pushVert(Pnt3f(s,-s,1), Vec3f(0,0,1), Vec2f(1,0));
-        int q3 = geo.pushVert(Pnt3f(s,s,1), Vec3f(0,0,1), Vec2f(1,1));
-        int q4 = geo.pushVert(Pnt3f(-s,s,1), Vec3f(0,0,1), Vec2f(0,1));
-        int v1 = geo.pushVert(Pnt3f(w1,-h,1), Vec3f(0,0,1), Vec2f(0,0));
-        int v2 = geo.pushVert(Pnt3f(w2,-h,1), Vec3f(0,0,1), Vec2f(1,0));
-        int v3 = geo.pushVert(Pnt3f(w2,h,1), Vec3f(0,0,1), Vec2f(1,1));
-        int v4 = geo.pushVert(Pnt3f(w1,h,1), Vec3f(0,0,1), Vec2f(0,1));
-        geo.pushQuad(q1,v1,v2,q2);
-        geo.pushQuad(q2,v2,v3,q3);
-        geo.pushQuad(q3,v3,v4,q4);
-        geo.pushQuad(q4,v4,v1,q1);
-        geo.pushQuad(v1,v2,v3,v4); // inner quad for label
-    }
-
-    if (n.type == VRProcess::MESSAGE) {
-        float s = 0.5 * n.label.size() + 0.5;
-        float h = height*0.5;
-
-        int v1 = geo.pushVert(Pnt3f(-s,-h,1), Vec3f(0,0,1), Vec2f(0,0));
-        int v2 = geo.pushVert(Pnt3f(s,-h,1), Vec3f(0,0,1), Vec2f(1,0));
-        int v3 = geo.pushVert(Pnt3f(s,h,1), Vec3f(0,0,1), Vec2f(1,1));
-        int v4 = geo.pushVert(Pnt3f(-s,h,1), Vec3f(0,0,1), Vec2f(0,1));
-        geo.pushQuad(v1,v2,v3,v4);
-    }
+    if (n.type == VRProcess::SUBJECT) pushSubjectBox(geo, n.label, height*0.5);
+    if (n.type == VRProcess::MESSAGE) pushMsgBox(geo, n.label, height*0.5);
 
     auto w = geo.asGeometry("ProcessElement");
     mat->setLit(0);
     w->setMaterial(mat);
     w->setPickable(1);
-    w->getConstraint()->setTConstraint(Vec3f(0,0,1), VRConstraint::PLANE);
+    w->getConstraint()->setTConstraint(Vec3f(0,1,0), VRConstraint::PLANE);
     w->getConstraint()->setRConstraint(Vec3f(0,1,0), VRConstraint::POINT);
     addChild(w);
     return w;
@@ -85,7 +108,7 @@ void VRProcessLayout::setProcess(VRProcessPtr p) {
         auto& e = diag->getElement(i);
         e.widget = newWidget(e, height);
 
-        Vec3f p = Vec3f(f, 0.01*(rand()%100), 0);
+        Vec3f p = Vec3f(f, 0, 0.01*(rand()%100));
         f += e.label.size()+2;
         e.widget->setFrom(p);
 

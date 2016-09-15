@@ -1,4 +1,5 @@
 #include "VRStroke.h"
+#include "VRGeoData.h"
 #include "core/math/path.h"
 #include "core/objects/material/VRMaterial.h"
 
@@ -9,11 +10,7 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-VRStroke::VRStroke(string name) : VRGeometry(name) {
-    mode = -1;
-    closed = false;
-}
-
+VRStroke::VRStroke(string name) : VRGeometry(name) { }
 VRStrokePtr VRStroke::create(string name) { return shared_ptr<VRStroke>(new VRStroke(name) ); }
 VRStrokePtr VRStroke::ptr() { return static_pointer_cast<VRStroke>( shared_from_this() ); }
 
@@ -22,42 +19,25 @@ void VRStroke::setPath(path* p) {
     paths.push_back(p);
 }
 
-void VRStroke::addPath(path* p) {
-    paths.push_back(p);
-}
-
-void VRStroke::setPaths(vector<path*> p) {
-    paths = p;
-}
-
+void VRStroke::addPath(path* p) { paths.push_back(p); }
+void VRStroke::setPaths(vector<path*> p) { paths = p; }
 vector<path*>& VRStroke::getPaths() { return paths; }
 
-/*void VRStroke::addQuad(GeoPnt3fPropertyRecPtr Pos, vector<Vec3f>& profile, GeoUInt32PropertyRecPtr Indices) {
-    ;
-}*/
-
-void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool doColor) {
+void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool doColor, CAP l, CAP r) {
     mode = 0;
     this->profile = profile;
     this->closed = closed;
     this->doColor = doColor;
+    cap_beg = l;
+    cap_end = r;
 
     Vec3f pCenter;
     for (auto p : profile) pCenter += p;
     pCenter *= 1.0/profile.size();
 
-    GeoUInt8PropertyRecPtr      Type = GeoUInt8Property::create();
-    GeoUInt32PropertyRecPtr     Length = GeoUInt32Property::create();
-    GeoPnt3fPropertyRecPtr      Pos = GeoPnt3fProperty::create();
-    GeoVec3fPropertyRecPtr      Norms = GeoVec3fProperty::create();
-    GeoVec3fPropertyRecPtr      Colors = GeoVec3fProperty::create();
-    GeoUInt32PropertyRecPtr     Indices = GeoUInt32Property::create();
-
+    VRGeoData data;
     bool doCaps = closed && profile.size() > 1;
-
     Vec3f z = Vec3f(0,0,1);
-    if (profile.size() == 1) Type->addValue(GL_LINES);
-    else Type->addValue(GL_QUADS);
 
     clearChildren();
     for (uint i=0; i<paths.size(); i++) {
@@ -76,57 +56,45 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool doColor) {
             Matrix m;
             MatrixLookAt(m, Vec3f(0,0,0), n, u);
 
+            bool begArrow1 = (j == 0) && (cap_beg == ARROW);
+            bool begArrow2 = (j == 1) && (cap_beg == ARROW);
+            bool endArrow1 = (j == pnts.size()-2) && (cap_end == ARROW);
+            bool endArrow2 = (j == pnts.size()-1) && (cap_end == ARROW);
+
             // add new profile points && normals
             for (uint k=0; k<profile.size(); k++) {
-                Vec3f tmp = profile[k];
-                m.mult(tmp, tmp);
+                Vec3f pos = profile[k];
+                if (endArrow1 || begArrow2) pos *= 2;
+                if (endArrow2 || begArrow1) pos *= 0.1;
+                m.mult(pos, pos);
 
-                Pos->addValue(p+tmp);
-                tmp.normalize();
-                Norms->addValue(tmp);
-                if (doColor) Colors->addValue(c);
+                Vec3f norm = pos; norm.normalize();
+                if (!doColor) data.pushVert(p+pos, norm);
+                else data.pushVert(p+pos, norm, c);
             }
 
             if (j==0) continue;
 
-            // add line
-            if (profile.size() == 1) {
-                int N = Pos->size();
-                Indices->addValue(N-2);
-                Indices->addValue(N-1);
-            } else {
-                // add quad
+            if (profile.size() == 1) data.pushLine();
+            else { // add quad
                 for (uint k=0; k<profile.size()-1; k++) {
-                    int N1 = Pos->size() - 2*profile.size() + k;
-                    int N2 = Pos->size() -   profile.size() + k;
-                    Indices->addValue(N1);
-                    Indices->addValue(N2);
-                    Indices->addValue(N2+1);
-                    Indices->addValue(N1+1);
-
-                    //cout << "\nN1N2 " << N1 << " " << N2 << " " << N2+1 << " " << N1+1 << flush;
+                    int N1 = data.size() - 2*profile.size() + k;
+                    int N2 = data.size() -   profile.size() + k;
+                    data.pushQuad(N1, N2, N2+1, N1+1);
                 }
 
                 if (closed) {
-                    int N0 = Pos->size() - 2*profile.size();
-                    int N1 = Pos->size() - profile.size() - 1;
-                    int N2 = Pos->size() - 1;
-                    Indices->addValue(N1);
-                    Indices->addValue(N2);
-                    Indices->addValue(N1+1);
-                    Indices->addValue(N0);
-
-                    //cout << "\nN1N2 " << N1 << " " << N2 << " " << N1+1 << " " << N0 << flush;
+                    int N0 = data.size() - 2*profile.size();
+                    int N1 = data.size() - profile.size() - 1;
+                    int N2 = data.size() - 1;
+                    data.pushQuad(N1, N2, N1+1, N0);
                 }
             }
         }
     }
 
-    Length->addValue(Indices->size());
-
     // caps
     if (doCaps) {
-        int Nt = 0;
         for (uint i=0; i<paths.size(); i++) {
             if (paths[i]->isClosed()) continue;
 
@@ -145,32 +113,27 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool doColor) {
             MatrixLookAt(m, Vec3f(0,0,0), n, u);
             Vec3f tmp; m.mult(pCenter, tmp);
 
-            int Ni = Pos->size();
-            Pos->addValue(p + tmp);
-            Norms->addValue(-n);
-            if (doColor) Colors->addValue(c);
+            int Ni = data.size();
+            if (!doColor) data.pushVert(p + tmp, -n);
+            else data.pushVert(p + tmp, -n, c);
 
             for (uint k=0; k<profile.size(); k++) {
                 Vec3f tmp = profile[k];
                 m.mult(tmp, tmp);
 
-                Pos->addValue(p+tmp);
-                Norms->addValue(-n);
-                if (doColor) Colors->addValue(c);
+                if (!doColor) data.pushVert(p + tmp, -n);
+                else data.pushVert(p + tmp, -n, c);
             }
 
             for (uint k=1; k<=profile.size(); k++) {
                 int j = k+1;
                 if (k == profile.size()) j = 1;
-                Indices->addValue(Ni);
-                Indices->addValue(Ni+k);
-                Indices->addValue(Ni+j);
-                Nt+=3;
+                data.pushTri(Ni, Ni+k, Ni+j);
             }
 
              // last cap
             int N = pnts.size()-1;
-            Ni = Pos->size();
+            Ni = data.size();
             p = pnts[N];
             n = directions[N];
             u = up_vectors[N];
@@ -178,46 +141,26 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool doColor) {
             MatrixLookAt(m, Vec3f(0,0,0), n, u);
             m.mult(pCenter, tmp);
 
-            Pos->addValue(p + tmp);
-            Norms->addValue(n);
-            if (doColor) Colors->addValue(c);
-
+            if (!doColor) data.pushVert(p + tmp, n);
+            else data.pushVert(p + tmp, n, c);
 
             for (uint k=0; k<profile.size(); k++) {
                 Vec3f tmp = profile[k];
                 m.mult(tmp, tmp);
 
-                Pos->addValue(p+tmp);
-                Norms->addValue(n);
-                if (doColor) Colors->addValue(c);
+                if (!doColor) data.pushVert(p + tmp, n);
+                else data.pushVert(p + tmp, n, c);
             }
 
             for (uint k=1; k<=profile.size(); k++) {
                 int j = k+1;
                 if (k == profile.size()) j = 1;
-                Indices->addValue(Ni);
-                Indices->addValue(Ni+j);
-                Indices->addValue(Ni+k);
-                Nt+=3;
+                data.pushTri(Ni, Ni+j, Ni+k);
             }
-        }
-
-        if (Nt > 0) {
-            Type->addValue(GL_TRIANGLES);
-            Length->addValue(Nt); // caps triangles
         }
     }
 
-    GeometryMTRecPtr g = Geometry::create();
-    g->setTypes(Type);
-    g->setLengths(Length);
-    g->setPositions(Pos);
-
-    g->setNormals(Norms);
-    if (doColor) g->setColors(Colors);
-    g->setIndices(Indices);
-
-    setMesh(g);
+    data.apply( ptr() );
 }
 
 void VRStroke::strokeStrew(VRGeometryPtr geo) {

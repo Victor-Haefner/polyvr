@@ -47,6 +47,10 @@ VRTexturePtr VRText::createBmp (string text, string font, int width, int height,
     cairo_t *cr;
     cairo_surface_t *surface;
 
+    int R = 3; // padding px
+    width += 2*R;
+    height += 2*R;
+
     surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
     cr = cairo_create (surface);
 
@@ -64,14 +68,21 @@ VRTexturePtr VRText::createBmp (string text, string font, int width, int height,
 
     //hier wird gemalt!
     //background
-    cairo_rectangle(cr, 0.0, 0.0, width, height);
     cairo_set_source_rgba(cr, bg[0],bg[1],bg[2],bg[3]);
+    cairo_rectangle(cr, 0, 0, width, height);
     cairo_fill(cr);
 
     //text
     cairo_set_source_rgba (cr, fg[0],fg[1],fg[2],fg[3]);
+    cairo_translate(cr, R, R);
     pango_cairo_update_layout (cr, layout);
     pango_cairo_show_layout (cr, layout);
+
+    cairo_set_source_rgba(cr, bg[0],bg[1],bg[2],bg[3]);
+    cairo_rectangle(cr, 0, 0, width, R-1); cairo_fill(cr);
+    cairo_rectangle(cr, 0, height-R-1, width, R-1); cairo_fill(cr);
+    cairo_rectangle(cr, 0, 0, R-1, height); cairo_fill(cr);
+    cairo_rectangle(cr, width-R-1, 0, R-1, height); cairo_fill(cr);
 
     UChar8* data = cairo_image_surface_get_data(surface);
     convertData(data, width, height);

@@ -43,8 +43,13 @@ class VRGeoData {
         int pushVert(VRGeoData& other, int i, Matrix m);
 
         void pushPoint(int i = -1);
+        void pushLine(int i, int j);
         void pushTri(int i, int j, int k);
         void pushQuad(int i, int j, int k, int l);
+
+        void pushLine();
+        void pushTri();
+        void pushQuad();
 
         void apply(VRGeometryPtr geo);
         VRGeometryPtr asGeometry(string name);
