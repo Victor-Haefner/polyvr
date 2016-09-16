@@ -13,6 +13,7 @@ PyMethodDef VRPyProcess::methods[] = {
     {"setOntology", (PyCFunction)VRPyProcess::setOntology, METH_VARARGS, "Set data from ontology - open(ontology)" },
     {"getInteractionDiagram", (PyCFunction)VRPyProcess::getInteractionDiagram, METH_NOARGS, "Return subjects interaction diagram - getInteractionDiagram()" },
     {"getBehaviorDiagram", (PyCFunction)VRPyProcess::getBehaviorDiagram, METH_VARARGS, "Return subject behavior diagram - getBehaviorDiagram( str subject )" },
+    {"getSubjects", (PyCFunction)VRPyProcess::getSubjects, METH_NOARGS, "Return subjects graph IDs - [int] getSubjects()" },
     {NULL}  /* Sentinel */
 };
 
@@ -38,6 +39,14 @@ PyObject* VRPyProcess::getInteractionDiagram(VRPyProcess* self) {
 PyObject* VRPyProcess::getBehaviorDiagram(VRPyProcess* self, PyObject* args) {
     if (!self->valid()) return NULL;
     return VRPyGraph::fromSharedPtr( self->objPtr->getBehaviorDiagram( parseString(args) ) );
+}
+
+PyObject* VRPyProcess::getSubjects(VRPyProcess* self) {
+    if (!self->valid()) return NULL;
+    auto IDs = self->objPtr->getSubjects();
+    PyObject* res = PyList_New(0);
+    for (auto i : IDs) PyList_Append(res, PyInt_FromLong(i));
+    return res;
 }
 
 PyMethodDef VRPyProcessLayout::methods[] = {

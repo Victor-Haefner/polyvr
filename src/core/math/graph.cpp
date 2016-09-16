@@ -17,6 +17,7 @@ vector< vector< graph_base::edge > >& graph_base::getEdges() { return edges; }
 vector< graph_base::node >& graph_base::getNodes() { return nodes; }
 graph_base::node& graph_base::getNode(int i) { return nodes[i]; }
 void graph_base::update(int i, bool changed) {}
+int graph_base::size() { return nodes.size(); }
 
 int graph_base::getNEdges() {
     int N = 0;

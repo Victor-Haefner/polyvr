@@ -48,6 +48,7 @@ class graph_base {
         vector< node >& getNodes();
         vector< vector<edge> >& getEdges();
         int getNEdges();
+        int size();
 
         //vector<node>::iterator begin();
         //vector<node>::iterator end();

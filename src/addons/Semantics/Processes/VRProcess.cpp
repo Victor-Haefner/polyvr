@@ -45,6 +45,15 @@ void VRProcess::setOntology(VROntologyPtr o) { ontology = o; update(); }
 VRProcess::DiagramPtr VRProcess::getInteractionDiagram() { return interactionDiagram; }
 VRProcess::DiagramPtr VRProcess::getBehaviorDiagram(string subject) { return behaviorDiagrams[subject]; }
 
+vector<int> VRProcess::getSubjects() {
+    vector<int> res;
+    for (int i=0; i<interactionDiagram->size(); i++) {
+        auto& e = interactionDiagram->getElement(i);
+        if (e.type == SUBJECT) res.push_back(i);
+    }
+    return res;
+}
+
 void VRProcess::update() {
     if (!ontology) return;
 

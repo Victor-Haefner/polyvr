@@ -19,7 +19,8 @@ PyMethodDef VRPyPathtool::methods[] = {
     {"addPath", (PyCFunction)VRPyPathtool::addPath, METH_VARARGS, "Add a path - addPath(path, object)" },
     {"select", (PyCFunction)VRPyPathtool::select, METH_VARARGS, "Select handle - select(handle)" },
     {"setVisible", (PyCFunction)VRPyPathtool::setVisible, METH_VARARGS, "Set the tool visibility - setVisible(bool)\n     setVisible(bool stroke, bool handles)" },
-    {"getPaths", (PyCFunction)VRPyPathtool::getPaths, METH_NOARGS, "Return alist of all paths - [path] getPaths()" },
+    {"getPaths", (PyCFunction)VRPyPathtool::getPaths, METH_NOARGS, "Return all paths - [path] getPaths()" },
+    {"getPath", (PyCFunction)VRPyPathtool::getPath, METH_VARARGS, "Return path between handles h1 and h2 - [path] getPath( handle h1, handle h2 )" },
     {"getHandles", (PyCFunction)VRPyPathtool::getHandles, METH_VARARGS, "Return a list of paths handles - [handle] getHandles(path)" },
     {"getStroke", (PyCFunction)VRPyPathtool::getStroke, METH_VARARGS, "Return the stroke object - stroke getStroke(path)" },
     {"update", (PyCFunction)VRPyPathtool::update, METH_NOARGS, "Update the tool - update()" },
@@ -76,6 +77,14 @@ PyObject* VRPyPathtool::getPaths(VRPyPathtool* self) {
     }
 
     return li;
+}
+
+PyObject* VRPyPathtool::getPath(VRPyPathtool* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    VRPyGeometry *h1, *h2;
+    if (!PyArg_ParseTuple(args, "OO", &h1, &h2)) return NULL;
+    auto p = self->objPtr->getPath(h1->objPtr, h2->objPtr);
+    return VRPyPath::fromPtr(p);
 }
 
 PyObject* VRPyPathtool::getStroke(VRPyPathtool* self, PyObject* args) {

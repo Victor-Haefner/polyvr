@@ -251,6 +251,16 @@ vector<path*> VRPathtool::getPaths() {
     return res;
 }
 
+path* VRPathtool::getPath(VRGeometryPtr h1, VRGeometryPtr h2) {
+    if (!entries.count(h1.get()) || !entries.count(h2.get())) return 0;
+    for (auto& e1 : entries[h1.get()]) {
+        for (auto& e2 : entries[h2.get()]) {
+            if (e1->p == e2->p) return e1->p;
+        }
+    }
+    return 0;
+}
+
 vector<VRGeometryPtr> VRPathtool::getHandles(path* p) {
     vector<VRGeometryPtr> res;
     if (p == 0) for (auto h : handles) res.push_back(h.lock());
@@ -260,9 +270,6 @@ vector<VRGeometryPtr> VRPathtool::getHandles(path* p) {
         for (auto h : e->handles) if (auto hl = h.lock()) sor[ e->points[hl.get()] ] = hl;
         for (auto h : sor) res.push_back(h.second);
     }
-
-    //cout << "get handles " << p << endl;
-    //for (auto h : res) cout << " " << h->getName() << endl;
     return res;
 }
 

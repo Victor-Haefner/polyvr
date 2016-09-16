@@ -11,6 +11,7 @@ struct VRPyProcess : VRPyBaseT<OSG::VRProcess> {
     static PyObject* setOntology(VRPyProcess* self, PyObject* args);
     static PyObject* getInteractionDiagram(VRPyProcess* self);
     static PyObject* getBehaviorDiagram(VRPyProcess* self, PyObject* args);
+    static PyObject* getSubjects(VRPyProcess* self);
 };
 
 struct VRPyProcessLayout : VRPyBaseT<OSG::VRProcessLayout> {

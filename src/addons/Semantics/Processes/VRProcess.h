@@ -49,8 +49,7 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
         void setOntology(VROntologyPtr o);
         DiagramPtr getInteractionDiagram();
         DiagramPtr getBehaviorDiagram(string subject);
-
-
+        vector<int> getSubjects();
 };
 
 OSG_END_NAMESPACE;
