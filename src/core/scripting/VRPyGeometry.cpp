@@ -97,7 +97,20 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"remove", (PyCFunction)VRPyGeometry::remove, METH_VARARGS, "Remove a part of the geometry - remove( Selection s )" },
     {"copy", (PyCFunction)VRPyGeometry::copy, METH_VARARGS, "Copy a part of the geometry - geo copy( Selection s )" },
     {"separate", (PyCFunction)VRPyGeometry::separate, METH_VARARGS, "Copy and remove a part of the geometry - geo separate( Selection s )" },
-    {"setPrimitive", (PyCFunction)VRPyGeometry::setPrimitive, METH_VARARGS, "Set geometry to primitive" },
+    {"setPrimitive", (PyCFunction)VRPyGeometry::setPrimitive, METH_VARARGS, "Set geometry to primitive - setPrimitive(str params)"
+                        "\n\tparams is a single string as for example: 'Box 1.2 5.4 3.46 1 12 32'"
+                        "\n\t   Box is the primitive type, followed by the geometric parameters"
+                        "\n\tavailable primitives are:"
+                        "\n\t\tPlane size_x size_y segments_x segments_y"
+                        "\n\t\tBox size_x size_y size_z segments_x segments_y segments_z"
+                        "\n\t\tSphere radius iterations"
+                        "\n\t\tCylinder height radius N_sides do_bottom do_top do_sides"
+                        "\n\t\tCone height radius N_sides do_bottom do_sides"
+                        "\n\t\tTorus inner_radius outer_radius N_segments N_rings"
+                        "\n\t\tTeapot iterations scale"
+                        "\n\t\tArrow height width trunc hat thickness"
+                        "\n\t\tGear width hole pitch N_teeth teeth_size bevel"
+                        "\n\t\tThread length radius pitch N_segments" },
     {"setVideo", (PyCFunction)VRPyGeometry::setVideo, METH_VARARGS, "Set video texture - setVideo(path)" },
     {"playVideo", (PyCFunction)VRPyGeometry::playVideo, METH_VARARGS, "Play the video texture from t0 to t1 - playVideo(t0, t1, speed)" },
     {"decimate", (PyCFunction)VRPyGeometry::decimate, METH_VARARGS, "Decimate geometry by collapsing a fraction of edges - decimate(f)" },

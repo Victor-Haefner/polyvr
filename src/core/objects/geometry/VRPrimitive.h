@@ -118,6 +118,7 @@ struct VRArrow : public VRPrimitive {
     float width = 1;
     float trunc = 0.5;
     float hat = 0.2;
+    float thickness = 0.2;
 
     VRArrow();
     void fromStream(stringstream& ss);
@@ -125,13 +126,13 @@ struct VRArrow : public VRPrimitive {
     OSG::GeometryMTRecPtr make();
 };
 
-struct VRThread : public VRPrimitive {
+struct VRScrewThread : public VRPrimitive {
     float length = 1;
     float radius = 0.5;
     float pitch = 0.1;
     float Nsegments = 16;
 
-    VRThread();
+    VRScrewThread();
     void fromStream(stringstream& ss);
     void toStream(stringstream& ss);
     OSG::GeometryMTRecPtr make();

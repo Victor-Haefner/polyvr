@@ -1,9 +1,13 @@
 #include "VRPrimitive.h"
+#include "VRGeometry.h"
+#include "VRGeoData.h"
 #include <math.h>
 #include <OpenSG/OSGSimpleGeometry.h>
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGSimpleMaterial.h>
 #include <OpenSG/OSGNameAttachment.h>
+
+using namespace OSG;
 
 int VRPrimitive::getNParams() { return N; }
 string VRPrimitive::getType() { return type; }
@@ -19,7 +23,7 @@ VRPrimitive* VRPrimitive::make(string p) {
     if (p == "Cone") return new VRCone();
     if (p == "Arrow") return new VRArrow();
     if (p == "Gear") return new VRGear();
-    if (p == "Thread") return new VRThread();
+    if (p == "Thread") return new VRScrewThread();
     return 0;
 }
 
@@ -100,6 +104,7 @@ vector<string> VRPrimitive::getTypeParameter(string type) {
         params["Arrow"].push_back("Width");
         params["Arrow"].push_back("Trunc");
         params["Arrow"].push_back("Hat");
+        params["Arrow"].push_back("Thickness");
 
         params["Gear"].push_back("Width");
         params["Gear"].push_back("Hole");
@@ -125,8 +130,8 @@ VRTorus::VRTorus() { N = 4; type = "Torus"; }
 VRTeapot::VRTeapot() { N = 2; type = "Teapot"; }
 VRCylinder::VRCylinder() { N = 6; type = "Cylinder"; }
 VRCone::VRCone() { N = 5; type = "Cone"; }
-VRArrow::VRArrow() { N = 4; type = "Arrow"; }
-VRThread::VRThread() { N = 4; type = "Thread"; }
+VRArrow::VRArrow() { N = 5; type = "Arrow"; }
+VRScrewThread::VRScrewThread() { N = 4; type = "Thread"; }
 VRGear::VRGear() { N = 6; type = "Gear"; }
 
 void VRPlane::fromStream(stringstream& ss) { ss >> width >> height >> Nx >> Ny; }
@@ -136,8 +141,8 @@ void VRTorus::fromStream(stringstream& ss) { ss >> inner_radius >> outer_radius 
 void VRTeapot::fromStream(stringstream& ss) { ss >> iterations >> scale; }
 void VRCylinder::fromStream(stringstream& ss) { ss >> height >> radius >> Nsides >> doTop >> doBottom >> doSides; }
 void VRCone::fromStream(stringstream& ss) { ss >> height >> radius >> Nsides >> doBottom >> doSides; }
-void VRArrow::fromStream(stringstream& ss) { ss >> height >> width >> trunc >> hat; }
-void VRThread::fromStream(stringstream& ss) { ss >> length >> radius >> pitch >> Nsegments; }
+void VRArrow::fromStream(stringstream& ss) { ss >> height >> width >> trunc >> hat >> thickness; }
+void VRScrewThread::fromStream(stringstream& ss) { ss >> length >> radius >> pitch >> Nsegments; }
 void VRGear::fromStream(stringstream& ss) { ss >> width >> hole >> pitch >> teeth_number >> teeth_size >> bevel; }
 
 void VRPlane::toStream(stringstream& ss) { ss << width << " " << height << " " << Nx << " " << Ny; }
@@ -147,66 +152,75 @@ void VRTorus::toStream(stringstream& ss) { ss << inner_radius << " " << outer_ra
 void VRTeapot::toStream(stringstream& ss) { ss << iterations << " " << scale; }
 void VRCylinder::toStream(stringstream& ss) { ss << height << " " << radius << " " << Nsides << " " << doTop << " " << doBottom << " " << doSides; }
 void VRCone::toStream(stringstream& ss) { ss << height << " " << radius << " " << Nsides << " " << doBottom << " " << doSides; }
-void VRArrow::toStream(stringstream& ss) { ss << height << " " << width << " " << trunc << " " << hat; }
-void VRThread::toStream(stringstream& ss) { ss << length << " " << radius << " " << pitch << " " << Nsegments; }
+void VRArrow::toStream(stringstream& ss) { ss << height << " " << width << " " << trunc << " " << hat << " " << thickness; }
+void VRScrewThread::toStream(stringstream& ss) { ss << length << " " << radius << " " << pitch << " " << Nsegments; }
 void VRGear::toStream(stringstream& ss) { ss << width << " " << hole << " " << pitch << " " << teeth_number << " " << teeth_size << " " << bevel; }
 
-OSG::GeometryMTRecPtr VRPlane::make() { return OSG::makePlaneGeo(width, height, Nx, Ny); }
-OSG::GeometryMTRecPtr VRBox::make() { return OSG::makeBoxGeo(width, height, depth, Nx, Ny, Nz); }
-OSG::GeometryMTRecPtr VRSphere::make() { return OSG::makeSphereGeo(iterations, radius); }
-OSG::GeometryMTRecPtr VRTorus::make() { return OSG::makeTorusGeo(inner_radius, outer_radius, Nsegments, Nrings); }
-OSG::GeometryMTRecPtr VRTeapot::make() { return OSG::makeTeapotGeo(iterations, scale); }
-OSG::GeometryMTRecPtr VRCylinder::make() { return OSG::makeCylinderGeo(height, radius, Nsides, doSides, doTop, doBottom); }
-OSG::GeometryMTRecPtr VRCone::make() { return OSG::makeConeGeo(height, radius, Nsides, doSides, doBottom); }
-OSG::GeometryMTRecPtr VRArrow::make() {
-    OSG::GeoUInt8PropertyRecPtr      Type = OSG::GeoUInt8Property::create();
-    OSG::GeoUInt32PropertyRecPtr     Length = OSG::GeoUInt32Property::create();
-    OSG::GeoPnt3fPropertyRecPtr      Pos = OSG::GeoPnt3fProperty::create();
-    OSG::GeoVec3fPropertyRecPtr      Norms = OSG::GeoVec3fProperty::create();
-    OSG::GeoUInt32PropertyRecPtr     Indices = OSG::GeoUInt32Property::create();
-    OSG::SimpleMaterialRecPtr        Mat = OSG::SimpleMaterial::create();
+GeometryMTRecPtr VRPlane::make() { return makePlaneGeo(width, height, Nx, Ny); }
+GeometryMTRecPtr VRBox::make() { return makeBoxGeo(width, height, depth, Nx, Ny, Nz); }
+GeometryMTRecPtr VRSphere::make() { return makeSphereGeo(iterations, radius); }
+GeometryMTRecPtr VRTorus::make() { return makeTorusGeo(inner_radius, outer_radius, Nsegments, Nrings); }
+GeometryMTRecPtr VRTeapot::make() { return makeTeapotGeo(iterations, scale); }
+GeometryMTRecPtr VRCylinder::make() { return makeCylinderGeo(height, radius, Nsides, doSides, doTop, doBottom); }
+GeometryMTRecPtr VRCone::make() { return makeConeGeo(height, radius, Nsides, doSides, doBottom); }
+GeometryMTRecPtr VRArrow::make() {
+    VRGeoData data;
 
-    Pos->addValue(OSG::Vec3f(0,0,0));
-    Pos->addValue(OSG::Vec3f(-width*0.5,0,hat));
-    Pos->addValue(OSG::Vec3f(width*0.5,0,hat));
-    Pos->addValue(OSG::Vec3f(-trunc*0.5,0,hat));
-    Pos->addValue(OSG::Vec3f(trunc*0.5,0,hat));
-    Pos->addValue(OSG::Vec3f(-trunc*0.5,0,height));
-    Pos->addValue(OSG::Vec3f(trunc*0.5,0,height));
-    for (int i=0; i<7; i++) Norms->addValue(OSG::Vec3f(0,1,0));
-    Indices->addValue(0); Indices->addValue(1); Indices->addValue(2);
-    Indices->addValue(3); Indices->addValue(5); Indices->addValue(4);
-    Indices->addValue(4); Indices->addValue(5); Indices->addValue(6);
+    float w2 = width*0.5;
 
-    Type->addValue(GL_TRIANGLES);
-    Length->addValue(Indices->size()); // for each tooth 4 quads
+    auto pushArrow = [&](float t, Vec3f n) {
+        int v1 = data.pushVert(Vec3f(0,t,0), n);
+        int v2 = data.pushVert(Vec3f(-w2,t,hat), n);
+        int v3 = data.pushVert(Vec3f(w2,t,hat), n);
+        int v4 = data.pushVert(Vec3f(-trunc*0.5,t,hat), n);
+        int v5 = data.pushVert(Vec3f(trunc*0.5,t,hat), n);
+        int v6 = data.pushVert(Vec3f(-trunc*0.5,t,height), n);
+        int v7 = data.pushVert(Vec3f(trunc*0.5,t,height), n);
+        data.pushTri(v1,v2,v3);
+        data.pushQuad(v4,v6,v7,v5);
+    };
 
-    Mat->setDiffuse(OSG::Color3f(0.8,0.8,0.6));
-    Mat->setAmbient(OSG::Color3f(0.4, 0.4, 0.2));
-    Mat->setSpecular(OSG::Color3f(0.1, 0.1, 0.1));
+    auto pushRect = [&](float x0, float x1, float y0, float y1, float z0, float z1, Vec3f n) {
+        int v1 = data.pushVert(Vec3f(x0,y0,z0), n);
+        int v2 = data.pushVert(Vec3f(x1,y0,z1), n);
+        int v3 = data.pushVert(Vec3f(x1,y1,z1), n);
+        int v4 = data.pushVert(Vec3f(x0,y1,z0), n);
+        data.pushQuad(v1,v2,v3,v4);
+    };
 
-    OSG::GeometryMTRecPtr geo = OSG::Geometry::create();
-    geo->setTypes(Type);
-    geo->setLengths(Length);
-    geo->setIndices(Indices);
-    geo->setPositions(Pos);
-    geo->setNormals(Norms);
-    geo->setMaterial(Mat);
+    if (thickness == 0) pushArrow(0, Vec3f(0,1,0));
+    else {
+        float t2 = thickness*0.5;
 
-    return geo;
+        pushArrow(t2, Vec3f(0,1,0));
+        pushArrow(-t2, Vec3f(0,1,0));
+
+        Vec3f nh1(hat, 0, w2); nh1.normalize();
+        Vec3f nh2(hat, 0, -w2); nh2.normalize();
+        pushRect(0,-w2,t2,-t2,0,hat, nh1);
+        pushRect(0,w2,t2,-t2,0,hat, nh2);
+        pushRect(-w2,-trunc*0.5,t2,-t2,hat,hat, Vec3f(0,0,-1));
+        pushRect(trunc*0.5,w2,t2,-t2,hat,hat, Vec3f(0,0,-1));
+        pushRect(-trunc*0.5,trunc*0.5,t2,-t2,height,height, Vec3f(0,0,-1));
+        pushRect(-trunc*0.5,-trunc*0.5,t2,-t2,hat,height, Vec3f(1,0,0));
+        pushRect(trunc*0.5,trunc*0.5,t2,-t2,height,hat, Vec3f(-1,0,0));
+    }
+
+    auto geo = data.asGeometry("Arrow");
+    return geo->getMesh();
 }
-OSG::GeometryMTRecPtr VRThread::make() {
-    OSG::GeoUInt8PropertyRecPtr      Type = OSG::GeoUInt8Property::create();
-    OSG::GeoUInt32PropertyRecPtr     Length = OSG::GeoUInt32Property::create();
-    OSG::GeoPnt3fPropertyRecPtr      Pos = OSG::GeoPnt3fProperty::create();
-    OSG::GeoVec3fPropertyRecPtr      Norms = OSG::GeoVec3fProperty::create();
-    OSG::GeoUInt32PropertyRecPtr     Indices = OSG::GeoUInt32Property::create();
-    OSG::SimpleMaterialRecPtr        Mat = OSG::SimpleMaterial::create();
+GeometryMTRecPtr VRScrewThread::make() {
+    GeoUInt8PropertyRecPtr      Type = GeoUInt8Property::create();
+    GeoUInt32PropertyRecPtr     Length = GeoUInt32Property::create();
+    GeoPnt3fPropertyRecPtr      Pos = GeoPnt3fProperty::create();
+    GeoVec3fPropertyRecPtr      Norms = GeoVec3fProperty::create();
+    GeoUInt32PropertyRecPtr     Indices = GeoUInt32Property::create();
+    SimpleMaterialRecPtr        Mat = SimpleMaterial::create();
 
     int rN = Nsegments;
 
     //positionen und Normalen
-    OSG::Vec3f n;
+    Vec3f n;
     int iN = 0;
     int tN = round(length/pitch);
     float r1 = radius;
@@ -218,10 +232,10 @@ OSG::GeometryMTRecPtr VRThread::make() {
             float ca = cos(j*2*M_PI/rN);
             float o = j*pitch/rN;
 
-            Pos->addValue(OSG::Vec3f(r1*ca ,r1*sa ,o+i*pitch));
-            Pos->addValue(OSG::Vec3f(r2*ca ,r2*sa ,o+(i+0.5)*pitch));
-            Norms->addValue(OSG::Vec3f(ca,sa,0));
-            Norms->addValue(OSG::Vec3f(ca,sa,0));
+            Pos->addValue(Vec3f(r1*ca ,r1*sa ,o+i*pitch));
+            Pos->addValue(Vec3f(r2*ca ,r2*sa ,o+(i+0.5)*pitch));
+            Norms->addValue(Vec3f(ca,sa,0));
+            Norms->addValue(Vec3f(ca,sa,0));
 
             if (i == 0 && j == 0) continue;
 
@@ -243,11 +257,11 @@ OSG::GeometryMTRecPtr VRThread::make() {
     Type->addValue(GL_QUADS);
     Length->addValue(Indices->size()); // for each tooth 4 quads
 
-    Mat->setDiffuse(OSG::Color3f(0.8,0.8,0.6));
-    Mat->setAmbient(OSG::Color3f(0.4, 0.4, 0.2));
-    Mat->setSpecular(OSG::Color3f(0.1, 0.1, 0.1));
+    Mat->setDiffuse(Color3f(0.8,0.8,0.6));
+    Mat->setAmbient(Color3f(0.4, 0.4, 0.2));
+    Mat->setSpecular(Color3f(0.1, 0.1, 0.1));
 
-    OSG::GeometryMTRecPtr geo = OSG::Geometry::create();
+    GeometryMTRecPtr geo = Geometry::create();
     geo->setTypes(Type);
     geo->setLengths(Length);
     geo->setIndices(Indices);
@@ -257,13 +271,13 @@ OSG::GeometryMTRecPtr VRThread::make() {
 
     return geo;
 }
-OSG::GeometryMTRecPtr VRGear::make() {
-    OSG::GeoUInt8PropertyRecPtr      Type = OSG::GeoUInt8Property::create();
-    OSG::GeoUInt32PropertyRecPtr     Length = OSG::GeoUInt32Property::create();
-    OSG::GeoPnt3fPropertyRecPtr      Pos = OSG::GeoPnt3fProperty::create();
-    OSG::GeoVec3fPropertyRecPtr      Norms = OSG::GeoVec3fProperty::create();
-    OSG::GeoUInt32PropertyRecPtr     Indices = OSG::GeoUInt32Property::create();
-    OSG::SimpleMaterialRecPtr        Mat = OSG::SimpleMaterial::create();
+GeometryMTRecPtr VRGear::make() {
+    GeoUInt8PropertyRecPtr      Type = GeoUInt8Property::create();
+    GeoUInt32PropertyRecPtr     Length = GeoUInt32Property::create();
+    GeoPnt3fPropertyRecPtr      Pos = GeoPnt3fProperty::create();
+    GeoVec3fPropertyRecPtr      Norms = GeoVec3fProperty::create();
+    GeoUInt32PropertyRecPtr     Indices = GeoUInt32Property::create();
+    SimpleMaterialRecPtr        Mat = SimpleMaterial::create();
 
     float r0 = hole;
     float r1 = radius();
@@ -277,33 +291,33 @@ OSG::GeometryMTRecPtr VRGear::make() {
     float b = z*tan(bevel);
     float bt = ts*cos(bevel);
     float bz = -ts*sin(bevel);
-    OSG::Vec3f n;
+    Vec3f n;
     int iN = 0;
     for(int i=0; i<tN; i++) {
         for (int j=0; j<4; j++) a[j] = 2*M_PI*(i+j/6.)/tN;
         for (int j=0; j<4; j++) { c[j] = cos(a[j]); s[j] = sin(a[j]); }
 
         iN = Pos->size();
-        Pos->addValue(OSG::Vec3f(c[0]*r0, s[0]*r0, -z)); // 0
-        Pos->addValue(OSG::Vec3f(c[0]*(r1-b), s[0]*(r1-b), -z)); // 1
-        Pos->addValue(OSG::Vec3f(c[0]*(r1-b+bt*0.5), s[0]*(r1-b+bt*0.5), -z+bz*0.5)); // 2
-        Pos->addValue(OSG::Vec3f(c[1]*(r1-b+bt), s[1]*(r1-b+bt), -z+bz)); // 3
-        Pos->addValue(OSG::Vec3f(c[2]*(r1-b+bt), s[2]*(r1-b+bt), -z+bz)); // 4
-        Pos->addValue(OSG::Vec3f(c[3]*(r1-b+bt*0.5), s[3]*(r1-b+bt*0.5), -z+bz*0.5)); // 5
-        Pos->addValue(OSG::Vec3f(c[3]*(r1-b), s[3]*(r1-b), -z)); // 6
-        Pos->addValue(OSG::Vec3f(c[3]*r0, s[3]*r0, -z)); // 7
+        Pos->addValue(Vec3f(c[0]*r0, s[0]*r0, -z)); // 0
+        Pos->addValue(Vec3f(c[0]*(r1-b), s[0]*(r1-b), -z)); // 1
+        Pos->addValue(Vec3f(c[0]*(r1-b+bt*0.5), s[0]*(r1-b+bt*0.5), -z+bz*0.5)); // 2
+        Pos->addValue(Vec3f(c[1]*(r1-b+bt), s[1]*(r1-b+bt), -z+bz)); // 3
+        Pos->addValue(Vec3f(c[2]*(r1-b+bt), s[2]*(r1-b+bt), -z+bz)); // 4
+        Pos->addValue(Vec3f(c[3]*(r1-b+bt*0.5), s[3]*(r1-b+bt*0.5), -z+bz*0.5)); // 5
+        Pos->addValue(Vec3f(c[3]*(r1-b), s[3]*(r1-b), -z)); // 6
+        Pos->addValue(Vec3f(c[3]*r0, s[3]*r0, -z)); // 7
 
-        Pos->addValue(OSG::Vec3f(c[0]*r0, s[0]*r0, z)); // 8
-        Pos->addValue(OSG::Vec3f(c[0]*(r1+b), s[0]*(r1+b), z)); // 9
-        Pos->addValue(OSG::Vec3f(c[0]*(r1+b+bt*0.5), s[0]*(r1+b+bt*0.5), z+bz*0.5)); // 10
-        Pos->addValue(OSG::Vec3f(c[1]*(r1+b+bt), s[1]*(r1+b+bt), z+bz)); // 11
-        Pos->addValue(OSG::Vec3f(c[2]*(r1+b+bt), s[2]*(r1+b+bt), z+bz)); // 12
-        Pos->addValue(OSG::Vec3f(c[3]*(r1+b+bt*0.5), s[3]*(r1+b+bt*0.5), z+bz*0.5)); // 13
-        Pos->addValue(OSG::Vec3f(c[3]*(r1+b), s[3]*(r1+b), z)); // 14
-        Pos->addValue(OSG::Vec3f(c[3]*r0, s[3]*r0, z)); // 15
+        Pos->addValue(Vec3f(c[0]*r0, s[0]*r0, z)); // 8
+        Pos->addValue(Vec3f(c[0]*(r1+b), s[0]*(r1+b), z)); // 9
+        Pos->addValue(Vec3f(c[0]*(r1+b+bt*0.5), s[0]*(r1+b+bt*0.5), z+bz*0.5)); // 10
+        Pos->addValue(Vec3f(c[1]*(r1+b+bt), s[1]*(r1+b+bt), z+bz)); // 11
+        Pos->addValue(Vec3f(c[2]*(r1+b+bt), s[2]*(r1+b+bt), z+bz)); // 12
+        Pos->addValue(Vec3f(c[3]*(r1+b+bt*0.5), s[3]*(r1+b+bt*0.5), z+bz*0.5)); // 13
+        Pos->addValue(Vec3f(c[3]*(r1+b), s[3]*(r1+b), z)); // 14
+        Pos->addValue(Vec3f(c[3]*r0, s[3]*r0, z)); // 15
 
-        for (int j=0; j<8; j++) { n = OSG::Vec3f(0,0,-1); Norms->addValue(n); }
-        for (int j=0; j<8; j++) { n = OSG::Vec3f(0,0,1); Norms->addValue(n); }
+        for (int j=0; j<8; j++) { n = Vec3f(0,0,-1); Norms->addValue(n); }
+        for (int j=0; j<8; j++) { n = Vec3f(0,0,1); Norms->addValue(n); }
 
         Indices->addValue(iN+1);
         Indices->addValue(iN+0); // T1 unten
@@ -363,41 +377,41 @@ OSG::GeometryMTRecPtr VRGear::make() {
         for (int j=0; j<4; j++) { c[j] = cos(a[j]); s[j] = sin(a[j]); }
 
         iN = Pos->size();
-        Pos->addValue(OSG::Vec3f(c[0]*r0, s[0]*r0, -z)); // 0
-        Pos->addValue(OSG::Vec3f(c[0]*(r1-b), s[0]*(r1-b), -z)); // 1
-        Pos->addValue(OSG::Vec3f(c[0]*(r1-b+bt*0.5), s[0]*(r1-b+bt*0.5), -z+bz*0.5)); // 2
-        Pos->addValue(OSG::Vec3f(c[1]*(r1-b+bt), s[1]*(r1-b+bt), -z+bz)); // 3
-        Pos->addValue(OSG::Vec3f(c[2]*(r1-b+bt), s[2]*(r1-b+bt), -z+bz)); // 4
-        Pos->addValue(OSG::Vec3f(c[3]*(r1-b+bt*0.5), s[3]*(r1-b+bt*0.5), -z+bz*0.5)); // 5
-        Pos->addValue(OSG::Vec3f(c[3]*(r1-b), s[3]*(r1-b), -z)); // 6
-        Pos->addValue(OSG::Vec3f(c[3]*r0, s[3]*r0, -z)); // 7
+        Pos->addValue(Vec3f(c[0]*r0, s[0]*r0, -z)); // 0
+        Pos->addValue(Vec3f(c[0]*(r1-b), s[0]*(r1-b), -z)); // 1
+        Pos->addValue(Vec3f(c[0]*(r1-b+bt*0.5), s[0]*(r1-b+bt*0.5), -z+bz*0.5)); // 2
+        Pos->addValue(Vec3f(c[1]*(r1-b+bt), s[1]*(r1-b+bt), -z+bz)); // 3
+        Pos->addValue(Vec3f(c[2]*(r1-b+bt), s[2]*(r1-b+bt), -z+bz)); // 4
+        Pos->addValue(Vec3f(c[3]*(r1-b+bt*0.5), s[3]*(r1-b+bt*0.5), -z+bz*0.5)); // 5
+        Pos->addValue(Vec3f(c[3]*(r1-b), s[3]*(r1-b), -z)); // 6
+        Pos->addValue(Vec3f(c[3]*r0, s[3]*r0, -z)); // 7
 
-        Pos->addValue(OSG::Vec3f(c[0]*r0, s[0]*r0, z)); // 8
-        Pos->addValue(OSG::Vec3f(c[0]*(r1+b), s[0]*(r1+b), z)); // 9
-        Pos->addValue(OSG::Vec3f(c[0]*(r1+b+bt*0.5), s[0]*(r1+b+bt*0.5), z+bz*0.5)); // 10
-        Pos->addValue(OSG::Vec3f(c[1]*(r1+b+bt), s[1]*(r1+b+bt), z+bz)); // 11
-        Pos->addValue(OSG::Vec3f(c[2]*(r1+b+bt), s[2]*(r1+b+bt), z+bz)); // 12
-        Pos->addValue(OSG::Vec3f(c[3]*(r1+b+bt*0.5), s[3]*(r1+b+bt*0.5), z+bz*0.5)); // 13
-        Pos->addValue(OSG::Vec3f(c[3]*(r1+b), s[3]*(r1+b), z)); // 14
-        Pos->addValue(OSG::Vec3f(c[3]*r0, s[3]*r0, z)); // 15
+        Pos->addValue(Vec3f(c[0]*r0, s[0]*r0, z)); // 8
+        Pos->addValue(Vec3f(c[0]*(r1+b), s[0]*(r1+b), z)); // 9
+        Pos->addValue(Vec3f(c[0]*(r1+b+bt*0.5), s[0]*(r1+b+bt*0.5), z+bz*0.5)); // 10
+        Pos->addValue(Vec3f(c[1]*(r1+b+bt), s[1]*(r1+b+bt), z+bz)); // 11
+        Pos->addValue(Vec3f(c[2]*(r1+b+bt), s[2]*(r1+b+bt), z+bz)); // 12
+        Pos->addValue(Vec3f(c[3]*(r1+b+bt*0.5), s[3]*(r1+b+bt*0.5), z+bz*0.5)); // 13
+        Pos->addValue(Vec3f(c[3]*(r1+b), s[3]*(r1+b), z)); // 14
+        Pos->addValue(Vec3f(c[3]*r0, s[3]*r0, z)); // 15
 
-        n = OSG::Vec3f(-c[0], -s[0], 0); n.normalize(); Norms->addValue(n);
-        n = OSG::Vec3f(c[0]+s[0], -c[0]+s[0], 0); n.normalize(); Norms->addValue(n);
-        n = OSG::Vec3f(s[0], -c[0], 0); n.normalize(); Norms->addValue(n);
-        n = OSG::Vec3f(c[1]+s[1], -c[1]+s[1], 0); n.normalize(); Norms->addValue(n);
-        n = OSG::Vec3f(c[2]-s[2], c[2]+s[2], 0); n.normalize(); Norms->addValue(n);
-        n = OSG::Vec3f(-s[3], c[3], 0); n.normalize(); Norms->addValue(n);
-        n = OSG::Vec3f(c[3]-s[3], c[3]+s[3], 0); n.normalize(); Norms->addValue(n);
-        n = OSG::Vec3f(-c[3], -s[3], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3f(-c[0], -s[0], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3f(c[0]+s[0], -c[0]+s[0], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3f(s[0], -c[0], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3f(c[1]+s[1], -c[1]+s[1], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3f(c[2]-s[2], c[2]+s[2], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3f(-s[3], c[3], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3f(c[3]-s[3], c[3]+s[3], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3f(-c[3], -s[3], 0); n.normalize(); Norms->addValue(n);
 
-        n = OSG::Vec3f(-c[0], -s[0], 0); n.normalize(); Norms->addValue(n);
-        n = OSG::Vec3f(c[0]+s[0], -c[0]+s[0], 0); n.normalize(); Norms->addValue(n);
-        n = OSG::Vec3f(s[0], -c[0], 0); n.normalize(); Norms->addValue(n);
-        n = OSG::Vec3f(c[1]+s[1], -c[1]+s[1], 0); n.normalize(); Norms->addValue(n);
-        n = OSG::Vec3f(c[2]-s[2], c[2]+s[2], 0); n.normalize(); Norms->addValue(n);
-        n = OSG::Vec3f(-s[3], c[3], 0); n.normalize(); Norms->addValue(n);
-        n = OSG::Vec3f(c[3]-s[3], c[3]+s[3], 0); n.normalize(); Norms->addValue(n);
-        n = OSG::Vec3f(-c[3], -s[3], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3f(-c[0], -s[0], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3f(c[0]+s[0], -c[0]+s[0], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3f(s[0], -c[0], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3f(c[1]+s[1], -c[1]+s[1], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3f(c[2]-s[2], c[2]+s[2], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3f(-s[3], c[3], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3f(c[3]-s[3], c[3]+s[3], 0); n.normalize(); Norms->addValue(n);
+        n = Vec3f(-c[3], -s[3], 0); n.normalize(); Norms->addValue(n);
 
         Indices->addValue(iN+0); // B1
         Indices->addValue(iN+8);
@@ -453,11 +467,11 @@ OSG::GeometryMTRecPtr VRGear::make() {
     Type->addValue(GL_QUADS);
     Length->addValue(Indices->size()); // for each tooth 4 quads
 
-    Mat->setDiffuse(OSG::Color3f(0.8,0.8,0.6));
-    Mat->setAmbient(OSG::Color3f(0.4, 0.4, 0.2));
-    Mat->setSpecular(OSG::Color3f(0.1, 0.1, 0.1));
+    Mat->setDiffuse(Color3f(0.8,0.8,0.6));
+    Mat->setAmbient(Color3f(0.4, 0.4, 0.2));
+    Mat->setSpecular(Color3f(0.1, 0.1, 0.1));
 
-    OSG::GeometryMTRecPtr geo = OSG::Geometry::create();
+    GeometryMTRecPtr geo = Geometry::create();
     geo->setTypes(Type);
     geo->setLengths(Length);
     geo->setIndices(Indices);
