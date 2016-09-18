@@ -14,11 +14,11 @@ VRProcess::Node::Node(VREntityPtr e) {
 }
 
 void VRProcess::Node::update(graph_base::node& n, bool changed) { // callede when graph node changes
-    if (widget && !widget->isDragged() && changed) widget->setFrom(n.pos);
+    if (widget && !widget->isDragged() && changed) widget->setFrom(n.box.center());
 
     if (widget && widget->isDragged()) {
         auto m = widget->getMatrixTo( widget->getDragParent() );
-        n.pos = Vec3f(m[3]);
+        n.box.setCenter( Vec3f(m[3]) );
     }
 }
 

@@ -21,14 +21,16 @@ class boundingbox {
         void update(Vec3f v);
         void update(VRGeometryPtr g);
 
-        Vec3f min();
-        Vec3f max();
-        Vec3f center();
-        Vec3f size();
-        float radius();
+        Vec3f min() const;
+        Vec3f max() const;
+        Vec3f center() const;
+        Vec3f size() const;
+        float radius() const;
 
+        void setCenter(const Vec3f& t);
         void move(const Vec3f& t);
 
+        bool isInside(Vec3f p) const;
         bool intersectedBy(Line l);
 };
 

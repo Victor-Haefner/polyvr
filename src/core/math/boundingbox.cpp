@@ -25,19 +25,32 @@ void boundingbox::update(Vec3f v) {
 void boundingbox::update(VRGeometryPtr g) {
     clear();
     auto pos = g->getMesh()->getPositions();
-    for (int i=0; i<pos->size(); i++) update(pos->getValue<Pnt3f>(i).subZero());
+    for (int i=0; i<pos->size(); i++) {
+        Vec3f p = pos->getValue<Pnt3f>(i).subZero();
+        update(p);
+    }
 }
 
 bool boundingbox::empty() { return cleared; }
-Vec3f boundingbox::min() { return bb1; }
-Vec3f boundingbox::max() { return bb2; }
-Vec3f boundingbox::center() { return (bb2+bb1)*0.5; }
-Vec3f boundingbox::size() { return bb2-bb1; }
-float boundingbox::radius() { return cleared ? 0 : (min()-center()).length(); }
+Vec3f boundingbox::min() const { return bb1; }
+Vec3f boundingbox::max() const { return bb2; }
+Vec3f boundingbox::center() const { return (bb2+bb1)*0.5; }
+Vec3f boundingbox::size() const { return bb2-bb1; }
+float boundingbox::radius() const { return cleared ? 0 : (min()-center()).length(); }
+
+bool boundingbox::isInside(Vec3f p) const {
+    return (p[0] <= bb2[0] && p[0] >= bb1[0]
+         && p[1] <= bb2[1] && p[1] >= bb1[1]
+         && p[2] <= bb2[2] && p[2] >= bb1[2]);
+}
 
 void boundingbox::move(const Vec3f& t) {
     bb1 += t;
     bb2 += t;
+}
+
+void boundingbox::setCenter(const Vec3f& t) {
+    move( t - center() );
 }
 
 bool boundingbox::intersectedBy(Line l) {

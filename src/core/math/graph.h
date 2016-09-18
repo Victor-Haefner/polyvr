@@ -19,7 +19,6 @@ class graph_base {
         };
 
         struct node {
-            Vec3f pos;
             boundingbox box;
         };
 

@@ -99,8 +99,8 @@ void VRPathtool::setGraph(graph_basePtr g) {
     for (auto& n : edges) {
         for (auto& e : n) {
             path* p = new path();
-            p->addPoint(nodes[e.from].pos);
-            p->addPoint(nodes[e.to].pos);
+            p->addPoint(nodes[e.from].box.center());
+            p->addPoint(nodes[e.to].box.center());
             addPath(p, 0, knots[e.from].handle.lock(), knots[e.to].handle.lock());
             knots[e.from].out.push_back(e.to);
             knots[e.to].in.push_back(e.from);

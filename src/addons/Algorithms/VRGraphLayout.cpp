@@ -25,8 +25,8 @@ void VRGraphLayout::applySprings(float eps) {
             auto f2 = getFlag(e.to);
             auto& n1 = graph->getNode(e.from);
             auto& n2 = graph->getNode(e.to);
-            Vec3f p1 = n1.pos;
-            Vec3f p2 = n2.pos;
+            Vec3f p1 = n1.box.center();
+            Vec3f p2 = n2.box.center();
 
             float r = radius + n1.box.radius() + n2.box.radius();
             Vec3f d = p2 - p1;
@@ -70,24 +70,24 @@ void VRGraphLayout::applyOccupancy(float eps) {
 
     for (unsigned long i=0; i<nodes.size(); i++) {
         auto& n = nodes[i];
-        //o.add( n.pos, (void*)i );
-        o.addBox( n.box.min() + n.pos, n.box.max() + n.pos, (void*)i );
+        //o.add( n.box.center(), (void*)i );
+        o.addBox( n.box, (void*)i );
     }
 
     for (int i=0; i<nodes.size(); i++) {
         auto& n = nodes[i];
-        Vec3f pn = n.pos;
+        Vec3f pn = n.box.center();
         float rs = radius + 2*n.box.radius();
         if ( getFlag(i) == FIXED ) continue;
 
         float s = 1.0;
         Vec3f D;
-        for (auto& on2 : o.boxSearch(pn, n.box.min()*s, n.box.max()*s) ) { // TODO!!
+        for (auto& on2 : o.boxSearch(n.box) ) {
             int j = (long)on2;
             if (i == j) continue; // no self interaction
 
             auto& n2 = nodes[j];
-            Vec3f d = n2.pos - pn;
+            Vec3f d = n2.box.center() - pn;
             Vec3f w = n.box.size() + n2.box.size();
 
             Vec3f vx = Vec3f(abs(d[0]), abs(d[1]), abs(d[2])) - w*0.5;
@@ -96,7 +96,7 @@ void VRGraphLayout::applyOccupancy(float eps) {
             if (abs(vx[1]) < abs(x)) { x = vx[1]; dir = 1; }
             if (abs(vx[2]) < abs(x)) { x = vx[2]; dir = 2; }
 
-            cout << " dir " << dir << "   x " << x << "   d " << d << "   w2 " << w*0.5 << "   vx " << vx << endl;
+            //cout << " dir " << dir << "   x " << x << "   d " << d << "   w2 " << w*0.5 << "   vx " << vx << endl;
             //cout << "displ " << i << " " << j << " w " << n.box.size() << " + " << n2.box.size() << "    d " << d << "    x " << x << endl;
             d.normalize();
             D[dir] -= d[dir]*abs(x);//*0.15;

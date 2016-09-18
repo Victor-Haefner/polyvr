@@ -145,9 +145,9 @@ void VRGuiSemantics::updateLayout() {
         s[2] = 100;
 
         int ID = gra->addNode();
-        gra->getNode(ID).pos = c.second->getPosition();
         gra->getNode(ID).box.update(-s);
         gra->getNode(ID).box.update(s);
+        gra->getNode(ID).box.setCenter( c.second->getPosition() );
 
         widgetIDs[c.first] = ID;
         if (c.first == current->thing->ID) layout.fixNode(widgetIDs[c.first]);
@@ -179,23 +179,21 @@ void VRGuiSemantics::updateLayout() {
 
     layout.compute(2, 0.002);
 
-    auto clamp = [&](Vec3f& p, boundingbox& bb) {
+    auto clamp = [&](boundingbox& bb) {
         float W = canvas->get_width();
         float H = canvas->get_height();
-        float x0 = bb.max()[0];
-        float y0 = bb.max()[1];
-        if (p[0] < x0) p[0] = x0;
-        if (p[1] < y0) p[1] = y0;
-        if (p[0] > W) p[0] = W;
-        if (p[1] > H) p[1] = H;
+        Vec3f s = bb.size();
+        Vec3f p = bb.center();
+        if (p[0] < s[0]) p[0] = s[0];
+        if (p[1] < s[1]) p[1] = s[1];
+        bb.setCenter(p);
     };
 
     int i = 0;
     for (auto c : widgets) { // update widget positions
         if (!c.second->visible) continue;
-        Vec3f p = gra->getNode(i).pos;
-        auto bb = gra->getNode(i).box;
-        clamp(p,bb);
+        clamp( gra->getNode(i).box );
+        Vec3f p = gra->getNode(i).box.center();
         c.second->move(Vec2f(p[0], p[1]));
         i++;
     }

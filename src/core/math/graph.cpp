@@ -27,7 +27,7 @@ int graph_base::getNEdges() {
 
 void graph_base::setPosition(int i, Vec3f v) {
     auto& n = nodes[i];
-    n.pos = v;
+    n.box.setCenter(v);
     update(i, true);
 }
 

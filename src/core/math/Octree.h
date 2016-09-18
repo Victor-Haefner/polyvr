@@ -5,6 +5,7 @@
 #include <vector>
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGVector.h>
+#include "boundingbox.h"
 
 using namespace std;
 
@@ -25,7 +26,7 @@ class Octree {
 
         void destroy(Octree* guard);
         void findInSphere(Vec3f p, float r, vector<void*>& res);
-        void findInBox(Vec3f p, Vec3f min, Vec3f max, vector<void*>& res);
+        void findInBox(const boundingbox& b, vector<void*>& res);
         int getOctant(Vec3f p);
         bool inBox(Vec3f p, Vec3f c, float size);
 
@@ -34,14 +35,14 @@ class Octree {
         Octree* getRoot();
 
         void add(Vec3f p, void* data, int maxjump = -1, bool checkPosition = true);
-        void addBox(Vec3f min, Vec3f max, void* data, int maxjump = -1, bool checkPosition = true);
+        void addBox(const boundingbox& b, void* data, int maxjump = -1, bool checkPosition = true);
         void set(Octree* node, Vec3f p, void* data);
         Octree* get(Vec3f p);
 
         void clear();
 
         vector<void*> radiusSearch(Vec3f p, float r);
-        vector<void*> boxSearch(Vec3f p, Vec3f min, Vec3f max);
+        vector<void*> boxSearch(const boundingbox& b);
 
         void test();
         void print(int indent = 0);
