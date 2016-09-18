@@ -70,7 +70,8 @@ void VRGraphLayout::applyOccupancy(float eps) {
 
     for (unsigned long i=0; i<nodes.size(); i++) {
         auto& n = nodes[i];
-        o.add( n.pos, (void*)i );
+        //o.add( n.pos, (void*)i );
+        o.addBox( n.box.min() + n.pos, n.box.max() + n.pos, (void*)i );
     }
 
     for (int i=0; i<nodes.size(); i++) {
@@ -79,17 +80,26 @@ void VRGraphLayout::applyOccupancy(float eps) {
         float rs = radius + 2*n.box.radius();
         if ( getFlag(i) == FIXED ) continue;
 
+        float s = 1.0;
         Vec3f D;
-        for (auto& on2 : o.radiusSearch(pn, rs) ) {
-            int i = (long)on2;
-            auto& n2 = nodes[i];
+        for (auto& on2 : o.boxSearch(pn, n.box.min()*s, n.box.max()*s) ) { // TODO!!
+            int j = (long)on2;
+            if (i == j) continue; // no self interaction
+
+            auto& n2 = nodes[j];
             Vec3f d = n2.pos - pn;
-            float r = radius + n.box.radius() + n2.box.radius();
-            float x = (r - d.length())*eps; // displacement
-            if (x > 0) {
-                d.normalize();
-                D -= d*x*r*0.15;
-            }
+            Vec3f w = n.box.size() + n2.box.size();
+
+            Vec3f vx = Vec3f(abs(d[0]), abs(d[1]), abs(d[2])) - w*0.5;
+            float x = vx[0]; // get smallest intrusion
+            int dir = 0;
+            if (abs(vx[1]) < abs(x)) { x = vx[1]; dir = 1; }
+            if (abs(vx[2]) < abs(x)) { x = vx[2]; dir = 2; }
+
+            cout << " dir " << dir << "   x " << x << "   d " << d << "   w2 " << w*0.5 << "   vx " << vx << endl;
+            //cout << "displ " << i << " " << j << " w " << n.box.size() << " + " << n2.box.size() << "    d " << d << "    x " << x << endl;
+            d.normalize();
+            D[dir] -= d[dir]*abs(x);//*0.15;
         }
 
         graph->setPosition(i, pn+D); // move node away from neighbors

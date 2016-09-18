@@ -14,7 +14,8 @@ class VRText {
 
     public:
         static VRText* get();
-        VRTexturePtr create(string text, string font, int scale, Color4f fg, Color4f bg);
+        VRTexturePtr create(string text, string font, int height, Color4f fg, Color4f bg);
+        VRTexturePtr create(string text, string font, int width, int height, Color4f fg, Color4f bg);
 };
 
 

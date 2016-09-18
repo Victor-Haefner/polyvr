@@ -26,6 +26,15 @@ VRProcessLayoutPtr VRProcessLayout::create(string name) { return VRProcessLayout
 
 */
 
+int wrapString(string& s, int width) {
+    int N = 1;
+    for (int i=width; i<s.size()-1; i+=width) {
+        s.insert(i, "\n");
+        N++;
+    }
+    return N;
+}
+
 Vec4i pushRectVerts(VRGeoData& geo, float x0, float x1, float y0, float y1, Vec3f n, Vec3f u, float d) {
     Matrix m;
     MatrixLookAt(m, Pnt3f(0,0,0), n, u);
@@ -53,8 +62,7 @@ void pushLabelFace(VRGeoData& geo, int N, float s, float h1, float h2, Vec3f n, 
     geo.pushQuad(q2[0],q2[3],q2[2],q2[1]); // inner quad for label
 }
 
-void pushSubjectBox(VRGeoData& geo, string& label, float h) {
-    int N = label.size();
+void pushSubjectBox(VRGeoData& geo, int N, float h) {
     float s = 0.5 * N + 0.5;
     pushLabelFace(geo, N,s,s,h, Vec3f(0,-1,0), Vec3f(0,0,1));
     pushLabelFace(geo, N,s,s,h, Vec3f(0,1,0), Vec3f(0,0,1));
@@ -64,8 +72,7 @@ void pushSubjectBox(VRGeoData& geo, string& label, float h) {
     pushLabelFace(geo, N,s,s,h, Vec3f(0,0,-1), Vec3f(0,1,0));
 }
 
-void pushMsgBox(VRGeoData& geo, string& label, float h) {
-    int N = label.size();
+void pushMsgBox(VRGeoData& geo, int N, float h) {
     float s = 0.5 * N + 0.5;
     Vec4i q1 = pushRectVerts(geo, -s, s, -h, h, Vec3f(0,-1,0), Vec3f(0,0,1), h);
     Vec4i q2 = pushRectVerts(geo, -s, s, -h, h, Vec3f(0,1,0), Vec3f(0,0,1), h);
@@ -77,19 +84,24 @@ void pushMsgBox(VRGeoData& geo, string& label, float h) {
     geo.pushQuad(q4[0],q4[3],q4[2],q4[1]);
 }
 
-VRTransformPtr VRProcessLayout::newWidget(VRProcess::Node& n, float height) {
+VRGeometryPtr VRProcessLayout::newWidget(VRProcess::Node& n, float height) {
     Color4f fg, bg;
     if (n.type == VRProcess::SUBJECT) { fg = Color4f(0,0,0,1); bg = Color4f(1,1,1,1); }
     if (n.type == VRProcess::MESSAGE) { fg = Color4f(0,0,0,1); bg = Color4f(1,1,0,1); }
 
-    auto txt = VRText::get()->create(n.label, "MONO 20", 20, fg, bg);
+    int wrapN = 12;
+    if (n.type == VRProcess::MESSAGE) wrapN = 22;
+    string l = n.label;
+    int lineN = wrapString(l, wrapN);
+
+    auto txt = VRText::get()->create(l, "MONO 20", 18*wrapN, 30*lineN, fg, bg);
     auto mat = VRMaterial::create("ProcessElement");
     mat->setTexture(txt);
     mat->setTextureParams(GL_LINEAR, GL_LINEAR);
     VRGeoData geo;
 
-    if (n.type == VRProcess::SUBJECT) pushSubjectBox(geo, n.label, height*0.5);
-    if (n.type == VRProcess::MESSAGE) pushMsgBox(geo, n.label, height*0.5);
+    if (n.type == VRProcess::SUBJECT) pushSubjectBox(geo, wrapN, lineN*height*0.5);
+    if (n.type == VRProcess::MESSAGE) pushMsgBox(geo, wrapN, lineN*height*0.5);
 
     auto w = geo.asGeometry("ProcessElement");
     w->setMaterial(mat);
@@ -110,7 +122,8 @@ void VRProcessLayout::setProcess(VRProcessPtr p) {
     auto diag = process->getInteractionDiagram();
     for (int i=0; i<diag->getElements().size(); i++) {
         auto& e = diag->getElement(i);
-        e.widget = newWidget(e, height);
+        auto geo = newWidget(e, height);
+        e.widget = geo;
 
         Vec3f p = Vec3f(f, 0, 0.01*(rand()%100));
         f += e.label.size()+2;
@@ -118,8 +131,6 @@ void VRProcessLayout::setProcess(VRProcessPtr p) {
 
         auto& n = diag->getNode(i);
         n.pos = p;
-        Vec3f size(e.label.size(), height, height);
-        n.box.update(size*0.5);
-        n.box.update(-size*0.5);
+        n.box.update(geo);
     }
 }

@@ -1,5 +1,8 @@
 #include "boundingbox.h"
 
+#include "core/objects/geometry/VRGeometry.h"
+#include <OpenSG/OSGGeometry.h>
+
 using namespace OSG;
 
 boundingbox::boundingbox() { clear(); }
@@ -19,10 +22,17 @@ void boundingbox::update(Vec3f v) {
     }
 }
 
+void boundingbox::update(VRGeometryPtr g) {
+    clear();
+    auto pos = g->getMesh()->getPositions();
+    for (int i=0; i<pos->size(); i++) update(pos->getValue<Pnt3f>(i).subZero());
+}
+
 bool boundingbox::empty() { return cleared; }
 Vec3f boundingbox::min() { return bb1; }
 Vec3f boundingbox::max() { return bb2; }
 Vec3f boundingbox::center() { return (bb2+bb1)*0.5; }
+Vec3f boundingbox::size() { return bb2-bb1; }
 float boundingbox::radius() { return cleared ? 0 : (min()-center()).length(); }
 
 void boundingbox::move(const Vec3f& t) {

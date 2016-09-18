@@ -142,6 +142,7 @@ void VRGuiSemantics::updateLayout() {
     for (auto c : widgets) { // build up graph nodes
         if (!c.second->visible) continue;
         Vec3f s = c.second->getSize();
+        s[2] = 100;
 
         int ID = gra->addNode();
         gra->getNode(ID).pos = c.second->getPosition();

@@ -54,6 +54,17 @@ bool Octree::inBox(Vec3f p, Vec3f c, float size) {
     return true;
 }
 
+void Octree::addBox(Vec3f min, Vec3f max, void* d, int maxjump, bool checkPosition) {
+    add(min, d, maxjump, checkPosition);
+    add(Vec3f(max[0],min[1],min[2]), d, maxjump, checkPosition);
+    add(Vec3f(max[0],min[1],max[2]), d, maxjump, checkPosition);
+    add(Vec3f(min[0],min[1],max[2]), d, maxjump, checkPosition);
+    add(max, d, maxjump, checkPosition);
+    add(Vec3f(max[0],max[1],min[2]), d, maxjump, checkPosition);
+    add(Vec3f(min[0],max[1],min[2]), d, maxjump, checkPosition);
+    add(Vec3f(min[0],max[1],max[2]), d, maxjump, checkPosition);
+}
+
 void Octree::add(Vec3f p, void* d, int maxjump, bool checkPosition) {
     bool rOk = checkRecursion(this, p);
     if (!rOk) {
@@ -152,6 +163,7 @@ Octree* Octree::getRoot() {
 
 // sphere center, box center, sphere radius, box size
 bool sphere_box_intersect(Vec3f Ps, Vec3f Pb, float Rs, float Sb)  {
+
     float r2 = Rs * Rs;
     Vec3f diag(Sb*0.5, Sb*0.5, Sb*0.5);
     Vec3f Bmin = Pb - diag;
@@ -180,9 +192,46 @@ void Octree::findInSphere(Vec3f p, float r, vector<void*>& res) { // TODO: optim
     }
 }
 
+// box min, box max, octree box center, octree box size
+bool box_box_intersect(Vec3f min, Vec3f max, Vec3f Bpos, float Sb)  {
+    Vec3f Bdiag(Sb, Sb, Sb);
+    Vec3f Bmin = Bpos - Bdiag*0.5;
+    Vec3f Bmax = Bpos + Bdiag*0.5;
+
+    Vec3f Apos = (max + min)*0.5;
+    Vec3f Adiag = max-min;
+
+    Vec3f diff = (Apos-Bpos)*2;
+    Vec3f ABdiag = Adiag+Bdiag;
+    return (abs(diff[0]) <= ABdiag[0]) && (abs(diff[1]) <= ABdiag[1]) && (abs(diff[2]) <= ABdiag[2]);
+}
+
+void Octree::findInBox(Vec3f p, Vec3f min, Vec3f max, vector<void*>& res) { // TODO: optimize!!
+    if (!box_box_intersect(min+p, max+p, center, size)) return;
+
+    for (unsigned int i=0; i<data.size(); i++) {
+        Vec3f pi = points[i];
+        Vec3f d = pi-p;
+        bool inRect = (d[0] <= max[0] && d[0] >= min[0]
+                    && d[1] <= max[1] && d[1] >= min[1]
+                    && d[2] <= max[2] && d[2] >= min[2]);
+        if (inRect) res.push_back(data[i]);
+    }
+
+    for (int i=0; i<8; i++) {
+        if (children[i]) children[i]->findInBox(p, min, max, res);
+    }
+}
+
 vector<void*> Octree::radiusSearch(Vec3f p, float r) {
     vector<void*> res;
     getRoot()->findInSphere(p, r, res);
+    return res;
+}
+
+vector<void*> Octree::boxSearch(Vec3f p, Vec3f min, Vec3f max) {
+    vector<void*> res;
+    getRoot()->findInBox(p, min, max, res);
     return res;
 }
 

@@ -101,9 +101,13 @@ VRText* VRText::get() {
     return singleton_opt;
 }
 
-VRTexturePtr VRText::create(string text, string font, int scale, Color4f fg, Color4f bg) {
+VRTexturePtr VRText::create(string text, string font, int height, Color4f fg, Color4f bg) {
     int l = text.size();
-    return createBmp(text, font, scale*l, scale*1.5, fg, bg);
+    return createBmp(text, font, height*l, height*1.5, fg, bg);
+}
+
+VRTexturePtr VRText::create(string text, string font, int width, int height, Color4f fg, Color4f bg) {
+    return createBmp(text, font, width, height, fg, bg);
 }
 
 OSG_END_NAMESPACE;
