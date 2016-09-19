@@ -133,7 +133,8 @@ void VRGuiSemantics::updateLayout() {
     layout.setAlgorithm(VRGraphLayout::SPRINGS, 0);
     layout.setAlgorithm(VRGraphLayout::OCCUPANCYMAP, 1);
     layout.setGravity(Vec3f(0,1,0));
-    layout.setRadius(20);
+    layout.setRadius(0);
+    layout.setSpeed(0.7);
 
     auto gra = shared_ptr< graph<graph_base::emptyNode> >( new graph<graph_base::emptyNode>() );
     layout.setGraph(gra);
@@ -142,11 +143,12 @@ void VRGuiSemantics::updateLayout() {
     for (auto c : widgets) { // build up graph nodes
         if (!c.second->visible) continue;
         Vec3f s = c.second->getSize();
-        s[2] = 100;
+        s[2] = 10;
 
         int ID = gra->addNode();
         gra->getNode(ID).box.update(-s);
         gra->getNode(ID).box.update(s);
+        gra->getNode(ID).box.scale(1.2);
         gra->getNode(ID).box.setCenter( c.second->getPosition() );
 
         widgetIDs[c.first] = ID;
@@ -177,15 +179,16 @@ void VRGuiSemantics::updateLayout() {
         }
     }
 
-    layout.compute(2, 0.002);
+    layout.compute(2, 0.1); // N iterations, eps
 
     auto clamp = [&](boundingbox& bb) {
         float W = canvas->get_width();
         float H = canvas->get_height();
-        Vec3f s = bb.size();
+        Vec3f s = bb.size()*0.5;
         Vec3f p = bb.center();
         if (p[0] < s[0]) p[0] = s[0];
         if (p[1] < s[1]) p[1] = s[1];
+        p[2] = 0;
         bb.setCenter(p);
     };
 

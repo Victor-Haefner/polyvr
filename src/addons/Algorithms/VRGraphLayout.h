@@ -30,6 +30,7 @@ class VRGraphLayout {
         map<int, FLAG> flags;
         Vec3f gravity;
         float radius = 1;
+        float speed = 1;
 
         void applySprings(float eps);
         void applyOccupancy(float eps);
@@ -50,6 +51,7 @@ class VRGraphLayout {
 
         void setGravity(Vec3f v);
         void setRadius(float r);
+        void setSpeed(float s);
         void fixNode(int i);
 };
 

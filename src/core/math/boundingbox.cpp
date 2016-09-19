@@ -36,7 +36,7 @@ Vec3f boundingbox::min() const { return bb1; }
 Vec3f boundingbox::max() const { return bb2; }
 Vec3f boundingbox::center() const { return (bb2+bb1)*0.5; }
 Vec3f boundingbox::size() const { return bb2-bb1; }
-float boundingbox::radius() const { return cleared ? 0 : (min()-center()).length(); }
+float boundingbox::radius() const { return cleared ? 0 : (size()*0.5).length(); }
 
 bool boundingbox::isInside(Vec3f p) const {
     return (p[0] <= bb2[0] && p[0] >= bb1[0]
@@ -51,6 +51,13 @@ void boundingbox::move(const Vec3f& t) {
 
 void boundingbox::setCenter(const Vec3f& t) {
     move( t - center() );
+}
+
+void boundingbox::scale(float s) {
+    Vec3f si = size();
+    Vec3f sis = (si*s-si)*0.5;
+    bb1 -= sis;
+    bb2 += sis;
 }
 
 bool boundingbox::intersectedBy(Line l) {

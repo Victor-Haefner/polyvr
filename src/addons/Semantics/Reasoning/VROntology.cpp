@@ -117,9 +117,9 @@ void VROntology::renameConcept(VRConceptPtr c, string newName) {
 }
 
 void VROntology::remEntity(VREntityPtr e) {
-    for (auto i : instances) cout << "i " << i.first << " " << i.second->getName() << " " << i.second->ID << endl;
+    //for (auto i : instances) cout << "i " << i.first << " " << i.second->getName() << " " << i.second->ID << endl;
     if (!instances.count(e->ID)) return;
-    cout << "VROntology::remEntity " << e->getName() << " " << e->ID << endl;
+    //cout << "VROntology::remEntity " << e->getName() << " " << e->ID << endl;
     instances.erase(e->ID);
 }
 
@@ -180,7 +180,7 @@ VREntityPtr VROntology::addVectorInstance(string name, string concept, vector<st
     if (1 < N) i->set("y", val[1]);
     if (2 < N) i->set("z", val[2]);
     if (3 < N) i->set("w", val[3]);
-    cout << "addVectorInstance " << name << " " << concept << endl;
+    //cout << "addVectorInstance " << name << " " << concept << endl;
     return i;
 }
 

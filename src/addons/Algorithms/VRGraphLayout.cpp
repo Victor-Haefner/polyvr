@@ -30,15 +30,12 @@ void VRGraphLayout::applySprings(float eps) {
 
             float r = radius + n1.box.radius() + n2.box.radius();
             Vec3f d = p2 - p1;
-            float x = (d.length() - r)*eps; // displacement
+            float x = d.length() - r; // displacement
             d.normalize();
             if (abs(x) < eps) continue;
-            if (x < -r*eps) x = -r*eps; // numerical safety ;)
 
-            Vec3f grav = gravity*x*0.1; // TODO: not yet working!
-            p1 += d*x*r*0.2 + grav;
-            p2 += -d*x*r*0.2 + grav;
-
+            p1 += d*x;
+            p2 += -d*x;
             switch (e.connection) {
                 case graph_base::SIMPLE:
                     if (f1 != FIXED) graph->setPosition(e.from, p1);
@@ -70,17 +67,14 @@ void VRGraphLayout::applyOccupancy(float eps) {
 
     for (unsigned long i=0; i<nodes.size(); i++) {
         auto& n = nodes[i];
-        //o.add( n.box.center(), (void*)i );
         o.addBox( n.box, (void*)i );
     }
 
     for (int i=0; i<nodes.size(); i++) {
         auto& n = nodes[i];
         Vec3f pn = n.box.center();
-        float rs = radius + 2*n.box.radius();
         if ( getFlag(i) == FIXED ) continue;
 
-        float s = 1.0;
         Vec3f D;
         for (auto& on2 : o.boxSearch(n.box) ) {
             int j = (long)on2;
@@ -92,14 +86,14 @@ void VRGraphLayout::applyOccupancy(float eps) {
 
             Vec3f vx = Vec3f(abs(d[0]), abs(d[1]), abs(d[2])) - w*0.5;
             float x = vx[0]; // get smallest intrusion
-            int dir = 0;
-            if (abs(vx[1]) < abs(x)) { x = vx[1]; dir = 1; }
-            if (abs(vx[2]) < abs(x)) { x = vx[2]; dir = 2; }
+            if (abs(vx[1]) < abs(x) && w[1] > 0) x = vx[1];
+            if (abs(vx[2]) < abs(x) && w[2] > 0) x = vx[2];
 
             //cout << " dir " << dir << "   x " << x << "   d " << d << "   w2 " << w*0.5 << "   vx " << vx << endl;
             //cout << "displ " << i << " " << j << " w " << n.box.size() << " + " << n2.box.size() << "    d " << d << "    x " << x << endl;
+            if (abs(x) < eps) continue;
             d.normalize();
-            D[dir] -= d[dir]*abs(x);//*0.15;
+            D -= d*abs(x);
         }
 
         graph->setPosition(i, pn+D); // move node away from neighbors
@@ -129,4 +123,9 @@ VRGraphLayout::FLAG VRGraphLayout::getFlag(int i) { return flags.count(i) ? flag
 void VRGraphLayout::fixNode(int i) { flags[i] = FIXED; }
 
 void VRGraphLayout::setRadius(float r) { radius = r; }
+void VRGraphLayout::setSpeed(float s) { speed = s; }
 void VRGraphLayout::setGravity(Vec3f v) { gravity = v; }
+
+
+
+

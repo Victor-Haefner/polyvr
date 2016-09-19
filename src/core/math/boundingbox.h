@@ -29,6 +29,7 @@ class boundingbox {
 
         void setCenter(const Vec3f& t);
         void move(const Vec3f& t);
+        void scale(float s);
 
         bool isInside(Vec3f p) const;
         bool intersectedBy(Line l);
