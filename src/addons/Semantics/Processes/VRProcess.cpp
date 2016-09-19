@@ -9,9 +9,7 @@
 
 using namespace OSG;
 
-VRProcess::Node::Node(VREntityPtr e) {
-    ;
-}
+VRProcess::Node::Node() {;}
 
 void VRProcess::Node::update(graph_base::node& n, bool changed) { // callede when graph node changes
     if (widget && !widget->isDragged() && changed) widget->setFrom(n.box.center());
@@ -67,12 +65,11 @@ void VRProcess::update() {
     interactionDiagram = DiagramPtr( new Diagram() );
 
     map<string, int> nodes;
-    auto addDiagNode = [&](VREntityPtr e, string label, WIDGET type) {
-        auto n = Node(e);
+    auto addDiagNode = [&](string label, WIDGET type) {
+        auto n = Node();
         n.label = label;
         n.type = type;
         int i = interactionDiagram->addNode(n);
-        if (auto ID = e->getValue("hasModelComponentID") ) nodes[ID->value] = i;
         return i;
     };
 
@@ -87,27 +84,36 @@ void VRProcess::update() {
 
     string q_subjects = "q(x):ActiveProcessComponent(x);Layer("+layer->getName()+");has("+layer->getName()+",x)";
     for ( auto subject : query(q_subjects) ) {
-        auto n = Node(subject);
         string label;
         if (auto l = subject->getValue("hasModelComponentLable") ) label = l->value;
-        addDiagNode(subject, label, SUBJECT);
+        int nID = addDiagNode(label, SUBJECT);
+        if (auto ID = subject->getValue("hasModelComponentID") ) nodes[ID->value] = nID;
     }
 
+    map<string, map<string, vector<VREntityPtr>>> messages;
     string q_messages = "q(x):StandardMessageExchange(x);Layer("+layer->getName()+");has("+layer->getName()+",x)";
     for ( auto message : query(q_messages) ) {
-        string q_message = "q(x):MessageSpec(x);StandardMessageExchange("+message->getName()+");is(x,"+message->getName()+".hasMessageType)";
-        auto msgs = query(q_message);
-        string label = "Msg: ";
-        if (msgs.size())
-            if (auto l = msgs[0]->getValue("hasModelComponentLable") ) label += l->value;
-        int i = addDiagNode(message, label, MESSAGE);
-
         string sender;
         string receiver;
         if (auto s = message->getValue("sender") ) sender = s->value;
         if (auto r = message->getValue("receiver") ) receiver = r->value;
-        connect(i, sender, graph_base::HIERARCHY);
-        connect(i, receiver, graph_base::DEPENDENCY);
+        messages[sender][receiver].push_back(message);
+    }
+
+    for (auto sender : messages) {
+        for (auto receiver : sender.second) {
+            string label = "Msg:";
+            for (auto message : receiver.second) {
+                string q_message = "q(x):MessageSpec(x);StandardMessageExchange("+message->getName()+");is(x,"+message->getName()+".hasMessageType)";
+                auto msgs = query(q_message);
+                if (msgs.size())
+                    if (auto l = msgs[0]->getValue("hasModelComponentLable") ) label += "\n - " + l->value;
+            }
+
+            int nID = addDiagNode(label, MESSAGE);
+            connect(nID, sender.first, graph_base::HIERARCHY);
+            connect(nID, receiver.first, graph_base::DEPENDENCY);
+        }
     }
 
     //interactionDiagram->connect( n );

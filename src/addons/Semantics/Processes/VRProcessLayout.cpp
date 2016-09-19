@@ -27,11 +27,24 @@ VRProcessLayoutPtr VRProcessLayout::create(string name) { return VRProcessLayout
 */
 
 int wrapString(string& s, int width) {
-    int N = 1;
-    for (int i=width; i<s.size()-1; i+=width) {
-        s.insert(i, "\n");
-        N++;
+    int w = 0;
+    vector<int> newBreaks;
+    for (int i=0; i<s.size(); i++) {
+        char c = s[i];
+
+        if (c == '\n') w = 0;
+        else w++;
+
+        if (w >= width) {
+            newBreaks.push_back(i);
+            w = 0;
+        }
     }
+
+    for (auto i : newBreaks) s.insert(i, "\n");
+
+    int N = 1;
+    for (auto c : s) if (c == '\n') N++;
     return N;
 }
 
@@ -94,7 +107,7 @@ VRGeometryPtr VRProcessLayout::newWidget(VRProcess::Node& n, float height) {
     string l = n.label;
     int lineN = wrapString(l, wrapN);
 
-    auto txt = VRText::get()->create(l, "MONO 20", 18*wrapN, 30*lineN, fg, bg);
+    auto txt = VRText::get()->create(l, "MONO 20", 18*wrapN, 32*lineN, fg, bg);
     auto mat = VRMaterial::create("ProcessElement");
     mat->setTexture(txt);
     mat->setTextureParams(GL_LINEAR, GL_LINEAR);
