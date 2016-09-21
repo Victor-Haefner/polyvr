@@ -6,6 +6,7 @@
 #include <OpenSG/OSGVector.h>
 #include <OpenSG/OSGProjectionCameraDecorator.h>
 #include "core/objects/VRObjectFwd.h"
+#include "core/scene/VRSceneFwd.h"
 #include "core/utils/VRStorage.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -16,6 +17,12 @@ class VRSSAO;
 class VRHMDDistortion;
 
 class VRRenderStudio : public VRStorage {
+    public:
+        enum EYE {
+            LEFT = 0,
+            RIGHT
+        };
+
     private:
         bool deferredRendering = false;
         bool do_ssao = false;
@@ -24,6 +31,11 @@ class VRRenderStudio : public VRStorage {
         int ssao_kernel = 4;
         int ssao_noise = 4;
         float ssao_radius = 0.02;
+        EYE eye = LEFT;
+
+        VRMaterialPtr calib_mat;
+        VRMaterialPtr hmdd_mat;
+        VRMaterialPtr ssao_mat;
 
         map<string, VRGeometryPtr> renderLayer;
         VRMaterialPtr setupRenderLayer(string name, VRObjectPtr parent);
@@ -41,8 +53,10 @@ class VRRenderStudio : public VRStorage {
         map<int, VRLightPtr> light_map;
 
     public:
-        VRRenderStudio();
+        VRRenderStudio(EYE e);
         ~VRRenderStudio();
+
+        static VRRenderStudioPtr create(EYE e = LEFT);
 
         void init(VRObjectPtr root = 0);
 
@@ -56,6 +70,7 @@ class VRRenderStudio : public VRStorage {
         void setCamera(ProjectionCameraDecoratorRecPtr cam);
         void setBackground(BackgroundRecPtr bg);
         void resize(Vec2i s);
+        void setEye(EYE e);
 
         void setDefferedShading(bool b);
         bool getDefferedShading();

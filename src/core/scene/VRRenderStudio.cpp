@@ -34,7 +34,9 @@ scene
 
 */
 
-VRRenderStudio::VRRenderStudio() {
+VRRenderStudio::VRRenderStudio(EYE e) {
+    eye = e;
+
     root = VRObject::create("Root");
     root_system = VRObject::create("System root");
     root_post_processing = VRObject::create("Post processing root");
@@ -49,10 +51,12 @@ VRRenderStudio::~VRRenderStudio() {
     delete ssao;
 }
 
+VRRenderStudioPtr VRRenderStudio::create(EYE e) { return VRRenderStudioPtr( new VRRenderStudio(e) ); }
+
 void VRRenderStudio::init(VRObjectPtr root) {
-    auto ssao_mat = setupRenderLayer("ssao", root_def_shading);
-    auto calib_mat = setupRenderLayer("calibration", root_post_processing);
-    auto hmdd_mat = setupRenderLayer("hmdd", root_post_processing);
+    ssao_mat = setupRenderLayer("ssao", root_def_shading);
+    calib_mat = setupRenderLayer("calibration", root_post_processing);
+    hmdd_mat = setupRenderLayer("hmdd", root_post_processing);
     //auto metaball_mat = setupRenderLayer("metaball");
 
     defShading = new VRDefShading();
@@ -90,6 +94,7 @@ void VRRenderStudio::initCalib(VRMaterialPtr mat) {
     mat->readVertexShader(shdrDir + "Calib.vp.glsl");
     mat->readFragmentShader(shdrDir + "Calib.fp.glsl");
     mat->setShaderParameter<int>("grid", 64);
+    mat->setShaderParameter<int>("isRightEye", eye);
 }
 
 void VRRenderStudio::update() {
@@ -121,6 +126,10 @@ void VRRenderStudio::addLight(VRLightPtr l) {
 }
 
 VRLightPtr VRRenderStudio::getLight(int ID) { return light_map[ID]; }
+void VRRenderStudio::setEye(EYE e) {
+    eye = e;
+    calib_mat->setShaderParameter<int>("isRightEye", eye);
+}
 
 void VRRenderStudio::setCamera(VRCameraPtr cam) {
     if (defShading) defShading->setDSCamera(cam);

@@ -253,9 +253,9 @@ VRView::VRView(string name) {
     GeometryMTRecPtr geo = dynamic_cast<Geometry*>( viewGeo->getCore() );
     geo->setMaterial(viewGeoMat->getMaterial());
 
-    renderingL = shared_ptr<VRRenderStudio>( new VRRenderStudio() );
+    renderingL = VRRenderStudio::create( VRRenderStudio::LEFT );
+    renderingR = VRRenderStudio::create( VRRenderStudio::RIGHT );
     renderingL->init();
-    renderingR = shared_ptr<VRRenderStudio>( new VRRenderStudio() );
     renderingR->init();
 
     update();
@@ -464,6 +464,8 @@ void VRView::swapEyes(bool b) {
     eyeinverted = b;
     if (PCDecoratorLeft) PCDecoratorLeft->setLeftEye(!b);
     if (PCDecoratorRight) PCDecoratorRight->setLeftEye(b);
+    renderingL->setEye( b ? VRRenderStudio::RIGHT : VRRenderStudio::LEFT );
+    renderingR->setEye( b ? VRRenderStudio::LEFT : VRRenderStudio::RIGHT );
 }
 
 bool VRView::eyesInverted() { return eyeinverted; }
