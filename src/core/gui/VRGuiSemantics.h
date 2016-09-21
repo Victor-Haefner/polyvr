@@ -5,9 +5,11 @@
 #include <OpenSG/OSGVector.h>
 #include "core/scene/VRSceneManager.h"
 #include "core/utils/VRFunctionFwd.h"
+#include "core/math/VRMathFwd.h"
 #include "addons/Semantics/VRSemanticsFwd.h"
 #include "VRGuiSignals.h"
 #include "VRGuiFwd.h"
+#include "addons/Algorithms/VRAlgorithmsFwd.h"
 
 namespace Gtk {
     class Fixed;
@@ -21,7 +23,10 @@ class VRGuiSemantics {
         Gtk::Fixed* canvas = 0;
         map<int, VRSemanticWidgetPtr> widgets;
         map<int, VRConnectorWidgetPtr> connectors;
+        map<int, int> widgetIDs;
 
+        VRGraphLayoutPtr layout;
+        graph_basePtr layout_graph;
         VROntologyPtr current;
         VRUpdatePtr updateLayoutCb;
 
@@ -36,6 +41,7 @@ class VRGuiSemantics {
 
         void clearCanvas();
         void setOntology(string name);
+        void addNode(int sID, int pID);
         void updateLayout();
 
         VRSemanticManagerPtr getManager();

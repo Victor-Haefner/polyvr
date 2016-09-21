@@ -1,16 +1,14 @@
 #ifndef VRGRAPHLAYOUT_H_INCLUDED
 #define VRGRAPHLAYOUT_H_INCLUDED
 
+#include "VRAlgorithmsFwd.h"
 #include "core/math/graph.h"
-#include "core/utils/VRFwdDeclTemplate.h"
 
 #include <OpenSG/OSGVector.h>
 #include <map>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
-
-ptrFwd(VRGraphLayout);
 
 class VRGraphLayout {
     public:

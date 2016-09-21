@@ -52,8 +52,9 @@ class graph_base {
         //vector<node>::iterator begin();
         //vector<node>::iterator end();
 
-        virtual void update(int i, bool changed);
         void setPosition(int i, Vec3f v);
+        virtual void update(int i, bool changed);
+        virtual void clear();
 };
 
 template<class T>
@@ -74,6 +75,7 @@ class graph : public graph_base {
 
         vector<T>& getElements();
         T& getElement(int i);
+        void clear();
 };
 
 OSG_END_NAMESPACE;

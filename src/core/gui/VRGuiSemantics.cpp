@@ -125,34 +125,27 @@ void VRGuiSemantics::on_open_clicked() {
 
 void VRGuiSemantics::clearCanvas() {
     for (auto c : canvas->get_children()) canvas->remove(*c);
-    canvas->show_all();
+    layout_graph->clear();
+    widgets.clear();
+    connectors.clear();
 }
 
 void VRGuiSemantics::updateLayout() {
-    VRGraphLayout layout;
-    layout.setAlgorithm(VRGraphLayout::SPRINGS, 0);
-    layout.setAlgorithm(VRGraphLayout::OCCUPANCYMAP, 1);
-    layout.setGravity(Vec3f(0,1,0));
-    layout.setRadius(0);
-    layout.setSpeed(0.7);
+    auto gra = dynamic_pointer_cast< graph<graph_base::emptyNode> >(layout_graph);
 
-    auto gra = shared_ptr< graph<graph_base::emptyNode> >( new graph<graph_base::emptyNode>() );
-    layout.setGraph(gra);
-    map<int, int> widgetIDs;
-
-    for (auto c : widgets) { // build up graph nodes
+    for (auto c : widgets) { // update node boxes
         if (!c.second->visible) continue;
+        if (!widgetIDs.count(c.first)) continue;
         Vec3f s = c.second->getSize();
         s[2] = 10;
 
-        int ID = gra->addNode();
+        int ID = widgetIDs[c.first];
+        if (ID >= gra->size()) continue;
+        gra->getNode(ID).box.clear();
         gra->getNode(ID).box.update(-s);
         gra->getNode(ID).box.update(s);
         gra->getNode(ID).box.scale(1.2);
         gra->getNode(ID).box.setCenter( c.second->getPosition() );
-
-        widgetIDs[c.first] = ID;
-        if (c.first == current->thing->ID) layout.fixNode(widgetIDs[c.first]);
     }
 
     for (auto w : widgets) { // add graph edges
@@ -179,7 +172,7 @@ void VRGuiSemantics::updateLayout() {
         }
     }
 
-    layout.compute(2, 0.1); // N iterations, eps
+    layout->compute(2, 0.1); // N iterations, eps
 
     auto clamp = [&](boundingbox& bb) {
         float W = canvas->get_width();
@@ -195,6 +188,7 @@ void VRGuiSemantics::updateLayout() {
     int i = 0;
     for (auto c : widgets) { // update widget positions
         if (!c.second->visible) continue;
+        if (i >= gra->size()) break;
         clamp( gra->getNode(i).box );
         Vec3f p = gra->getNode(i).box.center();
         c.second->move(Vec2f(p[0], p[1]));
@@ -216,8 +210,7 @@ void VRGuiSemantics::setOntology(string name) {
 
 void VRGuiSemantics::updateCanvas() {
     int i = 0;
-    widgets.clear();
-    connectors.clear();
+    clearCanvas();
 
     function<void(VRConceptPtr,int,int,VRConceptWidgetPtr)> travConcepts = [&](VRConceptPtr c, int cID, int lvl, VRConceptWidgetPtr cp) {
         auto cw = VRConceptWidgetPtr( new VRConceptWidget(this, canvas, c) );
@@ -226,7 +219,7 @@ void VRGuiSemantics::updateCanvas() {
         int x = 150+cID*60;
         int y = 150+40*lvl;
         cw->move(Vec2f(x,y));
-        if (lvl > 0) connect(cp, cw, "#00CCFF");
+        if (cp) connect(cp, cw, "#00CCFF");
 
         i++;
         int child_i = 0;
@@ -263,6 +256,13 @@ void VRGuiSemantics::connect(VRSemanticWidgetPtr w1, VRSemanticWidgetPtr w2, str
     co->set(w1, w2);
     w1->children[w2.get()] = w2;
     w2->connectors[co.get()] = co;
+    //addNode(w2->ID(), w1->ID());
+}
+
+void VRGuiSemantics::addNode(int sID, int pID) {
+    auto gra = dynamic_pointer_cast< graph<graph_base::emptyNode> >(layout_graph);
+    widgetIDs[sID] = gra->addNode();
+    gra->connect(widgetIDs[pID], widgetIDs[sID], graph_base::HIERARCHY);
 }
 
 void VRGuiSemantics::disconnect(VRSemanticWidgetPtr w1, VRSemanticWidgetPtr w2) {
@@ -345,6 +345,16 @@ VRGuiSemantics::VRGuiSemantics() {
     auto sm = VRSceneManager::get();
     updateLayoutCb = VRFunction<int>::create("layout_update", boost::bind(&VRGuiSemantics::updateLayout, this));
     sm->addUpdateFkt(updateLayoutCb);
+
+    layout = VRGraphLayout::create();
+    layout->setAlgorithm(VRGraphLayout::SPRINGS, 0);
+    layout->setAlgorithm(VRGraphLayout::OCCUPANCYMAP, 1);
+    layout->setGravity(Vec3f(0,1,0));
+    layout->setRadius(0);
+    layout->setSpeed(0.7);
+
+    layout_graph = shared_ptr< graph<graph_base::emptyNode> >( new graph<graph_base::emptyNode>() );
+    layout->setGraph(layout_graph);
 }
 
 void VRGuiSemantics::on_query_clicked() {
@@ -397,6 +407,7 @@ void VRGuiSemantics::copyConcept(VRConceptWidget* w) {
     widgets[c->ID] = cw;
     cw->move(w->pos + Vec2f(90,0));
     connect(widgets[w->ID()], cw, "#00CCFF");
+    if (c->ID == current->thing->ID) layout->fixNode(widgetIDs[c->ID]);
     saveScene();
 }
 
@@ -422,6 +433,7 @@ void VRGuiSemantics::addRule(VRConceptWidget* w) {
 void VRGuiSemantics::remConcept(VRConceptWidget* w) {
     widgets.erase(w->concept->ID);
     current->remConcept(w->concept);
+    widgetIDs.erase(w->concept->ID);
     //disconnectAny(); // TODO
     saveScene();
 }

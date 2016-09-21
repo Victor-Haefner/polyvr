@@ -91,10 +91,14 @@ void pushMsgBox(VRGeoData& geo, int N, float h) {
     Vec4i q2 = pushRectVerts(geo, -s, s, -h, h, Vec3f(0,1,0), Vec3f(0,0,1), h);
     Vec4i q3 = pushRectVerts(geo, -s, s, -h, h, Vec3f(0,0,-1), Vec3f(0,1,0), h);
     Vec4i q4 = pushRectVerts(geo, -s, s, -h, h, Vec3f(0,0,1), Vec3f(0,1,0), h);
+    Vec4i q5 = pushRectVerts(geo, -h, h, -h, h, Vec3f(1,0,0), Vec3f(0,1,0), s);
+    Vec4i q6 = pushRectVerts(geo, -h, h, -h, h, Vec3f(-1,0,0), Vec3f(0,1,0), s);
     geo.pushQuad(q1[0],q1[3],q1[2],q1[1]);
     geo.pushQuad(q2[0],q2[3],q2[2],q2[1]);
     geo.pushQuad(q3[0],q3[3],q3[2],q3[1]);
     geo.pushQuad(q4[0],q4[3],q4[2],q4[1]);
+    geo.pushQuad(q5[0],q5[3],q5[2],q5[1]);
+    geo.pushQuad(q6[0],q6[3],q6[2],q6[1]);
 }
 
 VRGeometryPtr VRProcessLayout::newWidget(VRProcess::Node& n, float height) {

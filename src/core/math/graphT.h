@@ -19,6 +19,8 @@ template<class T> T& graph<T>::getElement(int i) { return elements[i]; }
 
 template<class T> void graph<T>::update(int i, bool changed) { elements[i].update( nodes[i], changed ); }
 
+template<class T> void graph<T>::clear() { graph_base::clear(); elements.clear(); }
+
 OSG_END_NAMESPACE;
 
 #endif // GRAPHT_H_INCLUDED
