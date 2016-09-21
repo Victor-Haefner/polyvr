@@ -34,8 +34,8 @@ void boundingbox::update(VRGeometryPtr g) {
 bool boundingbox::empty() { return cleared; }
 Vec3f boundingbox::min() const { return bb1; }
 Vec3f boundingbox::max() const { return bb2; }
-Vec3f boundingbox::center() const { return (bb2+bb1)*0.5; }
-Vec3f boundingbox::size() const { return bb2-bb1; }
+Vec3f boundingbox::center() const { return cleared ? Vec3f() : (bb2+bb1)*0.5; }
+Vec3f boundingbox::size() const { return cleared ? Vec3f() : bb2-bb1; }
 float boundingbox::radius() const { return cleared ? 0 : (size()*0.5).length(); }
 
 bool boundingbox::isInside(Vec3f p) const {

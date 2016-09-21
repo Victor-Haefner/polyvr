@@ -23,6 +23,8 @@ void VRGraphLayout::applySprings(float eps) {
         for (auto& e : n) {
             auto f1 = getFlag(e.from);
             auto f2 = getFlag(e.to);
+            if (f1 & INACTIVE || f2 & INACTIVE) continue;
+
             auto& n1 = graph->getNode(e.from);
             auto& n2 = graph->getNode(e.to);
             Vec3f p1 = n1.box.center();
@@ -38,21 +40,21 @@ void VRGraphLayout::applySprings(float eps) {
             p2 += -d*x;
             switch (e.connection) {
                 case graph_base::SIMPLE:
-                    if (f1 != FIXED) graph->setPosition(e.from, p1);
-                    if (f2 != FIXED) graph->setPosition(e.to, p2);
+                    if (!(f1 & FIXED)) graph->setPosition(e.from, p1);
+                    if (!(f2 & FIXED)) graph->setPosition(e.to, p2);
                     break;
                 case graph_base::HIERARCHY:
-                    if (f2 != FIXED) graph->setPosition(e.to, p2);
-                    else if (f1 != FIXED) graph->setPosition(e.from, p1);
+                    if (!(f2 & FIXED)) graph->setPosition(e.to, p2);
+                    else if (!(f1 & FIXED)) graph->setPosition(e.from, p1);
                     break;
                 case graph_base::DEPENDENCY:
-                    if (f1 != FIXED) graph->setPosition(e.from, p1);
-                    else if (f2 != FIXED) graph->setPosition(e.to, p2);
+                    if (!(f1 & FIXED)) graph->setPosition(e.from, p1);
+                    else if (!(f2 & FIXED)) graph->setPosition(e.to, p2);
                     break;
                 case graph_base::SIBLING:
                     if (x < 0) { // push away siblings
-                        if (f1 != FIXED) graph->setPosition(e.from, p1);
-                        if (f2 != FIXED) graph->setPosition(e.to, p2);
+                        if (!(f1 & FIXED)) graph->setPosition(e.from, p1);
+                        if (!(f2 & FIXED)) graph->setPosition(e.to, p2);
                     }
                     break;
             }
@@ -66,14 +68,15 @@ void VRGraphLayout::applyOccupancy(float eps) {
     Octree o(10*eps);
 
     for (unsigned long i=0; i<nodes.size(); i++) {
+        if ( isFlag(i, INACTIVE) ) continue;
         auto& n = nodes[i];
         o.addBox( n.box, (void*)i );
     }
 
     for (int i=0; i<nodes.size(); i++) {
+        if ( isFlag(i, FIXED) || isFlag(i, INACTIVE) ) continue;
         auto& n = nodes[i];
         Vec3f pn = n.box.center();
-        if ( getFlag(i) == FIXED ) continue;
 
         Vec3f D;
         for (auto& on2 : o.boxSearch(n.box) ) {
@@ -119,13 +122,33 @@ void VRGraphLayout::compute(int N, float eps) {
     for (int i=0; i<graph->getNodes().size(); i++) graph->update(i, false);
 }
 
-VRGraphLayout::FLAG VRGraphLayout::getFlag(int i) { return flags.count(i) ? flags[i] : NONE; }
-void VRGraphLayout::fixNode(int i) { flags[i] = FIXED; }
+void VRGraphLayout::setFlag(int i, FLAG f) {
+    if (!flags.count(i)) flags[i] = NONE;
+    flags[i] = flags[i] | f;
+}
+
+void VRGraphLayout::remFlag(int i, FLAG f) {
+    if (!flags.count(i)) flags[i] = NONE;
+    if ((f & flags[i]) == f) {
+        flags[i] = flags[i] & ~f;
+    }
+}
+
+bool VRGraphLayout::isFlag(int i, FLAG f) {
+    if (!flags.count(i)) flags[i] = NONE;
+    return (f & flags[i]);
+}
+
+int VRGraphLayout::getFlag(int i) { return flags.count(i) ? flags[i] : NONE; }
+void VRGraphLayout::fixNode(int i) { setFlag(i, FIXED); }
+void VRGraphLayout::setNodeState(int i, bool s) { if(!s) setFlag(i, INACTIVE); else remFlag(i, INACTIVE); }
 
 void VRGraphLayout::setRadius(float r) { radius = r; }
 void VRGraphLayout::setSpeed(float s) { speed = s; }
 void VRGraphLayout::setGravity(Vec3f v) { gravity = v; }
 
-
+void VRGraphLayout::clear() {
+    flags.clear();
+}
 
 

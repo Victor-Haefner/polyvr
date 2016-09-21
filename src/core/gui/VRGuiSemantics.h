@@ -41,7 +41,7 @@ class VRGuiSemantics {
 
         void clearCanvas();
         void setOntology(string name);
-        void addNode(int sID, int pID);
+        void addNode(int sID);
         void updateLayout();
 
         VRSemanticManagerPtr getManager();

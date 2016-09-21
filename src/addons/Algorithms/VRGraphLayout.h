@@ -18,14 +18,15 @@ class VRGraphLayout {
         };
 
         enum FLAG {
-            NONE,
-            FIXED
+            NONE=1,
+            FIXED=2,
+            INACTIVE=4
         };
 
     private:
         graph_basePtr graph;
         map<int, ALGORITHM> algorithms;
-        map<int, FLAG> flags;
+        map<int, int> flags;
         Vec3f gravity;
         float radius = 1;
         float speed = 1;
@@ -33,12 +34,16 @@ class VRGraphLayout {
         void applySprings(float eps);
         void applyOccupancy(float eps);
 
-        FLAG getFlag(int i);
+        int getFlag(int i);
+        void setFlag(int i, FLAG f);
+        void remFlag(int i, FLAG f);
+        bool isFlag(int i, FLAG f);
 
     public:
         VRGraphLayout();
         static VRGraphLayoutPtr create();
 
+        void clear();
         void setGraph(graph_basePtr g);
         graph_basePtr getGraph();
 
@@ -51,6 +56,7 @@ class VRGraphLayout {
         void setRadius(float r);
         void setSpeed(float s);
         void fixNode(int i);
+        void setNodeState(int i, bool state);
 };
 
 OSG_END_NAMESPACE;
