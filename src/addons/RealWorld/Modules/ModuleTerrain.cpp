@@ -1,21 +1,23 @@
-#include "ModuleTerrain.h"
-#include "core/objects/material/VRMaterial.h"
-#include "core/objects/geometry/VRPhysics.h"
-#include "core/objects/geometry/VRGeometry.h"
-#include "core/scene/VRSceneManager.h"
-#include "triangulate.h"
-#include "Terrain.h"
-#include "../Config.h"
-#include "../World.h"
-#include "../OSM/OSMMapDB.h"
-#include "../RealWorld.h"
-#include "../MapCoordinator.h"
+#include "ModuleTerrain.h" // 2.3
+#include "../Config.h" // 2.2
+#include "../MapCoordinator.h" // 2.2
+#include "../OSM/OSMMapDB.h" // 0.4
+#include "../RealWorld.h" // 2.2
+#include "Terrain.h" // 2.3
+#include "core/objects/geometry/VRGeometry.h" // 5.2
+#include "core/objects/geometry/VRGeoData.h"
+#include "core/objects/geometry/VRPhysics.h" // 4.2
+#include "core/objects/material/VRMaterial.h" // 5.1
+#include "core/scene/VRSceneManager.h" // 4
+#include "triangulate.h" // 0.1
+
+//#define TEST
+#ifndef TEST
 
 using namespace OSG;
 
 ModuleTerrain::ModuleTerrain(bool t, bool p) : BaseModule("ModuleTerrain", t,p) {
-    // create List with materials
-    ModuleTerrain::fillTerrainList();
+    ModuleTerrain::fillTerrainList(); // create List with materials
 }
 
 void ModuleTerrain::loadBbox(MapGrid::Box bbox) {
@@ -23,8 +25,6 @@ void ModuleTerrain::loadBbox(MapGrid::Box bbox) {
     auto mc = RealWorld::get()->getCoordinator();
     OSMMap* osmMap = mapDB->getMap(bbox.str);
     if (!osmMap) return;
-
-    cout << "LOADING TERRAINS FOR " << bbox.str << "\n" << flush;
 
     for (OSMWay* way : osmMap->osmWays) {
         for (auto mat : terrainList) {
@@ -73,20 +73,15 @@ void ModuleTerrain::physicalize(bool b) {
 }
 
 void ModuleTerrain::fillTerrainList() {
-    //grass
-    addTerrain("Terrain/hdGrass.jpg", "landuse", "grass");
+    addTerrain("Terrain/hdGrass.jpg", "landuse", "grass"); // grass
     addTerrain("Terrain/hdGrass.jpg", "leisure", "common");
     addTerrain("Terrain/hdGrass.jpg", "leisure", "garden");
     addTerrain("Terrain/hdGrass.jpg", "leisure", "golf_course");
     addTerrain("Terrain/hdGrass.jpg", "landuse", "meadow");
     addTerrain("Terrain/hdGrass.jpg", "leisure", "park");
     addTerrain("Terrain/hdGrass.jpg", "leisure", "pitch");
-
-    //water
-    addTerrain("Terrain/water.jpg", "natural", "water", 3);
-
-    //other
-    addTerrain("Terrain/naturalMud.jpg", "natural", "mud");
+    addTerrain("Terrain/water.jpg", "natural", "water", 3); // water
+    addTerrain("Terrain/naturalMud.jpg", "natural", "mud"); // other
 
     //from wiki, please replace with better textures
     addTerrain("wiki/landuseRecreation_ground.png", "landuse", "recreation_ground");
@@ -122,8 +117,6 @@ void ModuleTerrain::fillTerrainList() {
     addTerrain("wiki/leisurePlayground.png", "leisure", "playground", 3);
 }
 
-void ModuleTerrain::addTerrain(string t, string k, string v){ addTerrain(t, k, v, 0); }
-
 void ModuleTerrain::addTerrain(string texture, string key, string value, int height) {
     texture = "world/textures/"+texture;
     if (materials.count(texture) == 0) {
@@ -143,12 +136,12 @@ void ModuleTerrain::addTerrain(string texture, string key, string value, int hei
     terrainList.push_back(m);
 }
 
-void ModuleTerrain::addTerrain(Terrain* ter, GeometryData* gdTerrain, int height){
+void ModuleTerrain::addTerrain(Terrain* ter, VRGeoData* gdTerrain, int height){
     //create && fill vector a with polygon corners
     Vector2dVector a;
     bool first = true;
     for (Vec2f corner : ter->getCorners()) {
-        if(first){ first=false; continue;} //first && last corners are equal, so ignoring first one
+        if (first) { first=false; continue;} //first && last corners are equal, so ignoring first one
          a.push_back( Vector2d(corner[0], corner[1]));
     }
 
@@ -161,9 +154,8 @@ void ModuleTerrain::addTerrain(Terrain* ter, GeometryData* gdTerrain, int height
     int tcount = result.size()/3;
 
     //reference values to map the texture on the triangles
-    //float refX = result[0].GetX();
-    //float refY = result[0].GetY();
-
+    //float refX = result[0][0];
+    //float refY = result[0][1];
     //float scale = mc->SCALE_REAL_TO_WORLD;
 
     for (int i=0; i<tcount; i++) {
@@ -185,15 +177,11 @@ void ModuleTerrain::addTerrain(Terrain* ter, GeometryData* gdTerrain, int height
         float groundLevel = (float)height * Config::get()->LAYER_DISTANCE ;
 
         //create triangle
-        tesselateTriangle(p1.GetX(), p1.GetY(), p2.GetX(), p2.GetY(), p3.GetX(), p3.GetY(), groundLevel, gdTerrain);
-      }
+        tesselateTriangle(p1[0], p1[1], p2[0], p2[1], p3[0], p3[1], groundLevel, gdTerrain);
+    }
 }
 
-Vec3f ModuleTerrain::tesselateTriangle(float p1X, float p1Y, float p2X, float p2Y, float p3X, float p3Y, float height, GeometryData* gdTerrain){
-    return tesselateTriangle(p1X, p1Y, p2X, p2Y, p3X, p3Y, height, gdTerrain, Vec3f(0,0,0));
-}
-
-Vec3f ModuleTerrain::tesselateTriangle(float p1X, float p1Y, float p2X, float p2Y, float p3X, float p3Y, float height, GeometryData* gdTerrain, Vec3f usedCorners) {
+Vec3f ModuleTerrain::tesselateTriangle(float p1X, float p1Y, float p2X, float p2Y, float p3X, float p3Y, float height, VRGeoData* gdTerrain, Vec3f usedCorners) {
     auto mc = RealWorld::get()->getCoordinator();
     Vec3f res = Vec3f(0, 0, 0);
     Vec2f p1 = Vec2f(p1X, p1Y);
@@ -222,37 +210,23 @@ Vec3f ModuleTerrain::tesselateTriangle(float p1X, float p1Y, float p2X, float p2
         tesselateTriangle(p1X, p1Y, p23X, p23Y, p3X, p3Y, height, gdTerrain, Vec3f(res.getValues()[0], 0, res.getValues()[2]));
         return Vec3f(0,0,0);
     } else { //only if triangle is small enough, create geometry for it
-
-        gdTerrain->norms->addValue(Vec3f(0, 1, 0));
-        gdTerrain->pos->addValue(Vec3f(p1X, mc->getElevation(p1X,p1Y) + height, p1Y)); // + getHight(p1.GetX(), p1.GetY())
-        gdTerrain->texs->addValue(p1/5);
-        gdTerrain->inds->addValue(gdTerrain->inds->size());
-
-        gdTerrain->norms->addValue(Vec3f(0, 1, 0));
-        gdTerrain->pos->addValue(Vec3f(p2X, mc->getElevation(p2X, p2Y) + height, p2Y));
-        gdTerrain->texs->addValue(p2/5);
-        gdTerrain->inds->addValue(gdTerrain->inds->size());
-
-        gdTerrain->norms->addValue(Vec3f(0, 1, 0));
-        gdTerrain->pos->addValue(Vec3f(p3X, mc->getElevation(p3X, p3Y) + height, p3Y));
-        gdTerrain->texs->addValue(p3/5);
-        gdTerrain->inds->addValue(gdTerrain->inds->size());
-
-        return Vec3f(gdTerrain->inds->size()-3, gdTerrain->inds->size()-2, gdTerrain->inds->size()-1);
+        Vec3f norm(0,1,0);
+        int Va = gdTerrain->pushVert(Vec3f(p1X, mc->getElevation(p1X,p1Y) + height, p1Y), norm, p1/5); // + getHight(p1[0], p1[1])
+        int Vb = gdTerrain->pushVert(Vec3f(p2X, mc->getElevation(p2X,p2Y) + height, p2Y), norm, p2/5);
+        int Vc = gdTerrain->pushVert(Vec3f(p3X, mc->getElevation(p3X,p3Y) + height, p3Y), norm, p3/5);
+        gdTerrain->pushTri();
+        return Vec3f(Va, Vb, Vc);
     }
 
     return Vec3f(0,0,0);
 }
 
 VRGeometryPtr ModuleTerrain::makeTerrainGeometry(Terrain* ter, TerrainMaterial* terrainMat) {
-    GeometryData* gdTerrain = new GeometryData();
+    VRGeoData* gdTerrain = new VRGeoData();
     addTerrain(ter, gdTerrain, terrainMat->height);
-    VRGeometryPtr geomTerrain = VRGeometry::create(terrainMat->v);
-
-    geomTerrain->create(GL_TRIANGLES, gdTerrain->pos, gdTerrain->norms, gdTerrain->inds, gdTerrain->texs);
-    geomTerrain->setMaterial(terrainMat->material);
-
-    VRGeometryPtr geom = VRGeometry::create("Terrain");
-    if (gdTerrain->inds->size() > 0) geom->addChild(geomTerrain);
-    return geom;
+    auto geo = gdTerrain->asGeometry("Terrain");
+    geo->setMaterial(terrainMat->material);
+    return geo;
 }
+
+#endif

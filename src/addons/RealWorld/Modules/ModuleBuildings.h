@@ -10,7 +10,7 @@ using namespace std;
 
 struct BuildingData;
 class Building;
-class GeometryData;
+class VRGeoData;
 class AreaBoundingBox;
 
 class ModuleBuildings: public BaseModule {
@@ -20,9 +20,9 @@ class ModuleBuildings: public BaseModule {
         VRMaterialPtr b_mat = 0;
 
         void createBuildingPart(BuildingData* bData, string part, string filePath);
-        void addBuildingWallLevel(GeometryData* b_geo_d, Vec2f pos1, Vec2f pos2, int level, int bNum, float elevation);
-        void addBuildingRoof(GeometryData* r_geo_d, Building* building, float height, float elevation);
-        void makeBuildingGeometry(GeometryData* b_geo_d, GeometryData* r_geo_d, Building* b); /** create one Building **/
+        void addBuildingWallLevel(VRGeoData* b_geo_d, Vec2f pos1, Vec2f pos2, int level, int bNum, float elevation);
+        void addBuildingRoof(VRGeoData* r_geo_d, Building* building, float height, float elevation);
+        void makeBuildingGeometry(VRGeoData* b_geo_d, VRGeoData* r_geo_d, Building* b); /** create one Building **/
 
     public:
         ModuleBuildings(bool t, bool p);

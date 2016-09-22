@@ -36,6 +36,7 @@ class VRGeoData {
         int pushVert(Pnt3f p, Vec3f n, Vec3f c);
         int pushVert(Pnt3f p, Vec3f n, Vec4f c);
         int pushVert(Pnt3f p, Vec3f n, Vec2f t);
+        int pushVert(Pnt3f p, Vec3f n, Vec2f t, Vec2f t2);
         int pushVert(Pnt3f p, Vec3f n, Vec3f c, Vec2f t);
         int pushVert(Pnt3f p, Vec3f n, Vec4f c, Vec2f t);
 

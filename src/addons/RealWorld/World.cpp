@@ -11,7 +11,7 @@
 
 using namespace OSG;
 
-GeometryData::GeometryData() { clear(); }
+/*GeometryData::GeometryData() { clear(); }
 
 void GeometryData::clear() {
     pos = GeoPnt3fProperty::create();
@@ -19,9 +19,9 @@ void GeometryData::clear() {
     inds = GeoUInt32Property::create();
     texs = GeoVec2fProperty::create();
     texs2 = GeoVec2fProperty::create();
-}
+}*/
 
-TextureObjChunkRecPtr World::getTexture(string key) {
+/*TextureObjChunkRecPtr World::getTexture(string key) {
     if (texMap.count(key)) return texMap[key];
 
     ImageRecPtr image = Image::create();
@@ -30,10 +30,10 @@ TextureObjChunkRecPtr World::getTexture(string key) {
     tex->setImage(image);
     texMap[key] = tex;
     return tex;
-}
+}*/
 
 World::World() {
-    ImageRecPtr imageStreetSegment = Image::create();
+    /*ImageRecPtr imageStreetSegment = Image::create();
     imageStreetSegment->read("world/textures/street1.png");
     texStreetSegment = TextureObjChunk::create();
     texStreetSegment->setImage(imageStreetSegment);
@@ -46,7 +46,7 @@ World::World() {
     ImageRecPtr imageSubQuad = Image::create();
     imageSubQuad->read("world/textures/asphalt.jpg");
     texSubQuad = TextureObjChunk::create();
-    texSubQuad->setImage(imageSubQuad);
+    texSubQuad->setImage(imageSubQuad);*/
 
     //                ImageRecPtr img = Image::create();
     //                UChar8 data[] = {0,0,0, 255,50,50, 100,255,100, 255,255,255};
@@ -54,7 +54,7 @@ World::World() {
     //                texSubQuad = TextureObjChunk::create();
     //                texSubQuad->setImage(img);
 
-    for(int i = 0; i<4; i++){
+    /*for(int i = 0; i<4; i++){
         TextureObjChunkRecPtr texTree;
         ImageRecPtr imageTree = Image::create();
         texTree = TextureObjChunk::create();
@@ -64,7 +64,7 @@ World::World() {
         imageTree->read(("world/textures/Tree/tree"+str+".png").c_str());
         texTree->setImage(imageTree);
         treeMapList.push_back(texTree);
-    }
+    }*/
 //                chunk->setMinFilter( GL_LINEAR_MIPMAP_LINEAR );
 //                chunk->setMagFilter( GL_LINEAR );
 //                chunk->setWrapS( GL_CLAMP );//GL_CLAMP //GL_REPEAT
@@ -72,7 +72,7 @@ World::World() {
 
 }
 
-vector<TextureObjChunkRecPtr> World::getTreeMap() { return treeMapList; }
+//vector<TextureObjChunkRecPtr> World::getTreeMap() { return treeMapList; }
 
 void World::updateGeometry() {
     VRTimer t;

@@ -15,6 +15,7 @@ struct VRGeoData::Data {
     GeoVec3fPropertyRecPtr cols3;
     GeoVec4fPropertyRecPtr cols4;
     GeoVec2fPropertyRecPtr texs;
+    GeoVec2fPropertyRecPtr texs2;
 
     int lastPrim = -1;
 
@@ -50,6 +51,7 @@ VRGeoData::VRGeoData(VRGeometryPtr geo) : pend(this, 0) {
     data->pos = (GeoPnt3fProperty*)geo->getMesh()->getPositions();
     data->norms = (GeoVec3fProperty*)geo->getMesh()->getNormals();
     data->texs = (GeoVec2fProperty*)geo->getMesh()->getTexCoords();
+    data->texs2 = (GeoVec2fProperty*)geo->getMesh()->getTexCoords2();
     auto cols = geo->getMesh()->getColors();
     int Nc = data->getColorChannels(cols);
     if (Nc == 3) data->cols3 = (GeoVec3fProperty*)cols;
@@ -62,6 +64,7 @@ VRGeoData::VRGeoData(VRGeometryPtr geo) : pend(this, 0) {
     if (!data->cols3) data->cols3 = GeoVec3fProperty::create();
     if (!data->cols4) data->cols4 = GeoVec4fProperty::create();
     if (!data->texs) data->texs = GeoVec2fProperty::create();
+    if (!data->texs2) data->texs2 = GeoVec2fProperty::create();
 }
 
 void VRGeoData::reset() {
@@ -73,6 +76,7 @@ void VRGeoData::reset() {
     data->cols3 = GeoVec3fProperty::create();
     data->cols4 = GeoVec4fProperty::create();
     data->texs = GeoVec2fProperty::create();
+    data->texs2 = GeoVec2fProperty::create();
 }
 
 bool VRGeoData::valid() {
@@ -89,6 +93,7 @@ int VRGeoData::pushVert(Pnt3f p, Vec3f n) { data->norms->addValue(n); return pus
 int VRGeoData::pushVert(Pnt3f p, Vec3f n, Vec3f c) { data->cols3->addValue(c); return pushVert(p,n); }
 int VRGeoData::pushVert(Pnt3f p, Vec3f n, Vec4f c) { data->cols4->addValue(c); return pushVert(p,n); }
 int VRGeoData::pushVert(Pnt3f p, Vec3f n, Vec2f t) { data->texs->addValue(t); return pushVert(p,n); }
+int VRGeoData::pushVert(Pnt3f p, Vec3f n, Vec2f t, Vec2f t2) { data->texs2->addValue(t2); return pushVert(p,n,t); }
 int VRGeoData::pushVert(Pnt3f p, Vec3f n, Vec3f c, Vec2f t) { data->texs->addValue(t); return pushVert(p,n,c); }
 int VRGeoData::pushVert(Pnt3f p, Vec3f n, Vec4f c, Vec2f t) { data->texs->addValue(t); return pushVert(p,n,c); }
 
@@ -99,10 +104,12 @@ int VRGeoData::pushVert(VRGeoData& other, int i) {
     bool doCol3 = (od->cols3 && od->cols3->size() > i);
     bool doCol4 = (od->cols4 && od->cols4->size() > i);
     bool doTex = (od->texs && od->texs->size() > i);
+    bool doTex2 = (od->texs2 && od->texs2->size() > i);
     if (doNorms) {
         Vec3f n = od->norms->getValue(i);
         if (doTex && doCol3) return pushVert(p, n, od->cols3->getValue(i), od->texs->getValue(i));
         if (doTex && doCol4) return pushVert(p, n, od->cols4->getValue(i), od->texs->getValue(i));
+        if (doTex2) return pushVert(p, n, od->texs->getValue(i), od->texs2->getValue(i));
         if (doTex)  return pushVert(p, n, od->texs->getValue(i));
         if (doCol3) return pushVert(p, n, od->cols3->getValue(i));
         if (doCol4) return pushVert(p, n, od->cols4->getValue(i));
@@ -120,11 +127,13 @@ int VRGeoData::pushVert(VRGeoData& other, int i, Matrix m) {
     bool doCol3 = (od->cols3 && od->cols3->size() > i);
     bool doCol4 = (od->cols4 && od->cols4->size() > i);
     bool doTex = (od->texs && od->texs->size() > i);
+    bool doTex2 = (od->texs2 && od->texs2->size() > i);
     if (doNorms) {
         Vec3f n = od->norms->getValue(i);
         m.mult(n,n);
         if (doTex && doCol3) return pushVert(p, n, od->cols3->getValue(i), od->texs->getValue(i));
         if (doTex && doCol4) return pushVert(p, n, od->cols4->getValue(i), od->texs->getValue(i));
+        if (doTex2) return pushVert(p, n, od->texs->getValue(i), od->texs2->getValue(i));
         if (doTex)  return pushVert(p, n, od->texs->getValue(i));
         if (doCol3) return pushVert(p, n, od->cols3->getValue(i));
         if (doCol4) return pushVert(p, n, od->cols4->getValue(i));
@@ -206,7 +215,8 @@ void VRGeoData::apply(VRGeometryPtr geo) {
     if (data->indices->size() > 0) geo->setIndices(data->indices);
     if (data->cols3->size() > 0) geo->setColors(data->cols3);
     if (data->cols4->size() > 0) geo->setColors(data->cols4);
-    if (data->texs->size() > 0) geo->setTexCoords(data->texs);
+    if (data->texs->size() > 0) geo->setTexCoords(data->texs, 0);
+    if (data->texs2->size() > 0) geo->setTexCoords(data->texs2, 1);
 }
 
 VRGeometryPtr VRGeoData::asGeometry(string name) {
@@ -231,6 +241,7 @@ string VRGeoData::status() {
     res += " " + toString(data->cols3->size()) + " colors 3\n";
     res += " " + toString(data->cols4->size()) + " colors 4\n";
     res += " " + toString(data->texs->size()) + " texture coordinates\n";
+    res += " " + toString(data->texs2->size()) + " texture coordinates 2\n";
     res += " " + toString(data->indices->size()) + " indices: ";
     for (int i=0; i<data->indices->size(); i++) res += " " + toString(data->indices->getValue(i));
     res += "\n";

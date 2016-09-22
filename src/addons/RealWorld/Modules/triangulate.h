@@ -39,23 +39,20 @@
 
 #include <vector>  // Include STL vector class.
 
-class Vector2d
-{
+class Vector2d {
 public:
-  Vector2d(float x,float y)
-  {
-    Set(x,y);
-  };
+  Vector2d(float x,float y) { Set(x,y); };
 
   float GetX(void) const { return mX; };
-
   float GetY(void) const { return mY; };
+  float operator [](int i) const { return (i==0) ? mX : mY; }
+  float& operator [](int i) { return (i==0) ? mX : mY; }
 
-  void  Set(float x,float y)
-  {
+  void  Set(float x,float y) {
     mX = x;
     mY = y;
   };
+
 private:
   float mX;
   float mY;

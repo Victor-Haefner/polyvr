@@ -3,10 +3,10 @@
 #include "../RealWorld.h"
 #include "../MapCoordinator.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
 
 #include "../OSM/OSMMapDB.h"
-#include "../World.h"
 #include "triangulate.h"
 #include "Wall.h"
 
@@ -87,7 +87,6 @@ void ModuleWalls::fillWallList() {
 }
 
 void ModuleWalls::addWall(string texture, string key, string value, float width, float height) {
-    auto world = RealWorld::get()->getWorld();
     WallMaterial* w = new WallMaterial();
     w->material = VRMaterial::create("wall");
     w->material->setTexture(texture);
@@ -95,7 +94,6 @@ void ModuleWalls::addWall(string texture, string key, string value, float width,
     w->v = value;
     w->width = width;
     w->height = height;
-
     wallList.push_back(w);
 }
 
@@ -103,7 +101,7 @@ void ModuleWalls::addWall(string texture, string key, string value){
     addWall(texture, key, value, 0.5, 1);
 }
 
-void ModuleWalls::addWallPart(Vec2f a1, Vec2f b1, Vec2f a2, Vec2f b2, Vec2f a3, Vec2f b3, GeometryData* gdWall, float width, float height){
+void ModuleWalls::addWallPart(Vec2f a1, Vec2f b1, Vec2f a2, Vec2f b2, Vec2f a3, Vec2f b3, VRGeoData* gdWall, float width, float height){
     Vec2f _NULL;
 
     Vec2f intersectStart1;
@@ -142,7 +140,7 @@ void ModuleWalls::addWallPart(Vec2f a1, Vec2f b1, Vec2f a2, Vec2f b2, Vec2f a3, 
 }
 
 Vec2f ModuleWalls::getNOrtho(Vec2f a, Vec2f b){
-    Vec2f res = Vec2f(-(b-a).getValues()[1], (b-a).getValues()[0]);
+    Vec2f res = Vec2f(-(b-a)[1], (b-a)[0]);
     res.normalize(); //vector length = 1;
     return res;
 }
@@ -153,74 +151,47 @@ Vec2f ModuleWalls::getIntersection(Vec2f a1, Vec2f b1, Vec2f a2, Vec2f b2){
     Vec2f v2 = a2-b2;
     if(v1 == v2) return _NULL; //if parallel
     float t;
-    float ax = a1.getValues()[0];
-    float ay = a1.getValues()[1];
-    float bx = v1.getValues()[0];
-    float by = v1.getValues()[1];
-    float cx = a2.getValues()[0];
-    float cy = a2.getValues()[1];
-    float dx = v2.getValues()[0];
-    float dy = v2.getValues()[1];
+    float ax = a1[0];
+    float ay = a1[1];
+    float bx = v1[0];
+    float by = v1[1];
+    float cx = a2[0];
+    float cy = a2[1];
+    float dx = v2[0];
+    float dy = v2[1];
 
     t = (by*ax + bx*cy - bx*ay - cx*by)/(dx*by - bx*dy);
     return Vec2f(cx + dx*t, cy + dy*t);
 }
 
-void ModuleWalls::createWallSide(Vec2f a, Vec2f b, Vec2f normal2D, GeometryData* gdWall, float height) {
+void ModuleWalls::createWallSide(Vec2f a, Vec2f b, Vec2f normal2D, VRGeoData* gdWall, float height) {
     auto mc = RealWorld::get()->getCoordinator();
-    Vec3f normal = Vec3f(normal2D.getValues()[0], 0, normal2D.getValues()[1]);
-    normal.normalize();
+    Vec3f n = Vec3f(normal2D[0], 0, normal2D[1]);
+    n.normalize();
 
+    float Ha = mc->getElevation(a);
+    float Hb = mc->getElevation(b);
     float length = (b-a).length();
 
-    gdWall->inds->addValue(gdWall->inds->size());
-    gdWall->norms->addValue(normal);
-    gdWall->pos->addValue(Vec3f(a.getValues()[0], mc->getElevation(a), a.getValues()[1]));
-    gdWall->texs->addValue(Vec2f(0, 0));
-
-    gdWall->inds->addValue(gdWall->inds->size());
-    gdWall->norms->addValue(normal);
-    gdWall->pos->addValue(Vec3f(b.getValues()[0], mc->getElevation(b), b.getValues()[1]));
-    gdWall->texs->addValue(Vec2f(0, length));
-
-    gdWall->inds->addValue(gdWall->inds->size());
-    gdWall->norms->addValue(normal);
-    gdWall->pos->addValue(Vec3f(b.getValues()[0], mc->getElevation(b) +  height, b.getValues()[1]));
-    gdWall->texs->addValue(Vec2f(height, length));
-
-    gdWall->inds->addValue(gdWall->inds->size());
-    gdWall->norms->addValue(normal);
-    gdWall->pos->addValue(Vec3f(a.getValues()[0], mc->getElevation(a) +  height, a.getValues()[1]));
-    gdWall->texs->addValue(Vec2f(height, 0));
+    int Va = gdWall->pushVert(Vec3f(a[0], Ha, a[1]), n, Vec2f(0, 0));
+    int Vb = gdWall->pushVert(Vec3f(b[0], Hb, b[1]), n, Vec2f(0, length));
+    int Vc = gdWall->pushVert(Vec3f(b[0], Hb+height, b[1]), n, Vec2f(height, length));
+    int Vd = gdWall->pushVert(Vec3f(a[0], Ha+height, a[1]), n, Vec2f(height, 0));
+    gdWall->pushQuad(Va, Vb, Vc, Vd);
 }
 
-void ModuleWalls::createWallRoof(Vec2f a1, Vec2f a2, Vec2f b1, Vec2f b2, GeometryData* gdWall, float height) {
+void ModuleWalls::createWallRoof(Vec2f a1, Vec2f a2, Vec2f b1, Vec2f b2, VRGeoData* gdWall, float height) {
     auto mc = RealWorld::get()->getCoordinator();
-    //float length = (a1 - a2).length();
-
-    gdWall->inds->addValue(gdWall->inds->size());
-    gdWall->norms->addValue(Vec3f(0, 1, 0));
-    gdWall->pos->addValue(Vec3f(a1.getValues()[0], mc->getElevation(a1) + height, a1.getValues()[1]));
-    gdWall->texs->addValue(Vec2f(a1.getValues()[0], a1.getValues()[1]));
-
-    gdWall->inds->addValue(gdWall->inds->size());
-    gdWall->norms->addValue(Vec3f(0, 1, 0));
-    gdWall->pos->addValue(Vec3f(a2.getValues()[0], mc->getElevation(a2) + height, a2.getValues()[1]));
-    gdWall->texs->addValue(Vec2f(a2.getValues()[0], a2.getValues()[1]));
-
-    gdWall->inds->addValue(gdWall->inds->size());
-    gdWall->norms->addValue(Vec3f(0, 1, 0));
-    gdWall->pos->addValue(Vec3f(b2.getValues()[0], mc->getElevation(b2) +  height, b2.getValues()[1]));
-    gdWall->texs->addValue(Vec2f(b2.getValues()[0], b2.getValues()[1]));
-
-    gdWall->inds->addValue(gdWall->inds->size());
-    gdWall->norms->addValue(Vec3f(0, 1, 0));
-    gdWall->pos->addValue(Vec3f(b1.getValues()[0], mc->getElevation(b1) +  height, b1.getValues()[1]));
-    gdWall->texs->addValue(Vec2f(b1.getValues()[0], b1.getValues()[1]));
+    Vec3f n = Vec3f(0, 1, 0);
+    int Va = gdWall->pushVert(Vec3f(a1[0], mc->getElevation(a1) + height, a1[1]), n, Vec2f(a1[0], a1[1]));
+    int Vb = gdWall->pushVert(Vec3f(a2[0], mc->getElevation(a2) + height, a2[1]), n, Vec2f(a2[0], a2[1]));
+    int Vc = gdWall->pushVert(Vec3f(b2[0], mc->getElevation(b2) + height, b2[1]), n, Vec2f(b2[0], b2[1]));
+    int Vd = gdWall->pushVert(Vec3f(b1[0], mc->getElevation(b1) + height, b1[1]), n, Vec2f(b1[0], b1[1]));
+    gdWall->pushQuad(Va, Vb, Vc, Vd);
 }
 
 //to do
-void ModuleWalls::addWall(Wall* wall, GeometryData* gdWall, float width, float height){
+void ModuleWalls::addWall(Wall* wall, VRGeoData* gdWall, float width, float height){
     //create AB todo
     Vec2f _NULL;
     vector<Vec2f*> sides = wall->getSides(); //get wall part
@@ -245,16 +216,10 @@ void ModuleWalls::addWall(Wall* wall, GeometryData* gdWall, float width, float h
 }
 
 VRGeometryPtr ModuleWalls::makeWallGeometry(Wall* wall, WallMaterial* wallMat) {
-    GeometryData* gdWall = new GeometryData();
-
+    VRGeoData* gdWall = new VRGeoData();
     addWall(wall, gdWall, wallMat->width, wallMat->height);
-
-    VRGeometryPtr geomWall = VRGeometry::create(wallMat->v);
-
-    geomWall->create(GL_QUADS, gdWall->pos, gdWall->norms, gdWall->inds, gdWall->texs);
-    geomWall->setMaterial(wallMat->material);
-
-    VRGeometryPtr geom = VRGeometry::create("Wall");
-    if (gdWall->inds->size() > 0) geom->addChild(geomWall);
-    return geom;
+    auto geo = gdWall->asGeometry("Wall");
+    geo->setMaterial(wallMat->material);
+    delete gdWall;
+    return geo;
 }
