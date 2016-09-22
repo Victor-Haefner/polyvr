@@ -24,6 +24,7 @@
 #include "core/tools/selection/VRSelection.h"
 #include "core/networking/VRSharedMemory.h"
 #include "VRPrimitive.h"
+#include "OSGGeometry.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -48,7 +49,7 @@ VRObjectPtr VRGeometry::copy(vector<VRObjectPtr> children) {
 VRGeometry::VRGeometry(string name) : VRTransform(name) {
     type = "Geometry";
     addAttachment("geometry", 0);
-    if (!meshSet) setMesh(Geometry::create());
+    if (!meshSet) setMesh();
 
     store("sourcetype", &source.type);
     store("sourceparam", &source.parameter);
@@ -60,7 +61,7 @@ VRGeometry::VRGeometry(string name, bool hidden) : VRTransform(name) {
     setNameSpace("system");
     type = "Geometry";
     addAttachment("geometry", 0);
-    if (!meshSet) setMesh(Geometry::create());
+    if (!meshSet) setMesh();
     if (hidden) setPersistency(0);
 }
 
@@ -77,24 +78,25 @@ VRGeometryPtr VRGeometry::create(string name, string primitive, string params) {
 VRGeometryPtr VRGeometry::ptr() { return static_pointer_cast<VRGeometry>( shared_from_this() ); }
 
 /** Set the geometry mesh (OSG geometry core) **/
-void VRGeometry::setMesh(GeometryMTRecPtr g, Reference ref, bool keep_material) {
-    if (g == 0) return;
-    if (mesh_node) getNode()->node->subChild(mesh_node);
+void VRGeometry::setMesh(OSGGeometryPtr g, Reference ref, bool keep_material) {
+    if (g->geo == 0) return;
+    if (mesh_node && mesh_node->node && getNode() && getNode()->node) getNode()->node->subChild(mesh_node->node);
 
     mesh = g;
-    mesh_node = makeNodeFor(g);
-    OSG::setName(mesh_node, getName());
-    getNode()->node->addChild(mesh_node);
+    mesh_node = OSGObject::create( makeNodeFor(g->geo) );
+    OSG::setName(mesh_node->node, getName());
+    getNode()->node->addChild(mesh_node->node);
     meshSet = true;
     source = ref;
 
     if (mat == 0) mat = VRMaterial::getDefault();
-    if (keep_material) mat = VRMaterial::get(g->getMaterial());
+    if (keep_material) mat = VRMaterial::get(g->geo->getMaterial());
     setMaterial(mat);
     meshChanged();
 }
 
-void VRGeometry::setMesh(GeometryMTRecPtr g) {
+void VRGeometry::setMesh(OSGGeometryPtr g) {
+    if (!g) g = OSGGeometry::create( Geometry::create() );
     Reference ref;
     ref.type = CODE;
     setMesh(g, ref);
@@ -108,7 +110,7 @@ void VRGeometry::setPrimitive(string primitive, string args) {
     if (args != "") this->primitive->fromString(args);
     source.type = PRIMITIVE;
     source.parameter = primitive + " " + this->primitive->toString();
-    setMesh(this->primitive->make(), source);
+    setMesh( OSGGeometry::create( this->primitive->make() ), source);
 }
 
 /** Create a mesh using vectors with positions, normals, indices && optionaly texture coordinates **/
@@ -152,7 +154,7 @@ void VRGeometry::create(int type, vector<Vec3f> pos, vector<Vec3f> norms, vector
     if (doTex) geo->setTexCoords(Tex);
     geo->setMaterial(Mat);
 
-    setMesh(geo);
+    setMesh( OSGGeometry::create(geo) );
 }
 
 /** Create a mesh using vectors with positions, normals, indices && optionaly texture coordinates **/
@@ -166,14 +168,14 @@ void VRGeometry::create(int type, GeoVectorProperty* pos, GeoVectorProperty* nor
 
 /** Overwrites the vertex positions of the mesh **/
 void VRGeometry::setPositions(GeoVectorProperty* Pos) {
-    if (!meshSet) setMesh(Geometry::create());
+    if (!meshSet) setMesh();
     if (Pos->size() == 1) Pos->addValue(Pnt3f()); // hack to avoid the single point bug
-    mesh->setPositions(Pos);
+    mesh->geo->setPositions(Pos);
     meshChanged();
 }
 
 void VRGeometry::setType(int t) {
-    if (!meshSet) setMesh(Geometry::create());
+    if (!meshSet) setMesh();
     GeoUInt8PropertyRecPtr Type = GeoUInt8Property::create();
     Type->addValue(t);
     setTypes(Type);
@@ -181,40 +183,40 @@ void VRGeometry::setType(int t) {
 
 void VRGeometry::makeUnique() {
     if (mesh_node == 0) return;
-    NodeMTRecPtr clone = deepCloneTree( mesh_node );
-    setMesh( dynamic_cast<Geometry*>( clone->getCore() ), source );
+    NodeMTRecPtr clone = deepCloneTree( mesh_node->node );
+    setMesh( OSGGeometry::create( dynamic_cast<Geometry*>( clone->getCore() ) ), source );
 }
 
 void VRGeometry::fixColorMapping() {
-    mesh->setIndex(mesh->getIndex(Geometry::PositionsIndex), Geometry::ColorsIndex);
+    mesh->geo->setIndex(mesh->geo->getIndex(Geometry::PositionsIndex), Geometry::ColorsIndex);
 }
 
 void VRGeometry::updateNormals() {
     if (!meshSet) return;
-    calcVertexNormals(mesh);
+    calcVertexNormals(mesh->geo);
 }
 
 int VRGeometry::getLastMeshChange() { return lastMeshChange; }
 
-void VRGeometry::setTypes(GeoIntegralProperty* types) { if (!meshSet) setMesh(Geometry::create()); mesh->setTypes(types); }
-void VRGeometry::setNormals(GeoVectorProperty* Norms) { if (!meshSet) setMesh(Geometry::create()); mesh->setNormals(Norms); }
-void VRGeometry::setColors(GeoVectorProperty* Colors, bool fixMapping) { if (!meshSet) setMesh(Geometry::create()); mesh->setColors(Colors); if (fixMapping) fixColorMapping(); }
-void VRGeometry::setLengths(GeoIntegralProperty* lengths) { if (!meshSet) setMesh(Geometry::create()); mesh->setLengths(lengths); }
+void VRGeometry::setTypes(GeoIntegralProperty* types) { if (!meshSet) setMesh(); mesh->geo->setTypes(types); }
+void VRGeometry::setNormals(GeoVectorProperty* Norms) { if (!meshSet) setMesh(); mesh->geo->setNormals(Norms); }
+void VRGeometry::setColors(GeoVectorProperty* Colors, bool fixMapping) { if (!meshSet) setMesh(); mesh->geo->setColors(Colors); if (fixMapping) fixColorMapping(); }
+void VRGeometry::setLengths(GeoIntegralProperty* lengths) { if (!meshSet) setMesh(); mesh->geo->setLengths(lengths); }
 void VRGeometry::setTexCoords(GeoVectorProperty* Tex, int i, bool fixMapping) {
-    if (!meshSet) setMesh(Geometry::create());
-    if (i == 0) mesh->setTexCoords(Tex);
-    if (i == 1) mesh->setTexCoords1(Tex);
-    if (i == 2) mesh->setTexCoords2(Tex);
-    if (i == 3) mesh->setTexCoords3(Tex);
-    if (i == 4) mesh->setTexCoords4(Tex);
-    if (i == 5) mesh->setTexCoords5(Tex);
-    if (i == 6) mesh->setTexCoords6(Tex);
-    if (i == 7) mesh->setTexCoords7(Tex);
-    if (fixMapping) mesh->setIndex(mesh->getIndex(Geometry::PositionsIndex), Geometry::TexCoordsIndex);
+    if (!meshSet) setMesh();
+    if (i == 0) mesh->geo->setTexCoords(Tex);
+    if (i == 1) mesh->geo->setTexCoords1(Tex);
+    if (i == 2) mesh->geo->setTexCoords2(Tex);
+    if (i == 3) mesh->geo->setTexCoords3(Tex);
+    if (i == 4) mesh->geo->setTexCoords4(Tex);
+    if (i == 5) mesh->geo->setTexCoords5(Tex);
+    if (i == 6) mesh->geo->setTexCoords6(Tex);
+    if (i == 7) mesh->geo->setTexCoords7(Tex);
+    if (fixMapping) mesh->geo->setIndex(mesh->geo->getIndex(Geometry::PositionsIndex), Geometry::TexCoordsIndex);
 }
 
 void VRGeometry::setPositionalTexCoords(float scale) {
-    GeoVectorPropertyRefPtr pos = mesh->getPositions();
+    GeoVectorPropertyRefPtr pos = mesh->geo->getPositions();
     if (scale == 1.0) setTexCoords(pos, 0, 1);
     else {
         GeoVec3fPropertyRefPtr tex = GeoVec3fProperty::create();
@@ -228,14 +230,14 @@ void VRGeometry::setPositionalTexCoords(float scale) {
 }
 
 void VRGeometry::setIndices(GeoIntegralProperty* Indices, bool doLengths) {
-    if (!meshSet) setMesh(Geometry::create());
+    if (!meshSet) setMesh();
     if (Indices->size() == 0) setMesh(0);
-    if (!mesh->getLengths() || doLengths) {
+    if (!mesh->geo->getLengths() || doLengths) {
         GeoUInt32PropertyRecPtr Length = GeoUInt32Property::create();
         Length->addValue(Indices->size());
-        mesh->setLengths(Length);
+        mesh->geo->setLengths(Length);
     }
-    mesh->setIndices(Indices);
+    mesh->geo->setIndices(Indices);
 }
 
 int getColorChannels(GeoVectorProperty* v) {
@@ -255,8 +257,8 @@ Vec4f morphColor4(const Vec4f& c) { return c; }
 
 void VRGeometry::merge(VRGeometryPtr geo) {
     if (!geo) return;
-    if (!geo->mesh) return;
-    if (!meshSet) setMesh(Geometry::create());
+    if (!geo->mesh->geo) return;
+    if (!meshSet) setMesh();
 
     VRGeoData self(ptr());
     VRGeoData other(geo);
@@ -338,7 +340,7 @@ void VRGeometry::merge(VRGeometryPtr geo) {
 }
 
 void VRGeometry::removeSelection(VRSelectionPtr sel) {
-    if (!mesh) return;
+    if (!mesh->geo) return;
 
     VRGeoData newData;
     VRGeoData self(ptr());
@@ -427,8 +429,8 @@ void VRGeometry::genTexCoords(string mapping, float scale, int channel, shared_p
     if (uvp) uvp_inv = uvp->asMatrix();
     if (uvp) uvp_inv.invert();
 
-    auto pos = mesh->getPositions();
-    auto norms = mesh->getNormals();
+    auto pos = mesh->geo->getPositions();
+    auto norms = mesh->geo->getNormals();
     int N = pos->size();
 
     Vec3f p;
@@ -556,12 +558,12 @@ void VRGeometry::decimate(float f) {
 }
 
 void VRGeometry::removeDoubles(float minAngle) {// TODO: use angle
-    createSharedIndex(mesh);
+    createSharedIndex(mesh->geo);
 }
 
 void VRGeometry::setRandomColors() {
-    if (!mesh) return;
-    GeoPnt3fPropertyRecPtr pos = dynamic_cast<GeoPnt3fProperty*>(mesh->getPositions());
+    if (!mesh->geo) return;
+    GeoPnt3fPropertyRecPtr pos = dynamic_cast<GeoPnt3fProperty*>(mesh->geo->getPositions());
     if (!pos) return;
 	int N = pos->size();
 
@@ -576,7 +578,7 @@ void VRGeometry::setRandomColors() {
 /** Returns the geometric center of the mesh **/
 Vec3f VRGeometry::getGeometricCenter() {
     if (!meshSet) return Vec3f(0,0,0);
-    GeoPnt3fPropertyRecPtr pos = dynamic_cast<GeoPnt3fProperty*>(mesh->getPositions());
+    GeoPnt3fPropertyRecPtr pos = dynamic_cast<GeoPnt3fProperty*>(mesh->geo->getPositions());
 
     Vec3f center = Vec3f(0,0,0);
     for (uint i=0;i<pos->size();i++)
@@ -590,7 +592,7 @@ Vec3f VRGeometry::getGeometricCenter() {
 /** Returns the average of all normals of the mesh (not normalized, can be zero) **/
 Vec3f VRGeometry::getAverageNormal() {
     if (!meshSet) return Vec3f(0,1,0);
-    GeoVec3fPropertyRecPtr norms = dynamic_cast<GeoVec3fProperty*>(mesh->getNormals());
+    GeoVec3fPropertyRecPtr norms = dynamic_cast<GeoVec3fProperty*>(mesh->geo->getNormals());
 
     Vec3f normal = Vec3f(0,0,0);
     for (uint i=0;i<norms->size();i++) {
@@ -607,22 +609,22 @@ void VRGeometry::influence(vector<Vec3f> pnts, vector<Vec3f> values, int power, 
     inp.setPoints(pnts);
     inp.setValues(values);
     if (color_code > 0) {
-        if (mesh->getColors() == 0) {
+        if (mesh->geo->getColors() == 0) {
             GeoVec4fPropertyRecPtr cols = GeoVec4fProperty::create();
-            cols->resize(mesh->getPositions()->size());
+            cols->resize(mesh->geo->getPositions()->size());
             setColors(cols);
             fixColorMapping();
         }
-        inp.evalVec(mesh->getPositions(), power, mesh->getColors(), color_code, dl_max);
+        inp.evalVec(mesh->geo->getPositions(), power, mesh->geo->getColors(), color_code, dl_max);
     }
-    else inp.evalVec(mesh->getPositions(), power);
+    else inp.evalVec(mesh->geo->getPositions(), power);
 }
 
 /** Returns the maximum position on the x, y || z axis **/
 float VRGeometry::getMax(int axis) {
     if (!meshSet) return 0;
     if (axis != 0 && axis != 1 && axis != 2) return 0;
-    GeoPnt3fPropertyRecPtr pos = dynamic_cast<GeoPnt3fProperty*>(mesh->getPositions());
+    GeoPnt3fPropertyRecPtr pos = dynamic_cast<GeoPnt3fProperty*>(mesh->geo->getPositions());
 
     float max = pos->getValue(0)[axis];
     for (uint i=0;i<pos->size();i++) {
@@ -636,7 +638,7 @@ float VRGeometry::getMax(int axis) {
 float VRGeometry::getMin(int axis) {
     if (!meshSet) return 0;
     if (axis != 0 && axis != 1 && axis != 2) return 0;
-    GeoPnt3fPropertyRecPtr pos = dynamic_cast<GeoPnt3fProperty*>(mesh->getPositions());
+    GeoPnt3fPropertyRecPtr pos = dynamic_cast<GeoPnt3fProperty*>(mesh->geo->getPositions());
 
     float min = pos->getValue(0)[axis];
     for (uint i=0;i<pos->size();i++) {
@@ -647,7 +649,7 @@ float VRGeometry::getMin(int axis) {
 }
 
 /** Returns the mesh as a OSG geometry core **/
-GeometryMTRecPtr VRGeometry::getMesh() {
+OSGGeometryPtr VRGeometry::getMesh() {
     if(meshSet) return mesh;
     else return 0;
 }
@@ -656,8 +658,8 @@ VRPrimitive* VRGeometry::getPrimitive() { return primitive; }
 
 void VRGeometry::setMeshVisibility(bool b) {
     if (!mesh_node) return;
-    if (b) mesh_node->setTravMask(0xffffffff);
-    else mesh_node->setTravMask(0);
+    if (b) mesh_node->node->setTravMask(0xffffffff);
+    else mesh_node->node->setTravMask(0);
 }
 
 /** Set the material of the mesh **/
@@ -667,10 +669,10 @@ void VRGeometry::setMaterial(VRMaterialPtr mat) {
 
     this->mat = mat;
     if (!meshSet) return;
-    mesh->setMaterial(mat->getMaterial());
+    mesh->geo->setMaterial(mat->getMaterial());
 }
 
-void VRGeometry::setMaterial(MaterialRecPtr mat) {
+/*void VRGeometry::setMaterial(MaterialRecPtr mat) {
     if (!meshSet) return;
     if (mat == 0) return;
 
@@ -678,7 +680,7 @@ void VRGeometry::setMaterial(MaterialRecPtr mat) {
     this->mat->setMaterial(mat);
 
     setMaterial(this->mat);
-}
+}*/
 
 VRMaterialPtr VRGeometry::getMaterial() {
     if (!meshSet) return 0;
@@ -689,7 +691,7 @@ float VRGeometry::calcSurfaceArea() {
     if (!meshSet) return 0;
 
     float A = 0;
-    TriangleIterator it(mesh);
+    TriangleIterator it(mesh->geo);
 
 	for(int i=0; !it.isAtEnd(); ++it, i++) {
         Pnt3f p0 = it.getPosition(0);
@@ -705,8 +707,8 @@ float VRGeometry::calcSurfaceArea() {
 
 void VRGeometry::applyTransformation(shared_ptr<pose> po) {
     Matrix m = po->asMatrix();
-    auto pos = mesh->getPositions();
-    auto norms = mesh->getNormals();
+    auto pos = mesh->geo->getPositions();
+    auto norms = mesh->geo->getNormals();
     Vec3f n; Pnt3f p;
 
     for (int i=0; i<pos->size(); i++) {
@@ -745,8 +747,8 @@ void VRGeometry::showGeometricData(string type, bool b) {
     Vec3f n;
 
     if (type == "Normals") {
-        GeoVectorPropertyRecPtr g_norms = mesh->getNormals();
-        GeoVectorPropertyRecPtr g_pos = mesh->getPositions();
+        GeoVectorPropertyRecPtr g_norms = mesh->geo->getNormals();
+        GeoVectorPropertyRecPtr g_pos = mesh->geo->getPositions();
         for (uint i=0; i<g_norms->size(); i++) {
             p = g_pos->getValue<Pnt3f>(i);
             n = g_norms->getValue<Vec3f>(i);

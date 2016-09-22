@@ -607,6 +607,8 @@
 		<Unit filename="src/core/objects/VRStage.h" />
 		<Unit filename="src/core/objects/VRTransform.cpp" />
 		<Unit filename="src/core/objects/VRTransform.h" />
+		<Unit filename="src/core/objects/geometry/OSGGeometry.cpp" />
+		<Unit filename="src/core/objects/geometry/OSGGeometry.h" />
 		<Unit filename="src/core/objects/geometry/VRBillboard.cpp" />
 		<Unit filename="src/core/objects/geometry/VRBillboard.h" />
 		<Unit filename="src/core/objects/geometry/VRConstraint.cpp" />

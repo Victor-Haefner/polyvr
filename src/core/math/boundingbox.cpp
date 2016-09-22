@@ -1,6 +1,7 @@
 #include "boundingbox.h"
 
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/OSGGeometry.h"
 #include <OpenSG/OSGGeometry.h>
 
 using namespace OSG;
@@ -24,7 +25,7 @@ void boundingbox::update(Vec3f v) {
 
 void boundingbox::update(VRGeometryPtr g) {
     clear();
-    auto pos = g->getMesh()->getPositions();
+    auto pos = g->getMesh()->geo->getPositions();
     for (int i=0; i<pos->size(); i++) {
         Vec3f p = pos->getValue<Pnt3f>(i).subZero();
         update(p);

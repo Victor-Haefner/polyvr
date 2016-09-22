@@ -1,5 +1,6 @@
 #include "VRPLY.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/OSGGeometry.h"
 
 #include <fstream>
 #include <OpenSG/OSGGeoProperties.h>
@@ -143,20 +144,20 @@ void loadPly(string filename, VRTransformPtr res) {
     geo->setMaterial(Mat);
 
     VRGeometryPtr vrgeo = VRGeometry::create(filename);
-    vrgeo->setMesh(geo);
+    vrgeo->setMesh(OSGGeometry::create(geo));
     res->addChild(vrgeo);
 }
 
 void writePly(VRGeometryPtr geo, string path) {
 	if (!geo) return;
 
-	auto pos = geo->getMesh()->getPositions();
-	auto norms = geo->getMesh()->getNormals();
-	auto cols = geo->getMesh()->getColors();
-	auto texc = geo->getMesh()->getTexCoords();
-	auto inds = geo->getMesh()->getIndices();
-	auto types = geo->getMesh()->getTypes();
-	auto lengths = geo->getMesh()->getLengths();
+	auto pos = geo->getMesh()->geo->getPositions();
+	auto norms = geo->getMesh()->geo->getNormals();
+	auto cols = geo->getMesh()->geo->getColors();
+	auto texc = geo->getMesh()->geo->getTexCoords();
+	auto inds = geo->getMesh()->geo->getIndices();
+	auto types = geo->getMesh()->geo->getTypes();
+	auto lengths = geo->getMesh()->geo->getLengths();
 
 	int Np = pos->size();
 	int Nn = norms->size();

@@ -11,6 +11,8 @@
 #include "core/scene/VRSceneManager.h" // 4
 #include "triangulate.h" // 0.1
 
+//#include "core/objects/VRTransform.h" // 3.2
+
 //#define TEST
 #ifndef TEST
 

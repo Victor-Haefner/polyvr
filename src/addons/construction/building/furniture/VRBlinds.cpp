@@ -3,7 +3,7 @@
 #include "core/scene/sound/VRSoundManager.h"
 #include "core/scene/VRAnimationManagerT.h"
 #include "core/objects/geometry/VRGeometry.h"
-#include <OpenSG/OSGSimpleMaterial.h>
+#include "core/objects/material/VRMaterial.h"
 #include <OpenSG/OSGGeoProperties.h>
 
 OSG_BEGIN_NAMESPACE;
@@ -131,11 +131,10 @@ void VRBlinds::create() {
     blend_geo->setPose(pos, norm, Vec3f(0,1,0));
     scene->add(blend_geo);
 
-    SimpleMaterialRecPtr mat = SimpleMaterial::create();
+    auto mat = VRMaterial::create("blinds");
     mat->setDiffuse(Color3f(0.5,0.5,0.5));
     mat->setAmbient(Color3f(0.2, 0.2, 0.2));
     mat->setSpecular(Color3f(0.1, 0.1, 0.1));
-
     blend_geo->setMaterial(mat);
 }
 

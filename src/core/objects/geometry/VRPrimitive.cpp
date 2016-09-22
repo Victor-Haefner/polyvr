@@ -1,5 +1,6 @@
 #include "VRPrimitive.h"
 #include "VRGeometry.h"
+#include "OSGGeometry.h"
 #include "VRGeoData.h"
 #include <math.h>
 #include <OpenSG/OSGSimpleGeometry.h>
@@ -207,8 +208,9 @@ GeometryMTRecPtr VRArrow::make() {
     }
 
     auto geo = data.asGeometry("Arrow");
-    return geo->getMesh();
+    return geo->getMesh()->geo;
 }
+
 GeometryMTRecPtr VRScrewThread::make() {
     GeoUInt8PropertyRecPtr      Type = GeoUInt8Property::create();
     GeoUInt32PropertyRecPtr     Length = GeoUInt32Property::create();

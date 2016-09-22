@@ -1,4 +1,5 @@
 #include "VRPyGeometry.h"
+#include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRVideo.h"
 #include "core/utils/toString.h"
@@ -571,7 +572,7 @@ PyObject* VRPyGeometry::getPositions(VRPyGeometry* self) {
     if (!self->valid()) return NULL;
     if (self->objPtr->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getPositions - Mesh is invalid"); return NULL; }
 
-    OSG::GeoVectorProperty* pos = self->objPtr->getMesh()->getPositions();
+    OSG::GeoVectorProperty* pos = self->objPtr->getMesh()->geo->getPositions();
     if (pos == 0) return PyList_New(0);
     PyObject* res = PyList_New(pos->size());
 
@@ -590,7 +591,7 @@ PyObject* VRPyGeometry::getTypes(VRPyGeometry* self) {
     if (!self->valid()) return NULL;
     if (self->objPtr->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getNormals - Mesh is invalid"); return NULL; }
 
-    OSG::GeoIntegralProperty* types = self->objPtr->getMesh()->getTypes();
+    OSG::GeoIntegralProperty* types = self->objPtr->getMesh()->geo->getTypes();
     if (types == 0) return PyList_New(0);
     PyObject* res = PyList_New(types->size());
 
@@ -607,7 +608,7 @@ PyObject* VRPyGeometry::getLengths(VRPyGeometry* self) {
     if (!self->valid()) return NULL;
     if (self->objPtr->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getNormals - Mesh is invalid"); return NULL; }
 
-    OSG::GeoIntegralProperty* lengths = self->objPtr->getMesh()->getLengths();
+    OSG::GeoIntegralProperty* lengths = self->objPtr->getMesh()->geo->getLengths();
     if (lengths == 0) return PyList_New(0);
     PyObject* res = PyList_New(lengths->size());
 
@@ -624,7 +625,7 @@ PyObject* VRPyGeometry::getNormals(VRPyGeometry* self) {
     if (!self->valid()) return NULL;
     if (self->objPtr->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getNormals - Mesh is invalid"); return NULL; }
 
-    OSG::GeoVectorProperty* pos = self->objPtr->getMesh()->getNormals();
+    OSG::GeoVectorProperty* pos = self->objPtr->getMesh()->geo->getNormals();
     if (pos == 0) return PyList_New(0);
     PyObject* res = PyList_New(pos->size());
 
@@ -642,7 +643,7 @@ PyObject* VRPyGeometry::getColors(VRPyGeometry* self) {
     if (!self->valid()) return NULL;
     if (self->objPtr->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getColors - Mesh is invalid"); return NULL; }
 
-    OSG::GeoVectorProperty* pos = self->objPtr->getMesh()->getColors();
+    OSG::GeoVectorProperty* pos = self->objPtr->getMesh()->geo->getColors();
     if (pos == 0) return PyList_New(0);
     PyObject* res = PyList_New(pos->size());
 
@@ -660,7 +661,7 @@ PyObject* VRPyGeometry::getIndices(VRPyGeometry* self) {
     if (!self->valid()) return NULL;
     if (self->objPtr->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getIndices - Mesh is invalid"); return NULL; }
 
-    OSG::GeoIntegralProperty* pos = self->objPtr->getMesh()->getIndices();
+    OSG::GeoIntegralProperty* pos = self->objPtr->getMesh()->geo->getIndices();
     if (pos == 0) return PyList_New(0);
     PyObject* res = PyList_New(pos->size());
 
@@ -678,7 +679,7 @@ PyObject* VRPyGeometry::getTexCoords(VRPyGeometry* self) {
     if (!self->valid()) return NULL;
     if (self->objPtr->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getTexCoords - Mesh is invalid"); return NULL; }
 
-    OSG::GeoVectorProperty* tc = self->objPtr->getMesh()->getTexCoords();
+    OSG::GeoVectorProperty* tc = self->objPtr->getMesh()->geo->getTexCoords();
     if (tc == 0) return PyList_New(0);
     PyObject* res = PyList_New(tc->size());
 

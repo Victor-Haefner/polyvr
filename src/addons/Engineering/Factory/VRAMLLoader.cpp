@@ -12,6 +12,7 @@
 
 #include "core/objects/object/VRObject.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 
 #include "core/objects/geometry/VRPhysics.h"
@@ -86,9 +87,9 @@ struct Geo {
         geo->setPositions(pos);
         geo->setNormals(norms);
         geo->setColors(cols);
-        geo->getMesh()->setIndex(inds_p, Geometry::PositionsIndex);
-        geo->getMesh()->setIndex(inds_c, Geometry::ColorsIndex);
-        geo->getMesh()->setIndex(inds_n, Geometry::NormalsIndex);
+        geo->getMesh()->geo->setIndex(inds_p, Geometry::PositionsIndex);
+        geo->getMesh()->geo->setIndex(inds_c, Geometry::ColorsIndex);
+        geo->getMesh()->geo->setIndex(inds_n, Geometry::NormalsIndex);
         geo->setTexCoords(tc1, 0);
         geo->setTexCoords(tc2, 1);
         geo->setTexCoords(tc3, 2);

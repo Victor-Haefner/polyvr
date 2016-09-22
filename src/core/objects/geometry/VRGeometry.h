@@ -7,7 +7,6 @@
 #include "core/tools/selection/VRSelectionFwd.h"
 #include "../VRTransform.h"
 
-#include <OpenSG/OSGNode.h>
 #include <OpenSG/OSGSField.h>
 
 struct VRPrimitive;
@@ -16,10 +15,6 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRMaterial;
-class Node; OSG_GEN_CONTAINERPTR(Node);
-class Geometry; OSG_GEN_CONTAINERPTR(Geometry);
-class Material; OSG_GEN_CONTAINERPTR(Material);
-
 class GeoVectorProperty;
 class GeoIntegralProperty;
 
@@ -36,8 +31,8 @@ class VRGeometry : public VRTransform {
     protected:
         VRMaterialPtr mat = 0;
         VRPrimitive* primitive = 0;
-        GeometryMTRecPtr mesh;
-        NodeMTRecPtr mesh_node;
+        OSGGeometryPtr mesh;
+        OSGObjectPtr mesh_node;
         bool meshSet = false;
         int lastMeshChange = 0;
 
@@ -62,8 +57,8 @@ class VRGeometry : public VRTransform {
         VRGeometryPtr ptr();
 
         /** Set the geometry mesh (OSG geometry core) **/
-        void setMesh(GeometryMTRecPtr g);
-        void setMesh(GeometryMTRecPtr g, Reference ref, bool keep_material = false);
+        void setMesh(OSGGeometryPtr g = 0);
+        void setMesh(OSGGeometryPtr g, Reference ref, bool keep_material = false);
 
         void setReference(Reference ref);
         Reference getReference();
@@ -113,14 +108,11 @@ class VRGeometry : public VRTransform {
         float getMin(int axis);
 
         /** Returns the mesh as a OSG geometry core **/
-        GeometryMTRecPtr getMesh();
+        OSGGeometryPtr getMesh();
         VRPrimitive* getPrimitive();
 
         /** Set the material of the mesh **/
         void setMaterial(VRMaterialPtr mat = 0);
-        void setMaterial(MaterialRecPtr mat);
-
-        /** Returns the mesh material **/
         VRMaterialPtr getMaterial();
 
         void influence(vector<Vec3f> pnts, vector<Vec3f> values, int power, float color_code = -1, float dl_max = 1.0);

@@ -1,5 +1,6 @@
 #include "VRGeoData.h"
 #include "VRGeometry.h"
+#include "OSGGeometry.h"
 #include "core/utils/toString.h"
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGGeometry.h>
@@ -45,14 +46,14 @@ VRGeoData::VRGeoData() : pend(this, 0) { data = shared_ptr<Data>(new Data()); re
 
 VRGeoData::VRGeoData(VRGeometryPtr geo) : pend(this, 0) {
     data = shared_ptr<Data>(new Data());
-    data->types = (GeoUInt8Property*)geo->getMesh()->getTypes();
-    data->lengths = (GeoUInt32Property*)geo->getMesh()->getLengths();
-    data->indices = (GeoUInt32Property*)geo->getMesh()->getIndices();
-    data->pos = (GeoPnt3fProperty*)geo->getMesh()->getPositions();
-    data->norms = (GeoVec3fProperty*)geo->getMesh()->getNormals();
-    data->texs = (GeoVec2fProperty*)geo->getMesh()->getTexCoords();
-    data->texs2 = (GeoVec2fProperty*)geo->getMesh()->getTexCoords2();
-    auto cols = geo->getMesh()->getColors();
+    data->types = (GeoUInt8Property*)geo->getMesh()->geo->getTypes();
+    data->lengths = (GeoUInt32Property*)geo->getMesh()->geo->getLengths();
+    data->indices = (GeoUInt32Property*)geo->getMesh()->geo->getIndices();
+    data->pos = (GeoPnt3fProperty*)geo->getMesh()->geo->getPositions();
+    data->norms = (GeoVec3fProperty*)geo->getMesh()->geo->getNormals();
+    data->texs = (GeoVec2fProperty*)geo->getMesh()->geo->getTexCoords();
+    data->texs2 = (GeoVec2fProperty*)geo->getMesh()->geo->getTexCoords2();
+    auto cols = geo->getMesh()->geo->getColors();
     int Nc = data->getColorChannels(cols);
     if (Nc == 3) data->cols3 = (GeoVec3fProperty*)cols;
     if (Nc == 4) data->cols4 = (GeoVec4fProperty*)cols;

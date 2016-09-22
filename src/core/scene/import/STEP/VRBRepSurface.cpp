@@ -3,6 +3,7 @@
 #include "core/math/pose.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
 #include <OpenSG/OSGTriangleIterator.h>
 
@@ -69,7 +70,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
         }
 
         auto g = t.compute(); // TODO: check about g??
-        if (!g->getMesh()->getPositions()) cout << "NO MESH!\n";
+        if (!g->getMesh()->geo->getPositions()) cout << "NO MESH!\n";
         g->setMatrix(m);
         return g;
     }
@@ -170,7 +171,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
         }
 
         auto g = t.compute();
-        if (auto gg = g->getMesh()) { if (!gg->getPositions()) cout << "VRBRepSurface::build: Triangulation failed, no mesh positions!\n";
+        if (auto gg = g->getMesh()->geo) { if (!gg->getPositions()) cout << "VRBRepSurface::build: Triangulation failed, no mesh positions!\n";
         } else cout << "VRBRepSurface::build: Triangulation failed, no mesh generated!\n";
 
         /* intersecting the cylinder rays with a triangle (2D)
@@ -256,7 +257,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
                 else nMesh.pushTri(b,e,d);
             };
 
-            for (it = TriangleIterator(gg); !it.isAtEnd() ;++it) {
+            for (it = TriangleIterator(gg->geo); !it.isAtEnd() ;++it) {
                 triangle t(it);
                 if (t.A < 1e-6) continue; // ignore flat triangles
 
@@ -470,8 +471,8 @@ VRGeometryPtr VRBRepSurface::build(string type) {
             nMesh.apply(g);
 
             // project the points back into 3D space
-            GeoVectorPropertyRecPtr pos = gg->getPositions();
-            GeoVectorPropertyRecPtr norms = gg->getNormals();
+            GeoVectorPropertyRecPtr pos = gg->geo->getPositions();
+            GeoVectorPropertyRecPtr norms = gg->geo->getNormals();
             if (pos) {
                 for (int i=0; i<pos->size(); i++) {
                     Pnt3f p = pos->getValue<Pnt3f>(i);
@@ -500,7 +501,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
         }
 
         if (g) g->setMatrix(m);
-        if (g && g->getMesh() && g->getMesh()->getPositions() && g->getMesh()->getPositions()->size() > 0) return g;
+        if (g && g->getMesh() && g->getMesh()->geo->getPositions() && g->getMesh()->geo->getPositions()->size() > 0) return g;
         return 0;
     }
 
@@ -642,7 +643,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
         }*/
 
         if (g) g->setMatrix(m);
-        if (g && g->getMesh() && g->getMesh()->getPositions() && g->getMesh()->getPositions()->size() > 0) return g;
+        if (g && g->getMesh() && g->getMesh()->geo->getPositions() && g->getMesh()->geo->getPositions()->size() > 0) return g;
         return 0;
     }
 
@@ -701,7 +702,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
 
         auto g = nMesh.asGeometry("BSpline");
         if (g) g->setMatrix(m);
-        if (g && g->getMesh() && g->getMesh()->getPositions() && g->getMesh()->getPositions()->size() > 0) return g;
+        if (g && g->getMesh() && g->getMesh()->geo->getPositions() && g->getMesh()->geo->getPositions()->size() > 0) return g;
         return 0;
     }
 

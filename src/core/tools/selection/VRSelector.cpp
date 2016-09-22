@@ -1,6 +1,7 @@
 #include "VRSelector.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/OSGGeometry.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 
@@ -50,9 +51,9 @@ void VRSelector::update() {
         subselection->merge(s);
     }
 
-    if (!subselection->getMesh()) return;
-    if (!subselection->getMesh()->getPositions()) return;
-    int N = subselection->getMesh()->getPositions()->size();
+    if (!subselection->getMesh()->geo) return;
+    if (!subselection->getMesh()->geo->getPositions()) return;
+    int N = subselection->getMesh()->geo->getPositions()->size();
 
     GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
     GeoUInt32PropertyRecPtr lengths = GeoUInt32Property::create();

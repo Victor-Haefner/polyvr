@@ -2,6 +2,7 @@
 
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRMaterialT.h"
+#include "core/objects/geometry/OSGGeometry.h"
 #include "core/tools/VRText.h"
 #include "core/utils/toString.h"
 
@@ -50,7 +51,7 @@ void VRAnnotationEngine::clear() {
     setNormals(norms);
     setIndices(inds);
 
-    mesh->getLengths()->setValue(0, 0);
+    mesh->geo->getLengths()->setValue(0, 0);
     setMaterial(mat);
 }
 
@@ -70,11 +71,11 @@ void VRAnnotationEngine::resize(Label& l, Vec3f p, int N) {
     l.entries.resize(N, 0);
     int pN = pos->size();
 
-    mesh->getLengths()->setValue(N-eN+pN, 0);
+    mesh->geo->getLengths()->setValue(N-eN+pN, 0);
     for (int i=0; i<N-eN; i++) {
         pos->addValue(p);
         norms->addValue(Vec3f());
-        mesh->getIndices()->addValue(pN+i);
+        mesh->geo->getIndices()->addValue(pN+i);
         l.entries[eN+i] = pN+i;
     }
 }

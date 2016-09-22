@@ -1,6 +1,7 @@
 #include "VRSegmentation.h"
 #include "VRAdjacencyGraph.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/math/Octree.h"
 #include <OpenSG/OSGGeometry.h>
@@ -27,7 +28,7 @@ void VRSegmentation::removeDuplicates(VRGeometryPtr geo) {
 	size_t NLM = numeric_limits<size_t>::max();
 	Octree oct(threshold);
 
-	TriangleIterator it(geo->getMesh());
+	TriangleIterator it(geo->getMesh()->geo);
 	for (; !it.isAtEnd() ;++it) {
         vector<size_t> IDs(3);
         for (int i=0; i<3; i++) {
@@ -63,7 +64,7 @@ void VRSegmentation::removeDuplicates(VRGeometryPtr geo) {
 	geo->setType(GL_TRIANGLES);
 	geo->setLengths(lengths);
 
-	calcVertexNormals(geo->getMesh());
+	calcVertexNormals(geo->getMesh()->geo);
 
 	for (void* o : oct.getData()) delete (size_t*)o; // Cleanup
 }
@@ -75,8 +76,8 @@ vector<int> VRSegmentation::growPatch(VRGeometryPtr geo, int i) {
     agraph->compNeighbors();
     agraph->compCurvatures();
 
-    auto pos = geo->getMesh()->getPositions();
-    auto norms = geo->getMesh()->getNormals();
+    auto pos = geo->getMesh()->geo->getPositions();
+    auto norms = geo->getMesh()->geo->getNormals();
 
     /*auto samePlane = [&](int i0, int i1, float dp, float dn) {
 		p0 = pos[i0]
@@ -151,8 +152,8 @@ struct Accumulator {
     virtual void pushPoint(Pnt3f p, Vec3f n) = 0;
 
     void pushGeometry(VRGeometryPtr geo_in) {
-        GeoVectorPropertyRecPtr positions = geo_in->getMesh()->getPositions();
-        GeoVectorPropertyRecPtr normals = geo_in->getMesh()->getNormals();
+        GeoVectorPropertyRecPtr positions = geo_in->getMesh()->geo->getPositions();
+        GeoVectorPropertyRecPtr normals = geo_in->getMesh()->geo->getNormals();
 
         cout << "start plane extraction of " << geo_in->getName() << " with " << positions->size() << " points && " << normals->size() << " normals" << endl;
 
@@ -286,7 +287,7 @@ struct Accumulator_octree : public Accumulator {
 };
 
 vector<VRGeometryPtr> extractPointsOnPlane(VRGeometryPtr geo_in, VRPlane plane, float Dp) {
-    GeoVectorPropertyRecPtr positions = geo_in->getMesh()->getPositions();
+    GeoVectorPropertyRecPtr positions = geo_in->getMesh()->geo->getPositions();
 
     vector<VRGeometryPtr> res; // two geometries, the plane && the rest
     for (int i=0; i<2; i++) {
@@ -299,15 +300,15 @@ vector<VRGeometryPtr> extractPointsOnPlane(VRGeometryPtr geo_in, VRPlane plane, 
     Pnt3f p;
     for (uint i = 0; i<positions->size(); i++) {
         positions->getValue(p, i);
-        if (plane.on(p, Dp)) res[0]->getMesh()->getPositions()->addValue(p);
-        else res[1]->getMesh()->getPositions()->addValue(p);
+        if (plane.on(p, Dp)) res[0]->getMesh()->geo->getPositions()->addValue(p);
+        else res[1]->getMesh()->geo->getPositions()->addValue(p);
     }
 
     return res;
 }
 
 vector<VRGeometryPtr> clusterByPlanes(VRGeometryPtr geo_in, vector<VRPlane> planes, float Dp, int pMax) {
-    GeoVectorPropertyRecPtr positions = geo_in->getMesh()->getPositions();
+    GeoVectorPropertyRecPtr positions = geo_in->getMesh()->geo->getPositions();
     map<int, VRGeometryPtr> res_map;
     Pnt3f p;
     int N = min(pMax+1, (int)planes.size());
@@ -336,7 +337,7 @@ vector<VRGeometryPtr> clusterByPlanes(VRGeometryPtr geo_in, vector<VRPlane> plan
             res_map[pl] = geo;
         }
 
-        res_map[pl]->getMesh()->getPositions()->addValue(p);
+        res_map[pl]->getMesh()->geo->getPositions()->addValue(p);
     }
 
     vector<VRGeometryPtr> res;
@@ -348,7 +349,7 @@ void finalizeClusterGeometries(vector<VRGeometryPtr>& res) {
     for (auto geo : res) { // finalize geometries
         geo->setType(GL_POINTS);
         GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
-        for (uint i=0; i<geo->getMesh()->getPositions()->size(); i++) inds->addValue(i);
+        for (uint i=0; i<geo->getMesh()->geo->getPositions()->size(); i++) inds->addValue(i);
         geo->setIndices(inds);
         geo->setMaterial(VRMaterial::create("pmat"));
 
@@ -363,10 +364,10 @@ void finalizeClusterGeometries(vector<VRGeometryPtr>& res) {
 void fixNormalsIndices(VRGeometryPtr geo_in) {
     map<int, int> inds_map;
 
-    GeoIntegralPropertyRecPtr i_n = geo_in->getMesh()->getIndex(Geometry::PositionsIndex);
-    GeoIntegralPropertyRecPtr i_p = geo_in->getMesh()->getIndex(Geometry::NormalsIndex);
+    GeoIntegralPropertyRecPtr i_n = geo_in->getMesh()->geo->getIndex(Geometry::PositionsIndex);
+    GeoIntegralPropertyRecPtr i_p = geo_in->getMesh()->geo->getIndex(Geometry::NormalsIndex);
 
-    GeoVectorPropertyRecPtr norms = geo_in->getMesh()->getNormals();
+    GeoVectorPropertyRecPtr norms = geo_in->getMesh()->geo->getNormals();
     GeoVec3fPropertyRecPtr norms2 = GeoVec3fProperty::create();
 
     for (uint i=0; i<i_p->size(); i++) inds_map[i_n->getValue(i)] = i_p->getValue(i);
@@ -377,7 +378,7 @@ void fixNormalsIndices(VRGeometryPtr geo_in) {
     }
 
     geo_in->setNormals(norms2);
-    geo_in->getMesh()->setIndex(geo_in->getMesh()->getIndex(Geometry::PositionsIndex), Geometry::NormalsIndex);
+    geo_in->getMesh()->geo->setIndex(geo_in->getMesh()->geo->getIndex(Geometry::PositionsIndex), Geometry::NormalsIndex);
 
     /*GeoColor4fPropertyRecPtr cols = GeoColor4fProperty::create();
     for (uint i = 0; i<norms->size(); i++) {
@@ -577,7 +578,7 @@ void VRSegmentation::fillHoles(VRGeometryPtr geo, int steps) {
     map<int, Edge*> edges;
 
     // ---- build linked structure ---- //
-	TriangleIterator it(geo->getMesh());
+	TriangleIterator it(geo->getMesh()->geo);
 	for (; !it.isAtEnd() ;++it) {
         Triangle* t = new Triangle();
         triangles.push_back(t);
@@ -725,7 +726,7 @@ void VRSegmentation::fillHoles(VRGeometryPtr geo, int steps) {
 	geo->setType(GL_TRIANGLES);
 
     // ---- colorize borders ---- //
-    int N = geo->getMesh()->getPositions()->size();
+    int N = geo->getMesh()->geo->getPositions()->size();
     GeoColor3fPropertyRecPtr cols = GeoColor3fProperty::create();
     cols->resize(N);
     for (int i=0; i<N; i++) cols->setValue(Color3f(1,1,1),i);

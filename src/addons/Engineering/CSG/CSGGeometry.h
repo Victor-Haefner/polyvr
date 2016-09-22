@@ -2,7 +2,7 @@
 #define CSGGEOMETRY_H_
 
 #include <string>
-#include "OpenSG/OSGConfig.h"
+#include <OpenSG/OSGGeometry.h>
 #include "core/objects/geometry/VRGeometry.h"
 
 namespace CGAL { class Polyhedron; }

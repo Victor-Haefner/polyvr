@@ -3,6 +3,7 @@
 #include "VRParticle.h"
 #include "VREmitter.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/geometry/OSGGeometry.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 
@@ -29,7 +30,7 @@ boost::recursive_mutex& VRParticles::mtx() {
 VRParticles::VRParticles(bool spawnParticles) : VRGeometry("particles"), ocparticles(0.1) {
     if (spawnParticles) resetParticles<Particle>();
     setVolume(false);
-    getMesh()->setDlistCache(false);
+    getMesh()->geo->setDlistCache(false);
 }
 
 VRParticles::~VRParticles() {

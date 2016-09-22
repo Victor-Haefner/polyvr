@@ -3,6 +3,7 @@
 #include <OpenSG/OSGSimpleMaterial.h>
 #include <OpenSG/OSGSimpleGeometry.h>        // Methods to create simple geos.
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/VRTransform.h"
 #include "core/objects/material/VRMaterial.h"
 
@@ -43,7 +44,7 @@ VRObjectPtr VRAvatar::initRay() {
 
 VRObjectPtr VRAvatar::initCone() {
     VRGeometryPtr cone = VRGeometry::create("av_cone");
-    cone->setMesh(makeConeGeo(0.3, 0.03, 32, true, true));
+    cone->setMesh( OSGGeometry::create(makeConeGeo(0.3, 0.03, 32, true, true)) );
     cone->setFrom(Vec3f(0,0,-0.1));
     cone->setOrientation(Vec3f(1,0,-0.1), Vec3f(0,0,-1));
 

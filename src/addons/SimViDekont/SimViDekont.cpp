@@ -204,7 +204,7 @@ void SimViDekont::createGeo(frame* f) {
     //--- END Save Geo in .osb binary
 
     f->geo = VRGeometry::create("myNewMesh");
-    f->geo->setMesh(geo);
+    f->geo->setMesh( OSGGeometry::create(geo) );
 }
 
 /**
@@ -291,7 +291,7 @@ void SimViDekont::playStepBackward(VRDevicePtr dev) { player->step(true); }
 
 void SimViDekont::toggleColors(VRDevicePtr dev) {
     for (auto frame : frames) {
-        GeometryMTRecPtr geo = frame->geo->getMesh();
+        GeometryMTRecPtr geo = frame->geo->getMesh()->geo;
         GeoVec3fPropertyRecPtr colors1 = dynamic_cast<GeoVec3fProperty*>(geo->getColors());
         GeoVec3fPropertyRecPtr colors2 = dynamic_cast<GeoVec3fProperty*>(geo->getSecondaryColors());
         geo->setColors(colors2);

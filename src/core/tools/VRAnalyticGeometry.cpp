@@ -2,6 +2,7 @@
 #include "VRAnnotationEngine.h"
 
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 
 #include <OpenSG/OSGGeometry.h>
@@ -112,9 +113,9 @@ void VRAnalyticGeometry::setLabelParams(float size, bool screen_size, bool billb
 
 void VRAnalyticGeometry::resize(int i, int j, int k) {
     if (vectorLinesGeometry) {
-        auto pos = vectorLinesGeometry->getMesh()->getPositions();
-        auto cols = vectorLinesGeometry->getMesh()->getColors();
-        auto lengths = vectorLinesGeometry->getMesh()->getLengths();
+        auto pos = vectorLinesGeometry->getMesh()->geo->getPositions();
+        auto cols = vectorLinesGeometry->getMesh()->geo->getColors();
+        auto lengths = vectorLinesGeometry->getMesh()->geo->getLengths();
         while (i >= (int)pos->size()) {
             pos->addValue(Pnt3f());
             cols->addValue(Vec3f());
@@ -123,9 +124,9 @@ void VRAnalyticGeometry::resize(int i, int j, int k) {
     }
 
     if (vectorEndsGeometry) {
-        auto pos = vectorEndsGeometry->getMesh()->getPositions();
-        auto cols = vectorEndsGeometry->getMesh()->getColors();
-        auto lengths = vectorEndsGeometry->getMesh()->getLengths();
+        auto pos = vectorEndsGeometry->getMesh()->geo->getPositions();
+        auto cols = vectorEndsGeometry->getMesh()->geo->getColors();
+        auto lengths = vectorEndsGeometry->getMesh()->geo->getLengths();
         while (j >= (int)pos->size()) {
             pos->addValue(Pnt3f());
             cols->addValue(Vec3f());
@@ -134,11 +135,11 @@ void VRAnalyticGeometry::resize(int i, int j, int k) {
     }
 
     if (circlesGeometry) {
-        auto pos = circlesGeometry->getMesh()->getPositions();
-        auto cols = circlesGeometry->getMesh()->getColors();
-        auto lengths = circlesGeometry->getMesh()->getLengths();
-        auto norms = circlesGeometry->getMesh()->getNormals();
-        auto tcs = circlesGeometry->getMesh()->getTexCoords();
+        auto pos = circlesGeometry->getMesh()->geo->getPositions();
+        auto cols = circlesGeometry->getMesh()->geo->getColors();
+        auto lengths = circlesGeometry->getMesh()->geo->getLengths();
+        auto norms = circlesGeometry->getMesh()->geo->getNormals();
+        auto tcs = circlesGeometry->getMesh()->geo->getTexCoords();
         while (k >= (int)pos->size()) {
             pos->addValue(Pnt3f());
             cols->addValue(Vec3f());
@@ -155,8 +156,8 @@ void VRAnalyticGeometry::setAngle(int i, Vec3f p, Vec3f v1, Vec3f v2, Vec3f c1, 
     resize(2*i+1);
 
     // line
-    auto pos = vectorLinesGeometry->getMesh()->getPositions();
-    auto cols = vectorLinesGeometry->getMesh()->getColors();
+    auto pos = vectorLinesGeometry->getMesh()->geo->getPositions();
+    auto cols = vectorLinesGeometry->getMesh()->geo->getColors();
     pos->setValue(p+v1*0.1, 2*i);
     pos->setValue(p+v2*0.1, 2*i+1);
     cols->setValue(c1, 2*i);
@@ -179,10 +180,10 @@ void VRAnalyticGeometry::setCircle(int i, Vec3f p, Vec3f n, float r, Vec3f color
     Vec3f norm(r, 0, 0);
 
     // quad
-    auto pos = circlesGeometry->getMesh()->getPositions();
-    auto cols = circlesGeometry->getMesh()->getColors();
-    auto norms = circlesGeometry->getMesh()->getNormals();
-    auto tcs = circlesGeometry->getMesh()->getTexCoords();
+    auto pos = circlesGeometry->getMesh()->geo->getPositions();
+    auto cols = circlesGeometry->getMesh()->geo->getColors();
+    auto norms = circlesGeometry->getMesh()->geo->getNormals();
+    auto tcs = circlesGeometry->getMesh()->geo->getTexCoords();
     pos->setValue(p+v1+v2, 4*i);
     pos->setValue(p-v1+v2, 4*i+1);
     pos->setValue(p-v1-v2, 4*i+2);
@@ -207,8 +208,8 @@ void VRAnalyticGeometry::setVector(int i, Vec3f p, Vec3f vec, Vec3f color, strin
     resize(2*i+1, i);
 
     // line
-    auto pos = vectorLinesGeometry->getMesh()->getPositions();
-    auto cols = vectorLinesGeometry->getMesh()->getColors();
+    auto pos = vectorLinesGeometry->getMesh()->geo->getPositions();
+    auto cols = vectorLinesGeometry->getMesh()->geo->getColors();
     pos->setValue(p, 2*i);
     pos->setValue(p+vec, 2*i+1);
     cols->setValue(color, 2*i);
@@ -216,8 +217,8 @@ void VRAnalyticGeometry::setVector(int i, Vec3f p, Vec3f vec, Vec3f color, strin
 
     // end
     if (!vectorEndsGeometry) return;
-    pos = vectorEndsGeometry->getMesh()->getPositions();
-    cols = vectorEndsGeometry->getMesh()->getColors();
+    pos = vectorEndsGeometry->getMesh()->geo->getPositions();
+    cols = vectorEndsGeometry->getMesh()->geo->getColors();
     pos->setValue(p+vec, i);
     cols->setValue(color, i);
 }

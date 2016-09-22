@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGSceneFileHandler.h>
 #include <OpenSG/OSGGeometry.h>
+#include "core/objects/geometry/OSGGeometry.h"
 
 using namespace std;
 
@@ -47,7 +48,7 @@ class GeoIO
                 cout << "Loading osb..." << endl;
                 NodeMTRecPtr geoNode = SceneFileHandler::the()->read(dataName.c_str());
                 _frame->geo = VRGeometry::create("myNewMesh");
-                _frame->geo->setMesh( dynamic_cast<Geometry*>(geoNode->getCore()) );
+                _frame->geo->setMesh( OSGGeometry::create( dynamic_cast<Geometry*>(geoNode->getCore()) ) );
                 fileLoaded = true;
             }
 

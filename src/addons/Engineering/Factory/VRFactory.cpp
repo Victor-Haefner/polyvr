@@ -2,6 +2,7 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRProgress.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/VRLod.h"
 #include "core/math/Octree.h"
@@ -55,7 +56,7 @@ struct Geo {
         geo->setPositions( pos );
         geo->setNormals( norms );
         geo->setIndices( inds_p );
-        geo->getMesh()->setIndex(inds_n, Geometry::NormalsIndex);
+        geo->getMesh()->geo->setIndex(inds_n, Geometry::NormalsIndex);
         geo->setMaterial(mat);
 
         VRGeometry::Reference ref(VRGeometry::FILE, repSpaces(path) + " " + repSpaces(geo->getName()) + " SOLIDWORKS-VRML2 " + toString(thread));
@@ -224,7 +225,7 @@ bool VRFactory::loadVRML(string path, VRProgressPtr progress, VRTransformPtr res
         res->addChild(g.geo);
 
         GeoUInt32PropertyRecPtr Length = GeoUInt32Property::create();
-        Length->addValue(g.geo->getMesh()->getIndices()->size());
+        Length->addValue(g.geo->getMesh()->geo->getIndices()->size());
         g.geo->setLengths(Length);
     }
 

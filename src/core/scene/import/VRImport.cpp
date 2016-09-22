@@ -20,6 +20,7 @@
 #include "core/objects/object/VRObject.h"
 #include "core/objects/object/VRObjectT.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/utils/VRProgress.h"
 #include "core/utils/VRFunction.h"
@@ -253,7 +254,7 @@ VRObjectPtr VRImport::OSGConstruct(NodeMTRecPtr n, VRObjectPtr parent, string na
         VRGeometry::Reference ref;
         ref.type = VRGeometry::FILE;
         ref.parameter = repSpaces(currentFile) + " " + repSpaces(name);
-        tmp_g->setMesh(dynamic_cast<Geometry *>(n->getCore()), ref, true);
+        tmp_g->setMesh( OSGGeometry::create( dynamic_cast<Geometry *>(n->getCore()) ), ref, true);
         tmp = tmp_g;
     }
 

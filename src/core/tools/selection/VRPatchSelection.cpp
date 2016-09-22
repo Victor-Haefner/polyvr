@@ -1,5 +1,6 @@
 #include "VRPatchSelection.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/OSGGeometry.h"
 #include <OpenSG/OSGGeometry.h>
 
 using namespace OSG;
@@ -42,7 +43,7 @@ vector<int> VRPatchSelection::crawl(VRGeometryPtr geo, int vertex, float d) {
         return newPnts;
     };
 
-	int N = geo->getMesh()->getPositions()->size();
+	int N = geo->getMesh()->geo->getPositions()->size();
 	vector<int> mask(N, 0);
 	vector<int> brdPnts;
 	vector<int> newPnts;

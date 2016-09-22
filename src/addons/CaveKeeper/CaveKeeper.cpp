@@ -14,6 +14,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRMaterialT.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/OSGGeometry.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -137,7 +138,7 @@ VRGeometryPtr BlockWorld::createChunk(vector<CKOctree::element*>& elements) {
     g->setMaterial(Mat);
 
     VRGeometryPtr geo = VRGeometry::create("chunk");
-    geo->setMesh(g);
+    geo->setMesh( OSGGeometry::create(g) );
     return geo;
 }
 

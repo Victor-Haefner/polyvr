@@ -1,5 +1,6 @@
 #include "VRNumberingEngine.h"
 
+#include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRMaterialT.h"
 #include "core/tools/VRText.h"
@@ -44,7 +45,7 @@ void VRNumberingEngine::clear() {
     setNormals(norms);
     setIndices(inds);
 
-    mesh->getLengths()->setValue(0, 0);
+    mesh->geo->getLengths()->setValue(0, 0);
     setMaterial(mat);
 }
 
@@ -66,13 +67,13 @@ void VRNumberingEngine::add(Vec3f p, int N, float f, int d, int grp) {
     if (checkUIn(grp)) return;
 
     int s = pos->size();
-    mesh->getLengths()->setValue(N+s, 0);
+    mesh->geo->getLengths()->setValue(N+s, 0);
 
     group g = groups[grp];
     for (int i=0; i<N; i++) {
         pos->addValue(p);
         norms->addValue(Vec3f(0,grp,0));
-        mesh->getIndices()->addValue(i+s);
+        mesh->geo->getIndices()->addValue(i+s);
     }
 }
 

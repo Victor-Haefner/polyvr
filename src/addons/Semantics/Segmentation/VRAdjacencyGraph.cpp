@@ -1,5 +1,6 @@
 #include "VRAdjacencyGraph.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/OSGGeometry.h"
 
 #include <OpenSG/OSGTriangleIterator.h>
 
@@ -27,7 +28,7 @@ void VRAdjacencyGraph::compNeighbors() {
     if (!sgeo) return;
     map< int, map<int, int> > tmpdict;
 
-    for (TriangleIterator it = TriangleIterator(sgeo->getMesh()); !it.isAtEnd(); ++it) {
+    for (TriangleIterator it = TriangleIterator(sgeo->getMesh()->geo); !it.isAtEnd(); ++it) {
         int i0 = it.getPositionIndex(0);
         int i1 = it.getPositionIndex(1);
         int i2 = it.getPositionIndex(2);
@@ -45,7 +46,7 @@ void VRAdjacencyGraph::compNeighbors() {
         reg(i2,i0,i1);
     }
 
-    int N = sgeo->getMesh()->getPositions()->size();
+    int N = sgeo->getMesh()->geo->getPositions()->size();
     vertex_neighbor_params.resize(2*N);
     for (auto i : tmpdict) vertex_neighbor_params[2*i.first+1] = i.second.size();
 
@@ -68,8 +69,8 @@ void VRAdjacencyGraph::compCurvatures(int range) {
     auto sgeo = geo.lock();
     if (!sgeo) return;
 
-    auto pos = sgeo->getMesh()->getPositions();
-    auto norms = sgeo->getMesh()->getNormals();
+    auto pos = sgeo->getMesh()->geo->getPositions();
+    auto norms = sgeo->getMesh()->geo->getNormals();
     int N = pos->size();
 
     auto curvMax = [&](int i, int range) {
@@ -119,7 +120,7 @@ void VRAdjacencyGraph::compTriLoockup() {
     auto sgeo = geo.lock();
     if (!sgeo) return;
 
-    for (TriangleIterator it = TriangleIterator(sgeo->getMesh()); !it.isAtEnd(); ++it) {
+    for (TriangleIterator it = TriangleIterator(sgeo->getMesh()->geo); !it.isAtEnd(); ++it) {
         triangle t;
         t.v1 = it.getPositionIndex(0);
         t.v2 = it.getPositionIndex(1);

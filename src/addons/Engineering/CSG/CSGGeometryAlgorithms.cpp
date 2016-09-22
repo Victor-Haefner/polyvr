@@ -2,6 +2,7 @@
 #include "CGALTypedefs.h"
 #include "core/math/Octree.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/geometry/OSGGeometry.h"
 
 #include "PolyhedronBuilder.h"
 
@@ -134,8 +135,8 @@ CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryMTRecPtr geometry, Matrix wo
         cout << "Error: The polyhedron is not a closed mesh!" << endl;
         VRGeometry::create(GL_TRIANGLES, pos, pos, inds);
         setWorldMatrix(worldTransform);
-        createSharedIndex(mesh);
-        calcVertexNormals(mesh, 0.523598775598 /*30 deg in rad*/);
+        createSharedIndex(mesh->geo);
+        calcVertexNormals(mesh->geo, 0.523598775598 /*30 deg in rad*/);
         getMaterial()->setFrontBackModes(GL_FILL, GL_NONE);
 	}
 
@@ -145,7 +146,7 @@ CGAL::Polyhedron* CSGGeometry::toPolyhedron(GeometryMTRecPtr geometry, Matrix wo
 }
 
 void CSGGeometry::markEdges(vector<Vec2i> edges) {
-    int N = getMesh()->getPositions()->size();
+    int N = getMesh()->geo->getPositions()->size();
     GeoColor3fPropertyRecPtr cols = GeoColor3fProperty::create();
     cols->resize(N);
     for (int i=0; i<N; i++) cols->setValue(Color3f(1,1,1),i);
@@ -170,7 +171,7 @@ bool CSGGeometry::disableEditMode() {
             cout << "child: " << geo->getName() << " toPolyhedron\n";
             bool success;
 			try {
-			    polys[i] = toPolyhedron( geo->getMesh(), geo->getWorldMatrix(), success );
+			    polys[i] = toPolyhedron( geo->getMesh()->geo, geo->getWorldMatrix(), success );
 			} catch (exception e) {
 			    success = false;
 			    cout << getName() << ": toPolyhedron exception: " << e.what() << endl;

@@ -1,5 +1,6 @@
 #include "core/utils/VRDoublebuffer.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/geometry/OSGGeometry.h"
 #include "core/math/Octree.h"
 
 #include "CSGGeometry.h"
@@ -45,14 +46,14 @@ CSGGeometryPtr CSGGeometry::create(string name) { return shared_ptr<CSGGeometry>
 void CSGGeometry::setCSGGeometry(CGAL::Polyhedron *p) {
 	if (!p->is_valid()) return;
 	polyhedron = p;
-	VRGeometry::setMesh((GeometryMTRecPtr)toOsgGeometry(p));
+	VRGeometry::setMesh( OSGGeometry::create((GeometryMTRecPtr)toOsgGeometry(p)) );
 }
 
 CGAL::Polyhedron* CSGGeometry::getCSGGeometry() {
     if (polyhedron == 0) {
         Matrix worldTransform = getWorldMatrix();
         bool success;
-        polyhedron = toPolyhedron(getMesh(), worldTransform, success);
+        polyhedron = toPolyhedron(getMesh()->geo, worldTransform, success);
     }
 
 	return polyhedron;

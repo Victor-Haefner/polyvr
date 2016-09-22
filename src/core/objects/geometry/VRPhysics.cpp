@@ -4,6 +4,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRPrimitive.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/geometry/VRConstraint.h"
 #include "core/utils/VRVisualLayer.h"
 #include "core/utils/VRTimer.h"
@@ -372,7 +373,7 @@ btSoftBody* VRPhysics::createCloth() {
     //float h = prim->height;
     //float w = prim->width;
 
-    OSG::GeoVectorPropertyRecPtr positions = geo->getMesh()->getPositions();
+    OSG::GeoVectorPropertyRecPtr positions = geo->getMesh()->geo->getPositions();
     vector<btVector3> vertices;
     vector<btScalar> masses;
 
@@ -452,7 +453,7 @@ btCollisionShape* VRPhysics::getBoxShape() {
 
     for (auto geo : getGeometries()) {
         if (!geo) continue;
-        OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->getPositions();
+        OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->geo->getPositions();
         if (!pos) continue;
 		for (unsigned int i = 0; i<pos->size(); i++) {
             OSG::Vec3f p;
@@ -480,7 +481,7 @@ btCollisionShape* VRPhysics::getSphereShape() {
 
     /*for (auto _g : geos ) { // get geometric center // makes no sense as you would have to change the center of the shape..
         OSG::VRGeometryPtr geo = (OSG::VRGeometryPtr)_g;
-        OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->getPositions();
+        OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->geo->getPositions();
         N += pos->size();
         for (unsigned int i=0; i<pos->size(); i++) {
             pos->getValue(p,i);
@@ -492,7 +493,7 @@ btCollisionShape* VRPhysics::getSphereShape() {
 
     for (auto geo : getGeometries()) {
         if (!geo) continue;
-        OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->getPositions();
+        OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->geo->getPositions();
 		for (unsigned int i = 0; i<pos->size(); i++) {
             pos->getValue(p,i);
             //r2 = max( r2, (p-center).squareLength() );
@@ -516,8 +517,8 @@ btCollisionShape* VRPhysics::getConvexShape(OSG::Vec3f& mc) {
     if (comType == "geometric") mc = OSG::Vec3f(); // center of mass
     for (auto geo : getGeometries()) {
         if (!geo) continue;
-        if (geo->getMesh() == 0) continue;
-        OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->getPositions();
+        if (geo->getMesh()->geo == 0) continue;
+        OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->geo->getPositions();
         if (pos == 0) continue;
 
         if (geo != obj) {
@@ -552,8 +553,8 @@ btCollisionShape* VRPhysics::getConcaveShape() {
     int N = 0;
     for (auto geo : getGeometries()) {
         if (!geo) continue;
-        if (geo->getMesh() == 0) continue;
-        OSG::TriangleIterator ti(geo->getMesh());
+        if (geo->getMesh()->geo == 0) continue;
+        OSG::TriangleIterator ti(geo->getMesh()->geo);
 
         btVector3 vertexPos[3];
 
@@ -587,8 +588,8 @@ btCollisionShape* VRPhysics::getCompoundShape() {
 
     for (auto geo : getGeometries()) {
         if (!geo) continue;
-        if (geo->getMesh() == 0) continue;
-        OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->getPositions();
+        if (geo->getMesh()->geo == 0) continue;
+        OSG::GeoVectorPropertyRecPtr pos = geo->getMesh()->geo->getPositions();
         if (pos == 0) continue;
 
         if (geo != obj) {
@@ -647,7 +648,7 @@ btCollisionShape* VRPhysics::getHACDShape() {
     std::vector< HACD::Vec3<HACD::Real> > points;
     std::vector< HACD::Vec3<long> > triangles;
 
-    OSG::GeoVectorPropertyRecPtr positions = obj->getMesh()->getPositions();
+    OSG::GeoVectorPropertyRecPtr positions = obj->getMesh()->geo->getPositions();
     OSG::Pnt3f p;
     for(uint i = 0; i < positions->size();i++) {
         positions->getValue(p,i);
@@ -655,7 +656,7 @@ btCollisionShape* VRPhysics::getHACDShape() {
         points.push_back(vertex);
     }
 
-    for (OSG::TriangleIterator it = OSG::TriangleIterator(obj->getMesh()); !it.isAtEnd() ;++it) {
+    for (OSG::TriangleIterator it = OSG::TriangleIterator(obj->getMesh()->geo); !it.isAtEnd() ;++it) {
         HACD::Vec3<long> triangle(it.getPositionIndex(0), it.getPositionIndex(1), it.getPositionIndex(2));
         triangles.push_back(triangle);
     }

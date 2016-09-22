@@ -1,5 +1,6 @@
 #include "VRSelection.h"
 #include "core/objects/geometry/VRGeometry.h"
+#include "core/objects/geometry/OSGGeometry.h"
 #include "core/math/boundingbox.h"
 
 #include <OpenSG/OSGGeometry.h>
@@ -95,7 +96,7 @@ void VRSelection::updateSubselection(VRGeometryPtr geo) {
     Matrix m = geo->getWorldMatrix();
     sel.subselection.clear();
     if (!geo->getMesh()) return;
-    auto pos = geo->getMesh()->getPositions();
+    auto pos = geo->getMesh()->geo->getPositions();
     if (!pos) return;
     for (int i=0; i<pos->size(); i++) {
         Pnt3f p = pos->getValue<Pnt3f>(i);
@@ -128,7 +129,7 @@ Vec3f VRSelection::computeCentroid() {
     int N = 0;
     for (auto& s : selected) {
         auto geo = s.second.geo.lock();
-        auto pos = geo->getMesh()->getPositions();
+        auto pos = geo->getMesh()->geo->getPositions();
         N += s.second.subselection.size();
         for (auto i : s.second.subselection) {
             auto p = Vec3f(pos->getValue<Pnt3f>(i));
@@ -148,7 +149,7 @@ Matrix VRSelection::computeCovMatrix() {
 
     for (auto& s : selected) {
         auto geo = s.second.geo.lock();
-        auto pos = geo->getMesh()->getPositions();
+        auto pos = geo->getMesh()->geo->getPositions();
         N += s.second.subselection.size();
         for (auto i : s.second.subselection) {
             auto pg = Vec3f(pos->getValue<Pnt3f>(i));
@@ -229,8 +230,8 @@ void VRSelection::selectPlane(pose p, float threshold) {
 
     for (auto& s : selected) {
         auto geo = s.second.geo.lock();
-        auto pos = geo->getMesh()->getPositions();
-        auto norms = geo->getMesh()->getNormals();
+        auto pos = geo->getMesh()->geo->getPositions();
+        auto norms = geo->getMesh()->geo->getNormals();
         s.second.subselection.clear();
         for (int i=0; i<pos->size(); i++) {
             auto p = pos->getValue<Pnt3f>(i);

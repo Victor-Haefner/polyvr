@@ -16,7 +16,7 @@ class VRBillboard : public VRGeometry {
         float BBsizeW;
         VRTexturePtr BBtexture;
         GeometryMTRecPtr BBplane;
-        ChunkMaterialRecPtr BBmat;
+        VRMaterialPtr BBmat;
         TextureObjChunkRecPtr BBtexChunk;
         VRShader* bbs;
 

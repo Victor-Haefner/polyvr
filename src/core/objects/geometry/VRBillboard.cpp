@@ -1,10 +1,11 @@
 #include "VRBillboard.h"
+#include "OSGGeometry.h"
 
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGGeoFunctions.h>
 #include <OpenSG/OSGSimpleGeometry.h>        // Methods to create simple geos.
 #include "core/tools/VRText.h"
-#include "core/objects/material/VRShader.h"
+#include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/scene/VRSceneManager.h"
 
@@ -14,26 +15,14 @@ using namespace std;
 
 void VRBillboard::initBBMesh(bool alpha) {
     BBplane = makePlaneGeo(BBsizeW,BBsizeH,1,1);
-    setMesh(BBplane);
+    setMesh( OSGGeometry::create(BBplane) );
 
-    BBmat = ChunkMaterial::create();
+    BBmat = VRMaterial::create("billboard");
     setMaterial(BBmat);
 
-    bbs = new VRShader(BBmat);
     string wdir = VRSceneManager::get()->getOriginalWorkdir();
-    bbs->setVertexProgram(wdir+"/shader/Billboard.vp");
-
-    BBtexChunk = TextureObjChunk::create();
-    TextureEnvChunkRecPtr env_chunk = TextureEnvChunk::create();
-    BBmat->addChunk(env_chunk);
-    BBmat->addChunk(BBtexChunk);
-
-    if (!alpha) return;
-    BlendChunkRecPtr blend_chunk = BlendChunk::create();
-    BBmat->addChunk(blend_chunk);
-    blend_chunk->setAlphaValue(1.0);
-    blend_chunk->setSrcFactor (GL_SRC_ALPHA);
-    blend_chunk->setDestFactor(GL_ONE_MINUS_SRC_ALPHA);
+    BBmat->readVertexShader(wdir+"/shader/Billboard.vp");
+    if (alpha) BBmat->enableTransparency();
 
     //BBtexChunk->setMinFilter(GL_NEAREST);
     //BBtexChunk->setMagFilter(GL_NEAREST);
