@@ -2,15 +2,13 @@
 #define VRSCENEMANAGER_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
+#include "VRSceneFwd.h"
 #include "VRThreadManager.h"
 #include "VRCallbackManager.h"
 #include "core/networking/VRNetworkManager.h"
 
-#include "VRScene.h"
-
 OSG_BEGIN_NAMESPACE;
 using namespace std;
-
 
 void glutUpdate();
 

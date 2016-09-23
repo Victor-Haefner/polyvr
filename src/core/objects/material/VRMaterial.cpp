@@ -1,4 +1,5 @@
 #include "VRMaterial.h"
+#include "OSGMaterial.h"
 
 #include <OpenSG/OSGNameAttachment.h>
 
@@ -154,12 +155,12 @@ VRMaterial::VRMaterial(string name) : VRObject(name) {
     auto scene = VRSceneManager::getCurrent();
     if (scene) deferred = scene->getDefferedShading();
     addAttachment("material", 0);
-    passes = MultiPassMaterial::create();
+    passes = OSGMaterial::create( MultiPassMaterial::create() );
     addPass();
     activePass = 0;
 
     MaterialGroupMTRecPtr group = MaterialGroup::create();
-    group->setMaterial(passes);
+    group->setMaterial(passes->mat);
     setCore(OSGCore::create(group), "Material");
 
     //store("diffuse", &diffuse);
@@ -261,13 +262,13 @@ void VRMaterial::resetDefault() {
 }
 
 int VRMaterial::getActivePass() { return activePass; }
-int VRMaterial::getNPasses() { return passes->getNPasses(); }
+int VRMaterial::getNPasses() { return passes->mat->getNPasses(); }
 
 int VRMaterial::addPass() {
     activePass = getNPasses();
     VRMatData* md = new VRMatData();
     md->reset();
-    passes->addMaterial(md->mat);
+    passes->mat->addMaterial(md->mat);
     mats.push_back(md);
     setDeffered(deferred);
     return activePass;
@@ -276,7 +277,7 @@ int VRMaterial::addPass() {
 void VRMaterial::remPass(int i) {
     if (i <= 0 || i >= getNPasses()) return;
     delete mats[i];
-    passes->subMaterial(i);
+    passes->mat->subMaterial(i);
     mats.erase(remove(mats.begin(), mats.end(), mats[i]), mats.end());
     if (activePass == i) activePass = 0;
 }
@@ -303,7 +304,7 @@ void VRMaterial::clearExtraPasses() { for (int i=1; i<getNPasses(); i++) remPass
 void VRMaterial::appendPasses(VRMaterialPtr mat) {
     for (int i=0; i<mat->getNPasses(); i++) {
         VRMatData* md = mat->mats[i]->copy();
-        passes->addMaterial(md->mat);
+        passes->mat->addMaterial(md->mat);
         mats.push_back(md);
     }
 }
@@ -313,11 +314,11 @@ void VRMaterial::prependPasses(VRMaterialPtr mat) {
     for (int i=0; i<mat->getNPasses(); i++) pses.push_back( mat->mats[i]->copy() );
     for (int i=0; i<getNPasses(); i++) pses.push_back(mats[i]);
 
-    passes->clearMaterials();
+    passes->mat->clearMaterials();
     mats.clear();
 
     for (auto md : pses) {
-        passes->addMaterial(md->mat);
+        passes->mat->addMaterial(md->mat);
         mats.push_back(md);
     }
 }
@@ -439,7 +440,7 @@ void VRMaterial::setMaterial(MaterialMTRecPtr m) {
     if (dynamic_pointer_cast<SwitchMaterial>(m)) cout << "   SwitchMaterial" << endl;
 }
 
-MultiPassMaterialMTRecPtr VRMaterial::getMaterial() { return passes; }
+OSGMaterialPtr VRMaterial::getMaterial() { return passes; }
 ChunkMaterialMTRecPtr VRMaterial::getMaterial(int i) { return mats[i]->mat; }
 
 void VRMaterial::setTextureParams(int min, int mag, int envMode, int wrapS, int wrapT, int unit) {

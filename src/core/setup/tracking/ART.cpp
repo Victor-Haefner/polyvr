@@ -4,6 +4,7 @@
 #include "core/setup/VRSetup.h"
 #include "core/utils/VROptions.h"
 #include "core/scene/VRSceneManager.h"
+#include "core/scene/VRScene.h"
 #include "core/utils/toString.h"
 #include <libxml++/nodes/element.h>
 #include "DTrack.h"

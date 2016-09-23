@@ -11,6 +11,7 @@
 #include "core/utils/VRTimer.h"
 #include "core/utils/VROptions.h"
 #include "core/scene/VRSceneManager.h"
+#include "core/scene/VRScene.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

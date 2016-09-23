@@ -8,6 +8,7 @@
 #include "core/objects/VRCamera.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRFunction.h"
 
 #include <OpenSG/OSGImage.h>
 #include <GL/glut.h>

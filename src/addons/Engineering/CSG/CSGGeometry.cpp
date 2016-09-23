@@ -1,5 +1,6 @@
 #include "core/utils/VRDoublebuffer.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/material/OSGMaterial.h"
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/math/Octree.h"
 
@@ -133,7 +134,7 @@ GeometryTransitPtr CSGGeometry::toOsgGeometry(CGAL::Polyhedron *p) {
 	mesh->setIndices(indices);
 	mesh->setTypes(types);
 	mesh->setLengths(lengths);
-	mesh->setMaterial(VRMaterial::getDefault()->getMaterial());
+	mesh->setMaterial(VRMaterial::getDefault()->getMaterial()->mat);
     createSharedIndex(mesh);
 	calcVertexNormals(mesh, 0.523598775598 /*30 deg in rad*/);
 

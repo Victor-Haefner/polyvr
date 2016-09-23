@@ -1,5 +1,6 @@
 #include "VRCodeCompletion.h"
 #include "core/scene/VRSceneManager.h"
+#include "core/scene/VRScene.h"
 #include "core/utils/toString.h"
 
 #include <gtksourceview/gtksourcecompletionprovider.h>

@@ -10,6 +10,7 @@ ptrFwd(OSGCore);
 ptrFwd(OSGObject);
 ptrFwd(OSGTransform);
 ptrFwd(OSGGeometry);
+ptrFwd(OSGMaterial);
 
 ptrFwd(VRStorage);
 ptrFwd(VRObject);

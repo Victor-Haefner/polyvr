@@ -13,6 +13,7 @@
 #include "VRGuiMonitor.h"
 #include "VRGuiSemantics.h"
 #include "core/utils/VROptions.h"
+#include "core/utils/VRFunction.h"
 #include "core/setup/devices/VRDevice.h"
 #include "core/setup/devices/VRSignalT.h"
 #include <gtkmm/uimanager.h>

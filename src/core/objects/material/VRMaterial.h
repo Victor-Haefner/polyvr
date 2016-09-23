@@ -2,7 +2,6 @@
 #define VRMATERIAL_H_INCLUDED
 
 #include <OpenSG/OSGSField.h>
-#include <OpenSG/OSGNode.h>
 #include <OpenSG/OSGColor.h>
 
 #include "core/objects/object/VRObject.h"
@@ -36,7 +35,7 @@ class VRMaterial : public VRObject {
         void setup();
 
     protected:
-        MultiPassMaterialMTRecPtr passes;
+        OSGMaterialPtr passes;
         vector<VRMatData*> mats;
         int activePass = 0;
         bool force_transparency = false;
@@ -144,7 +143,7 @@ class VRMaterial : public VRObject {
         void setLit(bool b);
         bool isLit();
 
-        MultiPassMaterialMTRecPtr getMaterial();
+        OSGMaterialPtr getMaterial();
         ChunkMaterialMTRecPtr getMaterial(int i);
         VRTexturePtr getTexture(int unit = 0);
         TextureObjChunkMTRecPtr getTextureObjChunk(int unit = 0);

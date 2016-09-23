@@ -2,6 +2,7 @@
 #include "VRLight.h"
 #include "core/objects/OSGObject.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/material/OSGMaterial.h"
 #include "core/utils/VRStorage_template.h"
 #include <OpenSG/OSGMultiPassMaterial.h>
 #include <OpenSG/OSGSimpleMaterial.h>
@@ -26,7 +27,7 @@ VRLightBeacon::VRLightBeacon(string name) : VRTransform(name) {
     lightGeo = 0;
 
     GeometryMTRecPtr lightGeo_ = makeSphereGeo(2,0.1);
-    lightGeo_->setMaterial(getLightGeoMat()->getMaterial());
+    lightGeo_->setMaterial(getLightGeoMat()->getMaterial()->mat);
 
     lightGeo = OSGObject::create( makeNodeFor(lightGeo_) );
     lightGeo->node->setTravMask(0);

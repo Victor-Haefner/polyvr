@@ -19,6 +19,7 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/material/OSGMaterial.h"
 #include "core/objects/object/VRObjectT.h"
 #include "core/objects/OSGObject.h"
 #include "core/tools/selection/VRSelection.h"
@@ -669,7 +670,7 @@ void VRGeometry::setMaterial(VRMaterialPtr mat) {
 
     this->mat = mat;
     if (!meshSet) return;
-    mesh->geo->setMaterial(mat->getMaterial());
+    mesh->geo->setMaterial(mat->getMaterial()->mat);
 }
 
 /*void VRGeometry::setMaterial(MaterialRecPtr mat) {

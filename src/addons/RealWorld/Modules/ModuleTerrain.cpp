@@ -1,20 +1,16 @@
+
+#include "core/objects/geometry/VRGeometry.h" // 3
+#include "core/objects/geometry/VRGeoData.h" // 2.8
+#include "core/objects/geometry/VRPhysics.h" // 2.9
+#include "core/objects/material/VRMaterial.h" // 3
+#include "core/scene/VRSceneManager.h" // 2.9
+#include "triangulate.h" // 0.1
+#include "../OSM/OSMMapDB.h" // 0.4
 #include "ModuleTerrain.h" // 2.3
 #include "../Config.h" // 2.2
 #include "../MapCoordinator.h" // 2.2
-#include "../OSM/OSMMapDB.h" // 0.4
 #include "../RealWorld.h" // 2.2
 #include "Terrain.h" // 2.3
-#include "core/objects/geometry/VRGeometry.h" // 5.2
-#include "core/objects/geometry/VRGeoData.h"
-#include "core/objects/geometry/VRPhysics.h" // 4.2
-#include "core/objects/material/VRMaterial.h" // 5.1
-#include "core/scene/VRSceneManager.h" // 4
-#include "triangulate.h" // 0.1
-
-//#include "core/objects/VRTransform.h" // 3.2
-
-//#define TEST
-#ifndef TEST
 
 using namespace OSG;
 
@@ -231,4 +227,5 @@ VRGeometryPtr ModuleTerrain::makeTerrainGeometry(Terrain* ter, TerrainMaterial* 
     return geo;
 }
 
-#endif
+
+

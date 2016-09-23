@@ -14,6 +14,7 @@
 #include "core/gui/VRGuiManager.h"
 #include "core/objects/OSGObject.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/material/OSGMaterial.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/objects/geometry/VRSprite.h"
 #include "core/objects/VRTransform.h"
@@ -251,7 +252,7 @@ VRView::VRView(string name) {
     viewGeo->setTravMask(0);
     viewGeoMat = VRMaterial::create("setup view mat");
     GeometryMTRecPtr geo = dynamic_cast<Geometry*>( viewGeo->getCore() );
-    geo->setMaterial(viewGeoMat->getMaterial());
+    geo->setMaterial(viewGeoMat->getMaterial()->mat);
 
     renderingL = VRRenderStudio::create( VRRenderStudio::LEFT );
     renderingR = VRRenderStudio::create( VRRenderStudio::RIGHT );

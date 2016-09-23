@@ -3,17 +3,21 @@
 
 #include "core/utils/VRStorage.h"
 #include "core/objects/VRObjectFwd.h"
-#include <btBulletDynamicsCommon.h>
 #include <OpenSG/OSGMatrix.h>
-#include <boost/thread/recursive_mutex.hpp>
+#include <LinearMath/btVector3.h>
+#include <LinearMath/btTransform.h>
 
+class btRigidBody;
 class btSoftBody;
 class btSoftRigidDynamicsWorld;
+class btPairCachingGhostObject;
+class btCollisionShape;
+class btDefaultMotionState;
+class btCollisionObject;
 
 using namespace std;
 
 struct VRPhysicsJoint;
-class btPairCachingGhostObject;
 
 struct VRCollision {
     OSG::Vec3f pos1;
@@ -82,7 +86,6 @@ class VRPhysics : public OSG::VRStorage {
         //btSoftBody*       createConvex();
         btSoftBody* createCloth();
         btSoftBody* createRope();
-        boost::recursive_mutex& mtx();
         void update();
         void clear();
 

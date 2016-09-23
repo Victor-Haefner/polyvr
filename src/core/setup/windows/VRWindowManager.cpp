@@ -12,6 +12,7 @@
 #include "core/objects/object/VRObject.h"
 #include "core/utils/VRRate.h"
 #include "core/scene/VRSceneManager.h"
+#include "core/scene/VRScene.h"
 #include "core/utils/VRFunction.h"
 
 #include <OpenSG/OSGGLUT.h>

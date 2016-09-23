@@ -2,6 +2,7 @@
 #include "core/utils/toString.h"
 #include "core/math/boundingbox.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/material/OSGMaterial.h"
 #include "core/objects/OSGObject.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneManager.h"
@@ -47,8 +48,8 @@ VRCamera::VRCamera(string name) : VRTransform(name) {
     camGeo = makeNodeFor(camGeo_);
     NodeMTRecPtr camGeo2 = makeNodeFor(camGeo2_);
     camGeo->setTravMask(0);
-    camGeo_->setMaterial(getCamGeoMat()->getMaterial());
-    camGeo2_->setMaterial(getCamGeoMat()->getMaterial());
+    camGeo_->setMaterial(getCamGeoMat()->getMaterial()->mat);
+    camGeo2_->setMaterial(getCamGeoMat()->getMaterial()->mat);
     addChild(OSGObject::create(t));
     t->addChild(camGeo);
     TransformMTRecPtr trans2 = Transform::create();

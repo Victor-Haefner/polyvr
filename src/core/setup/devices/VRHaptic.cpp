@@ -3,6 +3,7 @@
 #include "core/objects/VRTransform.h"
 #include "core/utils/VRFunction.h"
 #include "core/scene/VRSceneManager.h"
+#include "core/scene/VRScene.h"
 #include <boost/bind.hpp>
 #include "core/utils/VRProfiler.h"
 #include <time.h>
