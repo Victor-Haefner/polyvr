@@ -1,27 +1,21 @@
 #include "ModuleStreets.h"
 
-#include "core/objects/material/VRShader.h"
-#include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/material/VRMaterial.h"
-#include "core/objects/geometry/VRGeometry.h"
-#include "core/objects/geometry/VRGeoData.h"
-#include "core/utils/toString.h"
-#include "core/utils/VRTimer.h"
 #include "core/scene/VRSceneManager.h"
-#include "../OSM/OSMMap.h"
-#include "../OSM/OSMMapDB.h"
-#include "StreetSegment.h"
-#include "StreetJoint.h"
-#include "../StreetAlgos.h"
-#include "../World.h"
+#include "core/objects/geometry/VRGeoData.h"
+#include "core/tools/VRAnnotationEngine.h"
+#include "core/objects/geometry/VRPhysics.h"
+#include "core/utils/toString.h"
+
 #include "../Config.h"
 #include "../RealWorld.h"
+#include "../OSM/OSMMap.h"
+#include "../OSM/OSMMapDB.h"
 #include "../MapCoordinator.h"
-#include "core/objects/geometry/VRSprite.h"
-#include "core/tools/VRAnnotationEngine.h"
-
+#include "../StreetAlgos.h"
+#include "StreetJoint.h"
+#include "StreetSegment.h"
 #include <boost/exception/to_string.hpp>
-#include <OpenSG/OSGGeometry.h>
 #include <OpenSG/OSGMatrixUtility.h>
 
 using namespace OSG;
