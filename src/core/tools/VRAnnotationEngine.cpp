@@ -2,12 +2,9 @@
 
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRMaterialT.h"
-#include "core/objects/geometry/OSGGeometry.h"
+#include "core/objects/geometry/VRGeoData.h"
 #include "core/tools/VRText.h"
 #include "core/utils/toString.h"
-
-#include <OpenSG/OSGGeoProperties.h>
-#include <OpenSG/OSGGeometry.h>
 
 #define GLSL(shader) #shader
 
@@ -23,14 +20,13 @@ VRAnnotationEngine::VRAnnotationEngine() : VRGeometry("AnnEng") {
     mat->setFragmentShader(fp);
     mat->setGeometryShader(gp);
     mat->setPointSize(5);
+    setMaterial(mat);
     updateTexture();
 
     setSize(0.2);
     setBillboard(false);
     setScreensize(false);
-    //setVolume(false); // problems when drag and drop the volume
-
-    clear();
+    data = VRGeoData::create();
 }
 
 VRAnnotationEnginePtr VRAnnotationEngine::create() { return shared_ptr<VRAnnotationEngine>(new VRAnnotationEngine() ); }
@@ -38,46 +34,32 @@ VRAnnotationEnginePtr VRAnnotationEngine::ptr() { return static_pointer_cast<VRA
 
 void VRAnnotationEngine::clear() {
     labels.clear();
-
-    OSG::GeoPnt3fPropertyRecPtr pos = OSG::GeoPnt3fProperty::create();
-    OSG::GeoVec3fPropertyRecPtr norms = OSG::GeoVec3fProperty::create();
-    OSG::GeoUInt32PropertyRecPtr inds = OSG::GeoUInt32Property::create();
-
-    this->pos = pos;
-    this->norms = norms;
-
-    setType(GL_POINTS);
-    setPositions(pos);
-    setNormals(norms);
-    setIndices(inds);
-
-    mesh->geo->getLengths()->setValue(0, 0);
-    setMaterial(mat);
+    data->reset();
 }
 
 void VRAnnotationEngine::setColor(Vec4f c) { fg = c; updateTexture(); }
 void VRAnnotationEngine::setBackground(Vec4f c) { bg = c; updateTexture(); }
 
 bool VRAnnotationEngine::checkUIn(int i) {
-    if (i < 0 || i > (int)pos->size()) return true;
+    if (i < 0 || i > (int)data->size()) return true;
     return false;
 }
 
 void VRAnnotationEngine::resize(Label& l, Vec3f p, int N) {
     int eN = l.entries.size();
-    for (int i=0; i<eN; i++) norms->setValue(Vec3f(), l.entries[i]);
+    //for (int i=0; i<eN; i++) norms->setValue(Vec3f(), l.entries[i]);
 
     if (N <= eN) return;
     l.entries.resize(N, 0);
-    int pN = pos->size();
+    int pN = data->size();
 
-    mesh->geo->getLengths()->setValue(N-eN+pN, 0);
     for (int i=0; i<N-eN; i++) {
-        pos->addValue(p);
-        norms->addValue(Vec3f());
-        mesh->geo->getIndices()->addValue(pN+i);
+        data->pushVert(p, Vec3f());
+        data->pushPoint();
         l.entries[eN+i] = pN+i;
     }
+
+    data->apply( ptr() );
 }
 
 int VRAnnotationEngine::add(Vec3f p, string s) {
@@ -92,7 +74,7 @@ void VRAnnotationEngine::set(int i, Vec3f p, string s) {
 
     int N = ceil(s.size()/3.0); // number of points, 3 chars per point
     auto& l = labels[i];
-    resize(l,p,N + 4); // plus four bounding points
+    resize(l,p,N + 4); // plus 4 bounding points
 
     for (int j=0; j<N; j++) {
         char c[] = {0,0,0};
@@ -102,20 +84,14 @@ void VRAnnotationEngine::set(int i, Vec3f p, string s) {
         }
         float f = c[0] + c[1]*256 + c[2]*256*256;
         int k = l.entries[j];
-        pos->setValue(p, k);
-        norms->setValue(Vec3f(f,0,j), k);
+        data->setVert(k, p, Vec3f(f,0,j));
     }
 
     // bounding points to avoid word clipping
-    for (int j=0; j<4; j++) {
-        int k = l.entries[N+j];
-        norms->setValue(Vec3f(0,0,-1), k);
-    }
-
-    pos->setValue(p+Vec3f(-0.25*size, -0.5*size, 0), l.entries[N]);
-    pos->setValue(p+Vec3f(-0.25*size,  0.5*size, 0), l.entries[N+1]);
-    pos->setValue(p+Vec3f((s.size()-0.25)*size, -0.5*size, 0), l.entries[N+2]);
-    pos->setValue(p+Vec3f((s.size()-0.25)*size,  0.5*size, 0), l.entries[N+3]);
+    data->setVert(l.entries[N], p+Vec3f(-0.25*size, -0.5*size, 0), Vec3f(0,0,-1));
+    data->setVert(l.entries[N+1], p+Vec3f(-0.25*size,  0.5*size, 0), Vec3f(0,0,-1));
+    data->setVert(l.entries[N+2], p+Vec3f((s.size()-0.25)*size, -0.5*size, 0), Vec3f(0,0,-1));
+    data->setVert(l.entries[N+3], p+Vec3f((s.size()-0.25)*size,  0.5*size, 0), Vec3f(0,0,-1));
 }
 
 void VRAnnotationEngine::setSize(float f) { mat->setShaderParameter("size", Real32(f)); size = f; }

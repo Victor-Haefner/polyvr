@@ -68,6 +68,8 @@ VRGeoData::VRGeoData(VRGeometryPtr geo) : pend(this, 0) {
     if (!data->texs2) data->texs2 = GeoVec2fProperty::create();
 }
 
+VRGeoDataPtr VRGeoData::create() { return VRGeoDataPtr( new VRGeoData() ); }
+
 void VRGeoData::reset() {
     data->types = GeoUInt8Property::create();
     data->lengths = GeoUInt32Property::create();
@@ -97,6 +99,15 @@ int VRGeoData::pushVert(Pnt3f p, Vec3f n, Vec2f t) { data->texs->addValue(t); re
 int VRGeoData::pushVert(Pnt3f p, Vec3f n, Vec2f t, Vec2f t2) { data->texs2->addValue(t2); return pushVert(p,n,t); }
 int VRGeoData::pushVert(Pnt3f p, Vec3f n, Vec3f c, Vec2f t) { data->texs->addValue(t); return pushVert(p,n,c); }
 int VRGeoData::pushVert(Pnt3f p, Vec3f n, Vec4f c, Vec2f t) { data->texs->addValue(t); return pushVert(p,n,c); }
+
+bool VRGeoData::setVert(int i, Pnt3f p) { if (size() > i) data->pos->setValue(p,i); else return 0; return 1; }
+bool VRGeoData::setVert(int i, Pnt3f p, Vec3f n) { if (size() > i) data->norms->setValue(n,i); else return 0; return setVert(i,p); }
+bool VRGeoData::setVert(int i, Pnt3f p, Vec3f n, Vec3f c) { if (size() > i) data->cols3->setValue(c,i); else return 0; return setVert(i,p,n); }
+bool VRGeoData::setVert(int i, Pnt3f p, Vec3f n, Vec4f c) { if (size() > i) data->cols4->setValue(c,i); else return 0; return setVert(i,p,n); }
+bool VRGeoData::setVert(int i, Pnt3f p, Vec3f n, Vec2f t) { if (size() > i) data->texs->setValue(t,i); else return 0; return setVert(i,p,n); }
+bool VRGeoData::setVert(int i, Pnt3f p, Vec3f n, Vec2f t, Vec2f t2) { if (size() > i) data->texs2->setValue(t2,i); else return 0; return setVert(i,p,n,t); }
+bool VRGeoData::setVert(int i, Pnt3f p, Vec3f n, Vec3f c, Vec2f t) { if (size() > i) data->texs->setValue(t,i); else return 0; return setVert(i,p,n,c); }
+bool VRGeoData::setVert(int i, Pnt3f p, Vec3f n, Vec4f c, Vec2f t) { if (size() > i) data->texs->setValue(t,i); else return 0; return setVert(i,p,n,c); }
 
 int VRGeoData::pushVert(VRGeoData& other, int i) {
     auto od = other.data;

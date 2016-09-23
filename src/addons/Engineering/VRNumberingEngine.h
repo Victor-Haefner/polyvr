@@ -1,13 +1,11 @@
 #ifndef VRNUMBERINGENGINE_H_INCLUDED
 #define VRNUMBERINGENGINE_H_INCLUDED
 
-#include "core/objects/VRObjectFwd.h"
 #include "core/objects/geometry/VRGeometry.h"
 
 class VRNumberingEngine : public OSG::VRGeometry {
     private:
-        OSG::GeoVectorProperty* pos = 0;
-        OSG::GeoVectorProperty* norms = 0; // n[0] is the number, n[1] is the ID
+        OSG::VRGeoDataPtr data = 0;
         OSG::VRMaterialPtr mat = 0;
 
         static string vp;

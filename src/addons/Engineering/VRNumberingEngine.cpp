@@ -1,13 +1,10 @@
 #include "VRNumberingEngine.h"
 
-#include "core/objects/geometry/OSGGeometry.h"
+#include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRMaterialT.h"
 #include "core/tools/VRText.h"
 #include "core/utils/toString.h"
-
-#include <OpenSG/OSGGeoProperties.h>
-#include <OpenSG/OSGGeometry.h>
 
 #define GLSL(shader) #shader
 
@@ -23,31 +20,17 @@ VRNumberingEngine::VRNumberingEngine() : VRGeometry("NumbEng") {
     mat->setFragmentShader(fp);
     mat->setGeometryShader(gp);
     mat->setPointSize(5);
+    setMaterial(mat);
     updateTexture();
 
     setSize(0.2);
     setBillboard(false);
     setOnTop(false);
 
-    clear();
+    data = VRGeoData::create();
 }
 
-void VRNumberingEngine::clear() {
-    OSG::GeoPnt3fPropertyRecPtr pos = OSG::GeoPnt3fProperty::create();
-    OSG::GeoVec3fPropertyRecPtr norms = OSG::GeoVec3fProperty::create();
-    OSG::GeoUInt32PropertyRecPtr inds = OSG::GeoUInt32Property::create();
-
-    this->pos = pos;
-    this->norms = norms;
-
-    setType(GL_POINTS);
-    setPositions(pos);
-    setNormals(norms);
-    setIndices(inds);
-
-    mesh->geo->getLengths()->setValue(0, 0);
-    setMaterial(mat);
-}
+void VRNumberingEngine::clear() { data->reset(); }
 
 VRNumberingEnginePtr VRNumberingEngine::create() { return shared_ptr<VRNumberingEngine>(new VRNumberingEngine() ); }
 VRNumberingEnginePtr VRNumberingEngine::ptr() { return static_pointer_cast<VRNumberingEngine>( shared_from_this() ); }
@@ -59,33 +42,29 @@ bool VRNumberingEngine::checkUIn(int grp) {
 
 bool VRNumberingEngine::checkUIn(int i, int grp) {
     if (grp < 0 || grp > (int)groups.size()) return true;
-    if (i < 0 || i > (int)pos->size()) return true;
+    if (i < 0 || i > (int)data->size()) return true;
     return false;
 }
 
 void VRNumberingEngine::add(Vec3f p, int N, float f, int d, int grp) {
     if (checkUIn(grp)) return;
 
-    int s = pos->size();
-    mesh->geo->getLengths()->setValue(N+s, 0);
-
-    group g = groups[grp];
     for (int i=0; i<N; i++) {
-        pos->addValue(p);
-        norms->addValue(Vec3f(0,grp,0));
-        mesh->geo->getIndices()->addValue(i+s);
+        data->pushVert(p, Vec3f(0,grp,0));
+        data->pushPoint();
     }
+
+    data->apply( ptr() );
 }
 
 void VRNumberingEngine::set(int i, Vec3f p, float f, int d, int grp) {
     if (checkUIn(i,grp)) return;
-    pos->setValue(p, i);
     float f1 = floor(f);
     float f2 = f-f1;
     string sf2 = toString(f2);
     if (sf2.size() > 2) sf2 = sf2.substr(2,sf2.size()-1);
     f2 = toFloat(sf2);
-    norms->setValue(Vec3f(f1,grp,f2), i);
+    data->setVert(i, p, Vec3f(f1,grp,f2));
 }
 
 void VRNumberingEngine::setPrePost(int grp, string pre, string post) {

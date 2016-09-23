@@ -26,6 +26,8 @@ class VRGeoData {
         VRGeoData();
         VRGeoData(VRGeometryPtr geo);
 
+        static VRGeoDataPtr create();
+
         int size();
 
         void reset();
@@ -39,6 +41,15 @@ class VRGeoData {
         int pushVert(Pnt3f p, Vec3f n, Vec2f t, Vec2f t2);
         int pushVert(Pnt3f p, Vec3f n, Vec3f c, Vec2f t);
         int pushVert(Pnt3f p, Vec3f n, Vec4f c, Vec2f t);
+
+        bool setVert(int i, Pnt3f p);
+        bool setVert(int i, Pnt3f p, Vec3f n);
+        bool setVert(int i, Pnt3f p, Vec3f n, Vec3f c);
+        bool setVert(int i, Pnt3f p, Vec3f n, Vec4f c);
+        bool setVert(int i, Pnt3f p, Vec3f n, Vec2f t);
+        bool setVert(int i, Pnt3f p, Vec3f n, Vec2f t, Vec2f t2);
+        bool setVert(int i, Pnt3f p, Vec3f n, Vec3f c, Vec2f t);
+        bool setVert(int i, Pnt3f p, Vec3f n, Vec4f c, Vec2f t);
 
         int pushVert(VRGeoData& other, int i);
         int pushVert(VRGeoData& other, int i, Matrix m);

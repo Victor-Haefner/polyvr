@@ -286,6 +286,7 @@ void ModuleStreets::makeStreetSign(Vec3f p, string name, VRGeoData* geo) {
 }
 
 void ModuleStreets::makeStreetNameSign(StreetSegment* seg, VRAnnotationEnginePtr ae) {
+    if (!ae) return;
     if (seg->name == "") return;
     if (seg->jointA->type == J1 && seg->jointB->type == J1) return;
 

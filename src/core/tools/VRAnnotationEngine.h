@@ -1,15 +1,14 @@
 #ifndef VRANNOTATIONENGINE_H_INCLUDED
 #define VRANNOTATIONENGINE_H_INCLUDED
 
-#include "core/objects/geometry/VRGeometry.h"
 #include "core/tools/VRToolsFwd.h"
+#include "core/objects/geometry/VRGeometry.h"
 
 OSG_BEGIN_NAMESPACE;
 
 class VRAnnotationEngine : public VRGeometry {
     private:
-        GeoVectorProperty* pos = 0;
-        GeoVectorProperty* norms = 0; // n[0] is the number, n[1] is the ID
+        VRGeoDataPtr data = 0;
         VRMaterialPtr mat = 0;
         Vec4f fg, bg;
 

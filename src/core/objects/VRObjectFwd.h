@@ -16,6 +16,7 @@ ptrFwd(VRStorage);
 ptrFwd(VRObject);
 ptrFwd(VRTransform);
 ptrFwd(VRGeometry);
+ptrFwd(VRGeoData);
 ptrFwd(VRCamera);
 ptrFwd(VRLod);
 ptrFwd(VRSprite);
