@@ -101,7 +101,7 @@ void VRAnnotationEngine::setScreensize(bool b) { mat->setShaderParameter("screen
 void VRAnnotationEngine::updateTexture() {
     string txt;
     for (int i=32; i<128; i++) txt += char(i);
-    auto img = VRText::get()->create(txt, "MONO 20", 20, fg*255, bg*255 );
+    auto img = VRText::get()->create(txt, "MONO 20", 20, fg, bg);
     mat->setTexture(img);
 }
 
@@ -129,7 +129,7 @@ uniform sampler2D texture;
 in vec2 texCoord;
 
 void main( void ) {
-  //gl_FragColor = vec4(1.0,1.0,0.0,1.0);
+  //gl_FragColor = vec4(texCoord.x,texCoord.y,0.0,1.0);
   gl_FragColor = texture2D(texture, texCoord);
 }
 );

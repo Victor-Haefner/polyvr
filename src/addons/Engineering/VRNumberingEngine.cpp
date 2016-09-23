@@ -87,7 +87,7 @@ void VRNumberingEngine::setBillboard(bool b) { mat->setShaderParameter("doBillbo
 void VRNumberingEngine::updateTexture() {
     string txt = "0123456789.";
     //for (auto g : groups) txt += "\n+g.pre+"\n"+g.post;
-    auto img = VRText::get()->create(txt, "MONO 20", 20, Color4f(0,0,0,255), Color4f(0,0,0,0) );
+    auto img = VRText::get()->create(txt, "MONO 20", 20, Color4f(0,0,0,1), Color4f(0,0,0,0) );
     mat->setTexture(img);
 }
 
