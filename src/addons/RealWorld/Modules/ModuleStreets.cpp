@@ -6,9 +6,7 @@
 #include "core/tools/VRAnnotationEngine.h"
 #include "core/objects/geometry/VRPhysics.h"
 #include "core/utils/toString.h"
-
-#include "core/objects/geometry/VRStroke.h"
-#include "core/math/path.h"
+#include "core/math/pose.h"
 
 #include "../Config.h"
 #include "../RealWorld.h"
@@ -16,6 +14,7 @@
 #include "../OSM/OSMMapDB.h"
 #include "../MapCoordinator.h"
 #include "../StreetAlgos.h"
+#include "../Assets/StreetLamp.h"
 #include "StreetJoint.h"
 #include "StreetSegment.h"
 #include <boost/exception/to_string.hpp>
@@ -231,46 +230,6 @@ TODO:
     - duplicate them and append them to the VRGeoData thingy!
 */
 
-void ModuleStreets::makeStreetLight2(StreetSegment* seg, VRGeoData* geo) {
-	auto lamp = VRTransform::create("lamp");
-	lamp->setPose(Vec3f(0,0,0), Vec3f(0,1,0), Vec3f(0,0,1));
-
-	auto addPart = [&](float r, path& p) {
-		int N = 6;
-		vector<Vec3f> prof;
-		for (int i=0; i<N; i++) {
-			float a = i*2*Pi/N;
-			float x = r*cos(a);
-			float y = r*sin(a);
-			prof.push_back(Vec3f(x,y,0));
-		}
-
-        auto pole = VRStroke::create("pole");
-		pole->addPath(&p);
-        pole->strokeProfile(prof, 1, 1);
-        lamp->addChild(pole);
-	};
-
-	auto p1 = path();
-	p1.addPoint(Vec3f(0,0,0), Vec3f(0,0,-1), Vec3f(0,0,0), Vec3f(0,1,0));
-	p1.addPoint(Vec3f(0,0,-2), Vec3f(0,0,-1), Vec3f(0,0,0), Vec3f(0,1,0));
-	p1.compute(2);
-
-	auto p2 = path();
-	p2.addPoint(Vec3f(0,0,-2), Vec3f(0,0,-1), Vec3f(0,0,0), Vec3f(0,1,0));
-	p2.addPoint(Vec3f(0,0,-4), Vec3f(0,0,-1), Vec3f(0,0,0), Vec3f(0,1,0));
-	p2.compute(2);
-
-	auto p3 = path();
-	p3.addPoint(Vec3f(0,0,-4), Vec3f(0,0,-1), Vec3f(0,0,0), Vec3f(0,1,0));
-	p3.addPoint(Vec3f(1,0,-5), Vec3f(2,0,-1), Vec3f(0,0,0), Vec3f(0,1,0));
-	p3.compute(5);
-
-	addPart(0.1, p1);
-	addPart(0.04, p2);
-	addPart(0.04, p3);
-}
-
 void ModuleStreets::makeStreetLight(StreetSegment* seg, VRGeoData* geo) {
     if (seg->name == "") return;
     Vec3f pA = elevate(seg->jointA->position, 0);
@@ -285,38 +244,11 @@ void ModuleStreets::makeStreetLight(StreetSegment* seg, VRGeoData* geo) {
     X.normalize();
     X *= seg->width*0.5+0.3;
 
-    auto pushCylinder = [&](Vec3f pos, Vec3f dir, float r1, float r2, int Nsides, Vec2f tcs) {
-        Vec2f tc1(tcs[1], 0);
-        Vec2f tc2(tcs[1], 1);
-        Vec2f tc3(tcs[0], 1);
-        Vec2f tc4(tcs[0], 0);
-
-        Vec3f up(0,1,0);
-        if (dir.cross(up).squareLength() < 0.01 ) up = Vec3f(1,0,0);
-        Matrix m;
-        Vec3f dp(0,0,0);
-        MatrixLookAt(m, dp, dir, up);
-        for (int i=0; i<Nsides; i++) {
-            float a = i*3.14*2/Nsides;
-            float b = (i+1)*3.14*2/Nsides;
-            Vec3f p1 = Vec3f(cos(a), sin(a), 0);
-            Vec3f p2 = Vec3f(cos(b), sin(b), 0);
-            m.mult(p1,p1); m.mult(p2,p2);
-            Vec3f n = Vec3f(sin((a+b)*0.5),0,cos((a+b)*0.5));
-            pushQuad(p1*r1+pos, p1*r2+pos+dir, p2*r2+pos+dir, p2*r1+pos, n, geo, tc1, tc2, tc3, tc4);
-        }
-    };
-
     int N = floor(DL/spread);
     for (int i=0; i<N; i++) {
         int k = i%2*2-1;
-        Vec3f pole = pB+D*i/N-X*k;
-        Vec3f bdir = X*k+Vec3f(0,0.1*seg->width,0);
-        Vec3f bpos = pole+Vec3f(0,1.4*seg->width,0);
-        Vec3f lpos = bpos+bdir*0.45-Vec3f(0,0.1,0);
-        pushCylinder(pole, Vec3f(0,1.6*seg->width,0), 0.2, 0.15, 8, Vec2f(0.2,0.3)); // pole
-        pushCylinder(bpos, bdir, 0.12, 0.12, 8, Vec2f(0.2,0.3)); // branch
-        pushCylinder(lpos, bdir*0.5, 0.15, 0.15, 8, Vec2f(1,0.75)); // branch
+        pose p(pB+D*i/N-X*k, X*k+Vec3f(0,0.1*seg->width,0), Vec3f(0,1,0));
+        StreetLamp::make(p, 1.6*seg->width, geo);
     }
 }
 
