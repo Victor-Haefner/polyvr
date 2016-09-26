@@ -4,6 +4,8 @@
 
 using namespace OSG;
 
+map<string, VRGeometryPtr> Asset::assets = map<string, VRGeometryPtr>();
+
 VRGeometryPtr Asset::merge(VRObjectPtr obj) {
     auto geos = obj->getChildren(1, "Geometry");
     if (geos.size() == 0) return VRGeometry::create(obj->getBaseName());

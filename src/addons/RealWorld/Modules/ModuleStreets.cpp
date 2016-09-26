@@ -249,10 +249,8 @@ void ModuleStreets::makeStreetLight(StreetSegment* seg, VRGeoData* geo) {
     int N = floor(DL/spread);
     for (int i=0; i<N; i++) {
         int k = i%2*2-1; // -1 or 1
-        //pose p(pB+D*i/N-X*k, X*k+Vec3f(0,0.1*seg->width,0), Vec3f(0,1,0));
-        //StreetLamp::make(p, 1.6*seg->width, geo);
         pose p(pB+D*i/N-X*k, X*k, Vec3f(0,1,0));
-        StreetLamp::make2(p, geo);
+        StreetLamp::add(p, geo);
     }
 }
 
