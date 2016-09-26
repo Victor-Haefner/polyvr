@@ -2,6 +2,7 @@
 
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRPhysics.h"
+#include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/scene/VRSceneManager.h"
 #include "../RealWorld.h"
@@ -16,12 +17,7 @@ ModuleFloor::ModuleFloor(bool t, bool p) : BaseModule("ModuleFloor", t,p) {
     initMaterial();
 }
 
-VRGeometryPtr ModuleFloor::makeSubQuadGeometry(Vec2f pointA, Vec2f pointB) {
-    vector<Vec3f> pos;
-    vector<Vec3f> norms;
-    vector<int> inds;
-    vector<Vec2f> texs;
-
+void ModuleFloor::makeFloor(Vec2f pointA, Vec2f pointB, VRGeoData& geo) {
     MapCoordinator* mapC = RealWorld::get()->getCoordinator();
 
     float x1 = pointA[0];
@@ -33,7 +29,6 @@ VRGeometryPtr ModuleFloor::makeSubQuadGeometry(Vec2f pointA, Vec2f pointB) {
     int tesNum = 20;
     float deltaXStep = (x2 - x1)/(float)tesNum;
     float deltaYStep = (y2 - y1)/(float)tesNum;
-    Vec3f v1Prev, v2Prev, v3Prev, v4Prev;
     for(int i = 0; i<tesNum; i++){
         for(int j = 0; j<tesNum; j++){
             tempX1 = x1 + i*deltaXStep;
@@ -46,46 +41,18 @@ VRGeometryPtr ModuleFloor::makeSubQuadGeometry(Vec2f pointA, Vec2f pointB) {
             Vec3f v4 = Vec3f(tempX2, mapC->getElevation(Vec2f(tempX2, tempY1)), tempY1);
 
             Vec3f normal = MapCoordinator::getSurfaceNormal(v2-v1, v3-v1);
-
-            inds.push_back(inds.size());
-            norms.push_back(normal);
-            pos.push_back(v1);
-            texs.push_back(Vec2f((x1-tempX1), (y1-tempY1)));
-
-            inds.push_back(inds.size());
-            norms.push_back(normal);
-            pos.push_back(v2);
-            texs.push_back(Vec2f((x1-tempX1), (y1-tempY2)));
-
-            inds.push_back(inds.size());
-            norms.push_back(normal);
-            pos.push_back(v3);
-            texs.push_back(Vec2f((x1-tempX2), (y1-tempY2)));
+            geo.pushVert(v1, normal, Vec2f(x1-tempX1, y1-tempY1));
+            geo.pushVert(v2, normal, Vec2f(x1-tempX1, y1-tempY2));
+            geo.pushVert(v3, normal, Vec2f(x1-tempX2, y1-tempY2));
+            geo.pushTri();
 
             normal = MapCoordinator::getSurfaceNormal(v3-v4, v4-v1);
-
-            inds.push_back(inds.size());
-            norms.push_back(normal);
-            pos.push_back(v3);
-            texs.push_back(Vec2f((x1-tempX2), (y1-tempY2)));
-
-            inds.push_back(inds.size());
-            norms.push_back(normal);
-            pos.push_back(v4);
-            texs.push_back(Vec2f((x1-tempX2), (y1-tempY1)));
-
-            inds.push_back(inds.size());
-            norms.push_back(normal);
-            pos.push_back(v1);
-            texs.push_back(Vec2f((x1-tempX1), (y1-tempY1)));
-
-            v1Prev = v1; v2Prev = v2; v3Prev = v3; v4Prev = v4;
+            geo.pushVert(v3, normal, Vec2f(x1-tempX2, y1-tempY2));
+            geo.pushVert(v4, normal, Vec2f(x1-tempX2, y1-tempY1));
+            geo.pushVert(v1, normal, Vec2f(x1-tempX1, y1-tempY1));
+            geo.pushTri();
         }
     }
-
-    VRGeometryPtr geom = VRGeometry::create("Subquad");
-    geom->create(GL_TRIANGLES, pos, norms, inds, texs);
-    return geom;
 }
 
 void ModuleFloor::initMaterial() {
@@ -107,7 +74,9 @@ void ModuleFloor::loadBbox(MapGrid::Box bbox) {
     Vec2f min = mc->realToWorld(bbox.min);
     Vec2f max = mc->realToWorld(bbox.max);
 
-    VRGeometryPtr geom = makeSubQuadGeometry(min, max);
+    VRGeoData geo;
+    makeFloor(min, max, geo);
+    VRGeometryPtr geom = geo.asGeometry("Subquad");
     geom->setMaterial(matSubquad);
     root->addChild(geom);
 
@@ -119,5 +88,6 @@ void ModuleFloor::loadBbox(MapGrid::Box bbox) {
 }
 
 void ModuleFloor::unloadBbox(MapGrid::Box bbox) {
+    meshes[bbox.str]->destroy();
     meshes.erase(bbox.str);
 }

@@ -9,12 +9,14 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+class VRGeoData;
+
 class ModuleFloor : public BaseModule {
     private:
         VRMaterialPtr matSubquad;
         map<string, VRGeometryPtr> meshes;
 
-        VRGeometryPtr makeSubQuadGeometry(Vec2f pointA, Vec2f pointB);
+        void makeFloor(Vec2f pointA, Vec2f pointB, VRGeoData& geo);
 
         void initMaterial();
 

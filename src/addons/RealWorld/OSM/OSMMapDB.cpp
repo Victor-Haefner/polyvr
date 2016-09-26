@@ -5,7 +5,7 @@
 OSMMap* OSMMapDB::getMap(string posStr) {
     if (maps.count(posStr)) return maps[posStr];
 
-    string filename = "world/mapdata/map-"+posStr+".osm";
+    string filename = "world/maps/chunks/map-"+posStr+".osm";
     if ( !boost::filesystem::exists(filename) ) { cout << "OSMMapDB Error: no file " << filename << endl; return 0; }
 
     maps[posStr] = OSMMap::loadMap(filename);
