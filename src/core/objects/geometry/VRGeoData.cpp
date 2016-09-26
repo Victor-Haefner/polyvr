@@ -66,6 +66,13 @@ VRGeoData::VRGeoData(VRGeometryPtr geo) : pend(this, 0) {
     if (!data->cols4) data->cols4 = GeoVec4fProperty::create();
     if (!data->texs) data->texs = GeoVec2fProperty::create();
     if (!data->texs2) data->texs2 = GeoVec2fProperty::create();
+
+    auto normsIdx = geo->getMesh()->geo->getIndex(Geometry::NormalsIndex);
+    auto posIdx = geo->getMesh()->geo->getIndex(Geometry::PositionsIndex);
+    if (normsIdx != posIdx) { // TODO: fix normals
+        map<int, int> mapping;
+
+    }
 }
 
 VRGeoDataPtr VRGeoData::create() { return VRGeoDataPtr( new VRGeoData() ); }
@@ -82,14 +89,14 @@ void VRGeoData::reset() {
     data->texs2 = GeoVec2fProperty::create();
 }
 
-bool VRGeoData::valid() {
-    if (!data->types->size()) { cout << "Triangulator Error: no types!\n"; return false; }
-    if (!data->lengths->size()) { cout << "Triangulator Error: no lengths!\n"; return false; }
-    if (!data->pos->size()) { cout << "Triangulator Error: no pos!\n"; return false; }
+bool VRGeoData::valid() const {
+    if (!data->types->size()) { cout << "VRGeoData invalid: no types!\n"; return false; }
+    if (!data->lengths->size()) { cout << "VRGeoData invalid: no lengths!\n"; return false; }
+    if (!data->pos->size()) { cout << "VRGeoData invalid: no pos!\n"; return false; }
     return true;
 }
 
-int VRGeoData::size() { return data->pos->size(); }
+int VRGeoData::size() const { return data->pos->size(); }
 
 int VRGeoData::pushVert(Pnt3f p) { data->pos->addValue(p); return data->pos->size()-1; }
 int VRGeoData::pushVert(Pnt3f p, Vec3f n) { data->norms->addValue(n); return pushVert(p); }
@@ -109,7 +116,7 @@ bool VRGeoData::setVert(int i, Pnt3f p, Vec3f n, Vec2f t, Vec2f t2) { if (size()
 bool VRGeoData::setVert(int i, Pnt3f p, Vec3f n, Vec3f c, Vec2f t) { if (size() > i) data->texs->setValue(t,i); else return 0; return setVert(i,p,n,c); }
 bool VRGeoData::setVert(int i, Pnt3f p, Vec3f n, Vec4f c, Vec2f t) { if (size() > i) data->texs->setValue(t,i); else return 0; return setVert(i,p,n,c); }
 
-int VRGeoData::pushVert(VRGeoData& other, int i) {
+int VRGeoData::pushVert(const VRGeoData& other, int i) {
     auto od = other.data;
     Pnt3f p = od->pos->getValue(i);
     bool doNorms = (od->norms && od->norms->size() > i);
@@ -130,7 +137,7 @@ int VRGeoData::pushVert(VRGeoData& other, int i) {
     return pushVert(p);
 }
 
-int VRGeoData::pushVert(VRGeoData& other, int i, Matrix m) {
+int VRGeoData::pushVert(const VRGeoData& other, int i, Matrix m) {
     auto od = other.data;
     if (od->pos->size() <= i) { cout << "VRGeoData::pushVert ERROR: invalid index " << i << endl; return 0; }
     Pnt3f p = od->pos->getValue(i);
@@ -208,8 +215,9 @@ void VRGeoData::pushQuad() { int N = size(); pushQuad(N-4, N-3, N-2, N-1); }
 void VRGeoData::pushPrim(Primitive p) {
     int No = primNOffset(p.lid, p.type);
     int N = p.indices.size();
+    //int iN0 = size();
     //cout << "pushPrim: " << p.asString() << endl;
-    //cout << "pushPrim: " << No << " " << p.lID << endl;
+    //cout << "pushPrim: " << No << " " << p.lid << " " << iN0 << endl;
     for (int i = No; i<N; i++) {
         data->indices->addValue( p.indices[i] );
         //cout << "add index: " << p.indices[i] << endl;
@@ -218,8 +226,9 @@ void VRGeoData::pushPrim(Primitive p) {
     updateType(p.type, N-No);
 }
 
-void VRGeoData::apply(VRGeometryPtr geo) {
-    if (!valid()) cout << "VRGeoData::apply failed: data invalid!" << endl;
+void VRGeoData::apply(VRGeometryPtr geo) const {
+    if (!geo) { cout << "VRGeoData::apply to geometry " << geo->getName() << " failed: geometry invalid!" << endl; return; }
+    if (!valid()) { cout << "VRGeoData::apply to geometry " << geo->getName() << " failed: data invalid!" << endl; return; }
     geo->setPositions(data->pos);
     if (data->lengths->size() > 0) geo->setLengths(data->lengths);
     if (data->types->size() > 0) geo->setTypes(data->types);
@@ -231,7 +240,22 @@ void VRGeoData::apply(VRGeometryPtr geo) {
     if (data->texs2->size() > 0) geo->setTexCoords(data->texs2, 1);
 }
 
-VRGeometryPtr VRGeoData::asGeometry(string name) {
+void VRGeoData::append(const VRGeoData& geo, const Matrix& m) {
+    map<int, int> mapping;
+    for (auto p : geo) {
+        vector<int> ninds;
+        for (auto i : p.indices) {
+            if (!mapping.count(i)) mapping[i] = pushVert(geo, i, m);
+            ninds.push_back(mapping[i]);
+        }
+        p.indices = ninds;
+        pushPrim(p);
+    }
+}
+
+void VRGeoData::append(VRGeometryPtr geo, const Matrix& m) { append( VRGeoData(geo), m ); }
+
+VRGeometryPtr VRGeoData::asGeometry(string name) const {
     auto geo = VRGeometry::create(name);
     apply(geo);
     return geo;
@@ -260,9 +284,9 @@ string VRGeoData::status() {
     return res;
 }
 
-VRGeoData::PrimItr::PrimItr(VRGeoData* d, Primitive* p) { data = d; itr = p; }
+VRGeoData::PrimItr::PrimItr(const VRGeoData* d, Primitive* p) { data = d; itr = p; }
 
-int VRGeoData::primN(int type) {
+int VRGeoData::primN(int type) const {
     if (type == GL_POINTS) return 1;
     if (type == GL_LINES) return 2;
     if (type == GL_TRIANGLES) return 3;
@@ -279,7 +303,7 @@ int VRGeoData::primN(int type) {
     return 0;
 }
 
-int VRGeoData::primNOffset(int lID, int type) {
+int VRGeoData::primNOffset(int lID, int type) const {
     if (lID == 0) return 0;
 
     if (type == GL_POINTS) return 0;
@@ -298,7 +322,7 @@ int VRGeoData::primNOffset(int lID, int type) {
     return 0;
 }
 
-bool VRGeoData::setIndices(Primitive& p) {
+bool VRGeoData::setIndices(Primitive& p) const {
     vector<int> inds;
 
     if (p.tID >= data->types->size()) return false;
@@ -325,7 +349,7 @@ bool VRGeoData::setIndices(Primitive& p) {
     return true;
 }
 
-VRGeoData::Primitive* VRGeoData::next() {
+VRGeoData::Primitive* VRGeoData::next() const {
     if (!valid()) return 0;
     if (!setIndices(current)) return 0;
     return &current;
@@ -339,7 +363,14 @@ VRGeoData::PrimItr VRGeoData::begin() {
     return PrimItr( this, &current );
 }
 
-VRGeoData::PrimItr VRGeoData::begin() const { return begin(); }
+VRGeoData::PrimItr VRGeoData::begin() const {
+    if (!valid()) return end();
+    current.tID = 0;
+    current.lID = 0;
+    if (!setIndices(current)) return end();
+    return PrimItr( this, &current );
+}
+
 VRGeoData::PrimItr VRGeoData::cbegin() const { return begin(); }
 VRGeoData::PrimItr VRGeoData::end() { return PrimItr(this, 0); }
 VRGeoData::PrimItr VRGeoData::end() const { return pend; }

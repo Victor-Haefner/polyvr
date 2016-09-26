@@ -23,7 +23,7 @@ class pose {
         Vec3f dir() const;
         Vec3f up() const;
 
-        Matrix asMatrix();
+        Matrix asMatrix() const;
         void invert();
 
         string toString();

@@ -13,7 +13,7 @@ class pose;
 class StreetLamp : public Asset {
     public:
         static void make(const pose& p, float h, VRGeoData* geo);
-        static void make2(VRGeoData* geo);
+        static void make2(const pose& p, VRGeoData* geo);
 };
 
 OSG_END_NAMESPACE;

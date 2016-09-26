@@ -28,10 +28,10 @@ class VRGeoData {
 
         static VRGeoDataPtr create();
 
-        int size();
+        int size() const;
 
         void reset();
-        bool valid();
+        bool valid() const;
 
         int pushVert(Pnt3f p);
         int pushVert(Pnt3f p, Vec3f n);
@@ -51,8 +51,8 @@ class VRGeoData {
         bool setVert(int i, Pnt3f p, Vec3f n, Vec3f c, Vec2f t);
         bool setVert(int i, Pnt3f p, Vec3f n, Vec4f c, Vec2f t);
 
-        int pushVert(VRGeoData& other, int i);
-        int pushVert(VRGeoData& other, int i, Matrix m);
+        int pushVert(const VRGeoData& other, int i);
+        int pushVert(const VRGeoData& other, int i, Matrix m);
 
         void pushPoint(int i = -1);
         void pushLine(int i, int j);
@@ -63,8 +63,10 @@ class VRGeoData {
         void pushTri();
         void pushQuad();
 
-        void apply(VRGeometryPtr geo);
-        VRGeometryPtr asGeometry(string name);
+        void apply(VRGeometryPtr geo) const;
+        VRGeometryPtr asGeometry(string name) const;
+        void append(VRGeometryPtr geo, const Matrix& m = Matrix());
+        void append(const VRGeoData& geo, const Matrix& m = Matrix());
 
         // primitive iterator
         struct Primitive {
@@ -85,17 +87,17 @@ class VRGeoData {
             string asString();
         };
 
-        int primN(int type);
-        int primNOffset(int lID, int type);
-        bool setIndices(Primitive& p);
+        int primN(int type) const;
+        int primNOffset(int lID, int type) const;
+        bool setIndices(Primitive& p) const ;
         void pushPrim(Primitive p);
-        Primitive* next();
+        Primitive* next() const;
 
         struct PrimItr : public std::iterator<std::forward_iterator_tag, Primitive*> {
             Primitive* itr;
-            VRGeoData* data;
+            const VRGeoData* data;
 
-            PrimItr(VRGeoData* d, Primitive* p);
+            PrimItr(const VRGeoData* d, Primitive* p);
 
             PrimItr& operator++() { itr = data->next(); return *this; }
             PrimItr operator++(int) { itr = data->next(); return *this; }
@@ -112,7 +114,7 @@ class VRGeoData {
             Primitive& operator*() { return *itr; }
         };
 
-        Primitive current;
+        mutable Primitive current;
         PrimItr pend;
 
         PrimItr begin();

@@ -3,12 +3,17 @@
 #include "core/objects/geometry/VRStroke.h"
 #include "core/math/path.h"
 #include "core/math/pose.h"
+#include "core/scene/import/VRImport.h"
 
 #include <OpenSG/OSGMatrixUtility.h>
 
 using namespace OSG;
 
-void StreetLamp::make2(VRGeoData* geo) {
+void StreetLamp::make2(const pose& p, VRGeoData* geo) {
+    static int once = 0;
+    if (once) return;
+    once = 1;
+
 	auto lamp = VRTransform::create("lamp");
 	lamp->setPose(Vec3f(0,0,0), Vec3f(0,1,0), Vec3f(0,0,1));
 
@@ -46,10 +51,23 @@ void StreetLamp::make2(VRGeoData* geo) {
 	addPart(0.1, p1);
 	addPart(0.04, p2);
 	addPart(0.04, p3);
+
+    VRTransformPtr obj = VRImport::get()->load( "world/assets/lamps/streetlamp1.2.dae", 0, 1);
+    obj->setPose(Vec3f(1,0,-5.08), Vec3f(1,0,2.5), Vec3f(0,0,-1));
+    obj->setScale(Vec3f(0.07,0.07,0.07));
+    lamp->addChild(obj);
+
+	auto g = merge(lamp);
+    g->updateNormals();
+	Matrix mR;
+	MatrixLookAt(mR, Pnt3f(), Pnt3f(0,1,0), Vec3f(1,0,0));
+	Matrix m = p.asMatrix();
+	m.mult(mR);
+	geo->append(g, m);
 }
 
 void StreetLamp::make(const pose& p, float h, VRGeoData* geo) {
-    auto pushCylinder = [&](Vec3f pos, Vec3f dir, float r1, float r2, int Nsides, Vec2f tcs) {
+    auto pushCylinder = [&](VRGeoData& geo, Vec3f pos, Vec3f dir, float r1, float r2, int Nsides, Vec2f tcs) {
         Vec2f tc1(tcs[1], 0);
         Vec2f tc2(tcs[1], 1);
         Vec2f tc3(tcs[0], 1);
@@ -67,11 +85,11 @@ void StreetLamp::make(const pose& p, float h, VRGeoData* geo) {
             Vec3f p2 = Vec3f(cos(b), sin(b), 0);
             m.mult(p1,p1); m.mult(p2,p2);
             Vec3f n = Vec3f(sin((a+b)*0.5),0,cos((a+b)*0.5));
-            geo->pushVert(p1*r1+pos, n, tc1);
-            geo->pushVert(p1*r2+pos+dir, n, tc2);
-            geo->pushVert(p2*r2+pos+dir, n, tc3);
-            geo->pushVert(p2*r1+pos, n, tc4);
-            geo->pushQuad();
+            geo.pushVert(p1*r1+pos, n, tc1);
+            geo.pushVert(p1*r2+pos+dir, n, tc2);
+            geo.pushVert(p2*r2+pos+dir, n, tc3);
+            geo.pushVert(p2*r1+pos, n, tc4);
+            geo.pushQuad();
         }
     };
 
@@ -79,8 +97,17 @@ void StreetLamp::make(const pose& p, float h, VRGeoData* geo) {
     Vec3f bdir = p.dir();
     Vec3f bpos = pole+Vec3f(0,0.85*h,0);
     Vec3f lpos = bpos+bdir*0.45-Vec3f(0,0.1,0);
-    pushCylinder(pole, Vec3f(0,h,0), 0.2, 0.15, 8, Vec2f(0.2,0.3)); // pole
-    pushCylinder(bpos, bdir, 0.12, 0.12, 8, Vec2f(0.2,0.3)); // branch
-    pushCylinder(lpos, bdir*0.5, 0.15, 0.15, 8, Vec2f(1,0.75)); // branch
+
+    //VRGeoData& tmp = *geo;
+    //pushCylinder(tmp, pole, Vec3f(0,h,0), 0.2, 0.15, 8, Vec2f(0.2,0.3)); // pole
+    //pushCylinder(tmp, bpos, bdir, 0.12, 0.12, 8, Vec2f(0.2,0.3)); // branch
+    //pushCylinder(tmp, lpos, bdir*0.5, 0.15, 0.15, 8, Vec2f(1,0.75)); // branch
+
+    VRGeoData tmp;
+    pushCylinder(tmp, pole, Vec3f(0,h,0), 0.2, 0.15, 8, Vec2f(0.2,0.3)); // pole
+    pushCylinder(tmp, bpos, bdir, 0.12, 0.12, 8, Vec2f(0.2,0.3)); // branch
+    pushCylinder(tmp, lpos, bdir*0.5, 0.15, 0.15, 8, Vec2f(1,0.75)); // branch
+
+    geo->append(tmp);
 }
 

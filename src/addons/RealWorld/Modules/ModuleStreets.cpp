@@ -195,14 +195,16 @@ void ModuleStreets::loadBbox(MapGrid::Box bbox) {
 
     setGeo("streetQuads", GL_QUADS, sdata, matStreet);
     setGeo("streetTriangles", GL_TRIANGLES, jdata, matStreet);
-    setGeo("streetSigns", GL_QUADS, signs2, matSigns);
+    //setGeo("streetSigns", GL_QUADS, signs2, matSigns);
     setGeo("streetLights", GL_QUADS, ldata, matLights);
 
     root->addChild(signs);
     annotations[bbox.str+"_signs"] = signs;
 
     delete sdata;
+    delete ldata;
     delete jdata;
+    delete signs2;
 }
 
 void ModuleStreets::unloadBbox(MapGrid::Box bbox) {
@@ -246,9 +248,11 @@ void ModuleStreets::makeStreetLight(StreetSegment* seg, VRGeoData* geo) {
 
     int N = floor(DL/spread);
     for (int i=0; i<N; i++) {
-        int k = i%2*2-1;
-        pose p(pB+D*i/N-X*k, X*k+Vec3f(0,0.1*seg->width,0), Vec3f(0,1,0));
-        StreetLamp::make(p, 1.6*seg->width, geo);
+        int k = i%2*2-1; // -1 or 1
+        //pose p(pB+D*i/N-X*k, X*k+Vec3f(0,0.1*seg->width,0), Vec3f(0,1,0));
+        //StreetLamp::make(p, 1.6*seg->width, geo);
+        pose p(pB+D*i/N-X*k, X*k, Vec3f(0,1,0));
+        StreetLamp::make2(p, geo);
     }
 }
 
