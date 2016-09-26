@@ -13,16 +13,14 @@ MapGrid::Box::Box(Vec2f min, float size) {
 }
 
 bool MapGrid::Box::same(MapGrid::Box* b) { return str == b->str; }
+void MapGrid::set(Vec2f p) { position = p; update(); }
+vector<MapGrid::Box>& MapGrid::getBoxes() { return grid; }
 
 
 MapGrid::MapGrid(int d, float s) : dim(d), size(s) {
     for (int i=0; i<dim*dim; i++) grid.push_back( Box() );
     update();
 }
-
-void MapGrid::set(Vec2f p) { position = p; update(); }
-
-vector<MapGrid::Box>& MapGrid::getBoxes() { return grid; }
 
 bool MapGrid::has(Box& box) {
     for(auto b : grid) if (b.str == box.str) return true;

@@ -19,14 +19,11 @@ void ModuleWalls::loadBbox(MapGrid::Box bbox) {
     if (!osmMap) return;
 
     cout << "LOADING WALLS FOR " << bbox.str << "\n" << flush;
+    VRGeoData geo;
 
-    for(OSMWay* way: osmMap->osmWays) {
-
-        for(WallMaterial* mat: wallList) {
-
+    for (OSMWay* way : osmMap->osmWays) {
+        for (WallMaterial* mat : wallList) {
             if (way->tags[mat->k] == mat->v) {
-                //if (meshes.count(way->id)) continue;
-                // load Polygons from osmMap
                 Wall* wall = new Wall(way->id);
                 for(string nodeId: way->nodeRefs) {
                     OSMNode* node = osmMap->osmNodeMap[nodeId];
@@ -35,44 +32,26 @@ void ModuleWalls::loadBbox(MapGrid::Box bbox) {
                 }
 
                 if (wall->positions.size() < 3) continue;
-
-                // generate mesh
-                VRGeometryPtr geom = makeWallGeometry(wall, mat);
-                root->addChild(geom);
-                //meshes[wall->id] = geom;
+                addWall(wall, geo, mat->width, mat->height);
             }
-
         }
     }
+
+    VRGeometryPtr geom = geo.asGeometry("Wall");
+    geom->setMaterial(wallList[0]->material);
+    root->addChild(geom);
+    meshes[bbox.str] = geom;
 }
 
 void ModuleWalls::unloadBbox(MapGrid::Box bbox) {
-    auto mapDB = RealWorld::get()->getDB();
-    OSMMap* osmMap = mapDB->getMap(bbox.str);
-    if (!osmMap) return;
-
-//            BOOST_FOREACH(OSMWay* way, osmMap->osmWays) {
-//
-//                BOOST_FOREACH(WallMaterial* mat, wallList) {
-//                    if (way->tags[mat->k] == mat->v) {
-//                        if (meshes.count(way->id)) {
-//                            VRGeometryPtr geom = meshes[way->id];
-//                            meshes.erase(way->id);
-//                            delete geom;
-//                        }
-//                    }
-//
-//                }
-//            }
+    meshes[bbox.str]->destroy();
+    meshes.erase(bbox.str);
 }
 
-void ModuleWalls::physicalize(bool b) {
-    //for (auto mesh : meshes);
-}
+void ModuleWalls::physicalize(bool b) {}
 
 ModuleWalls::ModuleWalls(bool t, bool p) : BaseModule("ModuleWall", t,p) {
-    // create List with materials
-    fillWallList();
+    fillWallList(); // create List with materials
 }
 
 void ModuleWalls::fillWallList() {
@@ -101,7 +80,7 @@ void ModuleWalls::addWall(string texture, string key, string value){
     addWall(texture, key, value, 0.5, 1);
 }
 
-void ModuleWalls::addWallPart(Vec2f a1, Vec2f b1, Vec2f a2, Vec2f b2, Vec2f a3, Vec2f b3, VRGeoData* gdWall, float width, float height){
+void ModuleWalls::addWallPart(Vec2f a1, Vec2f b1, Vec2f a2, Vec2f b2, Vec2f a3, Vec2f b3, VRGeoData& gdWall, float width, float height){
     Vec2f _NULL;
 
     Vec2f intersectStart1;
@@ -164,7 +143,7 @@ Vec2f ModuleWalls::getIntersection(Vec2f a1, Vec2f b1, Vec2f a2, Vec2f b2){
     return Vec2f(cx + dx*t, cy + dy*t);
 }
 
-void ModuleWalls::createWallSide(Vec2f a, Vec2f b, Vec2f normal2D, VRGeoData* gdWall, float height) {
+void ModuleWalls::createWallSide(Vec2f a, Vec2f b, Vec2f normal2D, VRGeoData& gdWall, float height) {
     auto mc = RealWorld::get()->getCoordinator();
     Vec3f n = Vec3f(normal2D[0], 0, normal2D[1]);
     n.normalize();
@@ -173,25 +152,25 @@ void ModuleWalls::createWallSide(Vec2f a, Vec2f b, Vec2f normal2D, VRGeoData* gd
     float Hb = mc->getElevation(b);
     float length = (b-a).length();
 
-    int Va = gdWall->pushVert(Vec3f(a[0], Ha, a[1]), n, Vec2f(0, 0));
-    int Vb = gdWall->pushVert(Vec3f(b[0], Hb, b[1]), n, Vec2f(0, length));
-    int Vc = gdWall->pushVert(Vec3f(b[0], Hb+height, b[1]), n, Vec2f(height, length));
-    int Vd = gdWall->pushVert(Vec3f(a[0], Ha+height, a[1]), n, Vec2f(height, 0));
-    gdWall->pushQuad(Va, Vb, Vc, Vd);
+    int Va = gdWall.pushVert(Vec3f(a[0], Ha, a[1]), n, Vec2f(0, 0));
+    int Vb = gdWall.pushVert(Vec3f(b[0], Hb, b[1]), n, Vec2f(0, length));
+    int Vc = gdWall.pushVert(Vec3f(b[0], Hb+height, b[1]), n, Vec2f(height, length));
+    int Vd = gdWall.pushVert(Vec3f(a[0], Ha+height, a[1]), n, Vec2f(height, 0));
+    gdWall.pushQuad(Va, Vb, Vc, Vd);
 }
 
-void ModuleWalls::createWallRoof(Vec2f a1, Vec2f a2, Vec2f b1, Vec2f b2, VRGeoData* gdWall, float height) {
+void ModuleWalls::createWallRoof(Vec2f a1, Vec2f a2, Vec2f b1, Vec2f b2, VRGeoData& gdWall, float height) {
     auto mc = RealWorld::get()->getCoordinator();
     Vec3f n = Vec3f(0, 1, 0);
-    int Va = gdWall->pushVert(Vec3f(a1[0], mc->getElevation(a1) + height, a1[1]), n, Vec2f(a1[0], a1[1]));
-    int Vb = gdWall->pushVert(Vec3f(a2[0], mc->getElevation(a2) + height, a2[1]), n, Vec2f(a2[0], a2[1]));
-    int Vc = gdWall->pushVert(Vec3f(b2[0], mc->getElevation(b2) + height, b2[1]), n, Vec2f(b2[0], b2[1]));
-    int Vd = gdWall->pushVert(Vec3f(b1[0], mc->getElevation(b1) + height, b1[1]), n, Vec2f(b1[0], b1[1]));
-    gdWall->pushQuad(Va, Vb, Vc, Vd);
+    int Va = gdWall.pushVert(Vec3f(a1[0], mc->getElevation(a1) + height, a1[1]), n, Vec2f(a1[0], a1[1]));
+    int Vb = gdWall.pushVert(Vec3f(a2[0], mc->getElevation(a2) + height, a2[1]), n, Vec2f(a2[0], a2[1]));
+    int Vc = gdWall.pushVert(Vec3f(b2[0], mc->getElevation(b2) + height, b2[1]), n, Vec2f(b2[0], b2[1]));
+    int Vd = gdWall.pushVert(Vec3f(b1[0], mc->getElevation(b1) + height, b1[1]), n, Vec2f(b1[0], b1[1]));
+    gdWall.pushQuad(Va, Vb, Vc, Vd);
 }
 
 //to do
-void ModuleWalls::addWall(Wall* wall, VRGeoData* gdWall, float width, float height){
+void ModuleWalls::addWall(Wall* wall, VRGeoData& gdWall, float width, float height){
     //create AB todo
     Vec2f _NULL;
     vector<Vec2f*> sides = wall->getSides(); //get wall part
@@ -213,13 +192,4 @@ void ModuleWalls::addWall(Wall* wall, VRGeoData* gdWall, float width, float heig
         sidePre = side;
     }
     addWallPart(sidePrePre[0], sidePrePre[1], sidePre[0], sidePre[1], _NULL, _NULL, gdWall, width, height);
-}
-
-VRGeometryPtr ModuleWalls::makeWallGeometry(Wall* wall, WallMaterial* wallMat) {
-    VRGeoData* gdWall = new VRGeoData();
-    addWall(wall, gdWall, wallMat->width, wallMat->height);
-    auto geo = gdWall->asGeometry("Wall");
-    geo->setMaterial(wallMat->material);
-    delete gdWall;
-    return geo;
 }

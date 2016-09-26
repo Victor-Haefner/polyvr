@@ -40,7 +40,7 @@ void ModuleFloor::makeFloor(Vec2f pointA, Vec2f pointB, VRGeoData& geo) {
             Vec3f v3 = Vec3f(tempX2, mapC->getElevation(Vec2f(tempX2, tempY2)), tempY2);
             Vec3f v4 = Vec3f(tempX2, mapC->getElevation(Vec2f(tempX2, tempY1)), tempY1);
 
-            Vec3f normal = MapCoordinator::getSurfaceNormal(v2-v1, v3-v1);
+            Vec3f normal = MapCoordinator::getSurfaceNormal(v2-v1, v3-v1); // TODO: use quads ?
             geo.pushVert(v1, normal, Vec2f(x1-tempX1, y1-tempY1));
             geo.pushVert(v2, normal, Vec2f(x1-tempX1, y1-tempY2));
             geo.pushVert(v3, normal, Vec2f(x1-tempX2, y1-tempY2));

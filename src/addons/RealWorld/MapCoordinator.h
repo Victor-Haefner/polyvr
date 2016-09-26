@@ -11,13 +11,14 @@ class Elevation;
 class MapCoordinator {
     private:
         Vec2f zeroPos;
+        Vec2f offset;
         float gridSize;
         float SCALE_REAL_TO_WORLD = 111000.0;
         Elevation* ele = 0;
         float startElevation;
 
     public:
-        MapCoordinator(Vec2f zeroPos, float gridSize);
+        MapCoordinator(Vec2f zeroPos, Vec2f offset, float gridSize);
 
         Vec2f realToWorld(Vec2f realPosition);
         Vec2f worldToReal(Vec2f worldPosition);

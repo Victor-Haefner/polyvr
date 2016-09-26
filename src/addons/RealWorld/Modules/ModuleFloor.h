@@ -14,10 +14,8 @@ class VRGeoData;
 class ModuleFloor : public BaseModule {
     private:
         VRMaterialPtr matSubquad;
-        map<string, VRGeometryPtr> meshes;
 
         void makeFloor(Vec2f pointA, Vec2f pointB, VRGeoData& geo);
-
         void initMaterial();
 
     public:

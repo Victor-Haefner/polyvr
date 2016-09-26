@@ -1,6 +1,7 @@
 #ifndef BASEMODULE_H
 #define BASEMODULE_H
 
+#include <map>
 #include <OpenSG/OSGVector.h>
 #include "../MapGrid.h"
 #include "core/objects/VRObjectFwd.h"
@@ -16,6 +17,8 @@ class BaseModule {
         string name;
         VRObjectPtr root;
         bool doPhysicalize = false;
+
+        map<string, VRGeometryPtr> meshes;
 
     public:
         BaseModule(string name, bool t, bool p);

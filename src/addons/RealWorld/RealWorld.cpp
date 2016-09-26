@@ -31,9 +31,11 @@ using namespace OSG;
 RealWorld::RealWorld(VRObjectPtr root) {
     singelton = this;
 
-    mapCoordinator = new MapCoordinator(Vec2f(49.005f, 8.395f), 0.002f); //Kreuzung Kriegsstr. und Karlstr.
-    //mapCoordinator = new MapCoordinator(Vec2f(48.998969, 8.400171), 0.002f); // Tiergarten
-    //mapCoordinator = new MapCoordinator(Vec2f(49.013606f, 8.418295f), 0.002f); // Fasanengarten, funktioniert nicht?
+    mapCoordinator = new MapCoordinator(Vec2f(30.270, 120.149), Vec2f(0,-0.001), 0.002f); //Hongzhou
+
+    //mapCoordinator = new MapCoordinator(Vec2f(49.005f, 8.395f), Vec2f(), 0.002f); //Kreuzung Kriegsstr. und Karlstr.
+    //mapCoordinator = new MapCoordinator(Vec2f(48.998969, 8.400171), Vec2f(), 0.002f); // Tiergarten
+    //mapCoordinator = new MapCoordinator(Vec2f(49.013606f, 8.418295f), Vec2f(), 0.002f); // Fasanengarten, funktioniert nicht?
 
     world = new World();
     mapDB = new OSMMapDB();
