@@ -57,9 +57,10 @@ PyMethodDef VRPyRealWorld::methods[] = {
 };
 
 PyObject* VRPyRealWorld::initWorld(VRPyRealWorld* self, PyObject* args) {
-    VRPyObject* child = NULL;
-    if (! PyArg_ParseTuple(args, "O", &child)) return NULL;
-    if (self->obj == 0) self->obj = new RealWorld( child->objPtr );
+    VRPyObject* child = 0;
+    PyObject* origin = 0;
+    if (! PyArg_ParseTuple(args, "OO", &child, &origin)) return NULL;
+    if (self->obj == 0) self->obj = new RealWorld( child->objPtr, parseVec2fList(origin) );
     Py_RETURN_TRUE;
 }
 

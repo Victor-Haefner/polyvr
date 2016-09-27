@@ -18,7 +18,7 @@ class MapCoordinator {
         float startElevation;
 
     public:
-        MapCoordinator(Vec2f zeroPos, Vec2f offset, float gridSize);
+        MapCoordinator(Vec2f zeroPos, float gridSize);
 
         Vec2f realToWorld(Vec2f realPosition);
         Vec2f worldToReal(Vec2f worldPosition);

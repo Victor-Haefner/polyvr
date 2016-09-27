@@ -5,7 +5,7 @@
 
 using namespace OSG;
 
-MapCoordinator::MapCoordinator(Vec2f zeroPos, Vec2f offset, float gridSize) {
+MapCoordinator::MapCoordinator(Vec2f zeroPos, float gridSize) {
     this->zeroPos = zeroPos;
     this->gridSize = gridSize;
     ele = new Elevation;

@@ -31,7 +31,7 @@ class RealWorld {
         static RealWorld* singelton;
 
     public:
-        RealWorld(OSG::VRObjectPtr root);
+        RealWorld(OSG::VRObjectPtr root, OSG::Vec2f origin);
         ~RealWorld();
 
         static RealWorld* get();

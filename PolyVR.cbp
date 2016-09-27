@@ -146,6 +146,7 @@
 			<Add option="-lvtkParallel" />
 			<Add option="-lvirtuose" />
 			<Add option="-lCGAL" />
+			<Add option="-lgdal" />
 			<Add option="-lgmp" />
 			<Add option="-lmpfr" />
 			<Add option="-lSDL" />
@@ -727,6 +728,8 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="src/core/scene/import/E57/time_conversion.h" />
+		<Unit filename="src/core/scene/import/GIS/VRGDAL.cpp" />
+		<Unit filename="src/core/scene/import/GIS/VRGDAL.h" />
 		<Unit filename="src/core/scene/import/STEP/VRBRepBound.cpp" />
 		<Unit filename="src/core/scene/import/STEP/VRBRepBound.h" />
 		<Unit filename="src/core/scene/import/STEP/VRBRepEdge.cpp" />

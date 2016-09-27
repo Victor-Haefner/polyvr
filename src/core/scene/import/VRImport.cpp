@@ -4,6 +4,7 @@
 #include "VRVTK.h"
 #include "STEP/VRSTEP.h"
 #include "E57/E57.h"
+#include "GIS/VRGDAL.h"
 #include "addons/Engineering/Factory/VRFactory.h"
 
 #include <OpenSG/OSGSceneFileHandler.h>
@@ -141,6 +142,7 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         if (ext == ".stp") { VRSTEP step; step.load(path, res, options); return; }
         if (ext == ".wrl" && preset == "SOLIDWORKS-VRML2") { VRFactory f; if (f.loadVRML(path, progress, res, thread)) return; else preset = "OSG"; }
         if (ext == ".vtk") { loadVtk(path, res); return; }
+        if (ext == ".shp") { loadSHP(path, res); return; }
         if (preset == "OSG" || preset == "COLLADA") osgLoad(path, res);
         if (preset == "COLLADA") loadCollada(path, res);
     };
