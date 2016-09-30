@@ -9,6 +9,7 @@
 
 #include "core/objects/VRObjectFwd.h"
 #include "Altitude.h"
+#include <map>
 
 class OSMMapDB;
 
@@ -27,6 +28,7 @@ class RealWorld {
         MapManager* mapManager = 0;
         OSMMapDB* mapDB = 0;
         TrafficSimulation* trafficSimulation = 0; // Needed for script access
+        static map<string, string> options;
         static Altitude altitude; // constructor runs once, single instance
         static RealWorld* singelton;
 
@@ -37,6 +39,8 @@ class RealWorld {
         static RealWorld* get();
 
         void enableModule(string mod, bool b, bool t, bool p);
+        void configure(string var, string val);
+        static string getOption(string var);
         void update(OSG::Vec3f pos);
 
         TrafficSimulation* getTrafficSimulation();

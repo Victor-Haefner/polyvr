@@ -340,6 +340,8 @@
 		<Unit filename="src/addons/Factory/VRPyMechanism.h" />
 		<Unit filename="src/addons/Factory/VRPyNumberingEngine.h" />
 		<Unit filename="src/addons/Factory/network.h" />
+		<Unit filename="src/addons/GIS/GISWorld.cpp" />
+		<Unit filename="src/addons/GIS/GISWorld.h" />
 		<Unit filename="src/addons/RealWorld/Altitude.h" />
 		<Unit filename="src/addons/RealWorld/Assets/Asset.cpp" />
 		<Unit filename="src/addons/RealWorld/Assets/Asset.h" />

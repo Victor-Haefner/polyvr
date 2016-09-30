@@ -9,6 +9,7 @@ struct VRPyRealWorld : VRPyBaseT<RealWorld> {
     static PyMethodDef methods[];
 
     static PyObject* initWorld(VRPyRealWorld* self, PyObject* args);
+    static PyObject* configure(VRPyRealWorld* self, PyObject* args);
     static PyObject* update(VRPyRealWorld* self, PyObject* args);
     static PyObject* physicalize(VRPyRealWorld* self, PyObject* args);
     static PyObject* enableModule(VRPyRealWorld* self, PyObject* args);

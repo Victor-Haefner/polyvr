@@ -28,6 +28,8 @@
 
 using namespace OSG;
 
+map<string, string> RealWorld::options = map<string, string>();
+
 RealWorld::RealWorld(VRObjectPtr root, Vec2f origin) {
     singelton = this;
 
@@ -63,6 +65,8 @@ OSMMapDB* RealWorld::getDB() { return mapDB; }
 TrafficSimulation* RealWorld::getTrafficSimulation() { return trafficSimulation; }
 
 void RealWorld::update(Vec3f pos) { mapManager->updatePosition( Vec2f(pos[0], pos[2]) ); }
+void RealWorld::configure(string var, string val) { options[var] = val; }
+string RealWorld::getOption(string var) { return options[var]; }
 
 void RealWorld::enableModule(string mod, bool b, bool t, bool p) {
     if (b) {

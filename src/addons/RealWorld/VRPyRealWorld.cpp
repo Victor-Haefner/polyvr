@@ -53,6 +53,8 @@ PyMethodDef VRPyRealWorld::methods[] = {
     {"update", (PyCFunction)VRPyRealWorld::update, METH_VARARGS, "Update real obj - update([x,y,z])" },
     {"enableModule", (PyCFunction)VRPyRealWorld::enableModule, METH_VARARGS, "Enable a module - enableModule(str, bool threaded, bool physicalized)" },
     {"disableModule", (PyCFunction)VRPyRealWorld::disableModule, METH_VARARGS, "Disable a module - disableModule(str)" },
+    {"configure", (PyCFunction)VRPyRealWorld::configure, METH_VARARGS, "Configure a variable - configure( str var, str value )"
+            "\n\tpossible variables: [ 'CHUNKS_PATH' ]"},
     {NULL}  /* Sentinel */
 };
 
@@ -61,6 +63,15 @@ PyObject* VRPyRealWorld::initWorld(VRPyRealWorld* self, PyObject* args) {
     PyObject* origin = 0;
     if (! PyArg_ParseTuple(args, "OO", &child, &origin)) return NULL;
     if (self->obj == 0) self->obj = new RealWorld( child->objPtr, parseVec2fList(origin) );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyRealWorld::configure(VRPyRealWorld* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyRealWorld::configure, obj is invalid"); return NULL; }
+    const char* var = 0;
+    const char* val = 0;
+    if (! PyArg_ParseTuple(args, "ss", &var, &val)) return NULL;
+    self->obj->configure( var, val );
     Py_RETURN_TRUE;
 }
 
