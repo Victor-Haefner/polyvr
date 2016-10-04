@@ -43,6 +43,7 @@ struct VRConcept : public std::enable_shared_from_this<VRConcept>, public VROnto
     void remove(VRConceptPtr c);
 
     VRPropertyPtr addProperty(string name, string type);
+    VRPropertyPtr addProperty(string name, VRConceptPtr c);
     void addProperty(VRPropertyPtr p);
     void remProperty(VRPropertyPtr p);
     void addAnnotation(VRPropertyPtr p);

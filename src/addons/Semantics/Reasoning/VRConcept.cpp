@@ -62,6 +62,8 @@ VRPropertyPtr VRConcept::addProperty(string name, string type) {
     return p;
 }
 
+VRPropertyPtr VRConcept::addProperty(string name, VRConceptPtr c) { return addProperty(name, c->getName()); }
+
 VRPropertyPtr VRConcept::getProperty(int ID) {
     for (auto p : getProperties()) if (p->ID == ID) return p;
     cout << "Warning: property with ID " << ID << " not found" << endl;
