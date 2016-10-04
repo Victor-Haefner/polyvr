@@ -22,7 +22,7 @@ class VRGuiSemantics {
     private:
         Gtk::Fixed* canvas = 0;
         map<int, VRSemanticWidgetPtr> widgets;
-        map<int, VRConnectorWidgetPtr> connectors;
+        map<int, map<int, VRConnectorWidgetPtr> > connectors;
         map<int, int> widgetIDs;
 
         VRGraphLayoutPtr layout;

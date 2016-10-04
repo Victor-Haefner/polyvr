@@ -173,9 +173,11 @@ void VRGuiSemantics::updateLayout() {
         c.second->move(Vec2f(p[0], p[1]));
     }
 
-    for (auto c : connectors) {
-        if (!c.second->visible) continue;
-        c.second->update(); // update connectors
+    for (auto cv : connectors) {
+        for (auto c : cv.second) {
+            if (!c.second->visible) continue;
+            c.second->update(); // update connectors
+        }
     }
 }
 
@@ -191,6 +193,11 @@ void VRGuiSemantics::updateCanvas() {
     clearCanvas();
 
     function<void(VRConceptPtr,int,int,VRConceptWidgetPtr)> travConcepts = [&](VRConceptPtr c, int cID, int lvl, VRConceptWidgetPtr cp) {
+        if (widgets.count(c->ID)) {
+            if (cp) connect(cp, widgets[c->ID], "#00CCFF");
+            return;
+        }
+
         auto cw = VRConceptWidgetPtr( new VRConceptWidget(this, canvas, c) );
         widgets[c->ID] = cw;
         addNode(c->ID);
@@ -234,7 +241,7 @@ void VRGuiSemantics::updateCanvas() {
 
 void VRGuiSemantics::connect(VRSemanticWidgetPtr w1, VRSemanticWidgetPtr w2, string color) {
     auto co = VRConnectorWidgetPtr( new VRConnectorWidget(canvas, color) );
-    connectors[w2->ID()] = co;
+    connectors[w2->ID()][w1->ID()] = co;
     co->set(w1, w2);
     w1->children[w2.get()] = w2;
     w2->connectors[co.get()] = co;
@@ -252,9 +259,15 @@ void VRGuiSemantics::addNode(int sID) {
 
 void VRGuiSemantics::disconnect(VRSemanticWidgetPtr w1, VRSemanticWidgetPtr w2) {
     if (!connectors.count(w2->ID())) return;
-    auto co = connectors[w2->ID()];
-    if (co->w1.lock() == w1 && co->w2.lock() == w2) connectors.erase(w2->ID());
+    if (!connectors[w2->ID()].count(w1->ID())) return;
+    auto co = connectors[w2->ID()][w1->ID()];
+    if (co->w1.lock() == w1 && co->w2.lock() == w2) connectors[w2->ID()].erase(w1->ID());
     if (w1->children.count(w2.get())) w1->children.erase(w2.get());
+
+    int sID = w2->ID();
+    int pID = w1->ID();
+    auto gra = dynamic_pointer_cast< graph<graph_base::emptyNode> >(layout_graph);
+    if (widgetIDs.count(pID)) gra->disconnect(widgetIDs[pID], widgetIDs[sID]);
 }
 
 void VRGuiSemantics::disconnectAny(VRSemanticWidgetPtr w) {

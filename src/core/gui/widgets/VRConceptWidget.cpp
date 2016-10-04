@@ -142,10 +142,15 @@ void VRConceptWidget::reparent(VREntityWidgetPtr w) {}
 
 void VRConceptWidget::reparent(VRConceptWidgetPtr w) {
     VRConceptPtr c = w->concept;
-    if (auto p = c->parent.lock()) p->remove(c);
-    concept->append(c);
-    manager->disconnectAny(w);
-    manager->connect(ptr(), w, "#00CCFF");
+    if (c->hasParent(concept) && c->parents.size() > 1) { // remove parent if he has at least two!
+        cout << "removeParent\n";
+        c->removeParent(concept);
+        manager->disconnect(ptr(), w);
+    } else { // add parent
+        cout << "addParent\n";
+        concept->append(c);
+        manager->connect(ptr(), w, "#00CCFF");
+    }
     saveScene();
 }
 

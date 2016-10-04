@@ -1,6 +1,8 @@
 #include "graph.h"
 #include "graphT.h"
 
+#include <algorithm>
+
 using namespace OSG;
 
 template class graph<graph_base::emptyNode>;
@@ -12,6 +14,18 @@ void graph_base::connect(int i, int j, CONNECTION c) {
     if (i >= nodes.size() || j >= nodes.size()) return;
     while (i >= edges.size()) edges.push_back( vector<edge>() );
     edges[i].push_back(edge(i,j,c));
+}
+
+void graph_base::disconnect(int i, int j) {
+    if (i >= nodes.size() || j >= nodes.size()) return;
+    if (i >= edges.size()) return;
+    auto& v = edges[i];
+    for (int k=0; k<v.size(); k++) {
+        if (v[k].to == j) {
+            v.erase(v.begin()+k);
+            break;
+        }
+    }
 }
 
 vector< vector< graph_base::edge > >& graph_base::getEdges() { return edges; }

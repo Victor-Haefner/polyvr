@@ -26,8 +26,8 @@ struct VROntologyLink : VRStorage {
 };
 
 struct VRConcept : public std::enable_shared_from_this<VRConcept>, public VROntoID, public VRName {
-    VRConceptWeakPtr parent;
     VROntologyWeakPtr ontology;
+    map<int, VRConceptWeakPtr> parents;
     map<int, VRConceptPtr> children;
     map<int, VRPropertyPtr> properties;
     map<int, VRPropertyPtr> annotations;
@@ -36,11 +36,13 @@ struct VRConcept : public std::enable_shared_from_this<VRConcept>, public VROnto
 
     VRConcept(string name, VROntologyPtr o);
     static VRConceptPtr create(string name = "none", VROntologyPtr o = 0);
+    VRConceptPtr ptr();
 
     VRConceptPtr copy();
     VRConceptPtr append(string name, bool link = false);
     void append(VRConceptPtr c, bool link = false);
-    void remove(VRConceptPtr c);
+    void removeChild(VRConceptPtr c);
+    void removeParent(VRConceptPtr c);
 
     VRPropertyPtr addProperty(string name, string type);
     VRPropertyPtr addProperty(string name, VRConceptPtr c);
@@ -55,7 +57,10 @@ struct VRConcept : public std::enable_shared_from_this<VRConcept>, public VROnto
     vector<VRPropertyPtr> getProperties();
     void getProperties(map<string, VRPropertyPtr>& res);
 
+    bool hasParent(VRConceptPtr c = 0);
+    vector<VRConceptPtr> getParents();
     void getDescendance(vector<VRConceptPtr>& concepts);
+    void detach();
 
     bool is_a(string concept);
     string toString(string indent = "");

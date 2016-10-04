@@ -99,13 +99,13 @@ void VROntology::addConcept(VRConceptPtr c) {
     if (concepts.count(c->getName())) { cout << "WARNING in VROntology::addConcept, " << c->getName() << " known, skipping!\n"; return;  }
     if (c == thing) return;
     concepts[c->getName()] = c;
-    if (!c->parent.lock()) thing->append(c);
+    if (!c->hasParent()) thing->append(c);
 }
 
 void VROntology::remConcept(VRConceptPtr c) {
     if (c == thing) return;
     if (!concepts.count(c->getName())) return;
-    if (auto p = c->parent.lock()) p->remove(c);
+    c->detach();
     concepts.erase(c->getName());
 }
 

@@ -43,6 +43,7 @@ class graph_base {
         ~graph_base();
 
         void connect(int i, int j, CONNECTION c = SIMPLE);
+        void disconnect(int i, int j);
         node& getNode(int i);
         vector< node >& getNodes();
         vector< vector<edge> >& getEdges();
