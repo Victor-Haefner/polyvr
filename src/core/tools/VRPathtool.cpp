@@ -137,8 +137,8 @@ void VRPathtool::update() {
         if (!handle) continue;
         auto key = handle.get();
         if (!entries.count(key)) continue;
-        Matrix m = handle->getWorldMatrix();
         for (auto e : entries[key]) {
+            Matrix m = handle->getMatrixTo(e->anchor.lock());
             e->p->setPoint(e->points[key], Vec3f(m[3]), Vec3f(m[2]), Vec3f(1,1,1), Vec3f(m[1]));
         }
     }
