@@ -6,8 +6,8 @@ varying vec2 tc;
 varying vec2 tc2;
 
 void main (void) {
-	vec3 L = normalize(gl_LightSource[0].position.xyz);
-	//vec3 L = normalize(vec3(0,0,1));
+	//vec3 L = normalize(gl_LightSource[0].position.xyz - v); // point light
+	vec3 L = normalize(gl_LightSource[0].position.xyz); // directional light
   	vec3 E = normalize(-v); // we are in Eye Coordinates, so EyePos is (0,0,0)
   	vec3 R = normalize(-reflect(L,N));
 

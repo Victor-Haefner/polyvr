@@ -16,6 +16,7 @@ class VRTimer {
         static std::map<std::string, timer> beacons;
 
     public:
+        VRTimer();
         void start();
         int stop();
 

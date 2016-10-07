@@ -15,6 +15,8 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/VRCamera.h"
 #include "core/utils/VRVisualLayer.h"
+#include "core/utils/VRTimer.h"
+#include "core/utils/toString.h"
 #include <libxml++/nodes/element.h>
 
 OSG_BEGIN_NAMESPACE;
@@ -35,6 +37,7 @@ VRScene::VRScene() {
     addUpdateFkt(updatePhysObjectsFkt);
 
     physicsThreadID = initThread(updatePhysicsFkt, "physics", true, 0);
+    loadingTimeCb = VRFunction<int>::create("loadingTimeCb", boost::bind(&VRScene::recLoadingTime, this));
 
     initDevices();
     VRMaterial::getDefault()->resetDefault();
@@ -195,6 +198,12 @@ void VRScene::update() {
     updateCallbacks();
 }
 
+void VRScene::recLoadingTime() {
+    cout << "expected loading time: " << loadingTime*0.001 << " s" << endl;
+    loadingTime = loadingTimer.stop();
+    cout << "measured loading time: " << loadingTime*0.001 << " s" << endl;
+}
+
 void VRScene::saveScene(xmlpp::Element* e) {
     if (e == 0) return;
     VRName::saveName(e);
@@ -205,10 +214,16 @@ void VRScene::saveScene(xmlpp::Element* e) {
     VRNavigator::saveUnder(e);
     VRMaterialManager::saveUnder(e);
     semanticManager->saveUnder(e);
+
+    e->set_attribute("loading_time", toString(loadingTime));
 }
 
 void VRScene::loadScene(xmlpp::Element* e) {
     if (e == 0) return;
+
+    if (e->get_attribute("loading_time")) loadingTime = toInt(e->get_attribute("loading_time")->get_value());
+    loadingTimer.start();
+
     VRName::loadName(e);
     VRRenderManager::loadChildFrom(e);
     VRScriptManager::loadChildFrom(e);
@@ -225,6 +240,8 @@ void VRScene::loadScene(xmlpp::Element* e) {
     VRNavigator::update();
     VRMaterialManager::update();
     semanticManager->update();
+
+    queueJob(loadingTimeCb);
 }
 
 VRSemanticManagerPtr VRScene::getSemanticManager() { return semanticManager; }

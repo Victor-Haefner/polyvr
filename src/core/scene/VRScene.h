@@ -15,6 +15,7 @@
 #include "core/utils/VRName.h"
 #include "core/utils/VRFlags.h"
 #include "core/utils/VRUtilsFwd.h"
+#include "core/utils/VRTimer.h"
 #include "VRBackground.h"
 #include "VRRenderManager.h"
 
@@ -53,6 +54,11 @@ class VRScene : public VRObjectManager,
         VRTogglePtr layer_light_toggle;
 
         VRSemanticManagerPtr semanticManager;
+
+        int loadingTime = 0;
+        VRTimer loadingTimer;
+        VRUpdatePtr loadingTimeCb;
+        void recLoadingTime();
 
     public:
         VRScene();

@@ -4,6 +4,8 @@
 
 using namespace std;
 
+VRTimer::VRTimer() { start(); }
+
 void VRTimer::start() { single.start = glutGet(GLUT_ELAPSED_TIME); }
 int VRTimer::stop() { return glutGet(GLUT_ELAPSED_TIME) - single.start; }
 
