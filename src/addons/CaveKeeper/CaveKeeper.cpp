@@ -165,7 +165,7 @@ void BlockWorld::appendToVector(vector<CKOctree::element*>* elements, CKOctree::
 void BlockWorld::updateShaderCamPos() {
     //VRTransformPtr e = VRSceneManager::get()->getTrackerUser(); // TODO
     VRTransformPtr e = 0;
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (e == 0 && scene) e = scene->getActiveCamera();
     Vec4f cam_pos = Vec4f(e->getWorldPosition());
 
@@ -184,7 +184,7 @@ void BlockWorld::initWorld() {
     createSphere(6, Vec3i(0,0,0));
 
     // TODO ?
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     updatePtr = VRFunction<int>::create("blockworld_update", boost::bind(&BlockWorld::updateShaderCamPos, this));
     if (scene) scene->addUpdateFkt(updatePtr, 1);
 

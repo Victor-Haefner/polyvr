@@ -1,7 +1,6 @@
 #include "VRGuiUtils.h"
 #include "VRGuiSignals.h"
 #include "VRGuiFile.h"
-#include "core/scene/VRSceneManager.h"
 #include "core/scene/VRSceneLoader.h"
 #include "core/scene/VRScene.h"
 #include "core/setup/devices/VRDevice.h"
@@ -483,7 +482,7 @@ void saveSnapshot(string path) {
 }
 
 void saveScene(string path) {
-    auto scene = OSG::VRSceneManager::getCurrent();
+    auto scene = OSG::VRScene::getCurrent();
     if (scene == 0) return;
     //if (path == "") path = scene->getPath();
     path = scene->getFile();

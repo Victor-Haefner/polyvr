@@ -5,7 +5,6 @@
 #include "core/objects/material/OSGMaterial.h"
 #include "core/objects/OSGObject.h"
 #include "core/scene/VRScene.h"
-#include "core/scene/VRSceneManager.h"
 #include "core/gui/VRGuiManager.h"
 #include <OpenSG/OSGTransform.h>
 #include <OpenSG/OSGSimpleMaterial.h>
@@ -69,7 +68,7 @@ VRCameraPtr VRCamera::create(string name, bool reg) {
     auto p = shared_ptr<VRCamera>(new VRCamera(name) );
     getAll().push_back( p );
     VRGuiManager::broadcast("camera_added");
-    if (reg) VRSceneManager::getCurrent()->setMActiveCamera(p->getName());
+    if (reg) VRScene::getCurrent()->setMActiveCamera(p->getName());
     return p;
 }
 
@@ -82,7 +81,7 @@ void VRCamera::setup() {
 }
 
 void VRCamera::activate() {
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene) scene->setActiveCamera(getName());
     VRGuiManager::broadcast("camera_added");
 }

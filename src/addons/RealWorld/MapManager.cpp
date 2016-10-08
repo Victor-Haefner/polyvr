@@ -22,8 +22,7 @@ MapManager::MapManager(Vec2f position, MapCoordinator* mapCoordinator, World* wo
     grid = new MapGrid(3, mapCoordinator->getGridSize() );
 
     worker = VRFunction< VRThreadWeakPtr >::create( "mapmanager work", boost::bind(&MapManager::work, this, _1) );
-    VRSceneManager::getCurrent()->initThread(worker, "mapmanager worker", true, 1);
-        void work();
+    VRScene::getCurrent()->initThread(worker, "mapmanager worker", true, 1);
 }
 
 void MapManager::work(VRThreadWeakPtr tw) {

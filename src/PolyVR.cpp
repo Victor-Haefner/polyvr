@@ -153,7 +153,7 @@ void PolyVR::startTestScene(OSGObjectPtr n) {
     start(false);
     cout << "start test scene " << n << endl;
     VRSceneManager::get()->newScene("test");
-    VRSceneManager::getCurrent()->getRoot()->find("Headlight")->addChild(n);
+    VRScene::getCurrent()->getRoot()->find("Headlight")->addChild(n);
     VRGuiManager::get()->wakeWindow();
     run();
 }

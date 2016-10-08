@@ -8,7 +8,6 @@
 #include <gtkmm/builder.h>
 #include <boost/filesystem.hpp>
 
-#include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
@@ -37,7 +36,7 @@ void VRGuiFile::init() {
 }
 
 void VRGuiFile::open(string button, int action, string title) {
-    //OSG::VRSetupManager::getCurrent()->pauseRendering(true);
+    //OSG::VRSetup::getCurrent()->pauseRendering(true);
 
     if (dialog == 0) init();
     setLabel("openFileWarning", "");
@@ -54,7 +53,7 @@ void VRGuiFile::open(string button, int action, string title) {
 }
 
 void VRGuiFile::close() {
-    //OSG::VRSetupManager::getCurrent()->pauseRendering(false);
+    //OSG::VRSetup::getCurrent()->pauseRendering(false);
     if (dialog == 0) init();
     setWidget(0);
     dialog->hide();

@@ -3,7 +3,6 @@
 #include "VRGuiFile.h"
 #include "VRGuiBits.h"
 #include "VRGuiManager.h"
-#include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
 #include "core/scene/VRScene.h"
 #include "core/scripting/VRScript.h"
@@ -95,7 +94,7 @@ VRScript* VRGuiScripts::getSelectedScript() {
     VRGuiScripts_ModelColumns cols;
     Gtk::TreeModel::Row row = *iter;
     string name = row.get_value(cols.script);
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene == 0) return 0;
     VRScript* script = scene->getScript(name);
     lastSelectedScript = script;
@@ -179,7 +178,7 @@ void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScript* script, bool on
 
 void VRGuiScripts::on_new_clicked() {
     Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("script_list"));
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene == 0) return;
     scene->newScript("Script", "\tpass");
     updateList();
@@ -190,7 +189,7 @@ void VRGuiScripts::on_save_clicked() {
     if (script == 0) return;
 
     string core = VRGuiScripts::get_editor_core(script->getHeadSize());
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene == 0) return;
     scene->updateScript(script->getName(), core);
 
@@ -200,7 +199,7 @@ void VRGuiScripts::on_save_clicked() {
 }
 
 void VRGuiScripts::on_import_clicked() {
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene == 0) return;
 
     import_liststore1->clear();
@@ -285,7 +284,7 @@ void VRGuiScripts::on_diag_import() {
     VRScript* s = import_scripts[name];
     import_scripts.erase(name);
 
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene == 0) return;
     scene->addScript(s);
     s->enable(true);
@@ -301,7 +300,7 @@ void VRGuiScripts::on_exec_clicked() {
 
     on_save_clicked();
 
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene == 0) return;
     scene->triggerScript(script->getName());
 
@@ -317,7 +316,7 @@ void VRGuiScripts::on_del_clicked() {
     VRGuiScripts_ModelColumns cols;
     Gtk::TreeModel::Row row = *iter;
     string name = row.get_value(cols.script);
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene == 0) return;
     VRScript* script = scene->getScript(name);
     if (script == 0) return;
@@ -349,7 +348,7 @@ void VRGuiScripts::on_select_script() { // selected a script
 
     // update options
     setCombobox("combobox1", getListStorePos("liststore6", script->getType()));
-    auto setup = VRSetupManager::getCurrent();
+    auto setup = VRSetup::getCurrent();
     if (setup) fillStringListstore("liststore7", setup->getDevices("mobile"));
     setCombobox("combobox24", getListStorePos("liststore7", script->getMobile()));
 
@@ -476,7 +475,7 @@ void VRGuiScripts::on_name_edited(const Glib::ustring& path, const Glib::ustring
     row[cols.script] = new_name;
 
     // update key in map
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene == 0) return;
     scene->changeScriptName(name, new_name);
     updateList();
@@ -497,7 +496,7 @@ void VRGuiScripts_on_script_changed(GtkTextBuffer* tb, gpointer user_data) {
     // negate change if in line 0
 
     string core = gs->get_editor_core(script->getHeadSize());
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene == 0) return;
     scene->updateScript(script->getName(), core, false);
 }
@@ -733,7 +732,7 @@ void VRGuiScripts::updateDocumentation() {
     Glib::RefPtr<Gtk::TreeView> view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview3"));
     store->clear();
 
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene == 0) return;
 
     // apply filter
@@ -814,7 +813,7 @@ void VRGuiScripts::on_select_help() {
     string cla = row.get_value(cols.cla);
     string mod = row.get_value(cols.mod);
 
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene == 0) return;
     Glib::RefPtr<Gtk::TextBuffer> tb  = Glib::RefPtr<Gtk::TextBuffer>::cast_static(VRGuiBuilder()->get_object("pydoc"));
 
@@ -860,7 +859,7 @@ void VRGuiScripts::on_find_diag_find_clicked() {
     VRScript* s = getSelectedScript();
     if (!sa && s == 0) return;
 
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene == 0) return;
 
     vector<VRScript*> results;
@@ -931,7 +930,7 @@ void VRGuiScripts::printViewerLanguages() {
 }
 
 void VRGuiScripts::update() {
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene == 0) return;
     Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("script_list"));
 
@@ -943,7 +942,7 @@ void VRGuiScripts::update() {
 }
 
 void VRGuiScripts::updateList() {
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene == 0) return;
 
     // update script list

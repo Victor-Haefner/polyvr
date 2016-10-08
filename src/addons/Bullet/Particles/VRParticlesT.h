@@ -10,7 +10,7 @@ OSG_BEGIN_NAMESPACE;
 
 template<class P>
 void VRParticles::resetParticles(int amount) {
-    VRScenePtr scene = VRSceneManager::getCurrent();
+    VRScenePtr scene = VRScene::getCurrent();
     if (scene) world = scene->bltWorld();
 
     this->disableFunctions();

@@ -3,7 +3,6 @@
 #include <OpenSG/OSGTextureEnvChunk.h>
 #include <OpenSG/OSGTextureObjChunk.h>
 
-#include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRPhysics.h"
@@ -60,7 +59,7 @@ CarDynamicsPtr CarDynamics::create(string name) { return CarDynamicsPtr( new Car
 
 //only to be done once
 void CarDynamics::initPhysics() {
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     updatePtr = VRFunction<int>::create("cardyn_update", boost::bind(&CarDynamics::updateWheels, this));
     scene->addUpdateFkt(updatePtr);
     m_dynamicsWorld = (btDynamicsWorld*) scene->bltWorld();
@@ -263,7 +262,7 @@ void CarDynamics::setCarMass(float m) {
 }
 
 boost::recursive_mutex& CarDynamics::mtx() {
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene) return scene->physicsMutex();
     else {
         static boost::recursive_mutex m;

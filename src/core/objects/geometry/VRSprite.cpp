@@ -2,7 +2,6 @@
 
 #include "core/tools/VRText.h"
 #include "core/objects/material/VRMaterial.h"
-#include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
 #include "addons/CEF/CEF.h"
 #include <OpenSG/OSGNameAttachment.h>
@@ -73,9 +72,9 @@ void VRSprite::webOpen(string path, int res, float ratio){
     mat->setLit(false);
     web = CEF::create();
 
-    VRDevicePtr mouse = VRSetupManager::getCurrent()->getDevice("mouse");
-    VRDevicePtr keyboard = VRSetupManager::getCurrent()->getDevice("keyboard");
-    VRDevicePtr flystick = VRSetupManager::getCurrent()->getDevice("flystick");
+    VRDevicePtr mouse = VRSetup::getCurrent()->getDevice("mouse");
+    VRDevicePtr keyboard = VRSetup::getCurrent()->getDevice("keyboard");
+    VRDevicePtr flystick = VRSetup::getCurrent()->getDevice("flystick");
 
     web->setMaterial(mat);
     web->open(path);

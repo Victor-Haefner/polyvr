@@ -5,7 +5,6 @@
 #include "VRGuiContextMenu.h"
 #include "core/scripting/VRScript.h"
 #include "core/setup/VRSetupManager.h"
-#include "core/scene/VRSceneManager.h"
 #include "core/setup/VRSetup.h"
 #include "core/setup/VRNetwork.h"
 #include "core/setup/windows/VRWindow.h"
@@ -15,6 +14,7 @@
 #include "core/setup/devices/VRFlystick.h"
 #include "core/setup/devices/VRHaptic.h"
 #include "core/setup/devices/VRMobile.h"
+#include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRManager.cpp"
@@ -79,7 +79,7 @@ void VRGuiSetup::updateObjectData() {
     bool device = false;
     guard = true;
 
-    current_scene = VRSceneManager::getCurrent();
+    current_scene = VRScene::getCurrent();
 
     if (selected_type == "window") {
         setExpanderSensitivity("expander3", true);
@@ -427,7 +427,7 @@ void VRGuiSetup::on_menu_add_window() {
     if (!setup) return;
     VRWindowPtr win = setup->addMultiWindow("Display");
     win->setActive(true);
-    if ( VRSceneManager::getCurrent() ) win->setContent(true);
+    if ( VRScene::getCurrent() ) win->setContent(true);
 
     updateSetup();
     selected_object = win.get();

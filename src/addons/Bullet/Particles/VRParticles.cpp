@@ -4,7 +4,6 @@
 #include "VREmitter.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/OSGGeometry.h"
-#include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 
 #include <cmath> /* cbrtf() */
@@ -19,7 +18,7 @@ using namespace std;
 using namespace OSG;
 
 boost::recursive_mutex& VRParticles::mtx() {
-    auto scene = OSG::VRSceneManager::getCurrent();
+    auto scene = OSG::VRScene::getCurrent();
     if (scene) return scene->physicsMutex();
     else {
         static boost::recursive_mutex m;
@@ -204,13 +203,13 @@ void VRParticles::destroyEmitter(int id) {
 void VRParticles::setFunctions(int from, int to) {
     this->from = from;
     this->to = to;
-    VRScenePtr scene = VRSceneManager::getCurrent();
+    VRScenePtr scene = VRScene::getCurrent();
     scene->dropUpdateFkt(fkt);
     fkt = VRFunction<int>::create("particles_update", boost::bind(&VRParticles::updateParticles, this,from,to));
     scene->addUpdateFkt(fkt);
 }
 
 void VRParticles::disableFunctions() {
-    VRScenePtr scene = VRSceneManager::getCurrent();
+    VRScenePtr scene = VRScene::getCurrent();
     if (scene) scene->dropUpdateFkt(fkt);
 }

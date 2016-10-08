@@ -1,5 +1,4 @@
 #include "core/scene/VRSceneLoader.h"
-#include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRGeometry.h"
@@ -382,7 +381,7 @@ TrafficSimulation::~TrafficSimulation() {
 
     // Stop the thread
     if (communicationThreadId > 0) {
-        VRSceneManager::get()->stopThread(communicationThreadId);
+        VRScene::getCurrent()->stopThread(communicationThreadId);
         communicationThreadId = -1;
         communicationThreadMutex.lock();
         communicationThreadMutex.unlock();
@@ -576,7 +575,7 @@ void TrafficSimulation::addDriverType(const unsigned int id, const double probab
 void TrafficSimulation::start() {
     if (communicationThreadId < 0) {
         threadFkt = VRFunction<VRThreadWeakPtr>::create("trafficCommunicationThread", boost::bind(&TrafficSimulation::communicationThread, this, _1));
-        communicationThreadId = VRSceneManager::get()->initThread(threadFkt, "trafficCommunicationThread", true);
+        communicationThreadId = VRScene::getCurrent()->initThread(threadFkt, "trafficCommunicationThread", true);
     }
 
 
@@ -588,7 +587,7 @@ void TrafficSimulation::start() {
 
 void TrafficSimulation::pause() {
     if (communicationThreadId > 0) {
-        VRSceneManager::get()->stopThread(communicationThreadId);
+        VRScene::getCurrent()->stopThread(communicationThreadId);
         communicationThreadId = -1;
     }
 
@@ -855,7 +854,7 @@ void TrafficSimulation::update() {
                     if (!light.isConvertibleTo(stringValue)) continue;
 
                     while (bulbIndex+1 >= lightBulbs.size()) {
-                        auto scene = VRSceneManager::getCurrent();
+                        auto scene = VRScene::getCurrent();
                         if (!scene) break;
 
                         // Create a new light

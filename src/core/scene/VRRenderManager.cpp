@@ -1,5 +1,4 @@
 #include "VRRenderManager.h"
-#include "core/setup/VRSetupManager.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/setup/VRSetup.h"
 #include "core/setup/windows/VRView.h"
@@ -36,7 +35,7 @@ VRRenderManager::VRRenderManager() {
 VRRenderManager::~VRRenderManager() {}
 
 void VRRenderManager::update() {
-    auto setup = VRSetupManager::getCurrent();
+    auto setup = VRSetup::getCurrent();
     if (!setup) return;
     RenderActionRefPtr ract = setup->getRenderAction();
 
@@ -71,7 +70,7 @@ void VRRenderManager::update() {
 }
 
 void VRRenderManager::addLight(VRLightPtr l) {
-    auto setup = VRSetupManager::getCurrent();
+    auto setup = VRSetup::getCurrent();
     if (!setup) return;
     for (auto v : setup->getViews()) {
         auto rendering = v->getRenderingL();
@@ -82,7 +81,7 @@ void VRRenderManager::addLight(VRLightPtr l) {
 }
 
 void VRRenderManager::setDSCamera(VRCameraPtr cam) {
-    auto setup = VRSetupManager::getCurrent();
+    auto setup = VRSetup::getCurrent();
     if (!setup) return;
     for (auto v : setup->getViews()) {
         auto rendering = v->getRenderingL();

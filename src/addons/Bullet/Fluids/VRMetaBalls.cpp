@@ -5,7 +5,6 @@
 #include "core/objects/material/VRMaterialT.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/scene/VRScene.h"
-#include "core/scene/VRSceneManager.h"
 
 using namespace OSG;
 
@@ -29,7 +28,7 @@ void VRMetaBalls::init() {
     depth_mat = VRMaterial::create(name+"_depth_mat");
     dstage->addChild(depth_mat);
 
-    auto cam = VRSceneManager::getCurrent()->getActiveCamera();
+    auto cam = VRScene::getCurrent()->getActiveCamera();
     stage->setTarget(mat, 0);
     dstage->setTarget(mat, 1);
     stage->setCamera(cam);

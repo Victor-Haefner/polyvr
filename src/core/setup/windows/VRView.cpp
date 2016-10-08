@@ -8,7 +8,6 @@
 #include "core/utils/VRRate.h"
 #include "core/utils/toString.h"
 #include "core/tools/VRText.h"
-#include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
 #include "core/gui/VRGuiUtils.h"
 #include "core/gui/VRGuiManager.h"
@@ -365,7 +364,7 @@ void VRView::showStats(bool b) {
     if (!b && doStats) lView->removeObjFromForegrounds(stats);
     doStats = b;
 
-    VRSetupManager::getCurrent()->getRenderAction()->setStatCollector(stats->getCollector());
+    VRSetup::getCurrent()->getRenderAction()->setStatCollector(stats->getCollector());
 }
 
 void VRView::showViewGeo(bool b) {
@@ -408,7 +407,7 @@ void VRView::setUser(VRTransformPtr u) {
 }
 
 void VRView::setUser() {
-    if (user == 0 && user_name != "") user = VRSetupManager::getCurrent()->getTracker(user_name);
+    if (user == 0 && user_name != "") user = VRSetup::getCurrent()->getTracker(user_name);
 
     if (user == 0) {
         if (PCDecoratorLeft) PCDecoratorLeft->setUser(dummy_user->getNode()->node);
@@ -520,8 +519,8 @@ VRTexturePtr VRView::grab() {
         grabfg->setActive(true);
         OSG::commitChanges();
 
-        //window->render( VRSetupManager::getCurrent()->getRenderAction() );
-        VRSetupManager::getCurrent()->updateWindows();
+        //window->render( VRSetup::getCurrent()->getRenderAction() );
+        VRSetup::getCurrent()->updateWindows();
         VRGuiManager::get()->updateGtk(); // TODO: rendering produces just opengl error 500
 
         img = grabfg->getImage();
@@ -566,7 +565,7 @@ void VRView::load(xmlpp::Element* node) {
     if (node->get_attribute("warp")) proj_warp = toVec2f(node->get_attribute("warp")->get_value());
     if (node->get_attribute("user")) {
         user_name = node->get_attribute("user")->get_value();
-        user = VRSetupManager::getCurrent()->getTracker(user_name);
+        user = VRSetup::getCurrent()->getTracker(user_name);
     }
 
     dummy_user->setFrom(proj_user);

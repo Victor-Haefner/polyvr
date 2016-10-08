@@ -2,7 +2,6 @@
 #include "core/utils/isNan.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRStorage_template.h"
-#include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/objects/object/OSGCore.h"
 #include "core/objects/geometry/VRConstraint.h"
@@ -734,7 +733,7 @@ vector<VRAnimation*> VRTransform::getAnimations() {
 
 VRAnimation* VRTransform::startPathAnimation(path* p, float time, float offset, bool redirect, bool loop) {
     pathAnimPtr = VRFunction<float>::create("TransAnim", boost::bind(setFromPath, VRTransformWeakPtr(ptr()), p, redirect, _1));
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     VRAnimation* a = scene->addAnimation<float>(time, offset, pathAnimPtr, 0.f, 1.f, loop);
     addAnimation(a);
     return a;

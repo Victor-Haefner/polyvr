@@ -1,4 +1,5 @@
 #include "VREmitter.h"
+#include "core/scene/VRScene.h"
 
 using namespace std;
 using namespace OSG;
@@ -8,7 +9,7 @@ typedef boost::recursive_mutex::scoped_lock BLock;
 
 boost::recursive_mutex& Emitter::mtx() {
     static boost::recursive_mutex m;
-    auto scene = OSG::VRSceneManager::getCurrent();
+    auto scene = OSG::VRScene::getCurrent();
     if (scene) return scene->physicsMutex();
     else return m;
 }
@@ -30,14 +31,14 @@ void Emitter::set(btDiscreteDynamicsWorld* world, vector<Particle*> particlesV, 
 
 Emitter::~Emitter() {
     setActive(false);
-    VRScenePtr scene = VRSceneManager::getCurrent();
+    VRScenePtr scene = VRScene::getCurrent();
     scene->dropUpdateFkt(fkt);
 }
 
 shared_ptr<Emitter> Emitter::create() { return shared_ptr<Emitter>( new Emitter() ); }
 
 void Emitter::setActive(bool activate) {
-    VRScenePtr scene = VRSceneManager::getCurrent();
+    VRScenePtr scene = VRScene::getCurrent();
     if (!scene) return;
     if (activate && !active) scene->addUpdateFkt(fkt);
     if (!activate) scene->dropUpdateFkt(fkt);
@@ -46,7 +47,7 @@ void Emitter::setActive(bool activate) {
 
 void Emitter::setLoop(bool activate) {
     loop = activate;
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (!scene) return;
     if (activate) scene->addUpdateFkt(fkt);
     else scene->dropUpdateFkt(fkt);

@@ -8,7 +8,6 @@
 #include "core/setup/devices/VRSignal.h"
 #include "core/setup/devices/VRDevice.h"
 #include "core/setup/devices/VRMouse.h"
-#include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/math/path.h"
 
@@ -332,7 +331,7 @@ void VRNavigator::focus(VRDeviceWeakPtr _dev) {
     if (!dev) return;
     VRTransformPtr target = dev->getTarget();
     VRTransformPtr devBeacon = dev->getBeacon();
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
 
     if (target == 0) return;
     if (devBeacon == 0) return;

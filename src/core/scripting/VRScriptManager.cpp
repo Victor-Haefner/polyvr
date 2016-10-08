@@ -7,8 +7,8 @@
 #include <sigc++/adaptors/bind.h>
 #include <gtkmm/filechooser.h>
 
-#include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
+#include "core/scene/VRSceneManager.h"
 #include "core/scene/VRSceneLoader.h"
 #include "core/scene/import/VRImport.h"
 #include "core/scene/import/VRExport.h"
@@ -75,7 +75,6 @@
 #include "core/gui/VRGuiFile.h"
 #include "core/gui/VRGuiManager.h"
 #include "core/setup/VRSetup.h"
-#include "core/setup/VRSetupManager.h"
 #include "addons/Algorithms/VRPyGraphLayout.h"
 #include "addons/CaveKeeper/VRPyCaveKeeper.h"
 #include "addons/Bullet/Particles/VRPyParticles.h"
@@ -540,7 +539,7 @@ string VRScriptManager::getPyVRMethodDoc(string mod, string type, string method)
 // ==============
 
 PyObject* VRScriptManager::setPhysicsActive(VRScriptManager* self, PyObject *args) {
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene) (dynamic_pointer_cast<VRPhysicsManager>(scene))->setPhysicsActive( parseBool(args) );
     Py_RETURN_TRUE;
 }
@@ -562,17 +561,17 @@ PyObject* VRScriptManager::loadScene(VRScriptManager* self, PyObject *args) {
 }
 
 PyObject* VRScriptManager::getSetup(VRScriptManager* self) {
-    return VRPySetup::fromSharedPtr(VRSetupManager::getCurrent());
+    return VRPySetup::fromSharedPtr(VRSetup::getCurrent());
 }
 
 PyObject* VRScriptManager::getNavigator(VRScriptManager* self) {
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     return VRPyNavigator::fromPtr((VRNavigator*)scene.get());
 }
 
 PyObject* VRScriptManager::printOSG(VRScriptManager* self) {
-    VRObject::printOSGTree( VRSceneManager::getCurrent()->getRoot()->getNode() );
-    VRSetupManager::getCurrent()->printOSG();
+    VRObject::printOSGTree( VRScene::getCurrent()->getRoot()->getNode() );
+    VRSetup::getCurrent()->printOSG();
     Py_RETURN_TRUE;
 }
 
@@ -582,7 +581,7 @@ PyObject* VRScriptManager::exit(VRScriptManager* self) {
 }
 
 PyObject* VRScriptManager::getRoot(VRScriptManager* self) {
-    return VRPyTypeCaster::cast( VRSceneManager::getCurrent()->getRoot() );
+    return VRPyTypeCaster::cast( VRScene::getCurrent()->getRoot() );
 }
 
 PyObject* VRScriptManager::loadGeometry(VRScriptManager* self, PyObject *args, PyObject *kwargs) {
@@ -597,7 +596,7 @@ PyObject* VRScriptManager::loadGeometry(VRScriptManager* self, PyObject *args, P
     string format = "s|isiss:loadGeometry";
     if (! PyArg_ParseTupleAndKeywords(args, kwargs, format.c_str(), (char**)kwlist, &path, &ignoreCache, &preset, &threaded, &parent, &options)) return NULL;
 
-    VRObjectPtr prnt = VRSceneManager::getCurrent()->getRoot()->find( parent );
+    VRObjectPtr prnt = VRScene::getCurrent()->getRoot()->find( parent );
 
     VRTransformPtr obj = VRImport::get()->load( path, prnt, !ignoreCache, preset, threaded, options);
     if (obj == 0) {
@@ -622,7 +621,7 @@ PyObject* VRScriptManager::getLoadGeometryProgress(VRScriptManager* self) {
 }
 
 PyObject* VRScriptManager::pyTriggerScript(VRScriptManager* self, PyObject *args) {
-    VRSceneManager::getCurrent()->triggerScript( parseString(args) );
+    VRScene::getCurrent()->triggerScript( parseString(args) );
     Py_RETURN_TRUE;
 }
 
@@ -665,7 +664,7 @@ PyObject* VRScriptManager::startThread(VRScriptManager* self, PyObject *args) {
     }
 
     auto pyThread = VRFunction< VRThreadWeakPtr >::create( "pyExecCall", boost::bind(execThread, pyFkt, pArgs, _1) );
-    int t = VRSceneManager::getCurrent()->initThread(pyThread, "python thread");
+    int t = VRScene::getCurrent()->initThread(pyThread, "python thread");
     pyThreadsTmp[t] = pyThread; // need to keep a reference!
     //self->pyThreads[t] = pyThread; // TODO: self is 0 ???
     return PyInt_FromLong(t);
@@ -673,7 +672,7 @@ PyObject* VRScriptManager::startThread(VRScriptManager* self, PyObject *args) {
 
 PyObject* VRScriptManager::joinThread(VRScriptManager* self, PyObject *args) {
     int ID = parseInt(args);
-    VRSceneManager::getCurrent()->stopThread(ID);
+    VRScene::getCurrent()->stopThread(ID);
     pyThreadsTmp.erase(ID);
     Py_RETURN_TRUE;
 }
@@ -694,7 +693,7 @@ PyObject* VRScriptManager::stackCall(VRScriptManager* self, PyObject *args) {
     VRUpdatePtr fkt = VRFunction<int>::create( "pyExecCall", boost::bind(execCall, pyFkt, pArgs, _1) );
     VRUpdateWeakPtr wkp = fkt;
 
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     auto a = scene->addAnimation(0, delay, wkp, 0, 0, false);
     a->setCallbackOwner(true);
     Py_RETURN_TRUE;
@@ -734,7 +733,7 @@ PyObject* VRScriptManager::updateGui(VRScriptManager* self) {
 
 PyObject* VRScriptManager::render(VRScriptManager* self) {
     VRSceneManager::get()->updateScene();
-    VRSetupManager::getCurrent()->updateWindows();
+    VRSetup::getCurrent()->updateWindows();
     VRGuiManager::get()->updateGtk();
     Py_RETURN_TRUE;
 }

@@ -19,7 +19,7 @@ VRFluids::VRFluids(bool spawnParticles) : VRParticles(false) {
 }
 
 VRFluids::~VRFluids() {
-    VRScenePtr scene = VRSceneManager::getCurrent();
+    VRScenePtr scene = VRScene::getCurrent();
     if (scene) scene->dropPhysicsUpdateFunction(fluidFkt.get(), this->afterBullet);
 }
 
@@ -32,7 +32,7 @@ void VRFluids::setFunctions(int from, int to) {
     this->to = to;
     {
         BLock lock(mtx());
-        VRScenePtr scene = VRSceneManager::getCurrent();
+        VRScenePtr scene = VRScene::getCurrent();
         if (!scene) {
             printf("VRFluids::setFunctions(): No scene found\n");
             return;
@@ -56,7 +56,7 @@ void VRFluids::setFunctions(int from, int to) {
 void VRFluids::disableFunctions() {
     {
         BLock lock(mtx());
-        VRScenePtr scene = VRSceneManager::getCurrent();
+        VRScenePtr scene = VRScene::getCurrent();
         scene->dropUpdateFkt(fkt);
         scene->dropPhysicsUpdateFunction(fluidFkt.get(), this->afterBullet);
     }

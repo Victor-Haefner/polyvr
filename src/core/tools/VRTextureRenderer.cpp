@@ -5,7 +5,6 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTexture.h"
 #include "core/scene/VRScene.h"
-#include "core/scene/VRSceneManager.h"
 
 #include <OpenSG/OSGBackground.h>
 #include <OpenSG/OSGSimpleStage.h>
@@ -47,7 +46,7 @@ void VRTextureRenderer::test() {
     flagGeo->setMaterial(flagMat);
     flagScene->addChild(NodeRefPtr(makeNodeFor(flagGeo)));
 
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     auto hlight = scene->getRoot()->find("Headlight");
     hlight->addChild( OSGObject::create(flagScene) );
 }
@@ -78,7 +77,7 @@ VRTextureRenderer::VRTextureRenderer(string name) : VRObject(name) {
     mat = VRMaterial::create("VRTextureRenderer");
     mat->setTexture(data->fboTex);
 
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
 
     // Stage
     data->stage = SimpleStage::create();

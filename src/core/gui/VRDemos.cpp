@@ -166,7 +166,7 @@ void VRDemos::on_lock_toggle(demoEntry* e) {
     else e->butLock->add(*e->imgUnlock);
     e->butLock->show_all();
 
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene) scene->setFlag("write_protected", e->write_protected);
 }
 
@@ -314,7 +314,7 @@ void VRDemos::on_advanced_start() {
     if (current_demo->running) toggleDemo(current_demo); // close demo if it is running
     toggleDemo(current_demo); // start demo
 
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (no_scripts && scene) scene->disableAllScripts();
 }
 
@@ -332,7 +332,7 @@ void VRDemos::on_diag_save_clicked() { // TODO: check if ending is .pvr
 }
 
 void VRDemos::on_saveas_clicked() {
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene == 0) return;
     VRGuiFile::gotoPath( scene->getWorkdir() );
     VRGuiFile::setFile( scene->getFile() );
@@ -378,7 +378,7 @@ void VRDemos::on_new_clicked() {
 }
 
 void VRDemos::update() {
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene == 0) {
         if (current_demo) {
             current_demo->running = false;

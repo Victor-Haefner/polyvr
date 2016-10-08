@@ -2,7 +2,6 @@
 #include "core/utils/toString.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/scene/VRScene.h"
-#include "core/scene/VRSceneManager.h"
 #include "core/objects/OSGObject.h"
 #include "core/objects/object/OSGCore.h"
 #include "VRLightBeacon.h"
@@ -69,7 +68,7 @@ VRLight::~VRLight() {}
 VRLightPtr VRLight::ptr() { return static_pointer_cast<VRLight>( shared_from_this() ); }
 VRLightPtr VRLight::create(string name) {
     auto l = shared_ptr<VRLight>(new VRLight(name) );
-    VRSceneManager::getCurrent()->addLight(l);
+    VRScene::getCurrent()->addLight(l);
     return l;
 }
 
@@ -89,7 +88,7 @@ void VRLight::setup() {
 }
 
 void VRLight::setup_after() {
-    auto root = VRSceneManager::getCurrent()->getRoot();
+    auto root = VRScene::getCurrent()->getRoot();
     VRObjectPtr tmp = getRoot()->find(beacon_name);
     if (tmp) setBeacon( static_pointer_cast<VRLightBeacon>(tmp) );
     else cout << "  !! could not find light beacon: " << root << " " << this << endl;

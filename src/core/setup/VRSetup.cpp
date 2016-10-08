@@ -1,4 +1,5 @@
 #include "VRSetup.h"
+#include "VRSetupManager.h"
 #include "VRNetwork.h"
 #include "windows/VRWindow.h"
 #include "core/scene/VRSceneManager.h"
@@ -50,6 +51,8 @@ VRSetup::~VRSetup() {
 }
 
 VRSetupPtr VRSetup::create(string name) { return VRSetupPtr(new VRSetup(name)); }
+
+VRSetupPtr VRSetup::getCurrent() { return VRSetupManager::get()->getCurrent(); }
 
 void VRSetup::updateTracking() {
     vive->update();

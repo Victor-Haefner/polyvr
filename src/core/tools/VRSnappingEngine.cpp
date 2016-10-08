@@ -3,9 +3,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/setup/devices/VRDevice.h"
 #include "core/setup/VRSetup.h"
-#include "core/setup/VRSetupManager.h"
 #include "core/scene/VRScene.h"
-#include "core/scene/VRSceneManager.h"
 #include "core/math/Octree.h"
 #include "core/utils/VRDoublebuffer.h"
 #include "core/setup/devices/VRSignalT.h"
@@ -75,7 +73,7 @@ VRSnappingEngine::VRSnappingEngine() {
     snapSignal = VRSignal::create();
 
     updatePtr = VRFunction<int>::create("snapping engine update", boost::bind(&VRSnappingEngine::update, this) );
-    VRSceneManager::getCurrent()->addUpdateFkt(updatePtr, 999);
+    VRScene::getCurrent()->addUpdateFkt(updatePtr, 999);
 }
 
 VRSnappingEngine::~VRSnappingEngine() {
@@ -152,7 +150,7 @@ void VRSnappingEngine::addTree(VRObjectPtr obj, float weight) {
 VRSignalPtr VRSnappingEngine::getSignalSnap() { return snapSignal; }
 
 void VRSnappingEngine::update() {
-    for (auto dev : VRSetupManager::getCurrent()->getDevices()) { // get dragged objects
+    for (auto dev : VRSetup::getCurrent()->getDevices()) { // get dragged objects
         VRTransformPtr obj = dev.second->getDraggedObject();
         VRTransformPtr gobj = dev.second->getDraggedGhost();
         if (obj == 0 || gobj == 0) continue;

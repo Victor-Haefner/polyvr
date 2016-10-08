@@ -15,13 +15,12 @@ class VRSetupManager {
         VRSetupPtr current = 0;
         string current_path;
 
-        VRSetupManager();
-
     public:
-        static VRSetupManager* get();
-        static VRSetupPtr getCurrent();
+        VRSetupManager();
         ~VRSetupManager();
+        static VRSetupManager* get();
 
+        VRSetupPtr getCurrent();
         void closeSetup();
         VRSetupPtr create();
         VRSetupPtr load(string name, string path);

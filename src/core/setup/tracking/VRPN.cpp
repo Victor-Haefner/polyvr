@@ -1,7 +1,6 @@
 #include "VRPN.h"
 #include "core/gui/VRGuiManager.h"
 #include "core/scene/VRSceneManager.h"
-#include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
 #include "core/objects/VRTransform.h"
 #include "core/utils/toString.h"
@@ -79,7 +78,7 @@ VRPN_device::~VRPN_device() {}
 
 VRPN_devicePtr VRPN_device::create() {
     auto d = VRPN_devicePtr( new VRPN_device() );
-    VRSetupManager::getCurrent()->addDevice(d);
+    VRSetup::getCurrent()->addDevice(d);
     d->initIntersect(d);
     return d;
 }

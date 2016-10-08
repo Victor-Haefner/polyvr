@@ -1,7 +1,6 @@
 #include "VRWindow.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRRenderStudio.h"
-#include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
 #include "core/scene/VRThreadManager.h"
 #include "core/utils/VRFunction.h"
@@ -129,22 +128,22 @@ void VRWindow::load(xmlpp::Element* node) {
 
         if (el->get_name() != "View") continue;
 
-        int i = VRSetupManager::getCurrent()->addView(name);
-        VRViewPtr v = VRSetupManager::getCurrent()->getView(i);
+        int i = VRSetup::getCurrent()->addView(name);
+        VRViewPtr v = VRSetup::getCurrent()->getView(i);
         addView(v);
         v->load(el);
     }
 
     string _mouse = node->get_attribute("mouse")->get_value();
     if (_mouse != "None") {
-        mouse = dynamic_pointer_cast<VRMouse>( VRSetupManager::getCurrent()->getDevice(_mouse) );
+        mouse = dynamic_pointer_cast<VRMouse>( VRSetup::getCurrent()->getDevice(_mouse) );
         if (views.size() > 0 && mouse) if (auto v = views[0].lock()) mouse->setViewport(v);
     }
 
     if (node->get_attribute("keyboard") != 0) {
         string _keyboard = node->get_attribute("keyboard")->get_value();
         if (_keyboard != "None") {
-            keyboard = dynamic_pointer_cast<VRKeyboard>( VRSetupManager::getCurrent()->getDevice(_keyboard) );
+            keyboard = dynamic_pointer_cast<VRKeyboard>( VRSetup::getCurrent()->getDevice(_keyboard) );
         }
     }
 }

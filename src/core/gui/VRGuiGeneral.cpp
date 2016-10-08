@@ -43,27 +43,27 @@ VRGuiGeneral::VRGuiGeneral() {
 
 bool VRGuiGeneral::setSSAOradius( int st, double d ) {
     if (updating) return false;
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene) scene->setSSAOradius( getSliderState("hscale1") );
     return true;
 }
 
 bool VRGuiGeneral::setSSAOkernel( int st, double d ) {
     if (updating) return false;
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene) scene->setSSAOkernel( getSliderState("hscale2") );
     return true;
 }
 
 bool VRGuiGeneral::setSSAOnoise( int st, double d ) {
     if (updating) return false;
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene) scene->setSSAOnoise( getSliderState("hscale3") );
     return true;
 }
 
 void VRGuiGeneral::dumpOSG() {
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene == 0) return;
 
     string pg = scene->getName() + "_osg_dump.osg";
@@ -77,7 +77,7 @@ void VRGuiGeneral::dumpOSG() {
 bool VRGuiGeneral::setColor(GdkEventButton* b) {
     if (updating) return true;
 
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     Color3f col = scene->getBackgroundColor();
     Color4f c = chooseColor("bg_solid", toColor4f(col));
     scene->setBackgroundColor(toColor3f(c));
@@ -86,14 +86,14 @@ bool VRGuiGeneral::setColor(GdkEventButton* b) {
 
 void VRGuiGeneral::setPath() {
     if (updating) return;
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene == 0) return;
     scene->setBackgroundPath( getTextEntry("entry42") );
 }
 
 void VRGuiGeneral::setExtension() {
     if (updating) return;
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene == 0) return;
     scene->setSkyBGExtension( getTextEntry("entry14") );
 }
@@ -104,7 +104,7 @@ void VRGuiGeneral::setMode() {
     VRBackground::TYPE t = VRBackground::SOLID;
     if ( getCheckButtonState("radiobutton4") ) t = VRBackground::IMAGE;
     if ( getCheckButtonState("radiobutton5") ) t = VRBackground::SKY;
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     scene->setBackground( t );
 
     setEntrySensitivity("entry14", t == VRBackground::SKY);
@@ -113,48 +113,48 @@ void VRGuiGeneral::setMode() {
 
 void VRGuiGeneral::toggleDefferedShader() {
     if (updating) return;
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene) scene->setDefferedShading( getCheckButtonState("checkbutton_3") );
 }
 
 void VRGuiGeneral::toggleSSAO() {
     if (updating) return;
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene) scene->setSSAO( getCheckButtonState("checkbutton_4") );
 }
 
 void VRGuiGeneral::toggleHMDD() {
     if (updating) return;
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene) scene->setHMDD( getCheckButtonState("checkbutton_6") );
 }
 
 void VRGuiGeneral::toggleCalib() {
     if (updating) return;
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene) scene->setCalib( getCheckButtonState("checkbutton_5") );
 }
 
 void VRGuiGeneral::toggleFrustumCulling() {
     if (updating) return;
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene) scene->setFrustumCulling( getCheckButtonState("checkbutton_01") );
 }
 
 void VRGuiGeneral::toggleOcclusionCulling() {
     if (updating) return;
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene) scene->setOcclusionCulling( getCheckButtonState("checkbutton_02") );
 }
 
 void VRGuiGeneral::toggleTwoSided() {
     if (updating) return;
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene) scene->setTwoSided( getCheckButtonState("checkbutton_2") );
 }
 
 void VRGuiGeneral::updateScene() {
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene == 0) return;
 
     updating = true;

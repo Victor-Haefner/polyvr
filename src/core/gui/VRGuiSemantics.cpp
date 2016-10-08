@@ -299,7 +299,7 @@ void VRGuiSemantics_on_name_edited(GtkCellRendererText *cell, gchar *path_string
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
     if(!iter) return;
 
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (!scene) return;
 
     // get selected socket
@@ -312,7 +312,7 @@ void VRGuiSemantics_on_name_edited(GtkCellRendererText *cell, gchar *path_string
 }
 
 VRSemanticManagerPtr VRGuiSemantics::getManager() {
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene) return scene->getSemanticManager();
     return 0;
 }

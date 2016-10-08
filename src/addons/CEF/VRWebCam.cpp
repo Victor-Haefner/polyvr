@@ -1,6 +1,5 @@
 #include "VRWebCam.h"
 #include "core/setup/VRSetup.h"
-#include "core/setup/VRSetupManager.h"
 #include "core/setup/devices/VRMobile.h"
 
 using namespace OSG;
@@ -13,7 +12,7 @@ void VRWebCam::connect(string uri, int res, float ratio) {
     site += "<img src=\"" + uri + "\" alt=\"" + uri + "\"></img>";
     site += "</body></html>";
 
-    VRMobilePtr mob = dynamic_pointer_cast<VRMobile>( VRSetupManager::getCurrent()->getDevice("mobile") );
+    VRMobilePtr mob = dynamic_pointer_cast<VRMobile>( VRSetup::getCurrent()->getDevice("mobile") );
     if (!mob) return;
 
     mob->addWebSite("internal_webcam_1234", site);

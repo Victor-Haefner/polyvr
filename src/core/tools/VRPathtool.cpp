@@ -5,9 +5,7 @@
 #include "core/objects/geometry/VRStroke.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/scene/VRScene.h"
-#include "core/scene/VRSceneManager.h"
 #include "core/setup/VRSetup.h"
-#include "core/setup/VRSetupManager.h"
 #include "core/setup/devices/VRDevice.h"
 
 #include <OpenSG/OSGGeoProperties.h>
@@ -69,7 +67,7 @@ void VRManipulator::setup() {
 
 VRPathtool::VRPathtool() : VRObject("Pathtool") {
     updatePtr = VRFunction<int>::create("path tool update", boost::bind(&VRPathtool::updateDevs, this) );
-    VRSceneManager::getCurrent()->addUpdateFkt(updatePtr, 100);
+    VRScene::getCurrent()->addUpdateFkt(updatePtr, 100);
 
     manip = new VRManipulator();
 
@@ -181,7 +179,7 @@ void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle
 }
 
 void VRPathtool::updateDevs() { // update when something is dragged
-    for (auto dev : VRSetupManager::getCurrent()->getDevices()) { // get dragged objects
+    for (auto dev : VRSetup::getCurrent()->getDevices()) { // get dragged objects
         VRGeometryPtr obj = static_pointer_cast<VRGeometry>(dev.second->getDraggedObject());
         if (obj == 0) continue;
         if (entries.count(obj.get()) == 0) continue;

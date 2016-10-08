@@ -2,11 +2,8 @@
 #define VREMITTER_H_INCLUDED
 
 #include "VRParticle.h"
-#include "core/scene/VRSceneManager.h"
-#include "core/scene/VRScene.h"
 
 #include <OpenSG/OSGConfig.h>
-#include <OpenSG/OSGGeoProperties.h>
 #include <btBulletDynamicsCommon.h>
 #include <BulletSoftBody/btSoftRigidDynamicsWorld.h>
 

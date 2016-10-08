@@ -19,7 +19,6 @@
 #include <iostream>
 //#include <boost/locale.hpp>
 #include "core/scene/VRSceneManager.h"
-#include "core/setup/VRSetupManager.h"
 #include "core/setup/windows/VRView.h"
 #include "core/utils/VRInternalMonitor.h"
 #include "core/utils/VRVisualLayer.h"
@@ -62,13 +61,13 @@ void VRGuiBits::on_view_option_toggle(VRVisualLayer* l, Gtk::ToggleToolButton* t
 
 void VRGuiBits::on_camera_changed() {
     string name = getComboboxText("combobox4");
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     scene->setActiveCamera(name);
     VRGuiSignals::get()->getSignal("camera_changed")->triggerPtr<VRDevice>();
 }
 
 void VRGuiBits::on_navigation_changed() {
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene == 0) return;
     string name = getComboboxText("combobox9");
     scene->setActiveNavigation(name);
@@ -236,7 +235,7 @@ bool VRGuiBits::toggleFullscreen(GdkEventKey* k) {
 
 bool VRGuiBits::toggleStereo(GdkEventKey* k) {
     if (k->keyval != 65479) return false;
-    VRViewPtr v = VRSetupManager::getCurrent()->getView(0);
+    VRViewPtr v = VRSetup::getCurrent()->getView(0);
     if (v == 0) return false;
 
     bool b = v->isStereo();
@@ -378,7 +377,7 @@ void VRGuiBits::updateVisualLayer() {
 }
 
 void VRGuiBits::update() { // scene changed
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     setLabel("label24", "Project: None");
     if (scene == 0) return;
 

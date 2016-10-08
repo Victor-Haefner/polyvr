@@ -1,5 +1,4 @@
 #include "VRMillingWorkPiece.h"
-#include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/math/pose.h"
 
@@ -11,7 +10,7 @@ using namespace std;
 VRMillingWorkPiece::VRMillingWorkPiece(string name) : VRGeometry(name), rootElement(nullptr) {
 	type = "MillingWorkPiece";
 	uFkt = VRFunction<int>::create("MillingWorkPiece-update", boost::bind(&VRMillingWorkPiece::update, this));
-	VRSceneManager::getCurrent()->addUpdateFkt(uFkt);
+	VRScene::getCurrent()->addUpdateFkt(uFkt);
 }
 
 VRMillingWorkPiecePtr VRMillingWorkPiece::ptr() { return static_pointer_cast<VRMillingWorkPiece>( shared_from_this() ); }

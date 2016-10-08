@@ -11,7 +11,6 @@
 #include "core/utils/VRTimer.h"
 #include "core/objects/object/VRObject.h"
 #include "core/utils/VRRate.h"
-#include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/utils/VRFunction.h"
 
@@ -142,7 +141,7 @@ void VRWindowManager::updateWindows() {
     //timer.start("VRWindowManager::updateWindows");
     if (rendering_paused) return;
 
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene) scene->allowScriptThreads();
 
     ract->setResetStatistics(false);

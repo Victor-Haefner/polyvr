@@ -1,7 +1,6 @@
 #include "VRMouse.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
-#include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
 #include "core/setup/windows/VRGtkWindow.h"
 #include "core/objects/VRCamera.h"
@@ -26,7 +25,7 @@ VRMousePtr VRMouse::create() {
 VRMousePtr VRMouse::ptr() { return static_pointer_cast<VRMouse>( shared_from_this() ); }
 
 void VRMouse::setCursor(string c) {
-    auto s = VRSetupManager::getCurrent();
+    auto s = VRSetup::getCurrent();
     for (auto w : s->getWindows()) {
         if (!w.second->hasType(2)) continue; // not a gtk window
         auto win = dynamic_pointer_cast<VRGtkWindow>(w.second);

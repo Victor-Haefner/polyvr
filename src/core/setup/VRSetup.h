@@ -47,6 +47,7 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
         ~VRSetup();
 
         static VRSetupPtr create(string name);
+        static VRSetupPtr getCurrent();
 
         VRNetworkPtr getNetwork();
 

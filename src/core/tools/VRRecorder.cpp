@@ -1,7 +1,6 @@
 #include "VRRecorder.h"
 #include "core/setup/windows/VRView.h"
 #include "core/setup/VRSetup.h"
-#include "core/setup/VRSetupManager.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/objects/object/VRObject.h"
 #include "core/objects/VRTransform.h"
@@ -88,8 +87,8 @@ VRRecorder::VRRecorder() {
 
 void VRRecorder::setView(int i) {
     viewID = i;
-    if (VRSetupManager::getCurrent() == 0) return;
-    view = VRSetupManager::getCurrent()->getView(i);
+    if (VRSetup::getCurrent() == 0) return;
+    view = VRSetup::getCurrent()->getView(i);
 }
 
 void VRRecorder::setMaxFrames(int maxf) { maxFrames = maxf; }
@@ -112,7 +111,7 @@ Vec3f VRRecorder::getUp(int f) { VRFrame* fr = captures[f]; return fr->u; }
 void VRRecorder::capture() {
     auto v = view.lock();
     if (!v) {
-        v = VRSetupManager::getCurrent()->getView(viewID);
+        v = VRSetup::getCurrent()->getView(viewID);
         view = v;
     }
     if (!v) return;

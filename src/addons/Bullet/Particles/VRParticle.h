@@ -3,7 +3,6 @@
 
 #define BIT(x) (1<<(x))
 
-#include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 
 #include <OpenSG/OSGConfig.h>
@@ -32,7 +31,7 @@ struct Particle {
     Particle(btDiscreteDynamicsWorld* world = 0) {}
 
     ~Particle() {
-        VRScenePtr scene = VRSceneManager::getCurrent();
+        VRScenePtr scene = VRScene::getCurrent();
         if (scene && body) { scene->bltWorld()->removeRigidBody(body); }
         if (body) { delete body; }
         if (shape) { delete shape; }

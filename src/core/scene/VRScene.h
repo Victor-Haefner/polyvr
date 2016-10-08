@@ -68,6 +68,8 @@ class VRScene : public VRObjectManager,
         VRScene();
         ~VRScene();
 
+        static VRScenePtr getCurrent();
+
         void setPath(string path);
         void setIcon(string icon);
         string getPath();

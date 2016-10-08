@@ -9,7 +9,6 @@
 
 #include <boost/filesystem.hpp>
 
-#include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRStorage_template.h"
@@ -160,7 +159,7 @@ Color3f VRBackground::getBackgroundColor() { return base->color; }
 string VRBackground::getBackgroundPath() { return base->path; }
 
 void VRBackground::updateBackground() {
-    auto setup = VRSetupManager::getCurrent();
+    auto setup = VRSetup::getCurrent();
     if (setup) setup->setViewBackground(getBackground());
 }
 

@@ -2,8 +2,8 @@
 #include "VRPing.h"
 #include "mongoose/mongoose.h"
 #include "core/objects/object/VRObject.h"
-#include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
+#include "core/scene/VRSceneManager.h"
 #include "core/setup/devices/VRDevice.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRLogger.h"
@@ -251,7 +251,7 @@ void VRSocket::trigger() {
 }
 
 void VRSocket::handle(string s) {
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene == 0) return;
     tcp_msg = s;
     scene->queueJob(queued_signal);

@@ -68,7 +68,7 @@ CEF::CEF() {
     global_initiate();
     client = new CEF_client();
     update_callback = VRFunction<int>::create("webkit_update", boost::bind(&CEF::update, this));
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene) scene->addUpdateFkt(update_callback);
 }
 
@@ -177,7 +177,7 @@ void CEF::addMouse(VRDevicePtr dev, VRObjectWeakPtr obj, int lb, int rb, int wu,
     dev->addSignal(-1,1)->add(mouse_dev_callback[k]);
 
     if (!mouse_move_callback.count(k)) mouse_move_callback[k] = VRFunction<int>::create( "CEF::MM", boost::bind(&CEF::mouse_move, this, dev, _1) );
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene) scene->addUpdateFkt(mouse_move_callback[k]);
 }
 

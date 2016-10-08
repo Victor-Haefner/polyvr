@@ -10,7 +10,6 @@
 #include "../devices/VRKeyboard.h"
 #include "core/utils/VRTimer.h"
 #include "core/utils/VROptions.h"
-#include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -228,7 +227,7 @@ void VRGtkWindow::on_realize() {
 }
 
 bool VRGtkWindow::on_expose(GdkEventExpose* event) {
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene) scene->allowScriptThreads();
 
     GdkGLContext *glcontext = gtk_widget_get_gl_context (widget);

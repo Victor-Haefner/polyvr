@@ -2,6 +2,7 @@
 #include <iostream>
 #include <functional>
 #include "core/scene/VRScene.h"
+#include "core/scene/VRSceneManager.h"
 #include "VRPyObject.h"
 #include "VRPyGeometry.h"
 #include "VRPyDevice.h"
@@ -13,10 +14,8 @@
 #include "VRPyHaptic.h"
 #include "VRPyMobile.h"
 #include "VRPyBaseT.h"
-#include "core/scene/VRSceneManager.h"
 #include "core/utils/VRTimer.h"
 #include "core/utils/toString.h"
-#include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
 #include "core/objects/material/VRMaterial.h"
 #include <libxml++/nodes/element.h>
@@ -27,8 +26,8 @@ using namespace std;
 
 void updateArgPtr(VRScript::arg* a) {
     string t = a->type;
-    auto scene = VRSceneManager::getCurrent();
-    VRSetupPtr setup = VRSetupManager::getCurrent();
+    auto scene = VRScene::getCurrent();
+    VRSetupPtr setup = VRSetup::getCurrent();
 
     if (t == "VRPyObjectType" || t == "VRPyGeometryType" || t == "VRPyTransformType" || t == "VRPyLightType" || t == "VRPyLodType") {
         a->ptr = (void*)scene->get(a->val).get();
@@ -56,10 +55,10 @@ VRScript::arg::arg(string nspace, string name) {
 }
 
 void VRScript::clean() {
-    VRMobilePtr mob = dynamic_pointer_cast<VRMobile>( VRSetupManager::getCurrent()->getDevice(this->mobile) );
+    VRMobilePtr mob = dynamic_pointer_cast<VRMobile>( VRSetup::getCurrent()->getDevice(this->mobile) );
     if (mob) mob->remWebSite(getName());
 
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
 
     for (auto tr : trigs) {
         trig* t = tr.second;
@@ -76,11 +75,11 @@ void VRScript::clean() {
 
 void VRScript::update() {
     if (type == "HTML") {
-        VRMobilePtr mob = dynamic_pointer_cast<VRMobile>( VRSetupManager::getCurrent()->getDevice(mobile) );
+        VRMobilePtr mob = dynamic_pointer_cast<VRMobile>( VRSetup::getCurrent()->getDevice(mobile) );
         if (mob) mob->addWebSite(getName(), core);
     }
 
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
 
     for (auto tr : trigs) {
         trig* t = tr.second;
@@ -96,7 +95,7 @@ void VRScript::update() {
         }
 
         if (t->trigger == "on_device") {
-            VRDevicePtr dev = VRSetupManager::getCurrent()->getDevice(t->dev);
+            VRDevicePtr dev = VRSetup::getCurrent()->getDevice(t->dev);
             int state = -1;
             if (t->state == "Released") state = 0;
             if (t->state == "Pressed") state = 1;
@@ -313,7 +312,7 @@ void VRScript::execute() {
     }
 
     if (type == "HTML") {
-        VRMobilePtr mob = dynamic_pointer_cast<VRMobile>( VRSetupManager::getCurrent()->getDevice(this->mobile) );
+        VRMobilePtr mob = dynamic_pointer_cast<VRMobile>( VRSetup::getCurrent()->getDevice(this->mobile) );
         if (mob) mob->updateClients(getName());
     }
 
@@ -446,7 +445,7 @@ void VRScript::load(xmlpp::Element* e) {
             trigs[t->getName()] = t;
 
             if (t->trigger == "on_scene_load" && active) {
-                auto scene = VRSceneManager::getCurrent();
+                auto scene = VRScene::getCurrent();
                 scene->queueJob(cbfkt_sys);
             }
         }

@@ -1,10 +1,9 @@
 #include "ART.h"
 #include "core/scene/VRThreadManager.h"
-#include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
 #include "core/utils/VROptions.h"
-#include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
+#include "core/scene/VRSceneManager.h"
 #include "core/utils/toString.h"
 #include <libxml++/nodes/element.h>
 #include "DTrack.h"
@@ -33,10 +32,10 @@ void ART_device::init() {
         dev = VRFlystick::create();
         ent = dev->editBeacon();
 
-        auto setup = VRSetupManager::getCurrent();
+        auto setup = VRSetup::getCurrent();
         if (setup) setup->addDevice(dev);
 
-        auto scene = VRSceneManager::getCurrent();
+        auto scene = VRScene::getCurrent();
         if (scene) {
             scene->initFlyWalk(scene->getActiveCamera(), dev);
             scene->setActiveNavigation("FlyWalk");
@@ -145,7 +144,7 @@ void ART::updateT( weak_ptr<VRThread>  t) {
 }
 
 void ART::update_setup() {
-    auto setup = VRSetupManager::getCurrent();
+    auto setup = VRSetup::getCurrent();
     setup->updateViews(); // TODO: fuer headtracking, solte vlt wo anders hin
     auto r = setup->getRoot();
     for (auto d : devices) {

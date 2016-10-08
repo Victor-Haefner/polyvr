@@ -1,6 +1,5 @@
 #include "VRHandle.h"
 #include "core/scene/VRScene.h"
-#include "core/scene/VRSceneManager.h"
 #include "core/utils/VRFunction.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRConstraint.h"
@@ -72,13 +71,13 @@ void VRHandle::updateHandle() {
 
 void VRHandle::drag(VRTransformPtr new_parent) {
     VRTransform::drag(new_parent);
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     scene->addUpdateFkt( updateCb );
 }
 
 void VRHandle::drop() {
     VRTransform::drop();
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     scene->dropUpdateFkt( updateCb );
 }
 

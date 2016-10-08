@@ -33,7 +33,6 @@
 #include "core/objects/material/VRTexture.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRUndoInterfaceT.h"
-#include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/scripting/VRScript.h"
 #include "VRVideo.h"
@@ -152,7 +151,7 @@ map<string, VRMaterialWeakPtr> VRMaterial::materials;
 map<MaterialMTRecPtr, VRMaterialWeakPtr> VRMaterial::materialsByPtr;
 
 VRMaterial::VRMaterial(string name) : VRObject(name) {
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene) deferred = scene->getDefferedShading();
     addAttachment("material", 0);
     passes = OSGMaterial::create( MultiPassMaterial::create() );
@@ -834,19 +833,19 @@ void VRMaterial::setMagMinFilter(string mag, string min) {
 
 void VRMaterial::setVertexScript(string script) {
     mats[activePass]->vertexScript = script;
-    VRScript* scr = VRSceneManager::getCurrent()->getScript(script);
+    VRScript* scr = VRScene::getCurrent()->getScript(script);
     if (scr) setVertexShader(scr->getCore());
 }
 
 void VRMaterial::setFragmentScript(string script) {
     mats[activePass]->fragmentScript = script;
-    VRScript* scr = VRSceneManager::getCurrent()->getScript(script);
+    VRScript* scr = VRScene::getCurrent()->getScript(script);
     if (scr) setFragmentShader(scr->getCore());
 }
 
 void VRMaterial::setGeometryScript(string script) {
     mats[activePass]->geometryScript = script;
-    VRScript* scr = VRSceneManager::getCurrent()->getScript(script);
+    VRScript* scr = VRScene::getCurrent()->getScript(script);
     if (scr) setGeometryShader(scr->getCore());
 }
 

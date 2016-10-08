@@ -27,7 +27,6 @@
 #include "core/utils/VRFunction.h"
 #include "core/utils/toString.h"
 #include "core/scene/VRScene.h"
-#include "core/scene/VRSceneManager.h"
 
 OSG_BEGIN_NAMESPACE;
 
@@ -114,7 +113,7 @@ VRTransformPtr VRImport::load(string path, VRObjectPtr parent, bool reload, stri
         auto r = cache[path].retrieve(parent);
         auto job = new LoadJob(path, preset, r, progress, options); // TODO: fix memory leak!
         job->loadCb = VRFunction< VRThreadWeakPtr >::create( "geo load", boost::bind(&LoadJob::load, job, _1) );
-        VRSceneManager::getCurrent()->initThread(job->loadCb, "geo load thread", false, 1);
+        VRScene::getCurrent()->initThread(job->loadCb, "geo load thread", false, 1);
         return r;
     }
 }

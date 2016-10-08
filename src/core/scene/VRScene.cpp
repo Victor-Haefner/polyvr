@@ -6,7 +6,6 @@
 #include "core/setup/devices/VRMobile.h"
 #include "VRSceneManager.h"
 #include "VRSemanticManager.h"
-#include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
 #include "core/objects/OSGObject.h"
 #include "core/objects/VRLightBeacon.h"
@@ -75,8 +74,10 @@ VRScene::~VRScene() {
     VRMaterial::clearAll();
 }
 
+VRScenePtr VRScene::getCurrent() { return VRSceneManager::get()->getCurrent(); }
+
 void VRScene::initDevices() { // TODO: remove this after refactoring the navigation stuff
-    VRSetupPtr setup = VRSetupManager::getCurrent();
+    VRSetupPtr setup = VRSetup::getCurrent();
     if (!setup) return;
 
     VRMousePtr mouse = dynamic_pointer_cast<VRMouse>( setup->getDevice("mouse") );
@@ -150,7 +151,7 @@ VRObjectPtr VRScene::get(string name) {
 
 void VRScene::setActiveCamera(string camname) {
     setMActiveCamera(camname);
-    VRSetupPtr setup = VRSetupManager::getCurrent();
+    VRSetupPtr setup = VRSetup::getCurrent();
 
     // TODO: refactor the following workaround
     VRCameraPtr cam = getActiveCamera();

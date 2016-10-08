@@ -1,7 +1,6 @@
 #include "VRAnimation.h"
 
 #include "core/utils/VRFunction.h"
-#include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 
 #include <GL/glut.h>
@@ -19,7 +18,7 @@ void VRAnimation::start(float offset) {
     this->offset = offset;
     start_time = glutGet(GLUT_ELAPSED_TIME)/1000.0;
     run = true;
-    VRSceneManager::getCurrent()->addAnimation(this);
+    VRScene::getCurrent()->addAnimation(this);
 }
 
 void VRAnimation::setCallbackOwner(bool b) {

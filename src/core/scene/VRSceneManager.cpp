@@ -1,6 +1,5 @@
 #include "VRSceneManager.h"
 #include "VRSceneLoader.h"
-#include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
 #include "core/setup/windows/VRWindow.h"
 #include "core/utils/VRRate.h"
@@ -63,12 +62,12 @@ void VRSceneManager::closeScene() {
     on_scene_close->triggerPtr<VRDevice>();
     current = 0;
 
-    VRSetupManager::getCurrent()->resetViewports();
-    VRSetupManager::getCurrent()->clearSignals();
+    VRSetup::getCurrent()->resetViewports();
+    VRSetup::getCurrent()->clearSignals();
     VRTransform::dynamicObjects.clear();
 
     // deactivate windows
-    auto windows = VRSetupManager::getCurrent()->getWindows();
+    auto windows = VRSetup::getCurrent()->getWindows();
     for (auto w : windows) w.second->setContent(false);
 
     setWorkdir(original_workdir);
@@ -105,7 +104,7 @@ void VRSceneManager::newScene(string path) {
     headlight->addChild(cam);
 
     VRTransformPtr user;
-    auto setup = VRSetupManager::getCurrent();
+    auto setup = VRSetup::getCurrent();
     if (setup) user = setup->getUser();
     if (user) user->addChild(headlight_B);
     else cam->addChild(headlight_B);
@@ -120,7 +119,7 @@ VRSignalPtr VRSceneManager::getSignal_on_scene_close() { return on_scene_close; 
 void VRSceneManager::setScene(VRScenePtr scene) {
     if (!scene) return;
     current = scene;
-    VRSetupManager::getCurrent()->setScene(scene);
+    VRSetup::getCurrent()->setScene(scene);
     scene->setActiveCamera();
     VRProfiler::get()->setActive(true);
 
@@ -179,9 +178,7 @@ void VRSceneManager::searchExercisesAndFavorites() {
 vector<string> VRSceneManager::getFavoritePaths() { return favorite_paths; }
 vector<string> VRSceneManager::getExamplePaths() { return example_paths; }
 
-VRScenePtr VRSceneManager::getCurrent() {
-    return get()->current;
-}
+VRScenePtr VRSceneManager::getCurrent() { return current; }
 
 void sleep_to(int fps) {
     int dt = VRTimer::getBeacon("st");
@@ -191,7 +188,7 @@ void sleep_to(int fps) {
 
 void VRSceneManager::updateScene() {
     if (!current) return;
-    VRSetupManager::getCurrent()->updateActivatedSignals();
+    VRSetup::getCurrent()->updateActivatedSignals();
 
     //current->blockScriptThreads();
     current->update();
@@ -201,7 +198,7 @@ void VRSceneManager::updateScene() {
 void VRSceneManager::update() {
     VRProfiler::get()->swap();
     int fps = VRRate::get()->getRate();
-    auto setup = VRSetupManager::getCurrent();
+    auto setup = VRSetup::getCurrent();
 
 if (current) current->blockScriptThreads();
     VRGuiManager::get()->updateGtk();

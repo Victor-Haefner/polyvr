@@ -80,7 +80,7 @@ void VRSceneLoader::saveScene(string file, xmlpp::Element* guiN) {
     if (boost::filesystem::exists(file))
         file = boost::filesystem::canonical(file).string();
     cout << " save " << file << endl;
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene == 0) return;
 
     xmlpp::Document doc;
@@ -139,7 +139,7 @@ void VRSceneLoader::loadScene(string path) {
     xmlpp::Element* objectsN = VRSceneLoader_getElementChild_(sceneN, "Objects");
     xmlpp::Element* root = VRSceneLoader_getElementChild_(objectsN, 0);
 
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     VRSceneLoader_current_scene = scene;
 
     scene->getRoot()->load(root);

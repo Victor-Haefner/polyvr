@@ -1,5 +1,4 @@
 #include "VRPhysics.h"
-#include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/geometry/VRPrimitive.h"
@@ -39,7 +38,7 @@ sudo apt-get install libbullet-extras-dev
 typedef boost::recursive_mutex::scoped_lock Lock;
 
 boost::recursive_mutex& VRPhysics_mtx() {
-    auto scene = OSG::VRSceneManager::getCurrent();
+    auto scene = OSG::VRScene::getCurrent();
     if (scene) return scene->physicsMutex();
     else {
         static boost::recursive_mutex m;
@@ -238,7 +237,7 @@ void VRPhysics::setCenterOfMass(OSG::Vec3f com) {
 }
 
 void VRPhysics::clear() {
-    auto scene = OSG::VRSceneManager::getCurrent();
+    auto scene = OSG::VRScene::getCurrent();
     if (scene) scene->unphysicalize(vr_obj.lock());
 
     if (scene) world = scene->bltWorld();
@@ -289,7 +288,7 @@ void VRPhysics::clear() {
 }
 
 void VRPhysics::update() {
-    auto scene = OSG::VRSceneManager::getCurrent();
+    auto scene = OSG::VRScene::getCurrent();
     if (scene == 0) return;
 
     if (world == 0) world = scene->bltWorld();
@@ -366,7 +365,7 @@ btSoftBody* VRPhysics::createCloth() {
     OSG::Matrix m = geo->getMatrix();//get Transformation
     geo->setOrientation(OSG::Vec3f(0,0,-1),OSG::Vec3f(0,1,0));//set orientation to identity. ugly solution.
     geo->setWorldPosition(OSG::Vec3f(0.0,0.0,0.0));
-    btSoftBodyWorldInfo* info = OSG::VRSceneManager::getCurrent()->getSoftBodyWorldInfo();
+    btSoftBodyWorldInfo* info = OSG::VRScene::getCurrent()->getSoftBodyWorldInfo();
 
     VRPlane* prim = (VRPlane*)geo->getPrimitive();
     float nx = prim->Nx;

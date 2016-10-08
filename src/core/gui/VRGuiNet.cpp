@@ -44,7 +44,7 @@ class VRGuiNet_TypeCols : public Gtk::TreeModelColumnRecord {
 // --------------------------
 
 void VRGuiNet_updateList() {
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene == 0) return;
 
     // update script list
@@ -68,7 +68,7 @@ void VRGuiNet_updateList() {
 }
 
 void VRGuiNet::on_new_clicked() {
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene == 0) return;
     VRSocket* socket = scene->getSocket(5000);
     if (socket == 0) return;
@@ -90,7 +90,7 @@ void VRGuiNet::on_del_clicked() {
 
     string msg1 = "Delete socket " + name;
     if (!askUser(msg1, "Are you sure you want to delete this socket?")) return;
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene) scene->remSocket(name);
 
     Glib::RefPtr<Gtk::ListStore> list_store  = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("Sockets"));
@@ -120,7 +120,7 @@ void VRGuiNet_on_name_edited(GtkCellRendererText *cell, gchar *path_string, gcha
     row[cols.name] = new_name;
 
     // update key in map
-    auto scene = VRSceneManager::getCurrent();
+    auto scene = VRScene::getCurrent();
     if (scene) scene->changeSocketName(name, new_name);
 }
 

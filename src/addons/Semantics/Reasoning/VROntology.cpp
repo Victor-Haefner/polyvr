@@ -4,7 +4,6 @@
 #include "VROWLImport.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRStorage_template.h"
-#include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSemanticManager.h"
 #include <iostream>
@@ -225,7 +224,7 @@ void VROntology::open(string path) {
 }
 
 void VROntology::addModule(string mod) {
-    auto mgr = VRSceneManager::getCurrent()->getSemanticManager();
+    auto mgr = VRScene::getCurrent()->getSemanticManager();
     auto onto = mgr->getOntology(mod);
     if (!onto) { cout << "VROntology::addModule Error: Ontology " << mod << " not found" << endl; return; }
     merge(onto);

@@ -1,5 +1,4 @@
 #include "VRCodeCompletion.h"
-#include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/utils/toString.h"
 
@@ -28,7 +27,7 @@ struct VRCodeCompletionPrivate {
 };
 
 void VRModDictInit(VRCodeCompletion *self) {
-    auto scene = OSG::VRSceneManager::getCurrent();
+    auto scene = OSG::VRScene::getCurrent();
     if (scene == 0) return;
     for ( auto mod : scene->getPyVRModules() ) {
         if (mod != "VR") self->priv->dict["VR"].push_back(mod);

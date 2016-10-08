@@ -48,7 +48,7 @@ class VRSceneManager : public VRThreadManager, public VRCallbackManager, public 
         vector<string> getFavoritePaths();
         vector<string> getExamplePaths();
 
-        static VRScenePtr getCurrent();
+        VRScenePtr getCurrent();
 
         void updateScene();
         void update();
