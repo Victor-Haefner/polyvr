@@ -67,8 +67,8 @@ class VRStorage {
         void regStorageSetupFkt(VRUpdatePtr u);
         void regStorageSetupAfterFkt(VRUpdatePtr u);
 
-        xmlpp::Element* getChild(xmlpp::Element* e, string c);
-        vector<xmlpp::Element*> getChildren(xmlpp::Element* e);
+        static xmlpp::Element* getChild(xmlpp::Element* e, string c);
+        static vector<xmlpp::Element*> getChildren(xmlpp::Element* e);
 
     public:
         VRStorage();

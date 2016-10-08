@@ -11,6 +11,7 @@
 #include "core/objects/VRTransform.h"
 #include "core/objects/VRCamera.h"
 #include "core/objects/object/VRObjectT.h"
+#include "core/scripting/VRScript.h"
 #include <libxml++/libxml++.h>
 #include <libxml++/nodes/element.h>
 
@@ -53,6 +54,10 @@ VRSetup::~VRSetup() {
 VRSetupPtr VRSetup::create(string name) { return VRSetupPtr(new VRSetup(name)); }
 
 VRSetupPtr VRSetup::getCurrent() { return VRSetupManager::get()->getCurrent(); }
+
+void VRSetup::addScript(string name) { scripts[name] = VRScript::create(name); }
+VRScriptPtr VRSetup::getScript(string name) { return scripts[name]; }
+map<string, VRScriptPtr> VRSetup::getScripts() { return scripts; }
 
 void VRSetup::updateTracking() {
     vive->update();
@@ -147,12 +152,15 @@ void VRSetup::save(string file) {
     xmlpp::Element* trackingARTN = setupN->add_child("TrackingART");
     xmlpp::Element* trackingVRPNN = setupN->add_child("TrackingVRPN");
     xmlpp::Element* networkN = setupN->add_child("Network");
+    xmlpp::Element* scriptN = setupN->add_child("Scripts");
 
     VRWindowManager::save(displayN);
     VRDeviceManager::save(deviceN);
     ART::save(trackingARTN);
     VRPN::save(trackingVRPNN);
     network->save(networkN);
+
+    for (auto s : scripts) s.second->saveUnder(scriptN);
 
     doc.write_to_file_formatted(file);
 }
@@ -170,12 +178,25 @@ void VRSetup::load(string file) {
     xmlpp::Element* trackingARTN = getElementChild(setupN, "TrackingART");
     xmlpp::Element* trackingVRPNN = getElementChild(setupN, "TrackingVRPN");
     xmlpp::Element* networkN = getElementChild(setupN, "Network");
+    xmlpp::Element* scriptN = getElementChild(setupN, "Scripts");
 
     if (trackingARTN) ART::load(trackingARTN);
     if (trackingVRPNN) VRPN::load(trackingVRPNN);
     if (deviceN) VRDeviceManager::load(deviceN);
     if (displayN) VRWindowManager::load(displayN);
     if (networkN) network->load(networkN);
+
+    if (scriptN) {
+        for (auto el : getChildren(scriptN)) {
+            string name = el->get_name();
+            if (el->get_attribute("base_name")) name = el->get_attribute("base_name")->get_value();
+            auto t = VRScript::create(name);
+            t->load(el);
+
+            name = t->getName();
+            scripts[name] = t;
+        }
+    }
 }
 
 OSG_END_NAMESPACE;

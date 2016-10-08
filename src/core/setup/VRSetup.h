@@ -63,6 +63,10 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
         void setScene( shared_ptr<VRScene> s);
         void showSetup(bool b);
 
+        void addScript(string name);
+        VRScriptPtr getScript(string name);
+        map<string, VRScriptPtr> getScripts();
+
         void printOSG();
 
         void updateTracking();
