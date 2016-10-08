@@ -17,6 +17,7 @@
 #include "core/utils/VRVisualLayer.h"
 #include "core/utils/VRTimer.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRProgress.h"
 #include <libxml++/nodes/element.h>
 
 OSG_BEGIN_NAMESPACE;
@@ -56,6 +57,7 @@ VRScene::VRScene() {
     VRVisualLayer::anchorLayers(root);
 
     semanticManager = VRSemanticManager::create();
+    loadingProgress = VRProgress::create("Loading Scene", 100, VRProgress::WIDGET_M);
 
     cout << " init scene done\n";
 }
@@ -198,11 +200,24 @@ void VRScene::update() {
     updateCallbacks();
 }
 
+void VRScene::updateLoadingProgress(VRThreadWeakPtr t) {
+    if (loadingTime <= 0) return;
+    float last = loadingProgress->get();
+    float current = float(loadingTimer.stop())/loadingTime;
+    int delta = floor(100*(current-last));
+    loadingProgress->update(delta);
+    osgSleep(30); // slow down progress feedback!
+}
+
 void VRScene::recLoadingTime() {
     cout << "expected loading time: " << loadingTime*0.001 << " s" << endl;
+    VRSceneManager::get()->stopThread(loadingProgressThread);
+    loadingProgress->finish();
     loadingTime = loadingTimer.stop();
     cout << "measured loading time: " << loadingTime*0.001 << " s" << endl;
 }
+
+VRProgressPtr VRScene::getLoadingProgress() { return loadingProgress; }
 
 void VRScene::saveScene(xmlpp::Element* e) {
     if (e == 0) return;
@@ -223,6 +238,8 @@ void VRScene::loadScene(xmlpp::Element* e) {
 
     if (e->get_attribute("loading_time")) loadingTime = toInt(e->get_attribute("loading_time")->get_value());
     loadingTimer.start();
+    loadingProgressThreadCb = VRFunction< VRThreadWeakPtr >::create( "loading progress thread", boost::bind(&VRScene::updateLoadingProgress, this, _1) );
+    loadingProgressThread = VRSceneManager::get()->initThread(loadingProgressThreadCb, "loading progress thread", true, 1);
 
     VRName::loadName(e);
     VRRenderManager::loadChildFrom(e);

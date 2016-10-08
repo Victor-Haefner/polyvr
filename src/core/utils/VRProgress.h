@@ -28,7 +28,7 @@ class VRProgress {
 		VRProgress(string title = "Progress", int max = 100, Mode m = CONSOLE_M);
         ~VRProgress();
 
-        static VRProgressPtr create();
+        static VRProgressPtr create(string title = "Progress", int max = 100, Mode m = CONSOLE_M);
 
         void setCallback(VRUpdatePtr cb);
         float get();

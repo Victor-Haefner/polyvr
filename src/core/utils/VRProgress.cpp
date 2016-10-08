@@ -10,7 +10,7 @@ VRProgress::~VRProgress() {
 
 void VRProgress::setCallback(VRUpdatePtr cb) { callback = cb; }
 
-VRProgressPtr VRProgress::create() { return VRProgressPtr( new VRProgress() ); }
+VRProgressPtr VRProgress::create(string title, int max, Mode m) { return VRProgressPtr( new VRProgress(title, max, m) ); }
 
 void VRProgress::update(int i) {
     if (count < max) {

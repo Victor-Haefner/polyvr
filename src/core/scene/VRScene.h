@@ -55,9 +55,13 @@ class VRScene : public VRObjectManager,
 
         VRSemanticManagerPtr semanticManager;
 
+        VRProgressPtr loadingProgress;
+        int loadingProgressThread;
+        VRThreadCb loadingProgressThreadCb;
         int loadingTime = 0;
         VRTimer loadingTimer;
         VRUpdatePtr loadingTimeCb;
+        void updateLoadingProgress(VRThreadWeakPtr t);
         void recLoadingTime();
 
     public:
@@ -90,6 +94,7 @@ class VRScene : public VRObjectManager,
         void showCameras(bool b);
 
         VRSemanticManagerPtr getSemanticManager();
+        VRProgressPtr getLoadingProgress();
 
         void update();
 
