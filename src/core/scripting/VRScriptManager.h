@@ -69,6 +69,7 @@ class VRScriptManager : public VRStorage, public VRPyBase {
 
         // Python Methods
 		static PyObject* exit(VRScriptManager* self);
+		static PyObject* find(VRScriptManager* self, PyObject *args);
 		static PyObject* loadGeometry(VRScriptManager* self, PyObject *args, PyObject *kwargs);
 		static PyObject* getLoadGeometryProgress(VRScriptManager* self);
 		static PyObject* exportGeometry(VRScriptManager* self, PyObject *args);

@@ -276,6 +276,7 @@ static PyMethodDef VRScriptManager_module_methods[] = {
 	{"render", (PyCFunction)VRScriptManager::render, METH_NOARGS, "Renders the viewports" },
 	{"triggerScript", (PyCFunction)VRScriptManager::pyTriggerScript, METH_VARARGS, "Trigger a script - triggerScript( str script )" },
 	{"getRoot", (PyCFunction)VRScriptManager::getRoot, METH_NOARGS, "Return the root node of the scenegraph - object getRoot()" },
+	{"find", (PyCFunction)VRScriptManager::find, METH_VARARGS, "Return a ressource by name - something find(str name)\n\tthe ressources searched are: Objects, Devices" },
 	{"printOSG", (PyCFunction)VRScriptManager::printOSG, METH_NOARGS, "Print the OSG tree to console" },
 	{"getNavigator", (PyCFunction)VRScriptManager::getNavigator, METH_NOARGS, "Return a handle to the navigator object" },
 	{"getSetup", (PyCFunction)VRScriptManager::getSetup, METH_NOARGS, "Return a handle to the active hardware setup" },
@@ -578,6 +579,13 @@ PyObject* VRScriptManager::printOSG(VRScriptManager* self) {
 PyObject* VRScriptManager::exit(VRScriptManager* self) {
     PolyVR::shutdown();
     Py_RETURN_TRUE;
+}
+
+PyObject* VRScriptManager::find(VRScriptManager* self, PyObject *args) {
+    string name = parseString(args);
+    if (auto res = VRScene::getCurrent()->getRoot()->find(name)) return VRPyTypeCaster::cast(res);
+    if (auto res = VRSetup::getCurrent()->getDevice(name)) return VRPyTypeCaster::cast(res);
+    Py_RETURN_NONE;
 }
 
 PyObject* VRScriptManager::getRoot(VRScriptManager* self) {

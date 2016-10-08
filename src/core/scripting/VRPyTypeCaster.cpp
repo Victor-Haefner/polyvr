@@ -14,7 +14,15 @@
 #include "VRPyGeoPrimitive.h"
 #include "VRPyJointTool.h"
 #include "VRPyBaseT.h"
+
+#include "VRPyDevice.h"
+#include "VRPyMobile.h"
+#include "VRPyMouse.h"
+#include "VRPyHaptic.h"
+
 #include "core/objects/object/VRObject.h"
+#include "core/setup/devices/VRDevice.h"
+
 #ifndef _WIN32
 #include "addons/Engineering/CSG/VRPyCSG.h"
 #endif
@@ -45,8 +53,18 @@ PyObject* VRPyTypeCaster::cast(OSG::VRObjectPtr obj) {
     else if (type == "JointTool") return VRPyJointTool::fromSharedPtr( static_pointer_cast<OSG::VRJointTool>(obj) );
     else if (type == "Handle") return VRPyGeometry::fromSharedPtr( static_pointer_cast<OSG::VRGeometry>(obj) ); // TODO
     else if (type == "GeoPrimitive") return VRPyGeoPrimitive::fromSharedPtr( static_pointer_cast<OSG::VRGeoPrimitive>(obj) );
-    cout << "\nERROR in VRPyTypeCaster::cast: " << type << " not handled!\n";
+    cout << "\nERROR in VRPyTypeCaster::cast object: " << type << " not handled!\n";
 
     return VRPyObject::fromSharedPtr(obj);
-    //Py_RETURN_NONE;
+}
+
+PyObject* VRPyTypeCaster::cast(OSG::VRDevicePtr dev) {
+    if (!dev) Py_RETURN_NONE;
+
+    string type = dev->getType();
+    if (type == "mouse") return VRPyMouse::fromSharedPtr( static_pointer_cast<OSG::VRMouse>(dev) );
+    else if (type == "mobile") return VRPyMobile::fromSharedPtr( static_pointer_cast<OSG::VRMobile>(dev) );
+    else if (type == "haptic") return VRPyHaptic::fromSharedPtr( static_pointer_cast<OSG::VRHaptic>(dev) );
+    cout << "\nERROR in VRPyTypeCaster::cast device: " << type << " not handled!\n";
+    return VRPyDevice::fromSharedPtr(dev);
 }
