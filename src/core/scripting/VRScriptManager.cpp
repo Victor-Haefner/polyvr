@@ -122,7 +122,6 @@ VRScriptManager::VRScriptManager() {
 VRScriptManager::~VRScriptManager() {
     //cout << "VRScriptManager destroyed\n";
     blockScriptThreads();
-    for (auto s : scripts) delete s.second;
     scripts.clear();
     if (PyErr_Occurred() != NULL) PyErr_Print();
     //Py_XDECREF(pModBase);
@@ -136,14 +135,14 @@ void VRScriptManager::disableAllScripts() {
     for (auto s : scripts) s.second->enable(false);
 }
 
-VRScript* VRScriptManager::newScript(string name, string core) {
-    VRScript* script = new VRScript(name);
+VRScriptPtr VRScriptManager::newScript(string name, string core) {
+    VRScriptPtr script = VRScript::create(name);
     script->setCore(core);
     addScript( script );
     return script;
 }
 
-void VRScriptManager::addScript(VRScript* script) {
+void VRScriptManager::addScript(VRScriptPtr script) {
     string name = script->getName();
     scripts[name] = script;
     updateScript(name, script->getCore());
@@ -152,12 +151,11 @@ void VRScriptManager::addScript(VRScript* script) {
 void VRScriptManager::remScript(string name) {
     if (scripts.count(name) == 0) return;
     scripts[name]->clean();
-    delete scripts[name];
     scripts.erase(name);
 }
 
-vector<VRScript*> VRScriptManager::searchScript(string s, VRScript* sc) {
-    vector<VRScript*> res;
+vector<VRScriptPtr> VRScriptManager::searchScript(string s, VRScriptPtr sc) {
+    vector<VRScriptPtr> res;
     VRScript::Search search;
 
     for (auto sc : scripts) sc.second->find(""); // clear old search results
@@ -182,11 +180,11 @@ void VRScriptManager::update() {
     //allowScriptThreads();
 }
 
-VRScript* VRScriptManager::changeScriptName(string name, string new_name) {
-    map<string, VRScript*>::iterator i = scripts.find(name);
+VRScriptPtr VRScriptManager::changeScriptName(string name, string new_name) {
+    map<string, VRScriptPtr>::iterator i = scripts.find(name);
     if (i == scripts.end()) return 0;
 
-    VRScript* script = i->second;
+    VRScriptPtr script = i->second;
     script->setName(new_name);
     new_name = script->getName();
     scripts.erase(i);
@@ -194,14 +192,14 @@ VRScript* VRScriptManager::changeScriptName(string name, string new_name) {
     return script;
 }
 
-map<string, VRScript*> VRScriptManager::getScripts() { return scripts; }
-VRScript* VRScriptManager::getScript(string name) { return scripts.count(name) == 1 ? scripts[name] : 0; }
+map<string, VRScriptPtr> VRScriptManager::getScripts() { return scripts; }
+VRScriptPtr VRScriptManager::getScript(string name) { return scripts.count(name) == 1 ? scripts[name] : 0; }
 void VRScriptManager::triggerScript(string fkt) { if (scripts.count(fkt) == 1) scripts[fkt]->execute(); }
 
 void VRScriptManager::updateScript(string name, string core, bool compile) {
     if (scripts.count(name) == 0) return;
 
-    VRScript* script = scripts[name];
+    VRScriptPtr script = scripts[name];
     script->setCore(core);
 
     if (!compile) return;

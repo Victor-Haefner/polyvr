@@ -11,6 +11,7 @@
 #include "core/setup/devices/VRSignal.h"
 #include "../networking/VRSocket.h"
 #include "core/utils/VRName.h"
+#include "VRScriptFwd.h"
 
 namespace xmlpp{ class Element; }
 
@@ -74,6 +75,8 @@ class VRScript : public VRName {
     public:
         VRScript(string name);
         virtual ~VRScript();
+
+        static VRScriptPtr create(string name = "Script");
 
         void clean();
 

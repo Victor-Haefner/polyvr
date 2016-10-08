@@ -35,7 +35,7 @@ using namespace std;
 using namespace Gtk;
 
 GtkSourceBuffer* VRGuiScripts_sourceBuffer = 0;
-VRScript* lastSelectedScript = 0;
+VRScriptPtr lastSelectedScript = 0;
 
 class VRGuiScripts_ModelColumns : public Gtk::TreeModelColumnRecord {
     public:
@@ -85,7 +85,7 @@ string VRGuiScripts::get_editor_core(int i) {
     return string( gtk_text_buffer_get_text( GTK_TEXT_BUFFER(VRGuiScripts_sourceBuffer), &itr_s, &itr_e, true) );
 }
 
-VRScript* VRGuiScripts::getSelectedScript() {
+VRScriptPtr VRGuiScripts::getSelectedScript() {
     Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview5"));
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
     if(!iter) return 0;
@@ -96,13 +96,13 @@ VRScript* VRGuiScripts::getSelectedScript() {
     string name = row.get_value(cols.script);
     auto scene = VRScene::getCurrent();
     if (scene == 0) return 0;
-    VRScript* script = scene->getScript(name);
+    VRScriptPtr script = scene->getScript(name);
     lastSelectedScript = script;
 
     return script;
 }
 
-void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScript* script, bool onlyTime) {
+void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScriptPtr script, bool onlyTime) {
     if (script == 0) return;
 
     Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("script_list"));
@@ -185,7 +185,7 @@ void VRGuiScripts::on_new_clicked() {
 }
 
 void VRGuiScripts::on_save_clicked() {
-    VRScript* script = VRGuiScripts::getSelectedScript();
+    VRScriptPtr script = VRGuiScripts::getSelectedScript();
     if (script == 0) return;
 
     string core = VRGuiScripts::get_editor_core(script->getHeadSize());
@@ -238,7 +238,6 @@ vector<xmlpp::Element*> getXMLChildren(xmlpp::Element* e) {
 
 void VRGuiScripts::on_diag_import_select() {
     import_liststore1->clear();
-    for (auto s : import_scripts) delete s.second;
     import_scripts.clear();
     string path = VRGuiFile::getPath();
     if (path == "") return;
@@ -261,7 +260,7 @@ void VRGuiScripts::on_diag_import_select() {
             name = script->get_attribute("base_name")->get_value() + suffix;
         }
 
-        VRScript* s = new VRScript(name);
+        VRScriptPtr s = VRScript::create(name);
         s->enable(false);
         s->load(script);
         import_scripts[name] = s;
@@ -281,7 +280,7 @@ void VRGuiScripts::on_diag_import() {
     string name = row.get_value(cols.script);
     if (import_scripts.count(name) == 0) return;
 
-    VRScript* s = import_scripts[name];
+    VRScriptPtr s = import_scripts[name];
     import_scripts.erase(name);
 
     auto scene = VRScene::getCurrent();
@@ -295,7 +294,7 @@ void VRGuiScripts::on_diag_import_select_1() {} // TODO
 void VRGuiScripts::on_diag_import_select_2() {}
 
 void VRGuiScripts::on_exec_clicked() {
-    VRScript* script = VRGuiScripts::getSelectedScript();
+    VRScriptPtr script = VRGuiScripts::getSelectedScript();
     if (script == 0) return;
 
     on_save_clicked();
@@ -318,7 +317,7 @@ void VRGuiScripts::on_del_clicked() {
     string name = row.get_value(cols.script);
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
-    VRScript* script = scene->getScript(name);
+    VRScriptPtr script = scene->getScript(name);
     if (script == 0) return;
 
     string msg1 = "Delete script " + name;
@@ -333,9 +332,9 @@ void VRGuiScripts::on_del_clicked() {
 
 void VRGuiScripts::on_select_script() { // selected a script
     auto adjustment = Glib::RefPtr<Gtk::ScrolledWindow>::cast_static(VRGuiBuilder()->get_object("scrolledwindow4"))->get_vadjustment();
-    if (lastSelectedScript) pages[lastSelectedScript].line = adjustment->get_value();
+    if (lastSelectedScript) pages[lastSelectedScript.get()].line = adjustment->get_value();
 
-    VRScript* script = VRGuiScripts::getSelectedScript();
+    VRScriptPtr script = VRGuiScripts::getSelectedScript();
     if (script == 0) {
         setToolButtonSensitivity("toolbutton8", false);
         setToolButtonSensitivity("toolbutton7", false);
@@ -357,7 +356,7 @@ void VRGuiScripts::on_select_script() { // selected a script
     gtk_source_buffer_begin_not_undoable_action(VRGuiScripts_sourceBuffer);
     gtk_text_buffer_set_text(GTK_TEXT_BUFFER(VRGuiScripts_sourceBuffer), core.c_str(), core.size());
     gtk_source_buffer_end_not_undoable_action(VRGuiScripts_sourceBuffer);
-    adjustment->set_value(pages[script].line);
+    adjustment->set_value(pages[script.get()].line);
 
     // update arguments liststore
     Glib::RefPtr<Gtk::ListStore> args = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("liststore2"));
@@ -369,7 +368,7 @@ void VRGuiScripts::on_select_script() { // selected a script
         Gtk::ListStore::Row row = *args->append();
         gtk_list_store_set(args->gobj(), row.gobj(), 0, a->getName().c_str(), -1);
         gtk_list_store_set(args->gobj(), row.gobj(), 1, a->val.c_str(), -1);
-        gtk_list_store_set(args->gobj(), row.gobj(), 2, script, -1);
+        gtk_list_store_set(args->gobj(), row.gobj(), 2, script.get(), -1);
         gtk_list_store_set(args->gobj(), row.gobj(), 3, a->type.c_str(), -1);
     }
 
@@ -392,7 +391,7 @@ void VRGuiScripts::on_select_script() { // selected a script
         gtk_list_store_set(trigs->gobj(), row.gobj(), 2, key.c_str(), -1);
         gtk_list_store_set(trigs->gobj(), row.gobj(), 3, t->state.c_str(), -1);
         gtk_list_store_set(trigs->gobj(), row.gobj(), 4, t->param.c_str(), -1);
-        gtk_list_store_set(trigs->gobj(), row.gobj(), 5, script, -1);
+        gtk_list_store_set(trigs->gobj(), row.gobj(), 5, script.get(), -1);
         gtk_list_store_set(trigs->gobj(), row.gobj(), 6, t->getName().c_str(), -1);
     }
 
@@ -488,7 +487,7 @@ void VRGuiScripts_on_script_changed(GtkTextBuffer* tb, gpointer user_data) {
 
     VRGuiScripts* gs = (VRGuiScripts*)user_data;
 
-    VRScript* script = gs->getSelectedScript();
+    VRScriptPtr script = gs->getSelectedScript();
     if (script == 0) return;
 
     // TODO
@@ -503,7 +502,7 @@ void VRGuiScripts_on_script_changed(GtkTextBuffer* tb, gpointer user_data) {
 
 
 void VRGuiScripts::on_argadd_clicked() {
-    VRScript* script = VRGuiScripts::getSelectedScript();
+    VRScriptPtr script = VRGuiScripts::getSelectedScript();
     if (script == 0) return;
 
     script->addArgument();
@@ -512,7 +511,7 @@ void VRGuiScripts::on_argadd_clicked() {
 }
 
 void VRGuiScripts::on_trigadd_clicked() {
-    VRScript* script = VRGuiScripts::getSelectedScript();
+    VRScriptPtr script = VRGuiScripts::getSelectedScript();
     if (script == 0) return;
 
     script->addTrigger();
@@ -529,7 +528,7 @@ void VRGuiScripts::on_argrem_clicked() {
     VRGuiScripts_ArgsModelColumns cols;
     Gtk::TreeModel::Row row = *iter;
     string name = row.get_value(cols.name);
-    VRScript* script = (VRScript*)row.get_value(cols.obj);
+    auto script = (VRScript*)row.get_value(cols.obj);
 
     script->remArgument(name);
     on_select_script();
@@ -545,7 +544,7 @@ void VRGuiScripts::on_trigrem_clicked() {
     VRGuiScripts_TrigsModelColumns cols;
     Gtk::TreeModel::Row row = *iter;
     string name = row.get_value(cols.name);
-    VRScript* script = (VRScript*)row.get_value(cols.obj);
+    auto script = (VRScript*)row.get_value(cols.obj);
 
     script->remTrigger(name);
     on_select_script();
@@ -562,7 +561,7 @@ void VRGuiScripts::on_argname_edited(const Glib::ustring& path, const Glib::ustr
     Gtk::TreeModel::Row row = *iter;
     string name = row.get_value(cols.name);
     row[cols.name] = new_name;
-    VRScript* script = (VRScript*)row.get_value(cols.obj);
+    auto script = (VRScript*)row.get_value(cols.obj);
 
     // update argument name
     script->changeArgName(name, new_name);
@@ -581,7 +580,7 @@ void VRGuiScripts::on_argval_edited(const Glib::ustring& path, const Glib::ustri
     //string value = row.get_value(cols.value);
     string name = row.get_value(cols.name);
     row[cols.value] = new_name;
-    VRScript* script = (VRScript*)row.get_value(cols.obj);
+    auto script = (VRScript*)row.get_value(cols.obj);
 
     // update argument name
     script->changeArgValue(name, new_name);
@@ -604,7 +603,7 @@ void VRGuiScripts::on_argtype_edited(const Glib::ustring& new_name, const Gtk::T
     row[cols.type] = type;
 
     // do something
-    VRScript* script = (VRScript*)row.get_value(cols.obj);
+    auto script = (VRScript*)row.get_value(cols.obj);
     script->changeArgType(row.get_value(cols.name), type);
     on_select_script();
     on_save_clicked();
@@ -625,7 +624,7 @@ void VRGuiScripts::on_trigger_edited(const Glib::ustring& new_name, const Gtk::T
     row[cols.trigs] = type;
 
     // do something
-    VRScript* script = (VRScript*)row.get_value(cols.obj);
+    auto script = (VRScript*)row.get_value(cols.obj);
     script->changeTrigger(row.get_value(cols.name), type);
     on_select_script();
     on_save_clicked();
@@ -646,7 +645,7 @@ void VRGuiScripts::on_trigdev_edited(const Glib::ustring& new_name, const Gtk::T
     row[cols.devs] = type;
 
     // do something
-    VRScript* script = (VRScript*)row.get_value(cols.obj);
+    auto script = (VRScript*)row.get_value(cols.obj);
     script->changeTrigDev(row.get_value(cols.name), type);
     on_select_script();
     on_save_clicked();
@@ -664,7 +663,7 @@ void VRGuiScripts::on_trigparam_edited(const Glib::ustring& path, const Glib::us
     row[cols.params] = new_name;
 
     // do something
-    VRScript* script = (VRScript*)row.get_value(cols.obj);
+    auto script = (VRScript*)row.get_value(cols.obj);
     script->changeTrigParams(row.get_value(cols.name), new_name);
     on_select_script();
     on_save_clicked();
@@ -681,7 +680,7 @@ void VRGuiScripts::on_trigkey_edited(const Glib::ustring& path, const Glib::ustr
     row[cols.key] = new_name;
 
     // do something
-    VRScript* script = (VRScript*)row.get_value(cols.obj);
+    auto script = (VRScript*)row.get_value(cols.obj);
     script->changeTrigKey(row.get_value(cols.name), toInt(new_name));
     on_select_script();
     on_save_clicked();
@@ -702,7 +701,7 @@ void VRGuiScripts::on_trigstate_edited(const Glib::ustring& new_name, const Gtk:
     row[cols.state] = type;
 
     // do something
-    VRScript* script = (VRScript*)row.get_value(cols.obj);
+    auto script = (VRScript*)row.get_value(cols.obj);
     script->changeTrigState(row.get_value(cols.name), type);
     on_select_script();
     on_save_clicked();
@@ -856,13 +855,13 @@ void VRGuiScripts::on_find_diag_find_clicked() {
     string search = getTextEntry("entry10");
     hideDialog("find_dialog");
 
-    VRScript* s = getSelectedScript();
+    VRScriptPtr s = getSelectedScript();
     if (!sa && s == 0) return;
 
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
 
-    vector<VRScript*> results;
+    vector<VRScriptPtr> results;
     if (!sa) results = scene->searchScript(search, s);
     else results = scene->searchScript(search);
 
@@ -902,7 +901,7 @@ void VRGuiScripts::on_toggle_find_replace() {
 
 void VRGuiScripts::on_change_script_type() {
     if(!trigger_cbs) return;
-    VRScript* script = getSelectedScript();
+    VRScriptPtr script = getSelectedScript();
     string t = getComboboxText("combobox1");
     script->setType(t);
     on_select_script();
@@ -911,7 +910,7 @@ void VRGuiScripts::on_change_script_type() {
 
 void VRGuiScripts::on_change_mobile() {
     if(!trigger_cbs) return;
-    VRScript* script = getSelectedScript();
+    VRScriptPtr script = getSelectedScript();
     script->setHTMLHost( getComboboxText("combobox24") );
     on_select_script();
     on_save_clicked();
@@ -954,9 +953,10 @@ void VRGuiScripts::updateList() {
 
     for (auto script : scene->getScripts()) {
         auto s = script.second;
+        auto k = s.get();
         setScriptListRow(store->append(), s);
-        if (oldpages.count(s)) pages[s] = oldpages[s];
-        else pages[s] = page();
+        if (oldpages.count(k)) pages[k] = oldpages[k];
+        else pages[k] = page();
     }
     on_select_script();
 }

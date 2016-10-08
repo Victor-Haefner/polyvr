@@ -833,19 +833,19 @@ void VRMaterial::setMagMinFilter(string mag, string min) {
 
 void VRMaterial::setVertexScript(string script) {
     mats[activePass]->vertexScript = script;
-    VRScript* scr = VRScene::getCurrent()->getScript(script);
+    VRScriptPtr scr = VRScene::getCurrent()->getScript(script);
     if (scr) setVertexShader(scr->getCore());
 }
 
 void VRMaterial::setFragmentScript(string script) {
     mats[activePass]->fragmentScript = script;
-    VRScript* scr = VRScene::getCurrent()->getScript(script);
+    VRScriptPtr scr = VRScene::getCurrent()->getScript(script);
     if (scr) setFragmentShader(scr->getCore());
 }
 
 void VRMaterial::setGeometryScript(string script) {
     mats[activePass]->geometryScript = script;
-    VRScript* scr = VRScene::getCurrent()->getScript(script);
+    VRScriptPtr scr = VRScene::getCurrent()->getScript(script);
     if (scr) setGeometryShader(scr->getCore());
 }
 

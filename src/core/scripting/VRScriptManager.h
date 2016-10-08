@@ -7,6 +7,7 @@
 #include "core/setup/devices/VRSignal.h"
 #include "core/utils/VRStorage.h"
 #include "core/utils/VRDeviceFwd.h"
+#include "core/scripting/VRScriptFwd.h"
 #include "VRPyBase.h"
 
 namespace xmlpp{ class Element; }
@@ -24,7 +25,7 @@ class VRScriptManager : public VRStorage, public VRPyBase {
         PyObject* pModVR;
         map<int, VRThreadCb> pyThreads;
         map<string, map<string, PyTypeObject*> > modules;
-        map<string, VRScript*> scripts;
+        map<string, VRScriptPtr> scripts;
         map<string, VRSignalPtr> triggers;
         PyThreadState* pyThreadState = 0;
 
@@ -45,21 +46,21 @@ class VRScriptManager : public VRStorage, public VRPyBase {
         void allowScriptThreads();
         void blockScriptThreads();
 
-        VRScript* newScript(string name, string function);
-        void addScript(VRScript* script);
+        VRScriptPtr newScript(string name, string function);
+        void addScript(VRScriptPtr script);
         void remScript(string name);
 
         void disableAllScripts();
 
         void updateScript(string name, string core, bool compile = true);
-        VRScript* changeScriptName(string name, string new_name);
+        VRScriptPtr changeScriptName(string name, string new_name);
 
         void triggerScript(string name);
 
-        VRScript* getScript(string name);
-        map<string, VRScript*> getScripts();
+        VRScriptPtr getScript(string name);
+        map<string, VRScriptPtr> getScripts();
 
-        vector<VRScript*> searchScript(string s, VRScript* sc = 0);
+        vector<VRScriptPtr> searchScript(string s, VRScriptPtr sc = 0);
 
         vector<string> getPyVRModules();
         vector<string> getPyVRTypes(string mod);

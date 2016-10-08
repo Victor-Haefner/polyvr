@@ -8,6 +8,7 @@
 #include "core/scene/VRSceneManager.h"
 #include "VRGuiSignals.h"
 #include "core/utils/VRFunctionFwd.h"
+#include "core/scripting/VRScriptFwd.h"
 
 struct _GtkSourceLanguage;
 namespace Gtk{ class Table; class TreeView; }
@@ -35,13 +36,13 @@ class VRGuiScripts {
         Gtk::TreeView* import_treeview2 = 0;
         Glib::RefPtr<Gtk::ListStore> import_liststore1;
         Glib::RefPtr<Gtk::ListStore> import_liststore2;
-        map<string, VRScript*> import_scripts;
+        map<string, VRScriptPtr> import_scripts;
 
         string docs_filter;
 
         void initEditor();
         void printViewerLanguages();
-        void setScriptListRow(Gtk::TreeIter itr, VRScript* script, bool onlyTime = false);
+        void setScriptListRow(Gtk::TreeIter itr, VRScriptPtr script, bool onlyTime = false);
 
         void on_new_clicked();
         void on_save_clicked();
@@ -94,7 +95,7 @@ class VRGuiScripts {
         VRGuiScripts();
 
         void updateList();
-        VRScript* getSelectedScript();
+        VRScriptPtr getSelectedScript();
         string get_editor_core(int i);
 
         void update();

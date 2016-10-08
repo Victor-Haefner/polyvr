@@ -9,6 +9,7 @@
 #include "core/utils/VRName.h"
 #include "core/utils/VRUtilsFwd.h"
 #include "core/setup/VRSetupFwd.h"
+#include "core/scripting/VRScriptFwd.h"
 
 namespace xmlpp{ class Element; }
 
@@ -22,6 +23,8 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
     private:
         string cfgfile;
         string tracking;
+
+        map<string, VRScriptPtr> scripts;
 
         VRTransformPtr real_root = 0;
         VRTransformPtr user = 0;

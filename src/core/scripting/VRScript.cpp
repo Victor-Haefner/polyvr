@@ -183,6 +183,8 @@ VRScript::~VRScript() {
     for (auto t : trigs) delete t.second;
 }
 
+VRScriptPtr VRScript::create(string name) { return VRScriptPtr( new VRScript(name) ); }
+
 VRScript::arg* VRScript::addArgument() {
     clean();
     arg* a = new arg(VRName::getName());
