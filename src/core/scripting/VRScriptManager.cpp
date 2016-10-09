@@ -383,6 +383,7 @@ void VRScriptManager::initPyModules() {
     registerModule<VRPyRobotArm>("RobotArm", pModVR);
     registerModule<VRPyOntology>("Ontology", pModVR);
     registerModule<VRPyProcess>("Process", pModVR);
+    registerModule<VRPyProcessNode>("ProcessNode", pModVR);
     registerModule<VRPyProcessLayout>("ProcessLayout", pModVR, VRPyTransform::typeRef);
     registerModule<VRPyOntologyRule>("OntologyRule", pModVR);
     registerModule<VRPyProperty>("Property", pModVR);

@@ -30,6 +30,10 @@ template<> bool parseValue<string>(PyObject* args, string& t) {
 
 // Stuff for proxy getter
 
-template<> PyObject* toPyObject<VREntityPtr>(VREntityPtr e) {
-    return VRPyEntity::fromSharedPtr(e);
-}
+template<> PyObject* toPyObject<VREntityPtr>(VREntityPtr e) { return VRPyEntity::fromSharedPtr(e); }
+template<> PyObject* toPyObject<int>(int i) { return PyInt_FromLong(i); }
+template<> PyObject* toPyObject<string>(string s) { return PyString_FromString(s.c_str()); }
+
+
+
+

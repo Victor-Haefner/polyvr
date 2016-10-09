@@ -88,7 +88,7 @@ PyMethodDef VRPyObject::methods[] = {
     {"addLink", (PyCFunction)VRPyObject::addLink, METH_VARARGS, "Link subtree - addLink( object )" },
     {"remLink", (PyCFunction)VRPyObject::remLink, METH_VARARGS, "Unlink subtree - remLink( object )" },
     {"setEntity", PySetter(Object, setEntity, VREntityPtr), "Set entity - setEntity( Entity )" },
-    {"setEntity", PyGetter(Object, getEntity, VREntityPtr), "Get entity - Entity getEntity()" },
+    {"getEntity", PyGetter(Object, getEntity, VREntityPtr), "Get entity - Entity getEntity()" },
     {NULL}  /* Sentinel */
 };
 

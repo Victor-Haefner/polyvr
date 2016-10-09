@@ -1,11 +1,14 @@
 #include "VRPyProcess.h"
-#include "core/scripting/VRPyBaseT.h"
 #include "addons/Semantics/Reasoning/VRPyOntology.h"
+#include "core/scripting/VRPyBaseT.h"
 #include "core/scripting/VRPyGraph.h"
+#include "core/scripting/VRPyTypeCaster.h"
+#include "core/scripting/VRPyBaseFactory.h"
 
 using namespace OSG;
 
 simpleVRPyType(Process, New_named_ptr);
+simpleVRPyType(ProcessNode, 0);
 simpleVRPyType(ProcessLayout, New_VRObjects_ptr);
 
 PyMethodDef VRPyProcess::methods[] = {
@@ -43,16 +46,30 @@ PyObject* VRPyProcess::getBehaviorDiagram(VRPyProcess* self, PyObject* args) {
 
 PyObject* VRPyProcess::getSubjects(VRPyProcess* self) {
     if (!self->valid()) return NULL;
-    auto IDs = self->objPtr->getSubjects();
     PyObject* res = PyList_New(0);
-    for (auto i : IDs) PyList_Append(res, PyInt_FromLong(i));
+    auto subjects = self->objPtr->getSubjects();
+    for (auto s : subjects) PyList_Append(res, VRPyProcessNode::fromObject(s));
     return res;
 }
 
-PyMethodDef VRPyProcessLayout::methods[] = {
-    {"setProcess", (PyCFunction)VRPyProcessLayout::setProcess, METH_VARARGS, "Set process - setProcess(process)" },
+PyMethodDef VRPyProcessNode::methods[] = {
+    {"getLabel", PyGetter(ProcessNode, getLabel, string), "Get node label - str getLabel()" },
+    {"getID", PyGetter(ProcessNode, getID, int), "Get node graph ID - int getID()" },
     {NULL}  /* Sentinel */
 };
+
+PyMethodDef VRPyProcessLayout::methods[] = {
+    {"setProcess", (PyCFunction)VRPyProcessLayout::setProcess, METH_VARARGS, "Set process - setProcess(process)" },
+    {"getElement", (PyCFunction)VRPyProcessLayout::getElement, METH_VARARGS, "Return element i - obj getElement(int i)" },
+    {NULL}  /* Sentinel */
+};
+
+PyObject* VRPyProcessLayout::getElement(VRPyProcessLayout* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    int i=0;
+    if (!PyArg_ParseTuple(args, "i", &i)) return NULL;
+    return VRPyTypeCaster::cast( self->objPtr->getElement( i ) );
+}
 
 PyObject* VRPyProcessLayout::setProcess(VRPyProcessLayout* self, PyObject* args) {
     if (!self->valid()) return NULL;

@@ -14,9 +14,16 @@ struct VRPyProcess : VRPyBaseT<OSG::VRProcess> {
     static PyObject* getSubjects(VRPyProcess* self);
 };
 
+struct VRPyProcessNode : VRPyBaseT<OSG::VRProcessNode> {
+    static PyMethodDef methods[];
+    //static PyObject* getLabel(VRPyProcessNode* self);
+    //static PyObject* getID(VRPyProcessNode* self);
+};
+
 struct VRPyProcessLayout : VRPyBaseT<OSG::VRProcessLayout> {
     static PyMethodDef methods[];
     static PyObject* setProcess(VRPyProcessLayout* self, PyObject* args);
+    static PyObject* getElement(VRPyProcessLayout* self, PyObject* args);
 };
 
 #endif // VRPYPROCESS_H_INCLUDED

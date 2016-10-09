@@ -12,25 +12,29 @@
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
+enum PROCESS_WIDGET {
+    SUBJECT,
+    MESSAGE
+};
+
+struct VRProcessNode : VRName {
+    VREntityPtr entity;
+    VRTransformPtr widget;
+    PROCESS_WIDGET type;
+    int ID = 0;
+
+    string label;
+
+    VRProcessNode();
+    void update(graph_base::node& n, bool changed);
+
+    int getID();
+    string getLabel();
+};
+
 class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName {
     public:
-        enum WIDGET {
-            SUBJECT,
-            MESSAGE
-        };
-
-        struct Node : VRName {
-            VREntityPtr entity;
-            VRTransformPtr widget;
-            WIDGET type;
-
-            string label;
-
-            Node();
-            void update(graph_base::node& n, bool changed);
-        };
-
-        typedef graph<Node> Diagram;
+        typedef graph<VRProcessNode> Diagram;
         typedef shared_ptr< Diagram > DiagramPtr;
 
     private:
@@ -49,7 +53,7 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
         void setOntology(VROntologyPtr o);
         DiagramPtr getInteractionDiagram();
         DiagramPtr getBehaviorDiagram(string subject);
-        vector<int> getSubjects();
+        vector<VRProcessNode> getSubjects();
 };
 
 OSG_END_NAMESPACE;
