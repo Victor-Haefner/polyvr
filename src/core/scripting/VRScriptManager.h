@@ -46,7 +46,7 @@ class VRScriptManager : public VRStorage, public VRPyBase {
         void allowScriptThreads();
         void blockScriptThreads();
 
-        VRScriptPtr newScript(string name, string function);
+        VRScriptPtr newScript(string name, string core);
         void addScript(VRScriptPtr script);
         void remScript(string name);
 

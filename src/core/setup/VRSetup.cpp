@@ -45,6 +45,8 @@ VRSetup::VRSetup(string name) {
     stats_layer->setCallback( layer_stats_toggle );
 
     network = VRNetworkPtr( new VRNetwork() );
+
+    setupLESCCAVELights();
 }
 
 VRSetup::~VRSetup() {
@@ -55,12 +57,24 @@ VRSetupPtr VRSetup::create(string name) { return VRSetupPtr(new VRSetup(name)); 
 
 VRSetupPtr VRSetup::getCurrent() { return VRSetupManager::get()->getCurrent(); }
 
-void VRSetup::addScript(string name) { scripts[name] = VRScript::create(name); }
+/*void VRSetup::addScript(string name) { scripts[name] = VRScript::create(name); }
 VRScriptPtr VRSetup::getScript(string name) { return scripts[name]; }
-map<string, VRScriptPtr> VRSetup::getScripts() { return scripts; }
+map<string, VRScriptPtr> VRSetup::getScripts() { return scripts; }*/
+
+void VRSetup::setupLESCCAVELights() {
+    string core = "";
+    "\n print 'YAAAAAAY'";
+    cout << "VRSetup::setupLESCCAVELights A\n";
+    string name = "setCaveLoadingProgress";
+    //auto s = newScript(name, core);
+
+    //triggerScript(name);
+    cout << "VRSetup::setupLESCCAVELights B\n";
+}
 
 void VRSetup::updateTracking() {
     vive->update();
+    updateCallbacks();
 }
 
 VRNetworkPtr VRSetup::getNetwork() { return network; }
@@ -160,7 +174,7 @@ void VRSetup::save(string file) {
     VRPN::save(trackingVRPNN);
     network->save(networkN);
 
-    for (auto s : scripts) s.second->saveUnder(scriptN);
+    //for (auto s : scripts) s.second->saveUnder(scriptN);
 
     doc.write_to_file_formatted(file);
 }
@@ -186,7 +200,7 @@ void VRSetup::load(string file) {
     if (displayN) VRWindowManager::load(displayN);
     if (networkN) network->load(networkN);
 
-    if (scriptN) {
+    /*if (scriptN) {
         for (auto el : getChildren(scriptN)) {
             string name = el->get_name();
             if (el->get_attribute("base_name")) name = el->get_attribute("base_name")->get_value();
@@ -196,7 +210,7 @@ void VRSetup::load(string file) {
             name = t->getName();
             scripts[name] = t;
         }
-    }
+    }*/
 }
 
 OSG_END_NAMESPACE;

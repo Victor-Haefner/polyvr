@@ -55,8 +55,10 @@ VRScript::arg::arg(string nspace, string name) {
 }
 
 void VRScript::clean() {
-    VRMobilePtr mob = dynamic_pointer_cast<VRMobile>( VRSetup::getCurrent()->getDevice(this->mobile) );
-    if (mob) mob->remWebSite(getName());
+    if ( auto setup = VRSetup::getCurrent() ) {
+        VRMobilePtr mob = dynamic_pointer_cast<VRMobile>( setup->getDevice(this->mobile) );
+        if (mob) mob->remWebSite(getName());
+    }
 
     auto scene = VRScene::getCurrent();
 

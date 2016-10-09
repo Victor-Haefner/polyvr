@@ -6,6 +6,8 @@
 #include "devices/VRDeviceManager.h"
 #include "tracking/VRPN.h"
 #include "tracking/ART.h"
+#include "core/scripting/VRScriptManager.h"
+#include "core/scene/VRCallbackManager.h"
 #include "core/utils/VRName.h"
 #include "core/utils/VRUtilsFwd.h"
 #include "core/setup/VRSetupFwd.h"
@@ -19,12 +21,12 @@ using namespace std;
 class VRScene;
 class VRVisualLayer;
 
-class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceManager, public ART, public VRPN, public VRName {
+class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceManager, public VRScriptManager, public VRCallbackManager, public ART, public VRPN, public VRName {
     private:
         string cfgfile;
         string tracking;
 
-        map<string, VRScriptPtr> scripts;
+        //map<string, VRScriptPtr> scripts;
 
         VRTransformPtr real_root = 0;
         VRTransformPtr user = 0;
@@ -45,6 +47,8 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
 
         xmlpp::Element* getElementChild(xmlpp::Element* e, string name);
 
+        void setupLESCCAVELights(); // TODO: temporary until scripts for VRSetup implemented!
+
     public:
         VRSetup(string name);
         ~VRSetup();
@@ -63,9 +67,9 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
         void setScene( shared_ptr<VRScene> s);
         void showSetup(bool b);
 
-        void addScript(string name);
+        /*void addScript(string name);
         VRScriptPtr getScript(string name);
-        map<string, VRScriptPtr> getScripts();
+        map<string, VRScriptPtr> getScripts();*/
 
         void printOSG();
 
