@@ -138,9 +138,9 @@ void VRScriptManager::disableAllScripts() {
 VRScriptPtr VRScriptManager::newScript(string name, string core) {
     VRScriptPtr script = VRScript::create(name);
     script->setCore(core);
-    cout << "VRScriptManager::newScript A\n";
+    //cout << "VRScriptManager::newScript A\n";
     addScript( script );
-    cout << "VRScriptManager::newScript B\n";
+    //cout << "VRScriptManager::newScript B\n";
     return script;
 }
 
@@ -209,9 +209,9 @@ void VRScriptManager::updateScript(string name, string core, bool compile) {
         //PyGILState_STATE gstate = PyGILState_Ensure();
         //PyObject* pValue = PyRun_String(script->getScript().c_str(), Py_file_input, pGlobal, pLocal);
         PyObject* pValue = PyRun_String(script->getScript().c_str(), Py_file_input, pGlobal, PyModule_GetDict(pModVR));
-    cout << "VRScriptManager::updateScript A\n";
+//    cout << "VRScriptManager::updateScript A\n";
         if (PyErr_Occurred() != NULL) PyErr_Print();
-    cout << "VRScriptManager::updateScript B\n";
+//    cout << "VRScriptManager::updateScript B\n";
 
         if (pValue == NULL) return;
         Py_DECREF(pValue);

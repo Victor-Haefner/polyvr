@@ -84,6 +84,7 @@ void VRSceneManager::setWorkdir(string path) {
 void VRSceneManager::newEmptyScene(string path) {
     closeScene();
     VRScenePtr scene = VRScenePtr( new VRScene() );
+    VRSetup::getCurrent()->setupLESCCAVELights(scene);
     scene->setPath(path);
     setWorkdir(scene->getWorkdir());
     scene->setName(scene->getFileName());

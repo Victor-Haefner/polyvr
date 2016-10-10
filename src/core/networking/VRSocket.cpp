@@ -264,8 +264,18 @@ size_t httpwritefkt( char *ptr, size_t size, size_t nmemb, void *userdata) {
     return size*nmemb;
 }
 
-void VRSocket::sendMessage(string msg) {
-    /*if (type == "http post") {
+void VRSocket::sendHTTPGet(string uri) {
+    auto curl = curl_easy_init();
+    //curl_easy_setopt(curl, CURLOPT_GET, 1);
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1);
+    curl_easy_setopt(curl, CURLOPT_URL, uri.c_str());
+    auto res = curl_easy_perform(curl);
+    if(res != CURLE_OK) fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+    curl_easy_cleanup(curl);
+}
+
+/*void VRSocket::sendMessage(string msg) {
+    if (type == "http post") {
         curl = curl_easy_init();
         server = IP+":"+toString(port); // TODO: add uri args
         curl_easy_setopt(curl, CURLOPT_POST, 1);
@@ -273,9 +283,9 @@ void VRSocket::sendMessage(string msg) {
 
         curl_easy_setopt(curl, CURLOPT_URL, server.c_str());//scheme://host:port/path
         curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, server.c_str());//use this to parse the header lines!
-    }*/
+    }
 
-    /*cout << "\nSOCKET SEND " << msg << endl;
+    cout << "\nSOCKET SEND " << msg << endl;
 
     unsigned int sockfd, n;
     struct sockaddr_in serv_addr;
@@ -307,8 +317,8 @@ void VRSocket::sendMessage(string msg) {
     // Now read server response
     //n = read(sockfd, buffer, 255);
     //if (n < 0) { perror("ERROR reading from socket"); return; }
-    //printf("%s\n",buffer);*/
-}
+    //printf("%s\n",buffer);
+}*/
 
 void VRSocket::scanUnix(VRThreadWeakPtr thread) {
     //scan what new stuff is in the socket

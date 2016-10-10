@@ -56,7 +56,7 @@ VRScene::VRScene() {
     VRVisualLayer::anchorLayers(root);
 
     semanticManager = VRSemanticManager::create();
-    loadingProgress = VRProgress::create("Loading Scene", 100, VRProgress::WIDGET_M);
+    loadingProgress = VRProgress::create("Loading Scene", 100, VRProgress::CALLBACK_M);
 
     cout << " init scene done\n";
 }
@@ -207,7 +207,7 @@ void VRScene::updateLoadingProgress(VRThreadWeakPtr t) {
     float current = float(loadingTimer.stop())/loadingTime;
     int delta = floor(100*(current-last));
     loadingProgress->update(delta);
-    osgSleep(30); // slow down progress feedback!
+    osgSleep(10); // slow down progress feedback!
 }
 
 void VRScene::recLoadingTime() {

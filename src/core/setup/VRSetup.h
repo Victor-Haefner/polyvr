@@ -11,6 +11,7 @@
 #include "core/utils/VRName.h"
 #include "core/utils/VRUtilsFwd.h"
 #include "core/setup/VRSetupFwd.h"
+#include "core/scene/VRSceneFwd.h"
 #include "core/scripting/VRScriptFwd.h"
 
 namespace xmlpp{ class Element; }
@@ -47,8 +48,6 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
 
         xmlpp::Element* getElementChild(xmlpp::Element* e, string name);
 
-        void setupLESCCAVELights(); // TODO: temporary until scripts for VRSetup implemented!
-
     public:
         VRSetup(string name);
         ~VRSetup();
@@ -77,6 +76,10 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
 
         void save(string file);
         void load(string file);
+
+
+
+        void setupLESCCAVELights(VRScenePtr scene); // TODO: temporary until scripts for VRSetup implemented!
 };
 
 OSG_END_NAMESPACE;

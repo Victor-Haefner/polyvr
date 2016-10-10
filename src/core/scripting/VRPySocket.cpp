@@ -81,6 +81,6 @@ PyObject* VRPySocket::send(VRPySocket* self, PyObject* args) {
     string _msg = PyString_AsString(msg);
 
     if (self->obj == 0) { PyErr_SetString(err, "VRPySocket::send, Object is invalid"); return NULL; }
-    self->obj->sendMessage(_msg);
+    //self->obj->sendMessage(_msg);
     Py_RETURN_TRUE;
 }

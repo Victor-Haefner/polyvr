@@ -70,7 +70,7 @@ class VRSocket : public VRName {
         ~VRSocket();
 
         void initServer(CONNECTION_TYPE t, int _port);
-        void sendMessage(string msg);
+        void sendHTTPGet(string uri);
 
         void save(xmlpp::Element* e);
         void load(xmlpp::Element* e);

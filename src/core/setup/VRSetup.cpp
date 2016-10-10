@@ -4,8 +4,10 @@
 #include "windows/VRWindow.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
+#include "core/utils/toString.h"
 #include "core/utils/VROptions.h"
 #include "core/utils/VRVisualLayer.h"
+#include "core/utils/VRProgress.h"
 #include "core/setup/devices/VRMouse.h"
 #include "core/setup/tracking/Vive.h"
 #include "core/objects/VRTransform.h"
@@ -45,8 +47,6 @@ VRSetup::VRSetup(string name) {
     stats_layer->setCallback( layer_stats_toggle );
 
     network = VRNetworkPtr( new VRNetwork() );
-
-    setupLESCCAVELights();
 }
 
 VRSetup::~VRSetup() {
@@ -61,15 +61,51 @@ VRSetupPtr VRSetup::getCurrent() { return VRSetupManager::get()->getCurrent(); }
 VRScriptPtr VRSetup::getScript(string name) { return scripts[name]; }
 map<string, VRScriptPtr> VRSetup::getScripts() { return scripts; }*/
 
-void VRSetup::setupLESCCAVELights() {
+void setLoadingLights(int dev, int light, float R, float G, float B) {
+    cout << " !!! setLoadingLights " << dev << " " << light << " " << R << " " << G << " " << B << endl;
+    static VRSocket s("cave_lights");
+    string data = "device="+toString(dev);
+    if (light >= 0) data += "&light="+toString(light);
+    data += "&R="+toString(R)+"&G="+toString(G)+"&B="+toString(B);
+    s.sendHTTPGet("http://192.168.100.55:8000/cavelights?"+data);
+}
+
+void updateLoadingLights(int p) {
+    cout << "updateLoadingLights " << p << endl;
+    if (p == 100) { setLoadingLights(0, -1, 0.5,1,0.5); return; }
+    static float lastT = 0;
+
+    float t = p*0.01;
+    int dev_0 = 1+floor(lastT*3);
+    int dev_t = 1+floor(t*3);
+    int light_0 = floor((lastT*3-floor(lastT*3))*5);
+    int light_t = floor((t*3-floor(t*3))*5);
+    for (int d=dev_0; d<=dev_t; d++) {
+        for (int l=light_0; l<=light_t; l++) {
+            setLoadingLights(d, l, 1,0,0);
+        }
+    }
+    lastT = t;
+}
+
+void VRSetup::setupLESCCAVELights(VRScenePtr scene) {
     string core = "";
     "\n print 'YAAAAAAY'";
-    cout << "VRSetup::setupLESCCAVELights A\n";
+    //cout << "VRSetup::setupLESCCAVELights A\n";
     string name = "setCaveLoadingProgress";
     //auto s = newScript(name, core);
 
     //triggerScript(name);
-    cout << "VRSetup::setupLESCCAVELights B\n";
+    //cout << "VRSetup::setupLESCCAVELights B\n";
+
+    static auto fkt = VRFunction<int>::create("setup loading lights cb", boost::bind(updateLoadingLights, _1));
+    auto p = scene->getLoadingProgress();
+    p->setCallback(fkt);
+    setLoadingLights(0,-1,0,0,0);
+    setLoadingLights(1,-1,0,0,0);
+    setLoadingLights(2,-1,0,0,0);
+    setLoadingLights(3,-1,0,0,0);
+    setLoadingLights(4,-1,0,0,0);
 }
 
 void VRSetup::updateTracking() {
