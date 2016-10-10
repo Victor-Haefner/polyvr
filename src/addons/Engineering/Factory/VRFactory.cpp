@@ -46,18 +46,12 @@ struct Geo {
     //void init(vector<VRGeometryPtr>& geos, VRMaterialPtr mat) {
     void init(vector<Geo>& geos, VRMaterialPtr mat, string path, bool thread) {
         geo = VRGeometry::create("factory_part"); // init new object
+        geo->setMaterial(mat);
 
         pos = GeoPnt3fProperty::create();
         norms = GeoVec3fProperty::create();
         inds_p = GeoUInt32Property::create();
         inds_n = GeoUInt32Property::create();
-
-        geo->setType(GL_TRIANGLES);
-        geo->setPositions( pos );
-        geo->setNormals( norms );
-        geo->setIndices( inds_p );
-        geo->getMesh()->geo->setIndex(inds_n, Geometry::NormalsIndex);
-        geo->setMaterial(mat);
 
         VRGeometry::Reference ref(VRGeometry::FILE, repSpaces(path) + " " + repSpaces(geo->getName()) + " SOLIDWORKS-VRML2 " + toString(thread));
         geo->setReference( ref );
@@ -69,6 +63,14 @@ struct Geo {
 
         Np = Nn = 0;
         r = 0;
+    }
+
+    void finalize() {
+        geo->setType(GL_TRIANGLES);
+        geo->setPositions( pos );
+        geo->setNormals( norms );
+        geo->setIndices( inds_p );
+        geo->getMesh()->geo->setIndex(inds_n, Geometry::NormalsIndex);
     }
 
     bool inBB(Pnt3f& v) {
@@ -222,6 +224,7 @@ bool VRFactory::loadVRML(string path, VRProgressPtr progress, VRTransformPtr res
             continue;
         }
 
+        g.finalize();
         res->addChild(g.geo);
 
         GeoUInt32PropertyRecPtr Length = GeoUInt32Property::create();

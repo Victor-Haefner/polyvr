@@ -110,7 +110,7 @@ void VRSetup::setupLESCCAVELights(VRScenePtr scene) {
 
 void VRSetup::updateTracking() {
     vive->update();
-    updateCallbacks();
+    //updateCallbacks();
 }
 
 VRNetworkPtr VRSetup::getNetwork() { return network; }
