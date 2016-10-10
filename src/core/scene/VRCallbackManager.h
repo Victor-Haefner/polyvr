@@ -15,8 +15,9 @@ class VRCallbackManager {
         struct job {
             VRUpdatePtr ptr;
             int prio = 0;
+            int delay = 0;
             job() {}
-            job(VRUpdatePtr j, int p) : ptr(j), prio(p) {}
+            job(VRUpdatePtr j, int p, int d) : ptr(j), prio(p), delay(d) {}
         };
 
         struct timeoutFkt {
@@ -37,7 +38,7 @@ class VRCallbackManager {
         VRCallbackManager();
         ~VRCallbackManager();
 
-        void queueJob(VRUpdatePtr f, int priority = 0);
+        void queueJob(VRUpdatePtr f, int priority = 0, int delay = 0);
         void addUpdateFkt(VRUpdateWeakPtr f, int priority = 0);
         void addTimeoutFkt(VRUpdateWeakPtr f, int priority, int timeout);
 

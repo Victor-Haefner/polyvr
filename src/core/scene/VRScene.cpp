@@ -259,7 +259,7 @@ void VRScene::loadScene(xmlpp::Element* e) {
     VRMaterialManager::update();
     semanticManager->update();
 
-    queueJob(loadingTimeCb);
+    queueJob(loadingTimeCb, 0, 2);
 }
 
 VRSemanticManagerPtr VRScene::getSemanticManager() { return semanticManager; }

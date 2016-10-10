@@ -17,10 +17,10 @@ VRCallbackManager::~VRCallbackManager() {
     for (auto ufs : updateFktPtrs) delete ufs.second;
 }
 
-void VRCallbackManager::queueJob(VRUpdatePtr f, int priority) {
+void VRCallbackManager::queueJob(VRUpdatePtr f, int priority, int delay) {
     PLock lock(mtx);
     updateListsChanged = true;
-    jobFktPtrs[f.get()] = job(f,priority);
+    jobFktPtrs[f.get()] = job(f,priority,delay);
 }
 
 void VRCallbackManager::addUpdateFkt(VRUpdateWeakPtr f, int priority) {
@@ -107,13 +107,20 @@ void VRCallbackManager::updateCallbacks() {
         if ( auto scb = cb.lock()) (*scb)(0);
     }
 
+    map<VRFunction<int>* , job> delayedJobs;
     for (auto j : jobFktPtrs) {
+        if (j.second.delay > 0) {
+            j.second.delay--;
+            delayedJobs[j.first] = j.second;
+            continue;
+        }
+
         if (j.second.ptr) {
             string name = j.second.ptr->getName();
             (*j.second.ptr)(0);
         }
     }
-    jobFktPtrs.clear();
+    jobFktPtrs = delayedJobs;
 }
 
 void VRCallbackManager::printCallbacks() {

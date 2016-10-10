@@ -72,8 +72,8 @@ void setLoadingLights(int dev, int light, float R, float G, float B) {
 
 void updateLoadingLights(int p) {
     cout << "updateLoadingLights " << p << endl;
-    if (p == 100) { setLoadingLights(0, -1, 0.5,1,0.5); return; }
     static float lastT = 0;
+    if (p == 100) { setLoadingLights(0, -1, 0.5,0.5,0.5); lastT = 0; return; }
 
     float t = p*0.01;
     int dev_0 = 1+floor(lastT*3);
@@ -82,7 +82,7 @@ void updateLoadingLights(int p) {
     int light_t = floor((t*3-floor(t*3))*5);
     for (int d=dev_0; d<=dev_t; d++) {
         for (int l=light_0; l<=light_t; l++) {
-            setLoadingLights(d, l, 1,0,0);
+            setLoadingLights(d, l, 0,1,0);
         }
     }
     lastT = t;
@@ -101,10 +101,9 @@ void VRSetup::setupLESCCAVELights(VRScenePtr scene) {
     static auto fkt = VRFunction<int>::create("setup loading lights cb", boost::bind(updateLoadingLights, _1));
     auto p = scene->getLoadingProgress();
     p->setCallback(fkt);
-    setLoadingLights(0,-1,0,0,0);
-    setLoadingLights(1,-1,0,0,0);
-    setLoadingLights(2,-1,0,0,0);
-    setLoadingLights(3,-1,0,0,0);
+    setLoadingLights(1,-1,1,0,0);
+    setLoadingLights(2,-1,1,0,0);
+    setLoadingLights(3,-1,1,0,0);
     setLoadingLights(4,-1,0,0,0);
 }
 
@@ -210,8 +209,6 @@ void VRSetup::save(string file) {
     VRPN::save(trackingVRPNN);
     network->save(networkN);
 
-    //for (auto s : scripts) s.second->saveUnder(scriptN);
-
     doc.write_to_file_formatted(file);
 }
 
@@ -235,18 +232,6 @@ void VRSetup::load(string file) {
     if (deviceN) VRDeviceManager::load(deviceN);
     if (displayN) VRWindowManager::load(displayN);
     if (networkN) network->load(networkN);
-
-    /*if (scriptN) {
-        for (auto el : getChildren(scriptN)) {
-            string name = el->get_name();
-            if (el->get_attribute("base_name")) name = el->get_attribute("base_name")->get_value();
-            auto t = VRScript::create(name);
-            t->load(el);
-
-            name = t->getName();
-            scripts[name] = t;
-        }
-    }*/
 }
 
 OSG_END_NAMESPACE;
