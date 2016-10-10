@@ -75,8 +75,10 @@ class VRPathtool : public VRObject {
         vector<VRGeometryWeakPtr> handles;
         graph_basePtr graph;
         map<int, knot> knots; // maps graph node ids to pathtool knots
+        path* selectedPath = 0;
 
         VRMaterialPtr lmat;
+        VRMaterialPtr lsmat;
 
         VRUpdatePtr updatePtr;
         VRManipulator* manip = 0;
@@ -111,6 +113,8 @@ class VRPathtool : public VRObject {
         VRMaterialPtr getPathMaterial();
 
         void select(VRGeometryPtr handle);
+        void select(path* p);
+        void deselect();
         void update();
 };
 

@@ -69,6 +69,6 @@ bool VRPing::start(string IP, string port, int timeout) {
     return c.connect(IP, port, boost::posix_time::seconds(timeout));
 }
 
-bool start(std::string IP, int timeout) {
+bool VRPing::start(std::string IP, int timeout) {
     return false; // TODO
 }

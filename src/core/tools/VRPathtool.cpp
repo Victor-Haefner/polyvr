@@ -75,6 +75,11 @@ VRPathtool::VRPathtool() : VRObject("Pathtool") {
     lmat->setLit(false);
     lmat->setDiffuse(Vec3f(0.1,0.9,0.2));
     lmat->setLineWidth(3);
+
+    lsmat = VRMaterial::create("spline");
+    lsmat->setLit(false);
+    lsmat->setDiffuse(Vec3f(0.9,0.1,0.2));
+    lsmat->setLineWidth(3);
 }
 
 VRPathtoolPtr VRPathtool::create() { return VRPathtoolPtr( new VRPathtool() ); }
@@ -152,7 +157,8 @@ void VRPathtool::updateEntry(entry* e) {
     int pN = e->p->getPositions().size();
     if (pN <= 2) return;
 
-    if (!e->line.lock()) { // update path line
+    if (!e->anchor.lock()) e->anchor = ptr();
+    if (!e->line.lock() && e->anchor.lock()) { // update path line
         auto line = VRStroke::create("path");
         e->line = line;
         line->setPersistency(0);
@@ -164,7 +170,7 @@ void VRPathtool::updateEntry(entry* e) {
         line->strokeProfile(profile, 0, 0);
     }
 
-    e->line.lock()->update();
+    if (auto l = e->line.lock()) l->update();
 }
 
 void VRPathtool::updateHandle(VRGeometryPtr handle) { // update paths the handle belongs to
@@ -355,6 +361,16 @@ void VRPathtool::select(VRGeometryPtr h) {
     manip->handle(h);
     if (entries.count(h.get()) == 0) return;
     manip->manipulate(h);
+}
+
+void VRPathtool::select(path* p) {
+    if (selectedPath) getStroke(selectedPath)->setMaterial(lmat);
+    selectedPath = p;
+    getStroke(selectedPath)->setMaterial(lsmat);
+}
+
+void VRPathtool::deselect() {
+    if (selectedPath) getStroke(selectedPath)->setMaterial(lmat);
 }
 
 VRMaterialPtr VRPathtool::getPathMaterial() { return lmat; }

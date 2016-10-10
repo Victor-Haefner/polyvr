@@ -8,6 +8,7 @@
 #include "core/utils/VROptions.h"
 #include "core/utils/VRVisualLayer.h"
 #include "core/utils/VRProgress.h"
+#include "core/networking/VRPing.h"
 #include "core/setup/devices/VRMouse.h"
 #include "core/setup/tracking/Vive.h"
 #include "core/objects/VRTransform.h"
@@ -89,8 +90,10 @@ void updateLoadingLights(int p) {
 }
 
 void VRSetup::setupLESCCAVELights(VRScenePtr scene) {
-    string core = "";
-    "\n print 'YAAAAAAY'";
+    VRPing ping;
+    if (!ping.start("192.168.100.55", "8000", 1)) return;
+
+    string core = "\n print 'YAAAAAAY'";
     //cout << "VRSetup::setupLESCCAVELights A\n";
     string name = "setCaveLoadingProgress";
     //auto s = newScript(name, core);

@@ -16,8 +16,9 @@ PyMethodDef VRPyPathtool::methods[] = {
     {"newPath", (PyCFunction)VRPyPathtool::newPath, METH_VARARGS, "Add a new path - path newPath(device, anchor | int resolution)" },
     {"remPath", (PyCFunction)VRPyPathtool::remPath, METH_VARARGS, "Remove a path - remPath(path)" },
     {"extrude", (PyCFunction)VRPyPathtool::extrude, METH_VARARGS, "Extrude a path - handle extrude(device, path)" },
-    {"addPath", (PyCFunction)VRPyPathtool::addPath, METH_VARARGS, "Add a path - addPath(path, object)" },
+    {"addPath", (PyCFunction)VRPyPathtool::addPath, METH_VARARGS, "Add a path and add resulting stroke to object - addPath(path, object)" },
     {"select", (PyCFunction)VRPyPathtool::select, METH_VARARGS, "Select handle - select(handle)" },
+    {"deselect", (PyCFunction)VRPyPathtool::deselect, METH_NOARGS, "Deselect anything previously selected - deselect()" },
     {"setVisible", (PyCFunction)VRPyPathtool::setVisible, METH_VARARGS, "Set the tool visibility - setVisible(bool)\n     setVisible(bool stroke, bool handles)" },
     {"getPaths", (PyCFunction)VRPyPathtool::getPaths, METH_NOARGS, "Return all paths - [path] getPaths()" },
     {"getPath", (PyCFunction)VRPyPathtool::getPath, METH_VARARGS, "Return path between handles h1 and h2 - [path] getPath( handle h1, handle h2 )" },
@@ -123,9 +124,16 @@ PyObject* VRPyPathtool::setVisible(VRPyPathtool* self, PyObject* args) {
 
 PyObject* VRPyPathtool::select(VRPyPathtool* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    VRPyGeometry* obj;
-    if (! PyArg_ParseTuple(args, "O:select", &obj)) return NULL;
-    self->objPtr->select( obj->objPtr );
+    PyObject* o;
+    if (! PyArg_ParseTuple(args, "O:select", &o)) return NULL;
+    if (VRPyGeometry::check(o)) self->objPtr->select( ((VRPyGeometry*)o)->objPtr );
+    if (VRPyPath::check(o)) self->objPtr->select( ((VRPyPath*)o)->obj );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyPathtool::deselect(VRPyPathtool* self) {
+    if (!self->valid()) return NULL;
+    self->objPtr->deselect();
     Py_RETURN_TRUE;
 }
 
