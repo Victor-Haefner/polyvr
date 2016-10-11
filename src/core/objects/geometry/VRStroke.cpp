@@ -103,6 +103,8 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool doColor, C
             vector<Vec3f> up_vectors = paths[i]->getUpvectors();
             vector<Vec3f> cols = paths[i]->getColors();
 
+            if (pnts.size() == 0) { cout << "VRStroke::strokeProfile path size 0!\n"; continue; }
+
             Matrix m;
 
              // first cap
