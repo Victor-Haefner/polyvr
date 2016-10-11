@@ -113,8 +113,9 @@ VRGeometryPtr VRProcessLayout::newWidget(VRProcessNode& n, float height) {
 
     auto txt = VRText::get()->create(l, "MONO 20", 18*wrapN, 32*lineN, fg, bg);
     auto mat = VRMaterial::create("ProcessElement");
-    mat->setTexture(txt);
+    mat->setTexture(txt, false);
     mat->setTextureParams(GL_LINEAR, GL_LINEAR);
+    //mat->enableTransparency(0);
     VRGeoData geo;
 
     if (n.type == SUBJECT) pushSubjectBox(geo, wrapN, lineN*height*0.5);

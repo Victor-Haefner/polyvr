@@ -2,7 +2,7 @@
 <Setup>
   <Displays>
     <Window active="1" type="0" width="640" height="480" name="Boden" mouse="None" keyboard="None" Nx="2" Ny="1" ConnType="StreamSock">
-      <View stereo="1" active_stereo="1" projection="1" eye_inverted="0" eye_separation="0.045" position="0 0 1 1" center="0 -1.6 0" normal="0 1 0" user_pos="0 0 0" up="0 0 -1" size="4.93 2.4" shear="0 0" warp="0 0" user="ART_tracker"/>
+      <View stereo="1" active_stereo="1" projection="1" eye_inverted="1" eye_separation="0.045" position="0 0 1 1" center="0 -1.6 0" normal="0 1 0" user_pos="0 0 0" up="0 0 -1" size="4.93 2.4" shear="0 0" warp="0 0" user="ART_tracker"/>
       <Server Address="129.13.237.133:3000"/>
       <Server Address="129.13.237.133:3001"/>
     </Window>
@@ -12,7 +12,7 @@
       <Server Address="129.13.237.131:3000"/>
     </Window>
     <Window active="1" type="0" width="640" height="480" name="Seite" mouse="None" keyboard="None" Nx="1" Ny="1" ConnType="StreamSock">
-      <View stereo="1" active_stereo="1" projection="1" eye_inverted="0" eye_separation="0.045" position="0 0 1 1" center="-2.465 -0.3 -0.06" normal="1 0 0" user_pos="0 0 0" up="0 1 0" size="2.3 2.6" shear="0 0" warp="0 0" user="ART_tracker"/>
+      <View stereo="1" active_stereo="1" projection="1" eye_inverted="1" eye_separation="0.045" position="0 0 1 1" center="-2.465 -0.3 -0.06" normal="1 0 0" user_pos="0 0 0" up="0 1 0" size="2.3 2.6" shear="0 0" warp="0 0" user="ART_tracker"/>
       <Server Address="129.13.237.132:3000"/>
     </Window>
     <Window active="1" type="2" width="1380" height="840" name="screen" mouse="mouse" keyboard="keyboard">
@@ -40,4 +40,5 @@
       <Node active_stereo="1" autostart="1" base_name="129.13.237.133:3001" connection_type="StreamSock" display=":0.2" fullscreen="1" name_space="NetworkNode" name_suffix="0" persistency="666" port="3001" unique="1" ID="1"/>
     </Node>
   </Network>
+  <Scripts/>
 </Setup>
