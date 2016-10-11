@@ -873,11 +873,14 @@
 		<Unit filename="src/core/scripting/VRPyWaypoint.h" />
 		<Unit filename="src/core/scripting/VRSceneGlobals.cpp" />
 		<Unit filename="src/core/scripting/VRSceneGlobals.h" />
+		<Unit filename="src/core/scripting/VRSceneModules.cpp" />
+		<Unit filename="src/core/scripting/VRSceneModules.h" />
 		<Unit filename="src/core/scripting/VRScript.cpp" />
 		<Unit filename="src/core/scripting/VRScript.h" />
 		<Unit filename="src/core/scripting/VRScriptFwd.h" />
 		<Unit filename="src/core/scripting/VRScriptManager.cpp" />
 		<Unit filename="src/core/scripting/VRScriptManager.h" />
+		<Unit filename="src/core/scripting/VRScriptManagerT.h" />
 		<Unit filename="src/core/setup/VRNetwork.cpp" />
 		<Unit filename="src/core/setup/VRNetwork.h" />
 		<Unit filename="src/core/setup/VRSetup.cpp" />

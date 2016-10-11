@@ -29,11 +29,7 @@ class VRScriptManager : public VRStorage, public VRPyBase {
         map<string, VRSignalPtr> triggers;
         PyThreadState* pyThreadState = 0;
 
-        template<class T>
-        void registerModule(string mod, PyObject* parent, PyTypeObject* base = 0, string mod_parent = "VR");
-
         void test();
-
         void initPyModules();
 
     protected:
@@ -67,6 +63,9 @@ class VRScriptManager : public VRStorage, public VRPyBase {
         vector<string> getPyVRMethods(string mod, string type);
         string getPyVRDescription(string mod, string type);
         string getPyVRMethodDoc(string mod, string type, string method);
+
+        template<class T>
+        void registerModule(string mod, PyObject* parent, PyTypeObject* base = 0, string mod_parent = "VR");
 };
 
 OSG_END_NAMESPACE
