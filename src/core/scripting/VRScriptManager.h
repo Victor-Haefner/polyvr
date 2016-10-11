@@ -67,27 +67,6 @@ class VRScriptManager : public VRStorage, public VRPyBase {
         vector<string> getPyVRMethods(string mod, string type);
         string getPyVRDescription(string mod, string type);
         string getPyVRMethodDoc(string mod, string type, string method);
-
-        // Python Methods
-		static PyObject* exit(VRScriptManager* self);
-		static PyObject* find(VRScriptManager* self, PyObject *args);
-		static PyObject* loadGeometry(VRScriptManager* self, PyObject *args, PyObject *kwargs);
-		static PyObject* getLoadGeometryProgress(VRScriptManager* self);
-		static PyObject* exportGeometry(VRScriptManager* self, PyObject *args);
-		static PyObject* pyTriggerScript(VRScriptManager* self, PyObject *args);
-		static PyObject* stackCall(VRScriptManager* self, PyObject *args);
-		static PyObject* openFileDialog(VRScriptManager* self, PyObject *args);
-		static PyObject* updateGui(VRScriptManager* self);
-		static PyObject* render(VRScriptManager* self);
-		static PyObject* getRoot(VRScriptManager* self);
-		static PyObject* printOSG(VRScriptManager* self);
-		static PyObject* getNavigator(VRScriptManager* self);
-		static PyObject* getSetup(VRScriptManager* self);
-		static PyObject* loadScene(VRScriptManager* self, PyObject *args);
-		static PyObject* startThread(VRScriptManager* self, PyObject *args);
-		static PyObject* joinThread(VRScriptManager* self, PyObject *args);
-		static PyObject* getSystemDirectory(VRScriptManager* self, PyObject *args);
-		static PyObject* setPhysicsActive(VRScriptManager* self, PyObject *args);
 };
 
 OSG_END_NAMESPACE

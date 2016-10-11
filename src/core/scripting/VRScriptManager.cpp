@@ -109,6 +109,8 @@
 #include "addons/Semantics/Reasoning/VRPyOntology.h"
 #endif
 
+#include "VRSceneGlobals.h"
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -265,31 +267,6 @@ initVRPyStdOut(void) {
 //  such a script can be called from another script, but only by passing all the variables again
 //  it should be possible to call the script with any parameter, the gui parameter should be used as default ones!
 
-static PyMethodDef VRScriptManager_module_methods[] = {
-	{"exit", (PyCFunction)VRScriptManager::exit, METH_NOARGS, "Terminate application" },
-	{"loadGeometry", (PyCFunction)VRScriptManager::loadGeometry, METH_VARARGS|METH_KEYWORDS, "Loads a file and returns an object - obj loadGeometry(str path, bool cached = True, str preset = 'OSG', bool threaded = 0, str parent = None, str options = None)"
-                                                                                             "\n\tpreset can be: 'OSG', 'COLLADA', 'SOLIDWORKS-VRML2'"
-                                                                                             "\n\toptions can be: 'explorer' (currently only for STEP files)" },
-	{"exportGeometry", (PyCFunction)VRScriptManager::exportGeometry, METH_VARARGS, "Export a part of the scene - exportGeometry( object, path )" },
-	{"getLoadGeometryProgress", (PyCFunction)VRScriptManager::getLoadGeometryProgress, METH_VARARGS, "Return the progress object for geometry loading - getLoadGeometryProgress()" },
-	{"stackCall", (PyCFunction)VRScriptManager::stackCall, METH_VARARGS, "Schedules a call to a python function - stackCall( function, delay, [args] )" },
-	{"openFileDialog", (PyCFunction)VRScriptManager::openFileDialog, METH_VARARGS, "Open a file dialog - openFileDialog( onLoad, mode, title, default_path, filter )\n mode : {Save, Load, New, Create}" },
-	{"updateGui", (PyCFunction)VRScriptManager::updateGui, METH_NOARGS, "Update the gui" },
-	{"render", (PyCFunction)VRScriptManager::render, METH_NOARGS, "Renders the viewports" },
-	{"triggerScript", (PyCFunction)VRScriptManager::pyTriggerScript, METH_VARARGS, "Trigger a script - triggerScript( str script )" },
-	{"getRoot", (PyCFunction)VRScriptManager::getRoot, METH_NOARGS, "Return the root node of the scenegraph - object getRoot()" },
-	{"find", (PyCFunction)VRScriptManager::find, METH_VARARGS, "Return a ressource by name - something find(str name)\n\tthe ressources searched are: Objects, Devices" },
-	{"printOSG", (PyCFunction)VRScriptManager::printOSG, METH_NOARGS, "Print the OSG tree to console" },
-	{"getNavigator", (PyCFunction)VRScriptManager::getNavigator, METH_NOARGS, "Return a handle to the navigator object" },
-	{"getSetup", (PyCFunction)VRScriptManager::getSetup, METH_NOARGS, "Return a handle to the active hardware setup" },
-	{"loadScene", (PyCFunction)VRScriptManager::loadScene, METH_VARARGS, "Close the current scene and open another - loadScene( str path/to/my/scene.xml )" },
-	{"startThread", (PyCFunction)VRScriptManager::startThread, METH_VARARGS, "Start a thread - int startThread( callback, [params] )" },
-	{"joinThread", (PyCFunction)VRScriptManager::joinThread, METH_VARARGS, "Join a thread - joinThread( int ID )" },
-	{"getSystemDirectory", (PyCFunction)VRScriptManager::getSystemDirectory, METH_VARARGS, "Return the path to one of the specific PolyVR directories - getSystemDirectory( str dir )\n\tdir can be: ROOT, EXAMPLES, RESSOURCES, TRAFFIC" },
-	{"setPhysicsActive", (PyCFunction)VRScriptManager::setPhysicsActive, METH_VARARGS, "Pause and unpause physics - setPhysicsActive( bool b )" },
-    {NULL}  /* Sentinel */
-};
-
 void VRScriptManager::initPyModules() {
     Py_Initialize();
     PyEval_InitThreads();
@@ -315,7 +292,7 @@ void VRScriptManager::initPyModules() {
     //sys_path += ":.";
     //PySys_SetPath(sys_path.c_str());
 
-    pModVR = Py_InitModule3("VR", VRScriptManager_module_methods, "VR Module");
+    pModVR = Py_InitModule3("VR", VRSceneGlobals::methods, "VR Module");
     registerModule<VRPyObject>("Object", pModVR, VRPyStorage::typeRef);
     registerModule<VRPyTransform>("Transform", pModVR, VRPyObject::typeRef);
     registerModule<VRPyGeometry>("Geometry", pModVR, VRPyTransform::typeRef);
@@ -402,12 +379,12 @@ void VRScriptManager::initPyModules() {
 	registerModule<VRPySimViDekont>("SimViDekont", pModVR);
 #endif
 
-    PyObject* pModSetup = Py_InitModule3("Setup", VRScriptManager_module_methods, "VR Module");
+    PyObject* pModSetup = Py_InitModule3("Setup", VRSceneGlobals::methods, "VR Module");
     registerModule<VRPySetup>("Setup", pModSetup, 0, "Setup");
     registerModule<VRPyView>("View", pModSetup, 0, "Setup");
     registerModule<VRPyWindow>("Window", pModSetup, 0, "Setup");
 
-    PyObject* pModFactory = Py_InitModule3("Factory", VRScriptManager_module_methods, "VR Module");
+    PyObject* pModFactory = Py_InitModule3("Factory", VRSceneGlobals::methods, "VR Module");
     registerModule<FPyNode>("Node", pModFactory, 0, "Factory");
     registerModule<FPyNetwork>("Network", pModFactory, 0, "Factory");
     registerModule<FPyPath>("FPath", pModFactory, 0, "Factory");
@@ -538,215 +515,12 @@ string VRScriptManager::getPyVRMethodDoc(string mod, string type, string method)
     return res;
 }
 
-// ==============
-// Python methods
-// ==============
-
-PyObject* VRScriptManager::setPhysicsActive(VRScriptManager* self, PyObject *args) {
-    auto scene = VRScene::getCurrent();
-    if (scene) (dynamic_pointer_cast<VRPhysicsManager>(scene))->setPhysicsActive( parseBool(args) );
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRScriptManager::getSystemDirectory(VRScriptManager* self, PyObject *args) {
-    string dir = parseString(args);
-    string path = VRSceneManager::get()->getOriginalWorkdir();
-    if (dir == "ROOT") ;
-    if (dir == "EXAMPLES") path += "/examples";
-    if (dir == "RESSOURCES") path += "/ressources";
-    if (dir == "TRAFFIC") path += "/src/addons/RealWorld/traffic/simulation/bin";
-    return PyString_FromString(path.c_str());
-}
-
-PyObject* VRScriptManager::loadScene(VRScriptManager* self, PyObject *args) {
-    auto fkt = VRFunction<int>::create( "scheduled scene load", boost::bind(&VRSceneManager::loadScene, VRSceneManager::get(), parseString(args), false ) );
-    VRSceneManager::get()->queueJob(fkt);
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRScriptManager::getSetup(VRScriptManager* self) {
-    return VRPySetup::fromSharedPtr(VRSetup::getCurrent());
-}
-
-PyObject* VRScriptManager::getNavigator(VRScriptManager* self) {
-    auto scene = VRScene::getCurrent();
-    return VRPyNavigator::fromPtr((VRNavigator*)scene.get());
-}
-
-PyObject* VRScriptManager::printOSG(VRScriptManager* self) {
-    VRObject::printOSGTree( VRScene::getCurrent()->getRoot()->getNode() );
-    VRSetup::getCurrent()->printOSG();
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRScriptManager::exit(VRScriptManager* self) {
-    PolyVR::shutdown();
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRScriptManager::find(VRScriptManager* self, PyObject *args) {
-    string name = parseString(args);
-    if (auto res = VRScene::getCurrent()->getRoot()->find(name)) return VRPyTypeCaster::cast(res);
-    if (auto res = VRSetup::getCurrent()->getDevice(name)) return VRPyTypeCaster::cast(res);
-    Py_RETURN_NONE;
-}
-
-PyObject* VRScriptManager::getRoot(VRScriptManager* self) {
-    return VRPyTypeCaster::cast( VRScene::getCurrent()->getRoot() );
-}
-
-PyObject* VRScriptManager::loadGeometry(VRScriptManager* self, PyObject *args, PyObject *kwargs) {
-    const char* path = "";
-    int ignoreCache = 0;
-    int threaded = 0;
-    const char* preset = "OSG";
-    const char* parent = "";
-    const char* options = "";
-
-    const char* kwlist[] = {"path", "cached", "preset", "threaded", "parent", "options", NULL};
-    string format = "s|isiss:loadGeometry";
-    if (! PyArg_ParseTupleAndKeywords(args, kwargs, format.c_str(), (char**)kwlist, &path, &ignoreCache, &preset, &threaded, &parent, &options)) return NULL;
-
-    VRObjectPtr prnt = VRScene::getCurrent()->getRoot()->find( parent );
-
-    VRTransformPtr obj = VRImport::get()->load( path, prnt, !ignoreCache, preset, threaded, options);
-    if (obj == 0) {
-        VRGuiManager::get()->printToConsole("Errors", "Warning: " + string(path) + " not loaded!\n");
-        Py_RETURN_NONE;
-    }
-    obj->setPersistency(0);
-    return VRPyTypeCaster::cast(obj);
-}
-
-PyObject* VRScriptManager::exportGeometry(VRScriptManager* self, PyObject *args) {
-    const char* path = "";
-    VRPyObject* o;
-    if (! PyArg_ParseTuple(args, "Os", &o, &path)) return NULL;
-    VRExport::get()->write( o->objPtr, path );
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRScriptManager::getLoadGeometryProgress(VRScriptManager* self) {
-    const char* path = "";
-    return VRPyProgress::fromSharedPtr( VRImport::get()->getProgressObject() );
-}
-
-PyObject* VRScriptManager::pyTriggerScript(VRScriptManager* self, PyObject *args) {
-    VRScene::getCurrent()->triggerScript( parseString(args) );
-    Py_RETURN_TRUE;
-}
-
-void execCall(PyObject* pyFkt, PyObject* pArgs, int i) {
-    if (pyFkt == 0) return;
-    PyGILState_STATE gstate = PyGILState_Ensure();
-    if (PyErr_Occurred() != NULL) PyErr_Print();
-    if (pArgs == 0) pArgs = PyTuple_New(0);
-
-    PyObject_CallObject(pyFkt, pArgs);
-
-    Py_XDECREF(pArgs);
-    Py_DecRef(pyFkt);
-
-    if (PyErr_Occurred() != NULL) PyErr_Print();
-    PyGILState_Release(gstate);
-}
-
-void execThread(PyObject* pyFkt, PyObject* pArgs,  std::weak_ptr<VRThread>  thread) {
-    execCall(pyFkt, pArgs, 0);
-}
-
 void VRScriptManager::allowScriptThreads() {
     if (pyThreadState == 0) pyThreadState = PyEval_SaveThread();
 }
 
 void VRScriptManager::blockScriptThreads() {
     if (pyThreadState) { PyEval_RestoreThread(pyThreadState); pyThreadState = 0; }
-}
-
-map<int, VRThreadCb> pyThreadsTmp;
-PyObject* VRScriptManager::startThread(VRScriptManager* self, PyObject *args) {
-    PyObject *pyFkt, *pArgs = 0;
-    if (! PyArg_ParseTuple(args, "O|O", &pyFkt, &pArgs)) return NULL;
-    Py_IncRef(pyFkt);
-
-    if (pArgs != 0) {
-        std::string type = pArgs->ob_type->tp_name;
-        if (type == "list") pArgs = PyList_AsTuple(pArgs);
-    }
-
-    auto pyThread = VRFunction< VRThreadWeakPtr >::create( "pyExecCall", boost::bind(execThread, pyFkt, pArgs, _1) );
-    int t = VRScene::getCurrent()->initThread(pyThread, "python thread");
-    pyThreadsTmp[t] = pyThread; // need to keep a reference!
-    //self->pyThreads[t] = pyThread; // TODO: self is 0 ???
-    return PyInt_FromLong(t);
-}
-
-PyObject* VRScriptManager::joinThread(VRScriptManager* self, PyObject *args) {
-    int ID = parseInt(args);
-    VRScene::getCurrent()->stopThread(ID);
-    pyThreadsTmp.erase(ID);
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRScriptManager::stackCall(VRScriptManager* self, PyObject *args) {
-    PyObject *pyFkt, *pArgs = 0;
-    float delay;
-    if (PyTuple_Size(args) == 2) {
-        if (! PyArg_ParseTuple(args, "Of", &pyFkt, &delay)) return NULL;
-    } else if (! PyArg_ParseTuple(args, "OfO", &pyFkt, &delay, &pArgs)) return NULL;
-    Py_IncRef(pyFkt);
-
-    if (pArgs != 0) {
-        std::string type = pArgs->ob_type->tp_name;
-        if (type == "list") pArgs = PyList_AsTuple(pArgs);
-    }
-
-    VRUpdatePtr fkt = VRFunction<int>::create( "pyExecCall", boost::bind(execCall, pyFkt, pArgs, _1) );
-    VRUpdateWeakPtr wkp = fkt;
-
-    auto scene = VRScene::getCurrent();
-    auto a = scene->addAnimation(0, delay, wkp, 0, 0, false);
-    a->setCallbackOwner(true);
-    Py_RETURN_TRUE;
-}
-
-void on_py_file_diag_cb(PyObject* pyFkt) {
-    string res = VRGuiFile::getRelativePath_toWorkdir();
-    float scale = VRGuiFile::getScale();
-    PyObject *pArgs = PyTuple_New(2);
-    PyTuple_SetItem( pArgs, 0, PyString_FromString(res.c_str()) );
-    PyTuple_SetItem( pArgs, 1, PyFloat_FromDouble(scale) );
-    execCall( pyFkt, pArgs, 0 );
-}
-
-PyObject* VRScriptManager::openFileDialog(VRScriptManager* self, PyObject *args) {
-    PyObject *cb, *mode, *title, *default_path, *filter;
-    if (! PyArg_ParseTuple(args, "OOOOO", &cb, &mode, &title, &default_path, &filter)) return NULL;
-    Py_IncRef(cb);
-
-    VRGuiFile::clearFilter();
-    VRGuiFile::gotoPath( PyString_AsString(default_path) );
-    VRGuiFile::setFile( PyString_AsString(default_path) );
-    VRGuiFile::setCallbacks( sigc::bind<PyObject*>( sigc::ptr_fun( &on_py_file_diag_cb ), cb) );
-
-    string m = PyString_AsString(mode);
-    Gtk::FileChooserAction action = Gtk::FILE_CHOOSER_ACTION_OPEN;
-    if (m == "Save" || m == "New" || m == "Create") action = Gtk::FILE_CHOOSER_ACTION_SAVE;
-    VRGuiFile::open( m, action, PyString_AsString(title) );
-
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRScriptManager::updateGui(VRScriptManager* self) {
-    VRGuiManager::get()->updateGtk();
-    Py_RETURN_TRUE;
-}
-
-PyObject* VRScriptManager::render(VRScriptManager* self) {
-    VRSceneManager::get()->updateScene();
-    VRSetup::getCurrent()->updateWindows();
-    VRGuiManager::get()->updateGtk();
-    Py_RETURN_TRUE;
 }
 
 OSG_END_NAMESPACE
