@@ -124,7 +124,6 @@ void VRGuiSemantics::on_open_clicked() {
 }
 
 void VRGuiSemantics::clearCanvas() {
-    for (auto c : canvas->get_children()) canvas->remove(*c);
     layout->clear();
     layout_graph->clear();
     widgets.clear();
