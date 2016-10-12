@@ -194,8 +194,7 @@ void VRPathtool::updateDevs() { // update when something is dragged
 }
 
 void VRPathtool::addPath(path* p, VRObjectPtr anchor, VRGeometryPtr ha, VRGeometryPtr he) {
-    entry* e = new entry();
-    e->anchor = anchor ? anchor : ptr();
+    entry* e = new entry( anchor ? anchor : ptr() );
     e->p = p;
     paths[e->p] = e;
 
@@ -212,15 +211,18 @@ void VRPathtool::addPath(path* p, VRObjectPtr anchor, VRGeometryPtr ha, VRGeomet
     }
 }
 
+VRPathtool::entry::entry(VRObjectPtr a) {
+    anchor = a;
+}
+
 void VRPathtool::entry::addHandle(VRGeometryPtr h) {
     points[h.get()] = points.size()-1;
     handles.push_back(h);
-    anchor.lock()->addChild(h);
+    if (auto a = anchor.lock()) a->addChild(h);
 }
 
 path* VRPathtool::newPath(VRDevicePtr dev, VRObjectPtr anchor, int resolution) {
-    entry* e = new entry();
-    e->anchor = anchor ? anchor : ptr();
+    entry* e = new entry( anchor ? anchor : ptr() );
     e->p = new path();
     e->resolution = resolution;
     paths[e->p] = e;

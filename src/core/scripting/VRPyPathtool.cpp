@@ -141,7 +141,9 @@ PyObject* VRPyPathtool::addPath(VRPyPathtool* self, PyObject* args) {
     if (!self->valid()) return NULL;
     VRPyPath* p; VRPyObject* obj;
     if (! PyArg_ParseTuple(args, "OO:addPath", &p, &obj)) return NULL;
-    self->objPtr->addPath( p->obj, obj->objPtr );
+    VRObjectPtr anchor;
+    if (!isNone((PyObject*)obj)) anchor = obj->objPtr;
+    self->objPtr->addPath( p->obj, anchor );
     Py_RETURN_TRUE;
 }
 

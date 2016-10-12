@@ -61,6 +61,7 @@ class VRPathtool : public VRObject {
             VRStrokeWeakPtr line;
             VRObjectWeakPtr anchor;
 
+            entry(VRObjectPtr anchor);
             void addHandle(VRGeometryPtr h);
         };
 
