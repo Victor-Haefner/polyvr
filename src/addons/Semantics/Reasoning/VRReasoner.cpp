@@ -108,10 +108,10 @@ bool VRReasoner::has(VRStatementPtr statement, Context& context) { // TODO
 
     // DEBUG -> TODO
 
-    auto Cconcept = context.onto->getConcept( right.var->concept ); // child concept
     auto Pconcept = context.onto->getConcept( left.var->concept ); // parent concept
-    if (Cconcept == 0) { cout << "Warning (has): first concept " << right.var->concept << " not found!\n"; return false; }
-    if (Pconcept == 0) { cout << "Warning (has): second concept " << left.var->concept << " not found!\n"; return false; }
+    auto Cconcept = context.onto->getConcept( right.var->concept ); // child concept
+    if (Pconcept == 0) { cout << "Warning (has): first concept " << left.var->concept << " not found!\n"; return false; }
+    if (Cconcept == 0) { cout << "Warning (has): second concept " << right.var->concept << " not found!\n"; return false; }
     auto prop = Pconcept->getProperties( Cconcept->getName() );
     if (prop.size() == 0) cout << "Warning: has evaluation failed, property " << right.var->value << " missing!\n"; return false;
     return false;

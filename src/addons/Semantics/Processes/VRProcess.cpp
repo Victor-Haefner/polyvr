@@ -44,7 +44,7 @@ void VRProcess::open(string path) {
 void VRProcess::setOntology(VROntologyPtr o) { ontology = o; update(); }
 
 VRProcess::DiagramPtr VRProcess::getInteractionDiagram() { return interactionDiagram; }
-VRProcess::DiagramPtr VRProcess::getBehaviorDiagram(string subject) { return behaviorDiagrams[subject]; }
+VRProcess::DiagramPtr VRProcess::getBehaviorDiagram(int subject) { return behaviorDiagrams.count(subject) ? behaviorDiagrams[subject] : 0; }
 
 vector<VRProcessNode> VRProcess::getSubjects() {
     vector<VRProcessNode> res;
@@ -59,43 +59,45 @@ void VRProcess::update() {
     if (!ontology) return;
 
     VRReasonerPtr reasoner = VRReasoner::create();
-    reasoner->setVerbose(true, false);
+    reasoner->setVerbose(true,  false); //
     auto query = [&](string q) { return reasoner->process(q, ontology); };
+
+    map<string, int> nodes;
+    auto addDiagNode = [&](DiagramPtr diag, string label, PROCESS_WIDGET type) {
+        auto n = VRProcessNode();
+        n.label = label;
+        n.type = type;
+        int i = diag->addNode(n);
+        diag->getElement(i).ID = i;
+        return i;
+    };
+
+    auto connect = [&](DiagramPtr diag, int i, string parent, graph_base::CONNECTION mode) {
+        if (nodes.count(parent)) {
+            switch (mode) {
+                case graph_base::HIERARCHY: diag->connect(nodes[parent], i, mode); break;
+                case graph_base::DEPENDENCY: diag->connect(i, nodes[parent], mode); break;
+            }
+        }
+    };
+
+    /** get interaction diagram **/
 
     auto layers = query("q(x):Layer(x)");
     if (layers.size() == 0) return;
     auto layer = layers[0]; // only use first layer
     interactionDiagram = DiagramPtr( new Diagram() );
 
-    map<string, int> nodes;
-    auto addDiagNode = [&](string label, PROCESS_WIDGET type) {
-        auto n = VRProcessNode();
-        n.label = label;
-        n.type = type;
-        int i = interactionDiagram->addNode(n);
-        interactionDiagram->getElement(i).ID = i;
-        return i;
-    };
-
-    auto connect = [&](int i, string parent, graph_base::CONNECTION mode) {
-        if (nodes.count(parent)) {
-            switch (mode) {
-                case graph_base::HIERARCHY: interactionDiagram->connect(nodes[parent], i, mode); break;
-                case graph_base::DEPENDENCY: interactionDiagram->connect(i, nodes[parent], mode); break;
-            }
-        }
-    };
-
     string q_subjects = "q(x):ActiveProcessComponent(x);Layer("+layer->getName()+");has("+layer->getName()+",x)";
     for ( auto subject : query(q_subjects) ) {
         string label;
         if (auto l = subject->getValue("hasModelComponentLable") ) label = l->value;
-        int nID = addDiagNode(label, SUBJECT);
+        int nID = addDiagNode(interactionDiagram, label, SUBJECT);
         if (auto ID = subject->getValue("hasModelComponentID") ) nodes[ID->value] = nID;
     }
 
     map<string, map<string, vector<VREntityPtr>>> messages;
-    string q_messages = "q(x):StandardMessageExchange(x);Layer("+layer->getName()+");has("+layer->getName()+",x)";
+    string q_messages = "q(x):MessageExchange(x);Layer("+layer->getName()+");has("+layer->getName()+",x)";
     for ( auto message : query(q_messages) ) {
         string sender;
         string receiver;
@@ -104,23 +106,45 @@ void VRProcess::update() {
         messages[sender][receiver].push_back(message);
     }
 
-    for (auto sender : messages) {
+    for ( auto sender : messages ) {
         for (auto receiver : sender.second) {
             string label = "Msg:";
             for (auto message : receiver.second) {
-                string q_message = "q(x):MessageSpec(x);StandardMessageExchange("+message->getName()+");is(x,"+message->getName()+".hasMessageType)";
+                string q_message = "q(x):MessageSpec(x);MessageExchange("+message->getName()+");is(x,"+message->getName()+".hasMessageType)";
                 auto msgs = query(q_message);
                 if (msgs.size())
                     if (auto l = msgs[0]->getValue("hasModelComponentLable") ) label += "\n - " + l->value;
             }
 
-            int nID = addDiagNode(label, MESSAGE);
-            connect(nID, sender.first, graph_base::HIERARCHY);
-            connect(nID, receiver.first, graph_base::DEPENDENCY);
+            int nID = addDiagNode(interactionDiagram, label, MESSAGE);
+            connect(interactionDiagram, nID, sender.first, graph_base::HIERARCHY);
+            connect(interactionDiagram, nID, receiver.first, graph_base::DEPENDENCY);
         }
     }
 
-    //interactionDiagram->connect( n );
+    /** get behavior diagrams **/
+
+    for (auto behavior : query("q(x):Behavior(x)")) {
+        auto behaviorDiagram = DiagramPtr( new Diagram() );
+        string q_Subject = "q(x):ActiveProcessComponent(x);Behavior("+behavior->getName()+");has(x,"+behavior->getName()+")";
+
+/** TODO:
+    important reasoning fix:
+        ActiveProcessComponent does not have property of type behavior, but Actor and AbstractActor do!
+        When checking for an ActiveProcessComponent that has a behavior, the instances found for ActiveProcessComponent will have a subtype like Actor!
+        This has to be taken into account when checking the has relation! (instead of only using the declared concept of ActiveProcessComponent)
+**/
+
+        //string q_Subject = "q(x):ActiveProcessComponent(x)";
+        auto subjects = query(q_Subject);
+        for (auto s : subjects) cout << s->toString() << endl;
+
+        if (subjects.size() == 0) continue;
+        auto subject = subjects[0];
+        auto ID = subject->getValue("hasModelComponentID");
+        int sID = nodes[ID->value];
+        behaviorDiagrams[sID] = behaviorDiagram;
+    }
 }
 
 

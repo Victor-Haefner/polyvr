@@ -40,7 +40,7 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
     private:
         VROntologyPtr ontology;
         DiagramPtr interactionDiagram;
-        map<string, DiagramPtr> behaviorDiagrams;
+        map<int, DiagramPtr> behaviorDiagrams;
 
         void update();
 
@@ -52,7 +52,7 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
         void open(string path);
         void setOntology(VROntologyPtr o);
         DiagramPtr getInteractionDiagram();
-        DiagramPtr getBehaviorDiagram(string subject);
+        DiagramPtr getBehaviorDiagram(int subject);
         vector<VRProcessNode> getSubjects();
 };
 

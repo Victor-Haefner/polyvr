@@ -15,8 +15,8 @@ PyMethodDef VRPyProcess::methods[] = {
     {"open", (PyCFunction)VRPyProcess::open, METH_VARARGS, "Open file - open(path)" },
     {"setOntology", (PyCFunction)VRPyProcess::setOntology, METH_VARARGS, "Set data from ontology - open(ontology)" },
     {"getInteractionDiagram", (PyCFunction)VRPyProcess::getInteractionDiagram, METH_NOARGS, "Return subjects interaction diagram - getInteractionDiagram()" },
-    {"getBehaviorDiagram", (PyCFunction)VRPyProcess::getBehaviorDiagram, METH_VARARGS, "Return subject behavior diagram - getBehaviorDiagram( str subject )" },
-    {"getSubjects", (PyCFunction)VRPyProcess::getSubjects, METH_NOARGS, "Return subjects graph IDs - [int] getSubjects()" },
+    {"getBehaviorDiagram", (PyCFunction)VRPyProcess::getBehaviorDiagram, METH_VARARGS, "Return subject behavior diagram - getBehaviorDiagram( int ID )" },
+    {"getSubjects", (PyCFunction)VRPyProcess::getSubjects, METH_NOARGS, "Return subjects - [ProcessNode] getSubjects()" },
     {NULL}  /* Sentinel */
 };
 
@@ -41,7 +41,7 @@ PyObject* VRPyProcess::getInteractionDiagram(VRPyProcess* self) {
 
 PyObject* VRPyProcess::getBehaviorDiagram(VRPyProcess* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    return VRPyGraph::fromSharedPtr( self->objPtr->getBehaviorDiagram( parseString(args) ) );
+    return VRPyGraph::fromSharedPtr( self->objPtr->getBehaviorDiagram( parseInt(args) ) );
 }
 
 PyObject* VRPyProcess::getSubjects(VRPyProcess* self) {

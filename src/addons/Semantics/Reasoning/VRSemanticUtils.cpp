@@ -64,9 +64,12 @@ void Variable::addEntity(VREntityPtr e) {
 
 bool Variable::has(VariablePtr other, VROntologyPtr onto) {
     for (auto i1 : entities) { // all entities of that variable
+        cout << "Variable::has check for " << i1.second->getName() << endl;
         vector<VREntityPtr> matches;
         vector<VREntityPtr> toDiscard;
+        cout << other->toString() << endl;
         for (auto i2 : other->entities) { // check each instance of the other variable
+            cout << " Variable::has with " << i2.second->getName() << endl;
 
             bool res = false;
             for (auto p : i1.second->properties) { // all properties of each instance
@@ -77,6 +80,7 @@ bool Variable::has(VariablePtr other, VROntologyPtr onto) {
                 }
                 if (res) break;
             }
+            if (!res) cout << "  Variable::has discard!" << endl;
             if (!res) toDiscard.push_back(i2.second);
         }
 
