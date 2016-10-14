@@ -142,6 +142,7 @@ void VRImport::LoadJob::load(VRThreadWeakPtr tw) {
         if (ext == ".wrl" && preset == "SOLIDWORKS-VRML2") { VRFactory f; if (f.loadVRML(path, progress, res, thread)) return; else preset = "OSG"; }
         if (ext == ".vtk") { loadVtk(path, res); return; }
         if (ext == ".shp") { loadSHP(path, res); return; }
+        if (ext == ".tiff" || ext == ".tif") { loadTIFF(path, res); return; }
         if (preset == "OSG" || preset == "COLLADA") osgLoad(path, res);
         if (preset == "COLLADA") loadCollada(path, res);
     };
