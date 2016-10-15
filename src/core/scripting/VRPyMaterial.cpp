@@ -32,6 +32,8 @@ PyMethodDef VRPyMaterial::methods[] = {
     {"setVertexProgram", (PyCFunction)VRPyMaterial::setVertexProgram, METH_VARARGS, "Set vertex program - setVertexProgram( myScript )" },
     {"setFragmentProgram", (PyCFunction)VRPyMaterial::setFragmentProgram, METH_VARARGS, "Set fragment program - setFragmentProgram( myScript )" },
     {"setGeometryProgram", (PyCFunction)VRPyMaterial::setGeometryProgram, METH_VARARGS, "Set geometry program - setGeometryProgram( myScript )" },
+    {"setTessControlProgram", (PyCFunction)VRPyMaterial::setTessControlProgram, METH_VARARGS, "Set tess control program - setTessControlProgram( myScript )" },
+    {"setTessEvaluationProgram", (PyCFunction)VRPyMaterial::setTessEvaluationProgram, METH_VARARGS, "Set tess evaluation program - setTessEvaluationProgram( myScript )" },
     {"setWireFrame", (PyCFunction)VRPyMaterial::setWireFrame, METH_VARARGS, "Set wireframe mode - setWireFrame(bool)" },
     {"setLit", (PyCFunction)VRPyMaterial::setLit, METH_VARARGS, "Set if geometry is lit - setLit(bool)" },
     {"addPass", (PyCFunction)VRPyMaterial::addPass, METH_NOARGS, "Add a new pass - i addPass()" },
@@ -227,6 +229,18 @@ PyObject* VRPyMaterial::setFragmentProgram(VRPyMaterial* self, PyObject* args) {
 PyObject* VRPyMaterial::setGeometryProgram(VRPyMaterial* self, PyObject* args) {
 	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setGeometryProgram, C obj is invalid"); return NULL; }
 	self->objPtr->setGeometryScript(parseString(args));
+	Py_RETURN_TRUE;
+}
+
+PyObject* VRPyMaterial::setTessControlProgram(VRPyMaterial* self, PyObject* args) {
+	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setTessControlProgram, C obj is invalid"); return NULL; }
+	self->objPtr->setTessControlScript(parseString(args));
+	Py_RETURN_TRUE;
+}
+
+PyObject* VRPyMaterial::setTessEvaluationProgram(VRPyMaterial* self, PyObject* args) {
+	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setTessEvaluationProgram, C obj is invalid"); return NULL; }
+	self->objPtr->setTessEvaluationScript(parseString(args));
 	Py_RETURN_TRUE;
 }
 

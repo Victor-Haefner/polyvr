@@ -73,8 +73,9 @@ PyObject* VRPyProcessLayout::getElement(VRPyProcessLayout* self, PyObject* args)
 
 PyObject* VRPyProcessLayout::setProcess(VRPyProcessLayout* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    VRPyProcess* p = 0;
+    VRPyGraph* p = 0;
     if (!PyArg_ParseTuple(args, "O", &p)) return NULL;
-    self->objPtr->setProcess( p->objPtr );
+    VRProcess::DiagramPtr diag = dynamic_pointer_cast<VRProcess::Diagram>(p->objPtr);
+    self->objPtr->setProcess( diag );
     Py_RETURN_TRUE;
 }

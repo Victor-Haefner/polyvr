@@ -78,7 +78,7 @@ void VRProcess::update() {
                 case graph_base::HIERARCHY: diag->connect(nodes[parent], i, mode); break;
                 case graph_base::DEPENDENCY: diag->connect(i, nodes[parent], mode); break;
             }
-        }
+        } else cout << "VRProcess::connect " << parent << " not in nodes\n";
     };
 
     /** get interaction diagram **/
@@ -122,28 +122,55 @@ void VRProcess::update() {
         }
     }
 
+    //return;
     /** get behavior diagrams **/
 
     for (auto behavior : query("q(x):Behavior(x)")) {
         auto behaviorDiagram = DiagramPtr( new Diagram() );
         string q_Subject = "q(x):ActiveProcessComponent(x);Behavior("+behavior->getName()+");has(x,"+behavior->getName()+")";
-
-/** TODO:
-    important reasoning fix:
-        ActiveProcessComponent does not have property of type behavior, but Actor and AbstractActor do!
-        When checking for an ActiveProcessComponent that has a behavior, the instances found for ActiveProcessComponent will have a subtype like Actor!
-        This has to be taken into account when checking the has relation! (instead of only using the declared concept of ActiveProcessComponent)
-**/
-
-        //string q_Subject = "q(x):ActiveProcessComponent(x)";
         auto subjects = query(q_Subject);
-        for (auto s : subjects) cout << s->toString() << endl;
-
         if (subjects.size() == 0) continue;
         auto subject = subjects[0];
         auto ID = subject->getValue("hasModelComponentID");
         int sID = nodes[ID->value];
         behaviorDiagrams[sID] = behaviorDiagram;
+
+        string q_States = "q(x):State(x);Behavior("+behavior->getName()+");has("+behavior->getName()+",x)";
+        for (auto state : query(q_States)) {
+            string label;
+            if (auto l = state->getValue("hasModelComponentLable") ) label = l->value;
+            int nID = addDiagNode(behaviorDiagram, label, SUBJECT);
+            if (auto ID = state->getValue("hasModelComponentID") ) nodes[ID->value] = nID;
+        }
+
+        map<string, map<string, vector<VREntityPtr>>> edges;
+        string q_Edges = "q(x):TransitionEdge(x);Behavior("+behavior->getName()+");has("+behavior->getName()+",x)";
+        for (auto edge : query(q_Edges)) {
+            string source;
+            string target;
+            if (auto s = edge->getValue("hasSourceState") ) source = s->value;
+            if (auto r = edge->getValue("hasTargetState") ) target = r->value;
+            edges[source][target].push_back(edge);
+        }
+
+        for ( auto source : edges ) {
+            cout << "source " << source.first << endl;
+            for (auto target : source.second) {
+                cout << "target " << target.first << endl;
+                string label = "Msg:";
+                /*for (auto edge : target.second) {
+                    string q_message = "q(x):MessageSpec(x);MessageExchange("+edge->getName()+");is(x,"+edge->getName()+".hasMessageType)";
+                    auto msgs = query(q_message);
+                    if (msgs.size())
+                        if (auto l = msgs[0]->getValue("hasModelComponentLable") ) label += "\n - " + l->value;
+                }*/
+
+                int nID = addDiagNode(behaviorDiagram, label, MESSAGE);
+                connect(behaviorDiagram, nID, source.first, graph_base::HIERARCHY);
+                connect(behaviorDiagram, nID, target.first, graph_base::DEPENDENCY);
+                //connect(behaviorDiagram, nodes[source.first], target.first, graph_base::DEPENDENCY);
+            }
+        }
     }
 }
 

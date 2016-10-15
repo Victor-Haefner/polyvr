@@ -4,9 +4,6 @@
 #undef _POSIX_C_SOURCE
 #include <Python.h>
 
-#include "core/scene/VRScene.h"
-#include "core/scene/VRSceneManager.h"
-#include "core/scene/VRSceneLoader.h"
 #include "core/utils/VRStorage_template.h"
 #include "core/utils/VROptions.h"
 #include "core/gui/VRGuiManager.h"
@@ -16,9 +13,8 @@
 #include <memory>
 
 #include "VRSceneModules.h"
-#include "VRPyTypeCaster.h"
-#include "VRPyListMath.h"
 #include "VRSceneGlobals.h"
+#include "VRPyListMath.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

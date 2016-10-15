@@ -122,18 +122,28 @@ class VRMaterial : public VRObject {
         void setVertexShader(string s);
         void setFragmentShader(string s);
         void setGeometryShader(string s);
+        void setTessControlShader(string s);
+        void setTessEvaluationShader(string s);
         void readVertexShader(string s);
         void readFragmentShader(string s);
         void readGeometryShader(string s);
+        void readTessControlShader(string s);
+        void readTessEvaluationShader(string s);
         void setVertexScript(string script);
         void setFragmentScript(string script);
         void setGeometryScript(string script);
+        void setTessControlScript(string script);
+        void setTessEvaluationScript(string script);
         string getVertexShader();
         string getFragmentShader();
         string getGeometryShader();
+        string getTessControlShader();
+        string getTessEvaluationShader();
         string getVertexScript();
         string getFragmentScript();
         string getGeometryScript();
+        string getTessControlScript();
+        string getTessEvaluationScript();
         ShaderProgramMTRecPtr getShaderProgram();
 
         template<class T> void setShaderParameter(string name, const T &value);

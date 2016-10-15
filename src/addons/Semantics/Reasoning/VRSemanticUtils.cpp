@@ -63,32 +63,45 @@ void Variable::addEntity(VREntityPtr e) {
 }
 
 bool Variable::has(VariablePtr other, VROntologyPtr onto) {
-    for (auto i1 : entities) { // all entities of that variable
-        cout << "Variable::has check for " << i1.second->getName() << endl;
-        vector<VREntityPtr> matches;
-        vector<VREntityPtr> toDiscard;
-        cout << other->toString() << endl;
-        for (auto i2 : other->entities) { // check each instance of the other variable
-            cout << " Variable::has with " << i2.second->getName() << endl;
+    map<VREntityPtr, vector<VREntityPtr>> matches;
 
-            bool res = false;
+    // get all matches
+    for (auto i1 : entities) { // all entities of that variable
+        for (auto i2 : other->entities) { // check each instance of the other variable
             for (auto p : i1.second->properties) { // all properties of each instance
                 for (auto v : p.second) {
-                    if (v->value == other->value) return true; // TODO: direct match with other variable value
-                    if (v->value == i2.second->getName()) { res = true; matches.push_back(i2.second); }
-                    if (res) break;
+                    if (v->value == other->value) matches[i1.second].push_back(0); // TODO: direct match with other variable value
+                    if (v->value == i2.second->getName()) {
+                        matches[i1.second].push_back(i2.second);
+                    }
                 }
-                if (res) break;
             }
-            if (!res) cout << "  Variable::has discard!" << endl;
-            if (!res) toDiscard.push_back(i2.second);
         }
-
-        for (auto e : toDiscard) other->discard(e);
-        if (matches.size() > 0) return true;
     }
 
-    return false;
+    // remove non matched entities
+    vector<VREntityPtr> toDiscard1;
+    vector<VREntityPtr> toDiscard2;
+    for (auto i1 : entities) { // all entities of that variable
+        if (matches.count(i1.second) == 0) toDiscard1.push_back(i1.second);
+    }
+
+    for (auto i2 : other->entities) { // check each instance of the other variable
+        bool found = false;
+        for (auto ev : matches) {
+            for (auto e : ev.second) {
+                found = (e == i2.second);
+                if (found) break;
+            }
+            if (found) break;
+        }
+        if (!found) toDiscard2.push_back(i2.second);
+    }
+
+    for (auto e : toDiscard1) discard(e);
+    for (auto e : toDiscard2) other->discard(e);
+
+    return (matches.size() > 0);
 }
 
 bool Variable::is(VariablePtr other, VPath& p1, VPath& p2) {
@@ -96,10 +109,7 @@ bool Variable::is(VariablePtr other, VPath& p1, VPath& p2) {
 
     auto hasSameVal = [&](vector<string>& val1, vector<string>& val2) {
         for (string s1 : val1) {
-            for (string s2 : val2) {
-                cout << " " << s1 << " " << s2 << endl;
-                if (s1 == s2) return true;
-            }
+            for (string s2 : val2) if (s1 == s2) return true;
         }
         return false;
     };

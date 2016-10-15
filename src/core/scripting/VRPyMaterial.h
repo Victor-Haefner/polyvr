@@ -44,6 +44,8 @@ struct VRPyMaterial : VRPyBaseT<OSG::VRMaterial> {
     static PyObject* setVertexProgram(VRPyMaterial* self, PyObject* args);
     static PyObject* setFragmentProgram(VRPyMaterial* self, PyObject* args);
     static PyObject* setGeometryProgram(VRPyMaterial* self, PyObject* args);
+    static PyObject* setTessControlProgram(VRPyMaterial* self, PyObject* args);
+    static PyObject* setTessEvaluationProgram(VRPyMaterial* self, PyObject* args);
     static PyObject* setShaderParameter(VRPyMaterial* self, PyObject* args);
     static PyObject* setDefaultVertexShader(VRPyMaterial* self);
 };

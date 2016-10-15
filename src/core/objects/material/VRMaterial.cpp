@@ -62,12 +62,16 @@ struct VRMatData {
     ShaderProgramMTRecPtr vProgram;
     ShaderProgramMTRecPtr fProgram;
     ShaderProgramMTRecPtr gProgram;
+    ShaderProgramMTRecPtr tcProgram;
+    ShaderProgramMTRecPtr teProgram;
     VRVideo* video = 0;
     bool deffered = false;
 
     string vertexScript;
     string fragmentScript;
     string geometryScript;
+    string tessControlScript;
+    string tessEvalScript;
 
     ~VRMatData() {
         if (video) delete video;
@@ -132,11 +136,15 @@ struct VRMatData {
         if (vProgram) { m->vProgram = dynamic_pointer_cast<ShaderProgram>(vProgram->shallowCopy()); m->shaderChunk->addShader(m->vProgram); }
         if (fProgram) { m->fProgram = dynamic_pointer_cast<ShaderProgram>(fProgram->shallowCopy()); m->shaderChunk->addShader(m->fProgram); }
         if (gProgram) { m->gProgram = dynamic_pointer_cast<ShaderProgram>(gProgram->shallowCopy()); m->shaderChunk->addShader(m->gProgram); }
+        if (tcProgram) { m->tcProgram = dynamic_pointer_cast<ShaderProgram>(tcProgram->shallowCopy()); m->shaderChunk->addShader(m->tcProgram); }
+        if (teProgram) { m->teProgram = dynamic_pointer_cast<ShaderProgram>(teProgram->shallowCopy()); m->shaderChunk->addShader(m->teProgram); }
         if (video) ; // TODO
 
         m->vertexScript = vertexScript;
         m->fragmentScript = fragmentScript;
         m->geometryScript = geometryScript;
+        m->tessControlScript = tessControlScript;
+        m->tessEvalScript = tessEvalScript;
 
         return m;
     }
@@ -745,9 +753,17 @@ void VRMaterial::initShaderChunk() {
     md->vProgram = ShaderProgram::createVertexShader  ();
     md->fProgram = ShaderProgram::createFragmentShader();
     md->gProgram = ShaderProgram::createGeometryShader();
+
+    md->tcProgram = ShaderProgram::create();
+    md->tcProgram->setShaderType(GL_TESS_CONTROL_SHADER); // GL_GEOMETRY_SHADER_EXT
+    md->teProgram = ShaderProgram::create();
+    md->teProgram->setShaderType(GL_TESS_EVALUATION_SHADER); // GL_GEOMETRY_SHADER_EXT
+
     md->shaderChunk->addShader(md->vProgram);
     md->shaderChunk->addShader(md->fProgram);
     md->shaderChunk->addShader(md->gProgram);
+    md->shaderChunk->addShader(md->tcProgram);
+    md->shaderChunk->addShader(md->teProgram);
 
     md->vProgram->createDefaulAttribMapping();
     md->vProgram->addOSGVariable("OSGViewportSize");
@@ -760,6 +776,8 @@ void VRMaterial::remShaderChunk() {
     md->vProgram = 0;
     md->fProgram = 0;
     md->gProgram = 0;
+    md->tcProgram = 0;
+    md->teProgram = 0;
     md->shaderChunk = 0;
 }
 
@@ -799,6 +817,16 @@ void VRMaterial::setFragmentShader(string s) {
 void VRMaterial::setGeometryShader(string s) {
     initShaderChunk();
     mats[activePass]->gProgram->setProgram(s.c_str());
+}
+
+void VRMaterial::setTessControlShader(string s) {
+    initShaderChunk();
+    mats[activePass]->tcProgram->setProgram(s.c_str());
+}
+
+void VRMaterial::setTessEvaluationShader(string s) {
+    initShaderChunk();
+    mats[activePass]->tcProgram->setProgram(s.c_str());
 }
 
 string readFile(string path) {
@@ -849,9 +877,23 @@ void VRMaterial::setGeometryScript(string script) {
     if (scr) setGeometryShader(scr->getCore());
 }
 
+void VRMaterial::setTessControlScript(string script) {
+    mats[activePass]->tessControlScript = script;
+    VRScriptPtr scr = VRScene::getCurrent()->getScript(script);
+    if (scr) setTessControlShader(scr->getCore());
+}
+
+void VRMaterial::setTessEvaluationScript(string script) {
+    mats[activePass]->tessEvalScript = script;
+    VRScriptPtr scr = VRScene::getCurrent()->getScript(script);
+    if (scr) setTessEvaluationShader(scr->getCore());
+}
+
 string VRMaterial::getVertexScript() { return mats[activePass]->vertexScript; }
 string VRMaterial::getFragmentScript() { return mats[activePass]->fragmentScript; }
 string VRMaterial::getGeometryScript() { return mats[activePass]->geometryScript; }
+string VRMaterial::getTessControlScript() { return mats[activePass]->tessControlScript; }
+string VRMaterial::getTessEvaluationScript() { return mats[activePass]->tessEvalScript; }
 
 Color3f VRMaterial::toColor(string c) {
     static map<string, Color3f> colorMap;

@@ -21,7 +21,8 @@ class VRProcessLayout : public VRTransform {
         static VRProcessLayoutPtr create(string name = "");
         VRProcessLayoutPtr ptr();
 
-        void setProcess(VRProcessPtr p);
+        //void setProcess(VRProcessPtr p);
+        void setProcess(VRProcess::DiagramPtr diag);
         VRObjectPtr getElement(int i);
 };
 

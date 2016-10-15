@@ -131,14 +131,14 @@ VRGeometryPtr VRProcessLayout::newWidget(VRProcessNode& n, float height) {
     return w;
 }
 
-void VRProcessLayout::setProcess(VRProcessPtr p) {
-    process = p;
+void VRProcessLayout::setProcess(VRProcess::DiagramPtr diag) {
+    //process = p;
 
     clearChildren();
 
     float height = 2;
     float f=0;
-    auto diag = process->getInteractionDiagram();
+    //auto diag = process->getInteractionDiagram();
     for (int i=0; i<diag->getElements().size(); i++) {
         auto& e = diag->getElement(i);
         auto geo = newWidget(e, height);

@@ -47,7 +47,7 @@ void VRStatement::updateLocalVariables(map<string, VariablePtr>& globals, VROnto
     for (auto& t : terms) {
         if (globals.count(t.path.root)) t.var = globals[t.path.root];
         else t.var = Variable::create(onto,t.path.root);
-        //cout << "updateLocalVariables " << t.str << " " << t.var.value << " " << t.var.concept << endl;
+        //cout << "updateLocalVariables " << t.str << " " << t.path.root << " " << t.var->concept << endl;
     }
 }
 
