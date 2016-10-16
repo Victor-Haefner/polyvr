@@ -102,6 +102,7 @@ void VRRenderStudio::initCalib(VRMaterialPtr mat) {
 void VRRenderStudio::initMarker(VRMaterialPtr mat) { // TODO
     string shdrDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/DeferredShading/";
     mat->setLit(false);
+    mat->enableTransparency(true);
     mat->readVertexShader(shdrDir + "Marker.vp.glsl");
     mat->readFragmentShader(shdrDir + "Marker.fp.glsl");
     //mat->setShaderParameter<int>("grid", 64);
