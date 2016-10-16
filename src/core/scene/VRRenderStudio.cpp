@@ -102,10 +102,10 @@ void VRRenderStudio::initCalib(VRMaterialPtr mat) {
 void VRRenderStudio::initMarker(VRMaterialPtr mat) { // TODO
     string shdrDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/DeferredShading/";
     mat->setLit(false);
-    mat->readVertexShader(shdrDir + "Calib.vp.glsl");
-    mat->readFragmentShader(shdrDir + "Calib.fp.glsl");
-    mat->setShaderParameter<int>("grid", 64);
-    mat->setShaderParameter<int>("isRightEye", eye);
+    mat->readVertexShader(shdrDir + "Marker.vp.glsl");
+    mat->readFragmentShader(shdrDir + "Marker.fp.glsl");
+    //mat->setShaderParameter<int>("grid", 64);
+    //mat->setShaderParameter<int>("isRightEye", eye);
 }
 
 void VRRenderStudio::update() {
