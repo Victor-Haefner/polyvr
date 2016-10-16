@@ -54,6 +54,7 @@ void VRRenderManager::update() {
             rendering->setSSAOnoise(ssao_noise);
             rendering->setCalib(calib);
             rendering->setHMDD(do_hmdd);
+            rendering->setMarker(do_marker);
         }
 
         rendering = v->getRenderingR();
@@ -65,6 +66,7 @@ void VRRenderManager::update() {
             rendering->setSSAOnoise(ssao_noise);
             rendering->setCalib(calib);
             rendering->setHMDD(do_hmdd);
+            rendering->setMarker(do_marker);
         }
     }
 }
@@ -101,6 +103,7 @@ bool VRRenderManager::getTwoSided() { return twoSided; }
 bool VRRenderManager::getDefferedShading() { return deferredRendering; }
 bool VRRenderManager::getSSAO() { return do_ssao; }
 bool VRRenderManager::getHMDD() { return do_hmdd; }
+bool VRRenderManager::getMarker() { return do_marker; }
 
 void VRRenderManager::setDefferedShading(bool b) { deferredRendering = b; update(); }
 void VRRenderManager::setSSAO(bool b) { do_ssao = b; update(); }
@@ -109,5 +112,6 @@ void VRRenderManager::setSSAOkernel(int k) { ssao_kernel = k; update(); }
 void VRRenderManager::setSSAOnoise(int k) { ssao_noise = k; update(); }
 void VRRenderManager::setCalib(bool b) { calib = b; update(); }
 void VRRenderManager::setHMDD(bool b) { do_hmdd = b; update(); }
+void VRRenderManager::setMarker(bool b) { do_marker = b; update(); }
 
 OSG_END_NAMESPACE;

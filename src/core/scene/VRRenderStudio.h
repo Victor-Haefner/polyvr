@@ -28,12 +28,14 @@ class VRRenderStudio : public VRStorage {
         bool do_ssao = false;
         bool calib = false;
         bool do_hmdd = false;
+        bool do_marker = false;
         int ssao_kernel = 4;
         int ssao_noise = 4;
         float ssao_radius = 0.02;
         EYE eye = LEFT;
 
         VRMaterialPtr calib_mat;
+        VRMaterialPtr marker_mat;
         VRMaterialPtr hmdd_mat;
         VRMaterialPtr ssao_mat;
 
@@ -41,6 +43,7 @@ class VRRenderStudio : public VRStorage {
         VRMaterialPtr setupRenderLayer(string name, VRObjectPtr parent);
 
         void initCalib(VRMaterialPtr mat);
+        void initMarker(VRMaterialPtr mat);
 
     protected:
         VRDefShading* defShading = 0;
@@ -82,6 +85,8 @@ class VRRenderStudio : public VRStorage {
         void setCalib(bool b);
         void setHMDD(bool b);
         bool getHMDD();
+        void setMarker(bool b);
+        bool getMarker();
 
         void setHMDDeye(float e);
 

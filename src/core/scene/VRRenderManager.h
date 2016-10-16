@@ -18,6 +18,7 @@ class VRRenderManager : public VRStorage {
         bool do_ssao = false;
         bool calib = false;
         bool do_hmdd = false;
+        bool do_marker = false;
         int ssao_kernel = 4;
         int ssao_noise = 4;
         float ssao_radius = 0.02;
@@ -42,6 +43,7 @@ class VRRenderManager : public VRStorage {
         bool getDefferedShading();
         bool getSSAO();
         bool getHMDD();
+        bool getMarker();
 
         void setDefferedShading(bool b);
         void setSSAO(bool b);
@@ -50,6 +52,7 @@ class VRRenderManager : public VRStorage {
         void setSSAOnoise(int n);
         void setCalib(bool b);
         void setHMDD(bool b);
+        void setMarker(bool b);
 
         void update();
 };

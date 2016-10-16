@@ -55,8 +55,9 @@ VRRenderStudioPtr VRRenderStudio::create(EYE e) { return VRRenderStudioPtr( new 
 
 void VRRenderStudio::init(VRObjectPtr root) {
     ssao_mat = setupRenderLayer("ssao", root_def_shading);
-    calib_mat = setupRenderLayer("calibration", root_post_processing);
     hmdd_mat = setupRenderLayer("hmdd", root_post_processing);
+    calib_mat = setupRenderLayer("calibration", root_post_processing);
+    marker_mat = setupRenderLayer("marker", root_post_processing);
     //auto metaball_mat = setupRenderLayer("metaball");
 
     defShading = new VRDefShading();
@@ -72,6 +73,7 @@ void VRRenderStudio::init(VRObjectPtr root) {
     hmdd->initHMDD(hmdd_mat);
     hmdd_mat->setTexture(defShading->getTarget(), 0);
     initCalib(calib_mat);
+    initMarker(marker_mat);
 
     if (root) setScene(root);
     update();
@@ -89,6 +91,15 @@ VRMaterialPtr VRRenderStudio::setupRenderLayer(string name, VRObjectPtr parent) 
 }
 
 void VRRenderStudio::initCalib(VRMaterialPtr mat) {
+    string shdrDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/DeferredShading/";
+    mat->setLit(false);
+    mat->readVertexShader(shdrDir + "Calib.vp.glsl");
+    mat->readFragmentShader(shdrDir + "Calib.fp.glsl");
+    mat->setShaderParameter<int>("grid", 64);
+    mat->setShaderParameter<int>("isRightEye", eye);
+}
+
+void VRRenderStudio::initMarker(VRMaterialPtr mat) { // TODO
     string shdrDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/DeferredShading/";
     mat->setLit(false);
     mat->readVertexShader(shdrDir + "Calib.vp.glsl");
@@ -118,6 +129,7 @@ void VRRenderStudio::update() {
     if (renderLayer.count("ssao")) renderLayer["ssao"]->setVisible(do_ssao);
     if (renderLayer.count("calibration")) renderLayer["calibration"]->setVisible(calib);
     if (renderLayer.count("hmdd")) renderLayer["hmdd"]->setVisible(do_hmdd);
+    if (renderLayer.count("marker")) renderLayer["marker"]->setVisible(do_marker);
 }
 
 void VRRenderStudio::addLight(VRLightPtr l) {
@@ -158,6 +170,7 @@ void VRRenderStudio::resize(Vec2i s) {
 VRObjectPtr VRRenderStudio::getRoot() { return root_system; }
 bool VRRenderStudio::getSSAO() { return do_ssao; }
 bool VRRenderStudio::getHMDD() { return do_hmdd; }
+bool VRRenderStudio::getMarker() { return do_marker; }
 bool VRRenderStudio::getDefferedShading() { return deferredRendering; }
 
 void VRRenderStudio::setDefferedShading(bool b) { deferredRendering = b; update(); }
@@ -167,6 +180,7 @@ void VRRenderStudio::setSSAOkernel(int k) { ssao_kernel = k; update(); }
 void VRRenderStudio::setSSAOnoise(int k) { ssao_noise = k; update(); }
 void VRRenderStudio::setCalib(bool b) { calib = b; update(); }
 void VRRenderStudio::setHMDD(bool b) { do_hmdd = b; update(); }
+void VRRenderStudio::setMarker(bool b) { do_marker = b; update(); }
 
 void VRRenderStudio::setHMDDeye(float e) { hmdd->setHMDDparams(e); }
 

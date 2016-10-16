@@ -32,6 +32,7 @@ VRGuiGeneral::VRGuiGeneral() {
     setCheckButtonCallback("checkbutton_4", sigc::mem_fun(*this, &VRGuiGeneral::toggleSSAO) );
     setCheckButtonCallback("checkbutton_5", sigc::mem_fun(*this, &VRGuiGeneral::toggleCalib) );
     setCheckButtonCallback("checkbutton_6", sigc::mem_fun(*this, &VRGuiGeneral::toggleHMDD) );
+    setCheckButtonCallback("checkbutton_7", sigc::mem_fun(*this, &VRGuiGeneral::toggleMarker) );
     setSliderCallback("hscale1", sigc::mem_fun(*this, &VRGuiGeneral::setSSAOradius) );
     setSliderCallback("hscale2", sigc::mem_fun(*this, &VRGuiGeneral::setSSAOkernel) );
     setSliderCallback("hscale3", sigc::mem_fun(*this, &VRGuiGeneral::setSSAOnoise) );
@@ -133,6 +134,12 @@ void VRGuiGeneral::toggleCalib() {
     if (updating) return;
     auto scene = VRScene::getCurrent();
     if (scene) scene->setCalib( getCheckButtonState("checkbutton_5") );
+}
+
+void VRGuiGeneral::toggleMarker() {
+    if (updating) return;
+    auto scene = VRScene::getCurrent();
+    if (scene) scene->setMarker( getCheckButtonState("checkbutton_7") );
 }
 
 void VRGuiGeneral::toggleFrustumCulling() {
