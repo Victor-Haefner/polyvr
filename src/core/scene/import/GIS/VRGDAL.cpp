@@ -162,7 +162,7 @@ void loadTIFF(string path, VRTransformPtr res) {
 
     // setup object
     auto t = VRTexture::create();
-    t->setInternalFormat(GL_DEPTH_COMPONENT32); // TOTEST
+    //t->setInternalFormat(GL_DEPTH_COMPONENT32); // TOTEST
     auto img = t->getImage();
     img->set( Image::OSG_A_PF, sizeX, sizeY, 1, 0, 1, 0, (const uint8_t*)&data[0], Image::OSG_FLOAT32_IMAGEDATA, true, 1);
     auto m = VRMaterial::create("GeoTiff");

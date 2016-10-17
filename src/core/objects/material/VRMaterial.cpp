@@ -826,7 +826,7 @@ void VRMaterial::setTessControlShader(string s) {
 
 void VRMaterial::setTessEvaluationShader(string s) {
     initShaderChunk();
-    mats[activePass]->tcProgram->setProgram(s.c_str());
+    mats[activePass]->teProgram->setProgram(s.c_str());
 }
 
 string readFile(string path) {
