@@ -19,7 +19,7 @@ bool inRect(vec2 p, vec2 mi, vec2 ma) {
 vec4 decode(int m, int i, int j, vec4 fg, vec4 bg) {
     int k = j*4+(3-i);
     int bit = (m & ( 1 << k )) >> k;
-    if (bit) return fg;
+    if (bit == 1) return fg;
     else return bg;
 }
 
