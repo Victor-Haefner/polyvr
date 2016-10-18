@@ -176,6 +176,7 @@ void loadTIFF(string path, VRTransformPtr res) {
     geo.pushVert(Vec3f(1,0,1), Vec3f(0,1,0), Vec2f(1,1));
     geo.pushVert(Vec3f(1,0,-1), Vec3f(0,1,0), Vec2f(1,0));
     geo.pushQuad();
+    //geo.pushPatch(4);
 
     auto g = geo.asGeometry(path);
     g->setMaterial(m);

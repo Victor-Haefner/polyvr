@@ -62,6 +62,7 @@ class VRGeoData {
         void pushLine();
         void pushTri();
         void pushQuad();
+        void pushPatch(int N);
 
         void apply(VRGeometryPtr geo) const;
         VRGeometryPtr asGeometry(string name) const;

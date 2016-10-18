@@ -189,6 +189,12 @@ void VRGeoData::pushQuad(int i, int j, int k, int l) {
     updateType(GL_QUADS, 4);
 }
 
+void VRGeoData::pushPatch(int N) {
+    int vN = size();
+    for (int i=0; i<N; i++) data->indices->addValue(vN-N+i);
+    updateType(GL_PATCHES, N);
+}
+
 void VRGeoData::pushTri(int i, int j, int k) {
     data->indices->addValue(i);
     data->indices->addValue(j);

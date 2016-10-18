@@ -552,6 +552,8 @@ void VRGeometry::influence(vector<Vec3f> pnts, vector<Vec3f> values, int power, 
     else inp.evalVec(mesh->geo->getPositions(), power);
 }
 
+void VRGeometry::setPatchVertices(int n) { if (!meshSet) return; mesh->geo->setPatchVertices(n); }
+
 /** Returns the maximum position on the x, y || z axis **/
 float VRGeometry::getMax(int axis) {
     if (!meshSet) return 0;

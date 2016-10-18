@@ -88,6 +88,7 @@
 			<Add option="-DBOOST_NO_COMPILER_CONFIG" />
 			<Add option="-DBOOST_NO_CXX14_DECLTYPE_AUTO" />
 			<Add option="-DBOOST_NO_CXX11_DECLTYPE_N3276" />
+			<Add option="-DGL_GLEXT_PROTOTYPES" />
 			<Add directory="/usr/include/pango-1.0" />
 			<Add directory="/usr/include/glib-2.0" />
 			<Add directory="/usr/lib64/glib-2.0/include" />

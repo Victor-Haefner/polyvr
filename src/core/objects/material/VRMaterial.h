@@ -47,6 +47,8 @@ class VRMaterial : public VRObject {
         bool isSMat(MaterialMTUncountedPtr matPtr);
         bool isSTMat(MaterialMTUncountedPtr matPtr);
 
+        void forceShaderUpdate();
+
     public:
         VRMaterial(string name);
         virtual ~VRMaterial();

@@ -5,6 +5,11 @@ using namespace OSG;
 
 // Stuff for proxy setter
 
+template<> bool parseValue<int>(PyObject* args, int& t) {
+    if (!PyArg_ParseTuple(args, "i", &t)) return false;
+    return true;
+}
+
 template<> bool parseValue<float>(PyObject* args, float& t) {
     if (!PyArg_ParseTuple(args, "f", &t)) return false;
     return true;

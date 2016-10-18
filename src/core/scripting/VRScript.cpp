@@ -327,6 +327,8 @@ void VRScript::execute() {
             if (mat->getVertexScript() == getName()) mat->setVertexScript(getName());
             if (mat->getFragmentScript() == getName()) mat->setFragmentScript(getName());
             if (mat->getGeometryScript() == getName()) mat->setGeometryScript(getName());
+            if (mat->getTessControlScript() == getName()) mat->setTessControlScript(getName());
+            if (mat->getTessEvaluationScript() == getName()) mat->setTessEvaluationScript(getName());
         }
     }
 }

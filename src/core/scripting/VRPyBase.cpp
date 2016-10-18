@@ -253,6 +253,7 @@ int VRPyBase::toGLConst(string s) {
     if (s == "GL_TRIANGLES") return GL_TRIANGLES;
     if (s == "GL_LINES") return GL_LINES;
     if (s == "GL_POINTS") return GL_POINTS;
+    if (s == "GL_PATCHES") return GL_PATCHES;
     if (s == "GL_TRIANGLE_STRIP") return GL_TRIANGLE_STRIP;
     if (s == "GL_TRIANGLE_FAN") return GL_TRIANGLE_FAN;
     if (s == "GL_LINE_STRIP") return GL_LINE_STRIP;

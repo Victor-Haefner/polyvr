@@ -6,6 +6,7 @@
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSceneManager.h"
 #include "VRPyBaseT.h"
+#include "VRPyBaseFactory.h"
 #include "VRPyMaterial.h"
 #include "VRPySelection.h"
 #include "VRPyTypeCaster.h"
@@ -19,7 +20,9 @@
 #include <OpenSG/OSGGeoProperties.h>
 #include <OpenSG/OSGGeometry.h>
 
-template<> PyTypeObject VRPyBaseT<OSG::VRGeometry>::type = {
+using namespace OSG;
+
+template<> PyTypeObject VRPyBaseT<VRGeometry>::type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
     "VR.Geometry",             /*tp_name*/
@@ -126,6 +129,7 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"genTexCoords", (PyCFunction)VRPyGeometry::genTexCoords, METH_VARARGS, "Generate the texture coordinates - genTexCoords( str mapping, float scale, int channel, Pose )\n\tmapping: ['CUBE', 'SPHERE']" },
     {"readSharedMemory", (PyCFunction)VRPyGeometry::readSharedMemory, METH_VARARGS, "Read the geometry from shared memory buffers - readSharedMemory( str segment, str object )" },
     {"applyTransformation", (PyCFunction)VRPyGeometry::applyTransformation, METH_VARARGS, "Apply a transformation to the mesh - applyTransformation( pose )" },
+    {"setPatchVertices", PySetter(Geometry, setPatchVertices, int), "Set patch primitives for tesselation shader - setPatchVertices( int )" },
     {NULL}  /* Sentinel */
 };
 
@@ -317,10 +321,10 @@ PyObject* VRPyGeometry::influence(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
 	PyObject *vP, *vV; int power; float color_coding; float dl_max;
     if (!PyArg_ParseTuple(args, "OOiff", &vP, &vV, &power, &color_coding, &dl_max)) return NULL;
-    vector<OSG::Vec3f> pos;
-    vector<OSG::Vec3f> vals;
-    feed2D_v2<vector<OSG::Vec3f>, OSG::Vec3f>(vP, pos);
-    feed2D_v2<vector<OSG::Vec3f>, OSG::Vec3f>(vV, vals);
+    vector<Vec3f> pos;
+    vector<Vec3f> vals;
+    feed2D_v2<vector<Vec3f>, Vec3f>(vP, pos);
+    feed2D_v2<vector<Vec3f>, Vec3f>(vV, vals);
     self->objPtr->influence(pos, vals, power, color_coding, dl_max);
     Py_RETURN_TRUE;
 }
@@ -368,7 +372,7 @@ PyObject* VRPyGeometry::setType(VRPyGeometry* self, PyObject *args) {
         return NULL;
     }
 
-    OSG::VRGeometryPtr geo = (OSG::VRGeometryPtr) self->objPtr;
+    VRGeometryPtr geo = (VRGeometryPtr) self->objPtr;
     geo->setType(type);
     Py_RETURN_TRUE;
 }
@@ -378,8 +382,8 @@ PyObject* VRPyGeometry::setTypes(VRPyGeometry* self, PyObject *args) {
 	PyObject* typeList;
     if (!PyArg_ParseTuple(args, "O", &typeList)) return NULL;
 
-    OSG::VRGeometryPtr geo = (OSG::VRGeometryPtr) self->objPtr;
-    OSG::GeoUInt8PropertyRecPtr types = OSG::GeoUInt8Property::create();
+    VRGeometryPtr geo = (VRGeometryPtr) self->objPtr;
+    GeoUInt8PropertyRecPtr types = GeoUInt8Property::create();
 
 	for (int i = 0; i < pySize(typeList); i++) {
 		PyObject* pyType = PyList_GetItem(typeList, i);
@@ -410,23 +414,23 @@ PyObject* VRPyGeometry::setPositions(VRPyGeometry* self, PyObject *args) {
     PyObject* vec;
     if (! PyArg_ParseTuple(args, "O", &vec)) return NULL;
 
-	OSG::GeoPnt3fPropertyRecPtr pos = OSG::GeoPnt3fProperty::create();
+	GeoPnt3fPropertyRecPtr pos = GeoPnt3fProperty::create();
 
     int ld = getListDepth(vec);
     string tname = vec->ob_type->tp_name;
 
     if (ld == 1) {
-        if (tname == "numpy.ndarray") feed1D3np<OSG::GeoPnt3fPropertyRecPtr, OSG::Pnt3f>(vec, pos);
-        else feed1D3<OSG::GeoPnt3fPropertyRecPtr, OSG::Pnt3f>(vec, pos);
+        if (tname == "numpy.ndarray") feed1D3np<GeoPnt3fPropertyRecPtr, Pnt3f>(vec, pos);
+        else feed1D3<GeoPnt3fPropertyRecPtr, Pnt3f>(vec, pos);
     } else if (ld == 2) {
-        if (tname == "numpy.ndarray") feed2Dnp<OSG::GeoPnt3fPropertyRecPtr, OSG::Pnt3f>(vec, pos);
-        else feed2D<OSG::GeoPnt3fPropertyRecPtr, OSG::Pnt3f>(vec, pos);
+        if (tname == "numpy.ndarray") feed2Dnp<GeoPnt3fPropertyRecPtr, Pnt3f>(vec, pos);
+        else feed2D<GeoPnt3fPropertyRecPtr, Pnt3f>(vec, pos);
     } else if (ld == 3) {
         for(Py_ssize_t i = 0; i < PyList_Size(vec); i++) {
             PyObject* vecList = PyList_GetItem(vec, i);
             string tname = vecList->ob_type->tp_name;
-            if (tname == "numpy.ndarray") feed2Dnp<OSG::GeoPnt3fPropertyRecPtr, OSG::Pnt3f>(vecList, pos);
-            else feed2D<OSG::GeoPnt3fPropertyRecPtr, OSG::Pnt3f>(vecList, pos);
+            if (tname == "numpy.ndarray") feed2Dnp<GeoPnt3fPropertyRecPtr, Pnt3f>(vecList, pos);
+            else feed2D<GeoPnt3fPropertyRecPtr, Pnt3f>(vecList, pos);
         }
     } else {
         string e = "VRPyGeometry::setPositions - bad argument, ld is " + toString(ld);
@@ -443,16 +447,16 @@ PyObject* VRPyGeometry::setNormals(VRPyGeometry* self, PyObject *args) {
     PyObject* vec;
     if (! PyArg_ParseTuple(args, "O", &vec)) return NULL;
 
-    OSG::GeoVec3fPropertyRecPtr norms = OSG::GeoVec3fProperty::create();
+    GeoVec3fPropertyRecPtr norms = GeoVec3fProperty::create();
     string tname = vec->ob_type->tp_name;
     int ld = getListDepth(vec);
 
     if (ld == 1) {
-        if (tname == "numpy.ndarray") feed1D3np<OSG::GeoVec3fPropertyRecPtr, OSG::Vec3f>( vec, norms);
-        else feed1D3<OSG::GeoVec3fPropertyRecPtr, OSG::Vec3f>( vec, norms);
+        if (tname == "numpy.ndarray") feed1D3np<GeoVec3fPropertyRecPtr, Vec3f>( vec, norms);
+        else feed1D3<GeoVec3fPropertyRecPtr, Vec3f>( vec, norms);
     } else if (ld == 2) {
-        if (tname == "numpy.ndarray") feed2Dnp<OSG::GeoVec3fPropertyRecPtr, OSG::Vec3f>( vec, norms);
-        else feed2D<OSG::GeoVec3fPropertyRecPtr, OSG::Vec3f>( vec, norms);
+        if (tname == "numpy.ndarray") feed2Dnp<GeoVec3fPropertyRecPtr, Vec3f>( vec, norms);
+        else feed2D<GeoVec3fPropertyRecPtr, Vec3f>( vec, norms);
     } else {
         string e = "VRPyGeometry::setNormals - bad argument, ld is " + toString(ld);
         PyErr_SetString(err, e.c_str());
@@ -467,12 +471,12 @@ PyObject* VRPyGeometry::setColors(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
     PyObject* vec;
     if (! PyArg_ParseTuple(args, "O", &vec)) return NULL;
-    OSG::VRGeometryPtr geo = (OSG::VRGeometryPtr) self->objPtr;
+    VRGeometryPtr geo = (VRGeometryPtr) self->objPtr;
 
-    OSG::GeoVec4fPropertyRecPtr cols = OSG::GeoVec4fProperty::create();
+    GeoVec4fPropertyRecPtr cols = GeoVec4fProperty::create();
     string tname = vec->ob_type->tp_name;
-    if (tname == "numpy.ndarray") feed2Dnp<OSG::GeoVec4fPropertyRecPtr, OSG::Vec4f>( vec, cols);
-    else feed2D<OSG::GeoVec4fPropertyRecPtr, OSG::Vec4f>( vec, cols);
+    if (tname == "numpy.ndarray") feed2Dnp<GeoVec4fPropertyRecPtr, Vec4f>( vec, cols);
+    else feed2D<GeoVec4fPropertyRecPtr, Vec4f>( vec, cols);
 
     geo->setColors(cols, true);
     Py_RETURN_TRUE;
@@ -482,10 +486,10 @@ PyObject* VRPyGeometry::setLengths(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
     PyObject* vec;
     if (!PyArg_ParseTuple(args, "O", &vec)) return NULL;
-    OSG::VRGeometryPtr geo = (OSG::VRGeometryPtr) self->objPtr;
+    VRGeometryPtr geo = (VRGeometryPtr) self->objPtr;
 
-    OSG::GeoUInt32PropertyRecPtr lens = OSG::GeoUInt32Property::create();
-    feed1D<OSG::GeoUInt32PropertyRecPtr>(vec, lens);
+    GeoUInt32PropertyRecPtr lens = GeoUInt32Property::create();
+    feed1D<GeoUInt32PropertyRecPtr>(vec, lens);
     geo->setLengths(lens);
 
     Py_RETURN_TRUE;
@@ -496,22 +500,22 @@ PyObject* VRPyGeometry::setIndices(VRPyGeometry* self, PyObject *args) {
     PyObject* vec;
     if (! PyArg_ParseTuple(args, "O", &vec)) return NULL;
 
-    OSG::GeoUInt32PropertyRecPtr inds = OSG::GeoUInt32Property::create();
+    GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
     string tname = vec->ob_type->tp_name;
 
     int ld = getListDepth(vec);
     cout << "setIndices ld: " << ld << endl;
     if (ld == 1) {
         cout << "setIndices ld=1\n";
-        if (tname == "numpy.ndarray") feed1Dnp<OSG::GeoUInt32PropertyRecPtr>( vec, inds);
-        else feed1D<OSG::GeoUInt32PropertyRecPtr>( vec, inds );
+        if (tname == "numpy.ndarray") feed1Dnp<GeoUInt32PropertyRecPtr>( vec, inds);
+        else feed1D<GeoUInt32PropertyRecPtr>( vec, inds );
         self->objPtr->setIndices(inds, true);
     } else if (ld == 2) {
         cout << "setIndices ld=2\n";
-        OSG::GeoUInt32PropertyRecPtr lengths = OSG::GeoUInt32Property::create();
+        GeoUInt32PropertyRecPtr lengths = GeoUInt32Property::create();
         for(Py_ssize_t i = 0; i < PyList_Size(vec); i++) {
             PyObject* vecList = PyList_GetItem(vec, i);
-            feed1D<OSG::GeoUInt32PropertyRecPtr>( vecList, inds );
+            feed1D<GeoUInt32PropertyRecPtr>( vecList, inds );
             lengths->addValue(PyList_Size(vecList));
         }
         self->objPtr->setIndices(inds);
@@ -533,14 +537,14 @@ PyObject* VRPyGeometry::setTexCoords(VRPyGeometry* self, PyObject *args) {
     int vN = pySize(PyList_GetItem(vec,0));
 
     if (vN == 2) {
-        OSG::GeoVec2fPropertyRecPtr tc = OSG::GeoVec2fProperty::create();
-        feed2D<OSG::GeoVec2fPropertyRecPtr, OSG::Vec2f>(vec, tc);
+        GeoVec2fPropertyRecPtr tc = GeoVec2fProperty::create();
+        feed2D<GeoVec2fPropertyRecPtr, Vec2f>(vec, tc);
         self->objPtr->setTexCoords(tc, channel, doIndexFix);
     }
 
     if (vN == 3) {
-        OSG::GeoVec3fPropertyRecPtr tc = OSG::GeoVec3fProperty::create();
-        feed2D<OSG::GeoVec3fPropertyRecPtr, OSG::Vec3f>(vec, tc);
+        GeoVec3fPropertyRecPtr tc = GeoVec3fProperty::create();
+        feed2D<GeoVec3fPropertyRecPtr, Vec3f>(vec, tc);
         self->objPtr->setTexCoords(tc, channel, doIndexFix);
     }
 
@@ -551,7 +555,7 @@ PyObject* VRPyGeometry::setTexture(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
     PyObject* _path;
     if (! PyArg_ParseTuple(args, "O", &_path)) return NULL;
-    OSG::VRGeometryPtr geo = (OSG::VRGeometryPtr) self->objPtr;
+    VRGeometryPtr geo = (VRGeometryPtr) self->objPtr;
 
     string path = PyString_AsString(_path);
 
@@ -572,12 +576,12 @@ PyObject* VRPyGeometry::getPositions(VRPyGeometry* self) {
     if (!self->valid()) return NULL;
     if (self->objPtr->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getPositions - Mesh is invalid"); return NULL; }
 
-    OSG::GeoVectorProperty* pos = self->objPtr->getMesh()->geo->getPositions();
+    GeoVectorProperty* pos = self->objPtr->getMesh()->geo->getPositions();
     if (pos == 0) return PyList_New(0);
     PyObject* res = PyList_New(pos->size());
 
     for (uint i=0; i<pos->size(); i++) {
-        OSG::Vec3f v;
+        Vec3f v;
         pos->getValue(v,i);
         PyObject* pv = toPyTuple(v);
         // append to list
@@ -591,7 +595,7 @@ PyObject* VRPyGeometry::getTypes(VRPyGeometry* self) {
     if (!self->valid()) return NULL;
     if (self->objPtr->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getNormals - Mesh is invalid"); return NULL; }
 
-    OSG::GeoIntegralProperty* types = self->objPtr->getMesh()->geo->getTypes();
+    GeoIntegralProperty* types = self->objPtr->getMesh()->geo->getTypes();
     if (types == 0) return PyList_New(0);
     PyObject* res = PyList_New(types->size());
 
@@ -608,7 +612,7 @@ PyObject* VRPyGeometry::getLengths(VRPyGeometry* self) {
     if (!self->valid()) return NULL;
     if (self->objPtr->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getNormals - Mesh is invalid"); return NULL; }
 
-    OSG::GeoIntegralProperty* lengths = self->objPtr->getMesh()->geo->getLengths();
+    GeoIntegralProperty* lengths = self->objPtr->getMesh()->geo->getLengths();
     if (lengths == 0) return PyList_New(0);
     PyObject* res = PyList_New(lengths->size());
 
@@ -625,12 +629,12 @@ PyObject* VRPyGeometry::getNormals(VRPyGeometry* self) {
     if (!self->valid()) return NULL;
     if (self->objPtr->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getNormals - Mesh is invalid"); return NULL; }
 
-    OSG::GeoVectorProperty* pos = self->objPtr->getMesh()->geo->getNormals();
+    GeoVectorProperty* pos = self->objPtr->getMesh()->geo->getNormals();
     if (pos == 0) return PyList_New(0);
     PyObject* res = PyList_New(pos->size());
 
     for (uint i=0; i<pos->size(); i++) {
-        OSG::Vec3f v;
+        Vec3f v;
         pos->getValue(v,i);
         PyObject* pv = toPyTuple(v);
         PyList_SetItem(res, i, pv);
@@ -643,12 +647,12 @@ PyObject* VRPyGeometry::getColors(VRPyGeometry* self) {
     if (!self->valid()) return NULL;
     if (self->objPtr->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getColors - Mesh is invalid"); return NULL; }
 
-    OSG::GeoVectorProperty* pos = self->objPtr->getMesh()->geo->getColors();
+    GeoVectorProperty* pos = self->objPtr->getMesh()->geo->getColors();
     if (pos == 0) return PyList_New(0);
     PyObject* res = PyList_New(pos->size());
 
     for (uint i=0; i<pos->size(); i++) {
-        OSG::Vec3f v;
+        Vec3f v;
         pos->getValue(v,i);
         PyObject* pv = toPyTuple(v);
         PyList_SetItem(res, i, pv);
@@ -661,7 +665,7 @@ PyObject* VRPyGeometry::getIndices(VRPyGeometry* self) {
     if (!self->valid()) return NULL;
     if (self->objPtr->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getIndices - Mesh is invalid"); return NULL; }
 
-    OSG::GeoIntegralProperty* pos = self->objPtr->getMesh()->geo->getIndices();
+    GeoIntegralProperty* pos = self->objPtr->getMesh()->geo->getIndices();
     if (pos == 0) return PyList_New(0);
     PyObject* res = PyList_New(pos->size());
 
@@ -679,12 +683,12 @@ PyObject* VRPyGeometry::getTexCoords(VRPyGeometry* self) {
     if (!self->valid()) return NULL;
     if (self->objPtr->getMesh() == 0) { PyErr_SetString(err, "VRPyGeometry::getTexCoords - Mesh is invalid"); return NULL; }
 
-    OSG::GeoVectorProperty* tc = self->objPtr->getMesh()->geo->getTexCoords();
+    GeoVectorProperty* tc = self->objPtr->getMesh()->geo->getTexCoords();
     if (tc == 0) return PyList_New(0);
     PyObject* res = PyList_New(tc->size());
 
     for (unsigned int i=0; i<tc->size(); i++) {
-        OSG::Vec2f v;
+        Vec2f v;
         tc->getValue(v,i);
         PyObject* pv = toPyTuple(v);
         PyList_SetItem(res, i, pv);
@@ -695,7 +699,7 @@ PyObject* VRPyGeometry::getTexCoords(VRPyGeometry* self) {
 
 PyObject* VRPyGeometry::setVideo(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
-    OSG::VRGeometryPtr geo = (OSG::VRGeometryPtr) self->objPtr;
+    VRGeometryPtr geo = (VRGeometryPtr) self->objPtr;
 
     string path = parseString(args);
 
@@ -706,9 +710,9 @@ PyObject* VRPyGeometry::setVideo(VRPyGeometry* self, PyObject *args) {
 
 PyObject* VRPyGeometry::playVideo(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
-    OSG::VRGeometryPtr geo = (OSG::VRGeometryPtr) self->objPtr;
+    VRGeometryPtr geo = (VRGeometryPtr) self->objPtr;
 
-    OSG::Vec3f params = parseVec3f(args);
+    Vec3f params = parseVec3f(args);
 
     geo->getMaterial()->getVideo()->play(0, params[0], params[1], params[2]);
 

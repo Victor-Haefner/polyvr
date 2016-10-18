@@ -80,6 +80,7 @@ class VRGeometry : public VRTransform {
         void setIndices(GeoIntegralProperty* Indices, bool doLengths = false);
         void setTexCoords(GeoVectorProperty* Tex, int i=0, bool fixMapping = false);
         void setLengths(GeoIntegralProperty* lenghts);
+        void setPatchVertices(int n);
         void setPositionalTexCoords(float scale = 1.0);
 
         void setRandomColors();
