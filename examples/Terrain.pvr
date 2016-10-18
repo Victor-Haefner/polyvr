@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scene name_suffix="0" base_name="bla" name_space="Scene" loading_time="274">
+  <Objects>
+    <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
+      <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1" type="Light" unique="1" visible="1">
+        <Object accept_root="1" aspect="1" at="0 0.4 0" at_dir="0" base_name="Default" far="512" fov="1.0472" from="1.37913 1.56415 1.88928" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
+          <Object at="0 0 -1" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
+            <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
+          </Object>
+          <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
+        </Object>
+      </Object>
+    </Object>
+  </Objects>
+  <Rendering deferred_rendering="0" frustum_culling="1" hmdd="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
+  <Scripts persistency="666">
+    <Script base_name="displ_fp" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" mobile="">
+      <core>
+#version 120
+
+uniform sampler2D texture;
+
+void main( void ) {
+	float h = texture2D(texture, gl_TexCoord[0].xy).r;
+	vec3 c;
+	vec3 green = vec3(0.2,0.6,0.2);
+	vec3 darkgreen = vec3(0.1,0.1,0.1);
+	vec3 brown = vec3(0.6,0.5,0.2);
+	vec3 grey = vec3(0.7);
+	
+	if (h &gt; 1.2) {
+		float t = clamp(10*(h-1.2), 0.0, 1.0);
+		c = mix(grey, vec3(1.0), t);
+	}
+	
+	if (h &gt; 1.0 &amp;&amp; h &lt;= 1.2) {
+		float t = clamp(4*(h-1.0), 0.0, 1.0);
+		c = mix(brown, grey, t);
+	}
+	
+	if (h &gt; 0.7 &amp;&amp; h &lt;= 1.0) {
+		float t = clamp(4*(h-0.7), 0.0, 1.0);
+		c = mix(green, brown, t);
+	}
+	
+	if (h &lt;= 0.7) {
+		float t = clamp(1.5*h, 0.0, 1.0);
+		c = mix(darkgreen, green, t);
+	}
+	
+	gl_FragColor = vec4(c, 1.0);
+}
+</core>
+    </Script>
+    <Script base_name="displ_tcp" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" mobile="">
+      <core>
+#version 400 compatibility
+#extension GL_ARB_tessellation_shader : enable
+
+layout(vertices = 4) out;
+out vec3 tcPosition[];
+out vec2 tcTexCoords[];
+
+#define ID gl_InvocationID
+
+void main() {
+    tcPosition[ID] = gl_in[ID].gl_Position.xyz;
+    tcTexCoords[ID] = gl_in[ID].gl_TexCoord[0].xy;
+    
+    if (ID == 0) {
+		int res = 64; // maximum is 64
+		vec4 pos = gl_ModelViewProjectionMatrix * vec4(tcPosition[ID], 1.0);
+		if ( length(pos.xyz) &lt; 0.4) res = 64;
+		if ( length(pos.xyz) &lt; 0.2) res = 64;
+		
+        gl_TessLevelInner[0] = res;
+        gl_TessLevelInner[1] = res;
+        gl_TessLevelOuter[0] = res;
+        gl_TessLevelOuter[1] = res;
+        gl_TessLevelOuter[2] = res;
+        gl_TessLevelOuter[3] = res;
+    }
+}
+</core>
+    </Script>
+    <Script base_name="displ_tep" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" mobile="">
+      <core>
+#version 400 compatibility
+#extension GL_ARB_tessellation_shader : enable
+
+layout( quads ) in;
+in vec3 tcPosition[];
+in vec2 tcTexCoords[];
+
+uniform sampler2D texture;
+
+void main() {
+    float u = gl_TessCoord.x; 
+    float v = gl_TessCoord.y;
+    
+    vec2 ta = mix(tcTexCoords[0], tcTexCoords[1], u);
+    vec2 tb = mix(tcTexCoords[3], tcTexCoords[2], u);
+    vec2 tc = mix(ta, tb, v);
+    gl_TexCoord[0] = vec4(tc.x, tc.y, 1.0, 1.0);
+	
+    vec3 a = mix(tcPosition[0], tcPosition[1], u);
+    vec3 b = mix(tcPosition[3], tcPosition[2], u);
+    vec3 tePosition = mix(a, b, v);
+    tePosition.y = 0.4*texture2D(texture, gl_TexCoord[0].xy).r;
+    gl_Position = gl_ModelViewProjectionMatrix * vec4(tePosition, 1);
+}
+</core>
+    </Script>
+    <Script base_name="displ_vp" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" mobile="">
+      <core>
+#version 120
+
+attribute vec4 osg_Vertex;
+attribute vec2 osg_MultiTexCoord0;
+
+void main(void) {
+    gl_TexCoord[0] = vec4(osg_MultiTexCoord0,0.0,0.0);
+	gl_Position = osg_Vertex;
+}
+</core>
+    </Script>
+    <Script base_name="init" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" mobile="">
+      <core>
+	import VR
+	
+	g = VR.Geometry('terrain')
+	
+	g.setType('GL_PATCHES')
+	g.setPatchVertices(4)
+	g.setPositions([[-1,0,-1],[1,0,-1],[1,0,1],[-1,0,1]])
+	g.setTexCoords([[0,0],[1,0],[1,1],[0,1]])
+	g.setNormals([[0,1,0]]*4)
+	g.setIndices([0,1,2,3])
+	
+	VR.find('light').addChild(g)
+	VR.ground = g
+	VR.setMat()
+</core>
+      <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="2" base_name="trigger" name_space="__global__"/>
+    </Script>
+    <Script base_name="setMat" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" mobile="">
+      <core>
+	import VR
+	
+	tg = VR.TextureGenerator()
+	tg.setSize(400,400,1)
+	tg.add('Perlin', 1.0, [0.9]*3, [1.0]*3)
+	tg.add('Perlin', 1.0/8, [0.8]*3, [1.0]*3)
+	tg.add('Perlin', 1.0/16, [0.7]*3, [1.0]*3)
+	tg.add('Perlin', 1.0/32, [0.0]*3, [1.0]*3)
+	tex = tg.compose(0)
+	
+	m = VR.ground.getMaterial()
+	m.setWireFrame(0)
+	m.setLineWidth(1)
+	m.setVertexProgram('displ_vp')
+	m.setFragmentProgram('displ_fp')
+	m.setTessControlProgram('displ_tcp')
+	m.setTessEvaluationProgram('displ_tep')
+	m.setTexture(tex)
+</core>
+    </Script>
+  </Scripts>
+  <Sockets persistency="666"/>
+  <Background color="0.544594 0.865309 1" format=".png" path="" persistency="666" type="0"/>
+  <Navigation active="Orbit" persistency="666"/>
+  <Materials persistency="666"/>
+  <Semantics persistency="666"/>
+</Scene>
