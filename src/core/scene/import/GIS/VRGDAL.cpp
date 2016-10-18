@@ -170,15 +170,42 @@ void loadTIFF(string path, VRTransformPtr res) {
     m->setLit(0);
     m->setTextureParams(GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST, GL_MODULATE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
 
+
+    int NXgeo = 140;
+    int NYgeo = 140;
+    float SXchunk = 2.0/NXgeo;
+    float SYchunk = 2.0/NYgeo;
+    float TCXchunk = 1.0/NXgeo;
+    float TCYchunk = 1.0/NYgeo;
+
+    // TODO: optimize!
     VRGeoData geo;
-    geo.pushVert(Vec3f(-1,0,-1), Vec3f(0,1,0), Vec2f(0,0));
-    geo.pushVert(Vec3f(-1,0,1), Vec3f(0,1,0), Vec2f(0,1));
-    geo.pushVert(Vec3f(1,0,1), Vec3f(0,1,0), Vec2f(1,1));
-    geo.pushVert(Vec3f(1,0,-1), Vec3f(0,1,0), Vec2f(1,0));
-    geo.pushQuad();
+    for (int i=0; i<NXgeo; i++) {
+        float px1 = -1 + i*SXchunk;
+        float px2 = px1 + SXchunk;
+        float tcx1 = 0 + i*TCXchunk;
+        float tcx2 = tcx1 + TCXchunk;
+
+        for (int j=0; j<NYgeo; j++) {
+            float py1 = -1 + j*SYchunk;
+            float py2 = py1 + SYchunk;
+            float tcy1 = 0 + j*TCYchunk;
+            float tcy2 = tcy1 + TCYchunk;
+
+            geo.pushVert(Vec3f(px1,0,py1), Vec3f(0,1,0), Vec2f(tcx1,tcy1));
+            geo.pushVert(Vec3f(px1,0,py2), Vec3f(0,1,0), Vec2f(tcx1,tcy2));
+            geo.pushVert(Vec3f(px2,0,py2), Vec3f(0,1,0), Vec2f(tcx2,tcy2));
+            geo.pushVert(Vec3f(px2,0,py1), Vec3f(0,1,0), Vec2f(tcx2,tcy1));
+            geo.pushQuad();
+        }
+    }
+    auto g = geo.asGeometry(path);
     //geo.pushPatch(4);
 
-    auto g = geo.asGeometry(path);
+
+    //auto g = VRGeometry::create(path);
+    //g->setPrimitive("Plane", "1 1 140 140");
+
     g->setMaterial(m);
     res->addChild( g );
     GDALClose(poDS);

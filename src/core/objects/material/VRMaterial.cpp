@@ -911,7 +911,6 @@ void VRMaterial::setGeometryScript(string script) {
 }
 
 void VRMaterial::setTessControlScript(string script) {
-    cout << "VRMaterial::setTessControlScript " << getName() << " " << script << endl;
     mats[activePass]->tessControlScript = script;
     VRScriptPtr scr = VRScene::getCurrent()->getScript(script);
     if (scr) setTessControlShader(scr->getCore());
