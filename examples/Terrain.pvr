@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="bla" name_space="Scene" loading_time="274">
+<Scene name_suffix="0" base_name="bla" name_space="Scene" loading_time="365">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1" type="Light" unique="1" visible="1">
-        <Object accept_root="1" aspect="1" at="0 0.4 0" at_dir="0" base_name="Default" far="512" fov="1.0472" from="1.37913 1.56415 1.88928" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0 0.4 0" at_dir="0" base_name="Default" far="512" fov="1.0472" from="1.27574 1.45278 1.2807" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
             <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
           </Object>
@@ -16,39 +16,56 @@
   <Scripts persistency="666">
     <Script base_name="displ_fp" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" mobile="">
       <core>
-#version 120
+#version 400 compatibility
 
-uniform sampler2D texture;
+uniform sampler2D tex;
+const vec2 size = vec2(0.2,0.0);
+const ivec3 off = ivec3(-1,0,1);
+const vec3 light = vec3(-1,-1,-0.5);
 
-void main( void ) {
-	float h = texture2D(texture, gl_TexCoord[0].xy).r;
-	vec3 c;
-	vec3 green = vec3(0.2,0.6,0.2);
-	vec3 darkgreen = vec3(0.1,0.1,0.1);
+vec3 getNormal() {
+	vec2 tc = gl_TexCoord[0].xy;
+    float s11 = texture(tex, tc).r;
+    float s01 = textureOffset(tex, tc, off.xy).r;
+    float s21 = textureOffset(tex, tc, off.zy).r;
+    float s10 = textureOffset(tex, tc, off.yx).r;
+    float s12 = textureOffset(tex, tc, off.yz).r;
+    
+    vec3 va = normalize(vec3(size.xy,s21-s01));
+    vec3 vb = normalize(vec3(size.yx,s12-s10));
+    vec3 n = cross(va,vb);
+	return n;
+}
+
+vec3 mixColor(vec3 c1, vec3 c2, float t) {
+	t = clamp(t, 0.0, 1.0);
+	return mix(c1, c2, t);
+}
+
+vec3 getColor() {
+	vec3 green = vec3(0.2,0.5,0.2);
+	vec3 black = vec3(0.0);
 	vec3 brown = vec3(0.6,0.5,0.2);
 	vec3 grey = vec3(0.7);
+	vec3 white = vec3(1.0);
 	
-	if (h &gt; 1.2) {
-		float t = clamp(10*(h-1.2), 0.0, 1.0);
-		c = mix(grey, vec3(1.0), t);
-	}
+	float h = texture2D(tex, gl_TexCoord[0].xy).r;
+	if (h &gt; 1.2) return mixColor(grey, white, 10*(h-1.2));
+	if (h &gt; 1.0 &amp;&amp; h &lt;= 1.2) return mixColor(brown, grey, 5*(h-1.0));
+	if (h &gt; 0.8 &amp;&amp; h &lt;= 1.0) return mixColor(green, brown, 5*(h-0.8));
+	if (h &lt;= 0.8) return mixColor(black, green, 1.25*h);
+	return black;
+}
+
+void main( void ) {
+	vec3 n = getNormal();
+	vec3 c = getColor();
 	
-	if (h &gt; 1.0 &amp;&amp; h &lt;= 1.2) {
-		float t = clamp(4*(h-1.0), 0.0, 1.0);
-		c = mix(brown, grey, t);
-	}
-	
-	if (h &gt; 0.7 &amp;&amp; h &lt;= 1.0) {
-		float t = clamp(4*(h-0.7), 0.0, 1.0);
-		c = mix(green, brown, t);
-	}
-	
-	if (h &lt;= 0.7) {
-		float t = clamp(1.5*h, 0.0, 1.0);
-		c = mix(darkgreen, green, t);
-	}
-	
-	gl_FragColor = vec4(c, 1.0);
+	// diffuse lightning
+	vec4 aCol = vec4(c * 0.4, 1.0f);
+	float dFac = dot(normalize(n), -normalize(light));
+	vec4 dCol = vec4(c * 0.6 * dFac, 1.0f);	
+	gl_FragColor = aCol+dCol;
 }
 </core>
     </Script>
@@ -68,17 +85,19 @@ void main() {
     tcTexCoords[ID] = gl_in[ID].gl_TexCoord[0].xy;
     
     if (ID == 0) {
-		int res = 64; // maximum is 64
 		vec4 pos = gl_ModelViewProjectionMatrix * vec4(tcPosition[ID], 1.0);
-		if ( length(pos.xyz) &lt; 0.4) res = 64;
-		if ( length(pos.xyz) &lt; 0.2) res = 64;
+		float D = length(pos.xyz);
+		int p = int(5.0/D);
+		int res = int(pow(2,p));
+		res = clamp(res, 1, 64);
 		
         gl_TessLevelInner[0] = res;
         gl_TessLevelInner[1] = res;
-        gl_TessLevelOuter[0] = res;
-        gl_TessLevelOuter[1] = res;
-        gl_TessLevelOuter[2] = res;
-        gl_TessLevelOuter[3] = res;
+        
+        gl_TessLevelOuter[0] = 64;
+        gl_TessLevelOuter[1] = 64;
+        gl_TessLevelOuter[2] = 64;
+        gl_TessLevelOuter[3] = 64;
     }
 }
 </core>
@@ -129,13 +148,42 @@ void main(void) {
 	import VR
 	
 	g = VR.Geometry('terrain')
-	
 	g.setType('GL_PATCHES')
 	g.setPatchVertices(4)
-	g.setPositions([[-1,0,-1],[1,0,-1],[1,0,1],[-1,0,1]])
-	g.setTexCoords([[0,0],[1,0],[1,1],[0,1]])
-	g.setNormals([[0,1,0]]*4)
-	g.setIndices([0,1,2,3])
+	
+	gridN = 16
+	pChunk = 2.0/gridN
+	tcChunk = 1.0/gridN
+
+	pos = []
+	tcs = []
+	ids = []
+	for i in range(gridN):
+		px1 = -1 + i*pChunk
+		px2 = px1 + pChunk
+		tcx1 = 0 + i*tcChunk
+		tcx2 = tcx1 + tcChunk
+
+		for j in range(gridN):
+			py1 = -1 + j*pChunk
+			py2 = py1 + pChunk
+			tcy1 = 0 + j*tcChunk
+			tcy2 = tcy1 + tcChunk
+
+			N = len(pos)
+			pos.append([px1,0,py1])
+			tcs.append([tcx1,tcy1])
+			pos.append([px1,0,py2])
+			tcs.append([tcx1,tcy2])
+			pos.append([px2,0,py2])
+			tcs.append([tcx2,tcy2])
+			pos.append([px2,0,py1])
+			tcs.append([tcx2,tcy1])
+			ids += [0+N,1+N,2+N,3+N]	
+	
+	g.setPositions(pos)
+	g.setTexCoords(tcs)
+	g.setIndices(ids)
 	
 	VR.find('light').addChild(g)
 	VR.ground = g
@@ -149,10 +197,12 @@ void main(void) {
 	
 	tg = VR.TextureGenerator()
 	tg.setSize(400,400,1)
-	tg.add('Perlin', 1.0, [0.9]*3, [1.0]*3)
+	tg.add('Perlin', 1.0, [0.97]*3, [1.0]*3)
+	tg.add('Perlin', 1.0/2, [0.95]*3, [1.0]*3)
+	tg.add('Perlin', 1.0/4, [0.85]*3, [1.0]*3)
 	tg.add('Perlin', 1.0/8, [0.8]*3, [1.0]*3)
 	tg.add('Perlin', 1.0/16, [0.7]*3, [1.0]*3)
-	tg.add('Perlin', 1.0/32, [0.0]*3, [1.0]*3)
+	tg.add('Perlin', 1.0/32, [0.5]*3, [1.0]*3)
 	tex = tg.compose(0)
 	
 	m = VR.ground.getMaterial()
