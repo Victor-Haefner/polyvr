@@ -160,15 +160,17 @@ void loadTIFF(string path, VRTransformPtr res) {
     //vector<float> data(sizeX*sizeY, 0.5);
     //for (int i=0; i<sizeX*sizeY; i++) data[i] = 0.5;
 
+    // Image::OSG_A_PF, Image::OSG_ALPHA_INTEGER_PF, GL_RGBA32F_ARB, GL_ALPHA32F_ARB
+
     // setup object
     auto t = VRTexture::create();
-    //t->setInternalFormat(GL_DEPTH_COMPONENT32); // TOTEST
+    t->setInternalFormat(GL_ALPHA32F_ARB); // important for unclamped float
     auto img = t->getImage();
-    img->set( Image::OSG_A_PF, sizeX, sizeY, 1, 0, 1, 0, (const uint8_t*)&data[0], Image::OSG_FLOAT32_IMAGEDATA, true, 1);
+    img->set( Image::OSG_A_PF, sizeX, sizeY, 1, 1, 1, 0, (const uint8_t*)&data[0], Image::OSG_FLOAT32_IMAGEDATA, true, 1);
     auto m = VRMaterial::create("GeoTiff");
     m->setTexture(t);
     m->setLit(0);
-    m->setTextureParams(GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST, GL_MODULATE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+    m->setTextureParams(GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR, GL_MODULATE, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
 
 
     int NXgeo = 140;
