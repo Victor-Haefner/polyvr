@@ -149,6 +149,7 @@ class VRMaterial : public VRObject {
         ShaderProgramMTRecPtr getShaderProgram();
 
         template<class T> void setShaderParameter(string name, const T &value);
+        void enableShaderParameter(string name);
 
         void setMagMinFilter(string mag, string min);
 

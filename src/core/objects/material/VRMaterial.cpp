@@ -772,6 +772,11 @@ void VRMaterial::initShaderChunk() {
     md->vProgram->addOSGVariable("OSGViewportSize");
 }
 
+void VRMaterial::enableShaderParameter(string name) {
+    auto md = mats[activePass];
+    md->vProgram->addOSGVariable(name.c_str());
+}
+
 void VRMaterial::remShaderChunk() {
     auto md = mats[activePass];
     if (md->shaderChunk == 0) return;
