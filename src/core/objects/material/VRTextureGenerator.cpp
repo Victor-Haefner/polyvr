@@ -24,8 +24,25 @@ void VRTextureGenerator::add(GEN_TYPE type, float amount, Vec3f c1, Vec3f c2) {
     Layer l;
     l.amount = amount;
     l.type = type;
-    l.c1 = c1;
-    l.c2 = c2;
+    l.c31 = c1;
+    l.c32 = c2;
+    l.Nchannels = 3;
+    layers.push_back(l);
+}
+
+void VRTextureGenerator::add(string type, float amount, Vec4f c1, Vec4f c2) {
+    GEN_TYPE t = PERLIN;
+    if (type == "Bricks") t = BRICKS;
+    add(t, amount, c1, c2);
+}
+
+void VRTextureGenerator::add(GEN_TYPE type, float amount, Vec4f c1, Vec4f c2) {
+    Layer l;
+    l.amount = amount;
+    l.type = type;
+    l.c41 = c1;
+    l.c42 = c2;
+    l.Nchannels = 4;
     layers.push_back(l);
 }
 
@@ -35,16 +52,29 @@ VRTexturePtr VRTextureGenerator::compose(int seed) {
     srand(seed);
     Vec3i dims(width, height, depth);
 
-    Vec3f* data = new Vec3f[width*height*depth];
-    for (int i=0; i<width*height*depth; i++) data[i] = Vec3f(1,1,1);
+    Vec3f* data3 = new Vec3f[width*height*depth];
+    Vec4f* data4 = new Vec4f[width*height*depth];
+    for (int i=0; i<width*height*depth; i++) data3[i] = Vec3f(1,1,1);
+    for (int i=0; i<width*height*depth; i++) data4[i] = Vec4f(1,1,1,1);
+    bool alpha = false;
     for (auto l : layers) {
-        if (l.type == BRICKS) VRBricks::apply(data, dims, l.amount, l.c1, l.c2);
-        if (l.type == PERLIN) VRPerlin::apply(data, dims, l.amount, l.c1, l.c2);
+        if (l.Nchannels == 3) {
+            if (l.type == BRICKS) VRBricks::apply(data3, dims, l.amount, l.c31, l.c32);
+            if (l.type == PERLIN) VRPerlin::apply(data3, dims, l.amount, l.c31, l.c32);
+        }
+        if (l.Nchannels == 4) {
+            alpha = true;
+            if (l.type == BRICKS) VRBricks::apply(data4, dims, l.amount, l.c41, l.c42);
+            if (l.type == PERLIN) VRPerlin::apply(data4, dims, l.amount, l.c41, l.c42);
+        }
     }
 
     img = VRTexture::create();
-    img->getImage()->set(OSG::Image::OSG_RGB_PF, width, height, depth, 0, 1, 0.0, (const uint8_t*)data, OSG::Image::OSG_FLOAT32_IMAGEDATA, true, 1);
-    delete[] data;
+    auto format = alpha ? OSG::Image::OSG_RGBA_PF : OSG::Image::OSG_RGB_PF;
+    if (alpha) img->getImage()->set(format, width, height, depth, 0, 1, 0.0, (const uint8_t*)data4, OSG::Image::OSG_FLOAT32_IMAGEDATA, true, 1);
+    else       img->getImage()->set(format, width, height, depth, 0, 1, 0.0, (const uint8_t*)data3, OSG::Image::OSG_FLOAT32_IMAGEDATA, true, 1);
+    delete[] data3;
+    delete[] data4;
     return img;
 }
 

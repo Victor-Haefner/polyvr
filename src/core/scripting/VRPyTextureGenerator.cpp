@@ -47,7 +47,8 @@ template<> PyTypeObject VRPyBaseT<OSG::VRTextureGenerator>::type = {
 };
 
 PyMethodDef VRPyTextureGenerator::methods[] = {
-    {"add", (PyCFunction)VRPyTextureGenerator::add, METH_VARARGS, "Add a layer - add(str type, float amount, [r,g,b], [r,g,b])\n   type can be: 'Perlin', 'Bricks'" },
+    {"add", (PyCFunction)VRPyTextureGenerator::add, METH_VARARGS, "Add a layer - add(str type, float amount, [r,g,b], [r,g,b])\n\ttype can be: 'Perlin', 'Bricks'"
+                                                                    "\n\t add(str type, float amount, [r,g,b,a], [r,g,b,a])" },
     {"setSize", (PyCFunction)VRPyTextureGenerator::setSize, METH_VARARGS, "Set the size - setSize([width, height, depth])\n   set depth to 1 for 2D textures" },
     {"compose", (PyCFunction)VRPyTextureGenerator::compose, METH_VARARGS, "Bake the layers into an image - img compose( int seed )" },
     {"readSharedMemory", (PyCFunction)VRPyTextureGenerator::readSharedMemory, METH_VARARGS, "Read an image from shared memory - img readSharedMemory( string segment, string data )" },
@@ -71,7 +72,8 @@ PyObject* VRPyTextureGenerator::add(VRPyTextureGenerator* self, PyObject* args) 
     PyObject *type, *c1, *c2;
     float amount;
     if (! PyArg_ParseTuple(args, "OfOO", &type, &amount, &c1, &c2)) return NULL;
-    self->obj->add(PyString_AsString(type), amount, parseVec3fList(c1), parseVec3fList(c2));
+    if (pySize(c1) == 3) self->obj->add(PyString_AsString(type), amount, parseVec3fList(c1), parseVec3fList(c2));
+    if (pySize(c1) == 4) self->obj->add(PyString_AsString(type), amount, parseVec4fList(c1), parseVec4fList(c2));
     Py_RETURN_TRUE;
 }
 

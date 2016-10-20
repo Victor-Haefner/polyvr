@@ -12,6 +12,7 @@ class VRBricks {
         VRBricks();
 
         static void apply(Vec3f* data, Vec3i dim, float amount, Vec3f c1, Vec3f c2);
+        static void apply(Vec4f* data, Vec3i dim, float amount, Vec4f c1, Vec4f c2);
 };
 
 OSG_END_NAMESPACE;

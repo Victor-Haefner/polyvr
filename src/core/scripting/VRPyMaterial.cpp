@@ -42,7 +42,10 @@ PyMethodDef VRPyMaterial::methods[] = {
     {"setFrontBackModes", (PyCFunction)VRPyMaterial::setFrontBackModes, METH_VARARGS, "Set the draw mode of front and back faces - setFrontBackModes(front, back)\n\tmode can be: GL_NONE, GL_FILL, GL_BACK" },
     {"setZOffset", (PyCFunction)VRPyMaterial::setZOffset, METH_VARARGS, "Set the z offset factor and bias - setZOffset(factor, bias)" },
     {"setSortKey", (PyCFunction)VRPyMaterial::setSortKey, METH_VARARGS, "Set the sort key" },
-    {"setTexture", (PyCFunction)VRPyMaterial::setTexture, METH_VARARGS, "Set the texture - setTexture(str path)\n - setTexture([[r,g,b]], [xN, yN, zN], bool isFloat)\n - setTexture([[r,g,b,a]], [xN, yN, zN], bool isFloat)" },
+    {"setTexture", (PyCFunction)VRPyMaterial::setTexture, METH_VARARGS, "Set the texture - setTexture(str path, int pos = 0)"
+                                                                        "\n\t setTexture( Texture, int pos = 0)"
+                                                                        "\n\t setTexture([[r,g,b]], [xN, yN, zN], bool isFloat)"
+                                                                        "\n\t setTexture([[r,g,b,a]], [xN, yN, zN], bool isFloat)" },
     {"setTextureType", (PyCFunction)VRPyMaterial::setTextureType, METH_VARARGS, "Set the texture type - setTexture(str type)\n types are: 'Normal, 'SphereEnv'" },
     {"setStencilBuffer", (PyCFunction)VRPyMaterial::setStencilBuffer, METH_VARARGS, "Set the setStencilBuffer" },
     {"setShaderParameter", (PyCFunction)VRPyMaterial::setShaderParameter, METH_VARARGS, "Set shader variable - setShaderParameter(str var, value)" },
@@ -130,16 +133,17 @@ PyObject* VRPyMaterial::setTexture(VRPyMaterial* self, PyObject* args) {
 	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setTexture, C obj is invalid"); return NULL; }
 
 	int aN = pySize(args);
-	if (aN == 1) {
-        PyObject* o = parseObject(args);
-        if (PyString_Check(o)) self->objPtr->setTexture( PyString_AsString(o) ); // load a file
+	if (aN <= 2) {
+        PyObject* o = 0; int pos = 0;
+        if (! PyArg_ParseTuple(args, "O|i", &o, &pos)) return NULL;
+        if (PyString_Check(o)) self->objPtr->setTexture( PyString_AsString(o), true, pos ); // load a file
         else if (VRPyImage::check(o)) {
             VRPyImage* img = (VRPyImage*)o;
-            self->objPtr->setTexture( img->objPtr, 0 );
+            self->objPtr->setTexture( img->objPtr, false, pos );
         }
 	}
 
-	if (aN > 1) {
+	if (aN > 2) {
         PyObject *data, *dims; int doFl;
         if (! PyArg_ParseTuple(args, "OOi", &data, &dims, &doFl)) return NULL;
 

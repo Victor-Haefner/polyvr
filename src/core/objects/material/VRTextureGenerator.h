@@ -21,8 +21,10 @@ class VRTextureGenerator {
 
         struct Layer {
             GEN_TYPE type;
-            float amount;
-            Vec3f c1,c2;
+            float amount = 0;
+            Vec3f c31,c32;
+            Vec4f c41,c42;
+            int Nchannels = 3;
         };
 
         vector<Layer> layers;
@@ -36,6 +38,9 @@ class VRTextureGenerator {
 
         void add(GEN_TYPE type, float amount, Vec3f c1, Vec3f c2);
         void add(string type, float amount, Vec3f c1, Vec3f c2);
+        void add(GEN_TYPE type, float amount, Vec4f c1, Vec4f c2);
+        void add(string type, float amount, Vec4f c1, Vec4f c2);
+
         void clearStage();
         VRTexturePtr compose(int seed);
 

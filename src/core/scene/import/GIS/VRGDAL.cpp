@@ -149,7 +149,7 @@ void loadTIFF(string path, VRTransformPtr res) {
         vector<float> line(nXSize*nYSize);
         //GDALRWFlag eRWFlag, int nXOff, int nYOff, int nXSize, int nYSize, void * pData, int nBufXSize, int nBufYSize, GDALDataType eBufType, int nPixelSpace, int nLineSpace )
         band->RasterIO( GF_Read, 0, (i-1)*nYSize, nXSize, nYSize, &line[0], nXSize, nYSize, GDT_Float32, 0, 0 );
-        for (int j=0; j<nXSize*nYSize; j++) line[j] *= 0.001; // hack
+        //for (int j=0; j<nXSize*nYSize; j++) line[j] *= 0.001; // hack
         data.insert(data.end(), line.begin(), line.end());
     }
 
