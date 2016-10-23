@@ -118,7 +118,7 @@ void VRGuiSemantics::on_open_clicked() {
     VRGuiFile::setCallbacks( sigc::mem_fun(*this, &VRGuiSemantics::on_diag_load_clicked) );
     VRGuiFile::gotoPath( g_get_home_dir() );
     VRGuiFile::clearFilter();
-    VRGuiFile::addFilter("Ontology", 2, "*.owl");
+    VRGuiFile::addFilter("Ontology", 1, "*.owl");
     VRGuiFile::addFilter("All", 1, "*");
     VRGuiFile::open( "Load", Gtk::FILE_CHOOSER_ACTION_OPEN, "Load ontology" );
 }
