@@ -8,6 +8,7 @@ struct VRPyTree : VRPyBaseT<OSG::VRTree> {
     static PyMethodDef methods[];
 
     static PyObject* setup(VRPyTree* self, PyObject* args);
+    static PyObject* addLeafs(VRPyTree* self, PyObject* args);
 };
 
 #endif // VRPYTREE_H_INCLUDED

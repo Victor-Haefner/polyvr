@@ -12,7 +12,7 @@ struct seg_params;
 class VRTree : public VRGeometry {
     private:
         segment* trunc = 0;
-        vector<segment*>* branches = 0;
+        vector<segment*> branches;
         VRGeometryPtr armatureGeo;
         static VRMaterialPtr treeMat;
 
@@ -36,6 +36,8 @@ class VRTree : public VRGeometry {
         void setup(int branching = 5, int iterations = 5, int seed = 0,
                    float n_angle = 0.2, float p_angle = 0.6, float l_factor = 0.8, float r_factor = 0.5,
                    float n_angle_v = 0.2, float p_angle_v = 0.4, float l_factor_v = 0.2, float r_factor_v = 0.2);
+
+        void addLeafs(string tex, int lvl, float scale, float aspect);
 };
 
 OSG_END_NAMESPACE;

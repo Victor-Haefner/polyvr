@@ -116,6 +116,15 @@ bool VRGeoData::setVert(int i, Pnt3f p, Vec3f n, Vec2f t, Vec2f t2) { if (size()
 bool VRGeoData::setVert(int i, Pnt3f p, Vec3f n, Vec3f c, Vec2f t) { if (size() > i) data->texs->setValue(t,i); else return 0; return setVert(i,p,n,c); }
 bool VRGeoData::setVert(int i, Pnt3f p, Vec3f n, Vec4f c, Vec2f t) { if (size() > i) data->texs->setValue(t,i); else return 0; return setVert(i,p,n,c); }
 
+void VRGeoData::pushQuad(Vec3f p, Vec3f n, Vec3f u, Vec2f s, bool addInds) {
+    Vec3f x = n.cross(u); x.normalize();
+    pushVert(p - x*s[0]*0.5 - u*s[1]*0.5, n, Vec2f(0,0));
+    pushVert(p + x*s[0]*0.5 - u*s[1]*0.5, n, Vec2f(1,0));
+    pushVert(p + x*s[0]*0.5 + u*s[1]*0.5, n, Vec2f(1,1));
+    pushVert(p - x*s[0]*0.5 + u*s[1]*0.5, n, Vec2f(0,1));
+    if (addInds) pushQuad();
+}
+
 int VRGeoData::pushVert(const VRGeoData& other, int i) {
     auto od = other.data;
     Pnt3f p = od->pos->getValue(i);

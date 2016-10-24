@@ -1,5 +1,6 @@
 #include "VRTree.h"
 
+#include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/scene/VRSceneManager.h"
@@ -39,14 +40,14 @@ struct OSG::seg_params {
 };
 
 struct OSG::segment {
-
     Vec3f p1, p2, n1, n2;
     Vec2f params[2];
+    int lvl = 0;
     segment* parent;
     vector<segment*> children;
 
     //defaults are for the trunc
-    segment(segment* _parent = 0,
+    segment(int _lvl = 0, segment* _parent = 0,
             Vec3f _p1 = Vec3f(0,0,0),
             Vec3f _n1 = Vec3f(0,1,0),
             Vec3f _p2 = Vec3f(0,1,0),
@@ -55,6 +56,7 @@ struct OSG::segment {
         p2 = _p2;
         n1 = _n1;
         n2 = _n2;
+        lvl = _lvl;
 
         params[0] = Vec2f(1, 0);
         params[1] = Vec2f(1, 0);
@@ -104,8 +106,8 @@ void VRTree::grow(const seg_params& sp, segment* p, int iteration) {
     if (iteration == sp.iterations) return;
 
     for (int i=0;i<sp.child_number;i++) {
-        segment* c = new segment(p, p->p2);
-        branches->push_back(c);
+        segment* c = new segment(p->lvl+1, p, p->p2);
+        branches.push_back(c);
         c->p2 = randomRotate(p->p2 - p->p1, variation(sp.p_angle, sp.p_angle_var));
         c->p2 *= variation(sp.l_factor, sp.l_factor_var);
         c->p2 += p->p2;
@@ -152,8 +154,8 @@ void VRTree::initArmatureGeo() {
     vector<Vec2f> texs;
     vector<int> inds;
 
-    for (uint i=0;i<branches->size();i++) {
-        segment* s = branches->at(i);
+    for (uint i=0;i<branches.size();i++) {
+        segment* s = branches[i];
         pos.push_back(s->p1);
         pos.push_back(s->p2);
         norms.push_back(s->n1);
@@ -170,8 +172,8 @@ void VRTree::initArmatureGeo() {
 void VRTree::testSetup() {
     srand(time(0));
     trunc = new segment();
-    branches = new vector<segment*>();
-    branches->push_back(trunc);
+    branches = vector<segment*>();
+    branches.push_back(trunc);
     seg_params sp;
     grow(sp, trunc);
     initArmatureGeo();
@@ -183,8 +185,8 @@ void VRTree::setup(int branching, int iterations, int seed,
                    float n_angle_v, float p_angle_v, float l_factor_v, float r_factor_v) {
     srand(seed);
     trunc = new segment();
-    branches = new vector<segment*>();
-    branches->push_back(trunc);
+    branches = vector<segment*>();
+    branches.push_back(trunc);
     seg_params sp;
 
     sp.child_number = branching;
@@ -204,6 +206,29 @@ void VRTree::setup(int branching, int iterations, int seed,
     setMaterial(treeMat);
 }
 
+void VRTree::addLeafs(string tex, int lvl, float scale, float aspect) {
+    auto m = VRMaterial::get(tex);
+    m->setTexture(tex);
+    m->setLit(0);
+
+    VRGeoData geo;
+    for (auto b : branches) {
+        if (b->lvl != lvl) continue;
+
+        Vec3f p = (b->p1 + b->p2)*0.5;
+        Vec3f d = b->p2 - b->p1;
+        Vec3f u = Vec3f(0,1,0);
+        Vec3f n = u.cross(d); n.normalize();
+        u = d.cross(n); u.normalize();
+        float L = d.length();
+        Vec2f s = Vec2f(L, L/aspect)*scale;
+        geo.pushQuad(p, n, u, s, true);
+    }
+
+    auto g = geo.asGeometry("branches");
+    g->setMaterial(m);
+    addChild(g);
+}
 
 
 

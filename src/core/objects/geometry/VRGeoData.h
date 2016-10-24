@@ -64,6 +64,8 @@ class VRGeoData {
         void pushQuad();
         void pushPatch(int N);
 
+        void pushQuad(Vec3f p, Vec3f n, Vec3f u, Vec2f s, bool addInds = false);
+
         void apply(VRGeometryPtr geo) const;
         VRGeometryPtr asGeometry(string name) const;
         void append(VRGeometryPtr geo, const Matrix& m = Matrix());
