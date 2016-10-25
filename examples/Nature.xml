@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="241">
+<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="177">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1" type="Light" unique="1" visible="1">
-        <Object accept_root="1" aspect="1" at="0 1 0" at_dir="0" base_name="Default" far="250" fov="1.0472" from="-0.636349 0.993104 0.462064" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0 1 0" at_dir="0" base_name="Default" far="250" fov="1.0472" from="-5.40106 2.21995 2.89488" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
             <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
           </Object>
@@ -20,21 +20,32 @@
 	from random import random
 	
 	r = VR.getRoot().find('Headlight')
-	
+
 	if hasattr(VR, 'tree'): VR.tree.destroy()
 	VR.tree = VR.Tree()
 	r.addChild(VR.tree)
 	
 	#VR.tree.setup(6,5,int(random()*100), 0.2,0.5,0.78,0.45, 0.2,0.4,0.2,0.2)
-	VR.tree.setup(3,3,int(random()*100), 0.2,0.5,0.78,0.45, 0.2,0.4,0.2,0.2)
+	VR.tree.setup(4,4,int(random()*100), 0.2,0.5,0.78,0.45, 0.2,0.4,0.2,0.2)
 	
-	m = VR.tree.getMaterial()
+	VR.tree.setPatchVertices(2)
+	types = [ 'GL_PATCHES' for t in VR.tree.getTypes() ]
+	VR.tree.setTypes(types)
+	print VR.tree.getTypes()
+	m = VR.Material('treemat123')
+	VR.tree.setMaterial(m)
+	
 	m.setVertexProgram('shrd_vert')
 	m.setFragmentProgram('shrd_frag')
+	#m.setFragmentProgram('shdr_s_f')
+	m.setTessControlProgram('shdr_tc')
+	m.setTessEvaluationProgram('shdr_te')
 	m.setGeometryProgram('shrd_geo')
-	m.enableShaderParameter('OSGCameraPosition')
-	m.enableShaderParameter('OSGModelViewProjectionMatrix')
-	m.enableShaderParameter('OSGNormalMatrix')
+	#m.setGeometryProgram('shdr_s_g')
+	
+	m.enableShaderParameter('OSGCameraPosition')	
+	m.setWireFrame(0)
+	m.setLineWidth(3)
 	
 	tg = VR.TextureGenerator()
 	tg.setSize(50,50,50)
@@ -42,9 +53,203 @@
 	tg.add('Perlin', 1, [0.7,0.5,0.3], [1,0.9,0.7])
 	tg.add('Perlin', 1.0/4, [1,0.9,0.7], [0.7,0.5,0.3])
 	m.setTexture(tg.compose(0))
+	
+	
+	
+	
 </core>
       <trig type="on_device" dev="keyboard" state="Pressed" param="" key="105" name_suffix="0" base_name="trigger" name_space="__global__"/>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="7" base_name="trigger" name_space="__global__"/>
+    </Script>
+    <Script base_name="shdr_s_f" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" mobile="">
+      <core>
+#version 120
+
+void main( void ) {
+	gl_FragColor = vec4(1.0);
+}
+</core>
+    </Script>
+    <Script base_name="shdr_s_g" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" mobile="">
+      <core>
+#version 400 compatibility&#13;
+#extension GL_EXT_geometry_shader4 : enable&#13;
+layout (lines) in;&#13;
+layout (triangle_strip, max_vertices = 24) out;&#13;
+in vec2 tc[];
+&#13;
+//Phong&#13;
+out vec3 ViewDirection;&#13;
+out vec3 fvObjectPosition;
+out vec3 MVPos;
+out vec3 Normal;
+out vec3 TexCoord;
+
+out float cylR1;
+out float cylR2;
+out vec3 cylDir;
+out vec3 cylP0;
+out vec3 cylP1;
+out vec3 cylN0;
+out vec3 cylN1;
+
+uniform vec3 OSGCameraPosition;
+
+in mat4 mMVv[];
+in mat4 mPv[];
+
+#define mMVP mPv[0]*mMVv[0]
+#define mMV mMVv[0]
+#define mP mPv[0]
+&#13;
+//PHONG-----------------&#13;
+void addPhongVars(vec4 p) {&#13;
+   MVPos = vec3(mMV*p);
+   fvObjectPosition = vec3(mMVP*p);&#13;
+   ViewDirection = -fvObjectPosition.xyz;
+   ViewDirection = normalize(ViewDirection);
+   &#13;
+   /*vec4 p1 = gl_PositionIn[0];&#13;
+   vec4 p2 = gl_PositionIn[1];
+   vec3 d = normalize(p2.xyz - p1.xyz);
+   TexCoord = p.xyz + 0.5 * d / (1.0+10*p.xyz);*/
+   
+   TexCoord = p.xyz;
+   TexCoord.y *= 0.15;&#13;
+}
+&#13;
+void emitTriangle(vec4 p1, vec4 p2, vec4 p3) {&#13;
+   gl_Position = gl_ModelViewProjectionMatrix*p1;&#13;
+   addPhongVars(p1);&#13;
+   EmitVertex();&#13;
+   gl_Position = gl_ModelViewProjectionMatrix*p2;&#13;
+   addPhongVars(p2);&#13;
+   EmitVertex();&#13;
+   gl_Position = gl_ModelViewProjectionMatrix*p3;&#13;
+   addPhongVars(p3);&#13;
+   EmitVertex();&#13;
+   EndPrimitive();&#13;
+}&#13;
+&#13;
+void emitQuad(vec4 p1, vec4 p2, vec4 p3, vec4 p4) {&#13;
+   emitTriangle(p1, p2, p4);&#13;
+   emitTriangle(p2, p4, p3);&#13;
+}&#13;
+&#13;
+void emitSimpleQuad(vec4 pos[4]) {&#13;
+   emitQuad(pos[0], pos[1], pos[2], pos[3]);&#13;
+}
+&#13;
+float Sign(in float x) {
+    return step(0, x)*2 - 1;
+}
+
+vec3 getOffsets() {
+   vec3 d = OSGCameraPosition - gl_PositionIn[1].xyz;
+   return vec3(Sign(d[0]), Sign(d[1]), Sign(d[2]));
+}
+
+void main() {&#13;
+   vec4 p1 = gl_PositionIn[0];&#13;
+   vec4 p2 = gl_PositionIn[1];
+   
+   cylR1 = tc[0][0]*0.05;
+   cylR2 = tc[1][0]*0.05;
+   cylDir = normalize(vec3(mMV * vec4(p2.xyz - p1.xyz,0.0)));
+   //cylDir = vec3(mMV * vec4(normalize(p1.xyz - p2.xyz),0.0));
+   cylP0 = vec3(mMV * p1);
+   cylP1 = vec3(mMV * p2);
+   cylN0 = vec3(mMV * vec4(0.0,1.0,0.0,0.0));
+   cylN1 = vec3(mMV * vec4(0.0,1.0,0.0,0.0));
+   &#13;
+   gl_FrontColor = vec4(0.6, 0.6, 0.3, 1.0);&#13;
+
+   vec3 offs = getOffsets();&#13;
+   vec4 pos[4];
+   float S1x = 0.05*offs.x;
+   float S2x = -0.05*offs.x;
+   float S1y = 0.05*offs.z;
+   float S2y = -0.05*offs.z;
+   
+   
+   //emitTriangle(gl_PositionIn[0], gl_PositionIn[1], gl_PositionIn[1]);
+   
+   &#13;
+   pos[0] = p1+vec4(S1x,0,S1y,0)*tc[0][0];&#13;
+   pos[1] = p2+vec4(S1x,0,S1y,0)*tc[1][0];&#13;
+   pos[2] = p2+vec4(S2x,0,S1y,0)*tc[1][0];&#13;
+   pos[3] = p1+vec4(S2x,0,S1y,0)*tc[0][0];&#13;
+   emitSimpleQuad(pos);&#13;
+&#13;
+   pos[0] = p2+vec4(S1x,0,S1y,0)*tc[1][0];&#13;
+   pos[1] = p1+vec4(S1x,0,S1y,0)*tc[0][0];&#13;
+   pos[2] = p1+vec4(S1x,0,S2y,0)*tc[0][0];&#13;
+   pos[3] = p2+vec4(S1x,0,S2y,0)*tc[1][0];&#13;
+   emitSimpleQuad(pos);
+   
+   vec4 pc = p1;
+   float R = tc[0][0];
+   if (offs.y &gt; 0) { pc = p2; R = tc[1][0]; }&#13;
+   pos[0] = pc+vec4(S1x,0,S1y,0)*R;&#13;
+   pos[1] = pc+vec4(S2x,0,S1y,0)*R;&#13;
+   pos[2] = pc+vec4(S2x,0,S2y,0)*R;&#13;
+   pos[3] = pc+vec4(S1x,0,S2y,0)*R;&#13;
+   emitSimpleQuad(pos);
+}
+</core>
+    </Script>
+    <Script base_name="shdr_tc" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" mobile="">
+      <core>
+#version 400 compatibility
+#extension GL_ARB_tessellation_shader : enable
+
+layout(vertices = 2) out;
+out vec3 tcPosition[];
+in vec2 vtc[];
+out vec2 ctc[];
+in vec3 vn[];
+out vec3 cn[];
+
+#define ID gl_InvocationID
+
+void main() {
+    tcPosition[ID] = gl_in[ID].gl_Position.xyz;
+    ctc[ID] = vtc[ID];
+    cn[ID] = vn[ID];
+    
+    if (ID == 0) {
+        gl_TessLevelOuter[0] = 1;
+        gl_TessLevelOuter[1] = 12;
+    }
+}
+</core>
+    </Script>
+    <Script base_name="shdr_te" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" mobile="">
+      <core>
+#version 400 compatibility
+#extension GL_ARB_tessellation_shader : enable
+
+layout( isolines ) in;
+in vec3 tcPosition[];
+in vec2 ctc[];
+in vec3 cn[];
+out vec2 tc;
+
+void main() {
+    float u = gl_TessCoord.x;
+     
+    vec3 n1 = cn[0];
+    vec3 n2 = cn[1];
+    vec3 p1 = tcPosition[0];
+    vec3 p2 = p1+n1*0.1;
+    vec3 p3 = tcPosition[1];
+    
+    vec3 pos = (1-u)*(1-u)*p1 + 2*(1-u)*u*p2 + u*u*p3;
+    
+    tc = mix(ctc[0], ctc[1], u);
+    gl_Position = vec4(pos, 1);
+}
+</core>
     </Script>
     <Script base_name="shrd_frag" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" mobile="">
       <core>
@@ -174,12 +379,11 @@ void main( void ) {
     <Script base_name="shrd_geo" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" mobile="">
       <core>
 //----------------------------------------------------------------------------------------------MAIN--GP&#13;
-#version 150&#13;
+#version 400 compatibility&#13;
 #extension GL_EXT_geometry_shader4 : enable&#13;
 layout (lines) in;&#13;
 layout (triangle_strip, max_vertices = 24) out;&#13;
 in vec2 tc[];&#13;
-in vec3 vert_normal[];&#13;
 &#13;
 //Phong&#13;
 out vec3 ViewDirection;&#13;
@@ -198,12 +402,9 @@ out vec3 cylN1;
 
 uniform vec3 OSGCameraPosition;
 
-in mat4 mMVv[];
-in mat4 mPv[];
-
-#define mMVP mPv[0]*mMVv[0]
-#define mMV mMVv[0]
-#define mP mPv[0]&#13;
+#define mMVP gl_ModelViewProjectionMatrix
+#define mMV gl_ModelViewMatrix
+#define mP gl_ProjectionMatrix&#13;
 &#13;
 //PHONG-----------------&#13;
 void addPhongVars(vec4 p) {&#13;
@@ -304,11 +505,11 @@ void main() {&#13;
     </Script>
     <Script base_name="shrd_vert" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" mobile="">
       <core>
-// vertex shader program&#13;
-varying vec3 vert_normal;
+// vertex shader program
 varying mat4 mMVv;
 varying mat4 mPv;
-varying vec2 tc;&#13;
+varying vec2 vtc;
+varying vec3 vn;&#13;
 &#13;
 attribute vec4 osg_Vertex;&#13;
 attribute vec3 osg_Normal;
@@ -316,9 +517,9 @@ attribute vec2 osg_MultiTexCoord0;&#13;
 &#13;
 //----------------------------------------------------------------------------------------------MAIN--VP&#13;
 void main( void ) {
-	tc = osg_MultiTexCoord0;&#13;
-    gl_Position = osg_Vertex;&#13;
-    vert_normal = osg_Normal;
+	vtc = osg_MultiTexCoord0;
+	vn = osg_Normal;&#13;
+    gl_Position = osg_Vertex;
     mMVv = gl_ModelViewMatrix;
     mPv = gl_ProjectionMatrix;&#13;
 }
