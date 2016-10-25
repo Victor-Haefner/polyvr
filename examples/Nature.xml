@@ -3,7 +3,7 @@
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1" type="Light" unique="1" visible="1">
-        <Object accept_root="1" aspect="1" at="0 1 0" at_dir="0" base_name="Default" far="250" fov="1.0472" from="-0.727993 1.40002 1.23476" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0 1 0" at_dir="0" base_name="Default" far="250" fov="1.0472" from="-0.771797 -0.951895 -1.06602" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
             <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
           </Object>
@@ -69,41 +69,70 @@ varying in vec3 MVPos;
 varying in vec3 Normal;&#13;
 varying in vec2 texCoord;
 
-float solveEq(float A, float B, float C) {
+vec2 solveEq(float A, float B, float C) {
    	float D = B*B-4.0*A*C;
-   	if (D &lt;= 0.0) discard; // no solution/intersection
+   	if (D &lt; 0.0) discard; // no solution/intersection
    	D = sqrt(D);
    	float t1 = (-B+D)/A*0.5;
    	float t2 = (-B-D)/A*0.5;
-   	return min(t1, t2);
+   	//if (t1 &lt; 0) return t2;
+   	//if (t2 &lt; 0) return t1;
+   	return vec2(t1, t2);
 }
 
-vec3 raycastCylinder() {
-   	vec2 tc = 2.0*texCoord - vec2(1.0); // from -1 to 1
+vec3 raycastCylinder(vec3 rayStart, vec3 rayDir) {
+   	vec3 rayDRad = rayDir - dot(rayDir, cylDir)*cylDir;
+   	vec3 rayPRad = rayStart-cylP0 - dot(rayStart-cylP0, cylDir)*cylDir;
+   	
+   	float A = dot(rayDRad,rayDRad);
+   	float B = 2.0*dot(rayDRad, rayPRad);
+   	float C = dot(rayPRad, rayPRad) - cylR1*cylR1;
+   	vec2 t = solveEq(A, B, C);
+   	
+   	Normal = normalize(rayPRad); // TODO: warning
+   	
+   	vec3 pC = rayStart + max(t[0],t[1])*rayDir;
+   	if ( dot(cylDir, pC-cylP0) &lt; 0 ) discard;
+   	if ( dot(cylDir, pC-cylP1) &gt; 0 ) discard;
+   	return pC;
+}
+
+vec3 raycastCone(vec3 rayStart, vec3 rayDir) {
+   	float H = distance(cylP0, cylP1);
+   	float H2 = H*H;
+   	float dR = cylR1-cylR2;
+   	float dR2 = dR*dR;
+   	
+   	if (abs(dR) &lt; 0.0001) return raycastCylinder(rayStart, rayDir);
+   	
+   	vec3 cylPa = cylP0 + cylDir * cylR1*H/dR;
+   	float vrvc = dot(rayDir, cylDir);
+   	float dpvc = dot(rayStart-cylPa, cylDir);
+   	vec3 rayDRad = rayDir - vrvc*cylDir;
+   	vec3 rayPRad = rayStart-cylPa - dpvc*cylDir;
+   	float cos2a = H2 / (H2 + dR2);
+   	float sin2a = 1.0 - cos2a;
+   	
+   	float A = cos2a * dot(rayDRad,rayDRad) - sin2a * vrvc * vrvc;
+   	float B = 2.0 * (cos2a * dot(rayDRad, rayPRad) - sin2a * vrvc * dpvc);
+   	float C = cos2a * dot(rayPRad, rayPRad) - sin2a * dpvc * dpvc;
+   	vec2 t = solveEq(A, B, C);
+   	
+   	Normal = normalize(rayPRad); // TODO: warning
+   	
+   	vec3 pC = rayStart + max(t[0], t[1])*rayDir;
+   	if ( dot(cylDir, pC-cylP0) &lt; 0 ) discard;
+   	if ( dot(cylDir, pC-cylP1) &gt; 0 ) discard;
+   	return pC;
+}
+&#13;
+void main( void ) {
    	vec3 rayStart = MVPos;
    	vec3 rayDir = -MVPos;
    	rayDir = normalize(rayDir);
    	
-   	// ray cylinder intersection: At² + Bt + C = 0
-   	vec3 rayDRad = rayDir - dot(rayDir, cylDir)*cylDir;
-   	vec3 rayPRad = rayStart-cylP0 - dot(rayStart-cylP0, cylDir)*cylDir;
-   	float A = dot(rayDRad,rayDRad);
-   	float B = 2.0*dot(rayDRad, rayPRad);
-   	float C = dot(rayPRad, rayPRad) - cylR1*cylR1;
-   	float t = solveEq(A, B, C);
-   	vec3 pC = rayStart + t*rayDir;
-   	Normal = normalize(rayPRad);
-   	
-   	// caps
-   	// TODO
-	
-	return pC;
-}
-&#13;
-void main( void ) {
-   vec3 I = raycastCylinder();
-	//vec3 I = IntersectCylinder(vec3(0), -fvObjectPosition);
-	//vec3 I = IntersectCylinder(fvObjectPosition, -fvObjectPosition);&#13;
+	vec3 I = fvObjectPosition;
+	I = raycastCone(rayStart, rayDir);&#13;
 
    vec3  fvNormal         = normalize( Normal );&#13;
    vec3  fvLightDirection = normalize( gl_LightSource[0].position.xyz - I.xyz);
@@ -227,7 +256,8 @@ void main() {&#13;
    
    cylR1 = tc[0][0]*0.05;
    cylR2 = tc[1][0]*0.05;
-   cylDir = vec3(mMV * vec4(normalize(p2.xyz - p1.xyz),0.0));
+   cylDir = normalize(vec3(mMV * vec4(p2.xyz - p1.xyz,0.0)));
+   //cylDir = vec3(mMV * vec4(normalize(p1.xyz - p2.xyz),0.0));
    cylP0 = vec3(mMV * p1);
    cylP1 = vec3(mMV * p2);
    &#13;
