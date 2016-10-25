@@ -138,10 +138,12 @@ VRMaterialPtr VRTree::initMaterial() {
     mat->readFragmentShader(wdir+"/shader/Trees/Shader_tree_base.fp");
     mat->readVertexShader(wdir+"/shader/Trees/Shader_tree_base.vp");
     mat->readGeometryShader(wdir+"/shader/Trees/Shader_tree_base.gp");
+    mat->readTessControlShader(wdir+"/shader/Trees/Shader_tree_base.tcp");
+    mat->readTessEvaluationShader(wdir+"/shader/Trees/Shader_tree_base.tep");
     mat->setShaderParameter("texture", 0);
 
 	VRTextureGenerator tg;
-	tg.setSize(Vec3i(50,50,1));
+	tg.setSize(Vec3i(50,50,50));
 	tg.add("Perlin", 1, Vec3f(0.7,0.5,0.3), Vec3f(1,0.9,0.7));
 	tg.add("Perlin", 0.25, Vec3f(1,0.9,0.7), Vec3f(0.7,0.5,0.3));
 	mat->setTexture(tg.compose(0));
@@ -166,7 +168,8 @@ void VRTree::initArmatureGeo() {
         texs.push_back(s->params[1]);
     }
 
-    VRGeometry::create(GL_LINES, pos, norms, inds, texs);
+    VRGeometry::create(GL_PATCHES, pos, norms, inds, texs);
+    setPatchVertices(2);
 }
 
 void VRTree::testSetup() {

@@ -877,6 +877,8 @@ string readFile(string path) {
 void VRMaterial::readVertexShader(string s) { setVertexShader(readFile(s)); }
 void VRMaterial::readFragmentShader(string s) { setFragmentShader(readFile(s)); }
 void VRMaterial::readGeometryShader(string s) { setGeometryShader(readFile(s)); }
+void VRMaterial::readTessControlShader(string s) { setTessControlShader(readFile(s)); }
+void VRMaterial::readTessEvaluationShader(string s) { setTessEvaluationShader(readFile(s)); }
 
 string VRMaterial::getVertexShader() { return ""; } // TODO
 string VRMaterial::getFragmentShader() { return ""; }

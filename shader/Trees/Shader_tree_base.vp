@@ -1,21 +1,18 @@
 // vertex shader program
-varying mat4 model;
-varying mat3 n_model;
-varying vec2 tc;
-varying vec3 vert_normal;
+varying mat4 mMVv;
+varying mat4 mPv;
+varying vec2 vtc;
+varying vec3 vn;
 
-//attribute mat4 osg_ModelViewProjectionMatrix;
-//attribute mat3 osg_NormalMatrix;
 attribute vec4 osg_Vertex;
 attribute vec3 osg_Normal;
-attribute vec4 osg_Color;
 attribute vec2 osg_MultiTexCoord0;
 
 //----------------------------------------------------------------------------------------------MAIN--VP
 void main( void ) {
-    tc = osg_MultiTexCoord0.xy;
-    model = gl_ModelViewProjectionMatrix;
-    n_model = gl_NormalMatrix;
+	vtc = osg_MultiTexCoord0;
+	vn = osg_Normal;
     gl_Position = osg_Vertex;
-    vert_normal = osg_Normal;
+    mMVv = gl_ModelViewMatrix;
+    mPv = gl_ProjectionMatrix;
 }

@@ -1,0 +1,23 @@
+#version 400 compatibility
+#extension GL_ARB_tessellation_shader : enable
+
+layout( isolines ) in;
+in vec3 tcPosition[];
+in vec2 ctc[];
+in vec3 cn[];
+out vec2 tc;
+
+void main() {
+    float u = gl_TessCoord.x;
+     
+    vec3 n1 = cn[0];
+    vec3 n2 = cn[1];
+    vec3 p1 = tcPosition[0];
+    vec3 p2 = p1+n1*0.1;
+    vec3 p3 = tcPosition[1];
+    
+    vec3 pos = (1-u)*(1-u)*p1 + 2*(1-u)*u*p2 + u*u*p3;
+    
+    tc = mix(ctc[0], ctc[1], u);
+    gl_Position = vec4(pos, 1);
+}
