@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="392">
+<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="213">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1" type="Light" unique="1" visible="1">
-        <Object accept_root="1" aspect="1" at="0 1 0" at_dir="0" base_name="Default" far="250" fov="1.0472" from="-0.220681 1.07651 -0.201675" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0 1 0" at_dir="0" base_name="Default" far="250" fov="1.0472" from="0.157476 1.09696 -0.247777" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
             <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
           </Object>
@@ -32,6 +32,7 @@
 	m.setVertexProgram('shrd_vert')
 	m.setFragmentProgram('shrd_frag')
 	m.setGeometryProgram('shrd_geo')
+	m.enableShaderParameter('OSGCameraPosition')
 	
 	tg = VR.TextureGenerator()
 	tg.setSize(50,50,1)
@@ -59,6 +60,7 @@ varying in float cylR1;
 varying in float cylR2;
 varying in vec3 cylDir;
 varying in vec3 cylP0;
+varying in vec3 cylP1;
 &#13;
 varying in vec3 ViewDirection;&#13;
 varying in vec3 fvObjectPosition;&#13;
@@ -67,8 +69,9 @@ varying in vec2 texCoord;&#13;
 
 vec3 raycastCylinder() {
    	vec2 tc = 2.0*texCoord - vec2(1.0); // from -1 to 1
-   	vec3 rayStart = fvObjectPosition;
-   	vec3 rayDir = ViewDirection;
+   	vec3 rayStart = vec3(0);//fvObjectPosition;
+   	vec3 rayDir = fvObjectPosition;//ViewDirection;
+   	rayDir = normalize(rayDir);
    	
    	// ray cylinder intersection: At² + Bt + C = 0
    	vec3 rayDRad = rayDir - dot(rayDir, cylDir)*cylDir;
@@ -86,9 +89,60 @@ vec3 raycastCylinder() {
 	
 	return pC;
 }
+
+vec3 perp(vec3 v) {
+    vec3 b = cross(v, vec3(0, 0, 1));
+    if (dot(b, b) &lt; 0.01) b = cross(v, vec3(0, 1, 0));
+    return b;
+}
+
+vec3 IntersectCylinder(vec3 origin, vec3 dir) {
+   	dir = normalize(dir);
+    vec3 A = cylP0; vec3 B = cylP1;
+    float Epsilon = 0.0000001;
+    float extent = distance(A, B);
+    
+    vec3 W = (B - A) / extent;
+    vec3 U = perp(W);
+    vec3 V = cross(U, W);
+    U = normalize(cross(V, W));
+    V = normalize(V);
+    
+    float rSqr = cylR1*cylR1;
+    vec3 diff = origin - 0.5 * (A + B);
+    mat3 basis = mat3(U, V, W);
+    vec3 P = diff * basis;
+    float dz = dot(W, dir);
+    float t = 0.0;
+    if (abs(dz) &gt;= 1.0 - Epsilon) {
+        float radialSqrDist = rSqr - P.x*P.x - P.y*P.y;
+        if (radialSqrDist &lt; 0.0) discard;
+        t = (dz &gt; 0.0 ? -P.z : P.z) + extent * 0.5;
+        return origin + t*dir;
+    }
+
+    vec3 D = vec3(dot(U, dir), dot(V, dir), dz);
+    float a0 = P.x*P.x + P.y*P.y - rSqr;
+    float a1 = P.x*D.x + P.y*D.y;
+    float a2 = D.x*D.x + D.y*D.y;
+    float discr = a1*a1 - a0*a2;
+    if (discr &lt; 0.0) discard;
+
+    if (discr &gt; Epsilon) {
+        float root = sqrt(discr);
+        float inv = 1.0/a2;
+        t = (-a1 + root)*inv;
+        return origin + t*dir;
+    }
+
+    t = -a1/a2;
+    return origin + t*dir;
+}
 &#13;
 void main( void ) {
-	vec3 I = raycastCylinder();&#13;
+	//vec3 I = raycastCylinder();
+	//vec3 I = IntersectCylinder(vec3(0), -fvObjectPosition);
+	vec3 I = IntersectCylinder(fvObjectPosition, -fvObjectPosition);&#13;
 
    vec3  fvNormal         = normalize( Normal );&#13;
    vec3  fvLightDirection = normalize( gl_LightSource[0].position.xyz - I);
@@ -106,8 +160,14 @@ void main( void ) {
 &#13;
    gl_FragColor = fvTotalAmbient + fvTotalDiffuse + fvTotalSpecular;&#13;
    //gl_FragColor = vec4(fvNormal[0], fvNormal[1], fvNormal[2], 1.0);&#13;
-   gl_FragColor = vec4(abs(cylDir.xyz), 1.0);&#13;
+   //gl_FragColor = vec4(abs(cylDir.xyz), 1.0);
+   //gl_FragColor = vec4(abs(cylP0.xyz), 1.0);
+   gl_FragColor = vec4(abs(I.xyz), 1.0);&#13;
 }
+
+
+
+
 </core>
     </Script>
     <Script base_name="shrd_geo" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" mobile="">
@@ -132,7 +192,10 @@ out float cylH;
 out float cylR1;
 out float cylR2;
 out vec3 cylDir;
-out vec3 cylP0;&#13;
+out vec3 cylP0;
+out vec3 cylP1;
+
+uniform vec3 OSGCameraPosition;&#13;
 &#13;
 //PHONG-----------------&#13;
 void addPhongVars(vec4 p, vec3 n, vec2 tc) {&#13;
@@ -165,46 +228,50 @@ void emitSimpleQuad(vec4 pos[4]) {&#13;
    vec3 norm = cross(vec3(pos[1]-pos[0]),vec3(pos[1]-pos[2]));&#13;
    for (int i=0;i&lt;4;i++) pos[i] = model[0]*pos[i];&#13;
    emitQuad(pos[0], pos[1], pos[2], pos[3], norm, norm, norm, norm, vec2(0,0), vec2(1,0), vec2(1,1), vec2(0,1));&#13;
-}&#13;
+}
+&#13;
+float Sign(in float x) {
+    return step(0, x)*2 - 1;
+}
+
+vec2 getOffsets() {
+   vec3 d = OSGCameraPosition - gl_PositionIn[0].xyz;
+   float sd0 = Sign(d[0]);
+   float sd1 = Sign(d[2]);
+   //int ls = int(step(0, d[0]));
+   return vec2(sd0, sd1);
+}
 &#13;
 void main() {&#13;
-   //vec4 p1 = model[0]*gl_PositionIn[0];&#13;
-   //vec4 p2 = model[0]*gl_PositionIn[1];&#13;
    vec4 p1 = gl_PositionIn[0];&#13;
    vec4 p2 = gl_PositionIn[1];
    
    cylH = length(p2-p1);
-   cylR1 = tc[0][0];
-   cylR2 = tc[1][0];
+   cylR1 = tc[0][0]*0.05;
+   cylR2 = tc[1][0]*0.05;
    cylDir = vec3(model[0] * vec4(normalize(p2.xyz - p1.xyz),0.0));
    cylP0 = vec3(model[0] * p1);
+   cylP1 = vec3(model[0] * p2);
    &#13;
    gl_FrontColor = vec4(0.6, 0.6, 0.3, 1.0);&#13;
+
+   vec2 offs = getOffsets();&#13;
+   vec4 pos[4];
+   float S1x = 0.05*offs[0];
+   float S2x = -0.05*offs[0];
+   float S1y = 0.05*offs[1];
+   float S2y = -0.05*offs[1];&#13;
 &#13;
-   vec4 pos[4];&#13;
-&#13;
-   pos[0] = p1;&#13;
-   pos[1] = p2;&#13;
-   pos[2] = p2+vec4(0.1,0,0,0)*tc[1][0];&#13;
-   pos[3] = p1+vec4(0.1,0,0,0)*tc[0][0];&#13;
+   pos[0] = p1+vec4(S1x,0,S1y,0)*tc[0][0];&#13;
+   pos[1] = p2+vec4(S1x,0,S1y,0)*tc[1][0];&#13;
+   pos[2] = p2+vec4(S2x,0,S1y,0)*tc[1][0];&#13;
+   pos[3] = p1+vec4(S2x,0,S1y,0)*tc[0][0];&#13;
    emitSimpleQuad(pos);&#13;
 &#13;
-   pos[0] = p2;&#13;
-   pos[1] = p1;&#13;
-   pos[2] = p1+vec4(0,0,0.1,0)*tc[0][0];&#13;
-   pos[3] = p2+vec4(0,0,0.1,0)*tc[1][0];&#13;
-   emitSimpleQuad(pos);&#13;
-&#13;
-   pos[0] = p1+vec4(0.1,0,0,0)*tc[0][0];&#13;
-   pos[1] = p2+vec4(0.1,0,0,0)*tc[1][0];&#13;
-   pos[2] = p2+vec4(0.1,0,0.1,0)*tc[1][0];&#13;
-   pos[3] = p1+vec4(0.1,0,0.1,0)*tc[0][0];&#13;
-   emitSimpleQuad(pos);&#13;
-&#13;
-   pos[0] = p2+vec4(0,0,0.1,0)*tc[1][0];&#13;
-   pos[1] = p1+vec4(0,0,0.1,0)*tc[0][0];&#13;
-   pos[2] = p1+vec4(0.1,0,0.1,0)*tc[0][0];&#13;
-   pos[3] = p2+vec4(0.1,0,0.1,0)*tc[1][0];&#13;
+   pos[0] = p2+vec4(S1x,0,S1y,0)*tc[1][0];&#13;
+   pos[1] = p1+vec4(S1x,0,S1y,0)*tc[0][0];&#13;
+   pos[2] = p1+vec4(S1x,0,S2y,0)*tc[0][0];&#13;
+   pos[3] = p2+vec4(S1x,0,S2y,0)*tc[1][0];&#13;
    emitSimpleQuad(pos);&#13;
 }
 </core>
