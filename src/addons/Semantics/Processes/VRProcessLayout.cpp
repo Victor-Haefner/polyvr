@@ -132,6 +132,7 @@ VRGeometryPtr VRProcessLayout::newWidget(VRProcessNode& n, float height) {
 }
 
 void VRProcessLayout::setProcess(VRProcess::DiagramPtr diag) {
+    if (!diag) return;
     //process = p;
 
     clearChildren();
