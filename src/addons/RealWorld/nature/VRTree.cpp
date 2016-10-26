@@ -141,6 +141,7 @@ VRMaterialPtr VRTree::initMaterial() {
     mat->readTessControlShader(wdir+"/shader/Trees/Shader_tree_base.tcp");
     mat->readTessEvaluationShader(wdir+"/shader/Trees/Shader_tree_base.tep");
     mat->setShaderParameter("texture", 0);
+    mat->enableShaderParameter("OSGCameraPosition");
 
 	VRTextureGenerator tg;
 	tg.setSize(Vec3i(50,50,50));

@@ -17,6 +17,6 @@ void main() {
     
     if (ID == 0) {
         gl_TessLevelOuter[0] = 1;
-        gl_TessLevelOuter[1] = 12;
+        gl_TessLevelOuter[1] = 6;
     }
 }

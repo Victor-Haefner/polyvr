@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="177">
+<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="234">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1" type="Light" unique="1" visible="1">
-        <Object accept_root="1" aspect="1" at="0 1 0" at_dir="0" base_name="Default" far="250" fov="1.0472" from="-5.40106 2.21995 2.89488" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0 1 0" at_dir="0" base_name="Default" far="250" fov="1.0472" from="-3.61531 1.58307 -0.845586" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
             <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
           </Object>
@@ -219,7 +219,7 @@ void main() {
     
     if (ID == 0) {
         gl_TessLevelOuter[0] = 1;
-        gl_TessLevelOuter[1] = 12;
+        gl_TessLevelOuter[1] = 4;
     }
 }
 </core>
@@ -280,6 +280,8 @@ in vec3 TexCoord;
 
 vec3 norm;
 
+#define eps 0.0001
+
 vec2 solveEq(float A, float B, float C) {
    	float D = B*B-4.0*A*C;
    	if (D &lt; 0.0) discard; // no solution/intersection
@@ -291,6 +293,35 @@ vec2 solveEq(float A, float B, float C) {
    	return vec2(t1, t2);
 }
 
+float intersectCap(vec3 rayStart, vec3 rayDir, vec3 p0, vec3 n, float r) {
+	float t = dot((p0-rayStart),n)/dot(rayDir,n);
+   	vec3 p = rayStart + t*rayDir;
+   	if ( abs(dot(n, p-p0)) &gt; eps ) return -1;
+   	if ( distance(p,p0) &gt; r ) return -1;
+   	return t;
+}
+
+// ellipsoid: (x/a)2 + (y/b)2 + (z/c)2 = 1
+vec3 applyCaps(vec3 rayStart, vec3 rayDir, float tp) {
+   	vec3 pC = rayStart + tp*rayDir;
+   	if ( dot(cylN0, pC-cylP0) &lt; -eps ) {
+   		float tc0 = intersectCap(rayStart, rayDir, cylP0, cylN0, cylR1);
+   		if (tc0 &gt; eps) {
+   			tp = max( tp, tc0 );
+   			pC = rayStart + tp*rayDir;
+   		} else discard;
+   	}
+   	
+   	if ( dot(cylN1, pC-cylP1) &gt;  eps )  {
+   		float tc1 = intersectCap(rayStart, rayDir, cylP1, cylN1, cylR2);
+   		if (tc1 &gt; eps) {
+   			tp = max( tp, tc1 );
+   			pC = rayStart + tp*rayDir;
+   		} else discard;
+   	}
+   	return pC;
+}
+
 vec3 raycastCylinder(vec3 rayStart, vec3 rayDir) {
    	vec3 rayDRad = rayDir - dot(rayDir, cylDir)*cylDir;
    	vec3 rayPRad = rayStart-cylP0 - dot(rayStart-cylP0, cylDir)*cylDir;
@@ -299,14 +330,8 @@ vec3 raycastCylinder(vec3 rayStart, vec3 rayDir) {
    	float B = 2.0*dot(rayDRad, rayPRad);
    	float C = dot(rayPRad, rayPRad) - cylR1*cylR1;
    	vec2 t = solveEq(A, B, C);
-   	
-   	vec3 pC = rayStart + max(t[0],t[1])*rayDir;
-   	if ( dot(cylN0, pC-cylP0) &lt; 0.0 ) discard;
-   	if ( dot(cylN1, pC-cylP1) &gt; 0.0 ) discard;
-   	
-   	norm = pC - cylP0 - dot(pC - cylP0, cylDir)*cylDir;
-   	norm = normalize(norm);
-   	return pC;
+   	float tp = min(t[0],t[1]);
+   	return applyCaps(rayStart, rayDir, tp);
 }
 
 vec3 raycastCone(vec3 rayStart, vec3 rayDir) {
@@ -315,7 +340,8 @@ vec3 raycastCone(vec3 rayStart, vec3 rayDir) {
    	float dR = cylR1-cylR2;
    	float dR2 = dR*dR;
    	
-   	if (abs(dR) &lt; 0.0001) return raycastCylinder(rayStart, rayDir);
+   	if (abs(dR) &lt; eps) return raycastCylinder(rayStart, rayDir);
+   	//return fvObjectPosition;
    	
    	vec3 cylPa = cylP0 + cylDir * cylR1*H/dR;
    	float vrvc = dot(rayDir, cylDir);
@@ -329,28 +355,23 @@ vec3 raycastCone(vec3 rayStart, vec3 rayDir) {
    	float B = 2.0 * (cos2a * dot(rayDRad, rayPRad) - sin2a * vrvc * dpvc);
    	float C = cos2a * dot(rayPRad, rayPRad) - sin2a * dpvc * dpvc;
    	vec2 t = solveEq(A, B, C);
-   	
-   	
-   	vec3 pC = rayStart + max(t[0], t[1])*rayDir;
-   	if ( dot(cylN0, pC-cylP0) &lt; 0.0 ) discard;
-   	if ( dot(cylN1, pC-cylP1) &gt; 0.0 ) discard;
-   	
-   	norm = pC - cylP0 - dot(pC - cylP0, cylDir)*cylDir;
-   	norm = normalize(norm);
-   	return pC;
+   	float tp = min(t[0],t[1]);
+   	return applyCaps(rayStart, rayDir, tp);
 }
 &#13;
 void main( void ) {
 	norm = Normal;
-   	vec3 rayStart = MVPos;
-   	vec3 rayDir = -MVPos;
+   	vec3 rayStart = vec3(0.0);//MVPos;
+   	vec3 rayDir = MVPos;
    	rayDir = normalize(rayDir);
    	
-	vec3 I = fvObjectPosition;
-	I = raycastCone(rayStart, rayDir);&#13;
+	vec3 pC = fvObjectPosition;
+	pC = raycastCone(rayStart, rayDir);
+   	norm = pC - cylP0 - dot(pC - cylP0, cylDir)*cylDir;
+   	norm = normalize(norm);&#13;
 
    vec3  fvNormal         = normalize( norm );&#13;
-   vec3  fvLightDirection = normalize( gl_LightSource[0].position.xyz - I.xyz);
+   vec3  fvLightDirection = normalize( gl_LightSource[0].position.xyz - pC.xyz);
    float fNDotL           = dot( fvNormal, fvLightDirection );&#13;
 &#13;
    vec3  fvReflection     = normalize( ( ( 2.0 * fvNormal ) * fNDotL ) - fvLightDirection );&#13;
@@ -448,9 +469,10 @@ float Sign(in float x) {
     return step(0, x)*2 - 1;
 }
 
-vec3 getOffsets() {
-   vec3 d = OSGCameraPosition - gl_PositionIn[1].xyz;
-   return vec3(Sign(d[0]), Sign(d[1]), Sign(d[2]));
+vec3 perp(vec3 v) {
+    vec3 b = cross(v, vec3(1, 0, 0));
+    if (dot(b, b) &lt; 0.01) b = cross(v, vec3(0, 0, 1));
+    return b;
 }
 &#13;
 void main() {&#13;
@@ -463,37 +485,44 @@ void main() {&#13;
    //cylDir = vec3(mMV * vec4(normalize(p1.xyz - p2.xyz),0.0));
    cylP0 = vec3(mMV * p1);
    cylP1 = vec3(mMV * p2);
-   cylN0 = vec3(mMV * vec4(0.0,1.0,0.0,0.0));
-   cylN1 = vec3(mMV * vec4(0.0,1.0,0.0,0.0));
-   &#13;
-   gl_FrontColor = vec4(0.6, 0.6, 0.3, 1.0);&#13;
-
-   vec3 offs = getOffsets();&#13;
-   vec4 pos[4];
-   float S1x = 0.05*offs.x;
-   float S2x = -0.05*offs.x;
-   float S1y = 0.05*offs.z;
-   float S2y = -0.05*offs.z;&#13;
+   //cylN0 = vec3(mMV * vec4(0.0,1.0,0.0,0.0));
+   //cylN1 = vec3(mMV * vec4(0.0,1.0,0.0,0.0));
+   cylN0 = cylDir;
+   cylN1 = cylDir;&#13;
 &#13;
-   pos[0] = p1+vec4(S1x,0,S1y,0)*tc[0][0];&#13;
-   pos[1] = p2+vec4(S1x,0,S1y,0)*tc[1][0];&#13;
-   pos[2] = p2+vec4(S2x,0,S1y,0)*tc[1][0];&#13;
-   pos[3] = p1+vec4(S2x,0,S1y,0)*tc[0][0];&#13;
+   vec4 pos[4];
+   float S1x = 1.0;
+   float S2x = -1.0;
+   float S1y = 1.0;
+   float S2y = -1.0;
+   
+   vec4 Y = p2-p1;
+   vec4 X = vec4(1.0,0.0,0.0,0.0); // TODO!!!
+   vec4 Z = vec4(0.0,0.0,1.0,0.0);
+   //vec4 X = vec4( normalize(perp(cylDir)) ,0.0);
+   //vec4 Z = vec4( normalize(cross(cylDir, X.xyz)) ,0.0);
+   if ((mMVP * X).z &gt;= 0.0) X = -X;
+   if ((mMVP * Y).z &gt;= 0.0) Y = -Y;
+   if ((mMVP * Z).z &gt;= 0.0) Z = -Z;&#13;
+&#13;
+   pos[0] = p1+X*S1x*cylR1+Z*S1y*cylR1;
+   pos[1] = p2+X*S1x*cylR2+Z*S1y*cylR2;
+   pos[2] = p2+X*S2x*cylR2+Z*S1y*cylR2;
+   pos[3] = p1+X*S2x*cylR1+Z*S1y*cylR1;&#13;
    emitSimpleQuad(pos);&#13;
 &#13;
-   pos[0] = p2+vec4(S1x,0,S1y,0)*tc[1][0];&#13;
-   pos[1] = p1+vec4(S1x,0,S1y,0)*tc[0][0];&#13;
-   pos[2] = p1+vec4(S1x,0,S2y,0)*tc[0][0];&#13;
-   pos[3] = p2+vec4(S1x,0,S2y,0)*tc[1][0];&#13;
+   pos[0] = p2+X*S1x*cylR2+Z*S1y*cylR2;
+   pos[1] = p1+X*S1x*cylR1+Z*S1y*cylR1;
+   pos[2] = p1+X*S1x*cylR1+Z*S2y*cylR1;
+   pos[3] = p2+X*S1x*cylR2+Z*S2y*cylR2;&#13;
    emitSimpleQuad(pos);
    
-   vec4 pc = p1;
-   float R = tc[0][0];
-   if (offs.y &gt; 0) { pc = p2; R = tc[1][0]; }&#13;
-   pos[0] = pc+vec4(S1x,0,S1y,0)*R;&#13;
-   pos[1] = pc+vec4(S2x,0,S1y,0)*R;&#13;
-   pos[2] = pc+vec4(S2x,0,S2y,0)*R;&#13;
-   pos[3] = pc+vec4(S1x,0,S2y,0)*R;&#13;
+   vec4 pm = (p1+p2)*0.5;
+   float R = cylR1;&#13;
+   pos[0] = pm+X*S1x*R+Z*S1y*R+Y*0.5;
+   pos[1] = pm+X*S2x*R+Z*S1y*R+Y*0.5;
+   pos[2] = pm+X*S2x*R+Z*S2y*R+Y*0.5;
+   pos[3] = pm+X*S1x*R+Z*S2y*R+Y*0.5;&#13;
    emitSimpleQuad(pos);&#13;
 }
 

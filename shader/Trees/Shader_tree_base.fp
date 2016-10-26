@@ -25,6 +25,8 @@ in vec3 TexCoord;
 
 vec3 norm;
 
+#define eps 0.0001
+
 vec2 solveEq(float A, float B, float C) {
    	float D = B*B-4.0*A*C;
    	if (D < 0.0) discard; // no solution/intersection
@@ -36,6 +38,35 @@ vec2 solveEq(float A, float B, float C) {
    	return vec2(t1, t2);
 }
 
+float intersectCap(vec3 rayStart, vec3 rayDir, vec3 p0, vec3 n, float r) {
+	float t = dot((p0-rayStart),n)/dot(rayDir,n);
+   	vec3 p = rayStart + t*rayDir;
+   	if ( abs(dot(n, p-p0)) > eps ) return -1;
+   	if ( distance(p,p0) > r ) return -1;
+   	return t;
+}
+
+// ellipsoid: (x/a)2 + (y/b)2 + (z/c)2 = 1
+vec3 applyCaps(vec3 rayStart, vec3 rayDir, float tp) {
+   	vec3 pC = rayStart + tp*rayDir;
+   	if ( dot(cylN0, pC-cylP0) < -eps ) {
+   		float tc0 = intersectCap(rayStart, rayDir, cylP0, cylN0, cylR1);
+   		if (tc0 > eps) {
+   			tp = max( tp, tc0 );
+   			pC = rayStart + tp*rayDir;
+   		} else discard;
+   	}
+   	
+   	if ( dot(cylN1, pC-cylP1) >  eps )  {
+   		float tc1 = intersectCap(rayStart, rayDir, cylP1, cylN1, cylR2);
+   		if (tc1 > eps) {
+   			tp = max( tp, tc1 );
+   			pC = rayStart + tp*rayDir;
+   		} else discard;
+   	}
+   	return pC;
+}
+
 vec3 raycastCylinder(vec3 rayStart, vec3 rayDir) {
    	vec3 rayDRad = rayDir - dot(rayDir, cylDir)*cylDir;
    	vec3 rayPRad = rayStart-cylP0 - dot(rayStart-cylP0, cylDir)*cylDir;
@@ -44,14 +75,8 @@ vec3 raycastCylinder(vec3 rayStart, vec3 rayDir) {
    	float B = 2.0*dot(rayDRad, rayPRad);
    	float C = dot(rayPRad, rayPRad) - cylR1*cylR1;
    	vec2 t = solveEq(A, B, C);
-   	
-   	vec3 pC = rayStart + max(t[0],t[1])*rayDir;
-   	if ( dot(cylN0, pC-cylP0) < 0.0 ) discard;
-   	if ( dot(cylN1, pC-cylP1) > 0.0 ) discard;
-   	
-   	norm = pC - cylP0 - dot(pC - cylP0, cylDir)*cylDir;
-   	norm = normalize(norm);
-   	return pC;
+   	float tp = min(t[0],t[1]);
+   	return applyCaps(rayStart, rayDir, tp);
 }
 
 vec3 raycastCone(vec3 rayStart, vec3 rayDir) {
@@ -60,7 +85,8 @@ vec3 raycastCone(vec3 rayStart, vec3 rayDir) {
    	float dR = cylR1-cylR2;
    	float dR2 = dR*dR;
    	
-   	if (abs(dR) < 0.0001) return raycastCylinder(rayStart, rayDir);
+   	if (abs(dR) < eps) return raycastCylinder(rayStart, rayDir);
+   	//return fvObjectPosition;
    	
    	vec3 cylPa = cylP0 + cylDir * cylR1*H/dR;
    	float vrvc = dot(rayDir, cylDir);
@@ -74,28 +100,23 @@ vec3 raycastCone(vec3 rayStart, vec3 rayDir) {
    	float B = 2.0 * (cos2a * dot(rayDRad, rayPRad) - sin2a * vrvc * dpvc);
    	float C = cos2a * dot(rayPRad, rayPRad) - sin2a * dpvc * dpvc;
    	vec2 t = solveEq(A, B, C);
-   	
-   	
-   	vec3 pC = rayStart + max(t[0], t[1])*rayDir;
-   	if ( dot(cylN0, pC-cylP0) < 0.0 ) discard;
-   	if ( dot(cylN1, pC-cylP1) > 0.0 ) discard;
-   	
-   	norm = pC - cylP0 - dot(pC - cylP0, cylDir)*cylDir;
-   	norm = normalize(norm);
-   	return pC;
+   	float tp = min(t[0],t[1]);
+   	return applyCaps(rayStart, rayDir, tp);
 }
 
 void main( void ) {
 	norm = Normal;
-   	vec3 rayStart = MVPos;
-   	vec3 rayDir = -MVPos;
+   	vec3 rayStart = vec3(0.0);//MVPos;
+   	vec3 rayDir = MVPos;
    	rayDir = normalize(rayDir);
    	
-	vec3 I = fvObjectPosition;
-	I = raycastCone(rayStart, rayDir);
+	vec3 pC = fvObjectPosition;
+	pC = raycastCone(rayStart, rayDir);
+   	norm = pC - cylP0 - dot(pC - cylP0, cylDir)*cylDir;
+   	norm = normalize(norm);
 
    vec3  fvNormal         = normalize( norm );
-   vec3  fvLightDirection = normalize( gl_LightSource[0].position.xyz - I.xyz);
+   vec3  fvLightDirection = normalize( gl_LightSource[0].position.xyz - pC.xyz);
    float fNDotL           = dot( fvNormal, fvLightDirection );
 
    vec3  fvReflection     = normalize( ( ( 2.0 * fvNormal ) * fNDotL ) - fvLightDirection );

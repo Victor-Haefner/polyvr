@@ -68,9 +68,10 @@ float Sign(in float x) {
     return step(0, x)*2 - 1;
 }
 
-vec3 getOffsets() {
-   vec3 d = OSGCameraPosition - gl_PositionIn[1].xyz;
-   return vec3(Sign(d[0]), Sign(d[1]), Sign(d[2]));
+vec3 perp(vec3 v) {
+    vec3 b = cross(v, vec3(1, 0, 0));
+    if (dot(b, b) < 0.01) b = cross(v, vec3(0, 0, 1));
+    return b;
 }
 
 void main() {
@@ -83,37 +84,44 @@ void main() {
    //cylDir = vec3(mMV * vec4(normalize(p1.xyz - p2.xyz),0.0));
    cylP0 = vec3(mMV * p1);
    cylP1 = vec3(mMV * p2);
-   cylN0 = vec3(mMV * vec4(0.0,1.0,0.0,0.0));
-   cylN1 = vec3(mMV * vec4(0.0,1.0,0.0,0.0));
-   
-   gl_FrontColor = vec4(0.6, 0.6, 0.3, 1.0);
+   //cylN0 = vec3(mMV * vec4(0.0,1.0,0.0,0.0));
+   //cylN1 = vec3(mMV * vec4(0.0,1.0,0.0,0.0));
+   cylN0 = cylDir;
+   cylN1 = cylDir;
 
-   vec3 offs = getOffsets();
    vec4 pos[4];
-   float S1x = 0.05*offs.x;
-   float S2x = -0.05*offs.x;
-   float S1y = 0.05*offs.z;
-   float S2y = -0.05*offs.z;
+   float S1x = 1.0;
+   float S2x = -1.0;
+   float S1y = 1.0;
+   float S2y = -1.0;
+   
+   vec4 Y = p2-p1;
+   vec4 X = vec4(1.0,0.0,0.0,0.0); // TODO!!!
+   vec4 Z = vec4(0.0,0.0,1.0,0.0);
+   //vec4 X = vec4( normalize(perp(cylDir)) ,0.0);
+   //vec4 Z = vec4( normalize(cross(cylDir, X.xyz)) ,0.0);
+   if ((mMVP * X).z >= 0.0) X = -X;
+   if ((mMVP * Y).z >= 0.0) Y = -Y;
+   if ((mMVP * Z).z >= 0.0) Z = -Z;
 
-   pos[0] = p1+vec4(S1x,0,S1y,0)*tc[0][0];
-   pos[1] = p2+vec4(S1x,0,S1y,0)*tc[1][0];
-   pos[2] = p2+vec4(S2x,0,S1y,0)*tc[1][0];
-   pos[3] = p1+vec4(S2x,0,S1y,0)*tc[0][0];
+   pos[0] = p1+X*S1x*cylR1+Z*S1y*cylR1;
+   pos[1] = p2+X*S1x*cylR2+Z*S1y*cylR2;
+   pos[2] = p2+X*S2x*cylR2+Z*S1y*cylR2;
+   pos[3] = p1+X*S2x*cylR1+Z*S1y*cylR1;
    emitSimpleQuad(pos);
 
-   pos[0] = p2+vec4(S1x,0,S1y,0)*tc[1][0];
-   pos[1] = p1+vec4(S1x,0,S1y,0)*tc[0][0];
-   pos[2] = p1+vec4(S1x,0,S2y,0)*tc[0][0];
-   pos[3] = p2+vec4(S1x,0,S2y,0)*tc[1][0];
+   pos[0] = p2+X*S1x*cylR2+Z*S1y*cylR2;
+   pos[1] = p1+X*S1x*cylR1+Z*S1y*cylR1;
+   pos[2] = p1+X*S1x*cylR1+Z*S2y*cylR1;
+   pos[3] = p2+X*S1x*cylR2+Z*S2y*cylR2;
    emitSimpleQuad(pos);
    
-   vec4 pc = p1;
-   float R = tc[0][0];
-   if (offs.y > 0) { pc = p2; R = tc[1][0]; }
-   pos[0] = pc+vec4(S1x,0,S1y,0)*R;
-   pos[1] = pc+vec4(S2x,0,S1y,0)*R;
-   pos[2] = pc+vec4(S2x,0,S2y,0)*R;
-   pos[3] = pc+vec4(S1x,0,S2y,0)*R;
+   vec4 pm = (p1+p2)*0.5;
+   float R = cylR1;
+   pos[0] = pm+X*S1x*R+Z*S1y*R+Y*0.5;
+   pos[1] = pm+X*S2x*R+Z*S1y*R+Y*0.5;
+   pos[2] = pm+X*S2x*R+Z*S2y*R+Y*0.5;
+   pos[3] = pm+X*S1x*R+Z*S2y*R+Y*0.5;
    emitSimpleQuad(pos);
 }
 
