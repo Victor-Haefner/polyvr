@@ -65,6 +65,7 @@ PyObject* VRPyTypeCaster::cast(OSG::VRDevicePtr dev) {
     if (type == "mouse") return VRPyMouse::fromSharedPtr( static_pointer_cast<OSG::VRMouse>(dev) );
     else if (type == "mobile") return VRPyMobile::fromSharedPtr( static_pointer_cast<OSG::VRMobile>(dev) );
     else if (type == "haptic") return VRPyHaptic::fromSharedPtr( static_pointer_cast<OSG::VRHaptic>(dev) );
+    else if (type == "keyboard") return VRPyDevice::fromSharedPtr( dev );
     cout << "\nERROR in VRPyTypeCaster::cast device: " << type << " not handled!\n";
     return VRPyDevice::fromSharedPtr(dev);
 }
