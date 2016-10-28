@@ -106,7 +106,7 @@ vec3 raycastCone(vec3 rayStart, vec3 rayDir) {
 
 void main( void ) {
 	norm = Normal;
-   	vec3 rayStart = vec3(0.0);//MVPos;
+   	vec3 rayStart = vec3(0.0);
    	vec3 rayDir = MVPos;
    	rayDir = normalize(rayDir);
    	
@@ -115,26 +115,23 @@ void main( void ) {
    	norm = pC - cylP0 - dot(pC - cylP0, cylDir)*cylDir;
    	norm = normalize(norm);
 
-   vec3  fvNormal         = normalize( norm );
-   vec3  fvLightDirection = normalize( gl_LightSource[0].position.xyz - pC.xyz);
-   float fNDotL           = dot( fvNormal, fvLightDirection );
+	mat4 miMV = inverse( gl_ModelViewMatrix ); // TODO: avoid computing inverse here!
+	vec3 tc = (miMV*vec4(pC, 1.0)).xyz*10;
+	tc.y *= 0.25;
 
-   vec3  fvReflection     = normalize( ( ( 2.0 * fvNormal ) * fNDotL ) - fvLightDirection );
-   vec3  fvViewDirection  = normalize( ViewDirection );
-   float fRDotV           = max( 0.0, dot( fvReflection, fvViewDirection ) );
+	vec3  fvNormal         = normalize( norm );
+	vec3  fvLightDirection = normalize( gl_LightSource[0].position.xyz - pC.xyz);
+	float fNDotL           = dot( fvNormal, fvLightDirection );
+	vec3  fvReflection     = normalize( ( ( 2.0 * fvNormal ) * fNDotL ) - fvLightDirection );
+	vec3  fvViewDirection  = normalize( ViewDirection );
+	float fRDotV           = max( 0.0, dot( fvReflection, fvViewDirection ) );
+	vec4  fvBaseColor      = texture(tex, tc);
+	vec4  fvTotalAmbient   = fvAmbient * fvBaseColor;
+	vec4  fvTotalDiffuse   = fvDiffuse * fNDotL * fvBaseColor;
+	vec4  fvTotalSpecular  = fvSpecular * ( pow( fRDotV, fSpecularPower ) );
+	gl_FragColor = fvTotalAmbient + fvTotalDiffuse + fvTotalSpecular;
 
-   vec4  fvBaseColor      = texture(tex, TexCoord*10);
-
-   vec4  fvTotalAmbient   = fvAmbient * fvBaseColor;
-   vec4  fvTotalDiffuse   = fvDiffuse * fNDotL * fvBaseColor;
-   vec4  fvTotalSpecular  = fvSpecular * ( pow( fRDotV, fSpecularPower ) );
-
-   gl_FragColor = fvTotalAmbient + fvTotalDiffuse + fvTotalSpecular;
-   //gl_FragColor = vec4(fvObjectPosition.xyz, 1.0);
-   //gl_FragColor = vec4(10*cylR1, 10*cylR2, 0.0, 1.0);
-   //gl_FragColor = vec4(abs(cylDir.xyz), 1.0);
-   //gl_FragColor = vec4(abs(cylP0.xyz), 1.0);
-   //gl_FragColor = vec4(abs(I.xyz), 1.0);
+	// TODO: set depth buffer
 }
 
 

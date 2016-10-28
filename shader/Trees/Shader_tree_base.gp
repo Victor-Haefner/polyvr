@@ -2,7 +2,7 @@
 #version 400 compatibility
 #extension GL_EXT_geometry_shader4 : enable
 layout (lines) in;
-layout (triangle_strip, max_vertices = 24) out;
+layout (triangle_strip, max_vertices = 12) out;
 in vec2 tc[];
 
 //Phong
@@ -11,6 +11,7 @@ out vec3 fvObjectPosition;
 out vec3 MVPos;
 out vec3 Normal;
 out vec3 TexCoord;
+out vec3 tmp;
 
 out float cylR1;
 out float cylR2;
@@ -26,46 +27,44 @@ uniform vec3 OSGCameraPosition;
 #define mMV gl_ModelViewMatrix
 #define mP gl_ProjectionMatrix
 
-//PHONG-----------------
-void addPhongVars(vec4 p) {
-   MVPos = vec3(mMV*p);
-   fvObjectPosition = vec3(mMVP*p);
-   ViewDirection = -fvObjectPosition.xyz;
-   ViewDirection = normalize(ViewDirection);
-   
-   /*vec4 p1 = gl_PositionIn[0];
-   vec4 p2 = gl_PositionIn[1];
-   vec3 d = normalize(p2.xyz - p1.xyz);
-   TexCoord = p.xyz + 0.5 * d / (1.0+10*p.xyz);*/
-   
-   TexCoord = p.xyz;
-   TexCoord.y *= 0.15;
+vec4 crns[8];
+vec4 crnsMV[8];
+vec4 crnsMVP[8];
+
+void emit(int i) {
+	gl_Position = crnsMVP[i];
+	MVPos = crnsMV[i].xyz;
+	fvObjectPosition = crnsMVP[i].xyz;
+	ViewDirection = -fvObjectPosition.xyz;
+	ViewDirection = normalize(ViewDirection);
+
+	/*vec4 p1 = gl_PositionIn[0];
+	vec4 p2 = gl_PositionIn[1];
+	vec3 d = normalize(p2.xyz - p1.xyz);
+	TexCoord = p.xyz + 0.5 * d / (1.0+10*p.xyz);*/
+
+	TexCoord = crns[i].xyz;
+	TexCoord.y *= 0.15; // TODO: looks ugly!
+	EmitVertex();
 }
 
-void emitTriangle(vec4 p1, vec4 p2, vec4 p3) {
-   gl_Position = mMVP*p1;
-   addPhongVars(p1);
-   EmitVertex();
-   gl_Position = mMVP*p2;
-   addPhongVars(p2);
-   EmitVertex();
-   gl_Position = mMVP*p3;
-   addPhongVars(p3);
-   EmitVertex();
-   EndPrimitive();
-}
+void emitQuad(int i1, int i2, int i3, int i4) {
+	vec4 mvp1 = crnsMVP[i1];
+	vec4 mvp2 = crnsMVP[i2];
+	vec4 mvp3 = crnsMVP[i3];
+	vec4 mvp4 = crnsMVP[i4];
+	
+	// check visibility
+	vec4 c = (mvp1+mvp3)*0.5;
+	vec3 i = normalize( vec3(mvp2.xyz - mvp1.xyz) );
+    vec3 j = normalize( vec3(mvp4.xyz - mvp1.xyz) );
+    if ( dot(cross(i, j),c.xyz) < 0.0 ) return;
 
-void emitQuad(vec4 p1, vec4 p2, vec4 p3, vec4 p4) {
-   emitTriangle(p1, p2, p4);
-   emitTriangle(p2, p4, p3);
-}
-
-void emitSimpleQuad(vec4 pos[4]) {
-   emitQuad(pos[0], pos[1], pos[2], pos[3]);
-}
-
-float Sign(in float x) {
-    return step(0, x)*2 - 1;
+	emit(i1);
+	emit(i2);
+	emit(i4);
+	emit(i3);
+	EndPrimitive();
 }
 
 vec3 perp(vec3 v) {
@@ -77,52 +76,41 @@ vec3 perp(vec3 v) {
 void main() {
    vec4 p1 = gl_PositionIn[0];
    vec4 p2 = gl_PositionIn[1];
+   vec4 pm = (p1+p2)*0.5;
+   vec3 dir = p2.xyz - p1.xyz;
    
-   cylR1 = tc[0][0]*0.05;
-   cylR2 = tc[1][0]*0.05;
-   cylDir = normalize(vec3(mMV * vec4(p2.xyz - p1.xyz,0.0)));
-   //cylDir = vec3(mMV * vec4(normalize(p1.xyz - p2.xyz),0.0));
+   // TODO: try to make the segment bigger.
+   
+   cylR1 = tc[0][0]*0.1;
+   cylR2 = tc[1][0]*0.1;
+   cylDir = normalize(vec3(mMV * vec4(dir,0.0)));
    cylP0 = vec3(mMV * p1);
    cylP1 = vec3(mMV * p2);
-   //cylN0 = vec3(mMV * vec4(0.0,1.0,0.0,0.0));
-   //cylN1 = vec3(mMV * vec4(0.0,1.0,0.0,0.0));
    cylN0 = cylDir;
    cylN1 = cylDir;
-
-   vec4 pos[4];
-   float S1x = 1.0;
-   float S2x = -1.0;
-   float S1y = 1.0;
-   float S2y = -1.0;
+     
+   vec4 Y = vec4(dir*0.5, 0.0);
+   vec4 X = vec4( normalize(perp(dir)) ,0.0);
+   vec4 Z = vec4( normalize(cross(dir, X.xyz)) ,0.0);
+ 
+   crns[0] = pm - X*cylR1 - Y - Z*cylR1;
+   crns[1] = pm + X*cylR1 - Y - Z*cylR1;
+   crns[2] = pm + X*cylR1 - Y + Z*cylR1;
+   crns[3] = pm - X*cylR1 - Y + Z*cylR1;
+   crns[4] = pm - X*cylR1 + Y - Z*cylR1;
+   crns[5] = pm + X*cylR1 + Y - Z*cylR1;
+   crns[6] = pm + X*cylR1 + Y + Z*cylR1;
+   crns[7] = pm - X*cylR1 + Y + Z*cylR1;
    
-   vec4 Y = p2-p1;
-   vec4 X = vec4(1.0,0.0,0.0,0.0); // TODO!!!
-   vec4 Z = vec4(0.0,0.0,1.0,0.0);
-   //vec4 X = vec4( normalize(perp(cylDir)) ,0.0);
-   //vec4 Z = vec4( normalize(cross(cylDir, X.xyz)) ,0.0);
-   if ((mMVP * X).z >= 0.0) X = -X;
-   if ((mMVP * Y).z >= 0.0) Y = -Y;
-   if ((mMVP * Z).z >= 0.0) Z = -Z;
-
-   pos[0] = p1+X*S1x*cylR1+Z*S1y*cylR1;
-   pos[1] = p2+X*S1x*cylR2+Z*S1y*cylR2;
-   pos[2] = p2+X*S2x*cylR2+Z*S1y*cylR2;
-   pos[3] = p1+X*S2x*cylR1+Z*S1y*cylR1;
-   emitSimpleQuad(pos);
-
-   pos[0] = p2+X*S1x*cylR2+Z*S1y*cylR2;
-   pos[1] = p1+X*S1x*cylR1+Z*S1y*cylR1;
-   pos[2] = p1+X*S1x*cylR1+Z*S2y*cylR1;
-   pos[3] = p2+X*S1x*cylR2+Z*S2y*cylR2;
-   emitSimpleQuad(pos);
+   for (int i=0; i<8; i++) crnsMV[i] = mMV * crns[i];
+   for (int i=0; i<8; i++) crnsMVP[i] = mP * crnsMV[i];
    
-   vec4 pm = (p1+p2)*0.5;
-   float R = cylR1;
-   pos[0] = pm+X*S1x*R+Z*S1y*R+Y*0.5;
-   pos[1] = pm+X*S2x*R+Z*S1y*R+Y*0.5;
-   pos[2] = pm+X*S2x*R+Z*S2y*R+Y*0.5;
-   pos[3] = pm+X*S1x*R+Z*S2y*R+Y*0.5;
-   emitSimpleQuad(pos);
+   emitQuad(3, 2, 1, 0); // bottom
+   emitQuad(4, 5, 6, 7); // top
+   emitQuad(0, 1, 5, 4); // sides
+   emitQuad(1, 2, 6, 5);
+   emitQuad(2, 3, 7, 6);
+   emitQuad(3, 0, 4, 7);
 }
 
 

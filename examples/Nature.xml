@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="234">
+<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="495">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1" type="Light" unique="1" visible="1">
-        <Object accept_root="1" aspect="1" at="0 1 0" at_dir="0" base_name="Default" far="250" fov="1.0472" from="-3.61531 1.58307 -0.845586" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0 1 0" at_dir="0" base_name="Default" far="250" fov="1.0472" from="2.88263 3.19597 3.93626" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
             <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
           </Object>
@@ -31,7 +31,6 @@
 	VR.tree.setPatchVertices(2)
 	types = [ 'GL_PATCHES' for t in VR.tree.getTypes() ]
 	VR.tree.setTypes(types)
-	print VR.tree.getTypes()
 	m = VR.Material('treemat123')
 	VR.tree.setMaterial(m)
 	
@@ -361,7 +360,7 @@ vec3 raycastCone(vec3 rayStart, vec3 rayDir) {
 &#13;
 void main( void ) {
 	norm = Normal;
-   	vec3 rayStart = vec3(0.0);//MVPos;
+   	vec3 rayStart = vec3(0.0);
    	vec3 rayDir = MVPos;
    	rayDir = normalize(rayDir);
    	
@@ -370,26 +369,23 @@ void main( void ) {
    	norm = pC - cylP0 - dot(pC - cylP0, cylDir)*cylDir;
    	norm = normalize(norm);&#13;
 
-   vec3  fvNormal         = normalize( norm );&#13;
-   vec3  fvLightDirection = normalize( gl_LightSource[0].position.xyz - pC.xyz);
-   float fNDotL           = dot( fvNormal, fvLightDirection );&#13;
-&#13;
-   vec3  fvReflection     = normalize( ( ( 2.0 * fvNormal ) * fNDotL ) - fvLightDirection );&#13;
-   vec3  fvViewDirection  = normalize( ViewDirection );&#13;
-   float fRDotV           = max( 0.0, dot( fvReflection, fvViewDirection ) );&#13;
-&#13;
-   vec4  fvBaseColor      = texture(tex, TexCoord*10);&#13;
-&#13;
-   vec4  fvTotalAmbient   = fvAmbient * fvBaseColor;&#13;
-   vec4  fvTotalDiffuse   = fvDiffuse * fNDotL * fvBaseColor;&#13;
-   vec4  fvTotalSpecular  = fvSpecular * ( pow( fRDotV, fSpecularPower ) );&#13;
-&#13;
-   gl_FragColor = fvTotalAmbient + fvTotalDiffuse + fvTotalSpecular;&#13;
-   //gl_FragColor = vec4(fvObjectPosition.xyz, 1.0);&#13;
-   //gl_FragColor = vec4(10*cylR1, 10*cylR2, 0.0, 1.0);
-   //gl_FragColor = vec4(abs(cylDir.xyz), 1.0);
-   //gl_FragColor = vec4(abs(cylP0.xyz), 1.0);
-   //gl_FragColor = vec4(abs(I.xyz), 1.0);&#13;
+	mat4 miMV = inverse( gl_ModelViewMatrix ); // TODO: avoid computing inverse here!
+	vec3 tc = (miMV*vec4(pC, 1.0)).xyz*10;
+	tc.y *= 0.25;
+
+	vec3  fvNormal         = normalize( norm );&#13;
+	vec3  fvLightDirection = normalize( gl_LightSource[0].position.xyz - pC.xyz);
+	float fNDotL           = dot( fvNormal, fvLightDirection );&#13;
+	vec3  fvReflection     = normalize( ( ( 2.0 * fvNormal ) * fNDotL ) - fvLightDirection );&#13;
+	vec3  fvViewDirection  = normalize( ViewDirection );&#13;
+	float fRDotV           = max( 0.0, dot( fvReflection, fvViewDirection ) );&#13;
+	vec4  fvBaseColor      = texture(tex, tc);&#13;
+	vec4  fvTotalAmbient   = fvAmbient * fvBaseColor;&#13;
+	vec4  fvTotalDiffuse   = fvDiffuse * fNDotL * fvBaseColor;&#13;
+	vec4  fvTotalSpecular  = fvSpecular * ( pow( fRDotV, fSpecularPower ) );&#13;
+	gl_FragColor = fvTotalAmbient + fvTotalDiffuse + fvTotalSpecular;
+
+	// TODO: set depth buffer&#13;
 }
 
 
@@ -403,7 +399,7 @@ void main( void ) {
 #version 400 compatibility&#13;
 #extension GL_EXT_geometry_shader4 : enable&#13;
 layout (lines) in;&#13;
-layout (triangle_strip, max_vertices = 24) out;&#13;
+layout (triangle_strip, max_vertices = 12) out;&#13;
 in vec2 tc[];&#13;
 &#13;
 //Phong&#13;
@@ -412,6 +408,7 @@ out vec3 fvObjectPosition;
 out vec3 MVPos;
 out vec3 Normal;
 out vec3 TexCoord;
+out vec3 tmp;
 
 out float cylR1;
 out float cylR2;
@@ -426,47 +423,45 @@ uniform vec3 OSGCameraPosition;
 #define mMVP gl_ModelViewProjectionMatrix
 #define mMV gl_ModelViewMatrix
 #define mP gl_ProjectionMatrix&#13;
+
+vec4 crns[8];
+vec4 crnsMV[8];
+vec4 crnsMVP[8];
 &#13;
-//PHONG-----------------&#13;
-void addPhongVars(vec4 p) {&#13;
-   MVPos = vec3(mMV*p);
-   fvObjectPosition = vec3(mMVP*p);&#13;
-   ViewDirection = -fvObjectPosition.xyz;
-   ViewDirection = normalize(ViewDirection);
-   &#13;
-   /*vec4 p1 = gl_PositionIn[0];&#13;
-   vec4 p2 = gl_PositionIn[1];
-   vec3 d = normalize(p2.xyz - p1.xyz);
-   TexCoord = p.xyz + 0.5 * d / (1.0+10*p.xyz);*/
-   
-   TexCoord = p.xyz;
-   TexCoord.y *= 0.15;&#13;
-}
+void emit(int i) {&#13;
+	gl_Position = crnsMVP[i];&#13;
+	MVPos = crnsMV[i].xyz;
+	fvObjectPosition = crnsMVP[i].xyz;&#13;
+	ViewDirection = -fvObjectPosition.xyz;
+	ViewDirection = normalize(ViewDirection);
 &#13;
-void emitTriangle(vec4 p1, vec4 p2, vec4 p3) {&#13;
-   gl_Position = mMVP*p1;&#13;
-   addPhongVars(p1);&#13;
-   EmitVertex();&#13;
-   gl_Position = mMVP*p2;&#13;
-   addPhongVars(p2);&#13;
-   EmitVertex();&#13;
-   gl_Position = mMVP*p3;&#13;
-   addPhongVars(p3);&#13;
-   EmitVertex();&#13;
-   EndPrimitive();&#13;
+	/*vec4 p1 = gl_PositionIn[0];&#13;
+	vec4 p2 = gl_PositionIn[1];
+	vec3 d = normalize(p2.xyz - p1.xyz);
+	TexCoord = p.xyz + 0.5 * d / (1.0+10*p.xyz);*/
+
+	TexCoord = crns[i].xyz;
+	TexCoord.y *= 0.15; // TODO: looks ugly!&#13;
+	EmitVertex();&#13;
 }&#13;
 &#13;
-void emitQuad(vec4 p1, vec4 p2, vec4 p3, vec4 p4) {&#13;
-   emitTriangle(p1, p2, p4);&#13;
-   emitTriangle(p2, p4, p3);&#13;
-}&#13;
+void emitQuad(int i1, int i2, int i3, int i4) {&#13;
+	vec4 mvp1 = crnsMVP[i1];
+	vec4 mvp2 = crnsMVP[i2];
+	vec4 mvp3 = crnsMVP[i3];
+	vec4 mvp4 = crnsMVP[i4];
+	
+	// check visibility
+	vec4 c = (mvp1+mvp3)*0.5;
+	vec3 i = normalize( vec3(mvp2.xyz - mvp1.xyz) );
+    vec3 j = normalize( vec3(mvp4.xyz - mvp1.xyz) );
+    if ( dot(cross(i, j),c.xyz) &lt; 0.0 ) return;
 &#13;
-void emitSimpleQuad(vec4 pos[4]) {&#13;
-   emitQuad(pos[0], pos[1], pos[2], pos[3]);&#13;
-}
-&#13;
-float Sign(in float x) {
-    return step(0, x)*2 - 1;
+	emit(i1);
+	emit(i2);
+	emit(i4);
+	emit(i3);&#13;
+	EndPrimitive();&#13;
 }
 
 vec3 perp(vec3 v) {
@@ -478,52 +473,41 @@ vec3 perp(vec3 v) {
 void main() {&#13;
    vec4 p1 = gl_PositionIn[0];&#13;
    vec4 p2 = gl_PositionIn[1];
+   vec4 pm = (p1+p2)*0.5;
+   vec3 dir = p2.xyz - p1.xyz;
    
-   cylR1 = tc[0][0]*0.05;
-   cylR2 = tc[1][0]*0.05;
-   cylDir = normalize(vec3(mMV * vec4(p2.xyz - p1.xyz,0.0)));
-   //cylDir = vec3(mMV * vec4(normalize(p1.xyz - p2.xyz),0.0));
+   // TODO: try to make the segment bigger.
+   
+   cylR1 = tc[0][0]*0.1;
+   cylR2 = tc[1][0]*0.1;
+   cylDir = normalize(vec3(mMV * vec4(dir,0.0)));
    cylP0 = vec3(mMV * p1);
    cylP1 = vec3(mMV * p2);
-   //cylN0 = vec3(mMV * vec4(0.0,1.0,0.0,0.0));
-   //cylN1 = vec3(mMV * vec4(0.0,1.0,0.0,0.0));
    cylN0 = cylDir;
-   cylN1 = cylDir;&#13;
-&#13;
-   vec4 pos[4];
-   float S1x = 1.0;
-   float S2x = -1.0;
-   float S1y = 1.0;
-   float S2y = -1.0;
+   cylN1 = cylDir;
+     
+   vec4 Y = vec4(dir*0.5, 0.0);
+   vec4 X = vec4( normalize(perp(dir)) ,0.0);
+   vec4 Z = vec4( normalize(cross(dir, X.xyz)) ,0.0);&#13;
+ 
+   crns[0] = pm - X*cylR1 - Y - Z*cylR1;
+   crns[1] = pm + X*cylR1 - Y - Z*cylR1;
+   crns[2] = pm + X*cylR1 - Y + Z*cylR1;
+   crns[3] = pm - X*cylR1 - Y + Z*cylR1;
+   crns[4] = pm - X*cylR1 + Y - Z*cylR1;
+   crns[5] = pm + X*cylR1 + Y - Z*cylR1;
+   crns[6] = pm + X*cylR1 + Y + Z*cylR1;
+   crns[7] = pm - X*cylR1 + Y + Z*cylR1;
    
-   vec4 Y = p2-p1;
-   vec4 X = vec4(1.0,0.0,0.0,0.0); // TODO!!!
-   vec4 Z = vec4(0.0,0.0,1.0,0.0);
-   //vec4 X = vec4( normalize(perp(cylDir)) ,0.0);
-   //vec4 Z = vec4( normalize(cross(cylDir, X.xyz)) ,0.0);
-   if ((mMVP * X).z &gt;= 0.0) X = -X;
-   if ((mMVP * Y).z &gt;= 0.0) Y = -Y;
-   if ((mMVP * Z).z &gt;= 0.0) Z = -Z;&#13;
-&#13;
-   pos[0] = p1+X*S1x*cylR1+Z*S1y*cylR1;
-   pos[1] = p2+X*S1x*cylR2+Z*S1y*cylR2;
-   pos[2] = p2+X*S2x*cylR2+Z*S1y*cylR2;
-   pos[3] = p1+X*S2x*cylR1+Z*S1y*cylR1;&#13;
-   emitSimpleQuad(pos);&#13;
-&#13;
-   pos[0] = p2+X*S1x*cylR2+Z*S1y*cylR2;
-   pos[1] = p1+X*S1x*cylR1+Z*S1y*cylR1;
-   pos[2] = p1+X*S1x*cylR1+Z*S2y*cylR1;
-   pos[3] = p2+X*S1x*cylR2+Z*S2y*cylR2;&#13;
-   emitSimpleQuad(pos);
-   
-   vec4 pm = (p1+p2)*0.5;
-   float R = cylR1;&#13;
-   pos[0] = pm+X*S1x*R+Z*S1y*R+Y*0.5;
-   pos[1] = pm+X*S2x*R+Z*S1y*R+Y*0.5;
-   pos[2] = pm+X*S2x*R+Z*S2y*R+Y*0.5;
-   pos[3] = pm+X*S1x*R+Z*S2y*R+Y*0.5;&#13;
-   emitSimpleQuad(pos);&#13;
+   for (int i=0; i&lt;8; i++) crnsMV[i] = mMV * crns[i];
+   for (int i=0; i&lt;8; i++) crnsMVP[i] = mP * crnsMV[i];
+   &#13;
+   emitQuad(3, 2, 1, 0); // bottom
+   emitQuad(4, 5, 6, 7); // top
+   emitQuad(0, 1, 5, 4); // sides
+   emitQuad(1, 2, 6, 5);
+   emitQuad(2, 3, 7, 6);
+   emitQuad(3, 0, 4, 7);&#13;
 }
 
 
