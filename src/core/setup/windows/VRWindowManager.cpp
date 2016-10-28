@@ -118,13 +118,16 @@ VRWindowPtr VRWindowManager::addMultiWindow(string name) {
 VRWindowPtr VRWindowManager::addGtkWindow(string name, string glarea) {
     cout << " add Gtk window " << name << endl;
     Gtk::DrawingArea* drawArea = 0;
-    VRGuiBuilder()->get_widget(glarea, drawArea);
+    VRGuiBuilder()->get_widget(glarea, drawArea); // TODO: create new glarea, add flag to editor area window!
     VRGtkWindowPtr win = VRGtkWindow::create(drawArea);
+    editorWindow = win;
     win->setName(name);
     win->setAction(ract);
     windows[win->getName()] = win;
     return win;
 }
+
+VRGtkWindowPtr VRWindowManager::getEditorWindow() { return editorWindow; }
 
 void VRWindowManager::pauseRendering(bool b) { rendering_paused = b; }
 

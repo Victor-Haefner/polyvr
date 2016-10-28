@@ -42,6 +42,8 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
 
         VRNetworkPtr network;
 
+        void showStats(bool b);
+
         void parseSetup(xmlpp::Element* setup);
 
         void processOptions();

@@ -15,6 +15,7 @@ class VRWindow;
 class VRWindowManager {
     private:
         map<string, VRWindowPtr> windows;
+        VRGtkWindowPtr editorWindow;
         RenderActionRefPtr ract;
         bool rendering_paused = false;
 
@@ -44,6 +45,8 @@ class VRWindowManager {
         void pauseRendering(bool b);
         RenderActionRefPtr getRenderAction();
         void updateWindows();
+
+        VRGtkWindowPtr getEditorWindow();
 
         void save(xmlpp::Element* node);
         void load(xmlpp::Element* node);

@@ -19,6 +19,7 @@
 #include <iostream>
 //#include <boost/locale.hpp>
 #include "core/scene/VRSceneManager.h"
+#include "core/setup/windows/VRGtkWindow.h"
 #include "core/setup/windows/VRView.h"
 #include "core/utils/VRInternalMonitor.h"
 #include "core/utils/VRVisualLayer.h"
@@ -235,11 +236,14 @@ bool VRGuiBits::toggleFullscreen(GdkEventKey* k) {
 
 bool VRGuiBits::toggleStereo(GdkEventKey* k) {
     if (k->keyval != 65479) return false;
-    VRViewPtr v = VRSetup::getCurrent()->getView(0);
-    if (v == 0) return false;
 
-    bool b = v->isStereo();
-    v->setStereo(!b);
+    auto win = VRSetup::getCurrent()->getEditorWindow();
+    for (auto v : win->getViews()) {
+        if (v == 0) continue;
+        bool b = v->isStereo();
+        v->setStereo(!b);
+    }
+
     return true;
 }
 

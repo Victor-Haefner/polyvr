@@ -4,6 +4,7 @@
 #include "windows/VRWindow.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
+#include "core/setup/windows/VRGtkWindow.h"
 #include "core/utils/toString.h"
 #include "core/utils/VROptions.h"
 #include "core/utils/VRVisualLayer.h"
@@ -43,7 +44,7 @@ VRSetup::VRSetup(string name) {
     setup_layer = VRVisualLayer::getLayer("Setup", "setup.png",1);
     stats_layer = VRVisualLayer::getLayer("Statistics", "stats.png",1);
     layer_setup_toggle = VRFunction<bool>::create("showSetup", boost::bind(&VRSetup::showSetup, this, _1) );
-    layer_stats_toggle = VRFunction<bool>::create("showStats", boost::bind(&VRViewManager::showViewStats, this, 0, _1) );
+    layer_stats_toggle = VRFunction<bool>::create("showStats", boost::bind(&VRSetup::showStats, this, _1) );
     setup_layer->setCallback( layer_setup_toggle );
     stats_layer->setCallback( layer_stats_toggle );
 
@@ -57,6 +58,11 @@ VRSetup::~VRSetup() {
 VRSetupPtr VRSetup::create(string name) { return VRSetupPtr(new VRSetup(name)); }
 
 VRSetupPtr VRSetup::getCurrent() { return VRSetupManager::get()->getCurrent(); }
+
+void VRSetup::showStats(bool b) {
+    auto w = getEditorWindow();
+    for (auto v : w->getViews()) v->showStats(b);
+}
 
 /*void VRSetup::addScript(string name) { scripts[name] = VRScript::create(name); }
 VRScriptPtr VRSetup::getScript(string name) { return scripts[name]; }
