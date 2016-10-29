@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="495">
+<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="355">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
-      <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1" type="Light" unique="1" visible="1">
-        <Object accept_root="1" aspect="1" at="0 1 0" at_dir="0" base_name="Default" far="250" fov="1.0472" from="2.88263 3.19597 3.93626" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
-          <Object at="0 0 -1" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
-            <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
-          </Object>
+      <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1" type="Light" unique="1" visible="1">
+        <Object at="-0.5 -1 -1" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
+          <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
+        </Object>
+        <Object accept_root="1" aspect="1" at="0 1 0" at_dir="0" base_name="Default" far="250" fov="1.0472" from="-2.68659 1.58602 4.19801" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
           <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
       </Object>
@@ -41,8 +41,7 @@
 	m.setTessEvaluationProgram('shdr_te')
 	m.setGeometryProgram('shrd_geo')
 	#m.setGeometryProgram('shdr_s_g')
-	
-	m.enableShaderParameter('OSGCameraPosition')	
+		
 	m.setWireFrame(0)
 	m.setLineWidth(3)
 	
@@ -254,10 +253,10 @@ void main() {
       <core>
 #version 400 compatibility
 
-vec4 fvAmbient  = vec4(0.36, 0.36, 0.36, 1.0);&#13;
+vec4 fvAmbient  = vec4(0.1, 0.1, 0.1, 1.0);&#13;
 //vec4 fvSpecular = vec4(0.7,  0.7,  0.7,  1.0);&#13;
 vec4 fvSpecular = vec4(0.3,  0.3,  0.3,  1.0);&#13;
-vec4 fvDiffuse  = vec4(0.5,  0.5,  0.5,  1.0);&#13;
+vec4 fvDiffuse  = vec4(0.8,  0.8,  0.8,  1.0);&#13;
 //float fSpecularPower = 25.0;&#13;
 float fSpecularPower = 10.0;&#13;
 &#13;
@@ -270,16 +269,19 @@ in vec3 cylP0;
 in vec3 cylP1;
 in vec3 cylN0;
 in vec3 cylN1;
+in vec3 dir;
 &#13;
 in vec3 ViewDirection;&#13;
 in vec3 fvObjectPosition;
 in vec3 MVPos;
 in vec3 Normal;
-in vec3 TexCoord;
 
 vec3 norm;
+vec3 position;
+vec3 tc;
 
 #define eps 0.0001
+#define mP gl_ProjectionMatrix
 
 vec2 solveEq(float A, float B, float C) {
    	float D = B*B-4.0*A*C;
@@ -357,24 +359,11 @@ vec3 raycastCone(vec3 rayStart, vec3 rayDir) {
    	float tp = min(t[0],t[1]);
    	return applyCaps(rayStart, rayDir, tp);
 }
-&#13;
-void main( void ) {
-	norm = Normal;
-   	vec3 rayStart = vec3(0.0);
-   	vec3 rayDir = MVPos;
-   	rayDir = normalize(rayDir);
-   	
-	vec3 pC = fvObjectPosition;
-	pC = raycastCone(rayStart, rayDir);
-   	norm = pC - cylP0 - dot(pC - cylP0, cylDir)*cylDir;
-   	norm = normalize(norm);&#13;
 
-	mat4 miMV = inverse( gl_ModelViewMatrix ); // TODO: avoid computing inverse here!
-	vec3 tc = (miMV*vec4(pC, 1.0)).xyz*10;
-	tc.y *= 0.25;
-
+void applyPhong() {
+	vec4 light = /*gl_ModelViewMatrix */ gl_LightSource[0].position;
 	vec3  fvNormal         = normalize( norm );&#13;
-	vec3  fvLightDirection = normalize( gl_LightSource[0].position.xyz - pC.xyz);
+	vec3  fvLightDirection = normalize( light.xyz - position.xyz);
 	float fNDotL           = dot( fvNormal, fvLightDirection );&#13;
 	vec3  fvReflection     = normalize( ( ( 2.0 * fvNormal ) * fNDotL ) - fvLightDirection );&#13;
 	vec3  fvViewDirection  = normalize( ViewDirection );&#13;
@@ -382,10 +371,54 @@ void main( void ) {
 	vec4  fvBaseColor      = texture(tex, tc);&#13;
 	vec4  fvTotalAmbient   = fvAmbient * fvBaseColor;&#13;
 	vec4  fvTotalDiffuse   = fvDiffuse * fNDotL * fvBaseColor;&#13;
-	vec4  fvTotalSpecular  = fvSpecular * ( pow( fRDotV, fSpecularPower ) );&#13;
-	gl_FragColor = fvTotalAmbient + fvTotalDiffuse + fvTotalSpecular;
+	//vec4  fvTotalSpecular  = fvSpecular * ( pow( fRDotV, fSpecularPower ) );&#13;
+	gl_FragColor = fvTotalAmbient + fvTotalDiffuse;// + fvTotalSpecular;
+	//gl_FragColor = vec4(light.xyz, 1.0);
+}
 
-	// TODO: set depth buffer&#13;
+const vec2 size = vec2(0.1,-0.1);
+const ivec3 off = ivec3(-1,0,1);
+void applyBumpMap() {
+    float s11 = texture(tex, tc).r;
+    float s01 = textureOffset(tex, tc, off.xyz).r;
+    float s21 = textureOffset(tex, tc, off.zyx).r;
+    float s10 = textureOffset(tex, tc, off.yxz).r;
+    float s12 = textureOffset(tex, tc, off.yzx).r;
+    
+    vec3 va = normalize(vec3(size.xy,s21-s01));
+    vec3 vb = normalize(vec3(size.yx,s12-s10));
+    norm = normalize(norm+0.8*cross(va,vb));
+    //norm = cross(va,vb);
+}
+&#13;
+void main( void ) {
+	norm = Normal;
+   	vec3 rayStart = vec3(0.0);
+   	vec3 rayDir = MVPos;
+   	rayDir = normalize(rayDir);
+   	
+   	// TODO: work on normal computation!
+   	// TODO: work on texture stretching along cyinder direction!
+   	
+	position = fvObjectPosition;
+	position = raycastCone(rayStart, rayDir);
+   	norm = position - cylP0 - dot(position - cylP0, cylDir)*cylDir;
+   	norm = normalize(norm);&#13;
+
+	// texture coordinates
+	mat4 miMV = inverse( gl_ModelViewMatrix ); // TODO: avoid computing inverse here!
+	tc = (miMV*vec4(position, 1.0)).xyz*10;
+	//tc.y *= 0.25;
+	tc *= (vec3(1.0)-abs(normalize(dir))*0.85);
+	
+	norm = (miMV*vec4(norm, 0.0)).xyz;
+	
+	// bumb map
+	applyBumpMap();
+	applyPhong();
+
+	vec4 depth = mP * vec4(position, 1);
+    gl_FragDepth = depth.z / depth.w;&#13;
 }
 
 
@@ -407,8 +440,7 @@ out vec3 ViewDirection;&#13;
 out vec3 fvObjectPosition;
 out vec3 MVPos;
 out vec3 Normal;
-out vec3 TexCoord;
-out vec3 tmp;
+out vec3 dir;
 
 out float cylR1;
 out float cylR2;
@@ -417,8 +449,6 @@ out vec3 cylP0;
 out vec3 cylP1;
 out vec3 cylN0;
 out vec3 cylN1;
-
-uniform vec3 OSGCameraPosition;
 
 #define mMVP gl_ModelViewProjectionMatrix
 #define mMV gl_ModelViewMatrix
@@ -433,15 +463,7 @@ void emit(int i) {&#13;
 	MVPos = crnsMV[i].xyz;
 	fvObjectPosition = crnsMVP[i].xyz;&#13;
 	ViewDirection = -fvObjectPosition.xyz;
-	ViewDirection = normalize(ViewDirection);
-&#13;
-	/*vec4 p1 = gl_PositionIn[0];&#13;
-	vec4 p2 = gl_PositionIn[1];
-	vec3 d = normalize(p2.xyz - p1.xyz);
-	TexCoord = p.xyz + 0.5 * d / (1.0+10*p.xyz);*/
-
-	TexCoord = crns[i].xyz;
-	TexCoord.y *= 0.15; // TODO: looks ugly!&#13;
+	ViewDirection = normalize(ViewDirection);&#13;
 	EmitVertex();&#13;
 }&#13;
 &#13;
@@ -471,43 +493,46 @@ vec3 perp(vec3 v) {
 }
 &#13;
 void main() {&#13;
-   vec4 p1 = gl_PositionIn[0];&#13;
-   vec4 p2 = gl_PositionIn[1];
-   vec4 pm = (p1+p2)*0.5;
-   vec3 dir = p2.xyz - p1.xyz;
-   
-   // TODO: try to make the segment bigger.
-   
-   cylR1 = tc[0][0]*0.1;
-   cylR2 = tc[1][0]*0.1;
-   cylDir = normalize(vec3(mMV * vec4(dir,0.0)));
-   cylP0 = vec3(mMV * p1);
-   cylP1 = vec3(mMV * p2);
-   cylN0 = cylDir;
-   cylN1 = cylDir;
-     
-   vec4 Y = vec4(dir*0.5, 0.0);
-   vec4 X = vec4( normalize(perp(dir)) ,0.0);
-   vec4 Z = vec4( normalize(cross(dir, X.xyz)) ,0.0);&#13;
- 
-   crns[0] = pm - X*cylR1 - Y - Z*cylR1;
-   crns[1] = pm + X*cylR1 - Y - Z*cylR1;
-   crns[2] = pm + X*cylR1 - Y + Z*cylR1;
-   crns[3] = pm - X*cylR1 - Y + Z*cylR1;
-   crns[4] = pm - X*cylR1 + Y - Z*cylR1;
-   crns[5] = pm + X*cylR1 + Y - Z*cylR1;
-   crns[6] = pm + X*cylR1 + Y + Z*cylR1;
-   crns[7] = pm - X*cylR1 + Y + Z*cylR1;
-   
-   for (int i=0; i&lt;8; i++) crnsMV[i] = mMV * crns[i];
-   for (int i=0; i&lt;8; i++) crnsMVP[i] = mP * crnsMV[i];
-   &#13;
-   emitQuad(3, 2, 1, 0); // bottom
-   emitQuad(4, 5, 6, 7); // top
-   emitQuad(0, 1, 5, 4); // sides
-   emitQuad(1, 2, 6, 5);
-   emitQuad(2, 3, 7, 6);
-   emitQuad(3, 0, 4, 7);&#13;
+	vec4 p1 = gl_PositionIn[0];&#13;
+	vec4 p2 = gl_PositionIn[1];
+	vec4 pm = (p1+p2)*0.5;
+	dir = p2.xyz - p1.xyz;
+
+	// make the segment bigger to avoid chamfer problems
+	p1 -= vec4(dir*0.02, 0.0);
+	p2 += vec4(dir*0.02, 0.0);
+	dir *= 1.05;
+
+	// cylinder and cone raycast parameters
+	cylR1 = tc[0][0]*0.1;
+	cylR2 = tc[1][0]*0.1;
+	cylDir = normalize(vec3(mMV * vec4(dir,0.0)));
+	cylP0 = vec3(mMV * p1);
+	cylP1 = vec3(mMV * p2);
+	cylN0 = cylDir;
+	cylN1 = cylDir;
+	 
+	// build hull
+	vec4 Y = vec4(dir*0.5, 0.0);
+	vec4 X = vec4( normalize(perp(dir)) ,0.0);
+	vec4 Z = vec4( normalize(cross(dir, X.xyz)) ,0.0);
+	crns[0] = pm - X*cylR1 - Y - Z*cylR1;
+	crns[1] = pm + X*cylR1 - Y - Z*cylR1;
+	crns[2] = pm + X*cylR1 - Y + Z*cylR1;
+	crns[3] = pm - X*cylR1 - Y + Z*cylR1;
+	crns[4] = pm - X*cylR1 + Y - Z*cylR1;
+	crns[5] = pm + X*cylR1 + Y - Z*cylR1;
+	crns[6] = pm + X*cylR1 + Y + Z*cylR1;
+	crns[7] = pm - X*cylR1 + Y + Z*cylR1;
+	for (int i=0; i&lt;8; i++) crnsMV[i] = mMV * crns[i];
+	for (int i=0; i&lt;8; i++) crnsMVP[i] = mP * crnsMV[i];
+&#13;
+	emitQuad(3, 2, 1, 0); // bottom
+	emitQuad(4, 5, 6, 7); // top
+	emitQuad(0, 1, 5, 4); // sides
+	emitQuad(1, 2, 6, 5);
+	emitQuad(2, 3, 7, 6);
+	emitQuad(3, 0, 4, 7);&#13;
 }
 
 
@@ -526,17 +551,35 @@ varying vec3 vn;&#13;
 &#13;
 attribute vec4 osg_Vertex;&#13;
 attribute vec3 osg_Normal;
-attribute vec2 osg_MultiTexCoord0;&#13;
+attribute vec2 osg_MultiTexCoord0;
+
+uniform int wind;&#13;
 &#13;
 //----------------------------------------------------------------------------------------------MAIN--VP&#13;
 void main( void ) {
 	vtc = osg_MultiTexCoord0;
 	vn = osg_Normal;&#13;
-    gl_Position = osg_Vertex;
+    gl_Position = osg_Vertex;// + wind*0.01; // TODO: work on wind!
     mMVv = gl_ModelViewMatrix;
     mPv = gl_ProjectionMatrix;&#13;
 }
 </core>
+    </Script>
+    <Script base_name="wind" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" mobile="">
+      <core>
+	import VR
+	from math import sin
+	
+	if not hasattr(VR, 'tree'): return
+	if not hasattr(VR, 'windForce'): VR.windForce = 0
+	VR.windForce += 1
+	
+	m = VR.tree.getMaterial()
+	f = sin(VR.windForce*0.1)
+	m.setShaderParameter('wind', int(f*100))
+	
+</core>
+      <trig type="on_timeout" dev="" state="Pressed" param="0" key="0" name_suffix="1" base_name="trigger" name_space="__global__"/>
     </Script>
   </Scripts>
   <Sockets persistency="666"/>
