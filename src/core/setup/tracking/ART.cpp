@@ -48,11 +48,8 @@ void ART_device::init() {
 void ART_device::update() {
     if (ent) ent->setMatrix(m);
     if (dev) {
-        auto bitr = buttons.begin();
-        auto jitr = joysticks.begin();
-        for (; bitr != buttons.end() && jitr != joysticks.end(); bitr++, jitr++) {
-            dev->update(*bitr, *jitr);
-        }
+        for (auto j : joysticks) dev->update(j);
+        for (auto b : buttons) dev->update(b);
         buttons.clear();
         joysticks.clear();
     }
