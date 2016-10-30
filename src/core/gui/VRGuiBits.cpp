@@ -329,6 +329,7 @@ VRGuiBits::VRGuiBits() {
     addTermTab("Errors");
     addTermTab("Search results");
     addTermTab("Reasoning");
+    addTermTab("Tracking");
     openConsole = consoles["Console"];
     openConsole->setOpen(true);
 

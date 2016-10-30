@@ -53,7 +53,6 @@ class VRPN : public VRStorage {
         map<int, VRPN_devicePtr> devices;//pointer map auf die objecte
         int threadID;
         bool active = true;
-        bool verbose = false;
         int port = 3883;
 
         VRUpdatePtr updatePtr;
