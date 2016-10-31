@@ -1,6 +1,4 @@
 // vertex shader program
-varying mat4 mMVv;
-varying mat4 mPv;
 varying vec2 vtc;
 varying vec3 vn;
 
@@ -8,11 +6,25 @@ attribute vec4 osg_Vertex;
 attribute vec3 osg_Normal;
 attribute vec2 osg_MultiTexCoord0;
 
+uniform int wind; // -100 to 100
+
+vec4 vertex;
+
+// TODO: work on wind
+void applyWind() {
+	vec3 v = vertex.xyz;
+	float dw = abs(wind+50*v.x+50*v.z)*0.000002;
+	dw *= v.y*v.y;
+	dw *= sin(v.x*20)*sin(v.z*20);
+	dw /= vtc[0];
+    vertex += vec4(dw,0,dw,0);
+}
+
 //----------------------------------------------------------------------------------------------MAIN--VP
 void main( void ) {
 	vtc = osg_MultiTexCoord0;
 	vn = osg_Normal;
-    gl_Position = osg_Vertex;
-    mMVv = gl_ModelViewMatrix;
-    mPv = gl_ProjectionMatrix;
+	vertex = osg_Vertex;
+	applyWind();
+    gl_Position = vertex;
 }

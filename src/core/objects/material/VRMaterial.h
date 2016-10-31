@@ -84,6 +84,8 @@ class VRMaterial : public VRObject {
         void setTexture(char* data, int format, Vec3i dims, bool isfloat);
         void setTextureAndUnit(VRTexturePtr img, int unit);
         void setTextureParams(int min, int mag, int envMode = GL_MODULATE, int wrapS = GL_REPEAT, int wrapT = GL_REPEAT, int unit = 0);
+        void setMagMinFilter(int mag, int min, int unit);
+        void setTextureWrapping(int wrapS, int wrapT, int unit);
         void setTextureType(string type);
         void setQRCode(string s, Vec3f fg, Vec3f bg, int offset);
         void setVideo(string vid_path);
@@ -150,8 +152,6 @@ class VRMaterial : public VRObject {
 
         template<class T> void setShaderParameter(string name, const T &value);
         void enableShaderParameter(string name);
-
-        void setMagMinFilter(string mag, string min);
 
         void setLit(bool b);
         bool isLit();

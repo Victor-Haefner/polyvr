@@ -458,11 +458,25 @@ void VRMaterial::setTextureParams(int min, int mag, int envMode, int wrapS, int 
     if (md->texChunks.count(unit) == 0) { md->texChunks[unit] = TextureObjChunk::create(); md->mat->addChunk(md->texChunks[unit], unit); }
     if (md->envChunks.count(unit) == 0) { md->envChunks[unit] = TextureEnvChunk::create(); md->mat->addChunk(md->envChunks[unit], unit); }
 
-    md->texChunks[unit]->setMinFilter (min);
-    md->texChunks[unit]->setMagFilter (mag);
-    md->envChunks[unit]->setEnvMode (envMode);
-    md->texChunks[unit]->setWrapS (wrapS);
-    md->texChunks[unit]->setWrapT (wrapT);
+    int Min = min < 0 ? md->texChunks[unit]->getMinFilter() : min;
+    int Mag = mag < 0 ? md->texChunks[unit]->getMagFilter() : mag;
+    int EnvMode = envMode < 0 ? md->envChunks[unit]->getEnvMode() : envMode;
+    int WrapS = wrapS < 0 ? md->texChunks[unit]->getWrapS() : wrapS;
+    int WrapT = wrapT < 0 ? md->texChunks[unit]->getWrapT() : wrapT;
+
+    md->texChunks[unit]->setMinFilter (Min);
+    md->texChunks[unit]->setMagFilter (Mag);
+    md->envChunks[unit]->setEnvMode (EnvMode);
+    md->texChunks[unit]->setWrapS (WrapS);
+    md->texChunks[unit]->setWrapT (WrapT);
+}
+
+void VRMaterial::setMagMinFilter(int mag, int min, int unit) {
+    setTextureParams(min, mag, -1, -1, -1, unit);
+}
+
+void VRMaterial::setTextureWrapping(int wrapS, int wrapT, int unit) {
+    setTextureParams(-1, -1, -1, wrapS, wrapT, unit);
 }
 
 void VRMaterial::setTexture(string img_path, bool alpha, int unit) { // TODO: improve with texture map
@@ -562,7 +576,7 @@ void VRMaterial::setTextureType(string type) {
 
 void VRMaterial::setQRCode(string s, Vec3f fg, Vec3f bg, int offset) {
     createQRCode(s, ptr(), fg, bg, offset);
-    setTextureParams(GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST);
+    setTextureParams(GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST, -1, -1, -1);
 }
 
 void VRMaterial::setZOffset(float factor, float bias) {
@@ -883,21 +897,6 @@ void VRMaterial::readTessEvaluationShader(string s) { setTessEvaluationShader(re
 string VRMaterial::getVertexShader() { return ""; } // TODO
 string VRMaterial::getFragmentShader() { return ""; }
 string VRMaterial::getGeometryShader() { return ""; }
-
-void VRMaterial::setMagMinFilter(string mag, string min) {
-    GLenum Mag, Min;
-
-    if (mag == "GL_NEAREST") Mag = GL_NEAREST;
-    if (mag == "GL_LINEAR") Mag = GL_LINEAR;
-    if (min == "GL_NEAREST") Min = GL_NEAREST;
-    if (min == "GL_LINEAR") Min = GL_LINEAR;
-    if (min == "GL_NEAREST_MIPMAP_NEAREST") Min = GL_NEAREST_MIPMAP_NEAREST;
-    if (min == "GL_LINEAR_MIPMAP_NEAREST") Min = GL_LINEAR_MIPMAP_NEAREST;
-    if (min == "GL_NEAREST_MIPMAP_LINEAR") Min = GL_NEAREST_MIPMAP_LINEAR;
-    if (min == "GL_LINEAR_MIPMAP_LINEAR") Min = GL_LINEAR_MIPMAP_LINEAR;
-
-    setTextureParams(Min, Mag);
-}
 
 void VRMaterial::setVertexScript(string script) {
     mats[activePass]->vertexScript = script;

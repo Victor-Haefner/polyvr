@@ -65,7 +65,7 @@ void ModuleFloor::initMaterial() {
     string wdir = VRSceneManager::get()->getOriginalWorkdir();
     matSubquad->readVertexShader(wdir+"/shader/TexturePhong/phong.vp");
     matSubquad->readFragmentShader(wdir+"/shader/TexturePhong/phong.fp");
-    matSubquad->setMagMinFilter("GL_LINEAR", "GL_NEAREST_MIPMAP_NEAREST");
+    matSubquad->setMagMinFilter(GL_LINEAR, GL_NEAREST_MIPMAP_NEAREST, 0);
     matSubquad->setZOffset(1,1);
 }
 

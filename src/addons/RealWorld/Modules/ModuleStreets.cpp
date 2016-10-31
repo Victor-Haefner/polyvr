@@ -35,7 +35,7 @@ ModuleStreets::ModuleStreets(bool t, bool p) : BaseModule("ModuleStreets", t,p) 
     string wdir = VRSceneManager::get()->getOriginalWorkdir();
     matStreet->readVertexShader(wdir+"/shader/TexturePhong/phong.vp");
     matStreet->readFragmentShader(wdir+"/shader/TexturePhong/phong.fp");
-    matStreet->setMagMinFilter("GL_NEAREST", "GL_NEAREST");
+    matStreet->setMagMinFilter(GL_NEAREST, GL_NEAREST, 0);
     matStreet->setZOffset(-1,-1);
 
     matSigns = VRMaterial::create("Signs");

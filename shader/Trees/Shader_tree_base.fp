@@ -1,9 +1,9 @@
 #version 400 compatibility
 
-vec4 fvAmbient  = vec4(0.36, 0.36, 0.36, 1.0);
+vec4 fvAmbient  = vec4(0.2, 0.2, 0.2, 1.0);
 //vec4 fvSpecular = vec4(0.7,  0.7,  0.7,  1.0);
 vec4 fvSpecular = vec4(0.3,  0.3,  0.3,  1.0);
-vec4 fvDiffuse  = vec4(0.5,  0.5,  0.5,  1.0);
+vec4 fvDiffuse  = vec4(0.8,  0.8,  0.8,  1.0);
 //float fSpecularPower = 25.0;
 float fSpecularPower = 10.0;
 
@@ -16,16 +16,23 @@ in vec3 cylP0;
 in vec3 cylP1;
 in vec3 cylN0;
 in vec3 cylN1;
+in vec3 dir;
 
 in vec3 ViewDirection;
 in vec3 fvObjectPosition;
 in vec3 MVPos;
 in vec3 Normal;
-in vec3 TexCoord;
 
 vec3 norm;
+vec3 position;
+vec4 color;
+vec3 tc;
+mat4 miMV;
+vec3 rayStart;
+vec3 rayDir;
 
 #define eps 0.0001
+#define mP gl_ProjectionMatrix
 
 vec2 solveEq(float A, float B, float C) {
    	float D = B*B-4.0*A*C;
@@ -33,8 +40,6 @@ vec2 solveEq(float A, float B, float C) {
    	D = sqrt(D);
    	float t1 = (-B+D)/A*0.5;
    	float t2 = (-B-D)/A*0.5;
-   	//if (t1 < 0) return t2;
-   	//if (t2 < 0) return t1;
    	return vec2(t1, t2);
 }
 
@@ -67,7 +72,7 @@ vec3 applyCaps(vec3 rayStart, vec3 rayDir, float tp) {
    	return pC;
 }
 
-vec3 raycastCylinder(vec3 rayStart, vec3 rayDir) {
+vec3 raycastCylinder() {
    	vec3 rayDRad = rayDir - dot(rayDir, cylDir)*cylDir;
    	vec3 rayPRad = rayStart-cylP0 - dot(rayStart-cylP0, cylDir)*cylDir;
    	
@@ -79,13 +84,13 @@ vec3 raycastCylinder(vec3 rayStart, vec3 rayDir) {
    	return applyCaps(rayStart, rayDir, tp);
 }
 
-vec3 raycastCone(vec3 rayStart, vec3 rayDir) {
+vec3 raycastCone() {
    	float H = distance(cylP0, cylP1);
    	float H2 = H*H;
    	float dR = cylR1-cylR2;
    	float dR2 = dR*dR;
    	
-   	if (abs(dR) < eps) return raycastCylinder(rayStart, rayDir);
+   	if (abs(dR) < eps) return raycastCylinder();
    	//return fvObjectPosition;
    	
    	vec3 cylPa = cylP0 + cylDir * cylR1*H/dR;
@@ -104,34 +109,64 @@ vec3 raycastCone(vec3 rayStart, vec3 rayDir) {
    	return applyCaps(rayStart, rayDir, tp);
 }
 
+const vec2 size = vec2(0.1,-0.1);
+const ivec3 off = ivec3(-1,0,1);
+void applyBumpMap() {
+    float s11 = texture(tex, tc).r;
+    float s01 = textureOffset(tex, tc, off.xyz).r;
+    float s21 = textureOffset(tex, tc, off.zyx).r;
+    float s10 = textureOffset(tex, tc, off.yxz).r;
+    float s12 = textureOffset(tex, tc, off.yzx).r;
+    
+    vec3 va = normalize(vec3(size.xy,s21-s01));
+    vec3 vb = normalize(vec3(size.yx,s12-s10));
+    norm = normalize(norm+0.8*cross(va,vb));
+    //norm = cross(va,vb);
+}
+
+void computeNormal() {
+   	norm = position - cylP0 - dot(position - cylP0, cylDir)*cylDir;
+	norm = (miMV*vec4(norm, 0.0)).xyz;
+   	norm = normalize(norm);
+}
+
+void computeTexCoords() {
+	float h = dot(position-cylP0, cylDir);
+	tc = vec3(norm.x+h*0.5, h*5, norm.y+h*0.5);
+}
+
+void computeDepth() {
+	vec4 pp = mP * vec4(position, 1);
+	float d = pp.z / pp.w;
+	gl_FragDepth = d*0.5 + 0.5;
+}
+
+void applyBlinnPhong() {
+	norm = gl_NormalMatrix * norm;
+	vec3  light = normalize( gl_LightSource[0].position.xyz );// directional light
+	float NdotL = max(dot( norm, light ), 0.0);
+	vec4  ambient = gl_LightSource[0].ambient * color;
+	vec4  diffuse = gl_LightSource[0].diffuse * NdotL * color;
+	float NdotHV = max(dot(norm, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
+	vec4  specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess ); 
+	gl_FragColor = ambient + diffuse + specular;
+}
+
 void main( void ) {
+	miMV = inverse( gl_ModelViewMatrix ); // TODO: avoid computing inverse in shader!
 	norm = Normal;
-   	vec3 rayStart = vec3(0.0);
-   	vec3 rayDir = MVPos;
+   	rayStart = vec3(0.0);
+   	rayDir = MVPos;
    	rayDir = normalize(rayDir);
    	
-	vec3 pC = fvObjectPosition;
-	pC = raycastCone(rayStart, rayDir);
-   	norm = pC - cylP0 - dot(pC - cylP0, cylDir)*cylDir;
-   	norm = normalize(norm);
-
-	mat4 miMV = inverse( gl_ModelViewMatrix ); // TODO: avoid computing inverse here!
-	vec3 tc = (miMV*vec4(pC, 1.0)).xyz*10;
-	tc.y *= 0.25;
-
-	vec3  fvNormal         = normalize( norm );
-	vec3  fvLightDirection = normalize( gl_LightSource[0].position.xyz - pC.xyz);
-	float fNDotL           = dot( fvNormal, fvLightDirection );
-	vec3  fvReflection     = normalize( ( ( 2.0 * fvNormal ) * fNDotL ) - fvLightDirection );
-	vec3  fvViewDirection  = normalize( ViewDirection );
-	float fRDotV           = max( 0.0, dot( fvReflection, fvViewDirection ) );
-	vec4  fvBaseColor      = texture(tex, tc);
-	vec4  fvTotalAmbient   = fvAmbient * fvBaseColor;
-	vec4  fvTotalDiffuse   = fvDiffuse * fNDotL * fvBaseColor;
-	vec4  fvTotalSpecular  = fvSpecular * ( pow( fRDotV, fSpecularPower ) );
-	gl_FragColor = fvTotalAmbient + fvTotalDiffuse + fvTotalSpecular;
-
-	// TODO: set depth buffer
+	position = fvObjectPosition;
+	position = raycastCone();
+	computeNormal();
+	computeTexCoords();
+	applyBumpMap();
+	color = texture(tex, tc);
+	applyBlinnPhong();
+	computeDepth();
 }
 
 

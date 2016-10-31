@@ -123,7 +123,7 @@ void ModuleTerrain::addTerrain(string texture, string key, string value, int hei
         string wdir = VRSceneManager::get()->getOriginalWorkdir();
         materials[texture]->readVertexShader(wdir+"/shader/TexturePhong/phong.vp");
         materials[texture]->readFragmentShader(wdir+"/shader/TexturePhong/phong.fp");
-        materials[texture]->setMagMinFilter("GL_LINEAR", "GL_NEAREST_MIPMAP_NEAREST");
+        materials[texture]->setMagMinFilter(GL_LINEAR, GL_NEAREST_MIPMAP_NEAREST, 0);
     }
 
     TerrainMaterial* m = new TerrainMaterial();

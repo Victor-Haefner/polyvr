@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="530">
+<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="253">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1" type="Light" unique="1" visible="1">
         <Object at="-0.5 -1 -1" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
           <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
-        <Object accept_root="1" aspect="1" at="0 1 0" at_dir="0" base_name="Default" far="250" fov="1.0472" from="-4.52168 3.42433 2.20423" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0.393248 0.2 0.152291" at_dir="0" base_name="Default" far="250" fov="1.0472" from="-6.90604 2.95757 0.25873" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
+          <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
+        </Object>
+        <Object at="0 0 -1" at_dir="1" base_name="Box" from="0 0 0" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" sourceparam="Box 1 0.4 1 1 1 1" sourcetype="3" type="Geometry" unique="1" up="0 1 0" visible="1">
           <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
       </Object>
@@ -26,7 +29,7 @@
 	r.addChild(VR.tree)
 	
 	#VR.tree.setup(6,5,int(random()*100), 0.2,0.5,0.78,0.45, 0.2,0.4,0.2,0.2)
-	VR.tree.setup(4,4,int(random()*100), 0.2,0.5,0.78,0.45, 0.2,0.4,0.2,0.2)
+	VR.tree.setup(4,5,int(random()*100), 0.2,0.4,0.78,0.45, 0.2,0.4,0.2,0.2)
 	
 	VR.tree.setPatchVertices(2)
 	types = [ 'GL_PATCHES' for t in VR.tree.getTypes() ]
@@ -49,7 +52,7 @@
 	tg.setSize(50,50,50)
 	
 	tg.add('Perlin', 1, [0.7,0.5,0.3], [1,0.9,0.7])
-	tg.add('Perlin', 1.0/4, [1,0.9,0.7], [0.7,0.5,0.3])
+	tg.add('Perlin', 1.0/4, [1.0,0.9,0.7], [0.7,0.5,0.3])
 	m.setTexture(tg.compose(0))
 	
 	
@@ -404,8 +407,9 @@ void computeTexCoords() {
 }
 
 void computeDepth() {
-	vec4 depth = mP * vec4(position, 1);
-    gl_FragDepth = depth.z / depth.w;
+	vec4 pp = mP * vec4(position, 1);
+	float d = pp.z / pp.w;
+	gl_FragDepth = d*0.5 + 0.5;
 }
 	&#13;
 void main( void ) {
@@ -589,7 +593,7 @@ void main( void ) {
 	
 	def wave(x):
 		#return asin( sin(x*0.1) )
-		return sin(x*0.1) )
+		return sin(x*0.1)
 	
 	m = VR.tree.getMaterial()
 	f = wave(VR.windForce)

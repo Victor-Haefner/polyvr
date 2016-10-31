@@ -31,6 +31,8 @@ struct VRPyMaterial : VRPyBaseT<OSG::VRMaterial> {
     static PyObject* getTexture(VRPyMaterial* self, PyObject* args);
     static PyObject* setDepthTest(VRPyMaterial* self, PyObject* args);
     static PyObject* setFrontBackModes(VRPyMaterial* self, PyObject* args);
+    static PyObject* setMagMinFilter(VRPyMaterial* self, PyObject* args);
+    static PyObject* setTextureWrapping(VRPyMaterial* self, PyObject* args);
 
     static PyObject* setPointSize(VRPyMaterial* self, PyObject* args);
     static PyObject* setLineWidth(VRPyMaterial* self, PyObject* args);
@@ -40,7 +42,6 @@ struct VRPyMaterial : VRPyBaseT<OSG::VRMaterial> {
 
     static PyObject* setQRCode(VRPyMaterial* self, PyObject* args);
 
-    static PyObject* setMagMinFilter(VRPyMaterial* self, PyObject* args);
     static PyObject* setVertexProgram(VRPyMaterial* self, PyObject* args);
     static PyObject* setFragmentProgram(VRPyMaterial* self, PyObject* args);
     static PyObject* setGeometryProgram(VRPyMaterial* self, PyObject* args);

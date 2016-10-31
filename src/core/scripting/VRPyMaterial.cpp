@@ -29,7 +29,8 @@ PyMethodDef VRPyMaterial::methods[] = {
     {"setLineWidth", (PyCFunction)VRPyMaterial::setLineWidth, METH_VARARGS, "Sets the GL line width - setLineWidth(i)" },
     {"getTexture", (PyCFunction)VRPyMaterial::getTexture, METH_VARARGS, "Get the texture - texture getTexture( int unit = 0 )" },
     {"setQRCode", (PyCFunction)VRPyMaterial::setQRCode, METH_VARARGS, "Encode a string as QR code texture - setQRCode(string, fg[r,g,b], bg[r,g,b], offset)" },
-    {"setMagMinFilter", (PyCFunction)VRPyMaterial::setMagMinFilter, METH_VARARGS, "Set the mag && min filtering mode - setMagMinFilter( mag, min)\n possible values for mag are GL_X && min can be GL_X || GL_X_MIPMAP_Y, where X && Y can be NEAREST || LINEAR" },
+    {"setMagMinFilter", (PyCFunction)VRPyMaterial::setMagMinFilter, METH_VARARGS, "Set the mag and min filtering mode - setMagMinFilter( mag, min | int unit )\n possible values for mag are GL_X && min can be GL_X || GL_X_MIPMAP_Y, where X && Y can be NEAREST || LINEAR" },
+    {"setTextureWrapping", (PyCFunction)VRPyMaterial::setTextureWrapping, METH_VARARGS, "Set the texture wrap in u and v - setTextureWrapping( wrapU, wrapV | int unit )\n possible values for wrap are 'GL_CLAMP_TO_EDGE', 'GL_CLAMP_TO_BORDER', 'GL_CLAMP', 'GL_REPEAT'" },
     {"setVertexProgram", (PyCFunction)VRPyMaterial::setVertexProgram, METH_VARARGS, "Set vertex program - setVertexProgram( myScript )" },
     {"setFragmentProgram", (PyCFunction)VRPyMaterial::setFragmentProgram, METH_VARARGS, "Set fragment program - setFragmentProgram( myScript )" },
     {"setGeometryProgram", (PyCFunction)VRPyMaterial::setGeometryProgram, METH_VARARGS, "Set geometry program - setGeometryProgram( myScript )" },
@@ -220,8 +221,18 @@ PyObject* VRPyMaterial::setWireFrame(VRPyMaterial* self, PyObject* args) {
 PyObject* VRPyMaterial::setMagMinFilter(VRPyMaterial* self, PyObject* args) {
 	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setMagMinFilter, C obj is invalid"); return NULL; }
 	PyObject *mag, *min;
-    if (! PyArg_ParseTuple(args, "OO", &mag, &min)) return NULL;
-	self->objPtr->setMagMinFilter(PyString_AsString(mag), PyString_AsString(min));
+	int unit = 0;
+    if (! PyArg_ParseTuple(args, "OO|i", &mag, &min, &unit)) return NULL;
+	self->objPtr->setMagMinFilter(toGLConst(mag), toGLConst(min), unit);
+	Py_RETURN_TRUE;
+}
+
+PyObject* VRPyMaterial::setTextureWrapping(VRPyMaterial* self, PyObject* args) {
+	if (self->objPtr == 0) { PyErr_SetString(err, "VRPyMaterial::setTextureWrapping, C obj is invalid"); return NULL; }
+	PyObject *ws, *wt;
+	int unit = 0;
+    if (! PyArg_ParseTuple(args, "OO|i", &ws, &wt, &unit)) return NULL;
+	self->objPtr->setTextureWrapping(toGLConst(ws), toGLConst(wt), unit);
 	Py_RETURN_TRUE;
 }
 

@@ -27,7 +27,7 @@ ModuleBuildings::ModuleBuildings(bool t, bool p) : BaseModule("ModuleBuildings",
     string wdir = VRSceneManager::get()->getOriginalWorkdir();
     b_mat->readVertexShader(wdir+"/shader/TexturePhong/phong.vp");
     b_mat->readFragmentShader(wdir+"/shader/TexturePhong/phong_building.fp"); //Fragment Shader
-    b_mat->setMagMinFilter("GL_LINEAR", "GL_NEAREST_MIPMAP_NEAREST");
+    b_mat->setMagMinFilter(GL_LINEAR, GL_NEAREST_MIPMAP_NEAREST, 0);
 }
 
 void ModuleBuildings::loadBbox(MapGrid::Box bbox) {

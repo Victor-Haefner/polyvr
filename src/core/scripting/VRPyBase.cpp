@@ -261,6 +261,20 @@ int VRPyBase::toGLConst(string s) {
     if (s == "GL_QUAD_STRIP") return GL_QUAD_STRIP;
     if (s == "GL_POLYGON") return GL_POLYGON;
 
+    if (s == "GL_REPEAT") return GL_REPEAT;
+    if (s == "GL_CLAMP") return GL_CLAMP;
+    if (s == "GL_CLAMP_TO_EDGE") return GL_CLAMP_TO_EDGE;
+    if (s == "GL_CLAMP_TO_BORDER") return GL_CLAMP_TO_BORDER;
+
+    if (s == "GL_NEAREST") return GL_NEAREST;
+    if (s == "GL_LINEAR") return GL_LINEAR;
+    if (s == "GL_NEAREST") return GL_NEAREST;
+    if (s == "GL_LINEAR") return GL_LINEAR;
+    if (s == "GL_NEAREST_MIPMAP_NEAREST") return GL_NEAREST_MIPMAP_NEAREST;
+    if (s == "GL_LINEAR_MIPMAP_NEAREST") return GL_LINEAR_MIPMAP_NEAREST;
+    if (s == "GL_NEAREST_MIPMAP_LINEAR") return GL_NEAREST_MIPMAP_LINEAR;
+    if (s == "GL_LINEAR_MIPMAP_LINEAR") return GL_LINEAR_MIPMAP_LINEAR;
+
     return -1;
 }
 
