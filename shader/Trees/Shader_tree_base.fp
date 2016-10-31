@@ -1,12 +1,5 @@
 #version 400 compatibility
 
-vec4 fvAmbient  = vec4(0.2, 0.2, 0.2, 1.0);
-//vec4 fvSpecular = vec4(0.7,  0.7,  0.7,  1.0);
-vec4 fvSpecular = vec4(0.3,  0.3,  0.3,  1.0);
-vec4 fvDiffuse  = vec4(0.8,  0.8,  0.8,  1.0);
-//float fSpecularPower = 25.0;
-float fSpecularPower = 10.0;
-
 uniform sampler3D tex;
 
 in float cylR1;
@@ -132,7 +125,7 @@ void computeNormal() {
 
 void computeTexCoords() {
 	float h = dot(position-cylP0, cylDir);
-	tc = vec3(norm.x+h*0.5, h*5, norm.y+h*0.5);
+	tc = vec3(norm.x+h*0.5, h*0.3/cylR1, norm.z+h*0.5);
 }
 
 void computeDepth() {

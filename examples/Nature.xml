@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="253">
+<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="297">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
-      <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.1 0.1 0.1 1" type="Light" unique="1" visible="1">
+      <Object ambient="0.370962 0.370962 0.370962 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.233875 0.233875 0.233875 1" type="Light" unique="1" visible="1">
         <Object at="-0.5 -1 -1" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
           <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
-        <Object accept_root="1" aspect="1" at="0.393248 0.2 0.152291" at_dir="0" base_name="Default" far="250" fov="1.0472" from="-6.90604 2.95757 0.25873" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0.0906768 2 -0.490938" at_dir="0" base_name="Default" far="250" fov="1.0472" from="-2.23818 2.91217 3.36782" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
           <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
         <Object at="0 0 -1" at_dir="1" base_name="Box" from="0 0 0" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" sourceparam="Box 1 0.4 1 1 1 1" sourcetype="3" type="Geometry" unique="1" up="0 1 0" visible="1">
@@ -254,14 +254,7 @@ void main() {
     </Script>
     <Script base_name="shrd_frag" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" mobile="">
       <core>
-#version 400 compatibility
-
-vec4 fvAmbient  = vec4(0.2, 0.2, 0.2, 1.0);&#13;
-//vec4 fvSpecular = vec4(0.7,  0.7,  0.7,  1.0);&#13;
-vec4 fvSpecular = vec4(0.3,  0.3,  0.3,  1.0);&#13;
-vec4 fvDiffuse  = vec4(0.8,  0.8,  0.8,  1.0);&#13;
-//float fSpecularPower = 25.0;&#13;
-float fSpecularPower = 10.0;&#13;
+#version 400 compatibility&#13;
 &#13;
 uniform sampler3D tex;&#13;
 
@@ -281,6 +274,7 @@ in vec3 Normal;
 
 vec3 norm;
 vec3 position;
+vec4 color;
 vec3 tc;
 mat4 miMV;
 vec3 rayStart;
@@ -364,22 +358,6 @@ vec3 raycastCone() {
    	return applyCaps(rayStart, rayDir, tp);
 }
 
-void applyPhong() {
-	vec4 light = /*gl_ModelViewMatrix */ gl_LightSource[0].position;
-	vec3  fvNormal         = normalize( norm );&#13;
-	vec3  fvLightDirection = normalize( light.xyz - position.xyz);
-	float fNDotL           = dot( fvNormal, fvLightDirection );&#13;
-	vec3  fvReflection     = normalize( ( ( 2.0 * fvNormal ) * fNDotL ) - fvLightDirection );&#13;
-	vec3  fvViewDirection  = normalize( ViewDirection );&#13;
-	float fRDotV           = max( 0.0, dot( fvReflection, fvViewDirection ) );&#13;
-	vec4  fvBaseColor      = texture(tex, tc);&#13;
-	vec4  fvTotalAmbient   = fvAmbient * fvBaseColor;&#13;
-	vec4  fvTotalDiffuse   = fvDiffuse * fNDotL * fvBaseColor;&#13;
-	//vec4  fvTotalSpecular  = fvSpecular * ( pow( fRDotV, fSpecularPower ) );&#13;
-	gl_FragColor = fvTotalAmbient + fvTotalDiffuse;// + fvTotalSpecular;
-	//gl_FragColor = vec4(light.xyz, 1.0);
-}
-
 const vec2 size = vec2(0.1,-0.1);
 const ivec3 off = ivec3(-1,0,1);
 void applyBumpMap() {
@@ -403,7 +381,7 @@ void computeNormal() {
 
 void computeTexCoords() {
 	float h = dot(position-cylP0, cylDir);
-	tc = vec3(norm.x+h*0.5, h*5, norm.y+h*0.5);
+	tc = vec3(norm.x+h*0.5, h*0.3/cylR1, norm.z+h*0.5);
 }
 
 void computeDepth() {
@@ -411,7 +389,18 @@ void computeDepth() {
 	float d = pp.z / pp.w;
 	gl_FragDepth = d*0.5 + 0.5;
 }
-	&#13;
+
+void applyBlinnPhong() {
+	norm = gl_NormalMatrix * norm;
+	vec3  light = normalize( gl_LightSource[0].position.xyz );// directional light
+	float NdotL = max(dot( norm, light ), 0.0);&#13;
+	vec4  ambient = gl_LightSource[0].ambient * color;&#13;
+	vec4  diffuse = gl_LightSource[0].diffuse * NdotL * color;&#13;
+	float NdotHV = max(dot(norm, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
+	vec4  specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess ); &#13;
+	gl_FragColor = ambient + diffuse + specular;
+}
+&#13;
 void main( void ) {
 	miMV = inverse( gl_ModelViewMatrix ); // TODO: avoid computing inverse in shader!
 	norm = Normal;
@@ -424,7 +413,8 @@ void main( void ) {
 	computeNormal();
 	computeTexCoords();
 	applyBumpMap();
-	applyPhong();
+	color = texture(tex, tc);
+	applyBlinnPhong();
 	computeDepth();&#13;
 }
 
@@ -585,7 +575,7 @@ void main( void ) {
     <Script base_name="wind" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" mobile="">
       <core>
 	import VR
-	from math import sin, asin
+	from math import sin, cos, asin
 	
 	if not hasattr(VR, 'tree'): return
 	if not hasattr(VR, 'windForce'): VR.windForce = 0
@@ -599,6 +589,7 @@ void main( void ) {
 	f = wave(VR.windForce)
 	m.setShaderParameter('wind', int(f*100))
 	
+	VR.tree.setDir(cos(f),0,sin(f))
 </core>
       <trig type="on_timeout" dev="" state="Pressed" param="0" key="0" name_suffix="1" base_name="trigger" name_space="__global__"/>
     </Script>
