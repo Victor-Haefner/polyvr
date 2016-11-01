@@ -119,8 +119,9 @@ VRGuiManager::~VRGuiManager() {
     delete g_di;
 }
 
-VRGuiManager* VRGuiManager::get() {
-    static VRGuiManager* instance = new VRGuiManager();
+VRGuiManager* VRGuiManager::get(bool init) {
+    static VRGuiManager* instance = 0;
+    if (instance == 0 && init) instance = new VRGuiManager();
     return instance;
 }
 

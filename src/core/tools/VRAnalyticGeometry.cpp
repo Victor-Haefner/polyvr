@@ -32,8 +32,8 @@ VRAnalyticGeometry::VRAnalyticGeometry() : VRTransform("AnalyticGeometry") {
 
     cirMat = VRMaterial::create("AnalyticGeometry3");
     cirMat->setLit(false);
-    cirMat->setVertexShader(circle_vp);
-    cirMat->setFragmentShader(circle_fp);
+    cirMat->setVertexShader(circle_vp, "analyticCircleVS");
+    cirMat->setFragmentShader(circle_fp, "analyticCircleFS");
     if (circlesGeometry) circlesGeometry->setMaterial(cirMat);
 }
 

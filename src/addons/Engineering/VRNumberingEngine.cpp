@@ -16,9 +16,9 @@ VRNumberingEngine::VRNumberingEngine() : VRGeometry("NumbEng") {
     groups.push_back(g);
 
     mat = VRMaterial::get("NumbEngMat");
-    mat->setVertexShader(vp);
-    mat->setFragmentShader(fp);
-    mat->setGeometryShader(gp);
+    mat->setVertexShader(vp, "numbEngVS");
+    mat->setFragmentShader(fp, "numbEngFS");
+    mat->setGeometryShader(gp, "numbEngGS");
     mat->setPointSize(5);
     setMaterial(mat);
     updateTexture();

@@ -28,7 +28,7 @@ class VRVideo : public OSG::VRStorage {
 
     public:
         VRVideo(OSG::VRMaterialPtr mat);
-        ~VRVideo();
+        virtual ~VRVideo();
 
         void open(string f);
         void close();

@@ -24,7 +24,7 @@ class VRGuiManager {
         void update();
 
     public:
-        static VRGuiManager* get();
+        static VRGuiManager* get(bool init = true);
         ~VRGuiManager();
 
         static void broadcast(string sig);

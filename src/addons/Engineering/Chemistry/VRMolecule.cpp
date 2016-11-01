@@ -339,9 +339,9 @@ void VRMolecule::updateGeo() {
     VRMaterialPtr mat = VRMaterial::get("atoms");
     mat->setPointSize(40);
     mat->setLit(false);
-    mat->setVertexShader(a_vp);
-    mat->setFragmentShader(a_fp);
-    mat->setGeometryShader(a_gp);
+    mat->setVertexShader(a_vp, "moleculesVS");
+    mat->setFragmentShader(a_fp, "moleculesFS");
+    mat->setGeometryShader(a_gp, "moleculesGS");
 
     setType(GL_POINTS);
     setPositions(Pos);
@@ -354,9 +354,9 @@ void VRMolecule::updateGeo() {
     VRMaterialPtr mat2 = VRMaterial::get("molecule_bonds");
     mat2->setLineWidth(5);
     mat2->setLit(false);
-    mat2->setVertexShader(b_vp);
-    mat2->setFragmentShader(b_fp);
-    mat2->setGeometryShader(b_gp);
+    mat2->setVertexShader(b_vp, "moleculeBondsVS");
+    mat2->setFragmentShader(b_fp, "moleculeBondsFS");
+    mat2->setGeometryShader(b_gp, "moleculeBondsGS");
 
     bonds_geo->setType(GL_LINES);
     bonds_geo->setPositions(Pos2);

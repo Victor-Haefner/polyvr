@@ -47,6 +47,7 @@ class VRMaterial : public VRObject {
         bool isSMat(MaterialMTUncountedPtr matPtr);
         bool isSTMat(MaterialMTUncountedPtr matPtr);
 
+        void checkShader(int type, string shader, string name);
         void forceShaderUpdate();
 
     public:
@@ -123,11 +124,11 @@ class VRMaterial : public VRObject {
         void initShaderChunk();
         void remShaderChunk();
         void setDefaultVertexShader();
-        void setVertexShader(string s);
-        void setFragmentShader(string s);
-        void setGeometryShader(string s);
-        void setTessControlShader(string s);
-        void setTessEvaluationShader(string s);
+        void setVertexShader(string s, string name);
+        void setFragmentShader(string s, string name);
+        void setGeometryShader(string s, string name);
+        void setTessControlShader(string s, string name);
+        void setTessEvaluationShader(string s, string name);
         void readVertexShader(string s);
         void readFragmentShader(string s);
         void readGeometryShader(string s);

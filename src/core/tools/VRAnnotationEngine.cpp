@@ -16,9 +16,9 @@ VRAnnotationEngine::VRAnnotationEngine() : VRGeometry("AnnEng") {
     bg = Vec4f(1,0,1,0);
 
     mat = VRMaterial::create("AnnEngMat");
-    mat->setVertexShader(vp);
-    mat->setFragmentShader(fp);
-    mat->setGeometryShader(gp);
+    mat->setVertexShader(vp, "annotationVS");
+    mat->setFragmentShader(fp, "annotationFS");
+    mat->setGeometryShader(gp, "annotationGS");
     mat->setPointSize(5);
     setMaterial(mat);
     updateTexture();

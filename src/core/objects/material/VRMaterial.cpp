@@ -37,6 +37,7 @@
 #include "core/setup/VRSetup.h"
 #include "core/setup/windows/VRWindow.h"
 #include "core/scripting/VRScript.h"
+#include "core/gui/VRGuiManager.h"
 #include "VRVideo.h"
 #include "core/tools/VRQRCode.h"
 #include <libxml++/nodes/element.h>
@@ -243,8 +244,8 @@ void VRMaterial::setDeffered(bool b) {
             if (mats[i]->shaderChunk != 0) continue;
             mats[i]->deffered = true;
             setActivePass(i);
-            setVertexShader( constructShaderVP(mats[i]) );
-            setFragmentShader( constructShaderFP(mats[i]) );
+            setVertexShader( constructShaderVP(mats[i]), "defferedVS" );
+            setFragmentShader( constructShaderFP(mats[i]), "defferedFS" );
         }
     } else {
         for (uint i=0; i<mats.size(); i++) {
@@ -823,29 +824,32 @@ void VRMaterial::setDefaultVertexShader() {
     vp += "  gl_Position    = gl_ModelViewProjectionMatrix*osg_Vertex;\n";
     vp += "}\n";
 
-    setVertexShader(vp);
+    setVertexShader(vp, "defaultVS");
 }
 
-// Idea: instead of trying to get a log from OpenSG stuff, just compile the shader yourself and get log from there!
-void VRMaterial_checkLinking(ShaderProgramMTRecPtr p) { // TODO
-    return;
+// type: GL_VERTEX_SHADER, GL_FRAGMENT_SHADER, ...
+void VRMaterial::checkShader(int type, string shader, string name) {
+    auto gm = VRGuiManager::get(false);
+    if (!gm) return;
 
-    char errbuf[4096];
-    GLsizei len;
-    GLint link_ok = GL_FALSE;
+    GLuint shaderObject = glCreateShader(type);
+    int N = shader.size();
+    const char* str = shader.c_str();
+    glShaderSourceARB(shaderObject, 1, &str, &N);
+    glCompileShaderARB(shaderObject);
 
-    VRWindowPtr window = VRSetup::getCurrent()->getWindows().begin()->second;
-    if (!window) return;
-    Window* pWin = window->getOSGWindow();
-    GLuint uiProgram = GLuint(pWin->getGLObjectId(p->getGLId()));
-    if (!uiProgram) return;
+    GLint compiled;
+    glGetObjectParameterivARB(shaderObject, GL_COMPILE_STATUS, &compiled);
+    if (!compiled) gm->printToConsole("Errors", "Shader "+name+" of material "+getName()+" did not compiled!\n");
 
-    cout << "check shader linkage for program " << uiProgram << endl;
-    glGetProgramInfoLog(uiProgram, sizeof(errbuf), &len, errbuf);
-    glGetProgramiv(uiProgram, GL_LINK_STATUS, &link_ok);
-    if (!link_ok)  {
-        std::cout << errbuf << std::endl;
-        std::cout << "The shaders did not link correctly." << std::endl;
+    GLint blen = 0;
+    GLsizei slen = 0;
+    glGetShaderiv(shaderObject, GL_INFO_LOG_LENGTH , &blen);
+    if (blen > 1) {
+        GLchar* compiler_log = (GLchar*)malloc(blen);
+        glGetInfoLogARB(shaderObject, blen, &slen, compiler_log);
+        VRGuiManager::get()->printToConsole("Errors", string(compiler_log));
+        free(compiler_log);
     }
 }
 
@@ -854,31 +858,36 @@ void VRMaterial::forceShaderUpdate() {
     mats[activePass]->vProgram->setProgram(s.c_str());
 }
 
-void VRMaterial::setVertexShader(string s) {
+void VRMaterial::setVertexShader(string s, string name) {
     initShaderChunk();
     mats[activePass]->vProgram->setProgram(s.c_str());
+    checkShader(GL_VERTEX_SHADER, s, name);
 }
 
-void VRMaterial::setFragmentShader(string s) {
+void VRMaterial::setFragmentShader(string s, string name) {
     initShaderChunk();
     mats[activePass]->fProgram->setProgram(s.c_str());
+    checkShader(GL_FRAGMENT_SHADER, s, name);
 }
 
-void VRMaterial::setGeometryShader(string s) {
+void VRMaterial::setGeometryShader(string s, string name) {
     initShaderChunk();
     mats[activePass]->gProgram->setProgram(s.c_str());
+    checkShader(GL_GEOMETRY_SHADER, s, name);
 }
 
-void VRMaterial::setTessControlShader(string s) {
+void VRMaterial::setTessControlShader(string s, string name) {
     initShaderChunk();
     mats[activePass]->tcProgram->setProgram(s.c_str());
     forceShaderUpdate();
+    checkShader(GL_TESS_CONTROL_SHADER, s, name);
 }
 
-void VRMaterial::setTessEvaluationShader(string s) {
+void VRMaterial::setTessEvaluationShader(string s, string name) {
     initShaderChunk();
     mats[activePass]->teProgram->setProgram(s.c_str());
     forceShaderUpdate();
+    checkShader(GL_TESS_EVALUATION_SHADER, s, name);
 }
 
 string readFile(string path) {
@@ -888,11 +897,11 @@ string readFile(string path) {
     return str;
 }
 
-void VRMaterial::readVertexShader(string s) { setVertexShader(readFile(s)); }
-void VRMaterial::readFragmentShader(string s) { setFragmentShader(readFile(s)); }
-void VRMaterial::readGeometryShader(string s) { setGeometryShader(readFile(s)); }
-void VRMaterial::readTessControlShader(string s) { setTessControlShader(readFile(s)); }
-void VRMaterial::readTessEvaluationShader(string s) { setTessEvaluationShader(readFile(s)); }
+void VRMaterial::readVertexShader(string s) { setVertexShader(readFile(s), s); }
+void VRMaterial::readFragmentShader(string s) { setFragmentShader(readFile(s), s); }
+void VRMaterial::readGeometryShader(string s) { setGeometryShader(readFile(s), s); }
+void VRMaterial::readTessControlShader(string s) { setTessControlShader(readFile(s), s); }
+void VRMaterial::readTessEvaluationShader(string s) { setTessEvaluationShader(readFile(s), s); }
 
 string VRMaterial::getVertexShader() { return ""; } // TODO
 string VRMaterial::getFragmentShader() { return ""; }
@@ -901,31 +910,31 @@ string VRMaterial::getGeometryShader() { return ""; }
 void VRMaterial::setVertexScript(string script) {
     mats[activePass]->vertexScript = script;
     VRScriptPtr scr = VRScene::getCurrent()->getScript(script);
-    if (scr) setVertexShader(scr->getCore());
+    if (scr) setVertexShader(scr->getCore(), script);
 }
 
 void VRMaterial::setFragmentScript(string script) {
     mats[activePass]->fragmentScript = script;
     VRScriptPtr scr = VRScene::getCurrent()->getScript(script);
-    if (scr) setFragmentShader(scr->getCore());
+    if (scr) setFragmentShader(scr->getCore(), script);
 }
 
 void VRMaterial::setGeometryScript(string script) {
     mats[activePass]->geometryScript = script;
     VRScriptPtr scr = VRScene::getCurrent()->getScript(script);
-    if (scr) setGeometryShader(scr->getCore());
+    if (scr) setGeometryShader(scr->getCore(), script);
 }
 
 void VRMaterial::setTessControlScript(string script) {
     mats[activePass]->tessControlScript = script;
     VRScriptPtr scr = VRScene::getCurrent()->getScript(script);
-    if (scr) setTessControlShader(scr->getCore());
+    if (scr) setTessControlShader(scr->getCore(), script);
 }
 
 void VRMaterial::setTessEvaluationScript(string script) {
     mats[activePass]->tessEvalScript = script;
     VRScriptPtr scr = VRScene::getCurrent()->getScript(script);
-    if (scr) setTessEvaluationShader(scr->getCore());
+    if (scr) setTessEvaluationShader(scr->getCore(), script);
 }
 
 string VRMaterial::getVertexScript() { return mats[activePass]->vertexScript; }
