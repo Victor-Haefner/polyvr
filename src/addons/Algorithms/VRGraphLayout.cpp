@@ -17,7 +17,7 @@ void VRGraphLayout::setAlgorithm(string a, int p) {
     setAlgorithm(A, p);
 }
 
-void VRGraphLayout::applySprings(float eps) {
+void VRGraphLayout::applySprings(float eps, float v) {
     if (!graph) return;
     for (auto& n : graph->getEdges()) {
         for (auto& e : n) {
@@ -36,8 +36,8 @@ void VRGraphLayout::applySprings(float eps) {
             d.normalize();
             if (abs(x) < eps) continue;
 
-            p1 += d*x;
-            p2 += -d*x;
+            p1 += d*x*v;
+            p2 += -d*x*v;
             switch (e.connection) {
                 case graph_base::SIMPLE:
                     if (!(f1 & FIXED)) graph->setPosition(e.from, p1);
@@ -62,7 +62,7 @@ void VRGraphLayout::applySprings(float eps) {
     }
 }
 
-void VRGraphLayout::applyOccupancy(float eps) {
+void VRGraphLayout::applyOccupancy(float eps, float v) {
     if (!graph) return;
     auto& nodes = graph->getNodes();
     Octree o(10*eps);
@@ -99,7 +99,7 @@ void VRGraphLayout::applyOccupancy(float eps) {
             D -= d*abs(x);
         }
 
-        graph->setPosition(i, pn+D); // move node away from neighbors
+        graph->setPosition(i, pn+v*D); // move node away from neighbors
     }
 }
 
@@ -109,10 +109,10 @@ void VRGraphLayout::compute(int N, float eps) {
         for (auto a : algorithms) {
             switch(a.second) {
                 case SPRINGS:
-                    applySprings(eps);
+                    applySprings(eps, 0.03);
                     break;
                 case OCCUPANCYMAP:
-                    applyOccupancy(eps);
+                    applyOccupancy(eps, 0.5);
                     break;
             }
         }

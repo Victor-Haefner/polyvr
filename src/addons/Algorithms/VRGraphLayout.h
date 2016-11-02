@@ -31,8 +31,8 @@ class VRGraphLayout {
         float radius = 1;
         float speed = 1;
 
-        void applySprings(float eps);
-        void applyOccupancy(float eps);
+        void applySprings(float eps, float v);
+        void applyOccupancy(float eps, float v);
 
         int getFlag(int i);
         void setFlag(int i, FLAG f);
