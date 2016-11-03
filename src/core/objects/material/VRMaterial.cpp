@@ -2,7 +2,6 @@
 #include "OSGMaterial.h"
 
 #include <OpenSG/OSGNameAttachment.h>
-
 #include <OpenSG/OSGMaterialGroup.h>
 #include <OpenSG/OSGSimpleMaterial.h>
 #include <OpenSG/OSGSimpleTexturedMaterial.h>
@@ -12,7 +11,6 @@
 #include <OpenSG/OSGPrimeMaterial.h>
 #include <OpenSG/OSGCompositeMaterial.h>
 #include <OpenSG/OSGSwitchMaterial.h>
-
 #include <OpenSG/OSGTextureObjChunk.h>
 #include <OpenSG/OSGTextureEnvChunk.h>
 #include <OpenSG/OSGTexGenChunk.h>
@@ -27,6 +25,11 @@
 #include <OpenSG/OSGDepthChunk.h>
 #include <OpenSG/OSGMaterialChunk.h>
 
+#include <libxml++/nodes/element.h>
+#include <boost/filesystem.hpp>
+#include <GL/glext.h>
+#include <GL/glx.h>
+
 #include "core/objects/VRTransform.h"
 #include "core/objects/object/OSGCore.h"
 #include "core/objects/OSGObject.h"
@@ -40,9 +43,6 @@
 #include "core/gui/VRGuiManager.h"
 #include "VRVideo.h"
 #include "core/tools/VRQRCode.h"
-#include <libxml++/nodes/element.h>
-#include <boost/filesystem.hpp>
-#include <GL/glext.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -831,6 +831,8 @@ void VRMaterial::setDefaultVertexShader() {
 void VRMaterial::checkShader(int type, string shader, string name) {
     auto gm = VRGuiManager::get(false);
     if (!gm) return;
+
+    if (!glXGetCurrentContext()) return;
 
     GLuint shaderObject = glCreateShader(type);
     int N = shader.size();
