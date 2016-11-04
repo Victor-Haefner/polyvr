@@ -140,7 +140,7 @@ struct VRMatData {
 
         if (vProgram) { m->vProgram = dynamic_pointer_cast<ShaderProgram>(vProgram->shallowCopy()); m->shaderChunk->addShader(m->vProgram); }
         if (fProgram) { m->fProgram = dynamic_pointer_cast<ShaderProgram>(fProgram->shallowCopy()); m->shaderChunk->addShader(m->fProgram); }
-        //if (fdProgram) { m->fdProgram = dynamic_pointer_cast<ShaderProgram>(fdProgram->shallowCopy()); }
+        if (fdProgram) { m->fdProgram = dynamic_pointer_cast<ShaderProgram>(fdProgram->shallowCopy()); }
         if (gProgram) { m->gProgram = dynamic_pointer_cast<ShaderProgram>(gProgram->shallowCopy()); m->shaderChunk->addShader(m->gProgram); }
         if (tcProgram) { m->tcProgram = dynamic_pointer_cast<ShaderProgram>(tcProgram->shallowCopy()); m->shaderChunk->addShader(m->tcProgram); }
         if (teProgram) { m->teProgram = dynamic_pointer_cast<ShaderProgram>(teProgram->shallowCopy()); m->shaderChunk->addShader(m->teProgram); }
@@ -151,7 +151,7 @@ struct VRMatData {
         m->geometryScript = geometryScript;
         m->tessControlScript = tessControlScript;
         m->tessEvalScript = tessEvalScript;
-        //m->toggleDeferredShader(deferred);
+        m->toggleDeferredShader(deferred);
 
         return m;
     }
@@ -159,19 +159,10 @@ struct VRMatData {
     void toggleDeferredShader(bool def, bool verb = false) {
         if (deferred == def) return;
         deferred = def;
-        return;
-
         if (!shaderChunk) return;
-        if (verb) cout << " subFrag\n";
         shaderChunk->subFragmentShader(0);
-        if (deferred) {
-            if (verb) cout << "  add fdProgram\n";
-            shaderChunk->addShader(fdProgram);
-        }
-        else          {
-            if (verb) cout << "  add fProgram\n";
-            shaderChunk->addShader(fProgram);
-        }
+        if (deferred) shaderChunk->addShader(fdProgram);
+        else shaderChunk->addShader(fProgram);
     }
 
     template<typename T>
@@ -268,32 +259,33 @@ string VRMaterial::constructShaderFP(VRMatData* data) {
         if (mats[i]->shaderChunk == 0) {
             if (b) {
                 setVertexShader( constructShaderVP(mats[i]), "defferedVS" );
-                setFragmentShader( constructShaderFP(mats[i]), "defferedFS", b );
+                setFragmentShader( constructShaderFP(mats[i]), "defferedFS", true );
+                setFragmentShader( constructShaderFP(mats[i]), "defferedFS", false );
             } else remShaderChunk();
         }
         mats[i]->toggleDeferredShader(b, print);
     }
 }*/
 
- void VRMaterial::setDeffered(bool b) {
-     deferred = b;
-    if (b) {
-        for (uint i=0; i<mats.size(); i++) {
+void VRMaterial::setDeffered(bool b) {
+    deferred = b;
+    int a = activePass;
+    for (uint i=0; i<mats.size(); i++) {
+        setActivePass(i);
+        if (b) {
             if (mats[i]->shaderChunk != 0) continue;
-            mats[i]->deferred = true;
-            setActivePass(i);
+            mats[i]->toggleDeferredShader(b);
             setVertexShader( constructShaderVP(mats[i]), "defferedVS" );
-            setFragmentShader( constructShaderFP(mats[i]), "defferedFS" );
-        }
-    } else {
-        for (uint i=0; i<mats.size(); i++) {
+            setFragmentShader( constructShaderFP(mats[i]), "defferedFS", false );
+            setFragmentShader( constructShaderFP(mats[i]), "defferedFS", true );
+        } else {
             if (!mats[i]->deferred) continue;
-            mats[i]->deferred = false;
-            setActivePass(i);
+            mats[i]->toggleDeferredShader(b);
             remShaderChunk();
          }
-     }
- }
+    }
+    setActivePass(a);
+}
 
 void VRMaterial::clearAll() {
     materials.clear();
@@ -818,9 +810,8 @@ void VRMaterial::initShaderChunk() {
 
     md->shaderChunk->addShader(md->vProgram);
 
-    //if (md->deferred) md->shaderChunk->addShader(md->fdProgram);
-    //else              md->shaderChunk->addShader(md->fProgram);
-    md->shaderChunk->addShader(md->fProgram);
+    if (md->deferred) md->shaderChunk->addShader(md->fdProgram);
+    else              md->shaderChunk->addShader(md->fProgram);
 
     md->shaderChunk->addShader(md->gProgram);
     md->shaderChunk->addShader(md->tcProgram);
