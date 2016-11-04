@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="297">
+<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="293">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
       <Object ambient="0.370962 0.370962 0.370962 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowType="4096" specular="0.233875 0.233875 0.233875 1" type="Light" unique="1" visible="1">
         <Object at="-0.5 -1 -1" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
           <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
-        <Object accept_root="1" aspect="1" at="0.0906768 2 -0.490938" at_dir="0" base_name="Default" far="250" fov="1.0472" from="-2.23818 2.91217 3.36782" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0.0906768 2 -0.490938" at_dir="0" base_name="Default" far="250" fov="1.0472" from="-2.85569 3.1542 2.84559" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
           <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
         <Object at="0 0 -1" at_dir="1" base_name="Box" from="0 0 0" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" sourceparam="Box 1 0.4 1 1 1 1" sourcetype="3" type="Geometry" unique="1" up="0 1 0" visible="1">
@@ -39,11 +39,10 @@
 	
 	m.setVertexProgram('shrd_vert')
 	m.setFragmentProgram('shrd_frag')
-	#m.setFragmentProgram('shdr_s_f')
+	m.setFragmentProgram('shrd_dfrag', True)
 	m.setTessControlProgram('shdr_tc')
 	m.setTessEvaluationProgram('shdr_te')
 	m.setGeometryProgram('shrd_geo')
-	#m.setGeometryProgram('shdr_s_g')
 		
 	m.setWireFrame(0)
 	m.setLineWidth(3)
@@ -62,141 +61,178 @@
       <trig type="on_device" dev="keyboard" state="Pressed" param="" key="105" name_suffix="0" base_name="trigger" name_space="__global__"/>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="7" base_name="trigger" name_space="__global__"/>
     </Script>
-    <Script base_name="shdr_s_f" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" mobile="">
-      <core>
-#version 120
-
-void main( void ) {
-	gl_FragColor = vec4(1.0);
-}
-</core>
-    </Script>
-    <Script base_name="shdr_s_g" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" mobile="">
+    <Script base_name="shdr_dfrag" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" mobile="">
       <core>
 #version 400 compatibility&#13;
-#extension GL_EXT_geometry_shader4 : enable&#13;
-layout (lines) in;&#13;
-layout (triangle_strip, max_vertices = 24) out;&#13;
-in vec2 tc[];
 &#13;
-//Phong&#13;
-out vec3 ViewDirection;&#13;
-out vec3 fvObjectPosition;
-out vec3 MVPos;
-out vec3 Normal;
-out vec3 TexCoord;
+uniform sampler3D tex;&#13;
 
-out float cylR1;
-out float cylR2;
-out vec3 cylDir;
-out vec3 cylP0;
-out vec3 cylP1;
-out vec3 cylN0;
-out vec3 cylN1;
+in float cylR1;
+in float cylR2;
+in vec3 cylDir;
+in vec3 cylP0;
+in vec3 cylP1;
+in vec3 cylN0;
+in vec3 cylN1;
+in vec3 dir;
+&#13;
+in vec3 ViewDirection;&#13;
+in vec3 fvObjectPosition;
+in vec3 MVPos;
+in vec3 Normal;
 
-uniform vec3 OSGCameraPosition;
+vec3 norm;
+vec3 position;
+vec4 color;
+vec3 tc;
+mat4 miMV;
+vec3 rayStart;
+vec3 rayDir;
 
-in mat4 mMVv[];
-in mat4 mPv[];
+#define eps 0.0001
+#define mP gl_ProjectionMatrix
 
-#define mMVP mPv[0]*mMVv[0]
-#define mMV mMVv[0]
-#define mP mPv[0]
-&#13;
-//PHONG-----------------&#13;
-void addPhongVars(vec4 p) {&#13;
-   MVPos = vec3(mMV*p);
-   fvObjectPosition = vec3(mMVP*p);&#13;
-   ViewDirection = -fvObjectPosition.xyz;
-   ViewDirection = normalize(ViewDirection);
-   &#13;
-   /*vec4 p1 = gl_PositionIn[0];&#13;
-   vec4 p2 = gl_PositionIn[1];
-   vec3 d = normalize(p2.xyz - p1.xyz);
-   TexCoord = p.xyz + 0.5 * d / (1.0+10*p.xyz);*/
-   
-   TexCoord = p.xyz;
-   TexCoord.y *= 0.15;&#13;
-}
-&#13;
-void emitTriangle(vec4 p1, vec4 p2, vec4 p3) {&#13;
-   gl_Position = gl_ModelViewProjectionMatrix*p1;&#13;
-   addPhongVars(p1);&#13;
-   EmitVertex();&#13;
-   gl_Position = gl_ModelViewProjectionMatrix*p2;&#13;
-   addPhongVars(p2);&#13;
-   EmitVertex();&#13;
-   gl_Position = gl_ModelViewProjectionMatrix*p3;&#13;
-   addPhongVars(p3);&#13;
-   EmitVertex();&#13;
-   EndPrimitive();&#13;
-}&#13;
-&#13;
-void emitQuad(vec4 p1, vec4 p2, vec4 p3, vec4 p4) {&#13;
-   emitTriangle(p1, p2, p4);&#13;
-   emitTriangle(p2, p4, p3);&#13;
-}&#13;
-&#13;
-void emitSimpleQuad(vec4 pos[4]) {&#13;
-   emitQuad(pos[0], pos[1], pos[2], pos[3]);&#13;
-}
-&#13;
-float Sign(in float x) {
-    return step(0, x)*2 - 1;
+vec2 solveEq(float A, float B, float C) {
+   	float D = B*B-4.0*A*C;
+   	if (D &lt; 0.0) discard; // no solution/intersection
+   	D = sqrt(D);
+   	float t1 = (-B+D)/A*0.5;
+   	float t2 = (-B-D)/A*0.5;
+   	return vec2(t1, t2);
 }
 
-vec3 getOffsets() {
-   vec3 d = OSGCameraPosition - gl_PositionIn[1].xyz;
-   return vec3(Sign(d[0]), Sign(d[1]), Sign(d[2]));
+float intersectCap(vec3 rayStart, vec3 rayDir, vec3 p0, vec3 n, float r) {
+	float t = dot((p0-rayStart),n)/dot(rayDir,n);
+   	vec3 p = rayStart + t*rayDir;
+   	if ( abs(dot(n, p-p0)) &gt; eps ) return -1.0;
+   	if ( distance(p,p0) &gt; r ) return -1.0;
+   	return t;
 }
 
-void main() {&#13;
-   vec4 p1 = gl_PositionIn[0];&#13;
-   vec4 p2 = gl_PositionIn[1];
-   
-   cylR1 = tc[0][0]*0.05;
-   cylR2 = tc[1][0]*0.05;
-   cylDir = normalize(vec3(mMV * vec4(p2.xyz - p1.xyz,0.0)));
-   //cylDir = vec3(mMV * vec4(normalize(p1.xyz - p2.xyz),0.0));
-   cylP0 = vec3(mMV * p1);
-   cylP1 = vec3(mMV * p2);
-   cylN0 = vec3(mMV * vec4(0.0,1.0,0.0,0.0));
-   cylN1 = vec3(mMV * vec4(0.0,1.0,0.0,0.0));
-   &#13;
-   gl_FrontColor = vec4(0.6, 0.6, 0.3, 1.0);&#13;
+// ellipsoid: (x/a)2 + (y/b)2 + (z/c)2 = 1
+vec3 applyCaps(vec3 rayStart, vec3 rayDir, float tp) {
+   	vec3 pC = rayStart + tp*rayDir;
+   	if ( dot(cylN0, pC-cylP0) &lt; -eps ) {
+   		float tc0 = intersectCap(rayStart, rayDir, cylP0, cylN0, cylR1);
+   		if (tc0 &gt; eps) {
+   			tp = max( tp, tc0 );
+   			pC = rayStart + tp*rayDir;
+   		} else discard;
+   	}
+   	
+   	if ( dot(cylN1, pC-cylP1) &gt;  eps )  {
+   		float tc1 = intersectCap(rayStart, rayDir, cylP1, cylN1, cylR2);
+   		if (tc1 &gt; eps) {
+   			tp = max( tp, tc1 );
+   			pC = rayStart + tp*rayDir;
+   		} else discard;
+   	}
+   	return pC;
+}
 
-   vec3 offs = getOffsets();&#13;
-   vec4 pos[4];
-   float S1x = 0.05*offs.x;
-   float S2x = -0.05*offs.x;
-   float S1y = 0.05*offs.z;
-   float S2y = -0.05*offs.z;
-   
-   
-   //emitTriangle(gl_PositionIn[0], gl_PositionIn[1], gl_PositionIn[1]);
-   
-   &#13;
-   pos[0] = p1+vec4(S1x,0,S1y,0)*tc[0][0];&#13;
-   pos[1] = p2+vec4(S1x,0,S1y,0)*tc[1][0];&#13;
-   pos[2] = p2+vec4(S2x,0,S1y,0)*tc[1][0];&#13;
-   pos[3] = p1+vec4(S2x,0,S1y,0)*tc[0][0];&#13;
-   emitSimpleQuad(pos);&#13;
+vec3 raycastCylinder() {
+   	vec3 rayDRad = rayDir - dot(rayDir, cylDir)*cylDir;
+   	vec3 rayPRad = rayStart-cylP0 - dot(rayStart-cylP0, cylDir)*cylDir;
+   	
+   	float A = dot(rayDRad,rayDRad);
+   	float B = 2.0*dot(rayDRad, rayPRad);
+   	float C = dot(rayPRad, rayPRad) - cylR1*cylR1;
+   	vec2 t = solveEq(A, B, C);
+   	float tp = min(t[0],t[1]);
+   	return applyCaps(rayStart, rayDir, tp);
+}
+
+vec3 raycastCone() {
+   	float H = distance(cylP0, cylP1);
+   	float H2 = H*H;
+   	float dR = cylR1-cylR2;
+   	float dR2 = dR*dR;
+   	
+   	if (abs(dR) &lt; eps) return raycastCylinder();
+   	//return fvObjectPosition;
+   	
+   	vec3 cylPa = cylP0 + cylDir * cylR1*H/dR;
+   	float vrvc = dot(rayDir, cylDir);
+   	float dpvc = dot(rayStart-cylPa, cylDir);
+   	vec3 rayDRad = rayDir - vrvc*cylDir;
+   	vec3 rayPRad = rayStart-cylPa - dpvc*cylDir;
+   	float cos2a = H2 / (H2 + dR2);
+   	float sin2a = 1.0 - cos2a;
+   	
+   	float A = cos2a * dot(rayDRad,rayDRad) - sin2a * vrvc * vrvc;
+   	float B = 2.0 * (cos2a * dot(rayDRad, rayPRad) - sin2a * vrvc * dpvc);
+   	float C = cos2a * dot(rayPRad, rayPRad) - sin2a * dpvc * dpvc;
+   	vec2 t = solveEq(A, B, C);
+   	float tp = min(t[0],t[1]);
+   	return applyCaps(rayStart, rayDir, tp);
+}
+
+const vec2 size = vec2(0.1,-0.1);
+const ivec3 off = ivec3(-1,0,1);
+void applyBumpMap() {
+    float s11 = texture(tex, tc).r;
+    float s01 = textureOffset(tex, tc, off.xyz).r;
+    float s21 = textureOffset(tex, tc, off.zyx).r;
+    float s10 = textureOffset(tex, tc, off.yxz).r;
+    float s12 = textureOffset(tex, tc, off.yzx).r;
+    
+    vec3 va = normalize(vec3(size.xy,s21-s01));
+    vec3 vb = normalize(vec3(size.yx,s12-s10));
+    norm = normalize(norm+0.8*cross(va,vb));
+    //norm = cross(va,vb);
+}
+
+void computeNormal() {
+   	norm = position - cylP0 - dot(position - cylP0, cylDir)*cylDir;
+	norm = (miMV*vec4(norm, 0.0)).xyz;
+   	norm = normalize(norm);
+}
+
+void computeTexCoords() {
+	float h = dot(position-cylP0, cylDir);
+	tc = vec3(norm.x+h*0.5, h*0.3/cylR1, norm.z+h*0.5);
+}
+
+void computeDepth() {
+	vec4 pp = mP * vec4(position, 1);
+	float d = pp.z / pp.w;
+	gl_FragDepth = d*0.5 + 0.5;
+}
+
+void applyBlinnPhong() {
+	norm = gl_NormalMatrix * norm;
+	vec3  light = normalize( gl_LightSource[0].position.xyz );// directional light
+	float NdotL = max(dot( norm, light ), 0.0);&#13;
+	vec4  ambient = gl_LightSource[0].ambient * color;&#13;
+	vec4  diffuse = gl_LightSource[0].diffuse * NdotL * color;&#13;
+	float NdotHV = max(dot(norm, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
+	vec4  specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess ); &#13;
+	gl_FragColor = ambient + diffuse + specular;
+}
 &#13;
-   pos[0] = p2+vec4(S1x,0,S1y,0)*tc[1][0];&#13;
-   pos[1] = p1+vec4(S1x,0,S1y,0)*tc[0][0];&#13;
-   pos[2] = p1+vec4(S1x,0,S2y,0)*tc[0][0];&#13;
-   pos[3] = p2+vec4(S1x,0,S2y,0)*tc[1][0];&#13;
-   emitSimpleQuad(pos);
-   
-   vec4 pc = p1;
-   float R = tc[0][0];
-   if (offs.y &gt; 0) { pc = p2; R = tc[1][0]; }&#13;
-   pos[0] = pc+vec4(S1x,0,S1y,0)*R;&#13;
-   pos[1] = pc+vec4(S2x,0,S1y,0)*R;&#13;
-   pos[2] = pc+vec4(S2x,0,S2y,0)*R;&#13;
-   pos[3] = pc+vec4(S1x,0,S2y,0)*R;&#13;
-   emitSimpleQuad(pos);
+void main( void ) {
+	miMV = inverse( gl_ModelViewMatrix ); // TODO: avoid computing inverse in shader!
+	norm = Normal;
+   	rayStart = vec3(0.0);
+   	rayDir = MVPos;
+   	rayDir = normalize(rayDir);
+   	
+	position = fvObjectPosition;
+	position = raycastCone();
+	computeNormal();
+	computeTexCoords();
+	applyBumpMap();
+	color = texture(tex, tc);
+	computeDepth();
+	
+    gl_FragData[0] = vec4(position, 1.0);
+    gl_FragData[1] = vec4(norm, 0);
+    gl_FragData[2] = vec4(color, 0);&#13;
 }
+
+
+
+
 </core>
     </Script>
     <Script base_name="shdr_tc" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" mobile="">
@@ -245,10 +281,10 @@ void main() {
     vec3 p2 = p1+n1*0.1;
     vec3 p3 = tcPosition[1];
     
-    vec3 pos = (1-u)*(1-u)*p1 + 2*(1-u)*u*p2 + u*u*p3;
+    vec3 pos = (1.0-u)*(1.0-u)*p1 + 2.0*(1.0-u)*u*p2 + u*u*p3;
     
     tc = mix(ctc[0], ctc[1], u);
-    gl_Position = vec4(pos, 1);
+    gl_Position = vec4(pos, 1.0);
 }
 </core>
     </Script>
@@ -295,8 +331,8 @@ vec2 solveEq(float A, float B, float C) {
 float intersectCap(vec3 rayStart, vec3 rayDir, vec3 p0, vec3 n, float r) {
 	float t = dot((p0-rayStart),n)/dot(rayDir,n);
    	vec3 p = rayStart + t*rayDir;
-   	if ( abs(dot(n, p-p0)) &gt; eps ) return -1;
-   	if ( distance(p,p0) &gt; r ) return -1;
+   	if ( abs(dot(n, p-p0)) &gt; eps ) return -1.0;
+   	if ( distance(p,p0) &gt; r ) return -1.0;
    	return t;
 }
 
@@ -555,11 +591,11 @@ vec4 vertex;
 // TODO: work on wind
 void applyWind() {
 	vec3 v = vertex.xyz;
-	float dw = abs(wind+50*v.x+50*v.z)*0.000002;
+	float dw = abs(float(wind)+50.0*v.x+50.0*v.z)*0.000002;
 	dw *= v.y*v.y;
-	dw *= sin(v.x*20)*sin(v.z*20);
+	dw *= sin(v.x*20.0)*sin(v.z*20.0);
 	dw /= vtc[0];&#13;
-    vertex += vec4(dw,0,dw,0);
+    vertex += vec4(dw,0.0,dw,0.0);
 }&#13;
 &#13;
 //----------------------------------------------------------------------------------------------MAIN--VP&#13;
