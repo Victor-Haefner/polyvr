@@ -106,6 +106,7 @@ void VRSSAO::initSSAO(VRMaterialPtr mat) {
     ssao_mat->setShaderParameter<int>("texBufPos", 0);
     ssao_mat->setShaderParameter<int>("texBufNorm", 1);
     ssao_mat->setShaderParameter<int>("texBufDiff", 2);
+    ssao_mat->setDeffered(true);
     cout << "initSSAO " << mat->getName() << " done!" << endl;
 }
 

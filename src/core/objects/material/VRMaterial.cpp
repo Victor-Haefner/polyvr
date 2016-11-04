@@ -249,40 +249,23 @@ string VRMaterial::constructShaderFP(VRMatData* data) {
     return fp;
 }
 
-/*void VRMaterial::setDeffered(bool b) {
-    if (deferred == b) return;
-    deferred = b;
-    bool print = (getBaseName() == "ssao_mat");
-    for (uint i=0; i<mats.size(); i++) {
-        if (print) cout << "setDefferedMat " << getName() << " def " << b << " id " << i << endl;
-        setActivePass(i);
-        if (mats[i]->shaderChunk == 0) {
-            if (b) {
-                setVertexShader( constructShaderVP(mats[i]), "defferedVS" );
-                setFragmentShader( constructShaderFP(mats[i]), "defferedFS", true );
-                setFragmentShader( constructShaderFP(mats[i]), "defferedFS", false );
-            } else remShaderChunk();
-        }
-        mats[i]->toggleDeferredShader(b, print);
-    }
-}*/
-
 void VRMaterial::setDeffered(bool b) {
+    //if (deferred == b) return;
     deferred = b;
     int a = activePass;
     for (uint i=0; i<mats.size(); i++) {
         setActivePass(i);
         if (b) {
-            if (mats[i]->shaderChunk != 0) continue;
-            mats[i]->toggleDeferredShader(b);
-            setVertexShader( constructShaderVP(mats[i]), "defferedVS" );
-            setFragmentShader( constructShaderFP(mats[i]), "defferedFS", false );
-            setFragmentShader( constructShaderFP(mats[i]), "defferedFS", true );
+            if (mats[i]->shaderChunk == 0) {
+                setVertexShader( constructShaderVP(mats[i]), "defferedVS" );
+                setFragmentShader( constructShaderFP(mats[i]), "defferedFS", true );
+                mats[i]->toggleDeferredShader(b);
+            }
         } else {
             if (!mats[i]->deferred) continue;
             mats[i]->toggleDeferredShader(b);
             remShaderChunk();
-         }
+        }
     }
     setActivePass(a);
 }
