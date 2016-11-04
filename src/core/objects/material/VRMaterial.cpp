@@ -75,6 +75,7 @@ struct VRMatData {
 
     string vertexScript;
     string fragmentScript;
+    string fragmentDScript;
     string geometryScript;
     string tessControlScript;
     string tessEvalScript;
@@ -150,6 +151,7 @@ struct VRMatData {
 
         m->vertexScript = vertexScript;
         m->fragmentScript = fragmentScript;
+        m->fragmentDScript = fragmentDScript;
         m->geometryScript = geometryScript;
         m->tessControlScript = tessControlScript;
         m->tessEvalScript = tessEvalScript;
@@ -158,13 +160,15 @@ struct VRMatData {
         return m;
     }
 
-    void toggleDeferredShader(bool def, bool verb = false) {
+    void toggleDeferredShader(bool def, string name = "") {
         if (deferred == def) return;
         deferred = def;
         if (!shaderChunk) return;
         shaderChunk->subFragmentShader(0);
-        if (deferred) shaderChunk->addShader(fdProgram);
-        else shaderChunk->addShader(fProgram);
+        if (deferred) {
+            //cout << " toggleDeferredShader fdProgram " << name << endl;
+            shaderChunk->addShader(fdProgram);
+        } else shaderChunk->addShader(fProgram);
     }
 
     template<typename T>
@@ -263,7 +267,7 @@ void VRMaterial::setDeffered(bool b) {
                 setFragmentShader( constructShaderFP(mats[i]), "defferedFS", true );
             }
         } else if (mats[i]->tmpDeferredShdr) remShaderChunk();
-        mats[i]->toggleDeferredShader(b);
+        mats[i]->toggleDeferredShader(b, getName());
     }
     setActivePass(a);
 }
@@ -933,9 +937,11 @@ void VRMaterial::setVertexScript(string script) {
 }
 
 void VRMaterial::setFragmentScript(string script, bool deferred) {
-    mats[activePass]->fragmentScript = script;
+    if (deferred) mats[activePass]->fragmentDScript = script;
+    else mats[activePass]->fragmentScript = script;
     VRScriptPtr scr = VRScene::getCurrent()->getScript(script);
     if (scr) setFragmentShader(scr->getCore(), script, deferred);
+    else cout << " Warning: script "+script+" not found!\n";
 }
 
 void VRMaterial::setGeometryScript(string script) {
@@ -956,8 +962,10 @@ void VRMaterial::setTessEvaluationScript(string script) {
     if (scr) setTessEvaluationShader(scr->getCore(), script);
 }
 
+string VRMaterial::getFragmentScript(bool deferred) {
+    return deferred ? mats[activePass]->fragmentDScript : mats[activePass]->fragmentScript;
+}
 string VRMaterial::getVertexScript() { return mats[activePass]->vertexScript; }
-string VRMaterial::getFragmentScript() { return mats[activePass]->fragmentScript; }
 string VRMaterial::getGeometryScript() { return mats[activePass]->geometryScript; }
 string VRMaterial::getTessControlScript() { return mats[activePass]->tessControlScript; }
 string VRMaterial::getTessEvaluationScript() { return mats[activePass]->tessEvalScript; }
