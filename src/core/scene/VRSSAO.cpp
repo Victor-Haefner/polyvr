@@ -82,14 +82,12 @@ void VRSSAO::setSSAOparams(float radius, int kernelSize, int noiseSize) {
 }
 
 void VRSSAO::initSSAO(VRMaterialPtr mat) {
-    cout << "initSSAO " << mat->getName() << endl;
     string shdrDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/DeferredShading/";
     ssao_mat = mat;
 
     // ssao material pass
     ssao_mat->setLit(false);
     ssao_mat->readVertexShader(shdrDir + "SSAOAmbient.vp.glsl");
-    ssao_mat->readFragmentShader(shdrDir + "SSAOAmbient.fp.glsl", false);
     ssao_mat->readFragmentShader(shdrDir + "SSAOAmbient.fp.glsl", true);
     ssao_mat->setShaderParameter<int>("texBufPos", 0);
     ssao_mat->setShaderParameter<int>("texBufNorm", 1);
@@ -101,13 +99,10 @@ void VRSSAO::initSSAO(VRMaterialPtr mat) {
     // ssao blur material pass
     ssao_mat->addPass();
     ssao_mat->readVertexShader(shdrDir + "blur.vp.glsl");
-    ssao_mat->readFragmentShader(shdrDir + "blur.fp.glsl", false);
     ssao_mat->readFragmentShader(shdrDir + "blur.fp.glsl", true);
     ssao_mat->setShaderParameter<int>("texBufPos", 0);
     ssao_mat->setShaderParameter<int>("texBufNorm", 1);
     ssao_mat->setShaderParameter<int>("texBufDiff", 2);
-    ssao_mat->setDeffered(true);
-    cout << "initSSAO " << mat->getName() << " done!" << endl;
 }
 
 OSG_END_NAMESPACE;

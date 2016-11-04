@@ -71,6 +71,7 @@ struct VRMatData {
     ShaderProgramMTRecPtr teProgram;
     VRVideo* video = 0;
     bool deferred = false;
+    bool tmpDeferredShdr = false;
 
     string vertexScript;
     string fragmentScript;
@@ -108,6 +109,7 @@ struct VRMatData {
         clipChunk = 0;
         stencilChunk = 0;
         deferred = false;
+        tmpDeferredShdr = false;
 
         colChunk->setDiffuse( Color4f(1, 1, 1, 1) );
         colChunk->setAmbient( Color4f(0.3, 0.3, 0.3, 1) );
@@ -250,22 +252,18 @@ string VRMaterial::constructShaderFP(VRMatData* data) {
 }
 
 void VRMaterial::setDeffered(bool b) {
-    //if (deferred == b) return;
     deferred = b;
     int a = activePass;
     for (uint i=0; i<mats.size(); i++) {
         setActivePass(i);
         if (b) {
             if (mats[i]->shaderChunk == 0) {
+                mats[i]->tmpDeferredShdr = true;
                 setVertexShader( constructShaderVP(mats[i]), "defferedVS" );
                 setFragmentShader( constructShaderFP(mats[i]), "defferedFS", true );
-                mats[i]->toggleDeferredShader(b);
             }
-        } else {
-            if (!mats[i]->deferred) continue;
-            mats[i]->toggleDeferredShader(b);
-            remShaderChunk();
-        }
+        } else if (mats[i]->tmpDeferredShdr) remShaderChunk();
+        mats[i]->toggleDeferredShader(b);
     }
     setActivePass(a);
 }
