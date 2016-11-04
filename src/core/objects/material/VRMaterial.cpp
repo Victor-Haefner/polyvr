@@ -65,11 +65,12 @@ struct VRMatData {
     StencilChunkMTRecPtr stencilChunk;
     ShaderProgramMTRecPtr vProgram;
     ShaderProgramMTRecPtr fProgram;
+    ShaderProgramMTRecPtr fdProgram;
     ShaderProgramMTRecPtr gProgram;
     ShaderProgramMTRecPtr tcProgram;
     ShaderProgramMTRecPtr teProgram;
     VRVideo* video = 0;
-    bool deffered = false;
+    bool deferred = false;
 
     string vertexScript;
     string fragmentScript;
@@ -106,7 +107,7 @@ struct VRMatData {
         shaderChunk = 0;
         clipChunk = 0;
         stencilChunk = 0;
-        deffered = false;
+        deferred = false;
 
         colChunk->setDiffuse( Color4f(1, 1, 1, 1) );
         colChunk->setAmbient( Color4f(0.3, 0.3, 0.3, 1) );
@@ -139,6 +140,7 @@ struct VRMatData {
 
         if (vProgram) { m->vProgram = dynamic_pointer_cast<ShaderProgram>(vProgram->shallowCopy()); m->shaderChunk->addShader(m->vProgram); }
         if (fProgram) { m->fProgram = dynamic_pointer_cast<ShaderProgram>(fProgram->shallowCopy()); m->shaderChunk->addShader(m->fProgram); }
+        //if (fdProgram) { m->fdProgram = dynamic_pointer_cast<ShaderProgram>(fdProgram->shallowCopy()); }
         if (gProgram) { m->gProgram = dynamic_pointer_cast<ShaderProgram>(gProgram->shallowCopy()); m->shaderChunk->addShader(m->gProgram); }
         if (tcProgram) { m->tcProgram = dynamic_pointer_cast<ShaderProgram>(tcProgram->shallowCopy()); m->shaderChunk->addShader(m->tcProgram); }
         if (teProgram) { m->teProgram = dynamic_pointer_cast<ShaderProgram>(teProgram->shallowCopy()); m->shaderChunk->addShader(m->teProgram); }
@@ -149,8 +151,27 @@ struct VRMatData {
         m->geometryScript = geometryScript;
         m->tessControlScript = tessControlScript;
         m->tessEvalScript = tessEvalScript;
+        //m->toggleDeferredShader(deferred);
 
         return m;
+    }
+
+    void toggleDeferredShader(bool def, bool verb = false) {
+        if (deferred == def) return;
+        deferred = def;
+        return;
+
+        if (!shaderChunk) return;
+        if (verb) cout << " subFrag\n";
+        shaderChunk->subFragmentShader(0);
+        if (deferred) {
+            if (verb) cout << "  add fdProgram\n";
+            shaderChunk->addShader(fdProgram);
+        }
+        else          {
+            if (verb) cout << "  add fProgram\n";
+            shaderChunk->addShader(fProgram);
+        }
     }
 
     template<typename T>
@@ -237,25 +258,42 @@ string VRMaterial::constructShaderFP(VRMatData* data) {
     return fp;
 }
 
-void VRMaterial::setDeffered(bool b) {
+/*void VRMaterial::setDeffered(bool b) {
+    if (deferred == b) return;
     deferred = b;
+    bool print = (getBaseName() == "ssao_mat");
+    for (uint i=0; i<mats.size(); i++) {
+        if (print) cout << "setDefferedMat " << getName() << " def " << b << " id " << i << endl;
+        setActivePass(i);
+        if (mats[i]->shaderChunk == 0) {
+            if (b) {
+                setVertexShader( constructShaderVP(mats[i]), "defferedVS" );
+                setFragmentShader( constructShaderFP(mats[i]), "defferedFS", b );
+            } else remShaderChunk();
+        }
+        mats[i]->toggleDeferredShader(b, print);
+    }
+}*/
+
+ void VRMaterial::setDeffered(bool b) {
+     deferred = b;
     if (b) {
         for (uint i=0; i<mats.size(); i++) {
             if (mats[i]->shaderChunk != 0) continue;
-            mats[i]->deffered = true;
+            mats[i]->deferred = true;
             setActivePass(i);
             setVertexShader( constructShaderVP(mats[i]), "defferedVS" );
             setFragmentShader( constructShaderFP(mats[i]), "defferedFS" );
         }
     } else {
         for (uint i=0; i<mats.size(); i++) {
-            if (!mats[i]->deffered) continue;
-            mats[i]->deffered = false;
+            if (!mats[i]->deferred) continue;
+            mats[i]->deferred = false;
             setActivePass(i);
             remShaderChunk();
-        }
-    }
-}
+         }
+     }
+ }
 
 void VRMaterial::clearAll() {
     materials.clear();
@@ -770,6 +808,7 @@ void VRMaterial::initShaderChunk() {
 
     md->vProgram = ShaderProgram::createVertexShader  ();
     md->fProgram = ShaderProgram::createFragmentShader();
+    md->fdProgram = ShaderProgram::createFragmentShader();
     md->gProgram = ShaderProgram::createGeometryShader();
 
     md->tcProgram = ShaderProgram::create();
@@ -778,7 +817,11 @@ void VRMaterial::initShaderChunk() {
     md->teProgram->setShaderType(GL_TESS_EVALUATION_SHADER);
 
     md->shaderChunk->addShader(md->vProgram);
+
+    //if (md->deferred) md->shaderChunk->addShader(md->fdProgram);
+    //else              md->shaderChunk->addShader(md->fProgram);
     md->shaderChunk->addShader(md->fProgram);
+
     md->shaderChunk->addShader(md->gProgram);
     md->shaderChunk->addShader(md->tcProgram);
     md->shaderChunk->addShader(md->teProgram);
@@ -798,6 +841,7 @@ void VRMaterial::remShaderChunk() {
     md->mat->subChunk(md->shaderChunk);
     md->vProgram = 0;
     md->fProgram = 0;
+    md->fdProgram = 0;
     md->gProgram = 0;
     md->tcProgram = 0;
     md->teProgram = 0;
@@ -866,9 +910,10 @@ void VRMaterial::setVertexShader(string s, string name) {
     checkShader(GL_VERTEX_SHADER, s, name);
 }
 
-void VRMaterial::setFragmentShader(string s, string name) {
+void VRMaterial::setFragmentShader(string s, string name, bool deferred) {
     initShaderChunk();
-    mats[activePass]->fProgram->setProgram(s.c_str());
+    if (deferred) mats[activePass]->fdProgram->setProgram(s.c_str());
+    else          mats[activePass]->fProgram->setProgram(s.c_str());
     checkShader(GL_FRAGMENT_SHADER, s, name);
 }
 
@@ -900,7 +945,7 @@ string readFile(string path) {
 }
 
 void VRMaterial::readVertexShader(string s) { setVertexShader(readFile(s), s); }
-void VRMaterial::readFragmentShader(string s) { setFragmentShader(readFile(s), s); }
+void VRMaterial::readFragmentShader(string s, bool deferred) { setFragmentShader(readFile(s), s, deferred); }
 void VRMaterial::readGeometryShader(string s) { setGeometryShader(readFile(s), s); }
 void VRMaterial::readTessControlShader(string s) { setTessControlShader(readFile(s), s); }
 void VRMaterial::readTessEvaluationShader(string s) { setTessEvaluationShader(readFile(s), s); }
@@ -915,10 +960,10 @@ void VRMaterial::setVertexScript(string script) {
     if (scr) setVertexShader(scr->getCore(), script);
 }
 
-void VRMaterial::setFragmentScript(string script) {
+void VRMaterial::setFragmentScript(string script, bool deferred) {
     mats[activePass]->fragmentScript = script;
     VRScriptPtr scr = VRScene::getCurrent()->getScript(script);
-    if (scr) setFragmentShader(scr->getCore(), script);
+    if (scr) setFragmentShader(scr->getCore(), script, deferred);
 }
 
 void VRMaterial::setGeometryScript(string script) {
