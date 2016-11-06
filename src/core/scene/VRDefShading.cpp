@@ -215,6 +215,8 @@ void VRDefShading::updateLight(VRLightPtr l) {
     string fpFile = getLightFPFile(li.lightType, li.shadowType);
     li.lightVP->readProgram(vpFile.c_str());
     li.lightFP->readProgram(fpFile.c_str());
+
+    setShadow(li);
 }
 
 TextureObjChunkRefPtr VRDefShading::getTarget() { return fboTex; }
