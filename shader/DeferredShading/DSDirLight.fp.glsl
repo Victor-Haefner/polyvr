@@ -17,6 +17,7 @@ void computeDirLight() {
     vec3 lightDir = normalize( gl_LightSource[0].position.xyz );
     float NdotL = max(dot(norm, lightDir), 0.0);
     if (NdotL > 0.0) color = NdotL * color * gl_LightSource[0].diffuse;
+    else color = vec4(0);
 }
 
 void main(void) {

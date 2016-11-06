@@ -26,9 +26,10 @@ class VRDefShading {
         };
 
         struct LightInfo {
-            LightTypeE    lightType;
-            ShadowTypeE                shadowType;
-            LightMTRecPtr              light;
+            LightTypeE lightType;
+            ShadowTypeE shadowType;
+            LightMTRecPtr light;
+            int dsID = 0;
             //NodeMTRecPtr               lightN;
             //NodeMTRecPtr               beaconN;
 

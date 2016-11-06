@@ -189,6 +189,7 @@ void VRDefShading::addDSLight(VRLightPtr vrl) {
     li.lightSH->addShader(li.lightVP);
     li.lightSH->addShader(li.lightFP);
 
+    li.dsID = dsStage->editMFLights()->size();
     dsStage->editMFLights       ()->push_back(li.light  );
     dsStage->editMFLightPrograms()->push_back(li.lightSH);
     lightInfos[ID] = li;
@@ -207,11 +208,13 @@ void VRDefShading::updateLight(VRLightPtr l) {
     if (shadows) li.shadowType = defaultShadowType;
     else li.shadowType = ST_NONE;
 
+    li.light = l->getLightCore();
+    dsStage->editMFLights()->replace(li.dsID, li.light);
+
     string vpFile = getLightVPFile(li.lightType);
     string fpFile = getLightFPFile(li.lightType, li.shadowType);
     li.lightVP->readProgram(vpFile.c_str());
     li.lightFP->readProgram(fpFile.c_str());
-    li.lightFP->addUniformVariable<Int32>("channel", channel);
 }
 
 TextureObjChunkRefPtr VRDefShading::getTarget() { return fboTex; }
@@ -245,7 +248,7 @@ void VRDefShading::setShadow(LightInfo &li) {
     }
 
     if(li.shadowType == ST_TRAPEZOID) {
-        if(li.lightType != LightEngine::Directional) {
+        if(li.lightType != Directional) {
             TrapezoidalShadowMapEngineRecPtr shadowEng =
                 TrapezoidalShadowMapEngine::create();
 
