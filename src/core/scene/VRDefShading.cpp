@@ -123,12 +123,11 @@ void VRDefShading::reload() {
     dsStage->setAmbientProgram(shAmbient);
 
     for (auto li : lightInfos) {
-        string vpFile = getLightVPFile(li.lightType);
-        string fpFile = getLightFPFile(li.lightType, li.shadowType);
-        cout << "VRDefShading::reload " << fpFile << endl;
-        li.lightVP->readProgram(vpFile.c_str());
-        li.lightFP->readProgram(fpFile.c_str());
-        li.lightFP->addUniformVariable<Int32>("channel", channel);
+        string vpFile = getLightVPFile(li.second.lightType);
+        string fpFile = getLightFPFile(li.second.lightType, li.second.shadowType);
+        li.second.lightVP->readProgram(vpFile.c_str());
+        li.second.lightFP->readProgram(fpFile.c_str());
+        li.second.lightFP->addUniformVariable<Int32>("channel", channel);
     }
 }
 
@@ -158,12 +157,13 @@ void VRDefShading::setDSCamera(ProjectionCameraDecoratorRecPtr cam) {
     if (initiated) dsStage->setCamera(cam);
 }
 
-void VRDefShading::addDSLight(VRLightPtr light) {
-    addDSLight(light->getLightCore(), light->getLightType(), light->getShadows());
-}
-
-void VRDefShading::addDSLight(LightMTRecPtr light, string type, bool shadows) {
+void VRDefShading::addDSLight(VRLightPtr vrl) {
     if (!initiated) return;
+
+    LightMTRecPtr light = vrl->getLightCore();
+    string type = vrl->getLightType();
+    bool shadows = vrl->getShadows();
+    int ID = vrl->getID();
 
     LightInfo li;
 
@@ -191,8 +191,27 @@ void VRDefShading::addDSLight(LightMTRecPtr light, string type, bool shadows) {
 
     dsStage->editMFLights       ()->push_back(li.light  );
     dsStage->editMFLightPrograms()->push_back(li.lightSH);
-    lightInfos.push_back(li);
+    lightInfos[ID] = li;
     setShadow(li);
+}
+
+void VRDefShading::updateLight(VRLightPtr l) {
+    auto& li = lightInfos[l->getID()];
+
+    string type = l->getLightType();
+    bool shadows = l->getShadows();
+
+    li.lightType = Point;
+    if (type == "directional") li.lightType = Directional;
+    if (type == "spot") li.lightType = Spot;
+    if (shadows) li.shadowType = defaultShadowType;
+    else li.shadowType = ST_NONE;
+
+    string vpFile = getLightVPFile(li.lightType);
+    string fpFile = getLightFPFile(li.lightType, li.shadowType);
+    li.lightVP->readProgram(vpFile.c_str());
+    li.lightFP->readProgram(fpFile.c_str());
+    li.lightFP->addUniformVariable<Int32>("channel", channel);
 }
 
 TextureObjChunkRefPtr VRDefShading::getTarget() { return fboTex; }
@@ -263,15 +282,15 @@ const std::string& VRDefShading::getLightVPFile(LightTypeE lightType) {
 // file containing fragment shader code for the light type
 const std::string& VRDefShading::getLightFPFile(LightTypeE lightType, ShadowTypeE shadowType) {
     switch(lightType) {
-        case LightEngine::Directional:
+        case Directional:
             if(shadowType == ST_NONE) return dsDirLightFPFile;
             else return dsDirLightShadowFPFile;
 
-        case LightEngine::Point:
+        case Point:
             if(shadowType == ST_NONE) return dsPointLightFPFile;
             else return dsPointLightShadowFPFile;
 
-        case LightEngine::Spot:
+        case Spot:
             if(shadowType == ST_NONE) return dsSpotLightFPFile;
             else return dsSpotLightShadowFPFile;
 
@@ -280,7 +299,7 @@ const std::string& VRDefShading::getLightFPFile(LightTypeE lightType, ShadowType
     }
 }
 
-void VRDefShading::subLight(UInt32 lightIdx) {
+void VRDefShading::subLight(UInt32 lightIdx, int ID) {
     OSG_ASSERT(lightIdx < lightInfos.size());
     OSG_ASSERT(lightIdx < dsStage->getMFLights()->size());
     OSG_ASSERT(lightIdx < dsStage->getMFLightPrograms()->size());
@@ -288,7 +307,7 @@ void VRDefShading::subLight(UInt32 lightIdx) {
     dsStage->editMFLights()->erase(lightIdx);
     dsStage->editMFLightPrograms()->erase(lightIdx);
 
-    lightInfos.erase(lightInfos.begin() + lightIdx);
+    lightInfos.erase(ID);
 }
 
 OSG_END_NAMESPACE;

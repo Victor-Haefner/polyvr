@@ -34,6 +34,7 @@ class VRLight : public VRObject {
 
         void setup();
         void setup_after();
+        void updateDeferredLight();
 
     public:
         VRLight(string name = "");

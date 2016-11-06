@@ -45,12 +45,11 @@ class VRDefShading {
         string dsUnknownFile = "unknownFile";
 
         TextureObjChunkRefPtr fboTex;
-
-        NodeMTRecPtr                   dsStageN;
-        DeferredShadingStageRecPtr   dsStage;
-        vector<LightInfo>         lightInfos;
-        UInt32                         shadowMapWidth;
-        UInt32                         shadowMapHeight;
+        NodeMTRecPtr dsStageN;
+        DeferredShadingStageRecPtr dsStage;
+        map<int, LightInfo> lightInfos;
+        int shadowMapWidth;
+        int shadowMapHeight;
 
         ShadowTypeE defaultShadowType;
         int shadowRes;
@@ -78,8 +77,8 @@ class VRDefShading {
         void setDSCamera(VRCameraPtr cam);
         void setDSCamera(ProjectionCameraDecoratorRecPtr cam);
         void addDSLight(VRLightPtr light);
-        void addDSLight(LightMTRecPtr light, string type, bool shadows = false);
-        void subLight(UInt32 lightIdx);
+        void updateLight(VRLightPtr l);
+        void subLight(UInt32 lightIdx, int ID);
         void setShadow(LightInfo &li);
 
         const std::string &getLightVPFile(LightTypeE lightType);

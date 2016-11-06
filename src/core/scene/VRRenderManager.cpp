@@ -72,14 +72,11 @@ void VRRenderManager::update() {
 }
 
 void VRRenderManager::addLight(VRLightPtr l) {
-    auto setup = VRSetup::getCurrent();
-    if (!setup) return;
-    for (auto v : setup->getViews()) {
-        auto rendering = v->getRenderingL();
-        if (rendering) rendering->addLight(l);
-        rendering = v->getRenderingR();
-        if (rendering) rendering->addLight(l);
-    }
+    for (auto r : getRenderings()) r->addLight(l);
+}
+
+void VRRenderManager::updateLight(VRLightPtr l) {
+    for (auto r : getRenderings()) r->updateLight(l);
 }
 
 void VRRenderManager::setDSCamera(VRCameraPtr cam) {

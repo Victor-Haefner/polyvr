@@ -34,6 +34,7 @@ class VRRenderManager : public VRStorage {
         ~VRRenderManager();
 
         void addLight(VRLightPtr l);
+        void updateLight(VRLightPtr l);
         void setDSCamera(VRCameraPtr cam);
 
         void setFrustumCulling(bool b);

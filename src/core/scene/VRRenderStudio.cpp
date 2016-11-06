@@ -138,7 +138,12 @@ void VRRenderStudio::addLight(VRLightPtr l) {
     if (defShading) defShading->addDSLight(l);
 }
 
-VRLightPtr VRRenderStudio::getLight(int ID) { return light_map[ID]; }
+VRLightPtr VRRenderStudio::getLight(int ID) { return light_map.count(ID) ? light_map[ID] : 0; }
+
+void VRRenderStudio::updateLight(VRLightPtr l) {
+    if (defShading) defShading->updateLight(l);
+}
+
 void VRRenderStudio::setEye(EYE e) {
     eye = e;
     calib_mat->setShaderParameter<int>("isRightEye", eye);

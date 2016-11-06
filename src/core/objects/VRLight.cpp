@@ -232,11 +232,15 @@ vector<string> VRLight::getTypeParameter(string type) {
 
 VRLightBeaconWeakPtr VRLight::getBeacon() { return beacon; }
 
-void VRLight::setPointlight() { switchCore(p_light); }
-void VRLight::setSpotlight() { switchCore(s_light); }
-void VRLight::setDirectionallight() { switchCore(d_light); }
+void VRLight::setPointlight() { switchCore(p_light); updateDeferredLight(); }
+void VRLight::setSpotlight() { switchCore(s_light); updateDeferredLight(); }
+void VRLight::setDirectionallight() { switchCore(d_light); updateDeferredLight(); }
 
 LightMTRecPtr VRLight::getLightCore() { return dynamic_pointer_cast<Light>(getCore()->core); }
 string VRLight::getLightType() { return lightType; };
+
+void VRLight::updateDeferredLight() {
+    VRScene::getCurrent()->updateLight( ptr() );
+}
 
 OSG_END_NAMESPACE;
