@@ -3,6 +3,7 @@
 
 #include <OpenSG/OSGConfig.h>
 #include "core/objects/VRObjectFwd.h"
+#include "core/setup/VRSetupFwd.h"
 #include "core/utils/VRStorage.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -26,6 +27,8 @@ class VRRenderManager : public VRStorage {
     protected:
         VRObjectPtr root = 0;
 
+        vector<VRRenderStudioPtr> getRenderings();
+
     public:
         VRRenderManager();
         ~VRRenderManager();
@@ -45,7 +48,8 @@ class VRRenderManager : public VRStorage {
         bool getHMDD();
         bool getMarker();
 
-        void setDefferedShading(bool b);
+        void setDeferredShading(bool b);
+        void setDeferredChannel(int channel);
         void setSSAO(bool b);
         void setSSAOradius(float r);
         void setSSAOkernel(int k);

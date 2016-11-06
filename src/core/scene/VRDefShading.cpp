@@ -125,8 +125,10 @@ void VRDefShading::reload() {
     for (auto li : lightInfos) {
         string vpFile = getLightVPFile(li.lightType);
         string fpFile = getLightFPFile(li.lightType, li.shadowType);
+        cout << "VRDefShading::reload " << fpFile << endl;
         li.lightVP->readProgram(vpFile.c_str());
         li.lightFP->readProgram(fpFile.c_str());
+        li.lightFP->addUniformVariable<Int32>("channel", channel);
     }
 }
 
@@ -144,6 +146,9 @@ void VRDefShading::setDefferedShading(bool b) {
 }
 
 bool VRDefShading::getDefferedShading() { return enabled; }
+
+// channel : GL_RENDER GL_POSITION GL_NORMALIZE GL_DIFFUSE
+void VRDefShading::setDeferredChannel(int c) { channel = c; reload(); }
 
 void VRDefShading::setDSCamera(VRCameraPtr cam) {
     if (initiated) dsStage->setCamera(cam->getCam());
@@ -186,9 +191,7 @@ void VRDefShading::addDSLight(LightMTRecPtr light, string type, bool shadows) {
 
     dsStage->editMFLights       ()->push_back(li.light  );
     dsStage->editMFLightPrograms()->push_back(li.lightSH);
-
     lightInfos.push_back(li);
-
     setShadow(li);
 }
 

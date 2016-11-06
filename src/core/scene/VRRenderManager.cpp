@@ -105,7 +105,22 @@ bool VRRenderManager::getSSAO() { return do_ssao; }
 bool VRRenderManager::getHMDD() { return do_hmdd; }
 bool VRRenderManager::getMarker() { return do_marker; }
 
-void VRRenderManager::setDefferedShading(bool b) { deferredRendering = b; update(); }
+vector<VRRenderStudioPtr> VRRenderManager::getRenderings() {
+    vector<VRRenderStudioPtr> res;
+    auto setup = VRSetup::getCurrent();
+    if (!setup) return res;
+    for (auto v : setup->getViews()) {
+        if (auto r = v->getRenderingL()) res.push_back(r);
+        if (auto r = v->getRenderingR()) res.push_back(r);
+    }
+    return res;
+}
+
+void VRRenderManager::setDeferredChannel(int c) {
+    for (auto r : getRenderings()) r->setDeferredChannel(c);
+}
+
+void VRRenderManager::setDeferredShading(bool b) { deferredRendering = b; update(); }
 void VRRenderManager::setSSAO(bool b) { do_ssao = b; update(); }
 void VRRenderManager::setSSAOradius(float r) { ssao_radius = r; update(); }
 void VRRenderManager::setSSAOkernel(int k) { ssao_kernel = k; update(); }

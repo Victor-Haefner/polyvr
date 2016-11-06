@@ -76,6 +76,7 @@ class VRRenderStudio : public VRStorage {
         void setEye(EYE e);
 
         void setDefferedShading(bool b);
+        void setDeferredChannel(int c);
         bool getDefferedShading();
         void setSSAO(bool b);
         bool getSSAO();

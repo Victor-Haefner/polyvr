@@ -28,7 +28,7 @@ VRGuiGeneral::VRGuiGeneral() {
     setCheckButtonCallback("checkbutton_01", sigc::mem_fun(*this, &VRGuiGeneral::toggleFrustumCulling) );
     setCheckButtonCallback("checkbutton_02", sigc::mem_fun(*this, &VRGuiGeneral::toggleOcclusionCulling) );
     setCheckButtonCallback("checkbutton_2", sigc::mem_fun(*this, &VRGuiGeneral::toggleTwoSided) );
-    setCheckButtonCallback("checkbutton_3", sigc::mem_fun(*this, &VRGuiGeneral::toggleDefferedShader) );
+    setCheckButtonCallback("checkbutton_3", sigc::mem_fun(*this, &VRGuiGeneral::toggleDeferredShader) );
     setCheckButtonCallback("checkbutton_4", sigc::mem_fun(*this, &VRGuiGeneral::toggleSSAO) );
     setCheckButtonCallback("checkbutton_5", sigc::mem_fun(*this, &VRGuiGeneral::toggleCalib) );
     setCheckButtonCallback("checkbutton_6", sigc::mem_fun(*this, &VRGuiGeneral::toggleHMDD) );
@@ -40,6 +40,10 @@ VRGuiGeneral::VRGuiGeneral() {
     setEntryCallback("entry42", sigc::mem_fun(*this, &VRGuiGeneral::setPath));
     setEntryCallback("entry14", sigc::mem_fun(*this, &VRGuiGeneral::setExtension));
     setButtonCallback("button22", sigc::mem_fun(*this, &VRGuiGeneral::dumpOSG));
+    setRadioButtonCallback("radiobutton13", sigc::mem_fun(*this, &VRGuiGeneral::toggleDRendChannel));
+    setRadioButtonCallback("radiobutton14", sigc::mem_fun(*this, &VRGuiGeneral::toggleDRendChannel));
+    setRadioButtonCallback("radiobutton15", sigc::mem_fun(*this, &VRGuiGeneral::toggleDRendChannel));
+    setRadioButtonCallback("radiobutton16", sigc::mem_fun(*this, &VRGuiGeneral::toggleDRendChannel));
 }
 
 bool VRGuiGeneral::setSSAOradius( int st, double d ) {
@@ -112,10 +116,21 @@ void VRGuiGeneral::setMode() {
     setEntrySensitivity("entry42", t == VRBackground::SKY || t == VRBackground::IMAGE);
 }
 
-void VRGuiGeneral::toggleDefferedShader() {
+void VRGuiGeneral::toggleDeferredShader() {
     if (updating) return;
     auto scene = VRScene::getCurrent();
-    if (scene) scene->setDefferedShading( getCheckButtonState("checkbutton_3") );
+    if (scene) scene->setDeferredShading( getCheckButtonState("checkbutton_3") );
+}
+
+void VRGuiGeneral::toggleDRendChannel() {
+    if (updating) return;
+    auto scene = VRScene::getCurrent();
+    if (!scene) return;
+    auto channel = GL_RENDER;
+    if ( getRadioButtonState("radiobutton14") ) channel = GL_POSITION;
+    if ( getRadioButtonState("radiobutton15") ) channel = GL_NORMALIZE;
+    if ( getRadioButtonState("radiobutton16") ) channel = GL_DIFFUSE;
+    scene->setDeferredChannel(channel);
 }
 
 void VRGuiGeneral::toggleSSAO() {

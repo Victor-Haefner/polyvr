@@ -57,6 +57,7 @@ class VRDefShading {
         float shadowColor;
         bool initiated = false;
         bool enabled = false;
+        int channel = GL_RENDER;
         VRObjectPtr stageObject;
         VRMaterialPtr ssao_mat;
 
@@ -71,6 +72,7 @@ class VRDefShading {
         bool getDefferedShading();
         void reload();
 
+        void setDeferredChannel(int channel);
         TextureObjChunkRefPtr getTarget();
 
         void setDSCamera(VRCameraPtr cam);

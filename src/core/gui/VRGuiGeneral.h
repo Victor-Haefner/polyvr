@@ -23,7 +23,8 @@ class VRGuiGeneral {
         void toggleFrustumCulling();
         void toggleOcclusionCulling();
         void toggleTwoSided();
-        void toggleDefferedShader();
+        void toggleDeferredShader();
+        void toggleDRendChannel();
         void toggleSSAO();
         void toggleCalib();
         void toggleHMDD();

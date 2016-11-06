@@ -174,6 +174,10 @@ bool VRRenderStudio::getHMDD() { return do_hmdd; }
 bool VRRenderStudio::getMarker() { return do_marker; }
 bool VRRenderStudio::getDefferedShading() { return deferredRendering; }
 
+void VRRenderStudio::setDeferredChannel(int c) {
+    if (defShading) defShading->setDeferredChannel(c);
+}
+
 void VRRenderStudio::setDefferedShading(bool b) { deferredRendering = b; update(); }
 void VRRenderStudio::setSSAO(bool b) { do_ssao = b; update(); }
 void VRRenderStudio::setSSAOradius(float r) { ssao_radius = r; update(); }

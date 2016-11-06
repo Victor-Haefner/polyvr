@@ -136,6 +136,7 @@ VRMaterialPtr VRTree::initMaterial() {
 
     string wdir = VRSceneManager::get()->getOriginalWorkdir();
     mat->readFragmentShader(wdir+"/shader/Trees/Shader_tree_base.fp");
+    mat->readFragmentShader(wdir+"/shader/Trees/Shader_tree_base.dfp", true);
     mat->readVertexShader(wdir+"/shader/Trees/Shader_tree_base.vp");
     mat->readGeometryShader(wdir+"/shader/Trees/Shader_tree_base.gp");
     mat->readTessControlShader(wdir+"/shader/Trees/Shader_tree_base.tcp");
