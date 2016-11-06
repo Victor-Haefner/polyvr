@@ -18,6 +18,7 @@
 #include <OpenSG/OSGSimpleSHLChunk.h>
 #include <OpenSG/OSGChunkMaterial.h>
 #include <OpenSG/OSGMatrixUtility.h>
+#include <OpenSG/OSGDepthChunk.h>
 #include <OpenSG/OSGSimpleGeometry.h>        // Methods to create simple geos.
 
 
@@ -115,25 +116,15 @@ bool VRTransform::changedNow() { return checkWorldChange(); }
 
 void VRTransform::initCoords() {
     if (coords != 0) return;
-
     coords = OSGObject::create( makeCoordAxis(0.3, 3, false) );
     coords->node->setTravMask(0);
     addChild(coords);
     GeometryMTRecPtr geo = dynamic_cast<Geometry*>(coords->node->getCore());
-
-    string shdr_vp =
-    "void main( void ) {"
-    "   gl_Position = gl_ModelViewProjectionMatrix*gl_Vertex;"
-    "   gl_Position.z = -0.1;"
-    "   gl_FrontColor = gl_Color;"
-    "}";
-
     ChunkMaterialRecPtr mat = ChunkMaterial::create();
+    DepthChunkRecPtr depthChunk = DepthChunk::create();
+    depthChunk->setFunc( GL_ALWAYS );
+    mat->addChunk(depthChunk);
     mat->setSortKey(100);// render last
-    SimpleSHLChunkRecPtr shader_chunk = SimpleSHLChunk::create();
-    shader_chunk->setVertexProgram(shdr_vp.c_str());
-    mat->addChunk(shader_chunk);
-
     geo->setMaterial(mat);
 }
 
