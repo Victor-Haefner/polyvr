@@ -26,6 +26,7 @@ class VRDefShading {
         };
 
         struct LightInfo {
+            VRLightPtr vrlight;
             LightTypeE lightType;
             ShadowTypeE shadowType;
             LightMTRecPtr light;
@@ -80,7 +81,6 @@ class VRDefShading {
         void addDSLight(VRLightPtr light);
         void updateLight(VRLightPtr l);
         void subLight(UInt32 lightIdx, int ID);
-        void setShadow(LightInfo &li);
 
         const std::string &getLightVPFile(LightTypeE lightType);
         const std::string &getLightFPFile(LightTypeE lightType, ShadowTypeE shadowType);

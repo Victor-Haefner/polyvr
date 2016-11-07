@@ -142,6 +142,7 @@ void VRDefShading::setDefferedShading(bool b) {
     if (stageObject == 0) return;
     if (b) stageObject->setCore(OSGCore::create(dsStage), "defShading", true);
     else stageObject->setCore(OSGCore::create(Group::create()), "Object", true);
+    for (auto li : lightInfos) li.second.vrlight->setDeferred(b);
 }
 
 bool VRDefShading::getDefferedShading() { return enabled; }
@@ -162,14 +163,15 @@ void VRDefShading::addDSLight(VRLightPtr vrl) {
 
     LightMTRecPtr light = vrl->getLightCore();
     string type = vrl->getLightType();
-    bool shadows = false; //vrl->getShadows();
+    bool shadows = vrl->getShadows();
     int ID = vrl->getID();
 
     LightInfo li;
 
-    li.lightVP    = ShaderProgram     ::createVertexShader  ();
-    li.lightFP    = ShaderProgram     ::createFragmentShader();
-    li.lightSH    = ShaderProgramChunk::create              ();
+    li.vrlight = vrl;
+    li.lightVP = ShaderProgram     ::createVertexShader  ();
+    li.lightFP = ShaderProgram     ::createFragmentShader();
+    li.lightSH = ShaderProgramChunk::create              ();
 
     if (shadows) li.shadowType = defaultShadowType;
     else li.shadowType = ST_NONE;
@@ -193,14 +195,17 @@ void VRDefShading::addDSLight(VRLightPtr vrl) {
     dsStage->editMFLights       ()->push_back(li.light  );
     dsStage->editMFLightPrograms()->push_back(li.lightSH);
     lightInfos[ID] = li;
-    setShadow(li);
+
+    string vpFile = getLightVPFile(li.lightType);
+    string fpFile = getLightFPFile(li.lightType, li.shadowType);
+    li.lightVP->readProgram(vpFile.c_str());
+    li.lightFP->readProgram(fpFile.c_str());
 }
 
 void VRDefShading::updateLight(VRLightPtr l) {
     auto& li = lightInfos[l->getID()];
-
     string type = l->getLightType();
-    bool shadows = false; //l->getShadows();
+    bool shadows = l->getShadows();
 
     li.lightType = Point;
     if (type == "directional") li.lightType = Directional;
@@ -210,94 +215,33 @@ void VRDefShading::updateLight(VRLightPtr l) {
 
     li.light = l->getLightCore();
     dsStage->editMFLights()->replace(li.dsID, li.light);
-
+    dsStage->editMFLightPrograms();
     string vpFile = getLightVPFile(li.lightType);
     string fpFile = getLightFPFile(li.lightType, li.shadowType);
     li.lightVP->readProgram(vpFile.c_str());
     li.lightFP->readProgram(fpFile.c_str());
-
-    setShadow(li);
 }
 
 TextureObjChunkRefPtr VRDefShading::getTarget() { return fboTex; }
 
-void VRDefShading::setShadow(LightInfo &li) {
-    dsStage->editMFLights       ();
-    dsStage->editMFLightPrograms();
-
-    string vpFile = getLightVPFile(li.lightType);
-    string fpFile = getLightFPFile(li.lightType, li.shadowType);
-
-    li.lightVP->readProgram(vpFile.c_str());
-    li.lightFP->readProgram(fpFile.c_str());
-
-    auto setStandartShadow = [&]() {
-        ShaderShadowMapEngineRecPtr shadowEng = ShaderShadowMapEngine::create();
-        shadowEng->setWidth (shadowMapWidth );
-        shadowEng->setHeight(shadowMapHeight);
-        shadowEng->setOffsetFactor( 4.5f);
-        shadowEng->setOffsetBias  (16.f );
-        shadowEng->setForceTextureUnit(3);
-        li.light->setLightEngine(shadowEng);
-    };
-
-    if (li.shadowType == ST_STANDARD || true) {
-        setStandartShadow();
-        return;
-    }
-
-    if (li.shadowType == ST_TRAPEZOID && li.lightType != Directional) {
-        TrapezoidalShadowMapEngineRecPtr shadowEng = TrapezoidalShadowMapEngine::create();
-        shadowEng->setWidth (shadowMapWidth );
-        shadowEng->setHeight(shadowMapHeight);
-        shadowEng->setOffsetFactor( 4.5f);
-        shadowEng->setOffsetBias  (16.f );
-        shadowEng->setForceTextureUnit(3);
-        li.light->setLightEngine(shadowEng);
-        return;
-    }
-
-    if (li.shadowType == ST_TRAPEZOID && li.lightType == Directional) {
-        cout << "Warning: TSM not supported for diretional lights, using standart shadows" << endl;
-        setStandartShadow();
-        return;
-    }
-
-    li.light->setLightEngine(NULL);
-}
-
-
 // file containing vertex shader code for the light type
 const std::string& VRDefShading::getLightVPFile(LightTypeE lightType) {
     switch(lightType) {
-        case LightEngine::Directional:
-            return dsDirLightVPFile;
-        case LightEngine::Point:
-            return dsPointLightVPFile;
-        case LightEngine::Spot:
-            return dsSpotLightVPFile;
-        default:
-            return dsUnknownFile;
+        case LightEngine::Directional: return dsDirLightVPFile;
+        case LightEngine::Point: return dsPointLightVPFile;
+        case LightEngine::Spot: return dsSpotLightVPFile;
+        default: return dsUnknownFile;
     }
 }
 
 // file containing fragment shader code for the light type
 const std::string& VRDefShading::getLightFPFile(LightTypeE lightType, ShadowTypeE shadowType) {
+    bool ds = (shadowType != ST_NONE);
     switch(lightType) {
-        case Directional:
-            if(shadowType == ST_NONE) return dsDirLightFPFile;
-            else return dsDirLightShadowFPFile;
-
-        case Point:
-            if(shadowType == ST_NONE) return dsPointLightFPFile;
-            else return dsPointLightShadowFPFile;
-
-        case Spot:
-            if(shadowType == ST_NONE) return dsSpotLightFPFile;
-            else return dsSpotLightShadowFPFile;
-
-        default:
-            return dsUnknownFile;
+        case Directional: return ds ? dsDirLightShadowFPFile : dsDirLightFPFile;
+        case Point: return ds ? dsPointLightShadowFPFile : dsPointLightFPFile;
+        case Spot: return ds ? dsSpotLightShadowFPFile : dsSpotLightFPFile;
+        default: return dsUnknownFile;
     }
 }
 
@@ -305,10 +249,8 @@ void VRDefShading::subLight(UInt32 lightIdx, int ID) {
     OSG_ASSERT(lightIdx < lightInfos.size());
     OSG_ASSERT(lightIdx < dsStage->getMFLights()->size());
     OSG_ASSERT(lightIdx < dsStage->getMFLightPrograms()->size());
-
     dsStage->editMFLights()->erase(lightIdx);
     dsStage->editMFLightPrograms()->erase(lightIdx);
-
     lightInfos.erase(ID);
 }
 

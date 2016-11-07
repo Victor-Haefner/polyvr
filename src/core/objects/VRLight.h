@@ -36,6 +36,7 @@ class VRLight : public VRObject {
         Vec3f attenuation; // C L Q
         bool shadows = false;
         bool on = true;
+        bool deferred = false;
 
         void setup();
         void setup_after();
@@ -53,6 +54,7 @@ class VRLight : public VRObject {
         bool isOn();
 
         void setType(string type);
+        void setDeferred(bool b);
 
         void setLightDiffColor(Color4f c);
         Color4f getLightDiffColor();

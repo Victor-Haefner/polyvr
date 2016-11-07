@@ -131,6 +131,11 @@ void VRLight::setLightSpecColor(Color4f c) {
 
 Color4f VRLight::getLightSpecColor() { return lightSpecular; }
 
+void VRLight::setDeferred(bool b) {
+    deferred = b;
+    setShadows(shadows);
+}
+
 void VRLight::setupShadowEngines() {
     ssme = SimpleShadowMapEngine::create();
     gsme = ShaderShadowMapEngine::create();
@@ -170,9 +175,13 @@ void VRLight::setShadows(bool b) {
     };
 
     if (b) {
-        setShadowEngine(ssme);
+        if (!deferred) setShadowEngine(ssme);
+        if (deferred && lightType == "directional") setShadowEngine(gsme);
+        if (deferred && lightType != "directional") setShadowEngine(tsme);
         auto bb = getBoundingBox(); // update osg volume
     } else setShadowEngine(0);
+
+    updateDeferredLight();
 }
 
 void VRLight::setShadowColor(Color4f c) {
