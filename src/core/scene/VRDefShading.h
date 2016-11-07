@@ -58,7 +58,7 @@ class VRDefShading {
         float shadowColor;
         bool initiated = false;
         bool enabled = false;
-        int channel = GL_RENDER;
+        int channel = 0;
         VRObjectPtr stageObject;
         VRMaterialPtr ssao_mat;
 

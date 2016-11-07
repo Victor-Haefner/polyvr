@@ -37,7 +37,6 @@ VRLight::VRLight(string name) : VRObject(name) {
     s_light->setSpotExponent(3.f);
 
     setCore(OSGCore::create(p_light), "Light");
-    lightType = "point";
     attenuation = Vec3f(p_light->getConstantAttenuation(), p_light->getLinearAttenuation(), p_light->getQuadraticAttenuation());
 
     setLightDiffColor(Color4f(1,1,1,1));
@@ -141,7 +140,6 @@ void VRLight::setupShadowEngines() {
     gsme = ShaderShadowMapEngine::create();
     tsme = TrapezoidalShadowMapEngine::create();
     setShadowColor(Color4f(0.1f, 0.1f, 0.1f, 1.0f));
-    shadowType = "4096";
 
     ssme->setWidth (toInt(shadowType));
     ssme->setHeight(toInt(shadowType));
@@ -168,18 +166,23 @@ void VRLight::setShadows(bool b) {
     if (!ssme) setupShadowEngines();
     shadows = b;
 
-    auto setShadowEngine = [&](ShadowMapEngineRecPtr e) {
-        dynamic_pointer_cast<Light>(d_light->core)->setLightEngine(e);
-        dynamic_pointer_cast<Light>(p_light->core)->setLightEngine(e);
-        dynamic_pointer_cast<Light>(s_light->core)->setLightEngine(e);
+    auto setShadowEngine = [&](OSGCorePtr l, ShadowMapEngineRecPtr e) {
+        dynamic_pointer_cast<Light>(l->core)->setLightEngine(e);
     };
 
-    if (b) {
-        if (!deferred) setShadowEngine(ssme);
-        if (deferred && lightType == "directional") setShadowEngine(gsme);
-        if (deferred && lightType != "directional") setShadowEngine(tsme);
+    if (b) { // TODO: store a shadow engine for each core or create a new engine on the fly each time!
+        if (!deferred) setShadowEngine(d_light, ssme);
+        if (!deferred) setShadowEngine(p_light, ssme);
+        if (!deferred) setShadowEngine(s_light, ssme);
+        if (deferred) setShadowEngine(d_light, gsme);
+        if (deferred) setShadowEngine(p_light, tsme);
+        if (deferred) setShadowEngine(s_light, tsme);
         auto bb = getBoundingBox(); // update osg volume
-    } else setShadowEngine(0);
+    } else {
+        setShadowEngine(d_light, 0);
+        setShadowEngine(p_light, 0);
+        setShadowEngine(s_light, 0);
+    }
 
     updateDeferredLight();
 }

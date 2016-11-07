@@ -31,10 +31,10 @@ void main(void) {
         pos = posAmb.xyz;
         color = texture2DRect(texBufDiff, lookup);
 
-	if (channel == 7168) computeDirLight();
-	if (channel == 4611) color = vec4(posAmb.xyz, 1.0);
-	if (channel == 2977) color = vec4(norm.xyz, 1.0);
-	if (channel == 4609) color = vec4(color.xyz, 1.0);
+	if (channel == 0) computeDirLight();
+	if (channel == 1) color = vec4(posAmb.xyz, 1.0);
+	if (channel == 2) color = vec4(norm.xyz, 1.0);
+	if (channel == 3) color = vec4(color.xyz, 1.0);
         gl_FragColor = color;
     }
 }

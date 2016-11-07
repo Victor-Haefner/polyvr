@@ -7,15 +7,17 @@ uniform sampler2DRect texBufPos;
 uniform sampler2DRect texBufNorm;
 uniform sampler2DRect texBufDiff;
 uniform vec2          vpOffset;
+uniform int           channel;
 uniform float shadowColor = 0.0;
 
-// forward decls
+vec3 pos;
+vec3 norm;
+vec4 color = vec4(0);
+
 vec4 OSG_SSME_FP_calcShadow(in vec4 ecFragPos);
 
-// compute point light INDEX for fragment at POS with normal NORM and diffuse material color MDIFF
-vec4 computePointLight(int index, vec3 pos, vec3 norm, vec4 mDiff) {
-    vec4  color      = vec4(0., 0., 0., 0.);
-    vec3  lightDirUN = gl_LightSource[index].position.xyz - pos;
+void computePointLight() {
+    vec3  lightDirUN = gl_LightSource[0].position.xyz - pos;
     vec3  lightDir   = normalize(lightDirUN);
     float NdotL      = max(dot(norm, lightDir), 0.);
 
@@ -24,27 +26,29 @@ vec4 computePointLight(int index, vec3 pos, vec3 norm, vec4 mDiff) {
         shadow += shadowColor;
 
         float lightDist = length(lightDirUN);
-        float distAtt   = dot(vec3(gl_LightSource[index].constantAttenuation,
-                                   gl_LightSource[index].linearAttenuation,
-                                   gl_LightSource[index].quadraticAttenuation),
+        float distAtt   = dot(vec3(gl_LightSource[0].constantAttenuation,
+                                   gl_LightSource[0].linearAttenuation,
+                                   gl_LightSource[0].quadraticAttenuation),
                               vec3(1., lightDist, lightDist * lightDist));
         distAtt = 1. / distAtt;
-        color = shadow * distAtt * NdotL * mDiff * gl_LightSource[index].diffuse;
-    }
-
-    return color;
+        color = shadow * distAtt * NdotL * color * gl_LightSource[0].diffuse;
+    } else color = vec4(0);
 }
 
 void main(void) {
     vec2 lookup = gl_FragCoord.xy - vpOffset;
-    vec3 norm   = texture2DRect(texBufNorm, lookup).xyz;
+    norm   = texture2DRect(texBufNorm, lookup).xyz;
 
     if (dot(norm, norm) < 0.95) discard;
     else {
-        vec4  posAmb = texture2DRect(texBufPos,  lookup);
-        vec3  pos    = posAmb.xyz;
-        float amb    = posAmb.w;
-        vec4  mDiff  = texture2DRect(texBufDiff, lookup);
-        gl_FragColor = computePointLight(0, pos, norm, mDiff);
+        vec4 posAmb = texture2DRect(texBufPos,  lookup);
+        pos = posAmb.xyz;
+        color = texture2DRect(texBufDiff, lookup);
+
+	if (channel == 0) computePointLight();
+	if (channel == 1) color = vec4(posAmb.xyz, 1.0);
+	if (channel == 2) color = vec4(norm.xyz, 1.0);
+	if (channel == 3) color = vec4(color.xyz, 1.0);
+        gl_FragColor = color;
     }
 }

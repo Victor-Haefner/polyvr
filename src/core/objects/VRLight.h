@@ -26,8 +26,8 @@ class VRLight : public VRObject {
         ShaderShadowMapEngineRefPtr gsme;
         TrapezoidalShadowMapEngineRefPtr tsme;
 
-        string lightType;
-        string shadowType;
+        string lightType = "point";
+        string shadowType = "2048";
         string beacon_name;
         Color4f lightDiffuse;
         Color4f lightAmbient;

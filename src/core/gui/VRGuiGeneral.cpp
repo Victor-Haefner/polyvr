@@ -126,10 +126,10 @@ void VRGuiGeneral::toggleDRendChannel() {
     if (updating) return;
     auto scene = VRScene::getCurrent();
     if (!scene) return;
-    auto channel = GL_RENDER;
-    if ( getRadioButtonState("radiobutton14") ) channel = GL_POSITION;
-    if ( getRadioButtonState("radiobutton15") ) channel = GL_NORMALIZE;
-    if ( getRadioButtonState("radiobutton16") ) channel = GL_DIFFUSE;
+    int channel = 0;
+    if ( getRadioButtonState("radiobutton14") ) channel = 1;
+    if ( getRadioButtonState("radiobutton15") ) channel = 2;
+    if ( getRadioButtonState("radiobutton16") ) channel = 3;
     scene->setDeferredChannel(channel);
 }
 
