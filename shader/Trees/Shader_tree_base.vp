@@ -13,9 +13,9 @@ vec4 vertex;
 // TODO: work on wind
 void applyWind() {
 	vec3 v = vertex.xyz;
-	float dw = abs(wind+50*v.x+50*v.z)*0.000002;
+	float dw = abs(float(wind)+50.0*v.x+50.0*v.z)*0.000002;
 	dw *= v.y*v.y;
-	dw *= sin(v.x*20)*sin(v.z*20);
+	dw *= sin(v.x*20.0)*sin(v.z*20.0);
 	dw /= vtc[0];
     vertex += vec4(dw,0,dw,0);
 }

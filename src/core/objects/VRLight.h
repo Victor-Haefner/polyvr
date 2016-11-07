@@ -12,6 +12,8 @@ using namespace std;
 
 class Light; OSG_GEN_CONTAINERPTR(Light);
 class SimpleShadowMapEngine; OSG_GEN_CONTAINERPTR(SimpleShadowMapEngine);
+class ShaderShadowMapEngine; OSG_GEN_CONTAINERPTR(ShaderShadowMapEngine);
+class TrapezoidalShadowMapEngine; OSG_GEN_CONTAINERPTR(TrapezoidalShadowMapEngine);
 class VRLightBeacon;
 
 class VRLight : public VRObject {
@@ -19,21 +21,25 @@ class VRLight : public VRObject {
         OSGCorePtr d_light;
         OSGCorePtr p_light;
         OSGCorePtr s_light;
+        VRLightBeaconWeakPtr beacon;
+        SimpleShadowMapEngineRefPtr ssme;
+        ShaderShadowMapEngineRefPtr gsme;
+        TrapezoidalShadowMapEngineRefPtr tsme;
+
         string lightType;
         string shadowType;
-        VRLightBeaconWeakPtr beacon;
         string beacon_name;
         Color4f lightDiffuse;
         Color4f lightAmbient;
         Color4f lightSpecular;
         Color4f shadowColor;
+        Vec3f attenuation; // C L Q
         bool shadows = false;
         bool on = true;
-        SimpleShadowMapEngineRefPtr ssme;
-        Vec3f attenuation; // C L Q
 
         void setup();
         void setup_after();
+        void setupShadowEngines();
         void updateDeferredLight();
 
     public:

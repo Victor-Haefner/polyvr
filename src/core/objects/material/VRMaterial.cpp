@@ -870,7 +870,8 @@ void VRMaterial::checkShader(int type, string shader, string name) {
     if (blen > 1) {
         GLchar* compiler_log = (GLchar*)malloc(blen);
         glGetInfoLogARB(shaderObject, blen, &slen, compiler_log);
-        VRGuiManager::get()->printToConsole("Errors", string(compiler_log));
+        gm->printToConsole("Errors", "Shader "+name+" of material "+getName()+" warnings and errors:\n");
+        gm->printToConsole("Errors", string(compiler_log));
         free(compiler_log);
     }
 }

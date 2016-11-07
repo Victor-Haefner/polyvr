@@ -162,7 +162,7 @@ void VRDefShading::addDSLight(VRLightPtr vrl) {
 
     LightMTRecPtr light = vrl->getLightCore();
     string type = vrl->getLightType();
-    bool shadows = vrl->getShadows();
+    bool shadows = false; //vrl->getShadows();
     int ID = vrl->getID();
 
     LightInfo li;
@@ -200,7 +200,7 @@ void VRDefShading::updateLight(VRLightPtr l) {
     auto& li = lightInfos[l->getID()];
 
     string type = l->getLightType();
-    bool shadows = l->getShadows();
+    bool shadows = false; //l->getShadows();
 
     li.lightType = Point;
     if (type == "directional") li.lightType = Directional;
@@ -231,42 +231,39 @@ void VRDefShading::setShadow(LightInfo &li) {
     li.lightVP->readProgram(vpFile.c_str());
     li.lightFP->readProgram(fpFile.c_str());
 
-    if(li.shadowType == ST_NONE) {
-        li.light->setLightEngine(NULL);
-        return;
-    }
-
-    if(li.shadowType == ST_STANDARD) {
+    auto setStandartShadow = [&]() {
         ShaderShadowMapEngineRecPtr shadowEng = ShaderShadowMapEngine::create();
-
         shadowEng->setWidth (shadowMapWidth );
         shadowEng->setHeight(shadowMapHeight);
         shadowEng->setOffsetFactor( 4.5f);
         shadowEng->setOffsetBias  (16.f );
         shadowEng->setForceTextureUnit(3);
+        li.light->setLightEngine(shadowEng);
+    };
 
+    if (li.shadowType == ST_STANDARD || true) {
+        setStandartShadow();
+        return;
+    }
+
+    if (li.shadowType == ST_TRAPEZOID && li.lightType != Directional) {
+        TrapezoidalShadowMapEngineRecPtr shadowEng = TrapezoidalShadowMapEngine::create();
+        shadowEng->setWidth (shadowMapWidth );
+        shadowEng->setHeight(shadowMapHeight);
+        shadowEng->setOffsetFactor( 4.5f);
+        shadowEng->setOffsetBias  (16.f );
+        shadowEng->setForceTextureUnit(3);
         li.light->setLightEngine(shadowEng);
         return;
     }
 
-    if(li.shadowType == ST_TRAPEZOID) {
-        if(li.lightType != Directional) {
-            TrapezoidalShadowMapEngineRecPtr shadowEng =
-                TrapezoidalShadowMapEngine::create();
-
-            shadowEng->setWidth (shadowMapWidth );
-            shadowEng->setHeight(shadowMapHeight);
-            shadowEng->setOffsetFactor( 4.5f);
-            shadowEng->setOffsetBias  (16.f );
-            shadowEng->setForceTextureUnit(3);
-
-
-            li.light->setLightEngine(shadowEng);
-        } else {
-            std::cout << "TSM not supported for diretional lights." << std::endl;
-            li.light->setLightEngine(NULL);
-        }
+    if (li.shadowType == ST_TRAPEZOID && li.lightType == Directional) {
+        cout << "Warning: TSM not supported for diretional lights, using standart shadows" << endl;
+        setStandartShadow();
+        return;
     }
+
+    li.light->setLightEngine(NULL);
 }
 
 

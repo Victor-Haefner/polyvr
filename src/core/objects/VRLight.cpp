@@ -15,6 +15,8 @@
 #include <OpenSG/OSGDirectionalLight.h>
 #include <OpenSG/OSGSpotLight.h>
 #include <OpenSG/OSGSimpleShadowMapEngine.h>
+#include <OpenSG/OSGShaderShadowMapEngine.h>
+#include <OpenSG/OSGTrapezoidalShadowMapEngine.h>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -33,10 +35,6 @@ VRLight::VRLight(string name) : VRObject(name) {
     s_light->setDirection(Vec3f(0,0,-1));
     s_light->setSpotCutOff(Pi/6.f);
     s_light->setSpotExponent(3.f);
-
-    ssme = SimpleShadowMapEngine::create();
-    setShadowColor(Color4f(0.1f, 0.1f, 0.1f, 1.0f));
-    shadowType = "4096";
 
     setCore(OSGCore::create(p_light), "Light");
     lightType = "point";
@@ -73,12 +71,9 @@ VRLightPtr VRLight::create(string name) {
 }
 
 void VRLight::setup() {
-    ssme = SimpleShadowMapEngine::create();
     setType(lightType);
     setShadows(shadows);
     setShadowColor(shadowColor);
-    ssme->setWidth (toInt(shadowType));
-    ssme->setHeight(toInt(shadowType));
     setLightDiffColor(lightDiffuse);
     setLightAmbColor(lightAmbient);
     setLightSpecColor(lightSpecular);
@@ -136,28 +131,58 @@ void VRLight::setLightSpecColor(Color4f c) {
 
 Color4f VRLight::getLightSpecColor() { return lightSpecular; }
 
-void VRLight::setShadows(bool b) {
-    shadows = b;
-    if (b) {
-        dynamic_pointer_cast<Light>(d_light->core)->setLightEngine(ssme);
-        dynamic_pointer_cast<Light>(p_light->core)->setLightEngine(ssme);
-        dynamic_pointer_cast<Light>(s_light->core)->setLightEngine(ssme);
-        auto bb = getBoundingBox(); // update osg volume
-    } else {
-        dynamic_pointer_cast<Light>(d_light->core)->setLightEngine(0);
-        dynamic_pointer_cast<Light>(p_light->core)->setLightEngine(0);
-        dynamic_pointer_cast<Light>(s_light->core)->setLightEngine(0);
-    }
+void VRLight::setupShadowEngines() {
+    ssme = SimpleShadowMapEngine::create();
+    gsme = ShaderShadowMapEngine::create();
+    tsme = TrapezoidalShadowMapEngine::create();
+    setShadowColor(Color4f(0.1f, 0.1f, 0.1f, 1.0f));
+    shadowType = "4096";
+
+    ssme->setWidth (toInt(shadowType));
+    ssme->setHeight(toInt(shadowType));
+    gsme->setWidth (toInt(shadowType));
+    gsme->setHeight(toInt(shadowType));
+    tsme->setWidth (toInt(shadowType));
+    tsme->setHeight(toInt(shadowType));
+
+    ssme->setOffsetFactor( 4.5f);
+    ssme->setOffsetBias  (16.f );
+
+    gsme->setOffsetFactor( 4.5f);
+    gsme->setOffsetBias  (16.f );
+    gsme->setForceTextureUnit(3);
+    tsme->setOffsetFactor( 4.5f);
+    tsme->setOffsetBias  (16.f );
+    tsme->setForceTextureUnit(3);
 }
 
 bool VRLight::getShadows() { return shadows; }
+Color4f VRLight::getShadowColor() { return shadowColor; }
+
+void VRLight::setShadows(bool b) {
+    if (!ssme) setupShadowEngines();
+    shadows = b;
+
+    auto setShadowEngine = [&](ShadowMapEngineRecPtr e) {
+        dynamic_pointer_cast<Light>(d_light->core)->setLightEngine(e);
+        dynamic_pointer_cast<Light>(p_light->core)->setLightEngine(e);
+        dynamic_pointer_cast<Light>(s_light->core)->setLightEngine(e);
+    };
+
+    if (b) {
+        setShadowEngine(ssme);
+        auto bb = getBoundingBox(); // update osg volume
+    } else setShadowEngine(0);
+}
 
 void VRLight::setShadowColor(Color4f c) {
     shadowColor = c;
+    if (!ssme) return;
     ssme->setShadowColor(c);
+    //gsme->setShadowColor(c);
+    //tsme->setShadowColor(c);
+    // TODO: shadow color has to be passed as uniform to light fragment shader
 }
-
-Color4f VRLight::getShadowColor() { return shadowColor; }
 
 void VRLight::setOn(bool b) {
     on = b;
