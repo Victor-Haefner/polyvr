@@ -204,7 +204,7 @@ void setLight(VRLightPtr l) {
     setCheckButton("checkbutton31", l->isOn());
     setCheckButton("checkbutton32", l->getShadows());
     setCombobox("combobox2", getListStorePos("light_types", l->getLightType()));
-    setCombobox("combobox22", getListStorePos("shadow_types", l->getShadowType()));
+    setCombobox("combobox22", getListStorePos("shadow_types", toString(l->getShadowMapRes())));
 
     setColorChooserColor("shadow_col", toColor3f(l->getShadowColor()));
     setColorChooserColor("light_diff", toColor3f(l->getLightDiffColor()));
@@ -1093,7 +1093,7 @@ void VRGuiScene::on_change_light_shadow() {
     VRLightPtr obj = static_pointer_cast<VRLight>( getSelected() );
     if (!obj) return;
     string t = getComboboxText("combobox22");
-    obj->setShadowType(t);
+    obj->setShadowMapRes(toInt(t));
 }
 
 void VRGuiScene::on_edit_light_attenuation() {
@@ -1274,7 +1274,7 @@ VRGuiScene::VRGuiScene() { // TODO: reduce callbacks with templated functions
 
     //light
     fillStringListstore("light_types", VRLight::getTypes());
-    fillStringListstore("shadow_types", VRLight::getShadowTypes());
+    fillStringListstore("shadow_types", VRLight::getShadowMapResolutions());
     //fillStringListstore("csg_operations", CSGGeometry::getOperations());
     fillStringListstore("phys_shapes", VRPhysics::getPhysicsShapes());
     fillStringListstore("cam_proj", VRCamera::getProjectionTypes());

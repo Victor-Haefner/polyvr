@@ -24,11 +24,12 @@ class VRLight : public VRObject {
         VRLightBeaconWeakPtr beacon;
         SimpleShadowMapEngineRefPtr ssme;
         ShaderShadowMapEngineRefPtr gsme;
-        TrapezoidalShadowMapEngineRefPtr tsme;
+        TrapezoidalShadowMapEngineRefPtr ptsme;
+        TrapezoidalShadowMapEngineRefPtr stsme;
 
         string lightType = "point";
-        string shadowType = "2048";
         string beacon_name;
+        int shadowMapRes = 2048;
         Color4f lightDiffuse;
         Color4f lightAmbient;
         Color4f lightSpecular;
@@ -67,8 +68,8 @@ class VRLight : public VRObject {
         bool getShadows();
         void setShadowColor(Color4f c);
         Color4f getShadowColor();
-        void setShadowType(string t);
-        string getShadowType();
+        void setShadowMapRes(int t);
+        int getShadowMapRes();
 
         VRLightBeaconWeakPtr getBeacon();
         void setBeacon(VRLightBeaconPtr b);
@@ -84,7 +85,7 @@ class VRLight : public VRObject {
         string getLightType();
 
         static vector<string> getTypes();
-        static vector<string> getShadowTypes();
+        static vector<string> getShadowMapResolutions();
         static vector<string> getTypeParameter(string type);
 };
 

@@ -46,7 +46,7 @@ VRLight::VRLight(string name) : VRObject(name) {
     store("on", &on);
     store("lightType", &lightType);
     store("shadow", &shadows);
-    store("shadowType", &shadowType);
+    store("shadowMapRes", &shadowMapRes);
     store("diffuse", &lightDiffuse);
     store("ambient", &lightAmbient);
     store("specular", &lightSpecular);
@@ -138,15 +138,18 @@ void VRLight::setDeferred(bool b) {
 void VRLight::setupShadowEngines() {
     ssme = SimpleShadowMapEngine::create();
     gsme = ShaderShadowMapEngine::create();
-    tsme = TrapezoidalShadowMapEngine::create();
+    ptsme = TrapezoidalShadowMapEngine::create();
+    stsme = TrapezoidalShadowMapEngine::create();
     setShadowColor(Color4f(0.1f, 0.1f, 0.1f, 1.0f));
 
-    ssme->setWidth (toInt(shadowType));
-    ssme->setHeight(toInt(shadowType));
-    gsme->setWidth (toInt(shadowType));
-    gsme->setHeight(toInt(shadowType));
-    tsme->setWidth (toInt(shadowType));
-    tsme->setHeight(toInt(shadowType));
+    ssme->setWidth (shadowMapRes);
+    ssme->setHeight(shadowMapRes);
+    gsme->setWidth (shadowMapRes);
+    gsme->setHeight(shadowMapRes);
+    ptsme->setWidth (shadowMapRes);
+    ptsme->setHeight(shadowMapRes);
+    stsme->setWidth (shadowMapRes);
+    stsme->setHeight(shadowMapRes);
 
     ssme->setOffsetFactor( 4.5f);
     ssme->setOffsetBias  (16.f );
@@ -154,9 +157,12 @@ void VRLight::setupShadowEngines() {
     gsme->setOffsetFactor( 4.5f);
     gsme->setOffsetBias  (16.f );
     gsme->setForceTextureUnit(3);
-    tsme->setOffsetFactor( 4.5f);
-    tsme->setOffsetBias  (16.f );
-    tsme->setForceTextureUnit(3);
+    ptsme->setOffsetFactor( 4.5f);
+    ptsme->setOffsetBias  (16.f );
+    ptsme->setForceTextureUnit(3);
+    stsme->setOffsetFactor( 4.5f);
+    stsme->setOffsetBias  (16.f );
+    stsme->setForceTextureUnit(3);
 }
 
 bool VRLight::getShadows() { return shadows; }
@@ -175,8 +181,8 @@ void VRLight::setShadows(bool b) {
         if (!deferred) setShadowEngine(p_light, ssme);
         if (!deferred) setShadowEngine(s_light, ssme);
         if (deferred) setShadowEngine(d_light, gsme);
-        if (deferred) setShadowEngine(p_light, tsme);
-        if (deferred) setShadowEngine(s_light, tsme);
+        if (deferred) setShadowEngine(p_light, ptsme);
+        if (deferred) setShadowEngine(s_light, stsme);
         auto bb = getBoundingBox(); // update osg volume
     } else {
         setShadowEngine(d_light, 0);
@@ -216,12 +222,19 @@ void VRLight::setAttenuation(Vec3f a) {
 
 Vec3f VRLight::getAttenuation() { return attenuation; }
 
-void VRLight::setShadowType(string t) {
-    shadowType = t;
-    setup();
+void VRLight::setShadowMapRes(int t) {
+    shadowMapRes = t;
+    if (ssme) ssme->setWidth (t);
+    if (ssme) ssme->setHeight(t);
+    if (gsme) gsme->setWidth (t);
+    if (gsme) gsme->setHeight(t);
+    if (ptsme) ptsme->setWidth (t);
+    if (ptsme) ptsme->setHeight(t);
+    if (stsme) stsme->setWidth (t);
+    if (stsme) stsme->setHeight(t);
 }
 
-string VRLight::getShadowType() { return shadowType; }
+int VRLight::getShadowMapRes() { return shadowMapRes; }
 
 vector<string> VRLight::getTypes() {
     vector<string> s;
@@ -231,7 +244,7 @@ vector<string> VRLight::getTypes() {
     return s;
 }
 
-vector<string> VRLight::getShadowTypes() {
+vector<string> VRLight::getShadowMapResolutions() {
     vector<string> s;
     s.push_back("128");
     s.push_back("256");
