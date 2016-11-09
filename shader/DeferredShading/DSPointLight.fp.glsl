@@ -46,10 +46,10 @@ void main(void) {
         vec4  mDiff  = texture2DRect(texBufDiff, lookup);
 
         vec4 c = vec4(0);
-	if (channel == 7168) c = computePointLight(0, posAmb.w, pos, norm, mDiff);
-	if (channel == 4611) c = vec4(posAmb.xyz, 1.0);
-	if (channel == 2977) c = vec4(norm.xyz, 1.0);
-	if (channel == 4609) c = vec4(mDiff.xyz, 1.0);
+	if (channel == 0) c = computePointLight(0, posAmb.w, pos, norm, mDiff);
+	if (channel == 1) c = vec4(posAmb.xyz, 1.0);
+	if (channel == 2) c = vec4(norm.xyz, 1.0);
+	if (channel == 3) c = vec4(mDiff.xyz, 1.0);
         gl_FragColor = c;
     }
 }
