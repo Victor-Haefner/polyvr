@@ -38,6 +38,7 @@ class VRTransform : public VRObject {
         bool change = false;
         bool fixed = true;
         bool cam_invert_z = false;
+        bool identity = true;
         int orientation_mode = OM_DIR;
 
         Vec3f _at = Vec3f(0,0,-1);

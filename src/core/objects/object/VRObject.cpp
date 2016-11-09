@@ -160,19 +160,24 @@ void VRObject::setCore(OSGCorePtr c, string _type, bool force) {
         return;
     }
 
+    core = c;
     type = _type;
     osg->node->setCore(c->core);
     specialized = true;
 }
 
 /** Returns the object OSG core **/
-OSGCorePtr VRObject::getCore() { return OSGCore::create( osg->node->getCore() ); }
+OSGCorePtr VRObject::getCore() { return core; }
 
 /** Switch the object core by another **/
 void VRObject::switchCore(OSGCorePtr c) {
     if(!specialized) return;
     osg->node->setCore(c->core);
+    core = c;
 }
+
+void VRObject::disableCore() { osg->node->setCore( Group::create() ); }
+void VRObject::enableCore() { osg->node->setCore( core->core ); }
 
 /** Returns the object OSG node **/
 OSGObjectPtr VRObject::getNode() { return osg; }

@@ -30,6 +30,7 @@ VRTransform::VRTransform(string name) : VRObject(name) {
     t = OSGTransform::create( Transform::create() );
     constraint = VRConstraint::create();
     setCore(OSGCore::create(t->trans), "Transform");
+    disableCore();
     addAttachment("transform", 0);
 
     store("from", &_from);
@@ -94,10 +95,31 @@ void VRTransform::updatePhysics() {
     physics->resetForces();
 }
 
+bool isIdentity(const Matrix& m) {
+    static Matrix r;
+    static bool mSet = false;
+    if (!mSet) { mSet = true; r.setIdentity(); }
+    return (m == r);
+}
+
 void VRTransform::updateTransformation() {
     Matrix m;
     dm->read(m);
-    if (t->trans) t->trans->setMatrix(m);
+
+    if (!t->trans) return;
+
+    bool isI = isIdentity(m);
+    if (identity && !isI) {
+        identity = false;
+        enableCore();
+    }
+
+    if (!identity && isI) {
+        identity = true;
+        disableCore();
+    }
+
+    t->trans->setMatrix(m);
 }
 
 void VRTransform::reg_change() {

@@ -34,7 +34,8 @@ class VRGlobals {
 
 class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, public VRUndoInterface {
     private:
-        std::shared_ptr<OSGObject> osg;
+        OSGObjectPtr osg;
+        OSGCorePtr core;
         bool specialized = false;
         VRObjectWeakPtr parent;
         int ID = 0;
@@ -85,6 +86,8 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         void setCore(OSGCorePtr c, string _type, bool force = false);
         OSGCorePtr getCore();
         void switchCore(OSGCorePtr c);
+        void disableCore();
+        void enableCore();
 
         OSGObjectPtr getNode();
         virtual void addChild(OSGObjectPtr n);
