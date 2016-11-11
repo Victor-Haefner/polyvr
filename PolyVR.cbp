@@ -225,6 +225,7 @@
 			<Add option="-lxerces-c" />
 			<Add option="-lHACD" />
 			<Add option="-lssh2" />
+			<Add option="-lfftw3" />
 			<Add directory="/usr/lib/virtuose" />
 			<Add directory="/usr/lib/opensg" />
 			<Add directory="/usr/lib/CEF" />

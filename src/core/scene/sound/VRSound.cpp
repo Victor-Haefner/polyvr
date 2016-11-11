@@ -19,6 +19,8 @@ extern "C" {
 #include <AL/alext.h>
 #endif
 
+#include <fftw3.h>
+
 using namespace OSG;
 
 struct VRSound::ALData {
@@ -336,7 +338,6 @@ void VRSound::synthesize(float Ac, float wc, float pc, float Am, float wm, float
     ALuint buf;
     alGenBuffers(1, &buf);
 
-
     int sample_rate = 22050;
     size_t buf_size = duration * sample_rate;
     buf_size += buf_size%2;
@@ -364,3 +365,53 @@ void VRSound::synthesize(float Ac, float wc, float pc, float Am, float wm, float
     delete samples;
 }
 
+void VRSound::synthBuffer(vector<Vec2d> frequencies, float duration) {
+    if (!initiated) initiate();
+
+    // fourier transform
+    vector<Vec2d> wave;
+    int N = frequencies.size();
+    wave.resize(N);
+    Vec2d* in = &frequencies[0];
+    Vec2d* out = &wave[0];
+    int dir;
+    fftw_plan p = fftw_plan_dft_1d(N, (double(*)[2])in, (double(*)[2])out, FFTW_FORWARD, FFTW_ESTIMATE);
+    fftw_execute(p);
+    fftw_destroy_plan(p);
+
+    auto interpolate = [&](const float& t) {
+        int t1 = floor(t);
+        int t2 = ceil(t);
+        if (t2 >= N) return 0.0;
+        return (wave[t2][1]-wave[t1][1])*(t-t1) + wave[t1][1];
+    };
+
+    // play sound
+    ALuint buf;
+    alGenBuffers(1, &buf);
+    int sample_rate = 22050;
+    size_t buf_size = duration * sample_rate;
+    buf_size += buf_size%2;
+    short* samples = new short[buf_size];
+
+    for (int i=0; i<buf_size; i++) {
+        float t = N*float(i)/sample_rate;
+        samples[i] = interpolate(t);
+    }
+
+    alBufferData(buf, AL_FORMAT_MONO16, samples, buf_size, sample_rate);
+
+    ALint val = -1;
+    ALuint bufid = 0; // TODO: not working properly!!
+    do { ALCHECK_BREAK( alGetSourcei(source, AL_BUFFERS_PROCESSED, &val) ); // recycle buffers
+        for(; val > 0; --val) {
+            ALCHECK( alSourceUnqueueBuffers(source, 1, &bufid));
+        }
+    } while (val > 0);
+
+    ALCHECK( alSourceQueueBuffers(source, 1, &buf));
+    ALCHECK( alGetSourcei(source, AL_SOURCE_STATE, &val));
+    if (val != AL_PLAYING) ALCHECK( alSourcePlay(source));
+
+    delete samples;
+}

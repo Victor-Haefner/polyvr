@@ -61,7 +61,7 @@ void VRMainInterface::update() {
     for (auto s : VRSceneManager::get()->getExamplePaths() ) page += "<button onClick='get(0,1,\"" + s + "\")'>" + s + "</button><br>";
 
     page += "</body></html>";
-    mobile->addWebSite("", page);
+    mobile->addWebSite("polyvr", page);
 }
 
 OSG_END_NAMESPACE;

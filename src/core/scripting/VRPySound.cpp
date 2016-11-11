@@ -13,6 +13,7 @@ PyMethodDef VRPySound::methods[] = {
     {"stopAllSounds", (PyCFunction)VRPySound::stopAllSounds, METH_NOARGS, "Stops all currently playing sounds." },
     {"setVolume", (PyCFunction)VRPySound::setVolume, METH_VARARGS, "Set sound volume - setVolume( float ) \n\tfrom 0.0 to 1.0 (= 100%)" },
     {"synthesize", (PyCFunction)VRPySound::synthesize, METH_VARARGS, "synthesize( Ac, wc, pc, Am, wm, pm, T)\t\n A,w,p are the amplitude, frequency and phase, c and m are the carrier sinusoid and modulator sinusoid, T is the packet duration in seconds" },
+    {"synthBuffer", (PyCFunction)VRPySound::synthBuffer, METH_VARARGS, "synthBuffer( [[f,A]], T )\t\n [f,A] frequency/amplitude pairs, T is the packet duration in seconds" },
     {NULL}  /* Sentinel */
 };
 
@@ -36,6 +37,16 @@ PyObject* VRPySound::synthesize(VRPySound* self, PyObject* args) {
     float Ac, wc, pc, Am, wm, pm, T;
     if (! PyArg_ParseTuple(args, "fffffff", &Ac, &wc, &pc, &Am, &wm, &pm, &T)) return NULL;
     self->objPtr->synthesize(Ac, wc, pc, Am, wm, pm, T);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPySound::synthBuffer(VRPySound* self, PyObject* args) {
+    float T;
+    PyObject* v;
+    if (! PyArg_ParseTuple(args, "Of", &v, &T)) return NULL;
+    vector<Vec2d> data;
+    pyListToVector<vector<Vec2d>, Vec2d>(v, data);
+    self->objPtr->synthBuffer(data, T);
     Py_RETURN_TRUE;
 }
 

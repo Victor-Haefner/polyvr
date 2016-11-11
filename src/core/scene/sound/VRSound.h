@@ -60,6 +60,7 @@ class VRSound {
 
         // carrier amplitude, carrier frequency, carrier phase, modulation amplitude, modulation frequency, modulation phase, packet duration
         void synthesize(float Ac = 32760, float wc = 440, float pc = 0, float Am = 0, float wm = 0, float pm = 0, float T = 1);
+        void synthBuffer(vector<Vec2d> frequencies, float T = 1);
 };
 
 OSG_END_NAMESPACE;

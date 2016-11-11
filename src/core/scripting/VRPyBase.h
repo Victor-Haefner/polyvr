@@ -51,6 +51,7 @@ struct VRPyBase {
     template <class T, class t>
     static bool pyListToVector(PyObject* data, T& vec);
     static OSG::Vec2f parseVec2fList(PyObject *li);
+    static OSG::Vec2d parseVec2dList(PyObject *li);
     static OSG::Vec3f parseVec3fList(PyObject *li);
     static OSG::Vec4f parseVec4fList(PyObject *li);
     static OSG::Vec3i parseVec3iList(PyObject *li);
