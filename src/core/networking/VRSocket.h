@@ -2,6 +2,7 @@
 #define VRSOCKET_H_INCLUDED
 
 #include <string.h>
+#include <memory>
 #include <OpenSG/OSGConfig.h>
 #include "core/utils/VRName.h"
 #include "core/utils/VRDeviceFwd.h"
@@ -20,9 +21,9 @@ typedef VRFunction<string> VRTCP_cb;
 struct HTTP_args {
     HTTPServer* serv = 0;
     VRHTTP_cb* cb = 0;
-    map<string, string>* params = 0;
-    map<string, string*>* pages = 0;
-    map<string, VRServerCbWeakPtr>* callbacks = 0;
+    std::shared_ptr< map<string, string> > params;
+    std::shared_ptr< map<string, string> > pages;
+    std::shared_ptr< map<string, VRServerCbWeakPtr> > callbacks;
     string path;
     bool websocket = false;
     string ws_data;

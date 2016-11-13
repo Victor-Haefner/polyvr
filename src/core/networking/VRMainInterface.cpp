@@ -14,8 +14,10 @@ VRMainInterface::VRMainInterface() {
     server = VRServer::create(5501);
     server->setName("MainInterface");
     VRSignalPtr sig = server->addSignal(0,1);
-    clickCb = VRFunction<VRDeviceWeakPtr>::create( "VRMainInterface_on_scene_clicked", boost::bind(&VRMainInterface::on_scene_clicked, this, _1) );
+    clickCb = VRDeviceCb::create( "VRMainInterface_on_scene_clicked", boost::bind(&VRMainInterface::on_scene_clicked, this, _1) );
     sig->add( clickCb );
+    reqCb = VRServerCb::create( "VRMainInterface_request_handler", boost::bind(&VRMainInterface::handleRequest, this, _1) );
+    server->addCallback( "request", reqCb);
     update();
 }
 
@@ -33,6 +35,31 @@ void VRMainInterface::on_scene_clicked(VRDeviceWeakPtr d) {
     cout << "switch to scene " << path << endl;
     VRSceneManager::get()->loadScene(path);
     update();
+}
+
+string VRMainInterface::handleRequest(map<string, string> params) {
+    if (!params.count("var")) return "";
+    string var = params["var"];
+
+    auto pathsToList = [&](const vector<string>& paths) {
+        string res = "[";
+        for (auto s : paths) {
+            res += s;
+            if (s != *paths.rbegin()) res += ", ";
+        }
+        res += "]";
+        return res;
+    };
+
+    if (var == "favorites") {
+        return pathsToList( VRSceneManager::get()->getFavoritePaths() );
+    }
+
+    if (var == "examples") {
+        return pathsToList( VRSceneManager::get()->getExamplePaths() );
+    }
+
+    return "";
 }
 
 void VRMainInterface::update() {

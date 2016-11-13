@@ -24,17 +24,12 @@ using namespace std;
 //mongoose server-------------------------------------------------------------
 
 HTTP_args::HTTP_args() {
-    params = new map<string, string>();
-    pages = new map<string, string*>();
-    callbacks = new map<string, VRServerCbWeakPtr>();
+    params = shared_ptr<map<string, string>>( new map<string, string>() );
+    pages = shared_ptr<map<string, string>>( new map<string, string>() );
+    callbacks = shared_ptr<map<string, VRServerCbWeakPtr>>( new map<string, VRServerCbWeakPtr>() );
 }
 
-HTTP_args::~HTTP_args() {
-    for (auto p : *pages) delete p.second;
-    delete params;
-    delete pages;
-    delete callbacks;
-}
+HTTP_args::~HTTP_args() {}
 
 void HTTP_args::print() {
     stringstream ss;
@@ -111,13 +106,11 @@ class HTTPServer {
         }
 
         void addPage(string path, string page) {
-            if (data->pages->count(path) == 0) (*data->pages)[path] = new string();
-            *(*data->pages)[path] = page;
+            (*data->pages)[path] = page;
         }
 
         void remPage(string path) {
             if (data->pages->count(path)) {
-                delete (*data->pages)[path];
                 data->pages->erase(path);
             }
         }
@@ -204,7 +197,7 @@ static int server_answer_to_connection_m(struct mg_connection *conn, enum mg_eve
 
         if (sad->path != "") {
             if (sad->pages->count(sad->path)) { // return local site
-                string spage = *(*sad->pages)[sad->path];
+                string spage = (*sad->pages)[sad->path];
                 mg_send_data(conn, spage.c_str(), spage.size());
                 if (v) VRLog::log("net", "Send local site\n");
             } else if(sad->callbacks->count(sad->path)) { // return callback

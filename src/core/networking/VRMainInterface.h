@@ -17,10 +17,13 @@ class VRMainInterface {
         VRServerPtr server;
         string page;
         VRDeviceCbPtr clickCb;
+        VRServerCbPtr reqCb;
 
         VRMainInterface();
         void on_scene_clicked(VRDeviceWeakPtr dev);
         void update();
+
+        string handleRequest(map<string, string> params);
 
     public:
         static VRMainInterface* get();
