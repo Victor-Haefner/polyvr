@@ -1,4 +1,4 @@
-#include "VRMobile.h"
+#include "VRServer.h"
 #include "VRSignal.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/toString.h"
@@ -14,28 +14,28 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-VRMobile::VRMobile(int port) : VRDevice("mobile") {
+VRServer::VRServer(int port) : VRDevice("server") {
     soc = VRSceneManager::get()->getSocket(port);
     this->port = port;
-    cb = new VRHTTP_cb( "Mobile_server_callback", boost::bind(&VRMobile::callback, this, _1) );
+    cb = new VRHTTP_cb( "Mobile_server_callback", boost::bind(&VRServer::callback, this, _1) );
     soc->setHTTPCallback(cb);
     soc->setType("http receive");
 }
 
-VRMobile::~VRMobile() {
-    //cout << "~VRMobile " << getName() << endl;
+VRServer::~VRServer() {
+    //cout << "~VRServer " << getName() << endl;
 }
 
-VRMobilePtr VRMobile::create(int p) {
-    auto d = VRMobilePtr(new VRMobile(p));
+VRServerPtr VRServer::create(int p) {
+    auto d = VRServerPtr(new VRServer(p));
     d->initIntersect(d);
     d->clearSignals();
     return d;
 }
 
-VRMobilePtr VRMobile::ptr() { return static_pointer_cast<VRMobile>( shared_from_this() ); }
+VRServerPtr VRServer::ptr() { return static_pointer_cast<VRServer>( shared_from_this() ); }
 
-void VRMobile::callback(void* _args) { // TODO: implement generic button trigger of device etc..
+void VRServer::callback(void* _args) { // TODO: implement generic button trigger of device etc..
     //args->print();
 	HTTP_args* args = (HTTP_args*)_args;
 
@@ -48,53 +48,55 @@ void VRMobile::callback(void* _args) { // TODO: implement generic button trigger
         setMessage(args->ws_data);
         if (args->ws_data.size() == 0) return;
     } else {
-        if (args->params->count("button") == 0) { cout << "VRMobile::callback warning, no button passed\n"; return; }
-        if (args->params->count("state") == 0) { cout << "VRMobile::callback warning, no state passed\n"; return; }
+        if (args->params->count("button") == 0) { cout << "VRServer::callback warning, no button passed\n"; return; }
+        if (args->params->count("state") == 0) { cout << "VRServer::callback warning, no state passed\n"; return; }
         if (args->params->count("message")) setMessage((*args->params)["message"]);
 
         button = toInt((*args->params)["button"]);
         state = toInt((*args->params)["state"]);
     }
 
-    VRLog::log("net", "VRMobile::callback button: " + toString(button) + " state: " + toString(state) + "\n");
+    VRLog::log("net", "VRServer::callback button: " + toString(button) + " state: " + toString(state) + "\n");
     change_button(button, state);
 }
 
-void VRMobile::answerWebSocket(int id, string msg) {
+void VRServer::answerWebSocket(int id, string msg) {
     soc->answerWebSocket(id, msg);
 }
 
-void VRMobile::clearSignals() {
+void VRServer::clearSignals() {
     VRDevice::clearSignals();
 
     addSignal( 0, 0)->add( getDrop() );
     addSignal( 0, 1)->add( addDrag( getBeacon() ) );
 }
 
-void VRMobile::setPort(int port) { this->port = port; soc->setPort(port); }
-int VRMobile::getPort() { return port; }
+void VRServer::setPort(int port) { this->port = port; soc->setPort(port); }
+int VRServer::getPort() { return port; }
 
-void VRMobile::updateMobilePage() {
-    return; //TODO: this induces a segfault when closing PolyVR
+void VRServer::updateMobilePage() {
+    //return; //TODO: this induces a segfault when closing PolyVR
     string page = "<html><body>";
     for (auto w : websites) page += "<a href=\"" + w.first + "\">" + w.first + "</a>";
     page += "</body></html>";
-    if (websites.size()) soc->addHTTPPage(getName(), page);
-    else soc->remHTTPPage(getName());
+    soc->addHTTPPage(getName(), page);
+
+    //if (websites.size()) soc->addHTTPPage(getName(), page);
+    //else soc->remHTTPPage(getName());
 }
 
-void VRMobile::addWebSite(string uri, string website) {
+void VRServer::addWebSite(string uri, string website) {
     websites[uri] = website;
     soc->addHTTPPage(uri, website);
     updateMobilePage();
 }
 
-void VRMobile::remWebSite(string uri) {
+void VRServer::remWebSite(string uri) {
     if (websites.count(uri)) websites.erase(uri);
     soc->remHTTPPage(uri);
     updateMobilePage();
 }
 
-void VRMobile::updateClients(string path) { CEF::reloadScripts(path); }
+void VRServer::updateClients(string path) { CEF::reloadScripts(path); }
 
 OSG_END_NAMESPACE;

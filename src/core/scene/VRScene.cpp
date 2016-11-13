@@ -3,7 +3,7 @@
 #include "core/setup/devices/VRMouse.h"
 #include "core/setup/devices/VRKeyboard.h"
 #include "core/setup/devices/VRHaptic.h"
-#include "core/setup/devices/VRMobile.h"
+#include "core/setup/devices/VRServer.h"
 #include "VRSceneManager.h"
 #include "VRSemanticManager.h"
 #include "core/setup/VRSetup.h"
@@ -160,7 +160,7 @@ void VRScene::setActiveCamera(string camname) {
     VRMousePtr mouse = dynamic_pointer_cast<VRMouse>( setup->getDevice("mouse") );
     VRFlystickPtr flystick = dynamic_pointer_cast<VRFlystick>( setup->getDevice("flystick") );
     VRDevicePtr razer = setup->getDevice("vrpn_device");
-    VRMobilePtr mobile = dynamic_pointer_cast<VRMobile>( setup->getDevice("mobile") );
+    VRServerPtr server1 = dynamic_pointer_cast<VRServer>( setup->getDevice("server1") );
 
     if (mouse) {
         mouse->setTarget(cam);
@@ -169,7 +169,7 @@ void VRScene::setActiveCamera(string camname) {
 
     if (flystick) flystick->setTarget(cam);
     if (razer) razer->setTarget(cam);
-    if (mobile) mobile->setTarget(cam);
+    if (server1) server1->setTarget(cam);
 
     setup->setViewCamera(cam, -1);
     if (cam->getAcceptRoot()) setup->getRoot()->switchParent(cam);

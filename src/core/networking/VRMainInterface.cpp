@@ -1,5 +1,5 @@
 #include "VRMainInterface.h"
-#include "core/setup/devices/VRMobile.h"
+#include "core/setup/devices/VRServer.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/scene/VRScene.h"
 #include "core/setup/VRSetupManager.h"
@@ -11,9 +11,9 @@
 OSG_BEGIN_NAMESPACE;
 
 VRMainInterface::VRMainInterface() {
-    mobile = VRMobile::create(5501);
-    mobile->setName("MainInterface");
-    VRSignalPtr sig = mobile->addSignal(0,1);
+    server = VRServer::create(5501);
+    server->setName("MainInterface");
+    VRSignalPtr sig = server->addSignal(0,1);
     clickCb = VRFunction<VRDeviceWeakPtr>::create( "VRMainInterface_on_scene_clicked", boost::bind(&VRMainInterface::on_scene_clicked, this, _1) );
     sig->add( clickCb );
     update();
@@ -61,7 +61,7 @@ void VRMainInterface::update() {
     for (auto s : VRSceneManager::get()->getExamplePaths() ) page += "<button onClick='get(0,1,\"" + s + "\")'>" + s + "</button><br>";
 
     page += "</body></html>";
-    mobile->addWebSite("polyvr", page);
+    server->addWebSite("polyvr", page);
 }
 
 OSG_END_NAMESPACE;

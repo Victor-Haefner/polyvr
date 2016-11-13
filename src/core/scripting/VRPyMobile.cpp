@@ -1,7 +1,7 @@
 #include "VRPyMobile.h"
 #include "VRPyBaseT.h"
 
-template<> PyTypeObject VRPyBaseT<OSG::VRMobile>::type = {
+template<> PyTypeObject VRPyBaseT<OSG::VRServer>::type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
     "VR.Mobile",             /*tp_name*/

@@ -10,7 +10,7 @@
 #include "VRKeyboard.h"
 #include "VRFlystick.h"
 #include "VRHaptic.h"
-#include "VRMobile.h"
+#include "VRServer.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -121,8 +121,8 @@ void VRDeviceManager::load(xmlpp::Element* node) {
             dev = h;
         }
 
-        if (type == "mobile") {
-            VRMobilePtr m = VRMobile::create(5500);
+        if (type == "server") {
+            VRServerPtr m = VRServer::create(5500);
             m->load(el);
             dev = m;
         }

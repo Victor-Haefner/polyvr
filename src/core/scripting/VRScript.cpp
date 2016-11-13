@@ -8,7 +8,7 @@
 #include "VRPyDevice.h"
 #include "VRPyLight.h"
 #include "VRPyLod.h"
-#include "core/setup/devices/VRMobile.h"
+#include "core/setup/devices/VRServer.h"
 #include "VRPySocket.h"
 #include "VRPyMouse.h"
 #include "VRPyHaptic.h"
@@ -54,9 +54,12 @@ VRScript::arg::arg(string nspace, string name) {
     setName(name);
 }
 
+VRScript::trig::~trig() {}
+VRScript::arg::~arg() {}
+
 void VRScript::clean() {
     if ( auto setup = VRSetup::getCurrent() ) {
-        VRMobilePtr mob = dynamic_pointer_cast<VRMobile>( setup->getDevice(this->mobile) );
+        VRServerPtr mob = dynamic_pointer_cast<VRServer>( setup->getDevice(server) );
         if (mob) mob->remWebSite(getName());
     }
 
@@ -77,7 +80,7 @@ void VRScript::clean() {
 
 void VRScript::update() {
     if (type == "HTML") {
-        VRMobilePtr mob = dynamic_pointer_cast<VRMobile>( VRSetup::getCurrent()->getDevice(mobile) );
+        VRServerPtr mob = dynamic_pointer_cast<VRServer>( VRSetup::getCurrent()->getDevice(server) );
         if (mob) mob->addWebSite(getName(), core);
     }
 
@@ -210,7 +213,7 @@ PyObject* VRScript::getPyObj(arg* a) {
     else if (a->type == "VRPyDeviceType") return VRPyDevice::fromSharedPtr(((VRDevice*)a->ptr)->ptr());
     else if (a->type == "VRPyMouseType") return VRPyMouse::fromSharedPtr(((VRMouse*)a->ptr)->ptr());
     else if (a->type == "VRPyHapticType") return VRPyHaptic::fromSharedPtr(((VRHaptic*)a->ptr)->ptr());
-    else if (a->type == "VRPyMobileType") return VRPyMobile::fromSharedPtr(((VRMobile*)a->ptr)->ptr());
+    else if (a->type == "VRPyMobileType") return VRPyMobile::fromSharedPtr(((VRServer*)a->ptr)->ptr());
     else if (a->type == "VRPySocketType") return VRPySocket::fromPtr((VRSocket*)a->ptr);
     else { cout << "\ngetPyObj ERROR: " << a->type << " unknown!\n"; Py_RETURN_NONE; }
 }
@@ -274,13 +277,13 @@ void VRScript::setName(string n) { clean(); VRName::setName(n); update(); }
 void VRScript::setFunction(PyObject* fkt) { this->fkt = fkt; }
 void VRScript::setCore(string core) { clean(); this->core = core; update(); }
 void VRScript::setType(string type) { clean(); this->type = type; update(); }
-void VRScript::setHTMLHost(string mobile) { clean(); this->mobile = mobile; update(); }
+void VRScript::setHTMLHost(string server) { clean(); this->server = server; update(); }
 
 string VRScript::getCore() { return core; }
 string VRScript::getHead() { return head; }
 string VRScript::getScript() { return head + core; }
 string VRScript::getType() { return type; }
-string VRScript::getMobile() { return mobile; }
+string VRScript::getMobile() { return server; }
 int VRScript::getHeadSize() { // number of head lines
     if (type == "Python") return 1;
     return 0;
@@ -316,7 +319,7 @@ void VRScript::execute() {
     }
 
     if (type == "HTML") {
-        VRMobilePtr mob = dynamic_pointer_cast<VRMobile>( VRSetup::getCurrent()->getDevice(this->mobile) );
+        VRServerPtr mob = dynamic_pointer_cast<VRServer>( VRSetup::getCurrent()->getDevice(server) );
         if (mob) mob->updateClients(getName());
     }
 
@@ -341,7 +344,7 @@ void VRScript::execute_dev(VRDeviceWeakPtr _dev) {
 
     args["dev"]->type = "VRPyDeviceType";
     if (dev->getType() == "haptic") args["dev"]->type = "VRPyHapticType";
-    if (dev->getType() == "mobile") args["dev"]->type = "VRPyMobileType";
+    if (dev->getType() == "server") args["dev"]->type = "VRPyMobileType";
     args["dev"]->val = dev->getName();
     args["dev"]->ptr = dev.get();
     execute();
@@ -388,7 +391,7 @@ void VRScript::save(xmlpp::Element* e) {
     xmlpp::Element* ec = e->add_child("core");
     ec->set_child_text("\n"+core+"\n");
     e->set_attribute("type", type);
-    e->set_attribute("mobile", mobile);
+    e->set_attribute("server", server);
 
     for (auto ai : args) {
         arg* a = ai.second;
@@ -417,7 +420,7 @@ void VRScript::load(xmlpp::Element* e) {
     loadName(e);
     if (e->get_attribute("core")) core = e->get_attribute("core")->get_value();
     if (e->get_attribute("type")) type = e->get_attribute("type")->get_value();
-    if (e->get_attribute("mobile")) mobile = e->get_attribute("mobile")->get_value();
+    if (e->get_attribute("server")) server = e->get_attribute("server")->get_value();
 
     for (xmlpp::Node* n : e->get_children() ) {
         xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);

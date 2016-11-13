@@ -9,12 +9,12 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRMobile;
+class VRServer;
 class VRDevice;
 
 class VRMainInterface {
     private:
-        VRMobilePtr mobile;
+        VRServerPtr server;
         string page;
         VRDeviceCb clickCb;
 

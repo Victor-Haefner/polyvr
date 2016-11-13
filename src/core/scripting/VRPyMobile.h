@@ -2,9 +2,9 @@
 #define VRPYMOBILE_H_INCLUDED
 
 #include "VRPyBase.h"
-#include "core/setup/devices/VRMobile.h"
+#include "core/setup/devices/VRServer.h"
 
-struct VRPyMobile : VRPyBaseT<OSG::VRMobile> {
+struct VRPyMobile : VRPyBaseT<OSG::VRServer> {
     static PyMethodDef methods[];
 
     static PyObject* answer(VRPyMobile* self, PyObject* args);

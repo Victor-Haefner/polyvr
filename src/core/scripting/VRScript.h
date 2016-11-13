@@ -28,6 +28,7 @@ class VRScript : public VRName {
             bool trig = false;
 
             arg(string nspace, string name = "arg");
+            virtual ~arg();
         };
 
         struct trig : public VRName {
@@ -41,6 +42,7 @@ class VRScript : public VRName {
             arg* a = 0;
 
             trig();
+            virtual ~trig();
         };
 
         struct Search {
@@ -53,7 +55,7 @@ class VRScript : public VRName {
         string core;
         string head;
         string type = "Python";
-        string mobile;
+        string server = "server1";
         PyObject* fkt = 0;
         PyObject* pargs = 0;
         map<string, arg*> args;
@@ -84,7 +86,7 @@ class VRScript : public VRName {
         void setFunction(PyObject* _fkt);
         void setCore(string _script);
         void setType(string type);
-        void setHTMLHost(string mobile);
+        void setHTMLHost(string server);
 
         string getHead();
         string getCore();

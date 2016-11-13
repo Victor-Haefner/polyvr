@@ -11,7 +11,7 @@
   </Displays>
   <Devices>
     <Device base_name="keyboard" name="keyboard" name_space="__global__" name_suffix="0" persistency="666" type="keyboard" unique="1"/>
-    <Device base_name="mobile" name="mobile" name_space="__global__" name_suffix="0" persistency="666" type="mobile" unique="1"/>
+    <Device base_name="server1" name="server1" name_space="__global__" name_suffix="0" persistency="666" type="server" unique="1"/>
     <Device base_name="mouse" name="mouse" name_space="__global__" name_suffix="0" persistency="666" type="mouse" unique="1"/>
   </Devices>
   <TrackingART active="0" offset="0 0 0" persistency="666" port="5000" up=""/>

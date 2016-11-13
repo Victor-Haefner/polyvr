@@ -892,7 +892,6 @@
 		<Unit filename="src/core/setup/VRSetupManager.h" />
 		<Unit filename="src/core/setup/devices/VRAvatar.cpp" />
 		<Unit filename="src/core/setup/devices/VRAvatar.h" />
-		<Unit filename="src/core/setup/devices/VRCallbackManager.h" />
 		<Unit filename="src/core/setup/devices/VRDevice.cpp" />
 		<Unit filename="src/core/setup/devices/VRDevice.h" />
 		<Unit filename="src/core/setup/devices/VRDeviceManager.cpp" />
@@ -905,10 +904,10 @@
 		<Unit filename="src/core/setup/devices/VRIntersect.h" />
 		<Unit filename="src/core/setup/devices/VRKeyboard.cpp" />
 		<Unit filename="src/core/setup/devices/VRKeyboard.h" />
-		<Unit filename="src/core/setup/devices/VRMobile.cpp" />
-		<Unit filename="src/core/setup/devices/VRMobile.h" />
 		<Unit filename="src/core/setup/devices/VRMouse.cpp" />
 		<Unit filename="src/core/setup/devices/VRMouse.h" />
+		<Unit filename="src/core/setup/devices/VRServer.cpp" />
+		<Unit filename="src/core/setup/devices/VRServer.h" />
 		<Unit filename="src/core/setup/devices/VRSignal.cpp" />
 		<Unit filename="src/core/setup/devices/VRSignal.h" />
 		<Unit filename="src/core/setup/devices/VRSignalT.h" />

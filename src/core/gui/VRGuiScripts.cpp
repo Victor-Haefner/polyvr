@@ -348,7 +348,7 @@ void VRGuiScripts::on_select_script() { // selected a script
     // update options
     setCombobox("combobox1", getListStorePos("liststore6", script->getType()));
     auto setup = VRSetup::getCurrent();
-    if (setup) fillStringListstore("liststore7", setup->getDevices("mobile"));
+    if (setup) fillStringListstore("liststore7", setup->getDevices("server"));
     setCombobox("combobox24", getListStorePos("liststore7", script->getMobile()));
 
     // update editor content && script head
@@ -908,7 +908,7 @@ void VRGuiScripts::on_change_script_type() {
     on_save_clicked();
 }
 
-void VRGuiScripts::on_change_mobile() {
+void VRGuiScripts::on_change_server() {
     if(!trigger_cbs) return;
     VRScriptPtr script = getSelectedScript();
     script->setHTMLHost( getComboboxText("combobox24") );
@@ -1094,7 +1094,7 @@ VRGuiScripts::VRGuiScripts() {
     setCheckButtonCallback("checkbutton12", sigc::mem_fun(*this, &VRGuiScripts::on_toggle_find_replace) );
 
     setComboboxCallback("combobox1", sigc::mem_fun(*this, &VRGuiScripts::on_change_script_type) );
-    setComboboxCallback("combobox24", sigc::mem_fun(*this, &VRGuiScripts::on_change_mobile) );
+    setComboboxCallback("combobox24", sigc::mem_fun(*this, &VRGuiScripts::on_change_server) );
 
     // trigger tree_view
     Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview14"));
@@ -1124,7 +1124,7 @@ VRGuiScripts::VRGuiScripts() {
     // fill combolists
     const char *arg_types[] = {"int", "float", "str", "VRPyObjectType", "VRPyTransformType", "VRPyGeometryType", "VRPyLightType", "VRPyLodType", "VRPyDeviceType", "VRPyMouseType", "VRPyHapticType", "VRPySocketType"};
     const char *trigger_types[] = {"none", "on_scene_load", "on_scene_close", "on_timeout", "on_device", "on_socket"};
-    const char *device_types[] = {"mouse", "keyboard", "flystick", "haptic", "mobile", "vrpn_device"}; // TODO: get from a list in devicemanager || something
+    const char *device_types[] = {"mouse", "keyboard", "flystick", "haptic", "server", "vrpn_device"}; // TODO: get from a list in devicemanager || something
     const char *trigger_states[] = {"Pressed", "Released", "Drag", "Drop", "To edge", "From edge"};
     const char *script_types[] = {"Python", "GLSL", "HTML"};
     fillStringListstore("arg_types", vector<string>(arg_types, end(arg_types)) );

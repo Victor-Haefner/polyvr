@@ -10,7 +10,7 @@ using namespace std;
 
 class VRSocket;
 
-class VRMobile : public VRDevice {
+class VRServer : public VRDevice {
     private:
         int port = 5500;
         VRSocket* soc = 0;
@@ -22,11 +22,11 @@ class VRMobile : public VRDevice {
         void updateMobilePage();
 
     public:
-        VRMobile(int port = 5500);
-        ~VRMobile();
+        VRServer(int port = 5500);
+        ~VRServer();
 
-        static VRMobilePtr create(int port = 5500);
-        VRMobilePtr ptr();
+        static VRServerPtr create(int port = 5500);
+        VRServerPtr ptr();
 
         void clearSignals();
 
