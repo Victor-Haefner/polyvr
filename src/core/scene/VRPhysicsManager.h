@@ -11,9 +11,6 @@
 #include "core/utils/VRUtilsFwd.h"
 #include "core/objects/VRObjectFwd.h"
 
-
-template<class T> class VRFunction;
-
 class btBroadphaseInterface;
 class btDefaultCollisionConfiguration;
 class btSoftBodyRigidBodyCollisionConfiguration;

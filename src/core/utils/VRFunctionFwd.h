@@ -3,8 +3,10 @@
 
 #include "VRFwdDeclTemplate.h"
 
+#include <string>
+#include <map>
+
 class VRFunction_base;
-template<class T> class VRFunction;
 typedef std::shared_ptr<VRFunction_base> VRBaseCbPtr;
 typedef std::weak_ptr<VRFunction_base> VRBaseCbWeakPtr;
 
@@ -19,6 +21,8 @@ ptrFctFwd( VREval, bool& );
 ptrFctFwd( VRAnim, float );
 ptrFctFwd( VRDevice, OSG::VRDeviceWeakPtr );
 ptrFctFwd( VRThread, OSG::VRThreadWeakPtr );
-ptrFctFwd( VRServer, std::string );
+
+typedef std::map<std::string, std::string> strMap;
+ptrRFctFwd( VRServer, strMap, std::string );
 
 #endif // VRFUNCTIONFWD_H_INCLUDED

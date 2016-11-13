@@ -3,8 +3,6 @@
 
 #include "VRDevice.h"
 
-template<class T> class VRFunction;
-
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 

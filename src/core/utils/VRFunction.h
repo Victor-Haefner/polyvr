@@ -21,8 +21,32 @@ class VRFunction_base : public VRName_base {
         void printExcept(boost::exception& e);
 };
 
-template<typename T>
+template<class T, class R>
 class VRFunction : public VRFunction_base {
+    boost::function<R (T)> fkt;
+    public:
+        VRFunction(string name, boost::function<R (T)> fkt) : fkt(fkt) { this->name = name; }
+        ~VRFunction() {}
+
+        R operator()(T t) {
+            R res;
+            try {
+                if (fkt) {
+                    t0();
+                    res = fkt(t);
+                    t1();
+                }
+            } catch (boost::exception& e) { printExcept(e); }
+            return res;
+        }
+
+        static std::shared_ptr<VRFunction<T> > create(string name, boost::function<R (T)> fkt) {
+            return std::shared_ptr<VRFunction<T> >( new VRFunction<T>(name, fkt) );
+        }
+};
+
+template<class T>
+class VRFunction<T, void> : public VRFunction_base {
     boost::function<void (T)> fkt;
     public:
         VRFunction(string name, boost::function<void (T)> fkt) : fkt(fkt) { this->name = name; }
@@ -30,10 +54,11 @@ class VRFunction : public VRFunction_base {
 
         void operator()(T t) {
             try {
-                if(fkt == 0) return;
-                t0();
-                fkt(t);
-                t1();
+                if (fkt) {
+                    t0();
+                    fkt(t);
+                    t1();
+                }
             } catch (boost::exception& e) { printExcept(e); }
         }
 

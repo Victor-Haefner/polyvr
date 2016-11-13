@@ -5,7 +5,7 @@
 #include <map>
 #include <string>
 
-template<class T> class VRFunction;
+#include "core/utils/VRFunctionFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;

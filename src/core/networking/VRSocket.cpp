@@ -30,8 +30,10 @@ HTTP_args::HTTP_args() {
 }
 
 HTTP_args::~HTTP_args() {
+    for (auto p : *pages) delete p.second;
     delete params;
     delete pages;
+    delete callbacks;
 }
 
 void HTTP_args::print() {
@@ -47,6 +49,7 @@ HTTP_args* HTTP_args::copy() {
     res->cb = cb;
     *res->params = *params;
     *res->pages = *pages;
+    *res->callbacks = *callbacks;
     res->path = path;
     res->websocket = websocket;
     res->ws_data = ws_data;
@@ -87,9 +90,6 @@ class HTTPServer {
         }
 
         ~HTTPServer() {
-            for (auto p : *data->pages) delete p.second;
-            delete data->params;
-            delete data->pages;
             delete data;
         }
 
@@ -202,20 +202,29 @@ static int server_answer_to_connection_m(struct mg_connection *conn, enum mg_eve
             mg_send_data(conn, "", 0);
         }
 
-        if (sad->pages->count(sad->path) && sad->path != "") { // return local site
-            string spage = *(*sad->pages)[sad->path];
-            mg_send_data(conn, spage.c_str(), spage.size());
-            if (v) VRLog::log("net", "Send local site\n");
-        } else if(sad->path != "") { // return ressources
-            if (!boost::filesystem::exists( sad->path )) {
-                if (v) VRLog::wrn("net", "Did not find ressource: " + sad->path + "\n");
-                if (v) VRLog::log("net", "Send empty string\n");
-                mg_send_data(conn, "", 0);
-            }
-            else {
-                if (v) VRLog::log("net", "Send ressource\n");
-                mg_send_file(conn, sad->path.c_str(), NULL);
-                return MG_MORE;
+        if (sad->path != "") {
+            if (sad->pages->count(sad->path)) { // return local site
+                string spage = *(*sad->pages)[sad->path];
+                mg_send_data(conn, spage.c_str(), spage.size());
+                if (v) VRLog::log("net", "Send local site\n");
+            } else if(sad->callbacks->count(sad->path)) { // return callback
+                VRServerCbPtr cb = (*sad->callbacks)[sad->path].lock();
+                if (cb) {
+                    string res = (*cb)(*sad->params);
+                    mg_send_data(conn, res.c_str(), res.size());
+                    if (v) VRLog::log("net", "Send callback response\n");
+                }
+            } else { // return ressources
+                if (!boost::filesystem::exists( sad->path )) {
+                    if (v) VRLog::wrn("net", "Did not find ressource: " + sad->path + "\n");
+                    if (v) VRLog::log("net", "Send empty string\n");
+                    mg_send_data(conn, "", 0);
+                }
+                else {
+                    if (v) VRLog::log("net", "Send ressource\n");
+                    mg_send_file(conn, sad->path.c_str(), NULL);
+                    return MG_MORE;
+                }
             }
         }
 
