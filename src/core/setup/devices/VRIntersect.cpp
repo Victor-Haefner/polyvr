@@ -229,11 +229,11 @@ void VRIntersect::initCross() {
     cross->setMaterial(mat);
 }
 
-VRDeviceCb VRIntersect::addDrag(VRTransformWeakPtr caster) {
+VRDeviceCbPtr VRIntersect::addDrag(VRTransformWeakPtr caster) {
     return addDrag(caster, VRObjectWeakPtr());
 }
 
-VRDeviceCb VRIntersect::addDrag(VRTransformWeakPtr caster, VRObjectWeakPtr tree) {
+VRDeviceCbPtr VRIntersect::addDrag(VRTransformWeakPtr caster, VRObjectWeakPtr tree) {
     auto sc = caster.lock();
     auto st = tree.lock();
     if (!sc) return 0;
@@ -241,7 +241,7 @@ VRDeviceCb VRIntersect::addDrag(VRTransformWeakPtr caster, VRObjectWeakPtr tree)
     auto key = sc.get();
     if (int_fkt_map.count(key)) return int_fkt_map[key];
 
-    VRDeviceCb fkt = VRFunction<VRDeviceWeakPtr>::create("Intersect_drag", boost::bind(&VRIntersect::dragCB, this, caster, tree, _1));
+    VRDeviceCbPtr fkt = VRFunction<VRDeviceWeakPtr>::create("Intersect_drag", boost::bind(&VRIntersect::dragCB, this, caster, tree, _1));
     dra_fkt_map[key] = fkt;
     return fkt;
 }
@@ -270,7 +270,7 @@ void VRIntersect::remDynTree(VRObjectPtr o) {
 }
 
 VRObjectPtr VRIntersect::getCross() { return cross; }//needs to be optimized for multiple scenes
-VRDeviceCb VRIntersect::getDrop() { return drop_fkt; }
+VRDeviceCbPtr VRIntersect::getDrop() { return drop_fkt; }
 //Pnt3f VRIntersect::getHitPoint() { return hitPoint; }
 //Vec2f VRIntersect::getHitTexel() { return hitTexel; }
 //VRObjectPtr VRIntersect::getHitObject() { return obj; }

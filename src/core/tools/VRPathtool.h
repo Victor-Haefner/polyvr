@@ -81,7 +81,7 @@ class VRPathtool : public VRObject {
         VRMaterialPtr lmat;
         VRMaterialPtr lsmat;
 
-        VRUpdatePtr updatePtr;
+        VRUpdateCbPtr updatePtr;
         VRManipulator* manip = 0;
         VRExtruder* ext = 0;
 

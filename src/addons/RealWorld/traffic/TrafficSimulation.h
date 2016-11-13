@@ -32,7 +32,7 @@ class MapCoordinator;
  */
 class TrafficSimulation {
     private:
-        VRThreadCb threadFkt;
+        VRThreadCbPtr threadFkt;
 
     public:
 

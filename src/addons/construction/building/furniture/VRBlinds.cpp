@@ -145,6 +145,6 @@ void VRBlinds::interpolate(float t) {
     blend_geo->setPositions(pos);
 }
 
-VRDeviceCb VRBlinds::getCallback() { return toggleCallback; }
+VRDeviceCbPtr VRBlinds::getCallback() { return toggleCallback; }
 
 OSG_END_NAMESPACE;

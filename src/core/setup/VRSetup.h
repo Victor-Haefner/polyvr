@@ -37,8 +37,8 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
 
         VRVisualLayerPtr setup_layer;
         VRVisualLayerPtr stats_layer;
-        VRTogglePtr layer_setup_toggle;
-        VRTogglePtr layer_stats_toggle;
+        VRToggleCbPtr layer_setup_toggle;
+        VRToggleCbPtr layer_stats_toggle;
 
         VRNetworkPtr network;
 

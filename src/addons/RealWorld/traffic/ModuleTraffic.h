@@ -11,7 +11,7 @@ using namespace std;
 class ModuleTraffic: public BaseModule {
     private:
         TrafficSimulation* simulation;
-        VRThreadCb threadFkt;
+        VRThreadCbPtr threadFkt;
 
     public:
         ModuleTraffic();

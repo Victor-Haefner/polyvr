@@ -42,7 +42,7 @@ struct demoEntry {
     bool pixmap = false;
     bool favorite = true;
     bool write_protected = false;
-    VRDeviceCb uPixmap;
+    VRDeviceCbPtr uPixmap;
 };
 
 class VRDemos {
@@ -54,7 +54,7 @@ class VRDemos {
         demoEntry* current_demo = 0;
         map<string, demoEntry*> demos;
         VRGuiContextMenu* menu;
-        VRDeviceCb updateCb;
+        VRDeviceCbPtr updateCb;
 
         bool on_any_event(GdkEvent* event, demoEntry* entry);
         Gtk::Image* loadGTKIcon(Gtk::Image* img, string path, int w, int h);

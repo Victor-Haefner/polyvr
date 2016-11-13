@@ -72,7 +72,7 @@ VRGuiManager::VRGuiManager() {
     g_mon = new VRGuiMonitor();
     g_scene->updateTreeView();
 
-    VRDeviceCb fkt;
+    VRDeviceCbPtr fkt;
     fkt = VRFunction<VRDeviceWeakPtr>::create("GUI_updateSceneViewer", boost::bind(&VRGuiScene::updateTreeView, g_scene) );
     VRGuiSignals::get()->getSignal("scene_modified")->add( fkt );
     VRGuiSignals::get()->getSignal("scene_changed")->add( fkt );

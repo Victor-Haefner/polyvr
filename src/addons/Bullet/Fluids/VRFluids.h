@@ -28,7 +28,7 @@ class VRFluids : public VRParticles {
 
 
     protected:
-        VRUpdatePtr fluidFkt;
+        VRUpdateCbPtr fluidFkt;
         SimulationType simulation = SPH;
 
         /* Calculate after bullets physics cycle? */

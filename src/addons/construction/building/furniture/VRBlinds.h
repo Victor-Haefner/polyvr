@@ -15,7 +15,7 @@ class VRBlinds: public VRTransform {
         enum State { OPEN, CLOSE };
 
     private:
-        VRDeviceCb toggleCallback;
+        VRDeviceCbPtr toggleCallback;
         VRSignalPtr sig;
         VRScene* scene;
         State state;
@@ -24,7 +24,7 @@ class VRBlinds: public VRTransform {
 
 
         VRGeometryPtr window;
-        VRAnimPtr fkt;
+        VRAnimCbPtr fkt;
 
         VRGeometryPtr blend_geo;
         vector<Vec3f> bl_pos_open;
@@ -53,7 +53,7 @@ class VRBlinds: public VRTransform {
 
         void interpolate(float t);
 
-        VRDeviceCb getCallback();
+        VRDeviceCbPtr getCallback();
 };
 
 OSG_END_NAMESPACE;

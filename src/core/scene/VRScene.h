@@ -49,18 +49,18 @@ class VRScene : public VRObjectManager,
         VRVisualLayerPtr cameras_layer;
         VRVisualLayerPtr lights_layer;
 
-        VRTogglePtr layer_ref_toggle;
-        VRTogglePtr layer_cam_toggle;
-        VRTogglePtr layer_light_toggle;
+        VRToggleCbPtr layer_ref_toggle;
+        VRToggleCbPtr layer_cam_toggle;
+        VRToggleCbPtr layer_light_toggle;
 
         VRSemanticManagerPtr semanticManager;
 
         VRProgressPtr loadingProgress;
         int loadingProgressThread;
-        VRThreadCb loadingProgressThreadCb;
+        VRThreadCbPtr loadingProgressThreadCb;
         int loadingTime = 0;
         VRTimer loadingTimer;
-        VRUpdatePtr loadingTimeCb;
+        VRUpdateCbPtr loadingTimeCb;
         void updateLoadingProgress(VRThreadWeakPtr t);
         void recLoadingTime();
 

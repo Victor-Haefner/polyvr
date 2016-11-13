@@ -18,7 +18,7 @@ using namespace std;
 
 string VRN_toString(int i) { char buf[100]; sprintf(buf,"%d", i); return string(buf); }
 
-VRNavBinding::VRNavBinding(VRDeviceCb c, int k, int s, bool repeat) {
+VRNavBinding::VRNavBinding(VRDeviceCbPtr c, int k, int s, bool repeat) {
     cb = c;
     key = k;
     state = s;
@@ -147,9 +147,9 @@ string VRNavigator_base::getActiveNavigation() { return current_name; }
 vector<string> VRNavigator_base::getNavigationNames() { vector<string> res; for(auto p : presets) res.push_back(p.first); return res; }
 map<string, VRNavPreset*> VRNavigator_base::getNavigations() { return presets; }
 
-void VRNavigator_base::storeNavigationCallback(VRDeviceCb cb) { library[cb->getName()] = cb; }
-VRDeviceCb VRNavigator_base::getNavigationCallback(string s) { if (library.count(s)) return library[s]; return 0; }
-map<string, VRDeviceCb>& VRNavigator_base::getNavigationCallbacks() { return library; }
+void VRNavigator_base::storeNavigationCallback(VRDeviceCbPtr cb) { library[cb->getName()] = cb; }
+VRDeviceCbPtr VRNavigator_base::getNavigationCallback(string s) { if (library.count(s)) return library[s]; return 0; }
+map<string, VRDeviceCbPtr>& VRNavigator_base::getNavigationCallbacks() { return library; }
 
 
 VRNavigator::VRNavigator() {

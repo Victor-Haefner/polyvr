@@ -31,7 +31,7 @@ class VRTransform : public VRObject {
         OSGTransformPtr t;
         bool noBlt = false;
         VRPhysics* physics = 0;
-        VRAnimPtr pathAnimPtr;
+        VRAnimCbPtr pathAnimPtr;
 
         unsigned int change_time_stamp = 0;
         unsigned int wchange_time_stamp = 0;

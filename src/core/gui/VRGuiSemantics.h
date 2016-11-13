@@ -28,7 +28,7 @@ class VRGuiSemantics {
         VRGraphLayoutPtr layout;
         graph_basePtr layout_graph;
         VROntologyPtr current;
-        VRUpdatePtr updateLayoutCb;
+        VRUpdateCbPtr updateLayoutCb;
 
         void on_new_clicked();
         void on_del_clicked();

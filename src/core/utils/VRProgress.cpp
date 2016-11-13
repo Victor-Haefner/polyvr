@@ -8,7 +8,7 @@ VRProgress::~VRProgress() {
 	if (mode == CONSOLE_M) cout << endl;
 }
 
-void VRProgress::setCallback(VRUpdatePtr cb) { callback = cb; }
+void VRProgress::setCallback(VRUpdateCbPtr cb) { callback = cb; }
 
 VRProgressPtr VRProgress::create(string title, int max, Mode m) { return VRProgressPtr( new VRProgress(title, max, m) ); }
 

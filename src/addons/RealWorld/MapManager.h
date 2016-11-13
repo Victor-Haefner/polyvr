@@ -26,7 +26,7 @@ class MapManager {
         World* world = 0;
         vector<BaseModule*> modules;
         VRObjectPtr root;
-        VRThreadCb worker;
+        VRThreadCbPtr worker;
 
         map<string, MapGrid::Box> loadedBoxes;
 

@@ -29,7 +29,7 @@ void VRAnimation::setCallbackOwner(bool b) {
 void VRAnimation::stop() { run = false; }
 bool VRAnimation::isActive() { return run; }
 
-void VRAnimation::setSimpleCallback(VRAnimWeakPtr fkt, float _duration) {
+void VRAnimation::setSimpleCallback(VRAnimCbWeakPtr fkt, float _duration) {
     run = false;
     duration = _duration;
 

@@ -21,7 +21,7 @@ class VRImport {
             string options;
             VRProgressPtr progress;
             VRTransformPtr res;
-            VRThreadCb loadCb;
+            VRThreadCbPtr loadCb;
 
             LoadJob(string p, string preset, VRTransformPtr r, VRProgressPtr pg, string opt);
 

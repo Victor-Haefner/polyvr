@@ -16,8 +16,8 @@ VRStorage::VRStorage() {
 
 void VRStorage::setPersistency(int p) { persistency = p; }
 int VRStorage::getPersistency() { return persistency; }
-void VRStorage::regStorageSetupFkt(VRUpdatePtr u) { f_setup.push_back(u); }
-void VRStorage::regStorageSetupAfterFkt(VRUpdatePtr u) { f_setup_after.push_back(u); }
+void VRStorage::regStorageSetupFkt(VRUpdateCbPtr u) { f_setup.push_back(u); }
+void VRStorage::regStorageSetupAfterFkt(VRUpdateCbPtr u) { f_setup_after.push_back(u); }
 void VRStorage::setStorageType(string t) { type = t; }
 
 void VRStorage::save(xmlpp::Element* e, int p) {

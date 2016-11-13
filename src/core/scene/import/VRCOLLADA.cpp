@@ -307,7 +307,7 @@ void buildAnimations(AnimationLibrary& lib, VRObjectPtr objects) {
         VRTransformPtr t = static_pointer_cast<VRTransform>(obj);
         int axis = getAxis(a.second);
 
-        VRAnimPtr fkt;
+        VRAnimCbPtr fkt;
         bool bezier = false;
 
         path* p = 0;
@@ -343,7 +343,7 @@ void buildAnimations(AnimationLibrary& lib, VRObjectPtr objects) {
             fkt = VRFunction<float>::create(a.first, boost::bind(callback, t, axis, p, _1) );
 
             VRAnimation* anim = 0;
-            VRAnimWeakPtr wkp = fkt;
+            VRAnimCbWeakPtr wkp = fkt;
             if (bezier) anim = new VRAnimation(duration, start[0], wkp, 0.f, 1.f, loop);
             else anim = new VRAnimation(duration, start[0], wkp, start[1], end[1], loop);
             anim->setCallbackOwner(true);

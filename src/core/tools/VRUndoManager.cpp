@@ -12,7 +12,7 @@ VRUndoAtom::VRUndoAtom(string name) {
 
 VRUndoAtomPtr VRUndoAtom::create(string name) { return VRUndoAtomPtr( new VRUndoAtom(name) ); }
 
-void VRUndoAtom::set(VRUpdatePtr f_undo, VRUpdatePtr f_redo, VREvalCbPtr f_valid) { this->f_undo = f_undo; this->f_redo = f_redo; this->f_valid = f_valid; }
+void VRUndoAtom::set(VRUpdateCbPtr f_undo, VRUpdateCbPtr f_redo, VREvalCbPtr f_valid) { this->f_undo = f_undo; this->f_redo = f_redo; this->f_valid = f_valid; }
 
 bool VRUndoAtom::valid() { bool b; (*f_valid)(b); return b; }
 bool VRUndoAtom::undo() { if (f_undo && valid()) (*f_undo)(0); else return 0; return 1;}
@@ -28,7 +28,7 @@ VRUndoManagerPtr VRUndoManager::ptr() { return static_pointer_cast<VRUndoManager
 
 void VRUndoManager::addObject(VRObjectPtr o) { o->setUndoManager(ptr()); }
 
-void VRUndoManager::recUndo(VRUpdatePtr f_undo, VRUpdatePtr f_redo, VREvalCbPtr f_valid) {
+void VRUndoManager::recUndo(VRUpdateCbPtr f_undo, VRUpdateCbPtr f_redo, VREvalCbPtr f_valid) {
     if (ward) return;
     data.erase(current.base(), data.end()); // delete history from here
     auto a = VRManager<VRUndoAtom>::add("", key);

@@ -21,7 +21,7 @@ VRHandle::VRHandle(string name) : VRGeometry(name) {
 VRHandlePtr VRHandle::create(string name) { return VRHandlePtr( new VRHandle(name) ); }
 VRHandlePtr VRHandle::ptr() { return static_pointer_cast<VRHandle>( shared_from_this() ); }
 
-void VRHandle::configure(VRAnimPtr cb, TYPE t, Vec3f n, float s, bool symmetric) {
+void VRHandle::configure(VRAnimCbPtr cb, TYPE t, Vec3f n, float s, bool symmetric) {
     axis = n;
     paramCb = cb;
     constraint = t;

@@ -55,8 +55,8 @@ class VRPN : public VRStorage {
         bool active = true;
         int port = 3883;
 
-        VRUpdatePtr updatePtr;
-        VRUpdatePtr testServer = 0;
+        VRUpdateCbPtr updatePtr;
+        VRUpdateCbPtr testServer = 0;
 
         //update thread
         void update_t(VRThread* thread);

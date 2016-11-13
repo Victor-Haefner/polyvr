@@ -166,7 +166,7 @@ void execThread(PyObject* pyFkt, PyObject* pArgs,  std::weak_ptr<VRThread>  thre
     execCall(pyFkt, pArgs, 0);
 }
 
-map<int, VRThreadCb> pyThreadsTmp;
+map<int, VRThreadCbPtr> pyThreadsTmp;
 PyObject* VRSceneGlobals::startThread(VRSceneGlobals* self, PyObject *args) {
     PyObject *pyFkt, *pArgs = 0;
     if (! PyArg_ParseTuple(args, "O|O", &pyFkt, &pArgs)) return NULL;
@@ -204,8 +204,8 @@ PyObject* VRSceneGlobals::stackCall(VRSceneGlobals* self, PyObject *args) {
         if (type == "list") pArgs = PyList_AsTuple(pArgs);
     }
 
-    VRUpdatePtr fkt = VRFunction<int>::create( "pyExecCall", boost::bind(execCall, pyFkt, pArgs, _1) );
-    VRUpdateWeakPtr wkp = fkt;
+    VRUpdateCbPtr fkt = VRFunction<int>::create( "pyExecCall", boost::bind(execCall, pyFkt, pArgs, _1) );
+    VRUpdateCbWeakPtr wkp = fkt;
 
     auto scene = VRScene::getCurrent();
     auto a = scene->addAnimation(0, delay, wkp, 0, 0, false);

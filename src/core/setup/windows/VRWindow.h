@@ -30,7 +30,7 @@ class VRWindow : public std::enable_shared_from_this<VRWindow>, public VRName {
         int width = 640;
         int height = 480;
 
-        VRThreadCb winThread;
+        VRThreadCbPtr winThread;
         int thread_id = -1;
         void update( VRThreadWeakPtr t );
 

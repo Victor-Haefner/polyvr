@@ -17,6 +17,7 @@ class VRServer : public VRDevice {
         VRFunction<void*>* cb = 0;
 
         map<string, string> websites;
+        map<string, VRServerCbPtr> callbacks;
 
         void callback(void* args);
         void updateMobilePage();
@@ -32,6 +33,9 @@ class VRServer : public VRDevice {
 
         void setPort(int port);
         int getPort();
+
+        void addCallback(string path, VRServerCbPtr cb);
+        void remCallback(string path);
 
         void remWebSite(string uri);
         void addWebSite(string uri, string website);

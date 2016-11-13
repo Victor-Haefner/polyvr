@@ -22,7 +22,7 @@ class VRProgress {
 		Mode mode = CONSOLE_M;
         int count = 0;
         double part = 0;
-        VRUpdateWeakPtr callback;
+        VRUpdateCbWeakPtr callback;
 
     public:
 		VRProgress(string title = "Progress", int max = 100, Mode m = CONSOLE_M);
@@ -30,7 +30,7 @@ class VRProgress {
 
         static VRProgressPtr create(string title = "Progress", int max = 100, Mode m = CONSOLE_M);
 
-        void setCallback(VRUpdatePtr cb);
+        void setCallback(VRUpdateCbPtr cb);
         float get();
 
         void setup(string title, int max, Mode m = CONSOLE_M);

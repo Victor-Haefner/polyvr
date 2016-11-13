@@ -59,7 +59,7 @@ class CarDynamics : public VRObject {
 
         VRGeometryPtr w1, w2, w3, w4;
         VRGeometryPtr chassis = 0;
-        VRUpdatePtr updatePtr;
+        VRUpdateCbPtr updatePtr;
 
         btAlignedObjectArray<btCollisionShape*> m_collisionShapes;
 

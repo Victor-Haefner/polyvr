@@ -74,6 +74,16 @@ void VRServer::clearSignals() {
 void VRServer::setPort(int port) { this->port = port; soc->setPort(port); }
 int VRServer::getPort() { return port; }
 
+void VRServer::addCallback(string path, VRServerCbPtr cb) {
+    callbacks[path] = cb;
+    soc->addHTTPCallback(path, cb);
+}
+
+void VRServer::remCallback(string path) {
+    if (callbacks.count(path)) callbacks.erase(path);
+    soc->remHTTPCallback(path);
+}
+
 void VRServer::updateMobilePage() {
     //return; //TODO: this induces a segfault when closing PolyVR
     string page = "<html><body>";

@@ -9,8 +9,8 @@
 
 namespace xmlpp{ class Element; }
 
-ptrFktFwd(VRStore, xmlpp::Element*);
-ptrFktFwd(VRStorageFactory, OSG::VRStoragePtr&);
+ptrFctFwd(VRStore, xmlpp::Element*);
+ptrFctFwd(VRStorageFactory, OSG::VRStoragePtr&);
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -24,8 +24,8 @@ class VRStorage {
     private:
         string type = "Node";
         int persistency = 666;
-        vector<VRUpdatePtr> f_setup; // setup
-        vector<VRUpdatePtr> f_setup_after; // setup after tree loaded
+        vector<VRUpdateCbPtr> f_setup; // setup
+        vector<VRUpdateCbPtr> f_setup_after; // setup after tree loaded
         map<string, VRStorageBin> storage;
         static map<string, VRStorageFactoryCbPtr> factory;
 
@@ -64,8 +64,8 @@ class VRStorage {
         template<typename T> void storeObjNames(string tag, vector<T>* o, vector<string>* t);
 
         void setStorageType(string t);
-        void regStorageSetupFkt(VRUpdatePtr u);
-        void regStorageSetupAfterFkt(VRUpdatePtr u);
+        void regStorageSetupFkt(VRUpdateCbPtr u);
+        void regStorageSetupAfterFkt(VRUpdateCbPtr u);
 
         static xmlpp::Element* getChild(xmlpp::Element* e, string c);
         static vector<xmlpp::Element*> getChildren(xmlpp::Element* e);

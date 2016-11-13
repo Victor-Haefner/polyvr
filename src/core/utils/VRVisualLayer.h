@@ -17,7 +17,7 @@ class VRVisualLayer : public VRName {
     private:
         VRObjectPtr anchor;
         static map<string, VRVisualLayerWeakPtr> layers;
-        VRToggleWeakPtr callback;
+        VRToggleCbWeakPtr callback;
         string icon;
 
         VRVisualLayer(string name, string icon);
@@ -35,7 +35,7 @@ class VRVisualLayer : public VRName {
 
         void addObject(VRObjectPtr obj);
 
-        void setCallback(VRToggleWeakPtr fkt);
+        void setCallback(VRToggleCbWeakPtr fkt);
 
         string getIconName();
 };

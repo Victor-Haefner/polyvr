@@ -19,12 +19,12 @@ struct VRNavBinding {
     int key = 0;
     int state = 0;
     VRSignalWeakPtr sig;
-    VRDeviceCb cb;
+    VRDeviceCbPtr cb;
     string sig_name;
     string cb_name;
     bool doRepeat = false;
 
-    VRNavBinding(VRDeviceCb c, int k, int s, bool repeat);
+    VRNavBinding(VRDeviceCbPtr c, int k, int s, bool repeat);
     ~VRNavBinding();
 
     void clearSignal();
@@ -60,7 +60,7 @@ class VRNavPreset : public VRName {
 
 class VRNavigator_base : public VRStorage {
     private:
-        map<string, VRDeviceCb> library;
+        map<string, VRDeviceCbPtr> library;
 
         VRNavPreset* current;
         string current_name;
@@ -80,9 +80,9 @@ class VRNavigator_base : public VRStorage {
         vector<string> getNavigationNames();
         string getNavigationTip(string name);
 
-        void storeNavigationCallback(VRDeviceCb cb);
-        map<string, VRDeviceCb>& getNavigationCallbacks();
-        VRDeviceCb getNavigationCallback(string s);
+        void storeNavigationCallback(VRDeviceCbPtr cb);
+        map<string, VRDeviceCbPtr>& getNavigationCallbacks();
+        VRDeviceCbPtr getNavigationCallback(string s);
 };
 
 class VRNavigator : public VRNavigator_base {

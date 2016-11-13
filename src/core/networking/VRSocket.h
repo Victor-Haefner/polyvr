@@ -22,6 +22,7 @@ struct HTTP_args {
     VRHTTP_cb* cb = 0;
     map<string, string>* params = 0;
     map<string, string*>* pages = 0;
+    map<string, VRServerCbWeakPtr>* callbacks = 0;
     string path;
     bool websocket = false;
     string ws_data;
@@ -38,8 +39,8 @@ class VRSocket : public VRName {
         enum CONNECTION_TYPE {UNIX, TCP, HTTP};
 
     private:
-        VRUpdatePtr queued_signal;
-        VRThreadCb socketThread;
+        VRUpdateCbPtr queued_signal;
+        VRThreadCbPtr socketThread;
         string tcp_msg;
         HTTP_args* http_args;
         VRSignalPtr sig;
@@ -85,6 +86,8 @@ class VRSocket : public VRName {
         void setPort(int i);
         void addHTTPPage(string path, string page);
         void remHTTPPage(string path);
+        void addHTTPCallback(string path, VRServerCbPtr cb);
+        void remHTTPCallback(string path);
 
         void answerWebSocket(int id, string msg);
 

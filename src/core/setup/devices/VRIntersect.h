@@ -44,9 +44,9 @@ class VRIntersect {
         uint drop_time = 0;
         VRGeometryPtr cross = 0;
         map< int, map<VRObject*, VRObjectWeakPtr> > dynTrees;
-        map<VRObject*, VRDeviceCb > int_fkt_map;
-        map<VRObject*, VRDeviceCb > dra_fkt_map;
-        VRDeviceCb drop_fkt;
+        map<VRObject*, VRDeviceCbPtr > int_fkt_map;
+        map<VRObject*, VRDeviceCbPtr > dra_fkt_map;
+        VRDeviceCbPtr drop_fkt;
 
         void dragCB(VRTransformWeakPtr caster, VRObjectWeakPtr tree, VRDeviceWeakPtr dev = VRDevicePtr(0));
 
@@ -64,9 +64,9 @@ class VRIntersect {
         VRIntersection intersect();
         void drag(VRObjectWeakPtr obj, VRTransformWeakPtr caster);
         void drop(VRDeviceWeakPtr dev = VRDevicePtr(0));
-        VRDeviceCb addDrag(VRTransformWeakPtr caster, VRObjectWeakPtr tree);
-        VRDeviceCb addDrag(VRTransformWeakPtr caster);
-        VRDeviceCb getDrop();
+        VRDeviceCbPtr addDrag(VRTransformWeakPtr caster, VRObjectWeakPtr tree);
+        VRDeviceCbPtr addDrag(VRTransformWeakPtr caster);
+        VRDeviceCbPtr getDrop();
 
         void toggleDragnDrop(bool b);
         void showHitPoint(bool b);

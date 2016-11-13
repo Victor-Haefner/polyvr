@@ -56,7 +56,7 @@ class ART : public VRStorage {
         DTrack* dtrack = 0;
         map<int, ART_devicePtr> devices;
 
-        VRUpdatePtr updatePtr;
+        VRUpdateCbPtr updatePtr;
         shared_ptr< VRFunction< weak_ptr<VRThread> > > threadFkt;
         VRSignalPtr on_new_device;
 

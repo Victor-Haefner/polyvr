@@ -46,7 +46,7 @@ class VRParticles : public VRGeometry {
         Octree ocparticles;
         map<int, shared_ptr<Emitter> > emitters;
 
-        VRUpdatePtr fkt;
+        VRUpdateCbPtr fkt;
         VRMaterialPtr mat;
         GeoPnt3fPropertyRecPtr pos;
         GeoVec3fPropertyRecPtr normals;

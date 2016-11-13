@@ -15,7 +15,7 @@ class VRAnimationManager {
         map<string, VRAnimation*> anim_map;
 
     protected:
-        VRUpdatePtr updateAnimationsFkt;
+        VRUpdateCbPtr updateAnimationsFkt;
         void updateAnimations();
 
     public:

@@ -16,7 +16,7 @@ class VRMainInterface {
     private:
         VRServerPtr server;
         string page;
-        VRDeviceCb clickCb;
+        VRDeviceCbPtr clickCb;
 
         VRMainInterface();
         void on_scene_clicked(VRDeviceWeakPtr dev);

@@ -62,11 +62,11 @@ class CEF {
         bool init = false;
         bool focus = false;
 
-        VRUpdatePtr update_callback;
-        map<OSG::VRDevice*, VRDeviceCb> mouse_dev_callback;
-        map<OSG::VRDevice*, VRUpdatePtr> mouse_move_callback;
-        //VRDeviceCb mouse_dev_callback;
-        VRDeviceCb keyboard_dev_callback;
+        VRUpdateCbPtr update_callback;
+        map<OSG::VRDevice*, VRDeviceCbPtr> mouse_dev_callback;
+        map<OSG::VRDevice*, VRUpdateCbPtr> mouse_move_callback;
+        //VRDeviceCbPtr mouse_dev_callback;
+        VRDeviceCbPtr keyboard_dev_callback;
 
         void global_initiate();
         void initiate();

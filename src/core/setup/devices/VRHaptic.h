@@ -20,8 +20,8 @@ class VRHaptic : public VRDevice {
         VRFunction<int>* updateFktPre;
         VRFunction<int>* updateFktPost;
         Vec3i button_states;
-        VRUpdatePtr timestepWatchdog;
-        VRUpdatePtr updatePtr;
+        VRUpdateCbPtr timestepWatchdog;
+        VRUpdateCbPtr updatePtr;
 
         /**gets positive when fps changes, negative w**/
         int fps_change = 0;

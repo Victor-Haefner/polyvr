@@ -18,8 +18,8 @@ void VRSignal_base::clear() { callbacks.clear(); callbacksPtr.clear(); }
 void VRSignal_base::setUpdate(bool b) { _doUpdate = b; }
 bool VRSignal_base::doUpdate() { return _doUpdate; }
 
-VRUpdatePtr VRSignal_base::getTriggerFkt() { return trig_fkt; }
-vector<VRBaseWeakCb> VRSignal_base::getCallbacks() { return callbacksPtr; }
+VRUpdateCbPtr VRSignal_base::getTriggerFkt() { return trig_fkt; }
+vector<VRBaseCbWeakPtr> VRSignal_base::getCallbacks() { return callbacksPtr; }
 
 
 VRSignal::VRSignal(VRDevicePtr _dev) : event(_dev.get()) {
@@ -32,7 +32,7 @@ VRSignal::~VRSignal() {}
 VRSignalPtr VRSignal::create(VRDevicePtr dev) { return VRSignalPtr( new VRSignal(dev) ); }
 
 void VRSignal::add(VRFunction_base* fkt) { callbacks.push_back(fkt); }
-void VRSignal::add(VRBaseWeakCb fkt) { callbacksPtr.push_back(fkt); }
+void VRSignal::add(VRBaseCbWeakPtr fkt) { callbacksPtr.push_back(fkt); }
 
 void VRSignal::sub(VRFunction_base* fkt) {
     if (callbacks.size() == 0) return;
@@ -40,7 +40,7 @@ void VRSignal::sub(VRFunction_base* fkt) {
     if (pos != callbacks.end()) callbacks.erase(pos);
 }
 
-void VRSignal::sub(VRBaseWeakCb fkt) {
+void VRSignal::sub(VRBaseCbWeakPtr fkt) {
     if (callbacksPtr.size() == 0) return;
     auto sp = fkt.lock();
     if (!sp) return;

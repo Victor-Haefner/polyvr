@@ -72,8 +72,8 @@ class VRPhysicsManager {
         int fps = 500;
 
     protected:
-        VRThreadCb updatePhysicsFkt;
-        VRUpdatePtr updatePhysObjectsFkt;
+        VRThreadCbPtr updatePhysicsFkt;
+        VRUpdateCbPtr updatePhysObjectsFkt;
         VRPhysicsManager();
         ~VRPhysicsManager();
 

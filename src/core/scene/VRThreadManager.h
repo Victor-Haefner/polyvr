@@ -33,7 +33,7 @@ class VRThread {
         string name;
         bool control_flag = false;
         int status = 0;
-        VRThreadWeakCb fkt;
+        VRThreadCbWeakPtr fkt;
         int aspect = 0;
         /** last frame time stamp**/
         long long t_last = 0;
@@ -53,7 +53,7 @@ class VRThreadManager {
         VRThreadManager();
         ~VRThreadManager();
 
-        int initThread(VRThreadCb f, string name, bool loop = false, int aspect = 0);
+        int initThread(VRThreadCbPtr f, string name, bool loop = false, int aspect = 0);
 
         void stopThread(int id, int tries = 100);
         void stopAllThreads();

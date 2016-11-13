@@ -28,7 +28,7 @@ class BlockWorld {
 
         map<string, VRMaterialPtr> materials;
         map<int, VRGeometryPtr> chunks;
-        VRUpdatePtr updatePtr;
+        VRUpdateCbPtr updatePtr;
 
         // octree population algorithm
 

@@ -13,7 +13,7 @@ class VRGuiRecWidget {
     private:
         VRRecorderPtr rec;
 
-        VRUpdatePtr updateCb;
+        VRUpdateCbPtr updateCb;
 
         Gtk::Dialog* diag = 0;
         Gtk::Label* lbl = 0;

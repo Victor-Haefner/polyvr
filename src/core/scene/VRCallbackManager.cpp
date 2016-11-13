@@ -17,23 +17,23 @@ VRCallbackManager::~VRCallbackManager() {
     for (auto ufs : updateFktPtrs) delete ufs.second;
 }
 
-void VRCallbackManager::queueJob(VRUpdatePtr f, int priority, int delay) {
+void VRCallbackManager::queueJob(VRUpdateCbPtr f, int priority, int delay) {
     PLock lock(mtx);
     updateListsChanged = true;
     jobFktPtrs[f.get()] = job(f,priority,delay);
 }
 
-void VRCallbackManager::addUpdateFkt(VRUpdateWeakPtr f, int priority) {
+void VRCallbackManager::addUpdateFkt(VRUpdateCbWeakPtr f, int priority) {
     PLock lock(mtx);
     updateListsChanged = true;
     if (updateFktPtrs.count(priority) == 0) {
-        updateFktPtrs[priority] = new list<VRUpdateWeakPtr>();
+        updateFktPtrs[priority] = new list<VRUpdateCbWeakPtr>();
     }
     updateFktPtrs_priorities[f.lock().get()] = priority;
     updateFktPtrs[priority]->push_back(f);
 }
 
-void VRCallbackManager::addTimeoutFkt(VRUpdateWeakPtr p, int priority, int timeout) {
+void VRCallbackManager::addTimeoutFkt(VRUpdateCbWeakPtr p, int priority, int timeout) {
     PLock lock(mtx);
     auto f = p.lock().get();
     updateListsChanged = true;
@@ -49,15 +49,15 @@ void VRCallbackManager::addTimeoutFkt(VRUpdateWeakPtr p, int priority, int timeo
     timeoutFktPtrs[priority]->push_back(tof);
 }
 
-void VRCallbackManager::dropUpdateFkt(VRUpdateWeakPtr p) {//replace by list || map || something..
+void VRCallbackManager::dropUpdateFkt(VRUpdateCbWeakPtr p) {//replace by list || map || something..
     PLock lock(mtx);
     auto f = p.lock().get();
     if (updateFktPtrs_priorities.count(f) == 0) return;
     int prio = updateFktPtrs_priorities[f];
-    list<VRUpdateWeakPtr>* l = updateFktPtrs[prio];
+    list<VRUpdateCbWeakPtr>* l = updateFktPtrs[prio];
     if (l == 0) return;
 
-    l->remove_if([p](VRUpdateWeakPtr p2){
+    l->remove_if([p](VRUpdateCbWeakPtr p2){
         auto sp = p.lock();
         auto sp2 = p2.lock();
         return (sp && sp2) ? sp == sp2 : false;
@@ -66,7 +66,7 @@ void VRCallbackManager::dropUpdateFkt(VRUpdateWeakPtr p) {//replace by list || m
     updateFktPtrs_priorities.erase(f);
 }
 
-void VRCallbackManager::dropTimeoutFkt(VRUpdateWeakPtr p) {//replace by list || map || something..
+void VRCallbackManager::dropTimeoutFkt(VRUpdateCbWeakPtr p) {//replace by list || map || something..
     PLock lock(mtx);
     auto f = p.lock().get();
     updateListsChanged = true;
@@ -89,7 +89,7 @@ void VRCallbackManager::dropTimeoutFkt(VRUpdateWeakPtr p) {//replace by list || 
 void VRCallbackManager::updateCallbacks() {
     PLock lock(mtx);
     //printCallbacks();
-    vector<VRUpdateWeakPtr> cbsPtr;
+    vector<VRUpdateCbWeakPtr> cbsPtr;
 
     // gather all update callbacks
     for (auto fl : updateFktPtrs) for (auto f : *fl.second) cbsPtr.push_back(f);

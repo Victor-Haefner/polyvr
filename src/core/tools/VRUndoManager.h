@@ -10,8 +10,8 @@ using namespace std;
 
 class VRUndoAtom : public VRName {
     private:
-        VRUpdatePtr f_undo;
-        VRUpdatePtr f_redo;
+        VRUpdateCbPtr f_undo;
+        VRUpdateCbPtr f_redo;
         VREvalCbPtr f_valid;
 
     public:
@@ -19,7 +19,7 @@ class VRUndoAtom : public VRName {
 
         static VRUndoAtomPtr create(string name = "");
 
-        void set(VRUpdatePtr f_undo, VRUpdatePtr f_redo, VREvalCbPtr f_valid);
+        void set(VRUpdateCbPtr f_undo, VRUpdateCbPtr f_redo, VREvalCbPtr f_valid);
 
         bool valid();
         bool undo();
@@ -39,7 +39,7 @@ class VRUndoManager : public VRManager<VRUndoAtom>, public std::enable_shared_fr
         VRUndoManagerPtr ptr();
 
         void addObject(VRObjectPtr o);
-        void recUndo(VRUpdatePtr f_undo, VRUpdatePtr f_redo, VREvalCbPtr f_valid);
+        void recUndo(VRUpdateCbPtr f_undo, VRUpdateCbPtr f_redo, VREvalCbPtr f_valid);
 
         void undo();
         void redo();

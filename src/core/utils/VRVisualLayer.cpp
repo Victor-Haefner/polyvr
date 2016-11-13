@@ -50,7 +50,7 @@ bool VRVisualLayer::getVisibility() { return anchor->isVisible(); }
 
 void VRVisualLayer::addObject(VRObjectPtr obj) { anchor->addChild(obj); }
 
-void VRVisualLayer::setCallback(VRToggleWeakPtr fkt) { callback = fkt; }
+void VRVisualLayer::setCallback(VRToggleCbWeakPtr fkt) { callback = fkt; }
 
 OSG_END_NAMESPACE;
 

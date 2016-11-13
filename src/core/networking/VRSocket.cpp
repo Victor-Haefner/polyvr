@@ -26,6 +26,7 @@ using namespace std;
 HTTP_args::HTTP_args() {
     params = new map<string, string>();
     pages = new map<string, string*>();
+    callbacks = new map<string, VRServerCbWeakPtr>();
 }
 
 HTTP_args::~HTTP_args() {
@@ -68,7 +69,7 @@ static int server_answer_to_connection_m(struct mg_connection *conn, enum mg_eve
 
 class HTTPServer {
     private:
-        VRThreadCb serverThread;
+        VRThreadCbPtr serverThread;
 
     public:
         //server----------------------------------------------------------------
@@ -118,6 +119,16 @@ class HTTPServer {
             if (data->pages->count(path)) {
                 delete (*data->pages)[path];
                 data->pages->erase(path);
+            }
+        }
+
+        void addCallback(string path, VRServerCbPtr cb) {
+            if (data->callbacks->count(path) == 0) (*data->callbacks)[path] = cb;
+        }
+
+        void remCallback(string path) {
+            if (data->callbacks->count(path)) {
+                data->callbacks->erase(path);
             }
         }
 
@@ -497,6 +508,8 @@ void VRSocket::setPort(int i) { port = i; update(); }
 void VRSocket::unsetCallbacks() { tcp_fkt = 0; http_fkt = 0; update(); }
 void VRSocket::addHTTPPage(string path, string page) { if (http_serv) http_serv->addPage(path, page); }
 void VRSocket::remHTTPPage(string path) { if (http_serv) http_serv->remPage(path); }
+void VRSocket::addHTTPCallback(string path, VRServerCbPtr cb) { if (http_serv) http_serv->addCallback(path, cb); }
+void VRSocket::remHTTPCallback(string path) { if (http_serv) http_serv->remCallback(path); }
 
 string VRSocket::getType() { return type; }
 string VRSocket::getIP() { return IP; }

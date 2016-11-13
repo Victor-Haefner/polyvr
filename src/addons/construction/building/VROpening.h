@@ -29,7 +29,7 @@ class VROpening: public VRTransform, public VROCtoggle {
         VRTransformPtr d1, d2;
         shared_ptr< VRFunction<Vec3f> > fkt1;
         shared_ptr< VRFunction<Vec3f> > fkt2;
-        VRDeviceCb toggleCallback;
+        VRDeviceCbPtr toggleCallback;
         VRSignalPtr sig;
         VRScene* scene;
         string sound;

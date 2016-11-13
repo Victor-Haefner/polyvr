@@ -37,7 +37,7 @@ protected:
     bool loop = false;
     bool active = false;
     bool collideSelf = false;
-    VRUpdatePtr fkt;
+    VRUpdateCbPtr fkt;
 
     void emitterLoop();
     boost::recursive_mutex& mtx();

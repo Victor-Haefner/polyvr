@@ -20,7 +20,7 @@ class VRDevice : public std::enable_shared_from_this<VRDevice>, public VRName, p
 
         map< string, VRSignalPtr > callbacks; //all callbacks
         map<VRSignal*, VRSignalPtr> activatedSignals;
-        map<VRSignal*, VRDeviceCb> deactivationCallbacks;
+        map<VRSignal*, VRDeviceCbPtr> deactivationCallbacks;
         map<int, int> BStates;//states of buttons
         map<int, float> SStates;//states of slider
 

@@ -32,8 +32,8 @@ class VRRecorder {
         AVFrame* frame = 0;
         SwsContext* sws_context = NULL;
 
-        VRTogglePtr toggleCallback;
-        VRUpdatePtr updateCallback;
+        VRToggleCbPtr toggleCallback;
+        VRUpdateCbPtr updateCallback;
 
         void initCodec();
         void closeCodec();

@@ -14,8 +14,8 @@ using namespace std;
 class VRGuiManager {
     private:
         bool standalone = false;
-	    VRUpdatePtr updatePtr;
-	    vector<VRDeviceCb> guiSignalCbs;
+	    VRUpdateCbPtr updatePtr;
+	    vector<VRDeviceCbPtr> guiSignalCbs;
 
 	    map<Gtk::Window*, Gtk::WindowPtr> windows;
 

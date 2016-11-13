@@ -74,7 +74,7 @@ class VRMillingWorkPiece : public VRGeometry {
         int updateCount = 0;
         posePtr toolPose;
         VRTransformWeakPtr tool;
-        VRUpdatePtr uFkt;
+        VRUpdateCbPtr uFkt;
         int levelsPerGeometry = 12; // can be overridden
         int geometryUpdateWait = 1;
         int maxTreeLevel = 0;

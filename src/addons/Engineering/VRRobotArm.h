@@ -26,7 +26,7 @@ class VRRobotArm {
 
         VRAnalyticGeometryPtr ageo = 0;
         VRAnimation* anim = 0;
-        VRAnimPtr animPtr;
+        VRAnimCbPtr animPtr;
         path* animPath = 0;
         path* robotPath = 0;
 

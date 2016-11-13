@@ -135,7 +135,7 @@ void VRThreadManager::stopThread(int id, int tries) {
     threads.erase(id);
 }
 
-int VRThreadManager::initThread(VRThreadCb f, string name, bool loop, int aspect) { //start thread
+int VRThreadManager::initThread(VRThreadCbPtr f, string name, bool loop, int aspect) { //start thread
     static int id = 1;
 
     VRThreadPtr t = VRThreadPtr( new VRThread() );

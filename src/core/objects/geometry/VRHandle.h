@@ -18,8 +18,8 @@ class VRHandle : public VRGeometry {
         };
 
     private:
-        VRUpdatePtr updateCb;
-        VRAnimPtr paramCb;
+        VRUpdateCbPtr updateCb;
+        VRAnimCbPtr paramCb;
 
         float value = 0;
         float scale = 1;
@@ -34,7 +34,7 @@ class VRHandle : public VRGeometry {
         VRHandlePtr ptr();
 
         void updateHandle();
-        void configure(VRAnimPtr cb, TYPE t, Vec3f n, float scale, bool symmetric);
+        void configure(VRAnimCbPtr cb, TYPE t, Vec3f n, float scale, bool symmetric);
         void set(posePtr p, float v);
 
         Vec3f getAxis();

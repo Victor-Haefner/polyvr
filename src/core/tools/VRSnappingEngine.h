@@ -56,7 +56,7 @@ class VRSnappingEngine {
         map<VRTransformPtr, vector<VRTransformPtr> > anchors; // object anchors
         Octree* positions = 0; // objects by positions
         VRGeometryPtr hintGeo = 0;
-        VRUpdatePtr updatePtr;
+        VRUpdateCbPtr updatePtr;
 
         float influence_radius = 1000;
         float distance_snap = 0.05;

@@ -46,7 +46,7 @@ class VRAnimation : public VRName {
         template<typename T>
         VRAnimation(float _duration, float _offset, std::weak_ptr< VRFunction<T> > _fkt, T _start, T _end, bool _loop);
 
-        void setSimpleCallback(VRAnimWeakPtr fkt, float _duration);
+        void setSimpleCallback(VRAnimCbWeakPtr fkt, float _duration);
 
         void setCallbackOwner(bool b);
 
