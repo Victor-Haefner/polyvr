@@ -37,17 +37,24 @@ void VRMainInterface::on_scene_clicked(VRDeviceWeakPtr d) {
     update();
 }
 
+void start_demo_proxy(string path, int i) {
+    auto sm = VRSceneManager::get();
+    //sm->closeScene();
+    sm->loadScene(path);
+}
+
 string VRMainInterface::handleRequest(map<string, string> params) {
     if (!params.count("var")) return "";
     string var = params["var"];
+    string param = params["param"];
 
     auto pathsToList = [&](const vector<string>& paths) {
-        string res = "[";
+        string res = "{ \"paths\": [";
         for (auto s : paths) {
-            res += s;
+            res += "\""+s+"\"";
             if (s != *paths.rbegin()) res += ", ";
         }
-        res += "]";
+        res += "] }";
         return res;
     };
 
@@ -57,6 +64,19 @@ string VRMainInterface::handleRequest(map<string, string> params) {
 
     if (var == "examples") {
         return pathsToList( VRSceneManager::get()->getExamplePaths() );
+    }
+
+    if (var == "toggle_calib") {
+        auto scene = VRScene::getCurrent();
+        if (scene) {
+            auto fkt = VRUpdateCb::create("toggle_calib_job", boost::bind(&VRScene::setCalib, scene.get(), int(!scene->getCalib())));
+            scene->queueJob(fkt);
+        }
+    }
+
+    if (var == "start") {
+        auto fkt = VRUpdateCb::create("start_demo", boost::bind(start_demo_proxy, param, _1) );
+        VRSceneManager::get()->queueJob(fkt);
     }
 
     return "";

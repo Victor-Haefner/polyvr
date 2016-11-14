@@ -48,6 +48,7 @@ class VRRenderManager : public VRStorage {
         bool getSSAO();
         bool getHMDD();
         bool getMarker();
+        bool getCalib();
 
         void setDeferredShading(bool b);
         void setDeferredChannel(int channel);

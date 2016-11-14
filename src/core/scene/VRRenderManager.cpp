@@ -101,6 +101,7 @@ bool VRRenderManager::getDefferedShading() { return deferredRendering; }
 bool VRRenderManager::getSSAO() { return do_ssao; }
 bool VRRenderManager::getHMDD() { return do_hmdd; }
 bool VRRenderManager::getMarker() { return do_marker; }
+bool VRRenderManager::getCalib() { return calib; }
 
 vector<VRRenderStudioPtr> VRRenderManager::getRenderings() {
     vector<VRRenderStudioPtr> res;
