@@ -19,6 +19,12 @@ extern "C" {
 #include <AL/alext.h>
 #endif
 
+/*
+not compiling?
+open a terminal and type:
+sudo apt-get install libfftw3-dev
+*/
+
 #include <fftw3.h>
 
 using namespace OSG;
