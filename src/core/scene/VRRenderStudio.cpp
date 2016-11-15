@@ -81,7 +81,8 @@ void VRRenderStudio::init(VRObjectPtr root) {
 
 VRMaterialPtr VRRenderStudio::setupRenderLayer(string name, VRObjectPtr parent) {
     auto plane = VRGeometry::create(name+"_renderlayer");
-    plane->setPrimitive("Plane", "2 2 1 1");
+    string s = "10000000"; // hack, setVolume(false) is not working!! :(
+    plane->setPrimitive("Plane", s+" "+s+" 1 1");
     plane->setVolume(false);
     plane->setMaterial( VRMaterial::create(name+"_mat") );
     plane->setVisible(false);

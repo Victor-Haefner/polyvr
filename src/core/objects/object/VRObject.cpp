@@ -76,15 +76,16 @@ void VRObject::detach() {
 
 void VRObject::setVolume(bool b) {
     if (!getNode()) return;
-    float inf = std::numeric_limits<float>::max();
     BoxVolume &vol = getNode()->node->editVolume(b);
-    if (!b) {
+    /*if (!b) {
+        float inf = std::numeric_limits<float>::max();
         vol.setEmpty();
         vol.extendBy(Pnt3f(-inf,-inf,-inf));
         vol.extendBy(Pnt3f(inf,inf,inf));
-    }
-    vol.setValid(!b);
+    }*/
+    vol.setInfinite(!b);
     vol.setStatic(!b);
+    vol.setValid(!b);
 }
 
 VRObjectPtr VRObject::create(string name) { return VRObjectPtr(new VRObject(name) ); }

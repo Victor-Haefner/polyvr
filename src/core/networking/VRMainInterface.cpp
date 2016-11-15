@@ -40,8 +40,13 @@ void VRMainInterface::on_scene_clicked(VRDeviceWeakPtr d) {
 
 void start_demo_proxy(string path, int i) {
     auto sm = VRSceneManager::get();
-    //sm->closeScene();
     sm->loadScene(path);
+}
+
+void switch_eyes_proxy(string view, int i) {
+    auto v = VRSetup::getCurrent()->getView( view );
+    v->swapEyes( !v->eyesInverted() );
+    VRSetup::getCurrent()->save();
 }
 
 string VRMainInterface::handleRequest(map<string, string> params) {
@@ -82,9 +87,13 @@ string VRMainInterface::handleRequest(map<string, string> params) {
 
     if (var == "toggle_view_eye") {
         auto v = VRSetup::getCurrent()->getView( param );
-        cout << "toggle_view_eye " << param << " " << v << endl;
-        for ( auto v : VRSetup::getCurrent()->getViews() ) cout << " view " << v->getName() << endl;
-        if (v) v->swapEyes( !v->eyesInverted() );
+        if (!v) {
+            string err = "Error: view " + param + " not found! could not switch eyes, known views are: ";
+            for ( auto v : VRSetup::getCurrent()->getViews() ) err += "'"+v->getName()+"' ";
+            return err;
+        }
+        auto fkt = VRUpdateCb::create("sitch_eyes", boost::bind(switch_eyes_proxy, param, _1) );
+        VRSceneManager::get()->queueJob(fkt);
     }
 
     return "";

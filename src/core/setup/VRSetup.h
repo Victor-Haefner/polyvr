@@ -26,6 +26,7 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
     private:
         string cfgfile;
         string tracking;
+        string path;
 
         //map<string, VRScriptPtr> scripts;
 
@@ -76,7 +77,7 @@ class VRSetup : public VRViewManager, public VRWindowManager, public VRDeviceMan
 
         void updateTracking();
 
-        void save(string file);
+        void save(string file = "");
         void load(string file);
 
 

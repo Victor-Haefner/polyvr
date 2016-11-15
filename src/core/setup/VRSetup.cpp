@@ -218,11 +218,13 @@ void VRSetup::save(string file) {
     VRPN::save(trackingVRPNN);
     network->save(networkN);
 
-    doc.write_to_file_formatted(file);
+    if (file == "") file = path;
+    if (file != "") doc.write_to_file_formatted(file);
 }
 
 void VRSetup::load(string file) {
     cout << " load setup " << file << endl;
+    path = file;
     xmlpp::DomParser parser;
     parser.set_validate(false);
     parser.parse_file(file.c_str());
