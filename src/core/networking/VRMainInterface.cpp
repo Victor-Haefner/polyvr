@@ -4,6 +4,7 @@
 #include "core/scene/VRScene.h"
 #include "core/setup/VRSetupManager.h"
 #include "core/setup/VRSetup.h"
+#include "core/setup/windows/VRView.h"
 #include "core/scene/VRSceneLoader.h"
 
 #include <boost/bind.hpp>
@@ -77,6 +78,13 @@ string VRMainInterface::handleRequest(map<string, string> params) {
     if (var == "start") {
         auto fkt = VRUpdateCb::create("start_demo", boost::bind(start_demo_proxy, param, _1) );
         VRSceneManager::get()->queueJob(fkt);
+    }
+
+    if (var == "toggle_view_eye") {
+        auto v = VRSetup::getCurrent()->getView( param );
+        cout << "toggle_view_eye " << param << " " << v << endl;
+        for ( auto v : VRSetup::getCurrent()->getViews() ) cout << " view " << v->getName() << endl;
+        if (v) v->swapEyes( !v->eyesInverted() );
     }
 
     return "";
