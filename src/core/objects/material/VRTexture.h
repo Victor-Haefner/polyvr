@@ -33,6 +33,7 @@ class VRTexture : public std::enable_shared_from_this<VRTexture> {
 
         void read(string path);
         void write(string path);
+        int getChannels();
         Vec4f getPixel(Vec2f uv);
 };
 
