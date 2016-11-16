@@ -2,6 +2,7 @@
 #define VRTEXTURE_H_INCLUDED
 
 #include <OpenSG/OSGSField.h>
+#include <OpenSG/OSGVector.h>
 
 #include "core/objects/object/VRObject.h"
 #include "core/objects/VRObjectFwd.h"
@@ -32,6 +33,7 @@ class VRTexture : public std::enable_shared_from_this<VRTexture> {
 
         void read(string path);
         void write(string path);
+        Vec4f getPixel(Vec2f uv);
 };
 
 OSG_END_NAMESPACE;

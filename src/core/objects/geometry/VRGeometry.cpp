@@ -27,6 +27,9 @@
 #include "VRPrimitive.h"
 #include "OSGGeometry.h"
 
+#include <OpenSG/OSGIntersectAction.h>
+#include <OpenSG/OSGLineIterator.h>
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -46,6 +49,57 @@ VRObjectPtr VRGeometry::copy(vector<VRObjectPtr> children) {
     return geo;
 }
 
+class geoProxy : public Geometry {
+    public:
+        Action::ResultE intersectEnter(Action* action) {
+            auto type = getTypes()->getValue(0);
+            if ( type != GL_PATCHES ) {
+                return Geometry::intersectEnter(action);
+            } else return Action::Skip;
+
+            if ( getPatchVertices() != 4 ) {
+                cout << "Warning: patch vertices is " + toString(getPatchVertices()) + ", not 4, skipping intersect action!\n";
+                return Action::Skip;
+            }
+
+            IntersectAction* ia = dynamic_cast<IntersectAction*>(action);
+            ia->getActNode()->updateVolume();
+            const BoxVolume& bv = ia->getActNode()->getVolume();
+            if (bv.isValid() && !bv.intersect(ia->getLine())) return Action::Skip; //bv missed -> can not hit children
+
+            UInt32 numTris = 0;
+            Real32 t;
+            Vec3f norm;
+            const Line& ia_line = ia->getLine();
+
+            auto inds = getIndices();
+            auto pos = getPositions();
+            for (int i=0; i<inds->size(); i+=4) { // each 4 indices are a quad
+                int i1 = inds->getValue(i+0);
+                int i2 = inds->getValue(i+1);
+                int i3 = inds->getValue(i+2);
+                int i4 = inds->getValue(i+3);
+
+                Pnt3f p1 = pos->getValue<Pnt3f>(i1);
+                Pnt3f p2 = pos->getValue<Pnt3f>(i2);
+                Pnt3f p3 = pos->getValue<Pnt3f>(i3);
+                Pnt3f p4 = pos->getValue<Pnt3f>(i4);
+
+                numTris += 2;
+                if (ia_line.intersect(p1, p2, p3, t, &norm)) {
+                    //ia->setHit(t, ia->getActNode(), i/4, norm, -1);
+                }
+                if (ia_line.intersect(p1, p3, p4, t, &norm)) {
+                    //ia->setHit(t, ia->getActNode(), i/4+1, norm, -1);
+                }
+            }
+
+            ia->getStatCollector()->getElem(IntersectAction::statNTriangles)->add(numTris);
+            return Action::Skip;
+            return Action::Continue;
+        }
+};
+
 /** initialise a geometry object with his name **/
 VRGeometry::VRGeometry(string name) : VRTransform(name) {
     type = "Geometry";
@@ -56,6 +110,9 @@ VRGeometry::VRGeometry(string name) : VRTransform(name) {
     store("sourceparam", &source.parameter);
 
     regStorageSetupFkt( VRFunction<int>::create("geometry_update", boost::bind(&VRGeometry::setup, this)) );
+
+    // override intersect action callbacks for geometry
+    IntersectAction::registerEnterDefault( Geometry::getClassType(), reinterpret_cast<Action::Callback>(&geoProxy::intersectEnter));
 }
 
 VRGeometry::VRGeometry(string name, bool hidden) : VRTransform(name) {

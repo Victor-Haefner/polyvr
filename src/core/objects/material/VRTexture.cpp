@@ -20,3 +20,11 @@ ImageRecPtr VRTexture::getImage() { return img; }
 
 void VRTexture::read(string path) { img->read(path.c_str()); }
 void VRTexture::write(string path) { img->write(path.c_str()); }
+
+Vec4f VRTexture::getPixel(Vec2f uv) {
+    auto res = Vec4f(0,0,0,1);
+    if (!img) return res;
+    auto data = img->getData();
+    //return data[]; // TODO
+    return res;
+}

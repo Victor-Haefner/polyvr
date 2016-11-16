@@ -44,6 +44,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRTexture>::type = {
 PyMethodDef VRPyImage::methods[] = {
     {"read", (PyCFunction)VRPyImage::read, METH_VARARGS, "Read an image from disk - read( str path )" },
     {"write", (PyCFunction)VRPyImage::write, METH_VARARGS, "Write an image to disk - write( str path )" },
+    {"getPixel", (PyCFunction)VRPyImage::getPixel, METH_VARARGS, "Return pixel at coordinates u,v - getPixel( [u,v] )" },
     {NULL}  /* Sentinel */
 };
 
@@ -95,6 +96,12 @@ PyObject* VRPyImage::write(VRPyImage* self, PyObject *args) {
     if (! PyArg_ParseTuple(args, "s", (char*)&path)) return NULL;
     if (path) self->objPtr->write(path);
     Py_RETURN_TRUE;
+}
+
+PyObject* VRPyImage::getPixel(VRPyImage* self, PyObject *args) {
+    PyObject* uv;
+    if (! PyArg_ParseTuple(args, "O", &uv)) return NULL;
+    return toPyTuple( self->objPtr->getPixel( parseVec2fList(uv) ) );
 }
 
 
