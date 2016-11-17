@@ -1,4 +1,5 @@
 #include "VROntology.h"
+#include "addons/GIS/GISWorld.h"
 
 using namespace OSG;
 
@@ -147,6 +148,8 @@ void VROntology::setupLibrary() {
     library["Drill"] = drillOnto;
     library["Robot"] = robotOnto;
     library["Object"] = objectOnto;
+
+    GISWorld::setupOntology();
 
     /* TODO:
 

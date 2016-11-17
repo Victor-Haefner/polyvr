@@ -10,36 +10,54 @@ GISWorld::GISWorld() {
 }
 
 void GISWorld::setupOntology() {
-    world = VROntology::create("world");
+    VROntologyPtr world = VROntology::create("World");
+    VROntology::library["World"] = world;
+    world->import( VROntology::library["Math"] );
 
-    auto World = world->addConcept("World");
     auto Area = world->addConcept("Area");
     auto Border = world->addConcept("Border");
+    auto Path = world->addConcept("Path");
+    auto Node = world->addConcept("Node");
+
+    Area->addProperty("borders", Border);
+    Area->addProperty("subArea", Area);
+    Border->addProperty("path", Path);
+    Node->addProperty("position", "Position");
+    Node->addProperty("paths", Path);
+    Path->addProperty("nodes", Node);
+
+    auto World = world->addConcept("World", "Area");
     auto Country = world->addConcept("Country", "Area");
     auto Region = world->addConcept("Region", "Area");
     auto City = world->addConcept("City", "Area");
 
     World->addProperty("countries", Country);
-    Area->addProperty("borders", Border);
+    World->addProperty("cities", City);
+    Country->addProperty("regions", Region);
 
-    auto RoadNetwork = world->addConcept("RoadNetwork");
-    auto Road = world->addConcept("Road");
-    auto Crossing = world->addConcept("Crossing");
-    auto Intersection = world->addConcept("Intersection", "Crossing");
-    auto Lane = world->addConcept("Lane");
-    auto Building = world->addConcept("Building");
-    auto Walkway = world->addConcept("Walkway", "Border");
+    auto WayNetwork = world->addConcept("WayNetwork", "", "The network of all ways in a country");
+    auto Way = world->addConcept("Way", "Area");
+    auto Road = world->addConcept("Road", "Way");
+    auto Sidewalk = world->addConcept("Sidewalk", "Way");
+    auto Crossing = world->addConcept("Crossing", "Node");
+    auto RoadIntersection = world->addConcept("RoadIntersection", "Crossing");
+    auto Lane = world->addConcept("Lane", "Way");
+    auto Building = world->addConcept("Building", "Area");
+    auto RoadMarking = world->addConcept("RoadMarking", "Border");
+    auto Kerb = world->addConcept("Kerb", "Border", "A stone edging to a pavement or raised way");
 
-    Country->addProperty("roadnetwork", RoadNetwork);
-    RoadNetwork->addProperty("roads", Road);
-    RoadNetwork->addProperty("nodes", Crossing);
+    World->addProperty("ways", WayNetwork);
+    WayNetwork->addProperty("ways", Way);
+    WayNetwork->addProperty("nodes", Crossing);
+    Way->addProperty("crossings", Crossing);
+    Way->addProperty("areas", Area);
     Road->addProperty("lanes", Lane);
-    Road->addProperty("intersections", Intersection);
-    Road->addProperty("crossings", Crossing);
-    Road->addProperty("borders", Border);
+    Road->addProperty("sidewalks", Sidewalk);
+    Road->addProperty("intersections", RoadIntersection);
     Road->addProperty("buildings", Building);
-
-
+    Road->addProperty("path", Path);
+    Road->addProperty("markings", RoadMarking);
+    Sidewalk->addProperty("kerbs", Kerb);
 
     auto Plant = world->addConcept("Plant");
     auto Tree = world->addConcept("Tree", "Plant");

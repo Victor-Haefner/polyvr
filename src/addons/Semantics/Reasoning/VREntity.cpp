@@ -121,6 +121,12 @@ void VREntity::setVector(string name, vector<string> v, string type) {
     if (auto o = ontology.lock()) o->addVectorInstance(v_name, type, v);
 }
 
+void VREntity::addVector(string name, vector<string> v, string type) {
+    string v_name = this->name+"_"+name;
+    add(name, v_name);
+    if (auto o = ontology.lock()) o->addVectorInstance(v_name, type, v);
+}
+
 vector<VRPropertyPtr> VREntity::getValues(string name) {
     if (name != "" && properties.count(name)) return properties[name];
     vector<VRPropertyPtr> res;

@@ -9,12 +9,12 @@ OSG_BEGIN_NAMESPACE;
 class GISWorld {
     private:
         //graph_basePtr streets;
-        VROntologyPtr world;
-
-        void setupOntology();
+        //VROntologyPtr world;
 
     public:
         GISWorld();
+
+        static void setupOntology();
 };
 
 OSG_END_NAMESPACE;

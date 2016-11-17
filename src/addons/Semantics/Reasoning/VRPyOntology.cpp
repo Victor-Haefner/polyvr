@@ -104,7 +104,8 @@ PyMethodDef VRPyEntity::methods[] = {
     {"getProperties", (PyCFunction)VRPyEntity::getProperties, METH_VARARGS, "Return all properties or the properties of a certain type - [property] getProperties( str )" },
     {"set", (PyCFunction)VRPyEntity::set, METH_VARARGS, "Set a property - set( str prop, str value )" },
     {"add", (PyCFunction)VRPyEntity::add, METH_VARARGS, "Add a property - add( str prop, str value )" },
-    {"setVector", (PyCFunction)VRPyEntity::setVector, METH_VARARGS, "Set a vector property - set( str prop, str value [x,y,z], str vector concept )" },
+    {"setVector", (PyCFunction)VRPyEntity::setVector, METH_VARARGS, "Set a vector property - setVector( str prop, str value [x,y,z], str vector concept )" },
+    {"addVector", (PyCFunction)VRPyEntity::addVector, METH_VARARGS, "Add a vector property - addVector( str prop, str value [x,y,z], str vector concept )" },
     {NULL}  /* Sentinel */
 };
 
@@ -144,6 +145,25 @@ PyObject* VRPyEntity::setVector(VRPyEntity* self, PyObject* args) {
     string pname; if (prop) pname = prop;
     string pvt; if (vectype) pvt = vectype;
     self->objPtr->setVector( pname, vals, pvt );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyEntity::addVector(VRPyEntity* self, PyObject* args) {
+    const char* prop = 0;
+    const char* vectype = "Vector";
+    PyObject* val = 0;
+    if (! PyArg_ParseTuple(args, "sO|s:addVector", (char*)&prop, (char*)&val, (char*)&vectype)) return NULL;
+
+    auto o_vals = pyListToVector(val);
+    vector<string> vals;
+    for (auto v : o_vals) {
+        string s = ::toString( PyFloat_AsDouble(v) );
+        vals.push_back(s);
+    }
+
+    string pname; if (prop) pname = prop;
+    string pvt; if (vectype) pvt = vectype;
+    self->objPtr->addVector( pname, vals, pvt );
     Py_RETURN_TRUE;
 }
 

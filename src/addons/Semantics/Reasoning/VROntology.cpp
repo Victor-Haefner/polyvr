@@ -80,7 +80,7 @@ vector<VRConceptPtr> VROntology::getConcepts() {
     return res;
 }
 
-VRConceptPtr VROntology::addConcept(string concept, string parent) {
+VRConceptPtr VROntology::addConcept(string concept, string parent, string comment) {
     if (concepts.count(concept)) { cout << "WARNING in VROntology::addConcept, " << concept << " known, skipping!\n"; return 0;  }
 
     auto p = thing;
@@ -90,6 +90,7 @@ VRConceptPtr VROntology::addConcept(string concept, string parent) {
     }
     //cout << "VROntology::addConcept " << concept << " " << parent << " " << p->name << " " << p->ID << endl;
     p = p->append(concept);
+    p->addAnnotation(comment, "comment");
     addConcept(p);
     return p;
 }

@@ -45,7 +45,7 @@ struct VROntology : public std::enable_shared_from_this<VROntology>, public VRNa
     void renameConcept(VRConceptPtr c, string newName);
     void renameEntity(VREntityPtr e, string s);
 
-    VRConceptPtr addConcept(string concept, string parent = "");
+    VRConceptPtr addConcept(string concept, string parent = "", string comment = "");
     VROntologyRulePtr addRule(string rule, string ac);
     VREntityPtr addInstance(string name, string concept);
     VREntityPtr addVectorInstance(string name, string concept, string x, string y, string z);
