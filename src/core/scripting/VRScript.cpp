@@ -283,7 +283,7 @@ string VRScript::getCore() { return core; }
 string VRScript::getHead() { return head; }
 string VRScript::getScript() { return head + core; }
 string VRScript::getType() { return type; }
-string VRScript::getMobile() { return server; }
+string VRScript::getServer() { return server; }
 int VRScript::getHeadSize() { // number of head lines
     if (type == "Python") return 1;
     return 0;
@@ -448,6 +448,7 @@ void VRScript::load(xmlpp::Element* e) {
             trig* t = new trig();
             t->trigger = el->get_attribute("type")->get_value();
             t->dev = el->get_attribute("dev")->get_value();
+            if (t->dev == "mobile") t->dev = "server1"; // Temp fix for old scenes after changing default server name!
             t->state = el->get_attribute("state")->get_value();
             t->param = el->get_attribute("param")->get_value();
             t->key = toInt( el->get_attribute("key")->get_value() );

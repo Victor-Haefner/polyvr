@@ -93,7 +93,7 @@ class VRScript : public VRName {
         string getScript();
         string getType();
         string getUri();
-        string getMobile();
+        string getServer();
         int getHeadSize();
 
         void enable(bool b);
