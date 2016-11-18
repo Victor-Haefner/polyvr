@@ -28,6 +28,8 @@ struct VREntity : public VROntoID, public VRName {
     void add(string name, string value);
     void setVector(string name, vector<string> value, string type);
     void addVector(string name, vector<string> value, string type);
+    string get(string prop, int i = 0);
+    string getVector(string prop, int i = 0);
     void rem(VRPropertyPtr);
     string toString();
 

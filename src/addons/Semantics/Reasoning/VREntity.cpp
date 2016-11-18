@@ -2,10 +2,14 @@
 #include "VRProperty.h"
 #include "VROntology.h"
 #include "core/utils/VRStorage_template.h"
+#include "core/gui/VRGuiManager.h"
 
 #include <iostream>
 
 using namespace OSG;
+
+#define WARN(x) \
+VRGuiManager::get()->printToConsole( "Errors", x+"\n" );
 
 /*#include <libxml++/nodes/element.h>
 #include "core/utils/VRFunction.h"
@@ -74,14 +78,14 @@ vector<string> VREntity::getConceptNames() {
 string VREntity::getConceptList() {
     string data;
     for (auto n : getConceptNames()) data += n+",";
-    if (concepts.size() > 0) data.pop_back();
+    if (data.size() > 0) data.pop_back();
     else data += "unknown concept";
     return data;
 }
 
 VRPropertyPtr VREntity::getProperty(string name) {
     for (auto c : getConcepts()) if (auto p = c->getProperty(name, 0)) return p;
-    cout << "Warning: property " << name << " of entity " << this->name << " not found!" << endl;
+    WARN("Warning: property " + name + " of entity " + this->name + " not found!");
     return 0;
 }
 
@@ -94,14 +98,14 @@ vector<VRPropertyPtr> VREntity::getProperties() {
 void VREntity::set(string name, string value) {
     if (!properties.count(name)) { add(name, value); return; }
     auto prop = getProperty(name);
-    if (!prop) { cout << "Warning (set): Entity " << this->name << " has no property " << name << endl; return; }
+    if (!prop) { WARN("Warning (set): Entity " + this->name + " has no property " + name); return; }
     properties[name][0]->value = value;
     // TODO: warn if vector size bigger 1
 }
 
 void VREntity::add(string name, string value) {
     auto prop = getProperty(name);
-    if (!prop) { cout << "Warning (add): Entity " << this->name << " has no property " << name << endl; return; }
+    if (!prop) { WARN("Warning (add): Entity " + this->name + " has no property " + name); return; }
     prop = prop->copy();
     prop->value = value;
     properties[name].push_back( prop );
@@ -125,6 +129,17 @@ void VREntity::addVector(string name, vector<string> v, string type) {
     string v_name = this->name+"_"+name;
     add(name, v_name);
     if (auto o = ontology.lock()) o->addVectorInstance(v_name, type, v);
+}
+
+string VREntity::get(string prop, int i) {
+    auto props = getValues(prop);
+    if (i >= props.size()) return "";
+    return props[i]->value;
+}
+
+string VREntity::getVector(string prop, int i) { // TODO
+    auto ve = get(prop, i);
+    return "";
 }
 
 vector<VRPropertyPtr> VREntity::getValues(string name) {

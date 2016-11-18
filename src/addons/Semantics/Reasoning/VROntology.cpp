@@ -6,7 +6,11 @@
 #include "core/utils/VRStorage_template.h"
 #include "core/scene/VRScene.h"
 #include "core/scene/VRSemanticManager.h"
+#include "core/gui/VRGuiManager.h"
 #include <iostream>
+
+#define WARN(x) \
+VRGuiManager::get()->printToConsole( "Errors", x+"\n" );
 
 using namespace OSG;
 
@@ -86,7 +90,7 @@ VRConceptPtr VROntology::addConcept(string concept, string parent, string commen
     auto p = thing;
     if (parent != "") {
         p = getConcept(parent);
-        if (!p) { cout << "WARNING in VROntology::addConcept, " << parent << " not found while adding " << concept << "!\n"; return 0;  }
+        if (!p) { WARN("WARNING in VROntology::addConcept, " + parent + " not found while adding " + concept); return 0;  }
     }
     //cout << "VROntology::addConcept " << concept << " " << parent << " " << p->name << " " << p->ID << endl;
     p = p->append(concept);
@@ -96,7 +100,7 @@ VRConceptPtr VROntology::addConcept(string concept, string parent, string commen
 }
 
 void VROntology::addConcept(VRConceptPtr c) {
-    if (concepts.count(c->getName())) { cout << "WARNING in VROntology::addConcept, " << c->getName() << " known, skipping!\n"; return;  }
+    if (concepts.count(c->getName())) { WARN("WARNING in VROntology::addConcept, " + c->getName() + " known, skipping!"); return;  }
     if (c == thing) return;
     concepts[c->getName()] = c;
     if (!c->hasParent()) thing->append(c);

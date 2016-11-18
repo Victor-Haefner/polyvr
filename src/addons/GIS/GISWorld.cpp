@@ -2,6 +2,8 @@
 
 #include "addons/Semantics/Reasoning/VROntology.h"
 
+#include <iostream>
+
 using namespace OSG;
 using namespace std;
 
@@ -12,19 +14,7 @@ GISWorld::GISWorld() {
 void GISWorld::setupOntology() {
     VROntologyPtr world = VROntology::create("World");
     VROntology::library["World"] = world;
-    world->import( VROntology::library["Math"] );
-
-    auto Area = world->addConcept("Area");
-    auto Border = world->addConcept("Border");
-    auto Path = world->addConcept("Path");
-    auto Node = world->addConcept("Node");
-
-    Area->addProperty("borders", Border);
-    Area->addProperty("subArea", Area);
-    Border->addProperty("path", Path);
-    Node->addProperty("position", "Position");
-    Node->addProperty("paths", Path);
-    Path->addProperty("nodes", Node);
+    world->merge( VROntology::library["Math"] );
 
     auto World = world->addConcept("World", "Area");
     auto Country = world->addConcept("Country", "Area");
@@ -50,14 +40,16 @@ void GISWorld::setupOntology() {
     WayNetwork->addProperty("ways", Way);
     WayNetwork->addProperty("nodes", Crossing);
     Way->addProperty("crossings", Crossing);
-    Way->addProperty("areas", Area);
+    Way->addProperty("areas", "Area");
+    Lane->addProperty("width", "float");
     Road->addProperty("lanes", Lane);
     Road->addProperty("sidewalks", Sidewalk);
     Road->addProperty("intersections", RoadIntersection);
     Road->addProperty("buildings", Building);
-    Road->addProperty("path", Path);
+    Road->addProperty("path", "Path");
     Road->addProperty("markings", RoadMarking);
     Sidewalk->addProperty("kerbs", Kerb);
+    RoadMarking->addProperty("width", "float");
 
     auto Plant = world->addConcept("Plant");
     auto Tree = world->addConcept("Tree", "Plant");

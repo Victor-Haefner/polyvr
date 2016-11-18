@@ -4,6 +4,8 @@
 #include "core/networking/VRSharedMemory.h"
 
 #include <OpenSG/OSGImage.h>
+#include <OpenSG/OSGMatrix.h>
+#include <OpenSG/OSGMatrixUtility.h>
 #include "core/objects/material/VRTexture.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -11,7 +13,7 @@ using namespace std;
 
 VRTextureGenerator::VRTextureGenerator() {}
 
-void VRTextureGenerator::setSize(Vec3i dim) { width = dim[0]; height = dim[1]; depth = dim[2]; }
+void VRTextureGenerator::setSize(Vec3i dim, bool a) { width = dim[0]; height = dim[1]; depth = dim[2]; hasAlpha = a; }
 void VRTextureGenerator::setSize(int w, int h, int d) { width = w; height = h; depth = d; }
 
 void VRTextureGenerator::add(string type, float amount, Vec3f c1, Vec3f c2) {
@@ -46,6 +48,103 @@ void VRTextureGenerator::add(GEN_TYPE type, float amount, Vec4f c1, Vec4f c2) {
     layers.push_back(l);
 }
 
+void VRTextureGenerator::drawFill(Vec4f c) {
+    Layer l;
+    l.type = FILL;
+    l.c41 = c;
+    layers.push_back(l);
+}
+
+void VRTextureGenerator::drawLine(Vec3f p1, Vec3f p2, Vec4f c, float w) {
+    Layer l;
+    l.type = LINE;
+    l.c31 = p1;
+    l.c32 = p2;
+    l.c41 = c;
+    l.amount = w;
+    layers.push_back(l);
+}
+
+void VRTextureGenerator::applyFill(Vec3f* data, Vec4f c) {
+    for (int k=0; k<depth; k++) {
+        for (int j=0; j<height; j++) {
+            for (int i=0; i<width; i++) {
+                int d = k*height*width + j*width + i;
+                data[d] = Vec3f(c[0], c[1], c[2])*c[3];
+            }
+        }
+    }
+}
+
+void VRTextureGenerator::applyFill(Vec4f* data, Vec4f c) {
+    for (int k=0; k<depth; k++) {
+        for (int j=0; j<height; j++) {
+            for (int i=0; i<width; i++) {
+                int d = k*height*width + j*width + i;
+                data[d] = c;
+            }
+        }
+    }
+}
+
+// TODO: most inefficient way to draw lines..
+void VRTextureGenerator::applyLine(Vec3f* data, Vec3f p1, Vec3f p2, Vec4f c, float w) {
+    Vec3f pm = (p1+p2)*0.5;
+    float L2 = (p2-p1).length()*0.5;
+    float w2 = w*0.5;
+
+    Matrix M; // box transformation
+    MatrixLookAt(M, pm, p1, Vec3f(0,0,-1)); // TODO, find orthogonal vector to p1
+    M.invert();
+
+    auto inBox = [&](Pnt3f& p) {
+        if (abs(p[0]) > w2) return false;
+        if (abs(p[1]) > w2) return false;
+        if (abs(p[2]) > L2) return false;
+        return true;
+    };
+
+    for (int k=0; k<depth; k++) {
+        for (int j=0; j<height; j++) {
+            for (int i=0; i<width; i++) {
+                int d = k*height*width + j*width + i;
+                Pnt3f pi = Pnt3f(float(i)/width, float(j)/height, float(k)/depth);
+                M.mult(pi, pi); // in box coords
+                if (inBox(pi)) data[d] = Vec3f(c[0], c[1], c[2])*c[3] + data[d]*(1.0-c[3]);
+                //data[d] = Vec3f(c[0], c[1], c[2])*c[3] + data[d]*(1.0-c[3]);
+            }
+        }
+    }
+}
+
+void VRTextureGenerator::applyLine(Vec4f* data, Vec3f p1, Vec3f p2, Vec4f c, float w) {
+    Vec3f pm = (p1+p2)*0.5;
+    float L = (p2-p1).length();
+    float w2 = w*0.5;
+
+    Matrix M; // box transformation
+    MatrixLookAt(M, pm, p1, Vec3f(0,1,0)); // TODO, find orthogonal vector to p1
+    M.invert();
+
+    auto inBox = [&](Pnt3f& p) {
+        if (abs(p[0]) > w2) return false;
+        if (abs(p[1]) > w2) return false;
+        if (abs(p[2]) > L) return false;
+        return true;
+    };
+
+    for (int k=0; k<depth; k++) {
+        for (int j=0; j<height; j++) {
+            for (int i=0; i<width; i++) {
+                int d = k*height*width + j*width + i;
+                Pnt3f pi = Pnt3f(float(i)/width, float(j)/height, float(k)/depth);
+                M.mult(pi, pi); // in box coords
+                if (inBox(pi)) data[d] = Vec4f(c[0], c[1], c[2], 1.0)*c[3] + data[d]*(1.0-c[3]);
+            }
+        }
+    }
+}
+
 void VRTextureGenerator::clearStage() { layers.clear(); }
 
 VRTexturePtr VRTextureGenerator::compose(int seed) {
@@ -56,22 +155,24 @@ VRTexturePtr VRTextureGenerator::compose(int seed) {
     Vec4f* data4 = new Vec4f[width*height*depth];
     for (int i=0; i<width*height*depth; i++) data3[i] = Vec3f(1,1,1);
     for (int i=0; i<width*height*depth; i++) data4[i] = Vec4f(1,1,1,1);
-    bool alpha = false;
     for (auto l : layers) {
-        if (l.Nchannels == 3) {
+        if (!hasAlpha) {
             if (l.type == BRICKS) VRBricks::apply(data3, dims, l.amount, l.c31, l.c32);
             if (l.type == PERLIN) VRPerlin::apply(data3, dims, l.amount, l.c31, l.c32);
+            if (l.type == LINE) applyLine(data3, l.c31, l.c32, l.c41, l.amount);
+            if (l.type == FILL) applyFill(data3, l.c41);
         }
-        if (l.Nchannels == 4) {
-            alpha = true;
+        if (hasAlpha) {
             if (l.type == BRICKS) VRBricks::apply(data4, dims, l.amount, l.c41, l.c42);
             if (l.type == PERLIN) VRPerlin::apply(data4, dims, l.amount, l.c41, l.c42);
+            if (l.type == LINE) applyLine(data4, l.c31, l.c32, l.c41, l.amount);
+            if (l.type == FILL) applyFill(data4, l.c41);
         }
     }
 
     img = VRTexture::create();
-    auto format = alpha ? OSG::Image::OSG_RGBA_PF : OSG::Image::OSG_RGB_PF;
-    if (alpha) img->getImage()->set(format, width, height, depth, 0, 1, 0.0, (const uint8_t*)data4, OSG::Image::OSG_FLOAT32_IMAGEDATA, true, 1);
+    auto format = hasAlpha ? OSG::Image::OSG_RGBA_PF : OSG::Image::OSG_RGB_PF;
+    if (hasAlpha) img->getImage()->set(format, width, height, depth, 0, 1, 0.0, (const uint8_t*)data4, OSG::Image::OSG_FLOAT32_IMAGEDATA, true, 1);
     else       img->getImage()->set(format, width, height, depth, 0, 1, 0.0, (const uint8_t*)data3, OSG::Image::OSG_FLOAT32_IMAGEDATA, true, 1);
     delete[] data3;
     delete[] data4;

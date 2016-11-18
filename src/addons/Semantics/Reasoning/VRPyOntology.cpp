@@ -106,8 +106,28 @@ PyMethodDef VRPyEntity::methods[] = {
     {"add", (PyCFunction)VRPyEntity::add, METH_VARARGS, "Add a property - add( str prop, str value )" },
     {"setVector", (PyCFunction)VRPyEntity::setVector, METH_VARARGS, "Set a vector property - setVector( str prop, str value [x,y,z], str vector concept )" },
     {"addVector", (PyCFunction)VRPyEntity::addVector, METH_VARARGS, "Add a vector property - addVector( str prop, str value [x,y,z], str vector concept )" },
+    {"get", (PyCFunction)VRPyEntity::get, METH_VARARGS, "Get the value of ith property named prop - str get( str prop | int i = 0 )" },
+    {"getVector", (PyCFunction)VRPyEntity::getVector, METH_VARARGS, "Get the value of ith vector property named prop - [x,y,z] getVector( str prop | int i = 0 ) )" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyEntity::get(VRPyEntity* self, PyObject* args) {
+    const char* prop = 0; int i=0;
+    if (! PyArg_ParseTuple(args, "s|i", (char*)&prop, &i)) return NULL;
+    string pname; if (prop) pname = prop;
+    string res = self->objPtr->get( pname, i );
+    if (res == "") Py_RETURN_NONE;
+    else return PyString_FromString(res.c_str());
+}
+
+PyObject* VRPyEntity::getVector(VRPyEntity* self, PyObject* args) {
+    const char* prop = 0; int i=0;
+    if (! PyArg_ParseTuple(args, "s|i", (char*)&prop, &i)) return NULL;
+    string pname; if (prop) pname = prop;
+    string res = self->objPtr->getVector( pname, i );
+    if (res == "") Py_RETURN_NONE;
+    else return PyString_FromString(res.c_str());
+}
 
 PyObject* VRPyEntity::add(VRPyEntity* self, PyObject* args) {
     const char* prop = 0;
@@ -176,7 +196,9 @@ PyObject* VRPyEntity::toString(VRPyEntity* self) {
 }
 
 PyObject* VRPyEntity::getConcept(VRPyEntity* self) {
-    return VRPyConcept::fromSharedPtr( self->objPtr->getConcepts()[0] );
+    auto cpts = self->objPtr->getConcepts();
+    if (cpts.size() == 0) Py_RETURN_NONE;
+    return VRPyConcept::fromSharedPtr( cpts[0] );
 }
 
 PyObject* VRPyEntity::getProperties(VRPyEntity* self, PyObject* args) {
