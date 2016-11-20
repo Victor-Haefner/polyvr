@@ -7,6 +7,7 @@
 #include <OpenSG/OSGMatrix.h>
 #include <OpenSG/OSGMatrixUtility.h>
 #include "core/objects/material/VRTexture.h"
+#include "core/math/path.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -65,6 +66,15 @@ void VRTextureGenerator::drawLine(Vec3f p1, Vec3f p2, Vec4f c, float w) {
     layers.push_back(l);
 }
 
+void VRTextureGenerator::drawPath(pathPtr p, Vec4f c, float w) {
+    Layer l;
+    l.type = PATH;
+    l.p = p;
+    l.c41 = c;
+    l.amount = w;
+    layers.push_back(l);
+}
+
 void VRTextureGenerator::applyFill(Vec3f* data, Vec4f c) {
     for (int k=0; k<depth; k++) {
         for (int j=0; j<height; j++) {
@@ -87,22 +97,23 @@ void VRTextureGenerator::applyFill(Vec4f* data, Vec4f c) {
     }
 }
 
+bool VRTextureGenerator::inBox(Pnt3f& p, Vec3f& s) {
+    if (abs(p[0]) > s[0]) return false;
+    if (abs(p[1]) > s[1]) return false;
+    if (abs(p[2]) > s[2]) return false;
+    return true;
+}
+
 // TODO: most inefficient way to draw lines..
 void VRTextureGenerator::applyLine(Vec3f* data, Vec3f p1, Vec3f p2, Vec4f c, float w) {
     Vec3f pm = (p1+p2)*0.5;
     float L2 = (p2-p1).length()*0.5;
     float w2 = w*0.5;
+    Vec3f s = Vec3f(w2,w2,L2);
 
     Matrix M; // box transformation
     MatrixLookAt(M, pm, p1, Vec3f(0,0,-1)); // TODO, find orthogonal vector to p1
     M.invert();
-
-    auto inBox = [&](Pnt3f& p) {
-        if (abs(p[0]) > w2) return false;
-        if (abs(p[1]) > w2) return false;
-        if (abs(p[2]) > L2) return false;
-        return true;
-    };
 
     for (int k=0; k<depth; k++) {
         for (int j=0; j<height; j++) {
@@ -110,7 +121,7 @@ void VRTextureGenerator::applyLine(Vec3f* data, Vec3f p1, Vec3f p2, Vec4f c, flo
                 int d = k*height*width + j*width + i;
                 Pnt3f pi = Pnt3f(float(i)/width, float(j)/height, float(k)/depth);
                 M.mult(pi, pi); // in box coords
-                if (inBox(pi)) data[d] = Vec3f(c[0], c[1], c[2])*c[3] + data[d]*(1.0-c[3]);
+                if (inBox(pi,s)) data[d] = Vec3f(c[0], c[1], c[2])*c[3] + data[d]*(1.0-c[3]);
                 //data[d] = Vec3f(c[0], c[1], c[2])*c[3] + data[d]*(1.0-c[3]);
             }
         }
@@ -119,19 +130,13 @@ void VRTextureGenerator::applyLine(Vec3f* data, Vec3f p1, Vec3f p2, Vec4f c, flo
 
 void VRTextureGenerator::applyLine(Vec4f* data, Vec3f p1, Vec3f p2, Vec4f c, float w) {
     Vec3f pm = (p1+p2)*0.5;
-    float L = (p2-p1).length();
+    float L2 = (p2-p1).length()*0.5;
     float w2 = w*0.5;
+    Vec3f s = Vec3f(w2,w2,L2);
 
     Matrix M; // box transformation
     MatrixLookAt(M, pm, p1, Vec3f(0,1,0)); // TODO, find orthogonal vector to p1
     M.invert();
-
-    auto inBox = [&](Pnt3f& p) {
-        if (abs(p[0]) > w2) return false;
-        if (abs(p[1]) > w2) return false;
-        if (abs(p[2]) > L) return false;
-        return true;
-    };
 
     for (int k=0; k<depth; k++) {
         for (int j=0; j<height; j++) {
@@ -139,9 +144,24 @@ void VRTextureGenerator::applyLine(Vec4f* data, Vec3f p1, Vec3f p2, Vec4f c, flo
                 int d = k*height*width + j*width + i;
                 Pnt3f pi = Pnt3f(float(i)/width, float(j)/height, float(k)/depth);
                 M.mult(pi, pi); // in box coords
-                if (inBox(pi)) data[d] = Vec4f(c[0], c[1], c[2], 1.0)*c[3] + data[d]*(1.0-c[3]);
+                if (inBox(pi,s)) data[d] = Vec4f(c[0], c[1], c[2], 1.0)*c[3] + data[d]*(1.0-c[3]);
             }
         }
+    }
+}
+
+// TODO: fix holes between curved path segments
+void VRTextureGenerator::applyPath(Vec3f* data, pathPtr p, Vec4f c, float w) {
+    auto pos = p->getPositions();
+    for (int i=1; i<pos.size(); i++) {
+        applyLine(data, pos[i-1], pos[i], c, w);
+    }
+}
+
+void VRTextureGenerator::applyPath(Vec4f* data, pathPtr p, Vec4f c, float w) {
+    auto pos = p->getPositions();
+    for (int i=1; i<pos.size(); i++) {
+        applyLine(data, pos[i-1], pos[i], c, w);
     }
 }
 
@@ -161,12 +181,14 @@ VRTexturePtr VRTextureGenerator::compose(int seed) {
             if (l.type == PERLIN) VRPerlin::apply(data3, dims, l.amount, l.c31, l.c32);
             if (l.type == LINE) applyLine(data3, l.c31, l.c32, l.c41, l.amount);
             if (l.type == FILL) applyFill(data3, l.c41);
+            if (l.type == PATH) applyPath(data3, l.p, l.c41, l.amount);
         }
         if (hasAlpha) {
             if (l.type == BRICKS) VRBricks::apply(data4, dims, l.amount, l.c41, l.c42);
             if (l.type == PERLIN) VRPerlin::apply(data4, dims, l.amount, l.c41, l.c42);
             if (l.type == LINE) applyLine(data4, l.c31, l.c32, l.c41, l.amount);
             if (l.type == FILL) applyFill(data4, l.c41);
+            if (l.type == PATH) applyPath(data4, l.p, l.c41, l.amount);
         }
     }
 

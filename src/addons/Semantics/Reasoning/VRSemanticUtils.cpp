@@ -32,14 +32,14 @@ Variable::Variable(VROntologyPtr onto, string concept, string var) {
     auto cl = onto->getConcept(concept);
     if (cl == 0) return;
 
-    if ( auto i = onto->getInstance(var) ) {
+    if ( auto i = onto->getEntity(var) ) {
         addEntity(i);
         this->concept = concept; // TODO: maybe the entity has a concept that inherits from the concept passed above?
         isAnonymous = false;
     } else { // get all entities of the required type
-        for (auto i : onto->getInstances(concept)) addEntity(i);
+        for (auto i : onto->getEntities(concept)) addEntity(i);
         if (entities.size() == 0) {
-            auto i = onto->addInstance(var, concept);
+            auto i = onto->addEntity(var, concept);
             addEntity(i);
             isAssumption = true; // TODO: put that in the evaluation
         }
@@ -171,7 +171,7 @@ Context::Context(VROntologyPtr onto) {
     this->onto = onto;
 
     //cout << "Init context:" << endl;
-    for (auto i : onto->instances) {
+    for (auto i : onto->entities) {
         if (i.second->getConcepts().size() == 0) { cout << "Context::Context instance " << i.second->getName() << " has no concepts!" << endl; continue; }
         vars[i.second->getName()] = Variable::create( onto, i.second->getConcepts()[0]->getName(), i.second->getName() );
         //cout << " add instance " << i.second->toString() << endl;

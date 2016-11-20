@@ -22,7 +22,7 @@ struct VROntology : public std::enable_shared_from_this<VROntology>, public VRNa
     string flag = "built-in";
 
     VRConceptPtr thing = 0;
-    map<int, VREntityPtr> instances;
+    map<int, VREntityPtr> entities;
     map<string, VRConceptWeakPtr> concepts;
     map<int, VROntologyRulePtr> rules;
     map<string, VROntologyWeakPtr> dependencies;
@@ -38,7 +38,7 @@ struct VROntology : public std::enable_shared_from_this<VROntology>, public VRNa
     VROntologyPtr copy();
 
     void addConcept(VRConceptPtr c);
-    void addInstance(VREntityPtr e);
+    void addEntity(VREntityPtr e);
     void remConcept(VRConceptPtr c);
     void remEntity(VREntityPtr e);
     void remRule(VROntologyRulePtr rule);
@@ -47,14 +47,14 @@ struct VROntology : public std::enable_shared_from_this<VROntology>, public VRNa
 
     VRConceptPtr addConcept(string concept, string parent = "", string comment = "");
     VROntologyRulePtr addRule(string rule, string ac);
-    VREntityPtr addInstance(string name, string concept);
-    VREntityPtr addVectorInstance(string name, string concept, string x, string y, string z);
-    VREntityPtr addVectorInstance(string name, string concept, vector<string> val);
+    VREntityPtr addEntity(string name, string concept);
+    VREntityPtr addVectorEntity(string name, string concept, string x, string y, string z);
+    VREntityPtr addVectorEntity(string name, string concept, vector<string> val);
 
     vector<VRConceptPtr> getConcepts();
     VRConceptPtr getConcept(string name);
-    VREntityPtr getInstance(string instance);
-    vector<VREntityPtr> getInstances(string concept);
+    VREntityPtr getEntity(string instance);
+    vector<VREntityPtr> getEntities(string concept);
 
     vector<VROntologyRulePtr> getRules();
 

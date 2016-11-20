@@ -24,20 +24,20 @@ struct VREntity : public VROntoID, public VRName {
     vector<VRPropertyPtr> getProperties();
     string getConceptList();
 
-    void set(string name, string value);
-    void add(string name, string value);
-    void setVector(string name, vector<string> value, string type);
-    void addVector(string name, vector<string> value, string type);
-    string get(string prop, int i = 0);
-    string getVector(string prop, int i = 0);
+    void set(string prop, string value);
+    void add(string prop, string value);
+    void setVector(string prop, vector<string> value, string type);
+    void addVector(string prop, vector<string> value, string type);
+
+    VRPropertyPtr get(string prop, int i = 0);
+    vector<VRPropertyPtr> getAll(string prop = "");
+    vector<string> getVector(string prop, int i = 0);
+    vector< vector<string> > getAllVector(string prop);
+
     void rem(VRPropertyPtr);
-    string toString();
-
-    vector<VRPropertyPtr> getValues(string name = "");
-    VRPropertyPtr getValue(string name);
-
     vector<string> getAtPath(vector<string> path);
 
+    string toString();
     void save(xmlpp::Element* e, int p);
     void load(xmlpp::Element* e);
 };

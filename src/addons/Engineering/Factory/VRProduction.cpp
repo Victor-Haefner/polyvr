@@ -35,7 +35,7 @@ VRProductionMachine::VRProductionMachine() {
 }
 
 void VRProduction::addMachine(VRProductionMachine* pm, string machine, VRGeometryPtr m) {
-    auto prod = description->getInstance("production");
+    auto prod = description->getEntity("production");
     prod->add(machine, "machine");
 
     pm->geo = m;
@@ -45,7 +45,7 @@ void VRProduction::addMachine(VRProductionMachine* pm, string machine, VRGeometr
 }
 
 VRProductionJob* VRProduction::queueJob(VRProduct* p, string job) {
-    auto prod = description->getInstance("production");
+    auto prod = description->getEntity("production");
     prod->add(job, "job");
 
     auto j = new VRProductionJob(p);
@@ -250,14 +250,14 @@ VRObjectPtr VRProduction::test() {
     auto drill = new VRProductionMachine();
     drill->geo->translate(Vec3f(-1.5,0,0));
     drill->description->merge(drillOnto);
-    drill->description->addVectorInstance("wsMin", "Vector", "0", "-1", "0");
-    drill->description->addVectorInstance("wsMax", "Vector", "0", "1", "0");
-    auto workSpace = drill->description->addInstance("workSpace", "Box");
+    drill->description->addVectorEntity("wsMin", "Vector", "0", "-1", "0");
+    drill->description->addVectorEntity("wsMax", "Vector", "0", "1", "0");
+    auto workSpace = drill->description->addEntity("workSpace", "Box");
     workSpace->set("wsMin", "min");
     workSpace->set("wsMax", "max");
-    drill->description->addVectorInstance("position", "Vector", "-1.5", "0", "0");
-    auto drilling = drill->description->addInstance("drilling", "Drilling");
-    drill->description->addVectorInstance("drillDir", "Vector", "0", "-1", "0");
+    drill->description->addVectorEntity("position", "Vector", "-1.5", "0", "0");
+    auto drilling = drill->description->addEntity("drilling", "Drilling");
+    drill->description->addVectorEntity("drillDir", "Vector", "0", "-1", "0");
     drilling->set("workSpace", "volume");
     drilling->set("drillDir", "direction");
     drilling->set("[0,0.5]", "depth"); // hole depth
@@ -267,52 +267,52 @@ VRObjectPtr VRProduction::test() {
     auto robot = new VRProductionMachine();
     robot->geo->translate(Vec3f(1.5,0,0));
     robot->description->merge(robotOnto);
-    auto robotI = robot->description->addInstance("robot", "Robot");
+    auto robotI = robot->description->addEntity("robot", "Robot");
     robotI->set("position", "position");
-    robot->description->addVectorInstance("position", "Vector", "1.5", "0", "0");
-    robot->description->addVectorInstance("wsMin", "Vector", "-1", "-1", "-1");
-    robot->description->addVectorInstance("wsMax", "Vector", "1", "1", "1");
-    workSpace = robot->description->addInstance("workSpace", "Box");
+    robot->description->addVectorEntity("position", "Vector", "1.5", "0", "0");
+    robot->description->addVectorEntity("wsMin", "Vector", "-1", "-1", "-1");
+    robot->description->addVectorEntity("wsMax", "Vector", "1", "1", "1");
+    workSpace = robot->description->addEntity("workSpace", "Box");
     workSpace->set("wsMin", "min");
     workSpace->set("wsMax", "max");
-    auto grab = robot->description->addInstance("grab", "Grab");
+    auto grab = robot->description->addEntity("grab", "Grab");
     grab->set("workSpace", "volume");
-    auto rotation = robot->description->addInstance("rotation", "Rotation");
+    auto rotation = robot->description->addEntity("rotation", "Rotation");
     rotation->set("workSpace", "volume");
-    auto translation = robot->description->addInstance("translation", "Translation");
+    auto translation = robot->description->addEntity("translation", "Translation");
     translation->set("workSpace", "volume");
 
     // product ---------------
     auto product = new VRProduct("testProduct");
     product->description->merge(productOnto);
     product->description->merge(boreholeOnto);
-    auto Product = product->description->addInstance("testProduct", "Product");
-    auto Btop = product->description->addInstance("Btop", "Borehole");
-    auto Bbottom = product->description->addInstance("Bbottom", "Borehole");
+    auto Product = product->description->addEntity("testProduct", "Product");
+    auto Btop = product->description->addEntity("Btop", "Borehole");
+    auto Bbottom = product->description->addEntity("Bbottom", "Borehole");
     Product->add("Btop", "feature");
     Product->add("Bbottom", "feature");
     Btop->set("0.1", "radius");
     Btop->set("0.3", "depth");
     Btop->set("entryTop", "entrypoint");
     Btop->set("dirTop", "direction");
-    product->description->addVectorInstance("entryTop", "Position", "0", "0.5", "0");
-    product->description->addVectorInstance("dirTop", "Direction", "0", "-1", "0");
+    product->description->addVectorEntity("entryTop", "Position", "0", "0.5", "0");
+    product->description->addVectorEntity("dirTop", "Direction", "0", "-1", "0");
     Bbottom->set("0.1", "Radius");
     Bbottom->set("0.3", "Depth");
     Bbottom->set("entryBottom", "Entrypoint");
     Bbottom->set("dirBottom", "Direction");
-    product->description->addVectorInstance("entryBottom", "Position", "0", "-0.5", "0");
-    product->description->addVectorInstance("dirBottom", "Direction", "0", "1", "0");
-    auto box = product->description->addInstance("box", "Box");
+    product->description->addVectorEntity("entryBottom", "Position", "0", "-0.5", "0");
+    product->description->addVectorEntity("dirBottom", "Direction", "0", "1", "0");
+    auto box = product->description->addEntity("box", "Box");
     box->set("bmin", "min");
     box->set("bmax", "max");
-    product->description->addVectorInstance("bmin", "Vector", "-0.5", "-0.5", "-0.5");
-    product->description->addVectorInstance("bmax", "Vector", "0.5", "0.5", "0.5");
+    product->description->addVectorEntity("bmin", "Vector", "-0.5", "-0.5", "-0.5");
+    product->description->addVectorEntity("bmax", "Vector", "0.5", "0.5", "0.5");
 
     // production -----------------------------------------------
     auto production = new VRProduction();
     production->description->merge(productionOnto);
-    production->description->addInstance("production", "Production");
+    production->description->addEntity("production", "Production");
     production->addMachine(robot, "robot", static_pointer_cast<VRGeometry>(machine->duplicate()));
     production->addMachine(drill, "drill", static_pointer_cast<VRGeometry>(machine->duplicate()));
     production->queueJob(product, "testProduct");

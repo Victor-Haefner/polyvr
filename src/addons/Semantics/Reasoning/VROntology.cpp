@@ -20,7 +20,7 @@ VROntology::VROntology(string name) {
     setNameSpace("Ontology");
     setName(name);
 
-    storeMap("Instances", &instances, true);
+    storeMap("Entities", &entities, true);
     storeMap("Rules", &rules, true);
     store("flag", &flag);
     regStorageSetupFkt( VRFunction<int>::create("ontology setup", boost::bind(&VROntology::setup, this)) );
@@ -41,11 +41,11 @@ void VROntology::setup() {
     thing->getDescendance(cpts);
     for (auto& c : cpts) concepts[c->getName()] = c;
 
-    auto insts = instances;
-    instances.clear();
+    auto insts = entities;
+    entities.clear();
     for (auto& i : insts) {
         for (auto c : i.second->conceptNames) i.second->addConcept( concepts[c].lock() ); // update concept
-        instances[i.second->ID] = i.second; // update ID mapping
+        entities[i.second->ID] = i.second; // update ID mapping
     }
 
     auto rls = rules;
@@ -122,10 +122,10 @@ void VROntology::renameConcept(VRConceptPtr c, string newName) {
 }
 
 void VROntology::remEntity(VREntityPtr e) {
-    //for (auto i : instances) cout << "i " << i.first << " " << i.second->getName() << " " << i.second->ID << endl;
-    if (!instances.count(e->ID)) return;
+    //for (auto i : entities) cout << "i " << i.first << " " << i.second->getName() << " " << i.second->ID << endl;
+    if (!entities.count(e->ID)) return;
     //cout << "VROntology::remEntity " << e->getName() << " " << e->ID << endl;
-    instances.erase(e->ID);
+    entities.erase(e->ID);
 }
 
 void VROntology::remRule(VROntologyRulePtr r) {
@@ -134,7 +134,7 @@ void VROntology::remRule(VROntologyRulePtr r) {
 }
 
 void VROntology::renameEntity(VREntityPtr e, string s) {
-    if (!instances.count(e->ID)) return;
+    if (!entities.count(e->ID)) return;
     e->setName(s);
 }
 
@@ -172,46 +172,45 @@ VROntologyRulePtr VROntology::addRule(string rule, string ac) {
     return r;
 }
 
-VREntityPtr VROntology::addVectorInstance(string name, string concept, string x, string y, string z) {
+VREntityPtr VROntology::addVectorEntity(string name, string concept, string x, string y, string z) {
     vector<string> v;
     v.push_back(x); v.push_back(y); v.push_back(z);
-    return addVectorInstance(name, concept, v);
+    return addVectorEntity(name, concept, v);
 }
 
-VREntityPtr VROntology::addVectorInstance(string name, string concept, vector<string> val) {
-    auto i = addInstance(name, concept);
+VREntityPtr VROntology::addVectorEntity(string name, string concept, vector<string> val) {
+    auto i = addEntity(name, concept);
     int N = val.size();
     if (0 < N) i->set("x", val[0]);
     if (1 < N) i->set("y", val[1]);
     if (2 < N) i->set("z", val[2]);
     if (3 < N) i->set("w", val[3]);
-    //cout << "addVectorInstance " << name << " " << concept << endl;
     return i;
 }
 
-void VROntology::addInstance(VREntityPtr e) { instances[e->ID] = e; }
+void VROntology::addEntity(VREntityPtr e) { entities[e->ID] = e; }
 
-VREntityPtr VROntology::addInstance(string name, string concept) {
+VREntityPtr VROntology::addEntity(string name, string concept) {
     auto c = getConcept(concept);
     auto e = VREntity::create(name, ptr(), c);
-    addInstance(e);
+    addEntity(e);
     return e;
 }
 
-VREntityPtr VROntology::getInstance(string instance) {
-    for (auto i : instances) if (i.second->getName() == instance) return i.second;
+VREntityPtr VROntology::getEntity(string e) {
+    for (auto i : entities) if (i.second->getName() == e) return i.second;
     return 0;
 }
 
-vector<VREntityPtr> VROntology::getInstances(string concept) {
+vector<VREntityPtr> VROntology::getEntities(string concept) {
     vector<VREntityPtr> res;
     if (concept != "") {
-        for (auto i : instances) {
+        for (auto i : entities) {
             for (auto c : i.second->getConcepts()) {
                 if(c && c->is_a(concept)) { res.push_back(i.second); break; }
             }
         }
-    } else for (auto i : instances) res.push_back(i.second);
+    } else for (auto i : entities) res.push_back(i.second);
     return res;
 }
 
@@ -219,7 +218,7 @@ string VROntology::toString() {
     string res = "Taxonomy:\n";
     res += thing->toString();
     res += "Entities:\n";
-    for (auto e : instances) res += e.second->toString() + "\n";
+    for (auto e : entities) res += e.second->toString() + "\n";
     return res;
 }
 

@@ -57,11 +57,13 @@ struct VRPyBase {
     static OSG::Vec3i parseVec3iList(PyObject *li);
     static OSG::Line PyToLine(PyObject *li);
 
-    static PyObject* toPyTuple(OSG::Vec4f v);
-    static PyObject* toPyTuple(OSG::Vec3f v);
-    static PyObject* toPyTuple(OSG::Vec3i v);
-    static PyObject* toPyTuple(OSG::Vec2i v);
-    static PyObject* toPyTuple(OSG::Vec2f v);
+    static PyObject* toPyTuple(const OSG::Vec4f& v);
+    static PyObject* toPyTuple(const OSG::Vec3f& v);
+    static PyObject* toPyTuple(const OSG::Vec3i& v);
+    static PyObject* toPyTuple(const OSG::Vec2i& v);
+    static PyObject* toPyTuple(const OSG::Vec2f& v);
+    static PyObject* toPyTuple(const vector<string>& v);
+    static PyObject* toPyTuple(const vector<PyObject*>& v);
 
     static PyObject* toPyObject(float f);
 

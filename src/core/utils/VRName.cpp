@@ -73,17 +73,17 @@ string VRName_base::setName(string name) {
     if (nameDict.count(base_name) == 1) nameDict[base_name].erase(name_suffix); // check if allready named, remove old name from dict
 
     // check if passed name has a base . suffix structure
-    string s = name;
-    std::replace( s.begin(), s.end(), ' ', '_');
-    std::replace( s.begin(), s.end(), separator, ' ');
-    stringstream ss(s);
-    ss >> s;
-    int j;
-    if (ss >> j) {
-        base_name = s;
-        name_suffix = j;
-        compileName();
-        return this->name;
+    auto vs = splitString(name, separator);
+    if (vs.size() > 1) {
+        string last = *vs.rbegin();
+        bool isNumber = (last.find_first_not_of( "0123456789" ) == string::npos);
+        if (isNumber) {
+            base_name = vs[0];
+            for (int i=1; i<vs.size()-1; i++) base_name += separator + vs[i];
+            name_suffix = toInt(last);
+            compileName();
+            return this->name;
+        }
     }
 
     base_name = name; // set new base name

@@ -120,42 +120,48 @@ void VREntity::rem(VRPropertyPtr p) {
 }
 
 void VREntity::setVector(string name, vector<string> v, string type) {
-    string v_name = this->name+"_"+name;
-    set(name, v_name);
-    if (auto o = ontology.lock()) o->addVectorInstance(v_name, type, v);
+    if (auto o = ontology.lock()) {
+        string v_name = this->name+"_"+name;
+        auto e = o->addVectorEntity(v_name, type, v);
+        set(name, e->getName());
+    }
 }
 
 void VREntity::addVector(string name, vector<string> v, string type) {
-    string v_name = this->name+"_"+name;
-    add(name, v_name);
-    if (auto o = ontology.lock()) o->addVectorInstance(v_name, type, v);
+    if (auto o = ontology.lock()) {
+        string v_name = this->name+"_"+name;
+        auto e = o->addVectorEntity(v_name, type, v);
+        add(name, e->getName());
+    }
 }
 
-string VREntity::get(string prop, int i) {
-    auto props = getValues(prop);
-    if (i >= props.size()) return "";
-    return props[i]->value;
+VRPropertyPtr VREntity::get(string prop, int i) {
+    auto props = getAll(prop);
+    if (i >= props.size()) return 0;
+    return props[i];
 }
 
-string VREntity::getVector(string prop, int i) { // TODO
-    auto ve = get(prop, i);
-    return "";
-}
-
-vector<VRPropertyPtr> VREntity::getValues(string name) {
+vector<VRPropertyPtr> VREntity::getAll(string name) {
     if (name != "" && properties.count(name)) return properties[name];
     vector<VRPropertyPtr> res;
     if (name == "") for (auto pv : properties) for (auto p : pv.second) res.push_back(p);
     return res;
 }
 
-VRPropertyPtr VREntity::getValue(string name) {
-    auto props = getValues(name);
-    if (props.size() == 0) return 0;
-    return props[0];
+vector<string> VREntity::getVector(string prop, int i) { // TODO
+    vector<string> res;
+    auto vp = get(prop, i);
+    if (auto o = ontology.lock()) {
+        auto ve = o->getEntity( vp->value );
+
+    }
+    return res;
 }
 
-vector<VRPropertyPtr> getProperties();
+vector< vector<string> > VREntity::getAllVector(string prop) { // TODO
+    vector< vector<string> > res;
+    return res;
+}
 
 vector<string> VREntity::getAtPath(vector<string> path) { // TODO: move that to the reasoner, this is bullshit!
     /*cout << "  get value at path ";

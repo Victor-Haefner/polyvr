@@ -108,25 +108,58 @@ PyMethodDef VRPyEntity::methods[] = {
     {"addVector", (PyCFunction)VRPyEntity::addVector, METH_VARARGS, "Add a vector property - addVector( str prop, str value [x,y,z], str vector concept )" },
     {"get", (PyCFunction)VRPyEntity::get, METH_VARARGS, "Get the value of ith property named prop - str get( str prop | int i = 0 )" },
     {"getVector", (PyCFunction)VRPyEntity::getVector, METH_VARARGS, "Get the value of ith vector property named prop - [x,y,z] getVector( str prop | int i = 0 ) )" },
+    {"getAll", (PyCFunction)VRPyEntity::getAll, METH_VARARGS, "Get all values of property named prop - [str] get( str prop )" },
+    {"getAllVector", (PyCFunction)VRPyEntity::getAllVector, METH_VARARGS, "Get all values of vector property named prop - [[x,y,z]] getVector( str prop ) )" },
     {NULL}  /* Sentinel */
+};
+
+struct VRPyPropertyCaster {
+    static PyObject* cast(VRPropertyPtr p, VROntologyPtr o) {
+        if (!p) Py_RETURN_NONE;
+        if (p->value == "") Py_RETURN_NONE;
+        if (p->type == "int") return PyInt_FromLong( toInt(p->value) );
+        if (p->type == "float") return PyFloat_FromDouble( toFloat(p->value) );
+        if (p->type == "string") return PyString_FromString( p->value.c_str() );
+        if (o) {
+            if (auto e = o->getEntity(p->value)) return VRPyEntity::fromSharedPtr(e);
+        }
+        return PyString_FromString( p->value.c_str() );
+    }
 };
 
 PyObject* VRPyEntity::get(VRPyEntity* self, PyObject* args) {
     const char* prop = 0; int i=0;
     if (! PyArg_ParseTuple(args, "s|i", (char*)&prop, &i)) return NULL;
     string pname; if (prop) pname = prop;
-    string res = self->objPtr->get( pname, i );
-    if (res == "") Py_RETURN_NONE;
-    else return PyString_FromString(res.c_str());
+    auto p = self->objPtr->get( pname, i );
+    return VRPyPropertyCaster::cast(p, self->objPtr->ontology.lock());
+}
+
+PyObject* VRPyEntity::getAll(VRPyEntity* self, PyObject* args) {
+    const char* prop = 0;
+    if (! PyArg_ParseTuple(args, "s", (char*)&prop)) return NULL;
+    string pname; if (prop) pname = prop;
+    vector<PyObject*> res;
+    for (auto p : self->objPtr->getAll( pname )) res.push_back( VRPyPropertyCaster::cast(p, self->objPtr->ontology.lock()) );
+    return toPyTuple(res);
 }
 
 PyObject* VRPyEntity::getVector(VRPyEntity* self, PyObject* args) {
-    const char* prop = 0; int i=0;
+    /*const char* prop = 0; int i=0;
     if (! PyArg_ParseTuple(args, "s|i", (char*)&prop, &i)) return NULL;
     string pname; if (prop) pname = prop;
-    string res = self->objPtr->getVector( pname, i );
+    auto v = self->objPtr->getVector( pname, i );
     if (res == "") Py_RETURN_NONE;
-    else return PyString_FromString(res.c_str());
+    else return PyString_FromString(res.c_str());*/
+}
+
+
+PyObject* VRPyEntity::getAllVector(VRPyEntity* self, PyObject* args) {
+    /*const char* prop = 0;
+    if (! PyArg_ParseTuple(args, "s", (char*)&prop)) return NULL;
+    string pname; if (prop) pname = prop;
+    auto pv = self->objPtr->getAllVector( pname );
+    return toPyTuple(pv);*/
 }
 
 PyObject* VRPyEntity::add(VRPyEntity* self, PyObject* args) {
@@ -205,7 +238,7 @@ PyObject* VRPyEntity::getProperties(VRPyEntity* self, PyObject* args) {
     const char* prop = 0;
     if (! PyArg_ParseTuple(args, "|s:open", (char*)&prop)) return NULL;
     string pname; if (prop) pname = prop;
-    auto props = self->objPtr->getValues(pname);
+    auto props = self->objPtr->getAll(pname);
     auto res = PyList_New(props.size());
     for (int i=0; i<props.size(); i++)
         PyList_SetItem(res, i, VRPyProperty::fromSharedPtr( props[i] ) );
@@ -259,7 +292,7 @@ PyObject* VRPyOntology::addEntity(VRPyOntology* self, PyObject* args) {
     string sname, sconcept;
     if (name) sname = name;
     if (concept) sconcept = concept;
-    auto entity = self->objPtr->addInstance(sname, sconcept);
+    auto entity = self->objPtr->addEntity(sname, sconcept);
     if (propDict) {
         PyObject* keys = PyDict_Keys((PyObject*)propDict);
         for (int i=0; i<PyList_Size(keys); i++) {
@@ -276,7 +309,7 @@ PyObject* VRPyOntology::getEntity(VRPyOntology* self, PyObject* args) {
     if (! PyArg_ParseTuple(args, "s:addEntity", (char*)&name) ) return NULL;
     string sname;
     if (name) sname = name;
-    auto entity = self->objPtr->getInstance(sname);
+    auto entity = self->objPtr->getEntity(sname);
     return VRPyEntity::fromSharedPtr( entity );
 }
 
@@ -332,7 +365,7 @@ PyObject* VRPyOntology::getEntities(VRPyOntology* self, PyObject* args) {
     if (! PyArg_ParseTuple(args, "|s:getEntities", (char*)&c)) return NULL;
     string concept = "";
     if (c) concept = c;
-    auto entities = self->objPtr->getInstances(concept);
+    auto entities = self->objPtr->getEntities(concept);
     auto res = PyList_New(entities.size());
     for (int i=0; i<entities.size(); i++)
         PyList_SetItem(res, i, VRPyEntity::fromSharedPtr( entities[i] ) );

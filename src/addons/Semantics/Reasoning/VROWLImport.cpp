@@ -331,7 +331,7 @@ void VROWLImport::AgglomerateData() {
     }
 
     for (auto c : concepts) onto->addConcept(c.second);
-    for (auto e : entities) onto->addInstance(e.second);
+    for (auto e : entities) onto->addEntity(e.second);
     //cout << onto->toString() << endl;
 }
 

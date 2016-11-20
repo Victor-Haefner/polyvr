@@ -87,7 +87,7 @@ void VREntityWidget::on_select_property() {
     VRPropertyPtr p = 0;
     if (type == 0) p = entity->getProperty( row.get_value(cols.prop) );
     if (type == 1) {
-        auto pv = entity->getValues( row.get_value(cols.prop) );
+        auto pv = entity->getAll( row.get_value(cols.prop) );
         for (auto pi : pv) if (pi->ID == ID) { p = pi; break; }
     }
 
@@ -109,7 +109,7 @@ void VREntityWidget::update() {
         string color = selected ? "green" : "black";
         setPropRow(i, cp->getName(), cp->type, color, selected, cp->ID, 0);
 
-        for (auto ep : entity->getValues(cp->getName())) {
+        for (auto ep : entity->getAll(cp->getName())) {
             selected = selected_entity_property == ep;
             color = selected ? "green" : "black";
             Gtk::TreeModel::iterator j = treestore->append(i->children());

@@ -91,9 +91,9 @@ void VRProcess::update() {
     string q_subjects = "q(x):ActiveProcessComponent(x);Layer("+layer->getName()+");has("+layer->getName()+",x)";
     for ( auto subject : query(q_subjects) ) {
         string label;
-        if (auto l = subject->getValue("hasModelComponentLable") ) label = l->value;
+        if (auto l = subject->get("hasModelComponentLable") ) label = l->value;
         int nID = addDiagNode(interactionDiagram, label, SUBJECT);
-        if (auto ID = subject->getValue("hasModelComponentID") ) nodes[ID->value] = nID;
+        if (auto ID = subject->get("hasModelComponentID") ) nodes[ID->value] = nID;
     }
 
     map<string, map<string, vector<VREntityPtr>>> messages;
@@ -101,8 +101,8 @@ void VRProcess::update() {
     for ( auto message : query(q_messages) ) {
         string sender;
         string receiver;
-        if (auto s = message->getValue("sender") ) sender = s->value;
-        if (auto r = message->getValue("receiver") ) receiver = r->value;
+        if (auto s = message->get("sender") ) sender = s->value;
+        if (auto r = message->get("receiver") ) receiver = r->value;
         messages[sender][receiver].push_back(message);
     }
 
@@ -113,7 +113,7 @@ void VRProcess::update() {
                 string q_message = "q(x):MessageSpec(x);MessageExchange("+message->getName()+");is(x,"+message->getName()+".hasMessageType)";
                 auto msgs = query(q_message);
                 if (msgs.size())
-                    if (auto l = msgs[0]->getValue("hasModelComponentLable") ) label += "\n - " + l->value;
+                    if (auto l = msgs[0]->get("hasModelComponentLable") ) label += "\n - " + l->value;
             }
 
             int nID = addDiagNode(interactionDiagram, label, MESSAGE);
@@ -131,16 +131,16 @@ void VRProcess::update() {
         auto subjects = query(q_Subject);
         if (subjects.size() == 0) continue;
         auto subject = subjects[0];
-        auto ID = subject->getValue("hasModelComponentID");
+        auto ID = subject->get("hasModelComponentID");
         int sID = nodes[ID->value];
         behaviorDiagrams[sID] = behaviorDiagram;
 
         string q_States = "q(x):State(x);Behavior("+behavior->getName()+");has("+behavior->getName()+",x)";
         for (auto state : query(q_States)) {
             string label;
-            if (auto l = state->getValue("hasModelComponentLable") ) label = l->value;
+            if (auto l = state->get("hasModelComponentLable") ) label = l->value;
             int nID = addDiagNode(behaviorDiagram, label, SUBJECT);
-            if (auto ID = state->getValue("hasModelComponentID") ) nodes[ID->value] = nID;
+            if (auto ID = state->get("hasModelComponentID") ) nodes[ID->value] = nID;
         }
 
         map<string, map<string, vector<VREntityPtr>>> edges;
@@ -148,8 +148,8 @@ void VRProcess::update() {
         for (auto edge : query(q_Edges)) {
             string source;
             string target;
-            if (auto s = edge->getValue("hasSourceState") ) source = s->value;
-            if (auto r = edge->getValue("hasTargetState") ) target = r->value;
+            if (auto s = edge->get("hasSourceState") ) source = s->value;
+            if (auto r = edge->get("hasTargetState") ) target = r->value;
             edges[source][target].push_back(edge);
         }
 
@@ -162,7 +162,7 @@ void VRProcess::update() {
                     string q_message = "q(x):MessageSpec(x);MessageExchange("+edge->getName()+");is(x,"+edge->getName()+".hasMessageType)";
                     auto msgs = query(q_message);
                     if (msgs.size())
-                        if (auto l = msgs[0]->getValue("hasModelComponentLable") ) label += "\n - " + l->value;
+                        if (auto l = msgs[0]->get("hasModelComponentLable") ) label += "\n - " + l->value;
                 }*/
 
                 int nID = addDiagNode(behaviorDiagram, label, MESSAGE);

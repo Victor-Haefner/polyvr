@@ -215,7 +215,7 @@ void VRGuiSemantics::updateCanvas() {
         travConcepts(current->thing, 0, 0, 0);
         layout->fixNode( widgetIDs[current->thing->ID] );
 
-        for (auto e : current->instances) {
+        for (auto e : current->entities) {
             auto ew = VREntityWidgetPtr( new VREntityWidget(this, canvas, e.second) );
             widgets[ew->ID()] = ew;
             addNode(ew->ID());
@@ -408,7 +408,7 @@ void VRGuiSemantics::copyConcept(VRConceptWidget* w) {
 }
 
 void VRGuiSemantics::addEntity(VRConceptWidget* w) {
-    auto c = current->addInstance(w->concept->getName() + "_entity", w->concept->getName());
+    auto c = current->addEntity(w->concept->getName() + "_entity", w->concept->getName());
     auto cw = VREntityWidgetPtr( new VREntityWidget(this, canvas, c) );
     widgets[c->ID] = cw;
     cw->move(w->pos + Vec2f(90,0));

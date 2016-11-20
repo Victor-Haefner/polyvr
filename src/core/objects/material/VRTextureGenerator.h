@@ -4,6 +4,7 @@
 #include <OpenSG/OSGVector.h>
 
 #include "core/objects/VRObjectFwd.h"
+#include "core/math/VRMathFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -12,7 +13,8 @@ enum GEN_TYPE {
     PERLIN,
     BRICKS,
     LINE,
-    FILL
+    FILL,
+    PATH
 };
 
 class VRTextureGenerator {
@@ -27,6 +29,7 @@ class VRTextureGenerator {
             float amount = 0;
             Vec3f c31,c32;
             Vec4f c41,c42;
+            pathPtr p;
             int Nchannels = 3;
         };
 
@@ -37,6 +40,10 @@ class VRTextureGenerator {
         void applyFill(Vec4f* data, Vec4f c);
         void applyLine(Vec3f* data, Vec3f p1, Vec3f p2, Vec4f c, float width);
         void applyLine(Vec4f* data, Vec3f p1, Vec3f p2, Vec4f c, float width);
+        void applyPath(Vec3f* data, pathPtr p, Vec4f c, float width);
+        void applyPath(Vec4f* data, pathPtr p, Vec4f c, float width);
+
+        bool inBox(Pnt3f& p, Vec3f& s);
 
     public:
         VRTextureGenerator();
@@ -51,6 +58,7 @@ class VRTextureGenerator {
 
         void drawFill(Vec4f c);
         void drawLine(Vec3f p1, Vec3f p2, Vec4f c, float width);
+        void drawPath(pathPtr p, Vec4f c, float width);
 
         void clearStage();
         VRTexturePtr compose(int seed);
