@@ -62,12 +62,15 @@ class VRRenderStudio : public VRStorage {
         static VRRenderStudioPtr create(EYE e = LEFT);
 
         void init(VRObjectPtr root = 0);
+        void reset();
 
         VRObjectPtr getRoot();
 
         void addLight(VRLightPtr l);
         void updateLight(VRLightPtr l);
         VRLightPtr getLight(int ID);
+        void subLight(VRLightPtr l);
+        void clearLights();
 
         void setScene(VRObjectPtr root);
         void setCamera(VRCameraPtr cam);

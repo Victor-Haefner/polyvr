@@ -79,6 +79,11 @@ void VRRenderStudio::init(VRObjectPtr root) {
     update();
 }
 
+void VRRenderStudio::reset() {
+    root->clearLinks(); // clear links to current scene root node
+    clearLights();
+}
+
 VRMaterialPtr VRRenderStudio::setupRenderLayer(string name, VRObjectPtr parent) {
     auto plane = VRGeometry::create(name+"_renderlayer");
     string s = "10000000"; // hack, setVolume(false) is not working!! :(
@@ -145,6 +150,21 @@ void VRRenderStudio::updateLight(VRLightPtr l) {
     if (defShading) defShading->updateLight(l);
 }
 
+void VRRenderStudio::subLight(VRLightPtr l) {
+    if (!l) return;
+    if (light_map.count(l->getID())) light_map.erase(l->getID());
+    if (defShading) defShading->subLight(l);
+}
+
+void VRRenderStudio::clearLights() {
+    for (auto li : light_map) {
+        if (auto l = li.second) {
+            if (defShading) defShading->subLight(l);
+        }
+    }
+    light_map.clear();
+}
+
 void VRRenderStudio::setEye(EYE e) {
     eye = e;
     calib_mat->setShaderParameter<int>("isRightEye", eye);
@@ -166,7 +186,7 @@ void VRRenderStudio::setBackground(BackgroundRecPtr bg) {
 
 void VRRenderStudio::setScene(VRObjectPtr r) {
     if (!root || !r) return;
-    root->clearLinks();
+    root->clearLinks(); // clear links to current scene root node
     root->addLink( r );
 }
 

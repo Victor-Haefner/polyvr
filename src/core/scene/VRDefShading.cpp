@@ -245,13 +245,15 @@ const std::string& VRDefShading::getLightFPFile(LightTypeE lightType, ShadowType
     }
 }
 
-void VRDefShading::subLight(UInt32 lightIdx, int ID) {
+void VRDefShading::subLight(VRLightPtr l) {
+    auto& li = lightInfos[l->getID()];
+    int lightIdx = li.dsID;
     OSG_ASSERT(lightIdx < lightInfos.size());
     OSG_ASSERT(lightIdx < dsStage->getMFLights()->size());
     OSG_ASSERT(lightIdx < dsStage->getMFLightPrograms()->size());
     dsStage->editMFLights()->erase(lightIdx);
     dsStage->editMFLightPrograms()->erase(lightIdx);
-    lightInfos.erase(ID);
+    lightInfos.erase(l->getID());
 }
 
 OSG_END_NAMESPACE;

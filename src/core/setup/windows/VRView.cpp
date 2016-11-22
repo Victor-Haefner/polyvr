@@ -487,6 +487,8 @@ void VRView::update() {
 void VRView::reset() {
     cam = 0;
     view_root = 0;
+    if (renderingL) renderingL->reset();
+    if (renderingR) renderingR->reset();
     update();
 }
 

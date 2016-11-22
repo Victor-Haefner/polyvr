@@ -80,7 +80,8 @@ class VRDefShading {
         void setDSCamera(ProjectionCameraDecoratorRecPtr cam);
         void addDSLight(VRLightPtr light);
         void updateLight(VRLightPtr l);
-        void subLight(UInt32 lightIdx, int ID);
+        //void subLight(UInt32 lightIdx, int ID);
+        void subLight(VRLightPtr l);
 
         const std::string &getLightVPFile(LightTypeE lightType);
         const std::string &getLightFPFile(LightTypeE lightType, ShadowTypeE shadowType);
