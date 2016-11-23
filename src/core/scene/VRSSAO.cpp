@@ -26,59 +26,60 @@ float lerp(float f1, float f2, float f3) {
 }
 
 void VRSSAO::setSSAOparams(float radius, int kernelSize, int noiseSize) {
-    if (!ssao_mat) return;
-    int kernelSize2 = kernelSize*kernelSize;
-    int noiseSize2 = noiseSize*noiseSize;
+    if (ssao_mat) {
+        int kernelSize2 = kernelSize*kernelSize;
+        int noiseSize2 = noiseSize*noiseSize;
 
-    ssao_mat->setActivePass(0);
-    ssao_mat->setShaderParameter<int>("KernelSize", kernelSize);
-    ssao_mat->setShaderParameter<float>("uRadius", radius);
-    ssao_mat->setShaderParameter<float>("texScale", 1.0/noiseSize);
-    ssao_mat->setShaderParameter<int>("NoiseSize", noiseSize);
-    ssao_mat->setShaderParameter<float>("uRadius", radius);
+        ssao_mat->setShaderParameter<int>("KernelSize", kernelSize);
+        ssao_mat->setShaderParameter<float>("uRadius", radius);
+        ssao_mat->setShaderParameter<float>("texScale", 1.0/noiseSize);
+        ssao_mat->setShaderParameter<int>("NoiseSize", noiseSize);
+        ssao_mat->setShaderParameter<float>("uRadius", radius);
 
-    // kernel
-    vector<float> kernel(3*kernelSize2);
-    vector<float> noise(3*noiseSize2);
-    srand(0);
+        // kernel
+        vector<float> kernel(3*kernelSize2);
+        vector<float> noise(3*noiseSize2);
+        srand(0);
 
-    for (int i = 0; i < kernelSize2; i++) {
-        Vec3f k(random(-1,1), random(-1,1), random(0,1));
-        k.normalize();
-        k *= random(0,1);
-        float scale = float(i) / float(kernelSize2);
-        k *= lerp(0.1, 1, scale * scale);
+        for (int i = 0; i < kernelSize2; i++) {
+            Vec3f k(random(-1,1), random(-1,1), random(0,1));
+            k.normalize();
+            k *= random(0,1);
+            float scale = float(i) / float(kernelSize2);
+            k *= lerp(0.1, 1, scale * scale);
 
-        kernel[i*3+0] = k[0];
-        kernel[i*3+1] = k[1];
-        kernel[i*3+2] = k[2];
+            kernel[i*3+0] = k[0];
+            kernel[i*3+1] = k[1];
+            kernel[i*3+2] = k[2];
+        }
+
+        // noise texture
+        for (int i = 0; i < noiseSize2; i++) {
+            Vec3f n(random(-1,1), random(-1,1), 0);
+            n.normalize();
+
+            noise[i*3+0] = n[0];
+            noise[i*3+1] = n[1];
+            noise[i*3+2] = n[2];
+        }
+
+        // kernel texture
+        VRTexturePtr img = VRTexture::create();
+        img->getImage()->set(OSG::Image::OSG_RGB_PF, kernelSize, kernelSize, 1, 0, 1, 0.0, (const uint8_t*)&kernel[0], OSG::Image::OSG_FLOAT32_IMAGEDATA);
+        ssao_mat->setTextureAndUnit(img, 3);
+        ssao_mat->setMagMinFilter(GL_NEAREST, GL_NEAREST, 3);
+
+        // noise texture
+        VRTexturePtr imgN = VRTexture::create();
+        imgN->getImage()->set(OSG::Image::OSG_RGB_PF, noiseSize, noiseSize, 1, 0, 1, 0.0, (const uint8_t*)&noise[0], OSG::Image::OSG_FLOAT32_IMAGEDATA);
+        ssao_mat->setTextureAndUnit(imgN, 4);
+        ssao_mat->setMagMinFilter(GL_NEAREST, GL_NEAREST, 4);
     }
-
-    // noise texture
-    for (int i = 0; i < noiseSize2; i++) {
-        Vec3f n(random(-1,1), random(-1,1), 0);
-        n.normalize();
-
-        noise[i*3+0] = n[0];
-        noise[i*3+1] = n[1];
-        noise[i*3+2] = n[2];
-    }
-
-    // kernel texture
-    VRTexturePtr img = VRTexture::create();
-    img->getImage()->set(OSG::Image::OSG_RGB_PF, kernelSize, kernelSize, 1, 0, 1, 0.0, (const uint8_t*)&kernel[0], OSG::Image::OSG_FLOAT32_IMAGEDATA);
-    ssao_mat->setTextureAndUnit(img, 3);
-    ssao_mat->setMagMinFilter(GL_NEAREST, GL_NEAREST, 3);
-
-    // noise texture
-    VRTexturePtr imgN = VRTexture::create();
-    imgN->getImage()->set(OSG::Image::OSG_RGB_PF, noiseSize, noiseSize, 1, 0, 1, 0.0, (const uint8_t*)&noise[0], OSG::Image::OSG_FLOAT32_IMAGEDATA);
-    ssao_mat->setTextureAndUnit(imgN, 4);
-    ssao_mat->setMagMinFilter(GL_NEAREST, GL_NEAREST, 4);
 
     // blur size
-    ssao_mat->setActivePass(1);
-    ssao_mat->setShaderParameter<int>("uBlurSize", noiseSize);
+    if (blur_mat) {
+        blur_mat->setShaderParameter<int>("uBlurSize", noiseSize);
+    }
 }
 
 void VRSSAO::initSSAO(VRMaterialPtr mat) {
@@ -95,14 +96,19 @@ void VRSSAO::initSSAO(VRMaterialPtr mat) {
     ssao_mat->setShaderParameter<int>("uTexKernel", 3); // kernel texture
     ssao_mat->setShaderParameter<int>("uTexNoise", 4); // noise texture
     setSSAOparams(0.02, 6, 6);
+}
 
-    // ssao blur material pass
-    ssao_mat->addPass();
-    ssao_mat->readVertexShader(shdrDir + "blur.vp.glsl");
-    ssao_mat->readFragmentShader(shdrDir + "blur.fp.glsl", true);
-    ssao_mat->setShaderParameter<int>("texBufPos", 0);
-    ssao_mat->setShaderParameter<int>("texBufNorm", 1);
-    ssao_mat->setShaderParameter<int>("texBufDiff", 2);
+void VRSSAO::initBlur(VRMaterialPtr mat) {
+    string shdrDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/DeferredShading/";
+    blur_mat = mat;
+
+    // ssao blur material
+    blur_mat->readVertexShader(shdrDir + "blur.vp.glsl");
+    blur_mat->readFragmentShader(shdrDir + "blur.fp.glsl", true);
+    blur_mat->setShaderParameter<int>("texBufPos", 0);
+    blur_mat->setShaderParameter<int>("texBufNorm", 1);
+    blur_mat->setShaderParameter<int>("texBufDiff", 2);
+    setSSAOparams(0.02, 6, 6);
 }
 
 OSG_END_NAMESPACE;
