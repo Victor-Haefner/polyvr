@@ -428,6 +428,8 @@ void VRObject::printTree(int indent) {
 }
 
 void VRObject::printOSGTree(OSGObjectPtr o, string indent) {
+    if (o == 0) return;
+
     string type = o->node->getCore()->getTypeName();
     string name = "Unnamed";
     if (OSG::getName(o->node)) name = OSG::getName(o->node);

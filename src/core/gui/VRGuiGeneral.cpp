@@ -11,6 +11,9 @@
 
 #include <OpenSG/OSGSceneFileHandler.h>
 #include "core/scene/VRScene.h"
+#include "core/setup/VRSetup.h"
+#include "core/setup/windows/VRView.h"
+#include "core/scene/VRRenderStudio.h"
 #include "core/objects/OSGObject.h"
 #include "core/objects/material/VRMaterial.h"
 
@@ -77,6 +80,14 @@ void VRGuiGeneral::dumpOSG() {
 
     SceneFileHandler::the()->write( scene->getRoot()->getNode()->node, pg.c_str() );
     SceneFileHandler::the()->write( scene->getRoot()->getNode()->node, pb.c_str() );
+
+    auto setup = VRSetup::getCurrent();
+    for (auto v : setup->getViews()) {
+        auto rL = v->getRenderingL();
+        auto rR = v->getRenderingR();
+        if (rL) { cout << "rLEFT " << endl; VRObject::printOSGTree( rL->getRoot()->getNode() ); }
+        if (rR) { cout << "rRIGHT " << endl; VRObject::printOSGTree( rR->getRoot()->getNode() ); }
+    }
 }
 
 bool VRGuiGeneral::setColor(GdkEventButton* b) {

@@ -83,11 +83,6 @@ class VRView : public std::enable_shared_from_this<VRView> {
         BackgroundRecPtr background;
         SimpleStatisticsForegroundRecPtr stats = 0;
         GrabForegroundRecPtr grabfg = 0;
-        ImageForegroundRecPtr calib_fg;
-
-        map<string, VRGeometryPtr> renderLayer;
-        VRMaterialPtr setupRenderLayer(string name, VRObjectPtr parent);
-        void initCalib(VRMaterialPtr mat);
 
         void setMaterial();
         void setViewports();

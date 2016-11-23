@@ -286,24 +286,6 @@ void VRView::resize(Vec2i s) { window_size = s; update(); }
 int VRView::getID() { return ID; }
 void VRView::setID(int i) { ID = i; }
 
-VRMaterialPtr VRView::setupRenderLayer(string name, VRObjectPtr parent) {
-    auto plane = VRGeometry::create(name+"_renderlayer");
-    plane->setPrimitive("Plane", "2 2 1 1");
-    plane->setVolume(false);
-    plane->setMaterial( VRMaterial::create(name+"_mat") );
-    parent->addChild(plane);
-    renderLayer[name] = plane;
-    return plane->getMaterial();
-}
-
-void VRView::initCalib(VRMaterialPtr mat) {
-    string shdrDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/DeferredShading/";
-    mat->setLit(false);
-    mat->readVertexShader(shdrDir + "Calib.vp.glsl");
-    mat->readFragmentShader(shdrDir + "Calib.fp.glsl");
-    mat->setShaderParameter<int>("grid", 64);
-}
-
 void VRView::showStats(bool b) {
     if (stats == 0) {
         stats = SimpleStatisticsForeground::create();
@@ -495,11 +477,6 @@ void VRView::reset() {
 void VRView::setFotoMode(bool b) {
     if (!stereo) return;
     if (b) {
-        /*SolidBackgroundRecPtr sbg = SolidBackground::create();
-        sbg->setColor(Color3f(0,0,0));
-        if (rView) rView->setBackground(sbg);
-        NodeMTRecPtr n = Node::create();
-        if (rView) rView->setRoot(n);*/
         if (PCDecoratorLeft) PCDecoratorLeft->setEyeSeparation(0);
         if (PCDecoratorRight) PCDecoratorRight->setEyeSeparation(0);
     } else update();

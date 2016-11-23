@@ -18,16 +18,20 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+
 /**
 
 Rendering tree
 
 root_system - Group
 |
-root_def_shading - Group / DSStage
-|___________________________________________________________
-|                   |                   |                   |
-root - Group        Layer1              Layer2              ...
+root_post_processing
+|_____________________________________________________________________________________________________
+|                                                          |                    |                     |
+root_def_shading - Group / DSStage                         Calib                HMDD                  ...
+|_________________________________________________________________________________
+|                                         |                   |                   |
+root_def_rend - Group / DSStage           Layer1              Layer2              ...
 |
 scene
 
@@ -37,17 +41,18 @@ scene
 VRRenderStudio::VRRenderStudio(EYE e) {
     eye = e;
 
-    root = VRObject::create("Root");
     root_system = VRObject::create("System root");
     root_post_processing = VRObject::create("Post processing root");
     root_def_shading = VRObject::create("Deffered shading root");
+    root_def_rend = VRObject::create("Root");
     root_system->addChild(root_post_processing);
     root_post_processing->addChild(root_def_shading);
-    root_def_shading->addChild(root);
+    root_def_shading->addChild(root_def_rend);
 }
 
 VRRenderStudio::~VRRenderStudio() {
     delete defShading;
+    delete defRendering;
     delete ssao;
 }
 
@@ -61,6 +66,7 @@ void VRRenderStudio::init(VRObjectPtr root) {
     //auto metaball_mat = setupRenderLayer("metaball");
 
     defShading = new VRDefShading();
+    defRendering = new VRDefShading();
     ssao = new VRSSAO();
     hmdd = new VRHMDDistortion();
     auto hmddPtr = shared_ptr<VRHMDDistortion>(hmdd);
@@ -69,6 +75,7 @@ void VRRenderStudio::init(VRObjectPtr root) {
     root_def_shading->switchParent( hmddPtr );
 
     defShading->initDeferredShading(root_def_shading);
+    defRendering->initDeferredShading(root_def_rend);
     ssao->initSSAO(ssao_mat);
     hmdd->initHMDD(hmdd_mat);
     hmdd_mat->setTexture(defShading->getTarget(), 0);
@@ -80,20 +87,23 @@ void VRRenderStudio::init(VRObjectPtr root) {
 }
 
 void VRRenderStudio::reset() {
-    root->clearLinks(); // clear links to current scene root node
+    root_def_rend->clearLinks(); // clear links to current scene root node
     clearLights();
 }
 
 VRMaterialPtr VRRenderStudio::setupRenderLayer(string name, VRObjectPtr parent) {
     auto plane = VRGeometry::create(name+"_renderlayer");
-    string s = "10000000"; // hack, setVolume(false) is not working!! :(
+    auto mat = VRMaterial::create(name+"_mat");
+    string s = "2"; // TODO: check if layers are not culled in CAVE!
     plane->setPrimitive("Plane", s+" "+s+" 1 1");
     plane->setVolume(false);
-    plane->setMaterial( VRMaterial::create(name+"_mat") );
+    plane->setMaterial( mat );
     plane->setVisible(false);
+    mat->setDepthTest(GL_ALWAYS);
+    //mat->setSortKey(1000);
     parent->addChild(plane);
     renderLayer[name] = plane;
-    return plane->getMaterial();
+    return mat;
 }
 
 void VRRenderStudio::initCalib(VRMaterialPtr mat) {
@@ -116,19 +126,21 @@ void VRRenderStudio::initMarker(VRMaterialPtr mat) { // TODO
 }
 
 void VRRenderStudio::update() {
-    if (!defShading) return;
+    if (!defShading || !defRendering) return;
     defShading->setDefferedShading(deferredRendering);
+    defRendering->setDefferedShading(deferredRendering);
     if (ssao) ssao->setSSAOparams(ssao_radius, ssao_kernel, ssao_noise);
 
     for (auto m : VRMaterial::materials) {
         auto mat = m.second.lock();
         if (!mat) continue;
-        bool b = ( (ssao && do_ssao) || (defShading && deferredRendering) );
+        bool b = ( (ssao && do_ssao) || (defShading && defRendering && deferredRendering) );
         mat->setDeffered(b);
     }
 
     // update shader code
     defShading->reload();
+    defRendering->reload();
     if (do_hmdd && hmdd) hmdd->reload();
     if (hmdd) hmdd->setActive(do_hmdd);
 
@@ -172,11 +184,13 @@ void VRRenderStudio::setEye(EYE e) {
 
 void VRRenderStudio::setCamera(VRCameraPtr cam) {
     if (defShading) defShading->setDSCamera(cam);
+    if (defRendering) defRendering->setDSCamera(cam);
     if (hmdd) hmdd->setCamera(cam);
 }
 
 void VRRenderStudio::setCamera(ProjectionCameraDecoratorRecPtr cam) {
     if (defShading) defShading->setDSCamera(cam);
+    if (defRendering) defRendering->setDSCamera(cam);
     if (hmdd) hmdd->setCamera(cam);
 }
 
@@ -185,9 +199,9 @@ void VRRenderStudio::setBackground(BackgroundRecPtr bg) {
 }
 
 void VRRenderStudio::setScene(VRObjectPtr r) {
-    if (!root || !r) return;
-    root->clearLinks(); // clear links to current scene root node
-    root->addLink( r );
+    if (!root_def_rend || !r) return;
+    root_def_rend->clearLinks(); // clear links to current scene root node
+    root_def_rend->addLink( r );
 }
 
 void VRRenderStudio::resize(Vec2i s) {
@@ -202,6 +216,7 @@ bool VRRenderStudio::getDefferedShading() { return deferredRendering; }
 
 void VRRenderStudio::setDeferredChannel(int c) {
     if (defShading) defShading->setDeferredChannel(c);
+    if (defRendering) defRendering->setDeferredChannel(c);
 }
 
 void VRRenderStudio::setDefferedShading(bool b) { deferredRendering = b; update(); }

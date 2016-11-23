@@ -47,12 +47,13 @@ class VRRenderStudio : public VRStorage {
 
     protected:
         VRDefShading* defShading = 0;
+        VRDefShading* defRendering = 0;
         VRSSAO* ssao = 0;
         VRHMDDistortion* hmdd = 0;
         VRObjectPtr root_post_processing = 0;
         VRObjectPtr root_def_shading = 0;
         VRObjectPtr root_system = 0;
-        VRObjectPtr root = 0;
+        VRObjectPtr root_def_rend = 0;
         map<int, VRLightPtr> light_map;
 
     public:
