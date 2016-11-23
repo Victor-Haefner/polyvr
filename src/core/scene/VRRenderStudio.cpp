@@ -63,9 +63,9 @@ VRRenderStudioPtr VRRenderStudio::create(EYE e) { return VRRenderStudioPtr( new 
 
 void VRRenderStudio::init(VRObjectPtr root) {
     dsProxy_mat1 = setupRenderLayer("dsproxy1", root_def_shading);
-    //dsProxy_mat2 = setupRenderLayer("dsproxy2", root_def_blur);
+    dsProxy_mat2 = setupRenderLayer("dsproxy2", root_def_blur);
     ssao_mat = setupRenderLayer("ssao", root_def_shading);
-    //blur_mat = setupRenderLayer("blur", root_def_ssao);
+    blur_mat = setupRenderLayer("blur", root_def_ssao);
     hmdd_mat = setupRenderLayer("hmdd", root_post_processing);
     calib_mat = setupRenderLayer("calibration", root_post_processing);
     marker_mat = setupRenderLayer("marker", root_post_processing);
@@ -73,7 +73,7 @@ void VRRenderStudio::init(VRObjectPtr root) {
 
     defShading = new VRDefShading();
     defSSAO = new VRDefShading();
-    //defBlur = new VRDefShading();
+    defBlur = new VRDefShading();
     ssao = new VRSSAO();
     hmdd = new VRHMDDistortion();
     auto hmddPtr = shared_ptr<VRHMDDistortion>(hmdd);
@@ -83,13 +83,13 @@ void VRRenderStudio::init(VRObjectPtr root) {
 
     defShading->initDeferredShading(root_def_shading);
     defSSAO->initDeferredShading(root_def_ssao);
-    //defBlur->initDeferredShading(root_def_blur);
+    defBlur->initDeferredShading(root_def_blur);
     ssao->initSSAO(ssao_mat);
     //ssao->initBlur(blur_mat);
     hmdd->initHMDD(hmdd_mat);
     hmdd_mat->setTexture(defShading->getTarget(), 0);
     initDSProxy(dsProxy_mat1);
-    //initDSProxy(dsProxy_mat2);
+    initDSProxy(dsProxy_mat2);
     initCalib(calib_mat);
     initMarker(marker_mat);
 
