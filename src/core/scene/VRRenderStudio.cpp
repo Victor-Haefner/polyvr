@@ -38,83 +38,106 @@ scene
 
 */
 
+class VRDeferredRenderStage {
+    private:
+        VRObjectPtr top;
+        VRObjectPtr bottom;
+        VRGeometryPtr layer;
+        VRMaterialPtr mat;
+        VRDefShading* defRendering = 0;
+        bool active = false;
+
+        VRMaterialPtr setupRenderLayer(string name) {
+            layer = VRGeometry::create(name+"_renderlayer");
+            auto mat = VRMaterial::create(name+"_mat");
+            string s = "2"; // TODO: check if layers are not culled in CAVE!
+            layer->setPrimitive("Plane", s+" "+s+" 1 1");
+            layer->setVolume(false);
+            layer->setMaterial( mat );
+            layer->setVisible(false);
+            mat->setDepthTest(GL_ALWAYS);
+            //mat->setSortKey(1000);
+            top->addChild(layer);
+            return mat;
+        }
+
+        void initDeferred() {
+            defRendering = new VRDefShading();
+            defRendering->initDeferredShading(bottom);
+            defRendering->setDeferredShading(false);
+        }
+
+    public:
+        VRDeferredRenderStage(string name) {
+            top = VRObject::create(name+"_DRS_top");
+            bottom = VRObject::create(name+"_DRS_bottom");
+            top->addChild(bottom);
+            mat = setupRenderLayer(name);
+        }
+
+        ~VRDeferredRenderStage() {
+            delete defRendering;
+        }
+
+        VRObjectPtr getTop() { return top; }
+        VRObjectPtr getBottom() { return bottom; }
+        VRMaterialPtr getMaterial() { return mat; }
+        VRGeometryPtr getLayer() { return layer; }
+        VRDefShading* getRendering() {
+            if (!defRendering) initDeferred();
+            return defRendering;
+        }
+};
+
+VRDeferredRenderStage* VRRenderStudio::addStage(string name, string parent) {
+    auto s = new VRDeferredRenderStage(name);
+    stages[name] = s;
+    auto anchor = root_system;
+    if (stages.count(parent)) anchor = stages[parent]->getBottom();
+    s->getTop()->switchParent( anchor );
+    return s;
+}
+
 VRRenderStudio::VRRenderStudio(EYE e) {
     eye = e;
-
     root_system = VRObject::create("System root");
-    root_post_processing = VRObject::create("Post processing root");
-    root_def_shading = VRObject::create("Deffered shading root");
-    root_def_blur = VRObject::create("blur root");
-    root_def_ssao = VRObject::create("ssao root");
-    root_system->addChild(root_post_processing);
-    root_post_processing->addChild(root_def_shading);
-    root_def_shading->addChild(root_def_blur);
-    root_def_blur->addChild(root_def_ssao);
+    addStage("shading");
+    addStage("blur", "shading");
+    addStage("ssao", "blur");
+    addStage("marker");
+    addStage("calibration");
+    addStage("hmdd");
+    root_scene = stages["ssao"]->getBottom();
 }
 
 VRRenderStudio::~VRRenderStudio() {
-    delete defShading;
-    delete defSSAO;
-    delete defBlur;
     delete ssao;
 }
 
 VRRenderStudioPtr VRRenderStudio::create(EYE e) { return VRRenderStudioPtr( new VRRenderStudio(e) ); }
 
 void VRRenderStudio::init(VRObjectPtr root) {
-    dsProxy_mat1 = setupRenderLayer("dsproxy1", root_def_shading);
-    dsProxy_mat2 = setupRenderLayer("dsproxy2", root_def_blur);
-    ssao_mat = setupRenderLayer("ssao", root_def_blur);
-    blur_mat = setupRenderLayer("blur", root_def_shading);
-    hmdd_mat = setupRenderLayer("hmdd", root_post_processing);
-    calib_mat = setupRenderLayer("calibration", root_post_processing);
-    marker_mat = setupRenderLayer("marker", root_post_processing);
-    //auto metaball_mat = setupRenderLayer("metaball");
-
-    defShading = new VRDefShading();
-    defBlur = new VRDefShading();
-    defSSAO = new VRDefShading();
     ssao = new VRSSAO();
     hmdd = new VRHMDDistortion();
     auto hmddPtr = shared_ptr<VRHMDDistortion>(hmdd);
 
-    root_post_processing->addChild( hmddPtr );
-    root_def_shading->switchParent( hmddPtr );
+    root_system->addChild( hmddPtr );
+    stages["shading"]->getTop()->switchParent( hmddPtr );
 
-    defShading->initDeferredShading(root_def_shading);
-    defBlur->initDeferredShading(root_def_blur);
-    defSSAO->initDeferredShading(root_def_ssao);
-    ssao->initSSAO(ssao_mat);
-    ssao->initBlur(blur_mat);
-    hmdd->initHMDD(hmdd_mat);
-    hmdd_mat->setTexture(defShading->getTarget(), 0);
-    initDSProxy(dsProxy_mat1);
-    initDSProxy(dsProxy_mat2);
-    initCalib(calib_mat);
-    initMarker(marker_mat);
+    ssao->initSSAO( stages["ssao"]->getMaterial() );
+    ssao->initBlur( stages["blur"]->getMaterial() );
+    hmdd->initHMDD( stages["hmdd"]->getMaterial() );
+    stages["hmdd"]->getMaterial()->setTexture( stages["shading"]->getRendering()->getTarget(), 0 );
+    initCalib( stages["calibration"]->getMaterial() );
+    initMarker( stages["marker"]->getMaterial() );
 
     if (root) setScene(root);
     update();
 }
 
 void VRRenderStudio::reset() {
-    root_def_ssao->clearLinks(); // clear links to current scene root node
+    root_scene->clearLinks(); // clear links to current scene root node
     clearLights();
-}
-
-VRMaterialPtr VRRenderStudio::setupRenderLayer(string name, VRObjectPtr parent) {
-    auto plane = VRGeometry::create(name+"_renderlayer");
-    auto mat = VRMaterial::create(name+"_mat");
-    string s = "2"; // TODO: check if layers are not culled in CAVE!
-    plane->setPrimitive("Plane", s+" "+s+" 1 1");
-    plane->setVolume(false);
-    plane->setMaterial( mat );
-    plane->setVisible(false);
-    mat->setDepthTest(GL_ALWAYS);
-    //mat->setSortKey(1000);
-    parent->addChild(plane);
-    renderLayer[name] = plane;
-    return mat;
 }
 
 void VRRenderStudio::initDSProxy(VRMaterialPtr mat) {
@@ -136,21 +159,23 @@ void VRRenderStudio::initCalib(VRMaterialPtr mat) {
     mat->setShaderParameter<int>("isRightEye", eye);
 }
 
-void VRRenderStudio::initMarker(VRMaterialPtr mat) { // TODO
+void VRRenderStudio::initMarker(VRMaterialPtr mat) {
     string shdrDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/DeferredShading/";
     mat->setLit(false);
     mat->enableTransparency(true);
     mat->readVertexShader(shdrDir + "Marker.vp.glsl");
     mat->readFragmentShader(shdrDir + "Marker.fp.glsl");
-    //mat->setShaderParameter<int>("grid", 64);
-    //mat->setShaderParameter<int>("isRightEye", eye);
 }
 
 void VRRenderStudio::update() {
+    auto defShading = stages["shading"]->getRendering();
+    auto defSSAO = stages["ssao"]->getRendering();
+    auto defBlur = stages["blur"]->getRendering();
+
     if (!defShading || !defSSAO || !defBlur) return;
-    defShading->setDefferedShading(deferredRendering);
-    defBlur->setDefferedShading(deferredRendering);
-    defSSAO->setDefferedShading(deferredRendering);
+    defShading->setDeferredShading(deferredRendering);
+    defBlur->setDeferredShading(do_ssao);
+    defSSAO->setDeferredShading(do_ssao);
     if (ssao) ssao->setSSAOparams(ssao_radius, ssao_kernel, ssao_noise);
 
     bool do_deferred = ( (ssao && do_ssao) || (defShading && defBlur && defSSAO && deferredRendering) );
@@ -161,40 +186,40 @@ void VRRenderStudio::update() {
     }
 
     // update shader code
-    defShading->reload();
-    defBlur->reload();
-    defSSAO->reload();
+    for (auto s : stages) s.second->getRendering()->reload();
     if (do_hmdd && hmdd) hmdd->reload();
     if (hmdd) hmdd->setActive(do_hmdd);
 
     // update render layer visibility
-    if (renderLayer.count("ssao")) renderLayer["ssao"]->setVisible(do_ssao);
-    if (renderLayer.count("blur")) renderLayer["blur"]->setVisible(do_ssao);
-    if (renderLayer.count("dsproxy1")) renderLayer["dsproxy1"]->setVisible(do_deferred && !do_ssao);
-    if (renderLayer.count("dsproxy2")) renderLayer["dsproxy2"]->setVisible(do_deferred && !do_ssao);
-    if (renderLayer.count("calibration")) renderLayer["calibration"]->setVisible(calib);
-    if (renderLayer.count("hmdd")) renderLayer["hmdd"]->setVisible(do_hmdd);
-    if (renderLayer.count("marker")) renderLayer["marker"]->setVisible(do_marker);
+    if (stages.count("ssao")) stages["ssao"]->getLayer()->setVisible(do_ssao);
+    if (stages.count("blur")) stages["blur"]->getLayer()->setVisible(do_ssao);
+    if (stages.count("calibration")) stages["calibration"]->getLayer()->setVisible(calib);
+    if (stages.count("hmdd")) stages["hmdd"]->getLayer()->setVisible(do_hmdd);
+    if (stages.count("marker")) stages["marker"]->getLayer()->setVisible(do_marker);
 }
 
 void VRRenderStudio::addLight(VRLightPtr l) {
     light_map[l->getID()] = l;
+    auto defShading = stages["shading"]->getRendering();
     if (defShading) defShading->addDSLight(l);
 }
 
 VRLightPtr VRRenderStudio::getLight(int ID) { return light_map.count(ID) ? light_map[ID] : 0; }
 
 void VRRenderStudio::updateLight(VRLightPtr l) {
+    auto defShading = stages["shading"]->getRendering();
     if (defShading) defShading->updateLight(l);
 }
 
 void VRRenderStudio::subLight(VRLightPtr l) {
     if (!l) return;
     if (light_map.count(l->getID())) light_map.erase(l->getID());
+    auto defShading = stages["shading"]->getRendering();
     if (defShading) defShading->subLight(l);
 }
 
 void VRRenderStudio::clearLights() {
+    auto defShading = stages["shading"]->getRendering();
     for (auto li : light_map) {
         if (auto l = li.second) {
             if (defShading) defShading->subLight(l);
@@ -205,10 +230,13 @@ void VRRenderStudio::clearLights() {
 
 void VRRenderStudio::setEye(EYE e) {
     eye = e;
-    calib_mat->setShaderParameter<int>("isRightEye", eye);
+    stages["calibration"]->getMaterial()->setShaderParameter<int>("isRightEye", eye);
 }
 
 void VRRenderStudio::setCamera(VRCameraPtr cam) {
+    auto defShading = stages["shading"]->getRendering();
+    auto defSSAO = stages["ssao"]->getRendering();
+    auto defBlur = stages["blur"]->getRendering();
     if (defShading) defShading->setDSCamera(cam);
     if (defSSAO) defSSAO->setDSCamera(cam);
     if (defBlur) defBlur->setDSCamera(cam);
@@ -216,6 +244,9 @@ void VRRenderStudio::setCamera(VRCameraPtr cam) {
 }
 
 void VRRenderStudio::setCamera(ProjectionCameraDecoratorRecPtr cam) {
+    auto defShading = stages["shading"]->getRendering();
+    auto defSSAO = stages["ssao"]->getRendering();
+    auto defBlur = stages["blur"]->getRendering();
     if (defShading) defShading->setDSCamera(cam);
     if (defSSAO) defSSAO->setDSCamera(cam);
     if (defBlur) defBlur->setDSCamera(cam);
@@ -223,13 +254,16 @@ void VRRenderStudio::setCamera(ProjectionCameraDecoratorRecPtr cam) {
 }
 
 void VRRenderStudio::setBackground(BackgroundRecPtr bg) {
+    //if (defShading) defShading->setBackground(bg);
+    //if (defSSAO) defSSAO->setBackground(bg);
+    //if (defBlur) defBlur->setBackground(bg);
     if (hmdd) hmdd->setBackground(bg);
 }
 
 void VRRenderStudio::setScene(VRObjectPtr r) {
-    if (!root_def_ssao || !r) return;
-    root_def_ssao->clearLinks(); // clear links to current scene root node
-    root_def_ssao->addLink( r );
+    if (!root_scene || !r) return;
+    root_scene->clearLinks(); // clear links to current scene root node
+    root_scene->addLink( r );
 }
 
 void VRRenderStudio::resize(Vec2i s) {
@@ -243,6 +277,7 @@ bool VRRenderStudio::getMarker() { return do_marker; }
 bool VRRenderStudio::getDefferedShading() { return deferredRendering; }
 
 void VRRenderStudio::setDeferredChannel(int c) {
+    auto defShading = stages["shading"]->getRendering();
     if (defShading) defShading->setDeferredChannel(c);
 }
 

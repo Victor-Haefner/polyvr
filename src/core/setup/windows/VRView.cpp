@@ -119,8 +119,13 @@ void VRView::setViewports() {//create && set size of viewports
     if (stereo && !active_stereo) {
         lView = Viewport::create();
         rView = Viewport::create();
+        // left bottom right top
         lView->setSize(p[0], p[1], (p[0]+p[2])*0.5, p[3]);
         rView->setSize((p[0]+p[2])*0.5, p[1], p[2], p[3]);
+
+        // special test config that induces strange artifacts for ssao
+        //lView->setSize(0, 0, 0.5, 1.0);
+        //rView->setSize(0.1, 0, 1.0, 0.5);
     }
 
     if (active_stereo) {

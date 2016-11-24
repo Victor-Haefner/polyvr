@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="Mechanics" name_space="Scene" loading_time="421">
+<Scene name_suffix="0" base_name="Mechanics" name_space="Scene" loading_time="379">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
       <Object ambient="0.3 0.3 0.3 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.1 0.1 0.1 1" type="Light" unique="1" visible="1">
-        <Object accept_root="1" aspect="1" at="-0.83076 -0.145735 0.3" at_dir="0" base_name="Default" far="250" fov="1.0472" from="2.24202 2.39951 3.98509" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="-0.83076 -0.145735 0.3" at_dir="0" base_name="Default" far="250" fov="1.0472" from="0.667758 1.09552 2.09713" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
           <Object at="0 0 -1" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
             <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
           </Object>

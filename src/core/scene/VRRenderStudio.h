@@ -15,6 +15,7 @@ using namespace std;
 class VRDefShading;
 class VRSSAO;
 class VRHMDDistortion;
+class VRDeferredRenderStage;
 
 class VRRenderStudio : public VRStorage {
     public:
@@ -34,33 +35,18 @@ class VRRenderStudio : public VRStorage {
         float ssao_radius = 0.02;
         EYE eye = LEFT;
 
-        VRMaterialPtr dsProxy_mat1;
-        VRMaterialPtr dsProxy_mat2;
-        VRMaterialPtr blur_mat;
-        VRMaterialPtr ssao_mat;
-
-        VRMaterialPtr calib_mat;
-        VRMaterialPtr marker_mat;
-        VRMaterialPtr hmdd_mat;
-
-        map<string, VRGeometryPtr> renderLayer;
-        VRMaterialPtr setupRenderLayer(string name, VRObjectPtr parent);
+        map<string, VRDeferredRenderStage*> stages;
+        VRDeferredRenderStage* addStage(string name, string parent = "");
 
         void initDSProxy(VRMaterialPtr mat);
         void initCalib(VRMaterialPtr mat);
         void initMarker(VRMaterialPtr mat);
 
     protected:
-        VRDefShading* defShading = 0;
-        VRDefShading* defSSAO = 0;
-        VRDefShading* defBlur = 0;
         VRSSAO* ssao = 0;
         VRHMDDistortion* hmdd = 0;
         VRObjectPtr root_system = 0;
-        VRObjectPtr root_post_processing = 0;
-        VRObjectPtr root_def_shading = 0;
-        VRObjectPtr root_def_ssao = 0;
-        VRObjectPtr root_def_blur = 0;
+        VRObjectPtr root_scene = 0;
         map<int, VRLightPtr> light_map;
 
     public:

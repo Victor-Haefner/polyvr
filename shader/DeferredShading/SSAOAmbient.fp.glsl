@@ -24,6 +24,16 @@ vec2 toScreen(vec3 p) {
 }
 
 void main(void) {
+    /*vec2 lookup = gl_FragCoord.xy;
+
+    vec4 pos = texture2DRect(texBufPos, lookup);
+    //if (pos.z >= 0) discard;
+
+    gl_FragData[0] = pos;
+    gl_FragData[1] = texture2DRect(texBufNorm, lookup);
+    gl_FragData[2] = texture2DRect(texBufDiff, lookup);*/
+
+
     vec2 lookup = gl_FragCoord.xy;
     vec4 posAmb = texture2DRect(texBufPos,  lookup);
     vec3 norm   = texture2DRect(texBufNorm, lookup).xyz;

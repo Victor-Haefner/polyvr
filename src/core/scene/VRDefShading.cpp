@@ -134,10 +134,10 @@ void VRDefShading::reload() {
 void VRDefShading::initDeferredShading(VRObjectPtr o) {
     init();
     stageObject = o;
-    setDefferedShading(enabled);
+    setDeferredShading(enabled);
 }
 
-void VRDefShading::setDefferedShading(bool b) {
+void VRDefShading::setDeferredShading(bool b) {
     enabled = b;
     if (stageObject == 0) return;
     if (b) stageObject->setCore(OSGCore::create(dsStage), "defShading", true);
@@ -145,7 +145,7 @@ void VRDefShading::setDefferedShading(bool b) {
     for (auto li : lightInfos) li.second.vrlight->setDeferred(b);
 }
 
-bool VRDefShading::getDefferedShading() { return enabled; }
+bool VRDefShading::getDeferredShading() { return enabled; }
 
 // channel : GL_RENDER GL_POSITION GL_NORMALIZE GL_DIFFUSE
 void VRDefShading::setDeferredChannel(int c) { channel = c; reload(); }
@@ -156,6 +156,10 @@ void VRDefShading::setDSCamera(VRCameraPtr cam) {
 
 void VRDefShading::setDSCamera(ProjectionCameraDecoratorRecPtr cam) {
     if (initiated) dsStage->setCamera(cam);
+}
+
+void VRDefShading::setBackground(BackgroundRecPtr bg) {
+    if (initiated) dsStage->setBackground(bg);
 }
 
 void VRDefShading::addDSLight(VRLightPtr vrl) {

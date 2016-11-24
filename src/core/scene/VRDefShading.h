@@ -69,8 +69,8 @@ class VRDefShading {
         ~VRDefShading();
 
         void initDeferredShading(VRObjectPtr o);
-        void setDefferedShading(bool b);
-        bool getDefferedShading();
+        void setDeferredShading(bool b);
+        bool getDeferredShading();
         void reload();
 
         void setDeferredChannel(int channel);
@@ -80,8 +80,8 @@ class VRDefShading {
         void setDSCamera(ProjectionCameraDecoratorRecPtr cam);
         void addDSLight(VRLightPtr light);
         void updateLight(VRLightPtr l);
-        //void subLight(UInt32 lightIdx, int ID);
         void subLight(VRLightPtr l);
+        void setBackground(BackgroundRecPtr bg);
 
         const std::string &getLightVPFile(LightTypeE lightType);
         const std::string &getLightFPFile(LightTypeE lightType, ShadowTypeE shadowType);
