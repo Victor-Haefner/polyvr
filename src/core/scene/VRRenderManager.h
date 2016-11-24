@@ -9,6 +9,8 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+class VRDeferredRenderStage;
+
 class VRRenderManager : public VRStorage {
     private:
         bool frustumCulling = true;
@@ -43,6 +45,10 @@ class VRRenderManager : public VRStorage {
         bool getFrustumCulling();
         bool getOcclusionCulling();
         bool getTwoSided();
+
+        void addStage(string name, string parent = "");
+        void setStageActive(string name, bool da, bool la);
+        void setStageMaterialShader(string name, string VPpath, string FPpath, bool doDeferred);
 
         bool getDefferedShading();
         bool getSSAO();

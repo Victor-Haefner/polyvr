@@ -37,7 +37,6 @@ class VRRenderStudio : public VRStorage {
         EYE eye = LEFT;
 
         map<string, std::shared_ptr<VRDeferredRenderStage>> stages;
-        shared_ptr<VRDeferredRenderStage> addStage(string name, string parent = "");
 
         void initDSProxy(VRMaterialPtr mat);
         void initCalib(VRMaterialPtr mat);
@@ -60,6 +59,10 @@ class VRRenderStudio : public VRStorage {
         void reset();
 
         VRObjectPtr getRoot();
+
+        void addStage(string name, string parent = "");
+        void setStageActive(string name, bool da, bool la);
+        void setStageMaterialShader(string name, string VPpath, string FPpath, bool doDeferred);
 
         void addLight(VRLightPtr l);
         void updateLight(VRLightPtr l);

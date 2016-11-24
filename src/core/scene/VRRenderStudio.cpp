@@ -38,13 +38,30 @@ scene
 
 */
 
-shared_ptr<VRDeferredRenderStage> VRRenderStudio::addStage(string name, string parent) {
+void VRRenderStudio::addStage(string name, string parent) {
     auto s = shared_ptr<VRDeferredRenderStage>( new VRDeferredRenderStage(name) );
     stages[name] = s;
     auto anchor = root_system;
     if (stages.count(parent)) anchor = stages[parent]->getBottom();
     s->getTop()->switchParent( anchor );
-    return s;
+}
+
+void VRRenderStudio::setStageActive(string name, bool da, bool la) {
+    if (stages.count(name)) stages[name]->setActive(da, la);
+}
+
+void VRRenderStudio::setStageMaterialShader(string name, string VPpath, string FPpath, bool doDeferred) {
+    if (stages.count(name)) {
+        auto mat = stages[name]->getMaterial();
+        mat->setLit(false);
+        mat->readVertexShader(VPpath);
+        mat->readFragmentShader(FPpath, doDeferred);
+        if (doDeferred) {
+            mat->setShaderParameter<int>("texBufPos", 0);
+            mat->setShaderParameter<int>("texBufNorm", 1);
+            mat->setShaderParameter<int>("texBufDiff", 2);
+        }
+    }
 }
 
 VRRenderStudio::VRRenderStudio(EYE e) {

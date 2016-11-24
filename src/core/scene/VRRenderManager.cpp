@@ -114,6 +114,18 @@ vector<VRRenderStudioPtr> VRRenderManager::getRenderings() {
     return res;
 }
 
+void VRRenderManager::addStage(string name, string parent) {
+    for (auto r : getRenderings()) r->addStage(name, parent);
+}
+
+void VRRenderManager::setStageActive(string name, bool da, bool la) {
+    for (auto r : getRenderings()) r->setStageActive(name, da, la);
+}
+
+void VRRenderManager::setStageMaterialShader(string name, string VPpath, string FPpath, bool doDeferred) {
+    for (auto r : getRenderings()) r->setStageMaterialShader(name, VPpath, FPpath, doDeferred);
+}
+
 void VRRenderManager::setDeferredChannel(int c) {
     for (auto r : getRenderings()) r->setDeferredChannel(c);
 }
