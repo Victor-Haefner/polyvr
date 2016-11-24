@@ -35,18 +35,18 @@ class VRRenderStudio : public VRStorage {
         float ssao_radius = 0.02;
         EYE eye = LEFT;
 
-        map<string, VRDeferredRenderStage*> stages;
-        VRDeferredRenderStage* addStage(string name, string parent = "");
+        map<string, std::shared_ptr<VRDeferredRenderStage>> stages;
+        void addStage(string name, string parent = "");
 
         void initDSProxy(VRMaterialPtr mat);
         void initCalib(VRMaterialPtr mat);
         void initMarker(VRMaterialPtr mat);
 
     protected:
-        VRSSAO* ssao = 0;
-        VRHMDDistortion* hmdd = 0;
-        VRObjectPtr root_system = 0;
-        VRObjectPtr root_scene = 0;
+        shared_ptr<VRSSAO> ssao;
+        shared_ptr<VRHMDDistortion> hmdd;
+        VRObjectPtr root_system;
+        VRObjectPtr root_scene;
         map<int, VRLightPtr> light_map;
 
     public:
