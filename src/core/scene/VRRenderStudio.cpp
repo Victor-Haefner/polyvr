@@ -38,59 +38,13 @@ scene
 
 */
 
-class VRDeferredRenderStage {
-    private:
-        VRObjectPtr root;
-        VRGeometryPtr layer;
-        VRMaterialPtr mat;
-        shared_ptr<VRDefShading> defRendering;
-
-        VRMaterialPtr setupRenderLayer(string name) {
-            layer = VRGeometry::create(name+"_renderlayer");
-            auto mat = VRMaterial::create(name+"_mat");
-            string s = "2"; // TODO: check if layers are not culled in CAVE!
-            layer->setPrimitive("Plane", s+" "+s+" 1 1");
-            layer->setVolume(false);
-            layer->setMaterial( mat );
-            layer->setMeshVisibility(false);
-            mat->setDepthTest(GL_ALWAYS);
-            //mat->setSortKey(1000);
-            return mat;
-        }
-
-        void initDeferred() {
-            defRendering = shared_ptr<VRDefShading>( new VRDefShading() );
-            defRendering->initDeferredShading(root);
-            defRendering->setDeferredShading(false);
-        }
-
-    public:
-        VRDeferredRenderStage(string name) {
-            root = VRObject::create(name+"_DRS_bottom");
-            mat = setupRenderLayer(name);
-            layer->addChild(root);
-        }
-
-        ~VRDeferredRenderStage() {}
-
-        VRObjectPtr getTop() { return layer; }
-        VRObjectPtr getBottom() { return root; }
-        VRMaterialPtr getMaterial() { return mat; }
-        VRGeometryPtr getLayer() { return layer; }
-        shared_ptr<VRDefShading> getRendering() { if (!defRendering) initDeferred(); return defRendering; }
-
-        void setActive(bool da, bool la) {
-            getRendering()->setDeferredShading(da);
-            layer->setMeshVisibility(la);
-        }
-};
-
-void VRRenderStudio::addStage(string name, string parent) {
+shared_ptr<VRDeferredRenderStage> VRRenderStudio::addStage(string name, string parent) {
     auto s = shared_ptr<VRDeferredRenderStage>( new VRDeferredRenderStage(name) );
     stages[name] = s;
     auto anchor = root_system;
     if (stages.count(parent)) anchor = stages[parent]->getBottom();
     s->getTop()->switchParent( anchor );
+    return s;
 }
 
 VRRenderStudio::VRRenderStudio(EYE e) {

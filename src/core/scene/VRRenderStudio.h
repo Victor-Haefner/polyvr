@@ -8,6 +8,7 @@
 #include "core/objects/VRObjectFwd.h"
 #include "core/scene/VRSceneFwd.h"
 #include "core/utils/VRStorage.h"
+#include "VRDeferredRenderStage.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -36,7 +37,7 @@ class VRRenderStudio : public VRStorage {
         EYE eye = LEFT;
 
         map<string, std::shared_ptr<VRDeferredRenderStage>> stages;
-        void addStage(string name, string parent = "");
+        shared_ptr<VRDeferredRenderStage> addStage(string name, string parent = "");
 
         void initDSProxy(VRMaterialPtr mat);
         void initCalib(VRMaterialPtr mat);
