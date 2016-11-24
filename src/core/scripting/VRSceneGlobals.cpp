@@ -6,6 +6,7 @@
 #include "VRPyBaseT.h"
 #include "VRPySetup.h"
 #include "VRPyNavigator.h"
+#include "VRPyRendering.h"
 #include "VRPyTypeCaster.h"
 #include "VRPyProgress.h"
 
@@ -39,6 +40,7 @@ PyMethodDef VRSceneGlobals::methods[] = {
 	{"find", (PyCFunction)VRSceneGlobals::find, METH_VARARGS, "Return a ressource by name - something find(str name)\n\tthe ressources searched are: Objects, Devices" },
 	{"printOSG", (PyCFunction)VRSceneGlobals::printOSG, METH_NOARGS, "Print the OSG tree to console" },
 	{"getNavigator", (PyCFunction)VRSceneGlobals::getNavigator, METH_NOARGS, "Return a handle to the navigator object" },
+	{"getRendering", (PyCFunction)VRSceneGlobals::getRendering, METH_NOARGS, "Return a handle to the rendering manager" },
 	{"getSetup", (PyCFunction)VRSceneGlobals::getSetup, METH_NOARGS, "Return a handle to the active hardware setup" },
 	{"loadScene", (PyCFunction)VRSceneGlobals::loadScene, METH_VARARGS, "Close the current scene and open another - loadScene( str path/to/my/scene.xml )" },
 	{"startThread", (PyCFunction)VRSceneGlobals::startThread, METH_VARARGS, "Start a thread - int startThread( callback, [params] )" },
@@ -82,6 +84,11 @@ PyObject* VRSceneGlobals::getSetup(VRSceneGlobals* self) {
 PyObject* VRSceneGlobals::getNavigator(VRSceneGlobals* self) {
     auto scene = VRScene::getCurrent();
     return VRPyNavigator::fromPtr((VRNavigator*)scene.get());
+}
+
+PyObject* VRSceneGlobals::getRendering(VRSceneGlobals* self) {
+    auto scene = VRScene::getCurrent();
+    return VRPyRendering::fromPtr((VRRendering*)scene.get());
 }
 
 PyObject* VRSceneGlobals::printOSG(VRSceneGlobals* self) {

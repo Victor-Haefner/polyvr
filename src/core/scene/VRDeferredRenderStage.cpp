@@ -43,3 +43,11 @@ void VRDeferredRenderStage::setActive(bool da, bool la) {
     getRendering()->setDeferredShading(da);
     layer->setMeshVisibility(la);
 }
+
+void VRDeferredRenderStage::insert(shared_ptr<VRDeferredRenderStage> stage) {
+    stage->getTop()->switchParent( getBottom() );
+    if (child) child->getTop()->switchParent( stage->getBottom() );
+    child = stage;
+}
+
+

@@ -845,6 +845,8 @@
 		<Unit filename="src/core/scripting/VRPyProjectManager.h" />
 		<Unit filename="src/core/scripting/VRPyRecorder.cpp" />
 		<Unit filename="src/core/scripting/VRPyRecorder.h" />
+		<Unit filename="src/core/scripting/VRPyRendering.cpp" />
+		<Unit filename="src/core/scripting/VRPyRendering.h" />
 		<Unit filename="src/core/scripting/VRPySelection.cpp" />
 		<Unit filename="src/core/scripting/VRPySelection.h" />
 		<Unit filename="src/core/scripting/VRPySelector.cpp" />

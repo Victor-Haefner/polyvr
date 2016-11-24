@@ -18,39 +18,39 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-
 /**
 
-Rendering tree
+Rendering stages
 
 root_system - Group
-|
-root_post_processing
 |_____________________________________________________________________________________________________
 |                                                          |                    |                     |
 root_def_shading - Group / DSStage                         Calib                HMDD                  ...
-|_________________________________________________________________________________
-|                                         |                   |                   |
-root_def_ssao - Group / DSStage           Layer1              Layer2              ...
+|
+layer_blur - Group / Geometry
+|
+root_blur - Group / DSStage
+|
+layer_ssao - Group / Geometry
+|
+root_scene / root_ssao - Group / DSStage
 |
 scene
-
 
 */
 
 void VRRenderStudio::addStage(string name, string parent) {
     auto s = shared_ptr<VRDeferredRenderStage>( new VRDeferredRenderStage(name) );
     stages[name] = s;
-    auto anchor = root_system;
-    if (stages.count(parent)) anchor = stages[parent]->getBottom();
-    s->getTop()->switchParent( anchor );
+    if (!stages.count(parent)) s->getTop()->switchParent( root_system );
+    else stages[parent]->insert(s);
 }
 
 void VRRenderStudio::setStageActive(string name, bool da, bool la) {
     if (stages.count(name)) stages[name]->setActive(da, la);
 }
 
-void VRRenderStudio::setStageMaterialShader(string name, string VPpath, string FPpath, bool doDeferred) {
+void VRRenderStudio::setStageShader(string name, string VPpath, string FPpath, bool doDeferred) {
     if (stages.count(name)) {
         auto mat = stages[name]->getMaterial();
         mat->setLit(false);
@@ -74,6 +74,8 @@ VRRenderStudio::VRRenderStudio(EYE e) {
     addStage("calibration");
     addStage("hmdd");
     root_scene = stages["ssao"]->getBottom();
+
+    addStage("texturing", "shading");
 }
 
 VRRenderStudio::~VRRenderStudio() {}
@@ -190,11 +192,13 @@ void VRRenderStudio::setEye(EYE e) {
 void VRRenderStudio::setCamera(VRCameraPtr cam) {
     for (auto s : stages) s.second->getRendering()->setDSCamera(cam);
     if (hmdd) hmdd->setCamera(cam);
+    cout << "VRRenderStudio::setCamera VRCamera" << endl;
 }
 
 void VRRenderStudio::setCamera(ProjectionCameraDecoratorRecPtr cam) {
     for (auto s : stages) s.second->getRendering()->setDSCamera(cam);
     if (hmdd) hmdd->setCamera(cam);
+    cout << "VRRenderStudio::setCamera ProjectionCameraDecoratorRecPtr" << endl;
 }
 
 void VRRenderStudio::setBackground(BackgroundRecPtr bg) {

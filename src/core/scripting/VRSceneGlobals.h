@@ -27,6 +27,7 @@ class VRSceneGlobals: public VRPyBase {
 		static PyObject* printOSG(VRSceneGlobals* self);
 		static PyObject* getNavigator(VRSceneGlobals* self);
 		static PyObject* getSetup(VRSceneGlobals* self);
+		static PyObject* getRendering(VRSceneGlobals* self);
 		static PyObject* loadScene(VRSceneGlobals* self, PyObject *args);
 		static PyObject* startThread(VRSceneGlobals* self, PyObject *args);
 		static PyObject* joinThread(VRSceneGlobals* self, PyObject *args);

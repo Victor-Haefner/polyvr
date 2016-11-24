@@ -48,7 +48,7 @@ class VRRenderManager : public VRStorage {
 
         void addStage(string name, string parent = "");
         void setStageActive(string name, bool da, bool la);
-        void setStageMaterialShader(string name, string VPpath, string FPpath, bool doDeferred);
+        void setStageShader(string name, string VPpath, string FPpath, bool doDeferred);
 
         bool getDefferedShading();
         bool getSSAO();

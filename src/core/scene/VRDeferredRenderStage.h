@@ -15,6 +15,7 @@ class VRDeferredRenderStage {
         VRGeometryPtr layer;
         VRMaterialPtr mat;
         shared_ptr<VRDefShading> defRendering;
+        shared_ptr<VRDeferredRenderStage> child;
 
         VRMaterialPtr setupRenderLayer(string name);
         void initDeferred();
@@ -29,6 +30,7 @@ class VRDeferredRenderStage {
         VRGeometryPtr getLayer();
         shared_ptr<VRDefShading> getRendering();
         void setActive(bool da, bool la);
+        void insert(shared_ptr<VRDeferredRenderStage> stage);
 };
 
 OSG_END_NAMESPACE;

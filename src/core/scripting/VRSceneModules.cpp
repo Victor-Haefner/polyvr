@@ -43,6 +43,7 @@
 #include "VRPyClipPlane.h"
 #include "VRPyListMath.h"
 #include "VRPySetup.h"
+#include "VRPyRendering.h"
 #include "VRPyNavigator.h"
 #include "VRPyNavPreset.h"
 #include "VRPyWaypoint.h"
@@ -131,6 +132,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyPolygonSelection>("PolygonSelection", pModVR, VRPySelection::typeRef);
     sm->registerModule<VRPyNavigator>("Navigator", pModVR);
     sm->registerModule<VRPyNavPreset>("NavPreset", pModVR);
+    sm->registerModule<VRPyRendering>("Rendering", pModVR);
 
     sm->registerModule<VRPyProgress>("Progress", pModVR);
     sm->registerModule<VRPyUndoManager>("UndoManager", pModVR);
