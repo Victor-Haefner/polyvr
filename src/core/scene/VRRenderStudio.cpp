@@ -40,8 +40,7 @@ scene
 
 class VRDeferredRenderStage {
     private:
-        VRObjectPtr top;
-        VRObjectPtr bottom;
+        VRObjectPtr root;
         VRGeometryPtr layer;
         VRMaterialPtr mat;
         shared_ptr<VRDefShading> defRendering;
@@ -53,38 +52,36 @@ class VRDeferredRenderStage {
             layer->setPrimitive("Plane", s+" "+s+" 1 1");
             layer->setVolume(false);
             layer->setMaterial( mat );
-            layer->setVisible(false);
+            layer->setMeshVisibility(false);
             mat->setDepthTest(GL_ALWAYS);
             //mat->setSortKey(1000);
-            top->addChild(layer);
             return mat;
         }
 
         void initDeferred() {
             defRendering = shared_ptr<VRDefShading>( new VRDefShading() );
-            defRendering->initDeferredShading(bottom);
+            defRendering->initDeferredShading(root);
             defRendering->setDeferredShading(false);
         }
 
     public:
         VRDeferredRenderStage(string name) {
-            top = VRObject::create(name+"_DRS_top");
-            bottom = VRObject::create(name+"_DRS_bottom");
-            top->addChild(bottom);
+            root = VRObject::create(name+"_DRS_bottom");
             mat = setupRenderLayer(name);
+            layer->addChild(root);
         }
 
         ~VRDeferredRenderStage() {}
 
-        VRObjectPtr getTop() { return top; }
-        VRObjectPtr getBottom() { return bottom; }
+        VRObjectPtr getTop() { return layer; }
+        VRObjectPtr getBottom() { return root; }
         VRMaterialPtr getMaterial() { return mat; }
         VRGeometryPtr getLayer() { return layer; }
         shared_ptr<VRDefShading> getRendering() { if (!defRendering) initDeferred(); return defRendering; }
 
         void setActive(bool da, bool la) {
             getRendering()->setDeferredShading(da);
-            layer->setVisible(la);
+            layer->setMeshVisibility(la);
         }
 };
 

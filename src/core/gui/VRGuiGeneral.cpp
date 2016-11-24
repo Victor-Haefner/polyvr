@@ -85,8 +85,8 @@ void VRGuiGeneral::dumpOSG() {
     for (auto v : setup->getViews()) {
         auto rL = v->getRenderingL();
         auto rR = v->getRenderingR();
-        if (rL) { cout << "rLEFT " << endl; VRObject::printOSGTree( rL->getRoot()->getNode() ); }
-        if (rR) { cout << "rRIGHT " << endl; VRObject::printOSGTree( rR->getRoot()->getNode() ); }
+        if (rL) { cout << "\nrLEFT " << endl; VRObject::printOSGTree( rL->getRoot()->getNode() ); }
+        if (rR) { cout << "\nrRIGHT " << endl; VRObject::printOSGTree( rR->getRoot()->getNode() ); }
     }
 }
 
