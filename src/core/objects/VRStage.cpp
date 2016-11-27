@@ -82,8 +82,7 @@ void VRStage::setTarget(VRMaterialPtr mat, int tid) {
 }
 
 void VRStage::setSize( Vec2i s ) { size = s; update(); }
-void VRStage::setCamera(VRCameraPtr cam) { stage->setCamera( cam->getCam() ); }
-void VRStage::setCamera(ProjectionCameraDecoratorRecPtr cam) { stage->setCamera( cam ); }
+void VRStage::setCamera(CameraRecPtr cam) { stage->setCamera( cam ); }
 
 
 

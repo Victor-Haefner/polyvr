@@ -8,6 +8,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/VRStage.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/VRCamera.h"
 #include "VRRenderStudio.h"
 
 #include <OpenSG/OSGRenderAction.h>
@@ -84,9 +85,9 @@ void VRRenderManager::setDSCamera(VRCameraPtr cam) {
     if (!setup) return;
     for (auto v : setup->getViews()) {
         auto rendering = v->getRenderingL();
-        if (rendering) rendering->setCamera(cam);
+        if (rendering) rendering->setCamera(cam->getCam());
         rendering = v->getRenderingR();
-        if (rendering) rendering->setCamera(cam);
+        if (rendering) rendering->setCamera(cam->getCam());
     }
 }
 

@@ -76,8 +76,8 @@ class VRDefShading {
         void setDeferredChannel(int channel);
         TextureObjChunkRefPtr getTarget();
 
-        void setDSCamera(VRCameraPtr cam);
-        void setDSCamera(ProjectionCameraDecoratorRecPtr cam);
+        void setDSCamera(CameraRecPtr cam);
+        //void setDSCamera(ProjectionCameraDecoratorRecPtr cam);
         void addDSLight(VRLightPtr light);
         void updateLight(VRLightPtr l);
         void subLight(VRLightPtr l);

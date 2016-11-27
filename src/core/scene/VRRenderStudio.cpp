@@ -9,6 +9,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/VRStage.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/VRCamera.h"
 #include "VRDefShading.h"
 #include "VRSSAO.h"
 #include "VRHMDDistortion.h"
@@ -44,6 +45,7 @@ void VRRenderStudio::addStage(string name, string parent) {
     stages[name] = s;
     if (!stages.count(parent)) s->getTop()->switchParent( root_system );
     else stages[parent]->insert(s);
+    if (cam) setCamera(cam);
 }
 
 void VRRenderStudio::setStageActive(string name, bool da, bool la) {
@@ -75,7 +77,7 @@ VRRenderStudio::VRRenderStudio(EYE e) {
     addStage("hmdd");
     root_scene = stages["ssao"]->getBottom();
 
-    addStage("texturing", "shading");
+    //addStage("texturing", "shading");
 }
 
 VRRenderStudio::~VRRenderStudio() {}
@@ -189,16 +191,10 @@ void VRRenderStudio::setEye(EYE e) {
     if (auto s = stages["calibration"]) s->getMaterial()->setShaderParameter<int>("isRightEye", eye);
 }
 
-void VRRenderStudio::setCamera(VRCameraPtr cam) {
+void VRRenderStudio::setCamera(CameraRecPtr cam) {
     for (auto s : stages) s.second->getRendering()->setDSCamera(cam);
     if (hmdd) hmdd->setCamera(cam);
-    cout << "VRRenderStudio::setCamera VRCamera" << endl;
-}
-
-void VRRenderStudio::setCamera(ProjectionCameraDecoratorRecPtr cam) {
-    for (auto s : stages) s.second->getRendering()->setDSCamera(cam);
-    if (hmdd) hmdd->setCamera(cam);
-    cout << "VRRenderStudio::setCamera ProjectionCameraDecoratorRecPtr" << endl;
+    this->cam = cam;
 }
 
 void VRRenderStudio::setBackground(BackgroundRecPtr bg) {

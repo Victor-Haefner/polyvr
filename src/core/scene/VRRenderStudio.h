@@ -35,6 +35,7 @@ class VRRenderStudio : public VRStorage {
         int ssao_noise = 4;
         float ssao_radius = 0.02;
         EYE eye = LEFT;
+        CameraRecPtr cam;
 
         map<string, std::shared_ptr<VRDeferredRenderStage>> stages;
 
@@ -71,8 +72,7 @@ class VRRenderStudio : public VRStorage {
         void clearLights();
 
         void setScene(VRObjectPtr root);
-        void setCamera(VRCameraPtr cam);
-        void setCamera(ProjectionCameraDecoratorRecPtr cam);
+        void setCamera(CameraRecPtr cam);
         void setBackground(BackgroundRecPtr bg);
         void resize(Vec2i s);
         void setEye(EYE e);

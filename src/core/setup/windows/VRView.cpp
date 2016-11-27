@@ -423,8 +423,8 @@ void VRView::setCam() {
     if (lView && PCDecoratorLeft) lView->setCamera(PCDecoratorLeft);
     if (rView && PCDecoratorRight) rView->setCamera(PCDecoratorRight);
 
-    if (renderingL) renderingL->setCamera(cam);
-    if (renderingR) renderingR->setCamera(cam);
+    if (renderingL) renderingL->setCamera(cam->getCam());
+    if (renderingR) renderingR->setCamera(cam->getCam());
     if (renderingL && PCDecoratorLeft) renderingL->setCamera(PCDecoratorLeft);
     if (renderingR && PCDecoratorRight) renderingR->setCamera(PCDecoratorRight);
 }

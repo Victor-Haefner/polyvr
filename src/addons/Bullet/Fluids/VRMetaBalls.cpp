@@ -4,6 +4,7 @@
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRMaterialT.h"
 #include "core/objects/material/VRTexture.h"
+#include "core/objects/VRCamera.h"
 #include "core/scene/VRScene.h"
 
 using namespace OSG;
@@ -31,8 +32,8 @@ void VRMetaBalls::init() {
     auto cam = VRScene::getCurrent()->getActiveCamera();
     stage->setTarget(mat, 0);
     dstage->setTarget(mat, 1);
-    stage->setCamera(cam);
-    dstage->setCamera(cam);
+    stage->setCamera(cam->getCam());
+    dstage->setCamera(cam->getCam());
 
     mat->setShaderParameter<int>("texBufPos", 0);
     mat->setShaderParameter<int>("texBufNorm", 1);

@@ -150,11 +150,7 @@ bool VRDefShading::getDeferredShading() { return enabled; }
 // channel : GL_RENDER GL_POSITION GL_NORMALIZE GL_DIFFUSE
 void VRDefShading::setDeferredChannel(int c) { channel = c; reload(); }
 
-void VRDefShading::setDSCamera(VRCameraPtr cam) {
-    if (initiated) dsStage->setCamera(cam->getCam());
-}
-
-void VRDefShading::setDSCamera(ProjectionCameraDecoratorRecPtr cam) {
+void VRDefShading::setDSCamera(CameraRecPtr cam) {
     if (initiated) dsStage->setCamera(cam);
 }
 
