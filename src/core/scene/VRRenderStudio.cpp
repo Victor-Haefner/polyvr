@@ -98,6 +98,12 @@ void VRRenderStudio::setStageParameter(string name, string var, int val) {
     if (stages.count(name)) stages[name]->getMaterial()->setShaderParameter<int>(var, val);
 }
 
+void VRRenderStudio::setStageTexture(string name, VRTexturePtr tex, int unit) {
+    if (stages.count(name)) {
+        stages[name]->getMaterial()->setTexture(tex, 0, unit);
+    }
+}
+
 void VRRenderStudio::init(VRObjectPtr root) {
     ssao = shared_ptr<VRSSAO>( new VRSSAO() );
     hmdd = shared_ptr<VRHMDDistortion>( new VRHMDDistortion() );

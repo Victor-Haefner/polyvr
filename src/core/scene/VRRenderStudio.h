@@ -66,6 +66,7 @@ class VRRenderStudio : public VRStorage {
         void setStageShader(string name, string VPpath, string FPpath, bool doDeferred);
         int addStageBuffer(string name, int pformat, int ptype);
         void setStageParameter(string name, string var, int val);
+        void setStageTexture(string name, VRTexturePtr tex, int unit);
 
         void addLight(VRLightPtr l);
         void updateLight(VRLightPtr l);

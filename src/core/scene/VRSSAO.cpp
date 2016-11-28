@@ -34,7 +34,6 @@ void VRSSAO::setSSAOparams(float radius, int kernelSize, int noiseSize) {
         ssao_mat->setShaderParameter<float>("uRadius", radius);
         ssao_mat->setShaderParameter<float>("texScale", 1.0/noiseSize);
         ssao_mat->setShaderParameter<int>("NoiseSize", noiseSize);
-        ssao_mat->setShaderParameter<float>("uRadius", radius);
 
         // kernel
         vector<float> kernel(3*kernelSize2);

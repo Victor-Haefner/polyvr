@@ -115,6 +115,10 @@ vector<VRRenderStudioPtr> VRRenderManager::getRenderings() {
     return res;
 }
 
+void VRRenderManager::setStageTexture(string name, VRTexturePtr tex, int unit) {
+    for (auto r : getRenderings()) r->setStageTexture(name, tex, unit);
+}
+
 void VRRenderManager::addStage(string name, string parent) {
     for (auto r : getRenderings()) r->addStage(name, parent);
 }

@@ -70,7 +70,7 @@ void VRDefShading::init() {
     dsStage->editMFPixelFormats()->push_back(Image::OSG_RGB_PF           ); // normals (RGB) buffer
     dsStage->editMFPixelTypes  ()->push_back(Image::OSG_FLOAT32_IMAGEDATA);
     dsStage->editMFPixelFormats()->push_back(Image::OSG_RGB_PF); // diffuse (RGB) buffer
-    dsStage->editMFPixelTypes  ()->push_back(Image::OSG_UINT8_IMAGEDATA);
+    dsStage->editMFPixelTypes  ()->push_back(Image::OSG_FLOAT32_IMAGEDATA);
 
     //dsStage->editMFPixelFormats()->push_back(Image::OSG_RGB_PF); // diffuse2 (RGB) buffer
     //dsStage->editMFPixelTypes  ()->push_back(Image::OSG_UINT8_IMAGEDATA);
