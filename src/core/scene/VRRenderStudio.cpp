@@ -15,6 +15,7 @@
 #include "VRHMDDistortion.h"
 
 #include <OpenSG/OSGRenderAction.h>
+#include <boost/filesystem.hpp>
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -41,6 +42,7 @@ scene
 */
 
 void VRRenderStudio::addStage(string name, string parent) {
+    if (stages.count(name)) return;
     auto s = shared_ptr<VRDeferredRenderStage>( new VRDeferredRenderStage(name) );
     stages[name] = s;
     if (!stages.count(parent)) s->getTop()->switchParent( root_system );
@@ -56,8 +58,12 @@ void VRRenderStudio::setStageShader(string name, string VPpath, string FPpath, b
     if (stages.count(name)) {
         auto mat = stages[name]->getMaterial();
         mat->setLit(false);
-        mat->readVertexShader(VPpath);
-        mat->readFragmentShader(FPpath, doDeferred);
+
+        if ( boost::filesystem::exists( VPpath ) ) mat->readVertexShader(VPpath);
+        else mat->setVertexScript(VPpath);
+        if ( boost::filesystem::exists( FPpath ) ) mat->readFragmentShader(FPpath, doDeferred);
+        else mat->setFragmentScript(FPpath, doDeferred);
+
         if (doDeferred) {
             mat->setShaderParameter<int>("texBufPos", 0);
             mat->setShaderParameter<int>("texBufNorm", 1);
