@@ -127,6 +127,16 @@ void VRRenderManager::setStageShader(string name, string VPpath, string FPpath, 
     for (auto r : getRenderings()) r->setStageShader(name, VPpath, FPpath, doDeferred);
 }
 
+int VRRenderManager::addStageBuffer(string name, int pformat, int ptype) {
+    int ID = 0;
+    for (auto r : getRenderings()) ID = r->addStageBuffer(name, pformat, ptype);
+    return ID;
+}
+
+void VRRenderManager::setStageParameter(string name, string var, int val) {
+    for (auto r : getRenderings()) r->setStageParameter(name, var, val);
+}
+
 void VRRenderManager::setDeferredChannel(int c) {
     for (auto r : getRenderings()) r->setDeferredChannel(c);
 }

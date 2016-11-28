@@ -41,6 +41,23 @@ scene
 
 */
 
+VRRenderStudio::VRRenderStudio(EYE e) {
+    eye = e;
+    root_system = VRObject::create("System root");
+    addStage("shading");
+    addStage("blur", "shading");
+    addStage("ssao", "blur");
+    addStage("marker");
+    addStage("calibration");
+    addStage("hmdd");
+    root_scene = stages["ssao"]->getBottom();
+
+    //addStage("texturing", "shading");
+}
+
+VRRenderStudio::~VRRenderStudio() {}
+VRRenderStudioPtr VRRenderStudio::create(EYE e) { return VRRenderStudioPtr( new VRRenderStudio(e) ); }
+
 void VRRenderStudio::addStage(string name, string parent) {
     if (stages.count(name)) return;
     auto s = shared_ptr<VRDeferredRenderStage>( new VRDeferredRenderStage(name) );
@@ -72,22 +89,14 @@ void VRRenderStudio::setStageShader(string name, string VPpath, string FPpath, b
     }
 }
 
-VRRenderStudio::VRRenderStudio(EYE e) {
-    eye = e;
-    root_system = VRObject::create("System root");
-    addStage("shading");
-    addStage("blur", "shading");
-    addStage("ssao", "blur");
-    addStage("marker");
-    addStage("calibration");
-    addStage("hmdd");
-    root_scene = stages["ssao"]->getBottom();
-
-    //addStage("texturing", "shading");
+int VRRenderStudio::addStageBuffer(string name, int pformat, int ptype) {
+    if (!stages.count(name)) return 0;
+    return stages[name]->getRendering()->addBuffer(pformat, ptype);
 }
 
-VRRenderStudio::~VRRenderStudio() {}
-VRRenderStudioPtr VRRenderStudio::create(EYE e) { return VRRenderStudioPtr( new VRRenderStudio(e) ); }
+void VRRenderStudio::setStageParameter(string name, string var, int val) {
+    if (stages.count(name)) stages[name]->getMaterial()->setShaderParameter<int>(var, val);
+}
 
 void VRRenderStudio::init(VRObjectPtr root) {
     ssao = shared_ptr<VRSSAO>( new VRSSAO() );

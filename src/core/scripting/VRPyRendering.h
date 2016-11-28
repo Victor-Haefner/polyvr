@@ -14,6 +14,8 @@ struct VRPyRendering : VRPyBaseT<OSG::VRRendering> {
     static PyObject* addStage(VRPyRendering* self, PyObject* args);
     static PyObject* setStageShader(VRPyRendering* self, PyObject* args);
     static PyObject* setStageActive(VRPyRendering* self, PyObject* args);
+    static PyObject* addStageBuffer(VRPyRendering* self, PyObject* args);
+    static PyObject* setStageParameter(VRPyRendering* self, PyObject* args);
 };
 
 #endif // VRPYRENDERING_H_INCLUDED

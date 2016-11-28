@@ -73,6 +73,7 @@ class VRDefShading {
         bool getDeferredShading();
         void reload();
 
+        int addBuffer(int pformat, int ptype);
         void setDeferredChannel(int channel);
         TextureObjChunkRefPtr getTarget();
 

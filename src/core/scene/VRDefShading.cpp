@@ -46,7 +46,7 @@ VRDefShading::~VRDefShading() {
 }
 
 void VRDefShading::init() {
-    shadowMapWidth  = shadowRes;
+    shadowMapWidth = shadowRes;
     shadowMapHeight = shadowRes;
 
     string resDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/DeferredShading/";
@@ -64,7 +64,7 @@ void VRDefShading::init() {
     dsSpotLightFPFile = resDir + "DSSpotLight.fp.glsl";
     dsSpotLightShadowFPFile = resDir + "DSSpotLightShadow.fp.glsl";
 
-    dsStage  = DeferredShadingStage::create();
+    dsStage = DeferredShadingStage::create();
     dsStage->editMFPixelFormats()->push_back(Image::OSG_RGBA_PF          ); // positions (RGB) + ambient (A) term buffer
     dsStage->editMFPixelTypes  ()->push_back(Image::OSG_FLOAT32_IMAGEDATA);
     dsStage->editMFPixelFormats()->push_back(Image::OSG_RGB_PF           ); // normals (RGB) buffer
@@ -109,6 +109,12 @@ void VRDefShading::init() {
     fbo->setHeight(800);*/
 
     initiated = true;
+}
+
+int VRDefShading::addBuffer(int pformat, int ptype) {
+    dsStage->editMFPixelFormats()->push_back(pformat);
+    dsStage->editMFPixelTypes()->push_back(ptype);
+    return dsStage->editMFPixelFormats()->size() - 1;
 }
 
 void VRDefShading::reload() {
