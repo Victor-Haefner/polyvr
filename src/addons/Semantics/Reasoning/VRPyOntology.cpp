@@ -255,7 +255,8 @@ PyMethodDef VRPyOntology::methods[] = {
     {"getEntities", (PyCFunction)VRPyOntology::getEntities, METH_VARARGS, "Return all entities by concept name - [entity] getEntities( str concept )" },
     {"addConcept", (PyCFunction)VRPyOntology::addConcept, METH_VARARGS, "Add a new concept - concept addConcept( str concept, str parent = "", dict properties {str:str} )" },
     {"addEntity", (PyCFunction)VRPyOntology::addEntity, METH_VARARGS, "Add a new entity - entity addEntity( str name, str concept )" },
-    {"getEntity", (PyCFunction)VRPyOntology::getEntity, METH_VARARGS, "Get a entity by name - entity getEntity( str name )" },
+    {"getEntity", (PyCFunction)VRPyOntology::getEntity, METH_VARARGS, "Get an entity by name - entity getEntity( str name )" },
+    {"remEntity", (PyCFunction)VRPyOntology::remEntity, METH_VARARGS, "Remove an entity by name - entity remEntity( str name )" },
     {"addRule", (PyCFunction)VRPyOntology::addRule, METH_VARARGS, "Add a new rule - addRule( str rule )" },
     {"merge", (PyCFunction)VRPyOntology::merge, METH_VARARGS, "Merge in another ontology - merge( ontology )" },
     {"copy", (PyCFunction)VRPyOntology::copy, METH_NOARGS, "Copy the ontology - ontology copy()" },
@@ -306,11 +307,20 @@ PyObject* VRPyOntology::addEntity(VRPyOntology* self, PyObject* args) {
 
 PyObject* VRPyOntology::getEntity(VRPyOntology* self, PyObject* args) {
     const char* name = 0;
-    if (! PyArg_ParseTuple(args, "s:addEntity", (char*)&name) ) return NULL;
+    if (! PyArg_ParseTuple(args, "s:getEntity", (char*)&name) ) return NULL;
     string sname;
     if (name) sname = name;
     auto entity = self->objPtr->getEntity(sname);
     return VRPyEntity::fromSharedPtr( entity );
+}
+
+PyObject* VRPyOntology::remEntity(VRPyOntology* self, PyObject* args) {
+    const char* name = 0;
+    if (! PyArg_ParseTuple(args, "s:remEntity", (char*)&name) ) return NULL;
+    string sname;
+    if (name) sname = name;
+    self->objPtr->remEntity( self->objPtr->getEntity(sname) );
+    Py_RETURN_TRUE;
 }
 
 PyObject* VRPyOntology::addConcept(VRPyOntology* self, PyObject* args) {

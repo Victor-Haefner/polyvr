@@ -14,19 +14,23 @@ PyMethodDef VRPyRendering::methods[] = {
     {"setStageActive", (PyCFunction)VRPyRendering::setStageActive, METH_VARARGS, "Activate/deactivate the stage - setStageActive( str stage, bool deferred, bool layer )" },
     {"addStageBuffer", (PyCFunction)VRPyRendering::addStageBuffer, METH_VARARGS, "Add additional render buffer - id addStageBuffer( str stage, pixel_format, pixel_type )\r\tpixel_format can be 'RGB' or 'RGBA', pixel_type can be 'UINT8', 'UINT16', 'UINT32', 'FLOAT32', ... " },
     {"setStageParameter", (PyCFunction)VRPyRendering::setStageParameter, METH_VARARGS, "Set shader parameter of stage - setStageParameter( str stage, str var, int val )" },
-    {"setStageTexture", (PyCFunction)VRPyRendering::setStageTexture, METH_VARARGS, "Set stage material texture - setStageTexture( str stage, texture, int unit )" },
+    {"setStageTexture", (PyCFunction)VRPyRendering::setStageTexture, METH_VARARGS, "Set stage material texture - setStageTexture( str stage, texture, int unit, str mag, str min )" },
     {NULL}  /* Sentinel */
 };
 
 PyObject* VRPyRendering::setStageTexture(VRPyRendering* self, PyObject* args) {
     if (!self->valid()) return NULL;
     const char* name = 0;
+    const char* mag = 0;
+    const char* min = 0;
     VRPyImage* tex;
     int unit;
-    if (!PyArg_ParseTuple(args, "sOi", &name, &tex, &unit)) return NULL;
-    string sname;
+    if (!PyArg_ParseTuple(args, "sOiss", &name, &tex, &unit, &mag, &min)) return NULL;
+    string sname, smag, smin;
     if (name); sname = string(name);
-    if (auto s = VRScene::getCurrent()) s->setStageTexture(sname, tex->objPtr, unit);
+    if (mag); smag = string(mag);
+    if (min); smin = string(min);
+    if (auto s = VRScene::getCurrent()) s->setStageTexture(sname, tex->objPtr, unit, toGLConst(smag), toGLConst(smin));
     Py_RETURN_TRUE;
 }
 

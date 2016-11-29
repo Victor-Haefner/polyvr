@@ -98,9 +98,10 @@ void VRRenderStudio::setStageParameter(string name, string var, int val) {
     if (stages.count(name)) stages[name]->getMaterial()->setShaderParameter<int>(var, val);
 }
 
-void VRRenderStudio::setStageTexture(string name, VRTexturePtr tex, int unit) {
+void VRRenderStudio::setStageTexture(string name, VRTexturePtr tex, int unit, int mag, int min) {
     if (stages.count(name)) {
         stages[name]->getMaterial()->setTexture(tex, 0, unit);
+        stages[name]->getMaterial()->setMagMinFilter(mag, min, unit);
     }
 }
 
