@@ -34,6 +34,7 @@ void GISWorld::setupOntology() {
     auto Lane = world->addConcept("Lane", "Way");
     auto Building = world->addConcept("Building", "Area");
     auto RoadMarking = world->addConcept("RoadMarking", "Border");
+    auto RoadTrack = world->addConcept("RoadTrack", "Path");
     auto Kerb = world->addConcept("Kerb", "Border", "A stone edging to a pavement or raised way");
 
     World->addProperty("ways", WayNetwork);
@@ -48,8 +49,10 @@ void GISWorld::setupOntology() {
     Road->addProperty("buildings", Building);
     Road->addProperty("path", "Path");
     Road->addProperty("markings", RoadMarking);
+    Road->addProperty("tracks", RoadTrack);
     Sidewalk->addProperty("kerbs", Kerb);
     RoadMarking->addProperty("width", "float");
+    RoadTrack->addProperty("width", "float");
 
     auto Plant = world->addConcept("Plant");
     auto Tree = world->addConcept("Tree", "Plant");
