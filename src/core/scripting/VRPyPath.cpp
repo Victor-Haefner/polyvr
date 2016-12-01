@@ -7,16 +7,16 @@ using namespace OSG;
 newPyType( path, Path, New);
 
 PyMethodDef VRPyPath::methods[] = {
-    {"set", (PyCFunction)VRPyPath::set, METH_VARARGS, "Set the path - set(start pos, start dir, end pos, end dir, steps) \n       set(start pos, start dir, start up, end pos, end dir, end up, steps)" },
+    {"set", (PyCFunction)VRPyPath::set, METH_VARARGS, "Set the path - set(start pos, start dir, end pos, end dir, steps) \n\tset(start pos, start dir, start up, end pos, end dir, end up, steps)" },
     {"setStart", (PyCFunction)VRPyPath::setStartPoint, METH_VARARGS, "Set the path start point" },
     {"setEnd", (PyCFunction)VRPyPath::setEndPoint, METH_VARARGS, "Set the path end point" },
     {"getStart", (PyCFunction)VRPyPath::getStartPoint, METH_NOARGS, "Get the path start point" },
     {"getEnd", (PyCFunction)VRPyPath::getEndPoint, METH_NOARGS, "Get the path end point" },
     {"invert", (PyCFunction)VRPyPath::invert, METH_NOARGS, "Invert start && end point of path" },
-    {"compute", (PyCFunction)VRPyPath::compute, METH_VARARGS, "Compute path" },
+    {"compute", (PyCFunction)VRPyPath::compute, METH_VARARGS, "Compute path with given resolution, allways call this after adding all path points - compute( int resolution )" },
     {"update", (PyCFunction)VRPyPath::update, METH_NOARGS, "Update path" },
     {"addPoint", (PyCFunction)VRPyPath::addPoint, METH_VARARGS, "Add a point to the path - int addPoint( | vec3 pos, vec3 dir, vec3 col, vec3 up)" },
-    {"getPose", (PyCFunction)VRPyPath::getPose, METH_VARARGS, "Return the pose at the path length t {0,1} - pose getPose( float t )" },
+    {"getPose", (PyCFunction)VRPyPath::getPose, METH_VARARGS, "Return the pose at the path length t, t on the interval between point i and j - pose getPose( float t | int i, int j)" },
     {"getPoints", (PyCFunction)VRPyPath::getPoints, METH_NOARGS, "Return a list of the path points - [pos, dir, col, up] getPoints()" },
     {"close", (PyCFunction)VRPyPath::close, METH_NOARGS, "Close the path - close()" },
     {"getPositions", (PyCFunction)VRPyPath::getPositions, METH_NOARGS, "Return the positions from the computed path - [[x,y,z]] getPositions()" },
@@ -31,8 +31,10 @@ PyMethodDef VRPyPath::methods[] = {
 PyObject* VRPyPath::getPose(VRPyPath* self, PyObject *args) {
     if (!self->valid()) return NULL;
     float t = 0;
-    if (! PyArg_ParseTuple(args, "f", &t)) return NULL;
-    return VRPyPose::fromObject( self->obj->getPose(t) );
+    int i = 0;
+    int j = 0;
+    if (! PyArg_ParseTuple(args, "f|ii", &t, &i, &j)) return NULL;
+    return VRPyPose::fromObject( self->obj->getPose(t, i, j) );
 }
 
 PyObject* VRPyPath::getLength(VRPyPath* self) {

@@ -186,27 +186,28 @@ void path::close() {
 
 bool path::isClosed() { return closed; }
 
-Vec3f path::interp(vector<Vec3f>& vec, float t) {
+Vec3f path::interp(vector<Vec3f>& vec, float t, int i, int j) {
+    if (j <= 0) j = vec.size()-1;
     if (direction == -1) t = 1-t;
-    int N = vec.size() -1;
+    int N = j-i;
     if (N == -1) return Vec3f();
     float tN = t*N;
     int ti = floor(tN);
     float x = tN-ti;
-    if (ti > N) return vec[N];
-    return (1-x)*vec[ti] + x*vec[ti+1];
+    if (ti > N) return vec[i+N];
+    return (1-x)*vec[i+ti] + x*vec[i+ti+1];
 }
 
-Vec3f path::getPosition(float t) { return interp(positions, t); }
-Vec3f path::getColor(float t) { return interp(colors, t); }
-void path::getOrientation(float t, Vec3f& dir, Vec3f& up) {
+Vec3f path::getPosition(float t, int i, int j) { return interp(positions, t); }
+Vec3f path::getColor(float t, int i, int j) { return interp(colors, t); }
+void path::getOrientation(float t, Vec3f& dir, Vec3f& up, int i, int j) {
     dir = interp(directions, t)*direction;
     up = interp(up_vectors, t);
 }
 
-pose path::getPose(float t) {
-    Vec3f d,u; getOrientation(t,d,u);
-    return pose(getPosition(t), d, u);
+pose path::getPose(float t, int i, int j) {
+    Vec3f d,u; getOrientation(t,d,u,i,j);
+    return pose(getPosition(t,i,j), d, u);
 }
 
 void path::clear() {

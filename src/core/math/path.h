@@ -28,7 +28,7 @@ class path {
         vector<Vec3f> up_vectors;
         vector<Vec3f> colors;
 
-        Vec3f interp(vector<Vec3f>& vec, float t);
+        Vec3f interp(vector<Vec3f>& vec, float t, int i = 0, int j = 0);
         Vec3f projectInPlane(Vec3f v, Vec3f n, bool keep_length);
         void cubicBezier(Vec3f* container, int N, Vec3f p0, Vec3f p1, Vec3f n0, Vec3f n1);
         void quadraticBezier(Vec3f* container, int N, Vec3f p0, Vec3f p1, Vec3f n);
@@ -51,10 +51,10 @@ class path {
         vector<Vec3f> getDirections();
         vector<Vec3f> getUpvectors();
         vector<Vec3f> getColors();
-        Vec3f getPosition(float t);
-        void getOrientation(float t, Vec3f& dir, Vec3f& up);
-        Vec3f getColor(float t);
-        pose getPose(float t);
+        Vec3f getPosition(float t, int i = 0, int j = 0);
+        void getOrientation(float t, Vec3f& dir, Vec3f& up, int i = 0, int j = 0);
+        Vec3f getColor(float t, int i = 0, int j = 0);
+        pose getPose(float t, int i = 0, int j = 0);
 
         float getLength();
         int size();
