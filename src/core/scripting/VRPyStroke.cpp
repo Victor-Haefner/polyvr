@@ -69,25 +69,19 @@ PyMethodDef VRPyStroke::methods[] = {
 
 PyObject* VRPyStroke::setPath(VRPyStroke* self, PyObject* args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyStroke::setPath - Object is invalid"); return NULL; }
-
-    PyObject* o = 0;
-    if (! PyArg_ParseTuple(args, "O", &o)) return NULL;
-    VRPyPath* path = (VRPyPath*)o;
-
-    OSG::VRStrokePtr e = (OSG::VRStrokePtr) self->objPtr;
-    e->setPath(path->obj);
+    VRPyPath* path = 0;
+    if (! PyArg_ParseTuple(args, "O", &path)) return NULL;
+	if (path == 0) { PyErr_SetString(err, "VRPyStroke::setPath: path is invalid"); return NULL; }
+    self->objPtr->setPath(path->obj);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyStroke::addPath(VRPyStroke* self, PyObject* args) {
     if (self->objPtr == 0) { PyErr_SetString(err, "VRPyStroke::addPath - Object is invalid"); return NULL; }
-
-    PyObject* o = 0;
-    if (! PyArg_ParseTuple(args, "O", &o)) return NULL;
-    VRPyPath* path = (VRPyPath*)o;
-
-    OSG::VRStrokePtr e = (OSG::VRStrokePtr) self->objPtr;
-    e->addPath(path->obj);
+    VRPyPath* path = 0;
+    if (! PyArg_ParseTuple(args, "O", &path)) return NULL;
+	if (path == 0) { PyErr_SetString(err, "VRPyStroke::addPath: path is invalid"); return NULL; }
+    self->objPtr->addPath(path->obj);
     Py_RETURN_TRUE;
 }
 

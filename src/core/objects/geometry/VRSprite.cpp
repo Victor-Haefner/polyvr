@@ -2,6 +2,7 @@
 
 #include "core/tools/VRText.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/objects/geometry/OSGGeometry.h"
 #include "core/setup/VRSetup.h"
 #include "addons/CEF/CEF.h"
 #include <OpenSG/OSGNameAttachment.h>
@@ -83,6 +84,13 @@ void VRSprite::webOpen(string path, int res, float ratio){
     if (keyboard) web->addKeyboard(keyboard);
     web->setResolution(res);
     web->setAspectRatio(ratio);
+
+    // flip normals for deferred shading
+    auto norms = getMesh()->geo->getNormals();
+    for (int i=0; i<norms->size(); i++) {
+        Vec3f n = norms->getValue<Vec3f>(i);
+        norms->setValue(-n, i);
+    }
 }
 
 void VRSprite::setTexture(string path) {
