@@ -373,7 +373,7 @@ void disableStageNodeVolumes(NodeMTRecPtr n) {
     vol.setValid(true);
 
     for (uint i=0; i<n->getNChildren(); i++) {
-        test_disableStageNodeVolumes(n->getChild(i));
+        disableStageNodeVolumes(n->getChild(i));
     }
 }
 
