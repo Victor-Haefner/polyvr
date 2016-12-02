@@ -364,6 +364,19 @@ void VRView::setPosition(Vec4f pos) { position = pos; update(); }
 
 void VRView::setRoot(VRObjectPtr root, VRTransformPtr real) { view_root = root; real_root = real; update(); }
 
+void disableStageNodeVolumes(NodeMTRecPtr n) {
+    if (!n) return;
+
+    BoxVolume &vol = n->editVolume(false);
+    vol.setInfinite(true);
+    vol.setStatic(true);
+    vol.setValid(true);
+
+    for (uint i=0; i<n->getNChildren(); i++) {
+        test_disableStageNodeVolumes(n->getChild(i));
+    }
+}
+
 void VRView::setRoot() {
     if (real_root && viewGeo) real_root->addChild(OSGObject::create(viewGeo));
 
@@ -376,11 +389,13 @@ void VRView::setRoot() {
     if (renderingL) {
         renderingL->setScene(view_root);
         nl = renderingL->getRoot()->getNode()->node;
+        disableStageNodeVolumes(nl);
     }
 
     if (renderingR) {
         renderingR->setScene(view_root);
         nr = renderingR->getRoot()->getNode()->node;
+        disableStageNodeVolumes(nr);
     }
 
     if (lView) lView->setRoot(nl);
