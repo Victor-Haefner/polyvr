@@ -29,6 +29,8 @@ void VRProgress::update(int i) {
             break;
         case WIDGET_M:
             break;
+        case GEOM_M:
+            break;
     }
 }
 

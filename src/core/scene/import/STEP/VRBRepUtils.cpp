@@ -67,15 +67,15 @@ float VRBRepUtils::Bik(float t, int i, int k, const vector<double>& knots, bool 
 
 Vec3f VRBRepUtils::BSpline(float t, int deg, const vector<Vec3f>& cpoints, const vector<double>& knots) {
     Vec3f p;
-    for (int i=0; i<cpoints.size(); i++) p += cpoints[i]*Bik(t, i, deg, knots);
+    for (uint i=0; i<cpoints.size(); i++) p += cpoints[i]*Bik(t, i, deg, knots);
     return p;
 }
 
 Vec3f VRBRepUtils::BSplineW(float t, int deg, const vector<Vec3f>& cpoints, const vector<double>& knots, const vector<double>& weights) {
     Vec3f p;
     float W = 0;
-    for (int i=0; i<cpoints.size(); i++) W += Bik(t, i, deg, knots)*weights[i];
-    for (int i=0; i<cpoints.size(); i++) p += cpoints[i]*Bik(t, i, deg, knots)*weights[i]/W;
+    for (uint i=0; i<cpoints.size(); i++) W += Bik(t, i, deg, knots)*weights[i];
+    for (uint i=0; i<cpoints.size(); i++) p += cpoints[i]*Bik(t, i, deg, knots)*weights[i]/W;
     return p;
 }
 

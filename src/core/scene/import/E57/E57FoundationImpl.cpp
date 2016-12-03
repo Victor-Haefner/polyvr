@@ -4926,7 +4926,7 @@ void CheckedFile::unlink()
     }
 
     /// Try to unlink the file, don't report a failure
-    int result = ::_unlink(fileName_.c_str()); //??? unicode support here
+    /*int result =*/ ::_unlink(fileName_.c_str()); //??? unicode support here
 #ifdef E57_MAX_VERBOSE
     if (result < 0)
         cout << "::unlink() failed, result=" << result << endl;
@@ -5637,9 +5637,9 @@ struct SortByBytestreamNumber {
 };
 
 CompressedVectorWriterImpl::CompressedVectorWriterImpl(shared_ptr<CompressedVectorNodeImpl> ni, vector<SourceDestBuffer>& sbufs)
-: isOpen_(false),  // set to true when succeed below
-  cVector_(ni),
-  seekIndex_()      /// Init seek index for random access to beginning of chunks
+: cVector_(ni),
+  seekIndex_(),      /// Init seek index for random access to beginning of chunks
+  isOpen_(false)  // set to true when succeed below
 {
     //???  check if cvector already been written (can't write twice)
 
@@ -5901,7 +5901,7 @@ void CompressedVectorWriterImpl::write(const size_t requestedRecordCount)
         float totalBitsPerRecord = 0;  // an estimate of future performance
         for (unsigned i=0; i < bytestreams_.size(); i++)
             totalBitsPerRecord += bytestreams_.at(i)->bitsPerRecord();
-        float totalBytesPerRecord = max(totalBitsPerRecord/8, 0.1F); //??? trust
+        /*float totalBytesPerRecord =*/ max(totalBitsPerRecord/8, 0.1F); //??? trust
 
 #ifdef E57_MAX_VERBOSE
         cout << "  totalBytesPerRecord=" << totalBytesPerRecord << endl; //???
@@ -6409,7 +6409,7 @@ unsigned CompressedVectorReaderImpl::read()
 uint64_t CompressedVectorReaderImpl::earliestPacketNeededForInput()
 {
     uint64_t earliestPacketLogicalOffset = E57_UINT64_MAX;
-    unsigned earliestChannel = 0;
+    //unsigned earliestChannel = 0;
     for (unsigned i = 0; i < channels_.size(); i++) {
         DecodeChannel* chan = &channels_[i];
 
@@ -6419,7 +6419,7 @@ uint64_t CompressedVectorReaderImpl::earliestPacketNeededForInput()
             /// Check if earliest so far
             if (chan->currentPacketLogicalOffset < earliestPacketLogicalOffset) {
                 earliestPacketLogicalOffset = chan->currentPacketLogicalOffset;
-                earliestChannel = i;
+                //earliestChannel = i;
             }
         }
     }

@@ -688,7 +688,7 @@ btCollisionShape* VRPhysics::getHACDShape() {
     MyConvexDecomposition convexDecomposition;
     btCompoundShape* shape = new btCompoundShape();
 
-    for (int c=0; c < myHACD.GetNClusters(); c++) {
+    for (uint c=0; c < myHACD.GetNClusters(); c++) {
         size_t nPoints = myHACD.GetNPointsCH(c);
         size_t nTriangles = myHACD.GetNTrianglesCH(c);
 

@@ -128,11 +128,11 @@ void VRGeoData::pushQuad(Vec3f p, Vec3f n, Vec3f u, Vec2f s, bool addInds) {
 int VRGeoData::pushVert(const VRGeoData& other, int i) {
     auto od = other.data;
     Pnt3f p = od->pos->getValue(i);
-    bool doNorms = (od->norms && od->norms->size() > i);
-    bool doCol3 = (od->cols3 && od->cols3->size() > i);
-    bool doCol4 = (od->cols4 && od->cols4->size() > i);
-    bool doTex = (od->texs && od->texs->size() > i);
-    bool doTex2 = (od->texs2 && od->texs2->size() > i);
+    bool doNorms = (od->norms && int(od->norms->size()) > i);
+    bool doCol3 = (od->cols3 && int(od->cols3->size()) > i);
+    bool doCol4 = (od->cols4 && int(od->cols4->size()) > i);
+    bool doTex = (od->texs && int(od->texs->size()) > i);
+    bool doTex2 = (od->texs2 && int(od->texs2->size()) > i);
     if (doNorms) {
         Vec3f n = od->norms->getValue(i);
         if (doTex && doCol3) return pushVert(p, n, od->cols3->getValue(i), od->texs->getValue(i));
@@ -148,14 +148,14 @@ int VRGeoData::pushVert(const VRGeoData& other, int i) {
 
 int VRGeoData::pushVert(const VRGeoData& other, int i, Matrix m) {
     auto od = other.data;
-    if (od->pos->size() <= i) { cout << "VRGeoData::pushVert ERROR: invalid index " << i << endl; return 0; }
+    if (int(od->pos->size()) <= i) { cout << "VRGeoData::pushVert ERROR: invalid index " << i << endl; return 0; }
     Pnt3f p = od->pos->getValue(i);
     m.mult(p,p);
-    bool doNorms = (od->norms && od->norms->size() > i);
-    bool doCol3 = (od->cols3 && od->cols3->size() > i);
-    bool doCol4 = (od->cols4 && od->cols4->size() > i);
-    bool doTex = (od->texs && od->texs->size() > i);
-    bool doTex2 = (od->texs2 && od->texs2->size() > i);
+    bool doNorms = (od->norms && int(od->norms->size()) > i);
+    bool doCol3 = (od->cols3 && int(od->cols3->size()) > i);
+    bool doCol4 = (od->cols4 && int(od->cols4->size()) > i);
+    bool doTex = (od->texs && int(od->texs->size()) > i);
+    bool doTex2 = (od->texs2 && int(od->texs2->size()) > i);
     if (doNorms) {
         Vec3f n = od->norms->getValue(i);
         m.mult(n,n);
@@ -280,13 +280,13 @@ string VRGeoData::status() {
     string res;
     res += "VRGeoData stats:\n";
     res += " " + toString(data->types->size()) + " types: ";
-    for (int i=0; i<data->types->size(); i++) res += " " + toString(data->types->getValue(i));
+    for (uint i=0; i<data->types->size(); i++) res += " " + toString(data->types->getValue(i));
     res += "\n";
     res += " " + toString(data->lengths->size()) + " lengths: ";
-    for (int i=0; i<data->lengths->size(); i++) res += " " + toString(data->lengths->getValue(i));
+    for (uint i=0; i<data->lengths->size(); i++) res += " " + toString(data->lengths->getValue(i));
     res += "\n";
     res += " " + toString(data->pos->size()) + " positions\n";
-    for (int i=0; i<data->pos->size(); i++) res += " " + toString(data->pos->getValue(i));
+    for (uint i=0; i<data->pos->size(); i++) res += " " + toString(data->pos->getValue(i));
     res += "\n";
     res += " " + toString(data->norms->size()) + " normals\n";
     res += " " + toString(data->cols3->size()) + " colors 3\n";
@@ -294,7 +294,7 @@ string VRGeoData::status() {
     res += " " + toString(data->texs->size()) + " texture coordinates\n";
     res += " " + toString(data->texs2->size()) + " texture coordinates 2\n";
     res += " " + toString(data->indices->size()) + " indices: ";
-    for (int i=0; i<data->indices->size(); i++) res += " " + toString(data->indices->getValue(i));
+    for (uint i=0; i<data->indices->size(); i++) res += " " + toString(data->indices->getValue(i));
     res += "\n";
     return res;
 }
@@ -340,7 +340,7 @@ int VRGeoData::primNOffset(int lID, int type) const {
 bool VRGeoData::setIndices(Primitive& p) const {
     vector<int> inds;
 
-    if (p.tID >= data->types->size()) return false;
+    if (p.tID >= int(data->types->size())) return false;
 
     int t = data->types->getValue(p.tID);
     int l = data->lengths->getValue(p.tID);
@@ -410,7 +410,7 @@ void VRGeoData::test_copy(VRGeoData& g) {
     // GL_TRIANGLE_STRIP 5
     // GL_TRIANGLE_FAN 6
 
-    for (int i=0; i<g.data->types->size(); i++) {
+    for (uint i=0; i<g.data->types->size(); i++) {
         int t = g.data->types->getValue(i);
         int l = g.data->lengths->getValue(i);
         data->types->addValue(t);

@@ -1058,9 +1058,9 @@ struct VRSTEP::Surface : public VRSTEP::Instance, public VRBRepSurface {
             degu = inst.get<0, int, int, field<STEPentity*>, bool, bool, bool, vector<int>, vector<int>, vector<double>, vector<double> >();
             degv = inst.get<1, int, int, field<STEPentity*>, bool, bool, bool, vector<int>, vector<int>, vector<double>, vector<double> >();
             auto fcp = inst.get<2, int, int, field<STEPentity*>, bool, bool, bool, vector<int>, vector<int>, vector<double>, vector<double> >();
-            auto uclosed = inst.get<3, int, int, field<STEPentity*>, bool, bool, bool, vector<int>, vector<int>, vector<double>, vector<double> >();
-            auto vclosed = inst.get<4, int, int, field<STEPentity*>, bool, bool, bool, vector<int>, vector<int>, vector<double>, vector<double> >();
-            auto intersect = inst.get<5, int, int, field<STEPentity*>, bool, bool, bool, vector<int>, vector<int>, vector<double>, vector<double> >();
+            //auto uclosed = inst.get<3, int, int, field<STEPentity*>, bool, bool, bool, vector<int>, vector<int>, vector<double>, vector<double> >();
+            //auto vclosed = inst.get<4, int, int, field<STEPentity*>, bool, bool, bool, vector<int>, vector<int>, vector<double>, vector<double> >();
+            //auto intersect = inst.get<5, int, int, field<STEPentity*>, bool, bool, bool, vector<int>, vector<int>, vector<double>, vector<double> >();
             auto u_multiplicities = inst.get<6, int, int, field<STEPentity*>, bool, bool, bool, vector<int>, vector<int>, vector<double>, vector<double> >(); // segfault
             auto v_multiplicities = inst.get<7, int, int, field<STEPentity*>, bool, bool, bool, vector<int>, vector<int>, vector<double>, vector<double> >();
             auto u_knots = inst.get<8, int, int, field<STEPentity*>, bool, bool, bool, vector<int>, vector<int>, vector<double>, vector<double> >();

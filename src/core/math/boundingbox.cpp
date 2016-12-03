@@ -26,7 +26,7 @@ void boundingbox::update(Vec3f v) {
 void boundingbox::update(VRGeometryPtr g) {
     clear();
     auto pos = g->getMesh()->geo->getPositions();
-    for (int i=0; i<pos->size(); i++) {
+    for (uint i=0; i<pos->size(); i++) {
         Vec3f p = pos->getValue<Pnt3f>(i).subZero();
         update(p);
     }

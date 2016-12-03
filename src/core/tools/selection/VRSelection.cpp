@@ -98,7 +98,7 @@ void VRSelection::updateSubselection(VRGeometryPtr geo) {
     if (!geo->getMesh()) return;
     auto pos = geo->getMesh()->geo->getPositions();
     if (!pos) return;
-    for (int i=0; i<pos->size(); i++) {
+    for (uint i=0; i<pos->size(); i++) {
         Pnt3f p = pos->getValue<Pnt3f>(i);
         m.mult(p,p);
         if (vertSelected(Vec3f(p))) {
@@ -233,7 +233,7 @@ void VRSelection::selectPlane(pose p, float threshold) {
         auto pos = geo->getMesh()->geo->getPositions();
         auto norms = geo->getMesh()->geo->getNormals();
         s.second.subselection.clear();
-        for (int i=0; i<pos->size(); i++) {
+        for (uint i=0; i<pos->size(); i++) {
             auto p = pos->getValue<Pnt3f>(i);
             auto n = norms->getValue<Vec3f>(i);
             auto d = plane.distance(p);

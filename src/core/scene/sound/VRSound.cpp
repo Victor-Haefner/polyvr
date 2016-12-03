@@ -349,7 +349,7 @@ void VRSound::synthesize(float Ac, float wc, float pc, float Am, float wm, float
     buf_size += buf_size%2;
     short* samples = new short[buf_size];
 
-    for(int i=0; i<buf_size; i++) {
+    for(uint i=0; i<buf_size; i++) {
         float t = i*2*Pi/sample_rate;
         samples[i] = Ac * sin( wc*t + pc + Am*sin(wm*t + pm) );
     }
@@ -380,7 +380,6 @@ void VRSound::synthBuffer(vector<Vec2d> frequencies, float duration) {
     wave.resize(N);
     Vec2d* in = &frequencies[0];
     Vec2d* out = &wave[0];
-    int dir;
     fftw_plan p = fftw_plan_dft_1d(N, (double(*)[2])in, (double(*)[2])out, FFTW_FORWARD, FFTW_ESTIMATE);
     fftw_execute(p);
     fftw_destroy_plan(p);
@@ -400,7 +399,7 @@ void VRSound::synthBuffer(vector<Vec2d> frequencies, float duration) {
     buf_size += buf_size%2;
     short* samples = new short[buf_size];
 
-    for (int i=0; i<buf_size; i++) {
+    for (uint i=0; i<buf_size; i++) {
         float t = N*float(i)/sample_rate;
         samples[i] = interpolate(t);
     }

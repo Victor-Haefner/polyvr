@@ -53,7 +53,7 @@ PyObject* VRPyGraph::getOutEdges(VRPyGraph* self, PyObject* args) {
 
     PyObject* res = PyList_New(0);
     auto edges = self->objPtr->getEdges();
-    if (i<0 || i >= edges.size()) return res;
+    if (i<0 || i >= int(edges.size())) return res;
     auto& n = edges[i];
     for (auto& e : n) PyList_Append(res, convEdge(e));
     return res;

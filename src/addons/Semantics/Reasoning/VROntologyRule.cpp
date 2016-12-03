@@ -30,7 +30,7 @@ void VROntologyRule::setRule(string r) {
     if (parts.size() > 0) setQuery(parts[0]);
     if (parts.size() > 1) {
         parts = VRReasoner::split(parts[1], ';');
-        for (int i=0; i<parts.size(); i++) statements.push_back(VRStatement::create(parts[i], i));
+        for (uint i=0; i<parts.size(); i++) statements.push_back(VRStatement::create(parts[i], i));
     }
 }
 
@@ -53,7 +53,7 @@ VRStatementPtr VROntologyRule::addStatement(string name) {
 }
 
 VRStatementPtr VROntologyRule::getStatement(int i) {
-    if (i < statements.size()) return statements[i];
+    if (i < int(statements.size())) return statements[i];
     return 0;
 }
 

@@ -59,7 +59,7 @@ T ssToVal(const string& s, int* N = 0) {
     if(N) *N = ss.tellg();
     T v;
     ss >> v;
-    if(N) *N = ss.tellg() - *N;
+    if(N) *N = int(ss.tellg()) - *N;
     return v;
 }
 

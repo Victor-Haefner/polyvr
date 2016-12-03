@@ -73,7 +73,7 @@ void VRAdjacencyGraph::compCurvatures(int range) {
     auto norms = sgeo->getMesh()->geo->getNormals();
     int N = pos->size();
 
-    auto curvMax = [&](int i, int range) {
+    /*auto curvMax = [&](int i, int range) {
 		Vec3f n = norms->getValue<Vec3f>(i);
 		Vec3f vi = pos->getValue<Vec3f>(i);
 		float K = 0;
@@ -92,7 +92,7 @@ void VRAdjacencyGraph::compCurvatures(int range) {
 		}
 
 		return K;
-    };
+    };*/
 
     auto curvAvg = [&](int i, int range) {
 		Vec3f n = norms->getValue<Vec3f>(i);
@@ -141,7 +141,7 @@ void VRAdjacencyGraph::compTriLoockup() {
 vector<int> VRAdjacencyGraph::getNeighbors(int i, int range) {
     auto sgeo = geo.lock();
     if (!sgeo) return vector<int>();
-    if (2*i+1 >= vertex_neighbor_params.size()) return vector<int>();
+    if (2*i+1 >= int(vertex_neighbor_params.size())) return vector<int>();
 
     vector<int> job;
     vector<int> nextJob;
@@ -186,7 +186,7 @@ vector<int> VRAdjacencyGraph::getBorderVertices() {
 float VRAdjacencyGraph::getCurvature(int i) {
     auto sgeo = geo.lock();
     if (!sgeo) return 0;
-    if (i > vertex_curvatures.size() || i < 0) return 0;
+    if (i > int(vertex_curvatures.size()) || i < 0) return 0;
     return vertex_curvatures[i];
 }
 

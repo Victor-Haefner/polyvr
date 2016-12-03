@@ -70,7 +70,7 @@ PyObject* VRPyConcept::getProperty(VRPyConcept* self, PyObject* args) {
 PyObject* VRPyConcept::getProperties(VRPyConcept* self) {
     auto props = self->objPtr->getProperties();
     auto res = PyList_New(props.size());
-    for (int i=0; i<props.size(); i++)
+    for (uint i=0; i<props.size(); i++)
         PyList_SetItem(res, i, VRPyProperty::fromSharedPtr( props[i] ) );
     return res;
 }
@@ -151,6 +151,7 @@ PyObject* VRPyEntity::getVector(VRPyEntity* self, PyObject* args) {
     auto v = self->objPtr->getVector( pname, i );
     if (res == "") Py_RETURN_NONE;
     else return PyString_FromString(res.c_str());*/
+    Py_RETURN_TRUE;
 }
 
 
@@ -160,6 +161,7 @@ PyObject* VRPyEntity::getAllVector(VRPyEntity* self, PyObject* args) {
     string pname; if (prop) pname = prop;
     auto pv = self->objPtr->getAllVector( pname );
     return toPyTuple(pv);*/
+    Py_RETURN_TRUE;
 }
 
 PyObject* VRPyEntity::add(VRPyEntity* self, PyObject* args) {
@@ -240,7 +242,7 @@ PyObject* VRPyEntity::getProperties(VRPyEntity* self, PyObject* args) {
     string pname; if (prop) pname = prop;
     auto props = self->objPtr->getAll(pname);
     auto res = PyList_New(props.size());
-    for (int i=0; i<props.size(); i++)
+    for (uint i=0; i<props.size(); i++)
         PyList_SetItem(res, i, VRPyProperty::fromSharedPtr( props[i] ) );
     return res;
 }
@@ -365,7 +367,7 @@ PyObject* VRPyOntology::getConcept(VRPyOntology* self, PyObject* args) {
 PyObject* VRPyOntology::getConcepts(VRPyOntology* self) {
     auto concepts = self->objPtr->getConcepts();
     auto res = PyList_New(concepts.size());
-    for (int i=0; i<concepts.size(); i++)
+    for (uint i=0; i<concepts.size(); i++)
         PyList_SetItem(res, i, VRPyConcept::fromSharedPtr( concepts[i] ) );
     return res;
 }
@@ -377,7 +379,7 @@ PyObject* VRPyOntology::getEntities(VRPyOntology* self, PyObject* args) {
     if (c) concept = c;
     auto entities = self->objPtr->getEntities(concept);
     auto res = PyList_New(entities.size());
-    for (int i=0; i<entities.size(); i++)
+    for (uint i=0; i<entities.size(); i++)
         PyList_SetItem(res, i, VRPyEntity::fromSharedPtr( entities[i] ) );
     return res;
 }

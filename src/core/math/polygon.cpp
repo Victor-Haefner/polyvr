@@ -37,7 +37,7 @@ bool polygon::isCCW() {
     float s = 0;
     auto tmp = points;
     if (!closed && tmp.size() > 0) tmp.push_back(tmp[0]);
-    for (int i=1; i<tmp.size(); i++) {
+    for (uint i=1; i<tmp.size(); i++) {
         auto v1 = tmp[i-1];
         auto v2 = tmp[i];
         s += (v2[0]-v1[0])*(v2[1]+v1[1]);
@@ -105,7 +105,7 @@ void polygon::close() {
 polygon polygon::sort() {
     if (points.size() == 0) return polygon();
     Vec2f p0 = points[0]; // rightmost lowest point
-    for (int i=0; i<points.size(); i++) {
+    for (uint i=0; i<points.size(); i++) {
         Vec2f p = points[i];
         if ( p[1] < p0[1] ) p0 = p;
         if ( p[1] == p0[1] && p[0] > p0[0]) p0 = p;

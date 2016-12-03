@@ -76,8 +76,8 @@ vector<int> VRSegmentation::growPatch(VRGeometryPtr geo, int i) {
     agraph->compNeighbors();
     agraph->compCurvatures();
 
-    auto pos = geo->getMesh()->geo->getPositions();
-    auto norms = geo->getMesh()->geo->getNormals();
+    //auto pos = geo->getMesh()->geo->getPositions();
+    //auto norms = geo->getMesh()->geo->getNormals();
 
     /*auto samePlane = [&](int i0, int i1, float dp, float dn) {
 		p0 = pos[i0]

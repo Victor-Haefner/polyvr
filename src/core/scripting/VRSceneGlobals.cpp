@@ -145,7 +145,6 @@ PyObject* VRSceneGlobals::exportGeometry(VRSceneGlobals* self, PyObject *args) {
 }
 
 PyObject* VRSceneGlobals::getLoadGeometryProgress(VRSceneGlobals* self) {
-    const char* path = "";
     return VRPyProgress::fromSharedPtr( VRImport::get()->getProgressObject() );
 }
 

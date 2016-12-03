@@ -77,6 +77,8 @@ void VRProcess::update() {
             switch (mode) {
                 case graph_base::HIERARCHY: diag->connect(nodes[parent], i, mode); break;
                 case graph_base::DEPENDENCY: diag->connect(i, nodes[parent], mode); break;
+                case graph_base::SIMPLE: break;
+                case graph_base::SIBLING: break;
             }
         } else cout << "VRProcess::connect " << parent << " not in nodes\n";
     };

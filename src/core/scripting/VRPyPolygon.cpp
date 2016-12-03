@@ -74,7 +74,7 @@ PyObject* VRPyPolygon::getPoints(VRPyPolygon* self) {
     if (!self->valid()) return NULL;
     auto vec = self->objPtr->get();
     PyObject* res = PyList_New(vec.size());
-    for (int i=0; i<vec.size(); i++) PyList_SetItem(res, i, toPyTuple(vec[i]));
+    for (uint i=0; i<vec.size(); i++) PyList_SetItem(res, i, toPyTuple(vec[i]));
     return res;
 }
 

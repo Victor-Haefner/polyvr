@@ -76,7 +76,7 @@ bool VRPolygonSelection::vertSelected(Vec3f p) {
 
     auto inFrustum = [&](frustum& f) {
         auto planes = f.getPlanes();
-        for (int i=0; i<planes.size(); i++) {
+        for (uint i=0; i<planes.size(); i++) {
             float d = planes[i].distance(p);
             if ( d < 0 ) return false;
         }

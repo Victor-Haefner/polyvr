@@ -268,7 +268,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
                 Vec3i pSides;
                 //cout << " triangle size in x " << xs*180/Pi << " " << rays.size() << endl;
                 //cout << " triangle: " << p[0] << "   " << p[1] << "   " << p[2] << endl;
-                for (int i=1; i<rays.size(); i++) {
+                for (uint i=1; i<rays.size(); i++) {
                     auto s = Vec2f(rays[i-1], rays[i]);
                     //cout << "  side " << s*180/Pi << endl;
                     sides.push_back( s ); // get all cylinder faces
@@ -298,7 +298,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
                 if (pSides[0] != pSides[1] && pSides[0] != pSides[2] && pSides[1] != pSides[2]) {
                     //cout << "  case 2" << endl;
                     bool passed_middle = false;
-                    for (int i=0; i<sides.size(); i++) {
+                    for (uint i=0; i<sides.size(); i++) {
                         Vec2f s = sides[i];
                         if (i == 0) { // first triangle
                             int pi = pOrder[0]; // vertex index on that face
@@ -326,7 +326,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
                             continue;
                         }
 
-                        if (i == pSides[pOrder[1]]) { // pentagon in the middle
+                        if (int(i) == pSides[pOrder[1]]) { // pentagon in the middle
                             Pnt3f pv = t.p[pOrder[1]]; // point in the middle
                             Vec3f pr11(s[0],0,0); // point on cylinder edge
                             Vec3f pr12(s[0],0,0); // point on cylinder edge
@@ -376,7 +376,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
                 // case 3
                 if (pSides[pOrder[0]] == pSides[pOrder[1]]) {
                     //cout << "  case 3" << endl;
-                    for (int i=0; i<sides.size(); i++) {
+                    for (uint i=0; i<sides.size(); i++) {
                         Vec2f s = sides[i];
                         if (i == 0) { // first quad
                             Pnt3f pv1 = t.p[pOrder[0]]; // vertex on that face
@@ -422,7 +422,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
                 // case 4
                 if (pSides[pOrder[1]] == pSides[pOrder[2]]) {
                     //cout << "  case 4" << endl;
-                    for (int i=0; i<sides.size(); i++) {
+                    for (uint i=0; i<sides.size(); i++) {
                         Vec2f s = sides[i];
 
                         Pnt3f pv = t.p[pOrder[0]]; // vertex on that face
@@ -474,7 +474,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
             GeoVectorPropertyRecPtr pos = gg->geo->getPositions();
             GeoVectorPropertyRecPtr norms = gg->geo->getNormals();
             if (pos) {
-                for (int i=0; i<pos->size(); i++) {
+                for (uint i=0; i<pos->size(); i++) {
                     Pnt3f p = pos->getValue<Pnt3f>(i);
                     Vec3f n = norms->getValue<Vec3f>(i);
                     n = Vec3f(cos(p[0]), sin(p[0]), 0);
@@ -715,7 +715,7 @@ VRGeometryPtr VRBRepSurface::build(string type) {
     GeoUInt32PropertyRecPtr inds = GeoUInt32Property::create();
 
     for (auto b : bounds) {
-        for (int i=0; i<b.points.size(); i+=2) {
+        for (uint i=0; i<b.points.size(); i+=2) {
             Pnt3f p1 = b.points[i];
             Pnt3f p2 = b.points[i+1];
             pos->addValue(p1);

@@ -58,7 +58,7 @@ void VRProjectManager::load(string path) {
     xmlpp::Element* root = dynamic_cast<xmlpp::Element*>(parser.get_document()->get_root_node());
 
     vault_rebuild.clear();
-    int i=0;
+    uint i=0;
     for (auto n : root->get_children()) {
         xmlpp::Element* e = dynamic_cast<xmlpp::Element*>(n);
         if (!e) continue;

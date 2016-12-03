@@ -87,7 +87,7 @@ void VRSprite::webOpen(string path, int res, float ratio){
 
     // flip normals for deferred shading
     auto norms = getMesh()->geo->getNormals();
-    for (int i=0; i<norms->size(); i++) {
+    for (uint i=0; i<norms->size(); i++) {
         Vec3f n = norms->getValue<Vec3f>(i);
         norms->setValue(-n, i);
     }

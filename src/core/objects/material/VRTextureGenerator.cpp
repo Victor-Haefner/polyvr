@@ -153,14 +153,14 @@ void VRTextureGenerator::applyLine(Vec4f* data, Vec3f p1, Vec3f p2, Vec4f c, flo
 // TODO: fix holes between curved path segments
 void VRTextureGenerator::applyPath(Vec3f* data, pathPtr p, Vec4f c, float w) {
     auto pos = p->getPositions();
-    for (int i=1; i<pos.size(); i++) {
+    for (uint i=1; i<pos.size(); i++) {
         applyLine(data, pos[i-1], pos[i], c, w);
     }
 }
 
 void VRTextureGenerator::applyPath(Vec4f* data, pathPtr p, Vec4f c, float w) {
     auto pos = p->getPositions();
-    for (int i=1; i<pos.size(); i++) {
+    for (uint i=1; i<pos.size(); i++) {
         applyLine(data, pos[i-1], pos[i], c, w);
     }
 }

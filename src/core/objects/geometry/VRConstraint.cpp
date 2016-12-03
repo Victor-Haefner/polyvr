@@ -66,7 +66,7 @@ void VRConstraint::apply(VRTransformPtr obj) {
             t.multLeft(rotRebase);
             t.mult(refRebasedI);
             float a = atan2(-t[2][1], t[2][2]);
-            t.setRotate( Quaternion(Vec3f(1,0,0), atan2(-t[2][1], t[2][2])) );
+            t.setRotate( Quaternion(Vec3f(1,0,0), a) );
             t.mult(refRebased);
             t.multLeft(rotRebaseI);
         }

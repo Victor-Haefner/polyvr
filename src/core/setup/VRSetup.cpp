@@ -210,7 +210,7 @@ void VRSetup::save(string file) {
     xmlpp::Element* trackingARTN = setupN->add_child("TrackingART");
     xmlpp::Element* trackingVRPNN = setupN->add_child("TrackingVRPN");
     xmlpp::Element* networkN = setupN->add_child("Network");
-    xmlpp::Element* scriptN = setupN->add_child("Scripts");
+    /*xmlpp::Element* scriptN = */setupN->add_child("Scripts");
 
     VRWindowManager::save(displayN);
     VRDeviceManager::save(deviceN);
@@ -236,7 +236,7 @@ void VRSetup::load(string file) {
     xmlpp::Element* trackingARTN = getElementChild(setupN, "TrackingART");
     xmlpp::Element* trackingVRPNN = getElementChild(setupN, "TrackingVRPN");
     xmlpp::Element* networkN = getElementChild(setupN, "Network");
-    xmlpp::Element* scriptN = getElementChild(setupN, "Scripts");
+    /*xmlpp::Element* scriptN = */getElementChild(setupN, "Scripts");
 
     if (trackingARTN) ART::load(trackingARTN);
     if (trackingVRPNN) VRPN::load(trackingVRPNN);

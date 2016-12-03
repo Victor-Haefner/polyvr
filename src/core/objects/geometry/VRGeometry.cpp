@@ -74,7 +74,7 @@ class geoProxy : public Geometry {
 
             auto inds = getIndices();
             auto pos = getPositions();
-            for (int i=0; i<inds->size(); i+=4) { // each 4 indices are a quad
+            for (uint i=0; i<inds->size(); i+=4) { // each 4 indices are a quad
                 int i1 = inds->getValue(i+0);
                 int i2 = inds->getValue(i+1);
                 int i3 = inds->getValue(i+2);
@@ -278,7 +278,7 @@ void VRGeometry::setPositionalTexCoords(float scale) {
     if (scale == 1.0) setTexCoords(pos, 0, 1);
     else {
         GeoVec3fPropertyRefPtr tex = GeoVec3fProperty::create();
-        for (int i=0; i<pos->size(); i++) {
+        for (uint i=0; i<pos->size(); i++) {
             Pnt3f p = pos->getValue<Pnt3f>(i);
             p[0] *= scale; p[1] *= scale; p[2] *= scale;
             tex->addValue(Vec3f(p));
@@ -346,9 +346,9 @@ void VRGeometry::removeSelection(VRSelectionPtr sel) {
     auto sinds = sel->getSubselection(ptr());
     std::sort(sinds.begin(), sinds.end());
     std::unique(sinds.begin(), sinds.end());
-    for (int k=0, i=0; i < self.size(); i++) {
+    for (uint k=0, i=0; i < uint(self.size()); i++) {
         bool selected = false;
-        if (k < sinds.size()) if (i == sinds[k]) selected = true;
+        if (k < sinds.size()) if (int(i) == sinds[k]) selected = true;
         if (!selected) addVertex(i);
         else k++;
     }
@@ -704,13 +704,13 @@ void VRGeometry::applyTransformation(shared_ptr<pose> po) {
     auto norms = mesh->geo->getNormals();
     Vec3f n; Pnt3f p;
 
-    for (int i=0; i<pos->size(); i++) {
+    for (uint i=0; i<pos->size(); i++) {
         p = pos->getValue<Pnt3f>(i);
         m.mult(p,p);
         pos->setValue(p,i);
     };
 
-    for (int i=0; i<norms->size(); i++) {
+    for (uint i=0; i<norms->size(); i++) {
         n = norms->getValue<Vec3f>(i);
         m.mult(n,n);
         norms->setValue(n,i);
@@ -828,13 +828,13 @@ void VRGeometry::readSharedMemory(string segment, string object) {
     if (sm_types.size() > 0) for (auto& t : sm_types) types->addValue(t);
     if (sm_lengths.size() > 0) for (auto& l : sm_lengths) lengths->addValue(l);
     for (auto& i : sm_inds) inds->addValue(i);
-    if (sm_pos.size() > 0) for (int i=0; i<sm_pos.size()-2; i+=3) pos->addValue(Pnt3f(sm_pos[i], sm_pos[i+1], sm_pos[i+2]));
-    if (sm_norms.size() > 0) for (int i=0; i<sm_norms.size()-2; i+=3) norms->addValue(Vec3f(sm_norms[i], sm_norms[i+1], sm_norms[i+2]));
-    if (sm_cols.size() > 0) for (int i=0; i<sm_cols.size()-2; i+=3) cols->addValue(Pnt3f(sm_cols[i], sm_cols[i+1], sm_cols[i+2]));
+    if (sm_pos.size() > 0) for (uint i=0; i<sm_pos.size()-2; i+=3) pos->addValue(Pnt3f(sm_pos[i], sm_pos[i+1], sm_pos[i+2]));
+    if (sm_norms.size() > 0) for (uint i=0; i<sm_norms.size()-2; i+=3) norms->addValue(Vec3f(sm_norms[i], sm_norms[i+1], sm_norms[i+2]));
+    if (sm_cols.size() > 0) for (uint i=0; i<sm_cols.size()-2; i+=3) cols->addValue(Pnt3f(sm_cols[i], sm_cols[i+1], sm_cols[i+2]));
 
     cout << "osg mesh data: " << types->size() << " " << lengths->size() << " " << pos->size() << " " << norms->size() << " " << inds->size() << " " << cols->size() << endl;
 
-    int N = pos->size();
+    uint N = pos->size();
     if (N == 0) return;
 
     setTypes(types);

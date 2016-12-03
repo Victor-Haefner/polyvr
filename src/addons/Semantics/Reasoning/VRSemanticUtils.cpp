@@ -209,7 +209,7 @@ Query::Query(string q) {
     if (parts.size() > 0) request = VRStatement::create(parts[0]);
     if (parts.size() > 1) {
         parts = VRReasoner::split(parts[1], ';');
-        for (int i=0; i<parts.size(); i++) statements.push_back(VRStatement::create(parts[i], i));
+        for (uint i=0; i<parts.size(); i++) statements.push_back(VRStatement::create(parts[i], i));
     }
 }
 

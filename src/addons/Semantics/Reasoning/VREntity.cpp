@@ -137,7 +137,7 @@ void VREntity::addVector(string name, vector<string> v, string type) {
 
 VRPropertyPtr VREntity::get(string prop, int i) {
     auto props = getAll(prop);
-    if (i >= props.size()) return 0;
+    if (i >= int(props.size())) return 0;
     return props[i];
 }
 

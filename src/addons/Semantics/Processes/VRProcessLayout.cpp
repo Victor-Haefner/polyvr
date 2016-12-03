@@ -29,7 +29,7 @@ VRProcessLayoutPtr VRProcessLayout::create(string name) { return VRProcessLayout
 int wrapString(string& s, int width) {
     int w = 0;
     vector<int> newBreaks;
-    for (int i=0; i<s.size(); i++) {
+    for (uint i=0; i<s.size(); i++) {
         char c = s[i];
 
         if (c == '\n') w = 0;
@@ -140,7 +140,7 @@ void VRProcessLayout::setProcess(VRProcess::DiagramPtr diag) {
     float height = 2;
     float f=0;
     //auto diag = process->getInteractionDiagram();
-    for (int i=0; i<diag->getElements().size(); i++) {
+    for (uint i=0; i<diag->getElements().size(); i++) {
         auto& e = diag->getElement(i);
         auto geo = newWidget(e, height);
         e.widget = geo;

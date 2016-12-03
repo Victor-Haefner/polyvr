@@ -79,7 +79,7 @@ string VRName_base::setName(string name) {
         bool isNumber = (last.find_first_not_of( "0123456789" ) == string::npos);
         if (isNumber) {
             base_name = vs[0];
-            for (int i=1; i<vs.size()-1; i++) base_name += separator + vs[i];
+            for (uint i=1; i<vs.size()-1; i++) base_name += separator + vs[i];
             name_suffix = toInt(last);
             compileName();
             return this->name;

@@ -40,7 +40,7 @@ class VRNavPreset : public VRName {
 
     public:
         VRNavPreset();
-        ~VRNavPreset();
+        virtual ~VRNavPreset();
 
         void updateBinding(VRNavBinding& b);
 

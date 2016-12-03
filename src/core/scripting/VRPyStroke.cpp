@@ -139,8 +139,8 @@ PyObject* VRPyStroke::strokeProfile(VRPyStroke* self, PyObject* args) {
 
     OSG::VRStroke::CAP cbeg = OSG::VRStroke::NONE;
     OSG::VRStroke::CAP cend = OSG::VRStroke::NONE;
-    if (beg && beg == "ARROW") cbeg = OSG::VRStroke::ARROW;
-    if (end && end == "ARROW") cend = OSG::VRStroke::ARROW;
+    if (beg && string(beg) == "ARROW") cbeg = OSG::VRStroke::ARROW;
+    if (end && string(end) == "ARROW") cend = OSG::VRStroke::ARROW;
 
     self->objPtr->strokeProfile(profile, closed, color, cbeg, cend);
     self->objPtr->getMaterial()->setLit(lit);

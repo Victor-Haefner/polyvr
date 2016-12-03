@@ -93,7 +93,7 @@ class VRPhysics : public OSG::VRStorage {
 
     public:
         VRPhysics(OSG::VRTransformWeakPtr t);
-        ~VRPhysics();
+        virtual ~VRPhysics();
 
         void prepareStep();
 

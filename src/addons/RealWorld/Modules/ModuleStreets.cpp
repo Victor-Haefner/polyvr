@@ -166,7 +166,7 @@ void ModuleStreets::loadBbox(MapGrid::Box bbox) {
             for (auto seg : joint->segments) sLN.push_back(seg->lanes);
             sort(sLN.begin(), sLN.end());
 
-            if (sLN[0] == sLN[1] == sLN[2] == 1 && sLN[3] == 3) {
+            if ((sLN[0] == sLN[1]) == (sLN[2] == 1) && sLN[3] == 3) {
                 joint->type = J1x3L_3x1L;
             }
         }
@@ -270,7 +270,7 @@ void ModuleStreets::makeStreetNameSign(StreetSegment* seg, VRAnnotationEnginePtr
     if (seg->jointA->type == J1 && seg->jointB->type == J1) return;
 
     string name = seg->name;
-    for (int i=1; i<name.size(); i++) {
+    for (uint i=1; i<name.size(); i++) {
         int n = name[i];
         if (n == -68) { name[i-1] = 'u'; name[i] = 'e'; }
         if (n == -74) { name[i-1] = 'o'; name[i] = 'e'; }

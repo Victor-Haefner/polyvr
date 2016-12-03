@@ -79,7 +79,7 @@ void VRProduction::update() {
     last_takt = t;
 
     VROntologyPtr production = description;
-    for (VRProductionJob* job : jobs) {
+    //for (VRProductionJob* job : jobs) {
         /*VROntologyPtr product = job->product->description;
         VROntologyPtr jobOnto = VROntology::create();
         jobOnto->merge(production);
@@ -104,7 +104,7 @@ void VRProduction::update() {
         }
 
         cout << job->process->toString() << endl;*/
-    }
+    //}
 }
 
 VRProductionProcess::VRProductionProcess(string name) { this->name = name; }

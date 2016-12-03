@@ -69,8 +69,8 @@ void loadVtk(string path, VRTransformPtr res) {
 
     for (int i=0; i<ncells; i++) {
         vtkCell* c = dataset->GetCell(i);
-        int d = c->GetCellDimension();
-        int t = c->GetCellType();
+        //int d = c->GetCellDimension();
+        //int t = c->GetCellType();
 
         string type = c->GetClassName();
         cout << "cell type " << type << endl;
@@ -80,7 +80,7 @@ void loadVtk(string path, VRTransformPtr res) {
         }
     }
 
-    vtkCellData* cells = dataset->GetCellData();
+    //vtkCellData* cells = dataset->GetCellData();
     vtkPointData* points = dataset->GetPointData();
 
     cout << "POINT_DATA:\n";
@@ -235,7 +235,7 @@ void loadVtk_old(string path, VRTransformPtr res) {
             r = splitString( line );
             string type = r[0];
             N = toInt(r[1]);
-            int size = toInt(r[2]);
+            //int size = toInt(r[2]);
             for (int i=0; i<N; i++) { // for each primitive
                 r = splitString( next() );
                 int Ni = toInt(r[0]); // length of primitive

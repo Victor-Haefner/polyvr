@@ -92,7 +92,7 @@ void VRPathtool::setGraph(graph_basePtr g) {
     auto& nodes = g->getNodes();
     auto& edges = g->getEdges();
 
-    for (int i=0; i<nodes.size(); i++) {
+    for (uint i=0; i<nodes.size(); i++) {
         knots[i] = knot();
         auto h = newHandle();
         knots[i].handle = h;
@@ -113,15 +113,12 @@ void VRPathtool::setGraph(graph_basePtr g) {
 
 void VRPathtool::update() {
     if (graph) { // smooth knot transformations
-        auto& nodes = graph->getNodes();
-        auto& edges = graph->getEdges();
-
         // get handle positions
         map<int, Vec3f> hPositions;
-        for (int i=0; i<knots.size(); i++)
+        for (uint i=0; i<knots.size(); i++)
             if (auto h = knots[i].handle.lock()) hPositions[i] = h->getWorldPosition();
 
-        for (int i=0; i<knots.size(); i++) {
+        for (uint i=0; i<knots.size(); i++) {
             auto& knot = knots[i];
             auto h = knot.handle.lock();
             if (!h) continue;

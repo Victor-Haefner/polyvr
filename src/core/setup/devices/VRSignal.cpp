@@ -45,7 +45,7 @@ void VRSignal::sub(VRBaseCbWeakPtr fkt) {
     auto sp = fkt.lock();
     if (!sp) return;
     vector<int> toErase;
-    for (int i=0; i<callbacksPtr.size(); i++) {
+    for (uint i=0; i<callbacksPtr.size(); i++) {
         auto wp = callbacksPtr[i];
         auto sp2 = wp.lock();
         if (!sp2 || sp == sp2) toErase.push_back(i);

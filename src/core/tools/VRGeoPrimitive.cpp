@@ -38,7 +38,7 @@ VRGeoPrimitivePtr VRGeoPrimitive::ptr() { return static_pointer_cast<VRGeoPrimit
 VRAnnotationEnginePtr VRGeoPrimitive::getLabels() { return params_geo; }
 
 VRHandlePtr VRGeoPrimitive::getHandle(int i) {
-    if (i < 0 || i >= handles.size()) return 0;
+    if (i < 0 || i >= int(handles.size())) return 0;
     return handles[i];
 }
 
@@ -57,8 +57,8 @@ void VRGeoPrimitive::update(int i, float v) {
     if (!primitive) return;
     auto params = splitString(primitive->toString(), ' ');
     string args;
-    for (int j=0; j<params.size(); j++) {
-        if (i != j) args += params[j];
+    for (uint j=0; j<params.size(); j++) {
+        if (i != int(j)) args += params[j];
         else args += toString(v);
         if (j < params.size()-1) args += " ";
     }

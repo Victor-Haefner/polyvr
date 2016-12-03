@@ -161,7 +161,8 @@ int VRParticles::spawnCuboid(Vec3f center, Vec3f size, float distance) {
 }
 
 int VRParticles::setEmitter(Vec3f baseV, Vec3f dirV, int from, int to, int interval, bool loop) {
-    if (to > particles.size() || from > particles.size() || from > to) {
+    int N = particles.size();
+    if (to > N || from > N || from > to) {
         printf("ERROR: Please check parameters \'from\' and \'to\'\n");
         printf("ERROR: No Emitter was created.");
         return -1;

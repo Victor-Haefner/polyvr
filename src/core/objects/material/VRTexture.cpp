@@ -63,7 +63,7 @@ Vec4f VRTexture::getPixel(Vec2f uv) { // TODO: check data format (float/integer/
     auto res = Vec4f(0,0,0,1);
     if (!img) return res;
     int N = getChannels();
-    int B = img->getBpp()/N;
+    //int B = img->getBpp()/N;
     int w = img->getWidth();
     int h = img->getHeight();
     int x = uv[0]*(w-1);

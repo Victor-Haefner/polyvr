@@ -69,7 +69,7 @@ class VRSocket : public VRName {
 
     public:
         VRSocket(string name);
-        ~VRSocket();
+        virtual ~VRSocket();
 
         void initServer(CONNECTION_TYPE t, int _port);
         void sendHTTPGet(string uri);
