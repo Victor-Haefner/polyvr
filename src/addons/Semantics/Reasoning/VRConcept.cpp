@@ -9,6 +9,7 @@ using namespace OSG;
 VRConcept::VRConcept(string name, VROntologyPtr o) {
     setStorageType("Concept");
     setNameSpace("concept");
+    setSeparator('_');
     setUniqueName(false);
     setName(name);
     this->ontology = o;
