@@ -56,6 +56,14 @@ void VRTextureGenerator::drawFill(Vec4f c) {
     layers.push_back(l);
 }
 
+void VRTextureGenerator::drawPixel(Vec3i p, Vec4f c) {
+    Layer l;
+    l.type = PIXEL;
+    l.p1 = p;
+    l.c41 = c;
+    layers.push_back(l);
+}
+
 void VRTextureGenerator::drawLine(Vec3f p1, Vec3f p2, Vec4f c, float w) {
     Layer l;
     l.type = LINE;
@@ -165,6 +173,18 @@ void VRTextureGenerator::applyPath(Vec4f* data, pathPtr p, Vec4f c, float w) {
     }
 }
 
+void VRTextureGenerator::applyPixel(Vec4f* data, Vec3i p, Vec4f c) {
+    int d = p[3]*height*width + p[1]*width + p[0];
+    data[d] = Vec4f(c[0], c[1], c[2], 1.0)*c[3] + data[d]*(1.0-c[3]);
+}
+
+void VRTextureGenerator::applyPixel(Vec3f* data, Vec3i p, Vec4f c) {
+    int d = p[2]*height*width + p[1]*width + p[0];
+    int N = depth*height*width;
+    if (d >= N) { cout << "Warning: applyPixel failed, pixel " << d << " " << p << " " << height << " " << width << " " << depth << " out of range! (buffer size is " << N << ")" << endl; return; }
+    data[d] = Vec3f(c[0], c[1], c[2])*c[3] + data[d]*(1.0-c[3]);
+}
+
 void VRTextureGenerator::clearStage() { layers.clear(); }
 
 VRTexturePtr VRTextureGenerator::compose(int seed) {
@@ -181,6 +201,7 @@ VRTexturePtr VRTextureGenerator::compose(int seed) {
             if (l.type == PERLIN) VRPerlin::apply(data3, dims, l.amount, l.c31, l.c32);
             if (l.type == LINE) applyLine(data3, l.c31, l.c32, l.c41, l.amount);
             if (l.type == FILL) applyFill(data3, l.c41);
+            if (l.type == PIXEL) applyPixel(data3, l.p1, l.c41);
             if (l.type == PATH) applyPath(data3, l.p, l.c41, l.amount);
         }
         if (hasAlpha) {
@@ -188,6 +209,7 @@ VRTexturePtr VRTextureGenerator::compose(int seed) {
             if (l.type == PERLIN) VRPerlin::apply(data4, dims, l.amount, l.c41, l.c42);
             if (l.type == LINE) applyLine(data4, l.c31, l.c32, l.c41, l.amount);
             if (l.type == FILL) applyFill(data4, l.c41);
+            if (l.type == PIXEL) applyPixel(data4, l.p1, l.c41);
             if (l.type == PATH) applyPath(data4, l.p, l.c41, l.amount);
         }
     }

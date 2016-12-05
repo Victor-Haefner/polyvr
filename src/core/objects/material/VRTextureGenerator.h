@@ -14,7 +14,8 @@ enum GEN_TYPE {
     BRICKS,
     LINE,
     FILL,
-    PATH
+    PATH,
+    PIXEL
 };
 
 class VRTextureGenerator {
@@ -29,6 +30,7 @@ class VRTextureGenerator {
             float amount = 0;
             Vec3f c31,c32;
             Vec4f c41,c42;
+            Vec3i p1;
             pathPtr p;
             int Nchannels = 3;
         };
@@ -38,6 +40,8 @@ class VRTextureGenerator {
 
         void applyFill(Vec3f* data, Vec4f c);
         void applyFill(Vec4f* data, Vec4f c);
+        void applyPixel(Vec3f* data, Vec3i p, Vec4f c);
+        void applyPixel(Vec4f* data, Vec3i p, Vec4f c);
         void applyLine(Vec3f* data, Vec3f p1, Vec3f p2, Vec4f c, float width);
         void applyLine(Vec4f* data, Vec3f p1, Vec3f p2, Vec4f c, float width);
         void applyPath(Vec3f* data, pathPtr p, Vec4f c, float width);
@@ -57,6 +61,7 @@ class VRTextureGenerator {
         void add(string type, float amount, Vec4f c1, Vec4f c2);
 
         void drawFill(Vec4f c);
+        void drawPixel(Vec3i p, Vec4f c);
         void drawLine(Vec3f p1, Vec3f p2, Vec4f c, float width);
         void drawPath(pathPtr p, Vec4f c, float width);
 

@@ -9,6 +9,7 @@ struct VRPyTextureGenerator : VRPyBaseT<OSG::VRTextureGenerator> {
 
     static PyObject* add(VRPyTextureGenerator* self, PyObject* args);
     static PyObject* drawFill(VRPyTextureGenerator* self, PyObject* args);
+    static PyObject* drawPixel(VRPyTextureGenerator* self, PyObject* args);
     static PyObject* drawLine(VRPyTextureGenerator* self, PyObject* args);
     static PyObject* drawPath(VRPyTextureGenerator* self, PyObject* args);
     static PyObject* setSize(VRPyTextureGenerator* self, PyObject* args);

@@ -14,9 +14,10 @@ simpleVRPyType(TextureGenerator, New);
 PyMethodDef VRPyTextureGenerator::methods[] = {
     {"add", (PyCFunction)VRPyTextureGenerator::add, METH_VARARGS, "Add a layer - add(str type, float amount, [r,g,b], [r,g,b])\n\ttype can be: 'Perlin', 'Bricks'"
                                                                     "\n\t add(str type, float amount, [r,g,b,a], [r,g,b,a])" },
-    {"drawFill", (PyCFunction)VRPyTextureGenerator::drawFill, METH_VARARGS, "Set the size - drawFill([r,g,b,a])\n   Fill whole texture" },
-    {"drawLine", (PyCFunction)VRPyTextureGenerator::drawLine, METH_VARARGS, "Set the size - drawLine([x1,y1,z1], [x2,y2,z2], [r,g,b,a], flt width)\n   Add a line, coordinates go from 0 to 1" },
-    {"drawPath", (PyCFunction)VRPyTextureGenerator::drawPath, METH_VARARGS, "Set the size - drawPath(path, [r,g,b,a], flt width)\n   Add a path, use normalized coordinates from 0 to 1" },
+    {"drawFill", (PyCFunction)VRPyTextureGenerator::drawFill, METH_VARARGS, "Fill whole texture - drawFill([r,g,b,a])" },
+    {"drawPixel", (PyCFunction)VRPyTextureGenerator::drawPixel, METH_VARARGS, "Set a pixel color - drawPixel([x,y,z], [r,g,b,a])" },
+    {"drawLine", (PyCFunction)VRPyTextureGenerator::drawLine, METH_VARARGS, "Add a line, coordinates go from 0 to 1 - drawLine([x1,y1,z1], [x2,y2,z2], [r,g,b,a], flt width)" },
+    {"drawPath", (PyCFunction)VRPyTextureGenerator::drawPath, METH_VARARGS, "Add a path, use normalized coordinates from 0 to 1 - drawPath(path, [r,g,b,a], flt width)" },
     {"setSize", (PyCFunction)VRPyTextureGenerator::setSize, METH_VARARGS, "Set the size - setSize([width, height, depth] | bool hasAlphaChannel)\n   set depth to 1 for 2D textures" },
     {"compose", (PyCFunction)VRPyTextureGenerator::compose, METH_VARARGS, "Bake the layers into an image - img compose( int seed )" },
     {"readSharedMemory", (PyCFunction)VRPyTextureGenerator::readSharedMemory, METH_VARARGS, "Read an image from shared memory - img readSharedMemory( string segment, string data )" },
@@ -40,6 +41,14 @@ PyObject* VRPyTextureGenerator::drawFill(VRPyTextureGenerator* self, PyObject* a
     PyObject* c;
     if (! PyArg_ParseTuple(args, "O", &c)) return NULL;
     self->obj->drawFill(parseVec4fList(c));
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyTextureGenerator::drawPixel(VRPyTextureGenerator* self, PyObject* args) {
+    if (self->obj == 0) { PyErr_SetString(err, "VRPyTextureGenerator::add - Object is invalid"); return NULL; }
+    PyObject *p, *c;
+    if (! PyArg_ParseTuple(args, "OO", &p, &c)) return NULL;
+    self->obj->drawPixel(parseVec3iList(p), parseVec4fList(c));
     Py_RETURN_TRUE;
 }
 
