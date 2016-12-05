@@ -235,6 +235,7 @@ string VRMaterial::constructShaderFP(VRMatData* data) {
 
     string fp;
     fp += "#version 120\n";
+    fp += "uniform int isLit;\n";
     fp += "varying vec4 vertPos;\n";
     fp += "varying vec3 vertNorm;\n";
     fp += "varying vec3 color;\n";
@@ -249,7 +250,7 @@ string VRMaterial::constructShaderFP(VRMatData* data) {
     if (texD == 3) fp += "  vec3 diffCol = texture3D(tex0, gl_TexCoord[0].xyz).rgb;\n";
     fp += "  float ambVal  = luminance(diffCol);\n";
     fp += "  gl_FragData[0] = vec4(pos, ambVal);\n";
-    fp += "  gl_FragData[1] = vec4(normalize(vertNorm), 0);\n";
+    fp += "  gl_FragData[1] = vec4(normalize(vertNorm), isLit);\n";
     fp += "  gl_FragData[2] = vec4(diffCol, 0);\n";
     fp += "}\n";
     return fp;
@@ -265,6 +266,7 @@ void VRMaterial::setDeffered(bool b) {
                 mats[i]->tmpDeferredShdr = true;
                 setVertexShader( constructShaderVP(mats[i]), "defferedVS" );
                 setFragmentShader( constructShaderFP(mats[i]), "defferedFS", true );
+                setShaderParameter("isLit", int(isLit()));
             }
         } else if (mats[i]->tmpDeferredShdr) remShaderChunk();
         mats[i]->toggleDeferredShader(b, getName());
