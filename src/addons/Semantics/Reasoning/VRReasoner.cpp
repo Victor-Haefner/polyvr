@@ -119,6 +119,17 @@ bool VRReasoner::has(VRStatementPtr statement, Context& context) { // TODO
 
 // apply the statement changes to world
 bool VRReasoner::apply(VRStatementPtr statement, Context& context) {
+    auto clearAssumptions = [&]() {
+        vector<string> toDelete;
+        for (auto v : context.vars) {
+            if (v.second->isAssumption) toDelete.push_back(v.first);
+        }
+        for (auto v : toDelete) {
+            context.onto->remEntity( context.onto->getEntity(v) );
+            //context.vars.erase(v);
+        }
+    };
+
     if (statement->verb == "is") {
         auto& left = statement->terms[0];
         auto& right = statement->terms[1];
@@ -149,6 +160,7 @@ bool VRReasoner::apply(VRStatementPtr statement, Context& context) {
         }
         statement->state = 1;
         print("  process results of queried variable " + x, GREEN);
+        clearAssumptions();
     }
 
     return true;
