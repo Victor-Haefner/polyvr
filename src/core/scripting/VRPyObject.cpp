@@ -94,7 +94,7 @@ PyMethodDef VRPyObject::methods[] = {
 
 PyObject* VRPyObject::setVolumeCheck(VRPyObject* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    self->objPtr->setVolume( parseBool(args) );
+    self->objPtr->allowCulling( parseBool(args) );
     Py_RETURN_TRUE;
 }
 

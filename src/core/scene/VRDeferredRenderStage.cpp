@@ -19,7 +19,6 @@ VRMaterialPtr VRDeferredRenderStage::setupRenderLayer(string name) {
     auto mat = VRMaterial::create(name+"_mat");
     string s = "2"; // TODO: check if layers are not culled in CAVE!
     layer->setPrimitive("Plane", s+" "+s+" 1 1");
-    layer->setVolume(false);
     layer->setMaterial( mat );
     layer->setMeshVisibility(false);
     mat->setDepthTest(GL_ALWAYS);

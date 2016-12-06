@@ -69,6 +69,7 @@ void VRRenderStudio::addStage(string name, string parent) {
 
 void VRRenderStudio::setStageActive(string name, bool da, bool la) {
     if (stages.count(name)) stages[name]->setActive(da, la);
+    root_system->allowCulling( false, true );
 }
 
 void VRRenderStudio::setStageShader(string name, string VPpath, string FPpath, bool doDeferred) {

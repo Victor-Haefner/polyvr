@@ -22,7 +22,7 @@ void VRMetaBalls::init() {
     mat = VRMaterial::create(name+"_mat");
     auto plane = VRGeometry::create(name+"_renderlayer");
     plane->setPrimitive("Plane", "2 2 1 1");
-    plane->setVolume(false);
+    plane->allowCulling(false);
     plane->setMaterial( mat );
     VRObject::addChild(plane);
 

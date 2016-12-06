@@ -95,7 +95,7 @@ class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, p
         VRObjectPtr find(OSGObjectPtr n, string indent = " ");
         static void printOSGTree(OSGObjectPtr o, string indent = "");
 
-        void setVolume(bool b);
+        void allowCulling(bool b, bool recursive = false);
         void setSiblingPosition(int i);
 
         virtual void addChild(VRObjectPtr child, bool osg = true, int place = -1);

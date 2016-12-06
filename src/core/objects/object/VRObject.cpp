@@ -74,12 +74,27 @@ void VRObject::detach() {
     parent.reset();
 }
 
-void VRObject::setVolume(bool b) {
+void allowCullingRecursive(NodeMTRecPtr n, bool b) {
+    if (!n) return;
+
+    BoxVolume &vol = n->editVolume(false);
+    vol.setInfinite(!b);
+    vol.setStatic(!b);
+    vol.setValid(!b);
+
+    for (uint i=0; i<n->getNChildren(); i++) {
+        allowCullingRecursive(n->getChild(i), b);
+    }
+}
+
+void VRObject::allowCulling(bool b, bool recursive) {
     if (!getNode()) return;
     BoxVolume &vol = getNode()->node->editVolume(b);
     vol.setInfinite(!b);
     vol.setStatic(!b);
     vol.setValid(!b);
+
+    if (recursive) allowCullingRecursive(getNode()->node, b);
 }
 
 VRObjectPtr VRObject::create(string name) { return VRObjectPtr(new VRObject(name) ); }
