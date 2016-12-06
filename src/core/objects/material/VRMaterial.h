@@ -58,6 +58,7 @@ class VRMaterial : public VRObject {
         VRMaterialPtr ptr();
 
         void setDeffered(bool b);
+        void updateDeferredShader();
 
         void setActivePass(int i);
         int getActivePass();

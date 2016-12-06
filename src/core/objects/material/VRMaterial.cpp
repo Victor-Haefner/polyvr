@@ -165,10 +165,8 @@ struct VRMatData {
         deferred = def;
         if (!shaderChunk) return;
         shaderChunk->subFragmentShader(0);
-        if (deferred) {
-            //cout << " toggleDeferredShader fdProgram " << name << endl;
-            shaderChunk->addShader(fdProgram);
-        } else shaderChunk->addShader(fProgram);
+        if (deferred) shaderChunk->addShader(fdProgram);
+        else shaderChunk->addShader(fProgram);
     }
 
     template<typename T>
@@ -256,6 +254,14 @@ string VRMaterial::constructShaderFP(VRMatData* data) {
     return fp;
 }
 
+void VRMaterial::updateDeferredShader() {
+    auto m = mats[activePass];
+    if (!m->tmpDeferredShdr) return;
+    setVertexShader( constructShaderVP(m), "defferedVS" );
+    setFragmentShader( constructShaderFP(m), "defferedFS", true );
+    setShaderParameter("isLit", int(isLit()));
+}
+
 void VRMaterial::setDeffered(bool b) {
     deferred = b;
     int a = activePass;
@@ -264,9 +270,7 @@ void VRMaterial::setDeffered(bool b) {
         if (b) {
             if (mats[i]->shaderChunk == 0) {
                 mats[i]->tmpDeferredShdr = true;
-                setVertexShader( constructShaderVP(mats[i]), "defferedVS" );
-                setFragmentShader( constructShaderFP(mats[i]), "defferedFS", true );
-                setShaderParameter("isLit", int(isLit()));
+                updateDeferredShader();
             }
         } else if (mats[i]->tmpDeferredShdr) remShaderChunk();
         mats[i]->toggleDeferredShader(b, getName());
@@ -531,6 +535,7 @@ void VRMaterial::setTexture(VRTexturePtr img, bool alpha, int unit) {
     }
 
     if (img->getInternalFormat() != -1) md->texChunks[unit]->setInternalFormat(img->getInternalFormat());
+    updateDeferredShader();
 }
 
 void VRMaterial::setTexture(char* data, int format, Vec3i dims, bool isfloat) {

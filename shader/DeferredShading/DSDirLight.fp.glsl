@@ -25,7 +25,7 @@ void main(void) {
 	if (dot(norm.xyz, norm.xyz) < 0.95) discard;
 
 	color = texture2DRect(texBufDiff, lookup);
-	bool isLit = (norm.w <= 0);
+	bool isLit = (norm.w > 0);
 
 	if (channel == 0) {
 		if (isLit) computeDirLight();

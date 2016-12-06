@@ -113,10 +113,8 @@ void CEF::global_initiate() {
 
 void CEF::initiate() {
     init = true;
-
     CefWindowInfo win;
     CefBrowserSettings browser_settings;
-
     win.SetAsWindowless(0, true);
     browser = CefBrowserHost::CreateBrowserSync(win, client, "www.google.de", browser_settings, 0);
 }
@@ -132,7 +130,12 @@ string CEF::getSite() { return site; }
 void CEF::reload() { if (browser) browser->Reload(); }
 
 void CEF::update() {
-    if (init) CefDoMessageLoopWork();
+    if (!init || !client->getHandler()) return;
+    auto img = client->getHandler()->getImage();
+    int dim1= img->getImage()->getDimension();
+    CefDoMessageLoopWork();
+    int dim2= img->getImage()->getDimension();
+    if (dim1 != dim2) mat.lock()->updateDeferredShader();
 }
 
 void CEF::open(string site) {
