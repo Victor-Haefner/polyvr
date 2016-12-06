@@ -257,8 +257,16 @@ string VRMaterial::constructShaderFP(VRMatData* data) {
 void VRMaterial::updateDeferredShader() {
     auto m = mats[activePass];
     if (!m->tmpDeferredShdr) return;
-    setVertexShader( constructShaderVP(m), "defferedVS" );
-    setFragmentShader( constructShaderFP(m), "defferedFS", true );
+
+    initShaderChunk();
+    string s = constructShaderVP(m);
+    m->vProgram->setProgram(s.c_str());
+    checkShader(GL_VERTEX_SHADER, s, "defferedVS");
+
+    s = constructShaderFP(m);
+    m->fdProgram->setProgram(s.c_str());
+    checkShader(GL_FRAGMENT_SHADER, s, "defferedFS");
+
     setShaderParameter("isLit", int(isLit()));
 }
 
@@ -892,6 +900,7 @@ void VRMaterial::setVertexShader(string s, string name) {
     initShaderChunk();
     mats[activePass]->vProgram->setProgram(s.c_str());
     checkShader(GL_VERTEX_SHADER, s, name);
+    mats[activePass]->tmpDeferredShdr = false;
 }
 
 void VRMaterial::setFragmentShader(string s, string name, bool deferred) {
@@ -899,6 +908,7 @@ void VRMaterial::setFragmentShader(string s, string name, bool deferred) {
     if (deferred) mats[activePass]->fdProgram->setProgram(s.c_str());
     else          mats[activePass]->fProgram->setProgram(s.c_str());
     checkShader(GL_FRAGMENT_SHADER, s, name);
+    mats[activePass]->tmpDeferredShdr = false;
 }
 
 void VRMaterial::setGeometryShader(string s, string name) {
