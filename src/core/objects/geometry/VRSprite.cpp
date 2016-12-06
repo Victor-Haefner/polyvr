@@ -84,13 +84,6 @@ void VRSprite::webOpen(string path, int res, float ratio){
     if (keyboard) web->addKeyboard(keyboard);
     web->setResolution(res);
     web->setAspectRatio(ratio);
-
-    // flip normals for deferred shading
-    auto norms = getMesh()->geo->getNormals();
-    for (uint i=0; i<norms->size(); i++) {
-        Vec3f n = norms->getValue<Vec3f>(i);
-        norms->setValue(-n, i);
-    }
 }
 
 void VRSprite::setTexture(string path) {
