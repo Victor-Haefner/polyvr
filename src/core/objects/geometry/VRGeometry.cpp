@@ -8,8 +8,7 @@
 #include <OpenSG/OSGMultiPassMaterial.h>
 #include <OpenSG/OSGGeoFunctions.h>
 #include <OpenSG/OSGNameAttachment.h>
-
-//#include <OpenSG/OSGGeoProperties.h>
+#include <OpenSG/OSGFaceIterator.h>
 #include <OpenSG/OSGTypedGeoIntegralProperty.h>
 #include <OpenSG/OSGTypedGeoVectorProperty.h>
 
@@ -249,9 +248,114 @@ void VRGeometry::fixColorMapping() {
     mesh->geo->setIndex(mesh->geo->getIndex(Geometry::PositionsIndex), Geometry::ColorsIndex);
 }
 
-void VRGeometry::updateNormals() {
+// OSG 2.0 function not implemented :(
+// this is a port of the function in OSG 1.8
+void calcFaceNormals(GeometryMTRecPtr geo) {
+    if (!geo->getPositions() || geo->getPositions()->size() == 0) {
+        cout << "Warning: no positions for calcFaceNormals\n";
+        return;
+    }
+
+    GeoUInt32PropertyRecPtr newIndex = GeoUInt32Property::create();
+    GeoVec3fPropertyRecPtr newNormals = GeoVec3fProperty::create();
+    Vec3f normal;
+
+    FaceIterator faceIter = geo->beginFaces();
+    GeoIntegralPropertyRecPtr oldPosIndex = geo->getIndex(Geometry::PositionsIndex);
+    GeoIntegralPropertyRecPtr oldNormsIndex = geo->getIndex(Geometry::NormalsIndex);
+
+    auto calcNormal = [&](FaceIterator& f) {
+        Vec3f normal;
+        if (f.getLength() == 3) { // Face is a triangle
+            normal = ( f.getPosition(1) - f.getPosition(0) ).cross(f.getPosition(2) - f.getPosition(0));
+        } else { // Face must be a quad
+            normal = ( f.getPosition(1) - f.getPosition(0) ).cross(f.getPosition(2) - f.getPosition(0));
+            if (normal.length() == 0) { // Quad is degenerate, choose different points for normal
+                normal = ( f.getPosition(1) - f.getPosition(2) ).cross(f.getPosition(3) - f.getPosition(2));
+            }
+        }
+        normal.normalize();
+        return normal;
+    };
+
+    /*auto calcIndices = [&](FaceIterator& f) {
+        vector<int> res;
+        UInt32 base;
+        switch(f.getType()) {
+            case GL_TRIANGLE_FAN:
+            case GL_TRIANGLE_STRIP:
+                base = f.getIndex(2);                   // get last point's position in index field
+                res.push_back(base + (base / oldIMSize) + oldIMSize);
+                break;
+            case GL_QUAD_STRIP:
+                base = f.getIndex(3);                   // get last point's position in index field
+                res.push_back(base + (base / oldIMSize) + oldIMSize);
+                break;
+            default:
+                for(UInt32 i = 0; i < f.getLength(); ++i) {
+                    base = f.getIndex(i);
+                    res.push_back(base + (base / oldIMSize) + oldIMSize);
+                }
+                break;
+        }
+        return res;
+    };*/
+
+    if (oldPosIndex) { //Indexed
+        /*if (oldPosIndex != oldNormsIndex) { // multi indexed -> TODO
+            MFUInt16& oldIndexMap = geo->getIndexMapping();
+            UInt32 oldIMSize = oldIndexMap.size();
+
+            for (UInt32 i = 0; i < oldIndex->size() / oldIMSize; ++i) {
+                for (UInt32 k = 0; k < oldIMSize; ++k) newIndex->push_back(oldIndex->getValue(i * oldIMSize + k));
+                newIndex->push_back(0); //placeholder for normal index
+            }
+
+            for (UInt32 faceCnt = 0; faceIter != geo->endFaces(); ++faceIter, ++faceCnt) {
+                normal = calcNormal(faceIter);
+                newNormals->push_back(normal);
+                for (auto i : calcIndices(faceIter)) newIndex->setValue(faceCnt, i);
+            }
+
+            Int16 ni = geo->calcMappingIndex(Geometry::MapNormal);
+            if (ni != -1) oldIndexMap[ni] = oldIndexMap[ni] &~Geometry::MapNormal;
+            oldIndexMap.push_back(Geometry::MapNormal);
+            geo->setNormals(newNormals);
+            geo->setIndices(newIndex);
+            return;
+        }*/
+    }
+
+    newIndex->resize(oldPosIndex->size());
+    for(; faceIter != geo->endFaces(); ++faceIter) {
+        normal = calcNormal(faceIter);
+        newNormals->addValue(normal);
+        int nIndex = newNormals->size()-1;
+
+        switch(faceIter.getType()) {
+            case GL_TRIANGLE_FAN:
+            case GL_TRIANGLE_STRIP:
+                newIndex->setValue(nIndex, faceIter.getIndex(2));
+                break;
+            case GL_QUAD_STRIP:
+                newIndex->setValue(nIndex, faceIter.getIndex(3));
+                break;
+            default:
+                for (UInt32 i = 0; i < faceIter.getLength(); ++i) {
+                    newIndex->setValue(nIndex, faceIter.getIndex(i));
+                }
+                break;
+            }
+    }
+
+    geo->setNormals(newNormals);
+    geo->setIndex(newIndex, Geometry::NormalsIndex);
+}
+
+void VRGeometry::updateNormals(bool face) {
     if (!meshSet) return;
-    calcVertexNormals(mesh->geo);
+    if (face) calcFaceNormals(mesh->geo);
+    else calcVertexNormals(mesh->geo);
 }
 
 int VRGeometry::getLastMeshChange() { return lastMeshChange; }

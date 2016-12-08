@@ -33,7 +33,7 @@ struct VRPyGeometry : VRPyBaseT<OSG::VRGeometry> {
     static PyObject* setPrimitive(VRPyGeometry* self, PyObject *args);
     static PyObject* decimate(VRPyGeometry* self, PyObject *args);
     static PyObject* setRandomColors(VRPyGeometry* self);
-    static PyObject* updateNormals(VRPyGeometry* self);
+    static PyObject* updateNormals(VRPyGeometry* self, PyObject *args);
     static PyObject* makeUnique(VRPyGeometry* self);
     static PyObject* removeDoubles(VRPyGeometry* self, PyObject *args);
     static PyObject* merge(VRPyGeometry* self, PyObject *args);
@@ -47,6 +47,13 @@ struct VRPyGeometry : VRPyBaseT<OSG::VRGeometry> {
     static PyObject* genTexCoords(VRPyGeometry* self, PyObject *args);
     static PyObject* readSharedMemory(VRPyGeometry* self, PyObject *args);
     static PyObject* applyTransformation(VRPyGeometry* self, PyObject *args);
+
+    static PyObject* addVertex(VRPyGeometry* self, PyObject *args);
+    static PyObject* setVertex(VRPyGeometry* self, PyObject *args);
+    static PyObject* addPoint(VRPyGeometry* self, PyObject *args);
+    static PyObject* addLine(VRPyGeometry* self, PyObject *args);
+    static PyObject* addTriangle(VRPyGeometry* self, PyObject *args);
+    static PyObject* addQuad(VRPyGeometry* self, PyObject *args);
 };
 
 #endif // VRPYGEOMETRY_H_INCLUDED

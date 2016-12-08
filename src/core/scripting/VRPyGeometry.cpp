@@ -1,5 +1,6 @@
 #include "VRPyGeometry.h"
 #include "core/objects/geometry/OSGGeometry.h"
+#include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRVideo.h"
 #include "core/utils/toString.h"
@@ -120,7 +121,7 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"decimate", (PyCFunction)VRPyGeometry::decimate, METH_VARARGS, "Decimate geometry by collapsing a fraction of edges - decimate(f)" },
     {"setRandomColors", (PyCFunction)VRPyGeometry::setRandomColors, METH_NOARGS, "Set a random color for each vertex" },
     {"removeDoubles", (PyCFunction)VRPyGeometry::removeDoubles, METH_VARARGS, "Remove double vertices" },
-    {"updateNormals", (PyCFunction)VRPyGeometry::updateNormals, METH_NOARGS, "Recalculate the normals of the geometry" },
+    {"updateNormals", (PyCFunction)VRPyGeometry::updateNormals, METH_VARARGS, "Recalculate the normals of the geometry - updateNormals(| bool face)\n\tset face to true to compute face normals, the default are vertex normals" },
     {"makeUnique", (PyCFunction)VRPyGeometry::makeUnique, METH_NOARGS, "Make the geometry data unique" },
     {"influence", (PyCFunction)VRPyGeometry::influence, METH_VARARGS, "Pass a points and value vector to influence the geometry - influence([points,f3], [values,f3], int power)" },
     {"showGeometricData", (PyCFunction)VRPyGeometry::showGeometricData, METH_VARARGS, "Enable or disable a data layer - showGeometricData(string type, bool)\n layers are: ['Normals']" },
@@ -130,6 +131,13 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"readSharedMemory", (PyCFunction)VRPyGeometry::readSharedMemory, METH_VARARGS, "Read the geometry from shared memory buffers - readSharedMemory( str segment, str object )" },
     {"applyTransformation", (PyCFunction)VRPyGeometry::applyTransformation, METH_VARARGS, "Apply a transformation to the mesh - applyTransformation( pose )" },
     {"setPatchVertices", PySetter(Geometry, setPatchVertices, int), "Set patch primitives for tesselation shader - setPatchVertices( int )" },
+
+    {"addVertex", (PyCFunction)VRPyGeometry::addVertex, METH_VARARGS, "Add a vertex to geometry - addVertex( pos | norm, col, tc )" },
+    {"setVertex", (PyCFunction)VRPyGeometry::setVertex, METH_VARARGS, "Add a quad to geometry - setVertex( int i, pos | norm, col, tc )" },
+    {"addPoint", (PyCFunction)VRPyGeometry::addPoint, METH_VARARGS, "Add a quad to geometry - addPoint( | int i )" },
+    {"addLine", (PyCFunction)VRPyGeometry::addLine, METH_VARARGS, "Add a quad to geometry - addLine( | [i1,i2] )" },
+    {"addTriangle", (PyCFunction)VRPyGeometry::addLine, METH_VARARGS, "Add a quad to geometry - addLine( | [i1,i2,i3] )" },
+    {"addQuad", (PyCFunction)VRPyGeometry::addQuad, METH_VARARGS, "Add a quad to geometry - addQuad( | [i1,i2,i3,i4] )" },
     {NULL}  /* Sentinel */
 };
 
@@ -251,6 +259,66 @@ void feed1D3(PyObject* o, T& vec) {
     }
 }
 
+PyObject* VRPyGeometry::addVertex(VRPyGeometry* self, PyObject *args) {
+    if (!self->valid()) return NULL;
+    PyObject *p, *n, *c, *t;
+    p = n = c = t = 0;
+    if (!PyArg_ParseTuple(args, "O|OOO", &p, &n, &c, &t)) return NULL;
+    VRGeoData geo(self->objPtr);
+    geo.pushVert(parseVec3fList(p)); // TODO
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyGeometry::setVertex(VRPyGeometry* self, PyObject *args) {
+    if (!self->valid()) return NULL;
+    int i;
+    PyObject *p, *n, *c, *t;
+    p = n = c = t = 0;
+    if (!PyArg_ParseTuple(args, "iO|OOO", &i, &p, &n, &c, &t)) return NULL;
+    VRGeoData geo(self->objPtr);
+    geo.setVert(i, parseVec3fList(p));  // TODO
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyGeometry::addPoint(VRPyGeometry* self, PyObject *args) {
+    if (!self->valid()) return NULL;
+    int i = -1;
+    if (!PyArg_ParseTuple(args, "|i", &i)) return NULL;
+    VRGeoData geo(self->objPtr);
+    geo.pushPoint(i);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyGeometry::addLine(VRPyGeometry* self, PyObject *args) {
+    if (!self->valid()) return NULL;
+    PyObject* l = 0;
+    if (!PyArg_ParseTuple(args, "|O", &l)) return NULL;
+    VRGeoData geo(self->objPtr);
+    if (l) { auto i = parseVec2iList(l); geo.pushLine( i[0], i[1] ); }
+    else geo.pushQuad();
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyGeometry::addTriangle(VRPyGeometry* self, PyObject *args) {
+    if (!self->valid()) return NULL;
+    PyObject* l = 0;
+    if (!PyArg_ParseTuple(args, "|O", &l)) return NULL;
+    VRGeoData geo(self->objPtr);
+    if (l) { auto i = parseVec3iList(l); geo.pushTri( i[0], i[1], i[2] ); }
+    else geo.pushQuad();
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyGeometry::addQuad(VRPyGeometry* self, PyObject *args) {
+    if (!self->valid()) return NULL;
+    PyObject* l = 0;
+    if (!PyArg_ParseTuple(args, "|O", &l)) return NULL;
+    VRGeoData geo(self->objPtr);
+    if (l) { auto i = parseVec4iList(l); geo.pushQuad( i[0], i[1], i[2], i[3] ); }
+    else geo.pushQuad();
+    Py_RETURN_TRUE;
+}
+
 PyObject* VRPyGeometry::applyTransformation(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
     VRPyPose* pose = 0;
@@ -297,9 +365,11 @@ PyObject* VRPyGeometry::setPositionalTexCoords(VRPyGeometry* self, PyObject *arg
     Py_RETURN_TRUE;
 }
 
-PyObject* VRPyGeometry::updateNormals(VRPyGeometry* self) {
+PyObject* VRPyGeometry::updateNormals(VRPyGeometry* self, PyObject *args) {
     if (!self->valid()) return NULL;
-    self->objPtr->updateNormals();
+    int i = 0;
+    if (!PyArg_ParseTuple(args, "i", &i)) return NULL;
+    self->objPtr->updateNormals(i);
     Py_RETURN_TRUE;
 }
 

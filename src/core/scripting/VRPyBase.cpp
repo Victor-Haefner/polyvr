@@ -45,6 +45,16 @@ PyObject* VRPyBase::getItem(PyObject* v, int i) {
     return 0;
 }
 
+OSG::Vec2i VRPyBase::parseVec2iList(PyObject *li) {
+    if (li == 0) return OSG::Vec2i();
+    vector<PyObject*> lis = pyListToVector(li);
+    if (lis.size() != 2) return OSG::Vec2i();
+    int x,y;
+    x = PyInt_AsLong(lis[0]);
+    y = PyInt_AsLong(lis[1]);
+    return OSG::Vec2i(x,y);
+}
+
 OSG::Vec3i VRPyBase::parseVec3iList(PyObject *li) {
     if (li == 0) return OSG::Vec3i();
     vector<PyObject*> lis = pyListToVector(li);
@@ -54,6 +64,18 @@ OSG::Vec3i VRPyBase::parseVec3iList(PyObject *li) {
     y = PyInt_AsLong(lis[1]);
     z = PyInt_AsLong(lis[2]);
     return OSG::Vec3i(x,y,z);
+}
+
+OSG::Vec4i VRPyBase::parseVec4iList(PyObject *li) {
+    if (li == 0) return OSG::Vec4i();
+    vector<PyObject*> lis = pyListToVector(li);
+    if (lis.size() != 4) return OSG::Vec4i();
+    int x,y,z,w;
+    x = PyInt_AsLong(lis[0]);
+    y = PyInt_AsLong(lis[1]);
+    z = PyInt_AsLong(lis[2]);
+    w = PyInt_AsLong(lis[3]);
+    return OSG::Vec4i(x,y,z,w);
 }
 
 OSG::Line VRPyBase::PyToLine(PyObject *li) {
