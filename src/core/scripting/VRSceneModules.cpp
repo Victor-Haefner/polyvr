@@ -2,6 +2,7 @@
 #include "VRSceneGlobals.h"
 #include "VRScriptManagerT.h"
 
+#include "VRPyMath.h"
 #include "VRPyObject.h"
 #include "VRPyGeometry.h"
 #include "VRPyAnimation.h"
@@ -177,12 +178,17 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
 	sm->registerModule<VRPySimViDekont>("SimViDekont", pModVR);
 #endif
 
-    PyObject* pModSetup = Py_InitModule3("Setup", VRSceneGlobals::methods, "VR Module");
+    PyObject* pModMath = Py_InitModule3("Math", VRSceneGlobals::methods, "VR math module");
+    sm->registerModule<VRPyVec3f>("Vec3", pModMath, 0, "Math");
+    PyModule_AddObject(pModVR, "Math", pModMath);
+
+    PyObject* pModSetup = Py_InitModule3("Setup", VRSceneGlobals::methods, "VR setup module");
     sm->registerModule<VRPySetup>("Setup", pModSetup, 0, "Setup");
     sm->registerModule<VRPyView>("View", pModSetup, 0, "Setup");
     sm->registerModule<VRPyWindow>("Window", pModSetup, 0, "Setup");
+    PyModule_AddObject(pModVR, "Setup", pModSetup);
 
-    PyObject* pModFactory = Py_InitModule3("Factory", VRSceneGlobals::methods, "VR Module");
+    PyObject* pModFactory = Py_InitModule3("Factory", VRSceneGlobals::methods, "VR factory module");
     sm->registerModule<FPyNode>("Node", pModFactory, 0, "Factory");
     sm->registerModule<FPyNetwork>("Network", pModFactory, 0, "Factory");
     sm->registerModule<FPyPath>("FPath", pModFactory, 0, "Factory");

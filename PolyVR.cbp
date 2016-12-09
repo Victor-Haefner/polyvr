@@ -813,6 +813,8 @@
 		<Unit filename="src/core/scripting/VRPyLod.h" />
 		<Unit filename="src/core/scripting/VRPyMaterial.cpp" />
 		<Unit filename="src/core/scripting/VRPyMaterial.h" />
+		<Unit filename="src/core/scripting/VRPyMath.cpp" />
+		<Unit filename="src/core/scripting/VRPyMath.h" />
 		<Unit filename="src/core/scripting/VRPyMeasure.cpp" />
 		<Unit filename="src/core/scripting/VRPyMeasure.h" />
 		<Unit filename="src/core/scripting/VRPyMenu.cpp" />
