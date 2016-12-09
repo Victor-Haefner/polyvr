@@ -1,4 +1,4 @@
-#version 120
+#version 400 compatibility
 
 #extension GL_ARB_texture_rectangle : require
 #extension GL_ARB_texture_rectangle : enable
@@ -13,10 +13,14 @@ vec4 norm;
 vec4 color;
 
 void computeDirLight() {
-    vec3 lightDir = normalize( gl_LightSource[0].position.xyz );
-    float NdotL = max(dot(norm.xyz, lightDir), 0.0);
-    if (NdotL > 0.0) color = NdotL * color * gl_LightSource[0].diffuse;
-    else color = vec4(0);
+	vec3 light = normalize( gl_LightSource[0].position.xyz );
+  	float NdotL = max(dot(norm.xyz, light), 0.0);
+	vec4 ambient = gl_LightSource[0].ambient * color;
+	vec4 diffuse = gl_LightSource[0].diffuse * NdotL * color;
+	float NdotHV = max(dot(norm.xyz, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
+	vec4  specular = vec4(0);
+	if (NdotL > 0.0) specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess );
+	color = ambient + diffuse;
 }
 
 void main(void) {
