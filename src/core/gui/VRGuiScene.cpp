@@ -207,9 +207,9 @@ void setLight(VRLightPtr l) {
     setCombobox("combobox22", getListStorePos("shadow_types", toString(l->getShadowMapRes())));
 
     setColorChooserColor("shadow_col", toColor3f(l->getShadowColor()));
-    setColorChooserColor("light_diff", toColor3f(l->getLightDiffColor()));
-    setColorChooserColor("light_amb", toColor3f(l->getLightAmbColor()));
-    setColorChooserColor("light_spec", toColor3f(l->getLightSpecColor()));
+    setColorChooserColor("light_diff", toColor3f(l->getDiffuse()));
+    setColorChooserColor("light_amb", toColor3f(l->getAmbient()));
+    setColorChooserColor("light_spec", toColor3f(l->getSpecular()));
 
     Vec3f a = l->getAttenuation();
     setTextEntry("entry44", toString(a[0]));
@@ -1119,8 +1119,8 @@ bool VRGuiScene::setLight_diff_color(GdkEventButton* b) {
     if(!trigger_cbs) return true;
     VRLightPtr obj = static_pointer_cast<VRLight>( getSelected() );
     if (!obj) return true;
-    Color4f c = chooseColor("light_diff", obj->getLightDiffColor());
-    obj->setLightDiffColor(c);
+    Color4f c = chooseColor("light_diff", obj->getDiffuse());
+    obj->setDiffuse(c);
     return true;
 }
 
@@ -1128,8 +1128,8 @@ bool VRGuiScene::setLight_amb_color(GdkEventButton* b) {
     if(!trigger_cbs) return true;
     VRLightPtr obj = static_pointer_cast<VRLight>( getSelected() );
     if (!obj) return true;
-    Color4f c = chooseColor("light_amb", obj->getLightAmbColor());
-    obj->setLightAmbColor(c);
+    Color4f c = chooseColor("light_amb", obj->getAmbient());
+    obj->setAmbient(c);
     return true;
 }
 
@@ -1137,8 +1137,8 @@ bool VRGuiScene::setLight_spec_color(GdkEventButton* b) {
     if(!trigger_cbs) return true;
     VRLightPtr obj = static_pointer_cast<VRLight>( getSelected() );
     if (!obj) return true;
-    Color4f c = chooseColor("light_spec", obj->getLightSpecColor());
-    obj->setLightSpecColor(c);
+    Color4f c = chooseColor("light_spec", obj->getSpecular());
+    obj->setSpecular(c);
     return true;
 }
 // ----------------------------------------------

@@ -57,12 +57,12 @@ class VRLight : public VRObject {
         void setType(string type);
         void setDeferred(bool b);
 
-        void setLightDiffColor(Color4f c);
-        Color4f getLightDiffColor();
-        void setLightAmbColor(Color4f c);
-        Color4f getLightAmbColor();
-        void setLightSpecColor(Color4f c);
-        Color4f getLightSpecColor();
+        void setDiffuse(Color4f c);
+        Color4f getDiffuse();
+        void setAmbient(Color4f c);
+        Color4f getAmbient();
+        void setSpecular(Color4f c);
+        Color4f getSpecular();
 
         void setShadows(bool b);
         bool getShadows();

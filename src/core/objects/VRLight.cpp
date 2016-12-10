@@ -39,9 +39,9 @@ VRLight::VRLight(string name) : VRObject(name) {
     setCore(OSGCore::create(p_light), "Light");
     attenuation = Vec3f(p_light->getConstantAttenuation(), p_light->getLinearAttenuation(), p_light->getQuadraticAttenuation());
 
-    setLightDiffColor(Color4f(1,1,1,1));
-    setLightAmbColor(Color4f(.3,.3,.3,1));
-    setLightSpecColor(Color4f(.1,.1,.1,1));
+    setDiffuse(Color4f(1,1,1,1));
+    setAmbient(Color4f(.3,.3,.3,1));
+    setSpecular(Color4f(.1,.1,.1,1));
 
     store("on", &on);
     store("lightType", &lightType);
@@ -73,9 +73,9 @@ void VRLight::setup() {
     setType(lightType);
     setShadows(shadows);
     setShadowColor(shadowColor);
-    setLightDiffColor(lightDiffuse);
-    setLightAmbColor(lightAmbient);
-    setLightSpecColor(lightSpecular);
+    setDiffuse(lightDiffuse);
+    setAmbient(lightAmbient);
+    setSpecular(lightSpecular);
     setOn(on);
 
     setup_after(); // TODO: deffered shading needs to have the light beacon before adding the node!?!
@@ -103,32 +103,32 @@ void VRLight::setBeacon(VRLightBeaconPtr b) {
     dynamic_pointer_cast<Light>(s_light->core)->setBeacon(b->getNode()->node);
 }
 
-void VRLight::setLightDiffColor(Color4f c) {
+void VRLight::setDiffuse(Color4f c) {
     lightDiffuse = c;
     dynamic_pointer_cast<Light>(d_light->core)->setDiffuse(c);
     dynamic_pointer_cast<Light>(p_light->core)->setDiffuse(c);
     dynamic_pointer_cast<Light>(s_light->core)->setDiffuse(c);
 }
 
-Color4f VRLight::getLightDiffColor() { return lightDiffuse; }
+Color4f VRLight::getDiffuse() { return lightDiffuse; }
 
-void VRLight::setLightAmbColor(Color4f c) {
+void VRLight::setAmbient(Color4f c) {
     lightAmbient = c;
     dynamic_pointer_cast<Light>(d_light->core)->setAmbient(c);
     dynamic_pointer_cast<Light>(p_light->core)->setAmbient(c);
     dynamic_pointer_cast<Light>(s_light->core)->setAmbient(c);
 }
 
-Color4f VRLight::getLightAmbColor() { return lightAmbient; }
+Color4f VRLight::getAmbient() { return lightAmbient; }
 
-void VRLight::setLightSpecColor(Color4f c) {
+void VRLight::setSpecular(Color4f c) {
     lightSpecular = c;
     dynamic_pointer_cast<Light>(d_light->core)->setSpecular(c);
     dynamic_pointer_cast<Light>(p_light->core)->setSpecular(c);
     dynamic_pointer_cast<Light>(s_light->core)->setSpecular(c);
 }
 
-Color4f VRLight::getLightSpecColor() { return lightSpecular; }
+Color4f VRLight::getSpecular() { return lightSpecular; }
 
 void VRLight::setDeferred(bool b) {
     deferred = b;

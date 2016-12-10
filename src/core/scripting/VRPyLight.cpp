@@ -1,6 +1,7 @@
 #include "VRPyLight.h"
 #include "VRPyLightBeacon.h"
 #include "VRPyBaseT.h"
+#include "VRPyBaseFactory.h"
 #include "VRPyTypeCaster.h"
 
 using namespace OSG;
@@ -8,22 +9,13 @@ using namespace OSG;
 simpleVRPyType(Light, New_VRObjects_ptr);
 
 PyMethodDef VRPyLight::methods[] = {
-    {"setOn", (PyCFunction)VRPyLight::setOn, METH_VARARGS, "Set light state - setOn(bool)" },
-    {"setBeacon", (PyCFunction)VRPyLight::setBeacon, METH_VARARGS, "Set beacon - setBeacon( beacon )" },
+    {"setOn", PySetter(Light, setOn, bool), "Set light state - setOn(bool)" },
+    {"setBeacon", PySetter(Light, setBeacon, VRLightBeaconPtr), "Set beacon - setBeacon( beacon )" },
+    {"setDiffuse", PySetter(Light, setDiffuse, Color4f), "Set diffuse light color - setDiffuse( [r,g,b,a] )" },
+    {"setAmbient", PySetter(Light, setAmbient, Color4f), "Set ambient light color - setAmbient( [r,g,b,a] )" },
+    {"setSpecular", PySetter(Light, setSpecular, Color4f), "Set specular light color - setSpecular( [r,g,b,a] )" },
     {NULL}  /* Sentinel */
 };
 
-PyObject* VRPyLight::setBeacon(VRPyLight* self, PyObject *args) {
-    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyLight::setBeacon - Object is invalid"); return NULL; }
-    VRPyLightBeacon* b = 0;
-    if (! PyArg_ParseTuple(args, "O", &b)) return NULL;
-    self->objPtr->setBeacon( b->objPtr );
-    Py_RETURN_TRUE;
-}
 
-PyObject* VRPyLight::setOn(VRPyLight* self, PyObject *args) {
-    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyLight::setOn - Object is invalid"); return NULL; }
-    self->objPtr->setOn( parseBool(args) );
-    Py_RETURN_TRUE;
-}
 
