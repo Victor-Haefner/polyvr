@@ -2,11 +2,11 @@
 <Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="609">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
-      <Object ambient="0.370962 0.370962 0.370962 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="point" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.233875 0.233875 0.233875 1" type="Light" unique="1" visible="1">
+      <Object ambient="0.370962 0.370962 0.370962 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.233875 0.233875 0.233875 1" type="Light" unique="1" visible="1">
         <Object at="-4.5 4 -1" at_dir="1" base_name="Headlight_beacon" from="-4 5 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
           <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
-        <Object accept_root="1" aspect="1" at="-0.334808 0.299543 0.5" at_dir="0" base_name="Default" far="250" fov="1.0472" from="-1.82974 1.19805 0.932684" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0.0626887 0.2 -0.0268324" at_dir="0" base_name="Default" far="250" fov="1.0472" from="0.730672 1.01773 1.03652" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
           <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
       </Object>
@@ -44,31 +44,28 @@ float rayStep;
 
 void computeDepth() {
 	vec4 pp = gl_ModelViewProjectionMatrix * vec4(position, 1);
-	//vec4 pp = mP * vec4(position, 1);
 	float d = pp.z / pp.w;
 	gl_FragDepth = d*0.5 + 0.5;
 }
+
+vec3 bMin = vec3(0);
+vec3 bMax = vec3(1);
 
 vec4 probe(vec3 p) {
 	return texture(tex, p);
 }
 
-vec3 intersectPlane(vec3 p0, vec3 n) {
-	return vec3(0);
-}
-
 vec3 doGround(vec3 p) {
-	color = vec4(0,0.7,0,1);
-	return intersectPlane(vec3(0,0,0), vec3(0,1,0));
+	color = vec4(0,0.5,0,1);
+	p.y = 0.05;
+	return p;
 }
 
 vec3 castGrass() {
 	vec3 p = rayStart;
-	//while (rayPosition &lt; 40.0) {
 	while (rayPosition &lt; rayLength) {
-		vec3 ray = rayStart + rayDir*rayPosition;
-		if (ray.y &lt;= 0) return doGround(p);
-		//vec3 ray = rayEnd + rayDir*rayPosition;
+		vec3 ray = rayStart + rayDir*rayPosition + vec3(0);
+		if (ray.y &lt;= 0.05) return doGround(ray);
 		vec4 c = probe(ray);
 		color = c;
 		if (c.a &gt; 0.4) return ray;
@@ -78,9 +75,6 @@ vec3 castGrass() {
 	//if (rayPosition &gt;= rayLength &amp;&amp; rayStart.y &lt;= 0) return doGround(p);
    	return vec3(0);
 }
-
-vec3 bMin = vec3(-0.5,-0.5,-0.5);
-vec3 bMax = vec3(0.5,0.5,0.5);
 
 vec3 traverseVolume() {
     vec3 invR = 1.0 / rayDir;
@@ -176,7 +170,7 @@ void main( void ) {
     </Script>
     <Script base_name="init_grass" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1">
       <core>
-	import VR
+	import VR, random
 	
 	r = VR.getRoot().find('Headlight')
 
@@ -184,9 +178,13 @@ void main( void ) {
 	VR.grass = VR.Geometry('grass')
 	r.addChild(VR.grass)
 	
+	h = 0.2
 	VR.grass.setPrimitive('Box 1 1 1 1 1 1')
-	#VR.grass.translate(0,0.5,0)
-	#VR.grass.applyTransformation()
+	VR.grass.translate(0.5,0.5,0.5)
+	VR.grass.applyTransformation()
+	
+	VR.grass.translate(-0.5,0,-0.5)
+	VR.grass.setScale(1,h,1)
 	
 	
 	m = VR.Material('grassmat')	
@@ -195,9 +193,10 @@ void main( void ) {
 	#m.setFrontBackModes('GL_NONE', 'GL_FILL')
 	#m.setFragmentProgram('shdr_dfrag', True)
 		
-	N = 50
+	N = 100
+	H = 10
 	tg = VR.TextureGenerator()
-	tg.setSize([N,N,N], True)
+	tg.setSize([N,H,N], True)
 	
 	"""
 	tg.add('Perlin', 1, [0]*3, [1]*3)
@@ -205,14 +204,23 @@ void main( void ) {
 	tg.add('Perlin', 1.0/4, [0]*3, [1]*3)
 	
 	"""
-	tg.drawFill([0,0,0,0])
-	for i in range(N/4):
-		for j in range(N/4):
-			for k in range(N):
-				tg.drawPixel([i*4,k,j*4],[0,1,0,1])
+	tg.drawFill([0,0.5,0,0])
+	Ng = 3000
+	for i in range(Ng):
+		x = random.random()*(N-2)+1
+		y = random.random()*(N-2)+1
+		h = int(random.random()*H)
+		for z in range(h):
+			c = [0,0.5+float(z)/h*0.5,0,1]
+			tg.drawPixel([x,z,y],c)
 	
 	m.setTexture(tg.compose(0))
+	m.setTextureWrapping('GL_CLAMP_TO_EDGE', 'GL_CLAMP_TO_EDGE')
 	VR.grass.setMaterial(m)
+	
+	
+	
+	
 </core>
     </Script>
     <Script base_name="init_tree" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1">
