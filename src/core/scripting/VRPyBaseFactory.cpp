@@ -42,6 +42,15 @@ template<> bool parseValue<string>(PyObject* args, string& t) {
     return true;
 }
 
+template<> bool parseValue<Vec3f>(PyObject* args, Vec3f& t) {
+    PyObject* c;
+    if (!PyArg_ParseTuple(args, "O", &c)) return false;
+    if (c == 0) return false;
+    if (VRPyBase::pySize(c) != 3) return false;
+    t = VRPyBase::parseVec3fList(c);
+    return true;
+}
+
 template<> bool parseValue<Color4f>(PyObject* args, Color4f& t) {
     PyObject* c;
     if (!PyArg_ParseTuple(args, "O", &c)) return false;

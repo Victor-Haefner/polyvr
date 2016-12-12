@@ -180,7 +180,7 @@ void VRGuiScripts::on_new_clicked() {
     Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("script_list"));
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
-    scene->newScript("Script", "\tpass");
+    scene->newScript("Script", "\timport VR");
     updateList();
 }
 
