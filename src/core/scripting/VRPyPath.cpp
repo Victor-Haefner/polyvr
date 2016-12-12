@@ -25,8 +25,17 @@ PyMethodDef VRPyPath::methods[] = {
     {"getColors", (PyCFunction)VRPyPath::getColors, METH_NOARGS, "Return the colors from the computed path - [[x,y,z]] getColors()" },
     {"getSize", (PyCFunction)VRPyPath::getSize, METH_NOARGS, "Return the number of path nodes - int getSize()" },
     {"getLength", (PyCFunction)VRPyPath::getLength, METH_NOARGS, "Return the approximated path length - float getLength()" },
+    {"approximate", (PyCFunction)VRPyPath::approximate, METH_VARARGS, "Convert the cubic bezier spline in a quadratic or linear one (currently only quadratic) - approximate(int degree)" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyPath::approximate(VRPyPath* self, PyObject *args) {
+    if (!self->valid()) return NULL;
+    int i = 0;
+    if (! PyArg_ParseTuple(args, "i", &i)) return NULL;
+    self->obj->approximate(i);
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyPath::getPose(VRPyPath* self, PyObject *args) {
     if (!self->valid()) return NULL;

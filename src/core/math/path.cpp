@@ -26,7 +26,7 @@ void path::linearBezier(Vec3f* container, int N, Vec3f p0, Vec3f p1) {
     for (int i=1;i<N-1;i++) container[i] = container[i-1]+DEL;
 }
 
-void path::quadraticBezier(Vec3f* container, int N, Vec3f p0, Vec3f p1, Vec3f n) {
+void path::quadraticBezier(Vec3f* container, int N, Vec3f p0, Vec3f p1, Vec3f p2) {
     if (container == 0) container = new Vec3f[N];
 
     //schrittweite
@@ -37,8 +37,8 @@ void path::quadraticBezier(Vec3f* container, int N, Vec3f p0, Vec3f p1, Vec3f n)
     Vec3f DEL[3];
 
     //berechne die koeffizienten -> p[0]+b[0]t+b[1]t²
-    b[0] = n*2 - p0*2;
-    b[1] = p0 - n*2 + p1;
+    b[0] = p1*2 - p0*2;
+    b[1] = p0 - p1*2 + p2;
 
     //berechne schritte
     DEL[1] = b[1]*2*step*step;
@@ -46,7 +46,7 @@ void path::quadraticBezier(Vec3f* container, int N, Vec3f p0, Vec3f p1, Vec3f n)
 
     //fülle den vector
     container[0] = p0;
-    container[N-1] = p1;
+    container[N-1] = p2;
     for (int i=1;i<N-1;i++) {
         container[i] = container[i-1]+DEL[0];
         DEL[0] += DEL[1];
@@ -83,13 +83,71 @@ void path::cubicBezier(Vec3f* container, int N, Vec3f p0, Vec3f p1, Vec3f h0, Ve
 }
 
 
-path::path() {}
+path::path(int d) { degree = d; }
 
 path::pnt::pnt(Vec3f p, Vec3f n, Vec3f c, Vec3f u) {
     this->p = p;
     this->n = n;
     this->c = c;
     this->u = u;
+}
+
+void path::approximate(int d) {
+    degree = d;
+
+    auto intersect = [&](Vec3f& p1, Vec3f& n1, Vec3f& p2, Vec3f& n2) {
+		Vec3f d = p2-p1;
+		Vec3f n3 = n1.cross(n2);
+		float N3 = n3.dot(n3);
+		if (N3 == 0) N3 = 1.0;
+		float s = d.cross(n2).dot(n1.cross(n2))/N3;
+		return p1 + n1*s;
+    };
+
+    auto toQuadratic = [&](Vec3f& p1, Vec3f& p4, Vec3f& n1, Vec3f& n4, Vec3f& pm, Vec3f& p2, Vec3f& p3) {
+		p2 = p1+n1;
+		p3 = p4+n4;
+		Vec3f nm = p3-p2;
+		nm.normalize();
+		p2 = intersect(p1,n1,pm,nm);
+		p3 = intersect(p4,n4,pm,nm);
+    };
+
+	auto isLinear = [&](Vec3f& p1, Vec3f& p2, Vec3f& n1, Vec3f& n2) {
+		if (abs(n1.dot(n2)-1.0) > 0.00001) return false;
+		Vec3f d = p2-p1; d.normalize();
+		if (abs(d.dot(n1)-1.0) > 0.00001) return false;
+		return true;
+	};
+
+    if (degree == 2) {
+        vector<Vec3f> res;
+
+		for (uint j=0; j<points.size()-1; j++) { // p1,p2,pm,p3,p4
+			Vec3f p1 = points[j].p;
+			Vec3f p4 = points[j+1].p;
+			Vec3f n1 = points[j].n; n1.normalize();
+			Vec3f n4 = points[j+1].n; n4.normalize();
+			res.push_back(p1);
+
+			if (isLinear(p1,p4,n1,n4)) {
+                Vec3f p2 = (p1+p4)*0.5;
+                res.push_back(p2);
+			} else {
+				Vec3f pm = getPose(0.5, j, j+1).pos();
+				Vec3f p2,p3;
+				toQuadratic(p1,p4,n1,n4,pm, p2,p3);
+                res.push_back(p2);
+                res.push_back(pm);
+                res.push_back(p3);
+			}
+			if (j == points.size()-2) res.push_back(p4);
+		}
+
+		points.clear();
+		for (auto p : res) points.push_back(pnt(p,Vec3f(0,0,-1), Vec3f(0,0,0), Vec3f(0,1,0)));
+		update();
+    }
 }
 
 int path::addPoint(Vec3f p, Vec3f n, Vec3f c, Vec3f u) {
@@ -132,41 +190,56 @@ int path::size() { return points.size(); }
 
 void path::compute(int N) {
     if (points.size() <= 1) return;
-
     iterations = N;
-    int tN = N*(points.size()-1) - (points.size()-2); // (points.size()-2) is the number of segments minus one
+
+    int Nsegs = points.size()-1; // degree 3
+    if (degree == 2) Nsegs = (points.size()-1)/2;
+
+    int tN = (N-1)*Nsegs + 1; // (N-1) the number of subdivision points, times number of segments, plus the last point of the path
+
     positions.assign(tN, Vec3f());
-    directions.assign(tN, Vec3f());
-    up_vectors.assign(tN, Vec3f());
+    directions.assign(tN, Vec3f(0,0,-1));
+    up_vectors.assign(tN, Vec3f(0,1,0));
     colors.assign(tN, Vec3f());
     Vec3f* _pts = &positions[0];
     Vec3f* _drs = &directions[0];
     Vec3f* _ups = &up_vectors[0];
     Vec3f* _cls = &colors[0];
 
-    // berechne die hilfspunkte fuer die positionen
-    for (unsigned int i=0; i<points.size()-1; i++) {
-        pnt p1 = points[i];
-        pnt p2 = points[i+1];
-        Vec3f r = p2.p - p1.p;
-        float L = r.length();
-        Vec3f h1 = p1.p + p1.n*0.333*L;
-        Vec3f h2 = p2.p - p2.n*0.333*L;
+    if (degree == 2) {
+        for (unsigned int i=0; i<Nsegs; i++) {
+            pnt p1 = points[2*i];
+            pnt p2 = points[2*i+1];
+            pnt p3 = points[2*i+2];
+            quadraticBezier(_pts+(N-1)*i, N, p1.p, p2.p, p3.p);
+        }
+    }
 
-        // berechne die hilfspunkte fuer die directions B'(0.5)
-        //  B(t) = (1 - t)^3 * p1 + 3t(1-t)^2 * h1 + 3t^2 (1-t) * h2 + t^3 * p2
-        // B'(t) = -3(1-t)^2 * p1 + 3(1-t)^2 *  h1 - 6t(1-t) *    h1 - 3t^2 * h2 + 6t(1-t) * h2 + 3t^2 * p2
-        Vec3f n = (r-h1+h2)*0.75;
+    if (degree == 3) {
+        // berechne die hilfspunkte fuer die positionen
+        for (unsigned int i=0; i<points.size()-1; i++) {
+            pnt p1 = points[i];
+            pnt p2 = points[i+1];
+            Vec3f r = p2.p - p1.p;
+            float L = r.length();
+            Vec3f h1 = p1.p + p1.n*0.333*L;
+            Vec3f h2 = p2.p - p2.n*0.333*L;
 
-        // berechne hilfspunkt für up vector
-        //Vec3f x = n1.cross(u1)*0.5 + n2.cross(u2)*0.5;
-        Vec3f u = (p1.u+p2.u)*0.5;//x.cross(n);
-        u.normalize();
+            // berechne die hilfspunkte fuer die directions B'(0.5)
+            //  B(t) = (1 - t)^3 * p1 + 3t(1-t)^2 * h1 + 3t^2 (1-t) * h2 + t^3 * p2
+            // B'(t) = -3(1-t)^2 * p1 + 3(1-t)^2 *  h1 - 6t(1-t) *    h1 - 3t^2 * h2 + 6t(1-t) * h2 + 3t^2 * p2
+            Vec3f n = (r-h1+h2)*0.75;
 
-        cubicBezier    (_pts+(N-1)*i, N, p1.p, p2.p, h1, h2);
-        quadraticBezier(_drs+(N-1)*i, N, p1.n, p2.n, n);
-        quadraticBezier(_ups+(N-1)*i, N, p1.u, p2.u, u);
-        linearBezier   (_cls+(N-1)*i, N, p1.c, p2.c);
+            // berechne hilfspunkt für up vector
+            //Vec3f x = n1.cross(u1)*0.5 + n2.cross(u2)*0.5;
+            Vec3f u = (p1.u+p2.u)*0.5;//x.cross(n);
+            u.normalize();
+
+            cubicBezier    (_pts+(N-1)*i, N, p1.p, p2.p, h1, h2);
+            quadraticBezier(_drs+(N-1)*i, N, p1.n, n, p2.n);
+            quadraticBezier(_ups+(N-1)*i, N, p1.u, u, p2.u);
+            linearBezier   (_cls+(N-1)*i, N, p1.c, p2.c);
+        }
     }
 }
 
@@ -200,6 +273,7 @@ Vec3f path::interp(vector<Vec3f>& vec, float t, int i, int j) {
 
 Vec3f path::getPosition(float t, int i, int j) { return interp(positions, t); }
 Vec3f path::getColor(float t, int i, int j) { return interp(colors, t); }
+
 void path::getOrientation(float t, Vec3f& dir, Vec3f& up, int i, int j) {
     dir = interp(directions, t)*direction;
     up = interp(up_vectors, t);

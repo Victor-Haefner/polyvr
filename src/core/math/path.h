@@ -19,6 +19,7 @@ class path {
     private:
         vector<pnt> points;
 
+        int degree = 3;
         int direction = 1;
         int iterations = 80;
         bool closed = false;
@@ -35,7 +36,7 @@ class path {
         void linearBezier(Vec3f* container, int N, Vec3f p0, Vec3f p1);
 
     public:
-        path();
+        path(int degree = 3);
 
         int addPoint(Vec3f p = Vec3f(0,0,0), Vec3f n = Vec3f(0,0,-1), Vec3f c = Vec3f(0,0,0), Vec3f u = Vec3f(0,1,0));
         int addPoint(VRTransformPtr t);
@@ -55,6 +56,8 @@ class path {
         void getOrientation(float t, Vec3f& dir, Vec3f& up, int i = 0, int j = 0);
         Vec3f getColor(float t, int i = 0, int j = 0);
         pose getPose(float t, int i = 0, int j = 0);
+
+        void approximate(int degree);
 
         float getLength();
         int size();

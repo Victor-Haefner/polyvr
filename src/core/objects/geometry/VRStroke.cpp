@@ -40,11 +40,11 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool doColor, C
     Vec3f z = Vec3f(0,0,1);
 
     clearChildren();
-    for (uint i=0; i<paths.size(); i++) {
-        vector<Vec3f> pnts = paths[i]->getPositions();
-        vector<Vec3f> directions = paths[i]->getDirections();
-        vector<Vec3f> up_vectors = paths[i]->getUpvectors();
-        vector<Vec3f> cols = paths[i]->getColors();
+    for (auto path : paths) {
+        vector<Vec3f> pnts = path->getPositions();
+        vector<Vec3f> directions = path->getDirections();
+        vector<Vec3f> up_vectors = path->getUpvectors();
+        vector<Vec3f> cols = path->getColors();
 
         Vec3f _p;
         for (uint j=0; j<pnts.size(); j++) {
@@ -61,9 +61,8 @@ void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool doColor, C
             bool endArrow1 = (j == pnts.size()-2) && (cap_end == ARROW);
             bool endArrow2 = (j == pnts.size()-1) && (cap_end == ARROW);
 
-            // add new profile points && normals
-            for (uint k=0; k<profile.size(); k++) {
-                Vec3f pos = profile[k];
+            // add new profile points and normals
+            for (Vec3f pos : profile) {
                 if (endArrow1 || begArrow2) pos *= 2.5;
                 if (endArrow2 || begArrow1) pos *= 0.1;
                 m.mult(pos, pos);
