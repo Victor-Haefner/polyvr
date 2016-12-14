@@ -437,7 +437,7 @@ void VRMaterial::setMaterial(MaterialMTRecPtr m) {
             SimpleTexturedMaterialMTRecPtr stm = dynamic_pointer_cast<SimpleTexturedMaterial>(m);
             setTexture( VRTexture::create(stm->getImage()), true);
         }
-
+        updateDeferredShader();
         return;
     }
 
@@ -465,6 +465,7 @@ void VRMaterial::setMaterial(MaterialMTRecPtr m) {
 
             cout << "isCMat unhandled chunk: " << chunk->getClass()->getName() << endl;
         }
+        updateDeferredShader();
         return;
     }
 
