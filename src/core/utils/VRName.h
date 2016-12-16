@@ -17,6 +17,8 @@ class VRName_base {
         bool unique = true;
         char separator = '.';
         string nameSpace = "__global__";
+        string filter;
+        char filter_rep;
 
     public:
         VRName_base();
@@ -30,6 +32,7 @@ class VRName_base {
         void setSeparator(char s);
         void setNameSpace(string s);
         void setUniqueName(bool b);
+        void filterNameChars(string chars, char replacement);
 
         void saveName(xmlpp::Element* e);
         void loadName(xmlpp::Element* e);

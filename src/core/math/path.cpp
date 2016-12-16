@@ -106,7 +106,7 @@ void path::approximate(int d) {
 
     auto toQuadratic = [&](Vec3f& p1, Vec3f& p4, Vec3f& n1, Vec3f& n4, Vec3f& pm, Vec3f& p2, Vec3f& p3) {
 		p2 = p1+n1;
-		p3 = p4+n4;
+		p3 = p4-n4;
 		Vec3f nm = p3-p2;
 		nm.normalize();
 		p2 = intersect(p1,n1,pm,nm);
@@ -126,8 +126,8 @@ void path::approximate(int d) {
 		for (uint j=0; j<points.size()-1; j++) { // p1,p2,pm,p3,p4
 			Vec3f p1 = points[j].p;
 			Vec3f p4 = points[j+1].p;
-			Vec3f n1 = points[j].n; n1.normalize();
-			Vec3f n4 = points[j+1].n; n4.normalize();
+			Vec3f n1 = points[j].n; //n1.normalize();
+			Vec3f n4 = points[j+1].n; //n4.normalize();
 			res.push_back(p1);
 
 			if (isLinear(p1,p4,n1,n4)) {

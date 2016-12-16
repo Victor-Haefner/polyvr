@@ -56,6 +56,7 @@ void VRName_base::compileName() {
 }
 
 string VRName_base::setName(string name) {
+    for (char c : filter) replace(name.begin(), name.end(),c,filter_rep);
     //if (name == "arg") cout << "\n SET NAME " << name << " " << this->name << " " << nameSpace << flush;
 
     if (base_name == name && name_suffix == 0) {
@@ -108,6 +109,7 @@ string VRName_base::getName() { return name; }
 string VRName_base::getBaseName() { return base_name; }
 int VRName_base::getNameSuffix() { return name_suffix; }
 void VRName_base::setUniqueName(bool b) { unique = b; }
+void VRName_base::filterNameChars(string chars, char replacement) { filter = chars; filter_rep = replacement; }
 
 void VRName_base::saveName(xmlpp::Element* e) {
     e->set_attribute("name_suffix", toString(name_suffix));
