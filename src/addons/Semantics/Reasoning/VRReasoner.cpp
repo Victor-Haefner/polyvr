@@ -65,22 +65,21 @@ void VRReasoner::print(const string& s, COLOR c) {
 }
 
 bool VRReasoner::findRule(VRStatementPtr statement, Context& context) {
-    print("     search rule for " + statement->toString());
+    print("     search rule for statement: " + statement->toString());
     for ( auto r : context.onto->getRules()) { // no match found -> check rules and initiate new queries
         if (!context.rules.count(r->rule)) continue;
         Query query = context.rules[r->rule];
         if (query.request->verb != statement->verb) continue; // rule verb does not match
-        print("      rule " + query.request->toString());
-
-        //query.request.updateLocalVariables(context.vars, context.onto);
+        print("      found rule: " + query.request->toString(), GREEN);
         if (!statement->match(query.request)) continue; // statements are not similar enough
+        //query.request.updateLocalVariables(context.vars, context.onto);
 
-        query.request = statement; // TODO: use pointer? new query needs to share ownership of the statement
+        query.substituteRequest(statement);
         context.queries.push_back(query);
         print("      add query " + query.toString(), YELLOW);
         return true;
     }
-    print("      no rule found ");
+    print("      no rule found!", RED);
     return false;
 }
 
@@ -170,16 +169,23 @@ bool VRReasoner::evaluate(VRStatementPtr statement, Context& context) {
     print(" " + toString(statement->place) + " eval " + statement->toString());
     statement->updateLocalVariables(context.vars, context.onto);
 
-    if (!statement->isSimpleVerb()) { // resolve (anonymous?) variables
-        string var = statement->terms[0].path.root;
-        context.vars[var] = Variable::create( context.onto, statement->verb, var );
-        print("  added variable " + context.vars[var]->toString(), BLUE);
-        statement->state = 1;
-        return true;
+    if (statement->isSimpleVerb()) { // resolve (anonymous?) variables
+        if (statement->verb == "is") return is(statement, context);
+        if (statement->verb == "has") return has(statement, context);
     }
 
-    if (statement->verb == "is") return is(statement, context);
-    if (statement->verb == "has") return has(statement, context);
+    if (statement->terms.size() == 1) { // resolve (anonymous?) variables
+        string concept = statement->verb;
+        if (context.onto->getConcept(concept)) {
+            string name = statement->terms[0].path.root;
+            auto var = Variable::create( context.onto, concept, name );
+            context.vars[name] = var;
+            print("  added variable " + var->toString(), BLUE);
+            statement->state = 1;
+            return true;
+        }
+    }
+
     return false;
 }
     // TODO: introduce requirements rules for the existence of some individuals
@@ -206,12 +212,9 @@ vector<VREntityPtr> VRReasoner::process(string initial_query, VROntologyPtr onto
 
         for (auto& statement : query.statements) {
             if (statement->state == 1) continue;
-            if (evaluate(statement, context)) {
-                statement->state = 1;
-            } else {
-                if ( findRule(statement, context) ) continue;
-                apply(statement, context);
-            }
+            if (evaluate(statement, context)) { statement->state = 1; continue; }
+            if (findRule(statement, context)) continue;
+            apply(statement, context);
         }
 
         context.itr++;

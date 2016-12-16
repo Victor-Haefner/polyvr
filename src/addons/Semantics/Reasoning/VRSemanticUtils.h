@@ -70,6 +70,7 @@ struct Query {
     string toString();
 
     void checkState();
+    void substituteRequest(VRStatementPtr s);
 };
 
 struct Context {

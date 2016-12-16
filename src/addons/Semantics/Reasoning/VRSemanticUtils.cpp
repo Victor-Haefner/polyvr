@@ -228,3 +228,25 @@ void Query::checkState() {
     for (auto i : statements) if(i->state == 0) r = 0;
     request->state = r;
 }
+
+void Query::substituteRequest(VRStatementPtr replace) { // replaces the roots of all paths of the terms of each statement
+    for (auto statement : statements) {
+        for (auto& ts : statement->terms) {
+            for (int i=0; i<request->terms.size(); i++) {
+                auto& t1 = request->terms[i];
+                auto& t2 = replace->terms[i];
+                if (t1.path.root == ts.path.root) {
+                    ts.path.root = t2.path.root;
+                    ts.path.nodes[0] = t2.path.nodes[0];
+                    ts.str = ts.path.toString();
+                }
+            }
+        }
+    }
+
+    request = replace;
+}
+
+
+
+
