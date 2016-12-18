@@ -2,6 +2,7 @@
 #include "core/scripting/VRPyTransform.h"
 #include "core/scripting/VRPyGeometry.h"
 #include "core/scripting/VRPyBaseT.h"
+#include "core/scripting/VRPyPose.h"
 
 using namespace OSG;
 
@@ -17,8 +18,21 @@ PyMethodDef VRPyCarDynamics::methods[] = {
     {"reset", (PyCFunction)VRPyCarDynamics::reset, METH_VARARGS, "Reset car - reset([x,y,z])" },
     {"getSpeed", (PyCFunction)VRPyCarDynamics::getSpeed, METH_NOARGS, "Get car speed" },
     {"getRoot", (PyCFunction)VRPyCarDynamics::getRoot, METH_NOARGS, "Get car root node" },
+    {"getChassis", (PyCFunction)VRPyCarDynamics::getChassis, METH_NOARGS, "Get car chassis" },
+    {"getWheels", (PyCFunction)VRPyCarDynamics::getWheels, METH_NOARGS, "Get car wheels" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyCarDynamics::getWheels(VRPyCarDynamics* self) {
+    auto wheels = self->objPtr->getWheels();
+    PyObject* pyWheels = PyList_New(wheels.size());
+    for (int i=0; i<wheels.size(); i++) PyList_SetItem(pyWheels, i, VRPyTransform::fromSharedPtr(wheels[i]));
+    return pyWheels;
+}
+
+PyObject* VRPyCarDynamics::getChassis(VRPyCarDynamics* self) {
+    return VRPyTransform::fromSharedPtr(self->objPtr->getChassis());
+}
 
 PyObject* VRPyCarDynamics::getRoot(VRPyCarDynamics* self) {
     return VRPyObject::fromSharedPtr(self->objPtr->getRoot());
@@ -29,8 +43,9 @@ PyObject* VRPyCarDynamics::getSpeed(VRPyCarDynamics* self) {
 }
 
 PyObject* VRPyCarDynamics::reset(VRPyCarDynamics* self, PyObject* args) {
-    auto v = parseVec3f(args);
-    self->objPtr->reset(v[0], v[1], v[2]);
+    VRPyPose* p;
+    if (! PyArg_ParseTuple(args, "O", &p)) return NULL;
+    self->objPtr->reset(*p->objPtr);
     Py_RETURN_TRUE;
 }
 

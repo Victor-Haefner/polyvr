@@ -99,7 +99,7 @@ vector<VRPropertyPtr> VREntity::getProperties() {
 
 void VREntity::set(string name, string value) {
     if (!properties.count(name)) { add(name, value); return; }
-    auto prop = getProperty(name);
+    auto prop = get(name);
     if (!prop) { WARN("Warning (set): Entity " + this->name + " has no property " + name); return; }
     properties[name][0]->value = value;
     // TODO: warn if vector size bigger 1
@@ -123,9 +123,16 @@ void VREntity::rem(VRPropertyPtr p) {
 
 void VREntity::setVector(string name, vector<string> v, string type) {
     if (auto o = ontology.lock()) {
-        string v_name = this->name+"_"+name;
-        auto e = o->addVectorEntity(v_name, type, v);
-        set(name, e->getName());
+        if (!properties.count(name)) { addVector(name, v, type); return; }
+        if (!get(name)) { WARN("Warning (setVector): Entity " + this->name + " has no property " + name); return; }
+        auto v_name = get(name)->value;
+        auto vec = o->getEntity(v_name);
+        if (!vec) { WARN("Warning (setVector): Entity " + this->name + " has no vector entity " + v_name); return; }
+        int N = v.size();
+        if (0 < N) vec->set("x", v[0]);
+        if (1 < N) vec->set("y", v[1]);
+        if (2 < N) vec->set("z", v[2]);
+        if (3 < N) vec->set("w", v[3]);
     }
 }
 

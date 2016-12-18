@@ -7,6 +7,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/object/VRObjectT.h"
+#include "core/math/pose.h"
 #include <BulletDynamics/Vehicle/btRaycastVehicle.h>
 
 #include <stdio.h> //printf debugging
@@ -179,6 +180,7 @@ void CarDynamics::setChassisGeo(VRGeometryPtr geo, bool doPhys) {
     cout << "\nset chassis geo " << geo->getName() << endl;
 
     initVehicle();
+    chassis = geo;
     addChild(geo);
 }
 
@@ -202,6 +204,15 @@ void CarDynamics::setWheelGeo(VRGeometryPtr geo) { // TODO
 }
 
 VRObjectPtr CarDynamics::getRoot() { return ptr(); }
+VRTransformPtr CarDynamics::getChassis() { return chassis; }
+vector<VRTransformPtr> CarDynamics::getWheels() {
+    vector<VRTransformPtr> res;
+    res.push_back(w1);
+    res.push_back(w2);
+    res.push_back(w3);
+    res.push_back(w4);
+    return res;
+}
 
 void CarDynamics::setWheelOffsets(float x, float fZ, float rZ, float h) {
     xOffset = x;
@@ -270,13 +281,14 @@ boost::recursive_mutex& CarDynamics::mtx() {
     };
 }
 
-void CarDynamics::reset(float x, float y, float z) {
+void CarDynamics::reset(const pose& p) {
     PLock lock(mtx());
 
 	gVehicleSteering = 0.f;
 	btTransform t;
 	t.setIdentity();
-	t.setOrigin(btVector3(x,y,z));
+	Matrix m = p.asMatrix();
+	t.setFromOpenGLMatrix(&m[0][0]);
 	m_carChassis->setCenterOfMassTransform(t);
 	m_carChassis->setLinearVelocity(btVector3(0, 0, 0));
 	m_carChassis->setAngularVelocity(btVector3(0, 0, 0));

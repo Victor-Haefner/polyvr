@@ -9,6 +9,8 @@
 #include "core/tools/VRToolsFwd.h"
 #include "core/objects/object/VRObject.h"
 
+class pose;
+
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
@@ -85,6 +87,8 @@ class CarDynamics : public VRObject {
         static CarDynamicsPtr create(string name);
 
         VRObjectPtr getRoot();
+        VRTransformPtr getChassis();
+        vector<VRTransformPtr> getWheels();
 
         void setThrottle(float t);
         void setBreak(float b);
@@ -98,7 +102,7 @@ class CarDynamics : public VRObject {
 
         void updateWheels();
 
-        void reset(float x, float y, float z);
+        void reset(const pose& p);
         float getSpeed();
 };
 
