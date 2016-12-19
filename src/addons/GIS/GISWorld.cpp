@@ -52,6 +52,8 @@ void GISWorld::setupOntology() {
     Road->addProperty("tracks", RoadTrack);
     Sidewalk->addProperty("kerbs", Kerb);
     RoadMarking->addProperty("width", "float");
+    RoadMarking->addProperty("style", "string");
+    RoadMarking->addProperty("dashNumber", "int");
     RoadTrack->addProperty("width", "float");
 
     auto Plant = world->addConcept("Plant");
