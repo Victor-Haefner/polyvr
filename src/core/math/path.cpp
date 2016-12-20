@@ -260,6 +260,7 @@ void path::close() {
 bool path::isClosed() { return closed; }
 
 Vec3f path::interp(vector<Vec3f>& vec, float t, int i, int j) {
+    if (t <= 0) t = 0; if (t >= 1) t = 1; // clamp t
     if (j <= 0) j = vec.size()-1;
     if (direction == -1) t = 1-t;
     int N = j-i;
@@ -267,7 +268,7 @@ Vec3f path::interp(vector<Vec3f>& vec, float t, int i, int j) {
     float tN = t*N;
     int ti = floor(tN);
     float x = tN-ti;
-    if (ti > N) return vec[i+N];
+    if (ti >= N) return vec[i+N];
     return (1-x)*vec[i+ti] + x*vec[i+ti+1];
 }
 
