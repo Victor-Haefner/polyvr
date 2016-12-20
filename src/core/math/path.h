@@ -56,6 +56,7 @@ class path {
         void getOrientation(float t, Vec3f& dir, Vec3f& up, int i = 0, int j = 0);
         Vec3f getColor(float t, int i = 0, int j = 0);
         pose getPose(float t, int i = 0, int j = 0);
+        float getDistance(Vec3f p);
 
         void approximate(int degree);
 

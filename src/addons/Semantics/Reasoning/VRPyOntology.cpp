@@ -109,7 +109,7 @@ PyMethodDef VRPyEntity::methods[] = {
     {"get", (PyCFunction)VRPyEntity::get, METH_VARARGS, "Get the value of ith property named prop - str get( str prop | int i = 0 )" },
     {"getVector", (PyCFunction)VRPyEntity::getVector, METH_VARARGS, "Get the value of ith vector property named prop - [x,y,z] getVector( str prop | int i = 0 ) )" },
     {"getAll", (PyCFunction)VRPyEntity::getAll, METH_VARARGS, "Get all values of property named prop - [str] get( str prop )" },
-    {"getAllVector", (PyCFunction)VRPyEntity::getAllVector, METH_VARARGS, "Get all values of vector property named prop - [[x,y,z]] getVector( str prop ) )" },
+    {"getAllVector", (PyCFunction)VRPyEntity::getAllVector, METH_VARARGS, "Get all values of vector property named prop - [[x,y,z]] getAllVector( str prop ) )" },
     {NULL}  /* Sentinel */
 };
 

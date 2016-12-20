@@ -285,6 +285,26 @@ pose path::getPose(float t, int i, int j) {
     return pose(getPosition(t,i,j), d, u);
 }
 
+float path::getDistance(Vec3f p) {
+    auto positions = getPositions();
+    float dist = 1.0e10;
+
+    for (int i=1; i<positions.size(); i++){
+        Vec3f p1 = positions[i-1];
+        Vec3f p2 = positions[i];
+
+        auto d = p2-p1;
+        auto L = d.length();
+        auto t = -(p1-p).dot(d)/L/L;
+        auto ps = p1+d*t;
+        if (t<0) ps = p1;
+        if (t>1) ps = p2;
+        float D = (ps-p).length();
+        if (dist > D) dist = D;
+    }
+    return dist;
+}
+
 void path::clear() {
     points.clear();
     positions.clear();
