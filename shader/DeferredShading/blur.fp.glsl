@@ -20,7 +20,7 @@ void main(void) {
     if (pos.z >= 0) discard;
     float amb = posAmb.w;
 
-    int S = uBlurSize*0.5;
+    int S = int(uBlurSize*0.5);
 
     float result = 0.0;
     vec4 sample;
