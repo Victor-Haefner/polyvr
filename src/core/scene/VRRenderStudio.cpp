@@ -45,8 +45,9 @@ VRRenderStudio::VRRenderStudio(EYE e) {
     eye = e;
     root_system = VRObject::create("System root");
     addStage("shading");
-    addStage("blur", "shading");
-    addStage("ssao", "blur");
+    addStage("blurY", "shading");
+    addStage("blurX", "blurY");
+    addStage("ssao", "blurX");
     addStage("marker");
     addStage("calibration");
     addStage("hmdd");
@@ -118,7 +119,7 @@ void VRRenderStudio::init(VRObjectPtr root) {
     stages["shading"]->getTop()->switchParent( hmdd );
 
     ssao->initSSAO( stages["ssao"]->getMaterial() );
-    ssao->initBlur( stages["blur"]->getMaterial() );
+    ssao->initBlur( stages["blurX"]->getMaterial(), stages["blurY"]->getMaterial() );
     hmdd->initHMDD( stages["hmdd"]->getMaterial() );
     stages["hmdd"]->getMaterial()->setTexture( stages["shading"]->getRendering()->getTarget(), 0 );
     initCalib( stages["calibration"]->getMaterial() );
@@ -132,7 +133,8 @@ void VRRenderStudio::update() {
     stages["shading"]->setActive(deferredRendering, false);
     bool do_ssao = this->do_ssao && deferredRendering;
 
-    stages["blur"]->setActive(do_ssao, do_ssao);
+    stages["blurX"]->setActive(do_ssao, do_ssao);
+    stages["blurY"]->setActive(do_ssao, do_ssao);
     stages["ssao"]->setActive(do_ssao, do_ssao);
     if (ssao) ssao->setSSAOparams(ssao_radius, ssao_kernel, ssao_noise);
 

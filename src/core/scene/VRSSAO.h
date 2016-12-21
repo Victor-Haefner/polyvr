@@ -10,14 +10,15 @@ using namespace std;
 class VRSSAO {
     private:
         VRMaterialPtr ssao_mat;
-        VRMaterialPtr blur_mat;
+        VRMaterialPtr blur_matX;
+        VRMaterialPtr blur_matY;
 
     public:
         VRSSAO();
         ~VRSSAO();
 
         void initSSAO(VRMaterialPtr mat);
-        void initBlur(VRMaterialPtr mat);
+        void initBlur(VRMaterialPtr matX, VRMaterialPtr matY);
         void setSSAOparams(float radius, int kernel, int noise);
 };
 

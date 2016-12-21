@@ -6,6 +6,7 @@
 uniform sampler2DRect texBufPos;
 uniform sampler2DRect texBufNorm;
 uniform sampler2DRect texBufDiff;
+uniform vec2 direction;
 
 uniform int uBlurSize; // use size of noise texture
 
@@ -19,18 +20,20 @@ void main(void) {
     if (pos.z >= 0) discard;
     float amb = posAmb.w;
 
-    int S = uBlurSize/2;
+    int S = uBlurSize*0.5;
 
     float result = 0.0;
     vec4 sample;
-    for (int i = -S; i < S; ++i) {
-        for (int j = -S; j < S; ++j) {
-            sample = texture2DRect(texBufPos,  lookup + vec2(i,j));
-            result += sample.z < 0 ? sample.w : 0.0;
-        }
+    int N = 0;
+    for (int i = -S; i <= S; ++i) {
+		sample = texture2DRect(texBufPos,  lookup + i*direction);
+		if (sample.z < 0) {
+			result += sample.w;
+			N++;
+		}
     }
 
-    amb = result / float(uBlurSize * uBlurSize);
+    amb = result / float(N);
 
     gl_FragData[0] = vec4(pos, amb);
     gl_FragData[1] = vec4(norm,1);

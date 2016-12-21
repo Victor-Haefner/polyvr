@@ -40,5 +40,6 @@ void main(void) {
 	if (channel == 1) color = vec4(pos.xyz, 1.0);
 	if (channel == 2) color = vec4(norm.xyz, 1.0);
 	if (channel == 3) color = vec4(color.xyz, 1.0);
+	if (channel == 4) color = vec4(pos.w,pos.w,pos.w, 1.0);
 	gl_FragColor = color;
 }

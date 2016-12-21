@@ -76,9 +76,8 @@ void VRSSAO::setSSAOparams(float radius, int kernelSize, int noiseSize) {
     }
 
     // blur size
-    if (blur_mat) {
-        blur_mat->setShaderParameter<int>("uBlurSize", noiseSize);
-    }
+    if (blur_matX) blur_matX->setShaderParameter<int>("uBlurSize", noiseSize);
+    if (blur_matY) blur_matY->setShaderParameter<int>("uBlurSize", noiseSize);
 }
 
 void VRSSAO::initSSAO(VRMaterialPtr mat) {
@@ -97,16 +96,25 @@ void VRSSAO::initSSAO(VRMaterialPtr mat) {
     setSSAOparams(0.02, 6, 6);
 }
 
-void VRSSAO::initBlur(VRMaterialPtr mat) {
+void VRSSAO::initBlur(VRMaterialPtr matX, VRMaterialPtr matY) {
     string shdrDir = VRSceneManager::get()->getOriginalWorkdir() + "/shader/DeferredShading/";
-    blur_mat = mat;
+    blur_matX = matX;
+    blur_matY = matY;
 
     // ssao blur material
-    blur_mat->readVertexShader(shdrDir + "blur.vp.glsl");
-    blur_mat->readFragmentShader(shdrDir + "blur.fp.glsl", true);
-    blur_mat->setShaderParameter<int>("texBufPos", 0);
-    blur_mat->setShaderParameter<int>("texBufNorm", 1);
-    blur_mat->setShaderParameter<int>("texBufDiff", 2);
+    blur_matX->readVertexShader(shdrDir + "blur.vp.glsl");
+    blur_matX->readFragmentShader(shdrDir + "blur.fp.glsl", true);
+    blur_matX->setShaderParameter<int>("texBufPos", 0);
+    blur_matX->setShaderParameter<int>("texBufNorm", 1);
+    blur_matX->setShaderParameter<int>("texBufDiff", 2);
+    blur_matX->setShaderParameter<Vec2f>("direction", Vec2f(1,0));
+
+    blur_matY->readVertexShader(shdrDir + "blur.vp.glsl");
+    blur_matY->readFragmentShader(shdrDir + "blur.fp.glsl", true);
+    blur_matY->setShaderParameter<int>("texBufPos", 0);
+    blur_matY->setShaderParameter<int>("texBufNorm", 1);
+    blur_matY->setShaderParameter<int>("texBufDiff", 2);
+    blur_matY->setShaderParameter<Vec2f>("direction", Vec2f(0,1));
     setSSAOparams(0.02, 6, 6);
 }
 

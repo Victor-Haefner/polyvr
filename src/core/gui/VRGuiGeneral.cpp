@@ -141,6 +141,7 @@ void VRGuiGeneral::toggleDRendChannel() {
     if ( getRadioButtonState("radiobutton14") ) channel = 1;
     if ( getRadioButtonState("radiobutton15") ) channel = 2;
     if ( getRadioButtonState("radiobutton16") ) channel = 3;
+    if ( getRadioButtonState("radiobutton17") ) channel = 4;
     scene->setDeferredChannel(channel);
 }
 
