@@ -14,6 +14,7 @@ class VRAnnotationEngine : public VRGeometry {
 
         static string vp;
         static string fp;
+        static string dfp;
         static string gp;
 
         float size;

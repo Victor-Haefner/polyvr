@@ -11,7 +11,9 @@
 using namespace std;
 using namespace OSG;
 
-VRReasoner::VRReasoner() {;}
+VRReasoner::VRReasoner() {
+    verbConsole = false;
+}
 
 vector<string> VRReasoner::split(string s, string d) {
     vector<string> res;

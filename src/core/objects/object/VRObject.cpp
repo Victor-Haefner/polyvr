@@ -135,6 +135,12 @@ VRObjectPtr VRObject::hasAncestorWithAttachment(string name) {
     return getParent()->hasAncestorWithAttachment(name);
 }
 
+vector<VRObjectPtr> VRObject::getLinks() {
+    vector<VRObjectPtr> res;
+    for (auto wl : links) if (auto l = wl.second.lock()) res.push_back(l);
+    return res;
+}
+
 void VRObject::addLink(VRObjectPtr obj) {
     if (osg->links.count(obj.get())) return;
 
@@ -143,6 +149,7 @@ void VRObject::addLink(VRObjectPtr obj) {
     NodeMTRecPtr visit_node = makeNodeFor(visitor);
     addChild(OSGObject::create(visit_node));
 
+    links[obj.get()] = obj;
     osg->links[obj.get()] = visit_node;
 }
 
@@ -152,6 +159,7 @@ void VRObject::remLink(VRObjectPtr obj) {
     NodeMTRecPtr node = osg->links[obj.get()];
     subChild(OSGObject::create(node));
     osg->links.erase(obj.get());
+    links.erase(obj.get());
 }
 
 void VRObject::clearLinks() {

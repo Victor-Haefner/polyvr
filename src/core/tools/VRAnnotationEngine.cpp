@@ -18,6 +18,7 @@ VRAnnotationEngine::VRAnnotationEngine() : VRGeometry("AnnEng") {
     mat = VRMaterial::create("AnnEngMat");
     mat->setVertexShader(vp, "annotationVS");
     mat->setFragmentShader(fp, "annotationFS");
+    mat->setFragmentShader(dfp, "annotationDFS", true);
     mat->setGeometryShader(gp, "annotationGS");
     mat->setPointSize(5);
     setMaterial(mat);
@@ -108,21 +109,21 @@ void VRAnnotationEngine::updateTexture() {
 string VRAnnotationEngine::vp =
 "#version 120\n"
 GLSL(
-varying mat4 model;
+varying vec4 vertex;
 varying vec3 normal;
 
 attribute vec4 osg_Vertex;
 attribute vec4 osg_Normal;
 
 void main( void ) {
-    model = gl_ModelViewProjectionMatrix;
-    gl_Position = model*osg_Vertex;
+    vertex = osg_Vertex;
+    gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;
     normal = osg_Normal.xyz;
 }
 );
 
 string VRAnnotationEngine::fp =
-"#version 120\n"
+"#version 400 compatibility\n"
 GLSL(
 uniform sampler2D texture;
 
@@ -134,8 +135,26 @@ void main( void ) {
 }
 );
 
+string VRAnnotationEngine::dfp =
+"#version 400 compatibility\n"
+GLSL(
+uniform sampler2D texture;
+
+in vec4 geomPos;
+in vec3 geomNorm;
+in vec2 texCoord;
+
+void main( void ) {
+    vec3 pos = geomPos.xyz / geomPos.w;
+    vec3 diffCol = texture2D(texture, texCoord).rgb;
+    gl_FragData[0] = vec4(pos, 1);
+    gl_FragData[1] = vec4(normalize(geomNorm), 0);
+    gl_FragData[2] = vec4(diffCol, 0);
+}
+);
+
 string VRAnnotationEngine::gp =
-"#version 150\n"
+"#version 400 compatibility\n"
 "#extension GL_EXT_geometry_shader4 : enable\n"
 GLSL(
 layout (points) in;
@@ -145,13 +164,17 @@ uniform float doBillboard;
 uniform float screen_size;
 uniform float size;
 uniform vec2 OSGViewportSize;
-in mat4 model[];
+in vec4 vertex[];
 in vec3 normal[];
 out vec2 texCoord;
+out vec4 geomPos;
+out vec3 geomNorm;
 
-void emitVertex(in vec4 p, in vec2 tc) {
+void emitVertex(in vec4 p, in vec2 tc, in vec4 v) {
  gl_Position = p;
  texCoord = tc;
+ geomPos = v;
+ geomNorm = vec3(0,0,1);
  EmitVertex();
 }
 
@@ -163,6 +186,10 @@ void emitQuad(in float offset, in vec4 tc) {
  vec4 p2;
  vec4 p3;
  vec4 p4;
+ vec4 v1;
+ vec4 v2;
+ vec4 v3;
+ vec4 v4;
  vec4 p = gl_PositionIn[0];
 
  if (screen_size > 0.5) {
@@ -171,25 +198,29 @@ void emitQuad(in float offset, in vec4 tc) {
  }
 
  if (doBillboard < 0.5) {
-  p1 = p+model[0]*vec4(-sx+ox,-sy,0,0);
-  p2 = p+model[0]*vec4(-sx+ox, sy,0,0);
-  p3 = p+model[0]*vec4( sx+ox, sy,0,0);
-  p4 = p+model[0]*vec4( sx+ox,-sy,0,0);
+  p1 = p+gl_ModelViewProjectionMatrix*vec4(-sx+ox,-sy,0,0);
+  p2 = p+gl_ModelViewProjectionMatrix*vec4(-sx+ox, sy,0,0);
+  p3 = p+gl_ModelViewProjectionMatrix*vec4( sx+ox, sy,0,0);
+  p4 = p+gl_ModelViewProjectionMatrix*vec4( sx+ox,-sy,0,0);
  } else {
   float a = OSGViewportSize.y/OSGViewportSize.x;
   p1 = p+vec4(-sx*a+ox*a,-sy,0,0);
   p2 = p+vec4(-sx*a+ox*a, sy,0,0);
   p3 = p+vec4( sx*a+ox*a, sy,0,0);
   p4 = p+vec4( sx*a+ox*a,-sy,0,0);
+  v1 = vertex[0]+vec4(-sx*a+ox*a,-sy,0,0);
+  v2 = vertex[0]+vec4(-sx*a+ox*a, sy,0,0);
+  v3 = vertex[0]+vec4( sx*a+ox*a, sy,0,0);
+  v4 = vertex[0]+vec4( sx*a+ox*a,-sy,0,0);
  }
 
- emitVertex(p1, vec2(tc[0], tc[2]));
- emitVertex(p2, vec2(tc[0], tc[3]));
- emitVertex(p3, vec2(tc[1], tc[3]));
+ emitVertex(p1, vec2(tc[0], tc[2]), v1);
+ emitVertex(p2, vec2(tc[0], tc[3]), v2);
+ emitVertex(p3, vec2(tc[1], tc[3]), v3);
  EndPrimitive();
- emitVertex(p1, vec2(tc[0], tc[2]));
- emitVertex(p3, vec2(tc[1], tc[3]));
- emitVertex(p4, vec2(tc[1], tc[2]));
+ emitVertex(p1, vec2(tc[0], tc[2]), v1);
+ emitVertex(p3, vec2(tc[1], tc[3]), v3);
+ emitVertex(p4, vec2(tc[1], tc[2]), v4);
  EndPrimitive();
 }
 

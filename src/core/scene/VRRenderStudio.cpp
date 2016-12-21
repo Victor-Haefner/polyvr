@@ -63,7 +63,11 @@ void VRRenderStudio::addStage(string name, string parent) {
     auto s = shared_ptr<VRDeferredRenderStage>( new VRDeferredRenderStage(name) );
     stages[name] = s;
     if (!stages.count(parent)) s->getTop()->switchParent( root_system );
-    else stages[parent]->insert(s);
+    else {
+        auto pstage = stages[parent];
+        pstage->insert(s);
+        if (pstage->getBottom() == root_scene) root_scene = s->getBottom();
+    }
     if (cam) setCamera(cam);
 }
 

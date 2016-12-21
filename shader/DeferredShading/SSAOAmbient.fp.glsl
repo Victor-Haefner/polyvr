@@ -68,8 +68,7 @@ void main(void) {
             N++;
         }
 
-        occlusion = 1.0 - (occlusion / N);
-        amb = occlusion;
+        amb = 1.0 - (occlusion / N);
     } else { discard; }
 
     gl_FragData[0] = vec4(pos, amb);
