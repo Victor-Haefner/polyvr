@@ -112,14 +112,31 @@ bool VRTextureGenerator::inBox(Pnt3f& p, Vec3f& s) {
     return true;
 }
 
-// TODO: most inefficient way to draw lines..
+void VRTextureGenerator::applyPixel(Vec4f* data, Vec3i p, Vec4f c) {
+    int d = p[2]*height*width + p[1]*width + p[0];
+    int N = depth*height*width;
+    if (d >= N || d < 0) { cout << "Warning: applyPixel failed, pixel " << d << " " << p << " " << height << " " << width << " " << depth << " out of range! (buffer size is " << N << ")" << endl; return; }
+    data[d] = Vec4f(c[0], c[1], c[2], 1.0)*c[3] + data[d]*(1.0-c[3]);
+}
+
+void VRTextureGenerator::applyPixel(Vec3f* data, Vec3i p, Vec4f c) {
+    int d = p[2]*height*width + p[1]*width + p[0];
+    int N = depth*height*width;
+    if (d >= N|| d < 0) { cout << "Warning: applyPixel failed, pixel " << d << " " << p << " " << height << " " << width << " " << depth << " out of range! (buffer size is " << N << ")" << endl; return; }
+    data[d] = Vec3f(c[0], c[1], c[2])*c[3] + data[d]*(1.0-c[3]);
+}
+
 void VRTextureGenerator::applyLine(Vec3f* data, Vec3f p1, Vec3f p2, Vec4f c, float w) {
     Vec3f pm = (p1+p2)*0.5;
+    Vec3f d = p2-p1;
+    Vec3f u = Vec3f(0,1,0);
+    if (d[1] > d[2]) u = Vec3f(0,0,-1);
+
     float l2 = (p2-p1).length()*0.5;
     float w2 = w*0.5;
 
     Matrix M; // box transformation
-    MatrixLookAt(M, pm, p1, Vec3f(0,0,-1)); // TODO, find orthogonal vector to p1
+    MatrixLookAt(M, pm, p1, u);
 
     int X2 = ceil(w2*width);
     int Y2 = ceil(w2*height);
@@ -132,9 +149,14 @@ void VRTextureGenerator::applyLine(Vec3f* data, Vec3f p1, Vec3f p2, Vec4f c, flo
                 Pnt3f pi = Pnt3f(float(i)/width, float(j)/height, float(k)/depth);
                 M.mult(pi, pi); // in tex coords
                 Vec3i pI(pi[0]*width, pi[1]*height, pi[2]*depth);
-                int d = pI[2]*height*width + pI[1]*width + pI[0];
-                if (d >= N || d < 0) continue;
-                data[d] = Vec3f(c[0], c[1], c[2])*c[3] + data[d]*(1.0-c[3]);
+                applyPixel(data, pI+Vec3i(0,0,0), c);
+                applyPixel(data, pI+Vec3i(1,0,0), c);
+                applyPixel(data, pI+Vec3i(0,1,0), c);
+                applyPixel(data, pI+Vec3i(0,0,1), c);
+                applyPixel(data, pI+Vec3i(1,1,0), c);
+                applyPixel(data, pI+Vec3i(0,1,1), c);
+                applyPixel(data, pI+Vec3i(1,0,1), c);
+                applyPixel(data, pI+Vec3i(1,1,1), c);
             }
         }
     }
@@ -142,11 +164,15 @@ void VRTextureGenerator::applyLine(Vec3f* data, Vec3f p1, Vec3f p2, Vec4f c, flo
 
 void VRTextureGenerator::applyLine(Vec4f* data, Vec3f p1, Vec3f p2, Vec4f c, float w) {
     Vec3f pm = (p1+p2)*0.5;
-    float l2 = (p2-p1).length()*0.5;
+    Vec3f d = p2-p1;
+    Vec3f u = Vec3f(0,1,0);
+    if (d[1] > d[2]) u = Vec3f(0,0,-1);
+
+    float l2 = d.length()*0.5;
     float w2 = w*0.5;
 
     Matrix M; // box transformation
-    MatrixLookAt(M, pm, p1, Vec3f(0,1,0)); // TODO, find orthogonal vector to p1
+    MatrixLookAt(M, pm, p1, u);
 
     int X2 = ceil(w2*width);
     int Y2 = ceil(w2*height);
@@ -159,9 +185,14 @@ void VRTextureGenerator::applyLine(Vec4f* data, Vec3f p1, Vec3f p2, Vec4f c, flo
                 Pnt3f pi = Pnt3f(float(i)/width, float(j)/height, float(k)/depth);
                 M.mult(pi, pi); // in tex coords
                 Vec3i pI(pi[0]*width, pi[1]*height, pi[2]*depth);
-                int d = pI[2]*height*width + pI[1]*width + pI[0];
-                if (d >= N || d < 0) continue;
-                data[d] = Vec4f(c[0], c[1], c[2], 1.0)*c[3] + data[d]*(1.0-c[3]);
+                applyPixel(data, pI+Vec3i(0,0,0), c);
+                applyPixel(data, pI+Vec3i(1,0,0), c);
+                applyPixel(data, pI+Vec3i(0,1,0), c);
+                applyPixel(data, pI+Vec3i(0,0,1), c);
+                applyPixel(data, pI+Vec3i(1,1,0), c);
+                applyPixel(data, pI+Vec3i(0,1,1), c);
+                applyPixel(data, pI+Vec3i(1,0,1), c);
+                applyPixel(data, pI+Vec3i(1,1,1), c);
             }
         }
     }
@@ -180,20 +211,6 @@ void VRTextureGenerator::applyPath(Vec4f* data, pathPtr p, Vec4f c, float w) {
     for (uint i=1; i<pos.size(); i++) {
         applyLine(data, pos[i-1], pos[i], c, w);
     }
-}
-
-void VRTextureGenerator::applyPixel(Vec4f* data, Vec3i p, Vec4f c) {
-    int d = p[2]*height*width + p[1]*width + p[0];
-    int N = depth*height*width;
-    if (d >= N || d < 0) { cout << "Warning: applyPixel failed, pixel " << d << " " << p << " " << height << " " << width << " " << depth << " out of range! (buffer size is " << N << ")" << endl; return; }
-    data[d] = Vec4f(c[0], c[1], c[2], 1.0)*c[3] + data[d]*(1.0-c[3]);
-}
-
-void VRTextureGenerator::applyPixel(Vec3f* data, Vec3i p, Vec4f c) {
-    int d = p[2]*height*width + p[1]*width + p[0];
-    int N = depth*height*width;
-    if (d >= N|| d < 0) { cout << "Warning: applyPixel failed, pixel " << d << " " << p << " " << height << " " << width << " " << depth << " out of range! (buffer size is " << N << ")" << endl; return; }
-    data[d] = Vec3f(c[0], c[1], c[2])*c[3] + data[d]*(1.0-c[3]);
 }
 
 void VRTextureGenerator::clearStage() { layers.clear(); }
