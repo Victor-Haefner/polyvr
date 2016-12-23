@@ -115,22 +115,26 @@ bool VRTextureGenerator::inBox(Pnt3f& p, Vec3f& s) {
 // TODO: most inefficient way to draw lines..
 void VRTextureGenerator::applyLine(Vec3f* data, Vec3f p1, Vec3f p2, Vec4f c, float w) {
     Vec3f pm = (p1+p2)*0.5;
-    float L2 = (p2-p1).length()*0.5;
+    float l2 = (p2-p1).length()*0.5;
     float w2 = w*0.5;
-    Vec3f s = Vec3f(w2,w2,L2);
 
     Matrix M; // box transformation
     MatrixLookAt(M, pm, p1, Vec3f(0,0,-1)); // TODO, find orthogonal vector to p1
-    M.invert();
 
-    for (int k=0; k<depth; k++) {
-        for (int j=0; j<height; j++) {
-            for (int i=0; i<width; i++) {
-                int d = k*height*width + j*width + i;
+    int X2 = ceil(w2*width);
+    int Y2 = ceil(w2*height);
+    int L2 = ceil(l2*depth);
+    int N = depth*height*width;
+
+    for (int k=-L2; k<=L2; k++) {
+        for (int j=-Y2; j<=Y2; j++) {
+            for (int i=-X2; i<=X2; i++) {
                 Pnt3f pi = Pnt3f(float(i)/width, float(j)/height, float(k)/depth);
-                M.mult(pi, pi); // in box coords
-                if (inBox(pi,s)) data[d] = Vec3f(c[0], c[1], c[2])*c[3] + data[d]*(1.0-c[3]);
-                //data[d] = Vec3f(c[0], c[1], c[2])*c[3] + data[d]*(1.0-c[3]);
+                M.mult(pi, pi); // in tex coords
+                Vec3i pI(pi[0]*width, pi[1]*height, pi[2]*depth);
+                int d = pI[2]*height*width + pI[1]*width + pI[0];
+                if (d >= N || d < 0) continue;
+                data[d] = Vec3f(c[0], c[1], c[2])*c[3] + data[d]*(1.0-c[3]);
             }
         }
     }
@@ -138,21 +142,26 @@ void VRTextureGenerator::applyLine(Vec3f* data, Vec3f p1, Vec3f p2, Vec4f c, flo
 
 void VRTextureGenerator::applyLine(Vec4f* data, Vec3f p1, Vec3f p2, Vec4f c, float w) {
     Vec3f pm = (p1+p2)*0.5;
-    float L2 = (p2-p1).length()*0.5;
+    float l2 = (p2-p1).length()*0.5;
     float w2 = w*0.5;
-    Vec3f s = Vec3f(w2,w2,L2);
 
     Matrix M; // box transformation
     MatrixLookAt(M, pm, p1, Vec3f(0,1,0)); // TODO, find orthogonal vector to p1
-    M.invert();
 
-    for (int k=0; k<depth; k++) {
-        for (int j=0; j<height; j++) {
-            for (int i=0; i<width; i++) {
-                int d = k*height*width + j*width + i;
+    int X2 = ceil(w2*width);
+    int Y2 = ceil(w2*height);
+    int L2 = ceil(l2*depth);
+    int N = depth*height*width;
+
+    for (int k=-L2; k<=L2; k++) {
+        for (int j=-Y2; j<=Y2; j++) {
+            for (int i=-X2; i<=X2; i++) {
                 Pnt3f pi = Pnt3f(float(i)/width, float(j)/height, float(k)/depth);
-                M.mult(pi, pi); // in box coords
-                if (inBox(pi,s)) data[d] = Vec4f(c[0], c[1], c[2], 1.0)*c[3] + data[d]*(1.0-c[3]);
+                M.mult(pi, pi); // in tex coords
+                Vec3i pI(pi[0]*width, pi[1]*height, pi[2]*depth);
+                int d = pI[2]*height*width + pI[1]*width + pI[0];
+                if (d >= N || d < 0) continue;
+                data[d] = Vec4f(c[0], c[1], c[2], 1.0)*c[3] + data[d]*(1.0-c[3]);
             }
         }
     }
