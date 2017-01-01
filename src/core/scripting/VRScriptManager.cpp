@@ -290,15 +290,8 @@ string VRScriptManager::getPyVRMethodDoc(string mod, string type, string method)
         }
     }
 
-    while (PyDict_Next(dict, &pos, &key, &tp)) {
-        if (!PyType_Check(tp)) continue;
-        string name = PyString_AsString(key);
-        if (name != type) continue;
-        break;
-    }
-
-    PyTypeObject* t = (PyTypeObject*)tp;
-    dict = t->tp_dict; pos = 0;
+    pos = 0;
+    dict = modules[mod][type]->tp_dict;
     while (PyDict_Next(dict, &pos, &key, &meth)) {
         string name = PyString_AsString(key);
         if (method != name) continue;
