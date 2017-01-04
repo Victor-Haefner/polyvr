@@ -5,6 +5,7 @@
 #include "VRProperty.h"
 #include "core/utils/toString.h"
 
+#include <stack>
 #include <iostream>
 #include <algorithm>
 
@@ -249,9 +250,72 @@ class mathExpression { // TODO: put this in own header!
         string data;
         Node* tree = 0;
         vector<Node*> nodes;
+        map<char,int> OperatorHierarchy;
 
-        void convToPrefixExpr() { // TODO
-            ;
+        bool isMathToken(char c) {
+            if (c == '+' || c == '-' || c == '*' || c == '/') return true;
+            if (c == '(' || c == ')') return true;
+            return false;
+        }
+
+        void convToPrefixExpr() { // convert infix to prefix expression
+            vector<string> tokens;
+
+            // split into tokens
+            string last;
+            for (int i=0; i<data.size(); i++) {
+                char c = data[i];
+                if (isMathToken(c)) {
+                    if (last.size() > 0 ) tokens.push_back(last);
+                    last = "";
+                    string t; t+=c;
+                    tokens.push_back(t);
+                } else last += c;
+            }
+            if (last.size() > 0 ) tokens.push_back(last);
+            //for (auto t : tokens) cout << " '"+t+"' ";
+            //cout << endl;
+
+            stack<string> OperandStack;
+            stack<char> OperatorStack;
+
+            auto processTriple = [&]() {
+                char Operator = OperatorStack.top(); OperatorStack.pop();
+                auto RightOperand = OperandStack.top(); OperandStack.pop();
+                auto LeftOperand = OperandStack.top(); OperandStack.pop();
+                string op; op += Operator;
+                string tmp = op +" "+ LeftOperand +" "+ RightOperand;
+                OperandStack.push( tmp );
+            };
+
+            for (auto t : tokens) {
+                // token is operand
+                if (t.size() != 1 || !isMathToken(t[0]) ) {
+                    OperandStack.push(t); continue;
+                }
+                char o = t[0];
+
+                // If it is a left parentheses or operator of higher precedence than the last, or the stack is empty,
+                if ( o == '(' || OperatorStack.size() == 0 || OperatorHierarchy[o] < OperatorHierarchy[OperatorStack.top()] ) {
+                    OperatorStack.push(o); continue;
+                }
+
+                if ( o == ')' ) {
+                    while( OperatorStack.top() != '(' ) processTriple();
+                    o = OperatorStack.top(); OperatorStack.pop();
+                    continue;
+                }
+
+                if ( OperatorHierarchy[o] >= OperatorHierarchy[OperatorStack.top()] ) {
+                    while( OperatorStack.size() != 0 and OperatorHierarchy[o] >= OperatorHierarchy[OperatorStack.top()] ) {
+                        processTriple();
+                    }
+                    OperatorStack.push(o);
+                }
+            }
+
+            while( OperatorStack.size() ) processTriple();
+            data = OperandStack.top(); // store prefix expression
         }
 
         void buildTree() { // TODO, build the tree recursively from the prefix expression!
@@ -268,12 +332,17 @@ class mathExpression { // TODO: put this in own header!
     public:
         mathExpression(string s) {
             data = s;
+
+            OperatorHierarchy['+'] = 6;
+            OperatorHierarchy['-'] = 6;
+            OperatorHierarchy['*'] = 5;
+            OperatorHierarchy['/'] = 5;
+            OperatorHierarchy['('] = 2;
+            OperatorHierarchy[')'] = 2;
         }
 
         bool isMathExpression() {
-            for (auto c : data) {
-                if (c == '+' || c == '-' || c == '*' || c == '/') return true;
-            }
+            for (auto c : data) if (isMathToken(c)) return true;
             return false;
         }
 
@@ -297,6 +366,7 @@ Term::Term(string s) : path(s), str(s) { // parse term content
     // check for mathematical expression
     mathExpression me(s);
     if (me.isMathExpression()) {
+        cout << " Term::Term '"+s+"' is math expression!\n";
         me.computeTree(); // build RDP tree
         for (auto l : me.getLeafs()) {
             VPath p(l->param);
