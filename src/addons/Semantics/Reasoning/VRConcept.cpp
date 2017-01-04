@@ -1,52 +1,64 @@
 #include "VRConcept.h"
 #include "VRProperty.h"
+#include "core/utils/toString.h"
 #include "core/utils/VRStorage_template.h"
 
 #include <iostream>
 
 using namespace OSG;
 
+map<int, VRConceptPtr> VRConcept::ConceptsByID = map<int, VRConceptPtr>();
+map<string, VRConceptPtr> VRConcept::ConceptsByName = map<string, VRConceptPtr>();
+
 VRConcept::VRConcept(string name, VROntologyPtr o) {
+    //cout << "VRConcept::VRConcept " << name << endl;
     setStorageType("Concept");
     setNameSpace("concept");
     setSeparator('_');
     setUniqueName(false);
     setName(name);
-    this->ontology = o;
+    //this->ontology = o;
 
-    storeMap("Children", &children, true);
+    storeMap("Parents", &parents, true);
     storeMap("Properties", &properties, true);
     storeMap("Annotations", &annotations, true);
     regStorageSetupFkt( VRFunction<int>::create("concept setup", boost::bind(&VRConcept::setup, this)) );
 }
 
+VRConcept::~VRConcept() {
+    //cout << "VRConcept::~VRConcept " << getName() << endl;
+}
+
 VRConceptPtr VRConcept::create(string name, VROntologyPtr o) {
-    return VRConceptPtr(new VRConcept(name, o));
+    auto c = VRConceptPtr(new VRConcept(name, o));
+    ConceptsByID[c->ID] = c;
+    ConceptsByName[c->getName()] = c;
+    return c;
 }
 
 VRConceptPtr VRConcept::ptr() { return shared_from_this(); }
 
 VRConceptPtr VRConcept::copy() {
-    auto c = VRConcept::create(name, ontology.lock());
+    auto c = VRConcept::create(name, 0);
     for (auto p : properties) c->addProperty(p.second);
     for (auto a : annotations) c->addAnnotation(a.second);
-    for (auto i : children) c->append(i.second->copy());
+    //for (auto i : children) c->append(i.second->copy());
     return c;
 }
 
 void VRConcept::setup() {
-    auto tmp = children;
-    children.clear();
-    for (auto c : tmp) append(c.second);
+    auto tmp = parents;
+    parents.clear();
+    for (auto p : tmp) p.second->append(ptr());
 }
 
 void VRConcept::removeChild(VRConceptPtr c) {
-    if (children.count(c->ID)) children.erase(c->ID);
+    //if (children.count(c->ID)) children.erase(c->ID);
     if (c->parents.count(ID)) c->parents.erase(ID);
 }
 
 void VRConcept::removeParent(VRConceptPtr c) {
-    if (c->children.count(ID)) c->children.erase(ID);
+    //if (c->children.count(ID)) c->children.erase(ID);
     if (parents.count(c->ID)) parents.erase(c->ID);
 }
 
@@ -55,13 +67,14 @@ void VRConcept::addAnnotation(VRPropertyPtr p) { annotations[p->ID] = p; }
 void VRConcept::addProperty(VRPropertyPtr p) { properties[p->ID] = p; }
 
 VRConceptPtr VRConcept::append(string name, bool link) {
-    auto c = VRConcept::create(name, ontology.lock());
+    auto c = VRConcept::create(name, 0);
     append(c, link);
     return c;
 }
 
 void VRConcept::append(VRConceptPtr c, bool link) {
-    children[c->ID] = c;
+    //cout << "VRConcept::append " << c->getName() << " to " << getName() << " ID " << c->ID << " " << ID << endl;
+    //children[c->ID] = c;
     c->parents[ID] = ptr();
     if (!link) return;
     //link[c->ID] = ; // TODO
@@ -105,14 +118,28 @@ vector<VRPropertyPtr> VRConcept::getProperties(string type) {
     return res;
 }
 
+vector<VRPropertyPtr> VRConcept::getProperties() {
+    vector<VRPropertyPtr> res;
+    map<string, VRPropertyPtr> tmp;
+    getProperties(tmp);
+    for (auto p : tmp) res.push_back(p.second);
+    return res;
+}
+
 void VRConcept::getProperties(map<string, VRPropertyPtr>& res) {
-    for (auto p : getParents()) p->getProperties(res);
-    for (auto p : properties) res[p.second->getName()] = p.second;
+    //for (auto p : getParents()) cout << "VRConcept::getParentProperties parent " << p->getName() << " of " << getName() << " Np " << getParents().size() << " ID " << ID << endl;
+    for (auto p : getParents()) {
+        //cout << "VRConcept::getParentProperties parent " << p->getName() << " of " << getName() << endl;
+        p->getProperties(res);
+    }
+    for (auto p : properties) {
+        res[p.second->getName()] = p.second;
+    }
 }
 
 void VRConcept::detach() {
     for (auto p : getParents()) p->removeChild( ptr() );
-    for (auto c : children) c.second->removeParent( ptr() );
+    //for (auto c : children) c.second->removeParent( ptr() );
 }
 
 bool VRConcept::hasParent(VRConceptPtr c) {
@@ -125,26 +152,13 @@ bool VRConcept::hasParent(VRConceptPtr c) {
 
 vector<VRConceptPtr> VRConcept::getParents() {
     vector<VRConceptPtr> res;
-    for (auto wp : parents) if (auto p = wp.second.lock()) res.push_back(p);
-    return res;
-}
-
-vector<VRPropertyPtr> VRConcept::getProperties() {
-    vector<VRPropertyPtr> res;
-    map<string, VRPropertyPtr> tmp;
-    getProperties(tmp);
-    for (auto p : tmp) res.push_back(p.second);
+    for (auto p : parents) res.push_back(p.second);
     return res;
 }
 
 int VRConcept::getPropertyID(string name) {
     for (auto p : getProperties()) if (p->getName() == name) return p->ID;
     return -1;
-}
-
-void VRConcept::getDescendance(vector<VRConceptPtr>& concepts) {
-    concepts.push_back( ptr() );
-    for (auto c : children) c.second->getDescendance(concepts);
 }
 
 bool VRConcept::is_a(string concept) {
@@ -154,9 +168,23 @@ bool VRConcept::is_a(string concept) {
 }
 
 string VRConcept::toString(string indent) {
-    string res = indent+"concept: "+name+"\n";
+    string res = indent+"concept: "+name+"("+::toString(ID)+") - ";
+    for (auto p : getParents()) res += p->getName() + " ";
+    res += "\n";
     for (auto a : annotations) res += indent+a.second->toString();
     for (auto p : getProperties()) res += indent+p->toString();
-    for (auto c : children) res += c.second->toString(indent+"  ");
+    //for (auto c : children) res += c.second->toString(indent+"  ");
     return res;
 }
+
+string VRConcept::toString(map<int, vector<VRConceptPtr>>& cMap, string indent) {
+    string res = indent+"concept: "+name+"("+::toString(ID)+") - ";
+    for (auto p : getParents()) res += p->getName() + " ";
+    res += "\n";
+    for (auto a : annotations) res += indent+a.second->toString();
+    for (auto p : getProperties()) res += indent+p->toString();
+    for (auto c : cMap[ID]) res += c->toString(cMap, indent+"  ");
+    return res;
+}
+
+

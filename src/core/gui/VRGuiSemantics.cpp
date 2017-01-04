@@ -191,7 +191,7 @@ void VRGuiSemantics::updateCanvas() {
     int i = 0;
     clearCanvas();
 
-    function<void(VRConceptPtr,int,int,VRConceptWidgetPtr)> travConcepts = [&](VRConceptPtr c, int cID, int lvl, VRConceptWidgetPtr cp) {
+    function<void(map<int, vector<VRConceptPtr>>&, VRConceptPtr,int,int,VRConceptWidgetPtr)> travConcepts = [&](map<int, vector<VRConceptPtr>>& cMap, VRConceptPtr c, int cID, int lvl, VRConceptWidgetPtr cp) {
         if (widgets.count(c->ID)) {
             if (cp) connect(cp, widgets[c->ID], "#00CCFF");
             return;
@@ -208,11 +208,12 @@ void VRGuiSemantics::updateCanvas() {
 
         i++;
         int child_i = 0;
-        for (auto ci : c->children) { travConcepts(ci.second, child_i, lvl+1, cw); child_i++; }
+        for (auto ci : cMap[c->ID]) { travConcepts(cMap, ci, child_i, lvl+1, cw); child_i++; }
     };
 
     if (current) {
-        travConcepts(current->thing, 0, 0, 0);
+        auto cMap = current->getChildrenMap();
+        travConcepts(cMap, current->thing, 0, 0, 0);
         layout->fixNode( widgetIDs[current->thing->ID] );
 
         for (auto e : current->entities) {

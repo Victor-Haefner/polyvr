@@ -28,7 +28,8 @@ VROntology::VROntology(string name) {
 
 VROntologyPtr VROntology::create(string name) {
     auto o = VROntologyPtr( new VROntology(name) );
-    o->thing = VRConcept::create("Thing", o);
+    static VRConceptPtr thing = VRConcept::create("Thing", o);
+    o->thing = thing;
     o->concepts["Thing"] = o->thing;
     o->storeObj("Thing", o->thing);
     return o;
@@ -37,9 +38,9 @@ VROntologyPtr VROntology::create(string name) {
 VROntologyPtr VROntology::ptr() { return shared_from_this(); }
 
 void VROntology::setup() {
-    vector<VRConceptPtr> cpts;
-    thing->getDescendance(cpts);
-    for (auto& c : cpts) concepts[c->getName()] = c;
+    //map<int, VRConceptPtr> cpts;
+    //thing->getDescendance(cpts);
+    //for (auto& c : cpts) concepts[c.second->getName()] = c.second;
 
     auto insts = entities;
     entities.clear();
@@ -84,19 +85,27 @@ vector<VRConceptPtr> VROntology::getConcepts() {
     return res;
 }
 
-VRConceptPtr VROntology::addConcept(string concept, string parent, string comment) {
+VRConceptPtr VROntology::addConcept(string concept, string parents, string comment) {
     if (concepts.count(concept)) { cout << "WARNING in VROntology::addConcept, " << concept << " known, skipping!\n"; return 0;  }
 
-    auto p = thing;
-    if (parent != "") {
-        p = getConcept(parent);
-        if (!p) { WARN("WARNING in VROntology::addConcept, " + parent + " not found while adding " + concept); return 0;  }
+    vector<VRConceptPtr> Parents;
+    if (parents != "") {
+        for (auto parent : splitString(parents, ' ')) {
+            auto p = getConcept(parent);
+            if (!p) { WARN("WARNING in VROntology::addConcept, " + parent + " not found while adding " + concept); return 0;  }
+            Parents.push_back(p);
+        }
     }
-    //cout << "VROntology::addConcept " << concept << " " << parent << " " << p->name << " " << p->ID << endl;
-    p = p->append(concept);
-    p->addAnnotation(comment, "comment");
-    addConcept(p);
-    return p;
+
+    VRConceptPtr Concept;
+    if (Parents.size() == 0) Concept = thing->append(concept);
+    else Concept = Parents[0]->append(concept);
+
+    //cout << "VROntology::addConcept " << concept << " " << parents << " " << Concept->getName() << " " << Concept->ID << endl;
+    for (int i=1; i<Parents.size(); i++) Parents[i]->append(Concept);
+    Concept->addAnnotation(comment, "comment");
+    addConcept(Concept);
+    return Concept;
 }
 
 void VROntology::addConcept(VRConceptPtr c) {
@@ -143,16 +152,19 @@ void VROntology::import(VROntologyPtr o) { dependencies[o->getName()] = o; }
 
 void VROntology::merge(VROntologyPtr o) { // Todo: check it well!
     for (auto c : o->rules) rules[c.first] = c.second;
-    for (auto c : o->thing->children) {
-        auto cn = c.second->copy();
-        thing->append(cn);
-        vector<VRConceptPtr> cpts;
-        cn->getDescendance(cpts);
-        for (auto c : cpts) {
-            concepts[c->getName()] = c;
-            c->ontology = shared_from_this();
-        }
+    for (auto c : o->concepts) {
+        auto cn = c.second.lock();
+        if (cn) concepts[cn->getName()] = cn;
     }
+}
+
+map<int, vector<VRConceptPtr>> VROntology::getChildrenMap() {
+    map<int, vector<VRConceptPtr>> res;
+    for (auto wc : concepts) {
+        auto c = wc.second.lock();
+        if (c) for (auto p : c->parents) res[p.second->ID].push_back(c);
+    }
+    return res;
 }
 
 VROntologyPtr VROntology::copy() {
@@ -217,7 +229,8 @@ vector<VREntityPtr> VROntology::getEntities(string concept) {
 
 string VROntology::toString() {
     string res = "Taxonomy:\n";
-    res += thing->toString();
+    auto cMap = getChildrenMap();
+    res += thing->toString(cMap);
     res += "Entities:\n";
     for (auto e : entities) res += e.second->toString() + "\n";
     return res;

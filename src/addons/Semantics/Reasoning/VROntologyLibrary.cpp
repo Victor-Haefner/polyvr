@@ -9,6 +9,7 @@ void VROntology::setupLibrary() {
     // ontologies
     auto mathOnto = VROntology::create("Math");
     auto featureOnto = VROntology::create("Feature");
+    auto elecDevOnto = VROntology::create("ElectricalDevice");
     auto machineOnto = VROntology::create("Machine");
     auto prodMachineOnto = VROntology::create("ProductionMachine");
     auto manipOnto = VROntology::create("Manipulation");
@@ -69,8 +70,13 @@ void VROntology::setupLibrary() {
 
     actionOnto->addConcept("Action");
 
+    elecDevOnto->addConcept("ElectricalDevice");
+    elecDevOnto->getConcept("ElectricalDevice")->addProperty("powered", "bool");
+
     machineOnto->import(objectOnto);
-    machineOnto->addConcept("Machine", "Object");
+    machineOnto->import(elecDevOnto);
+    machineOnto->addConcept("Machine", "Object ElectricalDevice");
+    machineOnto->getConcept("Machine")->addProperty("running", "bool");
 
     processingOnto->import(featureOnto);
     processingOnto->import(actionOnto);
