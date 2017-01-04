@@ -264,11 +264,23 @@ PyMethodDef VRPyOntology::methods[] = {
     {"copy", (PyCFunction)VRPyOntology::copy, METH_NOARGS, "Copy the ontology - ontology copy()" },
     //{"addModule", (PyCFunction)proxy<string, VRPyOntology, void (VROntology::*)(string), &VROntology::addModule>::set, METH_VARARGS, "Add module from library - addModule( str name )" },
     {"addModule", PySetter(Ontology, addModule, string), "Add module from library - addModule( str name )" },
+    {"process", (PyCFunction)VRPyOntology::process, METH_VARARGS, "Process a query - process( str query )" },
     {NULL}  /* Sentinel */
 };
 
 PyObject* VRPyOntology::copy(VRPyOntology* self) {
     return VRPyOntology::fromSharedPtr( self->objPtr->copy() );
+}
+
+PyObject* VRPyOntology::process(VRPyOntology* self, PyObject* args) {
+    const char* query = 0;
+    if (! PyArg_ParseTuple(args, "s:process", (char*)&query)) return NULL;
+
+    auto pyres = PyList_New(0);
+    if (!query) return pyres;
+    auto res = self->objPtr->process(string(query));
+    for (auto e : res) PyList_Append(pyres, VRPyEntity::fromSharedPtr(e));
+    return pyres;
 }
 
 PyObject* VRPyOntology::merge(VRPyOntology* self, PyObject* args) {

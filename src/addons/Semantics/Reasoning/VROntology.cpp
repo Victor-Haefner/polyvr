@@ -67,7 +67,7 @@ VRConceptPtr VROntology::getConcept(string name) {
             if (auto o = ow.second.lock()) {
                 p = o->getConcept(name);
                 if (p) {
-                    p = p->copy();
+                    //p = p->copy();
                     addConcept(p);
                     break;
                 }
@@ -148,7 +148,8 @@ void VROntology::renameEntity(VREntityPtr e, string s) {
     e->setName(s);
 }
 
-void VROntology::import(VROntologyPtr o) { dependencies[o->getName()] = o; }
+//void VROntology::import(VROntologyPtr o) { dependencies[o->getName()] = o; }
+void VROntology::import(VROntologyPtr o) { merge(o); }
 
 void VROntology::merge(VROntologyPtr o) { // Todo: check it well!
     for (auto c : o->rules) rules[c.first] = c.second;
@@ -250,4 +251,11 @@ void VROntology::addModule(string mod) {
 
 void VROntology::setFlag(string f) { flag = f; }
 string VROntology::getFlag() { return flag; }
+
+vector<VREntityPtr> VROntology::process(string query) {
+    auto r = VRReasoner::create();
+    return r->process(query, ptr());
+}
+
+
 

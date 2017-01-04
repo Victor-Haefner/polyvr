@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="sorting" name_space="Scene" loading_time="367">
+<Scene name_suffix="0" base_name="sorting" name_space="Scene" loading_time="418">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
       <Object ambient="0.387091 0.387091 0.387091 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0 0 0 1" type="Light" unique="1" visible="1">
         <Object at="-0.5 -1 -0.3" at_dir="1" base_name="Headlight_beacon" from="0 0 0" light="light" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
           <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
-        <Object accept_root="1" aspect="1" at="5.04649 1.03754 -0.30734" at_dir="0" base_name="Default" far="512" fov="1.0472" from="9.67477 3.06887 4.7707" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="2.75 1.72391 0.071064" at_dir="0" base_name="Default" far="512" fov="1.0472" from="10.0781 4.3056 3.57062" name_space="__global__" name_suffix="0" near="0.1" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
           <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
       </Object>
@@ -32,6 +32,7 @@
 	VR.initScanner()
 	VR.initPackets()
 	
+	print VR.ontology.toString()
 </core>
       <trig type="on_device" dev="keyboard" state="Pressed" param="" key="105" name_suffix="0" base_name="trigger" name_space="__global__"/>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="1" base_name="trigger" name_space="__global__"/>
@@ -160,6 +161,7 @@
 	brown = VR.Material('brown')
 	brown.setDiffuse(0.8,0.5,0.1)
 	
+	belt = VR.ontology.process('q(b):ConveyorBelt(b)')[0]
 	def addPacket(p):
 		packet = VR.Geometry('packet')
 		packet.setPrimitive('Box 0.3 0.2 0.3 1 1 1')
@@ -167,8 +169,12 @@
 		packet.setMaterial(brown)
 		VR.scene.addChild(packet)
 		
+		epacket = VR.ontology.addEntity('packet', 'Object')
+		epacket.setVector('position', p)
+		belt.add('load',epacket.getName())
+		
 	for i in range(10):
-		addPacket([i*0.6-5,1.1,0])
+		addPacket([i*0.6-5,1.15,0])
 		
 </core>
     </Script>
@@ -277,10 +283,19 @@
 			for lamp in lamps: setLamp(lamp,1,0)
 		if m[1] == 'false': 
 			for lamp in lamps: setLamp(lamp,0,1)
+			
+		devices = VR.ontology.process('q(d):ElectricalDevice(d)')
+		for d in devices: d.set('powered',m[1])
 	
 	if m[0] == 'conveyor':
 		if m[1] == 'true': pass
 		if m[1] == 'false': pass
+		
+		belts = VR.ontology.process('q(b):ConveyorBelt(b);is(b.powered,true)')
+		for b in belts: b.set('running',m[1])
+		
+		
+	#print VR.ontology.toString()
 </core>
       <trig type="on_device" dev="server1" state="Released" param="" key="-1" name_suffix="2" base_name="trigger" name_space="__global__"/>
     </Script>
@@ -336,11 +351,32 @@
 	VR.ontology.addModule('Machine')
 	
 	cbelt = VR.ontology.addConcept('ConveyorBelt', 'Machine')
-	#cbelt.add
+	cbelt.addProperty('speed', 'float')
+	cbelt.addProperty('load', 'Object')
 	
-	print VR.ontology.toString()
-	print cbelt.toString()
+	change = VR.ontology.addConcept('Change')
+	change.addProperty('timestamp', 'int')
+	
+	Schange = VR.ontology.addConcept('ScalarChange')
+	Vchange = VR.ontology.addConcept('VectorChange')
+	Schange.addProperty('value', 'float')
+	Vchange.addProperty('value', 'Vector')
+	
+	VR.ontology.addRule('doTimestep(t):Machine(m);doWork(m,t)')
+	VR.ontology.addRule('doWork(c,t):ConveyorBelt(c);Object(o);has(c,o);is(o.position,o.position+c.direction*c.speed)')
+	
+	ebelt = VR.ontology.addEntity('belt', 'ConveyorBelt', {'running':'false','powered':'false'})		
+		
+	print VR.ontology
 </core>
+    </Script>
+    <Script base_name="semantics_update" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1">
+      <core>
+	import VR
+	
+	VR.ontology.process('q(c):Change(c);doTimestep(1)')
+</core>
+      <trig type="on_timeout" dev="" state="Pressed" param="1000" key="0" name_suffix="3" base_name="trigger" name_space="__global__"/>
     </Script>
   </Scripts>
   <Sockets persistency="666"/>

@@ -3,8 +3,10 @@
 #include "VROntology.h"
 #include "VRReasoner.h"
 #include "VRProperty.h"
+#include "core/utils/toString.h"
 
 #include <iostream>
+#include <algorithm>
 
 using namespace OSG;
 
@@ -219,7 +221,91 @@ string Query::toString() {
     return res;
 }
 
-Term::Term(string s) : path(s), str(s) {;}
+class mathExpression { // TODO: put this in own header!
+    public:
+        struct ValueBase {};
+        template<class T> struct Value : ValueBase {
+            T value;
+            Value(const T& t) : value(t) {;}
+        };
+
+        struct Node {
+            string param;
+            ValueBase* value = 0;
+
+            Node* parent = 0;
+            vector<Node*> children;
+            Node(string s) : param(s) {;}
+            ~Node() { if (value) delete value; }
+
+            void setValue(string s) {
+                int N = std::count(s.begin(), s.end(), ' ');
+                if (N == 0) value = new Value<float>(toFloat(s));
+                if (N == 2) value = new Value<Vec3f>(toVec3f(s));
+            }
+        };
+
+    private:
+        string data;
+        Node* tree = 0;
+        vector<Node*> nodes;
+
+        void convToPrefixExpr() { // TODO
+            ;
+        }
+
+        void buildTree() { // TODO, build the tree recursively from the prefix expression!
+
+
+
+            for (auto s : splitString(data,' ')) {
+                auto node = new Node(s);
+                nodes.push_back(node);
+                if (tree == 0) tree = node;
+            }
+        }
+
+    public:
+        mathExpression(string s) {
+            data = s;
+        }
+
+        bool isMathExpression() {
+            for (auto c : data) {
+                if (c == '+' || c == '-' || c == '*' || c == '/') return true;
+            }
+            return false;
+        }
+
+        void computeTree() {
+            convToPrefixExpr();
+            buildTree();
+        }
+
+        vector<Node*> getLeafs() {
+            vector<Node*> res;
+            for (auto n : nodes) if (n->children.size() == 0) res.push_back(n);
+            return res;
+        }
+
+        string compute() { // TODO: go through tree, get values, and compute expression
+            return "0.0";
+        }
+};
+
+Term::Term(string s) : path(s), str(s) { // parse term content
+    // check for mathematical expression
+    mathExpression me(s);
+    if (me.isMathExpression()) {
+        me.computeTree(); // build RDP tree
+        for (auto l : me.getLeafs()) {
+            VPath p(l->param);
+            string val = "1.5"; // TODO: get the value of p!!
+            l->setValue(val); // replace the variable with the numeric value!
+        }
+        path = VPath( me.compute() ); // override old data
+    }
+}
 
 bool Term::valid() { return var->valid; }
 
