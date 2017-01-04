@@ -157,6 +157,7 @@ void Variable::discard(VREntityPtr e) {
 
 VPath::VPath(string p) {
     nodes = VRReasoner::split(p, '.');
+    if (nodes.size() == 0) return;
     root = nodes[0];
     first = nodes[nodes.size()-1];
 }
@@ -224,29 +225,78 @@ string Query::toString() {
 
 class mathExpression { // TODO: put this in own header!
     public:
-        struct ValueBase {};
+        struct ValueBase {
+            virtual string toString() = 0;
+            virtual ValueBase* add(ValueBase* n) = 0;
+            virtual ValueBase* sub(ValueBase* n) = 0;
+            virtual ValueBase* mult(ValueBase* n) = 0;
+            virtual ValueBase* div(ValueBase* n) = 0;
+        };
+
         template<class T> struct Value : ValueBase {
             T value;
             Value(const T& t) : value(t) {;}
+            string toString() { return ::toString(value); }
+
+            // TODO: only declare here, use partial template implementations!
+            ValueBase* add(ValueBase* n) {
+                if (auto v2 = dynamic_cast<Value<T>*>(n)) return new Value<T>(value + v2->value);
+                return 0;
+            }
+            ValueBase* sub(ValueBase* n) {
+                if (auto v2 = dynamic_cast<Value<T>*>(n)) return new Value<T>(value - v2->value);
+                return 0;
+            }
+            ValueBase* mult(ValueBase* n) {
+                if (auto v2 = dynamic_cast<Value<T>*>(n)) return new Value<T>(value * v2->value);
+                return 0;
+            }
+            ValueBase* div(ValueBase* n) {
+                //if (auto v2 = dynamic_cast<Value<T>*>(n)) return new Value<T>(value / v2->value);
+                return 0;
+            }
         };
+
+        //ValueBase* add(Value<Vec3f>* v1, Value<Vec3f>* v2) { return new Value<T>(v1->value + v2->value); }
 
         struct Node {
             string param;
             ValueBase* value = 0;
-
             Node* parent = 0;
-            vector<Node*> children;
+            Node* left = 0;
+            Node* right = 0;
+
             Node(string s) : param(s) {;}
             ~Node() { if (value) delete value; }
 
+            void setValue(float f) { value = new Value<float>(f); }
+            void setValue(Vec3f v) { value = new Value<Vec3f>(v); }
             void setValue(string s) {
+                cout << " Node::setValue " << param << " " << s << endl;
                 int N = std::count(s.begin(), s.end(), ' ');
-                if (N == 0) value = new Value<float>(toFloat(s));
-                if (N == 2) value = new Value<Vec3f>(toVec3f(s));
+                if (N == 0) setValue(toFloat(s));
+                if (N == 2) setValue(toVec3f(s));
+            }
+
+            string toString(string indent = "") {
+                string res = param;
+                if (value) res += " ("+value->toString()+")";
+                if (left) res += "\n"+indent+" " + left->toString(indent+" ");
+                if (right) res += "\n"+indent+" " + right->toString(indent+" ");
+                return res;
+            }
+
+            void compute() { // compute value based on left and right values and param as operator
+                if (left->value == 0 || right->value == 0) return;
+                char op = param[0];
+                if (op == '+') value = left->value->add(right->value);
+                if (op == '-') value = left->value->sub(right->value);
+                if (op == '*') value = left->value->mult(right->value);
+                if (op == '/') value = left->value->div(right->value);
             }
         };
 
-    private:
+    public:
         string data;
         Node* tree = 0;
         vector<Node*> nodes;
@@ -273,8 +323,6 @@ class mathExpression { // TODO: put this in own header!
                 } else last += c;
             }
             if (last.size() > 0 ) tokens.push_back(last);
-            //for (auto t : tokens) cout << " '"+t+"' ";
-            //cout << endl;
 
             stack<string> OperandStack;
             stack<char> OperatorStack;
@@ -289,13 +337,11 @@ class mathExpression { // TODO: put this in own header!
             };
 
             for (auto t : tokens) {
-                // token is operand
                 if (t.size() != 1 || !isMathToken(t[0]) ) {
                     OperandStack.push(t); continue;
                 }
                 char o = t[0];
 
-                // If it is a left parentheses or operator of higher precedence than the last, or the stack is empty,
                 if ( o == '(' || OperatorStack.size() == 0 || OperatorHierarchy[o] < OperatorHierarchy[OperatorStack.top()] ) {
                     OperatorStack.push(o); continue;
                 }
@@ -318,15 +364,23 @@ class mathExpression { // TODO: put this in own header!
             data = OperandStack.top(); // store prefix expression
         }
 
-        void buildTree() { // TODO, build the tree recursively from the prefix expression!
-
-
-
-            for (auto s : splitString(data,' ')) {
-                auto node = new Node(s);
+        void buildTree() { // build a binary expression tree from the prefix expression data
+            stack<Node*> nodeStack;
+            Node* node = 0;
+            vector<string> tokens = splitString(data,' ');
+            for (int i=0; i<tokens.size(); i++) {
+                string t = tokens[tokens.size()-i-1];
+                node = new Node(t);
                 nodes.push_back(node);
-                if (tree == 0) tree = node;
+                if ( t.size() == 1 && isMathToken(t[0]) ) { // found operator
+                    node->right = nodeStack.top(); nodeStack.pop();
+                    node->left = nodeStack.top(); nodeStack.pop();
+                    nodeStack.push(node);
+                } else nodeStack.push(node);
             }
+            node = nodeStack.top(); nodeStack.pop();
+            tree = node;
+            //cout << tree->toString() << endl;
         }
 
     public:
@@ -353,12 +407,20 @@ class mathExpression { // TODO: put this in own header!
 
         vector<Node*> getLeafs() {
             vector<Node*> res;
-            for (auto n : nodes) if (n->children.size() == 0) res.push_back(n);
+            for (auto n : nodes) if (!n->left && !n->right) res.push_back(n);
             return res;
         }
 
-        string compute() { // TODO: go through tree, get values, and compute expression
-            return "0.0";
+        string compute() { // compute result of binary expression tree
+            std::function<void(Node*)> subCompute = [&](Node* n) {
+                if (!n || !n->left || !n->right) return;
+                subCompute(n->left);
+                subCompute(n->right);
+                n->compute();
+            };
+            subCompute(tree);
+            if (tree->value) return tree->value->toString();
+            else return "";
         }
 };
 
@@ -373,7 +435,10 @@ Term::Term(string s) : path(s), str(s) { // parse term content
             string val = "1.5"; // TODO: get the value of p!!
             l->setValue(val); // replace the variable with the numeric value!
         }
-        path = VPath( me.compute() ); // override old data
+        if (me.tree) cout << me.tree->toString() << endl;
+        string res = me.compute();
+        cout << " Term::Term '"+s+"' results to " << res << endl;
+        path = VPath(res ); // override old data
     }
 }
 
