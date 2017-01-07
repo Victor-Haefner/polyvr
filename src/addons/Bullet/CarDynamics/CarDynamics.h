@@ -104,6 +104,7 @@ class CarDynamics : public VRObject {
 
         void reset(const pose& p);
         float getSpeed();
+        float getAcceleration();
 };
 
 OSG_END_NAMESPACE
