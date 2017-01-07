@@ -49,7 +49,8 @@ void VRStorage::storeObjNames(string tag, vector<T>* o, vector<string>* v) {
 
 VREntity::VREntity(string name, VROntologyPtr o, VRConceptPtr c) {
     ontology = o;
-    if (!o && c) ontology = c->ontology;
+    //if (!o && c) ontology = c->ontology;
+    if (!o) cout << "Warning: VREntity::VREntity, no valid ontology passed!\n";
     concepts.push_back(c);
 
     setStorageType("Entity");

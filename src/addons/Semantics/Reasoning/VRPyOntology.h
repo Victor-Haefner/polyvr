@@ -57,6 +57,7 @@ struct VRPyOntology : VRPyBaseT<OSG::VROntology> {
     static PyObject* addRule(VRPyOntology* self, PyObject* args);
     static PyObject* merge(VRPyOntology* self, PyObject* args);
     static PyObject* copy(VRPyOntology* self);
+    static PyObject* process(VRPyOntology* self, PyObject* args);
 };
 
 struct VRPyReasoner : VRPyBaseT<OSG::VRReasoner> {

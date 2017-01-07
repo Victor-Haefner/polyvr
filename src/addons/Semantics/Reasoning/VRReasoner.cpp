@@ -153,6 +153,7 @@ bool VRReasoner::apply(VRStatementPtr statement, Context& context) {
     }
 
     if (statement->verb == "q") {
+        if (statement->terms.size() == 0) { print("Warning: failed to apply " + statement->toString() + ", empty query!"); return false; }
         string x = statement->terms[0].var->value;
         VariablePtr v = context.vars[x];
         for (auto e : v->entities) {

@@ -9,6 +9,7 @@ void VROntology::setupLibrary() {
     // ontologies
     auto mathOnto = VROntology::create("Math");
     auto featureOnto = VROntology::create("Feature");
+    auto elecDevOnto = VROntology::create("ElectricalDevice");
     auto machineOnto = VROntology::create("Machine");
     auto prodMachineOnto = VROntology::create("ProductionMachine");
     auto manipOnto = VROntology::create("Manipulation");
@@ -51,7 +52,7 @@ void VROntology::setupLibrary() {
     mathOnto->getConcept("Path")->addProperty("normals", "Normal");
     mathOnto->getConcept("Box")->addProperty("min", "Vector");
     mathOnto->getConcept("Box")->addProperty("max", "Vector");
-    mathOnto->addRule("inside(p,b):Box(b);Position(p);isGe(p,b/min);isGe(b/max,p)", "Box");
+    mathOnto->addRule("inside(p,b):Box(b);Position(p);isGe(p,b.min);isGe(b.max,p)", "Box");
     // TODO: quaternion rotation rule to change direction
 
     objectOnto->import(mathOnto);
@@ -62,15 +63,20 @@ void VROntology::setupLibrary() {
     processOnto->addConcept("Process");
     processOnto->getConcept("Process")->addProperty("fragment", "Process");
     processOnto->getConcept("Process")->addProperty("state", "int");
-    processOnto->addRule("is(p/state,1):Process(p);is_not(p/state,1);is_all(p/fragment/state,1)", "Process");
+    processOnto->addRule("is(p.state,1):Process(p);is_not(p.state,1);is_all(p.fragment.state,1)", "Process");
 
     featureOnto->addConcept("Feature");
     featureOnto->getConcept("Feature")->addProperty("state", "int");
 
     actionOnto->addConcept("Action");
 
+    elecDevOnto->addConcept("ElectricalDevice");
+    elecDevOnto->getConcept("ElectricalDevice")->addProperty("powered", "bool");
+
     machineOnto->import(objectOnto);
-    machineOnto->addConcept("Machine", "Object");
+    machineOnto->import(elecDevOnto);
+    machineOnto->addConcept("Machine", "Object ElectricalDevice");
+    machineOnto->getConcept("Machine")->addProperty("running", "bool");
 
     processingOnto->import(featureOnto);
     processingOnto->import(actionOnto);
@@ -80,7 +86,7 @@ void VROntology::setupLibrary() {
     // if processing unset and feature unset and feature and processing result have same concept, result is set to feature
     //processingOnto->addRule("s(Processing).state=unset & f(Feature).state=unset & s.result.CONCEPT=f.CONCEPT ? f.state=set & s.state=set & s.result=f");
     // if processing done, then result is done and skill is unset
-    processingOnto->addRule("is(s/result/state,1):Processing(s);is(s/state,1)", "Processing");
+    processingOnto->addRule("is(s.result.state,1):Processing(s);is(s.state,1)", "Processing");
 
     prodMachineOnto->import(machineOnto);
     prodMachineOnto->import(processingOnto);

@@ -17,14 +17,15 @@ VRStatement::VRStatement(string s, int p) {
     regStorageSetupFkt( VRFunction<int>::create("statement setup", boost::bind(&VRStatement::setup, this)) );
 }
 
-void VRStatement::setup() {
+void VRStatement::setup() { // parse statement
     if (statement == "") return;
+
+    // verb
     auto s1 = VRReasoner::split(statement, '(');
     if (s1.size() == 0) return;
     verb = s1[0];
-    //auto v = VRReasoner::split(s1[0], '_');
-    //verb = v[0];
-    //verb_suffix = v.size() > 1 ? v[1] : "";
+
+    // terms
     if (s1.size() < 2) return;
     auto s2 = VRReasoner::split(s1[1], ')');
     if (s2.size() == 0) return;
@@ -64,10 +65,20 @@ bool VRStatement::match(VRStatementPtr s) {
         auto tR = terms[i];
         if (!tS.valid() || !tR.valid()) return false;
         if (tS.path.nodes.size() != tR.path.nodes.size()) return false;
-
+        //cout << "A " << tR.var->concept << " " << tS.var->concept << endl;
         //cout << "var1 " << tR.var.value << " type: " << tR.var.concept << endl;
         //cout << "var2 " << tS.var.value << " type: " << tS.var.concept << endl;
-        if (tR.var->concept != tS.var->concept) return false;
+        if (tR.var->concept != tS.var->concept) {
+            for (auto e : tR.var->entities) {
+                for (auto c : e.second->getConcepts()) {
+                    cout << " A e: " << c->getName() << " c: " << tS.var->concept << endl;
+                    if (c->getName() == tS.var->concept) return true;
+                }
+            }
+
+            // !cR.hasParent(cS) && !cS.hasParent(cR) )
+            return false;
+        }
     }
     return true;
 }
