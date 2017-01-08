@@ -45,7 +45,6 @@ void VROntology::setupLibrary() {
     mathOnto->getConcept("Quaternion")->addProperty("w", "float");
     mathOnto->getConcept("Area")->addProperty("borders", "Border");
     mathOnto->getConcept("Area")->addProperty("subArea", "Area");
-    mathOnto->getConcept("Border")->addProperty("path", "Path");
     mathOnto->getConcept("Node")->addProperty("position", "Position");
     mathOnto->getConcept("Node")->addProperty("paths", "Path");
     mathOnto->getConcept("Path")->addProperty("nodes", "Node");
