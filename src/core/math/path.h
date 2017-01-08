@@ -57,6 +57,7 @@ class path {
         Vec3f getColor(float t, int i = 0, int j = 0);
         pose getPose(float t, int i = 0, int j = 0);
         float getDistance(Vec3f p);
+        vector<float> computeInflectionPoints(int i, int j);
 
         void approximate(int degree);
 

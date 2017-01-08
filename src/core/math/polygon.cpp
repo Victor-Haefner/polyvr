@@ -115,13 +115,14 @@ polygon polygon::sort() {
     polygon radial_sort;
     radial_sort.addPoint(p0);
     for (auto p : points) if (p != p0) radial_sort.addPoint(p);
+
     auto getSortTurn = [&](const Vec2f& p1, const Vec2f& p2) -> bool {
-        float z = (p1[0]-p0[0])*(p2[1]-p0[1])-(p1[1]-p0[1])*(p2[0]-p0[0]);
-        return z > 0;
+        return (p1[1]-p0[1])*(p2[0]-p0[0]) < (p1[0]-p0[0])*(p2[1]-p0[1]);
     };
 
     auto& vec = radial_sort.points;
-    std::sort(vec.begin(), vec.end(), getSortTurn);
+    //std::sort(vec.begin(), vec.end(), getSortTurn);
+    std::stable_sort(vec.begin(), vec.end(), getSortTurn);
     std::unique(vec.begin(), vec.end());
     return radial_sort;
 }

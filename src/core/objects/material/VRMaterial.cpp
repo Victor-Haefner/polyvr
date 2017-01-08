@@ -395,10 +395,17 @@ VRMaterialPtr VRMaterial::get(string s) {
     return materials[s].lock();
 }
 
-VRObjectPtr VRMaterial::copy(vector<VRObjectPtr> children) {
+VRObjectPtr VRMaterial::copy(vector<VRObjectPtr> children) { // TODO: test it, may not work properly!
     VRMaterialPtr mat = VRMaterial::create(getBaseName());
-    cout << "Warning: VRMaterial::copy not implemented!\n";
-    // TODO: copy all the stuff
+
+    for (int i=0; i<mats.size(); i++) {
+        if (i > 0) mat->addPass();
+        mat->mats[i] = mats[i]->copy();
+    }
+
+    mat->force_transparency = force_transparency;
+    mat->deferred = deferred;
+    mat->activePass = activePass;
     return mat;
 }
 

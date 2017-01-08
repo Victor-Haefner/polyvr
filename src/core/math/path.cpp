@@ -1,5 +1,6 @@
 #include "path.h"
 #include "core/objects/VRTransform.h"
+#include "core/math/equation.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
@@ -92,6 +93,45 @@ path::pnt::pnt(Vec3f p, Vec3f n, Vec3f c, Vec3f u) {
     this->u = u;
 }
 
+vector<float> path::computeInflectionPoints(int i, int j) { // first and second derivative are parallel
+    pnt P1 = points[i];
+    pnt P2 = points[j];
+
+    // help points
+    float L = (P1.p-P2.p).length();
+    Vec3f H1 = P1.p + P1.n*0.333*L;
+    Vec3f H2 = P2.p - P2.n*0.333*L;
+
+    // At*t*t + B*t*t + C*t + D
+    Vec3f A = P2.p - H2*3 + H1*3 - P1.p;
+    Vec3f B = H2 - H1*2 + P1.p;
+    Vec3f C = H1 - P1.p;
+
+    Vec3f CxB = C.cross(B);
+    Vec3f CxA = C.cross(A);
+    Vec3f BxA = B.cross(A);
+
+    // CxB + CxA*t + BxA*t*t = 0
+    equation ex(0,BxA[0],CxA[0],CxB[0]);
+    equation ey(0,BxA[1],CxA[1],CxB[1]);
+    equation ez(0,BxA[2],CxA[2],CxB[2]);
+    vector<float> T;
+    Vec3f t;
+    for (int k=0; k < ex.solve(t[0],t[1],t[3]) ;k++) T.push_back(t[k]);
+    for (int k=0; k < ey.solve(t[0],t[1],t[3]) ;k++) T.push_back(t[k]);
+    for (int k=0; k < ez.solve(t[0],t[1],t[3]) ;k++) T.push_back(t[k]);
+
+    vector<float> R;
+    for (auto t : T) {
+        Vec3f Vt = (A*t*t+B*t*2+C)*3;
+        Vec3f At = (A*t+B)*6;
+        if (Vt.dot(At) != 0) continue;
+        for (auto r : R) if (r == t) continue;
+        R.push_back(t);
+    }
+    return R;
+}
+
 void path::approximate(int d) {
     degree = d;
 
@@ -104,13 +144,61 @@ void path::approximate(int d) {
 		return p1 + n1*s;
     };
 
-    auto toQuadratic = [&](Vec3f& p1, Vec3f& p4, Vec3f& n1, Vec3f& n4, Vec3f& pm, Vec3f& p2, Vec3f& p3) {
-		p2 = p1+n1;
-		p3 = p4-n4;
-		Vec3f nm = p3-p2;
-		nm.normalize();
-		p2 = intersect(p1,n1,pm,nm);
-		p3 = intersect(p4,n4,pm,nm);
+    auto toQuadratic = [&](int j, Vec3f& p1, Vec3f& p4, Vec3f& n1, Vec3f& n4, Vec3f& pm, Vec3f& p2, Vec3f& p3) {
+        Vec3f nm;
+
+        auto computePoints = [&](int k) {
+            float t = 0.5+0.099*k;
+            pm = getPose(t, j, j+1).pos();
+            //nm = getPose(t, j, j+1).dir();
+
+            // help points
+            float L = (p1-p4).length();
+            Vec3f H1 = p1 + n1*0.333*L;
+            Vec3f H2 = p4 - n4*0.333*L;
+
+            // At*t*t + B*t*t + C*t + D
+            Vec3f A = p4 - H2*3 + H1*3 - p1;
+            Vec3f B = H2 - H1*2 + p1;
+            Vec3f C = H1 - p1;
+            nm = (A*t*t+B*t*2+C)*3;
+            nm.normalize();
+
+            //cout << "nm " << getPose(t, j, j+1).dir() << "   " << nm << endl;
+
+            p2 = intersect(p1,n1,pm,nm);
+            p3 = intersect(p4,n4,pm,nm);
+        };
+
+        /*vector<float> inflPnts = computeInflectionPoints(j,j+1);
+        if (inflPnts.size() == 0) inflPnts.push_back(0.5);
+        for (float t : inflPnts) {
+            computePoints();
+        }*/
+
+        computePoints(0);
+        for (int k = 1; k<5; k++) { // TODO: replace by computing exact inflection points!
+            /*if ((p2-pm).dot(nm) > 0) { // p2 beyond pm
+                computePoints(-k);
+                continue;
+            }
+            if ((p2-p1).dot(n1) < 0) { // p2 before p1
+                computePoints(-k);
+                cout << "Waring, p2 before p1, recompute pm! " << (p2-p1).dot(n1) << " nm " << nm << " pm " << pm << endl;
+                continue;
+            }
+            if ((p3-pm).dot(nm) < 0) { // p3 before pm
+                computePoints(k);
+                continue;
+            }
+            if ((p3-p4).dot(n4) > 0) { // p3 beyond p4
+                computePoints(k);
+                continue;
+            }
+            break;*/
+        }
+
+		//cout << "toQuadratic  p1:" << p1 << "  n1:" << n1 << "  p2:" << p2 << "  pm:" << pm << "  nm:" << nm << endl;
     };
 
 	auto isLinear = [&](Vec3f& p1, Vec3f& p2, Vec3f& n1, Vec3f& n2) {
@@ -134,9 +222,8 @@ void path::approximate(int d) {
                 Vec3f p2 = (p1+p4)*0.5;
                 res.push_back(p2);
 			} else {
-				Vec3f pm = getPose(0.5, j, j+1).pos();
-				Vec3f p2,p3;
-				toQuadratic(p1,p4,n1,n4,pm, p2,p3);
+				Vec3f p2,p3,pm;
+				toQuadratic(j,p1,p4,n1,n4,pm,p2,p3);
                 res.push_back(p2);
                 res.push_back(pm);
                 res.push_back(p3);
@@ -261,23 +348,30 @@ bool path::isClosed() { return closed; }
 
 Vec3f path::interp(vector<Vec3f>& vec, float t, int i, int j) {
     if (t <= 0) t = 0; if (t >= 1) t = 1; // clamp t
-    if (j <= 0) j = vec.size()-1;
     if (direction == -1) t = 1-t;
+
+    if (j <= 0) j = vec.size()-1;
+    else j *= (iterations-1);
+    i *= (iterations-1);
+
     int N = j-i;
-    if (N == -1) return Vec3f();
+    if (N < 0) return Vec3f();
+
     float tN = t*N;
     int ti = floor(tN);
     float x = tN-ti;
     if (ti >= N) return vec[i+N];
+
+    //cout << "i j ti x v[ti+i] v[ti+i+1]" << i << " " << j << " " << ti << " " << x << " " << vec[i+ti] << " " << vec[i+ti+1] << endl;
     return (1-x)*vec[i+ti] + x*vec[i+ti+1];
 }
 
-Vec3f path::getPosition(float t, int i, int j) { return interp(positions, t); }
-Vec3f path::getColor(float t, int i, int j) { return interp(colors, t); }
+Vec3f path::getPosition(float t, int i, int j) { return interp(positions, t, i, j); }
+Vec3f path::getColor(float t, int i, int j) { return interp(colors, t, i, j); }
 
 void path::getOrientation(float t, Vec3f& dir, Vec3f& up, int i, int j) {
-    dir = interp(directions, t)*direction;
-    up = interp(up_vectors, t);
+    dir = interp(directions, t, i, j)*direction;
+    up = interp(up_vectors, t, i, j);
 }
 
 pose path::getPose(float t, int i, int j) {
