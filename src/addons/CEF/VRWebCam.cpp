@@ -5,6 +5,9 @@
 using namespace OSG;
 
 VRWebCam::VRWebCam(string name) : VRSprite(name) {}
+VRWebCam::~VRWebCam() {}
+
+shared_ptr<VRWebCam> VRWebCam::create(string name) { return shared_ptr<VRWebCam>(new VRWebCam(name)); }
 
 void VRWebCam::connect(string uri, int res, float ratio) {
     this->uri = uri;

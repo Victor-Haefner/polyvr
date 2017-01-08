@@ -36,6 +36,8 @@ class RealWorld {
         RealWorld(OSG::VRObjectPtr root, OSG::Vec2f origin);
         ~RealWorld();
 
+        static std::shared_ptr<RealWorld> create(OSG::VRObjectPtr root, OSG::Vec2f origin);
+
         static RealWorld* get();
 
         void enableModule(string mod, bool b, bool t, bool p);

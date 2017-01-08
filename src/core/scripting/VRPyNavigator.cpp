@@ -14,5 +14,5 @@ PyMethodDef VRPyNavigator::methods[] = {
 
 PyObject* VRPyNavigator::getPreset(VRPyNavigator* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    return VRPyNavPreset::fromPtr(self->obj->getNavigation( parseString(args) ));
+    return VRPyNavPreset::fromSharedPtr(self->objPtr->getNavigation( parseString(args) ));
 }

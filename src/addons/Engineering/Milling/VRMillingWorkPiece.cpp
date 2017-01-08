@@ -21,7 +21,7 @@ void VRMillingWorkPiece::setCuttingTool(VRTransformPtr geo) {
     toolPose = geo->getWorldPose();
 }
 
-void VRMillingWorkPiece::setCuttingProfile(VRMillingCuttingToolProfile* profile) {
+void VRMillingWorkPiece::setCuttingProfile(shared_ptr<VRMillingCuttingToolProfile> profile) {
     cuttingProfile = profile;
 }
 

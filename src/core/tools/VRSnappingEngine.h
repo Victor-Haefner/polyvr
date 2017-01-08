@@ -68,6 +68,7 @@ class VRSnappingEngine {
     public:
         VRSnappingEngine();
         ~VRSnappingEngine();
+        static shared_ptr<VRSnappingEngine> create();
 
         VRSignalPtr getSignalSnap();
 

@@ -3,6 +3,7 @@
 #include "core/scripting/VRPyGeometry.h"
 #include "core/scripting/VRPyBaseT.h"
 #include "core/scripting/VRPyPose.h"
+#include "core/scripting/VRPyPath.h"
 
 using namespace OSG;
 
@@ -21,6 +22,8 @@ PyMethodDef VRPyCarDynamics::methods[] = {
     {"getRoot", (PyCFunction)VRPyCarDynamics::getRoot, METH_NOARGS, "Get car root node" },
     {"getChassis", (PyCFunction)VRPyCarDynamics::getChassis, METH_NOARGS, "Get car chassis" },
     {"getWheels", (PyCFunction)VRPyCarDynamics::getWheels, METH_NOARGS, "Get car wheels" },
+    {"followPath", (PyCFunction)VRPyCarDynamics::followPath, METH_VARARGS, "Start the pilot to follow a path with a certain speed curve - followPath( path p, path v )" },
+    {"stopPilot", (PyCFunction)VRPyCarDynamics::stopPilot, METH_NOARGS, "Stop auto pilot - stopPilot()" },
     {NULL}  /* Sentinel */
 };
 
@@ -33,6 +36,18 @@ PyObject* VRPyCarDynamics::getWheels(VRPyCarDynamics* self) {
 
 PyObject* VRPyCarDynamics::getChassis(VRPyCarDynamics* self) {
     return VRPyTransform::fromSharedPtr(self->objPtr->getChassis());
+}
+
+PyObject* VRPyCarDynamics::followPath(VRPyCarDynamics* self, PyObject* args) {
+    VRPyPath *p,*v;
+    if (! PyArg_ParseTuple(args, "OO", &p, &v)) return NULL;
+    self->objPtr->followPath(p->objPtr, v->objPtr);
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyCarDynamics::stopPilot(VRPyCarDynamics* self) {
+    self->objPtr->stopPilot();
+    Py_RETURN_TRUE;
 }
 
 PyObject* VRPyCarDynamics::getRoot(VRPyCarDynamics* self) {

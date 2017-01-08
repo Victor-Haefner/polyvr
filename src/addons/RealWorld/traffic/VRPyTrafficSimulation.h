@@ -5,7 +5,6 @@
 #include "core/scripting/VRPyBase.h"
 
 struct VRPyTrafficSimulation : VRPyBaseT<OSG::TrafficSimulation> {
-    static PyMemberDef members[];
     static PyMethodDef methods[];
 
     static PyObject* init(VRPyTrafficSimulation* self, PyObject* args);
@@ -22,9 +21,7 @@ struct VRPyTrafficSimulation : VRPyBaseT<OSG::TrafficSimulation> {
     static PyObject* setServer(VRPyTrafficSimulation* self, PyObject* args);
 
     static PyObject* setVehiclePosition(VRPyTrafficSimulation* self, PyObject* args);
-
     static PyObject* setPlayerTransform(VRPyTrafficSimulation* self, PyObject* args);
-
     static PyObject* tick(VRPyTrafficSimulation* self, PyObject* args);
 };
 

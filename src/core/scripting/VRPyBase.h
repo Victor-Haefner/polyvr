@@ -78,7 +78,7 @@ struct VRPyBase {
 
 template<class T>
 struct VRPyBaseT : public VRPyBase {
-    T* obj = 0;
+    //T* obj = 0;
     std::shared_ptr<T> objPtr = 0;
     bool owner = true;
     static PyTypeObject type;
@@ -91,24 +91,17 @@ struct VRPyBaseT : public VRPyBase {
 
     static bool check(PyObject* o);
 
-    static PyObject* fromPtr(T* obj);
     static PyObject* fromObject(T obj);
     static PyObject* fromSharedPtr(std::shared_ptr<T> obj);
     static bool      parse(PyObject *args, T** obj);
     static bool      parse(PyObject *args, std::shared_ptr<T>* obj);
-    static PyObject* New(PyTypeObject *type, PyObject *args, PyObject *kwds);
     static PyObject* New_ptr(PyTypeObject *type, PyObject *args, PyObject *kwds);
-    static PyObject* New_named(PyTypeObject *type, PyObject *args, PyObject *kwds);
     static PyObject* New_named_ptr(PyTypeObject *type, PyObject *args, PyObject *kwds);
     static PyObject* New_toZero(PyTypeObject *type, PyObject *args, PyObject *kwds);
-    static PyObject* New_VRObjects(PyTypeObject *type, PyObject *args, PyObject *kwds);
-    static PyObject* New_VRObjects_unnamed(PyTypeObject *type, PyObject *args, PyObject *kwds);
-    static PyObject* New_VRObjects_optional(PyTypeObject *type, PyObject *args, PyObject *kwds);
     static PyObject* New_VRObjects_ptr(PyTypeObject *type, PyObject *args, PyObject *kwds);
     static PyObject* New_VRObjects_unnamed_ptr(PyTypeObject *type, PyObject *args, PyObject *kwds);
     static PyObject* New_VRObjects_optional_ptr(PyTypeObject *type, PyObject *args, PyObject *kwds);
 
-    static PyObject* alloc(PyTypeObject* type, T* t);
     static PyObject* allocPtr(PyTypeObject* type, std::shared_ptr<T> t);
     static void dealloc(VRPyBaseT<T>* self);
     static int init(VRPyBaseT<T> *self, PyObject *args, PyObject *kwds);

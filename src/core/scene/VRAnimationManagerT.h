@@ -25,12 +25,15 @@ VRAnimation::VRAnimation(float _duration, float _offset, weak_ptr< VRFunction<T>
 }
 
 template<typename T>
-VRAnimation* VRAnimationManager::addAnimation(float duration, float offset, weak_ptr< VRFunction<T> > fkt, T start, T end, bool loop) {//Todo: replace VRFunction, template?
-    VRAnimation* anim = new VRAnimation(duration, offset, fkt, start, end, loop);
+VRAnimationPtr VRAnimationManager::addAnimation(float duration, float offset, weak_ptr< VRFunction<T> > fkt, T start, T end, bool loop) {//Todo: replace VRFunction, template?
+    auto anim = VRAnimation::create(duration, offset, fkt, start, end, loop);
     addAnimation(anim);
     anim->start(offset);
     return anim;
 }
+
+template<typename T>
+shared_ptr<VRAnimation> VRAnimation::create(float duration, float offset, weak_ptr< VRFunction<T> > fkt, T start, T end, bool loop) { return shared_ptr<VRAnimation>(new VRAnimation(duration, offset, fkt, start, end, loop)); }
 
 OSG_END_NAMESPACE;
 

@@ -43,6 +43,7 @@ class VRRecorder {
     public:
         VRRecorder();
         ~VRRecorder();
+        static shared_ptr<VRRecorder> create();
 
         void setView(int i);
         void capture();

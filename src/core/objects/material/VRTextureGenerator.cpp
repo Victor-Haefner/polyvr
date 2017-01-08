@@ -13,6 +13,8 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 VRTextureGenerator::VRTextureGenerator() {}
+VRTextureGenerator::~VRTextureGenerator() {}
+shared_ptr<VRTextureGenerator> VRTextureGenerator::create() { return shared_ptr<VRTextureGenerator>(new VRTextureGenerator()); }
 
 void VRTextureGenerator::setSize(Vec3i dim, bool a) { width = dim[0]; height = dim[1]; depth = dim[2]; hasAlpha = a; }
 void VRTextureGenerator::setSize(int w, int h, int d) { width = w; height = h; depth = d; }

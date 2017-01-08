@@ -73,8 +73,6 @@ class VRFrame {
         }
 };
 
-VRRecorder::~VRRecorder() { ; }
-
 VRRecorder::VRRecorder() {
     av_register_all();
     avcodec_register_all();
@@ -84,6 +82,9 @@ VRRecorder::VRRecorder() {
 
     //initCodec();
 }
+
+VRRecorder::~VRRecorder() { ; }
+shared_ptr<VRRecorder> VRRecorder::create() { return shared_ptr<VRRecorder>(new VRRecorder()); }
 
 void VRRecorder::setView(int i) {
     viewID = i;

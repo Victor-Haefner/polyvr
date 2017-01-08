@@ -59,7 +59,9 @@ void Triangulator::testQuad() {
     add(p2, false);
 }
 
-Triangulator::Triangulator() { /*testQuad();*/ }
+Triangulator::Triangulator() {}
+Triangulator::~Triangulator() {}
+shared_ptr<Triangulator> Triangulator::create() { return shared_ptr<Triangulator>(new Triangulator()); }
 
 void Triangulator::add(polygon p, bool outer) {
     if (outer) outer_bounds.push_back(p);

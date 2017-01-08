@@ -5,6 +5,11 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+path::path(int d) : degree(d) {}
+path::~path() {}
+
+shared_ptr<path> path::create() { return shared_ptr<path>(new path()); }
+
 Vec3f path::projectInPlane(Vec3f v, Vec3f n, bool keep_length) {
     n.normalize();
     float l;
@@ -82,9 +87,6 @@ void path::cubicBezier(Vec3f* container, int N, Vec3f p0, Vec3f p1, Vec3f h0, Ve
         DEL[1] += DEL[2];
     }
 }
-
-
-path::path(int d) { degree = d; }
 
 path::pnt::pnt(Vec3f p, Vec3f n, Vec3f c, Vec3f u) {
     this->p = p;

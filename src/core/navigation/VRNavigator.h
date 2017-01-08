@@ -41,6 +41,7 @@ class VRNavPreset : public VRName {
     public:
         VRNavPreset();
         virtual ~VRNavPreset();
+        static shared_ptr<VRNavPreset> create();
 
         void updateBinding(VRNavBinding& b);
 
@@ -61,22 +62,21 @@ class VRNavPreset : public VRName {
 class VRNavigator_base : public VRStorage {
     private:
         map<string, VRDeviceCbPtr> library;
-
-        VRNavPreset* current;
+        shared_ptr<VRNavPreset> current;
         string current_name;
-        map<string, VRNavPreset*> presets;
+        map<string, shared_ptr<VRNavPreset>> presets;
 
     public:
         VRNavigator_base();
         ~VRNavigator_base();
 
-        void addNavigation(VRNavPreset* ps);
+        void addNavigation(shared_ptr<VRNavPreset> ps);
         void remNavigation(string name);
 
         void setActiveNavigation(string s);
         string getActiveNavigation();
-        VRNavPreset* getNavigation(string s);
-        map<string, VRNavPreset*> getNavigations();
+        shared_ptr<VRNavPreset> getNavigation(string s);
+        map<string, shared_ptr<VRNavPreset>> getNavigations();
         vector<string> getNavigationNames();
         string getNavigationTip(string name);
 

@@ -83,12 +83,12 @@ PyObject* VRSceneGlobals::getSetup(VRSceneGlobals* self) {
 
 PyObject* VRSceneGlobals::getNavigator(VRSceneGlobals* self) {
     auto scene = VRScene::getCurrent();
-    return VRPyNavigator::fromPtr((VRNavigator*)scene.get());
+    return VRPyNavigator::fromSharedPtr(dynamic_pointer_cast<VRNavigator>(scene));
 }
 
 PyObject* VRSceneGlobals::getRendering(VRSceneGlobals* self) {
     auto scene = VRScene::getCurrent();
-    return VRPyRendering::fromPtr((VRRendering*)scene.get());
+    return VRPyRendering::fromSharedPtr(dynamic_pointer_cast<VRRendering>(scene));
 }
 
 PyObject* VRSceneGlobals::printOSG(VRSceneGlobals* self) {

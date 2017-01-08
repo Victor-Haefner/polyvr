@@ -56,21 +56,21 @@ PyMethodDef VRPySegmentation::methods[] = {
 PyObject* VRPySegmentation::convexDecompose(VRPySegmentation* self, PyObject* args) {
     VRPyGeometry* geo = NULL;
     if (! PyArg_ParseTuple(args, "O", &geo)) return NULL;
-    OSG::VRObjectPtr objects = self->obj->convexDecompose(geo->objPtr);
+    OSG::VRObjectPtr objects = self->objPtr->convexDecompose(geo->objPtr);
     return VRPyTypeCaster::cast( objects );
 }
 
 PyObject* VRPySegmentation::fillHoles(VRPySegmentation* self, PyObject* args) {
     VRPyGeometry* geo = NULL; int N = 0;
     if (! PyArg_ParseTuple(args, "Oi", &geo, &N)) return NULL;
-    self->obj->fillHoles(geo->objPtr, N);
+    self->objPtr->fillHoles(geo->objPtr, N);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPySegmentation::removeDuplicates(VRPySegmentation* self, PyObject* args) {
     VRPyGeometry* geo = NULL;
     if (! PyArg_ParseTuple(args, "O", &geo)) return NULL;
-    self->obj->removeDuplicates(geo->objPtr);
+    self->objPtr->removeDuplicates(geo->objPtr);
     Py_RETURN_TRUE;
 }
 
@@ -84,6 +84,6 @@ PyObject* VRPySegmentation::extractPatches(VRPySegmentation* self, PyObject* arg
     OSG::Vec3f vnorm = parseVec3fList(norm);
     OSG::Vec3f vnorm_d = parseVec3fList(norm_d);
 
-    OSG::VRObjectPtr patches = self->obj->extractPatches(geo->objPtr, OSG::SEGMENTATION_ALGORITHM(algo), curv, curv_d, vnorm, vnorm_d);
+    OSG::VRObjectPtr patches = self->objPtr->extractPatches(geo->objPtr, OSG::SEGMENTATION_ALGORITHM(algo), curv, curv_d, vnorm, vnorm_d);
     return VRPyTypeCaster::cast( patches );
 }

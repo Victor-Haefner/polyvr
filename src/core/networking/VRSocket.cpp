@@ -231,7 +231,7 @@ static int server_answer_to_connection_m(struct mg_connection *conn, enum mg_eve
 }
 
 
-VRSocket::VRSocket(string _name) {
+VRSocket::VRSocket(string name) {
     tcp_fkt = 0;
     http_fkt = 0;
     socketID = 0;
@@ -242,7 +242,7 @@ VRSocket::VRSocket(string _name) {
     queued_signal = VRFunction<int>::create("signal_trigger", boost::bind(&VRSocket::trigger, this));
     sig = VRSignal::create();
     setNameSpace("Sockets");
-    setName(_name);
+    setName(name);
     http_serv = new HTTPServer();
 }
 
@@ -253,6 +253,8 @@ VRSocket::~VRSocket() {
     if (http_args) delete http_args;
     if (http_serv) delete http_serv;
 }
+
+std::shared_ptr<VRSocket> VRSocket::create(string name) { return std::shared_ptr<VRSocket>(new VRSocket(name)); }
 
 void VRSocket::answerWebSocket(int id, string msg) {
     if (http_serv) http_serv->websocket_send(id, msg);

@@ -333,6 +333,7 @@ btRigidBody* CarDynamics::createRigitBody(float mass, const btTransform& startTr
 
 void CarDynamics::updatePilot() {
     if (!doPilot) return;
+    if (!p_path || !v_path) return;
 
     auto clamp = [&](float& v, float a, float b) {
         if (v < a) v = a;

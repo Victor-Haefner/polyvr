@@ -20,6 +20,8 @@ struct VRPyCarDynamics : VRPyBaseT<OSG::CarDynamics> {
     static PyObject* getRoot(VRPyCarDynamics* self);
     static PyObject* getChassis(VRPyCarDynamics* self);
     static PyObject* getWheels(VRPyCarDynamics* self);
+    static PyObject* followPath(VRPyCarDynamics* self, PyObject* args);
+    static PyObject* stopPilot(VRPyCarDynamics* self);
 };
 
 #endif // VRPYCARDYNAMICS_H_INCLUDED

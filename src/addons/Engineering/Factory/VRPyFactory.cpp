@@ -3,7 +3,9 @@
 #include "core/scripting/VRPyTypeCaster.h"
 #include "core/objects/VRTransform.h"
 
-template<> PyTypeObject VRPyBaseT<OSG::VRFactory>::type = {
+using namespace OSG;
+
+template<> PyTypeObject VRPyBaseT<VRFactory>::type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
     "VR.Factory.Factory",             /*tp_name*/
@@ -42,7 +44,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRFactory>::type = {
     0,                         /* tp_dictoffset */
     (initproc)init,      /* tp_init */
     0,                         /* tp_alloc */
-    New,                 /* tp_new */
+    New_ptr,                 /* tp_new */
 };
 
 PyMethodDef VRPyFactory::methods[] = {
@@ -53,17 +55,17 @@ PyMethodDef VRPyFactory::methods[] = {
 
 
 PyObject* VRPyFactory::loadVRML(VRPyFactory* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyFactory::loadVRML - Object is invalid"); return NULL; }
-    auto res = OSG::VRTransform::create("factory");
-    self->obj->loadVRML( parseString(args), 0, res );
+    if (!self->valid()) return NULL;
+    auto res = VRTransform::create("factory");
+    self->objPtr->loadVRML( parseString(args), 0, res );
     return VRPyTypeCaster::cast( res );
 }
 
 PyObject* VRPyFactory::setupLod(VRPyFactory* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyFactory::setupLod - Object is invalid"); return NULL; }
+    if (!self->valid()) return NULL;
     vector<PyObject*> vec = parseList(args);
     vector<string> svec;
     for (auto o : vec) svec.push_back( PyString_AsString(o) );
-    return VRPyTypeCaster::cast( self->obj->setupLod( svec ) );
+    return VRPyTypeCaster::cast( self->objPtr->setupLod( svec ) );
 }
 

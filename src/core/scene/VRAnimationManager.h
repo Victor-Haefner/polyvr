@@ -6,13 +6,14 @@
 
 #include "core/objects/VRAnimation.h"
 #include "core/utils/VRFunctionFwd.h"
+#include "core/tools/VRToolsFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class VRAnimationManager {
     private:
-        map<string, VRAnimation*> anim_map;
+        map<string, VRAnimationPtr> anim_map;
 
     protected:
         VRUpdateCbPtr updateAnimationsFkt;
@@ -21,11 +22,11 @@ class VRAnimationManager {
     public:
         VRAnimationManager();
 
-        void addAnimation(VRAnimation* anim);
-        void remAnimation(VRAnimation* anim);
+        void addAnimation(VRAnimationPtr anim);
+        void remAnimation(VRAnimationPtr anim);
 
         template<typename T>
-        VRAnimation* addAnimation(float duration, float offset, std::weak_ptr< VRFunction<T> > fkt, T start, T end, bool loop = false);
+        VRAnimationPtr addAnimation(float duration, float offset, std::weak_ptr< VRFunction<T> > fkt, T start, T end, bool loop = false);
 };
 
 OSG_END_NAMESPACE;
