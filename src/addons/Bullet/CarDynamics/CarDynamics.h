@@ -23,6 +23,10 @@ class CarDynamics : public VRObject {
         btVector3 wheelAxleCS = btVector3(-1, 0, 0);
         btScalar suspensionRestLength = 0.6;
 
+        float throttle = 0;
+        float breaking = 0;
+        float steering = 0;
+
         //
         //
         //const int maxProxies = 32766;
@@ -61,7 +65,8 @@ class CarDynamics : public VRObject {
 
         VRGeometryPtr w1, w2, w3, w4;
         VRGeometryPtr chassis = 0;
-        VRUpdateCbPtr updatePtr;
+        VRUpdateCbPtr updateWPtr;
+        VRUpdateCbPtr updatePPtr;
 
         btAlignedObjectArray<btCollisionShape*> m_collisionShapes;
 
@@ -73,10 +78,18 @@ class CarDynamics : public VRObject {
 
         btScalar m_defaultContactProcessingThreshold;
 
+        // pilot
+        bool doPilot = false;
+        pathPtr p_path;
+        pathPtr v_path;
+
         boost::recursive_mutex& mtx();
 
         void initPhysics();
         void initVehicle();
+
+        void updatePilot();
+        void updateWheels();
 
         btRigidBody* createRigitBody(float mass, const btTransform& startTransform, btCollisionShape* shape);
 
@@ -100,7 +113,8 @@ class CarDynamics : public VRObject {
         void setWheelParams(float w, float r);
         void setCarMass(float m);
 
-        void updateWheels();
+        void followPath(pathPtr p, pathPtr v);
+        void stopPilot();
 
         void reset(const pose& p);
         float getSpeed();

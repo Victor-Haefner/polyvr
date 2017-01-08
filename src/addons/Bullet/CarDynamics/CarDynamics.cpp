@@ -8,6 +8,7 @@
 #include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/object/VRObjectT.h"
 #include "core/math/pose.h"
+#include "core/math/path.h"
 #include <BulletDynamics/Vehicle/btRaycastVehicle.h>
 
 #include <GL/glut.h>
@@ -62,15 +63,17 @@ CarDynamicsPtr CarDynamics::create(string name) { return CarDynamicsPtr( new Car
 //only to be done once
 void CarDynamics::initPhysics() {
     auto scene = VRScene::getCurrent();
-    updatePtr = VRFunction<int>::create("cardyn_update", boost::bind(&CarDynamics::updateWheels, this));
-    scene->addUpdateFkt(updatePtr);
+    updateWPtr = VRFunction<int>::create("cardyn_wheel_update", boost::bind(&CarDynamics::updateWheels, this));
+    updatePPtr = VRFunction<int>::create("cardyn_pilot_update", boost::bind(&CarDynamics::updatePilot, this));
+    scene->addUpdateFkt(updateWPtr);
+    scene->addUpdateFkt(updatePPtr);
     m_dynamicsWorld = (btDynamicsWorld*) scene->bltWorld();
 }
 
 //only to be done once
 float CarDynamics::getSpeed() { PLock lock(mtx()); return m_vehicle->getCurrentSpeedKmHour(); }
 
-float CarDynamics::getAcceleration() {
+float CarDynamics::getAcceleration() { // TODO: idea! get the delta time from the distance traveled!!
     PLock lock(mtx());
     static float last_speed = 0;
     static double last_time = 0;
@@ -245,6 +248,7 @@ void CarDynamics::setThrottle(float t) {
     else     t = max(-maxEngineForce,t);
 
     PLock lock(mtx());
+    throttle = t;
     m_vehicle->applyEngineForce(t, 2);
     m_vehicle->applyEngineForce(t, 3);
 
@@ -256,33 +260,25 @@ void CarDynamics::setBreak(float b) {
     b = min(maxBreakingForce,b);
 
     PLock lock(mtx());
+    breaking = b;
     m_vehicle->setBrake(b, 2);
     m_vehicle->setBrake(b, 3);
-
 }
 
-void CarDynamics::setSteering(float s) {
+void CarDynamics::setSteering(float s) { // from -1 to 1
     float max_steer = .3f;
     PLock lock(mtx());
 
-    if (s < -1) {
-        m_vehicle->setSteeringValue(-max_steer, 0);
-        m_vehicle->setSteeringValue(-max_steer, 1);
-        return;
-    } else if (s > 1) {
-        m_vehicle->setSteeringValue(max_steer, 0);
-        m_vehicle->setSteeringValue(max_steer, 1);
-        return;
-    }
+    if (s < -1) s = -1;
+    if (s > 1) s = 1;
 
-    float res = (((s+1)*(2*max_steer)) / (2)) - max_steer;
-
-    m_vehicle->setSteeringValue(res, 0);
-    m_vehicle->setSteeringValue(res, 1);
+    steering = s;
+    m_vehicle->setSteeringValue(s*max_steer, 0);
+    m_vehicle->setSteeringValue(s*max_steer, 1);
 }
 
 void CarDynamics::setCarMass(float m) {
-    if(m > 0) m_mass = m;
+    if (m > 0) m_mass = m;
 }
 
 boost::recursive_mutex& CarDynamics::mtx() {
@@ -318,28 +314,77 @@ void CarDynamics::reset(const pose& p) {
 
 btRigidBody* CarDynamics::createRigitBody(float mass, const btTransform& startTransform, btCollisionShape* shape) {
 	if (shape == 0) return 0;
-
     PLock lock(mtx());
-
 	if (shape->getShapeType() == INVALID_SHAPE_PROXYTYPE) return 0;
 
 	btVector3 localInertia(0, 0, 0);
 	if (mass != 0.f) shape->calculateLocalInertia(mass, localInertia);
 
 	//using motionstate is recommended, it provides interpolation capabilities, && only synchronizes 'active' objects
-
-
 	btDefaultMotionState* myMotionState = new btDefaultMotionState(startTransform);
-
 	btRigidBody::btRigidBodyConstructionInfo cInfo(mass, myMotionState, shape, localInertia);
-
 	btRigidBody* body = new btRigidBody(cInfo);
 	body->setContactProcessingThreshold(m_defaultContactProcessingThreshold);
-//	btRigidBody* body = new btRigidBody(mass, 0, shape, localInertia);
-//	body->setWorldTransform(startTransform);
-
+    //btRigidBody* body = new btRigidBody(mass, 0, shape, localInertia);
+    //body->setWorldTransform(startTransform);
 	//dynamicsWorld->addRigidBody(body);
-
 	return body;
 }
+
+void CarDynamics::updatePilot() {
+    if (!doPilot) return;
+
+    auto clamp = [&](float& v, float a, float b) {
+        if (v < a) v = a;
+        if (v > b) v = b;
+    };
+
+    auto cpose = chassis->getPose();
+    auto pos = cpose->pos();
+    auto dir = cpose->dir();
+    auto up = cpose->up();
+    auto speed = getSpeed();
+
+    float t = p_path->getClosestPoint( pos ); // get closest path point
+    float L = p_path->getLength();
+
+    t += 1.0/L; // aim one meter ahead
+    clamp(t,0,1);
+
+    auto tpos = p_path->getPose(t).pos(); // get target position
+    auto tvel = v_path->getPose(t).pos()[1]; // get target velocity
+
+    float target_speed = 10; // TODO: get from path
+
+    // compute throttle and breaking
+    if (speed < target_speed-1) { throttle += 0.01; breaking -= 0.01; }
+    if (speed > target_speed+1) { throttle -= 0.01; breaking += 0.01; }
+
+    // compute steering
+    Vec3f delta = tpos - pos;
+    delta.normalize();
+    dir.normalize();
+    up.normalize();
+    Vec3f w = delta.cross(dir);
+    if (w.dot(up) > 0.0 ) steering += 0.01;
+    if (w.dot(up) < 0.0 ) steering -= 0.01;
+
+    clamp(throttle, 0,1);
+    clamp(breaking, 0,1);
+    clamp(steering, -1,1);
+
+    setThrottle(throttle);
+    setThrottle(breaking);
+    setThrottle(steering);
+}
+
+void CarDynamics::followPath(pathPtr p, pathPtr v) {
+    p_path = p;
+    v_path = v;
+    doPilot = true;
+}
+
+void CarDynamics::stopPilot() { doPilot = false; }
+
+
 

@@ -379,6 +379,30 @@ pose path::getPose(float t, int i, int j) {
     return pose(getPosition(t,i,j), d, u);
 }
 
+float path::getClosestPoint(Vec3f p) {
+    auto positions = getPositions();
+    float dist = 1.0e10;
+    float t_min = 0;
+
+    for (int i=1; i<positions.size(); i++){
+        Vec3f p1 = positions[i-1];
+        Vec3f p2 = positions[i];
+
+        auto d = p2-p1;
+        auto L = d.length();
+        auto t = -(p1-p).dot(d)/L/L;
+        auto ps = p1+d*t;
+        if (t<0) ps = p1;
+        if (t>1) ps = p2;
+        float D = (ps-p).length();
+        if (dist > D) {
+            dist = D;
+            t_min = float(i)/positions.size()+t;
+        }
+    }
+    return t_min;
+}
+
 float path::getDistance(Vec3f p) {
     auto positions = getPositions();
     float dist = 1.0e10;
