@@ -10,6 +10,7 @@
 #include "core/math/pose.h"
 #include <BulletDynamics/Vehicle/btRaycastVehicle.h>
 
+#include <GL/glut.h>
 #include <stdio.h> //printf debugging
 
 typedef boost::recursive_mutex::scoped_lock PLock;
@@ -68,6 +69,18 @@ void CarDynamics::initPhysics() {
 
 //only to be done once
 float CarDynamics::getSpeed() { PLock lock(mtx()); return m_vehicle->getCurrentSpeedKmHour(); }
+
+float CarDynamics::getAcceleration() {
+    PLock lock(mtx());
+    static float last_speed = 0;
+    static double last_time = 0;
+    float speed = getSpeed();
+    double time = glutGet(GLUT_ELAPSED_TIME)*0.001;
+    float a = (speed-last_speed)/(time-last_time);
+    last_speed = speed;
+    last_time = time;
+    return a;
+}
 
 void CarDynamics::initVehicle() {
     PLock lock(mtx());

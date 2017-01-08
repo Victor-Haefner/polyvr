@@ -17,6 +17,7 @@ PyMethodDef VRPyCarDynamics::methods[] = {
     {"setWheelOffsets", (PyCFunction)VRPyCarDynamics::setWheelOffsets, METH_VARARGS, "Set wheel offsets - setWheelOffsets(x offset, front offset, rear offset, height)" },
     {"reset", (PyCFunction)VRPyCarDynamics::reset, METH_VARARGS, "Reset car - reset([x,y,z])" },
     {"getSpeed", (PyCFunction)VRPyCarDynamics::getSpeed, METH_NOARGS, "Get car speed" },
+    {"getAcceleration", (PyCFunction)VRPyCarDynamics::getAcceleration, METH_NOARGS, "Get car acceleration" },
     {"getRoot", (PyCFunction)VRPyCarDynamics::getRoot, METH_NOARGS, "Get car root node" },
     {"getChassis", (PyCFunction)VRPyCarDynamics::getChassis, METH_NOARGS, "Get car chassis" },
     {"getWheels", (PyCFunction)VRPyCarDynamics::getWheels, METH_NOARGS, "Get car wheels" },
@@ -40,6 +41,10 @@ PyObject* VRPyCarDynamics::getRoot(VRPyCarDynamics* self) {
 
 PyObject* VRPyCarDynamics::getSpeed(VRPyCarDynamics* self) {
     return PyFloat_FromDouble(self->objPtr->getSpeed());
+}
+
+PyObject* VRPyCarDynamics::getAcceleration(VRPyCarDynamics* self) {
+    return PyFloat_FromDouble(self->objPtr->getAcceleration());
 }
 
 PyObject* VRPyCarDynamics::reset(VRPyCarDynamics* self, PyObject* args) {
