@@ -27,6 +27,8 @@ sudo apt-get install libfftw3-dev
 
 #include <fftw3.h>
 
+#include "contrib/rpm/arrayOut.h"
+
 using namespace OSG;
 
 struct VRSound::ALData {
@@ -369,6 +371,56 @@ void VRSound::synthesize(float Ac, float wc, float pc, float Am, float wm, float
     if (val != AL_PLAYING) ALCHECK( alSourcePlay(source));
 
     delete samples;
+}
+
+void VRSound::synthesizeSpectrum(double* spectrum, uint sample_rate) {
+    if (!initiated) initiate();
+
+    ALuint buf;
+    alGenBuffers(1, &buf);
+
+    // transform spectrum back to time domain using fftw3
+    double* out = new double[sample_rate];
+    // create plan
+    fftw_plan ifft;
+    //out = (double *) malloc(size*sizeof(double));
+
+    ifft = fftw_plan_r2r_1d(sample_rate, spectrum, out, FFTW_HC2R, FFTW_ESTIMATE);   //Setup fftw plan for ifft
+
+    arrayToFile a2f_spectrum("../synthesizeSpectrum", spectrum, sample_rate);
+
+    fftw_execute(ifft); // is output normalized?
+
+    fftw_destroy_plan(ifft);
+
+    arrayToFile a2f_double("../synthesizeAudioDouble", out, sample_rate);
+
+    short* samples = new short[sample_rate];
+    for(uint i=0; i<sample_rate; ++i) {
+        samples[i] = out[i];// / sample_rate; // for fftw normalization
+    }
+
+    delete out;
+
+    arrayToFile a2f_short("../synthesizeAudioShort", samples, sample_rate);
+
+    //alBufferData(buf, AL_FORMAT_MONO16, samples, buf_size, sample_rate);
+    alBufferData(buf, AL_FORMAT_MONO16, samples, sample_rate, sample_rate);
+
+    ALint val = -1;
+    ALuint bufid = 0; // TODO: not working properly!!
+    do { ALCHECK_BREAK( alGetSourcei(source, AL_BUFFERS_PROCESSED, &val) ); // recycle buffers
+        for(; val > 0; --val) {
+            ALCHECK( alSourceUnqueueBuffers(source, 1, &bufid));
+        }
+    } while (val > 0);
+
+    ALCHECK( alSourceQueueBuffers(source, 1, &buf));
+    ALCHECK( alGetSourcei(source, AL_SOURCE_STATE, &val));
+    if (val != AL_PLAYING) ALCHECK( alSourcePlay(source));
+
+    delete samples;
+
 }
 
 void VRSound::synthBuffer(vector<Vec2d> frequencies, float duration) {
