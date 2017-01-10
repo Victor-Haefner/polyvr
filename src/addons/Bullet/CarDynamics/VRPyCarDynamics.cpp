@@ -12,14 +12,12 @@ simplePyType(CarDynamics, New_named_ptr);
 PyMethodDef VRPyCarDynamics::methods[] = {
     {"update", (PyCFunction)VRPyCarDynamics::update, METH_VARARGS, "Update vehicle physics input (float throttle {0,1}, float break {0,1}, float steering {-1,1})" },
     {"setChassis", (PyCFunction)VRPyCarDynamics::setChassis, METH_VARARGS, "Set chassis geometry" },
-    {"setWheel", (PyCFunction)VRPyCarDynamics::setWheel, METH_VARARGS, "Set wheel geometry" },
+    {"setupSimpleWheels", (PyCFunction)VRPyCarDynamics::setupSimpleWheels, METH_VARARGS, "Setup classic wheels - setupSimpleWheels( geo, float X, float Zp, float Zn, float height, float radius, float width)" },
     {"setCarMass", (PyCFunction)VRPyCarDynamics::setCarMass, METH_VARARGS, "Set car weight, must be done before creating car." },
-    {"setWheelParams", (PyCFunction)VRPyCarDynamics::setWheelParams, METH_VARARGS, "Set wheel parameters - setWheelParams(width, radius)" },
-    {"setWheelOffsets", (PyCFunction)VRPyCarDynamics::setWheelOffsets, METH_VARARGS, "Set wheel offsets - setWheelOffsets(x offset, front offset, rear offset, height)" },
     {"reset", (PyCFunction)VRPyCarDynamics::reset, METH_VARARGS, "Reset car - reset([x,y,z])" },
-    {"getSteering", (PyCFunction)VRPyCarDynamics::getSteering, METH_NOARGS, "Get car steering - getSteering()" },
-    {"getThrottle", (PyCFunction)VRPyCarDynamics::getThrottle, METH_NOARGS, "Get car throttle - getThrottle()" },
-    {"getBreaking", (PyCFunction)VRPyCarDynamics::getBreaking, METH_NOARGS, "Get car breaking - getBreaking()" },
+    {"getSteering", (PyCFunction)VRPyCarDynamics::getSteering, METH_NOARGS, "Get car steering - float getSteering()" },
+    {"getThrottle", (PyCFunction)VRPyCarDynamics::getThrottle, METH_NOARGS, "Get car throttle - float getThrottle()" },
+    {"getBreaking", (PyCFunction)VRPyCarDynamics::getBreaking, METH_NOARGS, "Get car breaking - float getBreaking()" },
     {"getSpeed", (PyCFunction)VRPyCarDynamics::getSpeed, METH_NOARGS, "Get car speed" },
     {"getAcceleration", (PyCFunction)VRPyCarDynamics::getAcceleration, METH_NOARGS, "Get car acceleration" },
     {"getRoot", (PyCFunction)VRPyCarDynamics::getRoot, METH_NOARGS, "Get car root node" },
@@ -34,7 +32,7 @@ PyMethodDef VRPyCarDynamics::methods[] = {
 PyObject* VRPyCarDynamics::getWheels(VRPyCarDynamics* self) {
     auto wheels = self->objPtr->getWheels();
     PyObject* pyWheels = PyList_New(wheels.size());
-    for (int i=0; i<wheels.size(); i++) PyList_SetItem(pyWheels, i, VRPyTransform::fromSharedPtr(wheels[i]));
+    for (uint i=0; i<wheels.size(); i++) PyList_SetItem(pyWheels, i, VRPyTransform::fromSharedPtr(wheels[i]));
     return pyWheels;
 }
 
@@ -104,30 +102,18 @@ PyObject* VRPyCarDynamics::setChassis(VRPyCarDynamics* self, PyObject* args) {
     Py_RETURN_TRUE;
 }
 
-PyObject* VRPyCarDynamics::setWheel(VRPyCarDynamics* self, PyObject* args) {
-    VRPyGeometry* dev = NULL;
-    if (! PyArg_ParseTuple(args, "O", &dev)) return NULL;
-    self->objPtr->setWheelGeo(dev->objPtr);
+PyObject* VRPyCarDynamics::setupSimpleWheels(VRPyCarDynamics* self, PyObject* args) {
+    VRPyGeometry* geo = NULL;
+    float X, Zp, Zn, h, r, w;
+    if (! PyArg_ParseTuple(args, "Offffff", &geo, &X, &Zp, &Zn, &h, &r, &w)) return NULL;
+    self->objPtr->setupSimpleWheels(geo->objPtr, X, Zp, Zn, h, r, w);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyCarDynamics::setCarMass(VRPyCarDynamics* self, PyObject* args) {
-    cout << "setting car mass" << endl;
 	self->objPtr->setCarMass(parseFloat(args));
-	cout << "setting car mass" << endl;
 	Py_RETURN_TRUE;
 }
 
-PyObject* VRPyCarDynamics::setWheelOffsets(VRPyCarDynamics* self, PyObject* args){
-    float b1, b2, b3,b4;
-    if (! PyArg_ParseTuple(args, "ffff", &b1, &b2, &b3,&b4)) return NULL;
-    self->objPtr->setWheelOffsets(b1, b2, b3,b4);
-    Py_RETURN_TRUE;
-}
 
-PyObject* VRPyCarDynamics::setWheelParams(VRPyCarDynamics* self, PyObject* args){
-    float b1, b2;
-    if (! PyArg_ParseTuple(args, "ff", &b1, &b2)) return NULL;
-    self->objPtr->setWheelParams(b1, b2);
-    Py_RETURN_TRUE;
-}
+
