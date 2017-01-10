@@ -394,12 +394,12 @@ float path::getClosestPoint(Vec3f p) {
         auto L = d.length();
         auto t = -(p1-p).dot(d)/L/L;
         auto ps = p1+d*t;
-        if (t<0) ps = p1;
-        if (t>1) ps = p2;
+        if (t<0) { ps = p1; t = 0; }
+        if (t>1) { ps = p2; t = 1; }
         float D = (ps-p).length();
         if (dist > D) {
             dist = D;
-            t_min = float(i)/positions.size()+t;
+            t_min = (float(i)+t)/positions.size();
         }
     }
     return t_min;

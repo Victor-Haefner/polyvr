@@ -242,31 +242,35 @@ void CarDynamics::setWheelParams(float w, float r) {
     wheelRadius = r;
 }
 
-void CarDynamics::setThrottle(float t) {
+void CarDynamics::setThrottle(float t) { // from 0 to 1
+    if (doPilot) return;
+    throttle = t;
+    t *= enginePower;
     //t = max(0.f,t);
     if (t>0) t = min(maxEngineForce,t);
     else     t = max(-maxEngineForce,t);
 
     PLock lock(mtx());
-    throttle = t;
     m_vehicle->applyEngineForce(t, 2);
     m_vehicle->applyEngineForce(t, 3);
 
     //cout << "\nset throttle " << t << endl;
 }
 
-void CarDynamics::setBreak(float b) {
+void CarDynamics::setBreak(float b) { // from 0 to 1
+    if (doPilot) return;
+    breaking = b;
+    b *= breakPower;
     b = max(0.f,b);
     b = min(maxBreakingForce,b);
 
     PLock lock(mtx());
-    breaking = b;
     m_vehicle->setBrake(b, 2);
     m_vehicle->setBrake(b, 3);
 }
 
 void CarDynamics::setSteering(float s) { // from -1 to 1
-    float max_steer = .3f;
+    if (doPilot) return;
     PLock lock(mtx());
 
     if (s < -1) s = -1;
@@ -277,9 +281,11 @@ void CarDynamics::setSteering(float s) { // from -1 to 1
     m_vehicle->setSteeringValue(s*max_steer, 1);
 }
 
-void CarDynamics::setCarMass(float m) {
-    if (m > 0) m_mass = m;
-}
+float CarDynamics::getThrottle() { return throttle; }
+float CarDynamics::getBreaking() { return breaking; }
+float CarDynamics::getSteering() { return steering; }
+
+void CarDynamics::setCarMass(float m) { if (m > 0) m_mass = m; }
 
 boost::recursive_mutex& CarDynamics::mtx() {
     auto scene = VRScene::getCurrent();
@@ -348,18 +354,23 @@ void CarDynamics::updatePilot() {
 
     float t = p_path->getClosestPoint( pos ); // get closest path point
     float L = p_path->getLength();
+    float aimingLength = 2.0*speed;
 
-    t += 1.0/L; // aim one meter ahead
+    Vec3f p0 = p_path->getPose(t).pos();
+    t += aimingLength/L; // aim some meter ahead
     clamp(t,0,1);
 
     auto tpos = p_path->getPose(t).pos(); // get target position
     auto tvel = v_path->getPose(t).pos()[1]; // get target velocity
 
-    float target_speed = 10; // TODO: get from path
+    float target_speed = 5; // TODO: get from path
 
     // compute throttle and breaking
-    if (speed < target_speed-1) { throttle += 0.01; breaking -= 0.01; }
-    if (speed > target_speed+1) { throttle -= 0.01; breaking += 0.01; }
+    float sDiff = target_speed-speed;
+    throttle = 0;
+    breaking = 0;
+    if (sDiff > 0) throttle = sDiff*0.1;
+    if (sDiff < 0) breaking = sDiff*0.1;
 
     // compute steering
     Vec3f delta = tpos - pos;
@@ -367,16 +378,19 @@ void CarDynamics::updatePilot() {
     dir.normalize();
     up.normalize();
     Vec3f w = delta.cross(dir);
-    if (w.dot(up) > 0.0 ) steering += 0.01;
-    if (w.dot(up) < 0.0 ) steering -= 0.01;
+    steering = w.dot(up)*2.0;
 
+    // clamp inputs
     clamp(throttle, 0,1);
     clamp(breaking, 0,1);
     clamp(steering, -1,1);
 
+    // apply inputs
+    doPilot = false;
     setThrottle(throttle);
-    setThrottle(breaking);
-    setThrottle(steering);
+    setBreak(breaking);
+    setSteering(steering);
+    doPilot = true;
 }
 
 void CarDynamics::followPath(pathPtr p, pathPtr v) {
@@ -386,6 +400,7 @@ void CarDynamics::followPath(pathPtr p, pathPtr v) {
 }
 
 void CarDynamics::stopPilot() { doPilot = false; }
+bool CarDynamics::onAutoPilot() { return doPilot; }
 
 
 

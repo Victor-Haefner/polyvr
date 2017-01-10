@@ -35,10 +35,13 @@ class CarDynamics : public VRObject {
         //float	gEngineForce = 0.f;
         //float	gBreakingForce = 0.f;
         //
-        float	maxEngineForce = 10000.f;//this should be engine/velocity dependent
-        float	maxBreakingForce = 100.f;
+        float enginePower = 1000;//this should be engine/velocity dependent
+        float breakPower = 70;//this should be engine/velocity dependent
+        float maxEngineForce = 10000;//this should be engine/velocity dependent
+        float maxBreakingForce = 100;
+        float max_steer = .3f;
         //
-        float	gVehicleSteering = 0.f;
+        float gVehicleSteering = 0;
         //float	steeringIncrement = 0.04f;
         //float	steeringClamp = 0.3f;
 
@@ -107,6 +110,10 @@ class CarDynamics : public VRObject {
         void setBreak(float b);
         void setSteering(float s);
 
+        float getThrottle();
+        float getBreaking();
+        float getSteering();
+
         void setChassisGeo(VRGeometryPtr geo, bool doPhys = 1);
         void setWheelGeo(VRGeometryPtr geo);
         void setWheelOffsets(float xOffset, float frontZOffset, float rearZOffset, float height);
@@ -115,6 +122,7 @@ class CarDynamics : public VRObject {
 
         void followPath(pathPtr p, pathPtr v);
         void stopPilot();
+        bool onAutoPilot();
 
         void reset(const pose& p);
         float getSpeed();

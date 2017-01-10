@@ -10,13 +10,16 @@ using namespace OSG;
 simplePyType(CarDynamics, New_named_ptr);
 
 PyMethodDef VRPyCarDynamics::methods[] = {
-    {"update", (PyCFunction)VRPyCarDynamics::update, METH_VARARGS, "Update vehicle physics input (throttle force, break, steering [-1,1])" },
+    {"update", (PyCFunction)VRPyCarDynamics::update, METH_VARARGS, "Update vehicle physics input (float throttle {0,1}, float break {0,1}, float steering {-1,1})" },
     {"setChassis", (PyCFunction)VRPyCarDynamics::setChassis, METH_VARARGS, "Set chassis geometry" },
     {"setWheel", (PyCFunction)VRPyCarDynamics::setWheel, METH_VARARGS, "Set wheel geometry" },
     {"setCarMass", (PyCFunction)VRPyCarDynamics::setCarMass, METH_VARARGS, "Set car weight, must be done before creating car." },
     {"setWheelParams", (PyCFunction)VRPyCarDynamics::setWheelParams, METH_VARARGS, "Set wheel parameters - setWheelParams(width, radius)" },
     {"setWheelOffsets", (PyCFunction)VRPyCarDynamics::setWheelOffsets, METH_VARARGS, "Set wheel offsets - setWheelOffsets(x offset, front offset, rear offset, height)" },
     {"reset", (PyCFunction)VRPyCarDynamics::reset, METH_VARARGS, "Reset car - reset([x,y,z])" },
+    {"getSteering", (PyCFunction)VRPyCarDynamics::getSteering, METH_NOARGS, "Get car steering - getSteering()" },
+    {"getThrottle", (PyCFunction)VRPyCarDynamics::getThrottle, METH_NOARGS, "Get car throttle - getThrottle()" },
+    {"getBreaking", (PyCFunction)VRPyCarDynamics::getBreaking, METH_NOARGS, "Get car breaking - getBreaking()" },
     {"getSpeed", (PyCFunction)VRPyCarDynamics::getSpeed, METH_NOARGS, "Get car speed" },
     {"getAcceleration", (PyCFunction)VRPyCarDynamics::getAcceleration, METH_NOARGS, "Get car acceleration" },
     {"getRoot", (PyCFunction)VRPyCarDynamics::getRoot, METH_NOARGS, "Get car root node" },
@@ -24,6 +27,7 @@ PyMethodDef VRPyCarDynamics::methods[] = {
     {"getWheels", (PyCFunction)VRPyCarDynamics::getWheels, METH_NOARGS, "Get car wheels" },
     {"followPath", (PyCFunction)VRPyCarDynamics::followPath, METH_VARARGS, "Start the pilot to follow a path with a certain speed curve - followPath( path p, path v )" },
     {"stopPilot", (PyCFunction)VRPyCarDynamics::stopPilot, METH_NOARGS, "Stop auto pilot - stopPilot()" },
+    {"onAutoPilot", (PyCFunction)VRPyCarDynamics::onAutoPilot, METH_NOARGS, "Check if auto pilot - bool onAutoPilot()" },
     {NULL}  /* Sentinel */
 };
 
@@ -32,6 +36,22 @@ PyObject* VRPyCarDynamics::getWheels(VRPyCarDynamics* self) {
     PyObject* pyWheels = PyList_New(wheels.size());
     for (int i=0; i<wheels.size(); i++) PyList_SetItem(pyWheels, i, VRPyTransform::fromSharedPtr(wheels[i]));
     return pyWheels;
+}
+
+PyObject* VRPyCarDynamics::onAutoPilot(VRPyCarDynamics* self) {
+    return PyBool_FromLong( self->objPtr->onAutoPilot() );
+}
+
+PyObject* VRPyCarDynamics::getSteering(VRPyCarDynamics* self) {
+    return PyFloat_FromDouble(self->objPtr->getSteering());
+}
+
+PyObject* VRPyCarDynamics::getThrottle(VRPyCarDynamics* self) {
+    return PyFloat_FromDouble(self->objPtr->getThrottle());
+}
+
+PyObject* VRPyCarDynamics::getBreaking(VRPyCarDynamics* self) {
+    return PyFloat_FromDouble(self->objPtr->getBreaking());
 }
 
 PyObject* VRPyCarDynamics::getChassis(VRPyCarDynamics* self) {
