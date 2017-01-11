@@ -110,7 +110,7 @@ class CarDynamics : public VRObject {
 
         void setChassisGeo(VRGeometryPtr geo, bool doPhys = 1);
         void setupSimpleWheels(VRGeometryPtr geo, float xOffset, float frontZOffset, float rearZOffset, float height, float radius, float width);
-        void setCarMass(float m);
+        void setParameter(float mass, float maxSteering, float enginePower, float breakPower);
 
         void followPath(pathPtr p, pathPtr v);
         void stopPilot();

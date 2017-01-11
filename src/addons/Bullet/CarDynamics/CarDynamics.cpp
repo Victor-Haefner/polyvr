@@ -248,7 +248,12 @@ float CarDynamics::getThrottle() { return throttle; }
 float CarDynamics::getBreaking() { return breaking; }
 float CarDynamics::getSteering() { return steering; }
 
-void CarDynamics::setCarMass(float m) { if (m > 0) chassis.mass = m; }
+void CarDynamics::setParameter(float mass, float maxSteering, float enginePower, float breakPower) {
+    if (mass > 0) chassis.mass = mass;
+    engine.maxSteer = maxSteering;
+    engine.power = enginePower;
+    engine.breakPower = breakPower;
+}
 
 boost::recursive_mutex& CarDynamics::mtx() {
     auto scene = VRScene::getCurrent();
@@ -316,7 +321,7 @@ void CarDynamics::updatePilot() {
 
     float t = p_path->getClosestPoint( pos ); // get closest path point
     float L = p_path->getLength();
-    float aimingLength = 3.0;//2.0*speed;
+    float aimingLength = 4.0;//2.0*speed;
 
     Vec3f p0 = p_path->getPose(t).pos();
     t += aimingLength/L; // aim some meter ahead
@@ -331,8 +336,8 @@ void CarDynamics::updatePilot() {
     float sDiff = target_speed-speed;
     throttle = 0;
     breaking = 0;
-    if (sDiff > 0) throttle = sDiff*0.3;
-    if (sDiff < 0) breaking = -sDiff*0.3;
+    if (sDiff > 0) throttle = sDiff*1.5;
+    if (sDiff < 0) breaking = -sDiff*0.8;
     //cout << "pilot " << sDiff << " " << throttle << " " << breaking << endl;
 
 
@@ -342,7 +347,7 @@ void CarDynamics::updatePilot() {
     dir.normalize();
     up.normalize();
     Vec3f w = delta.cross(dir);
-    steering = w.dot(up)*2.0;
+    steering = w.dot(up)*3.0;
 
     // clamp inputs
     clamp(throttle, 0,1);

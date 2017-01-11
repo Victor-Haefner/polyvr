@@ -11,7 +11,7 @@ struct VRPyCarDynamics : VRPyBaseT<OSG::CarDynamics> {
     static PyObject* update(VRPyCarDynamics* self, PyObject* args);
     static PyObject* setChassis(VRPyCarDynamics* self, PyObject* args);
     static PyObject* setupSimpleWheels(VRPyCarDynamics* self, PyObject* args);
-    static PyObject* setCarMass(VRPyCarDynamics* self, PyObject* args);
+    static PyObject* setParameter(VRPyCarDynamics* self, PyObject* args);
     static PyObject* reset(VRPyCarDynamics* self, PyObject* args);
     static PyObject* getSpeed(VRPyCarDynamics* self);
     static PyObject* getAcceleration(VRPyCarDynamics* self);

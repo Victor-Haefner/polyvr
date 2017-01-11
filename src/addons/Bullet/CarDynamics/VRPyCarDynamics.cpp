@@ -13,7 +13,7 @@ PyMethodDef VRPyCarDynamics::methods[] = {
     {"update", (PyCFunction)VRPyCarDynamics::update, METH_VARARGS, "Update vehicle physics input (float throttle {0,1}, float break {0,1}, float steering {-1,1})" },
     {"setChassis", (PyCFunction)VRPyCarDynamics::setChassis, METH_VARARGS, "Set chassis geometry" },
     {"setupSimpleWheels", (PyCFunction)VRPyCarDynamics::setupSimpleWheels, METH_VARARGS, "Setup classic wheels - setupSimpleWheels( geo, float X, float Zp, float Zn, float height, float radius, float width)" },
-    {"setCarMass", (PyCFunction)VRPyCarDynamics::setCarMass, METH_VARARGS, "Set car weight, must be done before creating car." },
+    {"setParameter", (PyCFunction)VRPyCarDynamics::setParameter, METH_VARARGS, "Set car parameter, must be done before creating car - setParameter( float mass, float max_steering, float engine_power, float break_power )" },
     {"reset", (PyCFunction)VRPyCarDynamics::reset, METH_VARARGS, "Reset car - reset([x,y,z])" },
     {"getSteering", (PyCFunction)VRPyCarDynamics::getSteering, METH_NOARGS, "Get car steering - float getSteering()" },
     {"getThrottle", (PyCFunction)VRPyCarDynamics::getThrottle, METH_NOARGS, "Get car throttle - float getThrottle()" },
@@ -110,8 +110,10 @@ PyObject* VRPyCarDynamics::setupSimpleWheels(VRPyCarDynamics* self, PyObject* ar
     Py_RETURN_TRUE;
 }
 
-PyObject* VRPyCarDynamics::setCarMass(VRPyCarDynamics* self, PyObject* args) {
-	self->objPtr->setCarMass(parseFloat(args));
+PyObject* VRPyCarDynamics::setParameter(VRPyCarDynamics* self, PyObject* args) {
+    float m, s, e, b;
+    if (! PyArg_ParseTuple(args, "ffff", &m, &s, &e, &b)) return NULL;
+	self->objPtr->setParameter(m,s,e,b);
 	Py_RETURN_TRUE;
 }
 
