@@ -779,7 +779,7 @@ void VRMaterial::setSpecular(Color3f c) { mats[activePass]->colChunk->setSpecula
 void VRMaterial::setAmbient(Color3f c) { mats[activePass]->colChunk->setAmbient(toColor4f(c)); }
 void VRMaterial::setEmission(Color3f c) { mats[activePass]->colChunk->setEmission(toColor4f(c)); }
 void VRMaterial::setShininess(float c) { mats[activePass]->colChunk->setShininess(c); }
-void VRMaterial::setLit(bool b) { mats[activePass]->colChunk->setLit(b); }
+void VRMaterial::setLit(bool b) { mats[activePass]->colChunk->setLit(b); updateDeferredShader(); }
 
 Color3f VRMaterial::getDiffuse() { return toColor3f( mats[activePass]->colChunk->getDiffuse() ); }
 Color3f VRMaterial::getSpecular() { return toColor3f( mats[activePass]->colChunk->getSpecular() ); }

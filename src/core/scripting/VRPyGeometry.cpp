@@ -265,7 +265,15 @@ PyObject* VRPyGeometry::addVertex(VRPyGeometry* self, PyObject *args) {
     p = n = c = t = 0;
     if (!PyArg_ParseTuple(args, "O|OOO", &p, &n, &c, &t)) return NULL;
     VRGeoData geo(self->objPtr);
-    geo.pushVert(parseVec3fList(p)); // TODO
+
+    bool doTC = (t != 0) && !isNone(t);
+    bool doN = (t != 0) && !isNone(t);
+    bool doC = (t != 0) && !isNone(t);
+    if (doN && doC && doTC) geo.pushVert(parseVec3fList(p), parseVec3fList(n), parseVec3fList(c), parseVec2fList(t));
+    else if (doN && doC) geo.pushVert(parseVec3fList(p), parseVec3fList(n), parseVec3fList(c));
+    else if (doN && doTC) geo.pushVert(parseVec3fList(p), parseVec3fList(n), parseVec2fList(t));
+    else if (doN) geo.pushVert(parseVec3fList(p), parseVec3fList(n));
+    else geo.pushVert(parseVec3fList(p));
     Py_RETURN_TRUE;
 }
 
@@ -276,7 +284,15 @@ PyObject* VRPyGeometry::setVertex(VRPyGeometry* self, PyObject *args) {
     p = n = c = t = 0;
     if (!PyArg_ParseTuple(args, "iO|OOO", &i, &p, &n, &c, &t)) return NULL;
     VRGeoData geo(self->objPtr);
-    geo.setVert(i, parseVec3fList(p));  // TODO
+
+    bool doTC = (t != 0) && !isNone(t);
+    bool doN = (t != 0) && !isNone(t);
+    bool doC = (t != 0) && !isNone(t);
+    if (doN && doC && doTC) geo.setVert(i, parseVec3fList(p), parseVec3fList(n), parseVec3fList(c), parseVec2fList(t));
+    else if (doN && doC) geo.setVert(i, parseVec3fList(p), parseVec3fList(n), parseVec3fList(c));
+    else if (doN && doTC) geo.setVert(i, parseVec3fList(p), parseVec3fList(n), parseVec2fList(t));
+    else if (doN) geo.setVert(i, parseVec3fList(p), parseVec3fList(n));
+    else geo.setVert(i, parseVec3fList(p));
     Py_RETURN_TRUE;
 }
 

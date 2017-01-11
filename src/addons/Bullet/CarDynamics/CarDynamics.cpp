@@ -316,7 +316,7 @@ void CarDynamics::updatePilot() {
 
     float t = p_path->getClosestPoint( pos ); // get closest path point
     float L = p_path->getLength();
-    float aimingLength = 2.0*speed;
+    float aimingLength = 3.0;//2.0*speed;
 
     Vec3f p0 = p_path->getPose(t).pos();
     t += aimingLength/L; // aim some meter ahead
@@ -331,8 +331,10 @@ void CarDynamics::updatePilot() {
     float sDiff = target_speed-speed;
     throttle = 0;
     breaking = 0;
-    if (sDiff > 0) throttle = sDiff*0.1;
-    if (sDiff < 0) breaking = sDiff*0.1;
+    if (sDiff > 0) throttle = sDiff*0.3;
+    if (sDiff < 0) breaking = -sDiff*0.3;
+    //cout << "pilot " << sDiff << " " << throttle << " " << breaking << endl;
+
 
     // compute steering
     Vec3f delta = tpos - pos;
