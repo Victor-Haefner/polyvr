@@ -4,6 +4,7 @@
 #include "core/scripting/VRPyBase.h"
 #include "core/objects/object/VRObject.h"
 #include "CarDynamics.h"
+#include "VRDriver.h"
 
 struct VRPyCarDynamics : VRPyBaseT<OSG::CarDynamics> {
     static PyMethodDef methods[];
@@ -18,12 +19,18 @@ struct VRPyCarDynamics : VRPyBaseT<OSG::CarDynamics> {
     static PyObject* getRoot(VRPyCarDynamics* self);
     static PyObject* getChassis(VRPyCarDynamics* self);
     static PyObject* getWheels(VRPyCarDynamics* self);
-    static PyObject* followPath(VRPyCarDynamics* self, PyObject* args);
-    static PyObject* stopPilot(VRPyCarDynamics* self);
-    static PyObject* onAutoPilot(VRPyCarDynamics* self);
     static PyObject* getSteering(VRPyCarDynamics* self);
     static PyObject* getThrottle(VRPyCarDynamics* self);
     static PyObject* getBreaking(VRPyCarDynamics* self);
+};
+
+struct VRPyDriver : VRPyBaseT<OSG::VRDriver> {
+    static PyMethodDef methods[];
+
+    static PyObject* setCar(VRPyDriver* self, PyObject* args);
+    static PyObject* followPath(VRPyDriver* self, PyObject* args);
+    static PyObject* stop(VRPyDriver* self);
+    static PyObject* isDriving(VRPyDriver* self);
 };
 
 #endif // VRPYCARDYNAMICS_H_INCLUDED

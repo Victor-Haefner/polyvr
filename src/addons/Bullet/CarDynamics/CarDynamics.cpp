@@ -54,9 +54,7 @@ CarDynamicsPtr CarDynamics::create(string name) { return CarDynamicsPtr( new Car
 void CarDynamics::initPhysics() {
     auto scene = VRScene::getCurrent();
     updateWPtr = VRFunction<int>::create("cardyn_wheel_update", boost::bind(&CarDynamics::updateWheels, this));
-    updatePPtr = VRFunction<int>::create("cardyn_pilot_update", boost::bind(&CarDynamics::updatePilot, this));
     scene->addUpdateFkt(updateWPtr);
-    scene->addUpdateFkt(updatePPtr);
     m_dynamicsWorld = (btDynamicsWorld*) scene->bltWorld();
 }
 
@@ -206,7 +204,6 @@ void CarDynamics::setupSimpleWheels(VRGeometryPtr geo, float x, float fZ, float 
 }
 
 void CarDynamics::setThrottle(float t) { // from 0 to 1
-    if (doPilot) return;
     throttle = t;
     t *= engine.power;
     //t = max(0.f,t);
@@ -221,7 +218,6 @@ void CarDynamics::setThrottle(float t) { // from 0 to 1
 }
 
 void CarDynamics::setBreak(float b) { // from 0 to 1
-    if (doPilot) return;
     breaking = b;
     b *= engine.breakPower;
     b = max(0.f,b);
@@ -233,7 +229,6 @@ void CarDynamics::setBreak(float b) { // from 0 to 1
 }
 
 void CarDynamics::setSteering(float s) { // from -1 to 1
-    if (doPilot) return;
     PLock lock(mtx());
 
     if (s < -1) s = -1;
@@ -303,73 +298,6 @@ btRigidBody* CarDynamics::createRigitBody(float mass, const btTransform& startTr
 	//dynamicsWorld->addRigidBody(body);
 	return body;
 }
-
-void CarDynamics::updatePilot() {
-    if (!doPilot) return;
-    if (!p_path || !v_path) return;
-
-    auto clamp = [&](float& v, float a, float b) {
-        if (v < a) v = a;
-        if (v > b) v = b;
-    };
-
-    auto cpose = chassis.geo->getPose();
-    auto pos = cpose->pos();
-    auto dir = cpose->dir();
-    auto up = cpose->up();
-    auto speed = getSpeed();
-
-    float t = p_path->getClosestPoint( pos ); // get closest path point
-    float L = p_path->getLength();
-    float aimingLength = 4.0;//2.0*speed;
-
-    Vec3f p0 = p_path->getPose(t).pos();
-    t += aimingLength/L; // aim some meter ahead
-    clamp(t,0,1);
-
-    auto tpos = p_path->getPose(t).pos(); // get target position
-    //auto tvel = v_path->getPose(t).pos()[1]; // get target velocity
-
-    float target_speed = 5; // TODO: get from path
-
-    // compute throttle and breaking
-    float sDiff = target_speed-speed;
-    throttle = 0;
-    breaking = 0;
-    if (sDiff > 0) throttle = sDiff*1.5;
-    if (sDiff < 0) breaking = -sDiff*0.8;
-    //cout << "pilot " << sDiff << " " << throttle << " " << breaking << endl;
-
-
-    // compute steering
-    Vec3f delta = tpos - pos;
-    delta.normalize();
-    dir.normalize();
-    up.normalize();
-    Vec3f w = delta.cross(dir);
-    steering = w.dot(up)*3.0;
-
-    // clamp inputs
-    clamp(throttle, 0,1);
-    clamp(breaking, 0,1);
-    clamp(steering, -1,1);
-
-    // apply inputs
-    doPilot = false;
-    setThrottle(throttle);
-    setBreak(breaking);
-    setSteering(steering);
-    doPilot = true;
-}
-
-void CarDynamics::followPath(pathPtr p, pathPtr v) {
-    p_path = p;
-    v_path = v;
-    doPilot = true;
-}
-
-void CarDynamics::stopPilot() { doPilot = false; }
-bool CarDynamics::onAutoPilot() { return doPilot; }
 
 
 

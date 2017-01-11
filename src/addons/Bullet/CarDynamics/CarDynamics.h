@@ -61,9 +61,7 @@ class CarDynamics : public VRObject {
         vector<Wheel> wheels;
         Engine engine;
         Chassis chassis;
-
         VRUpdateCbPtr updateWPtr;
-        VRUpdateCbPtr updatePPtr;
 
         btAlignedObjectArray<btCollisionShape*> m_collisionShapes;
         btRaycastVehicle::btVehicleTuning m_tuning;
@@ -77,17 +75,9 @@ class CarDynamics : public VRObject {
         float rearZOffset = -2.7f;
         float height = .4f;
 
-        // pilot
-        bool doPilot = false;
-        pathPtr p_path;
-        pathPtr v_path;
-
         boost::recursive_mutex& mtx();
-
         void initPhysics();
         void initVehicle();
-
-        void updatePilot();
         void updateWheels();
 
         btRigidBody* createRigitBody(float mass, const btTransform& startTransform, btCollisionShape* shape);
@@ -111,10 +101,6 @@ class CarDynamics : public VRObject {
         void setChassisGeo(VRGeometryPtr geo, bool doPhys = 1);
         void setupSimpleWheels(VRGeometryPtr geo, float xOffset, float frontZOffset, float rearZOffset, float height, float radius, float width);
         void setParameter(float mass, float maxSteering, float enginePower, float breakPower);
-
-        void followPath(pathPtr p, pathPtr v);
-        void stopPilot();
-        bool onAutoPilot();
 
         void reset(const pose& p);
         float getSpeed();
