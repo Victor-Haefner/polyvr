@@ -39,8 +39,16 @@ VRScriptPtr lastSelectedScript = 0;
 
 class VRGuiScripts_ModelColumns : public Gtk::TreeModelColumnRecord {
     public:
-        VRGuiScripts_ModelColumns() { add(script); }
+        VRGuiScripts_ModelColumns() { add(script); add(fg); add(bg); add(time); add(tfg); add(tbg); add(icon); add(Nfound); }
         Gtk::TreeModelColumn<Glib::ustring> script;
+        Gtk::TreeModelColumn<Glib::ustring> fg;
+        Gtk::TreeModelColumn<Glib::ustring> bg;
+        Gtk::TreeModelColumn<Glib::ustring> time;
+        Gtk::TreeModelColumn<Glib::ustring> tfg;
+        Gtk::TreeModelColumn<Glib::ustring> tbg;
+        Gtk::TreeModelColumn<Glib::ustring> icon;
+        Gtk::TreeModelColumn<Glib::ustring> Nfound;
+        Gtk::TreeModelColumn<int> type;
 };
 
 class VRGuiScripts_ArgsModelColumns : public Gtk::TreeModelColumnRecord {
@@ -102,11 +110,24 @@ VRScriptPtr VRGuiScripts::getSelectedScript() {
     return script;
 }
 
+void VRGuiScripts::setGroupListRow(Gtk::TreeIter itr, group& g) {
+    Glib::RefPtr<Gtk::TreeStore> store = Glib::RefPtr<Gtk::TreeStore>::cast_static(VRGuiBuilder()->get_object("script_tree"));
+    Gtk::TreeStore::Row row = *itr;
+    gtk_tree_store_set (store->gobj(), row.gobj(),
+                        0, g.name.c_str(),
+                        1, "#666666",
+                        2, "#FFFFFF",
+                        3, "",
+                        4, "#666666",
+                        5, "#FFFFFF",
+                        6, "",
+                        7, "",
+                        8, g.ID,
+                        -1);
+}
+
 void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScriptPtr script, bool onlyTime) {
     if (script == 0) return;
-
-    Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("script_list"));
-    Gtk::ListStore::Row row = *itr;
     string fg = "#000000";
     string bg = "#FFFFFF";
     string tfg = "#000000";
@@ -122,18 +143,17 @@ void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScriptPtr script, bool 
         if (trig.second->trigger == "on_device_drag") trig_lvl |= 32;
         if (trig.second->trigger == "on_device_drop") trig_lvl |= 64;
     }
-
     if (script->getType() == "HTML") trig_lvl |= 128;
     if (script->getType() == "GLSL") trig_lvl |= 256;
 
-    if (trig_lvl >= 1) bg = "#AAFF88";
-    if (trig_lvl >= 4) bg = "#FF8866";
-    if (trig_lvl >= 8) bg = "#FFBB33";
-    if (trig_lvl >= 16) bg = "#3388FF";
-    if (trig_lvl >= 32) bg = "#FFCCAA";
-    if (trig_lvl >= 64) bg = "#FFCC88";
-    if (trig_lvl >= 128) bg = "#AACCFF";
-    if (trig_lvl >= 256) bg = "#CCAAFF";
+    if (trig_lvl >= 1) tbg = "#AAFF88";
+    if (trig_lvl >= 4) tbg = "#FF8866";
+    if (trig_lvl >= 8) tbg = "#FFBB33";
+    if (trig_lvl >= 16) tbg = "#3388FF";
+    if (trig_lvl >= 32) tbg = "#FFCCAA";
+    if (trig_lvl >= 64) tbg = "#FFCC88";
+    if (trig_lvl >= 128) tbg = "#AACCFF";
+    if (trig_lvl >= 256) tbg = "#CCAAFF";
 
     string time = " ";
     float exec_time = script->getExecutionTime();
@@ -159,12 +179,14 @@ void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScriptPtr script, bool 
         Nfound = toString(Nf);
     }
 
-    if (onlyTime) gtk_list_store_set (store->gobj(), row.gobj(),
+    Glib::RefPtr<Gtk::TreeStore> store = Glib::RefPtr<Gtk::TreeStore>::cast_static(VRGuiBuilder()->get_object("script_tree"));
+    Gtk::TreeStore::Row row = *itr;
+    if (onlyTime) gtk_tree_store_set (store->gobj(), row.gobj(),
                         3, time.c_str(),
                         4, tfg.c_str(),
                         5, tbg.c_str(),
                         -1);
-    else gtk_list_store_set (store->gobj(), row.gobj(),
+    else gtk_tree_store_set (store->gobj(), row.gobj(),
                         0, script->getName().c_str(),
                         1, fg.c_str(),
                         2, bg.c_str(),
@@ -173,14 +195,22 @@ void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScriptPtr script, bool 
                         5, tbg.c_str(),
                         6, icon.c_str(),
                         7, Nfound.c_str(),
+                        8, -1,
                         -1);
 }
 
 void VRGuiScripts::on_new_clicked() {
-    Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("script_list"));
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
     scene->newScript("Script", "\timport VR");
+    updateList();
+}
+
+VRGuiScripts::group::group() { static int i = 0; ID = i; i++; }
+
+void VRGuiScripts::on_addSep_clicked() {
+    group g;
+    groups[g.ID] = g;
     updateList();
 }
 
@@ -465,7 +495,7 @@ bool VRGuiScripts::on_any_event(GdkEvent* event) {
 void VRGuiScripts::on_name_edited(const Glib::ustring& path, const Glib::ustring& new_name) {
     Glib::RefPtr<Gtk::TreeView> tree_view  = Glib::RefPtr<Gtk::TreeView>::cast_static(VRGuiBuilder()->get_object("treeview5"));
     Gtk::TreeModel::iterator iter = tree_view->get_selection()->get_selected();
-    if(!iter) return;
+    if (!iter) return;
 
     // set the cell with new name
     VRGuiScripts_ModelColumns cols;
@@ -473,12 +503,18 @@ void VRGuiScripts::on_name_edited(const Glib::ustring& path, const Glib::ustring
     string name = row.get_value(cols.script);
     row[cols.script] = new_name;
 
-    // update key in map
-    auto scene = VRScene::getCurrent();
-    if (scene == 0) return;
-    scene->changeScriptName(name, new_name);
-    updateList();
-    on_select_script();
+    // update data
+    int type = row.get_value(cols.type);
+    if (type == -1) {
+        auto scene = VRScene::getCurrent();
+        if (scene == 0) return;
+        scene->changeScriptName(name, new_name);
+        updateList();
+        on_select_script();
+    } else {
+        groups[type].name = new_name;
+        for (auto& sw : groups[type].scripts) if (auto s = sw.lock()) s->setGroup(new_name);
+    }
 }
 
 
@@ -931,7 +967,7 @@ void VRGuiScripts::printViewerLanguages() {
 void VRGuiScripts::update() {
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
-    Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("script_list"));
+    Glib::RefPtr<Gtk::TreeStore> store = Glib::RefPtr<Gtk::TreeStore>::cast_static(VRGuiBuilder()->get_object("script_tree"));
 
     int i=0;
     for (auto script : scene->getScripts()) {
@@ -945,11 +981,13 @@ void VRGuiScripts::updateList() {
     if (scene == 0) return;
 
     // update script list
-    Glib::RefPtr<Gtk::ListStore> store = Glib::RefPtr<Gtk::ListStore>::cast_static(VRGuiBuilder()->get_object("script_list"));
+    Glib::RefPtr<Gtk::TreeStore> store = Glib::RefPtr<Gtk::TreeStore>::cast_static(VRGuiBuilder()->get_object("script_tree"));
     store->clear();
 
     auto oldpages = pages;
     pages.clear();
+
+    for (auto& g : groups) setGroupListRow(store->append(), g.second);
 
     for (auto script : scene->getScripts()) {
         auto s = script.second;
@@ -1080,6 +1118,7 @@ VRGuiScripts::VRGuiScripts() {
     setToolButtonCallback("toolbutton8", sigc::mem_fun(*this, &VRGuiScripts::on_exec_clicked) );
     setToolButtonCallback("toolbutton9", sigc::mem_fun(*this, &VRGuiScripts::on_del_clicked) );
     setToolButtonCallback("toolbutton16", sigc::mem_fun(*this, &VRGuiScripts::on_help_clicked) );
+    setToolButtonCallback("toolbutton20", sigc::mem_fun(*this, &VRGuiScripts::on_addSep_clicked) );
     setToolButtonCallback("toolbutton22", sigc::mem_fun(*this, &VRGuiScripts::on_import_clicked) );
     setToolButtonCallback("toolbutton23", sigc::mem_fun(*this, &VRGuiScripts::on_find_clicked) );
 

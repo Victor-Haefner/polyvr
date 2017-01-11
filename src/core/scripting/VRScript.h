@@ -56,6 +56,7 @@ class VRScript : public VRName {
         string head;
         string type = "Python";
         string server = "server1";
+        string group;
         PyObject* fkt = 0;
         PyObject* pargs = 0;
         map<string, arg*> args;
@@ -127,6 +128,9 @@ class VRScript : public VRName {
 
         string getTriggerParams();
         string getTrigger();
+
+        void setGroup(string g);
+        string getGroup();
 
         void save(xmlpp::Element* e);
         void load(xmlpp::Element* e);

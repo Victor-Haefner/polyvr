@@ -386,12 +386,16 @@ void VRScript::remArgument(string name) {
     update();
 }
 
+void VRScript::setGroup(string g) { group = g; }
+string VRScript::getGroup() { return group; }
+
 void VRScript::save(xmlpp::Element* e) {
     saveName(e);
     xmlpp::Element* ec = e->add_child("core");
     ec->set_child_text("\n"+core+"\n");
     e->set_attribute("type", type);
     e->set_attribute("server", server);
+    e->set_attribute("group", group);
 
     for (auto ai : args) {
         arg* a = ai.second;
@@ -421,6 +425,7 @@ void VRScript::load(xmlpp::Element* e) {
     if (e->get_attribute("core")) core = e->get_attribute("core")->get_value();
     if (e->get_attribute("type")) type = e->get_attribute("type")->get_value();
     if (e->get_attribute("server")) server = e->get_attribute("server")->get_value();
+    if (e->get_attribute("group")) group = e->get_attribute("group")->get_value();
 
     for (xmlpp::Node* n : e->get_children() ) {
         xmlpp::Element* el = dynamic_cast<xmlpp::Element*>(n);
