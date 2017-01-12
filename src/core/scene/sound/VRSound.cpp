@@ -27,7 +27,8 @@ sudo apt-get install libfftw3-dev
 
 #include <fftw3.h>
 
-#include "contrib/rpm/arrayOut.h"
+#include "contrib/rpm/arrayOut.h" // TESTING
+#include <climits>
 
 using namespace OSG;
 
@@ -385,27 +386,28 @@ void VRSound::synthesizeSpectrum(double* spectrum, uint sample_rate) {
     fftw_plan ifft;
     //out = (double *) malloc(size*sizeof(double));
 
-    ifft = fftw_plan_r2r_1d(sample_rate, spectrum, out, FFTW_HC2R, FFTW_ESTIMATE);   //Setup fftw plan for ifft
-
-    arrayToFile a2f_spectrum("../synthesizeSpectrum", spectrum, sample_rate);
+    ifft = fftw_plan_r2r_1d(sample_rate, spectrum, out, FFTW_DHT, FFTW_ESTIMATE);   //Setup fftw plan for ifft
 
     fftw_execute(ifft); // is output normalized?
 
     fftw_destroy_plan(ifft);
 
-    arrayToFile a2f_double("../synthesizeAudioDouble", out, sample_rate);
-
     short* samples = new short[sample_rate];
     for(uint i=0; i<sample_rate; ++i) {
-        samples[i] = out[i];// / sample_rate; // for fftw normalization
-    }
+        //samples[i] = (double)(SHRT_MAX - 1) * out[i] / (sample_rate * maxVal); // for fftw normalization
+        samples[i] = 0.5 * SHRT_MAX * out[i]; // for fftw normalization
 
+    }
+//#define SPECTRUM_OUTPUT
+#ifdef SPECTRUM_OUTPUT
+    arrayToFile a2f_spectrum("../spectrumTestData/synthesizeSpectrum", spectrum, sample_rate); // TESTING
+    arrayToFile a2f_double("../spectrumTestData/synthesizeAudioDouble", out, sample_rate); // TESTING
+    arrayToFile a2f_short("../spectrumTestData/synthesizeAudioShort", samples, sample_rate); // TESTING
+#endif
     delete out;
 
-    arrayToFile a2f_short("../synthesizeAudioShort", samples, sample_rate);
-
     //alBufferData(buf, AL_FORMAT_MONO16, samples, buf_size, sample_rate);
-    alBufferData(buf, AL_FORMAT_MONO16, samples, sample_rate, sample_rate);
+    alBufferData(buf, AL_FORMAT_MONO16, samples, sample_rate, 2*sample_rate);
 
     ALint val = -1;
     ALuint bufid = 0; // TODO: not working properly!!

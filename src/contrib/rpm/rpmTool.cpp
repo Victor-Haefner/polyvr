@@ -4,7 +4,9 @@
 #include <iostream>
 #include <fstream>
 
-#include "arrayOut.h"
+#include "arrayOut.h" // TESTING
+
+//#define SPECTRUM_OUTPUT
 
 namespace rpmTool {
 
@@ -57,7 +59,9 @@ double* rpmSpectrum::operator()(const double rpm) {
     }
   }
   _last = rpm;
-  arrayToFile audioToFile("../rpmSpectrum", _current, _resolution);
+#ifdef SPECTRUM_OUTPUT
+  arrayToFile audioToFile("../spectrumTestData/rpmSpectrum", _current, _resolution); // TESTING
+#endif
   return _current;
 }
 
@@ -65,11 +69,11 @@ void rpmSpectrum::interpLin(double& y, const double &x, const double &x0, const 
   y =  y0 + (x - x0) * (y1 - y0) / (x1 - x0);
 }
 
-double rpmSpectrum::getMin() {
+double rpmSpectrum::getMinRPM() {
   return _data.begin()->first;
 }
 
-double rpmSpectrum::getMax() {
+double rpmSpectrum::getMaxRPM() {
   return _data.rbegin()->first;
 }
 
@@ -101,6 +105,7 @@ void rpmSpectrum::readFile(const char* filename) {
 
       for (int j=0; j<_resolution; ++j){
         file >> tmp[j];
+        if (abs(tmp[j]) > _maxVal) _maxVal = tmp[j];
       }
       //std::cout<<"Map entry: "<<i<<" Label: "<<labels[i]<<" Spectrum: ";
       //tmp.print();
@@ -147,8 +152,10 @@ void VRMotor::load(const char*filename) {
     return;
   }
   _tool.readFile(filename);
-  _minRPM = _tool.getMin();
-  _maxRPM = _tool.getMax();
+  _minRPM = _tool.getMinRPM();
+  _maxRPM = _tool.getMaxRPM();
+  _maxVal = _tool.getMaxSample();
+  std::cout<<"Max sample (double): "<<_maxVal<<std::endl;
   std::cout<<"Spectrum tool loaded"<<std::endl;
 }
 

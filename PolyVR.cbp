@@ -504,6 +504,7 @@
 		<Unit filename="src/addons/construction/building/furniture/VRBlinds.h" />
 		<Unit filename="src/contrib/rpm/PyMotor" />
 		<Unit filename="src/contrib/rpm/VRrpmToolFwd.h" />
+		<Unit filename="src/contrib/rpm/arrayOut.h" />
 		<Unit filename="src/contrib/rpm/rpmTool.cpp" />
 		<Unit filename="src/contrib/rpm/rpmTool.h" />
 		<Unit filename="src/core/gui/VRCodeCompletion.cpp" />

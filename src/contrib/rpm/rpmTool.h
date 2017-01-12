@@ -36,8 +36,9 @@ public:
   void readFile(const char* filename);
   const uint getRes() {return _resolution; };
   const bool isLoaded() {return init; };
-  double getMin();
-  double getMax();
+  double getMinRPM();
+  double getMaxRPM();
+  double getMaxSample() {return _maxVal; };
 private:
   void interpLin(double& y, const double& x, const double& x0, const double& x1, const double& y0, const double& y1);
 
@@ -45,6 +46,7 @@ private:
   unsigned int _resolution; // number of frequencies per spectrum, data type needs to fit ~50k
   double _last; // previous rpm
   bool init = false;
+  double _maxVal = 0.;
 
   // map: key is rpm, value is spectrum data
   std::map<double, spectrum > _data;
@@ -68,6 +70,7 @@ private:
   double _persistent; // for python testing
   double _minRPM;
   double _maxRPM;
+  double _maxVal;
 };
 
 } // end namespace rpmTool
