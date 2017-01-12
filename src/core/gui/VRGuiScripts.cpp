@@ -814,11 +814,11 @@ void VRGuiScripts::updateDocumentation() {
 
     auto setRow = [&](Gtk::TreeModel::iterator itr, string label, string type, string cla, string mod, string col = "#FFFFFF") {
         Gtk::TreeStore::Row row = *itr;
-        gtk_tree_store_set (store->gobj(), row.gobj(), 0, label.c_str(), -1);
-        gtk_tree_store_set (store->gobj(), row.gobj(), 1, type.c_str(), -1);
-        gtk_tree_store_set (store->gobj(), row.gobj(), 2, cla.c_str(), -1);
-        gtk_tree_store_set (store->gobj(), row.gobj(), 3, mod.c_str(), -1);
-        gtk_tree_store_set (store->gobj(), row.gobj(), 4, col.c_str(), -1);
+        gtk_tree_store_set (store->gobj(), row.gobj(),  0, label.c_str(),
+                                                        1, type.c_str(),
+                                                        2, cla.c_str(),
+                                                        3, mod.c_str(),
+                                                        4, col.c_str(), -1);
     };
 
     Gtk::TreeModel::iterator itr0, itr1, itr2;
@@ -980,13 +980,7 @@ void VRGuiScripts::printViewerLanguages() {
 void VRGuiScripts::update() {
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
-    Glib::RefPtr<Gtk::TreeStore> store = Glib::RefPtr<Gtk::TreeStore>::cast_static(VRGuiBuilder()->get_object("script_tree"));
-
-    int i=0;
-    for (auto script : scene->getScripts()) {
-        setScriptListRow(store->get_iter(toString(i)), script.second, true);
-        i++;
-    }
+    for (auto r : scriptRows) setScriptListRow(r.second, r.first, true);
 }
 
 void VRGuiScripts::updateList() {
@@ -1008,26 +1002,32 @@ void VRGuiScripts::updateList() {
         g.scripts.clear();
     };
 
-    for (auto& g : groups) addGroupRow(g.second);
+    for (auto& g : groups) addGroupRow(g.second); // add all groups to list
 
+    for (auto script : scene->getScripts()) { // check for new groups
+        string grp = script.second->getGroup();
+        if (grp != "" && !grpIter.count(grp)) {
+            group g;
+            groups[g.ID] = g;
+            groups[g.ID].name = grp;
+            addGroupRow(groups[g.ID]);
+        }
+    }
+
+    scriptRows.clear();
     for (auto script : scene->getScripts()) {
         auto s = script.second;
         auto k = s.get();
-        Gtk::TreeIter i;
+        Gtk::TreeIter itr;
         string grp = s->getGroup();
-        if (grp == "") setScriptListRow(store->append(), s);
+        if (!grpIter.count(grp)) itr = store->append();
         else {
-            if (!grpIter.count(grp)) {
-                group g;
-                groups[g.ID] = g;
-                g.name = grp;
-                addGroupRow(g);
-            }
             auto& g = groups[grpIter[grp].first];
             g.scripts.push_back(s);
-            setScriptListRow(store->append(grpIter[grp].second->children()), s);
-
+            itr = store->append(grpIter[grp].second->children());
         }
+        scriptRows.push_back( pair<VRScriptPtr, Gtk::TreeIter>(s,itr) );
+        setScriptListRow(itr, s);
         if (oldpages.count(k)) pages[k] = oldpages[k];
         else pages[k] = page();
     }

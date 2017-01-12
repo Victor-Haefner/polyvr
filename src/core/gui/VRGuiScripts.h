@@ -47,6 +47,7 @@ class VRGuiScripts {
 
         string docs_filter;
         map<int, group> groups;
+        vector<pair<VRScriptPtr,Gtk::TreeIter>> scriptRows;
 
         void initEditor();
         void printViewerLanguages();
