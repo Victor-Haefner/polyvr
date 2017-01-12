@@ -62,6 +62,7 @@ class VRGuiScripts {
 
         void on_select_script();
         void on_change_script_type();
+        void on_change_group();
         void on_change_server();
         void on_name_edited(const Glib::ustring& path, const Glib::ustring& new_name);
         void on_script_changed();

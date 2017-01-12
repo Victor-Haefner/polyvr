@@ -39,7 +39,7 @@ VRScriptPtr lastSelectedScript = 0;
 
 class VRGuiScripts_ModelColumns : public Gtk::TreeModelColumnRecord {
     public:
-        VRGuiScripts_ModelColumns() { add(script); add(fg); add(bg); add(time); add(tfg); add(tbg); add(icon); add(Nfound); }
+        VRGuiScripts_ModelColumns() { add(script); add(fg); add(bg); add(time); add(tfg); add(tbg); add(icon); add(Nfound); add(type); }
         Gtk::TreeModelColumn<Glib::ustring> script;
         Gtk::TreeModelColumn<Glib::ustring> fg;
         Gtk::TreeModelColumn<Glib::ustring> bg;
@@ -48,7 +48,7 @@ class VRGuiScripts_ModelColumns : public Gtk::TreeModelColumnRecord {
         Gtk::TreeModelColumn<Glib::ustring> tbg;
         Gtk::TreeModelColumn<Glib::ustring> icon;
         Gtk::TreeModelColumn<Glib::ustring> Nfound;
-        Gtk::TreeModelColumn<int> type;
+        Gtk::TreeModelColumn<gint> type;
 };
 
 class VRGuiScripts_ArgsModelColumns : public Gtk::TreeModelColumnRecord {
@@ -115,8 +115,8 @@ void VRGuiScripts::setGroupListRow(Gtk::TreeIter itr, group& g) {
     Gtk::TreeStore::Row row = *itr;
     gtk_tree_store_set (store->gobj(), row.gobj(),
                         0, g.name.c_str(),
-                        1, "#666666",
-                        2, "#FFFFFF",
+                        1, "#FFFFFF",
+                        2, "#444444",
                         3, "",
                         4, "#666666",
                         5, "#FFFFFF",
@@ -379,7 +379,10 @@ void VRGuiScripts::on_select_script() { // selected a script
     setCombobox("combobox1", getListStorePos("liststore6", script->getType()));
     auto setup = VRSetup::getCurrent();
     if (setup) fillStringListstore("liststore7", setup->getDevices("server"));
+    vector<string> grps; for (auto g : groups) grps.push_back(g.second.name);
+    fillStringListstore("liststore10", grps);
     setCombobox("combobox24", getListStorePos("liststore7", script->getServer()));
+    setCombobox("combobox10", getListStorePos("liststore10", script->getGroup()));
 
     // update editor content && script head
     string core = script->getHead() + script->getCore();
@@ -509,12 +512,13 @@ void VRGuiScripts::on_name_edited(const Glib::ustring& path, const Glib::ustring
         auto scene = VRScene::getCurrent();
         if (scene == 0) return;
         scene->changeScriptName(name, new_name);
-        updateList();
-        on_select_script();
     } else {
+        cout << "VRGuiScripts::on_name_edited grp ID " << type << endl;
         groups[type].name = new_name;
         for (auto& sw : groups[type].scripts) if (auto s = sw.lock()) s->setGroup(new_name);
     }
+    updateList();
+    on_select_script();
 }
 
 
@@ -944,6 +948,15 @@ void VRGuiScripts::on_change_script_type() {
     on_save_clicked();
 }
 
+void VRGuiScripts::on_change_group() {
+    if(!trigger_cbs) return;
+    VRScriptPtr script = getSelectedScript();
+    script->setGroup( getComboboxText("combobox10") );
+    on_select_script();
+    on_save_clicked();
+    updateList();
+}
+
 void VRGuiScripts::on_change_server() {
     if(!trigger_cbs) return;
     VRScriptPtr script = getSelectedScript();
@@ -987,12 +1000,34 @@ void VRGuiScripts::updateList() {
     auto oldpages = pages;
     pages.clear();
 
-    for (auto& g : groups) setGroupListRow(store->append(), g.second);
+    map<string, pair<int,Gtk::TreeIter>> grpIter;
+    auto addGroupRow = [&](group& g) {
+        auto i = store->append();
+        grpIter[g.name] = pair<int,Gtk::TreeIter>(g.ID,i);
+        setGroupListRow(i, g);
+        g.scripts.clear();
+    };
+
+    for (auto& g : groups) addGroupRow(g.second);
 
     for (auto script : scene->getScripts()) {
         auto s = script.second;
         auto k = s.get();
-        setScriptListRow(store->append(), s);
+        Gtk::TreeIter i;
+        string grp = s->getGroup();
+        if (grp == "") setScriptListRow(store->append(), s);
+        else {
+            if (!grpIter.count(grp)) {
+                group g;
+                groups[g.ID] = g;
+                g.name = grp;
+                addGroupRow(g);
+            }
+            auto& g = groups[grpIter[grp].first];
+            g.scripts.push_back(s);
+            setScriptListRow(store->append(grpIter[grp].second->children()), s);
+
+        }
         if (oldpages.count(k)) pages[k] = oldpages[k];
         else pages[k] = page();
     }
@@ -1133,6 +1168,7 @@ VRGuiScripts::VRGuiScripts() {
     setCheckButtonCallback("checkbutton12", sigc::mem_fun(*this, &VRGuiScripts::on_toggle_find_replace) );
 
     setComboboxCallback("combobox1", sigc::mem_fun(*this, &VRGuiScripts::on_change_script_type) );
+    setComboboxCallback("combobox10", sigc::mem_fun(*this, &VRGuiScripts::on_change_group) );
     setComboboxCallback("combobox24", sigc::mem_fun(*this, &VRGuiScripts::on_change_server) );
 
     // trigger tree_view

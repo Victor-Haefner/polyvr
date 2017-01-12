@@ -1328,6 +1328,12 @@ cave allocated</property>
       </row>
     </data>
   </object>
+  <object class="GtkListStore" id="liststore10">
+    <columns>
+      <!-- column-name group -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
   <object class="GtkListStore" id="liststore2">
     <columns>
       <!-- column-name name -->
@@ -8920,7 +8926,7 @@ to add distances</property>
                               <object class="GtkToolButton" id="toolbutton20">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="tooltip_text" translatable="yes">Add Separator</property>
+                                <property name="tooltip_text" translatable="yes">Add Group</property>
                                 <property name="label" translatable="yes">toolbutton20</property>
                                 <property name="use_underline">True</property>
                                 <property name="stock_id">gtk-indent</property>
@@ -9314,7 +9320,7 @@ to add distances</property>
                                   <object class="GtkTable" id="table32">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="n_rows">2</property>
+                                    <property name="n_rows">3</property>
                                     <property name="n_columns">2</property>
                                     <child>
                                       <object class="GtkLabel" id="label32">
@@ -9351,8 +9357,8 @@ to add distances</property>
                                         <property name="label" translatable="yes">Server:</property>
                                       </object>
                                       <packing>
-                                        <property name="top_attach">1</property>
-                                        <property name="bottom_attach">2</property>
+                                        <property name="top_attach">2</property>
+                                        <property name="bottom_attach">3</property>
                                         <property name="x_options">GTK_FILL</property>
                                         <property name="x_padding">10</property>
                                       </packing>
@@ -9364,6 +9370,38 @@ to add distances</property>
                                         <property name="model">liststore7</property>
                                         <child>
                                           <object class="GtkCellRendererText" id="cellrenderertext43"/>
+                                          <attributes>
+                                            <attribute name="text">0</attribute>
+                                          </attributes>
+                                        </child>
+                                      </object>
+                                      <packing>
+                                        <property name="left_attach">1</property>
+                                        <property name="right_attach">2</property>
+                                        <property name="top_attach">2</property>
+                                        <property name="bottom_attach">3</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkLabel" id="label148">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="label" translatable="yes">Group:</property>
+                                      </object>
+                                      <packing>
+                                        <property name="top_attach">1</property>
+                                        <property name="bottom_attach">2</property>
+                                        <property name="x_options">GTK_FILL</property>
+                                        <property name="x_padding">10</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkComboBox" id="combobox10">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="model">liststore10</property>
+                                        <child>
+                                          <object class="GtkCellRendererText" id="cellrenderertext18"/>
                                           <attributes>
                                             <attribute name="text">0</attribute>
                                           </attributes>
