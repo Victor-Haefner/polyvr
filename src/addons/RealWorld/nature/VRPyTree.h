@@ -3,12 +3,20 @@
 
 #include "core/scripting/VRPyBase.h"
 #include "VRTree.h"
+#include "VRTerrain.h"
 
 struct VRPyTree : VRPyBaseT<OSG::VRTree> {
     static PyMethodDef methods[];
 
     static PyObject* setup(VRPyTree* self, PyObject* args);
     static PyObject* addLeafs(VRPyTree* self, PyObject* args);
+};
+
+struct VRPyTerrain : VRPyBaseT<OSG::VRTerrain> {
+    static PyMethodDef methods[];
+
+    static PyObject* setParameters(VRPyTerrain* self, PyObject* args);
+    static PyObject* setMap(VRPyTerrain* self, PyObject* args);
 };
 
 #endif // VRPYTREE_H_INCLUDED

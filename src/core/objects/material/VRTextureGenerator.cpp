@@ -118,7 +118,8 @@ void VRTextureGenerator::applyPixel(Vec4f* data, Vec3i p, Vec4f c) {
     int d = p[2]*height*width + p[1]*width + p[0];
     int N = depth*height*width;
     if (d >= N || d < 0) { cout << "Warning: applyPixel failed, pixel " << d << " " << p << " " << height << " " << width << " " << depth << " out of range! (buffer size is " << N << ")" << endl; return; }
-    data[d] = Vec4f(c[0], c[1], c[2], 1.0)*c[3] + data[d]*(1.0-c[3]);
+    //data[d] = Vec4f(c[0], c[1], c[2], 1.0)*c[3] + data[d]*(1.0-c[3]);
+    data[d] = c;
 }
 
 void VRTextureGenerator::applyPixel(Vec3f* data, Vec3i p, Vec4f c) {

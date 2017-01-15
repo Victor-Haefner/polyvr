@@ -52,8 +52,8 @@ void VRDriver::update() {
     float sDiff = target_speed-speed;
     float throttle = 0;
     float breaking = 0;
-    if (sDiff > 0) throttle = sDiff*1.5;
-    if (sDiff < 0) breaking = -sDiff*0.8;
+    if (sDiff > 0) throttle = sDiff*1.0;
+    if (sDiff < 0) breaking = -sDiff*0.6;
     //cout << "pilot " << sDiff << " " << throttle << " " << breaking << endl;
 
 

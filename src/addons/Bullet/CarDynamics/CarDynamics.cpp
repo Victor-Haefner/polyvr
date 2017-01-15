@@ -74,7 +74,7 @@ float CarDynamics::getAcceleration() { // TODO: idea! get the delta time from th
     float a = (speed-last_speed)/(time-last_time);
     last_speed = speed;
     last_time = time;
-    return a;
+    return abs(a);
 }
 
 void CarDynamics::initVehicle() {
