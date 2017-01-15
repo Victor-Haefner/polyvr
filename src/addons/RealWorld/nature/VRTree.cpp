@@ -6,6 +6,7 @@
 #include "core/scene/VRSceneManager.h"
 
 #include <OpenSG/OSGQuaternion.h>
+#include <random>
 
 using namespace OSG;
 
@@ -211,23 +212,40 @@ void VRTree::setup(int branching, int iterations, int seed,
     setMaterial(treeMat);
 }
 
-void VRTree::addLeafs(string tex, int lvl, float scale, float aspect) {
+void VRTree::addLeafs(string tex, int lvl, int amount) {
     auto m = VRMaterial::get(tex);
-    m->setTexture(tex);
     m->setLit(0);
+    m->setPointSize(3);
+    m->setDiffuse(Vec3f(0,1,0));
+
+    random_device rd;
+    mt19937 e2(rd());
+    normal_distribution<> ndist(0,1);
+
+    auto randVecInSphere = [&](float r) {
+        return Vec3f(ndist(e2), ndist(e2), ndist(e2))*r;
+    };
 
     VRGeoData geo;
     for (auto b : branches) {
         if (b->lvl != lvl) continue;
 
+        // compute branch segment basis
         Vec3f p = (b->p1 + b->p2)*0.5;
         Vec3f d = b->p2 - b->p1;
         Vec3f u = Vec3f(0,1,0);
         Vec3f n = u.cross(d); n.normalize();
         u = d.cross(n); u.normalize();
+
         float L = d.length();
-        Vec2f s = Vec2f(L, L/aspect)*scale;
-        geo.pushQuad(p, n, u, s, true);
+
+        for (int i=0; i<amount; i++) {
+            Vec3f v = randVecInSphere(L*0.3);
+            Vec3f n = p+v-b->p1;
+            n.normalize();
+            geo.pushVert(p+v, n);
+            geo.pushPoint();
+        }
     }
 
     auto g = geo.asGeometry("branches");

@@ -25,10 +25,10 @@ PyObject* VRPyTree::setup(VRPyTree* self, PyObject* args) {
 PyObject* VRPyTree::addLeafs(VRPyTree* self, PyObject* args) {
     const char* tex = 0;
     int lvl = 1;
-    float s, a;
-    if (! PyArg_ParseTuple(args, "siff", (char*)&tex, &lvl, &s, &a)) return NULL;
+    int amount = 1;
+    if (! PyArg_ParseTuple(args, "sii", (char*)&tex, &lvl, &amount)) return NULL;
 
-    self->objPtr->addLeafs( tex, lvl, s, a );
+    self->objPtr->addLeafs( tex, lvl, amount );
     Py_RETURN_TRUE;
 }
 

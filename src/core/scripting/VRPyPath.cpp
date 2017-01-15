@@ -26,9 +26,16 @@ PyMethodDef VRPyPath::methods[] = {
     {"getSize", (PyCFunction)VRPyPath::getSize, METH_NOARGS, "Return the number of path nodes - int getSize()" },
     {"getLength", (PyCFunction)VRPyPath::getLength, METH_NOARGS, "Return the approximated path length - float getLength()" },
     {"getDistance", (PyCFunction)VRPyPath::getDistance, METH_VARARGS, "Return the distance from point to path - float getDistance( [x,y,z] )" },
+    {"getClosestPoint", (PyCFunction)VRPyPath::getClosestPoint, METH_VARARGS, "Return the closest point on path in path coordinate t - float getClosestPoint( [x,y,z] )" },
     {"approximate", (PyCFunction)VRPyPath::approximate, METH_VARARGS, "Convert the cubic bezier spline in a quadratic or linear one (currently only quadratic) - approximate(int degree)" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyPath::getClosestPoint(VRPyPath* self, PyObject *args) {
+    if (!self->valid()) return NULL;
+    auto p = parseVec3f( args );
+    return PyFloat_FromDouble( self->objPtr->getClosestPoint(p) );
+}
 
 PyObject* VRPyPath::getDistance(VRPyPath* self, PyObject *args) {
     if (!self->valid()) return NULL;

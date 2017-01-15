@@ -37,7 +37,7 @@ class VRTree : public VRGeometry {
                    float n_angle = 0.2, float p_angle = 0.6, float l_factor = 0.8, float r_factor = 0.5,
                    float n_angle_v = 0.2, float p_angle_v = 0.4, float l_factor_v = 0.2, float r_factor_v = 0.2);
 
-        void addLeafs(string tex, int lvl, float scale, float aspect);
+        void addLeafs(string tex, int lvl, int amount);
 };
 
 OSG_END_NAMESPACE;
