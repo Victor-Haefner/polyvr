@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="1821">
+<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="2164">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
       <Object ambient="0.370962 0.370962 0.370962 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.233875 0.233875 0.233875 1" type="Light" unique="1" visible="1">
         <Object at="-4.5 4 -1" at_dir="1" base_name="Headlight_beacon" from="-4 5 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
           <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
-        <Object accept_root="1" aspect="1" at="0.0626887 0.2 -0.0268324" at_dir="0" base_name="Default" far="250" fov="1.0472" from="1.94917 4.8395 0.644323" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0.0626887 0.2 -0.0268324" at_dir="0" base_name="Default" far="250" fov="1.0472" from="7.45349 5.72699 0.644479" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
           <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
       </Object>
@@ -117,14 +117,14 @@
 	tg.add('Perlin', 1.0/4, [1.0,0.9,0.7], [0.7,0.5,0.3])
 	m.setTexture(tg.compose(0))
 	
-	VR.tree.addLeafs('leafs', 4, 10)
-	VR.tree.addLeafs('leafs', 5, 10)
+	VR.tree.addLeafs('maple-leaf.png', 4, 30)
+	VR.tree.addLeafs('maple-leaf.png', 5, 20)
 	
 	lmat = VR.tree.getChild(0).getMaterial()
 	lmat.setVertexProgram('shdr_leafs_vert')
 	lmat.setFragmentProgram('shdr_leafs_frag')
 	lmat.setGeometryProgram('shdr_leafs_geo')
-	
+	lmat.setLit(True)
 	
 	
 	
@@ -299,12 +299,34 @@ void main( void ) {
       <core>
 #version 400 compatibility&#13;
 &#13;
-uniform sampler3D tex;
+uniform sampler2D tex;
 
-in vec3 vn;
+in vec2 tcs;
+in vec3 norm;
+vec4 color;
+
+
+void applyBlinnPhong() {
+	vec3 n = gl_NormalMatrix * norm;
+	vec3  light = normalize( gl_LightSource[0].position.xyz );// directional light
+	float NdotL = max(dot( n, light ), 0.0);&#13;
+	vec4  ambient = gl_LightSource[0].ambient * color;&#13;
+	vec4  diffuse = gl_LightSource[0].diffuse * NdotL * color;&#13;
+	float NdotHV = max(dot(norm, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
+	vec4  specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess ); &#13;
+	gl_FragColor = ambient + diffuse + specular;
+}
 &#13;
 void main( void ) {
-	gl_FragColor = vec4(0,1,0,1);&#13;
+	color = texture(tex,tcs);
+	if (color.a &lt; 0.5) discard;
+	color.a = 1.0;
+	color.y *= 0.7;
+	color.xz *= 0.2;
+	//gl_FragColor = c;
+	applyBlinnPhong();
+	//gl_FragColor = vec4(norm, 1.0);
+	//gl_FragColor = vec4(0,1,0,1);&#13;
 }
 
 
@@ -320,6 +342,8 @@ void main( void ) {
 layout (points) in;&#13;
 layout (triangle_strip, max_vertices = 6) out;&#13;
 in vec3 vn[];
+out vec2 tcs;
+out vec3 norm;
 
 #define mMVP gl_ModelViewProjectionMatrix
 #define mMV gl_ModelViewMatrix
@@ -327,24 +351,32 @@ in vec3 vn[];
 &#13;
 vec4 crns[4];
 vec4 crnsMVP[4];
+vec2 TCS[4];
 &#13;
 void emit(int i) {&#13;
-	gl_Position = crnsMVP[i];&#13;
+	gl_Position = crnsMVP[i];
+	tcs = TCS[i];&#13;
 	EmitVertex();&#13;
 }
 &#13;
 void main() {&#13;
 	vec4 p = gl_PositionIn[0];
-	float s = 0.02;
+	float s = 0.03;
 	vec3 u = vec3(0,1,0);
 	//vec4 x = vec4(s,0,0,0);
 	//vec4 z = vec4(0,0,s,0);
 	vec4 z = vec4(vn[0]*s, 0);
 	vec4 x = vec4(normalize(cross(z.xyz,u))*s, 0);
+	if (z[1] &gt; 0) z[1] *= -1;
 	crns[0] = p -x-z;
 	crns[1] = p +x-z;
 	crns[2] = p -x+z;
 	crns[3] = p +x+z;
+	TCS[0] = vec2(0,0);
+	TCS[1] = vec2(1,0);
+	TCS[2] = vec2(0,1);
+	TCS[3] = vec2(1,1);
+	norm = normalize(cross(x.xyz,z.xyz));
 	for (int i=0; i&lt;4; i++) crnsMVP[i] = mMVP * crns[i];&#13;
 	emit(0);
 	emit(1);

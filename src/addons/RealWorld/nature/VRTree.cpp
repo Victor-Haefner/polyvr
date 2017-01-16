@@ -214,6 +214,7 @@ void VRTree::setup(int branching, int iterations, int seed,
 
 void VRTree::addLeafs(string tex, int lvl, int amount) {
     auto m = VRMaterial::get(tex);
+    m->setTexture(tex);
     m->setLit(0);
     m->setPointSize(3);
     m->setDiffuse(Vec3f(0,1,0));
