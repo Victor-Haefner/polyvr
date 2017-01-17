@@ -11,7 +11,7 @@ simplePyType(CarDynamics, New_named_ptr);
 simpleVRPyType(Driver, New_ptr);
 
 PyMethodDef VRPyCarDynamics::methods[] = {
-    {"update", (PyCFunction)VRPyCarDynamics::update, METH_VARARGS, "Update vehicle physics input (float throttle {0,1}, float break {0,1}, float steering {-1,1})" },
+    {"update", (PyCFunction)VRPyCarDynamics::update, METH_VARARGS, "Update vehicle physics input (float throttle {-1,1}, float break {0,1}, float steering {-1,1}, float clutch {0,1})" },
     {"setChassis", (PyCFunction)VRPyCarDynamics::setChassis, METH_VARARGS, "Set chassis geometry" },
     {"setupSimpleWheels", (PyCFunction)VRPyCarDynamics::setupSimpleWheels, METH_VARARGS, "Setup classic wheels - setupSimpleWheels( geo, float X, float Zp, float Zn, float height, float radius, float width)" },
     {"setParameter", (PyCFunction)VRPyCarDynamics::setParameter, METH_VARARGS, "Set car parameter, must be done before creating car - setParameter( float mass, float max_steering, float engine_power, float break_power )" },
@@ -19,6 +19,7 @@ PyMethodDef VRPyCarDynamics::methods[] = {
     {"getSteering", (PyCFunction)VRPyCarDynamics::getSteering, METH_NOARGS, "Get car steering - float getSteering()" },
     {"getThrottle", (PyCFunction)VRPyCarDynamics::getThrottle, METH_NOARGS, "Get car throttle - float getThrottle()" },
     {"getBreaking", (PyCFunction)VRPyCarDynamics::getBreaking, METH_NOARGS, "Get car breaking - float getBreaking()" },
+    {"getClutch", (PyCFunction)VRPyCarDynamics::getClutch, METH_NOARGS, "Get car clutch - float getClutch()" },
     {"getSpeed", (PyCFunction)VRPyCarDynamics::getSpeed, METH_NOARGS, "Get car speed" },
     {"getAcceleration", (PyCFunction)VRPyCarDynamics::getAcceleration, METH_NOARGS, "Get car acceleration" },
     {"getRoot", (PyCFunction)VRPyCarDynamics::getRoot, METH_NOARGS, "Get car root node" },
@@ -32,6 +33,10 @@ PyObject* VRPyCarDynamics::getWheels(VRPyCarDynamics* self) {
     PyObject* pyWheels = PyList_New(wheels.size());
     for (uint i=0; i<wheels.size(); i++) PyList_SetItem(pyWheels, i, VRPyTransform::fromSharedPtr(wheels[i]));
     return pyWheels;
+}
+
+PyObject* VRPyCarDynamics::getClutch(VRPyCarDynamics* self) {
+    return PyFloat_FromDouble(self->objPtr->getClutch());
 }
 
 PyObject* VRPyCarDynamics::getSteering(VRPyCarDynamics* self) {
@@ -70,10 +75,11 @@ PyObject* VRPyCarDynamics::reset(VRPyCarDynamics* self, PyObject* args) {
 }
 
 PyObject* VRPyCarDynamics::update(VRPyCarDynamics* self, PyObject* args) {
-    OSG::Vec3f input = parseVec3f(args);
+    OSG::Vec4f input = parseVec4f(args);
     self->objPtr->setThrottle(input[0]);
     self->objPtr->setBreak(input[1]);
     self->objPtr->setSteering(input[2]);
+    self->objPtr->setClutch(input[3]);
     Py_RETURN_TRUE;
 }
 

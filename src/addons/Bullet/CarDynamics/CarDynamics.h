@@ -54,6 +54,7 @@ class CarDynamics : public VRObject {
 
     private:
         // user inputs
+        float clutch = 0;
         float throttle = 0;
         float breaking = 0;
         float steering = 0;
@@ -91,9 +92,11 @@ class CarDynamics : public VRObject {
         VRTransformPtr getChassis();
         vector<VRTransformPtr> getWheels();
 
+        void setClutch(float c);
         void setThrottle(float t);
         void setBreak(float b);
         void setSteering(float s);
+        float getClutch();
         float getThrottle();
         float getBreaking();
         float getSteering();

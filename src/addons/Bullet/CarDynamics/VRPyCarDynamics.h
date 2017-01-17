@@ -22,6 +22,7 @@ struct VRPyCarDynamics : VRPyBaseT<OSG::CarDynamics> {
     static PyObject* getSteering(VRPyCarDynamics* self);
     static PyObject* getThrottle(VRPyCarDynamics* self);
     static PyObject* getBreaking(VRPyCarDynamics* self);
+    static PyObject* getClutch(VRPyCarDynamics* self);
 };
 
 struct VRPyDriver : VRPyBaseT<OSG::VRDriver> {

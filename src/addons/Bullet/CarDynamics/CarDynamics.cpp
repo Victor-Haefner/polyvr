@@ -203,12 +203,21 @@ void CarDynamics::setupSimpleWheels(VRGeometryPtr geo, float x, float fZ, float 
 	}
 }
 
+void CarDynamics::setClutch(float t) { // from 0 to 1
+    t = max(0.f,t);
+    t = min(1.f,t);
+    clutch = t;
+
+    //PLock lock(mtx());
+
+    // TODO
+}
+
 void CarDynamics::setThrottle(float t) { // from 0 to 1
+    t = max(-1.f,t);
+    t = min( 1.f,t);
     throttle = t;
     t *= engine.power;
-    //t = max(0.f,t);
-    if (t>0) t = min( engine.maxForce,t);
-    else     t = max(-engine.maxForce,t);
 
     PLock lock(mtx());
     m_vehicle->applyEngineForce(t, 2);
@@ -239,6 +248,7 @@ void CarDynamics::setSteering(float s) { // from -1 to 1
     m_vehicle->setSteeringValue(s*engine.maxSteer, 1);
 }
 
+float CarDynamics::getClutch() { return clutch; }
 float CarDynamics::getThrottle() { return throttle; }
 float CarDynamics::getBreaking() { return breaking; }
 float CarDynamics::getSteering() { return steering; }
