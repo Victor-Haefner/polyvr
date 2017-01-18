@@ -1026,6 +1026,8 @@
 		<Unit filename="src/core/utils/VRStorage.cpp" />
 		<Unit filename="src/core/utils/VRStorage.h" />
 		<Unit filename="src/core/utils/VRStorage_template.h" />
+		<Unit filename="src/core/utils/VRTests.cpp" />
+		<Unit filename="src/core/utils/VRTests.h" />
 		<Unit filename="src/core/utils/VRTimer.cpp" />
 		<Unit filename="src/core/utils/VRTimer.h" />
 		<Unit filename="src/core/utils/VRUndoInterface.cpp" />

@@ -33,6 +33,7 @@ class VRSceneGlobals: public VRPyBase {
 		static PyObject* joinThread(VRSceneGlobals* self, PyObject *args);
 		static PyObject* getSystemDirectory(VRSceneGlobals* self, PyObject *args);
 		static PyObject* setPhysicsActive(VRSceneGlobals* self, PyObject *args);
+		static PyObject* runTest(VRSceneGlobals* self, PyObject *args);
 };
 
 OSG_END_NAMESPACE;
