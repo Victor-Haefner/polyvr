@@ -540,15 +540,7 @@ void VRMaterial::setTexture(VRTexturePtr img, bool alpha, int unit) {
     //md->texture = img;
     md->texChunks[unit]->setImage(img->getImage());
     md->envChunks[unit]->setEnvMode(GL_MODULATE);
-    if (alpha && img->getImage()->hasAlphaChannel() && md->blendChunk == 0) {
-        md->blendChunk = BlendChunk::create();
-        md->mat->addChunk(md->blendChunk);
-    }
-
-    if (alpha && img->getImage()->hasAlphaChannel()) {
-        md->blendChunk->setSrcFactor  ( GL_SRC_ALPHA           );
-        md->blendChunk->setDestFactor ( GL_ONE_MINUS_SRC_ALPHA );
-    }
+    if (alpha && img->getImage()->hasAlphaChannel()) enableTransparency(false);
 
     if (img->getInternalFormat() != -1) md->texChunks[unit]->setInternalFormat(img->getInternalFormat());
     updateDeferredShader();
@@ -751,10 +743,10 @@ void VRMaterial::enableTransparency(bool user_override) {
     auto md = mats[activePass];
     if (md->blendChunk == 0) {
         md->blendChunk = BlendChunk::create();
-        md->blendChunk->setSrcFactor  ( GL_SRC_ALPHA           );
-        md->blendChunk->setDestFactor ( GL_ONE_MINUS_SRC_ALPHA );
         md->mat->addChunk(md->blendChunk);
     }
+    md->blendChunk->setSrcFactor  ( GL_SRC_ALPHA           );
+    md->blendChunk->setDestFactor ( GL_ONE_MINUS_SRC_ALPHA );
 }
 
 void VRMaterial::clearTransparency(bool user_override) {

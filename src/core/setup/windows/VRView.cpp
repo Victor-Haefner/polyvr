@@ -37,12 +37,12 @@ string VRView::getName() { return name; }
 void VRView::setMaterial() {
     ImageRecPtr img = Image::create();
 
-    Vec4f bg = Vec4f(0.5, 0.7, 0.95, 0.5);
-    Vec4f c1 = Vec4f(0.5, 0.7, 0.95, 0.9);
-    Vec4f cax = Vec4f(0.9, 0.2, 0.2, 1);
-    Vec4f cay = Vec4f(0.2, 0.9, 0.2, 1);
+    Vec3f bg  = Vec3f(0.5, 0.7, 0.95);
+    Vec3f c1  = Vec3f(0.5, 0.7, 0.95);
+    Vec3f cax = Vec3f(0.9, 0.2, 0.2);
+    Vec3f cay = Vec3f(0.2, 0.9, 0.2);
 
-    auto label = VRText::get()->create(name, "SANS 20", 20, Color4f(0,0,0,255), Color4f(bg[2]*255.0, bg[1]*255.0, bg[0]*255.0, 0));
+    auto label = VRText::get()->create(name, "SANS 20", 20, Color4f(1,1,1,1), Color4f(bg[2], bg[1], bg[0], 1));
     float lw = label->getImage()->getWidth();
     float lh = label->getImage()->getHeight();
 
@@ -52,7 +52,7 @@ void VRView::setMaterial() {
     int ar = 50;
     Vec2f pl(-0.1*s, -0.05*s);
 
-	vector<Vec4f> data;
+	vector<Vec3f> data;
 	data.resize(s*s);
 
     for (int i=0; i<s; i++) {
@@ -74,13 +74,13 @@ void VRView::setMaterial() {
                 int v = y - pl[1] + lh*0.5;
                 int w = 4*(u+v*lw);
                 const UInt8* d = label->getImage()->getData();
-                data[k] = Vec4f(d[w]/255.0, d[w+1]/255.0, d[w+2]/255.0, d[w+3]/255.0);
+                data[k] = Vec3f(d[w]/255.0, d[w+1]/255.0, d[w+2]/255.0);
                 //data[k] = Vec4f(1,1,1, 1);
             }
         }
     }
 
-    img->set( Image::OSG_RGBA_PF, s, s, 1, 0, 1, 0, (const uint8_t*)&data[0], OSG::Image::OSG_FLOAT32_IMAGEDATA, true, 1);
+    img->set( Image::OSG_RGB_PF, s, s, 1, 0, 1, 0, (const uint8_t*)&data[0], OSG::Image::OSG_FLOAT32_IMAGEDATA, true, 1);
 
     viewGeoMat->setTexture(VRTexture::create(img));
     viewGeoMat->setLit(false);

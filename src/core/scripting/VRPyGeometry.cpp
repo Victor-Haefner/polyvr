@@ -131,6 +131,7 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"readSharedMemory", (PyCFunction)VRPyGeometry::readSharedMemory, METH_VARARGS, "Read the geometry from shared memory buffers - readSharedMemory( str segment, str object )" },
     {"applyTransformation", (PyCFunction)VRPyGeometry::applyTransformation, METH_VARARGS, "Apply a transformation to the mesh - applyTransformation( pose )" },
     {"setPatchVertices", PySetter(Geometry, setPatchVertices, int), "Set patch primitives for tesselation shader - setPatchVertices( int )" },
+    {"setMeshVisibility", PySetter(Geometry, setMeshVisibility, bool), "Set mesh visibility - setMeshVisibility( bool )" },
 
     {"addVertex", (PyCFunction)VRPyGeometry::addVertex, METH_VARARGS, "Add a vertex to geometry - addVertex( pos | norm, col, tc )" },
     {"setVertex", (PyCFunction)VRPyGeometry::setVertex, METH_VARARGS, "Add a quad to geometry - setVertex( int i, pos | norm, col, tc )" },

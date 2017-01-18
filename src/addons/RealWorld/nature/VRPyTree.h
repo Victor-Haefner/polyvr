@@ -10,6 +10,7 @@ struct VRPyTree : VRPyBaseT<OSG::VRTree> {
 
     static PyObject* setup(VRPyTree* self, PyObject* args);
     static PyObject* addLeafs(VRPyTree* self, PyObject* args);
+    static PyObject* setLeafMaterial(VRPyTree* self, PyObject* args);
 };
 
 struct VRPyTerrain : VRPyBaseT<OSG::VRTerrain> {

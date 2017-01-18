@@ -10,7 +10,8 @@ simpleVRPyType(Tree, New_VRObjects_unnamed_ptr);
 
 PyMethodDef VRPyTree::methods[] = {
     {"setup", (PyCFunction)VRPyTree::setup, METH_VARARGS, "Set the tree parameters - setup( int , int, int, flt, flt, flt, flt, flt, flt, flt, flt ) " },
-    {"addLeafs", (PyCFunction)VRPyTree::addLeafs, METH_VARARGS, "Add a leaf layer - addLeafs( str texture, int lvl, flt scale, flt aspect )" },
+    {"addLeafs", (PyCFunction)VRPyTree::addLeafs, METH_VARARGS, "Add a leaf layer - addLeafs( int lvl, flt scale, flt aspect )" },
+    {"setLeafMaterial", (PyCFunction)VRPyTree::setLeafMaterial, METH_VARARGS, "Set leaf material - setLeafMaterial( mat )" },
     {NULL}  /* Sentinel */
 };
 
@@ -24,12 +25,18 @@ PyObject* VRPyTree::setup(VRPyTree* self, PyObject* args) {
 }
 
 PyObject* VRPyTree::addLeafs(VRPyTree* self, PyObject* args) {
-    const char* tex = 0;
     int lvl = 1;
     int amount = 1;
-    if (! PyArg_ParseTuple(args, "sii", (char*)&tex, &lvl, &amount)) return NULL;
+    if (! PyArg_ParseTuple(args, "ii", &lvl, &amount)) return NULL;
+    self->objPtr->addLeafs( lvl, amount );
+    Py_RETURN_TRUE;
+}
 
-    return VRPyMaterial::fromSharedPtr( self->objPtr->addLeafs( tex, lvl, amount ) );
+PyObject* VRPyTree::setLeafMaterial(VRPyTree* self, PyObject* args) {
+    VRPyMaterial* m;
+    if (! PyArg_ParseTuple(args, "O", &m)) return NULL;
+    self->objPtr->setLeafMaterial( m->objPtr );
+    Py_RETURN_TRUE;
 }
 
 PyMethodDef VRPyTerrain::methods[] = {

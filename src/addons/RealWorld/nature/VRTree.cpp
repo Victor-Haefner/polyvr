@@ -213,12 +213,23 @@ void VRTree::setup(int branching, int iterations, int seed,
     setMaterial(treeMat);
 }
 
-VRMaterialPtr VRTree::addLeafs(string tex, int lvl, int amount) {
-    auto m = VRMaterial::get(tex);
-    m->setTexture(tex);
-    m->setLit(0);
-    m->setPointSize(3);
-    m->setDiffuse(Vec3f(0,1,0));
+void VRTree::addLeafs(int lvl, int amount) { // TODO: add default material!
+    if (leafGeos.size() == 0) {
+        auto g0 = VRGeometry::create("branches");
+        auto g1 = VRGeometry::create("branches");
+        auto g2 = VRGeometry::create("branches");
+        leafGeos.push_back( g0 );
+        leafGeos.push_back( g1 );
+        leafGeos.push_back( g2 );
+
+        auto lod = VRLod::create("branches_lod");
+        addChild(lod);
+        lod->addChild(g0);
+        lod->addChild(g1);
+        lod->addChild(g2);
+        lod->addDistance(20);
+        lod->addDistance(50);
+    }
 
     random_device rd;
     mt19937 e2(rd());
@@ -260,23 +271,13 @@ VRMaterialPtr VRTree::addLeafs(string tex, int lvl, int amount) {
         geo2.pushPoint();
     }
 
-    auto g0 = geo0.asGeometry("branches");
-    auto g1 = geo1.asGeometry("branches");
-    auto g2 = geo2.asGeometry("branches");
-    g0->setMaterial(m);
-    g1->setMaterial(m);
-    g2->setMaterial(m);
-
-    auto lod = VRLod::create("branches_lod");
-    addChild(lod);
-    lod->addChild(g0);
-    lod->addChild(g1);
-    lod->addChild(g2);
-    lod->addDistance(20);
-    lod->addDistance(50);
-
-    return m;
+    geo0.apply(leafGeos[0]);
+    geo1.apply(leafGeos[1]);
+    geo2.apply(leafGeos[2]);
 }
 
+void VRTree::setLeafMaterial(VRMaterialPtr mat) {
+    for (auto g : leafGeos) g->setMaterial(mat);
+}
 
 

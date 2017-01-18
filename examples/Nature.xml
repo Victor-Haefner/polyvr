@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="2182">
+<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="1898">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
       <Object ambient="0.370962 0.370962 0.370962 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.233875 0.233875 0.233875 1" type="Light" unique="1" visible="1">
         <Object at="-4.5 4 -1" at_dir="1" base_name="Headlight_beacon" from="-4 5 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
           <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
-        <Object accept_root="1" aspect="1" at="0.0626887 0.2 -0.0268324" at_dir="0" base_name="Default" far="250" fov="1.0472" from="2.7153 7.02295 3.61221" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0.0626887 0.2 -0.0268324" at_dir="0" base_name="Default" far="250" fov="1.0472" from="8.26894 4.06762 -2.99607" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
           <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
       </Object>
@@ -19,7 +19,7 @@
 	import VR
 	
 	VR.init_terrain()
-	VR.init_tree()
+	VR.init_trees()
 	VR.init_grass()
 </core>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="2" base_name="trigger" name_space="__global__"/>
@@ -35,12 +35,14 @@
 	VR.grass = VR.Geometry('grass')
 	r.addChild(VR.grass)
 	
-	
+	# ongoing work
+	"""
 	patch = VR.Polygon()
 	VR.grass = VR.GrassPatch()
 	VR.grass.setSurface(VR.terrain)
 	VR.grass.setPerimeter(patch)
 	VR.grass.grow(1.0)
+	"""
 	
 	
 	
@@ -80,51 +82,66 @@
 	
 </core>
     </Script>
-    <Script base_name="init_tree" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="">
+    <Script base_name="init_trees" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="">
       <core>
 	import VR
 	from random import random
 	
 	r = VR.getRoot().find('Headlight')
 
-	if hasattr(VR, 'tree'): VR.tree.destroy()
-	VR.tree = VR.Tree()
-	r.addChild(VR.tree)
+	if hasattr(VR, 'trees'): VR.trees.destroy()
+	VR.trees = VR.Object('trees')
+	r.addChild(VR.trees)
 	
-	#VR.tree.setup(6,5,int(random()*100), 0.2,0.5,0.78,0.45, 0.2,0.4,0.2,0.2)
-	VR.tree.setup(4,5,int(random()*100), 0.2,0.4,0.78,0.45, 0.2,0.4,0.2,0.2)
-	
-	VR.tree.setPatchVertices(2)
-	types = [ 'GL_PATCHES' for t in VR.tree.getTypes() ]
-	VR.tree.setTypes(types)
 	m = VR.Material('treemat')
-	VR.tree.setMaterial(m)
-	
 	m.setVertexProgram('shrd_vert')
 	m.setFragmentProgram('shrd_frag')
 	m.setFragmentProgram('shdr_dfrag', True)
 	m.setTessControlProgram('shdr_tc')
 	m.setTessEvaluationProgram('shdr_te')
 	m.setGeometryProgram('shrd_geo')
-		
 	m.setWireFrame(0)
 	m.setLineWidth(3)
 	
 	tg = VR.TextureGenerator()
 	tg.setSize([50,50,50])
-	
 	tg.add('Perlin', 1, [0.7,0.5,0.3], [1,0.9,0.7])
 	tg.add('Perlin', 1.0/4, [1.0,0.9,0.7], [0.7,0.5,0.3])
 	m.setTexture(tg.compose(0))
 	
-	VR.tree.addLeafs('maple-leaf.png', 4, 30)
-	lmat = VR.tree.addLeafs('maple-leaf.png', 5, 20)
-	
+	lmat = VR.Material('leafs')
+	lmat.setTexture('maple-leaf.png')
 	lmat.setVertexProgram('shdr_leafs_vert')
 	lmat.setFragmentProgram('shdr_leafs_frag')
 	lmat.setGeometryProgram('shdr_leafs_geo')
 	lmat.setLit(True)
-	lmat.clearTransparency()
+	#lmat.clearTransparency() # TODO: strange performance hit!
+		
+	def addTree(p):
+		t = VR.Tree()
+		t.setFrom(p)
+		VR.trees.addChild(t)
+	
+		#t.setup(6,5,int(random()*100), 0.2,0.5,0.78,0.45, 0.2,0.4,0.2,0.2)
+		t.setup(4,5,int(random()*100), 0.2,0.4,0.78,0.45, 0.2,0.4,0.2,0.2)
+	
+		t.setPatchVertices(2)
+		types = [ 'GL_PATCHES' for y in t.getTypes() ]
+		t.setTypes(types)
+		
+		t.setMaterial(m)
+	
+		t.addLeafs(4, 30)
+		t.addLeafs(5, 20)
+		t.setLeafMaterial(lmat)
+	
+		
+		
+	addTree([ 0,0,0])
+	addTree([-2,0,0])
+	addTree([ 2,0,0])
+	addTree([ 0,0,-2])
+	addTree([ 0,0, 2])
 	
 	
 	
@@ -776,6 +793,18 @@ void main( void ) {
 	applyWind();
     gl_Position = vertex;&#13;
 }
+</core>
+    </Script>
+    <Script base_name="test_materials" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="">
+      <core>
+	import VR
+	
+	geos = VR.getRoot().getChildren(True, 'Geometry')
+	print len(geos)
+	
+	for geo in geos:
+		m = geo.getMaterial()
+		print m.getName()
 </core>
     </Script>
     <Script base_name="wind" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="">
