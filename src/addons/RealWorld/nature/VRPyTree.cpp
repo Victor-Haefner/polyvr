@@ -1,4 +1,5 @@
 #include "VRPyTree.h"
+#include "core/scripting/VRPyMaterial.h"
 #include "core/scripting/VRPyImage.h"
 #include "core/scripting/VRPyBaseT.h"
 
@@ -28,8 +29,7 @@ PyObject* VRPyTree::addLeafs(VRPyTree* self, PyObject* args) {
     int amount = 1;
     if (! PyArg_ParseTuple(args, "sii", (char*)&tex, &lvl, &amount)) return NULL;
 
-    self->objPtr->addLeafs( tex, lvl, amount );
-    Py_RETURN_TRUE;
+    return VRPyMaterial::fromSharedPtr( self->objPtr->addLeafs( tex, lvl, amount ) );
 }
 
 PyMethodDef VRPyTerrain::methods[] = {

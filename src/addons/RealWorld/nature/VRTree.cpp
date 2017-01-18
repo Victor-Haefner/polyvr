@@ -3,6 +3,7 @@
 #include "core/objects/geometry/VRGeoData.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTextureGenerator.h"
+#include "core/objects/VRLod.h"
 #include "core/scene/VRSceneManager.h"
 
 #include <OpenSG/OSGQuaternion.h>
@@ -212,7 +213,7 @@ void VRTree::setup(int branching, int iterations, int seed,
     setMaterial(treeMat);
 }
 
-void VRTree::addLeafs(string tex, int lvl, int amount) {
+VRMaterialPtr VRTree::addLeafs(string tex, int lvl, int amount) {
     auto m = VRMaterial::get(tex);
     m->setTexture(tex);
     m->setLit(0);
@@ -227,7 +228,7 @@ void VRTree::addLeafs(string tex, int lvl, int amount) {
         return Vec3f(ndist(e2), ndist(e2), ndist(e2))*r;
     };
 
-    VRGeoData geo;
+    VRGeoData geo0, geo1, geo2;
     for (auto b : branches) {
         if (b->lvl != lvl) continue;
 
@@ -244,14 +245,37 @@ void VRTree::addLeafs(string tex, int lvl, int amount) {
             Vec3f v = randVecInSphere(L*0.3);
             Vec3f n = p+v-b->p1;
             n.normalize();
-            geo.pushVert(p+v, n);
-            geo.pushPoint();
+            geo0.pushVert(p+v, n);
+            geo0.pushPoint();
         }
     }
 
-    auto g = geo.asGeometry("branches");
-    g->setMaterial(m);
-    addChild(g);
+    for (int i=0; i<geo0.size(); i+=4) {
+        geo1.pushVert( geo0.getPosition(i), geo0.getNormal(i));
+        geo1.pushPoint();
+    }
+
+    for (int i=0; i<geo0.size(); i+=16) {
+        geo2.pushVert( geo0.getPosition(i), geo0.getNormal(i));
+        geo2.pushPoint();
+    }
+
+    auto g0 = geo0.asGeometry("branches");
+    auto g1 = geo1.asGeometry("branches");
+    auto g2 = geo2.asGeometry("branches");
+    g0->setMaterial(m);
+    g1->setMaterial(m);
+    g2->setMaterial(m);
+
+    auto lod = VRLod::create("branches_lod");
+    addChild(lod);
+    lod->addChild(g0);
+    lod->addChild(g1);
+    lod->addChild(g2);
+    lod->addDistance(20);
+    lod->addDistance(50);
+
+    return m;
 }
 
 
