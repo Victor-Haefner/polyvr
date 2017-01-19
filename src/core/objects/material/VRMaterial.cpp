@@ -291,6 +291,12 @@ void VRMaterial::clearAll() {
     materialsByPtr.clear();
 }
 
+vector<VRMaterialPtr> VRMaterial::getAll() {
+    vector<VRMaterialPtr> res;
+    for (auto wm : materialsByPtr) if (auto m = wm.second.lock()) res.push_back(m);
+    return res;
+}
+
 VRMaterialPtr VRMaterial::getDefault() {
     if (materials.count("default"))
         if (auto sp = materials["default"].lock()) return sp;

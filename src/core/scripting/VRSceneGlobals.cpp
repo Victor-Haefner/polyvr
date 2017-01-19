@@ -16,6 +16,7 @@
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiFile.h"
 #include "core/objects/VRTransform.h"
+#include "core/objects/material/VRMaterial.h"
 #include "core/utils/VRTests.h"
 #include "PolyVR.h"
 
@@ -49,6 +50,7 @@ PyMethodDef VRSceneGlobals::methods[] = {
 	{"getSystemDirectory", (PyCFunction)VRSceneGlobals::getSystemDirectory, METH_VARARGS, "Return the path to one of the specific PolyVR directories - getSystemDirectory( str dir )\n\tdir can be: ROOT, EXAMPLES, RESSOURCES, TRAFFIC" },
 	{"setPhysicsActive", (PyCFunction)VRSceneGlobals::setPhysicsActive, METH_VARARGS, "Pause and unpause physics - setPhysicsActive( bool b )" },
 	{"runTest", (PyCFunction)VRSceneGlobals::runTest, METH_VARARGS, "Run a built-in system test - runTest( string test )" },
+	{"getSceneMaterials", (PyCFunction)VRSceneGlobals::getSceneMaterials, METH_NOARGS, "Get all materials of the scene - getSceneMaterials()" },
     {NULL}  /* Sentinel */
 };
 
@@ -56,6 +58,15 @@ PyMethodDef VRSceneGlobals::methods[] = {
 // ==============
 // Python methods
 // ==============
+
+PyObject* VRSceneGlobals::getSceneMaterials(VRSceneGlobals* self) {
+    auto scene = VRScene::getCurrent();
+    if (scene) {
+        auto mats = VRMaterial::getAll(); // TODO
+
+    }
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRSceneGlobals::setPhysicsActive(VRSceneGlobals* self, PyObject *args) {
     auto scene = VRScene::getCurrent();

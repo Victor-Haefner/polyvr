@@ -215,7 +215,7 @@ if (current) current->allowScriptThreads();
     VRGlobals::get()->CURRENT_FRAME++;
     VRGlobals::get()->FRAME_RATE = fps;
 
-    sleep_to(60);
+    //sleep_to(60);
 }
 
 OSG_END_NAMESPACE

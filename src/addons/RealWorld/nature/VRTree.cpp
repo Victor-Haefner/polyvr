@@ -239,6 +239,7 @@ void VRTree::addLeafs(int lvl, int amount) { // TODO: add default material!
         return Vec3f(ndist(e2), ndist(e2), ndist(e2))*r;
     };
 
+    float s = 0.03;
     VRGeoData geo0, geo1, geo2;
     for (auto b : branches) {
         if (b->lvl != lvl) continue;
@@ -256,18 +257,18 @@ void VRTree::addLeafs(int lvl, int amount) { // TODO: add default material!
             Vec3f v = randVecInSphere(L*0.3);
             Vec3f n = p+v-b->p1;
             n.normalize();
-            geo0.pushVert(p+v, n);
+            geo0.pushVert(p+v, n, Vec3f(s,0,0));
             geo0.pushPoint();
         }
     }
 
     for (int i=0; i<geo0.size(); i+=4) {
-        geo1.pushVert( geo0.getPosition(i), geo0.getNormal(i));
+        geo1.pushVert( geo0.getPosition(i), geo0.getNormal(i), Vec3f(s*2,0,0));
         geo1.pushPoint();
     }
 
     for (int i=0; i<geo0.size(); i+=16) {
-        geo2.pushVert( geo0.getPosition(i), geo0.getNormal(i));
+        geo2.pushVert( geo0.getPosition(i), geo0.getNormal(i), Vec3f(s*4,0,0));
         geo2.pushPoint();
     }
 

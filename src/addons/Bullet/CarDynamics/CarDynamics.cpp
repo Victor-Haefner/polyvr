@@ -10,6 +10,7 @@
 #include <OpenSG/OSGTextureObjChunk.h>
 #include <BulletDynamics/Vehicle/btRaycastVehicle.h>
 #include <GL/glut.h>
+#include <math.h>
 
 typedef boost::recursive_mutex::scoped_lock PLock;
 
@@ -53,7 +54,9 @@ CarDynamicsPtr CarDynamics::create(string name) { return CarDynamicsPtr( new Car
 //only to be done once
 void CarDynamics::initPhysics() {
     auto scene = VRScene::getCurrent();
+    updateEPtr = VRFunction<int>::create("cardyn_engin_update", boost::bind(&CarDynamics::updateEngine, this));
     updateWPtr = VRFunction<int>::create("cardyn_wheel_update", boost::bind(&CarDynamics::updateWheels, this));
+    scene->addUpdateFkt(updateEPtr);
     scene->addUpdateFkt(updateWPtr);
     m_dynamicsWorld = (btDynamicsWorld*) scene->bltWorld();
 }
@@ -207,34 +210,43 @@ void CarDynamics::setClutch(float t) { // from 0 to 1
     t = max(0.f,t);
     t = min(1.f,t);
     clutch = t;
-
-    //PLock lock(mtx());
-
-    // TODO
 }
 
 void CarDynamics::setThrottle(float t) { // from 0 to 1
-    t = max(-1.f,t);
-    t = min( 1.f,t);
+    t = max(0.f,t);
+    t = min(1.f,t);
     throttle = t;
-    t *= engine.power;
-
-    PLock lock(mtx());
-    m_vehicle->applyEngineForce(t, 2);
-    m_vehicle->applyEngineForce(t, 3);
-
-    //cout << "\nset throttle " << t << endl;
 }
 
 void CarDynamics::setBreak(float b) { // from 0 to 1
-    breaking = b;
-    b *= engine.breakPower;
     b = max(0.f,b);
-    b = min(engine.maxBreakingForce,b);
+    b = min(1.f,b);
+    breaking = b;
+}
 
+void CarDynamics::setGear(int g) { engine.gear = g; }
+
+void CarDynamics::updateEngine() {
     PLock lock(mtx());
-    m_vehicle->setBrake(b, 2);
-    m_vehicle->setBrake(b, 3);
+
+    // compute gears
+    float clutchF = engine.clutchForceCurve->getPosition(clutch)[1];
+    float gearmod = 1;
+    if (engine.gear == -1) gearmod = -1.0;
+    if (engine.gear ==  0) gearmod = 0;
+
+    // compute RPM
+	float s = abs( getSpeed() );
+	if (engine.gear ==  0) engine.rpm = (engine.maxRpm - engine.minRpm) * throttle + engine.minRpm;
+	else engine.rpm = s * engine.gearRatios[engine.gear] * 100 / (wheels[0].radius * 12 * Pi);
+    if (engine.rpm > 3800) gearmod = 0;
+
+	// apply force to engine
+    float eForce = throttle*engine.power*clutchF*gearmod;
+    m_vehicle->applyEngineForce(eForce, 2);
+    m_vehicle->applyEngineForce(eForce, 3);
+    m_vehicle->setBrake(breaking*engine.breakPower, 2);
+    m_vehicle->setBrake(breaking*engine.breakPower, 3);
 }
 
 void CarDynamics::setSteering(float s) { // from -1 to 1
@@ -252,12 +264,33 @@ float CarDynamics::getClutch() { return clutch; }
 float CarDynamics::getThrottle() { return throttle; }
 float CarDynamics::getBreaking() { return breaking; }
 float CarDynamics::getSteering() { return steering; }
+int CarDynamics::getGear() { return engine.gear; }
+int CarDynamics::getRPM() { return engine.rpm; }
+
 
 void CarDynamics::setParameter(float mass, float maxSteering, float enginePower, float breakPower) {
     if (mass > 0) chassis.mass = mass;
     engine.maxSteer = maxSteering;
     engine.power = enginePower;
     engine.breakPower = breakPower;
+
+    //TODO: pass it
+    if (!engine.clutchForceCurve) engine.clutchForceCurve = path::create();
+    engine.clutchForceCurve->clear();
+    engine.clutchForceCurve->addPoint(Vec3f(0,1,0), Vec3f(1,0,0), Vec3f(), Vec3f(0,1,0));
+    engine.clutchForceCurve->addPoint(Vec3f(1,0,0), Vec3f(1,0,0), Vec3f(), Vec3f(0,1,0));
+    engine.clutchForceCurve->compute(32);
+
+	engine.gearRatios.clear();
+	engine.gearRatios[-1] = 14.633;
+	engine.gearRatios[1] = 13.909;
+	engine.gearRatios[2] = 8.664;
+	engine.gearRatios[3] = 5.697;
+	engine.gearRatios[4] = 4.271;
+	engine.gearRatios[5] = 3.202;
+	engine.gearRatios[6] = 1;
+	engine.minRpm = 800;
+	engine.maxRpm = 4500;
 }
 
 boost::recursive_mutex& CarDynamics::mtx() {

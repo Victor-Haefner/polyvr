@@ -44,6 +44,12 @@ class CarDynamics : public VRObject {
             float maxForce = 10000;//this should be engine/velocity dependent
             float maxBreakingForce = 100;
             float maxSteer = .3f;
+            int gear = 0;
+            float rpm = 800;
+            float minRpm = 800;
+            float maxRpm = 4500;
+            map<int,float> gearRatios;
+            pathPtr clutchForceCurve;
         };
 
         struct Chassis {
@@ -62,6 +68,7 @@ class CarDynamics : public VRObject {
         vector<Wheel> wheels;
         Engine engine;
         Chassis chassis;
+        VRUpdateCbPtr updateEPtr;
         VRUpdateCbPtr updateWPtr;
 
         btAlignedObjectArray<btCollisionShape*> m_collisionShapes;
@@ -80,6 +87,7 @@ class CarDynamics : public VRObject {
         void initPhysics();
         void initVehicle();
         void updateWheels();
+        void updateEngine();
 
         btRigidBody* createRigitBody(float mass, const btTransform& startTransform, btCollisionShape* shape);
 
@@ -96,10 +104,13 @@ class CarDynamics : public VRObject {
         void setThrottle(float t);
         void setBreak(float b);
         void setSteering(float s);
+        void setGear(int g);
         float getClutch();
         float getThrottle();
         float getBreaking();
         float getSteering();
+        int getGear();
+        int getRPM();
 
         void setChassisGeo(VRGeometryPtr geo, bool doPhys = 1);
         void setupSimpleWheels(VRGeometryPtr geo, float xOffset, float frontZOffset, float rearZOffset, float height, float radius, float width);
