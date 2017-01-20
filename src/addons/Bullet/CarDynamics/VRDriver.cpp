@@ -52,8 +52,8 @@ void VRDriver::update() {
     float sDiff = target_speed-speed;
     float throttle = 0;
     float breaking = 0;
-    if (sDiff > 0) throttle = sDiff*1.0;
-    if (sDiff < 0) breaking = -sDiff*0.6;
+    if (sDiff > 0) throttle = sDiff*0.7;
+    if (sDiff < 0) breaking = -sDiff*0.2;
     //cout << "pilot " << sDiff << " " << throttle << " " << breaking << endl;
 
 
@@ -71,6 +71,7 @@ void VRDriver::update() {
     clamp(steering, -1,1);
 
     // apply inputs
+    car->setGear(1);
     car->setThrottle(throttle);
     car->setBreak(breaking);
     car->setSteering(steering);
