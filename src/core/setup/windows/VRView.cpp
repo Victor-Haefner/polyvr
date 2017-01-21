@@ -294,56 +294,53 @@ void VRView::setID(int i) { ID = i; }
 void VRView::showStats(bool b) {
     if (stats == 0) {
         stats = SimpleStatisticsForeground::create();
-
         stats->setSize(25);
-        stats->setColor(Color4f(0,1,0,0.7f));
+        stats->setColor(Color4f(0.1,0.9,0.6,0.7f));
 
-        // Render traversal stats action
-        stats->addElement(RenderAction::statDrawTime, "Draw FPS: %r.3f");
-        stats->addElement(RenderAction::statTravTime, "Trav FPS: %r.3f");
-        stats->addElement(VRRate::statFPStime, "PVR FPS: %d");
-        stats->addElement(VRRate::statPhysFPStime, "Physics FPS: %d");
+        stats->addText("\nPerformance:");
+        stats->addElement(VRRate::statFPS, " application FPS: %d");
+        stats->addElement(VRRate::statScriptFPS, "  script FPS: %d");
+        stats->addElement(RenderAction::statDrawTime, "  draw FPS: %r.2f");
+        stats->addElement(RenderAction::statTravTime, "  trav FPS: %r.2f");
+        stats->addElement(VRRate::statPhysFPS, " physics FPS: %d");
 
-        stats->addElement(RenderAction::statNStates, " State changes: %d");
-        stats->addElement(RenderAction::statNShaders, "Shader changes: %d");
-        stats->addElement(RenderAction::statNShaderParams, "Shader param changes: %d");
-        stats->addElement(TextureObjChunk::statNTextures, "Textures: %d");
-        stats->addElement(TextureObjChunk::statNTexBytes, " Tex Mem: %MB MB");
+        stats->addText("\nMaterials:");
+        stats->addElement(RenderAction::statNStates, " state changes: %d");
+        stats->addElement(RenderAction::statNShaders, " shader changes: %d");
+        stats->addElement(RenderAction::statNShaderParams, " shader param changes: %d");
+        stats->addElement(TextureObjChunk::statNTextures, " textures: %d");
+        stats->addElement(TextureObjChunk::statNTexBytes, " tex mem: %MB MB");
+        stats->addElement(RenderAction::statNChunks, " chunk changes: %d");
+
+        stats->addText("\nScene:");
+        stats->addElement(RenderAction::statNMatrices, " matrix changes: %d");
+        stats->addElement(Drawable::statNTriangles, " tris: %d");
+        stats->addElement(Drawable::statNLines, " lines: %d");
+        stats->addElement(Drawable::statNPoints, " points: %d");
+        stats->addElement(Drawable::statNVertices, " verts: %d");
+
+        stats->addText("\nChange list:");
+        stats->addElement(ChangeList::statNChangedStoreSize, " %d entries in changedStore");
+        stats->addElement(ChangeList::statNCreatedStoreSize, " %d entries in createdStore");
+        stats->addElement(ChangeList::statNUnCommittedStoreSize, " %d entries in uncommitedStore");
+        stats->addElement(ChangeList::statNPoolSize, " %d entries in pool");
 
 
-        stats->addElement(RenderAction::statNMatrices, "Matrix changes: %d");
         //stats->addElement(RenderAction::statNGeometries, "    Geom nodes: %d");
         //stats->addElement(RenderAction::statNTransGeometries, "Transparent Nodes drawn   %d");
         //stats->addElement(RenderAction::statNTriangles, "     Triangles: %d");
         //stats->addElement(RenderAction::statNMaterials, "%d material changes");
-
         //stats->addElement(PointLight::statNPointLights, "%d active point lights");
         //stats->addElement(DirectionalLight::statNDirectionalLights, "%d active directional lights");
         //stats->addElement(SpotLight::statNSpotLights, "%d active spot lights");
-
-        stats->addText   ("Drawables: (drawn)");
-        stats->addElement(Drawable::statNTriangles,    "  tris: %d");
-        stats->addElement(Drawable::statNLines,        " lines: %d");
-        stats->addElement(Drawable::statNPoints,       "points: %d");
-        stats->addElement(Drawable::statNVertices,     " verts: %d");
-
-        if(stats->getCollector() != NULL) stats->getCollector()->getElem(Drawable::statNTriangles);
-
-        stats->addText   ("ChangeList: ");
-        stats->addElement(ChangeList::statNChangedStoreSize, "    %d entries in changedStore");
-        stats->addElement(ChangeList::statNCreatedStoreSize, "    %d entries in createdStore");
-        stats->addElement(ChangeList::statNUnCommittedStoreSize, "    %d entries in uncommitedStore");
-        stats->addElement(ChangeList::statNPoolSize, "    %d entries in pool");
-
-
         //stats->addElement(DrawActionBase::statCullTestedNodes, "Nodes culltested      %d");
         //stats->addElement(DrawActionBase::statCulledNodes, "Nodes culled          %d");
         //stats->addElement(RenderAction::statNOcclusionMode, "Occlusion culling     %s");
         //stats->addElement(RenderAction::statNOcclusionTests, "Occlusion tests       %d");
         //stats->addElement(RenderAction::statNOcclusionCulled, "Occlusion culled      %d");
 
-
-        if(stats->getCollector() != NULL) stats->editCollector()->getElem(Drawable::statNTriangles);
+        if (stats->getCollector() != NULL) stats->getCollector() ->getElem(Drawable::statNTriangles);
+        if (stats->getCollector() != NULL) stats->editCollector()->getElem(Drawable::statNTriangles);
     }
 
     if (lView == 0) return;

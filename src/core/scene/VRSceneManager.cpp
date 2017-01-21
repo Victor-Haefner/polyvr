@@ -181,41 +181,41 @@ vector<string> VRSceneManager::getExamplePaths() { return example_paths; }
 
 VRScenePtr VRSceneManager::getCurrent() { return current; }
 
-void sleep_to(int fps) {
-    int dt = VRTimer::getBeacon("st");
-    if (dt > 16) return;
-    osgSleep(16-dt);
-}
-
 void VRSceneManager::updateScene() {
     if (!current) return;
     VRSetup::getCurrent()->updateActivatedSignals();
-
     //current->blockScriptThreads();
     current->update();
     //current->allowScriptThreads();
 }
 
 void VRSceneManager::update() {
+    // statistics
     VRProfiler::get()->swap();
-    int fps = VRRate::get()->getRate();
-    auto setup = VRSetup::getCurrent();
+    static VRRate FPS;
+    int fps = FPS.getRate();
+    VRTimer timer;
+    timer.start();
 
-if (current) current->blockScriptThreads();
+    // update GUI
+    if (current) current->blockScriptThreads();
     VRGuiManager::get()->updateGtk();
     updateCallbacks();
-    if (setup) setup->updateTracking();//tracking
-    if (setup) setup->updateDevices();//device beacon update
+    auto setup = VRSetup::getCurrent();
+    if (setup) setup->updateTracking(); // tracking
+    if (setup) setup->updateDevices(); // device beacon update
     updateScene();
+    int Sfps = round(1000.0/max(timer.stop(),1));
 
-    if (setup) setup->updateWindows();//rendering
+    if (setup) setup->updateWindows(); //rendering
     VRGuiManager::get()->updateGtk();
-if (current) current->allowScriptThreads();
+    if (current) current->allowScriptThreads();
 
+    // statistics
     VRGlobals::get()->CURRENT_FRAME++;
     VRGlobals::get()->FRAME_RATE = fps;
-
-    //sleep_to(60);
+    VRGlobals::get()->SCRIPTS_FRAME_RATE = Sfps;
+    osgSleep(max(16-timer.stop(),0));
 }
 
 OSG_END_NAMESPACE

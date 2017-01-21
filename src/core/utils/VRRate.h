@@ -15,23 +15,21 @@ class VRRate {
     typedef OSG::StatElemDesc<OSG::StatIntElem> StatRate;
 
     public:
-        static StatRate statFPStime;
-        static StatRate statPhysFPStime;
+        static StatRate statFPS;
+        static StatRate statScriptFPS;
+        static StatRate statPhysFPS;
 
     private:
-        int count, current;
-        int time_0, time_1;
-        bool print;
-
-        VRRate();
-
-        void operator= (VRRate v);
+        int count = 0;
+        int current = 60;
+        int time_0 = 0;
+        int time_1 = 0;
+        bool print = false;
 
     public:
-        static VRRate* get();
-
+        VRRate();
+        ~VRRate();
         void setPrint(bool b);
-
         int getRate();
 };
 
