@@ -1,6 +1,7 @@
 #include "VRTree.h"
 
 #include "core/objects/geometry/VRGeoData.h"
+#include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/objects/VRLod.h"
@@ -68,10 +69,20 @@ struct OSG::segment {
 };
 
 
-VRTree::VRTree() : VRGeometry("tree") {}
-
-VRTreePtr VRTree::create() { return shared_ptr<VRTree>(new VRTree() ); }
+VRTree::VRTree() : VRTransform("tree") {}
+VRTree::~VRTree() {}
+VRTreePtr VRTree::create() { return shared_ptr<VRTree>(new VRTree()); }
 VRTreePtr VRTree::ptr() { return static_pointer_cast<VRTree>( shared_from_this() ); }
+
+void VRTree::initLOD() {
+    lod = VRLod::create("tree_lod");
+    addChild(lod);
+    lod->addChild(VRObject::create("tree_lod1"));
+    lod->addChild(VRObject::create("tree_lod2"));
+    lod->addChild(VRObject::create("tree_lod3"));
+    lod->addDistance(20);
+    lod->addDistance(50);
+}
 
 float VRTree::random (float min, float max) {
     if (max!=min) {
@@ -156,24 +167,35 @@ VRMaterialPtr VRTree::initMaterial() {
 }
 
 void VRTree::initArmatureGeo() {
-    vector<Vec3f> pos, norms;
-    vector<Vec2f> texs;
-    vector<int> inds;
+    if (!lod) initLOD();
 
-    for (uint i=0;i<branches.size();i++) {
-        segment* s = branches[i];
-        pos.push_back(s->p1);
-        pos.push_back(s->p2);
-        norms.push_back(s->n1);
-        norms.push_back(s->n2);
-        inds.push_back(2*i);
-        inds.push_back(2*i+1);
-        texs.push_back(s->params[0]);
-        texs.push_back(s->params[1]);
+    VRGeoData geo[3];
+    for (segment* s : branches) {
+        geo[0].pushVert(s->p1, s->n1, s->params[0]);
+        geo[0].pushVert(s->p2, s->n2, s->params[1]);
+        geo[0].pushLine();
+
+        if (s->lvl <= 3) {
+            geo[1].pushVert(s->p1, s->n1, s->params[0]);
+            geo[1].pushVert(s->p2, s->n2, s->params[1]);
+            geo[1].pushLine();
+        }
+
+        if (s->lvl <= 2) {
+            geo[2].pushVert(s->p1, s->n1, s->params[0]);
+            geo[2].pushVert(s->p2, s->n2, s->params[1]);
+            geo[2].pushLine();
+        }
     }
 
-    VRGeometry::create(GL_PATCHES, pos, norms, inds, texs);
-    setPatchVertices(2);
+    for (int i=0; i<3; i++) {
+        woodGeos.push_back( geo[i].asGeometry("wood2") );
+        auto g = woodGeos[i];
+        g->setPatchVertices(2);
+        g->setType(GL_PATCHES);
+        g->setMaterial(treeMat);
+        lod->getChild(i)->addChild(g);
+    }
 }
 
 void VRTree::testSetup() {
@@ -210,25 +232,17 @@ void VRTree::setup(int branching, int iterations, int seed,
     grow(sp, trunc);
     initArmatureGeo();
     if (!treeMat) treeMat = initMaterial();
-    setMaterial(treeMat);
 }
 
 void VRTree::addLeafs(int lvl, int amount) { // TODO: add default material!
-    if (leafGeos.size() == 0) {
-        auto g0 = VRGeometry::create("branches");
-        auto g1 = VRGeometry::create("branches");
-        auto g2 = VRGeometry::create("branches");
-        leafGeos.push_back( g0 );
-        leafGeos.push_back( g1 );
-        leafGeos.push_back( g2 );
+    if (!lod) initLOD();
 
-        auto lod = VRLod::create("branches_lod");
-        addChild(lod);
-        lod->addChild(g0);
-        lod->addChild(g1);
-        lod->addChild(g2);
-        lod->addDistance(20);
-        lod->addDistance(50);
+    if (leafGeos.size() == 0) {
+        for (int i=0; i<3; i++) {
+            auto g = VRGeometry::create("branches");
+            leafGeos.push_back( g );
+            lod->getChild(i)->addChild(g);
+        }
     }
 
     random_device rd;

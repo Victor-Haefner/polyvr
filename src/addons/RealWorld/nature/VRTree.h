@@ -9,12 +9,13 @@ using namespace std;
 struct segment;
 struct seg_params;
 
-class VRTree : public VRGeometry {
+class VRTree : public VRTransform {
     private:
         segment* trunc = 0;
+        VRLodPtr lod;
         vector<segment*> branches;
-        VRGeometryPtr armatureGeo;
         vector<VRGeometryPtr> leafGeos;
+        vector<VRGeometryPtr> woodGeos;
         static VRMaterialPtr treeMat;
 
         float random (float min, float max);
@@ -25,11 +26,13 @@ class VRTree : public VRGeometry {
         void grow(const seg_params& sp, segment* p, int iteration = 0);
         VRMaterialPtr initMaterial();
 
+        void initLOD();
         void initArmatureGeo();
         void testSetup();
 
     public:
         VRTree();
+        ~VRTree();
 
         static VRTreePtr create();
         VRTreePtr ptr();
