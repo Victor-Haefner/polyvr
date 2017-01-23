@@ -33,6 +33,7 @@ ptrFwd(VRTexture);
 ptrFwd(VRConstraint);
 
 // addons
+ptrFwd(VRLodTree);
 ptrFwd(VRMetaBalls);
 ptrFwd(VRBlinds);
 ptrFwd(VROpening);

@@ -10,6 +10,7 @@ ptrFwd(boundingbox);
 ptrFwd(path);
 ptrFwd(pose);
 ptrFwd(graph_base);
+ptrFwd(Octree);
 
 }
 

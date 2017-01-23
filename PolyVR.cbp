@@ -421,6 +421,8 @@
 		<Unit filename="src/addons/RealWorld/nature/VRTerrain.h" />
 		<Unit filename="src/addons/RealWorld/nature/VRTree.cpp" />
 		<Unit filename="src/addons/RealWorld/nature/VRTree.h" />
+		<Unit filename="src/addons/RealWorld/nature/VRWoods.cpp" />
+		<Unit filename="src/addons/RealWorld/nature/VRWoods.h" />
 		<Unit filename="src/addons/RealWorld/traffic/JsonClient.cpp" />
 		<Unit filename="src/addons/RealWorld/traffic/JsonClient.h" />
 		<Unit filename="src/addons/RealWorld/traffic/ModuleTraffic.cpp" />
