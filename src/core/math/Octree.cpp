@@ -145,6 +145,20 @@ Octree* Octree::get(Vec3f p) {
     return this;
 }
 
+vector<Octree*> Octree::getPathTo(Vec3f p) {
+    vector<Octree*> res;
+    auto o = get(p);
+    if (!o) return res;
+
+    res.push_back(o);
+    while (o->parent) {
+        o = o->parent;
+        res.push_back(o);
+    }
+    std::reverse(res.begin(), res.end());
+    return res;
+}
+
 void Octree::destroy(Octree* guard) {
     for (int i=0; i<8; i++) {
         if (children[i] != 0) children[i]->destroy(guard);

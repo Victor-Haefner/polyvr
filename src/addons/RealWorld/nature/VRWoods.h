@@ -8,9 +8,10 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRLodTree : public VRLod {
+class VRLodTree : public VRObject {
     private:
         OctreePtr octree;
+        map<Octree*, VRLodPtr> lods;
 
     public:
         VRLodTree(string name);

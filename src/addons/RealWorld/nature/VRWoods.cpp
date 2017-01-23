@@ -10,7 +10,7 @@
 
 using namespace OSG;
 
-VRLodTree::VRLodTree(string name) : VRLod(name) {
+VRLodTree::VRLodTree(string name) : VRObject(name) {
     octree = Octree::create(5);
 }
 
@@ -21,13 +21,24 @@ VRLodTreePtr VRLodTree::ptr() { return static_pointer_cast<VRLodTree>( shared_fr
 void VRLodTree::addObject(VRObjectPtr obj, Vec3f p, int lvl) {
     octree->add(p, obj.get());
 
-/*    vector<Octree*> path = octree->getPathTo(obj.get());
-    for (auto o : path) {
+    vector<Octree*> path = octree->getPathTo(p);
+
+    VRLodPtr lod1, lod2;
+    for (int i=0; i< path.size(); i++) {
+        auto o = path[i];
         if (!lods.count(o)) {
             lods[o] = VRLod::create("subLod");
-
+            lods[o]->addEmpty();
+            lods[o]->addDistance(10*lvl);
         }
-    }*/
+        lod2 = lods[o];
+        if (!lod1) addChild(lod2);
+        else lod1->addChild(lod2);
+        lod1 = lod2;
+    }
+
+    auto oend = path[path.size()-1];
+    lods[oend]->addChild(obj);
 }
 
 

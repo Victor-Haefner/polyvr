@@ -42,7 +42,9 @@ void woodsTest() {
     woods->test();
 
     auto s = VRScene::getCurrent();
-    //s->find("light")->addChild(woods);
+    auto l = s->get("light");
+    if (!l) l = s->get("Headlight");
+    if (l) l->addChild(woods);
 }
 
 void VRRunTest(string test) {

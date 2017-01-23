@@ -42,6 +42,7 @@ class Octree {
         void addBox(const boundingbox& b, void* data, int maxjump = -1, bool checkPosition = true);
         void set(Octree* node, Vec3f p, void* data);
         Octree* get(Vec3f p);
+        vector<Octree*> getPathTo(Vec3f p);
 
         void clear();
 
