@@ -146,10 +146,18 @@ static int server_answer_to_connection_m(struct mg_connection *conn, enum mg_eve
         if (ev == MG_CONNECT) { VRLog::log("net", "EV CONNECT\n"); return MG_FALSE; }
         if (ev == MG_REPLY) { VRLog::log("net", "EV REPLY\n"); return MG_FALSE; }
         if (ev == MG_RECV) { VRLog::log("net", "EV RECV\n"); return MG_FALSE; }
-        if (ev == MG_CLOSE) { VRLog::log("net", "EV CLOSE\n"); return MG_FALSE; }
         if (ev == MG_WS_HANDSHAKE) { VRLog::log("net", "EV WS CONNECT\n"); return MG_FALSE; }
         if (ev == MG_WS_CONNECT) { VRLog::log("net", "EV WS CONNECT\n"); return MG_FALSE; }
         if (ev == MG_HTTP_ERROR) { VRLog::log("net", "EV ERROR\n"); return MG_FALSE; }
+    }
+
+    if (ev == MG_CLOSE) {
+        HTTP_args* sad = (HTTP_args*) conn->server_param;
+        if (sad->serv->websocket_ids.count(conn)) {
+            int wsid = sad->serv->websocket_ids[conn];
+            sad->serv->websockets.erase(wsid);
+            sad->serv->websocket_ids.erase(conn);
+        }
     }
 
     if (ev == MG_AUTH) return MG_TRUE;

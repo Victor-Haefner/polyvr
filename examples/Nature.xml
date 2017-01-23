@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="1884">
+<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="3697">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
       <Object ambient="0.370962 0.370962 0.370962 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.233875 0.233875 0.233875 1" type="Light" unique="1" visible="1">
         <Object at="-4.5 4 -1" at_dir="1" base_name="Headlight_beacon" from="-4 5 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
           <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
-        <Object accept_root="1" aspect="1" at="0.0626887 0.2 -0.0268324" at_dir="0" base_name="Default" far="250" fov="1.0472" from="106.687 50.4522 -38.6063" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="0.0626887 0.2 -0.0268324" at_dir="0" base_name="Default" far="250" fov="1.0472" from="15.1975 5.80151 2.67644" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
           <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
       </Object>
@@ -787,6 +787,13 @@ void main( void ) {
 	applyWind();
     gl_Position = vertex;&#13;
 }
+</core>
+    </Script>
+    <Script base_name="test" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="">
+      <core>
+	import VR
+	
+	VR.runTest('woodsTest')
 </core>
     </Script>
     <Script base_name="test_materials" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="">

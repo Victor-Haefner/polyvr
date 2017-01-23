@@ -19,7 +19,7 @@ class VRLodTree : public VRLod {
         static VRLodTreePtr create(string name);
         VRLodTreePtr ptr();
 
-        void addObject(VRObjectPtr obj);
+        void addObject(VRObjectPtr obj, Vec3f p, int lvl);
 };
 
 class VRWoods : public VRLodTree {
@@ -39,6 +39,8 @@ class VRWoods : public VRLodTree {
         VRWoodsPtr ptr();
 
         void addTree(VRTreePtr t);
+
+        void test();
 };
 
 OSG_END_NAMESPACE;

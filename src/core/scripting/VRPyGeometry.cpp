@@ -591,14 +591,11 @@ PyObject* VRPyGeometry::setIndices(VRPyGeometry* self, PyObject *args) {
     string tname = vec->ob_type->tp_name;
 
     int ld = getListDepth(vec);
-    cout << "setIndices ld: " << ld << endl;
     if (ld == 1) {
-        cout << "setIndices ld=1\n";
         if (tname == "numpy.ndarray") feed1Dnp<GeoUInt32PropertyRecPtr>( vec, inds);
         else feed1D<GeoUInt32PropertyRecPtr>( vec, inds );
         self->objPtr->setIndices(inds, true);
     } else if (ld == 2) {
-        cout << "setIndices ld=2\n";
         GeoUInt32PropertyRecPtr lengths = GeoUInt32Property::create();
         for(Py_ssize_t i = 0; i < PyList_Size(vec); i++) {
             PyObject* vecList = PyList_GetItem(vec, i);

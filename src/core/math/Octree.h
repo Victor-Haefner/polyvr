@@ -5,6 +5,7 @@
 #include <vector>
 #include <OpenSG/OSGConfig.h>
 #include <OpenSG/OSGVector.h>
+#include "VRMathFwd.h"
 #include "boundingbox.h"
 
 using namespace std;
@@ -32,8 +33,11 @@ class Octree {
 
     public:
         Octree(float resolution);
-        Octree* getRoot();
+        ~Octree();
 
+        static OctreePtr create(float resolution);
+
+        Octree* getRoot();
         void add(Vec3f p, void* data, int maxjump = -1, bool checkPosition = true);
         void addBox(const boundingbox& b, void* data, int maxjump = -1, bool checkPosition = true);
         void set(Octree* node, Vec3f p, void* data);

@@ -7,6 +7,9 @@
 OSG_BEGIN_NAMESPACE
 
 Octree::Octree(float res) : resolution(res) {}
+Octree::~Octree() {}
+
+OctreePtr Octree::create(float resolution) { return OctreePtr( new Octree(resolution) ); }
 
 int Octree::getOctant(Vec3f p) {
     Vec3f rp = p - center;
