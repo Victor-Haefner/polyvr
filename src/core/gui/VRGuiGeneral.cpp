@@ -27,6 +27,7 @@ using namespace std;
 
 VRGuiGeneral::VRGuiGeneral() {
     setCheckButtonCallback("radiobutton5", sigc::mem_fun(*this, &VRGuiGeneral::setMode) );
+    setCheckButtonCallback("radiobutton18", sigc::mem_fun(*this, &VRGuiGeneral::setMode) );
     setCheckButtonCallback("radiobutton4", sigc::mem_fun(*this, &VRGuiGeneral::setMode) );
     setCheckButtonCallback("checkbutton_01", sigc::mem_fun(*this, &VRGuiGeneral::toggleFrustumCulling) );
     setCheckButtonCallback("checkbutton_02", sigc::mem_fun(*this, &VRGuiGeneral::toggleOcclusionCulling) );
@@ -119,12 +120,13 @@ void VRGuiGeneral::setMode() {
 
     VRBackground::TYPE t = VRBackground::SOLID;
     if ( getCheckButtonState("radiobutton4") ) t = VRBackground::IMAGE;
-    if ( getCheckButtonState("radiobutton5") ) t = VRBackground::SKY;
+    if ( getCheckButtonState("radiobutton5") ) t = VRBackground::SKYBOX;
+    if ( getCheckButtonState("radiobutton18") ) t = VRBackground::SKY;
     auto scene = VRScene::getCurrent();
     scene->setBackground( t );
 
-    setEntrySensitivity("entry14", t == VRBackground::SKY);
-    setEntrySensitivity("entry42", t == VRBackground::SKY || t == VRBackground::IMAGE);
+    setEntrySensitivity("entry14", t == VRBackground::SKYBOX);
+    setEntrySensitivity("entry42", t == VRBackground::SKYBOX || t == VRBackground::IMAGE);
 }
 
 void VRGuiGeneral::toggleDeferredShader() {
@@ -199,10 +201,11 @@ void VRGuiGeneral::updateScene() {
 
     setColorChooserColor("bg_solid", Color3f(col[0], col[1], col[2]));
     setTextEntry("entry42", scene->getBackgroundPath());
-    setEntrySensitivity("entry14", t == VRBackground::SKY);
-    if (t == VRBackground::SKY) setTextEntry("entry14", scene->getSkyBGExtension());
+    setEntrySensitivity("entry14", t == VRBackground::SKYBOX);
+    if (t == VRBackground::SKYBOX) setTextEntry("entry14", scene->getSkyBGExtension());
 
-    setCheckButton("radiobutton5", t == VRBackground::SKY);
+    setCheckButton("radiobutton18", t == VRBackground::SKY);
+    setCheckButton("radiobutton5", t == VRBackground::SKYBOX);
     setCheckButton("radiobutton4", t == VRBackground::IMAGE);
 
     // rendering

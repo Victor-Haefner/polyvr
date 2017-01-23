@@ -15,7 +15,7 @@ class VRBackgroundBase;
 
 class VRBackground : public VRStorage {
     public:
-        enum TYPE { SOLID, IMAGE, SKY };
+        enum TYPE { SOLID, IMAGE, SKYBOX, SKY };
 
     private:
         VRBackgroundBase* base = 0;

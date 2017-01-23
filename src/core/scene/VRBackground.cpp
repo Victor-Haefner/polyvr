@@ -22,6 +22,7 @@ class VRBackgroundBase {
         BackgroundRecPtr bg;
         SkyBackgroundRecPtr sky;
         SolidBackgroundRecPtr sbg;
+        SkyBackgroundRecPtr sky2;
         TextureBackgroundRecPtr tbg;
         vector<ImageRecPtr> skyImgs;
 
@@ -83,6 +84,16 @@ void VRBackgroundBase::initSky() {
     sky->setRightTexture( createSkyTexture() );
     sky->setBottomTexture( createSkyTexture() );
     sky->setTopTexture( createSkyTexture() );
+
+    sky2 = SkyBackground::create();
+    /*
+    sky2->setBackTexture( createSkyTexture() );
+    sky2->setFrontTexture( createSkyTexture() );
+    sky2->setLeftTexture( createSkyTexture() );
+    sky2->setRightTexture( createSkyTexture() );
+    sky2->setBottomTexture( createSkyTexture() );
+    sky2->setTopTexture( createSkyTexture() );
+    */
 }
 
 void VRBackgroundBase::updateImgTexture() {
@@ -129,9 +140,12 @@ void VRBackground::setBackground(TYPE t) {
             base->bg = base->tbg;
             base->updateImgTexture();
             break;
-        case SKY:
+        case SKYBOX:
             base->bg = base->sky;
             base->updateSkyTextures();
+            break;
+        case SKY:
+            base->bg = base->sky2;
             break;
     }
 
@@ -147,7 +161,7 @@ void VRBackground::setBackgroundColor(Color3f c) {
 void VRBackground::setBackgroundPath(string s) {
     base->path = s;
     if (base->type == IMAGE) base->updateImgTexture();
-    if (base->type == SKY) base->updateSkyTextures();
+    if (base->type == SKYBOX) base->updateSkyTextures();
     setBackground(TYPE(base->type));
 }
 
