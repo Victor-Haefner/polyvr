@@ -16,6 +16,8 @@
 #include "core/gui/VRGuiManager.h"
 #include "core/gui/VRGuiFile.h"
 #include "core/objects/VRTransform.h"
+#include "core/objects/material/VRMaterial.h"
+#include "core/utils/VRTests.h"
 #include "PolyVR.h"
 
 #include <boost/bind.hpp>
@@ -47,6 +49,8 @@ PyMethodDef VRSceneGlobals::methods[] = {
 	{"joinThread", (PyCFunction)VRSceneGlobals::joinThread, METH_VARARGS, "Join a thread - joinThread( int ID )" },
 	{"getSystemDirectory", (PyCFunction)VRSceneGlobals::getSystemDirectory, METH_VARARGS, "Return the path to one of the specific PolyVR directories - getSystemDirectory( str dir )\n\tdir can be: ROOT, EXAMPLES, RESSOURCES, TRAFFIC" },
 	{"setPhysicsActive", (PyCFunction)VRSceneGlobals::setPhysicsActive, METH_VARARGS, "Pause and unpause physics - setPhysicsActive( bool b )" },
+	{"runTest", (PyCFunction)VRSceneGlobals::runTest, METH_VARARGS, "Run a built-in system test - runTest( string test )" },
+	{"getSceneMaterials", (PyCFunction)VRSceneGlobals::getSceneMaterials, METH_NOARGS, "Get all materials of the scene - getSceneMaterials()" },
     {NULL}  /* Sentinel */
 };
 
@@ -54,6 +58,15 @@ PyMethodDef VRSceneGlobals::methods[] = {
 // ==============
 // Python methods
 // ==============
+
+PyObject* VRSceneGlobals::getSceneMaterials(VRSceneGlobals* self) {
+    auto scene = VRScene::getCurrent();
+    if (scene) {
+        auto mats = VRMaterial::getAll(); // TODO
+
+    }
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRSceneGlobals::setPhysicsActive(VRSceneGlobals* self, PyObject *args) {
     auto scene = VRScene::getCurrent();
@@ -83,12 +96,12 @@ PyObject* VRSceneGlobals::getSetup(VRSceneGlobals* self) {
 
 PyObject* VRSceneGlobals::getNavigator(VRSceneGlobals* self) {
     auto scene = VRScene::getCurrent();
-    return VRPyNavigator::fromPtr((VRNavigator*)scene.get());
+    return VRPyNavigator::fromSharedPtr(dynamic_pointer_cast<VRNavigator>(scene));
 }
 
 PyObject* VRSceneGlobals::getRendering(VRSceneGlobals* self) {
     auto scene = VRScene::getCurrent();
-    return VRPyRendering::fromPtr((VRRendering*)scene.get());
+    return VRPyRendering::fromSharedPtr(dynamic_pointer_cast<VRRendering>(scene));
 }
 
 PyObject* VRSceneGlobals::printOSG(VRSceneGlobals* self) {
@@ -255,6 +268,13 @@ PyObject* VRSceneGlobals::render(VRSceneGlobals* self) {
     VRSceneManager::get()->updateScene();
     VRSetup::getCurrent()->updateWindows();
     VRGuiManager::get()->updateGtk();
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRSceneGlobals::runTest(VRSceneGlobals* self, PyObject *args) {
+    const char* test = "";
+    if (!PyArg_ParseTuple(args, "s", &test)) return NULL;
+    VRRunTest(test);
     Py_RETURN_TRUE;
 }
 

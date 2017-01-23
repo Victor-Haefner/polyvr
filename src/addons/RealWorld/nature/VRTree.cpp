@@ -1,11 +1,14 @@
 #include "VRTree.h"
 
 #include "core/objects/geometry/VRGeoData.h"
+#include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/VRTextureGenerator.h"
+#include "core/objects/VRLod.h"
 #include "core/scene/VRSceneManager.h"
 
 #include <OpenSG/OSGQuaternion.h>
+#include <random>
 
 using namespace OSG;
 
@@ -66,10 +69,20 @@ struct OSG::segment {
 };
 
 
-VRTree::VRTree() : VRGeometry("tree") {}
-
-VRTreePtr VRTree::create() { return shared_ptr<VRTree>(new VRTree() ); }
+VRTree::VRTree() : VRTransform("tree") {}
+VRTree::~VRTree() {}
+VRTreePtr VRTree::create() { return shared_ptr<VRTree>(new VRTree()); }
 VRTreePtr VRTree::ptr() { return static_pointer_cast<VRTree>( shared_from_this() ); }
+
+void VRTree::initLOD() {
+    lod = VRLod::create("tree_lod");
+    addChild(lod);
+    lod->addChild(VRObject::create("tree_lod1"));
+    lod->addChild(VRObject::create("tree_lod2"));
+    lod->addChild(VRObject::create("tree_lod3"));
+    lod->addDistance(20);
+    lod->addDistance(50);
+}
 
 float VRTree::random (float min, float max) {
     if (max!=min) {
@@ -154,24 +167,35 @@ VRMaterialPtr VRTree::initMaterial() {
 }
 
 void VRTree::initArmatureGeo() {
-    vector<Vec3f> pos, norms;
-    vector<Vec2f> texs;
-    vector<int> inds;
+    if (!lod) initLOD();
 
-    for (uint i=0;i<branches.size();i++) {
-        segment* s = branches[i];
-        pos.push_back(s->p1);
-        pos.push_back(s->p2);
-        norms.push_back(s->n1);
-        norms.push_back(s->n2);
-        inds.push_back(2*i);
-        inds.push_back(2*i+1);
-        texs.push_back(s->params[0]);
-        texs.push_back(s->params[1]);
+    VRGeoData geo[3];
+    for (segment* s : branches) {
+        geo[0].pushVert(s->p1, s->n1, s->params[0]);
+        geo[0].pushVert(s->p2, s->n2, s->params[1]);
+        geo[0].pushLine();
+
+        if (s->lvl <= 3) {
+            geo[1].pushVert(s->p1, s->n1, s->params[0]);
+            geo[1].pushVert(s->p2, s->n2, s->params[1]);
+            geo[1].pushLine();
+        }
+
+        if (s->lvl <= 2) {
+            geo[2].pushVert(s->p1, s->n1, s->params[0]);
+            geo[2].pushVert(s->p2, s->n2, s->params[1]);
+            geo[2].pushLine();
+        }
     }
 
-    VRGeometry::create(GL_PATCHES, pos, norms, inds, texs);
-    setPatchVertices(2);
+    for (int i=0; i<3; i++) {
+        woodGeos.push_back( geo[i].asGeometry("wood2") );
+        auto g = woodGeos[i];
+        g->setPatchVertices(2);
+        g->setType(GL_PATCHES);
+        g->setMaterial(treeMat);
+        lod->getChild(i)->addChild(g);
+    }
 }
 
 void VRTree::testSetup() {
@@ -208,32 +232,67 @@ void VRTree::setup(int branching, int iterations, int seed,
     grow(sp, trunc);
     initArmatureGeo();
     if (!treeMat) treeMat = initMaterial();
-    setMaterial(treeMat);
 }
 
-void VRTree::addLeafs(string tex, int lvl, float scale, float aspect) {
-    auto m = VRMaterial::get(tex);
-    m->setTexture(tex);
-    m->setLit(0);
+void VRTree::addLeafs(int lvl, int amount) { // TODO: add default material!
+    if (!lod) initLOD();
 
-    VRGeoData geo;
+    if (leafGeos.size() == 0) {
+        for (int i=0; i<3; i++) {
+            auto g = VRGeometry::create("branches");
+            leafGeos.push_back( g );
+            lod->getChild(i)->addChild(g);
+        }
+    }
+
+    random_device rd;
+    mt19937 e2(rd());
+    normal_distribution<> ndist(0,1);
+
+    auto randVecInSphere = [&](float r) {
+        return Vec3f(ndist(e2), ndist(e2), ndist(e2))*r;
+    };
+
+    float s = 0.03;
+    VRGeoData geo0, geo1, geo2;
     for (auto b : branches) {
         if (b->lvl != lvl) continue;
 
+        // compute branch segment basis
         Vec3f p = (b->p1 + b->p2)*0.5;
         Vec3f d = b->p2 - b->p1;
         Vec3f u = Vec3f(0,1,0);
         Vec3f n = u.cross(d); n.normalize();
         u = d.cross(n); u.normalize();
+
         float L = d.length();
-        Vec2f s = Vec2f(L, L/aspect)*scale;
-        geo.pushQuad(p, n, u, s, true);
+
+        for (int i=0; i<amount; i++) {
+            Vec3f v = randVecInSphere(L*0.3);
+            Vec3f n = p+v-b->p1;
+            n.normalize();
+            geo0.pushVert(p+v, n, Vec3f(s,0,0));
+            geo0.pushPoint();
+        }
     }
 
-    auto g = geo.asGeometry("branches");
-    g->setMaterial(m);
-    addChild(g);
+    for (int i=0; i<geo0.size(); i+=4) {
+        geo1.pushVert( geo0.getPosition(i), geo0.getNormal(i), Vec3f(s*2,0,0));
+        geo1.pushPoint();
+    }
+
+    for (int i=0; i<geo0.size(); i+=16) {
+        geo2.pushVert( geo0.getPosition(i), geo0.getNormal(i), Vec3f(s*4,0,0));
+        geo2.pushPoint();
+    }
+
+    geo0.apply(leafGeos[0]);
+    geo1.apply(leafGeos[1]);
+    geo2.apply(leafGeos[2]);
 }
 
+void VRTree::setLeafMaterial(VRMaterialPtr mat) {
+    for (auto g : leafGeos) g->setMaterial(mat);
+}
 
 

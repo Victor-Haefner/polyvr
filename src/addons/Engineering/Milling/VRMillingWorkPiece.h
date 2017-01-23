@@ -84,7 +84,7 @@ class VRMillingWorkPiece : public VRGeometry {
     public:
         float blockSize = 0.01;
         int geometryCreateLevel = 0;
-        VRMillingCuttingToolProfile* cuttingProfile;
+        shared_ptr<VRMillingCuttingToolProfile> cuttingProfile;
 
     public:
         VRMillingWorkPiece(string name);
@@ -94,7 +94,7 @@ class VRMillingWorkPiece : public VRGeometry {
         void reset();
 
         void setCuttingTool(VRTransformPtr geo);
-        void setCuttingProfile(VRMillingCuttingToolProfile* profile);
+        void setCuttingProfile(shared_ptr<VRMillingCuttingToolProfile> profile);
 
         void updateGeometry();
         void setLevelsPerGeometry(int levels);  // this will take effect after the next reset

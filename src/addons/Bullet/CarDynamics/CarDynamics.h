@@ -2,6 +2,7 @@
 #define CARDYNAMICS_H_INCLUDED
 
 #include <OpenSG/OSGConfig.h>
+#include <OpenSG/OSGVector.h>
 #include <btBulletDynamicsCommon.h>
 #include <LinearMath/btVector3.h>
 #include <boost/thread/recursive_mutex.hpp>
@@ -15,95 +16,109 @@ OSG_BEGIN_NAMESPACE;
 using namespace std;
 
 class CarDynamics : public VRObject {
+    public:
+        struct Wheel {
+            VRGeometryPtr geo;
+
+            // suspension parameter
+            Vec3f position;
+            Vec3f direction = Vec3f(0, -1, 0);
+            Vec3f axle = Vec3f(-1, 0, 0);
+            float suspensionRestLength = 0.6;
+            float suspensionStiffness = 20.f;
+            float suspensionDamping = 2.3f;
+            float suspensionCompression = 4.4f;
+            float rollInfluence = 0.1f;//1.0f;
+            bool isFrontWheel = false;
+
+            // wheel parameter
+            float friction = 1000;//BT_LARGE_FLOAT;
+            float radius = .4f;
+            float width = 0.4f;
+        };
+
+        struct Engine {
+            // engine parameter
+            float power = 1000;//this should be engine/velocity dependent
+            float breakPower = 70;//this should be engine/velocity dependent
+            float maxForce = 10000;//this should be engine/velocity dependent
+            float maxBreakingForce = 100;
+            float maxSteer = .3f;
+            int gear = 0;
+            float rpm = 800;
+            float minRpm = 800;
+            float maxRpm = 4500;
+            map<int,float> gearRatios;
+            pathPtr clutchForceCurve;
+        };
+
+        struct Chassis {
+            VRGeometryPtr geo;
+            btRigidBody* body = 0;
+            float mass = 850.0f;
+        };
+
     private:
-        int rightIndex = 0;
-        int upIndex = 1;
-        int forwardIndex = 2;
-        btVector3 wheelDirectionCS0 = btVector3(0, -1, 0);
-        btVector3 wheelAxleCS = btVector3(-1, 0, 0);
-        btScalar suspensionRestLength = 0.6;
+        // user inputs
+        float clutch = 0;
+        float throttle = 0;
+        float breaking = 0;
+        float steering = 0;
 
-        //
-        //
-        //const int maxProxies = 32766;
-        //const int maxOverlap = 65535;
-        //
-        //float	gEngineForce = 0.f;
-        //float	gBreakingForce = 0.f;
-        //
-        float	maxEngineForce = 10000.f;//this should be engine/velocity dependent
-        float	maxBreakingForce = 100.f;
-        //
-        float	gVehicleSteering = 0.f;
-        //float	steeringIncrement = 0.04f;
-        //float	steeringClamp = 0.3f;
+        vector<Wheel> wheels;
+        Engine engine;
+        Chassis chassis;
+        VRUpdateCbPtr updateEPtr;
+        VRUpdateCbPtr updateWPtr;
 
-        //for vehicle tuning
-        float	wheelFriction = 1000;//BT_LARGE_FLOAT;
-        float	suspensionStiffness = 20.f;
-        float	suspensionDamping = 2.3f;
-        float	suspensionCompression = 4.4f;
-        float	rollInfluence = 0.1f;//1.0f;
-        float m_mass = 850.0f;
+        btAlignedObjectArray<btCollisionShape*> m_collisionShapes;
+        btRaycastVehicle::btVehicleTuning m_tuning;
+        btVehicleRaycaster*	m_vehicleRayCaster = 0;
+        btRaycastVehicle* m_vehicle = 0;
+        btDynamicsWorld* m_dynamicsWorld = 0;
 
-        //params for the setting the wheels && axis
+        // simplified parameters for wheels setup
         float xOffset = 1.78f;
         float frontZOffset = 2.9f;
         float rearZOffset = -2.7f;
         float height = .4f;
-        float	wheelRadius = .4f;
-        float	wheelWidth = 0.4f;
-        //
-        //
-        //bool printedWheelTrans = false;
-        bool initialBuilt = false;
-
-
-        VRGeometryPtr w1, w2, w3, w4;
-        VRGeometryPtr chassis = 0;
-        VRUpdateCbPtr updatePtr;
-
-        btAlignedObjectArray<btCollisionShape*> m_collisionShapes;
-
-        btRigidBody* m_carChassis = 0;
-        btRaycastVehicle::btVehicleTuning	m_tuning;
-        btVehicleRaycaster*	m_vehicleRayCaster = 0;
-        btRaycastVehicle*	m_vehicle = 0;
-        btDynamicsWorld* m_dynamicsWorld = 0;
-
-        btScalar m_defaultContactProcessingThreshold;
 
         boost::recursive_mutex& mtx();
-
         void initPhysics();
         void initVehicle();
+        void updateWheels();
+        void updateEngine();
 
         btRigidBody* createRigitBody(float mass, const btTransform& startTransform, btCollisionShape* shape);
 
     public:
         CarDynamics(string name);
         ~CarDynamics();
-
         static CarDynamicsPtr create(string name);
 
         VRObjectPtr getRoot();
         VRTransformPtr getChassis();
         vector<VRTransformPtr> getWheels();
 
+        void setClutch(float c);
         void setThrottle(float t);
         void setBreak(float b);
         void setSteering(float s);
+        void setGear(int g);
+        float getClutch();
+        float getThrottle();
+        float getBreaking();
+        float getSteering();
+        int getGear();
+        int getRPM();
 
         void setChassisGeo(VRGeometryPtr geo, bool doPhys = 1);
-        void setWheelGeo(VRGeometryPtr geo);
-        void setWheelOffsets(float xOffset, float frontZOffset, float rearZOffset, float height);
-        void setWheelParams(float w, float r);
-        void setCarMass(float m);
-
-        void updateWheels();
+        void setupSimpleWheels(VRGeometryPtr geo, float xOffset, float frontZOffset, float rearZOffset, float height, float radius, float width);
+        void setParameter(float mass, float maxSteering, float enginePower, float breakPower);
 
         void reset(const pose& p);
         float getSpeed();
+        float getAcceleration();
 };
 
 OSG_END_NAMESPACE

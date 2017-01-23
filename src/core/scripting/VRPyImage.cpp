@@ -17,6 +17,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRTexture>::type = {
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
 " Constructor:\n\n"
+"  VRImage( )\n\n"
 "  VRImage( PyArray data, width, height, pixel format, data type)\n\n"
 "  VRImage( PyArray data, width, height, pixel format, data type, internal pixel format)\n\n"
 "  pixel formats:\n"
@@ -59,10 +60,14 @@ bool CheckExtension(string extN) {
 
 PyObject* VRPyImage::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     import_array1(NULL);
+    OSG::VRTexturePtr img = OSG::VRTexture::create();
+    if (pySize(args) == 0) return allocPtr( type, img );
+
     PyArrayObject* data = 0;
     int W, H;
     PyStringObject *channels, *datatype;
     PyStringObject* channels2 = 0;
+
     if (pySize(args) == 6) { if (! PyArg_ParseTuple(args, "OiiOOO", &data, &W, &H, &channels, &datatype, &channels2)) return NULL; }
     else if (! PyArg_ParseTuple(args, "OiiOO", &data, &W, &H, &channels, &datatype)) return NULL;
     if ((PyObject*)data == Py_None) Py_RETURN_TRUE;
@@ -78,7 +83,6 @@ PyObject* VRPyImage::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     //if (b)
     //for (int i=0; i<W*H; i++) cout << "cdata " <<
 
-    OSG::VRTexturePtr img = OSG::VRTexture::create();
     img->getImage()->set(pf, W, H, 1, 1, 1, 0, cdata, dt, true);
     if (channels2) img->setInternalFormat( toOSGConst(PyString_AsString((PyObject*)channels2)) );
     return allocPtr( type, img );

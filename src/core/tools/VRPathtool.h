@@ -54,7 +54,7 @@ class VRExtruder {
 class VRPathtool : public VRObject {
     private:
         struct entry {
-            path* p = 0;
+            pathPtr p = 0;
             int resolution = 10;
             map<VRGeometry*, int> points;
             vector<VRGeometryWeakPtr> handles;
@@ -76,7 +76,7 @@ class VRPathtool : public VRObject {
         vector<VRGeometryWeakPtr> handles;
         graph_basePtr graph;
         map<int, knot> knots; // maps graph node ids to pathtool knots
-        path* selectedPath = 0;
+        pathPtr selectedPath = 0;
 
         VRMaterialPtr lmat;
         VRMaterialPtr lsmat;
@@ -97,24 +97,24 @@ class VRPathtool : public VRObject {
 
         void setGraph(graph_basePtr g);
 
-        path* newPath(VRDevicePtr dev, VRObjectPtr anchor, int resolution = 10);
-        VRGeometryPtr extrude(VRDevicePtr dev, path* p);
-        void remPath(path* p);
+        pathPtr newPath(VRDevicePtr dev, VRObjectPtr anchor, int resolution = 10);
+        VRGeometryPtr extrude(VRDevicePtr dev, pathPtr p);
+        void remPath(pathPtr p);
 
-        void addPath(path* p, VRObjectPtr anchor = 0, VRGeometryPtr ha = 0, VRGeometryPtr he = 0);
+        void addPath(pathPtr p, VRObjectPtr anchor = 0, VRGeometryPtr ha = 0, VRGeometryPtr he = 0);
         void setVisible(bool handles, bool lines);
         void setHandleGeometry(VRGeometryPtr geo);
-        void clear(path* p = 0);
+        void clear(pathPtr p = 0);
 
-        vector<path*> getPaths();
-        path* getPath(VRGeometryPtr h1, VRGeometryPtr h2);
-        vector<VRGeometryPtr> getHandles(path* p);
-        VRStrokePtr getStroke(path* p);
+        vector<pathPtr> getPaths();
+        pathPtr getPath(VRGeometryPtr h1, VRGeometryPtr h2);
+        vector<VRGeometryPtr> getHandles(pathPtr p);
+        VRStrokePtr getStroke(pathPtr p);
 
         VRMaterialPtr getPathMaterial();
 
         void select(VRGeometryPtr handle);
-        void select(path* p);
+        void select(pathPtr p);
         void deselect();
         void update();
 };

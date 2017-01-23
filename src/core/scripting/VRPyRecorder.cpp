@@ -3,47 +3,9 @@
 #include "VRPyTransform.h"
 #include "VRPyImage.h"
 
-template<> PyTypeObject VRPyBaseT<OSG::VRRecorder>::type = {
-    PyObject_HEAD_INIT(NULL)
-    0,                         /*ob_size*/
-    "VR.Recorder",             /*tp_name*/
-    sizeof(VRPyRecorder),             /*tp_basicsize*/
-    0,                         /*tp_itemsize*/
-    (destructor)dealloc, /*tp_dealloc*/
-    0,                         /*tp_print*/
-    0,                         /*tp_getattr*/
-    0,                         /*tp_setattr*/
-    0,                         /*tp_compare*/
-    0,                         /*tp_repr*/
-    0,                         /*tp_as_number*/
-    0,                         /*tp_as_sequence*/
-    0,                         /*tp_as_mapping*/
-    0,                         /*tp_hash */
-    0,                         /*tp_call*/
-    0,                         /*tp_str*/
-    0,                         /*tp_getattro*/
-    0,                         /*tp_setattro*/
-    0,                         /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
-    "VRRecorder binding",           /* tp_doc */
-    0,		               /* tp_traverse */
-    0,		               /* tp_clear */
-    0,		               /* tp_richcompare */
-    0,		               /* tp_weaklistoffset */
-    0,		               /* tp_iter */
-    0,		               /* tp_iternext */
-    VRPyRecorder::methods,             /* tp_methods */
-    0,             /* tp_members */
-    0,                         /* tp_getset */
-    0,                         /* tp_base */
-    0,                         /* tp_dict */
-    0,                         /* tp_descr_get */
-    0,                         /* tp_descr_set */
-    0,                         /* tp_dictoffset */
-    (initproc)init,      /* tp_init */
-    0,                         /* tp_alloc */
-    New,                 /* tp_new */
-};
+using namespace OSG;
+
+simpleVRPyType(Recorder, New_ptr);
 
 PyMethodDef VRPyRecorder::methods[] = {
     {"capture", (PyCFunction)VRPyRecorder::capture, METH_NOARGS, "Capture the current view as an image - capture()" },
@@ -66,59 +28,59 @@ PyMethodDef VRPyRecorder::methods[] = {
 PyObject* VRPyRecorder::setTransform(VRPyRecorder* self, PyObject* args) {
 	VRPyTransform* t; int i;
     if (!PyArg_ParseTuple(args, "Oi", &t, &i)) return NULL;
-    self->obj->setTransform(t->objPtr,i);
+    self->objPtr->setTransform(t->objPtr,i);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyRecorder::get(VRPyRecorder* self, PyObject* args) {
     int i = parseInt(args);
-    return VRPyImage::fromSharedPtr( self->obj->get(i) );
+    return VRPyImage::fromSharedPtr( self->objPtr->get(i) );
 }
 
-PyObject* VRPyRecorder::getFrom(VRPyRecorder* self, PyObject* args) { return toPyTuple(self->obj->getFrom( parseInt(args) ) ); }
-PyObject* VRPyRecorder::getDir(VRPyRecorder* self, PyObject* args) { return toPyTuple(self->obj->getDir( parseInt(args) ) ); }
-PyObject* VRPyRecorder::getAt(VRPyRecorder* self, PyObject* args) { return toPyTuple(self->obj->getAt( parseInt(args) ) ); }
-PyObject* VRPyRecorder::getUp(VRPyRecorder* self, PyObject* args) { return toPyTuple(self->obj->getUp( parseInt(args) ) ); }
+PyObject* VRPyRecorder::getFrom(VRPyRecorder* self, PyObject* args) { return toPyTuple(self->objPtr->getFrom( parseInt(args) ) ); }
+PyObject* VRPyRecorder::getDir(VRPyRecorder* self, PyObject* args) { return toPyTuple(self->objPtr->getDir( parseInt(args) ) ); }
+PyObject* VRPyRecorder::getAt(VRPyRecorder* self, PyObject* args) { return toPyTuple(self->objPtr->getAt( parseInt(args) ) ); }
+PyObject* VRPyRecorder::getUp(VRPyRecorder* self, PyObject* args) { return toPyTuple(self->objPtr->getUp( parseInt(args) ) ); }
 
 PyObject* VRPyRecorder::setMaxFrames(VRPyRecorder* self, PyObject* args) {
-    if (self->obj) self->obj->setMaxFrames( parseInt(args) );
+    if (self->objPtr) self->objPtr->setMaxFrames( parseInt(args) );
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyRecorder::frameLimitReached(VRPyRecorder* self) {
-    return PyBool_FromLong( self->obj->frameLimitReached() );
+    return PyBool_FromLong( self->objPtr->frameLimitReached() );
 }
 
 PyObject* VRPyRecorder::getRecordingSize(VRPyRecorder* self) {
     int size = 0;
-    if (self->obj) size = self->obj->getRecordingSize();
+    if (self->objPtr) size = self->objPtr->getRecordingSize();
     return PyInt_FromLong(size);
 }
 
 PyObject* VRPyRecorder::getRecordingLength(VRPyRecorder* self) {
     float length = 0;
-    if (self->obj) length = self->obj->getRecordingLength();
+    if (self->objPtr) length = self->objPtr->getRecordingLength();
     return PyFloat_FromDouble(length);
 }
 
 PyObject* VRPyRecorder::clear(VRPyRecorder* self) {
-    if (self->obj) self->obj->clear();
+    if (self->objPtr) self->objPtr->clear();
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyRecorder::setView(VRPyRecorder* self, PyObject* args) {
-    if (self->obj) self->obj->setView( parseInt(args) );
+    if (self->objPtr) self->objPtr->setView( parseInt(args) );
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyRecorder::capture(VRPyRecorder* self) {
-    if (self->obj) self->obj->capture();
+    if (self->objPtr) self->objPtr->capture();
     int size = 0;
-    if (self->obj) size = self->obj->getRecordingSize();
+    if (self->objPtr) size = self->objPtr->getRecordingSize();
     return PyInt_FromLong(size-1);
 }
 
 PyObject* VRPyRecorder::compile(VRPyRecorder* self, PyObject* args) {
-    if (self->obj) self->obj->compile( parseString(args) );
+    if (self->objPtr) self->objPtr->compile( parseString(args) );
     Py_RETURN_TRUE;
 }

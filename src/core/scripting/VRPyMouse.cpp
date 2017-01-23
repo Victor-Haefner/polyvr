@@ -53,7 +53,7 @@ PyObject* VRPyMouse::setCursor(VRPyMouse* self, PyObject* args) {
     if (!self->valid()) return NULL;
     const char* c = 0;
     if (! PyArg_ParseTuple(args, "s:setCursor", &c)) return NULL;
-    self->obj->setCursor(c);
+    self->objPtr->setCursor(c);
     Py_RETURN_TRUE;
 }
 

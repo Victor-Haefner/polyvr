@@ -14,6 +14,7 @@ struct VRPyPolygon : VRPyBaseT<OSG::polygon> {
     static PyObject* size(VRPyPolygon* self);
     static PyObject* set(VRPyPolygon* self, PyObject *args);
     static PyObject* clear(VRPyPolygon* self);
+    static PyObject* getConvexHull(VRPyPolygon* self);
 };
 
 #endif // VRPYPOLYGON_H_INCLUDED

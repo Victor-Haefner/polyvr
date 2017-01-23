@@ -131,6 +131,7 @@ PyMethodDef VRPyGeometry::methods[] = {
     {"readSharedMemory", (PyCFunction)VRPyGeometry::readSharedMemory, METH_VARARGS, "Read the geometry from shared memory buffers - readSharedMemory( str segment, str object )" },
     {"applyTransformation", (PyCFunction)VRPyGeometry::applyTransformation, METH_VARARGS, "Apply a transformation to the mesh - applyTransformation( pose )" },
     {"setPatchVertices", PySetter(Geometry, setPatchVertices, int), "Set patch primitives for tesselation shader - setPatchVertices( int )" },
+    {"setMeshVisibility", PySetter(Geometry, setMeshVisibility, bool), "Set mesh visibility - setMeshVisibility( bool )" },
 
     {"addVertex", (PyCFunction)VRPyGeometry::addVertex, METH_VARARGS, "Add a vertex to geometry - addVertex( pos | norm, col, tc )" },
     {"setVertex", (PyCFunction)VRPyGeometry::setVertex, METH_VARARGS, "Add a quad to geometry - setVertex( int i, pos | norm, col, tc )" },
@@ -265,7 +266,15 @@ PyObject* VRPyGeometry::addVertex(VRPyGeometry* self, PyObject *args) {
     p = n = c = t = 0;
     if (!PyArg_ParseTuple(args, "O|OOO", &p, &n, &c, &t)) return NULL;
     VRGeoData geo(self->objPtr);
-    geo.pushVert(parseVec3fList(p)); // TODO
+
+    bool doTC = (t != 0) && !isNone(t);
+    bool doN = (t != 0) && !isNone(t);
+    bool doC = (t != 0) && !isNone(t);
+    if (doN && doC && doTC) geo.pushVert(parseVec3fList(p), parseVec3fList(n), parseVec3fList(c), parseVec2fList(t));
+    else if (doN && doC) geo.pushVert(parseVec3fList(p), parseVec3fList(n), parseVec3fList(c));
+    else if (doN && doTC) geo.pushVert(parseVec3fList(p), parseVec3fList(n), parseVec2fList(t));
+    else if (doN) geo.pushVert(parseVec3fList(p), parseVec3fList(n));
+    else geo.pushVert(parseVec3fList(p));
     Py_RETURN_TRUE;
 }
 
@@ -276,7 +285,15 @@ PyObject* VRPyGeometry::setVertex(VRPyGeometry* self, PyObject *args) {
     p = n = c = t = 0;
     if (!PyArg_ParseTuple(args, "iO|OOO", &i, &p, &n, &c, &t)) return NULL;
     VRGeoData geo(self->objPtr);
-    geo.setVert(i, parseVec3fList(p));  // TODO
+
+    bool doTC = (t != 0) && !isNone(t);
+    bool doN = (t != 0) && !isNone(t);
+    bool doC = (t != 0) && !isNone(t);
+    if (doN && doC && doTC) geo.setVert(i, parseVec3fList(p), parseVec3fList(n), parseVec3fList(c), parseVec2fList(t));
+    else if (doN && doC) geo.setVert(i, parseVec3fList(p), parseVec3fList(n), parseVec3fList(c));
+    else if (doN && doTC) geo.setVert(i, parseVec3fList(p), parseVec3fList(n), parseVec2fList(t));
+    else if (doN) geo.setVert(i, parseVec3fList(p), parseVec3fList(n));
+    else geo.setVert(i, parseVec3fList(p));
     Py_RETURN_TRUE;
 }
 

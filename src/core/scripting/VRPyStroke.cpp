@@ -68,33 +68,33 @@ PyMethodDef VRPyStroke::methods[] = {
 
 
 PyObject* VRPyStroke::setPath(VRPyStroke* self, PyObject* args) {
-    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyStroke::setPath - Object is invalid"); return NULL; }
+	if (!self->valid()) return NULL;
     VRPyPath* path = 0;
     if (! PyArg_ParseTuple(args, "O", &path)) return NULL;
 	if (path == 0) { PyErr_SetString(err, "VRPyStroke::setPath: path is invalid"); return NULL; }
-    self->objPtr->setPath(path->obj);
+    self->objPtr->setPath(path->objPtr);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyStroke::addPath(VRPyStroke* self, PyObject* args) {
-    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyStroke::addPath - Object is invalid"); return NULL; }
+	if (!self->valid()) return NULL;
     VRPyPath* path = 0;
     if (! PyArg_ParseTuple(args, "O", &path)) return NULL;
 	if (path == 0) { PyErr_SetString(err, "VRPyStroke::addPath: path is invalid"); return NULL; }
-    self->objPtr->addPath(path->obj);
+    self->objPtr->addPath(path->objPtr);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyStroke::setPaths(VRPyStroke* self, PyObject* args) {
-    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyStroke::setPaths - Object is invalid"); return NULL; }
+	if (!self->valid()) return NULL;
 
     PyObject* vec;
     if (! PyArg_ParseTuple(args, "O", &vec)) return NULL;
 
-    vector<OSG::path*> paths;
+    vector<OSG::pathPtr> paths;
     for (int i=0; i<PyList_Size(vec); i++) {
         VRPyPath* path = (VRPyPath*)PyList_GetItem(vec, i);
-        paths.push_back(path->obj);
+        paths.push_back(path->objPtr);
     };
 
     OSG::VRStrokePtr e = (OSG::VRStrokePtr) self->objPtr;
@@ -103,21 +103,21 @@ PyObject* VRPyStroke::setPaths(VRPyStroke* self, PyObject* args) {
 }
 
 PyObject* VRPyStroke::getPaths(VRPyStroke* self) {
-    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyStroke::getPaths - Object is invalid"); return NULL; }
+	if (!self->valid()) return NULL;
 
-    vector<OSG::path*> _paths = self->objPtr->getPaths();
+    vector<OSG::pathPtr> _paths = self->objPtr->getPaths();
     PyObject* paths = PyList_New(_paths.size());
 
     for (uint i=0; i<_paths.size(); i++) {
-        OSG::path* p = _paths[i];
-        PyList_SetItem( paths, i, VRPyPath::fromPtr(p) );
+        auto p = _paths[i];
+        PyList_SetItem( paths, i, VRPyPath::fromSharedPtr(p) );
     };
 
     return paths;
 }
 
 PyObject* VRPyStroke::strokeProfile(VRPyStroke* self, PyObject* args) {
-    if (self->objPtr == 0) { PyErr_SetString(err, "VRPyStroke::strokeProfile - Object is invalid"); return NULL; }
+	if (!self->valid()) return NULL;
 
     int closed, lit;
     int color = 1;

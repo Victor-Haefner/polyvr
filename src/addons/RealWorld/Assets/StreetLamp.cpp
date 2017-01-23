@@ -13,7 +13,7 @@ void StreetLamp::make() {
 	auto lamp = VRTransform::create("lamp");
 	lamp->setPose(Vec3f(0,0,0), Vec3f(0,1,0), Vec3f(0,0,1));
 
-	auto addPart = [&](float r, path& p) {
+	auto addPart = [&](float r, pathPtr p) {
 		int N = 6;
 		vector<Vec3f> prof;
 		for (int i=0; i<N; i++) {
@@ -24,25 +24,25 @@ void StreetLamp::make() {
 		}
 
         auto pole = VRStroke::create("pole");
-		pole->addPath(&p);
+		pole->addPath(p);
         pole->strokeProfile(prof, 1, 1);
         lamp->addChild(pole);
 	};
 
-	auto p1 = path();
-	p1.addPoint(Vec3f(0,0,0), Vec3f(0,0,-1), Vec3f(0,0,0), Vec3f(0,1,0));
-	p1.addPoint(Vec3f(0,0,-2), Vec3f(0,0,-1), Vec3f(0,0,0), Vec3f(0,1,0));
-	p1.compute(2);
+	auto p1 = path::create();
+	p1->addPoint(Vec3f(0,0,0), Vec3f(0,0,-1), Vec3f(0,0,0), Vec3f(0,1,0));
+	p1->addPoint(Vec3f(0,0,-2), Vec3f(0,0,-1), Vec3f(0,0,0), Vec3f(0,1,0));
+	p1->compute(2);
 
-	auto p2 = path();
-	p2.addPoint(Vec3f(0,0,-2), Vec3f(0,0,-1), Vec3f(0,0,0), Vec3f(0,1,0));
-	p2.addPoint(Vec3f(0,0,-4), Vec3f(0,0,-1), Vec3f(0,0,0), Vec3f(0,1,0));
-	p2.compute(2);
+	auto p2 = path::create();
+	p2->addPoint(Vec3f(0,0,-2), Vec3f(0,0,-1), Vec3f(0,0,0), Vec3f(0,1,0));
+	p2->addPoint(Vec3f(0,0,-4), Vec3f(0,0,-1), Vec3f(0,0,0), Vec3f(0,1,0));
+	p2->compute(2);
 
-	auto p3 = path();
-	p3.addPoint(Vec3f(0,0,-4), Vec3f(0,0,-1), Vec3f(0,0,0), Vec3f(0,1,0));
-	p3.addPoint(Vec3f(1,0,-5), Vec3f(2,0,-1), Vec3f(0,0,0), Vec3f(0,1,0));
-	p3.compute(5);
+	auto p3 = path::create();
+	p3->addPoint(Vec3f(0,0,-4), Vec3f(0,0,-1), Vec3f(0,0,0), Vec3f(0,1,0));
+	p3->addPoint(Vec3f(1,0,-5), Vec3f(2,0,-1), Vec3f(0,0,0), Vec3f(0,1,0));
+	p3->compute(5);
 
 	addPart(0.1, p1);
 	addPart(0.04, p2);

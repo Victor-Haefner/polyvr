@@ -65,7 +65,7 @@ PyObject* VRPySimViDekont::load(VRPySimViDekont* self, PyObject* args) {
     VRPyObject* child = NULL;
     if (! PyArg_ParseTuple(args, "O", &child)) return NULL;
     if (child == NULL) { PyErr_SetString(err, "Missing child parameter"); return NULL; }
-    if (child->obj == 0) { PyErr_SetString(err, "VRPySimViDekont::load, root is invalid"); return NULL; }
+    if (!child->objPtr) { PyErr_SetString(err, "VRPySimViDekont::load, root is invalid"); return NULL; }
 
     if (self->svd == 0) {
         self->svd = new OSG::SimViDekont();

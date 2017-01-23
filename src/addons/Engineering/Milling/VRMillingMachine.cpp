@@ -12,6 +12,8 @@ VRMillingMachine::VRMillingMachine() {
     http = new VRSocket("milling machine");
 }
 
+shared_ptr<VRMillingMachine> VRMillingMachine::create() { return shared_ptr<VRMillingMachine>(new VRMillingMachine()); }
+
 int VRMillingMachine::getState() { return state; }
 int VRMillingMachine::getMode() { return mode; }
 

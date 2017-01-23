@@ -59,40 +59,40 @@ PyMethodDef FPyNode::methods[] = {
 };
 
 PyObject* FPyNode::connect(FPyNode* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "FPyNode::connect - Object is invalid"); return NULL; }
+    if (!self->valid()) return NULL;
 
     FPyNode* node;
     if (! PyArg_ParseTuple(args, "O", &node)) return NULL;
 
-    self->obj->connect(node->obj);
+    self->objPtr->connect(node->objPtr);
     Py_RETURN_TRUE;
 }
 
 PyObject* FPyNode::set(FPyNode* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "FPyNode::set - Object is invalid"); return NULL; }
+    if (!self->valid()) return NULL;
 
     PyObject* o;
     if (! PyArg_ParseTuple(args, "O", &o)) return NULL;
     FPyProduct* object = (FPyProduct*)o; // actually needs FPyObject, but should work like this
 
-    self->obj->set(object->obj);
+    self->objPtr->set(object->objPtr);
     Py_RETURN_TRUE;
 }
 
 PyObject* FPyNode::setTransform(FPyNode* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "FPyNode::setTransform - Object is invalid"); return NULL; }
+    if (!self->valid()) return NULL;
 
     VRPyTransform* t;
     if (! PyArg_ParseTuple(args, "O", &t)) return NULL;
 
-    self->obj->setTransform(t->objPtr);
-    //self->obj->getTransform()->setWorldMatrix(t->obj->getWorldMatrix());
+    self->objPtr->setTransform(t->objPtr);
+    //self->objPtr->getTransform()->setWorldMatrix(t->objPtr->getWorldMatrix());
     Py_RETURN_TRUE;
 }
 
 PyObject* FPyNode::getTransform(FPyNode* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "FPyNode::getTransform - Object is invalid"); return NULL; }
-    return VRPyTransform::fromSharedPtr(self->obj->getTransform());
+    if (!self->valid()) return NULL;
+    return VRPyTransform::fromSharedPtr(self->objPtr->getTransform());
 }
 
 
@@ -147,23 +147,23 @@ PyMethodDef FPyNetwork::methods[] = {
 };
 
 PyObject* FPyNetwork::addNodes(FPyNetwork* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "FPyNetwork::addNodes - Object is invalid"); return NULL; }
+    if (!self->valid()) return NULL;
 
     FPyNode* n;
-    FNode* node;
+    shared_ptr<FNode> node;
     int i = 0;
     if (! PyArg_ParseTuple(args, "iO", &i, &n)) return NULL;
     if ((PyObject*)n == Py_None) node = 0;
-    else node = n->obj;
+    else node = n->objPtr;
 
-    return FPyNode::fromPtr( self->obj->addNodeChain(i, node) );
+    return FPyNode::fromSharedPtr( self->objPtr->addNodeChain(i, node) );
 }
 
 PyObject* FPyNetwork::stroke(FPyNetwork* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "FPyNetwork::stroke - Object is invalid"); return NULL; }
+    if (!self->valid()) return NULL;
     float r,g,b,k;
     if (! PyArg_ParseTuple(args, "ffff", &r, &g, &b, &k)) return NULL;
-    return VRPyStroke::fromSharedPtr( self->obj->stroke(OSG::Vec3f(r,g,b), k) );
+    return VRPyStroke::fromSharedPtr( self->objPtr->stroke(OSG::Vec3f(r,g,b), k) );
 }
 
 
@@ -218,22 +218,22 @@ PyMethodDef FPyPath::methods[] = {
 };
 
 PyObject* FPyPath::set(FPyPath* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "FPyPath::set - Object is invalid"); return NULL; }
+    if (!self->valid()) return NULL;
 
     FPyNode *n1, *n2;
     if (! PyArg_ParseTuple(args, "OO", &n1, &n2)) return NULL;
 
-    self->obj->set(n1->obj, n2->obj);
+    self->objPtr->set(n1->objPtr, n2->objPtr);
     Py_RETURN_TRUE;
 }
 
 PyObject* FPyPath::add(FPyPath* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "FPyPath::set - Object is invalid"); return NULL; }
+    if (!self->valid()) return NULL;
 
     FPyNode *n;
     if (! PyArg_ParseTuple(args, "O", &n)) return NULL;
 
-    self->obj->add(n->obj);
+    self->objPtr->add(n->objPtr);
     Py_RETURN_TRUE;
 }
 
@@ -245,8 +245,8 @@ PyObject* FPyPath::tp_iter(FPyPath* self) {
 
 PyObject* FPyPath::tp_iternext(FPyPath* self) {
     int i = self->i;
-    if (i < (int)self->obj->get().size()) {
-        PyObject *tmp = FPyNode::fromPtr(self->obj->get()[i]);
+    if (i < (int)self->objPtr->get().size()) {
+        PyObject *tmp = FPyNode::fromSharedPtr(self->objPtr->get()[i]);
         self->i = i+1;
         return tmp;
     } else {
@@ -308,19 +308,19 @@ PyMethodDef FPyTransporter::methods[] = {
 };
 
 PyObject* FPyTransporter::setPath(FPyTransporter* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "FPyTransporter::setPath - Object is invalid"); return NULL; }
+    if (!self->valid()) return NULL;
 
     FPyPath* p;
     if (! PyArg_ParseTuple(args, "O", &p)) return NULL;
 
-    self->obj->setPath(p->obj);
+    self->objPtr->setPath(p->objPtr);
     Py_RETURN_TRUE;
 }
 
 PyObject* FPyTransporter::setSpeed(FPyTransporter* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "FPyTransporter::setSpeed - Object is invalid"); return NULL; }
+    if (!self->valid()) return NULL;
     float s = parseFloat(args);
-    self->obj->setSpeed(s);
+    self->objPtr->setSpeed(s);
     Py_RETURN_TRUE;
 }
 
@@ -384,52 +384,52 @@ PyMethodDef FPyContainer::methods[] = {
 };
 
 PyObject* FPyContainer::add(FPyContainer* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "FPyContainer::add - Object is invalid"); return NULL; }
+    if (!self->valid()) return NULL;
     FPyProduct* p = (FPyProduct*)parseObject(args);
-    self->obj->add(p->obj);
+    self->objPtr->add(p->objPtr);
     Py_RETURN_TRUE;
 }
 
 PyObject* FPyContainer::peek(FPyContainer* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "FPyContainer::get - Object is invalid"); return NULL; }
-    return FPyProduct::fromPtr( self->obj->peek() );
+    if (!self->valid()) return NULL;
+    return FPyProduct::fromSharedPtr( self->objPtr->peek() );
 }
 
 PyObject* FPyContainer::get(FPyContainer* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "FPyContainer::get - Object is invalid"); return NULL; }
-    return FPyProduct::fromPtr( self->obj->pop() );
+    if (!self->valid()) return NULL;
+    return FPyProduct::fromSharedPtr( self->objPtr->pop() );
 }
 
 PyObject* FPyContainer::clear(FPyContainer* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "FPyContainer::getCapacity - Object is invalid"); return NULL; }
-    self->obj->clear();
+    if (!self->valid()) return NULL;
+    self->objPtr->clear();
     Py_RETURN_TRUE;
 }
 
 PyObject* FPyContainer::isFull(FPyContainer* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "FPyContainer::getCapacity - Object is invalid"); return NULL; }
-    return PyBool_FromLong( self->obj->isFull() );
+    if (!self->valid()) return NULL;
+    return PyBool_FromLong( self->objPtr->isFull() );
 }
 
 PyObject* FPyContainer::isEmpty(FPyContainer* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "FPyContainer::getCapacity - Object is invalid"); return NULL; }
-    return PyBool_FromLong( self->obj->isEmpty() );
+    if (!self->valid()) return NULL;
+    return PyBool_FromLong( self->objPtr->isEmpty() );
 }
 
 PyObject* FPyContainer::getCapacity(FPyContainer* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "FPyContainer::getCapacity - Object is invalid"); return NULL; }
-    return PyInt_FromLong( self->obj->getCapacity() );
+    if (!self->valid()) return NULL;
+    return PyInt_FromLong( self->objPtr->getCapacity() );
 }
 
 PyObject* FPyContainer::setCapacity(FPyContainer* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "FPyContainer::setCapacity - Object is invalid"); return NULL; }
-    self->obj->setCapacity( parseFloat(args) );
+    if (!self->valid()) return NULL;
+    self->objPtr->setCapacity( parseFloat(args) );
     Py_RETURN_TRUE;
 }
 
 PyObject* FPyContainer::getCount(FPyContainer* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "FPyContainer::getCount - Object is invalid"); return NULL; }
-    return PyInt_FromLong( self->obj->getCount() );
+    if (!self->valid()) return NULL;
+    return PyInt_FromLong( self->objPtr->getCount() );
 }
 
 
@@ -483,7 +483,7 @@ PyMethodDef FPyProduct::methods[] = {
 };
 
 PyObject* FPyProduct::getGeometry(FPyProduct* self) {
-    return VRPyTypeCaster::cast(self->obj->getTransformation());
+    return VRPyTypeCaster::cast(self->objPtr->getTransformation());
 }
 
 // ------------------------------------------------------------------------ LOGISTICS
@@ -527,7 +527,7 @@ template<> PyTypeObject VRPyBaseT<FLogistics>::type = {
     0,                         /* tp_dictoffset */
     (initproc)init,      /* tp_init */
     0,                         /* tp_alloc */
-    New,                 /* tp_new */
+    New_ptr,                 /* tp_new */
 };
 
 PyMethodDef FPyLogistics::methods[] = {
@@ -544,77 +544,76 @@ PyMethodDef FPyLogistics::methods[] = {
 };
 
 PyObject* FPyLogistics::addProduct(FPyLogistics* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "FPyLogistics::addProduct - Object is invalid"); return NULL; }
+    if (!self->valid()) return NULL;
     VRPyTransform* t;
     if (! PyArg_ParseTuple(args, "O", &t)) return NULL;
-    return FPyProduct::fromPtr( self->obj->addProduct( t->objPtr ) );
+    return FPyProduct::fromSharedPtr( self->objPtr->addProduct( t->objPtr ) );
 }
 
 PyObject* FPyLogistics::getContainers(FPyLogistics* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "FPyLogistics::getContainers - Object is invalid"); return NULL; }
+    if (!self->valid()) return NULL;
 
-    vector<FContainer*> objs = self->obj->getContainers();
+    auto objs = self->objPtr->getContainers();
 
     PyObject* li = PyList_New(objs.size());
     for (uint i=0; i<objs.size(); i++) {
-        PyList_SetItem(li, i, FPyContainer::fromPtr(objs[i]));
+        PyList_SetItem(li, i, FPyContainer::fromSharedPtr(objs[i]));
     }
 
     return li;
 }
 
 PyObject* FPyLogistics::addNetwork(FPyLogistics* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "FPyLogistics::addNetwork - Object is invalid"); return NULL; }
-    return FPyNetwork::fromPtr(self->obj->addNetwork());
+    if (!self->valid()) return NULL;
+    return FPyNetwork::fromSharedPtr(self->objPtr->addNetwork());
 }
 
 PyObject* FPyLogistics::addPath(FPyLogistics* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "FPyLogistics::addPath - Object is invalid"); return NULL; }
-    return FPyPath::fromPtr(self->obj->addPath());
+    if (!self->valid()) return NULL;
+    return FPyPath::fromSharedPtr(self->objPtr->addPath());
 }
 
 PyObject* FPyLogistics::addTransporter(FPyLogistics* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "FPyLogistics::addTransporter - Object is invalid"); return NULL; }
+    if (!self->valid()) return NULL;
 
     string type = parseString(args);
     FTransporter::FTType t = FTransporter::PRODUCT;
     if (type == "Container full") t = FTransporter::CONTAINER_FULL;
     if (type == "Container empty") t = FTransporter::CONTAINER_EMPTY;
 
-    return FPyTransporter::fromPtr(self->obj->addTransporter(t));
+    return FPyTransporter::fromSharedPtr(self->objPtr->addTransporter(t));
 }
 
 PyObject* FPyLogistics::addContainer(FPyLogistics* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "FPyLogistics::addContainer - Object is invalid"); return NULL; }
+    if (!self->valid()) return NULL;
     VRPyTransform* t = 0;
     if (! PyArg_ParseTuple(args, "O", &t)) return NULL;
     OSG::VRTransformPtr tr = 0;
     if ( !isNone((PyObject*)t) ) tr = t->objPtr;
-    FContainer* c = self->obj->addContainer(tr);
-    return FPyContainer::fromPtr(c);
+    auto c = self->objPtr->addContainer(tr);
+    return FPyContainer::fromSharedPtr(c);
 }
 
 PyObject* FPyLogistics::fillContainer(FPyLogistics* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "FPyLogistics::fillContainer - Object is invalid"); return NULL; }
+    if (!self->valid()) return NULL;
 
     VRPyTransform* t;
     FPyContainer* c;
     int i;
     if (! PyArg_ParseTuple(args, "OiO", &c, &i, &t)) return NULL;
 
-    self->obj->fillContainer(c->obj, i, t->objPtr);
+    self->objPtr->fillContainer(c->objPtr, i, t->objPtr);
     Py_RETURN_TRUE;
 }
 
 PyObject* FPyLogistics::update(FPyLogistics* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "FPyLogistics::update - Object is invalid"); return NULL; }
-    self->obj->update();
+    if (!self->valid()) return NULL;
+    self->objPtr->update();
     Py_RETURN_TRUE;
 }
 
 PyObject* FPyLogistics::destroy(FPyLogistics* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "FPyLogistics::destroy - Object is invalid"); return NULL; }
-    delete self->obj;
+    if (!self->valid()) return NULL;
     Py_RETURN_TRUE;
 }
 

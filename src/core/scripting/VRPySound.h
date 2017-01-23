@@ -13,6 +13,8 @@ struct VRPySound : VRPyBaseT<OSG::VRSound> {
     static PyObject* setVolume(VRPySound* self, PyObject* args);
     static PyObject* synthesize(VRPySound* self, PyObject* args);
     static PyObject* synthBuffer(VRPySound* self, PyObject* args);
+    static PyObject* getQueuedBuffer(VRPySound* self);
+    static PyObject* recycleBuffer(VRPySound* self);
 };
 
 #endif // VRPYSOCKET_H_INCLUDED

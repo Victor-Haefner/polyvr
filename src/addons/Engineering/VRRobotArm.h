@@ -5,30 +5,27 @@
 #include "core/utils/VRFunctionFwd.h"
 #include "core/objects/VRObjectFwd.h"
 #include "core/tools/VRToolsFwd.h"
+#include "core/math/VRMathFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-class VRAnimation;
-class VRAnalyticGeometry;
-class path;
-
 class VRRobotArm {
     private:
         struct job {
-            path* p = 0;
+            pathPtr p = 0;
             float t0 = 0;
             float t1 = 1;
             bool loop = false;
             float d = 1;
-            job(path* p, float t0 = 0, float t1 = 1, float d = 1, bool loop = false) : p(p), t0(t0), t1(t1), loop(loop), d(d) {;}
+            job(pathPtr p, float t0 = 0, float t1 = 1, float d = 1, bool loop = false) : p(p), t0(t0), t1(t1), loop(loop), d(d) {;}
         };
 
         VRAnalyticGeometryPtr ageo = 0;
-        VRAnimation* anim = 0;
+        VRAnimationPtr anim = 0;
         VRAnimCbPtr animPtr;
-        path* animPath = 0;
-        path* robotPath = 0;
+        pathPtr animPath = 0;
+        pathPtr robotPath = 0;
 
         list<job> job_queue;
 
@@ -50,6 +47,9 @@ class VRRobotArm {
 
     public:
         VRRobotArm();
+        ~VRRobotArm();
+
+        static shared_ptr<VRRobotArm> create();
 
         void setParts(vector<VRTransformPtr> parts);
         void setAngleOffsets(vector<float> offsets);
@@ -69,8 +69,8 @@ class VRRobotArm {
         void setGrab(float g);
         void toggleGrab();
 
-        void setPath(path* p);
-        path* getPath();
+        void setPath(pathPtr p);
+        pathPtr getPath();
         void moveOnPath(float t0, float t1, bool loop = false);
 };
 

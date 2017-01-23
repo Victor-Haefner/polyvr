@@ -42,7 +42,7 @@ class VRGuiNav_BindingTypeColumns : public Gtk::TreeModelColumnRecord {
 void VRGuiNav::on_preset_changed() {
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
-    VRNavPreset* preset = scene->getNavigation(getComboboxText("combobox5"));
+    auto preset = scene->getNavigation(getComboboxText("combobox5"));
     if (preset == 0) return;
 
     //get binding type liststore
@@ -70,7 +70,7 @@ void VRGuiNav::on_preset_changed() {
 void VRGuiNav::on_new_preset_clicked() {
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
-    VRNavPreset* preset = new VRNavPreset();
+    auto preset = VRNavPreset::create();
     scene->addNavigation(preset);
     preset->setTarget(scene->getActiveCamera());
 
@@ -92,7 +92,7 @@ void VRGuiNav::on_del_preset_clicked() {
 void VRGuiNav::on_new_binding_clicked() {
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
-    VRNavPreset* preset = scene->getNavigation(getComboboxText("combobox5"));
+    auto preset = scene->getNavigation(getComboboxText("combobox5"));
     VRDeviceCbPtr fkt;
     //cb = VRFunction<VRDeviceWeakPtr>::create( boost::bind(&VRNavigator::sandBoxNavigation, this, _1) ); //TODO
     VRNavBinding binding(fkt, 0, 0, false);
@@ -123,7 +123,7 @@ void VRGuiNav_on_keybinding_edited(GtkCellRendererText *cell, gchar *path_string
     if (scene == 0) return;
 
     string pname = getComboboxText("combobox5");
-    VRNavPreset* preset = scene->getNavigation(pname);
+    auto preset = scene->getNavigation(pname);
     if (!preset) { cout << "VRGuiNav_on_keybinding_edited preset not found: " << pname << endl; return; }
     preset->getBindings()[i].key = key;
     preset->updateBinding(preset->getBindings()[i]);
@@ -144,7 +144,7 @@ void VRGuiNav_on_statebinding_edited(GtkCellRendererText *cell, gchar *path_stri
     int i = toInt(path_string);
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
-    VRNavPreset* preset = scene->getNavigation(getComboboxText("combobox5"));
+    auto preset = scene->getNavigation(getComboboxText("combobox5"));
     preset->getBindings()[i].state = state;
     preset->updateBinding(preset->getBindings()[i]);
 }
@@ -167,7 +167,7 @@ void VRGuiNav_on_typebinding_changed(GtkCellRendererCombo* crc, gchar *path_stri
     int i = toInt(path_string);
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
-    VRNavPreset* preset = scene->getNavigation(getComboboxText("combobox5"));
+    auto preset = scene->getNavigation(getComboboxText("combobox5"));
     if (type == "Event") preset->getBindings()[i].doRepeat = false;
     if (type == "State") preset->getBindings()[i].doRepeat = true;
     preset->updateBinding(preset->getBindings()[i]);
@@ -192,7 +192,7 @@ void VRGuiNav_on_cbbinding_changed(GtkCellRendererCombo* crc, gchar *path_string
     if (scene == 0) return;
     VRDeviceCbPtr cback = scene->getNavigationCallbacks()[cb];
     int i = toInt(path_string);
-    VRNavPreset* preset = scene->getNavigation(getComboboxText("combobox5"));
+    auto preset = scene->getNavigation(getComboboxText("combobox5"));
     auto& b = preset->getBindings()[i];
     b.clearSignal();
     b.cb = cback;

@@ -4,7 +4,7 @@
 
 using namespace OSG;
 
-simpleVRPyType(SnappingEngine, New)
+simpleVRPyType(SnappingEngine, New_ptr)
 
 PyMethodDef VRPySnappingEngine::methods[] = {
     {"addObject", (PyCFunction)VRPySnappingEngine::addObject, METH_VARARGS, "Add an object to be checked for snapping - addObject(obj)" },
@@ -24,81 +24,78 @@ PyMethodDef VRPySnappingEngine::methods[] = {
 };
 
 PyObject* VRPySnappingEngine::remLocalRules(VRPySnappingEngine* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPySnappingEngine::remLocalRules - Object is invalid"); return NULL; }
+	if (!self->valid()) return NULL;
     VRPyTransform *o;
     if (! PyArg_ParseTuple(args, "O", &o)) return NULL;
-    self->obj->remLocalRules( o->objPtr );
+    self->objPtr->remLocalRules( o->objPtr );
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPySnappingEngine::addObjectAnchor(VRPySnappingEngine* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPySnappingEngine::addObjectAnchor - Object is invalid"); return NULL; }
+	if (!self->valid()) return NULL;
     VRPyTransform *o, *a;
     if (! PyArg_ParseTuple(args, "OO", &o, &a)) return NULL;
-    self->obj->addObjectAnchor( o->objPtr, a->objPtr );
+    self->objPtr->addObjectAnchor( o->objPtr, a->objPtr );
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPySnappingEngine::clearObjectAnchors(VRPySnappingEngine* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPySnappingEngine::clearObjectAnchors - Object is invalid"); return NULL; }
+	if (!self->valid()) return NULL;
     VRPyTransform *o;
     if (! PyArg_ParseTuple(args, "O", &o )) return NULL;
-    self->obj->clearObjectAnchors( o->objPtr );
+    self->objPtr->clearObjectAnchors( o->objPtr );
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPySnappingEngine::remRule(VRPySnappingEngine* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPySnappingEngine::remRule - Object is invalid"); return NULL; }
-    self->obj->remRule( parseInt(args) );
+	if (!self->valid()) return NULL;
+    self->objPtr->remRule( parseInt(args) );
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPySnappingEngine::addRule(VRPySnappingEngine* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPySnappingEngine::addRule - Object is invalid"); return NULL; }
+	if (!self->valid()) return NULL;
     PyObject *t, *o; // string
     PyObject *pt, *po; // Vec4f
     float d, w;
     VRPyTransform* l;
     if (! PyArg_ParseTuple(args, "OOOOffO", &t, &o, &pt, &po, &d, &w, &l)) return NULL;
     OSG::VRTransformPtr trans = isNone((PyObject*)l) ? 0 : l->objPtr;
-    auto _t = self->obj->typeFromStr( PyString_AsString(t) );
-    auto _o = self->obj->typeFromStr( PyString_AsString(o) );
-    int r = self->obj->addRule(_t, _o, PyToLine(pt), PyToLine(po), d, w, trans);
+    auto _t = self->objPtr->typeFromStr( PyString_AsString(t) );
+    auto _o = self->objPtr->typeFromStr( PyString_AsString(o) );
+    int r = self->objPtr->addRule(_t, _o, PyToLine(pt), PyToLine(po), d, w, trans);
     return PyInt_FromLong(r);
 }
 
 PyObject* VRPySnappingEngine::remObject(VRPySnappingEngine* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPySnappingEngine::remObject - Object is invalid"); return NULL; }
+	if (!self->valid()) return NULL;
     VRPyTransform* obj = 0;
     if (! PyArg_ParseTuple(args, "O", &obj)) return NULL;
-
-    if (obj->obj) self->obj->remObject(obj->objPtr);
+    if (obj->objPtr) self->objPtr->remObject(obj->objPtr);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPySnappingEngine::addTree(VRPySnappingEngine* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPySnappingEngine::addTree - Object is invalid"); return NULL; }
+	if (!self->valid()) return NULL;
     VRPyObject* obj = 0;
     if (! PyArg_ParseTuple(args, "O", &obj)) return NULL;
-
-    if (obj->obj) self->obj->addTree(obj->objPtr);
+    if (obj->objPtr) self->objPtr->addTree(obj->objPtr);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPySnappingEngine::addObject(VRPySnappingEngine* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPySnappingEngine::addObject - Object is invalid"); return NULL; }
+	if (!self->valid()) return NULL;
     VRPyTransform* obj = 0;
     if (! PyArg_ParseTuple(args, "O", &obj)) return NULL;
-
-    if (obj->obj) self->obj->addObject(obj->objPtr);
+    if (obj->objPtr) self->objPtr->addObject(obj->objPtr);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPySnappingEngine::setPreset(VRPySnappingEngine* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPySnappingEngine::setPreset - Object is invalid"); return NULL; }
+	if (!self->valid()) return NULL;
     string ps = parseString(args);
-    if (ps == "simple alignment") self->obj->setPreset(OSG::VRSnappingEngine::SIMPLE_ALIGNMENT);
-    if (ps == "snap back") self->obj->setPreset(OSG::VRSnappingEngine::SNAP_BACK);
+    if (ps == "simple alignment") self->objPtr->setPreset(OSG::VRSnappingEngine::SIMPLE_ALIGNMENT);
+    if (ps == "snap back") self->objPtr->setPreset(OSG::VRSnappingEngine::SNAP_BACK);
     Py_RETURN_TRUE;
 }
 

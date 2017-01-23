@@ -51,6 +51,8 @@ class VRTextureGenerator {
 
     public:
         VRTextureGenerator();
+        ~VRTextureGenerator();
+        static shared_ptr<VRTextureGenerator> create();
 
         void setSize(Vec3i dim, bool doAlpha = 0);
         void setSize(int w, int h, int d = 1);

@@ -92,7 +92,7 @@ PyObject* toPyObject(const Vec3f& v) { return (PyObject*)toPyVec3f(v); }
 PyObject* VRPyVec3f::New(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     float a,b,c;
     if (! PyArg_ParseTuple(args, "fff", &a, &b, &c)) return NULL;
-    VRPyVec3f* pv = (VRPyVec3f*)alloc( type, 0 );
+    VRPyVec3f* pv = (VRPyVec3f*)allocPtr( type, 0 );
     pv->v = Vec3f(a,b,c);
     return (PyObject*)pv;
 }

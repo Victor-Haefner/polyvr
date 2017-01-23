@@ -19,6 +19,10 @@ VRColorChooser::VRColorChooser() {
     setColor(Vec3f(1,1,1));
 }
 
+VRColorChooser::~VRColorChooser() {}
+
+shared_ptr<VRColorChooser> VRColorChooser::create() { return shared_ptr<VRColorChooser>(new VRColorChooser()); }
+
 Color3f VRColorChooser::colFromUV(Vec2f tc) {
     if (abs(tc[0]-0.5) > 0.5-border || abs(tc[1]-0.5) > 0.5-border) return color;
 

@@ -724,7 +724,7 @@ void VRTransform::setup() {
     update();
 }
 
-void setFromPath(VRTransformWeakPtr trp, path* p, bool redirect, float t) {
+void setFromPath(VRTransformWeakPtr trp, pathPtr p, bool redirect, float t) {
     auto tr = trp.lock();
     if (!tr) return;
     tr->setFrom( p->getPosition(t) );
@@ -737,17 +737,17 @@ void setFromPath(VRTransformWeakPtr trp, path* p, bool redirect, float t) {
     if (tr->get_orientation_mode() == VRTransform::OM_AT) tr->setAt( p->getColor(t) );
 }
 
-void VRTransform::addAnimation(VRAnimation* anim) { animations[anim->getName()] = anim; }
-vector<VRAnimation*> VRTransform::getAnimations() {
-    vector<VRAnimation*> res;
+void VRTransform::addAnimation(VRAnimationPtr anim) { animations[anim->getName()] = anim; }
+vector<VRAnimationPtr> VRTransform::getAnimations() {
+    vector<VRAnimationPtr> res;
     for (auto a : animations) res.push_back(a.second);
     return res;
 }
 
-VRAnimation* VRTransform::startPathAnimation(path* p, float time, float offset, bool redirect, bool loop) {
+VRAnimationPtr VRTransform::startPathAnimation(pathPtr p, float time, float offset, bool redirect, bool loop) {
     pathAnimPtr = VRFunction<float>::create("TransAnim", boost::bind(setFromPath, VRTransformWeakPtr(ptr()), p, redirect, _1));
     auto scene = VRScene::getCurrent();
-    VRAnimation* a = scene->addAnimation<float>(time, offset, pathAnimPtr, 0.f, 1.f, loop);
+    auto a = scene->addAnimation<float>(time, offset, pathAnimPtr, 0.f, 1.f, loop);
     addAnimation(a);
     return a;
 }

@@ -25,7 +25,7 @@ VRProductionJob::VRProductionJob(VRProduct* p) {
 
 VRProduction::VRProduction() {
     description = VROntology::create("Production");
-    intraLogistics = new FLogistics();
+    intraLogistics = FLogistics::create();
     network = intraLogistics->addNetwork();
 }
 
@@ -40,7 +40,7 @@ void VRProduction::addMachine(VRProductionMachine* pm, string machine, VRGeometr
 
     pm->geo = m;
     machines[pm->ID] = pm;
-    FNode* n0 = network->addNode();
+    auto n0 = network->addNode();
     for (auto n : network->getNodes()) if (n != n0) { n0->connect(n); n->connect(n0); }
 }
 
@@ -114,6 +114,8 @@ string VRProductionProcess::toString() {
     for (auto f : fragments) data += " fragment " + f.second->getName() + "\n";
     return data;
 }
+
+shared_ptr<VRProduction> VRProduction::create() { return shared_ptr<VRProduction>(new VRProduction()); }
 
 VRObjectPtr VRProduction::test() {
     // ontologies

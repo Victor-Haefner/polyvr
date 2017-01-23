@@ -5,7 +5,6 @@
 #include "RealWorld.h"
 
 struct VRPyRealWorld : VRPyBaseT<RealWorld> {
-    static PyMemberDef members[];
     static PyMethodDef methods[];
 
     static PyObject* initWorld(VRPyRealWorld* self, PyObject* args);

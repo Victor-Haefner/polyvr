@@ -55,6 +55,8 @@ RealWorld::~RealWorld() {
     delete mapManager;
 }
 
+std::shared_ptr<RealWorld> RealWorld::create(VRObjectPtr root, Vec2f origin) { return std::shared_ptr<RealWorld>(new RealWorld(root, origin)); }
+
 RealWorld* RealWorld::singelton = 0;
 
 RealWorld* RealWorld::get() { return singelton; }

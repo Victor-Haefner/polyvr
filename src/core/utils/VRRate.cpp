@@ -5,20 +5,8 @@
 using namespace std;
 
 
-VRRate::VRRate() {
-    count = 0;
-    current = 60;
-    time_0 = 0;
-    time_1 = 0;
-    print = true;
-}
-
-void VRRate::operator= (VRRate v) {;}
-
-VRRate* VRRate::get() {
-    static VRRate* singleton = new VRRate();
-    return singleton;
-}
+VRRate::VRRate() {}
+VRRate::~VRRate() {}
 
 void VRRate::setPrint(bool b) { print = b; }
 
@@ -34,6 +22,7 @@ int VRRate::getRate() {
     return current;
 }
 
-VRRate::StatRate VRRate::statFPStime("statFPStime", "PolyVR framerate");
-VRRate::StatRate VRRate::statPhysFPStime("statPhysFPStime", "PolyVR physics framerate");
+VRRate::StatRate VRRate::statFPS("statFPS", "PolyVR framerate");
+VRRate::StatRate VRRate::statScriptFPS("statScriptFPS", "PolyVR scripts framerate");
+VRRate::StatRate VRRate::statPhysFPS("statPhysFPS", "PolyVR physics framerate");
 

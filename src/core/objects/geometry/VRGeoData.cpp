@@ -98,6 +98,9 @@ bool VRGeoData::valid() const {
 
 int VRGeoData::size() const { return data->pos->size(); }
 
+Pnt3f VRGeoData::getPosition(int i) { return data->pos->getValue(i); }
+Vec3f VRGeoData::getNormal(int i) { return data->norms->getValue(i); }
+
 int VRGeoData::pushVert(Pnt3f p) { data->pos->addValue(p); return data->pos->size()-1; }
 int VRGeoData::pushVert(Pnt3f p, Vec3f n) { data->norms->addValue(n); return pushVert(p); }
 int VRGeoData::pushVert(Pnt3f p, Vec3f n, Vec3f c) { data->cols3->addValue(c); return pushVert(p,n); }

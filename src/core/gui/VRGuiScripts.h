@@ -20,6 +20,13 @@ class VRScript;
 
 class VRGuiScripts {
     private:
+        struct group {
+            string name = "new Group";
+            int ID;
+            vector<VRScriptWeakPtr> scripts;
+            group();
+        };
+
         struct page {
             int line = 0;
         };
@@ -39,12 +46,16 @@ class VRGuiScripts {
         map<string, VRScriptPtr> import_scripts;
 
         string docs_filter;
+        map<int, group> groups;
+        vector<pair<VRScriptPtr,Gtk::TreeIter>> scriptRows;
 
         void initEditor();
         void printViewerLanguages();
+        void setGroupListRow(Gtk::TreeIter itr, group& g);
         void setScriptListRow(Gtk::TreeIter itr, VRScriptPtr script, bool onlyTime = false);
 
         void on_new_clicked();
+        void on_addSep_clicked();
         void on_save_clicked();
         void on_exec_clicked();
         void on_del_clicked();
@@ -52,6 +63,7 @@ class VRGuiScripts {
 
         void on_select_script();
         void on_change_script_type();
+        void on_change_group();
         void on_change_server();
         void on_name_edited(const Glib::ustring& path, const Glib::ustring& new_name);
         void on_script_changed();

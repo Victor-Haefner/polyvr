@@ -544,17 +544,16 @@ PyObject* VRPyTransform::animate(VRPyTransform* self, PyObject *args) {
     int l = 0;
     if (! PyArg_ParseTuple(args, "Offi|i", &path, &t, &o, &b, &l)) return NULL;
 	if (path == 0) { PyErr_SetString(err, "VRPyTransform::animate: path is invalid"); return NULL; }
-    auto anim = self->objPtr->startPathAnimation(path->obj, t, o, b, l);
-    return VRPyAnimation::fromPtr(anim);
+    auto anim = self->objPtr->startPathAnimation(path->objPtr, t, o, b, l);
+    return VRPyAnimation::fromSharedPtr(anim);
 }
 
 PyObject* VRPyTransform::getAnimations(VRPyTransform* self) {
     if (!self->valid()) return NULL;
-    vector<OSG::VRAnimation*> anims = self->objPtr->getAnimations();
-
+    auto anims = self->objPtr->getAnimations();
     PyObject* li = PyList_New(anims.size());
     for (uint i=0; i<anims.size(); i++) {
-        PyList_SetItem(li, i, VRPyAnimation::fromPtr(anims[i]));
+        PyList_SetItem(li, i, VRPyAnimation::fromSharedPtr(anims[i]));
     }
     return li;
 }
@@ -567,14 +566,14 @@ PyObject* VRPyTransform::getConstraintAngleWith(VRPyTransform* self, PyObject *a
     OSG::Vec3f a = OSG::Vec3f(0.0,0.0,0.0);
     //cout << (self->objPtr->getPhysics()->getConstraintAngle(t->obj->getPhysics(),rotationOrPosition));
     if(rotationOrPosition == 0) {
-        a[0] = (self->objPtr->getPhysics()->getConstraintAngle(t->obj->getPhysics(),0));
-        a[1] = (self->objPtr->getPhysics()->getConstraintAngle(t->obj->getPhysics(),1));
-        a[2] = (self->objPtr->getPhysics()->getConstraintAngle(t->obj->getPhysics(),2));
+        a[0] = (self->objPtr->getPhysics()->getConstraintAngle(t->objPtr->getPhysics(),0));
+        a[1] = (self->objPtr->getPhysics()->getConstraintAngle(t->objPtr->getPhysics(),1));
+        a[2] = (self->objPtr->getPhysics()->getConstraintAngle(t->objPtr->getPhysics(),2));
     }
     else if(rotationOrPosition == 1) {
-        a[0] = (self->objPtr->getPhysics()->getConstraintAngle(t->obj->getPhysics(),3));
-        a[1] = (self->objPtr->getPhysics()->getConstraintAngle(t->obj->getPhysics(),4));
-        a[2] = (self->objPtr->getPhysics()->getConstraintAngle(t->obj->getPhysics(),5));
+        a[0] = (self->objPtr->getPhysics()->getConstraintAngle(t->objPtr->getPhysics(),3));
+        a[1] = (self->objPtr->getPhysics()->getConstraintAngle(t->objPtr->getPhysics(),4));
+        a[2] = (self->objPtr->getPhysics()->getConstraintAngle(t->objPtr->getPhysics(),5));
     }
 
     //Py_RETURN_TRUE;
@@ -585,6 +584,6 @@ PyObject* VRPyTransform::deletePhysicsConstraints(VRPyTransform* self, PyObject 
     if (!self->valid()) return NULL;
     VRPyTransform *t;
     if (! PyArg_ParseTuple(args, "O", &t)) return NULL;
-    self->objPtr->getPhysics()->deleteConstraints(t->obj->getPhysics());
+    self->objPtr->getPhysics()->deleteConstraints(t->objPtr->getPhysics());
     Py_RETURN_TRUE;
 }

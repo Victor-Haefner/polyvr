@@ -13,7 +13,11 @@ class VRWebCam : public VRSprite {
         string site;
 
     public:
-        VRWebCam(string name);
+        VRWebCam(string name = "webCam");
+        ~VRWebCam();
+
+        static shared_ptr<VRWebCam> create(string name = "webCam");
+
         void connect(string uri, int res, float ratio);
 };
 

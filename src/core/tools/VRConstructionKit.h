@@ -14,9 +14,9 @@ class VRSelector;
 
 class VRConstructionKit {
     private:
-        VRSnappingEngine* snapping = 0;
-        VRSelector* selector = 0;
-        VRObjectPtr root = 0;
+        shared_ptr<VRSnappingEngine> snapping;
+        shared_ptr<VRSelector> selector;
+        VRObjectPtr root;
 
         map<int, VRGeometryPtr> anchors;
         map<VRTransform*, VRTransformPtr> objects;
@@ -25,11 +25,13 @@ class VRConstructionKit {
 
     public:
         VRConstructionKit();
+        ~VRConstructionKit();
+        static shared_ptr<VRConstructionKit> create();
 
         void clear();
 
-        VRSnappingEngine* getSnappingEngine();
-        VRSelector* getSelector();
+        shared_ptr<VRSnappingEngine> getSnappingEngine();
+        shared_ptr<VRSelector> getSelector();
         vector<VRObjectPtr> getObjects();
 
         int addAnchorType(float size, Vec3f color);

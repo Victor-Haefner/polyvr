@@ -9,11 +9,13 @@ using namespace std;
 struct segment;
 struct seg_params;
 
-class VRTree : public VRGeometry {
+class VRTree : public VRTransform {
     private:
         segment* trunc = 0;
+        VRLodPtr lod;
         vector<segment*> branches;
-        VRGeometryPtr armatureGeo;
+        vector<VRGeometryPtr> leafGeos;
+        vector<VRGeometryPtr> woodGeos;
         static VRMaterialPtr treeMat;
 
         float random (float min, float max);
@@ -24,11 +26,13 @@ class VRTree : public VRGeometry {
         void grow(const seg_params& sp, segment* p, int iteration = 0);
         VRMaterialPtr initMaterial();
 
+        void initLOD();
         void initArmatureGeo();
         void testSetup();
 
     public:
         VRTree();
+        ~VRTree();
 
         static VRTreePtr create();
         VRTreePtr ptr();
@@ -37,7 +41,8 @@ class VRTree : public VRGeometry {
                    float n_angle = 0.2, float p_angle = 0.6, float l_factor = 0.8, float r_factor = 0.5,
                    float n_angle_v = 0.2, float p_angle_v = 0.4, float l_factor_v = 0.2, float r_factor_v = 0.2);
 
-        void addLeafs(string tex, int lvl, float scale, float aspect);
+        void addLeafs(int lvl, int amount);
+        void setLeafMaterial(VRMaterialPtr mat);
 };
 
 OSG_END_NAMESPACE;

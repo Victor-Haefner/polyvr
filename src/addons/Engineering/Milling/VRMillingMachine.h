@@ -29,6 +29,7 @@ class VRMillingMachine {
 
     public:
         VRMillingMachine();
+        static shared_ptr<VRMillingMachine> create();
 
         void connect(string s);
         void disconnect();

@@ -4,7 +4,7 @@
 
 using namespace OSG;
 
-newPyType( path, Path, New);
+newPyType( path, Path, New_ptr);
 
 PyMethodDef VRPyPath::methods[] = {
     {"set", (PyCFunction)VRPyPath::set, METH_VARARGS, "Set the path - set(start pos, start dir, end pos, end dir, steps) \n\tset(start pos, start dir, start up, end pos, end dir, end up, steps)" },
@@ -26,21 +26,28 @@ PyMethodDef VRPyPath::methods[] = {
     {"getSize", (PyCFunction)VRPyPath::getSize, METH_NOARGS, "Return the number of path nodes - int getSize()" },
     {"getLength", (PyCFunction)VRPyPath::getLength, METH_NOARGS, "Return the approximated path length - float getLength()" },
     {"getDistance", (PyCFunction)VRPyPath::getDistance, METH_VARARGS, "Return the distance from point to path - float getDistance( [x,y,z] )" },
+    {"getClosestPoint", (PyCFunction)VRPyPath::getClosestPoint, METH_VARARGS, "Return the closest point on path in path coordinate t - float getClosestPoint( [x,y,z] )" },
     {"approximate", (PyCFunction)VRPyPath::approximate, METH_VARARGS, "Convert the cubic bezier spline in a quadratic or linear one (currently only quadratic) - approximate(int degree)" },
     {NULL}  /* Sentinel */
 };
 
+PyObject* VRPyPath::getClosestPoint(VRPyPath* self, PyObject *args) {
+    if (!self->valid()) return NULL;
+    auto p = parseVec3f( args );
+    return PyFloat_FromDouble( self->objPtr->getClosestPoint(p) );
+}
+
 PyObject* VRPyPath::getDistance(VRPyPath* self, PyObject *args) {
     if (!self->valid()) return NULL;
     auto p = parseVec3f( args );
-    return PyFloat_FromDouble( self->obj->getDistance(p) );
+    return PyFloat_FromDouble( self->objPtr->getDistance(p) );
 }
 
 PyObject* VRPyPath::approximate(VRPyPath* self, PyObject *args) {
     if (!self->valid()) return NULL;
     int i = 0;
     if (! PyArg_ParseTuple(args, "i", &i)) return NULL;
-    self->obj->approximate(i);
+    self->objPtr->approximate(i);
     Py_RETURN_TRUE;
 }
 
@@ -50,22 +57,22 @@ PyObject* VRPyPath::getPose(VRPyPath* self, PyObject *args) {
     int i = 0;
     int j = 0;
     if (! PyArg_ParseTuple(args, "f|ii", &t, &i, &j)) return NULL;
-    return VRPyPose::fromObject( self->obj->getPose(t, i, j) );
+    return VRPyPose::fromObject( self->objPtr->getPose(t, i, j) );
 }
 
 PyObject* VRPyPath::getLength(VRPyPath* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::getLength - Object is invalid"); return NULL; }
-    return PyFloat_FromDouble( self->obj->getLength() );
+	if (!self->valid()) return NULL;
+    return PyFloat_FromDouble( self->objPtr->getLength() );
 }
 
 PyObject* VRPyPath::getSize(VRPyPath* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::getSize - Object is invalid"); return NULL; }
-    return PyInt_FromLong( self->obj->size() );
+	if (!self->valid()) return NULL;
+    return PyInt_FromLong( self->objPtr->size() );
 }
 
 PyObject* VRPyPath::getPoints(VRPyPath* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::getPoints - Object is invalid"); return NULL; }
-    auto pnts = self->obj->getPoints();
+	if (!self->valid()) return NULL;
+    auto pnts = self->objPtr->getPoints();
     if (pnts.size() == 0) return PyList_New(0);
     PyObject* res = PyList_New(pnts.size());
     for (uint i=0; i<pnts.size(); i++) {
@@ -80,8 +87,8 @@ PyObject* VRPyPath::getPoints(VRPyPath* self) {
 }
 
 PyObject* VRPyPath::getPositions(VRPyPath* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::getPositions - Object is invalid"); return NULL; }
-    auto pos = self->obj->getPositions();
+	if (!self->valid()) return NULL;
+    auto pos = self->objPtr->getPositions();
     if (pos.size() == 0) return PyList_New(0);
     PyObject* res = PyList_New(pos.size());
     for (uint i=0; i<pos.size(); i++) PyList_SetItem(res, i, toPyTuple(pos[i]));
@@ -89,8 +96,8 @@ PyObject* VRPyPath::getPositions(VRPyPath* self) {
 }
 
 PyObject* VRPyPath::getDirections(VRPyPath* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::getDirections - Object is invalid"); return NULL; }
-    auto pos = self->obj->getDirections();
+	if (!self->valid()) return NULL;
+    auto pos = self->objPtr->getDirections();
     if (pos.size() == 0) return PyList_New(0);
     PyObject* res = PyList_New(pos.size());
     for (uint i=0; i<pos.size(); i++) PyList_SetItem(res, i, toPyTuple(pos[i]));
@@ -98,8 +105,8 @@ PyObject* VRPyPath::getDirections(VRPyPath* self) {
 }
 
 PyObject* VRPyPath::getUpVectors(VRPyPath* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::close - Object is invalid"); return NULL; }
-    auto pos = self->obj->getUpvectors();
+	if (!self->valid()) return NULL;
+    auto pos = self->objPtr->getUpvectors();
     if (pos.size() == 0) return PyList_New(0);
     PyObject* res = PyList_New(pos.size());
     for (uint i=0; i<pos.size(); i++) PyList_SetItem(res, i, toPyTuple(pos[i]));
@@ -107,8 +114,8 @@ PyObject* VRPyPath::getUpVectors(VRPyPath* self) {
 }
 
 PyObject* VRPyPath::getColors(VRPyPath* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::close - Object is invalid"); return NULL; }
-    auto pos = self->obj->getColors();
+	if (!self->valid()) return NULL;
+    auto pos = self->objPtr->getColors();
     if (pos.size() == 0) return PyList_New(0);
     PyObject* res = PyList_New(pos.size());
     for (uint i=0; i<pos.size(); i++) PyList_SetItem(res, i, toPyTuple(pos[i]));
@@ -116,7 +123,7 @@ PyObject* VRPyPath::getColors(VRPyPath* self) {
 }
 
 PyObject* VRPyPath::set(VRPyPath* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::set, Object is invalid"); return NULL; }
+	if (!self->valid()) return NULL;
 
     int i;
     PyObject *p1, *p2, *n1, *n2, *u1 = 0, *u2 = 0;
@@ -127,25 +134,26 @@ PyObject* VRPyPath::set(VRPyPath* self, PyObject* args) {
     OSG::Vec3f c, uv1(0,1,0), uv2(0,1,0);
     if (u1) uv1 = parseVec3fList(u1);
     if (u2) uv2 = parseVec3fList(u2);
-    self->obj->addPoint(parseVec3fList(p1), parseVec3fList(n1), c, uv1);
-    self->obj->addPoint(parseVec3fList(p2), parseVec3fList(n2), c, uv2);
-    self->obj->compute(i);
+    self->objPtr->addPoint(parseVec3fList(p1), parseVec3fList(n1), c, uv1);
+    self->objPtr->addPoint(parseVec3fList(p2), parseVec3fList(n2), c, uv2);
+    self->objPtr->compute(i);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyPath::close(VRPyPath* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::invert, Object is invalid"); return NULL; }
-    self->obj->close();
+	if (!self->valid()) return NULL;
+    self->objPtr->close();
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyPath::invert(VRPyPath* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::invert, Object is invalid"); return NULL; }
-    self->obj->invert();
+	if (!self->valid()) return NULL;
+    self->objPtr->invert();
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyPath::addPoint(VRPyPath* self, PyObject* args) {
+	if (!self->valid()) return NULL;
     PyObject *_p, *_n, *_c, *_u; _p=_n=_c=_u=0;
     if (! PyArg_ParseTuple(args, "|OOOO", &_p, &_n, &_c, &_u)) return NULL;
 
@@ -155,12 +163,12 @@ PyObject* VRPyPath::addPoint(VRPyPath* self, PyObject* args) {
     c = _c ? parseVec3fList(_c) : OSG::Vec3f(0,0,0);
     u = _u ? parseVec3fList(_u) : OSG::Vec3f(0,1,0);
 
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::setStartPoint, Object is invalid"); return NULL; }
-    self->obj->addPoint(p,n,c,u);
+    self->objPtr->addPoint(p,n,c,u);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyPath::setStartPoint(VRPyPath* self, PyObject* args) {
+	if (!self->valid()) return NULL;
     PyObject *_p, *_n, *_c; _p=_n=_c=0;
     if (! PyArg_ParseTuple(args, "OOO", &_p, &_n, &_c)) return NULL;
 
@@ -169,12 +177,12 @@ PyObject* VRPyPath::setStartPoint(VRPyPath* self, PyObject* args) {
     n = parseVec3fList(_n);
     c = parseVec3fList(_c);
 
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::setStartPoint, Object is invalid"); return NULL; }
-    self->obj->addPoint(p,n,c);
+    self->objPtr->addPoint(p,n,c);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyPath::setEndPoint(VRPyPath* self, PyObject* args) {
+	if (!self->valid()) return NULL;
     PyObject *_p, *_n, *_c; _p=_n=_c=0;
     if (! PyArg_ParseTuple(args, "OOO", &_p, &_n, &_c)) return NULL;
 
@@ -183,15 +191,14 @@ PyObject* VRPyPath::setEndPoint(VRPyPath* self, PyObject* args) {
     n = parseVec3fList(_n);
     c = parseVec3fList(_c);
 
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::setEndPoint, Object is invalid"); return NULL; }
-    self->obj->addPoint(p,n,c);
+    self->objPtr->addPoint(p,n,c);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyPath::getStartPoint(VRPyPath* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::getStartPoint, Object is invalid"); return NULL; }
+	if (!self->valid()) return NULL;
     OSG::Vec3f v[3];
-    auto pnt = self->obj->getPoint(0);
+    auto pnt = self->objPtr->getPoint(0);
     v[0] = pnt.p;
     v[1] = pnt.n;
     v[2] = pnt.c;
@@ -209,9 +216,9 @@ PyObject* VRPyPath::getStartPoint(VRPyPath* self) {
 }
 
 PyObject* VRPyPath::getEndPoint(VRPyPath* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::getEndPoint, Object is invalid"); return NULL; }
+	if (!self->valid()) return NULL;
     OSG::Vec3f v[3];
-    auto pnt = self->obj->getPoint(1);
+    auto pnt = self->objPtr->getPoint(1);
     v[0] = pnt.p;
     v[1] = pnt.n;
     v[2] = pnt.c;
@@ -229,16 +236,19 @@ PyObject* VRPyPath::getEndPoint(VRPyPath* self) {
 }
 
 PyObject* VRPyPath::compute(VRPyPath* self, PyObject* args) {
+	if (!self->valid()) return NULL;
     int N; N=0;
     if (! PyArg_ParseTuple(args, "i", &N)) return NULL;
 
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::compute, Object is invalid"); return NULL; }
-    self->obj->compute(N);
+    self->objPtr->compute(N);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyPath::update(VRPyPath* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyPath::compute, Object is invalid"); return NULL; }
-    self->obj->update();
+	if (!self->valid()) return NULL;
+    self->objPtr->update();
     Py_RETURN_TRUE;
 }
+
+
+

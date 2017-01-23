@@ -1328,6 +1328,12 @@ cave allocated</property>
       </row>
     </data>
   </object>
+  <object class="GtkListStore" id="liststore10">
+    <columns>
+      <!-- column-name group -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
   <object class="GtkListStore" id="liststore2">
     <columns>
       <!-- column-name name -->
@@ -1648,24 +1654,26 @@ cave allocated</property>
       <column type="gint"/>
     </columns>
   </object>
-  <object class="GtkListStore" id="script_list">
+  <object class="GtkTreeStore" id="script_tree">
     <columns>
-      <!-- column-name script -->
+      <!-- column-name name -->
       <column type="gchararray"/>
-      <!-- column-name foreground -->
+      <!-- column-name fg -->
       <column type="gchararray"/>
-      <!-- column-name background -->
+      <!-- column-name bg -->
       <column type="gchararray"/>
-      <!-- column-name fps -->
+      <!-- column-name time -->
       <column type="gchararray"/>
-      <!-- column-name fg_text -->
+      <!-- column-name tfg -->
       <column type="gchararray"/>
-      <!-- column-name bg_text -->
+      <!-- column-name tbg -->
       <column type="gchararray"/>
-      <!-- column-name imgID -->
+      <!-- column-name icon -->
       <column type="gchararray"/>
-      <!-- column-name foundN -->
+      <!-- column-name Nfound -->
       <column type="gchararray"/>
+      <!-- column-name ID -->
+      <column type="gint"/>
     </columns>
   </object>
   <object class="GtkListStore" id="serverlist">
@@ -2133,6 +2141,12 @@ cave allocated</property>
                                 <child>
                                   <placeholder/>
                                 </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
                               </object>
                             </child>
                           </object>
@@ -2164,6 +2178,12 @@ cave allocated</property>
                                 <property name="can_focus">False</property>
                                 <property name="n_columns">2</property>
                                 <property name="homogeneous">True</property>
+                                <child>
+                                  <placeholder/>
+                                </child>
+                                <child>
+                                  <placeholder/>
+                                </child>
                                 <child>
                                   <placeholder/>
                                 </child>
@@ -8918,6 +8938,20 @@ to add distances</property>
                               </packing>
                             </child>
                             <child>
+                              <object class="GtkToolButton" id="toolbutton20">
+                                <property name="visible">True</property>
+                                <property name="can_focus">False</property>
+                                <property name="tooltip_text" translatable="yes">Add Group</property>
+                                <property name="label" translatable="yes">toolbutton20</property>
+                                <property name="use_underline">True</property>
+                                <property name="stock_id">gtk-indent</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="homogeneous">True</property>
+                              </packing>
+                            </child>
+                            <child>
                               <object class="GtkToolButton" id="toolbutton22">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
@@ -9301,7 +9335,7 @@ to add distances</property>
                                   <object class="GtkTable" id="table32">
                                     <property name="visible">True</property>
                                     <property name="can_focus">False</property>
-                                    <property name="n_rows">2</property>
+                                    <property name="n_rows">3</property>
                                     <property name="n_columns">2</property>
                                     <child>
                                       <object class="GtkLabel" id="label32">
@@ -9338,8 +9372,8 @@ to add distances</property>
                                         <property name="label" translatable="yes">Server:</property>
                                       </object>
                                       <packing>
-                                        <property name="top_attach">1</property>
-                                        <property name="bottom_attach">2</property>
+                                        <property name="top_attach">2</property>
+                                        <property name="bottom_attach">3</property>
                                         <property name="x_options">GTK_FILL</property>
                                         <property name="x_padding">10</property>
                                       </packing>
@@ -9351,6 +9385,38 @@ to add distances</property>
                                         <property name="model">liststore7</property>
                                         <child>
                                           <object class="GtkCellRendererText" id="cellrenderertext43"/>
+                                          <attributes>
+                                            <attribute name="text">0</attribute>
+                                          </attributes>
+                                        </child>
+                                      </object>
+                                      <packing>
+                                        <property name="left_attach">1</property>
+                                        <property name="right_attach">2</property>
+                                        <property name="top_attach">2</property>
+                                        <property name="bottom_attach">3</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkLabel" id="label148">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="label" translatable="yes">Group:</property>
+                                      </object>
+                                      <packing>
+                                        <property name="top_attach">1</property>
+                                        <property name="bottom_attach">2</property>
+                                        <property name="x_options">GTK_FILL</property>
+                                        <property name="x_padding">10</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkComboBox" id="combobox10">
+                                        <property name="visible">True</property>
+                                        <property name="can_focus">False</property>
+                                        <property name="model">liststore10</property>
+                                        <child>
+                                          <object class="GtkCellRendererText" id="cellrenderertext18"/>
                                           <attributes>
                                             <attribute name="text">0</attribute>
                                           </attributes>
@@ -9432,7 +9498,7 @@ to add distances</property>
                                   <object class="GtkTreeView" id="treeview5">
                                     <property name="visible">True</property>
                                     <property name="can_focus">True</property>
-                                    <property name="model">script_list</property>
+                                    <property name="model">script_tree</property>
                                     <property name="headers_clickable">False</property>
                                     <property name="search_column">0</property>
                                     <child>
@@ -9444,8 +9510,8 @@ to add distances</property>
                                             <property name="editable">True</property>
                                           </object>
                                           <attributes>
-                                            <attribute name="background">5</attribute>
-                                            <attribute name="foreground">4</attribute>
+                                            <attribute name="background">2</attribute>
+                                            <attribute name="foreground">1</attribute>
                                             <attribute name="text">0</attribute>
                                           </attributes>
                                         </child>
@@ -9454,8 +9520,8 @@ to add distances</property>
                                             <property name="alignment">right</property>
                                           </object>
                                           <attributes>
-                                            <attribute name="background">2</attribute>
-                                            <attribute name="foreground">1</attribute>
+                                            <attribute name="background">5</attribute>
+                                            <attribute name="foreground">4</attribute>
                                             <attribute name="text">3</attribute>
                                           </attributes>
                                         </child>

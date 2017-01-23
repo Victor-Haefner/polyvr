@@ -291,6 +291,12 @@ void VRMaterial::clearAll() {
     materialsByPtr.clear();
 }
 
+vector<VRMaterialPtr> VRMaterial::getAll() {
+    vector<VRMaterialPtr> res;
+    for (auto wm : materialsByPtr) if (auto m = wm.second.lock()) res.push_back(m);
+    return res;
+}
+
 VRMaterialPtr VRMaterial::getDefault() {
     if (materials.count("default"))
         if (auto sp = materials["default"].lock()) return sp;
@@ -395,10 +401,17 @@ VRMaterialPtr VRMaterial::get(string s) {
     return materials[s].lock();
 }
 
-VRObjectPtr VRMaterial::copy(vector<VRObjectPtr> children) {
+VRObjectPtr VRMaterial::copy(vector<VRObjectPtr> children) { // TODO: test it, may not work properly!
     VRMaterialPtr mat = VRMaterial::create(getBaseName());
-    cout << "Warning: VRMaterial::copy not implemented!\n";
-    // TODO: copy all the stuff
+
+    for (int i=0; i<mats.size(); i++) {
+        if (i > 0) mat->addPass();
+        mat->mats[i] = mats[i]->copy();
+    }
+
+    mat->force_transparency = force_transparency;
+    mat->deferred = deferred;
+    mat->activePass = activePass;
     return mat;
 }
 
@@ -533,15 +546,7 @@ void VRMaterial::setTexture(VRTexturePtr img, bool alpha, int unit) {
     //md->texture = img;
     md->texChunks[unit]->setImage(img->getImage());
     md->envChunks[unit]->setEnvMode(GL_MODULATE);
-    if (alpha && img->getImage()->hasAlphaChannel() && md->blendChunk == 0) {
-        md->blendChunk = BlendChunk::create();
-        md->mat->addChunk(md->blendChunk);
-    }
-
-    if (alpha && img->getImage()->hasAlphaChannel()) {
-        md->blendChunk->setSrcFactor  ( GL_SRC_ALPHA           );
-        md->blendChunk->setDestFactor ( GL_ONE_MINUS_SRC_ALPHA );
-    }
+    if (alpha && img->getImage()->hasAlphaChannel()) enableTransparency(false);
 
     if (img->getInternalFormat() != -1) md->texChunks[unit]->setInternalFormat(img->getInternalFormat());
     updateDeferredShader();
@@ -744,10 +749,10 @@ void VRMaterial::enableTransparency(bool user_override) {
     auto md = mats[activePass];
     if (md->blendChunk == 0) {
         md->blendChunk = BlendChunk::create();
-        md->blendChunk->setSrcFactor  ( GL_SRC_ALPHA           );
-        md->blendChunk->setDestFactor ( GL_ONE_MINUS_SRC_ALPHA );
         md->mat->addChunk(md->blendChunk);
     }
+    md->blendChunk->setSrcFactor  ( GL_SRC_ALPHA           );
+    md->blendChunk->setDestFactor ( GL_ONE_MINUS_SRC_ALPHA );
 }
 
 void VRMaterial::clearTransparency(bool user_override) {
@@ -772,7 +777,7 @@ void VRMaterial::setSpecular(Color3f c) { mats[activePass]->colChunk->setSpecula
 void VRMaterial::setAmbient(Color3f c) { mats[activePass]->colChunk->setAmbient(toColor4f(c)); }
 void VRMaterial::setEmission(Color3f c) { mats[activePass]->colChunk->setEmission(toColor4f(c)); }
 void VRMaterial::setShininess(float c) { mats[activePass]->colChunk->setShininess(c); }
-void VRMaterial::setLit(bool b) { mats[activePass]->colChunk->setLit(b); }
+void VRMaterial::setLit(bool b) { mats[activePass]->colChunk->setLit(b); updateDeferredShader(); }
 
 Color3f VRMaterial::getDiffuse() { return toColor3f( mats[activePass]->colChunk->getDiffuse() ); }
 Color3f VRMaterial::getSpecular() { return toColor3f( mats[activePass]->colChunk->getSpecular() ); }

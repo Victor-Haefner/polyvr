@@ -28,7 +28,7 @@ template<class T> VRPyBaseT<T>::VRPyBaseT() {;}
 
 template <typename T>
 bool VRPyBaseT<T>::valid() {
-    if (obj != 0 || objPtr != 0) return true;
+    if (objPtr != 0) return true;
     PyErr_SetString(err, "Py object is invalid!");
     return false;
 }
@@ -87,16 +87,6 @@ bool VRPyBase::pyListToVector(PyObject* o, T& vec) {
 }
 
 template<class T>
-PyObject* VRPyBaseT<T>::fromPtr(T* obj) {
-    if (obj == 0) Py_RETURN_NONE;
-    VRPyBaseT<T> *self = (VRPyBaseT<T> *)typeRef->tp_alloc(typeRef, 0);
-    if (self == NULL) Py_RETURN_NONE;
-    self->obj = obj;
-    self->owner = false;
-    return (PyObject *)self;
-}
-
-template<class T>
 PyObject* VRPyBaseT<T>::fromObject(T obj) {
     VRPyBaseT<T> *self = (VRPyBaseT<T> *)typeRef->tp_alloc(typeRef, 0);
     if (self == NULL) Py_RETURN_NONE;
@@ -139,16 +129,6 @@ bool VRPyBaseT<T>::parse(PyObject *args, std::shared_ptr<T>* obj) {
 }
 
 template<class T>
-PyObject* VRPyBaseT<T>::alloc(PyTypeObject* type, T* t) {
-    VRPyBaseT<T>* self = (VRPyBaseT<T> *)type->tp_alloc(type, 0);
-    if (self != NULL) {
-        self->owner = true;
-        self->obj = t;
-    }
-    return (PyObject *)self;
-}
-
-template<class T>
 PyObject* VRPyBaseT<T>::allocPtr(PyTypeObject* type, std::shared_ptr<T> t) {
     VRPyBaseT<T>* self = (VRPyBaseT<T> *)type->tp_alloc(type, 0);
     if (self != NULL) {
@@ -158,15 +138,8 @@ PyObject* VRPyBaseT<T>::allocPtr(PyTypeObject* type, std::shared_ptr<T> t) {
     return (PyObject *)self;
 }
 
-template<class T> PyObject* VRPyBaseT<T>::New(PyTypeObject *type, PyObject *args, PyObject *kwds) { return alloc( type, new T() ); }
 template<class T> PyObject* VRPyBaseT<T>::New_ptr(PyTypeObject *type, PyObject *args, PyObject *kwds) { return allocPtr( type, T::create() ); }
-template<class T> PyObject* VRPyBaseT<T>::New_toZero(PyTypeObject *type, PyObject *args, PyObject *kwds) { return alloc( type, 0 ); }
-
-template<class T> PyObject* VRPyBaseT<T>::New_named(PyTypeObject *type, PyObject *args, PyObject *kwds) {
-    const char* n = 0;
-    if (! PyArg_ParseTuple(args, "s", (char*)&n)) return NULL;
-    return alloc( type, new T( string(n) ) );
-}
+template<class T> PyObject* VRPyBaseT<T>::New_toZero(PyTypeObject *type, PyObject *args, PyObject *kwds) { return allocPtr( type, 0 ); }
 
 template<class T> PyObject* VRPyBaseT<T>::New_named_ptr(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     const char* n = 0;
@@ -194,29 +167,6 @@ template<class T>
 PyObject* VRPyBaseT<T>::New_VRObjects_unnamed_ptr(PyTypeObject *type, PyObject *args, PyObject *kwds) {
     VRPyBaseT<T>* self = (VRPyBaseT<T> *)New_ptr(type, args, kwds);
     if (self != NULL) self->objPtr->setPersistency(0);
-    return (PyObject *)self;
-}
-
-template<class T>
-PyObject* VRPyBaseT<T>::New_VRObjects(PyTypeObject *type, PyObject *args, PyObject *kwds) {
-    VRPyBaseT<T>* self = (VRPyBaseT<T> *)New_named(type, args, kwds);
-    if (self != NULL) self->obj->setPersistency(0);
-    return (PyObject *)self;
-}
-
-template<class T>
-PyObject* VRPyBaseT<T>::New_VRObjects_optional(PyTypeObject *type, PyObject *args, PyObject *kwds) {
-    VRPyBaseT<T>* self = 0;
-    if (pySize(args) == 0) self = (VRPyBaseT<T> *)New(type, args, kwds);
-    else self = (VRPyBaseT<T> *)New_named(type, args, kwds);
-    if (self != NULL) self->obj->setPersistency(0);
-    return (PyObject *)self;
-}
-
-template<class T>
-PyObject* VRPyBaseT<T>::New_VRObjects_unnamed(PyTypeObject *type, PyObject *args, PyObject *kwds) {
-    VRPyBaseT<T>* self = (VRPyBaseT<T> *)New(type, args, kwds);
-    if (self != NULL) self->obj->setPersistency(0);
     return (PyObject *)self;
 }
 

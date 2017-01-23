@@ -47,6 +47,7 @@ struct VRPyGeometry : VRPyBaseT<OSG::VRGeometry> {
     static PyObject* genTexCoords(VRPyGeometry* self, PyObject *args);
     static PyObject* readSharedMemory(VRPyGeometry* self, PyObject *args);
     static PyObject* applyTransformation(VRPyGeometry* self, PyObject *args);
+    static PyObject* setMeshVisibility(VRPyGeometry* self, PyObject *args);
 
     static PyObject* addVertex(VRPyGeometry* self, PyObject *args);
     static PyObject* setVertex(VRPyGeometry* self, PyObject *args);
