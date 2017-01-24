@@ -159,6 +159,9 @@ vector<Octree*> Octree::getPathTo(Vec3f p) {
     return res;
 }
 
+Vec3f Octree::getCenter() { return center; }
+Vec3f Octree::getLocalCenter() { return parent ? center - parent->center : center; }
+
 void Octree::destroy(Octree* guard) {
     for (int i=0; i<8; i++) {
         if (children[i] != 0) children[i]->destroy(guard);

@@ -10,6 +10,35 @@
 
 using namespace OSG;
 
+VRLodLeaf::VRLodLeaf(string name) : VRTransform(name) {}
+VRLodLeaf::~VRLodLeaf() {}
+VRLodLeafPtr VRLodLeaf::ptr() { return static_pointer_cast<VRLodLeaf>( shared_from_this() ); }
+
+VRLodLeafPtr VRLodLeaf::create(string name) {
+    auto l = VRLodLeafPtr(new VRLodLeaf(name));
+    l->lod = VRLod::create("lod");
+    l->addChild(l->lod);
+    auto lvl0 = VRObject::create("lvl");
+    l->levels.push_back(lvl0);
+    l->lod->addChild(lvl0);
+    return l;
+}
+
+void VRLodLeaf::addLevel(float dist) {
+    auto lvl = VRObject::create("lvl");
+    levels.push_back(lvl);
+    lod->addChild(lvl);
+    lod->addDistance(dist);
+}
+
+void VRLodLeaf::add(VRObjectPtr obj, int lvl) {
+    levels[lvl]->addChild(obj);
+}
+
+
+
+// --------------------------------------------------------------------------------------------------
+
 VRLodTree::VRLodTree(string name) : VRObject(name) {
     octree = Octree::create(5);
 }
@@ -23,17 +52,17 @@ void VRLodTree::addObject(VRObjectPtr obj, Vec3f p, int lvl) {
 
     vector<Octree*> path = octree->getPathTo(p);
 
-    VRLodPtr lod1, lod2;
+    VRLodLeafPtr lod1, lod2;
     for (int i=0; i< path.size(); i++) {
         auto o = path[i];
         if (!lods.count(o)) {
-            lods[o] = VRLod::create("subLod");
-            lods[o]->addEmpty();
-            lods[o]->addDistance(10*lvl);
+            lods[o] = VRLodLeaf::create("lodLeaf");
+            lods[o]->addLevel(10*lvl);
+            lods[o]->setFrom(o->getLocalCenter());
         }
         lod2 = lods[o];
         if (!lod1) addChild(lod2);
-        else lod1->addChild(lod2);
+        else lod1->add(lod2,1);
         lod1 = lod2;
     }
 
@@ -43,8 +72,9 @@ void VRLodTree::addObject(VRObjectPtr obj, Vec3f p, int lvl) {
 
 
 
-VRWoods::VRWoods() : VRLodTree("woods") {}
+// --------------------------------------------------------------------------------------------------
 
+VRWoods::VRWoods() : VRLodTree("woods") {}
 VRWoods::~VRWoods() {}
 VRWoodsPtr VRWoods::create() { return VRWoodsPtr(new VRWoods()); }
 VRWoodsPtr VRWoods::ptr() { return static_pointer_cast<VRWoods>( shared_from_this() ); }
@@ -53,11 +83,16 @@ void VRWoods::addTree(VRTreePtr t) {
 }
 
 void VRWoods::test() {
+    setPersistency(0);
     for (int i=0; i<30; i++) {
         for (int j=0; j<30; j++) {
+            Vec3f p = Vec3f(2*i,0,2*j);
             auto test_geo = VRGeometry::create("test");
             test_geo->setPrimitive("Box", "1 1 1 1 1 1");
-            addObject(test_geo, Vec3f(i,0,j), 0);
+            addObject(test_geo, p, 0);
+            test_geo->setWorldPosition(p);
         }
     }
 }
+
+

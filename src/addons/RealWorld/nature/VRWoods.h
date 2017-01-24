@@ -2,16 +2,33 @@
 #define VRWOODS_H_INCLUDED
 
 #include "core/objects/VRLod.h"
+#include "core/objects/VRTransform.h"
 #include "core/math/VRMathFwd.h"
 #include "addons/RealWorld/VRRealWorldFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
+class VRLodLeaf : public VRTransform {
+    private:
+        VRLodPtr lod;
+        vector<VRObjectPtr> levels;
+
+    public:
+        VRLodLeaf(string name);
+        ~VRLodLeaf();
+
+        static VRLodLeafPtr create(string name);
+        VRLodLeafPtr ptr();
+
+        void addLevel(float dist);
+        void add(VRObjectPtr obj, int lvl);
+};
+
 class VRLodTree : public VRObject {
     private:
         OctreePtr octree;
-        map<Octree*, VRLodPtr> lods;
+        map<Octree*, VRLodLeafPtr> lods;
 
     public:
         VRLodTree(string name);

@@ -19,6 +19,7 @@ ptrFwd(VRGeometry);
 ptrFwd(VRGeoData);
 ptrFwd(VRCamera);
 ptrFwd(VRLod);
+ptrFwd(VRLodLeaf);
 ptrFwd(VRSprite);
 ptrFwd(VRStroke);
 ptrFwd(VRMaterial);

@@ -43,6 +43,8 @@ class Octree {
         void set(Octree* node, Vec3f p, void* data);
         Octree* get(Vec3f p);
         vector<Octree*> getPathTo(Vec3f p);
+        Vec3f getCenter();
+        Vec3f getLocalCenter();
 
         void clear();
 
