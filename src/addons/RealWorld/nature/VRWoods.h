@@ -17,7 +17,6 @@ class VRLodLeaf : public VRTransform {
     public:
         VRLodLeaf(string name);
         ~VRLodLeaf();
-
         static VRLodLeafPtr create(string name);
         VRLodLeafPtr ptr();
 
@@ -28,12 +27,14 @@ class VRLodLeaf : public VRTransform {
 class VRLodTree : public VRObject {
     private:
         OctreePtr octree;
-        map<Octree*, VRLodLeafPtr> lods;
+
+    protected:
+        void newQuad(VRObjectPtr obj, VRObjectPtr parent, float o);
+        VRLodLeafPtr addLayer(float s, float d, VRObjectPtr obj);
 
     public:
         VRLodTree(string name);
         ~VRLodTree();
-
         static VRLodTreePtr create(string name);
         VRLodTreePtr ptr();
 
