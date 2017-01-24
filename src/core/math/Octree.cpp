@@ -3,13 +3,17 @@
 #include <algorithm>
 #include <iostream>
 #include <time.h>
+#include <sstream> //for std::stringstream
+#include <string>  //for std::string
+
+#include "core/utils/toString.h"
 
 OSG_BEGIN_NAMESPACE
 
-Octree::Octree(float res) : resolution(res) {}
+Octree::Octree(float res, float s) : resolution(res), size(s) {}
 Octree::~Octree() {}
 
-OctreePtr Octree::create(float resolution) { return OctreePtr( new Octree(resolution) ); }
+OctreePtr Octree::create(float resolution, float size) { return OctreePtr( new Octree(resolution, size) ); }
 
 int Octree::getOctant(Vec3f p) {
     Vec3f rp = p - center;
@@ -27,27 +31,6 @@ Vec3f lvljumpCenter(float s2, Vec3f rp) {
     if (rp[1] < 0) c[1]-=s2*2;
     if (rp[2] < 0) c[2]-=s2*2;
     return c;
-}
-
-bool checkRecursion(Octree* t, Vec3f p) {
-    static Octree* rec_1 = 0;
-    static Octree* rec_2 = 0;
-    static Octree* rec_3 = 0;
-
-    if (t == rec_2 && rec_1 == rec_3) {
-        cout << "\nRecursion error! Octree allready visited..";
-        cout << "\n Vec3f " << p;
-        cout << "\n Trees " << t << " " << rec_1 << " " << rec_2 << " " << rec_3;
-        //cout << "\n parent center: "; t->center.print();
-        cout << flush;
-        return false;
-    }
-
-    rec_3 = rec_2;
-    rec_2 = rec_1;
-    rec_1 = t;
-
-    return true;
 }
 
 bool Octree::inBox(Vec3f p, Vec3f c, float size) {
@@ -70,22 +53,43 @@ void Octree::addBox(const boundingbox& b, void* d, int maxjump, bool checkPositi
     add(Vec3f(min[0],max[1],max[2]), d, maxjump, checkPosition);
 }
 
-void Octree::add(Vec3f p, void* d, int maxjump, bool checkPosition) {
-    bool rOk = checkRecursion(this, p);
-    if (!rOk) {
-        cout << "\n Center " << center;
-        cout << "\n Size " << size;
-        cout << "\n Data size " << data.size();
-        cout << "\n In Box: " << inBox(p, center, size) << endl;
-        cout << "\n P Center " << parent->center;
-        cout << "\n P Size " << parent->size;
-        cout << "\n In Box: " << inBox(p, parent->center, parent->size) << endl;
-        cout << "\n P Vec3f Octant " <<  parent->getOctant(p);
-        cout << "\n P child at Vec3f Octant " <<  parent->children[ parent->getOctant(p) ];
-        cout << "\n this " << this;
+void Octree::add(Vec3f p, void* d, vector<Octree*>& newNodes, int maxjump, bool checkPosition) {
+    Vec3f rp = p - center;
+
+    if ( !inBox(p, center, size) && checkPosition ) { // not in node
+        if (parent == 0) { // no parent, create it
+            parent = new Octree(resolution, 2*size);
+            newNodes.push_back(parent);
+            Vec3f c = center + lvljumpCenter(size*0.5, rp);
+            parent->center = c;
+            int o = parent->getOctant(center);
+            parent->children[o] = this;
+        }
+        if (maxjump != -1) maxjump++;
+        parent->add(p, d, newNodes, maxjump, true); // go a level up
         return;
     }
 
+    if (size > resolution && maxjump != 0) {
+        int o = getOctant(p);
+        if (children[o] == 0) {
+            children[o] = new Octree(resolution, size*0.5);
+            newNodes.push_back(children[o]);
+            Vec3f c = center + lvljumpCenter(size*0.25, rp);
+            children[o]->center = c;
+            children[o]->parent = this;
+        }
+        //Vec3f c = children[o]->center;
+        if (maxjump != -1) maxjump--;
+        children[o]->add(p, d, newNodes, maxjump, false);
+        return;
+    }
+
+    data.push_back(d);
+    points.push_back(p);
+}
+
+void Octree::add(Vec3f p, void* d, int maxjump, bool checkPosition) {
     //cout << "\nAdd "; p.print();
     Vec3f rp = p - center;
 
@@ -102,7 +106,8 @@ void Octree::add(Vec3f p, void* d, int maxjump, bool checkPosition) {
             int o = parent->getOctant(center);
             parent->children[o] = this;
         }
-        parent->add(p, d, maxjump+1, checkPosition); // go a level up
+        if (maxjump >= 0) maxjump++;
+        parent->add(p, d, maxjump, checkPosition); // go a level up
         return;
     }
 
@@ -120,11 +125,11 @@ void Octree::add(Vec3f p, void* d, int maxjump, bool checkPosition) {
             children[o]->parent = this;
         }
         //Vec3f c = children[o]->center;
-        children[o]->add(p, d, maxjump-1, false);
+        if (maxjump >= 0) maxjump--;
+        children[o]->add(p, d, maxjump, false);
         return;
     }
 
-    checkRecursion(0,p);
     data.push_back(d);
     points.push_back(p);
 }
@@ -183,9 +188,12 @@ Octree* Octree::getRoot() {
     return o;
 }
 
+Octree* Octree::getParent() { return parent; }
+
+float Octree::getSize() { return size; }
+
 // sphere center, box center, sphere radius, box size
 bool sphere_box_intersect(Vec3f Ps, Vec3f Pb, float Rs, float Sb)  {
-
     float r2 = Rs * Rs;
     Vec3f diag(Sb*0.5, Sb*0.5, Sb*0.5);
     Vec3f Bmin = Pb - diag;
@@ -252,14 +260,24 @@ vector<void*> Octree::boxSearch(const boundingbox& b) {
     return res;
 }
 
-void Octree::print(int indent) {
-    cout << "\nOc ";
-    for (int i=0; i<indent; i++) cout << " " ;
-    cout << "size: " << size << " center: " << center;
-    if (data.size() > 0) cout << endl;
-    for (unsigned int i=0; i<data.size(); i++) if(data[i]) cout << " " << *(int*)data[i] ;
-    cout << flush;
+string Octree::toString(int indent) {
+    auto pToStr = [](void* p) {
+        const void * address = static_cast<const void*>(p);
+        std::stringstream ss;
+        ss << address;
+        return ss.str();
+    };
 
+    string res = "\nOc ";
+    for (int i=0; i<indent; i++) res += " ";
+    res += "size: " + ::toString(size) + " center: " + ::toString(center);
+    if (data.size() > 0) res += "\n";
+    for (unsigned int i=0; i<data.size(); i++) if(data[i]) res += " " + pToStr(data[i]);
+    return res;
+}
+
+void Octree::print(int indent) {
+    cout << toString(indent) << flush;
     for (int i=0; i<8; i++) {
         if (children[i] != 0) children[i]->print(indent+1);
     }

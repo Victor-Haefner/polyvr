@@ -27,13 +27,14 @@ class VRLodLeaf : public VRTransform {
 class VRLodTree : public VRObject {
     private:
         OctreePtr octree;
+        map<int, vector<VRObjectPtr> > objects;
 
     protected:
         void newQuad(VRObjectPtr obj, VRObjectPtr parent, float o);
         VRLodLeafPtr addLayer(float s, float d, VRObjectPtr obj);
 
     public:
-        VRLodTree(string name);
+        VRLodTree(string name, float size = 10);
         ~VRLodTree();
         static VRLodTreePtr create(string name);
         VRLodTreePtr ptr();

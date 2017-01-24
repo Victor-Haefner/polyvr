@@ -40,16 +40,29 @@ void VRLodLeaf::add(VRObjectPtr obj, int lvl) {
 
 // --------------------------------------------------------------------------------------------------
 
-VRLodTree::VRLodTree(string name) : VRObject(name) {}
+VRLodTree::VRLodTree(string name, float size) : VRObject(name) {
+    octree = Octree::create(size,size);
+    auto l = VRLodLeaf::create("lodLeaf");
+    l->addLevel(octree->getSize());
+}
 
-VRLodTree::~VRLodTree() { octree = Octree::create(10); }
+VRLodTree::~VRLodTree() {}
 VRLodTreePtr VRLodTree::create(string name) { return VRLodTreePtr(new VRLodTree(name)); }
 VRLodTreePtr VRLodTree::ptr() { return static_pointer_cast<VRLodTree>( shared_from_this() ); }
 
 void VRLodTree::addObject(VRObjectPtr obj, Vec3f p, int lvl) {
+    vector<Octree*> newNodes;
+    if (!octree) return;
+    objects[lvl].push_back(obj);
+    octree->add(p, obj.get(),newNodes,lvl,true);
+    cout << "VRLodTree::addObject " << obj.get() << " at " << p << " new nodes: " << newNodes.size() << endl;
 
+    for (auto o : newNodes) {
+        auto l = VRLodLeaf::create("lodLeaf");
+        l->addLevel(o->getSize());
+        cout << " new octree node: " << o->toString() << endl;
+    }
 }
-
 
 void VRLodTree::newQuad(VRObjectPtr obj, VRObjectPtr parent, float o) {
     auto o1 = dynamic_pointer_cast<VRTransform>( obj->duplicate() );
@@ -78,7 +91,7 @@ VRLodLeafPtr VRLodTree::addLayer(float s, float d, VRObjectPtr obj) {
 
 // --------------------------------------------------------------------------------------------------
 
-VRWoods::VRWoods() : VRLodTree("woods") { setPersistency(0); }
+VRWoods::VRWoods() : VRLodTree("woods", 5) { setPersistency(0); }
 VRWoods::~VRWoods() {}
 VRWoodsPtr VRWoods::create() { return VRWoodsPtr(new VRWoods()); }
 VRWoodsPtr VRWoods::ptr() { return static_pointer_cast<VRWoods>( shared_from_this() ); }
@@ -93,24 +106,39 @@ void VRWoods::test() {
         return box;
     };
 
-    auto l1 = addLayer(1, 5,newCylinder(1));
-    auto l2 = addLayer(2,10,newCylinder(2));
-    auto l3 = addLayer(4,20,newCylinder(4));
+    auto simpleTest = [&]() {
+        auto l1 = addLayer(1, 5,newCylinder(1));
+        auto l2 = addLayer(2,10,newCylinder(2));
+        auto l3 = addLayer(4,20,newCylinder(4));
 
-    auto c = newCylinder(0.5);
-    auto b = VRObject::create("node");
-    newQuad( c, b, 0.25*1);
-    l1->add( b, 0 );
+        auto c = newCylinder(0.5);
+        auto b = VRObject::create("node");
+        newQuad( c, b, 0.25*1);
+        l1->add( b, 0 );
 
-    b = VRObject::create("node");
-    newQuad( l1, b, 0.25*2);
-    l2->add( b, 0 );
+        b = VRObject::create("node");
+        newQuad( l1, b, 0.25*2);
+        l2->add( b, 0 );
 
-    b = VRObject::create("node");
-    newQuad( l2, b, 0.25*4);
-    l3->add( b, 0 );
+        b = VRObject::create("node");
+        newQuad( l2, b, 0.25*4);
+        l3->add( b, 0 );
 
-    addChild(l3);
+        addChild(l3);
+    };
+
+    auto simpleTest2 = [&]() {
+        int N = 2;
+        for (int i=0; i<N; i++) {
+            for (int j=0; j<N; j++) {
+                auto c = newCylinder(0.5);
+                addObject(c, Vec3f((i+0.2)*5,0,(j+0.2)*5), 0);
+            }
+        }
+    };
+
+    //simpleTest();
+    simpleTest2();
 }
 
 

@@ -32,17 +32,20 @@ class Octree {
         bool inBox(Vec3f p, Vec3f c, float size);
 
     public:
-        Octree(float resolution);
+        Octree(float resolution, float size = 10);
         ~Octree();
 
-        static OctreePtr create(float resolution);
+        static OctreePtr create(float resolution, float size = 10);
 
+        Octree* getParent();
         Octree* getRoot();
+        void add(Vec3f p, void* data, vector<Octree*>& newNodes, int maxjump = -1, bool checkPosition = true);
         void add(Vec3f p, void* data, int maxjump = -1, bool checkPosition = true);
         void addBox(const boundingbox& b, void* data, int maxjump = -1, bool checkPosition = true);
         void set(Octree* node, Vec3f p, void* data);
         Octree* get(Vec3f p);
         vector<Octree*> getPathTo(Vec3f p);
+        float getSize();
         Vec3f getCenter();
         Vec3f getLocalCenter();
 
@@ -53,6 +56,7 @@ class Octree {
 
         void test();
         void print(int indent = 0);
+        string toString(int indent = 0);
         vector<void*> getData();
 };
 
