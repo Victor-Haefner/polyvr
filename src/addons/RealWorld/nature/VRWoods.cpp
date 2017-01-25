@@ -11,12 +11,12 @@
 
 using namespace OSG;
 
-VRLodLeaf::VRLodLeaf(string name) : VRTransform(name) {}
+VRLodLeaf::VRLodLeaf(string name, Octree* o, int l) : VRTransform(name), oLeaf(o), lvl(l) {}
 VRLodLeaf::~VRLodLeaf() {}
 VRLodLeafPtr VRLodLeaf::ptr() { return static_pointer_cast<VRLodLeaf>( shared_from_this() ); }
 
-VRLodLeafPtr VRLodLeaf::create(string name) {
-    auto l = VRLodLeafPtr(new VRLodLeaf(name));
+VRLodLeafPtr VRLodLeaf::create(string name, Octree* o, int lvl) {
+    auto l = VRLodLeafPtr(new VRLodLeaf(name, o, lvl));
     l->lod = VRLod::create("lod");
     l->addChild(l->lod);
     auto lvl0 = VRObject::create("lvl");
@@ -36,62 +36,70 @@ void VRLodLeaf::add(VRObjectPtr obj, int lvl) {
     levels[lvl]->addChild(obj);
 }
 
-
+Octree* VRLodLeaf::getOLeaf() { return oLeaf; }
+int VRLodLeaf::getLevel() { return lvl; }
 
 // --------------------------------------------------------------------------------------------------
 
-VRLodTree::VRLodTree(string name, float size) : VRObject(name) {
-    octree = Octree::create(size,size);
-    auto l = VRLodLeaf::create("lodLeaf");
-    l->addLevel(octree->getSize());
-}
-
+VRLodTree::VRLodTree(string name, float size) : VRObject(name) { octree = Octree::create(size,size); }
 VRLodTree::~VRLodTree() {}
-VRLodTreePtr VRLodTree::create(string name) { return VRLodTreePtr(new VRLodTree(name)); }
 VRLodTreePtr VRLodTree::ptr() { return static_pointer_cast<VRLodTree>( shared_from_this() ); }
+VRLodTreePtr VRLodTree::create(string name) { return VRLodTreePtr(new VRLodTree(name)); }
 
-void VRLodTree::addObject(VRObjectPtr obj, Vec3f p, int lvl) {
-    vector<Octree*> newNodes;
-    if (!octree) return;
-    objects[lvl].push_back(obj);
-    octree->add(p, obj.get(),newNodes,lvl,true);
-    cout << "VRLodTree::addObject " << obj.get() << " at " << p << " new nodes: " << newNodes.size() << endl;
+void VRLodTree::addLeaf(Octree* o, int lvl) {
+    if (leafs.count(o)) return;
+    auto l = VRLodLeaf::create("lodLeaf", o, lvl);
+    l->addLevel(o->getSize());
+    l->setFrom(o->getLocalCenter());
+    leafs[o] = l;
 
-    for (auto o : newNodes) {
-        auto l = VRLodLeaf::create("lodLeaf");
-        l->addLevel(o->getSize());
-        cout << " new octree node: " << o->toString() << endl;
+    /**
+    add lod leaf to tree, handle following cases:
+        - octree leaf has parent
+            - parent lod leaf does not exist
+                -> call addLeaf on the parent octree leaf, may result in further recursion
+            - parent lod leaf exists
+                -> pass
+            (at this point the leaf parent should exist!)
+            -> add leaf to leaf parent
+        - octree leaf has no parent
+            - first lod leaf (no root leaf set), created in tree constructor
+                -> pass
+            - tree grows bigger, new root leaf
+                -> switch parent of old root leaf to new root leaf
+                -> update local position of old root leaf
+            -> remember as root leaf
+            -> add as child to tree
+    */
+
+    if (auto p = o->getParent()) {
+        if (!leafs.count(p)) addLeaf(p, lvl+1);
+        leafs[p]->add(l,0);
+    } else {
+        if (rootLeaf) {
+            l->add(rootLeaf,0);
+            rootLeaf->setFrom(rootLeaf->getOLeaf()->getLocalCenter());
+        }
+        rootLeaf = l;
+        addChild(l);
     }
 }
 
-void VRLodTree::newQuad(VRObjectPtr obj, VRObjectPtr parent, float o) {
-    auto o1 = dynamic_pointer_cast<VRTransform>( obj->duplicate() );
-    auto o2 = dynamic_pointer_cast<VRTransform>( obj->duplicate() );
-    auto o3 = dynamic_pointer_cast<VRTransform>( obj->duplicate() );
-    auto o4 = dynamic_pointer_cast<VRTransform>( obj->duplicate() );
-
-    o1->setFrom(Vec3f(-o, 0,-o));
-    o2->setFrom(Vec3f(-o, 0, o));
-    o3->setFrom(Vec3f( o, 0,-o));
-    o4->setFrom(Vec3f( o, 0, o));
-
-    parent->addChild( o1 );
-    parent->addChild( o2 );
-    parent->addChild( o3 );
-    parent->addChild( o4 );
-}
-
-VRLodLeafPtr VRLodTree::addLayer(float s, float d, VRObjectPtr obj) {
-    auto l = VRLodLeaf::create("lodLeaf");
-    l->addLevel(d);
-    l->add( obj, 1 );
-    //layers[s] = l;
-    return l;
+void VRLodTree::addObject(VRTransformPtr obj, Vec3f p, int lvl) {
+    if (leafs.size() == 0) addLeaf(octree.get(), 0);
+    vector<Octree*> newNodes;
+    if (!octree) return;
+    objects[lvl].push_back(obj);
+    auto oLeaf = octree->add(p, obj.get(),newNodes,lvl,true);
+    for (auto o : newNodes) addLeaf(o, lvl);
+    if (lvl == 0) leafs[oLeaf]->add(obj, 0);
+    else          leafs[oLeaf]->add(obj, 1);
+    obj->setWorldPosition(p);
 }
 
 // --------------------------------------------------------------------------------------------------
 
-VRWoods::VRWoods() : VRLodTree("woods", 5) { setPersistency(0); }
+VRWoods::VRWoods() : VRLodTree("woods", 1) { setPersistency(0); }
 VRWoods::~VRWoods() {}
 VRWoodsPtr VRWoods::create() { return VRWoodsPtr(new VRWoods()); }
 VRWoodsPtr VRWoods::ptr() { return static_pointer_cast<VRWoods>( shared_from_this() ); }
@@ -106,34 +114,24 @@ void VRWoods::test() {
         return box;
     };
 
-    auto simpleTest = [&]() {
-        auto l1 = addLayer(1, 5,newCylinder(1));
-        auto l2 = addLayer(2,10,newCylinder(2));
-        auto l3 = addLayer(4,20,newCylinder(4));
-
-        auto c = newCylinder(0.5);
-        auto b = VRObject::create("node");
-        newQuad( c, b, 0.25*1);
-        l1->add( b, 0 );
-
-        b = VRObject::create("node");
-        newQuad( l1, b, 0.25*2);
-        l2->add( b, 0 );
-
-        b = VRObject::create("node");
-        newQuad( l2, b, 0.25*4);
-        l3->add( b, 0 );
-
-        addChild(l3);
-    };
-
     auto simpleTest2 = [&]() {
-        int N = 2;
+        // add highest detail objects
+        int N = 4;
         for (int i=0; i<N; i++) {
             for (int j=0; j<N; j++) {
-                auto c = newCylinder(0.5);
-                addObject(c, Vec3f((i+0.2)*5,0,(j+0.2)*5), 0);
+                auto c = newCylinder(1);
+                Vec3f p = Vec3f((i-N*0.5)*15,0,(j-N*0.5)*15);
+                addObject(c, p, 0);
             }
+        }
+
+        // add lower detailed objects
+        for (auto l : leafs) {
+            int lvl = l.second->getLevel();
+            //if (lvl == 0) continue;
+            auto c = newCylinder(pow(2.0,lvl));
+            l.second->add(c,1);
+            //c->setWorldPosition(Vec3f());
         }
     };
 

@@ -53,7 +53,7 @@ void Octree::addBox(const boundingbox& b, void* d, int maxjump, bool checkPositi
     add(Vec3f(min[0],max[1],max[2]), d, maxjump, checkPosition);
 }
 
-void Octree::add(Vec3f p, void* d, vector<Octree*>& newNodes, int maxjump, bool checkPosition) {
+Octree* Octree::add(Vec3f p, void* d, vector<Octree*>& newNodes, int maxjump, bool checkPosition) {
     Vec3f rp = p - center;
 
     if ( !inBox(p, center, size) && checkPosition ) { // not in node
@@ -66,8 +66,7 @@ void Octree::add(Vec3f p, void* d, vector<Octree*>& newNodes, int maxjump, bool 
             parent->children[o] = this;
         }
         if (maxjump != -1) maxjump++;
-        parent->add(p, d, newNodes, maxjump, true); // go a level up
-        return;
+        return parent->add(p, d, newNodes, maxjump, true); // go a level up
     }
 
     if (size > resolution && maxjump != 0) {
@@ -81,15 +80,15 @@ void Octree::add(Vec3f p, void* d, vector<Octree*>& newNodes, int maxjump, bool 
         }
         //Vec3f c = children[o]->center;
         if (maxjump != -1) maxjump--;
-        children[o]->add(p, d, newNodes, maxjump, false);
-        return;
+        return children[o]->add(p, d, newNodes, maxjump, false);
     }
 
     data.push_back(d);
     points.push_back(p);
+    return this;
 }
 
-void Octree::add(Vec3f p, void* d, int maxjump, bool checkPosition) {
+Octree* Octree::add(Vec3f p, void* d, int maxjump, bool checkPosition) {
     //cout << "\nAdd "; p.print();
     Vec3f rp = p - center;
 
@@ -107,8 +106,7 @@ void Octree::add(Vec3f p, void* d, int maxjump, bool checkPosition) {
             parent->children[o] = this;
         }
         if (maxjump >= 0) maxjump++;
-        parent->add(p, d, maxjump, checkPosition); // go a level up
-        return;
+        return parent->add(p, d, maxjump, checkPosition); // go a level up
     }
 
     if (size > resolution && maxjump != 0) {
@@ -126,12 +124,12 @@ void Octree::add(Vec3f p, void* d, int maxjump, bool checkPosition) {
         }
         //Vec3f c = children[o]->center;
         if (maxjump >= 0) maxjump--;
-        children[o]->add(p, d, maxjump, false);
-        return;
+        return children[o]->add(p, d, maxjump, false);
     }
 
     data.push_back(d);
     points.push_back(p);
+    return this;
 }
 
 void Octree::set(Octree* node, Vec3f p, void* d) { node->data.clear(); node->points.clear(); node->data.push_back(d); node->points.push_back(p); }
