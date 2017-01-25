@@ -40,91 +40,42 @@ bool Octree::inBox(Vec3f p, Vec3f c, float size) {
     return true;
 }
 
-void Octree::addBox(const boundingbox& b, void* d, int maxjump, bool checkPosition) {
+void Octree::addBox(const boundingbox& b, void* d, int targetLevel, bool checkPosition) {
     const Vec3f min = b.min();
     const Vec3f max = b.max();
-    add(min, d, maxjump, checkPosition);
-    add(Vec3f(max[0],min[1],min[2]), d, maxjump, checkPosition);
-    add(Vec3f(max[0],min[1],max[2]), d, maxjump, checkPosition);
-    add(Vec3f(min[0],min[1],max[2]), d, maxjump, checkPosition);
-    add(max, d, maxjump, checkPosition);
-    add(Vec3f(max[0],max[1],min[2]), d, maxjump, checkPosition);
-    add(Vec3f(min[0],max[1],min[2]), d, maxjump, checkPosition);
-    add(Vec3f(min[0],max[1],max[2]), d, maxjump, checkPosition);
+    add(min, d, targetLevel, 0, checkPosition);
+    add(Vec3f(max[0],min[1],min[2]), d, targetLevel, 0, checkPosition);
+    add(Vec3f(max[0],min[1],max[2]), d, targetLevel, 0, checkPosition);
+    add(Vec3f(min[0],min[1],max[2]), d, targetLevel, 0, checkPosition);
+    add(max, d, targetLevel, 0, checkPosition);
+    add(Vec3f(max[0],max[1],min[2]), d, targetLevel, 0, checkPosition);
+    add(Vec3f(min[0],max[1],min[2]), d, targetLevel, 0, checkPosition);
+    add(Vec3f(min[0],max[1],max[2]), d, targetLevel, 0, checkPosition);
 }
 
-Octree* Octree::add(Vec3f p, void* d, vector<Octree*>& newNodes, int maxjump, bool checkPosition) {
+Octree* Octree::add(Vec3f p, void* d, int targetLevel, int currentLevel, bool checkPosition) {
     Vec3f rp = p - center;
 
     if ( !inBox(p, center, size) && checkPosition ) { // not in node
         if (parent == 0) { // no parent, create it
             parent = new Octree(resolution, 2*size);
-            newNodes.push_back(parent);
             Vec3f c = center + lvljumpCenter(size*0.5, rp);
             parent->center = c;
             int o = parent->getOctant(center);
             parent->children[o] = this;
         }
-        if (maxjump != -1) maxjump++;
-        return parent->add(p, d, newNodes, maxjump, true); // go a level up
+        return parent->add(p, d, targetLevel, currentLevel+1, true); // go a level up
     }
 
-    if (size > resolution && maxjump != 0) {
+    if (size > resolution && (currentLevel != targetLevel || targetLevel == -1)) {
         int o = getOctant(p);
         if (children[o] == 0) {
             children[o] = new Octree(resolution, size*0.5);
-            newNodes.push_back(children[o]);
             Vec3f c = center + lvljumpCenter(size*0.25, rp);
             children[o]->center = c;
             children[o]->parent = this;
         }
-        //Vec3f c = children[o]->center;
-        if (maxjump != -1) maxjump--;
-        return children[o]->add(p, d, newNodes, maxjump, false);
-    }
-
-    data.push_back(d);
-    points.push_back(p);
-    return this;
-}
-
-Octree* Octree::add(Vec3f p, void* d, int maxjump, bool checkPosition) {
-    //cout << "\nAdd "; p.print();
-    Vec3f rp = p - center;
-
-    if ( !inBox(p, center, size) && checkPosition ) { // not in node
-        if (parent == 0) { // no parent, create it
-            float s2 = size*0.5;
-            parent = new Octree(resolution);
-            //Vec3f c = center.add( Vec3f(copysign(s2,rp[0]), copysign(s2,rp[1]), copysign(s2,rp[2])) );
-            Vec3f c = center + lvljumpCenter(s2, rp);
-            parent->center = c;
-            float s = 2*size;
-            parent->size = s;
-
-            int o = parent->getOctant(center);
-            parent->children[o] = this;
-        }
-        if (maxjump >= 0) maxjump++;
-        return parent->add(p, d, maxjump, checkPosition); // go a level up
-    }
-
-    if (size > resolution && maxjump != 0) {
-        int o = getOctant(p);
-        if (children[o] == 0) {
-            float s2 = size*0.25;
-            children[o] = new Octree(resolution);
-            float s = size*0.5;
-            children[o]->size = s;
-            //Vec3f c = center.add( Vec3f(copysign(s2,rp[0]), copysign(s2,rp[1]), copysign(s2,rp[2])) );
-            Vec3f c = center + lvljumpCenter(s2, rp);
-
-            children[o]->center = c;
-            children[o]->parent = this;
-        }
-        //Vec3f c = children[o]->center;
-        if (maxjump >= 0) maxjump--;
-        return children[o]->add(p, d, maxjump, false);
+        return children[o]->add(p, d, targetLevel, currentLevel-1, false);
     }
 
     data.push_back(d);

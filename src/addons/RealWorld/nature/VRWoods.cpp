@@ -46,10 +46,17 @@ VRLodTree::~VRLodTree() {}
 VRLodTreePtr VRLodTree::ptr() { return static_pointer_cast<VRLodTree>( shared_from_this() ); }
 VRLodTreePtr VRLodTree::create(string name) { return VRLodTreePtr(new VRLodTree(name)); }
 
+void VRLodTree::reset(float size) {
+    octree = Octree::create(size,size);
+    leafs.clear();
+    objects.clear();
+    rootLeaf = 0;
+}
+
 void VRLodTree::addLeaf(Octree* o, int lvl) {
     if (leafs.count(o)) return;
     auto l = VRLodLeaf::create("lodLeaf", o, lvl);
-    l->addLevel(o->getSize());
+    if (lvl > 0) l->addLevel( o->getSize()*4 );
     l->setFrom(o->getLocalCenter());
     leafs[o] = l;
 
@@ -87,14 +94,15 @@ void VRLodTree::addLeaf(Octree* o, int lvl) {
 
 void VRLodTree::addObject(VRTransformPtr obj, Vec3f p, int lvl) {
     if (leafs.size() == 0) addLeaf(octree.get(), 0);
-    vector<Octree*> newNodes;
     if (!octree) return;
     objects[lvl].push_back(obj);
-    auto oLeaf = octree->add(p, obj.get(),newNodes,lvl,true);
-    for (auto o : newNodes) addLeaf(o, lvl);
+    auto oLeaf = octree->add(p, obj.get(), lvl, 0, true);
+    addLeaf(oLeaf, lvl);
     if (lvl == 0) leafs[oLeaf]->add(obj, 0);
     else          leafs[oLeaf]->add(obj, 1);
     obj->setWorldPosition(p);
+    obj->setDir(Vec3f(0,0,-1));
+    obj->setUp(Vec3f(0,1,0));
 }
 
 // --------------------------------------------------------------------------------------------------
@@ -114,7 +122,7 @@ void VRWoods::test() {
         return box;
     };
 
-    auto simpleTest2 = [&]() {
+    auto simpleTest = [&]() {
         // add highest detail objects
         int N = 4;
         for (int i=0; i<N; i++) {
@@ -127,16 +135,37 @@ void VRWoods::test() {
 
         // add lower detailed objects
         for (auto l : leafs) {
-            int lvl = l.second->getLevel();
-            //if (lvl == 0) continue;
+            auto& leaf = l.second;
+            cout << "LEAF: " << leaf->getOLeaf()->getSize() << " " << leaf->getLevel() << endl;
+            int lvl = leaf->getLevel();
+            if (lvl == 0) continue;
             auto c = newCylinder(pow(2.0,lvl));
-            l.second->add(c,1);
+            leaf->add(c,1);
             //c->setWorldPosition(Vec3f());
+        }
+    };
+
+    auto simpleTest2 = [&]() {
+        reset(1);
+
+        for (int k=0; k<5; k++) {
+            int N = pow(2,k);
+            float s = 16.0/N;
+            float o = 0.5*s;
+            for (int i=0; i<N; i++) {
+                for (int j=0; j<N; j++) {
+                    auto c = newCylinder(s);
+                    Vec3f p = Vec3f(o+s*i,0,o+s*j);
+                    addObject(c, p, 4-k);
+                }
+            }
         }
     };
 
     //simpleTest();
     simpleTest2();
 }
+
+
 
 

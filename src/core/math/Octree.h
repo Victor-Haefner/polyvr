@@ -39,9 +39,8 @@ class Octree {
 
         Octree* getParent();
         Octree* getRoot();
-        Octree* add(Vec3f p, void* data, vector<Octree*>& newNodes, int maxjump = -1, bool checkPosition = true);
-        Octree* add(Vec3f p, void* data, int maxjump = -1, bool checkPosition = true);
-        void addBox(const boundingbox& b, void* data, int maxjump = -1, bool checkPosition = true);
+        Octree* add(Vec3f p, void* data, int targetLevel = -1, int currentLevel = 0, bool checkPosition = true);
+        void addBox(const boundingbox& b, void* data, int targetLevel = -1, bool checkPosition = true);
         void set(Octree* node, Vec3f p, void* data);
         Octree* get(Vec3f p);
         vector<Octree*> getPathTo(Vec3f p);
