@@ -1,4 +1,5 @@
 #include "VRWoods.h"
+#include "VRTree.h"
 
 #include "core/objects/object/VRObject.h"
 #include "core/objects/geometry/VRGeometry.h"
@@ -56,7 +57,7 @@ void VRLodTree::reset(float size) {
 void VRLodTree::addLeaf(Octree* o, int lvl) {
     if (leafs.count(o)) return;
     auto l = VRLodLeaf::create("lodLeaf", o, lvl);
-    if (lvl > 0) l->addLevel( o->getSize()*4 );
+    if (lvl > 0) l->addLevel( o->getSize()*2 );
     l->setFrom(o->getLocalCenter());
     leafs[o] = l;
 
@@ -122,6 +123,28 @@ void VRWoods::test() {
         return box;
     };
 
+    auto simpleLeafMat = []() {
+        auto m = VRMaterial::create("lmat");
+        m->setPointSize(3);
+        m->setDiffuse(Vec3f(0.5,1,0));
+        m->setLit(0);
+        return m;
+    };
+
+    auto simpleTrunkMat = []() {
+        auto m = VRMaterial::create("brown");
+        m->setDiffuse(Vec3f(0.6,0.3,0));
+        return m;
+    };
+
+    auto newTree = [](VRMaterialPtr m) {
+        auto t = VRTree::create();
+        t->setup();
+        t->addLeafs(4, 4);
+        t->setLeafMaterial(m);
+        return t;
+    };
+
     auto simpleTest = [&]() {
         // add highest detail objects
         int N = 4;
@@ -145,7 +168,7 @@ void VRWoods::test() {
         }
     };
 
-    auto simpleTest2 = [&]() {
+    auto simpleTest2 = [&]() { // TODO: not perfectly working
         reset(1);
 
         for (int k=0; k<5; k++) {
@@ -162,10 +185,88 @@ void VRWoods::test() {
         }
     };
 
+    auto simpleTest3 = [&]() {
+        reset(5);
+        auto green = simpleLeafMat();
+        auto brown = simpleTrunkMat();
+
+        /*float W = 100;
+        float L = 100;
+        int N = 100;
+
+
+        // lowest level trees
+        for (int i=0; i<N; i++) {
+            float x = float(rand())/RAND_MAX*W;
+            float z = float(rand())/RAND_MAX*L;
+            auto t = newTree(green);
+            addObject(t, Vec3f(x,0,z), 0);
+        }*/
+
+        // lowest level trees
+        addObject( newTree(green), Vec3f(3,0,3), 0);
+        addObject( newTree(green), Vec3f(3,0,6), 0);
+        addObject( newTree(green), Vec3f(3,0,9), 0);
+        addObject( newTree(green), Vec3f(6,0,3), 0);
+        addObject( newTree(green), Vec3f(6,0,6), 0);
+        addObject( newTree(green), Vec3f(6,0,9), 0);
+        addObject( newTree(green), Vec3f(9,0,3), 0);
+        addObject( newTree(green), Vec3f(9,0,6), 0);
+        addObject( newTree(green), Vec3f(9,0,9), 0);
+
+        // get all trees for each layer leaf
+        map<VRLodLeaf*, vector<VRTree*> > trees;
+        for (auto l : leafs) {
+            auto& leaf = l.second;
+            int lvl = leaf->getLevel();
+            if (lvl == 0) continue;
+
+            vector<void*> data = leaf->getOLeaf()->getAllData();
+            for (auto v : data) trees[leaf.get()].push_back((VRTree*)v);
+        }
+
+        // create layer node geometries
+        for (auto l : leafs) {
+            auto& leaf = l.second;
+            int lvl = leaf->getLevel();
+            if (lvl == 0) continue;
+
+            Vec3f pos;
+            for (auto t : trees[leaf.get()]) pos += t->getWorldPosition();
+            pos *= 1.0/trees[leaf.get()].size();
+
+            VRGeoData geoLeafs;
+            VRGeoData geoTrunk;
+            for (auto t : trees[leaf.get()]) {
+                Vec3f offset = t->getWorldPosition() - pos;
+                float amount = 0.1/lvl;
+                t->createHullTrunkLod(geoTrunk, amount, offset);
+                t->createHullLeafLod (geoLeafs, amount, offset);
+            }
+            auto trunk = geoTrunk.asGeometry("trunk");
+            auto leafs = geoLeafs.asGeometry("leafs");
+            trunk->addChild( leafs );
+            leafs->setMaterial(green);
+            trunk->setMaterial(brown);
+
+            leaf->add( trunk, 1 );
+            trunk->setWorldPosition(pos);
+            trunk->setDir(Vec3f(0,0,-1));
+            trunk->setUp(Vec3f(0,1,0));
+        }
+    };
+
     //simpleTest();
-    simpleTest2();
+    //simpleTest2();
+    simpleTest3();
 }
 
+/**
+
+TODO:
+ - get rid of transform of lodleaf?
+ - optimize level zero structure
+*/
 
 
 

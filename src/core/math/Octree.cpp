@@ -99,6 +99,10 @@ Octree* Octree::get(Vec3f p) {
     return this;
 }
 
+vector<Octree*> Octree::getChildren() {
+    return vector<Octree*>(children, children+8);
+}
+
 vector<Octree*> Octree::getPathTo(Vec3f p) {
     vector<Octree*> res;
     auto o = get(p);
@@ -110,6 +114,21 @@ vector<Octree*> Octree::getPathTo(Vec3f p) {
         res.push_back(o);
     }
     std::reverse(res.begin(), res.end());
+    return res;
+}
+
+void gatherSubtree(Octree* o, vector<Octree*>& res) {
+    for (auto c : o->getChildren()) {
+        if (c) {
+            res.push_back(c);
+            gatherSubtree(c, res);
+        }
+    }
+}
+
+vector<Octree*> Octree::getSubtree() {
+    vector<Octree*> res;
+    gatherSubtree(this, res);
     return res;
 }
 
@@ -292,5 +311,14 @@ void Octree::test() {
 }
 
 vector<void*> Octree::getData() { return data; }
+
+vector<void*> Octree::getAllData() {
+    vector<void*> res;
+    for (auto c : getSubtree()) {
+        auto d = c->getData();
+        res.insert(res.end(), d.begin(), d.end());
+    }
+    return res;
+}
 
 OSG_END_NAMESPACE

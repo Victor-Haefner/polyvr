@@ -295,4 +295,45 @@ void VRTree::setLeafMaterial(VRMaterialPtr mat) {
     for (auto g : leafGeos) g->setMaterial(mat);
 }
 
+void VRTree::createHullLeafLod(VRGeoData& geo, float amount, Vec3f offset) { // TODO
+    VRGeoData g0(leafGeos[0]);
+
+    int N = g0.size()*amount;
+    float D = 1.0/amount;
+    for (int i=0; i<N; i++) {
+        int j = max( min( int(i*D), g0.size()-1), 0);
+        Pnt3f pos = g0.getPosition(j) + offset;
+        geo.pushVert( pos, g0.getNormal(j));
+        geo.pushPoint();
+    }
+}
+
+void VRTree::createHullTrunkLod(VRGeoData& geo, float amount, Vec3f offset) { // TODO
+    VRGeoData g0(leafGeos[0]);
+
+    auto normalize = [](Vec3f v) {
+        v.normalize();
+        return v;
+    };
+
+    float r = 0.1;
+    int N = geo.size();
+    geo.pushVert( Pnt3f(-r,0,-r) + offset, normalize( Vec3f(-1,0,-1) ) );
+    geo.pushVert( Pnt3f(-r,0, r) + offset, normalize( Vec3f(-1,0, 1) ) );
+    geo.pushVert( Pnt3f( r,0, r) + offset, normalize( Vec3f( 1,0, 1) ) );
+    geo.pushVert( Pnt3f( r,0,-r) + offset, normalize( Vec3f( 1,0,-1) ) );
+    geo.pushVert( Pnt3f(-r,2,-r) + offset, normalize( Vec3f(-1,0,-1) ) );
+    geo.pushVert( Pnt3f(-r,2, r) + offset, normalize( Vec3f(-1,0, 1) ) );
+    geo.pushVert( Pnt3f( r,2, r) + offset, normalize( Vec3f( 1,0, 1) ) );
+    geo.pushVert( Pnt3f( r,2,-r) + offset, normalize( Vec3f( 1,0,-1) ) );
+    geo.pushQuad(N+0,N+1,N+5,N+4);
+    geo.pushQuad(N+1,N+2,N+6,N+5);
+    geo.pushQuad(N+2,N+3,N+7,N+6);
+    geo.pushQuad(N+3,N+0,N+4,N+7);
+}
+
+
+
+
+
 

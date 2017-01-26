@@ -43,20 +43,24 @@ class Octree {
         void addBox(const boundingbox& b, void* data, int targetLevel = -1, bool checkPosition = true);
         void set(Octree* node, Vec3f p, void* data);
         Octree* get(Vec3f p);
-        vector<Octree*> getPathTo(Vec3f p);
         float getSize();
         Vec3f getCenter();
         Vec3f getLocalCenter();
 
         void clear();
 
+        vector<Octree*> getChildren();
+        vector<Octree*> getSubtree();
+        vector<Octree*> getPathTo(Vec3f p);
+
+        vector<void*> getData();
+        vector<void*> getAllData();
         vector<void*> radiusSearch(Vec3f p, float r);
         vector<void*> boxSearch(const boundingbox& b);
 
         void test();
         void print(int indent = 0);
         string toString(int indent = 0);
-        vector<void*> getData();
 };
 
 OSG_END_NAMESPACE
