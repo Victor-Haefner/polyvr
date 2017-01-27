@@ -562,6 +562,8 @@
 		<Unit filename="src/core/gui/widgets/VRSemanticWidget.h" />
 		<Unit filename="src/core/math/Octree.cpp" />
 		<Unit filename="src/core/math/Octree.h" />
+		<Unit filename="src/core/math/VRConvexHull.cpp" />
+		<Unit filename="src/core/math/VRConvexHull.h" />
 		<Unit filename="src/core/math/VRMathFwd.h" />
 		<Unit filename="src/core/math/boundingbox.cpp" />
 		<Unit filename="src/core/math/boundingbox.h" />

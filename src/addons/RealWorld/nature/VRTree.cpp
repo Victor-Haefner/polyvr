@@ -6,6 +6,7 @@
 #include "core/objects/material/VRTextureGenerator.h"
 #include "core/objects/VRLod.h"
 #include "core/scene/VRSceneManager.h"
+#include "core/math/VRConvexHull.h"
 
 #include <OpenSG/OSGQuaternion.h>
 #include <random>
@@ -298,14 +299,20 @@ void VRTree::setLeafMaterial(VRMaterialPtr mat) {
 void VRTree::createHullLeafLod(VRGeoData& geo, float amount, Vec3f offset) { // TODO
     VRGeoData g0(leafGeos[0]);
 
+    VRConvexHull hull;
+
+    VRGeoData tmpData;
     int N = g0.size()*amount;
     float D = 1.0/amount;
     for (int i=0; i<N; i++) {
         int j = max( min( int(i*D), g0.size()-1), 0);
         Pnt3f pos = g0.getPosition(j) + offset;
-        geo.pushVert( pos, g0.getNormal(j));
-        geo.pushPoint();
+        tmpData.pushVert( pos, g0.getNormal(j));
+        tmpData.pushPoint();
     }
+
+    auto res = hull.compute3D( tmpData.asGeometry("tmpdata") );
+    geo.append(res);
 }
 
 void VRTree::createHullTrunkLod(VRGeoData& geo, float amount, Vec3f offset) { // TODO
