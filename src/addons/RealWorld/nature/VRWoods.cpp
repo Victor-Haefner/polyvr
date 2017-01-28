@@ -127,7 +127,6 @@ void VRWoods::test() {
         auto m = VRMaterial::create("lmat");
         m->setPointSize(3);
         m->setDiffuse(Vec3f(0.5,1,0));
-        m->setLit(0);
         return m;
     };
 
@@ -139,9 +138,10 @@ void VRWoods::test() {
 
     auto newTree = [](VRMaterialPtr m) {
         auto t = VRTree::create();
-        t->setup();
-        t->addLeafs(4, 4);
-        t->setLeafMaterial(m);
+        t->setup(5, 5, rand());
+        t->addLeafs(4, 3);
+        t->addLeafs(5, 3);
+        //t->setLeafMaterial(m);
         return t;
     };
 
@@ -190,21 +190,27 @@ void VRWoods::test() {
         auto green = simpleLeafMat();
         auto brown = simpleTrunkMat();
 
-        /*float W = 100;
+        float W = 100;
         float L = 100;
         int N = 100;
 
 
         // lowest level trees
+        srand(time(0));
+        vector<Vec3f> positions;
         for (int i=0; i<N; i++) {
-            float x = float(rand())/RAND_MAX*W;
-            float z = float(rand())/RAND_MAX*L;
-            auto t = newTree(green);
-            addObject(t, Vec3f(x,0,z), 0);
-        }*/
+            float x = (float(rand())/RAND_MAX)*W;
+            float z = (float(rand())/RAND_MAX)*L;
+            positions.push_back(Vec3f(x,0,z));
+        }
 
-        // lowest level trees
-        addObject( newTree(green), Vec3f(3,0,3), 0);
+        for (auto p : positions) {
+            auto t = newTree(green);
+            addObject(t, p, 0);
+        }
+
+        // lowest level trees   TODO: there is still a bug with first tree!
+        /*addObject( newTree(green), Vec3f(3,0,3), 0);
         addObject( newTree(green), Vec3f(3,0,6), 0);
         addObject( newTree(green), Vec3f(3,0,9), 0);
         addObject( newTree(green), Vec3f(6,0,3), 0);
@@ -213,7 +219,7 @@ void VRWoods::test() {
         addObject( newTree(green), Vec3f(9,0,3), 0);
         addObject( newTree(green), Vec3f(9,0,6), 0);
         addObject( newTree(green), Vec3f(9,0,9), 0);
-
+*/
         // get all trees for each layer leaf
         map<VRLodLeaf*, vector<VRTree*> > trees;
         for (auto l : leafs) {

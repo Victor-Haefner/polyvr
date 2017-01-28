@@ -97,6 +97,7 @@ float VRTree::variation(float val, float var) { return random(val*(1-var), val*(
 Vec3f VRTree::randUVec() { return Vec3f(random(-1,1), random(-1,1), random(-1,1)); }
 
 VRMaterialPtr VRTree::treeMat = 0;
+VRMaterialPtr VRTree::leafMat = 0;
 
 //rotate a vector with angle 'a' in a random direction
 Vec3f VRTree::randomRotate(Vec3f v, float a) {
@@ -141,30 +142,46 @@ void VRTree::grow(const seg_params& sp, segment* p, int iteration) {
     }
 }
 
-VRMaterialPtr VRTree::initMaterial() {
-    VRMaterialPtr mat = VRMaterial::create("tree_mat");
+void VRTree::initMaterials() {
+    if (!treeMat) {
+        treeMat = VRMaterial::create("tree_wood");
 
-    mat->setDiffuse(Color3f(0.8,0.8,0.6));
-    mat->setAmbient(Color3f(0.4, 0.4, 0.2));
-    mat->setSpecular(Color3f(0.1, 0.1, 0.1));
+        treeMat->setDiffuse(Color3f(0.8,0.8,0.6));
+        treeMat->setAmbient(Color3f(0.4, 0.4, 0.2));
+        treeMat->setSpecular(Color3f(0.1, 0.1, 0.1));
 
-    string wdir = VRSceneManager::get()->getOriginalWorkdir();
-    mat->readFragmentShader(wdir+"/shader/Trees/Shader_tree_base.fp");
-    mat->readFragmentShader(wdir+"/shader/Trees/Shader_tree_base.dfp", true);
-    mat->readVertexShader(wdir+"/shader/Trees/Shader_tree_base.vp");
-    mat->readGeometryShader(wdir+"/shader/Trees/Shader_tree_base.gp");
-    mat->readTessControlShader(wdir+"/shader/Trees/Shader_tree_base.tcp");
-    mat->readTessEvaluationShader(wdir+"/shader/Trees/Shader_tree_base.tep");
-    mat->setShaderParameter("texture", 0);
-    mat->enableShaderParameter("OSGCameraPosition");
+        string wdir = VRSceneManager::get()->getOriginalWorkdir();
+        treeMat->readFragmentShader(wdir+"/shader/Trees/Shader_tree_base.fp");
+        treeMat->readFragmentShader(wdir+"/shader/Trees/Shader_tree_base.dfp", true);
+        treeMat->readVertexShader(wdir+"/shader/Trees/Shader_tree_base.vp");
+        treeMat->readGeometryShader(wdir+"/shader/Trees/Shader_tree_base.gp");
+        treeMat->readTessControlShader(wdir+"/shader/Trees/Shader_tree_base.tcp");
+        treeMat->readTessEvaluationShader(wdir+"/shader/Trees/Shader_tree_base.tep");
+        treeMat->setShaderParameter("texture", 0);
+        treeMat->enableShaderParameter("OSGCameraPosition");
 
-	VRTextureGenerator tg;
-	tg.setSize(Vec3i(50,50,50));
-	tg.add("Perlin", 1, Vec3f(0.7,0.5,0.3), Vec3f(1,0.9,0.7));
-	tg.add("Perlin", 0.25, Vec3f(1,0.9,0.7), Vec3f(0.7,0.5,0.3));
-	mat->setTexture(tg.compose(0));
+        VRTextureGenerator tg;
+        tg.setSize(Vec3i(50,50,50));
+        tg.add("Perlin", 1, Vec3f(0.7,0.5,0.3), Vec3f(1,0.9,0.7));
+        tg.add("Perlin", 0.25, Vec3f(1,0.9,0.7), Vec3f(0.7,0.5,0.3));
+        treeMat->setTexture(tg.compose(0));
+    }
 
-    return mat;
+    if (!leafMat) {
+        leafMat = VRMaterial::create("tree_leafs");
+
+        leafMat->setDiffuse(Color3f(0.6,1.0,0.4));
+        leafMat->setAmbient(Color3f(0.2, 0.6, 0.2));
+        leafMat->setSpecular(Color3f(0.1, 0.1, 0.1));
+
+        string wdir = VRSceneManager::get()->getOriginalWorkdir();
+        leafMat->readFragmentShader(wdir+"/shader/Trees/Shader_leafs.fp");
+        leafMat->readFragmentShader(wdir+"/shader/Trees/Shader_leafs.dfp", true);
+        leafMat->readVertexShader(wdir+"/shader/Trees/Shader_leafs.vp");
+        leafMat->readGeometryShader(wdir+"/shader/Trees/Shader_leafs.gp");
+        leafMat->setShaderParameter("tex", 0);
+        leafMat->setTexture( wdir+"/examples/maple-leaf.png" );
+    }
 }
 
 void VRTree::initArmatureGeo() {
@@ -206,8 +223,8 @@ void VRTree::testSetup() {
     branches.push_back(trunc);
     seg_params sp;
     grow(sp, trunc);
+    initMaterials();
     initArmatureGeo();
-    initMaterial();
 }
 
 void VRTree::setup(int branching, int iterations, int seed,
@@ -231,8 +248,8 @@ void VRTree::setup(int branching, int iterations, int seed,
     sp.r_factor_var = r_factor_v;
 
     grow(sp, trunc);
+    initMaterials();
     initArmatureGeo();
-    if (!treeMat) treeMat = initMaterial();
 }
 
 void VRTree::addLeafs(int lvl, int amount) { // TODO: add default material!
@@ -243,6 +260,7 @@ void VRTree::addLeafs(int lvl, int amount) { // TODO: add default material!
             auto g = VRGeometry::create("branches");
             leafGeos.push_back( g );
             lod->getChild(i)->addChild(g);
+            g->setMaterial(leafMat);
         }
     }
 

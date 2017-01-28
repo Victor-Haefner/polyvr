@@ -21,18 +21,28 @@ VRConvexHull::~VRConvexHull() {}
 VRGeometryPtr toGeometry(Polyhedron& poly, string name) {
     VRGeoData data;
 
-    for (auto it = poly.facets_begin(); it != poly.facets_end(); it++) {
-        for (auto fitr = it->facet_begin(); fitr != it->facet_begin(); fitr++) {
-			cgalPoint cp = fitr->vertex()->point();
-			Pnt3f p = Pnt3f(cp.x(), cp.y(), cp.z());
-			data.pushVert(p, Vec3f(0,1,0));
-		}
-		if (it->is_triangle()) data.pushTri();
-		if (it->is_quad())     data.pushQuad();
+    int i=0;
+    map<void*, int> points;
+    for (auto face = poly.facets_begin(); face != poly.facets_end(); face++) {
+        auto vertex = face->facet_begin();
+        vector<int> faceIndx;
+        do {
+			auto v = (void*)&(*vertex);
+			if (!points.count(v)) {
+                points[v] = i; i++;
+                cgalPoint cp = vertex->vertex()->point();
+                Pnt3f p = Pnt3f(cp.x(), cp.y(), cp.z());
+                data.pushVert(p, Vec3f(1,0,0));
+            }
+            faceIndx.push_back( points[v] );
+		} while (++vertex != face->facet_begin());
+		if (face->is_triangle()) data.pushTri(faceIndx[0], faceIndx[1], faceIndx[2]);
+		if (face->is_quad())     data.pushQuad(faceIndx[0], faceIndx[1], faceIndx[2], faceIndx[3]);
 	}
 
-
-	return data.asGeometry(name);
+	auto geo = data.asGeometry(name);
+	geo->updateNormals();
+	return geo;
 }
 
 VRGeometryPtr VRConvexHull::compute3D(VRGeometryPtr geo) {
@@ -42,8 +52,6 @@ VRGeometryPtr VRConvexHull::compute3D(VRGeometryPtr geo) {
         Pnt3f p = pos->getValue<Pnt3f>(i);
         points.push_back(cgalPoint(p[0], p[1], p[2]));
     }
-
-	cout << "compute3D " << points.size() << endl;
 
     Polyhedron poly; // define polyhedron to hold convex hull
     CGAL::convex_hull_3(points.begin(), points.end(), poly); // compute convex hull of non-collinear points
