@@ -66,12 +66,12 @@ bool VRStatement::match(VRStatementPtr s) {
         if (!tS.valid() || !tR.valid()) return false;
         if (tS.path.nodes.size() != tR.path.nodes.size()) return false;
         //cout << "A " << tR.var->concept << " " << tS.var->concept << endl;
-        //cout << "var1 " << tR.var.value << " type: " << tR.var.concept << endl;
-        //cout << "var2 " << tS.var.value << " type: " << tS.var.concept << endl;
+        //cout << "var1 " << tR.var->value << " type: " << tR.var->concept << endl;
+        //cout << "var2 " << tS.var->value << " type: " << tS.var->concept << endl;
         if (tR.var->concept != tS.var->concept) {
             for (auto e : tR.var->entities) {
                 for (auto c : e.second->getConcepts()) {
-                    cout << " A e: " << c->getName() << " c: " << tS.var->concept << endl;
+                    //cout << " A e: " << c->getName() << " c: " << tS.var->concept << endl;
                     if (c->getName() == tS.var->concept) return true;
                 }
             }

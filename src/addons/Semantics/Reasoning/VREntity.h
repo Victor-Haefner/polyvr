@@ -36,6 +36,7 @@ struct VREntity : public VROntoID, public VRName {
 
     void rem(VRPropertyPtr);
     vector<string> getAtPath(vector<string> path);
+    void setAtPath(vector<string> path, string v);
 
     string toString();
     void save(xmlpp::Element* e, int p);

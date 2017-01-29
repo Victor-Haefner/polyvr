@@ -197,6 +197,22 @@ vector<string> VREntity::getAtPath(vector<string> path) { // TODO: move that to 
     return res;
 }
 
+void VREntity::setAtPath(vector<string> path, string v) {
+    /*cout << "VREntity::setAtPath ";
+    for (auto p : path) cout << p << " ";
+    cout << "to " << v << endl;*/
+
+    if (path.size() == 2) {
+        string m = path[1];
+        auto prop = getProperty(m);
+        if (!prop) return;
+        if (!properties.count(prop->getName())) return;
+        for (auto p : properties[prop->getName()]) {
+            p->value = v;
+        }
+    }
+}
+
 string VREntity::toString() {
     string data = "Entity " + name + " of type (";
     data += getConceptList() + ")";

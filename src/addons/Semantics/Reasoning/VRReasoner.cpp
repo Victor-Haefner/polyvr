@@ -74,9 +74,9 @@ bool VRReasoner::findRule(VRStatementPtr statement, Context& context) {
         if (query.request->verb != statement->verb) continue; // rule verb does not match
         print("      found rule: " + query.request->toString(), GREEN);
         if (!statement->match(query.request)) continue; // statements are not similar enough
-        //query.request.updateLocalVariables(context.vars, context.onto);
 
         query.substituteRequest(statement);
+        //query.request->updateLocalVariables(context.vars, context.onto);
         context.queries.push_back(query);
         print("      add query " + query.toString(), YELLOW);
         return true;
@@ -134,9 +134,20 @@ bool VRReasoner::apply(VRStatementPtr statement, Context& context) {
     if (statement->verb == "is") {
         auto& left = statement->terms[0];
         auto& right = statement->terms[1];
-        left.var->value = right.var->value; // TOCHECK
+
+        if (left.path.nodes.size() > 1) {
+            for (auto eL : left.var->entities) {
+                for (auto eR : right.var->entities) {
+                    vector<string> valR = eR.second->getAtPath(right.path.nodes);
+                    if (valR.size() > 0) {
+                        string vR = valR[0]; // this is the value to apply!
+                        eL.second->setAtPath(left.path.nodes, vR);
+                    }
+                }
+            }
+        } else left.var->value = right.var->value;
         statement->state = 1;
-        print("  set " + left.str + " to " + right.str, GREEN);
+        print("  set " + left.str + " to " + right.str + " -> " + toString(left.var->value), GREEN);
     }
 
     if (statement->verb == "has") {
@@ -172,7 +183,7 @@ bool VRReasoner::evaluate(VRStatementPtr statement, Context& context) {
     print(" " + toString(statement->place) + " eval " + statement->toString());
     statement->updateLocalVariables(context.vars, context.onto);
 
-    if (statement->isSimpleVerb()) { // resolve (anonymous?) variables
+    if (statement->isSimpleVerb()) { // resolve basic verb
         if (statement->verb == "is") return is(statement, context);
         if (statement->verb == "has") return has(statement, context);
     }
@@ -181,6 +192,12 @@ bool VRReasoner::evaluate(VRStatementPtr statement, Context& context) {
         string concept = statement->verb;
         if (context.onto->getConcept(concept)) {
             string name = statement->terms[0].path.root;
+            if (context.vars.count(name)) {
+                print("  reuse variable " + context.vars[name]->toString(), BLUE);
+                statement->state = 1;
+                return true;
+            }
+
             auto var = Variable::create( context.onto, concept, name );
             context.vars[name] = var;
             print("  added variable " + var->toString(), BLUE);
@@ -191,7 +208,6 @@ bool VRReasoner::evaluate(VRStatementPtr statement, Context& context) {
 
     return false;
 }
-    // TODO: introduce requirements rules for the existence of some individuals
 
 vector<VREntityPtr> VRReasoner::process(string initial_query, VROntologyPtr onto) {
     print(initial_query);
