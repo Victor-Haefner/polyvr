@@ -435,8 +435,12 @@ Term::Term(string s) : path(s), str(s) { // parse term content
         me.computeTree(); // build RDP tree
         for (auto l : me.getLeafs()) {
             VPath p(l->param);
-            string val = "1.5"; // TODO: get the value of p!!
-            l->setValue(val); // replace the variable with the numeric value!
+            if (p.size() == 2) { // certainly not a number, go get the value!
+                l->setValue("0"); // TODO: replace the variable with the numeric value!
+            }
+            if (p.size() == 1) {
+                l->setValue(p.root); // default is to use path root, might just be a number
+            }
         }
         if (me.tree) cout << me.tree->toString() << endl;
         string res = me.compute();

@@ -37,6 +37,7 @@ class VRGuiScripts {
         _GtkSourceLanguage* glsl = 0;
         map<VRScript*, page> pages;
 	    shared_ptr<VRFunction<int> > updatePtr;
+	    VRDeviceCbPtr sceneChangedCb;
 
         Gtk::Table* scriptImportWidget = 0;
         Gtk::TreeView* import_treeview1 = 0;
@@ -102,6 +103,8 @@ class VRGuiScripts {
         void on_find_diag_cancel_clicked();
         void on_find_diag_find_clicked();
         void on_toggle_find_replace();
+
+        void on_scene_changed();
 
     public:
         VRGuiScripts();
