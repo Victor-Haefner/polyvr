@@ -982,6 +982,7 @@ void VRGuiScripts::printViewerLanguages() {
 void VRGuiScripts::update() {
     auto scene = VRScene::getCurrent();
     if (scene == 0) return;
+    groups.clear();
     for (auto r : scriptRows) setScriptListRow(r.second, r.first, true);
 }
 
