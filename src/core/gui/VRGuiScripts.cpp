@@ -379,7 +379,9 @@ void VRGuiScripts::on_select_script() { // selected a script
     setCombobox("combobox1", getListStorePos("liststore6", script->getType()));
     auto setup = VRSetup::getCurrent();
     if (setup) fillStringListstore("liststore7", setup->getDevices("server"));
-    vector<string> grps; for (auto g : groups) grps.push_back(g.second.name);
+    vector<string> grps;
+    grps.push_back("no group");
+    for (auto g : groups) grps.push_back(g.second.name);
     fillStringListstore("liststore10", grps);
     setCombobox("combobox24", getListStorePos("liststore7", script->getServer()));
     setCombobox("combobox10", getListStorePos("liststore10", script->getGroup()));
@@ -1006,7 +1008,7 @@ void VRGuiScripts::updateList() {
 
     for (auto script : scene->getScripts()) { // check for new groups
         string grp = script.second->getGroup();
-        if (grp != "" && !grpIter.count(grp)) {
+        if (grp != "" && grp != "no group" && !grpIter.count(grp)) {
             group g;
             groups[g.ID] = g;
             groups[g.ID].name = grp;
