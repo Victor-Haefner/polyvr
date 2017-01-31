@@ -7,6 +7,7 @@ using namespace OSG;
 
 simpleVRPyType(Terrain, New_VRObjects_ptr);
 simpleVRPyType(Tree, New_VRObjects_unnamed_ptr);
+simpleVRPyType(Woods, New_VRObjects_unnamed_ptr);
 
 PyMethodDef VRPyTree::methods[] = {
     {"setup", (PyCFunction)VRPyTree::setup, METH_VARARGS, "Set the tree parameters - setup( int , int, int, flt, flt, flt, flt, flt, flt, flt, flt ) " },
@@ -36,6 +37,24 @@ PyObject* VRPyTree::setLeafMaterial(VRPyTree* self, PyObject* args) {
     VRPyMaterial* m;
     if (! PyArg_ParseTuple(args, "O", &m)) return NULL;
     self->objPtr->setLeafMaterial( m->objPtr );
+    Py_RETURN_TRUE;
+}
+
+PyMethodDef VRPyWoods::methods[] = {
+    {"addTree", (PyCFunction)VRPyWoods::addTree, METH_VARARGS, "Add a tree - addTree( tree ) " },
+    {"computeLODs", (PyCFunction)VRPyWoods::computeLODs, METH_NOARGS, "Compute LODs - computeLODs() " },
+    {NULL}  /* Sentinel */
+};
+
+PyObject* VRPyWoods::addTree(VRPyWoods* self, PyObject* args) {
+    VRPyTree* o = 0;
+    if (! PyArg_ParseTuple(args, "O", &o)) return NULL;
+    self->objPtr->addTree( o->objPtr );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyWoods::computeLODs(VRPyWoods* self) {
+    self->objPtr->computeLODs();
     Py_RETURN_TRUE;
 }
 

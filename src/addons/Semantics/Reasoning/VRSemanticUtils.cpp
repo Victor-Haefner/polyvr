@@ -172,6 +172,10 @@ string VPath::toString() {
     return s;
 }
 
+int VPath::size() {
+    return nodes.size();
+}
+
 Context::Context() {}
 
 Context::Context(VROntologyPtr onto) {

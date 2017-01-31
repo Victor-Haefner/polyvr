@@ -31,6 +31,9 @@ class VRTree : public VRTransform {
         void initArmatureGeo();
         void testSetup();
 
+    protected:
+        VRObjectPtr copy(vector<VRObjectPtr> children);
+
     public:
         VRTree();
         ~VRTree();

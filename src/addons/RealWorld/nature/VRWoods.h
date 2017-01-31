@@ -65,6 +65,7 @@ class VRWoods : public VRLodTree {
         VRWoodsPtr ptr();
 
         void addTree(VRTreePtr t);
+        void computeLODs();
 
         void test();
 };

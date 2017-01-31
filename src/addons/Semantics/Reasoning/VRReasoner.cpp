@@ -190,6 +190,7 @@ bool VRReasoner::evaluate(VRStatementPtr statement, Context& context) {
 
     if (statement->terms.size() == 1) { // resolve (anonymous?) variables
         string concept = statement->verb;
+
         if (context.onto->getConcept(concept)) {
             string name = statement->terms[0].path.root;
             if (context.vars.count(name)) {

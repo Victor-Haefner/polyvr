@@ -216,6 +216,20 @@ void VRTree::initArmatureGeo() {
     }
 }
 
+VRObjectPtr VRTree::copy(vector<VRObjectPtr> children) {
+    auto tree = VRTree::create();
+    tree->trunc = trunc;
+    tree->lod;
+    tree->branches = branches;
+    tree->woodGeos.push_back( dynamic_pointer_cast<VRGeometry>( children[0]->getChild(0)->getChild(0) ) );
+    tree->woodGeos.push_back( dynamic_pointer_cast<VRGeometry>( children[0]->getChild(1)->getChild(0) ) );
+    tree->woodGeos.push_back( dynamic_pointer_cast<VRGeometry>( children[0]->getChild(2)->getChild(0) ) );
+    tree->leafGeos.push_back( dynamic_pointer_cast<VRGeometry>( children[0]->getChild(0)->getChild(1) ) );
+    tree->leafGeos.push_back( dynamic_pointer_cast<VRGeometry>( children[0]->getChild(1)->getChild(1) ) );
+    tree->leafGeos.push_back( dynamic_pointer_cast<VRGeometry>( children[0]->getChild(2)->getChild(1) ) );
+    return tree;
+}
+
 void VRTree::testSetup() {
     srand(time(0));
     trunc = new segment();
@@ -315,6 +329,7 @@ void VRTree::setLeafMaterial(VRMaterialPtr mat) {
 }
 
 void VRTree::createHullLeafLod(VRGeoData& geo, float amount, Vec3f offset) { // TODO
+    if (leafGeos.size() == 0) return;
     VRGeoData g0(leafGeos[0]);
 
     VRConvexHull hull;
@@ -334,6 +349,7 @@ void VRTree::createHullLeafLod(VRGeoData& geo, float amount, Vec3f offset) { // 
 }
 
 void VRTree::createHullTrunkLod(VRGeoData& geo, float amount, Vec3f offset) { // TODO
+    if (leafGeos.size() == 0) return;
     VRGeoData g0(leafGeos[0]);
 
     auto normalize = [](Vec3f v) {

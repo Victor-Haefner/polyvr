@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="2766">
+<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="4379">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
       <Object ambient="0.370962 0.370962 0.370962 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.233875 0.233875 0.233875 1" type="Light" unique="1" visible="1">
         <Object at="-4.5 4 -1" at_dir="1" base_name="Headlight_beacon" from="-4 5 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
           <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
-        <Object accept_root="1" aspect="1" at="2.36505 2.90329 3.36244" at_dir="0" base_name="Default" far="1024" fov="1.0472" from="33.159 71.8955 58.1444" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="-6.91573 3.11581 -10.3526" at_dir="0" base_name="Default" far="1024" fov="1.0472" from="-9.13616 14.1169 29.8793" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
           <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
       </Object>
@@ -14,6 +14,15 @@
   </Objects>
   <Rendering deferred_rendering="0" frustum_culling="1" hmdd="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
+    <Script base_name="click" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="no group">
+      <core>
+	import VR
+	
+	if dev.intersect():
+		print dev.getIntersection()
+</core>
+      <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" name_suffix="4" base_name="trigger" name_space="__global__"/>
+    </Script>
     <Script base_name="init" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="">
       <core>
 	import VR
@@ -70,11 +79,13 @@
 	
 	tg = VR.TextureGenerator()
 	tg.setSize([600,600,1], True)
-	tg.drawFill([0,1,0])
-	#tg.add('Perlin', 1, [0.9]*3, [1,1,1] )
-	#tg.add('Perlin', 0.5, [0.9]*3, [1,1,1] )
-	#tg.add('Perlin', 0.25, [0.9]*3, [1,1,1] )
-	#tg.add('Perlin', 0.125, [0.9]*3, [1,1,1] )	
+	#tg.drawFill([0,10,0])
+	r = 0.8
+	g = 0.9
+	tg.add('Perlin', 1, [r,g,0,0.9], [r,g,0,1] )
+	tg.add('Perlin', 0.5, [r,g,0,0.8], [r,g,0,1] )
+	tg.add('Perlin', 0.25, [r,g,0,0.7], [r,g,0,1] )
+	tg.add('Perlin', 0.125, [r,g,0,0.6], [r,g,0,1] )	
 	tex = tg.compose(0)
 	VR.terrain.setMap(tex)
 	
@@ -146,8 +157,38 @@
     <Script base_name="init_woods" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="">
       <core>
 	import VR
+	from random import random
 	
-	VR.runTest('woodsTest')
+	r = VR.getRoot().find('Headlight')
+
+	if hasattr(VR, 'trees'): VR.woods.destroy()
+	VR.woods = VR.Woods()
+	r.addChild(VR.woods)
+		
+	def addTree():
+		t = VR.Tree()	
+		#t.setup(6,5,int(random()*100), 0.2,0.5,0.78,0.45, 0.2,0.4,0.2,0.2)
+		t.setup(4,5,int(random()*100), 0.2,0.4,0.78,0.45, 0.2,0.4,0.2,0.2)
+		t.addLeafs(4, 30)
+		t.addLeafs(5, 20)
+		return t
+		
+	def randPos():
+		x = random()*W*2-W
+		z = random()*W*2-W
+		return [x,0,z]
+	
+	N1 = 50
+	W = 50
+	trees = [ addTree() for i in range(N1) ]
+	
+	N2 = 2000
+	for i in range(N2):
+		t = trees[int(random()*N1)].duplicate()
+		t.setFrom( randPos() )
+		VR.woods.addTree(t)
+		
+	VR.woods.computeLODs()
 </core>
     </Script>
     <Script base_name="shdr_dfrag" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" server="server1" group="">

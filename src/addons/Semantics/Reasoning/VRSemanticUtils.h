@@ -19,6 +19,7 @@ struct VPath {
 
     VPath(string p);
     string toString();
+    int size();
 };
 
 struct Evaluation {
