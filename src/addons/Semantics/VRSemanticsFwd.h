@@ -21,6 +21,7 @@ ptrFwd(VRStatement);
 ptrFwd(Variable);
 ptrFwd(VRProcess);
 ptrFwd(VRProcessLayout);
+ptrFwd(VRProcessEngine);
 
 }
 

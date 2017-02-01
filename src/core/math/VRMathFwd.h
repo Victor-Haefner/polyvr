@@ -11,6 +11,7 @@ ptrFwd(path);
 ptrFwd(pose);
 ptrFwd(graph_base);
 ptrFwd(Octree);
+ptrFwd(VRStateMachine);
 
 }
 

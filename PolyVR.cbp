@@ -458,6 +458,8 @@
 		<Unit filename="src/addons/Sandbox.h" />
 		<Unit filename="src/addons/Semantics/Processes/VRProcess.cpp" />
 		<Unit filename="src/addons/Semantics/Processes/VRProcess.h" />
+		<Unit filename="src/addons/Semantics/Processes/VRProcessEngine.cpp" />
+		<Unit filename="src/addons/Semantics/Processes/VRProcessEngine.h" />
 		<Unit filename="src/addons/Semantics/Processes/VRProcessLayout.cpp" />
 		<Unit filename="src/addons/Semantics/Processes/VRProcessLayout.h" />
 		<Unit filename="src/addons/Semantics/Processes/VRPyProcess.cpp" />
@@ -567,6 +569,8 @@
 		<Unit filename="src/core/math/VRConvexHull.cpp" />
 		<Unit filename="src/core/math/VRConvexHull.h" />
 		<Unit filename="src/core/math/VRMathFwd.h" />
+		<Unit filename="src/core/math/VRStateMachine.cpp" />
+		<Unit filename="src/core/math/VRStateMachine.h" />
 		<Unit filename="src/core/math/boundingbox.cpp" />
 		<Unit filename="src/core/math/boundingbox.h" />
 		<Unit filename="src/core/math/coordinates.cpp" />
