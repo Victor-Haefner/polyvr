@@ -117,6 +117,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyPath>("Path", pModVR);
     sm->registerModule<VRPyGraph>("Graph", pModVR);
     sm->registerModule<VRPyStateMachine>("StateMachine", pModVR);
+    sm->registerModule<VRPyState>("State", pModVR);
     sm->registerModule<VRPyGraphLayout>("GraphLayout", pModVR);
     sm->registerModule<VRPyPolygon>("Polygon", pModVR);
     sm->registerModule<VRPyTriangulator>("Triangulator", pModVR);

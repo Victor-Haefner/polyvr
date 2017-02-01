@@ -2,25 +2,49 @@
 #define VRSTATEMACHINE_H_INCLUDED
 
 #include "core/math/VRMathFwd.h"
+#include "core/utils/VRFunction.h"
+#include "core/utils/VRName.h"
 #include <OpenSG/OSGVector.h>
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
-class VRStateMachine {
+class VRStateMachine : public VRName {
+    public:
+        typedef VRFunction< map<string, string>, string > VRTransitionCb;
+        typedef shared_ptr<VRTransitionCb> VRTransitionCbPtr;
+
+        class State : public VRName {
+            private:
+                VRTransitionCbPtr transition;
+
+            public:
+                State(string name, VRTransitionCbPtr t);
+                ~State();
+
+                static shared_ptr<State> create(string name, VRTransitionCbPtr t);
+
+                string process(const map<string, string>& parameters);
+        };
+
+        typedef shared_ptr<State> StatePtr;
+
     private:
-        string currentState;
-        vector<string> states;
+        StatePtr currentState;
+        map<string, StatePtr> states;
 
     public:
-        VRStateMachine();
+        VRStateMachine( string name );
         ~VRStateMachine();
 
-        static VRStateMachinePtr create();
+        static VRStateMachinePtr create(string name = "StateMachine");
 
-        void addState(string s);
-        void setState(string s);
-        string getState();
+        StatePtr addState(string s, VRTransitionCbPtr t);
+        StatePtr getState(string s);
+        StatePtr setCurrentState(string s);
+        StatePtr getCurrentState();
+
+        StatePtr process(const map<string, string>& parameters);
 };
 
 OSG_END_NAMESPACE;
