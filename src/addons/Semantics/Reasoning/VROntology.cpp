@@ -237,6 +237,8 @@ string VROntology::toString() {
     res += thing->toString(cMap);
     res += "Entities:\n";
     for (auto e : entities) res += e.second->toString() + "\n";
+    res += "Rules:\n";
+    for (auto r : rules) res += r.second->toString() + "\n";
     return res;
 }
 

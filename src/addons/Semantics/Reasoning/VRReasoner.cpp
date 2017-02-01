@@ -69,8 +69,10 @@ void VRReasoner::print(const string& s, COLOR c) {
 bool VRReasoner::findRule(VRStatementPtr statement, Context& context) {
     print("     search rule for statement: " + statement->toString());
     for ( auto r : context.onto->getRules()) { // no match found -> check rules and initiate new queries
+        print("      check rule in context: "+r->rule, BLUE);
         if (!context.rules.count(r->rule)) continue;
         Query query = context.rules[r->rule];
+        print("      check rule verb: "+query.request->verb+" and "+statement->verb, BLUE);
         if (query.request->verb != statement->verb) continue; // rule verb does not match
         print("      found rule: " + query.request->toString(), GREEN);
         if (!statement->match(query.request)) continue; // statements are not similar enough

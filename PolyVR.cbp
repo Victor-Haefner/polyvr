@@ -560,6 +560,8 @@
 		<Unit filename="src/core/gui/widgets/VRRuleWidget.h" />
 		<Unit filename="src/core/gui/widgets/VRSemanticWidget.cpp" />
 		<Unit filename="src/core/gui/widgets/VRSemanticWidget.h" />
+		<Unit filename="src/core/math/Expression.cpp" />
+		<Unit filename="src/core/math/Expression.h" />
 		<Unit filename="src/core/math/Octree.cpp" />
 		<Unit filename="src/core/math/Octree.h" />
 		<Unit filename="src/core/math/VRConvexHull.cpp" />

@@ -4,6 +4,7 @@
 #include "VRReasoner.h"
 #include "VRProperty.h"
 #include "core/utils/toString.h"
+#include "core/math/Expression.h"
 
 #include <stack>
 #include <iostream>
@@ -189,7 +190,7 @@ Context::Context(VROntologyPtr onto) {
     }
 
     for ( auto r : onto->getRules()) {
-        //cout << "Context prep rule " << r->toString() << endl;
+        //cout << "Context prep rule " << r->rule << endl;
         Query q(r->toString());
         if (!q.request) continue;
 
@@ -208,7 +209,7 @@ Context::Context(VROntologyPtr onto) {
             }
         }
 
-        rules[r->toString()] = q;
+        rules[r->rule] = q;
     }
 }
 
@@ -230,210 +231,9 @@ string Query::toString() {
     return res;
 }
 
-class mathExpression { // TODO: put this in own header!
-    public:
-        struct ValueBase {
-            virtual string toString() = 0;
-            virtual ValueBase* add(ValueBase* n) = 0;
-            virtual ValueBase* sub(ValueBase* n) = 0;
-            virtual ValueBase* mult(ValueBase* n) = 0;
-            virtual ValueBase* div(ValueBase* n) = 0;
-        };
-
-        template<class T> struct Value : ValueBase {
-            T value;
-            Value(const T& t) : value(t) {;}
-            string toString() { return ::toString(value); }
-
-            // TODO: only declare here, use partial template implementations!
-            ValueBase* add(ValueBase* n) {
-                if (auto v2 = dynamic_cast<Value<T>*>(n)) return new Value<T>(value + v2->value);
-                return 0;
-            }
-            ValueBase* sub(ValueBase* n) {
-                if (auto v2 = dynamic_cast<Value<T>*>(n)) return new Value<T>(value - v2->value);
-                return 0;
-            }
-            ValueBase* mult(ValueBase* n) {
-                if (auto v2 = dynamic_cast<Value<T>*>(n)) return new Value<T>(value * v2->value);
-                return 0;
-            }
-            ValueBase* div(ValueBase* n) {
-                //if (auto v2 = dynamic_cast<Value<T>*>(n)) return new Value<T>(value / v2->value);
-                return 0;
-            }
-        };
-
-        //ValueBase* add(Value<Vec3f>* v1, Value<Vec3f>* v2) { return new Value<T>(v1->value + v2->value); }
-
-        struct Node {
-            string param;
-            ValueBase* value = 0;
-            Node* parent = 0;
-            Node* left = 0;
-            Node* right = 0;
-
-            Node(string s) : param(s) {;}
-            ~Node() { if (value) delete value; }
-
-            void setValue(float f) { value = new Value<float>(f); }
-            void setValue(Vec3f v) { value = new Value<Vec3f>(v); }
-            void setValue(string s) {
-                cout << " Node::setValue " << param << " " << s << endl;
-                int N = std::count(s.begin(), s.end(), ' ');
-                if (N == 0) setValue(toFloat(s));
-                if (N == 2) setValue(toVec3f(s));
-            }
-
-            string toString(string indent = "") {
-                string res = param;
-                if (value) res += " ("+value->toString()+")";
-                if (left) res += "\n"+indent+" " + left->toString(indent+" ");
-                if (right) res += "\n"+indent+" " + right->toString(indent+" ");
-                return res;
-            }
-
-            void compute() { // compute value based on left and right values and param as operator
-                if (left->value == 0 || right->value == 0) return;
-                char op = param[0];
-                if (op == '+') value = left->value->add(right->value);
-                if (op == '-') value = left->value->sub(right->value);
-                if (op == '*') value = left->value->mult(right->value);
-                if (op == '/') value = left->value->div(right->value);
-            }
-        };
-
-    public:
-        string data;
-        Node* tree = 0;
-        vector<Node*> nodes;
-        map<char,int> OperatorHierarchy;
-
-        bool isMathToken(char c) {
-            if (c == '+' || c == '-' || c == '*' || c == '/') return true;
-            if (c == '(' || c == ')') return true;
-            return false;
-        }
-
-        void convToPrefixExpr() { // convert infix to prefix expression
-            vector<string> tokens;
-
-            // split into tokens
-            string last;
-            for (int i=0; i<data.size(); i++) {
-                char c = data[i];
-                if (isMathToken(c)) {
-                    if (last.size() > 0 ) tokens.push_back(last);
-                    last = "";
-                    string t; t+=c;
-                    tokens.push_back(t);
-                } else last += c;
-            }
-            if (last.size() > 0 ) tokens.push_back(last);
-
-            stack<string> OperandStack;
-            stack<char> OperatorStack;
-
-            auto processTriple = [&]() {
-                char Operator = OperatorStack.top(); OperatorStack.pop();
-                auto RightOperand = OperandStack.top(); OperandStack.pop();
-                auto LeftOperand = OperandStack.top(); OperandStack.pop();
-                string op; op += Operator;
-                string tmp = op +" "+ LeftOperand +" "+ RightOperand;
-                OperandStack.push( tmp );
-            };
-
-            for (auto t : tokens) {
-                if (t.size() != 1 || !isMathToken(t[0]) ) {
-                    OperandStack.push(t); continue;
-                }
-                char o = t[0];
-
-                if ( o == '(' || OperatorStack.size() == 0 || OperatorHierarchy[o] < OperatorHierarchy[OperatorStack.top()] ) {
-                    OperatorStack.push(o); continue;
-                }
-
-                if ( o == ')' ) {
-                    while( OperatorStack.top() != '(' ) processTriple();
-                    o = OperatorStack.top(); OperatorStack.pop();
-                    continue;
-                }
-
-                if ( OperatorHierarchy[o] >= OperatorHierarchy[OperatorStack.top()] ) {
-                    while( OperatorStack.size() != 0 and OperatorHierarchy[o] >= OperatorHierarchy[OperatorStack.top()] ) {
-                        processTriple();
-                    }
-                    OperatorStack.push(o);
-                }
-            }
-
-            while( OperatorStack.size() ) processTriple();
-            data = OperandStack.top(); // store prefix expression
-        }
-
-        void buildTree() { // build a binary expression tree from the prefix expression data
-            stack<Node*> nodeStack;
-            Node* node = 0;
-            vector<string> tokens = splitString(data,' ');
-            for (int i=0; i<tokens.size(); i++) {
-                string t = tokens[tokens.size()-i-1];
-                node = new Node(t);
-                nodes.push_back(node);
-                if ( t.size() == 1 && isMathToken(t[0]) ) { // found operator
-                    node->right = nodeStack.top(); nodeStack.pop();
-                    node->left = nodeStack.top(); nodeStack.pop();
-                    nodeStack.push(node);
-                } else nodeStack.push(node);
-            }
-            node = nodeStack.top(); nodeStack.pop();
-            tree = node;
-            //cout << tree->toString() << endl;
-        }
-
-    public:
-        mathExpression(string s) {
-            data = s;
-
-            OperatorHierarchy['+'] = 6;
-            OperatorHierarchy['-'] = 6;
-            OperatorHierarchy['*'] = 5;
-            OperatorHierarchy['/'] = 5;
-            OperatorHierarchy['('] = 2;
-            OperatorHierarchy[')'] = 2;
-        }
-
-        bool isMathExpression() {
-            for (auto c : data) if (isMathToken(c)) return true;
-            return false;
-        }
-
-        void computeTree() {
-            convToPrefixExpr();
-            buildTree();
-        }
-
-        vector<Node*> getLeafs() {
-            vector<Node*> res;
-            for (auto n : nodes) if (!n->left && !n->right) res.push_back(n);
-            return res;
-        }
-
-        string compute() { // compute result of binary expression tree
-            std::function<void(Node*)> subCompute = [&](Node* n) {
-                if (!n || !n->left || !n->right) return;
-                subCompute(n->left);
-                subCompute(n->right);
-                n->compute();
-            };
-            subCompute(tree);
-            if (tree->value) return tree->value->toString();
-            else return "";
-        }
-};
-
 Term::Term(string s) : path(s), str(s) { // parse term content
     // check for mathematical expression
-    mathExpression me(s);
+    Expression me(s);
     if (me.isMathExpression()) {
         cout << " Term::Term '"+s+"' is math expression!\n";
         me.computeTree(); // build RDP tree
