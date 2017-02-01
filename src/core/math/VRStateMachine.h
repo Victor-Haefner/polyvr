@@ -9,11 +9,18 @@ OSG_BEGIN_NAMESPACE;
 
 class VRStateMachine {
     private:
+        string currentState;
+        vector<string> states;
+
     public:
         VRStateMachine();
         ~VRStateMachine();
 
         static VRStateMachinePtr create();
+
+        void addState(string s);
+        void setState(string s);
+        string getState();
 };
 
 OSG_END_NAMESPACE;

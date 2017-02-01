@@ -883,6 +883,8 @@
 		<Unit filename="src/core/scripting/VRPySound.h" />
 		<Unit filename="src/core/scripting/VRPySprite.cpp" />
 		<Unit filename="src/core/scripting/VRPySprite.h" />
+		<Unit filename="src/core/scripting/VRPyStateMachine.cpp" />
+		<Unit filename="src/core/scripting/VRPyStateMachine.h" />
 		<Unit filename="src/core/scripting/VRPyStroke.cpp" />
 		<Unit filename="src/core/scripting/VRPyStroke.h" />
 		<Unit filename="src/core/scripting/VRPyTextureGenerator.cpp" />

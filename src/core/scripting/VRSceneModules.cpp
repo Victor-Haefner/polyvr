@@ -13,6 +13,7 @@
 #include "VRPyIntersection.h"
 #include "VRPyPose.h"
 #include "VRPyPath.h"
+#include "VRPyStateMachine.h"
 #include "VRPyGraph.h"
 #include "VRPyPolygon.h"
 #include "VRPyTriangulator.h"
@@ -115,6 +116,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyPose>("Pose", pModVR);
     sm->registerModule<VRPyPath>("Path", pModVR);
     sm->registerModule<VRPyGraph>("Graph", pModVR);
+    sm->registerModule<VRPyStateMachine>("StateMachine", pModVR);
     sm->registerModule<VRPyGraphLayout>("GraphLayout", pModVR);
     sm->registerModule<VRPyPolygon>("Polygon", pModVR);
     sm->registerModule<VRPyTriangulator>("Triangulator", pModVR);
