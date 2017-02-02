@@ -4,13 +4,13 @@
 #include "core/math/VRStateMachine.h"
 #include "core/scripting/VRPyBase.h"
 
-struct VRPyState : VRPyBaseT<OSG::VRStateMachine::State> {
+struct VRPyState : VRPyBaseT<OSG::VRStateMachinePy::State> {
     static PyMethodDef methods[];
 
     static PyObject* getName(VRPyState* self);
 };
 
-struct VRPyStateMachine : VRPyBaseT<OSG::VRStateMachine> {
+struct VRPyStateMachine : VRPyBaseT<OSG::VRStateMachinePy> {
     static PyMethodDef methods[];
 
     static PyObject* addState(VRPyStateMachine* self, PyObject *args);

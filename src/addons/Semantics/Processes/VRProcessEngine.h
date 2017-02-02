@@ -12,8 +12,8 @@ OSG_BEGIN_NAMESPACE;
 class VRProcessEngine {
     private:
         VRProcessPtr process;
-        VRStateMachinePtr processState;
-        map<int, VRStateMachinePtr> subjectStates;
+        VRStateMachineMapPtr processState;
+        map<int, VRStateMachineMapPtr> subjectStates;
 
         void update();
 

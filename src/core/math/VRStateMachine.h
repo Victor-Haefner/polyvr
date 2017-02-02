@@ -9,9 +9,10 @@
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
+template<class P>
 class VRStateMachine : public VRName {
     public:
-        typedef VRFunction< map<string, string>, string > VRTransitionCb;
+        typedef VRFunction< P, string > VRTransitionCb;
         typedef shared_ptr<VRTransitionCb> VRTransitionCbPtr;
 
         class State : public VRName {
@@ -24,7 +25,7 @@ class VRStateMachine : public VRName {
 
                 static shared_ptr<State> create(string name, VRTransitionCbPtr t);
 
-                string process(const map<string, string>& parameters);
+                string process(const P& parameters);
         };
 
         typedef shared_ptr<State> StatePtr;
@@ -37,14 +38,14 @@ class VRStateMachine : public VRName {
         VRStateMachine( string name );
         ~VRStateMachine();
 
-        static VRStateMachinePtr create(string name = "StateMachine");
+        static shared_ptr<VRStateMachine<P>> create(string name = "StateMachine");
 
         StatePtr addState(string s, VRTransitionCbPtr t);
         StatePtr getState(string s);
         StatePtr setCurrentState(string s);
         StatePtr getCurrentState();
 
-        StatePtr process(const map<string, string>& parameters);
+        StatePtr process(const P& parameters);
 };
 
 OSG_END_NAMESPACE;

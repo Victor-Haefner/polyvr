@@ -2,42 +2,50 @@
 
 using namespace OSG;
 
-
-VRStateMachine::State::State(string name, VRTransitionCbPtr t) {
+template<class P>
+VRStateMachine<P>::State::State(string name, VRTransitionCbPtr t) {
     setNameSpace("State");
     setName(name);
     transition = t;
 }
 
-VRStateMachine::State::~State() {}
+template<class P>
+VRStateMachine<P>::State::~State() {}
 
-VRStateMachine::StatePtr VRStateMachine::State::create(string name, VRTransitionCbPtr t) { return StatePtr( new State(name, t) ); }
+template<class P>
+typename VRStateMachine<P>::StatePtr VRStateMachine<P>::State::create(string name, VRTransitionCbPtr t) { return StatePtr( new State(name, t) ); }
 
-string VRStateMachine::State::process(const map<string, string>& params) {
+template<class P>
+string VRStateMachine<P>::State::process(const P& params) {
     return (*transition)(params);
 }
 
 
-VRStateMachine::VRStateMachine(string name) {
+template<class P>
+VRStateMachine<P>::VRStateMachine(string name) {
     setNameSpace("StateMachine");
     setName(name);
 }
 
-VRStateMachine::~VRStateMachine() {}
+template<class P>
+VRStateMachine<P>::~VRStateMachine() {}
 
-VRStateMachinePtr VRStateMachine::create(string name) { return VRStateMachinePtr( new VRStateMachine(name) ); }
+template<class P>
+shared_ptr<VRStateMachine<P>> VRStateMachine<P>::create(string name) { return shared_ptr<VRStateMachine<P>>( new VRStateMachine<P>(name) ); }
 
-VRStateMachine::StatePtr VRStateMachine::addState(string s, VRTransitionCbPtr t) {
+template<class P>
+typename VRStateMachine<P>::StatePtr VRStateMachine<P>::addState(string s, VRTransitionCbPtr t) {
     auto state = State::create(s,t);
     states[s] = state;
     return state;
 }
 
-VRStateMachine::StatePtr VRStateMachine::setCurrentState(string s) { currentState = states[s]; return currentState; }
-VRStateMachine::StatePtr VRStateMachine::getState(string s) { return states[s]; }
-VRStateMachine::StatePtr VRStateMachine::getCurrentState() { return currentState; }
+template<class P> typename VRStateMachine<P>::StatePtr VRStateMachine<P>::setCurrentState(string s) { currentState = states[s]; return currentState; }
+template<class P> typename VRStateMachine<P>::StatePtr VRStateMachine<P>::getState(string s) { return states[s]; }
+template<class P> typename VRStateMachine<P>::StatePtr VRStateMachine<P>::getCurrentState() { return currentState; }
 
-VRStateMachine::StatePtr VRStateMachine::process(const map<string, string>& params) {
+template<class P>
+typename VRStateMachine<P>::StatePtr VRStateMachine<P>::process(const P& params) {
     string newState = currentState->process(params);
     if (states.count(newState)) setCurrentState(newState);
     return currentState;

@@ -1,10 +1,11 @@
 #include "VRPyStateMachine.h"
 #include "VRPyBaseT.h"
+#include "core/math/VRStateMachine.cpp"
 
 using namespace OSG;
 
-simpleVRPyType(StateMachine, New_named_ptr);
-newPyType(VRStateMachine::State, State, 0);
+newPyType(VRStateMachinePy, StateMachine, New_named_ptr);
+newPyType(VRStateMachinePy::State, State, 0);
 
 PyMethodDef VRPyState::methods[] = {
     {"getName", (PyCFunction)VRPyState::getName, METH_NOARGS, "Return the state name - str getName()" },
@@ -25,24 +26,26 @@ PyMethodDef VRPyStateMachine::methods[] = {
     {NULL}  /* Sentinel */
 };
 
-string cbWrapper(PyObject* pyFkt, const map<string, string>& params) { // TODO: get return value from callback!
+string cbWrapper(PyObject* pyFkt, const PyObject* params) {
     if (pyFkt == 0) return "";
     PyGILState_STATE gstate = PyGILState_Ensure();
     if (PyErr_Occurred() != NULL) PyErr_Print();
 
-    PyObject* dict = PyDict_New();
+    /*PyObject* dict = PyDict_New();
     for (auto p : params) {
         PyDict_SetItem(dict, PyString_FromString(p.first.c_str()), PyString_FromString(p.second.c_str()));
-    }
+    }*/
 
     PyObject* args = PyTuple_New(1);
-    PyTuple_SetItem(args, 0, dict);
+    PyTuple_SetItem(args, 0, (PyObject*)params);
     PyObject* res = PyObject_CallObject(pyFkt, args);
     Py_XDECREF(args);
 
     if (PyErr_Occurred() != NULL) PyErr_Print();
     PyGILState_Release(gstate);
 
+    if (!res) return "";
+    if (!PyString_Check(res)) return "";
     return PyString_AsString(res);
 }
 
@@ -53,7 +56,7 @@ PyObject* VRPyStateMachine::addState(VRPyStateMachine* self, PyObject *args) {
     if (! PyArg_ParseTuple(args, "sO", &s, &c)) return NULL;
 
     Py_IncRef(c);
-    VRStateMachine::VRTransitionCbPtr fkt = VRStateMachine::VRTransitionCb::create( "pyStateTransition", boost::bind(cbWrapper, c, _1) );
+    VRStateMachinePy::VRTransitionCbPtr fkt = VRStateMachinePy::VRTransitionCb::create( "pyStateTransition", boost::bind(cbWrapper, c, _1) );
 
     auto state = self->objPtr->addState( s, fkt );
     return VRPyState::fromSharedPtr( state );
@@ -84,19 +87,21 @@ PyObject* VRPyStateMachine::process(VRPyStateMachine* self, PyObject *args) {
 
 
 
-    map<string, string> params;
+    /*map<string, string> params;
     auto plist = PyDict_Items(p);
     for (int i=0; i<pySize(plist); i++) {
         auto paramPair = PyList_GetItem(plist, i);
         auto key = PyTuple_GetItem(paramPair, 0);
         auto value = PyTuple_GetItem(paramPair, 1);
         if (!key || !value) continue;
+        if (!PyString_Check(key)) { cout << "VRPyStateMachine::process Warning: key is not a string!\n"; continue; }
+        if (!PyString_Check(value)) { cout << "VRPyStateMachine::process Warning: value is not a string!\n"; continue; }
         string skey = PyString_AsString(key);
         string svalue = PyString_AsString(value);
         params[skey] = svalue;
-    }
+    }*/
 
-    auto state = self->objPtr->process(params);
+    auto state = self->objPtr->process(p);
     return VRPyState::fromSharedPtr( state );
 }
 
