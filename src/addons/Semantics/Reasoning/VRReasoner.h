@@ -43,11 +43,11 @@ class VRReasoner {
     private:
         VRReasoner();
 
-        bool evaluate(VRStatementPtr s, Context& c);
-        bool apply(VRStatementPtr s, Context& c);
-        bool is(VRStatementPtr s, Context& c);
-        bool has(VRStatementPtr s, Context& c);
-        bool findRule(VRStatementPtr s, Context& c);
+        bool evaluate(VRStatementPtr s, VRSemanticContextPtr c);
+        bool apply(VRStatementPtr s, VRSemanticContextPtr c);
+        bool is(VRStatementPtr s, VRSemanticContextPtr c);
+        bool has(VRStatementPtr s, VRSemanticContextPtr c);
+        bool findRule(VRStatementPtr s, VRSemanticContextPtr c);
         void print(const string& s);
         void print(const string& s, COLOR c);
 

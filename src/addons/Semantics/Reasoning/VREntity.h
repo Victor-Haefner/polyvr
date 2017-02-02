@@ -22,6 +22,7 @@ struct VREntity : public VROntoID, public VRName {
     vector<string> getConceptNames();
     VRPropertyPtr getProperty(string p);
     vector<VRPropertyPtr> getProperties();
+    void rem(VRPropertyPtr);
     string getConceptList();
 
     void set(string prop, string value);
@@ -33,10 +34,6 @@ struct VREntity : public VROntoID, public VRName {
     vector<VRPropertyPtr> getAll(string prop = "");
     vector<string> getVector(string prop, int i = 0);
     vector< vector<string> > getAllVector(string prop);
-
-    void rem(VRPropertyPtr);
-    vector<string> getAtPath(vector<string> path);
-    void setAtPath(vector<string> path, string v);
 
     string toString();
     void save(xmlpp::Element* e, int p);

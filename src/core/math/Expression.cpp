@@ -47,17 +47,23 @@ Expression::Node::~Node() { if (value) delete value; }
 void Expression::Node::setValue(float f) { value = new Value<float>(f); }
 void Expression::Node::setValue(Vec3f v) { value = new Value<Vec3f>(v); }
 void Expression::Node::setValue(string s) {
-    cout << " Node::setValue " << param << " " << s << endl;
     int N = std::count(s.begin(), s.end(), ' ');
     if (N == 0) setValue(toFloat(s));
     if (N == 2) setValue(toVec3f(s));
 }
 
-string Expression::Node::toString(string indent) {
+string Expression::Node::toString() {
+    string res = value ? value->toString() : param;
+    if (right) res = right->toString() + res;
+    if (left) res += left->toString();
+    return res;
+}
+
+string Expression::Node::treeToString(string indent) {
     string res = param;
     if (value) res += " ("+value->toString()+")";
-    if (left) res += "\n"+indent+" " + left->toString(indent+" ");
-    if (right) res += "\n"+indent+" " + right->toString(indent+" ");
+    if (left) res += "\n"+indent+" " + left->treeToString(indent+" ");
+    if (right) res += "\n"+indent+" " + right->treeToString(indent+" ");
     return res;
 }
 
@@ -131,12 +137,27 @@ void Expression::convToPrefixExpr() { // convert infix to prefix expression
 
     while( OperatorStack.size() ) processTriple();
     data = OperandStack.top(); // store prefix expression
+    prefixExpr = true;
 }
 
 void Expression::buildTree() { // build a binary expression tree from the prefix expression data
+    if (!prefixExpr) return;
     stack<Node*> nodeStack;
     Node* node = 0;
-    vector<string> tokens = splitString(data,' ');
+
+    /*vector<string> tokens; // split string in tokens
+    string token;
+    for (auto c : data) {
+        if (isMathToken(c)) {
+            tokens.push_back(token);
+            tokens.push_back(string()+c);
+            token = "";
+        } else token += c;
+    }
+    if (token.size()) tokens.push_back(token);*/
+
+    vector<string> tokens = splitString(data, ' '); // prefix expression is delimited by spaces!
+
     for (int i=0; i<tokens.size(); i++) {
         string t = tokens[tokens.size()-i-1];
         node = new Node(t);
@@ -147,9 +168,8 @@ void Expression::buildTree() { // build a binary expression tree from the prefix
             nodeStack.push(node);
         } else nodeStack.push(node);
     }
-    node = nodeStack.top(); nodeStack.pop();
-    tree = node;
-    //cout << tree->toString() << endl;
+    tree = nodeStack.top(); nodeStack.pop();
+    //cout << "expression tree:\n" << tree->treeToString() << " " << tree->parent << endl;
 }
 
 Expression::Expression(string s) {
@@ -193,6 +213,7 @@ string Expression::compute() { // compute result of binary expression tree
     else return "";
 }
 
+string Expression::toString() { return tree->toString(); }
 
 
 

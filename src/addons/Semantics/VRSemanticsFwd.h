@@ -16,6 +16,7 @@ ptrFwd(VROntology);
 ptrFwd(VREntity);
 ptrFwd(VROntologyRule);
 ptrFwd(VROntologyLink);
+ptrFwd(VRSemanticContext);
 ptrFwd(VRReasoner);
 ptrFwd(VRStatement);
 ptrFwd(Variable);

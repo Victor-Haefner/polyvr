@@ -121,7 +121,7 @@ bool Variable::is(VariablePtr other, VPath& p1, VPath& p2) {
     auto hasSameVal2 = [&](vector<string>& val1) {
         bool res = false;
         for (auto e : other->entities) {
-            vector<string> val2 = e.second->getAtPath(p2.nodes);
+            vector<string> val2 = p2.getValue(e.second);
             //for (auto v : val2) cout << " var2 value: " << v << endl;
             auto r = hasSameVal(val1, val2);
             if (!r) evaluations[e.first].state = Evaluation::INVALID;
@@ -136,7 +136,7 @@ bool Variable::is(VariablePtr other, VPath& p1, VPath& p2) {
     //cout << "Variable::is " << toString() << " at path " << p1.toString() << " =?= " << other->toString() << " at path " << p2.toString() << endl;
     bool res = false;
     for (auto e : entities) {
-        vector<string> val1 = e.second->getAtPath(p1.nodes);
+        vector<string> val1 = p1.getValue(e.second);
         //for (auto v : val1) cout << " var1 value: " << v << endl;
         auto r = hasSameVal2(val1);
         if (!r) evaluations[e.first].state = Evaluation::INVALID;
@@ -177,20 +177,45 @@ int VPath::size() {
     return nodes.size();
 }
 
-Context::Context() {}
+vector<string> VPath::getValue(VREntityPtr e) {
+    vector<string> res;
+    if (size() == 2) {
+        string m = first;
+        auto prop = e->getProperty(m);
+        if (!prop) return res;
+        if (!e->properties.count(prop->getName())) return res;
+        for (auto p : e->properties[prop->getName()]) res.push_back(p->value);
+        return res;
+    }
+    res.push_back( e->getName() );
+    return res;
+}
 
-Context::Context(VROntologyPtr onto) {
+void VPath::setValue(string v, VREntityPtr e) {
+    if (size() == 2) {
+        string m = first;
+        auto prop = e->getProperty(m);
+        if (!prop) return;
+        if (!e->properties.count(prop->getName())) return;
+        for (auto p : e->properties[prop->getName()]) {
+            p->value = v;
+        }
+    }
+}
+
+VRSemanticContext::VRSemanticContext(VROntologyPtr onto) {
+    if (!onto) return;
     this->onto = onto;
 
-    //cout << "Init context:" << endl;
+    //cout << "Init VRSemanticContext:" << endl;
     for (auto i : onto->entities) {
-        if (i.second->getConcepts().size() == 0) { cout << "Context::Context instance " << i.second->getName() << " has no concepts!" << endl; continue; }
+        if (i.second->getConcepts().size() == 0) { cout << "VRSemanticContext::VRSemanticContext instance " << i.second->getName() << " has no concepts!" << endl; continue; }
         vars[i.second->getName()] = Variable::create( onto, i.second->getConcepts()[0]->getName(), i.second->getName() );
         //cout << " add instance " << i.second->toString() << endl;
     }
 
     for ( auto r : onto->getRules()) {
-        //cout << "Context prep rule " << r->rule << endl;
+        //cout << "VRSemanticContext prep rule " << r->rule << endl;
         Query q(r->toString());
         if (!q.request) continue;
 
@@ -213,6 +238,8 @@ Context::Context(VROntologyPtr onto) {
     }
 }
 
+VRSemanticContextPtr VRSemanticContext::create(VROntologyPtr onto) { return VRSemanticContextPtr( new VRSemanticContext(onto) ); }
+
 // TODO: parse concept statements here
 Query::Query() {}
 
@@ -231,29 +258,43 @@ string Query::toString() {
     return res;
 }
 
-Term::Term(string s) : path(s), str(s) { // parse term content
-    // check for mathematical expression
-    Expression me(s);
-    if (me.isMathExpression()) {
-        cout << " Term::Term '"+s+"' is math expression!\n";
-        me.computeTree(); // build RDP tree
-        for (auto l : me.getLeafs()) {
-            VPath p(l->param);
-            if (p.size() == 2) { // certainly not a number, go get the value!
-                l->setValue("0"); // TODO: replace the variable with the numeric value!
-            }
-            if (p.size() == 1) {
-                l->setValue(p.root); // default is to use path root, might just be a number
+Term::Term(string s) : path(s), str(s) {}
+
+bool Term::isMathExpression() { Expression e(str); return e.isMathExpression(); }
+
+string Term::computeExpression(VRSemanticContextPtr context) {
+    Expression me(str);
+    if (!me.isMathExpression()) return "";
+    me.computeTree(); // build RDP tree
+    for (auto l : me.getLeafs()) {
+        VPath p(l->param);
+        l->setValue(p.root); // default is to use path root, might just be a number
+        if (context->vars.count(p.root)) {
+            auto v = context->vars[p.root];
+            for (auto e : v->entities) {
+                auto vals = p.getValue(e.second);
+                for (auto val : vals) {
+                    l->setValue(val);
+                    cout << " computeExpression, replace " << p.root << " by " << val << endl;
+                }
             }
         }
-        if (me.tree) cout << me.tree->toString() << endl;
-        string res = me.compute();
-        cout << " Term::Term '"+s+"' results to " << res << endl;
-        path = VPath(res ); // override old data
     }
+    string res = me.compute();
+    cout << " computeExpression '"+str+"' results to " << res << endl;
+    return res;
 }
 
 bool Term::valid() { return var->valid; }
+
+bool Term::is(Term& t, VRSemanticContextPtr context) {
+    auto v = t.var;
+    if (t.isMathExpression()) {
+        auto res = t.computeExpression(context);
+        v = Variable::create(0,res);
+    }
+    return var->is(v, path, t.path);
+}
 
 void Query::checkState() {
     int r = 1;
@@ -264,13 +305,34 @@ void Query::checkState() {
 void Query::substituteRequest(VRStatementPtr replace) { // replaces the roots of all paths of the terms of each statement
     for (auto statement : statements) {
         for (auto& ts : statement->terms) {
-            for (int i=0; i<request->terms.size(); i++) {
-                auto& t1 = request->terms[i];
-                auto& t2 = replace->terms[i];
-                if (t1.path.root == ts.path.root) {
-                    ts.path.root = t2.path.root;
-                    ts.path.nodes[0] = t2.path.nodes[0];
-                    ts.str = ts.path.toString();
+            if (ts.isMathExpression()) {
+                Expression e(ts.str);
+                e.computeTree();
+                cout << " substitute expression: " << e.toString() << endl;
+                for (auto& l : e.getLeafs()) {
+                    for (int i=0; i<request->terms.size(); i++) {
+                        auto& t1 = request->terms[i];
+                        auto& t2 = replace->terms[i];
+                        //cout << "   ??? substitute: " << t1.path.root << " with " << t2.path.root << " in expression " << ts.str << endl;
+                        if (t1.path.root == l->param) {
+                            l->param = t2.path.root;
+                            l->setValue(l->param);
+                            cout << "  substitute: " << t1.path.root << " with " << t2.path.root << " in expression " << ts.str << endl;
+                        }
+                    }
+                }
+                ts.str = e.toString();
+                ts.path = VPath(ts.str);
+                cout << " substituted expression: " << ts.str << endl;
+            } else {
+                for (int i=0; i<request->terms.size(); i++) {
+                    auto& t1 = request->terms[i];
+                    auto& t2 = replace->terms[i];
+                    if (t1.path.root == ts.path.root) {
+                        ts.path.root = t2.path.root;
+                        ts.path.nodes[0] = t2.path.nodes[0];
+                        ts.str = ts.path.toString();
+                    }
                 }
             }
         }
