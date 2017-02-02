@@ -20,6 +20,9 @@ struct VPath {
     VPath(string p);
     string toString();
     int size();
+
+    vector<string> getValue(VREntityPtr e);
+    void setValue(string v, VREntityPtr e);
 };
 
 struct Evaluation {
@@ -59,7 +62,11 @@ struct Term {
 
     Term(string s);
     bool valid();
-    //bool operator==(Term& other);
+
+    bool isMathExpression();
+    string computeExpression(VRSemanticContextPtr c);
+
+    bool is(Term& t, VRSemanticContextPtr context);
 };
 
 struct Query {
@@ -74,7 +81,7 @@ struct Query {
     void substituteRequest(VRStatementPtr s);
 };
 
-struct Context {
+struct VRSemanticContext {
     map<string, VariablePtr> vars;
     map<string, Query> rules;
     list<Query> queries;
@@ -84,8 +91,9 @@ struct Context {
     int itr=0;
     int itr_max = 5;
 
-    Context(VROntologyPtr onto);
-    Context();
+    VRSemanticContext(VROntologyPtr onto = 0);
+
+    static VRSemanticContextPtr create(VROntologyPtr onto = 0);
 };
 
 OSG_END_NAMESPACE;

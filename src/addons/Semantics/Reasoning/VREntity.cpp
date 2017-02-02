@@ -173,46 +173,6 @@ vector< vector<string> > VREntity::getAllVector(string prop) { // TODO
     return res;
 }
 
-vector<string> VREntity::getAtPath(vector<string> path) { // TODO: move that to the reasoner, this is bullshit!
-    /*cout << "  get value at path ";
-    for (auto p : path) cout << "." << p;
-    cout << endl;*/
-
-    vector<string> res;
-    if (path.size() == 2) {
-        string m = path[1];
-        auto prop = getProperty(m);
-        if (!prop) return res;
-        if (!properties.count(prop->getName())) return res;
-        for (auto p : properties[prop->getName()]) res.push_back(p->value);
-
-        /*cout << "  value of member " << m << " could be";
-        for (auto p : properties[prop->getName()]) cout << " " << p->value;
-        cout << endl;*/
-
-        return res;
-    }
-    res.push_back( getName() );
-
-    return res;
-}
-
-void VREntity::setAtPath(vector<string> path, string v) {
-    /*cout << "VREntity::setAtPath ";
-    for (auto p : path) cout << p << " ";
-    cout << "to " << v << endl;*/
-
-    if (path.size() == 2) {
-        string m = path[1];
-        auto prop = getProperty(m);
-        if (!prop) return;
-        if (!properties.count(prop->getName())) return;
-        for (auto p : properties[prop->getName()]) {
-            p->value = v;
-        }
-    }
-}
-
 string VREntity::toString() {
     string data = "Entity " + name + " of type (";
     data += getConceptList() + ")";

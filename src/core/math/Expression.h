@@ -49,7 +49,8 @@ class Expression {
             void setValue(Vec3f v);
             void setValue(string s);
 
-            string toString(string indent = "");
+            string toString();
+            string treeToString(string indent = "");
             void compute();
         };
 
@@ -58,6 +59,7 @@ class Expression {
         Node* tree = 0;
         vector<Node*> nodes;
         map<char,int> OperatorHierarchy;
+        bool prefixExpr = false;
 
         bool isMathToken(char c);
         void convToPrefixExpr();
@@ -71,6 +73,7 @@ class Expression {
         void computeTree();
         vector<Node*> getLeafs();
         string compute();
+        string toString();
 };
 
 OSG_END_NAMESPACE;
