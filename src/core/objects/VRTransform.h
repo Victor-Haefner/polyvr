@@ -20,7 +20,7 @@ class VRAnimation;
 
 class VRTransform : public VRObject {
     public:
-        enum ORIANTATION_MODE {
+        enum ORIENTATION_MODE {
             OM_AT = 0,
             OM_DIR = 1,
             OM_EULER = 2

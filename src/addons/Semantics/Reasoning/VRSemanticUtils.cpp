@@ -4,6 +4,7 @@
 #include "VRReasoner.h"
 #include "VRProperty.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRFunction.h"
 #include "core/math/Expression.h"
 
 #include <stack>
@@ -11,6 +12,13 @@
 #include <algorithm>
 
 using namespace OSG;
+
+VRSemanticBuiltinPtr VRSemanticBuiltin::create() { return VRSemanticBuiltinPtr( new VRSemanticBuiltin() ); }
+
+bool VRSemanticBuiltin::execute(const VRSemanticBuiltin::Params& params) {
+    if (callback) (*callback)(params);
+    return true;
+}
 
 Variable::Variable() {;}
 
@@ -303,7 +311,25 @@ void Query::checkState() {
 }
 
 void Query::substituteRequest(VRStatementPtr replace) { // replaces the roots of all paths of the terms of each statement
-    for (auto statement : statements) {
+    // compute all values to substitute
+    map<string, string> substitutes;
+    for (int i=0; i<request->terms.size(); i++) {
+        Term& t1 = request->terms[i];
+        Term& t2 = replace->terms[i];
+        substitutes[t1.var->value] = t2.str;
+    }
+
+    auto substitute = [&](string& var) {
+        if (!substitutes.count(var)) return;
+        cout << "  substitute: " << var;
+        var = substitutes[var];
+        cout << " with " << var << endl;
+    };
+
+    cout << " substitutes:\n";
+    for (auto s : substitutes) cout << "  substitute "+s.first+" "+s.second << endl;
+
+    for (auto statement : statements) { // substitute values in all statements of the query
         for (auto& ts : statement->terms) {
             if (ts.isMathExpression()) {
                 Expression e(ts.str);
@@ -312,12 +338,15 @@ void Query::substituteRequest(VRStatementPtr replace) { // replaces the roots of
                 for (auto& l : e.getLeafs()) {
                     for (int i=0; i<request->terms.size(); i++) {
                         auto& t1 = request->terms[i];
-                        auto& t2 = replace->terms[i];
-                        //cout << "   ??? substitute: " << t1.path.root << " with " << t2.path.root << " in expression " << ts.str << endl;
-                        if (t1.path.root == l->param) {
-                            l->param = t2.path.root;
-                            l->setValue(l->param);
-                            cout << "  substitute: " << t1.path.root << " with " << t2.path.root << " in expression " << ts.str << endl;
+                        //cout << " substitute " << l->param << " , " << t1.path.root << " in expression " << ts.str << " ?" << endl;
+                        if (t1.path.root == l->param) substitute(l->param);
+                        else {
+                            VPath lpath(l->param);
+                            if (t1.path.root == lpath.root) {
+                                substitute(lpath.root);
+                                lpath.nodes[0] = lpath.root;
+                                l->param = lpath.toString();
+                            }
                         }
                     }
                 }
@@ -327,10 +356,9 @@ void Query::substituteRequest(VRStatementPtr replace) { // replaces the roots of
             } else {
                 for (int i=0; i<request->terms.size(); i++) {
                     auto& t1 = request->terms[i];
-                    auto& t2 = replace->terms[i];
                     if (t1.path.root == ts.path.root) {
-                        ts.path.root = t2.path.root;
-                        ts.path.nodes[0] = t2.path.nodes[0];
+                        substitute(ts.path.root);
+                        ts.path.nodes[0] = ts.path.root;
                         ts.str = ts.path.toString();
                     }
                 }

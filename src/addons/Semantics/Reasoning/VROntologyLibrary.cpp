@@ -58,6 +58,7 @@ void VROntology::setupLibrary() {
     objectOnto->addConcept("Object");
     objectOnto->getConcept("Object")->addProperty("position", "Position");
     objectOnto->getConcept("Object")->addProperty("orientation", "Orientation");
+    //objectOnto->addBuiltin<VRTransform>("rotate", &VRTransform::rotate, "fVf3");
 
     processOnto->addConcept("Process");
     processOnto->getConcept("Process")->addProperty("fragment", "Process");

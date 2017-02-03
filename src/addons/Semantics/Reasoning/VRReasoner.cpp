@@ -11,6 +11,15 @@
 using namespace std;
 using namespace OSG;
 
+bool VRReasoner::verbGui = true;
+bool VRReasoner::verbConsole = true;
+string VRReasoner::pre = "  ?!?  ";
+string VRReasoner::redBeg  = "\033[0;38;2;255;150;150m";
+string VRReasoner::greenBeg = "\033[0;38;2;150;255;150m";
+string VRReasoner::blueBeg = "\033[0;38;2;150;150;255m";
+string VRReasoner::yellowBeg = "\033[0;38;2;255;255;150m";
+string VRReasoner::colEnd = "\033[0m";
+
 VRReasoner::VRReasoner() {
     verbConsole = false;
 }
@@ -42,11 +51,6 @@ bool VRReasoner::startswith(string s, string subs) {
     return s.compare(0, subs.size(), subs);
 }
 
-/* TODO
- - non matching paths may be valid rule!
-
-*/
-
 void VRReasoner::print(const string& s) {
     if (verbConsole) cout << pre << s << endl;
     if (verbGui) VRGuiManager::get()->printToConsole( "Reasoning", s+"\n" );
@@ -74,6 +78,7 @@ bool VRReasoner::findRule(VRStatementPtr statement, VRSemanticContextPtr context
         Query query = context->rules[r->rule];
         //print("      check rule verb: "+query.request->verb+" and "+statement->verb, BLUE);
         if (query.request->verb != statement->verb) continue; // rule verb does not match
+        print("      found rule with matching name: " + query.request->toString(), GREEN);
         if (!statement->match(query.request)) continue; // statements are not similar enough
         print("      found rule: " + query.request->toString(), GREEN);
 
@@ -85,6 +90,26 @@ bool VRReasoner::findRule(VRStatementPtr statement, VRSemanticContextPtr context
     }
     print("      no rule found!", RED);
     return false;
+}
+
+bool VRReasoner::builtin(VRStatementPtr s, VRSemanticContextPtr c) {
+    if (s->terms.size() < 2) return false;
+    if (!s->terms[1].var || s->terms[1].var->entities.size() == 0) return false;
+    string cb_name = s->terms[0].str;
+    VREntityPtr entity = s->terms[1].var->entities[0];
+
+    if (!c->onto->builtins.count(cb_name)) return false;
+    auto& builtin = c->onto->builtins[cb_name];
+
+    vector<string> params;
+    for (int i=2; i<s->terms.size(); i++) {
+        auto& t = s->terms[i];
+        if (t.isMathExpression()) params.push_back( t.computeExpression(c) );
+        if (t.var && t.var->entities.size() > 0) params.push_back( t.var->entities[0]->getName() );
+    }
+    builtin->execute(params);
+
+    return true;
 }
 
 bool VRReasoner::is(VRStatementPtr statement, VRSemanticContextPtr context) {
@@ -192,6 +217,10 @@ bool VRReasoner::evaluate(VRStatementPtr statement, VRSemanticContextPtr context
     print(" " + toString(statement->place) + " eval " + statement->toString());
     statement->updateLocalVariables(context->vars, context->onto);
 
+    if (statement->verb == "builtin") {
+        return builtin(statement, context);
+    }
+
     if (statement->isSimpleVerb()) { // resolve basic verb
         if (statement->verb == "is") return is(statement, context);
         if (statement->verb == "has") return has(statement, context);
@@ -200,9 +229,14 @@ bool VRReasoner::evaluate(VRStatementPtr statement, VRSemanticContextPtr context
     if (statement->terms.size() == 1) { // resolve (anonymous?) variables
         string concept = statement->verb;
 
-        if (context->onto->getConcept(concept)) {
+        if (auto c = context->onto->getConcept(concept)) {
             string name = statement->terms[0].path.root;
-            if (context->vars.count(name)) {
+            if (context->vars.count(name)) { // there is already a variable with that name!
+                auto var = context->vars[name];
+                if ( c->is_a(var->concept) && var->concept != concept ) { // the variable is not the same type or a subtype of concept!
+                    //TODO: what happens then?
+                    //  are the entities that don't have the concept removed from the variable? I think not...
+                }
                 print("  reuse variable " + context->vars[name]->toString(), BLUE);
                 statement->state = 1;
                 return true;

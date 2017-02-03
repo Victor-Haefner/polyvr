@@ -19,6 +19,7 @@ ptrFwd(VROntologyLink);
 ptrFwd(VRSemanticContext);
 ptrFwd(VRReasoner);
 ptrFwd(VRStatement);
+ptrFwd(VRSemanticBuiltin);
 ptrFwd(Variable);
 ptrFwd(VRProcess);
 ptrFwd(VRProcessLayout);

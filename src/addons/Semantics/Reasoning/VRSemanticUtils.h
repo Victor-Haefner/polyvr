@@ -8,9 +8,22 @@
 #include <OpenSG/OSGConfig.h>
 
 #include "../VRSemanticsFwd.h"
+#include "core/utils/VRFunctionFwd.h"
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
+
+struct VRSemanticBuiltin {
+    typedef vector<string> Params;
+    typedef VRFunction< Params > Callback;
+    typedef std::shared_ptr< Callback > CallbackPtr;
+
+    CallbackPtr callback;
+
+    static VRSemanticBuiltinPtr create();
+
+    bool execute(const Params& params);
+};
 
 struct VPath {
     string first;

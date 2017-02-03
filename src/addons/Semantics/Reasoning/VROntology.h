@@ -26,6 +26,7 @@ struct VROntology : public std::enable_shared_from_this<VROntology>, public VRNa
     map<string, VRConceptWeakPtr> concepts;
     map<int, VROntologyRulePtr> rules;
     map<string, VROntologyWeakPtr> dependencies;
+    map<string, VRSemanticBuiltinPtr> builtins;
 
     VROntology(string name);
     static VROntologyPtr create(string name = "");
@@ -48,6 +49,7 @@ struct VROntology : public std::enable_shared_from_this<VROntology>, public VRNa
 
     VRConceptPtr addConcept(string concept, string parent = "", string comment = "");
     VROntologyRulePtr addRule(string rule, string ac);
+    VRSemanticBuiltinPtr addBuiltin(string builtin);
     VREntityPtr addEntity(string name, string concept);
     VREntityPtr addVectorEntity(string name, string concept, string x, string y, string z);
     VREntityPtr addVectorEntity(string name, string concept, vector<string> val);
