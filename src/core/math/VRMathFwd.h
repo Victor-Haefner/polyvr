@@ -3,6 +3,9 @@
 
 
 #include "core/utils/VRFwdDeclTemplate.h"
+#include <map>
+#include <string>
+#include <Python.h>
 
 namespace OSG {
 
@@ -11,7 +14,10 @@ ptrFwd(path);
 ptrFwd(pose);
 ptrFwd(graph_base);
 ptrFwd(Octree);
-ptrFwd(VRStateMachine);
+
+ptrTemplateFwd( VRStateMachine, VRStateMachinePy, PyObject* );
+typedef std::map<std::string, std::string> strMap;
+ptrTemplateFwd( VRStateMachine, VRStateMachineMap, strMap );
 
 }
 
