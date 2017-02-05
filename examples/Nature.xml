@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="8864">
+<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="8477">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
       <Object ambient="0.370962 0.370962 0.370962 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.233875 0.233875 0.233875 1" type="Light" unique="1" visible="1">

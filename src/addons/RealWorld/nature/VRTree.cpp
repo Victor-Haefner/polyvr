@@ -289,6 +289,8 @@ void VRTree::addLeafs(int lvl, int amount) { // TODO: add default material!
     float s = 0.03;
     float ca = 1.0; // carotene
     float ch = 1.0; // chlorophyl
+    ca = 0.5 + rand()*0.5/RAND_MAX;
+    ch = 0.5 + rand()*0.5/RAND_MAX;
     VRGeoData geo0, geo1, geo2;
     for (auto b : branches) {
         if (b->lvl != lvl) continue;
@@ -333,7 +335,7 @@ void VRTree::setLeafMaterial(VRMaterialPtr mat) {
     for (auto g : leafGeos) g->setMaterial(mat);
 }
 
-void VRTree::createHullLeafLod(VRGeoData& geo, float amount, Vec3f offset) { // TODO
+void VRTree::createHullLeafLod(VRGeoData& geo, float amount, Vec3f offset) { // TODO, depending on amount, make multiple smaller convex hulls
     if (leafGeos.size() == 0) return;
     VRGeoData g0(leafGeos[0]);
 
