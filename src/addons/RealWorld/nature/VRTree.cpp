@@ -339,17 +339,27 @@ void VRTree::createHullLeafLod(VRGeoData& geo, float amount, Vec3f offset) { // 
 
     VRConvexHull hull;
 
+    Vec4f meanColor;
     VRGeoData tmpData;
     int N = g0.size()*amount;
     float D = 1.0/amount;
     for (int i=0; i<N; i++) {
         int j = max( min( int(i*D), g0.size()-1), 0);
+        meanColor += g0.getColor(j);
         Pnt3f pos = g0.getPosition(j) + offset;
-        tmpData.pushVert( pos, g0.getNormal(j));
+        tmpData.pushVert( pos, g0.getNormal(j) );
         tmpData.pushPoint();
     }
 
-    auto res = hull.compute3D( tmpData.asGeometry("tmpdata") );
+    auto res = VRGeoData( hull.compute( tmpData.asGeometry("tmpdata") ) );
+    meanColor *= 1.0/N;
+    float ca = meanColor[1]; // carotene
+    float ch = meanColor[2]; // chlorophyll
+    Vec3f leafColor = Vec3f(0.4*ca,0.8*ch,0.2*ch);
+    for (int i=0; i<res.size(); i++) {
+        res.pushColor( leafColor );
+    }
+
     geo.append(res);
 }
 
@@ -363,15 +373,16 @@ void VRTree::createHullTrunkLod(VRGeoData& geo, float amount, Vec3f offset) { //
     };
 
     float r = 0.1;
+    float h = 3;
     int N = geo.size();
     geo.pushVert( Pnt3f(-r,0,-r) + offset, normalize( Vec3f(-1,0,-1) ) );
     geo.pushVert( Pnt3f(-r,0, r) + offset, normalize( Vec3f(-1,0, 1) ) );
     geo.pushVert( Pnt3f( r,0, r) + offset, normalize( Vec3f( 1,0, 1) ) );
     geo.pushVert( Pnt3f( r,0,-r) + offset, normalize( Vec3f( 1,0,-1) ) );
-    geo.pushVert( Pnt3f(-r,2,-r) + offset, normalize( Vec3f(-1,0,-1) ) );
-    geo.pushVert( Pnt3f(-r,2, r) + offset, normalize( Vec3f(-1,0, 1) ) );
-    geo.pushVert( Pnt3f( r,2, r) + offset, normalize( Vec3f( 1,0, 1) ) );
-    geo.pushVert( Pnt3f( r,2,-r) + offset, normalize( Vec3f( 1,0,-1) ) );
+    geo.pushVert( Pnt3f(-r,h,-r) + offset, normalize( Vec3f(-1,0,-1) ) );
+    geo.pushVert( Pnt3f(-r,h, r) + offset, normalize( Vec3f(-1,0, 1) ) );
+    geo.pushVert( Pnt3f( r,h, r) + offset, normalize( Vec3f( 1,0, 1) ) );
+    geo.pushVert( Pnt3f( r,h,-r) + offset, normalize( Vec3f( 1,0,-1) ) );
     geo.pushQuad(N+0,N+1,N+5,N+4);
     geo.pushQuad(N+1,N+2,N+6,N+5);
     geo.pushQuad(N+2,N+3,N+7,N+6);

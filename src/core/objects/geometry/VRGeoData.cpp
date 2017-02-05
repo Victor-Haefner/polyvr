@@ -117,6 +117,9 @@ int VRGeoData::pushVert(Pnt3f p, Vec3f n, Vec2f t, Vec2f t2) { data->texs2->addV
 int VRGeoData::pushVert(Pnt3f p, Vec3f n, Vec3f c, Vec2f t) { data->texs->addValue(t); return pushVert(p,n,c); }
 int VRGeoData::pushVert(Pnt3f p, Vec3f n, Vec4f c, Vec2f t) { data->texs->addValue(t); return pushVert(p,n,c); }
 
+int VRGeoData::pushColor(Vec3f c) { data->cols3->addValue(c); }
+int VRGeoData::pushColor(Vec4f c) { data->cols4->addValue(c); }
+
 bool VRGeoData::setVert(int i, Pnt3f p) { if (size() > i) data->pos->setValue(p,i); else return 0; return 1; }
 bool VRGeoData::setVert(int i, Pnt3f p, Vec3f n) { if (size() > i) data->norms->setValue(n,i); else return 0; return setVert(i,p); }
 bool VRGeoData::setVert(int i, Pnt3f p, Vec3f n, Vec3f c) { if (size() > i) data->cols3->setValue(c,i); else return 0; return setVert(i,p,n); }

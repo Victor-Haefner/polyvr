@@ -14,7 +14,7 @@ class VRConvexHull {
         VRConvexHull();
         ~VRConvexHull();
 
-        VRGeometryPtr compute3D(VRGeometryPtr geo);
+        VRGeometryPtr compute(VRGeometryPtr geo);
 };
 
 OSG_END_NAMESPACE;
