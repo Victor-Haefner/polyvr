@@ -7,6 +7,7 @@ in vec3 vn[];
 in vec3 vcol[];
 out vec2 tcs;
 out vec3 norm;
+out vec3 col;
 
 #define mMVP gl_ModelViewProjectionMatrix
 #define mMV gl_ModelViewMatrix
@@ -40,6 +41,7 @@ void main() {
 	TCS[2] = vec2(0,1);
 	TCS[3] = vec2(1,1);
 	norm = normalize(cross(x.xyz,z.xyz));
+	col = vcol[0];
 	for (int i=0; i<4; i++) crnsMVP[i] = mMVP * crns[i];
 	emit(0);
 	emit(1);

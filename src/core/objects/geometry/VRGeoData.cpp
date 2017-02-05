@@ -100,6 +100,13 @@ int VRGeoData::size() const { return data->pos->size(); }
 
 Pnt3f VRGeoData::getPosition(int i) { return data->pos->getValue(i); }
 Vec3f VRGeoData::getNormal(int i) { return data->norms->getValue(i); }
+Vec4f VRGeoData::getColor(int i) {
+    if (data->cols4->size() > i) return data->cols4->getValue(i);
+    else {
+        Vec3f c = data->cols3->getValue(i);
+        return Vec4f( c[0], c[1], c[2], 1.0 );
+    }
+}
 
 int VRGeoData::pushVert(Pnt3f p) { data->pos->addValue(p); return data->pos->size()-1; }
 int VRGeoData::pushVert(Pnt3f p, Vec3f n) { data->norms->addValue(n); return pushVert(p); }

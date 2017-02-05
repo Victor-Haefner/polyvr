@@ -4,6 +4,7 @@ uniform sampler2D tex;
 
 in vec2 tcs;
 in vec3 norm;
+in vec3 col;
 vec4 color;
 
 
@@ -19,12 +20,14 @@ void applyBlinnPhong() {
 }
 
 void main( void ) {
+	float ca = col[1];
+	float ch = col[2];
 	color = texture(tex,tcs);
 	if (color.a < 0.3) discard;
 	//color.a = 1.0;
-	color.x *= 0.7;
-	color.y *= 0.7;
-	color.z *= 0.2;
+	color.x *= 0.4*ca;
+	color.y *= 0.8*ch;
+	color.z *= 0.2*ch;
 	
 	applyBlinnPhong();
 }

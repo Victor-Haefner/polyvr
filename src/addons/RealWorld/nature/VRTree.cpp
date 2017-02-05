@@ -287,6 +287,8 @@ void VRTree::addLeafs(int lvl, int amount) { // TODO: add default material!
     };
 
     float s = 0.03;
+    float ca = 1.0; // carotene
+    float ch = 1.0; // chlorophyl
     VRGeoData geo0, geo1, geo2;
     for (auto b : branches) {
         if (b->lvl != lvl) continue;
@@ -304,18 +306,21 @@ void VRTree::addLeafs(int lvl, int amount) { // TODO: add default material!
             Vec3f v = randVecInSphere(L*0.3);
             Vec3f n = p+v-b->p1;
             n.normalize();
-            geo0.pushVert(p+v, n, Vec3f(s,0,0));
+            // TODO: add model for carotene and chlorophyl depending on leaf age/size and more..
+            geo0.pushVert(p+v, n, Vec3f(s,ca,ch)); // color: leaf size, amount of carotene, amount of chlorophyl
             geo0.pushPoint();
         }
     }
 
     for (int i=0; i<geo0.size(); i+=4) {
-        geo1.pushVert( geo0.getPosition(i), geo0.getNormal(i), Vec3f(s*2,0,0));
+        auto c = geo0.getColor(i); c[0] *= 2; // double lod leaf size
+        geo1.pushVert( geo0.getPosition(i), geo0.getNormal(i), c);
         geo1.pushPoint();
     }
 
     for (int i=0; i<geo0.size(); i+=16) {
-        geo2.pushVert( geo0.getPosition(i), geo0.getNormal(i), Vec3f(s*4,0,0));
+        auto c = geo0.getColor(i); c[0] *= 4; // double lod leaf size
+        geo2.pushVert( geo0.getPosition(i), geo0.getNormal(i), c);
         geo2.pushPoint();
     }
 

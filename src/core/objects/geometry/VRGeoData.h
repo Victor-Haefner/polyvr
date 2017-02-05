@@ -35,6 +35,7 @@ class VRGeoData {
 
         Pnt3f getPosition(int i);
         Vec3f getNormal(int i);
+        Vec4f getColor(int i);
 
         int pushVert(Pnt3f p);
         int pushVert(Pnt3f p, Vec3f n);
