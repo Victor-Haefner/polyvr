@@ -170,7 +170,7 @@ void VRGuiScripts::setScriptListRow(Gtk::TreeIter itr, VRScriptPtr script, bool 
     bool user_focus = false;
     if(!user_focus) user_focus = ("gtkmm__GtkTreeView" == name);
     if(!user_focus) user_focus = ("GtkEntry" == name); // TODO: be more specific
-    if(onlyTime && user_focus) return;
+    if(onlyTime && (user_focus || !doPerf)) return;
 
     int Nf = script->getSearch().N;
     string icon, Nfound;
@@ -334,6 +334,10 @@ void VRGuiScripts::on_exec_clicked() {
     scene->triggerScript(script->getName());
 
     VRGuiSignals::get()->getSignal("scene_modified")->triggerPtr<VRDevice>();
+}
+
+void VRGuiScripts::on_perf_toggled() {
+    doPerf = getToggleButtonState("toggletoolbutton1");
 }
 
 void VRGuiScripts::on_del_clicked() {
@@ -1162,6 +1166,7 @@ VRGuiScripts::VRGuiScripts() {
     setToolButtonCallback("toolbutton20", sigc::mem_fun(*this, &VRGuiScripts::on_addSep_clicked) );
     setToolButtonCallback("toolbutton22", sigc::mem_fun(*this, &VRGuiScripts::on_import_clicked) );
     setToolButtonCallback("toolbutton23", sigc::mem_fun(*this, &VRGuiScripts::on_find_clicked) );
+    setToolButtonCallback("toggletoolbutton1", sigc::mem_fun(*this, &VRGuiScripts::on_perf_toggled) );
 
     setButtonCallback("button12", sigc::mem_fun(*this, &VRGuiScripts::on_argadd_clicked) );
     setButtonCallback("button13", sigc::mem_fun(*this, &VRGuiScripts::on_argrem_clicked) );

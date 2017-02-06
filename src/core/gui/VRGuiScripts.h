@@ -31,6 +31,7 @@ class VRGuiScripts {
             int line = 0;
         };
 
+        bool doPerf = false;
         bool trigger_cbs = true;
         _GtkSourceLanguage* python = 0;
         _GtkSourceLanguage* web = 0;
@@ -61,6 +62,7 @@ class VRGuiScripts {
         void on_exec_clicked();
         void on_del_clicked();
         void on_import_clicked();
+        void on_perf_toggled();
 
         void on_select_script();
         void on_change_script_type();
