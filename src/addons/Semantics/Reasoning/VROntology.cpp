@@ -133,12 +133,6 @@ void VROntology::renameConcept(VRConceptPtr c, string newName) {
     addConcept(c);
 }
 
-VRSemanticBuiltinPtr VROntology::addBuiltin(string builtin) {
-    auto b = VRSemanticBuiltin::create();
-    builtins[builtin] = b;
-    return b;
-}
-
 void VROntology::remEntity(VREntityPtr e) {
     if (!e) return;
     //for (auto i : entities) cout << "i " << i.first << " " << i.second->getName() << " " << i.second->ID << endl;
@@ -162,6 +156,7 @@ void VROntology::import(VROntologyPtr o) { merge(o); }
 
 void VROntology::merge(VROntologyPtr o) { // Todo: check it well!
     for (auto c : o->rules) rules[c.first] = c.second;
+    for (auto b : o->builtins) builtins[b.first] = b.second;
     for (auto c : o->concepts) {
         auto cn = c.second.lock();
         if (cn) concepts[cn->getName()] = cn;

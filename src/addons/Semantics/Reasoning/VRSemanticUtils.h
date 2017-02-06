@@ -9,20 +9,19 @@
 
 #include "../VRSemanticsFwd.h"
 #include "core/utils/VRFunctionFwd.h"
+#include "core/objects/VRObjectFwd.h"
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
 
 struct VRSemanticBuiltin {
     typedef vector<string> Params;
-    typedef VRFunction< Params > Callback;
-    typedef std::shared_ptr< Callback > CallbackPtr;
 
-    CallbackPtr callback;
+    string format;
 
-    static VRSemanticBuiltinPtr create();
-
-    bool execute(const Params& params);
+    VRSemanticBuiltin();
+    virtual ~VRSemanticBuiltin();
+    virtual bool execute(VRObjectPtr o, const Params& params) = 0;
 };
 
 struct VPath {

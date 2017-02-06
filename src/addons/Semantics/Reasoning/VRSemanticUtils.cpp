@@ -13,12 +13,8 @@
 
 using namespace OSG;
 
-VRSemanticBuiltinPtr VRSemanticBuiltin::create() { return VRSemanticBuiltinPtr( new VRSemanticBuiltin() ); }
-
-bool VRSemanticBuiltin::execute(const VRSemanticBuiltin::Params& params) {
-    if (callback) (*callback)(params);
-    return true;
-}
+VRSemanticBuiltin::VRSemanticBuiltin() {}
+VRSemanticBuiltin::~VRSemanticBuiltin() {}
 
 Variable::Variable() {;}
 
@@ -187,6 +183,7 @@ int VPath::size() {
 
 vector<string> VPath::getValue(VREntityPtr e) {
     vector<string> res;
+    if (!e) return res;
     if (size() == 2) {
         string m = first;
         auto prop = e->getProperty(m);

@@ -20,6 +20,7 @@ struct VRPyConcept : VRPyBaseT<OSG::VRConcept> {
     static PyObject* getProperty(VRPyConcept* self, PyObject* args);
     static PyObject* getProperties(VRPyConcept* self);
     static PyObject* addProperty(VRPyConcept* self, PyObject* args);
+    static PyObject* append(VRPyConcept* self, PyObject* args);
 };
 
 struct VRPyOntologyRule : VRPyBaseT<OSG::VROntologyRule> {

@@ -64,6 +64,9 @@ VREntity::VREntity(string name, VROntologyPtr o, VRConceptPtr c) {
 
 VREntityPtr VREntity::create(string name, VROntologyPtr o, VRConceptPtr c) { return VREntityPtr( new VREntity(name, o, c) ); }
 
+void VREntity::setSGObject(VRObjectPtr o) { sgObject = o; }
+VRObjectPtr VREntity::getSGObject() { return sgObject.lock(); }
+
 void VREntity::addConcept(VRConceptPtr c) { concepts.push_back(c); }
 
 vector<VRConceptPtr> VREntity::getConcepts() {

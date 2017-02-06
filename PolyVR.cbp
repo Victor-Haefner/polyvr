@@ -31,8 +31,8 @@
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="-std=c++11" />
 			<Add option="-Wall" />
+			<Add option="-std=c++11" />
 			<Add option="`pkg-config gtk+-2.0 --cflags`" />
 			<Add option="`pkg-config gmodule-2.0 --cflags`" />
 			<Add option="`pkg-config --cflags libxml++-2.6`" />
@@ -476,6 +476,7 @@
 		<Unit filename="src/addons/Semantics/Reasoning/VROntologyLibrary.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROntologyRule.cpp" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROntologyRule.h" />
+		<Unit filename="src/addons/Semantics/Reasoning/VROntologyT.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROntologyUtils.cpp" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROntologyUtils.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VRProperty.cpp" />

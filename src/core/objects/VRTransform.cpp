@@ -471,21 +471,7 @@ void VRTransform::setEuler(Vec3f e) {
 Vec3f VRTransform::getScale() { return _scale; }
 Vec3f VRTransform::getEuler() { return _euler; }
 
-/** Rotate the object around its up axis **/
-void VRTransform::rotate(float a) {//rotate around up axis
-    if (isNan(a)) return;
-    Vec3f d = _at - _from;
-
-    Quaternion q = Quaternion(_up, a);
-    q.multVec(d,d);
-
-    _at = _from + d;
-
-    reg_change();
-    //cout << "\nRotating " << name << " " << a ;
-}
-
-void VRTransform::rotate(float a, Vec3f v) {//rotate around up axis
+void VRTransform::rotate(float a, Vec3f v) {//rotate around axis
     if (isNan(a) || isNan(v)) return;
     Vec3f d = _at - _from;
 
@@ -499,8 +485,7 @@ void VRTransform::rotate(float a, Vec3f v) {//rotate around up axis
     reg_change();
 }
 
-        /** Rotate the object around its dir axis **/
-void VRTransform::rotateUp(float a) {//rotate around _at axis
+void VRTransform::rotateUp(float a) {//rotate around _up axis
     if (isNan(a)) return;
     Vec3f d = _at - _from;
     d.normalize();

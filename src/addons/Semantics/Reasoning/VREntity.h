@@ -13,6 +13,7 @@ struct VREntity : public VROntoID, public VRName {
     vector<string> conceptNames;
     map<string, vector<VRPropertyPtr> > properties;
     VROntologyWeakPtr ontology;
+    VRObjectWeakPtr sgObject;
 
     VREntity(string name, VROntologyPtr o, VRConceptPtr c = 0);
 
@@ -24,6 +25,9 @@ struct VREntity : public VROntoID, public VRName {
     vector<VRPropertyPtr> getProperties();
     void rem(VRPropertyPtr);
     string getConceptList();
+
+    void setSGObject(VRObjectPtr o);
+    VRObjectPtr getSGObject();
 
     void set(string prop, string value);
     void add(string prop, string value);

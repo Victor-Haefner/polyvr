@@ -94,20 +94,32 @@ bool VRReasoner::findRule(VRStatementPtr statement, VRSemanticContextPtr context
 
 bool VRReasoner::builtin(VRStatementPtr s, VRSemanticContextPtr c) {
     if (s->terms.size() < 2) return false;
-    if (!s->terms[1].var || s->terms[1].var->entities.size() == 0) return false;
     string cb_name = s->terms[0].str;
-    VREntityPtr entity = s->terms[1].var->entities[0];
-
     if (!c->onto->builtins.count(cb_name)) return false;
     auto& builtin = c->onto->builtins[cb_name];
 
+    // get parameters
     vector<string> params;
     for (int i=2; i<s->terms.size(); i++) {
         auto& t = s->terms[i];
+        cout << "builtin params in: " << t.str << endl;
         if (t.isMathExpression()) params.push_back( t.computeExpression(c) );
-        if (t.var && t.var->entities.size() > 0) params.push_back( t.var->entities[0]->getName() );
+        if (t.var) {
+            for (auto e : t.var->entities) {
+                if (e.second) params.push_back( e.second->getName() );
+            }
+        }
     }
-    builtin->execute(params);
+
+    for (auto p : params) cout << "builtin params out: " << p << endl;
+    return false;
+
+    // apply to entities
+    if (!s->terms[1].var) return false;
+    for (auto entity : s->terms[1].var->entities) {
+        VRObjectPtr obj = entity.second->getSGObject();
+        builtin->execute(obj, params);
+    }
 
     return true;
 }

@@ -1,5 +1,8 @@
 #include "VROntology.h"
+#include "VROntologyT.h"
 #include "addons/GIS/GISWorld.h"
+
+#include "core/objects/VRTransform.h"
 
 using namespace OSG;
 
@@ -58,7 +61,7 @@ void VROntology::setupLibrary() {
     objectOnto->addConcept("Object");
     objectOnto->getConcept("Object")->addProperty("position", "Position");
     objectOnto->getConcept("Object")->addProperty("orientation", "Orientation");
-    //objectOnto->addBuiltin<VRTransform>("rotate", &VRTransform::rotate, "fVf3");
+    objectOnto->addBuiltin("rotate", &VRTransform::rotate);
 
     processOnto->addConcept("Process");
     processOnto->getConcept("Process")->addProperty("fragment", "Process");

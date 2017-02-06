@@ -49,6 +49,7 @@ PyMethodDef VRPyConcept::methods[] = {
     {"getProperty", (PyCFunction)VRPyConcept::getProperty, METH_VARARGS, "Return a property by name - property getProperty( str name )" },
     {"getProperties", (PyCFunction)VRPyConcept::getProperties, METH_NOARGS, "Return all properties - [property] getProperties()" },
     {"addProperty", (PyCFunction)VRPyConcept::addProperty, METH_VARARGS, "Add new property - property addProperty( str name, str value )" },
+    {"append", (PyCFunction)VRPyConcept::append, METH_VARARGS, "Add another existing concept as child - concept append( str name )" },
     {NULL}  /* Sentinel */
 };
 
@@ -82,6 +83,13 @@ PyObject* VRPyConcept::addProperty(VRPyConcept* self, PyObject* args) {
     string pname; if (prop) pname = prop;
     string pval; if (val) pval = val;
     return VRPyProperty::fromSharedPtr( self->objPtr->addProperty(pname, pval) );
+}
+
+PyObject* VRPyConcept::append(VRPyConcept* self, PyObject* args) {
+    const char* name = 0;
+    if (! PyArg_ParseTuple(args, "s:append", (char*)&name)) return NULL;
+    string cname; if (name) cname = name;
+    return VRPyConcept::fromSharedPtr( self->objPtr->append(cname) );
 }
 
 // --------------------- OntologyRule --------------------

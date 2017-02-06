@@ -213,25 +213,25 @@ void VRRecorder::closeFrame() {
 void VRRecorder::compile(string path) {
     if (captures.size() == 0) return;
 
-    int i, ret, got_output;
-    FILE* f;
-
     /*for (int i=0; i<1; i++) { // test export the first N images
         string pimg = path+"."+toString(i)+".png";
         captures[i]->capture->write(pimg.c_str());
     }*/
 
-    f = fopen(path.c_str(), "wb");
+    FILE* f = fopen(path.c_str(), "wb");
     if (!f) { fprintf(stderr, "Could not open %s\n", path.c_str()); return; }
 
-    for (i=0; i<(int)captures.size(); i++) captures[i]->write(f);
+    for (int i=0; i<(int)captures.size(); i++) captures[i]->write(f);
 
     /* get the delayed frames */
-    for (got_output = 1; got_output; i++) {
+    for (int got_output = 1; got_output;) {
         fflush(stdout);
 
         AVPacket pkt;
-        ret = avcodec_encode_video2(codec_context, &pkt, NULL, &got_output);
+        av_init_packet(&pkt);
+        pkt.size = 0;
+        pkt.data = NULL;
+        int ret = avcodec_encode_video2(codec_context, &pkt, NULL, &got_output);
         if (ret < 0) { fprintf(stderr, "Error encoding frame\n"); return; }
 
         if (got_output) {

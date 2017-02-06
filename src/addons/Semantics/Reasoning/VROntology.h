@@ -49,10 +49,12 @@ struct VROntology : public std::enable_shared_from_this<VROntology>, public VRNa
 
     VRConceptPtr addConcept(string concept, string parent = "", string comment = "");
     VROntologyRulePtr addRule(string rule, string ac);
-    VRSemanticBuiltinPtr addBuiltin(string builtin);
     VREntityPtr addEntity(string name, string concept);
     VREntityPtr addVectorEntity(string name, string concept, string x, string y, string z);
     VREntityPtr addVectorEntity(string name, string concept, vector<string> val);
+
+    template <typename T, typename R, typename ...Args>
+    VRSemanticBuiltinPtr addBuiltin(string builtin, R (T::*callback)(Args...) );
 
     vector<VRConceptPtr> getConcepts();
     VRConceptPtr getConcept(string name);
