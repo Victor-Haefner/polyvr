@@ -39,6 +39,7 @@ struct VREntity : public VROntoID, public VRName {
     vector<string> getVector(string prop, int i = 0);
     vector< vector<string> > getAllVector(string prop);
 
+    bool is_a(string concept);
     string toString();
     void save(xmlpp::Element* e, int p);
     void load(xmlpp::Element* e);

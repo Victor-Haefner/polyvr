@@ -357,6 +357,7 @@ void Query::substituteRequest(VRStatementPtr replace) { // replaces the roots of
                         substitute(ts.path.root);
                         ts.path.nodes[0] = ts.path.root;
                         ts.str = ts.path.toString();
+                        ts.path = VPath(ts.str);
                     }
                 }
             }

@@ -94,31 +94,69 @@ bool VRReasoner::findRule(VRStatementPtr statement, VRSemanticContextPtr context
 
 bool VRReasoner::builtin(VRStatementPtr s, VRSemanticContextPtr c) {
     if (s->terms.size() < 2) return false;
+    if (!s->terms[1].var) return false;
     string cb_name = s->terms[0].str;
     if (!c->onto->builtins.count(cb_name)) return false;
     auto& builtin = c->onto->builtins[cb_name];
 
-    // get parameters
-    vector<string> params;
-    for (int i=2; i<s->terms.size(); i++) {
-        auto& t = s->terms[i];
-        cout << "builtin params in: " << t.str << endl;
-        if (t.isMathExpression()) params.push_back( t.computeExpression(c) );
-        if (t.var) {
-            for (auto e : t.var->entities) {
-                if (e.second) params.push_back( e.second->getName() );
+    vector< map<VREntity*, string> > params; // get parameters
+
+    for (int i=0; i<s->terms.size()-2; i++) {
+        auto& t = s->terms[2+i];
+        params.push_back( map<VREntity*, string>() );
+        //cout << "builtin params in: " << t.str << endl;
+
+        if (t.isMathExpression()) { params[i][0] = t.computeExpression(c); continue; }
+
+        auto r = t.path.root;
+        if (c->vars.count(r)) {
+            auto r_var = c->vars[r];
+
+            for (auto erp : r_var->entities) {
+                auto er = erp.second;
+                if (!er) continue;
+
+                auto vv = t.path.getValue(er);
+                for (auto v : vv) {
+                    if (!c->vars.count(v)) continue;
+                    auto e_var = c->vars[v];
+                    for (auto ep : e_var->entities) {
+                        auto e = ep.second;
+                        if (e->is_a("Vector")) params[i][er.get()] = e->get("x")->value +" "+ e->get("y")->value +" "+ e->get("z")->value;
+                        else params[i][er.get()] = e->getName();
+                    }
+                }
             }
+            continue;
+        }
+
+        if (t.var) {
+            for (auto ep : t.var->entities) {
+                auto e = ep.second;
+                if (!e) continue;
+                if (e->is_a("Vector")) params[i][e.get()] = e->get("x")->value +" "+ e->get("y")->value +" "+ e->get("z")->value;
+                else params[i][e.get()] = e->getName();
+            }
+            continue;
         }
     }
 
-    for (auto p : params) cout << "builtin params out: " << p << endl;
-    return false;
-
-    // apply to entities
-    if (!s->terms[1].var) return false;
-    for (auto entity : s->terms[1].var->entities) {
+    auto& entities = s->terms[1].var->entities;
+    for (auto entity : entities) { // apply to entities
         VRObjectPtr obj = entity.second->getSGObject();
-        builtin->execute(obj, params);
+        if (!obj) continue;
+
+        vector<string> args;
+        for (auto p : params) {
+            auto e = entity.second.get();
+            //cout << " e in p: " << p.count(e) << " ps: " << p.size() << endl;
+            if (p.count(e)) args.push_back(p[e]);
+            if (p.count(0)) args.push_back(p[0]);
+        }
+
+        //cout << "builtin sg object: " << obj << endl;
+        //for (auto a : args) cout << "builtin args: " << a << endl;
+        builtin->execute(obj, args);
     }
 
     return true;

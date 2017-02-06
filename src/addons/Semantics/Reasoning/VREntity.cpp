@@ -188,6 +188,15 @@ string VREntity::toString() {
     return data;
 }
 
+bool VREntity::is_a(string concept) {
+    for (auto cw : concepts) {
+        if (auto c = cw.lock()) {
+            if (c->is_a(concept)) return true;
+        }
+    }
+    return false;
+}
+
 void VREntity::save(xmlpp::Element* e, int p) {
     VRStorage::save(e,p);
     e = e->add_child("properties");
