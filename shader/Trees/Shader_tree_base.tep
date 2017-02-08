@@ -5,6 +5,8 @@ layout( isolines ) in;
 in vec3 tcPosition[];
 in vec2 ctc[];
 in vec3 cn[];
+in vec3 cc[];
+out vec3 ec[];
 out vec2 tc;
 
 void main() {

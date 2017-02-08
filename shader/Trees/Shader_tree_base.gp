@@ -4,6 +4,7 @@
 layout (lines) in;
 layout (triangle_strip, max_vertices = 12) out;
 in vec2 tc[];
+in vec3 ec[];
 
 //Phong
 out vec3 ViewDirection;
@@ -11,6 +12,7 @@ out vec3 fvObjectPosition;
 out vec3 MVPos;
 out vec3 Normal;
 out vec3 dir;
+out vec3 gc;
 
 out float cylR1;
 out float cylR2;
@@ -63,6 +65,7 @@ vec3 perp(vec3 v) {
 }
 
 void main() {
+	gc = ec[0];
 	vec4 p1 = gl_PositionIn[0];
 	vec4 p2 = gl_PositionIn[1];
 	vec4 pm = (p1+p2)*0.5;

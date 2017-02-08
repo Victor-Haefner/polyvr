@@ -162,8 +162,8 @@ void VRTree::initMaterials() {
 
         VRTextureGenerator tg;
         tg.setSize(Vec3i(50,50,50));
-        tg.add("Perlin", 1, Vec3f(0.7,0.5,0.3), Vec3f(1,0.9,0.7));
-        tg.add("Perlin", 0.25, Vec3f(1,0.9,0.7), Vec3f(0.7,0.5,0.3));
+        tg.add("Perlin", 1, truncColor, Vec3f(1,0.9,0.7));
+        tg.add("Perlin", 0.25, Vec3f(1,0.9,0.7), truncColor);
         treeMat->setTexture(tg.compose(0));
     }
 
@@ -189,19 +189,19 @@ void VRTree::initArmatureGeo() {
 
     VRGeoData geo[3];
     for (segment* s : branches) {
-        geo[0].pushVert(s->p1, s->n1, s->params[0]);
-        geo[0].pushVert(s->p2, s->n2, s->params[1]);
+        geo[0].pushVert(s->p1, s->n1, truncColor, s->params[0]);
+        geo[0].pushVert(s->p2, s->n2, truncColor, s->params[1]);
         geo[0].pushLine();
 
         if (s->lvl <= 3) { // first lod
-            geo[1].pushVert(s->p1, s->n1, s->params[0]);
-            geo[1].pushVert(s->p2, s->n2, s->params[1]);
+            geo[1].pushVert(s->p1, s->n1, truncColor, s->params[0]);
+            geo[1].pushVert(s->p2, s->n2, truncColor, s->params[1]);
             geo[1].pushLine();
         }
 
         if (s->lvl <= 2) { // second lod
-            geo[2].pushVert(s->p1, s->n1, s->params[0]);
-            geo[2].pushVert(s->p2, s->n2, s->params[1]);
+            geo[2].pushVert(s->p1, s->n1, truncColor, s->params[0]);
+            geo[2].pushVert(s->p2, s->n2, truncColor, s->params[1]);
             geo[2].pushLine();
         }
     }
@@ -418,10 +418,10 @@ void VRTree::createHullTrunkLod(VRGeoData& geo, int lvl, Vec3f offset) { // TODO
         static Vec3f n2 = normalize( Vec3f(-1,0, 1) );
         static Vec3f n3 = normalize( Vec3f( 1,0, 1) );
         static Vec3f n4 = normalize( Vec3f( 1,0,-1) );
-        int i1 = geo.pushVert( Pnt3f(-r,0,-r) + p + offset, n1 );
-        int i2 = geo.pushVert( Pnt3f(-r,0, r) + p + offset, n2 );
-        int i3 = geo.pushVert( Pnt3f( r,0, r) + p + offset, n3 );
-        int i4 = geo.pushVert( Pnt3f( r,0,-r) + p + offset, n4 );
+        int i1 = geo.pushVert( Pnt3f(-r,0,-r) + p + offset, n1, truncColor );
+        int i2 = geo.pushVert( Pnt3f(-r,0, r) + p + offset, n2, truncColor );
+        int i3 = geo.pushVert( Pnt3f( r,0, r) + p + offset, n3, truncColor );
+        int i4 = geo.pushVert( Pnt3f( r,0,-r) + p + offset, n4, truncColor );
         return Vec4i(i1,i2,i3,i4);
     };
 
@@ -437,9 +437,9 @@ void VRTree::createHullTrunkLod(VRGeoData& geo, int lvl, Vec3f offset) { // TODO
     pushBox(i1,i2);*/
 
     function<void(Vec4i, segment*)> pushBranch = [&](Vec4i i0, segment* s) {
+        if (s->lvl > 2) return;
         Vec4i i1 = pushRing(s->p2, s->params[1][0]*0.1);
         pushBox(i0,i1);
-        if (s->lvl > 2) return;
         for (auto c : s->children) pushBranch(i1,c);
     };
 

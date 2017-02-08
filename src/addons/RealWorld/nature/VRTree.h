@@ -19,6 +19,8 @@ class VRTree : public VRTransform {
         static VRMaterialPtr treeMat;
         static VRMaterialPtr leafMat;
 
+        Vec3f truncColor = Vec3f(0.6,0.3,0);
+
         float random (float min, float max);
         float variation(float val, float var);
         Vec3f randUVec();
