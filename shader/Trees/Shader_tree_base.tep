@@ -5,9 +5,9 @@ layout( isolines ) in;
 in vec3 tcPosition[];
 in vec2 ctc[];
 in vec3 cn[];
-in vec3 cc[];
-out vec3 ec[];
+in vec3 ccol[];
 out vec2 tc;
+out vec3 ec;
 
 void main() {
     float u = gl_TessCoord.x;
@@ -21,5 +21,6 @@ void main() {
     vec3 pos = (1-u)*(1-u)*p1 + 2*(1-u)*u*p2 + u*u*p3;
     
     tc = mix(ctc[0], ctc[1], u);
+    ec = ccol[0];
     gl_Position = vec4(pos, 1);
 }

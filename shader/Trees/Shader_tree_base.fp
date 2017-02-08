@@ -143,8 +143,8 @@ void applyBlinnPhong() {
 	vec4  diffuse = gl_LightSource[0].diffuse * NdotL * color;
 	float NdotHV = max(dot(norm, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
 	vec4  specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess ); 
-	//gl_FragColor = ambient + diffuse + specular;
-	gl_FragColor = color;
+	gl_FragColor = ambient + diffuse + specular;
+	//gl_FragColor = color;
 }
 
 void main( void ) {
@@ -159,9 +159,11 @@ void main( void ) {
 	computeNormal();
 	computeTexCoords();
 	applyBumpMap();
-	color = texture(tex, tc);
-	//color = vec4(gc,1.0);
+	//color = vec4(1,0,0,1);
+	//color = texture(tex, tc);
+	color = vec4(gc, 1.0);
 	applyBlinnPhong();
+	//gl_FragColor = vec4(gc, 1.0);
 	computeDepth();
 }
 

@@ -1,14 +1,15 @@
 #version 400 compatibility
 #extension GL_ARB_tessellation_shader : enable
 
+in vec2 vtc[];
+in vec3 vn[];
+in vec3 vcol[];
+
 layout(vertices = 2) out;
 out vec3 tcPosition[];
-in vec2 vtc[];
 out vec2 ctc[];
-in vec3 vn[];
 out vec3 cn[];
-in vec3 vc[];
-out vec3 cc[];
+out vec3 ccol[];
 
 #define ID gl_InvocationID
 
@@ -16,7 +17,7 @@ void main() {
     tcPosition[ID] = gl_in[ID].gl_Position.xyz;
     ctc[ID] = vtc[ID];
     cn[ID] = vn[ID];
-    cc[ID] = vc[ID];
+    ccol[ID] = vcol[ID];
     
     if (ID == 0) {
 	vec4 p = gl_ModelViewProjectionMatrix * gl_in[ID].gl_Position;

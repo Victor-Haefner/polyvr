@@ -1,12 +1,14 @@
-// vertex shader program
-varying vec2 vtc;
-varying vec3 vn;
-varying vec3 vc;
+#version 400 compatibility
 
-attribute vec4 osg_Vertex;
-attribute vec3 osg_Normal;
-attribute vec4 osg_Color;
-attribute vec2 osg_MultiTexCoord0;
+// vertex shader program
+out vec2 vtc;
+out vec3 vn;
+out vec3 vcol;
+
+in vec2 osg_MultiTexCoord0;
+in vec3 osg_Normal;
+in vec3 osg_Color;
+in vec4 osg_Vertex;
 
 uniform int wind; // -100 to 100
 
@@ -25,9 +27,9 @@ void applyWind() {
 //----------------------------------------------------------------------------------------------MAIN--VP
 void main( void ) {
 	vtc = osg_MultiTexCoord0;
-	vn = osg_Normal;// + osg_Color.xyz;
-	vc = osg_Color.xyz;
+	vn = osg_Normal;
+	vcol = osg_Color.xyz;
 	vertex = osg_Vertex;
-	applyWind();
+	//applyWind();
 	gl_Position = vertex;
 }
