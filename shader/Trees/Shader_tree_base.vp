@@ -1,34 +1,32 @@
 #version 400 compatibility
 
 // vertex shader program
-out vec2 vtc;
 out vec3 vn;
-out vec3 vcol;
+out vec4 vcol;
 
 in vec2 osg_MultiTexCoord0;
 in vec3 osg_Normal;
 in vec3 osg_Color;
 in vec4 osg_Vertex;
 
-uniform int wind; // -100 to 100
+//uniform int wind; // -100 to 100
 
 vec4 vertex;
 
 // TODO: work on wind
-void applyWind() {
+/*void applyWind() {
 	vec3 v = vertex.xyz;
 	float dw = abs(float(wind)+50.0*v.x+50.0*v.z)*0.000002;
 	dw *= v.y*v.y;
 	dw *= sin(v.x*20.0)*sin(v.z*20.0);
 	dw /= vtc[0];
     vertex += vec4(dw,0,dw,0);
-}
+}*/
 
 //----------------------------------------------------------------------------------------------MAIN--VP
 void main( void ) {
-	vtc = osg_MultiTexCoord0;
 	vn = osg_Normal;
-	vcol = osg_Color.xyz;
+	vcol = vec4(osg_Color.xyz, 0.1 * osg_MultiTexCoord0[0]);
 	vertex = osg_Vertex;
 	//applyWind();
 	gl_Position = vertex;

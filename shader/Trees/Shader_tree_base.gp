@@ -3,7 +3,7 @@
 #extension GL_EXT_geometry_shader4 : enable
 layout (lines) in;
 layout (triangle_strip, max_vertices = 12) out;
-in vec2 tc[];
+in float r[];
 in vec3 ec[];
 
 //Phong
@@ -77,8 +77,8 @@ void main() {
 	dir *= 1.05;
 
 	// cylinder and cone raycast parameters
-	cylR1 = tc[0][0]*0.1;
-	cylR2 = tc[1][0]*0.1;
+	cylR1 = r[0];
+	cylR2 = r[1];
 	cylDir = normalize(vec3(mMV * vec4(dir,0.0)));
 	cylP0 = vec3(mMV * p1);
 	cylP1 = vec3(mMV * p2);
