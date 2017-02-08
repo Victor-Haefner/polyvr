@@ -27,7 +27,8 @@ VRGeometryPtr toGeometry(Polyhedron& poly, string name) {
         auto vertex = face->facet_begin();
         vector<int> faceIndx;
         do {
-			auto v = (void*)&(*vertex);
+			auto v = (void*)&(*vertex->vertex());
+			//auto v = (void*)vertex->vertex();
 			if (!points.count(v)) {
                 points[v] = i; i++;
                 cgalPoint cp = vertex->vertex()->point();
@@ -47,15 +48,25 @@ VRGeometryPtr toGeometry(Polyhedron& poly, string name) {
 
 VRGeometryPtr VRConvexHull::compute(VRGeometryPtr geo) {
     vector<cgalPoint> points;
+    if (!geo->getMesh()) return 0;
+    if (!geo->getMesh()->geo) return 0;
     auto pos = geo->getMesh()->geo->getPositions();
+    if (!pos) return 0;
+
     for (int i=0; i<pos->size(); i++) {
         Pnt3f p = pos->getValue<Pnt3f>(i);
         points.push_back(cgalPoint(p[0], p[1], p[2]));
     }
 
-    Polyhedron poly; // define polyhedron to hold convex hull
-    CGAL::convex_hull_3(points.begin(), points.end(), poly); // compute convex hull of non-collinear points
-    return toGeometry(poly, "convexHull");
+    if (points.size() <= 2) return 0;
+
+    try {
+        Polyhedron poly; // define polyhedron to hold convex hull
+        CGAL::convex_hull_3(points.begin(), points.end(), poly); // compute convex hull of non-collinear points
+        return toGeometry(poly, "convexHull");
+    } catch( exception e ) {
+        return 0;
+    }
 }
 
 

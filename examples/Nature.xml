@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="1122">
+<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="5878">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
-      <Object ambient="0.370962 0.370962 0.370962 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.233875 0.233875 0.233875 1" type="Light" unique="1" visible="1">
+      <Object ambient="0.516136 0.516136 0.516136 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0 0 0 1" type="Light" unique="1" visible="1">
         <Object at="-4.5 4 -1" at_dir="1" base_name="Headlight_beacon" from="-4 5 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
           <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
-        <Object accept_root="1" aspect="1" at="7.54193 3.76543 1.18579" at_dir="0" base_name="Default" far="1024" fov="1.0472" from="10.4781 5.83285 9.50359" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="12.5592 3.90446 4.6652" at_dir="0" base_name="Default" far="1024" fov="1.0472" from="19.7173 6.41277 29.4013" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
           <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
       </Object>
@@ -358,6 +358,71 @@ void main( void ) {
 
 
 
+</core>
+    </Script>
+    <Script base_name="shdr_leaf_lod_fp" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" server="server1" group="no group">
+      <core>
+#version 400 compatibility&#13;
+&#13;
+uniform sampler2D tex;
+
+in vec3 vn;
+in vec4 vc;
+
+vec4 color;
+
+void applyBlinnPhong() {
+	vec3 n = gl_NormalMatrix * vn;
+	vec3  light = normalize( gl_LightSource[0].position.xyz );// directional light
+	float NdotL = max(dot( n, light ), 0.0);&#13;
+	vec4  ambient = gl_LightSource[0].ambient * color;&#13;
+	vec4  diffuse = gl_LightSource[0].diffuse * NdotL * color;&#13;
+	float NdotHV = max(dot(n, normalize(gl_LightSource[0].halfVector.xyz)),0.0);
+	vec4  specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess ); &#13;
+	gl_FragColor = ambient + diffuse + specular;
+}
+&#13;
+void main( void ) {
+	color = vc;
+	/*color = texture(tex,tcs);
+	if (color.a &lt; 0.5) discard;
+	color.a = 1.0;
+	color.y *= 0.7;
+	color.xz *= 0.2;
+	//gl_FragColor = c;*/
+	applyBlinnPhong();
+	//gl_FragColor = vec4(norm, 1.0);
+	//gl_FragColor = vec4(0,1,0,1);&#13;
+}
+</core>
+    </Script>
+    <Script base_name="shdr_leaf_lod_setup" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="no group">
+      <core>
+	import VR
+	
+	l = VR.find('leafs')
+	m = l.getMaterial()
+	
+	m.setAmbient([0,0,0])
+	m.setVertexProgram('shdr_leaf_lod_vp')
+	m.setFragmentProgram('shdr_leaf_lod_fp')
+</core>
+    </Script>
+    <Script base_name="shdr_leaf_lod_vp" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" server="server1" group="no group">
+      <core>
+// vertex shader program
+varying vec3 vn;
+varying vec4 vc;&#13;
+&#13;
+attribute vec4 osg_Vertex;&#13;
+attribute vec3 osg_Normal;
+attribute vec4 osg_Color;
+
+void main( void ) {
+	vn = osg_Normal;
+	vc = osg_Color;
+    gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;&#13;
+}
 </core>
     </Script>
     <Script base_name="shdr_leafs_frag" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" server="server1" group="">

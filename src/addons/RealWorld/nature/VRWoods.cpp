@@ -1,6 +1,7 @@
 #include "VRWoods.h"
 #include "VRTree.h"
 
+#include "core/scene/VRSceneManager.h"
 #include "core/objects/object/VRObject.h"
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRGeoData.h"
@@ -122,6 +123,11 @@ void VRWoods::computeLODs() {
         auto m = VRMaterial::create("lmat");
         m->setPointSize(3);
         m->setDiffuse(Vec3f(0.5,1,0));
+        m->setAmbient(Vec3f(0.1,0.3,0));
+        m->setSpecular(Vec3f(0.1,0.4,0));
+        string wdir = VRSceneManager::get()->getOriginalWorkdir();
+        m->readFragmentShader(wdir+"/shader/Trees/Shader_leafs_lod.fp");
+        m->readVertexShader(wdir+"/shader/Trees/Shader_leafs_lod.vp");
         return m;
     };
 
@@ -134,7 +140,7 @@ void VRWoods::computeLODs() {
     auto green = simpleLeafMat();
     auto brown = simpleTrunkMat();
 
-    // get all trees for each layer leaf
+    // get all trees for each leaf layer
     map<VRLodLeaf*, vector<VRTree*> > trees;
     for (auto l : leafs) {
         auto& leaf = l.second;
@@ -159,9 +165,8 @@ void VRWoods::computeLODs() {
         VRGeoData geoTrunk;
         for (auto t : trees[leaf.get()]) {
             Vec3f offset = t->getWorldPosition() - pos;
-            float amount = 0.1/lvl;
-            t->createHullTrunkLod(geoTrunk, amount, offset);
-            t->createHullLeafLod (geoLeafs, amount, offset);
+            t->createHullTrunkLod(geoTrunk, lvl, offset);
+            t->createHullLeafLod (geoLeafs, lvl, offset);
         }
         auto trunk = geoTrunk.asGeometry("trunk");
         auto leafs = geoLeafs.asGeometry("leafs");

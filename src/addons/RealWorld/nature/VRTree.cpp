@@ -193,13 +193,13 @@ void VRTree::initArmatureGeo() {
         geo[0].pushVert(s->p2, s->n2, s->params[1]);
         geo[0].pushLine();
 
-        if (s->lvl <= 3) {
+        if (s->lvl <= 3) { // first lod
             geo[1].pushVert(s->p1, s->n1, s->params[0]);
             geo[1].pushVert(s->p2, s->n2, s->params[1]);
             geo[1].pushLine();
         }
 
-        if (s->lvl <= 2) {
+        if (s->lvl <= 2) { // second lod
             geo[2].pushVert(s->p1, s->n1, s->params[0]);
             geo[2].pushVert(s->p2, s->n2, s->params[1]);
             geo[2].pushLine();
@@ -335,38 +335,77 @@ void VRTree::setLeafMaterial(VRMaterialPtr mat) {
     for (auto g : leafGeos) g->setMaterial(mat);
 }
 
-void VRTree::createHullLeafLod(VRGeoData& geo, float amount, Vec3f offset) { // TODO, depending on amount, make multiple smaller convex hulls
+void VRTree::createHullLeafLod(VRGeoData& geo, int lvl, Vec3f offset) {
     if (leafGeos.size() == 0) return;
-    VRGeoData g0(leafGeos[0]);
+    VRGeoData data(leafGeos[0]);
 
-    VRConvexHull hull;
+    auto computeHull = [&](VRGeoData& tmpData, Vec4f color) {
+        VRConvexHull hull;
+        auto res = VRGeoData( hull.compute( tmpData.asGeometry("tmpdata") ) );
+        float ca = color[1]; // carotene
+        float ch = color[2]; // chlorophyll
+        Vec3f leafColor = Vec3f(0.4*ca,0.8*ch,0.2*ch);
+        for (int i=0; i<res.size(); i++) {
+            res.pushColor( leafColor );
+        }
+        return res;
+    };
+
+    int Ns = max(1,int(15/lvl));
+    vector<VRGeoData> clusters(Ns);
+    vector<Pnt3f> seeds(Ns);
+    for (int k=0; k<Ns; k++) {
+        int p = data.size()*k*1.0/Ns;
+        seeds[k] = data.getPosition(p);
+    }
+
+    auto getMinCluster = [&](const Pnt3f& pos) -> VRGeoData& {
+        int cMin = 0;
+        float dMin = 1.0e10;
+        for (int c = 0; c<Ns; c++) {
+            auto& seed = seeds[c];
+            float L = (pos-seed).squareLength();
+            if (L < dMin) {
+                dMin = L;
+                cMin = c;
+            }
+        }
+        return clusters[cMin];
+    };
+
+    int N = 1000/lvl;
+    float D = data.size()/N;
+    float fuzzy = 0.2;
+
+    random_device rd;
+    mt19937 e2(rd());
+    normal_distribution<> ndist(0,fuzzy);
+    auto randVecInSphere = [&]() {
+        return Vec3f(ndist(e2), ndist(e2), ndist(e2));
+    };
 
     Vec4f meanColor;
-    VRGeoData tmpData;
-    int N = g0.size()*amount;
-    float D = 1.0/amount;
     for (int i=0; i<N; i++) {
-        int j = max( min( int(i*D), g0.size()-1), 0);
-        meanColor += g0.getColor(j);
-        Pnt3f pos = g0.getPosition(j) + offset;
-        tmpData.pushVert( pos, g0.getNormal(j) );
-        tmpData.pushPoint();
+        int j = max( min( int(i*D), data.size()-1), 0);
+        meanColor += data.getColor(j);
+        Pnt3f pos = data.getPosition(j);
+        VRGeoData& cluster = getMinCluster(pos + randVecInSphere());
+        pos += offset; // TODO, use tree transformation rotation?
+        cluster.pushVert( pos, data.getNormal(j) );
+        cluster.pushPoint();
     }
-
-    auto res = VRGeoData( hull.compute( tmpData.asGeometry("tmpdata") ) );
     meanColor *= 1.0/N;
-    float ca = meanColor[1]; // carotene
-    float ch = meanColor[2]; // chlorophyll
-    Vec3f leafColor = Vec3f(0.4*ca,0.8*ch,0.2*ch);
-    for (int i=0; i<res.size(); i++) {
-        res.pushColor( leafColor );
-    }
 
-    geo.append(res);
+    for (auto& c : clusters) {
+        if (c.size() <= 2) continue;
+        auto hull = computeHull(c, meanColor);
+        geo.append(hull);
+    }
 }
 
-void VRTree::createHullTrunkLod(VRGeoData& geo, float amount, Vec3f offset) { // TODO
+void VRTree::createHullTrunkLod(VRGeoData& geo, int lvl, Vec3f offset) { // TODO
     if (leafGeos.size() == 0) return;
+    if (!trunc) return;
     VRGeoData g0(leafGeos[0]);
 
     auto normalize = [](Vec3f v) {
@@ -374,21 +413,38 @@ void VRTree::createHullTrunkLod(VRGeoData& geo, float amount, Vec3f offset) { //
         return v;
     };
 
-    float r = 0.1;
-    float h = 3;
-    int N = geo.size();
-    geo.pushVert( Pnt3f(-r,0,-r) + offset, normalize( Vec3f(-1,0,-1) ) );
-    geo.pushVert( Pnt3f(-r,0, r) + offset, normalize( Vec3f(-1,0, 1) ) );
-    geo.pushVert( Pnt3f( r,0, r) + offset, normalize( Vec3f( 1,0, 1) ) );
-    geo.pushVert( Pnt3f( r,0,-r) + offset, normalize( Vec3f( 1,0,-1) ) );
-    geo.pushVert( Pnt3f(-r,h,-r) + offset, normalize( Vec3f(-1,0,-1) ) );
-    geo.pushVert( Pnt3f(-r,h, r) + offset, normalize( Vec3f(-1,0, 1) ) );
-    geo.pushVert( Pnt3f( r,h, r) + offset, normalize( Vec3f( 1,0, 1) ) );
-    geo.pushVert( Pnt3f( r,h,-r) + offset, normalize( Vec3f( 1,0,-1) ) );
-    geo.pushQuad(N+0,N+1,N+5,N+4);
-    geo.pushQuad(N+1,N+2,N+6,N+5);
-    geo.pushQuad(N+2,N+3,N+7,N+6);
-    geo.pushQuad(N+3,N+0,N+4,N+7);
+    auto pushRing = [&](Vec3f p, float r) {
+        static Vec3f n1 = normalize( Vec3f(-1,0,-1) );
+        static Vec3f n2 = normalize( Vec3f(-1,0, 1) );
+        static Vec3f n3 = normalize( Vec3f( 1,0, 1) );
+        static Vec3f n4 = normalize( Vec3f( 1,0,-1) );
+        int i1 = geo.pushVert( Pnt3f(-r,0,-r) + p + offset, n1 );
+        int i2 = geo.pushVert( Pnt3f(-r,0, r) + p + offset, n2 );
+        int i3 = geo.pushVert( Pnt3f( r,0, r) + p + offset, n3 );
+        int i4 = geo.pushVert( Pnt3f( r,0,-r) + p + offset, n4 );
+        return Vec4i(i1,i2,i3,i4);
+    };
+
+    auto pushBox = [&](Vec4i i1, Vec4i i2) {
+        geo.pushQuad(i1[0],i1[1],i2[1],i2[0]);
+        geo.pushQuad(i1[1],i1[2],i2[2],i2[1]);
+        geo.pushQuad(i1[2],i1[3],i2[3],i2[2]);
+        geo.pushQuad(i1[3],i1[0],i2[0],i2[3]);
+    };
+
+    /*Vec4i i1 = pushRing(Vec3f(0,0,0), 0.1);
+    Vec4i i2 = pushRing(Vec3f(0,3,0), 0.1);
+    pushBox(i1,i2);*/
+
+    function<void(Vec4i, segment*)> pushBranch = [&](Vec4i i0, segment* s) {
+        Vec4i i1 = pushRing(s->p2, s->params[1][0]*0.1);
+        pushBox(i0,i1);
+        if (s->lvl > 2) return;
+        for (auto c : s->children) pushBranch(i1,c);
+    };
+
+    Vec4i i0 = pushRing(trunc->p1, trunc->params[0][0]*0.1);
+    pushBranch(i0,trunc);
 }
 
 

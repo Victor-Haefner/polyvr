@@ -48,8 +48,8 @@ class VRTree : public VRTransform {
         void addLeafs(int lvl, int amount);
         void setLeafMaterial(VRMaterialPtr mat);
 
-        void createHullTrunkLod(VRGeoData& geo, float amount, Vec3f offset);
-        void createHullLeafLod(VRGeoData& geo, float amount, Vec3f offset);
+        void createHullTrunkLod(VRGeoData& geo, int lvl, Vec3f offset);
+        void createHullLeafLod(VRGeoData& geo, int lvl, Vec3f offset);
 };
 
 OSG_END_NAMESPACE;
