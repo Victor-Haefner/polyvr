@@ -488,5 +488,6 @@ void VRMechanism::update() {
     for (auto part : changed_parts) part->changed();
 }
 
+shared_ptr<VRMechanism> VRMechanism::create() { return shared_ptr<VRMechanism>(new VRMechanism()); }
 
 OSG_END_NAMESPACE;

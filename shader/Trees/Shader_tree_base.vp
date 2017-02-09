@@ -26,5 +26,5 @@ void main( void ) {
 	vn = osg_Normal;
 	vertex = osg_Vertex;
 	applyWind();
-    gl_Position = vertex;
+	gl_Position = vertex;
 }

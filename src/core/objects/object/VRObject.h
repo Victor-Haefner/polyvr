@@ -26,8 +26,8 @@ class VRGlobals {
     public:
         unsigned int CURRENT_FRAME = 0;
         unsigned int FRAME_RATE = 0;
-        /** TODO magic start number **/
-        unsigned int PHYSICS_FRAME_RATE = 500;
+        unsigned int SCRIPTS_FRAME_RATE = 0;
+        unsigned int PHYSICS_FRAME_RATE = 500; /** TODO magic start number **/
 
         static VRGlobals* get();
 };

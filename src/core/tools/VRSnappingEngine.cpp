@@ -81,6 +81,8 @@ VRSnappingEngine::~VRSnappingEngine() {
     if (event) delete event;
 }
 
+shared_ptr<VRSnappingEngine> VRSnappingEngine::create() { return shared_ptr<VRSnappingEngine>(new VRSnappingEngine()); }
+
 void VRSnappingEngine::clear() {
     anchors.clear();
     positions->clear();

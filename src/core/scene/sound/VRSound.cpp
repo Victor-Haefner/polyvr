@@ -25,7 +25,9 @@ open a terminal and type:
 sudo apt-get install libfftw3-dev
 */
 
+#include <fstream>
 #include <fftw3.h>
+#include <map>
 
 #include "contrib/rpm/arrayOut.h" // TESTING
 #include <climits>
@@ -260,11 +262,13 @@ void VRSound::playFrame() {
                 for(; val > 0; --val) {
                     ALCHECK( alSourceUnqueueBuffers(source, 1, &bufid));
                     free_buffers.push_back(bufid);
+                    queuedBuffers = max(0,queuedBuffers-1);
                 }
 
                 bufid = free_buffers.front();
                 free_buffers.pop_front();
 
+                queuedBuffers += 1;
                 ALCHECK( alBufferData(bufid, al->format, frameData, data_size, frequency));
                 ALCHECK( alSourceQueueBuffers(source, 1, &bufid));
                 ALCHECK( alGetSourcei(source, AL_SOURCE_STATE, &val));
@@ -318,11 +322,13 @@ void VRSound::play() {
                 for(; val > 0; --val) {
                     ALCHECK( alSourceUnqueueBuffers(source, 1, &bufid));
                     free_buffers.push_back(bufid);
+                    queuedBuffers = max(0,queuedBuffers-1);
                 }
 
                 bufid = free_buffers.front();
                 free_buffers.pop_front();
 
+                queuedBuffers += 1;
                 ALCHECK( alBufferData(bufid, al->format, frameData, data_size, frequency));
                 ALCHECK( alSourceQueueBuffers(source, 1, &bufid));
                 ALCHECK( alGetSourcei(source, AL_SOURCE_STATE, &val));
@@ -339,13 +345,23 @@ void VRSound::play() {
     av_free(al->frame);
 }
 
+void VRSound::playBuffer(short* buffer, size_t N, int sample_rate) {
+    recycleBuffer();
+
+    ALint val = -1;
+    ALuint buf;
+    alGenBuffers(1, &buf);
+    alBufferData(buf, AL_FORMAT_MONO16, buffer, N, sample_rate);
+
+    queuedBuffers += 1;
+    ALCHECK( alSourceQueueBuffers(source, 1, &buf));
+    ALCHECK( alGetSourcei(source, AL_SOURCE_STATE, &val));
+    if (val != AL_PLAYING) ALCHECK( alSourcePlay(source));
+}
 
 // carrier amplitude, carrier frequency, carrier phase, modulation amplitude, modulation frequency, modulation phase, packet duration
 void VRSound::synthesize(float Ac, float wc, float pc, float Am, float wm, float pm, float duration) {
     if (!initiated) initiate();
-
-    ALuint buf;
-    alGenBuffers(1, &buf);
 
     int sample_rate = 22050;
     size_t buf_size = duration * sample_rate;
@@ -357,28 +373,17 @@ void VRSound::synthesize(float Ac, float wc, float pc, float Am, float wm, float
         samples[i] = Ac * sin( wc*t + pc + Am*sin(wm*t + pm) );
     }
 
-    alBufferData(buf, AL_FORMAT_MONO16, samples, buf_size, sample_rate);
-
-    ALint val = -1;
-    ALuint bufid = 0; // TODO: not working properly!!
-    do { ALCHECK_BREAK( alGetSourcei(source, AL_BUFFERS_PROCESSED, &val) ); // recycle buffers
-        for(; val > 0; --val) {
-            ALCHECK( alSourceUnqueueBuffers(source, 1, &bufid));
-        }
-    } while (val > 0);
-
-    ALCHECK( alSourceQueueBuffers(source, 1, &buf));
-    ALCHECK( alGetSourcei(source, AL_SOURCE_STATE, &val));
-    if (val != AL_PLAYING) ALCHECK( alSourcePlay(source));
-
+    playBuffer(samples, buf_size, sample_rate);
     delete samples;
 }
 
-void VRSound::synthesizeSpectrum(double* spectrum, uint sample_rate) {
+void VRSound::synthesizeSpectrum(double* spectrum, uint sample_rate, float duration, float fade_factor) {
     if (!initiated) initiate();
 
-    ALuint buf;
-    alGenBuffers(1, &buf);
+    //ALuint buf;
+    //alGenBuffers(1, &buf);
+    size_t buf_size = duration * sample_rate;
+    uint fade = fade_factor * sample_rate; // number of samples to fade at beginning and end
 
     // transform spectrum back to time domain using fftw3
     double* out = new double[sample_rate];
@@ -392,11 +397,14 @@ void VRSound::synthesizeSpectrum(double* spectrum, uint sample_rate) {
 
     fftw_destroy_plan(ifft);
 
-    short* samples = new short[sample_rate];
-    for(uint i=0; i<sample_rate; ++i) {
+    short* samples = new short[buf_size];
+    for(uint i=0; i<buf_size; ++i) {
         //samples[i] = (double)(SHRT_MAX - 1) * out[i] / (sample_rate * maxVal); // for fftw normalization
         samples[i] = 0.5 * SHRT_MAX * out[i]; // for fftw normalization
-
+    }
+    for (uint i=0; i < fade; ++i) {
+        samples[i] *= i/(fade-1);
+        samples[buf_size-i-1] *= i/(fade-1);
     }
 //#define SPECTRUM_OUTPUT
 #ifdef SPECTRUM_OUTPUT
@@ -406,30 +414,16 @@ void VRSound::synthesizeSpectrum(double* spectrum, uint sample_rate) {
 #endif
     delete out;
 
-    //alBufferData(buf, AL_FORMAT_MONO16, samples, buf_size, sample_rate);
-    alBufferData(buf, AL_FORMAT_MONO16, samples, sample_rate, 2*sample_rate);
-
-    ALint val = -1;
-    ALuint bufid = 0; // TODO: not working properly!!
-    do { ALCHECK_BREAK( alGetSourcei(source, AL_BUFFERS_PROCESSED, &val) ); // recycle buffers
-        for(; val > 0; --val) {
-            ALCHECK( alSourceUnqueueBuffers(source, 1, &bufid));
-        }
-    } while (val > 0);
-
-    ALCHECK( alSourceQueueBuffers(source, 1, &buf));
-    ALCHECK( alGetSourcei(source, AL_SOURCE_STATE, &val));
-    if (val != AL_PLAYING) ALCHECK( alSourcePlay(source));
-
+    playBuffer(samples, buf_size, sample_rate);
     delete samples;
 
 }
 
-void VRSound::synthBuffer(vector<Vec2d> frequencies, float duration) {
+void VRSound::synthBuffer(vector<Vec2d> freqs1, vector<Vec2d> freqs2, float duration) {
     if (!initiated) initiate();
 
-    // fourier transform
-    vector<Vec2d> wave;
+    // fourier transform TODO!!
+    /*vector<Vec2d> wave;
     int N = frequencies.size();
     wave.resize(N);
     Vec2d* in = &frequencies[0];
@@ -437,40 +431,106 @@ void VRSound::synthBuffer(vector<Vec2d> frequencies, float duration) {
     fftw_plan p = fftw_plan_dft_1d(N, (double(*)[2])in, (double(*)[2])out, FFTW_FORWARD, FFTW_ESTIMATE);
     fftw_execute(p);
     fftw_destroy_plan(p);
-
+    ofstream synthIn;
+    ofstream synthOut;
+    synthIn.open("synthIn.dat");
+    synthOut.open("synthOut.dat");
+    for (int i=0; i<N; i++) {
+        synthIn << i << " " << frequencies[i][0] << endl;
+        synthOut << i << " " << wave[i][0] << endl;
+    }
+    synthIn.close();
+    synthOut.close();
     auto interpolate = [&](const float& t) {
         int t1 = floor(t);
         int t2 = ceil(t);
         if (t2 >= N) return 0.0;
         return (wave[t2][1]-wave[t1][1])*(t-t1) + wave[t1][1];
-    };
+    };*/
 
     // play sound
-    ALuint buf;
-    alGenBuffers(1, &buf);
     int sample_rate = 22050;
+    //int sample_rate = 10;
     size_t buf_size = duration * sample_rate;
     buf_size += buf_size%2;
     short* samples = new short[buf_size];
 
-    for (uint i=0; i<buf_size; i++) {
-        float t = N*float(i)/sample_rate;
-        samples[i] = interpolate(t);
+    float Ni1 = 1.0/freqs1.size();
+    float Ni2 = 1.0/freqs2.size();
+
+    static map<int, float> ma0;
+    static map<int, float> ma;
+    static float t0 = 0;
+    static float last_sample  = 0;
+    static float last_sample2 = 0;
+
+    for (auto fA : freqs1) {
+        int f = fA[0];
+        if (!ma0.count(f)) ma0[f] = 0;
+        if (!ma.count(f)) ma[f] = 0;
+    }
+    for (auto fA : freqs2) {
+        int f = fA[0];
+        if (!ma0.count(f)) ma0[f] = 0;
+        if (!ma.count(f)) ma[f] = 0;
     }
 
-    alBufferData(buf, AL_FORMAT_MONO16, samples, buf_size, sample_rate);
+    float t;
+    for (uint i=0; i<buf_size; i++) {
+        float k = float(i)/buf_size;
+        t = i*2*Pi/sample_rate;
 
+        float w = 1.0;
+        float wL = 0.25;
+        if (k < wL) w = k/wL;
+        if (k > 1.0-wL) w = (1.0-k)/wL;
+
+        samples[i] = 0;
+
+        for (int j=0; j<freqs1.size(); j++) {
+            float A = freqs1[j][1]*(1.0-k) + freqs2[j][1]*k;
+            float f = freqs1[j][0]*(1.0-k) + freqs2[j][0]*k;
+            //float a0 = ma0[int(freqs1[j][0])];
+            float a = f*t;
+            //float a = a0 + f*t; // TODO
+            samples[i] += A*sin( a )*Ni1;
+            //ma[int(freqs2[j][0])] = a;
+        }
+    }
+    //t0 = t;
+
+    float n1 = samples[1] - samples[0];
+    float n2 = last_sample - last_sample2;
+    cout << " first sample " << samples[0] << " last sample " << last_sample << " first normal " << n1 << " last normal " << n2 << endl;
+    last_sample  = samples[buf_size-1];
+    last_sample2 = samples[buf_size-2];
+
+    for (auto& a0 : ma0) {
+        int f = a0.first;
+        a0.second = ma[f];
+        //while (a0.second > 2*Pi) a0.second -= 2*Pi;
+    }
+
+    //for (auto& a0 : ma0) cout << " f " << a0.first << " a0 " << a0.second*180/Pi << endl;
+
+    playBuffer(samples, buf_size, sample_rate);
+    delete samples;
+}
+
+int VRSound::getQueuedBuffer() { return queuedBuffers; }
+
+void VRSound::recycleBuffer() {
     ALint val = -1;
     ALuint bufid = 0; // TODO: not working properly!!
     do { ALCHECK_BREAK( alGetSourcei(source, AL_BUFFERS_PROCESSED, &val) ); // recycle buffers
         for(; val > 0; --val) {
             ALCHECK( alSourceUnqueueBuffers(source, 1, &bufid));
+            if ( queuedBuffers > 0 ) queuedBuffers -= 1;
         }
     } while (val > 0);
-
-    ALCHECK( alSourceQueueBuffers(source, 1, &buf));
-    ALCHECK( alGetSourcei(source, AL_SOURCE_STATE, &val));
-    if (val != AL_PLAYING) ALCHECK( alSourcePlay(source));
-
-    delete samples;
 }
+
+
+
+
+

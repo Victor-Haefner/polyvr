@@ -14,11 +14,15 @@ VRAnimation::VRAnimation(string name) {
     setName(name);
 }
 
+VRAnimation::~VRAnimation() {}
+
+shared_ptr<VRAnimation> VRAnimation::create(string name) { return shared_ptr<VRAnimation>(new VRAnimation(name)); }
+
 void VRAnimation::start(float offset) {
     this->offset = offset;
     start_time = glutGet(GLUT_ELAPSED_TIME)/1000.0;
     run = true;
-    VRScene::getCurrent()->addAnimation(this);
+    VRScene::getCurrent()->addAnimation(shared_from_this());
 }
 
 void VRAnimation::setCallbackOwner(bool b) {

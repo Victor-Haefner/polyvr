@@ -5,6 +5,7 @@
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Polygon_2.h>
 #include <CGAL/partition_2.h>
+#include <CGAL/ch_graham_andrew.h>
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel Kernel;
 typedef CGAL::Partition_traits_2<Kernel> CGALTraits;
@@ -115,13 +116,14 @@ polygon polygon::sort() {
     polygon radial_sort;
     radial_sort.addPoint(p0);
     for (auto p : points) if (p != p0) radial_sort.addPoint(p);
+
     auto getSortTurn = [&](const Vec2f& p1, const Vec2f& p2) -> bool {
-        float z = (p1[0]-p0[0])*(p2[1]-p0[1])-(p1[1]-p0[1])*(p2[0]-p0[0]);
-        return z > 0;
+        return (p1[1]-p0[1])*(p2[0]-p0[0]) < (p1[0]-p0[0])*(p2[1]-p0[1]);
     };
 
     auto& vec = radial_sort.points;
-    std::sort(vec.begin(), vec.end(), getSortTurn);
+    //std::sort(vec.begin(), vec.end(), getSortTurn);
+    std::stable_sort(vec.begin(), vec.end(), getSortTurn);
     std::unique(vec.begin(), vec.end());
     return radial_sort;
 }
@@ -129,8 +131,8 @@ polygon polygon::sort() {
 vector<Vec2f> polygon::get() { return points; }
 vector<Vec3f> polygon::get3() { return points3; }
 
-polygon polygon::getConvexHull() { // graham scan algorithmus
-    auto radial_sort = sort();
+polygon polygon::getConvexHull() { // graham scan algorithm TODO: TOO FUCKING UNRELIABLE!!!
+    /*auto radial_sort = sort();
     if (radial_sort.size() < 3) return polygon();
     //cout << " polygon::getConvexHull points " << toString() << endl;
     //cout << " polygon::getConvexHull sort " << radial_sort.toString() << endl;
@@ -173,6 +175,18 @@ polygon polygon::getConvexHull() { // graham scan algorithmus
     res.convex = true;
     for (auto p : omega) res.addPoint(p);
     //cout << " polygon::getConvexHull res " << res.toString() << endl;
+    return res;*/
+
+    /*CGAL::set_ascii_mode(std::cin);
+    CGAL::set_ascii_mode(std::cout);
+    std::istream_iterator< Point_2 >  in_start( std::cin );
+    std::istream_iterator< Point_2 >  in_end;
+    std::ostream_iterator< Point_2 >  out( std::cout, "\n" );*/
+    vector<Kernel::Point_2> pIn; for (auto p : points) pIn.push_back(Kernel::Point_2(p[0],p[1]));
+    vector<Kernel::Point_2> pOut; for (auto p : points) pOut.push_back(Kernel::Point_2());
+    CGAL::ch_graham_andrew( pIn.begin(), pIn.end(), pOut.begin() );
+    polygon res;
+    for (auto p : pOut) res.addPoint(Vec2f(p[0],p[2]));
     return res;
 }
 

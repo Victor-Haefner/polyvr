@@ -154,10 +154,10 @@ class VRTransform : public VRObject {
         /** Cast a ray in world coordinates from the object in its local coordinates, -z axis defaults **/
         Line castRay(VRObjectPtr obj = 0, Vec3f dir = Vec3f(0,0,-1));
 
-        map<string, VRAnimation*> animations;
-        void addAnimation(VRAnimation* animation);
-        vector<VRAnimation*> getAnimations();
-        VRAnimation* startPathAnimation(path* p, float time, float offset, bool redirect = true, bool loop = false);
+        map<string, VRAnimationPtr> animations;
+        void addAnimation(VRAnimationPtr animation);
+        vector<VRAnimationPtr> getAnimations();
+        VRAnimationPtr startPathAnimation(pathPtr p, float time, float offset, bool redirect = true, bool loop = false);
         void stopAnimation();
 
         void printPos(); // Print the position of the object in local && world coords

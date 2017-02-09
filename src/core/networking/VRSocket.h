@@ -68,8 +68,9 @@ class VRSocket : public VRName {
         void update();
 
     public:
-        VRSocket(string name);
+        VRSocket(string name = "socket");
         virtual ~VRSocket();
+        static std::shared_ptr<VRSocket> create(string name = "socket");
 
         void initServer(CONNECTION_TYPE t, int _port);
         void sendHTTPGet(string uri);

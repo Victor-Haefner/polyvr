@@ -48,7 +48,7 @@ bool VRAnnotationEngine::checkUIn(int i) {
 
 void VRAnnotationEngine::resize(Label& l, Vec3f p, int N) {
     int eN = l.entries.size();
-    //for (int i=0; i<eN; i++) norms->setValue(Vec3f(), l.entries[i]);
+    for (int i=0; i<eN; i++) data->setVert(l.entries[i], Vec3f(), Vec3f()); // clear old buffer
 
     if (N <= eN) return;
     l.entries.resize(N, 0);

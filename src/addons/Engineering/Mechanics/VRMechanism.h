@@ -163,6 +163,7 @@ class VRMechanism {
     public:
         VRMechanism();
         ~VRMechanism();
+        static shared_ptr<VRMechanism> create();
 
         void add(VRGeometryPtr part, VRTransformPtr trans = 0);
         void clear();

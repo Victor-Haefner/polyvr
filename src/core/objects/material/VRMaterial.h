@@ -72,6 +72,7 @@ class VRMaterial : public VRObject {
         static VRMaterialPtr getDefault();
         static VRMaterialPtr get(MaterialMTRecPtr mat);
         static VRMaterialPtr get(string s);
+        static vector<VRMaterialPtr> getAll();
         static void clearAll();
 
         //** Set the material of the mesh **/

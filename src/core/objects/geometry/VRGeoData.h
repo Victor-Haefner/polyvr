@@ -33,6 +33,9 @@ class VRGeoData {
         void reset();
         bool valid() const;
 
+        Pnt3f getPosition(int i);
+        Vec3f getNormal(int i);
+
         int pushVert(Pnt3f p);
         int pushVert(Pnt3f p, Vec3f n);
         int pushVert(Pnt3f p, Vec3f n, Vec3f c);

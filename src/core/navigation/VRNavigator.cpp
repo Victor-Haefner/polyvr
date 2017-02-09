@@ -41,6 +41,7 @@ VRNavPreset::VRNavPreset() {
 }
 
 VRNavPreset::~VRNavPreset() {}
+shared_ptr<VRNavPreset> VRNavPreset::create() { return shared_ptr<VRNavPreset>(new VRNavPreset()); }
 
 void VRNavPreset::updateBinding(VRNavBinding& b) {
     if (!active) return;
@@ -87,28 +88,22 @@ void VRNavPreset::setSpeed(float vt, float vr) { speed = Vec2f(vt, vr); activate
 // preset management
 
 VRNavigator_base::VRNavigator_base () {
-    current = 0;
-
     store("active", &current_name);
-
-    VRNavPreset* np = new VRNavPreset();
+    auto np = VRNavPreset::create();
     np->setName("None");
     addNavigation(np);
 }
 
 VRNavigator_base::~VRNavigator_base() {
-    for (auto p : presets) delete p.second;
     presets.clear();
 }
 
-void VRNavigator_base::addNavigation(VRNavPreset* ps) {
+void VRNavigator_base::addNavigation(shared_ptr<VRNavPreset> ps) {
     string name = ps->getName();
-    if (presets.count(name)) delete presets[name];
     presets[name] = ps;
 }
 
 void VRNavigator_base::remNavigation(string name) {
-    delete presets[name];
     presets.erase(name);
 }
 
@@ -121,7 +116,7 @@ void VRNavigator_base::setActiveNavigation(string s) {
     current_name = s;
 }
 
-VRNavPreset* VRNavigator_base::getNavigation(string s) {
+shared_ptr<VRNavPreset> VRNavigator_base::getNavigation(string s) {
     if (presets.count(s) == 0) return 0;
     return presets[s];
 }
@@ -129,7 +124,7 @@ VRNavPreset* VRNavigator_base::getNavigation(string s) {
 string VRNavigator_base::getNavigationTip(string s) {
     string res;
     if (presets.count(s) == 0) return res;
-    VRNavPreset* p = presets[s];
+    auto p = presets[s];
 
     auto& bngs = p->getBindings();
     for ( uint i=0; i<bngs.size(); i++ ) {
@@ -145,7 +140,7 @@ string VRNavigator_base::getNavigationTip(string s) {
 
 string VRNavigator_base::getActiveNavigation() { return current_name; }
 vector<string> VRNavigator_base::getNavigationNames() { vector<string> res; for(auto p : presets) res.push_back(p.first); return res; }
-map<string, VRNavPreset*> VRNavigator_base::getNavigations() { return presets; }
+map<string, shared_ptr<VRNavPreset>> VRNavigator_base::getNavigations() { return presets; }
 
 void VRNavigator_base::storeNavigationCallback(VRDeviceCbPtr cb) { library[cb->getName()] = cb; }
 VRDeviceCbPtr VRNavigator_base::getNavigationCallback(string s) { if (library.count(s)) return library[s]; return 0; }
@@ -353,7 +348,7 @@ void VRNavigator::focus(VRDeviceWeakPtr _dev) {
 // presets
 
 void VRNavigator::initWalk(VRTransformPtr target, VRDevicePtr dev) {
-    VRNavPreset* preset = new VRNavPreset();
+    auto preset = VRNavPreset::create();
     preset->setDevice(dev);
     preset->setTarget(target);
     preset->setSpeed(0.02, 0.04);
@@ -367,7 +362,7 @@ void VRNavigator::initWalk(VRTransformPtr target, VRDevicePtr dev) {
 }
 
 void VRNavigator::initOrbit(VRTransformPtr target, VRDevicePtr dev) {
-    VRNavPreset* preset = new VRNavPreset();
+    auto preset = VRNavPreset::create();
     preset->setDevice(dev);
     preset->setTarget(target);
 
@@ -387,7 +382,7 @@ void VRNavigator::initOrbit(VRTransformPtr target, VRDevicePtr dev) {
 }
 
 void VRNavigator::initOrbit2D(VRTransformPtr target, VRDevicePtr dev) {
-    VRNavPreset* preset = new VRNavPreset();
+    auto preset = VRNavPreset::create();
     preset->setDevice(dev);
     preset->setTarget(target);
 
@@ -407,7 +402,7 @@ void VRNavigator::initOrbit2D(VRTransformPtr target, VRDevicePtr dev) {
 }
 
 void VRNavigator::initFlyOrbit(VRTransformPtr target, VRDevicePtr dev) { // TODO
-    VRNavPreset* preset = new VRNavPreset();
+    auto preset = VRNavPreset::create();
     preset->setDevice(dev);
     preset->setTarget(target);
 
@@ -425,7 +420,7 @@ void VRNavigator::initFlyOrbit(VRTransformPtr target, VRDevicePtr dev) { // TODO
 }
 
 void VRNavigator::initFlyWalk(VRTransformPtr target, VRDevicePtr dev) {
-    VRNavPreset* preset = new VRNavPreset();
+    auto preset = VRNavPreset::create();
     preset->setDevice(dev);
     preset->setTarget(target);
     preset->setSpeed(0.4, 0.4);
@@ -472,7 +467,7 @@ void VRNavigator::hyd_walk(VRDeviceWeakPtr _dev) {
 }
 
 void VRNavigator::initHydraFly(VRTransformPtr target, VRDevicePtr dev) {
-    VRNavPreset* preset = new VRNavPreset();
+    auto preset = VRNavPreset::create();
     preset->setDevice(dev);
     preset->setTarget(target);
 

@@ -97,6 +97,8 @@ struct Geo {
     }
 };
 
+shared_ptr<VRFactory> VRFactory::create() { return shared_ptr<VRFactory>(new VRFactory()); }
+
 bool VRFactory::loadVRML(string path, VRProgressPtr progress, VRTransformPtr res, bool thread) { // wrl filepath
     ifstream file(path);
     if (!file.is_open()) { cout << "file " << path << " not found" << endl; return true; }

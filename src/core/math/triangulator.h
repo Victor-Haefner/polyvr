@@ -23,6 +23,8 @@ class Triangulator {
 
     public:
         Triangulator();
+        ~Triangulator();
+        static shared_ptr<Triangulator> create();
 
         void add(polygon p, bool outer = true);
 

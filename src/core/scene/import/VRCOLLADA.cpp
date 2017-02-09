@@ -215,7 +215,7 @@ void printAll(const AnimationLibrary& library) {
 
 
 
-void setPose(OSG::VRTransformPtr o, int i, path *p, float t) {// object, axis, new axis values
+void setPose(OSG::VRTransformPtr o, int i, pathPtr p, float t) {// object, axis, new axis values
     if (i < 0 || i > 2) { return; }
     Vec3f f = o->getFrom();
     if(p) f[i] = p->getPosition(t)[1];
@@ -223,7 +223,7 @@ void setPose(OSG::VRTransformPtr o, int i, path *p, float t) {// object, axis, n
     o->setFrom(f);
 }
 
-void setRot(OSG::VRTransformPtr o, int i, path *p, float t) {
+void setRot(OSG::VRTransformPtr o, int i, pathPtr p, float t) {
     if (i < 0 || i > 2) { return; }
     Vec3f f = o->getEuler();
     if(p) f[i] = p->getPosition(t)[1];
@@ -231,7 +231,7 @@ void setRot(OSG::VRTransformPtr o, int i, path *p, float t) {
     o->setEuler(f);
 }
 
-void setScale(OSG::VRTransformPtr o, int i, path *p, float t) {
+void setScale(OSG::VRTransformPtr o, int i, pathPtr p, float t) {
     if (i < 0 || i > 2) { return; }
     Vec3f f = o->getScale();
     if(p) f[i] = p->getPosition(t)[1];
@@ -310,9 +310,9 @@ void buildAnimations(AnimationLibrary& lib, VRObjectPtr objects) {
         VRAnimCbPtr fkt;
         bool bezier = false;
 
-        path* p = 0;
+        pathPtr p = 0;
 
-        void (*callback)(OSG::VRTransformPtr o, int i, path *p, float t) = 0;
+        void (*callback)(OSG::VRTransformPtr o, int i, pathPtr p, float t) = 0;
         if (a.second.channel.type == "rotation") callback = setRot;
         if (a.second.channel.type == "location") callback = setPose;
         if (a.second.channel.type == "scale") callback = setScale;
@@ -332,7 +332,7 @@ void buildAnimations(AnimationLibrary& lib, VRObjectPtr objects) {
             Vec3f end(inputValues[i+1], outputValues[i+1], 0);
             float duration = end[0] - start[0];
             if (bezier) {
-                p = new path();
+                p = path::create();
                 Vec3f h0 = Vec3f(outtangentValues[2*i], outtangentValues[2*i+1], 0) - start;
                 Vec3f h1 = Vec3f(intangentValues[2*i+2], intangentValues[2*i+1+2], 0) - end;
                 p->addPoint( start, h0, Vec3f() );
@@ -342,10 +342,10 @@ void buildAnimations(AnimationLibrary& lib, VRObjectPtr objects) {
             bool loop = false;
             fkt = VRFunction<float>::create(a.first, boost::bind(callback, t, axis, p, _1) );
 
-            VRAnimation* anim = 0;
+            VRAnimationPtr anim = 0;
             VRAnimCbWeakPtr wkp = fkt;
-            if (bezier) anim = new VRAnimation(duration, start[0], wkp, 0.f, 1.f, loop);
-            else anim = new VRAnimation(duration, start[0], wkp, start[1], end[1], loop);
+            if (bezier) anim = VRAnimation::create(duration, start[0], wkp, 0.f, 1.f, loop);
+            else anim = VRAnimation::create(duration, start[0], wkp, start[1], end[1], loop);
             anim->setCallbackOwner(true);
             t->addAnimation(anim);
         }

@@ -12,9 +12,11 @@ struct VRPyMotor : VRPyBaseT<rpmTool::VRMotor> {
     static PyObject* stopAllSounds(VRPyMotor* self);
     static PyObject* setVolume(VRPyMotor* self, PyObject* args);
     static PyObject* play(VRPyMotor* self, PyObject* args);
-    static PyObject* playCurrent(VRPyMotor* self);
+    static PyObject* playCurrent(VRPyMotor* self, PyObject* args);
     static PyObject* setRPM(VRPyMotor* self, PyObject* args);
     static PyObject* getRPM(VRPyMotor* self);
+    static PyObject* getQueuedBuffer(VRPyMotor* self);
+    static PyObject* recycleBuffer(VRPyMotor* self);
 };
 
 #endif // VRPYSOCKET_H_INCLUDED

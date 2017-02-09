@@ -72,14 +72,15 @@ class VRProduction {
         VROntologyPtr description;
         map<int, VRProductionMachine*> machines;
         vector<VRProductionJob*> jobs;
-        FLogistics* intraLogistics = 0;
-        FNetwork* network = 0;
+        shared_ptr<FLogistics> intraLogistics;
+        shared_ptr<FNetwork> network;
         bool running = false;
         int takt = 2000;
         int last_takt = 0;
 
     public:
         VRProduction();
+        static shared_ptr<VRProduction> create();
 
         void addMachine(VRProductionMachine* pm, string machine, VRGeometryPtr m);
         VRProductionJob* queueJob(VRProduct* p, string prod);

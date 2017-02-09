@@ -16,12 +16,16 @@ OSG_BEGIN_NAMESPACE;
 void VRConstructionKit_on_snap(VRConstructionKit* kit, VRSnappingEngine::EventSnap* e);
 
 VRConstructionKit::VRConstructionKit() {
-    snapping = new VRSnappingEngine();
-    selector = new VRSelector();
+    snapping = VRSnappingEngine::create();
+    selector = VRSelector::create();
 
     auto fkt = new VRFunction<VRSnappingEngine::EventSnap*>("on_snap_callback", boost::bind(VRConstructionKit_on_snap, this, _1));
     snapping->getSignalSnap()->add(fkt);
 }
+
+VRConstructionKit::~VRConstructionKit() {}
+
+shared_ptr<VRConstructionKit> VRConstructionKit::create() { return shared_ptr<VRConstructionKit>(new VRConstructionKit()); }
 
 void VRConstructionKit::clear() {
     objects.clear();
@@ -29,8 +33,8 @@ void VRConstructionKit::clear() {
     snapping->clear();
 }
 
-VRSnappingEngine* VRConstructionKit::getSnappingEngine() { return snapping; }
-VRSelector* VRConstructionKit::getSelector() { return selector; }
+shared_ptr<VRSnappingEngine> VRConstructionKit::getSnappingEngine() { return snapping; }
+shared_ptr<VRSelector> VRConstructionKit::getSelector() { return selector; }
 
 vector<VRObjectPtr> VRConstructionKit::getObjects() {
     vector<VRObjectPtr> res;

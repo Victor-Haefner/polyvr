@@ -14,14 +14,14 @@ VRStroke::VRStroke(string name) : VRGeometry(name) { }
 VRStrokePtr VRStroke::create(string name) { return shared_ptr<VRStroke>(new VRStroke(name) ); }
 VRStrokePtr VRStroke::ptr() { return static_pointer_cast<VRStroke>( shared_from_this() ); }
 
-void VRStroke::setPath(path* p) {
+void VRStroke::setPath(pathPtr p) {
     paths.clear();
     paths.push_back(p);
 }
 
-void VRStroke::addPath(path* p) { paths.push_back(p); }
-void VRStroke::setPaths(vector<path*> p) { paths = p; }
-vector<path*>& VRStroke::getPaths() { return paths; }
+void VRStroke::addPath(pathPtr p) { paths.push_back(p); }
+void VRStroke::setPaths(vector<pathPtr> p) { paths = p; }
+vector<pathPtr>& VRStroke::getPaths() { return paths; }
 
 void VRStroke::strokeProfile(vector<Vec3f> profile, bool closed, bool doColor, CAP l, CAP r) {
     mode = 0;

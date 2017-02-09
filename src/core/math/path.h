@@ -37,6 +37,9 @@ class path {
 
     public:
         path(int degree = 3);
+        ~path();
+
+        static shared_ptr<path> create();
 
         int addPoint(Vec3f p = Vec3f(0,0,0), Vec3f n = Vec3f(0,0,-1), Vec3f c = Vec3f(0,0,0), Vec3f u = Vec3f(0,1,0));
         int addPoint(VRTransformPtr t);
@@ -56,7 +59,10 @@ class path {
         void getOrientation(float t, Vec3f& dir, Vec3f& up, int i = 0, int j = 0);
         Vec3f getColor(float t, int i = 0, int j = 0);
         pose getPose(float t, int i = 0, int j = 0);
+
+        float getClosestPoint(Vec3f p); // return t parameter on path
         float getDistance(Vec3f p);
+        vector<float> computeInflectionPoints(int i, int j);
 
         void approximate(int degree);
 

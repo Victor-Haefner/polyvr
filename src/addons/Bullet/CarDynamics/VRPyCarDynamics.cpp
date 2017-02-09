@@ -3,31 +3,62 @@
 #include "core/scripting/VRPyGeometry.h"
 #include "core/scripting/VRPyBaseT.h"
 #include "core/scripting/VRPyPose.h"
+#include "core/scripting/VRPyPath.h"
 
 using namespace OSG;
 
 simplePyType(CarDynamics, New_named_ptr);
+simpleVRPyType(Driver, New_ptr);
 
 PyMethodDef VRPyCarDynamics::methods[] = {
-    {"update", (PyCFunction)VRPyCarDynamics::update, METH_VARARGS, "Update vehicle physics input (throttle force, break, steering [-1,1])" },
+    {"update", (PyCFunction)VRPyCarDynamics::update, METH_VARARGS, "Update vehicle physics input (float throttle {-1,1}, float break {0,1}, float steering {-1,1}, float clutch {0,1}, int gear)" },
     {"setChassis", (PyCFunction)VRPyCarDynamics::setChassis, METH_VARARGS, "Set chassis geometry" },
-    {"setWheel", (PyCFunction)VRPyCarDynamics::setWheel, METH_VARARGS, "Set wheel geometry" },
-    {"setCarMass", (PyCFunction)VRPyCarDynamics::setCarMass, METH_VARARGS, "Set car weight, must be done before creating car." },
-    {"setWheelParams", (PyCFunction)VRPyCarDynamics::setWheelParams, METH_VARARGS, "Set wheel parameters - setWheelParams(width, radius)" },
-    {"setWheelOffsets", (PyCFunction)VRPyCarDynamics::setWheelOffsets, METH_VARARGS, "Set wheel offsets - setWheelOffsets(x offset, front offset, rear offset, height)" },
+    {"setupSimpleWheels", (PyCFunction)VRPyCarDynamics::setupSimpleWheels, METH_VARARGS, "Setup classic wheels - setupSimpleWheels( geo, float X, float Zp, float Zn, float height, float radius, float width)" },
+    {"setParameter", (PyCFunction)VRPyCarDynamics::setParameter, METH_VARARGS, "Set car parameter, must be done before creating car - setParameter( float mass, float max_steering, float engine_power, float break_power )" },
     {"reset", (PyCFunction)VRPyCarDynamics::reset, METH_VARARGS, "Reset car - reset([x,y,z])" },
+    {"getSteering", (PyCFunction)VRPyCarDynamics::getSteering, METH_NOARGS, "Get car steering - float getSteering()" },
+    {"getThrottle", (PyCFunction)VRPyCarDynamics::getThrottle, METH_NOARGS, "Get car throttle - float getThrottle()" },
+    {"getBreaking", (PyCFunction)VRPyCarDynamics::getBreaking, METH_NOARGS, "Get car breaking - float getBreaking()" },
+    {"getClutch", (PyCFunction)VRPyCarDynamics::getClutch, METH_NOARGS, "Get car clutch - float getClutch()" },
     {"getSpeed", (PyCFunction)VRPyCarDynamics::getSpeed, METH_NOARGS, "Get car speed" },
+    {"getAcceleration", (PyCFunction)VRPyCarDynamics::getAcceleration, METH_NOARGS, "Get car acceleration" },
     {"getRoot", (PyCFunction)VRPyCarDynamics::getRoot, METH_NOARGS, "Get car root node" },
     {"getChassis", (PyCFunction)VRPyCarDynamics::getChassis, METH_NOARGS, "Get car chassis" },
     {"getWheels", (PyCFunction)VRPyCarDynamics::getWheels, METH_NOARGS, "Get car wheels" },
+    {"getRPM", (PyCFunction)VRPyCarDynamics::getRPM, METH_NOARGS, "Get car RPM" },
+    {"getGear", (PyCFunction)VRPyCarDynamics::getGear, METH_NOARGS, "Get car gear" },
     {NULL}  /* Sentinel */
 };
 
 PyObject* VRPyCarDynamics::getWheels(VRPyCarDynamics* self) {
     auto wheels = self->objPtr->getWheels();
     PyObject* pyWheels = PyList_New(wheels.size());
-    for (int i=0; i<wheels.size(); i++) PyList_SetItem(pyWheels, i, VRPyTransform::fromSharedPtr(wheels[i]));
+    for (uint i=0; i<wheels.size(); i++) PyList_SetItem(pyWheels, i, VRPyTransform::fromSharedPtr(wheels[i]));
     return pyWheels;
+}
+
+PyObject* VRPyCarDynamics::getRPM(VRPyCarDynamics* self) {
+    return PyInt_FromLong(self->objPtr->getRPM());
+}
+
+PyObject* VRPyCarDynamics::getGear(VRPyCarDynamics* self) {
+    return PyInt_FromLong(self->objPtr->getGear());
+}
+
+PyObject* VRPyCarDynamics::getClutch(VRPyCarDynamics* self) {
+    return PyFloat_FromDouble(self->objPtr->getClutch());
+}
+
+PyObject* VRPyCarDynamics::getSteering(VRPyCarDynamics* self) {
+    return PyFloat_FromDouble(self->objPtr->getSteering());
+}
+
+PyObject* VRPyCarDynamics::getThrottle(VRPyCarDynamics* self) {
+    return PyFloat_FromDouble(self->objPtr->getThrottle());
+}
+
+PyObject* VRPyCarDynamics::getBreaking(VRPyCarDynamics* self) {
+    return PyFloat_FromDouble(self->objPtr->getBreaking());
 }
 
 PyObject* VRPyCarDynamics::getChassis(VRPyCarDynamics* self) {
@@ -42,6 +73,10 @@ PyObject* VRPyCarDynamics::getSpeed(VRPyCarDynamics* self) {
     return PyFloat_FromDouble(self->objPtr->getSpeed());
 }
 
+PyObject* VRPyCarDynamics::getAcceleration(VRPyCarDynamics* self) {
+    return PyFloat_FromDouble(self->objPtr->getAcceleration());
+}
+
 PyObject* VRPyCarDynamics::reset(VRPyCarDynamics* self, PyObject* args) {
     VRPyPose* p;
     if (! PyArg_ParseTuple(args, "O", &p)) return NULL;
@@ -50,10 +85,14 @@ PyObject* VRPyCarDynamics::reset(VRPyCarDynamics* self, PyObject* args) {
 }
 
 PyObject* VRPyCarDynamics::update(VRPyCarDynamics* self, PyObject* args) {
-    OSG::Vec3f input = parseVec3f(args);
-    self->objPtr->setThrottle(input[0]);
-    self->objPtr->setBreak(input[1]);
-    self->objPtr->setSteering(input[2]);
+    float t,b,s,c;
+    int g;
+    if (! PyArg_ParseTuple(args, "ffffi", &t, &b, &s, &c, &g)) return NULL;
+    self->objPtr->setThrottle(t);
+    self->objPtr->setBreak(b);
+    self->objPtr->setSteering(s);
+    self->objPtr->setClutch(c);
+    self->objPtr->setGear(g);
     Py_RETURN_TRUE;
 }
 
@@ -64,30 +103,54 @@ PyObject* VRPyCarDynamics::setChassis(VRPyCarDynamics* self, PyObject* args) {
     Py_RETURN_TRUE;
 }
 
-PyObject* VRPyCarDynamics::setWheel(VRPyCarDynamics* self, PyObject* args) {
-    VRPyGeometry* dev = NULL;
-    if (! PyArg_ParseTuple(args, "O", &dev)) return NULL;
-    self->objPtr->setWheelGeo(dev->objPtr);
+PyObject* VRPyCarDynamics::setupSimpleWheels(VRPyCarDynamics* self, PyObject* args) {
+    VRPyGeometry* geo = NULL;
+    float X, Zp, Zn, h, r, w;
+    if (! PyArg_ParseTuple(args, "Offffff", &geo, &X, &Zp, &Zn, &h, &r, &w)) return NULL;
+    self->objPtr->setupSimpleWheels(geo->objPtr, X, Zp, Zn, h, r, w);
     Py_RETURN_TRUE;
 }
 
-PyObject* VRPyCarDynamics::setCarMass(VRPyCarDynamics* self, PyObject* args) {
-    cout << "setting car mass" << endl;
-	self->objPtr->setCarMass(parseFloat(args));
-	cout << "setting car mass" << endl;
+PyObject* VRPyCarDynamics::setParameter(VRPyCarDynamics* self, PyObject* args) {
+    float m, s, e, b;
+    if (! PyArg_ParseTuple(args, "ffff", &m, &s, &e, &b)) return NULL;
+	self->objPtr->setParameter(m,s,e,b);
 	Py_RETURN_TRUE;
 }
 
-PyObject* VRPyCarDynamics::setWheelOffsets(VRPyCarDynamics* self, PyObject* args){
-    float b1, b2, b3,b4;
-    if (! PyArg_ParseTuple(args, "ffff", &b1, &b2, &b3,&b4)) return NULL;
-    self->objPtr->setWheelOffsets(b1, b2, b3,b4);
+
+PyMethodDef VRPyDriver::methods[] = {
+    {"setCar", (PyCFunction)VRPyDriver::setCar, METH_VARARGS, "Set car - setCar( car )" },
+    {"followPath", (PyCFunction)VRPyDriver::followPath, METH_VARARGS, "Start the pilot to follow a path with a certain speed curve - followPath( path p, path v )" },
+    {"stop", (PyCFunction)VRPyDriver::stop, METH_NOARGS, "Stop driving - stop()" },
+    {"isDriving", (PyCFunction)VRPyDriver::isDriving, METH_NOARGS, "Check if driving - bool isDriving()" },
+    {NULL}  /* Sentinel */
+};
+
+PyObject* VRPyDriver::isDriving(VRPyDriver* self) {
+    return PyBool_FromLong( self->objPtr->isDriving() );
+}
+
+PyObject* VRPyDriver::setCar(VRPyDriver* self, PyObject* args) {
+    VRPyCarDynamics* c;
+    if (! PyArg_ParseTuple(args, "O", &c)) return NULL;
+    self->objPtr->setCar(c->objPtr);
     Py_RETURN_TRUE;
 }
 
-PyObject* VRPyCarDynamics::setWheelParams(VRPyCarDynamics* self, PyObject* args){
-    float b1, b2;
-    if (! PyArg_ParseTuple(args, "ff", &b1, &b2)) return NULL;
-    self->objPtr->setWheelParams(b1, b2);
+PyObject* VRPyDriver::followPath(VRPyDriver* self, PyObject* args) {
+    VRPyPath *p,*v;
+    if (! PyArg_ParseTuple(args, "OO", &p, &v)) return NULL;
+    self->objPtr->followPath(p->objPtr, v->objPtr);
     Py_RETURN_TRUE;
 }
+
+PyObject* VRPyDriver::stop(VRPyDriver* self) {
+    self->objPtr->stop();
+    Py_RETURN_TRUE;
+}
+
+
+
+
+

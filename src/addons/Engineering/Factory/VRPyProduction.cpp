@@ -2,7 +2,9 @@
 #include "core/scripting/VRPyBaseT.h"
 #include "core/scripting/VRPyTypeCaster.h"
 
-template<> PyTypeObject VRPyBaseT<OSG::VRProduction>::type = {
+using namespace OSG;
+
+template<> PyTypeObject VRPyBaseT<VRProduction>::type = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
     "VR.Factory.Production",             /*tp_name*/
@@ -41,7 +43,7 @@ template<> PyTypeObject VRPyBaseT<OSG::VRProduction>::type = {
     0,                         /* tp_dictoffset */
     (initproc)init,      /* tp_init */
     0,                         /* tp_alloc */
-    New,                 /* tp_new */
+    New_ptr,                 /* tp_new */
 };
 
 PyMethodDef VRPyProduction::methods[] = {
@@ -51,6 +53,6 @@ PyMethodDef VRPyProduction::methods[] = {
 
 
 PyObject* VRPyProduction::test(VRPyProduction* self) {
-    return VRPyTypeCaster::cast( self->obj->test());
+    return VRPyTypeCaster::cast( self->objPtr->test());
 }
 

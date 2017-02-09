@@ -3,11 +3,10 @@
 
 #include "VRGeometry.h"
 #include "core/objects/VRObjectFwd.h"
+#include "core/math/VRMathFwd.h"
 
 OSG_BEGIN_NAMESPACE;
 using namespace std;
-
-class path;
 
 class VRStroke : public VRGeometry {
     public:
@@ -17,7 +16,7 @@ class VRStroke : public VRGeometry {
         };
 
     private:
-        vector<path*> paths;
+        vector<pathPtr> paths;
 
         int mode = -1;
         vector<Vec3f> profile;
@@ -35,11 +34,11 @@ class VRStroke : public VRGeometry {
         static VRStrokePtr create(string name = "None");
         VRStrokePtr ptr();
 
-        void setPath(path* p);
-        void addPath(path* p);
-        void setPaths(vector<path*> p);
+        void setPath(pathPtr p);
+        void addPath(pathPtr p);
+        void setPaths(vector<pathPtr> p);
 
-        vector<path*>& getPaths();
+        vector<pathPtr>& getPaths();
 
         void strokeProfile(vector<Vec3f> profile, bool closed, bool doColor = true, CAP l = NONE, CAP r = NONE);
         void strokeStrew(VRGeometryPtr geo);

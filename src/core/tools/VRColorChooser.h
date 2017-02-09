@@ -23,6 +23,8 @@ class VRColorChooser {
 
     public:
         VRColorChooser();
+        ~VRColorChooser();
+        static shared_ptr<VRColorChooser> create();
 
         void setColor(Color3f c);
         Color3f getColor();

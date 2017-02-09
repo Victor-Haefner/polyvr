@@ -151,8 +151,9 @@ void VRWindowManager::updateWindows() {
     StatCollector* sc = ract->getStatCollector();
     if (sc) {
         sc->reset();
-        sc->getElem(VRRate::statFPStime)->add(VRGlobals::get()->FRAME_RATE);
-        sc->getElem(VRRate::statPhysFPStime)->add(VRGlobals::get()->PHYSICS_FRAME_RATE);
+        sc->getElem(VRRate::statFPS)->add(VRGlobals::get()->FRAME_RATE);
+        sc->getElem(VRRate::statScriptFPS)->add(VRGlobals::get()->SCRIPTS_FRAME_RATE);
+        sc->getElem(VRRate::statPhysFPS)->add(VRGlobals::get()->PHYSICS_FRAME_RATE);
     }
 
     commitChanges();

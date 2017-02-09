@@ -5,10 +5,10 @@
 OSG_BEGIN_NAMESPACE;
 using namespace std;
 
-VRMillingCuttingToolProfile::VRMillingCuttingToolProfile()
-    : profile(vector<Vec2f>()) {}
+VRMillingCuttingToolProfile::VRMillingCuttingToolProfile() {}
+VRMillingCuttingToolProfile::~VRMillingCuttingToolProfile() {}
 
-VRMillingCuttingToolProfile::~VRMillingCuttingToolProfile(){}
+shared_ptr<VRMillingCuttingToolProfile> VRMillingCuttingToolProfile::create() { return shared_ptr<VRMillingCuttingToolProfile>(new VRMillingCuttingToolProfile()); }
 
 void VRMillingCuttingToolProfile::addPointProfile(Vec2f point) {
     profile.push_back(point);

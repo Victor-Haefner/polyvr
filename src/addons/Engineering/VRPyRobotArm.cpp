@@ -3,48 +3,9 @@
 #include "core/scripting/VRPyGeometry.h"
 #include "core/scripting/VRPyPath.h"
 
+using namespace OSG;
 
-template<> PyTypeObject VRPyBaseT<OSG::VRRobotArm>::type = {
-    PyObject_HEAD_INIT(NULL)
-    0,                         /*ob_size*/
-    "VR.RobotArm",             /*tp_name*/
-    sizeof(VRPyRobotArm),             /*tp_basicsize*/
-    0,                         /*tp_itemsize*/
-    (destructor)dealloc, /*tp_dealloc*/
-    0,                         /*tp_print*/
-    0,                         /*tp_getattr*/
-    0,                         /*tp_setattr*/
-    0,                         /*tp_compare*/
-    0,                         /*tp_repr*/
-    0,                         /*tp_as_number*/
-    0,                         /*tp_as_sequence*/
-    0,                         /*tp_as_mapping*/
-    0,                         /*tp_hash */
-    0,                         /*tp_call*/
-    0,                         /*tp_str*/
-    0,                         /*tp_getattro*/
-    0,                         /*tp_setattro*/
-    0,                         /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
-    "RobotArm binding",           /* tp_doc */
-    0,		               /* tp_traverse */
-    0,		               /* tp_clear */
-    0,		               /* tp_richcompare */
-    0,		               /* tp_weaklistoffset */
-    0,		               /* tp_iter */
-    0,		               /* tp_iternext */
-    VRPyRobotArm::methods,             /* tp_methods */
-    0,             /* tp_members */
-    0,                         /* tp_getset */
-    0,                         /* tp_base */
-    0,                         /* tp_dict */
-    0,                         /* tp_descr_get */
-    0,                         /* tp_descr_set */
-    0,                         /* tp_dictoffset */
-    (initproc)init,      /* tp_init */
-    0,                         /* tp_alloc */
-    New,                 /* tp_new */
-};
+simpleVRPyType(RobotArm, New_ptr);
 
 PyMethodDef VRPyRobotArm::methods[] = {
     {"setParts", (PyCFunction)VRPyRobotArm::setParts, METH_VARARGS, "Set robot parts - setParts([base, upper_arm, forearm, wrist, grab, jaw1, jaw2])" },
@@ -66,123 +27,123 @@ PyMethodDef VRPyRobotArm::methods[] = {
 };
 
 PyObject* VRPyRobotArm::moveOnPath(VRPyRobotArm* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyRobotArm::moveOnPath - Object is invalid"); return NULL; }
+	if (!self->valid()) return NULL;
     float t0, t1; int l;
     if (! PyArg_ParseTuple(args, "ffi", &t0, &t1, &l)) return NULL;
-    self->obj->moveOnPath(t0,t1,l);
+    self->objPtr->moveOnPath(t0,t1,l);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyRobotArm::getPath(VRPyRobotArm* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyRobotArm::getPath - Object is invalid"); return NULL; }
-    return VRPyPath::fromPtr( self->obj->getPath() );
+	if (!self->valid()) return NULL;
+    return VRPyPath::fromSharedPtr( self->objPtr->getPath() );
 }
 
 PyObject* VRPyRobotArm::setPath(VRPyRobotArm* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyRobotArm::setPath - Object is invalid"); return NULL; }
+	if (!self->valid()) return NULL;
     VRPyPath* path = 0;
     parseObject(args, path);
-    self->obj->setPath( path->obj );
+    self->objPtr->setPath( path->objPtr );
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyRobotArm::getForwardKinematics(VRPyRobotArm* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyRobotArm::setAngles - Object is invalid"); return NULL; }
+	if (!self->valid()) return NULL;
     auto prts = parseList(args);
     vector<float> res;
     for (auto p : prts) res.push_back( PyFloat_AsDouble(p) );
-    //auto pose = self->obj->getForwardKinematics( res );
+    //auto pose = self->objPtr->getForwardKinematics( res );
     //return VRPyPose::fromObj(pose);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyRobotArm::getBackwardKinematics(VRPyRobotArm* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyRobotArm::setAngles - Object is invalid"); return NULL; }
+	if (!self->valid()) return NULL;
     PyObject* pose;
     if (! PyArg_ParseTuple(args, "O", &pose)) return NULL;
-    //auto pose = self->obj->getForwardKinematics( res );
+    //auto pose = self->objPtr->getForwardKinematics( res );
     //return VRPyPose::fromObj(pose);
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyRobotArm::setAngles(VRPyRobotArm* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyRobotArm::setAngles - Object is invalid"); return NULL; }
+	if (!self->valid()) return NULL;
     auto prts = parseList(args);
     vector<float> res;
     for (auto p : prts) res.push_back( PyFloat_AsDouble(p) );
-    self->obj->setAngles( res );
+    self->objPtr->setAngles( res );
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyRobotArm::getAngles(VRPyRobotArm* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyRobotArm::toggleGrab - Object is invalid"); return NULL; }
-    auto v = self->obj->getAngles();
+	if (!self->valid()) return NULL;
+    auto v = self->objPtr->getAngles();
     PyObject* res = PyList_New(v.size());
     for (uint i=0; i<v.size(); i++) PyList_SetItem(res, i, PyFloat_FromDouble(v[i]));
     return res;
 }
 
 PyObject* VRPyRobotArm::toggleGrab(VRPyRobotArm* self) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyRobotArm::toggleGrab - Object is invalid"); return NULL; }
-    self->obj->toggleGrab();
+	if (!self->valid()) return NULL;
+    self->objPtr->toggleGrab();
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyRobotArm::moveTo(VRPyRobotArm* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyRobotArm::moveTo - Object is invalid"); return NULL; }
+	if (!self->valid()) return NULL;
     PyObject *v1, *v2, *v3;
     if (! PyArg_ParseTuple(args, "OOO", &v1, &v2, &v3)) return NULL;
-    self->obj->moveTo( parseVec3fList(v1), parseVec3fList(v2), parseVec3fList(v3) );
+    self->objPtr->moveTo( parseVec3fList(v1), parseVec3fList(v2), parseVec3fList(v3) );
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyRobotArm::setGrab(VRPyRobotArm* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyRobotArm::setGrab - Object is invalid"); return NULL; }
-    self->obj->setGrab( parseFloat(args) );
+	if (!self->valid()) return NULL;
+    self->objPtr->setGrab( parseFloat(args) );
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyRobotArm::setParts(VRPyRobotArm* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyRobotArm::setParts - Object is invalid"); return NULL; }
+	if (!self->valid()) return NULL;
     auto prts = parseList(args);
     vector<OSG::VRTransformPtr> res;
     for (auto p : prts) res.push_back( ((VRPyTransform*)p)->objPtr );
-    self->obj->setParts( res );
+    self->objPtr->setParts( res );
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyRobotArm::setAngleDirections(VRPyRobotArm* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyRobotArm::setAngleDirections - Object is invalid"); return NULL; }
+	if (!self->valid()) return NULL;
     auto prts = parseList(args);
     vector<int> res;
     for (auto p : prts) res.push_back( PyInt_AsLong(p) );
-    self->obj->setAngleDirections( res );
+    self->objPtr->setAngleDirections( res );
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyRobotArm::setAngleOffsets(VRPyRobotArm* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyRobotArm::setAngleOffsets - Object is invalid"); return NULL; }
+	if (!self->valid()) return NULL;
     auto prts = parseList(args);
     vector<float> res;
     for (auto p : prts) res.push_back( PyFloat_AsDouble(p) );
-    self->obj->setAngleOffsets( res );
+    self->objPtr->setAngleOffsets( res );
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyRobotArm::setLengths(VRPyRobotArm* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyRobotArm::setLengths - Object is invalid"); return NULL; }
+	if (!self->valid()) return NULL;
     auto prts = parseList(args);
     vector<float> res;
     for (auto p : prts) res.push_back( PyFloat_AsDouble(p) );
-    self->obj->setLengths( res );
+    self->objPtr->setLengths( res );
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyRobotArm::setAxis(VRPyRobotArm* self, PyObject* args) {
-    if (self->obj == 0) { PyErr_SetString(err, "VRPyRobotArm::setAxis - Object is invalid"); return NULL; }
+	if (!self->valid()) return NULL;
     auto prts = parseList(args);
     vector<int> res;
     for (auto p : prts) res.push_back( PyInt_AsLong(p) );
-    self->obj->setAxis( res );
+    self->objPtr->setAxis( res );
     Py_RETURN_TRUE;
 }
