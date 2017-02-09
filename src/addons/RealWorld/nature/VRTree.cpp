@@ -70,7 +70,17 @@ struct OSG::segment {
 };
 
 
-VRTree::VRTree() : VRTransform("tree") {}
+VRTree::VRTree() : VRTransform("tree") {
+    int c = random(0,10);
+    if (c == 3) truncColor = Vec3f(0.7, 0.7, 0.7);
+    if (c == 4) truncColor = Vec3f(0.7, 0.7, 0.7);
+    if (c == 5) truncColor = Vec3f(0.6, 0.5, 0.4);
+    if (c == 6) truncColor = Vec3f(0.2, 0.1, 0.1);
+    if (c == 7) truncColor = Vec3f(0.3, 0.2, 0);
+    if (c == 8) truncColor = Vec3f(0.3, 0.2, 0);
+    if (c == 9) truncColor = Vec3f(0.2, 0.1, 0.05);
+}
+
 VRTree::~VRTree() {}
 VRTreePtr VRTree::create() { return shared_ptr<VRTree>(new VRTree()); }
 VRTreePtr VRTree::ptr() { return static_pointer_cast<VRTree>( shared_from_this() ); }
@@ -221,6 +231,7 @@ VRObjectPtr VRTree::copy(vector<VRObjectPtr> children) {
     tree->trunc = trunc;
     tree->lod;
     tree->branches = branches;
+    tree->truncColor = truncColor;
     tree->woodGeos.push_back( dynamic_pointer_cast<VRGeometry>( children[0]->getChild(0)->getChild(0) ) );
     tree->woodGeos.push_back( dynamic_pointer_cast<VRGeometry>( children[0]->getChild(1)->getChild(0) ) );
     tree->woodGeos.push_back( dynamic_pointer_cast<VRGeometry>( children[0]->getChild(2)->getChild(0) ) );
@@ -432,12 +443,8 @@ void VRTree::createHullTrunkLod(VRGeoData& geo, int lvl, Vec3f offset) { // TODO
         geo.pushQuad(i1[3],i1[0],i2[0],i2[3]);
     };
 
-    /*Vec4i i1 = pushRing(Vec3f(0,0,0), 0.1);
-    Vec4i i2 = pushRing(Vec3f(0,3,0), 0.1);
-    pushBox(i1,i2);*/
-
     function<void(Vec4i, segment*)> pushBranch = [&](Vec4i i0, segment* s) {
-        if (s->lvl > 2) return;
+        if (s->lvl > 3) return;
         Vec4i i1 = pushRing(s->p2, s->params[1][0]*0.1);
         pushBox(i0,i1);
         for (auto c : s->children) pushBranch(i1,c);

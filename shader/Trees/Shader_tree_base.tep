@@ -6,7 +6,7 @@ in vec3 tcPosition[];
 in vec3 cn[];
 in vec4 ccol[];
 out float r;
-out vec4 ec;
+out vec3 ec;
 
 void main() {
     float u = gl_TessCoord.x;

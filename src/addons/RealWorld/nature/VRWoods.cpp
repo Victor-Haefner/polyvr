@@ -128,12 +128,26 @@ void VRWoods::computeLODs() {
         string wdir = VRSceneManager::get()->getOriginalWorkdir();
         m->readFragmentShader(wdir+"/shader/Trees/Shader_leafs_lod.fp");
         m->readVertexShader(wdir+"/shader/Trees/Shader_leafs_lod.vp");
+
+        auto tg = VRTextureGenerator::create();
+        tg->setSize(Vec3i(50,50,50), 1);
+        float r = 0.85;
+        float g = 1.0;
+        float b = 0.8;
+        tg->add(PERLIN, 1, Vec4f(r,g,b,0.9), Vec4f(r,g,b,1) );
+        tg->add(PERLIN, 0.5, Vec4f(r,g,b,0.5), Vec4f(r,g,b,1) );
+        tg->add(PERLIN, 0.25, Vec4f(r,g,b,0.8), Vec4f(r,g,b,1) );
+        m->setTexture(tg->compose(0));
+
         return m;
     };
 
     auto simpleTrunkMat = []() {
         auto m = VRMaterial::create("brown");
         m->setDiffuse(Vec3f(0.6,0.3,0));
+        string wdir = VRSceneManager::get()->getOriginalWorkdir();
+        m->readFragmentShader(wdir+"/shader/Trees/Shader_trunc_lod.fp");
+        m->readVertexShader(wdir+"/shader/Trees/Shader_trunc_lod.vp");
         return m;
     };
 

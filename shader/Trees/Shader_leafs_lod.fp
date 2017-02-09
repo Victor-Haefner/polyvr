@@ -1,9 +1,10 @@
 #version 400 compatibility
 
-uniform sampler2D tex;
+uniform sampler3D tex;
 
 in vec3 vn;
 in vec4 vc;
+in vec3 vp;
 
 vec4 color;
 
@@ -20,13 +21,9 @@ void applyBlinnPhong() {
 
 void main( void ) {
 	color = vc;
-	/*color = texture(tex,tcs);
-	if (color.a < 0.5) discard;
-	color.a = 1.0;
-	color.y *= 0.7;
-	color.xz *= 0.2;
-	//gl_FragColor = c;*/
+	vec4 noise = texture(tex,vp.xyz);
+	color.xyz *= noise.a;
+	//if (color.a < 0.5) discard;
+	//gl_FragColor = c;
 	applyBlinnPhong();
-	//gl_FragColor = vec4(norm, 1.0);
-	//gl_FragColor = vec4(0,1,0,1);
 }
