@@ -43,16 +43,16 @@ class VRTree : public VRTransform {
         static VRTreePtr create();
         VRTreePtr ptr();
 
-        void grow(int seed = 0, segment* p = 0, int iteration = 0);
+        segment* grow(int seed = 0, segment* p = 0, int iteration = 0);
 
         void addBranching(int nodes = 1, int branching = 5,
-                   float n_angle = 0.2, float p_angle = 0.6, float l_factor = 0.8, float r_factor = 0.5,
-                   float n_angle_v = 0.2, float p_angle_v = 0.4, float l_factor_v = 0.2, float r_factor_v = 0.2);
+                   float n_angle = 0.2, float p_angle = 0.6, float length = 0.8, float radius = 0.1,
+                   float n_angle_v = 0.2, float p_angle_v = 0.4, float length_v = 0.2, float radius_v = 0.2);
 
         // deprecated
         void setup(int branching = 5, int iterations = 5, int seed = 0,
-                   float n_angle = 0.2, float p_angle = 0.6, float l_factor = 0.8, float r_factor = 0.5,
-                   float n_angle_v = 0.2, float p_angle_v = 0.4, float l_factor_v = 0.2, float r_factor_v = 0.2);
+                   float n_angle = 0.2, float p_angle = 0.6, float length = 0.8, float radius = 0.1,
+                   float n_angle_v = 0.2, float p_angle_v = 0.4, float length_v = 0.2, float radius_v = 0.2);
 
         void addLeafs(int lvl, int amount);
         void setLeafMaterial(VRMaterialPtr mat);

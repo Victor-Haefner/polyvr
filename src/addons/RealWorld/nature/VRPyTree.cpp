@@ -11,10 +11,29 @@ simpleVRPyType(Woods, New_VRObjects_unnamed_ptr);
 
 PyMethodDef VRPyTree::methods[] = {
     {"setup", (PyCFunction)VRPyTree::setup, METH_VARARGS, "Set the tree parameters - setup( int , int, int, flt, flt, flt, flt, flt, flt, flt, flt ) " },
+    {"addBranching", (PyCFunction)VRPyTree::addBranching, METH_VARARGS, "Set the tree parameters - addBranching( int nodes, int branching, flt, flt, flt, flt, flt, flt, flt, flt ) " },
+    {"grow", (PyCFunction)VRPyTree::grow, METH_VARARGS, "Set the tree parameters - grow( flt seed ) " },
     {"addLeafs", (PyCFunction)VRPyTree::addLeafs, METH_VARARGS, "Add a leaf layer - addLeafs( int lvl, flt scale, flt aspect )" },
     {"setLeafMaterial", (PyCFunction)VRPyTree::setLeafMaterial, METH_VARARGS, "Set leaf material - setLeafMaterial( mat )" },
     {NULL}  /* Sentinel */
 };
+
+PyObject* VRPyTree::addBranching(VRPyTree* self, PyObject* args) {
+    int a,b;
+    float d,e,f,g,h,i,j,k;
+    if (! PyArg_ParseTuple(args, "iiffffffff", &a, &b, &d, &e, &f, &g, &h, &i, &j, &k)) return NULL;
+
+    self->objPtr->addBranching( a,b, d,e,f,g, h,i,j,k );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyTree::grow(VRPyTree* self, PyObject* args) {
+    float s;
+    if (! PyArg_ParseTuple(args, "f", &s)) return NULL;
+
+    self->objPtr->grow(s);
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyTree::setup(VRPyTree* self, PyObject* args) {
     int a,b,c;

@@ -100,14 +100,15 @@ bool VRGeoData::valid() const {
 
 int VRGeoData::size() const { return data->pos->size(); }
 
-Pnt3f VRGeoData::getPosition(int i) { return data->pos->getValue(i); }
-Vec3f VRGeoData::getNormal(int i) { return data->norms->getValue(i); }
+Pnt3f VRGeoData::getPosition(int i) { return data->pos->size() > i ? data->pos->getValue(i) : Pnt3f(); }
+Vec3f VRGeoData::getNormal(int i) { return data->norms->size() > i ? data->norms->getValue(i) : Vec3f(); }
 Vec4f VRGeoData::getColor(int i) {
     if (data->cols4->size() > i) return data->cols4->getValue(i);
-    else {
+    if (data->cols3->size() > i) {
         Vec3f c = data->cols3->getValue(i);
         return Vec4f( c[0], c[1], c[2], 1.0 );
     }
+    return Vec4f();
 }
 
 int VRGeoData::pushVert(Pnt3f p) { data->pos->addValue(p); return data->pos->size()-1; }
