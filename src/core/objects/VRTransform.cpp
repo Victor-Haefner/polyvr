@@ -7,6 +7,7 @@
 #include "core/objects/geometry/VRConstraint.h"
 #include "core/utils/VRUndoInterfaceT.h"
 #include "core/utils/VRDoublebuffer.h"
+#include "core/utils/VRGlobals.h"
 #include "core/scene/VRAnimationManagerT.h"
 #include "core/math/pose.h"
 #include "geometry/VRPhysics.h"
@@ -126,7 +127,7 @@ void VRTransform::reg_change() {
     if (change == false) {
         if (fixed) changedObjects.push_back( ptr() );
         change = true;
-        change_time_stamp = VRGlobals::get()->CURRENT_FRAME;
+        change_time_stamp = VRGlobals::CURRENT_FRAME;
     }
 }
 
@@ -224,7 +225,7 @@ Matrix VRTransform::getMatrixTo(VRObjectPtr obj) {
 bool VRTransform::checkWorldChange() {
     if (frame == 0) { frame = 1; return true; }
     if (change) return true;
-    if (VRGlobals::get()->CURRENT_FRAME == wchange_time_stamp) return true;
+    if (VRGlobals::CURRENT_FRAME == wchange_time_stamp) return true;
     if (hasGraphChanged()) return true;
 
     VRObjectPtr obj = ptr();
@@ -233,7 +234,7 @@ bool VRTransform::checkWorldChange() {
         if (obj->hasAttachment("transform")) {
             ent = static_pointer_cast<VRTransform>(obj);
             if (ent->change_time_stamp > wchange_time_stamp) {
-                wchange_time_stamp = VRGlobals::get()->CURRENT_FRAME;
+                wchange_time_stamp = VRGlobals::CURRENT_FRAME;
                 return true;
             }
         }

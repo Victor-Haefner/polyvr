@@ -22,7 +22,3 @@ int VRRate::getRate() {
     return current;
 }
 
-VRRate::StatRate VRRate::statFPS("statFPS", "PolyVR framerate");
-VRRate::StatRate VRRate::statScriptFPS("statScriptFPS", "PolyVR scripts framerate");
-VRRate::StatRate VRRate::statPhysFPS("statPhysFPS", "PolyVR physics framerate");
-

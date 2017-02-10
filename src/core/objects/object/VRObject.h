@@ -19,19 +19,6 @@ Here all the functions regarding the OSG scenegraph structure are wrapped.
 
 */
 
-class VRGlobals {
-    private:
-        VRGlobals();
-
-    public:
-        unsigned int CURRENT_FRAME = 0;
-        unsigned int FRAME_RATE = 0;
-        unsigned int SCRIPTS_FRAME_RATE = 0;
-        unsigned int PHYSICS_FRAME_RATE = 500; /** TODO magic start number **/
-
-        static VRGlobals* get();
-};
-
 class VRObject : public std::enable_shared_from_this<VRObject>, public VRName, public VRUndoInterface {
     private:
         OSGObjectPtr osg;

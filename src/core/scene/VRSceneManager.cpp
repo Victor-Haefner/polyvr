@@ -10,6 +10,7 @@
 #include "core/objects/VRLightBeacon.h"
 #include "core/gui/VRGuiManager.h"
 #include "core/utils/VRTimer.h"
+#include "core/utils/VRGlobals.h"
 #include "core/gui/VRGuiSignals.h"
 #include "core/gui/VRGuiFile.h"
 #include "addons/Semantics/Reasoning/VROntology.h"
@@ -211,10 +212,13 @@ void VRSceneManager::update() {
     VRGuiManager::get()->updateGtk();
     if (current) current->allowScriptThreads();
 
+    int Pfps = round(1000.0/max(timer.stop(),1));
+
     // statistics
-    VRGlobals::get()->CURRENT_FRAME++;
-    VRGlobals::get()->FRAME_RATE = fps;
-    VRGlobals::get()->SCRIPTS_FRAME_RATE = Sfps;
+    VRGlobals::CURRENT_FRAME++;
+    VRGlobals::FRAME_RATE.fps = fps;
+    VRGlobals::POLYVR_FRAME_RATE.fps = Pfps;
+    VRGlobals::SCRIPTS_FRAME_RATE.fps = Sfps;
     osgSleep(max(16-timer.stop(),0));
 }
 

@@ -26,7 +26,7 @@ vec4 vertex;
 //----------------------------------------------------------------------------------------------MAIN--VP
 void main( void ) {
 	vn = osg_Normal;
-	vcol = vec4(osg_Color.xyz, 0.1 * osg_MultiTexCoord0[0]);
+	vcol = vec4(osg_Color.xyz, osg_MultiTexCoord0[0]);
 	vertex = osg_Vertex;
 	//applyWind();
 	gl_Position = vertex;

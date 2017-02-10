@@ -8,6 +8,7 @@
 #include "core/objects/material/VRTexture.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/VRGlobals.h"
 
 #include <OpenSG/OSGImage.h>
 #include <GL/glut.h>
@@ -261,7 +262,7 @@ void VRRecorder::setRecording(bool b) {
     else VRSceneManager::get()->dropUpdateFkt(updateCallback);
 }
 
-string VRRecorder::getPath() { return "recording_"+toString(VRGlobals::get()->CURRENT_FRAME)+".avi"; }
+string VRRecorder::getPath() { return "recording_"+toString(VRGlobals::CURRENT_FRAME)+".avi"; }
 
 weak_ptr<VRFunction<bool> > VRRecorder::getToggleCallback() { return toggleCallback; }
 

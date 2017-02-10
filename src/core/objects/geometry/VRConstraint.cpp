@@ -1,6 +1,7 @@
 #include "VRConstraint.h"
 #include "core/objects/VRTransform.h"
 #include "core/utils/VRStorage_template.h"
+#include "core/utils/VRGlobals.h"
 
 #include <OpenSG/OSGQuaternion.h>
 
@@ -41,7 +42,7 @@ Matrix VRConstraint::getReferenceB() { return refMatrixB; };
 
 void VRConstraint::apply(VRTransformPtr obj) {
     if (!hasConstraint() || !active) return;
-    auto now = VRGlobals::get()->CURRENT_FRAME;
+    auto now = VRGlobals::CURRENT_FRAME;
     if (apply_time_stamp == now) return;
     apply_time_stamp = now;
 

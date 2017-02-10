@@ -7,6 +7,7 @@
 
 #include "core/utils/VRRate.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRGlobals.h"
 #include "core/tools/VRText.h"
 #include "core/setup/VRSetup.h"
 #include "core/gui/VRGuiUtils.h"
@@ -298,11 +299,12 @@ void VRView::showStats(bool b) {
         stats->setColor(Color4f(0.1,0.9,0.6,0.7f));
 
         stats->addText("\nPerformance:");
-        stats->addElement(VRRate::statFPS, " application FPS: %d");
-        stats->addElement(VRRate::statScriptFPS, "  script FPS: %d");
+        stats->addElement(VRGlobals::FRAME_RATE.statFPS, " application FPS: %d");
+        stats->addElement(VRGlobals::POLYVR_FRAME_RATE.statFPS, "  polyvr FPS: %d");
+        stats->addElement(VRGlobals::SCRIPTS_FRAME_RATE.statFPS, "  script FPS: %d");
         stats->addElement(RenderAction::statDrawTime, "  draw FPS: %r.2f");
         stats->addElement(RenderAction::statTravTime, "  trav FPS: %r.2f");
-        stats->addElement(VRRate::statPhysFPS, " physics FPS: %d");
+        stats->addElement(VRGlobals::PHYSICS_FRAME_RATE.statFPS, " physics FPS: %d");
 
         stats->addText("\nMaterials:");
         stats->addElement(RenderAction::statNStates, " state changes: %d");

@@ -14,6 +14,7 @@
 #include "core/objects/geometry/VRGeometry.h"
 #include "core/objects/geometry/VRPhysics.h"
 #include "core/objects/material/VRMaterial.h"
+#include "core/utils/VRGlobals.h"
 #include "core/utils/VRFunction.h"
 #include "core/utils/VRVisualLayer.h"
 #include "VRThreadManager.h"
@@ -142,14 +143,14 @@ void VRPhysicsManager::dropPhysicsUpdateFunction(VRFunction<int>* fkt, bool afte
     MLock lock(mtx);
     vector<VRFunction<int>* >* fkts = after ? &updateFktsPost : &updateFktsPre;
     for(unsigned int i = 0; i < fkts->size() ; i++) {
-            if(fkts->at(i) == fkt) {fkts->erase(fkts->begin() + i);return;}
+        if(fkts->at(i) == fkt) {fkts->erase(fkts->begin() + i);return;}
     }
  }
 
 void VRPhysicsManager::updatePhysObjects() {
     //mtx.try_lock();
     MLock lock(mtx);
-    VRGlobals::get()->PHYSICS_FRAME_RATE = fps;
+    VRGlobals::PHYSICS_FRAME_RATE.fps = fps;
 
     for (auto o : OSGobjs) {
         if (auto so = o.second.lock()) {

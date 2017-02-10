@@ -1020,6 +1020,8 @@
 		<Unit filename="src/core/utils/VRFunction.h" />
 		<Unit filename="src/core/utils/VRFunctionFwd.h" />
 		<Unit filename="src/core/utils/VRFwdDeclTemplate.h" />
+		<Unit filename="src/core/utils/VRGlobals.cpp" />
+		<Unit filename="src/core/utils/VRGlobals.h" />
 		<Unit filename="src/core/utils/VRInternalMonitor.cpp" />
 		<Unit filename="src/core/utils/VRInternalMonitor.h" />
 		<Unit filename="src/core/utils/VRLogger.cpp" />

@@ -62,8 +62,8 @@ struct OSG::segment {
         n2 = _n2;
         lvl = _lvl;
 
-        params[0] = Vec2f(1, 0);
-        params[1] = Vec2f(1, 0);
+        params[0] = Vec2f(0.1, 0);
+        params[1] = Vec2f(0.1, 0);
 
         parent = _parent;
     }
@@ -141,8 +141,8 @@ void VRTree::grow(const seg_params& sp, segment* p, int iteration) {
         c->n2.normalize();
         c->n1 = p->n2 + (p->n2 - c->n2)*variation(sp.n_angle, sp.n_angle_var);
 
-        c->params[0] = Vec2f(pow(sp.r_factor,iteration), 0);
-        c->params[1] = Vec2f(pow(sp.r_factor,iteration+1), 0);
+        c->params[0] = Vec2f(0.1*pow(sp.r_factor,iteration), 0);
+        c->params[1] = Vec2f(0.1*pow(sp.r_factor,iteration+1), 0);
 
         p->children.push_back(c);
     }
@@ -445,12 +445,12 @@ void VRTree::createHullTrunkLod(VRGeoData& geo, int lvl, Vec3f offset) { // TODO
 
     function<void(Vec4i, segment*)> pushBranch = [&](Vec4i i0, segment* s) {
         if (s->lvl > 3) return;
-        Vec4i i1 = pushRing(s->p2, s->params[1][0]*0.1);
+        Vec4i i1 = pushRing(s->p2, s->params[1][0]);
         pushBox(i0,i1);
         for (auto c : s->children) pushBranch(i1,c);
     };
 
-    Vec4i i0 = pushRing(trunc->p1, trunc->params[0][0]*0.1);
+    Vec4i i0 = pushRing(trunc->p1, trunc->params[0][0]);
     pushBranch(i0,trunc);
 }
 
