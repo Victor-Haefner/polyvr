@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="5719">
+<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="7286">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
       <Object ambient="0.516136 0.516136 0.516136 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0 0 0 1" type="Light" unique="1" visible="1">
         <Object at="-4.5 4 -1" at_dir="1" base_name="Headlight_beacon" from="-4 5 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
           <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
-        <Object accept_root="1" aspect="1" at="-9.96777 5.39198 14.3528" at_dir="0" base_name="Default" far="1024" fov="1.0472" from="-33.1707 11.9704 67.9792" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="10.5729 6.30398 5.46998" at_dir="0" base_name="Default" far="1024" fov="1.0472" from="-77.2549 41.6336 -38.0778" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
           <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
       </Object>
@@ -170,11 +170,13 @@
 		t = VR.Tree()
 		#t.setup(4,5,int(random()*100), 0.2,0.4,0.78,0.45, 0.2,0.4,0.2,0.2)
 		
-		t.addBranching(3,4, 0.2,0.4,5,0.1*pow(0.45,0), 0.2,0.4,0.2,0.2)
-		t.addBranching(1,4, 0.2,0.4,0.78,0.1*pow(0.45,1), 0.2,0.4,0.2,0.2)
-		t.addBranching(1,4, 0.2,0.4,0.78,0.1*pow(0.45,2), 0.2,0.4,0.2,0.2)
-		t.addBranching(1,4, 0.2,0.4,0.78,0.1*pow(0.45,3), 0.2,0.4,0.2,0.2)
-		t.addBranching(1,4, 0.2,0.4,0.78,0.1*pow(0.45,4), 0.2,0.4,0.2,0.2)
+		H = 2+random()*6
+		Nn = int(H)-1
+		t.addBranching(Nn,4, 0.2,0.4,H,0.1*pow(0.45,0), 0.2,0.4,0.2,0.2)
+		t.addBranching(1,4, 0.2,0.4,0.8,0.1*pow(0.45,1), 0.2,0.4,0.2,0.2)
+		t.addBranching(1,4, 0.2,0.4,0.7,0.1*pow(0.45,2), 0.2,0.4,0.2,0.2)
+		t.addBranching(1,4, 0.2,0.4,0.6,0.1*pow(0.45,3), 0.2,0.4,0.2,0.2)
+		t.addBranching(1,4, 0.2,0.4,0.5,0.1*pow(0.45,4), 0.2,0.4,0.2,0.2)
 		t.grow( int(random()*100) )
 		
 		
@@ -189,13 +191,6 @@
 	
 	N1 = 5
 	trees = [ addTree() for i in range(N1) ]
-	
-	"""
-	for i in range(N1):
-		t = trees[i]
-		t.setFrom( [i*3,0,0] )
-		VR.woods.addTree(t)
-	"""
 	
 	N2 = 200
 	for i in range(N2):
