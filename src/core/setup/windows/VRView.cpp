@@ -300,10 +300,14 @@ void VRView::showStats(bool b) {
 
         stats->addText("\nPerformance:");
         stats->addElement(VRGlobals::FRAME_RATE.statFPS, " application FPS: %d");
-        stats->addElement(VRGlobals::POLYVR_FRAME_RATE.statFPS, "  polyvr FPS: %d");
         stats->addElement(VRGlobals::SCRIPTS_FRAME_RATE.statFPS, "  script FPS: %d");
+        stats->addElement(VRGlobals::WINDOWS_FRAME_RATE.statFPS, "  distributed windows FPS: %d");
+        stats->addElement(VRGlobals::GTK1_FRAME_RATE.statFPS, " GTK devices FPS: %d");
+        stats->addElement(VRGlobals::GTK2_FRAME_RATE.statFPS, " GTK rendering FPS: %d");
         stats->addElement(RenderAction::statDrawTime, "  draw FPS: %r.2f");
         stats->addElement(RenderAction::statTravTime, "  trav FPS: %r.2f");
+        stats->addElement(VRGlobals::SMCALLBACKS_FRAME_RATE.statFPS, " scene manager callbacks FPS: %d");
+        stats->addElement(VRGlobals::SETUP_FRAME_RATE.statFPS, " setup devices FPS: %d");
         stats->addElement(VRGlobals::PHYSICS_FRAME_RATE.statFPS, " physics FPS: %d");
 
         stats->addText("\nMaterials:");

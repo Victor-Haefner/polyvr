@@ -193,32 +193,46 @@ void VRSceneManager::updateScene() {
 void VRSceneManager::update() {
     // statistics
     VRProfiler::get()->swap();
-    static VRRate FPS;
-    int fps = FPS.getRate();
-    VRTimer timer;
-    timer.start();
+    static VRRate FPS; int fps = FPS.getRate();
+    VRTimer timer; timer.start();
 
     // update GUI
     if (current) current->blockScriptThreads();
+
+    VRTimer t1; t1.start();
     VRGuiManager::get()->updateGtk();
+    VRGlobals::GTK1_FRAME_RATE.update(t1);
+
+    VRTimer t4; t4.start();
     updateCallbacks();
+    VRGlobals::SMCALLBACKS_FRAME_RATE.update(t4);
+
+    VRTimer t5; t5.start();
     auto setup = VRSetup::getCurrent();
     if (setup) setup->updateTracking(); // tracking
     if (setup) setup->updateDevices(); // device beacon update
-    updateScene();
-    int Sfps = round(1000.0/max(timer.stop(),1));
+    VRGlobals::SMCALLBACKS_FRAME_RATE.update(t5);
 
-    if (setup) setup->updateWindows(); //rendering
+    VRTimer t6; t6.start();
+    updateScene();
+    VRGlobals::SCRIPTS_FRAME_RATE.update(t6);
+
+    if (setup) {
+        VRTimer t2; t2.start();
+        setup->updateWindows(); //rendering
+        VRGlobals::WINDOWS_FRAME_RATE.update(t2);
+    }
+
+    VRTimer t3; t3.start();
     VRGuiManager::get()->updateGtk();
+    VRGlobals::GTK2_FRAME_RATE.update(t3);
+
     if (current) current->allowScriptThreads();
 
-    int Pfps = round(1000.0/max(timer.stop(),1));
 
     // statistics
     VRGlobals::CURRENT_FRAME++;
     VRGlobals::FRAME_RATE.fps = fps;
-    VRGlobals::POLYVR_FRAME_RATE.fps = Pfps;
-    VRGlobals::SCRIPTS_FRAME_RATE.fps = Sfps;
     osgSleep(max(16-timer.stop(),0));
 }
 
