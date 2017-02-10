@@ -233,7 +233,9 @@ void VRSceneManager::update() {
     // statistics
     VRGlobals::CURRENT_FRAME++;
     VRGlobals::FRAME_RATE.fps = fps;
+    VRTimer t7; t7.start();
     osgSleep(max(16-timer.stop(),0));
+    VRGlobals::SLEEP_FRAME_RATE.update(t7);
 }
 
 OSG_END_NAMESPACE

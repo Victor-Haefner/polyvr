@@ -14,40 +14,25 @@
 using namespace OSG;
 
 struct OSG::seg_params {
-    int iterations; //number of iterations
-    int child_number; //number of children
+    int nodes = 1; //number of iterations
+    int child_number = 5; //number of children
 
-    float n_angle; //angle between n1 && parent n2
-    float p_angle; //angle between axis (p1 p2) && parent axis (p1 p2)
-    float l_factor; //length diminution factor
-    float r_factor; //radius diminution factor
+    float n_angle = 0.2; //angle between n1 && parent n2
+    float p_angle = 0.6; //angle between axis (p1 p2) && parent axis (p1 p2)
+    float l_factor = 0.8; //length diminution factor
+    float r_factor = 0.5; //radius diminution factor
 
-    float n_angle_var; //n_angle variation
-    float p_angle_var; //p_angle variation
-    float l_factor_var; //l_factor variation
-    float r_factor_var; //r_factor variation
-
-    seg_params () {
-        iterations = 5;
-        child_number = 5;
-
-        n_angle = 0.2;
-        p_angle = 0.6;
-        l_factor = 0.8;
-        r_factor = 0.5;
-
-        n_angle_var = 0.2;
-        p_angle_var = 0.4;
-        l_factor_var = 0.2;
-        r_factor_var = 0.2;
-    }
+    float n_angle_var = 0.2; //n_angle variation
+    float p_angle_var = 0.4; //p_angle variation
+    float l_factor_var = 0.2; //l_factor variation
+    float r_factor_var = 0.2; //r_factor variation
 };
 
 struct OSG::segment {
     Vec3f p1, p2, n1, n2;
     Vec2f params[2];
     int lvl = 0;
-    segment* parent;
+    segment* parent = 0;
     vector<segment*> children;
 
     //defaults are for the trunc
@@ -126,11 +111,19 @@ Vec3f VRTree::randomRotate(Vec3f v, float a) {
     return v;
 }
 
-void VRTree::grow(const seg_params& sp, segment* p, int iteration) {
-    if (p == 0) return;
-    if (iteration == sp.iterations) return;
+void VRTree::grow(int seed, segment* p, int iteration) {
+    if (parameters.size() <= iteration) return;
+    const seg_params& sp = parameters[iteration];
 
-    for (int i=0;i<sp.child_number;i++) {
+    if (iteration == 0) { // prepare tree
+        trunc = new segment();
+        branches = vector<segment*>();
+        branches.push_back(trunc);
+        srand(seed);
+    }
+    if (p == 0) p = trunc;
+
+    for (int i=0;i<sp.child_number;i++) { // grow
         segment* c = new segment(p->lvl+1, p, p->p2);
         branches.push_back(c);
         c->p2 = randomRotate(p->p2 - p->p1, variation(sp.p_angle, sp.p_angle_var));
@@ -147,8 +140,11 @@ void VRTree::grow(const seg_params& sp, segment* p, int iteration) {
         p->children.push_back(c);
     }
 
-    for (int i=0;i<sp.child_number;i++) {
-        grow(sp, p->children[i], iteration+1);
+    for (int i=0;i<sp.child_number;i++) grow(seed, p->children[i], iteration+1);
+
+    if (iteration == 0) { // finish tree
+        initMaterials();
+        initArmatureGeo();
     }
 }
 
@@ -242,27 +238,26 @@ VRObjectPtr VRTree::copy(vector<VRObjectPtr> children) {
 }
 
 void VRTree::testSetup() {
-    srand(time(0));
-    trunc = new segment();
-    branches = vector<segment*>();
-    branches.push_back(trunc);
-    seg_params sp;
-    grow(sp, trunc);
-    initMaterials();
-    initArmatureGeo();
+    parameters.push_back(seg_params());
+    grow(time(0));
 }
 
 void VRTree::setup(int branching, int iterations, int seed,
                    float n_angle, float p_angle, float l_factor, float r_factor,
                    float n_angle_v, float p_angle_v, float l_factor_v, float r_factor_v) {
-    srand(seed);
-    trunc = new segment();
-    branches = vector<segment*>();
-    branches.push_back(trunc);
-    seg_params sp;
+    for (int i=0; i<iterations; i++)
+        addBranching(1, branching, n_angle, p_angle, l_factor, r_factor, n_angle_v, p_angle_v, l_factor_v , r_factor_v);
 
+    grow(seed);
+}
+
+
+void VRTree::addBranching(int nodes, int branching,
+           float n_angle, float p_angle, float l_factor, float r_factor,
+           float n_angle_v, float p_angle_v, float l_factor_v , float r_factor_v) {
+    seg_params sp;
+    sp.nodes = nodes;
     sp.child_number = branching;
-    sp.iterations = iterations;
     sp.n_angle = n_angle;
     sp.p_angle = p_angle;
     sp.l_factor = l_factor;
@@ -271,10 +266,7 @@ void VRTree::setup(int branching, int iterations, int seed,
     sp.p_angle_var = p_angle_v;
     sp.l_factor_var = l_factor_v;
     sp.r_factor_var = r_factor_v;
-
-    grow(sp, trunc);
-    initMaterials();
-    initArmatureGeo();
+    parameters.push_back(sp);
 }
 
 void VRTree::addLeafs(int lvl, int amount) { // TODO: add default material!
