@@ -10,6 +10,7 @@ using namespace OSG;
 simpleVRPyType(Process, New_named_ptr);
 simpleVRPyType(ProcessNode, 0);
 simpleVRPyType(ProcessLayout, New_VRObjects_ptr);
+simpleVRPyType(ProcessEngine, New_ptr);
 
 PyMethodDef VRPyProcess::methods[] = {
     {"open", (PyCFunction)VRPyProcess::open, METH_VARARGS, "Open file - open(path)" },
@@ -77,5 +78,45 @@ PyObject* VRPyProcessLayout::setProcess(VRPyProcessLayout* self, PyObject* args)
     if (!PyArg_ParseTuple(args, "O", &p)) return NULL;
     VRProcess::DiagramPtr diag = dynamic_pointer_cast<VRProcess::Diagram>(p->objPtr);
     self->objPtr->setProcess( diag );
+    Py_RETURN_TRUE;
+}
+
+PyMethodDef VRPyProcessEngine::methods[] = {
+    {"setProcess", (PyCFunction)VRPyProcessEngine::setProcess, METH_VARARGS, "Set process - setProcess( process )" },
+    {"getProcess", (PyCFunction)VRPyProcessEngine::getProcess, METH_NOARGS, "Get the current process - process getProcess()" },
+    {"run", (PyCFunction)VRPyProcessEngine::run, METH_VARARGS, "Run the simulation with a simulation speed multiplier, 1 is real time - run(float s)" },
+    {"reset", (PyCFunction)VRPyProcessEngine::reset, METH_NOARGS, "Reset simulation - reset()" },
+    {"pause", (PyCFunction)VRPyProcessEngine::pause, METH_NOARGS, "Pause simulation - pause()" },
+    {NULL}  /* Sentinel */
+};
+
+PyObject* VRPyProcessEngine::pause(VRPyProcessEngine* self) {
+    if (!self->valid()) return NULL;
+    self->objPtr->pause();
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyProcessEngine::reset(VRPyProcessEngine* self) {
+    if (!self->valid()) return NULL;
+    self->objPtr->reset();
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyProcessEngine::getProcess(VRPyProcessEngine* self) {
+    if (!self->valid()) return NULL;
+    return VRPyProcess::fromSharedPtr( self->objPtr->getProcess() );
+}
+
+PyObject* VRPyProcessEngine::setProcess(VRPyProcessEngine* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    VRPyProcess* p = 0;
+    if (!PyArg_ParseTuple(args, "O", &p)) return NULL;
+    self->objPtr->setProcess( p->objPtr );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyProcessEngine::run(VRPyProcessEngine* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    self->objPtr->run( parseFloat(args) );
     Py_RETURN_TRUE;
 }

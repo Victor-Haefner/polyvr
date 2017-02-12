@@ -4,6 +4,7 @@
 #include "core/scripting/VRPyBase.h"
 #include "VRProcess.h"
 #include "VRProcessLayout.h"
+#include "VRProcessEngine.h"
 
 struct VRPyProcess : VRPyBaseT<OSG::VRProcess> {
     static PyMethodDef methods[];
@@ -24,6 +25,15 @@ struct VRPyProcessLayout : VRPyBaseT<OSG::VRProcessLayout> {
     static PyMethodDef methods[];
     static PyObject* setProcess(VRPyProcessLayout* self, PyObject* args);
     static PyObject* getElement(VRPyProcessLayout* self, PyObject* args);
+};
+
+struct VRPyProcessEngine : VRPyBaseT<OSG::VRProcessEngine> {
+    static PyMethodDef methods[];
+    static PyObject* setProcess(VRPyProcessEngine* self, PyObject* args);
+    static PyObject* getProcess(VRPyProcessEngine* self);
+    static PyObject* run(VRPyProcessEngine* self, PyObject* args);
+    static PyObject* pause(VRPyProcessEngine* self);
+    static PyObject* reset(VRPyProcessEngine* self);
 };
 
 #endif // VRPYPROCESS_H_INCLUDED
