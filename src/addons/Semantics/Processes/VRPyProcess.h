@@ -13,10 +13,12 @@ struct VRPyProcess : VRPyBaseT<OSG::VRProcess> {
     static PyObject* getInteractionDiagram(VRPyProcess* self);
     static PyObject* getBehaviorDiagram(VRPyProcess* self, PyObject* args);
     static PyObject* getSubjects(VRPyProcess* self);
+    static PyObject* addSubject(VRPyProcess* self, PyObject* args);
 };
 
 struct VRPyProcessNode : VRPyBaseT<OSG::VRProcessNode> {
     static PyMethodDef methods[];
+    static PyObject* addState(VRPyProcess* self, PyObject* args);
     //static PyObject* getLabel(VRPyProcessNode* self);
     //static PyObject* getID(VRPyProcessNode* self);
 };
