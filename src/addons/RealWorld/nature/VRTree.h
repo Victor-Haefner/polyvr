@@ -17,6 +17,8 @@ class VRTree : public VRTransform {
         vector<segment*> branches;
         vector<VRGeometryPtr> leafGeos;
         vector<VRGeometryPtr> woodGeos;
+        map<int, VRGeometryPtr> leafLodCache;
+        map<int, VRGeometryPtr> truncLodCache;
         static VRMaterialPtr treeMat;
         static VRMaterialPtr leafMat;
 
