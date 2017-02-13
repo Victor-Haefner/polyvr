@@ -51,6 +51,7 @@ class VRLodTree : public VRObject {
 class VRWoods : public VRLodTree {
     private:
         vector<VRTreePtr> trees;
+        map<VRTree*, VRTreePtr> treeTemplates;
 
         void computeFirstLevel();
         void computeSecondLevel();

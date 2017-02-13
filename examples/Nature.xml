@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="7286">
+<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="614">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
       <Object ambient="0.516136 0.516136 0.516136 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0 0 0 1" type="Light" unique="1" visible="1">
         <Object at="-4.5 4 -1" at_dir="1" base_name="Headlight_beacon" from="-4 5 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
           <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
-        <Object accept_root="1" aspect="1" at="10.5729 6.30398 5.46998" at_dir="0" base_name="Default" far="1024" fov="1.0472" from="-77.2549 41.6336 -38.0778" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="13.7762 8.52932 -17.3806" at_dir="0" base_name="Default" far="1024" fov="1.0472" from="-171.291 132.746 162.481" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
           <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
       </Object>
@@ -27,7 +27,7 @@
       <core>
 	import VR
 	
-	VR.init_terrain()
+	#VR.init_terrain()
 	#VR.init_trees()
 	VR.init_woods()
 	#VR.init_grass()
@@ -172,7 +172,8 @@
 		
 		H = 2+random()*6
 		Nn = int(H)-1
-		t.addBranching(Nn,4, 0.2,0.4,H,0.1*pow(0.45,0), 0.2,0.4,0.2,0.2)
+		r0 = 0.5+1.5*random()
+		t.addBranching(Nn,4, 0.2,0.4,H,0.1*pow(r0,0), 0.2,0.4,0.2,0.2)
 		t.addBranching(1,4, 0.2,0.4,0.8,0.1*pow(0.45,1), 0.2,0.4,0.2,0.2)
 		t.addBranching(1,4, 0.2,0.4,0.7,0.1*pow(0.45,2), 0.2,0.4,0.2,0.2)
 		t.addBranching(1,4, 0.2,0.4,0.6,0.1*pow(0.45,3), 0.2,0.4,0.2,0.2)
@@ -192,13 +193,24 @@
 	N1 = 5
 	trees = [ addTree() for i in range(N1) ]
 	
-	N2 = 200
+	
+	N2 = 2000
 	for i in range(N2):
-		t = trees[int(random()*N1)].duplicate()
+		t = trees[int(random()*N1)]
 		t.setFrom( randPos(50) )
 		VR.woods.addTree(t)
+	
+	
+	"""	
+	for t in trees:
+		t.setFrom( randPos(50) )
+		VR.woods.addTree(t)
+	"""
 		
 	VR.woods.computeLODs()
+	
+	
+	
 </core>
     </Script>
     <Script base_name="shdr_dfrag" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" server="server1" group="">

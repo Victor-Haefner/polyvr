@@ -115,7 +115,9 @@ VRWoodsPtr VRWoods::create() { return VRWoodsPtr(new VRWoods()); }
 VRWoodsPtr VRWoods::ptr() { return static_pointer_cast<VRWoods>( shared_from_this() ); }
 
 void VRWoods::addTree(VRTreePtr t) {
-    addObject(t, t->getFrom(), 0);
+    auto td = dynamic_pointer_cast<VRTree>( t->duplicate() );
+    treeTemplates[td.get()] = t;
+    addObject(td, t->getFrom(), 0);
 }
 
 void VRWoods::computeLODs() {
@@ -178,9 +180,10 @@ void VRWoods::computeLODs() {
         VRGeoData geoLeafs;
         VRGeoData geoTrunk;
         for (auto t : trees[leaf.get()]) {
+            auto tRef = treeTemplates[t];
             Vec3f offset = t->getWorldPosition() - pos;
-            t->createHullTrunkLod(geoTrunk, lvl, offset);
-            t->createHullLeafLod (geoLeafs, lvl, offset);
+            tRef->createHullTrunkLod(geoTrunk, lvl, offset);
+            tRef->createHullLeafLod (geoLeafs, lvl, offset);
         }
         auto trunk = geoTrunk.asGeometry("trunk");
         auto leafs = geoLeafs.asGeometry("leafs");

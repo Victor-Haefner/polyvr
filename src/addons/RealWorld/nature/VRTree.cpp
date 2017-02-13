@@ -342,9 +342,11 @@ void VRTree::setLeafMaterial(VRMaterialPtr mat) {
 }
 
 void VRTree::createHullLeafLod(VRGeoData& geo, int lvl, Vec3f offset) {
+    Matrix Offset;
+    Offset.setTranslate(offset); // TODO, use tree transformation rotation?
+
     if (leafLodCache.count(lvl)) {
-        geo.append(leafLodCache[lvl]);
-        cout << "createHullLeafLod from cache!\n";
+        geo.append(leafLodCache[lvl], Offset);
         return;
     }
 
@@ -402,7 +404,6 @@ void VRTree::createHullLeafLod(VRGeoData& geo, int lvl, Vec3f offset) {
         meanColor += data.getColor(j);
         Pnt3f pos = data.getPosition(j);
         VRGeoData& cluster = getMinCluster(pos + randVecInSphere());
-        pos += offset; // TODO, use tree transformation rotation?
         cluster.pushVert( pos, data.getNormal(j) );
         cluster.pushPoint();
     }
@@ -416,13 +417,21 @@ void VRTree::createHullLeafLod(VRGeoData& geo, int lvl, Vec3f offset) {
     }
 
     leafLodCache[lvl] = Hull.asGeometry("lodLeafCache");
-    geo.append(Hull);
+    geo.append(Hull, Offset);
 }
 
-void VRTree::createHullTrunkLod(VRGeoData& geo, int lvl, Vec3f offset) { // TODO
-    if (leafGeos.size() == 0) return;
+void VRTree::createHullTrunkLod(VRGeoData& geo, int lvl, Vec3f offset) {
+    Matrix Offset;
+    Offset.setTranslate(offset); // TODO, use tree transformation rotation?
+
+    if (truncLodCache.count(lvl)) {
+        geo.append(truncLodCache[lvl], Offset);
+        return;
+    }
+
     if (!trunc) return;
-    VRGeoData g0(leafGeos[0]);
+
+    VRGeoData Hull;
 
     auto normalize = [](Vec3f v) {
         v.normalize();
@@ -434,35 +443,32 @@ void VRTree::createHullTrunkLod(VRGeoData& geo, int lvl, Vec3f offset) { // TODO
         static Vec3f n2 = normalize( Vec3f(-1,0, 1) );
         static Vec3f n3 = normalize( Vec3f( 1,0, 1) );
         static Vec3f n4 = normalize( Vec3f( 1,0,-1) );
-        int i1 = geo.pushVert( Pnt3f(-r,0,-r) + p + offset, n1, truncColor );
-        int i2 = geo.pushVert( Pnt3f(-r,0, r) + p + offset, n2, truncColor );
-        int i3 = geo.pushVert( Pnt3f( r,0, r) + p + offset, n3, truncColor );
-        int i4 = geo.pushVert( Pnt3f( r,0,-r) + p + offset, n4, truncColor );
+        int i1 = Hull.pushVert( Pnt3f(-r,0,-r) + p, n1, truncColor );
+        int i2 = Hull.pushVert( Pnt3f(-r,0, r) + p, n2, truncColor );
+        int i3 = Hull.pushVert( Pnt3f( r,0, r) + p, n3, truncColor );
+        int i4 = Hull.pushVert( Pnt3f( r,0,-r) + p, n4, truncColor );
         return Vec4i(i1,i2,i3,i4);
     };
 
     auto pushBox = [&](Vec4i i1, Vec4i i2) {
-        geo.pushQuad(i1[0],i1[1],i2[1],i2[0]);
-        geo.pushQuad(i1[1],i1[2],i2[2],i2[1]);
-        geo.pushQuad(i1[2],i1[3],i2[3],i2[2]);
-        geo.pushQuad(i1[3],i1[0],i2[0],i2[3]);
+        Hull.pushQuad(i1[0],i1[1],i2[1],i2[0]);
+        Hull.pushQuad(i1[1],i1[2],i2[2],i2[1]);
+        Hull.pushQuad(i1[2],i1[3],i2[3],i2[2]);
+        Hull.pushQuad(i1[3],i1[0],i2[0],i2[3]);
     };
 
-    /*function<void(Vec4i, segment*)> pushBranch = [&](Vec4i i0, segment* s) {
-        if (s->lvl > 3) return;
-        Vec4i i1 = pushRing(s->p2, s->radii[1]);
-        pushBox(i0,i1);
-        for (auto c : s->children) pushBranch(i1,c);
-    };
-    Vec4i i0 = pushRing(trunc->p1, trunc->radii[0]);
-    pushBranch(i0,trunc);*/
-
+    int Nlvl = 3;
+    if (lvl > 2) Nlvl = 2;
+    if (lvl > 3) Nlvl = 1;
     for (segment* s : branches) {
-        if (s->lvl > 3) continue;
+        if (s->lvl > Nlvl) continue;
         auto i0 = pushRing(s->p1, s->radii[0]);
         auto i1 = pushRing(s->p2, s->radii[1]);
         pushBox(i0,i1);
     }
+
+    truncLodCache[lvl] = Hull.asGeometry("truncLodCache");
+    geo.append(Hull, Offset);
 }
 
 
