@@ -10,6 +10,7 @@ using namespace OSG;
 simpleVRPyType(Process, New_named_ptr);
 simpleVRPyType(ProcessNode, 0);
 simpleVRPyType(ProcessLayout, New_VRObjects_ptr);
+simpleVRPyType(ProcessEngine, New_ptr);
 
 PyMethodDef VRPyProcess::methods[] = {
     {"open", (PyCFunction)VRPyProcess::open, METH_VARARGS, "Open file - open(path)" },
@@ -17,6 +18,7 @@ PyMethodDef VRPyProcess::methods[] = {
     {"getInteractionDiagram", (PyCFunction)VRPyProcess::getInteractionDiagram, METH_NOARGS, "Return subjects interaction diagram - getInteractionDiagram()" },
     {"getBehaviorDiagram", (PyCFunction)VRPyProcess::getBehaviorDiagram, METH_VARARGS, "Return subject behavior diagram - getBehaviorDiagram( int ID )" },
     {"getSubjects", (PyCFunction)VRPyProcess::getSubjects, METH_NOARGS, "Return subjects - [ProcessNode] getSubjects()" },
+    {"addSubject", (PyCFunction)VRPyProcess::addSubject, METH_VARARGS, "Add a new subject - ProcessNode addSubject( name )" },
     {NULL}  /* Sentinel */
 };
 
@@ -24,6 +26,14 @@ PyObject* VRPyProcess::open(VRPyProcess* self, PyObject* args) {
     if (!self->valid()) return NULL;
     self->objPtr->open( parseString(args) );
     Py_RETURN_TRUE;
+}
+
+PyObject* VRPyProcess::addSubject(VRPyProcess* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    const char* n = 0;
+    if (!PyArg_ParseTuple(args, "s", &n)) return NULL;
+    string name = n ? n : "subject";
+    return VRPyGraph::fromSharedPtr( self->objPtr->addSubject( name ) );
 }
 
 PyObject* VRPyProcess::setOntology(VRPyProcess* self, PyObject* args) {
@@ -48,7 +58,7 @@ PyObject* VRPyProcess::getSubjects(VRPyProcess* self) {
     if (!self->valid()) return NULL;
     PyObject* res = PyList_New(0);
     auto subjects = self->objPtr->getSubjects();
-    for (auto s : subjects) PyList_Append(res, VRPyProcessNode::fromObject(s));
+    for (auto s : subjects) PyList_Append(res, VRPyProcessNode::fromSharedPtr(s));
     return res;
 }
 
@@ -77,5 +87,45 @@ PyObject* VRPyProcessLayout::setProcess(VRPyProcessLayout* self, PyObject* args)
     if (!PyArg_ParseTuple(args, "O", &p)) return NULL;
     VRProcess::DiagramPtr diag = dynamic_pointer_cast<VRProcess::Diagram>(p->objPtr);
     self->objPtr->setProcess( diag );
+    Py_RETURN_TRUE;
+}
+
+PyMethodDef VRPyProcessEngine::methods[] = {
+    {"setProcess", (PyCFunction)VRPyProcessEngine::setProcess, METH_VARARGS, "Set process - setProcess( process )" },
+    {"getProcess", (PyCFunction)VRPyProcessEngine::getProcess, METH_NOARGS, "Get the current process - process getProcess()" },
+    {"run", (PyCFunction)VRPyProcessEngine::run, METH_VARARGS, "Run the simulation with a simulation speed multiplier, 1 is real time - run(float s)" },
+    {"reset", (PyCFunction)VRPyProcessEngine::reset, METH_NOARGS, "Reset simulation - reset()" },
+    {"pause", (PyCFunction)VRPyProcessEngine::pause, METH_NOARGS, "Pause simulation - pause()" },
+    {NULL}  /* Sentinel */
+};
+
+PyObject* VRPyProcessEngine::pause(VRPyProcessEngine* self) {
+    if (!self->valid()) return NULL;
+    self->objPtr->pause();
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyProcessEngine::reset(VRPyProcessEngine* self) {
+    if (!self->valid()) return NULL;
+    self->objPtr->reset();
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyProcessEngine::getProcess(VRPyProcessEngine* self) {
+    if (!self->valid()) return NULL;
+    return VRPyProcess::fromSharedPtr( self->objPtr->getProcess() );
+}
+
+PyObject* VRPyProcessEngine::setProcess(VRPyProcessEngine* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    VRPyProcess* p = 0;
+    if (!PyArg_ParseTuple(args, "O", &p)) return NULL;
+    self->objPtr->setProcess( p->objPtr );
+    Py_RETURN_TRUE;
+}
+
+PyObject* VRPyProcessEngine::run(VRPyProcessEngine* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    self->objPtr->run( parseFloat(args) );
     Py_RETURN_TRUE;
 }

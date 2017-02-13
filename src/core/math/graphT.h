@@ -17,7 +17,7 @@ template<class T> int graph<T>::addNode(T t) { nodes.push_back(node()); elements
 template<class T> vector<T>& graph<T>::getElements() { return elements; }
 template<class T> T& graph<T>::getElement(int i) { return elements[i]; }
 
-template<class T> void graph<T>::update(int i, bool changed) { elements[i].update( nodes[i], changed ); }
+template<class T> void graph<T>::update(int i, bool changed) { elements[i]->update( nodes[i], changed ); }
 
 template<class T> void graph<T>::clear() { graph_base::clear(); elements.clear(); }
 

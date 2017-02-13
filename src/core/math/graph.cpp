@@ -5,7 +5,7 @@
 
 using namespace OSG;
 
-template class graph<graph_base::emptyNode>;
+template class graph<graph_base::emptyNode*>;
 
 graph_base::graph_base() {}
 graph_base::~graph_base() {}

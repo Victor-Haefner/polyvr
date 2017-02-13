@@ -101,14 +101,14 @@ void pushMsgBox(VRGeoData& geo, int N, float h) {
     geo.pushQuad(q6[0],q6[3],q6[2],q6[1]);
 }
 
-VRGeometryPtr VRProcessLayout::newWidget(VRProcessNode& n, float height) {
+VRGeometryPtr VRProcessLayout::newWidget(VRProcessNodePtr n, float height) {
     Color4f fg, bg;
-    if (n.type == SUBJECT) { fg = Color4f(0,0,0,1); bg = Color4f(1,1,1,1); }
-    if (n.type == MESSAGE) { fg = Color4f(0,0,0,1); bg = Color4f(1,1,0,1); }
+    if (n->type == SUBJECT) { fg = Color4f(0,0,0,1); bg = Color4f(1,1,1,1); }
+    if (n->type == MESSAGE) { fg = Color4f(0,0,0,1); bg = Color4f(1,1,0,1); }
 
     int wrapN = 12;
-    if (n.type == MESSAGE) wrapN = 22;
-    string l = n.label;
+    if (n->type == MESSAGE) wrapN = 22;
+    string l = n->label;
     int lineN = wrapString(l, wrapN);
 
     auto txt = VRText::get()->create(l, "MONO 20", 18*wrapN, 32*lineN, fg, bg);
@@ -118,8 +118,8 @@ VRGeometryPtr VRProcessLayout::newWidget(VRProcessNode& n, float height) {
     //mat->enableTransparency(0);
     VRGeoData geo;
 
-    if (n.type == SUBJECT) pushSubjectBox(geo, wrapN, lineN*height*0.5);
-    if (n.type == MESSAGE) pushMsgBox(geo, wrapN, lineN*height*0.5);
+    if (n->type == SUBJECT) pushSubjectBox(geo, wrapN, lineN*height*0.5);
+    if (n->type == MESSAGE) pushMsgBox(geo, wrapN, lineN*height*0.5);
 
     auto w = geo.asGeometry("ProcessElement");
     w->setMaterial(mat);
@@ -143,11 +143,11 @@ void VRProcessLayout::setProcess(VRProcess::DiagramPtr diag) {
     for (uint i=0; i<diag->getElements().size(); i++) {
         auto& e = diag->getElement(i);
         auto geo = newWidget(e, height);
-        e.widget = geo;
+        e->widget = geo;
 
         Vec3f p = Vec3f(f, 0, 0.01*(rand()%100));
-        f += e.label.size()+2;
-        e.widget->setFrom(p);
+        f += e->label.size()+2;
+        e->widget->setFrom(p);
 
         auto& n = diag->getNode(i);
         n.box.update(geo);

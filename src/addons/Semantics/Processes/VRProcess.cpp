@@ -9,7 +9,9 @@
 
 using namespace OSG;
 
-VRProcessNode::VRProcessNode() {;}
+VRProcessNode::VRProcessNode(string name, PROCESS_WIDGET type) : type(type), label(name) {;}
+VRProcessNode::~VRProcessNode() {}
+VRProcessNodePtr VRProcessNode::create(string name, PROCESS_WIDGET type) { return VRProcessNodePtr( new VRProcessNode(name, type) ); }
 
 void VRProcessNode::update(graph_base::node& n, bool changed) { // callede when graph node changes
     if (widget && !widget->isDragged() && changed) widget->setFrom(n.box.center());
@@ -46,11 +48,11 @@ void VRProcess::setOntology(VROntologyPtr o) { ontology = o; update(); }
 VRProcess::DiagramPtr VRProcess::getInteractionDiagram() { return interactionDiagram; }
 VRProcess::DiagramPtr VRProcess::getBehaviorDiagram(int subject) { return behaviorDiagrams.count(subject) ? behaviorDiagrams[subject] : 0; }
 
-vector<VRProcessNode> VRProcess::getSubjects() {
-    vector<VRProcessNode> res;
+vector<VRProcessNodePtr> VRProcess::getSubjects() {
+    vector<VRProcessNodePtr> res;
     for (int i=0; i<interactionDiagram->size(); i++) {
         auto& e = interactionDiagram->getElement(i);
-        if (e.type == SUBJECT) res.push_back(e);
+        if (e->type == SUBJECT) res.push_back(e);
     }
     return res;
 }
@@ -64,11 +66,9 @@ void VRProcess::update() {
 
     map<string, int> nodes;
     auto addDiagNode = [&](DiagramPtr diag, string label, PROCESS_WIDGET type) {
-        auto n = VRProcessNode();
-        n.label = label;
-        n.type = type;
+        auto n = VRProcessNode::create(label, type);
         int i = diag->addNode(n);
-        diag->getElement(i).ID = i;
+        diag->getElement(i)->ID = i;
         return i;
     };
 
@@ -176,6 +176,15 @@ void VRProcess::update() {
     }
 }
 
+VRProcess::DiagramPtr VRProcess::addSubject(string name) {
+    if (!interactionDiagram) interactionDiagram = DiagramPtr( new Diagram() );
+    auto s = VRProcessNode::create(name, SUBJECT);
+    auto sID = interactionDiagram->addNode(s);
+    s->ID = sID;
+    auto behaviorDiagram = DiagramPtr( new Diagram() );
+    behaviorDiagrams[sID] = behaviorDiagram;
+    return behaviorDiagram;
+}
 
 
 

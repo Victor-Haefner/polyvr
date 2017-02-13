@@ -171,6 +171,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyProcess>("Process", pModVR);
     sm->registerModule<VRPyProcessNode>("ProcessNode", pModVR);
     sm->registerModule<VRPyProcessLayout>("ProcessLayout", pModVR, VRPyTransform::typeRef);
+    sm->registerModule<VRPyProcessEngine>("ProcessEngine", pModVR);
     sm->registerModule<VRPyOntologyRule>("OntologyRule", pModVR);
     sm->registerModule<VRPyProperty>("Property", pModVR);
     sm->registerModule<VRPyConcept>("Concept", pModVR);

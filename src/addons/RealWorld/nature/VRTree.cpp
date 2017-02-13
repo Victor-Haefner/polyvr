@@ -233,6 +233,7 @@ VRObjectPtr VRTree::copy(vector<VRObjectPtr> children) {
     tree->leafGeos.push_back( dynamic_pointer_cast<VRGeometry>( children[0]->getChild(0)->getChild(1) ) );
     tree->leafGeos.push_back( dynamic_pointer_cast<VRGeometry>( children[0]->getChild(1)->getChild(1) ) );
     tree->leafGeos.push_back( dynamic_pointer_cast<VRGeometry>( children[0]->getChild(2)->getChild(1) ) );
+    tree->leafLodCache = leafLodCache;
     return tree;
 }
 
@@ -341,6 +342,12 @@ void VRTree::setLeafMaterial(VRMaterialPtr mat) {
 }
 
 void VRTree::createHullLeafLod(VRGeoData& geo, int lvl, Vec3f offset) {
+    if (leafLodCache.count(lvl)) {
+        geo.append(leafLodCache[lvl]);
+        cout << "createHullLeafLod from cache!\n";
+        return;
+    }
+
     if (leafGeos.size() == 0) return;
     VRGeoData data(leafGeos[0]);
 
@@ -356,7 +363,7 @@ void VRTree::createHullLeafLod(VRGeoData& geo, int lvl, Vec3f offset) {
         return res;
     };
 
-    int Ns = max(1,int(15/lvl));
+    int Ns = pow(2,int(4/lvl));
     vector<VRGeoData> clusters(Ns);
     vector<Pnt3f> seeds(Ns);
     for (int k=0; k<Ns; k++) {
@@ -401,11 +408,15 @@ void VRTree::createHullLeafLod(VRGeoData& geo, int lvl, Vec3f offset) {
     }
     meanColor *= 1.0/N;
 
+    VRGeoData Hull;
     for (auto& c : clusters) {
         if (c.size() <= 2) continue;
         auto hull = computeHull(c, meanColor);
-        geo.append(hull);
+        Hull.append(hull);
     }
+
+    leafLodCache[lvl] = Hull.asGeometry("lodLeafCache");
+    geo.append(Hull);
 }
 
 void VRTree::createHullTrunkLod(VRGeoData& geo, int lvl, Vec3f offset) { // TODO
