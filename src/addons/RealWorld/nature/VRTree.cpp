@@ -354,7 +354,7 @@ void VRTree::createHullLeafLod(VRGeoData& geo, int lvl, Vec3f offset) {
     VRGeoData data(leafGeos[0]);
 
     auto computeHull = [&](VRGeoData& tmpData, Vec4f color) -> VRGeometryPtr {
-        if (tmpData.size() <= 200) return 0;
+        if (tmpData.size() == 0) return 0;
         float ca = color[1]; // carotene
         float ch = color[2]; // chlorophyll
         Vec3f leafColor = Vec3f(0.4*ca,0.8*ch,0.2*ch);
@@ -389,7 +389,7 @@ void VRTree::createHullLeafLod(VRGeoData& geo, int lvl, Vec3f offset) {
     };
 
     int N = 1000/lvl;
-    float D = data.size()/N;
+    float D = float(data.size())/N;
     float fuzzy = 0.2;
 
     random_device rd;
@@ -415,6 +415,7 @@ void VRTree::createHullLeafLod(VRGeoData& geo, int lvl, Vec3f offset) {
         auto hull = computeHull(c, meanColor);
         if (hull) Hull.append(hull);
     }
+    if (Hull.size() == 0) return;
 
     leafLodCache[lvl] = Hull.asGeometry("lodLeafCache");
     geo.append(Hull, Offset);

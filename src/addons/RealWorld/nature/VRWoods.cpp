@@ -189,16 +189,21 @@ void VRWoods::computeLODs() {
             tRef->createHullLeafLod (geoLeafs, lvl, offset);
         }
 
-        auto trunk = geoTrunk.asGeometry("trunk");
-        auto leafs = geoLeafs.asGeometry("leafs");
-        trunk->addChild( leafs );
-        leafs->setMaterial(green);
-        trunk->setMaterial(brown);
+        if (geoTrunk.size() > 0) {
+            auto trunk = geoTrunk.asGeometry("trunk");
+            trunk->setMaterial(brown);
 
-        leaf->add( trunk, 1 );
-        trunk->setWorldPosition(pos);
-        trunk->setDir(Vec3f(0,0,-1));
-        trunk->setUp(Vec3f(0,1,0));
+            leaf->add( trunk, 1 );
+            trunk->setWorldPosition(pos);
+            trunk->setDir(Vec3f(0,0,-1));
+            trunk->setUp(Vec3f(0,1,0));
+
+            if (geoLeafs.size() > 0) {
+                auto leafs = geoLeafs.asGeometry("leafs");
+                trunk->addChild( leafs );
+                leafs->setMaterial(green);
+            }
+        }
     }
 }
 
