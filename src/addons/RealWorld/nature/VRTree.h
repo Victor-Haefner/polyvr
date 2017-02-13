@@ -43,7 +43,7 @@ class VRTree : public VRTransform {
         static VRTreePtr create();
         VRTreePtr ptr();
 
-        segment* grow(int seed = 0, segment* p = 0, int iteration = 0);
+        segment* grow(int seed = 0, segment* p = 0, int iteration = 0, float t = 1);
 
         void addBranching(int nodes = 1, int branching = 5,
                    float n_angle = 0.2, float p_angle = 0.6, float length = 0.8, float radius = 0.1,

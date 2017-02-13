@@ -105,7 +105,7 @@ Vec3f VRTree::randomRotate(Vec3f v, float a) {
     return v;
 }
 
-segment* VRTree::grow(int seed, segment* p, int iteration) {
+segment* VRTree::grow(int seed, segment* p, int iteration, float t) {
     if (parameters.size() <= iteration) return 0;
     const seg_params& sp = parameters[iteration];
 
@@ -121,7 +121,8 @@ segment* VRTree::grow(int seed, segment* p, int iteration) {
         float a = variation(sp.p_angle, sp.p_angle_var);
         float l = variation(sp.length, sp.length_var);
         Vec3f d = p->p2 - p->p1; d.normalize();
-        s->p2 = p->p2 + l*randomRotate(d, a);
+        s->p1 = p->p1 + (p->p2-p->p1)*t;
+        s->p2 = s->p1 + l*randomRotate(d, a);
 
         s->n2 = s->p2 - s->p1;
         s->n2.normalize();
@@ -130,9 +131,11 @@ segment* VRTree::grow(int seed, segment* p, int iteration) {
         s->p2 *= variation(sp.length, sp.length_var);
     }
 
-    for (int i=0; i<sp.child_number; i++) {
-        auto c = grow(seed, s, iteration+1);
-        if (c) s->children.push_back(c);
+    for (int n=0; n<sp.nodes; n++) {
+        for (int i=0; i<sp.child_number; i++) {
+            auto c = grow(seed, s, iteration+1, (n+1)*1.0/sp.nodes);
+            if (c) s->children.push_back(c);
+        }
     }
 
     if (iteration == 0) { // finish tree
@@ -434,15 +437,21 @@ void VRTree::createHullTrunkLod(VRGeoData& geo, int lvl, Vec3f offset) { // TODO
         geo.pushQuad(i1[3],i1[0],i2[0],i2[3]);
     };
 
-    function<void(Vec4i, segment*)> pushBranch = [&](Vec4i i0, segment* s) {
+    /*function<void(Vec4i, segment*)> pushBranch = [&](Vec4i i0, segment* s) {
         if (s->lvl > 3) return;
         Vec4i i1 = pushRing(s->p2, s->radii[1]);
         pushBox(i0,i1);
         for (auto c : s->children) pushBranch(i1,c);
     };
-
     Vec4i i0 = pushRing(trunc->p1, trunc->radii[0]);
-    pushBranch(i0,trunc);
+    pushBranch(i0,trunc);*/
+
+    for (segment* s : branches) {
+        if (s->lvl > 3) continue;
+        auto i0 = pushRing(s->p1, s->radii[0]);
+        auto i1 = pushRing(s->p2, s->radii[1]);
+        pushBox(i0,i1);
+    }
 }
 
 
