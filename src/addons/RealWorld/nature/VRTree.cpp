@@ -272,7 +272,7 @@ void VRTree::addBranching(int nodes, int branching,
     parameters.push_back(sp);
 }
 
-void VRTree::addLeafs(int lvl, int amount) { // TODO: add default material!
+void VRTree::addLeafs(int lvl, int amount, float size) {
     if (!lod) initLOD();
 
     if (leafGeos.size() == 0) {
@@ -292,7 +292,6 @@ void VRTree::addLeafs(int lvl, int amount) { // TODO: add default material!
         return Vec3f(ndist(e2), ndist(e2), ndist(e2))*r;
     };
 
-    float s = 0.03;
     float ca = 1.0; // carotene
     float ch = 1.0; // chlorophyl
     ca = 0.5 + rand()*0.5/RAND_MAX;
@@ -315,10 +314,11 @@ void VRTree::addLeafs(int lvl, int amount) { // TODO: add default material!
             Vec3f n = p+v-b->p1;
             n.normalize();
             // TODO: add model for carotene and chlorophyl depending on leaf age/size and more..
-            geo0.pushVert(p+v, n, Vec3f(s,ca,ch)); // color: leaf size, amount of carotene, amount of chlorophyl
+            geo0.pushVert(p+v, n, Vec3f(size,ca,ch)); // color: leaf size, amount of carotene, amount of chlorophyl
             geo0.pushPoint();
         }
     }
+    if (geo0.size() == 0) { cout << "VRTree::addLeafs Warning: no armature with level " << lvl << endl; return; }
 
     for (int i=0; i<geo0.size(); i+=4) {
         auto c = geo0.getColor(i); c[0] *= 2; // double lod leaf size
@@ -353,16 +353,17 @@ void VRTree::createHullLeafLod(VRGeoData& geo, int lvl, Vec3f offset) {
     if (leafGeos.size() == 0) return;
     VRGeoData data(leafGeos[0]);
 
-    auto computeHull = [&](VRGeoData& tmpData, Vec4f color) {
-        VRConvexHull hull;
-        auto res = VRGeoData( hull.compute( tmpData.asGeometry("tmpdata") ) );
+    auto computeHull = [&](VRGeoData& tmpData, Vec4f color) -> VRGeometryPtr {
+        if (tmpData.size() <= 200) return 0;
         float ca = color[1]; // carotene
         float ch = color[2]; // chlorophyll
         Vec3f leafColor = Vec3f(0.4*ca,0.8*ch,0.2*ch);
-        for (int i=0; i<res.size(); i++) {
-            res.pushColor( leafColor );
-        }
-        return res;
+        VRConvexHull hull;
+        auto hgeo = hull.compute( tmpData.asGeometry("tmpdata") );
+        if (!hgeo) return 0;
+        auto res = VRGeoData( hgeo );
+        for (int i=0; i<res.size(); i++) res.pushColor( leafColor );
+        return res.size() > 0 ? res.asGeometry("tmp") : 0;
     };
 
     int Ns = pow(2,int(4/lvl));
@@ -411,9 +412,8 @@ void VRTree::createHullLeafLod(VRGeoData& geo, int lvl, Vec3f offset) {
 
     VRGeoData Hull;
     for (auto& c : clusters) {
-        if (c.size() <= 2) continue;
         auto hull = computeHull(c, meanColor);
-        Hull.append(hull);
+        if (hull) Hull.append(hull);
     }
 
     leafLodCache[lvl] = Hull.asGeometry("lodLeafCache");

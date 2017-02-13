@@ -56,7 +56,7 @@ class VRTree : public VRTransform {
                    float n_angle = 0.2, float p_angle = 0.6, float length = 0.8, float radius = 0.1,
                    float n_angle_v = 0.2, float p_angle_v = 0.4, float length_v = 0.2, float radius_v = 0.2);
 
-        void addLeafs(int lvl, int amount);
+        void addLeafs(int lvl, int amount, float size = 0.03);
         void setLeafMaterial(VRMaterialPtr mat);
 
         void createHullTrunkLod(VRGeoData& geo, int lvl, Vec3f offset);

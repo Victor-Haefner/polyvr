@@ -170,6 +170,7 @@ void VRWoods::computeLODs() {
     // create layer node geometries
     for (auto l : leafs) {
         auto& leaf = l.second;
+        if (trees.count(leaf.get()) == 0) continue;
         int lvl = leaf->getLevel();
         if (lvl == 0) continue;
 
@@ -180,11 +181,14 @@ void VRWoods::computeLODs() {
         VRGeoData geoLeafs;
         VRGeoData geoTrunk;
         for (auto t : trees[leaf.get()]) {
+            if (treeTemplates.count(t) == 0) continue;
             auto tRef = treeTemplates[t];
+            if (!tRef || !t) continue;
             Vec3f offset = t->getWorldPosition() - pos;
             tRef->createHullTrunkLod(geoTrunk, lvl, offset);
             tRef->createHullLeafLod (geoLeafs, lvl, offset);
         }
+
         auto trunk = geoTrunk.asGeometry("trunk");
         auto leafs = geoLeafs.asGeometry("leafs");
         trunk->addChild( leafs );
