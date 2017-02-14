@@ -180,7 +180,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
 
 #ifndef _WIN32
 	sm->registerModule<VRPyCSG>("CSGGeometry", pModVR, VRPyGeometry::typeRef);
-	sm->registerModule<VRPyRealWorld>("RealWorld", pModVR);
+	sm->registerModule<VRPyRealWorld>("RealWorld", pModVR, VRPyObject::typeRef);
 	sm->registerModule<VRPyTrafficSimulation>("TrafficSimulation", pModVR);
 	sm->registerModule<VRPySimViDekont>("SimViDekont", pModVR);
 #endif

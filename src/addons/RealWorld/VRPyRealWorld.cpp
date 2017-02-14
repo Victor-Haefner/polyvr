@@ -4,11 +4,11 @@
 
 using namespace OSG;
 
-simplePyType(RealWorld, New_toZero);
+simplePyType(RealWorld, New_named_ptr);
 
 PyMethodDef VRPyRealWorld::methods[] = {
-    {"init", (PyCFunction)VRPyRealWorld::initWorld, METH_VARARGS, "Init real obj - init(root)" },
-    {"update", (PyCFunction)VRPyRealWorld::update, METH_VARARGS, "Update real obj - update([x,y,z])" },
+    {"init", (PyCFunction)VRPyRealWorld::initWorld, METH_VARARGS, "Init world - init( size [X,Y])" },
+    {"update", (PyCFunction)VRPyRealWorld::update, METH_VARARGS, "Update world chunks around position - update([x,y,z])" },
     {"enableModule", (PyCFunction)VRPyRealWorld::enableModule, METH_VARARGS, "Enable a module - enableModule(str, bool threaded, bool physicalized)" },
     {"disableModule", (PyCFunction)VRPyRealWorld::disableModule, METH_VARARGS, "Disable a module - disableModule(str)" },
     {"configure", (PyCFunction)VRPyRealWorld::configure, METH_VARARGS, "Configure a variable - configure( str var, str value )"
@@ -17,10 +17,10 @@ PyMethodDef VRPyRealWorld::methods[] = {
 };
 
 PyObject* VRPyRealWorld::initWorld(VRPyRealWorld* self, PyObject* args) {
-    VRPyObject* child = 0;
-    PyObject* origin = 0;
-    if (! PyArg_ParseTuple(args, "OO", &child, &origin)) return NULL;
-    if (!self->objPtr) self->objPtr = RealWorld::create( child->objPtr, parseVec2fList(origin) );
+	if (!self->valid()) return NULL;
+    PyObject* size = 0;
+    if (! PyArg_ParseTuple(args, "O", &size)) return NULL;
+    self->objPtr->init( parseVec2iList(size) );
     Py_RETURN_TRUE;
 }
 
@@ -29,7 +29,7 @@ PyObject* VRPyRealWorld::configure(VRPyRealWorld* self, PyObject* args) {
     const char* var = 0;
     const char* val = 0;
     if (! PyArg_ParseTuple(args, "ss", &var, &val)) return NULL;
-    self->objPtr->configure( var, val );
+    self->objPtr->configure( var?var:"", val?val:"" );
     Py_RETURN_TRUE;
 }
 
@@ -41,10 +41,10 @@ PyObject* VRPyRealWorld::update(VRPyRealWorld* self, PyObject* args) {
 
 PyObject* VRPyRealWorld::enableModule(VRPyRealWorld* self, PyObject* args) {
 	if (!self->valid()) return NULL;
-    const char* name;
+    const char* name = 0;
     int t, p;
     if (! PyArg_ParseTuple(args, "sii", (char*)&name, &t, &p)) return NULL;
-    self->objPtr->enableModule( name, true, t, p );
+    self->objPtr->enableModule( name?name:"", true, t, p );
     Py_RETURN_TRUE;
 }
 
