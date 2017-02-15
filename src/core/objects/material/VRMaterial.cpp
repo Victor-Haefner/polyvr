@@ -195,9 +195,7 @@ VRMaterial::VRMaterial(string name) : VRObject(name) {
     //store("ambient", &ambient);
 }
 
-VRMaterial::~VRMaterial() {
-    cout << "~VRMaterial() " << name << endl;
-}
+VRMaterial::~VRMaterial() {}
 
 VRMaterialPtr VRMaterial::ptr() { return static_pointer_cast<VRMaterial>( shared_from_this() ); }
 VRMaterialPtr VRMaterial::create(string name) {
