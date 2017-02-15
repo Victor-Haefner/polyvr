@@ -19,6 +19,7 @@ ModuleFloor::ModuleFloor(bool t, bool p) : BaseModule("ModuleFloor", t,p) {
 
 void ModuleFloor::makeFloor(Vec2f pointA, Vec2f pointB, VRGeoData& geo) {
     MapCoordinator* mapC = RealWorld::get()->getCoordinator();
+    if (!mapC) return;
 
     float x1 = pointA[0];
     float y1 = pointA[1];
@@ -73,6 +74,7 @@ void ModuleFloor::initMaterial() {
 
 void ModuleFloor::loadBbox(MapGrid::Box bbox) {
     auto mc = RealWorld::get()->getCoordinator();
+    if (!mc) return;
     Vec2f min = mc->realToWorld(bbox.min);
     Vec2f max = mc->realToWorld(bbox.max);
 

@@ -61,15 +61,21 @@ PyObject* VRPyTree::setLeafMaterial(VRPyTree* self, PyObject* args) {
 }
 
 PyMethodDef VRPyWoods::methods[] = {
-    {"addTree", (PyCFunction)VRPyWoods::addTree, METH_VARARGS, "Add a tree - addTree( tree ) " },
+    {"addTree", (PyCFunction)VRPyWoods::addTree, METH_VARARGS, "Add a copy of the passed tree to the woods and return the copy - tree addTree( tree | bool updateLODs ) " },
     {"computeLODs", (PyCFunction)VRPyWoods::computeLODs, METH_NOARGS, "Compute LODs - computeLODs() " },
+    {"clear", (PyCFunction)VRPyWoods::clear, METH_NOARGS, "Clear woods - clear() " },
     {NULL}  /* Sentinel */
 };
 
 PyObject* VRPyWoods::addTree(VRPyWoods* self, PyObject* args) {
     VRPyTree* o = 0;
-    if (! PyArg_ParseTuple(args, "O", &o)) return NULL;
-    self->objPtr->addTree( o->objPtr );
+    int u = 0;
+    if (! PyArg_ParseTuple(args, "O|i", &o, &u)) return NULL;
+    return VRPyTree::fromSharedPtr( self->objPtr->addTree( o->objPtr, u ) );
+}
+
+PyObject* VRPyWoods::clear(VRPyWoods* self) {
+    self->objPtr->clear();
     Py_RETURN_TRUE;
 }
 

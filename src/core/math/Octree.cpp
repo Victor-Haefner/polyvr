@@ -85,6 +85,13 @@ Octree* Octree::add(Vec3f p, void* d, int targetLevel, int currentLevel, bool ch
 
 void Octree::set(Octree* node, Vec3f p, void* d) { node->data.clear(); node->points.clear(); node->data.push_back(d); node->points.push_back(p); }
 
+vector<Octree*> Octree::getAncestry() {
+    vector<Octree*> res;
+    auto p = parent;
+    while (p) { res.push_back(p); p = p->parent; }
+    return res;
+}
+
 Octree* Octree::get(Vec3f p) {
     if ( !inBox(p, center, size) ) {
         return parent == 0 ? 0 : parent->get(p);

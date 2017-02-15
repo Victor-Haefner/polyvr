@@ -38,6 +38,11 @@ void VRLodLeaf::add(VRObjectPtr obj, int lvl) {
     levels[lvl]->addChild(obj);
 }
 
+void VRLodLeaf::set(VRObjectPtr obj, int lvl) {
+    levels[lvl]->clearChildren();
+    levels[lvl]->addChild(obj);
+}
+
 Octree* VRLodLeaf::getOLeaf() { return oLeaf; }
 int VRLodLeaf::getLevel() { return lvl; }
 
@@ -49,14 +54,19 @@ VRLodTreePtr VRLodTree::ptr() { return static_pointer_cast<VRLodTree>( shared_fr
 VRLodTreePtr VRLodTree::create(string name) { return VRLodTreePtr(new VRLodTree(name)); }
 
 void VRLodTree::reset(float size) {
-    octree = Octree::create(size,size);
     leafs.clear();
     objects.clear();
     rootLeaf = 0;
+    if (size > 0) octree = Octree::create(size,size);
+    else {
+        auto s = octree->getSize();
+        octree = Octree::create(s,s);
+    }
+    clearChildren();
 }
 
-void VRLodTree::addLeaf(Octree* o, int lvl) {
-    if (leafs.count(o)) return;
+VRLodLeafPtr VRLodTree::addLeaf(Octree* o, int lvl) {
+    if (leafs.count(o)) return leafs[o];
     auto l = VRLodLeaf::create("lodLeaf", o, lvl);
     if (lvl > 0) l->addLevel( o->getSize()*2 );
     l->setFrom(o->getLocalCenter());
@@ -92,19 +102,21 @@ void VRLodTree::addLeaf(Octree* o, int lvl) {
         rootLeaf = l;
         addChild(l);
     }
+    return l;
 }
 
-void VRLodTree::addObject(VRTransformPtr obj, Vec3f p, int lvl) {
+VRLodLeafPtr VRLodTree::addObject(VRTransformPtr obj, Vec3f p, int lvl) {
     if (leafs.size() == 0) addLeaf(octree.get(), 0);
-    if (!octree) return;
+    if (!octree) return 0;
     objects[lvl].push_back(obj);
     auto oLeaf = octree->add(p, obj.get(), lvl, 0, true);
-    addLeaf(oLeaf, lvl);
-    if (lvl == 0) leafs[oLeaf]->add(obj, 0);
-    else          leafs[oLeaf]->add(obj, 1);
+    auto leaf = addLeaf(oLeaf, lvl);
+    if (lvl == 0) leaf->add(obj, 0);
+    else          leaf->add(obj, 1);
     obj->setWorldPosition(p);
     obj->setDir(Vec3f(0,0,-1));
     obj->setUp(Vec3f(0,1,0));
+    return leaf;
 }
 
 // --------------------------------------------------------------------------------------------------
@@ -114,15 +126,31 @@ VRWoods::~VRWoods() {}
 VRWoodsPtr VRWoods::create() { return VRWoodsPtr(new VRWoods()); }
 VRWoodsPtr VRWoods::ptr() { return static_pointer_cast<VRWoods>( shared_from_this() ); }
 
-void VRWoods::addTree(VRTreePtr t) {
+VRTreePtr VRWoods::addTree(VRTreePtr t, bool updateLODs) {
     auto td = dynamic_pointer_cast<VRTree>( t->duplicate() );
     treeTemplates[td.get()] = t;
-    addObject(td, t->getFrom(), 0);
+    auto leaf = addObject(td, t->getFrom(), 0);
+
+    if (updateLODs) {
+        auto oLeafs = leaf->getOLeaf()->getAncestry();
+        map<Octree*, VRLodLeafPtr> aLeafs;
+        for (auto o : oLeafs) {
+            if (leafs.count(o) == 0) continue;
+            aLeafs[o] = leafs[o];
+        }
+        computeLODs(aLeafs);
+    }
+
+    return td;
 }
 
 void VRWoods::computeLODs() {
+    computeLODs(leafs);
+}
+
+void VRWoods::computeLODs(map<Octree*, VRLodLeafPtr>& leafs) {
     auto simpleLeafMat = []() {
-        auto m = VRMaterial::create("lmat");
+        auto m = VRMaterial::create("simpleLeafMat");
         m->setPointSize(3);
         m->setDiffuse(Vec3f(0.5,1,0));
         m->setAmbient(Vec3f(0.1,0.3,0));
@@ -152,9 +180,6 @@ void VRWoods::computeLODs() {
         m->readVertexShader(wdir+"/shader/Trees/Shader_trunc_lod.vp");
         return m;
     };
-
-    auto green = simpleLeafMat();
-    auto brown = simpleTrunkMat();
 
     // get all trees for each leaf layer
     map<VRLodLeaf*, vector<VRTree*> > trees;
@@ -191,9 +216,10 @@ void VRWoods::computeLODs() {
 
         if (geoTrunk.size() > 0) {
             auto trunk = geoTrunk.asGeometry("trunk");
-            trunk->setMaterial(brown);
+            if (!truncMat) truncMat = simpleTrunkMat();
+            trunk->setMaterial(truncMat);
 
-            leaf->add( trunk, 1 );
+            leaf->set( trunk, 1 );
             trunk->setWorldPosition(pos);
             trunk->setDir(Vec3f(0,0,-1));
             trunk->setUp(Vec3f(0,1,0));
@@ -201,10 +227,17 @@ void VRWoods::computeLODs() {
             if (geoLeafs.size() > 0) {
                 auto leafs = geoLeafs.asGeometry("leafs");
                 trunk->addChild( leafs );
-                leafs->setMaterial(green);
+                if (!leafMat) leafMat = simpleLeafMat();
+                leafs->setMaterial(leafMat);
             }
         }
     }
+}
+
+void VRWoods::clear() {
+    trees.clear();
+    treeTemplates.clear();
+    VRLodTree::reset();
 }
 
 void VRWoods::test() {

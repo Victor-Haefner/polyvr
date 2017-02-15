@@ -61,39 +61,13 @@ VRGeometryPtr VRConvexHull::compute(VRGeometryPtr geo) {
 
     if (points.size() < 4) return 0;
 
-    Polyhedron poly; // define polyhedron to hold convex hull
-    CGAL::convex_hull_3(points.begin(), points.end(), poly); // compute convex hull of non-collinear points
-
-    VRGeoData data;
-
-    int i=0;
-    map<void*, int> points2;
-    for (auto face = poly.facets_begin(); face != poly.facets_end(); face++) {
-        auto vertex = face->facet_begin();
-        vector<int> faceIndx;
-        do {
-			auto v = (void*)&(*vertex->vertex());
-			if (!points2.count(v)) {
-                points2[v] = i; i++;
-                cgalPoint cp = vertex->vertex()->point();
-                Pnt3f p = Pnt3f(cp.x(), cp.y(), cp.z());
-                data.pushVert(p, Vec3f(1,0,0) );
-            }
-            faceIndx.push_back( points2[v] );
-		} while (++vertex != face->facet_begin());
-		if (face->is_triangle()) data.pushTri(faceIndx[0], faceIndx[1], faceIndx[2]);
-		if (face->is_quad())     data.pushQuad(faceIndx[0], faceIndx[1], faceIndx[2], faceIndx[3]);
-	}
-
-
+    VRGeometryPtr res = 0;
     try { // TODO: check if points bounding box is not size 0!!!
         Polyhedron poly; // define polyhedron to hold convex hull
         CGAL::convex_hull_3(points.begin(), points.end(), poly); // compute convex hull of non-collinear points
-        return toGeometry(poly, "convexHull");
-    } catch( exception e ) {
-        cout << "ARGH\n" << e.what() << endl;
-        return 0;
-    }
+        res = toGeometry(poly, "convexHull");
+    } catch( exception e ) { cout << "ARGH\n" << e.what() << endl; res = 0; }
+    return res;
 }
 
 

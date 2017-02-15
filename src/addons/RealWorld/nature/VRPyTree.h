@@ -28,6 +28,7 @@ struct VRPyWoods : VRPyBaseT<OSG::VRWoods> {
 
     static PyObject* addTree(VRPyWoods* self, PyObject* args);
     static PyObject* computeLODs(VRPyWoods* self);
+    static PyObject* clear(VRPyWoods* self);
 };
 
 #endif // VRPYTREE_H_INCLUDED

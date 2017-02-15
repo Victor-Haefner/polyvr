@@ -24,6 +24,7 @@ class VRLodLeaf : public VRTransform {
 
         void addLevel(float dist);
         void add(VRObjectPtr obj, int lvl);
+        void set(VRObjectPtr obj, int lvl);
 
         Octree* getOLeaf();
         int getLevel();
@@ -36,7 +37,7 @@ class VRLodTree : public VRObject {
         map<Octree*, VRLodLeafPtr> leafs;
         map<int, vector<VRTransformPtr> > objects;
 
-        void addLeaf(Octree* o, int lvl);
+        VRLodLeafPtr addLeaf(Octree* o, int lvl);
 
     public:
         VRLodTree(string name, float size = 10);
@@ -44,14 +45,17 @@ class VRLodTree : public VRObject {
         static VRLodTreePtr create(string name);
         VRLodTreePtr ptr();
 
-        void addObject(VRTransformPtr obj, Vec3f p, int lvl);
-        void reset(float size);
+        VRLodLeafPtr addObject(VRTransformPtr obj, Vec3f p, int lvl);
+        void reset(float size = 0);
 };
 
 class VRWoods : public VRLodTree {
     private:
         vector<VRTreePtr> trees;
         map<VRTree*, VRTreePtr> treeTemplates;
+
+        VRMaterialPtr truncMat;
+        VRMaterialPtr leafMat;
 
         void computeFirstLevel();
         void computeSecondLevel();
@@ -65,8 +69,10 @@ class VRWoods : public VRLodTree {
         static VRWoodsPtr create();
         VRWoodsPtr ptr();
 
-        void addTree(VRTreePtr t);
+        void clear();
+        VRTreePtr addTree(VRTreePtr t, bool updateLODs = 0);
         void computeLODs();
+        void computeLODs(map<Octree*, VRLodLeafPtr>& leafs);
 
         void test();
 };

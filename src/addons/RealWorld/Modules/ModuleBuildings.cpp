@@ -33,6 +33,7 @@ ModuleBuildings::ModuleBuildings(bool t, bool p) : BaseModule("ModuleBuildings",
 void ModuleBuildings::loadBbox(MapGrid::Box bbox) {
     auto mapDB = RealWorld::get()->getDB();
     auto mc = RealWorld::get()->getCoordinator();
+    if (!mc || !mapDB) return;
     OSMMap* osmMap = mapDB->getMap(bbox.str);
     if (!osmMap) return;
 
@@ -192,6 +193,7 @@ void ModuleBuildings::addBuildingRoof(VRGeoData* r_geo_d, Building* building, fl
 /** create one Building **/
 void ModuleBuildings::makeBuildingGeometry(VRGeoData* b_geo_d, VRGeoData* r_geo_d, Building* b) {
     auto mc = RealWorld::get()->getCoordinator();
+    if (!mc) return;
     int bNum = toInt(b->id);
     int height = bNum % Config::get()->MAX_FLOORS + 2;
     float minElevation = 99999.0f;

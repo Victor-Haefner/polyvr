@@ -20,6 +20,7 @@ class MultiPassMaterial; OSG_GEN_CONTAINERPTR(MultiPassMaterial);
 class TextureObjChunk; OSG_GEN_CONTAINERPTR(TextureObjChunk);
 
 struct VRMatData;
+typedef shared_ptr<VRMatData> VRMatDataPtr;
 
 Color4f toColor4f(Color3f c, float t = 1);
 Color3f toColor3f(Color4f c);
@@ -29,14 +30,14 @@ class VRMaterial : public VRObject {
         static map<string, VRMaterialWeakPtr> materials;
         static map<MaterialMTRecPtr, VRMaterialWeakPtr> materialsByPtr;
 
-        string constructShaderVP(VRMatData* data);
-        string constructShaderFP(VRMatData* data);
+        string constructShaderVP(VRMatDataPtr data);
+        string constructShaderFP(VRMatDataPtr data);
 
         void setup();
 
     protected:
         OSGMaterialPtr passes;
-        vector<VRMatData*> mats;
+        vector<VRMatDataPtr> mats;
         int activePass = 0;
         bool force_transparency = false;
         bool deferred = false;
