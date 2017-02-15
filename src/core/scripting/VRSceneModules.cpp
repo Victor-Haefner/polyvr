@@ -56,6 +56,8 @@
 #include "VRPyProgress.h"
 #include "VRPyUndoManager.h"
 
+#include "VRPyMotor.h"
+
 #include "addons/Algorithms/VRPyGraphLayout.h"
 #include "addons/CaveKeeper/VRPyCaveKeeper.h"
 #include "addons/Bullet/Particles/VRPyParticles.h"
@@ -134,6 +136,8 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyNavigator>("Navigator", pModVR);
     sm->registerModule<VRPyNavPreset>("NavPreset", pModVR);
     sm->registerModule<VRPyRendering>("Rendering", pModVR);
+
+    sm->registerModule<VRPyMotor>("Motor", pModVR);
 
     sm->registerModule<VRPyProgress>("Progress", pModVR);
     sm->registerModule<VRPyUndoManager>("UndoManager", pModVR);

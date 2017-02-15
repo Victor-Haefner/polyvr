@@ -31,8 +31,8 @@
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="-std=c++11" />
 			<Add option="-Wall" />
+			<Add option="-std=c++11" />
 			<Add option="`pkg-config gtk+-2.0 --cflags`" />
 			<Add option="`pkg-config gmodule-2.0 --cflags`" />
 			<Add option="`pkg-config --cflags libxml++-2.6`" />
@@ -226,6 +226,7 @@
 			<Add option="-lHACD" />
 			<Add option="-lssh2" />
 			<Add option="-lfftw3" />
+			<Add option="-Wl,-rpath=/usr/lib/x86_64-linux-gnu" />
 			<Add directory="/usr/lib/virtuose" />
 			<Add directory="/usr/lib/opensg" />
 			<Add directory="/usr/lib/CEF" />
@@ -511,6 +512,11 @@
 		<Unit filename="src/addons/construction/building/VROpening.h" />
 		<Unit filename="src/addons/construction/building/furniture/VRBlinds.cpp" />
 		<Unit filename="src/addons/construction/building/furniture/VRBlinds.h" />
+		<Unit filename="src/contrib/rpm/PyMotor" />
+		<Unit filename="src/contrib/rpm/VRrpmToolFwd.h" />
+		<Unit filename="src/contrib/rpm/arrayOut.h" />
+		<Unit filename="src/contrib/rpm/rpmTool.cpp" />
+		<Unit filename="src/contrib/rpm/rpmTool.h" />
 		<Unit filename="src/core/gui/VRCodeCompletion.cpp" />
 		<Unit filename="src/core/gui/VRCodeCompletion.h" />
 		<Unit filename="src/core/gui/VRDemos.cpp" />
@@ -833,6 +839,8 @@
 		<Unit filename="src/core/scripting/VRPyMenu.h" />
 		<Unit filename="src/core/scripting/VRPyMobile.cpp" />
 		<Unit filename="src/core/scripting/VRPyMobile.h" />
+		<Unit filename="src/core/scripting/VRPyMotor.cpp" />
+		<Unit filename="src/core/scripting/VRPyMotor.h" />
 		<Unit filename="src/core/scripting/VRPyMouse.cpp" />
 		<Unit filename="src/core/scripting/VRPyMouse.h" />
 		<Unit filename="src/core/scripting/VRPyNavPreset.cpp" />
