@@ -4,6 +4,7 @@
 #include "core/scripting/VRPyTypeCaster.h"
 #include "core/scripting/VRPyBaseT.h"
 #include "core/scripting/VRPyBaseFactory.h"
+#include "core/scripting/VRPyObject.h"
 #include "core/utils/toString.h"
 
 using namespace OSG;
@@ -49,6 +50,7 @@ PyMethodDef VRPyConcept::methods[] = {
     {"getProperty", (PyCFunction)VRPyConcept::getProperty, METH_VARARGS, "Return a property by name - property getProperty( str name )" },
     {"getProperties", (PyCFunction)VRPyConcept::getProperties, METH_NOARGS, "Return all properties - [property] getProperties()" },
     {"addProperty", (PyCFunction)VRPyConcept::addProperty, METH_VARARGS, "Add new property - property addProperty( str name, str value )" },
+    {"append", (PyCFunction)VRPyConcept::append, METH_VARARGS, "Add another existing concept as child - concept append( str name )" },
     {NULL}  /* Sentinel */
 };
 
@@ -84,6 +86,13 @@ PyObject* VRPyConcept::addProperty(VRPyConcept* self, PyObject* args) {
     return VRPyProperty::fromSharedPtr( self->objPtr->addProperty(pname, pval) );
 }
 
+PyObject* VRPyConcept::append(VRPyConcept* self, PyObject* args) {
+    const char* name = 0;
+    if (! PyArg_ParseTuple(args, "s:append", (char*)&name)) return NULL;
+    string cname; if (name) cname = name;
+    return VRPyConcept::fromSharedPtr( self->objPtr->append(cname) );
+}
+
 // --------------------- OntologyRule --------------------
 
 PyMethodDef VRPyOntologyRule::methods[] = {
@@ -110,6 +119,7 @@ PyMethodDef VRPyEntity::methods[] = {
     {"getVector", (PyCFunction)VRPyEntity::getVector, METH_VARARGS, "Get the value of ith vector property named prop - [x,y,z] getVector( str prop | int i = 0 ) )" },
     {"getAll", (PyCFunction)VRPyEntity::getAll, METH_VARARGS, "Get all values of property named prop - [str] get( str prop )" },
     {"getAllVector", (PyCFunction)VRPyEntity::getAllVector, METH_VARARGS, "Get all values of vector property named prop - [[x,y,z]] getAllVector( str prop ) )" },
+    {"setSGObject", (PyCFunction)VRPyEntity::setSGObject, METH_VARARGS, "Link the entity to its scene graph object - setSGObject( obj ) )" },
     {NULL}  /* Sentinel */
 };
 
@@ -126,6 +136,13 @@ struct VRPyPropertyCaster {
         return PyString_FromString( p->value.c_str() );
     }
 };
+
+PyObject* VRPyEntity::setSGObject(VRPyEntity* self, PyObject* args) {
+    VRPyObject* obj;
+    if (! PyArg_ParseTuple(args, "O", &obj)) return NULL;
+    self->objPtr->setSGObject( obj->objPtr );
+    Py_RETURN_TRUE;
+}
 
 PyObject* VRPyEntity::get(VRPyEntity* self, PyObject* args) {
     const char* prop = 0; int i=0;

@@ -64,6 +64,9 @@ VREntity::VREntity(string name, VROntologyPtr o, VRConceptPtr c) {
 
 VREntityPtr VREntity::create(string name, VROntologyPtr o, VRConceptPtr c) { return VREntityPtr( new VREntity(name, o, c) ); }
 
+void VREntity::setSGObject(VRObjectPtr o) { sgObject = o; }
+VRObjectPtr VREntity::getSGObject() { return sgObject.lock(); }
+
 void VREntity::addConcept(VRConceptPtr c) { concepts.push_back(c); }
 
 vector<VRConceptPtr> VREntity::getConcepts() {
@@ -173,30 +176,6 @@ vector< vector<string> > VREntity::getAllVector(string prop) { // TODO
     return res;
 }
 
-vector<string> VREntity::getAtPath(vector<string> path) { // TODO: move that to the reasoner, this is bullshit!
-    /*cout << "  get value at path ";
-    for (auto p : path) cout << "." << p;
-    cout << endl;*/
-
-    vector<string> res;
-    if (path.size() == 2) {
-        string m = path[1];
-        auto prop = getProperty(m);
-        if (!prop) return res;
-        if (!properties.count(prop->getName())) return res;
-        for (auto p : properties[prop->getName()]) res.push_back(p->value);
-
-        /*cout << "  value of member " << m << " could be";
-        for (auto p : properties[prop->getName()]) cout << " " << p->value;
-        cout << endl;*/
-
-        return res;
-    }
-    res.push_back( getName() );
-
-    return res;
-}
-
 string VREntity::toString() {
     string data = "Entity " + name + " of type (";
     data += getConceptList() + ")";
@@ -207,6 +186,15 @@ string VREntity::toString() {
         }
     }
     return data;
+}
+
+bool VREntity::is_a(string concept) {
+    for (auto cw : concepts) {
+        if (auto c = cw.lock()) {
+            if (c->is_a(concept)) return true;
+        }
+    }
+    return false;
 }
 
 void VREntity::save(xmlpp::Element* e, int p) {

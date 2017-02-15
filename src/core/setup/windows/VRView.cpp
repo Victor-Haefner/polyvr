@@ -7,6 +7,7 @@
 
 #include "core/utils/VRRate.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRGlobals.h"
 #include "core/tools/VRText.h"
 #include "core/setup/VRSetup.h"
 #include "core/gui/VRGuiUtils.h"
@@ -298,11 +299,19 @@ void VRView::showStats(bool b) {
         stats->setColor(Color4f(0.1,0.9,0.6,0.7f));
 
         stats->addText("\nPerformance:");
-        stats->addElement(VRRate::statFPS, " application FPS: %d");
-        stats->addElement(VRRate::statScriptFPS, "  script FPS: %d");
-        stats->addElement(RenderAction::statDrawTime, "  draw FPS: %r.2f");
-        stats->addElement(RenderAction::statTravTime, "  trav FPS: %r.2f");
-        stats->addElement(VRRate::statPhysFPS, " physics FPS: %d");
+        stats->addElement(VRGlobals::FRAME_RATE.statFPS, " application FPS: %d");
+        stats->addElement(VRGlobals::SLEEP_FRAME_RATE.statFPS, " application sleep FPS: %d");
+        stats->addElement(VRGlobals::SCRIPTS_FRAME_RATE.statFPS, "  script FPS: %d");
+        stats->addElement(VRGlobals::WINDOWS_FRAME_RATE.statFPS, "  distributed windows FPS: %d");
+        stats->addElement(VRGlobals::GTK1_FRAME_RATE.statFPS, " GTK devices FPS: %d");
+        stats->addElement(VRGlobals::GTK2_FRAME_RATE.statFPS, " GTK rendering FPS: %d");
+        stats->addElement(VRGlobals::RENDER_FRAME_RATE.statFPS, "  rendering FPS: %d");
+        stats->addElement(VRGlobals::SWAPB_FRAME_RATE.statFPS, "  swap buffer FPS: %d");
+        stats->addElement(RenderAction::statDrawTime, "   draw FPS: %r.2f");
+        stats->addElement(RenderAction::statTravTime, "   trav FPS: %r.2f");
+        stats->addElement(VRGlobals::SMCALLBACKS_FRAME_RATE.statFPS, " scene manager callbacks FPS: %d");
+        stats->addElement(VRGlobals::SETUP_FRAME_RATE.statFPS, " setup devices FPS: %d");
+        stats->addElement(VRGlobals::PHYSICS_FRAME_RATE.statFPS, " physics FPS: %d");
 
         stats->addText("\nMaterials:");
         stats->addElement(RenderAction::statNStates, " state changes: %d");

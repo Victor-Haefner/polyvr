@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="sorting" name_space="Scene" loading_time="418">
+<Scene name_suffix="0" base_name="sorting" name_space="Scene" loading_time="471">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
       <Object ambient="0.387091 0.387091 0.387091 1" base_name="light" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0 0 0 1" type="Light" unique="1" visible="1">
@@ -14,7 +14,7 @@
   </Objects>
   <Rendering deferred_rendering="0" frustum_culling="1" hmdd="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
-    <Script base_name="init" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1">
+    <Script base_name="init" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="no group">
       <core>
 	import VR
 	
@@ -37,7 +37,7 @@
       <trig type="on_device" dev="keyboard" state="Pressed" param="" key="105" name_suffix="0" base_name="trigger" name_space="__global__"/>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="1" base_name="trigger" name_space="__global__"/>
     </Script>
-    <Script base_name="initBins" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1">
+    <Script base_name="initBins" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="no group">
       <core>
 	import VR
 	
@@ -64,7 +64,7 @@
 	makeBin([9,0.5,1.1])
 </core>
     </Script>
-    <Script base_name="initBumpers" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1">
+    <Script base_name="initBumpers" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="no group">
       <core>
 	import VR
 	
@@ -110,7 +110,7 @@
 	makeBumper([8.7,0.5,-1.1])
 </core>
     </Script>
-    <Script base_name="initConveyorBelt" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1">
+    <Script base_name="initConveyorBelt" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="no group">
       <core>
 	import VR
 	
@@ -140,7 +140,7 @@
 		belt.addChild(roll)
 </core>
     </Script>
-    <Script base_name="initFloor" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1">
+    <Script base_name="initFloor" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="no group">
       <core>
 	import VR
 	
@@ -154,7 +154,7 @@
 	VR.scene.addChild(floor)
 </core>
     </Script>
-    <Script base_name="initPackets" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1">
+    <Script base_name="initPackets" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="no group">
       <core>
 	import VR
 	
@@ -178,7 +178,7 @@
 		
 </core>
     </Script>
-    <Script base_name="initPanel" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1">
+    <Script base_name="initPanel" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="no group">
       <core>
 	import VR
 	
@@ -198,7 +198,7 @@
 	panel.addChild(screen)
 </core>
     </Script>
-    <Script base_name="initScanner" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1">
+    <Script base_name="initScanner" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="no group">
       <core>
 	import VR
 	
@@ -232,7 +232,7 @@
 	scanner.addChild(lamp)
 </core>
     </Script>
-    <Script base_name="makeLamp" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1">
+    <Script base_name="makeLamp" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="no group">
       <core>
 	import VR
 	
@@ -257,7 +257,7 @@
 	return lamp
 </core>
     </Script>
-    <Script base_name="pannel_handler" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1">
+    <Script base_name="pannel_handler" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="no group">
       <core>
 	import VR
 	
@@ -299,7 +299,7 @@
 </core>
       <trig type="on_device" dev="server1" state="Released" param="" key="-1" name_suffix="2" base_name="trigger" name_space="__global__"/>
     </Script>
-    <Script base_name="pannel_site" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="HTML" server="server1">
+    <Script base_name="pannel_site" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="HTML" server="server1" group="no group">
       <core>
 &lt;!DOCTYPE html&gt;
 &lt;html&gt;
@@ -340,7 +340,7 @@
 &lt;/html&gt;
 </core>
     </Script>
-    <Script base_name="semantics_init" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1">
+    <Script base_name="semantics_init" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="no group">
       <core>
 	import VR
 	
@@ -370,13 +370,21 @@
 	print VR.ontology
 </core>
     </Script>
-    <Script base_name="semantics_update" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1">
+    <Script base_name="semantics_update" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="no group">
       <core>
 	import VR
 	
-	VR.ontology.process('q(c):Change(c);doTimestep(1)')
+	#VR.ontology.process('q(c):Change(c);doTimestep(1)')
 </core>
       <trig type="on_timeout" dev="" state="Pressed" param="1000" key="0" name_suffix="3" base_name="trigger" name_space="__global__"/>
+    </Script>
+    <Script base_name="test" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="no group">
+      <core>
+	import VR
+	
+	x = VR.ontology.process('q(x):float(x);is(x,1+1)')
+	print x
+</core>
     </Script>
   </Scripts>
   <Sockets persistency="666"/>

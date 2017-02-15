@@ -29,7 +29,8 @@ class CarDynamics : public VRObject {
             float suspensionDamping = 2.3f;
             float suspensionCompression = 4.4f;
             float rollInfluence = 0.1f;//1.0f;
-            bool isFrontWheel = false;
+            bool isSteered = false;
+            bool isDriven = false;
 
             // wheel parameter
             float friction = 1000;//BT_LARGE_FLOAT;
@@ -89,6 +90,7 @@ class CarDynamics : public VRObject {
         void updateWheels();
         void updateEngine();
 
+        void addBTWheel(Wheel& w);
         btRigidBody* createRigitBody(float mass, const btTransform& startTransform, btCollisionShape* shape);
 
     public:

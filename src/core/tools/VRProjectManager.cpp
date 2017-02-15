@@ -26,8 +26,16 @@ vector<VRStoragePtr> VRProjectManager::getItems() {
     return res;
 }
 
+void VRProjectManager::newProject(string path) {
+    setName(path);
+    vault_rebuild.clear();
+}
+
 void VRProjectManager::save(string path) {
+    if (path == "") path = getName();
     if (fs::exists(path)) path = fs::canonical(path).string();
+    cout << "VRProjectManager::save " << path << endl;
+
     xmlpp::Document doc;
     xmlpp::Element* root = doc.create_root_node("Project", "", "VRP"); // name, ns_uri, ns_prefix
 
@@ -49,8 +57,12 @@ void VRProjectManager::save(string path) {
 }
 
 void VRProjectManager::load(string path) {
+    if (path == "") path = getName();
+    if (fs::exists(path)) {
+        setName(path);
+        path = fs::canonical(path).string();
+    } else return;
     cout << "VRProjectManager::load " << path << endl;
-    if (fs::exists(path)) path = fs::canonical(path).string();
 
     xmlpp::DomParser parser;
     parser.set_validate(false);

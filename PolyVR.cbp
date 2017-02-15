@@ -31,8 +31,8 @@
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="-std=c++11" />
 			<Add option="-Wall" />
+			<Add option="-std=c++11" />
 			<Add option="`pkg-config gtk+-2.0 --cflags`" />
 			<Add option="`pkg-config gmodule-2.0 --cflags`" />
 			<Add option="`pkg-config --cflags libxml++-2.6`" />
@@ -458,6 +458,8 @@
 		<Unit filename="src/addons/Sandbox.h" />
 		<Unit filename="src/addons/Semantics/Processes/VRProcess.cpp" />
 		<Unit filename="src/addons/Semantics/Processes/VRProcess.h" />
+		<Unit filename="src/addons/Semantics/Processes/VRProcessEngine.cpp" />
+		<Unit filename="src/addons/Semantics/Processes/VRProcessEngine.h" />
 		<Unit filename="src/addons/Semantics/Processes/VRProcessLayout.cpp" />
 		<Unit filename="src/addons/Semantics/Processes/VRProcessLayout.h" />
 		<Unit filename="src/addons/Semantics/Processes/VRPyProcess.cpp" />
@@ -474,6 +476,7 @@
 		<Unit filename="src/addons/Semantics/Reasoning/VROntologyLibrary.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROntologyRule.cpp" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROntologyRule.h" />
+		<Unit filename="src/addons/Semantics/Reasoning/VROntologyT.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROntologyUtils.cpp" />
 		<Unit filename="src/addons/Semantics/Reasoning/VROntologyUtils.h" />
 		<Unit filename="src/addons/Semantics/Reasoning/VRProperty.cpp" />
@@ -560,9 +563,15 @@
 		<Unit filename="src/core/gui/widgets/VRRuleWidget.h" />
 		<Unit filename="src/core/gui/widgets/VRSemanticWidget.cpp" />
 		<Unit filename="src/core/gui/widgets/VRSemanticWidget.h" />
+		<Unit filename="src/core/math/Expression.cpp" />
+		<Unit filename="src/core/math/Expression.h" />
 		<Unit filename="src/core/math/Octree.cpp" />
 		<Unit filename="src/core/math/Octree.h" />
+		<Unit filename="src/core/math/VRConvexHull.cpp" />
+		<Unit filename="src/core/math/VRConvexHull.h" />
 		<Unit filename="src/core/math/VRMathFwd.h" />
+		<Unit filename="src/core/math/VRStateMachine.cpp" />
+		<Unit filename="src/core/math/VRStateMachine.h" />
 		<Unit filename="src/core/math/boundingbox.cpp" />
 		<Unit filename="src/core/math/boundingbox.h" />
 		<Unit filename="src/core/math/coordinates.cpp" />
@@ -875,6 +884,8 @@
 		<Unit filename="src/core/scripting/VRPySound.h" />
 		<Unit filename="src/core/scripting/VRPySprite.cpp" />
 		<Unit filename="src/core/scripting/VRPySprite.h" />
+		<Unit filename="src/core/scripting/VRPyStateMachine.cpp" />
+		<Unit filename="src/core/scripting/VRPyStateMachine.h" />
 		<Unit filename="src/core/scripting/VRPyStroke.cpp" />
 		<Unit filename="src/core/scripting/VRPyStroke.h" />
 		<Unit filename="src/core/scripting/VRPyTextureGenerator.cpp" />
@@ -1009,6 +1020,8 @@
 		<Unit filename="src/core/utils/VRFunction.h" />
 		<Unit filename="src/core/utils/VRFunctionFwd.h" />
 		<Unit filename="src/core/utils/VRFwdDeclTemplate.h" />
+		<Unit filename="src/core/utils/VRGlobals.cpp" />
+		<Unit filename="src/core/utils/VRGlobals.h" />
 		<Unit filename="src/core/utils/VRInternalMonitor.cpp" />
 		<Unit filename="src/core/utils/VRInternalMonitor.h" />
 		<Unit filename="src/core/utils/VRLogger.cpp" />

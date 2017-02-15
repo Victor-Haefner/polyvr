@@ -10,6 +10,7 @@
 #include "../devices/VRKeyboard.h"
 #include "core/utils/VRTimer.h"
 #include "core/utils/VROptions.h"
+#include "core/utils/VRGlobals.h"
 #include "core/scene/VRScene.h"
 
 OSG_BEGIN_NAMESPACE;
@@ -226,6 +227,13 @@ void VRGtkWindow::on_realize() {
     gdk_gl_drawable_gl_end (gldrawable);
 }
 
+void printGLversion() {
+    const GLubyte* renderer = glGetString (GL_RENDERER); // get renderer string
+    const GLubyte* version = glGetString (GL_VERSION); // version as a string
+    cout << "Renderer B " << endl;
+    cout << "OpenGL version supported " << version << endl;
+}
+
 bool VRGtkWindow::on_expose(GdkEventExpose* event) {
     auto scene = VRScene::getCurrent();
     if (scene) scene->allowScriptThreads();
@@ -238,19 +246,20 @@ bool VRGtkWindow::on_expose(GdkEventExpose* event) {
     int h = widget->allocation.height;
 
     gdk_gl_drawable_gl_begin (gldrawable, glcontext);
-
-    //const GLubyte* renderer = glGetString (GL_RENDERER); // get renderer string
-    //const GLubyte* version = glGetString (GL_VERSION); // version as a string
-    //cout << "Renderer B " << endl;
-    //cout << "OpenGL version supported " << version << endl;
-
+    // printGLversion();
     if (win->getWidth() != w || win->getHeight() != h) resize(w,h);
 
     glClearColor(0.2, 0.2, 0.2, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
-    if (active && content) win->render(ract);
 
+    VRTimer t1; t1.start();
+    if (active && content) win->render(ract);
+    VRGlobals::RENDER_FRAME_RATE.update(t1);
+
+    VRTimer t2; t2.start();
     gdk_gl_drawable_swap_buffers (gldrawable);
+    VRGlobals::SWAPB_FRAME_RATE.update(t2);
+
     gdk_gl_drawable_gl_end (gldrawable);
 
     if (scene) scene->blockScriptThreads();

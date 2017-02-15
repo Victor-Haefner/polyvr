@@ -161,6 +161,12 @@ int VRConcept::getPropertyID(string name) {
     return -1;
 }
 
+bool VRConcept::is_a(VRConceptPtr c) {
+    if (ID == c->ID) return true;
+    for (auto p : getParents()) if (p->is_a(c)) return true;
+    return false;
+}
+
 bool VRConcept::is_a(string concept) {
     if (getName() == concept) return true;
     for (auto p : getParents()) if (p->is_a(concept)) return true;

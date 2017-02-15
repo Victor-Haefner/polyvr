@@ -21,8 +21,9 @@ class VRProjectManager : public VRObject {
         void addItem(VRStoragePtr s, string mode);
         vector<VRStoragePtr> getItems();
 
-        void save(string path);
-        void load(string path);
+        void newProject(string path);
+        void save(string path = "");
+        void load(string path = "");
 };
 
 OSG_END_NAMESPACE;

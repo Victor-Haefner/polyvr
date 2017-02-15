@@ -31,12 +31,14 @@ class VRGuiScripts {
             int line = 0;
         };
 
+        bool doPerf = false;
         bool trigger_cbs = true;
         _GtkSourceLanguage* python = 0;
         _GtkSourceLanguage* web = 0;
         _GtkSourceLanguage* glsl = 0;
         map<VRScript*, page> pages;
 	    shared_ptr<VRFunction<int> > updatePtr;
+	    VRDeviceCbPtr sceneChangedCb;
 
         Gtk::Table* scriptImportWidget = 0;
         Gtk::TreeView* import_treeview1 = 0;
@@ -60,6 +62,7 @@ class VRGuiScripts {
         void on_exec_clicked();
         void on_del_clicked();
         void on_import_clicked();
+        void on_perf_toggled();
 
         void on_select_script();
         void on_change_script_type();
@@ -102,6 +105,8 @@ class VRGuiScripts {
         void on_find_diag_cancel_clicked();
         void on_find_diag_find_clicked();
         void on_toggle_find_replace();
+
+        void on_scene_changed();
 
     public:
         VRGuiScripts();

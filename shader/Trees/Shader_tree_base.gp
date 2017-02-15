@@ -3,7 +3,8 @@
 #extension GL_EXT_geometry_shader4 : enable
 layout (lines) in;
 layout (triangle_strip, max_vertices = 12) out;
-in vec2 tc[];
+in float r[];
+in vec3 ec[];
 
 //Phong
 out vec3 ViewDirection;
@@ -11,6 +12,7 @@ out vec3 fvObjectPosition;
 out vec3 MVPos;
 out vec3 Normal;
 out vec3 dir;
+out vec3 gc;
 
 out float cylR1;
 out float cylR2;
@@ -63,6 +65,7 @@ vec3 perp(vec3 v) {
 }
 
 void main() {
+	gc = ec[0];
 	vec4 p1 = gl_PositionIn[0];
 	vec4 p2 = gl_PositionIn[1];
 	vec4 pm = (p1+p2)*0.5;
@@ -74,8 +77,8 @@ void main() {
 	dir *= 1.05;
 
 	// cylinder and cone raycast parameters
-	cylR1 = tc[0][0]*0.1;
-	cylR2 = tc[1][0]*0.1;
+	cylR1 = r[0];
+	cylR2 = r[1];
 	cylDir = normalize(vec3(mMV * vec4(dir,0.0)));
 	cylP0 = vec3(mMV * p1);
 	cylP1 = vec3(mMV * p2);

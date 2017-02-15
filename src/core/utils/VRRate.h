@@ -12,13 +12,6 @@ using namespace std;
 */
 
 class VRRate {
-    typedef OSG::StatElemDesc<OSG::StatIntElem> StatRate;
-
-    public:
-        static StatRate statFPS;
-        static StatRate statScriptFPS;
-        static StatRate statPhysFPS;
-
     private:
         int count = 0;
         int current = 60;

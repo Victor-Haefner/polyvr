@@ -13,6 +13,7 @@
 #include "VRPyIntersection.h"
 #include "VRPyPose.h"
 #include "VRPyPath.h"
+#include "VRPyStateMachine.h"
 #include "VRPyGraph.h"
 #include "VRPyPolygon.h"
 #include "VRPyTriangulator.h"
@@ -115,6 +116,8 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyPose>("Pose", pModVR);
     sm->registerModule<VRPyPath>("Path", pModVR);
     sm->registerModule<VRPyGraph>("Graph", pModVR);
+    sm->registerModule<VRPyStateMachine>("StateMachine", pModVR);
+    sm->registerModule<VRPyState>("State", pModVR);
     sm->registerModule<VRPyGraphLayout>("GraphLayout", pModVR);
     sm->registerModule<VRPyPolygon>("Polygon", pModVR);
     sm->registerModule<VRPyTriangulator>("Triangulator", pModVR);
@@ -157,6 +160,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyMechanism>("Mechanism", pModVR);
     sm->registerModule<VRPyNumberingEngine>("NumberingEngine", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyTree>("Tree", pModVR, VRPyGeometry::typeRef);
+    sm->registerModule<VRPyWoods>("Woods", pModVR, VRPyObject::typeRef);
     sm->registerModule<VRPyTerrain>("Terrain", pModVR, VRPyGeometry::typeRef);
     sm->registerModule<VRPyMillingMachine>("MillingMachine", pModVR);
     sm->registerModule<VRPyMillingWorkPiece>("MillingWorkPiece", pModVR, VRPyGeometry::typeRef);
@@ -167,6 +171,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
     sm->registerModule<VRPyProcess>("Process", pModVR);
     sm->registerModule<VRPyProcessNode>("ProcessNode", pModVR);
     sm->registerModule<VRPyProcessLayout>("ProcessLayout", pModVR, VRPyTransform::typeRef);
+    sm->registerModule<VRPyProcessEngine>("ProcessEngine", pModVR);
     sm->registerModule<VRPyOntologyRule>("OntologyRule", pModVR);
     sm->registerModule<VRPyProperty>("Property", pModVR);
     sm->registerModule<VRPyConcept>("Concept", pModVR);
@@ -175,7 +180,7 @@ void VRSceneModules::setup(VRScriptManager* sm, PyObject* pModVR) {
 
 #ifndef _WIN32
 	sm->registerModule<VRPyCSG>("CSGGeometry", pModVR, VRPyGeometry::typeRef);
-	sm->registerModule<VRPyRealWorld>("RealWorld", pModVR);
+	sm->registerModule<VRPyRealWorld>("RealWorld", pModVR, VRPyObject::typeRef);
 	sm->registerModule<VRPyTrafficSimulation>("TrafficSimulation", pModVR);
 	sm->registerModule<VRPySimViDekont>("SimViDekont", pModVR);
 #endif

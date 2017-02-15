@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="1884">
+<Scene name_suffix="0" base_name="nature" name_space="Scene" loading_time="5506">
   <Objects>
     <Object base_name="Root" name_space="__global__" name_suffix="0" persistency="666" pickable="0" type="Object" unique="1" visible="1">
-      <Object ambient="0.370962 0.370962 0.370962 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0.233875 0.233875 0.233875 1" type="Light" unique="1" visible="1">
+      <Object ambient="0.516136 0.516136 0.516136 1" base_name="Headlight" beacon="Headlight_beacon" diffuse="1 1 1 1" lightType="directional" name_space="__global__" name_suffix="0" on="1" persistency="666" pickable="0" shadow="0" shadowColor="0.1 0.1 0.1 1" shadowMapRes="2048" specular="0 0 0 1" type="Light" unique="1" visible="1">
         <Object at="-4.5 4 -1" at_dir="1" base_name="Headlight_beacon" from="-4 5 0" light="Headlight" name_space="__global__" name_suffix="0" persistency="666" pickable="0" scale="1 1 1" type="LightBeacon" unique="1" up="0 1 0" visible="1">
           <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
-        <Object accept_root="1" aspect="1" at="0.0626887 0.2 -0.0268324" at_dir="0" base_name="Default" far="250" fov="1.0472" from="106.687 50.4522 -38.6063" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
+        <Object accept_root="1" aspect="1" at="-23.259 4.46788 -38.3707" at_dir="0" base_name="Default" far="1024" fov="1.0472" from="106.548 64.5825 108.192" name_space="__global__" name_suffix="0" near="0.01" persistency="666" pickable="0" scale="1 1 1" type="Camera" unique="1" up="0 1 0" visible="1">
           <constraint active="1" cR="0 1 0" cR_local="0" cR_mode="0" cT="0 1 0" cT_local="0" cT_mode="0" persistency="666"/>
         </Object>
       </Object>
@@ -14,13 +14,23 @@
   </Objects>
   <Rendering deferred_rendering="0" frustum_culling="1" hmdd="0" occlusion_culling="0" persistency="666" ssao="0" ssao_kernel="4" ssao_noise="4" ssao_radius="0.02" two_sided="1"/>
   <Scripts persistency="666">
+    <Script base_name="click" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="no group">
+      <core>
+	import VR
+	
+	if dev.intersect():
+		print dev.getIntersection()
+</core>
+      <trig type="on_device" dev="mouse" state="Pressed" param="" key="0" name_suffix="4" base_name="trigger" name_space="__global__"/>
+    </Script>
     <Script base_name="init" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="">
       <core>
 	import VR
 	
-	VR.init_terrain()
-	VR.init_trees()
-	VR.init_grass()
+	#VR.init_terrain()
+	#VR.init_trees()
+	VR.init_woods()
+	#VR.init_grass()
 </core>
       <trig type="on_scene_load" dev="" state="Pressed" param="" key="0" name_suffix="2" base_name="trigger" name_space="__global__"/>
       <trig type="on_device" dev="keyboard" state="Pressed" param="" key="105" name_suffix="3" base_name="trigger" name_space="__global__"/>
@@ -69,12 +79,14 @@
 	
 	tg = VR.TextureGenerator()
 	tg.setSize([600,600,1], True)
-	for i in range(600):
-		for j in range(600):
-			a = sin(i*3.0*pi/600)*sin(j*3.0*pi/600)
-			h = (1.0-a)*0.5
-			tg.drawPixel([i,j,0],[0.1,0.5+h*0.3,0.2,h])
-	
+	#tg.drawFill([0,10,0])
+	r = 0.85
+	g = 0.9
+	b = 0.8
+	tg.add('Perlin', 1, [r,g,b,0.9], [r,g,b,1] )
+	tg.add('Perlin', 0.5, [r,g,b,0.8], [r,g,b,1] )
+	tg.add('Perlin', 0.25, [r,g,b,0.7], [r,g,b,1] )
+	tg.add('Perlin', 0.125, [r,g,b,0.6], [r,g,b,1] )	
 	tex = tg.compose(0)
 	VR.terrain.setMap(tex)
 	
@@ -138,6 +150,74 @@
 			addTree([(i-N*0.5)*s,0,(j-N*0.5)*s])
 	
 	
+	
+	
+	
+</core>
+    </Script>
+    <Script base_name="init_woods" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="">
+      <core>
+	import VR
+	from random import random
+	
+	r = VR.getRoot().find('Headlight')
+
+	if hasattr(VR, 'woods'): VR.woods.destroy()
+	VR.woods = VR.Woods()
+	r.addChild(VR.woods)
+		
+	def addTree():
+		t = VR.Tree()
+		
+		H = 2+random()*6
+		Nn = int(H)-1
+		r0 = 0.05+0.15*random()
+		t.addBranching(Nn,4, 0.2,0.4,H,r0, 0.2,0.4,0.2,0.2)
+		t.addBranching(1,4, 0.2,0.4,0.8,r0*pow(0.3,1), 0.2,0.4,0.2,0.2)
+		t.addBranching(1,4, 0.2,0.4,0.7,r0*pow(0.3,2), 0.2,0.4,0.2,0.2)
+		t.addBranching(1,4, 0.2,0.4,0.6,r0*pow(0.3,3), 0.2,0.4,0.2,0.2)
+		t.addBranching(1,4, 0.2,0.4,0.5,r0*pow(0.3,4), 0.2,0.4,0.2,0.2)
+		t.grow( int(random()*100) )
+		
+		t.addLeafs(4, 30)
+		return t
+		
+	def addBush():
+		t = VR.Tree()
+		
+		t.addBranching(1,10, 0.2,0.4,0.1,0.1, 0.2,0.4,0.2,0.2)
+		t.addBranching(1,4, 0.2,0.9,0.8,0.02, 0.2,0.4,0.2,0.2)
+		t.addBranching(1,4, 0.2,0.4,0.7,0.004, 0.2,0.4,0.2,0.2)
+		t.grow( int(random()*100) )
+		
+		t.addLeafs(2, 20, 0.1)
+		return t
+		
+	def randPos(W):
+		x = random()*W*2-W
+		z = random()*W*2-W
+		return [x,0,z]
+	
+	trees = [ addTree() for i in range(5) ]
+	bushes = [ addBush() for i in range(5) ]
+	
+	for i in range(200):
+		t = trees[int(random()*5)]
+		t.setFrom( randPos(50) )
+		VR.woods.addTree(t)
+	
+	for i in range(2000):
+		t = bushes[int(random()*5)]
+		t.setFrom( randPos(50) )
+		VR.woods.addTree(t)
+	
+	"""	
+	for t in trees:
+		t.setFrom( randPos(50) )
+		VR.woods.addTree(t)
+	"""
+		
+	VR.woods.computeLODs()
 	
 	
 	
@@ -304,6 +384,80 @@ void main( void ) {
 
 
 
+</core>
+    </Script>
+    <Script base_name="shdr_leaf_lod_fp" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" server="server1" group="no group">
+      <core>
+#version 400 compatibility&#13;
+&#13;
+uniform sampler3D tex;&#13;
+&#13;
+in vec3 vn;&#13;
+in vec4 vc;&#13;
+in vec3 vp;&#13;
+&#13;
+vec4 color;&#13;
+&#13;
+void applyBlinnPhong() {&#13;
+	vec3 n = gl_NormalMatrix * vn;&#13;
+	vec3  light = normalize( gl_LightSource[0].position.xyz );// directional light&#13;
+	float NdotL = max(dot( n, light ), 0.0);&#13;
+	vec4  ambient = gl_LightSource[0].ambient * color;&#13;
+	vec4  diffuse = gl_LightSource[0].diffuse * NdotL * color;&#13;
+	float NdotHV = max(dot(n, normalize(gl_LightSource[0].halfVector.xyz)),0.0);&#13;
+	vec4  specular = gl_LightSource[0].specular * pow( NdotHV, gl_FrontMaterial.shininess ); &#13;
+	gl_FragColor = ambient + diffuse + specular;&#13;
+}&#13;
+&#13;
+void main( void ) {&#13;
+	color = vc;&#13;
+	vec4 noise = texture(tex,vp.xyz);
+	color.xyz *= noise.a;&#13;
+	//if (color.a &lt; 0.5) discard;&#13;
+	//gl_FragColor = c;&#13;
+	applyBlinnPhong();&#13;
+}
+</core>
+    </Script>
+    <Script base_name="shdr_leaf_lod_setup" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="no group">
+      <core>
+	import VR
+	
+	l = VR.find('leafs')
+	m = l.getMaterial()
+	
+	tg = VR.TextureGenerator()
+	tg.setSize([50,50,50], True)
+	r = 0.85
+	g = 1.0
+	b = 0.8
+	tg.add('Perlin', 1, [r,g,b,0.9], [r,g,b,1] )
+	tg.add('Perlin', 0.5, [r,g,b,0.5], [r,g,b,1] )
+	tg.add('Perlin', 0.25, [r,g,b,0.8], [r,g,b,1] )
+	#tg.add('Perlin', 0.125, [r,g,b,0.7], [r,g,b,1] )
+	
+	m.setTexture(tg.compose(0))
+	m.setVertexProgram('shdr_leaf_lod_vp')
+	m.setFragmentProgram('shdr_leaf_lod_fp')
+</core>
+    </Script>
+    <Script base_name="shdr_leaf_lod_vp" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" server="server1" group="no group">
+      <core>
+// vertex shader program&#13;
+varying vec3 vn;&#13;
+varying vec4 vc;&#13;
+varying vec3 vp;&#13;
+&#13;
+attribute vec4 osg_Vertex;&#13;
+attribute vec3 osg_Normal;&#13;
+attribute vec4 osg_Color;&#13;
+&#13;
+void main( void ) {&#13;
+	vn = osg_Normal;&#13;
+	vc = osg_Color;
+	vp = osg_Vertex.xyz;&#13;
+	gl_Position = gl_ModelViewProjectionMatrix*osg_Vertex;&#13;
+}
 </core>
     </Script>
     <Script base_name="shdr_leafs_frag" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="GLSL" server="server1" group="">
@@ -788,6 +942,12 @@ void main( void ) {
     gl_Position = vertex;&#13;
 }
 </core>
+    </Script>
+    <Script base_name="test" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="">
+      <core>
+	import VR
+</core>
+      <trig type="none" dev="" state="Pressed" param="" key="0" name_suffix="0" base_name="trigger" name_space="__global__"/>
     </Script>
     <Script base_name="test_materials" name_space="__script__" name_suffix="0" persistency="666" unique="1" type="Python" server="server1" group="">
       <core>

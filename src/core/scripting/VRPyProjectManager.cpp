@@ -15,8 +15,9 @@ PyMethodDef VRPyStorage::methods[] = {
 PyMethodDef VRPyProjectManager::methods[] = {
     {"addItem", (PyCFunction)VRPyProjectManager::addItem, METH_VARARGS, "Add a storable item - addItem( i, str mode )\n\tmode can be 'RELOAD' or 'REBUILD', reload will only reload the attributes of the object" },
     {"getItems", (PyCFunction)VRPyProjectManager::getItems, METH_NOARGS, "Get all items - [items] getItems()" },
-    {"save", (PyCFunction)VRPyProjectManager::save, METH_VARARGS, "Save to file - save( str path )" },
-    {"load", (PyCFunction)VRPyProjectManager::load, METH_VARARGS, "Load from file - load( str path )" },
+    {"new", (PyCFunction)VRPyProjectManager::newp, METH_VARARGS, "New project - new( str path )" },
+    {"save", (PyCFunction)VRPyProjectManager::save, METH_VARARGS, "Save project to file - save( | str path )" },
+    {"load", (PyCFunction)VRPyProjectManager::load, METH_VARARGS, "Load project from file - load( | str path )" },
     {NULL}  /* Sentinel */
 };
 
@@ -46,19 +47,27 @@ PyObject* VRPyProjectManager::addItem(VRPyProjectManager* self, PyObject* args) 
     Py_RETURN_TRUE;
 }
 
+PyObject* VRPyProjectManager::newp(VRPyProjectManager* self, PyObject* args) {
+    if (!self->valid()) return NULL;
+    const char* p = 0;
+    if (! PyArg_ParseTuple(args, "s", (char*)&p)) return NULL;
+    if (p) self->objPtr->newProject(p);
+    Py_RETURN_TRUE;
+}
+
 PyObject* VRPyProjectManager::save(VRPyProjectManager* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    const char* p;
-    if (! PyArg_ParseTuple(args, "s", (char*)&p)) return NULL;
-    if (p) self->objPtr->save(p);
+    const char* p = 0;
+    if (! PyArg_ParseTuple(args, "|s", (char*)&p)) return NULL;
+    self->objPtr->save(p?p:"");
     Py_RETURN_TRUE;
 }
 
 PyObject* VRPyProjectManager::load(VRPyProjectManager* self, PyObject* args) {
     if (!self->valid()) return NULL;
-    const char* p;
-    if (! PyArg_ParseTuple(args, "s", (char*)&p)) return NULL;
-    if (p) self->objPtr->load(p);
+    const char* p = 0;
+    if (! PyArg_ParseTuple(args, "|s", (char*)&p)) return NULL;
+    self->objPtr->load(p?p:"");
     Py_RETURN_TRUE;
 }
 

@@ -45,6 +45,7 @@ string VRStatement::toString() {
 }
 
 void VRStatement::updateLocalVariables(map<string, VariablePtr>& globals, VROntologyPtr onto) {
+    this->onto = onto;
     for (auto& t : terms) {
         if (globals.count(t.path.root)) t.var = globals[t.path.root];
         else t.var = Variable::create(onto,t.path.root);
@@ -60,14 +61,29 @@ bool VRStatement::isSimpleVerb() {
 }
 
 bool VRStatement::match(VRStatementPtr s) {
+    if (terms.size() != s->terms.size()) {
+        VRReasoner::print("       statement has wrong number of arguments!", VRReasoner::RED);
+        return false;
+    }
+
     for (uint i=0; i<terms.size(); i++) {
         auto tS = s->terms[i];
         auto tR = terms[i];
-        if (!tS.valid() || !tR.valid()) return false;
-        if (tS.path.nodes.size() != tR.path.nodes.size()) return false;
-        //cout << "A " << tR.var->concept << " " << tS.var->concept << endl;
-        //cout << "var1 " << tR.var.value << " type: " << tR.var.concept << endl;
-        //cout << "var2 " << tS.var.value << " type: " << tS.var.concept << endl;
+        if (!tS.valid() || !tR.valid()) continue; // may be anything..
+
+        auto cS = onto->getConcept(tS.var->concept);
+        auto cR = onto->getConcept(tR.var->concept);
+        if (!cS || !cR) continue; // may be anything..
+
+        if (!cS->is_a(cR) && !cR->is_a(cS)) { // check if the concepts are related
+            VRReasoner::print("       var "+tR.var->value+" ("+tR.var->concept+") and var "+tS.var->value+" ("+tS.var->concept+") are not related!", VRReasoner::RED);
+            return false;
+        }
+
+        //if (tS.path.nodes.size() != tR.path.nodes.size()) return false;
+        /*cout << "A " << tR.var->concept << " " << tS.var->concept << endl;
+        cout << "var1 " << tR.var->value << " type: " << tR.var->concept << endl;
+        cout << "var2 " << tS.var->value << " type: " << tS.var->concept << endl;
         if (tR.var->concept != tS.var->concept) {
             for (auto e : tR.var->entities) {
                 for (auto c : e.second->getConcepts()) {
@@ -78,7 +94,8 @@ bool VRStatement::match(VRStatementPtr s) {
 
             // !cR.hasParent(cS) && !cS.hasParent(cR) )
             return false;
-        }
+        }*/
     }
+
     return true;
 }

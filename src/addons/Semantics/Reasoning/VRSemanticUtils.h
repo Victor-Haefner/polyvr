@@ -8,9 +8,21 @@
 #include <OpenSG/OSGConfig.h>
 
 #include "../VRSemanticsFwd.h"
+#include "core/utils/VRFunctionFwd.h"
+#include "core/objects/VRObjectFwd.h"
 
 using namespace std;
 OSG_BEGIN_NAMESPACE;
+
+struct VRSemanticBuiltin {
+    typedef vector<string> Params;
+
+    string format;
+
+    VRSemanticBuiltin();
+    virtual ~VRSemanticBuiltin();
+    virtual bool execute(VRObjectPtr o, const Params& params) = 0;
+};
 
 struct VPath {
     string first;
@@ -19,6 +31,10 @@ struct VPath {
 
     VPath(string p);
     string toString();
+    int size();
+
+    vector<string> getValue(VREntityPtr e);
+    void setValue(string v, VREntityPtr e);
 };
 
 struct Evaluation {
@@ -58,7 +74,11 @@ struct Term {
 
     Term(string s);
     bool valid();
-    //bool operator==(Term& other);
+
+    bool isMathExpression();
+    string computeExpression(VRSemanticContextPtr c);
+
+    bool is(Term& t, VRSemanticContextPtr context);
 };
 
 struct Query {
@@ -73,7 +93,7 @@ struct Query {
     void substituteRequest(VRStatementPtr s);
 };
 
-struct Context {
+struct VRSemanticContext {
     map<string, VariablePtr> vars;
     map<string, Query> rules;
     list<Query> queries;
@@ -83,8 +103,9 @@ struct Context {
     int itr=0;
     int itr_max = 5;
 
-    Context(VROntologyPtr onto);
-    Context();
+    VRSemanticContext(VROntologyPtr onto = 0);
+
+    static VRSemanticContextPtr create(VROntologyPtr onto = 0);
 };
 
 OSG_END_NAMESPACE;

@@ -6,6 +6,8 @@
 #include "core/objects/geometry/OSGGeometry.h"
 #include "core/objects/geometry/VRGeometry.h"
 
+#include "addons/RealWorld/nature/VRWoods.h"
+
 #include <map>
 #include <OpenSG/OSGMaterial.h>
 
@@ -35,8 +37,19 @@ void listActiveMaterials() {
     }
 }
 
+void woodsTest() {
+    VRWoodsPtr woods = VRWoods::create();
+    woods->test();
+
+    auto s = VRScene::getCurrent();
+    auto l = s->get("light");
+    if (!l) l = s->get("Headlight");
+    if (l) l->addChild(woods);
+}
+
 void VRRunTest(string test) {
     cout << "run test " << test << endl;
 
     if (test == "listActiveMaterials") listActiveMaterials();
+    if (test == "woodsTest") woodsTest();
 }

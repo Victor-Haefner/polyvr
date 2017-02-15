@@ -19,6 +19,7 @@ struct VRStatement : VRStorage {
     vector<Term> terms;
     int state = 0;
     int place = -1;
+    VROntologyPtr onto;
 
     VRStatement();
     VRStatement(string s, int i = -1);

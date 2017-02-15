@@ -13,6 +13,7 @@ struct VREntity : public VROntoID, public VRName {
     vector<string> conceptNames;
     map<string, vector<VRPropertyPtr> > properties;
     VROntologyWeakPtr ontology;
+    VRObjectWeakPtr sgObject;
 
     VREntity(string name, VROntologyPtr o, VRConceptPtr c = 0);
 
@@ -22,7 +23,11 @@ struct VREntity : public VROntoID, public VRName {
     vector<string> getConceptNames();
     VRPropertyPtr getProperty(string p);
     vector<VRPropertyPtr> getProperties();
+    void rem(VRPropertyPtr);
     string getConceptList();
+
+    void setSGObject(VRObjectPtr o);
+    VRObjectPtr getSGObject();
 
     void set(string prop, string value);
     void add(string prop, string value);
@@ -34,9 +39,7 @@ struct VREntity : public VROntoID, public VRName {
     vector<string> getVector(string prop, int i = 0);
     vector< vector<string> > getAllVector(string prop);
 
-    void rem(VRPropertyPtr);
-    vector<string> getAtPath(vector<string> path);
-
+    bool is_a(string concept);
     string toString();
     void save(xmlpp::Element* e, int p);
     void load(xmlpp::Element* e);

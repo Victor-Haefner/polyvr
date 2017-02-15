@@ -67,6 +67,7 @@ struct VRConcept : public std::enable_shared_from_this<VRConcept>, public VROnto
     //void getDescendance(map<int, VRConceptPtr>& concepts);
     void detach();
 
+    bool is_a(VRConceptPtr c);
     bool is_a(string concept);
     string toString(string indent = "");
     string toString(map<int, vector<VRConceptPtr>>& cMap, string indent = "");

@@ -17,6 +17,7 @@
 #include "core/math/interpolator.h"
 #include "core/utils/toString.h"
 #include "core/utils/VRFunction.h"
+#include "core/utils/VRGlobals.h"
 #include "core/objects/material/VRMaterial.h"
 #include "core/objects/material/OSGMaterial.h"
 #include "core/objects/object/VRObjectT.h"
@@ -159,7 +160,7 @@ void VRGeometry::setMesh(OSGGeometryPtr g) {
     setMesh(g, ref);
 }
 
-void VRGeometry::meshChanged() { lastMeshChange = VRGlobals::get()->CURRENT_FRAME; }
+void VRGeometry::meshChanged() { lastMeshChange = VRGlobals::CURRENT_FRAME; }
 
 void VRGeometry::setPrimitive(string primitive, string args) {
     this->primitive = VRPrimitive::make(primitive);

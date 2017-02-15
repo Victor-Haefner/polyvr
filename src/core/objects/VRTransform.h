@@ -20,7 +20,7 @@ class VRAnimation;
 
 class VRTransform : public VRObject {
     public:
-        enum ORIANTATION_MODE {
+        enum ORIENTATION_MODE {
             OM_AT = 0,
             OM_DIR = 1,
             OM_EULER = 2
@@ -136,8 +136,7 @@ class VRTransform : public VRObject {
 
         void showCoordAxis(bool b);
 
-        void rotate(float a);
-        void rotate(float a, Vec3f v);
+        void rotate(float a, Vec3f v = Vec3f(0,1,0));
         void rotateUp(float a);
         void rotateX(float a);
         void rotateAround(float a);

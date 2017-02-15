@@ -13,6 +13,7 @@ struct VRPyProjectManager : public VRPyBaseT<OSG::VRProjectManager> {
 
     static PyObject* addItem(VRPyProjectManager* self, PyObject* args);
     static PyObject* getItems(VRPyProjectManager* self);
+    static PyObject* newp(VRPyProjectManager* self, PyObject* args);
     static PyObject* save(VRPyProjectManager* self, PyObject* args);
     static PyObject* load(VRPyProjectManager* self, PyObject* args);
 };
