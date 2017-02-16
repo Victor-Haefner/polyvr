@@ -24,6 +24,7 @@ class VRStorage {
     private:
         string type = "Node";
         int persistency = 666;
+        bool overrideCallbacks = false;
         vector<VRUpdateCbPtr> f_setup; // setup
         vector<VRUpdateCbPtr> f_setup_after; // setup after tree loaded
         map<string, VRStorageBin> storage;
@@ -31,6 +32,8 @@ class VRStorage {
 
         template<class T> static void typeFactoryCb(VRStoragePtr& s);
 
+        void save_str_cb(string t, string tag, xmlpp::Element* e);
+        void load_str_cb(string t, string tag, xmlpp::Element* e);
         template<typename T> void save_cb(T* t, string tag, xmlpp::Element* e);
         template<typename T> void save_on_cb(T* t, string tag, xmlpp::Element* e);
         template<typename T> void load_cb(T* t, string tag, xmlpp::Element* e);
@@ -51,9 +54,11 @@ class VRStorage {
         template<typename T> void load_str_objmap_cb(map<string, std::shared_ptr<T> >* mt, string tag, bool under, xmlpp::Element* e);
         template<typename T> void load_int_objmap_cb(map<int, std::shared_ptr<T> >* mt, string tag, bool under, xmlpp::Element* e);
 
-    protected:
+    public:
 
+        void store(string tag, string val);
         template<typename T> void store(string tag, T* t);
+        template<typename T> void storeVec(string tag, vector<T>& v, bool under = false);
         template<typename T> void storeObj(string tag, std::shared_ptr<T>& o);
         template<typename T> void storeObjVec(string tag, vector<std::shared_ptr<T> >& v, bool under = false);
         template<typename T> void storeMap(string tag, map<string, T*>* mt, bool under = false);
@@ -84,6 +89,7 @@ class VRStorage {
 
         void setPersistency(int p);
         int getPersistency();
+        void setOverrideCallbacks(bool b);
 };
 
 OSG_END_NAMESPACE;

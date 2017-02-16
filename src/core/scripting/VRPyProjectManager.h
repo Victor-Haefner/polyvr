@@ -16,6 +16,7 @@ struct VRPyProjectManager : public VRPyBaseT<OSG::VRProjectManager> {
     static PyObject* newp(VRPyProjectManager* self, PyObject* args);
     static PyObject* save(VRPyProjectManager* self, PyObject* args);
     static PyObject* load(VRPyProjectManager* self, PyObject* args);
+    static PyObject* setPersistencyLevel(VRPyProjectManager* self, PyObject* args);
 };
 
 #endif // VRPYPROJECTMANAGER_H_INCLUDED

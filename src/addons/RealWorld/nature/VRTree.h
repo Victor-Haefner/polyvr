@@ -13,7 +13,7 @@ class VRTree : public VRTransform {
     private:
         segment* trunc = 0;
         VRLodPtr lod;
-        vector<seg_params> parameters;
+        vector<shared_ptr<seg_params>> parameters;
         vector<segment*> branches;
         vector<VRGeometryPtr> leafGeos;
         vector<VRGeometryPtr> woodGeos;
@@ -39,10 +39,10 @@ class VRTree : public VRTransform {
         VRObjectPtr copy(vector<VRObjectPtr> children);
 
     public:
-        VRTree();
+        VRTree(string name = "tree");
         ~VRTree();
 
-        static VRTreePtr create();
+        static VRTreePtr create(string name = "tree");
         VRTreePtr ptr();
 
         segment* grow(int seed = 0, segment* p = 0, int iteration = 0, float t = 1);

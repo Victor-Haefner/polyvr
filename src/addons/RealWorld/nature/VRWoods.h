@@ -52,7 +52,8 @@ class VRLodTree : public VRObject {
 class VRWoods : public VRLodTree {
     private:
         vector<VRTreePtr> trees;
-        map<VRTree*, VRTreePtr> treeTemplates;
+        map<string, VRTreePtr> treeTemplates;
+        map<VRTree*, VRTreePtr> treeRefs;
 
         VRMaterialPtr truncMat;
         VRMaterialPtr leafMat;

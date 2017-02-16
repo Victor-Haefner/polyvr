@@ -7,13 +7,14 @@
 #include "core/objects/VRLod.h"
 #include "core/scene/VRSceneManager.h"
 #include "core/math/VRConvexHull.h"
+#include "core/utils/VRStorage_template.h"
 
 #include <OpenSG/OSGQuaternion.h>
 #include <random>
 
 using namespace OSG;
 
-struct OSG::seg_params {
+struct OSG::seg_params : public VRStorage {
     int nodes = 1; //number of iterations
     int child_number = 5; //number of children
 
@@ -26,6 +27,21 @@ struct OSG::seg_params {
     float p_angle_var = 0.4; //p_angle variation
     float length_var = 0.2; //length variation
     float radius_var = 0.2; //radius variation
+
+    seg_params() {
+        store("nodes", &nodes);
+        store("child_number", &child_number);
+        store("n_angle", &n_angle);
+        store("p_angle", &p_angle);
+        store("length", &length);
+        store("radius", &radius);
+        store("n_angle_var", &n_angle_var);
+        store("p_angle_var", &p_angle_var);
+        store("length_var", &length_var);
+        store("radius_var", &radius_var);
+    }
+
+    static shared_ptr<seg_params> create() { return shared_ptr<seg_params>( new seg_params() ); }
 };
 
 struct OSG::segment {
@@ -48,8 +64,7 @@ struct OSG::segment {
     }
 };
 
-
-VRTree::VRTree() : VRTransform("tree") {
+VRTree::VRTree(string name) : VRTransform(name) {
     int c = random(0,10);
     if (c == 3) truncColor = Vec3f(0.7, 0.7, 0.7);
     if (c == 4) truncColor = Vec3f(0.7, 0.7, 0.7);
@@ -58,18 +73,27 @@ VRTree::VRTree() : VRTransform("tree") {
     if (c == 7) truncColor = Vec3f(0.3, 0.2, 0);
     if (c == 8) truncColor = Vec3f(0.3, 0.2, 0);
     if (c == 9) truncColor = Vec3f(0.2, 0.1, 0.05);
+
+    storeObjVec("branching", parameters, true);
 }
 
 VRTree::~VRTree() {}
-VRTreePtr VRTree::create() { return shared_ptr<VRTree>(new VRTree()); }
+VRTreePtr VRTree::create(string name) { return shared_ptr<VRTree>(new VRTree(name)); }
 VRTreePtr VRTree::ptr() { return static_pointer_cast<VRTree>( shared_from_this() ); }
 
 void VRTree::initLOD() {
     lod = VRLod::create("tree_lod");
+    lod->setPersistency(0);
     addChild(lod);
-    lod->addChild(VRObject::create("tree_lod1"));
-    lod->addChild(VRObject::create("tree_lod2"));
-    lod->addChild(VRObject::create("tree_lod3"));
+    auto lod1 = VRObject::create("tree_lod1");
+    auto lod2 = VRObject::create("tree_lod2");
+    auto lod3 = VRObject::create("tree_lod3");
+    lod1->setPersistency(0);
+    lod2->setPersistency(0);
+    lod3->setPersistency(0);
+    lod->addChild(lod1);
+    lod->addChild(lod2);
+    lod->addChild(lod3);
     lod->addDistance(20);
     lod->addDistance(50);
 }
@@ -107,33 +131,33 @@ Vec3f VRTree::randomRotate(Vec3f v, float a) {
 
 segment* VRTree::grow(int seed, segment* p, int iteration, float t) {
     if (parameters.size() <= iteration) return 0;
-    const seg_params& sp = parameters[iteration];
+    auto sp = parameters[iteration];
 
     if (iteration == 0) { // prepare tree
         branches = vector<segment*>();
         srand(seed);
     }
 
-    segment* s = new segment(p, sp.radius);
+    segment* s = new segment(p, sp->radius);
     branches.push_back(s);
 
     if (p) {
-        float a = variation(sp.p_angle, sp.p_angle_var);
-        float l = variation(sp.length, sp.length_var);
+        float a = variation(sp->p_angle, sp->p_angle_var);
+        float l = variation(sp->length, sp->length_var);
         Vec3f d = p->p2 - p->p1; d.normalize();
         s->p1 = p->p1 + (p->p2-p->p1)*t;
         s->p2 = s->p1 + l*randomRotate(d, a);
 
         s->n2 = s->p2 - s->p1;
         s->n2.normalize();
-        s->n1 = p->n2 + (p->n2 - s->n2)*variation(sp.n_angle, sp.n_angle_var);
+        s->n1 = p->n2 + (p->n2 - s->n2)*variation(sp->n_angle, sp->n_angle_var);
     } else {
-        s->p2 *= variation(sp.length, sp.length_var);
+        s->p2 *= variation(sp->length, sp->length_var);
     }
 
-    for (int n=0; n<sp.nodes; n++) {
-        for (int i=0; i<sp.child_number; i++) {
-            auto c = grow(seed, s, iteration+1, (n+1)*1.0/sp.nodes);
+    for (int n=0; n<sp->nodes; n++) {
+        for (int i=0; i<sp->child_number; i++) {
+            auto c = grow(seed, s, iteration+1, (n+1)*1.0/sp->nodes);
             if (c) s->children.push_back(c);
         }
     }
@@ -238,7 +262,7 @@ VRObjectPtr VRTree::copy(vector<VRObjectPtr> children) {
 }
 
 void VRTree::testSetup() {
-    parameters.push_back(seg_params());
+    parameters.push_back( seg_params::create() );
     grow(time(0));
 }
 
@@ -258,17 +282,17 @@ void VRTree::setup(int branching, int iterations, int seed,
 void VRTree::addBranching(int nodes, int branching,
            float n_angle, float p_angle, float length, float radius,
            float n_angle_v, float p_angle_v, float length_v , float radius_v) {
-    seg_params sp;
-    sp.nodes = nodes;
-    sp.child_number = branching;
-    sp.n_angle = n_angle;
-    sp.p_angle = p_angle;
-    sp.length = length;
-    sp.radius = radius;
-    sp.n_angle_var = n_angle_v;
-    sp.p_angle_var = p_angle_v;
-    sp.length_var = length_v;
-    sp.radius_var = radius_v;
+    auto sp = seg_params::create();
+    sp->nodes = nodes;
+    sp->child_number = branching;
+    sp->n_angle = n_angle;
+    sp->p_angle = p_angle;
+    sp->length = length;
+    sp->radius = radius;
+    sp->n_angle_var = n_angle_v;
+    sp->p_angle_var = p_angle_v;
+    sp->length_var = length_v;
+    sp->radius_var = radius_v;
     parameters.push_back(sp);
 }
 
@@ -278,6 +302,7 @@ void VRTree::addLeafs(int lvl, int amount, float size) {
     if (leafGeos.size() == 0) {
         for (int i=0; i<3; i++) {
             auto g = VRGeometry::create("branches");
+            g->setPersistency(0);
             leafGeos.push_back( g );
             lod->getChild(i)->addChild(g);
             g->setMaterial(leafMat);
