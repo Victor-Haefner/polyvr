@@ -49,10 +49,13 @@ class VRLodTree : public VRObject {
         void reset(float size = 0);
 };
 
+struct VRWoodsTreeEntry;
+
 class VRWoods : public VRLodTree {
     private:
         vector<VRTreePtr> trees;
         map<string, VRTreePtr> treeTemplates;
+        map<string, shared_ptr<VRWoodsTreeEntry>> treeEntries;
         map<VRTree*, VRTreePtr> treeRefs;
 
         VRMaterialPtr truncMat;
@@ -61,6 +64,7 @@ class VRWoods : public VRLodTree {
         void computeFirstLevel();
         void computeSecondLevel();
 
+        void setup();
         void initLOD();
 
     public:

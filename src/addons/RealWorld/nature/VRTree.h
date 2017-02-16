@@ -31,6 +31,7 @@ class VRTree : public VRTransform {
 
         void initMaterials();
 
+        void setup();
         void initLOD();
         void initArmatureGeo();
         void testSetup();

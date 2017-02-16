@@ -75,11 +75,16 @@ VRTree::VRTree(string name) : VRTransform(name) {
     if (c == 9) truncColor = Vec3f(0.2, 0.1, 0.05);
 
     storeObjVec("branching", parameters, true);
+    regStorageSetupFkt( VRFunction<int>::create("tree setup", boost::bind(&VRTree::setup, this)) );
 }
 
 VRTree::~VRTree() {}
 VRTreePtr VRTree::create(string name) { return shared_ptr<VRTree>(new VRTree(name)); }
 VRTreePtr VRTree::ptr() { return static_pointer_cast<VRTree>( shared_from_this() ); }
+
+void VRTree::setup() {
+    grow(0); // TODO: store seed
+}
 
 void VRTree::initLOD() {
     lod = VRLod::create("tree_lod");

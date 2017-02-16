@@ -126,19 +126,50 @@ VRLodLeafPtr VRLodTree::addObject(VRTransformPtr obj, Vec3f p, int lvl) {
 
 // --------------------------------------------------------------------------------------------------
 
+struct OSG::VRWoodsTreeEntry : public VRName {
+    Vec3f pos;
+    string type;
+    VRWoodsTreeEntry(string name = "") {
+        setName("treeEntry");
+        store("position", &pos);
+        store("tree", &type);
+    }
+    static shared_ptr<VRWoodsTreeEntry> create(string name = "") { return shared_ptr<VRWoodsTreeEntry>(new VRWoodsTreeEntry(name)); }
+
+    void set(Vec3f p, string t) {
+        pos = p;
+        type = t;
+    }
+};
+
 VRWoods::VRWoods() : VRLodTree("woods", 5) {
     storeMap("templateTrees", &treeTemplates, true);
+    storeMap("trees", &treeEntries, true);
+    regStorageSetupFkt( VRFunction<int>::create("woods setup", boost::bind(&VRWoods::setup, this)) );
 }
 
 VRWoods::~VRWoods() {}
 VRWoodsPtr VRWoods::create() { return VRWoodsPtr(new VRWoods()); }
 VRWoodsPtr VRWoods::ptr() { return static_pointer_cast<VRWoods>( shared_from_this() ); }
 
+void VRWoods::setup() {
+    for (auto& t : treeEntries) {
+        auto tree = treeTemplates[t.second->type];
+        tree->setFrom(t.second->pos);
+        addTree(tree);
+    }
+    computeLODs();
+}
+
 VRTreePtr VRWoods::addTree(VRTreePtr t, bool updateLODs) {
     auto td = dynamic_pointer_cast<VRTree>( t->duplicate() );
     treeTemplates[t->getName()] = t;
     treeRefs[td.get()] = t;
     auto leaf = addObject(td, t->getFrom(), 0);
+
+    auto te = VRWoodsTreeEntry::create();
+    te->set( t->getFrom(), t->getName() );
+    treeEntries[td->getName()] = te;
 
     if (updateLODs) {
         auto oLeafs = leaf->getOLeaf()->getAncestry();
@@ -251,12 +282,12 @@ void VRWoods::clear() {
 }
 
 void VRWoods::test() {
-    auto newCylinder = [](float s) {
+    /*auto newCylinder = [](float s) {
         auto box = VRGeometry::create("box");
         string S = toString(s*0.5);
         box->setPrimitive("Cylinder", "1 "+S+" 16 1 1 1");
         return box;
-    };
+    };*/
 
     auto simpleLeafMat = []() {
         auto m = VRMaterial::create("lmat");
@@ -280,7 +311,7 @@ void VRWoods::test() {
         return t;
     };
 
-    auto simpleTest = [&]() {
+    /*auto simpleTest = [&]() {
         // add highest detail objects
         int N = 4;
         for (int i=0; i<N; i++) {
@@ -301,9 +332,9 @@ void VRWoods::test() {
             leaf->add(c,1);
             //c->setWorldPosition(Vec3f());
         }
-    };
+    };*/
 
-    auto simpleTest2 = [&]() { // TODO: not perfectly working
+    /*auto simpleTest2 = [&]() { // TODO: not perfectly working
         reset(1);
 
         for (int k=0; k<5; k++) {
@@ -318,7 +349,7 @@ void VRWoods::test() {
                 }
             }
         }
-    };
+    };*/
 
     auto simpleTest3 = [&]() {
         reset(5);
