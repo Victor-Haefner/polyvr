@@ -29,6 +29,7 @@ void VRGuiFile::init() {
     setButtonCallback("button9", sigc::ptr_fun(VRGuiFile::apply));
     dialog->signal_selection_changed().connect( sigc::ptr_fun( VRGuiFile::select ));
     dialog->signal_file_activated().connect( sigc::ptr_fun(VRGuiFile::apply) );
+    dialog->signal_event().connect( sigc::ptr_fun(VRGuiFile::keyApply) );
     dialog->set_action(Gtk::FILE_CHOOSER_ACTION_OPEN);
 
     setEntryCallback("entry21", sigc::ptr_fun(&VRGuiFile::on_edit_import_scale) );
@@ -124,6 +125,12 @@ void VRGuiFile::apply() {
     dialog->hide();
     sigApply();
     setWidget(0);
+}
+
+bool VRGuiFile::keyApply(GdkEvent* k) {
+    if (k->key.keyval != 65293 || k->key.type != GDK_KEY_RELEASE) return false;
+    apply();
+    return true;
 }
 
 void VRGuiFile::setCallbacks(sig sa, sig sc, sig ss) {

@@ -131,7 +131,7 @@ void VRGuiSemantics::clearCanvas() {
 }
 
 void VRGuiSemantics::updateLayout() {
-    auto gra = dynamic_pointer_cast< graph<graph_base::emptyNode> >(layout_graph);
+    auto gra = dynamic_pointer_cast< graph<graph_base::emptyNode*> >(layout_graph);
 
     for (auto c : widgets) { // update node boxes
         if (!widgetIDs.count(c.first)) continue;
@@ -248,12 +248,12 @@ void VRGuiSemantics::connect(VRSemanticWidgetPtr w1, VRSemanticWidgetPtr w2, str
 
     int sID = w2->ID();
     int pID = w1->ID();
-    auto gra = dynamic_pointer_cast< graph<graph_base::emptyNode> >(layout_graph);
+    auto gra = dynamic_pointer_cast< graph<graph_base::emptyNode*> >(layout_graph);
     if (widgetIDs.count(pID)) gra->connect(widgetIDs[pID], widgetIDs[sID], graph_base::HIERARCHY);
 }
 
 void VRGuiSemantics::addNode(int sID) {
-    auto gra = dynamic_pointer_cast< graph<graph_base::emptyNode> >(layout_graph);
+    auto gra = dynamic_pointer_cast< graph<graph_base::emptyNode*> >(layout_graph);
     widgetIDs[sID] = gra->addNode();
 }
 
@@ -266,7 +266,7 @@ void VRGuiSemantics::disconnect(VRSemanticWidgetPtr w1, VRSemanticWidgetPtr w2) 
 
     int sID = w2->ID();
     int pID = w1->ID();
-    auto gra = dynamic_pointer_cast< graph<graph_base::emptyNode> >(layout_graph);
+    auto gra = dynamic_pointer_cast< graph<graph_base::emptyNode*> >(layout_graph);
     if (widgetIDs.count(pID)) gra->disconnect(widgetIDs[pID], widgetIDs[sID]);
 }
 
@@ -351,7 +351,7 @@ VRGuiSemantics::VRGuiSemantics() {
     layout->setRadius(0);
     layout->setSpeed(0.7);
 
-    layout_graph = shared_ptr< graph<graph_base::emptyNode> >( new graph<graph_base::emptyNode>() );
+    layout_graph = shared_ptr< graph<graph_base::emptyNode*> >( new graph<graph_base::emptyNode*>() );
     layout->setGraph(layout_graph);
 }
 

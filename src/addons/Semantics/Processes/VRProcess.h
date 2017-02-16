@@ -25,7 +25,10 @@ struct VRProcessNode : VRName {
 
     string label;
 
-    VRProcessNode();
+    VRProcessNode(string name, PROCESS_WIDGET type);
+    ~VRProcessNode();
+    static VRProcessNodePtr create(string name, PROCESS_WIDGET type);
+
     void update(graph_base::node& n, bool changed);
 
     int getID();
@@ -34,7 +37,7 @@ struct VRProcessNode : VRName {
 
 class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName {
     public:
-        typedef graph<VRProcessNode> Diagram;
+        typedef graph<VRProcessNodePtr> Diagram;
         typedef shared_ptr< Diagram > DiagramPtr;
 
     private:
@@ -53,7 +56,9 @@ class VRProcess : public std::enable_shared_from_this<VRProcess>, public VRName 
         void setOntology(VROntologyPtr o);
         DiagramPtr getInteractionDiagram();
         DiagramPtr getBehaviorDiagram(int subject);
-        vector<VRProcessNode> getSubjects();
+        vector<VRProcessNodePtr> getSubjects();
+
+        DiagramPtr addSubject(string name);
 };
 
 OSG_END_NAMESPACE;

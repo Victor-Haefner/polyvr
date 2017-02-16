@@ -13,7 +13,7 @@ class VRTree : public VRTransform {
     private:
         segment* trunc = 0;
         VRLodPtr lod;
-        vector<seg_params> parameters;
+        vector<shared_ptr<seg_params>> parameters;
         vector<segment*> branches;
         vector<VRGeometryPtr> leafGeos;
         vector<VRGeometryPtr> woodGeos;
@@ -39,10 +39,10 @@ class VRTree : public VRTransform {
         VRObjectPtr copy(vector<VRObjectPtr> children);
 
     public:
-        VRTree();
+        VRTree(string name = "tree");
         ~VRTree();
 
-        static VRTreePtr create();
+        static VRTreePtr create(string name = "tree");
         VRTreePtr ptr();
 
         segment* grow(int seed = 0, segment* p = 0, int iteration = 0, float t = 1);
@@ -56,7 +56,7 @@ class VRTree : public VRTransform {
                    float n_angle = 0.2, float p_angle = 0.6, float length = 0.8, float radius = 0.1,
                    float n_angle_v = 0.2, float p_angle_v = 0.4, float length_v = 0.2, float radius_v = 0.2);
 
-        void addLeafs(int lvl, int amount);
+        void addLeafs(int lvl, int amount, float size = 0.03);
         void setLeafMaterial(VRMaterialPtr mat);
 
         void createHullTrunkLod(VRGeoData& geo, int lvl, Vec3f offset);

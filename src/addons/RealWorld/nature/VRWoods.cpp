@@ -10,6 +10,7 @@
 #include "core/objects/VRLod.h"
 #include "core/math/Octree.h"
 #include "core/utils/toString.h"
+#include "core/utils/VRStorage_template.h"
 
 using namespace OSG;
 
@@ -20,8 +21,10 @@ VRLodLeafPtr VRLodLeaf::ptr() { return static_pointer_cast<VRLodLeaf>( shared_fr
 VRLodLeafPtr VRLodLeaf::create(string name, Octree* o, int lvl) {
     auto l = VRLodLeafPtr(new VRLodLeaf(name, o, lvl));
     l->lod = VRLod::create("lod");
+    l->lod->setPersistency(0);
     l->addChild(l->lod);
     auto lvl0 = VRObject::create("lvl");
+    lvl0->setPersistency(0);
     l->levels.push_back(lvl0);
     l->lod->addChild(lvl0);
     return l;
@@ -29,12 +32,18 @@ VRLodLeafPtr VRLodLeaf::create(string name, Octree* o, int lvl) {
 
 void VRLodLeaf::addLevel(float dist) {
     auto lvl = VRObject::create("lvl");
+    lvl->setPersistency(0);
     levels.push_back(lvl);
     lod->addChild(lvl);
     lod->addDistance(dist);
 }
 
 void VRLodLeaf::add(VRObjectPtr obj, int lvl) {
+    levels[lvl]->addChild(obj);
+}
+
+void VRLodLeaf::set(VRObjectPtr obj, int lvl) {
+    levels[lvl]->clearChildren();
     levels[lvl]->addChild(obj);
 }
 
@@ -49,15 +58,21 @@ VRLodTreePtr VRLodTree::ptr() { return static_pointer_cast<VRLodTree>( shared_fr
 VRLodTreePtr VRLodTree::create(string name) { return VRLodTreePtr(new VRLodTree(name)); }
 
 void VRLodTree::reset(float size) {
-    octree = Octree::create(size,size);
     leafs.clear();
     objects.clear();
     rootLeaf = 0;
+    if (size > 0) octree = Octree::create(size,size);
+    else {
+        auto s = octree->getSize();
+        octree = Octree::create(s,s);
+    }
+    clearChildren();
 }
 
-void VRLodTree::addLeaf(Octree* o, int lvl) {
-    if (leafs.count(o)) return;
+VRLodLeafPtr VRLodTree::addLeaf(Octree* o, int lvl) {
+    if (leafs.count(o)) return leafs[o];
     auto l = VRLodLeaf::create("lodLeaf", o, lvl);
+    l->setPersistency(0);
     if (lvl > 0) l->addLevel( o->getSize()*2 );
     l->setFrom(o->getLocalCenter());
     leafs[o] = l;
@@ -92,35 +107,59 @@ void VRLodTree::addLeaf(Octree* o, int lvl) {
         rootLeaf = l;
         addChild(l);
     }
+    return l;
 }
 
-void VRLodTree::addObject(VRTransformPtr obj, Vec3f p, int lvl) {
+VRLodLeafPtr VRLodTree::addObject(VRTransformPtr obj, Vec3f p, int lvl) {
     if (leafs.size() == 0) addLeaf(octree.get(), 0);
-    if (!octree) return;
+    if (!octree) return 0;
     objects[lvl].push_back(obj);
     auto oLeaf = octree->add(p, obj.get(), lvl, 0, true);
-    addLeaf(oLeaf, lvl);
-    if (lvl == 0) leafs[oLeaf]->add(obj, 0);
-    else          leafs[oLeaf]->add(obj, 1);
+    auto leaf = addLeaf(oLeaf, lvl);
+    if (lvl == 0) leaf->add(obj, 0);
+    else          leaf->add(obj, 1);
     obj->setWorldPosition(p);
     obj->setDir(Vec3f(0,0,-1));
     obj->setUp(Vec3f(0,1,0));
+    return leaf;
 }
 
 // --------------------------------------------------------------------------------------------------
 
-VRWoods::VRWoods() : VRLodTree("woods", 5) { setPersistency(0); }
+VRWoods::VRWoods() : VRLodTree("woods", 5) {
+    storeMap("templateTrees", &treeTemplates, true);
+}
+
 VRWoods::~VRWoods() {}
 VRWoodsPtr VRWoods::create() { return VRWoodsPtr(new VRWoods()); }
 VRWoodsPtr VRWoods::ptr() { return static_pointer_cast<VRWoods>( shared_from_this() ); }
 
-void VRWoods::addTree(VRTreePtr t) {
-    addObject(t, t->getFrom(), 0);
+VRTreePtr VRWoods::addTree(VRTreePtr t, bool updateLODs) {
+    auto td = dynamic_pointer_cast<VRTree>( t->duplicate() );
+    treeTemplates[t->getName()] = t;
+    treeRefs[td.get()] = t;
+    auto leaf = addObject(td, t->getFrom(), 0);
+
+    if (updateLODs) {
+        auto oLeafs = leaf->getOLeaf()->getAncestry();
+        map<Octree*, VRLodLeafPtr> aLeafs;
+        for (auto o : oLeafs) {
+            if (leafs.count(o) == 0) continue;
+            aLeafs[o] = leafs[o];
+        }
+        computeLODs(aLeafs);
+    }
+
+    return td;
 }
 
 void VRWoods::computeLODs() {
+    computeLODs(leafs);
+}
+
+void VRWoods::computeLODs(map<Octree*, VRLodLeafPtr>& leafs) {
     auto simpleLeafMat = []() {
-        auto m = VRMaterial::create("lmat");
+        auto m = VRMaterial::create("simpleLeafMat");
         m->setPointSize(3);
         m->setDiffuse(Vec3f(0.5,1,0));
         m->setAmbient(Vec3f(0.1,0.3,0));
@@ -151,9 +190,6 @@ void VRWoods::computeLODs() {
         return m;
     };
 
-    auto green = simpleLeafMat();
-    auto brown = simpleTrunkMat();
-
     // get all trees for each leaf layer
     map<VRLodLeaf*, vector<VRTree*> > trees;
     for (auto l : leafs) {
@@ -168,6 +204,7 @@ void VRWoods::computeLODs() {
     // create layer node geometries
     for (auto l : leafs) {
         auto& leaf = l.second;
+        if (trees.count(leaf.get()) == 0) continue;
         int lvl = leaf->getLevel();
         if (lvl == 0) continue;
 
@@ -178,21 +215,39 @@ void VRWoods::computeLODs() {
         VRGeoData geoLeafs;
         VRGeoData geoTrunk;
         for (auto t : trees[leaf.get()]) {
+            if (treeRefs.count(t) == 0) continue;
+            auto tRef = treeRefs[t];
+            if (!tRef || !t) continue;
             Vec3f offset = t->getWorldPosition() - pos;
-            t->createHullTrunkLod(geoTrunk, lvl, offset);
-            t->createHullLeafLod (geoLeafs, lvl, offset);
+            tRef->createHullTrunkLod(geoTrunk, lvl, offset);
+            tRef->createHullLeafLod (geoLeafs, lvl, offset);
         }
-        auto trunk = geoTrunk.asGeometry("trunk");
-        auto leafs = geoLeafs.asGeometry("leafs");
-        trunk->addChild( leafs );
-        leafs->setMaterial(green);
-        trunk->setMaterial(brown);
 
-        leaf->add( trunk, 1 );
-        trunk->setWorldPosition(pos);
-        trunk->setDir(Vec3f(0,0,-1));
-        trunk->setUp(Vec3f(0,1,0));
+        if (geoTrunk.size() > 0) {
+            auto trunk = geoTrunk.asGeometry("trunk");
+            if (!truncMat) truncMat = simpleTrunkMat();
+            trunk->setMaterial(truncMat);
+
+            leaf->set( trunk, 1 );
+            trunk->setWorldPosition(pos);
+            trunk->setDir(Vec3f(0,0,-1));
+            trunk->setUp(Vec3f(0,1,0));
+
+            if (geoLeafs.size() > 0) {
+                auto leafs = geoLeafs.asGeometry("leafs");
+                leafs->setPersistency(0);
+                trunk->addChild( leafs );
+                if (!leafMat) leafMat = simpleLeafMat();
+                leafs->setMaterial(leafMat);
+            }
+        }
     }
+}
+
+void VRWoods::clear() {
+    trees.clear();
+    treeTemplates.clear();
+    VRLodTree::reset();
 }
 
 void VRWoods::test() {

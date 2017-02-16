@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <sigc++/functors/slot.h>
+#include <gtk-2.0/gdk/gdkevents.h>
 
 namespace Gtk { class FileChooserDialog; class Table; }
 using namespace std;
@@ -27,6 +28,7 @@ class VRGuiFile {
         static void open(string button, int action, string title);
         static void close();
         static void apply();
+        static bool keyApply(GdkEvent*);
         static void select();
         static string getPath();
         static string getRelativePath_toOrigin();

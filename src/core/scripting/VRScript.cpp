@@ -177,6 +177,11 @@ VRScript::VRScript(string _name) {
     cbfkt_sys = VRFunction<int>::create(_name + "_ScriptCallback_sys", boost::bind(&VRScript::execute, this));
     cbfkt_dev = new VRFunction<VRDeviceWeakPtr>(_name + "_ScriptCallback_dev", boost::bind(&VRScript::execute_dev, this, _1));
     cbfkt_soc = new VRFunction<string>(_name + "_ScriptCallback_soc", boost::bind(&VRScript::execute_soc, this, _1));
+
+    setOverrideCallbacks(true);
+    store("type", &type);
+    store("server", &server);
+    store("group", &group);
 }
 
 VRScript::~VRScript() {
@@ -390,12 +395,8 @@ void VRScript::setGroup(string g) { group = g; }
 string VRScript::getGroup() { return group; }
 
 void VRScript::save(xmlpp::Element* e) {
-    saveName(e);
     xmlpp::Element* ec = e->add_child("core");
     ec->set_child_text("\n"+core+"\n");
-    e->set_attribute("type", type);
-    e->set_attribute("server", server);
-    e->set_attribute("group", group);
 
     for (auto ai : args) {
         arg* a = ai.second;

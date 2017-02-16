@@ -32,7 +32,7 @@ void VRStorage::save_str_map_cb(map<string, T*>* mt, string tag, bool under, xml
     if (under) e = e->add_child(tag);
     for (auto t : *mt) {
         auto ei = t.second->saveUnder(e);
-        t.second->save(ei); // TODO: some classes like VRScript have a custom save method
+        if (t.second->overrideCallbacks) t.second->save(ei); // TODO: some classes like VRScript have a custom save method
     }
 }
 
@@ -42,7 +42,7 @@ void VRStorage::save_str_objmap_cb(map<string, std::shared_ptr<T> >* mt, string 
     if (under) e = e->add_child(tag);
     for (auto t : *mt) {
         auto ei = t.second->saveUnder(e);
-        t.second->save(ei); // TODO: some classes like VRScript have a custom save method
+        if (t.second->overrideCallbacks) t.second->save(ei); // TODO: some classes like VRScript have a custom save method
     }
 }
 
@@ -211,6 +211,14 @@ void VRStorage::storeObjVec(string tag, vector<std::shared_ptr<T> >& v, bool und
     VRStorageBin b;
     b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_obj_vec_cb<T>, this, &v, tag, under, _1 ) );
     b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_obj_vec_cb<T>, this, &v, tag, under, _1 ) );
+    storage[tag] = b;
+}
+
+template<typename T>
+void VRStorage::storeVec(string tag, vector<T>& v, bool under) {
+    VRStorageBin b;
+    b.f1 = VRStoreCb::create("load", boost::bind( &VRStorage::load_vec_cb<T>, this, &v, tag, under, _1 ) );
+    b.f2 = VRStoreCb::create("save", boost::bind( &VRStorage::save_vec_cb<T>, this, &v, tag, under, _1 ) );
     storage[tag] = b;
 }
 

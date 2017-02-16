@@ -38,6 +38,7 @@ class Octree {
         static OctreePtr create(float resolution, float size = 10);
 
         Octree* getParent();
+        vector<Octree*> getAncestry();
         Octree* getRoot();
         Octree* add(Vec3f p, void* data, int targetLevel = -1, int currentLevel = 0, bool checkPosition = true);
         void addBox(const boundingbox& b, void* data, int targetLevel = -1, bool checkPosition = true);

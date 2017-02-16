@@ -21,6 +21,7 @@ ModuleTerrain::ModuleTerrain(bool t, bool p) : BaseModule("ModuleTerrain", t,p) 
 void ModuleTerrain::loadBbox(MapGrid::Box bbox) {
     auto mapDB = RealWorld::get()->getDB();
     auto mc = RealWorld::get()->getCoordinator();
+    if (!mc || !mapDB) return;
     OSMMap* osmMap = mapDB->getMap(bbox.str);
     if (!osmMap) return;
 
@@ -50,6 +51,7 @@ void ModuleTerrain::loadBbox(MapGrid::Box bbox) {
 
 void ModuleTerrain::unloadBbox(MapGrid::Box bbox) {
     auto mapDB = RealWorld::get()->getDB();
+    if (!mapDB) return;
     OSMMap* osmMap = mapDB->getMap(bbox.str);
     if (!osmMap) return;
     for (OSMWay* way : osmMap->osmWays) {
@@ -181,6 +183,7 @@ void ModuleTerrain::addTerrain(Terrain* ter, VRGeoData* gdTerrain, int height){
 
 Vec3f ModuleTerrain::tesselateTriangle(float p1X, float p1Y, float p2X, float p2Y, float p3X, float p3Y, float height, VRGeoData* gdTerrain, Vec3f usedCorners) {
     auto mc = RealWorld::get()->getCoordinator();
+    if (!mc) return Vec3f();
     Vec3f res = Vec3f(0, 0, 0);
     Vec2f p1 = Vec2f(p1X, p1Y);
     Vec2f p2 = Vec2f(p2X, p2Y);

@@ -8,6 +8,7 @@
 */
 
 #include "core/objects/VRObjectFwd.h"
+#include "core/objects/object/VRObject.h"
 #include "Altitude.h"
 #include <map>
 
@@ -21,7 +22,7 @@ class MapCoordinator;
 class World;
 class MapManager;
 
-class RealWorld {
+class RealWorld : public VRObject {
     private:
         MapCoordinator* mapCoordinator = 0;
         World* world = 0;
@@ -33,13 +34,13 @@ class RealWorld {
         static RealWorld* singelton;
 
     public:
-        RealWorld(OSG::VRObjectPtr root, OSG::Vec2f origin);
+        RealWorld(string name);
         ~RealWorld();
 
-        static std::shared_ptr<RealWorld> create(OSG::VRObjectPtr root, OSG::Vec2f origin);
-
+        static std::shared_ptr<RealWorld> create(string name);
         static RealWorld* get();
 
+        void init(OSG::Vec2i size);
         void enableModule(string mod, bool b, bool t, bool p);
         void configure(string var, string val);
         static string getOption(string var);

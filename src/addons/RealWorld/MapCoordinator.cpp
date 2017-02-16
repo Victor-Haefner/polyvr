@@ -38,15 +38,4 @@ Vec2f MapCoordinator::getRealBboxPosition(Vec2f worldPosition) {
     return Vec2f(gridX / 1000.0f, gridY / 1000.0f) + offset;
 }
 
-/** returns normals for 3D planes **/
-Vec3f MapCoordinator::getSurfaceNormal(Vec3f v1, Vec3f v2){
-    float v1x = v1[0];
-    float v1y = v1[1];
-    float v1z = v1[2];
-    float v2x = v2[0];
-    float v2y = v2[1];
-    float v2z = v2[2];
 
-    Vec3f n = Vec3f(v1y*v2z - v1z*v2y, v1z*v2x - v1x*v2z, v1x*v2y - v1y*v2x);
-    return n[1] < 0 ? -n : n; // makes normal point upwards
-}

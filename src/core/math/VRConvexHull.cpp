@@ -47,6 +47,7 @@ VRGeometryPtr toGeometry(Polyhedron& poly, string name) {
 }
 
 VRGeometryPtr VRConvexHull::compute(VRGeometryPtr geo) {
+    if (!geo) return 0;
     vector<cgalPoint> points;
     if (!geo->getMesh()) return 0;
     if (!geo->getMesh()->geo) return 0;
@@ -58,15 +59,15 @@ VRGeometryPtr VRConvexHull::compute(VRGeometryPtr geo) {
         points.push_back(cgalPoint(p[0], p[1], p[2]));
     }
 
-    if (points.size() <= 2) return 0;
+    if (points.size() < 4) return 0;
 
-    try {
+    VRGeometryPtr res = 0;
+    try { // TODO: check if points bounding box is not size 0!!!
         Polyhedron poly; // define polyhedron to hold convex hull
         CGAL::convex_hull_3(points.begin(), points.end(), poly); // compute convex hull of non-collinear points
-        return toGeometry(poly, "convexHull");
-    } catch( exception e ) {
-        return 0;
-    }
+        res = toGeometry(poly, "convexHull");
+    } catch( exception e ) { cout << "ARGH\n" << e.what() << endl; res = 0; }
+    return res;
 }
 
 
