@@ -8,12 +8,15 @@ using namespace std;
 
 struct segment;
 struct seg_params;
+struct leaf_params;
 
 class VRTree : public VRTransform {
     private:
+        int seed = 0;
         segment* trunc = 0;
         VRLodPtr lod;
         vector<shared_ptr<seg_params>> parameters;
+        vector<shared_ptr<leaf_params>> foliage;
         vector<segment*> branches;
         vector<VRGeometryPtr> leafGeos;
         vector<VRGeometryPtr> woodGeos;
@@ -47,6 +50,7 @@ class VRTree : public VRTransform {
         VRTreePtr ptr();
 
         segment* grow(int seed = 0, segment* p = 0, int iteration = 0, float t = 1);
+        void growLeafs(shared_ptr<leaf_params>);
 
         void addBranching(int nodes = 1, int branching = 5,
                    float n_angle = 0.2, float p_angle = 0.6, float length = 0.8, float radius = 0.1,

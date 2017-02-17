@@ -154,6 +154,7 @@ VRWoodsPtr VRWoods::ptr() { return static_pointer_cast<VRWoods>( shared_from_thi
 
 void VRWoods::setup() {
     for (auto& t : treeEntries) {
+        if (!treeTemplates.count(t.second->type)) { cout << "VRWoods::setup Warning, " << t.second->type << " is not a tree template!" << endl; continue; }
         auto tree = treeTemplates[t.second->type];
         tree->setFrom(t.second->pos);
         addTree(tree);
