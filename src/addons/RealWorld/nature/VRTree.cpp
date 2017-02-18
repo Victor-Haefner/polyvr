@@ -44,6 +44,20 @@ struct OSG::seg_params : public VRStorage {
     static shared_ptr<seg_params> create() { return shared_ptr<seg_params>( new seg_params() ); }
 };
 
+struct OSG::leaf_params : public VRStorage {
+    int level = 3; // branch level to add leafs
+    int amount = 10; // amount of leafs per segment
+    float size = 0.03; // leaf sprite size
+
+    leaf_params() {
+        store("level", &level);
+        store("amount", &amount);
+        store("size", &size);
+    }
+
+    static shared_ptr<leaf_params> create() { return shared_ptr<leaf_params>( new leaf_params() ); }
+};
+
 struct OSG::segment {
     Vec3f p1 = Vec3f(0,0,0);
     Vec3f p2 = Vec3f(0,1,0);
@@ -74,12 +88,20 @@ VRTree::VRTree(string name) : VRTransform(name) {
     if (c == 8) truncColor = Vec3f(0.3, 0.2, 0);
     if (c == 9) truncColor = Vec3f(0.2, 0.1, 0.05);
 
+    store("seed", &seed);
     storeObjVec("branching", parameters, true);
+    storeObjVec("foliage", foliage, true);
+    regStorageSetupFkt( VRFunction<int>::create("tree setup", boost::bind(&VRTree::setup, this)) );
 }
 
 VRTree::~VRTree() {}
 VRTreePtr VRTree::create(string name) { return shared_ptr<VRTree>(new VRTree(name)); }
 VRTreePtr VRTree::ptr() { return static_pointer_cast<VRTree>( shared_from_this() ); }
+
+void VRTree::setup() {
+    grow(seed);
+    for (auto lp : foliage) growLeafs(lp);
+}
 
 void VRTree::initLOD() {
     lod = VRLod::create("tree_lod");
@@ -130,6 +152,7 @@ Vec3f VRTree::randomRotate(Vec3f v, float a) {
 }
 
 segment* VRTree::grow(int seed, segment* p, int iteration, float t) {
+    this->seed = seed;
     if (parameters.size() <= iteration) return 0;
     auto sp = parameters[iteration];
 
@@ -297,6 +320,15 @@ void VRTree::addBranching(int nodes, int branching,
 }
 
 void VRTree::addLeafs(int lvl, int amount, float size) {
+    auto lp = leaf_params::create();
+    lp->level = lvl;
+    lp->amount = amount;
+    lp->size = size;
+    foliage.push_back(lp);
+    growLeafs(lp);
+}
+
+void VRTree::growLeafs(shared_ptr<leaf_params> lp) {
     if (!lod) initLOD();
 
     if (leafGeos.size() == 0) {
@@ -323,7 +355,7 @@ void VRTree::addLeafs(int lvl, int amount, float size) {
     ch = 0.5 + rand()*0.5/RAND_MAX;
     VRGeoData geo0, geo1, geo2;
     for (auto b : branches) {
-        if (b->lvl != lvl) continue;
+        if (b->lvl != lp->level) continue;
 
         // compute branch segment basis
         Vec3f p = (b->p1 + b->p2)*0.5;
@@ -334,16 +366,16 @@ void VRTree::addLeafs(int lvl, int amount, float size) {
 
         float L = d.length();
 
-        for (int i=0; i<amount; i++) {
+        for (int i=0; i<lp->amount; i++) {
             Vec3f v = randVecInSphere(L*0.3);
             Vec3f n = p+v-b->p1;
             n.normalize();
             // TODO: add model for carotene and chlorophyl depending on leaf age/size and more..
-            geo0.pushVert(p+v, n, Vec3f(size,ca,ch)); // color: leaf size, amount of carotene, amount of chlorophyl
+            geo0.pushVert(p+v, n, Vec3f(lp->size,ca,ch)); // color: leaf size, amount of carotene, amount of chlorophyl
             geo0.pushPoint();
         }
     }
-    if (geo0.size() == 0) { cout << "VRTree::addLeafs Warning: no armature with level " << lvl << endl; return; }
+    if (geo0.size() == 0) { cout << "VRTree::addLeafs Warning: no armature with level " << lp->level << endl; return; }
 
     for (int i=0; i<geo0.size(); i+=4) {
         auto c = geo0.getColor(i); c[0] *= 2; // double lod leaf size
