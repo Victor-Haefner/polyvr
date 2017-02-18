@@ -101,6 +101,7 @@ PyObject* VRPyStateMachine::process(VRPyStateMachine* self, PyObject *args) {
         params[skey] = svalue;
     }*/
 
+    Py_XINCREF(p);
     auto state = self->objPtr->process(p);
     return VRPyState::fromSharedPtr( state );
 }

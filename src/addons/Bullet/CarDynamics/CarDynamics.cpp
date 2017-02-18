@@ -63,24 +63,8 @@ void CarDynamics::initPhysics() {
     m_dynamicsWorld = (btDynamicsWorld*) scene->bltWorld();
 }
 
-//only to be done once
-float CarDynamics::getSpeed() {
-    PLock lock(mtx());
-    if (!m_vehicle) return 0;
-    return m_vehicle->getCurrentSpeedKmHour();
-}
-
-float CarDynamics::getAcceleration() { // TODO: idea! get the delta time from the distance traveled!!
-    PLock lock(mtx());
-    static float last_speed = 0;
-    static double last_time = 0;
-    float speed = getSpeed();
-    double time = glutGet(GLUT_ELAPSED_TIME)*0.001;
-    float a = (speed-last_speed)/(time-last_time);
-    last_speed = speed;
-    last_time = time;
-    return abs(a);
-}
+float CarDynamics::getSpeed() { return speed; }
+float CarDynamics::getAcceleration() { return acceleration; }
 
 void CarDynamics::initVehicle() {
     PLock lock(mtx());
@@ -270,6 +254,16 @@ void CarDynamics::updateEngine() {
         if (wheel.isSteered) {
             m_vehicle->setSteeringValue(steering*engine.maxSteer, i);
         }
+    }
+
+    speed = m_vehicle->getCurrentSpeedKmHour();
+    double time = glutGet(GLUT_ELAPSED_TIME)*0.001;
+    double dt = time-a_measurement_t;
+    if (dt > 0) {
+        float a = (speed-s_measurement)/dt;
+        s_measurement = speed;
+        a_measurement_t = time;
+        acceleration = a;//abs(a);
     }
 }
 
