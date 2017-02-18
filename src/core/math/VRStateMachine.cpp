@@ -17,6 +17,7 @@ typename VRStateMachine<P>::StatePtr VRStateMachine<P>::State::create(string nam
 
 template<class P>
 string VRStateMachine<P>::State::process(const P& params) {
+    if (!transition) return "";
     return (*transition)(params);
 }
 
@@ -40,12 +41,13 @@ typename VRStateMachine<P>::StatePtr VRStateMachine<P>::addState(string s, VRTra
     return state;
 }
 
-template<class P> typename VRStateMachine<P>::StatePtr VRStateMachine<P>::setCurrentState(string s) { currentState = states[s]; return currentState; }
-template<class P> typename VRStateMachine<P>::StatePtr VRStateMachine<P>::getState(string s) { return states[s]; }
+template<class P> typename VRStateMachine<P>::StatePtr VRStateMachine<P>::setCurrentState(string s) { if (states.count(s)) currentState = states[s]; return currentState; }
+template<class P> typename VRStateMachine<P>::StatePtr VRStateMachine<P>::getState(string s) { return states.count(s) ? states[s] : 0; }
 template<class P> typename VRStateMachine<P>::StatePtr VRStateMachine<P>::getCurrentState() { return currentState; }
 
 template<class P>
 typename VRStateMachine<P>::StatePtr VRStateMachine<P>::process(const P& params) {
+    if (!currentState) return 0;
     string newState = currentState->process(params);
     if (states.count(newState)) setCurrentState(newState);
     return currentState;
