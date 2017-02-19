@@ -6,7 +6,7 @@
 using namespace OSG;
 
 simpleVRPyType(Terrain, New_VRObjects_ptr);
-simpleVRPyType(Tree, New_VRObjects_unnamed_ptr);
+simpleVRPyType(Tree, New_VRObjects_ptr);
 simpleVRPyType(Woods, New_VRObjects_unnamed_ptr);
 
 PyMethodDef VRPyTree::methods[] = {
